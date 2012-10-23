@@ -1,0 +1,8 @@
+
+
+hello.cmd:	hello.c
+	cc hello
+	ln -o hello.cmd hello.o -lc
+
+clean:
+	erase hello.cmd
