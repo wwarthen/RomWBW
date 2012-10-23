@@ -10,15 +10,11 @@
 ;__________________________________________________________________________________________________
 ; DATA CONSTANTS
 ;__________________________________________________________________________________________________
-;IDE REGISTER		IO PORT		; FUNCTION
+;
 READR		 .EQU	0F0h		; READ VDU
 WRITR		 .EQU	0F1h		; WRITE VDU
 SY6545S		 .EQU	0F2h		; VDU STATUS/REGISTER
 SY6545D		 .EQU	0F3h		;
-VPPIA		 .EQU	0F4h		; PPI PORT A
-VPPIB		 .EQU	0F5h		; PPI PORT B
-VPPIC		 .EQU	0F6h		; PPI PORT C
-VPPICONT	 .EQU	0F7h		; PPI CONTROL PORT
 
 STATE_NORMAL	 .EQU	00H		; NORMAL TERMINAL OPS
 STATE_ESC	 .EQU	01H		; ESC MODE
@@ -26,56 +22,186 @@ STATE_DIR_L	 .EQU	02H		; ESC-Y X *
 STATE_DIR_C	 .EQU	03H		; ESC-Y * X
 
 ESC_KEY		 .EQU	1BH		; ESCAPE CODE
+;
+;__________________________________________________________________________________________________
+; BOARD INITIALIZATION
+;__________________________________________________________________________________________________
+;
+VDU_INIT:
+	CALL	INITVDU
+	CALL	PPK_INIT
+	XOR	A
+	RET
 ;	
 ;__________________________________________________________________________________________________
 ; FUNCTION JUMP TABLE
 ;__________________________________________________________________________________________________
 ;
-VDU_DISPATCH:
+VDU_DISPCIO:
 	LD	A,B	; GET REQUESTED FUNCTION
 	AND	$0F	; ISOLATE SUB-FUNCTION
-	JR	Z,VDU_IN
+	JR	Z,VDU_CIOIN
 	DEC	A
-	JR	Z,VDU_OUT
+	JR	Z,VDU_CIOOUT
 	DEC	A
-	JR	Z,VDU_IST
+	JR	Z,VDU_CIOIST
 	DEC	A
-	JR	Z,VDU_OST
+	JR	Z,VDU_CIOOST
 	CALL	PANIC
+;	
+VDU_CIOIN:
+	JP	PPK_READ
 ;
-VDU_INIT:
-	CALL	INITVDU
+VDU_CIOIST:
+	JP	PPK_STAT
+;
+VDU_CIOOUT:
+	JP	VDU_VDAWRC
+;
+VDU_CIOOST:
+	XOR	A
+	INC	A
 	RET
 ;	
-VDU_IN:
-	CALL	GET_KEY
-	LD	E,A
-	RET
+;__________________________________________________________________________________________________
+; NEW FUNCTION JUMP TABLE
+;__________________________________________________________________________________________________
 ;
-VDU_IST:
-	CALL	IS_KBHIT
-	RET
-;
-VDU_OUT:
-	LD	C,E
-	CALL	CHARIN
-	RET
-;
-VDU_OST:
+
+VDU_DISPVDA:
+	LD	A,B		; GET REQUESTED FUNCTION
+	AND	$0F		; ISOLATE SUB-FUNCTION
+
+	JR	Z,VDU_VDAINI
+	DEC	A
+	JR	Z,VDU_VDAQRY
+	DEC	A
+	JR	Z,VDU_VDARES
+	DEC	A
+	JR	Z,VDU_VDASCS
+	DEC	A
+	JR	Z,VDU_VDASCP
+	DEC	A
+	JR	Z,VDU_VDASAT
+	DEC	A
+	JR	Z,VDU_VDASCO
+	DEC	A
+	JR	Z,VDU_VDAWRC
+	DEC	A
+	JR	Z,VDU_VDAFIL
+	DEC	A
+	JR	Z,VDU_VDASCR
+	DEC	A
+	JP	Z,PPK_STAT
+	DEC	A
+	JP	Z,PPK_FLUSH
+	DEC	A
+	JP	Z,PPK_READ
 	CALL	PANIC
+
+VDU_VDAINI:
+	CALL	INITVDU
+	XOR	A
+	RET
+
+VDU_VDAQRY:
+	CALL	PANIC
+	
+VDU_VDARES:
+	JR	VDU_INIT
+	
+VDU_VDASCS:
+	CALL	PANIC
+	
+VDU_VDASCP:
+	LD	A,E
+	LD	(TERM_X),A
+	LD	A,D
+	LD	(TERM_Y),A
+	CALL	GOTO_XY
+	XOR	A
+	RET
+	
+VDU_VDASAT:
+	; FIX: NOT IMPLEMENTED!!!
+	CALL	PANIC
+	
+VDU_VDASCO:
+	; NOT SUPPORTED!!!
+	CALL	PANIC
+	
+VDU_VDAWRC:
+	; PUSH CHARACTER OUT AT CURRENT POSITION
+	LD 	A,31           	; PREP VDU FOR DATA R/W
+	OUT 	(SY6545S),A
+	CALL 	VDU_WAITRDY		; WAIT FOR VDU TO BE READY
+	LD	A,E
+	OUT 	(WRITR),A		; OUTPUT CHAR TO VDU
+
+	; UPDATE CURSOR POSITION TO FOLLOW CHARACTERS
+	LD 	HL,(VDU_DISPLAYPOS)	; GET CURRENT DISPLAY POSITION
+	INC 	HL			; INCREMENT IT
+	LD 	(VDU_DISPLAYPOS),HL	; STORE NEW DISPLAY POSITION
+	LD	DE,(VDU_DISPLAY_START)	; GET DISPLAY START
+	ADD	HL,DE			; ADD IT TO DISPLAY POSITION
+	LD 	A,14			; UPDATE CURSOR POSITION
+	CALL 	VDU_HL2WREG_A		; SEND IT
+
+	; RETURN WITH SUCCESS
+	XOR	A
+	RET
+	
+VDU_VDAFIL:
+    	LD 	A, 31		; PREP VDU FOR DATA R/W
+    	OUT 	(SY6545S),A
+VDU_VDAFIL1:
+	LD	A,H		; CHECK NUMBER OF FILL CHARS LEFT
+	OR	L			
+	JR	Z,VDU_VDAFIL2	; ALL DONE, GO TO COMPLETION
+	CALL	VDU_WAITRDY	; WAIT FOR VDU TO BE READY
+	LD	A,E
+    	OUT 	(WRITR), A	; OUTPUT CHAR TO VDU
+	DEC	HL		; DECREMENT COUNT
+	JR	VDU_VDAFIL1	; LOOP AS NEEDED
+VDU_VDAFIL2:
+	CALL	GOTO_XY		; YES, MOVE CURSOR BACK TO ORIGINAL POSITION
+	XOR	A		; RESULT = 0
+	RET
+	
+VDU_VDASCR:
+	; FIX: IMPLEMENT REVERSE SCROLLING!!!
+	LD	A,E
+	OR	A
+	RET	Z
+	PUSH	DE
+	CALL	DO_SCROLL
+	POP	DE
+	DEC	E
+	JR	VDU_VDASCR
+;
+VDU_WAITRDY:
+   	IN 	A,(SY6545S)	; READ STATUS
+	OR	A		; SET FLAGS
+	RET	M		; IF BIT 7 SET, THEN READY!
+	JR	VDU_WAITRDY	; KEEP CHECKING
+;__________________________________________________________________________________________________
+; IMBED COMMON PARALLEL PORT KEYBOARD DRIVER
+;__________________________________________________________________________________________________
+;
+#INCLUDE "ppk.asm"
 ;
 ;__________________________________________________________________________________________________
 ; INITIALIZATION
 ;__________________________________________________________________________________________________
 INITVDU:
     	CALL	VDUINIT			; INIT VDU   					
-	CALL 	KB_INITIALIZE		; INIT KB
+;	CALL 	KB_INITIALIZE		; INIT KB
 ;	CALL	PR_INITIALIZE		; INIT PR
     	
 ;    	CALL	DSPMATRIX		; DISPLAY INIT MATRIX SCREEN
 ;	CALL	WAIT_KBHIT		; WAIT FOR A KEYSTROKE
-	LD	A,0			; EMPTY KB QUEUE
-	LD	(KB_QUEUE_PTR),A	; 
+;	LD	A,0			; EMPTY KB QUEUE
+;	LD	(KB_QUEUE_PTR),A	; 
 	
 	CALL	PERF_ERASE_EOS		; CLEAR SCREEN
 	CALL	PERF_CURSOR_HOME	; CURSOR HOME	
@@ -446,12 +572,12 @@ PERF_ERASE_EOS_LOOP:
 ; 	PERFORM TERMINAL IDENTIFY FUNCTION
 ;__________________________________________________________________________________________________	
 PERF_IDENTIFY:
-	LD	A,ESC_KEY		;
-	CALL	KB_ENQUEUE		; STORE ON KB QUEUE
-	LD	A,'/'			;
-	CALL	KB_ENQUEUE		; STORE ON KB QUEUE
-	LD	A,'K'			;
-	CALL	KB_ENQUEUE		; STORE ON KB QUEUE
+;	LD	A,ESC_KEY		;
+;	CALL	KB_ENQUEUE		; STORE ON KB QUEUE
+;	LD	A,'/'			;
+;	CALL	KB_ENQUEUE		; STORE ON KB QUEUE
+;	LD	A,'K'			;
+;	CALL	KB_ENQUEUE		; STORE ON KB QUEUE
 	CALL	SET_STATE_NORMAL	; SET NORMAL STATE
 	RET
 	
@@ -590,66 +716,6 @@ REVERSE_SCROLL:
     	POP	HL			; RESTORE HL
     	POP	AF			; RESTORE AF
     	RET				;
-    			
-	
-	
-;__IS_KBHIT________________________________________________________________________________________
-;
-; 	WAS A KEY PRESSED?
-;__________________________________________________________________________________________________			
-IS_KBHIT:
-	CALL 	KB_PROCESS		; CALL KEYBOARD ROUTINE
-	LD 	A,(KB_QUEUE_PTR)	; ASK IF KEYBOARD HAS KEY WAITING
-	OR	A
-	JP	Z,CIO_IDLE
-	LD	A,$FF			; SIGNAL DATA PENDING
-	RET
-	
-				
-;__WAIT_KBHIT______________________________________________________________________________________
-;
-; 	WAIT FOR A KEY PRESS
-;__________________________________________________________________________________________________			
-WAIT_KBHIT:
-	CALL	IS_KBHIT
-	JR	Z,WAIT_KBHIT
-	RET
-
-	
-;__GET_KEY_________________________________________________________________________________________
-;
-; 	GET KEY PRESS VALUE
-;__________________________________________________________________________________________________			
-GET_KEY:
-	CALL	WAIT_KBHIT		; WAIT FOR A KEY
-	LD	A,(KB_QUEUE_PTR)	; GET QUEUE POINTER
-	OR	A			;
-	RET	Z			; ABORT IF QUEUE EMPTY
-	PUSH	BC			; STORE BC
-	LD	B,A			; STORE QUEUE COUNT FOR LATER
-	PUSH	HL			; STORE HL
-	LD	A,(KB_QUEUE)		; GET TOP BYTE FROM QUEUE
-	PUSH 	AF			; STORE IT
-	LD	HL,KB_QUEUE		; GET POINTER TO QUEUE
-GET_KEY_LOOP:				;
-	INC	HL			; POINT TO NEXT VALUE IN QUEUE
-	LD	A,(HL)			; GET VALUE
-	DEC 	HL			;
-	LD	(HL),A			; MOVE IT UP ONE
-	INC	HL			;
-	DJNZ	GET_KEY_LOOP		; LOOP UNTIL DONE
-	LD	A,(KB_QUEUE_PTR)	; DECREASE QUEUE POINTER BY ONE	
-	DEC	A			;
-	LD	(KB_QUEUE_PTR),A	;
-	POP	AF			; RESTORE VALUE
-	POP	HL			; RESTORE HL
-	POP	BC			; RESTORE BC
-	RET
-
-		
-		
-	
-	
 
 ;__VDUINIT__________________________________________________________________________________________
 ;
@@ -746,20 +812,20 @@ VDU_CRTSPACELOOP:			;
 ;	HL: WORD VALUE TO WRITE
 ;__________________________________________________________________________________________________			
 VDU_HL2WREG_A:
-	PUSH 	BC			; STORE BC
-	PUSH 	AF			; STORE AF
-    	CALL 	VDU_UPDATECHECK 	; WAIT FOR VDU TO BE READY
-    	POP 	AF			; RESTORE AF
-    	LD 	C, SY6545S           	; ADDRESS REGISTER
-    	OUT 	(C), A          	; SELECT REGISTER (A)
-    	INC 	C               	; NEXT WRITE IN REGISTER
-    	OUT 	(C), H          	; WRITE H TO SELECTED REGISTER
-    	DEC 	C               	; NEXT WRITE SELECT REGISTER
-    	INC 	A               	; INCREASE REGISTER NUMBER
-    	OUT 	(C), A          	; SELECT REGISTER (A+1)
-    	INC 	C              		; NEXT WRITE IN REGISTER
-    	OUT 	(C), L          	; WRITE L TO SELECTED REGISTER
-    	POP 	BC			; RESTORE BC
+	PUSH 	BC		; STORE BC
+;	PUSH 	AF		; STORE AF
+;    	CALL 	VDU_UPDATECHECK ; WAIT FOR VDU TO BE READY
+;    	POP 	AF		; RESTORE AF
+    	LD 	C, SY6545S	; ADDRESS REGISTER
+    	OUT 	(C), A		; SELECT REGISTER (A)
+    	INC 	C		; NEXT WRITE IN REGISTER
+    	OUT 	(C), H		; WRITE H TO SELECTED REGISTER
+    	DEC 	C		; NEXT WRITE SELECT REGISTER
+    	INC 	A		; INCREASE REGISTER NUMBER
+    	OUT 	(C), A		; SELECT REGISTER (A+1)
+    	INC 	C		; NEXT WRITE IN REGISTER
+    	OUT 	(C), L		; WRITE L TO SELECTED REGISTER
+    	POP 	BC		; RESTORE BC
     	RET
 
 ;__VDU_UPDATECHECK_________________________________________________________________________________
@@ -767,9 +833,9 @@ VDU_HL2WREG_A:
 ; 	WAIT FOR VDU TO BE READY
 ;__________________________________________________________________________________________________			
 VDU_UPDATECHECK:
-    	IN 	A,(SY6545S)          	; READ ADDRESS/STATUS REGISTER
+   	IN 	A,(SY6545S)          ; READ ADDRESS/STATUS REGISTER
     	BIT 	7,A             	; IF BIT 7 = 1 THAN AN UPDATE STROBE HAS OCCURED
-    	RET 	NZ			;
+    	RET 	NZ
     	JR 	VDU_UPDATECHECK  	; WAIT FOR READY
 
 VDU_INIT6845:
@@ -784,7 +850,7 @@ VDU_INIT6845:
 	.DB	01EH			; R4 VERTICAL TOTAL (TOTAL CHARS IN A FRAME -1)
 	.DB	002H			; R5 VERTICAL TOTAL ADJUST (
 	.DB	018H			; R6 VERTICAL DISPLAYED (24 ROWS)
-	.DB	01CH			; R7 VERTICAL SYNC
+	.DB	01AH			; R7 VERTICAL SYNC
 	.DB	078H			; R8 MODE	B7=0 TRANSPARENT UPDATE DURING BLANKING
 					;		B6=1 PIN 34 IS UPDATE STROBE
 					;		B5=1 DELAY CURSOR 1 CHARACTER
@@ -1000,529 +1066,6 @@ VDU_PUTCHAR1:				;
 ;	RET
 		
 
-;__KB_INITIALIZE___________________________________________________________________________________
-;
-; 	INITIALISE - CLEAR SOME LOCATIONS AND SEND A RESET TO THE KEYBOARD
-;__________________________________________________________________________________________________			   	   	
-KB_INITIALIZE:
-	CALL 	KB_SETPORTC		; SETS PORT C SO CAN INPUT AND OUTPUT
-	CALL 	KB_RESET		; RESET TO THE KEYBOARD
-	LD 	A,200			; 1 SECOND DELAY AS KEYBOARD SENDS STUFF BACK WHEN RESET
-	CALL 	KB_DELAY		; IGNORE ANYTHING BACK AFTER A RESET
-	LD	A,0			; EMPTY KB QUEUE
-	LD	(KB_QUEUE_PTR),A	; 
-	RET
-
-
-;__KB_RESET________________________________________________________________________________________
-;
-; 	RESET THE KEYBOARD
-;__________________________________________________________________________________________________			   	   	
-KB_RESET:
-	CALL 	KB_DATAHIGH		;
-	CALL 	KB_CLOCKHIGH		;
-	LD 	B,255			;
-SF1:	DJNZ 	SF1			;
-	CALL 	KB_CLOCKLOW		; STEP 1
-	LD 	B,255			;
-SF2:	DJNZ 	SF2			;
-	CALL 	KB_DATALOW		; STEP 2
-	CALL 	KB_CLOCKHIGH		; STEP 3
-	CALL 	KB_WAITCLOCKLOW		; STEP 4
-	LD	B,9			; 8 DATA BITS + 1 PARITY BIT LOW
-SF3:	PUSH 	BC			;
-	CALL 	KB_DATAHIGH		; STEP 5
-	CALL 	KB_WAITCLOCKHIGH	; STEP 6
-	CALL 	KB_WAITCLOCKLOW		; STEP 7
-	POP 	BC			;
-	DJNZ 	SF3			;
-	CALL 	KB_DATAHIGH		; STEP9
-	CALL 	KB_WAITCLOCKLOW		; STEP 10 COULD READ THE ACK BIT HERE IF WANT TO
-	CALL 	KB_WAITCLOCKHIGH	; STEP 11
-	LD 	B,255			;
-SF4:	DJNZ 	SF4			; FINISH UP DELAY
-	RET
-
-;__KB_SETPORTC_____________________________________________________________________________________
-;
-; 	SETUP PORT C OF 8255 FOR KEYBOARD
-;__________________________________________________________________________________________________			   	   	
-KB_SETPORTC:
-	LD 	A,10000010B		; A=OUT B=IN, C HIGH=OUT, CLOW=OUT
-	OUT 	(VPPICONT),A		; PPI CONTROL PORT
-	LD 	A,00000000B		; PORT A TO ZERO AS NEED THIS FOR COMMS TO WORK
-	OUT	(VPPIA),A		; PPI PORT A
-	CALL 	KB_DATAHIGH		;
-	CALL 	KB_CLOCKHIGH		;
-	LD 	A,0			;
-	LD 	(CAPSLOCK),A		; SET CAPSLOCK OFF TO START
-	LD 	(CTRL),A		; CONTROL OFF
-	LD 	(NUMLOCK),A		; NUMLOCK OFF
-	RET
-;_________________________________________________________________________________________________
-;
-; 	PORT C BIT ROUTINES
-;__________________________________________________________________________________________________			   	   	
-KB_PORTCBIT0HIGH:			;
-	LD 	A,01110001B		; SEE THE 8255 DATA SHEET
-	JP	KB_SETBITS		;
-KB_PORTCBIT1HIGH:			;
-	LD 	A,01110011B		; SEE THE 8255 DATA SHEET
-	JP	KB_SETBITS		;
-KB_PORTCBIT2HIGH:			;
-	LD 	A,01110101B		; SEE THE 8255 DATA SHEET
-	JP	KB_SETBITS		;
-KB_PORTCBIT3HIGH:			;
-	LD 	A,01110111B		; SEE THE 8255 DATA SHEET
-	JP	KB_SETBITS		;
-KB_PORTCBIT0LOW:			;
-	LD 	A,01110000B		; SEE THE 8255 DATA SHEET
-	JP	KB_SETBITS		;
-KB_PORTCBIT1LOW:			;
-	LD 	A,01110010B		; SEE THE 8255 DATA SHEET
-	JP	KB_SETBITS		;
-KB_PORTCBIT2LOW:			;
-	LD 	A,01110100B		; SEE THE 8255 DATA SHEET
-	JP	KB_SETBITS		;
-KB_PORTCBIT3LOW:			;
-	LD 	A,01110110B		; SEE THE 8255 DATA SHEET
-	JP	KB_SETBITS		;
-KB_DATAHIGH:
-KB_PORTCBIT4HIGH:			;
-	LD 	A,01111001B		; SEE THE 8255 DATA SHEET
-	JP	KB_SETBITS		;
-KB_DATALOW:				;
-KB_PORTCBIT4LOW:			;
-	LD 	A,01111000B		; SEE THE 8255 DATA SHEET
-	JP	KB_SETBITS		;
-KB_CLOCKHIGH:				;
-KB_PORTCBIT5HIGH:			;
-	LD 	A,01111011B		; BIT 5 HIGH
-	JP	KB_SETBITS		;
-KB_CLOCKLOW:				;
-PORTCBIT5LOW:				;
-	LD 	A,01111010B		;
-KB_SETBITS:				;
-	OUT 	(VPPICONT),A		;
-	RET				;
-
-
-
-;__KB_WAITCLOCKLOW_________________________________________________________________________________
-;
-; WAITCLOCKLOW SAMPLES DATA BIT 0, AND WAITS TILL
-; IT GOES LOW, THEN RETURNS
-; ALSO TIMES OUT AFTER 0 001 SECONDS
-; USES A, CHANGES B
-;__________________________________________________________________________________________________			   	   	
-KB_WAITCLOCKLOW:
-	LD 	B,255		; FOR TIMEOUT COUNTER
-WL1:	IN 	A,(VPPIB)	; GET A BYTE FROM PORT B
-	BIT 	1,A		; TEST THE CLOCK BIT
-	RET 	Z		; EXIT IF IT WENT LOW
-	DJNZ 	WL1		; LOOP B TIMES
-	RET
-
-	
-;__KB_WAITCLOCKHIGH_________________________________________________________________________________
-;
-; WAITCLOCKHIGH SAMPLES DATA BIT 0, AND WAITS TILL
-; IT GOES HIGH, THEN RETURNS
-; ALSO TIMES OUT AFTER 0 001 SECONDS
-; USES A, CHANGES B
-;__________________________________________________________________________________________________			   	   	
-KB_WAITCLOCKHIGH:	
-	LD 	B,255		; FOR TIMEOUT COUNTER
-WH1:	IN 	A,(VPPIB)	; GET A BYTE FROM PORT B
-	BIT 	1,A		; TEST THE CLOCK BIT
-	RET 	NZ		; EXIT IF IT WENT HIGH
-	DJNZ 	WH1		; LOOP B TIMES
-	RET
-
-;__KB_DELAY________________________________________________________________________________________
-;
-; PASS A - DELAY IS B*0 005 SECONDS, BCDEHL ALL PRESERVED
-;__________________________________________________________________________________________________			   	   	
-KB_DELAY:	
-	PUSH 	BC		; STORE ALL VARIABLES
-	PUSH 	DE		;
-	PUSH 	HL		;
-	LD 	B,A		; PUT THE VARIABLE DELAY IN B
-	LD 	DE,1		;
-LOOP1:	LD 	HL,740		; ADJUST THIS VALUE FOR YOUR CLOCK 1481=3 68MHZ, 3219=8MHZ (TEST WITH A=1000=10 SECS)
-LOOP2:	SBC 	HL,DE		; HL-1
-	JR 	NZ,LOOP2	;
-	DJNZ 	LOOP1		;
-	POP 	HL		; RESTORE VARIABLES
-	POP 	DE		;
-	POP 	BC		;
-	RET			;
-
-
-;__KB_PROCESS______________________________________________________________________________________
-;
-;  A=0 IF WANT TO KNOW IF A BYTE IS AVAILABLE, AND A=1 TO ASK FOR THE BYTE
-;__________________________________________________________________________________________________			   	   	
-KB_PROCESS:	
-	CALL	SKIP		; DON'T TEST EVERY ONE AS TAKES TIME
-	OR	A		; IS IT ZERO
-	RET	Z		; RETURN IF ZERO
- 	CALL	KB_WAITBYTE	; TEST KEYBOARD  TIMES OUT AFTER A BIT
-	CALL 	KB_DECODECHAR	; RETURNS CHAR OR 0 FOR THINGS LIKE KEYUP, SOME RETURN DIRECTLY TO CP/M
-	RET			; RETURN TO CP/M
-
-	
-;-----------------------------------------------
-; CPM CALLS THE KEYBOARD QUITE FREQUENTLY  IF A KEYBOARD WAS LIKE A UART WHICH CAN BE CHECKED
-; WITH ONE INSTRUCTION, THAT WOULD BE FINE  BUT CHECKING A KEYBOARD INVOLVES PUTTING THE CLOCK LINE LOW
-; THEN WAITING SOME TIME FOR A POSSIBLE REPLY, THEN READING IN BITS WITH TIMEOUTS AND THEN RETURNING
-; THIS SLOWS DOWN A LOT OF CP/M PROCESSES, EG TRY TYPE MYPROG AND PRINTING OUT TEXT
-SKIP:
-	LD	B,0		;
-	LD 	A,(SKIPCOUNT)	;
-	DEC	A		; SUBTRACT 1
-	LD	(SKIPCOUNT),A	; STORE IT BACK
-	CP 	0		;
-	JP	NZ,SK1		; WORDSTAR IS VERY SLOW EVEN TRIED A VALUE OF 5 TO 200 HERE
-	LD	A,200		; ONLY ACT ON EVERY N CALLS - BIGGER=BETTER BECAUSE THIS SUB IS QUICKER THAN READBITS
-	LD	(SKIPCOUNT),A	; RESET COUNTER
-	LD 	B,1		; FLAG TO SAY RESET COUNTER
-SK1:				;
-	LD	A,B		; RETURN THE VALUE IN A
-	RET
-
-	
-;__KB_DECODECHAR____________________________________________________________________________________
-;
-; DECODE CHARACTER PASS A AND PRINTS OUT THE CHAR
-; ON THE LCD SCREEN
-;__________________________________________________________________________________________________			   	   	
-KB_DECODECHAR:
-	CP	0		; IS IT ZERO
-	RET	Z		; RETURN IF A ZERO - NO NEED TO DO ANYTHING
-	CP 	0F0H		; IS A KEY UP (NEED TO DO SPECIAL CODE FOR SHIFT)
-	JP 	Z,DECKEYUP	; IGNORE CHAR UP
-	CP	0E0H		; TWO BYTE KEYPRESSES
-	JP 	Z,TWOBYTE	;
-	CP 	058H		; CAPS LOCK SO TOGGLE
-	JP 	Z,CAPSTOG	;
-	CP	12H		; SHIFT (DOWN, BECAUSE UP WOULD BE TRAPPED BY 0F ABOVE)
-	JP 	Z,SHIFTDOWN	;
-	CP	59H		; OTHER SHIFT KEY
-	JP 	Z,SHIFTDOWN	;
-	CP	014H		; CONTROL KEY
-	JP 	Z,CONTROLDOWN	;
-	CP	05AH		; ENTER KEY
-	JP	Z,RETURN	;
-	CP	066H		; BACKSPACE KEY
-	JP	Z,BACKSPACE	;
-	CP	0DH		; TAB KEY
-	JP 	Z,TABKEY	;
-	CP	076H		; ESCAPE KEY
-	JP	Z,ESCAPE	;
-	LD 	C,A		;
-	LD 	B,0		; ADD BC TO HL
-	LD 	HL,NORMALKEYS	; OFFSET TO ADD
-	ADD 	HL,BC		;
-	JP	TESTCONTROL	; IS THE CONTROL KEY DOWN?
-DC1:	LD 	A,(CAPSLOCK)	;
-	CP 	0		; IS IT 0, IF SO THEN DON'T ADD THE CAPS OFFSET
-	JR 	Z,DC2		;
-	LD 	C,080H		; ADD ANOTHER 50H TO SMALLS TO GET CAPS
-	ADD 	HL,BC		;
-DC2:	LD 	A,(HL)		;
-	CALL	KB_ENQUEUE	; STORE ON KB QUEUE
-	RET			;
-TESTCONTROL:
-	LD 	A,(CTRL)	;
-	CP 	0		; IS CONTROL BEING HELD DOWN?
-	JP	Z,DC1		; NO SO GO BACK TO TEST CAPS LOCK ON
-	LD	A,(HL)		; GET THE LETTER, SHOULD BE SMALLS 
-	SUB	96		; A=97 SO SUBTRACT 96 A=1=^A
-	CALL	KB_ENQUEUE	; STORE ON KB QUEUE
-	RET			; RETURN INSTEAD OF THE RET AFTER DC2
-TABKEY:				;
-	LD 	A,9		;
-	CALL	KB_ENQUEUE	; STORE ON KB QUEUE
-	RET			;TAB
-BACKSPACE:			;
-	LD	A,8		; BACKSPACE
-	CALL	KB_ENQUEUE	; STORE ON KB QUEUE
-	RET			;
-ESCAPE:				;
-	LD	A,27		;
-	CALL	KB_ENQUEUE	; STORE ON KB QUEUE
-	RET			;
-RETURN:				;
-	LD	A,13		; CARRIAGE RETURN
-	CALL	KB_ENQUEUE	; STORE ON KB QUEUE
-	RET			;
-DECKEYUP:
-	CALL KB_WAITBYTE	; IGNORE KEY UP THROW AWAY THE CHARACTER UNLESS A SHIFT 
-	CP	012H		; IS IT A SHIFT
-	JP 	Z,SHIFTUP	;
-	CP	59H		; OTHER SHIFT KEY
-	JP	Z,SHIFTUP	;
-	CP	014H		; CONTROL UP
-	JP 	Z,CONTROLUP	; CONTROL UP
-	LD	A,0		; NOTHING CAPTURED SO SEND BACK A ZERO 
-	RET
-TWOBYTE:; ALREADY GOT EO SO GET THE NEXT CHARACTER
-	CALL 	KB_WAITBYTE
-	CP	0F0H		; SEE THE NOTES - KEYUP FOR E0 KEYS IS EO F0 NN NOT F0 EO!!
-	JP	Z,TWOBYTEUP	;
-	CP	071H		; DELETE
-	JP	Z,DELETEKEY	;
-	CP	05AH		; RETURN ON NUMBER PAD
-	JP	Z,RETURNKEY	;
-	CP	072H		;
-	JP	Z,DOWNARROW	;
-	CP	074H		;
-	JP	Z,RIGHTARROW	;
-	CP	06BH		;
-	JP	Z,LEFTARROW	;
-	CP	075H		;
-	JP	Z,UPARROW	;
-	CP	070H		;
-	JP	Z,INSERT	;
-	CP	07DH		;
-	JP	Z,PAGEUP	;
-	CP	07AH		;
-	JP	Z,PAGEDOWN	;
-	CP	06CH		;
-	JP	Z,HOME		;
-	CP	069H		;
-	JP	Z,END		;
-	LD 	A,0		; RETURNS NOTHING
-	RET
-TWOBYTEUP:			;EXPECT A BYTE AND IGNORE IT
-	CALL	KB_WAITBYTE	;
-	LD	A,0		;
-	RET			;
-HOME:				;
-	LD	A,1BH		; ESC
-	CALL	KB_ENQUEUE	; STORE ON KB QUEUE
-	LD	A,'?'		; ?
-	CALL	KB_ENQUEUE	; STORE ON KB QUEUE
-	LD	A,'W'		; W
-	CALL	KB_ENQUEUE	; STORE ON KB QUEUE
-	RET			;
-END:				;
-	LD	A,1BH		; ESC
-	CALL	KB_ENQUEUE	; STORE ON KB QUEUE
-	LD	A,'?'		; ?
-	CALL	KB_ENQUEUE	; STORE ON KB QUEUE
-	LD	A,'Q'		; Q
-	CALL	KB_ENQUEUE	; STORE ON KB QUEUE
-	RET			;
-DOWNARROW:			;
-	LD	A,1BH		; ESC
-	CALL	KB_ENQUEUE	; STORE ON KB QUEUE
-	LD	A,'B'		; B
-	CALL	KB_ENQUEUE	; STORE ON KB QUEUE
-	RET			;
-RIGHTARROW:			;
-	LD	A,1BH		; ESC
-	CALL	KB_ENQUEUE	; STORE ON KB QUEUE
-	LD	A,'C'		; C
-	CALL	KB_ENQUEUE	; STORE ON KB QUEUE
-	RET			;
-LEFTARROW:			;
-	LD	A,1BH		; ESC
-	CALL	KB_ENQUEUE	; STORE ON KB QUEUE
-	LD	A,'D'		; D
-	CALL	KB_ENQUEUE	; STORE ON KB QUEUE
-	RET			;
-UPARROW:			;
-	LD	A,1BH		; ESC
-	CALL	KB_ENQUEUE	; STORE ON KB QUEUE
-	LD 	A,'A'		; A
-	CALL	KB_ENQUEUE	; STORE ON KB QUEUE
-	RET			;	
-INSERT:				;
-	LD	A,1BH		; ESC
-	CALL	KB_ENQUEUE	; STORE ON KB QUEUE
-	LD	A,'?'		; ?
-	CALL	KB_ENQUEUE	; STORE ON KB QUEUE
-	LD	A,'P'		; P
-	CALL	KB_ENQUEUE	; STORE ON KB QUEUE
-	RET			;
-PAGEUP:				;
-	LD	A,1BH		; ESC
-	CALL	KB_ENQUEUE	; STORE ON KB QUEUE
-	LD	A,'?'		; ?
-	CALL	KB_ENQUEUE	; STORE ON KB QUEUE
-	LD	A,'Y'		; Y
-	CALL	KB_ENQUEUE	; STORE ON KB QUEUE
-	RET			;
-PAGEDOWN:			;
-	LD	A,1BH		; ESC
-	CALL	KB_ENQUEUE	; STORE ON KB QUEUE
-	LD	A,'?'		; ?
-	CALL	KB_ENQUEUE	; STORE ON KB QUEUE
-	LD	A,'S'		; S
-	CALL	KB_ENQUEUE	; STORE ON KB QUEUE
-	RET			;
-CONTROLDOWN:			; SAME CODE AS SHIFTDOWN BUT DIFF LOCATION
-	LD 	A,0FFH		;
-	LD	(CTRL),A	; CONTROL DOWN
-	LD	A,0		;
-	RET			;
-CONTROLUP:			; CONTROL KEY UP SEE SHIFT FOR EXPLANATION
-	LD	A,0		;
-	LD 	(CTRL),A	;
-	LD 	A,0		;
-	RET			;
-RETURNKEY:			;
-	LD 	A,13		;
-	CALL	KB_ENQUEUE	; STORE ON KB QUEUE
-	RET			;
-DELETEKEY:			;
-	LD 	A,07FH		; DELETE KEY VALUE THAT CP/M USES
-	CALL	KB_ENQUEUE	; STORE ON KB QUEUE
-	RET			;
-CAPSTOG:			;
-  	LD 	A,(CAPSLOCK)	;
-	XOR 	11111111B	; SWAP ALL THE BITS
-	LD 	(CAPSLOCK),A	;
-	LD	A,0		; RETURNS NOTHING
-	RET			;
-SHIFTDOWN:			; SHIFT IS SPECIAL - HOLD IT DOWN AND IT AUTOREPEATS
-				; SO ONCE IT IS DOWN, TURN CAPS ON AND IGNORE ALL FURTHER SHIFTS
-				; ONLY AN F0+SHIFT TURNS CAPS LOCK OFF AGAIN
-	LD 	A,0FFH		;
-	LD 	(CAPSLOCK),A	;
-	LD 	A,0		; RETURNS NOTHING
-	RET			;
-SHIFTUP:			; SHIFTUP TURNS OFF CAPS LOCK DEFINITELY
-	LD 	A,0		;
-	LD 	(CAPSLOCK),A	;
-	LD 	A,0		; RETURNS NOTHING
-	RET			;
-
-;__KB_ENQUEUE______________________________________________________________________________________
-;
-;  STORE A BYTE IN THE KEYBOARD QUEUE 
-;  A: BYTE TO ENQUEUE
-;__________________________________________________________________________________________________			   	   		
-KB_ENQUEUE:
-	PUSH	DE		; STORE DE
-	PUSH	HL		; STORE HL	
-	PUSH	AF		; STORE VALUE
-	LD	A,(KB_QUEUE_PTR); PUT QUEUE POINTER IN A
-	CP	15		; IS QUEUE FULL
-	JP	P,KB_ENQUEUE_AB	; YES, ABORT	
-	LD	HL,KB_QUEUE	; GET QUEUE POINTER
-	PUSH	HL		; MOVE HL TO BC
-	POP	BC		; 
-	LD	H,0		; ZERO OUT H
-	LD	L,A		; PLACE QUEUE POINTER IN L
-	ADD	HL,BC		; POINT HL AT THE NEXT LOACTION TO ADD VALUE
-	POP	AF		; RESTORE VALUE
-	LD	(HL),A		; ENQUEUE VALUE
-	LD	A,(KB_QUEUE_PTR); GET QUEUE POINTER
-	INC	A		; INC IT
-	LD	(KB_QUEUE_PTR),A ;STORE QUEUE POINTER
-KB_ENQUEUE_AB:
-	POP	HL		; RESTORE HL
-	POP	DE		; RESTORE DE
-	RET
-	
-	
-;__KB_WAITBYTE_____________________________________________________________________________________
-;
-; WAIT FOR A BYTE - TESTS A NUMBER OF TIMES IF THERE IS A KEYBOARD INPUT,
-; OVERWRITES ALL REGISTERS, RETURNS BYTE IN A
-;__________________________________________________________________________________________________			   	   		
-KB_WAITBYTE:	
-	CALL	KB_CLOCKHIGH	; TURN ON KEYBOARD
-	LD 	HL,500		; NUMBER OF TIMES TO CHECK 200=SLOW TYPE
-				; 10=ERROR, 25 ?ERROR 50 OK - 
-				; THIS DELAY HAS TO BE THERE OTHERWISE WEIRD KEYUP ERRORS
-WB1:	PUSH 	HL		; STORE COUNTER
-	CALL 	KB_READBITS	; TEST FOR A LOW ON THE CLOCK LINE
-	POP 	HL		; GET THE COUNTER BACK
-	CP	0		; TEST FOR A ZERO BACK FROM READBITS
-	JR	NZ,WB2		; IF NOT A ZERO THEN MUST HAVE A BYTE IE A KEYBOARD PRESS
-	LD	DE,1		; LOAD WITH 1
-	SBC 	HL,DE		; SUBTRACT 1
-	JR	NZ,WB1		; LOOP WAITING FOR A RESPONSE
-WB2:	PUSH 	AF		; STORE THE VALUE IN A
-	CALL 	KB_CLOCKLOW	; TURN OFF KEYBOARD
-	POP AF			; GET BACK BYTE AS CLOCKLOW ERASED IT
-	RET
-
-;__KB_READBITS_____________________________________________________________________________________
-;
-; READBITS READS 11 BITS IN FROM THE KEYBOARD
-; FIRST BIT IS A START BIT THEN 8 BITS FOR THE BYTE
-; THEN A PARITY BIT AND A STOP BIT
-; RETURNS AFTER ONE MACHINE CYCLE IF NOT LOW
-; USES A, B,D, E 
-; RETURNS A=0 IF NO DATA, A= SCANCODE (OR PART THEREOF)
-;__________________________________________________________________________________________________			   	   		
-KB_READBITS:
-	IN 	A,(VPPIB)
-	BIT 	1,A		; TEST THE CLOCK BIT
-	JR 	Z,R1		; IF LOW THEN START THE CAPTURE
-	LD 	A,0		; RETURNS A=0 IF NOTHING
-	RET			;
-R1:	CALL 	KB_WAITCLOCKHIGH; IF GETS TO HERE THEN MUST BE LOW SO WAIT TILL HIGH
-	LD 	B,8		; SAMPLE 8 TIMES
-	LD 	E,0		; START WITH E=0
-R2:	LD 	D,B		; STORE BECAUSE WAITCLOCKHIGH DESTROYS
-	CALL 	KB_WAITCLOCKLOW	; WAIT TILL CLOCK GOES LOW
-	IN 	A,(VPPIB)	; SAMPLE THE DATA LINE
-	RRA			; MOVE THE DATA BIT INTO THE CARRY REGISTER
-	LD 	A,E		; GET THE BYTE WE ARE BUILDING IN E
-	RRA			; MOVE THE CARRY BIT INTO BIT 7 AND SHIFT RIGHT
-	LD 	E,A		; STORE IT BACK  AFTER 8 CYCLES 1ST BIT READ WILL BE IN B0
-	CALL 	KB_WAITCLOCKHIGH; WAIT TILL GOES HIGH
-	LD 	B,D		; RESTORE FOR LOOP
-	DJNZ 	R2		; DO THIS 8 TIMES
-	CALL 	KB_WAITCLOCKLOW	; GET THE PARITY BIT
-	CALL 	KB_WAITCLOCKHIGH;
-	CALL 	KB_WAITCLOCKLOW	; GET THE STOP BIT
-	CALL 	KB_WAITCLOCKHIGH;	
-	LD 	A,E		; RETURNS WITH ANSWER IN A
-	RET
-	
-NORMALKEYS:
-	; THE TI CHARACTER CODES, OFFSET FROM LABEL BY KEYBOARD SCAN CODE
-	.DB	$00, $00, $00, $00, $00, $00, $00, $00 
-	.DB	$00, $00, $00, $00, $00, $09, "`", $00	; $09=TAB
-	.DB	$00, $00, $00, $00, $00, "q", "1", $00
-	.DB	$00, $00, "z", "s", "a", "w", "2", $00
-	.DB	$00, "c", "x", "d", "e", "4", "3", $00
-	.DB	$00, " ", "v", "f", "t", "r", "5", $00
-	.DB	$00, "n", "b", "h", "g", "y", "6", $00 
-	.DB	$00, $00, "m", "j", "u", "7", "8", $00 
-	.DB	$00, ",", "k", "i", "o", "0", "9", $00 
-	.DB	$00, ".", "/", "l", ";", "p", "-", $00
-	.DB	$00, $00, $27, $00, "[", "=", $00, $00 	; $27=APOSTROPHE
-	.DB	$00, $00, $00, "]", $00, $5C, $00, $00	; $5C=BACKSLASH
-	.DB	$00, $00, $00, $00, $00, $00, $00, $00
-	.DB	$00, "1", $00, "4", "7", $00, $00, $00
-	.DB	"0", ".", "2", "5", "6", "8", $00, $00
-	.DB	$00, "+", "3", "-", "*", "9", $00, $00
-
-SHIFTKEYS:
-	.DB	$00, $00, $00, $00, $00, $00, $00, $00
-	.DB	$00, $00, $00, $00, $00, 009, "~", $00	; $09=TAB
-	.DB	$00, $00, $00, $00, $00, "Q", "!", $00
-	.DB	$00, $00, "Z", "S", "A", "W", "@", $00
-	.DB	$00, "C", "X", "D", "E", "$", "#", $00
-	.DB	$00, " ", "V", "F", "T", "R", "%", $00
-	.DB	$00, "N", "B", "H", "G", "Y", "^", $00
-	.DB	$00, $00, "M", "J", "U", "&", "*", $00
-	.DB	$00, "<", "K", "I", "O", ")", "(", $00
-	.DB	$00, ">", "?", "L", ":", "P", "_", $00
-	.DB	$00, $00, 034, $00, "{", "+", $00, $00	; $22=DBLQUOTE
-	.DB	$00, $00, $00, "}", $00, "|", $00, $00
-	.DB	$00, $00, $00, $00, $00, $00, $00, $00
-	.DB	$00, "1", $00, "4", "7", $00, $00, $00
-	.DB	"0", ".", "2", "5", "6", "8", $00, $00
-	.DB	$00, "+", "3", "-", "*", "9", $00, $00
 ;
 ;==================================================================================================
 ;   VDU DRIVER - DATA
@@ -1537,9 +1080,3 @@ TERMSTATE		.DB	0		; TERMINAL STATE
         					; 1 = ESC RCVD
 VDU_DISPLAYPOS		.DW 	0		; CURRENT DISPLAY POSITION
 VDU_DISPLAY_START	.DW 	0		; CURRENT DISPLAY POSITION
-CAPSLOCK		.DB	0		; location for caps lock, either 00000000 or 11111111
-CTRL			.DB	0		; location for ctrl on or off 00000000 or 11111111
-NUMLOCK			.DB	0		; location for num lock
-SKIPCOUNT		.DB	0		; only check some calls, speeds up a lot of cp/m
-KB_QUEUE		.FILL	16,0 		; 16 BYTE KB QUEUE
-KB_QUEUE_PTR		.DB	0		; POINTER TO QUEUE
