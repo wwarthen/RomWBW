@@ -1,0 +1,253 @@
+<HTML><HEAD><TITLE>Cpmtools 2.9 Executables for Windows Users</TITLE>
+</HEAD>
+
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#008000" ALINK="#008000" VLINK="#008000">
+<a name=topmenu></a><FONT FACE="Arial" SIZE=3><P>
+<center>
+<B>Welcome to the Wonderfully Ancient World of CP/M<br></B>
+Cpmtools 2.9 Executables for Windows Users<br></FONT>
+</center>
+<FONT FACE="Arial" SIZE=2 COLOR="#000000">
+<UL>
+<b>Getting Started</b><br>
+<br>
+<UL>
+<a href="./index.htm#intro">Introduction</a><br>
+<a href="./index.htm#licence">Licence</a><br>
+<a href="./index.htm#disclaimer">Disclaimer</a><br>
+</UL>
+<br>
+<a name=programs></a><b>Program Documentation</b><br>
+<br>
+<UL>
+<a href="./cpm.htm">CPM - CP/M disk and file system format</a><br>
+<br>
+
+<b>Entry Level Commands</b><br>
+<UL>
+<a href="./cpmchattr.htm">cpmchattr - change file attributes on CP/M files</a><br>
+<a href="./cpmchmod.htm">cpmchmod - change file mode on CP/M files</a><br>
+<a href="./cpmcp.htm">cpmcp - copy files from and to CP/M disks</a><br>
+<a href="./cpmls.htm">cpmls - list sorted contents of directory</a><br>
+<a href="./cpmrm.htm">cpmrm - remove files on CP/M disks</a><br>
+</UL>
+<br>
+<b>Expert Level Commands</b><br>
+<UL>
+<a href="./fsck.cpm.htm">fsck.cpm - check a CP/M file system</a><br>
+<a href="./fsed.cpm.htm">fsed.cpm - edit a CP/M file system</a><br>
+<a href="./mkfs.cpm.htm">mkfs.cpm - make a CP/M file system</a><br>
+</UL>
+</UL>
+<br>
+<a name=links></a><b>Downloads and Links</b><br>
+<br>
+<UL>
+<a href="./index.htm#unix">cpmtools source code</a><br>
+<a href="./index.htm#windows">cpmtools Native Win32 Executables</a><br>
+<a href="./index.htm#cygwin">cpmtools cygwin Win32 Executables</a><br>
+<a href="./index.htm#resources">CP/M Resources</a><br>
+</UL>
+</UL>
+<HR>
+<a name=intro></a><b>Introduction</b>
+<BR>
+<BR>
+<FONT FACE="Arial" SIZE=2 COLOR="#0000ff"><b>
+Cpmtools is a suite of command line utilities which allow access to
+CP/M file systems. It is available on many platforms. This document
+is targetted at the use of the cpmtools Win32 executables at
+the Windows command prompt by Windows users who know how to use
+command line utilities and disk images
+and who may not wish to create cpmtools executables from
+source code... just to use them.</b>
+</FONT>
+<BR>
+<BR>
+Cpmtools is copyright 1997-2008 Michael Haardt &lt;<A HREF="mailto:michael@moria.de">michael@moria.de</A>&gt; and
+copyright 2000, 2001 John Elliott &lt;<A HREF="mailto:jce@seasip.demon.co.uk">jce@seasip.demon.co.uk</A>&gt;.
+<BR>
+<BR>
+<a href="./index.htm#topmenu">&lt;&lt; Back to Top</a>
+<br>
+<br>
+<HR>
+<a name="licence"><b>Licence</b></a>
+<br>
+<br>
+Cpmtools is free software; you can redistribute it and/or modify it
+under the terms of
+the <a href="http://www.gnu.org/licenses/licenses.html#GPL">GNU General Public License</a> as
+published by the
+Free Software Foundation; either version 3 of the License, or (at your
+option) any later version.
+<br>
+<br>
+Cpmtools is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<a href="http://www.gnu.org/licenses/licenses.html#GPL">GNU General Public License</a> for more details.
+<BR><BR>
+You should receive a copy of
+the <a href="http://www.gnu.org/licenses/licenses.html#GPL">GNU General Public License</a> along
+with cpmtools.  If not, write to the Free Software Foundation, Inc.,
+59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+<br>
+<br>
+The contents of this document
+are either part of cpmtools or provide additional information about using cmptools.
+You can redistribute it under the terms of
+the <a href="http://www.gnu.org/licenses/licenses.html#GPL">GNU General Public License</a> as
+published by the Free Software Foundation; either version 3 of the License, or (at your
+option) any later version.
+<br>
+<br>
+<a href="./index.htm#topmenu">&lt;&lt; Back to Top</a>
+<br>
+<br>
+<HR>
+<a name="unix"></a><b>Downloads</b>
+<br>
+<br>
+The source for the <b>latest version of cpmtools</b> is available as
+a GNU zipped tape archive from:
+<br>
+<br>
+<b>
+<A HREF="http://www.moria.de/~michael/cpmtools/">http://www.moria.de/~michael/cpmtools/</a>
+</b>
+<br>
+<br>
+The cpmtools source used in cygwin to build both the Windows binary (Executable) versions of
+cpmtools 2.9 noted below is available from the
+<a href="http://www.cpm8680.com/">www.cpm8680.com Website</a> in a zip file format:
+<br>
+<br>
+<b>
+<a href="http://www.cpm8680.com/cpmtools/cpmtools-2.9.zip">http://www.cpm8680.com/cpmtools/cpmtools-2.9.zip</a>
+</b>
+<br>
+<br>
+<a name="windows"></a><b>For Windows Users</b> who do not wish to make working programs from source code, a compiled
+<b>Native Win32 Binary (Executable)</b> version of cpmtools 2.9 is available from the
+<a href="http://www.cpm8680.com/">www.cpm8680.com Website</a> in a zip file format:
+<br>
+<br>
+<b>
+<a href="http://www.cpm8680.com/cpmtools/cpmtools-2.9-Win32.zip">http://www.cpm8680.com/cpmtools/cpmtools-2.9-Win32.zip</a>
+</b>
+<br>
+<br>
+Just unzip with pathnames intact to the root of your local drive (usually C:)
+and open-up a cmd prompt in the \cpmtools directory (Windows XP and Vista users
+can click-on the cpmtools XP Shortcut)
+and you should be good to go. The document you are reading and the program description documents
+that it links to are included in the Windows zip file. To use them just click-on them from Windows explorer and
+in the \cpmtools\docs directory and
+they will load into your favorite web browser.
+<BR>
+<BR>
+<FONT FACE="Arial" SIZE=2 COLOR="#0000ff"><b>
+The distribution noted above has the following customizations:</b>
+<br>
+<br>
+<b>The default disk image format is apple-do</b>. This means that if you are working
+with Apple II DOS 3.3 order disk images you never need to include the -f apple-do
+format option when typing in your command line.
+<br>
+<br>
+<b>The diskdefs file is called \cpmtools\diskdefs</b>. This has been hardcoded
+into the executables. This means that you can add the \cpmtools directory
+to your PATH and the disk and disk image format definitions file will be found.
+Users of earlier versions of Windows than XP that support Win32 will need to open a command
+prompt and run \cpmtools\cpmtools.bat to set their PATH.
+<br>
+<br>
+<b>A Windows XP Shortcut has been added for Windows XP Users</b>. This should
+also work in Windows Vista. This means that Windows XP and Vista users can just
+click on this shortcut in Windows Explorer or the Shortcut can be copied to
+the desktop.
+</FONT>
+<BR>
+<BR>
+<a href="./index.htm#topmenu">&lt;&lt; Back to Top</a>
+<br>
+<br>
+<a name="cygwin"></a><b>For cygwin Users</b> who do not wish to make working programs from source code, a compiled
+<b>cygwin 5 Binary (Executable)</b> version of cpmtools 2.9 is available from the
+<a href="http://www.cpm8680.com/">www.cpm8680.com Website</a> in a zip file format:
+<br>
+<br>
+<b>
+<a href="http://www.cpm8680.com/cpmtools/cpmtools-2.9-cygwin.zip">http://www.cpm8680.com/cpmtools/cpmtools-2.9-cygwin.zip</a>
+</b>
+<br>
+<br>
+Outside cygwin just unzip with pathnames intact to the root of the drive that the cygwin
+version 5 directory is installed on (\cygwin is assumed). If you are doing this inside cygwin
+using zip and cygwin is installed on C:, then cd \cygdrive\c before un-zipping.
+<br>
+<br>
+The cygwin installation comes complete with the manpages but not the html manual.
+It overlays your cygwin installation so review the zip before installing.
+<BR>
+<BR>
+<FONT FACE="Arial" SIZE=2 COLOR="#0000ff"><b>
+The distribution noted above has the following customization:</b>
+<br>
+<br>
+<b>The default disk image format is apple-do</b>. This means that if you are working
+with Apple II DOS 3.3 order disk images you never need to include the -f apple-do
+format option when typing in your command line.
+<br>
+<br>
+Other than that, it is what you would get if you built from scratch then installed
+using "make install". If you wish to know more you should download
+the source as well.
+</FONT>
+<BR>
+<BR>
+<a href="./index.htm#topmenu">&lt;&lt; Back to Top</a>
+<br>
+<br>
+<HR>
+<a name="resources"><b>CP/M Resources</b></a>
+<BR>
+<BR>
+<a href="http://www.aztecmuseum.ca/index.htm#cpm">Aztec C CP/M compilers</a> for
+making programs in Windows, MS-DOS, and CP/M that will run in CP/M are available
+from the <a href="http://www.aztecmuseum.ca/">Aztec C Museum Website</a> for Fair Use and for
+free by hobbyists and enthusiasts. These are no longer commercially available and are offered
+with the permission of the Copyright holder.
+<br>
+<br>
+The <a href="http://www.aztecmuseum.ca/">Aztec C Museum Website</a> is only one of many free
+CP/M resources on the Internet <b>too numerous to mention</b> that can be used in conjunction with
+cpmtools. Some of these include:
+<br>
+<UL>
+<a href="http://www.apple2info.net/hardware/softcard/softcard.htm">The Microsoft Softcard</a><br>
+<a href="ftp://ftp.apple.asimov.net/pub/apple_II/images/cpm/">The Apple II CP/M Archives at ftp.apple.asimov.net</a><br>
+<a href="http://www.seasip.info/Cpm/index.html">John Elliot's CP/M Pages Site</a><br>
+<a href="http://www.cpm.z80.de/index.html">The Unofficial CP/M Website aka Gaby Chaudry's Site</a><br>
+<a href="http://www.cpm80.com/">Harte Technologies CP/M-80 Information and Download Page</a><br>
+<a href="http://www.retroarchive.org/cpm/">Commercial CP/M Software Archive</a><br>
+</UL>
+<a href="./index.htm#topmenu">&lt;&lt; Back to Top</a>
+<br>
+<br>
+<HR>
+<a name="disclaimer"><b>Caveat Emptor</b></a>
+<br>
+<br>
+This document was written and formatted by hand by <A HREF="mailto:bbuckels@mts.net">Bill Buckels</A>. Its
+contents are either part of cpmtools or provide additional information about using cmptools. It is targetted primarily
+at Windows users but most of it applies to all users of cpmtools.
+<br>
+<br>
+It is provided in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+or FITNESS FOR A PARTICULAR PURPOSE. In particular, Bill Buckels has no warranty
+obligations or liability resulting from its use in any way whatsoever. If you don't
+agree then don't read it.
+</FONT></BODY>
+</HTML>
