@@ -1,0 +1,290 @@
+"TASM 7000 Assembler.    "
+/****************************************************************************
+/* $Id: tasm70.tab 1.1 1993/07/31 01:12:40 toma Exp $
+/****************************************************************************
+/* Table for TMS7000 micros
+/*   Note that the table does not require the 'Rnn' nomenclature
+/* for reference of locations in the register file.  Any expression
+/* will do, the value of which indicates the register.  This is more
+/* flexible then making an entry like  "ADC R*,A".
+/* 
+/* TASM has trouble with the MOVD +(B),+ instruction so
+/*   we convert it to        MOVD +[B],+
+/*
+/*INSTR ARGS OPCODE BYTES MOD CLASS SHIFT OR */
+/*-------------------------------------------*/
+.ALTWILD+
+
+ADC  B,A    69 1 NOP   1
+ADC  %+,A   29 2 NOP   1
+ADC  %+,B   59 2 NOP   1
+ADC  %+,+   79 3 COMB  1
+ADC  +,A    19 2 NOP   1
+ADC  +,B    39 2 NOP   1
+ADC  +,+    49 3 COMB  1
+
+ADD  B,A    68 1 NOP   1
+ADD  %+,A   28 2 NOP   1
+ADD  %+,B   58 2 NOP   1
+ADD  %+,+   78 3 COMB  1
+ADD  +,A    18 2 NOP   1
+ADD  +,B    38 2 NOP   1
+ADD  +,+    48 3 COMB  1
+
+AND  B,A    63 1 NOP   1
+AND  %+,A   23 2 NOP   1
+AND  %+,B   53 2 NOP   1
+AND  %+,+   73 3 COMB  1
+AND  +,A    13 2 NOP   1
+AND  +,B    33 2 NOP   1
+AND  +,+    43 3 COMB  1
+
+ANDP A,+    83 2 NOP   1
+ANDP B,+    93 2 NOP   1
+ANDP %+,+   A3 3 COMB  1
+
+BTJO B,A,+  66 2 R1    1
+BTJO %+,A,+ 26 3 CREL  1
+BTJO %+,B,+ 56 3 CREL  1
+BTJO %+,+,+ 76 4 3REL  1
+BTJO +,A,+  16 3 CREL  1
+BTJO +,B,+  36 3 CREL  1
+BTJO +,+,+  46 4 3REL  1
+
+
+BTJOP   A,+,+    86 3 CREL 1
+BTJOP   B,+,+    96 3 CREL 1
+BTJOP   %+,+,+   A6 4 3REL 1
+
+BTJZ B,A,+  67 2 R1    1
+BTJZ %+,A,+ 27 3 CREL  1
+BTJZ %+,B,+ 57 3 CREL  1
+BTJZ %+,+,+ 77 4 3REL  1
+BTJZ +,A,+  17 3 CREL  1
+BTJZ +,B,+  37 3 CREL  1
+BTJZ +,+,+  47 4 3REL  1
+
+BTJZP   A,+,+    87 3 CREL 1
+BTJZP   B,+,+    97 3 CREL 1
+BTJZP   %+,+,+   A7 4 3REL 1
+
+BR      @+(B)    AC 3 SWAP 1
+BR      @+[B]    AC 3 SWAP 1
+BR      @+       8C 3 SWAP 1
+BR      *+       9C 2 NOP  1
+
+CALL    @+(B)    AE 3 SWAP 1
+CALL    @+[B]    AE 3 SWAP 1
+CALL    @+       8E 3 SWAP 1
+CALL    *+       9E 2 NOP  1
+
+CLR     A        B5 1 NOP  1
+CLR     B        C5 1 NOP  1
+CLR     +        D5 2 NOP  1
+
+CLRC    ""       B0 1 NOP  1
+
+CMP     B,A      6D 1 NOP  1
+CMP     %+,A     2D 2 NOP  1
+CMP     %+,B     5D 2 NOP  1
+CMP     %+,+     7D 3 COMB 1
+CMP     +,A      1D 2 NOP  1
+CMP     +,B      3D 2 NOP  1
+CMP     +,+      4D 3 COMB 1
+
+CMPA    @+(B)    AD 3 SWAP 1
+CMPA    @+[B]    AD 3 SWAP 1
+CMPA    @+       8D 3 SWAP 1
+CMPA    *+       9D 2 NOP  1
+
+DAC     B,A      6E 1 NOP  1
+DAC     %+,A     2E 2 NOP  1
+DAC     %+,B     5E 2 NOP  1
+DAC     %+,+     7E 3 COMB 1
+DAC     +,A      1E 2 NOP  1
+DAC     +,B      3E 2 NOP  1
+DAC     +,+      4E 3 COMB 1
+
+DEC     A        B2 1 NOP  1
+DEC     B        C2 1 NOP  1
+DEC     +        D2 2 NOP  1
+
+DECD    A        BB 1 NOP  1
+DECD    B        CB 1 NOP  1
+DECD    +        DB 2 NOP  1
+
+DINT    ""       06 1 NOP  1
+
+DJNZ    A,+      BA 2 R1   1
+DJNZ    B,+      CA 2 R1   1
+DJNZ    +,+      DA 3 CREL 1
+
+DSB     B,A      6F 1 NOP  1
+DSB     %+,A     2F 2 NOP  1
+DSB     %+,B     5F 2 NOP  1
+DSB     %+,+     7F 3 COMB 1
+DSB     +,A      1F 2 NOP  1
+DSB     +,B      3F 2 NOP  1
+DSB     +,+      4F 3 COMB 1
+
+EINT    ""       05 1 NOP  1
+
+IDLE    ""       01 1 NOP  1
+
+INC     A        B3 1 NOP  1
+INC     B        C3 1 NOP  1
+INC     +        D3 2 NOP  1
+
+INV     A        B4 1 NOP  1
+INV     B        C4 1 NOP  1
+INV     +        D4 2 NOP  1
+
+JMP     +        E0 2 R1   1
+
+JC      +        E3 2 R1   1
+JEQ     +        E2 2 R1   1
+JGE     +        E5 2 R1   1
+JGT     +        E4 2 R1   1
+JHS     +        E3 2 R1   1
+JL      +        E7 2 R1   1
+JN      +        E1 2 R1   1  /+ ??
+JNC     +        E7 2 R1   1
+JNE     +        E6 2 R1   1
+JNZ     +        E6 2 R1   1
+JP      +        E4 2 R1   1
+JPZ     +        E5 2 R1   1
+JZ      +        E2 2 R1   1
+
+LDA     @+(B)    AA 3 SWAP 1
+LDA     @+[B]    AA 3 SWAP 1
+LDA     @+       8A 3 SWAP 1
+LDA     *+       9A 2 NOP  1
+
+LDSP    ""       0D 1 NOP  1
+
+MOV     A,B      C0 1 NOP  1
+MOV     B,A      62 1 NOP  1
+MOV     A,+      D0 2 NOP  1
+MOV     B,+      D1 2 NOP  1
+MOV     %+,A     22 2 NOP  1
+MOV     %+,B     52 2 NOP  1
+MOV     %+,+     72 3 COMB 1
+MOV     +,A      12 2 NOP  1
+MOV     +,B      32 2 NOP  1
+MOV     +,+      42 3 COMB 1
+
+MOVD    %+[B],+  A8 4 CSWAP 1
+MOVD    %+,+     88 4 CSWAP 1
+MOVD    +,+      98 3 COMB 1
+
+MOVP    A,+      82 2 NOP  1
+MOVP    B,+      92 2 NOP  1
+MOVP    %+,+     A2 3 COMB 1
+MOVP    +,A      80 2 NOP  1
+MOVP    +,B      91 2 NOP  1
+
+MPY     B,A      6C 1 NOP   1
+MPY     %+,A     2C 2 NOP   1
+MPY     %+,B     5C 2 NOP   1
+MPY     %+,+     7C 3 COMB  1
+MPY     +,A      1C 2 NOP   1
+MPY     +,B      3C 2 NOP   1
+MPY     +,+      4C 3 COMB  1
+
+NOP     ""       00 1 NOP   1
+
+OR      B,A      64 1 NOP   1
+OR      %+,A     24 2 NOP   1
+OR      %+,B     54 2 NOP   1
+OR      %+,+     74 3 COMB  1
+OR      +,A      14 2 NOP   1
+OR      +,B      34 2 NOP   1
+OR      +,+      44 3 COMB  1
+
+ORP     A,+      84 2 NOP   1
+ORP     B,+      94 2 NOP   1
+ORP     %+,+     A4 3 COMB  1
+
+POP     A        B9 1 NOP   1
+POP     B        C9 1 NOP   1
+POP     ST       08 1 NOP   1
+POP     +        D9 2 NOP   1
+POPST   ""       08 1 NOP   1
+
+PUSH    A        B8 1 NOP   1
+PUSH    B        C8 1 NOP   1
+PUSH    ST       0E 1 NOP   1
+PUSH    +        D8 2 NOP   1
+PUSHST  ""       0E 1 NOP   1
+
+RETI    ""       0B 1 NOP   1
+
+RETS    ""       0A 1 NOP 1
+
+RL      A        BE 1 NOP   1
+RL      B        CE 1 NOP   1
+RL      +        DE 2 NOP   1
+
+RLC     A        BF 1 NOP   1
+RLC     B        CF 1 NOP   1
+RLC     +        DF 2 NOP   1
+
+RR      A        BC 1 NOP   1
+RR      B        CC 1 NOP   1
+RR      +        DC 2 NOP   1
+
+RRC     A        BD 1 NOP   1
+RRC     B        CD 1 NOP   1
+RRC     +        DD 2 NOP   1
+
+SBB     B,A      6B 1 NOP   1
+SBB     %+,A     2B 2 NOP   1
+SBB     %+,B     5B 2 NOP   1
+SBB     %+,+     7B 3 COMB  1
+SBB     +,A      1B 2 NOP   1
+SBB     +,B      3B 2 NOP   1
+SBB     +,+      4B 3 COMB  1
+
+SETC    ""       07 1 NOP   1
+
+STA     @+(B)    AB 3 SWAP 1
+STA     @+[B]    AB 3 SWAP 1
+STA     @+       8B 3 SWAP 1
+STA     *+       9B 2 NOP  1
+
+STSP    ""       09 1 NOP  1
+
+SUB     B,A      6A 1 NOP  1
+SUB     %+,A     2A 2 NOP  1
+SUB     %+,B     5A 2 NOP  1
+SUB     %+,+     7A 3 COMB 1
+SUB     +,A      1A 2 NOP  1
+SUB     +,B      3A 2 NOP  1
+SUB     +,+      4A 3 COMB 1
+
+SWAP    A        B7 1 NOP  1
+SWAP    B        C7 1 NOP  1
+SWAP    +        D7 2 NOP  1
+
+TRAP    +        FF 1 SUB  1
+
+TST     A        B0 1 NOP  1
+TSTA    ""       B0 1 NOP  1
+TST     B        C1 1 NOP  1
+TSTB    ""       C1 1 NOP  1
+
+XCHB    A        B6 1 NOP  1
+XCHB    +        D6 2 NOP  1
+
+XOR     B,A      65 1 NOP  1
+XOR     %+,A     25 2 NOP  1
+XOR     %+,B     55 2 NOP  1
+XOR     %+,+     75 3 COMB 1
+XOR     +,A      15 2 NOP  1
+XOR     +,B      35 2 NOP  1
+XOR     +,+      45 3 COMB 1
+
+XORP    A,+      85 2 NOP  1
+XORP    B,+      95 2 NOP  1
+XORP    %+,+     A5 3 COMB 1
+
