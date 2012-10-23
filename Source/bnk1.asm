@@ -12,16 +12,7 @@
 ; INCLUDE GENERIC STUFF
 ;
 #INCLUDE "std.asm"
-;
-;==================================================================================================
-;   BANK 1 ENTRY / JUMP TABLE
-;==================================================================================================
-;
-; THIS IS THE ENTRY DISPATCH POINT FOR BANK1
-;__________________________________________________________________________________________________
-;
-	JP	INITSYS
-	JP	BIOS_DISPATCH
+
 ;
 ;==================================================================================================
 ;   SYSTEM INITIALIZATION
@@ -87,6 +78,9 @@ INITSYS2:
 #IF (HDSKENABLE)
 	CALL	HDSK_INIT
 #ENDIF
+;
+	LD	DE,STR_BANNER
+	CALL	WRITESTR
 ;
 	RET
 ;
@@ -163,7 +157,7 @@ DIO_DISPATCH:
 	JR	NC,DIO_COMMON
 
 	; DISPATCH FUCNTION TO APPROPRIATE DRIVER
-	AND	$0F	; 
+	AND	$0F
 	
 	; HACK TO FILL IN HSTTRK AND HSTSEC
 	; BUT ONLY FOR READ/WRITE FUNCTION CALLS
@@ -225,8 +219,8 @@ DIO_GBA:
 ; DISK: SET BUFFER ADDRESS
 ;
 DIO_SBA:
-	BIT	7,H		; IS HIGH ORDER BIT SET?
-	CALL	Z,PANIC		; IF NOT, ADR IS IN LOWER 32K, NOT ALLOWED!!!
+	BIT	7,H			; IS HIGH ORDER BIT SET?
+	CALL	Z,PANIC			; IF NOT, ADR IS IN LOWER 32K, NOT ALLOWED!!!
 	LD	(DIOBUF),HL
 	XOR	A
 	RET
@@ -270,17 +264,17 @@ SYS_BNKCPY:
 	LD	A,C			; BANK SELECTION TO A
 	PUSH	IX
 	POP	BC			; BC = BYTE COUNT TO COPY
-	JP	$FF03			; JUST PASS CONTROL TO HBIOS STUB IN UPPER MEMORY
+	JP	HB_BNKCPY		; JUST PASS CONTROL TO HBIOS STUB IN UPPER MEMORY
 ;
 ; COMMON ROUTINE THAT IS CALLED BY CHARACTER IO DRIVERS WHEN
 ; AN IDLE CONDITION IS DETECTED (WAIT FOR INPUT/OUTPUT)
 ;
 CIO_IDLE:
-	LD	HL,IDLECOUNT	; POINT TO IDLE COUNT
-	DEC	(HL)		; 256 TIMES?
-	CALL	Z,IDLE		; RUN IDLE PROCESS EVERY 256 ITERATIONS
-	XOR	A		; SIGNAL NO CHAR READY
-	RET			; AND RETURN
+	LD	HL,IDLECOUNT		; POINT TO IDLE COUNT
+	DEC	(HL)			; 256 TIMES?
+	CALL	Z,IDLE			; RUN IDLE PROCESS EVERY 256 ITERATIONS
+	XOR	A			; SIGNAL NO CHAR READY
+	RET				; AND RETURN
 ;
 ;==================================================================================================
 ;   DEVICE DRIVERS
@@ -371,8 +365,6 @@ SIZ_HDSK	.EQU	$ - ORG_HDSK
 #DEFINE	DSKY_KBD
 #INCLUDE "util.asm"
 ;
-;;;;#INCLUDE "memmgr.asm"
-;
 ;==================================================================================================
 ;   BANK ONE GLOBAL DATA
 ;==================================================================================================
@@ -386,6 +378,12 @@ HSTTRK		.DW	0		; TRACK IN BUFFER
 HSTSEC		.DW	0		; SECTOR IN BUFFER
 ;
 DIOBUF		.DW	$FD00		; PTR TO 512 BYTE DISK XFR BUFFER
+;
+STR_BANNER	.DB	"N8VEM HBIOS v", BIOSVER, " ("
+VAR_LOC		.DB	VARIANT, "-"
+TST_LOC		.DB	TIMESTAMP, ")\r\n"
+		.DB	PLATFORM_NAME, DSKYLBL, VDULBL, FDLBL, IDELBL, PPIDELBL, 
+		.DB	SDLBL, PRPLBL, PPPLBL, HDSKLBL, "\r\n$"
 ;
 ;==================================================================================================
 ;   FILL REMAINDER OF BANK
@@ -408,23 +406,19 @@ HB_IMG	.EQU	$
 	.ORG	HB_LOC
 ;
 ;==================================================================================================
-;   HBIOS DISPATCH
+;   HBIOS INTERRUPT VECTOR TABLE
 ;==================================================================================================
 ;
-; DISPATCH JUMP TABLE FOR UPPER MEMORY HBIOS FUNCTIONS
+; AREA RESERVED FOR UP TO 16 INTERRUPT VECTOR ENTRIES (MODE 2)
 ;
-	JP	HB_INIT
-	JP	HB_BNKCPY
-;
-; MEMORY MANAGER
-;
-#INCLUDE "memmgr.asm"
+HB_IVT:
+	.FILL	20H,0FFH
 ;
 ;==================================================================================================
-;   HBIOS BOOT ROUTINE
+;   HBIOS INITIALIZATION
 ;==================================================================================================
 ;
-; SETUP RST 08 TO HANDLE MAIN BIOS FUNCTIONS
+; SETUP RST 08 VECTOR TO HANDLE MAIN BIOS FUNCTIONS
 ;
 HB_INIT:
 	LD	A,0C3H		; $C3 = JP
@@ -432,6 +426,10 @@ HB_INIT:
 	LD	HL,HB_ENTRY
 	LD	(9H),HL
 	RET
+;
+; MEMORY MANAGER
+;
+#INCLUDE "memmgr.asm"
 ;
 ;==================================================================================================
 ;   HBIOS BNKCPY ROUTINE
@@ -467,36 +465,34 @@ HB_BNKCPY2:
 ; ENTRY POINT FOR BIOS FUNCTIONS (TARGET OF RST 08)
 ;
 HB_ENTRY:
-	LD	(STACKSAV),SP	; SAVE ORIGINAL STACK FRAME
-	LD	SP,STACK	; SETUP NEW STACK FRAME
-
 	PGRAMF(1)		; MAP RAM PAGE 1 INTO LOWER 32K
 	
-	CALL	1003H		; CALL BANK 1 HBIOS FUNCTION DISPATCHER
+	LD	(HB_STKSAV),SP	; SAVE ORIGINAL STACK FRAME
+	LD	SP,HB_STACK	; SETUP NEW STACK FRAME
 
-	PUSH	AF		; SAVE AF (FUNCTION RETURN)
+	CALL	BIOS_DISPATCH	; CALL HBIOS FUNCTION DISPATCHER
+
+	PUSH	AF		; SAVE AF
 	PGRAMF(0)		; MAP RAM PAGE 0 INTO LOWER 32K
 	POP	AF		; RESTORE AF
 
-	LD	SP,(STACKSAV)	; RESTORE ORIGINAL STACK FRAME
+	LD	SP,(HB_STKSAV)	; RESTORE ORIGINAL STACK FRAME
 
 	RET			; RETURN TO CALLER
 ;
-; PRIVATE DATA
-;
-STACKSAV	.DW	0
-;
-; JUST FOR FUN, PRIVATE STACK IS LOCATED AT TOP OF MEMORY...
-;
-STACK		.EQU	0
-;
-;
+HB_STKSAV	.DW	0	; PREVIOUS STACK POINTER (SEE PROXY)
 ;
 HB_SLACK	.EQU	(HB_END - $)
-		.ECHO	"STACK space remaining: "
+		.ECHO	"HBIOS space remaining: "
 		.ECHO	HB_SLACK
 		.ECHO	" bytes.\n"
 ;
 		.FILL	HB_SLACK,0FFH
+;
+;==================================================================================================
+;   HBIOS STACK LIVES IN THE SLACK SPACE!!!
+;==================================================================================================
+;
+HB_STACK	.EQU	$ & 0FFFFH
 ;
 		.END

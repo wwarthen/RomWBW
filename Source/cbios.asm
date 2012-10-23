@@ -214,7 +214,7 @@ CONIO:
 ;
 	LD	A,(IOBYTE)	; GET IOBYTE
 	AND	$03		; ISOLATE RELEVANT IOBYTE BITS FOR CONSOLE
-	OR	$00		; PUT LOGICAL DEVICE IN BITS 2-3 (CON:=$00, RDR:=$04, PUN:=$08, LST:=$0B
+	OR	$00		; PUT LOGICAL DEVICE IN BITS 2-3 (CON:=$00, RDR:=$04, PUN:=$08, LST:=$0C
 	JP	CIO_DISP
 ;
 ;__________________________________________________________________________________________________			
@@ -262,7 +262,7 @@ PUNCHIO:
 	RLCA
 	RLCA
 	AND	$03		; ISOLATE RELEVANT IOBYTE BITS FOR PUN:
-	OR	$08		; PUT LOGICAL DEVICE IN BITS 2-3 (CON:=$00, RDR:=$04, PUN:=$08, LST:=$0B
+	OR	$08		; PUT LOGICAL DEVICE IN BITS 2-3 (CON:=$00, RDR:=$04, PUN:=$08, LST:=$0C
 	JP	CIO_DISP
 ;
 ;__________________________________________________________________________________________________			
@@ -288,7 +288,7 @@ READERIO:
 	RRCA			; SHIFT RELEVANT BITS TO BITS 0-1
 	RRCA
 	AND	$03		; ISOLATE RELEVANT IOBYTE BITS FOR RDR:
-	OR	$04		; PUT LOGICAL DEVICE IN BITS 2-3 (CON:=$00, RDR:=$04, PUN:=$08, LST:=$0B
+	OR	$04		; PUT LOGICAL DEVICE IN BITS 2-3 (CON:=$00, RDR:=$04, PUN:=$08, LST:=$0C
 	JP	CIO_DISP
 ;
 ;__________________________________________________________________________________________________			
@@ -310,8 +310,7 @@ CIOST:
 ;
 	OR	A		; SET FLAGS
 	RET	Z		; NO CHARACTERS WAITING (IST) OR OUTPUT BUF FULL (OST)
-	XOR	A
-	DEC	A		; $FF SIGNALS READY TO READ (IST) OR WRITE (OST)
+	OR	0FFH		; $FF SIGNALS READY TO READ (IST) OR WRITE (OST)
 	RET
 ;__________________________________________________________________________________________________
 SELDSK:
@@ -986,9 +985,7 @@ NUL_OUT:
 ;
 NUL_IST:
 NUL_OST:
-;	LD	A,$FF
-	XOR	A		; A=0
-	DEC	A		; A=$FF & NZ SET
+	OR	$FF		; A=$FF & NZ SET
 	RET
 ;
 ;==================================================================================================
@@ -1445,14 +1442,13 @@ STR_SEC		.DB	" SEC=$"
 ; DATA
 ;==================================================================================================
 ;
-STR_BANNER	.DB	"\r\n", OSLBL, " for ", PLATFORM_NAME, "\r\n"
-		.DB	"CBIOS v", BIOSVER, " ("
+STR_BANNER	.DB	OSLBL, " for ", PLATFORM_NAME, " (CBIOS v", BIOSVER, ")$"
 VAR_LOC		.DB	VARIANT
-		.DB	"-"
-TST_LOC		.DB	TIMESTAMP, ")", DSKYLBL, VDULBL, FDLBL, IDELBL, PPIDELBL, SDLBL, PRPLBL, PPPLBL, "\r\n$"
+TST_LOC		.DB	TIMESTAMP
+;
 STR_INITRAMDISK	.DB	"\r\nFormatting RAMDISK...$"
-STR_READONLY	.DB 	"\r\nCBIOS Error: Read Only Drive$"
-STR_STALE	.DB 	"\r\nCBIOS Error: Stale Drive$"
+STR_READONLY	.DB 	"\r\nCBIOS Err: Read Only Drive$"
+STR_STALE	.DB 	"\r\nCBIOS Err: Stale Drive$"
 ;
 SECADR:		.DW 	0		; ADDRESS OF SECTOR IN ROM/RAM PAGE
 DEFDRIVE	.DB	0		; DEFAULT DRIVE
@@ -2048,8 +2044,10 @@ INIT2:
 	LD	(CDISK),A		; SETUP CDISK
 	
 	; STARTUP MESSAGE
+	CALL	NEWLINE
 	LD	DE,STR_BANNER
 	CALL	WRITESTR
+	CALL	NEWLINE
 	
 	; SAVE COMMAND PROCESSOR TO CACHE IN RAM1
 	LD	A,1
@@ -2063,6 +2061,8 @@ INIT2:
 	; SYSTEM INITIALIZATION
 	CALL	BLKRES			; RESET DISK (DE)BLOCKING ALGORITHM
 	CALL	MD_INIT			; INITIALIZE MEMORY DISK DRIVER (RAM/ROM)
+
+	CALL	NEWLINE
 
 	; STARTUP CPM
 	JP	GOCPM
@@ -2114,6 +2114,7 @@ DEFDRV2:
 	; WE HAVE A MATCH MATCHED, RECORD NEW DEFAULT DRIVE
 	LD	A,C			; C HAS MATCHING DRIVE, MOVE TO A
 	LD	(DEFDRIVE),A		; SAVE IT
+;
 	RET
 ;
 	.FILL	(256 - ($ - INIT)),0	; FILL REMAINDER OF PAGE

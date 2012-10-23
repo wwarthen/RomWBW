@@ -1,5 +1,7 @@
-
+#
 # GCC based makefile
+#
+# 09/28/2012 2.2 dwg - updated for Mac OS X 10.8.2 Mountain Lion
 #
 # 06/18/2012 2.0 dgg - updated for v2.0
 #
@@ -65,11 +67,11 @@
 # do this with commands like the following at an OS command
 # prompt or in a batch file:
 #
-#   SET CONFIG=n8vem
-#   SET ROMSIZE=512
-#   SET CPU=80
-#   SET SYS=CPM
-#   SET ROMNAME=n8vem
+# SET CONFIG=zeta
+# SET ROMSIZE=512
+# SET CPU=80
+# SET SYS=CPM
+# SET ROMNAME=zeta
 #
 # Note: use "make clean" to delete temporary and output files
 #
@@ -84,47 +86,40 @@
 #
 # Uncomment and update values below to hardcode settings:
 #
-#CONFIG := n8vem
-#ROMSIZE := 512
-#CPU := 80
-#SYS := CPM
-#ROMNAME := n8vem
-
-# Dougs Configuration
-CONFIG  := zeta
+CONFIG := zeta
 ROMSIZE := 512
-CPU     := 80
-SYS     := CPM
-ROMNAME := dougzeta
+CPU := 80
+SYS := CPM
+ROMNAME := zeta
 
 ifndef ROMNAME
 ROMNAME := $(CONFIG)
 endif
 
 CPMCP := bin/cpmcp
+CVT := bin/CVT2MAC
+SRC := ../Source/
 
-ROMDSKFILES := ../RomDsk/$(SYS)_$(ROMSIZE)KB/*.* ../RomDsk/cfg_$(CONFIG)/*.* ../RomDsk/RomApps/*.*
+ROMDSKFILES := ../RomDsk/$(SYS)_$(ROMSIZE)KB/*.* ../RomDsk/cfg_$(CONFIG)/*.* ../Apps/core/*.*
 
 ifeq "$(SYS)" "CPM"
 DOSBIN := bdosb01.bin
 CPBIN := ccpb03.bin
-CPASM := ccpb03.asm
 else
 DOSBIN := zsdos.bin
 CPBIN := zcprw.bin
-CPASM := zcprw.asm
 endif
 
 OUTDIR := ../Output
 
-TASM := bin/tasm
+TASM := bin/TASM 
 TASMTABS := bin
 export TASMTABS
 
 ASMOPT80 := -t$(CPU) -g3
 ASMOPT85 := -t85 -g3 
 
-ASM80 := $(TASM) $(ASMOPT80) -b 
+ASM80 := $(TASM) $(ASMOPT80)
 ASM85 := $(TASM) $(ASMOPT85)
 ASMIMG := $(TASM) $(ASMOPT80) -b -fE5
 
@@ -132,7 +127,7 @@ NULL :=
 SPACE := ${NULL} ${NULL}
 
 %.bin: %.asm
-	$(ASM80) -b $< $@
+	$(ASM80) $< $@
 	
 %.com: %.asm
 	$(ASM80) $< $@
@@ -149,264 +144,197 @@ $(error Usage: make CONFIG=<config> ROMSIZE=[512|1024] CPU=[80|180] SYS=[CPM|ZSY
 endif
 endif
 
-all: $(OUTDIR)/$(ROMNAME).rom $(OUTDIR)/$(ROMNAME).sys $(OUTDIR)/$(ROMNAME).com
+all: tasm80.tab tasm85.tab $(OUTDIR)/$(ROMNAME).rom $(OUTDIR)/$(ROMNAME).sys $(OUTDIR)/$(ROMNAME).com
+
+tasm80.tab:	bin/TASM80.TAB
+	cp bin/TASM80.TAB tasm80.tab
+
+tasm85.tab:	bin/TASM85.TAB
+	cp bin/TASM85.TAB tasm85.tab
+
 
 build.inc:
-	echo	';' >$@
+	/bin/echo	';' >$@
 	/bin/echo -n '; RomWBW Configured for '$(CONFIG)' ' >>$@
 	date >> $@
-	echo	; >>$@
+	/bin/echo	; >>$@
 	/bin/echo -n '#DEFINE	TIMESTAMP	"' >>$@
-	date '+%Y%m%d%H%M"' >>$@
-	echo	; >>$@
-	echo  '#DEFINE	VARIANT		"WBW-$(USERNAME)"' >>$@
-	echo	; >>$@
-	echo	ROMSIZE		.EQU	$(ROMSIZE) >>$@
-	echo	; >>$@
-	echo	'#INCLUDE	"config_'$(CONFIG)'.asm"' >>$@
-	echo	; >>$@
+	date '+%Y %m %d %H%M"' >>$@
+	/bin/echo	; >>$@
+	/bin/echo  '#DEFINE	VARIANT		"WBW-$(USERNAME)"' >>$@
+	/bin/echo	; >>$@
+	/bin/echo	ROMSIZE		.EQU	$(ROMSIZE) >>$@
+	/bin/echo	; >>$@
+	/bin/echo	'#INCLUDE	"config_'$(CONFIG)'.asm"' >>$@
+	/bin/echo	; >>$@
 
-#loader.bin:	loader.asm util.asm
-#	$(TASM) $(ASMOPT80) -b $<
-
-loader.bin:	loader.asm util.asm
-
-loader.asm:	../Source/loader.asm
-	cp $< .
-	bin/cvt2mac $@
-
-bnk1.asm:	../Source/bnk1.asm
-	cp $< .
-	bin/cvt2mac $@
-
-bdosb01.asm:	../Source/bdosb01.asm
-	cp $< .
-	bin/cvt2mac $@
-
-bootrom.bin : bootrom.asm memmgr.asm std.asm build.inc ver.inc
+bootrom.bin : bootrom.asm std.asm build.inc ver.inc memmgr.asm config_$(CONFIG).asm
 	$(TASM) $(ASMOPT80) $< $@
-
-bootrom.asm:	../Source/bootrom.asm config_$(CONFIG).asm
-	cp $< .
-	bin/cvt2mac $@
 	
-bootapp.bin : bootapp.asm std.asm build.inc ver.inc
+bootapp.bin:	bootapp.asm std.asm build.inc ver.inc
 	$(TASM) $(ASMOPT80) $< $@
-
-bootapp.asm:	../Source/bootapp.asm
-	cp $< .
-	bin/cvt2mac $@
-
-cbios.asm:	../Source/cbios.asm
-	cp $< .
-	bin/cvt2mac $@
-
-
-
-config_$(CONFIG).asm:	../Source/config_$(CONFIG).asm
-	cp $< .
-	bin/cvt2mac $@
-
-cnfgdata.inc:	../Source/cnfgdata.inc
-	cp $< .
-	bin/cvt2mac $@
-
-dbgmon.asm:	../Source/dbgmon.asm
-	cp $< .
-	bin/cvt2mac $@
-
-fd.asm:		../Source/fd.asm
-	cp $< .
-	bin/cvt2mac $@
-
-fd_data.asm:	../Source/fd_data.asm
-	cp $< .
-	bin/cvt2mac $@
-
-#hbios.asm:	../Source/hbios.asm
-#	cp $< .
-#	bin/cvt2mac $@
-
-hbfill.asm:	../Source/hbfill.asm
-	cp $< .
-	bin/cvt2mac $@
-
-ide.asm:	../Source/ide.asm
-	cp $< .
-	bin/cvt2mac $@
-
-ide_data.asm:	../Source/ide_data.asm
-	cp $< .
-	bin/cvt2mac $@
-
-infolist.inc:	../Source/infolist.inc
-	cp $< .
-	bin/cvt2mac $@
-
-memmgr.asm:	../Source/memmgr.asm
-	cp $< .
-	bin/cvt2mac $@
-
-pgzero.bin : pgzero.asm std.asm build.inc ver.inc
-	$(TASM) $(ASMOPT80) $< $@
-
-pgzero.asm:	../Source/pgzero.asm
-	cp $< .
-	bin/cvt2mac $@ 
-
-ppide.asm:	../Source/ppide.asm
-	cp $< .
-	bin/cvt2mac $@
-
-ppide_data.asm:	../Source/ppide_data.asm
-	cp $< .
-	bin/cvt2mac $@
-
-ppp.asm:	../Source/ppp.asm
-	cp $< .
-	bin/cvt2mac $@
-
-ppp_data.asm:	../Source/ppp_data.asm
-	cp $< .
-	bin/cvt2mac $@
-
-prefix.asm:	../Source/prefix.asm
-	cp $< .
-	bin/cvt2mac $@
-
-prp.asm:	../Source/prp.asm
-	cp $< .
-	bin/cvt2mac $@
-
-prp_data.asm:	../Source/prp_data.asm
-	cp $< .
-	bin/cvt2mac $@
-
-romfill.bin:	romfill.asm
-	$(TASM) $(ASMOPT80) -b $< $@
-
-romfill.asm:	../Source/romfill.asm
-	cp $< .
-	bin/cvt2mac $@
-
-sd.asm:		../Source/sd.asm
-	cp $< .
-	bin/cvt2mac $@
-
-sd_data.asm:	../Source/sd_data.asm
-	cp $< .
-	bin/cvt2mac $@
 	
-std.asm:	../Source/std.asm
-	cp $< .
-	bin/cvt2mac $@
-
-syscfg.asm:	../Source/syscfg.asm
-	cp $< .
-	bin/cvt2mac $@
-
-uart.asm:	../Source/uart.asm
-	cp $< .
-	bin/cvt2mac $@
-
-util.bin:	util.asm
-
-util.asm:	../Source/util.asm
-	cp $< .
-	bin/cvt2mac $@
-
-vdu.asm:	../Source/vdu.asm
-	cp $< .
-	bin/cvt2mac $@
-
-ver.inc:	../Source/ver.inc
-	cp $< .
-	bin/cvt2mac $@
-
-zcprw.bin : zcprw.asm zcpr.asm
+pgzero.bin:	pgzero.asm std.asm build.inc ver.inc
+	$(TASM) $(ASMOPT80) $< $@
+	
+zcprw.bin:	zcprw.asm zcpr.asm
 	$(TASM) $(ASMOPT85) $< $@
 	
-zsdos.bin : zsdos.asm zsdos.lib zsdos-gp.z80
+zsdos.bin:	zsdos.asm zsdos.lib zsdos-gp.z80
 	$(TASM) $(ASMOPT80) $< $@
 
-hbfill.bin: hbfill.asm fd.asm ide.asm ppide.asm sd.asm prp.asm ppp.asm std.asm ver.inc build.inc
-
 cbios.bin: cbios.asm fd_data.asm ide_data.asm ppide_data.asm sd_data.asm prp_data.asm ppp_data.asm uart.asm vdu.asm std.asm ver.inc build.inc infolist.inc
-	$(ASM80) -b -dBLD_SYS=SYS_$(SYS) $< $@
+	$(TASM) $(ASMOPT80) -dBLD_SYS=SYS_$(SYS) $< $@
 
-cbios.asm:	../Source/cbios.asm
-	cp $< .
-	bin/cvt2mac $@
+dbgmon.bin: dbgmon.asm std.asm ver.inc build.inc
 
-dbgmon.bin: dbgmon.asm hbfill.bin std.asm ver.inc build.inc
+syscfg.bin: syscfg.asm std.asm build.inc ver.inc
 
-syscfg.bin: syscfg.asm std.asm build.inc ver.inc cnfgdata.inc
-
-$(CPASM):	../Source/$(CPASM)
-	cp $< .
-	bin/cvt2mac $@
+os.bin: $(CPBIN) $(DOSBIN) cbios.bin
+	cat $(CPBIN) $(DOSBIN) cbios.bin >>$@
+ 	
+rom0.bin: pgzero.bin bootrom.bin syscfg.bin loader.bin romfill.bin dbgmon.bin os.bin hbfill.bin
+	cat pgzero.bin bootrom.bin syscfg.bin loader.bin romfill.bin dbgmon.bin os.bin hbfill.bin >>$@
 	
-$(OUTDIR)/$(ROMNAME).rom:	diskdefs rom0.bin rom1.bin $(ROMDISKFILES) $(OUTDIR)/$(ROMNAME).sys blank$(ROMSIZE)KB.dat
-	for d in ../Apps/*; do \
-	    if test -e $$d/*.com; then \
-		cp $$d/*.com ../RomDsk/RomApps; \
-	    fi; \
-	done;
-	for d in ../Apps/*; do \
-	    if test -e $$d/*.man; then \
-		cp $$d/*.man ../RomDsk/RomApps; \
-	    fi; \
-	done;
-	for d in ../Apps/*; do \
-	    if test -e $$d/*.bsp; then \
-		cp $$d/*.bsp ../RomDsk/RomApps; \
-	    fi; \
-	done;
-	cp blank$(ROMSIZE)KB.dat RomDisk.tmp
+rom1.bin: pgzero.bin bootrom.bin syscfg.bin loader.bin bnk1.bin
+	cat pgzero.bin bootrom.bin syscfg.bin loader.bin bnk1.bin >>$@
+
+$(OUTDIR)/$(ROMNAME).rom: rom0.bin rom1.bin $(ROMDISKFILES) $(OUTDIR)/$(ROMNAME).sys diskdefs
+	cp $(SRC)blank$(ROMSIZE)KB.dat RomDisk.tmp
 	$(CPMCP) -f rom$(ROMSIZE)KB RomDisk.tmp $(ROMDSKFILES) 0:
 	$(CPMCP) -f rom$(ROMSIZE)KB RomDisk.tmp ../Output/$(ROMNAME).sys 0:$(SYS).sys
 	cat rom0.bin rom1.bin RomDisk.tmp >>$@
 
-diskdefs:	bin/diskdefs
-	cp bin/diskdefs .
-	bin/cvt2mac diskdefs
+$(OUTDIR)/$(ROMNAME).com: bootapp.bin syscfg.bin loader.bin bnk1.bin dbgmon.bin os.bin
+	cat bootapp.bin syscfg.bin loader.bin bnk1.bin dbgmon.bin os.bin >>$@
 
-$(OUTDIR)/$(ROMNAME).com: bootapp.bin syscfg.bin loader.bin bnk1.bin dbgmon.bin sys.bin
-	cat bootapp.bin syscfg.bin loader.bin bnk1.bin dbgmon.bin sys.bin >>$@
+$(OUTDIR)/$(ROMNAME).sys: prefix.bin os.bin
+	cat prefix.bin os.bin >>$@
 
-$(OUTDIR)/$(ROMNAME).sys:	prefix.bin sys.bin
-	cat prefix.bin sys.bin >>$(OUTDIR)/$(ROMNAME).sys
+bdosb01.asm:	$(SRC)bdosb01.asm
+	cp $< $@
+	$(CVT) $@
 
-rom0.bin:	pgzero.bin bootrom.bin syscfg.bin loader.bin romfill.bin dbgmon.bin sys.bin hbfill.bin
-	cat $< >>rom0.bin
+bnk1.asm:	$(SRC)bnk1.asm fd.asm ppide.asm
+	cp $(SRC)bnk1.asm $@
+	$(CVT) $@
 
-rom1.bin:	pgzero.bin bootrom.bin syscfg.bin loader.bin bnk1.bin
-	cat $< >>rom1.bin
+bootapp.asm:	$(SRC)bootapp.asm
+	cp $< $@
+	$(CVT) $@
 
-sys.bin:	$(CPBIN) $(DOSBIN) cbios.bin hbfill.bin ccpb03.bin
-	echo at sys.bin target, about to cat
-	cat $(CPBIN) $(DOSBIN) cbios.bin hbfill.bin >>$@
+bootrom.asm:	$(SRC)bootrom.asm
+	cp $< $@
+	$(CVT) $@
 
-prefix.bin:	prefix.asm
+cbios.asm:	$(SRC)cbios.asm
+	cp $< $@
+	$(CVT) $@
 
-blank512KB.dat:	../Source/blank512KB.dat
-	cp $< .
+ccpb03.asm:	$(SRC)ccpb03.asm
+	cp $< $@
+	$(CVT) $@
 
-blank1024KB.dat:	../Source/blank1024KB.dat
-	cp $< .
+cnfgdata.inc:	$(SRC)cnfgdata.inc
+	cp $< $@
+	$(CVT) $@
 
-#cbios.asm:	../Source/cbios.asm
-#	cp $< .
-#	bin/cvt2mac $@
+config_zeta.asm:	$(SRC)config_zeta.asm
+	cp $< $@
+	$(CVT) $@
 
-ccpb03.asm:	../Source/ccpb03.asm
-	cp $< .
-	bin/cvt2mac $@
+dbgmon.asm:	$(SRC)dbgmon.asm
+	cp $< $@
+	$(CVT) $@
+
+diskdefs:	$(SRC)diskdefs
+	cp $< $@
+	$(CVT) $@
+
+fd.asm:	$(SRC)fd.asm
+	cp $< $@
+	$(CVT) $@
+
+fd_data.asm:	$(SRC)fd_data.asm
+	cp $< $@
+	$(CVT) $@
+
+hbfill.asm:	$(SRC)hbfill.asm
+	cp $< $@
+	$(CVT) $@
+
+ide_data.asm:	$(SRC)ide_data.asm
+	cp $< $@
+	$(CVT) $@
+
+infolist.inc:	$(SRC)infolist.inc
+	cp $< $@
+	$(CVT) $@
+
+loader.asm:	$(SRC)loader.asm util.asm
+	cp $(SRC)loader.asm $@
+	$(CVT) $@
+
+memmgr.asm:	$(SRC)memmgr.asm
+	cp $< $@
+	$(CVT) $@
+
+pgzero.asm:	$(SRC)pgzero.asm
+	cp $< $@
+	$(CVT) $@
+
+ppide.asm:	$(SRC)ppide.asm
+	cp $< $@
+	$(CVT) $@
+
+ppide_data.asm:	$(SRC)ppide_data.asm
+	cp $< $@
+	$(CVT) $@
+
+ppp_data.asm:	$(SRC)ppp_data.asm
+	cp $< $@
+	$(CVT) $@
+
+prefix.asm:	$(SRC)prefix.asm
+	cp $< $@
+	$(CVT) $@
+
+prp_data.asm:	$(SRC)prp_data.asm
+	cp $< $@
+	$(CVT) $@
+
+romfill.asm:	$(SRC)romfill.asm
+	cp $< $@
+	$(CVT) $@
+sd_data.asm:	$(SRC)sd_data.asm
+	cp $< $@
+	$(CVT) $@
+
+std.asm:	$(SRC)std.asm
+	cp $< $@
+	$(CVT) $@
+
+syscfg.asm:	$(SRC)syscfg.asm config_$(CONFIG).asm cnfgdata.inc
+	cp $< $@
+	$(CVT) $@
+
+uart.asm:	$(SRC)uart.asm
+	cp $< $@
+	$(CVT) $@
+
+util.asm:	$(SRC)util.asm
+	cp $< $@
+	$(CVT) $@
+
+vdu.asm:	$(SRC)vdu.asm
+	cp $< $@
+	$(CVT) $@
+
+ver.inc:	$(SRC)ver.inc
+	cp $< $@
+	$(CVT) $@
 
 clean:
-	rm -f *.asm *.obj *.bin *.com *.img *.rom *.lst *.exp *.tmp *.inc
+	rm -f *.tab *.TAB *.inc *.asm *.bin *.com *.img *.rom *.lst *.exp *.tmp
+	rm -f build.inc diskdefs
 	rm -f $(OUTDIR)/*.*
-	rm -f ../RomDsk/RomApps/*.*
-	rm -f diskdefs
-	rm -f blank$(ROMSIZE)KB.dat
-
