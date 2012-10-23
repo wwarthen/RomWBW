@@ -1,5 +1,6 @@
-The Mac OS X Makefile is not fully debugged yet and is
-not usable in it's current form. It will be updated and 
-posted when it is working correctly.
+This build is experimental. Most likely it is working,
+but you should be careful with it until it is verified.
 
 Douglas Goodall
+Santa Maria
+9/2012 
