@@ -1,3 +1,4 @@
+# RomWBW/branches/dwg/XSource/Makefile 10/24/2012 dwg - 
 #
 # GCC based makefile
 #
@@ -86,11 +87,11 @@
 #
 # Uncomment and update values below to hardcode settings:
 #
-CONFIG := zeta
+CONFIG := n8_2312
 ROMSIZE := 512
-CPU := 80
+CPU := 180
 SYS := CPM
-ROMNAME := zeta
+ROMNAME := n8_2312
 
 ifndef ROMNAME
 ROMNAME := $(CONFIG)
@@ -211,11 +212,15 @@ $(OUTDIR)/$(ROMNAME).com: bootapp.bin syscfg.bin loader.bin bnk1.bin dbgmon.bin 
 $(OUTDIR)/$(ROMNAME).sys: prefix.bin os.bin
 	cat prefix.bin os.bin >>$@
 
+ansi.asm:	$(SRC)ansi.asm
+	cp $< $@
+	$(CVT) $@
+
 bdosb01.asm:	$(SRC)bdosb01.asm
 	cp $< $@
 	$(CVT) $@
 
-bnk1.asm:	$(SRC)bnk1.asm fd.asm ppide.asm
+bnk1.asm:	$(SRC)bnk1.asm fd.asm ppide.asm n8v.asm ppk.asm sd.asm tty.asm ansi.asm
 	cp $(SRC)bnk1.asm $@
 	$(CVT) $@
 
@@ -239,7 +244,11 @@ cnfgdata.inc:	$(SRC)cnfgdata.inc
 	cp $< $@
 	$(CVT) $@
 
-config_zeta.asm:	$(SRC)config_zeta.asm
+##config_zeta.asm:	$(SRC)config_zeta.asm
+##	cp $< $@
+##	$(CVT) $@
+
+config_$(CONFIG).asm:	$(SRC)config_$(CONFIG).asm
 	cp $< $@
 	$(CVT) $@
 
@@ -279,6 +288,10 @@ memmgr.asm:	$(SRC)memmgr.asm
 	cp $< $@
 	$(CVT) $@
 
+n8v.asm:	$(SRC)n8v.asm
+	cp $< $@
+	$(CVT) $@
+
 pgzero.asm:	$(SRC)pgzero.asm
 	cp $< $@
 	$(CVT) $@
@@ -288,6 +301,10 @@ ppide.asm:	$(SRC)ppide.asm
 	$(CVT) $@
 
 ppide_data.asm:	$(SRC)ppide_data.asm
+	cp $< $@
+	$(CVT) $@
+
+ppk.asm:	$(SRC)ppk.asm
 	cp $< $@
 	$(CVT) $@
 
@@ -306,6 +323,11 @@ prp_data.asm:	$(SRC)prp_data.asm
 romfill.asm:	$(SRC)romfill.asm
 	cp $< $@
 	$(CVT) $@
+
+sd.asm:	$(SRC)sd.asm
+	cp $< $@
+	$(CVT) $@
+
 sd_data.asm:	$(SRC)sd_data.asm
 	cp $< $@
 	$(CVT) $@
@@ -315,6 +337,10 @@ std.asm:	$(SRC)std.asm
 	$(CVT) $@
 
 syscfg.asm:	$(SRC)syscfg.asm config_$(CONFIG).asm cnfgdata.inc
+	cp $< $@
+	$(CVT) $@
+
+tty.asm:	$(SRC)tty.asm
 	cp $< $@
 	$(CVT) $@
 
