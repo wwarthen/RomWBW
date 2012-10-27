@@ -1,0 +1,17 @@
+To build the software on LINUX:
+
+
+1.  Copy the entire Tasm32 installation folder from the Windows environment
+    to the LINUX system in whatever manner you find convenient.  You must
+    remove the CR from the lines of text files (using mcopy or
+    other such utility).
+
+2.  Move to the "src" directory and rename "MAKEFILE.UNX" as "makefile".
+
+3.  Execute "make".  The resulting executable will be named "tasm".
+
+4.  Copy the executable to a place in your "PATH" and set the TASMTABS
+    environment variable to point to the location of the table files.
+
+
+

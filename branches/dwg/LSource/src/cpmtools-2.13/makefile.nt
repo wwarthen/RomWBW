@@ -1,0 +1,89 @@
+#
+# Makefile for cpmtools, using MS Visual C++ 6.x command-line tools 
+#
+CC=		cl
+DISKDEFS=	c:/cpm/etc/diskdefs
+CPPFLAGS=	/DDISKDEFS=\"$(DISKDEFS)\" /DFORMAT=\"ibm-3740\"
+#
+# Note: The "/Zp1" (pack structures on 1-byte boundaries) is important.
+#
+CFLAGS=     /Zp1 /WX /W3 $(CPPFLAGS)
+LDFLAGS=
+#LDFLAGS=	-g -L/usr/dmalloc/lib
+LIBCURSES=	-lcurses
+LIBS=       getopt.obj
+#LIBS=		-ldmalloc
+MAKEDEPEND=	mkdep -d
+#MAKEDEPEND=	gcc -MM
+#MAKEDEPEND=	makedepend -f-
+BINDIR=		/usr/cpm/bin
+MANDIR=		/usr/cpm/man/en
+OSDEPEND=       os_win32.obj
+#OSDEPEND=      os_unix.obj    # Can be used if you don't want direct
+                               # floppy support
+
+ALL=		cpmls.exe cpmrm.exe cpmcp.exe mkfs.cpm.exe fsck.cpm.exe \
+               # fsed.cpm.exe
+
+all:		$(ALL)
+
+cpmls.exe:	cpmls.obj cpmfs.obj $(OSDEPEND) getopt.obj
+		$(CC) $(LDFLAGS) -o $@ cpmls.obj cpmfs.obj $(OSDEPEND) $(LIBS)
+
+cpmrm.exe:	cpmrm.obj cpmfs.obj $(OSDEPEND) getopt.obj
+		$(CC) $(LDFLAGS) -o $@ cpmrm.obj cpmfs.obj $(OSDEPEND) $(LIBS)
+
+cpmcp.exe:	cpmcp.obj cpmfs.obj $(OSDEPEND) getopt.obj
+		$(CC) $(LDFLAGS) -o $@ cpmcp.obj cpmfs.obj $(OSDEPEND) $(LIBS)
+
+mkfs.cpm.exe:	mkfs.cpm.obj cpmfs.obj $(OSDEPEND) getopt.obj
+		$(CC) $(LDFLAGS) -o $@ mkfs.cpm.obj cpmfs.obj $(OSDEPEND) $(LIBS)
+
+fsck.cpm.exe:	fsck.cpm.obj cpmfs.obj $(OSDEPEND) getopt.obj
+		$(CC) $(LDFLAGS) -o $@ fsck.cpm.obj cpmfs.obj $(OSDEPEND) $(LIBS)
+
+fsed.cpm.exe:	fsed.cpm.obj getopt.obj
+		$(CC) $(LDFLAGS) -o $@ fsed.cpm.obj $(LIBCURSES) $(LIBS)
+
+fsck.test:	fsck.cpm.exe
+		-.\\fsck.cpm.exe -n badfs/status
+		-.\\fsck.cpm.exe -n badfs/extno
+		-.\\fsck.cpm.exe -n badfs/lcr
+		-.\\fsck.cpm.exe -n badfs/name
+		-.\\fsck.cpm.exe -n badfs/extension
+		-.\\fsck.cpm.exe -n badfs/blocknumber
+		-.\\fsck.cpm.exe -n badfs/recordcount
+		-.\\fsck.cpm.exe -n badfs/hugecom
+		-.\\fsck.cpm.exe -n badfs/timestamps
+		-.\\fsck.cpm.exe -n badfs/multipleblocks
+		-.\\fsck.cpm.exe -n badfs/doubleext
+		-.\\fsck.cpm.exe -f pcw -n badfs/label
+
+install:	all
+		install -c -s -m 755 cpmls $(BINDIR)/cpmls
+		install -c -s -m 755 cpmcp $(BINDIR)/cpmcp
+		install -c -s -m 755 cpmrm $(BINDIR)/cpmrm
+		install -c -s -m 755 mkfs.cpm $(BINDIR)/mkfs.cpm
+		install -c -s -m 755 fsck.cpm $(BINDIR)/fsck.cpm
+		install -c -s -m 755 fsed.cpm $(BINDIR)/fsed.cpm
+		install -c -m 644 diskdefs $(DISKDEFS)
+		install -c -m 644 cpmls.1 $(MANDIR)/man1/cpmls.1
+		install -c -m 644 cpmcp.1 $(MANDIR)/man1/cpmcp.1
+		install -c -m 644 cpmrm.1 $(MANDIR)/man1/cpmrm.1
+		install -c -m 644 mkfs.cpm.1 $(MANDIR)/man1/mkfs.cpm.1
+		install -c -m 644 fsck.cpm.1 $(MANDIR)/man1/fsck.cpm.1
+		install -c -m 644 fsed.cpm.1 $(MANDIR)/man1/fsed.cpm.1
+
+clean:
+		rm -f *.obj
+
+clobber:	clean
+		rm -f $(ALL) *.out
+
+tar:		clobber
+		(b=`pwd`; b=`basename $$b`; cd ..; tar zcvf $$b.tar.gz $$b)
+
+depend:
+		$(MAKEDEPEND) $(CPPFLAGS) *.c >.depend
+
+include .depend

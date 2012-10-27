@@ -1,0 +1,14 @@
+cpmchattr.o: cpmchattr.c config.h getopt_.h cpmfs.h device.h
+cpmchmod.o: cpmchmod.c config.h getopt_.h cpmfs.h device.h
+cpmcp.o: cpmcp.c config.h getopt_.h cpmfs.h device.h
+cpmfs.o: cpmfs.c config.h cpmdir.h cpmfs.h device.h
+cpmls.o: cpmls.c config.h getopt_.h cpmfs.h device.h
+cpmrm.o: cpmrm.c config.h getopt_.h cpmfs.h device.h
+device_libdsk.o: device_libdsk.c config.h device.h
+device_posix.o: device_posix.c config.h device.h
+device_win32.o: device_win32.c config.h cpmdir.h cpmfs.h device.h
+fsck.cpm.o: fsck.cpm.c config.h getopt_.h cpmdir.h cpmfs.h device.h
+fsed.cpm.o: fsed.cpm.c config.h cpmfs.h device.h
+getopt.o: getopt.c config.h getopt_.h getopt_int.h
+getopt1.o: getopt1.c config.h getopt_.h getopt_int.h
+mkfs.cpm.o: mkfs.cpm.c config.h getopt_.h cpmfs.h device.h

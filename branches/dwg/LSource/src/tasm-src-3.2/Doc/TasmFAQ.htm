@@ -1,0 +1,252 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="GENERATOR" content="Microsoft FrontPage 4.0">
+   <title>The Telemark Cross Assembler (TASM) FAQ</title>
+<!--$Revision: 1.1 $-->
+</head>
+<body text="#000000" bgcolor="#CCCCCC" link="#0000EE" vlink="#551A8B" alink="#FF0000">
+
+<h1>
+TASM Frequently Asked Questions</h1>
+
+<hr>
+
+<h2>
+Q: What Processors are supported by TASM?</h2>
+The following table enumerates the processor families supported by TASM.&nbsp;
+Derivatives that are compatible with the base processor family are, of course,
+supported too.&nbsp; For those derivatives that have additional (extended)
+instructions, the second column shows those that are supported.&nbsp; [Note: use
+the &quot;-x&quot; command line option to enable extended instructions.]
+<br>&nbsp;
+<table BORDER=1 >
+<tr>
+<td><b>Processor Family</b></td>
+
+<td><b>Derivatives with extended instructions supported</b></td>
+</tr>
+
+<tr>
+<td>8048</td>
+
+<td>8041A, 8022, 8021</td>
+</tr>
+
+<tr>
+<td>6502</td>
+
+<td>R65C02, R65C00/21</td>
+</tr>
+
+<tr>
+<td>Z80</td>
+
+<td>HD64180</td>
+</tr>
+
+<tr>
+<td>6800</td>
+
+<td>6801, 6803, 68HC11</td>
+</tr>
+
+<tr>
+<td>6805</td>
+
+<td>M146805 CMOS, 68HC02C4</td>
+</tr>
+
+<tr>
+<td>8051</td>
+
+<td></td>
+</tr>
+
+<tr>
+<td>8080</td>
+
+<td></td>
+</tr>
+
+<tr>
+<td>TMS32010</td>
+
+<td></td>
+</tr>
+
+<tr>
+<td>TMS320C25</td>
+
+<td>TMS320C26</td>
+</tr>
+
+<tr>
+<td>TMS7000</td>
+
+<td></td>
+</tr>
+
+<tr>
+<td>8096&nbsp;</td>
+
+<td>80C196KC</td>
+</tr>
+</table>
+
+<h2>
+Q: Does TASM come with an object code linker?</h2>
+No. TASM generates absolute object code, thus no linker is necessary. It
+is possible to break an application into many files, however, and collect
+them via a top level file to include all the components (see the <b><i> #include</i></b>
+directive in the <i> <b> TASM User's Manual</b></i>).
+<h2>
+Q: What are the minimum system requirements to run TASM?</h2>
+
+For versions earlier than 3.2:
+
+<ul>
+<li>
+80286 or higher processor. [Contact us if you need a version for the 8086.]</li>
+
+<li>
+MSDOS 2.1 or above</li>
+
+<li>
+512 Kbytes RAM</li>
+
+<li>
+2 Mbytes disk space</li>
+</ul>
+<p>For version 3.2:</p>
+<ul>
+  <li>A 32 bit Windows platform (Windows 95, Windows 98, Windows 2000, Windows
+    NT)</li>
+  <li>2 Mbytes disk space</li>
+</ul>
+<h2>
+Q: My computer has 512 Mbytes of RAM. How come TASM runs out of memory?</h2>
+Prior to version 3.2, TASM was an old-fashioned program confined
+to the 640 Kbyte memory space provided by DOS. If you are running out of memory
+and you are using a version early than 3.2 you should upgrade and see if it
+eliminates the problem.&nbsp; Even version 3.2 has some inherent limits,
+however.&nbsp; There are fixed limits for the maximum number of labels and
+macros (see the <b><i> TASM User's Manual</i></b>).
+<h2>
+Q: What performance can be expected from TASM?</h2>
+Many factors affect performance. Here are some observed lines/second measurements
+for assemblies of 6502 source code on various platforms:
+<ul>
+<li>
+15000 lines/second on a 500 MHz Pentium based PC.</li>
+
+<li>
+40000 lines/second on a&nbsp;&nbsp;&nbsp;&nbsp; 2 GHz Pentium based PC.</li>
+</ul>
+Of historical note, early versions of TASM running on a PC/AT class machine
+(circa 1985) typically achieved about 20 lines/second.&nbsp;&nbsp;
+<h2>
+Q: Is there a UNIX version of TASM?</h2>
+Yes, but you need the source distribution to build it.&nbsp; The source
+distribution comes with a <i>makefile</i> and instructions for building on
+LINUX.&nbsp; The <i>makefile</i> should be usable on a variety of UNIX platforms
+with little modification (assuming an appropriate compiler
+tool set). An ANSI C compiler is required.
+<h2>
+Q: What compiler is used to build the released version of TASM?</h2>
+Microsoft Visual C++ 6.0.
+<h2>
+Q: What's new in the latest release (v3.2)?</h2>
+
+<ul>
+<li>
+Built as a 32 bit application for improved memory management and performance
+improvements.</li>
+
+<li>
+Increased maximum length of a source line to 512 bytes to better handle
+expansion of long macros.</li>
+
+<li>
+Improved formatting of list file for directives that generate more than 6 bytes
+of object code (now broken into multiple lines).</li>
+
+<li>
+Self-extracting installation utility provided.</li>
+</ul>
+
+<h2>
+Q: Can I bundle TASM with my way-cool development board?</h2>
+The shareware distribution of TASM may be distributed with other commercial
+products as long as it is clear that the customer is getting a shareware
+product that has not yet been paid for. The customer receives the shareware
+product for evaluation purposes, and if prolonged use ensues, the product
+should be paid for.
+<p>Alternately, a fully licensed TASM may be bundled with other commercial
+products under an agreement with <i><b>SVS</b></i>. Many agreements such as this have
+been employed in the past for both microcontroller development tools and
+educational books. Please contact <b><i> SVS</i></b> if you are interested in such an
+arrangement.
+<h2>
+Q: Can I distribute TASM to my students for course assignments?</h2>
+The license policy is this: an educational institution may distribute TASM
+to students for course work at that institution provide the institution
+purchases a TASM site license. The students are not authorized to continue
+use of TASM for their personal projects, however. Continued use by students
+outside of course work requires an individual registration.
+<h2>
+Q: Is there a Windows version of TASM?</h2>
+No. We have experimented with Windows interfaces for TASM, but have concluded
+that such adds little value. What is of value, though, is integration of
+TASM with a source code editor (Windows based or otherwise). Being able
+to perform the edit/assemble/edit cycle all within a single environment
+is useful. Many full-featured editors support such integration. Such editors
+include:
+<ul>
+<li>
+Brief</li>
+
+<li>
+CodeWright</li>
+
+<li>
+Vim (see <a href="http://www.vim.org">http://www.Vim.org</a>)</li>
+</ul>
+
+<h2>
+Q: How do I configure the Vim editor to run TASM?</h2>
+The first step is to add the following to your &quot;_vimrc&quot; file (which is
+normally in the directory indicated by the HOME or HOMEPATH environment
+variables):&nbsp;
+<blockquote>
+  <pre>set makeprg=tasm\ -80\ -x\ %
+set errorformat=%f\ line\ %l:\ %m</pre>
+</blockquote>
+<p>Now, you can launch an assembly on the file you are editing with Vim by
+invoking the &quot;<font face="Courier New"><b>:make</b></font>&quot; command.&nbsp;
+Use the &quot;<font face="Courier New"><b>:cnext</b></font>&quot; command to
+skip to the next line with an error.&nbsp; Use the &quot;<font face="Courier New"><b>:copen</b></font>&quot;
+command to open a window showing the full error list.&nbsp; See the Vim help
+documentation for more details on this feature.</p>
+
+<p>The <b>makeprg</b> setting above depends upon the TASM executable being in a
+directory in the <b>Path</b> environment variable.&nbsp; Alternately, add the
+full path to the <b>makeprg</b> setting (being extra careful with embedded
+spaces).&nbsp; Also, the example explicitly indicates the Z80 instruction table
+with the &quot;-80&quot; option.&nbsp; Set this according to your needs.</p>
+
+<h2>
+Q: Suppose I want to write my own TASM table for a processor not currently
+supported. Is it difficult?</h2>
+It is not terribly difficult, but does require thorough knowledge of the
+target processor instruction set and the encoding rules supported by TASM.
+The 3.2 release of TASM supports 31 different rules for the encoding of
+opcodes/operands. When new processor families are added to TASM, most of
+the instructions/address modes are supported by an existing encoding rule,
+but usually a few new rules are necessary. Adding new encoding rules requires
+source code modification. See TASMTABS.HTM&nbsp; for a summary of the encoding rules.
+<p>&nbsp;</p>
+<hr>
+</body>
+</html>

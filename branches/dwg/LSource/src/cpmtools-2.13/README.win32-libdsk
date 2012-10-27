@@ -1,0 +1,9 @@
+  Under Windows 95/98, if a program name has more than one dot, you have to
+add the ".exe" extension to the command. So you should use "fsck.cpm.exe" 
+rather than just "fsck.cpm".
+
+  If you have appropriate rights, the CPMTOOLS should be able to access
+the floppy drive by using "A:" or "B:" as the name of the disc image. 
+"mkfs.cpm" and "fsed.cpm" don't have this capability.
+
+John Elliott, 18 June 2000  

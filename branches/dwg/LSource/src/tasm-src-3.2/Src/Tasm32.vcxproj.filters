@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{22595b52-6a59-42d5-8e18-beeb9888569d}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;rc;def;r;odl;idl;hpj;bat</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{1117c96e-b7d2-4304-ad8c-84b72e4ed6ec}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{d03649bd-7c7b-4f89-aee8-d95950697963}</UniqueIdentifier>
+      <Extensions>ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Errlog.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Fname.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Lookup.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Macro.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Parse.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Rules.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Str.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Tasm.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Tasmmain.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Wrtobj.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Tasm.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

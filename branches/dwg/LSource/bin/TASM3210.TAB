@@ -1,0 +1,205 @@
+"TASM TMS32010 Assembler."
+/****************************************************************************
+/* $Id: tasm3210.tab 1.1 1993/07/31 01:12:40 toma Exp $
+/****************************************************************************
+/* This is the instruction set definition table 
+/*   for the TMS32010 version of TASM.
+/*      Thomas N. Anderson, Speech Technology Incorporated
+/*
+/*  See TASM manual for info on table structure.
+/* 
+/*INSTR ARGS OPCODE BYTES MOD CLASS SHIFT MASK */
+/*-------------------------------------------*/
+
+/* Generate opcodes high byte first */
+.MSFIRST
+/* Don't use '*' as the wild card since it is used for indirect addressing */
+/* In this table '@' is the wild card indicating where expression may appear*/
+.ALTWILD
+/* Use word addressing (not byte addressing)
+.WORDADDRS
+/* All shift/and stuff applies to opcodes, not args
+.NOARGSHIFT
+
+.REGSET *+      A0 1
+.REGSET *-      90 1
+.REGSET *       80 1
+
+ABS  ""      7F88 2 NOP 1
+
+ADD  !,@,@   0000 2 T1   1 8 0F00
+ADD  !,@     0008 2 T1   1 8 0F00
+ADD  !       0008 2 NOP  1
+ADD  @,@     0000 2 TDMA 1 8 0F00
+ADD  @       0000 2 T1   1 0 007F
+
+ADDH !,@     6000 2 T1   1 0 01
+ADDH !       6008 2 NOP  1
+ADDH @       6000 2 T1   1 0 007F
+
+ADDS !,@     6100 2 T1   1 0 01
+ADDS !       6108 2 NOP  1
+ADDS @       6100 2 T1   1 0 007F
+
+AND  !,@     7900 2 T1   1 0 01
+AND  !       7908 2 NOP  1
+AND  @       7900 2 T1   1 0 7F
+
+APAC ""      7F8F 2 NOP  1
+B    @       F900 4 SWAP 1
+BANZ @       F400 4 SWAP 1
+BGEZ @       FD00 4 SWAP 1
+BGZ  @       FC00 4 SWAP 1
+BIOZ @       F600 4 SWAP 1
+BLEZ @       FB00 4 SWAP 1
+BLZ  @       FA00 4 SWAP 1
+BNZ  @       FE00 4 SWAP 1
+BV   @       F500 4 SWAP 1
+BZ   @       FF00 4 SWAP 1
+CALA ""      7F8C 2 NOP  1
+CALL @       F800 4 SWAP 1
+DINT ""      7F81 2 NOP  1
+
+DMOV !,@     6900 2 T1   1 0 01
+DMOV !       6908 2 NOP  1
+DMOV @       6900 2 T1   1 0 007F
+
+EINT ""      7F82 2 NOP  1
+
+IN   !,@,@   4000 2 T1   1 8 0700
+IN   !,@     4008 2 T1   1 8 0700
+IN   @,@     4000 2 TDMA 1 8 0700
+
+LAC  !,@,@   2000 2 T1   1 8 0F00
+LAC  !,@     2008 2 T1   1 8 0F00
+LAC  !       2008 2 NOP  1
+LAC  @,@     2000 2 TDMA 1 8 0F00
+LAC  @       2000 2 T1   1 0 007F
+
+LACK @       7E00 2 T1   1 0 00FF
+
+LAR  @,!,@   3800 2 TAR  1 0 0001
+LAR  @,!     3808 2 TAR  1 0 0001
+LAR  @,@     3800 2 TAR  1 0 007F
+
+LARK @,@     7000 2 TAR  1 0 00FF
+LARP @       6880 2 T1   1 0 0001
+
+LDP  !,@     6F00 2 T1   1 0 01
+LDP  !       6F08 2 NOP  1
+LDP  @       6F00 2 T1   1 0 007F
+
+LDPK @       6E00 2 T1   1 0 01
+
+LST  !,@     7B00 2 T1   1 0 01
+LST  !       7B08 2 NOP  1
+LST  @       7B00 2 T1   1 0 007F
+
+LT   !,@     6A00 2 T1   1 0 01
+LT   !       6A08 2 NOP  1
+LT   @       6A00 2 T1   1 0 007F
+
+LTA  !,@     6C00 2 T1   1 0 01
+LTA  !       6C08 2 NOP  1
+LTA  @       6C00 2 T1   1 0 007F
+
+LTD  !,@     6B00 2 T1   1 0 01
+LTD  !       6B08 2 NOP  1
+LTD  @       6B00 2 T1   1 0 007F
+
+MAR  !,@     6800 2 T1   1 0 01
+MAR  !       6808 2 NOP  1
+MAR  @       6800 2 T1   1 0 007F
+
+MPY  !,@     6D00 2 T1   1 0 01
+MPY  !       6D08 2 NOP  1
+MPY  @       6D00 2 T1   1 0 007F
+
+MPYK @       8000 2 T1   1 0 1FFF
+
+NOP  ""      7F80 2 NOP  1
+
+OR   !,@     7A00 2 T1   1 0 01
+OR   !       7A08 2 NOP  1
+OR   @       7A00 2 T1   1 0 007F
+
+OUT  !,@,@   4800 2 T1   1 8 0700
+OUT  !,@     4808 2 T1   1 8 0700
+OUT  @,@     4800 2 TDMA 1 8 0700
+
+PAC  ""      7F8E 2 NOP  1
+POP  ""      7F9D 2 NOP  1
+PUSH ""      7F9C 2 NOP  1
+RET  ""      7F8D 2 NOP  1
+ROVM ""      7F8A 2 NOP  1
+
+/* shift count for SACH can only be 0,1, or 4.  The mask allows  */
+/*  0,1,4, or 5.  Let the user beware */
+SACH !,@,@   5800 2 T1   1 8 0500
+SACH !,@     5808 2 T1   1 8 0500
+SACH !       5808 2 NOP  1
+SACH @,@     5800 2 TDMA 1 8 0500
+SACH @       5800 2 T1   1 0 007F
+
+/* The data book shows a shift field for SACL but states it must be 0.
+/* The previous version of this table left the shift field out 
+/* for simplicity, but here I have put it back for compatibility.
+/* The AND mask is set to zero in this case so a error message 
+/* will result from non-zero shifts.
+SACL !,@,@   5000 2 T1   1 8 0000
+SACL !,@     5008 2 T1   1 8 0000
+SACL !       5008 2 NOP  1
+SACL @,@     5000 2 TDMA 1 8 0000
+SACL @       5000 2 T1   1 0 007F
+
+SAR  @,!,@   3000 2 TAR  1 0 0001
+SAR  @,!     3008 2 TAR  1 0 0001
+SAR  @,@     3000 2 TAR  1 0 007F
+
+SOVM ""      7F8B 2 NOP  1
+SPAC ""      7F90 2 NOP  1
+
+SST  !,@     7C00 2 T1   1 0 0001
+SST  !       7C08 2 NOP  1
+SST  @       7C00 2 T1   1 0 007F
+
+SUB  !,@,@   1000 2 T1   1 8 0F00
+SUB  !,@     1008 2 T1   1 8 0F00
+SUB  !       1008 2 NOP  1
+SUB  @,@     1000 2 TDMA 1 8 0F00
+SUB  @       1000 2 T1   1 0 007F
+
+SUBC !,@     6400 2 T1   1 0 01
+SUBC !       6408 2 NOP  1
+SUBC @       6400 2 T1   1 0 007F
+
+SUBH !,@     6200 2 T1   1 0 01
+SUBH !       6208 2 NOP  1
+SUBH @       6200 2 T1   1 0 007F
+
+SUBS !,@     6300 2 T1   1 0 01
+SUBS !       6308 2 NOP  1
+SUBS @       6300 2 T1   1 0 007F
+
+TBLR !,@     6700 2 T1   1 0 01
+TBLR !       6708 2 NOP  1
+TBLR @       6700 2 T1   1 0 007F
+
+TBLW !,@     7D00 2 T1   1 0 01
+TBLW !       7D08 2 NOP  1
+TBLW @       7D00 2 T1   1 0 007F
+
+XOR  !,@     7800 2 T1   1 0 01
+XOR  !       7808 2 NOP  1
+XOR  @       7800 2 T1   1 0 007F
+
+ZAC  ""      7F89 2 NOP  1
+
+ZALH !,@     6500 2 T1   1 0 01
+ZALH !       6508 2 NOP  1
+ZALH @       6500 2 T1   1 0 007F
+
+ZALS !,@     6600 2 T1   1 0 01
+ZALS !       6608 2 NOP  1
+ZALS @       6600 2 T1   1 0 007F
+
