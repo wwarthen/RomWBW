@@ -1,0 +1,215 @@
+"TASM 6805 Assembler.    "
+/***************************************************************************
+/* $Id
+/***************************************************************************
+/* This is the instruction set definition table for the 6805 version of TASM.
+/*      Thomas N. Anderson, Speech Technology Incorported, April 1988.
+/* 
+/*INSTR ARGS OPCODE BYTES MOD CLASS SHIFT OR */
+/*-------------------------------------------*/
+
+ADC  #*  A9 2 NOP   1         
+ADC  ,X  F9 1 NOP   1           
+ADC  *,X D9 3 MZERO 1        
+ADC  *   C9 3 MZERO 1          
+
+ADD  #*  AB 2 NOP   1         
+ADD  ,X  FB 1 NOP   1              
+ADD  *,X DB 3 MZERO 1        
+ADD  *   CB 3 MZERO 1          
+
+AND  #*  A4 2 NOP   1         
+AND  ,X  F4 1 NOP   1              
+AND  *,X D4 3 MZERO 1        
+AND  *   C4 3 MZERO 1          
+
+ASLA ""  48 1 NOP   1       
+ASLX ""  58 1 NOP   1       
+ASL  ,X  78 1 NOP   1              
+ASL  *,X 68 2 NOP   1              
+ASL  *   38 2 NOP   1
+
+ASRA ""  47 1 NOP   1       
+ASRX ""  57 1 NOP   1       
+ASR  ,X  77 1 NOP   1              
+ASR  *,X 67 2 NOP   1              
+ASR  *   37 2 NOP   1
+
+BCC  *   24 2 R1    1           
+BCLR *,* 11 2 MBIT  1
+BCS  *   25 2 R1    1           
+BEQ  *   27 2 R1    1           
+BHCC *   28 2 R1    1           
+BHCS *   29 2 R1    1           
+BHI  *   22 2 R1    1
+BHS  *   24 2 R1    1           
+BIH  *   2F 2 R1    1           
+BIL  *   2E 2 R1    1           
+
+BIT  #*  A5 2 NOP   1         
+BIT  ,X  F5 1 NOP   1              
+BIT  *,X D5 3 MZERO 1        
+BIT  *   C5 3 MZERO 1          
+
+BLO  *   25 2 R1    1           
+BLS  *   23 2 R1    1           
+BMC  *   2C 2 R1    1           
+BMI  *   2B 2 R1    1           
+BMS  *   2D 2 R1    1           
+BNE  *   26 2 R1    1           
+BPL  *   2A 2 R1    1           
+BRA  *   20 2 R1    1           
+
+BRCLR *,*,* 01 3 MBIT 1
+BRN  *   21 2 R1    1           
+BRSET *,*,* 00 3 MBIT 1 
+BSET *,* 10 2 MBIT  1    
+BSR  *   AD 2 R1    1           
+
+CLC  ""  98 1 NOP   1     
+CLI  ""  9A 1 NOP   1     
+
+CLRA ""  4F 1 NOP   1       
+CLRX ""  5F 1 NOP   1       
+CLR  ,X  7F 1 NOP   1              
+CLR  *,X 6F 2 NOP   1              
+CLR  *   3F 2 NOP   1
+
+CMP  #*  A1 2 NOP   1         
+CMP  ,X  F1 1 NOP   1              
+CMP  *,X D1 3 MZERO 1        
+CMP  *   C1 3 MZERO 1          
+
+CMPX #*  A3 2 NOP   1         /* equivalent to CPX */
+CMPX ,X  F3 1 NOP   1              
+CMPX *,X D3 3 MZERO 1        
+CMPX *   C3 3 MZERO 1          
+
+COMA ""  43 1 NOP   1       
+COMX ""  53 1 NOP   1       
+COM  ,X  73 1 NOP   1              
+COM  *,X 63 2 NOP   1               
+COM  *   33 2 NOP   1
+
+CPX  #*  A3 2 NOP   1         
+CPX  ,X  F3 1 NOP   1              
+CPX  *,X D3 3 MZERO 1        
+CPX  *   C3 3 MZERO 1          
+
+DECA ""  4A 1 NOP   1       
+DECX ""  5A 1 NOP   1       
+DEX  ""  5A 1 NOP   1       
+DEC  ,X  7A 1 NOP   1              
+DEC  *,X 6A 2 NOP   1              
+DEC  *   3A 2 NOP   1
+
+EOR  #*  A8 2 NOP   1         
+EOR  ,X  F8 1 NOP   1              
+EOR  *,X D8 3 MZERO 1        
+EOR  *   C8 3 MZERO 1          
+
+INCA ""  4C 1 NOP   1       
+INCX ""  5C 1 NOP   1       
+INX  ""  5C 1 NOP   1       
+INC  ,X  7C 1 NOP   1              
+INC  *,X 6C 2 NOP   1              
+INC  *   3C 2 NOP   1
+
+JMP  ,X  FC 1 NOP   1              
+JMP  *,X DC 3 MZERO 1        
+JMP  *   CC 3 MZERO 1          
+
+JSR  ,X  FD 1 NOP   1              
+JSR  *,X DD 3 MZERO 1        
+JSR  *   CD 3 MZERO 1          
+
+LDA  #*  A6 2 NOP   1         
+LDA  ,X  F6 1 NOP   1              
+LDA  *,X D6 3 MZERO 1        
+LDA  *   C6 3 MZERO 1          
+
+LDX  #*  AE 2 NOP   1         
+LDX  ,X  FE 1 NOP   1              
+LDX  *,X DE 3 MZERO 1        
+LDX  *   CE 3 MZERO 1          
+
+LSLA ""  48 1 NOP   1       
+LSLX ""  58 1 NOP   1       
+LSL  ,X  78 1 NOP   1              
+LSL  *,X 68 2 NOP   1              
+LSL  *   38 2 NOP   1
+
+LSRA ""  44 1 NOP   1       
+LSRX ""  54 1 NOP   1       
+LSR  ,X  74 1 NOP   1              
+LSR  *,X 64 2 NOP   1              
+LSR  *   34 2 NOP   1
+
+MUL  ""  42 1 NOP   4  /* HC05C4 only */
+
+NEGA ""  40 1 NOP   1       
+NEGX ""  50 1 NOP   1        
+NEG  ,X  70 1 NOP   1              
+NEG  *,X 60 2 NOP   1              
+NEG  *   30 2 NOP   1
+
+NOP  ""  9D 1 NOP   1     
+
+ORA  #*  AA 2 NOP   1         
+ORA  ,X  FA 1 NOP   1              
+ORA  *,X DA 3 MZERO 1        
+ORA  *   CA 3 MZERO 1          
+
+ROLA ""  49 1 NOP   1       
+ROLX ""  59 1 NOP   1       
+ROL  ,X  79 1 NOP   1              
+ROL  *,X 69 2 NOP   1              
+ROL  *   39 2 NOP   1
+
+RORA ""  46 1 NOP   1       
+RORX ""  56 1 NOP   1       
+ROR  ,X  76 1 NOP   1              
+ROR  *,X 66 2 NOP   1              
+ROR  *   36 2 NOP   1
+
+RSP  ""  9C 1 NOP   1     
+RTI  ""  80 1 NOP   1     
+RTS  ""  81 1 NOP   1     
+                    
+SBC  #*  A2 2 NOP   1         
+SBC  ,X  F2 1 NOP   1              
+SBC  *,X D2 3 MZERO 1        
+SBC  *   C2 3 MZERO 1          
+
+SEC  ""  99 1 NOP   1     
+SEI  ""  9B 1 NOP   1     
+
+STA  ,X  F7 1 NOP   1              
+STA  *,X D7 3 MZERO 1        
+STA  *   C7 3 MZERO 1          
+
+STOP ""  8E 1 NOP   2     /* M146805 CMOS only */
+
+STX  ,X  FF 1 NOP   1              
+STX  *,X DF 3 MZERO 1        
+STX  *   CF 3 MZERO 1          
+
+SUB  #*  A0 2 NOP   1         
+SUB  ,X  F0 1 NOP   1              
+SUB  *,X D0 3 MZERO 1        
+SUB  *   C0 3 MZERO 1          
+
+SWI  ""  83 1 NOP   1     
+
+TAX  ""  97 1 NOP   1     
+
+TSTA ""  4D 1 NOP   1       
+TSTX ""  5D 1 NOP   1       
+TST  ,X  7D 1 NOP   1              
+TST  *,X 6D 2 NOP   1              
+TST  *   3D 2 NOP   1
+
+TXA  ""  9F 1 NOP   1     
+
+WAIT ""  8F 1 NOP   2     /* M146805 CMOS only */
+
