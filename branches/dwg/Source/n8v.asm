@@ -1,3 +1,6 @@
+; ../RomWBW/Source/n8v.asm 10/27/2012 dwg - begin enhancement
+
+
 ;__N8VDRIVER_______________________________________________________________________________________
 ;
 ;	N8 VIDEO DRIVER FOR ROMWBW
@@ -122,3 +125,6 @@ N8V_VDASCR:
 ; LOCAL DRIVER DATA
 ;__________________________________________________________________________________________________
 ;
+
+CHARSET:
+#INCLUDE "n8chars.inc"
