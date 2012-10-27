@@ -1,6 +1,8 @@
-# RomWBW/branches/dwg/XSource/Makefile 10/24/2012 dwg - 
+# RomWBW/branches/dwg/LSource/Makefile 10/27/2012 dwg - 
 #
 # GCC based makefile
+#
+# 10/27/2012 2.x dwg - updated for Linux
 #
 # 09/28/2012 2.2 dwg - updated for Mac OS X 10.8.2 Mountain Lion
 #
