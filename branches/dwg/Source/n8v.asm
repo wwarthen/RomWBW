@@ -124,7 +124,7 @@ N8V_VDAFIL:
 	RET
 	
 N8V_VDASCR:
-	XOR	A
+  	XOR	A
 	RET
 
 ;-------------------------------------------------
@@ -134,15 +134,11 @@ CMDP:   .EQU    BASE+24
 DATAP:  .EQU    BASE+25
 
 VDP_CLR16K:
-
         LD      C,CMDP
         LD      A,$00
         OUT     (C),A           ; out(CMDP,0);
-
         LD      A,64
         OUT     (C),A           ; out(CMDP,64);
-
-
         LD      B,128
 VDP_CL16LP2:
         PUSH    BC              ; save outer loop counter
@@ -203,8 +199,9 @@ VDP_PGT:
 
 VDP_COLORS:
         LD      C,CMDP
-        LD      A,240
-        OUT     (C),A           ; out(CMDP,240);
+        LD      A,(VDP_ATTR)
+;       LD      A,240
+        OUT     (C),A           ; out(CMDP,240); 240 is 0xF0 - 1111 0000 LSB=background MSB=foreground
         LD      A,135
         OUT     (C),A           ; out(CMDP,135);
         RET
@@ -217,7 +214,6 @@ VDP_LOADSET:
         OUT     (C),A           ; out(CMDP,0);
         LD      A,72
         OUT     (C),A           ; out(CMDP,72);
-
         LD      HL,CHARSET      ; set memory ptr to start of bitmaps
         LD      B,0             ; prepare for 256 iterations
         OTIR                    ; 0000-00FF
@@ -228,44 +224,10 @@ VDP_LOADSET:
         OTIR                    ; 0500-05FF
         OTIR                    ; 0600-06FF
         OTIR                    ; 0700-07FF
-
         RET
 
 ;-------------------------------------------------
 
-
-;
-
-N8V_MODES:
-	; outp(CMDP,80);
-	; outp(CMDP,129);
-	RET
-
-N8V_PNT:
-	; outp(CMDP,0);
-	; outp(CMDP,130);
-	RET
-
-N8V_PGT:
-	; outp(CMDP,1);
-	; outp(CMDP,132);
-	RET
-
-N8V_COLORS:
-	; outp(CMDP,240);
-	; outp(CMDP,135);
-	RET
-
-N8V_LOADCHARS:
-	; out(CMDP,0);
-	; out(CMDP,72);
-	; index=0;
-	; for(c=0;c<256;c++P) {
-	; 	for(d=0;d<8;d++) {
-	;		out(DATAP,charset[index++]);
-	;	}
-	; }
-	RET
 
 N8V_FILL:
 	; out(CMDP,0);
@@ -278,7 +240,9 @@ N8V_FILL:
 	; }
 	RET
 
-N8V_WRVRAM:
+VDP_WRVRAM:
+	; HL -> points to ram location
+
 	; vdp_wrvram(o)
 	; {
 	; 	byte1 = o & 255;
@@ -286,6 +250,11 @@ N8V_WRVRAM:
 	;	out(CMDP,byte1);
 	;	out(CMDP,byte2);
 	; }
+
+	LD	C,CMDP
+	OUT	(C),L
+	OUT	(C),H
+
 	RET
 
 
@@ -311,6 +280,11 @@ N8V_DISPLAY:
 ; LOCAL DRIVER DATA
 ;__________________________________________________________________________________________________
 ;
+
+VDP_LINE	.DB	0
+VDP_COL		.DB	0
+VDP_ATTR	.DB	240	; default to white on black
+
 
 CHARSET:
 #INCLUDE "n8chars.inc"
