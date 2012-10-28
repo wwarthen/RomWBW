@@ -18,10 +18,21 @@
 ;
 N8V_INIT:
 	; INIT TMS9918 HERE...
+
+        CALL    VDP_CLR16K
+        CALL    VDP_SETREGS
+        CALL    VDP_MODES
+        CALL    VDP_PNT
+        CALL    VDP_PGT
+        CALL    VDP_COLORS
+        CALL    VDP_LOADSET
+
 	CALL	PPK_INIT
 	XOR	A
 	RET
-;	
+
+
+;
 ;__________________________________________________________________________________________________
 ; CHARACTER I/O (CIO) DISPATCHER
 ;__________________________________________________________________________________________________
@@ -115,6 +126,114 @@ N8V_VDAFIL:
 N8V_VDASCR:
 	XOR	A
 	RET
+
+;-------------------------------------------------
+
+BASE:   .EQU    128
+CMDP:   .EQU    BASE+24
+DATAP:  .EQU    BASE+25
+
+VDP_CLR16K:
+
+        LD      C,CMDP
+        LD      A,$00
+        OUT     (C),A           ; out(CMDP,0);
+
+        LD      A,64
+        OUT     (C),A           ; out(CMDP,64);
+
+
+        LD      B,128
+VDP_CL16LP2:
+        PUSH    BC              ; save outer loop counter
+        ;
+        LD      B,128
+        LD      A,0
+        LD      C,DATAP
+VDP_CL16LP1:
+        OUT     (C),A           ; out(DATAP,0);
+        DJNZ    VDP_CL16LP1     ; see Brey page 86
+        ;
+        POP     BC              ; restore outer loop counter
+        DJNZ    VDP_CL16LP2     ; see Brey page 86
+
+        RET
+
+;-------------------------------------------------
+
+VDP_SETREGS:
+        LD      C,CMDP
+        LD      A,0
+        OUT     (C),A           ; out(CMDP,0);
+        LD      A,128
+        OUT     (C),A           ; out(CMDP,128);
+        RET
+
+;-------------------------------------------------
+
+VDP_MODES:
+        LD      C,CMDP
+        LD      A,80
+        OUT     (C),A           ; out(CMDP,80);
+        LD      A,129
+        OUT     (C),A           ; out(CMDP,129);
+        RET
+
+;-------------------------------------------------
+
+VDP_PNT:
+        LD      C,CMDP
+        LD      A,0
+        OUT     (C),A           ; out(CMDP,0);
+        LD      A,130
+        OUT     (C),A           ; out(CMDP,130);
+        RET
+
+;-------------------------------------------------
+
+VDP_PGT:
+        LD      C,CMDP
+        LD      A,1
+        OUT     (C),A           ; out(CMDP,1);
+        LD      A,132
+        OUT     (C),A           ; out(CMDP,132);
+        RET
+
+;-------------------------------------------------
+
+VDP_COLORS:
+        LD      C,CMDP
+        LD      A,240
+        OUT     (C),A           ; out(CMDP,240);
+        LD      A,135
+        OUT     (C),A           ; out(CMDP,135);
+        RET
+
+;-------------------------------------------------
+
+VDP_LOADSET:
+        LD      C,CMDP
+        LD      A,0
+        OUT     (C),A           ; out(CMDP,0);
+        LD      A,72
+        OUT     (C),A           ; out(CMDP,72);
+
+        LD      HL,CHARSET      ; set memory ptr to start of bitmaps
+        LD      B,0             ; prepare for 256 iterations
+        OTIR                    ; 0000-00FF
+        OTIR                    ; 0100-01FF
+        OTIR                    ; 0200-02FF
+        OTIR                    ; 0300-03FF
+        OTIR                    ; 0400-04FF
+        OTIR                    ; 0500-05FF
+        OTIR                    ; 0600-06FF
+        OTIR                    ; 0700-07FF
+
+        RET
+
+;-------------------------------------------------
+
+
 ;
 
 N8V_MODES:
