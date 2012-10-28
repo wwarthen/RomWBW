@@ -256,4 +256,4 @@
 	.DB	0fch,0fch,0fch,0fch,0fch,0fch,0fch,0fch	; 0xfe(254)
 	.DB	000h,000h,000h,000h,000h,000h,000h,000h	; 0xff(255)
 ; eof - n8chars.inc
-
+
