@@ -17,16 +17,15 @@
 ;__________________________________________________________________________________________________
 ;
 N8V_INIT:
-	; INIT TMS9918 HERE...
-
-        CALL    VDP_CLR16K
-        CALL    VDP_SETREGS
-        CALL    VDP_MODES
-        CALL    VDP_PNT
-        CALL    VDP_PGT
-        CALL    VDP_COLORS
-        CALL    VDP_LOADSET
-
+        CALL    VDP_CLR16K	; clear the first 16K of TMS9918 video ram to zeroes
+;        CALL    VDP_SETREGS	; set TMS9918 into Text Mode
+;        CALL    VDP_MODES	; set TMS9918 into 40-column mode
+;        CALL    VDP_PNT		; set TMS9918 Pattern Name Table Pointer
+;        CALL    VDP_PGT		; set TMS9918 Pattern Generator Table Pointer
+;        CALL    VDP_COLORS	; set TMS9918 foreground(white) background(black)
+;        CALL    VDP_LOADSET	; set TMS9918 character bitmaps
+; 	CALL	VDP_SINE	; display initialization message on composite video;
+;	CALL	PANIC
 	CALL	PPK_INIT
 	XOR	A
 	RET
@@ -130,8 +129,8 @@ N8V_VDASCR:
 ;-------------------------------------------------
 
 BASE:   .EQU    128
-CMDP:   .EQU    BASE+24
-DATAP:  .EQU    BASE+25
+CMDP:   .EQU    BASE+25
+DATAP:  .EQU    BASE+24
 
 VDP_CLR16K:
         LD      C,CMDP
@@ -139,19 +138,16 @@ VDP_CLR16K:
         OUT     (C),A           ; out(CMDP,0);
         LD      A,64
         OUT     (C),A           ; out(CMDP,64);
-        LD      B,128
-VDP_CL16LP2:
-        PUSH    BC              ; save outer loop counter
-        ;
-        LD      B,128
-        LD      A,0
-        LD      C,DATAP
-VDP_CL16LP1:
-        OUT     (C),A           ; out(DATAP,0);
-        DJNZ    VDP_CL16LP1     ; see Brey page 86
-        ;
-        POP     BC              ; restore outer loop counter
-        DJNZ    VDP_CL16LP2     ; see Brey page 86
+
+	LD	C,DATAP
+	LD	HL,16384
+CLR16LOOP:
+	LD	A,0
+	OUT	(C),A
+	DEC	HL
+	LD	A,H
+	OR	L
+	JR	NZ,CLR16LOOP
 
         RET
 
@@ -228,6 +224,16 @@ VDP_LOADSET:
 
 ;-------------------------------------------------
 
+VDP_SINE:
+	LD	HL,0
+	CALL	VDP_WRVRAM
+
+	LD	HL,VDP_HELLO
+        LD      B,52
+	LD	C,DATAP
+	OTIR
+
+	RET
 
 N8V_FILL:
 	; out(CMDP,0);
@@ -284,7 +290,8 @@ N8V_DISPLAY:
 VDP_LINE	.DB	0
 VDP_COL		.DB	0
 VDP_ATTR	.DB	240	; default to white on black
-
+VDP_HELLO       .TEXT   "N8-2312 TMS9918 Text Mode Initialization Completed"
+VDP_HELLOLEN	.DB	$-VDP_HELLO
 
 CHARSET:
 #INCLUDE "n8chars.inc"
