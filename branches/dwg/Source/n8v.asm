@@ -18,13 +18,13 @@
 ;
 N8V_INIT:
         CALL    VDP_CLR16K	; clear the first 16K of TMS9918 video ram to zeroes
-;        CALL    VDP_SETREGS	; set TMS9918 into Text Mode
-;        CALL    VDP_MODES	; set TMS9918 into 40-column mode
-;        CALL    VDP_PNT		; set TMS9918 Pattern Name Table Pointer
-;        CALL    VDP_PGT		; set TMS9918 Pattern Generator Table Pointer
-;        CALL    VDP_COLORS	; set TMS9918 foreground(white) background(black)
-;        CALL    VDP_LOADSET	; set TMS9918 character bitmaps
-; 	CALL	VDP_SINE	; display initialization message on composite video;
+        CALL    VDP_SETREGS	; set TMS9918 into Text Mode
+        CALL    VDP_MODES	; set TMS9918 into 40-column mode
+        CALL    VDP_PNT		; set TMS9918 Pattern Name Table Pointer
+        CALL    VDP_PGT		; set TMS9918 Pattern Generator Table Pointer
+        CALL    VDP_COLORS	; set TMS9918 foreground(white) background(black)
+        CALL    VDP_LOAD2       ; set TMS9918 character bitmaps
+ 	CALL	VDP_SINE	; display initialization message on composite video;
 ;	CALL	PANIC
 	CALL	PPK_INIT
 	XOR	A
@@ -157,6 +157,7 @@ VDP_SETREGS:
         LD      C,CMDP
         LD      A,0
         OUT     (C),A           ; out(CMDP,0);
+	NOP
         LD      A,128
         OUT     (C),A           ; out(CMDP,128);
         RET
@@ -167,6 +168,7 @@ VDP_MODES:
         LD      C,CMDP
         LD      A,80
         OUT     (C),A           ; out(CMDP,80);
+	NOP
         LD      A,129
         OUT     (C),A           ; out(CMDP,129);
         RET
@@ -177,6 +179,7 @@ VDP_PNT:
         LD      C,CMDP
         LD      A,0
         OUT     (C),A           ; out(CMDP,0);
+	NOP
         LD      A,130
         OUT     (C),A           ; out(CMDP,130);
         RET
@@ -187,6 +190,7 @@ VDP_PGT:
         LD      C,CMDP
         LD      A,1
         OUT     (C),A           ; out(CMDP,1);
+	NOP
         LD      A,132
         OUT     (C),A           ; out(CMDP,132);
         RET
@@ -198,6 +202,7 @@ VDP_COLORS:
         LD      A,(VDP_ATTR)
 ;       LD      A,240
         OUT     (C),A           ; out(CMDP,240); 240 is 0xF0 - 1111 0000 LSB=background MSB=foreground
+	NOP
         LD      A,135
         OUT     (C),A           ; out(CMDP,135);
         RET
@@ -205,35 +210,133 @@ VDP_COLORS:
 ;-------------------------------------------------
 
 VDP_LOADSET:
+
         LD      C,CMDP
         LD      A,0
         OUT     (C),A           ; out(CMDP,0);
+	NOP
         LD      A,72
         OUT     (C),A           ; out(CMDP,72);
+
         LD      HL,CHARSET      ; set memory ptr to start of bitmaps
-        LD      B,0             ; prepare for 256 iterations
-        OTIR                    ; 0000-00FF
-        OTIR                    ; 0100-01FF
-        OTIR                    ; 0200-02FF
-        OTIR                    ; 0300-03FF
-        OTIR                    ; 0400-04FF
-        OTIR                    ; 0500-05FF
-        OTIR                    ; 0600-06FF
-        OTIR                    ; 0700-07FF
+	LD	DE,2048
+	LD	C,DATAP
+VDP_LOADLOOP:
+        LD      A,(HL)
+	OUT	(C),A
+	INC	HL
+	DEC	DE
+	LD	A,D
+	OR	E
+	JR	NZ,VDP_LOADLOOP
         RET
 
 ;-------------------------------------------------
+
+VDP_LOAD2:
+
+        LD      C,CMDP
+        LD      A,0
+        OUT     (C),A           ; out(CMDP,0);
+	NOP
+        LD      A,72
+        OUT     (C),A           ; out(CMDP,72);
+	NOP
+
+        LD      HL,CHARSET      ; set memory ptr to start of bitmaps
+        LD      DE,256
+	LD	C,DATAP
+VDP_LOAD2LOOP:
+
+        LD      A,(HL)
+        LD      (BYTE8),A
+        INC     HL
+
+        LD      A,(HL)
+        LD      (BYTE7),A
+        INC     HL
+
+        LD      A,(HL)
+        LD      (BYTE6),A
+        INC     HL
+
+        LD      A,(HL)
+        LD      (BYTE5),A
+        INC     HL
+
+        LD      A,(HL)
+        LD      (BYTE4),A
+        INC     HL
+
+        LD      A,(HL)
+        LD      (BYTE3),A
+        INC     HL
+
+        LD      A,(HL)
+        LD      (BYTE2),A
+        INC     HL
+
+        LD      A,(HL)
+        INC     HL
+
+        OUT     (C),A
+	CALL	RECOVER
+        LD      A,(BYTE2)
+	OUT	(C),A
+	CALL	RECOVER
+        LD      A,(BYTE3)
+        OUT     (C),A
+	CALL	RECOVER
+        LD      A,(BYTE4)
+        OUT     (C),A
+	CALL	RECOVER
+        LD      A,(BYTE5)
+        OUT     (C),A
+	CALL	RECOVER
+        LD      A,(BYTE6)
+        OUT     (C),A
+	CALL	RECOVER
+        LD      A,(BYTE7)
+        OUT     (C),A
+	CALL	RECOVER
+	LD      A,(BYTE8)
+        OUT     (C),A
+	CALL	RECOVER
+
+        DEC	DE
+	LD	A,D
+	OR	E
+        JR      NZ,VDP_LOAD2LOOP
+        RET
+
+;-------------------------------------------------
+
+
+
+
 
 VDP_SINE:
 	LD	HL,0
 	CALL	VDP_WRVRAM
 
-	LD	HL,VDP_HELLO
-        LD      B,52
-	LD	C,DATAP
-	OTIR
+;        LD      HL,VDP_HELLO
+;        LD      B,52
+;        LD      C,DATAP
+;        OTIR
 
-	RET
+        LD      HL,VDP_HELLO
+        LD      DE,39
+        LD      C,DATAP
+HELLO_LOOP:
+        LD      A,(HL)
+        OUT     (C),A
+        INC     HL
+        DEC     DE
+        LD      A,D
+        OR      E
+        JR      NZ,HELLO_LOOP
+        RET
+
 
 N8V_FILL:
 	; out(CMDP,0);
@@ -274,7 +377,14 @@ N8V_DISPLAY:
 	; }	
 	RET
 
-
+RECOVER:
+	PUSH	BC
+	PUSH	DE
+	PUSH	HL
+	POP	HL
+	POP	DE
+	POP	BC
+	RET
 
 ;__________________________________________________________________________________________________
 ; IMBED COMMON PRALLEL PORT KEYBOARD DRIVER
@@ -290,8 +400,17 @@ N8V_DISPLAY:
 VDP_LINE	.DB	0
 VDP_COL		.DB	0
 VDP_ATTR	.DB	240	; default to white on black
-VDP_HELLO       .TEXT   "N8-2312 TMS9918 Text Mode Initialization Completed"
+VDP_HELLO       .TEXT   "   N8-2312 TMS9918 Text Mode Init Done!!"
 VDP_HELLOLEN	.DB	$-VDP_HELLO
+
+;BYTE           .DB     0
+BYTE2           .DB     0
+BYTE3           .DB     0
+BYTE4           .DB     0
+BYTE5           .DB     0
+BYTE6           .DB     0
+BYTE7           .DB     0
+BYTE8           .DB     0
 
 CHARSET:
 #INCLUDE "n8chars.inc"
