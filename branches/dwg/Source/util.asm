@@ -43,6 +43,16 @@ PC_RBKT:
 	LD	A,']'
 	JR	PC_PRTCHR
 
+PC_LT:
+	PUSH	AF
+	LD	A,'<'
+	JR	PC_PRTCHR
+
+PC_GT:
+	PUSH	AF
+	LD	A,'>'
+	JR	PC_PRTCHR
+
 PC_LPAREN:
 	PUSH	AF
 	LD	A,'('
