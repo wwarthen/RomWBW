@@ -1,3 +1,4 @@
+# RomWBW/branches/dwg/LSource/Makefile 11/09/2012 dwg - added rule to copy n8chars.minc
 # RomWBW/branches/dwg/LSource/Makefile 10/27/2012 dwg - 
 #
 # GCC based makefile
@@ -223,7 +224,7 @@ bdosb01.asm:	$(SRC)bdosb01.asm
 	cp $< $@
 	$(CVT) $@
 
-bnk1.asm:	$(SRC)bnk1.asm fd.asm ppide.asm n8v.asm ppk.asm sd.asm tty.asm ansi.asm
+bnk1.asm:	$(SRC)bnk1.asm fd.asm ppide.asm n8v.asm n8chars.inc ppk.asm sd.asm tty.asm ansi.asm
 	cp $(SRC)bnk1.asm $@
 	$(CVT) $@
 
@@ -288,6 +289,10 @@ loader.asm:	$(SRC)loader.asm util.asm
 	$(CVT) $@
 
 memmgr.asm:	$(SRC)memmgr.asm
+	cp $< $@
+	$(CVT) $@
+
+n8chars.inc:	$(SRC)n8chars.inc
 	cp $< $@
 	$(CVT) $@
 
