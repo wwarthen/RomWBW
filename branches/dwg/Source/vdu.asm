@@ -22,7 +22,6 @@ VDU_DATA	 .EQU	0F3h		; VDU DATA REGISTER
 ;
 VDU_INIT:
 	CALL	INITVDU
-	CALL	PPK_INIT
 	XOR	A
 	RET
 ;	
@@ -176,12 +175,6 @@ VDU_WAITRDY:
 	OR	A		; SET FLAGS
 	RET	M		; IF BIT 7 SET, THEN READY!
 	JR	VDU_WAITRDY	; KEEP CHECKING
-;
-;__________________________________________________________________________________________________
-; IMBED COMMON PARALLEL PORT KEYBOARD DRIVER
-;__________________________________________________________________________________________________
-;
-#INCLUDE "ppk.asm"
 ;
 ;__________________________________________________________________________________________________
 ; INITIALIZATION
