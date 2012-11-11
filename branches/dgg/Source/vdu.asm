@@ -1,10 +1,10 @@
 ;__VDUDRIVER_______________________________________________________________________________________
 ;
-;	VDUDRIVER FOR CBIOS 2.2, PAGED.
+;	VDU DRIVER FOR N8VEM PROJECT
 ;
 ;	VDU DRIVERS BY:  ANDREW LYNCH
-;	KEYBOARD DRIVERS BY: DR  JAMES MOXHAM
 ;	REMAINDER WRITTEN BY: DAN WERNER -- 11/7/2009
+;	ROMWBW ADAPTATION BY: WAYNE WARTHEN -- 11/9/2012
 ;__________________________________________________________________________________________________
 ;
 ;__________________________________________________________________________________________________
