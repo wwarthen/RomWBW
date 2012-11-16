@@ -188,48 +188,10 @@ CVDU_VDASCR1:
 	POP	DE		; RECOVER E
 	INC	E		; INCREMENT IT
 	JR	CVDU_VDASCR	; LOOP
-;	
+;
 ;======================================================================
 ; CVDU DRIVER - PRIVATE DRIVER FUNCTIONS
 ;======================================================================
-;
-;----------------------------------------------------------------------
-; MOS 8563 DISPLAY CONTROLLER CHIP INITIALIZATION
-;----------------------------------------------------------------------
-;
-CVDU_CRTINIT:
-    	LD 	C,0			; START WITH REGISTER 0
-	LD	B,37			; INIT 37 REGISTERS
-    	LD 	HL,CVDU_INIT8563	; HL = POINTER TO THE DEFAULT VALUES
-CVDU_CRTINIT1:
-	LD	A,(HL)			; GET VALUE
-	CALL	CVDU_WR			; WRITE IT
-	INC	HL			; POINT TO NEXT VALUE
-	INC	C			; POINT TO NEXT REGISTER
-	DJNZ	CVDU_CRTINIT1		; LOOP
-    	RET
-;
-;----------------------------------------------------------------------
-; LOAD FONT DATA
-;----------------------------------------------------------------------
-;
-CVDU_LOADFONT:
-	LD	HL,$2000		; START OF FONT BUFFER
-	LD	C,18			; UPDATE ADDRESS REGISTER PAIR
-	CALL	CVDU_WRX		; DO IT
-
-	LD	HL,CVDU_FONTDATA	; POINTER TO FONT DATA
-	LD	DE,$2000		; LENGTH OF FONT DATA
-	LD	C,31			; DATA REGISTER
-CVDU_LOADFONT1:
-	LD	A,(HL)			; LOAD NEXT BYTE OF FONT DATA
-	CALL	CVDU_WR			; WRITE IT
-	INC	HL			; INCREMENT FONT DATA POINTER
-	DEC	DE			; DECREMENT LOOP COUNTER
-	LD	A,D			; CHECK DE...
-	OR	E			; FOR COUNTER EXHAUSTED
-	JR	NZ,CVDU_LOADFONT1	; LOOP TILL DONE
-	RET
 ;
 ;----------------------------------------------------------------------
 ; UPDATE M8563 REGISTERS
@@ -279,6 +241,44 @@ CVDU_RDX:
 	INC	C			; BUMP TO NEXT REGISTER OF PAIR
 	CALL	CVDU_RD			; READ THE VALUE
 	LD	L,A			; SAVE IT IN L
+	RET
+;
+;----------------------------------------------------------------------
+; MOS 8563 DISPLAY CONTROLLER CHIP INITIALIZATION
+;----------------------------------------------------------------------
+;
+CVDU_CRTINIT:
+    	LD 	C,0			; START WITH REGISTER 0
+	LD	B,37			; INIT 37 REGISTERS
+    	LD 	HL,CVDU_INIT8563	; HL = POINTER TO THE DEFAULT VALUES
+CVDU_CRTINIT1:
+	LD	A,(HL)			; GET VALUE
+	CALL	CVDU_WR			; WRITE IT
+	INC	HL			; POINT TO NEXT VALUE
+	INC	C			; POINT TO NEXT REGISTER
+	DJNZ	CVDU_CRTINIT1		; LOOP
+    	RET
+;
+;----------------------------------------------------------------------
+; LOAD FONT DATA
+;----------------------------------------------------------------------
+;
+CVDU_LOADFONT:
+	LD	HL,$2000		; START OF FONT BUFFER
+	LD	C,18			; UPDATE ADDRESS REGISTER PAIR
+	CALL	CVDU_WRX		; DO IT
+
+	LD	HL,CVDU_FONTDATA	; POINTER TO FONT DATA
+	LD	DE,$2000		; LENGTH OF FONT DATA
+	LD	C,31			; DATA REGISTER
+CVDU_LOADFONT1:
+	LD	A,(HL)			; LOAD NEXT BYTE OF FONT DATA
+	CALL	CVDU_WR			; WRITE IT
+	INC	HL			; INCREMENT FONT DATA POINTER
+	DEC	DE			; DECREMENT LOOP COUNTER
+	LD	A,D			; CHECK DE...
+	OR	E			; FOR COUNTER EXHAUSTED
+	JR	NZ,CVDU_LOADFONT1	; LOOP TILL DONE
 	RET
 ;
 ;----------------------------------------------------------------------
