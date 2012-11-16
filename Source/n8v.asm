@@ -1,3 +1,5 @@
+; ../RomWBW/Source/n8v.asm 11/16/2012 dwg - N8V_VDAQRY now working
+; ../RomWBW/Source/n8v.asm 11/15/2012 dwg - vdaini and vdaqry retcodes ok
 ; ../RomWBW/Source/n8v.asm 10/28/2012 dwg - add n8v_modes
 ; ../RomWBW/Source/n8v.asm 10/27/2012 dwg - begin enhancement
 
@@ -92,14 +94,52 @@ N8V_DISPVDA:
 	CALL	PANIC
 
 N8V_VDAINI:
-	XOR	A
+	LD	A,C
+	LD	(VDP_DEVUNIT),A
+	LD	A,E
+	LD	(VDP_MODE),A
+	CALL	N8V_INIT
 	RET
 
 N8V_VDAQRY:
-	CALL	PANIC
+	LD	A,(VDP_MODE)
+	LD	C,A
+	LD	A,(VDP_ROWS)
+	LD	D,A
+	LD	A,(VDP_COLS)
+	LD	E,A
+
+	LD	A,H
+	OR	L
+	JP	Z,N8V_QDONE
+
+	; read bitmaps and 
+        LD      C,CMDP
+        LD      A,0
+        OUT     (C),A           ; out(CMDP,0);
+	CALL	RECOVER
+        LD      A,72
+        OUT     (C),A           ; out(CMDP,72);
+	CALL	RECOVER
+
+	LD	DE,2048
+	LD	C,DATAP
+	IN	A,(C)					; read status
+	CALL	RECOVER
+VDP_QLOOP:
+	IN	A,(C)
+	LD	(HL),A
+	INC	HL
+	DEC	DE
+	LD	A,D
+	OR	E
+	JR	NZ,VDP_QLOOP
+N8V_QDONE:
+	LD	A,0		; return SUCCESS
+	RET
 	
 N8V_VDARES:
-	JR	N8V_INIT
+	JP	N8V_INIT
 	
 N8V_VDASCS:
 	CALL	PANIC
@@ -164,6 +204,8 @@ VDP_SETREGS:
 
 ;-------------------------------------------------
 
+; The only TMS9918 mode available right now is "text mode".
+
 VDP_MODES:
         LD      C,CMDP
         LD      A,80
@@ -171,6 +213,15 @@ VDP_MODES:
 	NOP
         LD      A,129
         OUT     (C),A           ; out(CMDP,129);
+
+	;; text mode is 24x40
+	LD	A,0
+	LD	(VDP_MODE),a
+	LD	a,40
+	LD	(VDP_COLS),a
+	LD	a,24
+	LD	(VDP_ROWS),A
+
         RET
 
 ;-------------------------------------------------
@@ -316,14 +367,10 @@ VDP_LOAD2LOOP:
 
 
 VDP_SINE:
+
+	; N8-2312 TMS9918 Text Mode Init Done!
 	LD	HL,0
 	CALL	VDP_WRVRAM
-
-;        LD      HL,VDP_HELLO
-;        LD      B,52
-;        LD      C,DATAP
-;        OTIR
-
         LD      HL,VDP_HELLO
         LD      DE,39
         LD      C,DATAP
@@ -335,6 +382,69 @@ HELLO_LOOP:
         LD      A,D
         OR      E
         JR      NZ,HELLO_LOOP
+
+	; N8VEM HBIOS v2.2 B3
+	LD	HL,40+40+40+40+3
+	CALL	VDP_WRVRAM
+	LD	HL,STR_BANNER
+	LD	C,DATAP
+	LD	DE,20
+BAN_LOOP:
+	LD	A,(HL)
+	CP	'('
+	JP	Z,BAN_DONE
+	OUT	(C),A
+	INC	HL
+	DEC	DE
+	LD	A,D
+	OR	E
+	JR	NZ,BAN_LOOP
+BAN_DONE:
+
+
+	; (rOMwbw-DOUG-121113t0113) <BLANK>
+	LD	HL,40+40+40+40+40+3
+	CALL	VDP_WRVRAM
+	;
+	LD	HL,STR_BANNER + 20
+	LD	C,DATAP
+	;
+	LD	DE,27
+BAN_LOOP2:
+	LD	A,(HL)
+	CP	' '
+	JP	Z,BAN_DONE2
+	OUT	(C),A
+	INC	HL
+	DEC	DE
+	LD	A,D
+	OR	E
+	JR	NZ,BAN_LOOP2
+	LD	A,'|'
+	OUT	(C),A
+	CALL	RECOVER
+BAN_DONE2:
+
+	; n8 z180 sbc, floppy (autosize), ppide..
+	PUSH	HL
+	LD	HL,40+40+40+40+40+40+3
+	CALL	VDP_WRVRAM
+	POP	HL
+
+	LD	C,DATAP
+	LD	DE,60
+BAN_LOOP3:
+	LD	A,(HL)
+	CP	'$'
+	JP	Z,BAN_DONE3
+	OUT	(C),A
+	INC	HL
+	DEC	DE
+	LD	A,D
+	OR	E
+	JP	NZ,BAN_LOOP3
+BAN_DONE3:
+
         RET
 
 
@@ -362,8 +472,9 @@ VDP_WRVRAM:
 
 	LD	C,CMDP
 	OUT	(C),L
+	CALL	RECOVER
 	OUT	(C),H
-
+	CALL	RECOVER
 	RET
 
 
@@ -392,8 +503,12 @@ RECOVER:
 ;__________________________________________________________________________________________________
 ;
 
-VDP_LINE	.DB	0
+VDP_DEVUNIT	.DB	0
+VDP_ROW		.DB	0
 VDP_COL		.DB	0
+VDP_ROWS	.DB	24
+VDP_COLS	.DB	40
+VDP_MODE	.DB	0
 VDP_ATTR	.DB	240	; default to white on black
 VDP_HELLO       .TEXT   "   N8-2312 TMS9918 Text Mode Init Done!!"
 VDP_HELLOLEN	.DB	$-VDP_HELLO
