@@ -1,78 +1,78 @@
-;__CVDUDRIVER_______________________________________________________________________________________
-;
+;======================================================================
 ;	COLOR VDU DRIVER FOR N8VEM PROJECT
 ;
 ;	WRITTEN BY: DAN WERNER -- 11/4/2011
-;	REMAINDER WRITTEN BY: DAN WERNER -- 11/7/2009
 ;	ROMWBW ADAPTATION BY: WAYNE WARTHEN -- 11/9/2012
-;__________________________________________________________________________________________________
+;======================================================================
 ;
-;__________________________________________________________________________________________________
-; DATA CONSTANTS
-;__________________________________________________________________________________________________
+; TODO:
+;   - IMPLEMENT CONSTANTS FOR SCREEN DIMENSIONS
+;   - IMPLEMENT SET CURSOR STYLE (VDASCS) FUNCTION
+;   - IMPLEMENT ALTERNATE DISPLAY MODES?
+;   - IMPLEMENT DYNAMIC READ/WRITE OF CHARACTER BITMAP DATA?
+;
+;======================================================================
+; CVDU DRIVER - CONSTANTS
+;======================================================================
 ;
 CVDU_STAT	 .EQU	$E4		; READ M8563 STATUS
 CVDU_REG	 .EQU	$E4		; SELECT M8563 REGISTER
 CVDU_DATA	 .EQU	$EC		; READ/WRITE M8563 DATA
 ;
-;__________________________________________________________________________________________________
-; BOARD INITIALIZATION
-;__________________________________________________________________________________________________
+;======================================================================
+; CVDU DRIVER - INITIALIZATION
+;======================================================================
 ;
 CVDU_INIT:
-	CALL 	CVDU_CRTINIT
-	CALL	CVDU_LOADFONT
+	CALL 	CVDU_CRTINIT		; SETUP THE CVDU CHIP REGISTERS
+	CALL	CVDU_LOADFONT		; LOAD FONT DATA FROM ROM TO CVDU STRORAGE
 
 CVDU_RESET:
-	LD	A,14
-	LD	(CVDU_ATTR),A
-	XOR	A
-	LD	(CVDU_X),A
-	LD	(CVDU_Y),A
-	LD	DE,0
-	LD	(CVDU_DISPLAYPOS),DE
+	LD	A,$0E			; ATTRIBUTE IS STANDARD WHITE ON BLACK
+	LD	(CVDU_ATTR),A		; SAVE IT
 	
-	LD	A,'#'
-	LD	DE,$800
-	CALL	CVDU_FILL
-	CALL	CVDU_XY
+	LD	A,'#'			; BLANK THE SCREEN
+	LD	DE,$800			; FILL ENTIRE BUFFER
+	CALL	CVDU_FILL		; DO IT
+	LD	DE,0			; ROW = 0, COL = 0
+	CALL	CVDU_XY			; SEND CURSOR TO TOP LEFT
 	
-	XOR	A
+	XOR	A			; SIGNAL SUCCESS
 	RET
 ;	
-;__________________________________________________________________________________________________
-; CHARACTER I/O (CIO) FUNCTION JUMP TABLE
-;__________________________________________________________________________________________________
+;======================================================================
+; CVDU DRIVER - CHARACTER I/O (CIO) DISPATCHER AND FUNCTIONS
+;======================================================================
 ;
 CVDU_DISPCIO:
-	LD	A,B		; GET REQUESTED FUNCTION
-	AND	$0F		; ISOLATE SUB-FUNCTION
-	JR	Z,CVDU_CIOIN
+	LD	A,B			; GET REQUESTED FUNCTION
+	AND	$0F			; ISOLATE SUB-FUNCTION
+	JR	Z,CVDU_CIOIN		; $00
 	DEC	A
-	JR	Z,CVDU_CIOOUT
+	JR	Z,CVDU_CIOOUT		; $01
 	DEC	A
-	JR	Z,CVDU_CIOIST
+	JR	Z,CVDU_CIOIST		; $02
 	DEC	A
-	JR	Z,CVDU_CIOOST
+	JR	Z,CVDU_CIOOST		; $03
 	CALL	PANIC
 ;	
 CVDU_CIOIN:
-	JP	KBD_READ
+	JP	KBD_READ		; CHAIN TO KEYBOARD DRIVER
 ;
 CVDU_CIOIST:
-	JP	KBD_STAT
+	JP	KBD_STAT		; CHAIN TO KEYBOARD DRIVER
 ;
 CVDU_CIOOUT:
-	JP	CVDU_VDAWRC
+	JP	CVDU_VDAWRC		; WRITE CHARACTER
 ;
 CVDU_CIOOST:
-	XOR	A
-	INC	A
+	XOR	A			; A = 0
+	INC	A			; A = 1, SIGNAL OUTPUT BUFFER READY
 	RET
 ;	
-;__________________________________________________________________________________________________
-; VIDEO DISPLAY ADAPTER (VDA) FUNCTION JUMP TABLE
-;__________________________________________________________________________________________________
+;======================================================================
+; CVDU DRIVER - VIDEO DISPLAY ADAPTER (VDA) DISPATCHER AND FUNCTIONS
+;======================================================================
 ;
 CVDU_DISPVDA:
 	LD	A,B		; GET REQUESTED FUNCTION
@@ -118,17 +118,13 @@ CVDU_VDAQRY:
 	RET
 	
 CVDU_VDARES:
-	JP	CVDU_RESET
+	JP	CVDU_RESET	; DO THE RESET
 	
 CVDU_VDASCS:
 	CALL	PANIC		; NOT IMPLEMENTED (YET)
 	
 CVDU_VDASCP:
-	LD	A,E		; GET E
-	LD	(CVDU_X),A	; SAVE AS COLUMN (X)
-	LD	A,D		; GET D
-	LD	(CVDU_Y),A	; SAVE AS ROW (Y)
-	CALL	CVDU_XY		; MOVE THE CURSOR
+	CALL	CVDU_XY		; SET CURSOR POSITION
 	XOR	A		; SIGNAL SUCCESS
 	RET
 	
@@ -194,10 +190,14 @@ CVDU_VDASCR1:
 	POP	DE		; RECOVER E
 	INC	E		; INCREMENT IT
 	JR	CVDU_VDASCR	; LOOP
+;	
+;======================================================================
+; CVDU DRIVER - PRIVATE DRIVER FUNCTIONS
+;======================================================================
 ;
-;__CVDU_CRTINIT_____________________________________________________________________________________
-;
-; 	INIT 8563 VDU CHIP
+;----------------------------------------------------------------------
+; MOS 8563 DISPLAY CONTROLLER CHIP INITIALIZATION
+;----------------------------------------------------------------------
 ;
 CVDU_CRTINIT:
     	LD 	C,0			; START WITH REGISTER 0
@@ -211,18 +211,18 @@ CVDU_CRTINIT1:
 	DJNZ	CVDU_CRTINIT1		; LOOP
     	RET
 ;
-;__CVDU_LOADFONT____________________________________________________________________________________
+;----------------------------------------------------------------------
+; LOAD FONT DATA
+;----------------------------------------------------------------------
 ;
-; 	LOAD SCREEN FONT
-;__________________________________________________________________________________________________			   	   	
 CVDU_LOADFONT:
 	LD	HL,$2000		; START OF FONT BUFFER
-	LD	C,18			; SET BUFFER POINTER
+	LD	C,18			; UPDATE ADDRESS REGISTER PAIR
 	CALL	CVDU_WRX		; DO IT
 
 	LD	HL,CVDU_FONTDATA	; POINTER TO FONT DATA
 	LD	DE,$2000		; LENGTH OF FONT DATA
-	LD	C,31			; WRITE DATA
+	LD	C,31			; DATA REGISTER
 CVDU_LOADFONT1:
 	LD	A,(HL)			; LOAD NEXT BYTE OF FONT DATA
 	CALL	CVDU_WR			; WRITE IT
@@ -233,32 +233,12 @@ CVDU_LOADFONT1:
 	JR	NZ,CVDU_LOADFONT1	; LOOP TILL DONE
 	RET
 ;
-;__CVDU_WREG________________________________________________________________________________________
+;----------------------------------------------------------------------
+; UPDATE M8563 REGISTERS
+;   CVDU_WR WRITES VALUE IN A TO VDU REGISTER SPECIFIED IN C
+;   CVDU_WRX WRITES VALUE IN DE TO VDU REGISTER PAIR IN C, C+1
+;----------------------------------------------------------------------
 ;
-; 	WRITE VALUE IN A TO REGISTER IN B
-;	B: REGISTER TO UPDATE
-;	A: VALUE TO WRITE
-;__________________________________________________________________________________________________			
-CVDU_WREG:
-	PUSH 	AF			; STORE AF
-CVDU_WREG1:	
-	IN 	A,(CVDU_STAT)         ; read address/status register
-    	BIT 	7,A             	; if bit 7 = 1 than an update strobe has been occured
-    	JR 	Z,CVDU_WREG1	  	; wait for ready
-	LD	A,B			;
-       	OUT 	(CVDU_REG),A      	; select register 
-CVDU_WREG2:	
-	IN 	A,(CVDU_STAT)         ; read address/status register
-    	BIT 	7,A             	; if bit 7 = 1 than an update strobe has been occured
-    	JR 	Z,CVDU_WREG2	  	; wait for ready
-	POP	AF			;
-       	OUT 	(CVDU_DATA),A      	; PUT DATA
-    	RET
-;
-;__CVDU_WR__________________________________________________________________________________________
-;
-; 	WRITE VALUE IN A TO REGISTER IN C
-;__________________________________________________________________________________________________			
 CVDU_WR:
 	PUSH	AF			; SAVE VALUE TO WRITE
 	LD	A,C			; SET A TO CVDU REGISTER TO SELECT
@@ -271,10 +251,6 @@ CVDU_WR1:
 	OUT	(CVDU_DATA),A		; WRITE IT
 	RET
 ;
-;__CVDU_WRX_________________________________________________________________________________________
-;
-; 	WRITE VALUE IN HL TO REGISTER PAIR C/C+1
-;__________________________________________________________________________________________________			
 CVDU_WRX:
 	LD	A,H			; SETUP MSB TO WRITE
 	CALL	CVDU_WR			; DO IT
@@ -282,86 +258,90 @@ CVDU_WRX:
 	LD	A,L			; SETUP LSB TO WRITE
 	JR	CVDU_WR			; DO IT & RETURN
 ;
-;__CVDU_GREG________________________________________________________________________________________
+;----------------------------------------------------------------------
+; READ M8563 REGISTERS
+;   CVDU_RD READS VDU REGISTER SPECIFIED IN C AND RETURNS VALUE IN A
+;   CVDU_RDX READS VDU REGISTER PAIR SPECIFIED BY C, C+1 
+;     AND RETURNS VALUE IN HL
+;----------------------------------------------------------------------
 ;
-; 	GET VALUE FROM REGISTER IN B PLACE IN A
-;	B: REGISTER TO GET
-;	A: VALUE 
-;__________________________________________________________________________________________________			
-CVDU_GREG:
-	IN 	A,(CVDU_STAT)         ; read address/status register
-    	BIT 	7,A             	; if bit 7 = 1 than an update strobe has been occured
-    	JR 	Z,CVDU_GREG	  	; wait for ready
-	LD	A,B			;
-       	OUT 	(CVDU_REG) , A    	; select register 
-CVDU_GREG1:	
-	IN 	A,(CVDU_STAT)         ; read address/status register
-    	BIT 	7,A             	; if bit 7 = 1 than an update strobe has been occured
-    	JR 	Z,CVDU_GREG1	  	; wait for ready
-       	IN 	A,(CVDU_DATA)       	; GET DATA 
-    	RET
+CVDU_RD:
+	LD	A,C			; SET A TO CVDU REGISTER TO SELECT
+	OUT	(CVDU_REG),A		; WRITE IT TO SELECT THE REGISTER
+CVDU_RD1:
+	IN	A,(CVDU_STAT)		; GET CVDU STATUS
+	BIT	7,A			; CHECK BIT 7
+	JR	Z,CVDU_WR1		; LOOP WHILE NOT READY (BIT 7 NOT SET)
+	IN	A,(CVDU_DATA)		; READ IT
+	RET
 ;
-;__CVDU_XY__________________________________________________________________________________________
+CVDU_RDX:
+	CALL	CVDU_RD			; GET VALUE FROM REGISTER IN C
+	LD	H,A			; SAVE IN H
+	INC	C			; BUMP TO NEXT REGISTER OF PAIR
+	CALL	CVDU_RD			; READ THE VALUE
+	LD	L,A			; SAVE IT IN L
+	RET
 ;
-; 	MOVE CURSOR TO POSITON IN CVDU_X AND CVDU_Y
+;----------------------------------------------------------------------
+; SET CURSOR POSITION TO ROW IN D AND COLUMN IN E
+;----------------------------------------------------------------------
 ;
 CVDU_XY:
-	LD	A,(CVDU_Y)		; GET CURRENT ROW (Y)
-	LD	H,A			; PLACE IN Y
-	LD	DE,80			; DE := 80 (ROW LENGTH)
-	CALL	MULT8			; HL := H * E (D IS CLEARED)
-	LD	A,(CVDU_X)		; GET CURRENT COLUMN (X)
-	LD	E,A			; PUT IN E, D IS ALREADY 0
-	ADD	HL,DE			; ADD IN COLUMN OFFSET
-	LD	(CVDU_DISPLAYPOS),HL	; SAVE THE RESULT (DISPLAY POSITION)
-    	LD 	C,14			; FUNCTION TO SET CURSOR POSITION
+	LD	A,E			; SAVE COLUMN NUMBER IN A
+	LD	H,D			; SET H TO ROW NUMBER
+	LD	E,80			; SET E TO ROW LENGTH
+	CALL	MULT8			; MULTIPLY TO GET ROW OFFSET
+	LD	E,A			; GET COLUMN BACK
+	ADD	HL,DE			; ADD IT IN
+	LD	(CVDU_POS),HL		; SAVE THE RESULT (DISPLAY POSITION)
+    	LD 	C,14			; CURSOR POSITION REGISTER PAIR
 	JP	CVDU_WRX		; DO IT AND RETURN
 ;
-;__________________________________________________________________________________________________			   	   	
+;----------------------------------------------------------------------
+; WRITE VALULE IN A TO CURRENT VDU BUFFER POSTION, ADVANCE CURSOR
+;----------------------------------------------------------------------
+;
 CVDU_PUTCHAR:
-;
-; PLACE CHARACTER ON SCREEN, ADVANCE CURSOR
-; A: CHARACTER TO OUTPUT
-;
 	PUSH	AF			; SAVE CHARACTER
-	
+
 	; SET MEMORY LOCATION FOR CHARACTER
-	LD	HL,(CVDU_DISPLAYPOS)
-	LD	C,18
-	CALL	CVDU_WRX
+	LD	HL,(CVDU_POS)		; LOAD CURRENT POSITION INTO HL
+	LD	C,18			; UPDATE ADDRESS REGISTER PAIR
+	CALL	CVDU_WRX		; DO IT
 
 	; PUT THE CHARACTER THERE
-	POP	AF
-	LD	C,31
-	CALL	CVDU_WR
+	POP	AF			; RECOVER CHARACTER VALLUE TO WRITE
+	LD	C,31			; DATA REGISTER
+	CALL	CVDU_WR			; DO IT
 
 	; BUMP THE CURSOR FORWARD
-	INC	HL
-	LD	(CVDU_DISPLAYPOS),HL
-	LD	C,14
-	CALL	CVDU_WRX
+	INC	HL			; BUMP HL TO NEXT POSITION
+	LD	(CVDU_POS),HL		; SAVE IT
+	LD	C,14			; CURSOR POSITION REGISTER PAIR
+	CALL	CVDU_WRX		; DO IT
 
 	; SET MEMORY LOCATION FOR ATTRIBUTE
-	LD	DE,$800 - 1
-	ADD	HL,DE
-	LD	C,18
-	CALL	CVDU_WRX
-	
+	LD	DE,$800 - 1		; SETUP DE TO ADD OFFSET INTO ATTRIB BUFFER
+	ADD	HL,DE			; HL NOW POINTS TO ATTRIB POS FOR CHAR JUST WRITTEN
+	LD	C,18			; UPDATE ADDRESS REGISTER PAIR
+	CALL	CVDU_WRX		; DO IT
+
 	; PUT THE ATTRIBUTE THERE
-	LD	A,(CVDU_ATTR)
-	LD	C,31
-	JP	CVDU_WR
+	LD	A,(CVDU_ATTR)		; LOAD THE ATTRIBUTE VALUE
+	LD	C,31			; DATA REGISTER
+	JP	CVDU_WR			; DO IT AND RETURN
 ;
-;__________________________________________________________________________________________________			   	   	
-CVDU_FILL:
-;
+;----------------------------------------------------------------------
 ; FILL AREA IN BUFFER WITH SPECIFIED CHARACTER AND CURRENT COLOR/ATTRIBUTE
-; STARTING WITH THE CURRENT FRAME BUFFER POSITION
+; STARTING AT THE CURRENT FRAME BUFFER POSITION
 ;   A: FILL CHARACTER
 ;   DE: NUMBER OF CHARACTERS TO FILL
+;----------------------------------------------------------------------
 ;
+CVDU_FILL:
 	PUSH	DE			; SAVE FILL COUNT
-	LD	HL,(CVDU_DISPLAYPOS)	; SET CHARACTER BUFFER POSITION TO FILL
+	LD	HL,(CVDU_POS)		; SET CHARACTER BUFFER POSITION TO FILL
 	PUSH	HL			; SAVE BUF POS
 	CALL	CVDU_FILL1		; DO THE CHARACTER FILL
 	POP	HL			; RECOVER BUF POS
@@ -372,7 +352,6 @@ CVDU_FILL:
 	JR	CVDU_FILL1		; DO ATTRIBUTE FILL AND RETURN
 	
 CVDU_FILL1:
-	; SAVE FILL VALUE
 	LD	B,A			; SAVE REQUESTED FILL VALUE
 	
 	; CHECK FOR VALID FILL LENGTH
@@ -381,44 +360,45 @@ CVDU_FILL1:
 	RET	Z			; BAIL OUT IF LENGTH OF ZERO SPECIFIED
 	
 	; POINT TO BUFFER LOCATION TO START FILL
-	LD	C,18			; USE CVDU REG 18/19 TO SET BUF LOC
+	LD	C,18			; UPDATE ADDRESS REGISTER PAIR
 	CALL	CVDU_WRX		; DO IT
 	
 	; SET MODE TO BLOCK WRITE
-	XOR	A			; WRITE VALUE 0 (BIT 7 CLR FOR BLOCK WRITE)
-	LD	C,24			; TO CVDU REG 24
+	LD	C,24			; BLOCK MODE CONTROL REGISTER
+	CALL	CVDU_RD			; GET CURRENT VALUE
+	AND	$7F			; CLEAR BIT 7 FOR FILL MODE
 	CALL	CVDU_WR			; DO IT
 
 	; SET CHARACTER TO WRITE (WRITES ONE CHARACTER)
 	LD	A,B			; RECOVER FILL VALUE
-	LD	C,31			; USE CVDU REG 31 TO WRITE VALUE
+	LD	C,31			; DATA REGISTER
 	CALL	CVDU_WR			; DO IT
 	DEC	DE			; REFLECT ONE CHARACTER WRITTEN
 	
-	; LOOP TO DO BULK WRITE
+	; LOOP TO DO BULK WRITE (UP TO 255 BYTES PER LOOP)
 	EX	DE,HL			; NOW USE HL FOR COUNT
 	LD	C,30			; BYTE COUNT REGISTER
 CVDU_FILL2:
 	LD	A,H			; GET HIGH BYTE
 	OR	A			; SET FLAGS
-	LD	A,L			; PRESUME WE WILL WRITE L COUNT BYTES
-	JR	Z,CVDU_FILL3		; IF H WAS ZERO, READY TO WRITE L BYTES
-	LD	A,$FF			; H WAS > 0, WRITE 255 BYTES
+	LD	A,L			; PRESUME WE WILL WRITE L COUNT (ALL REMAINING) BYTES
+	JR	Z,CVDU_FILL3		; IF H WAS ZERO, WRITE L BYTES
+	LD	A,$FF			; H WAS > 0, NEED MORE LOOPS, WRITE 255 BYTES
 CVDU_FILL3:
-	CALL	CVDU_WR			; DO IT
+	CALL	CVDU_WR			; DO IT (SOURCE/DEST REGS AUTO INCREMENT)
 	LD	D,0			; CLEAR D
 	LD	E,A			; SET E TO BYTES WRITTEN
 	SBC	HL,DE			; SUBTRACT FROM HL
 	RET	Z			; IF ZERO, WE ARE DONE
 	JR	CVDU_FILL2		; OTHERWISE, WRITE SOME MORE
 ;
-;__CVDU_SCROLL_______________________________________________________________________________________
-;
-; 	SCROLL THE SCREEN FORWARD ONE LINE
+;----------------------------------------------------------------------
+; SCROLL ENTIRE SCREEN FORWARD BY ONE LINE (CURSOR POSITION UNCHANGED)
+;----------------------------------------------------------------------
 ;
 CVDU_SCROLL:
 	; SCROLL THE CHARACTER BUFFER
-	LD	A,'='			; CHAR VALUE TO FILL NEW EXPOSED LINE
+	LD	A,' '			; CHAR VALUE TO FILL NEW EXPOSED LINE
 	LD	HL,0			; SOURCE ADDRESS OF CHARACER BUFFER
 	CALL	CVDU_SCROLL1		; SCROLL CHARACTER BUFFER
 	
@@ -431,12 +411,13 @@ CVDU_SCROLL1:
 	PUSH	AF			; SAVE FILL VALUE FOR NOW
 	
 	; SET MODE TO BLOCK COPY
-	LD	A,$80			; SET BIT 7 FOR BLOCK COPY
-	LD	C,24			; IN CVDU REG 24
+	LD	C,24			; BLOCK MODE CONTROL REGISTER
+	CALL	CVDU_RD			; GET CURRENT VALUE
+	OR	$80			; SET BIT 7 FOR COPY MODE
 	CALL	CVDU_WR			; DO IT
 
 	; SET INITIAL BLOCK COPY DESTINATION (USING HL PASSED IN)
-    	LD 	C,18			; SET DESTINATION ADDRESS IN REG 18/19
+    	LD 	C,18			; UPDATE ADDRESS (DESTINATION) REGISTER
 	CALL	CVDU_WRX		; DO IT
 
 	; COMPUTE SOURCE (INCREMENT ONE ROW)
@@ -444,39 +425,40 @@ CVDU_SCROLL1:
 	ADD	HL,DE			; ADD IT TO BUF ADDRESS
 
 	; SET INITIAL BLOCK COPY SOURCE
-    	LD 	C,32			; PUT THE SOURCE ADDRESS IN CVDU REG 32
+    	LD 	C,32			; BLOCK START ADDRESS REGISTER
 	CALL	CVDU_WRX		; DO IT
 
-	LD	B,23			; ITERATIONS (23 ROWS)
+	LD	B,23			; ITERATIONS (ROWS - 1)
 CVDU_SCROLL2:
 	; SET BLOCK COPY COUNT (WILL EXECUTE COPY)
 	LD	A,80			; COPY 80 BYTES
-	LD	C,30			; PUT LENGTH TO COPY IN REG 30
+	LD	C,30			; WORD COUNT REGISTER
 	CALL	CVDU_WR			; DO IT
 
 	; LOOP TILL DONE WITH ALL LINES
 	DJNZ	CVDU_SCROLL2		; REPEAT FOR ALL LINES
 	
 	; SET MODE TO BLOCK WRITE TO CLEAR NEW LINE EXPOSED BY SCROLL
-	XOR	A			; CLR BIT 7
-	LD	C,24			; OF CVDU REG 24
-	CALL	CVDU_WR
+	LD	C,24			; BLOCK MODE CONTROL REGISTER
+	CALL	CVDU_RD			; GET CURRENT VALUE
+	AND	$7F			; CLEAR BIT 7 FOR FILL MODE
+	CALL	CVDU_WR			; DO IT
 	
 	; SET CHARACTER TO WRITE
-	POP	AF	; RESTORE THE FILL VALUE PASSED IN
-	LD	C,31
-	CALL	CVDU_WR
+	POP	AF			; RESTORE THE FILL VALUE PASSED IN
+	LD	C,31			; DATA REGISTER
+	CALL	CVDU_WR			; DO IT
 
 	; SET BLOCK WRITE COUNT (WILL EXECUTE THE WRITE)
-	LD	A,80 - 1
-	LD	C,30
-	CALL	CVDU_WR
+	LD	A,80 - 1		; SET WRITE COUNT TO LINE LENGTH - 1 (1 CHAR ALREADY WRITTEN)
+	LD	C,30			; WORD COUNT REGISTER
+	CALL	CVDU_WR			; DO IT
 	
 	RET
 ;
-;__CVDU_RSCROLL_______________________________________________________________________________________
-;
-; 	SCROLL THE SCREEN REVERSE ONE LINE
+;----------------------------------------------------------------------
+; REVERSE SCROLL ENTIRE SCREEN BY ONE LINE (CURSOR POSITION UNCHANGED)
+;----------------------------------------------------------------------
 ;
 CVDU_RSCROLL:
 	; SCROLL THE CHARACTER BUFFER
@@ -487,21 +469,23 @@ CVDU_RSCROLL:
 	; SCROLL THE ATTRIBUTE BUFFER
 	LD	A,(CVDU_ATTR)		; ATTRIBUTE VALUE TO FILL NEW EXPOSED LINE
 	LD	HL,$800+(80*23)		; SOURCE ADDRESS OF ATTRIBUTE BUFFER (LINE 24)
-	JR	CVDU_RSCROLL1		; SCROLL ATTRIBUTE BUFFER
+	JR	CVDU_RSCROLL1		; SCROLL ATTRIBUTE BUFFER AND RETURN
 
 CVDU_RSCROLL1:
 	PUSH	AF			; SAVE FILL VALUE FOR NOW
 	
 	; SET MODE TO BLOCK COPY
-	LD	A,$80			; SET BIT 7 FOR BLOCK COPY
-	LD	C,24			; IN CVDU REG 24
+	LD	C,24			; BLOCK MODE CONTROL REGISTER
+	CALL	CVDU_RD			; GET CURRENT VALUE
+	AND	$80			; SET BIT 7 FOR COPY MODE
 	CALL	CVDU_WR			; DO IT
 
+	; LOOP TO SCROLL EACH LINE WORKING FROM BOTTOM TO TOP
 	LD	B,23			; ITERATIONS (23 ROWS)
 CVDU_RSCROLL2:
 
 	; SET BLOCK COPY DESTINATION (USING HL PASSED IN)
-    	LD 	C,18			; SET DESTINATION ADDRESS IN REG 18/19
+    	LD 	C,18			; UPDATE ADDRESS (DESTINATION) REGISTER
 	CALL	CVDU_WRX		; DO IT
 
 	; COMPUTE SOURCE (DECREMENT ONE ROW)
@@ -509,43 +493,40 @@ CVDU_RSCROLL2:
 	SBC	HL,DE			; SUBTRACT IT FROM BUF ADDRESS
 
 	; SET BLOCK COPY SOURCE
-    	LD 	C,32			; PUT THE SOURCE ADDRESS IN CVDU REG 32
+    	LD 	C,32			; BLOCK START ADDRESS REGISTER
 	CALL	CVDU_WRX		; DO IT
 
 	; SET BLOCK COPY COUNT (WILL EXECUTE COPY)
 	LD	A,80			; COPY 80 BYTES
-	LD	C,30			; PUT LENGTH TO COPY IN REG 30
+	LD	C,30			; WORD COUNT REGISTER
 	CALL	CVDU_WR			; DO IT
 
-	; LOOP TILL DONE WITH ALL LINES
 	DJNZ	CVDU_RSCROLL2		; REPEAT FOR ALL LINES
 	
 	; SET MODE TO BLOCK WRITE TO CLEAR NEW LINE EXPOSED BY SCROLL
-	XOR	A			; CLR BIT 7
-	LD	C,24			; OF CVDU REG 24
-	CALL	CVDU_WR
+	LD	C,24			; BLOCK MODE CONTROL REGISTER
+	CALL	CVDU_RD			; GET CURRENT VALUE
+	AND	$7F			; CLEAR BIT 7 FOR FILL MODE
+	CALL	CVDU_WR			; DO IT
 	
 	; SET CHARACTER TO WRITE
-	POP	AF	; RESTORE THE FILL VALUE PASSED IN
-	LD	C,31
-	CALL	CVDU_WR
+	POP	AF			; RESTORE THE FILL VALUE PASSED IN
+	LD	C,31			; DATA REGISTER
+	CALL	CVDU_WR			; DO IT
 
 	; SET BLOCK WRITE COUNT (WILL EXECUTE THE WRITE)
-	LD	A,80 - 1
-	LD	C,30
-	CALL	CVDU_WR
+	LD	A,80 - 1		; SET WRITE COUNT TO LINE LENGTH - 1 (1 CHAR ALREADY WRITTEN)
+	LD	C,30			; WORD COUNT REGISTER
+	CALL	CVDU_WR			; DO IT
 	
 	RET
 ;
 ;==================================================================================================
-;   VDU DRIVER - DATA
+;   CVDU DRIVER - DATA
 ;==================================================================================================
 ;
-CVDU_X			.DB	0	; CURSOR X
-CVDU_Y			.DB	0	; CURSOR Y
 CVDU_ATTR		.DB	0	; CURRENT COLOR
-CVDU_DISPLAYPOS		.DW 	0	; CURRENT DISPLAY POSITION
-CVDU_DISPLAY_START	.DW 	0	; CURRENT DISPLAY POSITION
+CVDU_POS		.DW 	0	; CURRENT DISPLAY POSITION
 ;
 ; ATTRIBUTE ENCODING:
 ;   BIT 7: ALTERNATE CHARACTER SET
@@ -558,7 +539,7 @@ CVDU_DISPLAY_START	.DW 	0	; CURRENT DISPLAY POSITION
 ;   BIT 0: INTENSITY
 ;
 ;==================================================================================================
-;   VDU DRIVER - 8563 REGISTER INITIALIZATION
+;   CVDU DRIVER - 8563 REGISTER INITIALIZATION
 ;==================================================================================================
 ;
 ; Reg	Hex	Bit 7	Bit 6	Bit 5	Bit 4	Bit 3	Bit 2	Bit 1	Bit 0	Description
@@ -606,7 +587,7 @@ CVDU_DISPLAY_START	.DW 	0	; CURRENT DISPLAY POSITION
 CVDU_INIT8563:
 	.DB	97		; 0: hor. total - 1
 	.DB	80		; 1: hor. displayed
-	.DB	85		; 2: hor. sync position
+	.DB	90		; 2: hor. sync position 85
 	.DB	$14		; 3: vert/hor sync width 		or 0x4F -- MDA
 	.DB	26		; 4: vert total
 	.DB	2		; 5: vert total adjust
