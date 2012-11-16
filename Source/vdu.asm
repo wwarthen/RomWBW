@@ -1,108 +1,121 @@
-;__VDUDRIVER_______________________________________________________________________________________
-;
+;======================================================================
 ;	VDU DRIVER FOR N8VEM PROJECT
 ;
-;	VDU DRIVERS BY:  ANDREW LYNCH
-;	REMAINDER WRITTEN BY: DAN WERNER -- 11/7/2009
+;	ORIGINALLY WRITTEN BY: ANDREW LYNCH
+;	REVISED/ENHANCED BY DAN WERNER -- 11/7/2009
 ;	ROMWBW ADAPTATION BY: WAYNE WARTHEN -- 11/9/2012
-;__________________________________________________________________________________________________
+;======================================================================
 ;
-;__________________________________________________________________________________________________
-; DATA CONSTANTS
-;__________________________________________________________________________________________________
+; TODO:
+;   - IMPLEMENT CONSTANTS FOR SCREEN DIMENSIONS
+;   - IMPLEMENT SET CURSOR STYLE (VDASCS) FUNCTION
+;   - IMPLEMENT ALTERNATE DISPLAY MODES?
 ;
-VDU_RD		 .EQU	0F0h		; READ VDU
-VDU_WR		 .EQU	0F1h		; WRITE VDU
-VDU_STREG	 .EQU	0F2h		; VDU STATUS/REGISTER
+;======================================================================
+; CVDU DRIVER - CONSTANTS
+;======================================================================
+;
+VDU_RAMRD	 .EQU	0F0h		; READ VDU
+VDU_RAMWR	 .EQU	0F1h		; WRITE VDU
+VDU_STAT	 .EQU	0F2h		; VDU STATUS/REGISTER
+VDU_REG		 .EQU	0F2h		; VDU STATUS/REGISTER
 VDU_DATA	 .EQU	0F3h		; VDU DATA REGISTER
 ;
-;__________________________________________________________________________________________________
-; BOARD INITIALIZATION
-;__________________________________________________________________________________________________
+;======================================================================
+; VDU DRIVER - INITIALIZATION
+;======================================================================
 ;
 VDU_INIT:
-	CALL	INITVDU
+	CALL 	VDU_CRTINIT		; INIT 6545 VDU CHIP	
+	CALL	VDUINIT			; INIT VDU   					
+	CALL	PERF_ERASE_EOS		; CLEAR SCREEN
+	CALL	PERF_CURSOR_HOME	; CURSOR HOME	
+	RET
+	
+VDU_RESET:
 	XOR	A
 	RET
 ;	
-;__________________________________________________________________________________________________
-; CHARACTER I/O (CIO) FUNCTION JUMP TABLE
-;__________________________________________________________________________________________________
+;======================================================================
+; VDU DRIVER - CHARACTER I/O (CIO) DISPATCHER AND FUNCTIONS
+;======================================================================
 ;
 VDU_DISPCIO:
-	LD	A,B	; GET REQUESTED FUNCTION
-	AND	$0F	; ISOLATE SUB-FUNCTION
-	JR	Z,VDU_CIOIN
+	LD	A,B			; GET REQUESTED FUNCTION
+	AND	$0F			; ISOLATE SUB-FUNCTION
+	JR	Z,VDU_CIOIN		; $00
 	DEC	A
-	JR	Z,VDU_CIOOUT
+	JR	Z,VDU_CIOOUT		; $01
 	DEC	A
-	JR	Z,VDU_CIOIST
+	JR	Z,VDU_CIOIST		; $02
 	DEC	A
-	JR	Z,VDU_CIOOST
+	JR	Z,VDU_CIOOST		; $03
 	CALL	PANIC
 ;	
 VDU_CIOIN:
-	JP	PPK_READ
+	JP	PPK_READ		; CHAIN TO KEYBOARD DRIVER
 ;
 VDU_CIOIST:
-	JP	PPK_STAT
+	JP	PPK_STAT		; CHAIN TO KEYBOARD DRIVER
 ;
 VDU_CIOOUT:
-	JP	VDU_VDAWRC
+	JP	VDU_VDAWRC		; WRITE CHARACTER
 ;
 VDU_CIOOST:
-	XOR	A
-	INC	A
+	XOR	A			; A := 0
+	INC	A			; A := 1, SIGNAL OUTPUT BUFFER READY
 	RET
 ;	
-;__________________________________________________________________________________________________
-; VIDEO DISPLAY ADAPTER (VDA) FUNCTION JUMP TABLE
-;__________________________________________________________________________________________________
+;======================================================================
+; VDU DRIVER - VIDEO DISPLAY ADAPTER (VDA) DISPATCHER AND FUNCTIONS
+;======================================================================
 ;
 VDU_DISPVDA:
 	LD	A,B		; GET REQUESTED FUNCTION
 	AND	$0F		; ISOLATE SUB-FUNCTION
 
-	JR	Z,VDU_VDAINI
+	JR	Z,VDU_VDAINI	; $40
 	DEC	A
-	JR	Z,VDU_VDAQRY
+	JR	Z,VDU_VDAQRY	; $41
 	DEC	A
-	JR	Z,VDU_VDARES
+	JR	Z,VDU_VDARES	; $42
 	DEC	A
-	JR	Z,VDU_VDASCS
+	JR	Z,VDU_VDASCS	; $43
 	DEC	A
-	JR	Z,VDU_VDASCP
+	JR	Z,VDU_VDASCP	; $44
 	DEC	A
-	JR	Z,VDU_VDASAT
+	JR	Z,VDU_VDASAT	; $45
 	DEC	A
-	JR	Z,VDU_VDASCO
+	JR	Z,VDU_VDASCO	; $46
 	DEC	A
-	JR	Z,VDU_VDAWRC
+	JR	Z,VDU_VDAWRC	; $47
 	DEC	A
-	JR	Z,VDU_VDAFIL
+	JR	Z,VDU_VDAFIL	; $48
 	DEC	A
-	JR	Z,VDU_VDASCR
+	JR	Z,VDU_VDASCR	; $49
 	DEC	A
-	JP	Z,PPK_STAT
+	JP	Z,PPK_STAT	; $4A
 	DEC	A
-	JP	Z,PPK_FLUSH
+	JP	Z,PPK_FLUSH	; $4B
 	DEC	A
-	JP	Z,PPK_READ
+	JP	Z,PPK_READ	; $4C
 	CALL	PANIC
 
 VDU_VDAINI:
-	CALL	INITVDU
-	XOR	A
-	RET
+	JR	VDU_INIT	; INITIALIZE
 
 VDU_VDAQRY:
-	CALL	PANIC
+	LD	C,$00		; MODE ZERO IS ALL WE KNOW
+	LD	DE,$1950	; 25 ROWS ($19), 80 COLS ($50)
+	LD	HL,0		; EXTRACTION OF CURRENT BITMAP DATA NOT SUPPORTED YET
+	XOR	A		; SIGNAL SUCCESS
+	RET
 	
 VDU_VDARES:
-	JR	VDU_INIT
+	JR	VDU_RESET	; DO THE RESET
 	
 VDU_VDASCS:
-	CALL	PANIC
+	CALL	PANIC		; NOT IMPLEMENTED (YET)
 	
 VDU_VDASCP:
 	LD	A,E
@@ -124,10 +137,10 @@ VDU_VDASCO:
 VDU_VDAWRC:
 	; PUSH CHARACTER OUT AT CURRENT POSITION
 	LD 	A,31           	; PREP VDU FOR DATA R/W
-	OUT 	(VDU_STREG),A
+	OUT 	(VDU_REG),A
 	CALL 	VDU_WAITRDY		; WAIT FOR VDU TO BE READY
 	LD	A,E
-	OUT 	(VDU_WR),A		; OUTPUT CHAR TO VDU
+	OUT 	(VDU_RAMWR),A		; OUTPUT CHAR TO VDU
 
 	; UPDATE CURSOR POSITION TO FOLLOW CHARACTERS
 	LD 	HL,(VDU_DISPLAYPOS)	; GET CURRENT DISPLAY POSITION
@@ -144,14 +157,14 @@ VDU_VDAWRC:
 	
 VDU_VDAFIL:
     	LD 	A, 31		; PREP VDU FOR DATA R/W
-    	OUT 	(VDU_STREG),A
+    	OUT 	(VDU_REG),A
 VDU_VDAFIL1:
 	LD	A,H		; CHECK NUMBER OF FILL CHARS LEFT
 	OR	L			
 	JR	Z,VDU_VDAFIL2	; ALL DONE, GO TO COMPLETION
 	CALL	VDU_WAITRDY	; WAIT FOR VDU TO BE READY
 	LD	A,E
-    	OUT 	(VDU_WR), A	; OUTPUT CHAR TO VDU
+    	OUT 	(VDU_RAMWR), A	; OUTPUT CHAR TO VDU
 	DEC	HL		; DECREMENT COUNT
 	JR	VDU_VDAFIL1	; LOOP AS NEEDED
 VDU_VDAFIL2:
@@ -171,19 +184,19 @@ VDU_VDASCR:
 	JR	VDU_VDASCR
 ;
 VDU_WAITRDY:
-   	IN 	A,(VDU_STREG)	; READ STATUS
+   	IN 	A,(VDU_STAT)	; READ STATUS
 	OR	A		; SET FLAGS
 	RET	M		; IF BIT 7 SET, THEN READY!
 	JR	VDU_WAITRDY	; KEEP CHECKING
-;
-;__________________________________________________________________________________________________
-; INITIALIZATION
-;__________________________________________________________________________________________________
-INITVDU:
-	CALL	VDUINIT			; INIT VDU   					
-	CALL	PERF_ERASE_EOS		; CLEAR SCREEN
-	CALL	PERF_CURSOR_HOME	; CURSOR HOME	
-	RET
+;;
+;;__________________________________________________________________________________________________
+;; INITIALIZATION
+;;__________________________________________________________________________________________________
+;INITVDU:
+;	CALL	VDUINIT			; INIT VDU   					
+;	CALL	PERF_ERASE_EOS		; CLEAR SCREEN
+;	CALL	PERF_CURSOR_HOME	; CURSOR HOME	
+;	RET
 ;	
 ;__PERF_ERASE_EOL__________________________________________________________________________________
 ;
@@ -196,11 +209,11 @@ PERF_ERASE_EOL:
 	SUB	C			; GET REMAINING POSITIONS ON CURRENT LINE
 	LD	B,A			; MOVE IT INTO B
 	LD	A,31			; UPDATE TOGGLE VDU CHIP
-	OUT	(VDU_STREG),A
+	OUT	(VDU_REG),A
 PERF_ERASE_EOL_LOOP:		
 	CALL	VDU_WAITRDY	 	; WAIT FOR VDU CHIP TO BE READY
 	LD	A,32			; MOVE SPACE CHARACTER INTO A
-	OUT	(VDU_WR),A    	     	; WRITE IT TO SCREEN, VDU WILL AUTO INC TO NEXT ADDRESS
+	OUT	(VDU_RAMWR),A   	     	; WRITE IT TO SCREEN, VDU WILL AUTO INC TO NEXT ADDRESS
 	DJNZ	PERF_ERASE_EOL_LOOP	; LOOP UNTIL DONE
 	CALL	VDU_XY			; MOVE CURSOR BACK TO ORIGINAL POSITION
 	RET
@@ -214,11 +227,11 @@ PERF_ERASE_EOS:
 	PUSH	HL			; MOVE IT TO DE
 	POP	DE
 	LD	A,31			; UPDATE TOGGLE VDU CHIP
-	OUT	(VDU_STREG),A
+	OUT	(VDU_REG),A
 PERF_ERASE_EOS_LOOP:		
 	CALL	VDU_WAITRDY		; WAIT FOR VDU CHIP TO BE READY
 	LD	A, ' '           	; MOVE SPACE CHARACTER INTO A
-	OUT	(VDU_WR),A         	; WRITE IT TO SCREEN, VDU WILL AUTO INC TO NEXT ADDRESS
+	OUT	(VDU_RAMWR),A        	; WRITE IT TO SCREEN, VDU WILL AUTO INC TO NEXT ADDRESS
 	DEC	DE			; DEC COUNTER
 	LD	A,D			; IS COUNTER 0 YET?
 	OR	E
@@ -246,7 +259,7 @@ DO_SCROLL1:
 	PUSH	HL			; STORE HL
 	PUSH	BC			; STORE BC
 	LD 	A, 31            	; TOGGLE VDU FOR UPDATE
-	OUT 	(VDU_STREG),A
+	OUT 	(VDU_REG),A
 	CALL 	VDU_WAITRDY	 	; WAIT FOR VDU TO BE READY
 	LD 	HL, (VDU_DISPLAY_START)	; GET UP START OF DISPLAY
 	LD	DE,0050H		; SET AMOUNT TO ADD
@@ -279,7 +292,7 @@ REVERSE_SCROLL:
 	PUSH	HL			; STORE HL
 	PUSH	BC			; STORE BC
 	LD	A, 31            	; TOGGLE VDU FOR UPDATE
-	OUT	(VDU_STREG),A
+	OUT	(VDU_REG),A
 	CALL	VDU_WAITRDY	 	; WAIT FOR VDU TO BE READY
 	LD	HL, (VDU_DISPLAY_START)	; GET UP START OF DISPLAY
 	LD	DE,0FFB0H		; SET AMOUNT TO SUBTRACT (TWOS COMPLEMENT 50H)
@@ -312,25 +325,24 @@ VDUINIT:
 	PUSH 	DE			; STORE DE
 	PUSH 	HL			; STORE HL
 
-	CALL 	VDU_CRTINIT		; INIT 6545 VDU CHIP	
 	LD 	A, 31			; TOGGLE VDU FOR UPDATE
-	OUT 	(VDU_STREG),A
+	OUT 	(VDU_REG),A
 	LD	HL,0			; SET-UP START OF DISPLAY 
 	LD 	DE, 2048    		; SET-UP DISPLAY SIZE
 	LD 	A, 18            	; WRITE HL TO R18 AND R19 (UPDATE ADDRESS)
 	CALL 	VDU_HL2WREG_A  		;
 	LD 	A, 31            	; TOGGLE VDU FOR UPDATE
-	OUT 	(VDU_STREG),A
+	OUT 	(VDU_REG),A
 VDU_CRTSPACELOOP:			;
 	CALL 	VDU_WAITRDY	 	; WAIT FOR VDU TO BE READY
 	LD 	A, ' '           	; CLEAR SCREEN
-	OUT 	(VDU_WR),A         	; SEND SPACE TO DATAPORT
+	OUT 	(VDU_RAMWR),A        	; SEND SPACE TO DATAPORT
 	DEC	DE			; DECREMENT DE
 	LD 	A,D			; IS ZERO?
 	OR 	E			;
 	JP 	NZ, VDU_CRTSPACELOOP	; NO, LOOP
 	LD 	A, 31            	; TOGGLE VDU FOR UPDATE
-	OUT 	(VDU_STREG),A
+	OUT 	(VDU_REG),A
 	LD 	HL, 0			; SET UP START OF DISPLAY
 	LD	(VDU_DISPLAY_START),HL	; STORE DISPLAY START
 	LD 	A, 12			; SAVE START OF DISPLAY TO VDU
@@ -350,7 +362,7 @@ VDU_CRTSPACELOOP:			;
 ;__________________________________________________________________________________________________			
 VDU_HL2WREG_A:
 	PUSH 	BC		; STORE BC
-    	LD 	C,VDU_STREG	; ADDRESS REGISTER
+    	LD 	C,VDU_REG	; ADDRESS REGISTER
     	OUT 	(C),A		; SELECT REGISTER (A)
     	INC 	C		; NEXT WRITE IN REGISTER
     	OUT 	(C),H		; WRITE H TO SELECTED REGISTER
@@ -371,15 +383,15 @@ VDU_CRTINIT:
     	PUSH 	BC			; STORE BC
     	PUSH 	DE			; STORE DE
     	PUSH 	HL			; STORE HL
-    	LD 	BC,010F2h         	; B = 16, C = VDU_STREG
+    	LD 	BC,010F2h         	; B = 16, C = VDU_REG
     	LD 	HL,VDU_INIT6845  	; HL = POINTER TO THE DEFAULT VALUES
     	XOR 	A               	; A = 0
 VDU_CRTINITLOOP:
-    	OUT 	(C), A          	; VDU_STREG SET REGISTER
+    	OUT 	(C), A          	; VDU_REG SET REGISTER
     	INC 	C               	; 0F3h
     	LD 	D,(HL)          	; LOAD THE NEXT DEFAULT VALUE IN D
     	OUT 	(C),D          		; 0F3h ADDRESS
-    	DEC 	C               	; VDU_STREG
+    	DEC 	C               	; VDU_REG
     	INC 	HL              	; TAB + 1
     	INC 	A               	; REG + 1
     	DJNZ 	VDU_CRTINITLOOP		; LOOP UNTIL DONE
@@ -429,7 +441,7 @@ VDU_YLOOPEND:				;
     	LD 	A, 18			; SET UPDATE ADDRESS IN VDU
     	CALL 	VDU_HL2WREG_A		;
     	LD 	A, 31            	; TOGGLE VDU FOR UPDATE
-    	OUT 	(VDU_STREG),A
+    	OUT 	(VDU_REG),A
     	LD 	A, 14            	; SET CURSOR POS
     	CALL 	VDU_HL2WREG_A		;
     	POP 	DE			; RESTORE DE
