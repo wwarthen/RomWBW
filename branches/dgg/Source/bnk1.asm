@@ -4,8 +4,10 @@
 ;__________________________________________________________________________________________________
 ;
 
+; bnk1.asm 11/16/2012 dwg - specify hl=0 before calling N8V_INIT
+; 	This causes the TMS9918 character bitmaps to be loaded from the 
+; 	default bitmaps included in bnk1.asm
 ; bnk1.asm 5/23/2012 dwg Beta 4 - Enhanced SYS_GETCFG and SYS_SETCFG
-
 
 	.ORG	1000H
 ;
@@ -112,7 +114,8 @@ INITSYS1:
 	CALL	UPD7220_INIT
 #ENDIF
 #IF (N8VENABLE)
-	CALL	N8V_INIT
+	LD		HL,CHARSET		; tell init to use built-in bitmaps
+	CALL	N8V_VDAINI
 #ENDIF
 #IF (PRPENABLE)
 	CALL	PRP_INIT
