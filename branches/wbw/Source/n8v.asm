@@ -14,26 +14,37 @@
 ; DATA CONSTANTS
 ;__________________________________________________________________________________________________
 ;
-;__________________________________________________________________________________________________
+;_________________________________________________________________________
 ; BOARD INITIALIZATION
-;__________________________________________________________________________________________________
+;_________________________________________________________________________
+
 ;
-N8V_INIT:
-        CALL    VDP_CLR16K	; clear the first 16K of TMS9918 video ram to zeroes
-        CALL    VDP_SETREGS	; set TMS9918 into Text Mode
-        CALL    VDP_MODES	; set TMS9918 into 40-column mode
-        CALL    VDP_PNT		; set TMS9918 Pattern Name Table Pointer
-        CALL    VDP_PGT		; set TMS9918 Pattern Generator Table Pointer
-        CALL    VDP_COLORS	; set TMS9918 foreground(white) background(black)
-        CALL    VDP_LOAD2       ; set TMS9918 character bitmaps
- 	CALL	VDP_SINE	; display initialization message on composite video;
-;	CALL	PANIC
+; This routine is called from bnk1.asm to init the TMS9918
+; If HL is non-zero, it specifies the character bitmaps to load
+N8V_VDAINI:
+
+	LD	A,C
+	LD	(VDP_DEVUNIT),A
+	LD	A,E
+	LD	(VDP_MODE),A
+	PUSH	HL
+    CALL    VDP_CLR16K	; clear first 16K of TMS9918 video ram to zeroes
+    CALL    VDP_SETREGS	; set TMS9918 into Text Mode
+    CALL    VDP_MODES	; set TMS9918 into 40-column mode
+    CALL    VDP_PNT		; set TMS9918 Pattern Name Table Pointer
+    CALL    VDP_PGT		; set TMS9918 Pattern Generator Table Pointer
+    CALL    VDP_COLORS	; set TMS9918 foreground(white) background(black)
+	POP		HL
+	LD		A,L
+	OR		H
+	JP		Z,N8V_NOLOAD
+    CALL    VDP_LOAD2   ; set TMS9918 character bitmaps
+N8V_NOLOAD:
+ 	CALL	VDP_SINE	; display init message on composite video
 	CALL	PPK_INIT
 	XOR	A
 	RET
 
-
-;
 ;__________________________________________________________________________________________________
 ; CHARACTER I/O (CIO) DISPATCHER
 ;__________________________________________________________________________________________________
@@ -66,25 +77,25 @@ N8V_DISPVDA:
 	LD	A,B		; GET REQUESTED FUNCTION
 	AND	$0F		; ISOLATE SUB-FUNCTION
 
-	JR	Z,N8V_VDAINI
+	JP	Z,N8V_VDAINI
 	DEC	A
-	JR	Z,N8V_VDAQRY
+	JP	Z,N8V_VDAQRY
 	DEC	A
-	JR	Z,N8V_VDARES
+	JP	Z,N8V_VDARES
 	DEC	A
-	JR	Z,N8V_VDASCS
+	JP	Z,N8V_VDASCS
 	DEC	A
-	JR	Z,N8V_VDASCP
+	JP	Z,N8V_VDASCP
 	DEC	A
-	JR	Z,N8V_VDASAT
+	JP	Z,N8V_VDASAT
 	DEC	A
-	JR	Z,N8V_VDASCO
+	JP	Z,N8V_VDASCO
 	DEC	A
-	JR	Z,N8V_VDAWRC
+	JP	Z,N8V_VDAWRC
 	DEC	A
-	JR	Z,N8V_VDAFIL
+	JP	Z,N8V_VDAFIL
 	DEC	A
-	JR	Z,N8V_VDASCR
+	JP	Z,N8V_VDASCR
 	DEC	A
 	JP	Z,PPK_STAT
 	DEC	A
@@ -93,26 +104,15 @@ N8V_DISPVDA:
 	JP	Z,PPK_READ
 	CALL	PANIC
 
-N8V_VDAINI:
-	LD	A,C
-	LD	(VDP_DEVUNIT),A
-	LD	A,E
-	LD	(VDP_MODE),A
-	CALL	N8V_INIT
-	RET
+
+
 
 N8V_VDAQRY:
-	LD	A,(VDP_MODE)
-	LD	C,A
-	LD	A,(VDP_ROWS)
-	LD	D,A
-	LD	A,(VDP_COLS)
-	LD	E,A
 
 	LD	A,H
 	OR	L
 	JP	Z,N8V_QDONE
-
+		
 	; read bitmaps and 
         LD      C,CMDP
         LD      A,0
@@ -122,24 +122,92 @@ N8V_VDAQRY:
         OUT     (C),A           ; out(CMDP,72);
 	CALL	RECOVER
 
-	LD	DE,2048
+	LD	DE,256
 	LD	C,DATAP
 	IN	A,(C)					; read status
 	CALL	RECOVER
 VDP_QLOOP:
 	IN	A,(C)
+	CALL	RECOVER
+	LD	(BYTE8),A
+
+	IN	A,(C)
+	CALL	RECOVER
+	LD	(BYTE7),A
+
+	IN	A,(C)
+	CALL	RECOVER
+	LD	(BYTE6),A
+
+	IN	A,(C)
+	CALL	RECOVER
+	LD	(BYTE5),A
+
+	IN	A,(C)
+	CALL	RECOVER
+	LD	(BYTE4),A
+
+	IN	A,(C)
+	CALL	RECOVER
+	LD	(BYTE3),A
+
+	IN	A,(C)
+	CALL	RECOVER
+	LD	(BYTE2),A
+
+	IN	A,(C)
+	CALL	RECOVER
+;	LD	(BYTE1),A
+
 	LD	(HL),A
 	INC	HL
+
+	LD	A,(BYTE2)
+	LD	(HL),A
+	INC	HL
+	
+	LD	A,(BYTE3)
+	LD	(HL),A
+	INC	HL
+
+	LD	A,(BYTE4)
+	LD	(HL),A
+	INC	HL
+
+	LD	A,(BYTE5)
+	LD	(HL),A
+	INC	HL
+
+	LD	A,(BYTE6)
+	LD	(HL),A
+	INC	HL
+
+	LD	A,(BYTE7)
+	LD	(HL),A
+	INC	HL
+
+	LD	A,(BYTE8)
+	LD	(HL),A
+	INC	HL
+
 	DEC	DE
 	LD	A,D
 	OR	E
 	JR	NZ,VDP_QLOOP
 N8V_QDONE:
+	LD	A,(VDP_MODE)
+	LD	C,A
+	LD	A,(VDP_ROWS)
+	LD	D,A
+	LD	A,(VDP_COLS)
+	LD	E,A
+
 	LD	A,0		; return SUCCESS
 	RET
 	
 N8V_VDARES:
-	JP	N8V_INIT
+	LD	HL,CHARSET
+	JP	N8V_VDAINI
 	
 N8V_VDASCS:
 	CALL	PANIC
@@ -210,9 +278,10 @@ VDP_MODES:
         LD      C,CMDP
         LD      A,80
         OUT     (C),A           ; out(CMDP,80);
-	NOP
+		CALL	RECOVER
         LD      A,129
         OUT     (C),A           ; out(CMDP,129);
+		CALL	RECOVER
 
 	;; text mode is 24x40
 	LD	A,0
@@ -260,43 +329,27 @@ VDP_COLORS:
 
 ;-------------------------------------------------
 
-VDP_LOADSET:
-
-        LD      C,CMDP
-        LD      A,0
-        OUT     (C),A           ; out(CMDP,0);
-	NOP
-        LD      A,72
-        OUT     (C),A           ; out(CMDP,72);
-
-        LD      HL,CHARSET      ; set memory ptr to start of bitmaps
-	LD	DE,2048
-	LD	C,DATAP
-VDP_LOADLOOP:
-        LD      A,(HL)
-	OUT	(C),A
-	INC	HL
-	DEC	DE
-	LD	A,D
-	OR	E
-	JR	NZ,VDP_LOADLOOP
-        RET
-
 ;-------------------------------------------------
 
 VDP_LOAD2:
 
         LD      C,CMDP
         LD      A,0
+
         OUT     (C),A           ; out(CMDP,0);
-	NOP
+		CALL	RECOVER
         LD      A,72
         OUT     (C),A           ; out(CMDP,72);
-	NOP
+		CALL	RECOVER
 
-        LD      HL,CHARSET      ; set memory ptr to start of bitmaps
+;		LD		A,H
+;		OR		L
+;		JP		NZ,NOLOAD2
+;		LD		HL,CHARSET
+;NOLOAD2:
+
         LD      DE,256
-	LD	C,DATAP
+		LD		C,DATAP
 VDP_LOAD2LOOP:
 
         LD      A,(HL)
@@ -504,16 +557,16 @@ RECOVER:
 ;
 
 VDP_DEVUNIT	.DB	0
-VDP_ROW		.DB	0
-VDP_COL		.DB	0
-VDP_ROWS	.DB	24
-VDP_COLS	.DB	40
+VDP_ROW		.DB	0	; row number 0-23
+VDP_COL		.DB	0	; col number 0-39
+VDP_ROWS	.DB	24	; number of rows
+VDP_COLS	.DB	40	;
 VDP_MODE	.DB	0
 VDP_ATTR	.DB	240	; default to white on black
 VDP_HELLO       .TEXT   "   N8-2312 TMS9918 Text Mode Init Done!!"
 VDP_HELLOLEN	.DB	$-VDP_HELLO
 
-;BYTE           .DB     0
+BYTE1           .DB     0
 BYTE2           .DB     0
 BYTE3           .DB     0
 BYTE4           .DB     0
