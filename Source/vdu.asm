@@ -7,6 +7,8 @@
 ;======================================================================
 ;
 ; TODO:
+;   - ADD REMAINING REGISTERS TO INIT
+;   - TRY 25 ROW MODE?
 ;   - IMPLEMENT CONSTANTS FOR SCREEN DIMENSIONS
 ;   - IMPLEMENT SET CURSOR STYLE (VDASCS) FUNCTION
 ;   - IMPLEMENT ALTERNATE DISPLAY MODES?
@@ -26,13 +28,15 @@ VDU_DATA	 .EQU	0F3h		; VDU DATA REGISTER
 ;======================================================================
 ;
 VDU_INIT:
-	CALL 	VDU_CRTINIT		; INIT 6545 VDU CHIP	
-	CALL	VDUINIT			; INIT VDU   					
-	CALL	PERF_ERASE_EOS		; CLEAR SCREEN
-	CALL	PERF_CURSOR_HOME	; CURSOR HOME	
-	RET
+	CALL 	VDU_CRTINIT		; INIT SY6845 VDU CHIP
 	
 VDU_RESET:
+	LD	DE,0
+	LD	(VDU_OFFSET),DE
+	CALL	VDU_XY
+	LD	A,' '
+	LD	DE,1024*16
+	CALL	VDU_FILL
 	XOR	A
 	RET
 ;	
@@ -106,8 +110,8 @@ VDU_VDAINI:
 
 VDU_VDAQRY:
 	LD	C,$00		; MODE ZERO IS ALL WE KNOW
-	LD	DE,$1950	; 25 ROWS ($19), 80 COLS ($50)
-	LD	HL,0		; EXTRACTION OF CURRENT BITMAP DATA NOT SUPPORTED YET
+	LD	DE,$1850	; 24 ROWS ($18), 80 COLS ($50)
+	LD	HL,0		; EXTRACTION OF CURRENT BITMAP DATA NOT SUPPORTED
 	XOR	A		; SIGNAL SUCCESS
 	RET
 	
@@ -118,348 +122,242 @@ VDU_VDASCS:
 	CALL	PANIC		; NOT IMPLEMENTED (YET)
 	
 VDU_VDASCP:
-	LD	A,E
-	LD	(VDU_X),A
-	LD	A,D
-	LD	(VDU_Y),A
 	CALL	VDU_XY
 	XOR	A
 	RET
 	
 VDU_VDASAT:
-	; FIX: NOT IMPLEMENTED!!!
-	CALL	PANIC
+	XOR	A
+	RET
 	
 VDU_VDASCO:
-	; NOT SUPPORTED!!!
-	CALL	PANIC
+	XOR	A
+	RET
 	
 VDU_VDAWRC:
-	; PUSH CHARACTER OUT AT CURRENT POSITION
-	LD 	A,31           	; PREP VDU FOR DATA R/W
-	OUT 	(VDU_REG),A
-	CALL 	VDU_WAITRDY		; WAIT FOR VDU TO BE READY
 	LD	A,E
-	OUT 	(VDU_RAMWR),A		; OUTPUT CHAR TO VDU
-
-	; UPDATE CURSOR POSITION TO FOLLOW CHARACTERS
-	LD 	HL,(VDU_DISPLAYPOS)	; GET CURRENT DISPLAY POSITION
-	INC 	HL			; INCREMENT IT
-	LD 	(VDU_DISPLAYPOS),HL	; STORE NEW DISPLAY POSITION
-	LD	DE,(VDU_DISPLAY_START)	; GET DISPLAY START
-	ADD	HL,DE			; ADD IT TO DISPLAY POSITION
-	LD 	A,14			; UPDATE CURSOR POSITION
-	CALL 	VDU_HL2WREG_A		; SEND IT
-
-	; RETURN WITH SUCCESS
+	CALL	VDU_PUTCHAR
 	XOR	A
 	RET
 	
 VDU_VDAFIL:
-    	LD 	A, 31		; PREP VDU FOR DATA R/W
-    	OUT 	(VDU_REG),A
-VDU_VDAFIL1:
-	LD	A,H		; CHECK NUMBER OF FILL CHARS LEFT
-	OR	L			
-	JR	Z,VDU_VDAFIL2	; ALL DONE, GO TO COMPLETION
-	CALL	VDU_WAITRDY	; WAIT FOR VDU TO BE READY
-	LD	A,E
-    	OUT 	(VDU_RAMWR), A	; OUTPUT CHAR TO VDU
-	DEC	HL		; DECREMENT COUNT
-	JR	VDU_VDAFIL1	; LOOP AS NEEDED
-VDU_VDAFIL2:
-	CALL	VDU_XY		; YES, MOVE CURSOR BACK TO ORIGINAL POSITION
-	XOR	A		; RESULT = 0
+	LD	A,E		; FILL CHARACTER GOES IN A
+	EX	DE,HL		; FILL LENGTH GOES IN DE
+	CALL	VDU_FILL	; DO THE FILL
+	XOR	A		; SIGNAL SUCCESS
 	RET
 	
 VDU_VDASCR:
-	; FIX: IMPLEMENT REVERSE SCROLLING!!!
-	LD	A,E
-	OR	A
-	RET	Z
-	PUSH	DE
-	CALL	DO_SCROLL
-	POP	DE
-	DEC	E
-	JR	VDU_VDASCR
+	LD	A,E		; LOAD E INTO A
+	OR	A		; SET FLAGS
+	RET	Z		; IF ZERO, WE ARE DONE
+	PUSH	DE		; SAVE E
+	JP	M,VDU_VDASCR1	; E IS NEGATIVE, REVERSE SCROLL
+	CALL	VDU_SCROLL	; SCROLL FORWARD ONE LINE
+	POP	DE		; RECOVER E
+	DEC	E		; DECREMENT IT
+	JR	VDU_VDASCR	; LOOP
+VDU_VDASCR1:
+	CALL	VDU_RSCROLL	; SCROLL REVERSE ONE LINE
+	POP	DE		; RECOVER E
+	INC	E		; INCREMENT IT
+	JR	VDU_VDASCR	; LOOP
+;
+;======================================================================
+; CVDU DRIVER - PRIVATE DRIVER FUNCTIONS
+;======================================================================
+;
+;----------------------------------------------------------------------
+; WAIT FOR VDU TO BE READY FOR A DATA READ/WRITE
+;----------------------------------------------------------------------
 ;
 VDU_WAITRDY:
    	IN 	A,(VDU_STAT)	; READ STATUS
 	OR	A		; SET FLAGS
 	RET	M		; IF BIT 7 SET, THEN READY!
 	JR	VDU_WAITRDY	; KEEP CHECKING
-;;
-;;__________________________________________________________________________________________________
-;; INITIALIZATION
-;;__________________________________________________________________________________________________
-;INITVDU:
-;	CALL	VDUINIT			; INIT VDU   					
-;	CALL	PERF_ERASE_EOS		; CLEAR SCREEN
-;	CALL	PERF_CURSOR_HOME	; CURSOR HOME	
-;	RET
-;	
-;__PERF_ERASE_EOL__________________________________________________________________________________
 ;
-; 	PERFORM ERASE FROM CURSOR POS TO END OF LINE
-;__________________________________________________________________________________________________	
-PERF_ERASE_EOL:
-	LD	A,(VDU_X)		; GET CURRENT CURSOR X COORD
-	LD	C,A			; STORE IT IN C
-	LD	A,80			; MOVE CURRENT LINE WIDTH INTO A
-	SUB	C			; GET REMAINING POSITIONS ON CURRENT LINE
-	LD	B,A			; MOVE IT INTO B
-	LD	A,31			; UPDATE TOGGLE VDU CHIP
-	OUT	(VDU_REG),A
-PERF_ERASE_EOL_LOOP:		
-	CALL	VDU_WAITRDY	 	; WAIT FOR VDU CHIP TO BE READY
-	LD	A,32			; MOVE SPACE CHARACTER INTO A
-	OUT	(VDU_RAMWR),A   	     	; WRITE IT TO SCREEN, VDU WILL AUTO INC TO NEXT ADDRESS
-	DJNZ	PERF_ERASE_EOL_LOOP	; LOOP UNTIL DONE
-	CALL	VDU_XY			; MOVE CURSOR BACK TO ORIGINAL POSITION
+;----------------------------------------------------------------------
+; UPDATE SY6845 REGISTERS
+;   VDU_WRREG WRITES VALUE IN A TO VDU REGISTER SPECIFIED IN C
+;   VDU_WRREGX WRITES VALUE IN DE TO VDU REGISTER PAIR IN C, C+1
+;----------------------------------------------------------------------
+;
+VDU_WRREG:
+	PUSH	AF			; SAVE VALUE TO WRITE
+	LD	A,C			; SET A TO CVDU REGISTER TO SELECT
+	OUT	(VDU_REG),A		; WRITE IT TO SELECT THE REGISTER
+	POP	AF			; RECOVER VALUE TO WRITE
+	OUT	(VDU_DATA),A		; WRITE IT
 	RET
 ;
-;__PERF_ERASE_EOS__________________________________________________________________________________
+VDU_WRREGX:
+	LD	A,H			; SETUP MSB TO WRITE
+	CALL	VDU_WRREG		; DO IT
+	INC	C			; NEXT CVDU REGISTER
+	LD	A,L			; SETUP LSB TO WRITE
+	JR	VDU_WRREG		; DO IT & RETURN
 ;
-; 	PERFORM ERASE FROM CURSOR POS TO END OF SCREEN
-;__________________________________________________________________________________________________	
-PERF_ERASE_EOS:	
-	LD	HL,0780H		; SET SCREEN SIZE INTO HL
-	PUSH	HL			; MOVE IT TO DE
-	POP	DE
-	LD	A,31			; UPDATE TOGGLE VDU CHIP
-	OUT	(VDU_REG),A
-PERF_ERASE_EOS_LOOP:		
-	CALL	VDU_WAITRDY		; WAIT FOR VDU CHIP TO BE READY
-	LD	A, ' '           	; MOVE SPACE CHARACTER INTO A
-	OUT	(VDU_RAMWR),A        	; WRITE IT TO SCREEN, VDU WILL AUTO INC TO NEXT ADDRESS
-	DEC	DE			; DEC COUNTER
-	LD	A,D			; IS COUNTER 0 YET?
-	OR	E
-	JP	NZ,PERF_ERASE_EOS_LOOP	; NO, LOOP
-	CALL	VDU_XY			; YES, MOVE CURSOR BACK TO ORIGINAL POSITION
-	RET
-;	
-;__PERF_CURSOR_HOME________________________________________________________________________________
+;----------------------------------------------------------------------
+; READ SY6845 REGISTERS
+;   VDU_RDREG READS VDU REGISTER SPECIFIED IN C AND RETURNS VALUE IN A
+;   VDU_RDREGX READS VDU REGISTER PAIR SPECIFIED BY C, C+1 
+;     AND RETURNS VALUE IN HL
+;----------------------------------------------------------------------
 ;
-; 	PERFORM CURSOR HOME
-;__________________________________________________________________________________________________	
-PERF_CURSOR_HOME:
-	LD	A,0			; LOAD 0 INTO A
-	LD	(VDU_X),A		; SET X COORD
-	LD	(VDU_Y),A		; SET Y COORD
-	JP	VDU_XY			; MOVE CURSOR TO POSITION
-;
-;__DO_SCROLL_______________________________________________________________________________________
-;
-; 	SCROLL THE SCREEN UP ONE LINE
-;__________________________________________________________________________________________________			
-DO_SCROLL:
-	PUSH	AF			; STORE AF	
-DO_SCROLL1:
-	PUSH	HL			; STORE HL
-	PUSH	BC			; STORE BC
-	LD 	A, 31            	; TOGGLE VDU FOR UPDATE
-	OUT 	(VDU_REG),A
-	CALL 	VDU_WAITRDY	 	; WAIT FOR VDU TO BE READY
-	LD 	HL, (VDU_DISPLAY_START)	; GET UP START OF DISPLAY
-	LD	DE,0050H		; SET AMOUNT TO ADD
-	ADD	HL,DE			; ADD TO START POS
-	LD	(VDU_DISPLAY_START),HL	; STORE DISPLAY START
-	LD 	A, 12			; SAVE START OF DISPLAY TO VDU
-	CALL 	VDU_HL2WREG_A
-	LD	A,23			; SET CURSOR TO BEGINNING OF LAST LINE
-	LD	(VDU_Y),A
-	LD	A,(VDU_X)
-	PUSH	AF			; STORE X COORD
-	LD	A,0
-	LD	(VDU_X),A
-	CALL	VDU_XY			; SET CURSOR POSITION TO BEGINNING OF LINE
-	CALL	PERF_ERASE_EOL		; ERASE SCROLLED LINE
-	POP	AF			; RESTORE X COORD
-	LD	(VDU_X),A
-	CALL	VDU_XY			; SET CURSOR POSITION
-	POP	BC			; RESTORE BC
-	POP	HL			; RESTORE HL
-	POP	AF			; RESTORE AF
-	RET				;
-;    	
-;__REVERSE_SCROLL__________________________________________________________________________________
-;
-; 	SCROLL THE SCREEN DOWN ONE LINE
-;__________________________________________________________________________________________________			
-REVERSE_SCROLL:
-	PUSH	AF			; STORE AF
-	PUSH	HL			; STORE HL
-	PUSH	BC			; STORE BC
-	LD	A, 31            	; TOGGLE VDU FOR UPDATE
-	OUT	(VDU_REG),A
-	CALL	VDU_WAITRDY	 	; WAIT FOR VDU TO BE READY
-	LD	HL, (VDU_DISPLAY_START)	; GET UP START OF DISPLAY
-	LD	DE,0FFB0H		; SET AMOUNT TO SUBTRACT (TWOS COMPLEMENT 50H)
-	ADD	HL,DE			; ADD TO START POS
-	LD	(VDU_DISPLAY_START),HL	; STORE DISPLAY START
-	LD	A, 12			; SAVE START OF DISPLAY TO VDU
-	CALL	VDU_HL2WREG_A
-	LD	A,23			; SET CURSOR TO BEGINNING OF LAST LINE
-	LD	(VDU_Y),A
-	LD	A,(VDU_X)
-	PUSH	AF			; STORE X COORD
-	LD	A,0
-	LD	(VDU_X),A
-	CALL	VDU_XY			; SET CURSOR POSITION TO BEGINNING OF LINE
-	CALL	PERF_ERASE_EOL		; ERASE SCROLLED LINE
-	POP	AF			; RESTORE X COORD
-	LD	(VDU_X),A
-	CALL	VDU_XY			; SET CURSOR POSITION
-	POP	BC			; RESTORE BC
-	POP	HL			; RESTORE HL
-	POP	AF			; RESTORE AF
+VDU_RDREG:
+	LD	A,C			; SET A TO CVDU REGISTER TO SELECT
+	OUT	(VDU_REG),A		; WRITE IT TO SELECT THE REGISTER
+	IN	A,(VDU_DATA)		; READ IT
 	RET
 ;
-;__VDUINIT__________________________________________________________________________________________
+VDU_RDREGX:
+	CALL	VDU_RDREG			; GET VALUE FROM REGISTER IN C
+	LD	H,A			; SAVE IN H
+	INC	C			; BUMP TO NEXT REGISTER OF PAIR
+	CALL	VDU_RDREG			; READ THE VALUE
+	LD	L,A			; SAVE IT IN L
+	RET
 ;
-; 	INITIALIZE VDU
-;__________________________________________________________________________________________________			
-VDUINIT:
-	PUSH 	AF			; STORE AF
-	PUSH 	DE			; STORE DE
-	PUSH 	HL			; STORE HL
-
-	LD 	A, 31			; TOGGLE VDU FOR UPDATE
-	OUT 	(VDU_REG),A
-	LD	HL,0			; SET-UP START OF DISPLAY 
-	LD 	DE, 2048    		; SET-UP DISPLAY SIZE
-	LD 	A, 18            	; WRITE HL TO R18 AND R19 (UPDATE ADDRESS)
-	CALL 	VDU_HL2WREG_A  		;
-	LD 	A, 31            	; TOGGLE VDU FOR UPDATE
-	OUT 	(VDU_REG),A
-VDU_CRTSPACELOOP:			;
-	CALL 	VDU_WAITRDY	 	; WAIT FOR VDU TO BE READY
-	LD 	A, ' '           	; CLEAR SCREEN
-	OUT 	(VDU_RAMWR),A        	; SEND SPACE TO DATAPORT
-	DEC	DE			; DECREMENT DE
-	LD 	A,D			; IS ZERO?
-	OR 	E			;
-	JP 	NZ, VDU_CRTSPACELOOP	; NO, LOOP
-	LD 	A, 31            	; TOGGLE VDU FOR UPDATE
-	OUT 	(VDU_REG),A
-	LD 	HL, 0			; SET UP START OF DISPLAY
-	LD	(VDU_DISPLAY_START),HL	; STORE DISPLAY START
-	LD 	A, 12			; SAVE START OF DISPLAY TO VDU
-	CALL 	VDU_HL2WREG_A		;
-	POP 	HL			;
-	POP 	DE			;
-	POP 	AF			;
-	CALL	PERF_CURSOR_HOME	; CURSOR HOME	
-	CALL	PERF_ERASE_EOS		; CLEAR SCREEN
-	RET	
-;	
-;__VDU_HL2WREG_A___________________________________________________________________________________
+;----------------------------------------------------------------------
+; SY6845 DISPLAY CONTROLLER CHIP INITIALIZATION
+;----------------------------------------------------------------------
 ;
-; 	WRITE VALUE IN HL TO REGISTER IN A
-;	A: REGISTER TO UPDATE
-;	HL: WORD VALUE TO WRITE
-;__________________________________________________________________________________________________			
-VDU_HL2WREG_A:
-	PUSH 	BC		; STORE BC
-    	LD 	C,VDU_REG	; ADDRESS REGISTER
-    	OUT 	(C),A		; SELECT REGISTER (A)
-    	INC 	C		; NEXT WRITE IN REGISTER
-    	OUT 	(C),H		; WRITE H TO SELECTED REGISTER
-    	DEC 	C		; NEXT WRITE SELECT REGISTER
-    	INC 	A		; INCREASE REGISTER NUMBER
-    	OUT 	(C),A		; SELECT REGISTER (A+1)
-    	INC 	C		; NEXT WRITE IN REGISTER
-    	OUT 	(C),L		; WRITE L TO SELECTED REGISTER
-    	POP 	BC		; RESTORE BC
-    	RET
-;
-;__VDU_CRTINIT_____________________________________________________________________________________
-;
-; 	INIT VDU CHIP
-;__________________________________________________________________________________________________			   	
 VDU_CRTINIT:
-    	PUSH 	AF			; STORE AF
-    	PUSH 	BC			; STORE BC
-    	PUSH 	DE			; STORE DE
-    	PUSH 	HL			; STORE HL
-    	LD 	BC,010F2h         	; B = 16, C = VDU_REG
-    	LD 	HL,VDU_INIT6845  	; HL = POINTER TO THE DEFAULT VALUES
-    	XOR 	A               	; A = 0
-VDU_CRTINITLOOP:
-    	OUT 	(C), A          	; VDU_REG SET REGISTER
-    	INC 	C               	; 0F3h
-    	LD 	D,(HL)          	; LOAD THE NEXT DEFAULT VALUE IN D
-    	OUT 	(C),D          		; 0F3h ADDRESS
-    	DEC 	C               	; VDU_REG
-    	INC 	HL              	; TAB + 1
-    	INC 	A               	; REG + 1
-    	DJNZ 	VDU_CRTINITLOOP		; LOOP UNTIL DONE
-    	POP 	HL			; RESTORE HL
-    	POP 	DE			; RESTORE DE
-    	POP	BC			; RESTORE BC
-    	POP	AF			; RESTORE AF
+    	LD 	C,0			; START WITH REGISTER 0
+	LD	B,16			; INIT 16 REGISTERS
+    	LD 	HL,VDU_INIT6845		; HL = POINTER TO THE DEFAULT VALUES
+VDU_CRTINIT1:
+	LD	A,(HL)			; GET VALUE
+	CALL	VDU_WRREG		; WRITE IT
+	INC	HL			; POINT TO NEXT VALUE
+	INC	C			; POINT TO NEXT REGISTER
+	DJNZ	VDU_CRTINIT1		; LOOP
     	RET
 ;
-;__VDU_XY__________________________________________________________________________________________
+;----------------------------------------------------------------------
+; SET CURSOR POSITION TO ROW IN D AND COLUMN IN E
+;----------------------------------------------------------------------
 ;
-; 	MOVE CURSOR TO POSITON IN VDU_X AND VDU_Y
-;__________________________________________________________________________________________________			
 VDU_XY:
-	PUSH	AF			; STORE AF
+	LD	A,E			; SAVE COLUMN NUMBER IN A
+	LD	H,D			; SET H TO ROW NUMBER
+	LD	E,80			; SET E TO ROW LENGTH
+	CALL	MULT8			; MULTIPLY TO GET ROW OFFSET
+	LD	E,A			; GET COLUMN BACK
+	ADD	HL,DE			; ADD IT IN
+	LD	(VDU_POS),HL		; SAVE THE RESULT (DISPLAY POSITION)
+	LD	DE,(VDU_OFFSET)		; NOW GET THE BUFFER OFFSET
+	ADD	HL,DE			; AND ADD THAT IN
+    	LD 	C,14			; CURSOR POSITION REGISTER PAIR
+	JP	VDU_WRREGX		; DO IT AND RETURN
+;
+;----------------------------------------------------------------------
+; WRITE VALULE IN A TO CURRENT VDU BUFFER POSTION, ADVANCE CURSOR
+;----------------------------------------------------------------------
+;
+VDU_PUTCHAR:
+	LD	B,A		; SAVE THE CHARACTER
 
-	LD	A,(VDU_Y)		; PLACE Y COORD IN A
-	CP	24			; IS 24?
-	JP	Z,DO_SCROLL1		; YES, MUST SCROLL
-
-    	PUSH 	BC			; STORE BC
-    	PUSH 	DE			; STORE DE
-	LD	A,(VDU_X)		;
-	LD	H,A			;
-    	LD	A,(VDU_Y)		;
-    	LD	L,A			;    	
-    	PUSH 	HL			; STORE HL
-    	LD 	B, A             	; B = Y COORD
-    	LD 	DE, 80			; MOVE LINE LENGTH INTO DE
-    	LD 	HL, 0			; MOVE 0 INTO HL
-    	LD 	A, B             	; A=B
-    	CP 	0			; Y=0?
-    	JP 	Z, VDU_YLOOPEND  	; THEN DO NOT MULTIPLY BY 80
-VDU_YLOOP:              		; HL = 80 * Y
-    	ADD 	HL, DE			; HL=HL+DE
-    	DJNZ 	VDU_YLOOP		; LOOP 
-VDU_YLOOPEND:				;
-    	POP 	DE              	; DE = ORG HL
-    	LD 	E, D             	; E = X
-    	LD 	D, 0             	; D = 0
-    	ADD 	HL, DE          	; HL = HL + X
-    	LD 	(VDU_DISPLAYPOS), HL	;
-	PUSH	HL			;
-	POP	DE			;
-	LD	HL,(VDU_DISPLAY_START)	;
-	ADD	HL,DE			;    	
-    	LD 	A, 18			; SET UPDATE ADDRESS IN VDU
-    	CALL 	VDU_HL2WREG_A		;
-    	LD 	A, 31            	; TOGGLE VDU FOR UPDATE
+	; SET BUFFER WRITE POSITION
+	LD	HL,(VDU_OFFSET)
+	LD	DE,(VDU_POS)
+	ADD	HL,DE
+	INC	DE		; INC
+	LD	(VDU_POS),DE	; SAVE NEW SCREEN POSITION
+	LD	C,18		; UPDATE ADDRESS REGISTER PAIR
+	CALL	VDU_WRREGX	; DO IT
+	INC	HL		; NEW CURSOR POSITION
+	LD	C,14		; CURSOR POSITION REGISTER PAIR
+	CALL	VDU_WRREGX	; DO IT
+	
+    	LD 	A,31		; PREP VDU FOR DATA R/W
     	OUT 	(VDU_REG),A
-    	LD 	A, 14            	; SET CURSOR POS
-    	CALL 	VDU_HL2WREG_A		;
-    	POP 	DE			; RESTORE DE
-   	POP 	BC			; RESTORE BC
-    	POP 	AF			; RESTORE AF
-    	RET
+	CALL	VDU_WAITRDY	; WAIT FOR VDU TO BE READY
+	LD	A,B
+    	OUT 	(VDU_RAMWR),A	; OUTPUT CHAR TO VDU
+	
+	RET
+;
+;----------------------------------------------------------------------
+; FILL AREA IN BUFFER WITH SPECIFIED CHARACTER AND CURRENT COLOR/ATTRIBUTE
+; STARTING AT THE CURRENT FRAME BUFFER POSITION
+;   A: FILL CHARACTER
+;   DE: NUMBER OF CHARACTERS TO FILL
+;----------------------------------------------------------------------
+;
+VDU_FILL:
+	LD	B,A		; SAVE THE FILL CHARACTER
+
+	; SET FILL START POSITION
+	PUSH	DE
+	LD	HL,(VDU_OFFSET)
+	LD	DE,(VDU_POS)
+	ADD	HL,DE
+	LD	C,18
+	CALL	VDU_WRREGX
+	POP	DE
+
+	; FILL LOOP
+    	LD 	A,31		; PREP VDU FOR DATA R/W
+    	OUT 	(VDU_REG),A
+VDU_FILL1:
+	LD	A,D		; CHECK NUMBER OF FILL CHARS LEFT
+	OR	E			
+	RET	Z		; ALL DONE, RETURN
+	CALL	VDU_WAITRDY	; WAIT FOR VDU TO BE READY
+	LD	A,B
+    	OUT 	(VDU_RAMWR),A	; OUTPUT CHAR TO VDU
+	DEC	DE		; DECREMENT COUNT
+	JR	VDU_FILL1	; LOOP
+;
+;----------------------------------------------------------------------
+; SCROLL ENTIRE SCREEN FORWARD BY ONE LINE (CURSOR POSITION UNCHANGED)
+;----------------------------------------------------------------------
+;
+VDU_SCROLL:
+	; SCROLL FORWARD BY ADDING ONE ROW TO DISPLAY START ADDRESS
+	LD	HL,(VDU_OFFSET)
+	LD	DE,80
+	ADD	HL,DE
+	LD	(VDU_OFFSET),HL
+	LD	C,12
+	CALL	VDU_WRREGX
+	
+	; FILL EXPOSED LINE
+	LD	HL,(VDU_POS)
+	PUSH	HL
+	LD	HL,23*80
+	LD	(VDU_POS),HL
+	LD	DE,80
+	LD	A,' '
+	CALL	VDU_FILL
+	POP	HL
+	LD	(VDU_POS),HL
+	
+	; ADJUST CURSOR POSITION
+	LD	HL,(VDU_OFFSET)
+	LD	DE,(VDU_POS)
+	ADD	HL,DE
+	LD	C,14
+	JP	VDU_WRREGX
+;
+;----------------------------------------------------------------------
+; REVERSE SCROLL ENTIRE SCREEN BY ONE LINE (CURSOR POSITION UNCHANGED)
+;----------------------------------------------------------------------
+;
+VDU_RSCROLL:
+	RET
 ;
 ;==================================================================================================
 ;   VDU DRIVER - DATA
 ;==================================================================================================
 ;
-VDU_X			.DB	0		; CURSOR X
-VDU_Y			.DB	0		; CURSOR Y
-VDU_DISPLAYPOS		.DW 	0		; CURRENT DISPLAY POSITION
-VDU_DISPLAY_START	.DW 	0		; CURRENT DISPLAY POSITION
+VDU_POS		.DW 	0		; CURRENT DISPLAY POSITION
+VDU_OFFSET	.DW 	0		; CURRENT DISPLAY POSITION
 ;
 ;==================================================================================================
-;   VDU DRIVER - 6845 REGISTER INITIALIZATION
+;   VDU DRIVER - SY6845 REGISTER INITIALIZATION
 ;==================================================================================================
 ;
 VDU_INIT6845:
