@@ -1,3 +1,4 @@
+; ../RomWBW/Source/n8v.asm 11/22/2012 dwg - best so far
 ; ../RomWBW/Source/n8v.asm 11/19/2012 dwg - add snippets into video scheme
 ; ../RomWBW/Source/n8v.asm 11/16/2012 dwg - N8V_VDAQRY now working
 ; ../RomWBW/Source/n8v.asm 11/15/2012 dwg - vdaini and vdaqry retcodes ok
