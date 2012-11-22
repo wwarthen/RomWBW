@@ -456,16 +456,14 @@ N8V_VDASCS:
 ; Video Display Processor Set Cursor Position ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 N8V_VDASCP:
-	LD		(VDP_SCP_COL),A		; keep private copy of column
+	LD		A,E
+	LD		(VDP_COL),A		; keep private copy of column
 	LD		A,C
-	LD		(VDP_SCP_DEV),A		; keep private copy of dev/unit
+	LD		(VDP_DEVUNIT),A		; keep private copy of dev/unit
 	LD		A,D
-	LD		(VDP_SCP_ROW),A		; keep private copy of row
+	LD		(VDP_ROW),A		; keep private copy of row
 	XOR	A
 	RET
-VDP_SCP_DEV	.DB	0
-VDP_SCP_ROW	.DB	0
-VDP_SCP_COL	.DB	0
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Video Display Processor Set Character Attributes ;
@@ -483,8 +481,50 @@ N8V_VDASCO:
 ; Video Display Processor Write Character ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
 N8V_VDAWRC:
-	XOR	A
-	RET
+	PUSH	DE
+
+	LD	hl,row_offs		; hl -> row offset table
+	LD	A,(VDP_ROW)		; pick up cursor row
+	LD	E,A				; place in LO byte of DE
+	LD	d,0				; make 16 bits
+	add	hl,DE			;
+	add hl,DE			; hl -> word in offset table for desired row
+	LD	e,(hl)			; pick up the LO byte of the row ptr
+	INC	HL
+	ld	d,(hl)			; pick up the HO byte of the ROW ptr
+	EX	DE,HL			; hl -> offset of first column in row
+	LD	A,(VDP_COL)		; pick up the current column number
+	LD	E,A				; use as LO byte of DE
+	LD	D,0				; make 16 bits
+	ADD	HL,DE			; hl = offset in name table of row and column
+	call VDP_WRVRAM		; set vram write ptr to proper byte in name table
+
+	POP	DE				; restore the output byte into E
+	LD	A,E				; move into A for output
+	LD	C,DATAP			; I/O address for subsequent VRAM write
+	OUT	(C),a			; prime the auto incrementer
+	OUT	(C),a			; output the data byte into the name table
+	
+	LD	A,(VDP_COL)
+	INC A
+	LD	(VDP_COL),A
+	CP	40
+	JR	NZ,N8V_VDAWRC2
+	LD	A,0
+	LD	(VDP_COL),A
+	LD	A,(VDP_ROW)
+	INC A
+	LD	(VDP_ROW),A
+	CP 24
+	JR	NZ, N8V_VDAWRC2
+	; need to scroll up one line
+	LD A,1				; SCROLL ONE LINE
+	LD E,A				; NEEDS TO BE IN A
+	CALL N8V_VDASCR		; USE SCROLLING FUNCTION
+N8V_VDAWRC2:	
+
+	XOR	A				; set SUCCESS return code
+	RET					; return from HBIOS call
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Video Display Processor Fill ;
@@ -551,6 +591,12 @@ BYTE8           .DB     0
 
 CHARSET:
 #INCLUDE "n8chars.inc"
+
+row_offs	.dw	40* 0,40* 1,40* 2,40* 3,40* 4,40* 5,40* 6,40* 7
+			.dw 40* 8,40* 9,40*10,40*11,40*12,40*13,40*14,40*15
+			.dw 40*16,40*17,40*18,40*19,40*20,40*21,40*22,40*23
+;
+
 
 ;;;;;;;;;;;;;;;;;
 ; eof - n8v.asm ;
