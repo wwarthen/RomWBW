@@ -477,6 +477,26 @@ N8V_VDASAT:
 N8V_VDASCO:
 	CALL	PANIC
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Video Display Processor Calculate Row Offset  ;
+; Enter with A = Row number (rel 0)             ;
+; returns with HL = offset                      ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+N8V_OFFSET:
+	PUSH DE
+	LD	hl,row_offs		; hl -> row offset table
+	LD	E,A				; place in LO byte of DE
+	LD	d,0				; make 16 bits
+	add	hl,DE			;
+	add hl,DE			; hl -> word in offset table for desired row
+	LD	e,(hl)			; pick up the LO byte of the row ptr
+	INC	HL
+	ld	d,(hl)			; pick up the HO byte of the ROW ptr
+	EX	DE,HL			; hl -> offset of first column in row
+	POP DE
+	RET
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Video Display Processor Write Character ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
@@ -536,16 +556,106 @@ N8V_VDAFIL:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
 ; Video Display Processor Scroll ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; TODO
+;;; Currently the code only scrolls one line
+;;; and ignores the distance argument in E.
+
+VDASCR_RVRAM:
+	; COPY DATA ZONE FROM VRAM TO SCRLBUF
+	
+	; CALCULATE AND SET OFFSET TO START OF DATA ZONE IN VRAM
+	LD	A,(VDASCR_DIST)
+	CALL N8V_OFFSET
+	CALL VDP_WRVRAM
+
+	; SETUP FOR VRAM DATA READ	
+	LD	C,DATAP
+	IN	A,(C)			; PRIME AUTOINCREMENT
+	LD	HL,SCRLBUF		; DEST IS SCRLBUF OFFSET 0
+
+	; COPY VDASCR_SIZE BYTES FROM VRAM TO HEAD OF SCRLBUF
+	LD	DE,(VDASCR_SIZE)	; SIZE OF DATA ZONE
+N8V_VDASCR2:
+	IN	A,(C)				; FETCH NEXT BYTE FROM VRAM
+	LD	(HL),A				; STORE IN SEQUENTIAL LOCATIONS IN SCRBUF
+	INC	HL					; BUMP STORAGE INDEX
+	DEC	DE					; DECREMENT BYTE COUNT REMAINING
+	LD	A,D					; OR D
+	OR	E					; WITH E
+	JR	NZ,N8V_VDASCR2		; AND DO MORE IF NOT ZERO
+	
+	RET
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+VDASCR_WVRAM:
+	LD	HL,0
+	CALL VDP_WRVRAM
+	LD	C,DATAP
+;	OUT	(C),A
+	LD 	HL,SCRLBUF
+	LD	DE,(VDASCR_SIZE)
+N8V_VDASCR3:
+	LD A,(HL)			; FETCH NEXT BYTE FROM SCRLBUF
+	OUT	(C),A
+	INC	HL
+	DEC DE
+	LD	A,D
+	OR	E
+	JR	NZ,N8V_VDASCR3
+	RET
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+VDASCR_BLANKING:
+	; CALCULATE SIZE OF BLANKING ZONE
+	LD A,(VDASCR_DIST)
+	CALL N8V_OFFSET
+	EX	DE,HL				; NUMBER OF BYTES TO BLANK
+N8V_VDASCR4:
+	LD	A,' '				; WE WILL BE STORING BLANKS
+	OUT	(C),A				; OUTPUT A BYTE TO THE VRAM NAME TABLE BLANKING ZONE
+	DEC	DE					; DECREMENT COUNT
+	LD	A,D					; OR THE HO BYTE
+	OR	E					; WITH THE LO BYTE
+	JR	NZ,N8V_VDASCR4		; ;AND LOOP IF NOT ZERO
+	RET
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+VDASCR_DIST	.DB	0	; NUMBER OF ROWS TO SCROLL
+VDASCR_SIZE	.DW	0	; SIZE IN BYTES OF DATA REGION
+
 N8V_VDASCR:
   	; E = scroll distance (# lines)
+  	LD	A,E
+  	LD	(VDASCR_DIST),A
+  	
+  	LD	A,(VDP_ROWS)		; NUMBER OF ROWS ON SCREEN
+  	SUB	E					; MINUS DIST IS ROWS OF DATA
+  	CALL	N8V_OFFSET		; CVT ROWS OF DATA TO NUMBER OF BYTES
+  	LD	(VDASCR_SIZE),HL	; AND SAVE FOR LATER USE  	
+  	
+	CALL	VDASCR_RVRAM
+    
+	CALL	VDASCR_WVRAM
 
-	LD HL,0
+	CALL	VDASCR_BLANKING
+
+	XOR	A					; SET SUCCESSFUL RETURN CODE
+	RET						; RETURN TO CALLER
+
+;;;
+OLD_N8V_VDASCR:
+  	; E = scroll distance (# lines)
+
+	LD HL,0				; starting at row 0 column 0
 	CALL VDP_WRVRAM
 	LD	C,DATAP
 	IN	A,(C)			; prime autoincrement
-	LD HL,SCRLBUF
+	LD HL,SCRLBUF		; 
 	LD DE,24*40
-N8V_VDASCR2:
+OLD_N8V_VDASCR2:
 	IN	A,(C)
 	LD (HL),A
 	INC HL
@@ -561,7 +671,7 @@ N8V_VDASCR2:
 	LD DE,(24*40)-40
 	LD C,DATAP
 	OUT (C),A
-N8V_VDASCR3:
+OLD_N8V_VDASCR3:
 	LD A,(HL)
 	OUT (C),A
 	INC HL
@@ -572,7 +682,7 @@ N8V_VDASCR3:
 
 	; BLANK LAST 40
 	LD DE,40
-N8V_VDASCR4:
+OLD_N8V_VDASCR4:
 	LD A,' '
 	OUT (C),A
 	DEC DE
