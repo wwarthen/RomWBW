@@ -501,6 +501,9 @@ N8V_OFFSET:
 ; Video Display Processor Write Character ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
 N8V_VDAWRC:
+	
+	LD	(VDP_POS),HL	; accept curpos from caller in HL
+	
 	PUSH	DE
 
 	LD	hl,row_offs		; hl -> row offset table
@@ -525,23 +528,23 @@ N8V_VDAWRC:
 	OUT	(C),a			; prime the auto incrementer
 	OUT	(C),a			; output the data byte into the name table
 	
-	LD	A,(VDP_COL)
-	INC A
-	LD	(VDP_COL),A
-	CP	40
-	JR	NZ,N8V_VDAWRC2
-	LD	A,0
-	LD	(VDP_COL),A
-	LD	A,(VDP_ROW)
-	INC A
-	LD	(VDP_ROW),A
-	CP 24
-	JR	NZ, N8V_VDAWRC2
-	; need to scroll up one line
-	LD A,1				; SCROLL ONE LINE
-	LD E,A				; NEEDS TO BE IN A
-	CALL N8V_VDASCR		; USE SCROLLING FUNCTION
-N8V_VDAWRC2:	
+;	LD	A,(VDP_COL)
+;	INC A
+;	LD	(VDP_COL),A
+;	CP	40
+;	JR	NZ,N8V_VDAWRC2
+;	LD	A,0
+;	LD	(VDP_COL),A
+;	LD	A,(VDP_ROW)
+;	INC A
+;	LD	(VDP_ROW),A
+;	CP 24
+;	JR	NZ, N8V_VDAWRC2
+;	; need to scroll up one line
+;	LD A,1				; SCROLL ONE LINE
+;	LD E,A				; NEEDS TO BE IN A
+;	CALL N8V_VDASCR		; USE SCROLLING FUNCTION
+;N8V_VDAWRC2:	
 
 	XOR	A				; set SUCCESS return code
 	RET					; return from HBIOS call
@@ -557,20 +560,16 @@ N8V_VDAFIL:
 ; Video Display Processor Scroll ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;; TODO
-;;; Currently the code only scrolls one line
-;;; and ignores the distance argument in E.
-
+; COPY DATA ZONE FROM VRAM TO SCRLBUF
 VDASCR_RVRAM:
-	; COPY DATA ZONE FROM VRAM TO SCRLBUF
 	
 	; CALCULATE AND SET OFFSET TO START OF DATA ZONE IN VRAM
-	LD	A,(VDASCR_DIST)
-	CALL N8V_OFFSET
+	LD	A,(VDASCR_DIST)	 ; from number lines to scroll,
+	CALL N8V_OFFSET		 ; set HL to offset of data in name table
 	CALL VDP_WRVRAM
 
 	; SETUP FOR VRAM DATA READ	
-	LD	C,DATAP
+	LD	C,DATAP			; using the TMS9918 data port
 	IN	A,(C)			; PRIME AUTOINCREMENT
 	LD	HL,SCRLBUF		; DEST IS SCRLBUF OFFSET 0
 
@@ -605,6 +604,7 @@ N8V_VDASCR3:
 	OR	E
 	JR	NZ,N8V_VDASCR3
 	RET
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 VDASCR_BLANKING:
@@ -620,8 +620,8 @@ N8V_VDASCR4:
 	OR	E					; WITH THE LO BYTE
 	JR	NZ,N8V_VDASCR4		; ;AND LOOP IF NOT ZERO
 	RET
+	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 
 VDASCR_DIST	.DB	0	; NUMBER OF ROWS TO SCROLL
 VDASCR_SIZE	.DW	0	; SIZE IN BYTES OF DATA REGION
@@ -636,62 +636,15 @@ N8V_VDASCR:
   	CALL	N8V_OFFSET		; CVT ROWS OF DATA TO NUMBER OF BYTES
   	LD	(VDASCR_SIZE),HL	; AND SAVE FOR LATER USE  	
   	
-	CALL	VDASCR_RVRAM
+	CALL	VDASCR_RVRAM	; read data region of name table into scrlbuf
     
-	CALL	VDASCR_WVRAM
+	CALL	VDASCR_WVRAM	; write scrlbuf to head of name table in VRAM
 
-	CALL	VDASCR_BLANKING
+	CALL	VDASCR_BLANKING	; blank dist lines at end of name table
 
 	XOR	A					; SET SUCCESSFUL RETURN CODE
 	RET						; RETURN TO CALLER
 
-;;;
-OLD_N8V_VDASCR:
-  	; E = scroll distance (# lines)
-
-	LD HL,0				; starting at row 0 column 0
-	CALL VDP_WRVRAM
-	LD	C,DATAP
-	IN	A,(C)			; prime autoincrement
-	LD HL,SCRLBUF		; 
-	LD DE,24*40
-OLD_N8V_VDASCR2:
-	IN	A,(C)
-	LD (HL),A
-	INC HL
-	DEC DE
-	LD A,D
-	OR E
-	JR NZ,N8V_VDASCR2
-	
-	; COPY UP 23 LINES
-	LD HL,0
-	CALL VDP_WRVRAM
-	LD HL,SCRLBUF+40
-	LD DE,(24*40)-40
-	LD C,DATAP
-	OUT (C),A
-OLD_N8V_VDASCR3:
-	LD A,(HL)
-	OUT (C),A
-	INC HL
-	DEC DE
-	LD A,D
-	OR E
-	JR NZ,N8V_VDASCR3
-
-	; BLANK LAST 40
-	LD DE,40
-OLD_N8V_VDASCR4:
-	LD A,' '
-	OUT (C),A
-	DEC DE
-	LD A,D
-	OR E
-	JR NZ,N8V_VDASCR4
-	
-	XOR	A
-	RET
 
 SCRLBUF	.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 		.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
@@ -773,8 +726,11 @@ RECOVER:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 VDP_DEVUNIT	.DB	0
-VDP_ROW		.DB	0	; row number 0-23
+
+VDP_POS:
 VDP_COL		.DB	0	; col number 0-39
+VDP_ROW		.DB	0	; row number 0-23
+
 VDP_ROWS	.DB	24	; number of rows
 VDP_COLS	.DB	40	;
 VDP_MODE	.DB	0
