@@ -1,4 +1,5 @@
 ;
+; tty_dochar - added setup in HL of position data before call to write
 ;==================================================================================================
 ;   TTY EMULATION MODULE
 ;==================================================================================================
@@ -93,6 +94,9 @@ TTY_DOCHAR:
 	JR	Z,TTY_LF
 	CP	32		; COMPARE TO SPACE (FIRST PRINTABLE CHARACTER)
 	RET	C		; SWALLOW OTHER CONTROL CHARACTERS
+	
+	LD	HL,(TTY_POS)	; physical driver needs pos data to write
+	
 	LD	B,BF_VDAWRC
 	CALL	EMU_VDADISP	; SPIT OUT THE RAW CHARACTER
 	LD	A,(TTY_COL)	; GET CUR COL
