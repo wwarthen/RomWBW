@@ -1,0 +1,20 @@
+This directory has the files that comprise a cross development
+environment for building C utility programs.
+
+The program files located here are not current but rather represent
+a snapshot from a recent time. If you wanted to compile any of the
+current apps from RomWBW, you would have too unpack the sources in
+/RomWBW/trunk/Apps/apps-srcs and copy them to this folder, being careful
+to usde upper case filenames.
+
+The build is set up in sort of a microsoft-like folder arrangement
+with files generated being placed in either the DEBUG or RELEASE folder.
+
+The actual apps for RomWBW are generated directly on CP/M-80- v2.2
+using native language tools, it's the "CP/M way".
+
+Have fun,
+
+Douglas Goodall
+Santa Maria, CA
+douglas_goodall@mac.com
