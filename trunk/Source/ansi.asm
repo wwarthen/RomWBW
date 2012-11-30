@@ -3,13 +3,167 @@
 ;   ANSI EMULATION MODULE
 ;==================================================================================================
 ;
-; TODO:
-;   - THIS IS CURRENTLY JUST A CLONE OF TTY.ASM!  NEEDS A REAL IMPLEMENTATION!
-;   - SOME FUNCTIONS ARE NOT IMPLEMENTED!
-;
+
+; The ANSI handler is a superset of the TTY handler in that is does simple 
+; processing of control characters such as CR, LF... But in addition is Hasbro
+; a state machine driven escape sequence parser that accepts parameters and 
+; command characters and builds a table of data required to perform the indicated
+; operation.
+
+; For instance, a screen clear escaper sequence such as <esc>[2J is parsed as
+; a leading CSI ()escape which places us in state1 (waiting for [ ). When the 
+; next character arrives and turns out to be [, the parser's next state is 
+; state2.
+
+; State2 processing is a little more complex. If the next character is a numeral,
+; it is placed in the parameter1 buffer and the next state is state3 (collecting 
+; parameter1).
+
+; State3 processing implies that the buffer already has 1 byte of a parameter in 
+; the parameter1 buffer. If the next character is a semi-colon, that implies that 
+; the parameter1 buffer is complete and the next state should be state4. If the 
+; next byte is a numeral, it is appended to the parameter1 buffer and we stay INC
+; state3. If the nect character is a semi-colon, that indicates the parameter1 is 
+; complete and we need to enter state4 to begin collection of parameter2. If the 
+; next character is neither a numeral or a semi-colon, then it needs 
+; to be decoded as a command. Commands result in the calling of low-level driver 
+; functions to perform the indicated operation. Subsequently we return to state0.
+
+; State4 processing implies we are collecting parameter2 data. If the next byte
+; is a numeral, it is assigned to the parameter2 buffer. In this case we go to 
+; state5 which is used to finish collection of parameter2.
+
+; State5 processing is for collecting additional parameter2 bytes to be appended
+; to the parameter2 buffer. When a non-numeral arrives, that implies that parameter2
+; is complete and the new character is either a semi-colon or the awaited command 
+; character. If it is a semi-colon, that would imply the existance of a parameter3,
+; which may or may not be supported in this implementation. If it is the command
+; character, then the propper low-level driver calls need to be invoked to perform
+; the desired operations on the video screen.
+
+; Once state5 is complete, we re-enter state0.
+
+ANSI_ERR1		.EQU	1
+
+
+ANSI_CMD_DISP:
+	LD	A,B
+	CP	'J'
+	JR	ANSI_CMD_NOT_CRTCLR
+	
+	; THIS IS THE CRTCLR FUNCTIONAL CODE	
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	LD	DE,0			; row 0 column 0
+	LD	B,BF_VDASCP		; FUNCTION IS SET CURSOR POSITION
+	CALL EMU_VDADISP	; CALL THE VIDEO HARDWARE DRIVER
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	LD	DE,0		; row 0 column 0
+	LD	B,BF_VDAQRY	; FUNCTION IS QUERY FOR SCREEN SIZE
+	LD	HL,0		; WE DO NOT WANT A COPY OF THE CHARACTER BITMAP DATA
+	CALL	EMU_VDADISP	; PERFORM THE QUERY FUNCTION
+	; on return, D=row count, E=column count	
+	; for the fill call, we need hl=number of chars to fill
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
+	LD	E,' '		; fill with spaces
+	;
+	LD	A,(ANSI_ROWS)	; given A = number of rows
+	CALL N8V_OFFSET		; return HL = num_rows * num_cols
+	;	
+	LD	B,BF_VDAFIL	; FUNCTION IS FILL
+	CALL	EMU_VDADISP	; PERFORM THE QUERY FUNCTION
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	XOR	A
+	RET					; return SUCCESS to caller
+	;
+ANSI_CMD_NOT_CRTCLR:
+
+	CP	66h			; is it cursor position?
+	JR	ANSI_CMD_NOT_CRTLC
+	
+ANSI_CMD_NOT_CRTLC:
+
+; since only the crtclr and crtlc are supported right now...
+; any other command is an error
+	CALL	PANIC	; A has the unknown command byte
+
+;------------------------------------------------------------------------------------
+ANSI_IS_NUMERAL:
+	RET
+
+;------------------------------------------------------------------------------------
+ANSI_IS_ALPHA:
+	RET
+;------------------------------------------------------------------------------------
+ANSI_MARSHALL_PARM1:
+	RET
+;------------------------------------------------------------------------------------
+ANSI_MARSHALL_PARM2:
+	RET
+;------------------------------------------------------------------------------------
+ANSI_PROC_COMMAND:
+	RET
+;------------------------------------------------------------------------------------
+	
+
+ANSI_STATE1:
+	; Waiting for [
+	; (the only valid character to follow an ESC would be the [ )
+	; (if we get something else, we go back to state0 and begin again)
+	LD	A,B 
+	CP	'['
+	JR	NZ,ANSI_STATE1_ERR	; if not the expected [, go around
+	LD	HL,ANSI_STATE2		; having found the [, set the next state
+	LD	(ANSI_STATE),HL		; to state2 (waiting for a parm1 char).
+	XOR	A					; set retcode to SUCCESS
+	RET						; and return to caller
+ANSI_STATE1_ERR:
+	LD	HL,ANSI_STATE0
+	LD	(ANSI_STATE),HL	; set next state to state 0
+	LD	A,ANSI_ERR1		; "state1 expected [ not found"
+	RET
+
+;------------------------------------------------------------------------------------
+
+ANSI_STATE2:
+	; waiting for parm1
+	LD	A,B
+	CALL	ANSI_IS_NUMERAL
+	JR		NZ,ANSI_STATE2_NOT_NUMERAL
+	CALL	ANSI_MARSHALL_PARM1
+	XOR	A					; set SUCCESS return code
+	RET
+ANSI_STATE2_NOT_NUMERAL:
+	LD	A,B
+	CP	59		; semi-colon	
+	JR	NZ,ANSI_STATE2_NOT_SEMI
+	LD	HL,ANSI_STATE3
+	LD	(ANSI_STATE),HL		; set next state to waiting for parm2
+	XOR	A
+	RET						; return SUCCESS
+ANSI_STATE2_NOT_SEMI:
+	; if it is not a semi, or a numeral, it must be a command char
+	LD HL,ANSI_STATE0		; after we do the command dispatcher, the
+	LD	(ANSI_STATE),HL		; next state we will want is the default state
+	JP	ANSI_CMD_DISP
+	
 ANSI_INIT:
 	JR	ANSI_INI	; REUSE THE INI FUNCTION BELOW
 ;
+
+ANSI_STATE3:
+	; waiting for parm2
+	LD	A,B
+	CALL	ANSI_IS_NUMERAL
+	JR	NZ,ANSI_STATE3_NOT_NUMERAL
+	CALL	ANSI_MARSHALL_PARM2
+	XOR	A
+	RET
+ANSI_STATE3_NOT_NUMERAL:
+	LD	A,B
+	CALL	ANSI_PROC_COMMAND
+	LD	HL,ANSI_STATE0
+	LD	(ANSI_STATE),HL
+	RET
 ;
 ;
 ANSI_DISPATCH:
@@ -39,9 +193,13 @@ ANSI_IN:
 ;
 ;
 ANSI_OUT:
-	CALL	ANSI_DOCHAR	; HANDLE THE CHARACTER (EMULATION ENGINE)
-	XOR	A		; SIGNAL SUCCESS
-	RET
+	LD	HL,(ANSI_STATE)
+	JP	(HL)
+
+;;	CALL	ANSI_DOCHAR	; HANDLE THE CHARACTER (EMULATION ENGINE)
+;;	XOR	A		; SIGNAL SUCCESS
+;;	RET
+
 ;
 ;
 ;
@@ -65,6 +223,9 @@ ANSI_CFG:
 ;
 ;
 ANSI_INI:
+	LD	HL,ANSI_STATE0		; load the address of the default state function
+	LD	(ANSI_STATE),HL		; and place it in the ANSI_STATE variable for later.
+	
 	LD	B,BF_VDAQRY	; FUNCTION IS QUERY
 	LD	HL,0		; WE DO NOT WANT A COPY OF THE CHARACTER BITMAP DATA
 	CALL	EMU_VDADISP	; PERFORM THE QUERY FUNCTION
@@ -82,7 +243,33 @@ ANSI_QRY:
 ;
 ;
 ;
-ANSI_DOCHAR:
+
+	
+	; This is probably the best place to insert a state sensitive 
+	; dispatcher for handling ANSI escape sequences. Ansi sequences
+	; are unusual because they contain a number of parameters 
+	; subsequently followed by a command character that comes last.
+	
+	; It is wise to create a list of supported sequences so we know
+	; before writing the parser what the most complex sequence will
+	; consist of.
+	
+	; RomWBW utilities written by Douglas Goodall only use several
+	; sequences. A screen clear, and a cursor position. 
+	;
+	; crtclr() uses <esc>[2J
+	; crtlc()  uses <esc>[<line>;<column><0x66>
+	
+	; Programs such as wordstar use more complex operations.
+	;
+	;
+;; ANSI_DOCHAR:
+ANSI_STATE0:
+	; ANSI_STATE0 is the default state where random output characters May
+	; be normal visible characters, a control character such as BS, CR, LF...
+	; or a CSI such as an escape character (27).
+
+
 	LD	A,E		; CHARACTER TO PROCESS
 	CP	8		; BACKSPACE
 	JR	Z,ANSI_BS
@@ -92,6 +279,15 @@ ANSI_DOCHAR:
 	JR	Z,ANSI_CR
 	CP	10		; LINEFEED
 	JR	Z,ANSI_LF
+	
+	CP	27		; ESCAPE	; This is the hook into the escape handler
+	JR	Z,ANSI_NOT_ESC		; go around if not CSI
+	LD	HL,ANSI_STATE1
+	LD	(ANSI_STATE),HL
+	XOR	A					; setup SUCCESS as return status
+	RET
+ANSI_NOT_ESC:
+
 	CP	32		; COMPARE TO SPACE (FIRST PRINTABLE CHARACTER)
 	RET	C		; SWALLOW OTHER CONTROL CHARACTERS
 	LD	B,BF_VDAWRC
@@ -157,7 +353,9 @@ ANSI_XY:
 	LD	B,BF_VDASCP	; SET FUNCTIONT TO SET CURSOR POSITION
 	JP	EMU_VDADISP	; REPOSITION CURSOR
 ;
-;
+; The ANSI_STATE variable (word) contains the 
+;    address of the next state function 
+ANSI_STATE	.DW	ANSI_STATE0	; by default, ANSI_STATE0 
 ;
 ANSI_POS:
 ANSI_COL	.DB	0	; CURRENT COLUMN - 0 BASED
