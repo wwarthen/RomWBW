@@ -1,4 +1,7 @@
-;
+; ansi.asm 12/3/2012 dwg - changed polarity of conditional jump for normal processing
+
+; Status: Still very experimental, either doesn't work or is buggy
+ 
 ;==================================================================================================
 ;   ANSI EMULATION MODULE
 ;==================================================================================================
@@ -281,7 +284,7 @@ ANSI_STATE0:
 	JR	Z,ANSI_LF
 	
 	CP	27		; ESCAPE	; This is the hook into the escape handler
-	JR	Z,ANSI_NOT_ESC		; go around if not CSI
+	JR	NZ,ANSI_NOT_ESC		; go around if not CSI
 	LD	HL,ANSI_STATE1
 	LD	(ANSI_STATE),HL
 	XOR	A					; setup SUCCESS as return status
@@ -290,8 +293,11 @@ ANSI_NOT_ESC:
 
 	CP	32		; COMPARE TO SPACE (FIRST PRINTABLE CHARACTER)
 	RET	C		; SWALLOW OTHER CONTROL CHARACTERS
+
+	; A reg has next character from BIOS CONOUT
 	LD	B,BF_VDAWRC
 	CALL	EMU_VDADISP	; SPIT OUT THE RAW CHARACTER
+
 	LD	A,(ANSI_COL)	; GET CUR COL
 	INC	A		; INCREMENT
 	LD	(ANSI_COL),A	; SAVE IT
