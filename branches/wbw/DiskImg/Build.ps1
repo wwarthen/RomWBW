@@ -9,16 +9,30 @@ $ImgFile = "Disk.img"
 $Blank = ([byte[]](0xE5) * (128KB * 65))
 
 "Creating work file..."
-Set-Content -Value $Blank -Encoding byte -Path Blank.img
-
-"Creating output file..."
-Set-Content -Path $ImgFile -Value $null
+if (!(Test-Path('Blank.img'))) {Set-Content -Value $Blank -Encoding byte -Path 'Blank.img'}
 
 "Adding files to partition 0..."
 copy Blank.img hd0.tmp
 if (Test-Path ('hd0\*')) {cpmcp -f hd0 hd0.tmp hd0/*.* 0:}
 
-copy /b hd*.tmp Disk.img
+"Adding files to partition 1..."
+copy Blank.img hd1.tmp
+if (Test-Path ('hd1\*')) {cpmcp -f hd0 hd1.tmp hd1/*.* 0:}
+
+"Adding files to partition 2..."
+copy Blank.img hd2.tmp
+if (Test-Path ('hd2\*')) {cpmcp -f hd0 hd2.tmp hd2/*.* 0:}
+
+"Adding files to partition 3..."
+copy Blank.img hd3.tmp
+if (Test-Path ('hd3\*')) {cpmcp -f hd0 hd3.tmp hd3/*.* 0:}
+
+"Adding slices to image..."
+#gc hd0.tmp -Enc Byte -Read 512 | Add-Content -Enc Byte $ImgFile 
+#gc hd0.tmp -Enc Byte -Read 10240 | sc x.x -Enc Byte
+&$env:COMSPEC /c copy /b hd*.tmp $ImgFile
+
+Remove-Item *.tmp
 
 return
 

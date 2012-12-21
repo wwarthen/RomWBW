@@ -24,6 +24,7 @@ CVDU_DATA	 .EQU	$EC		; READ/WRITE M8563 DATA
 ;======================================================================
 ;
 CVDU_INIT:
+	PRTS("CVDU:$")
 	CALL 	CVDU_CRTINIT		; SETUP THE CVDU CHIP REGISTERS
 	CALL	CVDU_LOADFONT		; LOAD FONT DATA FROM ROM TO CVDU STRORAGE
 

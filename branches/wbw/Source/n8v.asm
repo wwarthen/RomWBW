@@ -23,7 +23,14 @@ DATAP:  .EQU    BASE+24
 ;_________________________________________________________________________
 ; BOARD INITIALIZATION
 ;_________________________________________________________________________
-
+;
+; FIX: THE BELOW BELONGS IN N8V.INI
+;
+N8V_INIT:
+	PRTS("N8V:$")
+	LD	HL,CHARSET
+	CALL	N8V_VDAINI
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; This routine is called from bnk1.asm to init the TMS9918		;
 ; If HL is non-zero, it specifies the character bitmaps to load ;
