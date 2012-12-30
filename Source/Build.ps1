@@ -113,7 +113,7 @@ Asm 'bootrom'
 Asm 'bootapp'
 Asm 'loader'
 Asm 'pgzero'
-Asm 'bnk1'
+Asm 'hbios'
 Asm 'hbfill'
 Asm 'romfill'
 
@@ -124,8 +124,8 @@ Asm 'romfill'
 Concat 'cp.bin','dos.bin','cbios.bin' 'os.bin'
 Concat 'prefix.bin','os.bin' $SysImgFile
 Concat 'pgzero.bin','bootrom.bin','syscfg.bin','loader.bin','romfill.bin','dbgmon.bin','os.bin','hbfill.bin' 'rom0.bin'
-Concat 'pgzero.bin','bootrom.bin','syscfg.bin','loader.bin','bnk1.bin' 'rom1.bin'
-Concat 'bootapp.bin','syscfg.bin','loader.bin','bnk1.bin','dbgmon.bin','os.bin' $LoaderFile
+Concat 'pgzero.bin','bootrom.bin','syscfg.bin','loader.bin','hbios.bin' 'rom1.bin'
+Concat 'bootapp.bin','syscfg.bin','loader.bin','hbios.bin','dbgmon.bin','os.bin' $LoaderFile
 
 # Create the RomDisk image
 
