@@ -95,7 +95,7 @@ TTY_DOCHAR:
 	CP	32		; COMPARE TO SPACE (FIRST PRINTABLE CHARACTER)
 	RET	C		; SWALLOW OTHER CONTROL CHARACTERS
 	
-	LD	HL,(TTY_POS)	; physical driver needs pos data to write
+;;;	LD	HL,(TTY_POS)	; physical driver needs pos data to write
 	
 	LD	B,BF_VDAWRC
 	CALL	EMU_VDADISP	; SPIT OUT THE RAW CHARACTER
