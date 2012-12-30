@@ -147,6 +147,10 @@ endif
 endif
 
 all: tasm80.tab tasm85.tab $(OUTDIR)/$(ROMNAME).rom $(OUTDIR)/$(ROMNAME).sys $(OUTDIR)/$(ROMNAME).com
+	rm  -f *.asm
+	rm  -f *.bin
+	rm  -f *.inc *.tab *.tmp
+	rm  -f diskdefs *.exp
 
 tasm80.tab:	bin/TASM80.TAB
 	cp bin/TASM80.TAB tasm80.tab

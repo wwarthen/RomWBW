@@ -509,11 +509,10 @@ N8V_OFFSET:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
 N8V_VDAWRC:
 	
-	LD	(VDP_POS),HL	; accept curpos from caller in HL
+;;;	LD	(VDP_POS),HL	; accept curpos from caller in HL
 	
 	PUSH	DE
 
-	LD	hl,row_offs		; hl -> row offset table
 	LD	A,(VDP_ROW)		; pick up cursor row
 	LD	E,A				; place in LO byte of DE
 	LD	d,0				; make 16 bits
@@ -534,25 +533,7 @@ N8V_VDAWRC:
 	LD	C,DATAP			; I/O address for subsequent VRAM write
 	OUT	(C),a			; prime the auto incrementer
 	OUT	(C),a			; output the data byte into the name table
-	
-;	LD	A,(VDP_COL)
-;	INC A
-;	LD	(VDP_COL),A
-;	CP	40
-;	JR	NZ,N8V_VDAWRC2
-;	LD	A,0
-;	LD	(VDP_COL),A
-;	LD	A,(VDP_ROW)
-;	INC A
-;	LD	(VDP_ROW),A
-;	CP 24
-;	JR	NZ, N8V_VDAWRC2
-;	; need to scroll up one line
-;	LD A,1				; SCROLL ONE LINE
-;	LD E,A				; NEEDS TO BE IN A
-;	CALL N8V_VDASCR		; USE SCROLLING FUNCTION
-;N8V_VDAWRC2:	
-
+		
 	XOR	A				; set SUCCESS return code
 	RET					; return from HBIOS call
 
@@ -733,6 +714,14 @@ RECOVER:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 VDP_DEVUNIT	.DB	0
+
+
+; The following data items, VDP_COL and VDP_ROW area
+; data bytes that can be retrieved together with a 
+; word fetch using the VDP_POS label. It is generally
+; set by a call to VDASCP from the emulation layer.
+; It is used by VDAFIL specifically to denote the beginning
+; of the fill area not specified in the API of VDAFIL.
 
 VDP_POS:
 VDP_COL		.DB	0	; col number 0-39
