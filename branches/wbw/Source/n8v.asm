@@ -24,12 +24,12 @@ DATAP:  .EQU    BASE+24
 ; BOARD INITIALIZATION
 ;_________________________________________________________________________
 ;
-; FIX: THE BELOW BELONGS IN N8V.INI
-;
 N8V_INIT:
 	PRTS("N8V:$")
 	LD	HL,CHARSET
 	CALL	N8V_VDAINI
+	XOR	A
+	RET
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; This routine is called from bnk1.asm to init the TMS9918		;
@@ -276,7 +276,8 @@ BAN_LOOP3:
 BAN_DONE3:
 ; fall through...
 
-	CALL	PPK_INIT
+;	WBW: PPK_INIT SHOULD ONLY BE CALLED FROM HBIOS INIT
+;	CALL	PPK_INIT
 	; fall through...
 
 	XOR	A
