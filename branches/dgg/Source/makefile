@@ -182,7 +182,7 @@ os.bin: $(CPBIN) $(DOSBIN) cbios.bin
 rom0.bin: pgzero.bin bootrom.bin syscfg.bin loader.bin romfill.bin dbgmon.bin os.bin hbfill.bin
 	copy /B $(subst $(SPACE),+,$(^)) $@
 	
-rom1.bin: pgzero.bin bootrom.bin syscfg.bin loader.bin bnk1.bin
+rom1.bin: pgzero.bin bootrom.bin syscfg.bin loader.bin hbios.bin
 	copy /B $(subst $(SPACE),+,$(^)) $@
 
 $(OUTDIR)\$(ROMNAME).rom: rom0.bin rom1.bin $(ROMDISKFILES) $(OUTDIR)\$(ROMNAME).sys
@@ -191,7 +191,7 @@ $(OUTDIR)\$(ROMNAME).rom: rom0.bin rom1.bin $(ROMDISKFILES) $(OUTDIR)\$(ROMNAME)
 	$(CPMCP) -f rom$(ROMSIZE)KB RomDisk.tmp ../Output/$(ROMNAME).sys 0:$(SYS).sys
 	copy /B rom0.bin+rom1.bin+RomDisk.tmp $@
 
-$(OUTDIR)\$(ROMNAME).com: bootapp.bin syscfg.bin loader.bin bnk1.bin dbgmon.bin os.bin
+$(OUTDIR)\$(ROMNAME).com: bootapp.bin syscfg.bin loader.bin hbios.bin dbgmon.bin os.bin
 	copy /B $(subst $(SPACE),+,$(^)) $@
 
 $(OUTDIR)\$(ROMNAME).sys: prefix.bin os.bin

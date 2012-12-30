@@ -62,6 +62,7 @@ KBD_IDLE	.DB	0	; IDLE COUNT
 ;__________________________________________________________________________________________________
 ;
 KBD_INIT:
+	PRTS("KBD:$")
 	LD	A,KBD_DEFRPT		; GET DEFAULT REPEAT RATE
 	LD	(KBD_REPEAT),A		; SAVE IT
 	LD	A,KBD_DEFSTATE		; GET DEFAULT STATE

@@ -2,6 +2,13 @@
 
 ; Status: Still very experimental, either doesn't work or is buggy
  
+; WBW: BOGUS EQUATE TO GET MODULE TO BUILD FOR NON-N8 HARDWARE
+; NEEDS TO BE FIXED BEFORE IT WILL WORK FOR ANYTHING OTHER THAN N8
+#IF (!N8VENABLE)
+#DEFINE	N8V_OFFSET	PANIC
+#ENDIF
+
+;
 ;==================================================================================================
 ;   ANSI EMULATION MODULE
 ;==================================================================================================
@@ -150,6 +157,7 @@ ANSI_STATE2_NOT_SEMI:
 	JP	ANSI_CMD_DISP
 	
 ANSI_INIT:
+	PRTS("ANSI:$")
 	JR	ANSI_INI	; REUSE THE INI FUNCTION BELOW
 ;
 
