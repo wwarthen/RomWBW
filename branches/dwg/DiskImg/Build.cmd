@@ -1,4 +1,6 @@
 @echo off
+PowerShell .\Build.ps1 %*
+goto :eof
 
 setlocal
 set path=..\tools\cpmtools;%path%
