@@ -1,0 +1,16 @@
+dwg-apps.man 7/22/2012 dwg - 2.0 Apps - Command syntax
+
+banker                       display version and specifics of bnk1, bnk0...
+cpmname [-a]                 display values in syscfg and cnfgdata
+setlabel                     edit drive label of current drive (interactive)
+map                          displays current drives, mapping, and LU labels
+map <drive> <lunum>          changes LU of specified drive to specified LU #
+meta                         display and/or edit metadata of  current drive
+rem                          used in submit file to add remarks
+sysgen                       writes default system onto current drive
+sysgen <filespec>            writes specified file onto current drive
+sysgen <filespec> <drive>    write  specified file to specified drive
+termtype                     display and or edit terminal type
+view                         display tables of current and next 3 drives
+view { A: | B: | C: | D: | E: | F: | G: | H: }  dsply specified & nxt 3 drvs
+
