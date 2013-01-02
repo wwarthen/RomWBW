@@ -4,27 +4,26 @@ $CpmToolsPath = '..\tools\cpmtools'
 
 $env:PATH = $CpmToolsPath + ';' + $env:PATH
 
-$OutDir = "../Output"
-$ImgFile = "Disk.img"
+$ImgFile = "..\Output\Disk.img"
 $Blank = ([byte[]](0xE5) * (128KB * 65))
 
 "Creating work file..."
-if (!(Test-Path('Blank.img'))) {Set-Content -Value $Blank -Encoding byte -Path 'Blank.img'}
+if (!(Test-Path('Blank.tmp'))) {Set-Content -Value $Blank -Encoding byte -Path 'Blank.tmp'}
 
 "Adding files to partition 0..."
-copy Blank.img hd0.tmp
+copy Blank.tmp hd0.tmp
 if (Test-Path ('hd0\*')) {cpmcp -f hd0 hd0.tmp hd0/*.* 0:}
 
 "Adding files to partition 1..."
-copy Blank.img hd1.tmp
+copy Blank.tmp hd1.tmp
 if (Test-Path ('hd1\*')) {cpmcp -f hd0 hd1.tmp hd1/*.* 0:}
 
 "Adding files to partition 2..."
-copy Blank.img hd2.tmp
+copy Blank.tmp hd2.tmp
 if (Test-Path ('hd2\*')) {cpmcp -f hd0 hd2.tmp hd2/*.* 0:}
 
 "Adding files to partition 3..."
-copy Blank.img hd3.tmp
+copy Blank.tmp hd3.tmp
 if (Test-Path ('hd3\*')) {cpmcp -f hd0 hd3.tmp hd3/*.* 0:}
 
 "Adding slices to image..."
