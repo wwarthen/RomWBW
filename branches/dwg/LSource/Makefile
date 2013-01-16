@@ -1,3 +1,4 @@
+# RomWBW/branches/dwg/LSource/Makefile  1/16/2013 dwg - Makefile for scientific Linux (red hat enterprise)
 # RomWBW/branches/dwg/LSource/Makefile 11/09/2012 dwg - added rule to copy n8chars.minc
 # RomWBW/branches/dwg/LSource/Makefile 10/27/2012 dwg - 
 #
