@@ -1,3 +1,4 @@
+# RomWBW/branches/dwg/XSource/Makefile  1/16/2013 dwg - validate build on Linux
 # RomWBW/branches/dwg/XSource/Makefile 11/09/2012 dwg - add copy rule for n8chars.inc
 # RomWBW/branches/dwg/XSource/Makefile 10/24/2012 dwg - 
 #
@@ -202,11 +203,10 @@ os.bin: $(CPBIN) $(DOSBIN) cbios.bin
  	
 rom0.bin: pgzero.bin bootrom.bin syscfg.bin loader.bin romfill.bin dbgmon.bin os.bin hbfill.bin
 	cat pgzero.bin bootrom.bin syscfg.bin loader.bin romfill.bin dbgmon.bin os.bin hbfill.bin >>$@
-	
-rom1.bin:	pgzero.bin bootrom.bin syscfg.bin loader.bin
-#rom1.bin: pgzero.bin bootrom.bin syscfg.bin loader.bin hbios.bin
-	cat pgzero.bin bootrom.bin syscfg.bin loader.bin >>$@
-#	cat pgzero.bin bootrom.bin syscfg.bin loader.bin hbios.bin >>$@
+
+# fixed 1/16/20113 dwg - added hbios.bin to end of cat list	
+rom1.bin:	pgzero.bin bootrom.bin syscfg.bin loader.bin hbios.bin
+	cat     pgzero.bin bootrom.bin syscfg.bin loader.bin hbios.bin >>$@
 
 $(OUTDIR)/$(ROMNAME).rom: rom0.bin rom1.bin $(ROMDISKFILES) $(OUTDIR)/$(ROMNAME).sys diskdefs
 	cp $(SRC)blank$(ROMSIZE)KB.dat RomDisk.tmp
