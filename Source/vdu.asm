@@ -28,7 +28,10 @@ VDU_DATA	 .EQU	0F3h		; VDU DATA REGISTER
 ;======================================================================
 ;
 VDU_INIT:
-	PRTS("VDU:$")
+	PRTS("VDU: IO=0x$")
+	LD	A,VDU_RAMRD
+	CALL	PRTHEXBYTE
+;
 	CALL 	VDU_CRTINIT		; INIT SY6845 VDU CHIP
 	
 VDU_RESET:
