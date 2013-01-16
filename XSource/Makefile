@@ -174,7 +174,8 @@ build.inc:
 	/bin/echo	'#INCLUDE	"config_'$(CONFIG)'.asm"' >>$@
 	/bin/echo	; >>$@
 
-bootrom.bin : bootrom.asm std.asm build.inc ver.inc memmgr.asm config_$(CONFIG).asm
+# 12/31/2012 dwg - added xio.asm as dependency
+bootrom.bin : bootrom.asm std.asm build.inc ver.inc memmgr.asm config_$(CONFIG).asm xio.asm
 	$(TASM) $(ASMOPT80) $< $@
 	
 bootapp.bin:	bootapp.asm std.asm build.inc ver.inc
@@ -202,8 +203,10 @@ os.bin: $(CPBIN) $(DOSBIN) cbios.bin
 rom0.bin: pgzero.bin bootrom.bin syscfg.bin loader.bin romfill.bin dbgmon.bin os.bin hbfill.bin
 	cat pgzero.bin bootrom.bin syscfg.bin loader.bin romfill.bin dbgmon.bin os.bin hbfill.bin >>$@
 	
-rom1.bin: pgzero.bin bootrom.bin syscfg.bin loader.bin bnk1.bin
-	cat pgzero.bin bootrom.bin syscfg.bin loader.bin bnk1.bin >>$@
+rom1.bin:	pgzero.bin bootrom.bin syscfg.bin loader.bin
+#rom1.bin: pgzero.bin bootrom.bin syscfg.bin loader.bin hbios.bin
+	cat pgzero.bin bootrom.bin syscfg.bin loader.bin >>$@
+#	cat pgzero.bin bootrom.bin syscfg.bin loader.bin hbios.bin >>$@
 
 $(OUTDIR)/$(ROMNAME).rom: rom0.bin rom1.bin $(ROMDISKFILES) $(OUTDIR)/$(ROMNAME).sys diskdefs
 	cp $(SRC)blank$(ROMSIZE)KB.dat RomDisk.tmp
@@ -211,8 +214,8 @@ $(OUTDIR)/$(ROMNAME).rom: rom0.bin rom1.bin $(ROMDISKFILES) $(OUTDIR)/$(ROMNAME)
 	$(CPMCP) -f rom$(ROMSIZE)KB RomDisk.tmp ../Output/$(ROMNAME).sys 0:$(SYS).sys
 	cat rom0.bin rom1.bin RomDisk.tmp >>$@
 
-$(OUTDIR)/$(ROMNAME).com: bootapp.bin syscfg.bin loader.bin bnk1.bin dbgmon.bin os.bin
-	cat bootapp.bin syscfg.bin loader.bin bnk1.bin dbgmon.bin os.bin >>$@
+$(OUTDIR)/$(ROMNAME).com: bootapp.bin syscfg.bin loader.bin hbios.bin dbgmon.bin os.bin
+	cat bootapp.bin syscfg.bin loader.bin hbios.bin dbgmon.bin os.bin >>$@
 
 $(OUTDIR)/$(ROMNAME).sys: prefix.bin os.bin
 	cat prefix.bin os.bin >>$@
@@ -225,8 +228,8 @@ bdosb01.asm:	$(SRC)bdosb01.asm
 	cp $< $@
 	$(CVT) $@
 
-bnk1.asm:	$(SRC)bnk1.asm fd.asm ppide.asm n8v.asm n8chars.inc ppk.asm sd.asm tty.asm ansi.asm
-	cp $(SRC)bnk1.asm $@
+hbios.asm:	$(SRC)hbios.asm fd.asm ppide.asm n8v.asm n8chars.inc ppk.asm sd.asm tty.asm ansi.asm
+	cp $(SRC)hbios.asm $@
 	$(CVT) $@
 
 bootapp.asm:	$(SRC)bootapp.asm
@@ -366,6 +369,10 @@ vdu.asm:	$(SRC)vdu.asm
 	$(CVT) $@
 
 ver.inc:	$(SRC)ver.inc
+	cp $< $@
+	$(CVT) $@
+
+xio.asm:	$(SRC)xio.asm
 	cp $< $@
 	$(CVT) $@
 
