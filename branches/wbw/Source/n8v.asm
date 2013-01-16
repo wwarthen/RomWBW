@@ -25,7 +25,10 @@ DATAP:  .EQU    BASE+24
 ;_________________________________________________________________________
 ;
 N8V_INIT:
-	PRTS("N8V:$")
+	PRTS("N8V: IO=0x$")
+	LD	A,DATAP
+	CALL	PRTHEXBYTE
+;
 	LD	HL,CHARSET
 	CALL	N8V_VDAINI
 	XOR	A

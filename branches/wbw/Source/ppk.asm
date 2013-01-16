@@ -69,7 +69,10 @@ PPK_IDLE	.DB	0	; IDLE COUNT
 ;__________________________________________________________________________________________________
 ;
 PPK_INIT:
-	PRTS("PPK:$")
+	PRTS("PPK: IO=0x$")
+	LD	A,PPK_PPIA
+	CALL	PRTHEXBYTE
+;
 	CALL 	PPK_INITPORT		; SETS PORT C SO CAN INPUT AND OUTPUT
 
 	LD	A,PPK_DEFRPT		; GET DEFAULT REPEAT RATE
