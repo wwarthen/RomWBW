@@ -89,7 +89,7 @@
 #
 # Uncomment and update values below to hardcode settings:
 #
-CONFIG := n8_2312
+CONFIG := s100
 ROMSIZE := 512
 CPU := 180
 SYS := CPM
@@ -228,7 +228,7 @@ bdosb01.asm:	$(SRC)bdosb01.asm
 	cp $< $@
 	$(CVT) $@
 
-hbios.asm:	$(SRC)hbios.asm fd.asm ppide.asm n8v.asm n8chars.inc ppk.asm sd.asm tty.asm ansi.asm
+hbios.asm:	$(SRC)hbios.asm kbd.asm fd.asm ppide.asm n8v.asm n8chars.inc ppk.asm sd.asm tty.asm ansi.asm
 	cp $(SRC)hbios.asm $@
 	$(CVT) $@
 
@@ -285,6 +285,10 @@ ide_data.asm:	$(SRC)ide_data.asm
 	$(CVT) $@
 
 infolist.inc:	$(SRC)infolist.inc
+	cp $< $@
+	$(CVT) $@
+
+kbd.asm:		$(SRC)kbd.asm
 	cp $< $@
 	$(CVT) $@
 
