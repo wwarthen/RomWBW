@@ -1,26 +1,26 @@
+; ~/RomWBW/branches/s100/Source/std.asm 1/19/2013 dwg - 
 ;
-;==================================================================================================
-;   STANDARD INCLUDE STUFF
-;==================================================================================================
-;
-;  5/21/2012 2.0.0.0 dwg - added B1F0PEEK & B1F0POKE
-;
-;  5/11/2012 2.0.0.0 dwg - moved BIOS JMPS together
-;
-;  3/04/2012 2.0.0.0 dwg - added CBIOS_BNKSEL for new BIOS jump (OEM extension)
-;
-;  2/21/2012         dwg - added TERM_VT52 terminal type for VDU
-; 12/12/2011         dwg - changed TERM_NOT_SPEC to TERM_TTY & TTY=0 ANSI=1 WYSE=2
-;
-; 12/11/2011         dwg - added TERM_ANSI and TERM_WYSE for TERMTYPE
-;
-; 11/29/2011         dwg - now uses dynamically generated include file
-; 			   instead of static definitions.
-;
-;---------------------------------------------------------------------------------------------------
-;
+
+; The purpose of this file is to define generic symbols and to include
+; the appropriate std-*.inc file to bring in platform specifics.
+
+; There are four classes of systems supported by N8VEM.
+; 1. N8VEM 	Platforms that include ECB interface
+; 2. ZETA	Genrally N8VEM-like, but no ECB
+; 3. N8		Generally N8VEM-like bt 180 and extra embedded devices
+; 4. S100	Assumes Z80 Master CPU Card
+
+; All the classes require certain generic definitions, and these are
+; defined here prior to the inclusion of platform specific .inc files.
+
+; It is unfortunate, but all the possible config items must be defined
+; here because the config gets read before the specific std-*.inc's
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 TRUE		.EQU 	1
 FALSE		.EQU 	0
+
 ;
 ; DEPRECATED STUFF!!!
 ;
@@ -38,42 +38,53 @@ PLT_S100	.EQU	5		; S100COMPUTERS Z80 based system
 
 ; BOOT STYLE
 ;
-BT_MENU		.EQU	1		; WAIT FOR MENU SELECTION AT LOADER PROMPT
-BT_AUTO		.EQU	2		; AUTO SELECT BOOT_DEFAULT AFTER BOOT_TIMEOUT
+BT_MENU		.EQU	1	; WAIT FOR MENU SELECTION AT LOADER PROMPT
+BT_AUTO		.EQU	2	; AUTO SELECT BOOT_DEFAULT AFTER BOOT_TIMEOUT
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ; VDA DEVICES (VIDEO DISPLAY ADAPTER)
 ;
 VDADEV_NONE	.EQU	$00		; NO VDA DEVICE
+; the following are specific
 VDADEV_VDU	.EQU	$10		; ECB VDU - 6545 CHIP
-VDADEV_CVDU	.EQU	$20		; ECB COLOR VDU - 8563 CHIP (NOT IMPLEMENTED)
+VDADEV_CVDU	.EQU	$20		; ECB COLOR VDU - 8563 CHIP (NOT IMP)
 VDADEV_UPD7220	.EQU	$30		; ECB uP7220 (NOT IMPLEMENTED)
 VDADEV_N8V	.EQU	$40		; N8 ONBOARD VDA SUBSYSTEM
+
+
+
+
+
 ;
 ; CHARACTER DEVICES
 ;
 CIODEV_UART	.EQU	$00
-CIODEV_ASCI	.EQU	$10
-CIODEV_VDU	.EQU	$20
-CIODEV_CVDU	.EQU	$30
-CIODEV_UPD7220	.EQU	$40
+;CIODEV_ASCI	.EQU	$10
+;CIODEV_VDU	.EQU	$20
+;CIODEV_CVDU	.EQU	$30
+;CIODEV_UPD7220	.EQU	$40
 CIODEV_N8V	.EQU	$50
-CIODEV_PRPCON	.EQU	$60
-CIODEV_PPPCON	.EQU	$70
+;CIODEV_PRPCON	.EQU	$60
+;CIODEV_PPPCON	.EQU	$70
 CIODEV_CRT	.EQU	$D0
-CIODEV_BAT	.EQU	$E0
+;CIODEV_BAT	.EQU	$E0
 CIODEV_NUL	.EQU	$F0
+
 ;
 ; DISK DEVICES (ONLY FIRST NIBBLE RELEVANT, SECOND NIBBLE RESERVED FOR UNIT)
 ;
 DIODEV_MD	.EQU	$00
-DIODEV_FD	.EQU	$10
-DIODEV_IDE	.EQU	$20
-DIODEV_ATAPI	.EQU	$30
-DIODEV_PPIDE	.EQU	$40
-DIODEV_SD	.EQU	$50
-DIODEV_PRPSD	.EQU	$60
-DIODEV_PPPSD	.EQU	$70
-DIODEV_HDSK	.EQU	$80
+; The following are specific
+;DIODEV_FD	.EQU	$10
+;DIODEV_IDE	.EQU	$20
+;DIODEV_ATAPI	.EQU	$30
+;DIODEV_PPIDE	.EQU	$40
+;DIODEV_SD	.EQU	$50
+;DIODEV_PRPSD	.EQU	$60
+;DIODEV_PPPSD	.EQU	$70
+;DIODEV_HDSK	.EQU	$80
 ;
 ; RAM DISK INITIALIZATION OPTIONS
 ;
@@ -115,6 +126,7 @@ MID_FD111	.EQU	8
 ;
 ; FD MODE SELECTIONS
 ;
+FDMODE_NONE	.equ	0		; FD modes defined in std-*.inc
 FDMODE_DIO	.EQU	1		; DISKIO V1
 FDMODE_ZETA	.EQU	2		; ZETA
 FDMODE_DIDE	.EQU	3		; DUAL IDE
@@ -123,11 +135,14 @@ FDMODE_DIO3	.EQU	5		; DISKIO V3
 ;
 ; IDE MODE SELECTIONS
 ;
+IDEMODE_NONE	.EQU	0
 IDEMODE_DIO	.EQU	1		; DISKIO V1
 IDEMODE_DIDE	.EQU	2		; DUAL IDE
 ;
 ; PPIDE MODE SELECTIONS
 ;
+PPIDEMODE_NONE	.EQU	0
+
 PPIDEMODE_STD	.EQU	1		; STANDARD N8VEM PARALLEL PORT
 PPIDEMODE_DIO3	.EQU	2		; DISKIO V3 PARALLEL PORT
 ;
@@ -183,12 +198,24 @@ CP		.EQU	CP_ZCPR
 #INCLUDE "build.inc"			; INCLUDE USER CONFIG, ADD VARIANT, TIMESTAMP, & ROMSIZE
 ;
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Support for S100COMPUTERS.COM Hardware ;
-; Phase One Support - Minimum Board Set  ;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-																																																																																													
+#IF (PLATFORM == PLT_N8VEM)
+#INCLUDE "std-n8vem.inc"
+#ENDIF
+
+#IF (PLATFORM == PLT_ZETA)
+#INCLUDE "std-zeta.inc"
+#ENDIF
+
+#IF (PLATFORM == PLT_N8)
+#INCLUDE "std-n8.inc"
+#ENDIF
+
+#IF (PLATFORM == PLT_S2I)
+#INCLUDE "std-s2i.inc"
+#ENDIF
+
 #IF (PLATFORM == PLT_S100)
+#INCLUDE "std-s100.inc")
 ;
 #IFDEF S100_CPU
 #INCLUDE "S100CPU.INC"
@@ -208,149 +235,6 @@ CP		.EQU	CP_ZCPR
 ;
 #ENDIF
 
-
-#IF (PLATFORM != PLT_N8)
-;
-; N8VEM HARDWARE IO PORT ADDRESSES AND MEMORY LOCATIONS
-;
-MPCL_RAM	.EQU 	78H		; BASE IO ADDRESS OF RAM MEMORY PAGER CONFIGURATION LATCH
-MPCL_ROM	.EQU 	7CH		; BASE IO ADDRESS OF ROM MEMORY PAGER CONFIGURATION LATCH
-RTC		.EQU	70H		; ADDRESS OF RTC LATCH AND INPUT PORT
-
-;__HARDWARE_INTERFACES________________________________________________________________________________________________________________ 
-;
-; PPI 82C55 I/O IS DECODED TO PORT 60-67
-;
-#IF (PLATFORM == PLT_S2I)
-PPIBASE		.EQU	80H
-#ELSE
-PPIBASE		.EQU	60H
-#ENDIF
-PPIA		.EQU 	PPIBASE + 0	; PORT A
-PPIB		.EQU 	PPIBASE + 1	; PORT B
-PPIC		.EQU 	PPIBASE + 2	; PORT C
-PPIX	 	.EQU 	PPIBASE + 3	; PPI CONTROL PORT
-;
-; 16C550 SERIAL LINE UART
-;
-#IF (PLATFORM == PLT_S2I)
-SIO_BASE	.EQU	90H
-#ELSE
-SIO_BASE	.EQU	68H
-#ENDIF
-SIO_RBR		.EQU	SIO_BASE + 0	; DLAB=0: RCVR BUFFER REG (READ ONLY)
-SIO_THR		.EQU	SIO_BASE + 0	; DLAB=0: XMIT HOLDING REG (WRITE ONLY)
-SIO_IER		.EQU	SIO_BASE + 1	; DLAB=0: INT ENABLE REG
-SIO_IIR		.EQU	SIO_BASE + 2	; INT IDENT REGISTER (READ ONLY)
-SIO_FCR		.EQU	SIO_BASE + 2	; FIFO CONTROL REG (WRITE ONLY)
-SIO_LCR		.EQU	SIO_BASE + 3	; LINE CONTROL REG
-SIO_MCR		.EQU	SIO_BASE + 4	; MODEM CONTROL REG
-SIO_LSR		.EQU	SIO_BASE + 5	; LINE STATUS REG
-SIO_MSR		.EQU	SIO_BASE + 6	; MODEM STATUS REG
-SIO_SCR		.EQU	SIO_BASE + 7	; SCRATCH REGISTER
-SIO_DLL		.EQU	SIO_BASE + 0	; DLAB=1: DIVISOR LATCH (LS)
-SIO_DLM		.EQU	SIO_BASE + 1	; DLAB=1: DIVISOR LATCH (MS)
-;
-#ENDIF		; (PLATFORM != PLT_N8)
-;
-#IF (PLATFORM == PLT_N8)
-;
-; Z180 REGISTERS
-;
-CPU_IOBASE	.EQU	40H		; ONLY RELEVANT FOR Z180
-;
-CPU_CNTLA0:	.EQU	CPU_IOBASE+$00	;ASCI0 control A
-CPU_CNTLA1:	.EQU	CPU_IOBASE+$01	;ASCI1 control A
-CPU_CNTLB0:	.EQU	CPU_IOBASE+$02	;ASCI0 control B
-CPU_CNTLB1:	.EQU	CPU_IOBASE+$03	;ASCI1 control B
-CPU_STAT0:	.EQU	CPU_IOBASE+$04	;ASCI0 status
-CPU_STAT1:	.EQU	CPU_IOBASE+$05	;ASCI1 status
-CPU_TDR0:	.EQU	CPU_IOBASE+$06	;ASCI0 transmit
-CPU_TDR1:	.EQU	CPU_IOBASE+$07	;ASCI1 transmit
-CPU_RDR0:	.EQU	CPU_IOBASE+$08	;ASCI0 receive
-CPU_RDR1:	.EQU	CPU_IOBASE+$09	;ASCI1 receive
-CPU_CNTR:	.EQU	CPU_IOBASE+$0A	;CSI/O control
-CPU_TRDR:	.EQU	CPU_IOBASE+$0B	;CSI/O transmit/receive
-CPU_TMDR0L:	.EQU	CPU_IOBASE+$0C	;Timer 0 data lo
-CPU_TMDR0H:	.EQU	CPU_IOBASE+$0D	;Timer 0 data hi
-CPU_RLDR0L:	.EQU	CPU_IOBASE+$0E	;Timer 0 reload lo
-CPU_RLDR0H:	.EQU	CPU_IOBASE+$0F	;Timer 0 reload hi
-CPU_TCR:	.EQU	CPU_IOBASE+$10	;Timer control
-;	
-CPU_ASEXT0:	.EQU	CPU_IOBASE+$12	;ASCI0 extension control (Z8S180)
-CPU_ASEXT1:	.EQU	CPU_IOBASE+$13	;ASCI1 extension control (Z8S180)
-;
-CPU_TMDR1L:	.EQU	CPU_IOBASE+$14	;Timer 1 data lo
-CPU_TMDR1H:	.EQU	CPU_IOBASE+$15	;Timer 1 data hi
-CPU_RLDR1L:	.EQU	CPU_IOBASE+$16	;Timer 1 reload lo
-CPU_RLDR1H:	.EQU	CPU_IOBASE+$17	;Timer 1 reload hi
-CPU_FRC:	.EQU	CPU_IOBASE+$18	;Free running counter
-
-CPU_ASTC0L:	.EQU	CPU_IOBASE+$1A	;ASCI0 Time constant lo (Z8S180)
-CPU_ASTC0H:	.EQU	CPU_IOBASE+$1B	;ASCI0 Time constant hi (Z8S180)
-CPU_ASTC1L:	.EQU	CPU_IOBASE+$1C	;ASCI1 Time constant lo (Z8S180)
-CPU_ASTC1H:	.EQU	CPU_IOBASE+$1D	;ASCI1 Time constant hi (Z8S180)
-CPU_CMR:	.EQU	CPU_IOBASE+$1E	;Clock multiplier (latest Z8S180)
-CPU_CCR:	.EQU	CPU_IOBASE+$1F	;CPU control (Z8S180)
-;
-CPU_SAR0L:	.EQU	CPU_IOBASE+$20	;DMA0 source addr lo
-CPU_SAR0H:	.EQU	CPU_IOBASE+$21	;DMA0 source addr hi
-CPU_SAR0B:	.EQU	CPU_IOBASE+$22	;DMA0 source addr bank
-CPU_DAR0L:	.EQU	CPU_IOBASE+$23	;DMA0 dest addr lo
-CPU_DAR0H:	.EQU	CPU_IOBASE+$24	;DMA0 dest addr hi
-CPU_DAR0B:	.EQU	CPU_IOBASE+$25	;DMA0 dest addr bank
-CPU_BCR0L:	.EQU	CPU_IOBASE+$26	;DMA0 byte count lo
-CPU_BCR0H:	.EQU	CPU_IOBASE+$27	;DMA0 byte count hi
-CPU_MAR1L:	.EQU	CPU_IOBASE+$28	;DMA1 memory addr lo
-CPU_MAR1H:	.EQU	CPU_IOBASE+$29	;DMA1 memory addr hi
-CPU_MAR1B:	.EQU	CPU_IOBASE+$2A	;DMA1 memory addr bank
-CPU_IAR1L:	.EQU	CPU_IOBASE+$2B	;DMA1 I/O addr lo
-CPU_IAR1H:	.EQU	CPU_IOBASE+$2C	;DMA1 I/O addr hi
-CPU_IAR1B:	.EQU	CPU_IOBASE+$2D	;DMA1 I/O addr bank (Z8S180)
-CPU_BCR1L:	.EQU	CPU_IOBASE+$2E	;DMA1 byte count lo
-CPU_BCR1H:	.EQU	CPU_IOBASE+$2F	;DMA1 byte count hi
-CPU_DSTAT:	.EQU	CPU_IOBASE+$30	;DMA status
-CPU_DMODE:	.EQU	CPU_IOBASE+$31	;DMA mode
-CPU_DCNTL:	.EQU	CPU_IOBASE+$32	;DMA/WAIT control
-CPU_IL:		.EQU	CPU_IOBASE+$33	;Interrupt vector load
-CPU_ITC:	.EQU	CPU_IOBASE+$34	;INT/TRAP control
-;
-CPU_RCR:	.EQU	CPU_IOBASE+$36	;Refresh control
-;
-CPU_CBR:	.EQU	CPU_IOBASE+$38	;MMU common base register
-CPU_BBR:	.EQU	CPU_IOBASE+$39	;MMU bank base register
-CPU_CBAR	.EQU	CPU_IOBASE+$3A	;MMU common/bank area register
-;
-CPU_OMCR:	.EQU	CPU_IOBASE+$3E	;Operation mode control
-CPU_ICR:	.EQU	$3F		;I/O control register (not relocated!!!)
-;
-; N8 ONBOARD  I/O REGISTERS
-;
-N8_IOBASE	.EQU	$80
-;
-PPI		.EQU	N8_IOBASE+$00
-PPIA		.EQU 	PPI+$00		; PORT A
-PPIB		.EQU 	PPI+$01		; PORT B
-PPIC		.EQU 	PPI+$02		; PORT C
-PPIX	 	.EQU 	PPI+$03		; PPI CONTROL PORT
-;
-PPI2		.EQU	N8_IOBASE+$04
-PPI2A		.EQU 	PPI2+$00	; PORT A
-PPI2B		.EQU 	PPI2+$01	; PORT B
-PPI2C		.EQU 	PPI2+$02	; PORT C
-PPI2X	 	.EQU 	PPI2+$03	; PPI CONTROL PORT
-;
-RTC:		.EQU	N8_IOBASE+$08	;RTC latch and buffer
-;FDC:		.EQU	N8_IOBASE+$0C	;Floppy disk controller
-;UTIL:		.EQU	N8_IOBASE+$10	;Floppy disk utility 
-ACR:		.EQU	N8_IOBASE+$14	;auxillary control register
-RMAP:		.EQU	N8_IOBASE+$16	;ROM page register
-VDP:		.EQU	N8_IOBASE+$18	;Video Display Processor (TMS9918A)
-PSG:		.EQU	N8_IOBASE+$1C	;Programmable Sound Generator (AY-3-8910)
-;
-DEFACR		.EQU	$1B
-;
-#ENDIF
 ;
 ; CHARACTER DEVICE FUNCTIONS
 ;
@@ -561,15 +445,6 @@ CCPSIZ:		.EQU	00800H
       #DEFINE	FDLBL	", FLOPPY (AUTOSIZE)"
   #ELSE
     #IF (FDMEDIA == FDM720)
-      #DEFINE	FDLBL	", FLOPPY (720KB)"
-    #ENDIF
-    #IF (FDMEDIA == FDM144)
-      #DEFINE	FDLBL	", FLOPPY (1.44MB)"
-    #ENDIF
-    #IF (FDMEDIA == FDM120)
-      #DEFINE	FDLBL	", FLOPPY (1.20MB)"
-    #ENDIF
-    #IF (FDMEDIA == FDM360)
       #DEFINE	FDLBL	", FLOPPY (360KB)"
     #ENDIF
     #IF (FDMEDIA == FDM111)
