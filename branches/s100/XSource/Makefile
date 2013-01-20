@@ -1,3 +1,8 @@
+# RomWBW/branches/s100/XSource/Makefile 1/19/2013 dgw - 
+#   This makefile is a preliminary build script for the new std.asm schema.
+#   It currently builds the zeta and n8_2312 platforms and work on the
+#   n8vem platform is in progress but not working yet.
+
 # RomWBW/branches/dwg/XSource/Makefile  1/16/2013 dwg - validate build on Linux
 # RomWBW/branches/dwg/XSource/Makefile 11/09/2012 dwg - add copy rule for n8chars.inc
 # RomWBW/branches/dwg/XSource/Makefile 10/24/2012 dwg - 
@@ -89,11 +94,29 @@
 #
 # Uncomment and update values below to hardcode settings:
 #
-CONFIG := s100
+
+
+# 1/19/2013 dwg - tested zeta, 
+
+#CONFIG := zeta
+#ROMSIZE := 512
+#CPU := 180
+#SYS := CPM
+#ROMNAME := zeta
+
+#CONFIG := n8_2312
+#ROMSIZE := 512
+#CPU := 180
+#SYS := CPM
+#ROMNAME := n8_2312
+
+CONFIG := N8VEM
 ROMSIZE := 512
 CPU := 180
 SYS := CPM
-ROMNAME := n8_2312
+ROMNAME := N8VEM
+
+
 
 ifndef ROMNAME
 ROMNAME := $(CONFIG)
@@ -147,7 +170,9 @@ $(error Usage: make CONFIG=<config> ROMSIZE=[512|1024] CPU=[80|180] SYS=[CPM|ZSY
 endif
 endif
 
-all: tasm80.tab tasm85.tab $(OUTDIR)/$(ROMNAME).rom $(OUTDIR)/$(ROMNAME).sys $(OUTDIR)/$(ROMNAME).com
+STDS = std-n8.inc std-n8vem.inc std-s100.inc std-s2i.inc std-zeta.inc
+
+all: $(STDS) tasm80.tab tasm85.tab $(OUTDIR)/$(ROMNAME).rom $(OUTDIR)/$(ROMNAME).sys $(OUTDIR)/$(ROMNAME).com
 	rm  -f *.asm
 	rm  -f *.bin
 	rm  -f *.inc *.tab *.tmp
@@ -352,6 +377,26 @@ std.asm:	$(SRC)std.asm
 	cp $< $@
 	$(CVT) $@
 
+std-n8.inc:	$(SRC)std-n8.inc
+	cp $< $@
+	$(CVT) $@
+	
+std-n8vem.inc:	$(SRC)std-n8vem.inc 
+	cp $< $@
+	$(CVT) $@
+
+std-s100.inc:	$(SRC)std-s100.inc
+	cp $< $@
+	$(CVT) $@
+
+std-s2i.inc:	$(SRC)std-s2i.inc
+	cp $< $@
+	$(CVT) $@
+
+std-zeta.inc:	$(SRC)std-zeta.inc
+	cp $< $@
+	$(CVT) $@
+
 syscfg.asm:	$(SRC)syscfg.asm config_$(CONFIG).asm cnfgdata.inc
 	cp $< $@
 	$(CVT) $@
@@ -382,5 +427,5 @@ xio.asm:	$(SRC)xio.asm
 
 clean:
 	rm -f *.tab *.TAB *.inc *.asm *.bin *.com *.img *.rom *.lst *.exp *.tmp
-	rm -f build.inc diskdefs
+	rm -f build.inc diskdefs *.inc
 	rm -f $(OUTDIR)/*.*
