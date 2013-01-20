@@ -104,17 +104,17 @@
 #SYS := CPM
 #ROMNAME := zeta
 
-#CONFIG := n8_2312
-#ROMSIZE := 512
-#CPU := 180
-#SYS := CPM
-#ROMNAME := n8_2312
-
-CONFIG := N8VEM
+CONFIG := n8_2312
 ROMSIZE := 512
 CPU := 180
 SYS := CPM
-ROMNAME := N8VEM
+ROMNAME := n8_2312
+
+#CONFIG := N8VEM
+#ROMSIZE := 512
+#CPU := 180
+#SYS := CPM
+#ROMNAME := N8VEM
 
 
 
@@ -276,10 +276,6 @@ ccpb03.asm:	$(SRC)ccpb03.asm
 cnfgdata.inc:	$(SRC)cnfgdata.inc
 	cp $< $@
 	$(CVT) $@
-
-##config_zeta.asm:	$(SRC)config_zeta.asm
-##	cp $< $@
-##	$(CVT) $@
 
 config_$(CONFIG).asm:	$(SRC)config_$(CONFIG).asm
 	cp $< $@
