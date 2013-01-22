@@ -98,17 +98,22 @@
 
 # 1/19/2013 dwg - tested zeta, 
 
+CONFIG := S100
+ROMSIZE := 512
+CPU     := 80
+SYS     := CPM
+
 #CONFIG := zeta
 #ROMSIZE := 512
 #CPU := 180
 #SYS := CPM
 #ROMNAME := zeta
 
-CONFIG := n8_2312
-ROMSIZE := 512
-CPU := 180
-SYS := CPM
-ROMNAME := n8_2312
+#CONFIG := n8_2312
+#ROMSIZE := 512
+#CPU := 180
+#SYS := CPM
+#ROMNAME := n8_2312
 
 #CONFIG := N8VEM
 #ROMSIZE := 512
