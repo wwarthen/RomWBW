@@ -98,16 +98,11 @@
 
 # 1/19/2013 dwg - tested zeta, 
 
-CONFIG := S100
+CONFIG := zeta
 ROMSIZE := 512
-CPU     := 80
-SYS     := CPM
-
-#CONFIG := zeta
-#ROMSIZE := 512
-#CPU := 180
-#SYS := CPM
-#ROMNAME := zeta
+CPU := 180
+SYS := CPM
+ROMNAME := zeta
 
 #CONFIG := n8_2312
 #ROMSIZE := 512
@@ -281,6 +276,10 @@ ccpb03.asm:	$(SRC)ccpb03.asm
 cnfgdata.inc:	$(SRC)cnfgdata.inc
 	cp $< $@
 	$(CVT) $@
+
+##config_zeta.asm:	$(SRC)config_zeta.asm
+##	cp $< $@
+##	$(CVT) $@
 
 config_$(CONFIG).asm:	$(SRC)config_$(CONFIG).asm
 	cp $< $@
