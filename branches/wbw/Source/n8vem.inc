@@ -1,15 +1,9 @@
-; ~/RomWBW/branches/s100/Source/s100iob.inc 1/17/2013 dwg - 
-
-; S100COMPUTERS.COM Input Output Board Schema
-
-#DEFINE IC_SCC_8530
-
-#DEFINE IC_PPI_8255
-
 ;
-;==================================================================
-; WBW: STUFF BELOW IS TEMPORARY TO ALLOW S100 TO BUILD WITHOUT ERROR
-;==================================================================
+; N8VEM HARDWARE IO PORT ADDRESSES AND MEMORY LOCATIONS
+;
+MPCL_RAM	.EQU 	78H		; BASE IO ADDRESS OF RAM MEMORY PAGER CONFIGURATION LATCH
+MPCL_ROM	.EQU 	7CH		; BASE IO ADDRESS OF ROM MEMORY PAGER CONFIGURATION LATCH
+RTC		.EQU	70H		; ADDRESS OF RTC LATCH AND INPUT PORT
 ;
 ; PPI 82C55 I/O IS DECODED TO PORT 60-67
 ;
@@ -34,5 +28,3 @@ SIO_MSR		.EQU	SIO_BASE + 6	; MODEM STATUS REG
 SIO_SCR		.EQU	SIO_BASE + 7	; SCRATCH REGISTER
 SIO_DLL		.EQU	SIO_BASE + 0	; DLAB=1: DIVISOR LATCH (LS)
 SIO_DLM		.EQU	SIO_BASE + 1	; DLAB=1: DIVISOR LATCH (MS)
-;
-;==================================================================
