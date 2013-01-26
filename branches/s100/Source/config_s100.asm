@@ -1,3 +1,84 @@
+; ~/RomWBW/branches/s100/Source/config_s100.asm 1/25/2013 dwg - 
+
+S100WBWENABLE		.EQU	TRUE		; TRUE IF TARGETING RomWBW
+
+S100IOENABLE	 .EQU	TRUE		; TRUE FOR S100COMPUTERS I/O BOARD
+S100IOSCCAENABLE .EQU	TRUE
+S100IOSCCBENABLE .EQU	TRUE
+S100IO8255ENABLE .EQU	TRUE
+
+S100IOUSBENABLE	.EQU	FALSE		; TRUE IF USB MODULE PRESENT
+S100IOVSENABLE	.EQU	FALSE		; TRUE IF VStamp CHIP IS PRESENT
+
+S100DIDEENABLE	.EQU	TRUE		; TRUE IF Dual IDE IS PRESENT
+
+S100MSDENABLE	.EQU	FALSE		; TRUE IF MSDOS BOARD PRESENT
+
+S100ZFDCENABLE	.EQU	FALSE		; TRUE IF ZFDC BOARD PRESENT
+
+S100VFIIENABLE	.EQU	FALSE		; TRUE IF VERSAFLOPPY II PRESENT
+
+S100ISCPUENABLE	.EQU	FALSE		; TRUE IF INTERSYSTEMS CPU PRESENT
+
+S100I3ENABLE	.EQU	FALSE		; TRUE FOR COMPUPRO INTERFACER 3
+S100I3IOBASE	.EQU	10H			; I/O base address of Interfacer 3
+
+S100I4ENABLE	.EQU	FALSE		; TRUE FOR COMPUPRO INTERFACER 4
+S100I4IOBASE	.EQU	10H			; I/O base address of Interfacer 4
+
+S100I4SCREAM	.EQU	FALSE		; !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+; Mode 1
+
+;               01-- ----	; Async 1 Stop Bitable
+;		--00 ----	; No Parity
+;		---- 11--	; 8 Bits
+;		---- --10	; Async 16x Rate
+;               0100 1110
+
+S100I4MODE1		.EQU	01001110b
+
+
+; Mode 2
+;		---- ----	; notused
+;		--1- ----	; Use internal transmitter clock
+;		---1 ----	; Use internal receiver clock
+;		---- 1111	; 19,200 BAUDRATE
+;                   
+S100I4MODE2	.EQU	00111111b
+
+
+; Command (Enable Receiver, Enable Transmitter, No break, Force RTS & DTR LOW
+;	00-- ----	Normal Operation
+;       --1------   	RTS
+;       ---0 ----	Reset Error "normal"
+;       ---- 0---	Don't force BREAK
+;       ---- -1--	Enable Receiver
+;       ---- --1-	DTR
+;       ---- ---1	Transmitter Enable
+;       0010 0111   0x27
+
+; Command (Enable Receiver, Enable Transmitter, No break, Force RTS & DTR HIGH
+;	00-- ----	Normal Operation
+;       --0------   	RTS
+;       ---0 ----	Reset Error "normal"
+;       ---- 0---	Don't force BREAK
+;       ---- -1--	Enable Receiver
+;       ---- --0-	DTR
+;       ---- ---1	Transmitter Enable
+;       0000 0101   	0x05
+
+;S100I4CMD	.EQU	00000101b	; 0x05
+;S100I4CMD	.EQU	00100111b	; 0x05
+S100I4CMD	.EQU	11100111b	; 0xE7		; enable remote loopback
+
+
+S100SDSVIDENABLE	.EQU	FALSE
+
+S1008086ENABLE	.EQU	FALSE
+
+S10068KENABLE	.EQU	FALSE
+
 ;
 ;==================================================================================================
 ;   ROMWBW 2.X CONFIGURATION FOR N8 5/8/2012
