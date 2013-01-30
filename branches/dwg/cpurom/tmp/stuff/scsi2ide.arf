@@ -1,0 +1,9 @@
+-mjx
+-i scsi2ide.ihx
+-k /Developer/sdcc/share/sdcc/lib/z80
+-l z80
+-b _DBGMON = 0x8000
+obj/crt0.rel
+obj/scsi2ide.rel
+obj/dbgmon.rel
+-e
