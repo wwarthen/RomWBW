@@ -1,4 +1,4 @@
 @echo off
-pushd Source
+setlocal
+cd Source
 PowerShell .\Build.ps1 %*
-popd

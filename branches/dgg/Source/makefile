@@ -1,6 +1,8 @@
 #
 # GCC based makefile
 #
+# 05/24/2012 2.3 wbw - changed to handle revised build parms
+#
 # 05/24/2012 2.0 wbw - changed to handle HBIOS
 #
 # 01/11/2011 1.4 wbw - added support for ZSDOS/ZDDOS/ZCPR
@@ -18,22 +20,21 @@
 
 #
 # The operation of this makefile is entirely dependent on the setting
-# of three variables: CONFIG, ROMSIZE, and CPU:
+# of five variables: PLATFORM, CONFIG, ROMSIZE, SYS, and optionally ROMNAME:
+#
+# PLATFORM specifies the base hardware platform you are targeting
+# and must be one of N8VEM, ZETA, N8, S2I, or S100
 #
 # CONFIG determines which configuration to build which means that
-# it will determine the config_xxx.asm config settings file to
+# it will determine the config_xxxx_yyyy.asm config settings file to
 # include as well as the output file names.  So, for example,
-# if CONFIG is "n8vem", the config_n8vem.asm file will be used
-# for BIOS configuration settings and the output files will be
-# n8vem.rom, n8vem.sys, and n8vem.com.
+# if PLATFORM is "n8vem" and CONFIG is "cvdu", the config_N8VEM_cvdu.asm
+# file will be used for BIOS configuration settings and the output
+# files will be N8VEM_cvdu.rom, N8VEM_cvdu.sys, and N8VEM_cvdu.com.
 #
 # ROMSIZE specifies the size of the ROM image to be produced and
 # currently must be either "1024" for a 1MB ROM or "512" for a
 # 512KB ROM.
-#
-# CPU specifies the instruction set to be used in assembly and
-# must be either "80" for Z80 or "180" for Z180.  Currently,
-# you should use 180 for N8 ROMs and 80 for everything else.
 #
 # SYS specifies the system variant to build in.  CPM will
 # build traditional CP/M.  ZSYS will build ZSystem which
@@ -47,11 +48,11 @@
 # line, hardcoded in this file, or set as environment variables
 # in the OS.  To use a command line, use the following format:
 #
-#   make CONFIG=<config> ROMSIZE=<romsize> CPU=<cpu> SYS=<sys> ROMNAME=<romname>
+#   make PLATFORM=<platform> CONFIG=<config> ROMSIZE=<romsize> SYS=<sys>
 #
 # An example of this is:
 #
-#   make CONFIG=n8vem ROMSIZE=512 CPU=80 SYS=CPM ROMNAME=n8vem
+#   make PLATFORM=N8VEM CONFIG=cvdu ROMSIZE=512 SYS=CPM
 #
 # Alternatively, you can specify the variables by hardcoding them
 # in this file.  To do so, uncomment the five lines after these
@@ -63,9 +64,9 @@
 # do this with commands like the following at an OS command
 # prompt or in a batch file:
 #
-#   SET CONFIG=n8vem
+#	SET PLATFORM=N8VEM
+#   SET CONFIG=cvdu
 #   SET ROMSIZE=512
-#   SET CPU=80
 #   SET SYS=CPM
 #   SET ROMNAME=n8vem
 #
@@ -74,7 +75,7 @@
 # A good idea is to do a clean with every build and this can be
 # accomplished on one command line doing something like this:
 #
-#   make clean all CONFIG=n8vem ROMSIZE=512 CPU=80 SYS=CPM ROMNAME=n8vem
+#   make clean all PLATFORM=N8VEM CONFIG=std ROMSIZE=512 SYS=CPM
 #
 # or, if you are using hard coded variables above:
 #
@@ -82,20 +83,26 @@
 #
 # Uncomment and update values below to hardcode settings:
 #
-#CONFIG := n8vem
+#PLATFORM := N8VEM
+#CONFIG := std
 #ROMSIZE := 512
-#CPU := 80
 #SYS := CPM
 #ROMNAME := n8vem
 
+ifeq "$(PLATFORM)" "N8"
+CPU := 180
+else
+CPU := 80
+endif
+
 ifndef ROMNAME
-ROMNAME := $(CONFIG)
+ROMNAME := $(PLATFORM)_$(CONFIG)
 endif
 
 CPMTOOLSPATH := ../tools/cpmtools
 CPMCP := $(CPMTOOLSPATH)/cpmcp.exe
 
-ROMDSKFILES := ../RomDsk/$(SYS)_$(ROMSIZE)KB/*.* ../RomDsk/cfg_$(CONFIG)/*.* ../Apps/core/*.*
+ROMDSKFILES := ../RomDsk/$(SYS)_$(ROMSIZE)KB/*.* ../RomDsk/cfg_$(PLATFORM)_$(CONFIG)/*.* ../Apps/core/*.*
 
 ifeq "$(SYS)" "CPM"
 DOSBIN := bdosb01.bin
@@ -135,8 +142,8 @@ SPACE := ${NULL} ${NULL}
 	$(CC) $< -o $@
 
 ifneq ($(MAKECMDGOALS),clean)
-ifeq "$(and $(CONFIG), $(ROMSIZE), $(CPU), $(SYS), $(ROMNAME))" ""
-$(error Usage: make CONFIG=<config> ROMSIZE=[512|1024] CPU=[80|180] SYS=[CPM|ZSYS] ROMNAME=<romname>)
+ifeq "$(and $(PLATFORM) $(CONFIG), $(ROMSIZE), $(SYS), $(ROMNAME))" ""
+$(error Usage: make PLATFORM=[N8VEM|ZETA|N8|S2I|S100] CONFIG=<config> ROMSIZE=[512|1024] SYS=[CPM|ZSYS] [ROMNAME=<romname>])
 endif
 endif
 
@@ -144,14 +151,24 @@ all: $(OUTDIR)\$(ROMNAME).rom $(OUTDIR)\$(ROMNAME).sys $(OUTDIR)\$(ROMNAME).com
 
 build.inc:
 	echo	; >$@
-	echo	; RomWBW Configured for $(CONFIG), %date% %time% >>$@
+	echo	; RomWBW Configured for $(PLATFORM) $(CONFIG), %date% %time% >>$@
 	echo	; >>$@
 	echo	#DEFINE	TIMESTAMP	"%date:~-4,4%%date:~-10,2%%date:~-7,2%T%time:~0,2%%time:~3,2%" >>$@
 	echo	#DEFINE	VARIANT		"WBW-%username%" >>$@
 	echo	; >>$@
-	echo	ROMSIZE		.EQU	$(ROMSIZE) >>$@
 	echo	; >>$@
-	echo	#INCLUDE	"config_$(CONFIG).asm" >>$@
+	echo	; INCLUDE PLATFORM SPECIFIC DEVICE DEFINITIONS >>$@
+	echo	; >>$@
+	echo	ROMSIZE		.EQU	$(ROMSIZE) >>$@
+	echo	PLATFORM	.EQU	PLT_$(PLATFORM) >>$@
+	echo	; >>$@
+	echo	#IF (PLATFORM == PLT_S100) >>$@
+	echo	  #INCLUDE "std-s100.inc" >>$@
+	echo	#ELSE >>$@
+	echo	  #INCLUDE "std-n8vem.inc" >>$@
+	echo	#ENDIF >>$@
+	echo	; >>$@
+	echo	#INCLUDE "config_$(PLATFORM)_$(CONFIG).asm" >>$@
 	echo	; >>$@
 	
 bootrom.bin : bootrom.asm std.asm build.inc ver.inc
