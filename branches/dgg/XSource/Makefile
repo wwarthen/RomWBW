@@ -95,14 +95,6 @@
 # Uncomment and update values below to hardcode settings:
 #
 
-
-# 1/19/2013 dwg - tested zeta, 
-
-CONFIG := S100
-ROMSIZE := 512
-CPU     := 80
-SYS     := CPM
-
 #CONFIG := zeta
 #ROMSIZE := 512
 #CPU := 180
@@ -115,13 +107,18 @@ SYS     := CPM
 #SYS := CPM
 #ROMNAME := n8_2312
 
-#CONFIG := N8VEM
+#CONFIG := n8vem
 #ROMSIZE := 512
 #CPU := 180
 #SYS := CPM
-#ROMNAME := N8VEM
+#ROMNAME := n8vem
 
-
+CONFIG := s100
+ROMSIZE := 512
+CPU := 80
+SYS := CPM
+ROMNAME := s100
+CPUROM := master-cfg
 
 ifndef ROMNAME
 ROMNAME := $(CONFIG)
@@ -157,6 +154,7 @@ ASMIMG := $(TASM) $(ASMOPT80) -b -fE5
 NULL :=
 SPACE := ${NULL} ${NULL}
 
+
 %.bin: %.asm
 	$(ASM80) $< $@
 	
@@ -175,9 +173,17 @@ $(error Usage: make CONFIG=<config> ROMSIZE=[512|1024] CPU=[80|180] SYS=[CPM|ZSY
 endif
 endif
 
+# The STDS macro names all the sub-includes so they all can be copied
+# in from the Source folder. $(STDS) is the first dependency of the "all"
+# target, therefore assuring that these files are here in time for their
+# use in any assembly that includes the top level file, "std.asm".
 STDS = std-n8.inc std-n8vem.inc std-s100.inc std-s2i.inc std-zeta.inc
 
-all: $(STDS) tasm80.tab tasm85.tab $(OUTDIR)/$(ROMNAME).rom $(OUTDIR)/$(ROMNAME).sys $(OUTDIR)/$(ROMNAME).com
+#ifdef $(CPUROM)
+CONDIT = $(OUTDIR)/$(CPUROM).rom
+#endif
+
+all: $(STDS) tasm80.tab tasm85.tab $(OUTDIR)/$(ROMNAME).rom $(OUTDIR)/$(ROMNAME).sys $(OUTDIR)/$(ROMNAME).com $(CONDIT)
 	rm  -f *.asm
 	rm  -f *.bin
 	rm  -f *.inc *.tab *.tmp
@@ -211,7 +217,13 @@ bootrom.bin : bootrom.asm std.asm build.inc ver.inc memmgr.asm config_$(CONFIG).
 	
 bootapp.bin:	bootapp.asm std.asm build.inc ver.inc
 	$(TASM) $(ASMOPT80) $< $@
-	
+
+#ifdef CPUROM
+$(OUTDIR)/$(CPUROM).rom:	$(CPUROM).asm std.asm build.inc config_$(CONFIG).asm 
+	cp config_$(CONFIG).asm config.asm
+	$(ASMIMG) $(CPUROM).asm $(OUTDIR)/$(CPUROM).rom
+#endif
+
 pgzero.bin:	pgzero.asm std.asm build.inc ver.inc
 	$(TASM) $(ASMOPT80) $< $@
 	
@@ -249,6 +261,13 @@ $(OUTDIR)/$(ROMNAME).com: bootapp.bin syscfg.bin loader.bin hbios.bin dbgmon.bin
 
 $(OUTDIR)/$(ROMNAME).sys: prefix.bin os.bin
 	cat prefix.bin os.bin >>$@
+
+$(OUTDIR)/$(CPUROM).bin:	$(CPUROM).asm std.asm
+	$(ASMIMG) $(CPUROM).asm $@ 
+
+std.asm:	$(SRC)std.asm
+	cp $< $@
+	$(CVT) $@
 
 ansi.asm:	$(SRC)ansi.asm
 	cp $< $@
@@ -322,6 +341,12 @@ loader.asm:	$(SRC)loader.asm util.asm
 	cp $(SRC)loader.asm $@
 	$(CVT) $@
 
+#ifdef $(CPUROM)
+$(CPUROM).asm:	$(SRC)/$(CPUROM).asm
+	cp $< $@
+	$(CVT) $@
+#endif
+
 memmgr.asm:	$(SRC)memmgr.asm
 	cp $< $@
 	$(CVT) $@
@@ -366,6 +391,10 @@ romfill.asm:	$(SRC)romfill.asm
 	cp $< $@
 	$(CVT) $@
 
+s100-i3.asm:	$(SRC)s100-i3.asm
+	cp $< $@
+	$(CVT) $@
+
 sd.asm:	$(SRC)sd.asm
 	cp $< $@
 	$(CVT) $@
@@ -374,8 +403,11 @@ sd_data.asm:	$(SRC)sd_data.asm
 	cp $< $@
 	$(CVT) $@
 
-std.asm:	$(SRC)std.asm
-	cp $< $@
+# By adding all the sub-includes as dependencies for std.asm, this assures that
+# whichever one we are using will be present during the assembly of any modules
+# that include std.asm.
+std.asm:	$(SRC)std.asm std-n8.inc std-n8vem.inc std-s100.inc std-s2i.inc std-zeta.inc
+	cp $(SRC)std.asm $@
 	$(CVT) $@
 
 std-n8.inc:	$(SRC)std-n8.inc
