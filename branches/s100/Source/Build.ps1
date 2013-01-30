@@ -1,13 +1,20 @@
-param([string]$Config = "", [string]$RomSize = "", [string]$CPUType = "", [string]$SYS = "", [string]$RomName = "")
+param([string]$Platform = "", [string]$Config = "", [string]$RomSize = "", [string]$SYS = "", [string]$RomName = "")
+
+$Platform = $Platform.ToUpper()
+while ($true)
+{
+	if (($Platform -eq "N8VEM") -or ($Platform -eq "ZETA") -or ($Platform -eq "N8") -or ($Platform -eq "S2I") -or ($Platform -eq "S100")) {break}
+	$Platform = (Read-Host -prompt "Platform [N8VEM|ZETA|N8|S2I|S100]").Trim().ToUpper()
+}
 
 while ($true)
 {
-	$ConfigFile = "config_${Config}.asm"
-	if (Test-Path $ConfigFile)	{break}
+	$ConfigFile = "config_${Platform}_${Config}.asm"
+	if (Test-Path $ConfigFile) {break}
 	if ($Config -ne "") {Write-Host "${ConfigFile} does not exist!"}
 
 	"Configurations available:"
-	Get-Item config_*.asm | foreach {Write-Host " >", $_.Name.Substring(7,$_.Name.Length - 11)}
+	Get-Item "config_${Platform}_*.asm" | foreach {Write-Host " >", $_.Name.Substring(8 + $Platform.Length, $_.Name.Length - 12 - $Platform.Length)}
 	$Config = (Read-Host -prompt "Configuration").Trim()
 }
 
@@ -17,11 +24,7 @@ while ($true)
 	$RomSize = (Read-Host -prompt "ROM Size [512|1024]").Trim()
 }
 
-while ($true)
-{
-	if (($CPUType -eq "80") -or ($CPUType -eq "180")) {break}
-	$CPUType = (Read-Host -prompt "CPU Type Z[80|180]").Trim()
-}
+if ($Platform -eq "N8") {$CPUType = "180"} else {$CPUType = "80"}
 
 $SYS = $SYS.ToUpper()
 while ($true)
@@ -30,7 +33,7 @@ while ($true)
 	$SYS = (Read-Host -prompt "System [CPM|ZSYS]").Trim().ToUpper()
 }
 
-if ($RomName -eq "") {$RomName = $Config}
+if ($RomName -eq "") {$RomName = "${Platform}_${Config}"}
 while ($RomName -eq "")
 {
 	$CP = (Read-Host -prompt "ROM Name [${Config}]").Trim()
@@ -48,7 +51,7 @@ $env:PATH = $TasmPath + ';' + $CpmToolsPath + ';' + $env:PATH
 $OutDir = "../Output"
 $RomFmt = "rom${RomSize}KB"
 $BlankFile = "blank${RomSize}KB.dat"
-$ConfigFile = "Config_${Config}.asm"
+#$ConfigFile = "Config_${Config}.asm"
 $RomDiskFile = "RomDisk.tmp"
 $RomFile = "${OutDir}/${RomName}.rom"
 $SysImgFile = "${OutDir}/${RomName}.sys"
@@ -81,12 +84,21 @@ Function Concat($InputFileList, $OutputFile)
 # Generate the build settings include file
 
 @"
-; RomWBW Configured for ${Config}, $(Get-Date)
+; RomWBW Configured for ${Platform} ${Config}, $(Get-Date)
 ;
 #DEFINE		TIMESTAMP	${TimeStamp}
 #DEFINE		VARIANT		${Variant}
 ;
 ROMSIZE		.EQU		${ROMSize}		; SIZE OF ROM IN KB
+PLATFORM	.EQU		PLT_${Platform}		; HARDWARE PLATFORM
+;
+; INCLUDE PLATFORM SPECIFIC DEVICE DEFINITIONS
+;
+#IF (PLATFORM == PLT_S100)
+  #INCLUDE "std-s100.inc"
+#ELSE
+  #INCLUDE "std-n8vem.inc"
+#ENDIF
 ;
 #INCLUDE "${ConfigFile}"
 ;
@@ -133,7 +145,7 @@ Concat 'bootapp.bin','syscfg.bin','loader.bin','hbios.bin','dbgmon.bin','os.bin'
 
 Copy-Item $BlankFile $RomDiskFile
 cpmcp -f $RomFmt $RomDiskFile ../RomDsk/${SYS}_${RomSize}KB/*.* 0:
-cpmcp -f $RomFmt $RomDiskFile ../RomDsk/cfg_${Config}/*.* 0:
+cpmcp -f $RomFmt $RomDiskFile ../RomDsk/cfg_${Platform}_${Config}/*.* 0:
 cpmcp -f $RomFmt $RomDiskFile ../Apps/core/*.* 0:
 cpmcp -f $RomFmt $RomDiskFile ../Output/${RomName}.sys 0:${SYS}.sys
 
