@@ -118,7 +118,7 @@ ROMSIZE := 512
 CPU := 80
 SYS := CPM
 ROMNAME := s100
-CPUROM := master-cfg
+CPUROM := master-yoda
 
 ifndef ROMNAME
 ROMNAME := $(CONFIG)
@@ -177,11 +177,9 @@ endif
 # in from the Source folder. $(STDS) is the first dependency of the "all"
 # target, therefore assuring that these files are here in time for their
 # use in any assembly that includes the top level file, "std.asm".
-STDS = std-n8.inc std-n8vem.inc std-s100.inc std-s2i.inc std-zeta.inc
-
-#ifdef $(CPUROM)
+# STDS = std-n8.inc std-n8vem.inc std-s100.inc std-s2i.inc std-zeta.inc
+STDS = std-s100.inc std-n8vem.inc
 CONDIT = $(OUTDIR)/$(CPUROM).rom
-#endif
 
 all: $(STDS) tasm80.tab tasm85.tab $(OUTDIR)/$(ROMNAME).rom $(OUTDIR)/$(ROMNAME).sys $(OUTDIR)/$(ROMNAME).com $(CONDIT)
 	rm  -f *.asm
@@ -218,11 +216,9 @@ bootrom.bin : bootrom.asm std.asm build.inc ver.inc memmgr.asm config_$(CONFIG).
 bootapp.bin:	bootapp.asm std.asm build.inc ver.inc
 	$(TASM) $(ASMOPT80) $< $@
 
-#ifdef CPUROM
 $(OUTDIR)/$(CPUROM).rom:	$(CPUROM).asm std.asm build.inc config_$(CONFIG).asm 
 	cp config_$(CONFIG).asm config.asm
 	$(ASMIMG) $(CPUROM).asm $(OUTDIR)/$(CPUROM).rom
-#endif
 
 pgzero.bin:	pgzero.asm std.asm build.inc ver.inc
 	$(TASM) $(ASMOPT80) $< $@
@@ -341,11 +337,9 @@ loader.asm:	$(SRC)loader.asm util.asm
 	cp $(SRC)loader.asm $@
 	$(CVT) $@
 
-#ifdef $(CPUROM)
 $(CPUROM).asm:	$(SRC)/$(CPUROM).asm
 	cp $< $@
 	$(CVT) $@
-#endif
 
 memmgr.asm:	$(SRC)memmgr.asm
 	cp $< $@
@@ -406,7 +400,7 @@ sd_data.asm:	$(SRC)sd_data.asm
 # By adding all the sub-includes as dependencies for std.asm, this assures that
 # whichever one we are using will be present during the assembly of any modules
 # that include std.asm.
-std.asm:	$(SRC)std.asm std-n8.inc std-n8vem.inc std-s100.inc std-s2i.inc std-zeta.inc
+std.asm:	$(SRC)std.asm $(STDS) 
 	cp $(SRC)std.asm $@
 	$(CVT) $@
 
