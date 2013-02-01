@@ -1,0 +1,1718 @@
+                              1 ;--------------------------------------------------------
+                              2 ; cbioshc.s derived from CPM22-HC.ASM by dwg 5/18-30/2011
+                              3 ;--------------------------------------------------------
+                              4 	.module cbioshc
+                              5 	.optsdcc -mz80
+                              6 ;--------------------------------------------------------
+                              7 ; Public variables in this module
+                              8 ;--------------------------------------------------------
+                              9 	.globl _cbioshc
+                             10 ;--------------------------------------------------------
+                             11 ; special function registers
+                             12 ;--------------------------------------------------------
+                             13 ;--------------------------------------------------------
+                             14 ;  ram data
+                             15 ;--------------------------------------------------------
+                             16 	.area _DATA
+                             17 ;--------------------------------------------------------
+                             18 ; overlayable items in  ram 
+                             19 ;--------------------------------------------------------
+                             20 	.area _OVERLAY
+                             21 ;--------------------------------------------------------
+                             22 ; external initialized ram data
+                             23 ;--------------------------------------------------------
+                             24 ;--------------------------------------------------------
+                             25 ; global & static initialisations
+                             26 ;--------------------------------------------------------
+                             27 	.area _HOME
+                             28 	.area _GSINIT
+                             29 	.area _GSFINAL
+                             30 	.area _GSINIT
+                             31 ;--------------------------------------------------------
+                             32 ; Home
+                             33 ;--------------------------------------------------------
+                             34 	.area _HOME
+                             35 	.area _HOME
+                             36 ;--------------------------------------------------------
+                             37 ; code
+                             38 ;--------------------------------------------------------
+                             39 	.area _CBIOS
+   0000                      40 _cbioshc_start::
+   0000                      41 _cbioshc:
+                             42 
+                             43 ;**************************************************************
+                             44 ;*
+                             45 ;*        C B I O S  f o r
+                             46 ;*
+                             47 ;*  T e s t   P r o t o t y p e
+                             48 ;* 
+                             49 ;*  by Andrew Lynch, with input from many sources
+                             50 ;* Updated  24-Mar-2009 Max Scane - changed seldsk: to not save bogus drive value
+                             51 ;* changed a: to be ram drive, B: to be rom disk
+                             52 ;* Updated 1-Jun-2010 Max Scane - Changed DPBs to be more sane
+                             53 ;* Updated 1-Jul-2010 Max Scane - Added PPIDE driver and conditionals
+                             54 ;* Updated April 2011 Max Scane - Adapted for the N8VEM Home Computer
+                             55 ;**************************************************************
+                             56 ;
+                             57 ;	SKELETAL CBIOS FOR FIRST LEVEL OF CP/M 2.0 ALTERATION
+                             58 ;             WITH MODS FOR CP/M  ROMDISK AND RAMDISK.
+                             59 ;
+                             60 ;             ENTIRELY IN 8080 MNEUMONICS (SO ASM CAN BE USED)
+                             61 ;             BUT ASSUMES A Z80! (remove)
+                             62 ;
+                             63 
+                    003C     64 MEM = 60 ; DOUGTEMP DOUGTEMP
+                             65 
+                             66 
+                             67 ;MSIZE	.EQU	20			;CP/M VERSION MEMORY SIZE IN KILOBYTES
+                             68 ;MSIZE	.EQU	62			;CP/M VERSION MEMORY SIZE IN KILOBYTES
+                             69 ; MEM defined in CPM22 above, line 0015
+                             70 
+                    003C     71 MSIZE = MEM	;CP/M VERSION MEMORY SIZE IN KILOBYTES
+                             72 
+                             73 ;
+                             74 ;	"BIAS" IS ADDRESS OFFSET FROM 3400H FOR MEMORY SYSTEMS
+                             75 ;	THAN 16K (REFERRED TO AS "B" THROUGHOUT THE TEXT).
+                             76 ;
+                             77 
+                    A000     78 BIAS = (MSIZE-20)*1024
+                             79 
+                    D400     80 CCP = 0x3400+BIAS	; base of ccp
+                             81 
+                    DC06     82 BDOS = CCP+0x0806	; base of BDOS
+                             83 
+                    EA00     84 BIOS = CCP+0x1600	; base of BIOS
+                             85 
+                    0004     86 CDISK = 0x0004		; current disk number 0=a,...,15=p
+                             87 
+                             88 ; IOBYTE already defined in CPM22 above, line 0017
+                             89 ;IOBYTE	.EQU	0003H			;INTEL I/O BYTE
+                             90 
+                             91 ; since the assembly has been broken into pieces,
+                             92 ; this symbols wasn't previously encountered.
+                             93 ; It could be exported from other module, but why?
+                    0003     94 IOBYTE = 0x0003
+                             95 
+                             96 ;
+                             97 ;	CONSTANTS
+                             98 
+                             99 
+                    00FF    100 END = 0x0FF
+                            101 
+                            102 
+                    000D    103 CR = 0x0d
+                    000A    104 LF = 0x0a
+                            105 
+                    0094    106 DEFIOB = 0x94		; default IOBYTE (TTY,RDR,PUN,LPT)
+                            107 
+                            108 ;
+                            109 
+                    0100    110 ROMSTART_MON = 0x0100		; where the monitor is stored in ROM
+                            111 
+                    F800    112 RAMTARG_MON = 0x0f800		; where the monitor starts in RAM
+                            113 
+                    0800    114 MOVSIZ_MON = 0x0800		; monitor is 2K in length
+                            115 
+                    0900    116 ROMSTART_CPM = 0x0900		; where ccp+bdos+bios is stored in ROM
+                            117 
+                    D400    118 RAMTARG_CPM = 0x0D400		; where ccp+bdos+bios starts in RAM
+                            119 
+                            120 ;dwg; INTERESTING - 0x15FF is 4K+1K+512-1, not 5KB
+                            121 ;dwg;MOVSIZ_CPM:		.EQU	$15FF	; CCP, BDOS IS 5KB IN LENGTH
+                    15FF    122 MOVSIZ_CPM = 0x15FF		; ccp+bdos is 5KB in length
+                            123 
+                    0080    124 HC_REG_BASE = 0x80		; N8 I/I Regs $80-9F
+                            125 
+                    0080    126 PPI1 = HC_REG_BASE+0x00
+                            127 
+                    0094    128 ACR = HC_REG_BASE+0x14
+                            129 
+                    0096    130 RMAP = ACR+2
+                            131 
+                    0040    132 IO_REG_BASE = 0x40		; IO reg base offset for Z1x80
+                            133 
+                    0040    134 CNTLA0 = IO_REG_BASE+0x00
+                            135 
+                    0042    136 CNTLB0 = IO_REG_BASE+0x02
+                            137 
+                    0044    138 STAT0 = IO_REG_BASE+0x04
+                            139 
+                    0046    140 TDR0 = IO_REG_BASE+0x06
+                            141 
+                    0048    142 RDR0 = IO_REG_BASE+0x08
+                            143 
+                    0052    144 ASEXT0 = IO_REG_BASE+0x12
+                            145 
+                    0078    146 CBR = IO_REG_BASE+0x38
+                            147 
+                    0079    148 BBR = IO_REG_BASE+0x39
+                            149 
+                    007A    150 CBAR = IO_REG_BASE+0x3A
+                            151 
+                            152 ;
+                            153 ;
+                            154 ; PIO 82C55 I/O IS ATTACHED TO THE FIRST IO BASE ADDRESS
+                            155 
+                    0080    156 IDELSB = PPI1+0 ; LSB
+                            157 
+                    0081    158 IDEMSB = PPI1+1 ; MSB
+                            159 
+                    0082    160 IDECTL = PPI1+2 ; Control Signals
+                            161 
+                    0083    162 PIO1CONT = PPI1+3 ; Control Byte PIO 82C55
+                            163 
+                            164 ; PPI control bytes for read and write to IDE drive
+                            165 
+                    0092    166 rd_ide_8255 = 0b10010010	; ide_8255_ctl out ide_8255_lsb/msb input
+                            167 
+                    0080    168 wr_ide_8255 = 0b10000000	; all three ports output
+                            169 
+                            170 ;ide control lines for use with ide_8255_ctl.  Change these 8
+                            171 ;constants to reflect where each signal of the 8255 each of the
+                            172 ;ide control signals is connected.  All the control signals must
+                            173 ;be on the same port, but these 8 lines let you connect them to
+                            174 ;whichever pins on that port.
+                            175 
+                    0001    176 ide_a0_line = 0x01		; direct from 8255 to ide interface
+                            177 
+                    0002    178 ide_a1_line = 0x02		; direct from 8255 to  ide intereface
+                            179 
+                    0004    180 ide_a2_line = 0x04		; direct from 8255 to ide interface
+                            181 
+                    0008    182 ide_cs0_line = 0x08		; inverter between 8255 and ide interface
+                            183 
+                    0010    184 ide_cs1_line = 0x10		; inverter between 8255 and ide interface
+                            185 
+                    0020    186 ide_wr_line = 0x20		; inverter between 8255 and ide interface
+                            187 
+                    0040    188 ide_rd_line = 0x40		; inverter between 8255 and ide interface
+                            189 
+                    0080    190 ide_rst_line = 0x80		; inverter between 8255 and ide interface
+                            191 
+                            192 ;------------------------------------------------------------------
+                            193 ; More symbolic constants... these should not be changed, unless of
+                            194 ; course the IDE drive interface changes, perhaps when drives get
+                            195 ; to 128G and the PC industry will do yet another kludge.
+                            196 
+                            197 ;some symbolic constants for the ide registers, which makes the
+                            198 ;code more readable than always specifying the address pins
+                            199 
+                    0008    200 ide_data    = ide_cs0_line
+                    0009    201 ide_err     = ide_cs0_line + ide_a0_line
+                    000A    202 ide_sec_cnt = ide_cs0_line + ide_a1_line
+                    000B    203 ide_sector  = ide_cs0_line + ide_a1_line + ide_a0_line
+                    000C    204 ide_cyl_lsb = ide_cs0_line + ide_a2_line
+                    000D    205 ide_cyl_msb = ide_cs0_line + ide_a2_line + ide_a0_line
+                    000E    206 ide_head    = ide_cs0_line + ide_a2_line + ide_a1_line
+                    000F    207 ide_command = ide_cs0_line + ide_a2_line + ide_a1_line + ide_a0_line
+                    000F    208 ide_status  = ide_cs0_line + ide_a2_line + ide_a1_line + ide_a0_line
+                    0016    209 ide_control = ide_cs1_line + ide_a2_line + ide_a1_line
+                    0017    210 ide_astatus = ide_cs1_line + ide_a2_line + ide_a1_line + ide_a0_line
+                            211 
+                            212 ;IDE Command Constants.  These should never change.
+                            213 
+                    0010    214 ide_cmd_recal    = 0x10
+                    0020    215 ide_cmd_read     = 0x20
+                    0030    216 ide_cmd_write    = 0x30
+                    0091    217 ide_cmd_init     = 0x91
+                    00EC    218 ide_cmd_id       = 0x0ec
+                    00E0    219 ide_cmd_spindown = 0xe0
+                    00E1    220 ide_cmd_spinup   = 0xe1
+                            221 
+                            222 
+                            223 ;	.ORG	BIOS			;ORIGIN OF THIS PROGRAM
+                            224 
+                            225 
+                            226 ;dwg;NSECTS	.EQU	($-CCP)/128		;WARM START SECTOR COUNT
+                            227 
+                            228 ;
+                            229 ;	JUMP VECTOR FOR INDIVIDUAL SUBROUTINES
+                            230 
+   0000 C3rDDs00            231 	JP	BOOT	;COLD START
+   0003 C3rF5s00            232 WBOOTE:	JP	WBOOT	;WARM START
+   0006 C3r2Fs01            233 	JP	CONST	;CONSOLE STATUS
+   0009 C3r41s01            234 	JP	CONIN	;CONSOLE CHARACTER IN
+   000C C3r53s01            235 	JP	CONOUT	;CONSOLE CHARACTER OUT
+   000F C3r65s01            236 	JP	LIST	;LIST CHARACTER OUT (NULL ROUTINE)
+   0012 C3r6Bs01            237 	JP	PUNCH	;PUNCH CHARACTER OUT (NULL ROUTINE)
+   0015 C3r6Es01            238 	JP	READER	;READER CHARACTER OUT (NULL ROUTINE)
+   0018 C3rC6s01            239 	JP	HOME	;MOVE HEAD TO HOME POSITION
+   001B C3rAFs01            240 	JP	SELDSK	;SELECT DISK
+   001E C3rC9s01            241 	JP	SETTRK	;SET TRACK NUMBER
+   0021 C3rCFs01            242 	JP	SETSEC	;SET SECTOR NUMBER
+   0024 C3rD8s01            243 	JP	SETDMA	;SET DMA ADDRESS
+   0027 C3rDEs01            244 	JP	READ	;READ DISK
+   002A C3r02s02            245 	JP	WRITE	;WRITE DISK
+   002D C3r68s01            246 	JP	LISTST	;RETURN LIST STATUS (NULL ROUTINE)
+   0030 C3rD5s01            247 	JP	SECTRN	;SECTOR TRANSLATE
+                            248 
+                            249 ;
+                            250 ;   FIXED DATA TABLES FOR ALL DRIVES
+                            251 ;   0= RAMDISK, 1=ROMDISK, 2=HDPART1, 3=HDPART2
+                            252 ;   DISK PARAMETER HEADER FOR DISK 00 (RAM Disk)
+   0033                     253 DPBASE:	
+   0033 00 00 00 00         254 	.DW	0x0000,0x0000
+   0037 00 00 00 00         255 	.DW	0x0000,0x0000
+   003Br7Cs07r83s00         256 	.DW	DIRBF,DPBLK0
+   003Fr9Es0ArFCs07         257 	.DW	CHK00,ALL00
+                            258 
+                            259 ;   DISK PARAMETER HEADER FOR DISK 05	(Large ROM Disk)
+   0043 00 00 00 00         260 	.DW	0x0000,0x0000
+   0047 00 00 00 00         261 	.DW	0x0000,0x0000
+   004Br7Cs07rCEs00         262 	.DW	DIRBF,DPBLK5
+   004Fr9Es0Ar5Es0A         263 	.DW	CHK05,ALL05
+                            264 
+                            265 
+                            266 ;   DISK PARAMETER HEADER FOR DISK 02 (8MB disk Partition)
+   0053 00 00 00 00         267 	.DW	0x0000,0x0000
+   0057 00 00 00 00         268 	.DW	0x0000,0x0000
+   005Br7Cs07rA1s00         269 	.DW	DIRBF,DPBLK2
+   005Fr9Es0Ar20s08         270 	.DW	CHK02,ALL02
+                            271 
+                            272 ;   DISK PARAMETER HEADER FOR DISK 03 (8MB disk Partition)
+   0063 00 00 00 00         273 	.DW	0x0000,0x0000
+   0067 00 00 00 00         274 	.DW	0x0000,0x0000
+   006Br7Cs07rB0s00         275 	.DW	DIRBF,DPBLK3
+   006Fr9Es0Ar1Fs09         276 	.DW	CHK03,ALL03
+                            277 
+                            278 ;   DISK PARAMETER HEADER FOR DISK 04 (??? third disk partition ???)
+   0073 00 00 00 00         279 	.DW	0x0000,0x0000
+   0077 00 00 00 00         280 	.DW	0x0000,0x0000
+   007Br7Cs07rBFs00         281 	.DW	DIRBF,DPBLK4
+   007Fr9Es0Ar1Es0A         282 	.DW	CHK04,ALL04
+                            283 
+   0083                     284 DPBLK0:			;DISK PARAMETER BLOCK (RAMDISK 512K, 448K usable)
+   0083 00 01               285 SPT_1:	.DW 	256	; 256 SECTORS OF 128 BYTES PER 32K TRACK
+   0085 04                  286 BSH_1:	.DB 	4 	; BLOCK SHIFT FACTOR (SIZE OF ALLOCATION BLOCK)
+   0086 0F                  287 BLM_1: 	.DB 	15 	; PART OF THE ALLOCATION BLOCK SIZE MATH
+   0087 01                  288 EXM_1: 	.DB 	1 	; DEFINES SIZE OF EXTENT (DIRECTORY INFO)
+   0088 DF 00               289 DSM_1: 	.DW 	223 	; BLOCKSIZE [2048] * NUMBER OF BLOCKS + 1 = DRIVE SIZE
+   008A FF 00               290 DRM_1: 	.DW 	255 		; NUMBER OF DIRECTORY ENTRIES
+   008C F0                  291 AL0_1: 	.DB 	0b11110000  	; BIT MAP OF SPACE ALLOCATED TO DIRECTORY
+   008D 00                  292 AL1_1: 	.DB 	0b00000000  	; DIRECTORY CAN HAVE UP TO 16 BLOCKS ALLOCATED
+   008E 00 00               293 CKS_1: 	.DW 	0   		; SIZE OF DIRECTORY CHECK [0 IF NON REMOVEABLE]
+   0090 02 00               294 OFF_1: 	.DW 	2   		; 2 TRACK RESERVED [FIRST 64K OF RAM]
+                            295 ; Note: changed to 2 tracks to skip over the 1st 64KB or RAM.
+                            296 
+   0092                     297 DPBLK1:	;DISK PARAMETER BLOCK (ROMDISK 32KB WITH 16 2K TRACKS, 22K usable)
+   0092 10 00               298 SPT_0:	.DW 	16	; 16 SECTORS OF 128 BYTES PER 2K TRACK
+   0094 03                  299 BSH_0:	.DB 	3 	; BLOCK SHIFT FACTOR (SIZE OF ALLOCATION BLOCK)
+   0095 07                  300 BLM_0:	.DB 	7 	; PART OF THE ALLOCATION BLOCK SIZE MATH
+   0096 00                  301 EXM_0:	.DB 	0 	; DEFINES SIZE OF EXTENT (DIRECTORY INFO)
+   0097 1F 00               302 DSM_0:	.DW 	31 	; BLOCKSIZE [1024] * NUMBER OF BLOCKS + 1 = DRIVE SIZE
+   0099 1F 00               303 DRM_0:	.DW 	31 	; NUMBER OF DIRECTORY ENTRIES
+   009B 80                  304 AL0_0:	.DB 	0b10000000  	; BIT MAP OF SPACE ALLOCATED TO DIRECTORY
+   009C 00                  305 AL1_0:	.DB 	0b00000000  	; DIRECTORY CAN HAVE UP TO 16 BLOCKS ALLOCATED
+   009D 00 00               306 CKS_0:	.DW 	0 		; SIZE OF DIRECTORY CHECK [0 IF NON REMOVEABLE]
+   009F 05 00               307 OFF_0:	.DW 	5 	  	; FIRST 5 TRACKS TRACKS RESERVED (10K FOR SYSTEM)
+                            308 	; SYSTEM IS ROM LOADER, CCP, BDOS, CBIOS, AND MONITOR
+                            309 	;
+                            310 	; IMPORTANT NOTE: TRACKS $00 - $04 OF 2K BYTES
+                            311 	; EACH ARE MARKED WITH THE OFF_0 SET TO 5 AS 
+                            312 	; SYSTEM TRACKS. USABLE ROM DRIVE SPACE
+                            313 	; STARTING AFTER THE FIFTH TRACK (IE, TRACK $05)
+                            314 	; MOST LIKELY FIX TO THIS IS PLACING A DUMMY
+                            315 	; FIRST 10K ROM CONTAINS THE ROM LOADER, MONITOR,
+                            316  	; CCP, BDOS, BIOS, ETC (5 TRACKS * 2K EACH)
+                            317 
+                            318 
+   00A1                     319 DPBLK2:			;DISK PARAMETER BLOCK (IDE HARD DISK 8MB)
+   00A1 00 01               320 SPT_2:	.DW 	256	; 256 SECTORS OF 128 BYTES PER 32K TRACK
+   00A3 05                  321 BSH_2:	.DB 	5 	; BLOCK SHIFT FACTOR (SIZE OF ALLOCATION BLOCK)
+   00A4 1F                  322 BLM_2: 	.DB 	31 	; PART OF THE ALLOCATION BLOCK SIZE MATH
+   00A5 01                  323 EXM_2: 	.DB 	1 	; DEFINES SIZE OF EXTENT (DIRECTORY INFO)
+   00A6 F7 07               324 DSM_2: 	.DW 	2039 	; BLOCKSIZE [4096] * NUMBER OF BLOCKS + 1 = DRIVE SIZE
+                            325 			; HD PARTITION 2 IS 16128 SECTORS LONG
+                            326 			; AT 512 BYTES EACH WHICH IS 
+                            327 			; 2016 BLOCKS AT 4096 BYTES A PIECE.
+   00A8 FF 01               328 DRM_2: 	.DW 	511 	; NUMBER OF DIRECTORY ENTRIES
+   00AA F0                  329 AL0_2: 	.DB 	0b11110000  	; BIT MAP OF SPACE ALLOCATED TO DIRECTORY
+   00AB 00                  330 AL1_2: 	.DB 	0b00000000  	; DIRECTORY CAN HAVE UP TO 16 BLOCKS ALLOCATED
+   00AC 00 00               331 CKS_2: 	.DW 	0 	 	; SIZE OF DIRECTORY CHECK [0 IF NON REMOVEABLE]
+   00AE 01 00               332 OFF_2: 	.DW 	1 	  	; 1 TRACK (32K) RESERVED FOR SYSTEM
+                            333 
+   00B0                     334 DPBLK3:			;DISK PARAMETER BLOCK (IDE HARD DISK 8MB)
+   00B0 00 01               335 SPT_3:	.DW 	256 	; 256 SECTORS OF 128 BYTES PER 32K TRACK
+   00B2 05                  336 BSH_3:	.DB 	5 	; BLOCK SHIFT FACTOR (SIZE OF ALLOCATION BLOCK)
+   00B3 1F                  337 BLM_3: 	.DB 	31 	; PART OF THE ALLOCATION BLOCK SIZE MATH
+   00B4 01                  338 EXM_3: 	.DB 	1 	; DEFINES SIZE OF EXTENT (DIRECTORY INFO)
+   00B5 F7 07               339 DSM_3: 	.DW 	2039 ; BLOCKSIZE [4096] * NUMBER OF BLKS + 1 = DRIVE SIZE
+                            340 			; HD PARTITION 3 IS 16128 SECTORS LONG
+                            341 			; AT 512 BYTES EACH WHICH IS 
+                            342 			; 2016 BLOCKS AT 4096 BYTES A PIECE.
+   00B7 FF 01               343 DRM_3: 	.DW 	511 	; NUMBER OF DIRECTORY ENTRIES
+   00B9 F0                  344 AL0_3: 	.DB 	0b11110000  	; BIT MAP OF SPACE ALLOCATED TO DIRECTORY
+   00BA 00                  345 AL1_3: 	.DB 	0b00000000  	; DIRECTORY CAN HAVE UP TO 16 BLOCKS ALLOCATED
+   00BB 00 00               346 CKS_3: 	.DW 	0 	; SIZE OF DIRECTORY CHECK [0 IF NON REMOVEABLE]
+   00BD 01 00               347 OFF_3: 	.DW 	1 	; 1 TRACK (32K) RESERVED FOR SYSTEM
+                            348 
+   00BF                     349 DPBLK4:			;DISK PARAMETER BLOCK (IDE HARD DISK 1024K)
+   00BF 00 01               350 SPT_4:	.DW 	256	; 256 SECTORS OF 128 BYTES PER 32K TRACK
+   00C1 04                  351 BSH_4:	.DB 	4 	; BLOCK SHIFT FACTOR (SIZE OF ALLOCATION BLOCK)
+   00C2 0F                  352 BLM_4: 	.DB 	15 	; PART OF THE ALLOCATION BLOCK SIZE MATH
+   00C3 00                  353 EXM_4: 	.DB 	0 	; DEFINES SIZE OF EXTENT (DIRECTORY INFO)
+   00C4 F1 01               354 DSM_4: 	.DW 	497 ; BLKSIZE [2048] * NUMBER OF BLKS + 1 = DRIVE SIZE
+                            355 			; HD PARTITION 4 IS 4032 SECTORS LONG
+                            356 			; AT 512 BYTES EACH WHICH IS 
+                            357 			; 1008 BLOCKS AT 2048 BYTES A PIECE.
+                            358 		; NOT USING ALL OF THE AVAILABLE SECTORS SINCE THIS
+                            359 		; DRIVE IS INTENDED TO EMULATE A ROM DRIVE AND COPIED
+                            360 		; INTO A ROM IN THE FUTURE.
+   00C6 FF 00               361 DRM_4: 	.DW 	255 	    ; NUMBER OF DIRECTORY ENTRIES
+   00C8 F0                  362 AL0_4: 	.DB 	0b11110000  ; BIT MAP OF SPACE ALLOCATED TO DIRECTORY
+   00C9 00                  363 AL1_4: 	.DB 	0b00000000  ; DIRECTORY CAN HAVE UP TO 16 BLOCKS ALLOCATED
+   00CA 00 00               364 CKS_4: 	.DW 	0 	    ; SIZE OF DIRECTORY CHECK [0 IF NON REMOVEABLE]
+   00CC 01 00               365 OFF_4: 	.DW 	1 	    ; 1 TRACK RESERVED [FIRST 32K OF PARTITION]
+                            366 
+                            367 ;
+   00CE                     368 DPBLK5:			;DISK PARAMETER BLOCK (ROMDISK 1MB)
+   00CE 00 01               369 SPT_5:	.DW 	256	; 256 SECTORS OF 128 BYTES PER 32K TRACK
+   00D0 04                  370 BSH_5:	.DB 	4 	; BLOCK SHIFT FACTOR (SIZE OF ALLOCATION BLOCK)
+   00D1 0F                  371 BLM_5: 	.DB 	15 	; PART OF THE ALLOCATION BLOCK SIZE MATH
+   00D2 00                  372 EXM_5: 	.DB 	0 	; DEFINES SIZE OF EXTENT (DIRECTORY INFO)
+   00D3 EF 01               373 DSM_5: 	.DW 	495 	; BLKSIZE [2048] * NUMBER OF BLKS +1 =DRIVE SIZE
+                            374 ;DSM_5: .DW 	511 	; BLKSIZE [2048] * NUMBER OF BLKS +1 =DRIVE SIZE
+   00D5 FF 00               375 DRM_5: 	.DW 	255 		; NUMBER OF DIRECTORY ENTRIES
+   00D7 F0                  376 AL0_5: 	.DB 	0b11110000  	; BIT MAP OF SPACE ALLOCATED TO DIRECTORY
+   00D8 00                  377 AL1_5: 	.DB 	0b00000000  	; DIR CAN HAVE UP TO 16 BLOCKS ALLOCATED
+   00D9 00 00               378 CKS_5: 	.DW 	0 	  	; SIZE OF DIR CHECK [0 IF NON REMOVEABLE]
+   00DB 01 00               379 OFF_5: 	.DW 	1 	  	; 1 TRACK RESERVED [FIRST 32K OF ROM]
+                            380 
+                            381 ;
+                            382 ;	END OF FIXED TABLES
+                            383 ;
+                            384 ;	INDIVIDUAL SUBROUTINES TO PERFORM EACH FUNCTION
+                            385 
+   00DD                     386 BOOT:	;SIMPLEST CASE IS TO JUST PERFORM PARAMETER INITIALIZATION
+   00DD F3                  387 	di			; disable interrupts
+                            388 ;	IM	1		; SET INTERRUPT MODE 1
+                            389 ;	.DB	$ED,$56		; Z80 "IM 1" INSTRUCTION
+                            390 	
+   00DE 3E 80               391 	ld	a,#0x80
+                            392 
+                            393 ;	out0	ACR
+                            394 ;	.BYTE	$ED,$39,ACR	; ensure that the ROM is switched out
+                            395 
+   00E0 D3 94               396 	out	(ACR),a
+                            397 	
+   00E2 3E 01               398 	ld	a,#1
+   00E4 32 04 00            399 	ld	(CDISK),a	; select disk 0
+                            400 
+   00E7 3E 94               401 	ld	a,#DEFIOB
+   00E9 32 03 00            402 	ld	(IOBYTE),a
+                            403 
+                            404 ;	ei				; enable interrupts
+                            405 
+   00EC 21r30s05            406 	ld	hl,#TXT_STARTUP_MSG
+   00EF CDr89s03            407 	CALL	PRTMSG
+                            408 
+   00F2 C3r0Es01            409 	JP	GOCPM			;INITIALIZE AND GO TO CP/M
+                            410 
+                            411 ;
+   00F5                     412 WBOOT:	;SIMPLEST CASE IS TO READ THE DISK UNTIL ALL SECTORS LOADED
+                            413         ; WITH A ROMDISK WE SELECT THE ROM AND THE CORRECT PAGE [0]
+                            414         ; THEN COPY THE CP/M IMAGE (CCP, BDOS, BIOS, MONITOR) TO HIGH RAM
+                            415         ; LOAD ADDRESS.
+                            416 
+   00F5 F3                  417 	DI				; DISABLE INTERRUPT
+                            418 
+   00F6 31 80 00            419 	ld	SP,#0x0080		; use space below buffer for stack
+                            420 
+                            421 ;	IM	1			; SET INTERRUPT MODE 1
+                            422 ;	.DB	$ED,$56			; Z80 "IM 1" INSTRUCTION
+                            423 
+   00F9 AF                  424 	xor	a,a
+                            425 
+                            426       	; CHEAP ZERO IN ACC
+                            427 ;	mvi	a,00h				; switch in the ROM
+                            428 ;	out0	ACR
+                            429 ;	.BYTE	$ED,$39,ACR
+                            430 
+   00FA D3 94               431 	out	(ACR),a
+                            432 
+   00FC AF                  433 	xor	a,a
+                            434 
+                            435 ;	out0	RMAP
+                            436 ;	.BYTE	$ED,$39,$F6
+                            437 
+   00FD D3 96               438 	out	(RMAP),a	; set the rom map
+                            439 
+                            440 				; Just reload CCP and BDOS
+                            441 
+   00FF 21 00 09            442 	ld	hl,#ROMSTART_CPM	; where in rom cp/m is stored (1st byte)
+   0102 11 00 D4            443 	ld	de,#RAMTARG_CPM		; where in ram to move ccp+BDOS to
+   0105 01 FF 15            444 	ld	bc,#MOVSIZ_CPM
+   0108 ED B0               445 	ldir
+                            446 	
+   010A 3E 80               447 	ld	a,#0x80
+   010C D3 94               448 	out	(ACR),a
+                            449 
+                            450 ;	EI		; ENABLE INTERRUPTS
+                            451 
+                            452 ;
+                            453 ;	END OF LOAD OPERATION, SET PARAMETERS AND GO TO CP/M
+   010E                     454 GOCPM:
+                            455 					;CPU RESET HANDLER
+   010E 3E C3               456 	ld	a,#0xC3			; C32 is a jump opcode
+   0110 32 00 00            457 	ld	(0x0000),a
+   0113 21r03s00            458 	ld	hl,#WBOOTE		; address of warm boot
+   0116 22 01 00            459 	ld	(0x0001),hl		; set addr field for jmp at 0
+                            460 
+   0119 32 05 00            461 	ld	(0x0005),a		; for jump to bdos
+   011C 21 06 DC            462 	ld	hl,#BDOS
+   011F 22 06 00            463 	ld	(0x0006),hl
+                            464 
+   0122 01 80 00            465 	ld	bc,#0x0080		; default DMA address
+   0125 CDrD8s01            466 	CALL 	SETDMA
+                            467 
+   0128 3A 04 00            468 	ld	a,(CDISK)		; get current disk number
+   012B 4F                  469 	ld	c,a			; send to the ccp
+   012C C3 00 D4            470 	JP	CCP			;GO TO CP/M FOR FURTHER PROCESSING
+                            471 	
+                            472 
+                            473 ;
+                            474 ;----------------------------------------------------------------------------------------------------------------------
+                            475 ;	N8VEM Home computer I/O handlers
+                            476 ;
+                            477 ;	This implementation uses IOBYTE and allocates devices as follows:
+                            478 ;
+                            479 ;	TTY	-	Driver for the Z180 ASCI port 0 
+                            480 ;	CRT	-	Driver for the <TBA>
+                            481 ;	UC1	-	Driver for the <TBA>
+                            482 ;	xxx	-	Driver for the <TBA>
+                            483 ;
+                            484 ;	Logical device drivers - these pass control to the physical 
+                            485 ;	device drivers depending on the value of the IOBYTE
+                            486 ;
+                            487 
+   012F                     488 CONST:	;CONSOLE STATUS, RETURN 0FFH IF CHARACTER READY, 00H IF NOT
+                            489 
+   012F 3A 03 00            490 	ld	a,(IOBYTE)
+   0132 E6 03               491 	and	a,#3
+   0134 FE 00               492 	cp	#0
+   0136 CAr91s01            493 	jp	z,TTYISTS
+                            494 
+   0139 FE 01               495 	cp	#1
+   013B CArA9s01            496 	jp	z,CRTISTS
+                            497 
+   013E C3r76s01            498 	jp	NULLSTS
+                            499 
+                            500 
+                            501 
+                            502 
+   0141                     503 CONIN:	;CONSOLE CHARACTER INTO REGISTER A
+   0141 3A 03 00            504 	ld	a,(IOBYTE)
+   0144 E6 03               505 	and	a,#3
+   0146 FE 00               506 	cp	#0
+   0148 CAr79s01            507 	jp	z,TTYIN
+   014B FE 01               508 	cp	#1
+   014D CArA3s01            509 	jp	z,CRTIN
+   0150 C3r71s01            510 	jp	NULLIN
+                            511 	
+                            512 
+   0153                     513 CONOUT: ;CONSOLE CHARACTER OUTPUT FROM REGISTER C
+   0153 3A 03 00            514 	ld	a,(IOBYTE)
+   0156 E6 03               515 	and	a,#3		; isolate console bits
+   0158 FE 00               516 	cp	#0
+   015A CAr85s01            517 	jp	z,TTYOUT
+   015D FE 01               518 	cp	#1
+   015F CArA6s01            519 	jp	z,CRTOUT
+   0162 C3r74s01            520 	jp	NULLOUT
+                            521 	
+   0165                     522 LIST:	;LIST CHARACTER FROM REGISTER C
+   0165 C3r74s01            523 	jp	NULLOUT
+                            524 
+                            525 
+                            526 
+   0168                     527 LISTST:	;RETURN LIST STATUS (0 IF NOT READY, 1 IF READY)
+   0168 C3r76s01            528 	jp	NULLSTS
+                            529 
+                            530 	;
+   016B                     531 PUNCH:	;PUNCH CHARACTER FROM REGISTER C
+   016B C3r74s01            532     	jp	NULLOUT
+                            533 	
+                            534 ;
+   016E                     535 READER:	;READ CHARACTER INTO REGISTER A FROM READER DEVICE
+                            536 
+   016E C3r71s01            537 	jp	NULLIN			; currently not used
+                            538 
+                            539 
+                            540 
+                            541 ;----------------------------------------------------------------------------------------------------------------------------------------
+                            542 ;
+                            543 ;	Here are the physical io device drivers
+                            544 ;
+                            545 ; Null driver  - this is a dummy driver for the NULL device
+                            546 
+   0171                     547 NULLIN:
+   0171 3E 1A               548 	ld	a,#0x1a
+   0173 C9                  549 	ret
+                            550 	
+   0174                     551 NULLOUT:
+   0174 79                  552 	ld	a,c
+   0175 C9                  553 	ret
+                            554 
+   0176                     555 NULLSTS:
+   0176 3E 01               556 	ld	a,#1
+   0178 C9                  557 	ret
+                            558 
+                            559 ;
+                            560 ;---------------------------------------------------------------------------------------------------------------------------------------------
+                            561 ;
+                            562 ; TTY Driver (programmed i/o)  this is the driver for the Home Computer console port
+                            563 ;
+   0179                     564 TTYIN:
+   0179 CDr91s01            565 	CALL	TTYISTS; IS A CHAR READY TO BE READ FROM UART?
+   017C FE 00               566 	cp	#0
+   017E CAr79s01            567 	jp	z,TTYIN
+                            568 
+                            569 ;	IN0	A,(RDR0)
+                            570 
+                            571 ;dwg;	.BYTE	$ED,$38,RDR0
+   0181 ED 38 48            572 	.byte	0xED,0x38,RDR0
+                            573 	
+   0184 C9                  574 	ret
+                            575 	
+   0185                     576 TTYOUT:
+   0185 CDr9As01            577 	call	TTYOSTS
+   0188 A7                  578 	and	a,a
+   0189 CAr85s01            579 	jp	z,TTYOUT		; if not repeat
+                            580 
+   018C 79                  581 	ld	a,c			; get to accum
+                            582 
+                            583 ;	OUT0	(TDR0),A
+   018D ED 39 46            584 	.byte	0xed,0x39,TDR0
+                            585 
+   0190 C9                  586 	ret
+                            587 	
+   0191                     588 TTYISTS:
+                            589 ;	IN0	A,(STAT0)
+                            590 ;dwg;	.BYTE	$ED,$38,STAT0
+                            591 ;;dwg;;	in0	a,(STAT0)
+   0191 ED 38 44            592 	.byte	0xed,0x38,STAT0
+                            593 
+   0194 E6 80               594 	and	a,#0x80
+   0196 C8                  595 	ret	z		; is there a char ready? 0=no 1=yes
+   0197 3E FF               596 	ld	a,#0xff
+   0199 C9                  597 	ret			; NO, LEAVE $00 IN A AND RETURN
+                            598 
+   019A                     599 TTYOSTS:
+                            600 ;	IN0	A,(STAT0)
+                            601 ;dwg;	.BYTE	$ED,$38,STAT0
+                            602 ;;dwg;;	in0	a,(STAT0)
+   019A ED 38 44            603 	.byte	0xed,0x38,STAT0
+                            604 
+   019D E6 02               605 	and	a,#2
+   019F C8                  606 	ret	z
+   01A0 3E FF               607 	ld	a,#0xff
+                            608 
+   01A2 C9                  609 	ret			; NO, LEAVE $00 IN A AND RETURN
+                            610 ;---------------------------------------------------------------------------------------------------------------------------------------------	
+                            611 ;	CRT Driver - This is the driver for the Prop VDU
+                            612 ;	
+                            613 
+   01A3                     614 CRTIN:
+   01A3 C3r71s01            615 	jp		NULLIN
+                            616 	
+   01A6                     617 CRTOUT:
+   01A6 C3r74s01            618 	jp		NULLOUT
+                            619 	
+   01A9                     620 CRTISTS:
+   01A9 C3r76s01            621 	jp		NULLSTS
+                            622 
+   01AC                     623 CRTOSTS:
+   01AC C3r76s01            624 	jp		NULLSTS
+                            625 	
+                            626 	
+                            627 ;---------------------------------------------------------------------------------------------------------------------------------------------		
+                            628 	;;
+                            629 ;	I/O DRIVERS FOR THE DISK FOLLOW
+                            630 ;	FOR NOW, WE WILL SIMPLY STORE THE PARAMETERS AWAY FOR USE
+                            631 ;	IN THE READ AND WRITE SUBROUTINES
+                            632 ;
+                            633 
+                            634 ;
+                            635 ;   SELECT DISK GIVEN BY REGISTER C
+                            636 ;
+   01AF                     637 SELDSK:
+                            638 
+   01AF 21 00 00            639 	ld	hl,#0		; error return code
+                            640 
+   01B2 79                  641 	ld	a,c
+                            642 
+   01B3 FE 04               643 	cp	a,#4		; must be between 0 and 4
+   01B5 D0                  644 	ret	nc		; no carry if 4,5,6,7
+   01B6 79                  645 	ld	a,c
+   01B7 32r68s05            646 	ld	(DISKNO),a	; save valid disk number
+                            647 
+                            648 ;
+                            649 ;   DISK NUMBER IS IN THE PROPER RANGE
+                            650 ;   COMPUTE PROPER DISK PARAMETER HEADER ADDRESS
+                            651 
+   01BA 6F                  652 	ld	l,a			; l = disk num 0,1,2,3,4
+   01BB 26 00               653 	ld	h,#0			; high order 
+   01BD 29                  654 	add	hl,hl			; * 2
+   01BE 29                  655 	add	hl,hl			; * 4
+   01BF 29                  656 	add	hl,hl			; * 8
+   01C0 29                  657 	add	hl,hl			; * 16 (size of each header)
+   01C1 11r33s00            658 	ld	de,#DPBASE
+   01C4 19                  659 	add	hl,de			; hl = .DPBASE(DISKNO*16)
+   01C5 C9                  660 	RET
+                            661 ;
+   01C6                     662 HOME:		;MOVE TO THE TRACK 00 POSITION OF CURRENT DRIVE
+                            663 		; TRANSLATE THIS CALL INTO A SETTRK CALL WITH PARAMETER 00
+                            664 
+   01C6 01 00 00            665 	ld	bc,#0		; select track zero
+                            666 
+                            667 ;	CALL	SETTRK
+                            668 ;	RET			;WE WILL MOVE TO 00 ON FIRST READ/WRITE
+                            669 				; FALL THROUGH TO SETTRK TO STORE VALUE
+                            670 
+   01C9                     671 SETTRK:	;SET TRACK GIVEN BY REGISTER BC
+   01C9 60                  672 	ld	h,b
+   01CA 69                  673 	ld	l,c
+   01CB 22r62s05            674 	ld	(TRACK),hl
+   01CE C9                  675 	RET
+                            676 ;
+   01CF                     677 SETSEC:	;SET SECTOR GIVEN BY REGISTER BC
+   01CF 60                  678 	ld	h,b
+   01D0 69                  679 	ld	l,c
+   01D1 22r64s05            680 	ld	(SECTOR),hl
+   01D4 C9                  681 	RET
+                            682 ;
+                            683 ;   TRANSLATE THE SECTOR GIVEN BY BC USING THE
+                            684 ;   TRANSLATE TABLE GIVEN BY DE
+                            685 ; ONLY USED FOR FLOPPIES! FOR ROMDISK/RAMDISK IT'S 1:1
+                            686 ; DO THE NEXT ROUTINE IS A NULL (RETURNS THE SAME)
+   01D5                     687 SECTRN:  
+   01D5 60                  688 	ld	h,b
+   01D6 69                  689 	ld	l,c
+   01D7 C9                  690 	RET
+                            691 ;
+                            692 
+   01D8                     693 SETDMA:	;SET DMA ADDRESS GIVEN BY REGISTERS B AND C
+   01D8 69                  694 	ld	l,c
+   01D9 60                  695 	ld	h,b
+   01DA 22r66s05            696 	ld	(DMAAD),hl
+   01DD C9                  697 	RET
+                            698 
+                            699 ;   READ DISK
+                            700 ;    USES DE,DL, BC,  ACC FLAGS
+                            701 ;      Z80 COULD USE BLOCK MOVE [LDIR] BUT WRITTEN IN 8080 	
+   01DE                     702 READ:
+                            703 ;	DI			; DISABLE INTERRUPTS
+                            704 
+   01DE 3Ar68s05            705 	ld	a,(DISKNO)
+                            706 				; FIND OUT WHICH DRIVE IS BEING REQUESTED
+                            707 				; ARE WE READING RAM OR ROM?
+   01E1 FE 00               708 	cp	#0
+   01E3 CAr2Fs02            709 	jp	z,READ_RAM_DISK
+                            710 	
+   01E6 FE 01               711 	cp	#1
+   01E8 CAr5Fs02            712 	jp	z,READ_ROM_DISK
+                            713 	
+   01EB FE 02               714 	cp	#2
+   01ED CArB6s02            715 	jp	z,READ_HDPART1
+                            716 
+   01F0 FE 03               717 	cp	#3
+   01F2 CArC5s02            718 	jp	z,READ_HDPART2	; READ FROM 8 MB IDE HD, PARTITION 2
+                            719 
+   01F5 FE 04               720 	cp	#4
+   01F7 CArD4s02            721 	jp	z,READ_HDPART3	; READ FROM 1 MB IDE HD, PARTITION 4
+                            722 
+   01FA FE 05               723 	cp	#5
+   01FC CArD4s02            724 	jp	z,READ_HDPART4	; READ FROM 1 MB IDE HD, PARTITION 5	
+                            725 
+   01FF 3E 01               726 	ld	a,#1 	; BDOS WILL ALSO PRINT ITS OWN ERROR MESSAGE
+   0201 C9                  727 	ret
+                            728 
+                            729 
+                            730 ;
+                            731 ;   WRITE DISK
+                            732 ;
+   0202                     733 WRITE:
+                            734 ;	DI					; DISABLE INTERRUPTS
+                            735 
+   0202 3Ar68s05            736 	ld	a,(DISKNO)	; get drive
+                            737 
+                            738 ;	ORA	A		; SET FLAGS
+                            739 
+   0205 FE 00               740 	cp	#0		; find out which drive is being requested
+                            741 
+   0207 CAr86s02            742 	jp	z,WRITE_RAM_DISK	; write to 448K ram disk
+                            743 	
+   020A FE 01               744 	cp	#1
+   020C CAr26s02            745 	jp	z,RDONLY	; jump to read only routine
+                            746 
+                            747 			; READ ONLY, FROM 22K EEPROM DISK, ERROR ON WRITE
+   020F FE 02               748 	cp	#2
+   0211 CAr1Cs03            749 	jp	z,WRITE_HDPART1	; write to 8MB IDE HD, Part 2
+                            750 
+   0214 FE 03               751 	cp	#3
+   0216 CAr2Bs03            752 	jp	z,WRITE_HDPART2	; write to 8MB IDE HD, Part 3
+                            753 
+   0219 FE 04               754 	cp	#4
+   021B CAr3As03            755 	jp	z,WRITE_HDPART3	; write to 1MB IDE HD, Part 4
+                            756 
+   021E FE 05               757 	cp	#5
+   0220 CAr3As03            758 	jp	z,WRITE_HDPART4	; write to 1MB IDE HD Part 5
+                            759 
+                            760 
+                            761 		; IF NONE OF THE OTHER DISKS, IT MUST BE
+                            762 		; THE RAM DISK, SO FALL THROUGH
+                            763 
+   0223 3E 01               764 	ld	a,#1		; send bad sector error back
+                            765 			; BDOS WILL ALSO PRINT ITS OWN ERROR MESSAGE
+   0225 C9                  766 	ret
+                            767 
+                            768 						
+                            769 						
+   0226                     770 RDONLY:
+                            771 ;
+                            772 ;   HANDLE WRITE TO READ ONLY
+                            773 ;
+                            774 ;   SENDS A MESSAGE TO TERMINAL THAT ROM DRIVE IS NOT WRITEABLE
+                            775 ;   DOES A PAUSE THEN RETURNS TO CPM WITH ERROR FLAGGED. THIS IS
+                            776 ;   DONE TO ALLOW A POSSIBLE GRACEFUL EXIT (SOME APPS MAY PUKE).
+                            777 ;
+                            778 
+                            779 	; CODE TBD, PRINT A HEY WRONG DISK AND PAUSE 5 SEC AND
+                            780 	; CONTINUE.
+                            781 
+   0226 21r0Fs05            782 	ld	hl,#TXT_RO_ERROR	; set hp --> error msg
+   0229 CDr89s03            783 	CALL	PRTMSG		; PRINT ERROR MESSAGE
+                            784 
+   022C 3E 01               785 	ld	a,#1		; send bad sector error back
+                            786 			; BDOS WILL ALSO PRINT ITS OWN ERROR MESSAGE
+                            787 				; ADD 5 SECOND PAUSE ROUTINE HERE
+   022E C9                  788 	ret
+                            789 
+                            790 ;
+                            791 ;--------------------------------------------------------------------------------------------------------------
+                            792 ;
+                            793 ;  DISK DRIVERS...
+                            794 ;
+                            795 ; DRIVER NEED TO DO SEVERAL THINGS FOR ROM AND RAM DISKS.
+                            796 ;   - INTERRUPTS ARE NOT ALLOWED DURING LOW RAM/ROM ACCESS (DISABLE!)
+                            797 ;   -TRANSLATE TRACK AND SECTOR INTO A POINTER TO WHERE THE 128 BYTE 
+                            798 ;     SECTOR BEGINS IN THE RAM/ROM
+                            799 ;   -TRANSLATE THE DRIVE INTO A RAM/ROM SELECT, COMBINE WITH TRACK ADDRESS
+                            800 ;     AND SEND TO THE MAP PORT.
+                            801 ;   -COPY 128 BYTE FROM OR TO THE ROM/RAMDISK AND MEM POINTED TO BY DMA 
+                            802 ;     ADDRESS PREVIOUSLY STORED.
+                            803 ;   -RESTORE MAP PORT TO PRIOR CONDITION BEFOR READ/WRITE
+                            804 ;
+                            805 ;   - FIRST TRICK IS THAT WE MADE SECTORS 256 AS 256*128=32768. SO WE COPY 
+                            806 ;     THE LOW SECTOR ADDRESS TO THE LOW BYTE OF THE HL REGISTER AND THEN 
+                            807 ;     MULTIPLY BY 128. THIS RESULTS IN THE STARTING ADDR IN THE RAM OR ROM
+                            808 ;     (0000 -> 7F80H) 32K PAGE.
+                            809 ;
+                            810 ;    - TRICK TWO IS THE TRACK ADDRESS EQUALS THE 32K PAGE ADDRESS AND IS A 
+                            811 ;      DIRECT SELECT THAT CAN BE COPIED TO THE MAP PORT D0 THROUGH D5.  D7
+                            812 ;      SELECTS THE DRIVE (ROM OR RAM).
+                            813 ;      THAT MEANS THE LOW BYTE OF TRACK CONTAINS THE D0-D5 VALUE AND 
+                            814 ;      DISKNO HAS THE DRIVE SELECTED.  WE FIRST COPY DISKNO TO ACC
+                            815 ;      AND RIGHTSHIFT IT TO PLACE THAT IN BIT7, WE THEN ADD LOW BYTE OF 
+                            816 ;      TRACK TO ACC AND THEN SEND THAT TO THE MAP PORT.
+                            817 ;
+                            818 ;      NOTE 1: A WRITE TO ROM SHOULD BE FLAGGED AS AN ERROR.
+                            819 ;      NOTE 2: RAM MUST START AS A "FORMATTED DISK"  IF BATTERY BACKED UP
+                            820 ;           IT'S A DO ONCE AT COLD COLD START.  IF NOT BATTERY BACKED UP
+                            821 ;           IT WILL HAVE TO BE DONE EVERY TIME THE SYSTEM IS POWERED.
+                            822 ;           FORMATTING THE RAM IS SIMPLE AS CLEARING THE DIRECTORY AREA 
+                            823 ;           TO A VALUE OF E5H (THE FIRST 8K OF TRACK 1 OR THE RAMDISK).
+                            824 ;           IT COULD BE DONE AS A SIMPLE UTILITY PROGRAM STORED IN ROMDISK
+                            825 ;                   OR ANYTIME COLBOOT IS CALLED(LESS DESIREABLE).
+                            826 ;
+                            827 ;     -WE NOW CAN COPY TO/FROM AS CORRECT FOR THE DEVICE 128 BYTES (SECTOR)
+                            828 ;      TO OR FROM THE DMA ADDRESS. ALMOST!  SINCE ROM OR RAM IS BEING PAGED
+                            829 ;      WE HAVE TO COPY ANYTHING DESTINED FOR BELOW 8000H TO TEMP BUFFER 
+                            830 ;      THEN HANDLE THE PAGING.
+                            831 ;        
+                            832 ;
+                            833 ;     - LAST STEP IS TO RESTORE THE MAP PORT TO POINT TO THE RAM (TRACK 0)
+                            834 ;	SO THE CP/M MEMORY MAP IS ALL RAM AGAIN AND NOT POINTING INTO THE 
+                            835 ;	DATA AREAS OR THE "DISK".
+                            836 ;       SINCE THE RAM 0TH PAGE IS NOMINALLY THE LOW 32K OF RAM IN THE i
+                            837 ;	SYSTEM WE CAN SEND A SIMPLE MVI A,80H ; OUT MPCL_ROM; MVI A,00H ; 
+                            838 ;	OUT MPCL_RAM.
+                            839 ;
+                            840 ;      - THE READ OR WRITE OPERATION IS DONE.
+                            841 ;
+                            842 ;
+                            843 ;
+                            844 ;
+                            845 ;
+                            846 ;
+                            847 
+                            848 		; ACCESS ALGORITHM (ONLY APPLICABLE TO 32K ROM PART!)
+   022F                     849 READ_RAM_DISK:
+   022F F3                  850 	DI		; IF RAM, PROCEED WITH NORMAL TRACK/SECTOR READ
+   0230 CDr98s03            851 	CALL	SECPAGE	; SETUP FOR READ OF RAM OR ROM DISK
+                            852 	
+   0233 2Ar62s05            853 	ld	hl,(TRACK)		; multiply by 8 (4k segs)
+                            854 							
+                            855 ;dwg;	dad	h				; *2
+   0236 29                  856 	add	hl,hl
+                            857 
+                            858 ;dwg;	dad	h				; *4
+   0237 29                  859 	add	hl,hl
+                            860 
+                            861 ;dwg;	dad	h				; *8
+   0238 29                  862 	add	hl,hl
+                            863 
+                            864 ;dwg;	MOV	A,L				; get track in L
+   0239 7D                  865 	ld	a,l
+                            866 
+                            867 ;	out0	BBR				; select RAM bank
+                            868 
+                            869 ;dwg;	.BYTE	 $ED,$39,BBR
+                            870 ;;dwg;;	out0	BBR
+   023A ED 39 79            871 	.byte	0xed,0x39,BBR
+                            872 
+   023D 21r7Cs05            873 	ld	hl,#TMPBUF		; load hl with temp buf addr
+   0240 54                  874 	ld	d,h			; get it into de
+   0241 5D                  875 	ld	e,l
+   0242 2Ar6Ds05            876 	ld	hl,(SECST)		; rom/ram addr
+   0245 01 80 00            877 	ld	bc,#128
+   0248 ED B0               878 	ldir
+                            879 
+                            880 ;
+                            881 ; NOW WITH THE ROM/RAM DATA IN THE BUFFER WE CAN NOW MOVE IT TO THE 
+                            882 ; DMA ADDRESS (IN RAM)
+                            883 ;
+                            884 
+   024A 3E 00               885 	ld	a,#0		; return to system bank
+                            886 
+                            887 ;	out0	BBR				; select RAM bank
+                            888 
+                            889 ;dwg;	.BYTE	 $ED,$39,BBR
+                            890 ;;dwg;;	out0	BBR
+   024C ED 39 79            891 	.db	0xed,0x39,BBR
+                            892 
+                            893 ;	CALL	RPAGE			; SET PAGE TO CP/M RAM
+                            894 
+                            895 ;	EI			; RE-ENABLE INTERRUPTS
+                            896 
+   024F 2Ar66s05            897 	ld	hl,(DMAAD)	; load hl  with dma addr
+   0252 5D                  898 	ld	e,l
+   0253 54                  899 	ld	d,h		; get it into de
+   0254 21r7Cs05            900 	ld	hl,#TMPBUF	; get rom/ram addr
+   0257 01 80 00            901 	ld	bc,#128
+   025A ED B0               902 	ldir
+                            903 
+   025C 3E 00               904 	ld	a,#0
+   025E C9                  905 	RET
+                            906 	
+   025F                     907 READ_ROM_DISK:
+   025F F3                  908 	DI			; IF RAM, PROCEED WITH NORMAL TRACK/SECTOR READ
+   0260 CDr98s03            909 	CALL	SECPAGE		; SETUP FOR READ OF RAM OR ROM DISK
+   0263 CDrA6s03            910 	CALL 	PAGERB		; SET PAGER WITH DRIVE AND TRACK
+                            911 
+   0266 21r7Cs05            912 	ld	hl,#TMPBUF	; load hl with temp buf address
+   0269 54                  913 	ld	d,h
+   026A 5D                  914 	ld	e,l		; get it into de
+   026B 2Ar6Ds05            915 	ld	hl,(SECST)	; rom/ram address
+   026E 01 80 00            916 	ld	bc,#128
+   0271 ED B0               917 	ldir
+                            918 
+                            919 ;
+                            920 ; NOW WITH THE ROM/RAM DATA IN THE BUFFER WE CAN NOW MOVE IT TO THE 
+                            921 ; DMA ADDRESS (IN RAM)
+                            922 ;
+   0273 CDrB9s03            923 	CALL	RPAGE			; SET PAGE TO CP/M RAM
+                            924 ;	EI				; RE-ENABLE INTERRUPTS
+                            925 
+   0276 2Ar66s05            926 	ld	hl,(DMAAD)		; load hl with dma address
+   0279 5D                  927 	ld	e,l
+   027A 54                  928 	ld	d,h
+   027B 21r7Cs05            929 	ld	hl,#TMPBUF		; get rom/ram address
+   027E 01 80 00            930 	ld	bc,#128
+   0281 ED B0               931 	ldir
+                            932 
+   0283 3E 00               933 	ld	a,#0
+   0285 C9                  934 	ret
+                            935 
+                            936 	
+   0286                     937 WRITE_RAM_DISK:
+                            938 
+   0286 21r7Cs05            939 	ld	hl,#TMPBUF		; load hl with temp buf address
+   0289 54                  940 	ld	d,h
+   028A 5D                  941 	ld	e,l
+   028B 2Ar66s05            942 	ld	hl,(DMAAD)
+   028E 01 80 00            943 	ld	bc,#128
+   0291 ED B0               944 	ldir
+                            945 
+                            946 ;
+                            947 ;  NOW THAT DATA IS IN THE TEMP BUF WE SET TO RAM PAGE
+                            948 ;   FOR WRITE.
+                            949 ;
+   0293 F3                  950 	DI
+   0294 CDr98s03            951 	CALL	SECPAGE 		; GET RAM PAGE WRITE ADDRESS
+                            952 
+   0297 2Ar62s05            953 	ld	hl,(TRACK)
+                            954 
+   029A 29                  955 	add	hl,hl			; *2  multiply by 8 (4k segs)
+   029B 29                  956 	add	hl,hl			; *4
+   029C 29                  957 	add	hl,hl			; *8
+   029D 7D                  958 	ld	a,l			; get track in l
+                            959 
+                            960 ;	out0	BBR				; select RAM bank
+                            961 ;dwg;	.BYTE	 $ED,$39,BBR	
+                            962 ;;dwg;;	out0	BBR
+   029E ED 39 79            963 	.db	0xed,0x39,BBR
+                            964 	
+   02A1 2Ar6Ds05            965 	ld	hl,(SECST)	; load hl with dma addr (where to write to)
+   02A4 54                  966 	ld	d,h		; get it into de
+   02A5 5D                  967 	ld	e,l
+   02A6 21r7Cs05            968 	ld	hl,#TMPBUF	; get temp buffer address
+   02A9 01 80 00            969 	ld	bc,#128
+   02AC ED B0               970 	ldir
+                            971 
+   02AE 3E 00               972 	ld	a,#0		; return to system bank
+                            973 
+                            974 ;	out0	BBR			; select RAM bank
+                            975 ;dwg;	.BYTE	 $ED,$39,BBR
+                            976 ;;dwg;;	out0	BBR
+   02B0 ED 39 79            977 	.db	0xed,0x39,BBR
+                            978 
+                            979 ;	EI	
+                            980 					; RE-ENABLE INTERRUPTS
+   02B3 3E 00               981 	ld	a,#0
+   02B5 C9                  982 	ret
+                            983 	
+                            984 ;-------------------------------------------------------------------	
+                            985 
+                            986 ; Logical disk drivers	
+                            987 
+   02B6                     988 READ_HDPART1:
+                            989 
+   02B6 21 01 00            990 	ld	hl,#1			; init LBA offset sector lo word
+   02B9 22r6Fs05            991 	ld	(LBA_OFFSET_LO),hl
+   02BC 21 00 00            992 	ld	hl,#0			; init LBA offset sector hi word
+   02BF 22r71s05            993 	ld	(LBA_OFFSET_HI),hl
+   02C2 C3rD5s02            994 	JP	READ_HDPARTX
+                            995 
+   02C5                     996 READ_HDPART2:
+   02C5 21 01 40            997 	ld	hl,#0x4001		; init LBA offset sector lo word
+   02C8 22r6Fs05            998 	ld	(LBA_OFFSET_LO),hl
+   02CB 21 00 00            999 	ld	hl,#0			; init LBA offset sector hi word
+   02CE 22r71s05           1000 	ld	(LBA_OFFSET_HI),hl
+   02D1 C3rD5s02           1001 	JP	READ_HDPARTX
+                           1002 	
+   02D4                    1003 READ_HDPART3:
+   02D4                    1004 READ_HDPART4:
+   02D4 C9                 1005 	ret
+                           1006 
+                           1007 	
+   02D5                    1008 READ_HDPARTX:
+                           1009 
+                           1010 	; BDOS TRACK PARAMETER (16 BITS)
+                           1011 	; BDOS SECTOR PARAMETER (16 BITS)
+                           1012 
+   02D5 2Ar62s05           1013 	ld	hl,(TRACK)	; load track number (word)
+   02D8 45                 1014 	ld	b,l		; save lower 8 bits (tracks 0-255)
+   02D9 2Ar64s05           1015 	ld	hl,(SECTOR)	; load sector number (word)
+   02DC 60                 1016 	ld	h,b		; hl is 8 bit track in h, 8 bit sector in l
+   02DD CDrC4s03           1017 	CALL	CONVERT_IDE_SECTOR_CPM	; COMPUTE WHERE CP/M SECTOR IS ON THE
+                           1018 					; IDE PARTITION
+                           1019 
+                           1020 	; MAP COMPUTED IDE HD SECTOR TO LBA REGISTERS
+                           1021 
+                           1022 	; LBA REGISTERS STORE 28 BIT VALUE OF IDE HD SECTOR ADDRESS
+                           1023 
+   02E0 3Ar73s05           1024 	ld	a,(LBA_TARGET_LO)	; load LBA reg 0 with sector addr to read
+   02E3 32r77s05           1025 	ld	(IDE_LBA0),a
+   02E6 3Ar74s05           1026 	ld	a,(LBA_TARGET_LO+1)	; load LBA reg 1 with sector addr t read
+   02E9 32r78s05           1027 	ld	(IDE_LBA1),a
+   02EC 3Ar75s05           1028 	ld	a,(LBA_TARGET_HI)	; load LBA reg 2 with sector addr to read
+   02EF 32r79s05           1029 	ld	(IDE_LBA2),a
+   02F2 3Ar76s05           1030 	ld	a,(LBA_TARGET_HI+1)	; load LBA reg 3 with sector addr to read
+   02F5 E6 0F              1031 	and	a,#0b00001111		; only lower 4 bits are valid
+   02F7 C6 E0              1032 	add	a,#0b11100000		; enable LBA bits 5:7=111 in IDE_LBA3
+   02F9 32r7As05           1033 	ld	(IDE_LBA3),a
+   02FC CDrFCs03           1034 	CALL	IDE_READ_SECTOR		; READ THE IDE HARD DISK SECTOR
+                           1035 
+                           1036 ; NEED TO ADD ERROR CHECKING HERE, CARRY FLAG IS SET IF IDE_READ_SECTOR SUCCESSFUL!
+                           1037 
+                           1038 	; COMPUTE STARTING ADDRESS OF CP/M SECTOR IN READ IDE HD SECTOR BUFFER
+                           1039 
+   02FF 21r7Cs05           1040 	ld	hl,#SECTOR_BUFFER	; load hl with sector buffer address
+                           1041 
+   0302 3Ar7Bs05           1042 	ld	a,(SECTOR_INDEX)	; get the sector index (off in buff)
+                           1043 
+   0305 CB 0F              1044 	RRC	a	; MOVE BIT 0 TO BIT 7
+   0307 CB 0F              1045 	RRC	a	; DO AGAIN - IN EFFECT MULTIPLY BY 64
+                           1046 
+   0309 16 00              1047 	ld	d,#0	; put result as 16 value in de, upper byte in d is 0
+                           1048 
+   030B 5F                 1049 	ld	e,a	; put addr offset in e
+                           1050 
+   030C 19                 1051 	add	hl,de	; multiply by 2, total mult is x 128
+                           1052 
+   030D 19                 1053 	add	hl,de	; cp/m sect starting addr in IDE HD sector buffer
+                           1054 
+                           1055 	; COPY CP/M SECTOR TO BDOS DMA ADDRESS BUFFER
+                           1056 
+   030E 54                 1057 	ld	D,H		; TRANSFER HL REGISTERS TO DE
+   030F 5D                 1058 	ld	E,L
+   0310 2Ar66s05           1059 	ld	hl,(DMAAD)	; LOAD HL WITH DMA ADDRESS
+   0313 EB                 1060 	ex	de,hl
+   0314 01 80 00           1061 	ld	bc,#128
+   0317 ED B0              1062 	ldir
+                           1063 
+                           1064 ;	EI					; RE-ENABLE INTERRUPTS
+                           1065 
+   0319 3E 00              1066 	ld	a,#0			; return err code read successful a=0
+   031B C9                 1067 	ret
+                           1068 
+                           1069 
+                           1070 
+                           1071 
+                           1072 ;-------------------------------------------------------------------	
+                           1073 
+                           1074 	
+   031C                    1075 WRITE_HDPART1:
+                           1076 
+                           1077 ;	DI			; DISABLE INTERRUPTS
+                           1078 
+   031C 21 01 00           1079 	ld	hl,#1		; init LBA offset sector lo word
+   031F 22r6Fs05           1080 	ld	(LBA_OFFSET_LO),hl
+   0322 21 00 00           1081 	ld	hl,#0		; init LBA offset sector hi word
+   0325 22r71s05           1082 	ld	(LBA_OFFSET_HI),hl
+   0328 C3r3Bs03           1083 	JP	WRITE_HDPARTX
+                           1084 	
+                           1085 
+   032B                    1086 WRITE_HDPART2:
+                           1087 
+                           1088 ;	DI			; DISABLE INTERRUPTS
+                           1089 
+   032B 21 01 40           1090 	ld	hl,#0x4001		; init LBA offset sector lo word
+   032E 22r6Fs05           1091 	ld	(LBA_OFFSET_LO),hl
+   0331 21 00 00           1092 	ld	hl,#0			; init LBA offset sector hi word
+   0334 22r71s05           1093 	ld	(LBA_OFFSET_HI),hl
+   0337 C3r3Bs03           1094 	JP	WRITE_HDPARTX
+                           1095 
+                           1096 ;-------------------------------------------------------------------	
+                           1097 	
+   033A                    1098 WRITE_HDPART3:				; STUB
+   033A                    1099 WRITE_HDPART4:				; STUB
+   033A C9                 1100 	RET
+                           1101 
+                           1102 ;-------------------------------------------------------------------
+                           1103 	
+                           1104 	
+   033B                    1105 WRITE_HDPARTX:
+                           1106 
+                           1107 	; BDOS TRACK PARAMETER (16 BITS)
+                           1108 	; BDOS SECTOR PARAMETER (16 BITS)
+                           1109 
+   033B 2Ar62s05           1110 	ld	hl,(TRACK)	; load track # (word)
+   033E 45                 1111 	ld	b,l		; save lower 8 bits (tracks 0-255)
+   033F 2Ar64s05           1112 	ld	hl,(SECTOR)	; load sector # (word)
+   0342 60                 1113 	ld	h,b		; hl is 8 bit track in h, 8 bit sector in l
+                           1114 
+   0343 CDrC4s03           1115 	CALL	CONVERT_IDE_SECTOR_CPM	; COMPUTE WHERE THE CP/M SECT IS ON THE
+                           1116 					; IDE PARTITION
+                           1117 
+                           1118 		; MAP COMPUTED IDE HD SECTOR TO LBA REGISTERS
+                           1119 		; LBA REGISTERS STORE 28 BIT VALUE OF IDE HD SECTOR ADDRESS
+                           1120 
+   0346 3Ar73s05           1121 	ld	a,(LBA_TARGET_LO)	; load LBA reg 0 with sect addr to read
+   0349 32r77s05           1122 	ld	(IDE_LBA0),a
+   034C 3Ar74s05           1123 	ld	a,(LBA_TARGET_LO+1)	; load LBA reg 1 with sect addr to read
+   034F 32r78s05           1124 	ld	(IDE_LBA1),a
+   0352 3Ar75s05           1125 	ld	a,(LBA_TARGET_HI)	; load LBA reg 2 with sect addr to read
+   0355 32r79s05           1126 	ld	(IDE_LBA2),a
+   0358 3Ar76s05           1127 	ld	a,(LBA_TARGET_HI+1)	; load LBA reg 3 with sect addr to read
+   035B E6 0F              1128 	and	a,#0b00001111		; only lower four bits are valid
+   035D C6 E0              1129 	add	a,#0b11100000		; enable LBA bits 5:7=111 in IDE_LBA3
+   035F 32r7As05           1130 	ld	(IDE_LBA3),a
+   0362 CDrFCs03           1131 	CALL	IDE_READ_SECTOR		; READ THE IDE HARD DISK SECTOR
+                           1132 
+                           1133 	; NEED TO ADD ERROR CHECKING HERE,
+                           1134 	; CARRY FLAG IS SET IF IDE_READ_SECTOR SUCCESSFUL!
+                           1135 
+                           1136 	; COMPUTE STARTING ADDRESS OF CP/M SECTOR IN READ IDE HD SECTOR BUFFER
+                           1137 
+   0365 21r7Cs05           1138 	ld	hl,#SECTOR_BUFFER	; load hl with sector buffer address
+                           1139 
+   0368 3Ar7Bs05           1140 	ld	a,(SECTOR_INDEX)	; get the sector index (off in buffer)
+                           1141 
+   036B CB 0F              1142 	RRC	a		; MOVE BIT 0 TO BIT 7
+   036D CB 0F              1143 	RRC	a		; DO AGAIN - IN EFFECT MULTIPLY BY 64
+                           1144 
+   036F 16 00              1145 	ld	d,#0		; put result as 16 bit value in de
+                           1146 				; UPPER BYTE IN D IS $00
+   0371 5F                 1147 	ld	e,a		; put address offset in e
+                           1148 
+   0372 19                 1149 	add	hl,de		; cp/m starting addr in buffer
+                           1150 
+   0373 19                 1151 	add	hl,de	; *2, total mult is x128
+                           1152 
+                           1153         ; KEEP CP/M SECTOR ADDRESS FOR LATER USE
+                           1154 	; COPY CP/M SECTOR FROM BDOS DMA ADDRESS BUFFER
+   0374 22r6Ds05           1155 	ld	(SECST),hl
+                           1156 
+   0377 2Ar6Ds05           1157 	ld	hl,(SECST)	; setup destination
+   037A EB                 1158 	ex	de,hl		; swap for next LHLD
+   037B 2Ar66s05           1159 	ld	hl,(DMAAD)	; setup source
+   037E 01 80 00           1160 	ld	bc,#128		; byte count
+   0381 ED B0              1161 	ldir
+                           1162 	
+                           1163 	; IDE HD SECTOR IS NOW UPDATED 
+                           1164 	; WITH CURRENT CP/M SECTOR DATA SO WRITE TO DISK
+                           1165 
+   0383 CDr15s04           1166 	CALL	IDE_WRITE_SECTOR ; WRITE THE UPDATED IDE HARD DISK SECTOR
+                           1167 
+                           1168 	; NEED TO ADD ERROR CHECKING HERE, 
+                           1169 	; CARRY FLAG IS SET IF IDE_WRITE_SECTOR SUCCESSFUL!
+                           1170 
+                           1171 ;	EI					; RE-ENABLE INTERRUPTS
+                           1172 
+   0386 3E 00              1173 	ld	a,#0		; return error code write successful a=0
+   0388 C9                 1174 	ret
+                           1175 
+                           1176 ;-------------------------------------------------------------------
+                           1177 
+                           1178 
+   0389                    1179 PRTMSG:
+   0389 7E                 1180 	ld	a,(hl)		; get char into A
+   038A FE FF              1181 	cp	a,#END		; test for end byte
+   038C CAr97s03           1182 	jp	z,PRTMSG1	; jump if end byte is found
+   038F 4F                 1183 	ld	c,a		; put char to print in C for conout
+   0390 CDr53s01           1184 	CALL	CONOUT		; SEND CHARACTER TO CONSOLE FROM REG C
+   0393 23                 1185 	inc	hl		; inc ptr to next char
+   0394 C3r89s03           1186 	JP	PRTMSG		; TRANSMIT LOOP
+   0397                    1187 PRTMSG1:
+   0397 C9                 1188 	ret
+                           1189 
+                           1190 
+                           1191 ;
+                           1192 ; UTILITY ROUTINE FOR SECTOR TO PAGE ADDRESS
+                           1193 ;   USES HL AND CARRY
+                           1194 ;
+   0398                    1195 SECPAGE:
+   0398 2Ar64s05           1196 	ld	hl,(SECTOR)
+   039B 29                 1197 	add	hl,hl		; * 2
+   039C 29                 1198 	add	hl,hl		; * 4
+   039D 29                 1199 	add	hl,hl		; * 8
+   039E 29                 1200 	add	hl,hl		; * 16
+   039F 29                 1201 	add	hl,hl		; * 32
+   03A0 29                 1202 	add	hl,hl		; * 64
+   03A1 29                 1203 	add	hl,hl		; * 128
+   03A2 22r6Ds05           1204 	ld	(SECST),hl	; save sector starting address
+   03A5 C9                 1205 	ret
+                           1206 
+                           1207 ;
+                           1208 ;  PAGER BYTE CREATION
+                           1209 ;  ASSEMBLES DRIVE AND TRACK AND SENDS IT TO PAGER PORT
+                           1210 ;
+   03A6                    1211 PAGERB:
+   03A6 2Ar62s05           1212 	ld	hl,(TRACK)
+   03A9 7D                 1213 	ld	a,l	; or l with acc to combine track and drive
+                           1214 ;	out0	ACR+2
+   03AA ED 39 96           1215 	.db	0xed,0x39,ACR+2		; rom latch
+   03AD 3E 00              1216 	ld	a,#0			; switch in the rom
+                           1217 ;	out0	ACR
+   03AF ED 39 94           1218 	.db	0xed,0x39,ACR
+   03B2 32r69s05           1219 	ld	(PAGER),a		; save copy (just because)
+   03B5 32r6As05           1220 	ld	(DB_PAGER),a		; save another copy for debug
+   03B8 C9                 1221 	RET
+                           1222 
+                           1223 ;
+                           1224 ;   RESET PAGER BACK TO RAM.  
+                           1225 ;
+   03B9                    1226 RPAGE:
+                           1227 
+   03B9 3E 80              1228 	ld	a,#0x80			; deselect rom page
+                           1229 ;	out0	ACR
+   03BB ED 39 94           1230 	.db	0xed,0x39,ACR
+                           1231 
+   03BE 3E 00              1232 	ld	a,#0			; set to RAM track 0
+                           1233 ;dwg;	STA 	PAGER			; SAVE COPY OF PAGER BYTE
+   03C0 32r69s05           1234 	ld	(PAGER),a
+                           1235 
+   03C3 C9                 1236 	RET
+                           1237 
+                           1238 
+   03C4                    1239 CONVERT_IDE_SECTOR_CPM:
+                           1240 
+                           1241 	; COMPUTES WHERE THE CP/M SECTOR IS IN THE IDE PARTITION
+                           1242 	; IDE HD SECTORS ARE 512 BYTES EACH, CP/M SECTORS ARE 128 BYTES EACH
+                           1243 	; MAXIMUM SIZE OF CP/M DISK IS 8 MB = 65536 (16 BITS) X 128 BYTES PER SECTOR
+                           1244 	; IDE HD PARTITION CAN HAVE AT MOST 16384 IDE SECTORS -> 65536 CP/M SECTORS
+                           1245 	; EACH IDE HD SECTOR CONTAINS 4 ADJACENT CP/M SECTORS
+                           1246 	; 
+                           1247 	;
+                           1248 	; INPUT:
+                           1249 	; IDE HD PARTITION STARTING SECTOR NUMBER (FROM PARTITION TABLE)
+                           1250 	;  - LOWER 16 BITS STORED IN LBA_OFFSET_LO
+                           1251 	;  - UPPER 16 BITS STORED IN LBA_OFFSET_HI
+                           1252 	; PARTITION OFFSET IN HL (16 BITS)
+                           1253 	;  - A UNIQUELY COMPUTED FUNCTION BASED ON GEOMETRY OF DISKS NUMBER OF
+                           1254 	;    CP/M TRACKS AND SECTORS SPECIFIED IN DPB
+                           1255 	; 
+                           1256 	;
+                           1257 	; OUTPUT:
+                           1258 	; IDE TARGET SECTOR (SENT TO IDE HD CONTROLLER FOR READ OPERATION)
+                           1259 	;  - LOWER 16 BITS STORED IN LBA_TARGET_LO
+                           1260 	;  - UPPER 16 BITS STORED IN LBA_TARGET_HI
+                           1261 	; CP/M TO IDE HD SECTOR MAPPING PARAMETER STORED IN SECTOR_INDEX
+                           1262 	;  - 8 BIT VALUE WITH 4 LEGAL STATES (00, 01, 02, 04) WHICH IS
+                           1263 	;    TO BE USED TO COMPUTE STARTING ADDRESS OF 128 BYTE CP/M SECTOR ONCE
+                           1264 	;    512 BYTE IDE HD SECTOR READ INTO MEMORY BUFFER
+                           1265 	; 
+                           1266 
+                           1267 	; ROTATE WITH CARRY 16 BIT TRACK,SECTOR VALUE IN HL TO GET 14 BIT IDE HD
+                           1268 	; TARGET SECTOR IN PARTITION
+                           1269 	; KEEP LAST TWO BITS IN B FOR IDE HD SECTOR TO CP/M SECTOR TRANSLATION
+                           1270 
+                           1271 	; COMPUTE SECTOR_INDEX 
+                           1272 
+                           1273 ;;dwg;; What is the point of this? the next inst sets A anyway??
+   03C4 AF                 1274 	xor	a,a			; zero accumulator
+                           1275 
+   03C5 7D                 1276 	ld	a,l			; store the last 2 bits of l in b
+   03C6 E6 03              1277 	and	a,#0b00000011
+   03C8 47                 1278 	ld	b,a
+                           1279 
+   03C9 32r7Bs05           1280 	ld	(SECTOR_INDEX),a	; locates the 128 cpm sector in buffer
+                           1281 
+                           1282 	; COMPUTE WHICH IDE HD SECTOR TO READ TO WITHIN 4 CP/M SECTORS 
+                           1283 	; SHIFTS 16 BIT PARTITION OFFSET TO THE RIGHT 2 BITS AND ADDS RESULT TO
+                           1284 	; IDE HD PARTITION STARTING SECTOR
+                           1285 
+                           1286 	; SHIFT PARTITION OFFSET RIGHT 1 BIT
+                           1287 
+   03CC 37                 1288 	scf				; set the carry flag, so we can clear it
+   03CD 3F                 1289 	ccf				; Complement Carry Flag
+                           1290 
+   03CE 7C                 1291 	ld	a,h			; 16 bit rotate hl with carry
+   03CF 1F                 1292 	rra
+   03D0 67                 1293 	ld	h,a			; rotate HL right 1 bit (divide by 2)
+   03D1 7D                 1294 	ld	a,l
+   03D2 1F                 1295 	rra
+   03D3 6F                 1296 	ld	l,a
+                           1297 
+                           1298 	; SHIFT PARTITION OFFSET RIGHT 1 BIT
+                           1299 
+   03D4 37                 1300 	scf
+   03D5 3F                 1301 	ccf					; CLEAR CARRY FLAG
+                           1302 
+   03D6 7C                 1303 	ld	a,h			; 16 bit rotate HL with carry
+   03D7 1F                 1304 	rra
+   03D8 67                 1305 	ld	H,A			; ROTATE HL RIGHT 1 BIT (DIVIDE BY 2)
+   03D9 7D                 1306 	ld	A,L
+   03DA 1F                 1307 	rra
+   03DB 6F                 1308 	ld	L,A
+                           1309 
+                           1310 	; ADD RESULTING 14 BIT VALUE TO IDE HD PARTITION STARTING SECTOR
+                           1311 	; STORE RESULT IN IDE HD TARGET SECTOR PARAMETER
+                           1312 
+   03DC 3Ar6Fs05           1313 	ld	a,(LBA_OFFSET_LO)	; 16 bit add of LBA_OFFSET_LO with hl
+   03DF 85                 1314 	ADD	L
+   03E0 32r73s05           1315 	ld	(LBA_TARGET_LO),a
+   03E3 3Ar70s05           1316 	ld	a,(LBA_OFFSET_LO+1)
+   03E6 8C                 1317 	adc	a,h
+   03E7 32r74s05           1318 	ld	(LBA_TARGET_LO+1),a	; store overflow bit in carry
+   03EA 21 00 00           1319 	ld	hl,#0
+   03ED 3Ar71s05           1320 	ld	a,(LBA_OFFSET_HI)	; 16 bit add w/carry of LBA_OFFSET_HI w/
+   03F0 8D                 1321 	adc	a,l
+   03F1 32r75s05           1322 	ld	(LBA_TARGET_HI),a
+   03F4 3Ar72s05           1323 	ld	a,(LBA_OFFSET_HI+1)
+   03F7 8C                 1324 	adc	a,h
+   03F8 32r76s05           1325 	ld	(LBA_TARGET_HI+1),a
+   03FB C9                 1326 	RET
+                           1327 
+                           1328 
+                           1329 	
+                           1330 ;------------------------------------------------------------------------------------		
+                           1331 ; Parallel port IDE driver
+                           1332 ;		
+                           1333 ;
+                           1334 ; -----------------------------------------------------------------------------	
+                           1335 
+                           1336 	;read a sector, specified by the 4 bytes in "lba",
+                           1337 	;Return, acc is zero on success, non-zero for an error
+   03FC                    1338 IDE_READ_SECTOR:
+   03FC CDr4Fs04           1339 	call	ide_wait_not_busy	;make sure drive is ready
+   03FF CDr9Fs04           1340 	call	wr_lba			;tell it which sector we want
+                           1341 
+   0402 3E 0F              1342 	ld	a,#ide_command		; select IDE reg
+   0404 0E 20              1343 	ld	c,#ide_cmd_read
+   0406 CDrEBs04           1344 	call	ide_write		;ask the drive to read it
+   0409 CDr69s04           1345 	call	ide_wait_drq		;wait until it's got the data
+                           1346 ;	bit	0,a
+                           1347 ;	ani	1
+                           1348 ;	jnz	 get_err
+                           1349 
+   040C 21r7Cs05           1350 	ld	hl,#SECTOR_BUFFER
+   040F CDr77s04           1351 	call	read_data		;grab the data
+   0412 3E 00              1352 	ld	a,#0			; ? set successful return code ?
+                           1353 
+   0414 C9                 1354 	ret
+                           1355 
+                           1356 	
+                           1357 ;-----------------------------------------------------------------------------
+                           1358 
+                           1359 
+                           1360 	;write a sector, specified by the 4 bytes in "lba",
+                           1361 	;whatever is in the buffer gets written to the drive!
+                           1362 	;Return, acc is zero on success, non-zero for an error
+   0415                    1363 IDE_WRITE_SECTOR:
+   0415 CDr4Fs04           1364 	call	ide_wait_not_busy	;make sure drive is ready
+   0418 CDr9Fs04           1365 	call	wr_lba			;tell it which sector we want
+                           1366 
+   041B 3E 0F              1367 	ld	a,#ide_command
+   041D 0E 30              1368 	ld	c,#ide_cmd_write
+   041F CDrEBs04           1369 	call	ide_write		;tell drive to write a sector
+   0422 CDr69s04           1370 	call	ide_wait_drq		;wait unit it wants the data
+                           1371 
+                           1372 ;	bit	0,a			; check for error returned
+                           1373 ;	ani	1
+                           1374 ;	jnz	get_err
+                           1375 
+   0425 21r7Cs05           1376 	ld	hl,#SECTOR_BUFFER
+   0428 CDr8Bs04           1377 	call	write_data		;give the data to the drive
+   042B CDr4Fs04           1378 	call	ide_wait_not_busy	;wait until the write is complete
+                           1379 
+                           1380 ;	bit	0,a
+                           1381 ;	ani	1
+                           1382 ;	jnz	get_err
+                           1383 
+                           1384 ;	ld	a,#0			; SHOULD THIS BE HERE (Doug's idea)
+   042E C9                 1385 	ret
+                           1386 
+                           1387 
+                           1388 ;-----------------------------------------------------------------------------
+                           1389 
+                           1390 ;--------ide_hard_reset---------------------------------------------------------------
+                           1391 	;do a hard reset on the drive, by pulsing its reset pin.
+                           1392 	;this should usually be followed with a call to "ide_init".
+                           1393 ;-------------------------------------------------------------------------------------------	
+   042F                    1394 ide_hard_reset:
+   042F CDr05s05           1395 	call	set_ppi_rd
+   0432 3E 80              1396 	ld	a,#ide_rst_line
+   0434 D3 82              1397 	out	(IDECTL),a		; assert rst line on IDE interface
+   0436 01 00 00           1398 	ld	bc,#0
+   0439                    1399 rst_dly:
+   0439 05                 1400 	dec	b
+   043A C2r39s04           1401 	jp	nz,rst_dly
+   043D 3E 00              1402 	ld	a,#0		; this could be XOR A,A (shorter)
+   043F D3 82              1403 	out	(IDECTL),a		; deassert RST line on IDE interface
+   0441 C9                 1404 	ret
+                           1405 
+                           1406 ;------------------------------------------------------------------------------
+                           1407 ; IDE INTERNAL SUBROUTINES 
+                           1408 ;------------------------------------------------------------------------------
+                           1409 
+                           1410 
+                           1411 	
+                           1412 ;----------------------------------------------------------------------------
+                           1413 	;when an error occurs, we get bit 0 of A set from a call to ide_drq
+                           1414 	;or ide_wait_not_busy (which read the drive's status register).  If
+                           1415 	;that error bit is set, we should jump here to read the drive's
+                           1416 	;explaination of the error, to be returned to the user.  If for
+                           1417 	;some reason the error code is zero (shouldn't happen), we'll
+                           1418 	;return 255, so that the main program can always depend on a
+                           1419 	;return of zero to indicate success.
+   0442                    1420 get_err:
+   0442 3E 09              1421 	ld	a,#ide_err
+   0444 CDrCFs04           1422 	call	ide_read
+   0447 79                 1423 	ld	a,c
+   0448 CAr4Cs04           1424 	jp	z,gerr2
+   044B C9                 1425 	ret
+   044C                    1426 gerr2:
+   044C 3E FF              1427 	ld	a,#255
+   044E C9                 1428 	ret
+                           1429 
+                           1430 ;-----------------------------------------------------------------------------
+                           1431 	
+   044F                    1432 ide_wait_not_busy:
+   044F 3E 0F              1433 	ld	a,#ide_status		; wait for RDY bit to be set
+   0451 CDrCFs04           1434 	call	ide_read
+   0454 79                 1435 	ld	a,c
+   0455 E6 80              1436 	and	a,#0x80			; isolate busy bit
+   0457 C2r4Fs04           1437 	jp	nz,ide_wait_not_busy
+   045A C9                 1438 	ret
+                           1439 
+                           1440 
+   045B                    1441 ide_wait_ready:
+   045B 3E 0F              1442 	ld	a,#ide_status		; wait for RDY bit to be set
+   045D CDrCFs04           1443 	call	ide_read
+   0460 79                 1444 	ld	a,c
+   0461 E6 C0              1445 	and	a,#0b11000000		; mask off busy and ready bits
+   0463 EE 40              1446 	xor	a,#0b01000000		; we want Busy(7) to be 0 and ready(6) to be 1
+   0465 C2r5Bs04           1447 	jp	nz,ide_wait_ready
+   0468 C9                 1448 	ret
+                           1449 
+                           1450 	;Wait for the drive to be ready to transfer data.
+                           1451 	;Returns the drive's status in Acc
+   0469                    1452 ide_wait_drq:
+   0469 3E 0F              1453 	ld	a,#ide_status		; waut for DRQ bit to be set
+   046B CDrCFs04           1454 	call	ide_read
+   046E 79                 1455 	ld	a,c
+   046F E6 88              1456 	and	a,#0b10001000		; mask off busy(7) and DRQ(3)
+   0471 EE 08              1457 	xor	a,#0b00001000		; we want busy(7) to be 0 and DRQ (3) to be 1
+   0473 C2r69s04           1458 	jp	nz,ide_wait_drq
+   0476 C9                 1459 	ret
+                           1460 
+                           1461 
+                           1462 
+                           1463 ;------------------------------------------------------------------------------
+                           1464 
+                           1465 	;Read a block of 512 bytes (one sector) from the drive
+                           1466 	;and store it in memory @ HL
+   0477                    1467 read_data:
+   0477 06 00              1468 	ld	b,#0
+   0479                    1469 rdblk2:
+   0479 C5                 1470 	push	bc
+   047A E5                 1471 	push	hl
+   047B 3E 08              1472 	ld	a,#ide_data
+   047D CDrCFs04           1473 	call	ide_read		; read form data port
+   0480 E1                 1474 	pop	hl
+   0481 71                 1475 	ld	(hl),c
+   0482 23                 1476 	inc	hl
+   0483 70                 1477 	ld	(hl),b
+   0484 23                 1478 	inc	hl
+   0485 C1                 1479 	pop	bc
+   0486 05                 1480 	dec	b
+   0487 C2r79s04           1481 	jp	nz,rdblk2
+   048A C9                 1482 	ret
+                           1483 
+                           1484 ;-----------------------------------------------------------------------------
+                           1485 
+                           1486 	;Write a block of 512 bytes (at HL) to the drive
+   048B                    1487 write_data:
+   048B 06 00              1488 	ld	b,#0
+   048D                    1489 wrblk2: 
+   048D C5                 1490 	push	bc
+   048E 4E                 1491 	ld	c,(hl)	; lsb
+   048F 23                 1492 	inc	hl
+   0490 46                 1493 	ld	b,(hl)	; msb
+   0491 23                 1494 	inc	hl
+   0492 E5                 1495 	push	hl
+   0493 3E 08              1496 	ld	a,#ide_data
+   0495 CDrEBs04           1497 	call	ide_write
+   0498 E1                 1498 	pop	hl
+   0499 C1                 1499 	pop	bc
+   049A 05                 1500 	dec	b
+   049B C2r8Ds04           1501 	jp	nz,wrblk2
+   049E C9                 1502 	ret
+                           1503 
+                           1504 
+                           1505 ;-----------------------------------------------------------------------------
+                           1506 
+                           1507 	;write the logical block address to the drive's registers
+   049F                    1508 wr_lba:
+   049F 3Ar7As05           1509 	ld	a,(IDE_LBA0+3)		; MSB
+   04A2 E6 0F              1510 	and	a,#0x0f
+   04A4 F6 E0              1511 	or	a,#0xe0
+   04A6 4F                 1512 	ld	c,a
+   04A7 3E 0E              1513 	ld	a,#ide_head
+   04A9 CDrEBs04           1514 	call	ide_write
+   04AC 3Ar79s05           1515 	ld	a,(IDE_LBA0+2)
+   04AF 4F                 1516 	ld	c,a
+   04B0 3E 0D              1517 	ld	a,#ide_cyl_msb
+   04B2 CDrEBs04           1518 	call	ide_write
+   04B5 3Ar78s05           1519 	ld	a,(IDE_LBA0+1)
+   04B8 4F                 1520 	ld	c,a
+   04B9 3E 0C              1521 	ld	a,#ide_cyl_lsb
+   04BB CDrEBs04           1522 	call	ide_write
+   04BE 3Ar77s05           1523 	ld	a,(IDE_LBA0)		; LSB
+   04C1 4F                 1524 	ld	c,a
+   04C2 3E 0B              1525 	ld	a,#ide_sector
+   04C4 CDrEBs04           1526 	call	ide_write
+   04C7 0E 01              1527 	ld	c,#1
+   04C9 3E 0A              1528 	ld	a,#ide_sec_cnt
+   04CB CDrEBs04           1529 	call	ide_write
+                           1530 	
+   04CE C9                 1531 	ret
+                           1532 	
+                           1533 ;-------------------------------------------------------------------------------
+                           1534 
+                           1535 ; Low Level I/O to the drive.  These are the routines that talk
+                           1536 ; directly to the drive, via the 8255 chip.  Normally a main
+                           1537 ; program would not call to these.
+                           1538 
+                           1539 	;Do a read bus cycle to the drive, using the 8255.
+                           1540 	;input A = ide regsiter address
+                           1541 	;output C = lower byte read from ide drive
+                           1542 	;output B = upper byte read from ide drive
+                           1543 
+   04CF                    1544 ide_read:
+   04CF F5                 1545 	push	af			; save register value
+   04D0 CDr05s05           1546 	call	set_ppi_rd		; setup for a read cycle
+   04D3 F1                 1547 	pop	af			; restore register value
+   04D4 D3 82              1548 	out	(IDECTL),a		;drive address onto control lines
+   04D6 F6 40              1549 	or	a,#ide_rd_line		; assert RD pin
+   04D8 D3 82              1550 	out	(IDECTL),a
+   04DA F5                 1551 	push	af			; save register value
+   04DB DB 80              1552 	in	a,(IDELSB)		; read lower byte
+   04DD 4F                 1553 	ld	c,a			; save in c reg
+   04DE DB 81              1554 	in	a,(IDEMSB)		; read upper byte
+   04E0 47                 1555 	ld	b,a			; save in reg b
+   04E1 F1                 1556 	pop	af			; restore reg value
+   04E2 EE 40              1557 	xor	a,#ide_rd_line		; deassert RD signal
+   04E4 D3 82              1558 	out	(IDECTL),a
+   04E6 3E 00              1559 	ld	a,#0		;; DWG SAYS couln't this be a 1 byter?
+   04E8 D3 82              1560 	out	(IDECTL),a		;deassert all control pins
+   04EA C9                 1561 	ret
+                           1562 
+                           1563 	;Do a write bus cycle to the drive, via the 8255
+                           1564 	;input A = ide register address
+                           1565 	;input register C = lsb to write
+                           1566 	;input register B = msb to write
+                           1567 	;
+                           1568 
+                           1569 	
+   04EB                    1570 ide_write:
+   04EB F5                 1571 	push	af			; save IDE reg valure
+   04EC CDr0As05           1572 	call	set_ppi_wr		; setup for a write cycle
+   04EF 79                 1573 	ld	a,c			; get value to be written
+   04F0 D3 80              1574 	out	(IDELSB),a
+   04F2 78                 1575 	ld	a,b			; get value to be written
+   04F3 D3 81              1576 	out	(IDEMSB),a
+   04F5 F1                 1577 	pop	af			; restore saved IDE reg
+   04F6 D3 82              1578 	out	(IDECTL),a		; drive address onto control lines
+   04F8 F6 20              1579 	or	a,#ide_wr_line		; assert write pin
+   04FA D3 82              1580 	out	(IDECTL),a
+   04FC EE 20              1581 	xor	a,#ide_wr_line		; deasser write pin
+   04FE D3 82              1582 	out	(IDECTL),a		;drive address onto control lines
+   0500 3E 00              1583 	ld	a,#0			;; DWG SAYS couldn't this be 1 byter?
+   0502 D3 82              1584 	out	(IDECTL),a		; release bus signals
+   0504 C9                 1585 	ret
+                           1586 
+                           1587 
+                           1588 ;-----------------------------------------------------------------------------------	
+                           1589 ; ppi setup routine to configure the appropriate PPI mode
+                           1590 ;
+                           1591 ;------------------------------------------------------------------------------------
+                           1592 
+   0505                    1593 set_ppi_rd:
+   0505 3E 92              1594 	ld	a,#rd_ide_8255
+   0507 D3 83              1595 	out	(PIO1CONT),a			;config 8255 chip, read mode
+   0509 C9                 1596 	ret
+                           1597 
+   050A                    1598 set_ppi_wr:
+   050A 3E 80              1599 	ld	a,#wr_ide_8255
+   050C D3 83              1600 	out	(PIO1CONT),a			;config 8255 chip, write mode
+   050E C9                 1601 	ret
+                           1602 	
+                           1603 ;-----------------------------------------------------------------------------
+                           1604 ; End of PPIDE disk driver
+                           1605 ;------------------------------------------------------------------------------------	
+                           1606 
+                           1607 	
+                           1608 ;	TEXT STRINGS
+                           1609 
+   050F                    1610 TXT_RO_ERROR:
+   050F 0D 0A              1611 	.DB CR,LF
+   0511 45 52 52 4F 52 3A  1612 	.ascii "ERROR: WRITE TO READ ONLY DISK"
+        20 57 52 49 54 45
+        20 54 4F 20 52 45
+        41 44 20 4F 4E 4C
+        59 20 44 49 53 4B
+   052F FF                 1613 	.DB END
+                           1614 
+   0530                    1615 TXT_STARTUP_MSG:
+   0530 0D 0A              1616 	.DB CR,LF
+   0532 43 50 2F 4D 2D 38  1617 	.ascii "CP/M-80 VERSION 2.2C FOR THE "
+        30 20 56 45 52 53
+        49 4F 4E 20 32 2E
+        32 43 20 46 4F 52
+        20 54 48 45 20
+   054F 4E 38 56 45 4D 20  1618 	.ascii "N8VEM N8"
+        4E 38
+   0557 20 28 50 50 49 44  1619 	.ascii " (PPIDE)"
+        45 29
+   055F 0D 0A              1620 	.DB CR,LF
+   0561 FF                 1621 	.DB END
+                           1622 
+                           1623 ;
+                           1624 ;	THE REMAINDER OF THE CBIOS IS RESERVED UNINITIALIZED
+                           1625 ;	DATA AREA, AND DOES NOT NEED TO BE A PART OF THE
+                           1626 ;	SYSTEM MEMORY IMAGE
+                           1627 ;
+   0562                    1628 TRACK:			.DS	2		; TWO BYTES FOR TRACK #
+   0564                    1629 SECTOR:			.DS	2		; TWO BYTES FOR SECTOR #
+   0566                    1630 DMAAD:			.DS	2		; DIRECT MEMORY ADDRESS
+   0568                    1631 DISKNO:			.DS	1		; DISK NUMBER 0-15
+                           1632 
+                           1633 
+   0569 01                 1634 PAGER:			.DB	1		; COPY OF PAGER BYTE
+                           1635 
+   056A FF                 1636 DB_PAGER:		.db	0xff		; copy of pager byte
+                           1637 
+   056B                    1638 V_SECTOR:		.DS	2		; TWO BYTES FOR VIRTUAL SECTOR #
+   056D                    1639 SECST:			.DS	2		; SECTOR IN ROM/RAM START ADDRESS
+                           1640 
+                           1641 
+   056F 00 00              1642 LBA_OFFSET_LO:	.DW	0	; IDE HD PART STARTING SECTOR (LOW 16 BITS)
+   0571 00 00              1643 LBA_OFFSET_HI:	.DW	0	; IDE HD PART STARTING SECTOR (HI 16 BITS, 12 USED)
+   0573 00 00              1644 LBA_TARGET_LO:	.DW	0	; IDE HD PART TARGET SECTOR (LOW 16 BITS)
+   0575 00 00              1645 LBA_TARGET_HI:	.DW	0	; IDE HD PART TARGET SECTOR (HI 16 BITS, 12 USED)
+                           1646 
+   0577                    1647 IDE_LBA0:	.DS	1	;SET LBA 0:7
+   0578                    1648 IDE_LBA1:	.DS	1	;SET LBA 8:15
+   0579                    1649 IDE_LBA2:	.DS	1	;SET LBA 16:23
+   057A                    1650 IDE_LBA3:	.DS	1	;LOWEST 4 BITS USED ONLY TO ENABLE LBA MODE 
+                           1651 
+   057B 00                 1652 SECTOR_INDEX:	.DB	0		;WHERE 128 BYTE CP/M SECTOR IS IN 512 BYTE IDE HD SECTOR
+                           1653 
+                           1654 
+                           1655 ;
+                           1656 ;	SCRATCH RAM AREA FOR BDOS USE
+                           1657 ;
+                           1658 ; Note: this can extend up to the beginning of the debug monitor however
+                           1659 ; there is a limitation in the amount of space available in the EPROM
+                           1660 ;
+                           1661 ;BEGDAT			.EQU	$				;BEGINNING OF DATA AREA
+                           1662 ;
+                           1663 ;
+                           1664 
+   057C                    1665 SECTOR_BUFFER:	.DS	512			;Deblocking STORAGE FOR 512 BYTE IDE HD SECTOR
+                           1666 
+                           1667 ;dwg;TMPBUF			.EQU 	SECTOR_BUFFER
+                    057C   1668 TMPBUF = SECTOR_BUFFER
+                           1669 
+   077C                    1670 DIRBF:			.DS	128			;SCRATCH DIRECTORY AREA
+   07FC                    1671 ALL00:			.DS	4			;ALLOCATION VECTOR 0  (DSM/8 = 1 BIT PER BLOCK)
+   0800                    1672 ALL01:			.DS	32			;ALLOCATION VECTOR 1 (225/8)
+   0820                    1673 ALL02:			.DS	255			;ALLOCATION VECTOR 2 (2040/8)
+   091F                    1674 ALL03:			.DS	255			;ALLOCATION VECTOR 3 (2040/8)
+   0A1E                    1675 ALL04:			.DS	64			;ALLOCATION VECTOR 4 (511/8)
+   0A5E                    1676 ALL05:			.DS	64			;ALLOCATION VECTOR 5 (495/8)
+                           1677 ;
+   0A9E                    1678 CHK00:			.DS	0			; NOT USED FOR FIXED MEDIA
+   0A9E                    1679 CHK01:			.DS	0			; NOT USED FOR FIXED MEDIA
+   0A9E                    1680 CHK02:			.DS	0			; NOT USED FOR FIXED MEDIA
+   0A9E                    1681 CHK03:			.DS	0			; NOT USED FOR FIXED MEDIA
+   0A9E                    1682 CHK04:			.DS	0			; NOT USED FOR FIXED MEDIA
+   0A9E                    1683 CHK05:			.DS	0			; NOT USED FOR FIXED MEDIA
+                           1684 
+                           1685 ; DOUG SAYS - THIS NEEDS TO BE DONE ANOTHER WAY NO ORGS IN REL SEG
+                           1686 ;
+                           1687 ;	.ORG	$F2FF
+                           1688 ;
+                           1689 ;   F2FF	- desired org
+                           1690 ; - E600	- BIOS ORG
+                           1691 ; ______
+                           1692 ;   0CFF	- necessary offset in this module
+                           1693 ;
+                           1694 ;   0CCF	; where we want to be
+                           1695 ; - 0AA9	; where we are now
+                           1696 ; ______
+                           1697 ;   0256	- adjustment to reach desired org in rel segment
+                           1698 ;
+                           1699 
+   0A9E                    1700 	.ds	0x0256		; THIS NEEDS TO BE ADJUSTED SO LASTBYTE IS AT 0CFF
+                           1701 
+   0CF4 E5                 1702 LASTBYTE:	.DB	0xE5	; note this is just to force out the last byte.
+                           1703 				; this address will actually fall within the
+                           1704 				; allocation vector block
+                           1705 
+   0CF5                    1706 _cbioshc_end::
+                           1707 	.area _CODE
+                           1708 	.area _CABS

@@ -1,0 +1,13 @@
+-mjx
+-i homecomp.ihx
+-k /usr/local/share/sdcc/lib/z80
+-l z80
+-b _CCPB03 = 0x0900
+-b _BDOSB01 = 0xD800
+-b _CBIOS = 0xE600
+-b _DBGMON = 0x0200
+loaderhc.rel
+dbgmon.rel
+ccpb03.rel
+bdosb01.rel
+cbios.rel

@@ -1,0 +1,139 @@
+ASxxxx Assembler V02.00 + NoICE + SDCC mods + Flat24  (Zilog Z80 / Hitachi HD64180), page 1.
+'Bdos Interface, Bdos, Version 2.2 Feb, 1980'
+Symbol Table
+
+    .__.ABS.=  0000 G   |   6 _bdos      0000 GR  |   6 _bdos_en   0AC6 GR
+  6 _bdos_st   0000 GR  |   6 addh       03D1 R   |     addlist    **** X
+  6 alloca     0AC6 R   |   6 allocate   030F R   |   6 allocwd    0801 R
+  6 arecord    0AC6 R   |   6 arecord1   0AC6 R   |   6 aret       01FC R
+  6 atran      0315 R   |   6 atran0     031B R   |   6 backsp     0199 R
+  6 backup     00D6 R   |   6 backx      0158 R   |   6 badseek    08E7 R
+  6 bdose      0011 R   |   6 blkmsk     0AC6 R   |   6 blkshf     0AC6 R
+  6 blockok    07E8 R   |   6 buffa      0AC6 R   |   6 buffnzer   06BE R
+  6 cdrmaxa    0AC6 R   |   6 check$ro   03BA R   |   6 check$ro   03BD R
+  6 check$wr   03C4 R   |   6 checka     0AC6 R   |   6 checksum   0402 R
+  6 chksiz     0AC6 R   |   6 close      0688 R   |   6 clrmodnu   03DC R
+  6 column     01FC R   |   6 compcdr    03E5 R   |   6 compcol    01FC R
+  6 compext    0538 R   |   6 compout    00AB R   |   6 compute$   0377 R
+  6 compute$   0902 R   |   6 computec   037B R   |   6 conb0      008D R
+  6 conb1      0090 R   |   6 conbrk     0074 R   |   6 conech     0061 R
+  6 conin      005B R   |     coninf     **** X   |   6 conout     0091 R
+    conoutf    **** X   |     constf     **** X   |   6 copy$dir   0609 R
+  6 copy$dir   0532 R   |   6 copy$fcb   0609 R   |     cr         **** X
+  6 crlf       00F0 R   |   6 crlfp      00DF R   |   6 crlfp0     00E5 R
+    ctl        **** X   |     ctlc       **** X   |     ctle       **** X
+    ctlh       **** X   |   6 ctlout     00BB R   |     ctlp       **** X
+    ctlr       **** X   |     ctls       **** X   |     ctlu       **** X
+    ctlx       **** X   |   6 curdsk     01FC R   |   6 curreca    0AC6 R
+  6 curselec   0984 R   |   6 curtrka    0AC6 R   |   6 dcnt       0AC6 R
+  6 delete     05B1 R   |   6 delete0    05B7 R   |   6 diocomp    025A R
+  6 dir$to$u   0445 R   |   6 dirblk     0AC6 R   |   6 dirinp     01D7 R
+  6 dirloc     0AC6 R   |   6 dirmax     0AC6 R   |   6 diskeof    07A8 R
+  6 diskread   0775 R   |   6 diskwr0    07C3 R   |   6 diskwr1    0807 R
+  6 diskwr11   0850 R   |   6 diskwr2    0862 R   |   6 diskwr3    0885 R
+  6 diskwrit   07AE R   |   6 diskwru    0807 R   |   6 dlog       0AC6 R
+  6 dm$posit   02D5 R   |   6 dmaad      0AC6 R   |   6 dminx      0AC6 R
+  6 dmpos0     02D9 R   |   6 dmpos1     02E5 R   |   6 dmpos2     02EE R
+  6 dmset      06DA R   |   6 dpbaddr    0AC6 R   |     dpblist    **** X
+  6 dptr       0AC6 R   |   6 drec       0AC6 R   |   6 dskerr     004A R
+    dskmap     **** X   |   6 dskmsg     004A R   |     dskmsk     **** X
+    dskshf     **** X   |     dvers      **** X   |   6 echoc      006F R
+  6 efcb       0AC6 R   |     empty      **** X   |   6 end$of$d   044F R
+    enddir     **** X   |   6 endmerge   06EE R   |   6 endsearc   059F R
+  6 entsp      01FC R   |   6 errflg     004A R   |   6 extmsk     0AC6 R
+    extnum     **** X   |   6 extval     0AC6 R   |     false      **** X
+  6 fcb$copi   0AC6 R   |   6 fcbdsk     0AC6 R   |     fcblen     **** X
+  6 fcbnzero   06B8 R   |     fcbshf     **** X   |   6 fill0      0825 R
+  6 fill1      0831 R   |   6 func$ret   01F8 R   |   6 func1      01BF R
+  6 func11     01F2 R   |   6 func12     09B2 R   |   6 func13     09B5 R
+  6 func15     09C8 R   |   6 func16     09D1 R   |   6 func17     09D7 R
+  6 func18     09EC R   |   6 func19     09FB R   |   6 func20     0A04 R
+  6 func21     0A0A R   |   6 func22     0A10 R   |   6 func23     0A19 R
+  6 func24     0A22 R   |   6 func25     0A28 R   |   6 func26     0A2E R
+  6 func27     0A35 R   |   6 func29     0A3B R   |   6 func3      01C5 R
+  6 func30     0A41 R   |   6 func31     0A4A R   |   6 func32     0A51 R
+  6 func33     0A61 R   |   6 func34     0A67 R   |   6 func35     0A6D R
+  6 func37     0A73 R   |   6 func40     0AB9 R   |   6 func6      01CB R
+  6 func7      01E4 R   |   6 func8      01EA R   |   6 func9      01EC R
+  6 functab    0037 R   |     fwfmsk     **** X   |   6 get$bloc   05CD R
+  6 getalloc   0485 R   |   6 getdm      02F0 R   |   6 getdmd     02FE R
+  6 getdptra   03CB R   |   6 getexta    0331 R   |   6 getfcb     033D R
+  6 getfcba    0336 R   |   6 getfiles   091F R   |   6 getmodnu   03D6 R
+  6 getnexts   094B R   |   6 getsize    092C R   |   6 goback     0A94 R
+  6 goerr      01FC R   |   6 hlrotl     0382 R   |   6 hlrotl0    0383 R
+  6 hlrotr     036A R   |   6 hlrotr0    036B R   |   6 home       0240 R
+    homef      **** X   |   6 index      0304 R   |   6 indic0     063B R
+  6 indicato   0638 R   |   6 info       01FC R   |   6 initial$   0428 R
+  6 initial0   04F0 R   |   6 initial2   050B R   |   6 initiali   04E4 R
+    ioloc      **** X   |   6 kbchar     01FC R   |   6 lefttst    05CF R
+    lf         **** X   |   6 linelen    0173 R   |   6 linfo      0AC6 R
+  6 listcp     01FC R   |     listf      **** X   |     lret       **** X
+  6 lstack     01FC R   |     lstrec     **** X   |   6 make       06F6 R
+  6 make0      070E R   |   6 maxall     0AC6 R   |     maxext     **** X
+    maxmod     **** X   |   6 merge0     06AA R   |   6 merged     06C5 R
+  6 mergerr    06F4 R   |   6 mergezer   067A R   |     modnum     **** X
+  6 move       0201 R   |   6 move0      0202 R   |     namlen     **** X
+  6 newcheck   0402 R   |     nfuncs     **** X   |   6 nopblock   07DD R
+  6 noselect   09A9 R   |   6 nospace    0885 R   |     not        **** X
+  6 notbacks   00B9 R   |   6 notc       01B6 R   |   6 note       014A R
+  6 noth       012D R   |   6 notp       0154 R   |   6 notr       01A3 R
+  6 notrub     013B R   |   6 notu       0170 R   |   6 notx       0166 R
+  6 noupdate   086D R   |   6 nowrite    0399 R   |     nxtrec     **** X
+  6 offset     0AC6 R   |   6 olddsk     0AC6 R   |   6 open       0648 R
+  6 open$cop   064F R   |   6 open$mod   0740 R   |   6 open$r$e   076C R
+  6 open$rcn   0674 R   |   6 open$ree   071F R   |   6 open$ree   0746 R
+  6 open$ree   0762 R   |   6 open$ree   0765 R   |   6 pctlh      00DC R
+  6 pdollar    0529 R   |   6 pererr     0009 R   |   6 permsg     004A R
+  6 persub     0037 R   |   6 print      00F6 R   |   6 qselect    09E6 R
+  6 ranclose   08B6 R   |   6 randiskr   08F4 R   |   6 randiskw   08FB R
+    ranrec     **** X   |   6 rcount     0AC6 R   |   6 rd$dir     0436 R
+  6 rdbuff     0251 R   |   6 rdech1     01A6 R   |   6 rdecho     01A3 R
+  6 read       0102 R   |   6 read$dir   0459 R   |   6 read$dir   046D R
+  6 read$dir   0470 R   |   6 readen     01BA R   |     readerf    **** X
+    readf      **** X   |   6 readn0     0110 R   |   6 readnx     010E R
+    reboot     **** X   |     reccnt     **** X   |   6 recordok   0793 R
+    recsiz     **** X   |   6 rename     061C R   |   6 rename0    0628 R
+  6 rep0       017B R   |   6 rep1       018D R   |   6 resel      0AC6 R
+  6 reselect   098D R   |   6 retblock   05FB R   |   6 retblock   0603 R
+  6 retmon     0AAF R   |   6 retselec   023E R   |   6 righttst   05E0 R
+  6 rmf        0AC6 R   |   6 roderr     000D R   |   6 rodmsg     004A R
+  6 rodsk      0AC6 R   |   6 rodsub     0041 R   |   6 roferr     000F R
+    rofile     **** X   |   6 rofmsg     004A R   |   6 rofsub     0044 R
+  6 rotl       04A0 R   |   6 rotr       04AC R   |   6 rseek      0888 R
+  6 rseek1     088C R   |     rubout     **** X   |   6 scandm     04B3 R
+  6 scandm0    04B8 R   |   6 scandm1    04C9 R   |   6 scandm2    04CF R
+  6 scanm3     04DE R   |   6 search     0547 R   |   6 search$f   05AB R
+  6 searcha    0AC6 R   |   6 searchex   058F R   |   6 searchl    0AC6 R
+  6 searchlo   0577 R   |   6 searchn    0557 R   |   6 searchne   0570 R
+  6 searchok   0598 R   |   6 sectpt     0AC6 R   |     sectran    **** X
+  6 seek       026B R   |   6 seek$cop   0616 R   |   6 seek$dir   025F R
+  6 seek0      027B R   |   6 seek1      0291 R   |   6 seek2      02A6 R
+  6 seekerr    08EC R   |   6 seekok     08E2 R   |   6 sel$erro   01FC R
+    seldskf    **** X   |   6 select     0960 R   |   6 selectdi   020B R
+  6 selerr     000B R   |   6 selmsg     004A R   |   6 selsub     003E R
+  6 seqdiskr   0772 R   |   6 seqdiskw   07AB R   |   6 seqio      0AC6 R
+  6 set$allo   04A6 R   |   6 set$cdis   0389 R   |   6 set$end$   0455 R
+  6 set$ro     03A5 R   |   6 setcdr     03F2 R   |   6 setdata    043C R
+  6 setdir     043F R   |   6 setdma     043F R   |     setdmaf    **** X
+  6 setfcb     0354 R   |   6 setfcb1    035E R   |   6 setfwf     03E0 R
+  6 setlret1   01F9 R   |   6 setrando   0953 R   |     setsecf    **** X
+  6 setsize    0951 R   |     settrkf    **** X   |   6 setusrco   0A5D R
+  6 single     0AC6 R   |   6 sta$ret    01F5 R   |   6 sthl$ret   0A4D R
+  6 strtcol    01FC R   |   6 subdh      03FB R   |     tab        **** X
+  6 tab0       00CC R   |   6 tabout     00C8 R   |     tbuff      **** X
+  6 tinfo      0AC6 R   |   6 tranv      0AC6 R   |     true       **** X
+    ubytes     **** X   |   6 usrcode    01FC R   |   6 vrecord    0AC6 R
+  6 wait$err   0044 R   |   6 wrbuff     0257 R   |   6 wrdir      042A R
+    writef     **** X
+ASxxxx Assembler V02.00 + NoICE + SDCC mods + Flat24  (Zilog Z80 / Hitachi HD64180), page 2.
+'Bdos Interface, Bdos, Version 2.2 Feb, 1980'
+Area Table
+
+   0 _CODE      size    0   flags 0
+   1 _DATA      size    0   flags 0
+   2 _OVERLAY   size    0   flags 0
+   3 _HOME      size    0   flags 0
+   4 _GSINIT    size    0   flags 0
+   5 _GSFINAL   size    0   flags 0
+   6 _BDOS      size  AC6   flags 0
+   7 _CABS      size    0   flags 0

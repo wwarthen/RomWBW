@@ -1,0 +1,12 @@
+ASxxxx Assembler V02.00 + NoICE + SDCC mods + Flat24  (Zilog Z80 / Hitachi HD64180), page 1.
+
+Symbol Table
+
+    .__.ABS.=  0000 G   |   2 jploop     0000 R
+ASxxxx Assembler V02.00 + NoICE + SDCC mods + Flat24  (Zilog Z80 / Hitachi HD64180), page 2.
+
+Area Table
+
+   0 _CODE      size    0   flags 0
+   1 _HEADER    size    0   flags 8
+   2 _HEADER0   size    3   flags 8

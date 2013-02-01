@@ -1,0 +1,1909 @@
+                              1 	.title dbgmon.s derived from dbgmon.asm
+                              2 	.sbttl Ported by Douglas Goodall
+                              3 
+                              4 	.module dbgmon
+                              5 	.optsdcc -mz80
+                              6 	
+                              7 ;--------------------------------------------------------
+                              8 ; Public variables in this module
+                              9 ;--------------------------------------------------------
+                             10 	.globl _dbgmon
+                             11 ;--------------------------------------------------------
+                             12 ; special function registers
+                             13 ;--------------------------------------------------------
+                             14 ;--------------------------------------------------------
+                             15 ;  ram data
+                             16 ;--------------------------------------------------------
+                             17 	.area _DATA
+                             18 ;--------------------------------------------------------
+                             19 ; overlayable items in  ram 
+                             20 ;--------------------------------------------------------
+                             21 	.area _OVERLAY
+                             22 ;--------------------------------------------------------
+                             23 ; external initialized ram data
+                             24 ;--------------------------------------------------------
+                             25 ;--------------------------------------------------------
+                             26 ; global & static initialisations
+                             27 ;--------------------------------------------------------
+                             28 	.area _HOME
+                             29 	.area _GSINIT
+                             30 	.area _GSFINAL
+                             31 	.area _GSINIT
+                             32 ;--------------------------------------------------------
+                             33 ; Home
+                             34 ;--------------------------------------------------------
+                             35 	.area _HOME
+                             36 	.area _HOME
+                             37 ;--------------------------------------------------------
+                             38 ; code
+                             39 ;--------------------------------------------------------
+                             40 	.area _DBGMON
+   0000                      41 _dbgmon_start::
+   0000                      42 _dbgmon:
+                             43 
+                             44 
+                             45 ;___ROM_MONITOR_PROGRAM_____________________________________________________________________________________________________________
+                             46 ;
+                             47 ;  ORIGINAL CODE BY:	ANDREW LYNCH (LYNCHAJ@YAHOO COM)	13 FEB 2007
+                             48 ;
+                             49 ;  MODIFIED BY : 	DAN WERNER 03 09.2009
+                             50 ;
+                             51 ;__REFERENCES________________________________________________________________________________________________________________________ 
+                             52 ; THOMAS SCHERRER BASIC HAR.DWARE TEST ASSEMBLER SOURCES FROM THE Z80 INFO PAGE
+                             53 ; INCLUDING ORIGINAL SCHEMATIC CONCEPT
+                             54 ; HTTP://Z80 INFO/Z80SOURC.TXT
+                             55 ; CODE SAMPLES FROM BRUCE JONES PUBLIC DOMAIN ROM MONITOR FOR THE SBC-200C 
+                             56 ; HTTP://WWW RETROTECHNOLOGY.COM/HERBS_STUFF/SD_BRUCE_CODE.ZIP
+                             57 ; INSPIRATION FROM JOEL OWENS "Z-80 SPACE-TIME PRODUCTIONS SINGLE BOARD COMPUTER"
+                             58 ; HTTP://WWW JOELOWENS.ORG/Z80/Z80INDEX.HTML
+                             59 ; GREAT HELP AND TECHNICAL ADVICE FROM ALLISON AT ALPACA_DESIGNERS
+                             60 ; HTTP://GROUPS YAHOO.COM/GROUP/ALPACA_DESIGNERS
+                             61 ; INTEL SDK-85 ROM DEBUG MONITOR
+                             62 ;
+                             63 ;__HARDWARE_INTERFACES________________________________________________________________________________________________________________ 
+                             64 ;
+                             65 ; PIO 82C55 I/O IS DECODED TO PORT 60-67
+                             66 ;
+                    0060     67 PORTA		 = 	0x60
+                    0061     68 PORTB		 = 	0x61
+                    0062     69 PORTC		 = 	0x62
+                    0063     70 PIOCONT 	 = 	0x63
+                             71 ;
+                             72 ; UART 16C450 SERIAL IS DECODED TO 68-6F
+                             73 ;
+                    0068     74 UART0		 =	0x68		;   DATA IN/OUT
+                    0069     75 UART1		 =	0x69		;   CHECK RX
+                    006A     76 UART2		 =	0x6A		;   INTERRUPTS
+                    006B     77 UART3		 =	0x6B		;   LINE CONTROL
+                    006C     78 UART4		 =	0x6C		;   MODEM CONTROL
+                    006D     79 UART5		 =	0x6D		;   LINE STATUS
+                    006E     80 UART6		 =	0x6E		;   MODEM STATUS
+                    006F     81 UART7		 =	0x6F		;   SCRATCH REG.
+                             82 ;
+                             83 ; MEMORY PAGE CONFIGURATION LATCH IS DECODED TO 78
+                             84 ;
+                    0078     85 MPCL		 =	0x78		; CONTROL PORT, SHOULD ONLY BE CHANGED WHILE
+                             86 ;					  IN UPPER MEMORY PAGE 08000h-$FFFF OR LIKELY
+                    0078     87 MPCL_RAM	 = 	0x78		; BASE IO ADDRESS OF RAM MEMORY PAGER CONFIGURATION LATCH
+                    007C     88 MPCL_ROM	 = 	0x7C		; BASE IO ADDRESS OF ROM MEMORY PAGER CONFIGURATION LATCH
+                             89 ;					  LOSS OF CPU MEMORY CONTEXT 
+                             90 ;
+                             91 ; MEMORY PAGE CONFIGURATION LATCH CONTROL PORT ( IO_Y3 ) INFORMATION
+                             92 ;
+                             93 ;	7 6 5 4  3 2 1 0      ONLY APPLICABLE TO THE LOWER MEMORY PAGE 00000h-$7FFF
+                             94 ;	^ ^ ^ ^  ^ ^ ^ ^
+                             95 ;	: : : :  : : : :--0 = A15 RAM/ROM ADDRESS LINE DEFAULT IS 0
+                             96 ;	: : : :  : : :----0 = A16 RAM/ROM ADDRESS LINE DEFAULT IS 0
+                             97 ;	: : : :  : :------0 = A17 RAM/ROM ADDRESS LINE DEFAULT IS 0
+                             98 ;	: : : :  :--------0 = A18 RAM/ROM ADDRESS LINE DEFAULT IS 0
+                             99 ;	: : : :-----------0 = A19 ROM ONLY ADDRESS LINE DEFAULT IS 0
+                            100 ;	: : :-------------0 = 
+                            101 ;	: :---------------0 = 
+                            102 ;	:-----------------0 = ROM SELECT (0=ROM, 1=RAM) DEFAULT IS 0
+                            103 ;
+                            104 ;
+                            105 ;IDE REGISTER		IO PORT		; FUNCTION
+                    0020    106 IDELO		 =	0x020		; DATA PORT (LOW BYTE)
+                    0021    107 IDEERR		 =	0x021		; READ: ERROR REGISTER; WRITE: PRECOMP
+                    0022    108 IDESECTC	 =	0x022		; SECTOR COUNT
+                    0023    109 IDESECTN	 =	0x023		; SECTOR NUMBER
+                    0024    110 IDECYLLO	 =	0x024		; CYLINDER LOW
+                    0025    111 IDECYLHI	 =	0x025		; CYLINDER HIGH
+                    0026    112 IDEHEAD		 =	0x026		; DRIVE/HEAD
+                    0027    113 IDESTTS		 =	0x027		; READ: STATUS; WRITE: COMMAND
+                    0028    114 IDEHI		 =	0x028		; DATA PORT (HIGH BYTE)
+                    002E    115 IDECTRL		 =	0x02E		; READ: ALTERNATIVE STATUS; WRITE; DEVICE CONTROL
+                    002F    116 IDEADDR		 =	0x02F		; DRIVE ADDRESS (READ ONLY)
+                            117 
+                            118 ;
+                            119 ;
+                            120 ;__CONSTANTS_________________________________________________________________________________________________________________________ 
+                            121 ;	
+                    FFFF    122 RAMTOP		 =	0x0FFFF		; HIGHEST ADDRESSABLE MEMORY LOCATION
+                    CFFF    123 STACKSTART	 =	0x0CFFF		; START OF STACK
+                    8000    124 RAMBOTTOM	 =	0x08000		; START OF FIXED UPPER 32K PAGE OF 512KB X 8 RAM 8000H-FFFFH
+                    8000    125 MONSTARTCOLD	 =	0x08000		; COLD START MONITOR IN HIGH RAM
+                    00FF    126 ENDT		 =	0x0FF		; MARK END OF TEXT
+                    000D    127 CR		 =	0x0D		; ASCII CARRIAGE RETURN CHARACTER
+                    000A    128 LF		 =	0x0A		; ASCII LINE FEED CHARACTER
+                    001B    129 ESC		 =	0x1B		; ASCII ESCAPE CHARACTER
+                    0008    130 BS		 =	0x08		; ASCII BACKSPACE CHARACTER
+                            131 
+                    0041    132 ASCIIA	= 	0x41
+                    0042    133 ASCIIB	=	0x42
+                    0043    134 ASCIIC	=	0x43
+                    0044    135 ASCIID	=	0x44
+                    0045    136 ASCIIE	=	0x45
+                    0046    137 ASCIIF	=	0x46
+                    0047    138 ASCIIG	=	0x47
+                    0048    139 ASCIIH	=	0x48
+                    0049    140 ASCIII	=	0x49
+                    004A    141 ASCIIJ	=	0x4A
+                    004B    142 ASCIIK	=	0x4B
+                    004C    143 ASCIIL	=	0x4C
+                    004D    144 ASCIIM	=	0x4D
+                    004E    145 ASCIIN	=	0x4E
+                    004F    146 ASCIIO	=	0x4F
+                    0050    147 ASCIIP	=	0x50
+                    0051    148 ASCIIQ	=	0x51
+                    0052    149 ASCIIR	=	0x52
+                    0053    150 ASCIIS	=	0x53
+                    0054    151 ASCIIT	=	0x54
+                    0055    152 ASCIIU	=	0x55
+                    0056    153 ASCIIV	=	0x56
+                    0057    154 ASCIIW	=	0x57
+                    0058    155 ASCIIX	=	0x58
+                    0059    156 ASCIIY	=	0x59
+                    005A    157 ASCIIZ	=	0x5A
+                            158 
+                            159 ;
+                            160 ;
+                            161 ;
+                            162 ;__MAIN_PROGRAM_____________________________________________________________________________________________________________________ 
+                            163 ;
+                            164 ;	 ORG	00100h			; FOR DEBUG IN CP/M (AS .COM)
+                            165 
+                            166 ;dwg;	 .ORG	8000H			; NORMAL OP
+                            167 
+   0000 31 FF CF            168 	LD	SP,#STACKSTART		; SET THE STACK POINTER TO STACKSTART
+   0003 CDr32s06            169 	CALL	INITIALIZE		; INITIALIZE SYSTEM
+                            170 
+                            171 
+                            172 
+                            173 ;__FRONT_PANEL_STARTUP___________________________________________________________________________________________________________ 
+                            174 ;
+                            175 ;	START UP THE SYSTEM WITH THE FRONT PANEL INTERFACE
+                            176 ;	
+                            177 ;________________________________________________________________________________________________________________________________
+                            178 ;
+   0006 CDr3Bs06            179 	CALL    MTERM_INIT		; INIT 8255 FOR MTERM
+   0009 21rC7s0C            180 	LD	HL,#CPUUP		; SET POINTER TO DATA BUFFER
+   000C CDr05s07            181 	CALL	SEGDISPLAY		; DISPLAY 
+                            182 
+                            183 
+                            184 
+   000F                     185 FRONTPANELLOOP:
+   000F CDr40s06            186 	CALL	KB_GET			; GET KEY FROM KB
+                            187 
+   0012 FE 10               188 	CP	#0x10			; IS PORT READ?
+   0014 CAr3Cs00            189 	JP	Z,DOPORTREAD		; YES, JUMP
+   0017 FE 11               190 	CP	#0x11			; IS PORT WRITE?
+   0019 CAr94s00            191 	JP	Z,DOPORTWRITE		; YES, JUMP
+   001C FE 14               192 	CP	#0x14			; IS DEPOSIT?
+   001E CArD0s00            193 	JP	Z,DODEPOSIT		; YES, JUMP
+   0021 FE 15               194 	CP	#0x15			; IS EXAMINE?
+   0023 CAr24s01            195 	JP	Z,DOEXAMINE		; YES, JUMP
+   0026 FE 16               196 	CP	#0x16			; IS GO?
+   0028 CArCCs00            197 	JP	Z,DOGO			; YES, JUMP
+   002B FE 17               198 	CP	#0x17			; IS BO?
+   002D CAr33s00            199 	JP	Z,DOBOOT		; YES, JUMP
+                            200 
+   0030 18 DD               201 	JR	FRONTPANELLOOP		; LOOP
+   0032                     202 EXIT:
+   0032 C9                  203 	RET	
+                            204 
+                            205 
+                            206 ;__DOBOOT________________________________________________________________________________________________________________________ 
+                            207 ;
+                            208 ;	PERFORM BOOT FRONT PANEL ACTION
+                            209 ;________________________________________________________________________________________________________________________________
+                            210 ;
+   0033                     211 DOBOOT:
+   0033 3E 00               212 	LD	A,#0		; LOAD VALUE TO SWITCH OUT ROM
+   0035 D3 7C               213 	OUT	(MPCL_ROM),A	; SWITCH OUT ROM, BRING IN LOWER 32K RAM PAGE
+                            214 				;
+                            215 				;
+   0037 D3 78               216 	OUT	(MPCL_RAM),A	;
+   0039 C3 00 00            217 	JP	0			; GO TO CP/M
+                            218 
+                            219 
+                            220 ;__DOPORTREAD____________________________________________________________________________________________________________________ 
+                            221 ;
+                            222 ;	PERFORM PORT READ FRONT PANEL ACTION
+                            223 ;________________________________________________________________________________________________________________________________
+                            224 ;
+   003C                     225 DOPORTREAD:	
+   003C CDr6Cs02            226 	CALL 	GETPORT			; GET PORT INTO A
+   003F                     227 PORTREADLOOP:
+   003F 4F                  228 	LD	C,A			; STORE PORT IN "C"
+   0040 CB 3F               229 	SRL	A			; ROTATE HIGH NIB TO LOW
+   0042 CB 3F               230 	SRL	A			;
+   0044 CB 3F               231 	SRL	A			;
+   0046 CB 3F               232 	SRL	A			;
+   0048 32r90s07            233 	LD	(DISPLAYBUF+5),A	; SHOW HIGH NIB IN DISP 5
+   004B 79                  234 	LD	A,C			; RESTORE PORT VALUE INTO "A"
+   004C E6 0F               235 	AND	#0x0F			; CLEAR HIGH NIB, LEAVING LOW
+   004E 32r8Fs07            236 	LD	(DISPLAYBUF+4),A	; SHOW LOW NIB IN DISP 4
+   0051 ED 78               237 	IN 	A,(C)			; GET PORT VALUE FROM PORT IN "C"
+   0053 4F                  238 	LD	C,A			; STORE VALUE IN "C"
+   0054 CB 3F               239 	SRL	A			; ROTATE HIGH NIB TO LOW
+   0056 CB 3F               240 	SRL	A			;
+   0058 CB 3F               241 	SRL	A			;
+   005A CB 3F               242 	SRL	A			;
+   005C 32r8Cs07            243 	LD	(DISPLAYBUF+1),A	; SHOW HIGH NIB IN DISP 1
+   005F 79                  244 	LD	A,C			; RESTORE VALUE TO "A"
+   0060 E6 0F               245 	AND	#0x0F			; CLEAR HIGH NIB, LEAVING LOW
+   0062 32r8Bs07            246 	LD	(DISPLAYBUF),A		; DISPLAY LOW NIB IN DISP 0
+   0065 3E 10               247 	LD	A,#0x10			; CLEAR OTHER DISPLAYS
+   0067 32r8Ds07            248 	LD	(DISPLAYBUF+2),A	;
+   006A 32r8Es07            249 	LD	(DISPLAYBUF+3),A	;
+   006D 3E 13               250 	LD	A,#0x13			; "P"
+   006F 32r92s07            251 	LD	(DISPLAYBUF+7),A	; STORE IN DISP 7
+   0072 3E 14               252 	LD	A,#0x14			; "O"
+   0074 32r91s07            253 	LD	(DISPLAYBUF+6),A	; STORE IN DISP 6
+   0077 21r8Bs07            254 	LD	HL,#DISPLAYBUF		; SET POINTER TO DISPLAY BUFFER
+   007A CDrBEs06            255 	CALL	HEXDISPLAY		; DISPLAY BUFFER CONTENTS
+   007D                     256 PORTREADGETKEY:
+   007D CDr40s06            257 	CALL	KB_GET			; GET KEY FROM KB
+   0080 FE 12               258 	CP	#0x12			; [CL] PRESSED, EXIT
+   0082 CAr8Bs00            259 	JP	Z,PORTREADEXIT		;
+   0085 FE 10               260 	CP	#0x10			; [PR] PRESSED, PROMPT FOR NEW PORT
+   0087 28 B3               261 	JR	Z,DOPORTREAD		;
+   0089 18 F2               262 	JR	PORTREADGETKEY		; NO VALID KEY, LOOP
+   008B                     263 PORTREADEXIT:
+   008B 21rC7s0C            264 	LD	HL,#CPUUP		; SET POINTER TO DATA BUFFER
+   008E CDr05s07            265 	CALL	SEGDISPLAY		; DISPLAY 
+   0091 C3r0Fs00            266 	JP	FRONTPANELLOOP		;
+                            267 
+                            268 ;__DOPORTWRITE____________________________________________________________________________________________________________________ 
+                            269 ;
+                            270 ;	PERFORM PORT WRITE FRONT PANEL ACTION
+                            271 ;________________________________________________________________________________________________________________________________
+                            272 ;
+   0094                     273 DOPORTWRITE:	
+   0094 CDr6Cs02            274 	CALL 	GETPORT			; GET PORT INTO A
+   0097                     275 PORTWRITELOOP:
+   0097 4F                  276 	LD	C,A			; STORE PORT IN "C"
+   0098 CB 3F               277 	SRL	A			; ROTATE HIGH NIB INTO LOW
+   009A CB 3F               278 	SRL	A			;
+   009C CB 3F               279 	SRL	A			;
+   009E CB 3F               280 	SRL	A			;
+   00A0 32r90s07            281 	LD	(DISPLAYBUF+5),A	; DISPLAY HIGH NIB IN DISPLAY 5
+   00A3 79                  282 	LD	A,C			; RESTORE PORT VALUE INTO "A"
+   00A4 E6 0F               283 	AND	#0x0F			; CLEAR OUT HIGH NIB
+   00A6 32r8Fs07            284 	LD	(DISPLAYBUF+4),A	; DISPLAY LOW NIB IN DISPLAY 4
+   00A9 3E 10               285 	LD	A,#0x10			; CLEAR OUT DISPLAYS 2 AND 3
+   00AB 32r8Ds07            286 	LD	(DISPLAYBUF+2),A	;
+   00AE 32r8Es07            287 	LD	(DISPLAYBUF+3),A	;
+   00B1 3E 13               288 	LD	A,#0x13			; DISPLAY "P" IN DISP 7
+   00B3 32r92s07            289 	LD	(DISPLAYBUF+7),A	;
+   00B6 3E 14               290 	LD	A,#0x14			; DISPLAY "O" IN DISP 6
+   00B8 32r91s07            291 	LD	(DISPLAYBUF+6),A	;
+   00BB 21r8Bs07            292 	LD	HL,#DISPLAYBUF		; POINT TO DISPLAY BUFFER
+   00BE CDrCFs02            293 	CALL	GETVALUE		; INPUT A BYTE VALUE, RETURN IN "A"
+   00C1 ED 79               294 	OUT	(C),A			; OUTPUT VALUE TO PORT STORED IN "C"
+   00C3 21rC7s0C            295 	LD	HL,#CPUUP		; SET POINTER TO DATA BUFFER
+   00C6 CDr05s07            296 	CALL	SEGDISPLAY		; DISPLAY 
+   00C9 C3r0Fs00            297 	JP	FRONTPANELLOOP		;
+                            298 
+                            299 
+                            300 ;__DOGO__________________________________________________________________________________________________________________________ 
+                            301 ;
+                            302 ;	PERFORM GO FRONT PANEL ACTION
+                            303 ;________________________________________________________________________________________________________________________________
+                            304 ;
+   00CC                     305 DOGO:
+   00CC CDr89s01            306 	CALL 	GETADDR			; GET ADDRESS INTO HL
+   00CF E9                  307 	JP	(HL)			; GO THERE!
+                            308 
+                            309 
+                            310 
+                            311 ;__DODEPOSIT________________________________________________________________________________________________________________________ 
+                            312 ;
+                            313 ;	PERFORM DEPOSIT FRONT PANEL ACTION
+                            314 ;________________________________________________________________________________________________________________________________
+                            315 ;
+   00D0                     316 DODEPOSIT:
+   00D0 CDr89s01            317 	CALL 	GETADDR			; GET ADDRESS INTO HL
+   00D3 E5                  318 	PUSH 	HL
+   00D4                     319 DEPOSITLOOP:
+   00D4 7C                  320 	LD	A,H			;
+   00D5 CB 3F               321 	SRL	A			;
+   00D7 CB 3F               322 	SRL	A			;
+   00D9 CB 3F               323 	SRL	A			;
+   00DB CB 3F               324 	SRL	A			;
+   00DD 32r92s07            325 	LD	(DISPLAYBUF+7),A	;
+   00E0 7C                  326 	LD	A,H			;
+   00E1 E6 0F               327 	AND	#0x0F			;
+   00E3 32r91s07            328 	LD	(DISPLAYBUF+6),A	;
+   00E6 7D                  329 	LD	A,L			;
+   00E7 CB 3F               330 	SRL	A			;
+   00E9 CB 3F               331 	SRL	A			;
+   00EB CB 3F               332 	SRL	A			;
+   00ED CB 3F               333 	SRL	A			;
+   00EF 32r90s07            334 	LD	(DISPLAYBUF+5),A	;
+   00F2 7D                  335 	LD	A,L			;
+   00F3 E6 0F               336 	AND	#0x0F			;
+   00F5 32r8Fs07            337 	LD	(DISPLAYBUF+4),A	;
+   00F8 3E 10               338 	LD	A,#0x10			;
+   00FA 32r8Es07            339 	LD	(DISPLAYBUF+3),A	;
+   00FD 21r8Bs07            340 	LD	HL,#DISPLAYBUF		;
+   0100 CDrCFs02            341 	CALL	GETVALUE		;
+   0103 E1                  342 	POP	HL			;
+   0104 77                  343 	LD	(HL),A			;
+   0105                     344 DEPOSITGETKEY:
+   0105 CDr40s06            345 	CALL	KB_GET			; GET KEY FROM KB
+   0108 FE 12               346 	CP	#0x12			; [CL] PRESSED, EXIT
+   010A CAr1Bs01            347 	JP	Z,DEPOSITEXIT		;
+   010D FE 13               348 	CP	#0x13			; [EN] PRESSED, INC ADDRESS AND LOOP
+   010F 28 06               349 	JR	Z,DEPOSITFW		; 
+   0111 FE 14               350 	CP	#0x14			; [DE] PRESSED, PROMPT FOR NEW ADDRESS
+   0113 28 BB               351 	JR	Z,DODEPOSIT		;
+   0115 18 EE               352 	JR	DEPOSITGETKEY		; NO VALID KEY, LOOP
+   0117                     353 DEPOSITFW:
+   0117 23                  354 	INC	HL			;
+   0118 E5                  355 	PUSH	HL			; STORE HL
+   0119 18 B9               356 	JR 	DEPOSITLOOP		;	
+   011B                     357 DEPOSITEXIT:
+   011B 21rC7s0C            358 	LD	HL,#CPUUP		; SET POINTER TO DATA BUFFER
+   011E CDr05s07            359 	CALL	SEGDISPLAY		; DISPLAY 
+   0121 C3r0Fs00            360 	JP	FRONTPANELLOOP		;
+                            361 
+                            362 
+                            363 
+                            364 
+                            365 ;__DOEXAMINE________________________________________________________________________________________________________________________ 
+                            366 ;
+                            367 ;	PERFORM EXAMINE FRONT PANEL ACTION
+                            368 ;________________________________________________________________________________________________________________________________
+                            369 ;
+   0124                     370 DOEXAMINE:
+   0124 CDr89s01            371 	CALL 	GETADDR			; GET ADDRESS INTO HL
+   0127 E5                  372 	PUSH 	HL			; STORE HL
+   0128                     373 EXAMINELOOP:
+   0128 7C                  374 	LD	A,H			; MOVE HIGH BYTE IN "A"
+   0129 CB 3F               375 	SRL	A			; SHOW HIGH NIBBLE IN DISP 7
+   012B CB 3F               376 	SRL	A			;
+   012D CB 3F               377 	SRL	A			;
+   012F CB 3F               378 	SRL	A			;
+   0131 32r92s07            379 	LD	(DISPLAYBUF+7),A	;
+   0134 7C                  380 	LD	A,H			; RESTORE HIGH BYTE
+   0135 E6 0F               381 	AND	#0x0F			; CLEAR HIGH NIBBLE
+   0137 32r91s07            382 	LD	(DISPLAYBUF+6),A	; DISPLAY LOW NIBBLE IN DISP 6
+   013A 7D                  383 	LD	A,L			; PUT LOW BYTE IN "A"
+   013B CB 3F               384 	SRL	A			; SHOW HIGH NIBBLE IN DISP 5
+   013D CB 3F               385 	SRL	A			;
+   013F CB 3F               386 	SRL	A			;
+   0141 CB 3F               387 	SRL	A			;
+   0143 32r90s07            388 	LD	(DISPLAYBUF+5),A	;
+   0146 7D                  389 	LD	A,L			; RESTORE LOW BYTE IN "A"
+   0147 E6 0F               390 	AND	#0x0F			; CLEAR OUT HIGH NIBBLE
+   0149 32r8Fs07            391 	LD	(DISPLAYBUF+4),A	; DISPLAY LOW NIBBLE IN DISP 4
+   014C 3E 10               392 	LD	A,#0x10			; CLEAR OUT DISP 3
+   014E 32r8Es07            393 	LD	(DISPLAYBUF+3),A	;
+   0151 7E                  394 	LD	A,(HL)			; GET VALUE FROM ADDRESS IN HL
+   0152 CB 3F               395 	SRL	A			; DISPLAY HIGH NIB IN DISPLAY 1
+   0154 CB 3F               396 	SRL	A			;
+   0156 CB 3F               397 	SRL	A			;
+   0158 CB 3F               398 	SRL	A			;
+   015A 32r8Cs07            399 	LD	(DISPLAYBUF+1),A	;
+   015D 7E                  400 	LD	A,(HL)			; GET VALUE FROM ADDRESS IN HL
+   015E E6 0F               401 	AND	#0x0F			; CLEAR OUT HIGH NIBBLE
+   0160 32r8Bs07            402 	LD	(DISPLAYBUF),A		; DISPLAY LOW NIBBLE IN DISPLAY 0
+   0163 21r8Bs07            403 	LD	HL,#DISPLAYBUF		; POINT TO DISPLAY BUFFER
+   0166 CDrBEs06            404 	CALL	HEXDISPLAY		; DISPLAY BUFFER ON DISPLAYS
+   0169 E1                  405 	POP	HL			; RESTORE HL
+   016A                     406 EXAMINEGETKEY:
+   016A CDr40s06            407 	CALL	KB_GET			; GET KEY FROM KB
+   016D FE 12               408 	CP	#0x12			; [CL] PRESSED, EXIT
+   016F CAr80s01            409 	JP	Z,EXAMINEEXIT		;
+   0172 FE 13               410 	CP	#0x13			; [EN] PRESSED, INC ADDRESS AND LOOP
+   0174 28 06               411 	JR	Z,EXAMINEFW		; 
+   0176 FE 15               412 	CP	#0x15			; [DE] PRESSED, PROMPT FOR NEW ADDRESS
+   0178 28 AA               413 	JR	Z,DOEXAMINE		;
+   017A 18 EE               414 	JR	EXAMINEGETKEY		; NO VALID KEY, LOOP
+   017C                     415 EXAMINEFW:
+   017C 23                  416 	INC	HL			; HL++
+   017D E5                  417 	PUSH	HL			; STORE HL
+   017E 18 A8               418 	JR 	EXAMINELOOP		;	
+   0180                     419 EXAMINEEXIT:
+   0180 21rC7s0C            420 	LD	HL,#CPUUP		; SET POINTER TO DATA BUFFER
+   0183 CDr05s07            421 	CALL	SEGDISPLAY		; DISPLAY 
+   0186 C3r0Fs00            422 	JP	FRONTPANELLOOP		;
+                            423 
+                            424 
+                            425 ;__GETADDR_______________________________________________________________________________________________________________________ 
+                            426 ;
+                            427 ;	GET ADDRESS FROM FRONT PANEL
+                            428 ;________________________________________________________________________________________________________________________________
+                            429 ;
+   0189                     430 GETADDR:
+   0189 C5                  431 	PUSH	BC			; STORE BC
+   018A 18 6A               432 	JR	GETADDRCLEAR		; 
+   018C                     433 GETADDR1:
+   018C 21rCFs0C            434 	LD	HL,#ADDR			; DISPLAY PROMPT
+   018F CDr05s07            435 	CALL	SEGDISPLAY		; 
+   0192                     436 GETADDRLOOP:
+   0192 CDr40s06            437 	CALL	KB_GET			;	
+   0195 FE 10               438 	CP	#0x10			;
+   0197 FArDDs01            439 	JP	M,GETADDRNUM		; NUMBER PRESSED, STORE IT
+   019A FE 13               440 	CP	#0x13			; EN PRESSED, DONE
+   019C 28 06               441 	JR	Z,GETADDRDONE		;
+   019E FE 12               442 	CP	#0x12			; CLEAR PRESSED, CLEAR
+   01A0 28 54               443 	JR	Z,GETADDRCLEAR		; 
+   01A2 18 EE               444 	JR	GETADDRLOOP		; INVALID KEY, LOOP
+   01A4                     445 GETADDRDONE:
+   01A4 21 00 00            446 	LD	HL,#0			; HL=0
+   01A7 3Ar8Cs07            447 	LD	A,(DISPLAYBUF+1)	; GET DIGIT IN DISPLAY 1
+   01AA CB 27               448 	SLA	A			; ROTATE IT TO HIGH NIBBLE
+   01AC CB 27               449 	SLA	A			;
+   01AE CB 27               450 	SLA	A			;
+   01B0 CB 27               451 	SLA	A			;
+   01B2 4F                  452 	LD	C,A			; STORE IT IN "C"	
+   01B3 3Ar8Bs07            453 	LD	A,(DISPLAYBUF)		; GET DIGIT IN DISPLAY 0
+   01B6 E6 0F               454 	AND	#0x0F			; CLEAR HIGH NIBBLE
+   01B8 B1                  455 	OR	C			; ADD IN NIBBLE STORED IN C
+   01B9 6F                  456 	LD	L,A			; STORE IT IN LOW BYTE OF ADDRESS POINTER
+   01BA 3Ar8Es07            457 	LD	A,(DISPLAYBUF+3)	; GET DIGIT IN DISPLAY 3
+   01BD CB 27               458 	SLA	A			; ROTATE IT TO HIGH NIBBLE
+   01BF CB 27               459 	SLA	A			;
+   01C1 CB 27               460 	SLA	A			;
+   01C3 CB 27               461 	SLA	A			;
+   01C5 4F                  462 	LD	C,A			; STORE IT IN "C"	
+   01C6 3Ar8Ds07            463 	LD	A,(DISPLAYBUF+2)	; GET DIGIT IN DISPLAY 2
+   01C9 E6 0F               464 	AND	#0x0F			; CLEAR HIGH NIBBLE
+   01CB B1                  465 	OR	C			; ADD IN NIBBLE STORED IN "C"
+   01CC 67                  466 	LD	H,A			; STORE BYTE IN HIGH BYTE OF ADDRESS POINTER
+   01CD 3E 10               467 	LD	A,#0x10			; CLEAR OUT DISPLAYS 0,1,2 & 3
+   01CF 32r8Bs07            468 	LD	(DISPLAYBUF),A		;
+   01D2 32r8Cs07            469 	LD	(DISPLAYBUF+1),A	;
+   01D5 32r8Ds07            470 	LD	(DISPLAYBUF+2),A	;
+   01D8 32r8Es07            471 	LD	(DISPLAYBUF+3),A	;	
+   01DB C1                  472 	POP	BC			; RESTORE BC	
+   01DC C9                  473 	RET
+   01DD                     474 GETADDRNUM:
+   01DD 4F                  475 	LD	C,A			;
+   01DE 3Ar8Ds07            476 	LD	A,(DISPLAYBUF+2)	; SHIFT BYTES IN DISPLAY BUF TO THE LEFT
+   01E1 32r8Es07            477 	LD      (DISPLAYBUF+3),A	;
+   01E4 3Ar8Cs07            478 	LD	A,(DISPLAYBUF+1)	;	
+   01E7 32r8Ds07            479 	LD	(DISPLAYBUF+2),A	;
+   01EA 3Ar8Bs07            480 	LD	A,(DISPLAYBUF)		;	
+   01ED 32r8Cs07            481 	LD	(DISPLAYBUF+1),A	;
+   01F0 79                  482 	LD	A,C			; DISPLAY KEYSTROKE IN RIGHT MOST DISPLAY (0)
+   01F1 32r8Bs07            483 	LD	(DISPLAYBUF+0),A	;
+   01F4 18 0E               484 	JR	GETADDRDISP		;
+   01F6                     485 GETADDRCLEAR:
+   01F6 3E 12               486 	LD	A,#0x12			; CLEAR OUT DISPLAYS 0,1,2 & 3
+   01F8 32r8Bs07            487 	LD	(DISPLAYBUF),A		;
+   01FB 32r8Cs07            488 	LD	(DISPLAYBUF+1),A	;
+   01FE 32r8Ds07            489 	LD	(DISPLAYBUF+2),A	;
+   0201 32r8Es07            490 	LD	(DISPLAYBUF+3),A	;	
+   0204                     491 GETADDRDISP:
+   0204 3Ar8Bs07            492 	LD	A,(DISPLAYBUF)		; ENCODE DIGITS IN DISPLAY BUFFER TO DISPLAY
+   0207 CDrF8s06            493 	CALL 	DECODEDISPLAY		;
+   020A 32rCFs0C            494 	LD	(ADDR),A		;
+   020D 3Ar8Cs07            495 	LD	A,(DISPLAYBUF+1)	;
+   0210 CDrF8s06            496 	CALL 	DECODEDISPLAY		;
+   0213 32rD0s0C            497 	LD	(ADDR+1),A		;
+   0216 3Ar8Ds07            498 	LD	A,(DISPLAYBUF+2)	;
+   0219 CDrF8s06            499 	CALL 	DECODEDISPLAY		;
+   021C 32rD1s0C            500 	LD	(ADDR+2),A		;
+   021F 3Ar8Es07            501 	LD	A,(DISPLAYBUF+3)	;
+   0222 CDrF8s06            502 	CALL 	DECODEDISPLAY		;
+   0225 32rD2s0C            503 	LD	(ADDR+3),A		;
+   0228 C3r8Cs01            504 	JP	GETADDR1		;
+                            505 
+                            506 
+                            507 
+                            508 ;__DSPSECTOR_______________________________________________________________________________________________________________________ 
+                            509 ;
+                            510 ;	DISPLAY SECTOR IN HL ON FRONT PANEL
+                            511 ;________________________________________________________________________________________________________________________________
+                            512 ;
+   022B                     513 DSPSECTOR:
+   022B C5                  514 	PUSH	BC			; STORE BC
+   022C E5                  515 	PUSH	HL			; STORE HL
+   022D 7C                  516 	LD	A,H			; DISPLAY HIGH BYTE, HIGH NIBBLE
+   022E CB 3F               517 	SRL 	A			;	
+   0230 CB 3F               518 	SRL 	A			;	
+   0232 CB 3F               519 	SRL 	A			;	
+   0234 CB 3F               520 	SRL 	A			;	
+   0236 E6 0F               521 	AND	#0x0F			;
+   0238 CDrF8s06            522 	CALL 	DECODEDISPLAY		;
+   023B 32rE2s0C            523 	LD	(SEC+3),A		;
+   023E 7C                  524 	LD      A,H			; DISPLAY HIGH BYTE, LOW NIBBLE
+   023F E6 0F               525 	AND	#0x0F			;
+   0241 CDrF8s06            526 	CALL 	DECODEDISPLAY		;
+   0244 32rE1s0C            527 	LD	(SEC+2),A		;
+   0247 7D                  528 	LD	A,L			; DISPLAY LOW BYTE, HIGH NIBBLE
+   0248 E6 F0               529 	AND	#0x0F0			;
+   024A CB 3F               530 	SRL 	A			;	
+   024C CB 3F               531 	SRL 	A			;	
+   024E CB 3F               532 	SRL 	A			;	
+   0250 CB 3F               533 	SRL 	A			;		
+   0252 E6 0F               534 	AND	#0x0F			;
+   0254 CDrF8s06            535 	CALL 	DECODEDISPLAY		;
+   0257 32rE0s0C            536 	LD	(SEC+1),A		; DISPLAY LOW BYTE, LOW NIBBLE
+   025A 7D                  537 	LD      A,L			;
+   025B E6 0F               538 	AND	#0x0F			;
+   025D CDrF8s06            539 	CALL 	DECODEDISPLAY		;
+   0260 32rDFs0C            540 	LD	(SEC),A			;
+   0263 21rDFs0C            541 	LD	HL,#SEC			; DISPLAY PROMPT
+   0266 CDr05s07            542 	CALL	SEGDISPLAY		; 
+   0269 E1                  543 	POP	HL			; RESTORE HL
+   026A C1                  544 	POP	BC			; RESTORE BC
+   026B C9                  545 	RET
+                            546 
+                            547 
+                            548 
+                            549 ;__GETPORT_______________________________________________________________________________________________________________________ 
+                            550 ;
+                            551 ;	GET PORT FROM FRONT PANEL
+                            552 ;________________________________________________________________________________________________________________________________
+                            553 ;
+   026C                     554 GETPORT:
+   026C C5                  555 	PUSH	BC			; STORE BC
+   026D 18 43               556 	JR	GETPORTCLEAR		;
+   026F                     557 GETPORT1:
+   026F 21rD7s0C            558 	LD	HL,#PORT			; DISPLAY PROMPT
+   0272 CDr05s07            559 	CALL	SEGDISPLAY		; 
+   0275                     560 GETPORTLOOP:
+   0275 CDr40s06            561 	CALL	KB_GET			;	
+   0278 FE 10               562 	CP	#0x10			;
+   027A FArA5s02            563 	JP	M,GETPORTNUM		; NUMBER PRESSED, STORE IT
+   027D FE 13               564 	CP	#0x13			; EN PRESSED, DONE
+   027F 28 06               565 	JR	Z,GETPORTDONE		;
+   0281 FE 12               566 	CP	#0x12			; CLEAR PRESSED, CLEAR
+   0283 28 2D               567 	JR	Z,GETPORTCLEAR		; 
+   0285 18 EE               568 	JR	GETPORTLOOP		; INVALID KEY, LOOP
+   0287                     569 GETPORTDONE:
+   0287 3Ar8Cs07            570 	LD	A,(DISPLAYBUF+1)	;
+   028A CB 27               571 	SLA	A			;
+   028C CB 27               572 	SLA	A			;
+   028E CB 27               573 	SLA	A			;
+   0290 CB 27               574 	SLA	A			;
+   0292 4F                  575 	LD	C,A			;	
+   0293 3Ar8Bs07            576 	LD	A,(DISPLAYBUF)		;
+   0296 E6 0F               577 	AND	#0x0F			;
+   0298 B1                  578 	OR	C			;
+   0299 4F                  579 	LD	C,A			;
+   029A 3E 10               580 	LD	A,#0x10			;
+   029C 32r8Bs07            581 	LD	(DISPLAYBUF),A		;
+   029F 32r8Cs07            582 	LD	(DISPLAYBUF+1),A	;
+   02A2 79                  583 	LD	A,C			;
+   02A3 C1                  584 	POP	BC			; RESTORE BC	
+   02A4 C9                  585 	RET
+   02A5                     586 GETPORTNUM:
+   02A5 4F                  587 	LD	C,A			;
+   02A6 3Ar8Bs07            588 	LD	A,(DISPLAYBUF)		;	
+   02A9 32r8Cs07            589 	LD	(DISPLAYBUF+1),A	;
+   02AC 79                  590 	LD	A,C			;
+   02AD 32r8Bs07            591 	LD	(DISPLAYBUF+0),A	;
+   02B0 18 08               592 	JR	GETPORTDISP		;
+   02B2                     593 GETPORTCLEAR:
+   02B2 3E 12               594 	LD	A,#0x12			;
+   02B4 32r8Bs07            595 	LD	(DISPLAYBUF),A		;
+   02B7 32r8Cs07            596 	LD	(DISPLAYBUF+1),A	;
+   02BA                     597 GETPORTDISP:
+   02BA 3Ar8Bs07            598 	LD	A,(DISPLAYBUF)		;
+   02BD CDrF8s06            599 	CALL 	DECODEDISPLAY		;
+   02C0 32rD7s0C            600 	LD	(PORT),A		;
+   02C3 3Ar8Cs07            601 	LD	A,(DISPLAYBUF+1)	;
+   02C6 CDrF8s06            602 	CALL 	DECODEDISPLAY		;
+   02C9 32rD8s0C            603 	LD	(PORT+1),A		;
+   02CC C3r6Fs02            604 	JP	GETPORT1		;
+                            605 
+                            606 
+                            607 ;__GETVALUE______________________________________________________________________________________________________________________ 
+                            608 ;
+                            609 ;	GET VALUE FROM FRONT PANEL
+                            610 ;________________________________________________________________________________________________________________________________
+                            611 ;
+   02CF                     612 GETVALUE:
+   02CF C5                  613 	PUSH	BC			; STORE BC
+   02D0 18 40               614 	JR	GETVALUECLEAR		;
+   02D2                     615 GETVALUE1:
+   02D2 CDrBEs06            616 	CALL	HEXDISPLAY		; 
+                            617 	
+   02D5                     618 GETVALUELOOP:
+   02D5 CDr40s06            619 	CALL	KB_GET			;	
+   02D8 FE 10               620 	CP	#0x10			;
+   02DA FAr05s03            621 	JP	M,GETVALUENUM		; NUMBER PRESSED, STORE IT
+   02DD FE 13               622 	CP	#0x13			; EN PRESSED, DONE
+   02DF 28 06               623 	JR	Z,GETVALUEDONE		;
+   02E1 FE 12               624 	CP	#0x12			; CLEAR PRESSED, CLEAR
+   02E3 28 2D               625 	JR	Z,GETVALUECLEAR		; 
+   02E5 18 EE               626 	JR	GETVALUELOOP		; INVALID KEY, LOOP
+   02E7                     627 GETVALUEDONE:
+   02E7 3Ar8Cs07            628 	LD	A,(DISPLAYBUF+1)	;
+   02EA CB 27               629 	SLA	A			;
+   02EC CB 27               630 	SLA	A			;
+   02EE CB 27               631 	SLA	A			;
+   02F0 CB 27               632 	SLA	A			;
+   02F2 4F                  633 	LD	C,A			;	
+   02F3 3Ar8Bs07            634 	LD	A,(DISPLAYBUF)		;
+   02F6 E6 0F               635 	AND	#0x0F			;
+   02F8 B1                  636 	OR	C			;
+   02F9 4F                  637         LD	C,A			;
+   02FA 3E 10               638 	LD	A,#0x10			;
+   02FC 32r8Bs07            639 	LD	(DISPLAYBUF),A		;
+   02FF 32r8Cs07            640 	LD	(DISPLAYBUF+1),A	;
+   0302 79                  641 	LD	A,C			;
+   0303 C1                  642 	POP	BC			; RESTORE BC		
+   0304 C9                  643 	RET
+   0305                     644 GETVALUENUM:
+   0305 4F                  645 	LD	C,A			;
+   0306 3Ar8Bs07            646 	LD	A,(DISPLAYBUF)		;	
+   0309 32r8Cs07            647 	LD	(DISPLAYBUF+1),A	;
+   030C 79                  648 	LD	A,C			;
+   030D 32r8Bs07            649 	LD	(DISPLAYBUF+0),A	;
+   0310 18 C0               650 	JR	GETVALUE1		;
+   0312                     651 GETVALUECLEAR:
+   0312 3E 12               652 	LD	A,#0x12			;
+   0314 32r8Bs07            653 	LD	(DISPLAYBUF),A		;
+   0317 32r8Cs07            654 	LD	(DISPLAYBUF+1),A	;
+   031A C3rD2s02            655 	JP	GETVALUE1		;
+                            656 
+                            657 
+                            658 ;__MONSTARTWARM___________________________________________________________________________________________________________________ 
+                            659 ;
+                            660 ;	SERIAL MONITOR STARTUP
+                            661 ;________________________________________________________________________________________________________________________________
+                            662 ;
+                            663 
+   031D                     664 MONSTARTWARM:				; CALL HERE FOR SERIAL MONITOR WARM START
+   031D 31 FF CF            665 	LD	SP,#STACKSTART		; SET THE STACK POINTER TO STACKSTART
+   0320 CDr32s06            666 	CALL	INITIALIZE		; INITIALIZE SYSTEM
+                            667 
+   0323 AF                  668 	XOR	A			;ZERO OUT ACCUMULATOR (ADDED)
+   0324 E5                  669 	PUSH	HL			;PROTECT HL FROM OVERWRITE     
+   0325 21r9Bs09            670 	LD	HL,#TXT_READY		;POINT AT TEXT
+   0328 CDr8As04            671 	CALL	MSG			;SHOW WE'RE HERE
+   032B E1                  672 	POP	HL			;PROTECT HL FROM OVERWRITE
+                            673 
+                            674 ;
+                            675 ;__SERIAL_MONITOR_COMMANDS_________________________________________________________________________________________________________ 
+                            676 ;
+                            677 ; B XX BOOT CPM FROM DRIVE XX
+                            678 ; D XXXXH YYYYH  DUMP MEMORY FROM XXXX TO YYYY
+                            679 ; F XXXXH YYYYH ZZH FILL MEMORY FROM XXXX TO YYYY WITH ZZ
+                            680 ; H LOAD INTEL HEX FORMAT DATA
+                            681 ; I INPUT FROM PORT AND SHOW HEX DATA
+                            682 ; K ECHO KEYBOARD INPUT
+                            683 ; M XXXXH YYYYH ZZZZH MOVE MEMORY BLOCK XXXX TO YYYY TO ZZZZ
+                            684 ; O OUTPUT TO PORT HEX DATA
+                            685 ; P XXXXH YYH PROGRAM RAM FROM XXXXH WITH VALUE IN YYH, WILL PROMPT FOR NEXT LINES FOLLOWING UNTIL CR
+                            686 ; R RUN A PROGRAM FROM CURRENT LOCATION
+                            687 
+                            688 
+                            689 
+                            690 ;__COMMAND_PARSE_________________________________________________________________________________________________________________ 
+                            691 ;
+                            692 ;	PROMPT USER FOR COMMANDS, THEN PARSE THEM
+                            693 ;________________________________________________________________________________________________________________________________
+                            694 ;
+                            695 
+   032C                     696 SERIALCMDLOOP:
+   032C CDr81s04            697 	CALL	CRLFA			; CR,LF,>
+   032F 21r3Bs07            698 	LD	HL,#KEYBUF		; SET POINTER TO KEYBUF AREA
+   0332 CDr81s03            699 	CALL 	GETLN			; GET A LINE OF INPUT FROM THE USER
+   0335 21r3Bs07            700 	LD	HL,#KEYBUF		; RESET POINTER TO START OF KEYBUF
+   0338 7E                  701         LD      A,(HL)			; LOAD FIRST CHAR INTO A (THIS SHOULD BE THE COMMAND)
+   0339 23                  702 	INC	HL			; INC POINTER
+                            703 
+   033A FE 42               704 	CP	#ASCIIB			; IS IT "B" (Y/N)
+   033C CAr33s00            705 	JP	Z,DOBOOT		; IF YES DO BOOT
+   033F FE 52               706 	CP	#ASCIIR			; IS IT "R" (Y/N)
+   0341 CAr98s04            707 	JP	Z,RUN			; IF YES GO RUN ROUTINE
+   0344 FE 50               708 	CP	#ASCIIP			; IS IT "P" (Y/N)
+   0346 CAr9Ds04            709 	JP	Z,PROGRM		; IF YES GO PROGRAM ROUTINE
+   0349 FE 4F               710 	CP	#ASCIIO			; IS IT AN "O" (Y/N)
+   034B CAr63s04            711 	JP	Z,POUT			; PORT OUTPUT
+   034E FE 48               712 	CP	#ASCIIH			; IS IT A "H" (Y/N)
+   0350 CAr30s05            713 	JP	Z,HXLOAD		; INTEL HEX FORMAT LOAD DATA
+   0353 FE 49               714 	CP	#ASCIII			; IS IT AN "I" (Y/N)
+   0355 CAr71s04            715 	JP	Z,PIN			; PORT INPUT
+   0358 FE 44               716 	CP	#ASCIID			; IS IT A "D" (Y/N)
+   035A CArD4s04            717 	JP	Z,DUMP			; DUMP MEMORY
+   035D FE 4B               718 	CP	#ASCIIK
+   035F CAr74s03            719 	JP	Z,KLOP			; LOOP ON KEYBOARD
+   0362 FE 4D               720 	CP	#ASCIIM			; IS IT A "M" (Y/N)
+   0364 CAr9Cs05            721 	JP	Z,MOVE			; MOVE MEMORY COMMAND
+   0367 FE 46               722 	CP	#ASCIIF			; IS IT A "F" (Y/N)
+   0369 CArDDs05            723 	JP	Z,FILL			; FILL MEMORY COMMAND
+   036C 21rA2s0C            724 	LD	HL,#TXT_COMMAND		; POINT AT ERROR TEXT
+   036F CDr8As04            725 	CALL	MSG			; PRINT COMMAND LABEL
+                            726 
+   0372 18 B8               727 	JR	SERIALCMDLOOP
+                            728 
+                            729 
+                            730 
+                            731 
+                            732 
+                            733 ;__KLOP__________________________________________________________________________________________________________________________ 
+                            734 ;
+                            735 ;	READ FROM THE SERIAL PORT AND ECHO, MONITOR COMMAND "K"
+                            736 ;________________________________________________________________________________________________________________________________
+                            737 ;
+   0374                     738 KLOP:
+   0374 CDrB4s03            739 	CALL	KIN			; GET A KEY
+   0377 CDrC8s03            740 	CALL	COUT			; OUTPUT KEY TO SCREEN
+   037A FE 1B               741 	CP	#ESC			; IS <ESC>?
+   037C 20 F6               742 	JR	NZ,KLOP			; NO, LOOP
+   037E C3r2Cs03            743 	JP	SERIALCMDLOOP		;
+                            744 
+                            745 ;__GETLN_________________________________________________________________________________________________________________________ 
+                            746 ;
+                            747 ;	READ A LINE(80) OF TEXT FROM THE SERIAL PORT, HANDLE <BS>, TERM ON <CR> 
+                            748 ;       EXIT IF TOO MANY CHARS    STORE RESULT IN HL.  CHAR COUNT IN C.
+                            749 ;________________________________________________________________________________________________________________________________
+                            750 ;
+   0381                     751 GETLN:
+   0381 0E 00               752 	LD	C,#0			; ZERO CHAR COUNTER
+   0383 D5                  753 	PUSH	DE			; STORE DE
+   0384                     754 GETLNLOP:
+   0384 CDrB4s03            755 	CALL	KIN			; GET A KEY
+   0387 CDrC8s03            756 	CALL	COUT			; OUTPUT KEY TO SCREEN
+   038A FE 0D               757 	CP	#CR			; IS <CR>?
+   038C 28 22               758 	JR	Z,GETLNDONE		; YES, EXIT 
+   038E FE 08               759 	CP	#BS			; IS <BS>?
+   0390 20 16               760 	JR	NZ,GETLNSTORE		; NO, STORE CHAR
+   0392 79                  761 	LD	A,C			; A=C
+   0393 FE 00               762 	CP	#0			;
+   0395 28 ED               763 	JR	Z,GETLNLOP		; NOTHING TO BACKSPACE, IGNORE & GET NEXT KEY
+   0397 2B                  764 	DEC	HL			; PERFORM BACKSPACE
+   0398 0D                  765 	DEC	C			; LOWER CHAR COUNTER	
+   0399 3E 00               766 	LD	A,#0			;
+   039B 77                  767 	LD	(HL),A			; STORE NULL IN BUFFER
+   039C 3E 20               768 	LD	A,#0x20			; BLANK OUT CHAR ON TERM
+   039E CDrC8s03            769 	CALL	COUT			;
+   03A1 3E 08               770 	LD	A,#BS			;
+   03A3 CDrC8s03            771 	CALL	COUT			;
+   03A6 18 DC               772 	JR	GETLNLOP		; GET NEXT KEY
+   03A8                     773 GETLNSTORE:
+   03A8 77                  774 	LD	(HL),A			; STORE CHAR IN BUFFER
+   03A9 23                  775 	INC	HL			; INC POINTER
+   03AA 0C                  776 	INC	C			; INC CHAR COUNTER	
+   03AB 79                  777 	LD	A,C			; A=C
+   03AC FE 4D               778 	CP	#0x4D			; OUT OF BUFFER SPACE?
+   03AE 20 D4               779 	JR	NZ,GETLNLOP		; NOPE, GET NEXT CHAR
+   03B0                     780 GETLNDONE:
+   03B0 36 00               781 	LD	(HL),#0			; STORE NULL IN BUFFER
+   03B2 D1                  782 	POP	DE			; RESTORE DE
+   03B3 C9                  783 	RET				;
+                            784 
+                            785 
+                            786 ;__KIN___________________________________________________________________________________________________________________________ 
+                            787 ;
+                            788 ;	READ FROM THE SERIAL PORT AND ECHO & CONVERT INPUT TO UCASE
+                            789 ;________________________________________________________________________________________________________________________________
+                            790 ;
+   03B4                     791 KIN:
+   03B4 DB 6D               792 	IN	A,(UART5)		; READ LINE STATUS REGISTER
+   03B6 CB 47               793 	BIT	0,A			; TEST IF DATA IN RECEIVE BUFFER
+   03B8 CArB4s03            794 	JP	Z,KIN			; LOOP UNTIL DATA IS READY
+   03BB DB 68               795 	IN	A,(UART0)		; THEN READ THE CHAR FROM THE UART
+   03BD E6 7F               796 	AND	#0x7F			; STRIP HI BIT
+   03BF FE 41               797 	CP	#ASCIIA			; KEEP NUMBERS, CONTROLS
+   03C1 D8                  798 	RET	C			; AND UPPER CASE
+   03C2 FE 7B               799 	CP	#0x7B			; SEE IF NOT LOWER CASE
+   03C4 D0                  800 	RET	NC			; 
+   03C5 E6 5F               801 	AND	#0x5F			; MAKE UPPER CASE
+   03C7 C9                  802 	RET
+                            803 
+                            804 
+                            805 ;__COUT__________________________________________________________________________________________________________________________ 
+                            806 ;
+                            807 ;	WRITE THE VALUE IN "A" TO THE SERIAL PORT
+                            808 ;________________________________________________________________________________________________________________________________
+                            809 ;
+   03C8                     810 COUT:
+   03C8 F5                  811 	PUSH   AF			; STORE AF
+   03C9                     812 TX_BUSYLP:
+   03C9 DB 6D               813 	IN	A,(UART5)		; READ LINE STATUS REGISTER
+   03CB CB 6F               814 	BIT	5,A			; TEST IF UART IS READY TO SEND
+   03CD CArC9s03            815 	JP	Z,TX_BUSYLP		; IF NOT REPEAT
+   03D0 F1                  816 	POP	AF			; RESTORE AF
+   03D1 D3 68               817 	OUT	(UART0),A		; THEN WRITE THE CHAR TO UART
+   03D3 C9                  818 	RET				; DONE
+                            819 
+                            820 
+                            821 ;__CRLF__________________________________________________________________________________________________________________________ 
+                            822 ;
+                            823 ;	SEND CR & LF TO THE SERIAL PORT
+                            824 ;________________________________________________________________________________________________________________________________
+                            825 ;
+   03D4                     826 CRLF:
+   03D4 E5                  827 	PUSH	HL			; PROTECT HL FROM OVERWRITE
+   03D5 21r94s09            828 	LD	HL,#TCRLF		; LOAD MESSAGE POINTER
+   03D8 CDr8As04            829 	CALL	MSG			; SEBD MESSAGE TO SERIAL PORT
+   03DB E1                  830 	POP	HL			; PROTECT HL FROM OVERWRITE
+   03DC C9                  831 	RET				;
+                            832 
+                            833 
+                            834 ;__LDHL__________________________________________________________________________________________________________________________ 
+                            835 ;
+                            836 ;	GET ONE WORD OF HEX DATA FROM BUFFER POINTED TO BY HL SERIAL PORT, RETURN IN HL
+                            837 ;________________________________________________________________________________________________________________________________
+                            838 ;
+   03DD                     839 LDHL:
+   03DD D5                  840 	PUSH	DE			; STORE DE
+   03DE CDrE9s03            841 	CALL	HEXIN			; GET K B. AND MAKE HEX
+   03E1 57                  842 	LD	D,A			; THATS THE HI BYTE
+   03E2 CDrE9s03            843 	CALL	HEXIN			; DO HEX AGAIN
+   03E5 6F                  844 	LD	L,A			; THATS THE LOW BYTE
+   03E6 62                  845 	LD	H,D			; MOVE TO HL
+   03E7 D1                  846 	POP	DE			; RESTORE BC
+   03E8 C9                  847 	RET				; GO BACK WITH ADDRESS  
+                            848 
+                            849 
+                            850 ;__HEXIN__________________________________________________________________________________________________________________________ 
+                            851 ;
+                            852 ;	GET ONE BYTE OF HEX DATA FROM BUFFER IN HL, RETURN IN A
+                            853 ;________________________________________________________________________________________________________________________________
+                            854 ;
+   03E9                     855 HEXIN:
+   03E9 C5                  856 	PUSH	BC			;SAVE BC REGS 
+   03EA CDrFCs03            857 	CALL	NIBL			;DO A NIBBLE
+   03ED CB 07               858 	RLC	A			;MOVE FIRST BYTE UPPER NIBBLE  
+   03EF CB 07               859 	RLC	A			; 
+   03F1 CB 07               860 	RLC	A			; 
+   03F3 CB 07               861 	RLC	A			; 
+   03F5 47                  862 	LD	B,A			; SAVE ROTATED BYTE
+   03F6 CDrFCs03            863 	CALL	NIBL			; DO NEXT NIBBLE
+   03F9 80                  864 	ADD	A,B			; COMBINE NIBBLES IN ACC 
+   03FA C1                  865 	POP	BC			; RESTORE BC
+   03FB C9                  866 	RET				; DONE  
+   03FC                     867 NIBL:
+   03FC 7E                  868 	LD	A,(HL)			; GET K B. DATA
+   03FD 23                  869 	INC	HL			; INC KB POINTER
+   03FE FE 40               870 	CP	#0x40			; TEST FOR ALPHA
+   0400 30 03               871 	JR	NC,ALPH			;
+   0402 E6 0F               872 	AND	#0x0F			; GET THE BITS
+   0404 C9                  873 	RET				;
+   0405                     874 ALPH:
+   0405 E6 0F               875 	AND	#0x0F			; GET THE BITS
+   0407 C6 09               876 	ADD	A,#9			; MAKE IT HEX A-F
+   0409 C9                  877 	RET				;
+                            878 
+                            879 
+                            880 ;__HEXINS_________________________________________________________________________________________________________________________ 
+                            881 ;
+                            882 ;	GET ONE BYTE OF HEX DATA FROM SERIAL PORT, RETURN IN A
+                            883 ;________________________________________________________________________________________________________________________________
+                            884 ;
+   040A                     885 HEXINS:
+   040A C5                  886 	PUSH	BC			;SAVE BC REGS 
+   040B CDr1Ds04            887 	CALL	NIBLS			;DO A NIBBLE
+   040E CB 07               888 	RLC	A			;MOVE FIRST BYTE UPPER NIBBLE  
+   0410 CB 07               889 	RLC	A			; 
+   0412 CB 07               890 	RLC	A			; 
+   0414 CB 07               891 	RLC	A			; 
+   0416 47                  892 	LD	B,A			; SAVE ROTATED BYTE
+   0417 CDr1Ds04            893 	CALL	NIBLS			; DO NEXT NIBBLE
+   041A 80                  894 	ADD	A,B			; COMBINE NIBBLES IN ACC 
+   041B C1                  895 	POP	BC			; RESTORE BC
+   041C C9                  896 	RET				; DONE  
+   041D                     897 NIBLS:
+   041D CDrB4s03            898 	CALL	KIN			; GET K B. DATA
+   0420 23                  899 	INC	HL			; INC KB POINTER
+   0421 FE 40               900 	CP	#0x40			; TEST FOR ALPHA
+   0423 30 E0               901 	JR	NC,ALPH			;
+   0425 E6 0F               902 	AND	#0x0F			; GET THE BITS
+   0427 C9                  903 	RET				;
+                            904 
+                            905 
+                            906 ;__HXOUT_________________________________________________________________________________________________________________________ 
+                            907 ;
+                            908 ;	PRINT THE ACCUMULATOR CONTENTS AS HEX DATA ON THE SERIAL PORT
+                            909 ;________________________________________________________________________________________________________________________________
+                            910 ;
+   0428                     911 HXOUT:
+   0428 C5                  912 	PUSH	BC			; SAVE BC
+   0429 47                  913 	LD	B,A			;
+   042A CB 07               914 	RLC	A			; DO HIGH NIBBLE FIRST  
+   042C CB 07               915 	RLC	A			;
+   042E CB 07               916 	RLC	A			;
+   0430 CB 07               917 	RLC	A			;
+   0432 E6 0F               918 	AND	#0x0F			; ONLY THIS NOW
+   0434 C6 30               919 	ADD	A,#0x30			; TRY A NUMBER
+   0436 FE 3A               920 	CP	#0x3A			; TEST IT
+   0438 38 02               921 	JR	C,OUT1			; IF CY SET PRINT 'NUMBER'
+   043A C6 07               922 	ADD	A,#0x07			; MAKE IT AN ALPHA
+   043C                     923 OUT1:
+   043C CDrC8s03            924 	CALL	COUT			; SCREEN IT
+   043F 78                  925 	LD	A,B			; NEXT NIBBLE
+   0440 E6 0F               926 	AND	#0x0F			; JUST THIS
+   0442 C6 30               927 	ADD	A,#0x30			; TRY A NUMBER
+   0444 FE 3A               928 	CP	#0x3A			; TEST IT
+   0446 38 02               929 	JR	C,OUT2			; PRINT 'NUMBER'
+   0448 C6 07               930 	ADD	A,#7			; MAKE IT ALPHA
+   044A                     931 OUT2:
+   044A CDrC8s03            932 	CALL	COUT			; SCREEN IT
+   044D C1                  933 	POP	BC			; RESTORE BC
+   044E C9                  934 	RET				;
+                            935 
+                            936 
+                            937 ;__SPACE_________________________________________________________________________________________________________________________ 
+                            938 ;
+                            939 ;	PRINT A SPACE CHARACTER ON THE SERIAL PORT
+                            940 ;________________________________________________________________________________________________________________________________
+                            941 ;
+   044F                     942 SPACE:
+   044F F5                  943 	PUSH	AF			; STORE AF
+   0450 3E 20               944 	LD	A,#0x20			; LOAD A "SPACE"
+   0452 CDrC8s03            945 	CALL	COUT			; SCREEN IT
+   0455 F1                  946 	POP	AF			; RESTORE AF
+   0456 C9                  947 	RET				; DONE
+                            948 
+                            949 ;__PHL_________________________________________________________________________________________________________________________ 
+                            950 ;
+                            951 ;	PRINT THE HL REG ON THE SERIAL PORT
+                            952 ;________________________________________________________________________________________________________________________________
+                            953 ;
+   0457                     954 PHL:
+   0457 7C                  955 	LD	A,H			; GET HI BYTE
+   0458 CDr28s04            956 	CALL	HXOUT			; DO HEX OUT ROUTINE
+   045B 7D                  957 	LD	A,L			; GET LOW BYTE
+   045C CDr28s04            958 	CALL	HXOUT			; HEX IT
+   045F CDr4Fs04            959 	CALL	SPACE			; 
+   0462 C9                  960 	RET				; DONE  
+                            961 
+                            962 ;__POUT__________________________________________________________________________________________________________________________ 
+                            963 ;
+                            964 ;	OUTPUT TO AN I/O PORT, MONITOR COMMAND "O"
+                            965 ;________________________________________________________________________________________________________________________________
+                            966 ;
+   0463                     967 POUT:
+   0463                     968 POUT1:
+   0463 23                  969 	INC	HL			;
+   0464 CDrE9s03            970 	CALL	HEXIN			; GET PORT
+   0467 4F                  971 	LD	C,A			; SAVE PORT POINTER
+   0468 23                  972 	INC	HL			;
+   0469 CDrE9s03            973 	CALL	HEXIN			; GET DATA
+   046C                     974 OUTIT:
+   046C ED 79               975 	OUT	(C),A			;
+   046E C3r2Cs03            976 	JP	SERIALCMDLOOP		;
+                            977 
+                            978 
+                            979 ;__PIN___________________________________________________________________________________________________________________________ 
+                            980 ;
+                            981 ;	INPUT FROM AN I/O PORT, MONITOR COMMAND "I"
+                            982 ;________________________________________________________________________________________________________________________________
+                            983 ;
+   0471                     984 PIN:
+   0471 23                  985 	INC 	HL			;
+   0472 CDrE9s03            986 	CALL	HEXIN			; GET PORT
+   0475 4F                  987 	LD	C,A			; SAVE PORT POINTER
+   0476 CDrD4s03            988 	CALL	CRLF			;
+   0479 ED 78               989 	IN	A,(C)			; GET DATA
+   047B CDr28s04            990 	CALL	HXOUT			; SHOW IT
+   047E C3r2Cs03            991 	JP	SERIALCMDLOOP	        ;
+                            992 
+                            993 
+                            994 
+                            995 
+                            996 
+                            997 ;__CRLFA_________________________________________________________________________________________________________________________ 
+                            998 ;
+                            999 ;	PRINT COMMAND PROMPT TO THE SERIAL PORT
+                           1000 ;________________________________________________________________________________________________________________________________
+                           1001 ;
+   0481                    1002 CRLFA:
+   0481 E5                 1003 	PUSH	HL			; PROTECT HL FROM OVERWRITE
+   0482 21r97s09           1004 	LD	HL,#PROMPT		;
+   0485 CDr8As04           1005 	CALL	MSG			;
+   0488 E1                 1006 	POP	HL			; PROTECT HL FROM OVERWRITE
+   0489 C9                 1007 	RET				; DONE
+                           1008 
+                           1009 
+                           1010 ;__MSG___________________________________________________________________________________________________________________________ 
+                           1011 ;
+                           1012 ;	PRINT A STRING  TO THE SERIAL PORT
+                           1013 ;________________________________________________________________________________________________________________________________
+                           1014 ;
+   048A                    1015 MSG:
+                           1016 
+   048A                    1017 TX_SERLP:
+   048A 7E                 1018 	LD	A,(HL)			; GET CHARACTER TO A
+   048B FE FF              1019 	CP	#ENDT			; TEST FOR END BYTE
+   048D CAr97s04           1020 	JP	Z,TX_END		; JUMP IF END BYTE IS FOUND
+   0490 CDrC8s03           1021 	CALL	COUT			;
+   0493 23                 1022 	INC	HL			; INC POINTER, TO NEXT CHAR
+   0494 C3r8As04           1023 	JP	TX_SERLP		; TRANSMIT LOOP
+   0497                    1024 TX_END:
+   0497 C9                 1025 	RET				;ELSE DONE
+                           1026 
+                           1027 ;__RUN___________________________________________________________________________________________________________________________ 
+                           1028 ;
+                           1029 ;	TRANSFER OUT OF MONITOR, USER OPTION "R"
+                           1030 ;________________________________________________________________________________________________________________________________
+                           1031 ;
+   0498                    1032 RUN:
+   0498 23                 1033 	INC	HL			; SHOW READY
+   0499 CDrDDs03           1034 	CALL	LDHL			; GET START ADDRESS
+   049C E9                 1035 	JP	(HL)			;	
+                           1036 
+                           1037 
+                           1038 ;__PROGRM________________________________________________________________________________________________________________________ 
+                           1039 ;
+                           1040 ;	PROGRAM RAM LOCATIONS, USER OPTION "P"
+                           1041 ;________________________________________________________________________________________________________________________________
+                           1042 ;
+   049D                    1043 PROGRM:
+   049D 23                 1044 	INC	HL			; SHOW READY
+   049E E5                 1045 	PUSH	HL			; STORE HL
+   049F CDrDDs03           1046 	CALL	LDHL			; GET START ADDRESS
+   04A2 54                 1047 	LD	D,H			;
+   04A3 5D                 1048 	LD	E,L			; DE POINTS TO ADDRESS TO PROGRAM
+   04A4 E1                 1049 	POP	HL			;
+   04A5 23                 1050 	INC	HL			;
+   04A6 23                 1051 	INC	HL			;
+   04A7 23                 1052 	INC	HL			;
+   04A8 23                 1053 	INC	HL			;
+   04A9 23                 1054 	INC	HL			;
+   04AA                    1055 PROGRMLP:
+   04AA CDrE9s03           1056 	CALL	HEXIN			; GET NEXT HEX NUMBER
+   04AD 12                 1057 	LD	(DE),A			; STORE IT
+   04AE 13                 1058 	INC	DE			; NEXT ADDRESS;
+   04AF CDr81s04           1059 	CALL	CRLFA			; CR,LF,>
+   04B2 3E 50              1060 	LD      A,#ASCIIP			;
+   04B4 CDrC8s03           1061 	CALL	COUT			;
+   04B7 CDr4Fs04           1062 	CALL  	SPACE			;
+   04BA 62                 1063 	LD	H,D			;
+   04BB 6B                 1064 	LD	L,E			;
+   04BC CDr57s04           1065 	CALL	PHL			;
+   04BF 21r3Bs07           1066 	LD	HL,#KEYBUF		; SET POINTER TO KEYBUF AREA
+   04C2 CDr81s03           1067 	CALL 	GETLN			; GET A LINE OF INPUT FROM THE USER
+   04C5 21r3Bs07           1068 	LD	HL,#KEYBUF		; RESET POINTER TO START OF KEYBUF
+   04C8 7E                 1069         LD      A,(HL)			; LOAD FIRST CHAR INTO A 
+   04C9 FE 00              1070 	CP	#0			; END OF LINE?
+   04CB CArD1s04           1071 	JP	Z,PROGRMEXIT		; YES, EXIT
+   04CE C3rAAs04           1072 	JP	PROGRMLP		; NO, LOOP
+   04D1                    1073 PROGRMEXIT:
+   04D1 C3r2Cs03           1074 	JP	SERIALCMDLOOP	
+                           1075 
+                           1076 
+                           1077 
+                           1078 
+                           1079 
+                           1080 
+                           1081 
+                           1082 ;__DUMP__________________________________________________________________________________________________________________________ 
+                           1083 ;
+                           1084 ;	PRINT A MEMORY DUMP, USER OPTION "D"
+                           1085 ;________________________________________________________________________________________________________________________________
+                           1086 ;
+   04D4                    1087 DUMP:
+   04D4 23                 1088 	INC	HL			; SHOW READY
+   04D5 E5                 1089 	PUSH	HL			; STORE HL
+   04D6 CDrDDs03           1090 	CALL	LDHL			; GET START ADDRESS
+   04D9 54                 1091 	LD	D,H			;
+   04DA 5D                 1092 	LD	E,L			;
+   04DB E1                 1093 	POP	HL			;
+   04DC D5                 1094 	PUSH	DE			; SAVE START
+   04DD 23                 1095 	INC	HL			;
+   04DE 23                 1096 	INC	HL			;
+   04DF 23                 1097 	INC	HL			;
+   04E0 23                 1098 	INC	HL			;
+   04E1 23                 1099 	INC	HL			;
+   04E2 CDrDDs03           1100 	CALL	LDHL			; GET END ADDRESS
+   04E5 23                 1101 	INC	HL			; ADD ONE MORE FOR LATER COMPARE
+   04E6 EB                 1102 	EX	DE,HL			; PUT END ADDRESS IN DE
+   04E7 E1                 1103 	POP	HL			; GET BACK START
+   04E8                    1104 GDATA:	
+   04E8 CDrD4s03           1105 	CALL	CRLF			;	
+   04EB                    1106 BLKRD:
+   04EB CDr57s04           1107 	CALL	PHL			; PRINT START LOCATION
+   04EE 0E 10              1108 	LD	C,#16			; SET FOR 16 LOCS
+   04F0 E5                 1109 	PUSH	HL			; SAVE STARTING HL
+   04F1                    1110 NXTONE:
+   04F1 D9                 1111 	EXX				;
+   04F2 4B                 1112 	LD	C,E			;
+   04F3 ED 78              1113 	IN	A,(C)			;
+   04F5 D9                 1114 	EXX				;
+   04F6 E6 7F              1115 	AND	#0x7F			;
+   04F8 FE 1B              1116 	CP	#ESC			;
+   04FA CAr2Cs03           1117 	JP	Z,SERIALCMDLOOP		;
+   04FD FE 13              1118 	CP	#19			;
+   04FF 28 F0              1119 	JR	Z,NXTONE		;
+   0501 7E                 1120 	LD 	A,(HL)			; GET BYTE
+   0502 CDr28s04           1121 	CALL	HXOUT			; PRINT IT
+   0505 CDr4Fs04           1122 	CALL	SPACE			;
+   0508                    1123 UPDH:	
+   0508 23                 1124 	INC	HL			; POINT NEXT
+   0509 0D                 1125 	DEC	C			; DEC  LOC COUNT
+   050A 20 E5              1126 	JR	NZ,NXTONE		; IF LINE NOT DONE
+                           1127 					; NOW PRINT 'DECODED' DATA TO RIGHT OF DUMP
+   050C                    1128 PCRLF:
+   050C CDr4Fs04           1129 	CALL	SPACE			; SPACE IT
+   050F 0E 10              1130 	LD	C,#16			; SET FOR 16 CHARS
+   0511 E1                 1131 	POP	HL			; GET BACK START
+   0512                    1132 PCRLF0:
+   0512 7E                 1133 	LD	A,(HL)			; GET BYTE
+   0513 E6 60              1134 	AND	#0x060			; SEE IF A 'DOT'
+   0515 7E                 1135 	LD	A,(HL)			; O K. TO GET
+   0516 20 02              1136 	JR	NZ,PDOT			;
+   0518                    1137 DOT:
+   0518 3E 2E              1138 	LD	A,#0x2E			; LOAD A DOT	
+   051A                    1139 PDOT:
+   051A CDrC8s03           1140 	CALL	COUT			; PRINT IT
+   051D 23                 1141 	INC	HL			; 
+   051E 7A                 1142 	LD	A,D			;
+   051F BC                 1143 	CP	H			;
+   0520 20 05              1144 	JR	NZ,UPDH1		;
+   0522 7B                 1145 	LD	A,E			;
+   0523 BD                 1146 	CP	L			;
+   0524 CAr2Cs03           1147 	JP	Z,SERIALCMDLOOP		;
+                           1148 ;
+                           1149 ;IF BLOCK NOT DUMPED, DO NEXT CHARACTER OR LINE
+   0527                    1150 UPDH1:
+   0527 0D                 1151 	DEC	C			; DEC  CHAR COUNT
+   0528 20 E8              1152 	JR	NZ,PCRLF0		; DO NEXT
+   052A                    1153 CONTD:
+   052A CDrD4s03           1154 	CALL	CRLF			;
+   052D C3rEBs04           1155 	JP	BLKRD			;
+                           1156 
+                           1157 
+                           1158 ;__HXLOAD__________________________________________________________________________________________________________________________ 
+                           1159 ;
+                           1160 ;	LOAD INTEL HEX FORMAT FILE FROM THE SERIAL PORT, USER OPTION "H"
+                           1161 ;
+                           1162 ;	 [INTEL HEX FORMAT IS:
+                           1163 ;	 1) COLON (FRAME 0)
+                           1164 ;	 2) RECORD LENGTH FIELD (FRAMES 1 AND 2)
+                           1165 ;	 3) LOAD ADDRESS FIELD (FRAMES 3,4,5,6)
+                           1166 ;	 4) RECORD TYPE FIELD (FRAMES 7 AND 8)
+                           1167 ;	 5) DATA FIELD (FRAMES 9 TO 9+2*(RECORD LENGTH)-1
+                           1168 ;	 6) CHECKSUM FIELD - SUM OF ALL BYTE VALUES FROM RECORD LENGTH TO AND 
+                           1169 ;	   INCLUDING CHECKSUM FIELD = 0 ]
+                           1170 ;
+                           1171 ; EXAMPLE OF INTEL HEX FORMAT FILE
+                           1172 ; EACH LINE CONTAINS A CARRIAGE RETURN AS THE LAST CHARACTER
+                           1173 ; :18F900002048454C4C4F20574F524C4420FF0D0AFF0D0A3EFF0D0A54BF
+                           1174 ; :18F918006573742050726F746F7479706520524F4D204D6F6E69746FF1
+                           1175 ; :18F9300072205265616479200D0AFF0D0A434F4D4D414E4420524543F2
+                           1176 ; :18F948004549564544203AFF0D0A434845434B53554D204552524F52CD
+                           1177 ; :16F96000FF0A0D20202D454E442D4F462D46494C452D20200A0DA4
+                           1178 ; :00000001FF
+                           1179 ;________________________________________________________________________________________________________________________________
+   0530                    1180 HXLOAD:
+   0530 CDrD4s03           1181 	CALL	CRLF			; SHOW READY
+   0533                    1182 HXLOAD0:
+   0533 CDrB4s03           1183 	CALL	KIN			; GET THE FIRST CHARACTER, EXPECTING A ':'
+   0536                    1184 HXLOAD1:
+   0536 FE 3A              1185 	CP	#0x3A			; IS IT COLON ':'? START OF LINE OF INTEL HEX FILE
+   0538 20 47              1186 	JR	NZ,HXLOADERR		; IF NOT, MUST BE ERROR, ABORT ROUTINE
+   053A 1E 00              1187 	LD	E,#0			; FIRST TWO CHARACTERS IS THE RECORD LENGTH FIELD
+   053C CDr0As04           1188 	CALL	HEXINS			; GET US TWO CHARACTERS INTO BC, CONVERT IT TO A BYTE <A>
+   053F CDr8As05           1189 	CALL	HXCHKSUM		; UPDATE HEX CHECK SUM
+   0542 57                 1190 	LD	D,A			; LOAD RECORD LENGTH COUNT INTO D
+   0543 CDr0As04           1191 	CALL	HEXINS			; GET NEXT TWO CHARACTERS, MEMORY LOAD ADDRESS <H>
+   0546 CDr8As05           1192 	CALL	HXCHKSUM		; UPDATE HEX CHECK SUM
+   0549 67                 1193 	LD	H,A			; PUT VALUE IN H REGISTER 
+   054A CDr0As04           1194 	CALL	HEXINS			; GET NEXT TWO CHARACTERS, MEMORY LOAD ADDRESS <L>
+   054D CDr8As05           1195 	CALL	HXCHKSUM		; UPDATE HEX CHECK SUM
+   0550 6F                 1196 	LD	L,A			; PUT VALUE IN L REGISTER 
+   0551 CDr0As04           1197 	CALL	HEXINS			; GET NEXT TWO CHARACTERS, RECORD FIELD TYPE
+   0554 CDr8As05           1198 	CALL	HXCHKSUM		; UPDATE HEX CHECK SUM
+   0557 FE 01              1199 	CP	#1			; RECORD FIELD TYPE 00 IS DATA, 01 IS END OF FILE
+   0559 20 0D              1200 	JR	NZ,HXLOAD2		; MUST BE THE END OF THAT FILE
+   055B CDr0As04           1201 	CALL	HEXINS			; GET NEXT TWO CHARACTERS, ASSEMBLE INTO BYTE
+   055E CDr8As05           1202 	CALL	HXCHKSUM		; UPDATE HEX CHECK SUM
+   0561 7B                 1203 	LD	A,E			; RECALL THE CHECKSUM BYTE
+   0562 A7                 1204 	AND	A			; IS IT ZERO?
+   0563 CAr96s05           1205         JP      Z,HXLOADEXIT		; MUST BE O K., GO BACK FOR SOME MORE, ELSE
+   0566 18 19              1206 	JR	HXLOADERR		; CHECKSUMS DON'T ADD UP, ERROR OUT	
+   0568                    1207 HXLOAD2:
+   0568 7A                 1208 	LD	A,D			; RETRIEVE LINE CHARACTER COUNTER	
+   0569 A7                 1209 	AND	A			; ARE WE DONE WITH THIS LINE?
+   056A 28 0B              1210 	JR	Z,HXLOAD3		; GET TWO MORE ASCII CHARACTERS, BUILD A BYTE AND CHECKSUM
+   056C CDr0As04           1211 	CALL	HEXINS			; GET NEXT TWO CHARS, CONVERT TO BYTE IN A, CHECKSUM IT
+   056F CDr8As05           1212 	CALL	HXCHKSUM		; UPDATE HEX CHECK SUM
+   0572 77                 1213 	LD	(HL),A			; CHECKSUM OK, MOVE CONVERTED BYTE IN A TO MEMORY LOCATION
+   0573 23                 1214 	INC	HL			; INCREMENT POINTER TO NEXT MEMORY LOCATION	
+   0574 15                 1215 	DEC	D			; DECREMENT LINE CHARACTER COUNTER
+   0575 18 F1              1216 	JR	HXLOAD2			; AND KEEP LOADING INTO MEMORY UNTIL LINE IS COMPLETE		
+   0577                    1217 HXLOAD3:
+   0577 CDr0As04           1218 	CALL	HEXINS			; GET TWO CHARS, BUILD BYTE AND CHECKSUM
+   057A CDr8As05           1219 	CALL	HXCHKSUM		; UPDATE HEX CHECK SUM
+   057D 7B                 1220 	LD	A,E			; CHECK THE CHECKSUM VALUE
+   057E A7                 1221 	AND	A			; IS IT ZERO?
+   057F 28 0F              1222 	JR	Z,HXLOADAGAIN		; IF THE CHECKSUM IS STILL OK, CONTINUE ON, ELSE
+   0581                    1223 HXLOADERR:
+   0581 21rB5s0C           1224 	LD	HL,#TXT_CKSUMERR		; GET "CHECKSUM ERROR" MESSAGE
+   0584 CDr8As04           1225 	CALL	MSG			; PRINT MESSAGE FROM (HL) AND TERMINATE THE LOAD
+   0587 C3r96s05           1226 	JP	HXLOADEXIT		; RETURN TO PROMPT
+   058A                    1227 HXCHKSUM:
+   058A 4F                 1228 	LD	C,A			; BUILD THE CHECKSUM
+   058B 7B                 1229 	LD	A,E			;
+   058C 91                 1230 	SUB	C			; THE CHECKSUM SHOULD ALWAYS .EQUAL ZERO WHEN CHECKED
+   058D 5F                 1231 	LD	E,A			; SAVE THE CHECKSUM BACK WHERE IT CAME FROM
+   058E 79                 1232 	LD	A,C			; RETRIEVE THE BYTE AND GO BACK
+   058F C9                 1233 	RET				; BACK TO CALLER
+   0590                    1234 HXLOADAGAIN:
+   0590 CDrB4s03           1235 	CALL	KIN			; CATCH THE TRAILING CARRIAGE RETURN
+   0593 C3r33s05           1236 	JP	HXLOAD0			; LOAD ANOTHER LINE OF DATA
+   0596                    1237 HXLOADEXIT:
+   0596 CDrB4s03           1238 	CALL	KIN			; CATCH ANY STRAY TRAILING CHARACTERS
+   0599 C3r2Cs03           1239 	JP	SERIALCMDLOOP		; RETURN TO PROMPT
+                           1240 
+                           1241 
+                           1242 ;__MOVE__________________________________________________________________________________________________________________________ 
+                           1243 ;
+                           1244 ;	MOVE MEMORY, USER OPTION "M"
+                           1245 ;________________________________________________________________________________________________________________________________
+                           1246 ;
+   059C                    1247 MOVE:
+   059C 0E 03              1248 	LD	C,#3
+                           1249 					; START GETNM REPLACEMENT
+                           1250 					; GET SOURCE STARTING MEMORY LOCATION
+   059E 23                 1251 	INC	HL			; SHOW EXAMINE READY
+   059F E5                 1252 	PUSH	HL			;
+   05A0 CDrDDs03           1253 	CALL	LDHL			; LOAD IN HL REGS 
+   05A3 54                 1254 	LD	D,H			;
+   05A4 5D                 1255 	LD	E,L			;
+   05A5 E1                 1256 	POP	HL			;
+   05A6 D5                 1257 	PUSH	DE			; PUSH MEMORY ADDRESS ON STACK
+   05A7 23                 1258 	INC	HL			;
+   05A8 23                 1259 	INC	HL			;
+   05A9 23                 1260 	INC	HL			;
+   05AA 23                 1261 	INC	HL			;
+   05AB 23                 1262 	INC 	HL			; PRINT SPACE SEPARATOR
+   05AC E5                 1263 	PUSH	HL			;
+   05AD CDrDDs03           1264 	CALL	LDHL			; LOAD IN HL REGS 
+   05B0 54                 1265 	LD	D,H			;
+   05B1 5D                 1266 	LD	E,L			;
+   05B2 E1                 1267 	POP	HL			;
+   05B3 D5                 1268 	PUSH	DE			; PUSH MEMORY ADDRESS ON STACK
+   05B4 23                 1269 	INC	HL			;
+   05B5 23                 1270 	INC	HL			;
+   05B6 23                 1271 	INC	HL			;
+   05B7 23                 1272 	INC	HL			;
+   05B8 23                 1273 	INC	HL			; PRINT SPACE SEPARATOR
+   05B9 CDrDDs03           1274 	CALL	LDHL			; LOAD IN HL REGS 
+   05BC E5                 1275 	PUSH	HL			; PUSH MEMORY ADDRESS ON STACK
+                           1276 					; END GETNM REPLACEMENT
+   05BD D1                 1277 	POP	DE			; DEST
+   05BE C1                 1278 	POP	BC			; SOURCE END
+   05BF E1                 1279 	POP	HL			; SOURCE
+   05C0 E5                 1280 	PUSH    HL			;
+   05C1 7D                 1281 	LD	A,L			;
+   05C2 2F                 1282 	CPL				;
+   05C3 6F                 1283 	LD	L,A			;
+   05C4 7C                 1284 	LD	A,H			;
+   05C5 2F                 1285 	CPL				;
+   05C6 67                 1286 	LD	H,A			;
+   05C7 23                 1287 	INC	HL			;
+   05C8 09                 1288 	ADD	HL,BC			;
+   05C9 4D                 1289 	LD	C,L			;
+   05CA 44                 1290 	LD	B,H			;
+   05CB E1                 1291 	POP     HL        		;
+   05CC CDrD2s05           1292 	CALL    MOVE_LOOP		;
+   05CF C3r2Cs03           1293 	JP	SERIALCMDLOOP			; EXIT MOVE COMMAND ROUTINE
+   05D2                    1294 MOVE_LOOP:
+   05D2 7E                 1295 	LD	A,(HL)			; FETCH
+   05D3 12                 1296 	LD	(DE),A			; DEPOSIT
+   05D4 23                 1297 	INC     HL			; BUMP  SOURCE
+   05D5 13                 1298 	INC     DE			; BUMP DEST
+   05D6 0B                 1299 	DEC     BC			; DEC COUNT
+   05D7 79                 1300 	LD	A,C			;
+   05D8 B0                 1301 	OR	B       		;
+   05D9 C2rD2s05           1302 	JP	NZ,MOVE_LOOP		; TIL COUNT=0
+   05DC C9                 1303 	RET				;
+                           1304                
+                           1305 ;__FILL__________________________________________________________________________________________________________________________ 
+                           1306 ;
+                           1307 ;	FILL MEMORY, USER OPTION "M"
+                           1308 ;________________________________________________________________________________________________________________________________
+                           1309 ;
+   05DD                    1310 FILL:
+   05DD 0E 03              1311 	LD	C,#3			;
+                           1312 					; START GETNM REPLACEMENT
+                           1313 					; GET FILL STARTING MEMORY LOCATION
+   05DF 23                 1314 	INC	HL			; SHOW EXAMINE READY
+   05E0 E5                 1315 	PUSH	HL			;
+   05E1 CDrDDs03           1316 	CALL	LDHL			; LOAD IN HL REGS 
+   05E4 54                 1317 	LD	D,H			;
+   05E5 5D                 1318 	LD	E,L			;
+   05E6 E1                 1319 	POP	HL			;
+   05E7 D5                 1320 	PUSH	DE			; PUSH MEMORY ADDRESS ON STACK
+   05E8 23                 1321 	INC	HL			;
+   05E9 23                 1322 	INC	HL			;
+   05EA 23                 1323 	INC	HL			;
+   05EB 23                 1324 	INC	HL			;
+   05EC 23                 1325 	INC	HL			; PRINT SPACE SEPARATOR
+                           1326 					; GET FILL ENDING MEMORY LOCATION
+   05ED E5                 1327 	PUSH	HL			;
+   05EE CDrDDs03           1328 	CALL	LDHL			; LOAD IN HL REGS 
+   05F1 54                 1329 	LD	D,H			;
+   05F2 5D                 1330 	LD	E,L			;
+   05F3 E1                 1331 	POP	HL			;
+   05F4 D5                 1332 	PUSH	DE			; PUSH MEMORY ADDRESS ON STACK
+   05F5 23                 1333 	INC	HL			;
+   05F6 23                 1334 	INC	HL			;
+   05F7 23                 1335 	INC	HL			;
+   05F8 23                 1336 	INC	HL			;
+   05F9 23                 1337 	INC	HL			; PRINT SPACE SEPARATOR
+                           1338 					; GET TARGET STARTING MEMORY LOCATION
+   05FA CDrE9s03           1339 	CALL	HEXIN			; GET K B. AND MAKE HEX
+   05FD 4F                 1340 	LD	C,A			; PUT FILL VALUE IN F SO IT IS SAVED FOR LATER
+   05FE C5                 1341 	PUSH	BC			; PUSH FILL VALUE BYTE ON STACK
+                           1342 					; END GETNM REPLACEMENT
+   05FF C1                 1343 	POP	BC			; BYTE
+   0600 D1                 1344 	POP	DE			; END
+   0601 E1                 1345 	POP	HL			; START
+   0602 71                 1346 	LD	(HL),C			;
+   0603                    1347 FILL_LOOP:
+   0603 71                 1348 	LD	(HL),C			;
+   0604 23                 1349 	INC     HL			;
+   0605 7B                 1350 	LD	A,E			;
+   0606 95                 1351 	SUB     L			;
+   0607 47                 1352 	LD	B,A			;
+   0608 7A                 1353 	LD	A,D			;
+   0609 94                 1354 	SUB     H			;
+   060A B0                 1355 	OR	B			;
+   060B C2r03s06           1356 	JP	NZ,FILL_LOOP		;
+   060E C3r2Cs03           1357 	JP	SERIALCMDLOOP		;
+                           1358 
+                           1359 ;__GOCPM_________________________________________________________________________________________________________________________ 
+                           1360 ;
+                           1361 ;	BOOT CP/M FROM ROM DRIVE, USER OPTION "C"
+                           1362 ;________________________________________________________________________________________________________________________________
+                           1363 ;
+   0611                    1364 GOCPM:
+                           1365 ;___________________________
+                           1366 ; REMOVE COMMENTS WHEN BURNED IN ROM
+                           1367 ;___________________________
+                           1368 
+                           1369 ;	LD	A,000000000b		; RESET MPCL LATCH TO DEFAULT ROM
+                           1370 ;	OUT	(MPCL),A		;
+                           1371 ;	LD	HL,ROMSTART_CPM		; WHERE IN ROM CP/M IS STORED (FIRST BYTE)
+                           1372 ;        LD	DE,RAMTARG_CPM		; WHERE IN RAM TO MOVE MONITOR TO (FIRST BYTE)
+                           1373 ;	LD	BC,MOVSIZ_CPM		; NUMBER OF BYTES TO MOVE FROM ROM TO RAM
+                           1374 ;	LDIR				; PERFORM BLOCK COPY OF CP/M TO UPPER RAM PAGE
+                           1375 ;	LD	A,010000000b		; RESET MPCL LATCH TO DEFAULT CP/M WITH 64K SETTING
+                           1376 ;	OUT	(MPCL),A		;
+                           1377 
+   0611 C3 00 EA           1378 	JP	0x0EA00			; CP/M COLD BOOT ENTRY POINT
+                           1379 
+                           1380 ;
+                           1381 ;__INIT_UART_____________________________________________________________________________________________________________________ 
+                           1382 ;
+                           1383 ;	INITIALIZE UART
+                           1384 ;	PARAMS:	SER_BAUD NEEDS TO BE SET TO BAUD RATE
+                           1385 ;	1200:	96	 = 1,843,200 / ( 16 X 1200 )
+                           1386 ;	2400:	48	 = 1,843,200 / ( 16 X 2400 )
+                           1387 ;	4800:	24	 = 1,843,200 / ( 16 X 4800 )
+                           1388 ;	9600:	12	 = 1,843,200 / ( 16 X 9600 )
+                           1389 ;	19K2:	06	 = 1,843,200 / ( 16 X 19,200 )
+                           1390 ;	38K4:	03	
+                           1391 ;	57K6:	02
+                           1392 ;	115K2:	01	
+                           1393 ;
+                           1394 ;_________________________________________________________________________________________________________________________________
+                           1395 ;
+   0614                    1396 INIT_UART:
+   0614 3E 80              1397 	LD	A,#0x80			;
+   0616 D3 6B              1398 	OUT	(UART3),A		; SET DLAB FLAG
+   0618 3Ar3As07           1399 	LD	A,(SER_BAUD)		;
+   061B D3 68              1400 	OUT	(UART0),A		;
+   061D 3E 00              1401 	LD	A,#0			;
+   061F D3 69              1402 	OUT	(UART1),A		;
+   0621 3E 03              1403 	LD	A,#3			;
+   0623 D3 6B              1404 	OUT	(UART3),A		; SET 8 BIT DATA, 1 STOPBIT
+   0625 3E 03              1405 	LD    	A,#3        		; set DTR & RTS
+   0627 D3 6C              1406         OUT  	(UART4),A		;
+   0629 C9                 1407 	RET
+                           1408 
+                           1409 
+                           1410 ;
+                           1411 ;__FILL_MEM_______________________________________________________________________________________________________________________ 
+                           1412 ;
+                           1413 ;	FUNCTION	: FILL MEMORY WITH A VALUE
+                           1414 ;	INPUT		: HL = START ADDRESS BLOCK
+                           1415 ;			: BC = LENGTH OF BLOCK
+                           1416 ;			: A = VALUE TO FILL WITH
+                           1417 ;	USES		: DE, BC
+                           1418 ;	OUTPUT		:
+                           1419 ;	CALLS		: 
+                           1420 ;	TESTED		: 13 FEB 2007
+                           1421 ;_________________________________________________________________________________________________________________________________
+                           1422 ;
+   062A                    1423 FILL_MEM:
+   062A 5D                 1424 	LD	E,L			;
+   062B 54                 1425 	LD	D,H			;
+   062C 13                 1426 	INC	DE			;
+   062D 77                 1427 	LD	(HL),A			; INITIALISE FIRST BYTE OF BLOCK WITH DATA BYTE IN A
+   062E 0B                 1428 	DEC	BC			;
+   062F ED B0              1429 	LDIR				; FILL MEMORY
+   0631 C9                 1430 	RET				; RETURN TO CALLER
+                           1431 
+                           1432 ;
+                           1433 ;__INITIALIZE_____________________________________________________________________________________________________________________ 
+                           1434 ;
+                           1435 ;	INITIALIZE SYSTEM
+                           1436 ;_________________________________________________________________________________________________________________________________
+                           1437 ;
+   0632                    1438 INITIALIZE:
+   0632 3E 0C              1439 	LD	A,#12			; SPECIFY BAUD RATE 9600 BPS (9600,8,NONE,1)
+   0634 32r3As07           1440 	LD	(SER_BAUD),A		; 
+   0637 CDr14s06           1441 	CALL	INIT_UART		; INIT THE UART 
+   063A C9                 1442 	RET	 			; 
+                           1443 ;
+                           1444 
+                           1445 ;__MTERM_INIT________________________________________________________________________________________
+                           1446 ;
+                           1447 ;  SETUP 8255, MODE 0, PORT A=OUT, PORT B=IN, PORT C=OUT/OUT 
+                           1448 ;     
+                           1449 ;____________________________________________________________________________________________________
+   063B                    1450 MTERM_INIT:
+   063B 3E 82              1451 	LD	A,#0x82
+   063D D3 63              1452 	OUT (PIOCONT),A
+   063F C9                 1453 	RET
+                           1454 
+                           1455 ;__KB_GET____________________________________________________________________________________________
+                           1456 ;
+                           1457 ;  GET A SINGLE KEY AND DECODE
+                           1458 ;     
+                           1459 ;____________________________________________________________________________________________________
+   0640                    1460 KB_GET:
+   0640 E5                 1461 	PUSH 	HL			; STORE HL
+   0641                    1462 KB_GET_LOOP:				; WAIT FOR KEY
+   0641 CDr67s06           1463 	CALL	KB_SCAN			;  SCAN KB ONCE
+   0644 FE 00              1464 	CP	#0			;  NULL?
+   0646 28 F9              1465 	JR	Z,KB_GET_LOOP		;  LOOP WHILE NOT ZERO
+   0648 57                 1466 	LD      D,A			;  STORE A
+   0649 3E 4F              1467 	LD	A,#0x4F			;  SCAN ALL COL LINES
+   064B D3 62              1468 	OUT 	(PORTC),A		;  SEND TO COLUMN LINES
+   064D CDrB4s06           1469         CALL    KB_SCAN_DELAY		;  DELAY TO ALLOW LINES TO STABILIZE
+   0650                    1470 KB_CLEAR_LOOP:				; WAIT FOR KEY TO CLEAR
+   0650 DB 61              1471 	IN	A,(PORTB)		;  GET ROWS
+   0652 FE 00              1472 	CP	#0 			;  ANYTHING PRESSED?
+   0654 20 FA              1473 	JR	NZ,KB_CLEAR_LOOP	;  YES, EXIT 
+   0656 7A                 1474 	LD	A,D			;  RESTORE A
+   0657 16 00              1475 	LD	D,#0x00			;
+   0659 21rE7s0C           1476 	LD	HL,#KB_DECODE		;  POINT TO BEGINNING OF TABLE	
+   065C                    1477 KB_GET_LLOOP:
+   065C BE                 1478 	CP	(HL)			;  MATCH?	
+   065D 28 05              1479 	JR	Z,KB_GET_DONE		;  FOUND, DONE
+   065F 23                 1480 	INC	HL
+   0660 14                 1481 	INC	D			;  D + 1	
+   0661 C2r5Cs06           1482 	JP	NZ,KB_GET_LLOOP		;  NOT FOUND, LOOP UNTIL EOT			
+   0664                    1483 KB_GET_DONE:
+   0664 7A                 1484 	LD	A,D			;  RESULT INTO A
+   0665 E1                 1485 	POP	HL			; RESTORE HL
+   0666 C9                 1486 	RET
+                           1487 
+                           1488 
+                           1489 
+                           1490 ;__KB_SCAN____________________________________________________________________________________________
+                           1491 ;
+                           1492 ;  SCAN KEYBOARD MATRIX FOR AN INPUT
+                           1493 ;     
+                           1494 ;____________________________________________________________________________________________________
+   0667                    1495 KB_SCAN:
+                           1496 
+   0667 0E 00              1497 	LD      C,#0
+   0669 3E 41              1498 	LD	A,#0x41			;  SCAN COL ONE
+   066B D3 62              1499 	OUT 	(PORTC),A		;  SEND TO COLUMN LINES
+   066D CDrB4s06           1500         CALL    KB_SCAN_DELAY		;  DELAY TO ALLOW LINES TO STABILIZE
+   0670 DB 61              1501 	IN	A,(PORTB)		;  GET ROWS
+   0672 FE 00              1502 	CP	#0x00 			;  ANYTHING PRESSED?
+   0674 20 34              1503 	JR	NZ,KB_SCAN_FOUND	;  YES, EXIT 
+                           1504 
+   0676 0E 40              1505 	LD      C,#0x0040
+   0678 3E 42              1506 	LD	A,#0x42			;  SCAN COL TWO
+   067A D3 62              1507 	OUT 	(PORTC),A		;  SEND TO COLUMN LINES
+   067C CDrB4s06           1508         CALL    KB_SCAN_DELAY		;  DELAY TO ALLOW LINES TO STABILIZE
+   067F DB 61              1509 	IN	A,(PORTB)		;  GET ROWS
+   0681 FE 00              1510 	CP	#0 			;  ANYTHING PRESSED?
+   0683 20 25              1511 	JR	NZ,KB_SCAN_FOUND	;  YES, EXIT 
+                           1512 
+   0685 0E 80              1513 	LD      C,#0x0080
+   0687 3E 44              1514 	LD	A,#0x44			;  SCAN COL THREE
+   0689 D3 62              1515 	OUT 	(PORTC),A		;  SEND TO COLUMN LINES
+   068B CDrB4s06           1516         CALL    KB_SCAN_DELAY		;  DELAY TO ALLOW LINES TO STABILIZE
+   068E DB 61              1517 	IN	A,(PORTB)		;  GET ROWS
+   0690 FE 00              1518 	CP	#0x00 			;  ANYTHING PRESSED?
+   0692 20 16              1519 	JR	NZ,KB_SCAN_FOUND	;  YES, EXIT 
+                           1520 
+   0694 0E C0              1521 	LD      C,#0x00C0			;
+   0696 3E 48              1522 	LD	A,#0x48			;  SCAN COL FOUR
+   0698 D3 62              1523 	OUT 	(PORTC),A		;  SEND TO COLUMN LINES
+   069A CDrB4s06           1524         CALL    KB_SCAN_DELAY		;  DELAY TO ALLOW LINES TO STABILIZE
+   069D DB 61              1525 	IN	A,(PORTB)		;  GET ROWS
+   069F FE 00              1526 	CP	#0x00 			;  ANYTHING PRESSED?
+   06A1 20 07              1527 	JR	NZ,KB_SCAN_FOUND	;  YES, EXIT 
+                           1528 
+   06A3 3E 40              1529 	LD	A, #0x40			;  TURN OFF ALL COLUMNS
+   06A5 D3 62              1530 	OUT 	(PORTC),A		;  SEND TO COLUMN LINES
+   06A7 3E 00              1531 	LD	A, #0x00			;  RETURN NULL
+   06A9 C9                 1532 	RET				;  EXIT
+                           1533 
+   06AA                    1534 KB_SCAN_FOUND:
+   06AA E6 3F              1535 	AND	#0x3F			;  CLEAR TOP TWO BITS
+   06AC B1                 1536 	OR	C			;  ADD IN ROW BITS 
+   06AD 4F                 1537 	LD	C,A			;  STORE VALUE
+   06AE 3E 00              1538 	LD	A,#0x00			;  TURN OFF ALL COLUMNS
+   06B0 D3 62              1539 	OUT 	(PORTC),A		;  SEND TO COLUMN LINES
+   06B2 79                 1540 	LD	A,C			;  RESTORE VALUE
+   06B3 C9                 1541 	RET
+                           1542 
+   06B4                    1543 PAUSE:
+   06B4                    1544 KB_SCAN_DELAY:
+   06B4 00                 1545 	NOP
+   06B5 00                 1546 	NOP
+   06B6 00                 1547 	NOP
+   06B7 00                 1548 	NOP
+   06B8 00                 1549 	NOP
+   06B9 00                 1550 	NOP
+   06BA 00                 1551 	NOP
+   06BB 00                 1552 	NOP
+   06BC 00                 1553 	NOP
+   06BD C9                 1554 	RET
+                           1555 
+                           1556 
+                           1557 
+                           1558 ;__HEXDISPLAY________________________________________________________________________________________
+                           1559 ;
+                           1560 ;  DISPLAY CONTENTS OF DISPLAYBUF IN DECODED HEX BITS 0-3 ARE DISPLAYED DIG, BIT 7 IS DP
+                           1561 ;     
+                           1562 ;____________________________________________________________________________________________________
+   06BE                    1563 HEXDISPLAY:
+   06BE E5                 1564 	PUSH	HL			; STORE HL
+   06BF F5                 1565 	PUSH	AF			; STORE AF
+   06C0 C5                 1566 	PUSH	BC			; STORE BC
+   06C1 01 07 00           1567 	LD	BC,#0007	
+   06C4 09                 1568 	ADD	HL,BC
+   06C5 06 08              1569 	LD	B,#0x08			; SET DIGIT COUNT
+   06C7 3E 40              1570 	LD	A,#0x40			; SET CONTROL PORT 7218 TO OFF
+   06C9 D3 62              1571 	OUT	(PORTC),A		; OUTPUT
+   06CB CDrB4s06           1572 	CALL 	PAUSE			; WAIT
+   06CE 3E F0              1573 	LD	A,#0x0F0			; SET CONTROL TO 1111 (DATA COMING, HEX DECODE,NO DECODE, NORMAL)
+   06D0 D3 60              1574 	OUT	(PORTA),A		; OUTPUT TO PORT
+   06D2 3E 80              1575 	LD	A,#0x80			; STROBE WRITE PULSE WITH CONTROL=1
+   06D4 D3 62              1576 	OUT	(PORTC),A		; OUTPUT TO PORT
+   06D6 CDrB4s06           1577 	CALL 	PAUSE			; WAIT
+   06D9 3E 40              1578 	LD	A,#0x40			; SET CONTROL PORT 7218 TO OFF
+   06DB D3 62              1579 	OUT	(PORTC),A		; OUTPUT
+   06DD                    1580 HEXDISPLAY_LP:		
+   06DD 7E                 1581 	LD	A,(HL)			; GET DISPLAY DIGIT
+   06DE CDrF8s06           1582 	CALL	DECODEDISPLAY		; DECODE DISPLAY
+   06E1 D3 60              1583 	OUT	(PORTA),A		; OUT TO PORTA
+   06E3 3E 00              1584 	LD	A,#0x00			; SET WRITE STROBE
+   06E5 D3 62              1585 	OUT	(PORTC),A		; OUT TO PORTC
+   06E7 CDrB4s06           1586 	CALL	PAUSE			; DELAY
+   06EA 3E 40              1587 	LD	A,#0x40			; SET CONTROL PORT OFF
+   06EC D3 62              1588 	OUT	(PORTC),A		; OUT TO PORTC
+   06EE CDrB4s06           1589 	CALL	PAUSE			; WAIT
+   06F1 2B                 1590 	DEC	HL			; INC POINTER
+   06F2 10 E9              1591 	DJNZ	HEXDISPLAY_LP		; LOOP FOR NEXT DIGIT
+   06F4 C1                 1592 	POP	BC			; RESTORE BC
+   06F5 F1                 1593 	POP	AF			; RESTORE AF
+   06F6 E1                 1594 	POP	HL			; RESTORE HL
+   06F7 C9                 1595 	RET
+                           1596 
+                           1597 ;__DECODEDISPLAY_____________________________________________________________________________________
+                           1598 ;
+                           1599 ;  DISPLAY CONTENTS OF DISPLAYBUF IN DECODED HEX BITS 0-3 ARE DISPLAYED DIG, BIT 7 IS DP
+                           1600 ;     
+                           1601 ;____________________________________________________________________________________________________
+   06F8                    1602 DECODEDISPLAY:
+   06F8 C5                 1603 	PUSH	BC			; STORE BC
+   06F9 E5                 1604 	PUSH	HL			; STORE HL
+   06FA 21rFFs0C           1605 	LD	HL,#SEGDECODE		; POINT HL TO DECODE TABLE
+   06FD 06 00              1606 	LD	B,#0x00			; RESET HIGH BYTE
+   06FF 4F                 1607 	LD	C,A			; CHAR INTO LOW BYTE
+   0700 09                 1608 	ADD	HL,BC			; SET TABLE POINTER
+   0701 7E                 1609 	LD	A,(HL)			; GET VALUE
+   0702 E1                 1610 	POP	HL			; RESTORE HL
+   0703 C1                 1611 	POP	BC			; RESTORE BC
+   0704 C9                 1612 	RET
+                           1613 
+                           1614 
+                           1615 ;__SEGDISPLAY________________________________________________________________________________________
+                           1616 ;
+                           1617 ;  DISPLAY CONTENTS OF DISPLAYBUF IN DECODED HEX BITS 0-3 ARE DISPLAYED DIG, BIT 7 IS DP
+                           1618 ;     
+                           1619 ;____________________________________________________________________________________________________
+   0705                    1620 SEGDISPLAY:
+   0705 F5                 1621 	PUSH	AF			; STORE AF
+   0706 C5                 1622 	PUSH	BC			; STORE BC
+   0707 01 07 00           1623 	LD	BC,#0x0007	
+   070A 09                 1624 	ADD	HL,BC
+   070B 06 08              1625 	LD	B,#0x08			; SET DIGIT COUNT
+   070D 3E 40              1626 	LD	A,#0x40			; SET CONTROL PORT 7218 TO OFF
+   070F D3 62              1627 	OUT	(PORTC),A		; OUTPUT
+   0711 CDrB4s06           1628 	CALL 	PAUSE			; WAIT
+   0714 3E F0              1629 	LD	A,#0x0F0			; SET CONTROL TO 1111 (DATA COMING, HEX DECODE,NO DECODE, NORMAL)
+   0716 D3 60              1630 	OUT	(PORTA),A		; OUTPUT TO PORT
+   0718 3E 80              1631 	LD	A,#0x80			; STROBE WRITE PULSE WITH CONTROL=1
+   071A D3 62              1632 	OUT	(PORTC),A		; OUTPUT TO PORT
+   071C CDrB4s06           1633 	CALL 	PAUSE			; WAIT
+   071F 3E 40              1634 	LD	A,#0x40			; SET CONTROL PORT 7218 TO OFF
+   0721 D3 62              1635 	OUT	(PORTC),A		; OUTPUT
+   0723                    1636 SEGDISPLAY_LP:		
+   0723 7E                 1637 	LD	A,(HL)			; GET DISPLAY DIGIT
+   0724 D3 60              1638 	OUT	(PORTA),A		; OUT TO PORTA
+   0726 3E 00              1639 	LD	A,#0x00			; SET WRITE STROBE
+   0728 D3 62              1640 	OUT	(PORTC),A		; OUT TO PORTC
+   072A CDrB4s06           1641 	CALL	PAUSE			; DELAY
+   072D 3E 40              1642 	LD	A,#0x40			; SET CONTROL PORT OFF
+   072F D3 62              1643 	OUT	(PORTC),A		; OUT TO PORTC
+   0731 CDrB4s06           1644 	CALL	PAUSE			; WAIT
+   0734 2B                 1645 	DEC	HL			; INC POINTER
+   0735 10 EC              1646 	DJNZ	SEGDISPLAY_LP		; LOOP FOR NEXT DIGIT
+   0737 C1                 1647 	POP	BC			; RESTORE BC
+   0738 F1                 1648 	POP	AF			; RESTORE AF
+   0739 C9                 1649 	RET
+                           1650 
+                           1651 ;
+                           1652 ;__WORK_AREA___________________________________________________________________________________________________________________ 
+                           1653 ;
+                           1654 ;	RESERVED RAM FOR MONITOR WORKING AREA
+                           1655 ;_____________________________________________________________________________________________________________________________
+                           1656 ;
+   073A                    1657 SER_BAUD:	.DS	1		; SPECIFY DESIRED UART COM RATE IN BPS
+   073B 20 20 20 20 20 20  1658 KEYBUF:  	.ascii   	"                                  "
+        20 20 20 20 20 20
+        20 20 20 20 20 20
+        20 20 20 20 20 20
+        20 20 20 20 20 20
+        20 20 20 20
+   075D 20 20 20 20 20 20  1659 		.ascii	"                                              "
+        20 20 20 20 20 20
+        20 20 20 20 20 20
+        20 20 20 20 20 20
+        20 20 20 20 20 20
+        20 20 20 20 20 20
+        20 20 20 20 20 20
+        20 20 20 20
+   078B 00 00 00 00 00 00  1660 DISPLAYBUF:	.DB 	00,00,00,00,00,00,00,00
+        00 00
+   0793 01                 1661 IDEDEVICE:	.DB	1		; IDE DRIVE SELECT FLAG (00H=PRIAMRY, 10H = SECONDARY)
+   0794                    1662 IDE_SECTOR_BUFFER:
+   0794                    1663 		.DS	0x00200
+                           1664 
+                           1665 
+                           1666 
+                           1667 
+                           1668 ;
+                           1669 ;__TEXT_STRINGS_________________________________________________________________________________________________________________ 
+                           1670 ;
+                           1671 ;	SYSTEM TEXT STRINGS
+                           1672 ;_____________________________________________________________________________________________________________________________
+                           1673 ;
+   0994                    1674 TCRLF:
+   0994 0D 0A FF           1675 	.DB  	CR,LF,ENDT
+                           1676 
+   0997                    1677 PROMPT:
+   0997 0D 0A              1678 	.DB  	CR,LF
+   0999 3E                 1679 	.ascii	">"
+   099A FF                 1680 	.DB	ENDT
+                           1681 
+   099B                    1682 TXT_READY:
+   099B 0D 0A              1683 	.DB   CR,LF
+   099D 20 20 20 20 20 20  1684 	.ascii   "         NN      NN      8888      VV      VV    EEEEEEEEEE   MM          MM"
+        20 20 20 4E 4E 20
+        20 20 20 20 20 4E
+        4E 20 20 20 20 20
+        20 38 38 38 38 20
+        20 20 20 20 20 56
+        56 20 20 20 20 20
+        20 56 56 20 20 20
+        20 45 45 45 45 45
+        45 45 45 45 45 20
+        20 20 4D 4D 20 20
+        20 20 20 20 20 20
+        20 20 4D 4D
+   09E9 0D 0A              1685 	.DB   CR,LF
+   09EB 20 20 20 20 20 20  1686 	.ascii   "        NNNN    NN    88    88    VV      VV    EE           MMMM      MMMM"
+        20 20 4E 4E 4E 4E
+        20 20 20 20 4E 4E
+        20 20 20 20 38 38
+        20 20 20 20 38 38
+        20 20 20 20 56 56
+        20 20 20 20 20 20
+        56 56 20 20 20 20
+        45 45 20 20 20 20
+        20 20 20 20 20 20
+        20 4D 4D 4D 4D 20
+        20 20 20 20 20 4D
+        4D 4D 4D
+   0A36 0D 0A              1687 	.DB   CR,LF
+   0A38 20 20 20 20 20 20  1688 	.ascii   "       NN  NN  NN    88    88    VV      VV    EE           MM  MM  MM  MM"
+        20 4E 4E 20 20 4E
+        4E 20 20 4E 4E 20
+        20 20 20 38 38 20
+        20 20 20 38 38 20
+        20 20 20 56 56 20
+        20 20 20 20 20 56
+        56 20 20 20 20 45
+        45 20 20 20 20 20
+        20 20 20 20 20 20
+        4D 4D 20 20 4D 4D
+        20 20 4D 4D 20 20
+        4D 4D
+   0A82 0D 0A              1689 	.DB   CR,LF
+   0A84 20 20 20 20 20 20  1690 	.ascii   "      NN    NNNN    88    88    VV      VV    EE           MM    MM    MM"
+        4E 4E 20 20 20 20
+        4E 4E 4E 4E 20 20
+        20 20 38 38 20 20
+        20 20 38 38 20 20
+        20 20 56 56 20 20
+        20 20 20 20 56 56
+        20 20 20 20 45 45
+        20 20 20 20 20 20
+        20 20 20 20 20 4D
+        4D 20 20 20 20 4D
+        4D 20 20 20 20 4D
+        4D
+   0ACD 0D 0A              1691 	.DB   CR,LF
+   0ACF 20 20 20 20 20 4E  1692 	.ascii   "     NN      NN      8888      VV      VV    EEEEEEE      MM          MM"
+        4E 20 20 20 20 20
+        20 4E 4E 20 20 20
+        20 20 20 38 38 38
+        38 20 20 20 20 20
+        20 56 56 20 20 20
+        20 20 20 56 56 20
+        20 20 20 45 45 45
+        45 45 45 45 20 20
+        20 20 20 20 4D 4D
+        20 20 20 20 20 20
+        20 20 20 20 4D 4D
+   0B17 0D 0A              1693 	.DB   CR,LF
+   0B19 20 20 20 20 4E 4E  1694 	.ascii   "    NN      NN    88    88     VV    VV     EE           MM          MM"
+        20 20 20 20 20 20
+        4E 4E 20 20 20 20
+        38 38 20 20 20 20
+        38 38 20 20 20 20
+        20 56 56 20 20 20
+        20 56 56 20 20 20
+        20 20 45 45 20 20
+        20 20 20 20 20 20
+        20 20 20 4D 4D 20
+        20 20 20 20 20 20
+        20 20 20 4D 4D
+   0B60 0D 0A              1695 	.DB   CR,LF
+   0B62 20 20 20 4E 4E 20  1696 	.ascii   "   NN      NN    88    88      VV  VV      EE           MM          MM"
+        20 20 20 20 20 4E
+        4E 20 20 20 20 38
+        38 20 20 20 20 38
+        38 20 20 20 20 20
+        20 56 56 20 20 56
+        56 20 20 20 20 20
+        20 45 45 20 20 20
+        20 20 20 20 20 20
+        20 20 4D 4D 20 20
+        20 20 20 20 20 20
+        20 20 4D 4D
+   0BA8 0D 0A              1697 	.DB   CR,LF
+   0BAA 20 20 4E 4E 20 20  1698 	.ascii   "  NN      NN    88    88        VVV       EE           MM          MM"
+        20 20 20 20 4E 4E
+        20 20 20 20 38 38
+        20 20 20 20 38 38
+        20 20 20 20 20 20
+        20 20 56 56 56 20
+        20 20 20 20 20 20
+        45 45 20 20 20 20
+        20 20 20 20 20 20
+        20 4D 4D 20 20 20
+        20 20 20 20 20 20
+        20 4D 4D
+   0BEF 0D 0A              1699 	.DB   CR,LF
+   0BF1 20 4E 4E 20 20 20  1700 	.ascii   " NN      NN      8888           V        EEEEEEEEEE   MM          MM    S B C"
+        20 20 20 4E 4E 20
+        20 20 20 20 20 38
+        38 38 38 20 20 20
+        20 20 20 20 20 20
+        20 20 56 20 20 20
+        20 20 20 20 20 45
+        45 45 45 45 45 45
+        45 45 45 20 20 20
+        4D 4D 20 20 20 20
+        20 20 20 20 20 20
+        4D 4D 20 20 20 20
+        53 20 42 20 43
+   0C3E 0D 0A              1701 	.DB   CR,LF
+   0C40 0D 0A              1702 	.DB   CR,LF                                                                                                                                                
+   0C42 20 2A 2A 2A 2A 2A  1703 	.ascii   " ****************************************************************************"
+        2A 2A 2A 2A 2A 2A
+        2A 2A 2A 2A 2A 2A
+        2A 2A 2A 2A 2A 2A
+        2A 2A 2A 2A 2A 2A
+        2A 2A 2A 2A 2A 2A
+        2A 2A 2A 2A 2A 2A
+        2A 2A 2A 2A 2A 2A
+        2A 2A 2A 2A 2A 2A
+        2A 2A 2A 2A 2A 2A
+        2A 2A 2A 2A 2A 2A
+        2A 2A 2A 2A 2A 2A
+        2A 2A 2A 2A 2A
+   0C8F 0D 0A              1704 	.DB   CR,LF
+   0C91 4D 4F 4E 49 54 4F  1705 	.ascii   "MONITOR READY "
+        52 20 52 45 41 44
+        59 20
+   0C9F 0D 0A FF           1706 	.DB   CR,LF,ENDT
+                           1707 
+   0CA2                    1708 TXT_COMMAND:
+   0CA2 0D 0A              1709 	.DB   CR,LF
+   0CA4 55 4E 4B 4E 4F 57  1710 	.ascii   "UNKNOWN COMMAND."
+        4E 20 43 4F 4D 4D
+        41 4E 44 2E
+   0CB4 FF                 1711 	.DB   ENDT
+                           1712 
+   0CB5                    1713 TXT_CKSUMERR:
+   0CB5 0D 0A              1714 	.DB   CR,LF
+   0CB7 43 48 45 43 4B 53  1715 	.ascii   "CHECKSUM ERROR."
+        55 4D 20 45 52 52
+        4F 52 2E
+   0CC6 FF                 1716 	.DB   ENDT
+   0CC7                    1717 CPUUP:
+   0CC7 84 EE BB 80 BB EE  1718 	.DB 	0x084,0x0EE,0x0BB,0x080,0x0BB,0x0EE,0x0CB,0x084
+        CB 84
+   0CCF                    1719 ADDR:
+   0CCF 00 00 00 00 8C BD  1720 	.DB 	0x00,0x00,0x00,0x00,0x08C,0x0BD,0x0BD,0x0FE
+        BD FE
+                           1721 
+                           1722 
+   0CD7                    1723 PORT:
+   0CD7 00 00 80 80 94 8C  1724 	.DB 	0x00,0x00,0x80,0x80,0x094,0x08C,0x09D,0x0EE
+        9D EE
+   0CDF                    1725 SEC:
+   0CDF 80 80 80 80 80 CB  1726 	.DB 	0x80,0x80,0x80,0x80,0x80,0x0CB,0x0CF,0x0D7
+        CF D7
+                           1727 
+                           1728 
+                           1729 ;_KB DECODE TABLE__________________________________________________________________________________________________________
+                           1730 ; 
+                           1731 ;
+   0CE7                    1732 KB_DECODE:
+                           1733 ;                0  1   2   3   4   5   6   7   8   9   A   B   C   D   E   F
+   0CE7 41 02 42 82 04 44  1734 	.DB	0x41,0x02,0x42,0x82,0x04,0x44,0x84,0x08,0x48,0x88,0x10,0x50,0x90,0x20,0x60,0x0A0
+        84 08 48 88 10 50
+        90 20 60 A0
+                           1735 ;               FW  BK  CL  EN  DP  EX  GO  BO
+   0CF7 01 81 C1 C2 C4 C8  1736 	.DB	0x01,0x81,0x0C1,0x0C2,0x0C4,0x0C8,0x0D0,0x0E0
+        D0 E0
+                           1737 ;
+                           1738 ; F-KEYS,
+                           1739 ; FW = FORWARD
+                           1740 ; BK = BACKWARD
+                           1741 ; CL = CLEAR
+                           1742 ; EN = ENTER
+                           1743 ; DP = DEPOSIT (INTO MEM)
+                           1744 ; EX = EXAMINE (MEM)
+                           1745 ; GO = GO
+                           1746 ; BO = BOOT
+                           1747 ;_________________________________________________________________________________________________________________________
+                           1748 ;_HEX 7_SEG_DECODE_TABLE__________________________________________________________________________________________________
+                           1749 ; 
+                           1750 ; 0,1,2,3,4,5,6,7,8,9,A,B,C,D,E,F, ,-
+                           1751 ; AND WITH 7FH TO TURN ON DP 
+                           1752 ;_________________________________________________________________________________________________________________________
+   0CFF                    1753 SEGDECODE:
+   0CFF FB B0 ED F5 B6 D7  1754 	.DB	0x0FB,0x0B0,0x0ED,0x0F5,0x0B6,0x0D7,0x0DF,0x0F0,0x0FF,0x0F7,0x0FE,0x09F,0x0CB,0x0BD,0x0CF,0x0CE,0x080,0x084,0x00,0x0EE,0x09D
+        DF F0 FF F7 FE 9F
+        CB BD CF CE 80 84
+        00 EE 9D
+                           1755 
+                           1756 ;********************* END OF PROGRAM ***********************************
+                           1757 
+                           1758 ;dwg; .ORG	08FFFh
+                           1759 ;dwg; .DB  	000h
+                           1760 ;dwg; .END
+                           1761 
+   0D14                    1762 _dbgmon_end::
+                           1763 	.area _CODE
+                           1764 	.area _CABS

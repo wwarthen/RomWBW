@@ -1,0 +1,17 @@
+-mjx
+-i baseline.ihx
+-k /usr/local/share/sdcc/lib/z80
+-l z80
+-b _CCPB03 = 0xD000
+-b _BDOSB01 = 0xD800
+-b _CBIOS = 0xE600
+-b _DBGMON = 0x8000
+crt0.rel
+baseline.rel
+ns16550.rel
+i8255.rel
+dbgmon.rel
+ccpb03.rel
+bdosb01.rel
+cbios.rel
+-e

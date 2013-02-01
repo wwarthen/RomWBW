@@ -1,0 +1,18 @@
+ASxxxx Assembler V02.00 + NoICE + SDCC mods + Flat24  (Zilog Z80 / Hitachi HD64180), page 1.
+
+Symbol Table
+
+    .__.ABS.=  0000 G   |     SCSI2IDE=  0000     |     UART_BAU=  000C 
+    UART_DLA=  0080     |     UART_IO_=  0010     |     UART_RDA=  0001 
+    UART_TBE=  0020     |     rUART_II=  0012     |     rUART_LS=  0015 
+    rUART_MS=  0016     |     rUART_RD=  0010     |   2 scream     0000 R
+  2 scrmlp     0018 R   |     wUART_DI=  0011     |     wUART_DI=  0010 
+    wUART_FC=  0017     |     wUART_IE=  0011     |     wUART_LC=  0013 
+    wUART_MC=  0014     |     wUART_TD=  0010 
+ASxxxx Assembler V02.00 + NoICE + SDCC mods + Flat24  (Zilog Z80 / Hitachi HD64180), page 2.
+
+Area Table
+
+   0 _CODE      size    0   flags 0
+   1 _HEADER    size    0   flags 8
+   2 _HEADER0   size   26   flags 8

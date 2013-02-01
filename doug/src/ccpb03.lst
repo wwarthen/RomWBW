@@ -1,0 +1,1375 @@
+                              1         .title ccpb03.s derived from ccpb03.asm
+                              2         .sbttl by Douglas Goodall 5/16/2011 dwg 
+                              3 	
+                              4 	.module ccpb03
+                              5 	.optsdcc -mz80
+                              6 	
+                              7 ;--------------------------------------------------------
+                              8 ; Public variables in this module
+                              9 ;--------------------------------------------------------
+                             10 	.globl _ccp
+                             11 ;--------------------------------------------------------
+                             12 ; special function registers
+                             13 ;--------------------------------------------------------
+                             14 ;--------------------------------------------------------
+                             15 ;  ram data
+                             16 ;--------------------------------------------------------
+                             17 	.area _DATA
+                             18 ;--------------------------------------------------------
+                             19 ; overlayable items in  ram 
+                             20 ;--------------------------------------------------------
+                             21 	.area _OVERLAY
+                             22 ;--------------------------------------------------------
+                             23 ; external initialized ram data
+                             24 ;--------------------------------------------------------
+                             25 ;--------------------------------------------------------
+                             26 ; global & static initialisations
+                             27 ;--------------------------------------------------------
+                             28 	.area _HOME
+                             29 	.area _GSINIT
+                             30 	.area _GSFINAL
+                             31 	.area _GSINIT
+                             32 ;--------------------------------------------------------
+                             33 ; Home
+                             34 ;--------------------------------------------------------
+                             35 	.area _HOME
+                             36 	.area _HOME
+                             37 ;--------------------------------------------------------
+                             38 ; code
+                             39 ;--------------------------------------------------------
+                             40 
+                             41 ;	.area _CODE
+                             42 	.area _CCPB03
+                             43 
+   0000                      44 _ccp_start::
+   0000                      45 _ccp:
+                             46 
+                    0001     47 MON	=	1		;ADD THE CCP MON COMMAND
+                    0001     48 USRDSP	=	1		;SHOW THE USER NUMBER
+                    0001     49 CHKU0B	=	1		;CHECK FOR TRANSIENTS ON USER 0 TOO
+                    0001     50 ENDFIL	=	1		;FILE FULL CCP SIZE
+                             51 ;
+                             52 ;**************************************************************
+                             53 ;*
+                             54 ;* C C P  -   C O N S O L E   C O M M A N D   P R O C E S S O R
+                             55 ;*
+                             56 ;**************************************************************
+                             57 ;*
+                    0003     58 IOBYTE	=	3		; I/O DEFINITION BYTE.
+                    0004     59 TDRIVE	=	4		; CURRENT DRIVE NAME AND USER NUMBER.
+                    0005     60 ENTRY	=	5		; ENTRY POINT FOR THE CP/M BDOS.
+                    005C     61 TFCB	=	0x5C		; DEFAULT FILE CONTROL BLOCK.
+                    0080     62 TBUFF	=	0x80		; I/O BUFFER AND COMMAND LINE STORAGE.
+                    0100     63 TBASE	=	0x0100		; TRANSIANT PROGRAM STORAGE AREA.
+                    FC00     64 MONADR	=	0x0FC00		;MONITOR PROGRAM
+                             65 ;
+                             66 ;   SET CONTROL CHARACTER .EQUATES.
+                             67 ;
+                    0003     68 CNTRLC	=	0x03		; CONTROL-C
+                    0005     69 CNTRLE	=	0x05		; CONTROL-E
+                    0008     70 BS	=	0x08		; BACKSPACE
+                    0009     71 TAB	=	0x09		; TAB
+                    000A     72 LF	=	0x0A		; LINE FEED
+                    000C     73 FF	=	0x0C		; FORM FEED
+                    000D     74 CR	=	0x0D		; CARRIAGE RETURN
+                    0010     75 CNTRLP	=	0x10		; CONTROL-P
+                    0012     76 CNTRLR	=	0x12		; CONTROL-R
+                    0013     77 CNTRLS	=	0x13		; CONTROL-S
+                    0015     78 CNTRLU	=	0x15		; CONTROL-U
+                    0018     79 CNTRLX	=	0x18		; CONTROL-X
+                    001A     80 CNTRLZ	=	0x1A		; CONTROL-Z (END-OF-FILE MARK)
+                    002A     81 ASTERICK = 	0x2A
+                    003A     82 COLON	=	0x3A
+                    003C     83 LESSTHAN = 	0x3C
+                    0020     84 ASCSPACE = 	0x20		; SPACE
+                    002E     85 PERIOD	=	0x2e		; PERIOD
+                    003D     86 EQUAL   =	0x3D
+                    003E     87 GREATERTHAN = 	0x3E
+                    003F     88 QUESTION = 	0x3F		;QUESTION MARK
+                    005F     89 UNDERSCORE = 	0x5F
+                    007B     90 LCURLY	= 	0x7B		; {
+                    007F     91 DEL	=	0x7F		; RUBOUT
+                             92 ;
+                             93 ;   SET ORIGIN FOR CP/M
+                             94 ;
+                             95 
+                    003B     96 NK      =	59             ;SYSTEM SIZE
+                    9C00     97 BASE    =	(NK*1024)-0x5000
+                    D000     98 CCPO    =	BASE+0x3400     ;CCP ORIGIN
+                    D800     99 BDOSO   =	BASE+0x3C00     ;BDOS ORIGIN
+                    E600    100 BIOSO   =	BASE+0x4A00     ;BIOS ORIGIN
+                            101 
+                            102 ;dwg;	.ORG	CCPO
+                            103 ;
+   0000 C3r54s03            104 CBASE:	JP	COMMAND		; EXECUTE COMMAND PROCESSOR (CCP).
+   0003 C3r50s03            105 	JP	CLEARBUF	; ENTRY TO EMPTY INPUT BUFFER BEFORE STARTING CCP.
+                            106 
+                            107 ;
+                            108 ;   STANDARD CP/M CCP INPUT BUFFER. FORMAT IS (MAX LENGTH),
+                            109 ; (ACTUAL LENGTH), (CHAR #1), (CHAR #2), (CHAR #3), ETC.
+                            110 ;
+   0006 7F                  111 INBUFF:	.DB 127			; LENGTH OF INPUT BUFFER.
+                            112 
+                            113 ; N8VEM - if add any text after this point, change .DB 0 below to length
+                            114 ; and put a 0 after the text, and delete the same number of zeros after the dig
+                            115 ; so that inpoint ends up at the same spot
+                            116 ; INBUFF+1 is cleared on the next warm boot, so only runs once.
+   0007 00                  117 	.DB	0	;CURRENT LENGTH OF CONTENTS.
+                            118 
+                            119 
+                            120 ;	.DB 17			; Autoboot length of string
+                            121 ;	.DB    "SUPERSUB AUTOEXEC"
+                            122 ;	.DB 0			; zero at end
+                            123 
+                            124 
+   0008 43 4F 50 59 52 49   125 	.ascii "COPYRIGHT"
+        47 48 54
+   0011 20 31 39 37 39 20   126 	.ascii " 1979 (C) BY "
+        28 43 29 20 42 59
+        20
+   001E 44 49 47 49 54 41   127 	.ascii "DIGITAL RESEARCH    "
+        4C 20 52 45 53 45
+        41 52 43 48 20 20
+        20 20
+   0032 20 20               128 	.ascii "  "
+                            129 
+                            130 ;dwg;	.ORG	INBUFF+128
+                            131 ;dwg; becausje org's are not allowed in rel areas, it has been 
+                            132 ; replaced with the following array of .db's to achieve the 
+                            133 ; same purpose
+   0034 00 00 00 00 00 00   134 	.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+        00 00 00 00 00 00
+        00 00 00 00
+   0044 00 00 00 00 00 00   135         .db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+        00 00 00 00 00 00
+        00 00 00 00
+   0054 00 00 00 00 00 00   136         .db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+        00 00 00 00 00 00
+        00 00 00 00
+   0064 00 00 00 00 00 00   137         .db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+        00 00 00 00 00 00
+        00 00 00 00
+   0074 00 00 00 00 00 00   138         .db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+        00 00 00 00 00 00
+        00 00 00 00
+   0084 00 00               139 	.db 0,0
+                            140 
+                            141 ;; s/b d086 here
+                            142 
+   0086r08s00               143 INPOINT:.DW INBUFF+2		; INPUT LINE POINTER
+   0088 00 00               144 NAMEPNT:.DW 0			; INPUT LINE POINTER USED FOR ERROR MESSAGE. POINTS TO
+                            145 ;				;START OF NAME IN ERROR.
+                            146 ;
+                            147 ;   ROUTINE TO PRINT (A) ON THE CONSOLE. ALL REGISTERS USED.
+                            148 ;
+   008A 5F                  149 PRINT:	LD	E,A		; SETUP BDOS CALL.
+   008B 0E 02               150 	LD	C,#2
+   008D C3 05 00            151 	JP	ENTRY
+                            152 ;
+                            153 ;   ROUTINE TO PRINT (A) ON THE CONSOLE AND TO SAVE (BC).
+                            154 ;
+   0090 C5                  155 PRINTB:	PUSH	BC
+   0091 CDr8As00            156 	CALL	PRINT
+   0094 C1                  157 	POP	BC
+   0095 C9                  158 	RET
+                            159 ;
+                            160 ;   ROUTINE TO SEND A CARRIAGE RETURN, LINE FEED COMBINATION
+                            161 ; TO THE CONSOLE.
+                            162 ;
+   0096 3E 0D               163 CRLF:	LD	A,#CR
+   0098 CDr90s00            164 	CALL	PRINTB
+   009B 3E 0A               165 	LD	A,#LF
+   009D C3r90s00            166 	JP	PRINTB
+                            167 ;
+                            168 ;   ROUTINE TO SEND ONE SPACE TO THE CONSOLE AND SAVE (BC).
+                            169 ;
+   00A0 3E 20               170 SPACE:	LD	A,#ASCSPACE
+   00A2 C3r90s00            171 	JP	PRINTB
+                            172 ;
+                            173 ;   ROUTINE TO PRINT CHARACTER STRING POINTED TO BE (BC) ON THE
+                            174 ; CONSOLE. IT MUST TERMINATE WITH A NULL BYTE.
+                            175 ;
+   00A5 C5                  176 PLINE:	PUSH	BC
+   00A6 CDr96s00            177 	CALL	#CRLF
+   00A9 E1                  178 	POP	HL
+   00AA 7E                  179 PLINE2:	LD	A,(HL)
+   00AB B7                  180 	OR	A
+   00AC C8                  181 	RET	Z
+   00AD 23                  182 	INC	HL
+   00AE E5                  183 	PUSH	HL
+   00AF CDr8As00            184 	CALL	PRINT
+   00B2 E1                  185 	POP	HL
+   00B3 C3rAAs00            186 	JP	PLINE2
+                            187 ;
+                            188 ;   ROUTINE TO RESET THE DISK SYSTEM.
+                            189 ;
+   00B6 0E 0D               190 RESDSK:	LD	C,#13
+   00B8 C3 05 00            191 	JP	ENTRY
+                            192 ;
+                            193 ;   ROUTINE TO SELECT DISK (A).
+                            194 ;
+   00BB 5F                  195 DSKSEL:	LD	E,A
+   00BC 0E 0E               196 	LD	C,#14
+   00BE C3 05 00            197 	JP	ENTRY
+                            198 ;
+                            199 ;   ROUTINE TO CALL BDOS AND SAVE THE RETURN CODE. THE ZERO
+                            200 ; FLAG IS SET ON A RETURN OF 0FFH.
+                            201 ;
+   00C1 CD 05 00            202 ENTRY1:	CALL	ENTRY
+   00C4 32rFAs07            203 	LD	(RTNCODE),A	; SAVE RETURN CODE.
+   00C7 3C                  204 	INC	A		; SET ZERO IF 0FFH RETURNED.
+   00C8 C9                  205 	RET
+                            206 ;
+                            207 ;   ROUTINE TO OPEN A FILE. (DE) MUST POINT TO THE FCB.
+                            208 ;
+   00C9 0E 0F               209 OPEN:	LD	C,#15
+   00CB C3rC1s00            210 	JP	ENTRY1
+                            211 ;
+                            212 ;   ROUTINE TO OPEN FILE AT (FCB).
+                            213 ;
+   00CE AF                  214 OPENFCB:XOR	A		; CLEAR THE RECORD NUMBER BYTE AT FCB+32
+   00CF 32rF9s07            215 	LD	(FCB+32),A
+   00D2 11rD9s07            216 	LD	DE,#FCB
+   00D5 C3rC9s00            217 	JP	OPEN
+                            218 ;
+                            219 ;   ROUTINE TO CLOSE A FILE. (DE) POINTS TO FCB.
+                            220 ;
+   00D8 0E 10               221 CLOSE:	LD	C,#16
+   00DA C3rC1s00            222 	JP	ENTRY1
+                            223 ;
+                            224 ;   ROUTINE TO SEARCH FOR THE FIRST FILE WITH AMBIGUEOUS NAME
+                            225 ; (DE).
+                            226 ;
+   00DD 0E 11               227 SRCHFST:LD	C,#17
+   00DF C3rC1s00            228 	JP	ENTRY1
+                            229 ;
+                            230 ;   SEARCH FOR THE NEXT AMBIGEOUS FILE NAME.
+                            231 ;
+   00E2 0E 12               232 SRCHNXT:LD	C,#18
+   00E4 C3rC1s00            233 	JP	ENTRY1
+                            234 ;
+                            235 ;   SEARCH FOR FILE AT (FCB).
+                            236 ;
+   00E7 11rD9s07            237 SRCHFCB:LD	DE,#FCB
+   00EA C3rDDs00            238 	JP	SRCHFST
+                            239 ;
+                            240 ;   ROUTINE TO DELETE A FILE POINTED TO BY (DE).
+                            241 ;
+   00ED 0E 13               242 DELETE:	LD	C,#19
+   00EF C3 05 00            243 	JP	ENTRY
+                            244 ;
+                            245 ;   ROUTINE TO CALL THE BDOS AND SET THE ZERO FLAG IF A ZERO
+                            246 ; STATUS IS RETURNED.
+                            247 ;
+   00F2 CD 05 00            248 ENTRY2:	CALL	ENTRY
+   00F5 B7                  249 	OR	A		; SET ZERO FLAG IF APPROPRIATE.
+   00F6 C9                  250 	RET
+                            251 ;
+                            252 ;   ROUTINE TO READ THE NEXT RECORD FROM A S.EQUENTIAL FILE.
+                            253 ; (DE) POINTS TO THE FCB.
+                            254 ;
+   00F7 0E 14               255 RDREC:	LD	C,#20
+   00F9 C3rF2s00            256 	JP	ENTRY2
+                            257 ;
+                            258 ;   ROUTINE TO READ FILE AT (FCB).
+                            259 ;
+   00FC 11rD9s07            260 READFCB:LD	DE,#FCB
+   00FF C3rF7s00            261 	JP	RDREC
+                            262 ;
+                            263 ;   ROUTINE TO WRITE THE NEXT RECORD OF A S.EQUENTIAL FILE.
+                            264 ; (DE) POINTS TO THE FCB.
+                            265 ;
+   0102 0E 15               266 WRTREC:	LD	C,#21
+   0104 C3rF2s00            267 	JP	ENTRY2
+                            268 ;
+                            269 ;   ROUTINE TO CREATE THE FILE POINTED TO BY (DE).
+                            270 ;
+   0107 0E 16               271 CREATE:	LD	C,#22
+   0109 C3rC1s00            272 	JP	ENTRY1
+                            273 ;
+                            274 ;   ROUTINE TO RENAME THE FILE POINTED TO BY (DE). NOTE THAT
+                            275 ; THE NEW NAME STARTS AT (DE+16).
+                            276 ;
+   010C 0E 17               277 RENAM:	LD	C,#23
+   010E C3 05 00            278 	JP	ENTRY
+                            279 ;
+                            280 ;   GET THE CURRENT USER CODE.
+                            281 ;
+   0111 1E FF               282 GETUSR:	LD	E,#0x0FF
+                            283 ;
+                            284 ;   ROUTNE TO GET OR SET THE CURRENT USER CODE.
+                            285 ; IF (E) IS FF THEN THIS IS A GET, ELSE IT IS A SET.
+                            286 ;
+   0113                     287 GETSETUC:
+   0113 0E 20               288 	LD	C,#32
+   0115 C3 05 00            289 	JP	ENTRY
+                            290 ;
+                            291 ;   ROUTINE TO SET THE CURRENT DRIVE BYTE AT (TDRIVE).
+                            292 ;
+   0118 CDr11s01            293 SETCDRV:CALL	GETUSR		; GET USER NUMBER
+   011B 87                  294 	ADD	A,A		; AND SHIFT INTO THE UPPER 4 BITS.
+   011C 87                  295 	ADD	A,A
+   011D 87                  296 	ADD	A,A
+   011E 87                  297 	ADD	A,A
+   011F 21rFBs07            298 	LD	HL,#CDRIVE	; NOW ADD IN THE CURRENT DRIVE NUMBER.
+   0122 B6                  299 	OR	(HL)
+   0123 32 04 00            300 	LD	(TDRIVE),A	; AND SAVE.
+   0126 C9                  301 	RET
+                            302 ;
+                            303 ;   MOVE CURRENTLY ACTIVE DRIVE DOWN TO (TDRIVE).
+                            304 ;
+   0127 3ArFBs07            305 MOVECD:	LD	A,(CDRIVE)
+   012A 32 04 00            306 	LD	(TDRIVE),A
+   012D C9                  307 	RET
+                            308 ;
+                            309 ;   ROUTINE TO CONVERT (A) INTO UPPER CASE ASCII. ONLY LETTERS
+                            310 ; ARE AFFECTED.
+                            311 ;
+   012E FE 41               312 UPPER:	CP	#0x41		; CHECK FOR LETTERS IN THE RANGE OF 'A' TO 'Z'.
+   0130 D8                  313 	RET	C
+   0131 FE 7B               314 	CP	#LCURLY
+   0133 D0                  315 	RET	NC
+   0134 E6 5F               316 	AND	#0x5F		; CONVERT IT IF FOUND.
+   0136 C9                  317 	RET
+                            318 ;
+                            319 ;   ROUTINE TO GET A LINE OF INPUT. WE MUST CHECK TO SEE IF THE
+                            320 ; USER IS IN (BATCH) MODE. IF SO, THEN READ THE INPUT FROM FILE
+                            321 ; ($$$.SUB). AT THE END, RESET TO CONSOLE INPUT.
+                            322 ;
+   0137 3ArB7s07            323 GETINP:	LD	A,(BATCH)	; IF =0, THEN USE CONSOLE INPUT.
+   013A B7                  324 	OR	A
+   013B CAr94s01            325 	JP	Z,GETINP1
+                            326 ;
+                            327 ;   USE THE SUBMIT FILE ($$$.SUB) WHICH IS PREPARED BY A
+                            328 ; SUBMIT RUN. IT MUST BE ON DRIVE (A) AND IT WILL BE DELETED
+                            329 ; IF AND ERROR OCCURES (LIKE EOF).
+                            330 ;
+   013E 3ArFBs07            331 	LD	A,(CDRIVE)	; SELECT DRIVE 0 IF NEED BE.
+   0141 B7                  332 	OR	A
+   0142 3E 00               333 	LD	A,#0		; ALWAYS USE DRIVE A FOR SUBMIT.
+   0144 C4rBBs00            334 	CALL	NZ,DSKSEL	; SELECT IT IF R.EQUIRED.
+   0147 11rB8s07            335 	LD	DE,#BATCHFCB
+   014A CDrC9s00            336 	CALL	OPEN		; LOOK FOR IT.
+   014D CAr94s01            337 	JP	Z,GETINP1	; IF NOT THERE, USE NORMAL INPUT.
+   0150 3ArC7s07            338 	LD	A,(BATCHFCB+15)	; GET LAST RECORD NUMBER+1.
+   0153 3D                  339 	DEC	A
+   0154 32rD8s07            340 	LD	(BATCHFCB+32),A
+   0157 11rB8s07            341 	LD	DE,#BATCHFCB
+   015A CDrF7s00            342 	CALL	RDREC		; READ LAST RECORD.
+   015D C2r94s01            343 	JP	NZ,GETINP1	; QUIT ON END OF FILE.
+                            344 ;
+                            345 ;   MOVE THIS RECORD INTO INPUT BUFFER.
+                            346 ;
+   0160 11r07s00            347 	LD	DE,#INBUFF+1
+   0163 21 80 00            348 	LD	HL,#TBUFF	; DATA WAS READ INTO BUFFER HERE.
+   0166 06 80               349 	LD	B,#128		; ALL 128 CHARACTERS MAY BE USED.
+   0168 CDr38s04            350 	CALL	HL2DE		; (HL) TO (DE), (B) BYTES.
+   016B 21rC6s07            351 	LD	HL,#BATCHFCB+14
+   016E 36 00               352 	LD	(HL),#0		; ZERO OUT THE 'S2' BYTE.
+   0170 23                  353 	INC	HL		; AND DECREMENT THE RECORD COUNT.
+   0171 35                  354 	DEC	(HL)
+   0172 11rB8s07            355 	LD	DE,#BATCHFCB	; CLOSE THE BATCH FILE NOW.
+   0175 CDrD8s00            356 	CALL	CLOSE
+   0178 CAr94s01            357 	JP	Z,GETINP1	; QUIT ON AN ERROR.
+   017B 3ArFBs07            358 	LD	A,(CDRIVE)	; RE-SELECT PREVIOUS DRIVE IF NEED BE.
+   017E B7                  359 	OR	A
+   017F C4rBBs00            360 	CALL	NZ,DSKSEL	; DON'T DO NEEDLESS SELECTS.
+                            361 ;
+                            362 ;   PRINT LINE JUST READ ON CONSOLE.
+                            363 ;
+   0182 21r08s00            364 	LD	HL,#INBUFF+2
+   0185 CDrAAs00            365 	CALL	PLINE2
+   0188 CDrC0s01            366 	CALL	CHKCON		; CHECK CONSOLE, QUIT ON A KEY.
+   018B CArA5s01            367 	JP	Z,GETINP2	; JUMP IF NO KEY IS PRESSED.
+                            368 ;
+                            369 ;   TERMINATE THE SUBMIT JOB ON ANY KEYBOARD INPUT. DELETE THIS
+                            370 ; FILE SUCH THAT IT IS NOT RE-STARTED AND JUMP TO NORMAL KEYBOARD
+                            371 ; INPUT SECTION.
+                            372 ;
+   018E CDrDBs01            373 	CALL	DELBATCH	; DELETE THE BATCH FILE.
+   0191 C3r7As03            374 	JP	CMMND1		; AND RESTART COMMAND INPUT.
+                            375 ;
+                            376 ;   GET HERE FOR NORMAL KEYBOARD INPUT. DELETE THE SUBMIT FILE
+                            377 ; INCASE THERE WAS ONE.
+                            378 ;
+   0194 CDrDBs01            379 GETINP1:CALL	DELBATCH	; DELETE FILE ($$$.SUB).
+   0197 CDr18s01            380 	CALL	SETCDRV		; RESET ACTIVE DISK.
+   019A 0E 0A               381 	LD	C,#10		; GET LINE FROM CONSOLE DEVICE.
+   019C 11r06s00            382 	LD	DE,#INBUFF
+   019F CD 05 00            383 	CALL	ENTRY
+   01A2 CDr27s01            384 	CALL	MOVECD		; RESET CURRENT DRIVE (AGAIN).
+                            385 ;
+                            386 ;   CONVERT INPUT LINE TO UPPER CASE.
+                            387 ;
+   01A5 21r07s00            388 GETINP2:LD	HL,#INBUFF+1
+   01A8 46                  389 	LD	B,(HL)		; (B)=CHARACTER COUNTER.
+   01A9 23                  390 GETINP3:INC	HL
+   01AA 78                  391 	LD	A,B		; END OF THE LINE?
+   01AB B7                  392 	OR	A
+   01AC CArB8s01            393 	JP	Z,GETINP4
+   01AF 7E                  394 	LD	A,(HL)		; CONVERT TO UPPER CASE.
+   01B0 CDr2Es01            395 	CALL	UPPER
+   01B3 77                  396 	LD	(HL),A
+   01B4 05                  397 	DEC	B		; ADJUST CHARACTER COUNT.
+   01B5 C3rA9s01            398 	JP	GETINP3
+   01B8 77                  399 GETINP4:LD	(HL),A		; ADD TRAILING NULL.
+   01B9 21r08s00            400 	LD	HL,#INBUFF+2
+   01BC 22r86s00            401 	LD	(INPOINT),HL	; RESET INPUT LINE POINTER.
+   01BF C9                  402 	RET
+                            403 ;
+                            404 ;   ROUTINE TO CHECK THE CONSOLE FOR A KEY PRESSED. THE ZERO
+                            405 ; FLAG IS SET IS NONE, ELSE THE CHARACTER IS RETURNED IN (A).
+                            406 ;
+   01C0 0E 0B               407 CHKCON:	LD	C,#11		; CHECK CONSOLE.
+   01C2 CD 05 00            408 	CALL	ENTRY
+   01C5 B7                  409 	OR	A
+   01C6 C8                  410 	RET	Z		; RETURN IF NOTHING.
+   01C7 0E 01               411 	LD	C,#1		; ELSE GET CHARACTER.
+   01C9 CD 05 00            412 	CALL	ENTRY
+   01CC B7                  413 	OR	A		; CLEAR ZERO FLAG AND RETURN.
+   01CD C9                  414 	RET
+                            415 ;
+                            416 ;   ROUTINE TO GET THE CURRENTLY ACTIVE DRIVE NUMBER.
+                            417 ;
+   01CE 0E 19               418 GETDSK:	LD	C,#25
+   01D0 C3 05 00            419 	JP	ENTRY
+                            420 ;
+                            421 ;   SET THE STABDARD DMA ADDRESS.
+                            422 ;
+   01D3 11 80 00            423 STDDMA:	LD	DE,#TBUFF
+                            424 ;
+                            425 ;   ROUTINE TO SET THE DMA ADDRESS TO (DE).
+                            426 ;
+   01D6 0E 1A               427 DMASET:	LD	C,#26
+   01D8 C3 05 00            428 	JP	ENTRY
+                            429 ;
+                            430 ;  DELETE THE BATCH FILE CREATED BY SUBMIT.
+                            431 ;
+   01DB                     432 DELBATCH:
+   01DB 21rB7s07            433 	LD	HL,#BATCH	; IS BATCH ACTIVE?
+   01DE 7E                  434 	LD	A,(HL)
+   01DF B7                  435 	OR	A
+   01E0 C8                  436 	RET	Z
+   01E1 36 00               437 	LD	(HL),#0		; YES, DE-ACTIVATE IT.
+   01E3 AF                  438 	XOR	A
+   01E4 CDrBBs00            439 	CALL	DSKSEL		; SELECT DRIVE 0 FOR SURE.
+   01E7 11rB8s07            440 	LD	DE,#BATCHFCB	; AND DELETE THIS FILE.
+   01EA CDrEDs00            441 	CALL	DELETE
+   01ED 3ArFBs07            442 	LD	A,(CDRIVE)	; RESET CURRENT DRIVE.
+   01F0 C3rBBs00            443 	JP	DSKSEL
+                            444 ;
+                            445 ;   PRINT BACK FILE NAME WITH A '?' TO INDICATE A SYNTAX ERROR.
+                            446 ;
+   01F3 CDr96s00            447 SYNERR:	CALL	CRLF		; END CURRENT LINE.
+   01F6 2Ar88s00            448 	LD	HL,(NAMEPNT)	; THIS POINTS TO NAME IN ERROR.
+   01F9 7E                  449 SYNERR1:LD	A,(HL)		; PRINT IT UNTIL A SPACE OR NULL IS FOUND.
+   01FA FE 20               450 	CP	#ASCSPACE
+   01FC CAr0Cs02            451 	JP	Z,SYNERR2
+   01FF B7                  452 	OR	A
+   0200 CAr0Cs02            453 	JP	Z,SYNERR2
+   0203 E5                  454 	PUSH	HL
+   0204 CDr8As00            455 	CALL	PRINT
+   0207 E1                  456 	POP	HL
+   0208 23                  457 	INC	HL
+   0209 C3rF9s01            458 	JP	SYNERR1
+   020C 3E 3F               459 SYNERR2:LD	A,#QUESTION		; ADD TRAILING '?'.
+   020E CDr8As00            460 	CALL	PRINT
+   0211 CDr96s00            461 	CALL	CRLF
+   0214 CDrDBs01            462 	CALL	DELBATCH	; DELETE ANY BATCH FILE.
+   0217 C3r7As03            463 	JP	CMMND1		; AND RESTART FROM CONSOLE INPUT.
+                            464 ;
+                            465 ;   CHECK CHARACTER AT (DE) FOR LEGAL COMMAND INPUT. NOTE THAT THE
+                            466 ; ZERO FLAG IS SET IF THE CHARACTER IS A DELIMITER.
+                            467 ;
+   021A 1A                  468 CHECK:	LD	A,(DE)
+   021B B7                  469 	OR	A
+   021C C8                  470 	RET	Z
+   021D FE 20               471 	CP	#ASCSPACE		; CONTROL CHARACTERS ARE NOT LEGAL HERE.
+   021F DArF3s01            472 	JP	C,SYNERR
+   0222 C8                  473 	RET	Z		; CHECK FOR VALID DELIMITER.
+   0223 FE 3D               474 	CP	#EQUAL
+   0225 C8                  475 	RET	Z
+   0226 FE 5F               476 	CP	#UNDERSCORE
+   0228 C8                  477 	RET	Z
+   0229 FE 2E               478 	CP	#PERIOD
+   022B C8                  479 	RET	Z
+   022C FE 3A               480 	CP	#COLON
+   022E C8                  481 	RET	Z
+   022F FE 3B               482 	CP	#0x3b
+   0231 C8                  483 	RET	Z
+   0232 FE 3C               484 	CP	#LESSTHAN
+   0234 C8                  485 	RET	Z
+   0235 FE 3E               486 	CP	#GREATERTHAN
+   0237 C8                  487 	RET	Z
+   0238 C9                  488 	RET
+                            489 ;
+                            490 ;   GET THE NEXT NON-BLANK CHARACTER FROM (DE).
+                            491 ;
+   0239                     492 NONBLANK:
+   0239 1A                  493 	LD	A,(DE)
+   023A B7                  494 	OR	A		; STRING ENDS WITH A NULL.
+   023B C8                  495 	RET	Z
+   023C FE 20               496 	CP	#ASCSPACE
+   023E C0                  497 	RET	NZ
+   023F 13                  498 	INC	DE
+   0240 C3r39s02            499 	JP	NONBLANK
+                            500 ;
+                            501 ;   ADD (HL)=(HL)+(A)
+                            502 ;
+   0243 85                  503 ADDHL:	ADD	A,L
+   0244 6F                  504 	LD	L,A
+   0245 D0                  505 	RET	NC		; TAKE CARE OF ANY CARRY.
+   0246 24                  506 	INC	H
+   0247 C9                  507 	RET
+                            508 ;
+                            509 ;   CONVERT THE FIRST NAME IN (FCB).
+                            510 ;
+   0248 3E 00               511 CONVFST:LD	A,#0
+                            512 ;
+                            513 ;   FORMAT A FILE NAME (CONVERT * TO '?', ETC.). ON RETURN,
+                            514 ; (A)=0 IS AN UNAMBIGEOUS NAME WAS SPECIFIED. ENTER WITH (A) .EQUAL TO
+                            515 ; THE POSITION WITHIN THE FCB FOR THE NAME (EITHER 0 OR 16).
+                            516 ;
+   024A 21rD9s07            517 CONVERT:LD	HL,#FCB
+   024D CDr43s02            518 	CALL	ADDHL
+   0250 E5                  519 	PUSH	HL
+   0251 E5                  520 	PUSH	HL
+   0252 AF                  521 	XOR	A
+   0253 32rFCs07            522 	LD	(CHGDRV),A	; INITIALIZE DRIVE CHANGE FLAG.
+   0256 2Ar86s00            523 	LD	HL,(INPOINT)	; SET (HL) AS POINTER INTO INPUT LINE.
+   0259 EB                  524 	EX	DE,HL
+   025A CDr39s02            525 	CALL	NONBLANK	; GET NEXT NON-BLANK CHARACTER.
+   025D EB                  526 	EX	DE,HL
+   025E 22r88s00            527 	LD	(NAMEPNT),HL	; SAVE POINTER HERE FOR ANY ERROR MESSAGE.
+   0261 EB                  528 	EX	DE,HL
+   0262 E1                  529 	POP	HL
+   0263 1A                  530 	LD	A,(DE)		; GET FIRST CHARACTER.
+   0264 B7                  531 	OR	A
+   0265 CAr73s02            532 	JP	Z,CONVRT1
+   0268 DE 40               533 	SBC	A,#0x41-1	; MIGHT BE A DRIVE NAME, CONVERT TO BINARY.
+   026A 47                  534 	LD	B,A		; AND SAVE.
+   026B 13                  535 	INC	DE		; CHECK NEXT CHARACTER FOR A ':'.
+   026C 1A                  536 	LD	A,(DE)
+   026D FE 3A               537 	CP	#COLON
+   026F CAr7As02            538 	JP	Z,CONVRT2
+   0272 1B                  539 	DEC	DE		; NOPE, MOVE POINTER BACK TO THE START OF THE LINE.
+   0273 3ArFBs07            540 CONVRT1:LD	A,(CDRIVE)
+   0276 77                  541 	LD	(HL),A
+   0277 C3r80s02            542 	JP	CONVRT3
+   027A 78                  543 CONVRT2:LD	A,B
+   027B 32rFCs07            544 	LD	(CHGDRV),A	; SET CHANGE IN DRIVES FLAG.
+   027E 70                  545 	LD	(HL),B
+   027F 13                  546 	INC	DE
+                            547 ;
+                            548 ;   CONVERT THE BASIC FILE NAME.
+                            549 ;
+   0280 06 08               550 CONVRT3:LD	B,#8
+   0282 CDr1As02            551 CONVRT4:CALL	CHECK
+   0285 CArA3s02            552 	JP	Z,CONVRT8
+   0288 23                  553 	INC	HL
+   0289 FE 2A               554 	CP	#ASTERICK	; NOTE THAT AN '*' WILL FILL THE REMAINING
+   028B C2r93s02            555 	JP	NZ,CONVRT5	; FIELD WITH '?'.
+   028E 36 3F               556 	LD	(HL),#QUESTION
+   0290 C3r95s02            557 	JP	CONVRT6
+   0293 77                  558 CONVRT5:LD	(HL),A
+   0294 13                  559 	INC	DE
+   0295 05                  560 CONVRT6:DEC	B
+   0296 C2r82s02            561 	JP	NZ,CONVRT4
+   0299 CDr1As02            562 CONVRT7:CALL	CHECK		; GET NEXT DELIMITER.
+   029C CArAAs02            563 	JP	Z,GETEXT
+   029F 13                  564 	INC	DE
+   02A0 C3r99s02            565 	JP	CONVRT7
+   02A3 23                  566 CONVRT8:INC	HL		; BLANK FILL THE FILE NAME.
+   02A4 36 20               567 	LD	(HL),#ASCSPACE
+   02A6 05                  568 	DEC	B
+   02A7 C2rA3s02            569 	JP	NZ,CONVRT8
+                            570 ;
+                            571 ;   GET THE EXTENSION AND CONVERT IT.
+                            572 ;
+   02AA 06 03               573 GETEXT:	LD	B,#3
+   02AC FE 2E               574 	CP	#PERIOD
+   02AE C2rD3s02            575 	JP	NZ,GETEXT5
+   02B1 13                  576 	INC	DE
+   02B2 CDr1As02            577 GETEXT1:CALL	CHECK
+   02B5 CArD3s02            578 	JP	Z,GETEXT5
+   02B8 23                  579 	INC	HL
+   02B9 FE 2A               580 	CP	#ASTERICK
+   02BB C2rC3s02            581 	JP	NZ,GETEXT2
+   02BE 36 3F               582 	LD	(HL),#QUESTION
+   02C0 C3rC5s02            583 	JP	GETEXT3
+   02C3 77                  584 GETEXT2:LD	(HL),A
+   02C4 13                  585 	INC	DE
+   02C5 05                  586 GETEXT3:DEC	B
+   02C6 C2rB2s02            587 	JP	NZ,GETEXT1
+   02C9 CDr1As02            588 GETEXT4:CALL	CHECK
+   02CC CArDAs02            589 	JP	Z,GETEXT6
+   02CF 13                  590 	INC	DE
+   02D0 C3rC9s02            591 	JP	GETEXT4
+   02D3 23                  592 GETEXT5:INC	HL
+   02D4 36 20               593 	LD	(HL),#ASCSPACE
+   02D6 05                  594 	DEC	B
+   02D7 C2rD3s02            595 	JP	NZ,GETEXT5
+   02DA 06 03               596 GETEXT6:LD	B,#3
+   02DC 23                  597 GETEXT7:INC	HL
+   02DD 36 00               598 	LD	(HL),#0
+   02DF 05                  599 	DEC	B
+   02E0 C2rDCs02            600 	JP	NZ,GETEXT7
+   02E3 EB                  601 	EX	DE,HL
+   02E4 22r86s00            602 	LD	(INPOINT),HL	; SAVE INPUT LINE POINTER.
+   02E7 E1                  603 	POP	HL
+                            604 ;
+                            605 ;   CHECK TO SEE IF THIS IS AN AMBIGEOUS FILE NAME SPECIFICATION.
+                            606 ; SET THE (A) REGISTER TO NON ZERO IF IT IS.
+                            607 ;
+   02E8 01 0B 00            608 	LD	BC,#11		; SET NAME LENGTH.
+   02EB 23                  609 GETEXT8:INC	HL
+   02EC 7E                  610 	LD	A,(HL)
+   02ED FE 3F               611 	CP	#QUESTION	; ANY QUESTION MARKS?
+   02EF C2rF3s02            612 	JP	NZ,GETEXT9
+   02F2 04                  613 	INC	B		; COUNT THEM.
+   02F3 0D                  614 GETEXT9:DEC	C
+   02F4 C2rEBs02            615 	JP	NZ,GETEXT8
+   02F7 78                  616 	LD	A,B
+   02F8 B7                  617 	OR	A
+   02F9 C9                  618 	RET
+                            619 ;
+                            620 ;   CP/M COMMAND TABLE. NOTE COMMANDS CAN BE EITHER 3 OR 4 CHARACTERS LONG.
+                            621 ;
+                    0001    622 	.if	MON
+                    0007    623 NUMCMDS	=	7		; NUMBER OF COMMANDS
+                            624 	.else
+                            625 NUMCMDS	= 	6		; NUMBER OF COMMANDS
+                            626 	.endif
+                            627 
+   02FA 44 49 52 20         628 CMDTBL:	.ascii	"DIR "
+   02FE 45 52 41 20         629 	.ascii	"ERA "
+   0302 54 59 50 45         630 	.ascii	"TYPE"
+   0306 53 41 56 45         631 	.ascii	"SAVE"
+   030A 52 45 4E 20         632 	.ascii	"REN "
+   030E 55 53 45 52         633 	.ascii	"USER"
+                    0001    634 	.if	MON
+   0312 4D 4F 4E 20         635 	.ascii	"MON "
+                            636 	.ENDIF
+                            637 	
+   0316r70s04               638 CMDADR:	.DW	DIRECT
+   0318r18s05               639 	.DW	ERASE
+   031Ar56s05               640 	.DW	TYPE
+   031CrA6s05               641 	.DW	SAVE
+   031Er09s06               642 	.DW	RENAME
+   0320r87s06               643 	.DW	USER
+                    0001    644 	.IF	MON
+   0322r6Ds04               645 	.DW	MONITOR
+                            646 	.ENDIF
+   0324r9Es06               647 	.DW	UNKNOWN
+                            648 ;
+                            649 ;   SEARCH THE COMMAND TABLE FOR A MATCH WITH WHAT HAS JUST
+                            650 ; BEEN ENTERED. IF A MATCH IS FOUND, THEN WE JUMP TO THE
+                            651 ; PROPER SECTION. ELSE JUMP TO (UNKNOWN).
+                            652 ; ON RETURN, THE (C) REGISTER IS SET TO THE COMMAND NUMBER
+                            653 ; THAT MATCHED (OR NUMCMDS+1 IF NO MATCH).
+                            654 ;
+   0326 21rFAs02            655 SEARCH:	LD	HL,#CMDTBL
+   0329 0E 00               656 	LD	C,#0
+   032B 79                  657 SEARCH1:LD	A,C
+   032C FE 07               658 	CP	#NUMCMDS		; THIS COMMANDS EXISTS.
+   032E D0                  659 	RET	NC
+   032F 11rDAs07            660 	LD	DE,#FCB+1	; CHECK THIS ONE.
+   0332 06 04               661 	LD	B,#4		; MAX COMMAND LENGTH.
+   0334 1A                  662 SEARCH2:LD	A,(DE)
+   0335 BE                  663 	CP	(HL)
+   0336 C2r47s03            664 	JP	NZ,SEARCH3	; NOT A MATCH.
+   0339 13                  665 	INC	DE
+   033A 23                  666 	INC	HL
+   033B 05                  667 	DEC	B
+   033C C2r34s03            668 	JP	NZ,SEARCH2
+   033F 1A                  669 	LD	A,(DE)		; ALLOW A 3 CHARACTER COMMAND TO MATCH.
+   0340 FE 20               670 	CP	#ASCSPACE
+   0342 C2r4Cs03            671 	JP	NZ,SEARCH4
+   0345 79                  672 	LD	A,C		; SET RETURN REGISTER FOR THIS COMMAND.
+   0346 C9                  673 	RET
+   0347 23                  674 SEARCH3:INC	HL
+   0348 05                  675 	DEC	B
+   0349 C2r47s03            676 	JP	NZ,SEARCH3
+   034C 0C                  677 SEARCH4:INC	C
+   034D C3r2Bs03            678 	JP	SEARCH1
+                            679 ;
+                            680 ;   SET THE INPUT BUFFER TO EMPTY AND THEN START THE COMMAND
+                            681 ; PROCESSOR (CCP).
+                            682 ;
+   0350                     683 CLEARBUF:
+   0350 AF                  684 	XOR	A
+   0351 32r07s00            685 	LD	(INBUFF+1),A	; SECOND BYTE IS ACTUAL LENGTH.
+   0354 31rB7s07            686 COMMAND:LD	SP,#CCPSTACK	; SETUP STACK AREA.
+   0357 C5                  687 	PUSH	BC		; NOTE THAT (C) SHOULD BE .EQUAL TO:
+   0358 79                  688 	LD	A,C		; (UUUUDDDD) WHERE 'UUUU' IS THE USER NUMBER
+   0359 1F                  689 	RRA			; AND 'DDDD' IS THE DRIVE NUMBER.
+   035A 1F                  690 	RRA
+   035B 1F                  691 	RRA
+   035C 1F                  692 	RRA
+   035D E6 0F               693 	AND	#0x0F		; ISOLATE THE USER NUMBER.
+   035F 5F                  694 	LD	E,A
+   0360 CDr13s01            695 	CALL	GETSETUC	; AND SET IT.
+   0363 CDrB6s00            696 	CALL	RESDSK		; RESET THE DISK SYSTEM.
+   0366 32rB7s07            697 	LD	(BATCH),A	; CLEAR BATCH MODE FLAG.
+   0369 C1                  698 	POP	BC
+   036A 79                  699 	LD	A,C
+   036B E6 0F               700 	AND	#0x0F		; ISOLATE THE DRIVE NUMBER.
+   036D 32rFBs07            701 	LD	(CDRIVE),A	; AND SAVE.
+   0370 CDrBBs00            702 	CALL	DSKSEL		; ...AND SELECT.
+   0373 3Ar07s00            703 	LD	A,(INBUFF+1)
+   0376 B7                  704 	OR	A		; ANYTHING IN INPUT BUFFER ALREADY?
+   0377 C2rA6s03            705 	JP	NZ,CMMND2	; YES, WE JUST PROCESS IT.
+                            706 ;
+                            707 ;   ENTRY POINT TO GET A COMMAND LINE FROM THE CONSOLE.
+                            708 ;
+   037A 31rB7s07            709 CMMND1:	LD	SP,#CCPSTACK	; SET STACK STRAIGHT.
+   037D CDr96s00            710 	CALL	CRLF		; START A NEW LINE ON THE SCREEN.
+   0380 CDrCEs01            711 	CALL	GETDSK		; GET CURRENT DRIVE.
+   0383 C6 41               712 	ADD	A,#0x41
+   0385 CDr8As00            713 	CALL	PRINT		; PRINT CURRENT DRIVE.
+                    0001    714 	.IF	USRDSP
+   0388 CDr11s01            715         CALL	GETUSR		;GET CURRENT USER NUMBER
+   038B FE 0A               716         CP	#10              ;TWO DIGITS?
+   038D 38 0A               717         JR      C,CMMND3        ;NO
+   038F 3E 31               718         LD      A,#0x31		;PRINT LEADING '1'
+   0391 CDr8As00            719         CALL    PRINT
+   0394 CDr11s01            720         CALL	GETUSR		;GET CURRENT USER NUMBER
+   0397 D6 0A               721         SUB     #10		;SUBTRACT 10
+   0399 C6 30               722 CMMND3: ADD     A,#0x30
+   039B CDr8As00            723         CALL    PRINT
+                            724 	.ENDIF
+   039E 3E 3E               725 	LD	A,#GREATERTHAN
+   03A0 CDr8As00            726 	CALL	PRINT		; AND ADD PROMPT.
+   03A3 CDr37s01            727 	CALL	GETINP		; GET LINE FROM USER.
+                            728 ;
+                            729 ;   PROCESS COMMAND LINE HERE.
+                            730 ;
+   03A6 11 80 00            731 CMMND2:	LD	DE,#TBUFF
+   03A9 CDrD6s01            732 	CALL	DMASET		; SET STANDARD DMA ADDRESS.
+   03AC CDrCEs01            733 	CALL	GETDSK
+   03AF 32rFBs07            734 	LD	(CDRIVE),A	; SET CURRENT DRIVE.
+   03B2 CDr48s02            735 	CALL	CONVFST		; CONVERT NAME TYPED IN.
+   03B5 C4rF3s01            736 	CALL	NZ,SYNERR	; WILD CARDS ARE NOT ALLOWED.
+   03B8 3ArFCs07            737 	LD	A,(CHGDRV)	; IF A CHANGE IN DRIVES WAS INDICATED,
+   03BB B7                  738 	OR	A		; THEN TREAT THIS AS AN UNKNOWN COMMAND
+   03BC C2r9Es06            739 	JP	NZ,UNKNOWN	; WHICH GETS EXECUTED.
+   03BF CDr26s03            740 	CALL	SEARCH		; ELSE SEARCH COMMAND TABLE FOR A MATCH.
+                            741 ;
+                            742 ;   NOTE THAT AN UNKNOWN COMMAND RETURNS
+                            743 ; WITH (A) POINTING TO THE LAST ADDRESS
+                            744 ; IN OUR TABLE WHICH IS (UNKNOWN).
+                            745 ;
+   03C2 21r16s03            746 	LD	HL,#CMDADR	; NOW, LOOK THRU OUR ADDRESS TABLE FOR COMMAND (A).
+   03C5 5F                  747 	LD	E,A		; SET (DE) TO COMMAND NUMBER.
+   03C6 16 00               748 	LD	D,#0
+   03C8 19                  749 	ADD	HL,DE
+   03C9 19                  750 	ADD	HL,DE		; (HL)=(CMDADR)+2*(COMMAND NUMBER).
+   03CA 7E                  751 	LD	A,(HL)		; NOW PICK OUT THIS ADDRESS.
+   03CB 23                  752 	INC	HL
+   03CC 66                  753 	LD	H,(HL)
+   03CD 6F                  754 	LD	L,A
+   03CE E9                  755 	JP	(HL)		; NOW EXECUTE IT.
+                            756 ;
+                            757 ;   READ ERROR WHILE TYPEING A FILE.
+                            758 ;
+   03CF 01rD5s03            759 RDERROR:LD	BC,#RDERR
+   03D2 C3rA5s00            760 	JP	PLINE
+   03D5 52 65 61 64 20 45   761 RDERR:	.asciz	"Read Error"
+        72 72 6F 72 00
+                            762 
+                            763 ;
+                            764 ;   R.EQUIRED FILE WAS NOT LOCATED.
+                            765 ;
+   03E0 01rE6s03            766 NONE:	LD	BC,#NOFILE
+   03E3 C3rA5s00            767 	JP	PLINE
+   03E6 4E 6F 20 46 69 6C   768 NOFILE:	.asciz	"No File"
+        65 00
+                            769 ;
+                            770 ;   DECODE A COMMAND OF THE FORM 'A>FILENAME NUMBER{ FILENAME}.
+                            771 ; NOTE THAT A DRIVE SPECIFIER IS NOT ALLOWED ON THE FIRST FILE
+                            772 ; NAME. ON RETURN, THE NUMBER IS IN REGISTER (A). ANY ERROR
+                            773 ; CAUSES 'FILENAME?' TO BE PRINTED AND THE COMMAND IS ABORTED.
+                            774 ;
+   03EE CDr48s02            775 DECODE:	CALL	CONVFST		; CONVERT FILENAME.
+   03F1 3ArFCs07            776 	LD	A,(CHGDRV)	; DO NOT ALLOW A DRIVE TO BE SPECIFIED.
+   03F4 B7                  777 	OR	A
+   03F5 C2rF3s01            778 	JP	NZ,SYNERR
+   03F8 21rDAs07            779 	LD	HL,#FCB+1	; CONVERT NUMBER NOW.
+   03FB 01 0B 00            780 	LD	BC,#11		; (B)=SUM REGISTER, (C)=MAX DIGIT COUNT.
+   03FE 7E                  781 DECODE1:LD	A,(HL)
+   03FF FE 20               782 	CP	#ASCSPACE		; A SPACE TERMINATES THE NUMERAL.
+   0401 CAr29s04            783 	JP	Z,DECODE3
+   0404 23                  784 	INC	HL
+   0405 D6 30               785 	SUB	#0x30		; MAKE BINARY FROM ASCII.
+   0407 FE 0A               786 	CP	#10		; LEGAL DIGIT?
+   0409 D2rF3s01            787 	JP	NC,SYNERR
+   040C 57                  788 	LD	D,A		; YES, SAVE IT IN (D).
+   040D 78                  789 	LD	A,B		; COMPUTE (B)=(B)*10 AND CHECK FOR OVERFLOW.
+   040E E6 E0               790 	AND	#0x0E0
+   0410 C2rF3s01            791 	JP	NZ,SYNERR
+   0413 78                  792 	LD	A,B
+   0414 07                  793 	RLCA
+   0415 07                  794 	RLCA
+   0416 07                  795 	RLCA			; (A)=(B)*8
+   0417 80                  796 	ADD	A,B		; .......*9
+   0418 DArF3s01            797 	JP	C,SYNERR
+   041B 80                  798 	ADD	A,B		; .......*10
+   041C DArF3s01            799 	JP	C,SYNERR
+   041F 82                  800 	ADD	A,D		; ADD IN NEW DIGIT NOW.
+   0420 DArF3s01            801 DECODE2:JP	C,SYNERR
+   0423 47                  802 	LD	B,A		; AND SAVE RESULT.
+   0424 0D                  803 	DEC	C		; ONLY LOOK AT 11 DIGITS.
+   0425 C2rFEs03            804 	JP	NZ,DECODE1
+   0428 C9                  805 	RET
+   0429 7E                  806 DECODE3:LD	A,(HL)		; SPACES MUST FOLLOW (WHY?).
+   042A FE 20               807 	CP	#ASCSPACE
+   042C C2rF3s01            808 	JP	NZ,SYNERR
+   042F 23                  809 	INC	HL
+   0430 0D                  810 DECODE4:DEC	C
+   0431 C2r29s04            811 	JP	NZ,DECODE3
+   0434 78                  812 	LD	A,B		; SET (A)=THE NUMERIC VALUE ENTERED.
+   0435 C9                  813 	RET
+                            814 ;
+                            815 ;   MOVE 3 BYTES FROM (HL) TO (DE). NOTE THAT THERE IS ONLY
+                            816 ; ONE REFERENCE TO THIS AT (A2D5H).
+                            817 ;
+   0436 06 03               818 MOVE3:	LD	B,#3
+                            819 ;
+                            820 ;   MOVE (B) BYTES FROM (HL) TO (DE).
+                            821 ;
+   0438 7E                  822 HL2DE:	LD	A,(HL)
+   0439 12                  823 	LD	(DE),A
+   043A 23                  824 	INC	HL
+   043B 13                  825 	INC	DE
+   043C 05                  826 	DEC	B
+   043D C2r38s04            827 	JP	NZ,HL2DE
+   0440 C9                  828 	RET
+                            829 ;
+                            830 ;   COMPUTE (HL)=(TBUFF)+(A)+(C) AND GET THE BYTE THAT'S HERE.
+                            831 ;
+   0441 21 80 00            832 EXTRACT:LD	HL,#TBUFF
+   0444 81                  833 	ADD	A,C
+   0445 CDr43s02            834 	CALL	ADDHL
+   0448 7E                  835 	LD	A,(HL)
+   0449 C9                  836 	RET
+                            837 ;
+                            838 ;  CHECK DRIVE SPECIFIED. IF IT MEANS A CHANGE, THEN THE NEW
+                            839 ; DRIVE WILL BE SELECTED. IN ANY CASE, THE DRIVE BYTE OF THE
+                            840 ; FCB WILL BE SET TO NULL (MEANS USE CURRENT DRIVE).
+                            841 ;
+   044A AF                  842 DSELECT:XOR	A		; NULL OUT FIRST BYTE OF FCB.
+   044B 32rD9s07            843 	LD	(FCB),A
+   044E 3ArFCs07            844 	LD	A,(CHGDRV)	; A DRIVE CHANGE INDICATED?
+   0451 B7                  845 	OR	A
+   0452 C8                  846 	RET	Z
+   0453 3D                  847 	DEC	A		; YES, IS IT THE SAME AS THE CURRENT DRIVE?
+   0454 21rFBs07            848 	LD	HL,#CDRIVE
+   0457 BE                  849 	CP	(HL)
+   0458 C8                  850 	RET	Z
+   0459 C3rBBs00            851 	JP	DSKSEL		; NO. SELECT IT THEN.
+                            852 ;
+                            853 ;   CHECK THE DRIVE SELECTION AND RESET IT TO THE PREVIOUS
+                            854 ; DRIVE IF IT WAS CHANGED FOR THE PRECEEDING COMMAND.
+                            855 ;
+   045C 3ArFCs07            856 RESETDR:LD	A,(CHGDRV)	; DRIVE CHANGE INDICATED?
+   045F B7                  857 	OR	A
+   0460 C8                  858 	RET	Z
+   0461 3D                  859 	DEC	A		; YES, WAS IT A DIFFERENT DRIVE?
+   0462 21rFBs07            860 	LD	HL,#CDRIVE
+   0465 BE                  861 	CP	(HL)
+   0466 C8                  862 	RET	Z
+   0467 3ArFBs07            863 	LD	A,(CDRIVE)	; YES, RE-SELECT OUR OLD DRIVE.
+   046A C3rBBs00            864 	JP	DSKSEL
+                            865 	
+                    0001    866 	.IF	MON
+                            867 ;
+                            868 ;**************************************************************
+                            869 ;*
+                            870 ;*           M O N I T O R   C O M M A N D
+                            871 ;*
+                            872 ;**************************************************************
+                            873 ;
+   046D C3 00 FC            874 MONITOR: JP	MONADR
+                            875 	.ENDIF
+                            876 
+                            877 ;
+                            878 ;**************************************************************
+                            879 ;*
+                            880 ;*           D I R E C T O R Y   C O M M A N D
+                            881 ;*
+                            882 ;**************************************************************
+                            883 ;
+   0470 CDr48s02            884 DIRECT:	CALL	CONVFST		; CONVERT FILE NAME.
+   0473 CDr4As04            885 	CALL	DSELECT		; SELECT INDICATED DRIVE.
+   0476 21rDAs07            886 	LD	HL,#FCB+1	; WAS ANY FILE INDICATED?
+   0479 7E                  887 	LD	A,(HL)
+   047A FE 20               888 	CP	#ASCSPACE
+   047C C2r88s04            889 	JP	NZ,DIRECT2
+   047F 06 0B               890 	LD	B,#11		; NO. FILL FIELD WITH '?' - SAME AS *.*.
+   0481 36 3F               891 DIRECT1:LD	(HL),#QUESTION
+   0483 23                  892 	INC	HL
+   0484 05                  893 	DEC	B
+   0485 C2r81s04            894 	JP	NZ,DIRECT1
+   0488 1E 00               895 DIRECT2:LD	E,#0		; SET INITIAL CURSOR POSITION.
+   048A D5                  896 	PUSH	DE
+   048B CDrE7s00            897 	CALL	SRCHFCB		; GET FIRST FILE NAME.
+   048E CCrE0s03            898 	CALL	Z,NONE		; NONE FOUND AT ALL?
+   0491 CAr14s05            899 DIRECT3:JP	Z,DIRECT9	; TERMINATE IF NO MORE NAMES.
+   0494 3ArFAs07            900 	LD	A,(RTNCODE)	; GET FILE'S POSITION IN SEGMENT (0-3).
+   0497 0F                  901 	RRCA
+   0498 0F                  902 	RRCA
+   0499 0F                  903 	RRCA
+   049A E6 60               904 	AND	#0x60		; (A)=POSITION*32
+   049C 4F                  905 	LD	C,A
+   049D 3E 0A               906 	LD	A,#10
+   049F CDr41s04            907 	CALL	EXTRACT		; EXTRACT THE TENTH ENTRY IN FCB.
+   04A2 17                  908 	RLA			; CHECK SYSTEM FILE STATUS BIT.
+   04A3 DAr08s05            909 	JP	C,DIRECT8	; WE DON'T LIST THEM.
+   04A6 D1                  910 	POP	DE
+   04A7 7B                  911 	LD	A,E		; BUMP NAME COUNT.
+   04A8 1C                  912 	INC	E
+   04A9 D5                  913 	PUSH	DE
+   04AA E6 03               914 	AND	#3		; AT END OF LINE?
+   04AC F5                  915 	PUSH	AF
+   04AD C2rC5s04            916 	JP	NZ,DIRECT4
+   04B0 CDr96s00            917 	CALL	CRLF		; YES, END THIS LINE AND START ANOTHER.
+   04B3 C5                  918 	PUSH	BC
+   04B4 CDrCEs01            919 	CALL	GETDSK		; START LINE WITH ('A:').
+   04B7 C1                  920 	POP	BC
+   04B8 C6 41               921 	ADD	A,#0x41
+   04BA CDr90s00            922 	CALL	PRINTB
+   04BD 3E 3A               923 	LD	A,#COLON
+   04BF CDr90s00            924 	CALL	PRINTB
+   04C2 C3rCDs04            925 	JP	DIRECT5
+   04C5 CDrA0s00            926 DIRECT4:CALL	SPACE		; ADD SEPERATOR BETWEEN FILE NAMES.
+   04C8 3E 3A               927 	LD	A,#COLON
+   04CA CDr90s00            928 	CALL	PRINTB
+   04CD CDrA0s00            929 DIRECT5:CALL	SPACE
+   04D0 06 01               930 	LD	B,#1		; 'EXTRACT' EACH FILE NAME CHARACTER AT A TIME.
+   04D2 78                  931 DIRECT6:LD	A,B
+   04D3 CDr41s04            932 	CALL	EXTRACT
+   04D6 E6 7F               933 	AND	#0x7F		; STRIP BIT 7 (STATUS BIT).
+   04D8 FE 20               934 	CP	#ASCSPACE		; ARE WE AT THE END OF THE NAME?
+   04DA C2rF2s04            935 	JP	NZ,DRECT65
+   04DD F1                  936 	POP	AF		; YES, DON'T PRINT SPACES AT THE END OF A LINE.
+   04DE F5                  937 	PUSH	AF
+   04DF FE 03               938 	CP	#3
+   04E1 C2rF0s04            939 	JP	NZ,DRECT63
+   04E4 3E 09               940 	LD	A,#9		; FIRST CHECK FOR NO EXTENSION.
+   04E6 CDr41s04            941 	CALL	EXTRACT
+   04E9 E6 7F               942 	AND	#0x7F
+   04EB FE 20               943 	CP	#ASCSPACE
+   04ED CAr07s05            944 	JP	Z,DIRECT7	; DON'T PRINT SPACES.
+   04F0 3E 20               945 DRECT63:LD	A,#ASCSPACE	; ELSE PRINT THEM.
+   04F2 CDr90s00            946 DRECT65:CALL	PRINTB
+   04F5 04                  947 	INC	B		; BUMP TO NEXT CHARACTER PSOITION.
+   04F6 78                  948 	LD	A,B
+   04F7 FE 0C               949 	CP	#12		; END OF THE NAME?
+   04F9 D2r07s05            950 	JP	NC,DIRECT7
+   04FC FE 09               951 	CP	#9		; NOPE, STARTING EXTENSION?
+   04FE C2rD2s04            952 	JP	NZ,DIRECT6
+   0501 CDrA0s00            953 	CALL	SPACE		; YES, ADD SEPERATING SPACE.
+   0504 C3rD2s04            954 	JP	DIRECT6
+   0507 F1                  955 DIRECT7:POP	AF		; GET THE NEXT FILE NAME.
+   0508 CDrC0s01            956 DIRECT8:CALL	CHKCON		; FIRST CHECK CONSOLE, QUIT ON ANYTHING.
+   050B C2r14s05            957 	JP	NZ,DIRECT9
+   050E CDrE2s00            958 	CALL	SRCHNXT		; GET NEXT NAME.
+   0511 C3r91s04            959 	JP	DIRECT3		; AND CONTINUE WITH OUR LIST.
+   0514 D1                  960 DIRECT9:POP	DE		; RESTORE THE STACK AND RETURN TO COMMAND LEVEL.
+   0515 C3r92s07            961 	JP	GETBACK
+                            962 ;
+                            963 ;**************************************************************
+                            964 ;*
+                            965 ;*                E R A S E   C O M M A N D
+                            966 ;*
+                            967 ;**************************************************************
+                            968 ;
+   0518 CDr48s02            969 ERASE:	CALL	CONVFST		; CONVERT FILE NAME.
+   051B FE 0B               970 	CP	#11		; WAS '*.*' ENTERED?
+   051D C2r3Bs05            971 	JP	NZ,ERASE1
+   0520 01r4Bs05            972 	LD	BC,#YESNO	; YES, ASK FOR CONFIRMATION.
+   0523 CDrA5s00            973 	CALL	PLINE
+   0526 CDr37s01            974 	CALL	GETINP
+   0529 21r07s00            975 	LD	HL,#INBUFF+1
+   052C 35                  976 	DEC	(HL)		; MUST BE EXACTLY 'Y'.
+   052D C2r7As03            977 	JP	NZ,CMMND1
+   0530 23                  978 	INC	HL
+   0531 7E                  979 	LD	A,(HL)
+   0532 FE 59               980 	CP	#0x59
+   0534 C2r7As03            981 	JP	NZ,CMMND1
+   0537 23                  982 	INC	HL
+   0538 22r86s00            983 	LD	(INPOINT),HL	; SAVE INPUT LINE POINTER.
+   053B CDr4As04            984 ERASE1:	CALL	DSELECT		; SELECT DESIRED DISK.
+   053E 11rD9s07            985 	LD	DE,#FCB
+   0541 CDrEDs00            986 	CALL	DELETE		; DELETE THE FILE.
+   0544 3C                  987 	INC	A
+   0545 CCrE0s03            988 	CALL	Z,NONE		; NOT THERE?
+   0548 C3r92s07            989 	JP	GETBACK		; RETURN TO COMMAND LEVEL NOW.
+   054B 41 6C 6C 20 28 59   990 YESNO:	.asciz	"All (Y/N)?"
+        2F 4E 29 3F 00
+                            991 ;
+                            992 ;**************************************************************
+                            993 ;*
+                            994 ;*            T Y P E   C O M M A N D
+                            995 ;*
+                            996 ;**************************************************************
+                            997 ;
+   0556 CDr48s02            998 TYPE:	CALL	CONVFST		; CONVERT FILE NAME.
+   0559 C2rF3s01            999 	JP	NZ,SYNERR	; WILD CARDS NOT ALLOWED.
+   055C CDr4As04           1000 	CALL	DSELECT		; SELECT INDICATED DRIVE.
+   055F CDrCEs00           1001 	CALL	OPENFCB		; OPEN THE FILE.
+   0562 CArA0s05           1002 	JP	Z,TYPE5		; NOT THERE?
+   0565 CDr96s00           1003 	CALL	CRLF		; OK, START A NEW LINE ON THE SCREEN.
+   0568 21rFDs07           1004 	LD	HL,#NBYTES	; INITIALIZE BYTE COUNTER.
+   056B 36 FF              1005 	LD	(HL),#0x0FF	; SET TO READ FIRST SECTOR.
+   056D 21rFDs07           1006 TYPE1:	LD	HL,#NBYTES
+   0570 7E                 1007 TYPE2:	LD	A,(HL)		; HAVE WE WRITTEN THE ENTIRE SECTOR?
+   0571 FE 80              1008 	CP	#128
+   0573 DAr80s05           1009 	JP	C,TYPE3
+   0576 E5                 1010 	PUSH	HL		; YES, READ IN THE NEXT ONE.
+   0577 CDrFCs00           1011 	CALL	READFCB
+   057A E1                 1012 	POP	HL
+   057B C2r99s05           1013 	JP	NZ,TYPE4	; END OR ERROR?
+   057E AF                 1014 	XOR	A		; OK, CLEAR BYTE COUNTER.
+   057F 77                 1015 	LD	(HL),A
+   0580 34                 1016 TYPE3:	INC	(HL)		; COUNT THIS BYTE.
+   0581 21 80 00           1017 	LD	HL,#TBUFF	; AND GET THE (A)TH ONE FROM THE BUFFER (TBUFF).
+   0584 CDr43s02           1018 	CALL	ADDHL
+   0587 7E                 1019 	LD	A,(HL)
+   0588 FE 1A              1020 	CP	#CNTRLZ		; END OF FILE MARK?
+   058A CAr92s07           1021 	JP	Z,GETBACK
+   058D CDr8As00           1022 	CALL	PRINT		; NO, PRINT IT.
+   0590 CDrC0s01           1023 	CALL	CHKCON		; CHECK CONSOLE, QUIT IF ANYTHING READY.
+   0593 C2r92s07           1024 	JP	NZ,GETBACK
+   0596 C3r6Ds05           1025 	JP	TYPE1
+                           1026 ;
+                           1027 ;   GET HERE ON AN END OF FILE OR READ ERROR.
+                           1028 ;
+   0599 3D                 1029 TYPE4:	DEC	A		; READ ERROR?
+   059A CAr92s07           1030 	JP	Z,GETBACK
+   059D CDrCFs03           1031 	CALL	RDERROR		; YES, PRINT MESSAGE.
+   05A0 CDr5Cs04           1032 TYPE5:	CALL	RESETDR		; AND RESET PROPER DRIVE
+   05A3 C3rF3s01           1033 	JP	SYNERR		; NOW PRINT FILE NAME WITH PROBLEM.
+                           1034 ;
+                           1035 ;**************************************************************
+                           1036 ;*
+                           1037 ;*            S A V E   C O M M A N D
+                           1038 ;*
+                           1039 ;**************************************************************
+                           1040 ;
+   05A6 CDrEEs03           1041 SAVE:	CALL	DECODE		; GET NUMERIC NUMBER THAT FOLLOWS SAVE.
+   05A9 F5                 1042 	PUSH	AF		; SAVE NUMBER OF PAGES TO WRITE.
+   05AA CDr48s02           1043 	CALL	CONVFST		; CONVERT FILE NAME.
+   05AD C2rF3s01           1044 	JP	NZ,SYNERR	; WILD CARDS NOT ALLOWED.
+   05B0 CDr4As04           1045 	CALL	DSELECT		; SELECT SPECIFIED DRIVE.
+   05B3 11rD9s07           1046 	LD	DE,#FCB		; NOW DELETE THIS FILE.
+   05B6 D5                 1047 	PUSH	DE
+   05B7 CDrEDs00           1048 	CALL	DELETE
+   05BA D1                 1049 	POP	DE
+   05BB CDr07s01           1050 	CALL	CREATE		; AND CREATE IT AGAIN.
+   05BE CArF4s05           1051 	JP	Z,SAVE3		; CAN'T CREATE?
+   05C1 AF                 1052 	XOR	A		; CLEAR RECORD NUMBER BYTE.
+   05C2 32rF9s07           1053 	LD	(FCB+32),A
+   05C5 F1                 1054 	POP	AF		; CONVERT PAGES TO SECTORS.
+   05C6 6F                 1055 	LD	L,A
+   05C7 26 00              1056 	LD	H,#0
+   05C9 29                 1057 	ADD	HL,HL		; (HL)=NUMBER OF SECTORS TO WRITE.
+   05CA 11 00 01           1058 	LD	DE,#TBASE	; AND WE START FROM HERE.
+   05CD 7C                 1059 SAVE1:	LD	A,H		; DONE YET?
+   05CE B5                 1060 	OR	L
+   05CF CArEAs05           1061 	JP	Z,SAVE2
+   05D2 2B                 1062 	DEC	HL		; NOPE, COUNT THIS AND COMPUTE THE START
+   05D3 E5                 1063 	PUSH	HL		; OF THE NEXT 128 BYTE SECTOR.
+   05D4 21 80 00           1064 	LD	HL,#128
+   05D7 19                 1065 	ADD	HL,DE
+   05D8 E5                 1066 	PUSH	HL		; SAVE IT AND SET THE TRANSFER ADDRESS.
+   05D9 CDrD6s01           1067 	CALL	DMASET
+   05DC 11rD9s07           1068 	LD	DE,#FCB		; WRITE OUT THIS SECTOR NOW.
+   05DF CDr02s01           1069 	CALL	WRTREC
+   05E2 D1                 1070 	POP	DE		; RESET (DE) TO THE START OF THE LAST SECTOR.
+   05E3 E1                 1071 	POP	HL		; RESTORE SECTOR COUNT.
+   05E4 C2rF4s05           1072 	JP	NZ,SAVE3	; WRITE ERROR?
+   05E7 C3rCDs05           1073 	JP	SAVE1
+                           1074 ;
+                           1075 ;   GET HERE AFTER WRITING ALL OF THE FILE.
+                           1076 ;
+   05EA 11rD9s07           1077 SAVE2:	LD	DE,#FCB		; NOW CLOSE THE FILE.
+   05ED CDrD8s00           1078 	CALL	CLOSE
+   05F0 3C                 1079 	INC	A		; DID IT CLOSE OK?
+   05F1 C2rFAs05           1080 	JP	NZ,SAVE4
+                           1081 ;
+                           1082 ;   PRINT OUT ERROR MESSAGE (NO SPACE).
+                           1083 ;
+   05F4 01r00s06           1084 SAVE3:	LD	BC,#NOSPACE
+   05F7 CDrA5s00           1085 	CALL	PLINE
+   05FA CDrD3s01           1086 SAVE4:	CALL	STDDMA		; RESET THE STANDARD DMA ADDRESS.
+   05FD C3r92s07           1087 	JP	GETBACK
+                           1088 
+   0600 4E 6F 20 53 70 61  1089 NOSPACE: .asciz	"No Space"
+        63 65 00
+                           1090 ;
+                           1091 ;**************************************************************
+                           1092 ;*
+                           1093 ;*           R E N A M E   C O M M A N D
+                           1094 ;*
+                           1095 ;**************************************************************
+                           1096 ;
+   0609 CDr48s02           1097 RENAME:	CALL	CONVFST		; CONVERT FIRST FILE NAME.
+   060C C2rF3s01           1098 	JP	NZ,SYNERR	; WILD CARDS NOT ALLOWED.
+   060F 3ArFCs07           1099 	LD	A,(CHGDRV)	; REMEMBER ANY CHANGE IN DRIVES SPECIFIED.
+   0612 F5                 1100 	PUSH	AF
+   0613 CDr4As04           1101 	CALL	DSELECT		; AND SELECT THIS DRIVE.
+   0616 CDrE7s00           1102 	CALL	SRCHFCB		; IS THIS FILE PRESENT?
+   0619 C2r72s06           1103 	JP	NZ,RENAME6	; YES, PRINT ERROR MESSAGE.
+   061C 21rD9s07           1104 	LD	HL,#FCB		; YES, MOVE THIS NAME INTO SECOND SLOT.
+   061F 11rE9s07           1105 	LD	DE,#FCB+16
+   0622 06 10              1106 	LD	B,#16
+   0624 CDr38s04           1107 	CALL	HL2DE
+   0627 2Ar86s00           1108 	LD	HL,(INPOINT)	; GET INPUT POINTER.
+   062A EB                 1109 	EX	DE,HL
+   062B CDr39s02           1110 	CALL	NONBLANK	; GET NEXT NON BLANK CHARACTER.
+   062E FE 3D              1111 	CP	#EQUAL		; ONLY ALLOW AN '=' OR '_' SEPERATOR.
+   0630 CAr38s06           1112 	JP	Z,RENAME1
+   0633 FE 20              1113 	CP	#ASCSPACE
+   0635 C2r6Cs06           1114 	JP	NZ,RENAME5
+   0638 EB                 1115 RENAME1:EX	DE,HL
+   0639 23                 1116 	INC	HL		; OK, SKIP SEPERATOR.
+   063A 22r86s00           1117 	LD	(INPOINT),HL	; SAVE INPUT LINE POINTER.
+   063D CDr48s02           1118 	CALL	CONVFST		; CONVERT THIS SECOND FILE NAME NOW.
+   0640 C2r6Cs06           1119 	JP	NZ,RENAME5	; AGAIN, NO WILD CARDS.
+   0643 F1                 1120 	POP	AF		; IF A DRIVE WAS SPECIFIED, THEN IT
+   0644 47                 1121 	LD	B,A		; MUST BE THE SAME AS BEFORE.
+   0645 21rFCs07           1122 	LD	HL,#CHGDRV
+   0648 7E                 1123 	LD	A,(HL)
+   0649 B7                 1124 	OR	A
+   064A CAr52s06           1125 	JP	Z,RENAME2
+   064D B8                 1126 	CP	B
+   064E 70                 1127 	LD	(HL),B
+   064F C2r6Cs06           1128 	JP	NZ,RENAME5	; THEY WERE DIFFERENT, ERROR.
+   0652 70                 1129 RENAME2:LD	(HL),B		; 	RESET AS PER THE FIRST FILE SPECIFICATION.
+   0653 AF                 1130 	XOR	A
+   0654 32rD9s07           1131 	LD	(FCB),A		; CLEAR THE DRIVE BYTE OF THE FCB.
+   0657 CDrE7s00           1132 RENAME3:CALL	SRCHFCB		; AND GO LOOK FOR SECOND FILE.
+   065A CAr66s06           1133 	JP	Z,RENAME4	; DOESN'T EXIST?
+   065D 11rD9s07           1134 	LD	DE,#FCB
+   0660 CDr0Cs01           1135 	CALL	RENAM		; OK, RENAME THE FILE.
+   0663 C3r92s07           1136 	JP	GETBACK
+                           1137 ;
+                           1138 ;   PROCESS RENAME ERRORS HERE.
+                           1139 ;
+   0666 CDrE0s03           1140 RENAME4:CALL	NONE		; FILE NOT THERE.
+   0669 C3r92s07           1141 	JP	GETBACK
+   066C CDr5Cs04           1142 RENAME5:CALL	RESETDR		; BAD COMMAND FORMAT.
+   066F C3rF3s01           1143 	JP	SYNERR
+   0672 01r7Bs06           1144 RENAME6:LD	BC,#EXISTS	; DESTINATION FILE ALREADY EXISTS.
+   0675 CDrA5s00           1145 	CALL	PLINE
+   0678 C3r92s07           1146 	JP	GETBACK
+   067B 46 69 6C 65 20 45  1147 EXISTS:	.asciz	"File Exists"
+        78 69 73 74 73 00
+                           1148 ;
+                           1149 ;**************************************************************
+                           1150 ;*
+                           1151 ;*             U S E R   C O M M A N D
+                           1152 ;*
+                           1153 ;**************************************************************
+                           1154 ;
+   0687 CDrEEs03           1155 USER:	CALL	DECODE		; GET NUMERIC VALUE FOLLOWING COMMAND.
+   068A FE 10              1156 	CP	#16		; LEGAL USER NUMBER?
+   068C D2rF3s01           1157 	JP	NC,SYNERR
+   068F 5F                 1158 	LD	E,A		; YES BUT IS THERE ANYTHING ELSE?
+   0690 3ArDAs07           1159 	LD	A,(FCB+1)
+   0693 FE 20              1160 	CP	#ASCSPACE
+   0695 CArF3s01           1161 	JP	Z,SYNERR	; YES, THAT IS NOT ALLOWED.
+   0698 CDr13s01           1162 	CALL	GETSETUC	; OK, SET USER CODE.
+   069B C3r95s07           1163 	JP	GETBACK1
+                           1164 ;
+                           1165 ;**************************************************************
+                           1166 ;*
+                           1167 ;*        T R A N S I A N T   P R O G R A M   C O M M A N D
+                           1168 ;*
+                           1169 ;**************************************************************
+                           1170 ;
+   069E 3ArDAs07           1171 UNKNOWN:LD	A,(FCB+1)	; ANYTHING TO EXECUTE?
+   06A1 FE 20              1172 	CP	#ASCSPACE
+   06A3 C2rBAs06           1173 	JP	NZ,UNKWN1
+   06A6 3ArFCs07           1174 	LD	A,(CHGDRV)	; NOPE, ONLY A DRIVE CHANGE?
+   06A9 B7                 1175 	OR	A
+   06AA CAr95s07           1176 	JP	Z,GETBACK1	; NEITHER???
+   06AD 3D                 1177 	DEC	A
+   06AE 32rFBs07           1178 	LD	(CDRIVE),A	; OK, STORE NEW DRIVE.
+   06B1 CDr27s01           1179 	CALL	MOVECD		; SET (TDRIVE) ALSO.
+   06B4 CDrBBs00           1180 	CALL	DSKSEL		; AND SELECT THIS DRIVE.
+   06B7 C3r95s07           1181 	JP	GETBACK1	; THEN RETURN.
+                           1182 ;
+                           1183 ;   HERE A FILE NAME WAS TYPED. PREPARE TO EXECUTE IT.
+                           1184 ;
+   06BA 11rE2s07           1185 UNKWN1:	LD	DE,#FCB+9	; AN EXTENSION SPECIFIED?  
+   06BD 1A                 1186 	LD	A,(DE)
+   06BE FE 20              1187 	CP	#ASCSPACE
+   06C0 C2rF3s01           1188 	JP	NZ,SYNERR	; YES, NOT ALLOWED.
+   06C3 D5                 1189 UNKWN2:	PUSH	DE
+   06C4 CDr4As04           1190 	CALL	DSELECT		; SELECT SPECIFIED DRIVE.
+   06C7 D1                 1191 	POP	DE
+   06C8 21r8Fs07           1192 	LD	HL,#COMFILE	; SET THE EXTENSION TO 'COM'.  LD HL,COMFILE
+   06CB CDr36s04           1193 	CALL	MOVE3		; move 3 bytes from (HL) to (DE) to add .COM
+   06CE CDrCEs00           1194 	CALL	OPENFCB		; AND OPEN THIS FILE.
+   06D1 C2rEAs06           1195 	JP	NZ,UNKWNA	;GOT IT
+                    0001   1196 	.IF	CHKU0B
+   06D4 1E 00              1197         LD	E,#0             ;TRY USER 0, THIS DRIVE
+   06D6 CDr13s01           1198 	CALL	GETSETUC	; OK, SET USER CODE.
+   06D9 CDrCEs00           1199         CALL    OPENFCB
+   06DC C2rEAs06           1200 	JP	NZ,UNKWNA	;GOT IT
+   06DF 21rD9s07           1201         LD      HL,#FCB          ;SEE IF ON DRIVE B, USER 0
+   06E2 36 02              1202         LD      (HL),#2
+   06E4 CDrCEs00           1203         CALL    OPENFCB
+   06E7 CAr77s07           1204 	JP	Z,UNKWN9	;NOPE
+                           1205 	.ENDIF
+                           1206 ;
+                           1207 ;   LOAD IN THE PROGRAM.
+                           1208 ;
+   06EA 21 00 01           1209 UNKWNA:	LD	HL,#TBASE	; STORE THE PROGRAM STARTING HERE.
+   06ED E5                 1210 UNKWN3:	PUSH	HL
+   06EE EB                 1211 	EX	DE,HL
+   06EF CDrD6s01           1212 	CALL	DMASET		; SET TRANSFER ADDRESS.
+   06F2 11rD9s07           1213 	LD	DE,#FCB		; AND READ THE NEXT RECORD.
+   06F5 CDrF7s00           1214 	CALL	RDREC
+   06F8 C2r0Ds07           1215 	JP	NZ,UNKWN4	; END OF FILE OR READ ERROR?
+   06FB E1                 1216 	POP	HL		; NOPE, BUMP POINTER FOR NEXT SECTOR.
+   06FC 11 80 00           1217 	LD	DE,#128
+   06FF 19                 1218 	ADD	HL,DE
+   0700 11r00s00           1219 	LD	DE,#CBASE	; ENOUGH ROOM FOR THE WHOLE FILE?
+   0703 7D                 1220 	LD	A,L
+   0704 93                 1221 	SUB	E
+   0705 7C                 1222 	LD	A,H
+   0706 9A                 1223 	SBC	A,D
+   0707 D2r7Ds07           1224 	JP	NC,UNKWN0	; NO, IT CAN'T FIT.
+   070A C3rEDs06           1225 	JP	UNKWN3
+                           1226 ;
+                           1227 ;   GET HERE AFTER FINISHED READING.
+                           1228 ;
+   070D E1                 1229 UNKWN4:	POP	HL
+   070E 3D                 1230 	DEC	A		; NORMAL END OF FILE?
+   070F C2r7Ds07           1231 	JP	NZ,UNKWN0
+   0712 CDr5Cs04           1232 	CALL	RESETDR		; YES, RESET PREVIOUS DRIVE.
+   0715 CDr48s02           1233 	CALL	CONVFST		; CONVERT THE FIRST FILE NAME THAT FOLLOWS
+   0718 21rFCs07           1234 	LD	HL,#CHGDRV	; COMMAND NAME.
+   071B E5                 1235 	PUSH	HL
+   071C 7E                 1236 	LD	A,(HL)		; SET DRIVE CODE IN DEFAULT FCB.
+   071D 32rD9s07           1237 	LD	(FCB),A
+   0720 3E 10              1238 	LD	A,#16		; PUT SECOND NAME 16 BYTES LATER.
+   0722 CDr4As02           1239 	CALL	CONVERT		; CONVERT SECOND FILE NAME.
+   0725 E1                 1240 	POP	HL
+   0726 7E                 1241 	LD	A,(HL)		; AND SET THE DRIVE FOR THIS SECOND FILE.
+   0727 32rE9s07           1242 	LD	(FCB+16),A
+   072A AF                 1243 	XOR	A		; CLEAR RECORD BYTE IN FCB.
+   072B 32rF9s07           1244 	LD	(FCB+32),A
+   072E 11 5C 00           1245 	LD	DE,#TFCB		; MOVE IT INTO PLACE AT(005CH).
+   0731 21rD9s07           1246 	LD	HL,#FCB
+   0734 06 21              1247 	LD	B,#33
+   0736 CDr38s04           1248 	CALL	HL2DE
+   0739 21r08s00           1249 	LD	HL,#INBUFF+2	; NOW MOVE THE REMAINDER OF THE INPUT
+   073C 7E                 1250 UNKWN5:	LD	A,(HL)		; LINE DOWN TO (0080H). LOOK FOR A NON BLANK.
+   073D B7                 1251 	OR	A		; OR A NULL.
+   073E CAr4As07           1252 	JP	Z,UNKWN6
+   0741 FE 20              1253 	CP	#ASCSPACE
+   0743 CAr4As07           1254 	JP	Z,UNKWN6
+   0746 23                 1255 	INC	HL
+   0747 C3r3Cs07           1256 	JP	UNKWN5
+                           1257 ;
+                           1258 ;   DO THE LINE MOVE NOW. IT ENDS IN A NULL BYTE.
+                           1259 ;
+   074A 06 00              1260 UNKWN6:	LD	B,#0		; KEEP A CHARACTER COUNT.
+   074C 11 81 00           1261 	LD	DE,#TBUFF+1	; DATA GETS PUT HERE.
+   074F 7E                 1262 UNKWN7:	LD	A,(HL)		; MOVE IT NOW.
+   0750 12                 1263 	LD	(DE),A
+   0751 B7                 1264 	OR	A
+   0752 CAr5Bs07           1265 	JP	Z,UNKWN8
+   0755 04                 1266 	INC	B
+   0756 23                 1267 	INC	HL
+   0757 13                 1268 	INC	DE
+   0758 C3r4Fs07           1269 	JP	UNKWN7
+   075B 78                 1270 UNKWN8:	LD	A,B		; NOW STORE THE CHARACTER COUNT.
+   075C 32 80 00           1271 	LD	(TBUFF),A
+   075F CDr96s00           1272 	CALL	CRLF		; CLEAN UP THE SCREEN.
+   0762 CDrD3s01           1273 	CALL	STDDMA		; SET STANDARD TRANSFER ADDRESS.
+   0765 CDr18s01           1274 	CALL	SETCDRV		; RESET CURRENT DRIVE.
+   0768 CD 00 01           1275 	CALL	TBASE		; AND EXECUTE THE PROGRAM.
+                           1276 ;
+                           1277 ;   TRANSIANT PROGRAMS RETURN HERE (OR REBOOT).
+                           1278 ;
+   076B 31rB7s07           1279 	LD	SP,#BATCH	; SET STACK FIRST OFF.
+   076E CDr27s01           1280 	CALL	MOVECD		; MOVE CURRENT DRIVE INTO PLACE (TDRIVE).
+   0771 CDrBBs00           1281 	CALL	DSKSEL		; AND RESELECT IT.
+   0774 C3r7As03           1282 	JP	CMMND1		; BACK TO COMAND MODE.
+                           1283 ;
+                           1284 ;   GET HERE IF SOME ERROR OCCURED.
+                           1285 ;
+   0777 CDr5Cs04           1286 UNKWN9:	CALL	RESETDR		; INPROPER FORMAT.
+   077A C3rF3s01           1287 	JP	SYNERR
+   077D 01r86s07           1288 UNKWN0:	LD	BC,#BADLOAD	; READ ERROR OR WON'T FIT.
+   0780 CDrA5s00           1289 	CALL	PLINE
+   0783 C3r92s07           1290 	JP	GETBACK
+   0786 42 61 64 20 4C 6F  1291 BADLOAD:.asciz	"Bad Load"
+        61 64 00
+   078F 43 4F 4D           1292 COMFILE:.ascii	"COM"		; COMMAND FILE EXTENSION.
+                           1293 ;
+                           1294 ;   GET HERE TO RETURN TO COMMAND LEVEL. WE WILL RESET THE
+                           1295 ; PREVIOUS ACTIVE DRIVE AND THEN EITHER RETURN TO COMMAND
+                           1296 ; LEVEL DIRECTLY OR PRINT ERROR MESSAGE AND THEN RETURN.
+                           1297 ;
+   0792 CDr5Cs04           1298 GETBACK:CALL	RESETDR		; RESET PREVIOUS DRIVE.
+   0795                    1299 GETBACK1:
+   0795 CDr48s02           1300 	CALL	CONVFST		; CONVERT FIRST NAME IN (FCB).
+   0798 3ArDAs07           1301 	LD	A,(FCB+1)	; IF THIS WAS JUST A DRIVE CHANGE R.EQUEST,
+   079B D6 20              1302 	SUB	#ASCSPACE	; MAKE SURE IT WAS VALID.
+   079D 21rFCs07           1303 	LD	HL,#CHGDRV
+   07A0 B6                 1304 	OR	(HL)
+   07A1 C2rF3s01           1305 	JP	NZ,SYNERR
+   07A4 C3r7As03           1306 	JP	CMMND1		; OK, RETURN TO COMMAND LEVEL.
+                           1307 ;
+                           1308 ;   CCP STACK AREA.
+                           1309 ;
+   07A7 00 00 00 00 00 00  1310 	.DB	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+        00 00 00 00 00 00
+        00 00 00 00
+   07B7                    1311 CCPSTACK:
+                           1312 ;dwg;	.EQU	$	;END OF CCP STACK AREA.
+                           1313 
+                           1314 ;
+                           1315 ;   BATCH (OR SUBMIT) PROCESSING INFORMATION STORAGE.
+                           1316 ;
+   07B7 00                 1317 BATCH:	.DB	0			; BATCH MODE FLAG (0=NOT ACTIVE).
+   07B8 00                 1318 BATCHFCB:.DB	0
+   07B9 24 24 24 20 20 20  1319 	.ascii	"$$$     SUB"
+        20 20 53 55 42
+   07C4 00 00 00 00 00 00  1320 	.DB	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+        00 00 00 00 00 00
+        00 00 00 00 00 00
+        00 00 00
+                           1321 ;
+                           1322 ;   FILE CONTROL BLOCK SETUP BY THE CCP.
+                           1323 ;
+   07D9 00                 1324 FCB:	.DB	0
+   07DA 20 20 20 20 20 20  1325 	.asciz	"           "
+        20 20 20 20 20 00
+   07E6 00 00 00 00        1326 	.DB	0,0,0,0
+                           1327 
+   07EA 20 20 20 20 20 20  1328 	.asciz	"           "
+        20 20 20 20 20 00
+   07F6 00 00 00 00        1329 	.DB	0,0,0,0
+                           1330 
+   07FA 00                 1331 RTNCODE:.DB	0			; STATUS RETURNED FROM BDOS CALL.
+   07FB 00                 1332 CDRIVE:	.DB	0			; CURRENTLY ACTIVE DRIVE.
+   07FC 00                 1333 CHGDRV:	.DB	0			; CHANGE IN DRIVES FLAG (0=NO CHANGE).
+   07FD 00 00              1334 NBYTES:	.DW	0			; BYTE COUNTER USED BY TYPE.
+                           1335 
+                           1336 ;dwg;	.IF	ENDFIL
+                           1337 ;dwg;	.ORG	CCPO+07FFH
+                           1338 ;dwg;	.DB	055H
+                           1339 ;dwg;	.ENDIF
+                           1340 ;dwg;	.END
+                           1341 
+                           1342 
+   07FF                    1343 _ccp_end::
+                           1344 	.area _CODE
+                           1345 	.area _CABS

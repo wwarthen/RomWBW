@@ -1,0 +1,17 @@
+ASxxxx Assembler V02.00 + NoICE + SDCC mods + Flat24  (Zilog Z80 / Hitachi HD64180), page 1.
+
+Symbol Table
+
+    .__.ABS.=  0000 G   |   0 _cpmbdos   0000 GR  |   0 _cpmbdos   0019 GR
+  0 _cpmbdos   0000 GR
+ASxxxx Assembler V02.00 + NoICE + SDCC mods + Flat24  (Zilog Z80 / Hitachi HD64180), page 2.
+
+Area Table
+
+   0 _CODE      size   19   flags 0
+   1 _DATA      size    0   flags 0
+   2 _OVERLAY   size    0   flags 0
+   3 _HOME      size    0   flags 0
+   4 _GSINIT    size    0   flags 0
+   5 _GSFINAL   size    0   flags 0
+   6 _CABS      size    0   flags 0

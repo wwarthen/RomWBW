@@ -1,0 +1,72 @@
+                              1 ;--------------------------------------------------------------------------
+                              2 ;  crt0scrm.s 8/7/2011 dwg - - Generic crt0.s for a Z80 with jump loop
+                              3 ;--------------------------------------------------------------------------
+                              4 
+                              5 
+                              6 	.area	_HEADER (ABS)
+   0000                       7 	.org 	0
+                              8 
+                              9 	.include "scsi2ide.inc"
+                              1 ; scsi2ide.inc 8/7/2011 dwg - macros describing the N8VEM SCSI2IDE
+                              2 
+                    0000      3 SCSI2IDE_IO_BASE = 0
+                              4 
+                    0010      5 UART_IO_BASE     = SCSI2IDE_IO_BASE+16
+                              6 
+                    0010      7 rUART_RDR        = UART_IO_BASE + 0
+                    0010      8 wUART_TDR        = UART_IO_BASE + 0
+                    0010      9 wUART_DIV_LO     = UART_IO_BASE + 0
+                    0011     10 wUART_DIV_HI     = UART_IO_BASE + 1
+                    0011     11 wUART_IER        = UART_IO_BASE + 1
+                    0012     12 rUART_IIR        = UART_IO_BASE + 2
+                    0013     13 wUART_LCR        = UART_IO_BASE + 3
+                    0014     14 wUART_MCR        = UART_IO_BASE + 4
+                    0015     15 rUART_LSR        = UART_IO_BASE + 5
+                    0016     16 rUART_MSR        = UART_IO_BASE + 6
+                    0017     17 wUART_FCR        = UART_IO_BASE + 7
+                             18 
+                             19 ; eof - scsi2ide.inc
+                             20 
+                             10 	.include "ns16550.inc"
+                              1 ; ns16550.inc 8/7/2011 dwg - National 16550
+                              2 
+                    0080      3 UART_DLAB      = 0x80
+                    000C      4 UART_BAUD_9600 = 12
+                    0001      5 UART_RDA       = 0x01
+                    0020      6 UART_TBE       = 0x20
+                              7 
+                              8 ; eof - ns16550.inc
+                             11 
+   0000                      12 scream:
+                             13 
+   0000 3E 80                14         ld      a,#UART_DLAB
+   0002 D3 13                15         out    (wUART_LCR),a
+                             16 
+   0004 3E 00                17         ld      a,#0x00
+   0006 D3 11                18         out    (wUART_DIV_HI),a
+                             19 
+   0008 3E 0C                20         ld      a,#UART_BAUD_9600
+   000A D3 10                21         out    (wUART_DIV_LO),a
+                             22 
+   000C 3E 00                23         ld      a,#0
+   000E D3 13                24         out    (wUART_LCR),a
+                             25 
+   0010 3E 03                26         ld      a,#0x03
+   0012 D3 13                27         out     (wUART_LCR),a
+                             28 
+   0014 3E 03                29         ld      a,#0x03
+   0016 D3 14                30         out     (wUART_MCR),a
+                             31 
+   0018                      32 scrmlp:
+   0018 DB 15                33         in      a,(rUART_LSR)
+   001A E6 20                34         and     a,#UART_TBE
+   001C CAr18s00             35         jp      z,scrmlp
+                             36 
+   001F 3E 30                37         ld      a,#0x30  ; ascii 0 (zero)
+   0021 D3 10                38         out    (wUART_TDR),a
+                             39 
+   0023 C3r18s00             40         jp      scrmlp
+                             41 
+                             42 
+                             43 
+                             44 

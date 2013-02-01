@@ -1,0 +1,83 @@
+ASxxxx Assembler V02.00 + NoICE + SDCC mods + Flat24  (Zilog Z80 / Hitachi HD64180), page 1.
+ccpb03.s derived from ccpb03.asm
+Symbol Table
+
+    .__.ABS.=  0000 G   |   6 ADDHL      0243 R   |     ASCSPACE=  0020 
+    ASTERICK=  002A     |   6 BADLOAD    0786 R   |     BASE    =  9C00 
+  6 BATCH      07B7 R   |   6 BATCHFCB   07B8 R   |     BDOSO   =  D800 
+    BIOSO   =  E600     |     BS      =  0008     |   6 CBASE      0000 R
+    CCPO    =  D000     |   6 CCPSTACK   07B7 R   |   6 CDRIVE     07FB R
+  6 CHECK      021A R   |   6 CHGDRV     07FC R   |   6 CHKCON     01C0 R
+    CHKU0B  =  0001     |   6 CLEARBUF   0350 R   |   6 CLOSE      00D8 R
+  6 CMDADR     0316 R   |   6 CMDTBL     02FA R   |   6 CMMND1     037A R
+  6 CMMND2     03A6 R   |   6 CMMND3     0399 R   |     CNTRLC  =  0003 
+    CNTRLE  =  0005     |     CNTRLP  =  0010     |     CNTRLR  =  0012 
+    CNTRLS  =  0013     |     CNTRLU  =  0015     |     CNTRLX  =  0018 
+    CNTRLZ  =  001A     |     COLON   =  003A     |   6 COMFILE    078F R
+  6 COMMAND    0354 R   |   6 CONVERT    024A R   |   6 CONVFST    0248 R
+  6 CONVRT1    0273 R   |   6 CONVRT2    027A R   |   6 CONVRT3    0280 R
+  6 CONVRT4    0282 R   |   6 CONVRT5    0293 R   |   6 CONVRT6    0295 R
+  6 CONVRT7    0299 R   |   6 CONVRT8    02A3 R   |     CR      =  000D 
+  6 CREATE     0107 R   |   6 CRLF       0096 R   |   6 DECODE     03EE R
+  6 DECODE1    03FE R   |   6 DECODE2    0420 R   |   6 DECODE3    0429 R
+  6 DECODE4    0430 R   |     DEL     =  007F     |   6 DELBATCH   01DB R
+  6 DELETE     00ED R   |   6 DIRECT     0470 R   |   6 DIRECT1    0481 R
+  6 DIRECT2    0488 R   |   6 DIRECT3    0491 R   |   6 DIRECT4    04C5 R
+  6 DIRECT5    04CD R   |   6 DIRECT6    04D2 R   |   6 DIRECT7    0507 R
+  6 DIRECT8    0508 R   |   6 DIRECT9    0514 R   |   6 DMASET     01D6 R
+  6 DRECT63    04F0 R   |   6 DRECT65    04F2 R   |   6 DSELECT    044A R
+  6 DSKSEL     00BB R   |     ENDFIL  =  0001     |     ENTRY   =  0005 
+  6 ENTRY1     00C1 R   |   6 ENTRY2     00F2 R   |     EQUAL   =  003D 
+  6 ERASE      0518 R   |   6 ERASE1     053B R   |   6 EXISTS     067B R
+  6 EXTRACT    0441 R   |   6 FCB        07D9 R   |     FF      =  000C 
+  6 GETBACK    0792 R   |   6 GETBACK1   0795 R   |   6 GETDSK     01CE R
+  6 GETEXT     02AA R   |   6 GETEXT1    02B2 R   |   6 GETEXT2    02C3 R
+  6 GETEXT3    02C5 R   |   6 GETEXT4    02C9 R   |   6 GETEXT5    02D3 R
+  6 GETEXT6    02DA R   |   6 GETEXT7    02DC R   |   6 GETEXT8    02EB R
+  6 GETEXT9    02F3 R   |   6 GETINP     0137 R   |   6 GETINP1    0194 R
+  6 GETINP2    01A5 R   |   6 GETINP3    01A9 R   |   6 GETINP4    01B8 R
+  6 GETSETUC   0113 R   |   6 GETUSR     0111 R   |     GREATERT=  003E 
+  6 HL2DE      0438 R   |   6 INBUFF     0006 R   |   6 INPOINT    0086 R
+    IOBYTE  =  0003     |     LCURLY  =  007B     |     LESSTHAN=  003C 
+    LF      =  000A     |     MON     =  0001     |     MONADR  =  FC00 
+  6 MONITOR    046D R   |   6 MOVE3      0436 R   |   6 MOVECD     0127 R
+  6 NAMEPNT    0088 R   |   6 NBYTES     07FD R   |     NK      =  003B 
+  6 NOFILE     03E6 R   |   6 NONBLANK   0239 R   |   6 NONE       03E0 R
+  6 NOSPACE    0600 R   |     NUMCMDS =  0007     |   6 OPEN       00C9 R
+  6 OPENFCB    00CE R   |     PERIOD  =  002E     |   6 PLINE      00A5 R
+  6 PLINE2     00AA R   |   6 PRINT      008A R   |   6 PRINTB     0090 R
+    QUESTION=  003F     |   6 RDERR      03D5 R   |   6 RDERROR    03CF R
+  6 RDREC      00F7 R   |   6 READFCB    00FC R   |   6 RENAM      010C R
+  6 RENAME     0609 R   |   6 RENAME1    0638 R   |   6 RENAME2    0652 R
+  6 RENAME3    0657 R   |   6 RENAME4    0666 R   |   6 RENAME5    066C R
+  6 RENAME6    0672 R   |   6 RESDSK     00B6 R   |   6 RESETDR    045C R
+  6 RTNCODE    07FA R   |   6 SAVE       05A6 R   |   6 SAVE1      05CD R
+  6 SAVE2      05EA R   |   6 SAVE3      05F4 R   |   6 SAVE4      05FA R
+  6 SEARCH     0326 R   |   6 SEARCH1    032B R   |   6 SEARCH2    0334 R
+  6 SEARCH3    0347 R   |   6 SEARCH4    034C R   |   6 SETCDRV    0118 R
+  6 SPACE      00A0 R   |   6 SRCHFCB    00E7 R   |   6 SRCHFST    00DD R
+  6 SRCHNXT    00E2 R   |   6 STDDMA     01D3 R   |   6 SYNERR     01F3 R
+  6 SYNERR1    01F9 R   |   6 SYNERR2    020C R   |     TAB     =  0009 
+    TBASE   =  0100     |     TBUFF   =  0080     |     TDRIVE  =  0004 
+    TFCB    =  005C     |   6 TYPE       0556 R   |   6 TYPE1      056D R
+  6 TYPE2      0570 R   |   6 TYPE3      0580 R   |   6 TYPE4      0599 R
+  6 TYPE5      05A0 R   |     UNDERSCO=  005F     |   6 UNKNOWN    069E R
+  6 UNKWN0     077D R   |   6 UNKWN1     06BA R   |   6 UNKWN2     06C3 R
+  6 UNKWN3     06ED R   |   6 UNKWN4     070D R   |   6 UNKWN5     073C R
+  6 UNKWN6     074A R   |   6 UNKWN7     074F R   |   6 UNKWN8     075B R
+  6 UNKWN9     0777 R   |   6 UNKWNA     06EA R   |   6 UPPER      012E R
+  6 USER       0687 R   |     USRDSP  =  0001     |   6 WRTREC     0102 R
+  6 YESNO      054B R   |   6 _ccp       0000 GR  |   6 _ccp_end   07FF GR
+  6 _ccp_sta   0000 GR
+ASxxxx Assembler V02.00 + NoICE + SDCC mods + Flat24  (Zilog Z80 / Hitachi HD64180), page 2.
+ccpb03.s derived from ccpb03.asm
+Area Table
+
+   0 _CODE      size    0   flags 0
+   1 _DATA      size    0   flags 0
+   2 _OVERLAY   size    0   flags 0
+   3 _HOME      size    0   flags 0
+   4 _GSINIT    size    0   flags 0
+   5 _GSFINAL   size    0   flags 0
+   6 _CCPB03    size  7FF   flags 0
+   7 _CABS      size    0   flags 0

@@ -1,0 +1,2750 @@
+                              1 	.title cbios.s    derived from    cbios.asm
+                              2 	.sbttl by Douglas Goodall for N8VEM use '11
+                              3 
+                              4 	.module cbios
+                              5 	.optsdcc -mz80
+                              6 	
+                              7 ;--------------------------------------------------------
+                              8 ; Public variables in this module
+                              9 ;--------------------------------------------------------
+                             10 	.globl _cbios
+                             11 ;--------------------------------------------------------
+                             12 ; special function registers
+                             13 ;--------------------------------------------------------
+                             14 ;--------------------------------------------------------
+                             15 ;  ram data
+                             16 ;--------------------------------------------------------
+                             17 	.area _DATA
+                             18 ;--------------------------------------------------------
+                             19 ; overlayable items in  ram 
+                             20 ;--------------------------------------------------------
+                             21 	.area _OVERLAY
+                             22 ;--------------------------------------------------------
+                             23 ; external initialized ram data
+                             24 ;--------------------------------------------------------
+                             25 ;--------------------------------------------------------
+                             26 ; global & static initialisations
+                             27 ;--------------------------------------------------------
+                             28 	.area _HOME
+                             29 	.area _GSINIT
+                             30 	.area _GSFINAL
+                             31 	.area _GSINIT
+                             32 ;--------------------------------------------------------
+                             33 ; Home
+                             34 ;--------------------------------------------------------
+                             35 	.area _HOME
+                             36 	.area _HOME
+                             37 ;--------------------------------------------------------
+                             38 ; code
+                             39 ;--------------------------------------------------------
+                             40 
+                             41 ;	.area _CODE
+                             42 	.area _CBIOS
+                             43 
+   0000                      44 _cbios_start::
+   0000                      45 _cbios:
+                             46 
+                             47 ;	CBIOS FOR N8VEM
+                             48 ;
+                             49 ;	Supports: Floppy, IDE HDD, ATAPI ZIP, RAM & ROM DRIVES, on board 16550, DSKY & VDU CARD
+                             50 ;
+                             51 ;	BY ANDREW LYNCH, WITH INPUT FROM MANY SOURCES
+                             52 ;
+                             53 ; DATA CONSTANTS
+                             54 ;__________________________________________________________________________________________________
+                    0000     55 FALSE		= 	0
+                    0001     56 TRUE		=  	1
+                             57 
+                             58 ; LIST OF CONDITIONAL ASSEMBLY INSTRUCTIONS
+                             59 
+                    0001     60 CONDIDESOFT	=	TRUE		; IF NO IDE DRIVE, HAS A SIGNIFICANT DELAY ON SOFT BOOT (TRUE) OR QUICK (FALSE)
+                    0001     61 CONDSHORTMSG	=	TRUE		; TRUE FOR ORIGINAL WARM BOOT SIGNON, FALSE FOR SHORTER ONE WITH LESS <CR>
+                    0001     62 CONDSUPERSUB	=	TRUE		; TRUE FOR NO SUPERSUB AUTOEXEC, FALSE TO RUN SUPERSUB AUTOEXEC
+                    0001     63 CONDABONLY    	=	TRUE   	 	; TRUE FOR ORIGINAL, FALSE TO ONLY HAVE DRIVE A AND B
+                             64 
+                    0000     65 CONDUSEVDU	=	FALSE	   	; TRUE FOR USE VDU CARD, FALSE TO USE SERIAL PORT (FOR CONSOLE)
+                    0001     66 CONDUSEFLOPPY	=	TRUE	   	; TRUE FOR USE FLOPPY, FALSE FOR NO FLOPPY DRIVE
+                    0001     67 COND144FLOPPY	=	TRUE		; TRUE FOR 1.44Mb FLOPPY ON DRIVE G:
+                    0000     68 CONDUSEATAPI	=	FALSE	   	; TRUE FOR USE ZIP DISK, FALSE FOR NO ZIP DISK
+                    0000     69 CONDUSEDSKY	=	FALSE	   	; TRUE FOR USE DSKY, FALSE FOR NO DSKY
+                             70 
+                             71 ; POINTERS TO VDU ROUTINES IN HIGH ROM BANK (NOT NEEDED IF NOT USING VDU CARD)
+                             72 
+                    0100     73 VDU_INIT	=	0x0100		; VECTOR TO VDU INIT CODE
+                    0395     74 IS_KBHIT	=	0x0395		; VECTOR TO KB HIT CODE
+                    039C     75 GET_KEY		=	0x039C		; VECTOR TO GET KEY CODE
+                    011B     76 CHARIN		=	0x011B		; VECTOR TO CHARIN CODE
+                    0CD6     77 PR_OUTCHAR	=	0x0CD6		; VECTOR TO PRINTER CODE
+                             78 
+                             79 ;
+                    003B     80 MSIZE		=	59		;CP/M VERSION MEMORY SIZE IN KILOBYTES
+                             81 ;
+                             82 ;	"BIAS" IS ADDRESS OFFSET FROM 3400H FOR MEMORY SYSTEMS
+                             83 ;	THAN 16K (REFERRED TO AS "B" THROUGHOUT THE TEXT) 
+                             84 ;
+                    9C00     85 BIAS	 	= 	(MSIZE-20)*1024	;
+                    D000     86 CCP	 	= 	0x3400+BIAS	; BASE OF CCP
+                    D806     87 BDOS	 	= 	CCP+0x806	; BASE OF BDOS
+                    E600     88 BIOS	 	= 	CCP+0x1600	; BASE OF BIOS
+                    0004     89 CDISK	 	= 	4		; CURRENT DISK NUMBER 0=A,...,15=P
+                    0003     90 IOBYTE	 	= 	3		; I/O DEFINITION BYTE.
+                             91 
+                    00FF     92 END		= 	0x0FF
+                    000D     93 CR		=	0x0D
+                    000A     94 LF		=	0x0A
+                             95 
+                             96 ; TEST PROTOTYPE SPECIFIC HARDWARE IO PORT ADDRESSES AND MEMORY LOCATIONS
+                             97 
+                    0068     98 UART		= 	0x68	; BASE IO ADDRESS OF UART
+                    0078     99 MPCL_RAM	= 	0x78	; BASE IO ADDRESS OF RAM MEMORY PAGER CONFIGURATION LATCH
+                    007C    100 MPCL_ROM	= 	0x7C	; BASE IO ADDRESS OF ROM MEMORY PAGER CONFIGURATION LATCH
+                            101 
+                    0A00    102 ROMSTART_CPM= 	0x00A00	; WHERE THE CCP+BDOS+BIOS IS STORED IN ROM
+                    D000    103 RAMTARG_CPM=	0x0D000	; WHERE THE CCP+BDOS+BIOS STARTS IN RAM (ENTRY POINT)
+                    2BFF    104 MOVSIZ_CPM= 	0x02BFF	; CCP, BDOS
+                    0800    105 CCPSIZ_CPM= 	0x00800	; CCP 0800h BYTES IN LENGTH
+                            106 
+                            107 ; IDE REGISTER		IO PORT		; FUNCTION
+                    0020    108 IDELO		= 	0x20		; DATA PORT (LOW BYTE)
+                    0021    109 IDEERR		= 	0x21		; READ: ERROR REGISTER; WRITE: PRECOMP
+                    0022    110 IDESECTC	= 	0x22		; SECTOR COUNT
+                    0023    111 IDESECTN	= 	0x23		; SECTOR NUMBER
+                    0024    112 IDECYLLO	= 	0x24		; CYLINDER LOW
+                    0025    113 IDECYLHI	= 	0x25		; CYLINDER HIGH
+                    0026    114 IDEHEAD	= 	0x26		; DRIVE/HEAD
+                    0027    115 IDESTTS	= 	0x27		; READ: STATUS; WRITE: COMMAND
+                    0028    116 IDEHI		= 	0x28		; DATA PORT (HIGH BYTE)
+                    002E    117 IDECTRL	= 	0x2E		; READ: ALTERNATIVE STATUS; WRITE; DEVICE CONTROL
+                    002F    118 IDEADDR	= 	0x2F		; DRIVE ADDRESS (READ ONLY)
+                    0036    119 FMSR		=	0x36		; ADDRESS OF MAIN STATUS REGISTER
+                    0037    120 FDATA		=	0x37		; FLOPPY DATA REGISTER
+                    003A    121 FLATCH		=	0x3A		; FLOPPY CONFIGURATION LATCH
+                    003C    122 FDMA		=	0x3C		; PSEUDO DMA ADDRESS
+                            123 ;
+                            124 ; FDC CONFIGURATION LATCH OUTPUT BIT PATTERNS
+                    0000    125 MOTOR		=	0b00000000	; BIT PATTERN IN LATCH FOR MOTOR CONTROL (ON)
+                    0001    126 TERMCN		=	0b00000001	; BIT PATTERN IN LATCH TO WRITE A TC STROBE
+                    0002    127 RESETL		=	0b00000010	; BIT PATTERN IN LATCH TO RESET ALL BITS
+                    0004    128 MINI		=	0b00000100	; BIT PATTERN IN LATCH TO SET MINI MODE FDC9229 LOW DENS=1, HIGH DENS=0
+                    0020    129 PRECOMP	=	0b00100000	; BIT PATTERN IN LATCH TO SET WRITE PRECOMP 125 NS:
+                    0040    130 FDDENSITY	=	0b01000000	; BIT PATTERN IN LATCH TO FLOPPY LOW DENSITY (HIGH IS 0)
+                    0080    131 FDREADY	=	0b10000000	; BIT PATTERN IN LATCH TO FLOPPY READY (P-34):
+                            132 ;
+                            133 ; PIO 82C55 I/O IS DECODED TO PORT 60-67
+                    0060    134 PORTA		= 	0x60		; PORT A
+                    0061    135 PORTB		= 	0x61		; PORT B
+                    0062    136 PORTC		= 	0x62		; PORT C
+                    0063    137 PIOCONT 	= 	0x63		; PIO CONTROL PORT
+                            138 
+                            139 
+                            140 ;dwg;     		.ORG   BIOS
+                            141 
+                            142 ;__________________________________________________________________________________________________
+                            143 ;
+                            144 ;	CP/M JUMP VECTOR TABLE FOR INDIVIDUAL SUBROUTINES
+                            145 ;__________________________________________________________________________________________________
+                            146 ;
+   0000 C3r1Bs01            147 	JP	BOOT			; COLD START
+   0003 C3r46s01            148 WBOOTE:	JP	WBOOT			; WARM START
+   0006 C3r9Cs01            149 	JP	CONST			; CONSOLE STATUS
+   0009 C3rA6s01            150 	JP	CONIN			; CONSOLE CHARACTER IN
+   000C C3rB1s01            151 	JP	CONOUT			; CONSOLE CHARACTER OUT
+   000F C3rBCs01            152 	JP	LIST			; LIST CHARACTER OUT (NULL ROUTINE)
+   0012 C3rC0s01            153 	JP	PUNCH			; PUNCH CHARACTER OUT (NULL ROUTINE)
+   0015 C3rC2s01            154 	JP	READER			; READER CHARACTER OUT (NULL ROUTINE)
+   0018 C3rDAs01            155 	JP	HOME			; MOVE HEAD TO HOME POSITION
+   001B C3rC4s01            156 	JP	SELDSK			; SELECT DISK
+   001E C3rDDs01            157 	JP	SETTRK			; SET TRACK NUMBER
+   0021 C3rE3s01            158 	JP	SETSEC			; SET SECTOR NUMBER
+   0024 C3rECs01            159 	JP	SETDMA			; SET DMA ADDRESS
+   0027 C3rF2s01            160 	JP	READ			; READ DISK
+   002A C3rD7s03            161 	JP	WRITE			; WRITE DISK
+   002D C3rBEs01            162 	JP	LISTST			; RETURN LIST STATUS (NULL ROUTINE)
+   0030 C3rE9s01            163 	JP	SECTRN			; SECTOR TRANSLATE
+                            164 	
+                            165 ;__________________________________________________________________________________________________	
+                            166 ;
+                            167 ;   FIXED DATA TABLES FOR ALL DRIVES
+                            168 ;   0= FLOPPY DISK OR RAM DISK, 1=RAM DISK, 2=IDE, 3=ATAPI OR RAM DISK, 4=HDPART4
+                            169 ;   5= 1MB ROM DISK,6=32K ROM DISK
+                            170 ;
+                            171 ;   NOTE:  The RAM disk area is used as a substitute if the Floppy and/or ZIP drives are not enabled
+                            172 ;          in the sustem.  This RAM disk is the same "disk" as drive B.
+                            173 ;
+                            174 ;__________________________________________________________________________________________________
+                            175 
+                            176 ;   DISK PARAMETER HEADER FOR DISK 00
+   0033                     177 DPBASE:
+   0033 00 00 00 00         178 	 	.DW 	0000,0000
+   0037 00 00 00 00         179 	 	.DW 	0000,0000
+   003Br1Ds0BrB2s00         180 	 	.DW 	DIRBF,DPBLK1
+   003Fr4Es0FrDEs0B         181 	 	.DW 	CHK01,ALL01
+                            182 
+                            183 ;   DISK PARAMETER HEADER FOR DISK 01
+                    0001    184 .IF CONDUSEFLOPPY
+                    0001    185    .IF COND144FLOPPY
+   0043 00 00 00 00         186 	 	.DW 	0000,0000
+   0047 00 00 00 00         187 	 	.DW 	0000,0000
+   004Br1Ds0Br0Cs01         188 	 	.DW 	DIRBF,DPBLK7	; FOR 1.44M FLOPPIES
+   004FrCEs0FrC2s0E         189 	 	.DW 	CHK07,ALL07
+                            190    .ELSE
+                            191 	 	.DW 	0000,0000
+                            192 	 	.DW 	0000,0000
+                            193 	 	.DW 	DIRBF,DPBLK0
+                            194 	 	.DW 	CHK00,ALL00
+                            195    .ENDIF
+                            196 .ELSE
+                            197 	 	.DW 	0000,0000
+                            198 	 	.DW 	0000,0000
+                            199 	 	.DW 	DIRBF,DPBLK1
+                            200 	 	.DW 	CHK01,ALL01 
+                            201 .ENDIF
+                            202 ;   DISK PARAMETER HEADER FOR DISK 02
+   0053 00 00 00 00         203 	 	.DW 	0000,0000
+   0057 00 00 00 00         204 	 	.DW 	0000,0000
+   005Br1Ds0BrC1s00         205 	 	.DW 	DIRBF,DPBLK2
+   005Fr4Es0FrFFs0B         206 	 	.DW 	CHK02,ALL02
+                            207 	 
+                    0000    208  .IF CONDUSEATAPI	 
+                            209 ;   DISK PARAMETER HEADER FOR DISK 03
+                            210 	 	.DW 	0000,0000
+                            211 	 	.DW 	0000,0000
+                            212 	 	.DW 	DIRBF,DPBLK3
+                            213 	 	.DW 	CHK03,ALL03
+                            214  .ELSE
+   0063 00 00 00 00         215 	 	.DW 	0000,0000
+   0067 00 00 00 00         216 	 	.DW 	0000,0000
+   006Br1Ds0BrB2s00         217 	 	.DW 	DIRBF,DPBLK1
+   006Fr4Es0FrDEs0B         218 	 	.DW 	CHK01,ALL01 	
+                            219  .ENDIF
+                            220  
+                            221 ;   DISK PARAMETER HEADER FOR DISK 04
+   0073 00 00 00 00         222 	 	.DW 	0000,0000
+   0077 00 00 00 00         223 	 	.DW 	0000,0000
+   007Br1Ds0BrDFs00         224 	 	.DW 	DIRBF,DPBLK4
+   007FrCEs0FrFFs0D         225 	 	.DW 	CHK04,ALL04
+                            226 	 	
+                            227 ;   DISK PARAMETER HEADER FOR DISK 05
+   0083 00 00 00 00         228 	 	.DW 	0000,0000
+   0087 00 00 00 00         229 	 	.DW 	0000,0000
+   008Br1Ds0BrEEs00         230 	 	.DW 	DIRBF,DPBLK5
+   008FrCEs0Fr40s0E         231 	 	.DW 	CHK05,ALL05
+                            232 	 	
+                            233 ;   DISK PARAMETER HEADER FOR DISK 06
+   0093 00 00 00 00         234 	 	.DW 	0000,0000
+   0097 00 00 00 00         235 	 	.DW 	0000,0000
+   009Br1Ds0BrFDs00         236 	 	.DW 	DIRBF,DPBLK6
+   009FrCEs0Fr81s0E         237 	 	.DW 	CHK06,ALL06
+                            238 ;
+                            239 
+   00A3                     240 DPBLK0:					; DISK PARAMETER BLOCK (FLOPPY DISK 720KB)
+   00A3 24 00               241 SPT_0:	 	.DW  	36		; 36 SECTORS OF 128 BYTES PER 4.5K TRACK
+   00A5 04                  242 BSH_0:		.DB  	4		; BLOCK SHIFT FACTOR (SIZE OF ALLOCATION BLOCK)
+   00A6 0F                  243 BLM_0:		.DB  	15		; PART OF THE ALLOCATION BLOCK SIZE MATH
+   00A7 00                  244 EXM_0:		.DB  	0		; DEFINES SIZE OF EXTENT (DIRECTORY INFO)
+   00A8 5E 01               245 DSM_0:	 	.DW  	350		; BLOCKSIZE [2048] * NUMBER OF BLOCKS + 1 = DRIVE SIZE
+   00AA 7F 00               246 DRM_0:	 	.DW  	127		; NUMBER OF DIRECTORY ENTRIES
+   00AC C0                  247 AL0_0:		.DB  	0b11000000	; BIT MAP OF SPACE ALLOCATED TO DIRECTORY
+   00AD 00                  248 AL1_0:		.DB  	0b00000000	; DIRECTORY CAN HAVE UP TO 16 BLOCKS ALLOCATED
+   00AE 20 00               249 CKS_0:	 	.DW  	32		; SIZE OF DIRECTORY CHECK [0 IF NON REMOVEABLE]
+   00B0 04 00               250 OFF_0:	 	.DW  	4		; FIRST 4 TRACKS TRACKS RESERVED (18K FOR SYSTEM)
+                            251 					; 
+   00B2                     252 DPBLK1:					; DISK PARAMETER BLOCK (RAMDISK 512K, 448K USABLE)
+   00B2 00 01               253 SPT_1:	 	.DW  	256		; 256 SECTORS OF 128 BYTES PER 32K TRACK
+   00B4 04                  254 BSH_1:		.DB  	4		; BLOCK SHIFT FACTOR (SIZE OF ALLOCATION BLOCK)
+   00B5 0F                  255 BLM_1:		.DB  	15		; PART OF THE ALLOCATION BLOCK SIZE MATH
+   00B6 01                  256 EXM_1:		.DB  	1		; DEFINES SIZE OF EXTENT (DIRECTORY INFO)
+   00B7 E1 00               257 DSM_1:	 	.DW  	225		; BLOCKSIZE [2048] * NUMBER OF BLOCKS + 1 = DRIVE SIZE
+   00B9 FF 00               258 DRM_1:	 	.DW  	255		; NUMBER OF DIRECTORY ENTRIES
+   00BB F0                  259 AL0_1:		.DB  	0b11110000	; BIT MAP OF SPACE ALLOCATED TO DIRECTORY
+   00BC 00                  260 AL1_1:		.DB  	0b00000000	; DIRECTORY CAN HAVE UP TO 16 BLOCKS ALLOCATED
+   00BD 00 00               261 CKS_1:	 	.DW  	0		; SIZE OF DIRECTORY CHECK [0 IF NON REMOVEABLE]
+   00BF 01 00               262 OFF_1:	 	.DW  	1		; 1 TRACK RESERVED [FIRST 32K OF RAM]
+                            263 					;
+   00C1                     264 DPBLK2:					; DISK PARAMETER BLOCK (IDE HARD DISK 8MB)
+   00C1 00 01               265 SPT_2:	 	.DW  	256		; 256 SECTORS OF 128 BYTES PER 32K TRACK
+   00C3 05                  266 BSH_2:		.DB  	5		; BLOCK SHIFT FACTOR (SIZE OF ALLOCATION BLOCK)
+   00C4 1F                  267 BLM_2:		.DB  	31		; PART OF THE ALLOCATION BLOCK SIZE MATH
+   00C5 01                  268 EXM_2:		.DB  	1		; DEFINES SIZE OF EXTENT (DIRECTORY INFO)
+   00C6 E1 07               269 DSM_2:		.DW  	2017		; BLOCKSIZE [4096] * NUMBER OF BLOCKS + 1 = DRIVE SIZE
+   00C8 FF 01               270 DRM_2:	 	.DW  	511		; NUMBER OF DIRECTORY ENTRIES
+   00CA F0                  271 AL0_2:		.DB  	0b11110000	; BIT MAP OF SPACE ALLOCATED TO DIRECTORY
+   00CB 00                  272 AL1_2:		.DB  	0b00000000	; DIRECTORY CAN HAVE UP TO 16 BLOCKS ALLOCATED
+   00CC 00 00               273 CKS_2:	 	.DW  	0		; SIZE OF DIRECTORY CHECK [0 IF NON REMOVEABLE]
+   00CE F1 03               274 OFF_2:	 	.DW  	0x03F1		; TRACKS (32K) RESERVED FOR SYSTEM AND OTHER PARTITIONS
+                            275 					;
+   00D0                     276 DPBLK3:					; DISK PARAMETER BLOCK (ATAPI DRIVE 8MB)
+   00D0 00 01               277 SPT_3:	 	.DW  	256		; 256 SECTORS OF 128 BYTES PER 32K TRACK
+   00D2 05                  278 BSH_3:		.DB  	5		; BLOCK SHIFT FACTOR (SIZE OF ALLOCATION BLOCK)
+   00D3 1F                  279 BLM_3:		.DB  	31		; PART OF THE ALLOCATION BLOCK SIZE MATH
+   00D4 01                  280 EXM_3:		.DB  	1		; DEFINES SIZE OF EXTENT (DIRECTORY INFO)
+   00D5 E1 07               281 DSM_3:	 	.DW  	2017		; BLOCKSIZE [4096] * NUMBER OF BLOCKS + 1 = DRIVE SIZE
+   00D7 FF 01               282 DRM_3:	 	.DW  	511		; NUMBER OF DIRECTORY ENTRIES
+   00D9 F0                  283 AL0_3:		.DB  	0b11110000	; BIT MAP OF SPACE ALLOCATED TO DIRECTORY
+   00DA 00                  284 AL1_3:		.DB  	0b00000000	; DIRECTORY CAN HAVE UP TO 16 BLOCKS ALLOCATED
+   00DB 00 00               285 CKS_3:	 	.DW  	0		; SIZE OF DIRECTORY CHECK [0 IF NON REMOVEABLE]
+   00DD 01 00               286 OFF_3:	 	.DW  	1		; 1 TRACK (32K) RESERVED FOR SYSTEM
+                            287 					;
+   00DF                     288 DPBLK4:					; DISK PARAMETER BLOCK (IDE HARD DISK 1024K)
+   00DF 00 01               289 SPT_4:	 	.DW  	256		; 256 SECTORS OF 128 BYTES PER 32K TRACK
+   00E1 04                  290 BSH_4:		.DB  	4		; BLOCK SHIFT FACTOR (SIZE OF ALLOCATION BLOCK)
+   00E2 0F                  291 BLM_4:		.DB 	15		; PART OF THE ALLOCATION BLOCK SIZE MATH
+   00E3 01                  292 EXM_4:		.DB  	1		; DEFINES SIZE OF EXTENT (DIRECTORY INFO)
+   00E4 F1 01               293 DSM_4:	 	.DW  	497		; BLOCKSIZE [2048] * NUMBER OF BLOCKS + 1 = DRIVE SIZE
+   00E6 FF 00               294 DRM_4:	 	.DW  	255		; NUMBER OF DIRECTORY ENTRIES
+   00E8 F0                  295 AL0_4:		.DB  	0b11110000	; BIT MAP OF SPACE ALLOCATED TO DIRECTORY
+   00E9 00                  296 AL1_4:		.DB  	0b00000000	; DIRECTORY CAN HAVE UP TO 16 BLOCKS ALLOCATED
+   00EA 00 00               297 CKS_4:	 	.DW  	0		; SIZE OF DIRECTORY CHECK [0 IF NON REMOVEABLE]
+   00EC 01 00               298 OFF_4:	 	.DW  	1		; 1 TRACK RESERVED [FIRST 32K OF PARTITION]
+                            299 					;
+   00EE                     300 DPBLK5:					; DISK PARAMETER BLOCK (ROMDISK 1MB) 
+   00EE 00 01               301 SPT_5:	 	.DW  	256		; 256 SECTORS OF 128 BYTES PER 32K TRACK
+   00F0 04                  302 BSH_5:		.DB  	4		; BLOCK SHIFT FACTOR (SIZE OF ALLOCATION BLOCK)
+   00F1 0F                  303 BLM_5:		.DB  	15		; PART OF THE ALLOCATION BLOCK SIZE MATH
+   00F2 00                  304 EXM_5:		.DB  	0		; DEFINES SIZE OF EXTENT (DIRECTORY INFO)
+   00F3 FF 01               305 DSM_5:	 	.DW  	511		; BLOCKSIZE [2048] * NUMBER OF BLOCKS +1 =DRIVE SIZE
+   00F5 FF 00               306 DRM_5:	 	.DW  	255		; NUMBER OF DIRECTORY ENTRIES
+   00F7 F0                  307 AL0_5:		.DB  	0b11110000	; BIT MAP OF SPACE ALLOCATED TO DIRECTORY
+   00F8 00                  308 AL1_5:		.DB  	0b00000000	; DIRECTORY CAN HAVE UP TO 16 BLOCKS ALLOCATED
+   00F9 00 00               309 CKS_5:	 	.DW  	0		; SIZE OF DIRECTORY CHECK [0 IF NON REMOVEABLE]
+   00FB 01 00               310 OFF_5:	 	.DW  	1		; 1 TRACK RESERVED [FIRST 32K OF ROM]	
+                            311 					;
+   00FD                     312 DPBLK6:					; DISK PARAMETER BLOCK (ROMDISK 32KB)
+   00FD 10 00               313 SPT_6:	 	.DW 	16	 	; 16 SECTORS OF 128 BYTES PER 2K TRACK
+   00FF 03                  314 BSH_6:		.DB 	3 		; BLOCK SHIFT FACTOR (SIZE OF ALLOCATION BLOCK)
+   0100 07                  315 BLM_6:		.DB 	7 		; PART OF THE ALLOCATION BLOCK SIZE MATH
+   0101 01                  316 EXM_6:		.DB 	1 		; DEFINES SIZE OF EXTENT (DIRECTORY INFO)
+   0102 1F 00               317 DSM_6:	 	.DW 	31 		; BLOCKSIZE [1024] * NUMBER OF BLOCKS + 1 = DRIVE SIZE
+   0104 1F 00               318 DRM_6:	 	.DW 	31 		; NUMBER OF DIRECTORY ENTRIES
+   0106 80                  319 AL0_6:		.DB 	0b10000000  	; BIT MAP OF SPACE ALLOCATED TO DIRECTORY
+   0107 00                  320 AL1_6:		.DB 	0b00000000  	; DIRECTORY CAN HAVE UP TO 16 BLOCKS ALLOCATED
+   0108 00 00               321 CKS_6:	 	.DW 	0 	  	; SIZE OF DIRECTORY CHECK [0 IF NON REMOVEABLE]
+   010A 0A 00               322 OFF_6:	 	.DW 	10 	  	; FIRST 10 TRACKS TRACKS RESERVED (20K FOR SYSTEM)
+                            323 					; SYSTEM IS ROM LOADER, CCP, BDOS, CBIOS, AND MONITOR
+   010C                     324 DPBLK7:					; DISK PARAMETER BLOCK FLOPPY 1.44M
+   010C 48 00               325 SPT_7:	 	.DW 	72	 	; 16 SECTORS OF 128 BYTES PER 2K TRACK
+   010E 04                  326 BSH_7:		.DB 	4 		; BLOCK SHIFT FACTOR (SIZE OF ALLOCATION BLOCK)
+   010F 0F                  327 BLM_7:		.DB 	15 		; PART OF THE ALLOCATION BLOCK SIZE MATH
+   0110 00                  328 EXM_7:		.DB 	0		; DEFINES SIZE OF EXTENT (DIRECTORY INFO)
+   0111 C6 02               329 DSM_7:	 	.DW 	710 		; BLOCKSIZE [1024] * NUMBER OF BLOCKS + 1 = DRIVE SIZE
+   0113 FF 00               330 DRM_7:	 	.DW 	255 		; NUMBER OF DIRECTORY ENTRIES
+   0115 F0                  331 AL0_7:		.DB 	0b11110000  	; BIT MAP OF SPACE ALLOCATED TO DIRECTORY
+   0116 00                  332 AL1_7:		.DB 	0b00000000  	; DIRECTORY CAN HAVE UP TO 16 BLOCKS ALLOCATED
+                            333 
+   0117 20 00               334 CKS_7:	 	.DW 	32 	  	; SIZE OF DIRECTORY CHECK [0 IF NON REMOVEABLE]
+   0119 02 00               335 OFF_7:	 	.DW 	2 	  	; FIRST 10 TRACKS TRACKS RESERVED (20K FOR SYSTEM)
+                            336 					; SYSTEM IS ROM LOADER, CCP, BDOS, CBIOS, AND MONITOR
+                            337 					;
+                            338 					; IMPORTANT NOTE: TRACKS 00h - 0AH OF 2K BYTES
+                            339 					; EACH ARE MARKED WITH THE OFF_6 SET TO 5 AS 
+                            340 					; SYSTEM TRACKS  USABLE ROM DRIVE SPACE
+                            341 					; STARTING AFTER THE TENTH TRACK (IE, TRACK 0AH)
+                            342 					; MOST LIKELY FIX TO THIS IS PLACING A DUMMY
+                            343 					; FIRST 20K ROM CONTAINS THE ROM LOADER, MONITOR,
+                            344  					; CCP, BDOS, BIOS, ETC (10 TRACKS * 2K EACH)
+                            345 ;__________________________________________________________________________________________________ 			
+                            346 ;
+                            347 ;	END OF FIXED CP/M TABLES
+                            348 ;
+                            349 ;	INDIVIDUAL SUBROUTINES TO PERFORM EACH FUNCTION
+                            350 ;__________________________________________________________________________________________________
+                            351 
+                            352 
+                            353 ;___BOOT___________________________________________________________________________________________
+   011B                     354 BOOT:					; SIMPLEST CASE IS TO JUST PERFORM PARAMETER INITIALIZATION
+                            355 					;
+   011B 3E 80               356 	LD	A,#0x80			; LOAD VALUE TO SWITCH OUT ROM
+   011D D3 7C               357 	OUT	(MPCL_ROM),A		; SWITCH OUT ROM, BRING IN LOWER 32K RAM PAGE
+                            358 					;
+                            359 					;
+   011F 3E 81               360 	LD	A,#0b10000001		; SWITCH IN FIRST 32K LOWER PAGE (FIRST TRACK)
+   0121 D3 78               361 	OUT	(MPCL_RAM),A		;
+                            362 					; FORMATTING THE RAM IS SIMPLE AS CLEARING THE DIRECTORY AREA 
+                            363 					; TO A VALUE OF E5H (THE FIRST 8K OF TRACK 1 OR THE RAMDISK) 
+   0123 21 00 00            364 	LD	HL,#0000		; STARTING MEMORY ADDRESS OF TRACK 1, SECTOR 0 IN HL
+   0126 01 FF 1F            365 	LD	BC,#0x1FFF		; 8K OF DIRECTORY SECTORS RESERVED (LENGTH IN BC)
+   0129 3E E5               366 	LD	A,#0x0E5			; INITIALIZING VALUE IN A 
+   012B 5D                  367 	LD	E,L			;
+   012C 54                  368 	LD	D,H			;
+   012D 13                  369 	INC	DE			;
+   012E 77                  370 	LD	(HL),A			;
+   012F ED B0               371 	LDIR				;
+                            372 					;
+   0131 3E 80               373 	LD	A,#0x80			; LOAD VALUE TO SWITCH OUT ROM
+   0133 D3 7C               374 	OUT	(MPCL_ROM),A		; SWITCH OUT ROM, BRING IN LOWER 32K RAM PAGE
+                            375 					;
+   0135 3E 00               376 	LD	A,#0			; ENSURE LOWEST RAM PAGE SELECTED
+   0137 D3 78               377 	OUT	(MPCL_RAM),A		; BRING IN LOWEST 32K RAM PAGE
+                            378 					;
+   0139 AF                  379 	XOR	A			; ZERO IN THE ACCUM
+   013A 32 03 00            380 	LD	(IOBYTE),A		; CLEAR THE IOBYTE
+   013D 32 04 00            381 	LD	(CDISK),A		; SELECT DISK 0
+                            382 					;	
+   0140 CDrC3s05            383 	CALL	IDE_SOFT_RESET		; RESET THE IDE HARD DISK
+                            384 					;
+                            385 					;
+   0143 C3r67s01            386 	JP	GOCPM			; INITIALIZE AND GO TO CP/M
+                            387 					;
+                            388 ;
+                            389 ;___WBOOT__________________________________________________________________________________________
+   0146                     390 WBOOT:					; SIMPLEST CASE IS TO READ THE DISK UNTIL ALL SECTORS LOADED
+                            391 					; WITH A ROMDISK WE SELECT THE ROM AND THE CORRECT PAGE [0]
+                            392 					; THEN COPY THE CP/M IMAGE (CCP, BDOS, BIOS, MONITOR) TO HIGH RAM
+                            393 					; LOAD ADDRESS 
+                            394 					; FOR Z80 IT LOOKS LIKE THIS . USING 8080 NEMONICS	
+                            395 					;
+   0146 F3                  396 	DI				; DISABLE INTERRUPT
+   0147 31 80 00            397 	LD	SP,#0x80			; USE SPACE BELOW BUFFER FOR STACK
+   014A ED 56               398 	IM	1			; SET INTERRUPT MODE 1
+                            399 					;
+   014C AF                  400 	XOR	A			; CHEAP ZERO IN ACC
+   014D D3 7C               401 	OUT	(MPCL_ROM),A		; SEND 0 TO ROM MAP PORT (SWITCH IN LOWER 32K ROM PAGE)
+                            402 					;
+   014F AF                  403 	XOR	A			; CHEAP ZERO IN ACC
+   0150 D3 78               404 	OUT	(MPCL_RAM),A		; SEND 0 TO RAM MAP PORT (SELECT LOWEST RAM PAGE)
+                            405 					;
+   0152 21 00 0A            406 	LD	HL,#ROMSTART_CPM		; WHERE IN ROM CP/M IS STORED (FIRST BYTE)
+   0155 11 00 D0            407 	LD	DE,#RAMTARG_CPM		; WHERE IN RAM TO MOVE MONITOR TO (FIRST BYTE)
+   0158 01 00 08            408 	LD	BC,#CCPSIZ_CPM		; NUMBER OF BYTES TO MOVE FROM ROM TO RAM
+   015B ED B0               409 	LDIR				;
+                            410 					;
+                            411 					;
+                            412 ;;;;;	EI				; ENABLE INTERRUPTS
+   015D 3E 80               413 	LD	A,#0x80			; LOAD VALUE TO SWITCH OUT ROM
+   015F D3 7C               414 	OUT	(MPCL_ROM),A		; SWITCH OUT ROM, BRING IN LOWER 32K RAM PAGE
+                            415 					;
+   0161 AF                  416 	XOR	A			; CHEAP ZERO IN ACC
+   0162 D3 78               417 	OUT	(MPCL_RAM),A		; SEND 0 TO RAM MAP PORT (SELECT LOWEST RAM PAGE)
+                            418 					;
+   0164 CDrC3s05            419 	CALL	IDE_SOFT_RESET		; RESET THE IDE HARD DISK
+                            420 					;
+                    0001    421  .IF CONDSUPERSUB			;
+                            422 					; DO NOTHING FOR ORIGINAL CODE
+                            423  .ELSE					;
+                            424 					; CLEAR THE AUTOSUB BUFFER, DO ON A WARM BOOT
+                            425 	XOR	A			;
+                            426 	LD	(INBUFF+1),A		; SECOND BYTE IS ACTUAL LENGTH 
+                            427  .ENDIF					;
+                            428 					; FALL THROUGH TO GOCPM ROUTINE
+                            429 ;
+                            430 ;	END OF LOAD OPERATION, SET PARAMETERS AND GO TO CP/M
+                            431 ;
+                            432 ;___GOCPM__________________________________________________________________________________________
+   0167                     433 GOCPM:
+                            434 					; CPU RESET HANDLER
+   0167 3E C3               435 	LD	A,#0x0C3			; C3 IS A JMP INSTRUCTION
+   0169 32 00 00            436 	LD	(0),A		; FOR JMP TO WBOOT
+   016C 21r03s00            437 	LD	HL,#WBOOTE		; WBOOT ENTRY POINT
+   016F 22 01 00            438 	LD	(1),HL			; SET ADDRESS FIELD FOR JMP AT 0
+                            439 					;
+                            440 					; CPU INTERRUPT HANDLER
+   0172 3E C3               441 	LD	A,#0x0C3			; C3 IS A JMP INSTRUCTION
+   0174 32 38 00            442 	LD	(0x0038),A		; FOR JMP TO WBOOT
+   0177 21r03s00            443 	LD	HL,#WBOOTE		; WBOOT ENTRY POINT
+   017A 22 01 00            444 	LD	(1),HL			; SET ADDRESS FIELD FOR JMP AT 0
+                            445 					;
+   017D 32 05 00            446 	LD	(5),A			; FOR JMP TO BDOS
+   0180 21 06 D8            447 	LD	HL,#BDOS		; BDOS ENTRY POINT
+   0183 22 06 00            448 	LD	(6),HL			; ADDRESS FIELD OF JUMP AT 5 TO BDOS
+                            449 					;
+   0186 01 80 00            450 	LD	BC,#0x80		; DEFAULT DMA ADDRESS IS 80H
+   0189 CDrECs01            451 	CALL	SETDMA			;
+                            452 					;
+                    0001    453  .IF CONDUSEFLOPPY			;
+   018C CDrBFs07            454 	CALL	SETUPDRIVE		; SETUP FLOPPY PARAMETERS
+                            455  .ENDIF					;
+                            456 					;
+                    0000    457  .IF CONDUSEVDU				;
+                            458 	DI				; DISABLE INTERRUPTS	
+                            459 	LD	A,#0x1F			; SET HIGH ROM PAGE
+                            460 	OUT	(MPCL_ROM),A		; SEND TO ROM PORT MAPPER
+                            461 	LD	HL,#0			;
+                            462 	ADD	HL,SP			; GET STACK POINTER INTO HL
+                            463 	LD	(PARKSTACK),HL		; SAVE STACK POINTER 
+                            464 	LD	SP,#FLOPPYSTACK		; 
+                            465 	CALL	VDU_INIT		;
+                            466 	LD	SP,(PARKSTACK)		; RESTORE STACK
+                            467 	LD	A,#0x80			; LOAD VALUE TO SWITCH OUT ROM
+                            468 	OUT	(MPCL_ROM),A		;
+                            469 	LD	A,#0			; CHOOSE HIGHEST RAM PAGE
+                            470 	OUT	(MPCL_RAM),A		; SEND 19H TO RAM MAP PORT (SELECT HIGHEST RAM PAGE)
+                            471 ;;;;;	EI				; ENABLE INTERRUPTS	
+                            472  .ENDIF					;
+   018F 21rADs0A            473 	LD	HL,#TXT_STARTUP_MSG 	; PRINT STARTUP MESSAGE
+   0192 CDrBCs04            474 	CALL	PRTMSG			;
+                            475 					;
+   0195 3A 04 00            476 	LD	A,(CDISK)		; GET CURRENT DISK NUMBER
+   0198 4F                  477 	LD	C,A			; SEND TO THE CCP
+   0199 C3 00 D0            478 	JP	CCP			; GO TO CP/M FOR FURTHER PROCESSING
+                            479 					;
+                            480 ;__________________________________________________________________________________________________
+                            481 ;
+                            482 ;	** CONSOLE & PRINTER I/O -- VDU CARD DRIVER INTERFACE
+                            483 ;		
+                            484 ;__________________________________________________________________________________________________
+                    0000    485  .IF CONDUSEVDU
+                            486 CONST:
+                            487 	PUSH	HL			; STORE HL
+                            488 	DI				; DISABLE INTERRUPTS	
+                            489 	LD	A,#1FH			; SET HIGH ROM PAGE
+                            490 	OUT	(MPCL_ROM),A		; SEND TO ROM PORT MAPPER
+                            491 	LD	HL,#0			;
+                            492 	ADD	HL,SP			; GET STACK POINTER INTO HL
+                            493 	LD	(PARKSTACK),HL		; SAVE STACK POINTER 
+                            494 	LD	SP,#FLOPPYSTACK		; 
+                            495 	CALL	IS_KBHIT		; CHECK FOR KB HIT
+                            496 	LD	C,A			; STORE RESULT	
+                            497 	LD	SP,(PARKSTACK)		; RESTORE STACK
+                            498 	LD	A,#0x80			; LOAD VALUE TO SWITCH OUT ROM
+                            499 	OUT	(MPCL_ROM),A		;
+                            500 	LD	A,#0			; CHOOSE HIGHEST RAM PAGE
+                            501 	OUT	(MPCL_RAM),A		; SEND 19H TO RAM MAP PORT (SELECT HIGHEST RAM PAGE)
+                            502 	LD	A,C			; RESTORE RESULT
+                            503 ;;;;;	EI				; ENABLE INTERRUPTS
+                            504 	POP	HL			; RESTORE HL
+                            505 	RET
+                            506 
+                            507 CONIN:
+                            508 	PUSH	HL			; STORE HL
+                            509 	DI				; DISABLE INTERRUPTS	
+                            510 	LD	A,#0x1F			; SET HIGH ROM PAGE
+                            511 	OUT	(MPCL_ROM),A		; SEND TO ROM PORT MAPPER
+                            512 	LD	HL,#0			;
+                            513 	ADD	HL,SP			; GET STACK POINTER INTO HL
+                            514 	LD	(PARKSTACK),HL		; SAVE STACK POINTER 
+                            515 	LD	SP,#FLOPPYSTACK		; 
+                            516 	CALL	GET_KEY			; GET KEY FROM KEYBOARD	
+                            517 	LD	C,A			; STORE RESULT
+                            518 	LD	SP,(PARKSTACK)		; RESTORE STACK
+                            519 	LD	A,#0x80			; LOAD VALUE TO SWITCH OUT ROM
+                            520 	OUT	(MPCL_ROM),A	;
+                            521 	LD	A,#0x00			; CHOOSE HIGHEST RAM PAGE
+                            522 	OUT	(MPCL_RAM),A		; SEND 19H TO RAM MAP PORT (SELECT HIGHEST RAM PAGE)
+                            523 	LD	A,C			; RESTORE RESULT
+                            524 ;;;;;	EI				; ENABLE INTERRUPTS
+                            525 	POP	HL			; RESTORE HL
+                            526 	RET
+                            527 	
+                            528 CONOUT:
+                            529 	PUSH	HL			; STORE HL
+                            530 	DI				; DISABLE INTERRUPTS	
+                            531 	LD	A,#0x1F			; SET HIGH ROM PAGE	
+                            532 	OUT	(MPCL_ROM),A		; SEND TO ROM PORT MAPPER
+                            533 	LD	HL,#0			;
+                            534 	ADD	HL,SP			; GET STACK POINTER INTO HL
+                            535 	LD	(PARKSTACK),HL		; SAVE STACK POINTER 
+                            536 	LD	SP,#FLOPPYSTACK		; 
+                            537 	LD	A,C			; RESTORE CHARACTER
+                            538 	CALL	CHARIN			; DISPLAY CHARACTER	
+                            539 	LD	SP,(PARKSTACK)		; RESTORE STACK
+                            540 	LD	A,#0x80			; LOAD VALUE TO SWITCH OUT ROM
+                            541 	OUT	(MPCL_ROM),A	;
+                            542 	LD	A,#0x00			; CHOOSE HIGHEST RAM PAGE
+                            543 	OUT	(MPCL_RAM),A		; SEND 19H TO RAM MAP PORT (SELECT HIGHEST RAM PAGE)
+                            544 ;;;;;	EI				; ENABLE INTERRUPTS
+                            545 	POP	HL			; RESTORE HL
+                            546 	RET
+                            547 LIST:
+                            548 	PUSH	HL			; STORE HL
+                            549 	DI				; DISABLE INTERRUPTS	
+                            550 	LD	A,#0x1F			; SET HIGH ROM PAGE
+                            551 	OUT	(MPCL_ROM),A		; SEND TO ROM PORT MAPPER
+                            552 	LD	HL,#0			;
+                            553 	ADD	HL,SP			; GET STACK POINTER INTO HL
+                            554 	LD	(PARKSTACK),HL		; SAVE STACK POINTER 	
+                            555 	LD	SP,#FLOPPYSTACK		; 
+                            556 	LD	A,C			; RESTORE CHARACTER
+                            557 	CALL    PR_OUTCHAR	;
+                            558 	LD	SP,(PARKSTACK)		; RESTORE STACK
+                            559 	LD	A,#0x80			; LOAD VALUE TO SWITCH OUT ROM
+                            560 	OUT	(MPCL_ROM),A	;
+                            561 	LD	A,#0x00			; CHOOSE HIGHEST RAM PAGE
+                            562 	OUT	(MPCL_RAM),A		; SEND 19H TO RAM MAP PORT (SELECT HIGHEST RAM PAGE)
+                            563 ;;;;;	EI				; ENABLE INTERRUPTS
+                            564 	POP	HL			; RESTORE HL
+                            565 	RET
+                            566 	
+                            567 ;__________________________________________________________________________________________________
+                            568 ;
+                            569 ;	** CONSOLE I/O -- ON-BOARD 16550 SERIAL INTERFACE
+                            570 ;		
+                            571 ;__________________________________________________________________________________________________
+                            572  .ELSE
+   019C                     573 CONST:	; CONSOLE STATUS, RETURN 0FFH IF CHARACTER READY, 00H IF NOT
+   019C DB 6D               574 	IN	A,(UART + 5)	; READ LINE STATUS REGISTER (UART5 = 068h + $05)
+   019E E6 01               575 	AND	#0x01		; TEST IF DATA IN RECEIVE BUFFER
+                            576 				; IS THERE A CHAR READY? 0=NO, 1=YES
+   01A0 CArA5s01            577 	JP	Z,NOT_READY	;
+   01A3 3E FF               578 	LD	A,#0x0FF	; YES, PUT 0FFh IN A AND RETURN
+   01A5                     579 NOT_READY:			;
+                            580 				; NO, LEAVE 000h IN A AND RETURN
+   01A5 C9                  581 	RET			;
+   01A6                     582 CONIN:				; CONSOLE CHARACTER INTO REGISTER A
+                            583 				;
+   01A6 CDr9Cs01            584 	CALL	CONST		; IS A CHAR READY TO BE READ FROM UART?
+   01A9 FE 00               585 	CP	#0		; 
+   01AB CArA6s01            586 	JP	Z,CONIN		; NO?  TRY AGAIN   
+   01AE DB 68               587 	IN	A,(UART)	; YES? READ THE CHAR FROM THE UART (UART0 = 068h + $00)
+                            588 				; REGISTER AND PASS BACK TO USER
+   01B0 C9                  589 	RET			;
+                            590 				;
+   01B1                     591 CONOUT:				; CONSOLE CHARACTER OUTPUT FROM REGISTER C
+   01B1 DB 6D               592 	IN	A,(UART + 5)	; READ LINE STATUS REGISTER
+   01B3 E6 20               593 	AND	#0x20		; TEST IF UART IS READY TO SEND
+   01B5 CArB1s01            594 	JP	Z,CONOUT	; IF NOT REPEAT
+                            595 				;
+   01B8 79                  596 	LD	A,C		; GET TO ACCUMULATOR
+   01B9 D3 68               597 	OUT	(UART),A  ; THEN WRITE THE CHAR TO UART (UART0 = 068h + $00)
+   01BB C9                  598 	RET			;
+                            599 				;
+   01BC                     600 LIST:				;LIST CHARACTER FROM REGISTER C
+   01BC 79                  601 	LD	A,C		;CHARACTER TO REGISTER A
+   01BD C9                  602 	RET			;NULL SUBROUTINE
+                            603  .ENDIF
+                            604 				;
+   01BE                     605 LISTST:					;RETURN LIST STATUS (0 IF NOT READY, 1 IF READY)
+   01BE AF                  606 	XOR	A			;0 IS ALWAYS OK TO RETURN
+   01BF C9                  607 	RET				;
+                            608 					;
+                            609 					;
+                            610 ;__________________________________________________________________________________________________
+                            611 ;
+                            612 ;	** PUNCH & READER I/O -- STUB
+                            613 ;		
+                            614 ;__________________________________________________________________________________________________			
+   01C0                     615 PUNCH:					;PUNCH CHARACTER FROM REGISTER C
+   01C0 79                  616 	LD	A,C			;CHARACTER TO REGISTER A
+   01C1 C9                  617 	RET				;NULL SUBROUTINE
+                            618 					;
+   01C2                     619 READER:					;READ CHARACTER INTO REGISTER A FROM READER DEVICE
+   01C2 79                  620 	LD	A,C			;CHARACTER TO REGISTER A
+   01C3 C9                  621 	RET
+                            622 	
+                            623 	
+                            624 ;__________________________________________________________________________________________________
+                            625 ;
+                            626 ;	** DISK STORAGE I/O 
+                            627 ;		
+                            628 ;__________________________________________________________________________________________________
+                            629 ;
+                            630 ;   SELECT DISK GIVEN BY REGISTER C
+                            631 ;__________________________________________________________________________________________________
+                            632 
+   01C4 21 00 00            633 SELDSK:	LD	HL,#0x0000		; ERROR RETURN CODE
+   01C7 79                  634 	LD	A,C			;
+                    0001    635  .IF CONDABONLY				;
+   01C8 FE 07               636 	CP	#7			; MUST BE BETWEEN 0 AND 6
+                            637  .ELSE					;
+                            638 	CP	#2			; IF NO IDE THEN ONLY DRIVE A AND B FOR THE MINI N8VEM SO 0 OR 1 ONLY
+                            639  .ENDIF					;
+   01CA D0                  640 	RET	NC			; RETURN IF OUT OF RANGE
+   01CB 32r12s0B            641 	LD	(DISKNO),A		;
+                            642 					; DISK NUMBER IS IN THE PROPER RANGE
+                            643 					; COMPUTE PROPER DISK PARAMETER HEADER ADDRESS
+   01CE 6F                  644 	LD	L,A			; L=DISK NUMBER 0,1,2,3,4
+   01CF 26 00               645 	LD	H,#0			; HIGH ORDER ZERO
+   01D1 29                  646 	ADD	HL,HL			; *2
+   01D2 29                  647 	ADD	HL,HL			; *4
+   01D3 29                  648 	ADD	HL,HL			; *8
+   01D4 29                  649 	ADD	HL,HL			; *16 (SIZE OF EACH HEADER)
+   01D5 11r33s00            650 	LD	DE,#DPBASE		;
+   01D8 19                  651 	ADD	HL,DE			; HL= DPBASE(DISKNO*16)
+   01D9 C9                  652 	RET
+                            653 ;__________________________________________________________________________________________________	
+   01DA                     654 HOME:					; MOVE TO THE TRACK 00 POSITION OF CURRENT DRIVE
+                            655 					; TRANSLATE THIS CALL INTO A SETTRK CALL WITH PARAMETER 00
+   01DA 01 00 00            656 	LD	BC,#0			; SELECT TRACK 0000
+                            657 ;__________________________________________________________________________________________________
+   01DD                     658 SETTRK:					; SET TRACK GIVEN BY REGISTER BC
+   01DD 60                  659 	LD	H,B			;
+   01DE 69                  660 	LD	L,C			;
+   01DF 22r02s0B            661 	LD	(TRACK),HL		;
+   01E2 C9                  662 	RET
+                            663 ;__________________________________________________________________________________________________
+   01E3                     664 SETSEC:					; SET SECTOR GIVEN BY REGISTER BC
+   01E3 60                  665 	LD	H,B			;
+   01E4 69                  666 	LD	L,C			;
+   01E5 22r0As0B            667 	LD	(SECTOR),HL		;
+   01E8 C9                  668 	RET				;
+                            669 ;__________________________________________________________________________________________________
+                            670 ;
+                            671 ;  TRANSLATE THE SECTOR GIVEN BY BC USING THE
+                            672 ;  TRANSLATE TABLE GIVEN BY DE
+                            673 ;  ONLY USED FOR FLOPPIES! FOR ROMDISK/RAMDISK/IDE/ATAPI IT'S 1:1
+                            674 ;  DO THE NEXT ROUTINE IS A NULL (RETURNS THE SAME)
+                            675 ;__________________________________________________________________________________________________
+   01E9                     676 SECTRN:	
+   01E9 60                  677 	LD	H,B			;
+   01EA 69                  678 	LD	L,C			;
+   01EB C9                  679 	RET				;
+                            680 ;__________________________________________________________________________________________________
+   01EC                     681 SETDMA:					; SET DMA ADDRESS GIVEN BY REGISTERS B AND C
+   01EC 69                  682 	LD	L,C			; LOW ORDER ADDRESS
+   01ED 60                  683 	LD	H,B			; HIGH ORDER ADDRESS
+   01EE 22r10s0B            684 	LD	(DMAAD),HL		; SAVE THE ADDRESS
+   01F1 C9                  685 	RET
+                            686 ;________________________________________________________________________________________________________
+                            687 ;  DISK DRIVERS .
+                            688 ;
+                            689 ; DRIVER NEEDS TO DO SEVERAL THINGS FOR ROM AND RAM DISKS 
+                            690 ;   - INTERRUPTS ARE NOT ALLOWED DURING LOW RAM/ROM ACCESS (DISABLE!)
+                            691 ;   -TRANSLATE TRACK AND SECTOR INTO A POINTER TO WHERE THE 128 BYTE 
+                            692 ;     SECTOR BEGINS IN THE RAM/ROM
+                            693 ;   -TRANSLATE THE DRIVE INTO A RAM/ROM SELECT, COMBINE WITH TRACK ADDRESS
+                            694 ;     AND SEND TO THE MAP PORT 
+                            695 ;   -COPY 128 BYTE FROM OR TO THE ROM/RAMDISK AND MEMORY POINTED TO BY THE DMA 
+                            696 ;     ADDRESS PREVIOUSLY STORED 
+                            697 ;   -RESTORE MAP PORT TO PRIOR CONDITION BEFOR READ/WRITE
+                            698 ;
+                            699 ;   - FIRST TRICK IS THAT WE MADE SECTORS 256 AS 256*128=32768   SO WE COPY 
+                            700 ;     THE LOW SECTOR ADDRESS TO THE LOW BYTE OF THE HL REGISTER AND THEN 
+                            701 ;     MULTIPLY BY 128  THIS RESULTS IN THE STARTING ADDRESS IN THE RAM OR ROM
+                            702 ;     (0000 -> 7F80H) 32K PAGE 
+                            703 ;
+                            704 ;    - TRICK TWO IS THE TRACK ADDRESS  EQUALS THE 32K PAGE ADDRESS AND IS A 
+                            705 ;      DIRECT SELECT THAT CAN BE COPIED TO THE MAP PORT D0 THROUGH D5   D7
+                            706 ;      SELECTS THE DRIVE (ROM OR RAM) 
+                            707 ;      THAT MEANS THE LOW BYTE OF TRACK CONTAINS THE D0-D5 VALUE AND 
+                            708 ;      DISKNO HAS THE DRIVE SELECTED   WE FIRST COPY DISKNO TO ACC
+                            709 ;      AND RIGHTSHIFT IT TO PLACE THAT IN BIT 7, WE THEN ADD THE LOW BYTE OF 
+                            710 ;      TRACK TO ACC AND THEN SEND THAT TO THE MAP PORT 
+                            711 ;
+                            712 ;      NOTE 1: A WRITE TO ROM SHOULD BE FLAGGED AS AN ERROR 
+                            713 ;      NOTE 2: RAM MUST START AS A "FORMATTED DISK"  IF BATTERY BACKED UP
+                            714 ;                   IT'S A DO ONCE AT COLD COLD START   IF NOT BATTERY BACKED U
+                            715 ;                   IT WILL HAVE TO BE DONE EVERY TIME THE SYSTEM IS POWERED 
+                            716 ;                   FORMATTING THE RAM IS SIMPLE AS CLEARING THE DIRECTORY AREA
+                            717 ;                   TO A VALUE OF E5H (THE FIRST 8K OF TRACK 1 OR THE RAMDISK) 
+                            718 ;                   IT COULD BE DONE AS A SIMPLE UTILITY PROGRAM STORED IN ROMD
+                            719 ;                   OR ANYTIME COLBOOT IS CALLED(LESS DESIREABLE) 
+                            720 ;
+                            721 ;     -WE NOW CAN COPY TO OR FROM AS CORRECT FOR THE DEVICE 128 BYTES (SECTOR)
+                            722 ;      TO OR FROM THE DMA ADDRESS  ALMOST!  SINCE ROM OR RAM IS BEING PAGED
+                            723 ;      WE HAVE TO COPY ANYTHING DETINED FOR BELOW 8000H TO A TEMP BUFFER THEN
+                            724 ;      HANDLE THE PAGING 
+                            725 ;        
+                            726 ;
+                            727 ;     - LAST STEP IS TO RESTORE THE MAP PORT TO POINT TO THE RAM (TRACK 0) SO T
+                            728 ;       MEMORY MAP IS ALL RAM AGAIN AND NOT POINTING INTO THE DATA AREAS OR THE
+                            729 ;       SINCE THE RAM 0TH PAGE IS NOMINALLY THE LOW 32K OF RAM IN THE SYSTEM WE
+                            730 ;       SEND A SIMPLE MVI A,80H ; OUT MPCL_ROM	; MVI A,00H ; OUT MPCL_RAM 
+                            731 ;
+                            732 ;      - THE READ OR WRITE OPERATION IS DONE 
+                            733 ;
+                            734 ;   READ DISK
+                            735 ;    USES DE,DL, BC,  ACC FLAGS
+                            736 ;      Z80 COULD USE BLOCK MOVE [LDIR] BUT WRITTEN IN 8080 
+                            737 ;________________________________________________________________________________________________________
+                            738 
+                            739 ;__READ__________________________________________________________________________________________________
+                            740 ;
+                            741 ; 	PERFORM CP/M SECTOR READ
+                            742 ;________________________________________________________________________________________________________
+   01F2                     743 READ:
+   01F2 F3                  744 	DI				; DISABLE INTERRUPTS
+   01F3 3Ar12s0B            745 	LD	A,(DISKNO)		; GET DRIVE
+   01F6 FE 01               746 	CP	#0x01			; "B"
+                    0001    747  .IF CONDUSEFLOPPY
+   01F8 CArFEs02            748 	JP	Z,READ_FLPY_DSK 	; READ FLOPPY
+                            749  .ELSE
+                            750 	JP	Z,READ_RAM_DISK		; READ FROM 448K RAM DISK		
+                            751  .ENDIF
+   01FB FE 00               752 	CP	#0			; "B"
+   01FD CAr5As02            753 	JP	Z,READ_RAM_DISK		; READ FROM 448K RAM DISK
+   0200 FE 02               754 	CP	#2			; "C"
+   0202 CAr78s03            755 	JP	Z,READ_IDE		; READ FROM 8 MB IDE HARD DISK
+   0205 FE 03               756 	CP	#3			; "D"
+                    0000    757  .IF CONDUSEATAPI
+                            758  	JP	Z,READ_ATAPI		; READ FROM 8 MB ATAPI
+                            759  .ELSE
+   0207 CAr5As02            760 	JP	Z,READ_RAM_DISK		; READ FROM 448K RAM DISK		
+                            761  .ENDIF
+                            762 
+   020A FE 04               763 	CP	#4			; "E"
+   020C CArD6s03            764 	JP	Z,READ_HDPART4		; READ FROM 1 MB IDE HARD DISK, PARTITION 4  ** future use
+   020F FE 05               765 	CP	#5			; "F"
+   0211 CAr5As02            766 	JP	Z,READ_RAM_DISK		; READ FROM 1M ROM DISK (UTILIZES SAME
+                            767 					; ROUTINES AS RAM_DISK
+                            768 					; "G"
+                            769 					; READ FROM 22K EEPROM DISK , SO FALL THROUGH
+                            770 
+                            771 ;___READ_EEPROM_DISK_____________________________________________________________________________________
+                            772 ;
+                            773 ;	READ EEPROM DISK
+                            774 ;________________________________________________________________________________________________________
+   0214                     775 READ_EEPROM_DISK:
+                            776 					; 
+                            777 					; IF ROM, MAP TRACK/SECTOR TO VIRTUAL TRACK/SECTOR
+                            778 					; HANDLE READING FROM ROM HERE
+                            779 					; 
+                            780 					; PURPOSE OF THIS ROUTINE IS TO MAP 32K ROM PART
+                            781 					; TRACK/SECTOR MAP (2K TRACK SIZE MADE OF 16 128
+                            782 					; BYTE SECTORS EACH) ONTO WHAT THE RAM/ROM SECTOR
+                            783 					; READ ROUTINES ARE EXPECTING (32K TRACK SIZE MADE
+                            784 					; OF 256 128 BYTE SECTORS EACH)   THE ROUTINE 
+                            785 					; CONVERTS 4 BIT TRACK # AND 4 BIT SECTOR #
+                            786 					; INTO A VIRTUAL 1 TRACK, 256 SECTOR ACCESS
+   0214 2Ar02s0B            787 	LD	HL,(TRACK)		; TRACK # IS UPPER 4 BITS OF SECTOR ADDRESS
+   0217 29                  788 	ADD	HL,HL			; SHIFT BITS LEFT 1 (*2)
+   0218 29                  789 	ADD	HL,HL			; SHIFT BITS LEFT 1 (*4)
+   0219 29                  790 	ADD	HL,HL			; SHIFT BITS LEFT 1 (*8)
+   021A 29                  791 	ADD	HL,HL			; SHIFT BITS LEFT 1 (*16)
+   021B 44                  792 	LD	B,H			; PUT UPPER 4 BITS OF SECTOR ADDRESS IN BC
+   021C 4D                  793 	LD	C,L			; (B IS UPPER BYTE AND C IS LOWER BYTE)
+                            794 					; BC NOW CONTAINS THE UPDATED TRACK #
+   021D 2Ar0As0B            795 	LD	HL,(SECTOR)		; SECTOR # IS LOWER 4 BITS OF SECTOR ADDRESS
+   0220 09                  796 	ADD	HL,BC			; VIRTUAL SECTOR = (UPDATED TRACK #) + SECTOR #
+   0221 22r0Cs0B            797 	LD	(PSECTOR),HL		; STORE VIRTUAL SECTOR #
+                            798 					; NOW CONTINUE READING ROM WITH REGULAR RAM
+                            799 					; SETUP FOR READ OF RAM OR ROM DISK
+   0224 2Ar0Cs0B            800 	LD	HL,(PSECTOR)		;
+   0227 29                  801 	ADD	HL,HL			; SHIFT BITS LEFT 1 (*2)
+   0228 29                  802 	ADD	HL,HL			; SHIFT BITS LEFT 1 (*4)
+   0229 29                  803 	ADD	HL,HL			; SHIFT BITS LEFT 1 (*8)
+   022A 29                  804 	ADD	HL,HL			; SHIFT BITS LEFT 1 (*16)
+   022B 29                  805 	ADD	HL,HL			; SHIFT BITS LEFT 1 (*32)
+   022C 29                  806 	ADD	HL,HL			; SHIFT BITS LEFT 1 (*64)
+   022D 29                  807 	ADD	HL,HL			; SHIFT BITS LEFT 1 (*128)
+   022E 22r0Es0B            808 	LD	(SECST),HL		; SAVE SECTOR STARTING ADDRESS
+                            809 					; SET PAGER WITH DRIVE (0) AND TRACK (0)
+   0231 3E 00               810 	LD	A,#0			; SWITCH IN ROM PAGE 
+   0233 D3 7C               811 	OUT	(MPCL_ROM),A		; SEND TO PORT MAPPER
+   0235 32r08s0B            812 	LD	(PAGER),A		; SAVE COPY (JUST BECAUSE)	
+   0238 21rE2s0F            813 	LD	HL,#SECTOR_BUFFER	; LOAD HL WITH TEMP BUF ADDRESS
+   023B 5D                  814 	LD	E,L			;
+   023C 54                  815 	LD	D,H			; GET IT INTO DE
+   023D 2Ar0Es0B            816 	LD	HL,(SECST)		; GET ROM/RAM ADDRESS
+   0240 CDr10s05            817 	CALL	COPY_CPM_SECTOR		;
+   0243 CDr04s05            818 	CALL	RPAGE			; SET PAGE TO CP/M RAM
+   0246 2Ar10s0B            819 	LD	HL,(DMAAD)		; LOAD HL WITH DMA ADDRESS
+   0249 5D                  820 	LD	E,L			;
+   024A 54                  821 	LD	D,H			; GET IT INTO DE
+   024B 21rE2s0F            822 	LD	HL,#SECTOR_BUFFER	; GET ROM/RAM ADDRESS
+   024E CDr10s05            823 	CALL	COPY_CPM_SECTOR		;
+   0251 3Ar12s0B            824 	LD	A,(DISKNO)		; STORE CURRENT DRIVE IN BUFFER
+   0254 32rDDs0F            825 	LD	(CUDISK),A		;
+   0257 3E 00               826 	LD	A,#0			;
+                            827 ;;;;;	EI				; RE-ENABLE INTERRUPTS
+   0259 C9                  828 	RET		
+                            829 ;___READ_RAM_DISK_________________________________________________________________________________________
+                            830 ;
+                            831 ;	READ RAM DISK
+                            832 ;________________________________________________________________________________________________________
+   025A                     833 READ_RAM_DISK:				;
+                            834 					; IF RAM, PROCEED WITH NORMAL TRACK/SECTOR READ
+   025A CDrCBs04            835 	CALL	SECPAGE			; SETUP FOR READ OF RAM OR ROM DISK
+   025D CDrD9s04            836 	CALL	PAGERB			; SET PAGER WITH DRIVE AND TRACK
+   0260 21rE2s0F            837 	LD	HL,#SECTOR_BUFFER	; LOAD HL WITH TEMP BUF ADDRESS
+   0263 5D                  838 	LD	E,L			;
+   0264 54                  839 	LD	D,H			; GET IT INTO DE
+   0265 2Ar0Es0B            840 	LD	HL,(SECST)		; GET ROM/RAM ADDRESS
+   0268 CDr10s05            841 	CALL	COPY_CPM_SECTOR		; MOVE SECTOR TO SECTOR_BUFFER
+   026B CDr04s05            842 	CALL	RPAGE			; SET PAGE TO CP/M RAM
+   026E 2Ar10s0B            843 	LD	HL,(DMAAD)		; LOAD HL WITH DMA ADDRESS					;
+   0271 5D                  844 	LD	E,L			;
+   0272 54                  845 	LD	D,H			; GET IT INTO DE
+   0273 21rE2s0F            846 	LD	HL,#SECTOR_BUFFER	; GET ROM/RAM ADDRESS
+   0276 CDr10s05            847 	CALL	COPY_CPM_SECTOR		; MOVE SECTOR FROM SECTOR_BUFFER TO DMA AREA
+   0279 3Ar12s0B            848 	LD	A,(DISKNO)		; STORE CURRENT DRIVE IN BUFFER
+   027C 32rDDs0F            849 	LD	(CUDISK),A		;
+   027F 3E 00               850 	LD	A,#0			;
+                            851 ;;;;;	EI				; RE-ENABLE INTERRUPTS
+   0281 C9                  852 	RET
+                            853 	
+                            854 ;___TRFLSEC______________________________________________________________________________________________
+                            855 ;
+                            856 ;	TRANSLATE LOGICAL FLOPPY DISK SECTOR TO PHYSICAL SECTOR
+                            857 ;	IN:  TRACK,SECTOR
+                            858 ;	OUT: PTRACK,PSECTOR,SECTOR_INDEX
+                            859 ;________________________________________________________________________________________________________
+   0282                     860 TRFLSEC:	
+   0282 3Ar02s0B            861 	LD	A,(TRACK)		; LOAD TRACK # (LOW BYTE)
+   0285 E6 01               862 	AND	#1			; FILTER OUT HEAD
+   0287 32rEBs0A            863 	LD	(HEAD),A		; STORE HEAD
+   028A 3Ar02s0B            864 	LD	A,(TRACK)		; SAVE TRACK IN A
+   028D CB 3F               865 	SRL	A			; REMOVE HEAD BIT	
+   028F 32r04s0B            866 	LD	(PTRACK),A		; STORE IN TRACK
+   0292 3Ar0As0B            867 	LD	A,(SECTOR)		; LOAD SECTOR # (LOW BYTE)
+   0295 32r1Cs0B            868 	LD	(SECTOR_INDEX),A	; STORE SECTOR IN SECTOR INDEX
+   0298 CB 3F               869 	SRL	A			; 
+   029A CB 3F               870 	SRL	A			; DIVIDE BY 4 (FOR BLOCKING)
+   029C 32r0Cs0B            871 	LD	(PSECTOR),A		; STORE IN SECTOR
+   029F 3Ar1Cs0B            872 	LD	A,(SECTOR_INDEX)	; FILTER OUT UNWANTED BITS
+   02A2 E6 03               873 	AND	#3			;
+   02A4 32r1Cs0B            874 	LD	(SECTOR_INDEX),A	;
+   02A7 C9                  875 	RET	
+                            876 
+                            877 ;___DEBSEC_______________________________________________________________________________________________
+                            878 ;
+                            879 ;	DEBLOCK 512 BYTE SECTOR FOR CP/M
+                            880 ;
+                            881 ;________________________________________________________________________________________________________
+   02A8                     882 DEBSEC:	
+   02A8 2Ar10s0B            883 	LD	HL,(DMAAD)		; LOAD HL WITH DMA ADDRESS
+   02AB 54                  884 	LD	D,H			; TRANSFER HL REGISTERS TO DE
+   02AC 5D                  885 	LD	E,L			;
+   02AD D5                  886 	PUSH	DE			; STORE DE
+                            887 					; COMPUTE STARTING ADDRESS OF CP/M SECTOR IN READ SECTOR BUFFER
+   02AE 21rE2s0F            888 	LD	HL,#SECTOR_BUFFER	; LOAD HL WITH SECTOR BUFFER ADDRESS
+   02B1 3Ar1Cs0B            889 	LD	A,(SECTOR_INDEX)	; GET THE SECTOR INDEX (CP/M SECTOR OFFSET IN BUFFER)
+   02B4 0F                  890 	RRCA				; MOVE BIT 0 TO BIT 7
+   02B5 0F                  891 	RRCA				; DO AGAIN - IN EFFECT MULTIPLY BY 4
+   02B6 16 00               892 	LD	D,#0			; PUT RESULT AS 16 VALUE IN DE, UPPER BYTE IN D IS 000h
+   02B8 5F                  893 	LD	E,A			; PUT ADDRESS OFFSET IN E
+   02B9 19                  894 	ADD	HL,DE			; MULTIPLY BY 2, TOTAL MULTIPLICATION IS X 128
+   02BA 19                  895 	ADD	HL,DE			; CP/M SECTOR STARTING ADDRESS IN IDE HD SECTOR BUFFER
+                            896 					; COPY CP/M SECTOR TO BDOS DMA ADDRESS BUFFER			
+   02BB D1                  897 	POP	DE			; RESTORE DE			
+   02BC CDr10s05            898 	CALL	COPY_CPM_SECTOR		;
+   02BF C9                  899 	RET
+                            900 
+                            901 ;___BLKSEC_______________________________________________________________________________________________
+                            902 ;
+                            903 ;	BLOCK 512 BYTE SECTOR FOR CP/M
+                            904 ;
+                            905 ;________________________________________________________________________________________________________
+   02C0                     906 BLKSEC:	
+                            907 					; COMPUTE STARTING ADDRESS OF CP/M SECTOR IN READ SECTOR BUFFER	
+   02C0 21rE2s0F            908 	LD	HL,#SECTOR_BUFFER	; LOAD HL WITH SECTOR BUFFER ADDRESS
+   02C3 3Ar1Cs0B            909 	LD	A,(SECTOR_INDEX)	; GET THE SECTOR INDEX (CP/M SECTOR OFFSET IN BUFFER)
+   02C6 0F                  910 	RRCA				; MOVE BIT 0 TO BIT 7
+   02C7 0F                  911 	RRCA				; DO AGAIN - IN EFFECT MULTIPLY BY 64
+   02C8 16 00               912 	LD	D,#0			; PUT RESULT AS 16 VALUE IN DE, UPPER BYTE IN D IS 000h
+   02CA 5F                  913 	LD	E,A			; PUT ADDRESS OFFSET IN E
+   02CB 19                  914 	ADD	HL,DE			; CP/M SECTOR STARTING ADDRESS IN IDE HD SECTOR BUFFER
+   02CC 19                  915 	ADD	HL,DE			; MULTIPLY BY 2, TOTAL MULTIPLICATION IS X 128
+   02CD 22r0Es0B            916 	LD	(SECST),HL		; KEEP CP/M SECTOR ADDRESS FOR LATER USE
+                            917 					; COPY CP/M SECTOR FROM BDOS DMA ADDRESS BUFFER
+   02D0 2Ar0Es0B            918 	LD	HL,(SECST)		; LOAD CP/M SECTOR ADDRESS (WHERE THE DATA IS TO BE WRITTEN)
+   02D3 54                  919 	LD	D,H			; TRANSFER HL REGISTERS TO DE
+   02D4 5D                  920 	LD	E,L			;
+   02D5 2Ar10s0B            921 	LD	HL,(DMAAD)		; LOAD HL WITH DMA ADDRESS (WHERE THE DATA TO BE WRITTEN IS)
+   02D8 CDr10s05            922 	CALL	COPY_CPM_SECTOR		;
+   02DB C9                  923 	RET
+                            924 	
+                            925 ;___ISCUR_______________________________________________________________________________________________
+                            926 ;
+                            927 ;	IS CURRENT SECTOR IN BUFFER?
+                            928 ;
+                            929 ;________________________________________________________________________________________________________
+   02DC                     930 ISCUR:		
+   02DC 2Ar0Cs0B            931 	LD	HL,(PSECTOR)		; COMPARE REQUESTED SECTOR WITH SECTOR IN BUFFER
+   02DF 3ArDEs0F            932 	LD	A,(CUSECTOR)		; 
+   02E2 BD                  933 	CP	L			;
+   02E3 C0                  934 	RET	NZ			; LOW BYTE NOT  EQUAL
+   02E4 3ArDFs0F            935 	LD	A,(CUSECTOR+1)		; 
+   02E7 BC                  936 	CP	H			;
+   02E8 C0                  937 	RET	NZ			; HIGH BYTE NOT  EQUAL
+   02E9 2Ar04s0B            938 	LD	HL,(PTRACK)		; COMPARE REQUESTED TRACK WITH TRACK IN BUFFER
+   02EC 3ArE0s0F            939 	LD	A,(CUTRACK)		; 
+   02EF BD                  940 	CP	L			; LOW BYTE NOT  EQUAL
+   02F0 C0                  941 	RET	NZ			;
+   02F1 3ArE1s0F            942 	LD	A,(CUTRACK+1)		; 
+   02F4 BC                  943 	CP	H			;
+   02F5 C0                  944 	RET	NZ			; HIGH BYTE NOT  EQUAL
+   02F6 2Ar12s0B            945 	LD	HL,(DISKNO)		; COMPARE REQUESTED DRIVE WITH DRIVE IN BUFFER
+   02F9 3ArDDs0F            946 	LD	A,(CUDISK)		;
+   02FC BD                  947 	CP	L			;
+   02FD C9                  948 	RET				; EXIT WITH RESULT
+                            949 
+                            950 ;___READ_FLPY_DSK________________________________________________________________________________________
+                            951 ;
+                            952 ;	READ FLOPPY DISK
+                            953 ;
+                            954 ;________________________________________________________________________________________________________
+                            955 
+   02FE                     956 READ_FLPY_DSK:
+   02FE F3                  957 	DI				; DISABLE INTERRUPTS
+   02FF 21 00 00            958 	LD	HL,#0			;
+   0302 39                  959 	ADD	HL,SP			; GET STACK POINTER INTO HL
+   0303 22r64s0A            960 	LD	(PARKSTACK),HL		; SAVE STACK POINTER 
+   0306 31r63s0A            961 	LD	SP,#FLOPPYSTACK		; 
+   0309 CDr82s02            962 	CALL	TRFLSEC			; TRANSLATE SECTOR INFORMATION
+   030C CDr1As03            963 	CALL 	READ_FLPY_SEC		;
+   030F CDrA8s02            964 	CALL	DEBSEC			; DEBLOCK SECTOR
+   0312 3ArF7s0A            965 	LD	A,(ST1)			; LOAD RESULT CODE INTO A
+   0315                     966 READ_FLPY_DSK_EXIT:			;
+   0315 ED 7Br64s0A         967 	LD	SP,(PARKSTACK)		; RETURN STACK
+                            968 ;;;;;	EI				; RE-ENABLE INTERRUPTS
+   0319 C9                  969 	RET
+                            970 	
+                            971 	
+                            972 ;___READ_FLPY_SEC________________________________________________________________________________________
+                            973 ;
+                            974 ;	READ A SECTOR FROM A FLOPPY DISK
+                            975 ;
+                            976 ;________________________________________________________________________________________________________
+   031A                     977 READ_FLPY_SEC:
+   031A 3E 00               978 	LD	A,#0			; RESET STATUS FLAG 1
+   031C 32rF7s0A            979 	LD	(ST1),A			;
+   031F CDrDCs02            980 	CALL	ISCUR			; IS CURRENT SECTOR ALREADY IN BUFFER
+   0322 CAr65s03            981 	JP	Z,READ_FLPY_SEC_OK
+   0325 3E 14               982 	LD	A,#20			; 20 RETRIES
+   0327 32rFFs0A            983 	LD	(RETRY),A		;
+   032A 3E 02               984 	LD	A,#2			; 2 ITERATIONS OF RETRIES 
+   032C 32r00s0B            985 	LD	(RETRY1),A		;	
+   032F                     986 READ_FLPY_SEC_RETRY:			;
+   032F CDr1Es08            987 	CALL	FLOPPYREAD		; READ THE FLOPPY DISK SECTOR
+   0332 3ArF6s0A            988 	LD	A,(ST0)			; GET STATUS FLAG 0
+   0335 E6 F8               989 	AND	#0x0F8			; MASK OF DRIVE AND HEAD SELECTION
+   0337 47                  990 	LD	B,A			; MOVE STATUS FLAG 0 TO B
+   0338 3ArF7s0A            991 	LD	A,(ST1)			; GET STATUS FLAG 1
+   033B B0                  992 	OR	B			; IF ZERO READ WAS OK
+   033C CAr65s03            993 	JP	Z,READ_FLPY_SEC_OK
+   033F 3ArFFs0A            994 	LD	A,(RETRY)		; READ NOT OK, DEC RETRY COUNTER
+   0342 3D                  995 	DEC	A			; 
+   0343 32rFFs0A            996 	LD	(RETRY),A		; STORE NEW RETRY COUNTER
+   0346 C2r2Fs03            997 	JP	NZ,READ_FLPY_SEC_RETRY
+   0349 CDr61s09            998 	CALL	CYCLEFLOPPY		; CYCLE FLOPPY HEAD
+   034C 3E 14               999 	LD	A,#20			; RESET TO 20 RETRIES
+   034E 32rFFs0A           1000 	LD	(RETRY),A		; STORE RETRY COUNTER
+   0351 3Ar00s0B           1001 	LD	A,(RETRY1)		; DEC RETRY ITERATION COUNTER
+   0354 3D                 1002 	DEC	A			;
+   0355 32r00s0B           1003 	LD	(RETRY1),A		;
+   0358 C2r2Fs03           1004 	JP	NZ,READ_FLPY_SEC_RETRY
+   035B 21 FF FF           1005 	LD	HL,#0x0FFFF		; SET INVALID CONDITION, BUFFER IS INVALID
+   035E 22rDEs0F           1006 	LD	(CUSECTOR),HL		; CURRENT PHYSICAL DISK SECTOR IN BUFFER
+   0361 22rE0s0F           1007 	LD	(CUTRACK),HL		; CURRENT PHYSICAL DISK TRACK IN BUFFER
+   0364 C9                 1008 	RET				;
+   0365                    1009 READ_FLPY_SEC_OK:			;
+   0365 2Ar0Cs0B           1010 	LD	HL,(PSECTOR)		; STORE PHYSICAL SECTOR IN BUFFER
+   0368 22rDEs0F           1011 	LD	(CUSECTOR),HL		; 
+   036B 2Ar04s0B           1012 	LD	HL,(PTRACK)		; STORE PHYSICAL DISK TRACK IN BUFFER
+   036E 22rE0s0F           1013 	LD	(CUTRACK),HL		; 
+   0371 3Ar12s0B           1014 	LD	A,(DISKNO)		; STORE CURRENT DRIVE IN BUFFER
+   0374 32rDDs0F           1015 	LD	(CUDISK),A		;
+   0377 C9                 1016 	RET
+                           1017 	
+                           1018 ;___READ_IDE_____________________________________________________________________________________________
+                           1019 ;
+                           1020 ;	READ  FROM IDE HARD DISK  
+                           1021 ;________________________________________________________________________________________________________
+                           1022 
+   0378                    1023 READ_IDE:
+   0378 F3                 1024 	DI				; DISABLE INTERRUPTS
+   0379 21 00 00           1025 	LD	HL,#0			;
+   037C 39                 1026 	ADD	HL,SP			; GET STACK POINTER INTO HL
+   037D 22r64s0A           1027 	LD	(PARKSTACK),HL		; SAVE STACK POINTER 
+   0380 31r63s0A           1028 	LD	SP,#FLOPPYSTACK		; 
+                           1029 					; DISABLE INTERRUPTS
+   0383 CDr16s05           1030 	CALL	CONVERT_IDE_SECTOR_CPM 	
+   0386 CDr6As05           1031 	CALL	IDE_READ_SECTOR		; READ THE IDE HARD DISK SECTOR
+   0389 D2r96s03           1032 	JP	NC,READ_IDE_ERROR
+   038C CDrA8s02           1033 	CALL	DEBSEC			;
+   038F ED 7Br64s0A        1034 	LD	SP,(PARKSTACK)		; RETURN STACK
+                           1035 ;;;;;	EI				; RE-ENABLE INTERRUPTS
+   0393 3E 00              1036 	LD	A,#0			; RETURN ERROR CODE READ SUCCESSFUL A=0
+   0395 C9                 1037 	RET				;
+   0396                    1038 READ_IDE_ERROR:				;
+   0396 ED 7Br64s0A        1039 	LD	SP,(PARKSTACK)		; RETURN STACK
+                           1040 ;;;;;	EI				; RE-ENABLE INTERRUPTS
+   039A 3E FF              1041 	LD	A,#0x0FF			; RETURN ERROR CODE READ ERROR A=FF
+   039C C9                 1042 	RET	
+                           1043 
+                           1044 ;___READ_ATAPI_________________________________________________________________________________________
+                           1045 ;
+                           1046 ;	READ  FROM ATAPI DEVICE
+                           1047 ;________________________________________________________________________________________________________	
+   039D                    1048 READ_ATAPI:
+   039D 3E FF              1049 	LD	A,#0x0FF			; 255 RETRIES
+   039F 32rFFs0A           1050 	LD	(RETRY),A		;
+   03A2                    1051 READ_ATAPI_RETRY:	
+   03A2 3E 10              1052 	LD	A,#0x10			; SET TO SECONDARY DEVICE
+   03A4 32r17s0B           1053 	LD	(IDEDEVICE),A		;
+   03A7 F3                 1054 	DI				; DISABLE INTERRUPTS
+   03A8 21 00 00           1055 	LD	HL,#0			;
+   03AB 39                 1056 	ADD	HL,SP			; GET STACK POINTER INTO HL
+   03AC 22r64s0A           1057 	LD	(PARKSTACK),HL		; SAVE STACK POINTER 
+   03AF 31r63s0A           1058 	LD	SP,#FLOPPYSTACK		; 
+   03B2 CDr16s05           1059 	CALL	CONVERT_IDE_SECTOR_CPM	
+   03B5 CDrDFs06           1060 	CALL	ATAPI_READ_SECTOR	
+   03B8 D2rC5s03           1061 	JP	NC,READ_ATAPI_ERROR	
+   03BB CDrA8s02           1062 	CALL	DEBSEC			;
+   03BE ED 7Br64s0A        1063 	LD	SP,(PARKSTACK)		; RETURN STACK
+                           1064 ;;;;;	EI				; RE-ENABLE INTERRUPTS
+   03C2 3E 00              1065 	LD	A,#0			; RETURN ERROR CODE READ SUCCESSFUL A=0
+   03C4 C9                 1066 	RET				;
+   03C5                    1067 READ_ATAPI_ERROR:	
+   03C5 3ArFFs0A           1068 	LD	A,(RETRY)		; READ NOT OK, DEC RETRY COUNTER
+   03C8 3D                 1069 	DEC	A			; 
+   03C9 32rFFs0A           1070 	LD	(RETRY),A		; STORE NEW RETRY COUNTER
+   03CC C2rA2s03           1071 	JP	NZ,READ_ATAPI_RETRY	
+   03CF ED 7Br64s0A        1072 	LD	SP,(PARKSTACK)		; RETURN STACK
+                           1073 ;;;;;	EI				; RE-ENABLE INTERRUPTS
+   03D3 3E FF              1074 	LD	A,#0x0FF			; RETURN ERROR CODE READ ERROR A=FF
+   03D5 C9                 1075 	RET				;
+                           1076 	
+   03D6                    1077 READ_HDPART4:
+                           1078 					; STUB
+   03D6 C9                 1079 	RET
+                           1080 
+                           1081 ;___WRITE______________________________________________________________________________________________
+                           1082 ;
+                           1083 ;   HANDLE CP/M WRITE CALL
+                           1084 ;
+                           1085 ;________________________________________________________________________________________________________
+   03D7                    1086 WRITE:
+   03D7 F3                 1087 	DI				; DISABLE INTERRUPTS
+   03D8 3Ar12s0B           1088 	LD	A,(DISKNO)		; GET DRIVE
+   03DB FE 01              1089 	CP	#1			; FIND OUT WHICH DRIVE IS BEING REQUESTED
+                    0001   1090  .IF CONDUSEFLOPPY
+   03DD CAr25s04           1091 	JP	Z,WRITE_FLP_DSK		;
+                           1092  .ELSE
+                           1093 	JP	Z,WRITE_RAM_DISK	; WRITE TO 448K RAM DISK
+                           1094  .ENDIF
+   03E0 FE 00              1095 	CP	#0			; 
+   03E2 CArFDs03           1096 	JP	Z,WRITE_RAM_DISK	; WRITE TO 448K RAM DISK
+   03E5 FE 02              1097 	CP	#2			;
+   03E7 CAr66s04           1098 	JP	Z,WRITE_IDE		; WRITE TO 8 MB IDE HARD DISK, PARTITION 2
+   03EA FE 03              1099 	CP	#3			;
+                    0000   1100  .IF CONDUSEATAPI
+                           1101 	JP	Z,WRITE_ATAPI		; WRITE TO 8 MB IDE HARD DISK, PARTITION 3
+                           1102  .ELSE
+   03EC CArFDs03           1103 	JP	Z,WRITE_RAM_DISK	; WRITE TO 448K RAM DISK
+                           1104  .ENDIF
+   03EF FE 04              1105 	CP	#4			;
+   03F1 CArBBs04           1106 	JP	Z,WRITE_HDPART4		; WRITE TO 1 MB IDE HARD DISK, PARTITION 4
+                           1107 
+                           1108 
+                           1109 ;___RDONLY______________________________________________________________________________________________
+                           1110 ;
+                           1111 ;   HANDLE WRITE TO READ ONLY
+                           1112 ;
+                           1113 ;   SENDS A MESSAGE TO TERMINAL THAT ROM DRIVE IS NOT WRITEABLE
+                           1114 ;   DOES A PAUSE THEN RETURNS TO CPM WITH ERROR FLAGGED  THIS IS
+                           1115 ;   DONE TO ALLOW A POSSIBLE GRACEFUL EXIT (SOME APPS MAY PUKE) 
+                           1116 ;________________________________________________________________________________________________________
+   03F4                    1117 RDONLY:
+   03F4 21r8Cs0A           1118 	LD	HL,#TXT_RO_ERROR		; SET HL TO START OF ERROR MESSAGE
+   03F7 CDrBCs04           1119 	CALL	PRTMSG			; PRINT ERROR MESSAGE
+   03FA 3E 01              1120 	LD	A,#1			; SEND BAD SECTOR ERROR BACK
+                           1121 					; BDOS WILL ALSO PRINT ITS OWN ERROR MESSAGE
+   03FC C9                 1122 	RET
+                           1123 
+                           1124 ;___WRITE_RAM_DISK_____________________________________________________________________________________
+                           1125 ;
+                           1126 ;	WRITE RAM DISK
+                           1127 ;________________________________________________________________________________________________________
+   03FD                    1128 WRITE_RAM_DISK:
+   03FD 21rE2s0F           1129 	LD	HL,#SECTOR_BUFFER	; LOAD HL WITH TEMP BUF ADDRESS
+   0400 5D                 1130 	LD	E,L			;
+   0401 54                 1131 	LD	D,H			; GET IT INTO DE
+   0402 2Ar10s0B           1132 	LD	HL,(DMAAD)		; GET DMA ADDRESS
+   0405 CDr10s05           1133 	CALL	COPY_CPM_SECTOR		;
+   0408 CDrCBs04           1134 	CALL	SECPAGE			; GET RAM PAGE WRITE ADDRESS
+   040B CDrD9s04           1135 	CALL	PAGERB			; SET PAGER WITH DRIVE AND TRACK
+   040E 2Ar0Es0B           1136 	LD	HL,(SECST)		; LOAD HL WITH DMA ADDRESS (WHERE TO WRITE TO)
+   0411 5D                 1137 	LD	E,L			;
+   0412 54                 1138 	LD	D,H			; GET IT INTO DE
+   0413 21rE2s0F           1139 	LD	HL,#SECTOR_BUFFER	; GET TEMP BUFFER ADDRESS
+   0416 CDr10s05           1140 	CALL	COPY_CPM_SECTOR		;
+   0419 CDr04s05           1141 	CALL	RPAGE			; SET BACK TO RAM
+   041C 3Ar12s0B           1142 	LD	A,(DISKNO)		; STORE CURRENT DRIVE IN BUFFER
+   041F 32rDDs0F           1143 	LD	(CUDISK),A		;
+   0422 3E 00              1144 	LD	A,#0			;
+                           1145 ;;;;;	EI				; RE-ENABLE INTERRUPTS
+   0424 C9                 1146 	RET
+                           1147 	
+                           1148 ;___WRITE_FLP_DSK_____________________________________________________________________________________
+                           1149 ;
+                           1150 ;	WRITE FLOPPY DISK
+                           1151 ;________________________________________________________________________________________________________
+   0425                    1152 WRITE_FLP_DSK:
+   0425 F3                 1153 	DI				; DISABLE INTERRUPTS
+   0426 21 00 00           1154 	LD	HL,#0			;
+   0429 39                 1155 	ADD	HL,SP			; MOVE STACK POINTER TO HL
+   042A 22r64s0A           1156 	LD	(PARKSTACK),HL		; SAVE STACK POINTER 
+   042D 31r63s0A           1157 	LD	SP,#FLOPPYSTACK		;
+   0430 CDr82s02           1158 	CALL	TRFLSEC			; TRANSLATE SECTOR INFORMATION
+   0433 CDr1As03           1159 	CALL 	READ_FLPY_SEC		;
+   0436 3ArF7s0A           1160 	LD	A,(ST1)			; GET STATUS CODE
+   0439 C2r5Es04           1161 	JP	NZ,WRITE_FLP_DSK_OK	
+   043C                    1162 WRITE_READ_FLPY_DSK_OK:			;
+   043C CDrC0s02           1163 	CALL	BLKSEC			; BLOCK SECTOR 
+                           1164 					; IDE HD SECTOR IS NOW UPDATED WITH CURRENT CP/M SECTOR DATA SO WRITE TO DISK
+   043F 3E 14              1165 	LD	A,#20			; 20 RETRIES
+   0441 32rFFs0A           1166 	LD	(RETRY),A		;
+   0444                    1167 WRITE_FLP_DSK_RETRY:			;
+   0444 CDr26s08           1168 	CALL	FLOPPYWRITE		; WRITE THE FLOPPY DISK SECTOR
+   0447 3ArF6s0A           1169 	LD	A,(ST0)			; GET STATUS CODE 0
+   044A E6 F8              1170 	AND	#0x0F8			; MASK OF DRIVE AND HEAD SELECTION
+   044C 47                 1171 	LD	B,A			; MOVE STATUS CODE 0 TO B
+   044D 3ArF7s0A           1172 	LD	A,(ST1)			; GET STATUS CODE 1
+   0450 B0                 1173 	OR	B			; IF ZERO WRITE WAS OK
+   0451 CAr5Es04           1174 	JP	Z,WRITE_FLP_DSK_OK	;
+   0454 3ArFFs0A           1175 	LD	A,(RETRY)		; BAD WRITE, DEC RETRY COUNTER
+   0457 3D                 1176 	DEC	A			;
+   0458 32rFFs0A           1177 	LD	(RETRY),A		; STORE NEW RETRY COUNTER
+   045B C2r44s04           1178 	JP	NZ,WRITE_FLP_DSK_RETRY	;
+   045E                    1179 WRITE_FLP_DSK_OK:			;
+   045E ED 7Br64s0A        1180 	LD	SP,(PARKSTACK)		; RESTORE STACK
+   0462 3ArF7s0A           1181 	LD	A,(ST1)			; GET STATUS CODE 1
+                           1182 ;;;;;	EI				; RE-ENABLE INTERRUPTS
+   0465 C9                 1183 	RET
+                           1184 
+                           1185 	
+                           1186 
+                           1187 ;___WRITE_IDE____________________________________________________________________________________________
+                           1188 ;
+                           1189 ;	WRITE TO IDE DEVICE
+                           1190 ;________________________________________________________________________________________________________	
+   0466                    1191 WRITE_IDE:
+   0466 F3                 1192 	DI				; DISABLE INTERRUPTS
+   0467 21 00 00           1193 	LD	HL,#0			;
+   046A 39                 1194 	ADD	HL,SP			; GET STACK POINTER INTO HL
+   046B 22r64s0A           1195 	LD	(PARKSTACK),HL		; SAVE STACK POINTER 
+   046E 31r63s0A           1196 	LD	SP,#FLOPPYSTACK		; 
+   0471 CDr16s05           1197 	CALL	CONVERT_IDE_SECTOR_CPM 	;
+   0474 CDr6As05           1198 	CALL	IDE_READ_SECTOR		; READ THE IDE HARD DISK SECTOR
+   0477 D2r87s04           1199 	JP	NC,WRITE_IDE_ERROR	;
+   047A CDrC0s02           1200 	CALL	BLKSEC			; DEBLOCK SECTOR
+   047D CDr9Fs05           1201 	CALL	IDE_WRITE_SECTOR	; WRITE THE UPDATED IDE HARD DISK SECTOR
+   0480 ED 7Br64s0A        1202 	LD	SP,(PARKSTACK)		; RESTORE STACK
+                           1203 ;;;;;	EI				; RE-ENABLE INTERRUPTS
+   0484 3E 00              1204 	LD	A,#0			; RETURN ERROR CODE WRITE SUCCESSFUL A=0
+   0486 C9                 1205 	RET				;
+   0487                    1206 WRITE_IDE_ERROR:			;
+   0487 ED 7Br64s0A        1207 	LD	SP,(PARKSTACK)		; RESTORE STACK
+                           1208 ;;;;;	EI				; RE-ENABLE INTERRUPTS
+   048B 3E FF              1209 	LD	A,#0x0FF			; RETURN ERROR CODE WRITE ERROR A=FF
+   048D C9                 1210 	RET
+                           1211 
+                           1212 ;___WRITE_ATAPI__________________________________________________________________________________________
+                           1213 ;
+                           1214 ;	WRITE TO ATAPI DEVICE
+                           1215 ;________________________________________________________________________________________________________	
+   048E                    1216 WRITE_ATAPI:
+   048E 3E 10              1217 	LD	A,#0x10			; SET TO SECONDARY DEVICE
+   0490 32r17s0B           1218 	LD	(IDEDEVICE),A		;
+   0493 F3                 1219 	DI				; DISABLE INTERRUPTS
+   0494 21 00 00           1220 	LD	HL,#0			;
+   0497 39                 1221 	ADD	HL,SP			; GET STACK POINTER INTO HL
+   0498 22r64s0A           1222 	LD	(PARKSTACK),HL		; SAVE STACK POINTER 
+   049B 31r63s0A           1223 	LD	SP,#FLOPPYSTACK		; 
+                           1224 					;
+   049E CDr16s05           1225 	CALL	CONVERT_IDE_SECTOR_CPM	;
+                           1226 					;
+   04A1 CDrDFs06           1227 	CALL	ATAPI_READ_SECTOR	;
+   04A4 D2rB4s04           1228 	JP	NC,WRITE_ATAPI_ERROR	;
+   04A7 CDrC0s02           1229 	CALL	BLKSEC			; DEBLOCK SECTOR
+   04AA CDr3Cs07           1230 	CALL	ATAPI_WRITE_SECTOR	;
+                           1231 					;
+   04AD ED 7Br64s0A        1232 	LD	SP,(PARKSTACK)		; RESTORE STACK			
+                           1233 ;;;;;	EI				; RE-ENABLE INTERRUPTS
+   04B1 3E 00              1234 	LD	A,#0			; RETURN ERROR CODE WRITE SUCCESSFUL A=0
+   04B3 C9                 1235 	RET				;
+   04B4                    1236 WRITE_ATAPI_ERROR:			;
+   04B4 ED 7Br64s0A        1237 	LD	SP,(PARKSTACK)		; RESTORE STACK
+                           1238 ;;;;;	EI				; RE-ENABLE INTERRUPTS
+   04B8 3E FF              1239 	LD	A,#0x0FF		; RETURN ERROR CODE WRITE ERROR A=FF
+   04BA C9                 1240 	RET				;
+                           1241 	
+   04BB                    1242 WRITE_HDPART4:
+                           1243 					; STUB
+   04BB C9                 1244 	RET
+                           1245 
+                           1246 
+                           1247 ;___PRTMSG_______________________________________________________________________________________________
+                           1248 ;
+                           1249 ;	PRINT MESSAGE POINTED TO BY HL ON CONSOLE DEVICE
+                           1250 ;________________________________________________________________________________________________________	
+   04BC                    1251 PRTMSG:
+   04BC 7E                 1252 	LD	A,(HL)			; GET CHARACTER TO A
+   04BD FE FF              1253 	CP	#END			; TEST FOR END BYTE
+   04BF CArCAs04           1254 	JP	Z,PRTMSG1		; JUMP IF END BYTE IS FOUND
+   04C2 4F                 1255 	LD	C,A			; PUT CHAR TO PRINT VALUE IN REG C FOR CONOUT
+   04C3 CDrB1s01           1256 	CALL	CONOUT			; SEND CHARACTER TO CONSOLE FROM REG C
+   04C6 23                 1257 	INC	HL			; INC POINTER, TO NEXT CHAR
+   04C7 C3rBCs04           1258 	JP	PRTMSG			; TRANSMIT LOOP
+   04CA                    1259 PRTMSG1:
+   04CA C9                 1260 	RET
+                           1261 
+                           1262 
+                           1263 ;___SECPAGE_______________________________________________________________________________________________
+                           1264 ;
+                           1265 ;	UTILITY ROUTINE FOR SECTOR TO PAGE ADDRESS
+                           1266 ;________________________________________________________________________________________________________	
+   04CB                    1267 SECPAGE:
+   04CB 2Ar0As0B           1268 	LD	HL,(SECTOR)		; GET SECTOR INTO HL
+   04CE 29                 1269 	ADD	HL,HL			; SHIFT BITS 1 TO LEFT (*2)
+   04CF 29                 1270 	ADD	HL,HL			; SHIFT BITS 1 TO LEFT (*4)
+   04D0 29                 1271 	ADD	HL,HL			; SHIFT BITS 1 TO LEFT (*8)
+   04D1 29                 1272 	ADD	HL,HL			; SHIFT BITS 1 TO LEFT (*16)
+   04D2 29                 1273 	ADD	HL,HL			; SHIFT BITS 1 TO LEFT (*32)
+   04D3 29                 1274 	ADD	HL,HL			; SHIFT BITS 1 TO LEFT (*64)
+   04D4 29                 1275 	ADD	HL,HL			; SHIFT BITS 1 TO LEFT (*128)
+   04D5 22r0Es0B           1276 	LD	(SECST),HL		; SAVE SECTOR STARTING ADDRESS
+   04D8 C9                 1277 	RET
+                           1278 	
+                           1279 ;___PAGERB_______________________________________________________________________________________________
+                           1280 ;
+                           1281 ;	PAGER BYTE CREATION
+                           1282 ;    	ASSEMBLES DRIVE AND TRACK AND SENDS IT TO PAGER PORT
+                           1283 ;________________________________________________________________________________________________________	
+   04D9                    1284 PAGERB:	
+   04D9 2Ar02s0B           1285 	LD	HL,(TRACK)		; LOAD TRACK INTO HL
+   04DC 3Ar12s0B           1286 	LD	A,(DISKNO)		; LOAD DISK INTO A
+   04DF FE 05              1287 	CP	#5			; IS ROM?
+   04E1 CArF3s04           1288 	JP	Z,ROMD			; READ FROM 1M ROM DISK
+   04E4 FE 06              1289 	CP	#6			; IS ROM?
+   04E6 CArF3s04           1290 	JP	Z,ROMD			; READ FROM 22K ROM DISK
+   04E9 E6 01              1291 	AND	#1			; MASK FOR 1 BIT OF DRIVE SELECT 	
+   04EB 0F                 1292 	RRCA				; MOVE BIT 0 TO BIT 7
+   04EC B5                 1293 	OR	L			; OR L WITH ACC TO COMBINE TRACK AND DRIVE
+   04ED D3 78              1294 	OUT	(MPCL_RAM),A		; SEND TO RAM PORT MAPPER
+   04EF 32r08s0B           1295 	LD	(PAGER),A		; SAVE COPY (JUST BECAUSE)
+   04F2 C9                 1296 	RET				;
+   04F3                    1297 ROMD:					;
+   04F3 3E 05              1298 	LD	A,#5			;
+   04F5 E6 01              1299 	AND	#1			; MASK FOR 1 BIT OF DRIVE SELECT 
+   04F7 0F                 1300 	RRCA				; MOVE BIT 0 TO BIT 7
+   04F8 B5                 1301 	OR	L			; OR L WITH ACC TO COMBINE TRACK AND DRIVE
+   04F9 E6 7F              1302 	AND	#0x7F			; STRIP OFF BIT 7 (ROM_ENABLE BIT)	
+   04FB D3 7C              1303 	OUT	(MPCL_ROM),A		; SEND TO ROM PORT MAPPER
+   04FD 32r08s0B           1304 	LD	(PAGER),A		; SAVE COPY (JUST BECAUSE)
+   0500 32r09s0B           1305 	LD	(DB_PAGER),A		; SAVE COPY (JUST BECAUSE) (DEBUG)
+   0503 C9                 1306 	RET
+                           1307 
+                           1308 ;___RPAGE_______________________________________________________________________________________________
+                           1309 ;
+                           1310 ;	RESET PAGER BACK TO RAM   
+                           1311 ;________________________________________________________________________________________________________	
+   0504                    1312 RPAGE:
+   0504 3E 80              1313 	LD	A,#0x80			; DESELECT ROM PAGE
+   0506 D3 7C              1314 	OUT	(MPCL_ROM),A		; SELECT RAM
+   0508 3E 00              1315 	LD	A,#0			; SET TO RAM, TRACK 0
+   050A D3 78              1316 	OUT	(MPCL_RAM),A		; SELECT RAM
+   050C 32r08s0B           1317 	LD	(PAGER),A		; SAVE COPY OF PAGER BYTE
+   050F C9                 1318 	RET
+                           1319 
+                           1320 ;___COPY_CPM_SECTOR______________________________________________________________________________________
+                           1321 ;
+                           1322 ; 	COPIES ONE CPM SECTOR FROM ONE MEMORY ADDRESS TO ANOTHER
+                           1323 ;	INPUT
+                           1324 ;  	 DE SOURCE ADDRESS
+                           1325 ;	 HL TARGET ADDRESS
+                           1326 ; 	USES C REGISTER
+                           1327 ;________________________________________________________________________________________________________	
+   0510                    1328 COPY_CPM_SECTOR:
+   0510 01 80 00           1329 	LD	BC,#128			; BC IS COUNTER FOR FIXED SIZE TRANSFER (128 BYTES)
+   0513 ED B0              1330 	LDIR				; TRANSFER
+   0515 C9                 1331 	RET
+                           1332 
+                           1333 ;___CONVERT_IDE_SECTOR_CPM________________________________________________________________________________
+                           1334 ;
+                           1335 ; COMPUTES WHERE THE CP/M SECTOR IS IN THE LBA PARTITION
+                           1336 ; LBA HD SECTORS ARE 512 BYTES EACH, CP/M SECTORS ARE 128 BYTES EACH
+                           1337 ; MAXIMUM SIZE OF CP/M DISK IS 8 MB = 65536 (16 BITS) X 128 BYTES PER SECTOR
+                           1338 ; LBA HD PARTITION CAN HAVE AT MOST 16777215 IDE SECTORS -> 67108860 CP/M SECTORS
+                           1339 ; EACH IDE HD SECTOR CONTAINS 4 ADJACENT CP/M SECTORS
+                           1340 ; 
+                           1341 ; 
+                           1342 ; INPUT:
+                           1343 ;  - CP/M TRACK AND SECTOR 16 BIT WORDS
+                           1344 ; 
+                           1345 ; OUTPUT:
+                           1346 ; IDE TARGET SECTOR (SENT TO IDE HD CONTROLLER FOR READ OPERATION)
+                           1347 ;  - LOWER 16 BITS STORED IN LBA_TARGET_LO
+                           1348 ;  - UPPER 16 BITS STORED IN LBA_TARGET_HI
+                           1349 ; CP/M TO IDE HD SECTOR MAPPING PARAMETER STORED IN SECTOR_INDEX
+                           1350 ;  - 8 BIT VALUE WITH 4 LEGAL STATES (00, 01, 02, 04) WHICH IS
+                           1351 ;    TO BE USED TO COMPUTE STARTING ADDRESS OF 128 BYTE CP/M SECTOR ONCE
+                           1352 ;    512 BYTE IDE HD SECTOR READ INTO MEMORY BUFFER
+                           1353 ; LBA ADDRESS FORMAT = 00TTTTSS
+                           1354 ;
+                           1355 ; ROTATE WITH CARRY 16 BIT TRACK,SECTOR VALUE IN HL TO GET 14 BIT IDE HD
+                           1356 ; TARGET SECTOR IN PARTITION
+                           1357 ; KEEP LAST TWO BITS IN B FOR IDE HD SECTOR TO CP/M SECTOR TRANSLATION
+                           1358 ; COMPUTE SECTOR_INDEX 
+                           1359 ;________________________________________________________________________________________________________	
+   0516                    1360 CONVERT_IDE_SECTOR_CPM:
+                           1361 
+   0516 3Ar02s0B           1362 	LD	A,(TRACK)		; LOAD TRACK # (LOW BYTE)
+   0519 67                 1363 	LD	H,A			; 
+   051A 3Ar0As0B           1364 	LD	A,(SECTOR)		; LOAD SECTOR# (LOW BYTE)
+   051D 6F                 1365 	LD	L,A			;	
+   051E CDr61s05           1366 	CALL	RRA16			; ROTATE 'HL' RIGHT (DIVIDE BY 2)
+   0521 CDr61s05           1367 	CALL	RRA16			; ROTATE 'HL' RIGHT (DIVIDE BY 2)
+   0524 3Ar03s0B           1368 	LD	A,(TRACK+1)		; GET HIGH BYTE OF TRACK INTO A
+   0527 CB 27              1369 	SLA	A			;
+   0529 CB 27              1370 	SLA	A			;
+   052B CB 27              1371 	SLA	A			;
+   052D CB 27              1372 	SLA	A			;
+   052F CB 27              1373 	SLA	A			;
+   0531 CB 27              1374 	SLA	A			;
+   0533 B4                 1375 	OR	H			;
+   0534 67                 1376 	LD	H,A			;
+   0535 3Ar03s0B           1377 	LD	A,(TRACK+1)		; GET HIGH BYTE OF TRACK INTO A
+   0538 CB 3F              1378 	SRL	A			;
+   053A CB 3F              1379 	SRL	A			;
+   053C 32r15s0B           1380 	LD	(LBA_TARGET_HI),A	;
+   053F 7D                 1381 	LD	A,L			;
+   0540 32r13s0B           1382 	LD	(LBA_TARGET_LO),A	; LBA REGISTER IS 00TTTTSS / 4
+   0543 7C                 1383 	LD	A,H			;
+   0544 32r14s0B           1384 	LD	(LBA_TARGET_LO+1),A 	;
+   0547 3E 00              1385 	LD	A,#0			;
+   0549 32r16s0B           1386 	LD	(LBA_TARGET_HI+1),A	;
+                           1387 					;
+   054C 2Ar13s0B           1388 	LD	HL,(LBA_TARGET_LO)	; STORE PHYSICAL SECTOR 
+   054F 22r0Cs0B           1389 	LD	(PSECTOR),HL		;			
+   0552 2Ar15s0B           1390 	LD	HL,(LBA_TARGET_HI)	; STORE PHYSICAL TRACK 
+   0555 22r04s0B           1391 	LD	(PTRACK),HL		;			
+   0558 3Ar0As0B           1392 	LD	A,(SECTOR)		; LOAD SECTOR # 
+   055B E6 03              1393 	AND	#0b000000011		; 
+   055D 32r1Cs0B           1394 	LD	(SECTOR_INDEX),A	; LOCATES WHERE THE 128 BYTE CP/M SECTOR
+                           1395 					; IS WITHIN THE 512 BYTE IDE HD SECTOR
+                           1396 					; COMPUTE WHICH IDE HD SECTOR TO READ TO WITHIN 4 CP/M SECTORS 
+                           1397 					; SHIFTS 16 BIT PARTITION OFFSET TO THE RIGHT 2 BITS AND ADDS RESULT TO
+                           1398 					; IDE HD PARTITION STARTING SECTOR	
+                           1399 					; SHIFT PARTITION OFFSET RIGHT 1 BIT
+   0560 C9                 1400 	RET
+   0561                    1401 RRA16:
+   0561 37                 1402 	SCF				;
+   0562 3F                 1403 	CCF				; CLEAR CARRY FLAG
+   0563 7C                 1404 	LD	A,H			; 16 BIT ROTATE HL WITH CARRY
+   0564 1F                 1405 	RRA				;
+   0565 67                 1406 	LD	H,A			; ROTATE HL RIGHT 1 BIT (DIVIDE BY 2)
+   0566 7D                 1407 	LD	A,L			;
+   0567 1F                 1408 	RRA				;
+   0568 6F                 1409 	LD	L,A			;	
+   0569 C9                 1410 	RET
+                           1411 
+                           1412 
+                           1413 ;___IDE_READ_SECTOR______________________________________________________________________________________
+                           1414 ;
+                           1415 ;	READ IDE SECTOR
+                           1416 ;________________________________________________________________________________________________________		
+   056A                    1417 IDE_READ_SECTOR:
+   056A CDrDCs02           1418 	CALL	ISCUR			; IS CURRENT SECTOR IN BUFFER?	
+   056D CAr8Bs05           1419 	JP	Z,IDE_READ_SECTOR_OK	;
+   0570 CDrF3s05           1420 	CALL	IDE_WAIT_BUSY_READY 	; MAKE SURE DRIVE IS READY TO PROCEED
+   0573 D0                 1421 	RET	NC			; ERROR, RETURN
+   0574 CDr66s06           1422 	CALL	IDE_SETUP_LBA		; TELL DRIVE WHAT SECTOR IS REQUIRED
+   0577 3E 20              1423 	LD	A,#0x20			;
+   0579 D3 27              1424 	OUT	(IDESTTS),A		; 020h = IDE 'READ SECTOR' COMMAND 
+   057B                    1425 IDE_SREX:				;
+   057B CDrF3s05           1426 	CALL	IDE_WAIT_BUSY_READY	; MAKE SURE DRIVE IS READY TO PROCEED
+   057E D0                 1427 	RET	NC			; ERROR, RETURN
+   057F CDr0Fs06           1428 	CALL	IDE_TEST_ERROR		; ENSURE NO ERROR WAS REPORTED
+   0582 D0                 1429 	RET	NC			; ERROR, RETURN
+   0583 CDr22s06           1430 	CALL	IDE_WAIT_BUFFER		; WAIT FOR FULL BUFFER SIGNAL FROM DRIVE
+   0586 D0                 1431 	RET	NC			; ERROR, RETURN
+   0587 CDr3Cs06           1432 	CALL	IDE_READ_BUFFER		; GRAB THE 256 WORDS FROM THE BUFFER
+   058A 37                 1433 	SCF				; CARRY = 1 ON RETURN = OPERATION OK
+   058B                    1434 IDE_READ_SECTOR_OK:			;
+   058B 2Ar0Cs0B           1435 	LD	HL,(PSECTOR)		; STORE PHYSICAL SECTOR IN BUFFER
+   058E 22rDEs0F           1436 	LD	(CUSECTOR),HL		; 
+   0591 2Ar04s0B           1437 	LD	HL,(PTRACK)		; STORE PHYSICAL DISK TRACK IN BUFFER
+   0594 22rE0s0F           1438 	LD	(CUTRACK),HL		; 
+   0597 3Ar12s0B           1439 	LD	A,(DISKNO)		; STORE CURRENT DRIVE IN BUFFER
+   059A 32rDDs0F           1440 	LD	(CUDISK),A		;
+   059D 37                 1441 	SCF				; CARRY = 1 ON RETURN = OPERATION OK
+   059E C9                 1442 	RET
+                           1443 	
+                           1444 ;___IDE_WRITE_SECTOR_____________________________________________________________________________________
+                           1445 ;
+                           1446 ;	WRITE IDE SECTOR
+                           1447 ;________________________________________________________________________________________________________		
+   059F                    1448 IDE_WRITE_SECTOR:
+   059F CDrF3s05           1449 	CALL	IDE_WAIT_BUSY_READY 	; MAKE SURE DRIVE IS READY TO PROCEED
+   05A2 D0                 1450 	RET	NC			; ERROR, RETURN
+   05A3 CDr66s06           1451 	CALL	IDE_SETUP_LBA		; TELL DRIVE WHAT SECTOR IS REQUIRED
+   05A6 3E 30              1452 	LD	A,#0x30			;
+   05A8 D3 27              1453 	OUT	(IDESTTS),A		; 030h = IDE 'WRITE SECTOR' COMMAND 
+   05AA CDrF3s05           1454 	CALL	IDE_WAIT_BUSY_READY	;
+   05AD D0                 1455 	RET	NC			; ERROR, RETURN
+   05AE CDr0Fs06           1456 	CALL	IDE_TEST_ERROR		; ENSURE NO ERROR WAS REPORTED
+   05B1 D0                 1457 	RET	NC			; ERROR, RETURN
+   05B2 CDr22s06           1458 	CALL	IDE_WAIT_BUFFER		; WAIT FOR BUFFER READY SIGNAL FROM DRIVE
+   05B5 D0                 1459 	RET	NC			; ERROR, RETURN
+   05B6 CDr50s06           1460 	CALL	IDE_WRITE_BUFFER 	; SEND 256 WORDS TO DRIVE'S BUFFER
+   05B9 CDrF3s05           1461 	CALL	IDE_WAIT_BUSY_READY 	; MAKE SURE DRIVE IS READY TO PROCEED
+   05BC D0                 1462 	RET	NC			; ERROR, RETURN
+   05BD CDr0Fs06           1463 	CALL	IDE_TEST_ERROR		; ENSURE NO ERROR WAS REPORTED
+   05C0 D0                 1464 	RET	NC			; ERROR, RETURN
+   05C1 37                 1465 	SCF				; CARRY = 1 ON RETURN = OPERATION OK
+   05C2 C9                 1466 	RET	
+                           1467 
+                           1468 ;___IDE_SOFT_RESET_______________________________________________________________________________________
+                           1469 ;
+                           1470 ;	RESET IDE CHANNEL
+                           1471 ;________________________________________________________________________________________________________		
+   05C3                    1472 IDE_SOFT_RESET:
+                    0001   1473  .IF 	CONDIDESOFT			;
+   05C3 3E 06              1474 	LD	A,#0b000000110		; NO INTERRUPTS, RESET DRIVE = 1
+   05C5 D3 2E              1475 	OUT	(IDECTRL),A		;
+   05C7 3E 02              1476 	LD	A,#0b000000010		; NO INTERRUPTS, RESET DRIVE = 0
+   05C9 D3 2E              1477 	OUT	(IDECTRL),A		;
+   05CB CDrF3s05           1478 	CALL	IDE_WAIT_BUSY_READY	;THIS TAKES A COUPLE OF SECONDS
+   05CE C9                 1479 	RET	
+                           1480  .ELSE
+                           1481 	; SKIP THIS IF NO IDE DRIVE WHICH SPEEDS UP REBOOTS AND STARTUPS
+                           1482 	RET
+                           1483  .ENDIF
+                           1484 
+                           1485 ;___ATAPI_WAIT_BUSY_READY________________________________________________________________________________
+                           1486 ;
+                           1487 ;	WAIT FOR ATAPI CHANNEL TO BE READY
+                           1488 ;________________________________________________________________________________________________________		
+   05CF                    1489 ATAPI_WAIT_BUSY_READY:
+   05CF 11 00 00           1490 	LD	DE,#0			; CLEAR OUT DE
+   05D2                    1491 ATAPI_WBSY:				;
+   05D2 06 F0              1492 	LD	B,#0x0F0			; SETUP TIMEOUT
+   05D4                    1493 ATAPI_DLP:				;
+   05D4 10 FE              1494 	DJNZ	ATAPI_DLP		; 
+   05D6 13                 1495 	INC	DE			;
+   05D7 7A                 1496 	LD	A,D			;
+   05D8 B3                 1497 	OR	E			;
+   05D9 28 08              1498 	JR	Z,ATAPI_TO		;
+   05DB DB 27              1499 	IN	A,(IDESTTS)		; READ ERROR REG
+   05DD E6 80              1500 	AND	#0b010000000		; MASK OFF BUSY BIT
+   05DF 20 F1              1501 	JR	NZ,ATAPI_WBSY		; WE WANT BUSY(7) TO BE 0 
+   05E1 37                 1502 	SCF				; CARRY 1 = OK
+   05E2 C9                 1503 	RET				;
+   05E3                    1504 ATAPI_TO:				;
+   05E3 AF                 1505 	XOR	A			; CARRY 0 = TIMED OUT
+   05E4 C9                 1506 	RET				;
+                           1507 	
+                           1508 ;___IDE_WAIT_DRQ_READY___________________________________________________________________________________
+                           1509 ;
+                           1510 ;	WAIT FOR IDE CHANNEL TO BE READY
+                           1511 ;________________________________________________________________________________________________________		
+   05E5                    1512 IDE_WAIT_DRQ_READY:
+   05E5 DB 27              1513 	IN	A,(IDESTTS)		; READ ERROR REG
+   05E7 E6 08              1514 	AND	#0b000001000		; MASK OFF RDY BIT
+   05E9 28 FA              1515 	JR	Z,IDE_WAIT_DRQ_READY	; WE WANT DRQ(3) TO BE 1
+   05EB C9                 1516 	RET
+                           1517 
+                           1518 ;___IDE_WAIT_DRQ_ZERO____________________________________________________________________________________
+                           1519 ;
+                           1520 ;	WAIT FOR IDE DRQ TO BE ZERO
+                           1521 ;________________________________________________________________________________________________________		
+   05EC                    1522 IDE_WAIT_DRQ_ZERO:
+   05EC DB 27              1523 	IN	A,(IDESTTS)		; READ ERROR REG
+   05EE E6 08              1524 	AND	#0b000001000		; MASK OFF RDY BIT
+   05F0 20 FA              1525 	JR	NZ,IDE_WAIT_DRQ_ZERO	; WE WANT DRQ(3) TO BE 0
+   05F2 C9                 1526 	RET
+                           1527 
+                           1528 ;___IDE_WAIT_BUSY_READY___________________________________________________________________________________
+                           1529 ;
+                           1530 ;	WAIT FOR IDE CHANNEL TO BE READY
+                           1531 ;________________________________________________________________________________________________________		
+   05F3                    1532 IDE_WAIT_BUSY_READY:
+   05F3 11 00 00           1533 	LD	DE,#0			; CLEAR DE
+   05F6                    1534 IDE_WBSY:				;
+   05F6 06 05              1535 	LD	B,#5			; SETUP TIMEOUT
+   05F8                    1536 IDE_DLP:				;
+   05F8 05                 1537 	DEC	B			;
+   05F9 C2rF8s05           1538 	JP	NZ,IDE_DLP		;
+   05FC 13                 1539 	INC	DE			;
+   05FD 7A                 1540 	LD	A,D			;
+   05FE B3                 1541 	OR	E			;
+   05FF CAr0Ds06           1542 	JP	Z,IDE_TO		;
+   0602 DB 27              1543 	IN	A,(IDESTTS)		; READ ERROR REG
+   0604 E6 C0              1544 	AND	#0b011000000		; MASK OFF BUSY AND RDY BITS
+   0606 EE 40              1545 	XOR	#0b001000000		; WE WANT BUSY(7) TO BE 0 AND RDY(6) TO BE 1
+   0608 C2rF6s05           1546 	JP	NZ,IDE_WBSY		;
+   060B 37                 1547 	SCF				; CARRY 1 = OK
+   060C C9                 1548 	RET
+   060D                    1549 IDE_TO:
+   060D AF                 1550 	XOR	A			; CARRY 0 = TIMED OUT
+   060E C9                 1551 	RET
+                           1552 	
+                           1553 ;___IDE_TEST_ERROR_______________________________________________________________________________________
+                           1554 ;
+                           1555 ;	CHECK FOR IDE ERROR CONDITION
+                           1556 ;________________________________________________________________________________________________________		
+   060F                    1557 IDE_TEST_ERROR:
+   060F 37                 1558 	SCF				;
+   0610 DB 27              1559 	IN	A,(IDESTTS)		;
+   0612 47                 1560 	LD	B,A			; 
+   0613 E6 01              1561 	AND	#0b000000001		; TEST ERROR BIT
+   0615 37                 1562 	SCF				; 
+   0616 C8                 1563 	RET	Z			;
+   0617 78                 1564 	LD	A,B			; 
+   0618 E6 20              1565 	AND	#0b000100000		;
+   061A 37                 1566 	SCF				;
+   061B C2r20s06           1567 	JP	NZ,IDE_ERR		; TEST WRITE ERROR BIT
+   061E DB 21              1568 	IN	A,(IDEERR)		; READ ERROR FLAGS
+   0620                    1569 IDE_ERR:
+   0620 B7                 1570 	OR	A			; CARRY 0 = ERROR
+   0621 C9                 1571 	RET				; IF A = 0, IDE BUSY TIMED OUT
+                           1572 
+                           1573 ;___IDE_WAIT_BUFFER_______________________________________________________________________________________
+                           1574 ;
+                           1575 ;	WAIT FOR DATA BUFFER READY
+                           1576 ;________________________________________________________________________________________________________		
+   0622                    1577 IDE_WAIT_BUFFER:
+   0622 11 00 00           1578 	LD	DE,#0			;
+   0625                    1579 IDE_WDRQ:				;
+   0625 06 05              1580 	LD	B,#5			;
+   0627                    1581 IDE_BLP:				;
+   0627 05                 1582 	DEC	B			;
+   0628 C2r27s06           1583 	JP	NZ,IDE_BLP		;	
+   062B 13                 1584 	INC	DE			;
+   062C 7A                 1585 	LD	A,D			;
+   062D B3                 1586 	OR	E			;
+   062E CAr3As06           1587 	JP	Z,IDE_TO2		;
+   0631 DB 27              1588 	IN	A,(IDESTTS)		; WAIT FOR DRIVE'S 512 BYTE READ BUFFER 
+   0633 E6 08              1589 	AND	#0b000001000		; TO FILL (OR READY TO FILL)
+   0635 CAr25s06           1590 	JP	Z,IDE_WDRQ		;
+   0638 37                 1591 	SCF				; CARRY 1 = OK
+   0639 C9                 1592 	RET				;
+   063A                    1593 IDE_TO2:				;
+   063A AF                 1594 	XOR	A			; CARRY 0 = TIMED OUT
+   063B C9                 1595 	RET				;
+                           1596 
+                           1597 ;___IDE_READ_BUFFER_______________________________________________________________________________________
+                           1598 ;
+                           1599 ;	READ IDE BUFFER
+                           1600 ;________________________________________________________________________________________________________		
+   063C                    1601 IDE_READ_BUFFER:
+   063C E5                 1602 	PUSH	HL			;
+   063D 21rE2s0F           1603 	LD	HL,#SECTOR_BUFFER	;
+   0640 06 00              1604 	LD	B,#0			; 256 WORDS (512 BYTES PER SECTOR)
+   0642                    1605 IDEBUFRD:				;
+   0642 DB 20              1606 	IN	A,(IDELO)		; LOW BYTE OF WORD FIRST	
+   0644 77                 1607 	LD	(HL),A			;
+   0645 DB 28              1608 	IN	A,(IDEHI)		; THEN HIGH BYTE OF WORD
+   0647 23                 1609 	INC	HL			;
+   0648 77                 1610 	LD	(HL),A			;
+   0649 23                 1611 	INC	HL			;
+   064A 05                 1612 	DEC	B			;
+   064B C2r42s06           1613 	JP	NZ,IDEBUFRD		;
+   064E E1                 1614 	POP	HL			;
+   064F C9                 1615 	RET
+                           1616 
+                           1617 ;___IDE_WRITE_BUFFER_______________________________________________________________________________________
+                           1618 ;
+                           1619 ;	WRITE TO IDE BUFFER
+                           1620 ;________________________________________________________________________________________________________		
+   0650                    1621 IDE_WRITE_BUFFER:
+   0650 E5                 1622 	PUSH	HL			;
+   0651 21rE2s0F           1623 	LD	HL,#SECTOR_BUFFER	;
+   0654 06 00              1624 	LD	B,#0			; 256 WORDS (512 BYTES PER SECTOR)
+   0656                    1625 IDEBUFWT:			
+   0656 23                 1626 	INC	HL			;
+   0657 7E                 1627 	LD	A,(HL)			;
+   0658 2B                 1628 	DEC	HL			;
+   0659 D3 28              1629 	OUT	(IDEHI),A		; SET UP HIGH LATCHED BYTE BEFORE
+   065B 7E                 1630 	LD	A,(HL)			;
+   065C D3 20              1631 	OUT	(IDELO),A		; WRITING WORD WITH WRITE TO LOW BYTE
+   065E 23                 1632 	INC	HL			;
+   065F 23                 1633 	INC	HL			;
+   0660 05                 1634 	DEC	B			;
+   0661 C2r56s06           1635 	JP	NZ,IDEBUFWT		;
+   0664 E1                 1636 	POP	HL			;
+   0665 C9                 1637 	RET	
+                           1638 	
+                           1639 ;___IDE_SETUP_LDA________________________________________________________________________________________
+                           1640 ;
+                           1641 ;	SETUP IDE DRIVE FOR LDA OPERATION
+                           1642 ;________________________________________________________________________________________________________		
+   0666                    1643 IDE_SETUP_LBA:
+   0666 3Ar13s0B           1644 	LD	A,(LBA_TARGET_LO)	; LOAD LBA REGISTER 0 WITH SECTOR ADDRESS TO READ
+   0669 32r18s0B           1645 	LD	(IDE_LBA0),A		;
+   066C 3Ar14s0B           1646 	LD	A,(LBA_TARGET_LO+1)	; LOAD LBA REGISTER 1 WITH SECTOR ADDRESS TO READ
+   066F 32r19s0B           1647 	LD	(IDE_LBA1),A		;
+   0672 3Ar15s0B           1648 	LD	A,(LBA_TARGET_HI) 	; LOAD LBA REGISTER 2 WITH SECTOR ADDRESS TO READ
+   0675 32r1As0B           1649 	LD	(IDE_LBA2),A		;
+   0678 3Ar16s0B           1650 	LD	A,(LBA_TARGET_HI+1)	; LOAD LBA REGISTER 3 WITH SECTOR ADDRESS TO READ
+   067B E6 0F              1651 	AND	#0b000001111		; ONLY LOWER FOUR BITS ARE VALID
+   067D C6 E0              1652 	ADD	A,#0b011100000		; ENABLE LBA BITS 5:7=111 IN IDE_LBA3
+   067F 32r1Bs0B           1653 	LD	(IDE_LBA3),A		;
+                           1654 					; READ IDE HD SECTOR
+   0682 3E 01              1655 	LD	A,#1			;
+   0684 D3 22              1656 	OUT	(IDESECTC),A		; SET SECTOR COUNT = 1	
+                           1657 					;	
+   0686 3Ar18s0B           1658 	LD	A,(IDE_LBA0)		;
+   0689 D3 23              1659 	OUT	(IDESECTN),A		; SET LBA 0:7
+                           1660 					;
+   068B 3Ar19s0B           1661 	LD	A,(IDE_LBA1)		;
+   068E D3 24              1662 	OUT	(IDECYLLO),A		; SET LBA 8:15
+                           1663 					;
+   0690 3Ar1As0B           1664 	LD	A,(IDE_LBA2)		;
+   0693 D3 25              1665 	OUT	(IDECYLHI),A		; SET LBA 16:23
+                           1666 					;
+   0695 3Ar1Bs0B           1667 	LD	A,(IDE_LBA3)		;
+   0698 E6 0F              1668 	AND	#0b000001111		; LOWEST 4 BITS USED ONLY
+   069A F6 E0              1669 	OR	#0b011100000		; TO ENABLE LBA MODE
+   069C D3 26              1670 	OUT	(IDEHEAD),A		; SET LBA 24:27 + BITS 5:7=111
+                    0000   1671  .IF CONDUSEDSKY		
+                           1672 	CALL	IDESEGDISPLAY		;
+                           1673  .ENDIF	
+   069E C9                 1674 	RET	
+                           1675 
+                           1676 ;___ATAPI_SOFT_RESET_____________________________________________________________________________________
+                           1677 ;
+                           1678 ;	RESET ATAPI BUS
+                           1679 ;________________________________________________________________________________________________________		
+   069F                    1680 ATAPI_SOFT_RESET:
+   069F 3E 0E              1681 	LD	A,#0b000001110		;NO INTERRUPTS, RESET DRIVE = 1
+   06A1 D3 2E              1682 	OUT	(IDECTRL),A		;
+   06A3 CDrD7s09           1683 	CALL	DELAY24			;
+   06A6 3E 0A              1684 	LD	A,#0b000001010		;NO INTERRUPTS, RESET DRIVE = 0
+   06A8 D3 2E              1685 	OUT	(IDECTRL),A		;
+   06AA CDrCFs05           1686 	CALL	ATAPI_WAIT_BUSY_READY	;
+   06AD D0                 1687 	RET	NC			; ERROR, RETURN
+   06AE CDrD7s06           1688 	CALL	ATAPI_DEVICE_SELECTION	;
+   06B1 CDrD7s09           1689 	CALL	DELAY24			;
+   06B4 CDrB8s06           1690 	CALL 	REQUEST_SENSE_LOOP	;
+   06B7 C9                 1691 	RET
+                           1692 	
+                           1693 ;___REQUEST_SENSE_LOOP____________________________________________________________________________________
+                           1694 ;
+                           1695 ;	ATAPI_REQUEST SENSE DATA
+                           1696 ;_________________________________________________________________________________________________________		
+   06B8                    1697 REQUEST_SENSE_LOOP:
+   06B8 21r80s0A           1698 	LD	HL,#ATAPI_REQUEST_SENSE	;
+   06BB CDr7Ds07           1699 	CALL	ATAPI_SEND_PACKET	;
+   06BE CDrCFs05           1700 	CALL	ATAPI_WAIT_BUSY_READY	; MAKE SURE DRIVE IS READY TO PROCEED
+   06C1 D0                 1701 	RET	NC			; ERROR, RETURN
+   06C2 06 00              1702 	LD	B,#0			; 256 WORDS (512 BYTES PER SECTOR)
+   06C4                    1703 REQUEST_SENSE_LOOP1:			;
+   06C4 DB 20              1704 	IN	A,(IDELO)		;
+   06C6 DD 23              1705 	INC	IX			;
+   06C8 DB 28              1706 	IN	A,(IDEHI)		;
+   06CA DD 23              1707 	INC	IX			;
+   06CC 10 F6              1708 	DJNZ	REQUEST_SENSE_LOOP1	;
+   06CE ED 67              1709 	RRD				; DELAY ONLY
+   06D0 DB 27              1710 	IN	A,(IDESTTS)		;READ ERROR REG
+   06D2 E6 01              1711 	AND	#0b000000001		;MASK OFF BIT
+   06D4 20 E2              1712 	JR	NZ,REQUEST_SENSE_LOOP	;
+   06D6 C9                 1713 	RET
+                           1714 
+                           1715 ;___ATAPI_DEVICE_SELECTION________________________________________________________________________________
+                           1716 ;
+                           1717 ;	ATAPI DEVICE SELECTION
+                           1718 ;_________________________________________________________________________________________________________		
+   06D7                    1719 ATAPI_DEVICE_SELECTION:
+                           1720 
+   06D7 3Ar17s0B           1721 	LD	A,(IDEDEVICE)		; SELECTS DEVICE
+   06DA F6 A0              1722 	OR	#0x0A0			;
+   06DC D3 26              1723 	OUT	(IDEHEAD),A		;	
+   06DE C9                 1724 	RET				;
+                           1725 
+                           1726 
+                           1727 
+                           1728 ;__ATAPI_READ_SECTOR_____________________________________________________________________________________________________________ 
+                           1729 ;  READ ATAPI SECTOR   
+                           1730 ;
+                           1731 ;   D E H L = SECTOR (DOUBLE WORD) TO READ 
+                           1732 ;________________________________________________________________________________________________________________________________ 
+   06DF                    1733 ATAPI_READ_SECTOR:
+   06DF CDrDCs02           1734 	CALL	ISCUR			;
+   06E2 CAr28s07           1735 	JP	Z,ATAPI_READ_DATA_EXIT	;
+   06E5 3Ar13s0B           1736 	LD	A,(LBA_TARGET_LO)	; LOAD LBA REGISTER 0 WITH SECTOR ADDRESS TO READ
+   06E8 32r6Ds0A           1737 	LD	(READ_DISK_PACKET+5),A	;
+   06EB 3Ar14s0B           1738 	LD	A,(LBA_TARGET_LO+1)	; LOAD LBA REGISTER 1 WITH SECTOR ADDRESS TO READ
+   06EE 32r6Cs0A           1739 	LD	(READ_DISK_PACKET+4),A	;
+   06F1 3Ar15s0B           1740 	LD	A,(LBA_TARGET_HI)	; LOAD LBA REGISTER 2 WITH SECTOR ADDRESS TO READ
+   06F4 32r6Bs0A           1741 	LD	(READ_DISK_PACKET+3),A	;
+   06F7 3Ar16s0B           1742 	LD	A,(LBA_TARGET_HI+1)	; LOAD LBA REGISTER 3 WITH SECTOR ADDRESS TO READ
+   06FA 32r6As0A           1743 	LD	(READ_DISK_PACKET+2),A	;
+                    0000   1744  .IF CONDUSEDSKY		
+                           1745 	CALL	ATAPISEGDISPLAY		;
+                           1746  .ENDIF	
+   06FD CDrB8s06           1747 	CALL	REQUEST_SENSE_LOOP	; GET ATAPI SENSE CODES TO CLEAR ERRORS
+   0700 21r68s0A           1748 	LD	HL,#READ_DISK_PACKET	; SET POINTER TO READ SECTOR PACKET
+   0703 CDr7Ds07           1749 	CALL	ATAPI_SEND_PACKET	; SEND PACKET COMMAND
+   0706 CDrCFs05           1750 	CALL	ATAPI_WAIT_BUSY_READY	; MAKE SURE DRIVE IS READY TO PROCEED
+   0709 D0                 1751 	RET	NC			; ERROR, RETURN
+   070A 06 00              1752 	LD	B,#0			; 256 WORDS (512 BYTES PER SECTOR)
+   070C DD 21rE2s0F        1753 	LD	IX,#SECTOR_BUFFER	;
+   0710 DB 27              1754 	IN	A,(IDESTTS)		; READ  REG
+   0712 E6 08              1755 	AND	#0b000001000		; MASK OFF BIT
+   0714 FE 08              1756 	CP	#8			; IS DATA WAITING?
+   0716 20 10              1757 	JR	NZ,ATAPI_READ_DATA_EXIT	; NO, EXIT
+   0718                    1758 ATAPI_READ_DATA_LOOP:
+   0718 DB 20              1759 	IN	A,(IDELO)		;
+                           1760 
+   071A DD 77 00           1761 	LD	(IX),A			; 
+                           1762 
+   071D DD 23              1763 	INC	IX			;
+   071F DB 28              1764 	IN	A,(IDEHI)		;
+                           1765 
+   0721 DD 77 00           1766 	LD	(IX),A			; 
+                           1767 
+   0724 DD 23              1768 	INC	IX			;
+   0726 10 F0              1769 	DJNZ	ATAPI_READ_DATA_LOOP	;
+   0728                    1770 ATAPI_READ_DATA_EXIT:			;
+   0728 2Ar0Cs0B           1771 	LD	HL,(PSECTOR)		; STORE PHYSICAL SECTOR IN BUFFER
+   072B 22rDEs0F           1772 	LD	(CUSECTOR),HL		; 
+   072E 2Ar04s0B           1773 	LD	HL,(PTRACK)		; STORE PHYSICAL DISK TRACK IN BUFFER
+   0731 22rE0s0F           1774 	LD	(CUTRACK),HL		; 
+   0734 3Ar12s0B           1775 	LD	A,(DISKNO)		; STORE CURRENT DRIVE IN BUFFER
+   0737 32rDDs0F           1776 	LD	(CUDISK),A		;
+   073A 37                 1777 	SCF				; CARRY = 1 ON RETURN = OPERATION OK
+   073B C9                 1778 	RET				;
+                           1779 
+                           1780 
+                           1781 
+                           1782 ;__ATAPI_WRITE_SECTOR_____________________________________________________________________________________________________________ 
+                           1783 ;  WRITE ATAPI SECTOR   
+                           1784 ;
+                           1785 ;   D E H L = SECTOR (DOUBLE WORD) TO WRITE 
+                           1786 ;________________________________________________________________________________________________________________________________ 
+   073C                    1787 ATAPI_WRITE_SECTOR:
+                           1788 
+   073C 3Ar13s0B           1789 	LD	A,(LBA_TARGET_LO)	; LOAD LBA REGISTER 0 WITH SECTOR ADDRESS TO READ
+   073F 32r79s0A           1790 	LD	(WRITE_DISK_PACKET+5),A	;
+   0742 3Ar14s0B           1791 	LD	A,(LBA_TARGET_LO+1)	; LOAD LBA REGISTER 1 WITH SECTOR ADDRESS TO READ
+   0745 32r78s0A           1792 	LD	(WRITE_DISK_PACKET+4),A	;
+   0748 3Ar15s0B           1793 	LD	A,(LBA_TARGET_HI)	; LOAD LBA REGISTER 2 WITH SECTOR ADDRESS TO READ
+   074B 32r77s0A           1794 	LD	(WRITE_DISK_PACKET+3),A	;
+   074E 3Ar16s0B           1795 	LD	A,(LBA_TARGET_HI+1)	; LOAD LBA REGISTER 3 WITH SECTOR ADDRESS TO READ
+   0751 32r76s0A           1796 	LD	(WRITE_DISK_PACKET+2),A	;
+                    0000   1797  .IF CONDUSEDSKY		
+                           1798 	CALL	ATAPISEGDISPLAY		;
+                           1799  .ENDIF	
+   0754 CDrB8s06           1800 	CALL 	REQUEST_SENSE_LOOP	;
+   0757 21r74s0A           1801 	LD	HL,#WRITE_DISK_PACKET	; SET POINTER TO WRITE PACKET COMMAND
+   075A CDr7Ds07           1802 	CALL	ATAPI_SEND_PACKET	; SEND THE PACKET COMMAND			
+   075D CDrCFs05           1803 	CALL	ATAPI_WAIT_BUSY_READY	; MAKE SURE DRIVE IS READY TO PROCEED
+   0760 D0                 1804 	RET	NC			; ERROR, RETURN
+   0761 06 00              1805 	LD	B,#0			; 256 WORDS (512 BYTES PER SECTOR)
+   0763 DD 21rE2s0F        1806 	LD	IX,#SECTOR_BUFFER	;
+   0767                    1807 ATAPI_WRITE_DATA_LOOP:
+   0767 DB 27              1808 	IN	A,(IDESTTS)		; READ  REG
+                           1809 
+   0769 DD 7E 00           1810 	LD	A,(IX)			; 
+                           1811 
+   076C F5                 1812 	PUSH    AF			;
+   076D DD 23              1813 	INC	IX			;
+                           1814 
+   076F DD 7E 00           1815 	LD	A,(IX)			; 
+                           1816 
+   0772 D3 28              1817 	OUT	(IDEHI),A		;
+   0774 F1                 1818 	POP	AF			;
+   0775 D3 20              1819 	OUT	(IDELO),A		;
+   0777 DD 23              1820 	INC	IX			;
+   0779 10 EC              1821 	DJNZ	ATAPI_WRITE_DATA_LOOP	;
+   077B 37                 1822 	SCF				; CARRY = 1 ON RETURN = OPERATION OK
+   077C C9                 1823 	RET				;
+                           1824 
+                           1825 
+                           1826 
+                           1827 
+                           1828 ;__ATAPI_SEND_PACKET_____________________________________________________________________________________________________________ 
+                           1829 ;  SEND PACKET POINTED TO BY HL TO ATAPI DRIVE   
+                           1830 ;
+                           1831 ;________________________________________________________________________________________________________________________________ 
+   077D                    1832 ATAPI_SEND_PACKET:
+                           1833 
+   077D CDrCFs05           1834 	CALL	ATAPI_WAIT_BUSY_READY	; MAKE SURE DRIVE IS READY TO PROCEED
+   0780 D0                 1835 	RET	NC			; ERROR, RETURN
+   0781 CDrECs05           1836 	CALL	IDE_WAIT_DRQ_ZERO	;
+                           1837 					;
+   0784 3E 0A              1838 	LD	A,#0x0A			;
+   0786 D3 2E              1839 	OUT	(IDECTRL),A		; DISABLE INT
+   0788 3E 00              1840 	LD	A,#0			;
+   078A D3 21              1841 	OUT	(IDEERR),A		;
+   078C 3E 00              1842 	LD	A,#0			;
+   078E D3 22              1843 	OUT	(IDESECTC),A		; 
+   0790 3E 00              1844 	LD	A,#0			;
+   0792 D3 23              1845 	OUT	(IDESECTN),A		;
+   0794 3E 00              1846 	LD	A,#0			;
+   0796 D3 24              1847 	OUT	(IDECYLLO),A		; 
+   0798 3E 60              1848 	LD	A,#0x60			;
+   079A D3 25              1849 	OUT	(IDECYLHI),A		; 
+   079C 3Ar17s0B           1850 	LD	A,(IDEDEVICE)		;
+   079F D3 26              1851 	OUT	(IDEHEAD),A		; BIT 4 SELECTS DEVICE
+   07A1 3E A0              1852 	LD	A,#0x0A0			;
+   07A3 D3 27              1853 	OUT	(IDESTTS),A		;
+                           1854 					;
+   07A5 CDrE5s05           1855 	CALL	IDE_WAIT_DRQ_READY	; MAKE SURE DRIVE IS READY TO PROCEED
+                           1856 					;
+   07A8 06 06              1857 	LD	B,#6			; SEND 12 BYTES (6 WORDS)
+                           1858 					;
+   07AA                    1859 ATAPI_SEND_PACKET_LOOP:
+   07AA 7E                 1860 	LD	A,(HL)			; GET BYTE
+   07AB 57                 1861 	LD	D,A			; STORE LOW BYTE IN D
+   07AC 23                 1862 	INC	HL			; INC POINTER
+   07AD 7E                 1863 	LD	A,(HL)			; GET HIGH BYTE
+   07AE D3 28              1864 	OUT	(IDEHI),A		; STORE HIGH BYTE
+   07B0 7A                 1865 	LD	A,D			; MOVE LOW BYTE INTO A
+   07B1 D3 20              1866 	OUT	(IDELO),A		; STORE LOW BYTE
+   07B3 23                 1867 	INC	HL			; INC POINTER
+   07B4 DB 2E              1868 	IN	A,(IDECTRL)		; GET STATUS
+   07B6 10 F2              1869 	DJNZ	ATAPI_SEND_PACKET_LOOP	; LOOP
+                           1870 					;
+   07B8 CDrCFs05           1871 	CALL	ATAPI_WAIT_BUSY_READY	; MAKE SURE DRIVE IS READY TO PROCEED
+   07BB D0                 1872 	RET	NC			; ERROR, RETURN
+   07BC DB 2E              1873 	IN	A,(IDECTRL)		; READ STATUS (FOR DELAY)
+                           1874 					;
+   07BE C9                 1875 	RET				;
+                           1876 	
+                           1877 ;__SETUPDRIVE__________________________________________________________________________________________________________________________ 
+                           1878 ;
+                           1879 ;	SETUP FLOPPY DRIVE SETTINGS 
+                           1880 ;________________________________________________________________________________________________________________________________
+                           1881 ;
+   07BF                    1882 SETUPDRIVE:
+   07BF 3E 02              1883 	LD	A,#RESETL		; RESET SETTINGS
+                    0000   1884 .IF COND144FLOPPY-1
+                           1885 	OR	MINI			; SELECT MINI FLOPPY (LOW DENS=1, HIGH DENS=0)
+                           1886 .ENDIF
+   07C1 F6 20              1887 	OR	#PRECOMP			; SELECT PRECOMP 
+   07C3 F6 40              1888 	OR	#FDDENSITY		; SELECT DENSITY
+   07C5 F6 80              1889 	OR	#FDREADY			; SELECT READY SIGNAL
+   07C7 32r01s0B           1890 	LD	(FLATCH_STORE),A	; SAVE SETTINGS
+   07CA 3E 01              1891 	LD	A,#1			;
+   07CC 32rEAs0A           1892 	LD	(UNIT),A		; SET UNIT 1
+   07CF 3E 02              1893 	LD	A,#2			; DENSITY
+   07D1 32rECs0A           1894 	LD	(DENS),A		;
+   07D4 3E 09              1895 	LD	A,#9			;
+                    0001   1896 .IF COND144FLOPPY
+   07D6 87                 1897 	ADD	A,A
+                           1898 .ENDIF
+   07D7 32rEDs0A           1899 	LD	(EOTSEC),A		; LAST SECTOR OF TRACK		
+   07DA 3E 7F              1900 	LD	A,#0x7F			;
+   07DC 32rF2s0A           1901 	LD	(SRTHUT),A		; STEP RATE AND HEAD UNLOAD TIME
+   07DF 3E 05              1902 	LD	A,#5			;
+   07E1 32rF3s0A           1903 	LD	(HLT),A			; HEAD LOAD TIME
+   07E4 3E 0D              1904 	LD	A,#0x0D			;
+   07E6 32rEEs0A           1905 	LD	(GAP),A			; GAP 
+                           1906 ;;	LD	A,#0x80			;
+                           1907 ;;	LD	(SECSIZ),A		; SECTOR SIZE /4
+                           1908 					;
+   07E9 CDrE4s09           1909 	CALL	CHECKINT		; CHECK INTERRUPT STATUS, MAKE SURE IT IS CLEAR
+   07EC CDrE4s09           1910 	CALL	CHECKINT		; CHECK INTERRUPT STATUS, MAKE SURE IT IS CLEAR
+   07EF CDrE4s09           1911 	CALL	CHECKINT		; CHECK INTERRUPT STATUS, MAKE SURE IT IS CLEAR
+   07F2 CDrE4s09           1912 	CALL	CHECKINT		; CHECK INTERRUPT STATUS, MAKE SURE IT IS CLEAR
+   07F5 CDrE4s09           1913 	CALL	CHECKINT		; CHECK INTERRUPT STATUS, MAKE SURE IT IS CLEAR
+   07F8 CDrE4s09           1914 	CALL	CHECKINT		; CHECK INTERRUPT STATUS, MAKE SURE IT IS CLEAR
+                           1915 					;			
+   07FB 21r01s0B           1916 	LD	HL,#FLATCH_STORE		; POINT TO FLATCH
+   07FE CB 8E              1917 	RES	1,(HL)			; SET MOTOR ON
+   0800 CDr18s08           1918 	CALL	OUTFLATCH		; OUTPUT TO CONTROLLER
+   0803 00                 1919 	NOP				;
+   0804 00                 1920 	NOP				;
+   0805 3E 00              1921 	LD	A,#0			; ZERO TRACK
+   0807 32r04s0B           1922 	LD	(PTRACK),A		; STORE TRACK
+   080A CDr24s09           1923 	CALL	SETTRACK		; DO IT	
+   080D 00                 1924 	NOP				;
+   080E 00                 1925 	NOP				;
+   080F 21r01s0B           1926 	LD	HL,#FLATCH_STORE		; POINT TO FLATCH
+   0812 CB CE              1927 	SET	1,(HL)			; SET MOTOR OFF
+   0814 CDr18s08           1928 	CALL	OUTFLATCH		; OUTPUT TO CONTROLLER
+   0817 C9                 1929 	RET
+                           1930 ;
+                           1931 ;__OUTFLATCH__________________________________________________________________________________________________________________________ 
+                           1932 ;
+                           1933 ;	SEND SETTINGS TO FLOPPY CONTROLLER
+                           1934 ;________________________________________________________________________________________________________________________________
+                           1935 ;
+   0818                    1936 OUTFLATCH:
+   0818 3Ar01s0B           1937 	LD	A,(FLATCH_STORE)	; SET A TO SETTINGS
+   081B D3 3A              1938 	OUT	(FLATCH),A		; OUTPUT TO CONTROLLER
+   081D C9                 1939 	RET
+                           1940 
+                           1941 ;__FLOPPYREAD__________________________________________________________________________________________________________________________ 
+                           1942 ;
+                           1943 ; 	READ A FLOPPY DISK SECTOR 	
+                           1944 ;________________________________________________________________________________________________________________________________
+                           1945 ;	
+   081E                    1946 FLOPPYREAD:
+                    0000   1947  .IF CONDUSEDSKY	
+                           1948 	CALL	SEGDISPLAY		;
+                           1949  .ENDIF	
+   081E 3E 46              1950 	LD	A,#0x46			; BIT 6 SETS MFM, 06H IS READ COMMAND
+   0820 32rE9s0A           1951 	LD	(CMD),A			;
+   0823 C3r2Es08           1952 	JP	DSKOP			;
+                           1953 ;
+                           1954 ;__FLOPPYWRITE__________________________________________________________________________________________________________________________ 
+                           1955 ;
+                           1956 ; 	WRITE A FLOPPY DISK SECTOR 	
+                           1957 ;________________________________________________________________________________________________________________________________
+                           1958 ;	
+   0826                    1959 FLOPPYWRITE:
+                    0000   1960  .IF CONDUSEDSKY	
+                           1961 	CALL	SEGDISPLAY		;
+                           1962  .ENDIF	
+   0826 3E 45              1963 	LD	A,#0x45			; BIT 6 SETS MFM, 05H IS WRITE COMMAND
+   0828 32rE9s0A           1964 	LD	(CMD),A			;
+   082B C3r2Es08           1965 	JP	DSKOP			;
+                           1966 ;
+                           1967 ;__DSKOP__________________________________________________________________________________________________________________________ 
+                           1968 ;
+                           1969 ; 	PERFORM A DISK OPERATION 	
+                           1970 ;________________________________________________________________________________________________________________________________
+                           1971 ;	
+   082E                    1972 DSKOP:
+   082E 21r01s0B           1973 	LD	HL,#FLATCH_STORE		; POINT TO FLATCH
+   0831 CB CE              1974 	SET	1,(HL)			; SET MOTOR OFF
+   0833 CDr18s08           1975 	CALL	OUTFLATCH		; OUTPUT TO CONTROLLER
+                           1976 					;
+   0836 CDrE4s09           1977 	CALL	CHECKINT		; CHECK INTERRUPT STATUS, MAKE SURE IT IS CLEAR
+   0839 FE FF              1978 	CP	#0x0FF			; DID IT RETURN WITH ERROR CODE?
+   083B CAr75s08           1979 	JP	Z,DSKEXIT		; IF YES, EXIT WITH ERROR CODE
+                           1980 					;	
+   083E 3ArEAs0A           1981 	LD	A,(UNIT)		; GET DISK UNIT NUMBER
+   0841 E6 03              1982 	AND	#3			; MASK FOR FOUR DRIVES 
+   0843 47                 1983 	LD	B,A			; PARK IT IN B
+   0844 3ArEBs0A           1984 	LD	A,(HEAD)		; GET HEAD SELECTION
+   0847 E6 01              1985 	AND	#1			; INSURE SINGLE BIT
+   0849 17                 1986 	RLA				;
+   084A 17                 1987 	RLA				; MOVE HEAD TO BIT 2 POSITION
+   084B B0                 1988 	OR	B			; OR HEAD TO UNIT BYTE IN COMMAND BLOCK
+   084C 32rEAs0A           1989 	LD	(UNIT),A		; STORE IN UNIT
+                           1990 					;
+   084F 21r01s0B           1991 	LD	HL,#FLATCH_STORE		; POINT TO FLATCH
+   0852 CB 8E              1992 	RES	1,(HL)			; SET MOTOR ON
+   0854 CDr18s08           1993 	CALL	OUTFLATCH		; OUTPUT TO CONTROLLER	
+                           1994 					;
+   0857 3E 03              1995 	LD	A,#3			; SPECIFY COMMAND
+   0859 CDrC2s09           1996 	CALL	PFDATA			; PUSH IT
+   085C 3ArF2s0A           1997 	LD	A,(SRTHUT)		; STEP RATE AND HEAD UNLOAD TIME
+   085F CDrC2s09           1998 	CALL	PFDATA			; PUSH THAT
+   0862 3ArF3s0A           1999 	LD	A,(HLT)			;
+   0865 CDrC2s09           2000 	CALL	PFDATA			; PUSH THAT
+                           2001 					;
+   0868 CDr24s09           2002 	CALL	SETTRACK		; PERFORM SEEK TO TRACK
+                           2003 					;
+   086B C2r75s08           2004 	JP	NZ,DSKEXIT		; IF ERROR, EXIT
+                           2005 					;
+   086E 3ArE9s0A           2006 	LD	A,(CMD)			; WHAT COMMAND IS PENDING?
+   0871 B7                 2007 	OR	A			; SET FLAGS
+   0872 C3rA4s08           2008 	JP	DOSO4			; NO, MUST BE READ OR WRITE COMMAND
+   0875                    2009 DSKEXIT:	
+   0875 21r01s0B           2010 	LD	HL,#FLATCH_STORE		; POINT TO FLATCH
+   0878 CB CE              2011 	SET	1,(HL)			; SET MOTOR OFF
+   087A CDr18s08           2012 	CALL	OUTFLATCH		; OUTPUT TO CONTROLLER
+                           2013 					;
+   087D F6 FF              2014 	OR	#0x0FF			; SET -1 IF ERROR
+   087F C9                 2015 	RET
+                           2016 
+   0880                    2017 RESULT:
+   0880 0E 07              2018 	LD	C,#7			; LOAD C WITH NUMBER OF STATUS BYTES
+   0882 21rF6s0A           2019 	LD	HL,#ST0			; POINT TO STATS STORAGE
+   0885                    2020 RS3:
+   0885 CDr30s0A           2021 	CALL	GFDATA			; GET FIRST BYTE
+   0888 77                 2022 	LD	(HL),A			; SAVE IT
+   0889 23                 2023 	INC	HL			; POINTER++
+   088A 0D                 2024 	DEC	C			; CC-1
+   088B C2r85s08           2025 	JP	NZ,RS3			; LOOP TIL C0
+   088E 3ArF6s0A           2026 	LD	A,(ST0)			; LOAD STS0
+   0891 E6 F8              2027 	AND	#0x0F8			; MASK OFF DRIVE #
+   0893 47                 2028 	LD	B,A			; PARK IT
+   0894 3ArF7s0A           2029 	LD	A,(ST1)			; LOAD STS1
+   0897 B0                 2030 	OR	B			; ACC OR B ->ACC IF 0 THEN SUCCESS
+                           2031 					;
+   0898                    2032 RSTEXIT:
+   0898 CDrE4s09           2033 	CALL	CHECKINT		; CHECK INTERRUPT STATUS, MAKE SURE IT IS CLEAR
+   089B 21r01s0B           2034 	LD	HL,#FLATCH_STORE		; POINT TO FLATCH
+   089E CB CE              2035 	SET	1,(HL)			; SET MOTOR OFF
+   08A0 CDr18s08           2036 	CALL	OUTFLATCH		; OUTPUT TO CONTROLLER
+                           2037 					;
+                    0000   2038  .IF CONDUSEDSKY						
+                           2039 	CALL	SEGDISPLAY		;
+                           2040  .ENDIF	
+   08A3 C9                 2041 	RET				; DONE RETURN TO CALLER 
+                           2042 	
+                           2043 	
+   08A4                    2044 DOSO4:
+                           2045 					;
+                    0001   2046 .IF 1					;
+                    0038   2047 INT_LOC =    0x038                   ; IM 1 INTERRUPT CALLS GO HERE
+                           2048 ; SET UP FOR I/O AT INTERRUPT LEVEL
+   08A4 11 38 00           2049         LD      DE,#INT_LOC
+   08A7 21r1Es09           2050         LD      HL,#INT_RD
+   08AA 01 03 00           2051         LD      BC,#L_INT_RD
+   08AD 3ArE9s0A           2052 	LD	A,(CMD)			;
+   08B0 E6 01              2053 	AND	#0b000000001		; WRITE IS 1
+   08B2 CArB6s08           2054         JP      Z,IS_READ
+   08B5 09                 2055         ADD     HL,BC
+   08B6                    2056 IS_READ:
+   08B6 ED B0              2057         LDIR
+                           2058 .ENDIF
+                           2059 
+   08B8 21rE2s0F           2060 	LD	HL,#SECTOR_BUFFER	; GET BUFFER ADDRESS TO HL
+                           2061 ;;	LD	A,(SECSIZ)		; XFERLEN
+                           2062 ;;	LD	C,A			; C WILL BE THE NUMBER OF TRANSACTIONS
+                           2063 					; DIVIDED BY 4
+                           2064 
+   08BB ED 5BrEFs0A        2065         ld      de,(FSECSIZ)            ; GET FULL SECTOR SIZE
+   08BF 43                 2066         LD      B,E
+   08C0 0E 37              2067         LD      C,#FDATA                 ; GET DATA REGISTER I/O ADDRESS
+                           2068 
+   08C2 3ArE9s0A           2069 	LD	A,(CMD)			;
+   08C5 CDrC2s09           2070 	CALL	PFDATA			; PUSH COMMAND TO I8272
+   08C8 3ArEAs0A           2071 	LD	A,(UNIT)		;
+   08CB CDrC2s09           2072 	CALL	PFDATA			; 
+   08CE 3Ar04s0B           2073 	LD	A,(PTRACK)		;
+   08D1 CDrC2s09           2074 	CALL	PFDATA			; 
+   08D4 3ArEBs0A           2075 	LD	A,(HEAD)		;
+   08D7 CDrC2s09           2076 	CALL	PFDATA			; 
+   08DA 3Ar0Cs0B           2077 	LD	A,(PSECTOR)		;
+   08DD 3C                 2078 	INC	A			;
+   08DE CDrC2s09           2079 	CALL	PFDATA			; 
+   08E1 3ArECs0A           2080 	LD	A,(DENS)		;
+   08E4 CDrC2s09           2081 	CALL	PFDATA			; WHAT DENSITY
+   08E7 3ArEDs0A           2082 	LD	A,(EOTSEC)		;
+   08EA CDrC2s09           2083 	CALL	PFDATA			; ASSUME SC (SECTOR COUNT)  EOT
+   08ED 3ArEEs0A           2084 	LD	A,(GAP)			;
+   08F0 CDrC2s09           2085 	CALL	PFDATA			; WHAT GAP IS NEEDED
+   08F3 3ArF1s0A           2086 	LD	A,(DTL)			; DTL, IS THE LAST COMMAND BYTE TO I8272
+   08F6 CDrAFs09           2087 	CALL	PFDATAS			;
+                           2088 ;
+                           2089 ;
+                           2090 ; PERFORM READ / WRITE
+                           2091 ;
+                           2092 
+                           2093 
+   08F9                    2094 RDD_POLL:
+                           2095 
+   08F9                    2096 FDC_RW_P0:
+   08F9 FB                 2097         EI
+   08FA 76                 2098         HALT
+   08FB C2rF9s08           2099         JP      NZ,FDC_RW_P0           ;10  COUNT THRU 256 BYTES
+   08FE                    2100 FDC_RW_P1:
+   08FE FB                 2101         EI
+   08FF 76                 2102         HALT
+   0900 C2rFEs08           2103         JP      NZ,FDC_RW_P1           ;10  COUNT THRU 256 BYTES
+                           2104 
+                           2105 
+                           2106 ;  FALL THROUGH WITH INTERRUPTS DISABLED (NOT ENABLED IN INTERRUPT SERVICE)
+                           2107 
+                           2108 
+   0903                    2109 DSKOPEND:
+   0903 21r01s0B           2110 	LD	HL,#FLATCH_STORE		; POINT TO FLATCH
+   0906 CB C6              2111 	SET	0,(HL)			; SET TC
+   0908 CDr18s08           2112 	CALL	OUTFLATCH		; OUTPUT TO CONTROLLER
+   090B 00                 2113 	NOP				;
+   090C 00                 2114 	NOP				; 2 MICROSECOND DELAY
+   090D CB 86              2115 	RES	0,(HL)			; RESET TC
+   090F CDr18s08           2116 	CALL	OUTFLATCH		; OUTPUT TO CONTROLLER
+   0912 00                 2117 	NOP				;
+   0913 00                 2118 	NOP				; 2 MICROSECOND DELAY
+   0914 00                 2119 	NOP				;
+   0915 00                 2120 	NOP				; 2 MICROSECOND DELAY
+   0916 CB CE              2121 	SET	1,(HL)			; TURN OFF MOTOR
+   0918 CDr18s08           2122 	CALL	OUTFLATCH		; OUTPUT TO CONTROLLER
+   091B C3r80s08           2123 	JP	RESULT			; GET STATUS BYTES <RESULT PHASE>
+                           2124 
+                           2125 
+                           2126 
+   091E ED A2              2127 INT_RD:         INI
+   0920 C9                 2128                 RET
+   0921                    2129 IRTEMP:
+                    0003   2130 L_INT_RD        =    IRTEMP - INT_RD
+                           2131 
+   0921 ED A3              2132 INT_WR:         OUTI
+   0923 C9                 2133                 RET
+   0924                    2134 IWTEMP:
+                    0003   2135 L_INT_WR        =    IWTEMP - INT_WR
+                           2136 
+                           2137 
+                           2138 
+                           2139 ;__SETTRACK__________________________________________________________________________________________________________________________ 
+                           2140 ;
+                           2141 ; 	SEEK TO A TRACK ON GIVEN UNIT
+                           2142 ; 	A: TRACK #
+                           2143 ;________________________________________________________________________________________________________________________________
+                           2144 ;
+   0924                    2145 SETTRACK:
+   0924 3Ar06s0B           2146 	LD	A,(FTRACK)		; GET CURRENT HEAD TRACK
+   0927 4F                 2147 	LD	C,A
+   0928 3Ar04s0B           2148 	LD	A,(PTRACK)		; GET TRACK
+   092B B7                 2149 	OR	A			; SET FLAGS
+   092C CAr4As09           2150 	JP	Z,RECAL			; IF 0 PERFORM RECAL INSTEAD OF SEEK
+   092F B9                 2151 	CP	C			;
+   0930 CAr5As09           2152 	JP	Z,WAINT			; ALREADY THERE, ABORT
+   0933 32r06s0B           2153 	LD	(FTRACK),A		; STORE TRACK
+   0936 3E 0F              2154 	LD	A,#0x0F			; SEEK COMMAND
+   0938 CDrC2s09           2155 	CALL	PFDATA			; PUSH COMMAND
+   093B 3ArEAs0A           2156 	LD	A,(UNIT)		; SAY WHICH UNIT
+   093E CDrC2s09           2157 	CALL	PFDATA			; SEND THAT
+   0941 3Ar04s0B           2158 	LD	A,(PTRACK)		; TO WHAT TRACK
+   0944 CDrC2s09           2159 	CALL	PFDATA			; SEND THAT TOO
+   0947 C3r5As09           2160 	JP	WAINT			; WAIT FOR INTERRUPT SAYING DONE
+   094A                    2161 RECAL:
+   094A 3E 00              2162 	LD	A,#0			;
+   094C 32r06s0B           2163 	LD	(FTRACK),A		; STORE TRACK
+   094F 3E 07              2164 	LD	A,#7			; RECAL TO TRACK 0
+   0951 CDrC2s09           2165 	CALL	PFDATA			; SEND IT
+   0954 3ArEAs0A           2166 	LD	A,(UNIT)		; WHICH UNIT
+   0957 CDrC2s09           2167 	CALL	PFDATA			; SEND THAT TOO
+                           2168 					;
+   095A                    2169 WAINT:
+                           2170 					;
+   095A CDrF6s09           2171 	CALL	DELAYHSEC		; DELAY TO LET HEADS SETTLE BEFORE READ
+                           2172 					;
+                           2173 					; WAIT HERE FOR INTERRPT SAYING DONE
+                           2174 					; LOOP TIL INTERRUPT
+   095D CDrE4s09           2175 	CALL	CHECKINT		; CHECK INTERRUPT STATUS
+                           2176 					;
+   0960 C9                 2177 	RET
+                           2178 	
+                           2179 ;__CYCLEFLOPPY__________________________________________________________________________________________________________________________ 
+                           2180 ;
+                           2181 ; 	SEEK TO TRACK 0, THEN BACK TO THE SELECTED TRACK    
+                           2182 ;	THIS CAN BE USED ON AN ERROR CONDITION TO VERIFY THAT HEAD IS ON SELECTED TRACK
+                           2183 ; 	
+                           2184 ;________________________________________________________________________________________________________________________________
+                           2185 ;
+   0961                    2186 CYCLEFLOPPY:
+   0961 F5                 2187 	PUSH	AF			; STORE	AF
+   0962 E5                 2188 	PUSH	HL			; STORE	HL
+   0963 CDrE4s09           2189 	CALL	CHECKINT		; CHECK INTERRUPT STATUS, MAKE SURE IT IS CLEAR
+   0966 CDrE4s09           2190 	CALL	CHECKINT		; CHECK INTERRUPT STATUS, MAKE SURE IT IS CLEAR
+   0969 CDrE4s09           2191 	CALL	CHECKINT		; CHECK INTERRUPT STATUS, MAKE SURE IT IS CLEAR
+   096C CDrE4s09           2192 	CALL	CHECKINT		; CHECK INTERRUPT STATUS, MAKE SURE IT IS CLEAR
+   096F CDrE4s09           2193 	CALL	CHECKINT		; CHECK INTERRUPT STATUS, MAKE SURE IT IS CLEAR
+   0972 CDrE4s09           2194 	CALL	CHECKINT		; CHECK INTERRUPT STATUS, MAKE SURE IT IS CLEAR
+   0975 21r01s0B           2195 	LD	HL,#FLATCH_STORE		; POINT TO FLATCH
+   0978 CB 8E              2196 	RES	1,(HL)			; SET MOTOR ON
+   097A CDr18s08           2197 	CALL	OUTFLATCH		; OUTPUT TO CONTROLLER
+   097D 00                 2198 	NOP				;
+   097E 00                 2199 	NOP				;
+   097F CDr4As09           2200 	CALL	RECAL			;
+   0982 CDrF6s09           2201 	CALL	DELAYHSEC		;
+   0985 CDrF6s09           2202 	CALL	DELAYHSEC		;
+   0988 CDrF6s09           2203 	CALL	DELAYHSEC		;
+   098B CDrF6s09           2204 	CALL	DELAYHSEC		;
+   098E CDr4As09           2205 	CALL	RECAL			;
+   0991 CDrF6s09           2206 	CALL	DELAYHSEC		;
+   0994 CDrF6s09           2207 	CALL	DELAYHSEC		;
+   0997 CDrF6s09           2208 	CALL	DELAYHSEC		;
+   099A CDrF6s09           2209 	CALL	DELAYHSEC		;
+   099D CDr24s09           2210 	CALL	SETTRACK		;
+   09A0 CDrF6s09           2211 	CALL	DELAYHSEC		;
+   09A3 CDrF6s09           2212 	CALL	DELAYHSEC		;
+   09A6 CDrF6s09           2213 	CALL	DELAYHSEC		;
+   09A9 CDrF6s09           2214 	CALL	DELAYHSEC		;
+   09AC E1                 2215 	POP	HL			;
+   09AD F1                 2216 	POP	AF			; RESTORE AF
+   09AE C9                 2217 	RET	
+                           2218 
+                           2219 ;__PFDATAS__________________________________________________________________________________________________________________________ 
+                           2220 ;
+                           2221 ; WRITE A COMMAND OR PARAMETER SEQUENCE
+                           2222 ;
+                           2223 ; TRANSFERS ARE SYNCHONIZED BYT MSR D7 <RQM> AND D6 <DIO>
+                           2224 ;	RQM  DIO
+                           2225 ;	0	0	BUSY
+                           2226 ;	1	0	WRITE TO DATA REGISTER PERMITTED
+                           2227 ;	1	1	BYTE FOR READ BY HOST PENDING
+                           2228 ;	0	1	BUSY
+                           2229 ;
+                           2230 ;________________________________________________________________________________________________________________________________
+                           2231 ;
+   09AF                    2232 PFDATAS:
+   09AF F5                 2233 	PUSH	AF			; STORE AF
+   09B0                    2234 PFDS1:
+   09B0 DB 36              2235 	IN	A,(FMSR)		; READING OR WRITING IS KEYS TO D7 RQM
+   09B2 E6 80              2236 	AND	#0x80			; MASK OFF RQM BIT 
+   09B4 CArB0s09           2237 	JP	Z,PFDS1			; WAIT FOR RQM TO BE TRUE 
+   09B7 DB 36              2238 	IN	A,(FMSR)		; READ STATUS
+   09B9 E6 40              2239 	AND	#0x40			; WAITING FOR INPUT?
+   09BB C4r06s0A           2240 	CALL	NZ,ERRORT		; NO, SIGNAL ERROR
+   09BE F1                 2241 	POP	AF			; RESTORE AF
+   09BF D3 37              2242 	OUT	(FDATA),A		; OUTPUT A TO CONTROLLER
+   09C1 C9                 2243 	RET	
+                           2244 	
+                           2245 ;__PFDATA__________________________________________________________________________________________________________________________ 
+                           2246 ;
+                           2247 ; WRITE A COMMAND OR PARAMETER SEQUENCE
+                           2248 ;
+                           2249 ; TRANSFERS ARE SYNCHONIZED BYT MSR D7 <RQM> AND D6 <DIO>
+                           2250 ;	RQM  DIO
+                           2251 ;	0	0	BUSY
+                           2252 ;	1	0	WRITE TO DATA REGISTER PERMITTED
+                           2253 ;	1	1	BYTE FOR READ BY HOST PENDING
+                           2254 ;	0	1	BUSY
+                           2255 ;
+                           2256 ;________________________________________________________________________________________________________________________________
+                           2257 ;
+   09C2                    2258 PFDATA:
+   09C2 F5                 2259 	PUSH	AF			; STORE AF
+   09C3                    2260 PFD1:
+   09C3 DB 36              2261 	IN	A,(FMSR)		; READING OR WRITING IS KEYS TO D7 RQM
+   09C5 E6 80              2262 	AND	#0x80			; MASK OFF RQM BIT 
+   09C7 CArC3s09           2263 	JP	Z,PFD1			; WAIT FOR RQM TO BE TRUE 
+   09CA DB 36              2264 	IN	A,(FMSR)		; READ STATUS
+   09CC E6 40              2265 	AND	#0x40			; WAITING FOR INPUT?
+   09CE C4r06s0A           2266 	CALL	NZ,ERRORT		; NO, SIGNAL ERROR
+   09D1 F1                 2267 	POP	AF			; RESTORE AF
+   09D2 D3 37              2268 	OUT	(FDATA),A		; OUTPUT A TO CONTROLLER
+   09D4 C3rD7s09           2269 	JP	DELAY24			; DELAY 24US
+                           2270 	
+                           2271 	
+                           2272 	
+                           2273 ;__DELAY24__________________________________________________________________________________________________________________________ 
+                           2274 ;
+                           2275 ; 	DELAY 24US
+                           2276 ;________________________________________________________________________________________________________________________________
+                           2277 ;
+   09D7                    2278 DELAY24:	
+                           2279 					; JP= 10T	
+   09D7 DD E5              2280 	PUSH	IX			; 15T
+   09D9 DD E1              2281 	POP	IX			; 14T
+   09DB DD E5              2282 	PUSH	IX			; 15T
+   09DD DD E1              2283 	POP	IX			; 14T
+   09DF                    2284 DELAY12:
+   09DF DD E5              2285 	PUSH	IX			; 15T
+   09E1 DD E1              2286 	POP	IX			; 14T
+   09E3 C9                 2287 	RET				; 10T
+                           2288 
+                           2289 
+                           2290 ;__CHECKINT__________________________________________________________________________________________________________________________ 
+                           2291 ;
+                           2292 ; CHECK FOR ACTIVE FDC INTERRUPTS BEFORE GIVING I8272 COMMANDS
+                           2293 ; POLL RQM FOR WHEN NOT BUSY AND THEN SEND FDC
+                           2294 ; SENSE INTERRUPT COMMAND   IF IT RETURNS WITH NON ZERO
+                           2295 ; ERROR CODE, PASS BACK TO CALLING ROUTINE FOR HANDLING
+                           2296 ;________________________________________________________________________________________________________________________________
+                           2297 ;
+   09E4                    2298 CHECKINT:
+   09E4 DB 36              2299 	IN	A,(FMSR)		; READING OR WRITING IS KEYS TO D7 RQM
+   09E6 E6 80              2300 	AND	#0x80			; MASK OFF RQM BIT
+   09E8 CArE4s09           2301 	JP	Z,CHECKINT		; WAIT FOR RQM TO BE TRUE  WAIT UNTIL DONE
+   09EB DB 36              2302 	IN	A,(FMSR)		; READ STATUS
+   09ED E6 40              2303 	AND	#0x40			; WAITING FOR INPUT?
+   09EF C2rF5s09           2304 	JP	NZ,CHECKINTDONE		; NO, SIGNAL ERROR
+   09F2 CDr12s0A           2305 	CALL	SENDINT			; SENSE INTERRUPT COMMAND
+   09F5                    2306 CHECKINTDONE:
+   09F5 C9                 2307 	RET				;
+                           2308 	
+                           2309 
+                           2310 ;__DELAYHSEC__________________________________________________________________________________________________________________________ 
+                           2311 ;
+                           2312 ; DELAY FOR 1/2 SECOND
+                           2313 ;________________________________________________________________________________________________________________________________
+                           2314 ;	
+   09F6                    2315 DELAYHSEC:
+   09F6 21 00 00           2316 	LD	HL,#0		; 65536
+   09F9                    2317 DELDM:
+   09F9 00                 2318 	NOP				; (4 T) 
+   09FA 00                 2319 	NOP				; (4 T)
+   09FB 00                 2320 	NOP				; (4 T)
+   09FC 00                 2321 	NOP				; (4 T)
+   09FD 2D                 2322 	DEC	L			; (6 T)
+   09FE C2rF9s09           2323 	JP	NZ,DELDM		; (10 T) 24 T  8 MICROSECONDS AT 4 MHZ
+   0A01 25                 2324 	DEC	H			; (6 T)
+   0A02 C2rF9s09           2325 	JP	NZ,DELDM		; (10 T) (8 US * 256) * 256  524288 US   5 SECONDS
+   0A05 C9                 2326 	RET
+                           2327 
+                           2328 ;__ERRORT__________________________________________________________________________________________________________________________ 
+                           2329 ;
+                           2330 ; ERROR HANDLING
+                           2331 ;________________________________________________________________________________________________________________________________
+                           2332 ;		
+   0A06                    2333 ERRORT:
+   0A06 DB 37              2334 	IN	A,(FDATA)		; CLEAR THE JUNK OUT OF DATA REGISTER
+   0A08 DB 36              2335 	IN	A,(FMSR)		; CHECK WITH RQM
+   0A0A E6 80              2336 	AND	#0x80			; IF STILL NOT READY, READ OUT MORE JUNK
+   0A0C CAr06s0A           2337 	JP	Z,ERRORT		;
+   0A0F 3E FF              2338 	LD	A,#0x0FF			; RETURN ERROR CODE -1
+                           2339 					;
+   0A11 C9                 2340 	RET
+                           2341 
+                           2342 ;__SENDINT__________________________________________________________________________________________________________________________ 
+                           2343 ;
+                           2344 ; SENSE INTERRUPT COMMAND
+                           2345 ;________________________________________________________________________________________________________________________________
+                           2346 ;		
+   0A12                    2347 SENDINT:
+   0A12 3E 08              2348 	LD	A,#8			; SENSE INTERRUPT COMMAND
+   0A14 CDrC2s09           2349 	CALL	PFDATA			; SEND IT
+   0A17 CDr30s0A           2350 	CALL	GFDATA			; GET RESULTS
+   0A1A 32rFDs0A           2351 	LD	(ST0A),A		; STORE THAT
+   0A1D E6 C0              2352 	AND	#0x0C0			; MASK OFF INTERRUPT STATUS BITS
+   0A1F FE 80              2353 	CP	#0x80			; CHECK IF INVALID COMMAND
+   0A21 CAr2Fs0A           2354 	JP	Z,ENDSENDINT		; YES, EXIT
+   0A24 CDr30s0A           2355 	CALL	GFDATA			; GET ANOTHER (STATUS CODE 1)
+   0A27 32rFEs0A           2356 	LD	(ST1A),A		; SAVE THAT
+   0A2A 3ArFDs0A           2357 	LD	A,(ST0A)		; GET FIRST ONE
+   0A2D E6 C0              2358 	AND	#0x0C0			; MASK OFF ALL BUT INTERRUPT CODE 00 IS NORMAL
+   0A2F                    2359 ENDSENDINT:
+   0A2F C9                 2360 	RET				; ANYTHING ELSE IS AN ERROR
+                           2361 
+                           2362 
+                           2363 ;__GFDATA__________________________________________________________________________________________________________________________ 
+                           2364 ;
+                           2365 ; GET DATA FROM FLOPPY CONTROLLER
+                           2366 ;
+                           2367 ; TRANSFERS ARE SYNCHONIZED BYT MSR D7 <RQM> AND D6 <DIO>
+                           2368 ;	RQM  DIO
+                           2369 ;	0	0	BUSY
+                           2370 ;	1	0	WRITE TO DATA REGISTER PERMITTED
+                           2371 ;	1	1	BYTE FOR READ BY HOST PENDING
+                           2372 ;	0	1	BUSY
+                           2373 ;
+                           2374 ;________________________________________________________________________________________________________________________________
+                           2375 ;	
+   0A30                    2376 GFDATA:
+   0A30 DB 36              2377 	IN	A,(FMSR)		; READ STATUS BYTE
+   0A32 E6 80              2378 	AND	#0x80			; MASK OFF RQM
+   0A34 CAr30s0A           2379 	JP	Z,GFDATA		; LOOP WHILE BUSY
+   0A37 DB 36              2380 	IN	A,(FMSR)		; READ STSTUS BUTE
+   0A39 E6 40              2381 	AND	#0x40			; MASK OFF DIO
+   0A3B CCr06s0A           2382 	CALL	Z,ERRORT		; IF WRITE EXPECTED RUN ERRORRT
+   0A3E DB 37              2383 	IN	A,(FDATA)		; READ DATA
+   0A40 C3rD7s09           2384 	JP	DELAY24			; DELAY 24US
+                           2385 	
+                           2386 
+                           2387 	
+                    0000   2388  .IF CONDUSEDSKY	
+                           2389 ;__IDESEGDISPLAY________________________________________________________________________________________
+                           2390 ;
+                           2391 ;  DISPLAY CONTENTS OF IDE LOGICAL BLOCK ADDRESS ON DSKY    
+                           2392 ;____________________________________________________________________________________________________
+                           2393 IDESEGDISPLAY:
+                           2394 	LD	A, #0x82			;
+                           2395 	OUT (PIOCONT),A			;
+                           2396 					;
+                           2397 	LD	A,(IDE_LBA3)		;
+                           2398 	AND	#0x0F			;
+                           2399 	LD	(DISPLAYBUF+6),A	;
+                           2400 	LD	A,(IDE_LBA3)		;
+                           2401 	AND	#0x0F0			;
+                           2402 	SRL	A			;
+                           2403 	SRL	A			;
+                           2404 	SRL	A			;
+                           2405 	SRL	A			;
+                           2406 	LD	(DISPLAYBUF+7),A	;
+                           2407 					;
+                           2408 	LD	A,(IDE_LBA2)		;
+                           2409 	AND	#0x0F			;
+                           2410 	LD	(DISPLAYBUF+4),A	;
+                           2411 	LD	A,(IDE_LBA2)		;
+                           2412 	AND	#0x0F0			;
+                           2413 	SRL	A			;
+                           2414 	SRL	A			;
+                           2415 	SRL	A			;
+                           2416 	SRL	A			;
+                           2417 	LD	(DISPLAYBUF+5),A	;
+                           2418 					;
+                           2419 	LD	A,(IDE_LBA1)		;
+                           2420 	AND	#0x0F			;
+                           2421 	LD	(DISPLAYBUF+2),A	;
+                           2422 	LD	A,(IDE_LBA1)		;
+                           2423 	AND	#0x0F0			;
+                           2424 	SRL	A			;
+                           2425 	SRL	A			;
+                           2426 	SRL	A			;
+                           2427 	SRL	A			;
+                           2428 	LD	(DISPLAYBUF+3),A	;
+                           2429 	
+                           2430 	LD	A,(IDE_LBA0)		;
+                           2431 	AND	#0x0F			;
+                           2432 	LD	(DISPLAYBUF),A		;
+                           2433 	LD	A,(IDE_LBA0)		;
+                           2434 	AND	#0x0F0			;
+                           2435 	SRL	A			;
+                           2436 	SRL	A			;
+                           2437 	SRL	A			;
+                           2438 	SRL	A			;
+                           2439 	LD	(DISPLAYBUF+1),A	;
+                           2440 	JP	SEGDISPLAY1		;
+                           2441 
+                           2442 ;__ATAPISEGDISPLAY________________________________________________________________________________________
+                           2443 ;
+                           2444 ;  DISPLAY CONTENTS OF ATAPI LOGICAL BLOCK ADDRESS ON DSKY    
+                           2445 ;____________________________________________________________________________________________________
+                           2446 ATAPISEGDISPLAY:
+                           2447 	LD  A, #0x82		;
+                           2448 	OUT (PIOCONT),A			;
+                           2449 					;
+                           2450 	LD	A,(LBA_TARGET_HI+1)	;
+                           2451 	AND	#0x0F			;
+                           2452 	LD	(DISPLAYBUF+6),A	;
+                           2453 	LD	A,(LBA_TARGET_HI+1)	;
+                           2454 	AND	#0x0F0			;
+                           2455 	SRL	A			;
+                           2456 	SRL	A			;
+                           2457 	SRL	A			;
+                           2458 	SRL	A			;
+                           2459 	LD	(DISPLAYBUF+7),A	;
+                           2460 					;
+                           2461 	LD	A,(LBA_TARGET_HI)	;
+                           2462 	AND	#0x0F			;
+                           2463 	LD	(DISPLAYBUF+4),A	;
+                           2464 	LD	A,(LBA_TARGET_HI)	;
+                           2465 	AND	#0x0F0			;
+                           2466 	SRL	A			;
+                           2467 	SRL	A			;
+                           2468 	SRL	A			;
+                           2469 	SRL	A			;
+                           2470 	LD	(DISPLAYBUF+5),A	;
+                           2471 					;
+                           2472 	LD	A,(LBA_TARGET_LO+1)	;
+                           2473 	AND	#0x0F			;
+                           2474 	LD	(DISPLAYBUF+2),A	;
+                           2475 	LD	A,(LBA_TARGET_LO+1)	;
+                           2476 	AND	#0x0F0			;
+                           2477 	SRL	A			;
+                           2478 	SRL	A			;
+                           2479 	SRL	A			;
+                           2480 	SRL	A			;
+                           2481 	LD	(DISPLAYBUF+3),A	;
+                           2482 					;
+                           2483 	LD	A,(LBA_TARGET_LO)	;
+                           2484 	AND	#0x0F			;
+                           2485 	LD	(DISPLAYBUF),A		;
+                           2486 	LD	A,(LBA_TARGET_LO)	;
+                           2487 	AND	#0x0F0			;
+                           2488 	SRL	A			;
+                           2489 	SRL	A			;
+                           2490 	SRL	A			;
+                           2491 	SRL	A			;
+                           2492 	LD	(DISPLAYBUF+1),A	;
+                           2493 	JP	SEGDISPLAY1		;
+                           2494 
+                           2495 ;__SEGDISPLAY________________________________________________________________________________________
+                           2496 ;
+                           2497 ;  DISPLAY CONTENTS OF TRACK, SECTOR, ST0, ST1 ON DSKY
+                           2498 ;     
+                           2499 ;____________________________________________________________________________________________________
+                           2500 SEGDISPLAY:
+                           2501 	LD	A, #0x82			;
+                           2502 	OUT (PIOCONT),A			;
+                           2503 	LD	A,(TRACK)		;
+                           2504 	AND	#0x0F			;
+                           2505 	LD	(DISPLAYBUF+6),A	;
+                           2506 	LD	A,(TRACK)		;
+                           2507 	AND	#0x0F0			;
+                           2508 	SRL	A			;
+                           2509 	SRL	A			;
+                           2510 	SRL	A			;
+                           2511 	SRL	A			;
+                           2512 	LD	(DISPLAYBUF+7),A	;		
+                           2513 	LD	A,(SECTOR)		;
+                           2514 	AND	#0x0F			;
+                           2515 	LD	(DISPLAYBUF+4),A	;
+                           2516 	LD	A,(SECTOR)		;
+                           2517 	AND	#0x0F0			;
+                           2518 	SRL	A			;
+                           2519 	SRL	A			;
+                           2520 	SRL	A			;
+                           2521 	SRL	A			;
+                           2522 	LD	(DISPLAYBUF+5),A	;
+                           2523 	LD	A,(ST0)			;
+                           2524 	AND	#0x0F			;
+                           2525 	LD	(DISPLAYBUF+2),A	;
+                           2526 	LD	A,(ST0)			;
+                           2527 	AND	#0x0F0			;
+                           2528 	SRL	A			;
+                           2529 	SRL	A			;
+                           2530 	SRL	A			;
+                           2531 	SRL	A			;
+                           2532 	LD	(DISPLAYBUF+3),A	;		
+                           2533 	LD	A,(ST1)			;
+                           2534 	AND	#0x0F			;
+                           2535 	LD	(DISPLAYBUF),A		;
+                           2536 	LD	A,(ST1)			;
+                           2537 	AND	#0x0F0			;
+                           2538 	SRL	A			;
+                           2539 	SRL	A			;
+                           2540 	SRL	A			;
+                           2541 	SRL	A			;
+                           2542 	LD	(DISPLAYBUF+1),A	;
+                           2543 SEGDISPLAY1:				;
+                           2544 	LD	HL,#DISPLAYBUF		;
+                           2545 	LD	BC,#7 			;
+                           2546 	ADD	HL,BC			;
+                           2547 	LD	B,#8			; SET DIGIT COUNT
+                           2548 	LD	A,#0x40			; SET CONTROL PORT 7218 TO OFF
+                           2549 	OUT	(PORTC),A		; OUTPUT
+                           2550 	CALL 	DELAY12			; WAIT
+                           2551 	LD	A,#0x0D0			; SET CONTROL TO 1111 (DATA COMING, HEX DECODE, DECODE, NORMAL)
+                           2552 	OUT	(PORTA),A		; OUTPUT TO PORT
+                           2553 	LD	A,#0x80			; STROBE WRITE PULSE WITH CONTROL=1
+                           2554 	OUT	(PORTC),A		; OUTPUT TO PORT
+                           2555 	CALL 	DELAY12			; WAIT
+                           2556 	LD	A,#0x40			; SET CONTROL PORT 7218 TO OFF
+                           2557 	OUT	(PORTC),A		; OUTPUT
+                           2558 	CALL 	DELAY12			; WAIT
+                           2559 SEGDISPLAY_LP:	
+                           2560 	LD	A,(HL)			; GET DISPLAY DIGIT
+                           2561 	OUT	(PORTA),A		; OUT TO PORTA
+                           2562 	LD	A,#0			; SET WRITE STROBE
+                           2563 	OUT	(PORTC),A		; OUT TO PORTC
+                           2564 	CALL	DELAY12			; DELAY
+                           2565 	LD	A,#0x40			; SET CONTROL PORT OFF
+                           2566 	OUT	(PORTC),A		; OUT TO PORTC
+                           2567 	CALL	DELAY12			; WAIT
+                           2568 	DEC	HL			; INC POINTER
+                           2569 	DJNZ	SEGDISPLAY_LP		; LOOP FOR NEXT DIGIT
+                           2570 	RET	
+                           2571 	
+                           2572 DISPLAYBUF:	.DB 	01,02,03,04,05,06,07,08
+                           2573  .ENDIF
+   0A43 00 00 00 00 00 00  2574 		.DB	00,00,00,00,00,00,00,00	
+        00 00
+   0A4B 00 00 00 00 00 00  2575 		.DB	00,00,00,00,00,00,00,00	
+        00 00
+   0A53 00 00 00 00 00 00  2576 		.DB	00,00,00,00,00,00,00,00	
+        00 00
+   0A5B 00 00 00 00 00 00  2577 		.DB	00,00,00,00,00,00,00,00	
+        00 00
+                           2578 
+                           2579  
+                           2580  		
+   0A63 00                 2581 FLOPPYSTACK:	.DB	00
+   0A64 00 00 00 00        2582 PARKSTACK:	.DB	00,00,00,00
+                           2583 	
+   0A68                    2584 READ_DISK_PACKET:
+   0A68 A8 00 00 00 00 01  2585 		.DB	0x0A8,00,00,00,00,01,00,00,00,01,00,00
+        00 00 00 01 00 00
+   0A74                    2586 WRITE_DISK_PACKET:
+   0A74 2A 00 00 00 00 11  2587 		.DB	0x2A,00,00,00,00,0x11,00,00,01,00,00,00
+        00 00 01 00 00 00
+   0A80                    2588 ATAPI_REQUEST_SENSE:
+   0A80 03 00 00 00 11 00  2589 		.DB	3,00,00,00,0x11,00,00,00,00,00,00,00
+        00 00 00 00 00 00
+                           2590 
+                           2591 ;	******* TEXT STRINGS *******
+                           2592 
+   0A8C                    2593 TXT_RO_ERROR:
+   0A8C 0D 0A              2594 		.DB 	CR,LF
+   0A8E 45 52 52 4F 52 3A  2595 		.ascii 	"ERROR: WRITE TO READ ONLY DISK"
+        20 57 52 49 54 45
+        20 54 4F 20 52 45
+        41 44 20 4F 4E 4C
+        59 20 44 49 53 4B
+   0AAC FF                 2596 		.DB 	END
+                           2597 
+                           2598 
+   0AAD                    2599 TXT_STARTUP_MSG:
+                           2600 
+                    0001   2601  .IF 	CONDSHORTMSG
+   0AAD 0D 0A              2602 		.DB 	CR,LF
+   0AAF 43 50 2F 4D 2D 38  2603 		.ascii 	"CP/M-80 2.2C (JC0705-1) for "
+        30 20 32 2E 32 43
+        20 28 4A 43 30 37
+        30 35 2D 31 29 20
+        66 6F 72 20
+   0ACB 4E 38 56 45 4D 20  2604 		.ascii 	"N8VEM - W/"
+        2D 20 57 2F
+                    0000   2605     .IF   CONDUSEVDU
+                           2606                 .ascii     "VDU "
+                           2607     .ENDIF
+                    0000   2608     .IF   CONDUSEDSKY
+                           2609                 .ascii     "DSKY "
+                           2610     .ENDIF
+                    0001   2611     .IF   CONDIDESOFT
+   0AD5 49 44 45 20        2612                 .ascii     "IDE "
+                           2613     .ENDIF
+                    0000   2614     .IF   CONDUSEATAPI
+                           2615                 .ascii    "ATAPI "
+                           2616     .ENDIF
+                    0001   2617     .IF   CONDUSEFLOPPY
+   0AD9 46 4C 4F 50 50 59  2618                 .ascii     "FLOPPY "
+        20
+                    0001   2619 	.IF  COND144FLOPPY
+   0AE0 31 2E 34 34 4D 20  2620 		.ascii	"1.44M "
+                           2621 	.ENDIF
+                           2622     .ENDIF
+   0AE6 0D 0A              2623 		.DB 	CR,LF
+   0AE8 FF                 2624 		.DB 	END
+                           2625  .ELSE
+                           2626 		.ascii 	"CP/M V2.2C"
+                           2627 		.DB 	END
+                           2628  .ENDIF
+                           2629 
+                           2630 ;
+                           2631 ;	THE REMAINDER OF THE CBIOS IS RESERVED UNINITIALIZED
+                           2632 ;	DATA AREA, AND DOES NOT NEED TO BE A PART OF THE
+                           2633 ;	SYSTEM MEMORY IMAGE (THE SPACE MUST BE AVAILABLE,
+                           2634 ;	HOWEVER, BETWEEN "BEGDAT" AND "ENDDAT") 
+                           2635 ;
+                           2636 
+                           2637 ;
+                           2638 ; DISK COMMAND BLOCK
+                           2639 ;
+   0AE9 00                 2640 CMD:		.DB	0		; COMMAND READ OR WRITE,
+   0AEA 00                 2641 UNIT:		.DB	0		; PHYSICAL DRIVE 0->3
+   0AEB 00                 2642 HEAD:		.DB	0		; HEAD SEL 0 OR 1
+   0AEC 02                 2643 DENS:		.DB	2		; DENSITY
+   0AED 09                 2644 EOTSEC:		.DB	09		; LAST SECTOR OF TRACK
+   0AEE 1B                 2645 GAP:		.DB	0x1B		; VALUE FOR IRG <GAP3>
+                           2646 ;SECSIZ:	.DB	0x80		; HOW MANY BYTES TO TRANSFER/4
+   0AEF 00 02              2647 FSECSIZ:        .dw     0x0200          ; actual sector size in bytes
+   0AF1 FF                 2648 DTL:		.DB	0x0FF		; SIZE OF SECTOR
+   0AF2 7F                 2649 SRTHUT:		.DB	0x7F		; STEP RATE AND HEAD UNLOAD TIME
+   0AF3 05                 2650 HLT:		.DB	5		; HEAD LOAD TIME
+   0AF4 04                 2651 MIN:		.DB	MINI		; LATCH BIT PATTERN FOR FDC9229 MINITRUE
+   0AF5 20                 2652 PRE:		.DB	PRECOMP		; LATCH BIT PATTERN FOR FDC9229 PRECOMP125NS
+                           2653 ;
+                           2654 ; FLOPPY STATUS RESULT STORAGE
+                           2655 ;
+   0AF6 00                 2656 ST0:		.DB	0		; STORE STATUS 0
+   0AF7 00                 2657 ST1:		.DB	0		; ST1
+   0AF8 00                 2658 ST2:		.DB	0		; ST2
+   0AF9 00                 2659 SCYL:		.DB	0		; TRACK
+   0AFA 00                 2660 SHEAD:		.DB	0		; HEAD 0 OR 1
+   0AFB 00                 2661 SREC:		.DB	0		; SECTOR
+   0AFC 00                 2662 SNBIT:		.DB	0		; DENSITY
+   0AFD 00                 2663 ST0A:		.DB	0		; STORE STATUS 0
+   0AFE 00                 2664 ST1A:		.DB	0		; ST1
+   0AFF 00                 2665 RETRY:		.DB	0		; RETRIES
+   0B00 00                 2666 RETRY1:		.DB	0		; RETRIES
+                           2667 
+   0B01 00                 2668 FLATCH_STORE:	.DB	00		;
+                           2669 	
+   0B02 00 00              2670 TRACK:		.DW 	0		; TWO BYTES FOR TRACK # (LOGICAL)
+   0B04 00 00              2671 PTRACK:		.DW 	0		; TWO BYTES FOR TRACK # (PHYSICAL)
+   0B06 00 00              2672 FTRACK:		.DW 	0		; TWO BYTES FOR TRACK # (HEAD LOCATION)
+                           2673 
+   0B08 01                 2674 PAGER:		.DB 	1		; COPY OF PAGER BYTE
+   0B09 FF                 2675 DB_PAGER:	.DB 	0x0FF		; COPY OF PAGER BYTE (DEBUG)
+   0B0A 00 00              2676 SECTOR:		.DW 	0		; TWO BYTES FOR SECTOR # (LOGICAL)
+   0B0C 00 00              2677 PSECTOR: 	.DW 	0		; TWO BYTES FOR SECTOR # (PHYSICAL)
+   0B0E 00 00              2678 SECST:		.DW 	0		; SECTOR IN ROM/RAM START ADDRESS
+   0B10 00 00              2679 DMAAD:		.DW 	0		; DIRECT MEMORY ADDRESS
+   0B12 00                 2680 DISKNO:		.DB 	0		; DISK NUMBER 0-15
+   0B13 00 00              2681 LBA_TARGET_LO: 	.DW 	0		; IDE HD PARTITION TARGET SECTOR (LOW 16 BITS)
+   0B15 00 00              2682 LBA_TARGET_HI:	.DW 	0		; IDE HD PARTITION TARGET SECTOR (HI 16 BITS, 12 USED)
+   0B17 00                 2683 IDEDEVICE:	.DB 	0		; ATAPI DEVICE SELECTION FLAG
+                           2684 
+   0B18 00                 2685 IDE_LBA0:	.DB 	0		; SET LBA 0:7
+   0B19 00                 2686 IDE_LBA1:	.DB 	0		; SET LBA 8:15
+   0B1A 00                 2687 IDE_LBA2:	.DB 	0		; SET LBA 16:23
+   0B1B 00                 2688 IDE_LBA3:	.DB 	0		; LOWEST 4 BITS USED ONLY TO ENABLE LBA MODE 
+   0B1C 01                 2689 SECTOR_INDEX:	.DB 	1		; WHERE 128 BYTE CP/M SECTOR IS IN 512 BYTE IDE HD SECTOR
+                           2690 ;
+                           2691 ;	SCRATCH RAM AREA FOR BDOS USE
+   0B1D                    2692 BEGDAT:
+                           2693 ;		= 	$		; BEGINNING OF DATA AREA
+   0B1D                    2694 DIRBF:		.DS 	128		; SCRATCH DIRECTORY AREA
+   0B9D                    2695 ALL00:		.DS 	65		; ALLOCATION VECTOR 0  (DSM/8 = 1 BIT PER BLOCK)  44
+   0BDE                    2696 ALL01:		.DS 	33		; ALLOCATION VECTOR 1 (225/8)
+   0BFF                    2697 ALL02:		.DS 	256		; ALLOCATION VECTOR 2 (511/8)
+   0CFF                    2698 ALL03:		.DS 	256		; ALLOCATION VECTOR 3 (511/8)
+   0DFF                    2699 ALL04:		.DS 	65		; ALLOCATION VECTOR 4 (497/8)
+   0E40                    2700 ALL05:		.DS 	65		; ALLOCATION VECTOR 4 (495/8)
+   0E81                    2701 ALL06:		.DS 	65		; ALLOCATION VECTOR 4 (495/8)
+   0EC2                    2702 ALL07:		.DS 	135		; ALLOCATION VECTOR 7 (495/8)
+   0F49                    2703 CHK00:		.DS 	5		; 720K MEDIA
+   0F4E                    2704 CHK01:		.DS 	0		; NOT USED FOR FIXED MEDIA
+   0F4E                    2705 CHK02:		.DS 	0		; NOT USED FOR FIXED MEDIA
+   0F4E                    2706 CHK03:		.DS 	128		; 8M MEDIA
+   0FCE                    2707 CHK04:		.DS 	0		; NOT USED FOR FIXED MEDIA
+   0FCE                    2708 CHK05:		.DS 	0		; NOT USED FOR FIXED MEDIA
+   0FCE                    2709 CHK06:		.DS 	0		; NOT USED FOR FIXED MEDIA
+   0FCE                    2710 CHK07:		.DS 	15		; 1.44M MEDIA 
+                           2711 ;
+   0FDD                    2712 CUDISK:		.DS 	1		; CURRENT PHYSICAL DISK ID IN BUFFER
+   0FDE 01 00              2713 CUSECTOR:	.DW 	1		; CURRENT PHYSICAL DISK SECTOR IN BUFFER	
+   0FE0 02 00              2714 CUTRACK:	.DW 	2		; CURRENT PHYSICAL DISK TRACK IN BUFFER	
+   0FE2                    2715 SECTOR_BUFFER:  .DS 	520		; STORAGE FOR 512 BYTE IDE HD SECTOR
+   11EA                    2716 ENDDAT:
+                           2717 ;	 	.EQU 	$		; END OF DATA AREA
+   11EA                    2718 DSTEMP:
+                    06CD   2719 DATSIZ	 	=  	DSTEMP - BEGDAT	; SIZE OF DATA AREA
+                           2720 
+                           2721 
+                           2722 ;dwg;	 	.ORG 	0FDFFH
+   11EA 00                 2723 LASTBYTE:	.DB 	0
+                           2724 
+                           2725 ; .END
+                           2726 	
+                           2727 
+                           2728 	
+                           2729 
+                           2730 
+   11EB                    2731 _cbios_end::
+                           2732 	.area _CODE
+                           2733 	.area _CABS

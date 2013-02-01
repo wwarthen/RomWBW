@@ -1,0 +1,2675 @@
+                              1         .title bdosb01.s  derived from  bdosb01.asm
+                              2         .sbttl by Douglas Goodall for N8VEM use '11
+                              3 	
+                              4 	.module bdosb01
+                              5 	.optsdcc -mz80
+                              6 	
+                              7 ;--------------------------------------------------------
+                              8 ; Public variables in this module
+                              9 ;--------------------------------------------------------
+                             10 	.globl _bdos
+                             11 ;--------------------------------------------------------
+                             12 ; special function registers
+                             13 ;--------------------------------------------------------
+                             14 ;--------------------------------------------------------
+                             15 ;  ram data
+                             16 ;--------------------------------------------------------
+                             17 	.area _DATA
+                             18 ;--------------------------------------------------------
+                             19 ; overlayable items in  ram 
+                             20 ;--------------------------------------------------------
+                             21 	.area _OVERLAY
+                             22 ;--------------------------------------------------------
+                             23 ; external initialized ram data
+                             24 ;--------------------------------------------------------
+                             25 ;--------------------------------------------------------
+                             26 ; global & static initialisations
+                             27 ;--------------------------------------------------------
+                             28 	.area _HOME
+                             29 	.area _GSINIT
+                             30 	.area _GSFINAL
+                             31 	.area _GSINIT
+                             32 ;--------------------------------------------------------
+                             33 ; Home
+                             34 ;--------------------------------------------------------
+                             35 	.area _HOME
+                             36 	.area _HOME
+                             37 ;--------------------------------------------------------
+                             38 ; code
+                             39 ;--------------------------------------------------------
+                             40 	.area _CODE
+                             41 ;bdos.c:1: void bdos(void)
+                             42 ;	---------------------------------
+                             43 ; Function bdos
+                             44 ; ---------------------------------
+   0000                      45 _bdos_start::
+   0000                      46 _bdos:
+                             47 
+                             48 ;dwg-start;
+                             49 	.area _DATA
+                             50 ;dwg-end;
+                             51 
+                    0001     52 ENDFIL	=	1		;FILL FULL BDOS LENGTH
+                             53 ;
+                    0003     54 IOBYTE	= 	3		; I/O DEFINITION BYTE.
+                    0004     55 TDRIVE	= 4			; CURRENT DRIVE NAME AND USER NUMBER.
+                    0005     56 ENTRY	= 5			; ENTRY POINT FOR THE CP/M BDOS.
+                    005C     57 TFCB	= 0x5C			; DEFAULT FILE CONTROL BLOCK.
+                    0080     58 TBUFF	= 0x80			; I/O BUFFER AND COMMAND LINE STORAGE.
+                    0100     59 TBASE	= 0x100		; TRANSIANT PROGRAM STORAGE AREA.
+                             60 ;
+                             61 ;   SET CONTROL CHARACTER .EQUATES.
+                             62 ;
+                    0041     63 ASCIIA  = 0x41
+                    0040     64 AT	= 0x40
+                    0003     65 CNTRLC	= 3			; CONTROL-C
+                    0005     66 CNTRLE	= 05			; CONTROL-E
+                    0008     67 BS	= 08			; BACKSPACE
+                    0009     68 TAB	= 09			; TAB
+                    000A     69 LF	= 0x0A			; LINE FEED
+                    000C     70 FF	= 0x0C			; FORM FEED
+                    000D     71 CR	= 0x0D			; CARRIAGE RETURN
+                    0010     72 CNTRLP	= 0x10			; CONTROL-P
+                    0012     73 CNTRLR	= 0x12			; CONTROL-R
+                    0013     74 CNTRLS	= 0x13			; CONTROL-S
+                    0015     75 CNTRLU	= 0x15			; CONTROL-U
+                    0018     76 CNTRLX	= 0x18			; CONTROL-X
+                    001A     77 CNTRLZ	= 0x1A			; CONTROL-Z (END-OF-FILE MARK)
+                    0020     78 SPACE   = 0x20
+                    0023     79 POUND	= 0x23
+                    0024     80 DOLLAR	= 0x24
+                    003F     81 QUESTION = 0x3f
+                    005E     82 UP	= 0x5E
+                    007F     83 DEL	= 0x7F			; RUBOUT
+                             84 
+                             85 ; CPM ORIGIN CALCULATE
+                             86 
+                    003B     87 NK      =	59		;SYSTEM SIZE
+                    9C00     88 BASE    =	(NK*1024)-0x5000
+                    D000     89 CCPO    =	BASE+0x3400	;CCP ORIGIN
+                    D800     90 BDOSO   =	BASE+0x3C00	;BDOS ORIGIN
+                    E600     91 BIOSO   =	BASE+0x4A00	;BIOS ORIGIN
+                             92 
+                             93 ;dwg-begin;
+                             94 
+                             95 ;	.area _CODE
+                             96 	.area _BDOSB01
+                             97 
+                             98 ;dwg-end;
+                             99 
+                            100 ;dwg;	.ORG	BDOSO
+   0000 00 00 00 00 00 00   101 	.DB	0,0,0,0,0,0	;OLD SERIAL NUMBER
+                            102 ;
+                            103 ;**************************************************************
+                            104 ;*
+                            105 ;*                    B D O S   E N T R Y
+                            106 ;*
+                            107 ;**************************************************************
+                            108 ;
+   0006 C3r11s00            109 FBASE:	JP	FBASE1
+                            110 ;
+                            111 ;   BDOS ERROR TABLE.
+                            112 ;
+   0009r99s00               113 BADSCTR:.DW ERROR1		; BAD SECTOR ON READ OR WRITE.
+   000BrA5s00               114 BADSLCT:.DW ERROR2		; BAD DISK SELECT.
+   000DrABs00               115 RODISK:	.DW ERROR3		; DISK IS READ ONLY.
+   000FrB1s00               116 ROFILE:	.DW ERROR4		; FILE IS READ ONLY.
+                            117 ;
+                            118 ;   ENTRY INTO BDOS. (DE) OR (E) ARE THE PARAMETERS PASSED. THE
+                            119 ; FUNCTION NUMBER DESIRED IS IN REGISTER (C).
+                            120 ; E contains drive number if passing this
+   0011 EB                  121 FBASE1:	EX	DE,HL		; SAVE THE (DE) PARAMETERS.
+   0012 22r43s03            122 	LD	(PARAMS),HL
+   0015 EB                  123 	EX	DE,HL
+   0016 7B                  124 	LD	A,E		; AND SAVE REGISTER (E) IN PARTICULAR.
+   0017 32rD6s0D            125 	LD	(EPARAM),A
+   001A 21 00 00            126 	LD	HL,#0
+   001D 22r45s03            127 	LD	(STATUS),HL	; CLEAR RETURN STATUS.
+   0020 39                  128 	ADD	HL,SP
+   0021 22r0Fs03            129 	LD	(USRSTACK),HL	; SAVE USERS STACK POINTER.
+   0024 31r41s03            130 	LD	SP,#STKAREA	; AND SET OUR OWN.
+   0027 AF                  131 	XOR	A		; CLEAR AUTO SELECT STORAGE SPACE.
+   0028 32rE0s0D            132 	LD	(AUTOFLAG),A
+   002B 32rDEs0D            133 	LD	(AUTO),A
+   002E 21r74s0D            134 	LD	HL,#GOBACK	; SET RETURN ADDRESS.
+   0031 E5                  135 	PUSH	HL
+   0032 79                  136 	LD	A,C		; GET FUNCTION NUMBER.
+   0033 FE 29               137 	CP	#NFUNCTS		; VALID FUNCTION NUMBER?
+   0035 D0                  138 	RET	NC
+   0036 4B                  139 	LD	C,E		; KEEP SINGLE REGISTER FUNCTION HERE.
+   0037 21r47s00            140 	LD	HL,#FUNCTNS	; NOW LOOK THRU THE FUNCTION TABLE.
+   003A 5F                  141 	LD	E,A
+   003B 16 00               142 	LD	D,#0		; (DE)=FUNCTION NUMBER.
+   003D 19                  143 	ADD	HL,DE
+   003E 19                  144 	ADD	HL,DE		; (HL)=(START OF TABLE)+2*(FUNCTION NUMBER).
+   003F 5E                  145 	LD	E,(HL)
+   0040 23                  146 	INC	HL
+   0041 56                  147 	LD	D,(HL)		; NOW (DE)=ADDRESS FOR THIS FUNCTION.
+   0042 2Ar43s03            148 	LD	HL,(PARAMS)	; RETRIEVE PARAMETERS.
+   0045 EB                  149 	EX	DE,HL		; NOW (DE) HAS THE ORIGINAL PARAMETERS.
+   0046 E9                  150 	JP	(HL)		; EXECUTE DESIRED FUNCTION.
+                            151 ;
+                            152 ;   BDOS FUNCTION JUMP TABLE.
+                            153 ;
+                    0029    154 NFUNCTS = 41			; NUMBER OF FUNCTIONS IN FOLLOWIN TABLE.
+                            155 ;
+   0047 03 E6rC8s02r90s01   156 FUNCTNS:.DW WBOOT,GETCON,OUTCON,GETRDR,PUNCH,LIST,DIRCIO,GETIOB
+       rCEs02 12 E6 0F E6
+       rD4s02rEDs02
+   0057rF3s02rF8s02rE1s01   157 	.DW SETIOB,PRTSTR,R.DBUFF,GETCSTS,GETVER,RSTDSK,SETDSK,OPENFIL
+       rFEs02r7Es0Cr83s0C
+       r45s0Cr9Cs0C
+   0067rA5s0CrABs0CrC8s0C   158 	.DW CLOSEFIL,GETFST,GETNXT,DELFILE,READSEQ,WRTSEQ,FCREATE
+       rD7s0CrE0s0CrE6s0C
+       rECs0C
+   0075rF5s0CrFEs0Cr04s0D   159 	.DW RENFILE,GETLOG,GETCRNT,PUTDMA,GETALOC,WRTPRTD,GETROV,SETATTR
+       r0As0Dr11s0Dr2Cs05
+       r17s0Dr1Ds0D
+   0085r26s0Dr2Ds0Dr41s0D   160 	.DW GETPARM,GETUSER,RDRANDOM,WTRANDOM,FILESIZE,SETRAN,LOGOFF,RTN
+       r47s0Dr4Ds0Dr0Es0C
+       r53s0Dr04s03
+   0095r04s03r9Bs0D         161 	.DW RTN,WTSPECL
+                            162 ;
+                            163 ;   BDOS ERROR MESSAGE SECTION.
+                            164 ;
+   0099 21rCAs00            165 ERROR1:	LD	HL,#BADSEC	; BAD SECTOR MESSAGE.
+   009C CDrE5s00            166 	CALL	PRTERR		; PRINT IT AND GET A 1 CHAR RESPONCE.
+   009F FE 03               167 	CP	#CNTRLC		; RE-BOOT R.EQUEST (CONTROL-C)?
+   00A1 CA 00 00            168 	JP	Z,0		; YES.
+   00A4 C9                  169 	RET			; NO, RETURN TO RETRY I/O FUNCTION.
+                            170 ;
+   00A5 21rD5s00            171 ERROR2:	LD	HL,#BADSEL	; BAD DRIVE SELECTED.
+   00A8 C3rB4s00            172 	JP	ERROR5
+                            173 ;
+   00AB 21rE1s00            174 ERROR3:	LD	HL,#DISKRO	; DISK IS READ ONLY.
+   00AE C3rB4s00            175 	JP	ERROR5
+                            176 ;
+   00B1 21rDCs00            177 ERROR4:	LD	HL,#FILERO	; FILE IS READ ONLY.
+                            178 ;
+   00B4 CDrE5s00            179 ERROR5:	CALL	PRTERR
+   00B7 C3 00 00            180 	JP	0		; ALWAYS REBOOT ON THESE ERRORS.
+                            181 ;
+   00BA 42 44 4F 53 20 45   182 BDOSERR: .ascii "BDOS ERR ON "
+        52 52 20 4F 4E 20
+   00C6 20 3A 20 24         183 BDOSDRV: .ascii " : $"
+   00CA 42 41 44 20 53 45   184 BADSEC:	 .ascii "BAD SECTOR$"
+        43 54 4F 52 24
+   00D5 53 45 4C 45 43 54   185 BADSEL:	 .ascii "SELECT$"
+        24
+   00DC 46 49 4C 45 20      186 FILERO:	 .ascii "FILE "
+   00E1 52 2F 4F 24         187 DISKRO:	 .ascii "R/O$"
+                            188 ;
+                            189 ;   PRINT BDOS ERROR MESSAGE.
+                            190 ;
+   00E5 E5                  191 PRTERR:	PUSH	HL		; SAVE SECOND MESSAGE POINTER.
+   00E6 CDrC9s01            192 	CALL	OUTCRLF		; SEND (CR)(LF).
+   00E9 3Ar42s03            193 	LD	A,(ACTIVE)	; GET ACTIVE DRIVE.
+   00EC C6 41               194 	ADD	A,#ASCIIA	; MAKE ASCII.
+   00EE 32rC6s00            195 	LD	(BDOSDRV),A	; AND PUT IN MESSAGE.
+   00F1 01rBAs00            196 	LD	BC,#BDOSERR	; AND PRINT IT.
+   00F4 CDrD3s01            197 	CALL	PRTMESG
+   00F7 C1                  198 	POP	BC		; PRINT SECOND MESSAGE LINE NOW.
+   00F8 CDrD3s01            199 	CALL	PRTMESG
+                            200 ;
+                            201 ;   GET AN INPUT CHARACTER. WE WILL CHECK OUR 1 CHARACTER
+                            202 ; BUFFER FIRST. THIS MAY BE SET BY THE CONSOLE STATUS ROUTINE.
+                            203 ;
+   00FB 21r0Es03            204 GETCHAR:LD	HL,#CHARBUF	; CHECK CHARACTER BUFFER.
+   00FE 7E                  205 	LD	A,(HL)		; ANYTHING PRESENT ALREADY?
+   00FF 36 00               206 	LD	(HL),#0		; ...EITHER CASE CLEAR IT.
+   0101 B7                  207 	OR	A
+   0102 C0                  208 	RET	NZ		; YES, USE IT.
+   0103 C3 09 E6            209 	JP	CONIN		; NOPE, GO GET A CHARACTER RESPONCE.
+                            210 ;
+                            211 ;   INPUT AND ECHO A CHARACTER.
+                            212 ;
+   0106 CDrFBs00            213 GETECHO:CALL	GETCHAR		; INPUT A CHARACTER.
+   0109 CDr14s01            214 	CALL	CHKCHAR		; CARRIAGE CONTROL?
+   010C D8                  215 	RET	C		; NO, A REGULAR CONTROL CHAR SO DON'T ECHO.
+   010D F5                  216 	PUSH	AF		; OK, SAVE CHARACTER NOW.
+   010E 4F                  217 	LD	C,A
+   010F CDr90s01            218 	CALL	OUTCON		; AND ECHO IT.
+   0112 F1                  219 	POP	AF		; GET CHARACTER AND RETURN.
+   0113 C9                  220 	RET
+                            221 ;
+                            222 ;   CHECK CHARACTER IN (A). SET THE ZERO FLAG ON A CARRIAGE
+                            223 ; CONTROL CHARACTER AND THE CARRY FLAG ON ANY OTHER CONTROL
+                            224 ; CHARACTER.
+                            225 ;
+   0114 FE 0D               226 CHKCHAR:CP	#CR		; CHECK FOR CARRIAGE RETURN, LINE FEED, BACKSPACE,
+   0116 C8                  227 	RET	Z		; OR A TAB.
+   0117 FE 0A               228 	CP	#LF
+   0119 C8                  229 	RET	Z
+   011A FE 09               230 	CP	#TAB
+   011C C8                  231 	RET	Z
+   011D FE 08               232 	CP	#BS
+   011F C8                  233 	RET	Z
+   0120 FE 20               234 	CP	#SPACE		; OTHER CONTROL CHAR? SET CARRY FLAG.
+   0122 C9                  235 	RET
+                            236 ;
+                            237 ;   CHECK THE CONSOLE DURING OUTPUT. HALT ON A CONTROL-S, THEN
+                            238 ; REBOOT ON A CONTROL-C. IF ANYTHING ELSE IS READY, CLEAR THE
+                            239 ; ZERO FLAG AND RETURN (THE CALLING ROUTINE MAY WANT TO DO
+                            240 ; SOMETHING).
+                            241 ;
+   0123                     242 CKCONSOL:
+   0123 3Ar0Es03            243 	LD	A,(CHARBUF)	; CHECK BUFFER.
+   0126 B7                  244 	OR	A		; IF ANYTHING, JUST RETURN WITHOUT CHECKING.
+   0127 C2r45s01            245 	JP	NZ,CKCON2
+   012A CD 06 E6            246 	CALL	CONST		; NOTHING IN BUFFER. CHECK CONSOLE.
+   012D E6 01               247 	AND	#0x01		; LOOK AT BIT 0.
+   012F C8                  248 	RET	Z		; RETURN IF NOTHING.
+   0130 CD 09 E6            249 	CALL	CONIN		; OK, GET IT.
+   0133 FE 13               250 	CP	#CNTRLS		; IF NOT CONTROL-S, RETURN WITH ZERO CLEARED.
+   0135 C2r42s01            251 	JP	NZ,CKCON1
+   0138 CD 09 E6            252 	CALL	CONIN		; HALT PROCESSING UNTIL ANOTHER CHAR
+   013B FE 03               253 	CP	#CNTRLC		; IS TYPED. CONTROL-C?
+   013D CA 00 00            254 	JP	Z,0		; YES, REBOOT NOW.
+   0140 AF                  255 	XOR	A		; NO, JUST PRETEND NOTHING WAS EVER READY.
+   0141 C9                  256 	RET
+   0142 32r0Es03            257 CKCON1:	LD	(CHARBUF),A	; SAVE CHARACTER IN BUFFER FOR LATER PROCESSING.
+   0145 3E 01               258 CKCON2:	LD	A,#1		; SET (A) TO NON ZERO TO MEAN SOMETHING IS READY.
+   0147 C9                  259 	RET
+                            260 ;
+                            261 ;   OUTPUT (C) TO THE SCREEN. IF THE PRINTER FLIP-FLOP FLAG
+                            262 ; IS SET, WE WILL SEND CHARACTER TO PRINTER ALSO. THE CONSOLE
+                            263 ; WILL BE CHECKED IN THE PROCESS.
+                            264 ;
+   0148 3Ar0As03            265 OUTCHAR:LD	A,(OUTFLAG)	; CHECK OUTPUT FLAG.
+   014B B7                  266 	OR	A		; ANYTHING AND WE WON'T GENERATE OUTPUT.
+   014C C2r62s01            267 	JP	NZ,OUTCHR1
+   014F C5                  268 	PUSH	BC
+   0150 CDr23s01            269 	CALL	CKCONSOL	; CHECK CONSOLE (WE DON'T CARE WHATS THERE).
+   0153 C1                  270 	POP	BC
+   0154 C5                  271 	PUSH	BC
+   0155 CD 0C E6            272 	CALL	CONOUT		; OUTPUT (C) TO THE SCREEN.
+   0158 C1                  273 	POP	BC
+   0159 C5                  274 	PUSH	BC
+   015A 3Ar0Ds03            275 	LD	A,(PRTFLAG)	; CHECK PRINTER FLIP-FLOP FLAG.
+   015D B7                  276 	OR	A
+   015E C4 0F E6            277 	CALL	NZ,LIST		; PRINT IT ALSO IF NON-ZERO.
+   0161 C1                  278 	POP	BC
+   0162 79                  279 OUTCHR1:LD	A,C		; UPDATE CURSORS POSITION.
+   0163 21r0Cs03            280 	LD	HL,#CURPOS
+   0166 FE 7F               281 	CP	#DEL		; RUBOUTS DON'T DO ANYTHING HERE.
+   0168 C8                  282 	RET	Z
+   0169 34                  283 	INC	(HL)		; BUMP LINE POINTER.
+   016A FE 20               284 	CP	#SPACE		; AND RETURN IF A NORMAL CHARACTER.
+   016C D0                  285 	RET	NC
+   016D 35                  286 	DEC	(HL)		; RESTORE AND CHECK FOR THE START OF THE LINE.
+   016E 7E                  287 	LD	A,(HL)
+   016F B7                  288 	OR	A
+   0170 C8                  289 	RET	Z		; INGNORE CONTROL CHARACTERS AT THE START OF THE LINE.
+   0171 79                  290 	LD	A,C
+   0172 FE 08               291 	CP	#BS		; IS IT A BACKSPACE?
+   0174 C2r79s01            292 	JP	NZ,OUTCHR2
+   0177 35                  293 	DEC	(HL)		; YES, BACKUP POINTER.
+   0178 C9                  294 	RET
+   0179 FE 0A               295 OUTCHR2:CP	#LF		; IS IT A LINE FEED?
+   017B C0                  296 	RET	NZ		; IGNORE ANYTHING ELSE.
+   017C 36 00               297 	LD	(HL),#0		; RESET POINTER TO START OF LINE.
+   017E C9                  298 	RET
+                            299 ;
+                            300 ;   OUTPUT (A) TO THE SCREEN. IF IT IS A CONTROL CHARACTER
+                            301 ; (OTHER THAN CARRIAGE CONTROL), USE ^X FORMAT.
+                            302 ;
+   017F 79                  303 SHOWIT:	LD	A,C
+   0180 CDr14s01            304 	CALL	CHKCHAR		; CHECK CHARACTER.
+   0183 D2r90s01            305 	JP	NC,OUTCON	; NOT A CONTROL, USE NORMAL OUTPUT.
+   0186 F5                  306 	PUSH	AF
+   0187 0E 5E               307 	LD	C,#UP		; FOR A CONTROL CHARACTER, PRECEED IT WITH '^'.
+   0189 CDr48s01            308 	CALL	OUTCHAR
+   018C F1                  309 	POP	AF
+   018D F6 40               310 	OR	#AT		; AND THEN USE THE LETTER .EQUIVELANT.
+   018F 4F                  311 	LD	C,A
+                            312 ;
+                            313 ;   FUNCTION TO OUTPUT (C) TO THE CONSOLE DEVICE AND EXPAND TABS
+                            314 ; IF NECESSARY.
+                            315 ;
+   0190 79                  316 OUTCON:	LD	A,C
+   0191 FE 09               317 	CP	#TAB		; IS IT A TAB?
+   0193 C2r48s01            318 	JP	NZ,OUTCHAR	; USE REGULAR OUTPUT.
+   0196 0E 20               319 OUTCON1:LD	C,#SPACE	; YES IT IS, USE SPACES INSTEAD.
+   0198 CDr48s01            320 	CALL	OUTCHAR
+   019B 3Ar0Cs03            321 	LD	A,(CURPOS)	; GO UNTIL THE CURSOR IS AT A MULTIPLE OF 8
+                            322 
+   019E E6 07               323 	AND	#7		; POSITION.
+   01A0 C2r96s01            324 	JP	NZ,OUTCON1
+   01A3 C9                  325 	RET
+                            326 ;
+                            327 ;   ECHO A BACKSPACE CHARACTER. ERASE THE PREVOIUS CHARACTER
+                            328 ; ON THE SCREEN.
+                            329 ;
+   01A4 CDrACs01            330 BACKUP:	CALL	BACKUP1		; BACKUP THE SCREEN 1 PLACE.
+   01A7 0E 20               331 	LD	C,#SPACE	; THEN BLANK THAT CHARACTER.
+   01A9 CD 0C E6            332 	CALL	CONOUT
+   01AC 0E 08               333 BACKUP1:LD	C,#BS		; THEN BACK SPACE ONCE MORE.
+   01AE C3 0C E6            334 	JP	CONOUT
+                            335 ;
+                            336 ;   SIGNAL A DELETED LINE. PRINT A '#' AT THE END AND START
+                            337 ; OVER.
+                            338 ;
+   01B1 0E 23               339 NEWLINE:LD	C,#POUND
+   01B3 CDr48s01            340 	CALL	OUTCHAR		; PRINT THIS.
+   01B6 CDrC9s01            341 	CALL	OUTCRLF		; START NEW LINE.
+   01B9 3Ar0Cs03            342 NEWLN1:	LD	A,(CURPOS)	; MOVE THE CURSOR TO THE STARTING POSITION.
+   01BC 21r0Bs03            343 	LD	HL,#STARTING
+   01BF BE                  344 	CP	(HL)
+   01C0 D0                  345 	RET	NC		; THERE YET?
+   01C1 0E 20               346 	LD	C,#SPACE
+   01C3 CDr48s01            347 	CALL	OUTCHAR		; NOPE, KEEP GOING.
+   01C6 C3rB9s01            348 	JP	NEWLN1
+                            349 ;
+                            350 ;   OUTPUT A (CR) (LF) TO THE CONSOLE DEVICE (SCREEN).
+                            351 ;
+   01C9 0E 0D               352 OUTCRLF:LD	C,#CR
+   01CB CDr48s01            353 	CALL	OUTCHAR
+   01CE 0E 0A               354 	LD	C,#LF
+   01D0 C3r48s01            355 	JP	OUTCHAR
+                            356 ;
+                            357 ;   PRINT MESSAGE POINTED TO BY (BC). IT WILL END WITH A '$'.
+                            358 ;
+   01D3 0A                  359 PRTMESG:LD	A,(BC)		; CHECK FOR TERMINATING CHARACTER.
+   01D4 FE 24               360 	CP	#DOLLAR
+   01D6 C8                  361 	RET	Z
+   01D7 03                  362 	INC	BC
+   01D8 C5                  363 	PUSH	BC		; OTHERWISE, BUMP POINTER AND PRINT IT.
+   01D9 4F                  364 	LD	C,A
+   01DA CDr90s01            365 	CALL	OUTCON
+   01DD C1                  366 	POP	BC
+   01DE C3rD3s01            367 	JP	PRTMESG
+                            368 ;
+                            369 ;   FUNCTION TO EXECUTE A BUFFERED READ.
+                            370 ;
+   01E1 3Ar0Cs03            371 R.DBUFF:	LD	A,(CURPOS)	; USE PRESENT LOCATION AS STARTING ONE.
+   01E4 32r0Bs03            372 	LD	(STARTING),A
+   01E7 2Ar43s03            373 	LD	HL,(PARAMS)	; GET THE MAXIMUM BUFFER SPACE.
+   01EA 4E                  374 	LD	C,(HL)
+   01EB 23                  375 	INC	HL		; POINT TO FIRST AVAILABLE SPACE.
+   01EC E5                  376 	PUSH	HL		; AND SAVE.
+   01ED 06 00               377 	LD	B,#0		; KEEP A CHARACTER COUNT.
+   01EF C5                  378 R.DBUF1:	PUSH	BC
+   01F0 E5                  379 	PUSH	HL
+   01F1 CDrFBs00            380 R.DBUF2:	CALL	GETCHAR		; GET THE NEXT INPUT CHARACTER.
+   01F4 E6 7F               381 	AND	#0x7F		; STRIP BIT 7.
+   01F6 E1                  382 	POP	HL		; RESET REGISTERS.
+   01F7 C1                  383 	POP	BC
+   01F8 FE 0D               384 	CP	#CR		; EN OF THE LINE?
+   01FA CArC1s02            385 	JP	Z,R.DBUF17
+   01FD FE 0A               386 	CP	#LF
+   01FF CArC1s02            387 	JP	Z,R.DBUF17
+   0202 FE 08               388 	CP	#BS		; HOW ABOUT A BACKSPACE?
+   0204 C2r16s02            389 	JP	NZ,R.DBUF3
+   0207 78                  390 	LD	A,B		; YES, BUT IGNORE AT THE BEGINNING OF THE LINE.
+   0208 B7                  391 	OR	A
+   0209 CArEFs01            392 	JP	Z,R.DBUF1
+   020C 05                  393 	DEC	B		; OK, UPDATE COUNTER.
+   020D 3Ar0Cs03            394 	LD	A,(CURPOS)	; IF WE BACKSPACE TO THE START OF THE LINE,
+   0210 32r0As03            395 	LD	(OUTFLAG),A	; TREAT AS A CANCEL (CONTROL-X).
+   0213 C3r70s02            396 	JP	R.DBUF10
+   0216 FE 7F               397 R.DBUF3:	CP	#DEL		; USER TYPED A RUBOUT?
+   0218 C2r26s02            398 	JP	NZ,R.DBUF4
+   021B 78                  399 	LD	A,B		; IGNORE AT THE START OF THE LINE.
+   021C B7                  400 	OR	A
+   021D CArEFs01            401 	JP	Z,R.DBUF1
+   0220 7E                  402 	LD	A,(HL)		; OK, ECHO THE PREVOIUS CHARACTER.
+   0221 05                  403 	DEC	B		; AND RESET POINTERS (COUNTERS).
+   0222 2B                  404 	DEC	HL
+   0223 C3rA9s02            405 	JP	R.DBUF15
+   0226 FE 05               406 R.DBUF4:	CP	#CNTRLE		; PHYSICAL END OF LINE?
+   0228 C2r37s02            407 	JP	NZ,R.DBUF5
+   022B C5                  408 	PUSH	BC		; YES, DO IT.
+   022C E5                  409 	PUSH	HL
+   022D CDrC9s01            410 	CALL	OUTCRLF
+   0230 AF                  411 	XOR	A		; AND UPDATE STARTING POSITION.
+   0231 32r0Bs03            412 	LD	(STARTING),A
+   0234 C3rF1s01            413 	JP	R.DBUF2
+   0237 FE 10               414 R.DBUF5:	CP	#CNTRLP		; CONTROL-P?
+   0239 C2r48s02            415 	JP	NZ,R.DBUF6
+   023C E5                  416 	PUSH	HL		; YES, FLIP THE PRINT FLAG FILP-FLOP BYTE.
+   023D 21r0Ds03            417 	LD	HL,#PRTFLAG
+   0240 3E 01               418 	LD	A,#1		; PRTFLAG=1-PRTFLAG
+   0242 96                  419 	SUB	(HL)
+   0243 77                  420 	LD	(HL),A
+   0244 E1                  421 	POP	HL
+   0245 C3rEFs01            422 	JP	R.DBUF1
+   0248 FE 18               423 R.DBUF6:	CP	#CNTRLX		; CONTROL-X (CANCEL)?
+   024A C2r5Fs02            424 	JP	NZ,R.DBUF8
+   024D E1                  425 	POP	HL
+   024E 3Ar0Bs03            426 R.DBUF7:	LD	A,(STARTING)	; YES, BACKUP THE CURSOR TO HERE.
+   0251 21r0Cs03            427 	LD	HL,#CURPOS
+   0254 BE                  428 	CP	(HL)
+   0255 D2rE1s01            429 	JP	NC,R.DBUFF	; DONE YET?
+   0258 35                  430 	DEC	(HL)		; NO, DECREMENT POINTER AND OUTPUT BACK UP ONE SPACE.
+   0259 CDrA4s01            431 	CALL	BACKUP
+   025C C3r4Es02            432 	JP	R.DBUF7
+   025F FE 15               433 R.DBUF8:	CP	#CNTRLU		; CNTROL-U (CANCEL LINE)?
+   0261 C2r6Bs02            434 	JP	NZ,R.DBUF9
+   0264 CDrB1s01            435 	CALL	NEWLINE		; START A NEW LINE.
+   0267 E1                  436 	POP	HL
+   0268 C3rE1s01            437 	JP	R.DBUFF
+   026B FE 12               438 R.DBUF9:	CP	#CNTRLR		; CONTROL-R?
+   026D C2rA6s02            439 	JP	NZ,R.DBUF14
+   0270 C5                  440 R.DBUF10:PUSH	BC		; YES, START A NEW LINE AND RETYPE THE OLD ONE.
+   0271 CDrB1s01            441 	CALL	NEWLINE
+   0274 C1                  442 	POP	BC
+   0275 E1                  443 	POP	HL
+   0276 E5                  444 	PUSH	HL
+   0277 C5                  445 	PUSH	BC
+   0278 78                  446 R.DBUF11:LD	A,B		; DONE WHOLE LINE YET?
+   0279 B7                  447 	OR	A
+   027A CAr8As02            448 	JP	Z,R.DBUF12
+   027D 23                  449 	INC	HL		; NOPE, GET NEXT CHARACTER.
+   027E 4E                  450 	LD	C,(HL)
+   027F 05                  451 	DEC	B		; COUNT IT.
+   0280 C5                  452 	PUSH	BC
+   0281 E5                  453 	PUSH	HL
+   0282 CDr7Fs01            454 	CALL	SHOWIT		; AND DISPLAY IT.
+   0285 E1                  455 	POP	HL
+   0286 C1                  456 	POP	BC
+   0287 C3r78s02            457 	JP	R.DBUF11
+   028A E5                  458 R.DBUF12:PUSH	HL		; DONE WITH LINE. IF WE WERE DISPLAYING
+   028B 3Ar0As03            459 	LD	A,(OUTFLAG)	; THEN UPDATE CURSOR POSITION.
+   028E B7                  460 	OR	A
+   028F CArF1s01            461 	JP	Z,R.DBUF2
+   0292 21r0Cs03            462 	LD	HL,#CURPOS	; BECAUSE THIS LINE IS SHORTER, WE MUST
+   0295 96                  463 	SUB	(HL)		; BACK UP THE CURSOR (NOT THE SCREEN HOWEVER)
+   0296 32r0As03            464 	LD	(OUTFLAG),A	; SOME NUMBER OF POSITIONS.
+   0299 CDrA4s01            465 R.DBUF13:CALL	BACKUP		; NOTE THAT AS LONG AS (OUTFLAG) IS NON
+   029C 21r0As03            466 	LD	HL,#OUTFLAG	; ZERO, THE SCREEN WILL NOT BE CHANGED.
+   029F 35                  467 	DEC	(HL)
+   02A0 C2r99s02            468 	JP	NZ,R.DBUF13
+   02A3 C3rF1s01            469 	JP	R.DBUF2		; NOW JUST GET THE NEXT CHARACTER.
+                            470 ;
+                            471 ;   JUST A NORMAL CHARACTER, PUT THIS IN OUR BUFFER AND ECHO.
+                            472 ;
+   02A6 23                  473 R.DBUF14:INC	HL
+   02A7 77                  474 	LD	(HL),A		; STORE CHARACTER.
+   02A8 04                  475 	INC	B		; AND COUNT IT.
+   02A9 C5                  476 R.DBUF15:PUSH	BC
+   02AA E5                  477 	PUSH	HL
+   02AB 4F                  478 	LD	C,A		; ECHO IT NOW.
+   02AC CDr7Fs01            479 	CALL	SHOWIT
+   02AF E1                  480 	POP	HL
+   02B0 C1                  481 	POP	BC
+   02B1 7E                  482 	LD	A,(HL)		; WAS IT AN ABORT R.EQUEST?
+   02B2 FE 03               483 	CP	#CNTRLC		; CONTROL-C ABORT?
+   02B4 78                  484 	LD	A,B
+   02B5 C2rBDs02            485 	JP	NZ,R.DBUF16
+   02B8 FE 01               486 	CP	#1		; ONLY IF AT START OF LINE.
+   02BA CA 00 00            487 	JP	Z,0
+   02BD B9                  488 R.DBUF16:CP	C		; NOPE, HAVE WE FILLED THE BUFFER?
+   02BE DArEFs01            489 	JP	C,R.DBUF1
+   02C1 E1                  490 R.DBUF17:POP	HL		; YES END THE LINE AND RETURN.
+   02C2 70                  491 	LD	(HL),B
+   02C3 0E 0D               492 	LD	C,#CR
+   02C5 C3r48s01            493 	JP	OUTCHAR		; OUTPUT (CR) AND RETURN.
+                            494 ;
+                            495 ;   FUNCTION TO GET A CHARACTER FROM THE CONSOLE DEVICE.
+                            496 ;
+   02C8 CDr06s01            497 GETCON:	CALL	GETECHO		; GET AND ECHO.
+   02CB C3r01s03            498 	JP	SETSTAT		; SAVE STATUS AND RETURN.
+                            499 ;
+                            500 ;   FUNCTION TO GET A CHARACTER FROM THE TAPE READER DEVICE.
+                            501 ;
+   02CE CD 15 E6            502 GETRDR:	CALL	READER		; GET A CHARACTER FROM READER, SET STATUS AND RETURN.
+   02D1 C3r01s03            503 	JP	SETSTAT
+                            504 ;
+                            505 ;  FUNCTION TO PERFORM DIRECT CONSOLE I/O. IF (C) CONTAINS (FF)
+                            506 ; THEN THIS IS AN INPUT R.EQUEST. IF (C) CONTAINS (FE) THEN
+                            507 ; THIS IS A STATUS R.EQUEST. OTHERWISE WE ARE TO OUTPUT (C).
+                            508 ;
+   02D4 79                  509 DIRCIO:	LD	A,C		; TEST FOR (FF).
+   02D5 3C                  510 	INC	A
+   02D6 CArE0s02            511 	JP	Z,DIRC1
+   02D9 3C                  512 	INC	A		; TEST FOR (FE).
+   02DA CA 06 E6            513 	JP	Z,CONST
+   02DD C3 0C E6            514 	JP	CONOUT		; JUST OUTPUT (C).
+   02E0 CD 06 E6            515 DIRC1:	CALL	CONST		; THIS IS AN INPUT R.EQUEST.
+   02E3 B7                  516 	OR	A
+   02E4 CAr91s0D            517 	JP	Z,GOBACK1	; NOT READY? JUST RETURN (DIRECTLY).
+   02E7 CD 09 E6            518 	CALL	CONIN		; YES, GET CHARACTER.
+   02EA C3r01s03            519 	JP	SETSTAT		; SET STATUS AND RETURN.
+                            520 ;
+                            521 ;   FUNCTION TO RETURN THE I/O BYTE.
+                            522 ;
+   02ED 3A 03 00            523 GETIOB:	LD	A,(IOBYTE)
+   02F0 C3r01s03            524 	JP	SETSTAT
+                            525 ;
+                            526 ;   FUNCTION TO SET THE I/O BYTE.
+                            527 ;
+   02F3 21 03 00            528 SETIOB:	LD	HL,#IOBYTE
+   02F6 71                  529 	LD	(HL),C
+   02F7 C9                  530 	RET
+                            531 ;
+                            532 ;   FUNCTION TO PRINT THE CHARACTER STRING POINTED TO BY (DE)
+                            533 ; ON THE CONSOLE DEVICE. THE STRING ENDS WITH A '$'.
+                            534 ;
+   02F8 EB                  535 PRTSTR:	EX	DE,HL
+   02F9 4D                  536 	LD	C,L
+   02FA 44                  537 	LD	B,H		; NOW (BC) POINTS TO IT.
+   02FB C3rD3s01            538 	JP	PRTMESG
+                            539 ;
+                            540 ;   FUNCTION TO INTERIGATE THE CONSOLE DEVICE.
+                            541 ;
+   02FE CDr23s01            542 GETCSTS:CALL	CKCONSOL
+                            543 ;
+                            544 ;   GET HERE TO SET THE STATUS AND RETURN TO THE CLEANUP
+                            545 ; SECTION. THEN BACK TO THE USER.
+                            546 ;
+   0301 32r45s03            547 SETSTAT:LD	(STATUS),A
+   0304 C9                  548 RTN:	RET
+                            549 ;
+                            550 ;   SET THE STATUS TO 1 (READ OR WRITE ERROR CODE).
+                            551 ;
+   0305 3E 01               552 IOERR1:	LD	A,#1
+   0307 C3r01s03            553 	JP	SETSTAT
+                            554 ;
+   030A 00                  555 OUTFLAG:.DB 0			; OUTPUT FLAG (NON ZERO MEANS NO OUTPUT).
+   030B                     556 STARTING:
+   030B 02                  557 	.DB 2			; STARTING POSITION FOR CURSOR.
+   030C 00                  558 CURPOS:	.DB 0			; CURSOR POSITION (0=START OF LINE).
+   030D 00                  559 PRTFLAG:.DB 0			; PRINTER FLAG (CONTROL-P TOGGLE). LIST IF NON ZERO.
+   030E 00                  560 CHARBUF:.DB 0			; SINGLE INPUT CHARACTER BUFFER.
+                            561 ;
+                            562 ;   STACK AREA FOR BDOS CALLS.
+                            563 ;
+   030F                     564 USRSTACK:
+   030F 00 00               565 	.DW 0			; SAVE USERS STACK POINTER HERE.
+                            566 ;
+   0311 00 00 00 00 00 00   567 	.DB 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+        00 00 00 00 00 00
+        00 00 00 00 00 00
+        00 00 00 00 00 00
+   0329 00 00 00 00 00 00   568 	.DB 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+        00 00 00 00 00 00
+        00 00 00 00 00 00
+        00 00 00 00 00 00
+   0341                     569 STKAREA: 			; END OF STACK AREA.
+                            570 ;
+   0341 00                  571 USERNO:	.DB 0			; CURRENT USER NUMBER.
+   0342 00                  572 ACTIVE:	.DB 0			; CURRENTLY ACTIVE DRIVE.
+   0343 00 00               573 PARAMS:	.DW 0			; SAVE (DE) PARAMETERS HERE ON ENTRY.
+   0345 00 00               574 STATUS:	.DW 0			; STATUS RETURNED FROM BDOS FUNCTION.
+                            575 ;
+                            576 ;   SELECT ERROR OCCURED, JUMP TO ERROR ROUTINE.
+                            577 ;
+   0347 21r0Bs00            578 SLCTERR:LD	HL,#BADSLCT
+                            579 ;
+                            580 ;   JUMP TO (HL) INDIRECTLY.
+                            581 ;
+   034A 5E                  582 JUMPHL:	LD	E,(HL)
+   034B 23                  583 	INC	HL
+   034C 56                  584 	LD	D,(HL)		; NOW (DE) CONTAIN THE DESIRED ADDRESS.
+   034D EB                  585 	EX	DE,HL
+   034E E9                  586 	JP	(HL)
+                            587 ;
+                            588 ;   BLOCK MOVE. (DE) TO (HL), (C) BYTES TOTAL.
+                            589 ;
+   034F 0C                  590 DE2HL:	INC	C		; IS COUNT DOWN TO ZERO?
+   0350 0D                  591 DE2HL1:	DEC	C
+   0351 C8                  592 	RET	Z		; YES, WE ARE DONE.
+   0352 1A                  593 	LD	A,(DE)		; NO, MOVE ONE MORE BYTE.
+   0353 77                  594 	LD	(HL),A
+   0354 13                  595 	INC	DE
+   0355 23                  596 	INC	HL
+   0356 C3r50s03            597 	JP	DE2HL1		; AND REPEAT.
+                            598 ;
+                            599 ;   SELECT THE DESIRED DRIVE.
+                            600 ;
+   0359 3Ar42s03            601 SELECT:	LD	A,(ACTIVE)	; GET ACTIVE DISK.
+   035C 4F                  602 	LD	C,A
+   035D CD 1B E6            603 	CALL	SELDSK		; SELECT IT.
+   0360 7C                  604 	LD	A,H		; VALID DRIVE?
+   0361 B5                  605 	OR	L		; VALID DRIVE?
+   0362 C8                  606 	RET	Z		; RETURN IF NOT.
+                            607 ;
+                            608 ;   HERE, THE BIOS RETURNED THE ADDRESS OF THE PARAMETER BLOCK
+                            609 ; IN (HL). WE WILL EXTRACT THE NECESSARY POINTERS AND SAVE THEM.
+                            610 ;
+   0363 5E                  611 	LD	E,(HL)		; YES, GET ADDRESS OF TRANSLATION TABLE INTO (DE).
+   0364 23                  612 	INC	HL
+   0365 56                  613 	LD	D,(HL)
+   0366 23                  614 	INC	HL
+   0367 22rB3s0D            615 	LD	(SCRATCH1),HL	; SAVE POINTERS TO SCRATCH AREAS.
+   036A 23                  616 	INC	HL
+   036B 23                  617 	INC	HL
+   036C 22rB5s0D            618 	LD	(SCRATCH2),HL	; DITTO.
+   036F 23                  619 	INC	HL
+   0370 23                  620 	INC	HL
+   0371 22rB7s0D            621 	LD	(SCRATCH3),HL	; DITTO.
+   0374 23                  622 	INC	HL
+   0375 23                  623 	INC	HL
+   0376 EB                  624 	EX	DE,HL		; NOW SAVE THE TRANSLATION TABLE ADDRESS.
+   0377 22rD0s0D            625 	LD	(XLATE),HL
+   037A 21rB9s0D            626 	LD	HL,#DIRBUF	; PUT THE NEXT 8 BYTES HERE.
+   037D 0E 08               627 	LD	C,#8		; THEY CONSIST OF THE DIRECTORY BUFFER
+   037F CDr4Fs03            628 	CALL	DE2HL		; POINTER, PARAMETER BLOCK POINTER,
+   0382 2ArBBs0D            629 	LD	HL,(DISKPB)	; CHECK AND ALLOCATION VECTORS.
+   0385 EB                  630 	EX	DE,HL
+   0386 21rC1s0D            631 	LD	HL,#SECTORS	; MOVE PARAMETER BLOCK INTO OUR RAM.
+   0389 0E 0F               632 	LD	C,#15		; IT IS 15 BYTES LONG.
+   038B CDr4Fs03            633 	CALL	DE2HL
+   038E 2ArC6s0D            634 	LD	HL,(DSKSIZE)	; CHECK DISK SIZE.
+   0391 7C                  635 	LD	A,H		; MORE THAN 256 BLOCKS ON THIS?
+   0392 21rDDs0D            636 	LD	HL,#BIGDISK
+   0395 36 FF               637 	LD	(HL),#0x0FF	; SET TO SAMLL.
+   0397 B7                  638 	OR	A
+   0398 CAr9Ds03            639 	JP	Z,SELECT1
+   039B 36 00               640 	LD	(HL),#0		; WRONG, SET TO LARGE.
+   039D 3E FF               641 SELECT1:LD	A,#0x0FF		; CLEAR THE ZERO FLAG.
+   039F B7                  642 	OR	A
+   03A0 C9                  643 	RET
+                            644 ;
+                            645 ;   ROUTINE TO HOME THE DISK TRACK HEAD AND CLEAR POINTERS.
+                            646 ;
+   03A1 CD 18 E6            647 HOMEDRV:CALL	HOME		; HOME THE HEAD.
+   03A4 AF                  648 	XOR	A
+   03A5 2ArB5s0D            649 	LD	HL,(SCRATCH2)	; SET OUR TRACK POINTER ALSO.
+   03A8 77                  650 	LD	(HL),A
+   03A9 23                  651 	INC	HL
+   03AA 77                  652 	LD	(HL),A
+   03AB 2ArB7s0D            653 	LD	HL,(SCRATCH3)	; AND OUR SECTOR POINTER.
+   03AE 77                  654 	LD	(HL),A
+   03AF 23                  655 	INC	HL
+   03B0 77                  656 	LD	(HL),A
+   03B1 C9                  657 	RET
+                            658 ;
+                            659 ;   DO THE ACTUAL DISK READ AND CHECK THE ERROR RETURN STATUS.
+                            660 ;
+   03B2 CD 27 E6            661 DOREAD:	CALL	READ
+   03B5 C3rBBs03            662 	JP	IORET
+                            663 ;
+                            664 ;   DO THE ACTUAL DISK WRITE AND HANDLE ANY BIOS ERROR.
+                            665 ;
+   03B8 CD 2A E6            666 DOWRITE:CALL	WRITE
+   03BB B7                  667 IORET:	OR	A
+   03BC C8                  668 	RET	Z		; RETURN UNLESS AN ERROR OCCURED.
+   03BD 21r09s00            669 	LD	HL,#BADSCTR	; BAD READ/WRITE ON THIS SECTOR.
+   03C0 C3r4As03            670 	JP	JUMPHL
+                            671 ;
+                            672 ;   ROUTINE TO SELECT THE TRACK AND SECTOR THAT THE DESIRED
+                            673 ; BLOCK NUMBER FALLS IN.
+                            674 ;
+   03C3 2ArEAs0D            675 TRKSEC:	LD	HL,(FILEPOS)	; GET POSITION OF LAST ACCESSED FILE
+   03C6 0E 02               676 	LD	C,#2		; IN DIRECTORY AND COMPUTE SECTOR #.
+   03C8 CDrEAs04            677 	CALL	SHIFTR		; SECTOR #=FILE-POSITION/4.
+   03CB 22rE5s0D            678 	LD	(BLKNMBR),HL	; SAVE THIS AS THE BLOCK NUMBER OF INTEREST.
+   03CE 22rECs0D            679 	LD	(CKSUMTBL),HL	; WHAT'S IT DOING HERE TOO?
+                            680 ;
+                            681 ;   IF THE SECTOR NUMBER HAS ALREADY BEEN SET (BLKNMBR), ENTER
+                            682 ; AT THIS POINT.
+                            683 ;
+   03D1 21rE5s0D            684 TRKSEC1:LD	HL,#BLKNMBR
+   03D4 4E                  685 	LD	C,(HL)		; MOVE SECTOR NUMBER INTO (BC).
+   03D5 23                  686 	INC	HL
+   03D6 46                  687 	LD	B,(HL)
+   03D7 2ArB7s0D            688 	LD	HL,(SCRATCH3)	; GET CURRENT SECTOR NUMBER AND
+   03DA 5E                  689 	LD	E,(HL)		; MOVE THIS INTO (DE).
+   03DB 23                  690 	INC	HL
+   03DC 56                  691 	LD	D,(HL)
+   03DD 2ArB5s0D            692 	LD	HL,(SCRATCH2)	; GET CURRENT TRACK NUMBER.
+   03E0 7E                  693 	LD	A,(HL)		; AND THIS INTO (HL).
+   03E1 23                  694 	INC	HL
+   03E2 66                  695 	LD	H,(HL)
+   03E3 6F                  696 	LD	L,A
+   03E4 79                  697 TRKSEC2:LD	A,C		; IS DESIRED SECTOR BEFORE CURRENT ONE?
+   03E5 93                  698 	SUB	E
+   03E6 78                  699 	LD	A,B
+   03E7 9A                  700 	SBC	A,D
+   03E8 D2rFAs03            701 	JP	NC,TRKSEC3
+   03EB E5                  702 	PUSH	HL		; YES, DECREMENT SECTORS BY ONE TRACK.
+   03EC 2ArC1s0D            703 	LD	HL,(SECTORS)	; GET SECTORS PER TRACK.
+   03EF 7B                  704 	LD	A,E
+   03F0 95                  705 	SUB	L
+   03F1 5F                  706 	LD	E,A
+   03F2 7A                  707 	LD	A,D
+   03F3 9C                  708 	SBC	A,H
+   03F4 57                  709 	LD	D,A		; NOW WE HAVE BACKED UP ONE FULL TRACK.
+   03F5 E1                  710 	POP	HL
+   03F6 2B                  711 	DEC	HL		; ADJUST TRACK COUNTER.
+   03F7 C3rE4s03            712 	JP	TRKSEC2
+   03FA E5                  713 TRKSEC3:PUSH	HL		; DESIRED SECTOR IS AFTER CURRENT ONE.
+   03FB 2ArC1s0D            714 	LD	HL,(SECTORS)	; GET SECTORS PER TRACK.
+   03FE 19                  715 	ADD	HL,DE		; BUMP SECTOR POINTER TO NEXT TRACK.
+   03FF DAr0Fs04            716 	JP	C,TRKSEC4
+   0402 79                  717 	LD	A,C		; IS DESIRED SECTOR NOW BEFORE CURRENT ONE?
+   0403 95                  718 	SUB	L
+   0404 78                  719 	LD	A,B
+   0405 9C                  720 	SBC	A,H
+   0406 DAr0Fs04            721 	JP	C,TRKSEC4
+   0409 EB                  722 	EX	DE,HL		; NOT YES, INCREMENT TRACK COUNTER
+   040A E1                  723 	POP	HL		; AND CONTINUE UNTIL IT IS.
+   040B 23                  724 	INC	HL
+   040C C3rFAs03            725 	JP	TRKSEC3
+                            726 ;
+                            727 ;   HERE WE HAVE DETERMINED THE TRACK NUMBER THAT CONTAINS THE
+                            728 ; DESIRED SECTOR.
+                            729 ;
+   040F E1                  730 TRKSEC4:POP	HL		; GET TRACK NUMBER (HL).
+   0410 C5                  731 	PUSH	BC
+   0411 D5                  732 	PUSH	DE
+   0412 E5                  733 	PUSH	HL
+   0413 EB                  734 	EX	DE,HL
+   0414 2ArCEs0D            735 	LD	HL,(OFFSET)	; ADJUST FOR FIRST TRACK OFFSET.
+   0417 19                  736 	ADD	HL,DE
+   0418 44                  737 	LD	B,H
+   0419 4D                  738 	LD	C,L
+   041A CD 1E E6            739 	CALL	SETTRK		; SELECT THIS TRACK.
+   041D D1                  740 	POP	DE		; RESET CURRENT TRACK POINTER.
+   041E 2ArB5s0D            741 	LD	HL,(SCRATCH2)
+   0421 73                  742 	LD	(HL),E
+   0422 23                  743 	INC	HL
+   0423 72                  744 	LD	(HL),D
+   0424 D1                  745 	POP	DE
+   0425 2ArB7s0D            746 	LD	HL,(SCRATCH3)	; RESET THE FIRST SECTOR ON THIS TRACK.
+   0428 73                  747 	LD	(HL),E
+   0429 23                  748 	INC	HL
+   042A 72                  749 	LD	(HL),D
+   042B C1                  750 	POP	BC
+   042C 79                  751 	LD	A,C		; NOW SUBTRACT THE DESIRED ONE.
+   042D 93                  752 	SUB	E		; TO MAKE IT RELATIVE (1-# SECTORS/TRACK).
+   042E 4F                  753 	LD	C,A
+   042F 78                  754 	LD	A,B
+   0430 9A                  755 	SBC	A,D
+   0431 47                  756 	LD	B,A
+   0432 2ArD0s0D            757 	LD	HL,(XLATE)	; TRANSLATE THIS SECTOR ACCORDING TO THIS TABLE.
+   0435 EB                  758 	EX	DE,HL
+   0436 CD 30 E6            759 	CALL	SECTRN		; LET THE BIOS TRANSLATE IT.
+   0439 4D                  760 	LD	C,L
+   043A 44                  761 	LD	B,H
+   043B C3 21 E6            762 	JP	SETSEC		; AND SELECT IT.
+                            763 ;
+                            764 ;   COMPUTE BLOCK NUMBER FROM RECORD NUMBER (SAVNREC) AND
+                            765 ; EXTENT NUMBER (SAVEXT).
+                            766 ;
+   043E                     767 GETBLOCK:
+   043E 21rC3s0D            768 	LD	HL,#BLKSHFT	; GET LOGICAL TO PHYSICAL CONVERSION.
+   0441 4E                  769 	LD	C,(HL)		; NOTE THAT THIS IS BASE 2 LOG OF RATIO.
+   0442 3ArE3s0D            770 	LD	A,(SAVNREC)	; GET RECORD NUMBER.
+   0445 B7                  771 GETBLK1:OR	A		; COMPUTE (A)=(A)/2^BLKSHFT.
+   0446 1F                  772 	RRA
+   0447 0D                  773 	DEC	C
+   0448 C2r45s04            774 	JP	NZ,GETBLK1
+   044B 47                  775 	LD	B,A		; SAVE RESULT IN (B).
+   044C 3E 08               776 	LD	A,#8
+   044E 96                  777 	SUB	(HL)
+   044F 4F                  778 	LD	C,A		; COMPUTE (C)=8-BLKSHFT.
+   0450 3ArE2s0D            779 	LD	A,(SAVEXT)
+   0453 0D                  780 GETBLK2:DEC	C		; COMPUTE (A)=SAVEXT*2^(8-BLKSHFT).
+   0454 CAr5Cs04            781 	JP	Z,GETBLK3
+   0457 B7                  782 	OR	A
+   0458 17                  783 	RLA
+   0459 C3r53s04            784 	JP	GETBLK2
+   045C 80                  785 GETBLK3:ADD	A,B
+   045D C9                  786 	RET
+                            787 ;
+                            788 ;   ROUTINE TO EXTRACT THE (BC) BLOCK BYTE FROM THE FCB POINTED
+                            789 ; TO BY (PARAMS). IF THIS IS A BIG-DISK, THEN THESE ARE 16 BIT
+                            790 ; BLOCK NUMBERS, ELSE THEY ARE 8 BIT NUMBERS.
+                            791 ; NUMBER IS RETURNED IN (HL).
+                            792 ;
+   045E 2Ar43s03            793 EXTBLK:	LD	HL,(PARAMS)	; GET FCB ADDRESS.
+   0461 11 10 00            794 	LD	DE,#16		; BLOCK NUMBERS START 16 BYTES INTO FCB.
+   0464 19                  795 	ADD	HL,DE
+   0465 09                  796 	ADD	HL,BC
+   0466 3ArDDs0D            797 	LD	A,(BIGDISK)	; ARE WE USING A BIG-DISK?
+   0469 B7                  798 	OR	A
+   046A CAr71s04            799 	JP	Z,EXTBLK1
+   046D 6E                  800 	LD	L,(HL)		; NO, EXTRACT AN 8 BIT NUMBER FROM THE FCB.
+   046E 26 00               801 	LD	H,#0
+   0470 C9                  802 	RET
+   0471 09                  803 EXTBLK1:ADD	HL,BC		; YES, EXTRACT A 16 BIT NUMBER.
+   0472 5E                  804 	LD	E,(HL)
+   0473 23                  805 	INC	HL
+   0474 56                  806 	LD	D,(HL)
+   0475 EB                  807 	EX	DE,HL		; RETURN IN (HL).
+   0476 C9                  808 	RET
+                            809 ;
+                            810 ;   COMPUTE BLOCK NUMBER.
+                            811 ;
+   0477 CDr3Es04            812 COMBLK:	CALL	GETBLOCK
+   047A 4F                  813 	LD	C,A
+   047B 06 00               814 	LD	B,#0
+   047D CDr5Es04            815 	CALL	EXTBLK
+   0480 22rE5s0D            816 	LD	(BLKNMBR),HL
+   0483 C9                  817 	RET
+                            818 ;
+                            819 ;   CHECK FOR A ZERO BLOCK NUMBER (UNUSED).
+                            820 ;
+   0484 2ArE5s0D            821 CHKBLK:	LD	HL,(BLKNMBR)
+   0487 7D                  822 	LD	A,L		; IS IT ZERO?
+   0488 B4                  823 	OR	H
+   0489 C9                  824 	RET
+                            825 ;
+                            826 ;   ADJUST PHYSICAL BLOCK (BLKNMBR) AND CONVERT TO LOGICAL
+                            827 ; SECTOR (LOGSECT). THIS IS THE STARTING SECTOR OF THIS BLOCK.
+                            828 ; THE ACTUAL SECTOR OF INTEREST IS THEN ADDED TO THIS AND THE
+                            829 ; RESULTING SECTOR NUMBER IS STORED BACK IN (BLKNMBR). THIS
+                            830 ; WILL STILL HAVE TO BE ADJUSTED FOR THE TRACK NUMBER.
+                            831 ;
+   048A 3ArC3s0D            832 LOGICAL:LD	A,(BLKSHFT)	; GET LOG2(PHYSICAL/LOGICAL SECTORS).
+   048D 2ArE5s0D            833 	LD	HL,(BLKNMBR)	; GET PHYSICAL SECTOR DESIRED.
+   0490 29                  834 LOGICL1:ADD	HL,HL		; COMPUTE LOGICAL SECTOR NUMBER.
+   0491 3D                  835 	DEC	A		; NOTE LOGICAL SECTORS ARE 128 BYTES LONG.
+   0492 C2r90s04            836 	JP	NZ,LOGICL1
+   0495 22rE7s0D            837 	LD	(LOGSECT),HL	; SAVE LOGICAL SECTOR.
+   0498 3ArC4s0D            838 	LD	A,(BLKMASK)	; GET BLOCK MASK.
+   049B 4F                  839 	LD	C,A
+   049C 3ArE3s0D            840 	LD	A,(SAVNREC)	; GET NEXT SECTOR TO ACCESS.
+   049F A1                  841 	AND	C		; EXTRACT THE RELATIVE POSITION WITHIN PHYSICAL BLOCK.
+   04A0 B5                  842 	OR	L		; AND ADD IT TOO LOGICAL SECTOR.
+   04A1 6F                  843 	LD	L,A
+   04A2 22rE5s0D            844 	LD	(BLKNMBR),HL	; AND STORE.
+   04A5 C9                  845 	RET
+                            846 ;
+                            847 ;   SET (HL) TO POINT TO EXTENT BYTE IN FCB.
+                            848 ;
+   04A6 2Ar43s03            849 SETEXT:	LD	HL,(PARAMS)
+   04A9 11 0C 00            850 	LD	DE,#12		; IT IS THE TWELTH BYTE.
+   04AC 19                  851 	ADD	HL,DE
+   04AD C9                  852 	RET
+                            853 ;
+                            854 ;   SET (HL) TO POINT TO RECORD COUNT BYTE IN FCB AND (DE) TO
+                            855 ; NEXT RECORD NUMBER BYTE.
+                            856 ;
+   04AE 2Ar43s03            857 SETHLDE:LD	HL,(PARAMS)
+   04B1 11 0F 00            858 	LD	DE,#15		; RECORD COUNT BYTE (#15).
+   04B4 19                  859 	ADD	HL,DE
+   04B5 EB                  860 	EX	DE,HL
+   04B6 21 11 00            861 	LD	HL,#17		; NEXT RECORD NUMBER (#32).
+   04B9 19                  862 	ADD	HL,DE
+   04BA C9                  863 	RET
+                            864 ;
+                            865 ;   SAVE CURRENT FILE DATA FROM FCB.
+                            866 ;
+   04BB CDrAEs04            867 STRDATA:CALL	SETHLDE
+   04BE 7E                  868 	LD	A,(HL)		; GET AND STORE RECORD COUNT BYTE.
+   04BF 32rE3s0D            869 	LD	(SAVNREC),A
+   04C2 EB                  870 	EX	DE,HL
+   04C3 7E                  871 	LD	A,(HL)		; GET AND STORE NEXT RECORD NUMBER BYTE.
+   04C4 32rE1s0D            872 	LD	(SAVNXT),A
+   04C7 CDrA6s04            873 	CALL	SETEXT		; POINT TO EXTENT BYTE.
+   04CA 3ArC5s0D            874 	LD	A,(EXTMASK)	; GET EXTENT MASK.
+   04CD A6                  875 	AND	(HL)
+   04CE 32rE2s0D            876 	LD	(SAVEXT),A	; AND SAVE EXTENT HERE.
+   04D1 C9                  877 	RET
+                            878 ;
+                            879 ;   SET THE NEXT RECORD TO ACCESS. IF (MODE) IS SET TO 2, THEN
+                            880 ; THE LAST RECORD BYTE (SAVNREC) HAS THE CORRECT NUMBER TO ACCESS.
+                            881 ; FOR S.EQUENTIAL ACCESS, (MODE) WILL BE .EQUAL TO 1.
+                            882 ;
+   04D2 CDrAEs04            883 SETNREC:CALL	SETHLDE
+   04D5 3ArD5s0D            884 	LD	A,(MODE)	; GET S.EQUENTIAL FLAG (=1).
+   04D8 FE 02               885 	CP	#2		; A 2 INDICATES THAT NO ADDER IS NEEDED.
+   04DA C2rDEs04            886 	JP	NZ,STNREC1
+   04DD AF                  887 	XOR	A		; CLEAR ADDER (RANDOM ACCESS?).
+   04DE 4F                  888 STNREC1:LD	C,A
+   04DF 3ArE3s0D            889 	LD	A,(SAVNREC)	; GET LAST RECORD NUMBER.
+   04E2 81                  890 	ADD	A,C		; INCREMENT RECORD COUNT.
+   04E3 77                  891 	LD	(HL),A		; AND SET FCB'S NEXT RECORD BYTE.
+   04E4 EB                  892 	EX	DE,HL
+   04E5 3ArE1s0D            893 	LD	A,(SAVNXT)	; GET NEXT RECORD BYTE FROM STORAGE.
+   04E8 77                  894 	LD	(HL),A		; AND PUT THIS INTO FCB AS NUMBER OF RECORDS USED.
+   04E9 C9                  895 	RET
+                            896 ;
+                            897 ;   SHIFT (HL) RIGHT (C) BITS.
+                            898 ;
+   04EA 0C                  899 SHIFTR:	INC	C
+   04EB 0D                  900 SHIFTR1:DEC	C
+   04EC C8                  901 	RET	Z
+   04ED 7C                  902 	LD	A,H
+   04EE B7                  903 	OR	A
+   04EF 1F                  904 	RRA
+   04F0 67                  905 	LD	H,A
+   04F1 7D                  906 	LD	A,L
+   04F2 1F                  907 	RRA
+   04F3 6F                  908 	LD	L,A
+   04F4 C3rEBs04            909 	JP	SHIFTR1
+                            910 ;
+                            911 ;   COMPUTE THE CHECK-SUM FOR THE DIRECTORY BUFFER. RETURN
+                            912 ; INTEGER SUM IN (A).
+                            913 ;
+   04F7                     914 CHECKSUM:
+   04F7 0E 80               915 	LD	C,#128		; LENGTH OF BUFFER.
+   04F9 2ArB9s0D            916 	LD	HL,(DIRBUF)	; GET ITS LOCATION.
+   04FC AF                  917 	XOR	A		; CLEAR SUMMATION BYTE.
+   04FD 86                  918 CHKSUM1:ADD	A,(HL)		; AND COMPUTE SUM IGNORING CARRIES.
+   04FE 23                  919 	INC	HL
+   04FF 0D                  920 	DEC	C
+   0500 C2rFDs04            921 	JP	NZ,CHKSUM1
+   0503 C9                  922 	RET
+                            923 ;
+                            924 ;   SHIFT (HL) LEFT (C) BITS.
+                            925 ;
+   0504 0C                  926 SHIFTL:	INC	C
+   0505 0D                  927 SHIFTL1:DEC	C
+   0506 C8                  928 	RET	Z
+   0507 29                  929 	ADD	HL,HL		; SHIFT LEFT 1 BIT.
+   0508 C3r05s05            930 	JP	SHIFTL1
+                            931 ;
+                            932 ;   ROUTINE TO SET A BIT IN A 16 BIT VALUE CONTAINED IN (BC).
+                            933 ; THE BIT SET DEPENDS ON THE CURRENT DRIVE SELECTION.
+                            934 ;
+   050B C5                  935 SETBIT:	PUSH	BC		; SAVE 16 BIT WORD.
+   050C 3Ar42s03            936 	LD	A,(ACTIVE)	; GET ACTIVE DRIVE.
+   050F 4F                  937 	LD	C,A
+   0510 21 01 00            938 	LD	HL,#1
+   0513 CDr04s05            939 	CALL	SHIFTL		; SHIFT BIT 0 INTO PLACE.
+   0516 C1                  940 	POP	BC		; NOW 'OR' THIS WITH THE ORIGINAL WORD.
+   0517 79                  941 	LD	A,C
+   0518 B5                  942 	OR	L
+   0519 6F                  943 	LD	L,A		; LOW BYTE DONE, DO HIGH BYTE.
+   051A 78                  944 	LD	A,B
+   051B B4                  945 	OR	H
+   051C 67                  946 	LD	H,A
+   051D C9                  947 	RET
+                            948 ;
+                            949 ;   EXTRACT THE WRITE PROTECT STATUS BIT FOR THE CURRENT DRIVE.
+                            950 ; THE RESULT IS RETURNED IN (A), BIT 0.
+                            951 ;
+   051E 2ArADs0D            952 GETWPRT:LD	HL,(WRTPRT)	; GET STATUS BYTES.
+   0521 3Ar42s03            953 	LD	A,(ACTIVE)	; WHICH DRIVE IS CURRENT?
+   0524 4F                  954 	LD	C,A
+   0525 CDrEAs04            955 	CALL	SHIFTR		; SHIFT STATUS SUCH THAT BIT 0 IS THE
+   0528 7D                  956 	LD	A,L		; ONE OF INTEREST FOR THIS DRIVE.
+   0529 E6 01               957 	AND	#1		; AND ISOLATE IT.
+   052B C9                  958 	RET
+                            959 ;
+                            960 ;   FUNCTION TO WRITE PROTECT THE CURRENT DISK.
+                            961 ;
+   052C 21rADs0D            962 WRTPRTD:LD	HL,#WRTPRT	; POINT TO STATUS WORD.
+   052F 4E                  963 	LD	C,(HL)		; SET (BC) .EQUAL TO THE STATUS.
+   0530 23                  964 	INC	HL
+   0531 46                  965 	LD	B,(HL)
+   0532 CDr0Bs05            966 	CALL	SETBIT		; AND SET THIS BIT ACCORDING TO CURRENT DRIVE.
+   0535 22rADs0D            967 	LD	(WRTPRT),HL	; THEN SAVE.
+   0538 2ArC8s0D            968 	LD	HL,(DIRSIZE)	; NOW SAVE DIRECTORY SIZE LIMIT.
+   053B 23                  969 	INC	HL		; REMEMBER THE LAST ONE.
+   053C EB                  970 	EX	DE,HL
+   053D 2ArB3s0D            971 	LD	HL,(SCRATCH1)	; AND STORE IT HERE.
+   0540 73                  972 	LD	(HL),E		; PUT LOW BYTE.
+   0541 23                  973 	INC	HL
+   0542 72                  974 	LD	(HL),D		; THEN HIGH BYTE.
+   0543 C9                  975 	RET
+                            976 ;
+                            977 ;   CHECK FOR A READ ONLY FILE.
+                            978 ;
+   0544 CDr5Es05            979 CHKROFL:CALL	FCB2HL		; SET (HL) TO FILE ENTRY IN DIRECTORY BUFFER.
+   0547 11 09 00            980 CKROF1:	LD	DE,#9		; LOOK AT BIT 7 OF THE NINTH BYTE.
+   054A 19                  981 	ADD	HL,DE
+   054B 7E                  982 	LD	A,(HL)
+   054C 17                  983 	RLA
+   054D D0                  984 	RET	NC		; RETURN IF OK.
+   054E 21r0Fs00            985 	LD	HL,#ROFILE	; ELSE, PRINT ERROR MESSAGE AND TERMINATE.
+   0551 C3r4As03            986 	JP	JUMPHL
+                            987 ;
+                            988 ;   CHECK THE WRITE PROTECT STATUS OF THE ACTIVE DISK.
+                            989 ;
+   0554 CDr1Es05            990 CHKWPRT:CALL	GETWPRT
+   0557 C8                  991 	RET	Z		; RETURN IF OK.
+   0558 21r0Ds00            992 	LD	HL,#RODISK	; ELSE PRINT MESSAGE AND TERMINATE.
+   055B C3r4As03            993 	JP	JUMPHL
+                            994 ;
+                            995 ;   ROUTINE TO SET (HL) POINTING TO THE PROPER ENTRY IN THE
+                            996 ; DIRECTORY BUFFER.
+                            997 ;
+   055E 2ArB9s0D            998 FCB2HL:	LD	HL,(DIRBUF)	; GET ADDRESS OF BUFFER.
+   0561 3ArE9s0D            999 	LD	A,(FCBPOS)	; RELATIVE POSITION OF FILE.
+                           1000 ;
+                           1001 ;   ROUTINE TO ADD (A) TO (HL).
+                           1002 ;
+   0564 85                 1003 ADDA2HL:ADD	A,L
+   0565 6F                 1004 	LD	L,A
+   0566 D0                 1005 	RET	NC
+   0567 24                 1006 	INC	H		; TAKE CARE OF ANY CARRY.
+   0568 C9                 1007 	RET
+                           1008 ;
+                           1009 ;   ROUTINE TO GET THE 'S2' BYTE FROM THE FCB SUPPLIED IN
+                           1010 ; THE INITIAL PARAMETER SPECIFICATION.
+                           1011 ;
+   0569 2Ar43s03           1012 GETS2:	LD	HL,(PARAMS)	; GET ADDRESS OF FCB.
+   056C 11 0E 00           1013 	LD	DE,#14		; RELATIVE POSITION OF 'S2'.
+   056F 19                 1014 	ADD	HL,DE
+   0570 7E                 1015 	LD	A,(HL)		; EXTRACT THIS BYTE.
+   0571 C9                 1016 	RET
+                           1017 ;
+                           1018 ;   CLEAR THE 'S2' BYTE IN THE FCB.
+                           1019 ;
+   0572 CDr69s05           1020 CLEARS2:CALL	GETS2		; THIS SETS (HL) POINTING TO IT.
+   0575 36 00              1021 	LD	(HL),#0		; NOW CLEAR IT.
+   0577 C9                 1022 	RET
+                           1023 ;
+                           1024 ;   SET BIT 7 IN THE 'S2' BYTE OF THE FCB.
+                           1025 ;
+   0578 CDr69s05           1026 SETS2B7:CALL	GETS2		; GET THE BYTE.
+   057B F6 80              1027 	OR	#0x80		; AND SET BIT 7.
+   057D 77                 1028 	LD	(HL),A		; THEN STORE.
+   057E C9                 1029 	RET
+                           1030 ;
+                           1031 ;   COMPARE (FILEPOS) WITH (SCRATCH1) AND SET FLAGS BASED ON
+                           1032 ; THE DIFFERENCE. THIS CHECKS TO SEE IF THERE ARE MORE FILE
+                           1033 ; NAMES IN THE DIRECTORY. WE ARE AT (FILEPOS) AND THERE ARE
+                           1034 ; (SCRATCH1) OF THEM TO CHECK.
+                           1035 ;
+   057F 2ArEAs0D           1036 MOREFLS:LD	HL,(FILEPOS)	; WE ARE HERE.
+   0582 EB                 1037 	EX	DE,HL
+   0583 2ArB3s0D           1038 	LD	HL,(SCRATCH1)	; AND DON'T GO PAST HERE.
+   0586 7B                 1039 	LD	A,E		; COMPUTE DIFFERENCE BUT DON'T KEEP.
+   0587 96                 1040 	SUB	(HL)
+   0588 23                 1041 	INC	HL
+   0589 7A                 1042 	LD	A,D
+   058A 9E                 1043 	SBC	A,(HL)		; SET CARRY IF NO MORE NAMES.
+   058B C9                 1044 	RET
+                           1045 ;
+                           1046 ;   CALL THIS ROUTINE TO PREVENT (SCRATCH1) FROM BEING GREATER
+                           1047 ; THAN (FILEPOS).
+                           1048 ;
+   058C CDr7Fs05           1049 CHKNMBR:CALL	MOREFLS		; SCRATCH1 TOO BIG?
+   058F D8                 1050 	RET	C
+   0590 13                 1051 	INC	DE		; YES, RESET IT TO (FILEPOS).
+   0591 72                 1052 	LD	(HL),D
+   0592 2B                 1053 	DEC	HL
+   0593 73                 1054 	LD	(HL),E
+   0594 C9                 1055 	RET
+                           1056 ;
+                           1057 ;   COMPUTE (HL)=(DE)-(HL)
+                           1058 ;
+   0595 7B                 1059 SUBHL:	LD	A,E		; COMPUTE DIFFERENCE.
+   0596 95                 1060 	SUB	L
+   0597 6F                 1061 	LD	L,A		; STORE LOW BYTE.
+   0598 7A                 1062 	LD	A,D
+   0599 9C                 1063 	SBC	A,H
+   059A 67                 1064 	LD	H,A		; AND THEN HIGH BYTE.
+   059B C9                 1065 	RET
+                           1066 ;
+                           1067 ;   SET THE DIRECTORY CHECKSUM BYTE.
+                           1068 ;
+   059C 0E FF              1069 SETDIR:	LD	C,#0xFF
+                           1070 ;
+                           1071 ;   ROUTINE TO SET OR COMPARE THE DIRECTORY CHECKSUM BYTE. IF
+                           1072 ; (C)=0FFH, THEN THIS WILL SET THE CHECKSUM BYTE. ELSE THE BYTE
+                           1073 ; WILL BE CHECKED. IF THE CHECK FAILS (THE DISK HAS BEEN CHANGED),
+                           1074 ; THEN THIS DISK WILL BE WRITE PROTECTED.
+                           1075 ;
+   059E                    1076 CHECKDIR:
+   059E 2ArECs0D           1077 	LD	HL,(CKSUMTBL)
+   05A1 EB                 1078 	EX	DE,HL
+   05A2 2ArCCs0D           1079 	LD	HL,(ALLOC1)
+   05A5 CDr95s05           1080 	CALL	SUBHL
+   05A8 D0                 1081 	RET	NC		; OK IF (CKSUMTBL) > (ALLOC1), SO RETURN.
+   05A9 C5                 1082 	PUSH	BC
+   05AA CDrF7s04           1083 	CALL	CHECKSUM	; ELSE COMPUTE CHECKSUM.
+   05AD 2ArBDs0D           1084 	LD	HL,(CHKVECT)	; GET ADDRESS OF CHECKSUM TABLE.
+   05B0 EB                 1085 	EX	DE,HL
+   05B1 2ArECs0D           1086 	LD	HL,(CKSUMTBL)
+   05B4 19                 1087 	ADD	HL,DE		; SET (HL) TO POINT TO BYTE FOR THIS DRIVE.
+   05B5 C1                 1088 	POP	BC
+   05B6 0C                 1089 	INC	C		; SET OR CHECK ?
+   05B7 CArC4s05           1090 	JP	Z,CHKDIR1
+   05BA BE                 1091 	CP	(HL)		; CHECK THEM.
+   05BB C8                 1092 	RET	Z		; RETURN IF THEY ARE THE SAME.
+   05BC CDr7Fs05           1093 	CALL	MOREFLS		; NOT THE SAME, DO WE CARE?
+   05BF D0                 1094 	RET	NC
+   05C0 CDr2Cs05           1095 	CALL	WRTPRTD		; YES, MARK THIS AS WRITE PROTECTED.
+   05C3 C9                 1096 	RET
+   05C4 77                 1097 CHKDIR1:LD	(HL),A		; JUST SET THE BYTE.
+   05C5 C9                 1098 	RET
+                           1099 ;
+                           1100 ;   DO A WRITE TO THE DIRECTORY OF THE CURRENT DISK.
+                           1101 ;
+   05C6                    1102 DIRWRITE:
+   05C6 CDr9Cs05           1103 	CALL	SETDIR		; SET CHECKSUM BYTE.
+   05C9 CDrE0s05           1104 	CALL	DIRDMA		; SET DIRECTORY DMA ADDRESS.
+   05CC 0E 01              1105 	LD	C,#1		; TELL THE BIOS TO ACTUALLY WRITE.
+   05CE CDrB8s03           1106 	CALL	DOWRITE		; THEN DO THE WRITE.
+   05D1 C3rDAs05           1107 	JP	DEFDMA
+                           1108 ;
+                           1109 ;   READ FROM THE DIRECTORY.
+                           1110 ;
+   05D4 CDrE0s05           1111 DIRREAD:CALL	DIRDMA		; SET THE DIRECTORY DMA ADDRESS.
+   05D7 CDrB2s03           1112 	CALL	DOREAD		; AND READ IT.
+                           1113 ;
+                           1114 ;   ROUTINE TO SET THE DMA ADDRESS TO THE USERS CHOICE.
+                           1115 ;
+   05DA 21rB1s0D           1116 DEFDMA:	LD	HL,#USERDMA	; RESET THE DEFAULT DMA ADDRESS AND RETURN.
+   05DD C3rE3s05           1117 	JP	DIRDMA1
+                           1118 ;
+                           1119 ;   ROUTINE TO SET THE DMA ADDRESS FOR DIRECTORY WORK.
+                           1120 ;
+   05E0 21rB9s0D           1121 DIRDMA:	LD	HL,#DIRBUF
+                           1122 ;
+                           1123 ;   SET THE DMA ADDRESS. ON ENTRY, (HL) POINTS TO
+                           1124 ; WORD CONTAINING THE DESIRED DMA ADDRESS.
+                           1125 ;
+   05E3 4E                 1126 DIRDMA1:LD	C,(HL)
+   05E4 23                 1127 	INC	HL
+   05E5 46                 1128 	LD	B,(HL)		; SETUP (BC) AND GO TO THE BIOS TO SET IT.
+   05E6 C3 24 E6           1129 	JP	SETDMA
+                           1130 ;
+                           1131 ;   MOVE THE DIRECTORY BUFFER INTO USER'S DMA SPACE.
+                           1132 ;
+   05E9 2ArB9s0D           1133 MOVEDIR:LD	HL,(DIRBUF)	; BUFFER IS LOCATED HERE, AND
+   05EC EB                 1134 	EX	DE,HL
+   05ED 2ArB1s0D           1135 	LD	HL,(USERDMA)	; PUT IT HERE.
+   05F0 0E 80              1136 	LD	C,#128		; THIS IS ITS LENGTH.
+   05F2 C3r4Fs03           1137 	JP	DE2HL		; MOVE IT NOW AND RETURN.
+                           1138 ;
+                           1139 ;   CHECK (FILEPOS) AND SET THE ZERO FLAG IF IT .EQUALS 0FFFFH.
+                           1140 ;
+   05F5                    1141 CKFILPOS:
+   05F5 21rEAs0D           1142 	LD	HL,#FILEPOS
+   05F8 7E                 1143 	LD	A,(HL)
+   05F9 23                 1144 	INC	HL
+   05FA BE                 1145 	CP	(HL)		; ARE BOTH BYTES THE SAME?
+   05FB C0                 1146 	RET	NZ
+   05FC 3C                 1147 	INC	A		; YES, BUT ARE THEY EACH 0FFH?
+   05FD C9                 1148 	RET
+                           1149 ;
+                           1150 ;   SET LOCATION (FILEPOS) TO 0FFFFH.
+                           1151 ;
+   05FE                    1152 STFILPOS:
+   05FE 21 FF FF           1153 	LD	HL,#0x0FFFF
+   0601 22rEAs0D           1154 	LD	(FILEPOS),HL
+   0604 C9                 1155 	RET
+                           1156 ;
+                           1157 ;   MOVE ON TO THE NEXT FILE POSITION WITHIN THE CURRENT
+                           1158 ; DIRECTORY BUFFER. IF NO MORE EXIST, SET POINTER TO 0FFFFH
+                           1159 ; AND THE CALLING ROUTINE WILL CHECK FOR THIS. ENTER WITH (C)
+                           1160 ; .EQUAL TO 0FFH TO CAUSE THE CHECKSUM BYTE TO BE SET, ELSE WE
+                           1161 ; WILL CHECK THIS DISK AND SET WRITE PROTECT IF CHECKSUMS ARE
+                           1162 ; NOT THE SAME (APPLIES ONLY IF ANOTHER DIRECTORY SECTOR MUST
+                           1163 ; BE READ).
+                           1164 ;
+   0605 2ArC8s0D           1165 NXENTRY:LD	HL,(DIRSIZE)	; GET DIRECTORY ENTRY SIZE LIMIT.
+   0608 EB                 1166 	EX	DE,HL
+   0609 2ArEAs0D           1167 	LD	HL,(FILEPOS)	; GET CURRENT COUNT.
+   060C 23                 1168 	INC	HL		; GO ON TO THE NEXT ONE.
+   060D 22rEAs0D           1169 	LD	(FILEPOS),HL
+   0610 CDr95s05           1170 	CALL	SUBHL		; (HL)=(DIRSIZE)-(FILEPOS)
+   0613 D2r19s06           1171 	JP	NC,NXENT1	; IS THERE MORE ROOM LEFT?
+   0616 C3rFEs05           1172 	JP	STFILPOS	; NO. SET THIS FLAG AND RETURN.
+   0619 3ArEAs0D           1173 NXENT1:	LD	A,(FILEPOS)	; GET FILE POSITION WITHIN DIRECTORY.
+   061C E6 03              1174 	AND	#3		; ONLY LOOK WITHIN THIS SECTOR (ONLY 4 ENTRIES FIT).
+   061E 06 05              1175 	LD	B,#5		; CONVERT TO RELATIVE POSITION (32 BYTES EACH).
+   0620 87                 1176 NXENT2:	ADD	A,A		; NOTE THAT THIS IS NOT EFFICIENT CODE.
+   0621 05                 1177 	DEC	B		; 5 'ADD A'S WOULD BE BETTER.
+   0622 C2r20s06           1178 	JP	NZ,NXENT2
+   0625 32rE9s0D           1179 	LD	(FCBPOS),A	; SAVE IT AS POSITION OF FCB.
+   0628 B7                 1180 	OR	A
+   0629 C0                 1181 	RET	NZ		; RETURN IF WE ARE WITHIN BUFFER.
+   062A C5                 1182 	PUSH	BC
+   062B CDrC3s03           1183 	CALL	TRKSEC		; WE NEED THE NEXT DIRECTORY SECTOR.
+   062E CDrD4s05           1184 	CALL	DIRREAD
+   0631 C1                 1185 	POP	BC
+   0632 C3r9Es05           1186 	JP	CHECKDIR
+                           1187 ;
+                           1188 ;   ROUTINE TO TO GET A BIT FROM THE DISK SPACE ALLOCATION
+                           1189 ; MAP. IT IS RETURNED IN (A), BIT POSITION 0. ON ENTRY TO HERE,
+                           1190 ; SET (BC) TO THE BLOCK NUMBER ON THE DISK TO CHECK.
+                           1191 ; ON RETURN, (D) WILL CONTAIN THE ORIGINAL BIT POSITION FOR
+                           1192 ; THIS BLOCK NUMBER AND (HL) WILL POINT TO THE ADDRESS FOR IT.
+                           1193 ;
+   0635                    1194 CKBITMAP:
+   0635 79                 1195 	LD	A,C		; DETERMINE BIT NUMBER OF INTEREST.
+   0636 E6 07              1196 	AND	#7		; COMPUTE (D)=(E)=(C AND 7)+1.
+   0638 3C                 1197 	INC	A
+   0639 5F                 1198 	LD	E,A		; SAVE PARTICULAR BIT NUMBER.
+   063A 57                 1199 	LD	D,A
+                           1200 ;
+                           1201 ;   COMPUTE (BC)=(BC)/8.
+                           1202 ;
+   063B 79                 1203 	LD	A,C
+   063C 0F                 1204 	RRCA			; NOW SHIFT RIGHT 3 BITS.
+   063D 0F                 1205 	RRCA
+   063E 0F                 1206 	RRCA
+   063F E6 1F              1207 	AND	#0x1F		; AND CLEAR BITS 7,6,5.
+   0641 4F                 1208 	LD	C,A
+   0642 78                 1209 	LD	A,B
+   0643 87                 1210 	ADD	A,A		; NOW SHIFT (B) INTO BITS 7,6,5.
+   0644 87                 1211 	ADD	A,A
+   0645 87                 1212 	ADD	A,A
+   0646 87                 1213 	ADD	A,A
+   0647 87                 1214 	ADD	A,A
+   0648 B1                 1215 	OR	C		; AND ADD IN (C).
+   0649 4F                 1216 	LD	C,A		; OK, (C) HA BEEN COMPLETED.
+   064A 78                 1217 	LD	A,B		; IS THERE A BETTER WAY OF DOING THIS?
+   064B 0F                 1218 	RRCA
+   064C 0F                 1219 	RRCA
+   064D 0F                 1220 	RRCA
+   064E E6 1F              1221 	AND	#0x1F
+   0650 47                 1222 	LD	B,A		; AND NOW (B) IS COMPLETED.
+                           1223 ;
+                           1224 ;   USE THIS AS AN OFFSET INTO THE DISK SPACE ALLOCATION
+                           1225 ; TABLE.
+                           1226 ;
+   0651 2ArBFs0D           1227 	LD	HL,(ALOCVECT)
+   0654 09                 1228 	ADD	HL,BC
+   0655 7E                 1229 	LD	A,(HL)		; NOW GET CORRECT BYTE.
+   0656 07                 1230 CKBMAP1:RLCA			; GET CORRECT BIT INTO POSITION 0.
+   0657 1D                 1231 	DEC	E
+   0658 C2r56s06           1232 	JP	NZ,CKBMAP1
+   065B C9                 1233 	RET
+                           1234 ;
+                           1235 ;   SET OR CLEAR THE BIT MAP SUCH THAT BLOCK NUMBER (BC) WILL BE MARKED
+                           1236 ; AS USED. ON ENTRY, IF (E)=0 THEN THIS BIT WILL BE CLEARED, IF IT .EQUALS
+                           1237 ; 1 THEN IT WILL BE SET (DON'T USE ANYOTHER VALUES).
+                           1238 ;
+   065C                    1239 STBITMAP:
+   065C D5                 1240 	PUSH	DE
+   065D CDr35s06           1241 	CALL	CKBITMAP	; GET THE BYTE OF INTEREST.
+   0660 E6 FE              1242 	AND	#0x0FE		; CLEAR THE AFFECTED BIT.
+   0662 C1                 1243 	POP	BC
+   0663 B1                 1244 	OR	C		; AND NOW SET IT ACORDING TO (C).
+                           1245 ;
+                           1246 ;  ENTRY TO RESTORE THE ORIGINAL BIT POSITION AND THEN STORE
+                           1247 ; IN TABLE. (A) CONTAINS THE VALUE, (D) CONTAINS THE BIT
+                           1248 ; POSITION (1-8), AND (HL) POINTS TO THE ADDRESS WITHIN THE
+                           1249 ; SPACE ALLOCATION TABLE FOR THIS BYTE.
+                           1250 ;
+   0664 0F                 1251 STBMAP1:RRCA			; RESTORE ORIGINAL BIT POSITION.
+   0665 15                 1252 	DEC	D
+   0666 C2r64s06           1253 	JP	NZ,STBMAP1
+   0669 77                 1254 	LD	(HL),A		; AND STOR BYTE IN TABLE.
+   066A C9                 1255 	RET
+                           1256 ;
+                           1257 ;   SET/CLEAR SPACE USED BITS IN ALLOCATION MAP FOR THIS FILE.
+                           1258 ; ON ENTRY, (C)=1 TO SET THE MAP AND (C)=0 TO CLEAR IT.
+                           1259 ;
+   066B CDr5Es05           1260 SETFILE:CALL	FCB2HL		; GET ADDRESS OF FCB
+   066E 11 10 00           1261 	LD	DE,#16
+   0671 19                 1262 	ADD	HL,DE		; GET TO BLOCK NUMBER BYTES.
+   0672 C5                 1263 	PUSH	BC
+   0673 0E 11              1264 	LD	C,#17		; CHECK ALL 17 BYTES (MAX) OF TABLE.
+   0675 D1                 1265 SETFL1:	POP	DE
+   0676 0D                 1266 	DEC	C		; DONE ALL BYTES YET?
+   0677 C8                 1267 	RET	Z
+   0678 D5                 1268 	PUSH	DE
+   0679 3ArDDs0D           1269 	LD	A,(BIGDISK)	; CHECK DISK SIZE FOR 16 BIT BLOCK NUMBERS.
+   067C B7                 1270 	OR	A
+   067D CAr88s06           1271 	JP	Z,SETFL2
+   0680 C5                 1272 	PUSH	BC		; ONLY 8 BIT NUMBERS. SET (BC) TO THIS ONE.
+   0681 E5                 1273 	PUSH	HL
+   0682 4E                 1274 	LD	C,(HL)		; GET LOW BYTE FROM TABLE, ALWAYS
+   0683 06 00              1275 	LD	B,#0		; SET HIGH BYTE TO ZERO.
+   0685 C3r8Es06           1276 	JP	SETFL3
+   0688 0D                 1277 SETFL2:	DEC	C		; FOR 16 BIT BLOCK NUMBERS, ADJUST COUNTER.
+   0689 C5                 1278 	PUSH	BC
+   068A 4E                 1279 	LD	C,(HL)		; NOW GET BOTH THE LOW AND HIGH BYTES.
+   068B 23                 1280 	INC	HL
+   068C 46                 1281 	LD	B,(HL)
+   068D E5                 1282 	PUSH	HL
+   068E 79                 1283 SETFL3:	LD	A,C		; BLOCK USED?
+   068F B0                 1284 	OR	B
+   0690 CAr9Ds06           1285 	JP	Z,SETFL4
+   0693 2ArC6s0D           1286 	LD	HL,(DSKSIZE)	; IS THIS BLOCK NUMBER WITHIN THE
+   0696 7D                 1287 	LD	A,L		; SPACE ON THE DISK?
+   0697 91                 1288 	SUB	C
+   0698 7C                 1289 	LD	A,H
+   0699 98                 1290 	SBC	A,B
+   069A D4r5Cs06           1291 	CALL	NC,STBITMAP	; YES, SET THE PROPER BIT.
+   069D E1                 1292 SETFL4:	POP	HL		; POINT TO NEXT BLOCK NUMBER IN FCB.
+   069E 23                 1293 	INC	HL
+   069F C1                 1294 	POP	BC
+   06A0 C3r75s06           1295 	JP	SETFL1
+                           1296 ;
+                           1297 ;   CONSTRUCT THE SPACE USED ALLOCATION BIT MAP FOR THE ACTIVE
+                           1298 ; DRIVE. IF A FILE NAME STARTS WITH '$' AND IT IS UNDER THE
+                           1299 ; CURRENT USER NUMBER, THEN (STATUS) IS SET TO MINUS 1. OTHERWISE
+                           1300 ; IT IS NOT SET AT ALL.
+                           1301 ;
+   06A3 2ArC6s0D           1302 BITMAP:	LD	HL,(DSKSIZE)	; COMPUTE SIZE OF ALLOCATION TABLE.
+   06A6 0E 03              1303 	LD	C,#3
+   06A8 CDrEAs04           1304 	CALL	SHIFTR		; (HL)=(HL)/8.
+   06AB 23                 1305 	INC	HL		; AT LEASE 1 BYTE.
+   06AC 44                 1306 	LD	B,H
+   06AD 4D                 1307 	LD	C,L		; SET (BC) TO THE ALLOCATION TABLE LENGTH.
+                           1308 ;
+                           1309 ;   INITIALIZE THE BITMAP FOR THIS DRIVE. RIGHT NOW, THE FIRST
+                           1310 ; TWO BYTES ARE SPECIFIED BY THE DISK PARAMETER BLOCK. HOWEVER
+                           1311 ; A PATCH COULD BE ENTERED HERE IF IT WERE NECESSARY TO SETUP
+                           1312 ; THIS TABLE IN A SPECIAL MANNOR. FOR EXAMPLE, THE BIOS COULD
+                           1313 ; DETERMINE LOCATIONS OF 'BAD BLOCKS' AND SET THEM AS ALREADY
+                           1314 ; 'USED' IN THE MAP.
+                           1315 ;
+   06AE 2ArBFs0D           1316 	LD	HL,(ALOCVECT)	; NOW ZERO OUT THE TABLE NOW.
+   06B1 36 00              1317 BITMAP1:LD	(HL),#0
+   06B3 23                 1318 	INC	HL
+   06B4 0B                 1319 	DEC	BC
+   06B5 78                 1320 	LD	A,B
+   06B6 B1                 1321 	OR	C
+   06B7 C2rB1s06           1322 	JP	NZ,BITMAP1
+   06BA 2ArCAs0D           1323 	LD	HL,(ALLOC0)	; GET INITIAL SPACE USED BY DIRECTORY.
+   06BD EB                 1324 	EX	DE,HL
+   06BE 2ArBFs0D           1325 	LD	HL,(ALOCVECT)	; AND PUT THIS INTO MAP.
+   06C1 73                 1326 	LD	(HL),E
+   06C2 23                 1327 	INC	HL
+   06C3 72                 1328 	LD	(HL),D
+                           1329 ;
+                           1330 ;   END OF INITIALIZATION PORTION.
+                           1331 ;
+   06C4 CDrA1s03           1332 	CALL	HOMEDRV		; NOW HOME THE DRIVE.
+   06C7 2ArB3s0D           1333 	LD	HL,(SCRATCH1)
+   06CA 36 03              1334 	LD	(HL),#3		; FORCE NEXT DIRECTORY R.EQUEST TO READ
+   06CC 23                 1335 	INC	HL		; IN A SECTOR.
+   06CD 36 00              1336 	LD	(HL),#0
+   06CF CDrFEs05           1337 	CALL	STFILPOS	; CLEAR INITIAL FILE POSITION ALSO.
+   06D2 0E FF              1338 BITMAP2:LD	C,#0x0FF	; READ NEXT FILE NAME IN DIRECTORY
+   06D4 CDr05s06           1339 	CALL	NXENTRY		; AND SET CHECKSUM BYTE.
+   06D7 CDrF5s05           1340 	CALL	CKFILPOS	; IS THERE ANOTHER FILE?
+   06DA C8                 1341 	RET	Z
+   06DB CDr5Es05           1342 	CALL	FCB2HL		; YES, GET ITS ADDRESS.
+   06DE 3E E5              1343 	LD	A,#0x0E5
+   06E0 BE                 1344 	CP	(HL)		; EMPTY FILE ENTRY?
+   06E1 CArD2s06           1345 	JP	Z,BITMAP2
+   06E4 3Ar41s03           1346 	LD	A,(USERNO)	; NO, CORRECT USER NUMBER?
+   06E7 BE                 1347 	CP	(HL)
+   06E8 C2rF6s06           1348 	JP	NZ,BITMAP3
+   06EB 23                 1349 	INC	HL
+   06EC 7E                 1350 	LD	A,(HL)		; YES, DOES NAME START WITH A '$'?
+   06ED D6 24              1351 	SUB	#DOLLAR
+   06EF C2rF6s06           1352 	JP	NZ,BITMAP3
+   06F2 3D                 1353 	DEC	A		; YES, SET ATATUS TO MINUS ONE.
+   06F3 32r45s03           1354 	LD	(STATUS),A
+   06F6 0E 01              1355 BITMAP3:LD	C,#1		; NOW SET THIS FILE'S SPACE AS USED IN BIT MAP.
+   06F8 CDr6Bs06           1356 	CALL	SETFILE
+   06FB CDr8Cs05           1357 	CALL	CHKNMBR		; KEEP (SCRATCH1) IN BOUNDS.
+   06FE C3rD2s06           1358 	JP	BITMAP2
+                           1359 ;
+                           1360 ;   SET THE STATUS (STATUS) AND RETURN.
+                           1361 ;
+   0701                    1362 STSTATUS:
+   0701 3ArD4s0D           1363 	LD	A,(FNDSTAT)
+   0704 C3r01s03           1364 	JP	SETSTAT
+                           1365 ;
+                           1366 ;   CHECK EXTENTS IN (A) AND (C). SET THE ZERO FLAG IF THEY
+                           1367 ; ARE THE SAME. THE NUMBER OF 16K CHUNKS OF DISK SPACE THAT
+                           1368 ; THE DIRECTORY EXTENT COVERS IS EXPRESSAD IS (EXTMASK+1).
+                           1369 ; NO REGISTERS ARE MODIFIED.
+                           1370 ;
+   0707 C5                 1371 SAMEXT:	PUSH	BC
+   0708 F5                 1372 	PUSH	AF
+   0709 3ArC5s0D           1373 	LD	A,(EXTMASK)	; GET EXTENT MASK AND USE IT TO
+   070C 2F                 1374 	CPL			; TO COMPARE BOTH EXTENT NUMBERS.
+   070D 47                 1375 	LD	B,A		; SAVE RESULTING MASK HERE.
+   070E 79                 1376 	LD	A,C		; MASK FIRST EXTENT AND SAVE IN (C).
+   070F A0                 1377 	AND	B
+   0710 4F                 1378 	LD	C,A
+   0711 F1                 1379 	POP	AF		; NOW MASK SECOND EXTENT AND COMPARE
+   0712 A0                 1380 	AND	B		; WITH THE FIRST ONE.
+   0713 91                 1381 	SUB	C
+   0714 E6 1F              1382 	AND	#0x1F		; (* ONLY CHECK BUTS 0-4 *)
+   0716 C1                 1383 	POP	BC		; THE ZERO FLAG IS SET IF THEY ARE THE SAME.
+   0717 C9                 1384 	RET			; RESTORE (BC) AND RETURN.
+                           1385 ;
+                           1386 ;   SEARCH FOR THE FIRST OCCURENCE OF A FILE NAME. ON ENTRY,
+                           1387 ; REGISTER (C) SHOULD CONTAIN THE NUMBER OF BYTES OF THE FCB
+                           1388 ; THAT MUST MATCH.
+                           1389 ;
+   0718 3E FF              1390 FINDFST:LD	A,#0x0FF
+   071A 32rD4s0D           1391 	LD	(FNDSTAT),A
+   071D 21rD8s0D           1392 	LD	HL,#COUNTER	; SAVE CHARACTER COUNT.
+   0720 71                 1393 	LD	(HL),C
+   0721 2Ar43s03           1394 	LD	HL,(PARAMS)	; GET FILENAME TO MATCH.
+   0724 22rD9s0D           1395 	LD	(SAVEFCB),HL	; AND SAVE.
+   0727 CDrFEs05           1396 	CALL	STFILPOS	; CLEAR INITIAL FILE POSITION (SET TO 0FFFFH).
+   072A CDrA1s03           1397 	CALL	HOMEDRV		; HOME THE DRIVE.
+                           1398 ;
+                           1399 ;   ENTRY TO LOCATE THE NEXT OCCURENCE OF A FILENAME WITHIN THE
+                           1400 ; DIRECTORY. THE DISK IS NOT EXPECTED TO HAVE BEEN CHANGED. IF
+                           1401 ; IT WAS, THEN IT WILL BE WRITE PROTECTED.
+                           1402 ;
+   072D 0E 00              1403 FINDNXT:LD	C,#0		; WRITE PROTECT THE DISK IF CHANGED.
+   072F CDr05s06           1404 	CALL	NXENTRY		; GET NEXT FILENAME ENTRY IN DIRECTORY.
+   0732 CDrF5s05           1405 	CALL	CKFILPOS	; IS FILE POSITION = 0FFFFH?
+   0735 CAr94s07           1406 	JP	Z,FNDNXT6	; YES, EXIT NOW THEN.
+   0738 2ArD9s0D           1407 	LD	HL,(SAVEFCB)	; SET (DE) POINTING TO FILENAME TO MATCH.
+   073B EB                 1408 	EX	DE,HL
+   073C 1A                 1409 	LD	A,(DE)
+   073D FE E5              1410 	CP	#0x0E5		; EMPTY DIRECTORY ENTRY?
+   073F CAr4As07           1411 	JP	Z,FNDNXT1	; (* ARE WE TRYING TO RESERECT ERASED ENTRIES? *)
+   0742 D5                 1412 	PUSH	DE
+   0743 CDr7Fs05           1413 	CALL	MOREFLS		; MORE FILES IN DIRECTORY?
+   0746 D1                 1414 	POP	DE
+   0747 D2r94s07           1415 	JP	NC,FNDNXT6	; NO MORE. EXIT NOW.
+   074A CDr5Es05           1416 FNDNXT1:CALL	FCB2HL		; GET ADDRESS OF THIS FCB IN DIRECTORY.
+   074D 3ArD8s0D           1417 	LD	A,(COUNTER)	; GET NUMBER OF BYTES (CHARACTERS) TO CHECK.
+   0750 4F                 1418 	LD	C,A
+   0751 06 00              1419 	LD	B,#0		; INITIALIZE BYTE POSITION COUNTER.
+   0753 79                 1420 FNDNXT2:LD	A,C		; ARE WE DONE WITH THE COMPARE?
+   0754 B7                 1421 	OR	A
+   0755 CAr83s07           1422 	JP	Z,FNDNXT5
+   0758 1A                 1423 	LD	A,(DE)		; NO, CHECK NEXT BYTE.
+   0759 FE 3F              1424 	CP	#QUESTION	; DON'T CARE ABOUT THIS CHARACTER?
+   075B CAr7Cs07           1425 	JP	Z,FNDNXT4
+   075E 78                 1426 	LD	A,B		; GET BYTES POSITION IN FCB.
+   075F FE 0D              1427 	CP	#13		; DON'T CARE ABOUT THE THIRTEENTH BYTE EITHER.
+   0761 CAr7Cs07           1428 	JP	Z,FNDNXT4
+   0764 FE 0C              1429 	CP	#12		; EXTENT BYTE?
+   0766 1A                 1430 	LD	A,(DE)
+   0767 CAr73s07           1431 	JP	Z,FNDNXT3
+   076A 96                 1432 	SUB	(HL)		; OTHERWISE COMPARE CHARACTERS.
+   076B E6 7F              1433 	AND	#0x7F
+   076D C2r2Ds07           1434 	JP	NZ,FINDNXT	; NOT THE SAME, CHECK NEXT ENTRY.
+   0770 C3r7Cs07           1435 	JP	FNDNXT4		; SO FAR SO GOOD, KEEP CHECKING.
+   0773 C5                 1436 FNDNXT3:PUSH	BC		; CHECK THE EXTENT BYTE HERE.
+   0774 4E                 1437 	LD	C,(HL)
+   0775 CDr07s07           1438 	CALL	SAMEXT
+   0778 C1                 1439 	POP	BC
+   0779 C2r2Ds07           1440 	JP	NZ,FINDNXT	; NOT THE SAME, LOOK SOME MORE.
+                           1441 ;
+                           1442 ;   SO FAR THE NAMES COMPARE. BUMP POINTERS TO THE NEXT BYTE
+                           1443 ; AND CONTINUE UNTIL ALL (C) CHARACTERS HAVE BEEN CHECKED.
+                           1444 ;
+   077C 13                 1445 FNDNXT4:INC	DE		; BUMP POINTERS.
+   077D 23                 1446 	INC	HL
+   077E 04                 1447 	INC	B
+   077F 0D                 1448 	DEC	C		; ADJUST CHARACTER COUNTER.
+   0780 C3r53s07           1449 	JP	FNDNXT2
+   0783 3ArEAs0D           1450 FNDNXT5:LD	A,(FILEPOS)	; RETURN THE POSITION OF THIS ENTRY.
+   0786 E6 03              1451 	AND	#3
+   0788 32r45s03           1452 	LD	(STATUS),A
+   078B 21rD4s0D           1453 	LD	HL,#FNDSTAT
+   078E 7E                 1454 	LD	A,(HL)
+   078F 17                 1455 	RLA
+   0790 D0                 1456 	RET	NC
+   0791 AF                 1457 	XOR	A
+   0792 77                 1458 	LD	(HL),A
+   0793 C9                 1459 	RET
+                           1460 ;
+                           1461 ;   FILENAME WAS NOT FOUND. SET APPROPRIATE STATUS.
+                           1462 ;
+   0794 CDrFEs05           1463 FNDNXT6:CALL	STFILPOS	; SET (FILEPOS) TO 0FFFFH.
+   0797 3E FF              1464 	LD	A,#0x0FF	; SAY NOT LOCATED.
+   0799 C3r01s03           1465 	JP	SETSTAT
+                           1466 ;
+                           1467 ;   ERASE FILES FROM THE DIRECTORY. ONLY THE FIRST BYTE OF THE
+                           1468 ; FCB WILL BE AFFECTED. IT IS SET TO (E5).
+                           1469 ;
+   079C CDr54s05           1470 ERAFILE:CALL	CHKWPRT		; IS DISK WRITE PROTECTED?
+   079F 0E 0C              1471 	LD	C,#12		; ONLY COMPARE FILE NAMES.
+   07A1 CDr18s07           1472 	CALL	FINDFST		; GET FIRST FILE NAME.
+   07A4 CDrF5s05           1473 ERAFIL1:CALL	CKFILPOS	; ANY FOUND?
+   07A7 C8                 1474 	RET	Z		; NOPE, WE MUST BE DONE.
+   07A8 CDr44s05           1475 	CALL	CHKROFL		; IS FILE READ ONLY?
+   07AB CDr5Es05           1476 	CALL	FCB2HL		; NOPE, GET ADDRESS OF FCB AND
+   07AE 36 E5              1477 	LD	(HL),#0x0E5	; SET FIRST BYTE TO 'EMPTY'.
+   07B0 0E 00              1478 	LD	C,#0		; CLEAR THE SPACE FROM THE BIT MAP.
+   07B2 CDr6Bs06           1479 	CALL	SETFILE
+   07B5 CDrC6s05           1480 	CALL	DIRWRITE	; NOW WRITE THE DIRECTORY SECTOR BACK OUT.
+   07B8 CDr2Ds07           1481 	CALL	FINDNXT		; FIND THE NEXT FILE NAME.
+   07BB C3rA4s07           1482 	JP	ERAFIL1		; AND REPEAT PROCESS.
+                           1483 ;
+                           1484 ;   LOOK THROUGH THE SPACE ALLOCATION MAP (BIT MAP) FOR THE
+                           1485 ; NEXT AVAILABLE BLOCK. START SEARCHING AT BLOCK NUMBER (BC-1).
+                           1486 ; THE SEARCH PROCEDURE IS TO LOOK FOR AN EMPTY BLOCK THAT IS
+                           1487 ; BEFORE THE STARTING BLOCK. IF NOT EMPTY, LOOK AT A LATER
+                           1488 ; BLOCK NUMBER. IN THIS WAY, WE RETURN THE CLOSEST EMPTY BLOCK
+                           1489 ; ON EITHER SIDE OF THE 'TARGET' BLOCK NUMBER. THIS WILL SPEED
+                           1490 ; ACCESS ON RANDOM DEVICES. FOR SERIAL DEVICES, THIS SHOULD BE
+                           1491 ; CHANGED TO LOOK IN THE FORWARD DIRECTION FIRST AND THEN START
+                           1492 ; AT THE FRONT AND SEARCH SOME MORE.
+                           1493 ;
+                           1494 ;   ON RETURN, (DE)= BLOCK NUMBER THAT IS EMPTY AND (HL) =0
+                           1495 ; IF NO EMPRY BLOCK WAS FOUND.
+                           1496 ;
+   07BE                    1497 FNDSPACE:
+   07BE 50                 1498 	LD	D,B		; SET (DE) AS THE BLOCK THAT IS CHECKED.
+   07BF 59                 1499 	LD	E,C
+                           1500 ;
+                           1501 ;   LOOK BEFORE TARGET BLOCK. REGISTERS (BC) ARE USED AS THE LOWER
+                           1502 ; POINTER AND (DE) AS THE UPPER POINTER.
+                           1503 ;
+   07C0 79                 1504 FNDSPA1:LD	A,C		; IS BLOCK 0 SPECIFIED?
+   07C1 B0                 1505 	OR	B
+   07C2 CArD1s07           1506 	JP	Z,FNDSPA2
+   07C5 0B                 1507 	DEC	BC		; NOPE, CHECK PREVIOUS BLOCK.
+   07C6 D5                 1508 	PUSH	DE
+   07C7 C5                 1509 	PUSH	BC
+   07C8 CDr35s06           1510 	CALL	CKBITMAP
+   07CB 1F                 1511 	RRA			; IS THIS BLOCK EMPTY?
+   07CC D2rECs07           1512 	JP	NC,FNDSPA3	; YES. USE THIS.
+                           1513 ;
+                           1514 ;   NOTE THAT THE ABOVE LOGIC GETS THE FIRST BLOCK THAT IT FINDS
+                           1515 ; THAT IS EMPTY. THUS A FILE COULD BE WRITTEN 'BACKWARD' MAKING
+                           1516 ; IT VERY SLOW TO ACCESS. THIS COULD BE CHANGED TO LOOK FOR THE
+                           1517 ; FIRST EMPTY BLOCK AND THEN CONTINUE UNTIL THE START OF THIS
+                           1518 ; EMPTY SPACE IS LOCATED AND THEN USED THAT STARTING BLOCK.
+                           1519 ; THIS SHOULD HELP SPEED UP ACCESS TO SOME FILES ESPECIALLY ON
+                           1520 ; A WELL USED DISK WITH LOTS OF FAIRLY SMALL 'HOLES'.
+                           1521 ;
+   07CF C1                 1522 	POP	BC		; NOPE, CHECK SOME MORE.
+   07D0 D1                 1523 	POP	DE
+                           1524 ;
+                           1525 ;   NOW LOOK AFTER TARGET BLOCK.
+                           1526 ;
+   07D1 2ArC6s0D           1527 FNDSPA2:LD	HL,(DSKSIZE)	; IS BLOCK (DE) WITHIN DISK LIMITS?
+   07D4 7B                 1528 	LD	A,E
+   07D5 95                 1529 	SUB	L
+   07D6 7A                 1530 	LD	A,D
+   07D7 9C                 1531 	SBC	A,H
+   07D8 D2rF4s07           1532 	JP	NC,FNDSPA4
+   07DB 13                 1533 	INC	DE		; YES, MOVE ON TO NEXT ONE.
+   07DC C5                 1534 	PUSH	BC
+   07DD D5                 1535 	PUSH	DE
+   07DE 42                 1536 	LD	B,D
+   07DF 4B                 1537 	LD	C,E
+   07E0 CDr35s06           1538 	CALL	CKBITMAP	; CHECK IT.
+   07E3 1F                 1539 	RRA			; EMPTY?
+   07E4 D2rECs07           1540 	JP	NC,FNDSPA3
+   07E7 D1                 1541 	POP	DE		; NOPE, CONTINUE SEARCHING.
+   07E8 C1                 1542 	POP	BC
+   07E9 C3rC0s07           1543 	JP	FNDSPA1
+                           1544 ;
+                           1545 ;   EMPTY BLOCK FOUND. SET IT AS USED AND RETURN WITH (HL)
+                           1546 ; POINTING TO IT (TRUE?).
+                           1547 ;
+   07EC 17                 1548 FNDSPA3:RLA			; RESET BYTE.
+   07ED 3C                 1549 	INC	A		; AND SET BIT 0.
+   07EE CDr64s06           1550 	CALL	STBMAP1		; UPDATE BIT MAP.
+   07F1 E1                 1551 	POP	HL		; SET RETURN REGISTERS.
+   07F2 D1                 1552 	POP	DE
+   07F3 C9                 1553 	RET
+                           1554 ;
+                           1555 ;   FREE BLOCK WAS NOT FOUND. IF (BC) IS NOT ZERO, THEN WE HAVE
+                           1556 ; NOT CHECKED ALL OF THE DISK SPACE.
+                           1557 ;
+   07F4 79                 1558 FNDSPA4:LD	A,C
+   07F5 B0                 1559 	OR	B
+   07F6 C2rC0s07           1560 	JP	NZ,FNDSPA1
+   07F9 21 00 00           1561 	LD	HL,#0		; SET 'NOT FOUND' STATUS.
+   07FC C9                 1562 	RET
+                           1563 ;
+                           1564 ;   MOVE A COMPLETE FCB ENTRY INTO THE DIRECTORY AND WRITE IT.
+                           1565 ;
+   07FD 0E 00              1566 FCBSET:	LD	C,#0
+   07FF 1E 20              1567 	LD	E,#32		; LENGTH OF EACH ENTRY.
+                           1568 ;
+                           1569 ;   MOVE (E) BYTES FROM THE FCB POINTED TO BY (PARAMS) INTO
+                           1570 ; FCB IN DIRECTORY STARTING AT RELATIVE BYTE (C). THIS UPDATED
+                           1571 ; DIRECTORY BUFFER IS THEN WRITTEN TO THE DISK.
+                           1572 ;
+   0801 D5                 1573 UPDATE:	PUSH	DE
+   0802 06 00              1574 	LD	B,#0		; SET (BC) TO RELATIVE BYTE POSITION.
+   0804 2Ar43s03           1575 	LD	HL,(PARAMS)	; GET ADDRESS OF FCB.
+   0807 09                 1576 	ADD	HL,BC		; COMPUTE STARTING BYTE.
+   0808 EB                 1577 	EX	DE,HL
+   0809 CDr5Es05           1578 	CALL	FCB2HL		; GET ADDRESS OF FCB TO UPDATE IN DIRECTORY.
+   080C C1                 1579 	POP	BC		; SET (C) TO NUMBER OF BYTES TO CHANGE.
+   080D CDr4Fs03           1580 	CALL	DE2HL
+   0810 CDrC3s03           1581 UPDATE1:CALL	TRKSEC		; DETERMINE THE TRACK AND SECTOR AFFECTED.
+   0813 C3rC6s05           1582 	JP	DIRWRITE	; THEN WRITE THIS SECTOR OUT.
+                           1583 ;
+                           1584 ;   ROUTINE TO CHANGE THE NAME OF ALL FILES ON THE DISK WITH A
+                           1585 ; SPECIFIED NAME. THE FCB CONTAINS THE CURRENT NAME AS THE
+                           1586 ; FIRST 12 CHARACTERS AND THE NEW NAME 16 BYTES INTO THE FCB.
+                           1587 ;
+   0816                    1588 CHGNAMES:
+   0816 CDr54s05           1589 	CALL	CHKWPRT		; CHECK FOR A WRITE PROTECTED DISK.
+   0819 0E 0C              1590 	LD	C,#12		; MATCH FIRST 12 BYTES OF FCB ONLY.
+   081B CDr18s07           1591 	CALL	FINDFST		; GET FIRST NAME.
+   081E 2Ar43s03           1592 	LD	HL,(PARAMS)	; GET ADDRESS OF FCB.
+   0821 7E                 1593 	LD	A,(HL)		; GET USER NUMBER.
+   0822 11 10 00           1594 	LD	DE,#16		; MOVE OVER TO DESIRED NAME.
+   0825 19                 1595 	ADD	HL,DE
+   0826 77                 1596 	LD	(HL),A		; KEEP SAME USER NUMBER.
+   0827 CDrF5s05           1597 CHGNAM1:CALL	CKFILPOS	; ANY MATCHING FILE FOUND?
+   082A C8                 1598 	RET	Z		; NO, WE MUST BE DONE.
+   082B CDr44s05           1599 	CALL	CHKROFL		; CHECK FOR READ ONLY FILE.
+   082E 0E 10              1600 	LD	C,#16		; START 16 BYTES INTO FCB.
+   0830 1E 0C              1601 	LD	E,#12		; AND UPDATE THE FIRST 12 BYTES OF DIRECTORY.
+   0832 CDr01s08           1602 	CALL	UPDATE
+   0835 CDr2Ds07           1603 	CALL	FINDNXT		; GET TE NEXT FILE NAME.
+   0838 C3r27s08           1604 	JP	CHGNAM1		; AND CONTINUE.
+                           1605 ;
+                           1606 ;   UPDATE A FILES ATTRIBUTES. THE PROCEDURE IS TO SEARCH FOR
+                           1607 ; EVERY FILE WITH THE SAME NAME AS SHOWN IN FCB (IGNORING BIT 7)
+                           1608 ; AND THEN TO UPDATE IT (WHICH INCLUDES BIT 7). NO OTHER CHANGES
+                           1609 ; ARE MADE.
+                           1610 ;
+   083B                    1611 SAVEATTR:
+   083B 0E 0C              1612 	LD	C,#12		; MATCH FIRST 12 BYTES.
+   083D CDr18s07           1613 	CALL	FINDFST		; LOOK FOR FIRST FILENAME.
+   0840 CDrF5s05           1614 SAVATR1:CALL	CKFILPOS	; WAS ONE FOUND?
+   0843 C8                 1615 	RET	Z		; NOPE, WE MUST BE DONE.
+   0844 0E 00              1616 	LD	C,#0		; YES, UPDATE THE FIRST 12 BYTES NOW.
+   0846 1E 0C              1617 	LD	E,#12
+   0848 CDr01s08           1618 	CALL	UPDATE		; UPDATE FILENAME AND WRITE DIRECTORY.
+   084B CDr2Ds07           1619 	CALL	FINDNXT		; AND GET THE NEXT FILE.
+   084E C3r40s08           1620 	JP	SAVATR1		; THEN CONTINUE UNTIL DONE.
+                           1621 ;
+                           1622 ;  OPEN A FILE (NAME SPECIFIED IN FCB).
+                           1623 ;
+   0851 0E 0F              1624 OPENIT:	LD	C,#15		; COMPARE THE FIRST 15 BYTES.
+   0853 CDr18s07           1625 	CALL	FINDFST		; GET THE FIRST ONE IN DIRECTORY.
+   0856 CDrF5s05           1626 	CALL	CKFILPOS	; ANY AT ALL?
+   0859 C8                 1627 	RET	Z
+   085A CDrA6s04           1628 OPENIT1:CALL	SETEXT		; POINT TO EXTENT BYTE WITHIN USERS FCB.
+   085D 7E                 1629 	LD	A,(HL)		; AND GET IT.
+   085E F5                 1630 	PUSH	AF		; SAVE IT AND ADDRESS.
+   085F E5                 1631 	PUSH	HL
+   0860 CDr5Es05           1632 	CALL	FCB2HL		; POINT TO FCB IN DIRECTORY.
+   0863 EB                 1633 	EX	DE,HL
+   0864 2Ar43s03           1634 	LD	HL,(PARAMS)	; THIS IS THE USERS COPY.
+   0867 0E 20              1635 	LD	C,#32		; MOVE IT INTO USERS SPACE.
+   0869 D5                 1636 	PUSH	DE
+   086A CDr4Fs03           1637 	CALL	DE2HL
+   086D CDr78s05           1638 	CALL	SETS2B7		; SET BIT 7 IN 'S2' BYTE (UNMODIFIED).
+   0870 D1                 1639 	POP	DE		; NOW GET THE EXTENT BYTE FROM THIS FCB.
+   0871 21 0C 00           1640 	LD	HL,#12
+   0874 19                 1641 	ADD	HL,DE
+   0875 4E                 1642 	LD	C,(HL)		; INTO (C).
+   0876 21 0F 00           1643 	LD	HL,#15		; NOW GET THE RECORD COUNT BYTE INTO (B).
+   0879 19                 1644 	ADD	HL,DE
+   087A 46                 1645 	LD	B,(HL)
+   087B E1                 1646 	POP	HL		; KEEP THE SAME EXTENT AS THE USER HAD ORIGINALLY.
+   087C F1                 1647 	POP	AF
+   087D 77                 1648 	LD	(HL),A
+   087E 79                 1649 	LD	A,C		; IS IT THE SAME AS IN THE DIRECTORY FCB?
+   087F BE                 1650 	CP	(HL)
+   0880 78                 1651 	LD	A,B		; IF YES, THEN USE THE SAME RECORD COUNT.
+   0881 CAr8Bs08           1652 	JP	Z,OPENIT2
+   0884 3E 00              1653 	LD	A,#0		; IF THE USER SPECIFIED AN EXTENT GREATER THAN
+   0886 DAr8Bs08           1654 	JP	C,OPENIT2	; THE ONE IN THE DIRECTORY, THEN SET RECORD COUNT TO 0.
+   0889 3E 80              1655 	LD	A,#128		; OTHERWISE SET TO MAXIMUM.
+   088B 2Ar43s03           1656 OPENIT2:LD	HL,(PARAMS)	; SET RECORD COUNT IN USERS FCB TO (A).
+   088E 11 0F 00           1657 	LD	DE,#15
+   0891 19                 1658 	ADD	HL,DE		; COMPUTE RELATIVE POSITION.
+   0892 77                 1659 	LD	(HL),A		; AND SET THE RECORD COUNT.
+   0893 C9                 1660 	RET
+                           1661 ;
+                           1662 ;   MOVE TWO BYTES FROM (DE) TO (HL) IF (AND ONLY IF) (HL)
+                           1663 ; POINT TO A ZERO VALUE (16 BIT).
+                           1664 ;   RETURN WITH ZERO FLAG SET IT (DE) WAS MOVED. REGISTERS (DE)
+                           1665 ; AND (HL) ARE NOT CHANGED. HOWEVER (A) IS.
+                           1666 ;
+   0894                    1667 MOVEWORD:
+   0894 7E                 1668 	LD	A,(HL)		; CHECK FOR A ZERO WORD.
+   0895 23                 1669 	INC	HL
+   0896 B6                 1670 	OR	(HL)		; BOTH BYTES ZERO?
+   0897 2B                 1671 	DEC	HL
+   0898 C0                 1672 	RET	NZ		; NOPE, JUST RETURN.
+   0899 1A                 1673 	LD	A,(DE)		; YES, MOVE TWO BYTES FROM (DE) INTO
+   089A 77                 1674 	LD	(HL),A		; THIS ZERO SPACE.
+   089B 13                 1675 	INC	DE
+   089C 23                 1676 	INC	HL
+   089D 1A                 1677 	LD	A,(DE)
+   089E 77                 1678 	LD	(HL),A
+   089F 1B                 1679 	DEC	DE		; DON'T DISTURB THESE REGISTERS.
+   08A0 2B                 1680 	DEC	HL
+   08A1 C9                 1681 	RET
+                           1682 ;
+                           1683 ;   GET HERE TO CLOSE A FILE SPECIFIED BY (FCB).
+                           1684 ;
+   08A2 AF                 1685 CLOSEIT:XOR	A		; CLEAR STATUS AND FILE POSITION BYTES.
+   08A3 32r45s03           1686 	LD	(STATUS),A
+   08A6 32rEAs0D           1687 	LD	(FILEPOS),A
+   08A9 32rEBs0D           1688 	LD	(FILEPOS+1),A
+   08AC CDr1Es05           1689 	CALL	GETWPRT		; GET WRITE PROTECT BIT FOR THIS DRIVE.
+   08AF C0                 1690 	RET	NZ		; JUST RETURN IF IT IS SET.
+   08B0 CDr69s05           1691 	CALL	GETS2		; ELSE GET THE 'S2' BYTE.
+   08B3 E6 80              1692 	AND	#0x80		; AND LOOK AT BIT 7 (FILE UNMODIFIED?).
+   08B5 C0                 1693 	RET	NZ		; JUST RETURN IF SET.
+   08B6 0E 0F              1694 	LD	C,#15		; ELSE LOOK UP THIS FILE IN DIRECTORY.
+   08B8 CDr18s07           1695 	CALL	FINDFST
+   08BB CDrF5s05           1696 	CALL	CKFILPOS	; WAS IT FOUND?
+   08BE C8                 1697 	RET	Z		; JUST RETURN IF NOT.
+   08BF 01 10 00           1698 	LD	BC,#16		; SET (HL) POINTING TO RECORDS USED SECTION.
+   08C2 CDr5Es05           1699 	CALL	FCB2HL
+   08C5 09                 1700 	ADD	HL,BC
+   08C6 EB                 1701 	EX	DE,HL
+   08C7 2Ar43s03           1702 	LD	HL,(PARAMS)	; DO THE SAME FOR USERS SPECIFIED FCB.
+   08CA 09                 1703 	ADD	HL,BC
+   08CB 0E 10              1704 	LD	C,#16		; THIS MANY BYTES ARE PRESENT IN THIS EXTENT.
+   08CD                    1705 CLOSEIT1:
+   08CD 3ArDDs0D           1706 	LD	A,(BIGDISK)	; 8 OR 16 BIT RECORD NUMBERS?
+   08D0 B7                 1707 	OR	A
+   08D1 CArE8s08           1708 	JP	Z,CLOSEIT4
+   08D4 7E                 1709 	LD	A,(HL)		; JUST 8 BIT. GET ONE FROM USERS FCB.
+   08D5 B7                 1710 	OR	A
+   08D6 1A                 1711 	LD	A,(DE)		; NOW GET ONE FROM DIRECTORY FCB.
+   08D7 C2rDBs08           1712 	JP	NZ,CLOSEIT2
+   08DA 77                 1713 	LD	(HL),A		; USERS BYTE WAS ZERO. UPDATE FROM DIRECTORY.
+   08DB                    1714 CLOSEIT2:
+   08DB B7                 1715 	OR	A
+   08DC C2rE1s08           1716 	JP	NZ,CLOSEIT3
+   08DF 7E                 1717 	LD	A,(HL)		; DIRECTORIES BYTE WAS ZERO, UPDATE FROM USERS FCB.
+   08E0 12                 1718 	LD	(DE),A
+   08E1                    1719 CLOSEIT3:
+   08E1 BE                 1720 	CP	(HL)		; IF NEITHER ONE OF THESE BYTES WERE ZERO,
+   08E2 C2r1Fs09           1721 	JP	NZ,CLOSEIT7	; THEN CLOSE ERROR IF THEY ARE NOT THE SAME.
+   08E5 C3rFDs08           1722 	JP	CLOSEIT5	; OK SO FAR, GET TO NEXT BYTE IN FCBS.
+   08E8                    1723 CLOSEIT4:
+   08E8 CDr94s08           1724 	CALL	MOVEWORD	; UPDATE USERS FCB IF IT IS ZERO.
+   08EB EB                 1725 	EX	DE,HL
+   08EC CDr94s08           1726 	CALL	MOVEWORD	; UPDATE DIRECTORIES FCB IF IT IS ZERO.
+   08EF EB                 1727 	EX	DE,HL
+   08F0 1A                 1728 	LD	A,(DE)		; IF THESE TWO VALUES ARE NO DIFFERENT,
+   08F1 BE                 1729 	CP	(HL)		; THEN A CLOSE ERROR OCCURED.
+   08F2 C2r1Fs09           1730 	JP	NZ,CLOSEIT7
+   08F5 13                 1731 	INC	DE		; CHECK SECOND BYTE.
+   08F6 23                 1732 	INC	HL
+   08F7 1A                 1733 	LD	A,(DE)
+   08F8 BE                 1734 	CP	(HL)
+   08F9 C2r1Fs09           1735 	JP	NZ,CLOSEIT7
+   08FC 0D                 1736 	DEC	C		; REMEMBER 16 BIT VALUES.
+   08FD                    1737 CLOSEIT5:
+   08FD 13                 1738 	INC	DE		; BUMP TO NEXT ITEM IN TABLE.
+   08FE 23                 1739 	INC	HL
+   08FF 0D                 1740 	DEC	C		; THERE ARE 16 ENTRIES ONLY.
+   0900 C2rCDs08           1741 	JP	NZ,CLOSEIT1	; CONTINUE IF MORE TO DO.
+   0903 01 EC FF           1742 	LD	BC,#0x0FFEC	; BACKUP 20 PLACES (EXTENT BYTE).
+   0906 09                 1743 	ADD	HL,BC
+   0907 EB                 1744 	EX	DE,HL
+   0908 09                 1745 	ADD	HL,BC
+   0909 1A                 1746 	LD	A,(DE)
+   090A BE                 1747 	CP	(HL)		; DIRECTORY'S EXTENT ALREADY GREATER THAN THE
+   090B DAr17s09           1748 	JP	C,CLOSEIT6	; USERS EXTENT?
+   090E 77                 1749 	LD	(HL),A		; NO, UPDATE DIRECTORY EXTENT.
+   090F 01 03 00           1750 	LD	BC,#3		; AND UPDATE THE RECORD COUNT BYTE IN
+   0912 09                 1751 	ADD	HL,BC		; DIRECTORIES FCB.
+   0913 EB                 1752 	EX	DE,HL
+   0914 09                 1753 	ADD	HL,BC
+   0915 7E                 1754 	LD	A,(HL)		; GET FROM USER.
+   0916 12                 1755 	LD	(DE),A		; AND PUT IN DIRECTORY.
+   0917                    1756 CLOSEIT6:
+   0917 3E FF              1757 	LD	A,#0x0FF	; SET 'WAS OPEN AND IS NOW CLOSED' BYTE.
+   0919 32rD2s0D           1758 	LD	(CLOSEFLG),A
+   091C C3r10s08           1759 	JP	UPDATE1		; UPDATE THE DIRECTORY NOW.
+   091F                    1760 CLOSEIT7:
+   091F 21r45s03           1761 	LD	HL,#STATUS	; SET RETURN STATUS AND THEN RETURN.
+   0922 35                 1762 	DEC	(HL)
+   0923 C9                 1763 	RET
+                           1764 ;
+                           1765 ;   ROUTINE TO GET THE NEXT EMPTY SPACE IN THE DIRECTORY. IT
+                           1766 ; WILL THEN BE CLEARED FOR USE.
+                           1767 ;
+   0924                    1768 GETEMPTY:
+   0924 CDr54s05           1769 	CALL	CHKWPRT		; MAKE SURE DISK IS NOT WRITE PROTECTED.
+   0927 2Ar43s03           1770 	LD	HL,(PARAMS)	; SAVE CURRENT PARAMETERS (FCB).
+   092A E5                 1771 	PUSH	HL
+   092B 21rACs0D           1772 	LD	HL,#EMPTYFCB	; USE SPECIAL ONE FOR EMPTY SPACE.
+   092E 22r43s03           1773 	LD	(PARAMS),HL
+   0931 0E 01              1774 	LD	C,#1		; SEARCH FOR FIRST EMPTY SPOT IN DIRECTORY.
+   0933 CDr18s07           1775 	CALL	FINDFST		; (* ONLY CHECK FIRST BYTE *)
+   0936 CDrF5s05           1776 	CALL	CKFILPOS	; NONE?
+   0939 E1                 1777 	POP	HL
+   093A 22r43s03           1778 	LD	(PARAMS),HL	; RESTORE ORIGINAL FCB ADDRESS.
+   093D C8                 1779 	RET	Z		; RETURN IF NO MORE SPACE.
+   093E EB                 1780 	EX	DE,HL
+   093F 21 0F 00           1781 	LD	HL,#15		; POINT TO NUMBER OF RECORDS FOR THIS FILE.
+   0942 19                 1782 	ADD	HL,DE
+   0943 0E 11              1783 	LD	C,#17		; AND CLEAR ALL OF THIS SPACE.
+   0945 AF                 1784 	XOR	A
+   0946 77                 1785 GETMT1:	LD	(HL),A
+   0947 23                 1786 	INC	HL
+   0948 0D                 1787 	DEC	C
+   0949 C2r46s09           1788 	JP	NZ,GETMT1
+   094C 21 0D 00           1789 	LD	HL,#13		; CLEAR THE 'S1' BYTE ALSO.
+   094F 19                 1790 	ADD	HL,DE
+   0950 77                 1791 	LD	(HL),A
+   0951 CDr8Cs05           1792 	CALL	CHKNMBR		; KEEP (SCRATCH1) WITHIN BOUNDS.
+   0954 CDrFDs07           1793 	CALL	FCBSET		; WRITE OUT THIS FCB ENTRY TO DIRECTORY.
+   0957 C3r78s05           1794 	JP	SETS2B7		; SET 'S2' BYTE BIT 7 (UNMODIFIED AT PRESENT).
+                           1795 ;
+                           1796 ;   ROUTINE TO CLOSE THE CURRENT EXTENT AND OPEN THE NEXT ONE
+                           1797 ; FOR READING.
+                           1798 ;
+   095A AF                 1799 GETNEXT:XOR	A
+   095B 32rD2s0D           1800 	LD	(CLOSEFLG),A	; CLEAR CLOSE FLAG.
+   095E CDrA2s08           1801 	CALL	CLOSEIT		; CLOSE THIS EXTENT.
+   0961 CDrF5s05           1802 	CALL	CKFILPOS
+   0964 C8                 1803 	RET	Z		; NOT THERE???
+   0965 2Ar43s03           1804 	LD	HL,(PARAMS)	; GET EXTENT BYTE.
+   0968 01 0C 00           1805 	LD	BC,#12
+   096B 09                 1806 	ADD	HL,BC
+   096C 7E                 1807 	LD	A,(HL)		; AND INCREMENT IT.
+   096D 3C                 1808 	INC	A
+   096E E6 1F              1809 	AND	#0x1F		; KEEP WITHIN RANGE 0-31.
+   0970 77                 1810 	LD	(HL),A
+   0971 CAr83s09           1811 	JP	Z,GTNEXT1	; OVERFLOW?
+   0974 47                 1812 	LD	B,A		; MASK EXTENT BYTE.
+   0975 3ArC5s0D           1813 	LD	A,(EXTMASK)
+   0978 A0                 1814 	AND	B
+   0979 21rD2s0D           1815 	LD	HL,#CLOSEFLG	; CHECK CLOSE FLAG (0FFH IS OK).
+   097C A6                 1816 	AND	(HL)
+   097D CAr8Es09           1817 	JP	Z,GTNEXT2	; IF ZERO, WE MUST READ IN NEXT EXTENT.
+   0980 C3rACs09           1818 	JP	GTNEXT3		; ELSE, IT IS ALREADY IN MEMORY.
+   0983 01 02 00           1819 GTNEXT1:LD	BC,#2		; POINT TO THE 'S2' BYTE.
+   0986 09                 1820 	ADD	HL,BC
+   0987 34                 1821 	INC	(HL)		; AND BUMP IT.
+   0988 7E                 1822 	LD	A,(HL)		; TOO MANY EXTENTS?
+   0989 E6 0F              1823 	AND	#0x0F
+   098B CArB6s09           1824 	JP	Z,GTNEXT5	; YES, SET ERROR CODE.
+                           1825 ;
+                           1826 ;   GET HERE TO OPEN THE NEXT EXTENT.
+                           1827 ;
+   098E 0E 0F              1828 GTNEXT2:LD	C,#15		; SET TO CHECK FIRST 15 BYTES OF FCB.
+   0990 CDr18s07           1829 	CALL	FINDFST		; FIND THE FIRST ONE.
+   0993 CDrF5s05           1830 	CALL	CKFILPOS	; NONE AVAILABLE?
+   0996 C2rACs09           1831 	JP	NZ,GTNEXT3
+   0999 3ArD3s0D           1832 	LD	A,(R.DWRTFLG)	; NO EXTENT PRESENT. CAN WE OPEN AN EMPTY ONE?
+   099C 3C                 1833 	INC	A		; 0FFH MEANS READING (SO NOT POSSIBLE).
+   099D CArB6s09           1834 	JP	Z,GTNEXT5	; OR AN ERROR.
+   09A0 CDr24s09           1835 	CALL	GETEMPTY	; WE ARE WRITING, GET AN EMPTY ENTRY.
+   09A3 CDrF5s05           1836 	CALL	CKFILPOS	; NONE?
+   09A6 CArB6s09           1837 	JP	Z,GTNEXT5	; ERROR IF TRUE.
+   09A9 C3rAFs09           1838 	JP	GTNEXT4		; ELSE WE ARE ALMOST DONE.
+   09AC CDr5As08           1839 GTNEXT3:CALL	OPENIT1		; OPEN THIS EXTENT.
+   09AF CDrBBs04           1840 GTNEXT4:CALL	STRDATA		; MOVE IN UPDATED DATA (REC #, EXTENT #, ETC.)
+   09B2 AF                 1841 	XOR	A		; CLEAR STATUS AND RETURN.
+   09B3 C3r01s03           1842 	JP	SETSTAT
+                           1843 ;
+                           1844 ;   ERROR IN EXTENDING THE FILE. TOO MANY EXTENTS WERE NEEDED
+                           1845 ; OR NOT ENOUGH SPACE ON THE DISK.
+                           1846 ;
+   09B6 CDr05s03           1847 GTNEXT5:CALL	IOERR1		; SET ERROR CODE, CLEAR BIT 7 OF 'S2'
+   09B9 C3r78s05           1848 	JP	SETS2B7		; SO THIS IS NOT WRITTEN ON A CLOSE.
+                           1849 ;
+                           1850 ;   READ A S.EQUENTIAL FILE.
+                           1851 ;
+   09BC 3E 01              1852 RDSEQ:	LD	A,#1		; SET S.EQUENTIAL ACCESS MODE.
+   09BE 32rD5s0D           1853 	LD	(MODE),A
+   09C1 3E FF              1854 RDSEQ1:	LD	A,#0x0FF	; DON'T ALLOW READING UNWRITTEN SPACE.
+   09C3 32rD3s0D           1855 	LD	(R.DWRTFLG),A
+   09C6 CDrBBs04           1856 	CALL	STRDATA		; PUT REC# AND EXT# INTO FCB.
+   09C9 3ArE3s0D           1857 	LD	A,(SAVNREC)	; GET NEXT RECORD TO READ.
+   09CC 21rE1s0D           1858 	LD	HL,#SAVNXT	; GET NUMBER OF RECORDS IN EXTENT.
+   09CF BE                 1859 	CP	(HL)		; WITHIN THIS EXTENT?
+   09D0 DArE6s09           1860 	JP	C,RDSEQ2
+   09D3 FE 80              1861 	CP	#128		; NO. IS THIS EXTENT FULLY USED?
+   09D5 C2rFBs09           1862 	JP	NZ,RDSEQ3	; NO. END-OF-FILE.
+   09D8 CDr5As09           1863 	CALL	GETNEXT		; YES, OPEN THE NEXT ONE.
+   09DB AF                 1864 	XOR	A		; RESET NEXT RECORD TO READ.
+   09DC 32rE3s0D           1865 	LD	(SAVNREC),A
+   09DF 3Ar45s03           1866 	LD	A,(STATUS)	; CHECK ON OPEN, SUCCESSFUL?
+   09E2 B7                 1867 	OR	A
+   09E3 C2rFBs09           1868 	JP	NZ,RDSEQ3	; NO, ERROR.
+   09E6 CDr77s04           1869 RDSEQ2:	CALL	COMBLK		; OK. COMPUTE BLOCK NUMBER TO READ.
+   09E9 CDr84s04           1870 	CALL	CHKBLK		; CHECK IT. WITHIN BOUNDS?
+   09EC CArFBs09           1871 	JP	Z,RDSEQ3	; NO, ERROR.
+   09EF CDr8As04           1872 	CALL	LOGICAL		; CONVERT (BLKNMBR) TO LOGICAL SECTOR (128 BYTE).
+   09F2 CDrD1s03           1873 	CALL	TRKSEC1		; SET THE TRACK AND SECTOR FOR THIS BLOCK #.
+   09F5 CDrB2s03           1874 	CALL	DOREAD		; AND READ IT.
+   09F8 C3rD2s04           1875 	JP	SETNREC		; AND SET THE NEXT RECORD TO BE ACCESSED.
+                           1876 ;
+                           1877 ;   READ ERROR OCCURED. SET STATUS AND RETURN.
+                           1878 ;
+   09FB C3r05s03           1879 RDSEQ3:	JP	IOERR1
+                           1880 ;
+                           1881 ;   WRITE THE NEXT S.EQUENTIAL RECORD.
+                           1882 ;
+   09FE 3E 01              1883 WTSEQ:	LD	A,#1		; SET S.EQUENTIAL ACCESS MODE.
+   0A00 32rD5s0D           1884 	LD	(MODE),A
+   0A03 3E 00              1885 WTSEQ1:	LD	A,#0		; ALLOW AN ADDITION EMPTY EXTENT TO BE OPENED.
+   0A05 32rD3s0D           1886 	LD	(R.DWRTFLG),A
+   0A08 CDr54s05           1887 	CALL	CHKWPRT		; CHECK WRITE PROTECT STATUS.
+   0A0B 2Ar43s03           1888 	LD	HL,(PARAMS)
+   0A0E CDr47s05           1889 	CALL	CKROF1		; CHECK FOR READ ONLY FILE, (HL) ALREADY SET TO FCB.
+   0A11 CDrBBs04           1890 	CALL	STRDATA		; PUT UPDATED DATA INTO FCB.
+   0A14 3ArE3s0D           1891 	LD	A,(SAVNREC)	; GET RECORD NUMBER TO WRITE.
+   0A17 FE 80              1892 	CP	#128		; WITHIN RANGE?
+   0A19 D2r05s03           1893 	JP	NC,IOERR1	; NO, ERROR(?).
+   0A1C CDr77s04           1894 	CALL	COMBLK		; COMPUTE BLOCK NUMBER.
+   0A1F CDr84s04           1895 	CALL	CHKBLK		; CHECK NUMBER.
+   0A22 0E 00              1896 	LD	C,#0		; IS THERE ONE TO WRITE TO?
+   0A24 C2r6Es0A           1897 	JP	NZ,WTSEQ6	; YES, GO DO IT.
+   0A27 CDr3Es04           1898 	CALL	GETBLOCK	; GET NEXT BLOCK NUMBER WITHIN FCB TO USE.
+   0A2A 32rD7s0D           1899 	LD	(RELBLOCK),A	; AND SAVE.
+   0A2D 01 00 00           1900 	LD	BC,#0		; START LOOKING FOR SPACE FROM THE START
+   0A30 B7                 1901 	OR	A		; IF NONE ALLOCATED AS YET.
+   0A31 CAr3Bs0A           1902 	JP	Z,WTSEQ2
+   0A34 4F                 1903 	LD	C,A		; EXTRACT PREVIOUS BLOCK NUMBER FROM FCB
+   0A35 0B                 1904 	DEC	BC		; SO WE CAN BE CLOSEST TO IT.
+   0A36 CDr5Es04           1905 	CALL	EXTBLK
+   0A39 44                 1906 	LD	B,H
+   0A3A 4D                 1907 	LD	C,L
+   0A3B CDrBEs07           1908 WTSEQ2:	CALL	FNDSPACE	; FIND THE NEXT EMPTY BLOCK NEAREST NUMBER (BC).
+   0A3E 7D                 1909 	LD	A,L		; CHECK FOR A ZERO NUMBER.
+   0A3F B4                 1910 	OR	H
+   0A40 C2r48s0A           1911 	JP	NZ,WTSEQ3
+   0A43 3E 02              1912 	LD	A,#2		; NO MORE SPACE?
+   0A45 C3r01s03           1913 	JP	SETSTAT
+   0A48 22rE5s0D           1914 WTSEQ3:	LD	(BLKNMBR),HL	; SAVE BLOCK NUMBER TO ACCESS.
+   0A4B EB                 1915 	EX	DE,HL		; PUT BLOCK NUMBER INTO (DE).
+   0A4C 2Ar43s03           1916 	LD	HL,(PARAMS)	; NOW WE MUST UPDATE THE FCB FOR THIS
+   0A4F 01 10 00           1917 	LD	BC,#16		; NEWLY ALLOCATED BLOCK.
+   0A52 09                 1918 	ADD	HL,BC
+   0A53 3ArDDs0D           1919 	LD	A,(BIGDISK)	; 8 OR 16 BIT BLOCK NUMBERS?
+   0A56 B7                 1920 	OR	A
+   0A57 3ArD7s0D           1921 	LD	A,(RELBLOCK)	; (* UPDATE THIS ENTRY *)
+   0A5A CAr64s0A           1922 	JP	Z,WTSEQ4	; ZERO MEANS 16 BIT ONES.
+   0A5D CDr64s05           1923 	CALL	ADDA2HL		; (HL)=(HL)+(A)
+   0A60 73                 1924 	LD	(HL),E		; STORE NEW BLOCK NUMBER.
+   0A61 C3r6Cs0A           1925 	JP	WTSEQ5
+   0A64 4F                 1926 WTSEQ4:	LD	C,A		; COMPUTE SPOT IN THIS 16 BIT TABLE.
+   0A65 06 00              1927 	LD	B,#0
+   0A67 09                 1928 	ADD	HL,BC
+   0A68 09                 1929 	ADD	HL,BC
+   0A69 73                 1930 	LD	(HL),E		; STUFF BLOCK NUMBER (DE) THERE.
+   0A6A 23                 1931 	INC	HL
+   0A6B 72                 1932 	LD	(HL),D
+   0A6C 0E 02              1933 WTSEQ5:	LD	C,#2		; SET (C) TO INDICATE WRITING TO UN-USED DISK SPACE.
+   0A6E 3Ar45s03           1934 WTSEQ6:	LD	A,(STATUS)	; ARE WE OK SO FAR?
+   0A71 B7                 1935 	OR	A
+   0A72 C0                 1936 	RET	NZ
+   0A73 C5                 1937 	PUSH	BC		; YES, SAVE WRITE FLAG FOR BIOS (REGISTER C).
+   0A74 CDr8As04           1938 	CALL	LOGICAL		; CONVERT (BLKNMBR) OVER TO LOICAL SECTORS.
+   0A77 3ArD5s0D           1939 	LD	A,(MODE)	; GET ACCESS MODE FLAG (1=S.EQUENTIAL,
+   0A7A 3D                 1940 	DEC	A		; 0=RANDOM, 2=SPECIAL?).
+   0A7B 3D                 1941 	DEC	A
+   0A7C C2rBBs0A           1942 	JP	NZ,WTSEQ9
+                           1943 ;
+                           1944 ;   SPECIAL RANDOM I/O FROM FUNCTION #40. MAYBE FOR M/PM, BUT THE
+                           1945 ; CURRENT BLOCK, IF IT HAS NOT BEEN WRITTEN TO, WILL BE ZEROED
+                           1946 ; OUT AND THEN WRITTEN (REASON?).
+                           1947 ;
+   0A7F C1                 1948 	POP	BC
+   0A80 C5                 1949 	PUSH	BC
+   0A81 79                 1950 	LD	A,C		; GET WRITE STATUS FLAG (2=WRITING UNUSED SPACE).
+   0A82 3D                 1951 	DEC	A
+   0A83 3D                 1952 	DEC	A
+   0A84 C2rBBs0A           1953 	JP	NZ,WTSEQ9
+   0A87 E5                 1954 	PUSH	HL
+   0A88 2ArB9s0D           1955 	LD	HL,(DIRBUF)	; ZERO OUT THE DIRECTORY BUFFER.
+   0A8B 57                 1956 	LD	D,A		; NOTE THAT (A) IS ZERO HERE.
+   0A8C 77                 1957 WTSEQ7:	LD	(HL),A
+   0A8D 23                 1958 	INC	HL
+   0A8E 14                 1959 	INC	D		; DO 128 BYTES.
+   0A8F F2r8Cs0A           1960 	JP	P,WTSEQ7
+   0A92 CDrE0s05           1961 	CALL	DIRDMA		; TELL THE BIOS THE DMA ADDRESS FOR DIRECTORY ACCESS.
+   0A95 2ArE7s0D           1962 	LD	HL,(LOGSECT)	; GET SECTOR THAT STARTS CURRENT BLOCK.
+   0A98 0E 02              1963 	LD	C,#2		; SET 'WRITING TO UNUSED SPACE' FLAG.
+   0A9A 22rE5s0D           1964 WTSEQ8:	LD	(BLKNMBR),HL	; SAVE SECTOR TO WRITE.
+   0A9D C5                 1965 	PUSH	BC
+   0A9E CDrD1s03           1966 	CALL	TRKSEC1		; DETERMINE ITS TRACK AND SECTOR NUMBERS.
+   0AA1 C1                 1967 	POP	BC
+   0AA2 CDrB8s03           1968 	CALL	DOWRITE		; NOW WRITE OUT 128 BYTES OF ZEROS.
+   0AA5 2ArE5s0D           1969 	LD	HL,(BLKNMBR)	; GET SECTOR NUMBER.
+   0AA8 0E 00              1970 	LD	C,#0		; SET NORMAL WRITE FLAG.
+   0AAA 3ArC4s0D           1971 	LD	A,(BLKMASK)	; DETERMINE IF WE HAVE WRITTEN THE ENTIRE
+   0AAD 47                 1972 	LD	B,A		; PHYSICAL BLOCK.
+   0AAE A5                 1973 	AND	L
+   0AAF B8                 1974 	CP	B
+   0AB0 23                 1975 	INC	HL		; PREPARE FOR THE NEXT ONE.
+   0AB1 C2r9As0A           1976 	JP	NZ,WTSEQ8	; CONTINUE UNTIL (BLKMASK+1) SECTORS WRITTEN.
+   0AB4 E1                 1977 	POP	HL		; RESET NEXT SECTOR NUMBER.
+   0AB5 22rE5s0D           1978 	LD	(BLKNMBR),HL
+   0AB8 CDrDAs05           1979 	CALL	DEFDMA		; AND RESET DMA ADDRESS.
+                           1980 ;
+                           1981 ;   NORMAL DISK WRITE. SET THE DESIRED TRACK AND SECTOR THEN
+                           1982 ; DO THE ACTUAL WRITE.
+                           1983 ;
+   0ABB CDrD1s03           1984 WTSEQ9:	CALL	TRKSEC1		; DETERMINE TRACK AND SECTOR FOR THIS WRITE.
+   0ABE C1                 1985 	POP	BC		; GET WRITE STATUS FLAG.
+   0ABF C5                 1986 	PUSH	BC
+   0AC0 CDrB8s03           1987 	CALL	DOWRITE		; AND WRITE THIS OUT.
+   0AC3 C1                 1988 	POP	BC
+   0AC4 3ArE3s0D           1989 	LD	A,(SAVNREC)	; GET NUMBER OF RECORDS IN FILE.
+   0AC7 21rE1s0D           1990 	LD	HL,#SAVNXT	; GET LAST RECORD WRITTEN.
+   0ACA BE                 1991 	CP	(HL)
+   0ACB DArD2s0A           1992 	JP	C,WTSEQ10
+   0ACE 77                 1993 	LD	(HL),A		; WE HAVE TO UPDATE RECORD COUNT.
+   0ACF 34                 1994 	INC	(HL)
+   0AD0 0E 02              1995 	LD	C,#2
+                           1996 ;
+                           1997 ;*   THIS AREA HAS BEEN PATCHED TO CORRECT DISK UPDATE PROBLEM
+                           1998 ;* WHEN USING BLOCKING AND DE-BLOCKING IN THE BIOS.
+                           1999 ;
+   0AD2 00                 2000 WTSEQ10:NOP			; WAS 'DCR C'
+   0AD3 00                 2001 	NOP			; WAS 'DCR C'
+   0AD4 21 00 00           2002 	LD	HL,#0		; WAS 'JNZ WTSEQ99'
+                           2003 ;
+                           2004 ; *   END OF PATCH.
+                           2005 ;
+   0AD7 F5                 2006 	PUSH	AF
+   0AD8 CDr69s05           2007 	CALL	GETS2		; SET 'EXTENT WRITTEN TO' FLAG.
+   0ADB E6 7F              2008 	AND	#0x7F		; (* CLEAR BIT 7 *)
+   0ADD 77                 2009 	LD	(HL),A
+   0ADE F1                 2010 	POP	AF		; GET RECORD COUNT FOR THIS EXTENT.
+   0ADF FE 7F              2011 WTSEQ99:CP	#127		; IS IT FULL?
+   0AE1 C2r00s0B           2012 	JP	NZ,WTSEQ12
+   0AE4 3ArD5s0D           2013 	LD	A,(MODE)	; YES, ARE WE IN S.EQUENTIAL MODE?
+   0AE7 FE 01              2014 	CP	#1
+   0AE9 C2r00s0B           2015 	JP	NZ,WTSEQ12
+   0AEC CDrD2s04           2016 	CALL	SETNREC		; YES, SET NEXT RECORD NUMBER.
+   0AEF CDr5As09           2017 	CALL	GETNEXT		; AND GET NEXT EMPTY SPACE IN DIRECTORY.
+   0AF2 21r45s03           2018 	LD	HL,#STATUS	; OK?
+   0AF5 7E                 2019 	LD	A,(HL)
+   0AF6 B7                 2020 	OR	A
+   0AF7 C2rFEs0A           2021 	JP	NZ,WTSEQ11
+   0AFA 3D                 2022 	DEC	A		; YES, SET RECORD COUNT TO -1.
+   0AFB 32rE3s0D           2023 	LD	(SAVNREC),A
+   0AFE 36 00              2024 WTSEQ11:LD	(HL),#0		; CLEAR STATUS.
+   0B00 C3rD2s04           2025 WTSEQ12:JP	SETNREC		; SET NEXT RECORD TO ACCESS.
+                           2026 ;
+                           2027 ;   FOR RANDOM I/O, SET THE FCB FOR THE DESIRED RECORD NUMBER
+                           2028 ; BASED ON THE 'R0,R1,R2' BYTES. THESE BYTES IN THE FCB ARE
+                           2029 ; USED AS FOLLOWS:
+                           2030 ;
+                           2031 ;       FCB+35            FCB+34            FCB+33
+                           2032 ;  |     'R-2'      |      'R-1'      |      'R-0'     |
+                           2033 ;  |7             0 | 7             0 | 7             0|
+                           2034 ;  |0 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 0 | 0 0 0 0 0 0 0 0|
+                           2035 ;  |    OVERFLOW   | | EXTRA |  EXTENT   |   RECORD #  |
+                           2036 ;  | ______________| |_EXTENT|__NUMBER___|_____________|
+                           2037 ;                     ALSO 'S2'
+                           2038 ;
+                           2039 ;   ON ENTRY, REGISTER (C) CONTAINS 0FFH IF THIS IS A READ
+                           2040 ; AND THUS WE CAN NOT ACCESS UNWRITTEN DISK SPACE. OTHERWISE,
+                           2041 ; ANOTHER EXTENT WILL BE OPENED (FOR WRITING) IF R.EQUIRED.
+                           2042 ;
+   0B03                    2043 POSITION:
+   0B03 AF                 2044 	XOR	A		; SET RANDOM I/O FLAG.
+   0B04 32rD5s0D           2045 	LD	(MODE),A
+                           2046 ;
+                           2047 ;   SPECIAL ENTRY (FUNCTION #40). M/PM ?
+                           2048 ;
+   0B07 C5                 2049 POSITN1:PUSH	BC		; SAVE READ/WRITE FLAG.
+   0B08 2Ar43s03           2050 	LD	HL,(PARAMS)	; GET ADDRESS OF FCB.
+   0B0B EB                 2051 	EX	DE,HL
+   0B0C 21 21 00           2052 	LD	HL,#33		; NOW GET BYTE 'R0'.
+   0B0F 19                 2053 	ADD	HL,DE
+   0B10 7E                 2054 	LD	A,(HL)
+   0B11 E6 7F              2055 	AND	#0x7F		; KEEP BITS 0-6 FOR THE RECORD NUMBER TO ACCESS.
+   0B13 F5                 2056 	PUSH	AF
+   0B14 7E                 2057 	LD	A,(HL)		; NOW GET BIT 7 OF 'R0' AND BITS 0-3 OF 'R1'.
+   0B15 17                 2058 	RLA
+   0B16 23                 2059 	INC	HL
+   0B17 7E                 2060 	LD	A,(HL)
+   0B18 17                 2061 	RLA
+   0B19 E6 1F              2062 	AND	#0x1F		; AND SAVE THIS IN BITS 0-4 OF (C).
+   0B1B 4F                 2063 	LD	C,A		; THIS IS THE EXTENT BYTE.
+   0B1C 7E                 2064 	LD	A,(HL)		; NOW GET THE EXTRA EXTENT BYTE.
+   0B1D 1F                 2065 	RRA
+   0B1E 1F                 2066 	RRA
+   0B1F 1F                 2067 	RRA
+   0B20 1F                 2068 	RRA
+   0B21 E6 0F              2069 	AND	#0x0F
+   0B23 47                 2070 	LD	B,A		; AND SAVE IT IN (B).
+   0B24 F1                 2071 	POP	AF		; GET RECORD NUMBER BACK TO (A).
+   0B25 23                 2072 	INC	HL		; CHECK OVERFLOW BYTE 'R2'.
+   0B26 6E                 2073 	LD	L,(HL)
+   0B27 2C                 2074 	INC	L
+   0B28 2D                 2075 	DEC	L
+   0B29 2E 06              2076 	LD	L,#6		; PREPARE FOR ERROR.
+   0B2B C2r8Bs0B           2077 	JP	NZ,POSITN5	; OUT OF DISK SPACE ERROR.
+   0B2E 21 20 00           2078 	LD	HL,#32		; STORE RECORD NUMBER INTO FCB.
+   0B31 19                 2079 	ADD	HL,DE
+   0B32 77                 2080 	LD	(HL),A
+   0B33 21 0C 00           2081 	LD	HL,#12		; AND NOW CHECK THE EXTENT BYTE.
+   0B36 19                 2082 	ADD	HL,DE
+   0B37 79                 2083 	LD	A,C
+   0B38 96                 2084 	SUB	(HL)		; SAME EXTENT AS BEFORE?
+   0B39 C2r47s0B           2085 	JP	NZ,POSITN2
+   0B3C 21 0E 00           2086 	LD	HL,#14		; YES, CHECK EXTRA EXTENT BYTE 'S2' ALSO.
+   0B3F 19                 2087 	ADD	HL,DE
+   0B40 78                 2088 	LD	A,B
+   0B41 96                 2089 	SUB	(HL)
+   0B42 E6 7F              2090 	AND	#0x7F
+   0B44 CAr7Fs0B           2091 	JP	Z,POSITN3	; SAME, WE ARE ALMOST DONE THEN.
+                           2092 ;
+                           2093 ;  GET HERE WHEN ANOTHER EXTENT IS R.EQUIRED.
+                           2094 ;
+   0B47 C5                 2095 POSITN2:PUSH	BC
+   0B48 D5                 2096 	PUSH	DE
+   0B49 CDrA2s08           2097 	CALL	CLOSEIT		; CLOSE CURRENT EXTENT.
+   0B4C D1                 2098 	POP	DE
+   0B4D C1                 2099 	POP	BC
+   0B4E 2E 03              2100 	LD	L,#3		; PREPARE FOR ERROR.
+   0B50 3Ar45s03           2101 	LD	A,(STATUS)
+   0B53 3C                 2102 	INC	A
+   0B54 CAr84s0B           2103 	JP	Z,POSITN4	; CLOSE ERROR.
+   0B57 21 0C 00           2104 	LD	HL,#12		; PUT DESIRED EXTENT INTO FCB NOW.
+   0B5A 19                 2105 	ADD	HL,DE
+   0B5B 71                 2106 	LD	(HL),C
+   0B5C 21 0E 00           2107 	LD	HL,#14		; AND STORE EXTRA EXTENT BYTE 'S2'.
+   0B5F 19                 2108 	ADD	HL,DE
+   0B60 70                 2109 	LD	(HL),B
+   0B61 CDr51s08           2110 	CALL	OPENIT		; TRY AND GET THIS EXTENT.
+   0B64 3Ar45s03           2111 	LD	A,(STATUS)	; WAS IT THERE?
+   0B67 3C                 2112 	INC	A
+   0B68 C2r7Fs0B           2113 	JP	NZ,POSITN3
+   0B6B C1                 2114 	POP	BC		; NO. CAN WE CREATE A NEW ONE (WRITING?).
+   0B6C C5                 2115 	PUSH	BC
+   0B6D 2E 04              2116 	LD	L,#4		; PREPARE FOR ERROR.
+   0B6F 0C                 2117 	INC	C
+   0B70 CAr84s0B           2118 	JP	Z,POSITN4	; NOPE, READING UNWRITTEN SPACE ERROR.
+   0B73 CDr24s09           2119 	CALL	GETEMPTY	; YES WE CAN, TRY TO FIND SPACE.
+   0B76 2E 05              2120 	LD	L,#5		; PREPARE FOR ERROR.
+   0B78 3Ar45s03           2121 	LD	A,(STATUS)
+   0B7B 3C                 2122 	INC	A
+   0B7C CAr84s0B           2123 	JP	Z,POSITN4	; OUT OF SPACE?
+                           2124 ;
+                           2125 ;   NORMAL RETURN LOCATION. CLEAR ERROR CODE AND RETURN.
+                           2126 ;
+   0B7F C1                 2127 POSITN3:POP	BC		; RESTORE STACK.
+   0B80 AF                 2128 	XOR	A		; AND CLEAR ERROR CODE BYTE.
+   0B81 C3r01s03           2129 	JP	SETSTAT
+                           2130 ;
+                           2131 ;   ERROR. SET THE 'S2' BYTE TO INDICATE THIS (WHY?).
+                           2132 ;
+   0B84 E5                 2133 POSITN4:PUSH	HL
+   0B85 CDr69s05           2134 	CALL	GETS2
+   0B88 36 C0              2135 	LD	(HL),#0x0C0
+   0B8A E1                 2136 	POP	HL
+                           2137 ;
+                           2138 ;   RETURN WITH ERROR CODE (PRESENTLY IN L).
+                           2139 ;
+   0B8B C1                 2140 POSITN5:POP	BC
+   0B8C 7D                 2141 	LD	A,L		; GET ERROR CODE.
+   0B8D 32r45s03           2142 	LD	(STATUS),A
+   0B90 C3r78s05           2143 	JP	SETS2B7
+                           2144 ;
+                           2145 ;   READ A RANDOM RECORD.
+                           2146 ;
+   0B93 0E FF              2147 READRAN:LD	C,#0x0FF	; SET 'READ' STATUS.
+   0B95 CDr03s0B           2148 	CALL	POSITION	; POSITION THE FILE TO PROPER RECORD.
+   0B98 CCrC1s09           2149 	CALL	Z,RDSEQ1	; AND READ IT AS USUAL (IF NO ERRORS).
+   0B9B C9                 2150 	RET
+                           2151 ;
+                           2152 ;   WRITE TO A RANDOM RECORD.
+                           2153 ;
+   0B9C                    2154 WRITERAN:
+   0B9C 0E 00              2155 	LD	C,#0		; SET 'WRITING' FLAG.
+   0B9E CDr03s0B           2156 	CALL	POSITION	; POSITION THE FILE TO PROPER RECORD.
+   0BA1 CCr03s0A           2157 	CALL	Z,WTSEQ1	; AND WRITE AS USUAL (IF NO ERRORS).
+   0BA4 C9                 2158 	RET
+                           2159 ;
+                           2160 ;   COMPUTE THE RANDOM RECORD NUMBER. ENTER WITH (HL) POINTING
+                           2161 ; TO A FCB AN (DE) CONTAINS A RELATIVE LOCATION OF A RECORD
+                           2162 ; NUMBER. ON EXIT, (C) CONTAINS THE 'R0' BYTE, (B) THE 'R1'
+                           2163 ; BYTE, AND (A) THE 'R2' BYTE.
+                           2164 ;
+                           2165 ;   ON RETURN, THE ZERO FLAG IS SET IF THE RECORD IS WITHIN
+                           2166 ; BOUNDS. OTHERWISE, AN OVERFLOW OCCURED.
+                           2167 ;
+   0BA5                    2168 COMPRAND:
+   0BA5 EB                 2169 	EX	DE,HL		; SAVE FCB POINTER IN (DE).
+   0BA6 19                 2170 	ADD	HL,DE		; COMPUTE RELATIVE POSITION OF RECORD #.
+   0BA7 4E                 2171 	LD	C,(HL)		; GET RECORD NUMBER INTO (BC).
+   0BA8 06 00              2172 	LD	B,#0
+   0BAA 21 0C 00           2173 	LD	HL,#12		; NOW GET EXTENT.
+   0BAD 19                 2174 	ADD	HL,DE
+   0BAE 7E                 2175 	LD	A,(HL)		; COMPUTE (BC)=(RECORD #)+(EXTENT)*128.
+   0BAF 0F                 2176 	RRCA			; MOVE LOWER BIT INTO BIT 7.
+   0BB0 E6 80              2177 	AND	#0x80		; AND IGNORE ALL OTHER BITS.
+   0BB2 81                 2178 	ADD	A,C		; ADD TO OUR RECORD NUMBER.
+   0BB3 4F                 2179 	LD	C,A
+   0BB4 3E 00              2180 	LD	A,#0		; TAKE CARE OF ANY CARRY.
+   0BB6 88                 2181 	ADC	A,B
+   0BB7 47                 2182 	LD	B,A
+   0BB8 7E                 2183 	LD	A,(HL)		; NOW GET THE UPPER BITS OF EXTENT INTO
+   0BB9 0F                 2184 	RRCA			; BIT POSITIONS 0-3.
+   0BBA E6 0F              2185 	AND	#0x0F		; AND IGNORE ALL OTHERS.
+   0BBC 80                 2186 	ADD	A,B		; ADD THIS IN TO 'R1' BYTE.
+   0BBD 47                 2187 	LD	B,A
+   0BBE 21 0E 00           2188 	LD	HL,#14		; GET THE 'S2' BYTE (EXTRA EXTENT).
+   0BC1 19                 2189 	ADD	HL,DE
+   0BC2 7E                 2190 	LD	A,(HL)
+   0BC3 87                 2191 	ADD	A,A		; AND SHIFT IT LEFT 4 BITS (BITS 4-7).
+   0BC4 87                 2192 	ADD	A,A
+   0BC5 87                 2193 	ADD	A,A
+   0BC6 87                 2194 	ADD	A,A
+   0BC7 F5                 2195 	PUSH	AF		; SAVE CARRY FLAG (BIT 0 OF FLAG BYTE).
+   0BC8 80                 2196 	ADD	A,B		; NOW ADD EXTRA EXTENT INTO 'R1'.
+   0BC9 47                 2197 	LD	B,A
+   0BCA F5                 2198 	PUSH	AF		; AND SAVE CARRY (OVERFLOW BYTE 'R2').
+   0BCB E1                 2199 	POP	HL		; BIT 0 OF (L) IS THE OVERFLOW INDICATOR.
+   0BCC 7D                 2200 	LD	A,L
+   0BCD E1                 2201 	POP	HL		; AND SAME FOR FIRST CARRY FLAG.
+   0BCE B5                 2202 	OR	L		; EITHER ONE OF THESE SET?
+   0BCF E6 01              2203 	AND	#1		; ONLY CHECK THE CARRY FLAGS.
+   0BD1 C9                 2204 	RET
+                           2205 ;
+                           2206 ;   ROUTINE TO SETUP THE FCB (BYTES 'R0', 'R1', 'R2') TO
+                           2207 ; REFLECT THE LAST RECORD USED FOR A RANDOM (OR OTHER) FILE.
+                           2208 ; THIS READS THE DIRECTORY AND LOOKS AT ALL EXTENTS COMPUTING
+                           2209 ; THE LARGERST RECORD NUMBER FOR EACH AND KEEPING THE MAXIMUM
+                           2210 ; VALUE ONLY. THEN 'R0', 'R1', AND 'R2' WILL REFLECT THIS
+                           2211 ; MAXIMUM RECORD NUMBER. THIS IS USED TO COMPUTE THE SPACE USED
+                           2212 ; BY A RANDOM FILE.
+                           2213 ;
+   0BD2 0E 0C              2214 RANSIZE:LD	C,#12		; LOOK THRU DIRECTORY FOR FIRST ENTRY WITH
+   0BD4 CDr18s07           2215 	CALL	FINDFST		; THIS NAME.
+   0BD7 2Ar43s03           2216 	LD	HL,(PARAMS)	; ZERO OUT THE 'R0, R1, R2' BYTES.
+   0BDA 11 21 00           2217 	LD	DE,#33
+   0BDD 19                 2218 	ADD	HL,DE
+   0BDE E5                 2219 	PUSH	HL
+   0BDF 72                 2220 	LD	(HL),D		; NOTE THAT (D)=0.
+   0BE0 23                 2221 	INC	HL
+   0BE1 72                 2222 	LD	(HL),D
+   0BE2 23                 2223 	INC	HL
+   0BE3 72                 2224 	LD	(HL),D
+   0BE4 CDrF5s05           2225 RANSIZ1:CALL	CKFILPOS	; IS THERE AN EXTENT TO PROCESS?
+   0BE7 CAr0Cs0C           2226 	JP	Z,RANSIZ3	; NO, WE ARE DONE.
+   0BEA CDr5Es05           2227 	CALL	FCB2HL		; SET (HL) POINTING TO PROPER FCB IN DIR.
+   0BED 11 0F 00           2228 	LD	DE,#15		; POINT TO LAST RECORD IN EXTENT.
+   0BF0 CDrA5s0B           2229 	CALL	COMPRAND	; AND COMPUTE RANDOM PARAMETERS.
+   0BF3 E1                 2230 	POP	HL
+   0BF4 E5                 2231 	PUSH	HL		; NOW CHECK THESE VALUES AGAINST THOSE
+   0BF5 5F                 2232 	LD	E,A		; ALREADY IN FCB.
+   0BF6 79                 2233 	LD	A,C		; THE CARRY FLAG WILL BE SET IF THOSE
+   0BF7 96                 2234 	SUB	(HL)		; IN THE FCB REPRESENT A LARGER SIZE THAN
+   0BF8 23                 2235 	INC	HL		; THIS EXTENT DOES.
+   0BF9 78                 2236 	LD	A,B
+   0BFA 9E                 2237 	SBC	A,(HL)
+   0BFB 23                 2238 	INC	HL
+   0BFC 7B                 2239 	LD	A,E
+   0BFD 9E                 2240 	SBC	A,(HL)
+   0BFE DAr06s0C           2241 	JP	C,RANSIZ2
+   0C01 73                 2242 	LD	(HL),E		; WE FOUND A LARGER (IN SIZE) EXTENT.
+   0C02 2B                 2243 	DEC	HL		; STUFF THESE VALUES INTO FCB.
+   0C03 70                 2244 	LD	(HL),B
+   0C04 2B                 2245 	DEC	HL
+   0C05 71                 2246 	LD	(HL),C
+   0C06 CDr2Ds07           2247 RANSIZ2:CALL	FINDNXT		; NOW GET THE NEXT EXTENT.
+   0C09 C3rE4s0B           2248 	JP	RANSIZ1		; CONTINUE TIL ALL DONE.
+   0C0C E1                 2249 RANSIZ3:POP	HL		; WE ARE DONE, RESTORE THE STACK AND
+   0C0D C9                 2250 	RET			; RETURN.
+                           2251 ;
+                           2252 ;   FUNCTION TO RETURN THE RANDOM RECORD POSITION OF A GIVEN
+                           2253 ; FILE WHICH HAS BEEN READ IN S.EQUENTIAL MODE UP TO NOW.
+                           2254 ;
+   0C0E 2Ar43s03           2255 SETRAN:	LD	HL,(PARAMS)	; POINT TO FCB.
+   0C11 11 20 00           2256 	LD	DE,#32		; AND TO LAST USED RECORD.
+   0C14 CDrA5s0B           2257 	CALL	COMPRAND	; COMPUTE RANDOM POSITION.
+   0C17 21 21 00           2258 	LD	HL,#33		; NOW STUFF THESE VALUES INTO FCB.
+   0C1A 19                 2259 	ADD	HL,DE
+   0C1B 71                 2260 	LD	(HL),C		; MOVE 'R0'.
+   0C1C 23                 2261 	INC	HL
+   0C1D 70                 2262 	LD	(HL),B		; AND 'R1'.
+   0C1E 23                 2263 	INC	HL
+   0C1F 77                 2264 	LD	(HL),A		; AND LASTLY 'R2'.
+   0C20 C9                 2265 	RET
+                           2266 ;
+                           2267 ;   THIS ROUTINE SELECT THE DRIVE SPECIFIED IN (ACTIVE) AND
+                           2268 ; UPDATE THE LOGIN VECTOR AND BITMAP TABLE IF THIS DRIVE WAS
+                           2269 ; NOT ALREADY ACTIVE.
+                           2270 ;
+   0C21                    2271 LOGINDRV:
+   0C21 2ArAFs0D           2272 	LD	HL,(LOGIN)	; GET THE LOGIN VECTOR.
+   0C24 3Ar42s03           2273 	LD	A,(ACTIVE)	; GET THE DEFAULT DRIVE.
+   0C27 4F                 2274 	LD	C,A
+   0C28 CDrEAs04           2275 	CALL	SHIFTR		; POSITION ACTIVE BIT FOR THIS DRIVE
+   0C2B E5                 2276 	PUSH	HL		; INTO BIT 0.
+   0C2C EB                 2277 	EX	DE,HL
+   0C2D CDr59s03           2278 	CALL	SELECT		; SELECT THIS DRIVE.
+   0C30 E1                 2279 	POP	HL
+   0C31 CCr47s03           2280 	CALL	Z,SLCTERR	; VALID DRIVE?
+   0C34 7D                 2281 	LD	A,L		; IS THIS A NEWLY ACTIVATED DRIVE?
+   0C35 1F                 2282 	RRA
+   0C36 D8                 2283 	RET	C
+   0C37 2ArAFs0D           2284 	LD	HL,(LOGIN)	; YES, UPDATE THE LOGIN VECTOR.
+   0C3A 4D                 2285 	LD	C,L
+   0C3B 44                 2286 	LD	B,H
+   0C3C CDr0Bs05           2287 	CALL	SETBIT
+   0C3F 22rAFs0D           2288 	LD	(LOGIN),HL	; AND SAVE.
+   0C42 C3rA3s06           2289 	JP	BITMAP		; NOW UPDATE THE BITMAP.
+                           2290 ;
+                           2291 ;   FUNCTION TO SET THE ACTIVE DISK NUMBER.
+                           2292 ;
+   0C45 3ArD6s0D           2293 SETDSK:	LD	A,(EPARAM)	; GET PARAMETER PASSED AND SEE IF THIS
+   0C48 21r42s03           2294 	LD	HL,#ACTIVE	; REPRESENTS A CHANGE IN DRIVES.
+   0C4B BE                 2295 	CP	(HL)
+   0C4C C8                 2296 	RET	Z
+   0C4D 77                 2297 	LD	(HL),A		; YES IT DOES, LOG IT IN.
+   0C4E C3r21s0C           2298 	JP	LOGINDRV
+                           2299 ;
+                           2300 ;   THIS IS THE 'AUTO DISK SELECT' ROUTINE. THE FIRSST BYTE
+                           2301 ; OF THE FCB IS EXAMINED FOR A DRIVE SPECIFICATION. IF NON
+                           2302 ; ZERO THEN THE DRIVE WILL BE SELECTED AND LOGED IN.
+                           2303 ;
+   0C51 3E FF              2304 AUTOSEL:LD	A,#0x0FF		; SAY 'AUTO-SELECT ACTIVATED'.
+   0C53 32rDEs0D           2305 	LD	(AUTO),A
+   0C56 2Ar43s03           2306 	LD	HL,(PARAMS)	; GET DRIVE SPECIFIED.
+   0C59 7E                 2307 	LD	A,(HL)
+   0C5A E6 1F              2308 	AND	#0x1F		; LOOK AT LOWER 5 BITS.
+   0C5C 3D                 2309 	DEC	A		; ADJUST FOR (1=A, 2=B) ETC.
+   0C5D 32rD6s0D           2310 	LD	(EPARAM),A	; AND SAVE FOR THE SELECT ROUTINE.
+   0C60 FE 1E              2311 	CP	#0x1E		; CHECK FOR 'NO CHANGE' CONDITION.
+   0C62 D2r75s0C           2312 	JP	NC,AUTOSL1	; YES, DON'T CHANGE.
+   0C65 3Ar42s03           2313 	LD	A,(ACTIVE)	; WE MUST CHANGE, SAVE CURRENTLY ACTIVE
+   0C68 32rDFs0D           2314 	LD	(OLDDRV),A	; DRIVE.
+   0C6B 7E                 2315 	LD	A,(HL)		; AND SAVE FIRST BYTE OF FCB ALSO.
+   0C6C 32rE0s0D           2316 	LD	(AUTOFLAG),A	; THIS MUST BE NON-ZERO.
+   0C6F E6 E0              2317 	AND	#0x0E0		; WHATS THIS FOR (BITS 6,7 ARE USED FOR
+   0C71 77                 2318 	LD	(HL),A		; SOMETHING)?
+   0C72 CDr45s0C           2319 	CALL	SETDSK		; SELECT AND LOG IN THIS DRIVE.
+   0C75 3Ar41s03           2320 AUTOSL1:LD	A,(USERNO)	; MOVE USER NUMBER INTO FCB.
+   0C78 2Ar43s03           2321 	LD	HL,(PARAMS)	; (* UPPER HALF OF FIRST BYTE *)
+   0C7B B6                 2322 	OR	(HL)
+   0C7C 77                 2323 	LD	(HL),A
+   0C7D C9                 2324 	RET			; AND RETURN (ALL DONE).
+                           2325 ;
+                           2326 ;   FUNCTION TO RETURN THE CURRENT CP/M VERSION NUMBER.
+                           2327 ;
+   0C7E 3E 22              2328 GETVER:	LD	A,#0x022		; VERSION 2.2
+   0C80 C3r01s03           2329 	JP	SETSTAT
+                           2330 ;
+                           2331 ;   FUNCTION TO RESET THE DISK SYSTEM.
+                           2332 ;
+   0C83 21 00 00           2333 RSTDSK:	LD	HL,#0		; CLEAR WRITE PROTECT STATUS AND LOG
+   0C86 22rADs0D           2334 	LD	(WRTPRT),HL	; IN VECTOR.
+   0C89 22rAFs0D           2335 	LD	(LOGIN),HL
+   0C8C AF                 2336 	XOR	A		; SELECT DRIVE 'A'.
+   0C8D 32r42s03           2337 	LD	(ACTIVE),A
+   0C90 21 80 00           2338 	LD	HL,#TBUFF	; SETUP DEFAULT DMA ADDRESS.
+   0C93 22rB1s0D           2339 	LD	(USERDMA),HL
+   0C96 CDrDAs05           2340 	CALL	DEFDMA
+   0C99 C3r21s0C           2341 	JP	LOGINDRV	; NOW LOG IN DRIVE 'A'.
+                           2342 ;
+                           2343 ;   FUNCTION TO OPEN A SPECIFIED FILE.
+                           2344 ;
+   0C9C CDr72s05           2345 OPENFIL:CALL	CLEARS2		; CLEAR 'S2' BYTE.
+   0C9F CDr51s0C           2346 	CALL	AUTOSEL		; SELECT PROPER DISK.
+   0CA2 C3r51s08           2347 	JP	OPENIT		; AND OPEN THE FILE.
+                           2348 ;
+                           2349 ;   FUNCTION TO CLOSE A SPECIFIED FILE.
+                           2350 ;
+   0CA5                    2351 CLOSEFIL:
+   0CA5 CDr51s0C           2352 	CALL	AUTOSEL		; SELECT PROPER DISK.
+   0CA8 C3rA2s08           2353 	JP	CLOSEIT		; AND CLOSE THE FILE.
+                           2354 ;
+                           2355 ;   FUNCTION TO RETURN THE FIRST OCCURENCE OF A SPECIFIED FILE
+                           2356 ; NAME. IF THE FIRST BYTE OF THE FCB IS '?' THEN THE NAME WILL
+                           2357 ; NOT BE CHECKED (GET THE FIRST ENTRY NO MATTER WHAT).
+                           2358 ;
+   0CAB 0E 00              2359 GETFST:	LD	C,#0		; PREPARE FOR SPECIAL SEARCH.
+   0CAD EB                 2360 	EX	DE,HL
+   0CAE 7E                 2361 	LD	A,(HL)		; IS FIRST BYTE A '?'?
+   0CAF FE 3F              2362 	CP	#QUESTION
+   0CB1 CArC2s0C           2363 	JP	Z,GETFST1	; YES, JUST GET VERY FIRST ENTRY (ZERO LENGTH MATCH).
+   0CB4 CDrA6s04           2364 	CALL	SETEXT		; GET THE EXTENSION BYTE FROM FCB.
+   0CB7 7E                 2365 	LD	A,(HL)		; IS IT '?'? IF YES, THEN WE WANT
+   0CB8 FE 3F              2366 	CP	#QUESTION		; AN ENTRY WITH A SPECIFIC 'S2' BYTE.
+   0CBA C4r72s05           2367 	CALL	NZ,CLEARS2	; OTHERWISE, LOOK FOR A ZERO 'S2' BYTE.
+   0CBD CDr51s0C           2368 	CALL	AUTOSEL		; SELECT PROPER DRIVE.
+   0CC0 0E 0F              2369 	LD	C,#15		; COMPARE BYTES 0-14 IN FCB (12&13 EXCLUDED).
+   0CC2 CDr18s07           2370 GETFST1:CALL	FINDFST		; FIND AN ENTRY AND THEN MOVE IT INTO
+   0CC5 C3rE9s05           2371 	JP	MOVEDIR		; THE USERS DMA SPACE.
+                           2372 ;
+                           2373 ;   FUNCTION TO RETURN THE NEXT OCCURENCE OF A FILE NAME.
+                           2374 ;
+   0CC8 2ArD9s0D           2375 GETNXT:	LD	HL,(SAVEFCB)	; RESTORE POINTERS. NOTE THAT NO
+   0CCB 22r43s03           2376 	LD	(PARAMS),HL	; OTHER .DBOS CALLS ARE ALLOWED.
+   0CCE CDr51s0C           2377 	CALL	AUTOSEL		; NO ERROR WILL BE RETURNED, BUT THE
+   0CD1 CDr2Ds07           2378 	CALL	FINDNXT		; RESULTS WILL BE WRONG.
+   0CD4 C3rE9s05           2379 	JP	MOVEDIR
+                           2380 ;
+                           2381 ;   FUNCTION TO DELETE A FILE BY NAME.
+                           2382 ;
+   0CD7 CDr51s0C           2383 DELFILE:CALL	AUTOSEL		; SELECT PROPER DRIVE.
+   0CDA CDr9Cs07           2384 	CALL	ERAFILE		; ERASE THE FILE.
+   0CDD C3r01s07           2385 	JP	STSTATUS	; SET STATUS AND RETURN.
+                           2386 ;
+                           2387 ;   FUNCTION TO EXECUTE A S.EQUENTIAL READ OF THE SPECIFIED
+                           2388 ; RECORD NUMBER.
+                           2389 ;
+   0CE0 CDr51s0C           2390 READSEQ:CALL	AUTOSEL		; SELECT PROPER DRIVE THEN READ.
+   0CE3 C3rBCs09           2391 	JP	RDSEQ
+                           2392 ;
+                           2393 ;   FUNCTION TO WRITE THE NET S.EQUENTIAL RECORD.
+                           2394 ;
+   0CE6 CDr51s0C           2395 WRTSEQ:	CALL	AUTOSEL		; SELECT PROPER DRIVE THEN WRITE.
+   0CE9 C3rFEs09           2396 	JP	WTSEQ
+                           2397 ;
+                           2398 ;   CREATE A FILE FUNCTION.
+                           2399 ;
+   0CEC CDr72s05           2400 FCREATE:CALL	CLEARS2		; CLEAR THE 'S2' BYTE ON ALL CREATES.
+   0CEF CDr51s0C           2401 	CALL	AUTOSEL		; SELECT PROPER DRIVE AND GET THE NEXT
+   0CF2 C3r24s09           2402 	JP	GETEMPTY	; EMPTY DIRECTORY SPACE.
+                           2403 ;
+                           2404 ;   FUNCTION TO RENAME A FILE.
+                           2405 ;
+   0CF5 CDr51s0C           2406 RENFILE:CALL	AUTOSEL		; SELECT PROPER DRIVE AND THEN SWITCH
+   0CF8 CDr16s08           2407 	CALL	CHGNAMES	; FILE NAMES.
+   0CFB C3r01s07           2408 	JP	STSTATUS
+                           2409 ;
+                           2410 ;   FUNCTION TO RETURN THE LOGIN VECTOR.
+                           2411 ;
+   0CFE 2ArAFs0D           2412 GETLOG:	LD	HL,(LOGIN)
+   0D01 C3r29s0D           2413 	JP	GETPRM1
+                           2414 ;
+                           2415 ;   FUNCTION TO RETURN THE CURRENT DISK ASSIGNMENT.
+                           2416 ;
+   0D04 3Ar42s03           2417 GETCRNT:LD	A,(ACTIVE)
+   0D07 C3r01s03           2418 	JP	SETSTAT
+                           2419 ;
+                           2420 ;   FUNCTION TO SET THE DMA ADDRESS.
+                           2421 ;
+   0D0A EB                 2422 PUTDMA:	EX	DE,HL
+   0D0B 22rB1s0D           2423 	LD	(USERDMA),HL	; SAVE IN OUR SPACE AND THEN GET TO
+   0D0E C3rDAs05           2424 	JP	DEFDMA		; THE BIOS WITH THIS ALSO.
+                           2425 ;
+                           2426 ;   FUNCTION TO RETURN THE ALLOCATION VECTOR.
+                           2427 ;
+   0D11 2ArBFs0D           2428 GETALOC:LD	HL,(ALOCVECT)
+   0D14 C3r29s0D           2429 	JP	GETPRM1
+                           2430 ;
+                           2431 ;   FUNCTION TO RETURN THE READ-ONLY STATUS VECTOR.
+                           2432 ;
+   0D17 2ArADs0D           2433 GETROV:	LD	HL,(WRTPRT)
+   0D1A C3r29s0D           2434 	JP	GETPRM1
+                           2435 ;
+                           2436 ;   FUNCTION TO SET THE FILE ATTRIBUTES (READ-ONLY, SYSTEM).
+                           2437 ;
+   0D1D CDr51s0C           2438 SETATTR:CALL	AUTOSEL		; SELECT PROPER DRIVE THEN SAVE ATTRIBUTES.
+   0D20 CDr3Bs08           2439 	CALL	SAVEATTR
+   0D23 C3r01s07           2440 	JP	STSTATUS
+                           2441 ;
+                           2442 ;   FUNCTION TO RETURN THE ADDRESS OF THE DISK PARAMETER BLOCK
+                           2443 ; FOR THE CURRENT DRIVE.
+                           2444 ;
+   0D26 2ArBBs0D           2445 GETPARM:LD	HL,(DISKPB)
+   0D29 22r45s03           2446 GETPRM1:LD	(STATUS),HL
+   0D2C C9                 2447 	RET
+                           2448 ;
+                           2449 ;   FUNCTION TO GET OR SET THE USER NUMBER. IF (E) WAS (FF)
+                           2450 ; THEN THIS IS A R.EQUEST TO RETURN THE CURRENT USER NUMBER.
+                           2451 ; ELSE SET THE USER NUMBER FROM (E).
+                           2452 ;
+   0D2D 3ArD6s0D           2453 GETUSER:LD	A,(EPARAM)	; GET PARAMETER.
+   0D30 FE FF              2454 	CP	#0x0FF		; GET USER NUMBER?
+   0D32 C2r3Bs0D           2455 	JP	NZ,SETUSER
+   0D35 3Ar41s03           2456 	LD	A,(USERNO)	; YES, JUST DO IT.
+   0D38 C3r01s03           2457 	JP	SETSTAT
+   0D3B E6 1F              2458 SETUSER:AND	#0x1F		; NO, WE SHOULD SET IT INSTEAD. KEEP LOW
+   0D3D 32r41s03           2459 	LD	(USERNO),A	; BITS (0-4) ONLY.
+   0D40 C9                 2460 	RET
+                           2461 ;
+                           2462 ;   FUNCTION TO READ A RANDOM RECORD FROM A FILE.
+                           2463 ;
+   0D41                    2464 RDRANDOM:
+   0D41 CDr51s0C           2465 	CALL	AUTOSEL		; SELECT PROPER DRIVE AND READ.
+   0D44 C3r93s0B           2466 	JP	READRAN
+                           2467 ;
+                           2468 ;   FUNCTION TO COMPUTE THE FILE SIZE FOR RANDOM FILES.
+                           2469 ;
+   0D47                    2470 WTRANDOM:
+   0D47 CDr51s0C           2471 	CALL	AUTOSEL		; SELECT PROPER DRIVE AND WRITE.
+   0D4A C3r9Cs0B           2472 	JP	WRITERAN
+                           2473 ;
+                           2474 ;   FUNCTION TO COMPUTE THE SIZE OF A RANDOM FILE.
+                           2475 ;
+   0D4D                    2476 FILESIZE:
+   0D4D CDr51s0C           2477 	CALL	AUTOSEL		; SELECT PROPER DRIVE AND CHECK FILE LENGTH
+   0D50 C3rD2s0B           2478 	JP	RANSIZE
+                           2479 ;
+                           2480 ;   FUNCTION #37. THIS ALLOWS A PROGRAM TO LOG OFF ANY DRIVES.
+                           2481 ; ON ENTRY, SET (DE) TO CONTAIN A WORD WITH BITS SET FOR THOSE
+                           2482 ; DRIVES THAT ARE TO BE LOGGED OFF. THE LOG-IN VECTOR AND THE
+                           2483 ; WRITE PROTECT VECTOR WILL BE UPDATED. THIS MUST BE A M/PM
+                           2484 ; SPECIAL FUNCTION.
+                           2485 ;
+   0D53 2Ar43s03           2486 LOGOFF:	LD	HL,(PARAMS)	; GET DRIVES TO LOG OFF.
+   0D56 7D                 2487 	LD	A,L		; FOR EACH BIT THAT IS SET, WE WANT
+   0D57 2F                 2488 	CPL			; TO CLEAR THAT BIT IN (LOGIN)
+   0D58 5F                 2489 	LD	E,A		; AND (WRTPRT).
+   0D59 7C                 2490 	LD	A,H
+   0D5A 2F                 2491 	CPL
+   0D5B 2ArAFs0D           2492 	LD	HL,(LOGIN)	; RESET THE LOGIN VECTOR.
+   0D5E A4                 2493 	AND	H
+   0D5F 57                 2494 	LD	D,A
+   0D60 7D                 2495 	LD	A,L
+   0D61 A3                 2496 	AND	E
+   0D62 5F                 2497 	LD	E,A
+   0D63 2ArADs0D           2498 	LD	HL,(WRTPRT)
+   0D66 EB                 2499 	EX	DE,HL
+   0D67 22rAFs0D           2500 	LD	(LOGIN),HL	; AND SAVE.
+   0D6A 7D                 2501 	LD	A,L		; NOW DO THE WRITE PROTECT VECTOR.
+   0D6B A3                 2502 	AND	E
+   0D6C 6F                 2503 	LD	L,A
+   0D6D 7C                 2504 	LD	A,H
+   0D6E A2                 2505 	AND	D
+   0D6F 67                 2506 	LD	H,A
+   0D70 22rADs0D           2507 	LD	(WRTPRT),HL	; AND SAVE. ALL DONE.
+   0D73 C9                 2508 	RET
+                           2509 ;
+                           2510 ;   GET HERE TO RETURN TO THE USER.
+                           2511 ;
+   0D74 3ArDEs0D           2512 GOBACK:	LD	A,(AUTO)	; WAS AUTO SELECT ACTIVATED?
+   0D77 B7                 2513 	OR	A
+   0D78 CAr91s0D           2514 	JP	Z,GOBACK1
+   0D7B 2Ar43s03           2515 	LD	HL,(PARAMS)	; YES, BUT WAS A CHANGE MADE?
+   0D7E 36 00              2516 	LD	(HL),#0		; (* RESET FIRST BYTE OF FCB *)
+   0D80 3ArE0s0D           2517 	LD	A,(AUTOFLAG)
+   0D83 B7                 2518 	OR	A
+   0D84 CAr91s0D           2519 	JP	Z,GOBACK1
+   0D87 77                 2520 	LD	(HL),A		; YES, RESET FIRST BYTE PROPERLY.
+   0D88 3ArDFs0D           2521 	LD	A,(OLDDRV)	; AND GET THE OLD DRIVE AND SELECT IT.
+   0D8B 32rD6s0D           2522 	LD	(EPARAM),A
+   0D8E CDr45s0C           2523 	CALL	SETDSK
+   0D91 2Ar0Fs03           2524 GOBACK1:LD	HL,(USRSTACK)	; RESET THE USERS STACK POINTER.
+   0D94 F9                 2525 	LD	SP,HL
+   0D95 2Ar45s03           2526 	LD	HL,(STATUS)	; GET RETURN STATUS.
+   0D98 7D                 2527 	LD	A,L		; FORCE VERSION 1.4 COMPATABILITY.
+   0D99 44                 2528 	LD	B,H
+   0D9A C9                 2529 	RET			; AND GO BACK TO USER.
+                           2530 ;
+                           2531 ;   FUNCTION #40. THIS IS A SPECIAL ENTRY TO DO RANDOM I/O.
+                           2532 ; FOR THE CASE WHERE WE ARE WRITING TO UNUSED DISK SPACE, THIS
+                           2533 ; SPACE WILL BE ZEROED OUT FIRST. THIS MUST BE A M/PM SPECIAL
+                           2534 ; PURPOSE FUNCTION, BECAUSE WHY WOULD ANY NORMAL PROGRAM EVEN
+                           2535 ; CARE ABOUT THE PREVIOUS CONTENTS OF A SECTOR ABOUT TO BE
+                           2536 ; WRITTEN OVER.
+                           2537 ;
+   0D9B CDr51s0C           2538 WTSPECL:CALL	AUTOSEL		; SELECT PROPER DRIVE.
+   0D9E 3E 02              2539 	LD	A,#2		; USE SPECIAL WRITE MODE.
+   0DA0 32rD5s0D           2540 	LD	(MODE),A
+   0DA3 0E 00              2541 	LD	C,#0		; SET WRITE INDICATOR.
+   0DA5 CDr07s0B           2542 	CALL	POSITN1		; POSITION THE FILE.
+   0DA8 CCr03s0A           2543 	CALL	Z,WTSEQ1	; AND WRITE (IF NO ERRORS).
+   0DAB C9                 2544 	RET
+                           2545 ;
+                           2546 ;**************************************************************
+                           2547 ;*
+                           2548 ;*     BDOS DATA STORAGE POOL.
+                           2549 ;*
+                           2550 ;**************************************************************
+                           2551 ;
+   0DAC                    2552 EMPTYFCB:
+   0DAC E5                 2553 	.DB 0x0E5		; EMPTY DIRECTORY SEGMENT INDICATOR.
+   0DAD 00 00              2554 WRTPRT:	.DW 0			; WRITE PROTECT STATUS FOR ALL 16 DRIVES.
+   0DAF 00 00              2555 LOGIN:	.DW 0			; DRIVE ACTIVE WORD (1 BIT PER DRIVE).
+   0DB1 80 00              2556 USERDMA:.DW 0x80		; USER'S DMA ADDRESS (DEFAULTS TO 80H).
+                           2557 ;
+                           2558 ;   SCRATCH AREAS FROM PARAMETER BLOCK.
+                           2559 ;
+   0DB3                    2560 SCRATCH1:
+   0DB3 00 00              2561 	.DW 0			; RELATIVE POSITION WITHIN DIR SEGMENT FOR FILE (0-3).
+   0DB5                    2562 SCRATCH2:
+   0DB5 00 00              2563 	.DW 0			; LAST SELECTED TRACK NUMBER.
+   0DB7                    2564 SCRATCH3:
+   0DB7 00 00              2565 	.DW 0			; LAST SELECTED SECTOR NUMBER.
+                           2566 ;
+                           2567 ;   DISK STORAGE AREAS FROM PARAMETER BLOCK.
+                           2568 ;
+   0DB9 00 00              2569 DIRBUF:	.DW 0			; ADDRESS OF DIRECTORY BUFFER TO USE.
+   0DBB 00 00              2570 DISKPB:	.DW 0			; CONTAINS ADDRESS OF DISK PARAMETER BLOCK.
+   0DBD 00 00              2571 CHKVECT:.DW 0			; ADDRESS OF CHECK VECTOR.
+   0DBF                    2572 ALOCVECT:
+   0DBF 00 00              2573 	.DW 0			; ADDRESS OF ALLOCATION VECTOR (BIT MAP).
+                           2574 ;
+                           2575 ;   PARAMETER BLOCK RETURNED FROM THE BIOS.
+                           2576 ;
+   0DC1 00 00              2577 SECTORS:.DW 0			; SECTORS PER TRACK FROM BIOS.
+   0DC3 00                 2578 BLKSHFT:.DB 0			; BLOCK SHIFT.
+   0DC4 00                 2579 BLKMASK:.DB 0			; BLOCK MASK.
+   0DC5 00                 2580 EXTMASK:.DB 0			; EXTENT MASK.
+   0DC6 00 00              2581 DSKSIZE:.DW 0			; DISK SIZE FROM BIOS (NUMBER OF BLOCKS-1).
+   0DC8 00 00              2582 DIRSIZE:.DW 0			; DIRECTORY SIZE.
+   0DCA 00 00              2583 ALLOC0:	.DW 0			; STORAGE FOR FIRST BYTES OF BIT MAP (DIR SPACE USED).
+   0DCC 00 00              2584 ALLOC1:	.DW 0
+   0DCE 00 00              2585 OFFSET:	.DW 0			; FIRST USABLE TRACK NUMBER.
+   0DD0 00 00              2586 XLATE:	.DW 0			; SECTOR TRANSLATION TABLE ADDRESS.
+                           2587 ;
+                           2588 ;
+   0DD2                    2589 CLOSEFLG:
+   0DD2 00                 2590 	.DB 0			; CLOSE FLAG (=0FFH IS EXTENT WRITTEN OK).
+   0DD3                    2591 R.DWRTFLG:
+   0DD3 00                 2592 	.DB 0			; READ/WRITE FLAG (0FFH=READ, 0=WRITE).
+   0DD4 00                 2593 FNDSTAT:.DB 0			; FILENAME FOUND STATUS (0=FOUND FIRST ENTRY).
+   0DD5 00                 2594 MODE:	.DB 0			; I/O MODE SELECT (0=RANDOM, 1=S.EQUENTIAL, 2=SPECIAL RANDOM).
+   0DD6 00                 2595 EPARAM:	.DB 0			; STORAGE FOR REGISTER (E) ON ENTRY TO BDOS.
+   0DD7                    2596 RELBLOCK:
+   0DD7 00                 2597 	.DB 0			; RELATIVE POSITION WITHIN FCB OF BLOCK NUMBER WRITTEN.
+   0DD8 00                 2598 COUNTER:.DB 0			; BYTE COUNTER FOR DIRECTORY NAME SEARCHES.
+   0DD9 00 00 00 00        2599 SAVEFCB:.DW 0,0			; SAVE SPACE FOR ADDRESS OF FCB (FOR DIRECTORY SEARCHES).
+   0DDD 00                 2600 BIGDISK:.DB 0			; IF =0 THEN DISK IS > 256 BLOCKS LONG.
+   0DDE 00                 2601 AUTO:	.DB 0			; IF NON-ZERO, THEN AUTO SELECT ACTIVATED.
+   0DDF 00                 2602 OLDDRV:	.DB 0			; ON AUTO SELECT, STORAGE FOR PREVIOUS DRIVE.
+   0DE0                    2603 AUTOFLAG:
+   0DE0 00                 2604 	.DB 0			; IF NON-ZERO, THEN AUTO SELECT CHANGED DRIVES.
+   0DE1 00                 2605 SAVNXT:	.DB 0			; STORAGE FOR NEXT RECORD NUMBER TO ACCESS.
+   0DE2 00                 2606 SAVEXT:	.DB 0			; STORAGE FOR EXTENT NUMBER OF FILE.
+   0DE3 00 00              2607 SAVNREC:.DW 0			; STORAGE FOR NUMBER OF RECORDS IN FILE.
+   0DE5 00 00              2608 BLKNMBR:.DW 0			; BLOCK NUMBER (PHYSICAL SECTOR) USED WITHIN A FILE OR LOGICAL SEC
+   0DE7 00 00              2609 LOGSECT:.DW 0			; STARTING LOGICAL (128 BYTE) SECTOR OF BLOCK (PHYSICAL SECTOR).
+   0DE9 00                 2610 FCBPOS:	.DB 0			; RELATIVE POSITION WITHIN BUFFER FOR FCB OF FILE OF INTEREST.
+   0DEA 00 00              2611 FILEPOS:.DW 0			; FILES POSITION WITHIN DIRECTORY (0 TO MAX ENTRIES -1).
+                           2612 ;
+                           2613 ;   DISK DIRECTORY BUFFER CHECKSUM BYTES. ONE FOR EACH OF THE
+                           2614 ; 16 POSSIBLE DRIVES.
+                           2615 ;
+   0DEC                    2616 CKSUMTBL:
+   0DEC 00 00 00 00 00 00  2617 	.DB 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+        00 00 00 00 00 00
+        00 00 00 00
+                           2618 ;
+                           2619 ;**************************************************************
+                           2620 ;*
+                           2621 ;*        B I O S   J U M P   T A B L E
+                           2622 ;*
+                           2623 ;**************************************************************
+                           2624 ;
+                           2625 
+                    E600   2626 BIOS	=	BIOSO		;BIOS ORIGIN
+                           2627 ;
+                    E600   2628 BOOT	=	BIOS          ;(BOOT) Cold boot entry
+                    E603   2629 WBOOT	=     BIOS+3        ;Warm boot entry
+                    E606   2630 CONST	=     BIOS+6        ;Console status
+                    E609   2631 CONIN	=     BIOS+9        ;Console char in
+                    E60C   2632 CONOUT	=     BIOS+12       ;Console char out
+                    E60F   2633 LIST	=     BIOS+15       ;List char out
+                    E612   2634 PUNCH	=     BIOS+18       ;Punch char out
+                    E615   2635 READER	=     BIOS+21       ;Reader char in
+                    E618   2636 HOME	=     BIOS+24       ;Home disk
+                    E61B   2637 SELDSK	=     BIOS+27       ;Select disk
+                    E61E   2638 SETTRK	=     BIOS+30       ;Set disk track addr
+                    E621   2639 SETSEC	=     BIOS+33       ;Set disk sector addr
+                    E624   2640 SETDMA	=     BIOS+36       ;Set DMA buffer addr
+                    E627   2641 READ	=     BIOS+39       ;Read sector
+                    E62A   2642 WRITE	=     BIOS+42       ;Write sector
+                    E630   2643 SECTRN	=     BIOS+48       ;Sector translation routine
+                           2644 ;
+                           2645 ;dwg;	.IF	ENDFIL
+                           2646 ;dwg;	.ORG	BDOSO+0DFFH
+                           2647 ;dwg;	.DB	55H
+                           2648 ;dwg;	.ENDIF
+                           2649 
+                           2650 ;dwg;   .END
+                           2651 
+   0DFC                    2652 _bdos_end::
+                           2653 	.area _CODE
+                           2654 	.area _CABS
