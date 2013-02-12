@@ -1,6 +1,0 @@
--mjx
--i bdosb01.ihx
--k /usr/local/share/sdcc/lib/z80
--l z80
-bdosb01.rel
--e

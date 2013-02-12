@@ -1,6 +1,0 @@
--mjx
--i ccpb03.ihx
--k /usr/local/share/sdcc/lib/z80
--l z80
-ccpb03.rel
--e

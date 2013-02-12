@@ -1,9 +1,0 @@
--mjx
--i fdisk.ihx
--k /usr/local/share/sdcc/lib/z80
--l z80
-cpm0.rel
-fdisk.rel
-cpmbdos.rel
-cprintf.rel
--e

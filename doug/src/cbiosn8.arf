@@ -1,6 +1,0 @@
--mjx
--i cbioshc.ihx
--k /usr/local/share/sdcc/lib/z80
--l z80
-cbioshc.rel
--e
