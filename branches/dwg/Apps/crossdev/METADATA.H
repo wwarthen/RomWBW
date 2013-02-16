@@ -8,9 +8,6 @@ extern initmeta();
 extern getmeta();
 extern putmeta();
 
-#define METATRACK 0
-#define METASECT  11
-
 
 /*
  * This structure is the same as the metadata sector 
@@ -66,4 +63,4 @@ struct METADATA {
 	unsigned int cpment;
 } metadata;
 
-
+

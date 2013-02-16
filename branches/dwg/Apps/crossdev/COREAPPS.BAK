@@ -1,0 +1,28 @@
+rem coreapps.bat 2/15/2013 dwg - build all core apps using batch files
+
+if not exist access.cpm call access.bat
+
+if not exist cpmname.cpm call cpmname.bat
+
+if not exist findfile.cpm call findfile.bat
+if not exist findfile.cpm pause
+
+if not exist map.cpm call map.bat
+
+if not exist meta.cpm call meta.bat
+
+if not exist multifmt.cpm call multifmt.bat
+
+if not exist rem.cpm call makerem.bat
+
+if not exist setlabel.cpm call setlabel.bat
+
+if not exist sysgen.cpm call sysgen.bat
+
+if not exist termtype.cpm call termtype.bat
+
+if not exist view.cpm call view.bat
+
+rem All Core Apps Built
+dir *.cpm /w
+

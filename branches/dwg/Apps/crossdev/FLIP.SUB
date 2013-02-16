@@ -1,0 +1,5 @@
+cc flip
+as flip
+as diagnose
+ln flip.o diagnose.o -lc
+

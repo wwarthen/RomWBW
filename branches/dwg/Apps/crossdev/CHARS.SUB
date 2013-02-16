@@ -1,0 +1,18 @@
+e:rem chars.sub 7/22/2012 dwg - build chars from source
+cc chars
+as chars
+as bdoscall
+as bioscall
+as diagnose
+cc cbanner
+as cbanner
+cc ctermcap
+as ctermcap
+ln chars.o bdoscall.o bioscall.o cbanner.o diagnose.o ctermcap.o c.lib
+era chars.o
+era bdoscall.o
+era bioscall.o
+era diagose.o
+era cbanner.o
+era ctermcap.o
+

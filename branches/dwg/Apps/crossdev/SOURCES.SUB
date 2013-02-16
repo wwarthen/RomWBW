@@ -1,0 +1,9 @@
+era *.bak
+era *.prn
+era *.rel
+era *.sym
+era sect0*.h
+era sect1*.h
+era sect2*.h
+nulu sources.lbr -T *.asm -T *.lib -T *.c -T *.h -T *.sub -D 2drive.* -D twodrive.* -D $$$$$$.SUB -X
+
