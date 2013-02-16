@@ -1,0 +1,13 @@
+e:rem termtype.sub 7/22/2012 dwg - build termtype from sources
+cc termtype
+as termtype
+as asmiface
+cc ctermcap
+as ctermcap
+as diagnose
+ln termtype.o asmiface.o ctermcap.o diagnose.o c.lib
+era termtype.o
+era asmiface.o
+era ctermcap.o
+era diagnose.o
+

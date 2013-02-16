@@ -13,6 +13,10 @@
 #include "diagnose.h"
 #include "std.h"
 
+#define BDOS    5			/* memory address of BDOS invocation */
+#define HIGHSEG 0x0C000		/* memory address of system  config  */
+
+#define GETSYSCFG 0x0F000	/* HBIOS function for Get System Configuration */
 
 
 extern cnamept1();
@@ -20,7 +24,9 @@ extern cnamept2();
 extern cnamept3();
 extern cnamept4();
 
-struct SYSCFG * syscfg;
+
+
+struct SYSCFG * pSYSCFG;
 int line;
 
 int main(argc,argv)
@@ -36,8 +42,19 @@ int main(argc,argv)
 	char * pC;
 
 	line = 5;
+
+
+
+	hregbc = GETSYSCFG;				/* function = Get System Config      */
+	hregde = HIGHSEG;				/* addr of dest (must be high)       */
+	diagnose();						/* invoke the NBIOS function         */
+	pSYSCFG = HIGHSEG;
+	
+	crtinit(pSYSCFG->cnfgdata.termtype);
+	crtclr();
+	crtlc(0,0);
 		
-	printf("CPMNAME.COM %d/%d/%d v%d.%d.%d.%d",
+	printf("CPMNAME.COM %d/%d/%d v%d.%d.%d (%d)",
 		A_MONTH,A_DAY,A_YEAR,A_RMJ,A_RMN,A_RUP,A_RTP);
 	printf(" dwg - Display System Configuration");
 	pager();
@@ -54,16 +71,18 @@ int main(argc,argv)
 	bdoscall();
 	pager();
 			
-	syscfg = 0x8000;
 	
 	hregbc = 0xf000;
-	hregde = syscfg;	
+	hregde = HIGHSEG;	
 	diagnose();
 
-	cnamept1(syscfg);
-	cnamept2(syscfg);
-	cnamept3(syscfg);
-	cnamept4(syscfg);
+	pSYSCFG = HIGHSEG;
+	
+
+	cnamept1(pSYSCFG);
+	cnamept2(pSYSCFG);
+	cnamept3(pSYSCFG);
+	cnamept4(pSYSCFG);
 	
 }
 
@@ -83,4 +102,4 @@ pager()
 /* eof - ccpmname.c */
 /********************/
 
-	
+	

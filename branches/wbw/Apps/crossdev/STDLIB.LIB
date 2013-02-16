@@ -1,0 +1,10 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; stdlib.lib 1/18/2012 dwg - some stdlib declarations ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+SUCCESS equ	FALSE	; depends on previous portab.lib
+FAILURE	equ	TRUE	; depends on previous portab.lib
+;;;;;;;;;;;;;;;;;;;;
+; eof - stdlib.lib ;
+;;;;;;;;;;;;;;;;;;;;
+
+

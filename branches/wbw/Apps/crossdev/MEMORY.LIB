@@ -1,0 +1,24 @@
+; memory.lib 2/17/2012 dwg - review for release 1.5.1.0
+; memory.lib 2/11/2012 dwg - review for release 1.5
+; memory.lib 2/04/2012 dwg - adjust for new macros
+; memory.lib 1/13/2012 dwg - POSIX memcpy and memset
+
+	extrn	x$memcpy
+	extrn	x$memset
+
+memcpy	macro	dst,src,siz
+	lxi	d,dst		; load 1st positional parameter into reg
+	lxi	h,src		; load 2nd positional parameter into reg
+	lxi	b,siz		; load 3rd positional parameter into reg
+	call	x$memcpy	; call actual routine in see memory.asm
+	endm
+
+memset	macro	dst,data,siz
+	lxi	h,dst		; load 1st positional parameter into reg
+	mvi	a,data		; load 2nd positional parameter into reg
+	lxi	b,siz		; load 3rd positional parameter into reg
+	call	x$memset	; call actual routine in see memory.asm
+	endm
+
+; eof - memory.lib
+
