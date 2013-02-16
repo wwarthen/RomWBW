@@ -208,6 +208,8 @@ struct BIOS {
 #define DEV_PPIDE 	0x40
 #define DEV_SD		0x50
 #define DEV_PRPSD 	0x60
+#define DEV_PPPSD	0x70
+#define DEV_HDSK	0x80
 
 #define PLT_N8VEM 1
 #define PLT_ZETA  2
@@ -679,4 +681,4 @@ TERM$VT52	equ	3
 ; eof - std.lib
 
 */
-
+

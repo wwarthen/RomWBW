@@ -1,0 +1,18 @@
+; globals.lib 7/19/2012 dwg - update for 2.0.0.0 B22
+; globals.lib 1/18/2012 dwg - program globals
+
+ENGLISH		equ	TRUE
+SPANISH		equ	FALSE
+
+MAX$LABEL	equ	16
+STACK$SIZE 	equ 	512
+
+COLON		equ	':'
+
+stack	macro
+	ds	STACK$SIZE
+stack$top:
+	endm
+
+; eof - globals.lib
+

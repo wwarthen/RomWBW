@@ -8,23 +8,38 @@
 #include "syscfg.h"
 #include "diagnose.h"
 
-int tt;
+char termtype;
 
-crtinit()
+
+
+char wy50row[24] = { ' ', '!', '"', '#', '$', '%', '&', 39,
+				  '(', ')', '*', '+', ',', '-', '.', '/',
+				  '0', '1', '2', '3', '4', '5', '6', '7' };
+
+char wy50col[80] = { ' ', '!', '"', '#', '$', '%', '&', 39,
+				  '(', ')', '*', '+', ',', '-', '.', '/',
+				  '0', '1', '2', '3', '4', '5', '6', '7',
+				  '8', '9', ':', ';', '<', '=', '>', '?',
+				  '@', 'A', 'B', 'C', 'D', 'E', 'F', 'G',
+				  'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O',
+				  'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W',
+				  'X', 'Y', 'Z', '[', '\\', ']', '^', '_',
+				  96,  'a', 'b', 'c', 'd', 'e', 'f', 'g',
+				  'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o' };
+				  
+
+
+crtinit(tt)
+	char tt;
 {
-	struct SYSCFG * pSYSCFG;
-	hregbc = 0x0f000;
-	hregde = 0x0C000;
-	diagnose();
-	pSYSCFG = 0x0C000;
-	tt = pSYSCFG->cnfgdata.termtype;
+	termtype = tt;
 }
 
 crtclr()
 {
 	int i;
 
-	switch(tt) {
+	switch(termtype) {
 		case TERM_TTY:
 			for(i=0;i<43;i++) {
 				printf("%c%c",CR,LF);
@@ -48,14 +63,14 @@ int col;
 {
 	int i;
 
-	switch(tt) {
+	switch(termtype) {
 		case TERM_TTY:
 			break;
 		case TERM_ANSI:
 			printf("%c[%d;%d%c",ESC,line,col,0x66);
 			break;
 		case TERM_WYSE:
-			printf("%c+",ESC);
+			printf("%c=%c%c",ESC,wy50row[line-1],wy50col[col-1]);
 			break;
 		case TERM_VT52:
 			printf("%cY%c%c",ESC,' '+line,' '+col);
@@ -63,14 +78,7 @@ int col;
 	};
 }
 
-
-
-
 /*
-
-SINGLEQUOTE equ 0
-RIGHTQUOTE  equ 0
-LEFTQUOTE   equ 0
 
 wy50row	db	' !"#$%&'
 	db	39
@@ -81,9 +89,6 @@ wy50col db	' !"#$%&'
 	db	'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_'
 	db	96
 	db	'abcdefghijklmno'
-
-templine db 0
-tempcol	 db 0
 
 */
 

@@ -1,0 +1,4 @@
+cc remote
+as remote
+ln remote.o bdoscall.o ctermcap.o n8chars.o tms9918.o diagnose.o -lc
+
