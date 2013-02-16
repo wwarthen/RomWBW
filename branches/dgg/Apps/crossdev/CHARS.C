@@ -8,9 +8,18 @@
 #include "cpm80.h"
 #include "cpmappl.h"
 #include "applvers.h"
+#include "cnfgdata.h"
+#include "syscfg.h"
 
 #define TOP 0
 #define LEFT 4
+
+#define BDOS    5			/* memory address of BDOS invocation */
+#define HIGHSEG 0x0C000		/* memory address of system  config  */
+
+#define GETSYSCFG 0x0F000	/* HBIOS function for Get System Configuration */
+
+struct SYSCFG * pSYSCFG = HIGHSEG;
 
 char map[256] = 
 { 
@@ -92,7 +101,17 @@ int main(argc,argv)
 		}
 	} else  {
 	
-		crtinit();				
+
+
+	hregbc = GETSYSCFG;				/* function = Get System Config      */
+	hregde = HIGHSEG;				/* addr of dest (must be high)       */
+	diagnose();						/* invoke the NBIOS function         */
+	pSYSCFG = HIGHSEG;
+	
+/*	printf("TT is %d\n",pSYSCFG->cnfgdata.termtype); */
+
+
+		crtinit(pSYSCFG->cnfgdata.termtype);				
 		crtclr();
 		crtlc(0,0);
 
@@ -130,4 +149,4 @@ int main(argc,argv)
 	
 	return 0;
 }
-
+

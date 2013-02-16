@@ -1,0 +1,19 @@
+e:rem meta.sub 7/22/2012 dwg - build meta from sources
+era *.bak
+era *.prn
+cc meta
+as meta
+as asmiface
+as bioscall
+as bdoscall
+cc cbanner
+as cbanner
+cc clogical
+as clogical
+cc ctermcap
+as ctermcap
+as diagnose
+cc sectorio
+as sectorio
+ln meta.o asmiface.o bioscall.o bdoscall.o cbanner.o clogical.o diagnose.o ctermcap.o sectorio.o c.lib
+
