@@ -14,6 +14,14 @@
 #include "clogical.h"
 #include "metadata.h"
 #include "applvers.h"
+#include "cnfgdata.h"
+#include "syscfg.h"
+
+
+#define BDOS    5			/* memory address of BDOS invocation */
+#define HIGHSEG 0x0C000		/* memory address of system  config  */
+
+#define GETSYSCFG 0x0F000	/* HBIOS function for Get System Configuration */
 
 #define METALINE	7
 #define METACOL		0
@@ -26,7 +34,7 @@ int drive;
 int logunit;
 int numlu;
 
-
+struct SYSCFG * pSYSCFG = HIGHSEG;
 
 display()
 {
@@ -36,7 +44,7 @@ display()
 	luscur(drive,logunit);	
 
 	/* Read the Prefix Sector */
-	rdsector(drive,0,11,&metadata,0);
+	rdsector(drive,0,11,&metadata);
 
 	crtlc(METALINE+0,METACOL);
 	printf("metadata.signature = 0x%04x",metadata.signature);
@@ -159,13 +167,13 @@ int menu(state)
 		case 'p':
 			metadata.writeprot = TRUE;
 			metadata.update++;
-			wrsector(drive,0,11,&metadata,0);
+			wrsector(drive,0,11,&metadata);
 			break;
 		
 		case 'u':
 			metadata.writeprot = FALSE;
 		    metadata.update++;
-			wrsector(drive,0,11,&metadata,0);
+			wrsector(drive,0,11,&metadata);
 			break;
 
 		default:	printf("%c",7);	break;
@@ -178,7 +186,14 @@ main(argc,argv)
 	int argc;
 	char *argv[];
 {
-	crtinit();
+	hregbc = GETSYSCFG;				/* function = Get System Config      */
+	hregde = HIGHSEG;				/* addr of dest (must be high)       */
+	diagnose();						/* invoke the NBIOS function         */
+
+/*	printf("TT is %d\n",pSYSCFG->cnfgdata.termtype); */
+
+	pSYSCFG = HIGHSEG;
+	crtinit(pSYSCFG->cnfgdata.termtype);
 	crtclr();
 	crtlc(0,0);
 		
@@ -206,4 +221,4 @@ main(argc,argv)
 
 
 
-
+

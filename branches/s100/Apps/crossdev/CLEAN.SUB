@@ -1,0 +1,27 @@
+era *.bak
+era *.prn
+era *.rel
+era *.sym
+era *.lst
+era *.o
+era sect0*.h
+era sect1*.h
+era sect2*.h
+era sect3*.h
+era sect4*.h
+era sect5*.h
+era sect6*.h
+era sect7*.h
+era sect8*.h
+era sect9*.h
+era sect0*.inc
+era sect1*.inc
+era sect2*.inc
+era sect3*.inc
+era sect4*.inc
+era sect5*.inc
+era sect6*.inc
+era sect7*.inc
+era sect8*.inc
+era sect9*.inc
+

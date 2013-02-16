@@ -9,12 +9,19 @@
 #include "cpm80.h"
 #include "cpmappl.h"
 #include "applvers.h"
+#include "cnfgdata.h"
+#include "syscfg.h"
 
 #define DSM144 0x02C6
 #define DSM720 0x015E
 #define DSM360 0x00AA
 #define DSM120 0x024F
 #define DSM111 0x0222
+
+#define BDOS    5			/* memory address of BDOS invocation */
+#define HIGHSEG 0x0C000		/* memory address of system  config  */
+
+#define GETSYSCFG 0x0F000	/* HBIOS function for Get System Configuration */
 
 /*
 #include "cpmbind.h"
@@ -32,6 +39,10 @@
 */
 
 
+#define BDOS    5			/* memory address of BDOS invocation */
+#define HIGHSEG 0x0C000		/* memory address of system  config  */
+
+#define GETSYSCFG 0x0F000	/* HBIOS function for Get System Configuration */
 
 
 /* Drive List Geometry */
@@ -54,6 +65,9 @@
 /* BDOS Function number */
 #define RETCURR 25
 
+struct SYSCFG * pSYSCFG = HIGHSEG;
+
+
 /*
 struct DPH * pDPH;
 struct DPB * pDPB;
@@ -73,8 +87,8 @@ dispdpb(line,column,pDPB)
 	crtlc(line+2,column);	
 	printf("[%04x] blm =%02x",&pDPB->blm,pDPB->blm);
 	crtlc(line+3,column);	
-	printf("[%04x] ex  =%02x",&pDPB->exm,pDPB->exm);
-	crtlc(line+4,column);
+	printf("[%04x] exm =%02x",&pDPB->exm,pDPB->exm);
+	crtlc(line+4,column);	
 	printf("[%04x] dsm =%04x",&pDPB->dsm,pDPB->dsm);
 	crtlc(line+5,column);	
 	printf("[%04x] drm =%04x",&pDPB->drm,pDPB->drm);
@@ -188,7 +202,7 @@ struct DPB * dispdph(drive,line,column)
 		crtlc(line+10,column+1);	printf("1.11MB DSDD FMT");
 	}				
 
-	dispdpb(line+13,column,pDPH->dpb);
+	dispdpb(line+12,column,pDPH->dpb);
 }
 	
 
@@ -279,16 +293,47 @@ int main(argc,argv)
 						base = 7;
 						columns = 1;
 						break;
+
+					case 'I':
+					case 'i':
+						base = 8;
+						columns = 1;
+						break;
+
+					case 'J':
+					case 'j':
+						base = 9;
+						columns = 1;
+						break;
+
+					case 'K':
+					case 'k':
+						base = 10;
+						columns = 1;
+						break;
+
+					case 'L':
+					case 'l':
+						base = 11;
+						columns = 1;
+						break;
+
 				}
 			}
 		}		
 	}
 
-	crtinit();
+
+	hregbc = GETSYSCFG;				/* function = Get System Config      */
+	hregde = HIGHSEG;				/* addr of dest (must be high)       */
+	diagnose();						/* invoke the NBIOS function         */
+	pSYSCFG = HIGHSEG;
+	
+	crtinit(pSYSCFG->cnfgdata.termtype);
 	crtclr();
 	crtlc(0,0);
 
-	printf("VIEW.COM %d/%d/%d v%d.%d.%d.%d",
+	printf("VIEW.COM %d/%d/%d v%d.%d.%d (%d)",
 		A_MONTH,A_DAY,A_YEAR,A_RMJ,A_RMN,A_RUP,A_RTP);
 	printf(" dwg - System Storage Drives and Logical Units");
 
@@ -312,4 +357,4 @@ int main(argc,argv)
 /*****************/
 /* eof - cview.c */
 /*****************/
-
+

@@ -5,8 +5,9 @@
 	global	hregde_,2
 	global	hreghl_,2
 
+
 	public	diagnose_
-diagnose_:
+diagnose:
 	push	psw
 	push	b
 	push	d
@@ -45,3 +46,4 @@ diagnose_:
 	RET
 
 	END
+

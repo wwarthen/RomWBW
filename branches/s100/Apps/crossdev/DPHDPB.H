@@ -1,4 +1,19 @@
-/* dphdpb.h 6/10/2012 dwg - CP/M Disk Parameters */
+
+struct DPH {
+	unsigned int xlt;	
+	unsigned int rv1;
+	unsigned int rv2;
+	unsigned int rv3;
+	unsigned int dbf;	
+	void * dpb;	
+	void * csv;	
+	void * alv;	
+	/* extension */
+	unsigned char sigl;
+	unsigned char sigu;
+	unsigned int current;
+	unsigned int number;
+};
 
 struct DPB {
 	unsigned int spt;	
@@ -12,21 +27,4 @@ struct DPB {
 	unsigned int cks;	
 	unsigned int off;	
 };
-
-struct DPH {
-	unsigned int xlt;	
-	unsigned int rv1;
-	unsigned int rv2;
-	unsigned int rv3;
-	unsigned int dbf;	
-	struct DPB * dpb;	
-	void * csv;	
-	void * alv;	
-	/* extension */
-	char sigl;
-	char sigu;
-	int current;
-	int number;
-};
-
-
+
