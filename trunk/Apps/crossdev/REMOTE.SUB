@@ -1,0 +1,14 @@
+cc remote
+as remote
+as diagnose
+cc n8chars
+as n8chars
+cc tms9918
+as tms9918
+cc ctermcap
+as ctermcap
+as bdoscall
+as asmiface
+as bioscall
+ln remote.o asmiface.o bioscall.o bdoscall.o ctermcap.o n8chars.o tms9918.o diagnose.o -lc
+

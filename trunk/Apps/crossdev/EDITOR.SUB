@@ -1,0 +1,6 @@
+cc editor
+as editor
+as bdoscall
+as diagnose
+ln editor.o bdoscall.o diagnose.o -lc
+

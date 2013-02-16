@@ -1,0 +1,20 @@
+e:rem cpmname.sub  9/5/2012 dwg - build cpmname from sources
+cc cpmname
+as cpmname
+cc cnamept1
+as cnamept1
+cc cnamept2
+as cnamept2
+cc cnamept3
+as cnamept3
+cc cnamept4
+as cnamept4
+as bdoscall
+as bioscall
+cc cmemory
+as cmemory
+cc ctermcap
+as ctermcap
+as diagnose
+ln cpmname.o ctermcap.o cnamept1.o cnamept2.o cnamept3.o cnamept4.o cmemory.o diagnose.o bioscall.o bdoscall.o c.lib
+

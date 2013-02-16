@@ -1,0 +1,13 @@
+e:rem findfile.sub 9/5/2012 dwg - make findfile.com from sources
+era *.bak
+era *.prn
+rasm80 findfile 
+rasm80 printers
+rasm80 terminal
+rasm80 memory
+rasm80 banner
+rasm80 identity
+rasm80 hbios
+link80 findfile,hbios,identity,banner,memory,printers,terminal
+
+

@@ -11,13 +11,22 @@
 #include "applvers.h"
 #include "sectorio.h"	
 #include "infolist.h"
+#include "cnfgdata.h"
+#include "syscfg.h"
+
+#define BDOS    5			/* memory address of BDOS invocation */
+#define HIGHSEG 0x0C000		/* memory address of system  config  */
+
+#define GETSYSCFG 0x0F000	/* HBIOS function for Get System Configuration */
 
 
-/* rdsector(drive,track,sector,buffer,select); */
+/* rdsector(drive,track,sector,buffer); */
 
 
 struct DPH * pDPH;
 struct DPB * pDPB;
+
+struct SYSCFG * pSYSCFG = HIGHSEG;
 
 unsigned char filespec[32];
 
@@ -74,10 +83,9 @@ sysgen(drive,trk,sec,ptr,spt,cnt)
 	int spt;
 	int cnt;
 {
-	wrsector(drive,trk,sec,ptr,0);
 	while ( 0 < cnt ) {
 	
-		wrsector(drive,trk,sec,ptr,1);	
+		wrsector(drive,trk,sec,ptr);	
 
 		printf("drive=%c:, trk=%d, sec=%3d,  ptr=0x0%4x   ",
 				drive+'A', trk,    sec,      ptr);
@@ -118,8 +126,13 @@ int main(argc,argv)
 	unsigned char * p;	
 
 	
+	hregbc = GETSYSCFG;				/* function = Get System Config      */
+	hregde = HIGHSEG;				/* addr of dest (must be high)       */
+	diagnose();						/* invoke the NBIOS function         */
 
-	crtinit();
+/*	printf("TT is %d\n",pSYSCFG->cnfgdata.termtype); */
+
+	crtinit(pSYSCFG->cnfgdata.termtype);
 	crtclr();
 	crtlc(0,0);
 
@@ -226,4 +239,4 @@ int main(argc,argv)
 /* eof - csysgen.c */
 /*******************/
 
-
+

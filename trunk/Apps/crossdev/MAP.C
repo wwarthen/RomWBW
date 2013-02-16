@@ -1,27 +1,52 @@
+/* map.c 9/4/2012 dwg - added support for four more drives I: to L:        */
+/* map.c 8/3/2012 dwg - added DEV_PPPSD and DEV_HDSK, fixed end of drives  */
 /* map.c 6/7/2012 dwg - */
 
 #include "portab.h"
+
 #include "globals.h"
+
 #include "stdio.h"
+
 #include "stdlib.h"
+
 #include "memory.h"
 
 #include "cpmbind.h"
 
+/* #include "cbioshdr.h" */
+
 #include "infolist.h"
+
 #include "dphdpb.h"
+
 #include "dphmap.h"
+
 #include "metadata.h"
+
 #include "clogical.h"
+
 #include "applvers.h"
 
-#define MAXDRIVE 8
+#include "diagnose.h"
+
+#include "cnfgdata.h"
+
+#include "syscfg.h"
+
+/* #define MAXDRIVE 12 */
+
+#define BDOS    5			/* memory address of BDOS invocation */
+#define HIGHSEG 0x0C000		/* memory address of system  config  */
+
+#define GETSYSCFG 0x0F000	/* HBIOS function for Get System Configuration */
 
 /* Drive List Geometry */
-#define COL1 0
-#define COL2 (80/4)
-#define COL3 (80/2)
-#define COL4 (COL2+COL3)
+#define COL1 5
+#define COL2 25
+#define COL3 45
+#define COL4 65
+
 #define LINE 3
 
 /* Logical Unit List Geometry */
@@ -31,10 +56,10 @@
 #define COL3A (2*COL2A)
 
 /* Nomenclature Geometry */
-#define LINE2 8
+#define LINE2 9
 
 /* Misc Info Geometry */
-#define CDLINE 6
+#define CDLINE 7
 
 /* BDOS Function number */
 #define RETCURR 25
@@ -45,6 +70,11 @@ extern lurst();
 struct BIOS * pBIOS;
 
 struct DPH * pDPH;
+
+struct CNFGDATA * pCNFGDATA;
+struct SYSCFG * pSYSCFG;
+
+
 
 int devunit;
 int dev;
@@ -121,10 +151,23 @@ void dispdph(l,c,drive,ptr)
 		unsigned int current;
 		unsigned int number;
 */
+
+
+	/* 8/3/2012 dwg - detect end of drives properly */
+	ireghl = pGETLU;
+	iregbc = drive-'A';
+	bioscall();
+	if(1 == irega) {
+		return;
+	}
+
 	crtlc(l,c);
 	printf("%c: ",drive);
 
+
 	devunit = lugdu(drive-'A');
+
+
 	dev     = devunit & 0xf0;
 	unit    = devunit & 0x0f;	
 
@@ -151,6 +194,12 @@ void dispdph(l,c,drive,ptr)
 			break;
 		case DEV_PRPSD:
 			printf("PRPSD%d",unit);
+			break;
+		case DEV_PPPSD:
+			printf("PPPSD%d",unit);
+			break;
+		case DEV_HDSK:
+			printf("HDSK%d",unit);
 			break;
 		default:	
 			printf("UNK");
@@ -181,10 +230,17 @@ int main(argc,argv)
 	int	mylu;
 	int drivenum;
 	int column;
+	int l;
 	int line;
+	int startlu;
+	int limit;
+	char bRunning;
 	char szDrive[32];
 	char szLuNum[32];
-				
+	char szWP[2];
+
+
+					
 	if(argc == 3) {
 
 		strcpy(szDrive,argv[1]);
@@ -227,6 +283,24 @@ int main(argc,argv)
 					case 'H':
 						luscur(7,mylu);
 						break;
+
+					case 'i':
+					case 'I':
+						luscur(8,mylu);
+						break;
+					case 'j':
+					case 'J':
+						luscur(9,mylu);
+						break;
+					case 'k':
+					case 'K':
+						luscur(10,mylu);
+						break;
+					case 'l':
+					case 'L':
+						luscur(11,mylu);
+						break;
+
 					default:
 						break;
 				}			
@@ -239,11 +313,16 @@ int main(argc,argv)
 
 	pBIOS = BIOSAD;
 	
-	crtinit();
+
+	hregbc = GETSYSCFG;				/* function = Get System Config      */
+	hregde = HIGHSEG;				/* addr of dest (must be high)       */
+	diagnose();						/* invoke the NBIOS function         */
+	pSYSCFG = HIGHSEG;
+	crtinit(pSYSCFG->cnfgdata.termtype);
 	crtclr();
 	crtlc(0,0);
 
-	printf("MAP.COM %d/%d/%d v%d.%d.%d.%d",
+	printf("MAP.COM %d/%d/%d v%d.%d.%d (%d)",
 		A_MONTH,A_DAY,A_YEAR,A_RMJ,A_RMN,A_RUP,A_RTP);
 	printf(" dwg - System Storage Drives and Logical Units");
 	
@@ -256,14 +335,19 @@ int main(argc,argv)
 
 	pDPHMAP = (struct DPHMAPA *)pINFOLIST->dphmap;
 
-	dispdph(LINE,  COL1+LGUT-1,'A',(struct DPH *)pDPHMAP->drivea);
-	dispdph(LINE+1,COL1+LGUT-1,'B',(struct DPH *)pDPHMAP->driveb);
-	dispdph(LINE,  COL2+LGUT-1,'C',(struct DPH *)pDPHMAP->drivec);
-	dispdph(LINE+1,COL2+LGUT-1,'D',(struct DPH *)pDPHMAP->drived);
-	dispdph(LINE,  COL3+LGUT-1,'E',(struct DPH *)pDPHMAP->drivee);
-	dispdph(LINE+1,COL3+LGUT-1,'F',(struct DPH *)pDPHMAP->drivef);
-	dispdph(LINE,  COL4+LGUT-1,'G',(struct DPH *)pDPHMAP->driveg);
-	dispdph(LINE+1,COL4+LGUT-1,'H',(struct DPH *)pDPHMAP->driveh);
+
+	dispdph(LINE,  COL1,'A',(struct DPH *)pDPHMAP->drivea);
+	dispdph(LINE+1,COL1,'B',(struct DPH *)pDPHMAP->driveb);
+	dispdph(LINE+2,COL1,'C',(struct DPH *)pDPHMAP->drivec);
+	dispdph(LINE  ,COL2,'D',(struct DPH *)pDPHMAP->drived);
+	dispdph(LINE+1,COL2,'E',(struct DPH *)pDPHMAP->drivee);
+	dispdph(LINE+2,COL2,'F',(struct DPH *)pDPHMAP->drivef);
+	dispdph(LINE,  COL3,'G',(struct DPH *)pDPHMAP->driveg);
+	dispdph(LINE+1,COL3,'H',(struct DPH *)pDPHMAP->driveh);
+	dispdph(LINE+2,COL3,'I',(struct DPH *)pDPHMAP->drivei);
+	dispdph(LINE  ,COL4,'J',(struct DPH *)pDPHMAP->drivej);
+	dispdph(LINE+1,COL4,'K',(struct DPH *)pDPHMAP->drivek);
+	dispdph(LINE+2,COL4,'L',(struct DPH *)pDPHMAP->drivel);
 
 	dregbc = RETCURR;
 	bdoscall();
@@ -283,40 +367,100 @@ int main(argc,argv)
 	printf("Number of LUs is %d\n",lugnum(drive));
 
 	if(0<numlu)  {
-		crtlc(LINE2,COL1A+LGUT);	
-		printf("LU -----Label------");
-		crtlc(LINE2,COL2A+LGUT);
-		printf("LU -----Label------");
-		crtlc(LINE2,COL3A+LGUT);
-		printf("LU -----Label------");
+		crtlc(LINE2,COL1A+LGUT-1);	
+		printf("LU P -----Label------");
+		crtlc(LINE2,COL2A+LGUT-1);
+		printf("LU P -----Label------");
+		crtlc(LINE2,COL3A+LGUT-1);
+		printf("LU P -----Label------");
 
-		line   = LINE2+1;
-		column = 0;
-		for(i=0;i<numlu;i++) {
-			luscur(drive,i);
-			readsec(drive,0,11,&metadata);
-			metadata.term = 0;
-			switch(column++) {
-				case 0:
-					crtlc(line,COL1A+LGUT);
-					printf("%2d %s",i,metadata.label);
-					break;
-				case 1:
-					crtlc(line,COL2A+LGUT);
-					printf("%2d %s",i,metadata.label);
-					break;
-				case 2:
-					crtlc(line,COL3A+LGUT);
-					printf("%2d %s",i,metadata.label);
-					column = 0;
-					line++;
-					break;		
+		startlu = 0;
+		limit = startlu+39;
+		if(limit>numlu) limit = numlu;
+		bRunning = 1;
+		
+		while(1 == bRunning) {
+
+			line   = LINE2+1;
+			column = 0;
+
+			for(l=0;l<13;l++) {
+				crtlc(line+l,0);
+				/*               1         2         3         4	*/
+				/*      1234567890123456789012345678901234567890	*/
+				printf("				                        ");
+				/*               5         6         7              */
+				/*      123456789012345678901234567890123456789		*/
+				printf("                            ");
 			}
-		}
+			
+			for(i=startlu;i<limit;i++) {
+				luscur(drive,i);
+				readsec(drive,0,11,&metadata);
+				metadata.term = 0;
+
+
+				if(TRUE == metadata.writeprot) strcpy(szWP,"*");
+				else                           strcpy(szWP," ");
+
+				switch(column++) {
+					case 0:
+						crtlc(line,COL1A+LGUT-2);
+						printf("%3d %s %s",i,szWP,metadata.label);
+						break;
+					case 1:
+						crtlc(line,COL2A+LGUT-2);
+						printf("%3d %s %s",i,szWP,metadata.label);
+						break;
+					case 2:
+						crtlc(line,COL3A+LGUT-2);
+						printf("%3d %s %s",i,szWP,metadata.label);
+						column = 0;
+						line++;
+						break;		
+				}
+			}
+
+			crtlc(23,0);
+			printf("Options( N(ext), P(revious), Q(uit) )? ");
+			
+			dregbc = 1;	/* CONIN */
+			bdoscall();
+			
+			switch(drega) {
+				case 'Q':
+				case 'q':
+				case 'X':
+				case 'x':
+				case 3:			
+					bRunning = 0;
+					break;
+				case 'N':
+				case 'n':
+				case ' ':
+					startlu += 39;
+					if(startlu>numlu) startlu=0;
+					limit = startlu+39;
+					if(limit > numlu) limit = numlu;					
+					break;
+				case 'P':
+				case 'p':
+					startlu -= 39;
+					if(startlu < 0) startlu = 0;
+					limit = startlu+39;
+					if (limit > numlu) limit = numlu;
+					break;
+				default:
+					printf("%c",7);
+					break;
+			}						
+			
+		} /* end of (1==bRunning)   */
+		
 		luscur(drive,deflu);
 	}
 }
 
 /****************/
 /* eof - cmap.c */
-/****************/
+/****************/
