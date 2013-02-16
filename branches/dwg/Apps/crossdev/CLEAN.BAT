@@ -32,7 +32,6 @@ if exist menu.asm erase menu.asm
 if exist menu1.asm erase menu1.asm
 if exist menucol.asm erase menucol.asm
 if exist meta.asm erase meta.asm
-if exist metadata.asm erase metadata.asm
 if exist mkrasm80.asm erase mkrasm80.asm
 if exist monitor.asm erase monitor.asm
 if exist multifmt.asm erase multifmt.asm
