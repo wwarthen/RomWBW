@@ -27,7 +27,7 @@ WaitInitX:
         LD      E,REGstatus             ;Get status after initilization
         CALL    IDErd8D                 ;Check Status (info in [D])
         BIT     7,D
-        JR      Z,SECREAD               ;Zero, so all is OK to write to drive
+        JR      Z,SECREADX               ;Zero, so all is OK to write to drive
                                         ;Delay to allow drive to get up to speed
         PUSH    BC
         LD      BC,0FFFFH
@@ -46,8 +46,7 @@ IDErrorX:
 
 SECREADX:                                ;Note CPMLDR will ALWAYS be on TRK 0,SEC 1,Head 0
         CALL    IDEwaitnotbusy          ;Make sure drive is ready
-        JR      C,IDError               ;NC if ready
-
+        JR      C,IDErrorX               ;NC if ready
         LD      D,1                     ;Load track 0,sec 1, head 0
         LD      E,REGsector             ;Send info to drive
         CALL    IDEwr8D
@@ -95,7 +94,7 @@ MoreRD16X:
         LD      E,REGstatus             ;Check the R/W status when done
         CALL    IDErd8D
         BIT     0,D
-        JR      NZ,IDEerr1              ;Z if no errors
+        JR      NZ,IDEerr1X              ;Z if no errors
         LD      HL,STARTCPM
         LD      A,(HL)
         CP      31H                     ;EXPECT TO HAVE 31H @80H IE. LD SP,80H
