@@ -1,3 +1,7 @@
+; master-luke.asm 2/17/2013 dwg - doug's version derived from david's version
+;	Now includes BTROMWBW.INC (code to boot RomWBW style) Cmd "R"
+;
+; master-yoda.asm 2/17/2013 dwg - david's version unchanged
 ;
 ;	monitor.asm  This is main monitor program for my system
 ;
@@ -105,9 +109,9 @@ TBL:
 	.DW	NOTIMPL		; "M"
 	.DW	XMEMMAP		; "N" DISPLAY EXTENDED MEMORY SEGEMENT:ADDRESS
 	.DW	NOTIMPL		; "O"
-	.DW	HBOOTCPM	; "P BOOT IN CPM FROM IDE HARD DISK"
+	.DW	HBOOTCPM	; "P" BOOT IN CPM FROM IDE HARD DISK"
 	.DW	QUERY		; "Q" QUERY PORT (IN OR OUT)
-	.DW	NOTIMPL		; "R"
+	.DW	HBOOTWBW	; "R" BOOT IN CPM FROM RomWBW HARD DISK
 	.DW	SUBS		; "S" SUBSTITUTE &/OR EXAMINE MEMORY
 	.DW	NOTIMPL		; "T"
 	.DW	NOTIMPL		; "U"
@@ -726,7 +730,7 @@ M0:     DJNZ    M0
         JR      NZ,DELAY1
         RET
 
-
+#INCLUDE "BTROMWBW.INC"
 ;---------------------------------------------------------------
 
 ;MEMORY MAP PROGRAM CF.DR.DOBBS VOL 31 P40.
