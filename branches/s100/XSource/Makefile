@@ -115,12 +115,12 @@
 #SYS := CPM
 #ROMNAME := n8vem
 
-CONFIG := s100
+CONFIG := s100_std
 ROMSIZE := 512
 CPU := 80
 SYS := CPM
 ROMNAME := s100
-CPUROM := master-yoda
+CPUROM := master-luke
 
 ifndef ROMNAME
 ROMNAME := $(CONFIG)
@@ -218,9 +218,12 @@ bootrom.bin : bootrom.asm std.asm build.inc ver.inc memmgr.asm config_$(CONFIG).
 bootapp.bin:	bootapp.asm std.asm build.inc ver.inc
 	$(TASM) $(ASMOPT80) $< $@
 
-$(OUTDIR)/$(CPUROM).rom:	$(CPUROM).asm std.asm build.inc config_$(CONFIG).asm 
-	cp config_$(CONFIG).asm config.asm
-	$(ASMIMG) $(CPUROM).asm $(OUTDIR)/$(CPUROM).rom
+#$(OUTDIR)/$(CPUROM).rom:	$(CPUROM).asm std.asm build.inc config_$(CONFIG).asm 
+#	cp config_$(CONFIG).asm config.asm
+#	$(ASMIMG) $(CPUROM).asm $(OUTDIR)/$(CPUROM).rom
+
+$(OUTDIR)/$(CPUROM).rom:	$(CPUROM).asm
+	$(ASMIMG) $< $@
 
 pgzero.bin:	pgzero.asm std.asm build.inc ver.inc
 	$(TASM) $(ASMOPT80) $< $@
@@ -260,7 +263,7 @@ $(OUTDIR)/$(ROMNAME).com: bootapp.bin syscfg.bin loader.bin hbios.bin dbgmon.bin
 $(OUTDIR)/$(ROMNAME).sys: prefix.bin os.bin
 	cat prefix.bin os.bin >>$@
 
-$(OUTDIR)/$(CPUROM).bin:	$(CPUROM).asm std.asm
+$(OUTDIR)/$(CPUROM).bin:	$(CPUROM).asm std.asm btromwbw.inc
 	$(ASMIMG) $(CPUROM).asm $@ 
 
 std.asm:	$(SRC)std.asm
@@ -340,6 +343,10 @@ loader.asm:	$(SRC)loader.asm util.asm
 	$(CVT) $@
 
 $(CPUROM).asm:	$(SRC)/$(CPUROM).asm
+	cp $< $@
+	$(CVT) $@
+
+btromwbw.inc:	$(SRC)/btromwbw.inc
 	cp $< $@
 	$(CVT) $@
 
