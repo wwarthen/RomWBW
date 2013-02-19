@@ -826,7 +826,7 @@ PHL:
 ;
 POUT:
 POUT1:
-	INC	HL			;
+;	INC	HL			;
 	CALL	HEXIN			; GET PORT
 	LD	C,A			; SAVE PORT POINTER
 	INC	HL			;
@@ -842,7 +842,7 @@ OUTIT:
 ;_____________________________________________________________________________
 ;
 PIN:
-	INC 	HL			;
+;	INC 	HL			;
 	CALL	HEXIN			; GET PORT
 	LD	C,A			; SAVE PORT POINTER
 	CALL	CRLF			;
