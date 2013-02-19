@@ -1,5 +1,9 @@
 /* cvt2h.h 7/11/2012 dwg - Copyright (C) 2012 Douglas Goodall */
 
+/* This is an include file for a function which takes a pointer,
+   a length, and a filename, and converts a buffer into a C
+   header file that can be later incuded in some other compilation. */
+   
 #include "stdio.h"
 #include "visible.h"
 
@@ -39,4 +43,3 @@ cvt2h(buffer,length,name)
 	fprintf(fd,"};\n/* eof - %s */\n",name);
 	fclose(fd);
 }
-
