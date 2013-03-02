@@ -1,181 +1,16 @@
-; ansi.asm 12/3/2012 dwg - changed polarity of conditional jump for normal processing
-
-; Status: Still very experimental, either doesn't work or is buggy
- 
-; WBW: BOGUS EQUATE TO GET MODULE TO BUILD FOR NON-N8 HARDWARE
-; NEEDS TO BE FIXED BEFORE IT WILL WORK FOR ANYTHING OTHER THAN N8
-#IF (!N8VENABLE)
-#DEFINE	N8V_OFFSET	PANIC
-#ENDIF
-
 ;
 ;==================================================================================================
 ;   ANSI EMULATION MODULE
 ;==================================================================================================
 ;
-
-; The ANSI handler is a superset of the TTY handler in that is does simple 
-; processing of control characters such as CR, LF... But in addition is Hasbro
-; a state machine driven escape sequence parser that accepts parameters and 
-; command characters and builds a table of data required to perform the indicated
-; operation.
-
-; For instance, a screen clear escaper sequence such as <esc>[2J is parsed as
-; a leading CSI ()escape which places us in state1 (waiting for [ ). When the 
-; next character arrives and turns out to be [, the parser's next state is 
-; state2.
-
-; State2 processing is a little more complex. If the next character is a numeral,
-; it is placed in the parameter1 buffer and the next state is state3 (collecting 
-; parameter1).
-
-; State3 processing implies that the buffer already has 1 byte of a parameter in 
-; the parameter1 buffer. If the next character is a semi-colon, that implies that 
-; the parameter1 buffer is complete and the next state should be state4. If the 
-; next byte is a numeral, it is appended to the parameter1 buffer and we stay INC
-; state3. If the nect character is a semi-colon, that indicates the parameter1 is 
-; complete and we need to enter state4 to begin collection of parameter2. If the 
-; next character is neither a numeral or a semi-colon, then it needs 
-; to be decoded as a command. Commands result in the calling of low-level driver 
-; functions to perform the indicated operation. Subsequently we return to state0.
-
-; State4 processing implies we are collecting parameter2 data. If the next byte
-; is a numeral, it is assigned to the parameter2 buffer. In this case we go to 
-; state5 which is used to finish collection of parameter2.
-
-; State5 processing is for collecting additional parameter2 bytes to be appended
-; to the parameter2 buffer. When a non-numeral arrives, that implies that parameter2
-; is complete and the new character is either a semi-colon or the awaited command 
-; character. If it is a semi-colon, that would imply the existance of a parameter3,
-; which may or may not be supported in this implementation. If it is the command
-; character, then the propper low-level driver calls need to be invoked to perform
-; the desired operations on the video screen.
-
-; Once state5 is complete, we re-enter state0.
-
-ANSI_ERR1		.EQU	1
-
-
-ANSI_CMD_DISP:
-	LD	A,B
-	CP	'J'
-	JR	ANSI_CMD_NOT_CRTCLR
-	
-	; THIS IS THE CRTCLR FUNCTIONAL CODE	
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	LD	DE,0			; row 0 column 0
-	LD	B,BF_VDASCP		; FUNCTION IS SET CURSOR POSITION
-	CALL EMU_VDADISP	; CALL THE VIDEO HARDWARE DRIVER
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	LD	DE,0		; row 0 column 0
-	LD	B,BF_VDAQRY	; FUNCTION IS QUERY FOR SCREEN SIZE
-	LD	HL,0		; WE DO NOT WANT A COPY OF THE CHARACTER BITMAP DATA
-	CALL	EMU_VDADISP	; PERFORM THE QUERY FUNCTION
-	; on return, D=row count, E=column count	
-	; for the fill call, we need hl=number of chars to fill
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
-	LD	E,' '		; fill with spaces
-	;
-	LD	A,(ANSI_ROWS)	; given A = number of rows
-	CALL N8V_OFFSET		; return HL = num_rows * num_cols
-	;	
-	LD	B,BF_VDAFIL	; FUNCTION IS FILL
-	CALL	EMU_VDADISP	; PERFORM THE QUERY FUNCTION
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	XOR	A
-	RET					; return SUCCESS to caller
-	;
-ANSI_CMD_NOT_CRTCLR:
-
-	CP	66h			; is it cursor position?
-	JR	ANSI_CMD_NOT_CRTLC
-	
-ANSI_CMD_NOT_CRTLC:
-
-; since only the crtclr and crtlc are supported right now...
-; any other command is an error
-	CALL	PANIC	; A has the unknown command byte
-
-;------------------------------------------------------------------------------------
-ANSI_IS_NUMERAL:
-	RET
-
-;------------------------------------------------------------------------------------
-ANSI_IS_ALPHA:
-	RET
-;------------------------------------------------------------------------------------
-ANSI_MARSHALL_PARM1:
-	RET
-;------------------------------------------------------------------------------------
-ANSI_MARSHALL_PARM2:
-	RET
-;------------------------------------------------------------------------------------
-ANSI_PROC_COMMAND:
-	RET
-;------------------------------------------------------------------------------------
-	
-
-ANSI_STATE1:
-	; Waiting for [
-	; (the only valid character to follow an ESC would be the [ )
-	; (if we get something else, we go back to state0 and begin again)
-	LD	A,B 
-	CP	'['
-	JR	NZ,ANSI_STATE1_ERR	; if not the expected [, go around
-	LD	HL,ANSI_STATE2		; having found the [, set the next state
-	LD	(ANSI_STATE),HL		; to state2 (waiting for a parm1 char).
-	XOR	A					; set retcode to SUCCESS
-	RET						; and return to caller
-ANSI_STATE1_ERR:
-	LD	HL,ANSI_STATE0
-	LD	(ANSI_STATE),HL	; set next state to state 0
-	LD	A,ANSI_ERR1		; "state1 expected [ not found"
-	RET
-
-;------------------------------------------------------------------------------------
-
-ANSI_STATE2:
-	; waiting for parm1
-	LD	A,B
-	CALL	ANSI_IS_NUMERAL
-	JR		NZ,ANSI_STATE2_NOT_NUMERAL
-	CALL	ANSI_MARSHALL_PARM1
-	XOR	A					; set SUCCESS return code
-	RET
-ANSI_STATE2_NOT_NUMERAL:
-	LD	A,B
-	CP	59		; semi-colon	
-	JR	NZ,ANSI_STATE2_NOT_SEMI
-	LD	HL,ANSI_STATE3
-	LD	(ANSI_STATE),HL		; set next state to waiting for parm2
-	XOR	A
-	RET						; return SUCCESS
-ANSI_STATE2_NOT_SEMI:
-	; if it is not a semi, or a numeral, it must be a command char
-	LD HL,ANSI_STATE0		; after we do the command dispatcher, the
-	LD	(ANSI_STATE),HL		; next state we will want is the default state
-	JP	ANSI_CMD_DISP
-	
+; TODO:
+;   - SOME FUNCTIONS ARE NOT IMPLEMENTED!!!
+;
 ANSI_INIT:
 	PRTS("ANSI: RESET$")
 ;
-	JR	ANSI_INI	; REUSE THE INI FUNCTION BELOW
+	JR	ANSI_INI		; REUSE THE INI FUNCTION BELOW
 ;
-
-ANSI_STATE3:
-	; waiting for parm2
-	LD	A,B
-	CALL	ANSI_IS_NUMERAL
-	JR	NZ,ANSI_STATE3_NOT_NUMERAL
-	CALL	ANSI_MARSHALL_PARM2
-	XOR	A
-	RET
-ANSI_STATE3_NOT_NUMERAL:
-	LD	A,B
-	CALL	ANSI_PROC_COMMAND
-	LD	HL,ANSI_STATE0
-	LD	(ANSI_STATE),HL
-	RET
 ;
 ;
 ANSI_DISPATCH:
@@ -196,117 +31,315 @@ ANSI_DISPATCH:
 	JR	Z,ANSI_QRY	; $39
 	CALL	PANIC
 ;
+;==================================================================================================
+;   ANSI EMULATION MODULE BIOS FUNCTION ENTRY POINTS
+;==================================================================================================
 ;
+; READ A CHARACTER
 ;
-ANSI_IN:
+ANSI_IN:	; JUST DEFER TO KEYBOARD
 	LD	B,BF_VDAKRD	; SET FUNCTION TO KEYBOARD READ
 	JP	EMU_VDADISP	; CHAIN TO VDA DISPATCHER
 ;
-;
+; WRITE A CHARACTER W/ EMULATION
 ;
 ANSI_OUT:
-	LD	HL,(ANSI_STATE)
-	JP	(HL)
-
-;;	CALL	ANSI_DOCHAR	; HANDLE THE CHARACTER (EMULATION ENGINE)
-;;	XOR	A		; SIGNAL SUCCESS
-;;	RET
-
+	LD	A,E		; GET THE INCOMING CHARACTER
+	CP	$20		; $00-$1F IS C0
+	JP	C,ANSI_C0DISP	; IF C0, DO C0 DISPATCH
+	CP	$80		; $20-$7F
+	JR	C,ANSI_OUT1	; HANDLE VIA STATE MACHINE
+	CP	$A0		; $80-$9F IS C1
+	JP	C,ANSI_C1DISP	; IF C1, DO C1 DISPATCH
 ;
+ANSI_OUT1:	; PROCESS OTHER CHARS VIA STATE MACHINE
+	LD	HL,(ANSI_STATE)	; LOAD THE CURRENT STATE
+	CALL	JPHL		; DO IT
+	XOR	A		; SIGNAL SUCCESS
+	RET
 ;
+; CHECK INPUT STATUS
 ;
-ANSI_IST:
+ANSI_IST:	; DEFER TO KEYBOARD STATUS
 	LD	B,BF_VDAKST	; SET FUNCTION TO KEYBOARD STATUS
 	JP	EMU_VDADISP	; CHAIN TO VDA DISPATCHER
 ;
+; CHECK OUTPUT STATUS
 ;
-;
-ANSI_OST:
+ANSI_OST:	; VIDEO OUTPUT IS *ALWAYS* READY
 	XOR	A		; ZERO ACCUM
 	INC	A		; A := $FF TO SIGNAL OUTPUT BUFFER READY
 	RET
 ;
-;
+; SET CONFIGURATION
 ;
 ANSI_CFG:
 	XOR	A		; SIGNAL SUCCESS
 	RET
 ;
-;
+; INITIALIZE
 ;
 ANSI_INI:
-	LD	HL,ANSI_STATE0		; load the address of the default state function
-	LD	(ANSI_STATE),HL		; and place it in the ANSI_STATE variable for later.
-	
+	; QUERY THE VIDEO DRIVER FOR SCREEN DIMENSIONS
 	LD	B,BF_VDAQRY	; FUNCTION IS QUERY
 	LD	HL,0		; WE DO NOT WANT A COPY OF THE CHARACTER BITMAP DATA
 	CALL	EMU_VDADISP	; PERFORM THE QUERY FUNCTION
 	LD	(ANSI_DIM),DE	; SAVE THE SCREEN DIMENSIONS RETURNED
+;
+	; INITIALIZE ALL WORKING VARIABLES
 	LD	DE,0		; DE := 0, CURSOR TO HOME POSITION 0,0
 	LD	(ANSI_POS),DE	; SAVE CURSOR POSITION
+	LD	HL,ANSI_STBASE	; SET STATE TO BASE
+	LD	(ANSI_STATE),HL	; DO IT
+;
+	; RESET THE CURRENT VIDEO DRIVER
 	LD	B,BF_VDARES	; SET FUNCTION TO RESET
 	JP	EMU_VDADISP	; RESET VDA AND RETURN
 ;
-;
+; QUERY STATUS
 ;
 ANSI_QRY:
 	XOR	A		; SIGNAL SUCCESS
 	RET
 ;
+;==================================================================================================
+;   ANSI STATE MACHINE ENTRY POINTS
+;==================================================================================================
+;
+ANSI_STBASE:	; STATE == BASE
+	JP	ANSI_RENDER	; RENDER THE GLYPH
 ;
 ;
-
-	
-	; This is probably the best place to insert a state sensitive 
-	; dispatcher for handling ANSI escape sequences. Ansi sequences
-	; are unusual because they contain a number of parameters 
-	; subsequently followed by a command character that comes last.
-	
-	; It is wise to create a list of supported sequences so we know
-	; before writing the parser what the most complex sequence will
-	; consist of.
-	
-	; RomWBW utilities written by Douglas Goodall only use several
-	; sequences. A screen clear, and a cursor position. 
-	;
-	; crtclr() uses <esc>[2J
-	; crtlc()  uses <esc>[<line>;<column><0x66>
-	
-	; Programs such as wordstar use more complex operations.
-	;
-	;
-;; ANSI_DOCHAR:
-ANSI_STATE0:
-	; ANSI_STATE0 is the default state where random output characters May
-	; be normal visible characters, a control character such as BS, CR, LF...
-	; or a CSI such as an escape character (27).
-
-
-	LD	A,E		; CHARACTER TO PROCESS
-	CP	8		; BACKSPACE
-	JR	Z,ANSI_BS
-	CP	12		; FORMFEED
-	JR	Z,ANSI_FF
-	CP	13		; CARRIAGE RETURN
-	JR	Z,ANSI_CR
-	CP	10		; LINEFEED
-	JR	Z,ANSI_LF
-	
-	CP	27		; ESCAPE	; This is the hook into the escape handler
-	JR	NZ,ANSI_NOT_ESC		; go around if not CSI
-	LD	HL,ANSI_STATE1
-	LD	(ANSI_STATE),HL
-	XOR	A					; setup SUCCESS as return status
+;
+ANSI_STESC:	; STATE == ESCAPE SEQUENCE
+	RES	7,A		; CLEAR HIGH BIT
+	CP	$30		; $20 - $2F ARE PARAMETER CHARS
+	JP	C,ANSI_COLLINT	; COLLECT INTERMEDIATE CHARACTERS
+	CP	$7F		; $30 - $7E
+	RET	NC		; IGNORE $7F
+	LD	HL,ANSI_STBASE	; BASE STATE
+	LD	(ANSI_STATE),HL	; SET IT
+	JP	ANSI_ESCDISP	; DISPATCH FOR ESCAPE SEQUENCE
+;
+;
+;
+ANSI_STCTL:	; STATE == CONTROL SEQUENCE
+	RES	7,A		; CLEAR HIGH BIT
+	CP	$30
+	JP	C,ANSI_COLLINT	; COLLECT INTERMEDIATE CHARACTERS
+	CP	$3C
+	JP	C,ANSI_COLLPAR	; COLLECT PARAMETERS
+	CP	$40
+	JP	C,ANSI_COLLPRI	; COLLECT PRIVATE CHARACTERS
+	CP	$7F		; $30 - $7E
+	RET	NC		; IGNORE $7F
+	LD	HL,ANSI_STBASE	; BASE STATE
+	LD	(ANSI_STATE),HL	; SET IT
+	JP	ANSI_CTLDISP	; DISPATCH FOR CONTROL SEQUENCE
+;
+;
+;
+ANSI_STSTR:	; STATE == STRING DATA
 	RET
-ANSI_NOT_ESC:
-
-	CP	32		; COMPARE TO SPACE (FIRST PRINTABLE CHARACTER)
-	RET	C		; SWALLOW OTHER CONTROL CHARACTERS
-
-	; A reg has next character from BIOS CONOUT
-	LD	B,BF_VDAWRC
+;
+;==================================================================================================
+;   ANSI C0 DISPATCHING
+;==================================================================================================
+;
+ANSI_C0DISP:
+	CP	$08		; BS: BACKSPACE
+	JP	Z,ANSI_BS
+	CP	$0A		; LF: LINEFEED
+	JP	Z,ANSI_LF
+	CP	$0B		; VT: VERTICAL TAB
+	JP	Z,ANSI_LF	; TREAD AS LINEFEED
+	CP	$0C		; FF: FORMFEED
+	JP	Z,ANSI_LF	; TREAT AS LINEFEED
+	CP	$0D		; CR: CARRIAGE RETURN
+	JP	Z,ANSI_CR
+	CP	$18		; CAN: CANCEL
+	JP	Z,ANSI_CAN
+	CP	$1A		; SUB: ???
+	JP	Z,ANSI_SUB
+	CP	$1B		; ESC: ESCAPE
+	JP	Z,ANSI_ESC
+	RET
+;
+;==================================================================================================
+;   ANSI C1 DISPATCHING
+;==================================================================================================
+;
+ANSI_C1DISP:
+	CP	$9B			; CSI: CONTROL SEQ INTRODUCER
+	JP	Z,ANSI_CSI		; HANDLE IT
+;
+	; IGNORE OTHERS
+	RET
+;
+;==================================================================================================
+;   ANSI ESCAPE SEQUENCE DISPATCHING
+;==================================================================================================
+;
+ANSI_ESCDISP:
+	CP	$60			; $40-$5F
+	JR	NC,ANSI_ESCDISP1	; NOPE, CONTINUE
+;
+	; $40-$5F MAP TO $80-$9F IN C1 RANGE
+	CALL	ANSI_CLEAR		; CLEAR STATE RELATED VARIABLES
+	LD	HL,ANSI_STBASE		; BASE STATE
+	LD	(ANSI_STATE),HL		; SET IT
+	ADD	A,$40			; MAP $40-$5F -> $80-$9F
+	JP	ANSI_C1DISP		; PROCESS AS C1 CHARACTER
+;
+ANSI_ESCDISP1:
+	; CONTINUE ESCAPE SEQ DISPATCHING
+	; *DEBUG*
+	PRTS("<ESC>($")
+	PUSH	AF
+	LD	A,(ANSI_INT)
+	OR	A
+	CALL	NZ,COUT
+	CALL	PC_COMMA
+	POP	AF
+	CALL	COUT
+	CALL	PC_RPAREN
+	RET
+;
+;==================================================================================================
+;   ANSI CONTROL SEQUENCE DISPATCHING
+;==================================================================================================
+;
+ANSI_CTLDISP:
+	CP	'H'			; CUP: CURSOR POSITION
+	JP	Z,ANSI_CUP
+	CP	'J'			; ED: ERASE IN DISPLAY
+	JP	Z,ANSI_ED
+	; *DEBUG*
+	PUSH	AF
+	PRTS("<CTL>($")
+	LD	A,(ANSI_PRI)
+	OR	A
+	CALL	NZ,COUT
+	CALL	PC_COMMA
+	LD	DE,ANSI_PARLST
+	LD	A,(ANSI_PARIDX)
+	INC	A
+	CALL	PRTHEXBUF
+	CALL	PC_COMMA
+	LD	A,(ANSI_INT)
+	OR	A
+	CALL	NZ,COUT
+	CALL	PC_COMMA
+	POP	AF
+	CALL	COUT
+	CALL	PC_RPAREN
+	RET
+;
+;==================================================================================================
+;   ANSI PROTOCOL SUPPORT FUNCTIONS
+;==================================================================================================
+;
+; CLEAR THE WORKING VARIABLES AT START OF NEW ESC/CTL SEQUENCE
+;
+ANSI_CLEAR:
+	PUSH	AF			; PRESERVE AF
+	LD	HL,ANSI_VARS		; POINT TO VARS
+	LD	B,ANSI_VARLEN		; B := NUMBER OF BYTES TO CLEAR
+	XOR	A			; A := 0
+;
+ANSI_CLEAR1:	; LOOP
+	LD	(HL),A			; CLEAR THE BYTE
+	INC	HL			; BUMP POINTER
+	DJNZ	ANSI_CLEAR1		; LOOP AS NEEDED
+;
+	POP	AF			; RECOVER AF
+	RET				; DONE
+;
+; COLLECT INTERMEDIATE CHARACTERS
+; WE DO NOT SUPPORT MORE THAN 1 WHICH IS ALL THAT IS EVER
+; USED BY THE STANDARD.  IF MORE THAN ONE RECEIVED, IT IS OVERLAID
+;
+ANSI_COLLINT:
+	LD	(ANSI_INT),A		; RECORD INTERMEDIATE CHAR
+	RET				; DONE
+;
+; COLLECT PARAMETERS
+; ';' SEPARATES PARAMETERS
+; '0'-'9' ARE DIGITS OF CURRENT PARAMETER
+;
+ANSI_COLLPAR:
+	; HANDLE SEPARATOR
+	CP	$3B			; ';' SEPARATOR?
+	JR	NZ,ANSI_COLLPAR1	; NOPE, CONTINUE
+	LD	A,(ANSI_PARIDX)		; GET CURRENT PARM POS INDEX
+	INC	A			; INCREMENT
+	LD	(ANSI_PARIDX),A		; SAVE IT
+	RET				; DONE
+;
+ANSI_COLLPAR1:	; HANDLE '0'-'9'
+	CP	'9' + 1			; > '9'?
+	RET	NC			; YUP, IGNORE CHAR
+	SUB	'0'			; CONVERT TO BINARY VALUE
+	LD	B,A			; SAVE VALUE IN B
+	LD	A,(ANSI_PARIDX)		; A := CURRENT PARM INDEX
+	LD	HL,ANSI_PARLST		; POINT TO START OF PARM LIST
+	LD	DE,0			; SETUP DE := 0
+	LD	E,A			; NOW DE := PARM OFFSET
+	ADD	HL,DE			; NOW HL := PARM BYTE TO UPDATE
+	LD	A,(HL)			; GET CURRENT VALUE
+	LD	C,A			; COPY TO C
+	RLCA				; MULTIPLY BY 10
+	RLCA				; "
+	ADD	A,C			; "
+	RLCA				; "
+	ADD	A,B			; ADD NEW DIGIT
+	LD	(HL),A			; SAVE UPDATED VALUE
+	RET				; DONE
+;
+; COLLECT PRIVATE CHARACTERS
+; WE DO NOT SUPPORT MORE THAN 1 WHICH IS ALL THAT IS EVER
+; USED BY THE STANDARD.  IF MORE THAN ONE RECEIVED, IT IS OVERLAID
+;
+ANSI_COLLPRI:
+	LD	(ANSI_PRI),A		; RECORD THE PRIVATE CHARACTER
+	RET				; DONE
+;
+; CANCEL AN ESC/CTL SEQUENCE IN PROGRESS
+; SOME VT TERMINALS WILL SHOW AN ERROR SYMBOL IN THIS CASE
+;
+ANSI_SUB:
+	; DISPLAY AN ERR SYMBOL???
+;
+; CANCEL AN ESC/CTL SEQUENCE IN PROGRESS
+;
+ANSI_CAN:
+	LD	HL,ANSI_STBASE	; SET STATE TO BASE
+	LD	(ANSI_STATE),HL	; SAVE IT
+	RET
+;
+; START AN ESC SEQ, CANCEL ANY ESC/CTL SEQUENCE IN PROGRESS
+;
+ANSI_ESC:
+	CALL	ANSI_CLEAR	; CLEAR STATE RELEATED VARIABLES
+	LD	HL,ANSI_STESC	; SET STATE TO ESCAPE SEQUENCE
+	LD	(ANSI_STATE),HL	; SAVE IT
+	RET
+;
+; START A CTL SEQ
+;
+ANSI_CSI:
+	CALL	ANSI_CLEAR	; CLEAR STATE RELEATED VARIABLES
+	LD	HL,ANSI_STCTL	; SET STATE TO CONTROL SEQUENCE
+	LD	(ANSI_STATE),HL	; SAVE IT
+	RET
+;
+;==================================================================================================
+;   ANSI FUNCTION EXECUTION
+;==================================================================================================
+;
+ANSI_RENDER:
+	LD	B,BF_VDAWRC	; FUNC := WRITE CHARACTER
 	CALL	EMU_VDADISP	; SPIT OUT THE RAW CHARACTER
-
 	LD	A,(ANSI_COL)	; GET CUR COL
 	INC	A		; INCREMENT
 	LD	(ANSI_COL),A	; SAVE IT
@@ -326,7 +359,7 @@ ANSI_FF:
 	LD	E,' '		; FILL SCREEN WITH BLANKS
 	LD	B,BF_VDAFIL	; SET FUNCTION TO FILL
 	CALL	EMU_VDADISP	; PERFORM FILL
-	JR	ANSI_XY		; HOME CURSOR AND RETURN
+	JP	ANSI_XY		; HOME CURSOR AND RETURN
 ;
 ANSI_BS:
 	LD	DE,(ANSI_POS)	; GET CURRENT ROW/COL IN DE
@@ -339,12 +372,12 @@ ANSI_BS:
 	LD	E,' '		; LOAD A SPACE CHARACTER
 	LD	B,BF_VDAWRC	; SET FUNCTION TO WRITE CHARACTER
 	CALL	EMU_VDADISP	; OVERWRITE WITH A SPACE CHARACTER
-	JR	ANSI_XY		; NEED TO MOVE CURSOR BACK TO NEW TARGET COLUMN
+	JP	ANSI_XY		; NEED TO MOVE CURSOR BACK TO NEW TARGET COLUMN
 ;
 ANSI_CR:
 	XOR	A		; ZERO ACCUM
 	LD	(ANSI_COL),A	; COL := 0
-	JR	ANSI_XY		; REPOSITION CURSOR AND RETURN
+	JP	ANSI_XY		; REPOSITION CURSOR AND RETURN
 ;
 ANSI_LF:
 	LD	A,(ANSI_ROW)	; GET CURRENT ROW
@@ -363,14 +396,88 @@ ANSI_LF:
 	LD	(ANSI_ROW),A	; SAVE IT
 	JR	ANSI_XY		; RESPOSITION CURSOR AND RETURN
 ;
+;
+;
+ANSI_CUP:	; CURSOR UPDATE
+	LD	A,(ANSI_PARLST + 0)	; ROW PARM
+	LD	D,A			; PUT IN D
+	LD	A,(ANSI_PARLST + 1)	; COL PARM
+	LD	E,A			; PUT IN E
+	LD	(ANSI_POS),DE		; SAVE IT
+	JP	ANSI_XY			; UPDATE CURSOR AND RETURN
+;
+;
+;
+ANSI_ED:	; ERASE IN DISPLAY
+	LD	A,(ANSI_PARLST + 0)	; GET FIRST PARM
+	CP	2			; ERASE FULL DISPLAY?
+	JR	NZ,ANSI_ED1		; NOPE
+;
+	; ERASE ALL, HOME CURSOR AND TREAT AS ERASE EOS
+	LD	DE,0			; PREPARE TO HOME CURSOR
+	LD	(ANSI_POS),DE		; SAVE NEW CURSOR POSITION
+	CALL	ANSI_XY			; EXECUTE
+	LD	A,0			; TREAT PARM AS 0
+;	
+ANSI_ED1:	; DETERMINE TYPE OF ERASE
+	CP	0			; ERASE CURSOR TO EOS
+	JR	Z,ANSI_ED2
+	CP	1			; ERASE START THRU CURSOR
+	JR	Z,ANSI_ED3
+	RET				; INVALID?
+;
+ANSI_ED2:	; ERASE CURSOR THRU EOL
+	LD	DE,(ANSI_POS)		; GET CURSOR POSITION
+	CALL	ANSI_POS2IDX		; HL NOW HAS CURSOR INDEX
+	PUSH	HL			; SAVE IT
+	LD	DE,(ANSI_DIM)		; GET SCREEN DIMENSIONS
+	LD	E,0			; COL POSITION := 0
+	CALL	ANSI_POS2IDX		; HL NOW HAS EOS INDEX
+	POP	DE			; RECOVER CURSOR POS INDEX
+	OR	A			; CLEAR CARRY
+	SBC	HL,DE			; SUBTRACT CURSOR INDEX FROM EOS INDEX
+	LD	E,' '			; FILL WITH BLANKS
+	LD	B,BF_VDAFIL		; SET FUNCTION TO FILL
+	JP	EMU_VDADISP		; PERFORM FILL AND RETURN
+;
+ANSI_ED3:	; ERASE START THRU CURSOR
+	LD	DE,0			; CURSOR TO 0,0 FOR NOW
+	LD	B,BF_VDASCP		; SET FUNCTION TO SET CURSOR POSITION
+	CALL	EMU_VDADISP		; DO IT
+	LD	DE,(ANSI_POS)		; GET ORIGINAL CURSOR POSITION
+	CALL	ANSI_POS2IDX		; HL NOW HAS INDEX
+	INC	HL			; ADD 1 POSITION TO ERASE THRU CURSOR POSITION
+	LD	E,' '			; FILL WITH BLANKS
+	LD	B,BF_VDAFIL		; SET FUNCTION TO FILL
+	CALL	EMU_VDADISP		; DO IT
+	JP	ANSI_XY			; RESTORE CURSOR AND RETURN
+;
+;==================================================================================================
+;   SUPPORT FUNCTIONS
+;==================================================================================================
+;
 ANSI_XY:
 	LD	DE,(ANSI_POS)	; GET THE DESIRED CURSOR POSITION
-	LD	B,BF_VDASCP	; SET FUNCTIONT TO SET CURSOR POSITION
+	LD	B,BF_VDASCP	; SET FUNCTION TO SET CURSOR POSITION
 	JP	EMU_VDADISP	; REPOSITION CURSOR
 ;
-; The ANSI_STATE variable (word) contains the 
-;    address of the next state function 
-ANSI_STATE	.DW	ANSI_STATE0	; by default, ANSI_STATE0 
+; CONVERT XY COORDINATES IN DE INTO LINEAR INDEX IN HL
+; D=ROW, E=COL
+;
+ANSI_POS2IDX:
+	PUSH	DE
+	LD	HL,(ANSI_DIM)	; GET DIMENSIONS
+	LD	H,L		; COLS -> H
+	LD	E,D		; ROW NUM -> E
+	CALL	MULT8		; HL := H * E (ROW OFFSET)
+	POP	DE		; RECOVER ORIGINAL ROW/COL
+	LD	D,0		; GET RID OF ROW COUNT
+	ADD	HL,DE		; ADD COLUMN OFFSET
+	RET			; RETURN, HL HAS INDEX
+;
+;==================================================================================================
+;   WORKING DATA STORAGE
+;==================================================================================================
 ;
 ANSI_POS:
 ANSI_COL	.DB	0	; CURRENT COLUMN - 0 BASED
@@ -379,3 +486,12 @@ ANSI_ROW	.DB	0	; CURRENT ROW - 0 BASED
 ANSI_DIM:
 ANSI_COLS	.DB	80	; NUMBER OF COLUMNS ON SCREEN
 ANSI_ROWS	.DB	24	; NUMBER OF ROWS ON SCREEN
+;
+ANSI_STATE	.DW	PANIC	; CURRENT FUNCTION FOR STATE MACHINE
+;
+ANSI_VARS:
+ANSI_PRI	.DB	0	; PRIVATE CHARACTER RECORDED HERE
+ANSI_INT	.DB	0	; INTERMEDIATE CHARACTER RECORDED HERE
+ANSI_PARIDX	.DB	0	; NUMBER OF PARAMETERS RECORDED
+ANSI_PARLST	.FILL	16,0	; PARAMETER VALUE LIST (UP TO 16 BYTE VALUES)
+ANSI_VARLEN	.EQU	$ - ANSI_VARS
