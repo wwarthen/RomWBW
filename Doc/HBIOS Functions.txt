@@ -1,4 +1,0 @@
-HBIOS FUNCTION CALLS
-====================
-
-HBIOS function calls are now documented in "RomWBW Architecture.pdf".  Please refer to this document.
