@@ -1,3 +1,16 @@
+Version 2.5
+-----------
+- WBW: Implemented CRT driver model (video and keyboard)
+- WBW: Implemented ANSI terminal emulation
+- WBW: Updated build process to remove CPU specification
+- WBW: Refactored VDU and Color VDU drivers for new cRT driver model
+- WBW: Refactored keyboard drivers for new CRT driver model
+- WBW: Refactored PPIDE driver to improve performance
+- WBW: Implemented "boot" messaging
+- WBW: Fixed debug monitor (I, O, and H commands corrected)
+- WBW: Added support for SCSI2IDE (SD Card driver primarily)
+- WBW: Revised System Architecture document
+
 Version 2.1.1
 -------------
 - WBW: Corrected setup of Z180 wait states
@@ -14,7 +27,7 @@ Version 2.1
 Version 2.0
 -----------
 - WBW: Implemented Banked BIOS (drivers in separate bank)
-- DGG: Updated in-site flash utility for greater chip compatibility
+- DGG: Updated in-situ flash utility for greater chip compatibility
 - WBW: Updated FDTST to latest version (improved support for 5.25" and 8" media)
 - WBW: Added ParPortProp driver
 - DWG: Entire new suite of Apps written in Aztec C
