@@ -103,91 +103,17 @@
 #SYS := CPM
 #ROMNAME := zeta
 
-#CONFIG := n8_2312
-#ROMSIZE := 512
-#CPU := 180
-#SYS := CPM
-#ROMNAME := n8_2312
+CONFIG := n8_2312
+ROMSIZE := 512
+CPU := 180
+SYS := CPM
+ROMNAME := n8_2312
 
 #CONFIG := n8vem
 #ROMSIZE := 512
 #CPU := 180
 #SYS := CPM
 #ROMNAME := n8vem
-
-CONFIG := s100_std
-ROMSIZE := 512
-CPU := 80
-SYS := CPM
-ROMNAME := s100
-CPUROM := master-luke
-
-ifndef ROMNAME
-ROMNAME := $(CONFIG)
-endif
-
-CPMCP := bin/cpmcp
-CVT := bin/CVT2MAC
-SRC := ../Source/
-
-ROMDSKFILES := ../RomDsk/$(SYS)_$(ROMSIZE)KB/*.* ../RomDsk/cfg_$(CONFIG)/*.* ../Apps/core/*.*
-
-ifeq "$(SYS)" "CPM"
-DOSBIN := bdosb01.bin
-CPBIN := ccpb03.bin
-else
-DOSBIN := zsdos.bin
-CPBIN := zcprw.bin
-endif
-
-OUTDIR := ../Output
-
-TASM := bin/TASM 
-TASMTABS := bin
-export TASMTABS
-
-ASMOPT80 := -t$(CPU) -g3
-ASMOPT85 := -t85 -g3 
-
-ASM80 := $(TASM) $(ASMOPT80)
-ASM85 := $(TASM) $(ASMOPT85)
-ASMIMG := $(TASM) $(ASMOPT80) -b -fE5
-
-NULL :=
-SPACE := ${NULL} ${NULL}
-
-
-%.bin: %.asm
-	$(ASM80) $< $@
-	
-%.com: %.asm
-	$(ASM80) $< $@
-	
-%.img: %.asm
-	$(ASMIMG) $< $@
-
-%.exe:	%.cpp
-	$(CC) $< -o $@
-
-ifneq ($(MAKECMDGOALS),clean)
-ifeq "$(and $(CONFIG), $(ROMSIZE), $(CPU), $(SYS), $(ROMNAME))" ""
-$(error Usage: make CONFIG=<config> ROMSIZE=[512|1024] CPU=[80|180] SYS=[CPM|ZSYS] ROMNAME=<romname>)
-endif
-endif
-
-# The STDS macro names all the sub-includes so they all can be copied
-# in from the Source folder. $(STDS) is the first dependency of the "all"
-# target, therefore assuring that these files are here in time for their
-# use in any assembly that includes the top level file, "std.asm".
-# STDS = std-n8.inc std-n8vem.inc std-s100.inc std-s2i.inc std-zeta.inc
-STDS = std-s100.inc std-n8vem.inc
-CONDIT = $(OUTDIR)/$(CPUROM).rom
-
-all: $(STDS) tasm80.tab tasm85.tab $(OUTDIR)/$(ROMNAME).rom $(OUTDIR)/$(ROMNAME).sys $(OUTDIR)/$(ROMNAME).com $(CONDIT)
-	rm  -f *.asm
-	rm  -f *.bin
-	rm  -f *.inc *.tab *.tmp
-	rm  -f diskdefs *.exp
 
 tasm80.tab:	bin/TASM80.TAB
 	cp bin/TASM80.TAB tasm80.tab
@@ -394,10 +320,6 @@ romfill.asm:	$(SRC)romfill.asm
 	cp $< $@
 	$(CVT) $@
 
-s100-i3.asm:	$(SRC)s100-i3.asm
-	cp $< $@
-	$(CVT) $@
-
 sd.asm:	$(SRC)sd.asm
 	cp $< $@
 	$(CVT) $@
@@ -418,10 +340,6 @@ std-n8.inc:	$(SRC)std-n8.inc
 	$(CVT) $@
 	
 std-n8vem.inc:	$(SRC)std-n8vem.inc 
-	cp $< $@
-	$(CVT) $@
-
-std-s100.inc:	$(SRC)std-s100.inc
 	cp $< $@
 	$(CVT) $@
 
