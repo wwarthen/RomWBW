@@ -341,6 +341,8 @@ N8V_DISPVDA:
 	DEC	A
 	JP	Z,N8V_VDAFIL
 	DEC	A
+	JP	Z,N8V_VDACPY
+	DEC	A
 	JP	Z,N8V_VDASCR
 	DEC	A
 	JP	Z,PPK_STAT
@@ -545,6 +547,13 @@ N8V_VDAWRC:
 ; Video Display Processor Fill ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
 N8V_VDAFIL:
+	XOR	A
+	RET
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Video Display Processor Copy ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
+N8V_VDACPY:
 	XOR	A
 	RET
 
