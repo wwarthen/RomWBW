@@ -140,7 +140,7 @@ BOOTLU		.DW	0		; logical unit on dev/unit for boot
 ;SDCAPACITY	.EQU	64		; DEVICE SIZE IN MEGABYTES
 		.DW	SDCAPACITY
 
-		.DB	SDCSIO		; USE CSI/O PORT (boolean)
+		.DB	SDMODE		; USE CSI/O PORT (boolean)
 		.DB	SDCSIOFAST	; USE FAST CSI/O ALGORITHM (boolean)
 #ELSE
 		.DB	0E5h	; placeholder for Z180_CLKDIV
