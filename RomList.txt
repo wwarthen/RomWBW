@@ -67,6 +67,13 @@ DRI CP/M (BDOS & CCP)
     - PPISD support
     - Drives A:=ROM, B:=RAM, C:=SD0-00, D:=SD0-01, E:=SD0-02, F:=SD0-03
     
+  N8VEM_dsd.rom for N8VEM Z80 SBC V1/V2 + Dual SD:
+    - 512KB ROM, 512KB RAM
+    - 38.4KB serial console baud rate
+    - Basic ROM/RAM disk
+    - Dual SD support
+    - Drives A:=ROM, B:=RAM, C:=SD0-00, D:=SD0-01, E:=SD0-02, F:=SD0-03
+    
   N8VEM_propio.rom for N8VEM Z80 SBC V1/V2 + PROPIO:
     - 512KB ROM, 512KB RAM
     - 38.4KB serial console baud rate
@@ -181,6 +188,13 @@ ZSYSTEM (ZSDOS & ZCPR)
     - 38.4KB serial console baud rate
     - Basic ROM/RAM disk
     - PPISD support
+    - Drives A:=ROM, B:=RAM, C:=SD0-00, D:=SD0-01, E:=SD0-02, F:=SD0-03
+    
+  N8VEM_dsd_z.rom for N8VEM Z80 SBC V1/V2 + Dual SD:
+    - 512KB ROM, 512KB RAM
+    - 38.4KB serial console baud rate
+    - Basic ROM/RAM disk
+    - Dual SD support
     - Drives A:=ROM, B:=RAM, C:=SD0-00, D:=SD0-01, E:=SD0-02, F:=SD0-03
     
   N8VEM_propio_z.rom for N8VEM Z80 SBC V1/V2 + PROPIO:
