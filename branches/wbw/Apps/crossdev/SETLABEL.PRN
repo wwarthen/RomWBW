@@ -1,0 +1,152 @@
+                ; setlabel.asm 2/22/2012 dwg - use new labelib macro library for labels
+                ; label.asm    2/11/2012 dwg - make ident compliant
+                ; label.asm    2/11/2012 dwg - begin 1.6 enhancements
+                ; label.asm    2/04/2012 dwg - use new macros for benefits
+                ; label.asm    1/20/2012 dwg - label a drive or slice
+                
+                ;
+                ; Copyright (C) 2011-2012 Douglas Goodall Licensed under GPL Ver 3.
+                ;
+                ; This file is part of NuBiosDWG and is free software: you can
+                ; redistribute it and/or modify it under the terms of the GNU
+                ; General Public License as published by the Free Software Foundation,
+                ; either version 3 of the License, or (at your option) any later version.
+                ; This file is distributed in the hope that it will be useful,
+                ; but WITHOUT ANY WARRANTY; without even the implied warranty of
+                ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+                ; GNU General Public License for more details.
+                ; You should have received a copy of the GNU General Public License
+                ; along with it.  If not, see <http://www.gnu.org/licenses/>.
+                ;
+                
+                
+                	maclib	portab
+                	maclib	globals
+                	maclib	stdlib		; SUCCESS & FAILURE
+                	maclib	cpmbios
+                	maclib	cpmbdos
+                	maclib	bioshdr
+                	maclib	applvers
+                	maclib	cpmappl
+                	maclib	banner
+                	maclib	identity
+                	maclib	labelib
+                	maclib	version
+                
+                	cseg
+                
+                	do$start	; begin application housekeeping
+ 0000+C32200    START:	JMP	BEGIN
+ 0003+3031323334HEXREF	DB	'0123456789ABCDEF'
+ 0013+4944      ID$SIG	DB	'ID'
+ 0015+02        ID$RMJ	DB	A$RMJ
+ 0016+05        ID$RMN	DB	A$RMN
+ 0017+00        ID$RUP	DB	A$RUP
+ 0018+01        ID$RTP	DB	A$RTP
+ 0019+03        ID$MON	DB	A$MONTH
+ 001A+1F        ID$DAY	DB	A$DAY
+ 001B+DD07      ID$YR	DW	A$YEAR
+ 001D+3000      ID$ARGV	DW	ARGV
+ 001F+E5        	DB	0E5H
+ 0020+          PRE$STK	DS	2
+ 0022+210000    BEGIN:	LXI	H,0
+ 0025+39        	DAD	SP
+ 0026+222000    	SHLD	PRE$STK
+ 0029+312A03    	LXI	SP,STACK$TOP
+ 002C+00        	NOP
+                
+ 002D C3A000    	jmp	around$bandata
+ 0030 3E004B005Dargv	dw	prog,dat,prod,orig,ser,myname,0
+ 003E 5345544C41prog	db	'SETLABEL.COM$'
+                	date
+ 004B+20332F3331DAT	DB	' 3/31/2013$'
+                	serial
+ 0056+3635343332SER	DB	'654321$'
+                	product
+ 005D+43504D3830PROD	DB	'CPM80$'
+                	originator
+ 0063+44574724  ORIG	DB	'DWG$'
+                	oriname
+ 0067+20444F5547MYNAME	DB	' DOUGLAS W GOODALL $'
+ 007B 4133454544uuid	db	'A3EEDB99-2CC0-483E-8176-A67118936E32$'
+                around$bandata:
+                
+                	sbanner	argv
+ 00A0+213000    	LXI	H,ARGV
+ 00A3+CD0000    	CALL	X$SBANNER
+                
+                ;	version	warn$msg,error$msg
+                
+ 00A6 0E19      	mvi	c,RETCURR
+ 00A8 CD0500    	call	BDOS
+ 00AB 320000    	sta	drive$num
+                
+ 00AE 4F        	mov	c,a
+                	get$off
+ 00AF+F5        	PUSH	PSW
+ 00B0+C5        	PUSH	B
+ 00B1+D5        	PUSH	D
+ 00B2+CD1BE6    	CALL	BISELDSK
+ 00B5+110A00    	LXI	D,DPB$OFS
+ 00B8+19        	DAD	D
+ 00B9+5E        	MOV	E,M
+ 00BA+23        	INX	H
+ 00BB+56        	MOV	D,M
+ 00BC+EB        	XCHG
+ 00BD+110D00    	LXI	D,OFF$OFS
+ 00C0+19        	DAD	D
+ 00C1+5E        	MOV	E,M
+ 00C2+23        	INX	H
+ 00C3+56        	MOV	D,M
+ 00C4+EB        	XCHG
+ 00C5+D1        	POP	D
+ 00C6+C1        	POP	B
+ 00C7+F1        	POP	PSW
+ 00C8 7C        	mov	a,h
+ 00C9 B5        	ora	l
+ 00CA C21901    	jnz	off$ok
+                	printf	'Sorry, you can only label drives with reserved tracks'
+ 00CD+F5        	PUSH PSW
+ 00CE+C5        	PUSH B
+ 00CF+D5        	PUSH D
+ 00D0+E5        	PUSH H
+ 00D1+0E09      	MVI C,PRINTSTR
+ 00D3+11E000    	LXI D,??0002
+ 00D6+CD0500    	CALL BDOS
+ 00D9+E1        	POP H
+ 00DA+D1        	POP D
+ 00DB+C1        	POP B
+ 00DC+F1        	POP PSW
+ 00DD+C31601    	JMP	??0001
+ 00E0+536F727279??0002	DB	'Sorry, you can only label drives with reserved tracks'
+ 0115+24        	DB	'$'
+ 0116 C32001    	jmp	main$exit
+                off$ok:
+                
+ 0119 3A0000    	lda	drive$num	; using the default drive number
+ 011C 4F        	mov	c,a		; (presented in the C register)
+ 011D CD0000    	call	x$label		; call the actual code in labelib.asm
+                
+                main$exit:
+                	do$end			; finish up application housekeeping
+ 0120+2A2000    	LHLD	PRE$STK
+ 0123+F9        	SPHL
+ 0124+0E0D      	MVI	C,13
+ 0126+CD0500    	CALL	BDOS
+ 0129+C9        	RET
+ 012A+          	DS	STACK$SIZE
+                
+                
+                	dseg
+                
+ 0000           drive$num ds 1
+                
+                ; here are the two strings required for the version call
+ 0001 5468652076warn$msg  db 'The version number of this program '
+ 0024 6973206E6F	  db 'is not exactly the same as the BIOS',CR,LF,'$'
+ 004A 536F727279error$msg db 'Sorry, requires RomWBW or NuBios v2.0'
+                
+ 006F 0D0A24    crlf	db	CR,LF,'$'
+                
+ 0072           	end	start
+
