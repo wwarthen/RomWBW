@@ -1,3 +1,10 @@
+
+Note: This file is down-level. The best source is in
+crossdev.
+
+
+
+
 This file, "allfiles.lbr" is the complete contents of my A: drive,
 on which I develop all my apps and utilities. Once you have your
 system running with storage (ppide,ide,sd,...), configure to use

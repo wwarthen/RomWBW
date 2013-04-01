@@ -1,0 +1,351 @@
+                ; labelib.asm 2/22/2012 dwg - label library function implementation
+                ; label.asm   2/11/2012 dwg - make ident compliant
+                ; label.asm   2/11/2012 dwg - begin 1.6 enhancements
+                ; label.asm   2/04/2012 dwg - use new macros for benefits
+                ; label.asm   1/20/2012 dwg - label a drive or slice
+                
+                ;
+                ; Copyright (C) 2011-2012 Douglas Goodall Licensed under GPL Ver 3.
+                ;
+                ; This file is part of NuBiosDWG and is free software: you can
+                ; redistribute it and/or modify it under the terms of the GNU
+                ; General Public License as published by the Free Software Foundation,
+                ; either version 3 of the License, or (at your option) any later version.
+                ; This file is distributed in the hope that it will be useful,
+                ; but WITHOUT ANY WARRANTY; without even the implied warranty of
+                ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+                ; GNU General Public License for more details.
+                ; You should have received a copy of the GNU General Public License
+                ; along with it.  If not, see <http://www.gnu.org/licenses/>.
+                ;
+                
+                
+                	maclib	portab
+                	maclib	globals
+                	maclib	cpmbios
+                	maclib	cpmbdos
+                	maclib	bioshdr
+                	maclib	hardware
+                	maclib	z80
+                	maclib	memory
+                ;	maclib	applvers
+                ;	maclib	cpmappl
+                	maclib	printers
+                	maclib	metadata
+                ;	maclib	banner
+                	maclib	stdlib
+                ;	maclib	ffhaslu
+                ;	maclib	identity
+                
+                
+                
+                	cseg
+                
+                	public	x$label
+                x$label:
+ 0000 79        	mov	a,c
+ 0001 323E01    	sta	drive$num
+                
+                	get$off
+ 0004+F5        	PUSH	PSW
+ 0005+C5        	PUSH	B
+ 0006+D5        	PUSH	D
+ 0007+CD1BE6    	CALL	BISELDSK
+ 000A+110A00    	LXI	D,DPB$OFS
+ 000D+19        	DAD	D
+ 000E+5E        	MOV	E,M
+ 000F+23        	INX	H
+ 0010+56        	MOV	D,M
+ 0011+EB        	XCHG
+ 0012+110D00    	LXI	D,OFF$OFS
+ 0015+19        	DAD	D
+ 0016+5E        	MOV	E,M
+ 0017+23        	INX	H
+ 0018+56        	MOV	D,M
+ 0019+EB        	XCHG
+ 001A+D1        	POP	D
+ 001B+C1        	POP	B
+ 001C+F1        	POP	PSW
+ 001D 7C        	mov	a,h
+ 001E B5        	ora	l
+ 001F C26E00    	jnz	off$ok
+                	printf	'Sorry, you can only label drives with reserved tracks'
+ 0022+F5        	PUSH PSW
+ 0023+C5        	PUSH B
+ 0024+D5        	PUSH D
+ 0025+E5        	PUSH H
+ 0026+0E09      	MVI C,PRINTSTR
+ 0028+113500    	LXI D,??0002
+ 002B+CD0500    	CALL BDOS
+ 002E+E1        	POP H
+ 002F+D1        	POP D
+ 0030+C1        	POP B
+ 0031+F1        	POP PSW
+ 0032+C36B00    	JMP	??0001
+ 0035+536F727279??0002	DB	'Sorry, you can only label drives with reserved tracks'
+ 006A+24        	DB	'$'
+ 006B C3A901    	jmp	main$exit
+                off$ok:
+                
+ 006E 3A3E01    	lda	drive$num
+ 0071 4F        	mov	c,a
+ 0072 215101    	lxi	h,buffer
+ 0075 CD0000    	call	x$g$meta
+                
+ 0078 3A80004F  	lda DEFBUF ! mov c,a
+ 007C FE00C2FA00	cpi 0      ! jnz x$lab2
+                
+                ;	; Interactive label functionality here...
+                
+                prompt:
+                	; signature exists so label should be displayable
+                
+                	print old$lbl
+ 0081+F5        	PUSH PSW
+ 0082+C5        	PUSH B
+ 0083+D5        	PUSH D
+ 0084+E5        	PUSH H
+ 0085+0E09      	MVI C,PRINTSTR
+ 0087+11DE00    	LXI D,OLD$LBL
+ 008A+CD0500    	CALL BDOS
+ 008D+E1        	POP H
+ 008E+D1        	POP D
+ 008F+C1        	POP B
+ 0090+F1        	POP PSW
+                
+                ;	print label
+ 0091 215101    	lxi	h,buffer
+ 0094 116700    	lxi	d,meta$label
+ 0097 19        	dad	d
+ 0098 E5        	push	h
+ 0099 D1        	pop	d
+ 009A 0E09      	mvi	c,PRINTSTR
+ 009C CD0500    	call	BDOS
+                
+                	print crlf
+ 009F+F5        	PUSH PSW
+ 00A0+C5        	PUSH B
+ 00A1+D5        	PUSH D
+ 00A2+E5        	PUSH H
+ 00A3+0E09      	MVI C,PRINTSTR
+ 00A5+113B01    	LXI D,CRLF
+ 00A8+CD0500    	CALL BDOS
+ 00AB+E1        	POP H
+ 00AC+D1        	POP D
+ 00AD+C1        	POP B
+ 00AE+F1        	POP PSW
+                	print new$lbl
+ 00AF+F5        	PUSH PSW
+ 00B0+C5        	PUSH B
+ 00B1+D5        	PUSH D
+ 00B2+E5        	PUSH H
+ 00B3+0E09      	MVI C,PRINTSTR
+ 00B5+11EA00    	LXI D,NEW$LBL
+ 00B8+CD0500    	CALL BDOS
+ 00BB+E1        	POP H
+ 00BC+D1        	POP D
+ 00BD+C1        	POP B
+ 00BE+F1        	POP PSW
+                
+ 00BF 0E0A      	mvi c,READ$CON$BUF
+ 00C1 113F01    	lxi d,rcbuff
+ 00C4 CD0500    	call BDOS
+ 00C7 3A4001    	lda rclen
+ 00CA FE00      	cpi 0
+ 00CC C2D200    	jnz length$ok
+ 00CF C3A901    	jmp main$exit
+                length$ok:
+ 00D2 3C        	inr a
+ 00D3 328000    	sta DEFBUF
+ 00D6 3E20      	mvi a,' '
+ 00D8 328100    	sta DEFBUF+1
+ 00DB 4F        	mov c,a
+ 00DC 0600      	mvi b,0
+ 00DE 214101    	lxi h,rcdata
+ 00E1 118200    	lxi d,DEFBUF+2
+                	ldir
+ 00E4+EDB0      	DB	0EDH,0B0H
+                
+                	print crlf
+ 00E6+F5        	PUSH PSW
+ 00E7+C5        	PUSH B
+ 00E8+D5        	PUSH D
+ 00E9+E5        	PUSH H
+ 00EA+0E09      	MVI C,PRINTSTR
+ 00EC+113B01    	LXI D,CRLF
+ 00EF+CD0500    	CALL BDOS
+ 00F2+E1        	POP H
+ 00F3+D1        	POP D
+ 00F4+C1        	POP B
+ 00F5+F1        	POP PSW
+                
+ 00F6 3A3E01    	lda	drive$num
+ 00F9 4F        	mov	c,a
+                	; fall through to code below
+                
+                
+                ;;; not$interactive:
+                
+                	public	x$lab2
+                x$lab2:
+                ; This routine can be used interactively or non-interactively.
+                ; You can set up the default buffer at 80h and call x$lab2,
+                ; or you can call x$label and it will interactively redo the label.
+                ;
+ 00FA 79        	mov	a,c
+ 00FB 323E01    	sta	drive$num
+                
+                
+ 00FE 215101    	lxi	h,buffer
+ 0101 116700    	lxi	d,meta$label
+ 0104 19        	dad	d
+ 0105 3E20      	mvi	a,' '
+ 0107 011000    	lxi	b,meta$label$len	; max length of label
+ 010A CD0000    	call	x$memset
+                
+ 010D 3A8000    	lda DEFBUF	; pick up length of command tail
+ 0110 FE12      	cpi 18		; compare with max size of label
+ 0112 DA1A01    	jc lenok	; jump if size is within limits
+ 0115 3E11      	mvi a,17	; specify maximum size
+ 0117 328000    	sta DEFBUF	; and poke into default buffer size byte
+                
+ 011A 3A8000    lenok:	lda DEFBUF	; pick up command tail size byte
+ 011D 3D        	dcr a		; decrement
+                
+ 011E 4F        	mov c,a		; move to c reg as counter
+ 011F 0600      	mvi b,0
+                
+ 0121 215101    	lxi	h,buffer
+ 0124 116700    	lxi	d,meta$label
+ 0127 19        	dad	d
+ 0128 EB        	xchg
+ 0129 218200    	lxi 	h,DEFBUF+2	; set source index for move
+                	ldir
+ 012C+EDB0      	DB	0EDH,0B0H
+                
+ 012E 215101    	lxi	h,buffer
+ 0131 117700    	lxi	d,meta$term
+ 0134 19        	dad	d
+ 0135 3E24      	mvi 	a,'$' 
+ 0137 77        	mov	m,a
+                
+ 0138 3A3E01    	lda	drive$num
+ 013B 4F        	mov	c,a
+                
+ 013C 215101    	lxi	h,buffer
+ 013F CD0000    	call	x$u$meta
+ 0142 FE01      	cpi	FAILURE
+ 0144 CA6001    	jz	write$prot$err
+                
+ 0147 215101    	lxi	h,buffer
+ 014A CD0000    	call	x$p$meta
+                
+                	print suc$msg
+ 014D+F5        	PUSH PSW
+ 014E+C5        	PUSH B
+ 014F+D5        	PUSH D
+ 0150+E5        	PUSH H
+ 0151+0E09      	MVI C,PRINTSTR
+ 0153+110000    	LXI D,SUC$MSG
+ 0156+CD0500    	CALL BDOS
+ 0159+E1        	POP H
+ 015A+D1        	POP D
+ 015B+C1        	POP B
+ 015C+F1        	POP PSW
+                
+ 015D C3A901    	jmp main$exit
+                
+                write$prot$err:
+                	print wr$prot$msg
+ 0160+F5        	PUSH PSW
+ 0161+C5        	PUSH B
+ 0162+D5        	PUSH D
+ 0163+E5        	PUSH H
+ 0164+0E09      	MVI C,PRINTSTR
+ 0166+115C00    	LXI D,WR$PROT$MSG
+ 0169+CD0500    	CALL BDOS
+ 016C+E1        	POP H
+ 016D+D1        	POP D
+ 016E+C1        	POP B
+ 016F+F1        	POP PSW
+ 0170 C3A901    	jmp main$exit
+                
+                readerr: 
+                	print rd$err$msg
+ 0173+F5        	PUSH PSW
+ 0174+C5        	PUSH B
+ 0175+D5        	PUSH D
+ 0176+E5        	PUSH H
+ 0177+0E09      	MVI C,PRINTSTR
+ 0179+111B00    	LXI D,RD$ERR$MSG
+ 017C+CD0500    	CALL BDOS
+ 017F+E1        	POP H
+ 0180+D1        	POP D
+ 0181+C1        	POP B
+ 0182+F1        	POP PSW
+ 0183 C3A901    	jmp main$exit
+                
+                writeerr: 
+                	print wr$err$msg
+ 0186+F5        	PUSH PSW
+ 0187+C5        	PUSH B
+ 0188+D5        	PUSH D
+ 0189+E5        	PUSH H
+ 018A+0E09      	MVI C,PRINTSTR
+ 018C+113B00    	LXI D,WR$ERR$MSG
+ 018F+CD0500    	CALL BDOS
+ 0192+E1        	POP H
+ 0193+D1        	POP D
+ 0194+C1        	POP B
+ 0195+F1        	POP PSW
+ 0196 C3A901    	jmp main$exit
+                
+                dontboth: 
+                	print usage$msg
+ 0199+F5        	PUSH PSW
+ 019A+C5        	PUSH B
+ 019B+D5        	PUSH D
+ 019C+E5        	PUSH H
+ 019D+0E09      	MVI C,PRINTSTR
+ 019F+117F00    	LXI D,USAGE$MSG
+ 01A2+CD0500    	CALL BDOS
+ 01A5+E1        	POP H
+ 01A6+D1        	POP D
+ 01A7+C1        	POP B
+ 01A8+F1        	POP PSW
+                
+                main$exit:
+ 01A9 C9        	ret
+                
+                	dseg
+                
+ 0000 4C6162656Csuc$msg    db 'Label Written Successfully$'
+ 001B 536F727279rd$err$msg db 'Sorry, cannot read label sector$'
+ 003B 536F727279wr$err$msg db 'Sorry, cannot write label sector$'
+ 005C 536F727279wr$prot$msg db 'Sorry, metadata is write protected$'
+ 007F 7573616765usage$msg  db 'usage - label <label>$'
+ 0095 536F727279ver$msg    db 'Sorry, requires RomWBW or NuBios v1.5$'
+ 00BB 556E6C6162def$label  db 'Unlabeled       ',0
+ 00CC 4C6162656Cinit$msg   db 'Label initialized$'
+ 00DE 4F6C64204Cold$lbl    db 'Old Label: $'
+ 00EA 4E6577204Cnew$lbl	   db 'New Label: $'	
+ 00F6 436F707972copr$msg   db 'Copyright (C) 2012 Douglas Goodall$'
+ 0119 50726F6772lic$msg    db 'Program licensed under the GPL v3$'
+                
+ 013B 0D0A      crlf	db	CR,LF
+ 013D 24        term	db	'$'
+                
+                
+ 013E           drive$num ds 1
+                
+ 013F 10        rcbuff	db	MAX$LABEL
+ 0140 00        rclen	db	0
+ 0141           rcdata	ds	MAX$LABEL
+                
+ 0151           buffer	ds	128
+                
+                
+                
+                
+ 01D1           	end	start
+
