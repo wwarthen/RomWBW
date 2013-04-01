@@ -1,0 +1,419 @@
+                ; identity.asm 2/17/2012 dwg - Program Identity Declarations
+                
+                	maclib	portab
+                	maclib	globals
+                	maclib	stdlib
+                	maclib	cpmbios
+                	maclib	cpmbdos
+                	maclib	memory
+                	maclib	printers
+                
+                	public	x$ident
+                x$ident:
+ 0000 221502    	shld	lfcbptr		; save pointer to fcb
+                
+ 0003 0E0F      	mvi	c,FOPEN
+ 0005 2A1502    	lhld	lfcbptr
+ 0008 EB        	xchg
+ 0009 CD0500    	call	BDOS
+ 000C FEFF      	cpi	255
+ 000E C27100    	jnz	openok
+                
+                ;;;	memcpy	lname,file1fcb+1,8
+ 0011 0E08      	mvi	c,8
+ 0013 111902    	lxi	d,lname
+ 0016 2A1502    	lhld	lfcbptr
+ 0019 23        	inx	h
+ 001A CD0000    	call	x$memcpy
+                
+ 001D 3E2C      	mvi	a,','
+ 001F 322102    	sta	ldot
+                
+                ;;;	memcpy	lext,file1fcb+9,3
+ 0022 0E03      	mvi	c,3
+ 0024 2A1502    	lhld	lfcbptr
+ 0027 110900    	lxi	d,9
+ 002A 19        	dad	d
+ 002B 112202    	lxi	d,lext
+ 002E CD0000    	call	x$memcpy
+                
+                
+ 0031 3E24      	mvi	a,'$'
+ 0033 322502    	sta	lterm
+                	print	lname
+ 0036+F5        	PUSH PSW
+ 0037+C5        	PUSH B
+ 0038+D5        	PUSH D
+ 0039+E5        	PUSH H
+ 003A+0E09      	MVI C,PRINTSTR
+ 003C+111902    	LXI D,LNAME
+ 003F+CD0500    	CALL BDOS
+ 0042+E1        	POP H
+ 0043+D1        	POP D
+ 0044+C1        	POP B
+ 0045+F1        	POP PSW
+                	printf	' -- File Not Found'
+ 0046+F5        	PUSH PSW
+ 0047+C5        	PUSH B
+ 0048+D5        	PUSH D
+ 0049+E5        	PUSH H
+ 004A+0E09      	MVI C,PRINTSTR
+ 004C+115900    	LXI D,??0002
+ 004F+CD0500    	CALL BDOS
+ 0052+E1        	POP H
+ 0053+D1        	POP D
+ 0054+C1        	POP B
+ 0055+F1        	POP PSW
+ 0056+C36C00    	JMP	??0001
+ 0059+202D2D2046??0002	DB	' -- File Not Found'
+ 006B+24        	DB	'$'
+ 006C 3E01      	mvi	a,FAILURE
+ 006E C31402    	jmp	fini
+                openok:
+                
+ 0071 0E1A      	mvi	c,SETDMA
+ 0073 112F02    	lxi	d,buffer
+ 0076 CD0500    	call	BDOS
+                
+ 0079 0E14      	mvi	c,READSEQ
+ 007B 2A1502    	lhld	lfcbptr
+ 007E EB        	xchg
+ 007F CD0500    	call	BDOS
+                
+                
+ 0082 0E1A      	mvi	c,SETDMA
+ 0084 11AF02    	lxi	d,buffer+128
+ 0087 CD0500    	call	BDOS
+                
+ 008A 0E14      	mvi	c,READSEQ
+ 008C 2A1502    	lhld	lfcbptr
+ 008F EB        	xchg
+ 0090 CD0500    	call	BDOS
+                
+ 0093 0E10      	mvi	c,FCLOSE
+ 0095 2A1502    	lhld	lfcbptr
+ 0098 EB        	xchg
+ 0099 CD0500    	call	BDOS
+                
+ 009C 116D02    	lxi	d,d$prog
+ 009F 0E09      	mvi	c,9
+ 00A1 CD0500    	call	BDOS
+                
+                	conout	','
+ 00A4+F5        	PUSH PSW
+ 00A5+C5        	PUSH B
+ 00A6+D5        	PUSH D
+ 00A7+E5        	PUSH H
+ 00A8+0E02      	MVI C,CWRITE		; SET FOR CONSOLE OUTPUT BDOS CALL
+ 00AA+1E2C      	MVI E,','		; PLACE OUTPUT CHARACTER IN E AS REQUIRED
+ 00AC+CD0500    	CALL BDOS		; CALL BDOS FUNCTION ENTRY POINT
+ 00AF+E1        	POP H
+ 00B0+D1        	POP D
+ 00B1+C1        	POP B
+ 00B2+F1        	POP PSW
+                	conout	' '
+ 00B3+F5        	PUSH PSW
+ 00B4+C5        	PUSH B
+ 00B5+D5        	PUSH D
+ 00B6+E5        	PUSH H
+ 00B7+0E02      	MVI C,CWRITE		; SET FOR CONSOLE OUTPUT BDOS CALL
+ 00B9+1E20      	MVI E,' '		; PLACE OUTPUT CHARACTER IN E AS REQUIRED
+ 00BB+CD0500    	CALL BDOS		; CALL BDOS FUNCTION ENTRY POINT
+ 00BE+E1        	POP H
+ 00BF+D1        	POP D
+ 00C0+C1        	POP B
+ 00C1+F1        	POP PSW
+ 00C2 3A4402    	lda	p$rmj
+ 00C5 6F        	mov	l,a
+ 00C6 2600      	mvi	h,0
+ 00C8 CD0000    	call	pr$d$word
+                	conout	'.'
+ 00CB+F5        	PUSH PSW
+ 00CC+C5        	PUSH B
+ 00CD+D5        	PUSH D
+ 00CE+E5        	PUSH H
+ 00CF+0E02      	MVI C,CWRITE		; SET FOR CONSOLE OUTPUT BDOS CALL
+ 00D1+1E2E      	MVI E,'.'		; PLACE OUTPUT CHARACTER IN E AS REQUIRED
+ 00D3+CD0500    	CALL BDOS		; CALL BDOS FUNCTION ENTRY POINT
+ 00D6+E1        	POP H
+ 00D7+D1        	POP D
+ 00D8+C1        	POP B
+ 00D9+F1        	POP PSW
+ 00DA 3A4502    	lda	p$rmn
+ 00DD 6F        	mov	l,a
+ 00DE CD0000    	call	pr$d$word
+                	conout	'.'
+ 00E1+F5        	PUSH PSW
+ 00E2+C5        	PUSH B
+ 00E3+D5        	PUSH D
+ 00E4+E5        	PUSH H
+ 00E5+0E02      	MVI C,CWRITE		; SET FOR CONSOLE OUTPUT BDOS CALL
+ 00E7+1E2E      	MVI E,'.'		; PLACE OUTPUT CHARACTER IN E AS REQUIRED
+ 00E9+CD0500    	CALL BDOS		; CALL BDOS FUNCTION ENTRY POINT
+ 00EC+E1        	POP H
+ 00ED+D1        	POP D
+ 00EE+C1        	POP B
+ 00EF+F1        	POP PSW
+ 00F0 3A4602    	lda	p$rup
+ 00F3 6F        	mov	l,a
+ 00F4 CD0000    	call	pr$d$word
+                	conout	'.'
+ 00F7+F5        	PUSH PSW
+ 00F8+C5        	PUSH B
+ 00F9+D5        	PUSH D
+ 00FA+E5        	PUSH H
+ 00FB+0E02      	MVI C,CWRITE		; SET FOR CONSOLE OUTPUT BDOS CALL
+ 00FD+1E2E      	MVI E,'.'		; PLACE OUTPUT CHARACTER IN E AS REQUIRED
+ 00FF+CD0500    	CALL BDOS		; CALL BDOS FUNCTION ENTRY POINT
+ 0102+E1        	POP H
+ 0103+D1        	POP D
+ 0104+C1        	POP B
+ 0105+F1        	POP PSW
+ 0106 3A4702    	lda	p$rtp
+ 0109 6F        	mov	l,a
+ 010A CD0000    	call	pr$d$word
+                	conout	','
+ 010D+F5        	PUSH PSW
+ 010E+C5        	PUSH B
+ 010F+D5        	PUSH D
+ 0110+E5        	PUSH H
+ 0111+0E02      	MVI C,CWRITE		; SET FOR CONSOLE OUTPUT BDOS CALL
+ 0113+1E2C      	MVI E,','		; PLACE OUTPUT CHARACTER IN E AS REQUIRED
+ 0115+CD0500    	CALL BDOS		; CALL BDOS FUNCTION ENTRY POINT
+ 0118+E1        	POP H
+ 0119+D1        	POP D
+ 011A+C1        	POP B
+ 011B+F1        	POP PSW
+                	conout	' '
+ 011C+F5        	PUSH PSW
+ 011D+C5        	PUSH B
+ 011E+D5        	PUSH D
+ 011F+E5        	PUSH H
+ 0120+0E02      	MVI C,CWRITE		; SET FOR CONSOLE OUTPUT BDOS CALL
+ 0122+1E20      	MVI E,' '		; PLACE OUTPUT CHARACTER IN E AS REQUIRED
+ 0124+CD0500    	CALL BDOS		; CALL BDOS FUNCTION ENTRY POINT
+ 0127+E1        	POP H
+ 0128+D1        	POP D
+ 0129+C1        	POP B
+ 012A+F1        	POP PSW
+                
+ 012B 3A4802    	lda	p$mon
+ 012E 6F        	mov	l,a
+ 012F CD0000    	call	pr$d$word
+                	conout	'/'
+ 0132+F5        	PUSH PSW
+ 0133+C5        	PUSH B
+ 0134+D5        	PUSH D
+ 0135+E5        	PUSH H
+ 0136+0E02      	MVI C,CWRITE		; SET FOR CONSOLE OUTPUT BDOS CALL
+ 0138+1E2F      	MVI E,'/'		; PLACE OUTPUT CHARACTER IN E AS REQUIRED
+ 013A+CD0500    	CALL BDOS		; CALL BDOS FUNCTION ENTRY POINT
+ 013D+E1        	POP H
+ 013E+D1        	POP D
+ 013F+C1        	POP B
+ 0140+F1        	POP PSW
+ 0141 3A4902    	lda	p$day
+ 0144 6F        	mov	l,a
+ 0145 CD0000    	call	pr$d$word
+                	conout	'/'
+ 0148+F5        	PUSH PSW
+ 0149+C5        	PUSH B
+ 014A+D5        	PUSH D
+ 014B+E5        	PUSH H
+ 014C+0E02      	MVI C,CWRITE		; SET FOR CONSOLE OUTPUT BDOS CALL
+ 014E+1E2F      	MVI E,'/'		; PLACE OUTPUT CHARACTER IN E AS REQUIRED
+ 0150+CD0500    	CALL BDOS		; CALL BDOS FUNCTION ENTRY POINT
+ 0153+E1        	POP H
+ 0154+D1        	POP D
+ 0155+C1        	POP B
+ 0156+F1        	POP PSW
+ 0157 2A4A02    	lhld	p$year
+ 015A CD0000    	call	pr$d$word
+                	conout	','
+ 015D+F5        	PUSH PSW
+ 015E+C5        	PUSH B
+ 015F+D5        	PUSH D
+ 0160+E5        	PUSH H
+ 0161+0E02      	MVI C,CWRITE		; SET FOR CONSOLE OUTPUT BDOS CALL
+ 0163+1E2C      	MVI E,','		; PLACE OUTPUT CHARACTER IN E AS REQUIRED
+ 0165+CD0500    	CALL BDOS		; CALL BDOS FUNCTION ENTRY POINT
+ 0168+E1        	POP H
+ 0169+D1        	POP D
+ 016A+C1        	POP B
+ 016B+F1        	POP PSW
+                	conout	' '
+ 016C+F5        	PUSH PSW
+ 016D+C5        	PUSH B
+ 016E+D5        	PUSH D
+ 016F+E5        	PUSH H
+ 0170+0E02      	MVI C,CWRITE		; SET FOR CONSOLE OUTPUT BDOS CALL
+ 0172+1E20      	MVI E,' '		; PLACE OUTPUT CHARACTER IN E AS REQUIRED
+ 0174+CD0500    	CALL BDOS		; CALL BDOS FUNCTION ENTRY POINT
+ 0177+E1        	POP H
+ 0178+D1        	POP D
+ 0179+C1        	POP B
+ 017A+F1        	POP PSW
+                
+ 017B 118C02    	lxi	d,d$prod
+ 017E 0E09      	mvi	c,9
+ 0180 CD0500    	call	BDOS
+                	conout	','
+ 0183+F5        	PUSH PSW
+ 0184+C5        	PUSH B
+ 0185+D5        	PUSH D
+ 0186+E5        	PUSH H
+ 0187+0E02      	MVI C,CWRITE		; SET FOR CONSOLE OUTPUT BDOS CALL
+ 0189+1E2C      	MVI E,','		; PLACE OUTPUT CHARACTER IN E AS REQUIRED
+ 018B+CD0500    	CALL BDOS		; CALL BDOS FUNCTION ENTRY POINT
+ 018E+E1        	POP H
+ 018F+D1        	POP D
+ 0190+C1        	POP B
+ 0191+F1        	POP PSW
+                	conout	' '
+ 0192+F5        	PUSH PSW
+ 0193+C5        	PUSH B
+ 0194+D5        	PUSH D
+ 0195+E5        	PUSH H
+ 0196+0E02      	MVI C,CWRITE		; SET FOR CONSOLE OUTPUT BDOS CALL
+ 0198+1E20      	MVI E,' '		; PLACE OUTPUT CHARACTER IN E AS REQUIRED
+ 019A+CD0500    	CALL BDOS		; CALL BDOS FUNCTION ENTRY POINT
+ 019D+E1        	POP H
+ 019E+D1        	POP D
+ 019F+C1        	POP B
+ 01A0+F1        	POP PSW
+                
+ 01A1 119202    	lxi	d,d$orig
+ 01A4 0E09      	mvi	c,9
+ 01A6 CD0500    	call	BDOS
+                	conout	','
+ 01A9+F5        	PUSH PSW
+ 01AA+C5        	PUSH B
+ 01AB+D5        	PUSH D
+ 01AC+E5        	PUSH H
+ 01AD+0E02      	MVI C,CWRITE		; SET FOR CONSOLE OUTPUT BDOS CALL
+ 01AF+1E2C      	MVI E,','		; PLACE OUTPUT CHARACTER IN E AS REQUIRED
+ 01B1+CD0500    	CALL BDOS		; CALL BDOS FUNCTION ENTRY POINT
+ 01B4+E1        	POP H
+ 01B5+D1        	POP D
+ 01B6+C1        	POP B
+ 01B7+F1        	POP PSW
+                	conout	' '
+ 01B8+F5        	PUSH PSW
+ 01B9+C5        	PUSH B
+ 01BA+D5        	PUSH D
+ 01BB+E5        	PUSH H
+ 01BC+0E02      	MVI C,CWRITE		; SET FOR CONSOLE OUTPUT BDOS CALL
+ 01BE+1E20      	MVI E,' '		; PLACE OUTPUT CHARACTER IN E AS REQUIRED
+ 01C0+CD0500    	CALL BDOS		; CALL BDOS FUNCTION ENTRY POINT
+ 01C3+E1        	POP H
+ 01C4+D1        	POP D
+ 01C5+C1        	POP B
+ 01C6+F1        	POP PSW
+                
+ 01C7 118502    	lxi	d,d$ser
+ 01CA 0E09      	mvi	c,9
+ 01CC CD0500    	call	BDOS
+                	conout	','
+ 01CF+F5        	PUSH PSW
+ 01D0+C5        	PUSH B
+ 01D1+D5        	PUSH D
+ 01D2+E5        	PUSH H
+ 01D3+0E02      	MVI C,CWRITE		; SET FOR CONSOLE OUTPUT BDOS CALL
+ 01D5+1E2C      	MVI E,','		; PLACE OUTPUT CHARACTER IN E AS REQUIRED
+ 01D7+CD0500    	CALL BDOS		; CALL BDOS FUNCTION ENTRY POINT
+ 01DA+E1        	POP H
+ 01DB+D1        	POP D
+ 01DC+C1        	POP B
+ 01DD+F1        	POP PSW
+                	conout 	' '
+ 01DE+F5        	PUSH PSW
+ 01DF+C5        	PUSH B
+ 01E0+D5        	PUSH D
+ 01E1+E5        	PUSH H
+ 01E2+0E02      	MVI C,CWRITE		; SET FOR CONSOLE OUTPUT BDOS CALL
+ 01E4+1E20      	MVI E,' '		; PLACE OUTPUT CHARACTER IN E AS REQUIRED
+ 01E6+CD0500    	CALL BDOS		; CALL BDOS FUNCTION ENTRY POINT
+ 01E9+E1        	POP H
+ 01EA+D1        	POP D
+ 01EB+C1        	POP B
+ 01EC+F1        	POP PSW
+                
+ 01ED 3ACE02    	lda	d$term2
+ 01F0 FE24      	cpi	'$'
+ 01F2 C20A02    	jnz	do$name
+                	conout	' '
+ 01F5+F5        	PUSH PSW
+ 01F6+C5        	PUSH B
+ 01F7+D5        	PUSH D
+ 01F8+E5        	PUSH H
+ 01F9+0E02      	MVI C,CWRITE		; SET FOR CONSOLE OUTPUT BDOS CALL
+ 01FB+1E20      	MVI E,' '		; PLACE OUTPUT CHARACTER IN E AS REQUIRED
+ 01FD+CD0500    	CALL BDOS		; CALL BDOS FUNCTION ENTRY POINT
+ 0200+E1        	POP H
+ 0201+D1        	POP D
+ 0202+C1        	POP B
+ 0203+F1        	POP PSW
+ 0204 11BD02    	lxi	d,d$uuid+19
+ 0207 C30D02    	jmp	do$any
+                do$name:
+ 020A 119602    	lxi	d,d$name
+                do$any:
+ 020D 0E09      	mvi	c,9
+ 020F CD0500    	call	BDOS
+                
+ 0212 3E00      	mvi	a,SUCCESS	; set return code
+                fini:
+ 0214 C9        	ret
+                
+ 0215           lfcbptr	ds	2
+ 0217           ldrive	ds	1
+ 0218           lcolon	ds	1
+ 0219           lname	ds	8
+ 0221           ldot	ds	1
+ 0222           lext	ds	3
+ 0225           lterm	ds	1
+                
+ 0226 6275666665	db	'buffer-->'
+ 022F           buffer	ds	1
+ 0230           p$start	ds	2
+ 0232           p$hexrf	ds	16
+ 0242           p$sig	ds	2
+ 0244           p$rmj	ds	1
+ 0245           p$rmn	ds	1
+ 0246           p$rup	ds	1
+ 0247           p$rtp	ds	1
+ 0248           p$mon	ds	1
+ 0249           p$day	ds	1
+ 024A           p$year	ds	2
+ 024C           p$argv	ds	2
+ 024E           p$e5	ds	1
+ 024F           p$pr$st	ds	2
+ 0251           p$code1	ds	3		; begin: lxi h,0
+ 0254           p$code2	ds	1		;   dad sp
+ 0255           p$code3	ds	3		;   shld pre$stk
+ 0258           p$code4	ds	3		;    lxi sp,stack$top
+ 025B           p$code5	ds	1		;    nop
+ 025C           p$code6	ds	3		;    jmp around$bandata
+ 025F           p$prog	ds	2		;   dw prog
+ 0261           p$dat	ds	2		;   dw dat
+ 0263           p$prod	ds	2		;   dw prod
+ 0265           p$orig	ds	2		;   dw orig
+ 0267           p$ser	ds	2		;   dw ser
+ 0269           p$nam	ds	2		;   dw nam
+ 026B           p$term	ds	2		;   dw 0
+ 026D           d$prog	ds	8+1+3+1		;   db '12345678.123$'
+ 027A           d$date	ds	2+1+2+1+4+1	;   db ' 2/11/2012$'
+ 0285           d$ser	ds	6+1		;   db '654321$'
+ 028C           d$prod	ds	5+1		;   db 'CPM80$'
+ 0292           d$orig	ds	3+1		;   db 'DWG$'
+ 0296           d$name	ds	1+7+1+1+1+1+7+1	;   db ' Douglas W. Goodall$'
+ 02AA           d$uuid	ds	36		; unique user identification
+ 02CE           d$term2	ds	1		; can be set to zero or dollar sign
+ 00A0 =         p$len	equ	$-buffer
+ 02CF           p$rsvd	ds	256-p$len
+ 032F 3C2D2D6275	db	'<--buffer'
+ 0338 A000      	dw	p$len
+ 033A 0D0A24    crlf	db	CR,LF,'$'
+                
+                ; eof - identity.asm
+
