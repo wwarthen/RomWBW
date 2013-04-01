@@ -10,6 +10,8 @@ Version 2.5
 - WBW: Fixed debug monitor (I, O, and H commands corrected)
 - WBW: Added support for SCSI2IDE (SD Card driver primarily)
 - WBW: Revised System Architecture document
+- WBW: Added support for Dual SD board (preliminary)
+- WBW: Overhaul of SD driver (sd.asm) to clean up the conditionals
 
 Version 2.1.1
 -------------
