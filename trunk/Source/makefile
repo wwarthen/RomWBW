@@ -186,7 +186,7 @@ zcprw.bin : zcprw.asm zcpr.asm
 zsdos.bin : zsdos.asm zsdos.lib zsdos-gp.z80
 	$(TASM) $(ASMOPT80) $< $@
 
-cbios.bin: cbios.asm fd_data.asm ide_data.asm ppide_data.asm sd_data.asm prp_data.asm ppp_data.asm uart.asm vdu.asm std.asm ver.inc build.inc
+cbios.bin: cbios.asm fd_dph.asm ide_dph.asm ppide_dph.asm sd_dph.asm prp_dph.asm ppp_dph.asm uart.asm vdu.asm std.asm ver.inc build.inc
 	$(TASM) $(ASMOPT80) -dBLD_SYS=SYS_$(SYS) $< $@
 
 dbgmon.bin: dbgmon.asm std.asm ver.inc build.inc
