@@ -1,770 +1,552 @@
-; ../RomWBW/Source/n8v.asm 11/22/2012 dwg - best so far
-; ../RomWBW/Source/n8v.asm 11/19/2012 dwg - add snippets into video scheme
-; ../RomWBW/Source/n8v.asm 11/16/2012 dwg - N8V_VDAQRY now working
-; ../RomWBW/Source/n8v.asm 11/15/2012 dwg - vdaini and vdaqry retcodes ok
-; ../RomWBW/Source/n8v.asm 10/28/2012 dwg - add n8v_modes
-; ../RomWBW/Source/n8v.asm 10/27/2012 dwg - begin enhancement
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; N8 VIDEO DRIVER FOR ROMWBW ;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Video Display Processor I/O Addresses for the TMS9918 ;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-BASE:   .EQU    128
-CMDP:   .EQU    BASE+25
-DATAP:  .EQU    BASE+24
-
-;__________________________________________________________________________________________________
-; DATA CONSTANTS
-;__________________________________________________________________________________________________
+;======================================================================
+;	N8 VDU DRIVER FOR N8VEM PROJECT
 ;
-;_________________________________________________________________________
-; BOARD INITIALIZATION
-;_________________________________________________________________________
+;	WRITTEN BY: DOUGLAS GOODALL
+;	UPDATED BY: WAYNE WARTHEN -- 4/7/2013
+;======================================================================
+;
+; TODO:
+;   - IMPLEMENT CONSTANTS FOR SCREEN DIMENSIONS
+;   - IMPLEMENT SET CURSOR STYLE (VDASCS) FUNCTION
+;   - IMPLEMENT ALTERNATE DISPLAY MODES?
+;   - IMPLEMENT DYNAMIC READ/WRITE OF CHARACTER BITMAP DATA?
+;
+;======================================================================
+; N8V DRIVER - CONSTANTS
+;======================================================================
+;
+N8V_CMDREG	.EQU	N8_BASE + $19	; READ STATUS / WRITE REG SEL
+N8V_DATREG	.EQU	N8_BASE + $18	; READ/WRITE DATA
+;
+N8V_ROWS	.EQU	24
+N8V_COLS	.EQU	40
+;
+;======================================================================
+; N8V DRIVER - INITIALIZATION
+;======================================================================
 ;
 N8V_INIT:
 	PRTS("N8V: IO=0x$")
-	LD	A,DATAP
+	LD	A,N8V_DATREG
 	CALL	PRTHEXBYTE
 ;
-	LD	HL,CHARSET
-	CALL	N8V_VDAINI
-	XOR	A
-	RET
+	CALL 	N8V_CRTINIT		; SETUP THE N8V CHIP REGISTERS
+	CALL	N8V_LOADFONT		; LOAD FONT DATA FROM ROM TO N8V STRORAGE
 ;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; This routine is called from bnk1.asm to init the TMS9918		;
-; If HL is non-zero, it specifies the character bitmaps to load ;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-N8V_VDAINI:
-	LD	A,C
-	LD	(VDP_DEVUNIT),A
-	LD	A,E
-	LD	(VDP_MODE),A
-	PUSH	HL
-	; Fall through...
-
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	; clear first 16K of TMS9918 video ram to zeroes ;
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	LD      C,CMDP
-    LD      A,$00
-    OUT     (C),A           ; out(CMDP,0);
-	CALL	RECOVER
-    LD      A,64
-    OUT     (C),A           ; out(CMDP,64);
-	CALL	RECOVER
-	;
-	LD	C,DATAP
-	LD	HL,16384
-CLR16LOOP:
-	LD	A,0
-	OUT	(C),A
-	DEC	HL
-	LD	A,H
-	OR	L
-	JR	NZ,CLR16LOOP
-
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	; Set TMS9918 into Text Mode ;
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    LD      C,CMDP
-    LD      A,0
-    OUT     (C),A           ; out(CMDP,0);
-	CALL	RECOVER
-    LD      A,128
-    OUT     (C),A           ; out(CMDP,128);
-	CALL	RECOVER
-
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	; Set TMS9918 into 40-column mode ;
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	LD      C,CMDP
-    LD      A,80
-    OUT     (C),A           ; out(CMDP,80);
-	CALL	RECOVER
-    LD      A,129
-    OUT     (C),A           ; out(CMDP,129);
-	CALL	RECOVER
-	;
-	;; text mode is 24x40
-	LD		A,0
-	LD		(VDP_MODE),a
-	LD		a,40
-	LD		(VDP_COLS),a
-	LD		a,24
-	LD		(VDP_ROWS),A
-
-;;    CALL    VDP_PNT		; set TMS9918 Pattern Name Table Pointer
-;VDP_PNT:
-	LD      C,CMDP
-    LD      A,0
-    OUT     (C),A           ; out(CMDP,0);
-	CALL	RECOVER
-    LD      A,130
-    OUT     (C),A           ; out(CMDP,130);
-    CALL	RECOVER
-
-;;    CALL    VDP_PGT		; set TMS9918 Pattern Generator Table Pointer
-;VDP_PGT:
-	LD      C,CMDP
-    LD      A,1
-    OUT     (C),A           ; out(CMDP,1);
-	CALL	RECOVER
-	LD      A,132
-    OUT     (C),A           ; out(CMDP,132);
-	CALL	RECOVER
-
-;;    CALL    VDP_COLORS	; set TMS9918 foreground(white) background(black)
-;VDP_COLORS:
-	LD      C,CMDP
-    LD      A,(VDP_ATTR)
-;       LD      A,240
-    OUT     (C),A           ; out(CMDP,240); 240 is 0xF0 - 1111 0000 LSB=background MSB=foreground
-	CALL	RECOVER
-    LD      A,135
-    OUT     (C),A           ; out(CMDP,135);
-    CALL	RECOVER
-
-
-	POP		HL
-	LD		A,L
-	OR		H
-	JP		Z,N8V_NOLOAD
-;;    CALL    VDP_LOAD2   ; set TMS9918 character bitmaps
-;VDP_LOAD2:
-        LD      C,CMDP
-        LD      A,0
-        OUT     (C),A           ; out(CMDP,0);
-		CALL	RECOVER
-        LD      A,72
-        OUT     (C),A           ; out(CMDP,72);
-		CALL	RECOVER
-        LD      DE,256
-		LD		C,DATAP
-VDP_LOAD2LOOP:
-        LD      A,(HL)
-        LD      (BYTE8),A
-        INC     HL
-        LD      A,(HL)
-        LD      (BYTE7),A
-        INC     HL
-        LD      A,(HL)
-        LD      (BYTE6),A
-        INC     HL
-        LD      A,(HL)
-        LD      (BYTE5),A
-        INC     HL
-        LD      A,(HL)
-        LD      (BYTE4),A
-        INC     HL
-        LD      A,(HL)
-        LD      (BYTE3),A
-        INC     HL
-        LD      A,(HL)
-        LD      (BYTE2),A
-        INC     HL
-        LD      A,(HL)
-        INC     HL
-        OUT     (C),A
-		CALL	RECOVER
-        LD      A,(BYTE2)
-		OUT	(C),A
-		CALL	RECOVER
-        LD      A,(BYTE3)
-        OUT     (C),A
-		CALL	RECOVER
-        LD      A,(BYTE4)
-        OUT     (C),A
-		CALL	RECOVER
-        LD      A,(BYTE5)
-        OUT     (C),A
-		CALL	RECOVER
-        LD      A,(BYTE6)
-        OUT     (C),A
-		CALL	RECOVER
-        LD      A,(BYTE7)
-        OUT     (C),A
-		CALL	RECOVER
-		LD      A,(BYTE8)
-        OUT     (C),A
-		CALL	RECOVER
-        DEC	DE
-		LD	A,D
-		OR	E
-        JR      NZ,VDP_LOAD2LOOP
-N8V_NOLOAD:
-; fall through...
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Display init message on composite video ;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	; Output "N8-2312 TMS9918 Text Mode Init Done!"
-	LD	HL,0
-	CALL	VDP_WRVRAM
-    LD      HL,VDP_HELLO
-    LD      DE,39
-    LD      C,DATAP
-HELLO_LOOP:
-    LD      A,(HL)
-    OUT     (C),A
-    INC     HL
-    DEC     DE
-    LD      A,D
-    OR      E
-    JR      NZ,HELLO_LOOP
-	;
-	; N8VEM HBIOS v2.2 B3
-	LD	HL,40+40+40+40+3
-	CALL	VDP_WRVRAM
-	LD	HL,STR_BANNER
-	LD	C,DATAP
-	LD	DE,20
-BAN_LOOP:
-	LD	A,(HL)
-	CP	'('
-	JP	Z,BAN_DONE
-	OUT	(C),A
-	INC	HL
-	DEC	DE
-	LD	A,D
-	OR	E
-	JR	NZ,BAN_LOOP
-BAN_DONE:
-	;
-	; (rOMwbw-DOUG-121113t0113) <BLANK>
-	LD	HL,40+40+40+40+40+3
-	CALL	VDP_WRVRAM
-	;
-	LD	HL,STR_BANNER + 20
-	LD	C,DATAP
-	;
-	LD	DE,27
-BAN_LOOP2:
-	LD	A,(HL)
-	CP	' '
-	JP	Z,BAN_DONE2
-	OUT	(C),A
-	INC	HL
-	DEC	DE
-	LD	A,D
-	OR	E
-	JR	NZ,BAN_LOOP2
-	LD	A,'|'
-	OUT	(C),A
-	CALL	RECOVER
-BAN_DONE2:
-	;
-	; n8 z180 sbc, floppy (autosize), ppide..
-	PUSH	HL
-	LD	HL,40+40+40+40+40+40+3
-	CALL	VDP_WRVRAM
-	POP	HL
-	;
-	LD	C,DATAP
-	LD	DE,60
-BAN_LOOP3:
-	LD	A,(HL)
-	CP	'$'
-	JP	Z,BAN_DONE3
-	OUT	(C),A
-	INC	HL
-	DEC	DE
-	LD	A,D
-	OR	E
-	JP	NZ,BAN_LOOP3
-BAN_DONE3:
-; fall through...
-
-;	WBW: PPK_INIT SHOULD ONLY BE CALLED FROM HBIOS INIT
-;	CALL	PPK_INIT
-	; fall through...
-
-	XOR	A
-	RET
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; This is the end of the init routine ;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-;__________________________________________________________________________________________________
-; CHARACTER I/O (CIO) DISPATCHER
-;__________________________________________________________________________________________________
-;
-N8V_DISPCIO:
-	LD	A,B	; GET REQUESTED FUNCTION
-	AND	$0F	; ISOLATE SUB-FUNCTION
-	JP	Z,PPK_READ
-	DEC	A
-	JR	Z,N8V_CIOOUT
-	DEC	A
-	JP	Z,PPK_STAT
-	DEC	A
-	JR	Z,N8V_CIOOST
-	CALL	PANIC
-;
-N8V_CIOOUT:
-	JP	N8V_VDAWRC
-;
-N8V_CIOOST:
-	XOR	A
-	INC	A
+N8V_RESET:
+	LD	DE,0			; ROW = 0, COL = 0
+	CALL	N8V_XY			; SEND CURSOR TO TOP LEFT
+	LD	A,' '			; BLANK THE SCREEN
+	LD	DE,N8V_ROWS * N8V_COLS	; FILL ENTIRE BUFFER
+	CALL	N8V_FILL		; DO IT
+	LD	DE,0			; ROW = 0, COL = 0
+	CALL	N8V_XY			; SEND CURSOR TO TOP LEFT
+	
+	XOR	A			; SIGNAL SUCCESS
 	RET
 ;	
-;__________________________________________________________________________________________________
-; VIDEO DISPLAY ADAPTER (VDA) DISPATCHER
-;__________________________________________________________________________________________________
+;======================================================================
+; N8V DRIVER - CHARACTER I/O (CIO) DISPATCHER AND FUNCTIONS
+;======================================================================
+;
+N8V_DISPCIO:
+	LD	A,B			; GET REQUESTED FUNCTION
+	AND	$0F			; ISOLATE SUB-FUNCTION
+	JR	Z,N8V_CIOIN		; $00
+	DEC	A
+	JR	Z,N8V_CIOOUT		; $01
+	DEC	A
+	JR	Z,N8V_CIOIST		; $02
+	DEC	A
+	JR	Z,N8V_CIOOST		; $03
+	CALL	PANIC
+;	
+N8V_CIOIN:
+	JP	PPK_READ		; CHAIN TO KEYBOARD DRIVER
+;
+N8V_CIOIST:
+	JP	PPK_STAT		; CHAIN TO KEYBOARD DRIVER
+;
+N8V_CIOOUT:
+	JP	N8V_VDAWRC		; WRITE CHARACTER
+;
+N8V_CIOOST:
+	XOR	A			; A = 0
+	INC	A			; A = 1, SIGNAL OUTPUT BUFFER READY
+	RET
+;	
+;======================================================================
+; N8V DRIVER - VIDEO DISPLAY ADAPTER (VDA) DISPATCHER AND FUNCTIONS
+;======================================================================
 ;
 N8V_DISPVDA:
 	LD	A,B		; GET REQUESTED FUNCTION
 	AND	$0F		; ISOLATE SUB-FUNCTION
 
-	JP	Z,N8V_VDAINI
+	JR	Z,N8V_VDAINI	; $40
 	DEC	A
-	JP	Z,N8V_VDAQRY
+	JR	Z,N8V_VDAQRY	; $41
 	DEC	A
-	JP	Z,N8V_VDARES
+	JR	Z,N8V_VDARES	; $42
 	DEC	A
-	JP	Z,N8V_VDASCS
+	JR	Z,N8V_VDASCS	; $43
 	DEC	A
-	JP	Z,N8V_VDASCP
+	JR	Z,N8V_VDASCP	; $44
 	DEC	A
-	JP	Z,N8V_VDASAT
+	JR	Z,N8V_VDASAT	; $45
 	DEC	A
-	JP	Z,N8V_VDASCO
+	JR	Z,N8V_VDASCO	; $46
 	DEC	A
-	JP	Z,N8V_VDAWRC
+	JR	Z,N8V_VDAWRC	; $47
 	DEC	A
-	JP	Z,N8V_VDAFIL
+	JR	Z,N8V_VDAFIL	; $48
 	DEC	A
-	JP	Z,N8V_VDACPY
+	JR	Z,N8V_VDACPY	; $49
 	DEC	A
-	JP	Z,N8V_VDASCR
+	JR	Z,N8V_VDASCR	; $4A
 	DEC	A
-	JP	Z,PPK_STAT
+	JP	Z,PPK_STAT	; $4B
 	DEC	A
-	JP	Z,PPK_FLUSH
+	JP	Z,PPK_FLUSH	; $4C
 	DEC	A
-	JP	Z,PPK_READ
+	JP	Z,PPK_READ	; $4D
 	CALL	PANIC
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Video Display Processor Query ;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+N8V_VDAINI:
+	JP	N8V_INIT	; INITIALIZE
+
 N8V_VDAQRY:
+	LD	C,$00		; MODE ZERO IS ALL WE KNOW
+	LD	D,N8V_ROWS	; ROWS
+	LD	E,N8V_COLS	; COLS
+	LD	HL,0		; EXTRACTION OF CURRENT BITMAP DATA NOT SUPPORTED YET
+	XOR	A		; SIGNAL SUCCESS
+	RET
+	
+N8V_VDARES:
+	JR	N8V_RESET	; DO THE RESET
+	
+N8V_VDASCS:
+	CALL	PANIC		; NOT IMPLEMENTED (YET)
+	
+N8V_VDASCP:
+	CALL	N8V_XY		; SET CURSOR POSITION
+	XOR	A		; SIGNAL SUCCESS
+	RET
+	
+N8V_VDASAT:
+	XOR	A		; NOT POSSIBLE, JUST SIGNAL SUCCESS
+	RET
+	
+N8V_VDASCO:
+	XOR	A		; NOT POSSIBLE, JUST SIGNAL SUCCESS
+	RET
+	
+N8V_VDAWRC:
+	LD	A,E		; CHARACTER TO WRITE GOES IN A
+	CALL	N8V_PUTCHAR	; PUT IT ON THE SCREEN
+	XOR	A		; SIGNAL SUCCESS
+	RET
+	
+N8V_VDAFIL:
+	LD	A,E		; FILL CHARACTER GOES IN A
+	EX	DE,HL		; FILL LENGTH GOES IN DE
+	CALL	N8V_FILL	; DO THE FILL
+	XOR	A		; SIGNAL SUCCESS
+	RET
+
+N8V_VDACPY:
+	; LENGTH IN HL, SOURCE ROW/COL IN DE, DEST IS N8V_POS
+	; BLKCPY USES: HL=SOURCE, DE=DEST, BC=COUNT
+	PUSH	HL		; SAVE LENGTH
+	CALL	N8V_XY2IDX	; ROW/COL IN DE -> SOURCE ADR IN HL
+	POP	BC		; RECOVER LENGTH IN BC
+	LD	DE,(N8V_POS)	; PUT DEST IN DE
+	JP	N8V_BLKCPY	; DO A BLOCK COPY
+	
+N8V_VDASCR:
+	LD	A,E		; LOAD E INTO A
+	OR	A		; SET FLAGS
+	RET	Z		; IF ZERO, WE ARE DONE
+	PUSH	DE		; SAVE E
+	JP	M,N8V_VDASCR1	; E IS NEGATIVE, REVERSE SCROLL
+	CALL	N8V_SCROLL	; SCROLL FORWARD ONE LINE
+	POP	DE		; RECOVER E
+	DEC	E		; DECREMENT IT
+	JR	N8V_VDASCR	; LOOP
+N8V_VDASCR1:
+	CALL	N8V_RSCROLL	; SCROLL REVERSE ONE LINE
+	POP	DE		; RECOVER E
+	INC	E		; INCREMENT IT
+	JR	N8V_VDASCR	; LOOP
+;
+;======================================================================
+; N8V DRIVER - PRIVATE DRIVER FUNCTIONS
+;======================================================================
+;
+;----------------------------------------------------------------------
+; SET TMS9918 REGISTER VALUE
+;   N8V_SET WRITES VALUE IN A TO VDU REGISTER SPECIFIED IN C
+;----------------------------------------------------------------------
+;
+N8V_SET:
+	OUT	(N8V_CMDREG),A		; WRITE IT
+	NOP
+	LD	A,C			; GET THE DESIRED REGISTER
+	OR	$80			; SET BIT 7 
+	OUT	(N8V_CMDREG),A		; SELECT THE DESIRED REGISTER
+	NOP
+	RET
+;
+;----------------------------------------------------------------------
+; SET TMS9918 READ/WRITE ADDRESS
+;   N8V_WR SETS TMS9918 TO BEGIN WRITING TO ADDRESS SPECIFIED IN HL
+;   N8V_RD SETS TMS9918 TO BEGIN READING TO ADDRESS SPECIFIED IN HL
+;----------------------------------------------------------------------
+;
+N8V_WR:
+	PUSH	HL
+	SET	6,H			; SET WRITE BIT
+	CALL	N8V_RD
+	POP	HL
+	RET
+;
+N8V_RD:
+	LD	A,L
+	OUT	(N8V_CMDREG),A
+	NOP
 	LD	A,H
-	OR	L
-	JP	Z,N8V_QDONE
-	;	
-	; read bitmaps and 
-    LD      C,CMDP
-    LD      A,0
-    OUT     (C),A           ; out(CMDP,0);
-	CALL	RECOVER
-    LD      A,72
-    OUT     (C),A           ; out(CMDP,72);
-	CALL	RECOVER
-	;
-	LD	DE,256
-	LD	C,DATAP
-	IN	A,(C)					; read status
-	CALL	RECOVER
-VDP_QLOOP:
-	IN	A,(C)
-	CALL	RECOVER
-	LD	(BYTE8),A
-	;
-	IN	A,(C)
-	CALL	RECOVER
-	LD	(BYTE7),A
-	;
-	IN	A,(C)
-	CALL	RECOVER
-	LD	(BYTE6),A
-	;
-	IN	A,(C)
-	CALL	RECOVER
-	LD	(BYTE5),A
-	;
-	IN	A,(C)
-	CALL	RECOVER
-	LD	(BYTE4),A
-	;
-	IN	A,(C)
-	CALL	RECOVER
-	LD	(BYTE3),A
-	;
-	IN	A,(C)
-	CALL	RECOVER
-	LD	(BYTE2),A
-	;
-	IN	A,(C)
-	CALL	RECOVER
-;	LD	(BYTE1),A
-	;
-	LD	(HL),A
-	INC	HL
-	;
-	LD	A,(BYTE2)
-	LD	(HL),A
-	INC	HL
-	;
-	LD	A,(BYTE3)
-	LD	(HL),A
-	INC	HL
-	;
-	LD	A,(BYTE4)
-	LD	(HL),A
-	INC	HL
-	;
-	LD	A,(BYTE5)
-	LD	(HL),A
-	INC	HL
-	;	
-	LD	A,(BYTE6)
-	LD	(HL),A
-	INC	HL
-	;
-	LD	A,(BYTE7)
-	LD	(HL),A
-	INC	HL
-
-	LD	A,(BYTE8)
-	LD	(HL),A
-	INC	HL
-
+	OUT	(N8V_CMDREG),A
+	NOP
+	RET
+;
+;----------------------------------------------------------------------
+; MOS 8563 DISPLAY CONTROLLER CHIP INITIALIZATION
+;----------------------------------------------------------------------
+;
+N8V_CRTINIT:
+	; SET WRITE ADDRESS TO $0
+	LD	HL,0
+	CALL	N8V_WR
+;
+	; FILL ENTIRE RAM CONTENTS
+	LD	DE,$4000
+N8V_CRTINIT1:
+	XOR	A
+	OUT	(N8V_DATREG),A
 	DEC	DE
 	LD	A,D
 	OR	E
-	JR	NZ,VDP_QLOOP
-N8V_QDONE:
-	LD	A,(VDP_MODE)
-	LD	C,A
-	LD	A,(VDP_ROWS)
-	LD	D,A
-	LD	A,(VDP_COLS)
-	LD	E,A
-
-	LD	A,0		; return SUCCESS
-	RET
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Video Display Processor Reset	;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
-N8V_VDARES:
-	LD	HL,CHARSET
-	JP	N8V_VDAINI
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
-; Video Display Processor Set Cursor Style ;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-N8V_VDASCS:
-	CALL	PANIC
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
-; Video Display Processor Set Cursor Position ;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-N8V_VDASCP:
-	LD		A,E
-	LD		(VDP_COL),A		; keep private copy of column
-	LD		A,C
-	LD		(VDP_DEVUNIT),A		; keep private copy of dev/unit
-	LD		A,D
-	LD		(VDP_ROW),A		; keep private copy of row
-	XOR	A
-	RET
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Video Display Processor Set Character Attributes ;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
-N8V_VDASAT:
-	CALL	PANIC
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Video Display Processor Set Color Color ;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
-N8V_VDASCO:
-	CALL	PANIC
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Video Display Processor Calculate Row Offset  ;
-; Enter with A = Row number (rel 0)             ;
-; returns with HL = offset                      ;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-N8V_OFFSET:
-	PUSH DE
-	LD	hl,row_offs		; hl -> row offset table
-	LD	E,A				; place in LO byte of DE
-	LD	d,0				; make 16 bits
-	add	hl,DE			;
-	add hl,DE			; hl -> word in offset table for desired row
-	LD	e,(hl)			; pick up the LO byte of the row ptr
+	JR	NZ,N8V_CRTINIT1
+;
+	; INITIALIZE VDU REGISTERS
+    	LD 	C,0			; START WITH REGISTER 0
+	LD	B,N8V_INIT9918LEN	; NUMBER OF REGISTERS TO INIT
+    	LD 	HL,N8V_INIT9918		; HL = POINTER TO THE DEFAULT VALUES
+N8V_CRTINIT2:
+	LD	A,(HL)			; GET VALUE
+	CALL	N8V_SET			; WRITE IT
+	INC	HL			; POINT TO NEXT VALUE
+	INC	C			; POINT TO NEXT REGISTER
+	DJNZ	N8V_CRTINIT2		; LOOP
+    	RET
+;
+;----------------------------------------------------------------------
+; LOAD FONT DATA
+;----------------------------------------------------------------------
+;
+N8V_LOADFONT:
+	; SET WRITE ADDRESS TO $800
+	LD	HL,$800
+	CALL	N8V_WR
+;
+	; FILL $800 BYTES FROM FONTDATA
+	LD	HL,N8V_FONTDATA
+	LD	DE,$100 * 8
+N8V_LOADFONT1:
+	LD	B,8
+N8V_LOADFONT2:
+	LD	A,(HL)
+	PUSH	AF
 	INC	HL
-	ld	d,(hl)			; pick up the HO byte of the ROW ptr
-	EX	DE,HL			; hl -> offset of first column in row
-	POP DE
-	RET
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Video Display Processor Write Character ;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
-N8V_VDAWRC:
-	
-;;;	LD	(VDP_POS),HL	; accept curpos from caller in HL
-	
-	PUSH	DE
-
-	LD	A,(VDP_ROW)		; pick up cursor row
-	LD	E,A				; place in LO byte of DE
-	LD	d,0				; make 16 bits
-	add	hl,DE			;
-	add hl,DE			; hl -> word in offset table for desired row
-	LD	e,(hl)			; pick up the LO byte of the row ptr
-	INC	HL
-	ld	d,(hl)			; pick up the HO byte of the ROW ptr
-	EX	DE,HL			; hl -> offset of first column in row
-	LD	A,(VDP_COL)		; pick up the current column number
-	LD	E,A				; use as LO byte of DE
-	LD	D,0				; make 16 bits
-	ADD	HL,DE			; hl = offset in name table of row and column
-	call VDP_WRVRAM		; set vram write ptr to proper byte in name table
-
-	POP	DE				; restore the output byte into E
-	LD	A,E				; move into A for output
-	LD	C,DATAP			; I/O address for subsequent VRAM write
-	OUT	(C),a			; prime the auto incrementer
-	OUT	(C),a			; output the data byte into the name table
-		
-	XOR	A				; set SUCCESS return code
-	RET					; return from HBIOS call
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Video Display Processor Fill ;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
-N8V_VDAFIL:
-	XOR	A
-	RET
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Video Display Processor Copy ;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
-N8V_VDACPY:
-	XOR	A
-	RET
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
-; Video Display Processor Scroll ;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-; COPY DATA ZONE FROM VRAM TO SCRLBUF
-VDASCR_RVRAM:
-	
-	; CALCULATE AND SET OFFSET TO START OF DATA ZONE IN VRAM
-	LD	A,(VDASCR_DIST)	 ; from number lines to scroll,
-	CALL N8V_OFFSET		 ; set HL to offset of data in name table
-	CALL VDP_WRVRAM
-
-	; SETUP FOR VRAM DATA READ	
-	LD	C,DATAP			; using the TMS9918 data port
-	IN	A,(C)			; PRIME AUTOINCREMENT
-	LD	HL,SCRLBUF		; DEST IS SCRLBUF OFFSET 0
-
-	; COPY VDASCR_SIZE BYTES FROM VRAM TO HEAD OF SCRLBUF
-	LD	DE,(VDASCR_SIZE)	; SIZE OF DATA ZONE
-N8V_VDASCR2:
-	IN	A,(C)				; FETCH NEXT BYTE FROM VRAM
-	LD	(HL),A				; STORE IN SEQUENTIAL LOCATIONS IN SCRBUF
-	INC	HL					; BUMP STORAGE INDEX
-	DEC	DE					; DECREMENT BYTE COUNT REMAINING
-	LD	A,D					; OR D
-	OR	E					; WITH E
-	JR	NZ,N8V_VDASCR2		; AND DO MORE IF NOT ZERO
-	
-	RET
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-VDASCR_WVRAM:
-	LD	HL,0
-	CALL VDP_WRVRAM
-	LD	C,DATAP
-;	OUT	(C),A
-	LD 	HL,SCRLBUF
-	LD	DE,(VDASCR_SIZE)
-N8V_VDASCR3:
-	LD A,(HL)			; FETCH NEXT BYTE FROM SCRLBUF
-	OUT	(C),A
-	INC	HL
-	DEC DE
+	DJNZ	N8V_LOADFONT2
+;
+	LD	B,8
+N8V_LOADFONT3:
+	POP	AF
+	OUT	(N8V_DATREG),A
+	DEC	DE
+	DJNZ	N8V_LOADFONT3
+;
 	LD	A,D
 	OR	E
-	JR	NZ,N8V_VDASCR3
-	RET
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-VDASCR_BLANKING:
-	; CALCULATE SIZE OF BLANKING ZONE
-	LD A,(VDASCR_DIST)
-	CALL N8V_OFFSET
-	EX	DE,HL				; NUMBER OF BYTES TO BLANK
-N8V_VDASCR4:
-	LD	A,' '				; WE WILL BE STORING BLANKS
-	OUT	(C),A				; OUTPUT A BYTE TO THE VRAM NAME TABLE BLANKING ZONE
-	DEC	DE					; DECREMENT COUNT
-	LD	A,D					; OR THE HO BYTE
-	OR	E					; WITH THE LO BYTE
-	JR	NZ,N8V_VDASCR4		; ;AND LOOP IF NOT ZERO
-	RET
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-VDASCR_DIST	.DB	0	; NUMBER OF ROWS TO SCROLL
-VDASCR_SIZE	.DW	0	; SIZE IN BYTES OF DATA REGION
-
-N8V_VDASCR:
-  	; E = scroll distance (# lines)
-  	LD	A,E
-  	LD	(VDASCR_DIST),A
-  	
-  	LD	A,(VDP_ROWS)		; NUMBER OF ROWS ON SCREEN
-  	SUB	E					; MINUS DIST IS ROWS OF DATA
-  	CALL	N8V_OFFSET		; CVT ROWS OF DATA TO NUMBER OF BYTES
-  	LD	(VDASCR_SIZE),HL	; AND SAVE FOR LATER USE  	
-  	
-	CALL	VDASCR_RVRAM	; read data region of name table into scrlbuf
-    
-	CALL	VDASCR_WVRAM	; write scrlbuf to head of name table in VRAM
-
-	CALL	VDASCR_BLANKING	; blank dist lines at end of name table
-
-	XOR	A					; SET SUCCESSFUL RETURN CODE
-	RET						; RETURN TO CALLER
-
-
-SCRLBUF	.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		.db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-
-;-------------------------------------------------
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Video Display Processor Write the VRAM address registers ;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-VDP_WRVRAM:
-	; HL -> points to ram location
-	LD	C,CMDP
-	OUT	(C),L
-	CALL	RECOVER
-	OUT	(C),H
-	CALL	RECOVER
-	RET
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Recovery-time delay routine - Conservatively long delay ;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-RECOVER:
-	PUSH	BC
-	PUSH	DE
-	PUSH	HL
-	POP		HL
-	POP		DE
-	POP		BC
-	RET
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Video Display Processor Local Driver Data ;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-VDP_DEVUNIT	.DB	0
-
-
-; The following data items, VDP_COL and VDP_ROW area
-; data bytes that can be retrieved together with a 
-; word fetch using the VDP_POS label. It is generally
-; set by a call to VDASCP from the emulation layer.
-; It is used by VDAFIL specifically to denote the beginning
-; of the fill area not specified in the API of VDAFIL.
-
-VDP_POS:
-VDP_COL		.DB	0	; col number 0-39
-VDP_ROW		.DB	0	; row number 0-23
-
-VDP_ROWS	.DB	24	; number of rows
-VDP_COLS	.DB	40	;
-VDP_MODE	.DB	0
-VDP_ATTR	.DB	240	; default to white on black
-VDP_HELLO       .TEXT   "   N8-2312 TMS9918 Text Mode Init Done!!"
-VDP_HELLOLEN	.DB	$-VDP_HELLO
-
-BYTE1           .DB     0
-BYTE2           .DB     0
-BYTE3           .DB     0
-BYTE4           .DB     0
-BYTE5           .DB     0
-BYTE6           .DB     0
-BYTE7           .DB     0
-BYTE8           .DB     0
-
-CHARSET:
-#INCLUDE "n8chars.inc"
-
-row_offs	.dw	40* 0,40* 1,40* 2,40* 3,40* 4,40* 5,40* 6,40* 7
-			.dw 40* 8,40* 9,40*10,40*11,40*12,40*13,40*14,40*15
-			.dw 40*16,40*17,40*18,40*19,40*20,40*21,40*22,40*23
+	JR	NZ,N8V_LOADFONT1
 ;
-
-
-;;;;;;;;;;;;;;;;;
-; eof - n8v.asm ;
-;;;;;;;;;;;;;;;;;
+	RET
+;
+;----------------------------------------------------------------------
+; SET CURSOR POSITION TO ROW IN D AND COLUMN IN E
+;----------------------------------------------------------------------
+;
+N8V_XY:
+	CALL	N8V_XY2IDX		; CONVERT ROW/COL TO BUF IDX
+	LD	(N8V_POS),HL		; SAVE THE RESULT (DISPLAY POSITION)
+	RET
+;
+;----------------------------------------------------------------------
+; CONVERT XY COORDINATES IN DE INTO LINEAR INDEX IN HL
+; D=ROW, E=COL
+;----------------------------------------------------------------------
+;
+N8V_XY2IDX:
+	LD	A,E			; SAVE COLUMN NUMBER IN A
+	LD	H,D			; SET H TO ROW NUMBER
+	LD	E,N8V_COLS		; SET E TO ROW LENGTH
+	CALL	MULT8			; MULTIPLY TO GET ROW OFFSET
+	LD	E,A			; GET COLUMN BACK
+	ADD	HL,DE			; ADD IT IN
+	RET				; RETURN
+;
+;----------------------------------------------------------------------
+; WRITE VALUE IN A TO CURRENT VDU BUFFER POSTION, ADVANCE CURSOR
+;----------------------------------------------------------------------
+;
+N8V_PUTCHAR:
+	PUSH	AF			; SAVE CHARACTER
+	LD	HL,(N8V_POS)		; LOAD CURRENT POSITION INTO HL
+	CALL	N8V_WR			; SET THE WRITE ADDRESS
+	POP	AF			; RECOVER CHARACTER TO WRITE
+	OUT	(N8V_DATREG),A		; WRITE THE CHARACTER
+	LD	HL,(N8V_POS)		; LOAD CURRENT POSITION INTO HL
+	INC	HL
+	LD	(N8V_POS),HL
+	RET
+;
+;----------------------------------------------------------------------
+; FILL AREA IN BUFFER WITH SPECIFIED CHARACTER AND CURRENT COLOR/ATTRIBUTE
+; STARTING AT THE CURRENT FRAME BUFFER POSITION
+;   A: FILL CHARACTER
+;   DE: NUMBER OF CHARACTERS TO FILL
+;----------------------------------------------------------------------
+;
+N8V_FILL:
+	LD	C,A			; SAVE THE CHARACTER TO WRITE
+	LD	HL,(N8V_POS)		; SET STARTING POSITION
+	CALL	N8V_WR			; SET UP FOR WRITE
+;
+N8V_FILL1:
+	LD	A,C			; RECOVER CHARACTER TO WRITE
+	OUT	(N8V_DATREG),A
+	NOP \ NOP
+	DEC	DE
+	LD	A,D
+	OR	E
+	JR	NZ,N8V_FILL1
+;
+	RET
+;
+;----------------------------------------------------------------------
+; SCROLL ENTIRE SCREEN FORWARD BY ONE LINE (CURSOR POSITION UNCHANGED)
+;----------------------------------------------------------------------
+;
+N8V_SCROLL:
+	LD	HL,0			; SOURCE ADDRESS OF CHARACER BUFFER
+	LD	C,N8V_ROWS - 1		; SET UP LOOP COUNTER FOR ROWS - 1
+;
+N8V_SCROLL0:	; READ LINE THAT IS ONE PAST CURRENT DESTINATION
+	PUSH	HL			; SAVE CURRENT DESTINATION
+	LD	DE,N8V_COLS
+	ADD	HL,DE			; POINT TO NEXT ROW SOURCE
+	CALL	N8V_RD			; SET UP TO READ
+	LD	DE,N8V_BUF
+	LD	B,N8V_COLS
+N8V_SCROLL1:
+	IN	A,(N8V_DATREG)
+	NOP \ NOP
+	LD	(DE),A
+	INC	DE
+	DJNZ	N8V_SCROLL1
+	POP	HL			; RECOVER THE DESTINATION
+;	
+	; WRITE THE BUFFERED LINE TO CURRENT DESTINATION
+	CALL	N8V_WR			; SET UP TO WRITE
+	LD	DE,N8V_BUF
+	LD	B,N8V_COLS
+N8V_SCROLL2:
+	LD	A,(DE)
+	OUT	(N8V_DATREG),A
+	NOP \ NOP
+	INC	DE
+	DJNZ	N8V_SCROLL2
+;
+	; BUMP TO NEXT LINE
+	LD	DE,N8V_COLS
+	ADD	HL,DE
+	DEC	C			; DECREMENT ROW COUNTER
+	JR	NZ,N8V_SCROLL0		; LOOP THRU ALL ROWS
+;
+	; FILL THE NEWLY EXPOSED BOTTOM LINE
+	CALL	N8V_WR
+	LD	A,' '
+	LD	B,N8V_COLS
+N8V_SCROLL3:
+	OUT	(N8V_DATREG),A
+	NOP \ NOP \ NOP \ NOP
+	DJNZ	N8V_SCROLL3
+;
+	RET
+;
+;----------------------------------------------------------------------
+; REVERSE SCROLL ENTIRE SCREEN BY ONE LINE (CURSOR POSITION UNCHANGED)
+;----------------------------------------------------------------------
+;
+N8V_RSCROLL:
+	LD	HL,N8V_COLS * (N8V_ROWS - 1)
+	LD	C,N8V_ROWS - 1
+;
+N8V_RSCROLL0:	; READ THE LINE THAT IS ONE PRIOR TO CURRENT DESTINATION
+	PUSH	HL			; SAVE THE DESTINATION ADDRESS
+	LD	DE,-N8V_COLS
+	ADD	HL,DE			; SET SOURCE ADDRESS
+	CALL	N8V_RD			; SET UP TO READ
+	LD	DE,N8V_BUF		; POINT TO BUFFER
+	LD	B,N8V_COLS		; LOOP FOR EACH COLUMN
+N8V_RSCROLL1:
+	IN	A,(N8V_DATREG)		; GET THE CHAR
+	NOP \ NOP			; RECOVER
+	LD	(DE),A			; SAVE IN BUFFER
+	INC	DE			; BUMP BUFFER POINTER
+	DJNZ	N8V_RSCROLL1		; LOOP THRU ALL COLS
+	POP	HL			; RECOVER THE DESTINATION ADDRESS
+;
+	; WRITE THE BUFFERED LINE TO CURRENT DESTINATION
+	CALL	N8V_WR			; SET THE WRITE ADDRESS
+	LD	DE,N8V_BUF		; POINT TO BUFFER
+	LD	B,N8V_COLS		; INIT LOOP COUNTER
+N8V_RSCROLL2:
+	LD	A,(DE)			; LOAD THE CHAR
+	OUT	(N8V_DATREG),A		; WRITE TO SCREEN
+	NOP \ NOP			; DELAY
+	INC	DE			; BUMP BUF POINTER
+	DJNZ	N8V_RSCROLL2		; LOOP THRU ALL COLS
+;
+	; BUMP TO THE PRIOR LINE
+	LD	DE,-N8V_COLS		; LOAD COLS (NEGATIVE)
+	ADD	HL,DE			; BACK UP THE ADDRESS
+	DEC	C			; DECREMENT ROW COUNTER
+	JR	NZ,N8V_RSCROLL0		; LOOP THRU ALL ROWS
+;
+	; FILL THE NEWLY EXPOSED BOTTOM LINE
+	CALL	N8V_WR
+	LD	A,' '
+	LD	B,N8V_COLS
+N8V_RSCROLL3:
+	OUT	(N8V_DATREG),A
+	NOP \ NOP \ NOP \ NOP
+	DJNZ	N8V_RSCROLL3
+;
+	RET
+;
+;----------------------------------------------------------------------
+; BLOCK COPY BC BYTES FROM HL TO DE
+;----------------------------------------------------------------------
+;
+N8V_BLKCPY:
+	; SAVE DESTINATION AND LENGTH
+	PUSH	BC		; LENGTH
+	PUSH	DE		; DEST
+;
+	; READ FROM THE SOURCE LOCATION
+N8V_BLKCPY1:
+	CALL	N8V_RD		; SET UP TO READ FROM ADDRESS IN HL
+	LD	DE,N8V_BUF	; POINT TO BUFFER
+	LD	B,C
+N8V_BLKCPY2:
+	IN	A,(N8V_DATREG)	; GET THE NEXT BYTE
+	NOP \ NOP		; DELAY
+	LD	(DE),A		; SAVE IN BUFFER
+	INC	DE		; BUMP BUF PTR
+	DJNZ	N8V_BLKCPY2	; LOOP AS NEEDED
+;
+	; WRITE TO THE DESTINATION LOCATION
+	POP	HL		; RECOVER DESTINATION INTO HL
+	CALL	N8V_WR		; SET UP TO WRITE
+	LD	DE,N8V_BUF	; POINT TO BUFFER
+	POP	BC		; GET LOOP COUNTER BACK
+	LD	B,C
+N8V_BLKCPY3:
+	LD	A,(DE)		; GET THE CHAR FROM BUFFER
+	OUT	(N8V_DATREG),A	; WRITE TO VDU
+	NOP \ NOP		; DELAY
+	INC	DE		; BUMP BUF PTR
+	DJNZ	N8V_BLKCPY3	; LOOP AS NEEDED
+;
+	RET
+;
+;==================================================================================================
+;   N8V DRIVER - DATA
+;==================================================================================================
+;
+N8V_POS		.DW 	0	; CURRENT DISPLAY POSITION
+N8V_BUF		.FILL	256,0		; COPY BUFFER
+;
+;==================================================================================================
+;   N8V DRIVER - TMS9918 REGISTER INITIALIZATION
+;==================================================================================================
+;
+; Control Registers (write CMDREG):
+;
+; Reg	Bit 7	Bit 6	Bit 5	Bit 4	Bit 3	Bit 2	Bit 1	Bit 0	Description
+; 0	-	-	-	-	-	-	M2	EXTVID
+; 1	4/16K	BL	GINT	M1	M3	-	SI	MAG
+; 2	-	-	-	-	PN13	PN12	PN11	PN10
+; 3	CT13	CT12	CT11	CT10	CT9	CT8	CT7	CT6
+; 4	-	-	-	-	-	PG13	PG12	PG11
+; 5	-	SA13	SA12	SA11	SA10	SA9	SA8	SA7
+; 6	-	-	-	-	-	SG13	SG12	SG11
+; 7	TC3	TC2	TC1	TC0	BD3	BD2	BD1	BD0
+;
+; Status (read CMDREG):
+;
+; 	Bit 7	Bit 6	Bit 5	Bit 4	Bit 3	Bit 2	Bit 1	Bit 0	Description
+; 	INT	5S	C	FS4	FS3	FS2	FS1	FS0
+;
+; M1,M2,M3	Select screen mode
+; EXTVID	Enables external video input.
+; 4/16K		Selects 16kB RAM if set. No effect in MSX1 system.
+; BL		Blank screen if reset; just backdrop. Sprite system inactive
+; SI		16x16 sprites if set; 8x8 if reset
+; MAG		Sprites enlarged if set (sprite pixels are 2x2)
+; GINT		Generate interrupts if set
+; PN*		Address for pattern name table
+; CT*		Address for colour table (special meaning in M2)
+; PG*		Address for pattern generator table (special meaning in M2)
+; SA*		Address for sprite attribute table
+; SG*		Address for sprite generator table
+; TC*		Text colour (foreground)
+; BD*		Back drop (background). Sets the colour of the border around
+; 		the drawable area. If it is 0, it is black (like colour 1).
+; FS*		Fifth sprite (first sprite that's not displayed). Only valid
+; 		if 5S is set.
+; C		Sprite collision detected
+; 5S		Fifth sprite (not displayed) detected. Value in FS* is valid.
+; INT		Set at each screen update, used for interrupts.
+;
+N8V_INIT9918:
+	.DB	$00		; REG 0 - NO EXTERNAL VID
+	.DB	$50		; REG 1 - ENABLE SCREEN, SET MODE 1
+	.DB	$00		; REG 2 - PATTERN NAME TABLE := 0
+	.DB	$00		; REG 3 - NO COLOR TABLE
+	.DB	$01		; REG 4 - SET PATTERN GENERATOR TABLE TO $800
+	.DB	$00		; REG 5 - SPRITE ATTRIBUTE IRRELEVANT
+	.DB	$00		; REG 6 - NO SPRITE GENERATOR TABLE
+	.DB	$F0		; REG 7 - WHITE ON BLACK
+;
+N8V_INIT9918LEN	.EQU	$ - N8V_INIT9918
+;
+;==================================================================================================
+;   N8V DRIVER - FONT DATA
+;==================================================================================================
+;
+N8V_FONTDATA:
+#INCLUDE "n8v_font.inc"
