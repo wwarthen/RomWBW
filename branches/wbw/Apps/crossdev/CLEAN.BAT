@@ -3,6 +3,7 @@ if exist *.prn erase *.prn
 if exist *.o   erase *.o
 if exist *.rel erase *.rel
 if exist *.cpm erase *.cpm
+if exist *.sym erase *.sym
 if exist 2drive.asm erase 2drive.asm
 if exist 2map.asm erase 2map.asm
 if exist banker.asm erase banker.asm

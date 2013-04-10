@@ -1,4 +1,5 @@
 @echo Copy CP/M-80 executables from the crossdev folder to here (core only)
+del *.COM
 copy ..\crossdev\ACCESS.CPM ACCESS.COM
 copy ..\crossdev\CPMNAME.CPM CPMNAME.COM
 copy ..\crossdev\FINDFILE.CPM FINDFILE.COM

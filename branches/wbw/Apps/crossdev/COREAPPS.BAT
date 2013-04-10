@@ -1,12 +1,12 @@
 @rem coreapps.bat 2/15/2013 dwg - build all core apps using batch files
 
-@@if not exist access.cpm call access.bat
-@@if not exist access.cpm echo WARNING ACCESS DIDN'T BUILD
-@@if not exist access.cpm pause
+@if not exist access.cpm call access.bat
+@if not exist access.cpm echo WARNING ACCESS DIDN'T BUILD
+@if not exist access.cpm pause
 
-@@if not exist cpmname.cpm call cpmname.bat
-@@if not exist cpmname.cpm echo WARNING CPMNAME DIDN'T BUILD
-@@if not exist cpmname.cpm pause
+@if not exist cpmname.cpm call cpmname.bat
+@if not exist cpmname.cpm echo WARNING CPMNAME DIDN'T BUILD
+@if not exist cpmname.cpm pause
 
 @if not exist findfile.cpm call findfile.bat
 @if not exist findfile.cpm echo WARNING FINDFILE DIDN'T BUILD
