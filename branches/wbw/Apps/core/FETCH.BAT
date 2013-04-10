@@ -1,5 +1,7 @@
-@echo Copy CP/M-80 executables from the crossdev folder to here (core only)
-del *.COM
+@echo off
+echo Copy CP/M-80 executables from the crossdev folder to here (core only)
+if exist *.COM del *.COM
+if exist *.MAN del *.MAN
 copy ..\crossdev\ACCESS.CPM ACCESS.COM
 copy ..\crossdev\CPMNAME.CPM CPMNAME.COM
 copy ..\crossdev\FINDFILE.CPM FINDFILE.COM
@@ -11,3 +13,4 @@ copy ..\crossdev\SETLABEL.CPM SETLABEL.COM
 copy ..\crossdev\SYSGEN.CPM SYSGEN.COM
 copy ..\crossdev\TERMTYPE.CPM TERMTYPE.COM
 copy ..\crossdev\VIEW.CPM VIEW.COM
+copy ..\doc\dwg-apps.man DWG-APPS.MAN
