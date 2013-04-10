@@ -7,6 +7,6 @@ if not exist banner.rel   z80mu rmac banner
 if not exist identity.rel z80mu rmac identity
 if not exist hbios.rel    z80mu rmac hbios
 if not exist findfile.cpm z80mu link findfile,hbios,identity,banner,memory,printers,terminal
-if not exist findfile.cpm copy findfile.com findfile.cpm
+if not exist findfile.cpm rename findfile.com findfile.cpm
 dir findfile.cpm
 
