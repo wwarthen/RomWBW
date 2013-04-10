@@ -1,18 +1,0 @@
-                ; hbios.asm 7/19/2012 dwg - 
-                
- 0000 =         CFGVERS	equ	0
-                
-                	public	xgetsc
-                xgetsc:
-                	enter
- 0000 06F0      	mvi	b,0F0h
- 0002 0E00      	mvi	c,CFGVERS
- 0004 110080    	lxi	d,8000h
- 0007 CF          	db 	0cfh		;  rst 8
- 0008 210080    	lxi	h,8000h
-                	leave
- 000B C9        	ret
-                	
-                
- 000C           	END
-
