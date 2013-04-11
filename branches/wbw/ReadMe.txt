@@ -8,7 +8,7 @@ Builders: Wayne Warthen (wwarthen@gmail.com)
           Douglas Goodall (douglas_goodall@mac.com)
           David Giles (vk5dg@internode.on.net)
 
-Updated: 2013-04-09
+Updated: 2013-04-11
 Version: 2.5 Beta 6
 
 This is an adaptation of CP/M-80 2.2 and ZSDOS/ZCPR
