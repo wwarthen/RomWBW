@@ -146,7 +146,7 @@ Concat 'bootapp.bin','syscfg.bin','loader.bin','hbios.bin','dbgmon.bin','os.bin'
 Copy-Item $BlankFile $RomDiskFile
 cpmcp -f $RomFmt $RomDiskFile ../RomDsk/${SYS}_${RomSize}KB/*.* 0:
 cpmcp -f $RomFmt $RomDiskFile ../RomDsk/cfg_${Platform}_${Config}/*.* 0:
-cpmcp -f $RomFmt $RomDiskFile ../Apps/core/*.* 0:
+cpmcp -f $RomFmt $RomDiskFile ../Apps/Output/*.* 0:
 cpmcp -f $RomFmt $RomDiskFile ../Output/${RomName}.sys 0:${SYS}.sys
 
 Concat 'rom0.bin','rom1.bin',$RomDiskFile $RomFile
