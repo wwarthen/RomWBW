@@ -1,8 +1,0 @@
-cc n8vidtst
-as n8vidtst
-cc n8chars
-as n8chars
-cc tms9918
-as tms9918
-ln n8vidtst.o n8chars.o tms9918.o -lc
-

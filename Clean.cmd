@@ -6,17 +6,13 @@ pushd Source
 call Clean.cmd
 popd
 
-echo Cleaning Apps\core...
-pushd Apps\core
-del /q *.*
+echo Cleaning Apps...
+pushd Apps\Source
+call Clean.cmd
 popd
 
-echo Cleaning Apps\crossdev...
-pushd Apps\crossdev
-call Clean.bat
-popd
-
-choice /m "Clean Output directory?"
+choice /m "Clean Output directories?"
 if errorlevel 2 goto :eof
 echo Cleaning Output...
 if exist Output\*.* del Output\*.* /Q
+if exist Apps\Output\*.* del Apps\Output\*.* /Q
