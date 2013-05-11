@@ -8,8 +8,8 @@ Builders: Wayne Warthen (wwarthen@gmail.com)
           Douglas Goodall (douglas_goodall@mac.com)
           David Giles (vk5dg@internode.on.net)
 
-Updated: 2013-04-28
-Version: 2.5 Beta 7
+Updated: 2013-05-10
+Version: 2.5 Beta 8
 
 This is an adaptation of CP/M-80 2.2 and ZSDOS/ZCPR
 targeting ROMs for all N8VEM Z80 hardware variations
