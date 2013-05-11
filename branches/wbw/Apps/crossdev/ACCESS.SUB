@@ -1,7 +1,0 @@
-e:rem access.sub 9/5/2012 dwg - build access from sources
-rasm80 access
-rasm80 printers 
-rasm80 memory
-rasm80 banner
-link80 access,memory,banner,printers
-
