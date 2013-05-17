@@ -10,95 +10,140 @@
 #include "syscfg.h"
 
 extern pager();
+extern char * fmthexbyte();
+extern char * fmthexword();
+extern char * fmtbool();
+extern char * fmtenable();
+extern putscpm();
 
-char cache[17];
+char None[] = "*NONE*";
+char * PltName[] = {None, "N8VEM Z80", "ZETA Z80", "N8 Z180"};
+char * CIOName[] = {"UART", "ASCI", "VDU", "CVDU", "UPD7220", 
+			"N8V", "PRPCON", "PPPCON", "CRT", "BAT", "NUL"};
+char * DIOName[] = {"MD", "FD", "IDE", "ATAPI", "PPIDE",
+			"SD", "PRPSD", "PPPSD", "HDSK"};
+char * VDAName[] = {None, "VDU", "CVDU", "UPD7220", "N8V"};
+char * EmuName[] = {None, "TTY", "ANSI"};
+char * TermName[] = {"TTY", "ANSI", "WYSE", "VT52"};
+char * DiskMapName[] = {None, "ROM", "RAM", "FD", "IDE", 
+			"PPIDE", "SD", "PRPSD", "PPPSD", "HDSK"};
+char * ClrRamName[] = {"Never", "Auto", "Always"};
+char * FDModeName[] = {None, "DIO", "ZETA", "DIDE", "N8", "DIO3"};
+char * FDMediaName[] = {"720K", "1.44M", "360k", "1.2M", "1.11M"};
+char * IDEModeName[] = {None, "DIO", "DIDE"};
 
-cnamept1(syscfg)
-	struct SYSCFG * syscfg;
+cnamept1(pSysCfg)
+	struct SYSCFG * pSysCfg;
 {
-	strcpy(cache,"syscfg->cnfgdata");
+	struct CNFGDATA * pCfg;
+	char buf[5];
+	char buf2[5];
 	
-	printf("syscfg->jmp            jp  0%04xh",syscfg->jmp.address);
+	pCfg = &(pSysCfg->cnfgdata);
+
+	printf("%s @ %dMHz, RAM=%dMB, ROM=%dMB", 
+		PltName[pCfg->platform], 
+		pCfg->freq,
+		pCfg->ramsize,
+		pCfg->romsize);
+	pager();
+	printf("RomWBW Version %d.%d.%d.%d, ", 
+		pCfg->rmj, pCfg->rmn,
+		pCfg->rup, pCfg->rtp);
+	putscpm((unsigned int)pSysCfg + (unsigned int)pSysCfg->tstloc);
+	pager();
+	if (pCfg->diskboot)
+		printf("Disk Boot Device=%s, Unit=%d, LU=%d",
+			DIOName[pCfg->devunit >> 4],
+			pCfg->devunit & 0xF, pCfg->bootlu);
+	else
+		printf("ROM Boot");
+	pager();
 	pager();
 	
-	printf("syscfg->cnfloc         .dw 0%04xh",syscfg->cnfloc);
+	printf("Default Console: %s, Alternate Console: %s",
+		CIOName[pCfg->defcon], CIOName[pCfg->altcon]);
+	pager();
+	printf ("Default Video Display: %s, Default Emulation: %s",
+		VDAName[pCfg->defvda], EmuName[pCfg->defemu]);
+	pager();
+	printf ("Current Terminal Type: %s",
+		TermName[pCfg->termtype]);
 	pager();
 	
-	printf("syscfg->tstloc         .dw 0%04xh",syscfg->tstloc);
+	printf("Default IO Byte: 0x%s, Alternate IO Byte: 0x%s",
+		fmthexbyte(pCfg->defiobyte, buf),
+		fmthexbyte(pCfg->altiobyte, buf2));
+	pager();
+	printf("Disk Write Caching=%s, Disk IO Tracing=%s",
+		fmtbool(pCfg->wrtcache), fmtbool(pCfg->dsktrace));
+	pager();
+	printf("Disk Mapping Priority: %s, Clear RAM Disk: %s",
+		DiskMapName[pCfg->dskmap], ClrRamName[pCfg->clrramdsk]);
+	pager();
 	pager();
 	
-	printf("syscfg->varloc         .dw 0%04xh",syscfg->varloc);
+	printf("DSKY %s", fmtenable(pCfg->dskyenable));
 	pager();
-	
-	printf("%s.rmj           = %d",cache,syscfg->cnfgdata.rmj);
+	printf("UART %s, FIFO=%s, AFC=%s, Baudrate=0x%s",
+		fmtenable(pCfg->uartenable),
+		fmtbool(pCfg->uartfifo), fmtbool(pCfg->uartafc),
+		fmthexword(pCfg->baudrate, buf));
 	pager();
-	
-	printf("%s.rmn           = %d",cache,syscfg->cnfgdata.rmn);
+	printf("VDU %s", fmtenable(pCfg->vduenable));
 	pager();
-	
-	printf("%s.rup           = %d",cache,syscfg->cnfgdata.rup);
+	printf("CVDU %s", fmtenable(pCfg->cvduenable));
 	pager();
-	
-	printf("%s.rtp           = %d",cache,syscfg->cnfgdata.rtp);
+	printf("UPD7220 %s", fmtenable(pCfg->upd7220enable));
 	pager();
-	
-	printf("%s.diskboot      = ",cache);
-	 switch(syscfg->cnfgdata.diskboot) {
-		case TRUE:  printf("TRUE");  break;
-		case FALSE: printf("FALSE"); break;
-	} 
+	printf("N8V %s", fmtenable(pCfg->n8venable));
 	pager();
-	
-	printf("%s.devunit       = 0x%02x",cache,
-			syscfg->cnfgdata.devunit);
-	pager();
-	
-	printf("%s.bootlu        = 0x%04x",cache,
-			syscfg->cnfgdata.bootlu);
-	pager();
-	
-	printf("%s.freq          = %dMHz",cache,syscfg->cnfgdata.freq);	
-	pager();
-	
-	printf("%s.platform      = ",cache);
-	 switch(syscfg->cnfgdata.platform) {
-	 	case PLT_N8VEM:	printf("N8VEM");  break;
-	 	case PLT_ZETA:	printf("ZETA");	break;
-	 	case PLT_N8:	printf("N8");		break;
-	 }
-	pager();
-	
-	printf("%s.dioplat       = ",cache);
-	 switch(syscfg->cnfgdata.dioplat) {
-		case DPNONE: 	printf("DIOPLT_NONE");		break;
-		case DPDIO:		printf("DIOPLT_DISKIO");	break;
-		case DPZETA:	printf("DIOPLT_ZETA");		break;
-		case DPDIDE:	printf("DIOPLT_DIDE");		break;
-		case DPN8:		printf("DIOPLT_N8");		break;
-		case DPDIO3:	printf("DIOPLT_DISKIO3");	break;
-		default:		printf("Unknown");			break;
-	 }
-	pager();
-		
-	printf("%s.vdumode       = ",cache);
-	 switch(syscfg->cnfgdata.vdumode) {
-		case VPNONE: 	printf("VDUPLT_NONE");		break;
-		case VPVDU:	 	printf("VDUPLT_VDU");		break;
-		case VPVDUC: 	printf("VDUPLT_VDUC"); 		break;
-		case VPPROPIO: 	printf("VDUPLT_PROPIO");	break;
-		case VPN8:		printf("VDUPLT_VPN8");		break;	 
-		default:		printf("Unknown!!");		break;
-	}	
 	pager();
 
-	printf("%s.romsize       = %d",cache,
-		    syscfg->cnfgdata.romsize);		 
+	printf("FD %s, Mode=%s, TraceLevel=%d, Media=%s/%s, Auto=%s",
+		fmtenable(pCfg->fdenable), FDModeName[pCfg->fdmode], 
+		pCfg->fdtrace,
+		FDMediaName[pCfg->fdmedia], FDMediaName[pCfg->fdmediaalt],
+		fmtbool(pCfg->fdmauto));
+	pager();
+	printf("IDE %s, Mode=%s, TraceLevel=%d, 8bit=%s, Size=%dMB",
+		fmtenable(pCfg->ideenable), IDEModeName[pCfg->idemode],
+		pCfg->idetrace, fmtbool(pCfg->ide8bit), pCfg->idecapacity);
+	pager();
+	printf("PPIDE %s, Mode=%s, TraceLevel=%d, 8bit=%s, Slow=%s, Size=%dMB",
+		fmtenable(pCfg->ppideenable), IDEModeName[pCfg->ppidemode],
+		pCfg->ppidetrace, fmtbool(pCfg->ppide8bit), 
+		fmtbool(pCfg->ppideslow), pCfg->ppidecapacity);
+	pager();
+	printf("PRP %s, SD %s, TraceLevel=%d, Size=%dMB, Console %s",
+		fmtenable(pCfg->prpenable), fmtenable(pCfg->prpsdenable), 
+		pCfg->prpsdtrace, pCfg->prpsdcapacity,
+		fmtenable(pCfg->prpconenable));
+	pager();
+	printf("PPP %s, SD %s, TraceLevel=%d, Size=%dMB, Console %s",
+		fmtenable(pCfg->pppenable), fmtenable(pCfg->pppsdenable), 
+		pCfg->pppsdtrace, pCfg->pppsdcapacity,
+		fmtenable(pCfg->pppconenable));
+	pager();
+	printf("HDSK %s, TraceLevel=%d, Size=%dMB",
+		fmtenable(pCfg->hdskenable),
+		pCfg->hdsktrace, pCfg->hdskcapacity);
+	pager();
 	pager();
 	
-	printf("%s.ramsize       = %d",cache,
-		    syscfg->cnfgdata.ramsize);		 
+	printf("PPK %s, TraceLevel=%d",
+		fmtenable(pCfg->ppkenable), pCfg->ppktrace);
+	pager();
+	printf("KBD %s, TraceLevel=%d",
+		fmtenable(pCfg->kbdenable), pCfg->kbdtrace);
+	pager();
 	pager();
 	
+	printf("TTY %s", fmtenable(pCfg->ttyenable));
+	pager();
+	printf("ANSI %s, TraceLevel=%d",
+		fmtenable(pCfg->ansienable), pCfg->ansitrace);
+	pager();
 }
 
 
