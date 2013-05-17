@@ -15,6 +15,12 @@
 ;
 #INCLUDE "std.asm"
 ;
+#IF (PLATFORM == PLT_N8)
+BOOTCON		.EQU	CIODEV_ASCI
+#ELSE
+BOOTCON		.EQU	CIODEV_UART
+#ENDIF
+;
 ;==================================================================================================
 ;   SYSTEM INITIALIZATION
 ;==================================================================================================
@@ -46,10 +52,10 @@ INITSYS:
 	LD	BC,HB_SIZ	; SIZE
 	LDIR			; DO THE COPY
 ;
-; DURING INITIALIZATION, CONSOLE IS UART!
+; DURING INITIALIZATION, CONSOLE IS ALWAYS PRIMARY SERIAL PORT
 ; POST-INITIALIZATION, WILL BE SWITCHED TO USER CONFIGURED CONSOLE
 ;
-	LD	A,CIODEV_UART
+	LD	A,BOOTCON
 	LD	(CONDEV),A
 ;
 ; PERFORM DEVICE INITIALIZATION
@@ -106,6 +112,9 @@ INITSYS1:
 HB_INITTBL:
 #IF (UARTENABLE)
 	.DW	UART_INIT
+#ENDIF
+#IF (ASCIENABLE)
+	.DW	ASCI_INIT
 #ENDIF
 #IF (VDUENABLE)
 	.DW	VDU_INIT
@@ -218,6 +227,10 @@ CIO_DISPATCH:
 #IF (UARTENABLE)
 	CP	CIODEV_UART
 	JP	Z,UART_DISPATCH
+#ENDIF
+#IF (ASCIENABLE)
+	CP	CIODEV_ASCI
+	JP	Z,ASCI_DISPATCH
 #ENDIF
 #IF (PRPENABLE & PRPCONENABLE)
 	CP	CIODEV_PRPCON
@@ -603,6 +616,15 @@ SIZ_UART	.EQU	$ - ORG_UART
 		.ECHO	" bytes.\n"
 #ENDIF
 ;
+#IF (ASCIENABLE)
+ORG_ASCI	.EQU	$
+  #INCLUDE "asci.asm"
+SIZ_ASCI	.EQU	$ - ORG_ASCI
+		.ECHO	"ASCI occupies "
+		.ECHO	SIZ_ASCI
+		.ECHO	" bytes.\n"
+#ENDIF
+;
 #IF (VDUENABLE)
 ORG_VDU		.EQU	$
   #INCLUDE "vdu.asm"
@@ -746,7 +768,7 @@ SIZ_ANSI	.EQU	$ - ORG_ANSI
 ;   HBIOS GLOBAL DATA
 ;==================================================================================================
 ;
-CONDEV		.DB	CIODEV_UART
+CONDEV		.DB	BOOTCON
 ;
 IDLECOUNT	.DB	0
 ;
