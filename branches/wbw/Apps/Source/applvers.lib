@@ -3,14 +3,14 @@
 A$RMJ	equ	2
 A$RMN	equ	5
 A$RUP	equ	0
-A$RTP	equ	9
+A$RTP	equ	10
 
 A$MONTH	equ	5
-A$DAY	equ	16
+A$DAY	equ	17
 A$YEAR	equ	2013
 
 date	macro
-dat	db	' 5/16/2013$'
+dat	db	' 5/17/2013$'
 	endm
 
 serial	macro
