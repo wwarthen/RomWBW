@@ -63,9 +63,7 @@ set TGT=cpmname.com
 if exist %TGT% del %TGT%
 zx cz --o cpmname.a80 --DTINY cpmname
 zx as cpmname.a80
-zx cz --o cnamept1.a80 --DTINY cnamept1
-zx as cnamept1.a80
-zx ln cpmname.o cnamept1.o --ldwg --lt --lc
+zx ln cpmname.o --ldwg --lt --lc
 if not exist %TGT% echo *** Failed to build %TGT% ***  && pause
 
 echo.

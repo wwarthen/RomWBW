@@ -51,7 +51,10 @@ struct CNFGDATA {
 	unsigned char uartenable;
 	unsigned char uartfifo;
 	unsigned char uartafc;
-	unsigned int baudrate;
+	
+	unsigned char ascienable;
+	
+	unsigned int baudrate;			/* actual baudrate / 10 */
 	
 	unsigned char vduenable;
 
