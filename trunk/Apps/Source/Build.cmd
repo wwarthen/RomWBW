@@ -32,16 +32,16 @@ if exist %TGT% del %TGT%
 zx as bioscall
 zx as bdoscall
 zx as diagnose
-zx cz --o cmemory.a80 cmemory
+zx cz --o cmemory.a80 --DTINY cmemory
 zx as cmemory.a80
-zx cz --o cbanner.a80 cbanner
+zx cz --o cbanner.a80 --DTINY cbanner
 zx as cbanner.a80
-zx cz --o ctermcap.a80 ctermcap
+zx cz --o ctermcap.a80 --DTINY ctermcap
 zx as ctermcap.a80
-zx cz --o clogical.a80 clogical
+zx cz --o clogical.a80 --DTINY clogical
 zx as clogical.a80
 zx as asmiface
-zx cz --o sectorio.a80 sectorio
+zx cz --o sectorio.a80 --DTINY sectorio
 zx as sectorio.a80
 zx libutil --o dwg.lib cbanner.o clogical.o ctermcap.o sectorio.o asmiface.o 
 zx libutil --o dwg.lib dwg.lib bioscall.o bdoscall.o diagnose.o cmemory.o clogical.o
@@ -61,17 +61,11 @@ echo Building CPMNAME.COM...
 echo.
 set TGT=cpmname.com
 if exist %TGT% del %TGT%
-zx cz --o cpmname.a80 cpmname
+zx cz --o cpmname.a80 --DTINY cpmname
 zx as cpmname.a80
-zx cz --o cnamept1.a80 cnamept1
+zx cz --o cnamept1.a80 --DTINY cnamept1
 zx as cnamept1.a80
-zx cz --o cnamept2.a80 cnamept2
-zx as cnamept2.a80
-zx cz --o cnamept3.a80 cnamept3
-zx as cnamept3.a80
-zx cz --o cnamept4.a80 cnamept4
-zx as cnamept4.a80
-zx ln cpmname.o cnamept1.o cnamept2.o cnamept3.o cnamept4.o --ldwg --lt --lc
+zx ln cpmname.o cnamept1.o --ldwg --lt --lc
 if not exist %TGT% echo *** Failed to build %TGT% ***  && pause
 
 echo.
@@ -88,7 +82,7 @@ echo Building MAP.COM...
 echo.
 set TGT=map.com
 if exist %TGT% del %TGT%
-zx cz --o map.a80 map
+zx cz --o map.a80 --DTINY map
 zx as map.a80
 zx ln map.o --ldwg --lt --lc
 if not exist %TGT% echo *** Failed to build %TGT% ***  && pause
@@ -98,7 +92,7 @@ echo Building META.COM...
 echo.
 set TGT=meta.com
 if exist %TGT% del %TGT%
-zx cz --o meta.a80 meta
+zx cz --o meta.a80 --DTINY meta
 zx as meta.a80
 zx ln meta.o --ldwg --lt --lc
 if not exist %TGT% echo *** Failed to build %TGT% ***  && pause
@@ -108,7 +102,7 @@ echo Building MULTIFMT.COM...
 echo.
 set TGT=multifmt.com
 if exist %TGT% del %TGT%
-zx cz --o multifmt.a80 multifmt
+zx cz --o multifmt.a80 --DTINY multifmt
 zx as multifmt.a80
 zx ln multifmt.o --ldwg --lt --lc
 if not exist %TGT% echo *** Failed to build %TGT% ***  && pause
@@ -136,7 +130,7 @@ echo Building SYSGEN.COM...
 echo.
 set TGT=sysgen.com
 if exist %TGT% del %TGT%
-zx cz --o sysgen.a80 sysgen
+zx cz --o sysgen.a80 --DTINY sysgen
 zx as sysgen.a80
 zx ln sysgen.o --ldwg --lt --lc
 if not exist %TGT% echo *** Failed to build %TGT% ***  && pause
@@ -146,7 +140,7 @@ echo Building TERMTYPE.COM...
 echo.
 set TGT=termtype.com
 if exist %TGT% del %TGT%
-zx cz --o termtype.a80 termtype
+zx cz --o termtype.a80 --DTINY termtype
 zx as termtype.a80
 zx ln termtype.o --ldwg --lt --lc
 if not exist %TGT% echo *** Failed to build %TGT% ***  && pause
@@ -156,7 +150,7 @@ echo Building VIEW.COM...
 echo.
 set TGT=view.com
 if exist %TGT% del %TGT%
-zx cz --o view.a80 view
+zx cz --o view.a80 --DTINY view
 zx as view.a80
 zx ln view.o --ldwg --lt --lc
 if not exist %TGT% echo *** Failed to build %TGT% ***  && pause
@@ -164,21 +158,21 @@ if not exist %TGT% echo *** Failed to build %TGT% ***  && pause
 echo.
 echo Building N8VIDTST.COM / TMSSTAT.COM...
 echo.
-zx cz --o n8chars.a80 n8chars
+zx cz --o n8chars.a80 --DTINY n8chars
 zx as n8chars.a80
-zx cz --o tms9918.a80 tms9918
+zx cz --o tms9918.a80 --DTINY tms9918
 zx as tms9918.a80
 
 set TGT=n8vidtst.com
 if exist %TGT% del %TGT%
-zx cz --o n8vidtst.a80 n8vidtst
+zx cz --o n8vidtst.a80 --DTINY n8vidtst
 zx as n8vidtst.a80
 zx ln n8vidtst.o n8chars.o tms9918.o --ldwg --lt --lc
 if not exist %TGT% echo *** Failed to build %TGT% ***  && pause
 
 set TGT=tmsstat.com
 if exist %TGT% del %TGT%
-zx cz --o tmsstat.a80 tmsstat
+zx cz --o tmsstat.a80 --DTINY tmsstat
 zx as tmsstat.a80
 zx ln tmsstat.o n8chars.o tms9918.o --ldwg --lt --lc
 if not exist %TGT% echo *** Failed to build %TGT% ***  && pause
@@ -186,7 +180,6 @@ if not exist %TGT% echo *** Failed to build %TGT% ***  && pause
 echo.
 echo Generating Output...
 echo.
-if exist %OUTDIR% rd /s /q %OUTDIR%
-md %OUTDIR%
+if exist %OUTDIR%\*.* del /f /q %OUTDIR%\*.*
 for %%f in (%COREAPPS%) do echo %%f... && copy %%f.COM %OUTDIR%
 echo DWG-APPS.MAN... && copy DWG-APPS.MAN %OUTDIR%
