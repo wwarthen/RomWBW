@@ -13,47 +13,85 @@
 #include "diagnose.h"
 #include "std.h"
 
-#define BDOS    5			/* memory address of BDOS invocation */
 #define HIGHSEG 0x0C000		/* memory address of system  config  */
 
 #define GETSYSCFG 0x0F000	/* HBIOS function for Get System Configuration */
 
-
 extern cnamept1();
-extern cnamept2();
-extern cnamept3();
-extern cnamept4();
 
+int line = 1;
 
+char hexmap[] = "0123456789ABCDEF";
 
-struct SYSCFG * pSYSCFG;
-int line;
+char * fmthexbyte(val, buf)
+	unsigned char val;
+	char * buf;
+{
+	buf[0] = hexmap[(val >> 4) & 0xF];
+	buf[1] = hexmap[(val >> 0) & 0xF];
+	buf[2] = '\0';
+	
+	return buf;
+}
+
+char * fmthexword(val, buf)
+	unsigned int val;
+	char * buf;
+{
+	buf[0] = hexmap[(val >> 12) & 0xF];
+	buf[1] = hexmap[(val >> 8) & 0xF];
+	buf[2] = hexmap[(val >> 4) & 0xF];
+	buf[3] = hexmap[(val >> 0) & 0xF];
+	buf[4] = '\0';
+	
+	return buf;
+}
+
+char * fmtbool(val)
+	unsigned char val;
+{
+	return (val ? "True" : "False");
+}
+
+char * fmtenable(val)
+	unsigned char val;
+{
+	return (val ? "Enabled" : "Disabled");
+}
+
+putscpm(p)
+	char * p;
+{
+	while (*p != '$')
+		putchar(*(p++));
+}
+
+pager()
+{
+	int i;
+
+	line++;
+	printf("\r\n");
+
+	if(line >= 24)
+	{
+		printf("*** Press any key to continue...");
+		while (bdos(6, 0xFF) == 0);
+		putchar('\r');
+		for (i = 0; i < 40; i++) {putchar(' ');}
+		putchar('\r');
+		line = 1;
+	}
+}
 
 int main(argc,argv)
 	int argc;
 	char *argv[];
 {
-
-
-	char *p;				
-	char c;
-	int i;
-
-	char * pC;
-
-	line = 5;
-
-
-
 	hregbc = GETSYSCFG;				/* function = Get System Config      */
 	hregde = HIGHSEG;				/* addr of dest (must be high)       */
-	diagnose();						/* invoke the NBIOS function         */
-	pSYSCFG = HIGHSEG;
+	diagnose();						/* invoke the HBIOS function         */
 	
-	crtinit(pSYSCFG->cnfgdata.termtype);
-	crtclr();
-	crtlc(0,0);
-		
 	printf("CPMNAME.COM %d/%d/%d v%d.%d.%d (%d)",
 		A_MONTH,A_DAY,A_YEAR,A_RMJ,A_RMN,A_RUP,A_RTP);
 	printf(" dwg - Display System Configuration");
@@ -63,43 +101,19 @@ int main(argc,argv)
 	ireghl = pGETINFO;
 	bioscall();
 	pINFOLIST = ireghl;
-
-	printf("pINFOLIST->banptr ==> ");
-
-	dregde = pINFOLIST->banptr;
-	dregbc = 9;
-	bdoscall();
-	pager();
-			
 	
-	hregbc = 0xf000;
+	putscpm(pINFOLIST->banptr);
+	pager();
+	pager();
+
+	hregbc = 0xF000;
 	hregde = HIGHSEG;	
 	diagnose();
 
-	pSYSCFG = HIGHSEG;
-	
-
-	cnamept1(pSYSCFG);
-	cnamept2(pSYSCFG);
-	cnamept3(pSYSCFG);
-	cnamept4(pSYSCFG);
-	
-}
-
-pager()
-{
-	line++;
-	printf("\n");
-	if(24 == line) {
-		printf("     press any key to continue");
-		dregbc = 1;
-		bdoscall();
-		line = 1;
-	}
+	cnamept1(HIGHSEG);
 }
 
 /********************/
 /* eof - ccpmname.c */
 /********************/
-
-	
+
