@@ -1,7 +1,0 @@
-cc putc
-as putc
-cc n8chars
-as n8chars
-as diagnose
-ln putc.o n8chars.o diagnose.o -lc
-

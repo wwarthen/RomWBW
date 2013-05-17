@@ -3,6 +3,7 @@
 ;	CBIOS FOR N8VEM
 ;
 ;	BY ANDREW LYNCH, WITH INPUT FROM MANY SOURCES
+;	ROMWBW ADAPTATION BY WAYNE WARTHEN
 ;__________________________________________________________________________________________________
 ;
 ; cbios.asm  6/04/2012 dwg - added BOOTLU
@@ -25,7 +26,7 @@
 ;==================================================================================================
 ; These jumps are defined in the CP/M-80 v2.2 system guide and comprise
 ; the invariant part of the BIOS.
-
+;
 	JP	BOOT			; #0  - COLD START
 WBOOTE	JP	WBOOT			; #1  - WARM START
 	JP	CONST			; #2  - CONSOLE STATUS
@@ -33,7 +34,7 @@ WBOOTE	JP	WBOOT			; #1  - WARM START
 	JP	CONOUT			; #4  - CONSOLE CHARACTER OUT
 	JP	LIST			; #5  - LIST CHARACTER OUT
 	JP	PUNCH			; #6  - PUNCH CHARACTER OUT
-          	JP	READER			; #7  - READER CHARACTER OUT
+	JP	READER			; #7  - READER CHARACTER OUT
 	JP	HOME			; #8  - MOVE HEAD TO HOME POSITION
 	JP	SELDSK			; #9  - SELECT DISK
 	JP	SETTRK			; #10 - SET TRACK NUMBER
@@ -43,20 +44,24 @@ WBOOTE	JP	WBOOT			; #1  - WARM START
 	JP	WRITE			; #14 - WRITE DISK
 	JP	LISTST			; #15 - RETURN LIST STATUS
 	JP	SECTRN			; #16 - SECTOR TRANSLATE
+;
 ;------------------------------------------------------------------------
 ; These jumps are enhancements, added for the benefit of the RomWBW BIOS
 ; and are located following the invariant jump table so they can be
 ; easily located by external programs. They transfger control to routines
 ; that are located somewhere within the main section of the CBIOS.
-
+;
 	JP	BNKSEL			; #17 - SEL. RAM BANK FOR LOW32K (obsolete, use HBIOS)
 	JP	GETDSK			; #18 - Get Disk Info (device/unit/lu)
 	JP	SETDSK			; #19 - Set Disk Into (device/unit/lu)
 	JP	GETINFO			; #20 - Get BIOS Info Base Ptr
+;
+;------------------------------------------------------------------------
 ; Expansion area for future enhancements - In order not to shift the
 ; subsequent data and break local and external code, space is set aside for
 ; four additional jumps.  Until implemented, an invocation will result in
 ; a system panic.
+;
 	CALL	PANIC			; #21 - reserved for JP <new function>
 	CALL	PANIC			; #22 - reserved for JP <new function>
 	CALL	PANIC			; #23 - reserved for JP <new function>
@@ -99,18 +104,18 @@ BOOT:
 WBOOT:
 	DI
 	IM	1
-
+;
 	LD	SP,ISTACK	; STACK FOR INITIALIZATION
-	
+;	
 	; RELOAD COMMAND PROCESSOR FROM CACHE
-	LD	A,1
-	CALL	RAMPG
-	LD	HL,0800H	; LOCATION IN RAM1 OF COMMAND PROCESSOR CACHE
+	LD	A,1		; SELECT RAM BANK 1
+	CALL	RAMPG		; DO IT
+	LD	HL,0800H	; LOCATION IN RAM BANK 1 OF COMMAND PROCESSOR CACHE
 	LD	DE,CPM_LOC	; LOCATION OF ACTIVE COMMAND PROCESSOR
 	LD	BC,CCPSIZ	; SIZE OF COMMAND PROCESSOR
-	LDIR
-	CALL	RAMPGZ
-
+	LDIR			; COPY
+	CALL	RAMPGZ		; RESTORE RAM PAGE 0
+;
 	; FALL THRU TO INVOKE CP/M
 ;
 ;__________________________________________________________________________________________________			
@@ -120,13 +125,13 @@ GOCPM:
 	LD	(BUFADR),HL
 	LD	B,BF_DIOSETBUF
 	RST	08
-
+;
 	LD	A,0C3H			; LOAD A WITH 'JP' INSTRUCTION (USED BELOW)
-
+;
 	; CPU RESET / RST 0 -> WARM START CP/M
-	LD	(0000H),A
-	LD	HL,WBOOTE
-	LD	(0001H),HL
+	LD	($0000),A		; JP OPCODE GOES HERE
+	LD	HL,WBOOTE		; GET WARM BOOT ENTRY ADDRESS
+	LD	($0001),HL		; PUT IT AT $0001
 
 ;	; INT / RST 38 -> INVOKE MONITOR
 ;	LD	(0038H),A
@@ -139,16 +144,16 @@ GOCPM:
 ;	LD	(0039H),HL		; POKE IT
 	
 	; CALL 5 -> INVOKE BDOS
-	LD	(0005H),A
-	LD	HL,BDOS
-	LD	(0006H),HL
+	LD	(0005H),A		; JP OPCODE AT $0005
+	LD	HL,BDOS			; GET BDOS ENTRY ADDRESS
+	LD	(0006H),HL		; PUT IT AT $0006
 
 	; RESET (DE)BLOCKING ALGORITHM
 	CALL	BLKRES
 
 	; DEFAULT DMA ADDRESS
-	LD	BC,80H
-	CALL	SETDMA
+	LD	BC,80H			; DEFAULT DMA ADDRESS IS $0080
+	CALL	SETDMA			; SET IT
 
 	; ENSURE VALID DISK AND JUMP TO CCP
 	LD	A,(CDISK)		; GET CURRENT USER/DISK
@@ -157,12 +162,12 @@ GOCPM:
 	CALL	DSK_STATUS		; CHECK DISK STATUS
 	JR	Z,CURDSK		; ZERO MEANS OK
 	LD	A,(DEFDRIVE)		; CURRENT DRIVE NOT READY, USE DEFAULT
-	JR	GOCCP
+	JR	GOCCP			; JUMP TO COMMAND PROCESSOR
 CURDSK:
 	LD	A,(CDISK)		; GET CURRENT USER/DISK
 GOCCP:
 	LD	C,A			; SETUP C WITH CURRENT USER/DISK, ASSUME IT IS OK
-	JP	CCP
+	JP	CCP			; JUMP TO COMMAND PROCESSOR
 ;
 ;__________________________________________________________________________________________________			
 GOMON:
@@ -310,7 +315,7 @@ CIOST:
 ;
 	OR	A		; SET FLAGS
 	RET	Z		; NO CHARACTERS WAITING (IST) OR OUTPUT BUF FULL (OST)
-	OR	0FFH		; $FF SIGNALS READY TO READ (IST) OR WRITE (OST)
+	OR	$FF		; $FF SIGNALS READY TO READ (IST) OR WRITE (OST)
 	RET
 ;__________________________________________________________________________________________________
 SELDSK:
@@ -318,6 +323,7 @@ SELDSK:
 #IF DSKTRACE
 	CALL	PRTSELDSK	; *DEBUG*
 #ENDIF
+;
 	JP	DSK_SELECT
 ;
 ;__________________________________________________________________________________________________	
@@ -326,12 +332,12 @@ HOME:
 #IF DSKTRACE
 	CALL	PRTHOME		; *DEBUG*
 #ENDIF
-	
+;	
 	LD	A,(HSTWRT)	; CHECK FOR PENDING WRITE
-	OR	A
-	JR	NZ,HOMED
+	OR	A		; SET FLAGS
+	JR	NZ,HOMED	; BUFFER IS DIRTY
 	LD	(HSTACT),A	; CLEAR HOST ACTIVE FLAG
-
+;
 HOMED:
 	LD	BC,0
 ;
@@ -568,9 +574,9 @@ BLKFLSH:
 
 #IF WRTCACHE
 
-WRT_ALL	.EQU	0			; WRITE TO ALLOCATED
+WRT_ALC	.EQU	0			; WRITE TO ALLOCATED
 WRT_DIR	.EQU	1			; WRITE TO DIRECTORY
-WRT_UAL	.EQU	2			; WRITE TO UNALLOCATED
+WRT_UNA	.EQU	2			; WRITE TO UNALLOCATED
 
 ;
 ;__________________________________________________________________________________________________
@@ -589,7 +595,7 @@ BLKRW:
 	; OTHERWISE, CLEAR OUT ANY SEQUENTIAL, UNALLOC WRITE PROCESSING
 	; AND GO DIRECTLY TO MAIN I/O
 	XOR	A		; ZERO TO A
-	LD	(WRTYPE),A	; SET WRITE TYPE = 0 (WRT_ALL) TO ENSURE READ OCCURS
+	LD	(WRTYPE),A	; SET WRITE TYPE = 0 (WRT_ALC) TO ENSURE READ OCCURS
 	LD	(UNACNT),A	; SET UNACNT TO ABORT SEQ WRITE PROCESSING
 	
 	JR	BLKRW4		; GO TO I/O
@@ -598,25 +604,25 @@ BLKRW1:
 	; WRITE PROCESSING
 	; CHECK FOR FIRST WRITE TO UNALLOCATED BLOCK
 	LD	A,(WRTYPE)	; GET WRITE TYPE
-	CP	WRT_UAL		; IS IT WRITE TO UNALLOC?
+	CP	WRT_UNA		; IS IT WRITE TO UNALLOC?
 	JR	NZ,BLKRW2	; NOPE, BYPASS
 	
 	; INITIALIZE START OF SEQUENTIAL WRITING TO UNALLOCATED BLOCK
 	; AND THEN TREAT SUBSEQUENT PROCESSING AS A NORMAL WRITE
 	CALL	UNA_INI		; INITIALIZE SEQUENTIAL WRITE TRACKING
-	XOR	A		; A = 0 = WRT_ALL
+	XOR	A		; A = 0 = WRT_ALC
 	LD	(WRTYPE),A	; NOW TREAT LIKE WRITE TO ALLOCATED
 
 BLKRW2:
-	; IF WRTYPE = WRT_ALL AND SEQ WRITE, GOTO BLKRW7 (SKIP READ)
+	; IF WRTYPE = WRT_ALC AND SEQ WRITE, GOTO BLKRW7 (SKIP READ)
 	OR	A		; NOTE: A WILL ALREADY HAVE THE WRITE TYPE HERE
-	JR	NZ,BLKRW3	; NOT TYPE = 0 = WRT_ALL, SO MOVE ON
+	JR	NZ,BLKRW3	; NOT TYPE = 0 = WRT_ALC, SO MOVE ON
 
 	CALL	UNA_CHK		; CHECK FOR CONTINUATION OF SEQ WRITES TO UNALLOCATED BLOCK
 	JR	NZ,BLKRW3	; NOPE, ABORT
 	
 	; WE MATCHED EVERYTHING, TREAT AS WRITE TO UNALLOCATED BLOCK
-	LD	A,WRT_UAL	; WRITE TO UNALLOCATED
+	LD	A,WRT_UNA	; WRITE TO UNALLOCATED
 	LD	(WRTYPE),A	; SAVE WRITE TYPE
 	
 	CALL	UNA_INC		; INCREMENT SEQUENTIAL WRITE TRACKING
@@ -857,11 +863,11 @@ BLK_CMP:
 BLK_CMPLOOP:
 	LD	A,(DE)
 	CP	(HL)
-	RET	NZ		; BAD COMPARE, RETURN WITH NZ
+	RET	NZ			; BAD COMPARE, RETURN WITH NZ
 	INC	HL
 	INC	DE
 	DJNZ	BLK_CMPLOOP
-	RET			; RETURN WITH Z
+	RET				; RETURN WITH Z
 ;
 ;__________________________________________________________________________________________________
 ;
@@ -993,7 +999,7 @@ DSK_DISP:
 	RST	08		; OTHERWISE, HANDLE IN HBIOS
 	RET			; AND RETURN
 ;
-; LOOKUP DPH BASED ON DPM DRIVE NUMBER
+; LOOKUP DPH BASED ON CPM DRIVE NUMBER
 ;   ENTER WITH C=CPM DRIVE NUMBER
 ;   RETURNS WITH HL = DPH ADDRESS (0 ON ERROR)
 ;   A=0 ON SUCCESS, A=1 ON ERROR
@@ -1132,7 +1138,7 @@ DSK_SELECT4:
 ;
 ;
 DSK_STATUS:
-	; C HAS CPM DRIVE, LOOKUP DEVICE/UNIT AND CHECK FOR INVLAID DRIVE
+	; C HAS CPM DRIVE, LOOKUP DEVICE/UNIT AND CHECK FOR INVALID DRIVE
 	CALL	DSK_GETDPH	; B = DEVICE/UNIT
 	RET	NZ		; INVALID DRIVE ERROR
 	
