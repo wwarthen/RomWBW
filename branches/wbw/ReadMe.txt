@@ -8,8 +8,8 @@ Builders: Wayne Warthen (wwarthen@gmail.com)
           Douglas Goodall (douglas_goodall@mac.com)
           David Giles (vk5dg@internode.on.net)
 
-Updated: 2013-05-16
-Version: 2.5 Beta 9
+Updated: 2013-05-17
+Version: 2.5 Beta 10
 
 This is an adaptation of CP/M-80 2.2 and ZSDOS/ZCPR
 targeting ROMs for all N8VEM Z80 hardware variations
@@ -118,6 +118,26 @@ you have one.
 Please refer to the Build.txt file in the Doc directory
 for detailed instructions for building a custom ROM.  If
 you are using Linux, also read the LinuxBuild.txt file.
+
+Formatting Media
+----------------
+
+<TBD>
+
+Creating Bootable Media
+-----------------------
+
+<TBD>
+
+Using Slices on Mass Storage Devices
+------------------------------------
+
+<TBD>
+
+Managing Console I/O
+--------------------
+
+<TBD>
 
 Notes
 -----

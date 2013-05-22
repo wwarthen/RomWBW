@@ -12,6 +12,12 @@ Version 2.5
 - WBW: Revised System Architecture document
 - WBW: Added support for Dual SD board (preliminary)
 - WBW: Overhaul of SD driver (sd.asm) to clean up the conditionals
+- WBW: Completed Douglas' N8 video driver support
+- WBW: ASCI driver has been separated from UART driver
+- WBW: Added ZX CPM emulator and integrated with build process
+- WBW: Updated Apps built with Aztec C to use the TINY library
+- WBW: Updated CPMNAME application to reflect latest config data block
+
 
 Version 2.1.1
 -------------
