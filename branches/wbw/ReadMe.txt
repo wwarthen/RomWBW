@@ -53,6 +53,11 @@ Refer to the file called RomList.txt for a complete
 list of the ROMs that are included and the required
 hardware configuration that they support.
 
+Upgrading from Previous Versions
+--------------------------------
+
+<TBD>
+
 CPU Speed & Baud Rate
 ---------------------
 

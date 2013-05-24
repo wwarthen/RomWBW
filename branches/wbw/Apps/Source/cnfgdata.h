@@ -35,6 +35,7 @@ struct CNFGDATA {
 
 	unsigned char defcon;
 	unsigned char altcon;
+	unsigned int conbaud;
 	unsigned char defvda;
 	unsigned char defemu;
 	unsigned char termtype;
@@ -49,12 +50,27 @@ struct CNFGDATA {
 	unsigned char dskyenable;
 
 	unsigned char uartenable;
-	unsigned char uartfifo;
-	unsigned char uartafc;
+	unsigned char uartcnt;
+	unsigned char uart0iob;
+	unsigned int uart0baud;			/* actual baudrate / 10 */
+	unsigned char uart0fifo;
+	unsigned char uart0afc;
+	unsigned char uart1iob;
+	unsigned int uart1baud;			/* actual baudrate / 10 */
+	unsigned char uart1fifo;
+	unsigned char uart1afc;
+	unsigned char uart2iob;
+	unsigned int uart2baud;			/* actual baudrate / 10 */
+	unsigned char uart2fifo;
+	unsigned char uart2afc;
+	unsigned char uart3iob;
+	unsigned int uart3baud;			/* actual baudrate / 10 */
+	unsigned char uart3fifo;
+	unsigned char uart3afc;
 	
 	unsigned char ascienable;
-	
-	unsigned int baudrate;			/* actual baudrate / 10 */
+	unsigned int asci0baud;			/* actual baudrate / 10 */
+	unsigned int asci1baud;			/* actual baudrate / 10 */
 	
 	unsigned char vduenable;
 
