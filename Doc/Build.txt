@@ -117,13 +117,21 @@ instead, refer to the comments in the makefile in
 the Source directory as an alternative to the
 process described here.
 
-The build involves running a command at the command
+The build involves running commands at the command
 prompt.  From a Command Prompt window, you will need
 to change to the high level directory for the build.
 Normally, you would be changing to the RomWBW directory
 unless you renamed it.
 
-To run the build and be prompted for required information,
+First, you will build the support applications.  These
+do not require any configuration or customization -- they
+adapt to any variant of RomWBW.  To build the app, just
+enter "BuildApps".  Pay attention to the output to ensure
+that there are no errors.  When this step is done, you
+should see the built applications (.COM files) in the
+Apps\Output directory.
+
+To run the main build and be prompted for required information,
 just enter "Build".  You will be prompted for the information
 described below and the build should run.  If an error is
 encountered, the build should stop and display an error
