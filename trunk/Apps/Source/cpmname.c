@@ -94,7 +94,7 @@ pager()
 	}
 }
 
-prtcfg(pSysCfg)
+prtcfg1(pSysCfg)
 	struct SYSCFG * pSysCfg;
 {
 	struct CNFGDATA * pCfg;
@@ -123,8 +123,9 @@ prtcfg(pSysCfg)
 	pager();
 	pager();
 	
-	printf("Default Console: %s, Alternate Console: %s",
-		CIOName[pCfg->defcon], CIOName[pCfg->altcon]);
+	printf("Console: Default=%s, Alternate=%s, Init Baudrate=%d0",
+		CIOName[pCfg->defcon], CIOName[pCfg->altcon],
+		pCfg->conbaud);
 	pager();
 	printf ("Default Video Display: %s, Default Emulation: %s",
 		VDAName[pCfg->defvda], EmuName[pCfg->defemu]);
@@ -147,12 +148,35 @@ prtcfg(pSysCfg)
 	
 	printf("DSKY %s", fmtenable(pCfg->dskyenable));
 	pager();
-	printf("UART %s, FIFO=%s, AFC=%s, Baudrate=%d0",
-		fmtenable(pCfg->uartenable), fmtbool(pCfg->uartfifo),
-		fmtbool(pCfg->uartafc), 	pCfg->baudrate);
+	if (pCfg->uartenable)
+	{
+		printf("UART Enabled");
+		pager();
+		if (pCfg->uartcnt >= 1)
+			printf("UART0 FIFO=%s, AFC=%s, Baudrate=%d0",
+				fmtbool(pCfg->uart0fifo), fmtbool(pCfg->uart0afc), pCfg->uart0baud);
+		if (pCfg->uartcnt >= 2)
+			printf("UART1 FIFO=%s, AFC=%s, Baudrate=%d0",
+				fmtbool(pCfg->uart1fifo), fmtbool(pCfg->uart1afc), pCfg->uart1baud);
+		if (pCfg->uartcnt >= 3)
+			printf("UART2 FIFO=%s, AFC=%s, Baudrate=%d0",
+				fmtbool(pCfg->uart2fifo), fmtbool(pCfg->uart2afc), pCfg->uart2baud);
+		if (pCfg->uartcnt >= 4)
+			printf("UART3 FIFO=%s, AFC=%s, Baudrate=%d0",
+				fmtbool(pCfg->uart3fifo), fmtbool(pCfg->uart3afc), pCfg->uart3baud);
+	}
+	else
+		printf("UART Disabled");
 	pager();
-	printf("ASCI %s, Baudrate=%d0", 
-		fmtenable(pCfg->ascienable), pCfg->baudrate);
+	if (pCfg->ascienable)
+	{
+		printf("ASCI Enabled");
+		pager();
+		printf("ASCI0, Baudrate=%d0", pCfg->asci0baud);
+		printf("ASCI1, Baudrate=%d0", pCfg->asci1baud);
+	}
+	else
+		printf("ASCI Disabled");
 	pager();
 	printf("VDU %s", fmtenable(pCfg->vduenable));
 	pager();
@@ -163,6 +187,16 @@ prtcfg(pSysCfg)
 	printf("N8V %s", fmtenable(pCfg->n8venable));
 	pager();
 	pager();
+}
+
+prtcfg2(pSysCfg)
+	struct SYSCFG * pSysCfg;
+{
+	struct CNFGDATA * pCfg;
+	char buf[5];
+	char buf2[5];
+	
+	pCfg = &(pSysCfg->cnfgdata);
 
 	printf("FD %s, Mode=%s, TraceLevel=%d, Media=%s/%s, Auto=%s",
 		fmtenable(pCfg->fdenable), FDModeName[pCfg->fdmode], 
@@ -240,7 +274,8 @@ int main(argc,argv)
 		return;
 	}
 	
-	prtcfg(pSysCfg);
+	prtcfg1(pSysCfg);
+	prtcfg2(pSysCfg);
 }
 
 /********************/
