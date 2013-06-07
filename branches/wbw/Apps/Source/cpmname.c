@@ -12,9 +12,11 @@
 #define GETSYSCFG 0xF000	/* HBIOS function for Get System Configuration */
 
 char None[] = "*None*";
+char Unk[] = "*Unknown*";
 char * PltName[] = {None, "N8VEM Z80", "ZETA Z80", "N8 Z180"};
 char * CIOName[] = {"UART", "ASCI", "VDU", "CVDU", "UPD7220", 
-			"N8V", "PRPCON", "PPPCON", "CRT", "BAT", "NUL"};
+			"N8V", "PRPCON", "PPPCON", Unk, Unk, Unk, Unk, Unk, 
+			"CRT", "BAT", "NUL"};
 char * DIOName[] = {"MD", "FD", "IDE", "ATAPI", "PPIDE",
 			"SD", "PRPSD", "PPPSD", "HDSK"};
 char * VDAName[] = {None, "VDU", "CVDU", "UPD7220", "N8V"};
@@ -123,8 +125,9 @@ prtcfg1(pSysCfg)
 	pager();
 	pager();
 	
-	printf("Console: Default=%s, Alternate=%s, Init Baudrate=%d0",
-		CIOName[pCfg->defcon], CIOName[pCfg->altcon],
+	printf("Console: Default=%s:%d, Alternate=%s:%d, Init Baudrate=%d0",
+		CIOName[(pCfg->defcon) >> 4], pCfg->defcon & 0xF,
+		CIOName[(pCfg->altcon) >> 4], pCfg->altcon & 0xF,
 		pCfg->conbaud);
 	pager();
 	printf ("Default Video Display: %s, Default Emulation: %s",
@@ -208,8 +211,8 @@ prtcfg2(pSysCfg)
 		fmtenable(pCfg->ideenable), IDEModeName[pCfg->idemode],
 		pCfg->idetrace, fmtbool(pCfg->ide8bit), pCfg->idecapacity);
 	pager();
-	printf("PPIDE %s, Mode=%s, TraceLevel=%d, 8bit=%s, Slow=%s, Size=%dMB",
-		fmtenable(pCfg->ppideenable), IDEModeName[pCfg->ppidemode],
+	printf("PPIDE %s, IOBase=0x%s, TraceLevel=%d, 8bit=%s, Slow=%s, Size=%dMB",
+		fmtenable(pCfg->ppideenable), fmthexbyte(pCfg->ppideiob, buf),
 		pCfg->ppidetrace, fmtbool(pCfg->ppide8bit), 
 		fmtbool(pCfg->ppideslow), pCfg->ppidecapacity);
 	pager();
