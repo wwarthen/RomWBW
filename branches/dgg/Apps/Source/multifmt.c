@@ -219,7 +219,7 @@ clrdir(line,col)
 
 		if(-1 != line) {
 			crtlc(line,col-1);
-			printf("%3d",sectors-sector);
+			printf("%d",sectors-sector);
 		}
 
 		wrsector(gDrvNum,pDPB->off,sector,e5buffer,1);
@@ -283,7 +283,7 @@ physfmt(lu)
 	/* LU is not protected or override is enabled */
 
 	if(0==gTT) { 
-		printf("Formatting LU# %3d%c",lu,0x0d);
+		printf("Formatting LU# %d%c",lu,0x0d);
 		clrmeta(lu,-1,-1);
 		clrdir(-1,-1);
 	} else {
@@ -291,14 +291,14 @@ physfmt(lu)
 
 		line = lu / 16;
 		crtlc(26-16-4+line,0);
-		printf("%3d...",lu & 0xf0);
+		printf("%d...",lu & 0xf0);
 
 		col  = lu & 15;
 		clrmeta(lu,24-16-2+line,((80-64)/2)+(col*4)+1);
 		clrdir(    24-16-2+line,((80-64)/2)+(col*4)+1);
 
-		crtlc(24-16-2+line,((80-64)/2)+(col*4)+1);
-		printf("OK");
+		crtlc(24-16-2+line,((80-64)/2)+(col*4));
+		printf(" OK");
 	}
 	
 	return  TRUE;
@@ -317,7 +317,7 @@ lformat()
 	if(0 != gTT) {
 		for(index=0;index<16;index++) {
 			crtlc(24-16-2-2,((80-64)/2)+(index*4));
-			printf("+%2d",index);
+			printf("+%d",index);
 		}
 		for(index=0;index<16;index++) {
 			crtlc(24-16-2-1,((80-64)/2)+(index*4));
@@ -438,6 +438,7 @@ main(argc,argv)
 	char *argv[];
 {	
 	int retcode;
+	struct INFOLIST * pINFOLIST;
 
 	hregbc = GETSYSCFG;				/* function = Get System Config      */
 	hregde = HIGHSEG;				/* addr of dest (must be high)       */
