@@ -34,6 +34,7 @@
 #define	RESETDRIVE	37
 #define	WRRANDFILL	38
 
+#define BDOSDEFDR 0			/* BDOS Default (current) Drive Number      */
 #define	BDOSDRA	1
 #define	BDOSDRB	2
 #define	BDOSDRC	3
