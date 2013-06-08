@@ -23,28 +23,6 @@
 
 #define GETSYSCFG 0x0F000	/* HBIOS function for Get System Configuration */
 
-/*
-#include "cpmbind.h"
-#include "cbioshdr.h"
-#include "std.h"
-#include "infolist.h"
-#include "dphdpb.h"
-#include "dphmap.h"
-#include "metadata.h"
-#include "setlunum.h"
-#include "applvers.h"
-#include "cpmbdos.h"
-#include "ctermcap.h"
-#include "diagnose.h"
-*/
-
-
-#define BDOS    5			/* memory address of BDOS invocation */
-#define HIGHSEG 0x0C000		/* memory address of system  config  */
-
-#define GETSYSCFG 0x0F000	/* HBIOS function for Get System Configuration */
-
-
 /* Drive List Geometry */
 #define COL1 0
 #define COL2 (80/4)
@@ -67,39 +45,31 @@
 
 struct SYSCFG * pSYSCFG = HIGHSEG;
 
-
-/*
-struct DPH * pDPH;
-struct DPB * pDPB;
-*/
-
-/* int drive; */
-
 dispdpb(line,column,pDPB)
 	int line;
 	int column;
 	struct DPB * pDPB; 
 {
 	crtlc(line+0,column);	
-	printf("[%04x] spt =%04x",&pDPB->spt,pDPB->spt);
+	printf("[%x] spt =%x",&pDPB->spt,pDPB->spt);
 	crtlc(line+1,column);	
-	printf("[%04x] bsh =%02x",&pDPB->bsh,pDPB->bsh);
+	printf("[%x] bsh =%x",&pDPB->bsh,pDPB->bsh);
 	crtlc(line+2,column);	
-	printf("[%04x] blm =%02x",&pDPB->blm,pDPB->blm);
+	printf("[%x] blm =%x",&pDPB->blm,pDPB->blm);
 	crtlc(line+3,column);	
-	printf("[%04x] exm =%02x",&pDPB->exm,pDPB->exm);
+	printf("[%x] exm =%x",&pDPB->exm,pDPB->exm);
 	crtlc(line+4,column);	
-	printf("[%04x] dsm =%04x",&pDPB->dsm,pDPB->dsm);
+	printf("[%x] dsm =%x",&pDPB->dsm,pDPB->dsm);
 	crtlc(line+5,column);	
-	printf("[%04x] drm =%04x",&pDPB->drm,pDPB->drm);
+	printf("[%x] drm =%x",&pDPB->drm,pDPB->drm);
 	crtlc(line+6,column);	
-	printf("[%04x] al0 =%02x",&pDPB->al0,pDPB->al0);
+	printf("[%x] al0 =%x",&pDPB->al0,pDPB->al0);
 	crtlc(line+7,column);	
-	printf("[%04x] al1 =%02x",&pDPB->al1,pDPB->al1);
+	printf("[%x] al1 =%x",&pDPB->al1,pDPB->al1);
 	crtlc(line+8,column);	
-	printf("[%04x] cks =%04x",&pDPB->cks,pDPB->cks);
+	printf("[%x] cks =%x",&pDPB->cks,pDPB->cks);
 	crtlc(line+9,column);	
-	printf("[%04x] off =%04x",&pDPB->off,pDPB->off);	
+	printf("[%x] off =%x",&pDPB->off,pDPB->off);	
 }
 
 struct DPB * dispdph(drive,line,column)
@@ -149,31 +119,31 @@ struct DPB * dispdph(drive,line,column)
 	}
 
 
-	crtlc(line+0,column);	printf("[%04x] xlt =%04x",
+	crtlc(line+0,column);	printf("[%x] xlt =%x",
 								&pDPH->xlt,pDPH->xlt);
-	crtlc(line+1,column);	printf("[%04x] rv1 =%04x",
+	crtlc(line+1,column);	printf("[%x] rv1 =%x",
 								&pDPH->rv1,pDPH->rv1);
-	crtlc(line+2,column);	printf("[%04x] rv2 =%04x",
+	crtlc(line+2,column);	printf("[%x] rv2 =%x",
 								&pDPH->rv2,pDPH->rv2);
-	crtlc(line+3,column);	printf("[%04x] rv3 =%04x",
+	crtlc(line+3,column);	printf("[%x] rv3 =%x",
 								&pDPH->rv3,pDPH->rv3);
-	crtlc(line+4,column);	printf("[%04x] dbf =%04x",
+	crtlc(line+4,column);	printf("[%x] dbf =%x",
 								&pDPH->dbf,pDPH->dbf);
-	crtlc(line+5,column);	printf("[%04x] dpb =%04x",
+	crtlc(line+5,column);	printf("[%x] dpb =%x",
 								&pDPH->dpb,pDPH->dpb);
-	crtlc(line+6,column);	printf("[%04x] csv =%04x",
+	crtlc(line+6,column);	printf("[%x] csv =%x",
 								&pDPH->csv,pDPH->csv);
-	crtlc(line+7,column);	printf("[%04x] alv =%04x",
+	crtlc(line+7,column);	printf("[%x] alv =%x",
 								&pDPH->alv,pDPH->alv);
 	if( ('L' == pDPH->sigl) && ('U' == pDPH->sigu) ) {
 		crtlc(line+8,column);
-		printf("[%04x] sigl=%02x",&pDPH->sigl,pDPH->sigl);
+		printf("[%x] sigl=%x",&pDPH->sigl,pDPH->sigl);
 		crtlc(line+9,column);
-		printf("[%04x] sigu=%02x",&pDPH->sigu,pDPH->sigu);
+		printf("[%x] sigu=%x",&pDPH->sigu,pDPH->sigu);
 		crtlc(line+10,column);
-		printf("[%04x] curr=%04x",&pDPH->current,pDPH->current);
+		printf("[%x] curr=%x",&pDPH->current,pDPH->current);
 		crtlc(line+11,column);
-		printf("[%04x] numb=%04x",&pDPH->number,pDPH->number);
+		printf("[%x] numb=%x",&pDPH->number,pDPH->number);
 	}
 
 	if(DSM720 == pDPB->dsm) {

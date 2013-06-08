@@ -94,7 +94,7 @@ struct CNFGDATA {
 	unsigned int idecapacity;
 	
 	unsigned char ppideenable;
-	unsigned char ppidemode;
+	unsigned char ppideiob;
 	unsigned char ppidetrace;
 	unsigned char ppide8bit;
 	unsigned int ppidecapacity;
