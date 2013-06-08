@@ -1,6 +1,5 @@
 /* meta.c 6/7/2012 dwg - view and edit the metadata */
 
-
 #include "stdio.h"
 #include "portab.h"
 #include "globals.h"
@@ -47,10 +46,10 @@ display()
 	rdsector(drive,0,11,&metadata);
 
 	crtlc(METALINE+0,METACOL);
-	printf("metadata.signature = 0x%04x",metadata.signature);
+	printf("metadata.signature = 0x%x",metadata.signature);
 
 	crtlc(METALINE+1,METACOL);
-	printf("metadata.platform  = 0x%02x",metadata.platform);
+	printf("metadata.platform  = 0x%x",metadata.platform);
 
 	crtlc(METALINE+2,METACOL);
 	printf("metadata.formatter = \"");
@@ -93,16 +92,16 @@ display()
 	}
 	printf("\"");
 	crtlc(METALINE+9,METACOL);
-	printf("metadata.infloc    = 0x%04x",metadata.infloc);
+	printf("metadata.infloc    = 0x%x",metadata.infloc);
 	
 	crtlc(METALINE+10,METACOL);
-	printf("metadata.cpmloc    = 0x%04x",metadata.cpmloc);
+	printf("metadata.cpmloc    = 0x%x",metadata.cpmloc);
 	
 	crtlc(METALINE+11,METACOL);
-	printf("metadata.cpmend    = 0x%04x",metadata.cpmend);
+	printf("metadata.cpmend    = 0x%x",metadata.cpmend);
 	
 	crtlc(METALINE+12,METACOL);
-	printf("metadata.cpment    = 0x%04x",metadata.cpment);
+	printf("metadata.cpment    = 0x%x",metadata.cpment);
 
 }
 

@@ -15,13 +15,15 @@ echo Building DWG.REL...
 echo.
 set TGT=dwg.rel
 if exist %TGT% del %TGT%
-zx rmac printers
-zx rmac memory
-zx rmac banner
-zx rmac terminal
-zx rmac identity
-zx rmac hbios
-zx lib %TGT%=printers,memory,banner,terminal,identity,hbios
+zx rmac printers.asm -$PN
+zx rmac memory.asm -$PN
+zx rmac banner.asm -$PN
+zx rmac terminal.asm -$PN
+zx rmac identity.asm -$PN
+zx rmac hbios.asm -$PN
+ZX rmac labelib.asm -$PN
+zx rmac metadata.asm -$PN
+zx lib %TGT%=printers,memory,banner,terminal,identity,hbios,labelib,metadata
 if not exist %TGT% echo *** Failed to build %TGT% ***  && pause
 
 echo.
@@ -52,7 +54,7 @@ echo Building ACCESS.COM...
 echo.
 set TGT=access.com
 if exist %TGT% del %TGT%
-zx rmac access
+zx rmac access.asm -$PN
 zx link access,dwg
 if not exist %TGT% echo *** Failed to build %TGT% ***  && pause
 
@@ -71,7 +73,7 @@ echo Building FINDFILE.COM...
 echo.
 set TGT=findfile.com
 if exist %TGT% del %TGT%
-zx rmac findfile 
+zx rmac findfile.asm -$PN 
 zx link findfile,dwg
 if not exist %TGT% echo *** Failed to build %TGT% ***  && pause
 
@@ -110,7 +112,7 @@ echo Building REM.COM...
 echo.
 set TGT=rem.com
 if exist %TGT% del %TGT%
-zx rmac rem
+zx rmac rem.asm -$PN
 zx link rem
 if not exist %TGT% echo *** Failed to build %TGT% ***  && pause
 
@@ -119,7 +121,7 @@ echo Building SETLABEL.COM...
 echo.
 set TGT=setlabel.com
 if exist %TGT% del %TGT%
-zx rmac setlabel
+zx rmac setlabel.asm -$PN
 zx link setlabel,dwg
 if not exist %TGT% echo *** Failed to build %TGT% ***  && pause
 
