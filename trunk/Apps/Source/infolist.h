@@ -8,7 +8,7 @@ struct INFOLIST {
 	void * dpbmap;
 	void * dphmap;
 	void * ciomap;
-} * pINFOLIST;
+};
 
 /********************/
 /* eof - infolist.h */

@@ -238,8 +238,7 @@ int main(argc,argv)
 	char szDrive[32];
 	char szLuNum[32];
 	char szWP[2];
-
-
+	struct INFOLIST * pINFOLIST;
 					
 	if(argc == 3) {
 

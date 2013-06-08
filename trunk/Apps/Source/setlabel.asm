@@ -64,7 +64,6 @@ around$bandata:
 	printf	'Sorry, you can only label drives with reserved tracks'
 	jmp	main$exit
 off$ok:
-
 	lda	drive$num	; using the default drive number
 	mov	c,a		; (presented in the C register)
 	call	x$label		; call the actual code in labelib.asm
