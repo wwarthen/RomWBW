@@ -17,9 +17,10 @@ Version 2.5
 - WBW: Added ZX CPM emulator and integrated with build process
 - WBW: Updated Apps built with Aztec C to use the TINY library
 - WBW: Updated CPMNAME application to reflect latest config data block
-- WBW: Support up to 4 UART devices
+- WBW: Support multiple UART devices (up to 2 for now)
 - WBW: Partial support for Multifunction / PIC (UART & PPIDE)
 - WBW: Add chip detection to UART driver
+- WBW: Move ram/rom disk code into separate driver (md.asm)
 
 Version 2.1.1
 -------------

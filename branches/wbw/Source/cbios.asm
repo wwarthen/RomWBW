@@ -6,15 +6,10 @@
 ;	ROMWBW ADAPTATION BY WAYNE WARTHEN
 ;__________________________________________________________________________________________________
 ;
-; cbios.asm  6/04/2012 dwg - added BOOTLU
-; cbios.asm  5/21/2012 dwg - added peek and poke for bank 1 frame 0
-; cbios.asm  5/16/2012 dwg - new architecture for 2.0.0.0 Beta 3 
-;
-
 ; The std.asm file contains the majority of the standard equates
 ; that describe data sructures, magic values and bit fields used 
 ; by the CBIOS.
- 
+; 
 #INCLUDE "std.asm"
 ;
 #INCLUDE "syscfg.exp"
@@ -377,6 +372,11 @@ WRITE:
 	LD	A,DOP_WRITE
 	JR	READWRITE
 ;
+;__________________________________________________________________________________________________
+READWRITE:
+	LD	(DSKOP),A		; SET THE ACTIVE DISK OPERATION
+	JR	BLKRW
+;
 ;__________________________________________________________________________________________________			
 BNKSEL:
 ;
@@ -504,53 +504,6 @@ GETINFO:
 	LD	HL,INFOLIST
 	RET
 ;
-;__________________________________________________________________________________________________
-READWRITE:
-	LD	(DSKOP),A		; SET THE ACTIVE DISK OPERATION
-#IF DSKTRACE
-	CALL	PRTDSKOP		; *DEBUG*
-#ENDIF
-	LD	A,(SEKDU)		; GET DEVICE/UNIT
-	AND	0F0H			; ISOLATE DEVICE NIBBLE
-;	JR	Z,DIRRW			; DEVICE = 0 = MD, SO DIRECT R/W
-;	JP	BLKRW			; OTHERWISE, (DE)BLOCKING R/W
-	JR	NZ,BLKRW		; DEVICE != 0, (DE)BLOCKING R/W
-;
-	LD	(STKSAV),SP		; SAVE STACK
-	LD	SP,TMPSTK		; TEMP STACK
-	CALL	DIRRW			; DEVICE = 0 = MD, SO DIRECT R/W
-	LD	SP,(STKSAV)		; RESTORE STACK
-	RET				; DONE
-;
-; NEED TO FORCE STACK INTO UPPER MEMORY DUE TO PAGING OF LOWER MEMORY
-;
-STKSAV	.DW	0
-	.FILL	16
-TMPSTK	.EQU	$
-;
-;==================================================================================================
-;   DIRECT READ/WRITE (NO (DE)BLOCKING, NO BUFFERING, 128 BYTE SECTOR)
-;==================================================================================================
-;
-DIRRW:
-	CALL	BLKFLSH		; FLUSH ANY PENDING WRITES SO WE CAN USE SEC BUF
-	RET	NZ		; RETURN ON ERROR
-
-	CALL	BLKRES		; RESET (DE)BLOCKING ALG, BUF IS NO LONGER VALID
-	
-	; AT THIS POINT THE ACCESS IS HARDCODED TO POINT TO MEMORY DISK DRIVER
-	; SINCE THERE IS NO OTHER DIRECT READ/WRITE DEVICE
-	
-	LD	A,(DSKOP)
-	
-	CP	DOP_READ
-	JP	Z,MD_READ
-	
-	CP	DOP_WRITE
-	JP	Z,MD_WRITE
-	
-	CALL	PANIC
-;
 ;==================================================================================================
 ;   BLOCKED READ/WRITE (BLOCK AND BUFFER FOR 512 BYTE SECTOR)
 ;==================================================================================================
@@ -597,6 +550,10 @@ WRT_UNA	.EQU	2			; WRITE TO UNALLOCATED
 ; PHYSICAL READ/WRITE ROUTINES APPROPRIATELY.
 ;
 BLKRW:
+#IF DSKTRACE
+	CALL	PRTDSKOP		; *DEBUG*
+#ENDIF
+
 	; FIX!!! WE ABORT ON FIRST ERROR, DRI SEEMS TO PASS ERROR STATUS TO THE END!!!
 
 	; IF WRITE OPERATION, GO TO SPECIAL WRITE PROCESSING
@@ -798,6 +755,10 @@ UNA_INC:
 ; PHYSICAL READ/WRITE ROUTINES APPROPRIATELY.
 ;
 BLKRW:
+#IF DSKTRACE
+	CALL	PRTDSKOP	; *DEBUG*
+#ENDIF
+
 	CALL	BLK_XLT		; SECTOR XLAT: SEK... -> XLT...
 	CALL	BLK_CMP		; IN BUFFER?
 	JR	Z,BLKRW1	; YES, BYPASS READ
@@ -1002,15 +963,6 @@ NUL_OST:
 ; PHYSICAL DISK INTERFACE
 ;==================================================================================================
 ;
-DSK_DISP:
-	LD	A,C		; GET DEVICE/UNIT TO A
-	AND	0F0H		; ISOLATE DEVICE
-	CP	DIODEV_MD	; MEMORY DISK? (RAM/ROM)
-	JP	Z,MD_DISPATCH	; YES, GO TO MEMORY DISK DISPATCH
-	
-	RST	08		; OTHERWISE, HANDLE IN HBIOS
-	RET			; AND RETURN
-;
 ; LOOKUP DPH BASED ON CPM DRIVE NUMBER
 ;   ENTER WITH C=CPM DRIVE NUMBER
 ;   RETURNS WITH HL = DPH ADDRESS (0 ON ERROR)
@@ -1106,7 +1058,7 @@ DSK_SELECT1:
 	LD	A,(SEKDU)	; GET DEVICE/UNIT
 	LD	C,A		; STORE IN C
 	LD	B,BF_DIOMED	; DRIVER FUNCTION = DISK MEDIA
-	CALL	DSK_DISP	; CALL DRIVER, RETURNS WITH A=MEDIA ID
+	RST	08		; CALL DRIVER, RETURNS WITH A=MEDIA ID
 	
 	; CHECK FOR NO MEDIA
 	LD	HL,0		; ASSUME NO MEDIA FAILURE, HL = 0
@@ -1157,7 +1109,8 @@ DSK_STATUS:
 	; VALID DRIVE, DISPATCH TO DRIVER
 	LD	C,B		; C=DEVICE/UNIT
 	LD	B,BF_DIOST	; SET B = FUNCTION: STATUS
-	JP	DSK_DISP	; DISPATCH
+	RST	08		; DISPATCH
+	RET
 ;
 ;
 ;
@@ -1186,37 +1139,9 @@ DSK_IO:
 	LD	A,(HSTDU)	; LOAD DEVICE/UNIT VALUE
 	LD	C,A		; SAVE IN C
 	; DISPATCH TO DRIVER
-	CALL	DSK_DISP	; CALL DRIVER
+	RST	08		; CALL DRIVER
 	OR	A		; SET FLAGS BASED ON RESULT
 	RET
-;
-;==================================================================================================
-;   IN MEMORY DISK DRIVERS (ROM/RAM)
-;==================================================================================================
-;
-; USES ROM/RAM STORAGE NOT USED BY SYSTEM/OS FOR DISK STORAGE
-; ROM DRIVE:
-;   FIRST 32KB OF ROM RESERVED FOR SYSTEM BOOT AREA.  REMAINDER IS ALLOCATED
-;   AS READ-ONLY DISK STORAGE.
-; RAM DRIVE:
-;   FIRST AND LAST 32KB OF RAM IS RESERVED AND MAPPED TO FIRST AND LAST 32KB
-;   OF CPU MEMORY SPACE (FOR 64KB TOTAL).  EVERYTHING ELSE IS ALLOCATED AS
-;   READ/WRITE DISK STORAGE.
-; ROUTINES BELOW TRANSLATE REQUESTS FOR RAM/ROM STORAGE ACCESS BY CP/M BY
-; TEMPORARILY MAPPING RAM/ROM INTO LOWER 32KB OF CPU MEMORY SPACE AND COPYING
-; THE REQUESTED 128 BYTE BLOCK INTO THE CP/M DMA BUFFER.
-;
-MD_DISPATCH:
-	LD	A,B		; GET REQUESTED FUNCTION
-	AND	$0F
-	JR	Z,MD_READ
-	DEC	A
-	JR	Z,MD_WRITE
-	DEC	A
-	JR	Z,MD_READY
-	DEC	A
-	JR	Z,MD_SELECT
-	CALL	PANIC
 ;
 ;__________________________________________________________________________________________________
 MD_INIT:
@@ -1266,90 +1191,6 @@ CLRRAM2:
 CLRRAM3:
 	CALL	RAMPGZ
 #ENDIF
-	RET
-;
-;__________________________________________________________________________________________________
-MD_READY:
-	LD	A,TRUE
-	RET
-;
-;__________________________________________________________________________________________________
-MD_SELECT:
-	LD	A,C
-	AND	0FH
-	ADD	A,MID_MDROM
-	RET
-;
-;__________________________________________________________________________________________________
-MD_READ:
-	CALL	MD_PGSEL		; SET PAGER BASED ON DRIVE AND TRACK
-	LD	DE,(BUFADR)		; SETUP SECTOR BUF AS DESTINATION
-	CALL	MD_SECADR		; SETUP RAM/ROM PAGE ADDRESS IN HL
-	CALL	MD_DMACPY		; MOVE SECTOR TO SECBUF
-	CALL	RAMPGZ			; RESTORE NORMAL 32K LOWER CPU RAM
-	LD	DE,(DMAADR)		; SETUP FOR COPY TO DMA ADDRESS
-	LD	HL,(BUFADR)		; FROM BUFFER
-	CALL	MD_DMACPY		; COPY FROM BUF TO DMA
-	LD	A,00H			; SIGNAL SUCCESS
-	RET
-;
-;__________________________________________________________________________________________________
-MD_WRITE:
-	; CHECK FOR WRITE ACCESS TO ROM
-	LD	A,(SEKDU)		; GET DRIVE
-	OR	A			; DEVICE = 0, UNIT = 0 MEANS ROM DISK (READ ONLY!)
-	JR	Z,MD_RDONLY
-
-	LD	DE,(BUFADR)		; GET SECTOR BUF ADDRESS
-	LD	HL,(DMAADR)		; GET DMA BUF ADDRESS
-	CALL	MD_DMACPY		; MOVE FROM DMA BUF TO SECTOR BUF
-	CALL	MD_PGSEL		; SET PAGER BASED ON DRIVE AND TRACK
-	CALL	MD_SECADR		; SETUP PAGE ADDRESS IN HL
-	LD	DE,(BUFADR)		; SECTOR BUF ADDRESS IN DE
-	EX	DE,HL			; REVERSE THEM TO...
-	CALL	MD_DMACPY		; COPY FROM SECTOR BUF TO RAM PAGE
-	CALL	RAMPGZ			; RESTORE NORMAL 32K LOWER CPU RAM
-	LD	A,00H			; SIGNAL SUCCESS
-	RET
-	
-MD_RDONLY:
-	LD	DE,STR_READONLY		; SET DE TO START OF ERROR MESSAGE
-	CALL	WRITESTR		; PRINT ERROR MESSAGE
-	LD	A,1			; SEND BAD SECTOR ERROR BACK
-	RET				; BDOS WILL ALSO PRINT ITS OWN ERROR MESSAGE
-;
-;__________________________________________________________________________________________________
-MD_SECADR:
-; DETERMINE MEMORY ADDRESS CORRESPONDING TO CURRENT SECTOR
-; SECTOR SIZE = 128, SO JUST MULTIPLY BY 128
-; RETURNS ADDRESS IN HL
-	LD	HL,(SEKSEC)		; GET SECTOR INTO HL
-	LD	B,7
-MD_SECADR1:
-	ADD	HL,HL
-	DJNZ	MD_SECADR1
-	RET
-;__________________________________________________________________________________________________
-MD_PGSEL:
-; SELECT MEMORY PAGE BASED ON DRIVE AND TRACK
-; DRIVE UNIT 0 = ROM, OTHERWISE RAM
-
-	LD	A,(SEKTRK)
-	INC	A			; OFFSET PAST RESERVED 32KB SYSTEM AREA OF RAM/ROM!
-	INC	A			; OFFSET ANOTHER 32K PAST DRIVER BANK
-	LD	C,A
-	LD	A,(SEKDU)
-	OR	A
-	LD	A,C
-	JP	Z,ROMPG			; DEVICE/UNIT = 0?  YES, ROM PAGE
-	JP	RAMPG			; ELSE RAM PAGE
-;
-;__________________________________________________________________________________________________
-MD_DMACPY:
-; COPIES ONE CPM SECTOR FROM ONE MEMORY ADDRESS TO ANOTHER
-; INPUT DE=SOURCE ADDRESS, HL=TARGET ADDRESS, USES BC
-	LD	BC,128			; BC IS COUNTER FOR FIXED SIZE TRANSFER (128 BYTES)
-	LDIR				; TRANSFER
 	RET
 ;
 #INCLUDE "memmgr.asm"
@@ -1522,37 +1363,16 @@ DIRBF:		.FILL 	128,00H		; SCRATCH DIRECTORY AREA
 ;
 ; DRIVER STORAGE
 ;
-; MEMORY DISK 00: ROM DISK
 ;
-ROMBLKS	.EQU	((ROMSIZE - 64) / 2)
-;
-		.DB	DIODEV_MD + 0
-MDDPH0 	 	.DW 	0000,0000
-	 	.DW 	0000,0000
-	 	.DW 	DIRBF,DPB_ROM
-	 	.DW 	MDCSV0,MDALV0
-;
-CKS_ROM	.EQU	0			; CKS: 0 FOR NON-REMOVABLE MEDIA
-ALS_ROM	.EQU	((ROMBLKS + 7) / 8)	; ALS: BLKS / 8 (ROUNDED UP)
-;
-; MEMORY DISK 01: RAM DISK
-;
-RAMBLKS	.EQU	((RAMSIZE - 96) / 2)
-;
-		.DB	DIODEV_MD + 1
-MDDPH1	 	.DW 	0000,0000
-	 	.DW 	0000,0000
-	 	.DW 	DIRBF,DPB_RAM
-	 	.DW 	MDCSV1,MDALV1
-;
-CKS_RAM	.EQU	0			; CKS: 0 FOR NON-REMOVABLE MEDIA
-ALS_RAM	.EQU	((RAMBLKS + 7) / 8)	; ALS: BLKS / 8 (ROUNDED UP)
-;
-MDCSV0:		.FILL	0		; NO DIRECTORY CHECKSUM, NON-REMOVABLE DRIVE
-MDALV0:		.FILL	ALS_ROM,00H	; MAX OF 512 DATA BLOCKS
-MDCSV1:		.FILL	0		; NO DIRECTORY CHECKSUM, NON-REMOVABLE DRIVE
-MDALV1:		.FILL	ALS_RAM,00H	; MAX OF 256 DATA BLOCKS
-;
+#IF (MDENABLE)
+ORG_MD_DPH	.EQU	$
+  #INCLUDE "md_dph.asm"
+SIZ_MD_DPH	.EQU	$ - ORG_MD_DPH
+		.ECHO	"MD DPH occupies "
+		.ECHO	SIZ_MD_DPH
+		.ECHO	" bytes.\n"
+#ENDIF
+
 #IF (FDENABLE)
 ORG_FD_DPH	.EQU	$
   #INCLUDE "fd_dph.asm"
@@ -1745,7 +1565,7 @@ DPB_FD360:
 	.DW  	4		; OFF: RESERVED TRACKS = 4 TRKS * (512 B/SEC * 36 SEC/TRK) = 18K
 ;__________________________________________________________________________________________________
 ;
-; IBM 1.20MB 5.25" FLOPPY DRIVE, 80 TRKS, 60 SECS/TRK, 512 BYTES/SEC
+; IBM 1.20MB 5.25" FLOPPY DRIVE, 80 TRKS, 15 SECS/TRK, 512 BYTES/SEC
 ; BLOCKSIZE (BLS) = 2K, DIRECTORY ENTRIES = 256
 ;
 	.DB	(2048 / 128)	; RECORDS PER BLOCK (BLS / 128)
@@ -1762,7 +1582,7 @@ DPB_FD120:
 	.DW  	2		; OFF: RESERVED TRACKS = 2 TRKS * (512 B/SEC * 60 SEC/TRK) = 15K
 ;__________________________________________________________________________________________________
 ;
-; IBM 1.11MB 8" FLOPPY DRIVE, 74 TRKS, 60 SECS/TRK, 512 BYTES/SEC
+; IBM 1.11MB 8" FLOPPY DRIVE, 74 TRKS, 15 SECS/TRK, 512 BYTES/SEC
 ; BLOCKSIZE (BLS) = 2K, DIRECTORY ENTRIES = 256
 ;
 	.DB	(2048 / 128)	; RECORDS PER BLOCK (BLS / 128)

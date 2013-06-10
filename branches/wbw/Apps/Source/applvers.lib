@@ -1,16 +1,16 @@
-; applvers.lib 3/31/2012 dwg - For RomWBW 2.5.0.1 Release
+; applvers.lib 3/31/2012 dwg - For RomWBW 2.5.0.14 Release
 
 A$RMJ	equ	2
 A$RMN	equ	5
 A$RUP	equ	0
-A$RTP	equ	13
+A$RTP	equ	14
 
 A$MONTH	equ	6
-A$DAY	equ	7
+A$DAY	equ	9
 A$YEAR	equ	2013
 
 date	macro
-dat	db	'  6/7/2013$'
+dat	db	'  6/9/2013$'
 	endm
 
 serial	macro
@@ -30,5 +30,3 @@ myname	db	' Douglas W Goodall $'
 	endm
 
 ; eof - applvers.lib
-
-

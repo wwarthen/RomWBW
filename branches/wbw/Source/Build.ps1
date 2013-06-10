@@ -51,7 +51,6 @@ $env:PATH = $TasmPath + ';' + $CpmToolsPath + ';' + $env:PATH
 $OutDir = "../Output"
 $RomFmt = "rom${RomSize}KB"
 $BlankFile = "blank${RomSize}KB.dat"
-#$ConfigFile = "Config_${Config}.asm"
 $RomDiskFile = "RomDisk.tmp"
 $RomFile = "${OutDir}/${RomName}.rom"
 $SysImgFile = "${OutDir}/${RomName}.sys"
