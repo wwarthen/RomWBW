@@ -51,7 +51,6 @@ $env:PATH = $TasmPath + ';' + $CpmToolsPath + ';' + $env:PATH
 $OutDir = "../Output"
 $RomFmt = "rom${RomSize}KB"
 $BlankFile = "blank${RomSize}KB.dat"
-#$ConfigFile = "Config_${Config}.asm"
 $RomDiskFile = "RomDisk.tmp"
 $RomFile = "${OutDir}/${RomName}.rom"
 $SysImgFile = "${OutDir}/${RomName}.sys"
@@ -61,8 +60,7 @@ $LoaderFile = "${OutDir}/${RomName}.com"
 "Building ${RomName}: ${ROMSize}KB ROM configuration ${Config} for Z${CPUType}..."
 ""
 
-$TimeStamp = '"' + (Get-Date -Format 'yyMMddThhmm') + '"'
-$Variant = '"RomWBW-' + $Env:UserName + '"'
+$TimeStamp = '"' + (Get-Date -Format 'dd-MMM-yyyy') + '"'
 
 Function Asm($Component, $Opt, $Architecture=$CPUType, $Output="${Component}.bin")
 {
@@ -84,12 +82,11 @@ Function Concat($InputFileList, $OutputFile)
 # Generate the build settings include file
 
 @"
-; RomWBW Configured for ${Platform} ${Config}, $(Get-Date)
+; RomWBW Configured for ${Platform} ${Config}, $(Get-Date -Format "s")
 ;
 #DEFINE		TIMESTAMP	${TimeStamp}
-#DEFINE		VARIANT		${Variant}
 ;
-ROMSIZE		.EQU		${ROMSize}		; SIZE OF ROM IN KB
+ROMSIZE		.EQU		${ROMSize}			; SIZE OF ROM IN KB
 PLATFORM	.EQU		PLT_${Platform}		; HARDWARE PLATFORM
 ;
 ; INCLUDE PLATFORM SPECIFIC DEVICE DEFINITIONS
