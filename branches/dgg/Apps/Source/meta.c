@@ -35,9 +35,39 @@ int numlu;
 
 struct SYSCFG * pSYSCFG = HIGHSEG;
 
+char hexchar(val, bitoff)
+{
+	static char hexmap[] = "0123456789ABCDEF";
+
+	return hexmap[(val >> bitoff) & 0xF];
+}
+
+char * fmthexbyte(val, buf)
+	unsigned char val;
+	char * buf;
+{
+	buf[0] = hexchar(val, 4);
+	buf[1] = hexchar(val, 0);
+	buf[2] = '\0';
+	
+	return buf;
+}
+
+char * fmthexword(val, buf)
+	unsigned int val;
+	char * buf;
+{
+	buf[0] = hexchar(val, 12);
+	buf[1] = hexchar(val, 8);
+	fmthexbyte(val, buf + 2);
+
+	return buf;
+}
+
 display()
 {
 	int i;
+	char buf[5];
 
 	/* Set Current Logical Unit */	
 	luscur(drive,logunit);	
@@ -46,10 +76,10 @@ display()
 	rdsector(drive,0,11,&metadata);
 
 	crtlc(METALINE+0,METACOL);
-	printf("metadata.signature = 0x%x",metadata.signature);
+	printf("metadata.signature = 0x%s", fmthexword(metadata.signature, buf));
 
 	crtlc(METALINE+1,METACOL);
-	printf("metadata.platform  = 0x%x",metadata.platform);
+	printf("metadata.platform  = 0x%s", fmthexbyte(metadata.platform, buf));
 
 	crtlc(METALINE+2,METACOL);
 	printf("metadata.formatter = \"");
@@ -92,16 +122,16 @@ display()
 	}
 	printf("\"");
 	crtlc(METALINE+9,METACOL);
-	printf("metadata.infloc    = 0x%x",metadata.infloc);
+	printf("metadata.infloc    = 0x%s", fmthexword(metadata.infloc, buf));
 	
 	crtlc(METALINE+10,METACOL);
-	printf("metadata.cpmloc    = 0x%x",metadata.cpmloc);
+	printf("metadata.cpmloc    = 0x%s", fmthexword(metadata.cpmloc, buf));
 	
 	crtlc(METALINE+11,METACOL);
-	printf("metadata.cpmend    = 0x%x",metadata.cpmend);
+	printf("metadata.cpmend    = 0x%s", fmthexword(metadata.cpmend, buf));
 	
 	crtlc(METALINE+12,METACOL);
-	printf("metadata.cpment    = 0x%x",metadata.cpment);
+	printf("metadata.cpment    = 0x%s", fmthexword(metadata.cpment, buf));
 
 }
 
