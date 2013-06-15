@@ -676,7 +676,7 @@ STR_BOOTMENU	.DB	"\r\nBoot: (M)onitor, (R)OM, or Drive Letter ===> $"
 ;
 STR_SETUPMENU:
 	.DB	"\r\n\r\n", PLATFORM_NAME, " Setup & Configuration v", BIOSVER
-	.DB	" (", VARIANT, "-", TIMESTAMP, ")\r\n\r\n"
+	.DB	" (", BIOSBLD, "-", TIMESTAMP, ")\r\n\r\n"
 ;	.DB	"(F)ormat RAM Disk\r\n"
 	.DB	"e(X)it Setup\r\n"
 	.DB  	"\r\n===> $"

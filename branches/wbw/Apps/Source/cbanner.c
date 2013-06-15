@@ -15,7 +15,7 @@ sbanner(program)
 	char szTemp[128];
 	
 	printf("%s ",program);
-	printf("%2d/%2d/%4d  ",A_MONTH,A_DAY,A_YEAR);
+	printf("%d/%d/%d  ",A_MONTH,A_DAY,A_YEAR);
 	printf("Version %d.%d.%d.%d ",A_RMJ,A_RMN,A_RUP,A_RTP);
 	printf("COPR Douglas Goodall Licensed w/GPLv3\n");
 }
@@ -31,11 +31,9 @@ banner(program)
 	strcat(szTemp," ");
 	}
 	printf("%s ",szTemp);
-	printf("%2d/%2d/%4d  ",A_MONTH,A_DAY,A_YEAR);
+	printf("%d/%d/%d  ",A_MONTH,A_DAY,A_YEAR);
 	printf("Version %d.%d.%d.%d\n",A_RMJ,A_RMN,A_RUP,A_RTP);
 	printf("%s\n",line2);
 	printf("%s\n",line3);
 	printf("%s\n",lines);
 }
-
-

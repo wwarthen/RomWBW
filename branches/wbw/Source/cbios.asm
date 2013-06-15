@@ -1293,9 +1293,9 @@ STR_SEC		.DB	" SEC=$"
 ; DATA
 ;==================================================================================================
 ;
-STR_BANNER	.DB	OSLBL, " for ", PLATFORM_NAME, " (CBIOS v", BIOSVER, ")$"
-VAR_LOC		.DB	VARIANT
-TST_LOC		.DB	TIMESTAMP
+STR_BANNER	.DB	OSLBL, " for ", PLATFORM_NAME, ", CBIOS v", BIOSVER, "$"
+STR_BUILD	.DB	BIOSBLD, "$"
+STR_TIMESTAMP	.DB	TIMESTAMP, "$"
 ;
 STR_INITRAMDISK	.DB	"\r\nFormatting RAMDISK...$"
 STR_READONLY	.DB 	"\r\nCBIOS Err: Read Only Drive$"
