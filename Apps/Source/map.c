@@ -392,8 +392,16 @@ int main(argc,argv)
 				/*      123456789012345678901234567890123456789		*/
 				printf("                            ");
 			}
-			
+
 			for(i=startlu;i<limit;i++) {
+				int		pad;
+				if (i >= 100)
+					pad = 0;
+				else if (i >= 10)
+					pad = 1;
+				else
+					pad = 2;
+	
 				luscur(drive,i);
 				readsec(drive,0,11,&metadata);
 				metadata.term = 0;
@@ -404,16 +412,16 @@ int main(argc,argv)
 
 				switch(column++) {
 					case 0:
-						crtlc(line,COL1A+LGUT-2);
-						printf("%3d %s %s",i,szWP,metadata.label);
+						crtlc(line,COL1A+LGUT-2+pad);
+						printf("%d %s %s",i,szWP,metadata.label);
 						break;
 					case 1:
-						crtlc(line,COL2A+LGUT-2);
-						printf("%3d %s %s",i,szWP,metadata.label);
+						crtlc(line,COL2A+LGUT-2+pad);
+						printf("%d %s %s",i,szWP,metadata.label);
 						break;
 					case 2:
-						crtlc(line,COL3A+LGUT-2);
-						printf("%3d %s %s",i,szWP,metadata.label);
+						crtlc(line,COL3A+LGUT-2+pad);
+						printf("%d %s %s",i,szWP,metadata.label);
 						column = 0;
 						line++;
 						break;		
