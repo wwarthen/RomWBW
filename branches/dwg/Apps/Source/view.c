@@ -45,31 +45,63 @@
 
 struct SYSCFG * pSYSCFG = HIGHSEG;
 
+char hexchar(val, bitoff)
+{
+	static char hexmap[] = "0123456789ABCDEF";
+
+	return hexmap[(val >> bitoff) & 0xF];
+}
+
+char * fmthexbyte(val, buf)
+	unsigned char val;
+	char * buf;
+{
+	buf[0] = hexchar(val, 4);
+	buf[1] = hexchar(val, 0);
+	buf[2] = '\0';
+	
+	return buf;
+}
+
+char * fmthexword(val, buf)
+	unsigned int val;
+	char * buf;
+{
+	buf[0] = hexchar(val, 12);
+	buf[1] = hexchar(val, 8);
+	fmthexbyte(val, buf + 2);
+
+	return buf;
+}
+
 dispdpb(line,column,pDPB)
 	int line;
 	int column;
-	struct DPB * pDPB; 
+	struct DPB * pDPB;
 {
+	char buf[5];
+	char buf2[5];
+
 	crtlc(line+0,column);	
-	printf("[%x] spt =%x",&pDPB->spt,pDPB->spt);
+	printf("[%s] spt =%s", fmthexword(&pDPB->spt, buf), fmthexword(pDPB->spt, buf2));
 	crtlc(line+1,column);	
-	printf("[%x] bsh =%x",&pDPB->bsh,pDPB->bsh);
+	printf("[%s] bsh =%s", fmthexword(&pDPB->bsh, buf), fmthexword(pDPB->bsh, buf2));
 	crtlc(line+2,column);	
-	printf("[%x] blm =%x",&pDPB->blm,pDPB->blm);
+	printf("[%s] blm =%s", fmthexword(&pDPB->blm, buf), fmthexbyte(pDPB->blm, buf2));
 	crtlc(line+3,column);	
-	printf("[%x] exm =%x",&pDPB->exm,pDPB->exm);
+	printf("[%s] exm =%s", fmthexword(&pDPB->exm, buf), fmthexbyte(pDPB->exm, buf2));
 	crtlc(line+4,column);	
-	printf("[%x] dsm =%x",&pDPB->dsm,pDPB->dsm);
+	printf("[%s] dsm =%s", fmthexword(&pDPB->dsm, buf), fmthexword(pDPB->dsm, buf2));
 	crtlc(line+5,column);	
-	printf("[%x] drm =%x",&pDPB->drm,pDPB->drm);
+	printf("[%s] drm =%s", fmthexword(&pDPB->drm, buf), fmthexword(pDPB->drm, buf2));
 	crtlc(line+6,column);	
-	printf("[%x] al0 =%x",&pDPB->al0,pDPB->al0);
+	printf("[%s] al0 =%s", fmthexword(&pDPB->al0, buf), fmthexbyte(pDPB->al0, buf2));
 	crtlc(line+7,column);	
-	printf("[%x] al1 =%x",&pDPB->al1,pDPB->al1);
+	printf("[%s] al1 =%s", fmthexword(&pDPB->al1, buf), fmthexbyte(pDPB->al1, buf2));
 	crtlc(line+8,column);	
-	printf("[%x] cks =%x",&pDPB->cks,pDPB->cks);
+	printf("[%s] cks =%s", fmthexword(&pDPB->cks, buf), fmthexword(pDPB->cks, buf2));
 	crtlc(line+9,column);	
-	printf("[%x] off =%x",&pDPB->off,pDPB->off);	
+	printf("[%s] off =%s", fmthexword(&pDPB->off, buf), fmthexword(pDPB->off, buf2));
 }
 
 struct DPB * dispdph(drive,line,column)
@@ -77,7 +109,8 @@ struct DPB * dispdph(drive,line,column)
 	int line;
 	int column;
 {
-
+	char buf[5];
+	char buf2[5];
 	struct DPH * pDPH;
 	struct DPB * pDPB;
 		
@@ -119,31 +152,31 @@ struct DPB * dispdph(drive,line,column)
 	}
 
 
-	crtlc(line+0,column);	printf("[%x] xlt =%x",
-								&pDPH->xlt,pDPH->xlt);
-	crtlc(line+1,column);	printf("[%x] rv1 =%x",
-								&pDPH->rv1,pDPH->rv1);
-	crtlc(line+2,column);	printf("[%x] rv2 =%x",
-								&pDPH->rv2,pDPH->rv2);
-	crtlc(line+3,column);	printf("[%x] rv3 =%x",
-								&pDPH->rv3,pDPH->rv3);
-	crtlc(line+4,column);	printf("[%x] dbf =%x",
-								&pDPH->dbf,pDPH->dbf);
-	crtlc(line+5,column);	printf("[%x] dpb =%x",
-								&pDPH->dpb,pDPH->dpb);
-	crtlc(line+6,column);	printf("[%x] csv =%x",
-								&pDPH->csv,pDPH->csv);
-	crtlc(line+7,column);	printf("[%x] alv =%x",
-								&pDPH->alv,pDPH->alv);
+	crtlc(line+0,column);	
+	printf("[%s] xlt =%s", fmthexword(&pDPH->xlt, buf), fmthexword(pDPH->xlt, buf2));
+	crtlc(line+1,column);
+	printf("[%s] rv1 =%s", fmthexword(&pDPH->rv1, buf), fmthexword(pDPH->rv1, buf2));
+	crtlc(line+2,column);	
+	printf("[%s] rv2 =%s", fmthexword(&pDPH->rv2, buf), fmthexword(pDPH->rv2, buf2));
+	crtlc(line+3,column);	
+	printf("[%s] rv3 =%s", fmthexword(&pDPH->rv3, buf), fmthexword(pDPH->rv3, buf2));
+	crtlc(line+4,column);	
+	printf("[%s] dbf =%s", fmthexword(&pDPH->dbf, buf), fmthexword(pDPH->dbf, buf2));
+	crtlc(line+5,column);	
+	printf("[%s] dpb =%s", fmthexword(&pDPH->dpb, buf), fmthexword(pDPH->dpb, buf2));
+	crtlc(line+6,column);	
+	printf("[%s] csv =%s", fmthexword(&pDPH->csv, buf), fmthexword(pDPH->csv, buf2));
+	crtlc(line+7,column);	
+	printf("[%s] alv =%s", fmthexword(&pDPH->alv, buf), fmthexword(pDPH->alv, buf2));
 	if( ('L' == pDPH->sigl) && ('U' == pDPH->sigu) ) {
 		crtlc(line+8,column);
-		printf("[%x] sigl=%x",&pDPH->sigl,pDPH->sigl);
+		printf("[%s] sigl=%s", fmthexword(&pDPH->sigl, buf), fmthexbyte(pDPH->sigl, buf2));
 		crtlc(line+9,column);
-		printf("[%x] sigu=%x",&pDPH->sigu,pDPH->sigu);
+		printf("[%s] sigu=%s", fmthexword(&pDPH->sigu, buf), fmthexbyte(pDPH->sigu, buf2));
 		crtlc(line+10,column);
-		printf("[%x] curr=%x",&pDPH->current,pDPH->current);
+		printf("[%s] curr=%s", fmthexword(&pDPH->current, buf), fmthexword(pDPH->current, buf2));
 		crtlc(line+11,column);
-		printf("[%x] numb=%x",&pDPH->number,pDPH->number);
+		printf("[%s] numb=%s", fmthexword(&pDPH->number, buf), fmthexword(pDPH->number, buf2));
 	}
 
 	if(DSM720 == pDPB->dsm) {

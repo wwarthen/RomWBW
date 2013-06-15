@@ -102,7 +102,7 @@ endif
 CPMTOOLSPATH := ../tools/cpmtools
 CPMCP := $(CPMTOOLSPATH)/cpmcp.exe
 
-ROMDSKFILES := ../RomDsk/$(SYS)_$(ROMSIZE)KB/*.* ../RomDsk/cfg_$(PLATFORM)_$(CONFIG)/*.* ../Apps/core/*.*
+ROMDSKFILES := ../RomDsk/$(SYS)_$(ROMSIZE)KB/*.* ../RomDsk/cfg_$(PLATFORM)_$(CONFIG)/*.* ../Apps/Output/*.*
 
 ifeq "$(SYS)" "CPM"
 DOSBIN := bdosb01.bin
@@ -151,11 +151,9 @@ all: $(OUTDIR)\$(ROMNAME).rom $(OUTDIR)\$(ROMNAME).sys $(OUTDIR)\$(ROMNAME).com
 
 build.inc:
 	echo	; >$@
-	echo	; RomWBW Configured for $(PLATFORM) $(CONFIG), %date% %time% >>$@
+	echo	; RomWBW Configured for $(PLATFORM) $(CONFIG), %date:~4,10% %time% >>$@
 	echo	; >>$@
-	echo	#DEFINE	TIMESTAMP	"%date:~-4,4%%date:~-10,2%%date:~-7,2%T%time:~0,2%%time:~3,2%" >>$@
-	echo	#DEFINE	VARIANT		"WBW-%username%" >>$@
-	echo	; >>$@
+	echo	#DEFINE	TIMESTAMP	"%date:~4,10%" >>$@
 	echo	; >>$@
 	echo	; INCLUDE PLATFORM SPECIFIC DEVICE DEFINITIONS >>$@
 	echo	; >>$@
@@ -186,7 +184,7 @@ zcprw.bin : zcprw.asm zcpr.asm
 zsdos.bin : zsdos.asm zsdos.lib zsdos-gp.z80
 	$(TASM) $(ASMOPT80) $< $@
 
-cbios.bin: cbios.asm fd_dph.asm ide_dph.asm ppide_dph.asm sd_dph.asm prp_dph.asm ppp_dph.asm uart.asm vdu.asm std.asm ver.inc build.inc
+cbios.bin: cbios.asm fd_dph.asm ide_dph.asm ppide_dph.asm sd_dph.asm prp_dph.asm ppp_dph.asm std.asm ver.inc build.inc
 	$(TASM) $(ASMOPT80) -dBLD_SYS=SYS_$(SYS) $< $@
 
 dbgmon.bin: dbgmon.asm std.asm ver.inc build.inc

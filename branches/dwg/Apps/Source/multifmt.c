@@ -83,8 +83,7 @@
  * and labels the drive for future reference.
  *
  *
- * The problem this programs solves is how to prepare a large media device
-a few
+ * The problem this programs solves is how to prepare a large media device a few
  * logical units, or an entire device, possible having hundreds of logical
  * units.
  *
@@ -103,7 +102,7 @@ a few
  * It should only be necessary to run multifmt once to create the prefixes
  * and clear the directories. The clrdir program can be used ad hoc to clear
  * individual logical units as needed.
- 
+ * 
  * Now that a this is understood, the code of the program will make a lot
  * more sense. The main function calls the gather funtion that queries the
  * for constraints, then it call the logical formatter to deal with high
@@ -112,9 +111,6 @@ a few
  * work done and make changes to the target media. Because of this structure,
  * it is possible to operate the program in a sort of demo mode by disabling
  * the operation of the physical format function.
- 
- 
-  
  *
  */
  
@@ -175,8 +171,8 @@ clrline()
 	if(0 < gTT) {
 		crtlc(2,0);
 	}
-	printf("%c                                     ",0x0d);
-	printf("                                     %c",0x0d);
+	printf("\r                                     ");
+	printf("                                     \r");
 }
 
 /* The purpose of this routine is to access the BIOS GETDSK function
@@ -283,7 +279,7 @@ physfmt(lu)
 	/* LU is not protected or override is enabled */
 
 	if(0==gTT) { 
-		printf("Formatting LU# %d%c",lu,0x0d);
+		printf("Formatting LU# %d\r",lu);
 		clrmeta(lu,-1,-1);
 		clrdir(-1,-1);
 	} else {
@@ -404,7 +400,7 @@ gather()
 	}
 
 	clrline();
-	gLast = gNumLU-1;	
+	gLast = gNumLU-1;
 	printf("Please enter last logical unit to format 0-%d (%d):",
 			gNumLU-1,gLast);
 	gets(szTemp);

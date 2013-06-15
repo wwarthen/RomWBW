@@ -22,7 +22,6 @@
 
 /* rdsector(drive,track,sector,buffer); */
 
-
 struct DPH * pDPH;
 struct DPB * pDPB;
 
@@ -35,6 +34,35 @@ unsigned char * pBUFFER;
 unsigned char szDrive[32];
 
 char szTemp[128];
+
+char hexchar(val, bitoff)
+{
+	static char hexmap[] = "0123456789ABCDEF";
+
+	return hexmap[(val >> bitoff) & 0xF];
+}
+
+char * fmthexbyte(val, buf)
+	unsigned char val;
+	char * buf;
+{
+	buf[0] = hexchar(val, 4);
+	buf[1] = hexchar(val, 0);
+	buf[2] = '\0';
+	
+	return buf;
+}
+
+char * fmthexword(val, buf)
+	unsigned int val;
+	char * buf;
+{
+	buf[0] = hexchar(val, 12);
+	buf[1] = hexchar(val, 8);
+	fmthexbyte(val, buf + 2);
+
+	return buf;
+}
 
 rdimage(filename,bufptr,bufsiz)
 	char * filename;
@@ -83,13 +111,14 @@ sysgen(drive,trk,sec,ptr,spt,cnt)
 	int spt;
 	int cnt;
 {
+	char buf[5];
+
 	while ( 0 < cnt ) {
 	
 		wrsector(drive,trk,sec,ptr);	
 
-		printf("drive=%c:, trk=%d, sec=%3d,  ptr=0x0%4x   ",
-				drive+'A', trk,    sec,      ptr);
-		printf("%c",0x0d);				
+		printf("drive=%c:, trk=%d, sec=%d, ptr=0x%s     \r",
+				drive+'A', trk, sec, fmthexword(ptr, buf));
 		ptr += 128;
 		sec++;
 		if(sec == spt) {
@@ -98,8 +127,7 @@ sysgen(drive,trk,sec,ptr,spt,cnt)
 		}
 		cnt--;
 	}
-	printf("                                        ");
-	printf("%c",0x0d);
+	printf("                                        \r");
 }
 
 
