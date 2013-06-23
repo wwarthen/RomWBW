@@ -1,0 +1,210 @@
+; cnfgdata.lib 7/19/2012 dwg - 
+
+byte	equ	1
+word	equ	2
+
+;; /* cnfgdata.h 6/04/2012 dwg - */
+;; 
+;; struct CNFGDATA {
+;; 	unsigned char rmj;
+cfgrmj	equ	08009h
+;; 
+;; 	unsigned char rmn;
+cfgrmn	equ	cfgrmj + byte
+;; 
+;; 	unsigned char rup;
+cfgrup	equ	cfgrmn + byte
+;; 
+;; 	unsigned char rtp;
+cfgrtp	equ	cfgrup + byte
+;; 
+;; 	unsigned char diskboot;
+diskboot	equ	cfgrtp + byte
+;; 
+;; 	unsigned char devunit;
+devunit	equ	diskboot + byte
+;; 
+;; 	unsigned int  bootlu;
+bootlu	equ	devunit + byte
+;; 
+;; 	unsigned char hour;
+hour	equ	bootlu + word
+;; 
+;; 	unsigned char minute;
+minute	equ	hour + byte
+;; 
+;; 	unsigned char second;
+second	equ	minute + byte
+;; 
+;; 	unsigned char month;
+month	equ	second + byte
+;; 
+;; 	unsigned char day;
+day	equ	month + byte
+;; 
+;; 	unsigned char year;
+year	equ	day + byte
+;; 
+;; 	unsigned char freq;
+freq	equ	year + byte
+;; 
+;; 	unsigned char platform;
+platform equ	freq+ byte
+;; 
+;; 	unsigned char dioplat;
+dioplat	equ	platform + byte
+;; 
+;; 	unsigned char vdumode;
+vdumode	equ	dioplat + byte
+;; 
+;; 	unsigned int romsize;
+romsize	equ	vdumode + byte
+;; 
+;; 	unsigned int ramsize;
+ramsize	equ	romsize + word
+;; 
+;; 	unsigned char clrramdk;
+clrramdk equ	ramsize + word
+;; 
+;; 	unsigned char dskyenable;
+dskyenable equ clrramdk + byte
+;; 
+;; 	unsigned char uartenable;
+uartenable equ	dskyenable + byte
+;; 
+;; 	unsigned char vduenable;
+vduenable equ	uartenable + byte
+;; 
+;; 	unsigned char fdenable;
+fdenable equ	vduenable + byte
+;; 
+;; 	unsigned char fdtrace;
+fdtrace equ	fdenable + byte
+;; 
+;; 	unsigned char fdmedia;
+fdmedia	equ	fdtrace + byte
+;; 
+;; 	unsigned char fdmediaalt;
+fdmediaalt equ	fdmedia + byte
+;; 
+;; 	unsigned char fdmauto;
+fdmauto	equ	fdmediaalt + byte
+;; 
+;; 	unsigned char ideenable;
+ideenable	equ	fdmauto + byte
+;; 
+;; 	unsigned char idetrace;
+idetrace	equ	ideenable + byte
+;; 
+;; 	unsigned char ide8bit;
+ide8bit	equ	idetrace + byte
+;; 
+;; 	unsigned int idecapacity;
+idecapacity	equ	ide8bit + byte
+;; 
+;; 	unsigned char ppideenable;
+ppideenable equ	idecapacity + word
+;; 
+;; 	unsigned char ppidetrace;
+ppidetrace	equ	ppideenable + byte
+;; 
+;; 	unsigned char ppide8bit;
+ppide8bit	equ	ppidetrace + byte
+;; 
+;; 	unsigned int ppidecapacity;
+ppidecapacity	equ	ppide8bit + byte
+;; 
+;; 	unsigned char ppideslow;
+ppideslow	equ	ppidecapacity + word
+;; 
+;; 	unsigned char boottype;
+boottype	equ	ppideslow + byte
+;; 
+;; 	unsigned char boottimeout;
+boottimeout	equ	boottype + byte
+;; 
+;; 	unsigned char bootdefault;
+bootdefault	equ	boottimeout + byte
+;; 
+;; 	unsigned int baudrate;
+baudrate	equ	bootdefault + byte
+;; 
+;; 	unsigned char ckdiv;
+ckdiv	equ	baudrate + word
+;; 
+;; 	unsigned char memwait;
+memwait equ	ckdiv + byte
+;; 
+;; 	unsigned char iowait;
+iowait	equ	memwait + byte
+;; 
+;; 	unsigned char cntlb0;
+cntlb0	equ	iowait + byte
+;; 
+;; 	unsigned char cntlb1;
+cntlb1	equ	cntlb0 + byte
+;; 
+;; 	unsigned char sdenable;
+sdenable	equ	cntlb1 + byte
+;; 
+;; 	unsigned char sdtrace;
+sdtrace	equ	sdenable + byte
+;; 
+;; 	unsigned int sdcapacity;
+sdcapacity	equ	sdtrace + byte
+;; 
+;; 	unsigned char sdcsio;
+sdcsio	equ	sdcapacity + word
+;; 
+;; 	unsigned char sdcsiofast;
+sdcsiofast equ sdcsio + byte
+;; 
+;; 	unsigned char defiobyte;
+defiobyte	equ	sdcsiofast + byte
+;; 
+;; 	unsigned char termtype;
+termtype	equ	defiobyte + byte
+;; 
+;; 	unsigned int revision;
+revision	equ	termtype + byte
+;; 
+;; 	unsigned char prpsdenable;
+prpsdenable	equ	revision + word
+;; 
+;; 	unsigned char prpsdtrace;
+prpsdtrace	equ	prpsdenable + byte
+;; 
+;; 	unsigned int prpsdcapacity;
+prpsdcapacity	equ	prpsdtrace + byte
+;; 
+;; 	unsigned char prpconenable;
+prpconenable	equ	prpsdcapacity + word
+;; 
+;; 	unsigned int biossize;				
+biossize	equ	prpconenable + byte
+;; 
+;; 	unsigned char pppenable;
+pppenable	equ	biossize + word
+;; 	
+;; 	unsigned char pppsdenable;
+pppsdenable	equ	pppenable + byte
+;; 
+;; 	unsigned char pppsdtrace;
+pppsdtrace	equ	pppsdenable + byte
+;; 
+;; 	unsigned int  pppsdcapacity;
+pppsdcapacity	equ	pppsdtrace + byte
+;; 
+;; 	unsigned char pppconenable;
+pppconenable	equ	pppsdcapacity + word
+;; 
+;; 	unsigned char prpenable;
+prpenable 	equ	pppconenable + byte
+;; 
+;; };
+;; 
+;; /********************/
+;; /* eof - cnfgdata.h */
+;; /********************/
+
+

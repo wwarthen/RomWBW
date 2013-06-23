@@ -1,0 +1,35 @@
+; portab.lib 1/18/2012 dwg - added ESC, NEVER
+
+; Copyright (C) 2011-2012 Douglas Goodall All Rights Reserved.
+; For non-commerial use by N8VEM community
+
+
+TRUE	equ	1
+FALSE	equ	0
+NEVER	equ	FALSE
+
+CR	equ	0dh
+LF	equ	0ah
+ESC	equ	01bh
+
+BYTESIZE	equ	1
+WORDSIZE	equ	2
+
+; save registers on entry
+enter	macro	
+	push psw
+	push b
+	push d
+	push h
+	endm
+
+; restore registers on exit
+leave	macro	
+	pop h
+	pop d
+	pop b
+	pop psw
+	endm
+
+; eof - portab.h
+
