@@ -99,8 +99,12 @@ ifndef ROMNAME
 ROMNAME := $(PLATFORM)_$(CONFIG)
 endif
 
+ifndef "windir"
 CPMTOOLSPATH := ../tools/cpmtools
 CPMCP := $(CPMTOOLSPATH)/cpmcp.exe
+else
+CPMCP := /usr/bin/cpmcp
+endif
 
 ROMDSKFILES := ../RomDsk/$(SYS)_$(ROMSIZE)KB/*.* ../RomDsk/cfg_$(PLATFORM)_$(CONFIG)/*.* ../Apps/Output/*.*
 
@@ -112,11 +116,16 @@ DOSBIN := zsdos.bin
 CPBIN := zcprw.bin
 endif
 
-OUTDIR := ..\Output
+OUTDIR := ../Output
 
+ifndef "windir"
 TASMPATH := ../tools/tasm32
 TASM := $(TASMPATH)/tasm.exe
 TASMTABS := $(TASMPATH)
+else
+TASM := /usr/local/bin/tasm
+TASMTABS := /usr/local/lib
+endif
 export TASMTABS
 
 ASMOPT80 := -t$(CPU) -g3
@@ -147,8 +156,9 @@ $(error Usage: make PLATFORM=[N8VEM|ZETA|N8|S2I|S100] CONFIG=<config> ROMSIZE=[5
 endif
 endif
 
-all: $(OUTDIR)\$(ROMNAME).rom $(OUTDIR)\$(ROMNAME).sys $(OUTDIR)\$(ROMNAME).com
+all: $(OUTDIR)/$(ROMNAME).rom $(OUTDIR)/$(ROMNAME).sys $(OUTDIR)/$(ROMNAME).com
 
+ifndef "windir"
 build.inc:
 	echo	; >$@
 	echo	; RomWBW Configured for $(PLATFORM) $(CONFIG), %date:~4,10% %time% >>$@
@@ -168,6 +178,28 @@ build.inc:
 	echo	; >>$@
 	echo	#INCLUDE "config_$(PLATFORM)_$(CONFIG).asm" >>$@
 	echo	; >>$@
+else
+	echo	';' >$@
+	echo -n '; RomWBW Configured for '$(CONFIG)'' >>$@
+	date >> $@
+	echo	';' >>$@
+	echo -n '#DEFINE	TIMESTAMP	"' >>$@
+	date '+%Y %m %d %H%M"' >>$@
+	echo	';' >>$@
+	echo	'; INCLUDE PLATFORM SPECIFIC DEVICE DEFINITIONS' >>$@
+	echo	';' >>$@
+	echo	'ROMSIZE		.EQU	'$(ROMSIZE)'' >>$@
+	echo	'PLATFORM	.EQU	PLT_'$(PLATFORM)'' >>$@
+
+	echo	'#IF (PLATFORM == PLT_S100)' >>$@
+	echo	'  #INCLUDE "std-s100.inc"' >>$@
+	echo	'#ELSE' >>$@
+	echo	'  #INCLUDE "std-n8vem.inc"' >>$@
+	echo	'#ENDIF' >>$@
+	echo	';' >>$@
+	echo	'#INCLUDE	"config_'$(PLATFORM)'_'$(CONFIG)'.asm"' >>$@
+	echo	';' >>$@
+endif
 	
 bootrom.bin : bootrom.asm std.asm build.inc ver.inc
 	$(TASM) $(ASMOPT80) $< $@
@@ -192,27 +224,55 @@ dbgmon.bin: dbgmon.asm std.asm ver.inc build.inc
 syscfg.bin: syscfg.asm std.asm build.inc ver.inc
 
 os.bin: $(CPBIN) $(DOSBIN) cbios.bin
-	copy /B $(subst $(SPACE),+,$(^)) $@
+ifndef "windir"
+	copy /B $(subst $(SPACE),+,$(^)) "$@"
+else
+	cat $(CPBIN) $(DOSBIN) cbios.bin >>$@
+endif
 	
 rom0.bin: pgzero.bin bootrom.bin syscfg.bin loader.bin romfill.bin dbgmon.bin os.bin hbfill.bin
-	copy /B $(subst $(SPACE),+,$(^)) $@
+ifndef "windir"
+	copy /B $(subst $(SPACE),+,$(^)) "$@"
+else
+	cat pgzero.bin bootrom.bin syscfg.bin loader.bin romfill.bin dbgmon.bin os.bin hbfill.bin >>$@
+endif
 	
 rom1.bin: pgzero.bin bootrom.bin syscfg.bin loader.bin hbios.bin
-	copy /B $(subst $(SPACE),+,$(^)) $@
+ifndef "windir"
+	copy /B $(subst $(SPACE),+,$(^)) "$@"
+else
+	cat pgzero.bin bootrom.bin syscfg.bin loader.bin hbios.bin >>$@
+endif
 
-$(OUTDIR)\$(ROMNAME).rom: rom0.bin rom1.bin $(ROMDISKFILES) $(OUTDIR)\$(ROMNAME).sys
+$(OUTDIR)/$(ROMNAME).rom: rom0.bin rom1.bin $(ROMDISKFILES) $(OUTDIR)/$(ROMNAME).sys
+ifndef "windir"
 	copy blank$(ROMSIZE)KB.dat RomDisk.tmp
 	$(CPMCP) -f rom$(ROMSIZE)KB RomDisk.tmp $(ROMDSKFILES) 0:
 	$(CPMCP) -f rom$(ROMSIZE)KB RomDisk.tmp ../Output/$(ROMNAME).sys 0:$(SYS).sys
-	copy /B rom0.bin+rom1.bin+RomDisk.tmp $@
+	copy /B rom0.bin+rom1.bin+RomDisk.tmp "$@"
+else
+	cp blank$(ROMSIZE)KB.dat RomDisk.tmp
+	$(CPMCP) -f rom$(ROMSIZE)KB RomDisk.tmp $(ROMDSKFILES) 0:
+	$(CPMCP) -f rom$(ROMSIZE)KB RomDisk.tmp ../Output/$(ROMNAME).sys 0:$(SYS).sys
+	cat rom0.bin rom1.bin RomDisk.tmp >>$@
+endif
 
-$(OUTDIR)\$(ROMNAME).com: bootapp.bin syscfg.bin loader.bin hbios.bin dbgmon.bin os.bin
-	copy /B $(subst $(SPACE),+,$(^)) $@
+$(OUTDIR)/$(ROMNAME).com: bootapp.bin syscfg.bin loader.bin hbios.bin dbgmon.bin os.bin
+ifndef "windir"
+	copy /B $(subst $(SPACE),+,$(^)) "$@"
+else
+	cat bootapp.bin syscfg.bin loader.bin hbios.bin dbgmon.bin os.bin >>$@
+endif
 
-$(OUTDIR)\$(ROMNAME).sys: prefix.bin os.bin
-	copy /B $(subst $(SPACE),+,$(^)) $@
+$(OUTDIR)/$(ROMNAME).sys: prefix.bin os.bin
+ifndef "windir"
+	copy /B $(subst $(SPACE),+,$(^)) "$@"
+else
+	cat prefix.bin os.bin >>$@
+endif
 
 clean:
+ifndef "windir"
 	if exist *.bin del *.bin
 	if exist *.com del *.com
 	if exist *.img del *.img
@@ -221,4 +281,9 @@ clean:
 	if exist *.exp del *.exp
 	if exist *.tmp del *.tmp
 	if exist build.inc del build.inc
-	if exist $(OUTDIR)\*.* erase /Q $(OUTDIR)\*.*
+	if exist "$(OUTDIR)/*.*" erase /Q "$(OUTDIR)/*.*"
+else
+	rm -f *.bin *.com *.img *.rom *.lst *.exp *.tmp
+	rm -f build.inc
+	rm -f $(OUTDIR)/*.*
+endif
