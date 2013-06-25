@@ -4,11 +4,11 @@
 
 #define A_RMJ	2
 #define A_RMN	5
-#define A_RUP	0
-#define A_RTP	16
+#define A_RUP	1
+#define A_RTP	17
 
 #define A_MONTH	6
-#define A_DAY	23
+#define A_DAY	25
 #define A_YEAR	2013
 #define A_YR	13
 
