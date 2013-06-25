@@ -1,0 +1,191 @@
+; identity.lib 2/19/2012 dwg - add ify macro
+; identity.lib 2/17/2012 dwg - Program Identity Declarations
+
+	extrn	x$ident
+
+ident	macro	file1fcb
+	lxi	h,file1fcb
+	call	x$ident
+	endm
+
+ify	macro	progname,bool
+	local	done
+	local	file
+	local	fini
+	ident	file
+	jmp	fini
+	newfcb	file,0,progname
+fini:	mvi	a,bool
+	cpi	TRUE
+	jnz	done
+	conout	CR
+	conout	LF
+done:	
+	endm
+
+
+identx	macro	file1fcb
+	local	openok
+	local	identend
+
+	local	ldrive,lcolon,lname,ldot,lext,lterm
+
+	mvi	c,FOPEN
+	lxi	d,file1fcb
+	call	BDOS
+	cpi	255
+	jnz	openok
+
+	memcpy	lname,file1fcb+1,8
+	mvi	a,','
+	sta	ldot
+	memcpy	lext,file1fcb+9,3
+	mvi	a,'$'
+	sta	lterm
+	print	lname
+	printf	' -- File Not Found'
+	jmp	identend
+openok:
+
+	mvi	c,SETDMA
+	lxi	d,buffer
+	call	BDOS
+
+	mvi	c,READSEQ
+	lxi	d,file1fcb
+	call	BDOS
+
+	mvi	c,FCLOSE
+	lxi	d,file1fcb
+	call	BDOS
+
+	lxi	d,d$prog
+	mvi	c,9
+	call	BDOS
+
+	conout	','
+	conout	' '
+	lda	p$rmj
+	mov	l,a
+	mvi	h,0
+	call	pr$d$word
+	conout	'.'
+	lda	p$rmn
+	mov	l,a
+	call	pr$d$word
+	conout	'.'
+	lda	p$rup
+	mov	l,a
+	call	pr$d$word
+	conout	'.'
+	lda	p$rtp
+	mov	l,a
+	call	pr$d$word
+	conout	','
+	conout	' '
+
+	lda	p$mon
+	mov	l,a
+	call	pr$d$word
+	conout	'/'
+	lda	p$day
+	mov	l,a
+	call	pr$d$word
+	conout	'/'
+	lhld	p$year
+	call	pr$d$word
+	conout	','
+	conout	' '
+
+	lxi	d,d$prod
+	mvi	c,9
+	call	BDOS
+	conout	','
+	conout	' '
+
+	lxi	d,d$orig
+	mvi	c,9
+	call	BDOS
+	conout	','
+	conout	' '
+
+	lxi	d,d$ser
+	mvi	c,9
+	call	BDOS
+	conout	','
+	conout 	' '
+
+	lxi	d,d$name
+	mvi	c,9
+	call	BDOS
+	jmp	identend
+
+ldrive	ds	1
+lcolon	ds	1
+lname	ds	8
+ldot	ds	1
+lext	ds	3
+lterm	ds	1
+
+identend:
+	endm
+
+idata	macro
+	jmp	around$bandata
+argv	dw	prog,dat,prod,orig,ser,myname,0
+prog	db	'IDENT.COM   $'
+	date
+	serial
+	product
+	originator
+	oriname
+uuid	db	'777A67C2-4A92-42D4-80FE-C96FD6483BD2$'
+	db	'buffer-->'
+	public	buffer,p$start,p$hexrf,p$sig
+	public	p$rmj,p$rmn,p$rup,p$rtp
+	public	p$mon,p$day,p$year
+buffer	ds	1
+p$start	ds	2
+p$hexrf	ds	16
+p$sig	ds	2
+p$rmj	ds	1
+p$rmn	ds	1
+p$rup	ds	1
+p$rtp	ds	1
+p$mon	ds	1
+p$day	ds	1
+p$year	ds	2
+p$argv	ds	2
+p$e5	ds	1
+p$pr$st	ds	2
+p$code1	ds	3		; begin: lxi h,0
+p$code2	ds	1		;   dad sp
+p$code3	ds	3		;   shld pre$stk
+p$code4	ds	3		;    lxi sp,stack$top
+p$code5	ds	1		;    nop
+p$code6	ds	3		;    jmp around$bandata
+p$prog	ds	2		;   dw prog
+p$dat	ds	2		;   dw dat
+p$prod	ds	2		;   dw prod
+p$orig	ds	2		;   dw orig
+p$ser	ds	2		;   dw ser
+p$nam	ds	2		;   dw nam
+p$term	ds	2		;   dw 0
+d$prog	ds	8+1+3+1		;   db '12345678.123$'
+d$date	ds	2+1+2+1+4+1	;   db ' 2/11/2012$'
+d$ser	ds	6+1		;   db '654321$'
+d$prod	ds	5+1		;   db 'CPM80$'
+d$orig	ds	3+1		;   db 'DWG$'
+d$name	ds	1+7+1+1+1+1+7+1	;   db ' Douglas W. Goodall$'
+d$uuid	ds	37		; unique user identification
+d$term2	ds	1		; can be set to zero or dollar sign
+p$len	equ	$-buffer
+p$rsvd	ds	128-p$len
+	db	'<--buffer'
+crlf	db	CR,LF,'$'
+around$bandata:
+
+	endm
+
+; eof - identity.lib
+

@@ -1,0 +1,385 @@
+; biohdr.lib 2/19/2012 dwg - BIOS header display macros
+; copyright (C) 2011 Douglas Goodall. All Rights Reserved.
+; Licensed to N8VEM Community for non-commercial use only.
+
+;  2/19/2012 dwg - review for release 1.5.1.0
+;  2/05/2012 dwg - added DSKM (DM_ROM...) better late than never
+;  2/05/2012 dwg - added prpsdenable,prpsdtrace, and prpsdcapacity
+;  1/16/2012 dwg - extend LU numbers to 0x1C entries (256MB)
+;  1/11/2012 dwg - added new setlu for 1.4 slice technique
+; 12/18/2011 dwg - added REVISION (from svn)
+; 12/07/2011 dwg - BIOS header enhancement for version 1.3
+
+; Common Configuration items, 
+; Valid in all configurations
+RMJ	equ	0E64Bh
+RMN	equ	RMJ+1
+RUP	equ	RMN+1
+RTP	equ	RUP+1
+
+	if	0
+BANPTR	equ	RTP+1
+DKMP	equ	BANPTR+2
+DBBOOL	equ	DKMP+2		; Disk Boot Boolean
+DBDRV	equ	DBBOOL+1	; Disk Boot Drive Code
+FREQ	equ	DBDRV+1
+PLAT	equ	FREQ+1	; Hardware Platform
+DIOPLT	equ	PLAT+1
+VDUPLT	equ	DIOPLT+1
+ROMSIZ	equ	VDUPLT+1
+RAMSIZ	equ	ROMSIZ+2
+CRAM	equ	RAMSIZ+2
+DSKY	equ	CRAM+1	; Is Display/Keyboard Attached?
+UART	equ	DSKY+1	; Is UART Enabled?
+VDUEN	equ	UART+1
+FDEN	equ	VDUEN+1	; Is Floppy Disk Support Enabled
+FDTR	equ	FDEN+1	; Is Floppy Disk Error Tracing Enabled?
+FMED	equ	FDTR+1	; Floppy Disk Media Type
+FALT	equ	FMED+1	; Alternative Floppy Disk Media Type
+FAUT	equ	FALT+1	; Is Floppy Disk Automatic Sensing Enabled?
+IDEN	equ	FAUT+1	; Is On-Board IDE Support Enabled
+IDTR	equ	IDEN+1
+IDE8	equ	IDTR+1
+IDCP	equ	IDE8+1	; 1/13/2012 IDE Capacity
+PPEN	equ	IDCP+2	; Is PPIDE Support Enablned?
+PPTR	equ	PPEN+1	; Is PPIDE Tracing Enabled?
+PP8B	equ	PPTR+1
+PPCP	equ	PP8B+1	; 1/13/2012 PPIDE Capacity
+PSLW	equ	PPCP+2	; Use NOPs for recovery-time compensation 
+BTYP	equ	PSLW+1
+BTTO	equ	BTYP+1
+BTDF	equ	BTTO+1
+BAUD	equ	BTDF+1	; What is the Console Baud Rate
+
+; Only Valid if PLATFORM == PLT_N8
+CLKDIV	equ	BAUD+2		; Z180_CLKDIV
+MEMWAIT	equ	CLKDIV+1	; Z180_MEMWAIT
+IOWAIT	equ	MEMWAIT+1	; Z180_IOWAIT
+CNTLB0	equ	IOWAIT+1	; Z180_CNTLB0
+CNTLB1	equ	CNTLB0+1	; Z180_CNTLB1
+SDENABLE equ	CNTLB1+1
+SDTRACE	equ	SDENABLE+1
+SDCP	equ	SDTRACE+1	; 1/13/2012 SD Capacity
+VDPTR	equ	SDCP+2		; pointer to VDU Data
+FDPTR	equ	VDPTR+2		; pointer to FD  Data
+IDEPTR	equ	FDPTR+2		; pointer to IDE Data
+PPIPTR	equ	IDEPTR+2	; pointer to PPIDE_DATA Data
+PPIPTR2 equ	PPIPTR+2	; pointer to PPIDE.ASM DATA
+
+DEFIO	equ	PPIPTR2+2		; pointer to DEFIOBYTE
+LDRC	equ	DEFIO+1		; pointer to LDRCON
+DBGC	equ	LDRC+1		; pointer to DBGCON
+TTYP	equ	DBGC+1		; pointer to TERMTYPE
+REV	equ	TTYP+1		; subversion revision
+
+TMDT	equ	REV+2		; startup date and time
+ 
+PSDE	equ	TMDT+6		; prpsdenable
+PSDT	equ	PSDE+1		; prpsdtrace
+PSDC	equ	PSDT+1		; prpsdcapacity
+PRCE	equ	PSDC+2
+
+DSKM	equ	PRCE+1		; DM_ROM...
+
+DTSZ	equ	DSKM+1		; DATASIZE
+
+; LU0  LU1  LU2  LU3  LU4  LU5  LU6  LU7  LU8  LU9
+;  41   82   c3  104  145  186  1c7  208  249  286
+;
+; LU10 LU11 LU12 LU13 LU14 LU15 LU16
+;  2c7  308  349  38a  3cb  40c  44d
+
+LU0	equ	0	; 041h	; PPIDE1 offset for first   slice (default)
+LU1	equ	1	; 082h	; PPIDE1 offset for second  slice
+LU2	equ	2	; 0C3h	; PPIDE1 offset for third   slice
+LU3	equ	3	; 104h	; PPIDE1 offset for fourth  slice
+LU4	equ	4	; 145h	; PPIDE1 offset for fifth   slice
+LU5	equ	5	; 186h	; PPIDE1 offset for sixth   slice
+LU6	equ	6 	; 1c7h	; PPIDE1 offset for seventh slice
+LU7	equ	7	; 208h	; PPIDE1 offset for eighth  slice
+LU8	equ	8	; 249h	; PPIDE1 offset for ninth   slice
+LU9	equ	9 	; 286h	; PPIDE1 offset for tenth   slice
+LU10	equ	10
+LU11	equ	11
+LU12	equ	12
+LU13	equ	13
+LU14	equ	14
+LU15	equ	15
+LU16	equ	16
+LU17	equ	17
+LU18	equ	18
+LU19	equ	19
+LU20	equ	20
+LU21	equ	21
+LU22	equ	22
+LU23	equ	23
+LU24	equ	24
+LU25	equ	25
+LU26	equ	26	; 0x1a
+LU27	equ	27	; 0x1b (1Cth entry)
+
+	endif
+
+DRIVEB	equ	1	; 0=A, 1=B...
+
+
+setlu13	macro	offset
+	lxi	h,PPIPTR2	; set pointer to ppide.asm data
+	mov	e,m		; dereference pointer
+	inx	h
+	mov	d,m		; de -> ppide.asm data
+	xchg			; hl -> ppide.asm data
+	lxi	d,6		; offset to offset
+	dad	d		; hl -> offset in ppide.asm data
+	lxi	d,offset	; load caller's parameter in de
+	mov	m,e		; stuff LO offset byte into offset
+	inx	h		; bump ptr
+	mov	m,d		; stuff HO offset byte into offset
+	mvi	c,13		; BDOS DSKRESET 
+	call	5		; call BDOS
+	endm
+
+getlu13	macro	
+	lxi	h,PPIPTR2	; set pointer to ppide.asm data
+	mov	e,m		; dereference pointer
+	inx	h
+	mov	d,m		; de -> ppide.asm data
+	xchg			; hl -> ppide.asm data
+	lxi	d,6		; offset to offset
+	dad	d		; hl -> offset in ppide.asm data
+	mov	e,m		; pick up LO byte of offset
+	inx	h		; bump ptr
+	mov	d,m		; pick up HO byte of offset
+	xchg			; hl = offset
+	endm
+
+setlu14	macro	offset
+	lxi	h,PPIPTR2	; set pointer to ppide.asm data
+	mov	e,m		; dereference pointer
+	inx	h
+	mov	d,m		; de -> ppide.asm data
+	xchg			; hl -> ppide.asm data
+	lxi	d,6		; offset to offset
+	dad	d		; hl -> offset in ppide.asm data
+	lxi	d,offset	; load caller's parameter in de
+	mov	m,e		; stuff LO offset byte into offset
+	inx	h		; bump ptr
+	mov	m,d		; stuff HO offset byte into offset
+	mvi	c,13		; BDOS DSKRESET 
+	call	5		; call BDOS
+	endm
+
+getlu14	macro	
+	lxi	h,PPIPTR2	; set pointer to ppide.asm data
+	mov	e,m		; dereference pointer
+	inx	h
+	mov	d,m		; de -> ppide.asm data
+	xchg			; hl -> ppide.asm data
+	lxi	d,6		; offset to offset
+	dad	d		; hl -> offset in ppide.asm data
+	mov	e,m		; pick up LO byte of offset
+	inx	h		; bump ptr
+	mov	d,m		; pick up HO byte of offset
+	xchg			; hl = offset
+	endm
+
+setlu	macro	drive,slice
+	local	dontboth,msg,msg2
+	mvi	c,drive
+	call	BISELDSK
+	lxi	d,16
+	dad	d
+	mov	a,m
+	cpi	'L'
+	jnz	dontboth
+	inx	h
+	mov	a,m
+	cpi	'U'
+	jnz	dontboth
+	inx	h
+	mvi	a,slice
+	mov	m,a
+	print	msg
+	mvi	a,drive
+	adi	'A'
+	mov	e,a
+	mvi	c,2
+	call	BDOS
+	print	msg2
+	lxi	h,slice
+	call	pr$d$word
+	jmp	dontboth
+msg	db	CR,LF,'Drive $'
+msg2	db	': set to Logical Unit (slice) $'
+dontboth:
+	endm
+
+
+xluset	macro	
+	local	ldrive,lslice,dontboth,msg,msg2
+	; C = DRIVE
+	; A = SLICE
+	sta	lslice
+	mov	a,c
+	sta	ldrive
+
+	call	BISELDSK	; uses c parameter (drive)
+	lxi	d,16
+	dad	d
+	mov	a,m
+	cpi	'L'
+	jnz	dontboth
+	inx	h
+	mov	a,m
+	cpi	'U'
+	jnz	dontboth
+	inx	h
+	lda	lslice
+	mov	m,a		; put slice into CURRENT
+
+;	print	msg
+;	lda	ldrive
+;	adi	'A'
+;	mov	e,a
+;	mvi	c,2
+;	call	BDOS
+;	print	msg2
+;	lda	lslice
+;	mov	l,a
+;	mvi	h,0
+;	call	pr$d$word
+
+	jmp	dontboth
+msg	db	CR,LF,'Drive $'
+msg2	db	': set to Logical Unit (slice) $'
+ldrive	db	0
+lslice	db	0
+dontboth:
+	endm
+
+
+
+
+
+
+
+hdrlit		macro	ptr,val,msg
+		local	notval
+		lxi	h,ptr
+		mvi	a,val
+		cmp	m
+		jnz	notval
+		print	msg
+notval:
+		endm
+
+
+hdrbool		macro	ptr,tmsg,fmsg
+		local	itstrue,itsfalse,imdone
+		enter
+		lxi	h,ptr
+		mov	a,m
+		cpi	TRUE
+	jnz	itsfalse
+		lxi	d,tmsg
+		jmp	imdone
+itsfalse: 	lxi	d,fmsg	
+imdone:		mvi	c,PRINTSTR
+		call	BDOS
+		leave
+		endm
+
+hdrbyte		macro	ptr,msg
+		enter
+		mvi	c,PRINTSTR
+		lxi	d,msg
+		call BDOS
+		lxi	h,ptr
+		mov	a,m
+		call	pr$h$byte
+
+		conout	'('
+		mov	e,m
+		mov	d,0
+		xchg
+		call	pr$d$word
+		conout	')'
+
+		leave
+		endm
+
+hdrpbyte	macro	ptr,msg
+		enter
+		mvi	c,PRINTSTR
+		lxi	d,msg
+		call	BDOS
+		lxi	h,PTR
+		mov	e,m
+		inx h
+		mov d,m
+		xchg
+		mov a,m
+		call	pr$h$byte
+
+;		conout	' '
+		conout	'('
+		mov	e,m
+		mov	d,0
+		xchg
+		call	pr$d$word
+		conout	')'
+		leave
+		endm
+
+hdrword		macro	ptr,msg
+		enter
+
+		mvi	c,PRINTSTR
+		lxi	d,msg
+		call BDOS
+
+		lxi	h,ptr
+		inx	h
+		mov	a,m
+		call	pr$h$byte
+
+		lxi	h,ptr
+		mov	a,m
+		call	pr$h$byte
+
+		conout	'('
+		lxi	h,ptr
+		mov	e,m
+		inx 	h
+		mov	d,m
+		xchg
+		call	pr$d$word
+		conout	')'
+		leave
+		endm
+
+syncerr	macro
+		print syncmsg
+		exit		
+		endm
+
+hdrvalid	macro 
+		local byte1ok,byte2ok
+	   	enter
+	   	lxi h,CFDA
+		mov a,m
+		cpi 0DAh
+		jz byte1ok
+		syncerr
+byte1ok:
+		inx h
+		mov al,m
+		cpi 0CFh
+		jz	byte2ok
+		syncerr
+byte2ok:
+		leave 
+		endm
+
+; eof - bioshdr.lib
+

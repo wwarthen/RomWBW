@@ -1,0 +1,281 @@
+"TASM 8048 Assembler.    "
+/****************************************************************************
+/* $Id: tasm48.tab 1.1 1993/07/31 01:12:40 toma Exp $
+/****************************************************************************
+/* This is the instruction set definition table for the 8048 version of TASM.
+/*      Thomas N. Anderson, Speech Technology Incorported, June 1987.
+/*  CLASS bits are assigned as follows:
+/*      bit 0   = 8X48, 8035, 8039, 8049 instructions
+/*      bit 1   = 8X41A
+/*      bit 2   = 8022
+/*      bit 3   = 8021
+/*  Note that some of the base instructions should be disabled for the
+/*    8041, 8022, and 8021, but are not.
+/* 
+/*INSTR ARGS OPCODE BYTES MOD CLASS SHIFT OR */
+/*-------------------------------------------*/
+ADD  A,R0   68 1 NOP 1
+ADD  A,R1   69 1 NOP 1
+ADD  A,R2   6A 1 NOP 1
+ADD  A,R3   6B 1 NOP 1
+ADD  A,R4   6C 1 NOP 1
+ADD  A,R5   6D 1 NOP 1
+ADD  A,R6   6E 1 NOP 1
+ADD  A,R7   6F 1 NOP 1
+ADD  A,@R0  60 1 NOP 1
+ADD  A,@R1  61 1 NOP 1
+ADD  A,#*   03 2 NOP 1
+
+ADDC A,R0   78 1 NOP 1
+ADDC A,R1   79 1 NOP 1
+ADDC A,R2   7A 1 NOP 1
+ADDC A,R3   7B 1 NOP 1
+ADDC A,R4   7C 1 NOP 1
+ADDC A,R5   7D 1 NOP 1
+ADDC A,R6   7E 1 NOP 1
+ADDC A,R7   7F 1 NOP 1
+ADDC A,@R0  70 1 NOP 1
+ADDC A,@R1  71 1 NOP 1
+ADDC A,#*   13 2 NOP 1
+
+ANL  A,R0   58 1 NOP 1
+ANL  A,R1   59 1 NOP 1
+ANL  A,R2   5A 1 NOP 1
+ANL  A,R3   5B 1 NOP 1
+ANL  A,R4   5C 1 NOP 1
+ANL  A,R5   5D 1 NOP 1
+ANL  A,R6   5E 1 NOP 1
+ANL  A,R7   5F 1 NOP 1
+ANL  A,@R0  50 1 NOP 1
+ANL  A,@R1  51 1 NOP 1
+ANL  A,#*   53 2 NOP 1
+ANL  BUS,#* 98 2 NOP 1
+ANL  P1,#*  99 2 NOP 1
+ANL  P2,#*  9A 2 NOP 1
+
+ANLD P4,A   9C 1 NOP 1
+ANLD P5,A   9D 1 NOP 1
+ANLD P6,A   9E 1 NOP 1
+ANLD P7,A   9F 1 NOP 1
+
+CALL *      14 2 JMP 1
+
+CLR  A      27 1 NOP 1
+CLR  C      97 1 NOP 1
+CLR  F0     85 1 NOP 1
+CLR  F1     A5 1 NOP 1
+
+CPL  A      37 1 NOP 1
+CPL  C      A7 1 NOP 1
+CPL  F0     95 1 NOP 1
+CPL  F1     B5 1 NOP 1
+
+DA   A      57 1 NOP 1
+
+DEC  A      07 1 NOP 1
+DEC  R0     C8 1 NOP 1
+DEC  R1     C9 1 NOP 1
+DEC  R2     CA 1 NOP 1
+DEC  R3     CB 1 NOP 1
+DEC  R4     CC 1 NOP 1
+DEC  R5     CD 1 NOP 1
+DEC  R6     CE 1 NOP 1
+DEC  R7     CF 1 NOP 1
+
+DIS  I      15 1 NOP 1
+DIS  TCNTI  35 1 NOP 1
+
+DJNZ R0,*   E8 2 JTHISPAGE 1
+DJNZ R1,*   E9 2 JTHISPAGE 1
+DJNZ R2,*   EA 2 JTHISPAGE 1
+DJNZ R3,*   EB 2 JTHISPAGE 1
+DJNZ R4,*   EC 2 JTHISPAGE 1
+DJNZ R5,*   ED 2 JTHISPAGE 1
+DJNZ R6,*   EE 2 JTHISPAGE 1
+DJNZ R7,*   EF 2 JTHISPAGE 1
+
+EN   DMA    E5 1 NOP 2  ;8041
+EN   FLAGS  F5 1 NOP 2  ;8041
+EN   I      05 1 NOP 1
+EN   TCNTI  25 1 NOP 1
+ENT0 CLK    75 1 NOP 1
+
+IN   A,DBB  22 1 NOP 2  ;8041
+IN   A,P0   08 1 NOP 8  ;8021
+IN   A,P1   09 1 NOP 1
+IN   A,P2   0A 1 NOP 1
+
+INC  A      17 1 NOP 1
+INC  R0     18 1 NOP 1
+INC  R1     19 1 NOP 1
+INC  R2     1A 1 NOP 1
+INC  R3     1B 1 NOP 1
+INC  R4     1C 1 NOP 1
+INC  R5     1D 1 NOP 1
+INC  R6     1E 1 NOP 1
+INC  R7     1F 1 NOP 1
+INC  @R0    10 1 NOP 1
+INC  @R1    11 1 NOP 1
+
+INS  A,BUS  08 1 NOP 1
+
+JB0  *      12 2 JTHISPAGE 1
+JB1  *      32 2 JTHISPAGE 1
+JB2  *      52 2 JTHISPAGE 1
+JB3  *      72 2 JTHISPAGE 1
+JB4  *      92 2 JTHISPAGE 1
+JB5  *      B2 2 JTHISPAGE 1
+JB6  *      D2 2 JTHISPAGE 1
+JB7  *      F2 2 JTHISPAGE 1
+
+JMP  *      04 2 JMP 1
+
+JC   *      F6 2 JTHISPAGE 1
+JF0  *      B6 2 JTHISPAGE 1
+JF1  *      76 2 JTHISPAGE 1
+JNC  *      E6 2 JTHISPAGE 1
+JNI  *      86 2 JTHISPAGE 1
+JNIBF *     D6 2 JTHISPAGE 2  ;8041
+JNT0 *      26 2 JTHISPAGE 1
+JNT1 *      46 2 JTHISPAGE 1
+JNZ  *      96 2 JTHISPAGE 1
+JOBF *      86 2 JTHISPAGE 2  ;8041
+JTF  *      16 2 JTHISPAGE 1
+JT0  *      36 2 JTHISPAGE 1
+JT1  *      56 2 JTHISPAGE 1
+JZ   *      C6 2 JTHISPAGE 1
+
+JMPP @A     B3 1 NOP 1
+
+MOV  A,PSW  C7 1 NOP 1
+MOV  A,R0   F8 1 NOP 1
+MOV  A,R1   F9 1 NOP 1
+MOV  A,R2   FA 1 NOP 1
+MOV  A,R3   FB 1 NOP 1
+MOV  A,R4   FC 1 NOP 1
+MOV  A,R5   FD 1 NOP 1
+MOV  A,R6   FE 1 NOP 1
+MOV  A,R7   FF 1 NOP 1
+MOV  A,T    42 1 NOP 1
+MOV  A,@R0  F0 1 NOP 1
+MOV  A,@R1  F1 1 NOP 1
+MOV  A,#*   23 2 NOP 1
+MOV  PSW,A  D7 1 NOP 1
+MOV  R0,A   A8 1 NOP 1
+MOV  R1,A   A9 1 NOP 1
+MOV  R2,A   AA 1 NOP 1
+MOV  R3,A   AB 1 NOP 1
+MOV  R4,A   AC 1 NOP 1
+MOV  R5,A   AD 1 NOP 1
+MOV  R6,A   AE 1 NOP 1
+MOV  R7,A   AF 1 NOP 1
+MOV  R0,#*  B8 2 NOP 1
+MOV  R1,#*  B9 2 NOP 1
+MOV  R2,#*  BA 2 NOP 1
+MOV  R3,#*  BB 2 NOP 1
+MOV  R4,#*  BC 2 NOP 1
+MOV  R5,#*  BD 2 NOP 1
+MOV  R6,#*  BE 2 NOP 1
+MOV  R7,#*  BF 2 NOP 1
+MOV  STS,A  90 1 NOP 2  ;8041
+MOV  T,A    62 1 NOP 1
+MOV  @R0,A  A0 1 NOP 1
+MOV  @R1,A  A1 1 NOP 1
+MOV  @R0,#* B0 2 NOP 1
+MOV  @R1,#* B1 2 NOP 1
+
+MOVD A,P4   0C 1 NOP 1
+MOVD A,P5   0D 1 NOP 1
+MOVD A,P6   0E 1 NOP 1
+MOVD A,P7   0F 1 NOP 1
+MOVD P4,A   3C 1 NOP 1
+MOVD P5,A   3D 1 NOP 1
+MOVD P6,A   3E 1 NOP 1
+MOVD P7,A   3F 1 NOP 1
+
+MOVP  A,@A  A3 1 NOP 1
+MOVP3 A,@A  E3 1 NOP 1
+
+MOVX A,@R0  80 1 NOP 1
+MOVX A,@R1  81 1 NOP 1
+MOVX @R0,A  90 1 NOP 1
+MOVX @R1,A  91 1 NOP 1
+
+NOP  ""     00 1 NOP 1
+
+ORL  A,R0   48 1 NOP 1
+ORL  A,R1   49 1 NOP 1
+ORL  A,R2   4A 1 NOP 1
+ORL  A,R3   4B 1 NOP 1
+ORL  A,R4   4C 1 NOP 1
+ORL  A,R5   4D 1 NOP 1
+ORL  A,R6   4E 1 NOP 1
+ORL  A,R7   4F 1 NOP 1
+ORL  A,@R0  40 1 NOP 1
+ORL  A,@R1  41 1 NOP 1
+ORL  A,#*   43 2 NOP 1
+ORL  BUS,#* 88 2 NOP 1
+ORL  P1,#*  89 2 NOP 1
+ORL  P2,#*  8A 2 NOP 1
+
+ORLD P4,A   8C 1 NOP 1
+ORLD P5,A   8D 1 NOP 1
+ORLD P6,A   8E 1 NOP 1
+ORLD P7,A   8F 1 NOP 1
+
+OUTL BUS,A  02 1 NOP 1
+OUT  DBB,A  02 1 NOP 2  ;8041
+OUTL P0,A   90 1 NOP 8  ;8021
+OUTL P1,A   39 1 NOP 1
+OUTL P2,A   3A 1 NOP 1
+
+RAD  ""     80 1 NOP 4  ;8022
+
+RET  ""     83 1 NOP 1
+RETI ""     93 1 NOP 4  ;8022
+RETR ""     93 1 NOP 1
+
+RL   A      E7 1 NOP 1
+RLC  A      F7 1 NOP 1
+RR   A      77 1 NOP 1
+RRC  A      67 1 NOP 1
+
+SEL  AN0    85 1 NOP 4  ;8022
+SEL  AN1    95 1 NOP 4  ;8022
+SEL  MB0    E5 1 NOP 1
+SEL  MB1    F5 1 NOP 1
+SEL  RB0    C5 1 NOP 1
+SEL  RB1    D5 1 NOP 1
+
+STOP TCNT   65 1 NOP 1
+STRT CNT    45 1 NOP 1
+STRT T      55 1 NOP 1
+
+SWAP A      47 1 NOP 1
+
+XCH  A,R0   28 1 NOP 1
+XCH  A,R1   29 1 NOP 1
+XCH  A,R2   2A 1 NOP 1
+XCH  A,R3   2B 1 NOP 1
+XCH  A,R4   2C 1 NOP 1
+XCH  A,R5   2D 1 NOP 1
+XCH  A,R6   2E 1 NOP 1
+XCH  A,R7   2F 1 NOP 1
+XCH  A,@R0  20 1 NOP 1
+XCH  A,@R1  21 1 NOP 1
+
+XCHD A,@R0  30 1 NOP 1
+XCHD A,@R1  31 1 NOP 1
+
+XRL  A,R0   D8 1 NOP 1
+XRL  A,R1   D9 1 NOP 1
+XRL  A,R2   DA 1 NOP 1
+XRL  A,R3   DB 1 NOP 1
+XRL  A,R4   DC 1 NOP 1
+XRL  A,R5   DD 1 NOP 1
+XRL  A,R6   DE 1 NOP 1
+XRL  A,R7   DF 1 NOP 1
+XRL  A,@R0  D0 1 NOP 1
+XRL  A,@R1  D1 1 NOP 1
+XRL  A,#*   D3 2 NOP 1
+
