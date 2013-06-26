@@ -1,0 +1,22 @@
+; ffsetlu.lib 2/12/2012 dwg - review for use in superfmt
+; ffsetlu.lib 1/24/2012 dwg - 
+
+; enter with desired LU in A reg
+ffsetlu	macro	
+	enter
+	push	psw
+	mvi	c,RETCURR
+	call	BDOS
+	mov	c,a
+	call	BISELDSK	; uses c parameter (drive)
+	lxi	d,16+2
+	dad	d
+	pop	psw
+	mov	m,a		; put slice into CURRENT
+	mvi	c,13
+	call	BDOS
+	leave
+	endm
+
+; eof - ffsetlu
+

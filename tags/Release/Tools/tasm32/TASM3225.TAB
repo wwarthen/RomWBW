@@ -1,0 +1,456 @@
+"TASM TMS32025 Assembler."
+/****************************************************************************
+/* $Id: tasm3225.tab 1.2 1997/09/28 22:16:44 toma Exp $
+/****************************************************************************
+/* This is the instruction set definition table 
+/*   for the TMS32025 version of TASM.
+/*     Bob Stricklin 
+/*
+/*  See TASM manual for info on table structure.
+/* 
+/*INSTR ARGS OPCODE BYTES MOD CLASS SHIFT MASK */
+/*-------------------------------------------*/
+
+/* Generate opcodes high byte first */
+.MSFIRST
+/* Don't use '*' as the wild card since it is used for indirect addressing */
+/* In this table '@' is the wild card indicating where expression may appear*/
+.ALTWILD
+.WORDADDRS
+.NOARGSHIFT
+
+/* Addressing mode definitions.
+/* Value gets OR'd in to the opcode if the
+/* addressing mode is recognized
+/* Note: no special classes are defined, so if this
+/* table is used for TMS32020, invalid instructions 
+/* will not result in errors (no BR0+/- addressing mode (for example)
+/* The ! character can match any of the patterns in the REGSET:
+.REGSET *BR0+   F0 1
+.REGSET *BR0-   C0 1
+.REGSET *0+     E0 1
+.REGSET *0-     D0 1
+.REGSET *+      A0 1
+.REGSET *-      90 1
+.REGSET *       80 1
+
+
+
+
+ABS  ""         CE1B 2 NOP  1
+
+ADD  !,@,@      0088 2 T1   1 8 0F00
+ADD  !,@        0080 2 T1   1 8 0F00
+ADD  !          0080 2 NOP  1
+ADD  @,@        0000 2 TDMA 1 8 0F00
+ADD  @          0000 2 T1   1 0 007F
+
+ADDC !,@        4388 2 T1   1 0 0007
+ADDC !          4380 2 NOP  1
+ADDC @          4300 2 T1   1 0 007F
+
+ADDH !,@        4888 2 T1   1 0 0007
+ADDH !          4880 2 NOP  1
+ADDH @          4800 2 T1   1 0 007F
+
+ADDK @          CC00 2 T1   1 0 00FF   ;8 bit constant
+
+ADDS !,@        4988 2 T1   1 0 0007
+ADDS !          4980 2 NOP  1
+ADDS @          4900 2 T1   1 0 007F
+
+ADDT !,@        4A88 2 T1   1 0 0007
+ADDT !          4A80 2 NOP  1
+ADDT @          4A00 2 T1   1 0 007F
+
+ADLK @,@        D002 4 TLK  1 8 0F00
+ADLK @          D002 4 TLK  1 
+
+ADRK @          7E00 2 T1   1 0 00FF  ;8 bit constant
+
+AND  !,@        4E88 2 T1   1 0 0007
+AND  !          4E80 2 NOP  1
+AND  @          4E00 2 T1   1 0 007F
+
+ANDK @,@        D004 4 TLK  1 8 0F00
+ANDK @          D004 4 TLK  1
+
+APAC ""         CE15 2 NOP  1
+
+B    @,!,@      FF88 4 TLK  1 0 07
+B    @,!        FF80 4 SWAP 1
+B    @          FF80 4 SWAP 1
+
+BACC ""         CE25 2 NOP  1
+
+BANZ @,!,@      FB88 4 TLK  1 0 07
+BANZ @,!        FB80 4 SWAP 1
+BANZ @          FB90 4 SWAP 1       ; Default to the equivalent of 
+                                    ; BANZ loop,*-  (as per spec) for
+                                    ; TMS32010 compatibility.
+
+BBNZ @,!,@      F988 4 TLK  1 0 07
+BBNZ @,!        F980 4 SWAP 1
+BBNZ @          F980 4 SWAP 1
+
+BBZ  @,!,@      F888 4 TLK  1 0 07
+BBZ  @,!        F880 4 SWAP 1
+BBZ  @          F880 4 SWAP 1
+
+BC   @,!,@      5E88 4 TLK  1 0 07
+BC   @,!        5E80 4 SWAP 1
+BC   @          5E80 4 SWAP 1
+
+BGEZ @,!,@      F488 4 TLK  1 0 07
+BGEZ @,!        F480 4 SWAP 1
+BGEZ @          F480 4 SWAP 1
+
+BGZ  @,!,@      F188 4 TLK  1 0 07
+BGZ  @,!        F180 4 SWAP 1
+BGZ  @          F180 4 SWAP 1
+
+BIOZ @,!,@      FA88 4 TLK  1 0 07
+BIOZ @,!        FA80 4 SWAP 1
+BIOZ @          FA80 4 SWAP 1
+
+BIT  !,@,@      9088 2 T1   1 8 0F00 ;8 bit shift
+BIT  !,@        9080 2 T1   1 8 0F00
+BIT  @,@        9000 2 TDMA 1 8 0F00
+
+BITT !,@        5788 2 T1   1 0 07
+BITT !          5780 2 T1   1
+BITT @          5700 2 T1   1 0 7F
+
+BLEZ @,!,@      F288 4 TLK  1 0 07
+BLEZ @,!        F280 4 SWAP 1
+BLEZ @          F280 4 SWAP 1
+
+BLKD @,!,@      FD88 4 TLK  1 0 07
+BLKD @,!        FD80 4 TLK  1 0 07
+BLKD @,@        FD00 4 TLK  1 0 FF
+
+BLKP @,!,@      FC88 4 TLK  1 0 07
+BLKP @,!        FC80 4 TLK  1 0 07
+BLKP @,@        FC00 4 TLK  1 0 FF
+
+BLZ  @,!,@      F388 4 TLK  1 0 07
+BLZ  @,!        F380 4 SWAP 1
+BLZ  @          F380 4 SWAP 1
+
+BNC  @,!,@      5F88 4 TLK  1 0 07
+BNC  @,!        5F80 4 SWAP 1
+BNC  @          5F80 4 SWAP 1
+
+BNV  @,!,@      F788 4 TLK  1 0 07
+BNV  @,!        F780 4 SWAP 1
+BNV  @          F780 4 SWAP 1
+
+BNZ  @,!,@      F588 4 TLK  1 0 07
+BNZ  @,!        F580 4 SWAP 1
+BNZ  @          F580 4 SWAP 1
+
+BV   @,!,@      F088 4 TLK  1 0 07
+BV   @,!        F080 4 SWAP 1
+BV   @          F080 4 SWAP 1
+
+BZ   @,!,@      F688 4 TLK  1 0 07
+BZ   @,!        F680 4 SWAP 1
+BZ   @          F680 4 SWAP 1
+
+CALA ""         CE24 2 NOP  1
+
+CALL @,!,@      FE88 4 TLK  1 0 07
+CALL @,!        FE80 4 SWAP 1
+CALL @          FE80 4 SWAP 1
+
+CMPL ""         CE27 2 NOP  1
+
+CMPR @          CE50 2 T1   1 0 03 ;2 BIT CONTANT
+
+CNFD ""         CE04 2 NOP  1
+
+CNFP ""         CE05 2 NOP  1
+
+CONF ""         CE3C 2 T1   4 0 03 ; c26 ONLY
+            
+DINT ""         CE01 2 NOP  1
+
+DMOV !,@        5688 2 T1   1 0 07
+DMOV !          5680 2 NOP  1      
+DMOV @          5600 2 T1   1 0 007F
+
+EINT ""         CE00 2 NOP  1
+
+FORT @          CE0E 2 T1   1 0 01
+
+IDLE ""         CE1F 2 NOP  1
+
+IN   !,@,@      8088 2 T1   1 8 0F00
+IN   !,@        8080 2 T1   1 8 0F00
+IN   @,@        8000 2 TDMA 1 8 0F00
+
+LAC  !,@,@      2088 2 T1   1 8 0F00
+LAC  !,@        2080 2 T1   1 8 0F00
+LAC  !          2080 2 NOP  1
+LAC  @,@        2000 2 TDMA 1 8 0F00
+LAC  @          2000 2 T1   1 0 007F
+
+LACK @          CA00 2 T1   1 0 00FF    ;tested for -25
+
+LACT !,@        4288 2 T1   1 0 07
+LACT !          4280 2 NOP  1     
+LACT @          4200 2 T1   1 0 007F
+
+LALK @,@        D001 4 TLK  1 8 0F00
+LALK @          D001 4 TLK  1 
+
+LAR  @,!,@      3088 2 TAR  1 0 07
+LAR  @,!        3080 2 TAR  1 0 07
+LAR  @,@        3000 2 TAR  1 0 7F
+
+LARK @,@        C000 2 TAR  1 0 00FF
+LARP @          5588 2 T1   1 0 0007
+
+LDP  !,@        5288 2 T1   1 0 07
+LDP  !          5280 2 NOP  1     
+LDP  @          5200 2 T1   1 0 007F
+
+LDPK @          C800 2 T1   1 0 01FF      ;9 bit constant
+
+LPH  !,@        5388 2 T1   1 0 07
+LPH  !          5380 2 NOP  1      
+LPH  @          5300 2 T1   1 0 7F
+
+LRLK @,@        D000 4 T5   1 8 0700  ;<arp>, <const16>
+
+LST  !,@        5088 2 T1   1 0 07
+LST  !          5080 2 NOP  1     
+LST  @          5000 2 T1   1 0 7F
+
+LST1 !,@        5188 2 T1   1 0 07
+LST1 !          5180 2 NOP  1     
+LST1 @          5100 2 T1   1 0 7F
+
+LT   !,@        3C88 2 T1   1 0 07
+LT   !          3C80 2 NOP  1     
+LT   @          3C00 2 T1   1 0 7F
+
+LTA  !,@        3D88 2 T1   1 0 07
+LTA  !          3D80 2 NOP  1     
+LTA  @          3D00 2 T1   1 0 7F
+
+LTD  !,@        3F88 2 T1   1 0 07
+LTD  !          3F80 2 NOP  1     
+LTD  @          3F00 2 T1   1 0 7F
+
+LTP  !,@        3E88 2 T1   1 0 07
+LTP  !          3E80 2 NOP  1     
+LTP  @          3E00 2 T1   1 0 7F
+
+LTS  !,@        5B88 2 T1   1 0 07
+LTS  !          5B80 2 NOP  1     
+LTS  @          5B00 2 T1   1 0 7F
+
+MAC  @,!,@      5D88 4 TLK  1 0 07
+MAC  @,!        5D80 4 TLK  1 0 07
+MAC  @,@        5D00 4 TLK  1 0 7F
+
+MACD @,!,@      5C88 4 TLK  1 0 07
+MACD @,!        5C80 4 TLK  1 0 07
+MACD @,@        5C00 4 TLK  1 0 7F
+
+MAR  !,@        5588 2 T1   1 0 07
+MAR  !          5580 2 NOP  1     
+MAR  @          5500 2 T1   1 0 7F
+
+MPY  !,@        3888 2 T1   1 0 07
+MPY  !          3880 2 NOP  1     
+MPY  @          3800 2 T1   1 0 7F
+
+MPYA !,@        3A88 2 T1   1 0 07
+MPYA !          3A80 2 NOP  1     
+MPYA @          3A00 2 T1   1 0 7F
+
+MPYK @          A000 2 T1   1 0 1FFF  ;13 BIT CONTSTANT
+
+MPYS !,@        3B88 2 T1   1 0 07
+MPYS !          3B80 2 NOP  1     
+MPYS @          3B00 2 T1   1 0 7F
+
+MPYU !,@        CF88 2 T1   1 0 07
+MPYU !          CF80 2 NOP  1     
+MPYU @          CF00 2 T1   1 0 7F
+
+NEG  ""         CE23 2 NOP  1
+
+NOP  ""         5500 2 NOP  1
+
+NORM !          CE82 2 NOP  1       ; C25
+NORM ""         CEA2 2 NOP  1       ; C20
+
+OR   !,@        4D88 2 T1   1 0 07
+OR   !          4D80 2 NOP  1     
+OR   @          4D00 2 T1   1 0 7F
+
+ORK  @,@        D005 4 TLK  1 8 0F00
+ORK  @          D005 4 TLK  1
+
+OUT  !,@,@      E088 2 T1   1 8 0F00
+OUT  !,@        E080 2 T1   1 8 0F00
+OUT  @,@        E000 2 TDMA 1 8 0F00
+
+PAC  ""         CE14 2 NOP  1
+
+POP  ""         CE1D 2 NOP  1
+
+POPD !,@        7A88 2 T1   1 0 07
+POPD !          7A80 2 NOP  1     
+POPD @          7A00 2 T1   1 0 7F
+
+PSHD !,@        5488 2 T1   1 0 07
+PSHD !          5480 2 NOP  1     
+PSHD @          5400 2 T1   1 0 7F
+
+PUSH ""         CE1C 2 NOP  1
+RC   ""         CE30 2 NOP  1
+RET  ""         CE26 2 NOP  1
+RFSM ""         CE36 2 NOP  1
+RHM  ""         CE38 2 NOP  1
+ROL  ""         CE34 2 NOP  1
+ROR  ""         CE35 2 NOP  1
+ROVM ""         CE02 2 NOP  1
+
+RPT  !,@        4B88 2 T1   1 0 07
+RPT  !          4B80 2 NOP  1     
+RPT  @          4B00 2 T1   1 0 7F
+
+RPTK @          CB00 2 T1   1 0 00FF   ;8 bit constant
+
+RSXM ""         CE06 2 NOP  1
+RTC  ""         CE32 2 NOP  1
+RTXM ""         CE20 2 NOP  1
+RXF  ""         CE0C 2 NOP  1
+
+/* shift count for SACH can only be 0,1, or 4 FOR 32020
+/* 0-7 FOR 320c25.  For now, build the table specifically for the 320C25
+SACH !,@,@      6888 2 T1   1 8 0700
+SACH !,@        6880 2 T1   1 8 0700
+SACH !          6880 2 NOP  1
+SACH @,@        6800 2 TDMA 1 8 0700
+SACH @          6800 2 T1   1 0 007F
+
+SACL !,@,@      6088 2 T1   1 8 0700
+SACL !,@        6080 2 T1   1 8 0700
+SACL !          6080 2 NOP  1
+SACL @,@        6000 2 TDMA 1 8 0700
+SACL @          6000 2 T1   1 0 007F
+
+SAR  @,!,@      7088 2 TAR  1 0 0007
+SAR  @,!        7080 2 TAR  1 0 0007
+SAR  @,@        7000 2 TAR  1 0 007F
+
+SBLK @,@        D003 4 TLK  1 8 0F00
+SBLK @          D003 4 TLK  1
+
+SBRK @          7F00 2 T1   1 0 00FF
+
+SC   ""         CE31 2 NOP  1
+SFL  ""         CE18 2 NOP  1
+SFR  ""         CE19 2 NOP  1
+SFSM ""         CE37 2 NOP  1
+SHM  ""         CE39 2 NOP  1
+SOVM ""         CE03 2 NOP  1
+SPAC ""         CE16 2 NOP  1
+
+SPH  !,@        7D88 2 T1   1 0 07
+SPH  !          7D80 2 NOP  1     
+SPH  @          7D00 2 T1   1 0 7F
+
+SPL  !,@        7C88 2 T1   1 0 07
+SPL  !          7C80 2 NOP  1     
+SPL  @          7C00 2 T1   1 0 7F
+
+SPM  @          CE08 2 T1   1 0 03  ;2 bit constant
+
+SQRA !,@        3988 2 T1   1 0 07
+SQRA !          3980 2 NOP  1     
+SQRA @          3900 2 T1   1 0 7F
+
+SQRS !,@        5A88 2 T1   1 0 07
+SQRS !          5A80 2 NOP  1     
+SQRS @          5A00 2 T1   1 0 7F
+
+SST  !,@        7888 2 T1   1 0 07
+SST  !          7880 2 NOP  1     
+SST  @          7800 2 T1   1 0 7F
+
+SST1 !,@        7988 2 T1   1 0 07
+SST1 !          7980 2 NOP  1     
+SST1 @          7900 2 T1   1 0 7F
+
+SSXM ""         CE07 2 NOP  1
+STC  ""         CE33 2 NOP  1
+STXM ""         CE21 2 NOP  1
+
+
+SUB  !,@,@      1088 2 T1   1 8 0F00
+SUB  !,@        1080 2 T1   1 8 0F00
+SUB  !          1080 2 NOP  1
+SUB  @,@        1000 2 TDMA 1 8 0F00
+SUB  @          1000 2 T1   1 0 007F
+
+SUBB !,@        4F88 2 T1   1 0 07
+SUBB !          4F80 2 NOP  1     
+SUBB @          4F00 2 T1   1 0 7F
+
+SUBC !,@        4788 2 T1   1 0 07
+SUBC !          4780 2 NOP  1     
+SUBC @          4700 2 T1   1 0 7F
+
+SUBH !,@        4488 2 T1   1 0 07
+SUBH !          4480 2 NOP  1     
+SUBH @          4400 2 T1   1 0 7F
+
+SUBK @          CD00 2 T1   1 0 00FF
+
+SUBS !,@        4588 2 T1   1 0 07
+SUBS !          4580 2 NOP  1     
+SUBS @          4500 2 T1   1 0 7F
+
+SUBT !,@        4688 2 T1   1 0 07
+SUBT !          4680 2 NOP  1     
+SUBT @          4600 2 T1   1 0 7F
+
+SXF  ""         CE0D 2 NOP  1
+
+TBLR !,@        5888 2 T1   1 0 07
+TBLR !          5880 2 NOP  1     
+TBLR @          5800 2 T1   1 0 7F
+
+TBLW !,@        5988 2 T1   1 0 07
+TBLW !          5980 2 NOP  1     
+TBLW @          5900 2 T1   1 0 7F
+
+TRAP ""         CE1E 2 NOP  1
+
+XOR  !,@        4C88 2 T1   1 0 07
+XOR  !          4C80 2 NOP  1     
+XOR  @          4C00 2 T1   1 0 7F
+
+XORK @,@        D006 4 TLK  1 8 0F00
+XORK @          D006 4 TLK  1 
+
+ZAC  ""         CA00 2 NOP  1
+
+ZALH !,@        4088 2 T1   1 0 07
+ZALH !          4080 2 NOP  1     
+ZALH @          4000 2 T1   1 0 7F
+
+ZALR !,@        7B88 2 T1   1 0 07
+ZALR !          7B80 2 NOP  1     
+ZALR @          7B00 2 T1   1 0 7F
+
+ZALS !,@        4188 2 T1   1 0 07
+ZALS !          4180 2 NOP  1     
+ZALS @          4100 2 T1   1 0 7F
+

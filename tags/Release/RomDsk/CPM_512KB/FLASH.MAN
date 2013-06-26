@@ -1,0 +1,35 @@
+NAME
+	flash - in-situ 29F040 flash ROM programmer for N8VEM, Zeta and N8 computers
+SYNOPSIS
+	flashz
+	flashn8
+DESCRIPTION
+	The flashz and flashn8 erase and program the FLASH ROM chip from an
+	image file.  flashz is used for the N8VEM Z80-SBC and Zeta computers.
+	flashn8 is used with the N8 home computer.  Both function the same
+	except in the way memory is addressed.
+
+	flash expects a 512k file in the same directory containing the image
+	that will be programmed into the ROM.  This file must have the 
+	unimaginative filename of ROM.IMG.  The whole process of erasing and
+	programming the ROM takes less than a minute - far less than the time
+	taken to upload your new image.
+
+	This program is only suitable for 29F040 512k FLASH ROMs.
+
+	Assemble with TASM using the command
+	tasm -t80 -g3 flashz.asm flashz.com
+	tasm -t80 -g3 flashn8.asm flashn8.com
+
+JUMPERS
+	The following jumpers must be in place on the boards to allow the 
+	29F040 to be programmed.
+	For the N8VEM Z8-SBC MK-II: K1 1-2, K6 2-3, K8 2-3
+	For the N8: K3 1-2, K4 2-3, K5 2-3
+	For the Zeta, no jumpers need (or can) be set.
+
+AUTHOR
+	Written by David Giles so he doesn't have to open the box his Zeta 
+	lives in so often.  Reports to N8VEM group or vk5dg@internode.on.net
+
+

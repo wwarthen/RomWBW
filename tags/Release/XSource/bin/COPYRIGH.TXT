@@ -1,0 +1,62 @@
+The Telemark Assembler Copyright Notification
+
+The files on this disk are:
+Copyright 1985-1993 by Speech Technology Incorporated, all rights reserved.
+Copyright 1998,1999,2001 by Thomas N. Anderson       , all rights reserved.
+
+The following files on this disk may be freely copied and shared with others:
+
+TASM.EXE          - TASM Assembler, executable
+TASM48.TAB        - 8048 Instruction definition table
+TASM51.TAB        - 8051 Instruction definition table
+TASM65.TAB        - 6502 Instruction definition table
+TASM85.TAB        - 8085 Instruction definition table
+TASM80.TAB        - Z80  Instruction definition table
+TASM05.TAB        - 6805 Instruction definition table
+TASM68.TAB        - 6800/6801/68HC11 Instruction definition table
+TASM3210.TAB      - TMS32010 Instruction definition table
+TASM3225.TAB      - TMS32025 Instruction definition table
+TASM70.TAB        - TMS7000 Instruction definition table
+TASMMAN.HTM       - TASM Documentation (HTML)
+TASMTABS.HTM      - TASM Documentation on individual tables (HTML)
+TEST*.ASM         - TASM test cases (one for each table)
+TESTTABS.BAT      - Batch script to execute the test cases
+8051.H            - Useful register definitions for the 8051
+MOTO.H            - Useful directive definitions for Motorola compatibility
+README.TXT        - Brief Explanation of Disk contents
+COPYRIGH.TXT      - Copyright notice 
+ORDERFRM.TXT      - Registration Form
+ORDERFRM.HTM      - Registration Form (HTML)
+RELNOTES.TXT      - Release notes.
+
+Although you may freely copy the above files,  TASM is not 'free'  or 
+'public domain'.   It is copyrighted material which can be copied and 
+evaluated by people without registration,  but those that use it on a 
+regular basis must register (see the ORDERFRM.TXT or ORDERFRM.HTM files). 
+
+The  following  files  are  to  be copied  only  with  the  following 
+restrictions:  The owner of this software may  make as many copies of 
+the following as is deemed necessary as long as no possibility exists 
+for  the software (or derivitive products)  to be in use on more than 
+one machine  at a time. Or, if a site license has been purchased, the 
+software can only be used on machines at that site.  
+
+    TASM.C
+    TASMMAIN.C
+    MACRO.C
+    PARSE.C
+    STR.C
+    LOOKUP.C
+    WRTOBJ.C
+    FNAME.C 
+    WRTOBJ.C
+    ERRLOG.C
+    TASM.H
+
+
+        Thomas N. Anderson
+        Squak Valley Software
+        837 Front Street South
+        Issaquah, WA  98027
+
+	email:  andersontn@acm.org

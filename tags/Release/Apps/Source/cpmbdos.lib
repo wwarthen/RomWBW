@@ -1,0 +1,174 @@
+; cpmbdos.lib 1/19/2012 dwg - add READ$CON$BUF (10)
+; cpmbdos.lib 1/15/2012 dwg - add more functions
+
+;
+; Copyright (C) 2011-2012 Douglas Goodall Licensed under GPL Ver 3.
+;
+; This file is part of NuBiosDWG and is free software: you can
+; redistribute it and/or modify it under the terms of the GNU
+; General Public License as published by the Free Software Foundation,
+; either version 3 of the License, or (at your option) any later version.
+; This file is distributed in the hope that it will be useful,
+; but WITHOUT ANY WARRANTY; without even the implied warranty of
+; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+; GNU General Public License for more details.
+; You should have received a copy of the GNU General Public License
+; along with it.  If not, see <http://www.gnu.org/licenses/>.
+;
+
+; BDOS function codes
+
+TERMCPM		equ	0	; return to command line
+CREAD		equ	1	; read a character
+CWRITE		equ	2	; write a character
+PRINTSTR	equ	9	; print string
+READ$CON$BUF	equ	10	; read console buffer
+RETVERNO	equ	12	; return version number
+DSKRESET	equ	13	; disk reset
+SELDSK		equ	14	; select disk
+FOPEN		equ	15	; open file
+FCLOSE		equ	16	; close file
+FDELETE		equ	19	; delete file
+READSEQ		equ	20	; read sequential
+WRITESEQ	equ	21	; write sequential
+FMAKE		equ	22	; make file
+FRENAME		equ	23	; rename file
+RETCURR		equ	25	; return current disk, 0=a
+SETDMA		equ	26	; set dma address
+WRITERAND	equ	34	; write random record
+FCOMPSIZE	equ	35	; compute file size
+SETRANDREC	equ	36	; set random record
+RESETDRIVE	equ	37	; reset drive 
+WRITERANDZF	equ	40	; write random with zero fill
+
+OEMID		equ	0E5h
+
+; File Control Block
+DR$OFS	equ	0
+F1$OFS	equ	DR$OFS+BYTESIZE
+F2$OFS	equ	F1$OFS+BYTESIZE
+F3$OFS	equ	F2$OFS+BYTESIZE
+F4$OFS	equ	F3$OFS+BYTESIZE
+F5$OFS	equ	F4$OFS+BYTESIZE
+F6$OFS	equ	F5$OFS+BYTESIZE
+F7$OFS	equ	F6$OFS+BYTESIZE
+F8$OFS	equ	F7$OFS+BYTESIZE
+T1$OFS	equ	F8$OFS+BYTESIZE
+T2$OFS	equ	T1$OFS+BYTESIZE
+T3$OFS	equ	T2$OFS+BYTESIZE
+EX$OFS	equ	T3$OFS+BYTESIZE
+S1$OFS	equ	EX$OFS+BYTESIZE
+S2$OFS	equ	S1$OFS+BYTESIZE
+RC$OFS	equ	S2$OFS+BYTESIZE
+D0$OFS	equ	RC$OFS+BYTESIZE
+CR$OFS	equ	DR$OFS+32
+R0$OFS	equ	CR$OFS+BYTESIZE
+R1$OFS	equ	R0$OFS+BYTESIZE
+R2$OFS	equ	R1$OFS+BYTESIZE
+FCB$LEN	equ	R2$OFS+BYTESIZE
+
+; Memory Locations
+
+BDOS	equ	5	; entry point fo BDOS function calls
+PRIFCB	equ	5Ch	; primary   file control block address
+SECFCB	equ	6Ch	; secondary file control block address
+LENFCB	equ	32	; length of file control block
+DEFBUF	equ	80h	; address of default buffer
+
+
+EXIT	macro
+	mvi c,TERMCPM
+	call BDOS
+	endm
+
+conin	macro
+	push	b		; save context B&C
+	push	d		; save context D&E
+	push	h		; save context H&L
+	mvi	c,CREAD		; set up for console input BDOS call
+	call	BDOS		; call BDOS function entry point
+	pop	h		; restore context H&L
+	pop	d		; restore context D&E
+	pop	b		; restore context B&C
+	endm
+
+conout	macro char
+	enter			; save all context regs
+	mvi c,CWRITE		; set for console output BDOS call
+	mvi e,char		; place output character in E as required
+	call bdos		; call BDOS function entry point
+	leave			; restore all context regs
+	endm
+
+conouta	macro 
+	enter
+	mvi c,CWRITE
+	mov e,a
+	call bdos
+	leave
+	endm
+
+PRINT	macro	addr
+	enter
+	mvi c,PRINTSTR
+	lxi d,addr
+	call BDOS
+	leave
+	endm
+
+PTRPRT	macro	addr
+	enter			; save all context registers
+	lxi h,addr		; load the address parameter into H&L
+	mov e,m			; pick up LO byte of new pointer
+	inx h			; bump index register
+	mov d,m			; pick up HO byte of new pointer
+	mvi c,PRINTSTR		; assembled pointer used for printstring call
+	call BDOS
+	leave			; restore all context registers
+	endm
+
+
+movfcb	macro	destn,source
+	lxi d,destn
+	lxi h,source
+	lxi b,LENFCB
+	ldir
+	endm
+
+copyfcb	macro	fcbname,source
+	local	around
+	jmp	around
+fcbname	ds	32
+around:
+	endm
+
+printf	macro	parmdata
+	local	around
+	local	string
+	print	string
+	jmp	around
+string	db	parmdata
+	db	'$'
+around:
+	endm
+
+printmsg	macro	parmdata
+	enter
+	local	around
+	local	string
+	print	string
+	jmp	around
+string	db	parmdata
+	db	'$'
+around:
+	leave
+	endm
+
+newfcb	macro	fcbname,drive,filename
+fcbname	db	drive,filename
+	db	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+	endm
+
+
+; eof - cpmbdos.lib
+
