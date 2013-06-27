@@ -131,7 +131,7 @@ prtcfg1(pSysCfg)
 		pCfg->conbaud);
 	pager();
 	printf ("Default Video Display: %s, Default Emulation: %s",
-		VDAName[pCfg->defvda], EmuName[pCfg->defemu]);
+		VDAName[(pCfg->defvda) >> 4], EmuName[pCfg->defemu]);
 	pager();
 	printf ("Current Terminal Type: %s",
 		TermName[pCfg->termtype]);
