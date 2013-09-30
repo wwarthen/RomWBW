@@ -1,14 +1,14 @@
 /************************************/
-/* applvers.h dwg - 2.5.0.15        */
+/* applvers.h dwg - 2.5.2.18        */
 /************************************/
 
 #define A_RMJ	2
 #define A_RMN	5
-#define A_RUP	1
-#define A_RTP	17
+#define A_RUP	2
+#define A_RTP	18
 
-#define A_MONTH	6
-#define A_DAY	25
+#define A_MONTH	9
+#define A_DAY	29
 #define A_YEAR	2013
 #define A_YR	13
 
