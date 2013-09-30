@@ -7,7 +7,7 @@ echo which means that local scripts can be run without
 echo being signed.  This is required to use the RomWBW
 echo build process.
 echo.
-PowerShell -command Write-Host "Your PowerShell ExecutionPolicy is currently (Get-ExecutionPolicy)"
+PowerShell -command Write-Host "Your PowerShell ExecutionPolicy is currently set to: `'(Get-ExecutionPolicy)`'"
 echo.
 echo In order to modify the ExecutionPolicy, this command
 echo file *MUST* be run with administrator privileges.
@@ -24,6 +24,6 @@ echo Attempting to change Execution Policy...
 echo.
 PowerShell Set-ExecutionPolicy RemoteSigned
 echo.
-PowerShell -command Write-Host "Your new PowerShell ExecutionPolicy is now (Get-ExecutionPolicy)"
+PowerShell -command Write-Host "Your new PowerShell ExecutionPolicy is now set to: `'(Get-ExecutionPolicy)`'"
 echo.
 pause
