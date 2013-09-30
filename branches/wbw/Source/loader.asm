@@ -524,7 +524,7 @@ dmloop:
 	ld	(BL_TMPDRV),a	; save it for printing if needed
 	call	CBIOS_GETDSK	; get drive into, c still has drive number
 	or	a		; set flags on result
-	jr	nz,dmdone	; error, skip this drive
+	jp	nz,dmdone	; error, skip this drive
 	ld	(BL_TMPLU),de	; save lu for later
 	ld	a,b		; device/unit into a for matching below
 	
@@ -568,6 +568,10 @@ dmloop:
 
 	ld	de,str_devhdsk
 	cp	DIODEV_HDSK	; SIMH HDSK
+	jr	z,dmprt
+
+	ld	de,str_devrf
+	cp	DIODEV_RF	; RAM FLOPPY
 	jr	z,dmprt
 
 	jr	dmdone
@@ -770,6 +774,7 @@ str_devsd	.DB	"SD$"
 str_devprpsd	.DB	"PRPSD$"
 str_devpppsd	.DB	"PPPSD$"
 str_devhdsk	.DB	"HDSK$"
+str_devrf	.DB	"RF$"
 #ENDIF
 ;
 ;==================================================================================================
