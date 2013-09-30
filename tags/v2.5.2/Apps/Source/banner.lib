@@ -1,0 +1,18 @@
+; banner.lib 7/19/2012 dwg - for 2.0.0.0 B22
+; banner.lib 2/17/2012 dwg - review for release 1.5.1.0
+; banner.lib 2/11/2012 dwg - banner library declarations
+
+	extrn	x$banner
+banner	macro	argv
+	lxi	h,argv
+	call	x$banner
+ 	endm
+
+	extrn	x$sbanner
+sbanner	macro	argv
+	lxi	h,argv
+	call	x$sbanner
+ 	endm
+
+; eof - banner.lib
+

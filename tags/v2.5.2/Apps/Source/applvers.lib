@@ -1,0 +1,32 @@
+; applvers.lib 3/31/2012 dwg - For RomWBW 2.5.0.14 Release
+
+A$RMJ	equ	2
+A$RMN	equ	5
+A$RUP	equ	2
+A$RTP	equ	18
+
+A$MONTH	equ	9
+A$DAY	equ	29
+A$YEAR	equ	2013
+
+date	macro
+dat	db	'  9/29/2013$'
+	endm
+
+serial	macro
+ser	db	'654321$'
+	endm
+
+product	macro
+prod	db	'CPM80$'
+	endm
+
+originator macro
+orig	db	'DWG$'
+	endm
+
+oriname	macro
+myname	db	' Douglas W Goodall $'
+	endm
+
+; eof - applvers.lib

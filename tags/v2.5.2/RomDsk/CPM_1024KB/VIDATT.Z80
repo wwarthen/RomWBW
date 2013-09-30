@@ -1,0 +1,69 @@
+	title	WordStar 4.0 Video Attributes Driver
+
+strngout	equ	0283h
+
+esc		equ	1bh
+dim		equ	1
+blink		equ	2
+invert		equ	4
+uline		equ	8
+
+	aseg
+	org	03c1h
+
+vidatt:
+	xor	a
+	ld	hl,funtbl
+	ld	b,8
+getloop:
+	rr	c
+	jr	nc,getnext
+	or	a,(hl)
+getnext:
+	inc	hl
+	djnz	getloop
+;
+	ld	hl,string+2		; attribute #1 on/off indicator
+	push	hl
+	ld	b,4
+	ld	de,'?!'			; ? = attribute off, ! = attribute on
+setloop:
+	rra
+	jr	nc,attroff
+	ld	(hl),e			; attribute on
+	jr	setnext
+attroff:
+	ld	(hl),d			; attribute off
+setnext:
+	inc	hl
+	inc	hl
+	inc	hl			; advance to next on/off indicator
+	djnz	setloop
+;
+	pop	hl			; hl --> dim on/off
+	ld	a,d			; attribute off
+	cp	(hl)			; dim off?
+	jr	nz,setdim
+	ld	a,e			; attribute on
+setdim:
+	ld	(hl),a
+	ld	hl,string
+	jp	strngout		; ws string routine
+;
+;
+funtbl:
+	defb	dim			; strike out
+	defb	invert or blink		; warnings & errors
+	defb	invert			; block
+	defb	uline			; underline
+	defb	blink			; subscript
+	defb	blink or uline		; superscript
+	defb	invert			; menu, headline, bold, double
+	defb	invert or uline		; italics, RET, backspace
+;
+string:
+	defb	12,esc,' 2',esc,' 3',esc,' 4',esc,' 5'
+;
+finis	equ	$
+	end
+
