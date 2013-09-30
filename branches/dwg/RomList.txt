@@ -108,6 +108,13 @@ DRI CP/M (BDOS & CCP)
     - Basic ROM/RAM disk (no floppy/IDE)
     - Drives A:=ROM, B:=RAM, C:=HDSK0-00, D:=HDSK0-01, E:=HDSK0-02, F:=HDSK0-03
 
+  N8VEM_rf.rom for N8VEM Z80 SBC V1/2 + RAM Flopppy:
+    - 512KB ROM, 512KB RAM
+    - 38.4KB serial console baud rate
+    - Basic ROM/RAM disk (no floppy/IDE)
+    - RAM Floppy support
+    - Drives A:=ROM, B:=RAM, C:=RF0, D:=RF1
+
   N8VEM_vdu.rom for N8VEM Z80 SBC V1/V2:
     - 512KB ROM, 512KB RAM
     - 38.4KB serial console baud rate
@@ -253,6 +260,13 @@ ZSYSTEM (ZSDOS & ZCPR)
     - Basic ROM/RAM disk (no floppy/IDE)
     - Drives A:=ROM, B:=RAM, C:=HDSK0-00, D:=HDSK0-01, E:=HDSK0-02, F:=HDSK0-03
     
+  N8VEM_rf_z.rom for N8VEM Z80 SBC V1/2 + RAM Flopppy:
+    - 512KB ROM, 512KB RAM
+    - 38.4KB serial console baud rate
+    - Basic ROM/RAM disk (no floppy/IDE)
+    - RAM Floppy support
+    - Drives A:=ROM, B:=RAM, C:=RF0, D:=RF1
+
   ZETA_std_z.rom for Zeta Z80 SBC:
     - 512KB ROM, 512KB RAM
     - 38.4KB serial console baud rate
