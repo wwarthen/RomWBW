@@ -131,7 +131,7 @@ PUB cls1(c,screencolor,pcport,ascii,CR) | i,x,y
   
   inverse := 1
 
-  statprint(36,0, string("                         N8VEM ParPortProp | RomWBW                        v0.92"))
+  statprint(36,0, string("                         N8VEM ParPortProp | RomWBW                        v0.93"))
   inverse := 0
   statprint(37,0, string("                                                                                "))
   statprint(38,0, string("                                                                                "))
