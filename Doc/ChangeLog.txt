@@ -1,3 +1,10 @@
+Version 2.5.3
+-------------
+- WBW: Fixed EXM in DPB for 360K floppy definition (credit to Martin for finding this error)
+- WBW: Improved /WAIT trigger performance in PropIO (credit to Marko)
+       PropIO now seems to be compatible with CPU clock speeds up to 16MHz
+- WBW: Corrected the IO base address for PPIDE driver on N8 variants (credit to Arlen Michaels)
+
 Version 2.5.2
 -------------
 - WBW: Added initial support for RAM Floppy
