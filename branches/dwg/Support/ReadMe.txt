@@ -9,7 +9,9 @@ vdu.rom: ROM image for VDU onboard EPROM
 
 PropIO\PropIO.eeprom: PropIO firmware for use with RomWBW
 
-ParPortProp\ParPortProp.eeprom: ParPortProp firmware for use with RomWBWB
+PropIO2\PropIO2.eeprom: PropIO V2 firmware for use with RomWBW
+
+ParPortProp\ParPortProp.eeprom: ParPortProp firmware for use with RomWBW
 
 ZSDOS: Directory contains updated ZSDOS distribution files (see ..\Doc\ZSystem.txt)
 
