@@ -1,0 +1,18 @@
+Version 0.6
+Remove load time requirement for wininet.dll.
+Add extra read to Win9X to settle floppy disk into the drive
+Add absolute path to dll load to prevent conflict under ME
+Packed the exe with UPX
+Created auto install script
+
+Version 0.5
+Command line parameters
+Better error messages
+Autoupdate
+Auto download missing dll
+
+Version 0.4
+Number of copies to write
+NT does not always show floppy drives
+Better error message when diskio.dll not found
+
