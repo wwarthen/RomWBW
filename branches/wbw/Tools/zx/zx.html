@@ -145,7 +145,7 @@ computers;
 <P>Syntax for zx is:
 
 <BLOCKQUOTE>
-	zx <i>comfile.com</i> arg1 arg2 ...
+	zx <i>comfile.com</i> [-stdio] arg1 arg2 ...
 </BLOCKQUOTE>
 
 <P>The comfile is the program to run; <em>zx</em> searches the current 
@@ -153,6 +153,10 @@ directory and <strong>BINDIR80</strong> for it.
 <P>The arguments are parsed in this way:
 
 <UL>
+<LI>If -stdio appears as one of the arguments, zx will use buffered DOS I/O
+  which is useful if you want to pipe data in or out of zx.  Otherwise
+  zx will use raw console I/O which works better when the application
+  is being used interactively.
 <LI>Any argument starting with a - sign is passed to the CP/M program as-is,
   minus the leading - sign.
 <LI>Any argument starting with a + sign is parsed as a filename (see below)

@@ -1,16 +1,16 @@
-; applvers.lib 3/31/2012 dwg - For RomWBW 2.5.0.14 Release
+; applvers.lib 3/31/2012 dwg - For RomWBW 2.5.4.20 Release
 
 A$RMJ	equ	2
 A$RMN	equ	5
-A$RUP	equ	3
-A$RTP	equ	19
+A$RUP	equ	4
+A$RTP	equ	20
 
-A$MONTH	equ	1
-A$DAY	equ	20
+A$MONTH	equ	3
+A$DAY	equ	1
 A$YEAR	equ	2014
 
 date	macro
-dat	db	'  1/20/2014$'
+dat	db	'   3/1/2014$'
 	endm
 
 serial	macro
