@@ -45,13 +45,23 @@ DRI CP/M (BDOS & CCP)
     - Drives A:=ROM, B:=RAM, C:=FD0, D:=FD1, E:=IDE0-00, F:=IDE0-01, G:=IDE0-02, H:=IDE0-03
     
   N8VEM_diskio3.rom for N8VEM Z80 SBC V1/V2 + DISKIO3:
-    - EXPERIMENTAL!
     - 512KB ROM, 512KB RAM
     - 38.4KB serial console baud rate
     - Basic ROM/RAM disk
     - Floppy support via DISKIO3
     - IDE support via DISKIO3
     - Drives A:=ROM, B:=RAM, C:=FD0, D:=FD1, E:=IDE0-00, F:=IDE0-01, G:=IDE0-02, H:=IDE0-03
+
+  N8VEM_diskio3+cvdu.rom for N8VEM Z80 SBC V1/V2 + DISKIO3:
+    - 512KB ROM, 512KB RAM
+    - 38.4KB serial console baud rate
+    - Basic ROM/RAM disk
+    - Floppy support via DISKIO3
+    - IDE support via DISKIO3
+    - ColorVDU board support
+    - Drives A:=ROM, B:=RAM, C:=FD0, D:=FD1, E:=IDE0-00, F:=IDE0-01, G:=IDE0-02, H:=IDE0-03
+	- NOTE: Console defaults to CRT & PS/2 Keyboard.  Short JP2
+	  (one bit input port) to use the serial port as the console.
 
   N8VEM_ppide.rom for N8VEM Z80 SBC V1/V2 + PPIDE:
     - 512KB ROM, 512KB RAM
@@ -121,6 +131,17 @@ DRI CP/M (BDOS & CCP)
     - Basic ROM/RAM disk
     - VDU board support
     - Drives A:=ROM, B:=RAM
+	- NOTE: Console defaults to CRT & PS/2 Keyboard.  Short JP2
+	  (one bit input port) to use the serial port as the console.
+    
+  N8VEM_cvdu.rom for N8VEM Z80 SBC V1/V2:
+    - 512KB ROM, 512KB RAM
+    - 38.4KB serial console baud rate
+    - Basic ROM/RAM disk
+    - ColorVDU board support
+    - Drives A:=ROM, B:=RAM
+	- NOTE: Console defaults to CRT & PS/2 Keyboard.  Short JP2
+	  (one bit input port) to use the serial port as the console.
     
   ZETA_std.rom for Zeta Z80 SBC:
     - 512KB ROM, 512KB RAM
@@ -198,6 +219,17 @@ ZSYSTEM (ZSDOS & ZCPR)
     - IDE support via DISKIO3
     - Drives A:=ROM, B:=RAM, C:=FD0, D:=FD1, E:=IDE0-00, F:=IDE0-01, G:=IDE0-02, H:=IDE0-03
 
+  N8VEM_diskio3+cvdu_z.rom for N8VEM Z80 SBC V1/V2 + DISKIO3:
+    - 512KB ROM, 512KB RAM
+    - 38.4KB serial console baud rate
+    - Basic ROM/RAM disk
+    - Floppy support via DISKIO3
+    - IDE support via DISKIO3
+    - ColorVDU board support
+    - Drives A:=ROM, B:=RAM, C:=FD0, D:=FD1, E:=IDE0-00, F:=IDE0-01, G:=IDE0-02, H:=IDE0-03
+	- NOTE: Console defaults to CRT & PS/2 Keyboard.  Short JP2
+	  (one bit input port) to use the serial port as the console.
+
   N8VEM_ppide_z.rom for N8VEM Z80 SBC V1/V2 + PPIDE:
     - 512KB ROM, 512KB RAM
     - 38.4KB serial console baud rate
@@ -238,7 +270,18 @@ ZSYSTEM (ZSDOS & ZCPR)
     - Basic ROM/RAM disk
     - VDU board support
     - Drives A:=ROM, B:=RAM
+	- NOTE: Console defaults to CRT & PS/2 Keyboard.  Short JP2
+	  (one bit input port) to use the serial port as the console.
 
+  N8VEM_cvdu_z.rom for N8VEM Z80 SBC V1/V2:
+    - 512KB ROM, 512KB RAM
+    - 38.4KB serial console baud rate
+    - Basic ROM/RAM disk
+    - ColorVDU board support
+    - Drives A:=ROM, B:=RAM
+	- NOTE: Console defaults to CRT & PS/2 Keyboard.  Short JP2
+	  (one bit input port) to use the serial port as the console.
+    
   N8VEM_mfp_z.rom for N8VEM Z80 SBC V1/V2:
     - 512KB ROM, 512KB RAM
     - 38.4KB serial console baud rate
