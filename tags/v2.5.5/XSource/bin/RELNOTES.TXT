@@ -1,0 +1,213 @@
+TASM RELEASE NOTES [September 2001]
+
+RELEASE DATE/VERSION    DESCRIPTION
+-----------------------------------------------------------------------
+10/01/85 Version 2.0    First version with external table def files.
+
+01/01/86 Version 2.1    Added '*=' and '=' directives as
+                        alternatives to .ORG and .EQU (for
+                        more complete MOS Technology compatibility).
+                        Enhanced parsing algorithm so it can
+                        deal with more than one variable expression.
+                        Added -d option
+
+02/14/86 Version 2.2    Modified so instruction set definition
+                        tables don't need to be compiled in.
+                        Added 8051 tables.
+                        Increased the number of labels allowed.
+
+03/31/87 Version 2.3    Fixed bug that prevented location 0xffff
+                        from being used and written to object file.
+                        Most changes in wrtobj() and pr_hextab().
+
+05/01/87 Version 2.4    Added multiple byte opcode support.
+                        Added shift/or operation capability to
+                        args from instruction set definition table.
+                        Converted to MS C version 3.0
+                        Added hashing to instruction set table
+                        lookups to speed up.
+
+11/01/87 Version 2.5    Added DB and DW directives.
+                        Added escape capability in TEXT strings.
+                        Fixed inst_lookup function to treat the
+                        multiple wild card case a little better
+                        Added 8080/8085 and Z80 tables.
+                        Added sorting on label table.
+                        Increased size of read buffer.
+                        Speed enhancements.
+                        Added DEFCONT (macro continuation) directive.
+                        Converted to Microsoft C 5.0 compiler.
+                        Added 6805 table (and related modops).
+                        Added Z80 bit modop.
+                        Minor speed up.
+                        Fixed bug that enters infinite loop
+                        when a macro invocation has no closing paren.
+                        Added some three arg MODOPs.
+
+8/15/88 Version 2.6.1   Added CODES/NOCODES directives
+                        Fixed bug preventing directives in multiple
+                        statement lines.
+                2.6.2   Added COMB_NIBBLE and COMB_NIBBLE_SWAP MODOPS
+
+2/1/89  Version 2.7     Removed ad hoc heap and now use malloc()
+                        Added MSFIRST and LSFIRST directives.
+                        Added EXPORT directive.
+                        Added symbol table file (-s flag).
+                        Added NSEG/CSEG/BSEG/DSEG/XSEG directives
+                        and the SYM/AVSYM directives to support
+                        the Avocet avsim51 simulator.
+                        Added support for TMS320.
+                        Added -r flag to set read buffer size.
+                        Converted expression evaluation from 
+                        signed 16 bit to signed 32 bit (enabling
+                        apparent ability to use signed or unsigned
+                        16 bit values).
+
+4/20/89  Version 2.7.1  Return 0x20000 for undefined labels so that
+                        (label+x) type stuff won't confuse zero
+                        page addressing.
+                        Added duplicate label error message on pass 1.
+
+6/20/89  Version 2.7.2  Improved macro expansion capability.
+                        No expansion in comments.
+                        Context sensitive identifiers.
+                        Revised exit codes.
+
+6/27/89  Version 2.7.3  Added -a flag for strict error checking:
+                         (1) No outer parens around expressions.
+                         (2) Error message if unused argbytes remain 
+                         (3) Duplicate labels
+                        Fixed so ']' can terminate expressions.
+                        Removed parse() from tasm.c
+
+8/19/89  Version 2.7.4  Added Motorola hex object format.
+                        Fixed bug that complained when \ immediately
+                        followed a opcode with no args.
+                        Slightly improved error reporting (Errorbuf).
+
+10/31/89 Version 2.7.5  Added TMS7000 support.
+                        Fixed argv[] bug (only dimensioned to 10 in pass1.
+
+12/23/89 Version 2.7.6  Improved handling of % (modulo vs binary 
+                        prefix ambiguity).
+                        Fixed list so lines with more than  
+                        6 bytes go on second line.
+
+03/04/90 Version 2.7.7  Fixed bug that left off 2 bytes if ORG
+                        went backwards and all 64K was used.
+                        Added a command line option to ignore
+                        case on labels.
+                        Added a couple MODOP rules for TMS9900.
+                        Allow double quoted text strings for BYTE.
+
+04/15/90 Version 2.7.8  Fixed expression evaluator bug (paren popping)
+                        and changed expression evaluator to a more
+                        conventional left to right evaluation order.
+                        Added TURBOC ifdef's (from Lance Jump).
+
+08/20/90 Version 2.8    Primarily a documentation update.
+                        Added error check for AJMP/ACALL off of
+                        current 2K block (8051).
+
+10/15/90 Version 2.8.1  Minor speed up in label searching.
+                        Fixed word addressing for TMS320 
+         Version 2.8.2  Local labels.
+                        More label table format options (long form
+                        suppress local labels).
+
+11/30/90 Version 2.8.3  Turbo C conversion.
+                        DS directive added.
+
+12/27/90 Version 2.8.4  Added COMMENTCHAR directive to change the
+                        comment indicator in the first column.
+                        This was done to support the assembly
+                        files from the small C compiler (sc11)
+                        for the 68CH11.
+
+02/14/91 Version 2.8.5  Added LOCALLABELCHAR directive to 
+                        override the default "_" as the 
+                        prefix for local labels.
+
+03/18/91 Version 2.8.6  Added some MODOPs in support of TMS320C25
+
+04/20/91 Version 2.8.7  Fixed sign extend bug in CSWAP modop.
+                        Increased MAXLABS to 10000 for big version.
+
+05/05/91 Version 2.8.8  Fixed pointer bug in debug output in sort_labels().
+
+05/20/91 Version 2.9    TMS320C25 table along with some MODOP enhancements 
+                        for it.
+                        TASMTABS.DOC updated (but not TASM.DOC)
+
+08/09/91 Version 2.9.1  Nested conditionals.
+
+04/01/92 Version 2.9.2  Fixed long label clobber problem in
+                        find_label() and save_label.  Syntax
+                        errors could result in a comment line
+                        after an instruction being lumped together
+                        with a label resulting in a long label.
+                        The label functions were not testing for 
+                        labels that exceed the specified size.
+                        Added CHK directive.
+                        Added REL3 MODOD to support uPD75xxx.
+                        Delinting and more ANSIfication.
+                        Modifications due to feedback from B Provo:
+                         Added FILL directive.
+                         Allow multiple labels for EXPORT directive.
+                         Allow address with END directive.
+                        TASM.DOC update
+
+11/25/92 Version 2.9.3  Improved error reporting for mismatched quotes.
+                        Disallow the single quote character constants.
+                        Convert to BCC++ 3.1
+                        Provide filename,linenum on all error messages.
+                        Modify format of error messages for compatibility
+                        with the Brief editor.
+                        Added ECHO directive to send output to console.
+                        Performance improvements in macro processing.
+                        "Type Safe" conversion (compatible with C++).
+                        Improved error reporting for imbalanced ifdefs.
+
+ 
+01/29/93 Version 2.9.4  Added rules for 8096 (I1,I2,I3,I4,I5,I6).
+                        Generate error message on forward reference 
+                        in EQUate statements.
+                        Eliminated -a option for enabling the detection
+                        of branches of 2K page for 8051.  This 
+                        is now built into the table.
+                        Allow white space in double quotes for BYTE
+                        directive.  This previously worked for TEXT,
+                        but not BYTE.
+                        Fixed defect with Z80 4 byte indexed instructions.
+                        Fixed macro defect.  If the macro definition has
+                        args but the invocation does not some garbage
+                        gets expanded into the source line.
+                        Z80 OTDR opcode was incorrect.
+                        Z80 IN0/OUT0/INA instructions did not require
+                        the parens around the args.
+                        Some experimental support for windows verson of TASM.
+
+10/24/93 Version 3.0    Documentation update.  TASM.DOC, TASMTABS.DOC
+                        and RELNOTES.DOC updated, but the functionality
+                        remains unchanged from version 2.9.4.
+
+06/16/94 Version 3.0.1  Multiple macros on the same line.
+                        Fixed problem with -c with >8000h bytes used goes bonkers
+                        Corrected word addressing problem for BLOCK/DS directives.
+                        Allow escaped quotes in TEXT strings.
+
+11/30/97 Version 3.1    LINUX support.
+                        Protect mode version (tasmp) with better memory 
+                          management (more labels allowed, etc.)
+                        Added an 8096 table.
+                        Added Logical NOT unary operator.
+                        Added an object file format with word address
+
+09/01/01 version 3.2    Increased LINESIZ to 512 to enable use of longer macros.
+                        Eliminated -r command line option (to set 
+                        read buffer size - Now obsolete.)
+                        Improved list() function to put a max of 
+                        six bytes per line to avoid problems with
+                        directives that generate large blocks of 
+                        object code (i.e. .FILL).
+                        Built as a 32 bit version using MS C++ 6.0

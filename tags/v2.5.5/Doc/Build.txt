@@ -1,0 +1,347 @@
+Building a Custom ROM
+---------------------
+
+At present, the build environment assumes you are running
+a current version of Microsoft Windows (either 32-bit or
+64-bit).
+
+If you are using Linux, David Giles has contributed a Linux
+makefile that should work for you.  Please read the
+LinuxBuild.txt file for more information.
+
+All required tools are included in the distribution.  You
+should not need anything other than what comes as part of
+Windows or as part of the distribution.
+
+In summary, the process involves the 4 steps below:
+
+  1) Create/update configuration file
+
+  2) Update/Add/Delete any files you want incorporated in
+     the ROM Disk
+
+  3) Run the build script (or makefile if you prefer) and
+     confirm there are no errors.
+
+  4) Burn the resultant ROM image and try it.
+
+The process is really very simple.  In fact, you can
+essentially skip steps 1 & 2 if you want to try simply
+building one of the existing configurations.
+
+Each of the 4 steps above is described in more detail
+below.
+
+1. Create/Update Configuration File
+-----------------------------------
+
+The settings for a build are primarily controled by
+a configuration file that is included in the build
+process.  In order to customize your settings, you
+need to modify an existing configuration file or
+create your own.
+
+If you look in the Source directory, you will see
+a series of files named config_xxxx_yyyy.asm.  Each of
+them corresponds to one of the standard configurations
+listed in the ROMList.txt file.
+
+You have two choices.  You can simply modify the existing
+configuration file that is closest to your situation, or
+you can copy it to a new config_xxxx_yyyy.asm file and modify
+that.  I recommend that you copy one to your own name so
+that you will always have the unmodified standard configuration
+files left in place.  So, for example, you could just
+copy config_ZETA_std.asm to config_ZETA_wayne.asm.  You MUST
+name your config file as config_xxxx_yyyy.asm.  The xxxx's
+must match your platform (N8VEM, ZETA, N8, S2I, or S100).
+The yyyy's can be whatever you want.
+
+The config files are simply text files with various
+settings.  Open your target config file with your
+favorite text editor and modify the settings as desired.
+
+Unfortunately, I have not yet documented each of the
+settings in detail; that will be a separate document
+provided in the future.  However, there are comments
+in the config file that will probably be sufficient
+for the most part.
+
+2. Update/Add/Delete ROM Disk Files
+-----------------------------------
+
+The files that are included on the ROM Disk of your
+ROM are copied from a set of directories during the
+build process.  This allows you to have complete
+flexibility over the files you want included in your
+ROM.
+
+If you look at the RomDsk directory, you will see
+a variety of subdirectories.  These subdirectories
+contain the files that will be included in the
+ROM disk.  The build process will determine
+which subdirectories to include files from based
+on the following rules:
+
+First, all files from either std_512 or std_1024 will
+be incuded depending on on the size of the ROM you
+are building.  If you are building a 512KB ROM, then
+all the files from std_512KB will be included.  If you
+are building a 1MB ROM, then all the files from std_1024KB
+will be included.  Essentialy, the files in std_1204KB are
+a superset of the ones in std_512KB because there is more
+space available for the ROM drive.
+
+Second, all files from the directory that corresponds to
+your configuration file will be included.  If you build
+the "ZETA_std" configuration, all files in cfg_ZETA_std will
+be added.  Note that these files will be in addition
+to the files from the std_XXXKB directory.
+
+If you created your own config file (like config_ZETA_wayne.asm
+described above), you MUST create a subdirectory within
+the RomDsk directory and populate it with the files
+you want added.  Normally, you would include the
+files from the original standard config.  So, if
+you created config_ZETA_wayne.asm from config_ZETA_std.asm,
+then you would create a subdirectory in RomDsk called
+cfg_ZETA_wayne and copy all the files from cfg_ZETA_std to
+cfg_ZETA_wayne.
+
+3. Run the Build Process
+------------------------
+
+NOTE: The process described here is the more commonly
+used build script.  If you wish to use a makefile
+instead, refer to the comments in the makefile in
+the Source directory as an alternative to the
+process described here.
+
+The build involves running commands at the command
+prompt.  From a Command Prompt window, you will need
+to change to the high level directory for the build.
+Normally, you would be changing to the RomWBW directory
+unless you renamed it.
+
+First, you will build the support applications.  These
+do not require any configuration or customization -- they
+adapt to any variant of RomWBW.  To build the app, just
+enter "BuildApps".  Pay attention to the output to ensure
+that there are no errors.  When this step is done, you
+should see the built applications (.COM files) in the
+Apps\Output directory.
+
+To run the main build and be prompted for required information,
+just enter "Build".  You will be prompted for the information
+described below and the build should run.  If an error is
+encountered, the build should stop and display an error
+in red text.
+
+If you immediately receive the error "the execution of 
+scripts is disabled on this system", then you will need to 
+change the PowerShell Execution-Polcy to "RemoteSigned".
+To do this, you need to right-click on FixPowerShell.cmd and
+choose "Run as Administrator" to make the change.  If is
+critical that you right-click and use "Run as Administrator"
+or the change will not work (you will get an error
+indicating "Access to the registry denied" if you fail to
+use "Run as Administrator".
+
+The build script will prompt you for the following information
+which you will need to provide (don't worry, it is simple):
+
+Platform:
+
+Respond with the name of the platform that you are targeting.
+It must be one of N8VEM, ZETA, N8, S2I, or S100.
+
+Configuration:
+
+Respond with the name of the configuration you wish to build.
+A list of all available configurations is displayed for your
+convenience.  For example, if you are building the provided
+ZETA_std configuration, just enter "std".  If you have created a
+custom configuration as described above, you would enter
+"wayne".
+
+ROM Size [512|1024]:
+
+Respond with either "512" for a 512KB ROM build or "1024" for a
+1MB ROM build.  Only the two choices are possible at this time.
+It is important that you choose a ROM size that is no larger than
+the szie of the ROM you will ultimately be burning.  This is 
+dependant on your hardware.
+
+System [CPM|ZSYS]:
+
+Respond with the type of system you wish to create.  If you are
+not sure which you want, you should enter "CPM".  Refer to the
+ReadMe.txt file for more informatino on the difference between
+the two system types.
+
+At this point the build should run and you will see output related
+to the assembler runs and somem utility invocations.  Just review
+the output for any obvioius errors.  Normally, all errors will
+cause the build to stop immediately and display an error message
+in red.
+
+You will see from lines in the output indicating the amount of
+space variouis components have taken.  You should check these
+to make sure you do not see any negative numbers which would
+indicate that you have included too many features/drivers for
+the available memory space.  Here are examples of the lines
+showing the space used:
+
+	DATA space remaining: 39 bytes.
+	BOOT LOADER space remaining: 3503 bytes.
+	CBIOS space remaining: 161 bytes.
+	DBGMON space remaining: 860 bytes.
+	ROMX space remaining: 8191 bytes.
+	BOOT LOADER space remaining: 3503 bytes.
+
+4. Deploy the ROM
+-----------------
+
+If you look in the Output directory.  You should find the following files:
+
+     <config>.rom - binary ROM image to burn to EEPROM
+     <config>.sys - system image that can be written to the start of a
+                    disk to enable boot from disk functionality
+     <config>.com - executable version of the system image that can be
+                    copied via xmodem to a running system to test
+                    the build.
+
+The actual ROM image is the file ending in .rom.  It should be exactly
+512KB or 1MB depending on the ROM size you chose.  Simply burn the .rom
+image to your ROM and install it in your hardware.
+
+Specifying Build Options on Command Line
+----------------------------------------
+
+If you don't want to be prompted for the options to the "Build"
+command, you can specify the options right on the command line.
+
+For example:
+
+	Build ZETA std 512 CPM
+
+In this case, you will not be prompted.  This is useful if you
+wish to automate your build process.
+
+Example Build Run
+-----------------
+
+C:\Users\WWarthen\Projects\N8VEM\Build\RomWBW>Build.cmd
+Platform [N8VEM|ZETA|N8|S2I|S100]: ZETA
+Configurations available:
+ > ppp
+ > std
+Configuration: std
+ROM Size [512|1024]: 512
+System [CPM|ZSYS]: CPM
+
+Building ZETA_std: 512KB ROM configuration std for Z80...
+
+tasm -t80 -g3  ccpb03.asm cp.bin
+TASM Z80 Assembler.       Version 3.2 September, 2001.
+ Copyright (C) 2001 Squak Valley Software
+tasm: pass 1 complete.
+tasm: pass 2 complete.
+tasm: Number of errors = 0
+tasm -t80 -g3  bdosb01.asm dos.bin
+TASM Z80 Assembler.       Version 3.2 September, 2001.
+ Copyright (C) 2001 Squak Valley Software
+tasm: pass 1 complete.
+tasm: pass 2 complete.
+tasm: Number of errors = 0
+tasm -t80 -g3  syscfg.asm syscfg.bin
+TASM Z80 Assembler.       Version 3.2 September, 2001.
+ Copyright (C) 2001 Squak Valley Software
+tasm: pass 1 complete.
+Configuration: ZETA Z80 SBC, FLOPPY (AUTOSIZE), PPIDE (STD)
+tasm: pass 2 complete.
+tasm: Number of errors = 0
+tasm -t80 -g3 -dBLD_SYS=SYS_CPM cbios.asm cbios.bin
+TASM Z80 Assembler.       Version 3.2 September, 2001.
+ Copyright (C) 2001 Squak Valley Software
+tasm: pass 1 complete.
+Configuration: ZETA Z80 SBC, FLOPPY (AUTOSIZE), PPIDE (STD)
+INFOLIST occupies 18 bytes.
+UTIL occupies 484 bytes.
+FD_DATA occupies 340 bytes.
+PPIDE_DATA occupies 1116 bytes.
+CBIOS space remaining: 2092 bytes.
+tasm: pass 2 complete.
+tasm: Number of errors = 0
+tasm -t80 -g3  dbgmon.asm dbgmon.bin
+TASM Z80 Assembler.       Version 3.2 September, 2001.
+ Copyright (C) 2001 Squak Valley Software
+tasm: pass 1 complete.
+Configuration: ZETA Z80 SBC, FLOPPY (AUTOSIZE), PPIDE (STD)
+DBGMON space remaining: 795 bytes.
+tasm: pass 2 complete.
+tasm: Number of errors = 0
+tasm -t80 -g3  prefix.asm prefix.bin
+TASM Z80 Assembler.       Version 3.2 September, 2001.
+ Copyright (C) 2001 Squak Valley Software
+tasm: pass 1 complete.
+Configuration: ZETA Z80 SBC, FLOPPY (AUTOSIZE), PPIDE (STD)
+tasm: pass 2 complete.
+tasm: Number of errors = 0
+tasm -t80 -g3  bootrom.asm bootrom.bin
+TASM Z80 Assembler.       Version 3.2 September, 2001.
+ Copyright (C) 2001 Squak Valley Software
+tasm: pass 1 complete.
+Configuration: ZETA Z80 SBC, FLOPPY (AUTOSIZE), PPIDE (STD)
+tasm: pass 2 complete.
+tasm: Number of errors = 0
+tasm -t80 -g3  bootapp.asm bootapp.bin
+TASM Z80 Assembler.       Version 3.2 September, 2001.
+ Copyright (C) 2001 Squak Valley Software
+tasm: pass 1 complete.
+Configuration: ZETA Z80 SBC, FLOPPY (AUTOSIZE), PPIDE (STD)
+tasm: pass 2 complete.
+tasm: Number of errors = 0
+tasm -t80 -g3  loader.asm loader.bin
+TASM Z80 Assembler.       Version 3.2 September, 2001.
+ Copyright (C) 2001 Squak Valley Software
+tasm: pass 1 complete.
+Configuration: ZETA Z80 SBC, FLOPPY (AUTOSIZE), PPIDE (STD)
+LOADER space remaining: 1205 bytes.
+tasm: pass 2 complete.
+tasm: Number of errors = 0
+tasm -t80 -g3  pgzero.asm pgzero.bin
+TASM Z80 Assembler.       Version 3.2 September, 2001.
+ Copyright (C) 2001 Squak Valley Software
+tasm: pass 1 complete.
+tasm: pass 2 complete.
+tasm: Number of errors = 0
+tasm -t80 -g3  hbios.asm hbios.bin
+TASM Z80 Assembler.       Version 3.2 September, 2001.
+ Copyright (C) 2001 Squak Valley Software
+tasm: pass 1 complete.
+Configuration: ZETA Z80 SBC, FLOPPY (AUTOSIZE), PPIDE (STD)
+UART occupies 146 bytes.
+FD occupies 2071 bytes.
+PPIDE occupies 809 bytes.
+HBIOS space remaining: 24428 bytes.
+STACK space remaining: 145 bytes.
+tasm: pass 2 complete.
+tasm: Number of errors = 0
+tasm -t80 -g3  hbfill.asm hbfill.bin
+TASM Z80 Assembler.       Version 3.2 September, 2001.
+ Copyright (C) 2001 Squak Valley Software
+tasm: pass 1 complete.
+Configuration: ZETA Z80 SBC, FLOPPY (AUTOSIZE), PPIDE (STD)
+tasm: pass 2 complete.
+tasm: Number of errors = 0
+tasm -t80 -g3  romfill.asm romfill.bin
+TASM Z80 Assembler.       Version 3.2 September, 2001.
+ Copyright (C) 2001 Squak Valley Software
+tasm: pass 1 complete.
+tasm: pass 2 complete.
+tasm: Number of errors = 0
+Building ZETA_std output files...
+Building 512KB ZETA_std ROM disk data file...
+
+C:\Users\WWarthen\Projects\N8VEM\Build\RomWBW>
