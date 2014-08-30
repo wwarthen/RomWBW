@@ -5,6 +5,6 @@
 ;
 #INCLUDE "std.asm"
 ;
-		.FILL	HB_SIZ,0FFH
+		.FILL	HBX_SIZ,0FFH
 ;
 		.END

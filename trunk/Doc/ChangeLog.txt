@@ -1,3 +1,16 @@
+Version 2.6
+-----------
+- WBW: Old Apps removed (MULTIFMT, CPMNAME, SETLABEL, etc.)
+       removed because they are no longer working/supported
+- WBW: Added SysCopy and SysGen to install OS on disks
+- WBW: Added ASSIGN to modify disk drive mappings
+- WBW: Added UNA UBIOS support
+- WBW: Refactored CP/M disk mapping in CBIOS
+- WBW: Switched to ZCPR-D&J for ZSystem build
+- WBW: New bank/memory management routines in HBIOS including interbank copy
+- WBW: Moved physical disk buffer into HBIOS bank
+- WBW: Dynamic allocation of disk buffers in CBIOS
+
 Version 2.5.5
 -------------
 - WBW: Updated VDU/CVDU configs to allow booting into CRT mode
@@ -11,7 +24,7 @@ Version 2.5.3
 -------------
 - WBW: Fixed EXM in DPB for 360K floppy definition (credit to Martin for finding this error)
 - WBW: Improved /WAIT trigger performance in PropIO (credit to Marko)
-       PropIO now seems to be compatible with CPU clock speeds up to 16MHz
+       PropIO now seems to be compatible with CPU clock speeds up to ???
 - WBW: Corrected the IO base address for PPIDE driver on N8 variants (credit to Arlen Michaels)
 
 Version 2.5.2

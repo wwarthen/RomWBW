@@ -2,7 +2,7 @@ Assembling the RomWBW firmware under Linux.
 
 Note: Updated on 6/25/2013 to eliminate the need for the separate Linux
 makefile.  The standard makefile now has conditionals to allow it to be
-used under Windows of Linux (I hope) --WW
+used under Windows or Linux (I hope) --WW
 
 This method has been used under Ubuntu Linux and may have to be adapted for
 other distributions.  It is a bit more involved than the Windows procedure.

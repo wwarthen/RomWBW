@@ -123,13 +123,14 @@ to change to the high level directory for the build.
 Normally, you would be changing to the RomWBW directory
 unless you renamed it.
 
-First, you will build the support applications.  These
-do not require any configuration or customization -- they
-adapt to any variant of RomWBW.  To build the app, just
-enter "BuildApps".  Pay attention to the output to ensure
-that there are no errors.  When this step is done, you
-should see the built applications (.COM files) in the
-Apps\Output directory.
+First, you will need to build the components that are
+common to all configurations.  These components do not
+require any configuration.  To build these, use the
+following commands and ensure that they complete
+without error:
+
+	BuildZCPR-DJ
+	BuildApps2
 
 To run the main build and be prompted for required information,
 just enter "Build".  You will be prompted for the information
@@ -176,16 +177,16 @@ System [CPM|ZSYS]:
 
 Respond with the type of system you wish to create.  If you are
 not sure which you want, you should enter "CPM".  Refer to the
-ReadMe.txt file for more informatino on the difference between
+ReadMe.txt file for more information on the difference between
 the two system types.
 
-At this point the build should run and you will see output related
-to the assembler runs and somem utility invocations.  Just review
+At this point, the build should run and you will see output related
+to the assembler runs and some utility invocations.  Just review
 the output for any obvioius errors.  Normally, all errors will
 cause the build to stop immediately and display an error message
 in red.
 
-You will see from lines in the output indicating the amount of
+You will see some lines in the output indicating the amount of
 space variouis components have taken.  You should check these
 to make sure you do not see any negative numbers which would
 indicate that you have included too many features/drivers for
