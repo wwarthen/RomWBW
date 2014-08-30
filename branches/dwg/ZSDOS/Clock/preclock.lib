@@ -1,0 +1,50 @@
+	SUBTTL	"PRECLOCK.LIB - Test for Clock Tick - 12/12/88"
+;---------------------------------------------------------------
+; Read clock and wait for seconds to roll - watchdog protected
+; Enter with: DE pointing to relocated clock read routine
+;	      HL pointing to base of high module
+
+TSTRD:	JR	TSTRD0		; Jump around address store
+
+	DEFW	TSTRD		; Org location of the code
+
+TSTRD0:	LD	(CKCLK+1),DE	; Patch GETTIM address in
+	CALL	CKCLK		; Get time to start with
+	LD	A,(HL)		; Get seconds
+	CP	60H		; Check for valid digit
+	JR	NC,BAD		; >= 60h
+	LD	BC,0		; Set watchdog
+TST0:	DEC	BC		; One less remaining...
+	LD	A,B
+	OR	C
+	RET	Z		; Exit w/cy clear if timed out
+	PUSH	BC		; Save watchdog
+	LD	B,MHZ		; insure good at up to 25mhz
+TST1:	EX	(SP),HL		; ..under absolute worst case
+	EX	(SP),HL
+	DJNZ	TST1		; waste time (41t/loop)
+	CALL	CKCLK		; Read the clock
+	POP	BC		; Restore watchdog
+	LD	A,(HL)
+	SUB	E		; New - old
+	DAA
+	JR	Z,TST0		; If no action, try again
+	JR	NC,TST2		; New > old
+	ADD	A,60H		; Adjust for seconds rollover
+	DAA
+TST2:	SUB	2		; Allow 2 sec tolerance
+	DAA
+	RET	C		; Cy set is good
+BAD:	OR	A		; Cy clear is bad
+	RET
+
+LOCBUF:	DEFS	6
+
+; Set registers and read the clock
+
+CKCLK:	LD	HL,0000		; Set up in beginning
+	PUSH	HL		; Go to this address
+	LD	C,00		; Tell the clock we are reading
+	LD	HL,LOCBUF
+	RET
+

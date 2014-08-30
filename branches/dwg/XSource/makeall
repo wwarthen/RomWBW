@@ -1,5 +1,0 @@
-make clean
-make -f Makefile_n8vem
-make -f Makefile_n8_2312
-make -f Makefile_zeta
-ls -l ../Output
