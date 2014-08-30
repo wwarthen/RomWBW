@@ -3,8 +3,8 @@ param([string]$Platform = "", [string]$Config = "", [string]$RomSize = "", [stri
 $Platform = $Platform.ToUpper()
 while ($true)
 {
-	if (($Platform -eq "N8VEM") -or ($Platform -eq "ZETA") -or ($Platform -eq "N8") -or ($Platform -eq "S2I") -or ($Platform -eq "S100")) {break}
-	$Platform = (Read-Host -prompt "Platform [N8VEM|ZETA|N8|S2I|S100]").Trim().ToUpper()
+	if (($Platform -eq "N8VEM") -or ($Platform -eq "ZETA") -or ($Platform -eq "N8") -or ($Platform -eq "MK4") -or ($Platform -eq "S2I") -or ($Platform -eq "S100")) {break}
+	$Platform = (Read-Host -prompt "Platform [N8VEM|ZETA|N8|MK4|S2I|S100]").Trim().ToUpper()
 }
 
 while ($true)
@@ -24,7 +24,7 @@ while ($true)
 	$RomSize = (Read-Host -prompt "ROM Size [512|1024]").Trim()
 }
 
-if ($Platform -eq "N8") {$CPUType = "180"} else {$CPUType = "80"}
+if (($Platform -eq "N8") -or ($Platform -eq "MK4")) {$CPUType = "180"} else {$CPUType = "80"}
 
 $SYS = $SYS.ToUpper()
 while ($true)
@@ -49,7 +49,7 @@ $env:TASMTABS = $TasmPath
 $env:PATH = $TasmPath + ';' + $CpmToolsPath + ';' + $env:PATH
 
 $OutDir = "../Output"
-$RomFmt = "rom${RomSize}KB"
+$RomFmt = "n8vem_rom${RomSize}"
 $BlankFile = "blank${RomSize}KB.dat"
 $RomDiskFile = "RomDisk.tmp"
 $RomFile = "${OutDir}/${RomName}.rom"
@@ -91,11 +91,7 @@ PLATFORM	.EQU		PLT_${Platform}		; HARDWARE PLATFORM
 ;
 ; INCLUDE PLATFORM SPECIFIC DEVICE DEFINITIONS
 ;
-#IF (PLATFORM == PLT_S100)
-  #INCLUDE "std-s100.inc"
-#ELSE
-  #INCLUDE "std-n8vem.inc"
-#ENDIF
+#INCLUDE "std-n8vem.inc"
 ;
 #INCLUDE "${ConfigFile}"
 ;
@@ -105,13 +101,22 @@ PLATFORM	.EQU		PLT_${Platform}		; HARDWARE PLATFORM
 
 if ($SYS -eq "CPM")
 {
-	Asm 'ccpb03' -Output 'cp.bin'
-	Asm 'bdosb01' -Output 'dos.bin'
+#	Asm 'ccpb03' -Output 'cp.bin'
+#	Asm 'bdosb01' -Output 'dos.bin'
+
+#	Copy-Item '..\cpm22\ccpb03.bin' 'cp.bin'
+#	Copy-Item '..\cpm22\bdosb01.bin' 'dos.bin'
+
+#	Copy-Item '..\cpm22\ccp22.bin' 'cp.bin'
+#	Copy-Item '..\cpm22\bdos22.bin' 'dos.bin'
+
+	Copy-Item '..\cpm22\os2ccp.bin' 'cp.bin'
+	Copy-Item '..\cpm22\os3bdos.bin' 'dos.bin'
 }
 if ($SYS -eq "ZSYS")
 {
-	Asm 'zcprw' -Architecture '85' -Output 'cp.bin'
-	Asm 'zsdos' -Output 'dos.bin'
+	Copy-Item '..\zcpr-dj\zcpr.bin' 'cp.bin'
+	Copy-Item '..\zsdos\zsdos.bin' 'dos.bin'
 }
 
 Asm 'syscfg'
@@ -132,8 +137,8 @@ Asm 'romfill'
 
 Concat 'cp.bin','dos.bin','cbios.bin' 'os.bin'
 Concat 'prefix.bin','os.bin' $SysImgFile
-Concat 'pgzero.bin','bootrom.bin','syscfg.bin','loader.bin','romfill.bin','dbgmon.bin','os.bin','hbfill.bin' 'rom0.bin'
-Concat 'pgzero.bin','bootrom.bin','syscfg.bin','loader.bin','hbios.bin' 'rom1.bin'
+Concat 'pgzero.bin','bootrom.bin','syscfg.bin','loader.bin','romfill.bin','dbgmon.bin','os.bin','hbfill.bin' 'rom1.bin'
+Concat 'pgzero.bin','bootrom.bin','syscfg.bin','loader.bin','hbios.bin' 'rom2.bin'
 Concat 'bootapp.bin','syscfg.bin','loader.bin','hbios.bin','dbgmon.bin','os.bin' $LoaderFile
 
 # Create the RomDisk image
@@ -143,10 +148,10 @@ Concat 'bootapp.bin','syscfg.bin','loader.bin','hbios.bin','dbgmon.bin','os.bin'
 Copy-Item $BlankFile $RomDiskFile
 cpmcp -f $RomFmt $RomDiskFile ../RomDsk/${SYS}_${RomSize}KB/*.* 0:
 cpmcp -f $RomFmt $RomDiskFile ../RomDsk/cfg_${Platform}_${Config}/*.* 0:
-cpmcp -f $RomFmt $RomDiskFile ../Apps/Output/*.* 0:
-cpmcp -f $RomFmt $RomDiskFile ../Output/${RomName}.sys 0:${SYS}.sys
+cpmcp -f $RomFmt $RomDiskFile ../Apps/*.com 0:
+cpmcp -f $RomFmt $RomDiskFile ${OutDir}/${RomName}.sys 0:${SYS}.sys
 
-Concat 'rom0.bin','rom1.bin',$RomDiskFile $RomFile
+Concat 'rom1.bin','rom2.bin',$RomDiskFile $RomFile
 
 # Cleanup
 Remove-Item $RomDiskFile

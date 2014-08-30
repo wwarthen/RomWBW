@@ -8,12 +8,12 @@ Builders: Wayne Warthen (wwarthen@gmail.com)
           Douglas Goodall (douglas_goodall@mac.com)
           David Giles (vk5dg@internode.on.net)
 
-Updated: 2014-05-04
-Version: 2.5.5
+Updated: 2014-08-30
+Version: 2.6.0
 
 This is an adaptation of CP/M-80 2.2 and ZSDOS/ZCPR
 targeting ROMs for all N8VEM Z80 hardware variations
-including SBC, Zeta, and N8.
+including SBC, Zeta, N8, and Mark IV.
 
 NOTE: This is very much a work-in-progress.  It is
 severely lacking appropriate documentation.  I am 
@@ -27,15 +27,17 @@ to acknowledge that much of this is derived or
 copied from the work of others in the N8VEM
 project including Andrew Lynch, Dan Werner, Max Scane,
 David Giles, John Coffman, and probably many others 
-I am not clearly aware of.
+I am not clearly aware of (let me know if I omitted
+someone!).
 
 I especially want to credit Douglas Goodall for 
-contributing code, time, testing, and advice.
-He has created an entire suite of application
-programs that substantially enhance this ROM.  Everything
-in the Apps folder of the distribution came directly
-from Douglas and the list includes cpmname, writesys,
-assign, slices, termtype, drives, and others.
+contributing code, time, testing, and advice.  He created
+an entire suite of application programs to enhance the
+use of RomWBW.  However, he is looking for someone to
+continue the maintenance of these applications and
+they have become unusable due to changes within
+RomWBW.  As of RomWBW 2.6, these applications are
+no longer provided.
 
 David Giles has contributed support for building the
 ROM under Linux and the CSIO support in the SD Card driver.
@@ -56,7 +58,17 @@ hardware configuration that they support.
 Upgrading from Previous Versions
 --------------------------------
 
-<TBD>
+Burn a new ROM image appropriate for your system
+and boot under that new ROM.  You may want to use
+a different ROM chip in case the new version does
+not work.
+
+If you are using "boot from disk", you will need
+to update the OS image on all drives you boot from.
+To do this, use SYSCOPY.  Something like this
+would make sense:
+
+    B:SYSCOPY C:=B:ZSYS.SYS
 
 CPU Speed & Baud Rate
 ---------------------
@@ -73,6 +85,13 @@ old version of XModem (XM5.COM), put a faster CPU
 oscillator in your system (6MHz or above), or
 3) decrease the baud rate by building a custom
 ROM.
+
+UNA Variant
+-----------
+
+RomWBW will now run under it's native BIOS (HBIOS) or
+under UNA BIOS (UBIOS).  There are pre-build ROM
+images for UNA in the OutputUNA directory.
 
 CP/M vs. ZSystem
 ----------------

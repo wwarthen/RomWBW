@@ -1,0 +1,178 @@
+ZMAC Relocating Macro Assembler v 1.7,                       page    1
+N8VEM HBIOS Clock Interface                                 HBCLK   .Z80
+Description of Clock Module                                 33/21/C9 00:00
+
+     3                     ;===================================================================
+     4                     ; HBCLK.Z80
+     5                     ;  HBIOS Clock driver for N8VEM Z80 Series Computer
+     6                     ;                               Wayne Warthen
+     7                     ; Version: 18 Apr 2014
+     8                     ;===================================================================
+
+    10         = 000A      VERS    EQU     10
+    11                            .Z80
+    12                            NAME     HBIOS
+    13                            
+    14                             MACLIB  CLOCK.LIB
+
+    16                            COMMON  /_CLKID/
+
+    18   0000* 0000        DESCST: DEFW    0               ; Pointer to static year value if required
+
+    20   0002* 4E 38 56 45 CLKNAM: DEFB    'N8VEM HBIOS Clock       '      ; Exactly 24 chars in name
+    21   001A* 31 2E 30 00         DEFB    VERS/10+'0','.',VERS MOD 10 +'0',0
+
+    23   001E* 4E 38 56 45 DESCR:  DEFB    'N8VEM Z80 Series HBIOS Clock',0
+
+    25                               IF  [$-DESCST] > 256
+    27                               ENDIF
+
+ZMAC Relocating Macro Assembler v 1.7,                       page    2
+N8VEM HBIOS Clock Interface                                 HBCLK   .Z80
+Description of Clock Module                                 33/21/C9 00:00
+
+
+    32                             COMMON  /_PARM_/
+
+    34   0000* 0000        PARBAS: DEFW    0       ; # of parameters (Set to 00 if none)
+    35   0002* 0000                DEFW    0       ; Pointer to STRS (Set to 00 if none)
+
+    37                             CSEG
+
+    39                     ;-----------------------------------------------------------
+    40                     ;       Z S D O S  C L O C K  H E A D E R
+    41                     ;-----------------------------------------------------------
+    42                     ; Enter: HL points to a 6-byte buffer to Get/Set time
+    43                     ; Exit : A=1 on Success, A=FFH if error
+    44                     ;       HL points to last char in buffer
+    45                     ;       E contains original seconds (HL+5)
+
+    47                     ;- - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    48                     ;       R e a d / W r i t e  t h e  C l o c k
+    49                     ;- - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+J   51   0000' C3 0006'    PRGBAS: JP      GETTIM  ; Jump to Read Clock
+J   52   0003' C3 0024'            JP      WRCLK   ; Jump to Set Clock
+    53                     ;
+    54   0006' E5          GETTIM: PUSH    HL              ; Save final buffer pointer
+    55   0007' 21 0039'            LD      HL,TIMBUF       ; Point to temp buf for HBIOS read
+    56   000A' 06 20               LD      B,20H           ; HBIOS Read Clock function = $20
+    57   000C' CF                  RST     08              ; Call HBIOS to get time
+    58   000D' 20 28'              JR      NZ,ERRRET       ; Error return
+    59   000F' 21 0039'            LD      HL,TIMBUF       ; Source is start of temp buf
+    60   0012' D1                  POP     DE              ; Destination is buffer provided originally
+    61   0013' 01 0005             LD      BC,5            ; Copy just the first 5 bytes
+    62   0016' EDB0                LDIR                    ; Do it
+    63   0018' 1A                  LD      A,(DE)          ; Save the original seconds value
+    64   0019' 03                  INC     BC              ; Setup to copy final byte (BC := 1)
+    65   001A' EDB0                LDIR                    ; Do the last byte (seconds)
+    66   001C' EB                  EX      DE,HL           ; Setup HL to point to seconds for return
+    67   001D' 2B                  DEC     HL              ; Need to dec HL back to seconds adr
+    68   001E' 16 00               LD      D,0             ; Tenths of seconds is always zero
+    69   0020' 5F                  LD      E,A             ; Original seconds value to E
+    70   0021' 3E 01               LD      A,1             ; Signal success
+    71   0023' C9                  RET                     ; Done
+    72                     ;
+    73   0024' 11 0039'    WRCLK:  LD      DE,TIMBUF       ; Copy to temp buf
+    74   0027' 01 0006             LD      BC,6            ; 6 bytes
+    75   002A' EDB0                LDIR                    ; Do it
+    76                             ;XOR    A               ; Zero for day of week
+    77                             ;LD     (DE),A          ; Save day of week
+    78   002C' 21 0039'            LD      HL,TIMBUF       ; Point to temp buf for HBIOS call
+    79   002F' 06 21               LD      B,21H           ; Set clock function
+    80   0031' CF                  RST     08              ; Call HBIOS to set the time
+    81   0032' 20 03'              JR      NZ,ERRRET       ; Error return
+    82   0034' 3E 01               LD      A,1             ; Signal success
+    83   0036' C9                  RET                     ; Done
+    84                     ;
+    85   0037' AF          ERRRET: XOR     A               ; Error
+    86   0038' C9                  RET                     ; Done
+ZMAC Relocating Macro Assembler v 1.7,                       page    3
+N8VEM HBIOS Clock Interface                                 HBCLK   .Z80
+Configurable Clock Hardware Parameters                      33/21/C9 00:00
+
+    87                     ;
+    88                     ;TIMBUF EQU     0FE00H          ; HBIOS copy buffer
+    89   0039' 00 00 00 00 TIMBUF  DEFS    6               ; Temp date/time buffer
+
+ZMAC Relocating Macro Assembler v 1.7,                       page    4
+N8VEM HBIOS Clock Interface                                 HBCLK   .Z80
+Configurable Clock Hardware Parameters                      33/21/C9 00:00
+
+
+    94                     ; This code installs configurable items into the clock module
+    95                     ; Enter with DE pointing to the physical address of the relocatable module
+
+    97                             COMMON  /_POST_/
+    98   0000* C9                  RET             ; This RETURN MUST be present even if no other
+    99                                             ; code is included in this section
+
+   101                             COMMON  /_PRE_/
+
+   103                     ;---------------------------------------------------------------
+   104                     ; Read clock and wait for seconds to roll - watchdog protected
+   105                     ; Enter with: DE pointing to relocated clock read routine
+   106                     ;       HL pointing to base of high module
+
+   108                     ; This module is executed just prior to installing the module to insure
+   109                     ; that a valid clock is present
+   110                     ; Enter with DE pointing to beginning of relocated clock CSEG
+
+   112                             COMMON  /_PRE_/
+
+   114                             INCLUDE PRECLOCK.LIB
+     2+                    ;---------------------------------------------------------------
+     3+                    ; Read clock and wait for seconds to roll - watchdog protected
+     4+                    ; Enter with: DE pointing to relocated clock read routine
+     5+                    ;             HL pointing to base of high module
+
+     7+  0000* 18 02*      TSTRD:  JR      TSTRD0          ; Jump around address store
+
+     9+  0002* 0000                DEFW    TSTRD           ; Org location of the code
+
+    11+  0004* ED53 0039*  TSTRD0: LD      (CKCLK+1),DE    ; Patch GETTIM address in
+    12+  0008* CD 0038*            CALL    CKCLK           ; Get time to start with
+    13+  000B* 7E                  LD      A,(HL)          ; Get seconds
+    14+  000C* FE 60               CP      60H             ; Check for valid digit
+    15+  000E* 30 20*              JR      NC,BAD          ; >= 60h
+    16+  0010* 01 0000             LD      BC,0            ; Set watchdog
+    17+  0013* 0B          TST0:   DEC     BC              ; One less remaining...
+    18+  0014* 78                  LD      A,B
+    19+  0015* B1                  OR      C
+    20+  0016* C8                  RET     Z               ; Exit w/cy clear if timed out
+    21+  0017* C5                  PUSH    BC              ; Save watchdog
+    22+  0018* 06 21               LD      B,MHZ           ; insure good at up to 25mhz
+    23+  001A* E3          TST1:   EX      (SP),HL         ; ..under absolute worst case
+    24+  001B* E3                  EX      (SP),HL
+    25+  001C* 10 FC*              DJNZ    TST1            ; waste time (41t/loop)
+    26+  001E* CD 0038*            CALL    CKCLK           ; Read the clock
+    27+  0021* C1                  POP     BC              ; Restore watchdog
+    28+  0022* 7E                  LD      A,(HL)
+    29+  0023* 93                  SUB     E               ; New - old
+    30+  0024* 27                  DAA
+    31+  0025* 28 EC*              JR      Z,TST0          ; If no action, try again
+    32+  0027* 30 03*              JR      NC,TST2         ; New > old
+    33+  0029* C6 60               ADD     A,60H           ; Adjust for seconds rollover
+    34+  002B* 27                  DAA
+    35+  002C* D6 02       TST2:   SUB     2               ; Allow 2 sec tolerance
+ZMAC Relocating Macro Assembler v 1.7,                       page    5
+N8VEM HBIOS Clock Interface                                 HBCLK   .Z80
+PRECLOCK.LIB - Test for Clock Tick - 12/12/88               33/21/C9 00:00
+
+    36+  002E* 27                  DAA
+    37+  002F* D8                  RET     C               ; Cy set is good
+    38+  0030* B7          BAD:    OR      A               ; Cy clear is bad
+    39+  0031* C9                  RET
+
+    41+  0032* 00 00 00 00 LOCBUF: DEFS    6
+
+    43+                    ; Set registers and read the clock
+
+    45+  0038* 21 0000     CKCLK:  LD      HL,0000         ; Set up in beginning
+    46+  003B* E5                  PUSH    HL              ; Go to this address
+    47+  003C* 0E 00               LD      C,00            ; Tell the clock we are reading
+    48+  003E* 21 0032*            LD      HL,LOCBUF
+    49+  0041* C9                  RET
+
+   116                             END
+                                       

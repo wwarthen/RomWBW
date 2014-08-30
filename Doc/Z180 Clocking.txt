@@ -1,5 +1,5 @@
 The table below can be used to determine the correct value for CLKDIV AND CNTLB
-in an Z180 (N8) configuration file.  OSC Freq referes to the hardware clock
+in an Z180 (N8) configuration file.  OSC Freq refers to the hardware clock
 oscillator frequency you are using.  You can then choose a CLKDIV value which
 will result in the CPU speed (frequency) shown below the oscillator frequency.
 

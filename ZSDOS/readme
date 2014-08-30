@@ -1,0 +1,69 @@
+ZSDOS-GP.  General Public Release of the ZSDOS 1.x Operating System.
+
+Copyright (C) 1986.7.8 by:
+
+	Harold F. Bower          and         Cameron W. Cotrill
+      7914 Redglobe Ct.                     2160 N.W. 159th Place
+      Severn, MD  21144-1048                Beaverton, OR  97006
+      USA.                                  USA.
+
+      HalBower@worldnet.att.net             ccotrill@symantic.com
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    General Public License (file LICENSE.TXT) for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
+This Basic Disk Operating System is an enhanced CP/M 2.2 compatible
+core tailored for efficient operating on Z80 processors.  It is
+coded for assembly by the SLR Systems SLR180 or Z80ASMP assemblers,
+as well as Al Hawley's ZMAC assembler (NOT Echelon's or Hi-Tech's
+ZMAC assemblers).  Assembly is possible under other assemblers with
+appropriate modifications to conditional assembly directives and/or
+arguments coded with square brackets ({}).
+
+To assemble a relocatable image of the ZSDOS, first edit ZSDOS.LIB
+to reflect your desired options.  Among the more important options
+are:
+
+  ZS   - If Set to True, the ZSDOS variant will be produced which
+	requires an external clock driver and File stamping module.
+	These are tailored to various combinations of the DateStamper,
+	P2DOS (CP/M+), or NZTIM stamp methods with utility routines
+	in a separate package.  If Set to False, the ZDDOS variant is
+	produced which contains support for ONLY DateStamper file
+	stamps, but with internal drivers and NO support for the DOS
+	search path and other minor features.
+
+  ZSDOS11  - This flag, when set to True assembles a version
+	compatible to the released rev level which has been a
+	commercial product since 1988.  The released utilities are
+	set for this version as distributed.  A later 1.2 version was
+	produced but never distributes.  Setting this flag to False
+	will require reassembly and rebuilding of support modules to
+	permit an operating installation.
+
+  ZRL  - This flag provides a Named Common label needed by NZCOM and
+	other Z-System components if set to True.  When set to False,
+	this label is not embedded in the relocatable file.
+
+If you are Not running a ZCPR-based command processor, many of the
+remaining equates are unimportant, but examine them and set any
+values you need to system parameters.
+
+Assemble the program to a Microsoft Relocatable file (default type of
+.REL) and rename the output file type to .ZRL if you had the ZRL
+equate set to True in ZSDOS.LIB.  You may then use the output file
+directly in an NZ-COM build, installation per the manual with
+utilities provided in a separate file, or link to an absolute image
+for manual installation.
+

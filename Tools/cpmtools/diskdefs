@@ -266,16 +266,17 @@ diskdef interak
   sectrk 20
   blocksize 4096
   maxdir 256
-  skew 0
+  skew 1
   boottrk 2
   os 2.2
 end
 
-# For 512KB ROM, less 64K reserved for system
-diskdef rom512KB
-  seclen 128
-  tracks 14
-  sectrk 256
+# For 512KB ROM, less 96K reserved for system
+
+diskdef n8vem_rom512
+  seclen 512
+  tracks 13
+  sectrk 64
   blocksize 2048
   maxdir 256
   skew 0
@@ -283,14 +284,15 @@ diskdef rom512KB
   os 2.2
 end
 
-# For 1024KB ROM, less 64K reserved for system
-diskdef rom1024KB
-  seclen 128
-  tracks 30
-  sectrk 256
+# For 1024KB ROM, less 96K reserved for system
+
+diskdef n8vem_rom1024
+  seclen 512
+  tracks 29
+  sectrk 64
   blocksize 2048
   maxdir 256
-  skew 1
+  skew 0
   boottrk 0
   os 2.2
 end
