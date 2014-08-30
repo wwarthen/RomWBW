@@ -3,7 +3,7 @@
 <FONT FACE="Arial" SIZE=2>
 <H2><A NAME="lbAA">MKFS.CPM</A></H2>
 Section: User commands (1)<BR>
-Updated: June 16, 2008<BR><BR>
+Updated: December 1, 2013<BR><BR>
 
 <A HREF="#index">Index&nbsp;&nbsp;</A>
 <A HREF=" ./index.htm">Return to Main Contents&nbsp;&nbsp;</A>
@@ -28,6 +28,8 @@ Updated: June 16, 2008<BR><BR>
 [<B>-L</B>
 
 <I>label</I>]
+
+[<B>-t</B>]
 
 <I>image</I>
 
@@ -70,6 +72,10 @@ are written to sequential sectors, padding with 0xe5 if needed.
 <BR>
 Label the file system.  This is only supported by CP/M Plus.
 <BR><BR>
+
+<DT><B>-t</B><DD>
+Create time stamps.
+<BR><BR>
 </DL>
 
 <A NAME="lbAF">&nbsp;</A>
@@ -93,23 +99,29 @@ language like C.
 <A NAME="lbAH">&nbsp;</A>
 <B>FILES - diskdefs - CP/M disk format definitions</B><BR><BR>
 
-The diskdefs file is a plain ascii text file that serves as a database of
-disk and disk image format definitions. It can be reviewed for available
-CP/M formats and their names. For Apple II CP/M 80 users the disk
+The diskdefs file is a plain ascii text file (in "unix" format, not Windows format)
+that serves as a database of
+disk and disk image format definitions. It can be reviewed for available CP/M
+formats and their names. For Apple II CP/M 80 users the disk
 image formats apple-do and apple-po are available.
+<BR>
+To convert between Windows text and "unix" text, two utilities (rmcr and cr) are
+included in the Windows distro of the cpmtools binaries. These are included so you
+can use a Windows text editor to edit a copy of diskdefs if your Windows text editor
+does not edit "unix" text.
 <BR><BR>
 <b>The possible locations where cpmtools first looks for the diskdefs file:</b>
 <BR>
 <BR>
-- Can vary depending on the preferences of the person who builds the
+Can vary depending on the preferences of the person who builds the
 cpmtools binaries (executables) from the source code.
-<BR><BR>
-- The location is also installation dependent and the diskdefs file
-may also have been renamed.
 <BR>
 <BR>
 <b>If it's not found the current (work) directory is then searched for a
 file called diskdefs.</b>
+<br>
+<br>
+The Windows distro uses <b>\cpmtools\diskdefs</b> as a default.
 <BR>
 <BR>
 <b>On a unix-like system</b>, a <b>${prefix}/share/</b> style path
@@ -118,15 +130,8 @@ look for diskdefs.
 <BR>
 <BR>
 <b>In a Win32 system</b> sometimes unix-like shells like cygwin
-are used to run cpmtools instead of Windows cmd. For those installations
-unix-like conventions probably apply.
-<br>
-<br>
-For cpmtools installations targetted at the average
-Windows user who does not have a unix-like shell and uses the Windows cmd
-prompt to run cpmtools there is no standard shared place that cpmtools will first
-look for diskdefs. Pathed File names like <b>\cpm\diskdefs</b> or
-even <b>c:\cpmtools\diskdefs</b> are possible.
+are used to build and run cpmtools instead of Windows cmd. For those installations
+unix-like conventions may apply.
 <BR>
 <BR>
 
@@ -135,9 +140,9 @@ even <b>c:\cpmtools\diskdefs</b> are possible.
 <B>AUTHORS</B>
 <BR>
 <BR>
-This program is copyright 1997-2008 Michael Haardt &lt;<A HREF="mailto:michael@moria.de">michael@moria.de</A>&gt;.
+This program is copyright 1997-2013 Michael Haardt &lt;<A HREF="mailto:michael@moria.de">michael@moria.de</A>&gt;.
 The Windows port is
-copyright 2000, 2001 John Elliott &lt;<A HREF="mailto:jce@seasip.demon.co.uk">jce@seasip.demon.co.uk</A>&gt;.
+copyright 2000, 2001, 2011 John Elliott &lt;<A HREF="mailto:jce@seasip.demon.co.uk">jce@seasip.demon.co.uk</A>&gt;.
 <BR><BR>
 
 
@@ -161,6 +166,8 @@ with this program.  If not, write to the Free Software Foundation, Inc.,
 
 <A NAME="lbAJ">&nbsp;</A>
 <B>SEE ALSO</B><BR><BR>
+
+<I><A HREF="./fsck.cpm.htm">fsck.cpm</A></I>(1),
 
 <I><A HREF="./cpmls.htm">cpmls</A></I>(1),
 
@@ -189,14 +196,6 @@ with this program.  If not, write to the Free Software Foundation, Inc.,
 </DL>
 
 <HR>
-<b>Gradus ad Parnassum</b>
-<br>
-<br>
-An ugly version of this document was initially created by man2html on November 14, 2008
-using the cpmtools version 2.8 manual pages
-then edited and reformatted by hand by <A HREF="mailto:bbuckels@mts.net">Bill Buckels</A>.
-<br>
-<br>
 <a name="disclaimer"><b>Caveat Emptor</b></a>
 <br>
 <br>
