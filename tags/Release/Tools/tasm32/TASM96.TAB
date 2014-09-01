@@ -1,0 +1,393 @@
+"TASM 8096 Assembler."
+/****************************************************************************
+/* $Id: tasm96.tab 1.5 1997/09/28 22:14:30 toma Exp $
+/****************************************************************************
+;* This is the instruction set definition table
+;*   for the 8096 version of TASM.
+;*      Thomas N. Anderson, Speech Technology Incorporated
+;*
+;*  See TASM manual for info on table structure.
+;*
+;*INSTR ARGS OPCODE BYTES MOD CLASS SHIFT MASK
+;*-------------------------------------------*
+; Revisions:
+;   Added I7 rule for single arg direct/far (PUSH/POP)
+;   Changed ADDB *,*,*[*] entry from rule I1 to I6.
+;
+; Generate opcodes high byte first/
+.MSFIRST
+.NOARGSHIFT
+;
+; Note:
+;	The I1 rule uses ARGVAL for arg validation.  If the combined
+;	args AND ARGVAL is not equal to the combined args then an
+;	error message is generated.
+;
+;	The I1 rule also uses ARGOR.  The value of that mask is OR'd
+;	with the first byte of the args.
+;
+;		            	     ARGOR
+;       		  BYTES	CLASS |
+;                   | 	   |  |	
+;INST  ARGS    OP   v RULE v  v ARGVAL
+;-----------------------------------------;
+;OK ADD
+ADD  *,*,[*]+  46   4 I1   1 01 00FeFeFe  ;
+ADD  *,*,[*]   46   4 I1   1 00 00FeFeFe  ;
+ADD  *,*,*[*]  47   6 I6   1 00 00FeFeFe  ;
+ADD  *,*,#*    45   5 I1   1 00 FeFeFFFF  ;
+ADD  *,[*]+    66   3 I1   1 01 0000FFFe  ; 1st arg must be even, make odd
+ADD  *,[*]     66   3 I1   1 00 0000FFFe  ; 1st arg must be even
+ADD  *,*[*]    67   5 I6   1 00 00FFFFFF  ; 
+ADD  *,*,*     4701 6 I3   1 00 0000FeFe  ; 3rd arg may be far
+ADD  *,#*      65   4 I1   1 00 00FeFFFF  ; 1st arg must be even
+ADD  *,*       6701 5 I2   1 00 0000FeFe  ; 2nd arg may be far
+
+;OK ADDB
+ADDB *,*,[*]+  56   4 I1   1 01 00000000  ; no validation yet
+ADDB *,*,[*]   56   4 I1   1 00 00000000  ; no validation yet
+ADDB *,*,*[*]  57   6 I6   1 00 00000000  ; no validation yet
+ADDB *,*,#*    55   4 I1   1 00 00000000  ; no validation yet
+ADDB *,[*]+    76   3 I1   1 01 0000FFFe  ; 1st arg must be even, make odd
+ADDB *,[*]     76   3 I1   1 00 0000FFFe  ; 1st arg must be even
+ADDB *,*[*]    77   5 I6   1 00 00FeFFFe  ; 1st,3rd must be even
+ADDB *,*,*     5701 6 I3   1 00 00000000  ; 3rd arg may be far
+ADDB *,#*      75   3 I1   1 00 00FFFFFF  ; odd args ok for byte operations
+ADDB *,*       7701 5 I2   1 00 00000000  ; 2nd arg may be far
+
+; No three arg forms for ADDC or ADDCB
+ADDC *,[*]+    A6   3 I1   1 01 0000FFFe  ;1st arg must be even, make odd
+ADDC *,[*]     A6   3 I1   1 00 0000FFFe  ;1st arg must be even
+ADDC *,*[*]    A7   5 I6   1 00 00FFFFFF  ; 
+ADDC *,#*      A5   4 I1   1 00 00FeFFFF  ;1st arg must be even
+ADDC *,*       A701 5 I2   1 00 00000000  ;2nd arg may be far
+
+ADDCB *,[*]+   B6   3 I1   1 01 0000FFFe  ;1st arg must be even, make odd
+ADDCB *,[*]    B6   3 I1   1 00 0000FFFe  ;1st arg must be even
+ADDCB *,*[*]   B7   5 I6   1 00 00FFFFFF  ; 
+ADDCB *,#*     B5   3 I1   1 00 00FFFFFF  ;odd args ok for byte operations
+ADDCB *,*      B701 5 I2   1 00 00000000  ;2nd arg may be far
+
+; OK AND
+AND  *,*,[*]+  42   4 I1   1 01 00000000  ;no validation yet
+AND  *,*,[*]   42   4 I1   1 00 00000000  ;no validation yet
+AND  *,*,*[*]  43   6 I6   1 00 00000000  ;no validation yet
+AND  *,*,#*    41   5 I1   1 00 00000000  ;no validation yet
+AND  *,[*]+    62   3 I1   1 01 0000FFFe  ;1st arg must be even, make odd
+AND  *,[*]     62   3 I1   1 00 0000FFFe  ;1st arg must be even
+AND  *,*[*]    63   5 I6   1 00 00FeFFFe  ;1st,3rd must be even
+AND  *,*,*     4301 6 I3   1 00 00000000  ;3rd arg may be far
+AND  *,#*      61   4 I1   1 00 00FeFFFF  ;1st arg must be even
+AND  *,*       6301 5 I2   1 00 00000000  ;2nd arg may be far
+
+ANDB *,*,[*]+  52   4 I1   1 01 00000000  ;no validation yet
+ANDB *,*,[*]   52   4 I1   1 00 00000000  ;no validation yet
+ANDB *,*,*[*]  53   6 I6   1 00 00000000  ;no validation yet
+ANDB *,*,#*    51   4 I1   1 00 00000000  ;no validation yet
+ANDB *,[*]+    72   3 I1   1 01 0000FFFe  ;1st arg must be even, make odd
+ANDB *,[*]     72   3 I1   1 00 0000FFFe  ;1st arg must be even
+ANDB *,*[*]    73   5 I6   1 00 00FFFFFF  ;
+ANDB *,*,*     5301 6 I3   1 00 00000000  ;3rd arg may be far
+ANDB *,#*      71   3 I1   1 00 00FFFFFF  ;odd args ok for byte operations
+ANDB *,*       7301 5 I2   1 00 00000000  ;2nd arg may be far
+
+BMOV  *,*      C1   3 I1   2 00 0000FcFF  ;long word ptr to two words
+BMOVI *,*      AD   3 I1   2 00 0000FcFF  ;long word ptr to two words
+
+BR [*]         E3   2 I1   1 00 00000000  ;
+BR *           2000 2 I5   1 00 00000000  ; Same As SJMP
+
+CLR  *         01   2 NOP  1 00 00000000  ;
+CLRB *         11   2 NOP  1 00 00000000  ;
+CLRC  ""       F8   1 NOP  1 00 00000000  ;
+CLRVT ""       FC   1 NOP  1 00 00000000  ;
+
+CMP  *,[*]+    8A   3 I1   1 01 0000FFFe  ;1st arg must be even, make odd
+CMP  *,[*]     8A   3 I1   1 00 0000FFFe  ;1st arg must be even
+CMP  *,*[*]    8B   5 I6   1 00 00FFFFFF  ; 
+CMP  *,#*      89   4 I1   1 00 00FeFFFF  ;1st arg must be even
+CMP  *,*       8B01 5 I2   1 00 00000000  ;2nd arg may be far
+
+CMPB *,[*]+    9A   3 I1   1 01 0000FFFe  ;1st arg must be even, make odd
+CMPB *,[*]     9A   3 I1   1 00 0000FFFe  ;1st arg must be even
+CMPB *,*[*]    9B   5 I6   1 00 00FFFFFF  ; 
+CMPB *,#*      99   3 I1   1 00 00FFFFFF  ;odd args ok for byte operations
+CMPB *,*       9B01 5 I2   1 00 00000000  ;2nd arg may be far
+
+CMPL  *,*      C5   3 I1   2 00 0000FcFc  ;long align multiple of 4
+
+DEC  *         05   2 NOP  1 00 00000000  ;
+DECB *         15   2 NOP  1 00 00000000  ;
+DJNZ  *,*      E0   3 CREL 1 00 00000000  ;
+DJNZW *,*      E1   3 CREL 2 00 00000000  ;
+
+DI    ""       FA   1 NOP  1 00 00000000  ;
+
+DIVU  *,[*]+   8E   3 I1 1 01 0000FFFe  ;1st arg must be even, make odd
+DIVU  *,[*]    8E   3 I1 1 00 0000FFFe  ;1st arg must be even
+DIVU  *,*[*]   8F   5 I6 1 00 0000FFFe  ;1st arg must be even
+DIVU  *,#*     8D   4 I1 1 00 00FeFFFF  ;1st arg must be even
+DIVU  *,*      8F01 5 I2 1 00 00000000  ;2nd arg may be far
+
+DIVUB *,[*]+   9E   3 I1 1 01 0000FFFe  ;1st arg must be even, make odd
+DIVUB *,[*]    9E   3 I1 1 00 0000FFFe  ;1st arg must be even
+DIVUB *,*[*]   9F   5 I6 1 00 0000FFFF  ;
+DIVUB *,#*     9D   3 I1 1 00 00FFFFFF  ;odd args ok for byte operations
+DIVUB *,*      9F01 5 I2 1 00 00000000  ;2nd arg may be far
+
+DIV  *,[*]+    FE8E   4 I1 1 01 0000FFFe  ;1st arg must be even, make odd
+DIV  *,[*]     FE8E   4 I1 1 00 0000FFFe  ;1st arg must be even
+DIV  *,*[*]    FE8F   6 I6 1 00 0000FFFe  ;1st arg must be even
+DIV  *,#*      FE8D   5 I1 1 00 00FeFFFF  ;1st arg must be even
+DIV  *,*       FE8F01 6 I2 1 00 00000000  ;2nd arg may be far
+
+DIVB *,[*]+    FE9E   4 I1 1 01 0000FFFe  ;1st arg must be even, make odd
+DIVB *,[*]     FE9E   4 I1 1 00 0000FFFe  ;1st arg must be even
+DIVB *,*[*]    FE9F   6 I6 1 00 0000FFFF  ;
+DIVB *,#*      FE9D   4 I1 1 00 00FFFFFF  ;odd args ok for byte operations;
+DIVB *,*       FE9F01 6 I2 1 00 00000000  ;2nd arg may be far
+
+DPTS  ""       EC   1 NOP  2 00 00000000  ;
+EPTS  ""       ED   1 NOP  2 00 00000000  ;
+
+EI    ""       FB   1 NOP  1 00 00000000  ;
+
+EXT  *         06   2 NOP  1 00 00000000  ;
+EXTB *         16   2 NOP  1 00 00000000  ;
+
+IDLPD #*       F6   2 NOP  2 00 00000000  ;
+
+INC  *         07   2 NOP  1 00 00000000  ;
+INCB *         17   2 NOP  1 00 00000000  ;
+
+JC   *         DB   2 R1   1 00 00000000
+JNC  *         D3   2 R1   1 00 00000000
+JH   *         D9   2 R1   1 00 00000000
+JNH  *         D1   2 R1   1 00 00000000
+JE   *         DF   2 R1   1 00 00000000
+JNE  *         D7   2 R1   1 00 00000000
+JV   *         DD   2 R1   1 00 00000000
+JNV  *         D5   2 R1   1 00 00000000
+JGE  *         D6   2 R1   1 00 00000000
+JLT  *         DE   2 R1   1 00 00000000
+JVT  *         DC   2 R1   1 00 00000000
+JNVT *         D4   2 R1   1 00 00000000
+JGT  *         D2   2 R1   1 00 00000000
+JLE  *         DA   2 R1   1 00 00000000
+JST  *         D8   2 R1   1 00 00000000
+JNST *         D0   2 R1   1 00 00000000
+
+JBC  *,*,*     30   3 I4   1 00 00000000
+JBS  *,*,*     38   3 I4   1 00 00000000
+
+LJMP  *        E7   3 R2   1 00 00000000
+LCALL *        EF   3 R2   1 00 00000000
+
+LD  *,[*]+    A2   3 I1   1 01 0000FFFe  ;1st arg must be even, make odd
+LD  *,[*]     A2   3 I1   1 00 0000FFFe  ;1st arg must be even
+LD  *,*[*]    A3   5 I6   1 00 00FFFFFF  ;
+LD  *,#*      A1   4 I1   1 00 00FFFFFF  ;
+LD  *,*       A301 5 I2   1 00 00000000  ;2nd arg may be far
+
+LDB *,[*]+    B2   3 I1   1 01 0000FFFe  ;1st arg must be even, make odd
+LDB *,[*]     B2   3 I1   1 00 0000FFFe  ;1st arg must be even
+LDB *,*[*]    B3   5 I6   1 00 00FFFFFF  ;
+LDB *,#*      B1   3 I1   1 00 00FFFFFF  ;odd args ok for byte operations
+LDB *,*       B301 5 I2   1 00 00000000  ;2nd arg may be far
+
+LDBSE *,[*]+  BE   3 I1   1 01 0000FFFe  ;1st arg must be even, make odd
+LDBSE *,[*]   BE   3 I1   1 00 0000FFFe  ;1st arg must be even
+LDBSE *,*[*]  BF   5 I6   1 00 00FeFFFe  ;1st,3rd must be even
+LDBSE *,#*    BD   3 I1   1 00 00FFFFFF  ;odd args ok for byte operations
+LDBSE *,*     BF01 5 I2   1 00 00000000  ;2nd arg may be far
+
+LDBZE *,[*]+  AE   3 I1   1 01 0000FFFe  ;1st arg must be even, make odd
+LDBZE *,[*]   AE   3 I1   1 00 0000FFFe  ;1st arg must be even
+LDBZE *,*[*]  AF   5 I6   1 00 00FeFFFe  ;1st,3rd must be even
+LDBZE *,#*    AD   3 I1   1 00 00FFFFFF  ;odd args ok for byte operations
+LDBZE *,*     AF01 5 I2   1 00 00000000  ;2nd arg may be far
+
+MULU *,*,[*]+  4E   4 I1   1 01 00000000  ;no validation yet
+MULU *,*,[*]   4E   4 I1   1 00 00000000  ;no validation yet
+MULU *,*,*[*]  4F   6 I6   1 00 00000000  ;no validation yet
+MULU *,*,#*    4D   5 I1   1 00 00000000  ;no validation yet
+MULU *,[*]+    6E   3 I1   1 01 0000FFFe  ;1st arg must be even, make odd
+MULU *,[*]     6E   3 I1   1 00 0000FFFe  ;1st arg must be even
+MULU *,*[*]    6F   5 I6   1 00 00FeFFFe  ;1st,3rd must be even
+MULU *,*,*     4F01 6 I3   1 00 00000000  ;3rd arg may be far
+MULU *,#*      6D   4 I1   1 00 00FeFFFF  ;1st arg must be even
+MULU *,*       6F01 5 I2   1 00 00000000  ;2nd arg may be far
+
+
+MULUB *,*,[*]+ 5E   4 I1   1 01 00000000  ;no validation yet
+MULUB *,*,[*]  5E   4 I1   1 00 00000000  ;no validation yet
+MULUB *,*,*[*] 5F   6 I6   1 00 00000000  ;no validation yet
+MULUB *,*,#*   5D   4 I1   1 00 00000000  ;no validation yet
+MULUB *,[*]+   7E   3 I1   1 01 0000FFFe  ;1st arg must be even, make odd
+MULUB *,[*]    7E   3 I1   1 00 0000FFFe  ;1st arg must be even
+MULUB *,*[*]   7F   5 I6   1 00 00FFFFFF  ;
+MULUB *,*,*    5F01 6 I3   1 00 00000000  ;3rd arg may be far
+MULUB *,#*     7D   3 I1   1 00 00FFFFFF  ;odd args ok for byte operations
+MULUB *,*      7F01 5 I2   1 00 00000000  ;2nd arg may be far
+
+MUL  *,*,[*]+  FE4E   5 I1 1 01 00000000  ;no validation yet
+MUL  *,*,[*]   FE4E   5 I1 1 00 00000000  ;no validation yet
+MUL  *,*,*[*]  FE4F   7 I6 1 00 00000000  ;no validation yet
+MUL  *,*,#*    FE4D   6 I1 1 00 00000000  ;no validation yet
+MUL  *,[*]+    FE6E   4 I1 1 01 0000FFFe  ;1st arg must be even, make odd
+MUL  *,[*]     FE6E   4 I1 1 00 0000FFFe  ;1st arg must be even
+MUL  *,*[*]    FE6F   6 I6 1 00 00FeFFFe  ;1st,3rd must be even
+MUL  *,*,*     FE4F01 7 I3 1 00 00000000  ;3rd arg may be far
+MUL  *,#*      FE6D   5 I1 1 00 00FFFFFF  ;odd args ok for byte operations
+MUL  *,*       FE6F01 6 I2 1 00 00000000  ;2nd arg may be far
+
+MULB  *,*,[*]+ FE5E   5 I1 1 01 00000000  ;no validation yet
+MULB  *,*,[*]  FE5E   5 I1 1 00 00000000  ;no validation yet
+MULB  *,*,*[*] FE5F   7 I6 1 00 00000000  ;no validation yet
+MULB  *,*,#*   FE5D   5 I1 1 00 00000000  ;no validation yet
+MULB  *,[*]+   FE7E   4 I1 1 01 0000FFFe  ;1st arg must be even, make odd
+MULB  *,[*]    FE7E   4 I1 1 00 0000FFFe  ;1st arg must be even
+MULB  *,*[*]   FE7F   6 I6 1 00 00FFFFFF  ;
+MULB  *,*,*    FE5F01 7 I3 1 00 00000000  ;3rd arg may be far
+MULB  *,#*     FE7D   4 I1 1 00 00FFFFFF  ;odd args ok for byte operations
+MULB  *,*      FE7F01 6 I2 1 00 00000000  ;2nd arg may be far
+
+NEG  *         03   2 I1   1 00 000000FE  ;arg must be even
+NEGB *         13   2 I1   1 00 000000FF  ;
+
+NOP   ""       FD   1 NOP  1 00 00000000  ;
+
+NORML *,*      0F   3 I1   1 00 0000FFFF  ;long align
+
+NOT  *         02   2 NOP  1 00 00000000  ;
+NOTB *         12   2 NOP  1 00 00000000  ;
+
+OR   *,[*]+    82   3 I1   1 01 0000FFFe  ;1st arg must be even, make odd
+OR   *,[*]     82   3 I1   1 00 0000FFFe  ;1st arg must be even
+OR   *,*[*]    83   5 I6   1 00 00FeFFFe  ;1st,3rd must be even
+OR   *,#*      81   4 I1   1 00 00FeFFFF  ;1st arg must be even
+OR   *,*       8301 5 I2   1 00 00000000  ;2nd arg may be far
+
+ORB  *,[*]+    92   3 I1   1 01 0000FFFe  ;1st arg must be even, make odd
+ORB  *,[*]     92   3 I1   1 00 0000FFFe  ;1st arg must be even
+ORB  *,*[*]    93   5 I6   1 00 00FFFFFF  ;
+ORB  *,#*      91   3 I1   1 00 00FFFFFF  ;odd args ok for byte operations
+ORB  *,*       9301 5 I2   1 00 00000000  ;2nd arg may be far
+
+PUSH #*        C9   3 I1   1 00 00000000  ;
+PUSH [*]+      CA   2 I1   1 01 000000Fe  ;arg must be even
+PUSH [*]       CA   2 I1   1 00 000000Fe  ;arg must be even
+PUSH *[*]      CB   4 I6   1 00 00FFFFFe  ;arg must be even
+PUSH *         CB01 4 I7   1 00 0000FFFe  ;arg must be even
+
+PUSHF ""       F2   1 NOP  1 00 00000000  ;
+PUSHA ""       F4   1 NOP  1 00 00000000  ;
+
+POP  [*]+      CE   2 I1   1 01 000000Fe  ;arg must be even
+POP  [*]       CE   2 I1   1 00 000000Fe  ;arg must be even
+POP  *[*]      CF   4 I6   1 00 00FFFFFE  ;
+POP  *         CF01 4 I7   1 00 0000FFFe  ;arg must be even
+
+POPF  ""       F3   1 NOP  1 00 00000000  ;
+POPA  ""       F5   1 NOP  1 00 00000000  ;
+
+RET ""         F0   1 NOP  1 00 00000000  ;
+RST   ""       FF   1 NOP  1 00 00000000  ;
+
+SJMP  *        2000 2 I5   1 00 00000000
+SCALL *        2800 2 I5   1 00 00000000
+
+SUB  *,*,[*]+  4A   4 I1   1 01 00000000  ;no validation yet
+SUB  *,*,[*]   4A   4 I1   1 00 00000000  ;no validation yet
+SUB  *,*,*[*]  4B   6 I6   1 00 00000000  ;no validation yet
+SUB  *,*,#*    49   5 I1   1 00 00000000  ;no validation yet
+SUB  *,[*]+    6A   3 I1   1 01 0000FFFe  ;1st arg must be even, make odd
+SUB  *,[*]     6A   3 I1   1 00 0000FFFe  ;1st arg must be even
+SUB  *,*[*]    6B   5 I6   1 00 00FeFFFe  ;1st,3rd must be even
+SUB  *,*,*     4B01 6 I3   1 00 00000000  ;3rd arg may be far
+SUB  *,#*      69   4 I1   1 00 00FeFFFF  ;1st arg must be even
+SUB  *,*       6B01 5 I2   1 00 00000000  ;2nd arg may be far
+
+SUBB *,*,[*]+  5A   4 I1   1 01 00000000  ;no validation yet
+SUBB *,*,[*]   5A   4 I1   1 00 00000000  ;no validation yet
+SUBB *,*,*[*]  5B   6 I6   1 00 00000000  ;no validation yet
+SUBB *,*,#*    59   4 I1   1 00 00000000  ;no validation yet
+SUBB *,[*]+    7A   3 I1   1 01 0000FFFe  ;1st arg must be even, make odd
+SUBB *,[*]     7A   3 I1   1 00 0000FFFe  ;1st arg must be even
+SUBB *,*[*]    7B   5 I6   1 00 00FeFFFe  ;1st,3rd must be even
+SUBB *,*,*     5B01 6 I3   1 00 00000000  ;3rd arg may be far
+SUBB *,#*      79   3 I1   1 00 00FFFFFF  ;odd args ok for byte operations
+SUBB *,*       7B01 5 I2   1 00 00000000  ;2nd arg may be far
+
+SUBC *,[*]+    AA   3 I1   1 01 0000FFFe  ;1st arg must be even, make odd
+SUBC *,[*]     AA   3 I1   1 00 0000FFFe  ;1st arg must be even
+SUBC *,*[*]    AB   5 I6   1 00 00FeFFFe  ;1st,3rd must be even
+SUBC *,#*      A9   4 I1   1 00 00FeFFFF  ;1st arg must be even
+SUBC *,*       AB01 5 I2   1 00 00000000  ;2nd arg may be far
+
+SUBCB *,[*]+   BA   3 I1   1 01 0000FFFe  ;1st arg must be even, make odd
+SUBCB *,[*]    BA   3 I1   1 00 0000FFFe  ;1st arg must be even
+SUBCB *,*[*]   BB   5 I6   1 00 00FeFFFe  ;1st,3rd must be even
+SUBCB *,#*     B9   3 I1   1 00 00FFFFFF  ;odd args ok for byte operations
+SUBCB *,*      BB01 5 I2   1 00 00000000  ;2nd arg may be far
+
+SHL  *,#*      09   3 I1   1 00 0000FE0F  ; F
+SHL  *,*       09   3 I1   1 00 0000FEFF  ;
+SHLB *,#*      19   3 I1   1 00 0000FF0F  ;
+SHLB *,*       19   3 I1   1 00 0000FFFF  ;
+SHLL *,#*      0D   3 I1   1 00 0000FF0F  ;
+SHLL *,*       0D   3 I1   1 00 0000FFFF  ;
+
+SHR  *,#*      08   3 I1   1 00 0000FF0F  ;word align
+SHR  *,*       08   3 I1   1 00 0000FFFF  ;word align
+SHRB *,#*      18   3 I1   1 00 0000FF0F  ;byte align
+SHRB *,*       18   3 I1   1 00 0000FFFF  ;byte align
+SHRL *,#*      0C   3 I1   1 00 0000FF0F  ;long align
+SHRL *,*       0C   3 I1   1 00 0000FFFF  ;long align
+
+SHRA *,#*      0A   3 I1   1 00 0000FF0F  ;word align
+SHRA *,*       0A   3 I1   1 00 0000FFFF  ;word align
+SHRAB *,#*     1A   3 I1   1 00 0000FF0F  ;byte align
+SHRAB *,*      1A   3 I1   1 00 0000FFFF  ;byte align
+SHRAL *,#*     0E   3 I1   1 00 0000FF0F  ;long align
+SHRAL *,*      0E   3 I1   1 00 0000FFFF  ;long align
+
+SETC  ""       F9   1 NOP  1 00 00000000  ;
+
+
+SKIP  ""       0000 2 NOP  1 00 00000000  ;
+SKIP  *        00   2 I1   1 00 00000000  ;
+
+ST  *,[*]+    C2   3 I1   1 01 0000FFFe  ;1st arg must be even, make odd
+ST  *,[*]     C2   3 I1   1 00 0000FFFe  ;1st arg must be even
+ST  *,*[*]    C3   5 I6   1 00 FFFFFFFe  ;1st,3rd must be even
+ST  *,*       C301 5 I2   1 00 00000000  ;2nd arg may be far
+
+STB *,[*]+    C6   3 I1   1 01 0000FFFe  ;1st arg must be even, make odd
+STB *,[*]     C6   3 I1   1 00 0000FFFe  ;1st arg must be even
+STB *,*[*]    C7   5 I6   1 00 FFFFFFFe  ;1st,3rd must be even
+STB *,*       C701 5 I2   1 00 00000000  ;2nd arg may be far
+
+TRAP ""        F7   1 NOP  1 00 00000000  ;
+
+TIJMP *,[*],#* E2   4 I8   2 00 00FEFEFF  ;
+
+XCH  *,*[*]    0B   5 I6   2 00 00FeFFFe  ;1st,3rd must be even
+XCH  *,*       0B01 5 I2   2 0C 00000000  ;2nd arg may be far
+
+XCHB *,*[*]    1B   5 I6   2 00 00FFFFFF  ;
+XCHB *,*       1B01 5 I2   2 0C 00000000  ;2nd arg may be far
+
+XOR  *,[*]+    86   3 I1   1 01 0000FFFe  ;1st arg must be even, make odd
+XOR  *,[*]     86   3 I1   1 00 0000FFFe  ;1st arg must be even
+XOR  *,*[*]    87   5 I6   1 00 00FeFFFe  ;1st,3rd must be even
+XOR  *,#*      85   4 I1   1 00 00FeFFFF  ;1st arg must be even
+XOR  *,*       8701 5 I2   1 00 00000000  ;2nd arg may be far
+
+XORB *,[*]+    96   3 I1   1 01 0000FFFe  ;1st arg must be even, make odd
+XORB *,[*]     96   3 I1   1 00 0000FFFe  ;1st arg must be even
+XORB *,*[*]    97   5 I6   1 00 00FFFFFF  ;
+XORB *,#*      95   3 I1   1 00 00FFFFFF  ;odd args ok for byte operations
+XORB *,*       9701 5 I2   1 00 00000000  ;2nd arg may be far
+
+
