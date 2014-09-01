@@ -1,9 +1,0 @@
-Changes since 2.17:
-
-o  Make timestamps in mkfs.com optional and add date stamper creation
-o  Better cpm.5 documentation
-o  Updated config.guess
-o  Fixed error handling for corrupt images or diskdefs
-o  Fixed off by one bug in fsck not detecting a wrong block number
-o  Fixed too short directory buffer for directory sizes not matching
-   whole blocks
