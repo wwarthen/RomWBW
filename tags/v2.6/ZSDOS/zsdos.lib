@@ -1,0 +1,179 @@
+;.....
+; ZSDOS Customization.  		-HFB,  18 Sept 1987
+;					revised 07/17/88 CWC
+
+FALSE	EQU	0
+TRUE	EQU	NOT FALSE
+
+; Set these conditionals before assembly
+
+;****************************************************************************
+; In the General Public Release version, we have included an equate which
+; controls an additional unreleased fix (which only Howard Goldstein found).
+; If the following equate is set TRUE, a version 1.1 BDOS will be produced
+; which will require no changes to any released utilities.  If set to FALSE,
+; a version 1.2 BDOS will result, and many support utility libraries and
+; overlays will need to be revised to make them function properly.    HFB
+
+ZSDOS11	EQU	TRUE			; Set True for Ver 1.1, False for 1.2
+
+;****************************************************************************
+
+ZS	EQU	TRUE      		; Set True for ZSDOS, False for ZDDOS
+
+;----------
+;   Select assembler for ZSDOS.  Any modifications to source code must
+; support these assemblers at minimum.
+
+SLR	EQU	TRUE		; SLR Z80ASM or SLR180 Assembler, OR ZMAC
+ZAS	EQU	FALSE 		; MITEK/ECHELON ZAS Assembler (3.0 or later)
+
+	  IF ZAS
+	NAME	DOS
+	  ENDIF
+
+	  IF  SLR
+	.Z80
+	NAME	('DOS')
+	  ENDIF
+
+	  IF ZAS AND ZS
+	   IF  ZSDOS11
+	.TITLE	'ZSDOS 1.1 - Enhanced CP/M BDOS Replacement'
+	   ELSE		;~Zsdos11
+	.TITLE	'ZSDOS 1.2 - Enhanced CP/M BDOS Replacement'
+	   ENDIF	;Zsdos11
+	  ENDIF
+	  IF ZAS AND (NOT ZS)
+	   IF  ZSDOS11
+	.TITLE	'ZDDOS 1.1 - Enhanced CP/M BDOS Replacement w/DS'
+	   ELSE		;~Zsdos11	
+	.TITLE	'ZDDOS 1.2 - Enhanced CP/M BDOS Replacement w/DS'
+	   ENDIF	;Zsdos11
+	  ENDIF
+
+	  IF SLR AND ZS
+	   IF  ZSDOS11
+	TITLE	"ZSDOS 1.1 - Enhanced CP/M BDOS Replacement"
+	   ELSE		;~Zsdos11
+	TITLE	"ZSDOS 1.2 - Enhanced CP/M BDOS Replacement"
+	   ENDIF	;Zsdos11
+	  ENDIF
+	  IF SLR AND (NOT ZS)
+	   IF  ZSDOS11
+	TITLE	"ZDDOS 1.1 - Enhanced CP/M BDOS Replacement w/DS"
+	   ELSE		;~Zsdos11	
+	TITLE	"ZDDOS 1.2 - Enhanced CP/M BDOS Replacement w/DS"
+	   ENDIF	;Zsdos11
+	  ENDIF
+
+;----------
+;   P2DOS introduced a search path feature compatible with that used in
+; Richard Conn's ZCPR2 and ZCPR3.  If a requested file is not located in
+; the currently logged Drive/User, the SEARCH routine will sequentially
+; scan along the path until either the file is found or the end of the
+; path is reached.
+
+	  IF	ZS
+PATHAD	EQU	IPATH		; Set to the desired ZCPR2/3 search path.
+	  ELSE			; use 0000H to disable path.  A short
+PATHAD	EQU	00000H		; 3 element internal path is provided
+	  ENDIF			; in ZSDOS.  ZDDOS does not use path.
+
+;----------
+;   The WHEEL byte may be sensed from within ZSDOS by setting the following
+; address to that of the ZCPR3 WHEEL byte.  A value of 0 disables the WHEEL
+; byte sensing.
+
+WHLADR	EQU	00000H		; Set WHEEL byte address (0FDFFH for SB180)
+
+;----------
+;   Some systems, like the Kaypro 4, only recognize changes between single
+; and double-sided disks when the system is warm booted; BDOS Function 13
+; (reset disk) will not work.  By adding a "hook" to the BIOS of these mach-
+; ines and setting RESDSK to TRUE, BDOS functions 13 and 37 will allow changes
+; between single and double-sided disks; very handy for disk housekeeping
+; utilities such as NSWP, NULU, and cataloging programs.
+
+;   The "hook" is added as follows: Obtain the source to your computer's BIOS.
+; Examine the code for WARM BOOT.  Somewhere, there should be a call to a rou-
+; tine which initializes the disk system after a warm boot, or which detects
+; changes between single and double-sided disks.  Call this routine DISKINT
+; for purposes of discussion.  Modify your BIOS's cold boot routine to ini-
+; tialize 3 bytes at address SETDSK as "JP DISKINT".  The location of SETDSK
+; is arbitrary, it may be in your BIOS, or in a reserved spot in CP/M's page 0.
+
+RESDSK	EQU	FALSE
+
+   IF	   RESDSK
+SETDSK	EQU	004BH		; Set to suit your system (bh)
+   ENDIF		; resdsk (bh)
+
+;----------
+;   The following equate is used to produce separate code and data segments
+; for blowing ZSDOS into ROM.  Calling BDOS Function 0 will initialize the
+; Data Segment to default values.
+
+ROM	EQU	FALSE		; Separate data and code?
+
+;----------
+;   Many ZSDOS features can be controlled while ZSDOS is running by altering
+; the FLAG byte.  Set the following equate to your desired configuration based
+; on your requirements.  The individual bit assignments in the FLAG byte are:
+;
+; Bit -	7 6 5 4 3 2 1 0
+;	 \ \ \ \ \ \ \ \__Public File Enable (1) / Disable (0)
+;	  \ \ \ \ \ \ \___Public/Path Write Enable (1) / Disable (0)
+;	   \ \ \ \ \ \____Read-Only Enable (1) / Disable (0)
+;	    \ \ \ \ \_____Fast Fixed Disk Relog Enable (1) / Disable (0)
+;	     \ \ \ \______Disk Change Warning Enable (1) / Disable (0)
+;	      \ \ \_______ZCPR2/3 Path Enable (1) / Disable (0)
+;	       \ \________Path without System Enable (1) / Disable (0)
+;		\_________(Reserved)
+
+FLGBITS	EQU	01101101B	; PUBLIC On, P/P Write Off, R/O On, 
+				; Fast Relog On,Disk Change warning Off, 
+				; Path On, No System path On
+
+; The operation of Bit 6 represents a deviation from the description of PUBLIC
+; Files as given in DDJ Article by Bridger Mitchell and Derek McKay of Plu*
+; Perfect Systems.  The PUBLIC Specification states that Public Files will NOT
+; be found by any wildcard reference except when a "?" is in the FCB+0 byte.
+; The code here relaxes that requirement as follows:  If we are in the same
+; user area as the public file, then don't report the file as PUBLIC, but find
+; it.  This has a nasty side effect - it allows erasing of PUBLIC files if we
+; are in the same area.  However, these files also show up on the directory
+; (they wouldn't otherwise), so at least we should know we're blasting them.
+
+;----------
+; Equates for selecting ZSDOS or ZDDOS configurations
+
+; Since much ZSDOS code must be deleted to embed DateStamper in ZDDOS, the
+; following flags do the stripping:
+;	PICKEY	- True = Don't save users' DE register
+;	CTLREN	- True = Add ^R Retype line to cons read, False = No ^R
+;	UNROLL	- True = Inline code for shifts, False = collapse into loops
+;	UPATH	- True = Add User path from OS, False = No OS path search
+
+	  IF ZS
+CTLREN	EQU	TRUE
+UNROLL	EQU	TRUE
+UPATH	EQU	TRUE
+PICKEY	EQU	FALSE
+	  ELSE
+CTLREN	EQU	FALSE
+UNROLL	EQU	FALSE
+UPATH	EQU	FALSE
+PICKEY	EQU	FALSE
+	  ENDIF
+
+;----------
+; To Use the Named-COMMON aspect of NZCOM and JETLOADER (tm), the BIOS must
+; be referenced from the _BIOS_ name.  If operating under this scheme, set
+; the ZRL equate to TRUE.  With the ZRL equate set to FALSE, a standalone
+; .REL file will be produced with no external requirements.
+
+ZRL	EQU	TRUE		; Set True .ZRL file with COMMON for NZCOM,
+				;     False to produce straight .REL file
+
+
