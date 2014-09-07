@@ -91,6 +91,7 @@
 ;
 #IF (PLATFORM == PLT_UNA)
 	; IF RUNNING UNDER UNA, WE ARE DONE, PROCEED TO LOADER
+	LD	DE,$0100	; *** FIX *** ASSUME WE WANT DEFAULT DRIVE TO BE ROM
 	JP	CPM_ENT		; JUMP TO OS
 #ELSE
 	; NON-UNA REQUIRES PHASE 2
@@ -158,6 +159,7 @@ LOOP:
 	CALL	PGSEL		; SELECT IT
 	CALL	HBX_LOC		; CALL HBIOS PROXY INITIALIZATION
 ;
+	LD	DE,$0000	; ASSUME WE WANT DEFAULT DRIVE TO BE ROM
 	JP	CPM_ENT		; JUMP TO OS
 ;______________________________________________________________________________________________________________________
 ;
