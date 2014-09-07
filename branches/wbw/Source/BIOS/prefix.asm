@@ -1,17 +1,9 @@
 ;----------------------------------------------------------------------------
-;       PREFIX.ASM
+;       PREFIX_UNA.ASM
 ;
 ;       PUT AT THE HEAD OF BOOT.BIN TO XFER TO A FLOPPY DISK
 ;
 ;----------------------------------------------------------------------------
-
-; 5/11/2012 dwg - changed offset to BIOS booting fixup location
-; 3/ 2/2012 dwg - fixed BOOT_INFO_LOC (moved when jump added for bnksel)
-; 2/15/2012 dwg - added origin data written by formatter
-; 2/ 5/2012 dwg - added version quad, updates counter, and write protect boolean to metadata
-; 1/ 9/2012 wbw - added signature
-; 1/ 5/2012 dwg - added version of build generating system image
-; 1/ 5/2012 dwg - added drive label to metadata for 1.4
 
 #INCLUDE "std.asm"
 
@@ -23,12 +15,56 @@ BLOCK_SIZE	.EQU	128
 PREFIX_SIZE	.EQU	(3 * SECTOR_SIZE)	; 3 SECTORS
 METADATA_SIZE	.EQU	BYT+WRD+(4*BYT)+16+BYT+WRD+WRD+WRD+WRD	; (as defined below)
 
-BOOT_INFO_LOC	.EQU	CPM_ENT + 04BH
-; PTR TO LOCATION TO RECORD BOOT INFO IN MEMORY IMAGE
-; FIXUP REQUIRED WHEN BIOS HEADER CHANGES
-
-		.ORG	0000H
-		JP	CPM_ENT
+	.ORG	$8000
+	JR	BOOT
+;
+BOOT:
+	LD	DE,STR_LOAD	; LOADING STRING
+	CALL	PRTSTR		; PRINT
+	CALL	PRTDOT		; PROGRESS
+;
+	LD	BC,$0241	; UNIT=2, FUNCTION: SET LBA
+	LD	DE,0		; HI WORD ALWAYS ZERO
+	LD	HL,3		; IMAGE STARTS AT FOURTH SECTOR
+	CALL	$FFFD		; SET LBA
+	JR	NZ,ERROR	; HANDLE ERROR
+	CALL	PRTDOT		; PROGRESS
+;
+	LD	BC,$0242	; UNIT=2, FUNCTION: READ SECTORS
+	LD	DE,$D000	; STARTING ADDRESS FOR IMAGE
+	LD	L,22		; READ 22 SECTORS
+	CALL	$FFFD		; DO READ
+	JR	NZ,ERROR	; HANDLE ERROR
+	CALL	PRTDOT		; PROGRESS
+;
+	LD	DE,STR_DONE	; DONE MESSAGE
+	CALL	PRTSTR		; PRINT IT
+;
+	JP	CPM_ENT		; GO TO CPM
+;
+PRTSTR:
+	LD	BC,$0015	; UNIT 0, WRITE CHARS UNTIL TERMINATOR
+	LD	L,0		; TERMINATOR IS NULL
+	JP	$FFFD		; PRINT
+;
+PRTDOT:
+	LD	BC,$0012	; UNIT 0, WRITE CHAR
+	LD	E,'.'		; DOT
+	JP	$FFFD		; PRINT
+;
+ERROR:
+	LD	DE,STR_ERR	; POINT TO ERROR STRINT
+	JR	PRTSTR		; PRINT IT
+	HALT			; HALT
+;
+STR_LOAD	.DB	"\r\nLoading",0
+STR_DONE	.DB	"\r\n",0
+STR_ERR		.DB	" Read Error!",0
+;
+		.ORG	$ - $8000
+;
+		.FILL	(SECTOR_SIZE) - $ - 2
+		.DW	$AA55
 ;
 		.FILL	((PREFIX_SIZE - BLOCK_SIZE) - $),00H
 PR_SIG		.DW	0A55AH				; SIGNATURE GOES HERE
@@ -45,7 +81,7 @@ PR_LOG_UNIT	.DW	0
 		.DW	0		; starting update number
 		.DB	RMJ,RMN,RUP,RTP
 		.DB	"Unlabeled Drive ","$"
-		.DW	BOOT_INFO_LOC	; PTR TO LOCATION TO STORE DISKBOOT & BOOTDRIVE (SEE CNFGDATA)
+		.DW	0		; PTR TO LOCATION TO STORE DISKBOOT & BOOTDRIVE (SEE CNFGDATA)
 		.DW	CPM_LOC		; CCP START
 		.DW	CPM_END		; END OF CBIOS
 		.DW	CPM_ENT		; COLD BOOT LOCATION

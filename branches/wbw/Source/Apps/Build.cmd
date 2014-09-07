@@ -1,14 +1,15 @@
 @echo off
-
 setlocal
 
-set PATH=..\Tools\tasm32;..\Tools\zx;%PATH%
+set TOOLS=../../Tools
 
-set TASMTABS=..\Tools\tasm32
+set PATH=%TOOLS%\tasm32;%TOOLS%\zx;%PATH%
 
-set ZXBINDIR=../tools/cpm/bin/
-set ZXLIBDIR=../tools/cpm/lib/
-set ZXINCDIR=../tools/cpm/include/
+set TASMTABS=%TOOLS%\tasm32
+
+set ZXBINDIR=%TOOLS%/cpm/bin/
+set ZXLIBDIR=%TOOLS%/cpm/lib/
+set ZXINCDIR=%TOOLS%/cpm/include/
 
 call :asm SysCopy || goto :eof
 call :asm Assign || goto :eof

@@ -248,24 +248,27 @@ devlist:
 	or	a		; set flags
 	jr	nz,devlstu	; do UNA mode dev list
 ;
-	call	crlf		; formatting
-	ld	c,0		; start with device 0
+	ld	b,$1a		; hbios func: diodevcnt
+	rst	08		; call hbios, device count to B
+	ld	c,0		; use C for device index
 devlist1:
 	ld	de,indent	; indent
 	call	prtstr		; ... to look nice
-	ld	a,c		; next device
-	rlca			; rotate to
-	rlca			; ... high
-	rlca			; ... nibble
-	rlca			; ... for device
+	push	bc		; preserve loop control
+	ld	b,$1b		; hbios func: diodevinf
+	rst	08		; call hbios, return device/unit in C
+	ld	a,c		; device/unit to A
+	push	af		; save it
 	call	prtdev		; print device mnemonic
-	ld	a,':'		; formatting
+	pop	af		; get device/unit back
+	and	$0f		; isolate unit num
+	call	prtdecb		; append unit num
+	ld	a,':'		; colon for device/unit format
 	call	prtchr		; print it
-	call	crlf		; next line
-	inc	c		; next device
-	ld	a,c		; put in a
-	cp	devcnt		; compare to max
-	jr	nz,devlist1	; loop if more to do
+	call	crlf		; formatting
+	pop	bc		; restore loop control
+	inc	c		; next device index
+	djnz	devlist1	; loop as needed
 	ret			; done
 ;
 devlstu:
@@ -273,16 +276,17 @@ devlstu:
 	ld	b,0		; use unit 0 to get count
 	ld	c,$48		; una func: get disk type
 	ld	l,0		; preset unit count to zero
-	call	$fffd		; call una, b is assumed to be untouched!!!
+;	call	$fffd		; call una, b is assumed to be untouched!!!
+	rst	08		; call una, b is assumed to be untouched!!!
 	ld	a,l		; unit count to a
 	or	a		; set flags
 	ret	z		; no units, return
 	ld	b,l		; unit count to b
 	ld	c,0		; init unit index
 devlstu1:
-	push	bc		; save loop control vars
 	ld	de,indent	; indent
 	call	prtstr		; ... to look nice
+	push	bc		; save loop control vars
 	ld	a,c		; put unit num in A
 	push	af		; save it
 	call	prtdevu		; print the device name
@@ -439,7 +443,7 @@ drvmap2:	; verify the unit is eligible for assignment (hard disk unit only!)
 	call	chktyp		; check it
 	jp	nz,errtyp	; abort with bad unit error
 ;
-	; construct the requested dph table entry	
+	; construct the requested dph table entry
 	ld	a,c		; C has device num
 	rlca			; move it to upper nibble
 	rlca			; ...
@@ -452,6 +456,13 @@ drvmap2:	; verify the unit is eligible for assignment (hard disk unit only!)
 	ld	a,(slice)	; get the slice
 	ld	b,a		; and save in B
 ;
+	; check for valid device/unit (supported by BIOS)
+	push	bc		; save device/unit/slice
+	ld	a,c		; device/unit to A
+	call	chkdev		; device/unit OK?
+	pop	bc		; restore device/unit/slice
+	jp	nz,errdev	; invalid device specified
+;
 	; resolve the CBIOS DPH table entry
 	ld	a,(dstdrv)	; dest drv num to A
 	call	chkdrv		; valid drive?
@@ -461,16 +472,6 @@ drvmap2:	; verify the unit is eligible for assignment (hard disk unit only!)
 	rlca			; ... entry size of 4
 	call	addhl		; adjust HL to point to entry
 	ld	(dstptr),hl	; save it
-;
-	; verify the drive letter being assigned is a hard disk
-	ld	a,(hl)		; get the device/unit byte
-	rrca			; move device nibble to low nibble
-	rrca			; ...
-	rrca			; ...
-	rrca			; ...
-	and	$0F		; and isolate device bits
-	call	chktyp		; check it
-	jp	nz,errtyp	; abort with bad device type error
 ;
 	; shove updated device/unit/slice into the entry
 	ld	(hl),c		; save device/unit byte
@@ -491,15 +492,22 @@ drvmapu:
 	ld	b,a		; put in b
 	ld	d,0		; preset type to 0
 	ld	c,$48		; una func: get disk type
-	call	$fffd		; call una, b is assumed to be untouched!!!
+;	call	$fffd		; call una, b is assumed to be untouched!!!
+	rst	08		; call una, b is assumed to be untouched!!!
 	ld	a,d		; resultant device type to a
 	cp	$40		; RAM/ROM
 	jr	z,drvmapu0	; special case for RAM/ROM
 	ld	de,udevide	; assume IDE
 	cp	$41		; IDE?
 	jr	z,drvmapu1	; do compare
+	ld	de,udevppide	; assume PPIDE
+	cp	$42		; PPIDE?
+	jr	z,drvmapu1	; do compare
 	ld	de,udevsd	; assume SD
 	cp	$43		; SD?
+	jr	z,drvmapu1	; do compare
+	ld	de,udevdsd	; assume DSD
+	cp	$44		; DSD?
 	jr	z,drvmapu1	; do compare
 	jp	errdev		; error, invalid device name
 ;
@@ -509,7 +517,8 @@ drvmapu0:
 	ld	b,a		; unit num to B
 	ld	c,$45		; UNA func: get disk info
 	ld	de,$9000	; 512 byte buffer *** FIX!!! ***
-	call	$FFFD		; call UNA
+;	call	$fffd		; call UNA
+	rst	08		; call UNA
 	bit	7,b		; test RAM drive bit
 	ld	de,udevrom	; assume ROM
 	jr	z,drvmapu1	; do compare
@@ -521,6 +530,11 @@ drvmapu1:
 	ld	hl,tmpstr	; point HL to specified device name
 	call	strcmp		; compare
 	jp	nz,errdev	; no match, invalid device name
+;
+	; check for valid unit (supported by BIOS)
+	ld	a,(unit)	; get specified unit
+	call	chkdevu		; check validity
+	jp	nz,errdev	; invalid device specified
 ;
 	; resolve the CBIOS DPH table entry
 	ld	a,(dstdrv)	; dest drv num to A
@@ -600,7 +614,7 @@ showone:
 	ld	a,(hl)		; load device/unit
 	call	prtdev		; print device mnemonic
 	ld	a,(hl)		; load device/unit again
-	and	$0F		; isolate unit num
+	and	$0f		; isolate unit num
 	call	prtdecb		; print it
 	inc	hl		; point to slice num
 	ld	a,':'		; colon to separate slice
@@ -615,7 +629,7 @@ showone:
 ; Force BDOS to reset (logout) all drives
 ;
 drvrst:
-	ld	c,$0D		; BDOS Reset Disk function
+	ld	c,$0d		; BDOS Reset Disk function
 	call	bdos		; do it
 ;
 	xor	a		; signal success
@@ -633,7 +647,7 @@ prtdev:
 	rrca			;   ...
 	rrca			;   ...
 	rrca			;   ... into low nibble
-	and	$0F		; mask out undesired bits
+	and	$0f		; mask out undesired bits
 	push	hl		; save HL
 	add	a,a		; multiple A by two for word table
 	ld	hl,devtbl	; point to start of device name table
@@ -654,7 +668,8 @@ prtdevu:
 	; UNA mode version of print device
 	ld	b,a		; B := unit num
 	ld	c,$48		; UNA func: get disk type
-	call	$FFFD		; call UNA
+;	call	$fffd		; call UNA
+	rst	08		; call UNA
 	ld	a,d		; disk type to A
 	pop	hl
 	pop	de
@@ -665,9 +680,15 @@ prtdevu:
 	cp	$41		; IDE?
 	ld	de,udevide	; load string
 	jp	z,prtstr	; if IDE, print and return
+	cp	$42		; PPIDE?
+	ld	de,udevppide	; load string
+	jp	z,prtstr	; if PPIDE, print and return
 	cp	$43		; SD?
 	ld	de,udevsd	; load string
 	jp	z,prtstr	; if SD, print and return
+	cp	$44		; DSD?
+	ld	de,udevdsd	; load string
+	jp	z,prtstr	; if DSD, print and return
 	ld	de,udevunk	; load string for unknown
 	jr	prtstr		; and print it
 ;
@@ -678,7 +699,8 @@ prtdevu1:
 	ld	b,e		; unit num to B
 	ld	c,$45		; UNA func: get disk info
 	ld	de,$9000	; 512 byte buffer *** FIX!!! ***
-	call	$FFFD		; call UNA
+;	call	$fffd		; call UNA
+	rst	08		; call UNA
 	bit	7,b		; test RAM drive bit
 	pop	hl
 	pop	bc
@@ -699,6 +721,46 @@ chkdrv:
 	cp	a		; set Z to signal good
 	ret			; and return
 ;
+; Check that the device/unit value in A is valid
+; according to active BIOS support.
+;
+;
+chkdev:		; HBIOS variant
+	push	af		; save incoming device/unit
+	ld	b,$1a		; hbios func: diodevcnt
+	rst	08		; call hbios, device count to B
+	ld	c,0		; use C for device index
+	pop	af		; restore incoming device/unit
+chkdev1:
+	push	bc		; preserve loop control
+	push	af		; save incoming device/unit
+	ld	b,$1b		; hbios func: diodevinf
+	rst	08		; call hbios, return device/unit in C
+	pop	af		; restore incoming device/unit
+	cp	c		; match to device/unit from BIOS list?
+	pop	bc		; restore loop control
+	ret	z		; yes, match, return with Z set
+	inc	c		; next device list entry
+	djnz	chkdev1		; loop as needed
+	or	$ff		; no match, signal error
+	ret			; done
+;
+chkdevu:	; UNA variant
+	ld	b,a		; put in b
+	ld	d,0		; preset type to 0
+	ld	c,$48		; una func: get disk type
+;	call	$fffd		; call una
+	rst	08		; call una
+	ld	a,d		; resultant device type to a
+	or	a		; set flags
+	jr	z,chkdevu1	; invalid if 0
+	xor	a
+	ret
+;
+chkdevu1:	; handle invalid unit
+	or	$ff		; signal error
+	ret			; done
+;
 ; Check that specified device is valid for a mapping operation
 ; Only hard disk devices are dynamically mappable because
 ;   the DPH vector allocation sizes may not change.
@@ -715,11 +777,16 @@ chktypu:	; UNA variant
 	ld	b,a		; put unit in b
 	ld	c,$48		; una func: get disk type
 	ld	d,0		; preset disk type to zero
-	call	$fffd		; call UNA
+;	call	$fffd		; call UNA
+	rst	08		; call UNA
 	ld	a,d		; disk type to A
 	cp	$41		; IDE?
 	ret	z		; OK
+	cp	$42		; PPIDE?
+	ret	z		; OK
 	cp	$43		; SD?
+	ret	z		; OK
+	cp	$44		; DSD?
 	ret	z		; OK
 ;
 chkunit1:	; return error
@@ -798,7 +865,7 @@ hexascii:
 ; Convert low nibble of A to ascii hex
 ;
 hexconv:
-	and	$0F	     	; low nibble only
+	and	$0f	     	; low nibble only
 	add	a,$90
 	daa	
 	adc	a,$40
@@ -985,7 +1052,7 @@ strcmp:
 ; The CBIOS function offset must be stored in the byte
 ; following the call instruction.  ex:
 ;	call	cbios
-;	.db	$0C		; offset of CONOUT CBIOS function
+;	.db	$0c		; offset of CONOUT CBIOS function
 ;
 cbios:
 	ex	(sp),hl
@@ -1028,7 +1095,7 @@ errver:	; CBIOS version is not as expected
 	ld	de,msgver
 	jr	err
 ;
-errdrv:	; CBIOS version is not as expected
+errdrv:	; Invalid drive letter specified
 	push	af
 	ld	de,msgdrv1
 	call	prtstr
@@ -1075,7 +1142,7 @@ err1:	; without the leading crlf
 ;
 err2:	; without the string
 	call	crlf		; print newline
-	or	$FF		; signal error
+	or	$ff		; signal error
 	ret			; done
 ;
 ;===============================================================================
@@ -1091,7 +1158,7 @@ device	.db	0		; source device
 unit	.db	0		; source unit
 slice	.db	0		; source slice
 ;
-unamod	.db	0		; $FF indicates UNA UBIOS active
+unamod	.db	0		; $ff indicates UNA UBIOS active
 ;
 srcptr	.dw	0		; source pointer for copy
 dstptr	.dw	0		; destination pointer for copy
@@ -1124,11 +1191,13 @@ dev15	.equ	devunk
 ;
 devcnt	.equ	10		; 10 devices defined
 ;
-udevram	.db	"RAM",0
-udevrom	.db	"ROM",0
-udevide	.db	"IDE",0
-udevsd	.db	"SD",0
-udevunk	.db	"UNK",0
+udevram		.db	"RAM",0
+udevrom		.db	"ROM",0
+udevide		.db	"IDE",0
+udevppide	.db	"PPIDE",0
+udevsd		.db	"SD",0
+udevdsd		.db	"DSD",0
+udevunk		.db	"UNK",0
 ;
 stksav	.dw	0		; stack pointer saved at start
 	.fill	stksiz,0	; stack
@@ -1137,7 +1206,7 @@ stack	.equ	$		; stack top
 ; Messages
 ;
 indent	.db	"   ",0
-msgban1	.db	"ASSIGN v0.9d for RomWBW CP/M 2.2, 23-Aug-2014",0
+msgban1	.db	"ASSIGN v0.9e for RomWBW CP/M 2.2, 02-Sep-2014",0
 msgban2	.db	13,10,"Copyright 2014, Wayne Warthen, GNU GPL v3",13,10,0
 msghb	.db	" (HBIOS Mode)",0
 msgub	.db	" (UBIOS Mode)",0
@@ -1154,7 +1223,7 @@ msgver	.db	"Unexpected CBIOS version",0
 msgdrv1	.db	"Invalid drive letter (",0
 msgdrv2	.db	":)",0
 msgswp	.db	"Invalid drive swap request",0
-msgdev	.db	"Invalid device name",0
+msgdev	.db	"Invalid device name (ASSIGN /L for device list)",0
 msgnum	.db	"Unit or slice number invalid",0
 msgtyp	.db	"Only hard drive devices can be reassigned",0
 msgint	.db	"WARNING: Multiple drive letters reference one filesystem!",0
