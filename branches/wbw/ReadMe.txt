@@ -9,7 +9,7 @@ Builders: Wayne Warthen (wwarthen@gmail.com)
           David Giles (vk5dg@internode.on.net)
 
 Updated: 2014-08-30
-Version: 2.6.0
+Version: 2.6.1
 
 This is an adaptation of CP/M-80 2.2 and ZSDOS/ZCPR
 targeting ROMs for all N8VEM Z80 hardware variations
@@ -90,8 +90,8 @@ UNA Variant
 -----------
 
 RomWBW will now run under it's native BIOS (HBIOS) or
-under UNA BIOS (UBIOS).  There are pre-build ROM
-images for UNA in the OutputUNA directory.
+under UNA BIOS (UBIOS).  There are pre-built ROM
+images for UNA in the Output directory.
 
 CP/M vs. ZSystem
 ----------------
@@ -100,19 +100,16 @@ There are two OS variants included in this distribution
 and you may choose which one you prefer to use.
 
 The traditional Digital Research (DRI) CP/M code is the first
-choice.  The ROM images that DO NOT end in "_z" are built
-with the traditional CP/M components from DRI.  The Doc
+choice.  The Doc
 directory contains a manual for CP/M usage (cpm22-m.pdf).
 If you are new to the N8VEM systems, I would currently
-recommend using the CP/M ROMs to start with simply
+recommend using the CP/M variant to start with simply
 because they have gone through more testing and you
 are less likely to encounter problems.
 
 The other choice is to use the most popular non-DRI
 CP/M "clone" which is generally referred to as
-ZSystem.  The ROM images with a "_z" suffix are built
-using the ZSystem components (specifically ZSDOS 1.2
-and ZCPR 1.0).  These are intended to be
+ZSystem.  These are intended to be
 functionally equivalent to CP/M and should run all
 CP/M 2.2 code.  They are optimized for the Z80 CPU
 (as opposed to 8080 for CP/M) and have some potentially
@@ -120,8 +117,9 @@ useful improvements.  Please refer to the Doc directory
 and look at the files for zsdos and zcpr (zsdos.pdf &
 zcpr.doc as well as ZSystem.txt).
 
-ZSystem builds contain ZSDOS specific files in the
-ROM Disk.
+Both variants are now included in the pre-built ROM images.
+You will be given the choice to boot either CP/M or
+ZSystem at startup.
 
 Building a Custom ROM
 ---------------------
