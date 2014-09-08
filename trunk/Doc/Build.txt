@@ -173,13 +173,6 @@ It is important that you choose a ROM size that is no larger than
 the szie of the ROM you will ultimately be burning.  This is 
 dependant on your hardware.
 
-System [CPM|ZSYS]:
-
-Respond with the type of system you wish to create.  If you are
-not sure which you want, you should enter "CPM".  Refer to the
-ReadMe.txt file for more information on the difference between
-the two system types.
-
 At this point, the build should run and you will see output related
 to the assembler runs and some utility invocations.  Just review
 the output for any obvioius errors.  Normally, all errors will
@@ -224,7 +217,7 @@ command, you can specify the options right on the command line.
 
 For example:
 
-	Build ZETA std 512 CPM
+	Build ZETA std 512
 
 In this case, you will not be prompted.  This is useful if you
 wish to automate your build process.
@@ -239,7 +232,6 @@ Configurations available:
  > std
 Configuration: std
 ROM Size [512|1024]: 512
-System [CPM|ZSYS]: CPM
 
 Building ZETA_std: 512KB ROM configuration std for Z80...
 
