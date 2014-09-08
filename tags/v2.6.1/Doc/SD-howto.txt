@@ -1,0 +1,234 @@
+Using an SD card with the RomWBW firmware.
+
+This document describes using the SD-card interface for the Z80-SBC, Zeta and
+N8 systems with the RomWBW firmware.  It does not cover the ParPortProp SD
+interface. 
+V2.0 supports the bit-bang method as well as CSI/O port on the N8.  It does not 
+support the original connection by Juha to the Z80-SBC MK-I.  The firmware does
+have support for the high capacity (HC) cards.
+V2.1 supports the Mini-PPISD board for the Z80-SBC and Zeta.
+
+An SD-card interface uses four signal lines.  A chip select, data out to the 
+card, clock out to the card and a data in from the card.  Except for the CSIO
+port interface on the N8-2312 board, all N8VEM interfaces use a bit-banging
+technique.  The hardware is slightly different for each and will be discussed 
+in turn.  The configuration options are given for those who tailor their
+versions of the firmware.
+- Z80-SBC MK-II with SD-mini board
+- Zeta with SD-mini board
+- N8-2511 (prototype)
+- N8-2312 (production)
+- Mini-PPISD board
+
+
+--Z80-SBC MK-II with SD-mini board--
+The Z80-SBC interface uses the latch and input port normally used for the 
+DS1302 RTC chip.  The latch for the RTC is only 6-bits wide so we will be 
+doubling up on the RTC data out and clock lines.  The chip select uses a spare 
+latch output and the data in uses the 'config' header input.
+Miniboard	MK II SBC	Use
+1		+5v		
+2		GND		
+3		U5 pin 9	Data in to SBC from card 
+4		U18 pin 15	Data out from SBC to card
+5		N/C		alternative to pin 3
+6		N/C		alternative to pin 4
+7		U18 pin 12	Clock out to card
+8		U18 pin 2	Chip select to card
+The jumpers on the miniboard are K1 1-2, K2 1-2.
+Resistor R11 must be removed.
+
+--Zeta with SD-mini board--
+The Zeta uses a 6-bit latch for the RTC so we will be doubling up on the RTC
+data out and clock lines.  The chip select uses a spare latch output and the 
+data in uses the 'config' header input.
+First a modification to the Zeta board. The 'config' input has a 4k7 pull-up
+resistor which must be removed or isolated (RTC_PLUP at pin 6 of RR1).  To
+isolate this resistor cut the pcb track on the underside of the PCB that goes
+to pin 9 of U14 (the 74LS125).  SD-cards work at 3.3v and a pull-up to 5v can
+damage the card.  The config header is left open.
+Connections to the Zeta from the SD miniboard are:
+Miniboard	Zeta		Use
+1		+5v
+2		GND
+3		U14 pin 9	Data in to SBC from card 
+4		U11 pin 2	Data out from SBC to card
+5		N/C		alternative to pin 3
+6		N/C		alternative to pin 4
+7		U11 pin 10	Clock out to card
+8		U11 pin 7	Chip select to card
+The jumpers on the SD miniboard are K1 1-2, K2 1-2.
+
+Testing the Zeta and Z80-SBC MK-II boards
+With the miniboard connected to the Zeta BUT WITH NO SD-CARD INSTALLED do the
+following.
+1. Power up and check the voltages on all pins of the SD-card socket.  None of
+them should be over 3.3v.
+2. From the monitor type 
+>I 70		and it should come back with something like 78
+Short out the config header to bring the data in line low, type >I 70 and it
+should come back with 38 proving the data in line.
+3. Test the outputs by turning them all on (except the DS1302 enable line) with
+>O 70 CF
+Now check all the voltages again.  If they are 3.0 to 3.3v then go to the next
+step.  If two of them are closer to 2.0v then you are likely using a 74LS174 
+instead of a 74HCT174 (or similar) for U11.  To bring the outputs up enough 
+(3.0v) change the 2k7 resistors R4 and R8 to 560 ohms on the miniboard.
+4. If you want to test the individual output lines then
+>O 70 80	activates the data out line
+>O 70 40	activates the clock line
+>O 70 04	activates the chip select line
+5. Power down, plug in the SD-card and power-up.  There is no hot-swapping in
+this interface.  After that it should behave as the other drives.
+Note that the SD-interface is SLOW and can take a few seconds to respond.
+For assembly in the relative config_xxx.asm file alter the following:
+SDENABLE	.EQU	TRUE
+SDTRACE		.EQU	1
+SDCAPACITY	.EQU		(whatever your card size is in MB)
+SDCSIO		.EQU	FALSE	(FALSE for bit-banging)
+SDCSIOFAST	.EQU	FALSE	(ignore this, only for N8 CSIO port)
+PPISD		.EQU	FALSE
+
+--N8-2511 (prototype)--
+The N8-2511 board by default uses a similar bit-banging technique and interface
+as the Z80 MK-II and Zeta boards.  A hardware modification is needed to use the
+faster CSI/O port of the Z180 CPU.  
+  Make sure you have cut the track to or removed 4k7 pullup resistor marked 
+PU4.7K-H that goes to the data out of the SD-card and pin 9 of U4 (the
+74LS125).  It has damaged the SD-card I was initially testing as they are not 
+designed for 5v on any pin.  Before putting any SD-card into the connector,
+check all voltages and make sure they are less than 3.6v, preferably about 
+3.3v.  You can use the monitor's 'O 88 07' command to set all outputs on.
+
+For assembly in the config_n8_2511.asm file alter the following:
+SDENABLE	.EQU	TRUE
+SDTRACE		.EQU	1
+SDCAPACITY	.EQU		(whatever your card size is in MB)
+SDCSIO		.EQU	FALSE	(FALSE for bit-banging)
+SDCSIOFAST	.EQU	FALSE	(ignore this, only for CSIO port)
+PPISD		.EQU	FALSE
+
+--The quick guide to modifying the SD-card interface to use the CSI/O 
+port on the N8-2511 board.--  
+
+It is assumed that you have got the standard SD-card interface running and 
+have a known working SD-card (though not necessary for either).
+
+1. Remove jumper JP-1 to disconnect SD-Data out from U4 (74LS125)
+
+2. Cut tracks/IC pins 18 and 19 of U11 (74LS574) to disconnect SD_CLK 
+	and SD_DATA IN.
+
+3. If you are using U60 (MAX-232) for the secondary serial port RS-232 
+	interface, cut or bend pin 12 of U60 out of the socket.  Cutting the 
+	track between this pin and pin 56 of the cpu is not possible 
+	with the chip sockets in place.
+	This will stop U60 from inhibiting the CSI/O receiver.  If you are 
+	using the RS-485 interface then you don't have to do this mod.
+
+4. Connect pin 55 of the CPU (TXS) to SD_DATA_IN.  Easiest way is pin 3 of P49
+	to R6.
+
+5. Connect pin 56 of the CPU (RXS) to SD_DATA_OUT.  Easiest way is pin 4 of P49
+	to pin 4 of RR3.  
+
+6. Connect pin 57 of the CPU (CLK) to SD_CLK.  Easist way is pin 2 of P49 to 
+	R10.
+
+7. DO NOT INSTALL THE SD CARD YET.  Power up the N8 and grab your voltmeter.
+Looking at the SD card connector from the edge closest to the joystick headers
+you should have the following voltages:
+PIN	VOLTAGE		USE
+--9 	3.3v		not used, pulled high
+-1	3.3v		/CS
+-2	0 or 3.3v	data to card (TXS)
+--3	0v		GND
+--4	3.3v		Vcc
+-5	3.3v		CLK
+-6	0v		GND
+-7	3.3v		data from card (RXS)
+-8	3.3v		not used, pulled high
+
+If you have >3.5v on any pin, switch off and check your wiring.
+
+8. I had a fault in the PCB, there was a broken track around pin 5 of the 
+	connector.  A quick continuity check between the SD connector and the CPU
+	at this point may save headaches later.  You should read 2k7 between pin
+	55 of CPU and pin 2 of SD connector, 2k7 between pin 57 of CPU and pin 5
+	of SD connector, and <10 ohms between pin 56 of CPU and pin 7 of
+	SD connector.
+
+9. Power up again and check each pin's operation.
+RXS: 	From the monitor do the following
+	O 4A 06		;sets up CNTR with slowest clock speed
+	O 4A 26		;receive a byte
+	I 4B		;read byte
+	the result should be $FF due to the pullup resistor in RR3.
+	Now clip a jumper wire from any 0v point to RXS and do the last two
+	commands again.  The result should be $00.
+
+CLK: 	Use a logic probe or oscilloscope connected to the SD_CLK pin.
+	CLK is normally high and will pulse low when used.  Use the 
+	O 4A 26	to receive a byte and watch your probe/scope.
+
+TXS:	TXS will stay at the same level as the last bit sent. If it is hi use
+	O 4B 00		;send lo byte
+	O 4A 46		;enable transmit
+	or if it is lo use
+	O 4B FF		;send hi byte
+	O 4a 46		;enable transmit
+
+If everything has gone as detailed above then you should be ready to try the
+firmware.  
+There are two extra configurations for the CSIO port in the config_n8.asm file.
+SDCSIO should be set to TRUE if you are using the CSIO port.  The CSIO 
+transfers data LSB first, the SD card uses MSB first.  Each data byte has to be
+mirrored (i.e. swap bits around).  There are two methods used.  The rotate and
+shift is slow but uses very little code.  The lookup table is much faster but
+uses an extra 256 bytes of code space.
+For assembly in the config_n8_2511.asm file alter the following:
+SDENABLE	.EQU	TRUE
+SDTRACE		.EQU	1
+SDCAPACITY	.EQU		(whatever your card size is in MB)
+SDCSIO		.EQU	TRUE	(FALSE for bit-banging)
+SDCSIOFAST	.EQU	TRUE	(only use FALSE if memory space is tight)
+PPISD		.EQU	FALSE
+
+--N8-2312 (production)--
+The production version has the CSI/O modifications already taken care of.  If
+there are problems then the hardware can be tested from Step 7 of the 
+modification guide above.  NOTE: JP15 should be open.
+The config_n8_2312.asm file should contain the following:
+SDENABLE	.EQU	TRUE
+SDTRACE		.EQU	1
+SDCAPACITY	.EQU		(whatever your card size is in MB)
+SDCSIO		.EQU	TRUE
+SDCSIOFAST	.EQU	TRUE	(only use FALSE if memory space is tight)
+PPISD		.EQU	FALSE
+
+--Mini-PPISD board--
+The PPISD is an updated version of the bit-bang design.  It uses the PPI port 
+found throughout the N8VEM range and can be used with the 6x0x mezzanine board.
+It has full 5v to 3.3v level translation, can use power from the PPI connector 
+or an external supply and has a choice chip select inputs so two boards can be 
+used on the one computer.  An extra header is given for daisy chaining a DSKY 
+board or another PPISD board.  
+There are only a few points to watch out for.  It cannot be used with a PPIDE
+or a ParPortProp board as they double up on several pins, but it can be used 
+with the DSKY board on the same PPI connector.  The chip select line is active 
+LOW - opposite to the SD-mini board.  
+If the PPI is being used for other purposes (such as the DSKY) then the only
+programming requirements are that PPI outputs PC4 and PC5 must be kept high.
+There are two jumpers.  K1 selects the power source.  Jumper 1-2 for an
+external supply (Z80-SBC MK-I or 6x0x system), or jumper 2-3 to be powered
+from the PPI connector (Z80-SBC MK-II, Zeta, N8 or SBC-188).
+K2 selects which card-select line to be used.  1-2 uses PC4 and is the default
+for the RomWBW firmware.  Jumper 2-3 to use PC5.
+There is a page on the N8VEM Wiki with the latest details.
+In the config_xxx.asm files make
+PPISD		.EQU	TRUE
+PPIDEENABLE 	.EQU	FALSE
+
+DGG
+
+

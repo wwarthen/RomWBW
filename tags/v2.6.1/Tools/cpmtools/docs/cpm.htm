@@ -1,0 +1,425 @@
+<HTML><HEAD><TITLE>CPM - CP/M disk and file system format</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#008000" ALINK="#008000" VLINK="#008000">
+<FONT FACE="Arial" SIZE=2>
+<H2><A NAME="lbAA">CPM</A></H2>
+Section: File formats (5)<BR>
+Updated: December 1, 2013<BR><BR>
+
+<A HREF="#index">Index&nbsp;&nbsp;</A>
+<A HREF=" ./index.htm">Return to Main Contents&nbsp;&nbsp;</A>
+<a href="#disclaimer">Disclaimer&nbsp;&nbsp;</a><br><BR><HR>
+
+<A NAME="lbAB">&nbsp;</A>
+<B>NAME cpm - CP/M disk and file system format.</B><BR><BR>
+
+<A NAME="lbAD">&nbsp;</A>
+<B>DESCRIPTION</B><BR><BR>
+
+<A NAME="lbAE">&nbsp;</A>
+<B>Characteristic sizes - Each CP/M disk format is described by the following specific sizes:</B>
+<BR>
+
+<DL COMPACT><DT><DD>
+
+Sector size in bytes
+<BR>
+
+Number of tracks
+<BR>
+
+Number of sectors
+<BR>
+
+Block size
+<BR>
+
+Number of directory entries
+<BR>
+
+Logical sector skew
+<BR>
+
+Number of reserved system tracks (optional)
+<BR>
+
+Offset to start of volume (optional)
+<BR><BR>
+</DL>
+
+A block is the smallest allocatable storage unit.
+CP/M supports block sizes of 1024, 2048, 4096, 8192 and 16384 bytes.
+Unfortunately, this format specification is not stored on the disk and
+there are lots of formats. Accessing a block is performed by
+accessing its sectors, which are stored with the given software skew.
+<BR><BR>
+
+<A NAME="lbAF">&nbsp;</A>
+<B>Device areas - A CP/M disk contains these areas:</B><BR>
+
+<DL COMPACT><DT><DD>
+
+Volume Offset (optional)
+<BR>
+
+System tracks (optional)
+<BR>
+
+Directory
+<BR>
+
+Data
+<BR><BR>
+</DL>
+
+The system tracks store the boot loader and CP/M itself.  In order to save
+disk space, there are non-bootable formats which omit those system tracks.
+The term <I>disk capacity</I> always excludes the space for system tracks.
+Note that there is no bitmap or list for free blocks.  When accessing a
+drive for the first time, CP/M builds this bitmap in core from the directory.
+<BR><BR>
+
+A hard disk can have the additional notion of a <I>volume offset</I> to
+locate the start of the drive image (which may or may not have system
+tracks associated with it). The base unit for volume offset is byte
+count from the beginning of the physical disk, but specifiers of
+<I>K</I>, <I>M</I>, <I>T</I> or <I>S</I> may be appended to denote
+kilobytes, megabytes, tracks or sectors.  If provided, a specifier
+must immediately follow the numeric value with no whitespace.  For
+convenience upper and lower case are both accepted and only the first
+letter is significant, thus 2KB, 8MB, 1000trk and 16sec are valid
+values. Offset must appear subsequent to track, sector and sector
+length values.
+<BR><BR>
+
+<A NAME="lbAG">&nbsp;</A>
+<B>Directory entries - The directory is a sequence of directory entries (also called extents),
+which contain 32 bytes of the following structure:</B><BR>
+<DL COMPACT><DT><DD>
+
+St<TT>&nbsp;</TT>F0<TT>&nbsp;</TT>F1<TT>&nbsp;</TT>F2<TT>&nbsp;</TT>F3<TT>&nbsp;</TT>F4<TT>&nbsp;</TT>F5<TT>&nbsp;</TT>F6<TT>&nbsp;</TT>F7<TT>&nbsp;</TT>E0<TT>&nbsp;</TT>E1<TT>&nbsp;</TT>E2<TT>&nbsp;</TT>Xl<TT>&nbsp;</TT>Bc<TT>&nbsp;</TT>Xh<TT>&nbsp;</TT>Rc<BR>
+<BR>
+
+Al<TT>&nbsp;&nbsp;&nbsp;</TT>Al<TT>&nbsp;</TT>Al<TT>&nbsp;</TT>Al<TT>&nbsp;</TT>Al<TT>&nbsp;</TT>Al<TT>&nbsp;</TT>Al<TT>&nbsp;</TT>Al<TT>&nbsp;</TT>Al<TT>&nbsp;</TT>Al<TT>&nbsp;</TT>Al<TT>&nbsp;</TT>Al<TT>&nbsp;</TT>Al<TT>&nbsp;</TT>Al<TT>&nbsp;</TT>AlAl<BR>
+<BR>
+</DL>
+
+
+<B>St</B> is the status; possible values are:<BR>
+<DL COMPACT><DT><DD>
+
+0-15: used for file, status is the user number
+<BR>
+
+16-31: used for file, status is the user number (P2DOS)
+or used for password extent (CP/M 3 or higher)
+<BR>
+
+32: disc label
+<BR>
+
+33: time stamp (P2DOS)
+<BR>
+
+0xE5: unused
+<BR><BR>
+</DL>
+
+<B>F0-E2</B> are the file name and its extension.  They may consist of
+any printable 7 bit ASCII character but: <B>&lt; &gt; . , ; : = ? * [ ]</B>.
+The file name must not be empty, the extension may be empty.  Both are
+padded with blanks.  The highest bit of each character of the file name
+and extension is used as attribute.  The attributes have the following
+meaning:<BR>
+
+
+<DL COMPACT><DT><DD>
+F0: requires set wheel byte (Backgrounder II)
+<BR>
+
+F1: public file (P2DOS, ZSDOS), foreground-only command (Backgrounder II)
+<BR>
+
+F2: date stamp (ZSDOS), background-only commands (Backgrounder II)
+<BR>
+
+F7: wheel protect (ZSDOS)
+<BR>
+
+E0: read-only
+<BR>
+
+E1: system file
+<BR>
+
+E2: archived
+<BR><BR>
+</DL>
+
+Public files (visible under each user number) are not supported by CP/M
+2.2, but there is a patch and some free CP/M clones support them without
+any patches.
+<BR><BR>
+
+The wheel byte is (by default) the memory location at 0x4b.  If it is
+zero, only non-privileged commands may be executed.
+
+<BR><BR>
+
+
+<B>Xl</B> and <B>Xh</B> store the extent number.  A file may use more than
+one directory entry, if it contains more blocks than an extent can hold.
+In this case, more extents are allocated and each of them is numbered
+sequentially with an extent number.  If a physical extent stores more than
+16k, it is considered to contain multiple logical extents, each pointing
+to 16k data, and the extent number of the last used logical extent
+is stored.  Note: Some formats decided to always store only one logical
+extent in a physical extent, thus wasting extent space.  CP/M 2.2 allows
+512 extents per file, CP/M 3 and higher allow up to 2048.  Bit 5-7 of
+Xl are 0, bit 0-4 store the lower bits of the extent number.  Bit 6
+and 7 of Xh are 0, bit 0-5 store the higher bits of the extent number.
+
+<BR><BR>
+
+
+<B>Rc</B> and <B>Bc</B> determine the length of the data used by  this  extent.
+The physical extent is divided into logical extents, each of them being 16k
+in size (a physical extent must hold at least one logical extent,  e.g.
+a  blocksize of 1024 byte with two-byte block pointers is not allowed).
+Rc stores the number of 128 byte  records  of  the  last  used  logical
+extent.   Bc  stores  the number of bytes in the last used record.  The
+value 0 means 128 for backward compatibility with CP/M 2.2,  which  did
+not support Bc.  ISX records the number of unused instead of used bytes
+in Bc.
+
+<BR><BR>
+
+
+<B>Al</B> stores block pointers.  If the disk capacity minus boot  tracks  but
+including the directory area is less than 256 blocks, Al is interpreted
+as 16 byte-values, otherwise as 8 double-byte-values.  Since the direc-
+tory area is not subtracted, the directory area starts with block 0 and
+files can never allocate block 0, which is why this value can be  given
+a  new  meaning:  A  block pointer of 0 marks a hole in the file.  If a
+hole covers the range of a full extent, the extent will  not  be  allo-
+cated.  In particular, the first extent of a file does not neccessarily
+have extent number 0.  A file may not share blocks with other files, as
+its  blocks  would be freed if the other files were erased without a fol-
+lowing disk system reset.  CP/M returns EOF when  it  reaches  a  hole,
+whereas UNIX returns zero-value bytes, which makes holes invisible.
+<BR><BR>
+
+<A NAME="lbAH0">&nbsp;</A>
+<B>Native Time stamps</B><BR><BR>
+
+P2DOS  and  CP/M  Plus  support  time  stamps, which are stored in each
+fourth directory entry.  This entry contains the time  stamps  for  the
+extents  using  the  previous  three  directory entries.  Note that you
+really have time stamps for each extent, no matter if it is  the  first
+extent of a file or not.  The structure of time stamp entries is:<BR>
+
+<DL COMPACT><DT><DD>
+
+1 byte status 0x21
+<BR>
+
+8 bytes time stamp for third-last directory entry
+<BR>
+
+2 bytes unused
+<BR>
+
+8 bytes time stamp for second-last directory entry
+<BR>
+
+2 bytes unused
+<BR>
+
+8 bytes time stamp for last directory entry
+<BR><BR>
+</DL>
+
+A time stamp consists of two dates: Creation and modification date (the
+latter being recorded when the file is closed).  CP/M Plus further
+allows optionally to record the access instead of creation date as first
+time stamp.<BR>
+
+<DL COMPACT><DT><DD>
+2 bytes (little-endian) days starting with 1 at 01-01-1978
+<BR>
+
+1 byte hour in BCD format
+<BR>
+
+1 byte minute in BCD format
+<BR><BR>
+</DL>
+
+<A NAME="lbAH">&nbsp;</A>
+<B>DateStamper Time stamps</B><BR><BR>
+
+The DateStamper software added functions to the BDOS to manage
+time stamps by allocating a read only file with the name "!!!TIME&.DAT"
+in the very first directory entry, covering the very first data blocks.
+(The first 7 characters of this read-only file name is the magic number.)
+<BR>
+<BR>
+
+It contains one entry per directory entry with the following
+structure of 16 bytes: <BR>
+<DL COMPACT><DT><DD>
+
+5 bytes create datefield
+<BR>
+
+5 bytes access datefield
+<BR>
+
+5 bytes modify datefield
+<BR>
+
+1 byte magic number/checksum
+<BR><BR>
+</DL>
+
+The magic number is used for the  first  7  entries  of  each  128-byte
+record and contains the characters !, !, !, T, I, M and E (<b>!!!TIME</b>).
+The check-sum is used on every 8th entry (last entry in 128-byte record)  and  is
+the  sum of the first 127 bytes of the record.  Each datefield has this
+structure:<BR>
+
+<DL COMPACT><DT><DD>
+
+1 byte BCD coded year (no century, so it is sane assuming any year < 70 means 21st century)
+<BR>
+
+1 byte BCD coded month
+<BR>
+
+1 byte BCD coded day
+<BR>
+
+1 byte BCD coded hour or, if the high bit is set, the high byte of a counter for systems without real time clock
+<BR>
+
+1 byte BCD coded minute, or the low byte of the counter
+<BR><BR>
+</DL>
+
+
+<A NAME="lbAI">&nbsp;</A>
+<B>Disc labels - CP/M Plus supports disc labels, which are stored in an arbitrary directory
+entry.</B>
+<BR><BR>
+The structure of disc labels is:<BR>
+
+<DL COMPACT><DT><DD>
+1 byte status 0x20
+<BR>
+
+<B>F0-E2</B> are the disc label
+<BR>
+
+1 byte mode: bit 7 activates password protection, bit 6 causes time stamps on
+access, but 5 causes time stamps on modifications, bit 4 causes time stamps on
+creation and bit 0 is set when a label exists.  Bit 4 and 6 are exclusively set.
+<BR>
+
+1 byte password decode byte: To decode the password, xor this byte with the password
+bytes in reverse order.  To encode a password, add its characters to get the
+decode byte.
+<BR>
+
+2 reserved bytes
+<BR>
+
+8 password bytes
+<BR>
+
+4 bytes label creation time stamp
+<BR>
+
+4 bytes label modification time stamp
+<BR><BR>
+</DL>
+
+
+<A NAME="lbAJ">&nbsp;</A>
+<B>Passwords - CP/M Plus supports passwords, which are stored in an arbitrary directory entry.</B>
+<BR><BR>
+
+The structure of these entries is:<BR>
+
+<DL COMPACT><DT><DD>
+
+1 byte status (user number plus 16)
+<BR>
+
+<B>F0-E2</B> are the file name and its extension.
+<BR>
+
+1 byte password mode: bit 7 means password required for reading, bit 6 for writing
+and bit 5 for deleting.
+<BR>
+
+1 byte password decode byte: To decode the password, xor this byte with the password
+bytes in reverse order.  To encode a password, add its characters to get the
+decode byte.
+<BR>
+
+2 reserved bytes
+<BR>
+
+8 password bytes
+<BR><BR>
+</DL>
+
+
+
+<A NAME="lbAK">&nbsp;</A>
+<B>SEE ALSO</B><BR><BR>
+
+<I><A HREF=" ./mkfs.cpm.htm">mkfs.cpm</A></I>(1),
+
+<I><A HREF=" ./fsck.cpm.htm">fsck.cpm</A></I>(1),
+
+<I><A HREF=" ./fsed.cpm.htm">fsed.cpm</A></I>(1),
+
+<I><A HREF=" ./cpmls.htm">cpmls</A></I>(1)
+
+
+<BR><BR>
+
+<HR>
+<A NAME="index">&nbsp;</A><B>Index</B><BR>
+<DL>
+<DT><A HREF="#lbAA">NAME cpm - CP/M disk and file system format</A><DD>
+<DT><A HREF="#lbAD">DESCRIPTION</A><DD>
+<DL>
+<DT><A HREF="#lbAE">Characteristic sizes</A><DD>
+<DT><A HREF="#lbAF">Device areas</A><DD>
+<DT><A HREF="#lbAG">Directory entries</A><DD>
+<DT><A HREF="#lbAH0">Native Time stamps</A><DD>
+<DT><A HREF="#lbAH">DateStamper Time stamps</A><DD>
+<DT><A HREF="#lbAI">Disc labels </A><DD>
+<DT><A HREF="#lbAJ">Passwords</A><DD>
+</DL>
+<DT><A HREF="#lbAK">SEE ALSO</A><DD>
+</DL>
+<HR>
+<a name="disclaimer"><b>Caveat Emptor</b></a>
+<br>
+<br>
+The contents of this document
+are either part of cpmtools or provide additional information about using cmptools.
+You can redistribute it under the terms of
+the <a href="http://www.gnu.org/licenses/licenses.html#GPL">GNU General Public License</a> as
+published by the Free Software Foundation; either version 3 of the License, or (at your
+option) any later version.
+<br>
+<br>
+Bill Buckels has no warranty
+obligations or liability resulting from this document's use in any way whatsoever. If you don't
+agree then don't read it.
+</FONT></BODY>
+</HTML>
