@@ -1,3 +1,8 @@
+Version 2.6.1
+-------------
+- WBW: Both CP/M and ZSystem are imbedded in the ROM
+       image.
+
 Version 2.6
 -----------
 - WBW: Old Apps removed (MULTIFMT, CPMNAME, SETLABEL, etc.)
