@@ -4,12 +4,12 @@ Refer to the descriptions below to select
 one that matches your hardware 
 configuration, burn it, and use it.
 
-Note there are two set of rom builds
-below, one for generic DRI CP/M (BDOS & CCP)
-and one for ZSystem (ZSDOS & ZCPR).  The
-ZSystem builds are suffixed by"_z", for example
-the standard N8VEM build is available as both
-N8VEM_std.rom and N8VEM_std_z.rom.
+Note that there are no longer separate
+ROM images for CP/M and ZSystem.  Both
+OS variants are now imbedded in the ROM
+image and you are given the ability to
+choose the one you want to boot at
+startup.
 
 Note that all builds are now set for 512KB ROMs.
 The builds will work fine in 1MB ROMs.  If you
@@ -213,3 +213,9 @@ custom build.
 	  for the Propeller found in the Support directory!
 	- NOTE: Console defaults to VGA & PS/2 Keyboard.  Short JP2
 	  (one bit input port) to use the serial port as the console.
+
+  UNA_std.rom for all UNA support platforms (SBC V1/2, Zeta, N8, Mark IV)
+    - 512KB ROM
+    - Initial baud rate is 9600, but can be configured
+    - Resources are managed dynamically by UNA BIOS
+    - Refer to UNA project for more details
