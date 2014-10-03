@@ -26,8 +26,6 @@ while ($true)
 
 if (($Platform -eq "N8") -or ($Platform -eq "MK4")) {$CPUType = "180"} else {$CPUType = "80"}
 
-if ($Platform -eq "UNA") {$BIOS = "ubios"} else {$BIOS = "hbios"}
-
 if ($RomName -eq "") {$RomName = "${Platform}_${Config}"}
 while ($RomName -eq "")
 {
@@ -51,8 +49,7 @@ $RomDiskFile = "RomDisk.tmp"
 $RomFile = "${OutDir}/${RomName}.rom"
 $CPMImgFile = "${OutDir}/${RomName}_CPM.sys"
 $ZSYSImgFile = "${OutDir}/${RomName}_ZSYS.sys"
-$CPMLoader = "${OutDir}/${RomName}_CPM.com"
-$ZSYSLoader = "${OutDir}/${RomName}_ZSYS.com"
+$Loader = "${OutDir}/${RomName}.com"
 
 ""
 "Building ${RomName}: ${ROMSize}KB ROM configuration ${Config} for Z${CPUType}..."
@@ -101,18 +98,14 @@ Copy-Item '..\cpm22\os3bdos.bin' 'bdos.bin'
 Copy-Item '..\zcpr-dj\zcpr.bin' 'zcpr.bin'
 Copy-Item '..\zsdos\zsdos.bin' 'zsdos.bin'
 
-Asm 'syscfg'
 Asm 'cbios' "-dBLD_SYS=SYS_CPM" -Output "cbios.bin"
 Asm 'cbios' "-dBLD_SYS=SYS_ZSYS" -Output "zbios.bin"
 Asm 'dbgmon'
 Asm 'prefix'
-Asm 'bootrom'
-Asm 'bootapp'
-Asm 'loader'
-Asm 'pgzero'
-Asm $BIOS
-Asm 'hbfill'
-Asm 'romfill'
+Asm 'osldr'
+Asm 'fill1k'
+Asm 'romldr'
+if ($Platform -ne "UNA") {Asm 'hbios'}
 
 # Generate result files using components above
 
@@ -124,11 +117,8 @@ Concat 'zcpr.bin','zsdos.bin','zbios.bin' 'zsys.bin'
 Concat 'prefix.bin','cpm.bin' $CPMImgFile
 Concat 'prefix.bin','zsys.bin' $ZSYSImgFile
 
-Concat 'pgzero.bin','bootrom.bin','syscfg.bin','loader.bin','zsys.bin','hbfill.bin','dbgmon.bin','cpm.bin','hbfill.bin' 'rom1.bin'
-Concat 'pgzero.bin','bootrom.bin','syscfg.bin','loader.bin',"${BIOS}.bin" 'rom2.bin'
-
-Concat 'bootapp.bin','syscfg.bin','loader.bin',"${BIOS}.bin",'dbgmon.bin','cpm.bin' $CPMLoader
-Concat 'bootapp.bin','syscfg.bin','loader.bin',"${BIOS}.bin",'dbgmon.bin','zsys.bin' $ZSYSLoader
+Concat 'romldr.bin', 'zsys.bin','fill1k.bin','dbgmon.bin','cpm.bin','fill1k.bin' osimg.bin
+Concat 'osldr.bin','dbgmon.bin','cpm.bin','fill1k.bin','zsys.bin','fill1k.bin' $Loader
 
 # Create the RomDisk image
 
@@ -143,15 +133,16 @@ cpmcp -f $RomFmt $RomDiskFile ${OutDir}/${RomName}_ZSYS.sys 0:ZSYS.sys
 
 if ($Platform -eq "UNA")
 {
-	Copy-Item 'rom1.bin' ${OutDir}\UNA_WBW_SYS.bin
+	Copy-Item 'osimg.bin' ${OutDir}\UNA_WBW_SYS.bin
 	Copy-Item $RomDiskFile ${OutDir}\UNA_WBW_ROM${ROMSize}.bin
 
-	Concat 'UNA\UNA-BIOS.BIN','rom1.bin','UNA\FSFAT.BIN',$RomDiskFile $RomFile
+	Concat 'UNA\UNA-BIOS.BIN','osimg.bin','UNA\FSFAT.BIN',$RomDiskFile $RomFile
 }
 else 
 {
-	Concat 'rom1.bin','rom2.bin',$RomDiskFile $RomFile
+	Concat 'hbios.bin','osimg.bin',$RomDiskFile $RomFile
 }
 
 # Cleanup
+
 Remove-Item $RomDiskFile
