@@ -12,5 +12,4 @@ set ZXLIBDIR=%TOOLS%/cpm/lib/
 set ZXINCDIR=%TOOLS%/cpm/include/
 
 zx ZMAC -ZSDOS -/P
-zx LINK -ZSDOS[LD800]
-ren zsdos.com zsdos.bin
+zx LINK -ZSDOS.BIN=ZSDOS[LD800]
