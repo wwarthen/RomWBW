@@ -14,7 +14,7 @@
 ;==================================================================================================
 ;
 	.FILL	(000H - $),0FFH		; RST 0
-	JP	0100H			; JUMP TO BOOT CODE
+	JP	START			; JUMP TO BOOT CODE
 	.FILL	(004H - $),0FFH		; FILL TO START OF SIG PTR
 	.DW	ROM_SIG
 	.FILL	(008H - $),0FFH		; RST 8
@@ -49,12 +49,37 @@ NAME	.DB	"ROMWBW v", BIOSVER, ", ", BIOSBLD, ", ", TIMESTAMP, 0
 AUTH	.DB	"WBW",0
 DESC	.DB	"ROMWBW v", BIOSVER, ", Copyright 2014, Wayne Warthen, GNU GPL v3", 0
 ;
-	.FILL	(100H - $),0FFH		; PAD REMAINDER OF PAGE ZERO
+	.FILL	($100 - $),$FF		; PAD REMAINDER OF PAGE ZERO
+;
+;==================================================================================================
+;   ROM BUILD META DATA
+;==================================================================================================
+;
+	.DB	'W',~'W'		; MARKER
+	.DB	RMJ << 4 | RMN		; FIRST BYTE OF VERSION INFO
+	.DB	RUP << 4 | RTP		; SECOND BYTE OF VERSION INFO
+;
+	.DB	PLATFORM	
+	.DB	CPUFREQ		
+	.DW	RAMSIZE		
+	.DW	ROMSIZE		
+;
+	.DB	BID_COM		
+	.DB	BID_USR		
+	.DB	BID_BIOS	
+	.DB	BID_AUX		
+	.DB	BID_RAMD0	
+	.DB	BID_RAMDN	
+	.DB	BID_ROMD0	
+	.DB	BID_ROMDN	
+;
+	.FILL	($200 - $),$FF		; PAD REMAINDER OF PAGE ZERO
 ;
 ;==================================================================================================
 ;   ROM COLD START
 ;==================================================================================================
 ;
+START:
 	DI			; NO INTERRUPTS
 	IM	1		; INTERRUPT MODE 1
 	LD	SP,HBX_LOC	; SETUP INITIAL STACK JUST BELOW HBIOS PROXY
@@ -921,9 +946,11 @@ SYS_ATTR1:
 ;   RETURNS VERSION IN DE AS BCD
 ;     D: MAJOR VERION IN TOP 4 BITS, MINOR VERSION IN LOW 4 BITS
 ;     E: UPDATE VERION IN TOP 4 BITS, PATCH VERSION IN LOW 4 BITS
+;     L: PLATFORM ID
 ;
 SYS_GETVER:
 	LD	DE,0 | (RMJ << 12) | (RMN << 8) | (RUP << 4) | RTP
+	LD	L,PLATFORM
 	XOR	A
 	RET
 ;
