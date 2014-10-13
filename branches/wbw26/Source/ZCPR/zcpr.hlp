@@ -1,0 +1,367 @@
+Summary of the New Features of ZCPR
+The ZCPR Command Hierarchy Search
+ZCPR-Resident Command DIR
+ZCPR-Resident Command ERA
+ZCPR-Resident Command LIST
+ZCPR-Resident Command TYPE
+ZCPR-Resident Command SAVE
+ZCPR-Resident Command REN
+ZCPR-Resident Command USER
+ZCPR-Resident Command DFU
+ZCPR-Resident Command JUMP
+ZCPR-Resident Command GO
+ZCPR-Resident Command GET
+ZCPR Error Messages
+:Summary of the New Features of ZCPR
+     ZCPR (Z80 Command Processor Replacement) is a replacement of 
+the  CP/M  CCP which is designed to run as part of CP/M  on  Z80-
+based microcomputers.   In most cases it is upward-compatible  to 
+the original CP/M Version 2.2 CCP.
+
+     ZCPR,  however,  provides many extensions over the CP/M CCP.  
+Included in these extensions are:
+
+          . The TYPE function can be made to page or not page its 
+output at the user's discretion
+
+          .  A LIST function is available which sends its  output 
+to the CP/M LST: Device and does NOT page
+
+          .  The  DIR command has been extended to allow the dis-
+play of the system files or all files
+
+          . The ERA command now prints out the names of the files 
+it is erasing
+
+
+          .  The  current user number may be included as part  of 
+the command prompt;  if the user is under a number other than  0, 
+the prompt is of the form 'du>' (like 'A2>' or 'B10>'),  and,  if 
+the  user is under 0,  the prompt may be 'd>' or 'd0>' as per his 
+choice
+
+          .  The  SUBMIT facility has been changed in  two  basic 
+ways:
+               - the  prompt  changes to 'du$' or 'd$'  when  the 
+SUBMIT command is printed
+               - the $$$.SUB is executed from drive A: only (note 
+that the original SUBMIT problem now exists,  but the new SUB.COM 
+facility  corrects  it);   Indirect  Command  Files  now  perform 
+according to the basic philosophy that any command sequence  that 
+can  be input from the console may be used in an Indirect Command 
+File  as well;  the ZCPR.DOC file also gives details as to how to 
+patch SUBMIT.COM if SUB.COM is not available
+
+
+          .  A command-search hierarchy is now implemented  which 
+is executed as follows:
+               - the  user's command is checked against the  CPR-
+resident commands and executed immediately if a match is found
+               - failing  that,  the  current user number on  the 
+current disk is scanned for the COM file;  the COM file is loaded 
+and executed if found
+               - failing that, a default user number (initially 0 
+but  can be reset with the DFU CPR-resident command) on the  cur-
+rent disk is scanned for the COM file; the COM file is loaded and 
+executed if found
+               - finally,  failing that,  the default user number 
+on disk A:  is scanned for the COM file;  the COM file is  loaded 
+and executed if found or an error message (COMMAND?, when COMMAND 
+was the user's command name) is printed
+
+
+          .  The  numeric argument for the SAVE CPR-resident com-
+mand  (viz the number of 256-byte pages to save) can be input  in 
+HEX rather than decimal
+
+          .  A  GET  command which loads a file  at  a  specified 
+memory address and a JUMP command which "calls" the subroutine at 
+a  specified memory address have been added;  a GO command  which 
+"calls"  the  subroutine starting at 100H is also added (this  is 
+redundant with JUMP 100H)
+
+
+:The ZCPR Command Hierarchy Search
+     The first,  and most basic thing, to learn about ZCPR is the 
+order in which it searches for a COM file for execution or a file 
+specified  by the GET command.   Under the CP/M 2.2 CCP,  if  the 
+specified  COM file command was not found on the current drive in 
+the  current user area,  the CCP aborted with an  error  message.  
+ZCPR,  however,  continues searching from this point a maximum of 
+two  more  levels.   This command hierarchy search  was  outlined 
+above and is described here in further detail.
+
+          1.   If  the command is of the form 'COMMAND'  and  NOT 
+'d:COMMAND',  the  CPR-resident  command list is searched  for  a 
+match.   If  the  match  is found,  the CPR-resident  command  is 
+immediately processed.   If the match is not found or the command 
+is of the form 'd:COMMAND',  the next step is taken.   Note  that 
+the  'd:COMMAND' form is good for executing a COM file which  has 
+the same name as a CPR-resident command (such as SAVE or DIR).
+
+
+          2.   If  the command is of the form  'd:COMMAND',  disk 
+drive  'd:'  is  temporarily logged in for  the  purpose  of  the 
+command  search.   Otherwise,  the  currently logged-in drive  is 
+used.
+
+          3.  Now the file named COMMAND.COM is searched for.  If 
+found,  it  is loaded into memory starting at 100H and  executed.  
+If not, proceed to step 4.
+
+          4.   Now  that  the first search  for  COMMAND.COM  has 
+failed,  the  CPR checks to see if the user is under the  current 
+Default User Number.   The Default User Number may be that set by 
+the  DEFUSR equate in the CPR or that set by the user via the DFU 
+command.   DEFUSR  is in effect if DFU has not been issued  since 
+the last Warm or Cold Boot, and DFU is in effect if it was issued 
+since the last Warm or Cold Boot.   If the user is NOT under  the 
+current  Default User Number,  ZCPR temporarily logs him into  it 
+and  searches  the directory.   If COMMAND.COM is  found,  it  is 
+loaded as described above and executed.  If not, ZCPR proceeds to 
+the next step.
+
+          5.   The user is now in the Default User Number, and at 
+this  point,  ZCPR checks to see if the user is on disk drive A:.  
+If not, it temporarily logs into A: and searches the default user 
+number  of  A:  for  COMMAND.COM.   If found,  it  is  loaded  as 
+described above and executed.   If not,  ZCPR prints the  command 
+name  as  an  error message and returns to  command  input  mode, 
+aborting the SUBMIT file if COMMAND came from it.
+
+     In  all cases of the search above,  if COMMAND.COM is found, 
+after  it  is loaded into memory,  ZCPR resets the  user  to  his 
+original disk drive and user number.  Hence, the files referenced 
+by the user by default are obtained from this environment.
+
+
+     To  illustrate this command hierarchy search,  consider  the 
+following examples:
+
+Example 1:  DEFUSR equ 0 {default user number is 0}
+
+B10>           <-- User is on Drive B:, User Number 10
+B10>ASM TEST.BBZ    <-- User wishes to assemble TEST.ASM in
+                         Drive B:, User 10
+     <-- At this point, ZCPR looks on B:/10 for ASM.COM, fails,
+          looks on B:/0, fails, and finally looks on A:/0; it
+          finds ASM.COM here and goes back to B:/10 for the file
+
+
+
+
+Example 2:  DEFUSR equ 0 and DFU issued
+
+B10>           <-- User is on Drive B:, User Number 10
+B10>DFU 5      <-- User Selects User 5 as default
+B10>ASM TEST.BBZ    <-- As above
+     <-- At this point, ZCPR looks on B:/10 for ASM.COM, fails,
+          look on B:/5, fails, and finally looks on A:/5; it
+          fails here also and prints ASM? as an error message
+
+Example 3:  DEFUSR equ 0
+
+B>             <-- User is on Drive B:, User Number 0
+B>ASM TEST.BBZ      <-- As above
+     <-- At this point, ZCPR looks on B:/0 for ASM.COM, fails,
+          looks on A:/0, fails, and prints error message
+
+
+
+Example 4:  DEFUSR equ 0
+
+A10>           <-- User is on Drive A:, User Number 10
+A10>ASM TEST.AAZ    <-- As above, but file on A:
+     <-- At this point, ZCPR looks on A:/10 for ASM.COM, fails,
+          looks on A:/0, fails, and prints error message
+
+:ZCPR-Resident Command DIR
+Command: DIR
+Function:  To Display a listing of the names of the files on disk
+Forms:
+     DIR <afn>           <-- Displays $DIR files
+     DIR <afn> S         <-- Displays $SYS files
+     DIR <afn> A         <-- Displays both $DIR and $SYS files
+Examples:
+     DIR *.ASM           <-- All $DIR .ASM files
+     DIR *.COM S         <-- All $SYS .COM files
+     DIR *.COM A         <-- All .COM files
+Notes:
+     If  a  file is scanned for and no such name exists on  disk, 
+the  'No  Files' message will appear.   However,  if  a  file  is 
+scanned for and the name exists as a $SYS file and $DIR files are 
+being  scanned for,  no file name is displayed but the 'No Files' 
+message does NOT appear.  For example, if TEST.COM is a $SYS file 
+and  'DIR  TEST.COM' is issued,  no  message  appears.   If  'DIR 
+TEXT.COM' is issued and TEXT.COM does not exist on disk,  the 'No 
+Files' message is displayed.
+:ZCPR-Resident Command ERA
+Command: ERA
+Function:  To Erase the specified $R/W files from disk
+Forms:
+     ERA <afn>           <-- Erase both $DIR and $SYS files
+Examples:
+     ERA *.ASM           <-- Erase all .ASM files
+     ERA *.*             <-- Erase all files
+Notes:
+     If a $R/O file is encountered,  a BDOS error message will be 
+displayed  and the procedure is stopped.   The user is unsure  at 
+this  time as to which files have been erased and which have  not 
+and should check.  Sorry for this problem!  The ERASE command (to 
+be  given  to SIG/M by RLC in the near future) is a  solution  to 
+this problem.
+:ZCPR-Resident Command LIST
+Command: LIST
+Function:  To Print the specified file on the CP/M LST: device
+Forms:
+     LIST <ufn>          <-- Print the file (no paging)
+Examples:
+     LIST TEST.TXT       <-- Print TEST.TXT on LST:
+Notes:
+     If  the file has a $SYS attribute,  it will be found as well 
+as those with $DIR attributes.
+:ZCPR-Resident Command TYPE
+Command: TYPE
+Function:  To Print the specified file on the CP/M CON: device
+Forms:
+     TYPE <ufn>          <-- Print the file with the paging deflt
+     TYPE <ufn> P        <-- Print the file with the paging deflt
+                              negated
+Examples:
+     TYPE TEST.TXT
+     TYPE TEST.TXT P
+Notes:
+     When  the  display pauses during paging,  type any  char  to 
+continue or ^C to abort.  ^S also works.
+:ZCPR-Resident Command SAVE
+Command: SAVE
+Function:  To Copy the TPA starting at 100H to disk
+Forms:
+     SAVE <Number of Pages> <ufn>  <-- <Number of Pages> in DEC
+     SAVE <Number of Pages>H <ufn> <-- <Number of Pages> in HEX
+     SAVE <Number of Sectors> <ufn> S  <-- <Number of Sectors>
+                                          in DEC
+     SAVE <Number of Sectors>H <ufn> S <-- <Number of Sectors>
+                                          in HEX
+Examples:
+     SAVE FH MYFILE.TXT      <-- 15 pages saved
+     SAVE 15 MYFILE.TXT      <-- 15 pages saved
+     SAVE 10H MYFILE.TXT S   <-- 16 sectors (8 pages) saved
+Notes:
+     The error message 'Delete File?' is printed if <ufn> already 
+exists.   To go ahead and SAVE, type Y or y to erase the file and 
+proceed with the SAVE.
+
+:ZCPR-Resident Command REN
+Command: REN
+Function:  To Change the name of a disk file
+Forms:
+     REN <ufn new>=<ufn old>
+Examples:
+     REN NEWFILE.TXT=OLDFILE.TXT
+Notes:
+     The error message 'Delete File?' is printed if the <ufn new> 
+already exists.  To go ahead and complete the REN, type Y or y to 
+erase  the  current  <ufn new> file and then <ufn  old>  will  be 
+renamed to <ufn new>.
+
+:ZCPR-Resident Command USER
+Command: USER
+Function:  To Change the current user number
+Forms:
+     USER <User Number>       <-- <User Number> in DEC
+     USER <User Number>H      <-- <User Number> in HEX
+Examples:
+     USER 15
+     USER FH
+     USER 0
+     USER      <-- Same as USER 0
+Notes:
+     -None-
+:ZCPR-Resident Command DFU
+Command: DFU
+Function:  To Temporarily Change the default user number for the
+           command hierarchy search
+Forms:
+     DFU <User Number>        <-- <User Number> in DEC
+     DFU <User Number>H       <-- <User Number> in HEX
+Examples:
+     DFU 15
+     DFU 0
+     DFU FH
+     DFU       <-- Same as DFU 0
+Notes:
+     -None-
+:ZCPR-Resident Command JUMP
+Command: JUMP
+Function:  To "call" the subroutine at the specified page address
+Forms:
+     JUMP <Address> <Cmd Parms>  <-- <Address> in HEX
+Examples:
+     JUMP E000 or JUMP E000H  <-- Jump to E000H
+     JUMP 100                 <-- Jump to 100H
+     JUMP 0                   <-- Jump to 000H
+     JUMP                     <-- Same as JUMP 0
+Notes:
+     JUMP performs a subroutine "call", so the called routine may 
+return to the ZCPR by either a RET or a Warm Boot.
+:ZCPR-Resident Command GO
+Command: GO
+Function:  To "call" the subroutine at address 100H
+Forms:
+     GO <Cmd Parms>           <-- Routine at 100H
+Examples:
+     GO *.ASM                 <-- Execute TPA-resident prog
+                                   with *.ASM passed
+Notes:
+     This is identical in function to JUMP 100H.
+:ZCPR-Resident Command GET
+Command: GET
+Function:  To load a file from disk into memory starting at the
+           specified page
+Forms:
+     GET <Address> <ufn>      <-- <Address> in HEX
+Examples:
+     GET 8000 TEST.80         <-- Load TEST.80 starting at 8000H
+     GET 100 TEST.80 or GET 100H TEST.80 <-- Load TEST.80 start-
+                                   ing at 100H
+     GET 0 TEST.80            <-- Load TEST.80 starting at 000H
+Notes:
+     GET  searches for the specified file according to  the  same 
+command  hierarchy  search employed by the ZCPR command  scanner.  
+Hence,  if the user is on B:/10 and the file is on A:/0 with  the 
+current  default user number at 0,  GET will search from B:/10 to 
+B:/0 to A:/0 in looking for the file.
+:ZCPR Error Messages
+     The  following  are the error messages issued  by  ZCPR  and 
+their meanings.
+
+Message   Meaning
+
+?         Printed after a command or an argument means that such
+            was invalid
+
+No File   From DIR, this means that DIR did not locate any files
+          Also from ERA with the same meaning
+
+All?      Issued in response ERA *.*, asks the user is he really
+            wants to erase all the files.  Unlike under the
+            original CP/M 2.2 CCP, single character input is
+            required (Y or y for yes and anything else for no)
+            with NO <CR> to end the line
+
+
+Message   Meaning
+
+Full      From SAVE, means that there is not enough space on
+            disk
+          From GET or command load by CPR, means that there
+            is not enough space in memory
+
+Delete File?
+          From REN or SAVE, means that the file specified already 
+            exists  on disk and the user may type Y or y to erase 
+            it  and  continue  with the procedure  or  any  other 
+            character to abort
+
+

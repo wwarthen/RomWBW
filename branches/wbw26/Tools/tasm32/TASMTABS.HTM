@@ -1,0 +1,2989 @@
+<!DOCTYPE HTML PUBLIC "-//SQ//DTD HTML 2.0 + all extensions//EN" "hmpro3.dtd">
+<HTML>
+<HEAD>
+<TITLE>TASM Table Syntax </TITLE><!--$Revision: 1.3 $--></HEAD>
+<BODY>
+<H1>TASM TABLE SYNTAX DESCRIPTION</H1>
+<P>The tables that control TASM's interpretation of the source file are read
+from a file at run time.  The table file name is determined  by taking  the 
+numeric option field specified on the TASM command line and appending it to the
+string &quot;TASM&quot;, then a  &quot;.TAB&quot;  extension  is added.  Thus,
+if the following command line is entered:
+</P>
+<PRE>        tasm -51  test.asm
+</PRE>
+<P>then TASM would read the table file named &quot;TASM51.TAB&quot;.
+</P>
+<P>The following rules apply to the structure of the table file:
+</P>
+<UL>
+<LI>The first line of the file should contain a string surrounded by double
+quotes that should identify the version of the assembler table.  This  string
+will appear at the top of each page in the list file.  It should be limited to
+24 characters.</LI>
+<LI>Any line that starts with a '.' is considered a directive.  Directives
+should preceed instruction defintion lines.  The following directives are
+available:
+</LI></UL>
+<TABLE BORDER="BORDER">
+<TR>
+<TD><B><FONT SIZE="+1">DIRECTIVE</FONT></B></TD>
+<TD><B><FONT SIZE="+1">DESCRIPTION</FONT></B></TD></TR>
+<TR>
+<TD>MSFIRST</TD>
+<TD>Generate opcodes MS byte first.  Useful for tables with multibyte opcodes.</TD></TR>
+<TR>
+<TD>ALTWILD</TD>
+<TD>Use '@' instead of '*' as the wild card in the table. Useful if the
+instruction syntax uses '*' to denote certain addressing modes.</TD></TR>
+<TR>
+<TD>NOARGSHIFT</TD>
+<TD>Suppress the shift/or operation that applies if the optional SHIFT and OR
+fields are provided.  Some RULEs use the SHIFT/OR fields for other purposes.</TD></TR>
+<TR>
+<TD>REGSET</TD>
+<TD>Define a register mnemonic and associated bit field.  See example below.</TD></TR>
+<TR>
+<TD>WORDADDRS</TD>
+<TD>Set word addressing mode (one word = 2 bytes)</TD></TR></TABLE>
+<UL>
+<LI>Any line whose first character is not a '.' and is not alphabetic is
+considered to be a comment and is discarded.</LI>
+<LI>Any line that has an alphabetic character as the first character is assumed
+to be an instruction definition record and is parsed to build the internal
+representation of the instruction set tables. Eight fields (separated by white
+space) are expected, as follows:
+</LI></UL>
+<TABLE BORDER="BORDER">
+<TR>
+<TD><B>Field Name </B></TD>
+<TD><B>Description</B></TD></TR>
+<TR>
+<TD>INSTRUCTION </TD>
+<TD>Instruction Mnemonic</TD></TR>
+<TR>
+<TD>ARGS </TD>
+<TD>Argument definition</TD></TR>
+<TR>
+<TD>OPCODE </TD>
+<TD>Opcode value</TD></TR>
+<TR>
+<TD>NBYTES </TD>
+<TD>Number of bytes</TD></TR>
+<TR>
+<TD>RULE </TD>
+<TD>Modifier operation</TD></TR>
+<TR>
+<TD>CLASS </TD>
+<TD>Instruction class</TD></TR>
+<TR>
+<TD>SHIFT </TD>
+<TD>Argument left shift count</TD></TR>
+<TR>
+<TD>OR </TD>
+<TD>Argument bitwise OR mask</TD></TR></TABLE>
+<P>The fields are further defined below:</P>
+<DL>
+<DT><B> INSTRUCTION </B></DT>
+<DD>The INSTRUCTION field should contain the string to be used as the mnemonic
+for this instruction.  Upper case letters should be used (the source statements
+are converted to upper case before comparison). </DD>
+<DT><B>ARGS.</B></DT>
+<DD>The ARGS field should contain a string describing the format of the operand
+field.  All characters are taken literally except the '*' which denotes the
+presence of a valid TASM expression. Multiple '*'s can be used,  but all but the
+last one must be followed by a comma, '[', or ']'.  If a single '*' appears in
+the ARGS field, then the default action of TASM will be to determine the value
+of the expression that matches the field and insert one or two bytes of it into
+the object file depending on the NBYTES field.  If multiple '*'s are used, then
+special operators (RULE) must be used to take advantage of them (see the
+examples below).  An ARGS field of a pair of  double quotes means that no
+arguments are expected.
+</DD>
+<DT><B>OPCODE.</B></DT>
+<DD>The OPCODE field should contain the opcode value (two to six hex  digits)
+for this instruction and address mode.  Each pair of hex digits represent a
+single byte of the opcode, ordered with the right most pair being placed in the
+lowest memory location.
+</DD>
+<DT><B>NBYTES.</B></DT>
+<DD>The NBYTES field should specify the number of bytes this instruction  is to
+occupy (a single decimal digit).  This number includes both opcode bytes and
+argument bytes, thus, the number of bytes of argument is computed by subtracting
+the number of bytes of opcode (dictated by the length of the OPCODE field) from
+NBYTES.
+</DD>
+<DT><B>RULE.</B></DT>
+<DD>The RULE field determines if any special operations  need to be  performed
+on the code generated for this instruction.  For  example, the zero-page
+addressing mode of the 6502 is a special case of the absolute addressing mode,
+and is handled by a special RULE code.  See the<B> Encoding Rules</B> below.
+</DD>
+<DT><B>CLASS.</B></DT>
+<DD>The CLASS field is used to specify whether this instruction is part of the
+standard instruction set or a member of a set of extended instructions. Bit 0 of
+this field should be set to denote a member of the standard instruction set. 
+Other bits can be used as needed to establish several  classes (or sets) of
+instructions that can be enabled or disabled via  the '-x' command line option.
+
+</DD>
+<DT><B>SHIFT </B>(optional).</DT>
+<DD>The SHIFT field is used to cause the first argument of the given
+instruction to be shifted left the specified number of bits.  (Except T1, TDMA,
+TAR RULES as noted below).
+</DD>
+<DT><B>OR </B>(optional).</DT>
+<DD>The OR field is used to perform a bitwise OR with the first argument of the
+given instruction.  Specified as hex digits.  (Except  T1, TDMA, TAR RULES as
+noted below).
+</DD></DL>
+<P>Note that the SHIFT/OR fields are used somewhat differently for T1, TDMA, 
+and TAR RULES.  In those cases, the SHIFT and OR fields are used but the OR
+field is really an AND mask and the result is OR'd with the opcode.
+</P>
+<H2>Encoding Rules</H2>
+<P>The following encoding rules are available:</P>
+<DL>
+<DT><B>NOTOUCH or NOP</B></DT>
+<DD>Do nothing to instruction or args</DD>
+<DT><B>JMPPAGE</B></DT>
+<DD>Put bits 8-10 of first arg into bits 5-7 of opcode (8048 JMP)</DD>
+<DT><B>ZPAGE</B></DT>
+<DD> If arg &lt; 256 then use zero-page (6502)</DD>
+<DT><B>R1</B></DT>
+<DD>Make arg relative to PC (single byte)</DD>
+<DT><B>R2</B></DT>
+<DD>Make arg relative to PC (two byte)</DD>
+<DT><B>CREL</B></DT>
+<DD>Combine LS bytes of first two args making the second one relative to PC</DD>
+<DT><B>SWAP</B></DT>
+<DD>Swap bytes of first arg</DD>
+<DT><B>COMBINE</B></DT>
+<DD>Combine LS bytes of first two args into first arg (arg1 -&gt; LSB, arg2 -&gt;MSB).</DD>
+<DT><B>CSWAP</B></DT>
+<DD> Combine LS bytes of first two args into first arg and swap.</DD>
+<DT><B>ZBIT</B></DT>
+<DD>Z80 bit instructions.</DD>
+<DT><B>ZIDX</B></DT>
+<DD>Z80 Indexed Instructions (e.g.<TT> ADC A,(IX+x)</TT>)</DD>
+<DT><B>MBIT</B></DT>
+<DD>Motorola (6805) bit instructions</DD>
+<DT><B>MZERO</B> </DT>
+<DD>Motorola (6805) zero page (direct)</DD>
+<DT><B>3ARG</B></DT>
+<DD> Three args, one byte each.</DD>
+<DT><B>3REL</B></DT>
+<DD> Three args, one byte each, last one relative</DD>
+<DT><B>T1</B> </DT>
+<DD>TMS320 instruction with one arg.  Shift according to SHIFT and mask with OR
+and OR into opcode.  If a second arg exists assume it is an arp and OR intoLSB
+of opcode.</DD>
+<DT><B>TDMA</B></DT>
+<DD>TMS320 instruction with first arg dma. Second arg gets shift/and/or 
+treatment as with T1.</DD>
+<DT><B>TAR</B></DT>
+<DD>TMS320 instruction with first arg ar. Second arg gets shift/and/or
+treatment as with T1.</DD>
+<DT><B>I1</B></DT>
+<DD>  I8096 Combine</DD>
+<DT><B>I2</B></DT>
+<DD>  I8096 two far args</DD>
+<DT><B>I3</B></DT>
+<DD>  I8096 three far args</DD>
+<DT><B>I4</B></DT>
+<DD>  I8096 Jump with bit mask</DD>
+<DT><B>I5</B></DT>
+<DD>  I8096 Relative</DD>
+<DT><B>I6</B></DT>
+<DD>  I8096 Indirect</DD>
+<DT><B>I7</B></DT>
+<DD>  I8096 One far arg</DD>
+<DT><B>I8</B></DT>
+<DD>  I8096 Jump</DD></DL>
+<H2>Encoding Examples</H2>
+<P>Note that the reason for the combining of arguments (COMBINE and CSWAP) is
+that TASM assumes that all object bytes to be inserted in the object file are
+derived from a variable representing the value of the first argument (argval). 
+If two arguments are in the ARGS field, then one of the  previously mentioned
+RULE`s must be used.  They have the effect of combining the low bytes of the
+first two arguments into the variable (argval) from which the object code will
+be generated.  TASM`s argument parsing  routine can handle a large number of
+arguments, but the code that generates the object code is less capable.
+</P>
+<P>The following table shows possible instruction definition records,  followed
+by possible source statements that would match it, followed by the resulting
+object code that would be generated (in hex):
+</P>
+<PRE>                                          EXAMPLE         EXAMPLE
+INSTRUCTION DEFINITION                    SOURCE          OBJECT
+-------------------------------------------------------------------
+XYZ  *      FF   3  NOTOUCH 1             xyz 1234h       FF 34 12
+XYZ  *      FF   2  NOTOUCH 1             xyz 1234h       FF 34
+ZYX  *      FE   3  SWAP    1             zyx 1234h       FE 12 34
+ZYX  *      FE   3  R2      1             zyx $+4         FE 01 00
+ABC  *,*    FD   3  COMBINE 1             abc 45h,67h     FD 45 67
+ABC  *,*    FD   3  CSWAP   1             abc 45h,67h     FD 67 45
+ADD  A,#*   FC   2  NOTOUCH 1             add A,#'B'      FC 42
+RET  &quot;&quot;     FB   1  NOTOUCH 1             ret             FB
+LD   IX,*   21DD 4  NOTOUCH 1             ld  IX,1234h    DD 21 34 12
+LD   IX,*   21DD 4  NOTOUCH 1 1 0         ld  IX,1234h    DD 21 68 24
+LD   IX,*   21DD 4  NOTOUCH 1 0 1         ld  IX,1234h    DD 21 35 12
+LD   IX,*   21DD 4  NOTOUCH 1 1 1         ld  IX,1234h    DD 21 69 24
+LD   IX,*   21DD 4  NOTOUCH 1 8 12        ld  IX,34h      DD 21 12 34
+</PRE>
+<P>The order of the entries for various addressing modes of a given instruction
+is important. Since the wild card matches anything, it is  important to specify
+the ARGS for the addressing modes that have the most  qualifying characters
+first.  For example, if an instruction had two  addressing modes,  one that
+accepted any expression, and another that required a pound sign in front of an
+expression, the pound sign entry  should go first otherwise all occurrences of
+the instruction would match the  more general ARGS expression  that it
+encountered first.  The  following  entries illustrate the proper sequencing:
+</P>
+<PRE>        ADD #*  12 3 NOTOUCH 1
+        ADD *   13 3 NOTOUCH 1
+</PRE>
+<H2>Table Lookup Method</H2>
+<P>The current version of TASM uses a very simple hashing method based on the
+first character of the nmemonic.  A search is begun at the first table entry
+that starts with that letter.  Thus, the table should be sorted alphabetically
+for optimum lookup speed.  If the table is not sorted in this way it will not
+break anything, but just slow it down a bit.</P>
+<H2>REGSET Directive</H2>
+<P>For instruction sets that have a well defined set of registers that map to a
+bit field in the opcode it may be convenient to use the REGSET directive.  The
+value field following each register definition is OR'd into the opcode when a
+match is found.  The '!' character is used to indicate the expected occurance of
+a register.  Consider the following example:</P>
+<PRE>.REGSET R0  00 1
+.REGSET R1  01 1
+.REGSET R2  02 1
+.REGSET R3  03 1
+.REGSET R4  04 1
+.REGSET R5  05 1
+.REGSET R6  06 1
+.REGSET R7  07 1
+
+...
+INC !  E0  1 NOP
+...
+</PRE>
+<P>A source instruction <TT>INC R3</TT> would be encoded by ORing E0 with 03
+resulting in E3.</P>
+<HR>
+<H1>6502 INSTRUCTIONS AND ADDRESSING MODES</H1>
+<P>The acceptable 6502 opcode mnemonics for TASM are as follows:
+</P>
+<PRE> ADC  AND  ASL  BCC  BCS  BEQ  BNE  BMI  BPL  BVC  BVS  BIT
+ BRK  CLC  CLD  CLI  CLV  CMP  CPX  CPY  DEC  DEX  DEY  EOR
+ INC  INX  INY  JMP  JSR  LDA  LDX  LDY  LSR  NOP  ORA  PHA
+ PHP  PLA  PLP  ROL  ROR  RTI  RTS  SBC  SEC  SED  SEI  STA
+ STX  STY  TAX  TAY  TSX  TXA  TXS  TYA
+</PRE>
+<P>TASM  also  supports the following instructions that are part of the
+Rockwell  R65C02  and  R65C00/21  microprocessor  instruction  sets. Those  that
+ are  marked  as  set A are applicable to the R65C02 and those marked as set B
+are  applicable  to  the  R65C00/21  (A+B  for both):
+</P>
+<PRE>        Mnemonic        Description                Address Mode  Set
+        ---------------------------------------------------------------
+        ADC             Add with carry             (IND)         A
+        AND             And memory with A          (IND)         A
+        BIT             Test memory bits with A    ABS,X         A
+        BIT             Test memory bits with A    ZP,X          A
+        BIT             Test memory bits with A    IMM           A
+        CMP             Compare memory with A      (IND)         A
+        DEC             Decrement A                A             A
+        EOR             Exclusive OR memory with A (IND)         A
+        INC             Increment A                A             A
+        JMP             Jump                       (ABS,X)       A
+        LDA             Load A with memory         (IND)         A
+        ORA             OR A with memory           (IND)         A
+        SBC             Subtract memory form A     (IND)         A
+        STA             Store A in memory          (IND)         A
+        STZ             Store zero                 ABS           A
+        STZ             Store zero                 ABS,X         A
+        STZ             Store zero                 ZP            A
+        STZ             Store zero                 ZP,X          A
+        TRB             Test and reset memory bit  ABS           A
+        TRB             Test and reset memory bit  ZP            A
+        TSB             Test and set memory bit    ABS           A
+        TSB             Test and set memory bit    ZP            A
+
+        BRA             Branch Always              REL           A+B
+
+        BBR0            Branch on Bit 0 Reset      ZP,REL        A+B
+        BBR1            Branch on Bit 1 Reset      ZP,REL        A+B
+        BBR2            Branch on Bit 2 Reset      ZP,REL        A+B
+        BBR3            Branch on Bit 3 Reset      ZP,REL        A+B
+        BBR4            Branch on Bit 4 Reset      ZP,REL        A+B
+        BBR5            Branch on Bit 5 Reset      ZP,REL        A+B
+        BBR6            Branch on Bit 6 Reset      ZP,REL        A+B
+        BBR7            Branch on Bit 7 Reset      ZP,REL        A+B
+
+        BBS0            Branch on Bit 0 Set        ZP,REL        A+B
+        BBS1            Branch on Bit 1 Set        ZP,REL        A+B
+        BBS2            Branch on Bit 2 Set        ZP,REL        A+B
+        BBS3            Branch on Bit 3 Set        ZP,REL        A+B
+        BBS4            Branch on Bit 4 Set        ZP,REL        A+B
+        BBS5            Branch on Bit 5 Set        ZP,REL        A+B
+        BBS6            Branch on Bit 6 Set        ZP,REL        A+B
+        BBS7            Branch on Bit 7 Set        ZP,REL        A+B
+
+        MUL             Multiply                   Implied       B
+
+        PHX             Push Index X               Implied       A+B
+        PHY             Push Index Y               Implied       A+B
+        PLX             Pull Index X               Implied       A+B
+        PLY             Pull Index Y               Implied       A+B
+
+        RMB0            Reset Memory Bit 0         ZP            A+B
+        RMB1            Reset Memory Bit 1         ZP            A+B
+        RMB2            Reset Memory Bit 2         ZP            A+B
+        RMB3            Reset Memory Bit 3         ZP            A+B
+        RMB4            Reset Memory Bit 4         ZP            A+B
+        RMB5            Reset Memory Bit 5         ZP            A+B
+        RMB6            Reset Memory Bit 6         ZP            A+B
+        RMB7            Reset Memory Bit 7         ZP            A+B
+
+        SMB0            Set   Memory Bit 0         ZP            A+B
+        SMB1            Set   Memory Bit 1         ZP            A+B
+        SMB2            Set   Memory Bit 2         ZP            A+B
+        SMB3            Set   Memory Bit 3         ZP            A+B
+        SMB4            Set   Memory Bit 4         ZP            A+B
+        SMB5            Set   Memory Bit 5         ZP            A+B
+        SMB6            Set   Memory Bit 6         ZP            A+B
+        SMB7            Set   Memory Bit 7         ZP            A+B
+</PRE>
+<P>Addressing  modes  are denoted as follows:
+</P>
+<PRE>ABS               Absolute
+ZP                Zero Page
+ABS,X             Absolute X
+ZP,X              Zero Page X
+ABS,Y             Absolute Y
+ZP,Y              Zero Page Y
+A                 Accumulator
+(IND,X)           Indirect X
+(IND),Y           Indirect Y
+(IND)             Indirect
+#IMM              Immediate
+REL               Relative (Branch instructions only)
+ZP,REL            Zero Page, Relative
+Implied           Implied
+</PRE>
+<P>Note  that Zero Page addressing can not be explicitly requested.  It is used
+if the value of the operand is  representable  in  a  single byte for the
+applicable statements.
+</P>
+<P>The '-x' command line option can be used to enable the extended
+instructions.  A '-x' with no digit following will enable the standard set plus
+both extended sets.  The 6502 version of TASM uses three bits in the instruction
+class mask to determine whether a given instruction is enabled or not.  Bit 0
+enables the basic set, bit 1 enables set A (R65C02) and bit 2 enables set B
+(R65C00/21).  The following table shows various options:
+</P>
+<PRE>Class Mask        Enabled Instructions
+                BASIC   R65C02  R65C00/21
+--------------------------------------------
+1               yes     no      no
+2               no      yes     no
+3               yes     yes     no
+4               no      no      yes
+5               yes     no      yes
+6               no      yes     yes
+7               yes     yes     yes
+</PRE>
+<P>Thus,  to enable the basic set plus the R65C02 instructions,  invoke the
+'-x3' command line option.
+</P>
+<P>See manufacturer's data for a more complete description of the meaning of
+the mnemonics and addressing modes.
+</P>
+<HR>
+<H1>68xx INSTRUCTIONS AND ADDRESSING MODES
+</H1>
+<P>The following list shows the acceptable opcode mnemonics and their
+corresponding operand formats for the 6800/68HC11 version of TASM. Symbolic
+fields are defined as follows:
+</P>
+<PRE>SYMBOLIC            DESCRIPTION
+-----------------------------------------------
+_addr8_             Absolute address (8 bits)
+_addr16_            Absolute address (16 bits)
+                      Values that can fit in 8 bits can
+                      result in the DIRECT addressing mode.
+_addr16_no8_        Absolute address (16 bits)
+                      DIRECT addressing not applicable.
+_bmsk_              Bit mask (8 bits)
+_rel8_              Relative address (8 bit signed)
+_immed8_            Immediate data (8 bits)
+_immed16_           Immediate data (16 bits)
+</PRE>
+<P>Any valid TASM expression can appear in the place of any of the above
+symbolics.
+</P>
+<P>The lines that are marked with an 'a' or 'b' are extended instructions that 
+are available only if a -x option has been invoked on  the command line.   The
+classes of instructions (and their bit assignment in the class mask) are shown
+below:
+</P>
+<PRE>BIT     PROCESSOR      EXT LABEL     COMMAND LINE OPTION
+--------------------------------------------------------
+0       6800
+1       6801/6803       a            -x3
+2       68HC11          b            -x7
+</PRE>
+<P>Thus, to enable the 68HC11 instructions, a -x7 could be used on  the command
+line.
+</P>
+<P>TASM deviates from standard  Motorola syntax for  the BSET,   BRSET, BCLR, 
+and  BRCLR instructions.    TASM  requires commas  separating all arguments.   
+Motorola assemblers use white  space  to  separate the last one  or two 
+arguments for  these instructions.   Here  are examples of each applicable
+instruction:
+</P>
+<PRE>TASM                                MOTOROLA
+----------------------              --------------------
+BCLR    _addr8_,Y,_bmsk_            BCLR    _addr8_,Y _bmsk_
+BCLR    _addr8_,X,_bmsk_            BCLR    _addr8_,X _bmsk_
+BCLR    _addr8_  ,_bmsk_            BCLR    _addr8_   _bmsk_
+BSET    _addr8_,Y,_bmsk_            BSET    _addr8_,Y _bmsk_
+BSET    _addr8_,X,_bmsk_            BSET    _addr8_,X _bmsk_
+BSET    _addr8_  ,_bmsk_            BSET    _addr8_   _bmsk_
+BRCLR   _addr8_,Y,_bmsk_,_rel8_     BRCLR   _addr8_,Y _bmsk_ _rel8_
+BRCLR   _addr8_,X,_bmsk_,_rel8_     BRCLR   _addr8_,X _bmsk_ _rel8_
+BRCLR   _addr8_  ,_bmsk_,_rel8_     BRCLR   _addr8_   _bmsk_ _rel8_
+BRSET   _addr8_,Y,_bmsk_,_rel8_     BRSET   _addr8_,Y _bmsk_ _rel8_
+BRSET   _addr8_,X,_bmsk_,_rel8_     BRSET   _addr8_,X _bmsk_ _rel8_
+BRSET   _addr8_  ,_bmsk_,_rel8_     BRSET   _addr8_   _bmsk_ _rel8_
+</PRE>
+<PRE>OPCODE  OPERANDS       EXT   DESCRIPTION
+--------------------------------------------------------------
+ABA                          Add Accumulator B to Accumulator A
+ABX                     a    Add Accumulator B to Index Reg X
+ABY                     b    Add Accumulator B to Index reg Y
+
+ADCA    #_immed8_            Add with carry immediate  to Reg A
+ADCA    _addr8_,X            Add with carry indirect,X to Reg A
+ADCA    _addr8_,Y       b    Add with carry indirect,Y to Reg A
+ADCA    _addr16_             Add with carry extended   to Reg A
+
+ADCB    #_immed8_            Add with carry immediate  to Reg B
+ADCB    _addr8_,X            Add with carry indirect,X to Reg B
+ADCB    _addr8_,Y       b    Add with carry indirect,Y to Reg B
+ADCB    _addr16_             Add with carry extended   to Reg B
+
+ADDA    #_immed8_            Add w/o  carry immediate  to Reg A
+ADDA    _addr8_,X            Add w/o  carry indirect,X to Reg A
+ADDA    _addr8_,Y       b    Add w/o  carry indirect,Y to Reg A
+ADDA    _addr16_             Add w/o  carry extended   to Reg A
+
+ADDB    #_immed8_            Add w/o  carry immediate  to Reg B
+ADDB    _addr8_,X            Add w/o  carry indirect,X to Reg B
+ADDB    _addr8_,Y       b    Add w/o  carry indirect,Y to Reg B
+ADDB    _addr16_             Add w/o  carry extended   to Reg B
+
+ADDD    #_immed8_       a    Add double immediate  to Reg D
+ADDD    _addr8_,X       a    Add double indirect,X to Reg D
+ADDD    _addr8_,Y       b    Add double indirect,Y to Reg D
+ADDD    _addr16_        a    Add double extended   to Reg D
+
+ANDA    #_immed8_            AND immediate  to Reg A
+ANDA    _addr8_,X            AND indirect,X to Reg A
+ANDA    _addr8_,Y       b    AND indirect,Y to Reg A
+ANDA    _addr16_             AND extended   to Reg A
+
+ANDB    #_immed8_            AND immediate  to Reg B
+ANDB    _addr8_,X            AND indirect,X to Reg B
+ANDB    _addr8_,Y       b    AND indirect,Y to Reg B
+ANDB    _addr16_             AND extended   to Reg B
+
+ASL     _addr8_,X            Arithmetic shift left indirect,X
+ASL     _addr8_,Y       b    Arithmetic shift left indirect,Y
+ASL     _addr16_             Arithmetic shift left extended
+ASLA                         Arithmetic shift left Reg A
+ASLB                         Arithmetic shift left Reg B
+ASLD                    a    Arithmetic shift left double Reg D
+
+ASR     _addr8_,X            Arithmetic shift right indirect,X
+ASR     _addr8_,Y       b    Arithmetic shift right indirect,Y
+ASR     _addr16_             Arithmetic shift right extended
+ASRA                         Arithmetic shift right Reg A
+ASRB                         Arithmetic shift right Reg B
+
+OPCODE  OPERANDS       EXT   DESCRIPTION
+--------------------------------------------------------------
+BCC     _rel8_               Branch if carry clear
+BCS     _rel8_               Branch if carry set
+BEQ     _rel8_               Branch if equal
+BGE     _rel8_               Branch if greater or equal
+BGT     _rel8_               Branch if greater
+BHI     _rel8_               Branch if higher
+BHS     _rel8_               Branch if higher or same
+BRA     _rel8_               Branch always
+
+BITA    #_immed8_            AND immediate  with Reg A (set condition codes)
+BITA    _addr8_,X            AND indirect,X with Reg A (set condition codes)
+BITA    _addr8_,Y       b    AND indirect,Y with Reg A (set condition codes)
+BITA    _addr16_             AND extended   with Reg A (set condition codes)
+
+BITB    #_immed8_            AND immediate  with Reg B (set condition codes)
+BITB    _addr8_,X            AND indirect,X with Reg B (set condition codes)
+BITB    _addr8_,Y       b    AND indirect,Y with Reg B (set condition codes)
+BITB    _addr16_             AND extended   with Reg B (set condition codes)
+
+BLE     _rel8_               Branch if less than or equal
+BLO     _rel8_               Branch if lower (same as BCS)
+BLS     _rel8_               Branch if lower or same
+BLT     _rel8_               Branch if less than zero
+BMI     _rel8_               Branch if minus
+BNE     _rel8_               Branch if not equal
+BPL     _rel8_               Branch if plus
+BRA     _rel8_               Branch always
+
+BRCLR _addr8_,X,_bmsk_,_rel8_  b Branch if bits clear indirect X
+BRCLR _addr8_,Y,_bmsk_,_rel8_  b Branch if bits clear indirect Y
+BRCLR _addr8_,_bmsk_,  _rel8_  b Branch if bits clear direct
+
+BRN     _rel8_               Branch never
+
+BRSET _addr8_,X,_bmsk_,_rel8_  b Branch if bits set indirect X
+BRSET _addr8_,Y,_bmsk_,_rel8_  b Branch if bits set indirect Y
+BRSET _addr8_,_bmsk_,  _rel8_  b Branch if bits set direct
+
+BSET    _addr8_,X,_bmsk_ b   Bit set indirect X
+BSET    _addr8_,Y,_bmsk_ b   Bit set indirect Y
+BSET    _addr8_,_bmsk_   b   Bit set direct
+BSET    _addr8_,#_bmsk_  b   Bit set direct (alternate form)
+
+BSR     _rel8_               Branch subroutine
+BVC     _rel8_               Branch if overflow clear
+BVS     _rel8_               Branch if overflow set
+
+OPCODE  OPERANDS       EXT   DESCRIPTION
+--------------------------------------------------------------
+CBA                          Compare registers A &amp; B
+CLC                          Clear Carry
+CLI                          Clear Interrupt Mask
+
+CLR     _addr8_,X            Arithmetic shift right indirect,X
+CLR     _addr8_,Y       b    Arithmetic shift right indirect,Y
+CLR     _addr16_             Arithmetic shift right extended
+CLRA                         Arithmetic shift right Reg A
+CLRB                         Arithmetic shift right Reg B
+
+CLV                          Clear Overflow Bit
+
+CMPA    #_immed8_            Compare immediate  with Reg A
+CMPA    _addr8_,X            Compare indirect,X with Reg A
+CMPA    _addr8_,Y       b    Compare indirect,Y with Reg A
+CMPA    _addr16_             Compare extended   with Reg A
+
+CMPB    #_immed8_            Compare immediate  with Reg B
+CMPB    _addr8_,X            Compare indirect,X with Reg B
+CMPB    _addr8_,Y       b    Compare indirect,Y with Reg B
+CMPB    _addr16_             Compare extended   with Reg B
+
+COM     _addr8_,X            Complement indirect,X
+COM     _addr8_,Y       b    Complement indirect,Y
+COM     _addr16_             Complement extended
+COMA                         Complement Reg A
+COMB                         Complement Reg B
+
+CPD     #_immed16_      b    Compare double immediate  to Reg D
+CPD     _addr8_,X       b    Compare double indirect,X to Reg D
+CPD     _addr8_,Y       b    Compare double indirect,Y to Reg D
+CPD     _addr16_        b    Compare double extended   to Reg D
+
+CPX     #_immed8_            Compare double immediate  to Reg X
+CPX     _addr8_,X            Compare double indirect,X to Reg X
+CPX     _addr8_,Y       b    Compare double indirect,Y to Reg X
+CPX     _addr16_             Compare double extended   to Reg X
+
+CPY     #_immed8_       b    Compare double immediate  to Reg Y
+CPY     _addr8_,X       b    Compare double indirect,X to Reg Y
+CPY     _addr8_,Y       b    Compare double indirect,Y to Reg Y
+CPY     _addr16_        b    Compare double extended   to Reg Y
+
+OPCODE  OPERANDS       EXT   DESCRIPTION
+--------------------------------------------------------------
+DAA                          Decimal Adjust Reg A
+
+DEC     _addr8_,X            Decrement indirect,X
+DEC     _addr8_,Y            Decrement indirect,Y
+DEC     _addr16_no8_         Decrement extended
+DECA                         Decrement Reg A
+DECB                         Decrement Reg B
+DES                          Decrement stack pointer
+DEX                          Decrement Reg X
+DEY                     b    Decrement Reg Y
+
+EORA    #_immed8_            Exclusive OR immediate  with Reg A
+EORA    _addr8_,X            Exclusive OR indirect,X with Reg A
+EORA    _addr8_,Y       b    Exclusive OR indirect,Y with Reg A
+EORA    _addr16_             Exclusive OR extended   with Reg A
+
+EORB    #_immed8_            Exclusive OR immediate  with Reg B
+EORB    _addr8_,X            Exclusive OR indirect,X with Reg B
+EORB    _addr8_,Y       b    Exclusive OR indirect,Y with Reg B
+EORB    _addr16_             Exclusive OR extended   with Reg B
+
+FDIV                    b    Fractional Divide (ACCD/IX)
+IDIV                    b    Integer Divide (ACCD/IX)
+
+INC     _addr8_,X            Increment indirect,X
+INC     _addr8_,Y            Increment indirect,Y
+INC     _addr16_no8_         Increment extended
+INCA                         Increment Reg A
+INCB                         Increment Reg B
+INS                          Increment stack pointer
+INX                          Increment Reg X
+INY                     b    Increment Reg Y
+
+JMP     _addr8_,X            Jump indirect,X
+JMP     _addr8_,Y       b    Jump indirect,Y
+JMP     _addr16_no8_         Jump extended
+
+JSR     _addr8_,X            Jump Subroutine indirect,X
+JSR     _addr8_,Y       b    Jump Subroutine indirect,Y
+JSR     _addr16_             Jump Subroutine extended
+
+LDAA    #_immed8_            Load Accumulator immediate  with Reg A
+LDAA    _addr8_,X            Load Accumulator indirect,X with Reg A
+LDAA    _addr8_,Y       b    Load Accumulator indirect,Y with Reg A
+LDAA    _addr16_             Load Accumulator extended   with Reg A
+
+LDAB    #_immed8_            Load Accumulator immediate  with Reg B
+LDAB    _addr8_,X            Load Accumulator indirect,X with Reg B
+LDAB    _addr8_,Y       b    Load Accumulator indirect,Y with Reg B
+LDAB    _addr16_             Load Accumulator extended   with Reg B
+
+OPCODE  OPERANDS       EXT   DESCRIPTION
+--------------------------------------------------------------
+LDD     #_immed16_      a    Load double immediate  to Reg D
+LDD     _addr8_,X       a    Load double indirect,X to Reg D
+LDD     _addr8_,Y       b    Load double indirect,Y to Reg D
+LDD     _addr16_        a    Load double extended   to Reg D
+
+LDS     #_immed16_           Load double immediate  to Reg D
+LDS     _addr8_,X            Load double indirect,X to Reg D
+LDS     _addr8_,Y       b    Load double indirect,Y to Reg D
+LDS     _addr16_             Load double extended   to Reg D
+
+LDX     #_immed16_           Load immediate  to Reg X
+LDX     _addr8_,X            Load indirect,X to Reg X
+LDX     _addr8_,Y       b    Load indirect,Y to Reg X
+LDX     _addr16_             Load extended   to Reg X
+
+LDY     #_immed16_      b    Load immediate  to Reg Y
+LDY     _addr8_,X       b    Load indirect,X to Reg Y
+LDY     _addr8_,Y       b    Load indirect,Y to Reg Y
+LDY     _addr16_        b    Load extended   to Reg Y
+
+LSL     _addr8_,X            Logical Shift Left indirect,X
+LSL     _addr8_,Y       b    Logical Shift Left indirect,Y
+LSL     _addr16_no8_         Logical Shift Left extended
+LSLA                         Logical Shift Left Reg A
+LSLB                         Logical Shift Left Reg B
+LSLD                         Logical Shift Left Double Reg D
+
+LSR     _addr8_,X            Logical Shift Right indirect,X
+LSR     _addr8_,Y       b    Logical Shift Right indirect,Y
+LSR     _addr16_no8_         Logical Shift Right extended
+LSRA                         Logical Shift Right Reg A
+LSRB                         Logical Shift Right Reg B
+LSRD                         Logical Shift Right Double Reg D
+
+MUL                          Multiply Unsigned
+
+NEG     _addr8_,X            Negate indirect,X
+NEG     _addr8_,Y       b    Negate indirect,Y
+NEG     _addr16_no8_         Negate extended
+NEGA                         Negate Reg A
+NEGB                         Negate Reg B
+
+NOP                          No Operation
+
+OPCODE  OPERANDS       EXT   DESCRIPTION
+--------------------------------------------------------------
+ORAA    #_immed8_            Inclusive OR immediate  with Reg A
+ORAA    _addr8_,X            Inclusive OR indirect,X with Reg A
+ORAA    _addr8_,Y       b    Inclusive OR indirect,Y with Reg A
+ORAA    _addr16_             Inclusive OR extended   with Reg A
+
+ORAB    #_immed8_            Inclusive OR immediate  with Reg B
+ORAB    _addr8_,X            Inclusive OR indirect,X with Reg B
+ORAB    _addr8_,Y       b    Inclusive OR indirect,Y with Reg B
+ORAB    _addr16_             Inclusive OR extended   with Reg B
+
+PSHA                         Push Reg A onto stack
+PSHB                         Push Reg B onto stack
+PSHX                         Push Reg X onto stack
+PSHY                         Push Reg Y onto stack
+
+PULA                         Pull Reg A from stack
+PULB                         Pull Reg B from stack
+PULX                         Pull Reg X from stack
+PULY                         Pull Reg Y from stack
+
+ROL     _addr8_,X            Rotate Left indirect,X
+ROL     _addr8_,Y            Rotate Left indirect,Y
+ROL     _addr16_no8_         Rotate Left extended
+ROLA                         Rotate Left Reg A
+ROLB                         Rotate Left Reg B
+
+ROR     _addr8_,X            Rotate Right indirect,X
+ROR     _addr8_,Y            Rotate Right indirect,Y
+ROR     _addr16_no8_         Rotate Right extended
+RORA                         Rotate Right Reg A
+RORB                         Rotate Right Reg B
+RTI                          Return from Interrupt
+RTS                          Return from subroutine
+
+SBA                          Subtract Accumulators
+SBCA    #_immed8_            Subtract with Carry immediate  with Reg A
+SBCA    _addr8_,X            Subtract with Carry indirect,X with Reg A
+SBCA    _addr8_,Y       b    Subtract with Carry indirect,Y with Reg A
+SBCA    _addr16_             Subtract with Carry extended   with Reg A
+SBCB    #_immed8_            Subtract with Carry immediate  with Reg B
+SBCB    _addr8_,X            Subtract with Carry indirect,X with Reg B
+SBCB    _addr8_,Y       b    Subtract with Carry indirect,Y with Reg B
+SBCB    _addr16_             Subtract with Carry extended   with Reg B
+SEC                          Set Carry
+SEI                          Set Interrupt Mask
+SEV                          Set Twos Complement Overflow Bit
+STAA    _addr8_,X            Store Reg A indirect,X
+STAA    _addr8_,Y       b    Store Reg A indirect,Y
+STAA    _addr16_             Store Reg A extended
+
+STAB    _addr8_,X            Store Reg B indirect,X
+STAB    _addr8_,Y       b    Store Reg B indirect,Y
+STAB    _addr16_             Store Reg B extended
+
+OPCODE  OPERANDS       EXT   DESCRIPTION
+--------------------------------------------------------------
+STD     _addr8_,X            Store Double Acc indirect,X to Reg B
+STD     _addr8_,Y       b    Store Double Acc indirect,Y to Reg B
+STD     _addr16_             Store Double Acc extended   to Reg B
+
+STOP                         Stop Processing
+
+STS     _addr8_,X            Store Accumulator indirect,X
+STS     _addr8_,Y       b    Store Accumulator indirect,Y
+STS     _addr16_             Store Accumulator extended
+
+STX     _addr8_,X            Store Index Reg X indirect,X
+STX     _addr8_,Y       b    Store Index Reg X indirect,Y
+STX     _addr16_             Store Index Reg X extended
+
+STY     _addr8_,X       b    Store Index Reg Y indirect,X
+STY     _addr8_,Y       b    Store Index Reg Y indirect,Y
+STY     _addr16_        b    Store Index Reg Y extended
+
+SUBA    #_immed8_            Subtract immediate  from Reg A
+SUBA    _addr8_,X            Subtract indirect,X from Reg A
+SUBA    _addr8_,Y       b    Subtract indirect,Y from Reg A
+SUBA    _addr16_             Subtract extended   from Reg A
+
+SUBB    #_immed8_            Subtract immediate  from Reg B
+SUBB    _addr8_,X            Subtract indirect,X from Reg B
+SUBB    _addr8_,Y       b    Subtract indirect,Y from Reg B
+SUBB    _addr16_             Subtract extended   from Reg B
+
+SUBD    #_immed16_      b    Subtract double immediate  from Reg D
+SUBD    _addr8_,X       b    Subtract double indirect,X from Reg D
+SUBD    _addr8_,Y       b    Subtract double indirect,Y from Reg D
+SUBD    _addr16_        b    Subtract double extended   from Reg D
+
+SWI                          Software Interrupt
+
+TAB                          Transfer Reg A to Reg B
+TAP                          Transfer Reg A to Condition Code Reg
+TPA                          Transfer Condition Code Reg to Reg A
+TBA                          Transfer Reg B to Reg A
+
+TST     _addr8_,X            Test indirect,X
+TST     _addr8_,Y            Test indirect,Y
+TST     _addr16_no8_         Test extended
+TSTA                         Test Reg A
+TSTB                         Test Reg B
+
+TSX                          Transfer Stack Pointer to Reg X
+TSY                     b    Transfer Stack Pointer to Reg Y
+TXS                          Transfer Reg X to Stack Pointer
+TYS                     b    Transfer Reg Y to Stack Pointer
+
+WAI                          Wait for Interrupt
+XGDX                    b    Exchange Double Reg D and Reg X
+XGDY                    b    Exchange Double Reg D and Reg Y
+
+</PRE>
+<HR>
+<H1>8048 INSTRUCTIONS AND ADDRESSING MODES</H1>
+<P>The following list shows the acceptable opcode mnemonics and their
+corresponding operand formats for the 8048 version of TASM.  Where 'Rn' is seen,
+R0 through R7 may be substituted.  Other symbolic fields are as follows:
+</P>
+<PRE>SYMBOLIC            DESCRIPTION
+-----------------------------------------------
+_addr8_             Absolute address (8 bits)
+_addr11_            Absolute address (11 bits)
+_immed_             Immediate data
+
+</PRE>
+<P>Any valid TASM expression can appear in the place of any of the above
+symbolics.
+</P>
+<P>The lines that are marked with an (8041), (8022), or (8021) on the far 
+right are extended instructions that are available only if a -x option has been 
+invoked on the command line.  The classes of instructions (and their bit
+assignment in the class mask) are shown below:
+</P>
+<PRE>BIT     PROCESSOR
+-------------------------------
+0       8X48, 8035, 8039, 8049
+1       8X41A
+2       8022
+3       8021
+</PRE>
+<P>Thus, to enable the basic 8048 set plus the 8022 set, a -x5 could be used on
+the command line. 
+</P>
+<P>Note that some of the base instructions should be disabled for the 8041,
+8022, and 8021, but are not. 
+</P>
+<PRE>OPCODE  OPERANDS        DESCRIPTION
+-------------------------------------------------------------------
+ADD     A,Rn            Add Register to Acc
+ADD     A,@R0           Add Indirect RAM to Acc
+ADD     A,@R1           Add Indirect RAM to Acc
+ADD     A,#_immed_      Add Immediate data to Acc
+
+ADDC    A,Rn            Add Register to Acc with carry
+ADDC    A,@R0           Add Indirect RAM to Acc with carry
+ADDC    A,@R1           Add Indirect RAM to Acc with carry
+ADDC    A,#_immed_      Add Immediate data to Acc with carry
+
+ANL     A,Rn            AND Register to Acc
+ANL     A,@R0           AND Indirect RAM to Acc
+ANL     A,@R1           AND Indirect RAM to Acc
+ANL     A,#_immed_      AND Immediate data to Acc
+ANL     BUS,#_immed_    AND Immediate data to BUS
+ANL     P1,#_immed_     AND Immediate data to port P1
+ANL     P2,#_immed_     AND Immediate data to port P2
+
+ANLD    P4,A            AND Acc to Expander port P4
+ANLD    P5,A            AND Acc to Expander port P5
+ANLD    P6,A            AND Acc to Expander port P6
+ANLD    P7,A            AND Acc to Expander port P7
+
+CALL    _addr11_        Call subroutine
+
+CLR     A               Clear Acc
+CLR     C               Clear Carry
+CLR     F0              Clear Flag 0
+CLR     F1              Clear Flag 1
+
+CPL     A               Complement Acc
+CPL     C               Complement Carry
+CPL     F0              Complement Flag F0
+CPL     F1              Complement Flag F1
+
+DA      A               Decimal adjust Acc
+
+DEC     A               Decrement Acc
+DEC     Rn              Decrement Register
+
+DIS     I               Disable Interrupts
+DIS     TCNTI           Disable Timer/Counter Interrupt
+
+DJNZ    Rn,_addr8_      Decrement Register and Jump if nonzero
+
+EN      DMA             Enable DMA                           (8041)
+EN      FLAGS           Enable Flags                         (8041)
+EN      I               Enable External Interrupt
+EN      TCNTI           Enable Timer/Counter Interrupt
+ENT0    CLK             Enable Clock Output
+
+IN      A,DBB           Input Data Bus to Acc                (8041)
+IN      A,P0            Input Port 0 to Acc                  (8021)
+IN      A,P1            Input Port 1 to Acc
+IN      A,P2            Input Port 2 to Acc
+
+INC     A               Increment Acc
+INC     Rn              Increment Register
+INC     @R0             Increment Indirect RAM
+INC     @R1             Increment Indirect RAM
+
+INS     A,BUS           Strobed Input of Bus to Acc
+
+JB0     _addr8_         Jump if Acc bit 0 is set
+JB1     _addr8_         Jump if Acc bit 1 is set
+JB2     _addr8_         Jump if Acc bit 2 is set
+JB3     _addr8_         Jump if Acc bit 3 is set
+JB4     _addr8_         Jump if Acc bit 4 is set
+JB5     _addr8_         Jump if Acc bit 5 is set
+JB6     _addr8_         Jump if Acc bit 6 is set
+JB7     _addr8_         Jump if Acc bit 7 is set
+JMP     _addr11_        Jump
+JC      _addr8_         Jump if Carry is set
+JF0     _addr8_         Jump if Flag F0 is set
+JF1     _addr8_         Jump if Flag F1 is set
+JNC     _addr8_         Jump if Carry is clear
+JNI     _addr8_         Jump if Interrupt input is clear
+JNIBF   _addr8_         Jump if IBF is clear                 (8041)
+JNT0    _addr8_         Jump if T0 is clear
+JNT1    _addr8_         Jump if T1 is clear
+JNZ     _addr8_         Jump if Acc is not zero
+JOBF    _addr8_         Jump if OBF is set                   (8041)
+JTF     _addr8_         Jump if Timer Flag is set
+JT0     _addr8_         Jump if T0 pin is high
+JT1     _addr8_         Jump if T1 pin is high
+JZ      _addr8_         Jump if Acc is zero
+JMPP    @A              Jump Indirect (current page)
+
+MOV     A,PSW           Move PSW to Acc
+MOV     A,Rn            Move Register to Acc
+MOV     A,T             Move Timer/Counter to Acc
+MOV     A,@R0           Move Indirect RAM to Acc
+MOV     A,@R1           Move Indirect RAM to Acc
+MOV     A,#_immed_      Move Immediate data to Acc
+MOV     PSW,A           Move Acc to PSW
+MOV     Rn,A            Move Acc to Register
+MOV     Rn,#_immed_     Move Immediate data to Register
+MOV     STS,A           Move Acc to STS                      (8041)
+MOV     T,A             Move Acc to Timer/Counter
+MOV     @R0,A           Move Acc to Indirect RAM
+MOV     @R1,A           Move Acc to Indirect RAM
+MOV     @R0,#_immed_    Move Immediate data to Indirect RAM
+MOV     @R1,#_immed_    Move Immediate data to Indirect RAM
+
+MOVD    A,P4            Move half-byte Port 4 to Acc (lower nibble)
+MOVD    A,P5            Move half-byte Port 5 to Acc (lower nibble)
+MOVD    A,P6            Move half-byte Port 6 to Acc (lower nibble)
+MOVD    A,P7            Move half-byte Port 7 to Acc (lower nibble)
+MOVD    P4,A            Move lower nibble of Acc to Port 4
+MOVD    P5,A            Move lower nibble of Acc to Port 5
+MOVD    P6,A            Move lower nibble of Acc to Port 6
+MOVD    P7,A            Move lower nibble of Acc to Port 7
+
+MOVP    A,@A            Move Indirect Program data to Acc
+MOVP3   A,@A            Move Indirect Program data to Acc (page 3)
+
+MOVX    A,@R0           Move Indirect External RAM to Acc
+MOVX    A,@R1           Move Indirect External RAM to Acc
+MOVX    @R0,A           Move Acc to Indirect External RAM
+MOVX    @R1,A           Move Acc to Indirect External RAM
+
+NOP                     No operation
+
+ORL     A,Rn            OR Register to Acc
+ORL     A,@R0           OR Indirect RAM to Acc
+ORL     A,@R1           OR Indirect RAM to Acc
+ORL     A,#_immed_      OR Immediate data to Acc
+ORL     BUS,#_immed_    OR Immediate data to BUS
+ORL     P1,#_immed_     OR Immediate data to port P1
+ORL     P2,#_immed_     OR Immediate data to port P2
+
+ORLD    P4,A            OR lower nibble of Acc with P4
+ORLD    P5,A            OR lower nibble of Acc with P5
+ORLD    P6,A            OR lower nibble of Acc with P6
+ORLD    P7,A            OR lower nibble of Acc with P7
+
+OUTL    BUS,A           Output Acc to Bus
+OUT     DBB,A           Output Acc to DBB                    (8041)
+OUTL    P0,A            Output Acc to Port P0                (8021)
+OUTL    P1,A            Output Acc to Port P1
+OUTL    P2,A            Output Acc to Port P2
+
+RAD                     Move A/D Converter to Acc            (8022)
+
+RET                     Return from subroutine
+RETI                    Return from Interrupt w/o PSW restore(8022)
+RETR                    Return from Interrupt w/  PSW restore
+
+RL      A               Rotate Acc Left
+RLC     A               Rotate Acc Left through Carry
+RR      A               Rotate Acc Right
+RRC     A               Rotate Acc Right through Carry
+
+SEL     AN0             Select Analog Input 0                (8022)
+SEL     AN1             Select Analog Input 1                (8022)
+SEL     MB0             Select Memory Bank 0
+SEL     MB1             Select Memory Bank 1
+SEL     RB0             Select Register Bank 0
+SEL     RB1             Select Register Bank 1
+
+STOP    TCNT            Stop Timer/Counter
+STRT    CNT             Start Counter
+STRT    T               Start Timer
+
+SWAP    A               Swap nibbles of Acc
+
+XCH     A,Rn            Exchange Register with Acc
+XCH     A,@R0           Exchange Indirect RAM with Acc
+XCH     A,@R1           Exchange Indirect RAM with Acc
+
+XCHD    A,@R0           Exchange lower nibble of Indirect RAM w/ Acc
+XCHD    A,@R1           Exchange lower nibble of Indirect RAM w/ Acc
+
+XRL     A,Rn            Exclusive OR Register to Acc
+XRL     A,@R0           Exclusive OR Indirect RAM to Acc
+XRL     A,@R1           Exclusive OR Indirect RAM to Acc
+XRL     A,#_immed_      Exclusive OR Immediate data to Acc
+</PRE>
+<P>See manufacturer's data for a more complete description of the meaning of
+the mnemonics and addressing modes.
+</P>
+<HR>
+<H1>8051 INSTRUCTIONS AND ADDRESSING MODES</H1>
+<P>The following list shows the acceptable opcode mnemonics  and  their
+corresponding  operand  formats for the 8051 version of TASM.  Where 'Rn' is
+seen,  R0 through R7  may  be  substituted.  Other  symbolic fields are as
+follows: 
+</P>
+<PRE>        
+SYMBOLIC            DESCRIPTION
+-----------------------------------------------
+_addr11_            Absolute address (11 bits)
+_addr16_            Absolute address (16 bits)
+_bit_               Bit address
+_immed_             Immediate data
+_direct_            Direct RAM address
+_rel_               Relative address
+</PRE>
+<P>Any valid TASM expression can appear in the place of any of the above
+symbolics.
+</P>
+<PRE>OPCODE  OPERAND             DESCRIPTION
+--------------------------------------------------------------------
+ACALL   _addr11_            Absolute Call
+ADD     A,Rn                Add Register to Acc
+ADD     A,@R0               Add Indirect RAM to Acc
+ADD     A,@R1               Add Indirect RAM to Acc
+ADD     A,#_immed_          Add Immediate data to Acc
+ADD     A,_direct_          Add Direct RAM to Acc
+ADDC    A,Rn                Add Register to Acc with carry
+ADDC    A,@R0               Add Indirect RAM to Acc with carry
+ADDC    A,@R1               Add Indirect RAM to Acc with carry
+ADDC    A,#_immed_          Add Immediate data to Acc with carry
+ADDC    A,_direct_          Add Direct RAM to Acc with carry
+
+AJMP    _addr11_            Absolute Jump
+
+ANL     A,Rn                AND Register and Acc
+ANL     A,@R0               AND Indirect RAM and Acc
+ANL     A,@R1               AND Indirect RAM and Acc
+ANL     A,#_immed_          AND Immediate data and Acc
+ANL     A,_direct_          AND Direct RAM and Acc
+ANL     C,/_bit_            AND Complement of direct bit to Carry
+ANL     C,bit&gt;              AND direct bit to Carry
+ANL     _direct_,A          AND Acc to direct RAM
+ANL     _direct_,#_immed_   AND Immediate data and direct RAM
+
+CJNE    A,#_immed_,_rel_    Compare Immediate to Acc   and JNE
+CJNE    A,_direct_,_rel_    Compare direct RAM to Acc and JNE
+CJNE    Rn,#_immed_,_rel_   Compare Immediate to Register and JNE
+CJNE    @R0,#_immed_,_rel_  Compare Immediate to Indirect RAM and JNE
+CJNE    @R1,#_immed_,_rel_  Compare Immediate to Indirect RAM and JNE
+
+CLR     A                   Clear Accumulator
+CLR     C                   Clear Carry
+CLR     _bit_               Clear Bit
+
+CPL     A                   Complement Accumulator
+CPL     C                   Complement Carry
+CPL     _bit_               Complement Bit
+
+DA      A                   Decimal Adjust Accumulator
+DEC     A                   Decrement Acc
+DEC     Rn                  Decrement Register
+DEC     @R0                 Decrement Indirect RAM
+DEC     @R1                 Decrement Indirect RAM
+DEC     _direct_            Decrement Direct RAM
+
+DIV     AB                  Divide Acc by B
+
+DJNZ    Rn,_rel_            Decrement Register and JNZ
+DJNZ    _direct_,_rel_      Decrement Direct RAM and JNZ
+
+INC     A                   Increment Acc
+INC     Rn                  Increment Register
+INC     @R0                 Increment Indirect RAM
+INC     @R1                 Increment Indirect RAM
+INC     DPTR                Increment Data Pointer
+INC     _direct_            Increment Direct RAM
+
+JB      _bit_,_rel_         Jump if Bit is set
+JBC     _bit_,_rel_         Jump if Bit is set &amp; clear Bit
+JC      _rel_               Jump if Carry is set
+JMP     @A+DPTR             Jump indirect relative to Data Pointer
+JNB     _bit_,_rel_         Jump if Bit is clear
+JNC     _rel_               Jump if Carry is clear
+JNZ     _rel_               Jump if Acc is not zero
+JZ      _rel_               Jump if Acc is zero
+
+LCALL   _addr16_            Long Subroutine Call
+LJMP    _addr16_            Long Jump
+
+MOV     A,Rn                Move Register to Acc
+MOV     A,@R0               Move Indirect RAM to Acc
+MOV     A,@R1               Move Indirect RAM to Acc
+MOV     A,#_immed_          Move Immediate data to Acc
+MOV     A,_direct_          Move direct RAM to Acc
+MOV     C,_bit_             Move bit to Acc
+MOV     DPTR,#_immed_       Move immediate data to Data Pointer
+MOV     Rn,A                Move Acc to Register
+MOV     Rn,#_immed_         Move Immediate data to Register
+MOV     Rn,_direct_         Move Direct RAM to Register
+MOV     @R0,A               Move Acc to Indirect RAM
+MOV     @R1,A               Move Acc to Indirect RAM
+MOV     @R0,#_immed_        Move Immediate data to Indirect RAM
+MOV     @R1,#_immed_        Move Immediate data to Indirect RAM
+MOV     @R0,_direct_        Move Direct RAM to Indirect RAM
+MOV     @R1,_direct_        Move Direct RAM to Indirect RAM
+MOV     _direct_,A          Move Acc to Direct RAM
+MOV     _bit_,C             Move Carry to Bit
+MOV     _direct_,Rn         Move Register to Direct RAM
+MOV     _direct_,@R0        Move Indirect RAM to Direct RAM
+MOV     _direct_,@R1        Move Indirect RAM to Direct RAM
+MOV     _direct_,#_immed_   Move Immediate data to Direct RAM
+MOV     _direct_,_direct_   Move Direct RAM to Direct RAM
+MOVC    A,@A+DPTR           Move code byte relative to DPTR to Acc
+MOVC    A,@A+PC             Move code byte relative to PC to Acc
+
+MOVX    A,@R0               Move external RAM to Acc
+MOVX    A,@R1               Move external RAM to Acc
+MOVX    A,@DPTR             Move external RAM to Acc (16 bit addr)
+MOVX    @R0,A               Move Acc to external RAM
+MOVX    @R1,A               Move Acc to external RAM
+MOVX    @DPTR,A             Move Acc to external RAM (16 bit addr)
+
+MUL     AB                  Multiply Acc by B
+
+NOP                         No operation
+
+ORL     A,Rn                OR Register and Acc
+ORL     A,@R0               OR Indirect RAM and Acc
+ORL     A,@R1               OR Indirect RAM and Acc
+ORL     A,#_immed_          OR Immediate data and Acc
+ORL     A,_direct_          OR Direct RAM and Acc
+ORL     C,/_bit_            OR Complement of direct bit to Carry
+ORL     C,_bit_             OR direct bit to Carry
+ORL     _direct_,A          OR Acc to direct RAM
+ORL     _direct_,#_immed_   OR Immediate data and direct RAM
+
+POP     _direct_            Pop  from Stack and put in Direct RAM
+PUSH    _direct_            Push from Direct RAM to Stack
+
+RET                         Return from subroutine
+RETI                        Return from Interrupt
+
+RL      A                   Rotate Acc left
+RLC     A                   Rotate Acc left through Carry
+RR      A                   Rotate Acc right
+RRC     A                   Rotate Acc right through Carry
+
+SETB    C                   Set the Carry Bit
+SETB    _bit_               Set Direct Bit
+
+SJMP    _rel_               Short jump
+
+SUBB    A,Rn                Subtract Register from Acc with Borrow
+SUBB    A,@R0               Subtract Indirect RAM from Acc w/ Borrow
+SUBB    A,@R1               Subtract Indirect RAM from Acc w/ Borrow
+SUBB    A,#_immed_          Subtract Immediate data from Acc w/ Borrow
+SUBB    A,_direct_          Subtract Direct RAM from Acc w/ Borrow
+
+SWAP    A                   Swap nibbles of Acc
+
+XCH     A,Rn                Exchange Acc with Register
+XCH     A,@R0               Exchange Acc with Indirect RAM
+XCH     A,@R1               Exchange Acc with Indirect RAM
+XCH     A,_direct_          Exchange Acc with Direct RAM
+
+XCHD    A,@R0               Exchange Digit in Acc with Indirect RAM
+XCHD    A,@R1               Exchange Digit in Acc with Indirect RAM
+
+XRL     A,Rn                Exclusive OR Register and Acc
+XRL     A,@R0               Exclusive OR Indirect RAM and Acc
+XRL     A,@R1               Exclusive OR Indirect RAM and Acc
+XRL     A,#_immed_          Exclusive OR Immediate data and Acc
+XRL     A,_direct_          Exclusive OR Direct RAM and Acc
+XRL     _direct_,A          Exclusive OR Acc to direct RAM
+XRL     _direct_,#_immed_   Exclusive OR Immediate data and direct RAM
+</PRE>
+<P>Note  that  the above tables do not automatically define the various
+mnemonics that may be  used  for  addressing  the  special  function registers 
+of  the  8051.  The  user  may  wish  to set up a file of equates (EQU's) that
+can be included in the  source  file  for  this purpose.  The following
+illustrates some of the appropriate equates:
+</P>
+<PRE>P0      .equ    080H    ;Port 0
+SP      .equ    081H    ;Stack pointer
+DPL     .equ    082H
+DPH     .equ    083H
+PCON    .equ    087H
+TCON    .equ    088H
+TMOD    .equ    089H
+TL0     .equ    08AH
+TL1     .equ    08BH
+TH0     .equ    08CH
+TH1     .equ    08DH
+P1      .equ    090H    ;Port 1
+SCON    .equ    098H
+SBUF    .equ    099H
+P2      .equ    0A0H    ;Port 2
+IEC     .equ    0A8H
+P3      .equ    0B0H    ;Port 3
+IPC     .equ    0B8H
+PSW     .equ    0D0H
+ACC     .equ    0E0H    ;Accumulator
+B       .equ    0F0H    ;Secondary Accumulator
+;Now some bit addresses
+P0.0    .equ    080H    ;Port 0 bit 0
+P0.1    .equ    081H    ;Port 0 bit 1
+P0.2    .equ    082H    ;Port 0 bit 2
+P0.3    .equ    083H    ;Port 0 bit 3
+P0.4    .equ    084H    ;Port 0 bit 4
+P0.5    .equ    085H    ;Port 0 bit 5
+P0.6    .equ    086H    ;Port 0 bit 6
+P0.7    .equ    087H    ;Port 0 bit 7
+ACC.0   .equ    0E0H    ;Acc bit 0
+ACC.1   .equ    0E1H    ;Acc bit 1
+ACC.2   .equ    0E2H    ;Acc bit 2
+ACC.3   .equ    0E3H    ;Acc bit 3
+ACC.4   .equ    0E4H    ;Acc bit 4
+ACC.5   .equ    0E5H    ;Acc bit 5
+ACC.6   .equ    0E6H    ;Acc bit 6
+ACC.7   .equ    0E7H    ;Acc bit 7
+</PRE>
+<P>See the manufacturer's data sheets for more information.
+</P>
+<HR>
+<H1> 8085 INSTRUCTIONS AND ADDRESSING MODES </H1>
+<P>The following list shows the acceptable opcode mnemonics and their
+corresponding operand formats for the 8085 version of TASM.  The following
+symbols are used in the table:
+</P>
+<PRE>SYMBOLIC            DESCRIPTION
+-----------------------------------------------
+_addr_              Absolute address (16 bits)
+_data_              Immediate data (8 bits)
+_data16_            Immediate data (16 bits)
+_reg_               Register (A,B,C,D,E,H,L)
+_rp_                Register pair (B,D,H,SP)
+_port_              Port address (0-255)
+_int_               Interrupt level (0 - 7)
+
+</PRE>
+<P>Any valid TASM expression can appear in the  place  of  any  of  the above
+symbolics except _reg_, _rp_ and _int_.
+</P>
+<PRE>OPCODE  OPERAND        DESCRIPTION
+--------------------------------------------------------------------
+ACI      _data_         Add immediate to A with carry
+ADC      _reg_          Add _reg_ to A with carry
+ADC      M              Add indirect memory (HL) with carry
+ADD      _reg_          Add _reg_ to A
+ADD      M              Add indirect memory (HL) to A
+ADI      _data_         Add immediate to A
+
+ANA      _reg_          And register with A
+ANA      M              And indirect memory (HL) to A
+ANI      _data_         And immediate to A
+
+CALL     _addr_         Call subroutine at _addr_
+CC       _addr_         Call subroutine if carry set
+CNC      _addr_         Call subroutine if carry clear
+CZ       _addr_         Call subroutine if zero
+CNZ      _addr_         Call subroutine if non zero
+CP       _addr_         Call subroutine if positive
+CM       _addr_         Call subroutine if negative
+CPE      _addr_         Call subroutine if even parity
+CPO      _addr_         Call subroutine if odd  parity
+CMA                     Complement A
+CMC                     Complemennt carry
+CMP      _reg_          Compare register with A
+CMP      M              Compare indirect memory (HL) with A
+CPI      _data_         Compare immediate data with A
+
+DAA                     Decimal adjust A
+DAD      _rp_           Add register pair to HL
+DCR      _reg_          Decrement register
+DCR      M              Decrement indirect memory (HL)
+DCX      _rp_           Decrement register pair
+
+DI                      Disable interrupts
+EI                      Enable interrupts
+HLT                     Halt
+
+IN       _port_         Input on port
+INR      _reg_          Increment register
+INR      M              Increment indirect memory (HL)
+INX      _rp_           Increment register pair
+
+JMP      _addr_         Jump
+JC       _addr_         Jump if carry set
+JNC      _addr_         Jump if carry clear
+JZ       _addr_         Jump if zero
+JNZ      _addr_         Jump if not zero
+JM       _addr_         Jump if minus
+JP       _addr_         Jump if plus
+JPE      _addr_         Jump if parity even
+JPO      _addr_         Jump if parity odd
+
+LDA      _addr_         Load A direct from memory
+LDAX     B              Load A indirect from memory using BC
+LDAX     D              Load A indirect from memory using DE
+LHLD     _addr_         Load HL direct from memory
+LXI      _rp_,_data16_  Load register pair with immediate data
+
+MOV      _reg_,_reg_    Move register to register
+MOV      _reg_,M        Move indirect memory (HL) to register
+MVI      _reg_,_data_   Move immediate data to register
+
+NOP                     No operation
+
+ORA      _reg_          Or register with A
+ORA      M              Or indirect memory (HL) with A
+ORI      _data_         Or immediate data to A
+OUT      _port_         Ouput to port
+
+PCHL                    Jump to instruction at (HL)
+POP      _rp_           Pop  register pair (excluding SP) from stack
+PUSH     _rp_           Push register pair (excluding SP) onto stack
+POP      PSW            Pop  PSW from stack
+PUSH     PSW            Pop  PSW onto stack
+
+RAL                     Rotate A left  with carry
+RAR                     Rotate A right with carry
+RLC                     Rotate A left  with branch carry
+RRC                     Rotate A right with branch carry
+
+RET                     Return from subroutine
+RZ                      Return if zero
+RNZ                     Return if non zero
+RC                      Return if carry set
+RNC                     Return if carry clear
+RM                      Return if minus
+RP                      Return if plus
+RPE                     Return if parity even
+RPO                     Return if parity odd
+
+RIM                     Read interrupt mask
+RST      _int_          Restart at vector _int_
+
+SBB      _reg_          Subtract _reg_ from A         with borrow
+SBB      M              Subtract indirect memory (HL) with borrow
+SBI      _data_         Subtract immediate from A     with borrow
+SUB      _reg_          Subtract _reg_ from A
+SUB      M              Subtract indirect memory (HL) from A
+SUI      _data_         Subtract immediate from A
+
+SHLD     _addr_         Store HL
+SIM                     Store Interrupt mask
+SPHL                    Exchange SP with HL
+
+STA      _addr_         Store A direct memory
+STAX     B              Store A indirect using BC
+STAX     D              Store A indirect using DE
+
+STC                     Set carry
+
+XRA      _reg_          Exclusive OR A with register
+XRA      M              Exclusive Or A with indirect memory (HL)
+XRI      _data_         Exclusive Or A with immediate data
+XCHG                    Exchange DE with HL
+XTHL                    Exchange HL with top of stack
+
+</PRE>
+<P>See the manufacturer's data sheets for more information.
+</P>
+<HR>
+<H1> Z80 INSTRUCTIONS AND ADDRESSING MODES </H1>
+<P>The following list shows the acceptable opcode mnemonics and their
+corresponding operand formats for the Z80 version of TASM.  The following
+symbols are used in the table:
+</P>
+<PRE>SYMBOLIC            DESCRIPTION
+-----------------------------------------------
+_addr_              Absolute address (16 bits)
+_bit_               Bit address
+_data_              Immediate data (8 bits)
+_data16_            Immediate data (16 bits)
+_disp_              Relative address
+_reg_               Register (A, B, C, D, E, H, or L)
+_rp_                Register pair (BC, DE, HL, or SP)
+_port_              Port (0 - 255)
+_cond_              Condition
+			NZ - not zero
+			Z  - zero
+			NC - not carry
+			C  - carry
+			PO - parity odd
+			PE - parity even
+			P  - positive
+			M  - minus
+
+</PRE>
+<P>Any valid TASM expression can appear in the  place  of the   _addr_, _bit_,
+_data_, _data16_, or _disp_ symbolics.
+</P>
+<PRE>OPCODE  OPERAND         DESCRIPTION
+--------------------------------------------------------------------
+ADC  A,_data_           Add immediate with carry to accumulator
+ADC  A,_reg_            Add register with carry to accumulator
+ADC  A,(HL)             Add indirect memory with carry to accumulator
+ADC  A,(IX+_disp_)      Add indirect memory with carry to accumulator
+ADC  A,(IY+_disp_)      Add indirect memory with carry to accumulator
+ADC  HL,_rp_            Add register pair with carry to HL
+
+ADD  A,_data_           Add immediate to accumulator
+ADD  A,_reg_            Add register to accumulator
+ADD  A,(HL)             Add indirect memory to accumulator
+ADD  A,(IX+_disp_)      Add indirect memory to accumulator
+ADD  A,(IY+_disp_)      Add indirect memory to accumulator
+ADD  HL,_rp_            Add register pair to HL
+ADD  IX,_rp_            Add register pair to index register
+ADD  IY,_rp_            Add register pair to index register
+
+AND  _data_             And immediate with accumulator
+AND  _reg_              And register  with accumulator
+AND  (HL)               And memory with accumulator
+AND  (IX+_disp_)        And memory with accumulator
+AND  (IY+_disp_)        And memory with accumulator
+
+BIT  _bit_,_reg_        Test _bit_ in register
+BIT  _bit_,(HL)         Test _bit_ in indirect memory
+BIT  _bit_,(IY+_disp_)  Test _bit_ in indirect memory
+BIT  _bit_,(IX+_disp_)  Test _bit_ in indirect memory
+
+CALL _addr_             Call the routine at _addr_
+CALL _cond_,_addr_      Call the routine if _cond_ is satisfied
+
+CCF                     Complement carry flag
+
+CP   _data_             Compare immediate data with accumulator
+CP   _reg_              Compare register with accumulator
+CP   (HL)               Compare indirect memory with accumulator
+CP   (IX+_disp_)        Compare indirect memory with accumulator
+CP   (IY+_disp_)        Compare indirect memory with accumulator
+CPD                     Compare accumulator with memory and
+                            decrement address and byte counters
+CPDR                    Compare accumulator with memory and
+                            decrement address and byte counter,
+                            continue until match is found or
+                            byte counter is zero
+
+CPI                     Compare accumulator with memory and
+                            increment address and byte counters
+CPIR                    Compare accumulator with memory and
+                            increment address and byte counter,
+                            continue until match is found or
+                            byte counter is zero
+CPL                     Complement the accumulator
+DAA                     Decimal adjust accumulator
+DEC  _reg_              Decrement register contents
+DI                      Disable interrupts
+DJNZ _disp_             Decrement reg B and jump relative if zero
+EI                      Enable interrupts
+EX   AF,AF'             Exchange program status and alt program stat
+EX   DE,HL              Exchange DE and HL contents
+EX   (SP),HL            Exchange contents of HL and top of stack
+EX   (SP),IX            Exchange contents of IX and top of stack
+EX   (SP),IY            Exchange contents of IY and top of stack
+EXX                     Exchange register pairs and alt reg pairs
+HALT                    Program execution stops
+IM   0                  Interrupt mode 0
+IM   1                  Interrupt mode 1
+IM   2                  Interrupt mode 2
+IN   A,_port_           Input port to accumulator
+INC  _reg_              Increment contents of register
+INC  _rp_               Increment contents of register pair
+INC  IX                 Increment IX
+INC  IY                 Increment IY
+INC  (HL)               Increment indirect memory
+INC  (IX+_disp_)        Increment indirect memory
+INC  (IY+_disp_)        Increment indirect memory
+IND                     Input to memory and decrement pointer
+INDR                    Input to memory and decrement pointer until
+                            byte counter is zero
+INI                     Input to memory and increment pointer
+INIR                    Input to memory and increment pointer until
+                            byte counter is zero
+IN   _reg_,(C)          Input to register
+
+JP   _addr_             Jump to location
+JP   _cond_,_addr_      Jump to location if condition satisifed
+JP   (HL)               Jump to location pointed to by HL
+JP   (IX)               Jump to location pointed to by IX
+JP   (IY)               Jump to location pointed to by IY
+
+JR   _disp_             Jump relative
+JR   C,_disp_           Jump relative if carry is set
+JR   NC,_disp_          Jump relative if carry bit is reset
+JR   NZ,_disp_          Jump relative if zero flag is reset
+JR   Z,_disp_           Jump relative if zero flag is set
+
+LD   A,I                Move interrupt vector contents to accumulator
+LD   A,R                Move refresh reg contents to accumulator
+LD   A,(_addr_)         Load accumulator indirect from memory
+LD   A,(_rp_)           Load accumulator indirect from memory by _rp_
+LD   _reg_,_reg_        Load source register to destination register
+LD   _rp_,(_addr_)      Load register pair indirect from memory
+LD   IX,(_addr_)        Load IX indirect from memory
+LD   IY,(_addr_)        Load IY indirect from memory
+LD   I,A                Load interrup vector from accumulator
+LD   R,A                Load refresh register from accumulator
+LD   _reg_,_data_       Load register with immediate data
+LD   _rp_,_data16_      Load register pair with immediate data
+LD   IX,_data16_        Load  IX  with immediate data
+LD   IY,_data16_        Load  IY  with immediate data
+LD   _reg_,(HL)         Load register indirect from memory
+LD   _reg_,(IX+_disp_)  Load register indirect from memory
+LD   _reg_,(IY+_disp_)  Load register indirect from memory
+LD   SP,HL              Load contents of HL to stack pointer
+LD   SP,IX              Load contents of IX to stack pointer
+LD   SP,IY              Load contents of IY to stack pointer
+LD   (addr),A           Load contents of A to memory
+LD   (_addr_),HL        Load contents of HL to memory
+LD   (_addr_),_rp_      Load contents of register pair to memory
+LD   (_addr_),IX        Load contents of IX to memory
+LD   (_addr_),IY        Load contents of IY to memory
+LD   (HL),_data_        Load immediate into indirect memory
+LD   (IX+_disp_),_data_ Load immediate into indirect memory
+LD   (IY+_disp_),_data_ Load immediate into indirect memory
+LD   (HL),_reg_         Load register  into indirect memory
+LD   (IX+_disp_),_reg_  Load register  into indirect memory
+LD   (IY+_disp_),_reg_  Load register  into indirect memory
+LD   (_rp_),A           Load accumulator into indirect memory
+LDD                     Transfer data between memory and decrement
+                            destination and source addresses
+LDDR                    Transfer data between memory until byte
+                            counter is zero, decrement destintation
+                            and source addresses
+LDI                     Transfer data between memory and increment
+                            destination and source addresses
+LDIR                    Transfer data between memory until byte
+                            counter is zero, increment destination
+                            and source addresses
+NEG                     Negate contents of accumulator
+NOP                     No operation
+OR   _data_             Or immediate with accumulator
+OR   _reg_              Or register with accumulator
+OR   (HL)               Or indirect memory with accumulator
+OR   (IX+_disp_)        Or indirect memory with accumulator
+OR   (IY+_disp_)        Or indirect memory with accumulator
+OUT  (C),_reg_          Output from registor
+OUTD                    Output from memory, decrement address
+OTDR                    Output from memory, decrement address
+                            continue until reg B is zero
+OUTI                    Output from memory, increment address
+OTIR                    Output from memory, increment address
+                            continue until reg B is zero
+OUT  _port_,A           Output from accumulator
+POP  _rp_               Load register pair from top of stack
+POP  IX                 Load IX from top of stack
+POP  IY                 Load IY from top of stack
+PUSH _rp_               Store resister pair on top of stack
+PUSH IX                 Store IX on top of stack
+PUSH IY                 Store IY on top of stack
+RES  _bit_,_reg_        Reset register bit
+RES  _bit_,(HL)         Reset bit at indirect memory location
+RES  _bit_,(IX+disp)    Reset bit at indirect memory location
+RES  _bit_,(IY+_disp_)  Reset bit at indirect memory location
+RET                     Return from subroutine
+RET  _cond_             Return from subroutine if condition true
+RETI                    Return from interrupt
+RETN                    Return from non-maskable interrupt
+RL   _reg_              Rotate left through carry register contents
+RL   (HL)               Rotate left through carry indirect memory
+RL   (IX+_disp_)        Rotate left through carry indirect memory
+RL   (IY+_disp_)        Rotate left through carry indirect memory
+RLA                     Rotate left through carry accumulator
+RLC  _reg_              Rotate left branch  carry register contents
+RLC  (HL)               Rotate left branch  carry indirect memory
+RLC  (IX+_disp_)        Rotate left branch  carry indirect memory
+RLC  (IY+_disp_)        Rotate left branch  carry indirect memory
+RLCA                    Rotate left accumulator
+RLD                     Rotate one BCD digit left between the
+                            accumulator and memory
+RR   _reg_              Rotate right through carry register contents
+RR   (HL)               Rotate right through carry indirect memory
+RR   (IX+_disp_)        Rotate right through carry indirect memory
+RR   (IY+_disp_)        Rotate right through carry indirect memory
+RRA                     Rotate right through carry accumulator
+RRC  _reg_              Rotate right branch  carry register contents
+RRC  (HL)               Rotate right branch  carry indirect memory
+RRC  (IX+_disp_)        Rotate right branch  carry indirect memory
+RRC  (IY+_disp_)        Rotate right branch  carry indirect memory
+RRCA                    Rotate right branch  carry accumulator
+RRD                     Rotate one BCD digit right between the
+                            accumulator and memory
+RST                     Restart
+SBC  A,_data_           Subtract data            from A with borrow
+SBC  A,_reg_            Subtract register        from A with borrow
+SBC  A,(HL)             Subtract indirect memory from A with borrow
+SBC  A,(IX+_disp_)      Subtract indirect memory from A with borrow
+SBC  A,(IY+_disp_)      Subtract indirect memory from A with borrow
+SBC  HL,_rp_            Subtract register pair from HL with borrow
+SCF                     Set carry flag
+SET  _bit_,_reg_        Set register bit
+SET  _bit_,(HL)         Set indirect memory bit
+SET  _bit_,(IX+_disp_)  Set indirect memory bit
+SET  _bit_,(IY+_disp_)  Set indirect memory bit
+SLA  _reg_              Shift register left arithmetic
+SLA  (HL)               Shift indirect memory left arithmetic
+SLA  (IX+_disp_)        Shift indirect memory left arithmetic
+SLA  (IY+_disp_)        Shift indirect memory left arithmetic
+SRA  _reg_              Shift register right arithmetic
+SRA  (HL)               Shift indirect memory right arithmetic
+SRA  (IX+_disp_)        Shift indirect memory right arithmetic
+SRA  (IY+_disp_)        Shift indirect memory right arithmetic
+SRL  _reg_              Shift register right logical
+SRL  (HL)               Shift indirect memory right logical
+SRL  (IX+_disp_)        Shift indirect memory right logical
+SRL  (IY+_disp_)        Shift indirect memory right logical
+SUB  _data_             Subtract immediate from accumulator
+SUB  _reg_              Subtract register from accumulator
+SUB  (HL)               Subtract indirect memory from accumulator
+SUB  (IX+_disp_)        Subtract indirect memory from accumulator
+SUB  (IY+_disp_)        Subtract indirect memory from accumulator
+XOR  _data_             Exclusive or immediate with accumulator
+XOR  _reg_              Exclusive or register with accumulator
+XOR  (HL)               Exclusive or indirect memory with accumulator
+XOR  (IX+_disp_)        Exclusive or indirect memory with accumulator
+XOR  (IY+_disp_)        Exclusive or indirect memory with accumulator
+</PRE>
+<P>See  the   manufacturer's   data  sheets   for   more   information. 
+</P>
+<HR>
+<H1> 6805 INSTRUCTIONS AND ADDRESSING MODES </H1>
+<P>The following list shows the acceptable opcode mnemonics  and  their
+corresponding  operand  formats for the 6805  version of TASM.   The following
+symbols are used in the table:
+</P>
+<PRE>SYMBOLIC            DESCRIPTION
+-----------------------------------------------
+_addr_              Absolute address (16 bits)
+_addr8_             Absolute address (8 bits)
+_bit_               Bit address
+_data_              Immediate data (8 bits)
+_rel_               Relative address
+
+</PRE>
+<P>Any valid TASM expression can appear in the place of the _addr_, _addr8_,
+_bit_, _data_, or _rel_ symbolics.
+</P>
+<PRE>OPCODE  OPERAND         DESCRIPTION
+--------------------------------------------------------------
+ADC     #_data_         Add with carry, immediate
+ADC     ,X              Add with carry, indexed, no offset
+ADC     _addr8_,X       Add with carry, indexed, 1 byte offset
+ADC     _addr_,X        Add with carry, indexed, 2 byte offset
+ADC     _addr8_         Add with carry, direct
+ADC     _addr_          Add with carry, extended
+
+ADD     #_data_         Add, immediate
+ADD     ,X              Add, indexed, no offset
+ADD     _addr8_,X       Add, indexed, 1 byte offset
+ADD     _addr_,X        Add, indexed, 2 byte offset
+ADD     _addr8_         Add, direct
+ADD     _addr_          Add, extended
+
+AND     #_data_         And, immediate
+AND     ,X              And, indexed, no offset
+AND     _addr8_,X       And, indexed, 1 byte offset
+AND     _addr_,X        And, indexed, 2 byte offset
+AND     _addr8_         And, direct
+AND     _addr_          And, extended
+
+ASLA                    Arithmetic Shift Left, accumulator
+ASLX                    Arithmetic Shift Left, index register
+ASL     _addr8_         Arithmetic Shift Left, direct
+ASL     ,X              Arithmetic Shift Left, indexed, no offset
+ASL     _addr8_,X       Arithmetic Shift Left, indexed, 1 byte offset
+
+ASRA                    Arithmetic Shift Right, accumulator
+ASRX                    Arithmetic Shift Right, index register
+ASR     _addr8_         Arithmetic Shift Right, direct
+ASR     ,X              Arithmetic Shift Right, indexed, no offset
+ASR     _addr8_,X       Arithmetic Shift Right, indexed, 1 byte offset
+
+BCC     _rel_           Branch if carry clear
+BCLR    _bit_,_addr8_   Bit Clear in memory
+BCS     _rel_           Branch if carry set
+BEQ     _rel_           Branch if equal
+BHCC    _rel_           Branch if half carry clear
+BHCS    _rel_           Branch if half carry set
+BHI     _rel_           Branch if higher
+BHS     _rel_           Branch if higher or same
+BIH     _rel_           Branch if interrupt line is high
+BIL     _rel_           Branch if interrupt is low
+
+BIT     #_data_         Bit test, immediate
+BIT     ,X              Bit test, indexed, no offset
+BIT     _addr8_,X       Bit test, indexed, 1 byte offset
+BIT     _addr_,X        Bit test, indexed, 2 byte offset
+BIT     _addr8_         Bit test, direct
+BIT     _addr_          Bit test, extended
+
+BLO     _rel_           Branch if lower
+BLS     _rel_           Branch if lower or same
+BMC     _rel_           Branch if interrupt mask is clear
+BMI     _rel_           Branch if minus
+BMS     _rel_           Branch if interuupt mask bit is set
+BNE     _rel_           Branch if not equal
+BPL     _rel_           Branch if plus
+BRA     _rel_           Branch always
+BRCLR   _bit_,_addr8_,_rel_     Branch if bit is clear
+BRN     _rel_           Branch never
+BRSET   _bit_,_addr8_,_rel_     Branch if bit is set
+BSET    _bit_,_addr8_   Bit set in memory
+BSR     _rel_           Branch to subroutine
+
+CLC                     Clear carry bit
+CLI                     Clear interuupt mask bit
+
+CLRA                    Clear, accumulator
+CLRX                    Clear, index register
+CLR     _addr8_         Clear, direct
+CLR     ,X              Clear, indexed, no offset
+CLR     _addr8_,X       Clear, indexed, 1 byte offset
+
+CMP     #_data_         Compare Acc, immediate
+CMP     ,X              Compare Acc, indexed, no offset
+CMP     _addr8_,X       Compare Acc, indexed, 1 byte offset
+CMP     _addr_,X        Compare Acc, indexed, 2 byte offset
+CMP     _addr8_         Compare Acc, direct
+CMP     _addr_          Compare Acc, extended
+
+COMA                    Complement, accumulator
+COMX                    Complement, index register
+COM     _addr8_         Complement, direct
+COM     ,X              Complement, indexed, no offset
+COM     _addr8_,X       Complement, indexed, 1 byte offset
+
+CPX     #_data_         Compare Index, immediate
+CPX     ,X              Compare Index, indexed, no offset
+CPX     _addr8_,X       Compare Index, indexed, 1 byte offset
+CPX     _addr_,X        Compare Index, indexed, 2 byte offset
+CPX     _addr8_         Compare Index, direct
+CPX     _addr_          Compare Index, extended
+
+DECA                    Decrement, accumulator
+DECX                    Decrement, index register
+DEX                     Decrement, index register (alternate of DECX)
+DEC     _addr8_         Decrement, direct
+DEC     ,X              Decrement, indexed, no offset
+DEC     _addr8_,X       Decrement, indexed, 1 byte offset
+
+EOR     #_data_         Exclusive OR, immediate
+EOR     ,X              Exclusive OR, indexed, no offset
+EOR     _addr8_,X       Exclusive OR, indexed, 1 byte offset
+EOR     _addr_,X        Exclusive OR, indexed, 2 byte offset
+EOR     _addr8_         Exclusive OR, direct
+EOR     _addr_          Exclusive OR, extended
+
+INCA                    Increment, accumulator
+INCX                    Increment, index register
+INX                     Increment, index register (alternate of INCX)
+INC     _addr8_         Increment, direct
+INC     ,X              Increment, indexed, no offset
+INC     _addr8_,X       Increment, indexed, 1 byte offset
+
+JMP     ,X              Jump, indexed, no offset
+JMP     _addr8_,X       Jump, indexed, 1 byte offset
+JMP     _addr_,X        Jump, indexed, 2 byte offset
+JMP     _addr8_         Jump, direct
+JMP     _addr_          Jump, extended
+
+JSR     ,X              Jump Subroutine, indexed, no offset
+JSR     _addr8_,X       Jump Subroutine, indexed, 1 byte offset
+JSR     _addr_,X        Jump Subroutine, indexed, 2 byte offset
+JSR     _addr8_         Jump Subroutine, direct
+JSR     _addr_          Jump Subroutine, extended
+
+LDA     #_data_         Load Acc, immediate
+LDA     ,X              Load Acc, indexed, no offset
+LDA     _addr8_,X       Load Acc, indexed, 1 byte offset
+LDA     _addr_,X        Load Acc, indexed, 2 byte offset
+LDA     _addr8_         Load Acc, direct
+LDA     _addr_          Load Acc, extended
+
+LDX     #_data_         Load Index, immediate
+LDX     ,X              Load Index, indexed, no offset
+LDX     _addr8_,X       Load Index, indexed, 1 byte offset
+LDX     _addr_,X        Load Index, indexed, 2 byte offset
+LDX     _addr8_         Load Index, direct
+LDX     _addr_          Load Index, extended
+
+LSLA                    Logical Shift Left, accumulator
+LSLX                    Logical Shift Left, index register
+LSL     _addr8_         Logical Shift Left, direct
+LSL     ,X              Logical Shift Left, indexed, no offset
+LSL     _addr8_,X       Logical Shift Left, indexed, 1 byte offset
+
+LSRA                    Logical Shift Right, accumulator
+LSRX                    Logical Shift Right, index register
+LSR     _addr8_         Logical Shift Right, direct
+LSR     ,X              Logical Shift Right, indexed, no offset
+LSR     _addr8_,X       Logical Shift Right, indexed, 1 byte offset
+
+NEGA                    Negate, accumulator
+NEGX                    Negate, index register
+NEG     _addr8_         Negate, direct
+NEG     ,X              Negate, indexed, no offset
+NEG     _addr8_,X       Negate, indexed, 1 byte offset
+
+NOP                     No Operation
+
+ORA     #_data_         Inclusive OR Acc, immediate
+ORA     ,X              Inclusive OR Acc, indexed, no offset
+ORA     _addr8_,X       Inclusive OR Acc, indexed, 1 byte offset
+ORA     _addr_,X        Inclusive OR Acc, indexed, 2 byte offset
+ORA     _addr8_         Inclusive OR Acc, direct
+ORA     _addr_          Inclusive OR Acc, extended
+
+ROLA                    Rotate Left thru Carry, accumulator
+ROLX                    Rotate Left thru Carry, index register
+ROL     _addr8_         Rotate Left thru Carry, direct
+ROL     ,X              Rotate Left thru Carry, indexed, no offset
+ROL     _addr8_,X       Rotate Left thru Carry, indexed, 1 byte offset
+
+RORA                    Rotate Right thru Carry, accumulator
+RORX                    Rotate Right thru Carry, index register
+ROR     _addr8_         Rotate Right thru Carry, direct
+ROR     ,X              Rotate Right thru Carry, indexed, no offset
+ROR     _addr8_,X       Rotate Right thru Carry, indexed, 1 byte offset
+
+RSP                     Reset Stack Pointer
+RTI                     Return from Interrupt
+RTS                     Return from Subroutine
+
+SBC     #_data_         Subtract with Carry, immediate
+SBC     ,X              Subtract with Carry, indexed, no offset
+SBC     _addr8_,X       Subtract with Carry, indexed, 1 byte offset
+SBC     _addr_,X        Subtract with Carry, indexed, 2 byte offset
+SBC     _addr8_         Subtract with Carry, direct
+SBC     _addr_          Subtract with Carry, extended
+
+SEC                     Set carry bit
+SEI                     Set interrupt Mask bit
+
+STA     #_data_         Store Acc, immediate
+STA     ,X              Store Acc, indexed, no offset
+STA     _addr8_,X       Store Acc, indexed, 1 byte offset
+STA     _addr_,X        Store Acc, indexed, 2 byte offset
+STA     _addr8_         Store Acc, direct
+STA     _addr_          Store Acc, extended
+
+STOP                    Enable IRQ, Stop Oscillator
+
+STX     #_data_         Store Index, immediate
+STX     ,X              Store Index, indexed, no offset
+STX     _addr8_,X       Store Index, indexed, 1 byte offset
+STX     _addr_,X        Store Index, indexed, 2 byte offset
+STX     _addr8_         Store Index, direct
+STX     _addr_          Store Index, extended
+
+SUB     #_data_         Subtract, immediate
+SUB     ,X              Subtract, indexed, no offset
+SUB     _addr8_,X       Subtract, indexed, 1 byte offset
+SUB     _addr_,X        Subtract, indexed, 2 byte offset
+SUB     _addr8_         Subtract, direct
+SUB     _addr_          Subtract, extended
+
+SWI                     Software Interrupt
+
+TAX                     Transfer Acc to Index
+
+TSTA                    Test for neg or zero, accumulator
+TSTX                    Test for neg or zero, index register
+TST     _addr8_         Test for neg or zero, direct
+TST     ,X              Test for neg or zero, indexed, no offset
+TST     _addr8_,X       Test for neg or zero, indexed, 1 byte offset
+
+TXA                     Transfer Index to Acc
+
+WAIT                    Enable Interrupt, Stop Processor
+
+</PRE>
+<P>See the  manufacturer's data sheets for more information.
+</P>
+<HR>
+<H1> TMS32010 INSTRUCTIONS AND ADDRESSING MODES </H1>
+<P>The following list shows the acceptable opcode mnemonics and their
+corresponding operand formats for the TMS32010 version of TASM. The following
+symbols are used in the table: 
+</P>
+<PRE>SYMBOLIC            DESCRIPTION
+-----------------------------------------------
+_ar_                Auxiliary register (AR0, AR1)
+_arp_               Auxiliary register pointer
+_dma_               Direct memory address
+_pma_               Program memory address
+_port_              Port address (0 - 7)
+_shift_             Shift count  (0 - 15)
+_const1_            Constant (1 bit)
+_const8_            Constant (8 bit)
+_const13_           Constant (13 bit)
+
+</PRE>
+<P>Any valid TASM expression can appear in the place of any of the above
+symbolics. 
+</P>
+<PRE>OPCODE   OPERAND            DESCRIPTION
+--------------------------------------------------------------------
+ABS                         Absolute value of ACC
+
+ADD      *+,_shift_,_arp_   Add to ACC with shift
+ADD      *-,_shift_,_arp_
+ADD      *, _shift_,_arp_
+ADD      *+,_shift_
+ADD      *-,_shift_
+ADD      *, _shift_
+ADD      *+
+ADD      *-
+ADD      *
+ADD      _dma_,_shift_
+ADD      _dma_
+
+ADDH     *+,_arp_           Add to high-order ACC bits
+ADDH     *-,_arp_
+ADDH     *, _arp_
+ADDH     *+
+ADDH     *-
+ADDH     *
+ADDH     _dma_
+
+ADDS     *+,_arp_           Add to ACC with no sign extension
+ADDS     *-,_arp_
+ADDS     *, _arp_
+ADDS     *+
+ADDS     *-
+ADDS     *
+ADDS     _dma_
+
+AND      *+,_arp_           AND with ACC
+AND      *-,_arp_
+AND      *, _arp_
+AND      *+
+AND      *-
+AND      *
+AND      _dma_
+
+APAC                        Add P register to ACC
+
+B        _pma_              Branch unconditionally
+BANZ     _pma_              Branch on auxiliary register not zero
+BGEZ     _pma_              Branch if ACC &gt;= 0
+BGZ      _pma_              Branch if ACC &gt;  0
+BIOZ     _pma_              Branch on BIO- = 0
+BLEZ     _pma_              Branch if ACC &lt;= 0
+BLZ      _pma_              Branch if ACC &lt;  0
+BNZ      _pma_              Branch if ACC </PRE>
+<PRE> 0
+BV       _pma_              Branch on overflow
+BZ       _pma_              Branch if ACC =  0
+
+CALA                        Call subroutine from ACC
+CALL     _pma_              Call subroutine at _pma_
+
+DINT                        Disable interrupt
+
+DMOV     *+,_arp_           Data move in memory
+DMOV     *-,_arp_
+DMOV     *, _arp_
+DMOV     *+
+DMOV     *-
+DMOV     *
+DMOV     _dma_
+
+EINT                        Enable Interrupt
+
+IN       *+,_port_ ,_arp_   Input data from port
+IN       *-,_port_ ,_arp_
+IN       * ,_port_ ,_arp_
+IN       *+,_port_
+IN       *-,_port_
+IN       * ,_port_
+IN       _dma_,_port_
+
+LAC      *+,_shift_,_arp_   Load ACC with shift
+LAC      *-,_shift_,_arp_
+LAC      *, _shift_,_arp_
+LAC      *+,_shift_
+LAC      *-,_shift_
+LAC      *, _shift_
+LAC      *+
+LAC      *-
+LAC      *
+LAC      _dma_,_shift_
+LAC      _dma_
+
+LACK     _const8_                   Load ACC with 8 bit constant
+
+LAR      _ar_,*+,_arp_              Load auxiliary Register
+LAR      _ar_,*-,_arp_
+LAR      _ar_,*, _arp_
+LAR      _ar_,*+
+LAR      _ar_,*-
+LAR      _ar_,*
+LAR      _ar_,_dma_
+
+LARK     _ar_,_const8_              Load aux register with constant
+LARP     _const1_                   Load aux register pointer immed
+
+LDP      *+,_arp_                   Load data memory page pointer
+LDP      *-,_arp_
+LDP      *, _arp_
+LDP      *+
+LDP      *-
+LDP      *
+LDP      _dma_
+
+LDPK     _const1_                   Load data page pointer immediate
+
+LST      *+,_arp_                   Load status from data memory
+LST      *-,_arp_
+LST      *, _arp_
+LST      *+
+LST      *-
+LST      *
+LST      _dma_
+
+LT       *+,_arp_                   Load T register
+LT       *-,_arp_
+LT       *, _arp_
+LT       *+
+LT       *-
+LT       *
+LT       _dma_
+
+LTA      *+,_arp_                   Load T register and accumulate
+LTA      *-,_arp_                     product
+LTA      *, _arp_
+LTA      *+
+LTA      *-
+LTA      *
+LTA      _dma_
+
+LTD      *+,_arp_                   Load T reg, accumulate product,
+LTD      *-,_arp_                     and move
+LTD      *, _arp_
+LTD      *+
+LTD      *-
+LTD      *
+LTD      _dma_
+
+MAR      *+,_arp_                   Modify auxiliary register
+MAR      *-,_arp_
+MAR      *, _arp_
+MAR      *+
+MAR      *-
+MAR      *
+MAR      _dma_
+
+MPY      *+,_arp_                   Multiply
+MPY      *-,_arp_
+MPY      *, _arp_
+MPY      *+
+MPY      *-
+MPY      *
+MPY      _dma_
+
+MPYK     _const13_                  Multiply immediate
+
+NOP                                 No Operation
+
+OR       *+,_arp_                   OR  with low order bits of ACC
+OR       *-,_arp_
+OR       *, _arp_
+OR       *+
+OR       *-
+OR       *
+OR       _dma_
+
+OUT      *+,_port_,_arp_            Output data to port
+OUT      *-,_port_,_arp_
+OUT      *, _port_,_arp_
+OUT      *+,_port_
+OUT      *-,_port_
+OUT      *, _port_
+OUT      _dma_,_port_
+
+PAC                                 Load ACC with P register
+POP                                 Pop top of stack to ACC
+PUSH                                Push ACC onto stack
+RET                                 Return from subroutine
+ROVM                                Reset overflow mode register
+
+SACH     *+,_shift_,_arp_           Store ACC high with shift
+SACH     *-,_shift_,_arp_             Note: shift can only be 0, 1,
+SACH     *, _shift_,_arp_                   or 4
+SACH     *+,_shift_
+SACH     *-,_shift_
+SACH     *, _shift_
+SACH     *+
+SACH     *-
+SACH     *
+SACH     _dma_,_shift_
+SACH     _dma_
+
+SACL     *+,_arp_                   Store ACC low
+SACL     *-,_arp_
+SACL     *, _arp_
+SACL     *+
+SACL     *-
+SACL     *
+SACL     _dma_
+
+SAR      _ar_,*+,_arp_              Store auxiliary Register
+SAR      _ar_,*-,_arp_
+SAR      _ar_,*, _arp_
+SAR      _ar_,*+
+SAR      _ar_,*-
+SAR      _ar_,*
+SAR      _ar_,_dma_
+
+SOVM                                Set overflow mode register
+SPAC                                Subtract P register from ACC
+
+SST      *+,_arp_                   Store status
+SST      *-,_arp_
+SST      *, _arp_
+SST      *+
+SST      *-
+SST      *
+SST      _dma_
+
+SUB      *+,_shift_,_arp_           Subtract from ACC with shift
+SUB      *-,_shift_,_arp_
+SUB      *, _shift_,_arp_
+SUB      *+,_shift_
+SUB      *-,_shift_
+SUB      *, _shift_
+SUB      *+
+SUB      *-
+SUB      *
+SUB      _dma_,_shift_
+SUB      _dma_
+
+SUBC     *+,_arp_                   Conditional subtract
+SUBC     *-,_arp_
+SUBC     *, _arp_
+SUBC     *+
+SUBC     *-
+SUBC     *
+SUBC     _dma_
+
+SUBH     *+,_arp_                   Subtract from high-order ACC
+SUBH     *-,_arp_
+SUBH     *, _arp_
+SUBH     *+
+SUBH     *-
+SUBH     *
+SUBH     _dma_
+
+SUBS     *+,_arp_                   Subtract from low ACC with
+SUBS     *-,_arp_                     sign-extension suppressed
+SUBS     *, _arp_
+SUBS     *+
+SUBS     *-
+SUBS     *
+SUBS     _dma_
+
+TBLR     *+,_arp_                   Table Read
+TBLR     *-,_arp_
+TBLR     *, _arp_
+TBLR     *+
+TBLR     *-
+TBLR     *
+TBLR     _dma_
+
+TBLW     *+,_arp_                   Table Write
+TBLW     *-,_arp_
+TBLW     *, _arp_
+TBLW     *+
+TBLW     *-
+TBLW     *
+TBLW     _dma_
+
+XOR      *+,_arp_                   Exclusive OR with low bits of ACC
+XOR      *-,_arp_
+XOR      *, _arp_
+XOR      *+
+XOR      *-
+XOR      *
+XOR      _dma_
+
+ZAC                                 Zero the ACC
+
+ZALH     *+,_arp_                   Zero ACC and load high
+ZALH     *-,_arp_
+ZALH     *, _arp_
+ZALH     *+
+ZALH     *-
+ZALH     *
+ZALH     _dma_
+
+ZALS     *+,_arp_                   Zero ACC and load low with
+ZALS     *-,_arp_                     sign extension suppressed
+ZALS     *, _arp_
+ZALS     *+
+ZALS     *-
+ZALS     *
+ZALS     _dma_
+</PRE>
+<P>See manufacturer's data for more information.
+</P>
+<HR>
+<H1> TMS32025 INSTRUCTIONS AND ADDRESSING MODES</H1>
+<P>The following list shows the acceptable opcode mnemonics and their
+corresponding operand formats for the TMS32025 version of TASM. The following
+symbols are used in the table:
+</P>
+<PRE>SYMBOLIC            DESCRIPTION
+-----------------------------------------------
+_ar_                Auxiliary register (AR0, AR1, ...)
+_arp_               Auxiliary register pointer
+_nextarp_           Auxiliary register pointer (for next operation)
+_dma_               Direct memory address
+_pma_               Program memory address
+_port_              Port address (0 - 7)
+_shift_             Shift count  (0 - 15)
+_const1_            Constant (1 bit)
+_const2_            Constant (2 bit)
+_const8_            Constant (8 bit)
+_const13_           Constant (13 bit)
+_ind_               Indirect addressing mode indicator
+                      (see following table)
+
+</PRE>
+<P>Any valid TASM expression can appear in the  place  of  any  of  the above
+symbolics except for _ind_. The _ind_ symbolic must be one  of the following:
+</P>
+<PRE>        
+_ind_
+-------
+*BR0+
+*BR0-
+*0+
+*0-
+*+
+*-
+*
+
+OPCODE   OPERAND                DESCRIPTION
+--------------------------------------------------------------------
+ABS                             Absolute value of ACC
+
+ADD  _ind_,_shift_,_nextarp_    Add to ACC with shift
+ADD  _ind_,_shift_
+ADD  _ind_
+ADD  _dma_,_shift_
+ADD  _dma_
+
+ADDC _ind_,_nextarp_            Add to ACC with carry
+ADDC _ind_
+ADDC _dma_
+
+ADDH _ind_,_nextarp_            Add to high ACC
+ADDH _ind_
+ADDH _dma_
+
+ADDK _const8_                   Add to ACC short immediate
+ADDS _ind_,_nextarp_            Add to ACC with sign-extension suppressed
+ADDS _ind_
+ADDS _dma_
+
+ADDT _ind_,_nextarp_            Add to ACC with shift specified by T reg
+ADDT _ind_
+ADDT _dma_
+
+ADLK _const8_,_shift_           Add to ACC long immediate with shift
+ADLK _const8_
+
+ADRK _const8_                   Add to aux register short immediate
+
+AND  _ind_,_nextarp_            And with ACC
+AND  _ind_
+AND  _dma_
+
+ANDK _const8_,_shift_           And immediate with ACC with shift
+ANDK _const8_
+
+APAC                            Add P register to ACC
+
+B    _pma_,_ind_,_nextarp_      Branch unconditionally
+B    _pma_,_ind_
+B    _pma_
+
+BACC                            Branch to address specified by ACC
+
+BANZ _pma_,_ind_,_nextarp_      Branch on Aux register not zero
+BANZ _pma_,_ind_
+BANZ _pma_
+
+BBNZ _pma_,_ind_,_nextarp_      Branch on TC bit not zero
+BBNZ _pma_,_ind_
+BBNZ _pma_
+
+BBZ  _pma_,_ind_,_nextarp_      Branch on TC bit equal to zero
+BBZ  _pma_,_ind_
+BBZ  _pma_
+
+BC   _pma_,_ind_,_nextarp_      Branch on carry
+BC   _pma_,_ind_
+BC   _pma_
+
+BGEZ _pma_,_ind_,_nextarp_      Branch if ACC &gt;= zero
+BGEZ _pma_,_ind_
+BGEZ _pma_
+
+BGZ  _pma_,_ind_,_nextarp_      Branch if ACC &gt; zero
+BGZ  _pma_,_ind_
+BGZ  _pma_
+
+BIOZ _pma_,_ind_,_nextarp_      Branch on I/O status = zero
+BIOZ _pma_,_ind_
+BIOZ _pma_
+
+BIT  _ind_,_bitcode_,_nextarp_  Test bit
+BIT  _ind_,_bitcode_
+BIT  _dma_,_bitcode_
+
+BITT _ind_,_nextarp_            Test bit specified by T register
+BITT _ind_
+BITT _dma_
+
+BLEZ _pma_,_ind_,_nextarp_      Branch if ACC &lt;= zero
+BLEZ _pma_,_ind_
+BLEZ _pma_
+
+BLKD _dma_,_ind_,_nextarp_      Block move from data mem to data mem
+BLKD _dma_,_ind_
+BLKD _dma_,_dma_
+
+BLKP _pma_,_ind_,_nextarp_      Block move from prog mem to data mem
+BLKP _pma_,_ind_
+BLKP _pma_,_dma_
+
+BLZ  _pma_,_ind_,_nextarp_      Branch if ACC &lt; zero
+BLZ  _pma_,_ind_
+BLZ  _pma_
+
+BNC  _pma_,_ind_,_nextarp_      Branch on no carry
+BNC  _pma_,_ind_
+BNC  _pma_
+
+BNV  _pma_,_ind_,_nextarp_      Branch if no overflow
+BNV  _pma_,_ind_
+BNV  _pma_
+
+BNZ  _pma_,_ind_,_nextarp_      Branch if ACC </PRE>
+<PRE> zero
+BNZ  _pma_,_ind_
+BNZ  _pma_
+
+BV   _pma_,_ind_,_nextarp_      Branch on overflow
+BV   _pma_,_ind_
+BV   _pma_
+
+BZ   _pma_,_ind_,_nextarp_      Branch if ACC = zero
+BZ   _pma_,_ind_
+BZ   _pma_
+
+CALA                            Call subroutine indirect
+
+CALL _pma_,_ind_,_nextarp_      Call subroutine
+CALL _pma_,_ind_
+CALL _pma_
+
+CMPL                            Complement ACC
+CMPR _const2_                   Compare Aux reg with Aux AR0
+CNFD                            Configure block as data memory
+CNFP                            Configure block as program memory
+CONF _const2_                   Configure block as data/prog memory
+DINT                            Disable interrupt
+
+DMOV _ind_,_nextarp_            Data move in data memory
+DMOV _ind_
+DMOV _dma_
+
+EINT                            Enable interrupt
+
+FORT _const1_                   Format serial port registers
+
+IDLE                            Idle until interrupt
+
+IN   _ind_,_port_,_nextarp_     Input data from port
+IN   _ind_,_port_
+IN   _dma_,_port_
+
+LAC  _ind_,_shift_,_nextarp_    Load ACC with shift
+LAC  _ind_,_shift_
+LAC  _ind_
+LAC  _dma_,_shift_
+LAC  _dma_
+
+LACK _const8_                   Load ACC immediate short
+
+LACT _ind_,_nextarp_            Load ACC with shift specified by T reg
+LACT _ind_
+LACT _dma_
+
+LALK _const16_,_shift_          Load ACC long immediate with shift
+LALK _const16_
+
+LAR  _ar_,_ind_,_nextarp_       Load auxilary register
+LAR  _ar_,_ind_
+LAR  _ar_,_dma_
+
+LARK _ar_,_const8_              Load auxilary register immediate short
+
+LARP _arp_                      Load auxilary register pointer
+
+LDP  _ind_,_nextarp_            Load data memory page pointer
+LDP  _ind_
+LDP  _dma_
+
+LDPK _const8_                   Load data memory page pointer immediate
+
+LPH  _ind_,_nextarp_            Load high P register
+LPH  _ind_
+LPH  _dma_
+
+LRLK _ar_,_const16_             Load auxilary register long immediate
+
+LST  _ind_,_nextarp_            Load status register ST0
+LST  _ind_
+LST  _dma_
+
+LST1 _ind_,_nextarp_            Load status register ST1
+LST1 _ind_
+LST1 _dma_
+
+LT   _ind_,_nextarp_            Load T register
+LT   _ind_
+LT   _dma_
+
+LTA  _ind_,_nextarp_            Load T reg and accumulate prev product
+LTA  _ind_
+LTA  _dma_
+
+LTD  _ind_,_nextarp_            Load T reg, accum prev product &amp; move
+LTD  _ind_
+LTD  _dma_
+
+LTP  _ind_,_nextarp_            Load T reg and store P in ACC
+LTP  _ind_
+LTP  _dma_
+
+LTS  _ind_,_nextarp_            Load T reg, subract previous product
+LTS  _ind_
+LTS  _dma_
+
+MAC  _pma_,_ind_,_nextarp_      Multiply and accumulate
+MAC  _pma_,_ind_
+MAC  _pma_,_dma_
+
+MACD _pma_,_ind_,_nextarp_      Multiply and accumulate with data move
+MACD _pma_,_ind_
+MACD _pma_,_dma_
+
+MAR  _ind_,_nextarp_            Modify auxiliary register
+MAR  _ind_
+MAR  _dma_
+
+MPY  _ind_,_nextarp_            Multiply
+MPY  _ind_
+MPY  _dma_
+
+MPYA _ind_,_nextarp_            Multiply and accum previous product
+MPYA _ind_
+MPYA _dma_
+
+MPYK _const13_                  Multiply immediate
+
+MPYS _ind_,_nextarp_            Multiply and subtract previous product
+MPYS _ind_
+MPYS _dma_
+
+MPYU _ind_,_nextarp_            Multiply unsigned
+MPYU _ind_
+MPYU _dma_
+
+NEG                             Negate ACC
+
+NOP                             No operation
+
+NORM _ind_                      Normalize contents of ACC
+NORM
+
+OR   _ind_,_nextarp_            Or with ACC
+OR   _ind_
+OR   _dma_
+
+ORK  _dma_,_shift_              Or immediate with ACC with shift
+ORK  _dma_
+
+OUT  _ind_,_shift_,_nextarp_    Output data to port
+OUT  _ind_,_shift_
+OUT  _dma_,_shift_
+
+PAC                             Load ACC with P register
+
+POP                             Pop top of stack to low ACC
+
+POPD _ind_,_nextarp_            Pop top of stack to data memory
+POPD _ind_
+POPD _dma_
+
+PSHD _ind_,_nextarp_            Push data memory value onto stack
+PSHD _ind_
+PSHD _dma_
+
+PUSH                            Push low ACC onto stack
+RC                              Reset carry bit
+RET                             Return from subroutine
+RFSM                            Reset serial port frame syn mode
+RHM                             Reset hold mode
+ROL                             Rotate ACC left
+ROR                             Rotate ACC right
+ROVM                            Reset overflow mode
+
+RPT  _ind_,_nextarp_            Repeat instructions as per data mem
+RPT  _ind_
+RPT  _dma_
+
+RPTK _const8_                   Repeat instructions as per immediate
+
+RSXM                            Reset sign extension mode
+RTC                             Reset test control flag
+RTXM                            Reset serial port transmit mode
+RXF                             Reset external flag
+
+SACH _ind_,_shift_,_nextarp_    Store high ACC with shift
+SACH _ind_,_shift_
+SACH _ind_
+SACH _dma_,_shift_
+SACH _dma_
+
+SACL _ind_,_shift_,_nextarp_    Store low ACC with shift
+SACL _ind_,_shift_
+SACL _ind_
+SACL _dma_,_shift_
+SACL _dma_
+
+SAR  _ar_,_ind_,_nextarp_       Store AUX register
+SAR  _ar_,_ind_
+SAR  _ar_,_dma_
+
+SBLK _const16_,_shift_          Subtract from ACC long immediate with shift
+SBLK _const16_
+
+SBRK _const8_                   Subtract from AUX register short immediate
+
+SC                              Set carry bit
+SFL                             Shift ACC left
+SFR                             Shift ACC right
+SFSM                            Set serial port frame sync mode
+SHM                             Set hold mode
+SOVM                            Set overflow mode
+SPAC                            Subtract P register from ACC
+
+SPH  _ind_,_nextarp_            Store high P register
+SPH  _ind_
+SPH  _dma_
+
+SPL  _ind_,_nextarp_            Store low P register
+SPL  _ind_
+SPL  _dma_
+
+SPM  _dma_                      Set P register output shift mode
+
+SQRA _ind_,_nextarp_            Square and accumulate previous product
+SQRA _ind_
+SQRA _dma_
+
+SQRS _ind_,_nextarp_            Square and subtract previous product
+SQRS _ind_
+SQRS _dma_
+
+SST  _ind_,_nextarp_            Store status register ST0
+SST  _ind_
+SST  _dma_
+
+SST1 _ind_,_nextarp_            Store status register ST1
+SST1 _ind_
+SST1 _dma_
+
+SSXM                            Set sign extension mode
+STC                             Set test/control flag
+STXM                            Set serial port transmit mode
+
+
+SUB  _ind_,_shift_,_nextarp_    Subtract from ACC with shift
+SUB  _ind_,_shift_
+SUB  _ind_
+SUB  _dma_,_shift_
+SUB  _dma_
+
+SUBB _ind_,_nextarp_            Subtract from ACC with borrow
+SUBB _ind_
+SUBB _dma_
+SUBC _ind_,_nextarp_            Subtract conditional
+SUBC _ind_
+SUBC _dma_
+
+SUBH _ind_,_nextarp_            Subtract from high ACC
+SUBH _ind_
+SUBH _dma_
+
+SUBK _const8_                   Subtract from ACC short immediate
+
+SUBS _ind_,_nextarp_            Subtract from low ACC without sign-extension
+SUBS _ind_
+SUBS _dma_
+
+SUBT _ind_,_nextarp_            Subtract from ACC with shift as per T reg
+SUBT _ind_
+SUBT _dma_
+
+SXF                             Set external flag
+
+TBLR _ind_,_nextarp_            Table read
+TBLR _ind_
+TBLR _dma_
+
+TBLW _ind_,_nextarp_            Table write
+TBLW _ind_
+TBLW _dma_
+
+TRAP                            Software interrupt
+
+XOR  _ind_,_nextarp_            Exclusive OR with ACC
+XOR  _ind_
+XOR  _dma_
+
+XORK_dma_,_shift_               Exclusive OR immediate ACC with shift
+XORK _dma_
+
+ZAC                             Zero ACC
+
+ZALH _ind_,_nextarp_            Zero low ACC and load high ACC
+ZALH _ind_
+ZALH _dma_
+
+ZALR _ind_,_nextarp_            Zero low ACC, load high ACC with rounding
+ZALR _ind_
+ZALR _dma_
+
+ZALS _ind_,_nextarp_            Zero ACC, load low ACC without sign-extension
+ZALS _ind_
+ZALS _dma_
+
+</PRE>
+<HR>
+<H1>TMS7000 INSTRUCTIONS AND ADDRESSING MODES</H1>
+<P>The following list shows the acceptable opcode mnemonics and their
+corresponding operand formats for the TMS7000 version of TASM. The following
+symbolic fields used in the table: 
+</P>
+<PRE>SYMBOLIC        DESCRIPTION
+-------------------------------------------
+_iop_           Immediate data (8 bits)
+_Rn_            Register file (memory locations 0 to 127 or
+                   0 to 255 depending on on-chip RAM)
+_Pn_            Peripheral file (0-255)
+_rel_           Program address (relative)
+_addr_          Program address (16 bit)
+_trap_          Trap number (0-23)
+</PRE>
+<P>Any valid TASM expression can appear in the place of any of the above
+symbolics. 
+</P>
+<P>Note that TASM allows an alternate syntax for expressing indirection. 
+Parenthesis can be replaced with brackets (which are less ambiguous because they
+do not occur in expressions).  Thus, the following are equivalent: 
+</P>
+<PRE>    BR      @addr1(B)
+    BR      @addr1[B]
+</PRE>
+<PRE>OPCODE  OPERANDS
+---------------------------------------
+ADC    B,A
+ADC    %_iop_,A
+ADC    %_iop_,B
+ADC    %_iop_,_Rn_
+ADC    _Rn_,A
+ADC    _Rn_,B
+ADC    _Rn_,_Rn_
+
+ADD    B,A
+ADD    %_iop_,A
+ADD    %_iop_,B
+ADD    %_iop_,_Rn_
+ADD    _Rn_,A
+ADD    _Rn_,B
+ADD    _Rn_,_Rn_
+
+AND    B,A
+AND    %_iop_,A
+AND    %_iop_,B
+AND    %_iop_,_Rn_
+AND    _Rn_,A
+AND    _Rn_,B
+AND    _Rn_,_Rn_
+
+ANDP   A,_Pn_
+ANDP   B,_Pn_
+ANDP   %_iop_,_Pn_
+
+BTJO   B,A,_rel_
+BTJO   %_iop_,A,_rel_
+BTJO   %_iop_,B,_rel_
+BTJO   %_iop_,_Rn_,_rel_
+BTJO   _Rn_,A,_rel_
+BTJO   _Rn_,B,_rel_
+BTJO   _Rn_,_Rn_,_rel_
+
+BTJOP  A,_Pn_,_rel_
+BTJOP  B,_Pn_,_rel_
+BTJOP  %_iop_,_Pn_,_rel_
+
+BTJZ   B,A,_rel_
+BTJZ   %_iop_,A,_rel_
+BTJZ   %_iop_,B,_rel_
+BTJZ   %_iop_,_Rn_,_rel_
+BTJZ   _Rn_,A,_rel_
+BTJZ   _Rn_,B,_rel_
+BTJZ   _Rn_,_Rn_,_rel_
+
+BTJZP  A,_Pn_,_rel_
+BTJZP  B,_Pn_,_rel_
+BTJZP  %_iop_,_Pn_,_rel_
+
+BR      @_addr_(B)
+BR      @_addr_[B]
+BR      @_addr_
+BR      *_Rn_
+
+CALL    @_addr_(B)
+CALL    @_addr_[B]
+CALL    @_addr_
+CALL    *_Rn_
+
+CLR     A
+CLR     B
+CLR     _Rn_
+CLRC
+
+CMP     B,A
+CMP     %_iop_,A
+CMP     %_iop_,B
+CMP     %_iop_,_Rn_
+CMP     _Rn_,A
+CMP     _Rn_,B
+CMP     _Rn_,_Rn_
+
+CMPA    @_addr_(B)
+CMPA    @_addr_[B]
+CMPA    @_addr_
+CMPA    *_Rn_
+
+DAC     B,A
+DAC     %_iop_,A
+DAC     %_iop_,B
+DAC     %_iop_,_Rn_
+DAC     _Rn_,A
+DAC     _Rn_,B
+DAC     _Rn_,_Rn_
+
+DEC     A
+DEC     B
+DEC     _Rn_
+
+DECD    A
+DECD    B
+DECD    _Rn_
+
+DINT
+
+DJNZ    A,_rel_
+DJNZ    B,_rel_
+DJNZ    _Rn_,_rel_
+
+DSB     B,A
+DSB     %_iop_,A
+DSB     %_iop_,B
+DSB     %_iop_,_Rn_
+DSB     _Rn_,A
+DSB     _Rn_,B
+DSB     _Rn_,_Rn_
+
+EINT
+IDLE
+
+INC     A
+INC     B
+INC     _Rn_
+
+INV     A
+INV     B
+INV     _Rn_
+
+JMP     _rel_
+
+JC      _rel_
+JEQ     _rel_
+JGE     _rel_
+JGT     _rel_
+JHS     _rel_
+JL      _rel_
+JN      _rel_
+JNC     _rel_
+JNE     _rel_
+JNZ     _rel_
+JP      _rel_
+JPZ     _rel_
+JZ      _rel_
+
+LDA     @_addr_(B)
+LDA     @_addr_[B]
+LDA     @_addr_
+LDA     *_Rn_
+
+LDSP
+
+MOV     A,B
+MOV     B,A
+MOV     A,_Rn_
+MOV     B,_Rn_
+MOV     %_iop_,A
+MOV     %_iop_,B
+MOV     %_iop_,_Rn_
+MOV     _Rn_,A
+MOV     _Rn_,B
+MOV     _Rn_,_Rn_
+
+MOVD    %_iop_[B],_Rn_
+MOVD    %_iop_,_Rn_
+MOVD    _Rn_,_Rn_
+
+MOVP    A,_Pn_
+MOVP    B,_Pn_
+MOVP    %_iop_,_Pn_
+MOVP    _Pn_,A
+MOVP    _Pn_,B
+
+MPY     B,A
+MPY     %_iop_,A
+MPY     %_iop_,B
+MPY     %_iop_,_Rn_
+MPY     _Rn_,A
+MPY     _Rn_,B
+MPY     _Rn_,_Rn_
+
+NOP
+
+OR      B,A
+OR      %_iop_,A
+OR      %_iop_,B
+OR      %_iop_,_Rn_
+OR      _Rn_,A
+OR      _Rn_,B
+OR      _Rn_,_Rn_
+
+ORP     A,_Pn_
+ORP     B,_Pn_
+ORP     %_iop_,_Pn_
+
+POP     A
+POP     B
+POP     ST
+POP     _Rn_
+POPST
+
+PUSH    A
+PUSH    B
+PUSH    ST
+PUSH    _Rn_
+PUSHST
+
+RETI
+
+RETS
+
+RL      A
+RL      B
+RL      _Rn_
+
+RLC     A
+RLC     B
+RLC     _Rn_
+
+RR      A
+RR      B
+RR      _Rn_
+
+RRC     A
+RRC     B
+RRC     _Rn_
+
+SBB     B,A
+SBB     %_iop_,A
+SBB     %_iop_,B
+SBB     %_iop_,_Rn_
+SBB     _Rn_,A
+SBB     _Rn_,B
+SBB     _Rn_,_Rn_
+
+SETC
+
+STA     @_addr_(B)
+STA     @_addr_[B]
+STA     @_addr_
+STA     *_Rn_
+
+STSP
+
+SUB     B,A
+SUB     %_iop_,A
+SUB     %_iop_,B
+SUB     %_iop_,_Rn_
+SUB     _Rn_,A
+SUB     _Rn_,B
+SUB     _Rn_,_Rn_
+
+SWAP    A
+SWAP    B
+SWAP    _Rn_
+
+TRAP    _trap_
+
+TST     A
+TSTA
+TST     B
+TSTB
+
+XCHB    A
+XCHB    _Rn_
+
+XOR     B,A
+XOR     %_iop_,A
+XOR     %_iop_,B
+XOR     %_iop_,_Rn_
+XOR     _Rn_,A
+XOR     _Rn_,B
+XOR     _Rn_,_Rn_
+
+XORP    A,_Pn_
+XORP    B,_Pn_
+XORP    %_iop_,_Pn_
+</PRE>
+<HR></BODY></HTML>

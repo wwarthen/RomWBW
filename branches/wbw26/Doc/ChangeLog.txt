@@ -1,0 +1,317 @@
+Version 2.6.1
+-------------
+- WBW: Both CP/M and ZSystem are imbedded in the ROM
+       image.
+
+Version 2.6
+-----------
+- WBW: Old Apps removed (MULTIFMT, CPMNAME, SETLABEL, etc.)
+       removed because they are no longer working/supported
+- WBW: Added SysCopy and SysGen to install OS on disks
+- WBW: Added ASSIGN to modify disk drive mappings
+- WBW: Added UNA UBIOS support
+- WBW: Refactored CP/M disk mapping in CBIOS
+- WBW: Switched to ZCPR-D&J for ZSystem build
+- WBW: New bank/memory management routines in HBIOS including interbank copy
+- WBW: Moved physical disk buffer into HBIOS bank
+- WBW: Dynamic allocation of disk buffers in CBIOS
+
+Version 2.5.5
+-------------
+- WBW: Updated VDU/CVDU configs to allow booting into CRT mode
+
+Version 2.5.4
+-------------
+- WBW: Fixed IOBYTE handling
+- WBW: Added Propeller firmware support for PropIO V2
+
+Version 2.5.3
+-------------
+- WBW: Fixed EXM in DPB for 360K floppy definition (credit to Martin for finding this error)
+- WBW: Improved /WAIT trigger performance in PropIO (credit to Marko)
+       PropIO now seems to be compatible with CPU clock speeds up to ???
+- WBW: Corrected the IO base address for PPIDE driver on N8 variants (credit to Arlen Michaels)
+
+Version 2.5.2
+-------------
+- WBW: Added initial support for RAM Floppy
+
+Version 2.5.1
+-------------
+- WBW: Fix PPIDE bug
+
+Version 2.5
+-----------
+- WBW: Implemented CRT driver model (video and keyboard)
+- WBW: Implemented ANSI terminal emulation
+- WBW: Updated build process to remove CPU specification
+- WBW: Refactored VDU and Color VDU drivers for new cRT driver model
+- WBW: Refactored keyboard drivers for new CRT driver model
+- WBW: Refactored PPIDE driver to improve performance
+- WBW: Implemented "boot" messaging
+- WBW: Fixed debug monitor (I, O, and H commands corrected)
+- WBW: Added support for SCSI2IDE (SD Card driver primarily)
+- WBW: Revised System Architecture document
+- WBW: Added support for Dual SD board (preliminary)
+- WBW: Overhaul of SD driver (sd.asm) to clean up the conditionals
+- WBW: Completed Douglas' N8 video driver support
+- WBW: ASCI driver has been separated from UART driver
+- WBW: Added ZX CPM emulator and integrated with build process
+- WBW: Updated Apps built with Aztec C to use the TINY library
+- WBW: Updated CPMNAME application to reflect latest config data block
+- WBW: Support multiple UART devices (up to 2 for now)
+- WBW: Partial support for Multifunction / PIC (UART & PPIDE)
+- WBW: Add chip detection to UART driver
+- WBW: Move ram/rom disk code into separate driver (md.asm)
+
+Version 2.1.1
+-------------
+- WBW: Corrected setup of Z180 wait states
+- WBW: Added hd0-3 geometries to diskdefs file for cpmtools
+
+Version 2.1
+-----------
+- WBW: Implemented write caching in (de)blocking algorithm
+- WBW: Added Architecture documentation
+- WBW: Config jumper controls default vs. alternate console for N8VEM/Zeta
+- DGG: Added support for PPISD in SD Card driver
+- WBW: Implemented screen saver in PropIO and ParPortProp (5 minute timeout)
+
+Version 2.0
+-----------
+- WBW: Implemented Banked BIOS (drivers in separate bank)
+- DGG: Updated in-situ flash utility for greater chip compatibility
+- WBW: Updated FDTST to latest version (improved support for 5.25" and 8" media)
+- WBW: Added ParPortProp driver
+- DWG: Entire new suite of Apps written in Aztec C
+- DWG:   BANKER.COM - displays bank identification and version information
+- DWG:   CPMNAME.COM - displays CBIOS header data and SYSCFG data, names and vaues
+- DWG:   CHARS.COM - displays ascii map as reference 
+- DWG:   CLS.COM - clears screen
+- DWG:   LABEL.COM - displays and changes drive labels for drives with reserved tracks
+- DWG:   MAP.COM - like old map command, displays drives and logical unit labels and changes LU values
+- DWG:   META.COM - like old metaview command displays and edits drive metadata
+- DWG:   REM.COM - used in submit files
+- DWG:   SYSGEN.COM - replaces old writesys command, much nicer, more flexible
+- DWG:   TERMTYPE.COM - like old termtype, displays and changes terminal type
+- DWG:   VIEW.COM - displays drive DPH and DPB, with addresses, 4-up
+- WBW: Updated FDTST to v3.0 (support for sector interleave in format)
+- DGG: Support for CSIO based SD access for N8
+- DWG: Added DWG-APPS.MAN file to ROM describing command line syntax of new applications
+- WBW: Prebuilt ROMs are now all 512KB -- works fine on a 1MB ROM
+- WBW: Added driver for SIMH AltairZ80 hard disk (HDSK)
+- WBW: Added support for SDHC/XC card to SD Card driver
+- DWG: Extra Apps can be downloaded from Apps/apps-bins (limited to 100K in ROM)
+- DWG: /XSource/Makefile is work in progress for Mac OS X build (experimental)
+- WBW: Updated SIMH build for latest SIMH release v3.9
+
+Version 1.5.2
+-------------
+- DGG: Added in-situ flash programming application
+- WBW: Added support for 8" floppy drives
+- WBW: Upgraded FDTST.COM to version 2.7a on ROM disks
+- DWG: Minor fixes to METAVIEW, and MAP
+- DGG: Fixes for makefile.linux
+
+Version 1.5.1
+-------------
+- WBW: Added ZSDOS clock drivers (see Support\Clock)
+- WBW: Overhaul of ZSystem ROM Disk (see Doc\ZSystem.txt)
+- WBW: Update PropIO ANSI emulation for compatiblity with ASSIGN
+- DWG: Added version tags to all applications, and IDENT program to 
+       check version of utilities.
+- DWG: Added MULTIFMT program which prepares new media for use by
+       initializing the metadata and clearing the directory sectors of
+       all logical units on a specific drive (IDE,PPIDE,PRPSD,SD).
+- DWG: Enhanced MAP program combines the functionality of DRIVES,
+       SLICES, and MAP. DRIVES and SLICES have been removed.
+- DWG: ANALYSE and HELLO programs removed from ROM due space concerns
+- DWG: Additional macro librarties added supporting program identification
+       (IDENTITY.LIB/ASM) and access to drive metadata (METADATA.LIB/ASM),
+       and realtime selection of logical units from within new application 
+       programs (LOGICALS.LIB/ASM). 
+- DWG: Added TERM_VT52 for VDU compatbility, all apps now compliant
+- DGG: Contributed Linux build (see Doc\BuildLinux.txt)
+
+Version 1.5
+-----------
+- WBW: Upgraded XModem to version 12.5
+- WBW: Added support for PropIO (RomWBW specific firmware required on PropIO)
+- WBW: Corrected RTC application for N8 (it now works)
+- WBW: Included updated FDTST v2.6 w/ support for 5.25" floppy drives
+- WBW: Added OS support for 5.25" drives
+- DWG: New Apps ACCESS, ANALYSE, FINDFILE,HELLO,METAVIEW,NOACCESS,RTC2012
+- DWG: RMAC macro files re-written as hybrid libraries making executables smaller and faster
+- DWG: Loader displays logical unit label with other stats
+- DWG: CPMNAME enhanced to support new PROP I/O SD
+- DWG: Much more inline doc in Apps source code
+- DWG: Add ACCESS to verify file present in submit
+- DWG: Add ANALYSE as sample program demonstrating macro usage
+- DWG: Add FINDFILE to locate file(s) in any Logical Unit (slice)
+- DWG: Add HELLO as clasic hello world sample
+- DWG: Add METAVIEW to display and manage file system metadata
+- DWG: Add NOACCESS to verify file not present in submit
+
+Version 1.4
+-----------
+- DWG: Add various .SUB files used for application maintenance
+- DWG: Enhanced utility building .SUB files to only contain libs utilitized
+- DWG: Add BUILD.SUB to build all applications and DEVFILES.LBR
+- DWG: Add/update RMAC macro libraries used in Apps - 
+- DWG:	 BIOSHDR, STDLIB, STRCPY, STRLEN, CPMBIOS, CPMBDOS, TERMINAL, HARDWARE,
+- DWG:   CPMAPPL, GLOBALS, ATOI, LUBIND, APPLVERS, MEMORY(memcpy,memset), PORTAB
+- DWG: Add/Repair BIOS support for Boot Drive login during CP/M Coldstart
+- DWG: All Apps utilities now licensed with GNU Public License v3
+- DWG: DRIVES utility now  dispays labels for drives with reserved track(s)
+- DWG: DEVFILES.LBR now include just .ASM, .LIB, and .SUB files
+- DWG: Updated CPMNAME for latest config changes, added paging
+- DWG: Add REM utility for use in SUBMIT files
+- DWG: Add STOP utility to terminate execution of SUBMIT files
+- DWG: Add PAUSE utility to pause the execution of SUBMIT files
+- DWG: Add REQ1PARM utility to verify a parameter was specified
+- DWG: Add HEADER utility to display addresses of BIOS header data items
+- DWG: Add command line MAP utility "map A: 23" for use general use and in SUBMIT files
+- DWG: Retired PPIDELUx utilities in favor of new MAP utility
+- DWG: Add SLICES utility to display labels of all slices on current drive 3/line, formatted
+- DWG: Add LABEL utility to insert label into drive/slice metadata
+- DWG: Add 16 char label field to metadata
+- DWG: ASSIGN utility displays and manipulates DPH/DPB & logical unit parameters
+- DWG/WBW: Collaborated on design of Logical Unit DPH enhancemnt 
+- WBW: Proposed MAP utility functionality
+- WBW: Implement slice selection API for DSK devices
+- WBW: Record boot drive in config memory at load time
+- WBW: Add DSKY_KBD flag to util.asm so that keyboard routines can be built only when needed to save space in CBIOS
+- WBW: Support 16550 UART FIFO (selectively via config, enabled where available)
+- WBW: Remove B: default from xmodem (default to current drive)
+- WBW: Consolidate xmodem code variations using conditionals
+- WBW: Add xmodem variation for N8 ASCI1 (N8 now has XM0 & XM1 instead of XM)
+- WBW: Remove CCP extension that searches USER 0 area for executables
+- WBW: Reset drives when exitting FDTST (media format may have changed)
+- WBW: Switch from VDE to ZDE
+- WBW: Added signature to system image prefix
+- WBW: Modified SD card disk layout for consistency with other media (existing sd cards need reformatting!)
+- WBW: Upgraded ZSDOS from v1.1 to v1.2
+- WBW: Modified build so that separate ('_z') config files are no longer needed
+
+
+Version 1.3.3
+-------------
+
+- WBW: Changed startup banner for ZSystem builds
+- WBW: Modified XM for ZSystem builds to default to current drive
+- WBW: Included zsdos.lbr in Support directory
+
+Version 1.3.2
+-------------
+
+- WBW: ZSDOS/ZDDOS support added
+- WBW: ZCPR support added
+
+Version 1.3.1
+-------------
+
+- WBW: Updated FDTST application to handle faster (20MHz) systems, slower is OK
+- WBW: Small fix to SD card driver to handle card init failure in rare situations
+- DWG: Updated WRITESYS to improve SELDSK BIOS call compatibility
+
+Version 1.3
+-----------
+
+- DWG: WRITEIMG renamed to WRITESYS, works on PPIDE, CPM.SYS added to ROM
+- DWG: TERMTYPE gets and sets terminal type
+- DWG: PPIDELUX programs will dynamically select storage "slice" on device
+- DWG: DRIVES utility will show current drive mappings
+- DWG: CPMNAME utility enhanced to include all new config settings
+- DWG: DEVFILES Douglas Goodall's Development Environment added to Apps
+- DWG: Configured Wordstar and front end utility added to Apps
+- DWG: Added drive mapping display to loader
+- DWG: Added "Logical Unit" support for PPIDE (allows full use of media)
+- DWG: Designed Application Package format and Protocol
+- WBW: Implemented IOBYTE and character device driver interface abstraction layer.
+- WBW: Mapped VDU to CRT: device (N8VEM SBC w/ VDU hardware only)
+- WBW: Implemented second UART for N8 as UC1: device
+- WBW: Implemented SD driver (N8 only)
+- WBW: Implemented hot swap for SD driver (N8 only)
+- WBW: Added DSKY display for SD driver (N8 only)
+- WBW: Corrected keymap in VDU driver (N8VEM SBC w/ VDU hardware only)
+- WBW: Removed filler and allocated space to rom extension area
+- WBW: Added new standard build configurations for N8 (fd, sd, ppide)
+- WBW: Implement DBGCON selection (UART or VDU)
+- WBW: Implement LDRCON selection (UART of VDU)
+- WBW: Made ROM size selection part of build command
+- WBW: Made processor selection (Z80 vs. Z180) part of build command
+
+Version 1.2
+-----------
+
+- DWG: Updated CPMNAME and WRITEIMG utilities
+- WBW: Added N8 support (minimal, based on work by David Giles, but not as robust as N8RomDG).
+- WBW: Added support for VDU board (code from Andrew Lynch, Dan Werner and James Moxham)
+- WBW: Boot loader configurable for auto-selection w/ timeout (as requested by Bob Devries)
+
+Older Stuff
+-----------
+
+This work is all derived from JC110508.  Note that JC110508 included
+the fix for DPB in CBIOS for large ROM drive.  Specifically, EXM_5
+was changed from 1 -> 0 (as it should have been).
+
+1) Fixed the stack location in loader-b.asm.  LOADER.COM was not working
+for me without this change.
+
+2) Fixed the size of the ccp+bdos+cbios in bloader.asm and loader-b.asm.
+It was too small before and would be a potential problem depending on
+how many of the optional features were enabled.
+
+3) Fixed the "MON" command in cpm.  It was jumping to an old/bad location.
+I modified the way it works a bit to handle the situation where it can
+become overlaid.  There is now a routine in cbios.asm to reload it and
+branch to the warm start location.  The address of the cbios routine is
+now saved in the cbios scratch area of zero page (40H) so that ccp does
+not need to have a hard coded location in it.
+
+4) Corrected ROM memory layout a bit.  Small ROM drive was starting at the
+wrong location (4800H).  It should have been 5000H.  So, I gave the loader
+2K more space.  Required modifications to bloader and cbios.  Renamed
+'romdsk.dsk' to 'romdsk.dat' to help alert folks to the fact that this is
+a different image and allows "clean" to remove anything with a suffix
+of '.img'.
+
+5) Changed bloader to allow selection of DSKY or UART monitor using JP2.
+A single ROM can now be dynamically configured to start via DSKY or UART.
+
+6) Fixed small ROM disk DPB in cbios.  Changed DSM_6 from 31 -> 11.  Based
+on blocksize of 1024 and the fact that it is now a 12K area, 11 is the
+correct value.  Also fixed EXM_6 from 1 -> 0 (per DRI spec).
+
+7) Moved startup message from warm boot to cold boot.  Also moved VDU init
+to cold boot -- seems appropriate, but I have no way to test this yet...
+
+8) More DPB tweaks.  I have reviewed the floppy and RAM/ROM DPB's.  I have
+not looked at ATAPI or IDE.  May still be problems in those.
+
+9) Complete overhaul of build scripts.  Reworked makefile to be compatible
+with the make utility from gcc and created MakeRom.cmd to invoke the gcc
+make utility.  Created a PowerShell script as an alternative way to create
+ROM (BuildRom.ps1) and created BuildRom.cmd to invoke it.  Final ROM
+image is now called rom.img -- made more sense to me, but I have no
+compelling justification for changing that.  BuildRom2.bat is still
+there and I think it works.
+
+10) Played with the startup message in cbios a bit.  Extracted the "build"
+id and moved it to the top of the file.  My intent is to make it easy to
+update.  Ultimately, I wold prefer that it be updated with the current
+date of the build as part of the build scripts, but still debating how
+best to accomplish that.
+
+11) Related to #10, I have extracted the 3rd party build tools into sibling
+directories.  So, for example, tasm is now found at tasm32.  This makes it
+very easy to update the 3rd party tools and to clearly differentiate the
+3rd party tool files.  All build script have been updated as needed.
+
+12) Removed ALL enable interrupt (EI) instructions in CBIOS.  By leaving
+interrupts disabled the BIOS will now start OK even if some vagrant
+hardware is asserting an interrupt (DISKIO).  Seems like this is better
+anyway -- general idea is that we only enable interupts precisely
+when desired for very specific controled purposes since there is no
+concept of interrupt dispatching available.
