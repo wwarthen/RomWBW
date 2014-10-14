@@ -1,0 +1,18 @@
+This is the registered distribution disk for TASM - the Telemark Assembler.
+The files on the disk are: 
+
+Readme.1st        - This file
+Tasm32.zip        - TASM distribution archive, Version 3.2
+
+To extract the archive use pkunzip or pkzip for windows and extract 
+into the desired directory for TASM.
+
+See the README.TXT file after extraction.
+See the BUILD.TXT file for notes on building from the source archive.
+
+        Thomas N. Anderson
+        Squak Valley Software
+        837 Front Street South
+        Issaquah,  WA  98027
+        andersontn@acm.org
+

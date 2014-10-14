@@ -1,0 +1,113 @@
+ZSDOS CLOCK SPECIFICATIONS
+--------------------------
+     Clocks that are used with ZSDOS/ZDDOS and are loaded with the 
+SETUPZST utility must conform to the following specifications.  
+SETUPZST contains a MicroSoft REL format linker.  The clock module 
+must be assembled as a single source file by either SLR's Z80ASM or 
+SLR180 or with Al Hawley's ZMAC.
+
+     Five different segments are used within each clock module.  The 
+segments are differentiated by using different relocation bases for 
+each.  The segments are:
+
+_CLKID_   [100H] Static year pointer, clock name, clock description
+_PARM_    [100H] Configuration parameters and prompt strings
+CSEG      Actual clock driver code
+_POST_    [100H] Image patch code that places _PARM_ into CSEG
+_PRE_     Clock validation code
+
+The _PARM_ and _POST_ segments are used only while SETUPZST is active 
+and do not appear in the final load module.  Note that unlike named 
+commons in NZCOM and JETLDR, these relocation bases have length and 
+code associated with them.  SETUPZST contains an internal linker that 
+is responsible for resolving these addresses.
+
+     All segments MUST be present in the file!
+
+CODING GUIDELINES:
+------------------
+     The actual code for the clock driver is part of the operating 
+system and as such must save and restore ANY non-8080 registers it 
+uses.  All routines may assume 4 levels of system stack are avaliable. 
+No 8080 registers need be preserved unless noted.  SETUPZST does not 
+affect interrupts, nor does the loader.  The author of the overlay is 
+responsible to ensure that interrupts are disabled and re-enabled if 
+this is required.
+
+     Several macros and constants are defined in CLOCKS.LIB.  The 
+normal clock validation code is located in PRECLOCK.LIB.  Make use of 
+these where applicable.
+
+STRUCTURE OF INDIVIDUAL SEGMENTS:
+---------------------------------
+
+          INCLUDE   CLOCKS.LIB     ;get normal defines and macros
+
+; Clock ID segment
+
+          COMMON    /_CLKID_/
+DESCST:   DEFW      0         ;static year pointer
+CLKNAM:   DEFB      'Name of clock Vx.x'
+          DEFS      CLKNAM+23-$,' '
+          DEFB      0         ;exactly 24 bytes
+DESCR:    DEFZ      'What this clock runs on'
+                              ;segment size must be < 256 bytes
+
+; Parameter fetch structure
+
+          COMMON    /_PARM_/
+PARBAS:   DEFW      NPARMS    ;# of parameters
+          DEFW      STRS      ;pointer to prompt strings
+NP0:      DEFB      BYTE      ;byte/word flag - defined in CLOCK.LIB
+XMHZ:     DEFW      4         ;default clock speed
+          DEFB      BYTE
+PARM1:    DEFW      PRM1      ;value of parm1
+          ...                 ;more parms as required...
+NPARMS    EQU       [$-NP0]/3
+STRS:     DEFZ      'Clock speed in MHZ'
+          DEFZ      'Prompt string 1'
+          ...
+
+; Actual clock driver code
+
+          CSEG
+; Header for clock with Read and Set
+
+; Call with:   HL pointing to 6 byte user buffer for time
+; Returns:     HL pointing to user buffer + 5
+;              E = original contents of user buffer + 5
+;              A = 01H if successful, 0FFH if error
+
+          JP        GETTIM         ;read clock
+          JP        PUTTIM         ;set clock
+VMHZ:     DEFB      0              ;cpu speed (if needed)
+          ...
+
+; Header for clock with read only
+
+          JP        GETTIM         ;read clock
+          DEFB      0              ;filler or data that's never 0C3H
+VMHZ:     DEFB      0              ;cpu speed (if needed)
+
+GETTIM:   ...
+          LD        E,(HL)         ;hl pointing to last byte of buffer
+          LD        (HL),A         ;store new data
+          JP        TIMXT
+SETTIM:   ...
+          LD        E,(HL)         ;hl pointing to last byte of buffer
+          LD        (HL),A         ;store new data
+TIMXT:    XOR       A
+          INC       A              ;set a to one for success
+          RET                      ;and return to caller
+
+; Install configuration items into code segment
+
+          COMMON    /_POST_/
+          SETBYT    XMHZ,VMHZ      ;macro defined in CLOCKS.LIB
+          RET
+
+; Validate clock prior to install - returns cy set if OK
+
+          COMMON    /_PRE_/
+          INCLUDE   PRECLOCK.LIB   ;normal validation code
+
