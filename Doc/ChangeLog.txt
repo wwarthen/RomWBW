@@ -1,5 +1,9 @@
 Version 2.6.2
 -------------
+- WBW: DS1302 clock driver modified to observe proper delays
+
+Version 2.6.2
+-------------
 - WBW: ASSIGN.COM substantially improved to map all drive types
 
 Version 2.6.1
