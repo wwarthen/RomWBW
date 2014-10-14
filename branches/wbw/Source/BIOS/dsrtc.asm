@@ -3,6 +3,64 @@
 ; DALLAS SEMICONDUCTOR DS1302 RTC DRIVER
 ;==================================================================================================
 ;
+; PROGRAMMING NOTES:
+;  - ALL SIGNALS ARE ACTIVE HIGH
+;  - DATA OUTPUT (HOST -> RTC) ON RISING EDGE
+;  - DATA INPUT (RTC -> HOST) ON FALLING EDGE
+;  - SIMPLIFIED TIMING CONSTRAINTS:
+;    @ 50MHZ, 1 TSTATE IS WORTH 20NS, 1 NOP IS WORTH 80NS, 1 EX (SP), IX IS WORTH 23 460NS
+;    1) AFTER CHANGING CE, WAIT 1US (2 X EX (SP), IX)
+;    2) AFTER CHANGING CLOCK, WAIT 250NS (3 X NOP)
+;    3) AFTER SETTING A DATA BIT, WAIT 50NS (1 X NOP)
+;    4) PRIOR TO READING A DATA BIT, WAIT 200NS (3 X NOP)
+;
+;  COMMAND BYTE:
+;
+;     7     6     5     4     3     2     1     0
+;  +-----+-----+-----+-----+-----+-----+-----+-----+
+;  |  1  | RAM |  A4 |  A3 |  A2 |  A1 |  A0 |  RD |
+;  |     | ~CK |     |     |     |     |     | ~WR |
+;  +-----+-----+-----+-----+-----+-----+-----+-----+
+;
+;  REGISTER ADDRESSES (HEX / BCD):
+;
+;    RD   WR   D7   D6   D5   D4   D3   D2   D1   D0     RANGE
+;  +----+----+----+----+----+----+----+----+----+----+-----------+
+;  | 81 | 80 | CH | 10 SECS      | SEC               | 00-59     |
+;  +----+----+----+----+----+----+----+----+----+----+-----------+
+;  | 83 | 82 |    | 10 MINS      | MIN               | 00-59     |
+;  +----+----+----+----+----+----+----+----+----+----+-----------+
+;  | 85 | 84 | TF | 00 | PM | 10 | HOURS             | 1-12/0-23 |
+;  +----+----+----+----+----+----+----+----+----+----+-----------+
+;  | 87 | 86 | 00 | 00 | 10 DATE | DATE              | 1-31      |
+;  +----+----+----+----+----+----+----+----+----+----+-----------+
+;  | 89 | 88 | 00 | 10 MONTHS    | MONTH             | 1-12      |
+;  +----+----+----+----+----+----+----+----+----+----+-----------+
+;  | 8B | 8A | 00 | 00 | 00 | 00 | DAY               | 1-7       |
+;  +----+----+----+----+----+----+----+----+----+----+-----------+
+;  | 8D | 8C | 10 YEARS          | YEAR              | 0-99      |
+;  +----+----+----+----+----+----+----+----+----+----+-----------+
+;  | 8F | 8E | WP | 00 | 00 | 00 | 00 | 00 | 00 | 00 |           |
+;  +----+----+----+----+----+----+----+----+----+----+-----------+
+;  | 91 | 90 | TCS               | DS      | RS      |           |
+;  +----+----+----+----+----+----+----+----+----+----+-----------+
+;  | BF | BE | *CLOCK BURST*                                     |
+;  +----+----+----+----+----+----+----+----+----+----+-----------+
+;  | C1 | C0 |                                       |           |
+;  | .. | .. | *RAM*                                 |           |
+;  | FD | FC |                                       |           |
+;  +----+----+----+----+----+----+----+----+----+----+-----------+
+;  | FF | FE | *RAM BURST*                           |           |
+;  +----+----+----+----+----+----+----+----+----+----+-----------+
+;
+;  CH=CLOCK HALT (1=CLOCK HALTED & OSC STOPPED)
+;  TF=12 HOUR (1) OR 24 HOUR (0)
+;  PM=IF 24 HOURS, 0=AM, 1=PM, ELSE 10 HOURS
+;  WP=WRITE PROTECT (1=PROTECTED)
+;  TCS=TRICKLE CHARGE ENABLE (1010 TO ENABLE)
+;  DS=TRICKLE CHARGE DIODE SELECT
+;  RS=TRICKLE CHARGE RESISTOR SELECT
+;
 ; CONSTANTS
 ;
 DSRTC_BASE	.EQU	RTC		; RTC PORT ON ALL N8VEM SERIES Z80 PLATFORMS
@@ -185,6 +243,7 @@ DSRTC_TSTCLK:
 	LD	C,$81			; SECONDS REGISTER HAS CLOCK HALT FLAG
 	CALL	DSRTC_CMD		; SEND THE COMMAND
 	CALL	DSRTC_GET		; READ THE REGISTER
+	CALL	DSRTC_END		; FINISH IT
 	AND	%10000000		; HIGH ORDER BIT IS CLOCK HALT
 	RET
 ;
@@ -201,9 +260,7 @@ DSRTC_RDCLK1:
 	INC	HL			; INC BUF POINTER
 	POP	BC			; RESTORE BC
 	DJNZ	DSRTC_RDCLK1		; LOOP IF NOT DONE
-	XOR	A			; ALL LINES OFF TO CLEAN UP
-	OUT	(DSRTC_BASE),A		; WRITE TO RTC PORT
-	RET
+	JR	DSRTC_END		; FINISH IT
 ;
 ; BURST WRITE CLOCK DATA FROM BUFFER AT HL
 ;
@@ -212,6 +269,7 @@ DSRTC_WRCLK:
 	CALL	DSRTC_CMD		; SEND COMMAND
 	XOR	A			; $00 = UNPROTECT
 	CALL	DSRTC_PUT		; SEND VALUE TO CONTROL REGISTER
+	CALL	DSRTC_END		; FINISH IT
 ;
 	LD	C,$BE			; COMMAND = $BE TO BURST WRITE CLOCK
 	CALL	DSRTC_CMD		; SEND COMMAND TO RTC
@@ -225,54 +283,112 @@ DSRTC_WRCLK1:
 	DJNZ	DSRTC_WRCLK1		; LOOP IF NOT DONE
 	LD	A,$80			; ADD CONTROL REG BYTE, $80 = PROTECT ON
 	CALL	DSRTC_PUT		; WRITE REQUIRED 8TH BYTE
-	XOR	A			; ALL LINES OFF TO CLEAN UP
-	OUT	(DSRTC_BASE),A		; WRITE TO RTC PORT
-	RET
+	JR	DSRTC_END		; FINISH IT
 ;
 ; SEND COMMAND IN C TO RTC
+;   ALL RTC SEQUENCES MUST CALL THIS FIRST TO SEND THE RTC COMMAND.
+;   THE COMMAND IS SENT VIA A PUT.  CE AND CLK ARE LEFT HIGH!  THIS
+;   IS INTENTIONAL BECAUSE WHEN THE CLOCK IS LOWERED, THE FIRST BIT
+;   WILL BE PRESENTED TO READ (IN THE CASE OF A READ CMD).
+;
+;   0) ASSUME ALL LINES UNDEFINED AT ENTRY
+;   1) DEASSERT ALL LINES (CE, RD, CLOCK, & DATA)
+;   2) WAIT 1US
+;   3) ASSERT CE
+;   4) WAIT 1US
+;   5) PUT COMMAND
 ;
 DSRTC_CMD:
-	LD	A,DSRTC_RD		; CE LOW TO RESET RTC
-	OUT	(DSRTC_BASE),A		; WRITE IT
+	XOR	A			; ALL LINES OFF TO CLEAN UP
+	OUT	(DSRTC_BASE),A		; WRITE TO RTC PORT
+	EX (SP), IX \ EX (SP), IX	; WAIT 1US
+	XOR	DSRTC_CE		; RUN ON CE
+	OUT	(DSRTC_BASE),A		; WRITE TO RTC PORT
+	EX (SP), IX \ EX (SP), IX	; WAIT 1US
 	LD	A,C			; LOAD COMMAND
 	CALL	DSRTC_PUT		; WRITE IT
 	RET
 ;
 ; WRITE BYTE IN A TO THE RTC
+;   WRITE BYTE IN A TO THE RTC.  CE IS IMPLICITY ASSERTED AT
+;   THE START.  CE AND CLK ARE LEFT HIGH AT THE END.  CLOCK
+;   *MUST* BE LEFT HIGH FROM DSRTC_CMD!
+;
+;   0) ASSUME ENTRY WITH CE & CLK ASSERTED, RD DEASSERTED, DATA UNKNOWN
+;   1) WAIT 250NS (COMPLETE ANY PENDING WRITE)
+;   2) DEASSERT CLOCK (LOW)
+;   3) WAIT 250NS
+;   4) (DE)ASSERT DATA (ACCORDING TO BIT VALUE)
+;   5) ASSERT CLOCK (HIGH)
+;   6) LOOP FOR 8 DATA BITS
 ;
 DSRTC_PUT:
 	LD	B,8			; LOOP FOR 8 BITS
 DSRTC_PUT1:
+	NOP \ NOP \ NOP			; WAIT 250NS
 	RRCA				; ROTATE NEXT BIT TO SEND INTO BIT 7
 	LD	C,A			; SAVE WORKING VALUE
 	AND	%10000000		; ISOLATE THE DATA BIT
-	OR	DSRTC_CE		; ADD CHIP ENABLE, CLOCK HIGH
-	OUT	(DSRTC_BASE),A		; WRITE TO PORT WITH CLOCK LOW
-	XOR	DSRTC_CLK		; TURN CLOCK BACK ON
-	OUT	(DSRTC_BASE),A		; WRITE TO PORT WITH CLOCK HIGH
+	OR	DSRTC_CE		; SET CHIP ENABLE BIT
+	OUT	(DSRTC_BASE),A		; WRITE TO PORT (CLOCK IS LOW)
+	NOP \ NOP \ NOP			; WAIT 250NS
+	XOR	DSRTC_CLK		; TURN CLOCK ON
+	OUT	(DSRTC_BASE),A		; WRITE TO PORT TO SET CLOCK HIGH
 	LD	A,C			; RECOVER WORKING VALUE
 	DJNZ	DSRTC_PUT1		; LOOP IF NOT DONE
 	RET
 ;
 ; READ BYTE FROM RTC, RETURN VALUE IN A
+;   READ THE NEXT BYTE FROM THE RTC INTO A.  CE IS IMPLICITLY
+;   ASSERTED AT THE START.  CE AND CLK ARE LEFT HIGH AT
+;   THE END.  CLOCK *MUST* BE LEFT HIGH FROM DSRTC_CMD!
+;
+;   0) ASSUME ENTRY WITH CE & CLK ASSERTED, RD DEASSERTED, DATA UNKNOWN
+;   1) WAIT 250NS (COMPLETE ANY PENDING WRITE)
+;   2) ASSERT RD AND DEASSERT DATA
+;   3) DEASSERT CLOCK (LOW)
+;   4) WAIT 250NS
+;   5) READ DATA BIT
+;   5) ASSERT CLOCK (HIGH)
+;   6) LOOP FOR 8 DATA BITS
 ;
 DSRTC_GET:
+	NOP \ NOP \ NOP			; WAIT 250NS
 	LD	C,0			; INITIALIZE WORKING VALUE TO 0
 	LD	B,8			; LOOP FOR 8 BITS
 DSRTC_GET1:
-	LD	A,DSRTC_RD+DSRTC_CE	; LOWER CLOCK, CE STAYS HI, READ IS ON
+	LD	A,DSRTC_RD | DSRTC_CE | DSRTC_CLK	; ASSERT RD, DEASSERT DATA
 	OUT	(DSRTC_BASE),A		; WRITE TO RTC PORT
-	NOP				; SETTLE
+	XOR	DSRTC_CLK		; DEASSERT CLOCK
+	OUT	(DSRTC_BASE),A		; WRITE TO RTC PORT
+	NOP \ NOP \ NOP			; WAIT 250NS
 	IN	A,(DSRTC_BASE)		; READ THE RTC PORT
 	AND	%00000001		; ISOLATE THE DATA BIT
 	OR	C			; COMBINE WITH WORKING VALUE
 	RRCA				; ROTATE FOR NEXT BIT
 	LD	C,A			; SAVE WORKING VALUE
-	LD	A,DSRTC_CLK+DSRTC_RD+DSRTC_CE	; CLOCK BACK TO HIGH NOW
+	LD	A,DSRTC_CLK | DSRTC_RD | DSRTC_CE	; CLOCK BACK TO HIGH NOW
 	OUT	(DSRTC_BASE),A		; WRITE TO RTC PORT
 	DJNZ	DSRTC_GET1		; LOOP IF NOT DONE
 	LD	A,C			; GET RESULT INTO A
 	RET
+;
+; COMPLETE A COMMAND SEQUENCE
+;   FINISHES UP A COMMAND SEQUENCE.
+;   DOES NOT DESTROY ANY REGISTERS.
+;
+;   1) WAIT 250NS (COMPLETE ANY PENDING WRITE)
+;   2) DEASSERT ALL LINES (CE, RD, CLOCK, & DATA)
+;
+DSRTC_END:
+	NOP \ NOP \ NOP			; WAIT 250NS
+	PUSH	AF			; SAVE AF
+	XOR	A			; ALL LINES OFF TO CLEAN UP
+	OUT	(DSRTC_BASE),A		; WRITE TO RTC PORT
+	POP	AF			; RESTORE AF
+	RET
+
+
 ;
 ; WORKING VARIABLES
 ;
