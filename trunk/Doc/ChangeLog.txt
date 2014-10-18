@@ -1,4 +1,8 @@
-Version 2.6.2
+Version 2.6.4
+-------------
+- WBW: Yet more DS1302 clock driver delay mods
+
+Version 2.6.3
 -------------
 - WBW: DS1302 clock driver modified to observe proper delays
 
