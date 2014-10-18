@@ -225,8 +225,7 @@ PHASE2:
 ;
 	.ORG	$1000
 	JP	HB_START
-;	JP	HB_DISPATCH
-	CALL	PANIC			; REMOVE AFTER VERIFYING UNUSED
+	JP	HB_DISPATCH
 ;
 ;==================================================================================================
 ;   HBIOS INTERNAL PROXY JUMP TABLE

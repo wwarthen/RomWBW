@@ -42,14 +42,10 @@ $env:TASMTABS = $TasmPath
 $env:PATH = $TasmPath + ';' + $CpmToolsPath + ';' + $env:PATH
 
 $OutDir = "../../Output"
-#$RomFmt = "wbw_rom${RomSize}"
 if ($Platform -eq "UNA") {$RomFmt = "una_rom${RomSize}"} else {$RomFmt = "wbw_rom${RomSize}"}
 if ($Platform -eq "UNA") {$BlankFile = "blank${RomSize}KB-UNA.dat"} else {$BlankFile = "blank${RomSize}KB.dat"}
 $RomDiskFile = "RomDisk.tmp"
 $RomFile = "${OutDir}/${RomName}.rom"
-$CPMImgFile = "${OutDir}/${RomName}_CPM.sys"
-$ZSYSImgFile = "${OutDir}/${RomName}_ZSYS.sys"
-$Loader = "${OutDir}/${RomName}.com"
 
 ""
 "Building ${RomName}: ${ROMSize}KB ROM configuration ${Config} for Z${CPUType}..."
@@ -102,7 +98,6 @@ Asm 'cbios' "-dBLD_SYS=SYS_CPM" -Output "cbios.bin"
 Asm 'cbios' "-dBLD_SYS=SYS_ZSYS" -Output "zbios.bin"
 Asm 'dbgmon'
 Asm 'prefix'
-Asm 'osldr'
 Asm 'fill1k'
 Asm 'romldr'
 if ($Platform -ne "UNA") {Asm 'hbios'}
@@ -114,11 +109,10 @@ if ($Platform -ne "UNA") {Asm 'hbios'}
 Concat 'ccp.bin','bdos.bin','cbios.bin' 'cpm.bin'
 Concat 'zcpr.bin','zsdos.bin','zbios.bin' 'zsys.bin'
 
-Concat 'prefix.bin','cpm.bin' $CPMImgFile
-Concat 'prefix.bin','zsys.bin' $ZSYSImgFile
+Concat 'prefix.bin','cpm.bin' 'cpm.sys'
+Concat 'prefix.bin','zsys.bin' 'zsys.sys'
 
 Concat 'romldr.bin', 'zsys.bin','fill1k.bin','dbgmon.bin','cpm.bin','fill1k.bin' osimg.bin
-Concat 'osldr.bin','dbgmon.bin','cpm.bin','fill1k.bin','zsys.bin','fill1k.bin' $Loader
 
 # Create the RomDisk image
 
@@ -128,8 +122,7 @@ Copy-Item $BlankFile $RomDiskFile
 cpmcp -f $RomFmt $RomDiskFile ../RomDsk/ROM_${RomSize}KB/*.* 0:
 cpmcp -f $RomFmt $RomDiskFile ../RomDsk/${Platform}_${Config}/*.* 0:
 cpmcp -f $RomFmt $RomDiskFile ../Apps/*.com 0:
-cpmcp -f $RomFmt $RomDiskFile ${OutDir}/${RomName}_CPM.sys 0:CPM.sys
-cpmcp -f $RomFmt $RomDiskFile ${OutDir}/${RomName}_ZSYS.sys 0:ZSYS.sys
+cpmcp -f $RomFmt $RomDiskFile *.sys 0:
 
 if ($Platform -eq "UNA")
 {
