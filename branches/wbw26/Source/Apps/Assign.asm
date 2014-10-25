@@ -446,7 +446,7 @@ dph_init3:
 	call	crlf2
 	ld	de,indent
 	call	prtstr
-	ld	hl,$fc00 - $40	; subtract high water
+	ld	hl,$fc00	; subtract high water
 	ld	de,(buftop)	; ... from top of cbios
 	or	a		; ... with cf clear
 	sbc	hl,de		; ... so hl gets bytes free
@@ -1615,7 +1615,7 @@ stack	.equ	$		; stack top
 ; Messages
 ;
 indent	.db	"   ",0
-msgban1	.db	"ASSIGN v1.0 for RomWBW CP/M 2.2, 19-Sep-2014",0
+msgban1	.db	"ASSIGN v1.0a for RomWBW CP/M 2.2, 25-Oct-2014",0
 msghb	.db	" (HBIOS Mode)",0
 msgub	.db	" (UBIOS Mode)",0
 msgban2	.db	"Copyright 2014, Wayne Warthen, GNU GPL v3",0
