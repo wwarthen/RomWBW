@@ -176,7 +176,7 @@ PHASE2:
 	LD	DE,0
 	LD	BC,$8000
 	LD	A,BID_BIOS	; RET BANK IS HBIOS
-	CALL	HBX_COPY
+	CALL	HBX_BNKCPY
 	CALL	XIO_DOT		; MARK PROGRESS
 ;
 ; INITIALIZE HBIOS AND JUMP TO LOADER
@@ -906,7 +906,7 @@ SYS_COPY:
 	PUSH	IX
 	POP	BC
 	LD	A,BID_BIOS	; RET BANK IS HBIOS
-	CALL	HB_COPY
+	CALL	HB_BNKCPY
 	XOR	A
 	RET
 ;
@@ -1216,13 +1216,54 @@ HB_BUF		.EQU	$
 HBX_IMG		.EQU	$
 		.ORG	HBX_LOC
 ;
+;==================================================================================================
+;   HBIOS INTERBANK MEMORY COPY BUFFER
+;==================================================================================================
+;
+	.FILL	$FE00 - $,$FF	; FILL TO START OF BUFFER PAGE
+HBX_BUF	.FILL	$100,0		; INTER-BANK COPY BUFFER
+;
+;==================================================================================================
+;   HBIOS INTERRUPT VECTOR TABLE
+;==================================================================================================
+;
+	.FILL	$FF00 - $,$FF	; FILL TO START OF LAST PAGE
+;
+; AREA RESERVED FOR UP TO 16 INTERRUPT VECTOR ENTRIES (MODE 2)
+;
+HBX_IVT:
+	.FILL	$20,$FF
+;
+;==================================================================================================
+;   HBIOS ENTRY FOR RST 08 PROCESSING
+;==================================================================================================
+;
+HBX_INVOKE:
+	LD	(HBX_STKSAV),SP	; SAVE ORIGINAL STACK FRAME
+	LD	SP,HBX_STACK	; SETUP NEW STACK FRAME
+
+	LD	A,BID_BIOS	; HBIOS BANK
+	CALL	HBX_BNKSEL	; SELECT IT
+
+	CALL	HB_DISPATCH	; CALL HBIOS FUNCTION DISPATCHER
+
+	PUSH	AF		; SAVE AF (FUNCTION RETURN)
+	LD	A,(HBX_CURBNK)	; GET ENTRY BANK
+	CALL	HBX_BNKSEL	; SELECT IT
+	POP	AF		; RESTORE AF
+
+	LD	SP,0		; RESTORE ORIGINAL STACK FRAME
+HBX_STKSAV	.EQU	$ - 2
+
+	RET			; RETURN TO CALLER
+;
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;; SETBNK - Switch Memory Bank to Bank in A.
 ;;   Preserve all Registers including Flags.
 ;;   Does NOT update current bank.
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;
-HBX_SETBNK:
+HBX_BNKSEL:
 ;
 #IF ((PLATFORM == PLT_N8VEM) | (PLATFORM == PLT_ZETA))
 	OUT	(MPCL_ROM),A
@@ -1271,43 +1312,37 @@ HBX_ROM:
 ;
 ;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;
-HBX_COPY:
+HBX_BNKCPY:
+	; Setup for copy loop
 	LD	(HBX_RETBNK),A	; Save the return bank
-	CALL	HBX_COPY1	; Do the work
-	LD	A,(HBX_RETBNK)	; Set desired return bank
-	JR	HBX_SETBNK	; .. activate and return
-;
-HBX_COPY1:	; Setup for copy loop
 	LD	(HBX_SRCADR),HL	; Init working source adr
 	LD	(HBX_DSTADR),DE	; Init working dest adr 
-	LD	H,B		; Move bytes to copy from BC...
-	LD	L,C		;   to HL to use as byte counter
+	LD	H,B		; Move bytes to copy from BC
+	LD	L,C		; ... to HL to use as byte counter
 ;
-HBX_COPY2:	; Copy loop
-	INC	L		; Set ZF to indicate...
-	DEC	L		;   if a partial page copy is needed
+HBX_BNKCPY2:
+	; Copy loop
+	INC	L		; Set ZF to indicate
+	DEC	L		; ... if a partial page copy is needed
 	LD	BC,$100		; Assume a full page copy, 100H bytes
-	JR	Z,HBX_COPY3	; If full page copy, go do it
+	JR	Z,HBX_BNKCPY3	; If full page copy, go do it
 	DEC	B		; Otherwise, setup for partial page copy
-	LD	C,L		; by making BC := 0
+	LD	C,L		; ... by making BC := 0
 ;
-HBX_COPY3:
+HBX_BNKCPY3:
 	PUSH	HL		; Save bytes left to copy
-	CALL	HBX_COPY4	; Do it
+	CALL	HBX_BNKCPY4	; Do it
 	POP	HL		; Recover bytes left to copy
 	XOR	A		; Clear CF
 	SBC	HL,BC		; Reflect bytes copied in HL
-	JR	NZ,HBX_COPY2	; If any left, then loop
+	JR	NZ,HBX_BNKCPY2	; If any left, then loop
+	LD	A,0		; Set desired return bank
+HBX_RETBNK	.EQU	$ - 1
+	JR	HBX_BNKSEL	; Activate and return
 ;
-	LD	HL,(HBX_DEFBNK)	; Get TPA Bank #
-	LD	H,L		; .to both H and L
-	LD	(HBX_SRCBNK),HL	; ..set Source & Destination Bank # to default
-;
-	RET			; Done
-;
-HBX_COPY4:	; Switch to source bank
+HBX_BNKCPY4:	; Switch to source bank
 	LD	A,(HBX_SRCBNK)	; Get source bank
-	CALL	HBX_SETBNK	; Set bank without making it current
+	CALL	HBX_BNKSEL	; Set bank without making it current
 ;
 	; Copy BC bytes from HL -> BUF, allow HL to increment
 	PUSH	BC		; Save copy length
@@ -1319,7 +1354,7 @@ HBX_COPY4:	; Switch to source bank
 ;	
 	; Switch to dest bank
 	LD	A,(HBX_DSTBNK)	; Get destination bank
-	CALL	HBX_SETBNK	; Set bank without making it current
+	CALL	HBX_BNKSEL	; Set bank without making it current
 ;
 	; Copy BC bytes from BUF -> HL, allow DE to increment
 	PUSH	BC		; Save copy length
@@ -1331,132 +1366,8 @@ HBX_COPY4:	; Switch to source bank
 ;
 	RET			; Done
 ;
-;==================================================================================================
-;   HBIOS ENTRY FOR RST 08 PROCESSING
-;==================================================================================================
-;
-HBX_INVOKE:
-	LD	(HBX_STKSAV),SP	; SAVE ORIGINAL STACK FRAME
-	LD	SP,HBX_STACK	; SETUP NEW STACK FRAME
-
-	LD	A,BID_BIOS	; HBIOS BANK
-	CALL	HBX_SETBNK	; SELECT IT
-
-	CALL	HB_DISPATCH	; CALL HBIOS FUNCTION DISPATCHER
-
-	PUSH	AF		; SAVE AF (FUNCTION RETURN)
-	LD	A,(HBX_CURBNK)	; GET ENTRY BANK
-	CALL	HBX_SETBNK	; SELECT IT
-	POP	AF		; RESTORE AF
-
-	LD	SP,(HBX_STKSAV)	; RESTORE ORIGINAL STACK FRAME
-
-	RET			; RETURN TO CALLER
-;
-;==================================================================================================
-;   HBIOS INTERBANK MEMORY COPY BUFFER
-;==================================================================================================
-;
-	.FILL	$FE00 - $,$FF	; FILL TO START OF BUFFER PAGE
-HBX_BUF	.FILL	$100,0		; INTER-BANK COPY BUFFER
-;
-;==================================================================================================
-;   HBIOS INTERRUPT VECTOR TABLE
-;==================================================================================================
-;
-	.FILL	$FF00 - $,$FF	; FILL TO START OF LAST PAGE
-;
-; AREA RESERVED FOR UP TO 16 INTERRUPT VECTOR ENTRIES (MODE 2)
-;
-HBX_IVT:
-	.FILL	$20,$FF
-;
-;==================================================================================================
-;	Load  A,(HL)  from  Alternate  Bank  (in Reg C)
-;==================================================================================================
-;
-HBX_FRGETB:
-	LD	(HBX_STKSAV),SP	; SAVE ORIGINAL STACK FRAME
-	LD	SP,HBX_STACK	; SETUP NEW STACK FRAME
-	PUSH	BC
-	LD	A,C
-	DI
-	CALL	HBX_SETBNK	; SELECT IT
-	LD	C,(HL)
-	LD	A,(HBX_CURBNK)
-	CALL	HBX_SETBNK	; SELECT IT
-	EI
-	LD	A,C
-	POP	BC
-	LD	SP,(HBX_STKSAV)	; RESTORE ORIGINAL STACK FRAME
-	RET
-;
-;==================================================================================================
-;	Load  DE,(HL)  from  Alternate  Bank
-;==================================================================================================
-;
-HBX_FRGETW:
-	LD	(HBX_STKSAV),SP	; SAVE ORIGINAL STACK FRAME
-	LD	SP,HBX_STACK	; SETUP NEW STACK FRAME
-	LD	A,C
-	DI
-	CALL	HBX_SETBNK	; SELECT IT
-	LD	E,(HL)
-	INC	HL
-	LD	D,(HL)
-	DEC	HL
-	LD	A,(HBX_CURBNK)
-	CALL	HBX_SETBNK	; SELECT IT
-	EI
-	LD	SP,(HBX_STKSAV)	; RESTORE ORIGINAL STACK FRAME
-	RET
-;
-;==================================================================================================
-;	Load  (HL),A  to  Alternate  Bank  (in Reg C)
-;==================================================================================================
-;
-HBX_FRPUTB:	
-	LD	(HBX_STKSAV),SP	; SAVE ORIGINAL STACK FRAME
-	LD	SP,HBX_STACK	; SETUP NEW STACK FRAME
-	PUSH	BC
-	LD	B,A
-	LD	A,C
-	DI
-	CALL	HBX_SETBNK	; SELECT IT
-	LD	(HL),B
-	LD	A,(HBX_CURBNK)
-	CALL	HBX_SETBNK	; SELECT IT
-	EI
-	POP	BC
-	LD	SP,(HBX_STKSAV)	; RESTORE ORIGINAL STACK FRAME
-	RET
-;
-;==================================================================================================
-;	Load  (HL),DE  to  Alternate  Bank
-;==================================================================================================
-;
-HBX_FRPUTW:	
-	LD	(HBX_STKSAV),SP	; SAVE ORIGINAL STACK FRAME
-	LD	SP,HBX_STACK	; SETUP NEW STACK FRAME
-	LD	A,C
-	DI
-	CALL	HBX_SETBNK	; SELECT IT
-	LD	(HL),E
-	INC	HL
-	LD	(HL),D
-	DEC	HL
-	LD	A,(HBX_CURBNK)
-	CALL	HBX_SETBNK	; SELECT IT
-	EI
-	LD	SP,(HBX_STKSAV)	; RESTORE ORIGINAL STACK FRAME
-	RET
-;
 ; PRIVATE DATA
 ;
-HBX_STKSAV	.DW	0		; Saved stack pointer during HBIOS calls
-HBX_RETBNK	.DB	0		; Used to save bank to activate on ret
-HBX_SAVBNK	.DB	0		; Place to save entry bank during HB processing
-HBX_DEFBNK	.DB	BID_USR		; Default bank number
 HBX_SRCADR	.DW	0		; Copy Source Address
 HBX_DSTADR	.DW	0		; Copy Destination Address
 ;
@@ -1480,8 +1391,8 @@ HBX_STACK	.EQU	$
 ; TOP 16 BYTES OF HBIOS PROXY ARE RESERVED
 ;
 HB_INVOKE:	JP	HBX_INVOKE	; FIXED ADR ENTRY FOR HBX_INVOKE (ALT FOR RST 08)
-HB_SETBNK:	JP	HBX_SETBNK	; FIXED ADR ENTRY FOR HBX_SETBNK
-HB_COPY:	JP	HBX_COPY	; FIXED ENTRY FOR HBX_BNKCPY
+HB_BNKSEL:	JP	HBX_BNKSEL	; FIXED ADR ENTRY FOR HBX_BNKSEL
+HB_BNKCPY:	JP	HBX_BNKCPY	; FIXED ENTRY FOR HBX_BNKCPY
 		.DW	0		; FILLER, RESERVED FOR FUTURE HBIOS USE
 HBX_SRCBNK	.DB	BID_USR		; SOURCE BANK FOR NEXT HBX_BNKCPY
 HBX_DSTBNK	.DB	BID_USR		; DESTINATION BANK FOR NEXT HBX_BNKCPY

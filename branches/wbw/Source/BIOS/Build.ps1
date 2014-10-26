@@ -94,8 +94,8 @@ Copy-Item '..\cpm22\os3bdos.bin' 'bdos.bin'
 Copy-Item '..\zcpr-dj\zcpr.bin' 'zcpr.bin'
 Copy-Item '..\zsdos\zsdos.bin' 'zsdos.bin'
 
-Asm 'cbios' "-dBLD_SYS=SYS_CPM" -Output "cbios.bin"
-Asm 'cbios' "-dBLD_SYS=SYS_ZSYS" -Output "zbios.bin"
+Asm 'cbios' "-dBLD_SYS=SYS_CPM" -Output "cbios_cpm.bin"
+Asm 'cbios' "-dBLD_SYS=SYS_ZSYS" -Output "cbios_zsys.bin"
 Asm 'dbgmon'
 Asm 'prefix'
 Asm 'fill1k'
@@ -106,8 +106,8 @@ if ($Platform -ne "UNA") {Asm 'hbios'}
 
 "Building ${RomName} output files..."
 
-Concat 'ccp.bin','bdos.bin','cbios.bin' 'cpm.bin'
-Concat 'zcpr.bin','zsdos.bin','zbios.bin' 'zsys.bin'
+Concat 'ccp.bin','bdos.bin','cbios_cpm.bin' 'cpm.bin'
+Concat 'zcpr.bin','zsdos.bin','cbios_zsys.bin' 'zsys.bin'
 
 Concat 'prefix.bin','cpm.bin' 'cpm.sys'
 Concat 'prefix.bin','zsys.bin' 'zsys.sys'
