@@ -1,0 +1,196 @@
+<HTML><HEAD><TITLE>CPMRM - remove files on CP/M disks</TITLE>
+</HEAD><BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#008000" ALINK="#008000" VLINK="#008000">
+<FONT FACE="Arial" SIZE=2>
+<H2><A NAME="lbAA">CPMRM</H2>
+Section: User commands (1)<BR>
+Updated: December 1, 2013<BR><BR>
+
+<A HREF="#index">Index&nbsp;&nbsp;</A>
+<A HREF=" ./index.htm">Return to Main Contents&nbsp;&nbsp;</A>
+<a href="#disclaimer">Disclaimer&nbsp;&nbsp;</a><br><BR><HR>
+
+
+<A NAME="lbAB">&nbsp;</A>
+<B>NAME cpmrm - remove files on CP/M disks.</B><BR><BR>
+
+<A NAME="lbAC">&nbsp;</A>
+<B>SYNOPSIS</B><BR><BR>
+
+
+<B>cpmrm</B>
+
+[<B>-f</B>
+
+<I>format</I>]
+
+<I>image</I>
+
+<I>file-pattern</I>
+
+...
+<BR><BR>
+
+<A NAME="lbAD">&nbsp;</A>
+<B>DESCRIPTION</B><BR><BR>
+
+<B>Cpmrm removes files from CP/M disks.</B>
+<BR>
+<BR>
+
+<A NAME="lbAE">&nbsp;</A>
+<B>OPTIONS</B><BR><BR>
+
+<DL COMPACT><DT><DD>
+
+<DT><B>-f</B><BR><DD>
+
+Use the given CP/M disk <I>format</I> instead of the default format.
+<BR><BR>
+For Apple II CP/M 80
+users the disk image formats apple-do and apple-po are available. These
+are DOS3.3 order and ProDOS order disk image formats respectively, and must always be specified
+using the form <b>-f apple-do</b> or <b>-f apple-po</b>.
+<BR>
+<BR>
+</DL>
+<b>Example:</b>
+<BR>
+<BR>
+The following example shows how to remove a file on an Apple II DOS 3.3
+order cpm disk image:
+<BR>
+<BR>
+<b>cpmrm -f apple-do exmplcpm.dsk 0:bhead.c</b>
+<BR>
+<BR>
+<A NAME="lbAF">&nbsp;</A>
+<B>RETURN VALUE - Upon successful completion, exit code 0 is returned.</B><BR><BR>
+
+This will likely only be of interest to programmers. In a Win32 system
+the exit code can be trapped in a batch file as an "ERRORLEVEL" or as a
+return value when run from another Win32 console program written in a
+language like C.
+<BR><BR>
+
+<A NAME="lbAG">&nbsp;</A>
+<B>ERRORS - Any errors are indicated by exit code 1.</B><BR><BR>
+
+This will likely only be of interest to programmers. In a Win32 system
+the exit code can be trapped in a batch file as an "ERRORLEVEL" or as a
+return value when run from another Win32 console program written in a
+language like C.
+<BR><BR>
+
+<A NAME="lbAH">&nbsp;</A>
+<B>FILES - diskdefs - CP/M disk format definitions</B><BR><BR>
+
+The diskdefs file is a plain ascii text file (in "unix" format, not Windows format)
+that serves as a database of
+disk and disk image format definitions. It can be reviewed for available CP/M
+formats and their names. For Apple II CP/M 80 users the disk
+image formats apple-do and apple-po are available.
+<BR>
+To convert between Windows text and "unix" text, two utilities (rmcr and cr) are
+included in the Windows distro of the cpmtools binaries. These are included so you
+can use a Windows text editor to edit a copy of diskdefs if your Windows text editor
+does not edit "unix" text.
+<BR><BR>
+<b>The possible locations where cpmtools first looks for the diskdefs file:</b>
+<BR>
+<BR>
+Can vary depending on the preferences of the person who builds the
+cpmtools binaries (executables) from the source code.
+<BR>
+<BR>
+<b>If it's not found the current (work) directory is then searched for a
+file called diskdefs.</b>
+<br>
+<br>
+The Windows distro uses <b>\cpmtools\diskdefs</b> as a default.
+<BR>
+<BR>
+<b>On a unix-like system</b>, a <b>${prefix}/share/</b> style path
+like <b>/usr/local/share/</b> is a possible place that cpmtools will first
+look for diskdefs.
+<BR>
+<BR>
+<b>In a Win32 system</b> sometimes unix-like shells like cygwin
+are used to build and run cpmtools instead of Windows cmd. For those installations
+unix-like conventions may apply.
+<BR>
+<BR>
+
+<A NAME="lbAI">&nbsp;</A>
+<B>AUTHORS</B>
+<BR>
+<BR>
+This program is copyright 1997-2013 Michael Haardt &lt;<A HREF="mailto:michael@moria.de">michael@moria.de</A>&gt;.
+The Windows port is
+copyright 2000, 2001, 2011 John Elliott &lt;<A HREF="mailto:jce@seasip.demon.co.uk">jce@seasip.demon.co.uk</A>&gt;.
+<BR><BR>
+
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of
+the <a href="http://www.gnu.org/licenses/licenses.html#GPL">GNU General Public License</a> as
+published by the Free Software Foundation; either version 3 of the License, or (at your
+option) any later version.
+<BR><BR>
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<a href="http://www.gnu.org/licenses/licenses.html#GPL">GNU General Public License</a> for more details.
+<BR><BR>
+
+You should have received a copy of the GNU General Public License along
+with this program.  If not, write to the Free Software Foundation, Inc.,
+59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+<BR><BR>
+
+<A NAME="lbAJ">&nbsp;</A>
+<B>SEE ALSO</B><BR><BR>
+
+<I><A HREF="./cpmls.htm">cpmls</A></I>(1),
+
+<I><A HREF=" ./cpm.htm">cpm</A></I>(5)
+
+<BR><BR>
+
+<HR>
+
+<A NAME="index">&nbsp;</A><B>Index</B>
+<BR>
+<BR>
+
+<DL>
+<DT><A HREF="#lbAA">NAME cpmrm - remove files on CP/M disks.</A><DD>
+<DT><A HREF="#lbAC">SYNOPSIS</A><DD>
+<DT><A HREF="#lbAD">DESCRIPTION</A><DD>
+<DL>
+<DT><A HREF="#lbAE">OPTIONS</A><DD>
+<DT><A HREF="#lbAF">RETURN VALUE</A><DD>
+<DT><A HREF="#lbAG">ERRORS</A><DD>
+<DT><A HREF="#lbAH">FILES</A><DD>
+</DL>
+<DT><A HREF="#lbAI">AUTHORS</A><DD>
+<DT><A HREF="#lbAJ">SEE ALSO</A><DD>
+</DL>
+
+<HR>
+<a name="disclaimer"><b>Caveat Emptor</b></a>
+<br>
+<br>
+The contents of this document
+are either part of cpmtools or provide additional information about using cmptools.
+You can redistribute it under the terms of
+the <a href="http://www.gnu.org/licenses/licenses.html#GPL">GNU General Public License</a> as
+published by the Free Software Foundation; either version 3 of the License, or (at your
+option) any later version.
+<br>
+<br>
+Bill Buckels has no warranty
+obligations or liability resulting from this document's use in any way whatsoever. If you don't
+agree then don't read it.
+</FONT></BODY>
+</HTML>

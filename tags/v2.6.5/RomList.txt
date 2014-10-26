@@ -1,0 +1,221 @@
+You should find the following ROM
+images in the Output driectory.
+Refer to the descriptions below to select 
+one that matches your hardware 
+configuration, burn it, and use it.
+
+Note that there are no longer separate
+ROM images for CP/M and ZSystem.  Both
+OS variants are now imbedded in the ROM
+image and you are given the ability to
+choose the one you want to boot at
+startup.
+
+Note that all builds are now set for 512KB ROMs.
+The builds will work fine in 1MB ROMs.  If you
+want to use the full 1MB ROM address space, just
+do a cutom build.
+
+Note that all builds are now set for 38.4Kbps
+baud rate on the console with 8 data bits, no
+parity, and 1 stop bit.  The baud rate can be
+changed in the config file if you want to do a
+custom build.
+
+  N8VEM_std.rom for N8VEM Z80 SBC V1/V2:
+    - 512KB ROM, 512KB RAM
+    - 38.4KB serial console baud rate
+    - Basic ROM/RAM disk (no floppy/IDE)
+    - Drives A:=ROM, B:=RAM
+
+  N8VEM_diskio.rom for N8VEM Z80 SBC V1/V2 + DISKIO:
+    - 512KB ROM, 512KB RAM
+    - 38.4KB serial console baud rate
+    - Basic ROM/RAM disk
+    - Floppy support via DISKIO
+    - IDE support via DISKIO
+    - Drives A:=ROM, B:=RAM, C:=FD0, D:=FD1, E:=IDE0-00, F:=IDE0-01, G:=IDE0-02, H:=IDE0-03
+
+  N8VEM_dide.rom for N8VEM Z80 SBC V1/V2 + DUAL IDE:
+    - 512KB ROM, 512KB RAM
+    - 38.4KB serial console baud rate
+    - Basic ROM/RAM disk
+    - Floppy support via DISKIO
+    - IDE support via DISKIO
+    - Drives A:=ROM, B:=RAM, C:=FD0, D:=FD1, E:=IDE0-00, F:=IDE0-01, G:=IDE0-02, H:=IDE0-03
+    
+  N8VEM_diskio3.rom for N8VEM Z80 SBC V1/V2 + DISKIO3:
+    - 512KB ROM, 512KB RAM
+    - 38.4KB serial console baud rate
+    - Basic ROM/RAM disk
+    - Floppy support via DISKIO3
+    - IDE support via DISKIO3
+    - Drives A:=ROM, B:=RAM, C:=FD0, D:=FD1, E:=IDE0-00, F:=IDE0-01, G:=IDE0-02, H:=IDE0-03
+
+  N8VEM_diskio3+cvdu.rom for N8VEM Z80 SBC V1/V2 + DISKIO3:
+    - 512KB ROM, 512KB RAM
+    - 38.4KB serial console baud rate
+    - Basic ROM/RAM disk
+    - Floppy support via DISKIO3
+    - IDE support via DISKIO3
+    - ColorVDU board support
+    - Drives A:=ROM, B:=RAM, C:=FD0, D:=FD1, E:=IDE0-00, F:=IDE0-01, G:=IDE0-02, H:=IDE0-03
+	- NOTE: Console defaults to CRT & PS/2 Keyboard.  Short JP2
+	  (one bit input port) to use the serial port as the console.
+
+  N8VEM_ppide.rom for N8VEM Z80 SBC V1/V2 + PPIDE:
+    - 512KB ROM, 512KB RAM
+    - 38.4KB serial console baud rate
+    - Basic ROM/RAM disk
+    - IDE support via DISKIO
+    - Drives A:=ROM, B:=RAM, C:=PPIDE0-00, D:=PPIDE0-01, E:=PPIDE0-02, F:=PPIDE0-03
+    
+  N8VEM_ppisd.rom for N8VEM Z80 SBC V1/V2 + PPISD:
+    - 512KB ROM, 512KB RAM
+    - 38.4KB serial console baud rate
+    - Basic ROM/RAM disk
+    - PPISD support
+    - Drives A:=ROM, B:=RAM, C:=SD0-00, D:=SD0-01, E:=SD0-02, F:=SD0-03
+    
+  N8VEM_dsd.rom for N8VEM Z80 SBC V1/V2 + Dual SD:
+    - 512KB ROM, 512KB RAM
+    - 38.4KB serial console baud rate
+    - Basic ROM/RAM disk
+    - Dual SD support
+    - Drives A:=ROM, B:=RAM, C:=SD0-00, D:=SD0-01, E:=SD0-02, F:=SD0-03
+    
+  N8VEM_propio.rom for N8VEM Z80 SBC V1/V2 + PROPIO:
+    - 512KB ROM, 512KB RAM
+    - 38.4KB serial console baud rate
+    - Basic ROM/RAM disk
+    - SD Card support via PropIO
+    - VGA console support via PropIO
+    - PS/2 Keyboard support via PropIO
+    - Drives A:=ROM, B:=RAM, C:=PRPSD0-00, D:=PRPSD0-01, E:=PRPSD0-02, F:=PRPSD0-03
+	- WARNING: You must use the RomWBW specific firmware
+	  for the Propeller found in the Support directory!
+	- NOTE: Console defaults to VGA & PS/2 Keyboard.  Short JP2
+	  (one bit input port) to use the serial port as the console.
+
+  N8VEM_mfp.rom for N8VEM Z80 SBC V1/V2:
+    - 512KB ROM, 512KB RAM
+    - 38.4KB serial console baud rate
+    - Basic ROM/RAM disk (no floppy)
+    - Drives A:=ROM, B:=RAM, C:=PPIDE0-00, D:=PPIDE0-01, E:=PPIDE0-02, F:=PPIDE0-03
+    - IDE support via Multifunction / PIC
+    - Second UART via Multifunction / PIC
+
+  N8VEM_ci.rom for N8VEM Z80 SBC V1/V2:
+    - 512KB ROM, 512KB RAM
+    - 38.4KB serial console baud rate
+    - Basic ROM/RAM disk (no floppy/IDE)
+    - Drives A:=ROM, B:=RAM
+    - Cassette Interface mapped to RDR/PUN
+
+  N8VEM_simh.rom for N8VEM SIMH Simulator:
+    - 512KB ROM, 512KB RAM
+    - 38.4KB serial console baud rate
+    - Basic ROM/RAM disk (no floppy/IDE)
+    - Drives A:=ROM, B:=RAM, C:=HDSK0-00, D:=HDSK0-01, E:=HDSK0-02, F:=HDSK0-03
+
+  N8VEM_rf.rom for N8VEM Z80 SBC V1/2 + RAM Flopppy:
+    - 512KB ROM, 512KB RAM
+    - 38.4KB serial console baud rate
+    - Basic ROM/RAM disk (no floppy/IDE)
+    - RAM Floppy support
+    - Drives A:=ROM, B:=RAM, C:=RF0, D:=RF1
+
+  N8VEM_vdu.rom for N8VEM Z80 SBC V1/V2:
+    - 512KB ROM, 512KB RAM
+    - 38.4KB serial console baud rate
+    - Basic ROM/RAM disk
+    - VDU board support
+    - Drives A:=ROM, B:=RAM
+	- NOTE: Console defaults to CRT & PS/2 Keyboard.  Short JP2
+	  (one bit input port) to use the serial port as the console.
+    
+  N8VEM_cvdu.rom for N8VEM Z80 SBC V1/V2:
+    - 512KB ROM, 512KB RAM
+    - 38.4KB serial console baud rate
+    - Basic ROM/RAM disk
+    - ColorVDU board support
+    - Drives A:=ROM, B:=RAM
+	- NOTE: Console defaults to CRT & PS/2 Keyboard.  Short JP2
+	  (one bit input port) to use the serial port as the console.
+    
+  ZETA_std.rom for Zeta Z80 SBC:
+    - 512KB ROM, 512KB RAM
+    - 38.4KB serial console baud rate
+    - Basic ROM/RAM disk
+    - Floppy support via built-in FDC
+    - PPIDE support via built-in PPI
+    - Drives A:=ROM, B:=RAM, C:=FD0, D:=FD1, E:=PPIDE00-0, F:=PPIDE0-01, G:=PPIDE0-02, H:=PPIDE0-03
+
+  ZETA_ppp.rom for Zeta Z80 SBC w/ ParPortProp:
+    - 512KB ROM, 512KB RAM
+    - 38.4KB serial console baud rate
+    - Basic ROM/RAM disk
+    - Floppy support via built-in FDC
+    - SD Card support via ParPortProp
+    - VGA console support via ParPortProp
+    - PS/2 Keyboard support via ParPortProp
+    - Drives A:=ROM, B:=RAM, C:=FD0, D:=FD1, E:=PPPSD0-00, F:=PPPSD0-01, F:=PPPSD0-02, G:=PPPSD0-03
+	- WARNING: You must use the RomWBW specific firmware
+	  for the Propeller found in the Support directory!
+	- NOTE: Console defaults to VGA & PS/2 Keyboard.  Short JP1 (CONFIG)
+	  to use the serial port as the console.
+
+  N8_2511.rom for N8 2511 Z180:
+    - Assumes oscillator frequency of 18.432MHz
+    - CPU clock at X1 (18.432MHz)
+    - 512KB ROM, 1MB RAM
+    - 38.4KB serial console baud rate
+    - Basic ROM/RAM disk
+    - Floppy support via built-in FDC
+    - SD card support via built-in SD card slot
+    - Drives A:=ROM, B:=RAM, C:=FD0, D:=FD1, E:=SD0-00, F:=SD0-01, G:=SD0-02, H:=SD0-03
+
+  N8_2312.rom for N8 2312 Z180:
+    - Assumes oscillator frequency of 18.432MHz
+    - CPU clock at X1 (18.432MHz)
+    - 512KB ROM, 1MB RAM
+    - 38.4KB serial console baud rate
+    - Basic ROM/RAM disk
+    - Floppy support via built-in FDC
+    - SD card support via built-in SD card slot
+    - Drives A:=ROM, B:=RAM, C:=FD0, D:=FD1, E:=SD0-00, F:=SD0-01, G:=SD0-02, H:=SD0-03
+
+  MK4_std.rom for Mark IV Z180 SBC:
+    - 512KB ROM, 512KB RAM
+    - 38.4KB serial console baud rate
+    - Basic ROM/RAM disk (no floppy/IDE)
+    - Onboard SD Card
+    - Onboard IDE
+    - Drives A:=ROM, B:=RAM, C:=SD0-0, D:=SD0-1, E:=IDE0-00, F:=IDE0-01
+
+  MK4_diskio3.rom for Mark IV Z180 SBC:
+    - 512KB ROM, 512KB RAM
+    - 38.4KB serial console baud rate
+    - Basic ROM/RAM disk (no floppy/IDE)
+    - Floppy support via DISKIO3
+    - IDE support via DISKIO3
+    - Drives A:=ROM, B:=RAM, C:=FD0, D:=FD1, E:=IDE0-00, F:=IDE0-01, G:=IDE0-02, H:=IDE0-03
+
+  MK4_propio.rom for Mark IV Z180 SBC:
+    - 512KB ROM, 512KB RAM
+    - 38.4KB serial console baud rate
+    - Basic ROM/RAM disk (no floppy/IDE)
+    - SD Card support via PropIO
+    - VGA console support via PropIO
+    - PS/2 Keyboard support via PropIO
+    - Drives A:=ROM, B:=RAM, C:=PRPSD0-00, D:=PRPSD0-01, E:=PRPSD0-02, F:=PRPSD0-03
+	- WARNING: You must use the RomWBW specific firmware
+	  for the Propeller found in the Support directory!
+	- NOTE: Console defaults to VGA & PS/2 Keyboard.  Short JP2
+	  (one bit input port) to use the serial port as the console.
+
+  UNA_std.rom for all UNA support platforms (SBC V1/2, Zeta, N8, Mark IV)
+    - 512KB ROM
+    - Initial baud rate is 9600, but can be configured
+    - Resources are managed dynamically by UNA BIOS
+    - Refer to UNA project for more details
