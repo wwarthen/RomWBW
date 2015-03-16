@@ -7,4 +7,5 @@ if exist *.lst del *.lst
 if exist *.exp del *.exp
 if exist *.tmp del *.tmp
 if exist *.mrk del *.mrk
+if exist *.sys del *.sys
 if exist build.inc del build.inc

@@ -151,7 +151,45 @@ custom build.
     - PPIDE support via built-in PPI
     - Drives A:=ROM, B:=RAM, C:=FD0, D:=FD1, E:=PPIDE00-0, F:=PPIDE0-01, G:=PPIDE0-02, H:=PPIDE0-03
 
+  ZETA_ppisd.rom for Zeta Z80 SBC + PPISD:
+    - 512KB ROM, 512KB RAM
+    - 38.4KB serial console baud rate
+    - Basic ROM/RAM disk
+    - Floppy support via built-in FDC
+    - PPISD support
+    - Drives A:=ROM, B:=RAM, C:=SD0-00, D:=SD0-01, E:=SD0-02, F:=SD0-03
+    
   ZETA_ppp.rom for Zeta Z80 SBC w/ ParPortProp:
+    - 512KB ROM, 512KB RAM
+    - 38.4KB serial console baud rate
+    - Basic ROM/RAM disk
+    - Floppy support via built-in FDC
+    - SD Card support via ParPortProp
+    - VGA console support via ParPortProp
+    - PS/2 Keyboard support via ParPortProp
+    - Drives A:=ROM, B:=RAM, C:=FD0, D:=FD1, E:=PPPSD0-00, F:=PPPSD0-01, F:=PPPSD0-02, G:=PPPSD0-03
+	- WARNING: You must use the RomWBW specific firmware
+	  for the Propeller found in the Support directory!
+	- NOTE: Console defaults to VGA & PS/2 Keyboard.  Short JP1 (CONFIG)
+	  to use the serial port as the console.
+
+  ZETA2_std.rom for Zeta 2 Z80 SBC:
+    - 512KB ROM, 512KB RAM
+    - 38.4KB serial console baud rate
+    - Basic ROM/RAM disk
+    - Floppy support via built-in FDC
+    - PPIDE support via built-in PPI
+    - Drives A:=ROM, B:=RAM, C:=FD0, D:=FD1, E:=PPIDE00-0, F:=PPIDE0-01, G:=PPIDE0-02, H:=PPIDE0-03
+
+  ZETA2_ppisd.rom for Zeta 2 Z80 SBC + PPISD:
+    - 512KB ROM, 512KB RAM
+    - 38.4KB serial console baud rate
+    - Basic ROM/RAM disk
+    - Floppy support via built-in FDC
+    - PPISD support
+    - Drives A:=ROM, B:=RAM, C:=SD0-00, D:=SD0-01, E:=SD0-02, F:=SD0-03
+    
+  ZETA2_ppp.rom for Zeta 2 Z80 SBC w/ ParPortProp:
     - 512KB ROM, 512KB RAM
     - 38.4KB serial console baud rate
     - Basic ROM/RAM disk

@@ -3,7 +3,6 @@
 ; ROM BOOT MANAGER
 ;
 ;   HARDWARE COLD START WILL JUMP HERE FOR INITIALIZATION
-;   REFER TO BANKEDBIOS.TXT FOR MORE INFORMATION.
 ;______________________________________________________________________________________________________________________
 ;
 ;
@@ -13,7 +12,6 @@
 ;
 	DI			; NO INTERRUPTS
 	IM	1		; INTERRUPT MODE 1
-	;LD	SP,STACK	; SP IN RAM
 	LD	SP,HBX_LOC	; SP IN RAM
 ;
 ;

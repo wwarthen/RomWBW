@@ -3,36 +3,128 @@
 ;   HBIOS
 ;==================================================================================================
 ;
-	.ORG	$1000
-;
 ; INCLUDE GENERIC STUFF
 ;
 #INCLUDE "std.asm"
+;
+	.ORG	0
+;
+;==================================================================================================
+; NORMAL PAGE ZERO SETUP, RET/RETI/RETN AS APPROPRIATE
+;==================================================================================================
+;
+	.FILL	(000H - $),0FFH		; RST 0
+	JP	HB_START
+	.DW	ROM_SIG
+	.FILL	(008H - $),0FFH		; RST 8
+	JP	HB_DISPATCH
+	.FILL	(010H - $),0FFH		; RST 10
+	RET
+	.FILL	(018H - $),0FFH		; RST 18
+	RET
+	.FILL	(020H - $),0FFH		; RST 20
+	RET
+	.FILL	(028H - $),0FFH		; RST 28
+	RET
+	.FILL	(030H - $),0FFH		; RST 30
+	RET
+	.FILL	(038H - $),0FFH		; INT
+	RETI
+	.FILL	(066H - $),0FFH		; NMI
+	RETN
+;
+ROM_SIG:
+	.DB	$76, $B5		; 2 SIGNATURE BYTES
+	.DB	1			; STRUCTURE VERSION NUMBER
+	.DB	7			; ROM SIZE (IN MULTIPLES OF 4KB, MINUS ONE)
+	.DW	NAME			; POINTER TO HUMAN-READABLE ROM NAME
+	.DW	AUTH			; POINTER TO AUTHOR INITIALS
+	.DW	DESC			; POINTER TO LONGER DESCRIPTION OF ROM
+	.DB	0, 0, 0, 0, 0, 0	; RESERVED FOR FUTURE USE; MUST BE ZERO
+;
+NAME	.DB	"ROMWBW v", BIOSVER, ", ", BIOSBLD, ", ", TIMESTAMP, 0
+AUTH	.DB	"WBW",0
+DESC	.DB	"ROMWBW v", BIOSVER, ", Copyright 2014, Wayne Warthen, GNU GPL v3", 0
+;
+	.FILL	($100 - $),$FF		; PAD REMAINDER OF PAGE ZERO
+;
+;==================================================================================================
+;   BUILD META DATA
+;==================================================================================================
+;
+	.DB	'W',~'W'		; MARKER
+	.DB	RMJ << 4 | RMN		; FIRST BYTE OF VERSION INFO
+	.DB	RUP << 4 | RTP		; SECOND BYTE OF VERSION INFO
+;
+	.DB	PLATFORM	
+	.DB	CPUFREQ		
+	.DW	RAMSIZE		
+	.DW	ROMSIZE		
+;
+	.DB	BID_COM		
+	.DB	BID_USR		
+	.DB	BID_BIOS	
+	.DB	BID_AUX		
+	.DB	BID_RAMD0	
+	.DB	BID_RAMDN	
+	.DB	BID_ROMD0	
+	.DB	BID_ROMDN	
+;
+	.FILL	($200 - $),$FF		; PAD REMAINDER OF PAGE ONE
+;
+;==================================================================================================
+;   HBIOS CORE
+;==================================================================================================
+;
 ;
 ;==================================================================================================
 ;   ENTRY VECTORS (JUMP TABLE)
 ;==================================================================================================
 ;
-	JP	HB_START
-	JP	HB_DISPATCH
+	JP	HB_START		; HBIOS INITIALIZATION
+	JP	HB_DISPATCH		; VECTOR TO DISPATCHER
 ;
 ;==================================================================================================
-;   HBIOS INTERNAL PROXY JUMP TABLE
+;   CHARACTER DEVICE LIST
 ;==================================================================================================
 ;
-; THE FOLLOWING VECTOR TABLE IS USED BY HBIOS TO CALLBACK TO THE
-; HBIOS PROXY INTERNALLY.  IT SHOULD NEVER BE CALLED OUTSIDE OF HBIOS.
-; IT IS PROVIDED SO THAT THE LOCATION OF THE HBIOS PROXY CAN BE LOCATED
-; AT ARBITRARY ADDRESSES AND THE TABLE BELOW ADJUSTED AS NEEDED.
+#DEFINE		CHRENT(DEV,UNIT) \
+#DEFCONT	.DB	DEV | UNIT
 ;
-HBXX:
-HBXX_SETBNK	JP	HBXI_SETBNK
-HBXX_GETBNK	JP	HBXI_GETBNK
-HBXX_COPY	JP	HBXI_COPY
-HBXX_XCOPY	JP	HBXI_XCOPY
+		.DB	CHRCNT
+CHRMAP:
+#IFDEF CHRLST
+		CHRLST
+#ELSE
+
+#IF ASCIENABLE
+	CHRENT(CIODEV_ASCI,0)		; ASCI0:
+	CHRENT(CIODEV_ASCI,1)		; ASCI1:
+#ENDIF
+
+#IF UARTENABLE
+#IF (UARTCNT >= 1)
+	CHRENT(CIODEV_UART,0)		; UART0:
+#ENDIF
+#IF (UARTCNT >= 2)
+	CHRENT(CIODEV_UART,1)		; UART1:
+#ENDIF
+#IF (UARTCNT >= 3)
+	CHRENT(CIODEV_UART,2)		; UART2:
+#ENDIF
+#IF (UARTCNT >= 4)
+	CHRENT(CIODEV_UART,3)		; UART3:
+#ENDIF
+#ENDIF
+
+#ENDIF
+;
+CHRCNT		.EQU	($ - CHRMAP) / 1
+		.ECHO	CHRCNT
+		.ECHO	" character devices defined.\n"
 ;
 ;==================================================================================================
-;   HBIOS INTERNAL PROXY JUMP TABLE
+;   DISK DEVICE LIST
 ;==================================================================================================
 ;
 #DEFINE		DEVENT(DEV,UNIT) \
@@ -98,7 +190,7 @@ DEVMAP:
 ;
 DEVCNT		.EQU	($ - DEVMAP) / 1
 		.ECHO	DEVCNT
-		.ECHO	" devices defined.\n"
+		.ECHO	" disk devices defined.\n"
 ;
 ;==================================================================================================
 ;   SYSTEM INITIALIZATION
@@ -121,24 +213,6 @@ HB_START:
 	LD	HL,RAMSIZE
 	CALL	PRTDEC
 	PRTS("KB$")
-;
-; INSTALL HBIOS PROXY IN UPPER MEMORY
-;
-	LD	HL,HBX_IMG	; HL := SOURCE OF HBIOS PROXY IMAGE
-	LD	DE,HBX_LOC	; DE := DESTINATION TO INSTALL IT
-	LD	BC,HBX_SIZ	; SIZE
-	LDIR			; DO THE COPY
-;
-; UDPATE THE PROXY CALLBACK VECTOR TABLE
-;
-	LD	HL,HBXI_SETBNK
-	LD	(HBXX_SETBNK + 1),HL
-	LD	HL,HBXI_GETBNK
-	LD	(HBXX_GETBNK + 1),HL
-	LD	HL,HBXI_COPY
-	LD	(HBXX_COPY + 1),HL
-	LD	HL,HBXI_XCOPY
-	LD	(HBXX_XCOPY + 1),HL
 ;
 ; DURING INITIALIZATION, CONSOLE IS ALWAYS PRIMARY SERIAL PORT
 ; POST-INITIALIZATION, WILL BE SWITCHED TO USER CONFIGURED CONSOLE
@@ -167,7 +241,7 @@ INITSYS2:
 ;
 ; SET UP THE DEFAULT DISK BUFFER ADDRESS
 ;
-	LD	HL,HBX_IMG	; DEFAULT DISK XFR BUF ADDRESS
+	LD	HL,HB_BUF	; DEFAULT DISK XFR BUF ADDRESS
 	LD	(DIOBUF),HL	; SAVE IT
 ;
 ; NOW SWITCH TO USER CONFIGURED CONSOLE
@@ -322,6 +396,13 @@ HB_DISPATCH:
 ;   C: DEVICE/UNIT
 ;
 CIO_DISPATCH:
+;
+	; CIO FUNCTIONS STARTING AT CIOGETBUF ARE COMMON FUNCTIONS
+	LD	A,B		; GET THE REQUESTED FUNCTION
+	CP	BF_CIOGETCNT	; TEST FOR FIRST OF THE COMMON FUNCTIONS
+	JR	NC,CIO_COMMON	; IF >= CIOGETCNT HANDLE AS COMMON DIO FUNCTION
+;
+	; STANDARD FUNCTIONS ARE DISPATCHED TO DRIVER
 	LD	A,C		; REQUESTED DEVICE/UNIT IS IN C
 	AND	$F0		; ISOLATE THE DEVICE PORTION
 #IF (UARTENABLE)
@@ -373,9 +454,44 @@ CIOCON:
 	LD	C,A
 	JR	CIO_DISPATCH
 ;
+; HANDLE COMMON CHARACTER FUNCTIONS (NOT DEVICE DRIVER SPECIFIC)
+;
+CIO_COMMON:
+	SUB	BF_CIOGETCNT	; FUNCTION = CIOGETCNT?
+	JR	Z,CIO_GETCNT	; YES, HANDLE IT
+	DEC	A		; FUNCTION = CIOGETINF?
+	JR	Z,CIO_GETINF	; YES, HANDLE IT
+	CALL	PANIC		; INVALID FUNCTION SPECFIED
+;
+; CHARACTER DEVICE: GET DEVICE COUNT
+;
+CIO_GETCNT:
+	LD	A,(CHRMAP - 1)	; GET DEVICE COUNT
+	LD	B,A		; PUT IT IN B
+	XOR	A		; SIGNALS SUCCESS
+	RET
+;
+; CHARACTER DEVICE: GET DEVICE INFO
+;
+CIO_GETINF:
+	LD	HL,CHRMAP - 1	; POINT TO DEVICE MAP ENTRY COUNT
+	LD	B,(HL)		; ENTRY COUNT TO B
+	LD	A,C		; INDEX TO A
+	CP	B		; CHECK INDEX AGAINST MAX VALUE (INDEX - COUNT)
+	JR	NC,CIO_GETINF1	; IF INDEX TOO HIGH, ERR
+	INC	HL		; BUMP TO START OF CHR MAP ENTRIES
+	CALL	ADDHLA		; AND POINT TO REQUESTED INDEX
+	LD	C,(HL)		; DEVICE/UNIT TO C
+	XOR	A		; SIGNAL SUCCESS
+	RET			; DONE
+
+CIO_GETINF1:
+	OR	$FF		; SIGNAL ERROR
+	RET			; RETURN
+;
 ;==================================================================================================
 ;   DISK I/O DEVICE DISPATCHER
-;==================================================================================================
+;================= =================================================================================
 ;
 ; ROUTE CALL TO SPECIFIED DISK I/O DRIVER
 ;   B: FUNCTION
@@ -466,8 +582,11 @@ DIO_GETBUF:
 ; DISK: SET BUFFER ADDRESS
 ;
 DIO_SETBUF:
-;	BIT	7,H		; IS HIGH ORDER BIT SET?
-;	CALL	Z,PANIC		; IF NOT, ADR IS IN LOWER 32K, NOT ALLOWED!!!
+	LD	A,H		; TEST HL
+	OR	L		; ... FOR ZERO
+	JR	NZ,DIO_SETBUF1	; IF NOT, PROCEED TO SET BUF ADR
+	LD	HL,HB_BUF	; IF ZERO, SET TO DEFAULT ADR
+DIO_SETBUF1:
 	LD	(DIOBUF),HL	; RECORD NEW DISK BUFFER ADDRESS
 	XOR	A		; SIGNALS SUCCESS
 	RET
@@ -502,7 +621,7 @@ DIO_DEVINF1:
 ;   REAL TIME CLOCK DEVICE DISPATCHER
 ;==================================================================================================
 ;
-; ROUTE CALL TO REAL TIME CLOCK DRIVER (NOT YET IMPLEMENTED)
+; ROUTE CALL TO REAL TIME CLOCK DRIVER
 ;   B: FUNCTION
 ;
 RTC_DISPATCH:
@@ -687,15 +806,15 @@ SYS_DISPATCH:
 	DEC	A
 	JR	Z,SYS_GETBNK	; $F1
 	DEC	A
-	JP	Z,HBXI_COPY	; $F2
+	JP	Z,SYS_COPY	; $F2
 	DEC	A
-	JP	Z,HBX_XCOPY	; $F2
+	JP	Z,SYS_XCOPY	; $F3
 	DEC	A
-	JR	Z,SYS_GETCFG	; $F3
+	JR	Z,SYS_ATTR	; $F4
 	DEC	A
-	JR	Z,SYS_SETCFG	; $F4
+	;JR	Z,SYS_XXXX	; $F5
 	DEC	A
-	JR	Z,SYS_GETVER	; $F5
+	JR	Z,SYS_GETVER	; $F6
 	CALL	PANIC		; INVALID
 ;
 ; SET ACTIVE MEMORY BANK AND RETURN PREVIOUSLY ACTIVE MEMORY BANK
@@ -704,10 +823,10 @@ SYS_DISPATCH:
 ;   CALLER MUST EXTABLISH UPPER MEMORY STACK BEFORE INVOKING THIS FUNCTION!
 ;
 SYS_SETBNK:
-	LD	A,(HBX_CURBNK)	; GET THE PREVIOUS ACTIVE MEMORY BANK
+	LD	A,(HBX_INVBNK)	; GET THE PREVIOUS ACTIVE MEMORY BANK
 	PUSH	AF		; SAVE IT
 	LD	A,C		; LOAD THE NEW BANK REQUESTED
-	LD	(HBX_CURBNK),A	; SET IT FOR ACTIVATION UPON HBIOS RETURN
+	LD	(HBX_INVBNK),A	; SET IT FOR ACTIVATION UPON HBIOS RETURN
 	POP	AF		; GET PREVIOUS BANK INTO A
 	OR	A
 	RET
@@ -715,59 +834,62 @@ SYS_SETBNK:
 ; GET ACTIVE MEMORY BANK
 ;
 SYS_GETBNK:
-	LD	A,(HBX_CURBNK)	; GET THE PREVIOUS ACTIVE MEMORY BANK
+	LD	A,(HBX_INVBNK)	; GET THE ACTIVE MEMORY BANK
 	OR	A
 	RET
 ;
-; GET ACTIVE MEMORY BANK
+; PERFORM MEMORY COPY POTENTIALLY ACROSS BANKS
 ;
 SYS_COPY:
 	PUSH	IX
 	POP	BC
-	CALL	HBXI_COPY
+	CALL	BNKCPY
 	XOR	A
 	RET
 ;
 ; SET BANKS FOR EXTENDED (INTERBANK) MEMORY COPY
 ;
 SYS_XCOPY:
-	PUSH	DE
-	POP	BC
-	CALL	HBX_XCOPY
+	LD	A,E
+	LD	(HB_SRCBNK),A
+	LD	A,D
+	LD	(HB_DSTBNK),A
 	XOR	A
 	RET
 ;
-; GET ACTIVE CONFIGURATION
-;   DE: DESTINATION TO RECEIVE CONFIGURATION DATA BLOCK
-;       MUST BE IN UPPER 32K
+; GET/SET SYSTEM ATTRIBUTE
+;   C: ATTRIBUTE ID (BIT 7 INDICATES GET/SET, ON=SET)
+;   DE: ATTRIBUTE VALUES
 ;
-SYS_GETCFG:
-	LD	HL,$0200		; SETUP SOURCE OF CONFIG DATA
-	LD	BC,$0100		; SIZE OF CONFIG DATA
-	LDIR				; COPY IT
+SYS_ATTR:
+	LD	A,C		; LOAD ATTRIB ID
+	AND	$7F		; MASK OUT GET/SET BIT
+	RLCA			; MULTIPLY BY 2 FOR WORD OFFSET
+	LD	HL,HB_ATTR	; POINT TO START OF ATTR TABLE
+	CALL	ADDHLA		; ADD THE OFFSET
+	BIT	7,C		; TEST HIGH BIT
+	JR	NZ,SYS_ATTR1	; IF SET, GO TO SET OPER
+	LD	E,(HL)		; GET LSB TO E
+	INC	HL		; NEXT BYTE
+	LD	D,(HL)		; GET MSB TO D
+	XOR	A
 	RET
-;
-; SET ACTIVE CONFIGURATION
-;   DE: SOURCE OF NEW CONFIGURATION DATA BLOCK
-;       MUST BE IN UPPER 32K
-;
-;   HBIOS IS NOT REALLY SET UP TO DYNAMICALLY RECONFIGURE ITSELF!!!
-;   THIS FUNCTION IS NOT USEFUL YET.
-;
-SYS_SETCFG:
-	LD	HL,$0200		; SETUP SOURCE OF CONFIG DATA
-	LD	BC,$0100
-	EX	DE,HL
-	LDIR
+SYS_ATTR1:
+	LD	(HL),E		; SAVE LSB
+	INC	HL		; NEXT BYTE
+	LD	(HL),D		; SAVE MSB
+	XOR	A
 	RET
 ;
 ; GET THE CURRENT HBIOS VERSION
 ;   RETURNS VERSION IN DE AS BCD
 ;     D: MAJOR VERION IN TOP 4 BITS, MINOR VERSION IN LOW 4 BITS
 ;     E: UPDATE VERION IN TOP 4 BITS, PATCH VERSION IN LOW 4 BITS
+;     L: PLATFORM ID
 ;
 SYS_GETVER:
 	LD	DE,0 | (RMJ << 12) | (RMN << 8) | (RUP << 4) | RTP
+	LD	L,PLATFORM
 	XOR	A
 	RET
 ;
@@ -786,6 +908,10 @@ CIO_IDLE:
 	CALL	Z,IDLE			; IF ZERO, DO IDLE PROCESSING
 	POP	AF			; RECOVER AF
 	RET
+;
+; WRAPPER FOR CALL TO HB_BNKCPY FOR USE BY INTERNAL HBIOS FUNCTIONS
+;
+BNKCPY	.EQU	HB_BNKCPY
 ;
 ;==================================================================================================
 ;   DEVICE DRIVERS
@@ -1000,75 +1126,113 @@ HSTSEC		.DW	0		; SECTOR IN BUFFER
 CUREMU		.DB	DEFEMU		; CURRENT EMULATION
 CURVDA		.DB	DEFVDA		; CURRENT VDA TARGET FOR EMULATION
 ;
-DIOBUF		.DW	HBX_IMG		; PTR TO 1024 BYTE DISK XFR BUFFER
+DIOBUF		.DW	HB_BUF		; PTR TO 1024 BYTE DISK XFR BUFFER
+;
+BOOTDRV		.DW	0		; BOOT DRIVE / LU
 ;
 STR_BANNER	.DB	"N8VEM HBIOS v", BIOSVER, ", ", BIOSBLD, ", ", TIMESTAMP, "$"
 STR_PLATFORM	.DB	PLATFORM_NAME, "$"
 ;
+HB_ATTR:	; ATTRIBUTE TABLE, 128 WORD VALUES
+AT_BOOTVOL	.DW	0		; BOOT VOLUME, MSB=DEV/UNIT, LSB=LU
+AT_BOOTROM	.DW	0		; BANK ID OF ROM PAGE BOOTED
+		.FILL	HB_ATTR + 256 - $,0	; FILL OUT UNUSED ENTRIES
+;
 ;==================================================================================================
-;   FILL REMAINDER OF HBIOS
+;   FILL REMAINDER OF HBIOS (TO START OF 1K PHYSICAL DISK BUFFER AREA)
 ;==================================================================================================
 ;
-SLACK		.EQU	(HBX_LOC - $8000 - $)
-		.FILL	SLACK,0FFH
+SLACK		.EQU	(HBBUF_IMG - $)
+		.FILL	SLACK,$FF
 ;
 		.ECHO	"HBIOS space remaining: "
 		.ECHO	SLACK
 		.ECHO	" bytes.\n"
 ;
+HB_BUF		.EQU	$
+;
 ;==================================================================================================
-;   HBIOS UPPER MEMORY STUB
+;   HBIOS UPPER MEMORY PROXY
 ;==================================================================================================
 ;
 ; THE FOLLOWING CODE IS RELOCATED TO THE TOP OF MEMORY TO HANDLE INVOCATION DISPATCHING
+; AFTER RELOCATION THIS AREA (1K) IS REUSED AS THE HBIOS PHYSICAL DISK READ/WRITE BUFFER 
 ;
-HBX_IMG		.EQU	$
-		.ORG	HBX_LOC
+	.FILL	(HBX_IMG - $)	; FILL TO START OF PROXY IMAGE START
+	.ORG	HBX_LOC		; ADJUST FOR RELOCATION
+;
+; MEMORY LAYOUT:
+;   HBIOS PROXY CODE		$FE00 (256 BYTES)
+;   INTERRUPT VECTORS		$FF00 (32 BYTES, 16 ENTRIES)
+;   HBIOS PROXY COPY BUFFER	$FF20 (128 BYTES)
+;   HBIOS PROXY PRIVATE STACK	$FFA0 (64 BYTES, 32 ENTRIES)
+;   HBIOS PROXY MGMT BLOCK	$FFE0 (32 BYTES)
+;
+; DEFINITIONS
+;
+HBX_CODSIZ	.EQU	$100	; 256 BYTE CODE SPACE
+HBX_IVTSIZ	.EQU	$20	; VECTOR TABLE SIZE (16 ENTRIES)
+HBX_BUFSIZ	.EQU	$80	; INTERBANK COPY BUFFER
+HBX_STKSIZ	.EQU	$40	; PRIVATE STACK SIZE
+;
+; HBIOS IDENTIFICATION DATA BLOCK
+;
+HBX_IDENT:
+	.DB	'W',~'W'	; MARKER
+	.DB	RMJ << 4 | RMN	; FIRST BYTE OF VERSION INFO
+	.DB	RUP << 4 | RTP	; SECOND BYTE OF VERSION INFO
 ;
 ;==================================================================================================
-;   HBIOS JUMP TABLE
+;   HBIOS ENTRY FOR RST 08 PROCESSING
 ;==================================================================================================
 ;
-	JP	HBX_INIT
-	JP	HBX_INVOKE
-	JP	HBX_SETBNK
-	JP	HBX_GETBNK
-	JP	HBX_COPY
-	JP	HBX_XCOPY
-	JP	HBX_FRGETB
-	JP	HBX_FRGETW
-	JP	HBX_FRPUTB
-	JP	HBX_FRPUTW
+HBX_INVOKE:
+	LD	(HBX_STKSAV),SP	; SAVE ORIGINAL STACK FRAME
+	LD	SP,HBX_STACK	; SETUP NEW STACK FRAME
+
+	LD	A,(HB_CURBNK)	; GET CURRENT BANK
+	LD	(HBX_INVBNK),A	; SETUP TO RESTORE AT EXIT
+
+	LD	A,BID_BIOS	; HBIOS BANK
+	CALL	HBX_BNKSEL	; SELECT IT
+
+	CALL	HB_DISPATCH	; CALL HBIOS FUNCTION DISPATCHER
+
+	PUSH	AF		; SAVE AF (FUNCTION RETURN)
+	LD	A,$FF		; LOAD ORIGINAL BANK ($FF IS REPLACED AT ENTRY)
+HBX_INVBNK	.EQU	$ - 1
+	CALL	HBX_BNKSEL	; SELECT IT
+	POP	AF		; RESTORE AF
+
+	LD	SP,0		; RESTORE ORIGINAL STACK FRAME
+HBX_STKSAV	.EQU	$ - 2
+
+	RET			; RETURN TO CALLER
 ;
-;==================================================================================================
-;   HBIOS INITIALIZATION
-;==================================================================================================
+;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+;; SETBNK - Switch Memory Bank to Bank in A.
+;;   Preserve all Registers including Flags.
+;;   Does NOT update current bank.
+;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;
-; SETUP RST 08 VECTOR TO HANDLE MAIN BIOS FUNCTIONS
+HBX_BNKSEL:
+	LD	(HB_CURBNK),A	; RECORD NEW CURRENT BANK
 ;
-HBX_INIT:
-	LD	A,$C3		; $C3 = JP
-	LD	($08),A
-	LD	HL,HBX_INVOKE
-	LD	($09),HL
-	RET
-;
-;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-; SETBNK - Switch Memory Bank to Bank in A and show as current.
-;  Must preserve all Registers including Flags.
-;  All Bank Switching MUST be done by this routine
-;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-;
-HBX_SETBNK:
-	LD	(HBX_CURBNK),A
-;
-; Enter at HBXI_SETBNK to set bank temporarily and avoid
-; updating the "current" bank.
-;
-HBXI_SETBNK:
 #IF ((PLATFORM == PLT_N8VEM) | (PLATFORM == PLT_ZETA))
 	OUT	(MPCL_ROM),A
 	OUT	(MPCL_RAM),A
+#ENDIF
+#IF (PLATFORM == PLT_ZETA2)
+	BIT	7,A
+	JR	Z,HBX_ROM		; JUMP IF IT IS A ROM PAGE
+        RES     7,A			; RAM PAGE REQUESTED: CLEAR ROM BIT
+        ADD	A,16			; ADD 16 x 32K - RAM STARTS FROM 512K 
+;
+HBX_ROM:
+	RLCA				; TIMES 2 - GET 16K PAGE INSTEAD OF 32K
+	OUT	(MPGSEL_0),A		; BANK_0: 0K - 16K
+	INC	A
+	OUT	(MPGSEL_1),A		; BANK_1: 16K - 32K
 #ENDIF
 #IF (PLATFORM == PLT_N8)
 	BIT	7,A
@@ -1094,6 +1258,11 @@ HBX_ROM:
 ;
 #ENDIF
 #IF (PLATFORM == PLT_MK4)
+;	BIT	7,A			; RAM?
+;	JR	Z,HBX_BNKSEL1		; IF NOT, BYPASS
+;	XOR	%10010000		; CLEAR BIT 8, SET BIT 4 TO ADDRESS RAM
+;
+HBX_BNKSEL1:
 	RLCA
 	RLCA
 	RLCA
@@ -1101,29 +1270,12 @@ HBX_ROM:
 #ENDIF
 	RET
 ;
-;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-; GETBNK - Get current memory bank and return in A.
-;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-;
-HBX_GETBNK:
-HBXI_GETBNK:
-	LD	A,(HBX_CURBNK)
-	RET
-;
-;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-;	Set Banks for Inter-Bank Xfer.  Save all Registers.
-;  B = Destination Bank, C = Source Bank
-;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-;
-HBX_XCOPY:
-HBXI_XCOPY:
-	LD	(HBX_SRCBNK),BC	; SETS BOTH SRCBNK AND DSTBNK
-	RET
-;
 ;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ; Copy Data - Possibly between banks.  This resembles CP/M 3, but
 ;  usage of the HL and DE registers is reversed.
-; Enter: HL = Source Address
+; Caller MUST ensure stack is already in high memory.
+; Enter:
+;        HL = Source Address
 ;	 DE = Destination Address
 ;	 BC = Number of bytes to copy
 ; Exit : None
@@ -1131,233 +1283,121 @@ HBXI_XCOPY:
 ;
 ;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;
-; Primary entry point activates private stack while doing work.  The
-; secondary entry point MUST be used by internal HBIOS code/drivers
-; because our private stack is already active!
-;
-HBX_COPY:
-	LD	(HBX_STKSAV),SP	; Save current stack
-	LD	SP,HBX_STACK	; Activate our private stack
-	CALL	HBX_COPY1	; Do the work with private stack active
-	LD	SP,(HBX_STKSAV)	; Back to original stack
-	LD	A,(HBX_CURBNK)	; Get the "current" bank
-	JR	HBXI_SETBNK	; Activate current bank and return
-;
-; Secondary entry point HBXI_COPY is for use internally by HBIOS and
-; assumes a valid stack already exists in upper 32K.  It also ignores
-; the "current" bank and terminates with HBIOS bank active.
-;
-HBXI_COPY:
-	CALL	HBX_COPY1
-	LD	A,BID_HB	; Get the HBIOS bank
-	JR	HBXI_SETBNK	; .. activate and return
-;
-;
-;
-HBX_COPY1:
+HBX_BNKCPY:
+	; Save current bank to restore at end
+	LD	A,(HB_CURBNK)
+	LD	(HBX_CPYBNK),A
+
 	; Setup for copy loop
-	LD	(HBX_SRCADR),HL	; Init working source adr
-	LD	(HBX_DSTADR),DE	; Init working dest adr 
-	LD	H,B		; Move bytes to copy from BC...
-	LD	L,C		;   to HL to use as byte counter
-
-HBX_COPY2:	; Copy loop
-	INC	L		; Set ZF to indicate...
-	DEC	L		;   if a partial page copy is needed
-	LD	BC,$100		; Assume a full page copy, 100H bytes
-	JR	Z,HBX_COPY3	; If full page copy, go do it
-	DEC	B		; Otherwise, setup for partial page copy
-	LD	C,L		; by making BC := 0
-
-HBX_COPY3:
+	LD	(HB_SRCADR),HL	; Init working source adr
+	LD	(HB_DSTADR),DE	; Init working dest adr 
+	LD	H,B		; Move bytes to copy from BC
+	LD	L,C		; ... to HL to use as byte counter
+;
+HBX_BNKCPY2:
+	; Copy loop
+	LD	A,L		; Low byte of count to A
+	AND	$7F		; Isolate bits relevant to 128 byte buf
+	LD	BC,$80		; Assume full buf copy
+	JR	Z,HBX_BNKCPY3	; If full buf copy, go do it
+	LD	C,A		; Otherwise, BC := bytes to copy
+;
+HBX_BNKCPY3:
 	PUSH	HL		; Save bytes left to copy
-	CALL	HBX_COPY4	; Do it
+	CALL	HBX_BNKCPY4	; Do it
 	POP	HL		; Recover bytes left to copy
 	XOR	A		; Clear CF
 	SBC	HL,BC		; Reflect bytes copied in HL
-	JR	NZ,HBX_COPY2	; If any left, then loop
+	JR	NZ,HBX_BNKCPY2	; If any left, then loop
+	LD	A,$FF		; Load original bank ($FF is replaced at entry)
+HBX_CPYBNK	.EQU	$ - 1
 
-	LD	HL,(HBX_DEFBNK)	; Get TPA Bank #
-	LD	H,L		; .to both H and L
-	LD	(HBX_SRCBNK),HL	; ..set Source & Destination Bank # to default
-
-	RET			; Done
-
-HBX_COPY4:
-	; Switch to source bank
-	LD	A,(HBX_SRCBNK)	; Get source bank
-	CALL	HBXI_SETBNK	; Set bank without making it current
-
-	; Copy BC bytes from HL -> BUF
-	; Allow HL to increment
+	JR	HBX_BNKSEL	; Select and return
+;
+HBX_BNKCPY4:	; Switch to source bank
+	LD	A,(HB_SRCBNK)	; Get source bank
+	CALL	HBX_BNKSEL	; Set bank without making it current
+;
+	; Copy BC bytes from HL -> BUF, allow HL to increment
 	PUSH	BC		; Save copy length
-	LD	HL,(HBX_SRCADR)	; Point to source adr
+	LD	HL,(HB_SRCADR)	; Point to source adr
 	LD	DE,HBX_BUF	; Setup buffer as interim destination
 	LDIR			; Copy BC bytes: src -> buffer
-	LD	(HBX_SRCADR),HL	; Update source adr
+	LD	(HB_SRCADR),HL	; Update source adr
 	POP	BC		; Recover copy length
-	
+;	
 	; Switch to dest bank
-	LD	A,(HBX_DSTBNK)	; Get destination bank
-	CALL	HBXI_SETBNK	; Set bank without making it current
-
-	; Copy BC bytes from BUF -> HL
-	; Allow DE to increment
+	LD	A,(HB_DSTBNK)	; Get destination bank
+	CALL	HBX_BNKSEL	; Set bank without making it current
+;
+	; Copy BC bytes from BUF -> HL, allow DE to increment
 	PUSH	BC		; Save copy length
 	LD	HL,HBX_BUF	; Use the buffer as source now
-	LD	DE,(HBX_DSTADR)	; Setup final destination for copy
+	LD	DE,(HB_DSTADR)	; Setup final destination for copy
 	LDIR			; Copy BC bytes: buffer -> dest
-	LD	(HBX_DSTADR),DE	; Update dest adr
+	LD	(HB_DSTADR),DE	; Update dest adr
 	POP	BC		; Recover copy length
-
+;
 	RET			; Done
 ;
-;==================================================================================================
-;   HBIOS ENTRY FOR RST 08 PROCESSING
-;==================================================================================================
+; Call a routine in another bank saving and restoring the original bank.
+; Caller MUST ensure stack is already in high memory.
+; On input A=target bank, HL=target address
 ;
-; MARKER IMMEDIATELY PRECEDES INVOKE ROUTINE ADDRESS
-;
-HBX_MARKER:
-	.DB	'W',~'W'	; IDENTIFIES HBIOS
-;
-; ENTRY POINT FOR BIOS FUNCTIONS (TARGET OF RST 08)
-;
-HBX_INVOKE:
-	LD	(HBX_STKSAV),SP	; SAVE ORIGINAL STACK FRAME
-	LD	SP,HBX_STACK	; SETUP NEW STACK FRAME
-
-	LD	A,BID_HB	; HBIOS BANK
-	CALL	HBXI_SETBNK	; SELECT IT
-
-	CALL	HB_DISPATCH	; CALL HBIOS FUNCTION DISPATCHER
-
-	PUSH	AF		; SAVE AF (FUNCTION RETURN)
-	LD	A,(HBX_CURBNK)	; GET ENTRY BANK
-	CALL	HBXI_SETBNK	; SELECT IT
-	POP	AF		; RESTORE AF
-
-	LD	SP,(HBX_STKSAV)	; RESTORE ORIGINAL STACK FRAME
-
-	RET			; RETURN TO CALLER
-;
-;==================================================================================================
-;   HBIOS INTERBANK MEMORY COPY BUFFER
-;==================================================================================================
-;
-	.FILL	$FE00 - $,$FF	; FILL TO START OF BUFFER PAGE
-HBX_BUF	.FILL	$100,0		; INTER-BANK COPY BUFFER
-;
-;==================================================================================================
-;   HBIOS INTERRUPT VECTOR TABLE
-;==================================================================================================
-;
-	.FILL	$FF00 - $,$FF	; FILL TO START OF LAST PAGE
-;
-; AREA RESERVED FOR UP TO 16 INTERRUPT VECTOR ENTRIES (MODE 2)
-;
-HBX_IVT:
-	.FILL	$20,$FF
-;
-;==================================================================================================
-;	Load  A,(HL)  from  Alternate  Bank  (in Reg C)
-;==================================================================================================
-;
-HBX_FRGETB:
-	LD	(HBX_STKSAV),SP	; SAVE ORIGINAL STACK FRAME
-	LD	SP,HBX_STACK	; SETUP NEW STACK FRAME
-	PUSH	BC
-	LD	A,C
-	DI
-	CALL	HBXI_SETBNK	; SELECT IT
-	LD	C,(HL)
-	LD	A,(HBX_CURBNK)
-	CALL	HBXI_SETBNK	; SELECT IT
-	EI
-	LD	A,C
-	POP	BC
-	LD	SP,(HBX_STKSAV)	; RESTORE ORIGINAL STACK FRAME
+HBX_BNKCALL:
+	LD	(HBX_TGTBNK),A	; stuff target bank to call into code below
+	LD	(HBX_TGTADR),HL	; stuff address to call into code below
+	LD	A,(HB_CURBNK)	; get current bank
+	PUSH	AF		; save for return
+HBX_TGTBNK	.EQU	$ + 1
+	LD	A,$FF		; load bank to call ($ff overlaid at entry)
+	CALL	HBX_BNKSEL	; activate the new bank
+HBX_TGTADR	.EQU	$ + 1
+	CALL	$FFFF		; call routine ($FFFF is overlaid above)
+	EX	(SP),HL		; save hl and get bank to restore in hl
+	PUSH	AF		; save af
+	LD	A,H		; bank to restore to a
+	CALL	HBX_BNKSEL	; restore it
+	POP	AF		; recover af
+	POP	HL		; recover hl
 	RET
 ;
-;==================================================================================================
-;	Load  DE,(HL)  from  Alternate  Bank
-;==================================================================================================
+; FILLER FOR UNUSED HBIOS PROXY CODE SPACE
+; PAD TO START OF INTERRUPT VECTOR TABLE
 ;
-HBX_FRGETW:
-	LD	(HBX_STKSAV),SP	; SAVE ORIGINAL STACK FRAME
-	LD	SP,HBX_STACK	; SETUP NEW STACK FRAME
-	LD	A,C
-	DI
-	CALL	HBXI_SETBNK	; SELECT IT
-	LD	E,(HL)
-	INC	HL
-	LD	D,(HL)
-	DEC	HL
-	LD	A,(HBX_CURBNK)
-	CALL	HBXI_SETBNK	; SELECT IT
-	EI
-	LD	SP,(HBX_STKSAV)	; RESTORE ORIGINAL STACK FRAME
-	RET
-;
-;==================================================================================================
-;	Load  (HL),A  to  Alternate  Bank  (in Reg C)
-;==================================================================================================
-;
-HBX_FRPUTB:	
-	LD	(HBX_STKSAV),SP	; SAVE ORIGINAL STACK FRAME
-	LD	SP,HBX_STACK	; SETUP NEW STACK FRAME
-	PUSH	BC
-	LD	B,A
-	LD	A,C
-	DI
-	CALL	HBXI_SETBNK	; SELECT IT
-	LD	(HL),B
-	LD	A,(HBX_CURBNK)
-	CALL	HBXI_SETBNK	; SELECT IT
-	EI
-	POP	BC
-	LD	SP,(HBX_STKSAV)	; RESTORE ORIGINAL STACK FRAME
-	RET
-;
-;==================================================================================================
-;	Load  (HL),DE  to  Alternate  Bank
-;==================================================================================================
-;
-HBX_FRPUTW:	
-	LD	(HBX_STKSAV),SP	; SAVE ORIGINAL STACK FRAME
-	LD	SP,HBX_STACK	; SETUP NEW STACK FRAME
-	LD	A,C
-	DI
-	CALL	HBXI_SETBNK	; SELECT IT
-	LD	(HL),E
-	INC	HL
-	LD	(HL),D
-	DEC	HL
-	LD	A,(HBX_CURBNK)
-	CALL	HBXI_SETBNK	; SELECT IT
-	EI
-	LD	SP,(HBX_STKSAV)	; RESTORE ORIGINAL STACK FRAME
-	RET
-;
-; PRIVATE DATA
-;
-HBX_STKSAV	.DW	0		; Saved stack pointer during HBIOS calls
-HBX_CURBNK	.DB	BID_USR		; Currently active memory bank
-HBX_SAVBNK	.DB	0		; Place to save entry bank during HB processing
-HBX_DEFBNK	.DB	BID_USR		; Default bank number
-HBX_SRCBNK	.DB	BID_USR		; Copy Source Bank #
-HBX_DSTBNK	.DB	BID_USR		; Copy Destination Bank #
-HBX_SRCADR	.DW	0		; Copy Source Address
-HBX_DSTADR	.DW	0		; Copy Destination Address
-;
-; PRIVATE STACK
-;
-HBX_STKSIZ	.EQU	(HBX_END - $ - 2)
-		.ECHO	"STACK space remaining: "
-		.ECHO	HBX_STKSIZ
+HBX_SLACK	.EQU	(HBX_LOC + HBX_CODSIZ - $)
+		.ECHO	"HBIOS PROXY space remaining: "
+		.ECHO	HBX_SLACK
 		.ECHO	" bytes.\n"
+		.FILL	HBX_SLACK,$FF
+;
+; HBIOS INTERRUPT VECTOR TABLE (16 ENTRIES)
+;
+HBX_IVT		.FILL	HBX_IVTSIZ,$FF
+;
+; INTERBANK COPY BUFFER (128 BYTES)
+;
+HBX_BUF		.FILL	HBX_BUFSIZ,0
+;
+; PRIVATE STACK (64 BYTES, 32 ENTRIES)
 ;
 		.FILL	HBX_STKSIZ,$FF
 HBX_STACK	.EQU	$
-		.DW	HBX_MARKER	; POINTER TO HBIOS MARKER
-		.END
+;
+; HBIOS PROXY MGMT BLOCK (TOP 32 BYTES)
+;
+	.DB	BID_BOOT	; CURRENTLY ACTIVE LOW MEMORY BANK ID
+	.DB	$FF		; DEPRECATED!!!
+	.DW	0		; BNKCPY SOURCE ADDRESS
+	.DB	BID_USR		; BNKCPY SOURCE BANK ID
+	.DW	0		; BNKCPY DESTINATION ADDRESS
+	.DB	BID_USR		; BNKCPY DESTINATION BANK ID
+	.FILL	8,0		; FILLER, RESERVED FOR FUTURE HBIOS USE
+	JP	HBX_INVOKE	; FIXED ADR ENTRY FOR HBX_INVOKE (ALT FOR RST 08)
+	JP	HBX_BNKSEL	; FIXED ADR ENTRY FOR HBX_BNKSEL
+	JP	HBX_BNKCPY	; FIXED ADR ENTRY FOR HBX_BNKCPY
+	JP	HBX_BNKCALL	; FIXED ADR ENTRY FOR HBX_BNKCALL
+	.DW	HBX_IDENT	; ADDRESS OF HBIOX PROXY START
+	.DW	HBX_IDENT	; ADDRESS OF HBIOS IDENT INFO DATA BLOCK
+;
+	.END
