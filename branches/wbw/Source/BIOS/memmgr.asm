@@ -1,14 +1,14 @@
 ;==================================================================================================
-;   MEMORY PAGE MANAGEMENT
+;   MEMORY BANK MANAGEMENT
 ;==================================================================================================
 ;
-; PAGE THE REQUESTED 32K BLOCK OF RAM/ROM INTO THE LOWER 32K OF CPU ADDRESS SPACE.
-; LOAD DESIRED PAGE INDEX INTO A AND CALL PGSEL.
+; SELECT THE REQUESTED 32K BANK OF RAM/ROM INTO THE LOWER 32K OF CPU ADDRESS SPACE.
+; LOAD DESIRED BANK INDEX INTO A AND CALL BNKSEL.
 ;______________________________________________________________________________________________________________________
 ;
 
 #IF ((PLATFORM == PLT_N8VEM) | (PLATFORM == PLT_ZETA))
-PGSEL:
+BNKSEL:
 	OUT	(MPCL_ROM),A
 	OUT	(MPCL_RAM),A
 	RET
@@ -16,13 +16,34 @@ PGSEL:
 #ENDIF
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; ZETA SBC V2 USES 16K PAGES. ANY PAGE CAN BE MAPPED TO ONE OF FOUR BANKS:
+; BANK_0: 0K - 16K; BANK_1: 16K - 32K; BANK_2: 32K - 48K; BANK_3: 48K - 64K
+; THIS BNKSEL EMULATES N8VEM / ZETA BEHAVIOR BY SETTING BANK_0 and BANK_1 TO
+; TWO CONSECUTIVE PAGES
+
+#IF (PLATFORM == PLT_ZETA2)
+BNKSEL:
+	BIT	7,A
+	JR	Z,BNKSEL_ROM             ; JUMP IF IT IS A ROM PAGE
+        RES     7,A			; RAM PAGE REQUESTED: CLEAR ROM BIT
+        ADD	A,16			; ADD 16 x 32K - RAM STARTS FROM 512K 
+;
+BNKSEL_ROM:
+	RLCA				; TIMES 2 - GET 16K PAGE INSTEAD OF 32K
+	OUT	(MPGSEL_0),A		; BANK_0: 0K - 16K
+	INC	A
+	OUT	(MPGSEL_1),A		; BANK_1: 16K - 32K
+	RET
+#ENDIF
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 #IF (PLATFORM == PLT_N8)
-PGSEL:
+BNKSEL:
 	BIT	7,A
-	JR	Z,PGSEL_ROM
+	JR	Z,BNKSEL_ROM
 ;
-PGSEL_RAM:
+BNKSEL_RAM:
 	RES	7,A
 	RLCA
 	RLCA
@@ -32,7 +53,7 @@ PGSEL_RAM:
 	OUT0	(ACR),A
 	RET
 ;
-PGSEL_ROM:
+BNKSEL_ROM:
 	OUT0	(RMAP),A
 	XOR	A
 	OUT0	(CPU_BBR),A
@@ -45,7 +66,7 @@ PGSEL_ROM:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 #IF (PLATFORM == PLT_MK4)
-PGSEL:
+BNKSEL:
 	RLCA
 	RLCA
 	RLCA
@@ -59,7 +80,7 @@ PGSEL:
 ;       ALL FUNCTIONALITY IS NULLED OUT HERE.
 ;
 #IF (PLATFORM == PLT_S2I)
-PGSEL:
+BNKSEL:
 	RET
 #ENDIF
 

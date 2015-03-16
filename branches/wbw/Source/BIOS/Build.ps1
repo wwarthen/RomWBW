@@ -1,10 +1,10 @@
-param([string]$Platform = "", [string]$Config = "", [string]$RomSize = "", [string]$RomName = "")
+param([string]$Platform = "", [string]$Config = "", [string]$RomSize = "512", [string]$RomName = "")
 
 $Platform = $Platform.ToUpper()
 while ($true)
 {
-	if (($Platform -eq "N8VEM") -or ($Platform -eq "ZETA") -or ($Platform -eq "N8") -or ($Platform -eq "MK4") -or ($Platform -eq "UNA") -or ($Platform -eq "S2I") -or ($Platform -eq "S100")) {break}
-	$Platform = (Read-Host -prompt "Platform [N8VEM|ZETA|N8|MK4|UNA|S2I|S100]").Trim().ToUpper()
+	if (($Platform -eq "N8VEM") -or ($Platform -eq "ZETA") -or ($Platform -eq "ZETA2") -or ($Platform -eq "N8") -or ($Platform -eq "MK4") -or ($Platform -eq "UNA") -or ($Platform -eq "S2I") -or ($Platform -eq "S100")) {break}
+	$Platform = (Read-Host -prompt "Platform [N8VEM|ZETA|ZETA2|N8|MK4|UNA|S2I|S100]").Trim().ToUpper()
 }
 
 while ($true)
@@ -42,8 +42,8 @@ $env:TASMTABS = $TasmPath
 $env:PATH = $TasmPath + ';' + $CpmToolsPath + ';' + $env:PATH
 
 $OutDir = "../../Output"
-if ($Platform -eq "UNA") {$RomFmt = "una_rom${RomSize}"} else {$RomFmt = "wbw_rom${RomSize}"}
-if ($Platform -eq "UNA") {$BlankFile = "blank${RomSize}KB-UNA.dat"} else {$BlankFile = "blank${RomSize}KB.dat"}
+$RomFmt = "wbw_rom${RomSize}"
+$BlankROM = "Blank${RomSize}KB.dat"
 $RomDiskFile = "RomDisk.tmp"
 $RomFile = "${OutDir}/${RomName}.rom"
 
@@ -77,8 +77,8 @@ Function Concat($InputFileList, $OutputFile)
 ;
 #DEFINE		TIMESTAMP	${TimeStamp}
 ;
-ROMSIZE		.EQU		${ROMSize}			; SIZE OF ROM IN KB
 PLATFORM	.EQU		PLT_${Platform}		; HARDWARE PLATFORM
+ROMSIZE		.EQU		${ROMSize}		; SIZE OF ROM IN KB
 ;
 ; INCLUDE PLATFORM SPECIFIC DEVICE DEFINITIONS
 ;
@@ -98,9 +98,12 @@ Asm 'cbios' "-dBLD_SYS=SYS_CPM" -Output "cbios_cpm.bin"
 Asm 'cbios' "-dBLD_SYS=SYS_ZSYS" -Output "cbios_zsys.bin"
 Asm 'dbgmon'
 Asm 'prefix'
-Asm 'fill1k'
 Asm 'romldr'
-if ($Platform -ne "UNA") {Asm 'hbios'}
+if ($Platform -ne "UNA")
+{
+	Asm 'setup'
+	Asm 'hbios'
+}
 
 # Generate result files using components above
 
@@ -112,13 +115,13 @@ Concat 'zcpr.bin','zsdos.bin','cbios_zsys.bin' 'zsys.bin'
 Concat 'prefix.bin','cpm.bin' 'cpm.sys'
 Concat 'prefix.bin','zsys.bin' 'zsys.sys'
 
-Concat 'romldr.bin', 'zsys.bin','fill1k.bin','dbgmon.bin','cpm.bin','fill1k.bin' osimg.bin
+Concat 'romldr.bin', 'dbgmon.bin','cpm.bin','zsys.bin' osimg.bin
 
 # Create the RomDisk image
 
 "Building ${RomSize}KB ${RomName} ROM disk data file..."
 
-Copy-Item $BlankFile $RomDiskFile
+Copy-Item $BlankROM $RomDiskFile
 cpmcp -f $RomFmt $RomDiskFile ../RomDsk/ROM_${RomSize}KB/*.* 0:
 cpmcp -f $RomFmt $RomDiskFile ../RomDsk/${Platform}_${Config}/*.* 0:
 cpmcp -f $RomFmt $RomDiskFile ../Apps/*.com 0:
@@ -133,7 +136,7 @@ if ($Platform -eq "UNA")
 }
 else 
 {
-	Concat 'hbios.bin','osimg.bin',$RomDiskFile $RomFile
+	Concat 'setup.bin', 'hbios.bin','osimg.bin','hbios.bin',$RomDiskFile $RomFile
 }
 
 # Cleanup

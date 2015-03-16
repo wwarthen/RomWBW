@@ -91,18 +91,18 @@ osbin	.equ	osimg + hdrsiz	; Start of actual OS binary (after header)
 ;
 bfgbnk	.equ	$F1		; HBIOS Get Bank function
 bfver	.equ	$F6		; HBIOS Get Version function
-sigptr	.equ	hbimg + 4	; HBIOS signature pointer
+sigptr	.equ	hbimg + 3	; HBIOS signature pointer
 hbmrk	.equ	hbimg + $100	; HBIOS marker
 hbver	.equ	hbimg + $102	; HBIOS version
 hbplt	.equ	hbimg + $104	; HBIOS platform
 bidusr	.equ	hbimg + $10B	; User bank id
 bidbios	.equ	hbimg + $10C	; BIOS bank id
-pxyimg	.equ	hbimg + $7C00	; Proxy image location
-pxyloc	.equ	$FC00		; Proxy run location
-pxysiz	.equ	$0400		; Proxy size
-srcbnk	.equ	$FFFB		; Address of bank copy source bank id
-dstbnk	.equ	$FFFC		; Address of bank copy destination bank id
-curbnk	.equ	$FFFD		; Address of current bank id in hbios proxy
+pxyimg	.equ	hbimg + $7E00	; Proxy image location
+pxyloc	.equ	$FE00		; Proxy run location
+pxysiz	.equ	$0200		; Proxy size
+srcbnk	.equ	$FFE4		; Address of bank copy source bank id
+dstbnk	.equ	$FFE7		; Address of bank copy destination bank id
+curbnk	.equ	$FFE0		; Address of current bank id in hbios proxy
 hbxbnk	.equ	$FFF3		; Bank select function entry address
 hbxcpy	.equ	$FFF6		; Bank copy function entry address
 ;
@@ -552,7 +552,7 @@ initbio:
 	; initialize HBIOS
 	ld	a,(bidbios)	; get bios bank
 	call	hbxbnk		; ... and activate it
-	call	$1000		; call bios init entry point
+	call	$0000		; call bios init entry point
 	ld	a,(tpabnk)	; get active tpa bank id
 	call	hbxbnk		; ... and activate it
 ;

@@ -11,8 +11,8 @@ set ZXBINDIR=%TOOLS%/cpm/bin/
 set ZXLIBDIR=%TOOLS%/cpm/lib/
 set ZXINCDIR=%TOOLS%/cpm/include/
 
-zx MAC -stdio -ZCPR.ASM -$PO
-zx MLOAD25 -stdio -ZCPR.BIN=ZCPR.HEX
+zx MAC -ZCPR.ASM -$PO
+zx MLOAD25 -ZCPR.BIN=ZCPR.HEX
 
-zx MAC -stdio -BDLOC.ASM -$PO
-zx MLOAD25 -stdio -BDLOC.COM=BDLOC.HEX
+zx MAC -BDLOC.ASM -$PO
+zx MLOAD25 -BDLOC.COM=BDLOC.HEX
