@@ -3,34 +3,44 @@ Building a Custom ROM
 
 At present, the build environment assumes you are running
 a current version of Microsoft Windows (either 32-bit or
-64-bit).
+64-bit).  Additionally, you will need Microsoft PowerShell.
+PowerShell is included in all distributions of Microsoft
+Windows starting with Vista.  It is available as a free
+download for Windows XP from Microsoft
 
-If you are using Linux, David Giles has contributed a Linux
-makefile that should work for you.  Please read the
-LinuxBuild.txt file for more information.
+Other than PowerShell, all required tools are included in
+the distribution.  You should not need anything other than
+what comes as part of Windows or as part of the distribution.
 
-All required tools are included in the distribution.  You
-should not need anything other than what comes as part of
-Windows or as part of the distribution.
+In summary, the process involves the 4 steps below.  You must
+configure PowerShell prior to these steps, but this only needs
+to be done once.
 
-In summary, the process involves the 4 steps below:
+The basic steps to create a custom ROM are:
 
   1) Create/update configuration file
 
   2) Update/Add/Delete any files you want incorporated in
      the ROM Disk
 
-  3) Run the build script (or makefile if you prefer) and
+  3) Run the build scripts and
      confirm there are no errors.
 
   4) Burn the resultant ROM image and try it.
 
-The process is really very simple.  In fact, you can
-essentially skip steps 1 & 2 if you want to try simply
-building one of the existing configurations.
+I strongly recommend that you initially SKIP steps
+1 & 2.  Just try steps 3 & 4 to make sure you are
+able to build a ROM and test it in your hardware.
 
 Each of the 4 steps above is described in more detail
 below.
+
+Acquiring the Distribution
+--------------------------
+
+Preparing PowerShell
+--------------------
+
 
 1. Create/Update Configuration File
 -----------------------------------

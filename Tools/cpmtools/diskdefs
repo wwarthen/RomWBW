@@ -271,11 +271,11 @@ diskdef interak
   os 2.2
 end
 
-# RomWBW 512KB ROM (64KB reserved, 448KB ROM Disk)
+# RomWBW 512KB ROM (128KB reserved, 384KB ROM Disk)
 
 diskdef wbw_rom512
   seclen 512
-  tracks 14
+  tracks 12
   sectrk 64
   blocksize 2048
   maxdir 256
@@ -284,11 +284,11 @@ diskdef wbw_rom512
   os 2.2
 end
 
-# RomWBW 1024KB ROM (64KB reserved, 960KB ROM Disk)
+# RomWBW 1024KB ROM (128KB reserved, 896KB ROM Disk)
 
 diskdef wbw_rom1024
   seclen 512
-  tracks 30
+  tracks 28
   sectrk 64
   blocksize 2048
   maxdir 256

@@ -1,9 +1,10 @@
 @echo off
+
 setlocal
 
 pushd Source && call Clean && popd
 
 if exist *.img del *.img /Q
-if exist debug.log del debug.log
+if exist *.log del *.log /Q
 
 if exist Output\*.* del Output\*.* /Q
