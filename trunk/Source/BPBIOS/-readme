@@ -1,0 +1,116 @@
+Notes on GPL Release of Banked and Portable (B/P) Bios for the
+D-X Designs Pty Ltd P112.				   29 August 2001
+
+
+This package is the GPL Release of the Banked and Portable (B/P) Bios for
+the D-X Designs Pty Ltd P112 microcomputer.  An ascii text editor and
+assembler capable of recognizing Z180 mnemonics (such as Al Hawley's ZMAC
+or SLR Systems' SLR180/SLR180+ configured for Microsoft .REL output) are
+all the necessary tools to build a customized version of the system for
+your computer.  Installation, configuration and support utilities for the
+B/P system are in a separate library containing startup scripts, executable
+routines (.COM files), some help (.HLP) and utility configuration (.CFG)
+files, as well as selected ZCPR3 support utilities for proper initializa-
+tion of the system on bootup.  We recommend that you read the manual (also
+in a separate file) to become familiar with the system prior to making any
+major alterations to the system, and use it as a source of information for
+debugging.  As you work with the utilities supporting the B/P Bios system,
+remember that most, if not all, will display a brief help message if you
+invoke them with a double-slash argument as: "BPCNFG //".
+
+You will probably want to bring up a banked system as soon as possible to
+gain additional floppy diskette formats due to the limitations posed by
+the restricted format availability in either the default distribution
+(especially the 128 entry limit of the 1.44 MB format) or the B/P Bios
+Boot Track system.  Examine the 'DEFBOOT' file to see other limitations of
+the boot system compared to the fully-banked system defined in 'DEFBANK'.
+
+The default configuration for this installation assumes that you have
+constructed and installed the SCSI modification (using an NCR 5380 'type'
+controller chip) per the plans on Dave Brooks' web page, and programmed
+the flash ROM with ROMV4B or later.  Without these changes, you will not
+be able to boot directly into a B/P system, but should be able to load an
+Image (.IMG) file from the command line which will install a B/P system.
+
+As a brief guide, there are some steps which might ease the transition.
+To begin, work with copies of the files in this distribution.  For example,
+copy the BANKED.IMG to a new name (still of type .IMG) and use it to build
+your new system, changing the output name from Screen 1 in BPBUILD.  This
+procedure will then retain any previous tailoring to the ZCPR3 Environment
+done in Screen 3 with BPBUILD.
+
+It is probably easier to start installation by bringing up an Image-based
+system first since you will still be able to boot from your existing disks
+and determine which options you need.  Update the BANK-DX.CNF configuration
+file for BPCNFG with your settings to avoid wading through all the settings
+each time.  When you have a workable solution, then copy the relevant
+settings to the BOOT-DX.CNF file, and begin working on the Bootable version
+by updating any necessary option selections in (a copy of) DEFBOOT.  When
+you are satisfied, copy DEFBOOT to DEF-DX.LIB and assemble the Bios (by the
+name of the main file, BPBIO-DX.Z80) to a .REL file with a suitable name
+(I use BPBOOT.REL).  Finally, use INSTAL12 to overlay this Bios file on the
+MOVP112.COM file and give it a new output name, then execute the new file
+to generate an image for writing to the system tracks of a floppy or first
+hard drive partition on a drive.  The steps (with annotations) are:
+
+    MOVP112 53 *   <-- make a 53k system, keep in memory
+    BPSYGEN        <-- Load utility for writing system tracks
+      Source drive:  <-- Enter return for none (still in memory)
+      Dest drive:    <-- Enter letter of disk you want to make bootable
+
+Here are some suggested steps you might follow if your configuration
+differs from the default:
+
+1. No SCSI or GIDE (Tilmann Reh's Generic IDE interface):
+
+  - Assemble banked system (copy DEFBANK to DEF-DX.LIB) selecting no
+    Hard Drive support.  You will be limited to floppy drives A:, B: and
+    D: only (C: is unavailable due to hardware limitations in the SMC
+    controller chip), and the RAM disk (M:).  You will still be able to
+    use the 'Fast Warm Boot' which means that you will not need to keep a
+    bootable floppy in drive A:.
+
+  - Build a .IMG file from your Bios .REL file using BPBUILD and config-
+    ure it with BPCNFG.  You might consider tailoring the BANK-DX.CNF
+    configuration script after becoming familiar with the BPCNFG config
+    tool.  After this, you will be able to load a B/P system after you
+    boot the system from your existing disks.
+
+  - If you have updated the ROM with ROMV4B or later, you can assemble
+    a bootable system (copy DEFBOOT to DEF-DX.LIB).  Install the Bios
+    into the MOVP112.COM file using the INSTAL12 utility as described in
+    the manual, and use it to create a bootable image on the system track
+    or tracks of a diskette.  After writing the system track(s) with the
+    new image, it may be tailored with BPCNFG (see the BOOT-DX.CNF sample
+    configuration script) to your installation.  Due to size constraints
+    in a bootable image, only two disk formats are recognized as:
+
+    - Ampro/SB180 80-track Double-Sided 'Quad'-Density 800 kB (3.5/5.25")
+    - P112 definition for 3.5" High-Density 1.44 MB IBM PC "compatible"
+
+    Only the Ampro format will be usable as a target for a bootable B/P
+    system in the native mode, although you will be able to use the
+    EMULATE utility to lock a floppy drive into a specified format from
+    the library of formats available (or write your own).  Once booted,
+    you may load a banked Image to obtain more formats.
+
+
+2. Generic IDE (GIDE) Hard Drive interface installed:
+
+  - Assemble a Bios after editing the DEF-DX.LIB file (a copy of DEFBANK
+    or DEFBOOT depending on whether you are building a banked Image or
+    bootable disk version respectively) to select IDE instead of SCSI for
+    the type of Hard Drive system.  Configure the resulting system with
+    BPCNFG entering the appropriate values in Menu 4 for Cylinder, Head
+    and Sector, and establish your partitioning scheme in Menu 5.
+
+  - If your have upgraded your flash Bios to version ROMV4B or later, you
+    should be able to boot from the system tracks on the IDE drive after
+    you build a bootable Bios, install it into MOVP112.COM with INSTAL12,
+    generate a system, write it to the boot tracks and configure it with
+    BPCNFG.  You might consider modifying the sample BOOT-DX.CNF config
+    script for the last phase.
+
+Enjoy,
+Hal
+

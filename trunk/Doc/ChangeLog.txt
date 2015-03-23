@@ -1,3 +1,6 @@
+Version 2.7.1
+- WBW: Support loading from image file (UNA FSFAT)
+
 Version 2.7.0
 -------------
 - WBW: Memory page reorganization
