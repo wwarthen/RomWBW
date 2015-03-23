@@ -1,0 +1,59 @@
+  {JUMP}  - Execute code at a Specified Address
+  {PEEK}  - Examine memory contents
+  {POKE}  - Alter memory contents
+  {PORT}  - Examine contents of Input Port
+:
+	 {JUMP}  - Execute code at a Specified Address
+
+   This command permits execution of code at any specified address
+in the range of 0 to FFFFH in the current TPA memory area.  The user
+must insure that the the target address contains a valid program.
+
+Syntax:		JUMP Hexaddress
+
+:
+	 {PEEK}  - Examine memory contents
+
+   This command permits the user to examine memory contents
+throughout the Memory Range in A B/P Bios configuration.
+
+Syntax:		P [Bnk#:]StartAdr [EndAdr]
+
+	Where:	Bnk# = B/P Memory Bank in decimal.  The TPA bank
+			or PEEK values since the last Warm Boot
+			are assumed if not specified.
+		StartAdr, EndAdr = Hex Addresses
+
+NOTE: For long displays, the screen may be paused with the Ctrl-S
+  toggle.  To abort a long display, follow a Ctrl-S with a Ctrl-C.
+
+:
+	 {POKE}  - Alter memory contents
+
+   This command permits the user to alter the contents of TPA memory.
+Altering other banks is not permitted to assure the integrity of the
+Operating System.
+
+Syntax:		POKE addr [nn][..nn]
+			or
+		POKE addr "a[..a]
+
+	Where:	addr = Hexidecimal address to start the entry
+		nn = Hexidecimal value(s) to enter
+		a = Ascii character(s) to enter
+
+NOTE: The Ascii toggle may be used after preliminary Hex digit entry
+  but is Not reversible.  i.e. all following characters are entered
+  as literal Ascii.
+
+:
+	 {PORT}  - Examine contents of Input Port
+
+   This command permits the user to examine the contents of Input
+Registers within the range 0..FFFFH.  The command properly handles
+the on-board IO ports in the HD64180/Z180, and extended IO addresses.
+
+Syntax:		PORT nn
+
+	Where:	nn = Hexidecimal Port Address in [0..FFFF]
+

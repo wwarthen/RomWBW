@@ -1,0 +1,39 @@
+
+Option Q -- If the ZCPR quiet flag is set, FILEATTR will always default to 
+quiet mode.  To make quiet mode the default at all times, even when running 
+under CP/M, set this configuration option to "Yes".  Whatever is selected 
+here can be toggled with the command line "Q" option.
+
+Option X -- A "Yes" will cause FILEATTR to page screen output by default.  
+A "No" will default to continuous scrolling.  The chosen default can be 
+toggled with the command line "X" option.  Screen paging is always turned 
+off in quiet mode.
+
+Option R -- As distributed, FILEATTR prints nothing to the screen when it 
+is operating in quiet mode.  If this configuration option is "Yes", the 
+results summary line that gives the number of matching files found and the 
+number of attributes changed will be printed even in quiet mode.
+
+Option S -- Enter the number of lines on your video display screen.  Under 
+ZCPR 3.3 and higher, the number of screen lines for paging is obtained from 
+the environment descriptor.  This configuration parameter is used only if 
+running under CP/M.
+
+
+                      Attribute Configuration Options
+
+As distributed, FILEATTR will not change any file attribute unless 
+explicitly commanded to do so by a command line option.  To configure 
+FILEATTR to turn a file attribute ON or OFF by default, toggle the 
+appropriate configuration selection.
+
+For example, to make FILEATTR set all matching files to Public by default, 
+change the "Public attribute" setting to "Turn On".  Then FILEATTR will set 
+the specified files to Public unless the /NP command line option is given 
+(which would cause the files to be set to Private).  Since there is no 
+command which tells FILEATTR not to change an attribute, however, the 
+program will now insist on turning the Public attribute either on (default) 
+or off (through the /NP option).
+
+Most users will have neither need nor desire to change the configuration 
+default as distributed which will "Leave As-Is" all matching files.

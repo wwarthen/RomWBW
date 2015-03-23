@@ -97,7 +97,7 @@ hbver	.equ	hbimg + $102	; HBIOS version
 hbplt	.equ	hbimg + $104	; HBIOS platform
 bidusr	.equ	hbimg + $10B	; User bank id
 bidbios	.equ	hbimg + $10C	; BIOS bank id
-pxyimg	.equ	hbimg + $7E00	; Proxy image location
+pxyimg	.equ	hbimg + $200	; Proxy image offset within HBIOS image
 pxyloc	.equ	$FE00		; Proxy run location
 pxysiz	.equ	$0200		; Proxy size
 srcbnk	.equ	$FFE4		; Address of bank copy source bank id

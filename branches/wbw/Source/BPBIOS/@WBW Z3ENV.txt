@@ -1,0 +1,117 @@
+=============================================================================
+ORIGINAL DISTRIBUTION ENVIRONMENT
+-----------------------------------------------------------------------------
+  A  - Environment   - FE00H      F  - Named Dirs    -  FC00H
+        Size (# recs)-    2             # of Entries -    14
+  B  - Flow Ctrl Pkg - FA00H      G  - External Path -  FDF4H
+        Size (# recs)-    4             # of Entries -     5
+  C  - I/O Package   - EC00H      H  - Shell Stack   -  FD00H
+        Size (# recs)-   12             # of Entries -     4
+  D  - Res Cmd Proc  - F200H            Entry Size   -    32
+        Size (# recs)-   16       I  - Msg Buffer    -  FD80H
+  E  - Command Line  - FF00H      J  - Ext. FCB      -  FDD0H
+        Size (bytes) -  203       K  - Ext. Stack    -  FFD0H
+=============================================================================
+
+=============================================================================
+STANDARD ENVIRONMENT (HBIOS IMBEDDED IN BPBIOS)
+-----------------------------------------------------------------------------
+  A  - Environment   - FE00H      F  - Named Dirs    -  FC00H
+        Size (# recs)-    2             # of Entries -    14
+  B  - Flow Ctrl Pkg - FA00H      G  - External Path -  FDF4H
+        Size (# recs)-    4             # of Entries -     5
+  C  - I/O Package   - EC00H      H  - Shell Stack   -  FD00H
+        Size (# recs)-   12             # of Entries -     4
+  D  - Res Cmd Proc  - F200H            Entry Size   -    32
+        Size (# recs)-   16       I  - Msg Buffer    -  FD80H
+  E  - Command Line  - FF00H      J  - Ext. FCB      -  FDD0H
+        Size (bytes) -  203       K  - Ext. Stack    -  FFD0H
+=============================================================================
+
+=============================================================================
+X ENVIRONMENT (HBIOS @ FC00): ALL SEGMENTS SHIFTED DOWN BY $400
+-----------------------------------------------------------------------------
+  A  - Environment   - FA00H      F  - Named Dirs    -  F800H
+        Size (# recs)-    2             # of Entries -    14
+  B  - Flow Ctrl Pkg - F600H      G  - External Path -  F9F4H
+        Size (# recs)-    4             # of Entries -     5
+  C  - I/O Package   - E800H      H  - Shell Stack   -  F900H
+        Size (# recs)-   12             # of Entries -     4
+  D  - Res Cmd Proc  - EE00H            Entry Size   -    32
+        Size (# recs)-   16       I  - Msg Buffer    -  F980H
+  E  - Command Line  - FB00H      J  - Ext. FCB      -  F9D0H
+        Size (bytes) -  171       K  - Ext. Stack    -  FBB0H
+=============================================================================
+
+=============================================================================
+T ENVIRONMENT (HBIOS @ FC00): ALL SEGMENTS REARRANGED
+-----------------------------------------------------------------------------
+  A  - Environment   - EA00H      F  - Named Dirs    -  E800H
+        Size (# recs)-    2             # of Entries -    14
+  B  - Flow Ctrl Pkg - FA00H      G  - External Path -  E9F4H
+        Size (# recs)-    4             # of Entries -     5
+  C  - I/O Package   - EC00H      H  - Shell Stack   -  E900H
+        Size (# recs)-   12             # of Entries -     4
+  D  - Res Cmd Proc  - F200H            Entry Size   -    32
+        Size (# recs)-   16       I  - Msg Buffer    -  E980H
+  E  - Command Line  - EB00H      J  - Ext. FCB      -  E9D0H
+        Size (bytes) -  171       K  - Ext. Stack    -  EBB0H
+=============================================================================
+
+=============================================================================
+N ENVIRONMENT (HBIOS IMBEDDED IN BPBIOS): SMALL HBIOS STUB AT FFE0-FFFF
+-----------------------------------------------------------------------------
+  A  - Environment   - FE00H      F  - Named Dirs    -  FC00H
+        Size (# recs)-    2             # of Entries -    14
+  B  - Flow Ctrl Pkg - FA00H      G  - External Path -  FDF4H
+        Size (# recs)-    4             # of Entries -     5
+  C  - I/O Package   - EC00H      H  - Shell Stack   -  FD00H
+        Size (# recs)-   12             # of Entries -     4
+  D  - Res Cmd Proc  - F200H            Entry Size   -    32
+        Size (# recs)-   16       I  - Msg Buffer    -  FD80H
+  E  - Command Line  - FF00H      J  - Ext. FCB      -  FDD0H
+        Size (bytes) -  171       K  - Ext. Stack    -  FFB0H
+=============================================================================
+
+
+
+COMPONENT	BP33		BP33BNK		BP34		BP34BNK		BP41
+--------------	--------------	--------------	--------------	--------------	--------------
+CCP		ZCPR33.REL	ZCPR33.REL	Z34.REL		Z34.REL		Z41.ZRL
+DOS		ZSDOS.ZRL	ZSDOS.ZRL	ZSDOS.ZRL	ZSDOS.ZRL	ZS203.ZRL
+BIOS		BP33.REL	BP33BNK.REL	BP34.REL	BP34BNK.REL	BP41.REL
+
+NOTE: Implementing the environment changes in ZCPR33 requires building a new ZCPR33 from source!!!
+
+
+SEGMENT		Original	Std		Type X		Type T		Type N
+--------------	--------------	--------------	--------------	--------------	--------------
+
+Environment	FE00		FE00		FA00		EA00		FE00
+  # Recs	   2		   2		   2		   2		   2		   
+Flow Ctl Pkg	FA00            FA00            F600            FA00            FA00
+  # Recs	   4               4               4               4               4
+I/O Pkg		EC00            EC00            E800            EC00            EC00
+  # Recs	  12              12              12              12              12
+Res Cmd Pkg	F200            F200            EE00            F200            F200
+  # Recs	  16              16              16              16              16
+Cmd Line	FF00            FF00            FB00            EB00            FF00
+  # Bytes	 203             203             171             171             171
+Named Dirs	FC00            FC00            F800            E800            FC00
+  # Ents	  14              14              14              14              14
+Ext Path	FDF4            FDF4            F9F4            E9F4            FDF4
+  # Ents	   5               5               5               5               5
+Shell Stack	FD00            FD00            F900            E900            FD00
+  # Ents	   4               4               4               4               4
+  Ent Size	  32              32              32              32              32
+Msg Buffer	FD80            FD80            F980            E980            FD80
+Ext FCB		FDD0            FDD0            F9D0            E9D0            FDD0
+Ext Stack	FFD0            FFD0            FBB0            EBB0            FFB0
+
+
+Type X: All segments shifted down by size of HBIOS Proxy (1K)
+Type T: Segments rearranged to allow space for HBIOS Proxy
+        FC00-FFFF --> EA00-EBFF
+	Environment, Cmd Line, Named Dirs, Ext Path, Shell Stack, Msg Buffer, Ext FCB, Ext Stack
+Type N: Frees up HBIOS interface area at FFE0-FFFF by shrinking Cmd Line and shifting
+	Ext Stack down by 32 bytes

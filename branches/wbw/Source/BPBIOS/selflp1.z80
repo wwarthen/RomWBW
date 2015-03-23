@@ -1,0 +1,37 @@
+;**************************************************************************
+; SELFLP1 - Fast Select Floppy routine.  This Floppy Select Routine does NO
+; Auto-Selection.  Instead, it assumes the Format DPB is already assigned
+; in the DPH.  This routine is called only on New Mount.
+;
+; 1.0 -  3 Jul 92 - First General Release.				HFB
+; 0.0 - 12 Jun 91 - Initial Test Release.				HFB
+;**************************************************************************
+
+	  IF  BANKED
+	COMMON	/BANK2/
+	  ELSE
+	CSEG
+	  ENDIF
+
+SELFLP:	LD	A,(SEKPDN)	; Get unit number for drive
+	CALL	STHDRV		; Assume head 0 and set drive
+	LD	A,(SEKDVT)
+	LD	B,A
+	LD	A,0111B		; Mask for drive size
+	AND	B
+	LD	E,A
+	BIT	5,B		; Get motor flag
+	CALL	SETTFZ
+	LD	D,A
+	BIT	6,B
+	CALL	SETTFZ		; Set speed to maximum
+	CALL	STSIZE		; Set motor flag and drive size
+	CALL	DOSPEC		; Set step rate, hlt, hut
+	LD	B,3
+SELFL1:	CALL	RECAL		; Home the drive
+	JP	Z,SETPARMS	; Set params if successful
+	DJNZ	SELFL1		; Else try again
+	JP	SELERR		; Else select error
+
+;=========================== End of SELFLP1 ===============================
+
