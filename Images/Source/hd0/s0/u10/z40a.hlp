@@ -1,0 +1,67 @@
+  CLS   - Clear Screen
+  HELP  - Print Available Commands in CPR, RCP, FCP
+  ECHO  - Echo a string to Console w/processing
+  TYPE  - Display a file on the Console
+  NOTE  - Do nothing
+:
+	 CLS  - Clear Console Screen
+
+   This command clears the screen with the string defined in the
+ZCPR3 Termcap.  Insure that the Termcap on your system is the
+correct one for your Terminal.
+
+Syntax:		CLS
+
+:
+	 HELP  - Print Available Commands
+
+   This command prints all available commands from the Command
+Processor, Resident Command Processor (if any), and the Flow
+Control Processor.
+
+Syntax:		H
+
+NOTE: Commands which are disabled if user is Not a WHEEL are
+	displayed in Lower Case.  Users without WHEEL
+	privileges will not see disabled commands.
+
+:
+	 ECHO  - Echo the following string to the Console
+
+   This command displays a string specified in the command line on
+the Console with processing.  Special function characters embedded
+in the string have specified functions to alter the literal operation.
+
+Syntax:		ECHO [string]
+
+NOTE: Special processing characters are:
+	"^" - Convert the next char to a Control char (And w/1FH)
+	"%" - Toggle Upper/Lower Case printing prefix as:
+		"%<" - Convert print to Uppercase
+		"%>" - Convert print to Lowercase
+
+      The option to Echo to Printer is Not active in this version
+
+:
+	 TYPE  - Display a file on the Console
+
+   This command displays a file on the Console.  In the default
+mode, the file is paged based on the Number of Lines value contained
+in the Z3 Environment Descriptor.  If the Command Line contains a
+"P" after the specified file ID, the paging default will be over-
+ridden and the file will be continuously scrolled on the screen.
+In this mode, it may be stopped and started with Ctrl-S.
+
+Syntax:		TYPE [DU: | DIR:]Filename[.Typ] [P]
+
+NOTE: To abort print, Follow a Ctrl-S with a Ctrl-C while printing,
+  or enter Ctrl-C while paused at a page break.
+
+:
+	 NOTE  - Dummy Command to display comments in Script files
+
+   This command does nothing.  It's purpose is to insert comments
+in a script file.  All arguments passed are discarded.
+
+Syntax:		NOTE [string]
+

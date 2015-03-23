@@ -46,6 +46,8 @@ $RomFmt = "wbw_rom${RomSize}"
 $BlankROM = "Blank${RomSize}KB.dat"
 $RomDiskFile = "RomDisk.tmp"
 $RomFile = "${OutDir}/${RomName}.rom"
+$ComFile = "${OutDir}/${RomName}.com"
+$ImgFile = "${OutDir}/${RomName}.img"
 
 ""
 "Building ${RomName}: ${ROMSize}KB ROM configuration ${Config} for Z${CPUType}..."
@@ -101,8 +103,12 @@ Asm 'prefix'
 Asm 'romldr'
 if ($Platform -ne "UNA")
 {
-	Asm 'setup'
 	Asm 'hbios'
+	Asm 'hbfill'
+	Asm 'loader' "-dMODE=LM_ROM" -Output "ldr_rom.bin"
+	Asm 'setup' # uses exported values from loader compilation above!!!
+	Asm 'loader' "-dMODE=LM_COM" -Output "ldr_com.bin"
+	Asm 'loader' "-dMODE=LM_IMG" -Output "ldr_img.bin"
 }
 
 # Generate result files using components above
@@ -136,7 +142,9 @@ if ($Platform -eq "UNA")
 }
 else 
 {
-	Concat 'setup.bin', 'hbios.bin','osimg.bin','hbios.bin',$RomDiskFile $RomFile
+	Concat 'ldr_rom.bin','setup.bin','hbios.bin','hbfill.bin','osimg.bin','osimg.bin',$RomDiskFile $RomFile
+	Concat 'ldr_com.bin','hbios.bin','osimg.bin' $ComFile
+	Concat 'ldr_img.bin','hbios.bin','osimg.bin' $ImgFile
 }
 
 # Cleanup

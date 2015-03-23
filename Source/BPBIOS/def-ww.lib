@@ -1,0 +1,80 @@
+;:::::::::::::::::::::::::::::::::::::::::::::::**********************
+;  B/P BIOS Configuration and Equate File.	** System Dependant **
+;  - D-X Designs Pty Ltd P112 CPU Board -	**********************
+;	  HBIOS specific customizations
+;:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+; BIOS Configuration Equates and Macros
+;
+; NOTE: Must make sure settings below match hardware and
+;       HBIOS configuration.
+;
+HBIOS	EQU	YES			; Use HBIOS functions
+INTPXY	EQU	YES			; Internal HBIOS Proxy
+HBLOC	EQU	0FE00H			; Location of HBIOS proxy (if used)
+;
+; Set exactly one of the following to YES to specify platform
+;
+N8VEM	EQU	YES
+ZETA	EQU	NO
+N8	EQU	NO
+MK4	EQU	NO
+;
+; Set either the following to YES (or both to NO for no clock code)
+;
+SIMHCLK	EQU	NO			; Direct SIMH clock access
+HBCLK	EQU	YES			; HBIOS clock driver
+;
+; Set HB_HDDEV to appropriate hard disk driver
+;
+HB_HDDEV	EQU	HBDEV_HDSK	; SIMH HDSK Driver
+;HB_HDDEV	EQU	HBDEV_IDE	; IDE Driver
+;HB_HDDEV	EQU	HBDEV_SD	; SD Card Driver
+;
+; Set HB_MDDEV to appropriate memory disk driver
+;
+HB_MDDEV	EQU	HBDEV_MD	; Memory Disk Driver
+;
+; RAM/ROM disk sizes expressed as count of 2K blocks
+;
+HB_RAMBLKS	EQU	192		; 512K - 128K reserved / 2K per block
+HB_ROMBLKS	EQU	192		; 512K - 128K reserved / 2K per block
+;HB_ROMBLKS	EQU	448		; 1024K - 128K reserved / 2K per block
+;
+; Layout of RAM banks
+;
+	IF N8VEM OR ZETA
+BID_RAMD	EQU	80H
+BID_RAMM	EQU	8BH
+BID_SYS		EQU	8CH
+BID_HB		EQU	8DH
+BID_USR		EQU	8EH
+BID_COM		EQU	8FH
+	ENDIF
+	IF N8
+BID_RAMD	EQU	80H
+BID_RAMM	EQU	9BH
+BID_SYS		EQU	9CH
+BID_HB		EQU	9DH
+BID_USR		EQU	9EH
+BID_COM		EQU	9FH
+	ENDIF
+	IF MK4
+BID_RAMD	EQU	10H
+BID_RAMM	EQU	1BH
+BID_SYS		EQU	1CH
+BID_HB		EQU	1DH
+BID_USR		EQU	1EH
+BID_COM		EQU	1FH
+	ENDIF
+;
+	IF N8 OR MK4
+HB_IODEV	EQU	HBCIO_ASCI
+	ELSE
+HB_IODEV	EQU	HBCIO_UART
+	ENDIF
+;
+	IF INTPXY
+MEMTOP	EQU	0FFDFH		; Reserve memory above this for HBIOS
+	ELSE
+MEMTOP	EQU	HBLOC - 1	; Reserve memory above this for HBIOS
+	ENDIF

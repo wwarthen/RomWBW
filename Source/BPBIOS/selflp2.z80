@@ -1,0 +1,213 @@
+;**************************************************************************
+; SELFLP2 - Select Floppy Routine.  This floppy Select Routine uses a few
+; Host Formats that are not conflicting.  It auto-selects the format for
+; the drive provided that the format for the drive is not locked.  This
+; routine is called for New Mounts only.
+;
+; Format assumptions are as follows:
+;  1. Only One Single-Density Format per drive size is allowed.
+;  2. Only One 256-Byte/Sector Format is allowed per size.
+;  3. 512 and 1024 Byte/Sector Formats must have Sector Numbers
+;     offset by a constant (e.g. 17, 30, 40) if Double-Sided.
+;
+; 1.3 - 23 Aug 01 - Cleaned up for GPL Release.				HFB
+; 1.2b- 22 Apr 97 - Changed label for possible speed change to unique
+;		specific label in FDC-xx module.			HFB
+; 1.2a-  7 May 94 - Modified to make 5" HD drives work with YASMIO.	HFB
+; 1.2 -  4 Dec 93 - Modified SCNFMT requiring exact Drive match if HD,
+;		otherwise, treat 3.5" as 5.25" if Low Speed.		HFB
+; 1.0 -  3 Jul 92 - First General Release.				HFB
+; 0.0 - 12 Jun 91 - Initial Test Release.				HFB
+;**************************************************************************
+
+	  IF  BANKED
+	COMMON	/BANK2/
+	  ELSE
+	CSEG
+	  ENDIF
+
+SELFLP:	LD	A,(SEKPDN)	; Get unit number for drive
+	CALL	STHDRV		; Assume head 0 and set drive
+	LD	A,(SEKDVT)	; Get drive type byte
+	LD	B,A
+	AND	0111B		; Mask for drive size
+	LD	E,A
+	BIT	5,B		; Get motor flag
+	CALL	SETTFZ
+	LD	D,A
+	LD	(SEKMTS),DE	;  (Save Motor/Size in case of Loop)
+	BIT	6,B
+	CALL	SETTFZ		; Set speed to maximum
+SELFL0:	LD	(SEKSPD),A
+	CALL	STSIZE		; Set motor flag and drive size
+	CALL	DOSPEC		; Set step rate, hut, hlt
+	BIT	7,B
+SELFL1:	CALL	SETTFZ		; Indicate maximum density
+	LD	(SEKDEN),A
+	CALL	STMODE		; Set to highest density
+	LD	B,3
+SELFL2:	CALL	RECAL		; Home the drive
+	JR	Z,SELFL3	; Decipher format if successful
+	DJNZ	SELFL2		; Else try again
+	JP	SELERR		; Else select error
+
+SELFL3:	LD	HL,(SEKDPH)
+	LD	DE,-4
+	ADD	HL,DE		; Point to format lock flag
+	XOR	A
+	OR	(HL)		; Test if locked
+	JP	NZ,SETPARMS	; Set parameters if locked
+	INC	HL		; Point to drive type byte
+	RES	4,(HL)		; Clear Double Step bit
+	LD	DE,0000		; No Double-Step, No Verify on Seek
+	LD	A,2
+	CALL	SEEK		; Now seek to track two
+	CALL	READID		; See if we can read it
+	JR	Z,SELFL5	; If we read ok
+	LD	A,(SEKDEN)
+	AND	A		; Was read at double density?
+	JR	NZ,SELFL4	; Test speed if it was single density
+	DEC	A		; Else set single density
+	JR	SELFL1		; And try again
+
+SELFL4:	LD	A,(SEKDVT)
+	LD	B,A
+	LD	A,(SEKSPD)	; Get speed we used
+	AND	A		; Test if high speed
+	JP	Z,SELERR	; Give select error if we used low speed
+	LD	DE,(SEKMTS)	; Get Motor/Size
+	LD	A,E
+	CP	0010B		; Is it a 5" Drive?
+	CALL	Z,ChgSpd	;   (Use routine in FDC-xx if Yes)
+	XOR	A		; Set to Low Speed
+	JR	SELFL0		; And try again
+
+; When we arrive here, we have a successful read on Side 0, Track 1 or 2
+
+SELFL5:	LD	A,(RC)		; What track did we find?
+	DEC	A
+	JR	NZ,NODSTP	; ..jump if we did not find Track 1
+	LD	HL,(SEKDPH)	; Else point to this drive's DPH
+	DEC	HL
+	DEC	HL
+	DEC	HL		;  back up to drive type byte
+	SET	4,(HL)		;   and tell it to Double-Step
+	INC	A		; set count to 1 to force fall thru
+NODSTP:	DEC	A
+	JP	NZ,SELERR	; Error if we didn't find track 1 or 2
+
+; Set up Skeletal Format 0 and Format 1 Bytes
+
+	LD	A,(SEKDEN)
+	AND	10000000B	; Mask Density to B7
+	LD	C,A		; Save skeletal format 0 byte
+	LD	A,(SEKSPD)
+	AND	10000000B	; Mask Speed to B7
+	LD	B,A		; Set speed
+	LD	A,(RN)		; Get sector size
+	OR	B
+	LD	B,A		; Save skeletal format 1 byte
+	LD	A,(SEKDVT)	; Get drive type
+	AND	00000111B	; Mask size bits
+	OR	C
+	LD	C,A		; Save in c
+
+; The following code is Format Specific
+
+	BIT	7,B		; It it set for Hi-Speed/HD?
+	JR	NZ,SCNFMT	; ..jump if So requiring Exact Drive match
+
+	AND	0111B		; Else Remove any Density bit
+	CP	0011B		; Is it a 3.5" drive?
+	JR	NZ,SCNFMT	; ..jump if Not
+	DEC	C		; Else make 3.5" use 5.25" formats
+
+; Scan DPB's for matching formats
+
+SCNFMT:	LD	HL,DPB+10	; Point to format byte of first DPB
+	LD	E,NRDPB		; How many to check
+
+SCNFM1:	LD	A,(HL)		; Get format 0 byte
+	AND	10000111B	; Format 0 mask
+	CP	C		; Test for match
+	JR	NZ,SCNFM2	; ..jump to Next if No Match
+	INC	HL
+	LD	A,(HL)		; Get format 1 byte
+	DEC	HL
+	AND	10000111B	; Format 1 mask
+	CP	B		; Are they matched?
+	JR	Z,FMMAT		; ..jump if matched format bytes
+SCNFM2:	DEC	E		; One less to check
+	JP	Z,SELERR	; ..jump if we ran out, give select error
+	PUSH	DE		; Save counter
+	LD	DE,DPBSIZ
+	ADD	HL,DE		; Point to next DPB
+	POP	DE
+	JR	SCNFM1		; ..jump to check next DPB
+
+; We have a candidate for a match.  Check if number of Sides correct.
+
+FMMAT:	LD	A,(SEKDEN)
+	AND	A		; Single Density?
+	JR	NZ,FMMAT2	; ..jump if it is (IBM 3740 assumed)
+	LD	A,B
+	AND	0111B		; Test sector size
+	CP	2		; Sector size less than 512 bytes?
+	JR	C,FMMAT2	; ..jump Match found if so
+
+	BIT	7,B		; High-Speed?
+	JR	Z,FMMAT0	; ..jump if Not to Check for DS
+	LD	A,C		; Get Drive Size
+	AND	0111B		;  mask
+	SUB	0011B		; 3.5"?
+	JR	Z,FMMATH	; ..jump if So because all 3.5" HD are DS
+	
+FMMAT0:	LD	A,(RR)		; Get sector number read
+	CP	17		; Is 2-sided disk?
+	LD	A,0
+	JR	C,FMMAT1	; ..jump if it isn't (Ampro or Bower format)
+FMMATH:	DEC	A		; Else is Two-sided
+FMMAT1:	LD	D,A		; Save 2-side flag
+	LD	A,(SEKDVT)
+	BIT	3,A		; Test if 2-sided Drive
+	CALL	SETTFZ
+	XOR	D		; Is # Sides on Drive same as detected?
+	JR	Z,FMMAT1A	; ..jump if they are
+	AND	D		; Else be sure format is one-sided
+	JR	NZ,SCNFM2	; ..jump No go if DS on an SS Drive
+FMMAT1A: LD	A,00111000B
+	AND	(HL)		; See if format is two-sided
+	CALL	SETTFZ		; Set A to 0FFH if format is 2-sided
+	XOR	D		; See if # sides match
+	JR	NZ,SCNFM2	; No match, keep checking
+FMMAT2:	LD	DE,-10		; Offset to start of XDPB
+	ADD	HL,DE
+	EX	DE,HL
+	LD	HL,(SEKDPH)
+	LD	BC,10		; Offset to DPB pointer in DPH
+	ADD	HL,BC
+	LD	A,(HL)		; Get the RAM DPB Buffer address
+	INC	HL
+	LD	H,(HL)
+	LD	L,A
+	LD	BC,-DPHDSZ	;  offset to XDPB Start
+	ADD	HL,BC
+	EX	DE,HL		;   making this the destination
+	LD	BC,DPBSIZ	; Move the entire XDPH
+	LDIR			; ..to RAM
+	JP	SETPARMS	; New DPB in place, set up system vars
+
+; Scratch RAM for this module
+
+	  IF  BANKED AND NOT INROM
+	COMMON	/B2RAM/
+	  ELSE
+	DSEG
+	  ENDIF
+
+SEKDEN:	DEFS	1		; Single density flag
+SEKSPD:	DEFS	1		; High speed flag
+SEKMTS:	DEFS	2		; Motor/Size Storage
+
+;========================= End of SELFLP2 =================================
+

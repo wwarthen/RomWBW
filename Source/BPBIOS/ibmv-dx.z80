@@ -1,0 +1,345 @@
+;:::::::::::::::::::::::::::::::::::::::*****************************
+;   IBMOVE - Inter-Bank Move Routines	***** Hardware-Specific *****
+;	D-X Designs Pty Ltd P112	*****************************
+;
+; 1.0a- 17 Aug 01 - Cleaned up for GPL Release.			HFB
+; 1.0 - 10 Jun 96 - Initial Release for P112 from YASBEC.	HFB
+;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+	CSEG
+
+;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+; Move Data - Possibly between banks.  This resembles CP/M 3, but
+;  usage of the HL and DE registers is reversed.
+; Enter: HL = Source Address
+;	 DE = Destination Address
+;	 BC = Number of bytes to move
+; Exit : None
+; Uses : AF,BC,DE,HL
+;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+MOVE:
+BNKCPY:
+	; Save current stack & bank
+	LD	(BCSSAV),SP	; Save current stack
+	LD	SP,BCSTK	; Activate our private stack
+	    IF BANKED
+	LD	A,(CURBNK)	; Get the current bank
+	    ELSE
+	LD	A,(TPABNK)	; If not banked, assume TPA bank is active
+	    ENDIF
+	PUSH	AF		; Put on stack
+
+	; Setup for copy loop
+	LD	(XBCSRC),HL	; Init working soruce adr
+	LD	(XBCDST),DE	; Init working dest adr 
+	LD	H,B		; Move bytes to copy from BC...
+	LD	L,C		;   to HL to use as byte counter
+	
+	; Copy loop
+BNKCPY1:
+	INC	L		; Set ZF to indicate...
+	DEC	L		;   if a partial page copy is needed
+	LD	BC,100H		; Assume a full page copy, 100H bytes
+	JR	Z,BNKCPY2	; If full page copy, go do it
+	DEC	B		; Otherwise, setup for partial page copy
+	LD	C,L		; by making BC := 0L
+BNKCPY2:
+	PUSH	HL		; Save bytes left to copy
+	CALL	BNKCPY3		; Do it
+	POP	HL		; Recover bytes left to copy
+	XOR	A		; Clear CF
+	SBC	HL,BC		; Reflect bytes copied in HL
+	JR	NZ,BNKCPY1	; If any left, then loop
+
+	; Restore entry bank & stack
+	POP	AF		; Recover original bank
+	OUT	(MPCL_RAM),A	; Set it
+	LD	SP,(BCSSAV)	; Back to original stack
+
+	; Put source and dest bank back to default
+	LD	HL,(TPABNK)	; Get TPA Bank #
+	LD	H,L		; .to both H and L
+	LD	(SRCBNK),HL	; ..set Source & Destination Bank # to TPA
+
+
+	RET			; Done
+
+BNKCPY3:
+	; Switch to source bank
+	LD	A,(SRCBNK)	; Get source bank
+	OUT	(MPCL_RAM),A	; Set it
+
+	; Copy BC bytes from HL -> BUF
+	; Allow HL to increment
+	PUSH	BC		; Save copy length
+	LD	HL,(XBCSRC)	; Point to source adr
+	LD	DE,IBMVBF	; Setup buffer as interim destination
+	LDIR			; Copy BC bytes: src -> buffer
+	LD	(XBCSRC),HL	; Update source adr
+	POP	BC		; Recover copy length
+	
+	; Switch to dest bank
+	LD	A,(DSTBNK)	; Get destination bank
+	OUT	(MPCL_RAM),A	; Set it
+
+	; Copy BC bytes from BUF -> HL
+	; Allow DE to increment
+	PUSH	BC		; Save copy length
+	LD	HL,IBMVBF	; Use the buffer as source now
+	LD	DE,(XBCDST)	; Setup final destination for copy
+	LDIR			; Copy BC bytes: buffer -> dest
+	LD	(XBCDST),DE	; Update dest adr
+	POP	BC		; Recover copy length
+
+	RET			; Done
+
+;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+;  Routine to Switch to Local Stack for Banked Operations
+;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+	CSEG
+
+BIOSTK:	DEFB	0		; NOP if not currently in bank,
+				; ..RET if we are
+	LD	(USP-7),HL	; Save entry HL
+	POP	HL		; Retrieve caller's return address from stack
+	LD	(USP-5),HL	; ..and set in our stack for local return
+	DI			; No interrupts while we play with the stack
+	LD	(USP),SP	; Save User's Stack Pointer
+	LD	SP,USP-1	; ..and point locally, saving 1 byte for Bank
+	PUSH	AF		; Save entry A and Flags
+	LD	A,(CURBNK)	; Get current bank
+	LD	(USP-1),A	; ..and save for exitting
+	LD	A,0C9H		; Disable other calls here
+	LD	(BIOSTK),A	; ..by poking a RETurn at entry
+	POP	AF		; Restore entry AF
+	LD	HL,USRSTK	; Set banked return address
+	PUSH	HL		; ..at USP-2 & 3
+	LD	SP,USP-7	; Point stack pointer to do local return
+	POP	HL		; .restoring entry HL
+	EI			; ..enabling interrupts
+	RET			; And return to caller
+
+; Restore User Stack and Bank Routine
+
+USRSTK:	PUSH	AF
+	LD	A,(USP-1)	; Get bank control byte from entry
+	LD	(CURBNK),A	; WW: I ADDED THIS, IS IT RIGHT???
+	OUT	(MPCL_RAM),A	; ..and make it current
+	XOR	A
+	LD	(BIOSTK),A	; Patch NOP back in at start of code
+	POP	AF
+	LD	SP,(USP)	; Restore user stack
+	RET			; And return to caller
+
+;:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+;   Restore Bank and Stack Ptr to Entry and Jump to (HL)
+;:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+FRCLR:	PUSH	AF		; Save any entry in AF
+	LD	A,(USP-1)	; Get bank control byte
+	OUT	(MPCL_RAM),A	; .and make current
+	XOR	A
+	LD	(BIOSTK),A	; Patch NOP to enable stack switcher
+	POP	AF
+	LD	SP,(USP)	; Restore User Stack
+	JP	(HL)		; ..and jump to vector
+
+;:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+; Abort a Process (possibly in Alternate Bank) and Warm Boot
+;:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+ABORT:	LD	SP,USP		; Insure stack is in Common Memory
+	LD	A,(TPABNK)
+	CALL	SELBNK		; Insure TPA in Context
+	XOR	A
+	LD	(BIOSTK),A	; Remove patch
+	RST	0		; ..And Warm Boot
+
+;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+;	Return Current Memory Bank in Context
+; Entry: none
+; Exit : A = Current Memory Bank
+; Uses : AF
+;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+RETMEM:	LD	A,(CURBNK)
+	RET
+
+;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+;	Set Bank into context.  Save all Registers.
+;  A = Bank
+;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+SELMEM:	LD	(USRBNK),A	; Update user bank
+			;..fall thru to set specified bank..
+;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+; SELBNK - Switch Memory Bank to Bank in A and show as current.
+;  Must preserve all Registers including Flags.
+;  All Bank Switching MUST be done by this routine
+;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+SELBNK:	PUSH	AF		; Save regs
+SELBN0:	LD	(CURBNK),A	; Save as current bank #
+	OUT	(MPCL_RAM),A
+	POP	AF		; restore regs
+	RET
+
+;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+;	Set  Bank  for  DMA  Xfer.  Preserve All Registers
+;  A = Bank Number
+;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+SETBNK:	LD	(DMABNK),A
+	RET
+
+;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+;	Set Banks for Inter-Bank Xfer.  Save all Registers.
+;  B = Destination Bank, C = Source Bank
+;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+XMOVE:	LD	(SRCBNK),BC
+	RET
+
+;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+;	Select  System  Bank
+;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+GOSYSB:	PUSH	AF
+	LD	A,(SYSBNK)	; Get system bank
+	JR	SELBN0		; ..and set
+
+;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+;	Set  Bank  for  FRJP  and  FRCALL   (Reg A)
+;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+STFARC: LD	(JPBNK),A
+	RET
+
+;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+;	Jump  to  (HL)  in  Alternate  Bank
+;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+FRJP:	CALL	BIOSTK		; Insure we are in a common stack
+	PUSH	AF
+	LD	A,(JPBNK)
+	CALL	SELBNK		; Select the destination bank
+	POP	AF
+	JP	(HL)		; ..and go
+
+;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+;	Load  A,(HL)  from  Alternate  Bank  (in Reg C)
+;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+FRGETB:	
+	PUSH	BC
+	LD	A,C
+	DI
+	OUT	(MPCL_RAM),A
+	LD	C,(HL)
+	LD	A,(CURBNK)
+	OUT	(MPCL_RAM),A
+	EI
+	LD	A,C
+	POP	BC
+	RET
+
+;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+;	Load  DE,(HL)  from  Alternate  Bank
+;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+FRGETW:
+	LD	A,C
+	DI
+	OUT	(MPCL_RAM),A
+	LD	E,(HL)
+	INC	HL
+	LD	D,(HL)
+	DEC	HL
+	LD	A,(CURBNK)
+	OUT	(MPCL_RAM),A
+	EI
+	RET
+
+;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+;	Load  (HL),A  to  Alternate  Bank  (in Reg C)
+;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+FRPUTB:	
+	PUSH	BC
+	LD	B,A
+	LD	A,C
+	DI
+	OUT	(MPCL_RAM),A
+	LD	(HL),B
+	LD	A,(CURBNK)
+	OUT	(MPCL_RAM),A
+	EI
+	POP	BC
+	RET
+
+;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+;	Load  (HL),DE  to  Alternate  Bank
+;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+FRPUTW:	
+	LD	A,C
+	DI
+	OUT	(MPCL_RAM),A
+	LD	(HL),E
+	INC	HL
+	LD	(HL),D
+	DEC	HL
+	LD	A,(CURBNK)
+	OUT	(MPCL_RAM),A
+	EI
+	RET
+
+;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+;; Copy BC bytes from (SRCBNK):HL -> (DSTBNK):DE
+;; through buffer to allow for inter-bank copies
+;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+;
+;XBNKCPY:
+;	LD	(SRCBNK),BC
+;	RET
+
+;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+	DSEG
+
+JPBNK:	DEFS	1		; Bank # for Far Jump or Call
+USRBNK:	DEFS	1		; User's selected bank #
+CURBNK:	DEFS	1		; Current bank #
+SRCBNK:	DEFS	1		; Move Source Bank #
+DSTBNK:	DEFS	1		; Move Destination Bank #
+DMABNK:	DEFS	1		; Target bank # for disk xfers
+	DEFS	64		; 32 level stack
+USP:	DEFS	2		; User stack pointer
+ASAVE:	DEFS	1		; Temp storage for User's A-Register
+
+; Z-180 DMA transfer block for inter-bank moves
+
+ISRC:	DEFS	2		; Source Segment address
+	DEFS	1		; ..Source Bank in physical RAM
+IDST:	DEFS	2		; Destination Segment address
+	DEFS	1		; ..Destination Bank in physical RAM
+ICNT:	DEFS	2		; Number of bytes to move
+
+; Working storage for BNKCPY
+
+XBCSRC:	DEFS	2
+XBCDST:	DEFS	2
+	DEFS	32
+BCSTK:				; Temp stack for BNKCPY
+BCSSAV:	DEFW	2		; To save original stack
+
+; The P112 does not need this buffer, but other versions might
+
+	  IF  INROM OR [NOT IBMOVS]
+	DSEG
+IBMVBF:	DEFS	256		; Inter-bank move buffer
+	  ENDIF
+
+;======================= End of IBMV-DX ===========================
+
