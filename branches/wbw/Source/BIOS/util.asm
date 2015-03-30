@@ -616,7 +616,9 @@ DIV16:
 ;
 DIV16A:
 	; LOOP
-	.DB	$CB,$31		; SLL	C
+;	.DB	$CB,$31		; SLL	C
+	SLA	C
+	SET	0,C
 	RLA
 	ADC	HL,HL
 	SBC	HL,DE
