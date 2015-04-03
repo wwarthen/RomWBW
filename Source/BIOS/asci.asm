@@ -3,12 +3,89 @@
 ; ASCI DRIVER (Z180 SERIAL PORTS)
 ;==================================================================================================
 ;
+; BAUD RATE PROGRAMMING:
+; Given a known clock speed (PHI) and target Baud Rate (BAUD):
+;
+; Divisor = PHI / BAUD
+;
+; Program PS, DR, SS bits based on divisor table lookup
+;
+; Divisor = PHI / BAUD
+; Lookup = PHI / BAUD / 160
+;
+; To allow easier computation:
+;
+; Let xPHI = PHI / 1000 (PHI is always divisible by 1000)
+; Let xBAUD = BAUD / 100 (BAUD is always divisible by 100)
+; xPHI will always fit in 2 byte int
+; xBAUD will always fit in 2 byte int
+;
+; Lookup = (xPHI >> 4) / xBAUD
+;
+; If failure to match, fallback to 9600 baud and try again
+;
+; Lookup	PS Bit	PS Div	DR Bit	DR Div	SS Bits	SS Div	Divisor	CNTLB
+; 1		0	10	0	16	0	1	160	XX0X0000
+; 2		0	10	0	16	1	2	320	XX0X0001
+; 3		1	30	0	16	0	1	480	XX1X0000
+; 4		0	10	0	16	2	4	640	XX0X0010
+; 6		1	30	0	16	1	2	960	XX1X0001
+; 8		0	10	0	16	3	8	1280	XX0X0011
+; 12		1	30	0	16	2	4	1920	XX1X0010
+; 16		0	10	0	16	4	16	2560	XX0X0100
+; 24		1	30	0	16	3	8	3840	XX1X0011
+; 32		0	10	0	16	5	32	5120	XX0X0101
+; 48		1	30	0	16	4	16	7680	XX1X0100
+; 64		0	10	0	16	6	64	10240	XX0X0110
+; 96		1	30	0	16	5	32	15360	XX1X0101
+; 128		0	10	1	64	5	32	20480	XX0X1101
+; 192		1	30	0	16	6	64	30720	XX1X0110
+; 256		0	10	1	64	6	64	40960	XX0X1110
+; 384		1	30	1	64	5	32	61440	XX1X1101
+; 768		1	30	1	64	6	64	122880	XX1X1110
+;
+ASCI_LKUP:
+;	LOOKUP		CNTLB VAL
+;	------		----------
+.DW	1 \	.DB	%00000000
+.DW	2 \	.DB	%00000001
+.DW	3 \	.DB	%00100000	
+.DW	4 \	.DB	%00000010
+.DW	6 \	.DB	%00100001
+.DW	8 \	.DB	%00000011
+.DW	12 \	.DB	%00100010
+.DW	16 \	.DB	%00000100
+.DW	24 \	.DB	%00100011
+.DW	32 \	.DB	%00000101
+.DW	48 \	.DB	%00100100
+.DW	64 \	.DB	%00000110
+.DW	96 \	.DB	%00100101
+.DW	128 \	.DB	%00001101
+.DW	192 \	.DB	%00100110
+.DW	256 \	.DB	%00001110
+.DW	384 \	.DB	%00101101
+.DW	768 \	.DB	%00101110
+;
+ASCI_LKUPCNT	.EQU	($ - ASCI_LKUP) / 3
+;
+; CNTLB0/1:
+; 7 6 5 4 3 2 1 0
+; T M P R D S S S
+; | | | | | | | |
+; | | | | | + + +-- SS: SOURCE/SPEED SELECT (R/W)
+; | | | | +-------- DR: DIVIDE RATIO (R/W)
+; | | | +---------- PEO: PARITY EVEN ODD (R/W)
+; | | +------------ PS: ~CTS/PS: CLEAR TO SEND(R) / PRESCALE(W)
+; | +-------------- MP: MULTIPROCESSOR MODE (R/W)
+; +---------------- MPBT: MULTIPROCESSOR BIT TRANSMIT (R/W)
+;
+;
+;
 ; CHARACTER DEVICE DRIVER ENTRY
 ;   A: RESULT (OUT), CF=ERR
 ;   B: FUNCTION (IN)
 ;   C: CHARACTER (IN/OUT)
 ;   E: DEVICE/UNIT (IN)
-;
 ;
 ASCI_DISPATCH:
 	LD	A,C	; GET DEVICE/UNIT

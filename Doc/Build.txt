@@ -51,21 +51,22 @@ process.  In order to customize your settings, you
 need to modify an existing configuration file or
 create your own.
 
-If you look in the Source directory, you will see
-a series of files named config_xxxx_yyyy.asm.  Each of
+Configuration files are found in the Source\BIOS\Config
+directory.  If you look in the this directory, you will see
+a series of files named XXXX_yyyy.asm.  Each of
 them corresponds to one of the standard configurations
 listed in the ROMList.txt file.
 
 You have two choices.  You can simply modify the existing
 configuration file that is closest to your situation, or
-you can copy it to a new config_xxxx_yyyy.asm file and modify
+you can copy it to a new XXXX_yyyy.asm file and modify
 that.  I recommend that you copy one to your own name so
 that you will always have the unmodified standard configuration
 files left in place.  So, for example, you could just
-copy config_ZETA_std.asm to config_ZETA_wayne.asm.  You MUST
-name your config file as config_xxxx_yyyy.asm.  The xxxx's
-must match your platform (N8VEM, ZETA, N8, S2I, or S100).
-The yyyy's can be whatever you want.
+copy ZETA_std.asm to ZETA_wayne.asm.  You MUST
+name your config file as XXXX_yyyy.asm.  The XXXX portion
+must match your platform (N8VEM, ZETA, ZETA2, N8, UNA).
+The yyyy portion can be whatever you want.
 
 The config files are simply text files with various
 settings.  Open your target config file with your
@@ -93,30 +94,30 @@ ROM disk.  The build process will determine
 which subdirectories to include files from based
 on the following rules:
 
-First, all files from either std_512 or std_1024 will
-be incuded depending on on the size of the ROM you
+First, all files from either ROM_512KB or ROM_1024KB will
+be included depending on on the size of the ROM you
 are building.  If you are building a 512KB ROM, then
-all the files from std_512KB will be included.  If you
-are building a 1MB ROM, then all the files from std_1024KB
-will be included.  Essentialy, the files in std_1204KB are
-a superset of the ones in std_512KB because there is more
+all the files from ROM_512KB will be included.  If you
+are building a 1MB ROM, then all the files from ROM_1024KB
+will be included.  Essentialy, the files in ROM_1204KB are
+a superset of the ones in ROM_512KB because there is more
 space available for the ROM drive.
 
 Second, all files from the directory that corresponds to
 your configuration file will be included.  If you build
-the "ZETA_std" configuration, all files in cfg_ZETA_std will
+the "ZETA_std" configuration, all files in ZETA_std will
 be added.  Note that these files will be in addition
-to the files from the std_XXXKB directory.
+to the files from the ROM_XXXKB directory.
 
-If you created your own config file (like config_ZETA_wayne.asm
+If you created your own config file (like ZETA_wayne.asm
 described above), you MUST create a subdirectory within
 the RomDsk directory and populate it with the files
 you want added.  Normally, you would include the
 files from the original standard config.  So, if
-you created config_ZETA_wayne.asm from config_ZETA_std.asm,
+you created ZETA_wayne.asm from ZETA_std.asm,
 then you would create a subdirectory in RomDsk called
-cfg_ZETA_wayne and copy all the files from cfg_ZETA_std to
-cfg_ZETA_wayne.
+ZETA_wayne and copy all the files from ZETA_std to
+ZETA_wayne.
 
 3. Run the Build Process
 ------------------------
@@ -136,23 +137,22 @@ unless you renamed it.
 First, you will need to build the components that are
 common to all configurations.  These components do not
 require any configuration.  To build these, use the
-following commands and ensure that they complete
+following command and ensure it completes
 without error:
 
-	BuildZCPR-DJ
-	BuildApps2
+	BuildCommon
 
-To run the main build and be prompted for required information,
-just enter "Build".  You will be prompted for the information
-described below and the build should run.  If an error is
-encountered, the build should stop and display an error
-in red text.
+To run the configuration specific build and be prompted
+for required information, just enter "Build".  You will
+be prompted for the information described below and the
+build should run.  If an error is encountered, the build
+should stop and display an error in red text.
 
 If you immediately receive the error "the execution of 
 scripts is disabled on this system", then you will need to 
 change the PowerShell Execution-Polcy to "RemoteSigned".
 To do this, you need to right-click on FixPowerShell.cmd and
-choose "Run as Administrator" to make the change.  If is
+choose "Run as Administrator" to make the change.  It is
 critical that you right-click and use "Run as Administrator"
 or the change will not work (you will get an error
 indicating "Access to the registry denied" if you fail to
@@ -164,7 +164,7 @@ which you will need to provide (don't worry, it is simple):
 Platform:
 
 Respond with the name of the platform that you are targeting.
-It must be one of N8VEM, ZETA, N8, S2I, or S100.
+It must be one of N8VEM, ZETA, ZETA2, N8, or UNA.
 
 Configuration:
 
@@ -180,7 +180,7 @@ ROM Size [512|1024]:
 Respond with either "512" for a 512KB ROM build or "1024" for a
 1MB ROM build.  Only the two choices are possible at this time.
 It is important that you choose a ROM size that is no larger than
-the szie of the ROM you will ultimately be burning.  This is 
+the size of the ROM you will ultimately be burning.  This is 
 dependant on your hardware.
 
 At this point, the build should run and you will see output related
@@ -190,7 +190,7 @@ cause the build to stop immediately and display an error message
 in red.
 
 You will see some lines in the output indicating the amount of
-space variouis components have taken.  You should check these
+space various components have taken.  You should check these
 to make sure you do not see any negative numbers which would
 indicate that you have included too many features/drivers for
 the available memory space.  Here are examples of the lines
@@ -209,11 +209,11 @@ showing the space used:
 If you look in the Output directory.  You should find the following files:
 
      <config>.rom - binary ROM image to burn to EEPROM
-     <config>.sys - system image that can be written to the start of a
-                    disk to enable boot from disk functionality
      <config>.com - executable version of the system image that can be
                     copied via xmodem to a running system to test
                     the build.
+     <config>.img - system image that can be written to an SD/CF Card
+                    and loaded via the UNA FS FAT loader.
 
 The actual ROM image is the file ending in .rom.  It should be exactly
 512KB or 1MB depending on the ROM size you chose.  Simply burn the .rom
@@ -236,7 +236,7 @@ Example Build Run
 -----------------
 
 C:\Users\WWarthen\Projects\N8VEM\Build\RomWBW>Build.cmd
-Platform [N8VEM|ZETA|N8|S2I|S100]: ZETA
+Platform [N8VEM|ZETA|N8|UNA|S100]: ZETA
 Configurations available:
  > ppp
  > std
