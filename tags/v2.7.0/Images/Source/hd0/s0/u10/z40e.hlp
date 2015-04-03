@@ -1,0 +1,53 @@
+  {REGISTER}  - Examine/Alter ZCPR3 Register Values
+  {SPOP}      - Pop an element off the Shell Stack
+  {RESET}     - Re-log the Hard & Floppy Drive System
+   WHL        - Read/Set the Wheel Byte
+:
+	 {REGISTER}  - Examine/Alter ZCPR3 Register Values
+
+   This command allows the user to Examine, Increment, Decrement
+or set any of the ten registers defined in the ZCPR3 Environment.
+
+Syntax:		REG [option][n]
+			or
+		REG S[n] value
+
+	Where:	n is a Register Number in [0..9]
+		option = D to display all register values
+			    (no register Number needed)
+			 P to increment the register by 1
+			    (0 assumed if not specified)
+			 M to decrement the register by 1
+			    (0 assumed if not specified)
+		value = decimal value in [0..255]
+:
+	 {SPOP}  - Pop an element off the Shell Stack
+
+   This command is used to discard the command currently on the top
+of the Shell Stack.
+
+Syntax:		SPOP n
+
+:
+	 {RESET}  - Re-log the Hard & Floppy Drive System
+
+   This command Re-logs all Hard and Floppy Drives on the system.
+It properly handles the Fast-Relog feature of ZSDOS and re-logs the
+default disk when complete.  This should be executed after any
+Unerase or PUTDS operation on Hard Drives to insure that the Banked
+Allocation Vector in ZSDOS2 is properly updated.
+
+Syntax:		RES
+
+:
+	 WHL  - Read/Set the Wheel Byte
+
+   This command simply reads the Wheel byte and indicates the
+current setting if no arguments are passed.  If arguments exist,
+they are compared to the embedded Password in the CPR.  If a match
+is obtained, the Wheel Byte is turned On giving the user appropriate
+privileges.  A mismatch Disables the Wheel byte restricting the user.
+
+Syntax:		WHL		<- Display current setting
+		WHL password	<- Turn on if match, else disable
+

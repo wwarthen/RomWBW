@@ -1,0 +1,222 @@
+"TASM 6502 Assembler.    "
+/****************************************************************************
+/* $Id: tasm65.tab 1.1 1993/07/31 01:12:40 toma Exp $
+/****************************************************************************
+/* This is the instruction set definition table for the 6502 version of TASM.
+/*      Thomas N. Anderson, Speech Technology Incorported, June 1987.
+/*  Note that there are two classes of extended instructions beyond
+/*    the standard set.  The classes are assigned bits as follows:
+/*      bit 0 = standard set
+/*      bit 1 = extended instructions for R65C02
+/*      bit 2 = extended instructions for R65C00/21
+/* 
+/*INSTR ARGS OPCODE BYTES MOD CLASS SHIFT OR */
+/*-------------------------------------------*/
+ADC  #*     69 2 NOP 1
+ADC  (*,X)  61 2 NOP 1
+ADC  (*),Y  71 2 NOP 1
+ADC  (*)    72 2 NOP 2
+ADC  *,X    7D 3 ZP  1
+ADC  *,Y    79 3 NOP 1
+ADC  *      6D 3 ZP  1
+
+AND  #*     29 2 NOP 1
+AND  (*,X)  21 2 NOP 1
+AND  (*),Y  31 2 NOP 1
+AND  (*)    32 2 NOP 2
+AND  *,X    3D 3 ZP  1
+AND  *,Y    39 3 NOP 1
+AND  *      2D 3 ZP  1
+
+ASL  A      0A 1 NOP 1
+ASL  *,X    1E 3 ZP  1
+ASL  *      0E 3 ZP  1
+
+BBR0 *,*    0f 3 CR  6
+BBR1 *,*    1f 3 CR  6
+BBR2 *,*    2f 3 CR  6
+BBR3 *,*    3f 3 CR  6
+BBR4 *,*    4f 3 CR  6
+BBR5 *,*    5f 3 CR  6
+BBR6 *,*    6f 3 CR  6
+BBR7 *,*    7f 3 CR  6
+
+BBS0 *,*    8f 3 CR  6
+BBS1 *,*    9f 3 CR  6
+BBS2 *,*    af 3 CR  6
+BBS3 *,*    bf 3 CR  6
+BBS4 *,*    cf 3 CR  6
+BBS5 *,*    df 3 CR  6
+BBS6 *,*    ef 3 CR  6
+BBS7 *,*    ff 3 CR  6
+
+BCC  *      90 2 R1  1
+BCS  *      B0 2 R1  1
+BEQ  *      F0 2 R1  1
+BMI  *      30 2 R1  1
+BNE  *      D0 2 R1  1
+BPL  *      10 2 R1  1
+BRA  *      80 2 R1  6
+BVC  *      50 2 R1  1
+BVS  *      70 2 R1  1
+
+BIT  #*     89 2 NOP 2
+BIT  *,X    3C 3 ZP  2
+BIT  *      2C 3 ZP  1
+
+BRK  ""     00 1 NOP 1
+
+CLC  ""     18 1 NOP 1
+CLD  ""     D8 1 NOP 1
+CLI  ""     58 1 NOP 1
+CLV  ""     B8 1 NOP 1
+
+CMP  #*     C9 2 NOP 1
+CMP  (*,X)  C1 2 NOP 1
+CMP  (*),Y  D1 2 NOP 1
+CMP  (*)    D2 2 NOP 2
+CMP  *,X    DD 3 ZP  1
+CMP  *,Y    D9 3 NOP 1
+CMP  *      CD 3 ZP  1
+
+CPX  #*     E0 2 NOP 1
+CPX  *      EC 3 ZP  1
+
+CPY  #*     C0 2 NOP 1
+CPY  *      CC 3 ZP  1
+
+DEC  A      3A 1 NOP 2
+DEC  *,X    DE 3 ZP  1
+DEC  *      CE 3 ZP  1
+
+DEX  ""     CA 1 NOP 1
+DEY  ""     88 1 NOP 1
+
+EOR  #*     49 2 NOP 1
+EOR  (*,X)  41 2 NOP 1
+EOR  (*),Y  51 2 NOP 1
+EOR  (*)    52 2 NOP 2
+EOR  *,X    5D 3 ZP  1
+EOR  *,Y    59 3 NOP 1
+EOR  *      4D 3 ZP  1
+
+INC  A      1A 1 NOP 2
+INC  *,X    FE 3 ZP  1
+INC  *      EE 3 ZP  1
+
+INX  ""     E8 1 NOP 1
+INY  ""     C8 1 NOP 1
+
+JMP  (*,X)  7C 3 NOP 2
+JMP  (*)    6C 3 NOP 1
+JMP  *      4C 3 NOP 1
+
+JSR  *      20 3 NOP 1
+
+LDA  #*     A9 2 NOP 1
+LDA  (*,X)  A1 2 NOP 1
+LDA  (*),Y  B1 2 NOP 1
+LDA  (*)    B2 2 NOP 2
+LDA  *,X    BD 3 ZP  1
+LDA  *,Y    B9 3 NOP 1
+LDA  *      AD 3 ZP  1
+
+LDX  #*     A2 2 NOP 1
+LDX  *,Y    BE 3 ZP  1
+LDX  *      AE 3 ZP  1
+
+LDY  #*     A0 2 NOP 1
+LDY  *,X    BC 3 ZP  1
+LDY  *      AC 3 ZP  1
+
+LSR  A      4A 1 NOP 1
+LSR  *,X    5E 3 ZP  1
+LSR  *      4E 3 ZP  1
+
+MUL  ""     02 1 NOP 4  /* R65C00/21 only*/
+
+NOP  ""     EA 1 NOP 1
+
+ORA  #*     09 2 NOP 1
+ORA  (*,X)  01 2 NOP 1
+ORA  (*),Y  11 2 NOP 1
+ORA  (*)    12 2 NOP 2
+ORA  *,X    1D 3 ZP  1
+ORA  *,Y    19 3 NOP 1
+ORA  *      0D 3 ZP  1
+
+PHA  ""     48 1 NOP 1
+PHP  ""     08 1 NOP 1
+PHX  ""     DA 1 NOP 6
+PHY  ""     5A 1 NOP 6
+PLA  ""     68 1 NOP 1
+PLP  ""     28 1 NOP 1
+PLX  ""     FA 1 NOP 6
+PLY  ""     7A 1 NOP 6
+
+RMB0 *      07 2 NOP 6
+RMB1 *      17 2 NOP 6
+RMB2 *      27 2 NOP 6
+RMB3 *      37 2 NOP 6
+RMB4 *      47 2 NOP 6
+RMB5 *      57 2 NOP 6
+RMB6 *      67 2 NOP 6
+RMB7 *      77 2 NOP 6
+
+ROL  A      2A 1 NOP 1
+ROL  *,X    3E 3 ZP  1
+ROL  *      2E 3 ZP  1
+
+ROR  A      6A 1 NOP 1
+ROR  *,X    7E 3 ZP  1
+ROR  *      6E 3 ZP  1
+
+RTI  ""     40 1 NOP 1
+RTS  ""     60 1 NOP 1
+
+SBC  #*     E9 2 NOP 1
+SBC  (*,X)  E1 2 NOP 1
+SBC  (*),Y  F1 2 NOP 1
+SBC  (*)    F2 2 NOP 2
+SBC  *,X    FD 3 ZP  1
+SBC  *,Y    F9 3 NOP 1
+SBC  *      ED 3 ZP  1
+
+SEC  ""     38 1 NOP 1
+SED  ""     F8 1 NOP 1
+SEI  ""     78 1 NOP 1
+
+SMB0 *      87 2 NOP 6
+SMB1 *      97 2 NOP 6
+SMB2 *      a7 2 NOP 6
+SMB3 *      b7 2 NOP 6
+SMB4 *      c7 2 NOP 6
+SMB5 *      d7 2 NOP 6
+SMB6 *      e7 2 NOP 6
+SMB7 *      f7 2 NOP 6
+
+STA  (*,X)  81 2 NOP 1
+STA  (*),Y  91 2 NOP 1
+STA  (*)    92 2 NOP 2
+STA  *,X    9D 3 ZP  1
+STA  *,Y    99 3 NOP 1
+STA  *      8D 3 ZP  1
+
+STX  *,Y    96 2 ZP  1
+STX  *      8E 3 ZP  1
+
+STY  *,X    94 2 NOP 1
+STY  *      8C 3 ZP  1
+
+STZ  *,X    9e 3 ZP  2
+STZ  *      9c 3 ZP  2
+
+TAX  ""     AA 1 NOP 1
+TAY  ""     A8 1 NOP 1
+TRB  *      1c 3 ZP  2
+TSB  *      0c 3 ZP  2
+TSX  ""     BA 1 NOP 1
+TXA  ""     8A 1 NOP 1
+TXS  ""     9A 1 NOP 1
+TYA  ""     98 1 NOP 1
+

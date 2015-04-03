@@ -1,0 +1,52 @@
+   TIME   - Print Current System Time (Set if Wheel)
+   DATE   - Print Current System Date (Set if Wheel)
+   VER    - Display CPR, DOS and BIOS Version Numbers
+:
+	 TIME  - Print/{Set} Current System Time
+
+   This command, if no arguments are specified, will simply display
+the current Hours, Minutes, and Seconds reported by the Dos.  In a
+fully-implemented system, this will be the B/P Bios Real Time Clock.
+If arguments are passed, the current setting of the Wheel byte is
+checked.  If the Wheel Byte is OFF, the time is simply displayed,
+otherwise the arguments will be interpreted at a new time to set and
+parsed accordingly.  If no errors are detected, the system time will
+be updated and the revised setting displayed.  Arguments are parsed
+in the order; Hours, Minutes, Seconds.  All fields do not have to be
+present.  Current setting of fields not entered are retained if not
+explicitly altered.
+
+Syntax:		TIME
+		TIME hh[:mm][:ss]
+
+:
+	 DATE  - Print/{Set} Current System Date
+
+   This command, if no arguments are specified, will simply display
+the current Day, Month, and Year as reported by the Dos.  An assembly
+option selects US (mmm dd, yyyy) or European (dd mmm yyyy) form.  In a
+fully-implemented system, this will be the B/P Bios Real Time Clock.
+If arguments are passed, the current setting of the Wheel byte is
+checked.  If the Wheel Byte is OFF, the date is simply displayed,
+otherwise the arguments will be interpreted at a new date to set and
+parsed accordingly.  If no errors are detected, the system date will
+be updated and the revised setting displayed.  Arguments may be parsed
+either mm/dd/yy sequence if the "slash" character delimits the fields,
+or dd-mm-yy sequence if any other character (normally dash or period)
+delimits the fields.  All fields do not have to be present, although
+at least one is required to determine the parse order.  The current
+setting of fields not entered are retained unless explicitly altered.
+
+Syntax:		DATE
+		DATE mm/dd/yy
+		DATE dd.mm.yy   or   dd-mm-yy
+
+:
+	 VER  - Display Operating System Version Numbers
+
+   This command displays CPR, DOS and BIOS Version Numbers for the
+system currently executing.  It assumes ZSDOS and B/P Bios and uses
+the unique features of those systems to obtain the relevant values.
+
+Syntax:		VER
+

@@ -1,0 +1,37 @@
+;:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+; Disk Parameter Header (DPH) for RAM Drive			Generic File
+;	(MUST be in Common Memory)
+; This data must match information contained in the DPB table for RAM drive.
+;
+; 1.1 - 28 Aug 01 - Revised to generic module for GPL release.		HFB
+; 1.0 - 31 Aug 92 - General Release.					HFB
+; 0.0 -  3 Jan 92 - Initial Release.					HFB
+;:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+; This table is similar to the Hard Drive DPH table except that only one unit
+; is supported, and the Physical Drive Number byte is ignored.
+
+	CSEG
+
+XDPH90:	DEFB	TRUE		; Format lock flag (Lock RAM Drive)
+	DEFB	FIXDSK		; Disk Drive Type
+	DEFB	3		; Driver ID
+	DEFB	00000000B	; Physical Drive Number (ignored)
+DPH$90:	DEFW	0		; Skew Table pointer
+	DEFW	0,0,0		; Scratch area
+	DEFW	DIRBUF		; Directory buffer pointer
+	DEFW	DPBRAM		; Pointer to DPB for RAM Drive
+	DEFW	0		; No Wacd for RAM drive
+	DEFW	ALV$90		; Alloc vector for RAM Drive
+
+; Allocation BitMap Buffers.  MUST be # Alloc Blks/8 Bytes at Minimum.
+;  Each Logical Drive MUST have an Allocation BitMap Buffer.
+
+	  IF  [BANKED AND ZSDOS2]
+	COMMON	/B2RAM/
+	  ELSE
+	DSEG
+	  ENDIF
+
+ALV$90:	DEFS	MSIZ/8+1	; Space for RAM Drive Alloc Blocks
+
+;======================== End of RAM DPH ==============================

@@ -1,0 +1,35 @@
+ Intro to ZCPR 4.0 for ZSDOS2 and B/P Bios		19 Apr 92
+  Terminal Commands  - CLS, HELP, ECHO, TYPE, NOTE
+  Printer Commands   - FEED, LIST
+  Directory Support  - DIR, ERASE, FREE, PROTECT
+  File Manipulation  - COPY, GET, GO, RENAME, SAVE
+  Z-System Support   - REGISTR, SPOP, RESET, WHL
+  Hardware Support   - JUMP, PEEK, POKE, PORT
+  Miscellaneous      - TIME, DATE, VERSION
+:	 ZCPR 4.0 for ZSDOS2 and B/P Bios 
+
+   This Command Processor is a direct outgrowth of ZCPR 3.4 and many
+popular Resident Command Processor (RCP) extensions.  It takes advantage
+of the Command Line Parser in ZSDOS2 and the Banking capabilities of B/P
+Bios, if available, to reduce the resident portion of the Processor.
+Commands built into Z40 include:
+
+  CLS       COPY      DATE      DIR       ECHO      ERASE     FEED
+  FREE      GET       GO        HELP      JUMP      LIST      NOTE
+  PEEK      POKE      PORT      PROTECT   REGISTER  RENAME    RESET
+  SAVE      SPOP      TIME      TYPE      VER       WHL
+
+   in the following descriptions, optional fields or entries are listed
+in square brackets ([]) and repeating fields are denoted by double-
+periods.  Commands which are Not available without WHEEL privileges are
+noted in the individual descriptions by enclosing the name in Curly
+braces ({}).
+
+::Z40A.HLP
+::Z40B.HLP
+::Z40C.HLP
+::Z40D.HLP
+::Z40E.HLP
+::Z40F.HLP
+::Z40G.HLP
+

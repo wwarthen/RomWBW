@@ -1,0 +1,332 @@
+;:::::::::::::::::::::::::::::::::::::::::::::::::*************************
+;		 Byte I/O Routines		  *** Hardware Specific ***
+;	    - D-X Designs Pty Ltd P112 -	  *************************
+;
+; Several serial and parallel options exist on the P112, with two serial
+; ports available at RS-232 signalling levels.  The primary port defined here
+; as COM1 uses SCC Channel A of the Z80182.  A 16550-compatible serial port
+; on the SMC FDC37C665 is used as COM2.  Three other serial ports (the two
+; ACSI ports in the Z180 core, and SCC Channel B) are available at TTL
+; voltage levels on a single header and may be defined as COM3-5 if the pins
+; from the Z182 are not otherwise used.
+;   This code supports the additional serial channels if the MORDEV equate
+; is set to YES.  If any of the three additional serial ports are defined
+; (ESCC_B, ASCI_0, ASCI_1), then the System Configuration Register is set to
+; Zero activating the additional signals in the conditions specified herein
+; as activated by options in DEF-DX.LIB.
+;   A full Parallel port on the SMC FDC37C655 (in Normal Centronics mode) is
+; used as the primary List (Printer) Device.
+;
+; NOTE: At the present time, it appears that port 0D9H (ENH182) cannot be set
+;	so ESCC operation at 24 MHz will occur at the full clock rate instead
+;	of being divided by Two as specified in Zilog documentation.  Code
+;	managing ENH182 is commented out with ";;--" markers (HFB).
+;
+; 1.2 - 28 Aug 01 - Final scrub for GPL release.			HFB
+; 1.1a- 11 May 97 - Cleaned code, fixed added port accesses.		HFB
+; 1.1 - 25 Jan 97 - Revised ESCC Baud rate calcs, added COM3-5.		HFB
+; 1.0 - 19 Jun 96 - Initial Release for the P112 from YASBEC.		HFB
+;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+; Place constants for Expansions here
+
+	CSEG
+;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+;	   Byte  Device  Control  Tables
+;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+DEVCFG:
+
+;   The Clock Rate for the SCC channels on the Z80182 is based on a divider
+; constant loaded in extended registers, the Processor Crystal frequency,
+; and the setting of the divider in the SCC Register (1FH).
+;
+; NOTE: Divisor values are computed based on a compromise between the Crystal
+;	rates considered "standard" (6.144, 9.216, 12.288 MHz, etc) and the
+;	16.000 MHz initially placed on the P112.  Higher data rates (38.4 kbps
+;	and higher) may be out of tolerance, particularly at low CPU speeds.
+;
+;   Clock rates for the serial port on the SMC 37C655 are based on a software
+; programmable divider from the 24 MHz crystal driving the chip.
+
+COM1:	DEFB	'COM1'		; 4-Char ID
+	DEFB	11101011B	; Baud Rate
+;		||||++++--- Baud Rate setting (19.2 kbps)
+;		++++------- Maximum Baud Rate (115.2 kbps)
+; Rates are as:
+; 0000 = None	0001 = 134.5	0011 = 50	0011 = 75
+; 0100 = 150	0101 = 300	0110 = 600	0111 = 1200
+; 1000 = 2400	1001 = 4800	1010 = 9600	1011 = 19200
+; 1100 = 38400	1101 = 76800	1110 = 115200	1111 = Fixed
+
+	DEFB	11100001B	; Config Byte (In,Out,CTS/RTS control,1 Stop)
+;		|||||||+---------- Stop Bits 1 (1), 2 (0)
+;		||||||+----------- Parity Enable (1), Disable (0)
+;		|||||+------------ Parity Even (1), Odd (0)
+;		||||+------------- Data Bits 8 (0), 7 (1)
+;		|||+-------------- Xon-Xoff Handshake
+;		||+--------------- CTS/RTS Handshake
+;		|+---------------- Input Device No (0), Yes (1)
+;		+----------------- Output Device No (0), Yes (1)
+
+	DEFB	0FFH		; Input Data Mask
+	DEFB	0FFH		; Output Data Mask
+
+	DEFW	COM1OT		; COM 1 Byte Output
+	DEFW	COM1OS		; COM 1 Output Status
+	DEFW	COM1IN		; COM 1 Byte Input
+	DEFW	COM1IS		; COM 1 Input Status
+
+COM2:	DEFB	'COM2'		; 4-Char ID
+	DEFB	11101010B	; Baud Rate (115.2k Max, 9600 Set)
+	DEFB	11100001B	; Config Byte (In,Out,CTS/RTS control,1 Stop)
+	DEFB	0FFH		; Input Data Mask
+	DEFB	0FFH		; Output Data Mask
+
+	DEFW	COM2OT		; COM 2 Byte Output
+	DEFW	COM2OS		; COM 2 Output Status
+	DEFW	COM2IN		; COM 2 Byte Input
+	DEFW	COM2IS		; COM 2 Input Status
+
+PIO1:	DEFB	'PIO1'		; 4-Char ID
+	DEFB	00000000B	; Baud Rate (None)
+	DEFB	10000000B	; Config Byte (Output Only)
+	DEFB	0FFH		; Input Data Mask
+	DEFB	07FH		; Output Data Mask
+
+	DEFW	PIO1OT		; PIO Byte Output
+	DEFW	PIO1OS		; PIO Output Status
+	DEFW	PIO1IN		; PIO Byte Input
+	DEFW	PIO1IS		; PIO Input Status
+
+	  IF  MOVCPM OR [MORDEV AND NOT [ESCC_B OR ASCI_0 OR ASCI_1]]
+	DEFB	'NULL'		; 4-Char ID
+	DEFB	00000000B	; Baud Rate (None)
+	DEFB	11000000B	; Config Byte
+	DEFB	0FFH		; Input Data Mask
+	DEFB	0FFH		; Output Data Mask
+
+	DEFW	ISFALSE		; Null Output
+	DEFW	ISTRUE		; Null Output Status
+	DEFW	ISFALSE		; Null Input
+	DEFW	ISTRUE		; Null Input Status
+	  ENDIF
+
+	DEFB	0		; - End-of-Table marker
+MAXBDV	EQU	[$-DEVCFG-1]/[COM2-COM1]  ; Number of Character Devices Defined
+
+DEVTBL:	LD	HL,DEVCFG	; BYTE device table
+	RET			; CP/M-3 device init
+
+;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+;		   COM1   Drivers
+;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+	IF HBIOS
+; Uses HBIOS
+;.....
+; COM1 Input Status Test
+
+COM1IS:
+	PUSH	BC
+	PUSH	DE
+	PUSH	HL
+	LD	BC,0200H + HB_IODEV	; Func=$02 (IS), Device/Unit=HB_IODEV
+	CALL	HBX_INVOKE
+	POP	HL
+	POP	DE
+	POP	BC
+	RET
+
+;.....
+; COM1 Input Routine
+; Remain in Loop until Char ready, then Return Char in A
+
+COM1IN:
+	PUSH	DE
+	PUSH	HL
+	LD	BC,0000H + HB_IODEV	; Func=$00 (IN), Device/Unit=HB_IODEV
+	CALL	HBX_INVOKE
+	LD	C,E
+	POP	HL
+	POP	DE
+	RET
+
+;.....
+; COM1 Output Status Test
+
+COM1OS:
+	PUSH	BC
+	PUSH	DE
+	PUSH	HL
+	LD	BC,0300H + HB_IODEV	; Func=$03 (OS), Device/Unit=HB_IODEV
+	CALL	HBX_INVOKE
+	POP	HL
+	POP	DE
+	POP	BC
+	RET
+
+;.....
+; COM1 Output Routine (Byte to Send in C)
+
+COM1OT:
+	PUSH	BC
+	PUSH	DE
+	PUSH	HL
+	LD	E,C		; Character to E
+	LD	BC,0100H + HB_IODEV	; Func=$01 (OT), Device/Unit=HB_IODEV
+	CALL	HBX_INVOKE
+	POP	HL
+	POP	DE
+	POP	BC
+	RET
+
+	ELSE
+;.....
+; COM1 Input Status Test
+
+COM1IS:	IN	A,(_LSR)	; Input Status Reg Byte
+	RRA			; Rcv Rdy Bit[0] -> Carry
+	SBC	A,A		; A=00 if Not Ready, FF if Char received
+	RET
+
+;.....
+; COM1 Input Routine
+
+COM1IN:	CALL	COM1IS		; Char Ready?
+	JR	Z,COM1IN	; ..loop if Not
+	IN	A,(_RBR)	; Else Read Receive Buffer
+	LD	C,A		; Save byte
+	LD	A,(COM1+6)	; .get mask
+	AND	C		; ..apply it
+	RET
+
+;.....
+; COM1 Output Status Test
+
+COM1OS:
+	IN	A,(_LSR)	; Read Status Reg
+	AND	20H		;  Mask Bit of interest
+	RET	Z		; ..return if nothing valid
+	OR	0FFH		; Else set flags for Ready
+	RET
+
+;.....
+; COM1 Output Routine
+
+COM1OT:	CALL	COM1OS		; Test if ready
+	JR	Z,COM1OT	; ..loop if not
+	LD	A,(COM1+7)	; Get output mask
+	AND	C		;  apply
+	OUT	(_THR),A	;   and send char to Xmt Holding Reg
+	RET
+
+	ENDIF
+
+	PAGE
+;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+;		  COM2   Drivers
+;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+; Uses generic 16550 UART
+;.....
+; COM2 Input Status Test
+
+COM2IS:	IN	A,(_LSR)	; Input Status Reg Byte
+	RRA			; Rcv Rdy Bit[0] -> Carry
+	SBC	A,A		; A=00 if Not Ready, FF if Char received
+	RET
+
+;.....
+; COM2 Input Routine
+
+COM2IN:	CALL	COM2IS		; Char Ready?
+	JR	Z,COM2IN	; ..loop if Not
+	IN	A,(_RBR)	; Else Read Receive Buffer
+	LD	C,A		; Save byte
+	LD	A,(COM2+6)	; .get mask
+	AND	C		; ..apply it
+	RET
+
+;.....
+; COM2 Output Status Test
+
+COM2OS:
+	IN	A,(_LSR)	; Read Status Reg
+SOSTV:	AND	20H		;  Mask Bit of interest
+RETST:	RET	Z		; ..return if nothing valid
+ISTRUE:	OR	0FFH		; Else set flags for Ready
+	RET
+
+;.....
+; COM2 Output Routine
+
+COM2OT:	CALL	COM2OS		; Test if ready
+	JR	Z,COM2OT	; ..loop if not
+	LD	A,(COM2+7)	; Get output mask
+	AND	C		;  apply
+	OUT	(_THR),A	;   and send char to Xmt Holding Reg
+	RET
+
+	PAGE
+;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+;	       Parallel  I/O  Drivers
+;:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+; Uses "Standard" Parallel Centronics mode of SMC37C655 (output only)
+;.....
+; Parallel Input Status Test
+
+PIO1IS:	JR	ISTRUE		; Not implemented
+
+;.....
+; Parallel Input Data fetch
+
+PIO1IN:	JP	ISFALSE		; Not implemented
+
+;.....
+; Parallel Output Status Test
+
+PIO1OS:	JP	ISTRUE		; Not implemented
+
+;.....
+; Parallel Output Routine
+
+PIO1OT:	JP	ISFALSE		; Not implemented
+
+;:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+;::	      I n t e r r u p t    T a b l e		    ::
+;:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+; The Z80182 Interrupt Vector table is placed here on a 32-byte
+; boundary for internal peripherals.
+
+	DEFS	32-[$-BIOSJT AND 31]	; Align
+INTTBL:
+	DEFW	BADINT		; FDC Controller w/Ints  (FDCINT if Real Ints)
+	DEFW	BADINT		; Parallel output port   (INTPIO if Real Ints)
+	DEFW	TIMER		; Timer0
+	DEFW	BADINT		; Timer1
+	DEFW	BADINT		; DMA Channel 0
+	DEFW	BADINT		; DMA Channel 1
+	DEFW	BADINT		; Clocked Serial IO
+	DEFW	BADINT		; ASCI 0 if Not Interrupt/Mordev
+	DEFW	BADINT		; ASCI 1 if Not Interrupt/Mordev
+
+; Error trap for unimplemented Interrupts
+
+BADINT:	CALL	PRINT
+	DEFC	CR,LF,'Bad Int.'
+	JP	WBOOT
+
+;:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+;::	  D e v i c e    I n i t i a l i z a t i o n	    ::
+;:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+	CSEG
+DEVINI:
+	  IF  BANKED
+	CALL	BIOSTK
+	CALL	GOSYSB
+	JP	JDVINI
+	COMMON	/BANK2/
+JDVINI:
+	  ENDIF
+
+	RET			; WW

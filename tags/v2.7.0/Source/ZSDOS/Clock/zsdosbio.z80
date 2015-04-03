@@ -1,0 +1,105 @@
+	TITLE	"ZSDOS Spec BIOS Clock Interface - (ZSDOS-BIOS)"
+	SUBTTL	"Description of Clock Module"
+;===================================================================
+; ZSDOSBIO.Z80
+;  ZSDOS Clock driver for BIOSes that implement ZSDOS Clock interface
+;  from a BIOS Jump.
+;				Harold F. Bower
+; Version: 3 Oct 88
+;===================================================================
+
+VERS	EQU	01
+	.Z80
+	NAME	ZSBIOS
+
+	MACLIB	CLOCK.LIB
+
+	COMMON	/_CLKID_/
+
+DESCST:	DEFW	0		; Ptr to statyr
+
+CLKNAM:	DEFB	'ZSDOS-spec BIOS Vector  '	; Exactly 24 chars
+	DEFB	VERS/10+'0','.',VERS MOD 10 + '0',0
+
+DESCR:	DEFB	'  Interface for BIOSes having ZSDOS Clock compliant',CR,LF
+	DEFB	'  Jump table vector',0
+
+	  IF  [$-DESCST] > 256
+	OVER2
+	  ENDIF
+
+	PAGE
+	SUBTTL	"Configurable Clock Hardware Parameters"
+
+	COMMON	/_PARM_/
+
+PARBAS:	DEFW	NPARMS		; No parameters to set
+	DEFW	STRS
+
+NP0:
+XOFFST	EQU	$+1		; BIOS offset for entry vector
+	DEFB	BYTE
+	DEFW	03CH		; ..default
+
+NPARMS	EQU	($-NP0)/3
+
+STRS:	DEFB	'Offset to BIOS Clock Jump',0
+
+	PAGE
+	SUBTTL	"Clock Code - ZSDOS BIOS Vector"
+
+WBOOT	EQU	0		; Warm Boot Vector
+B_TIME	EQU	18*3		; Offset addr in BIOS
+
+	CSEG
+;-------------------------------------------------------------
+;	    Z S D O S    C L O C K    H E A D E R
+;-------------------------------------------------------------
+; Enter: HL points to a 6-byte buffer to Get/Set time
+; Exit :  A = 1 on Success, A = FFH if error
+;	 HL points to last char in buffer
+
+	JP	DOCLOK		; Jump to Read Clock
+	JP	DOCLOK		; Jump to Set Clock
+
+;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;	R E A D    a n d    S E T    T h e    C l o c k
+;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+DOCLOK:	EX	DE,HL		; Put Destination buffer back in DE
+BIOADR	EQU	$+1
+	LD	HL,0000		; Has it yet been set?
+	LD	A,H
+	OR	L
+	JR	NZ,DOCLK0	; ..jump if so
+	LD	HL,(0001)	; Else get Warm Boot entry
+BIOOFF	EQU	$+1
+	LD	L,00		; Set offset to Clock entry
+	LD	(BIOADR),HL	; ..add to code entry
+DOCLK0:	JP	(HL)		; Set address to stack
+
+
+	PAGE
+	SUBTTL	"Run-Time Configuration of Ports and Masks"
+
+; This code installs configurable items into the clock module
+; Enter with DE pointing to the physical address of the relocatable module
+
+	COMMON	/_POST_/
+
+	SETBYT	XOFFST,BIOOFF	; Set the BIOS offset in code
+	RET			; Nothing else to install
+
+	PAGE
+	SUBTTL	"Pre-Execution Clock Checks"
+
+; This module is executed just prior to installing the module to insure
+; that a valid clock is present
+; Enter with DE pointing to beginning of relocated clock CSEG
+
+	COMMON	/_PRE_/
+
+	INCLUDE	PRECLOCK.LIB
+
+	END
+
