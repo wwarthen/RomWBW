@@ -67,7 +67,7 @@ custom build.
     - 512KB ROM, 512KB RAM
     - 38.4KB serial console baud rate
     - Basic ROM/RAM disk
-    - IDE support via DISKIO
+    - PPIDE support via built-in PPI
     - Drives A:=ROM, B:=RAM, C:=PPIDE0-00, D:=PPIDE0-01, E:=PPIDE0-02, F:=PPIDE0-03
     
   N8VEM_ppisd.rom for N8VEM Z80 SBC V1/V2 + PPISD:
@@ -148,9 +148,16 @@ custom build.
     - 38.4KB serial console baud rate
     - Basic ROM/RAM disk
     - Floppy support via built-in FDC
-    - PPIDE support via built-in PPI
     - Drives A:=ROM, B:=RAM, C:=FD0, D:=FD1, E:=PPIDE00-0, F:=PPIDE0-01, G:=PPIDE0-02, H:=PPIDE0-03
 
+  ZETA_ppide.rom for Zeta Z80 SBC + PPIDE:
+    - 512KB ROM, 512KB RAM
+    - 38.4KB serial console baud rate
+    - Basic ROM/RAM disk
+    - Floppy support via built-in FDC
+    - PPIDE support via built-in PPI
+    - Drives A:=ROM, B:=RAM, C:=PPIDE0-00, D:=PPIDE0-01, E:=PPIDE0-02, F:=PPIDE0-03
+    
   ZETA_ppisd.rom for Zeta Z80 SBC + PPISD:
     - 512KB ROM, 512KB RAM
     - 38.4KB serial console baud rate
@@ -181,6 +188,14 @@ custom build.
     - PPIDE support via built-in PPI
     - Drives A:=ROM, B:=RAM, C:=FD0, D:=FD1, E:=PPIDE00-0, F:=PPIDE0-01, G:=PPIDE0-02, H:=PPIDE0-03
 
+  ZETA2_ppide.rom for Zeta 2 Z80 SBC + PPIDE:
+    - 512KB ROM, 512KB RAM
+    - 38.4KB serial console baud rate
+    - Basic ROM/RAM disk
+    - Floppy support via built-in FDC
+    - PPIDE support via built-in PPI
+    - Drives A:=ROM, B:=RAM, C:=PPIDE0-00, D:=PPIDE0-01, E:=PPIDE0-02, F:=PPIDE0-03
+    
   ZETA2_ppisd.rom for Zeta 2 Z80 SBC + PPISD:
     - 512KB ROM, 512KB RAM
     - 38.4KB serial console baud rate
