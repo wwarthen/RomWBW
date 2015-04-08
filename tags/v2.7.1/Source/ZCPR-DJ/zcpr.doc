@@ -1,0 +1,765 @@
+A Personal Note
+===============
+
+Somehow, I've managed to get by for the last 14 years using just ZCPR.
+But like some of you, I have fiddled with the standard ZCPR and
+modified it to suit my tastes.  As I added new commands or enriched old
+ones, I've always remained compatible with existing programs, all the
+BDOS replacements, and, most important of all, stayed within the 800H
+space allocation of the original Digital Research CCP.  Here are the
+fruits of my labors, I hope you enjoy this CCP replacement as much as I
+do.
+
+        Don Kirkpatrick
+        17595 S.W. Pheasant Lane
+        Beaverton, Oregon 97006
+        <Donald.C.Kirkpatrick@tek.com>
+
+
+Introduction
+============
+
+This console replacement is designed to run under CP/M 2.2 or any of
+the 2.2 BDOS replacements.  It requires a Z80 or better.  If you are
+running DRI's CCP or older versions of ZCPR1, this program is a
+significant improvement.  If you are running ZCPR3, CP/M 3.0, CP/M
+Plus, or MP/M, this will probably be a disappointment.
+
+If you are familiar with ZCPR3, you will recognize many of the
+enhancements here: comments on a command line, search path for the .com
+file, drive/user change with simple du:, CLEVEL3 command processing,
+proper SUBMIT file facility, and so on.  Nothing has been removed from
+DRI's CCP, only new features added.  AND IT ALL STILL FITS IN THE
+ORIGINAL 800H, THE SAME SPACE AS THE DIGITAL RESEARCH FIVE COMMAND
+CCP.
+
+Many of the standard commands have been enhanced.  For example, TYPE
+and LIST now have options to turn on or off page breaks.  Moreover, the
+console check for abort has been improved.
+
+Two commands have been added for use in submit files - SAK and BELL.
+These commands allow you to pause or ring the bell during submit file
+execution.
+
+Before you install this version of ZCPR onto your boot disks, try it by
+running it as a .com file.  Just edit the few customizing options and
+assemble the source.  After you decide it really is better, load it
+onto your boot track and make it your standard.  Complete instructions
+are located at the end of this document.
+
+The complete built-in command list is:
+
+    DIR - directory command enhanced to list optionally all user areas
+    REN - standard rename command
+    USER- move to new user number area on same drive
+    SAVE- save specified number of TPA pages or records in a file
+    TYPE- display a file on the console with optional page break pauses
+    LIST- print command plus optional form feed insertion
+    PAGE- send form feed to list device
+    ERA - standard file erase command
+    ERAQ- file erase with confirmation query at each file
+    DFU - set default user number for .com search path
+    BELL- send a bell character to the console
+    SAK - pause until a key is struck on the console (Strike Any Key)
+    SCL - toggle multiple commands per line (Single Command on a Line)
+    GET - load a file into the TPA at any specified location
+    JUMP- process command tail and execute program at specified address
+    GO  - process command tail and execute program loaded at 100H
+    PEEK- display hexadecimal byte string starting with specified address
+    POKE- load hexadecimal byte string starting with specified address
+    BOOT- execute BIOS cold boot routine
+
+
+Filename Processing
+===================
+
+The standard ZCPR3 du: drive/user file specification has been
+implemented.  Any filename can be in the du:fn.ft form.  For example:
+
+       A>era c4:junk*.*
+
+erases files on the C drive, user area 4 without leaving drive A user
+0.  When a user number is found in a filename, that user number is
+placed in S1 of the default FCB.  Bit 7 of S1 is set to inform the
+program using the FCB a user number was found.
+
+The * in an ambiguous file name has been improved.  Now a trailing *
+causes the remainder of the ambiguous name to be filled with '?', not
+just the fn field.  For example:
+
+       A>era c4:junk*
+
+is the same as the example above.  Previously, junk* was defined as
+'junk????.   '.  If you need the ft field blank, type 'junk*.'.  The
+question mark still works as a single character wild card.
+
+
+Command Line Processing
+=======================
+
+The  current user number is included as part of the command prompt for
+all non-zero user numbers.  The prompt is of the form du>, for example
+A2> or B10>.  If the SUPRES equate is true, the user number is
+suppressed for user 0 only.
+
+Multiple commands are typed on a single line separated by a command
+separator character.  Occasionally, you need to type the separator
+character in a command tail.  The SCL command toggles the multiple
+command enable.  The CMDCHR equate determines the command separator
+character.  A ';' has been chosen as the separator character in this
+distribution version.
+
+Comments are allowed on a command line.  When the comment separator
+character is encountered as the first character of a command, the
+remainder of the line is ignored.  The COMCHR equate determines the
+comment separator character.  A ';' has been chosen as the separator
+character in this distribution version.  Here is an example containing
+comments and multiple commands on a single line:
+
+   A>get 100 junk;peek 100;;this is a comment.
+   A>;this is also a comment.
+
+There exists a built-in search path for transient commands.  First, the
+current drive/user is searched.  Next, the current drive/default user
+is searched.  Last, drive A/default user is searched.  The DEFUSR
+equate determines the default user number, currently set to user 0 in
+this distribution version.  The default user is temporarily changed
+with the DFU command.  If a drive is specified in the transient
+command, the current and default user areas on the specified drive are
+searched.  If a user number is specified, that user area on the current
+and default drive are searched.  If both the drive and user number are
+specified, no search is performed.  The same drive/user area is never
+searched twice.
+
+Transient commands are always "called."  If a program terminates via a
+return rather than a warm boot, subsequent multiple commands on the
+command line are executed.  Any program exiting by a warm boot reloads
+ZCPR and the subsequent commands lost.
+
+A default command can be placed in the command buffer and control
+passed to ZCPR for processing.  The only thing required, besides
+placing the command in the buffer and jumping to CPRLOC, is to
+initialize the command character counter at the start of the buffer.
+The procedure is compatible with the original DRI CCP default command
+processing.  If ZCPR is entered at CPRLOC+3 jump, default command
+processing is suppressed.  Either way, register C must contain a valid
+drive/user, just like the original CCP.
+
+
+Submit File Processing
+======================
+
+A basic design choice had to be made in the design of ZCPR concerning
+the execution of submit files. The original CCP had a problem.  It
+ALWAYS looked for the $$$.SUB file on drive A and the submit program
+would place it on the current default drive.  When the you were logged
+onto drive B and you issued a submit command, the $$$.SUB was placed on
+drive B and not executed.
+
+After much debate it was decided to have ZCPR perform the same type of
+function as CCP (look for the $$$.SUB file on drive A), but the problem
+with SUBMIT.COM still exists.  Hence, RGF designed SuperSUB and RLC
+took his SuperSUB and designed SUB from it; both programs are set up to
+allow the selection at assembly time of creating the $$$.SUB on the
+default drive or on drive A.  If you don't have one of these newer
+submit programs, a procedure for patching the standard SUBMIT.COM has
+been included at the end.
+
+The fixed drive choice permits a submit file to contain a series of
+commands exactly as they would be entered from a CP/M console.  This
+permits things like:
+
+    A>dir
+    A>b:
+    B>dir
+
+to be executed, even though the currently default drive is changed
+during execution. If the $$$.SUB file were present on the default
+drive, the above series of commands would not work.  ZCPR would be
+looking for $$$.SUB on the default drive, and switching default drives
+without moving the $$$.SUB file would cause processing to abort.  Note
+that the same problem occurs if the user number of the $$$.SUB file is
+not predefined. ZCPR assumes that the $$$.SUB file is located on user 0
+of drive A.
+
+The trick of using the $ flag returned by the BDOS disk reset is used
+to speed the search for a $*.* file on drive A. This trick will not
+work if the $$$.SUB file were located on another drive.
+
+The '>' prompt character is replaced by a special character while a
+submit file is in execution.  The SPRMPT equate defines this special
+character, currently set to '$' in this distribution version.
+
+
+Command Syntax
+==============
+
+Multiple commands can be placed on one line.  If the comment character
+is encountered where a command should start, the rest of the line is
+ignored.  Any command can be renamed by editing the command table.
+Command names can be up to eight characters long and are terminated by
+bit 7 high.  If there is a conflict between an internal ZCPR command
+and a transient program of the same name, the internal command is
+executed.  Type the command with the du: included if the external
+transient command is the one desired.  Here is a complete alphabetized
+list of all the resident commands with their syntax:
+
+=============================================================================
+
+Command:  BELL
+
+Function: To ring terminal bell.
+
+Forms:    BELL
+
+Options:  None.
+
+Uses:     This command is designed to be placed in a submit file to
+          ring the bell to indicate significant checkpoints.
+
+=============================================================================
+
+Command:  BOOT
+
+Function: To execute BIOS cold boot routine.
+
+Forms:    BOOT
+
+Options:  REBOOT equate controls the inclusion/exclusion of this command.
+
+Uses:     Reboots the system without pushing the reset button.  The
+          cold boot entry point in the BIOS must be supported for this
+          command to work.
+
+=============================================================================
+
+Command:  DFU
+
+Function: To set the Default User Number for transient commands.
+
+Forms:    DFU <usrnum>
+
+Options:  DEFUSR equate defines the default user choice until this
+          command is entered.
+
+          NUMBASE equate defines the character that specifies a
+          hexadecimal number.  The distribution version is set to 'H'.
+
+Uses:     The default user area is searched after a transient command
+	  cannot be found in the current user area.  If the transient
+	  command still has not been found, the default user on the
+	  default drive is searched last.  The new default user number
+	  is in decimal, but hexadecimal numbers are entered by
+	  appending an 'H'.  The next warm boot will restore the
+	  original default user number.
+
+=============================================================================
+
+Command:  DIR
+
+Function: To display a directory listing of the files on a drive.
+
+Forms:    DIR <afn>       Display the DIR files
+          DIR <afn> S     Display the SYS files
+          DIR <afn> B     Display both DIR and SYS files
+          DIR <afn> A     Display both DIR and SYS files for all user areas
+
+Options:  TWOCOL equate controls the number of columns in the display.
+          Forty-column terminals are limited to two-column displays.
+
+          WIDE equate controls the spacing between the columns and
+          change the horizontal width of a directory display.
+
+          FENCE equate specifies the character separator between the
+          directory columns.
+
+          USRDLM equate specifies the character between the user number
+          and the filename.
+
+          USRFLG, SYSFLG, and SOFLG equates specify the command line
+          tail character that control the display of system and
+          non-system files.
+
+Uses:     Displays a directory listing of files in specific drive/user
+          area.
+
+=============================================================================
+
+Command:  ERA
+
+Function: To erase files.
+
+Forms:    ERA <afn>
+
+Options:  None.
+
+Uses:     Deletes files.  Names of erased files are displayed.
+
+=============================================================================
+
+Command:  ERAQ
+
+Function: To erase files with individual query.
+
+Forms:    ERAQ <afn>
+          <afn>? y          File erased
+          <afn>? <CR>       File not erased
+
+Options:  None.
+
+Uses:     Deletes a subset of a set of ambiguously specified files.
+          Any answer other than 'Y' (either case) will cause the file
+          to be skipped and not erased.
+
+=============================================================================
+
+Command:  GET
+
+Function: To load the specified file from disk to the specified address.
+
+Forms:    GET <hexadr> <ufn>
+
+Options:  None.
+
+Uses:     Loads a file into the TPA for patching purposes.  This command
+          searches for the specified file along the same search path as
+          the transient command loader.
+
+
+=============================================================================
+
+Command:  GO
+
+Function: To call the program in the TPA without loading from disk.
+
+Forms:    GO <command tail>
+
+Options:  None.
+
+Uses:     Most useful to rerun a program already loaded into the TPA.
+          Saves time and wear on disk drives.  The command tail is
+          entered exactly as it would appear if GO were replaced by the
+          program name.  Same as JUMP 100H, but more convenient,
+          especially when used with parameters for programs like STAT.
+
+=============================================================================
+
+Command:  JUMP
+
+Function: To call the program at a specified address.
+
+Forms:    JUMP <hexadr> <command tail>
+
+Options:  None.
+
+Uses:     Executes code not located at 100H.  For example, JUMP 0
+          warm boots.  The code must already reside at the specified
+          address.
+
+=============================================================================
+
+Command:  LIST
+
+Function: To print specified file on list device.
+-
+Forms:    LIST <ufn>      Print file
+          LIST <ufn> P    Print file without default paging
+
+Options:  NLINEP equate determines the number of lines per page.
+
+          FFKILL equate controls the suppression of form feeds before
+          printable text.
+
+          PGDFLG equate determines the command line tail character that
+          toggles the default form feed insertion every NLINEP lines.
+
+          NOSTAT equate controls the use of the BIOS list status call.
+
+Uses:     Prints files with/without pagination on LST: device.  A
+          listing is aborted by a console ^C.  Any submit file in
+          process is terminated and control is returned gracefully to
+          the console prompt.
+
+=============================================================================
+
+Command:  PAGE
+
+Function: To eject a page on list device via a form feed.
+
+Forms:    PAGE
+
+Options:  NOSTAT equate controls the use of the BIOS list status call.
+
+Uses:     Sends a form feed to the LST: device.  The page eject can
+	  be aborted by a console ^C if the system hangs because the
+	  printer is not ready.  If aborted, any submit file in process
+	  is terminated and control is returned gracefully to the
+	  console prompt.
+
+=============================================================================
+
+Command:  PEEK
+
+Function: To display hex values beginning at a specified address.
+
+Forms:    PEEK <hexadr> [<hexcnt>]
+
+Options:  None.
+
+Uses:     Displays hexadecimal values anywhere in the entire address
+          space.  The maximum value for <hexcnt> is 0FFH, but the
+          default <hexcnt> is 256.
+
+=============================================================================
+
+Command:  POKE
+
+Function: To poke a string of hex values into a set of consecutive
+          addresses.
+
+Forms:    POKE <hexadr> <hexval> [...<hexval>]
+
+Options:  None.
+
+Uses:     Modifies values anywhere in the entire address space.  Each
+          <hexval> represents one byte and is separated from the next
+          by a space.  The number of <hexval> are limited only by the
+          size of the command line buffer. The address is incremented
+          for each <hexval>.  Excellent for hand patching code.
+
+=============================================================================
+
+Command:  REN
+
+Function: To change the name of an existing file.
+
+Forms:    REN <newufn>=<oldufn>
+          REN <newufn>=<oldufn>     Existing <newufn>
+          Delete? y                 File deleted
+
+Options:  None.
+
+Uses:     Changes the names of files.  Any du: on <oldufn> is ignored;
+          the optional du: is on <newufn>.  If there already exists a
+          <newufn>, the console is queried for conformation.  Any
+          response except 'Y' (either case) aborts the command, kills
+          any submit file in process, and returns gracefully to the
+          command prompt.
+
+=============================================================================
+
+Command:  SAK
+
+Function: To pause until a key is struck.
+
+Forms:    SAK
+          ? <any key>
+
+Options:  None.
+
+Uses:     Pauses a submit file until a keystroke is entered.  Any
+	  character other than a ^C will resume execution.  A ^C kills
+	  the submit file, any commands remaining on the command the
+	  line are ignored, and control returns gracefully to the
+	  prompt.
+
+=============================================================================
+
+Command:  SAVE
+
+Function: To save the contents of TPA onto disk as a file.
+
+Forms:    SAVE <Number of Pages> <ufn>
+          SAVE <Number of Records> <ufn> R
+
+Options:  RECFLG equate determines the command tail character that
+          specifies records rather than pages.
+
+          NUMBASE equate defines the character that specifies a
+          hexadecimal number.  The distribution version is set to 'H'.
+
+Uses:     Saves the TPA to a file.  Records are 128 bytes long, pages
+	  are 256 bytes long.  Number of pages or records is in
+	  decimal, but a hexadecimal number is entered by appending an
+	  'H'.  Saved area begins at 100H.
+
+=============================================================================
+
+Command:  SCL
+
+Function: To force ZCPR to parse only a single command per line.
+
+Forms:    SCL
+
+Options:  MULTPL equate determines the inclusion/exclusion of this
+          command and whether or not multiple commands are allowed.
+
+          CMDCHR equate determines the character separating multiple
+          commands.
+
+Uses:     Some transient commands require the command separator in the
+          command tail.  This command turns off multiple command
+          parsing so the entire command tail is sent to the transient
+          program.  Multiple command format is reset at the next warm
+          boot. SCL toggles.
+
+=============================================================================
+
+Command:  TYPE
+
+Function: To display specified file on console.
+
+Forms:    TYPE <ufn>      Display file
+          TYPE <ufn> P    Display file without default paging
+
+Options:  NLINES equate determines the number of lines per screen.
+
+          FFKILL equate controls the suppression of form feeds before
+          printable text.
+
+          PGDFLG equate determines the command line tail character that
+          toggles the default form feed insertion every NLINEP lines.
+
+Uses:     Displays files with/without pagination on CON: device.  A
+          display is aborted by a console ^C.  If aborted, any submit
+          file in process terminates and control returns gracefully to
+          the console prompt.  When page breaks are enabled, any
+          console character except ^C will display the next page of
+          text.
+
+=============================================================================
+
+Command:  USER
+
+Function: To change current user number.
+
+Forms:    USER <usrnum>
+
+Options:  SUPRES equate controls the display of the user number in the
+          prompt when the user number is zero.
+
+          MAXUSR equate controls the maximum allowable user number.
+
+          NUMBASE equate defines the character that specifies a
+          hexadecimal number.  The distribution version is set to 'H'.
+
+Uses:     This command changes the current user number.  The new user
+          number is in decimal, but a hexadecimal number is entered by
+          appending an 'H'.  This command has been retained for
+          compatibility purposes only.  It is far easier to change
+          disk/user by typing du:.
+
+=============================================================================
+
+
+Error Messages
+==============
+
+If any error is encountered as a command line is being parsed, a
+message will be printed and, for serious errors, the remainder of the
+line is ignored.  Below is a complete list of all ZCPR error messages.
+Any error message encountered that is not on this list came from some
+program other than ZCPR.
+
+"?"
+
+   An error was detected in the command.  The an item on the command
+   line was not what was expected.  The command line is echoed up to
+   the position where the error was detected, as close as can be
+   determined, and the "?" printed.  Any commands remaining on the
+   command the line are ignored and any $$$.SUB file erased.
+
+"Full"
+
+   If ZCPR was attempting to load a transient program, one of two
+   things has gone wrong: either the program is so large that it won't
+   fit into the TPA or a read error was returned from the BDOS.  If
+   ZCPR was attempting to save a file, the BDOS write call returned
+   failure. Either the disk or the directory is full.  Any commands
+   remaining on the command line are ignored and any $$$.SUB file
+   erased.
+
+"No File"
+
+   No file could be found matching the filename specified in the
+   command.  This message is also be printed if the BDOS read command
+   returns failure.  If ZCPR was looking for a transient command, any
+   commands remaining on the command line are ignored and any $$$.SUB
+   file erased.
+
+"Name Error"
+
+   The specified filename has a user number larger than the allowable
+   maximum or an ambiguous filename was entered where only an
+   unambiguous filename is permitted.  Any commands remaining on the
+   command line are ignored and any $$$.SUB file erased.
+
+"Delete?"
+
+   Not really an error, but there already exists a file with the same
+   name as the requested new name in the REN command.  Any response
+   except 'Y' (either case) aborts the command, any commands remaining
+   on the command line are ignored, and any $$$.SUB file erased.
+
+"All?"
+
+   Not really an error, but a check to verify that all files on the
+   drive/user area are to be erased.  Any response except 'Y' (either
+   case) aborts the command and any commands remaining on the command
+   line are ignored.
+
+
+Installation Instructions
+=========================
+
+1) The first task is to determine the location of your BDOS because you
+   MUST set the P2DOS equate to this value.  If you do not know the
+   location of your BDOS, use ZCPRDEMO to find it.  If you do not
+   already have ZCPRDEMO.COM, assemble ZCPR with the TEST equate true
+   to make it.  A bootstrap loader will be included and you can run the
+   .com file.  This program assembles without errors using Microsoft's
+   M80/L80:
+
+   A>m80 =zcpr
+   A>l80 zcpr,zcprdemo/n/e
+
+   Other assemblers can be used, but ZCPR.MAC will probably require
+   editing to convert it to a form compatible.  The major decision in
+   converting is to determine how the .PHASE pseudo is to be handled.
+   Probably the best solution to the .PHASE is to generate a .hex
+   file and load it with an offset using DDT/SID/ZSID.  Consult the
+   "r" command in the DDT/SID/ZSID manaul.
+
+   Run ZCPRDEMO and peek at low memory:
+
+   A>zcprdemo
+   A<peek 0 10
+   0000 C3 03 F2 00 00 C3 06 E4 00 00 00 00 00 00 00 00
+   A<^C
+
+   Notice the prompt character has changed from a '>' to a '<'.  This
+   tells you the special debug version of ZCPR is running.  See the
+   debug section at the end for details.  Address 0 contains a jump 3
+   beyond the start of the BIOS and address 5 contains a jump 6 beyond
+   the start of the BDOS.
+
+   Be careful if you attempt to execute a transient program from
+   ZCPRDEMO.  Some transient programs, like NSWP, return rather than
+   warm boot when done. These programs don't know that ZCPRDEMO is at
+   address 8000H rather than just under the BDOS.  If they overwrite
+   ZCPRDEMO, then the return is to random code. Of course, this is not
+   a problem when ZCPR is installed just under the BDOS.
+
+2) You MUST edit the code to place your BDOS/P2DOS/Z80DOS/ZRDOS start
+   address in the P2DOS equate.  Set COMLD true (and TEST false if you
+   set it true in step 1 above) and make ZCPR.COM.  A bootstrap loader
+   will be included.
+
+   Assuming you successfully assemble it, just type "zcpr" to run it.
+   However, every time there is a warm boot, it will be  replaced by
+   the boot track CCP.  If you like what you see, place a copy on the
+   boot track to make it available all the time.
+
+3) Reassemble, this time with COMLD false to make ZCPRNBLD.COM (ZCPR
+   No Boot LoaDer).  
+
+4) Run SYSGEN to load a copy of the boot track into memory.
+
+   B>; Sample terminal session for integrating ZCPR
+   B>sysgen
+   SYSGEN VER 2.2
+   SOURCE DRIVE NAME (OR RETURN TO SKIP)a
+   SOURCE ON A, THEN TYPE RETURN  <cr>
+   FUNCTION COMPLETE
+   DESTINATION DRIVE NAME (OR RETURN TO REBOOT)  <cr>
+
+
+5) Run SAVE to save a track image to a file (eg: SAVE 32 BOOTFILE).
+   The number on the save command depends on the size of your boot
+   track loader; it can be as small as 31 and as large as 44.  If you
+   have extra disk space or are not sure, play it safe and use 44.
+
+   B>save 44 cpm56.com      <-- We now have a SYSGEN image of CP/M
+
+6) Find the location of the stock CCP by peeking at the boot file. It
+   is normally located at address 980H in the file. Using ZCPR:
+
+   B>zcpr                   <-- Reload zcpr.com version
+   B>get 100 cpm56.com
+
+   and search for the start of the console processor:
+
+   B>peek 980
+   0980 C3 xx xx C3 xx xx 7F 00 43 4F 50 59 52 49 47 48
+   0990 54 20 ...
+
+   If you don't find the start of the CCP at 980H, don't be
+   discouraged. It is there, but at a higher address.  Keep looking.
+
+7) When you find the location of the CCP, patch it with the new ZCPR
+   image.
+
+   B>get 980 zcprnbld.com
+
+8) Place the new file onto the boot track of a test disk, not your
+   original, using SYSGEN, and try it out.
+
+   B>sysgen
+   SYSGEN VER 2.2
+   SOURCE DRIVE NAME (OR RETURN TO SKIP) <cr>      <-- Use memory image
+   DESTINATION DRIVE NAME (OR RETURN TO REBOOT)b   <-- Load onto drive B
+   DESTINATION ON B, THEN TYPE RETURN <cr>
+   FUNCTION COMPLETE
+   DESTINATION DRIVE NAME (OR RETURN TO REBOOT) <cr>
+
+   You should now have a ZCPR system boot disk.  Notice you did all
+   your work on drive B so you wouldn't destroy the original.
+
+
+
+This may seem like a great number of steps, but each is only a single
+CP/M command line, total time is only 5 minutes or so after you get
+ZCPR to run as a .com file.
+
+
+Debugging ZCPR
+==============
+
+Special provisions have been make to ease the debugging of ZCPR.
+Setting the TEST equate true causes the assembler to build a version of
+ZCPR that executes in the TPA.  This allows the use of a debugger like
+DDT, ZSID, or Z8E to load and monitor execution.  To identify the debug
+version, the prompt character is changed from '>' to '<' when it runs.
+
+CPRLOC for the test version is 8000H.  A bootstrap loader is included
+at the beginning to move the image to this address.  Do not try to set
+a breakpoint until after the loader has moved ZCPR.  The easiest way to
+accomplish this is to single-step through the loader and then set your
+breakpoints.  Change the execution address to something lower if 8000H
+does not leave enough space for the debugger.
+
+A small amount of code is also added at the end of the debug version to
+compute the BIOS list status and cold boot entry points at run time.
+This permits the demo version to execute properly without setting the
+BDOS location equate.
+
+Patching SUBMIT.COM
+===================
+
+SUBMIT.COM is patched to run with ZCPR by the following procedure.
+This is recommended if the user does not have one of the newer public
+domain versions of submit.  This patch simply makes SUBMIT.COM always
+place the $$$.SUB file on drive A.  Illustrative terminal session
+follows:
+
+  A>get 100 submit.com;peek 5bb 2
+  05BB 00 24              <-- Patch is at 5BB Hex
+  A>poke 5bb 1            <-- Change 0 (default drive) to 1 (drive A)
+  A>peek 5b0 20           <-- Let's check just to make sure
+  05B0 00 00 00 00 00 00 30 30 31 20 24 01 24 24 24 20
+  05C0 20 20 20 20 53 55 42 00 00 00 1A 1A 1A 1A 1A 1A
+  A>save 5 newsubmt.com   <-- Save new SUBMIT.COM file
+
+Pretty simple, huh?
+ny error message encountered that is not on this list came from some
+prog

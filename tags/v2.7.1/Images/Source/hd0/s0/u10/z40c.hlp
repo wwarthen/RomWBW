@@ -1,0 +1,61 @@
+   DIR       - Display files in Directory
+  {ERASE}    - Delete specified file(s)
+  {SPACE}    - Display Free Space on specified Drive
+  {PROTECT}  - Alter SYStem and Read-Only Attributes on file
+:
+	 DIR  - Display files in Directory
+
+   This command displays an Unsorted directory listing for a specified
+or the default Drive/User.  Optional toggles control display of only
+Directory (Non-System) files, SYStem files, or Both with the default
+being only Directory files.
+
+Syntax:		DIR [DU: | DIR:][Filename][.Typ] [options]
+
+   Options are:	S - Display only SYStem files
+		A - Display both SYStem and Non-SYStem files
+
+NOTE: Standard Wildcards in Filename and Type are supported as:
+	"?" - matches any character
+	"*" - matches any character in remainder of string
+
+:
+	 {ERASE}  - Deleted specified file(s)
+
+   This command allows the user to delete files from the currently
+logged directory.  If an "I" is entered after the filespec, then
+confirmation is requested prior to physically deleteing the files
+from the directory.
+
+Syntax:		ERA [DU: | DIR:][Filename][.Typ] [I]
+
+NOTE: Standard Wildcards in Filename and Type are supported as:
+	"?" - matches any character
+	"*" - matches any character in remainder of string
+
+:
+	 {SPACE}  - Display Free Space on specified Drive
+
+   This command will display free space in Kilobytes on logical
+drives up to 999,999.  This function is automatically included in
+DIR, ERA and CP commands.
+
+Syntax:		SP [DU: | DIR:]
+
+:
+	 {PROTECT}  - Alter SYStem and Read-Only Attributes
+
+   This command allows the user to alter SYStem and Read-Only
+Attributes of a single file or multiple files.  It only may be
+executed against files in the currently-logged directory.
+
+Syntax:		PROT Filename[.Typ] [options]
+
+   Options are:	"R" - Set Read-Only Attribute, else Reset to R/W
+		"S" - Set SYStem Attribute, else Reset to Dir
+		"I" - Ask Approval before altering attributes
+
+NOTE: Standard Wildcards in Filename and Type are supported as:
+	"?" - matches any character
+	"*" - matches any character in remainder of string
+

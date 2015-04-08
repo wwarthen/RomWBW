@@ -1,0 +1,70 @@
+  {COPY}    - Create a duplicate file in another directory
+  {GET}     - Load a file into memory
+  {GO}      - Execute an existing file at beginning of TPA
+  {RENAME}  - Change the name of a file
+  {SAVE}    - Copy Memory contents to a file
+:
+	 {COPY}  - Create a duplicate file in another directory
+
+   This command creates a duplicate of a specified file in another
+or the default directory.  The new file is also datestamped with the
+times associated with the original file.
+
+Syntax:		CP Dest=Source
+			or
+		CP Source Dest
+			or
+		CP Source
+
+	Where Dest and Source are:  [DU: | DIR:]Filename.Typ
+
+NOTE: If no destination filespec is given, the currently logged
+	Drive/User and source filename and type are assumed.
+
+:
+	 {GET}  - Load a file into memory
+
+   This command loads a specified file into TPA memory at a
+specified Hexidecimal address.  It is only effective for files
+in the currently-logged Drive/User.
+
+Syntax:		GET Addr Filename.Typ
+
+	Where Addr is a Hexidecimal Address in the TPA memory.
+
+:
+	 {GO}  - Execute an existing file at beginning of TPA
+
+   This command effectively Re-executes the last file loaded in
+TPA memory at the normal program location at 100H.  It is the
+same as executing a JUMP 100H command.
+
+Syntax:		GO
+
+:
+	 {RENAME}  - Change the name of a file
+
+   This command permits a file name and type to be altered.  The
+File DateStamping information is not altered.
+
+Syntax:		REN [DU: | DIR:]NewID=OldID
+		   or
+		REN [DU: | DIR:]OldID NewID
+
+	Where OldID and NewID are:  Filename.Typ
+
+:
+	 {SAVE}  - Copy Memory contents to a file
+
+   This command permits an area of TPA memory starting at 100H to
+be copied to a specified disk file.  Options permit specifying the
+size in decimal or Hexidecimal Pages (256 bytes) or Sectors (128
+bytes).
+
+Syntax:		SAVE nn[H] [DU: | DIR:]Filename.Typ [option]
+
+	Where nn is the size [0..255] in Decimal, or Hex if suffixed
+	with an "H".  If the option field contains an "S", then nn
+	Sectors of 128 bytes are saved, otherwise nn Pages of 256
+	bytes are saved.
+

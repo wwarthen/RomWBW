@@ -1,0 +1,433 @@
+;:::::::::::::::::::::::::::::::::::::::*****************************
+;   HBIOS - HBios Interface Routines	***** Hardware-Specific *****
+;					*****************************
+;
+;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+;
+; CHARACTER DEVICES (ONLY FIRST NIBBLE RELEVANT, SECOND NIBBLE RESERVED FOR UNIT)
+;
+HBCIO_UART	EQU	000H
+HBCIO_ASCI	EQU	010H
+HBCIO_VDU	EQU	020H
+HBCIO_CVDU	EQU	030H
+HBCIO_UPD7220	EQU	040H
+HBCIO_N8V	EQU	050H
+HBCIO_PRPCON	EQU	060H
+HBCIO_PPPCON	EQU	070H
+HBCIO_CRT	EQU	0D0H
+HBCIO_BAT	EQU	0E0H
+HBCIO_NUL	EQU	0F0H
+;
+; DISK DEVICES (ONLY FIRST NIBBLE RELEVANT, SECOND NIBBLE RESERVED FOR UNIT)
+;
+HBDEV_MD	EQU	000H
+HBDEV_FD	EQU	010H
+HBDEV_RF	EQU	020H
+HBDEV_IDE	EQU	030H
+HBDEV_ATAPI	EQU	040H
+HBDEV_PPIDE	EQU	050H
+HBDEV_SD	EQU	060H
+HBDEV_PRPSD	EQU	070H
+HBDEV_PPPSD	EQU	080H
+HBDEV_HDSK	EQU	090H
+;
+HB_DEFBNK	EQU	BID_USR		; Default bank number
+;
+; LOCATION OF DISPATCH ENTRY IN HBIOS BANK
+;
+HB_DISPATCH	EQU	0203H
+;
+; PLATFORM SPECIFIC CONSTANTS
+;
+	IF N8
+N8_BASE		EQU	80H		; BASE I/O ADDRESS BOARD PERIPHERALS (NON-CPU)
+ACR		EQU	N8_BASE + 14H	; AUXILLARY CONTROL REGISTER
+DEFACR		EQU	1BH		; DEFAULT VALUE FOR ACR
+CPU_BBR		EQU	40H + 39H
+	ENDIF
+
+	IF MK4
+CPU_BBR		EQU	40H + 39H
+	ENDIF
+
+	CSEG
+
+	IF INTPXY
+
+	DB	0	; Prevents link error in BPBUILD
+	
+HB_XFC		EQU	0FFE0H
+HB_XFCIMG	EQU	$
+
+	.PHASE	HB_XFC 
+HB_CURBNK	DB	0
+HB_PRVBNK	DB	0		; DEPRECATED!!!
+HB_SRCADR	DW	0
+HB_SRCBNK	DB	0
+HB_DSTADR	DW	0
+HB_DSTBNK	DB	0
+		DB	0,0,0,0,0,0,0,0
+HB_INVOKE	JP	HBX_INVOKE
+HB_BNKSEL	JP	HBX_BNKSEL
+HB_BNKCPY	JP	HBX_BNKCPY
+HB_BNKCALL	JP	0 		; HBX_BNKCALL (NOT IMPLEMENTED)
+		DB	0,0		; RESERVED
+HB_IDENT	DW	0 		; HBX_IDENT
+	.DEPHASE
+
+HB_XFCSIZ	EQU	$ - HB_XFCIMG
+
+	ELSE
+
+HBX_INVOKE	EQU	0FFF0H
+HBX_BNKSEL	EQU	0FFF3H
+HBX_BNKCPY	EQU	0FFF6H
+HBX_BNKCALL	EQU	0FFF9H
+
+HB_CURBNK	EQU	0FFE0H
+;HB_PRVBNK	EQU	0FFE1H
+HB_SRCADR	EQU	0FFE2H
+HB_SRCBNK	EQU	0FFE4H
+HB_DSTADR	EQU	0FFE5H
+HB_DSTBNK	EQU	0FFE7H
+
+	ENDIF
+
+;
+;==================================================================================================
+;   HBIOS INTERFACE
+;==================================================================================================
+;
+HBX_INIT:
+
+	IF INTPXY
+
+	; Copy HB_XFCIMG to target location
+	LD	HL,HB_XFCIMG
+	LD	DE,HB_XFC		; point to HBIOS comm block
+	LD	BC,HB_XFCSIZ
+	LDIR
+
+	; Setup RST 08 vector
+	LD	A,0C3H			; $C3 = JP
+	LD	(08H),A
+	LD	HL,HBX_INVOKE
+	LD	(09H),HL
+
+	ENDIF
+	
+	; Init HB data fields
+	LD	A,BID_USR
+	LD	(HB_CURBNK),A
+	LD	(HB_SRCBNK),A
+	LD	(HB_DSTBNK),A
+	
+	RET
+
+HBX_SETBNK:
+	JP	HBX_BNKSEL
+
+HBX_XCOPY:
+	LD	A,C
+	LD	(HB_SRCBNK),A
+	LD	A,B
+	LD	(HB_DSTBNK),A
+	RET
+
+HBX_COPY:
+	LD	(HBX_STKSAV),SP	; Save current stack
+	LD	SP,HBX_STACK	; Activate our private stack
+	CALL	HBX_BNKCPY	; Do the work with private stack active
+	LD	SP,(HBX_STKSAV)	; Back to original stack
+	RET
+	
+	IF INTPXY
+;
+; Enter at HBX_BNKSEL to set bank temporarily and avoid
+; updating the "current" bank.
+;
+HBX_BNKSEL:
+	LD	(HB_CURBNK),A
+
+	IF N8VEM OR ZETA
+	OUT	(MPCL_ROM),A
+	OUT	(MPCL_RAM),A
+	ENDIF
+
+	IF N8
+	BIT	7,A
+	JR	Z,HBX_ROM
+;
+HBX_RAM:
+	RES	7,A
+	RLCA
+	RLCA
+	RLCA
+	OUT0	(CPU_BBR),A
+	LD	A,DEFACR | 80H
+	OUT0	(ACR),A
+	RET
+;
+HBX_ROM:
+	OUT0	(RMAP),A
+	XOR	A
+	OUT0	(CPU_BBR),A
+	LD	A,DEFACR
+	OUT0	(ACR),A
+	RET
+	ENDIF
+
+	IF MK4
+	RLCA
+	RLCA
+	RLCA
+	OUT0	(CPU_BBR),A
+	ENDIF
+
+	RET
+;
+;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+; GETBNK - Get current memory bank and return in A.
+;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+;
+HBX_GETBNK:
+	LD	A,(HB_CURBNK)
+	RET
+;
+; Entry point HBX_BNKCPY is for use internally and
+; assumes a valid stack already exists in upper 32K.
+;
+HBX_BNKCPY:
+	; Save current bank to restore at end
+	LD	A,(HB_CURBNK)
+	LD	(HBX_CPYBNK),A
+
+	; Setup for copy loop
+	LD	(HB_SRCADR),HL	; Init working source adr
+	LD	(HB_DSTADR),DE	; Init working dest adr 
+	LD	H,B		; Move bytes to copy from BC...
+	LD	L,C		;   to HL to use as byte counter
+
+HBX_COPY2:	; Copy loop
+	LD	A,L		; Low byte of count to A
+	AND	7FH		; Isolate bits relevant to 128 byte buf
+	LD	BC,80H		; Assume full buf copy
+	JR	Z,HBX_COPY3	; If full buf copy, go do it
+	LD	C,A		; Otherwise, BC := bytes to copy
+
+HBX_COPY3:
+	PUSH	HL		; Save bytes left to copy
+	CALL	HBX_COPY4	; Do it
+	POP	HL		; Recover bytes left to copy
+	XOR	A		; Clear CF
+	SBC	HL,BC		; Reflect bytes copied in HL
+	JR	NZ,HBX_COPY2	; If any left, then loop
+
+	; FIX: this should be done elsewhere!!!
+	LD	A,HB_DEFBNK	; Default bank id
+	LD	(HB_SRCBNK),A	; ... to source bank id
+	LD	(HB_DSTBNK),A	; ... and destination bank id
+
+	LD	A,0FFH		; Load original bank ($FF is replaced at entry)
+HBX_CPYBNK	EQU	$ - 1
+
+	JR	HBX_BNKSEL	; Return via bank set
+
+HBX_COPY4:
+	; Switch to source bank
+	LD	A,(HB_SRCBNK)	; Get source bank
+	CALL	HBX_BNKSEL	; Set bank without making it current
+
+	; Copy BC bytes from HL -> BUF
+	; Allow HL to increment
+	PUSH	BC		; Save copy length
+	LD	HL,(HB_SRCADR)	; Point to source adr
+	LD	DE,HBX_BUF	; Setup buffer as interim destination
+	LDIR			; Copy BC bytes: src -> buffer
+	LD	(HB_SRCADR),HL	; Update source adr
+	POP	BC		; Recover copy length
+	
+	; Switch to dest bank
+	LD	A,(HB_DSTBNK)	; Get destination bank
+	CALL	HBX_BNKSEL	; Set bank without making it current
+
+	; Copy BC bytes from BUF -> HL
+	; Allow DE to increment
+	PUSH	BC		; Save copy length
+	LD	HL,HBX_BUF	; Use the buffer as source now
+	LD	DE,(HB_DSTADR)	; Setup final destination for copy
+	LDIR			; Copy BC bytes: buffer -> dest
+	LD	(HB_DSTADR),DE	; Update dest adr
+	POP	BC		; Recover copy length
+
+	RET			; Done
+;
+;==================================================================================================
+;   HBIOS ENTRY FOR RST 08 PROCESSING
+;==================================================================================================
+;
+; ENTRY POINT FOR BIOS FUNCTIONS (TARGET OF RST 08)
+;
+HBX_INVOKE:
+	LD	(HBX_STKSAV),SP	; SAVE ORIGINAL STACK FRAME
+	LD	SP,HBX_STACK	; SETUP NEW STACK FRAME
+
+	LD	A,(HB_CURBNK)	; GET CURRENT BANK
+	LD	(HBX_INVBNK),A	; SETUP TO RESTORE AT EXIT
+
+	LD	A,BID_HB	; HBIOS BANK
+	CALL	HBX_BNKSEL	; SELECT IT
+
+	CALL	HB_DISPATCH	; CALL HBIOS FUNCTION DISPATCHER
+
+	PUSH	AF		; SAVE AF (FUNCTION RETURN)
+	LD	A,0FFH		; LOAD ORIGINAL BANK ($FF IS REPLACED AT ENTRY)
+HBX_INVBNK	EQU	$ - 1
+	CALL	HBX_BNKSEL	; SELECT IT
+	POP	AF		; RESTORE AF
+
+	LD	SP,(HBX_STKSAV)	; RESTORE ORIGINAL STACK FRAME
+
+	RET			; RETURN TO CALLER
+	
+	ENDIF
+
+;==================================================================================================
+;	Load  A,(HL)  from  Alternate  Bank  (in Reg C)
+;==================================================================================================
+
+HBX_FRGETB:
+	LD	(HBX_STKSAV),SP	; Save current stack
+	LD	SP,HBX_STACK	; Activate our private stack
+	
+	LD	A,(HB_CURBNK)	; Get current bank
+	LD	(HBX_BNKSAV),A	; Save current bank
+
+	PUSH	BC
+	LD	A,C
+	DI
+
+	CALL	HBX_BNKSEL
+
+	LD	C,(HL)
+	LD	A,(HBX_BNKSAV)
+
+	CALL	HBX_BNKSEL
+
+;WW	EI
+	LD	A,C
+	POP	BC
+
+	LD	SP,(HBX_STKSAV)	; RESTORE ORIGINAL STACK FRAME
+	RET
+
+;==================================================================================================
+;	Load  DE,(HL)  from  Alternate  Bank
+;==================================================================================================
+
+HBX_FRGETW:
+	LD	(HBX_STKSAV),SP	; Save current stack
+	LD	SP,HBX_STACK	; Activate our private stack
+
+	LD	A,(HB_CURBNK)	; Get current bank
+	LD	(HBX_BNKSAV),A	; Save current bank
+
+	LD	A,C
+	DI
+
+	CALL	HBX_BNKSEL
+
+	LD	E,(HL)
+	INC	HL
+	LD	D,(HL)
+	DEC	HL
+	LD	A,(HBX_BNKSAV)
+
+	CALL	HBX_BNKSEL
+
+;WW	EI
+
+	LD	SP,(HBX_STKSAV)	; RESTORE ORIGINAL STACK FRAME
+	RET
+
+;==================================================================================================
+;	Load  (HL),A  to  Alternate  Bank  (in Reg C)
+;==================================================================================================
+
+HBX_FRPUTB:	
+	LD	(HBX_STKSAV),SP	; Save current stack
+	LD	SP,HBX_STACK	; Activate our private stack
+
+	PUSH	AF
+	LD	A,(HB_CURBNK)	; Get current bank
+	LD	(HBX_BNKSAV),A	; Save current bank
+	POP	AF
+
+	PUSH	BC
+	LD	B,A
+	LD	A,C
+	DI
+
+	CALL	HBX_BNKSEL
+
+	LD	(HL),B
+	LD	A,(HBX_BNKSAV)
+
+	CALL	HBX_BNKSEL
+
+;WW	EI
+	POP	BC
+
+	LD	SP,(HBX_STKSAV)	; RESTORE ORIGINAL STACK FRAME
+	RET
+
+;==================================================================================================
+;	Load  (HL),DE  to  Alternate  Bank
+;==================================================================================================
+
+HBX_FRPUTW:	
+	LD	(HBX_STKSAV),SP	; Save current stack
+	LD	SP,HBX_STACK	; Activate our private stack
+
+	LD	A,(HB_CURBNK)	; Get current bank
+	LD	(HBX_BNKSAV),A	; Save current bank
+
+	LD	A,C
+	DI
+
+	CALL	HBX_BNKSEL
+
+	LD	(HL),E
+	INC	HL
+	LD	(HL),D
+	DEC	HL
+	LD	A,(HBX_BNKSAV)
+
+	CALL	HBX_BNKSEL
+
+;WW	EI
+
+	LD	SP,(HBX_STKSAV)	; RESTORE ORIGINAL STACK FRAME
+	RET
+
+;==================================================================================================
+;
+; PRIVATE DATA
+;
+
+	DSEG
+
+HB_DSKBUF	DEFW	0	; Address of physical disk buffer in HBIOS bank
+
+HBX_BNKSAV	DEFB	0	; Saved bank id during HBIOS calls
+HBX_STKSAV	DEFW	0	; Saved stack pointer during HBIOS calls
+		DEFS	64	; Private stack for HBIOS
+HBX_STACK	EQU	$	; Top of private stack
+
+	IF INTPXY
+
+HBX_RETBNK	DEFB	0	; Bank to activate on return from BNKCPY
+
+HBX_BUF		DEFS	80H	; Interbank copy buffer
+
+	ENDIF

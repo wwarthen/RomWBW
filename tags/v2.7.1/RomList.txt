@@ -1,0 +1,196 @@
+You should find the following ROM
+images in the Output driectory.
+Refer to the descriptions below to select 
+one that matches your hardware 
+configuration, burn it, and use it.
+
+All builds have the following:
+ - 512KB ROM Disk
+ - 512KB RAM Disk
+ - 38.4Kbps baud console
+
+All of the above can be modified by using
+a custom build.  See Build.txt in the 
+Doc directory.
+
+Note have all hard disk units are assumed to have
+at least 2 slices and therefore two drive letters
+are assigned per disk unit by default.  However,
+you can easily add/remove drive letters and slices
+by using the ASSIGN command to modify drive
+letter to disk/slice mapping on the fly at
+the command line.
+
+Note that there are no longer separate
+ROM images for CP/M and ZSystem.  Both
+OS variants are now imbedded in the ROM
+image and you are given the ability to
+choose the one you want to boot at
+startup.
+
+  N8VEM_std.rom for N8VEM Z80 SBC V1/V2:
+    - Drives A:=ROM, B:=RAM
+
+  N8VEM_diskio.rom for N8VEM Z80 SBC V1/V2 + DISKIO:
+    - Floppy support via DISKIO
+    - IDE support via DISKIO
+    - Drives A:=ROM, B:=RAM, C:=FD0, D:=FD1, E:=IDE0:00, F:=IDE0:01
+
+  N8VEM_dide.rom for N8VEM Z80 SBC V1/V2 + DUAL IDE:
+    - Floppy support via DISKIO
+    - IDE support via DISKIO
+    - Drives A:=ROM, B:=RAM, C:=FD0, D:=FD1, E:=IDE0:00, F:=IDE0:01
+    
+  N8VEM_diskio3.rom for N8VEM Z80 SBC V1/V2 + DISKIO3:
+    - Floppy support via DISKIO3
+    - IDE support via DISKIO3
+    - Drives A:=ROM, B:=RAM, C:=FD0, D:=FD1, E:=IDE0:00, F:=IDE0:01
+
+  N8VEM_diskio3+cvdu.rom for N8VEM Z80 SBC V1/V2 + DISKIO3:
+    - Floppy support via DISKIO3
+    - IDE support via DISKIO3
+    - ColorVDU board support
+    - Console defaults to VGA & PS/2 Keyboard.  Short JP2 (CONFIG)
+      to use the serial port as the console.
+    - Drives A:=ROM, B:=RAM, C:=FD0, D:=FD1, E:=IDE0:00, F:=IDE0:01
+
+  N8VEM_ppide.rom for N8VEM Z80 SBC V1/V2 + PPIDE:
+    - PPIDE support via built-in PPI
+    - Drives A:=ROM, B:=RAM, C:=PPIDE0:00, D:=PPIDE0:01
+    
+  N8VEM_ppisd.rom for N8VEM Z80 SBC V1/V2 + PPISD:
+    - PPISD support
+    - Drives A:=ROM, B:=RAM, C:=SD0:00, D:=SD0:01
+    
+  N8VEM_dsd.rom for N8VEM Z80 SBC V1/V2 + Dual SD:
+    - Dual SD support
+    - Drives A:=ROM, B:=RAM, C:=SD0:00, D:=SD0:01
+    
+  N8VEM_propio.rom for N8VEM Z80 SBC V1/V2 + PROPIO:
+    - SD Card support via PropIO
+    - VGA console support via PropIO
+    - PS/2 Keyboard support via PropIO
+    - You *MUST* use the RomWBW specific firmware
+      for the Propeller found in the Support directory!
+    - Console defaults to VGA & PS/2 Keyboard.  Short JP2 (CONFIG)
+      to use the serial port as the console.
+    - Drives A:=ROM, B:=RAM, C:=PRPSD0:00, D:=PRPSD0:01
+
+  N8VEM_mfp.rom for N8VEM Z80 SBC V1/V2:
+    - IDE support via Multifunction / PIC
+    - Second UART via Multifunction / PIC
+    - Drives A:=ROM, B:=RAM, C:=PPIDE0:00, D:=PPIDE0:01
+
+  N8VEM_ci.rom for N8VEM Z80 SBC V1/V2:
+    - Cassette Interface mapped to RDR/PUN
+    - Drives A:=ROM, B:=RAM
+
+  N8VEM_simh.rom for N8VEM SIMH Simulator:
+    - SIMH HDSK (simulated hard disk) support
+    - Drives A:=ROM, B:=RAM, C:=HDSK0:00, D:=HDSK0:01
+
+  N8VEM_rf.rom for N8VEM Z80 SBC V1/2 + RAM Flopppy:
+    - RAM Floppy support
+    - Drives A:=ROM, B:=RAM, C:=RF0, D:=RF1
+
+  N8VEM_vdu.rom for N8VEM Z80 SBC V1/V2:
+    - VDU board support
+    - Drives A:=ROM, B:=RAM
+	- NOTE: Console defaults to CRT & PS/2 Keyboard.  Short JP2
+	  (one bit input port) to use the serial port as the console.
+    
+  N8VEM_cvdu.rom for N8VEM Z80 SBC V1/V2:
+    - ColorVDU board support
+    - Console defaults to VGA & PS/2 Keyboard.  Short JP2 (CONFIG)
+      to use the serial port as the console.
+    - Drives A:=ROM, B:=RAM
+    
+  ZETA_std.rom for Zeta Z80 SBC:
+    - Floppy support via built-in FDC
+    - Drives A:=ROM, B:=RAM, C:=FD0, D:=FD1, E:=PPIDE00-0, F:=PPIDE0:01
+
+  ZETA_ppide.rom for Zeta Z80 SBC + PPIDE:
+    - Floppy support via built-in FDC
+    - PPIDE support via built-in PPI
+    - Drives A:=ROM, B:=RAM, C:=PPIDE0:00, D:=PPIDE0:01
+    
+  ZETA_ppisd.rom for Zeta Z80 SBC + PPISD:
+    - Floppy support via built-in FDC
+    - PPISD support
+    - Drives A:=ROM, B:=RAM, C:=SD0:00, D:=SD0:01
+    
+  ZETA_ppp.rom for Zeta Z80 SBC w/ ParPortProp:
+    - Floppy support via built-in FDC
+    - SD Card support via ParPortProp
+    - VGA console support via ParPortProp
+    - PS/2 Keyboard support via ParPortProp
+    - You *MUST* use the RomWBW specific firmware
+      for the Propeller found in the Support directory!
+    - Console defaults to VGA & PS/2 Keyboard.  Short JP1 (CONFIG)
+      to use the serial port as the console.
+    - Drives A:=ROM, B:=RAM, C:=FD0, D:=FD1, E:=PPPSD0:00, F:=PPPSD0:01
+
+  ZETA2_std.rom for Zeta 2 Z80 SBC:
+    - Floppy support via built-in FDC
+    - PPIDE support via built-in PPI
+    - Drives A:=ROM, B:=RAM, C:=FD0, D:=FD1, E:=PPIDE00-0, F:=PPIDE0:01
+
+  ZETA2_ppide.rom for Zeta 2 Z80 SBC + PPIDE:
+    - Floppy support via built-in FDC
+    - PPIDE support via built-in PPI
+    - Drives A:=ROM, B:=RAM, C:=PPIDE0:00, D:=PPIDE0:01
+    
+  ZETA2_ppisd.rom for Zeta 2 Z80 SBC + PPISD:
+    - Floppy support via built-in FDC
+    - PPISD support
+    - Drives A:=ROM, B:=RAM, C:=SD0:00, D:=SD0:01
+    
+  ZETA2_ppp.rom for Zeta 2 Z80 SBC w/ ParPortProp:
+    - Floppy support via built-in FDC
+    - SD Card support via ParPortProp
+    - VGA console support via ParPortProp
+    - PS/2 Keyboard support via ParPortProp
+    - You *MUST* use the RomWBW specific firmware
+      for the Propeller found in the Support directory!
+    - Console defaults to VGA & PS/2 Keyboard.  Short JP1 (CONFIG)
+      to use the serial port as the console.
+    - Drives A:=ROM, B:=RAM, C:=FD0, D:=FD1, E:=PPPSD0:00, F:=PPPSD0:01
+
+  N8_2511.rom for N8 2511 Z180:
+    - Assumes CPU oscillator frequency of 18.432MHz
+    - Floppy support via built-in FDC
+    - SD card support via built-in SD card slot
+    - Drives A:=ROM, B:=RAM, C:=FD0, D:=FD1, E:=SD0:00, F:=SD0:01
+
+  N8_2312.rom for N8 2312 Z180:
+    - Assumes CPU oscillator frequency of 18.432MHz
+    - Floppy support via built-in FDC
+    - SD card support via built-in SD card slot
+    - Drives A:=ROM, B:=RAM, C:=FD0, D:=FD1, E:=SD0:00, F:=SD0:01
+
+  MK4_std.rom for Mark IV Z180 SBC:
+    - Assumes CPU oscillator frequency of 18.432MHz
+    - Onboard SD Card
+    - Onboard IDE
+    - Drives A:=ROM, B:=RAM, C:=SD0-0, D:=SD0-1, E:=IDE0:00, F:=IDE0:01
+
+  MK4_diskio3.rom for Mark IV Z180 SBC:
+    - Assumes CPU oscillator frequency of 18.432MHz
+    - Floppy support via DISKIO3
+    - IDE support via DISKIO3
+    - Drives A:=ROM, B:=RAM, C:=FD0, D:=FD1, E:=IDE0:00, F:=IDE0:01
+
+  MK4_propio.rom for Mark IV Z180 SBC:
+    - Assumes CPU oscillator frequency of 18.432MHz
+    - SD Card support via PropIO
+    - VGA console support via PropIO
+    - PS/2 Keyboard support via PropIO
+    - You *MUST* use the RomWBW specific firmware
+      for the Propeller found in the Support directory!
+    - Drives A:=ROM, B:=RAM, C:=PRPSD0:00, D:=PRPSD0:01
+
+  UNA_std.rom for all UNA supported platforms (SBC V1/2, Zeta, Mark IV)
+    - Initial baud rate is 9600, but can be configured
+    - Resources are managed dynamically by UNA BIOS
+    - Refer to UNA project for more details
+    - Drive assignments occur dynamically based on UNA config

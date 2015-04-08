@@ -1,0 +1,43 @@
+                                                        11 Dec 88
+
+Some changes have been made to COPY since the manual was written.  
+Comparison of dates with Existence testing ON has been changed to 
+use the Creation date when no Modified date exists, and print 
+"Undated" when neither exists, yet both source and destination 
+disks support file date stamping.  Additionally, the /X option 
+has been re-defined, and a new /R option has been added to 
+Version 1.4.  Please replace Paragraph 4.1.2.9 on page 55 of your 
+ZSDOS manual with the following two paragraphs describing the new 
+options.
+
+
+4.1.2.9.1  ERASE SOURCE FILE AFTER COPY.
+
+When you want to "move" a file from one area to another, the "X" 
+option may be used.  This option causes a file or group of files 
+to be copied in the manner described by the default or specified 
+options, but after the copy and optional verify, the source file 
+or files are erased.  You will be notified that the file has been 
+erased by the status "(X)" being printed on your console.  To 
+minimize the possibility of deleting a good file when errors 
+exist in the copy, the Verify option should always be active, 
+either by default, or specified.  When Verify is active, any 
+errors detected will disable the "X" option for that file so that 
+a good source file will not be deleted.  The "X" option has no 
+configurable value, and is always assumed to be "Off" requiring 
+the option in the command line list to be effective.
+
+
+4.1.2.9.2  COPY ONLY FILES WHICH EXIST (REPLACE).
+
+Occasionally, you may wish to update selected files to a destina- 
+tion in a simpler manner than naming each file, or using the 
+Inspect option.  The "R" (Replace) option, when active, tells 
+COPY to transfer only files which exist on the destination direc- 
+tory.  If the Archive option (A) is added in conjunction with the 
+Replace option, only files which have not been archived, AND 
+already exist on the destination will be archived.  It should be 
+noted that the No Replacement (N) option is incompatible with 
+both the Replace and Archive options, and is disabled when either 
+"R" or "A" are active.
+

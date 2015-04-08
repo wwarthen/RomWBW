@@ -1,0 +1,21 @@
+  {FEED}  - Prepare for New Page on the Printer
+  {LIST}  - Send a file to the Printer
+:
+	 {FEED}  - Prepare for New Page on Printer
+
+   This command sends a Carriage Return (0AH) followed by a Form Feed
+character (0CH) to the printer to prepare for printing in the first
+column of a new page.
+
+Syntax:		FEED
+
+:
+	 {LIST}  - Send a file to the Printer
+
+   This command sends a file to the printer using Bdos functions.
+
+Syntax:		LIST [DU: | DIR:]Filename[.Typ]
+
+NOTE: Printing may be paused and restarted with the Bdos Ctrl-S
+toggle.  To abort printing, follow a Ctrl-S with a Ctrl-C.
+
