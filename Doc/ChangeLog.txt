@@ -1,10 +1,15 @@
 Version 2.7.1
-- WBW: Support loading from image file (UNA FSFAT)
+-------------
+- WBW: Replace XZ with XP compatible build (no functional changes)
+- WBW: Reset BDOS serial number on warm start
+- WBW: Turn off DRAM refresh on Z180 (fixes Z180 CPU speed detection)
 
 Version 2.7.0
 -------------
 - WBW: Memory page reorganization
 - WBW: Support for Zeta 2 (from Sergey Kiselev)
+- WBW: Support loading from image file (UNA FSFAT)
+- WBW: Dynamic CPU speed detection
 
 Version 2.6.5
 -------------
