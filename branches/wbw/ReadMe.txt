@@ -8,12 +8,12 @@ Builders: Wayne Warthen (wwarthen@gmail.com)
           Douglas Goodall (douglas_goodall@mac.com)
           David Giles (vk5dg@internode.on.net)
 
-Updated: 2015-04-02
-Version: 2.7.0
+Updated: 2015-04-07
+Version: 2.7.1
 
 This is an adaptation of CP/M-80 2.2 and ZSDOS/ZCPR
 targeting ROMs for all N8VEM Z80 hardware variations
-including SBC, Zeta, N8, and Mark IV.
+including SBC 1/2, Zeta 1/2, N8, and Mark IV.
 
 NOTE: This is very much a work-in-progress.  It is
 severely lacking appropriate documentation.  I am 
@@ -90,7 +90,7 @@ UNA Variant
 -----------
 
 RomWBW will now run under it's native BIOS (HBIOS) or
-under UNA BIOS (UBIOS).  There is a pre-built ROM
+under UNA BIOS (UBIOS).  There are pre-built ROM
 images for UNA in the Output directory.
 
 CP/M vs. ZSystem
