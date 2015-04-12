@@ -1,6 +1,6 @@
 ;__________________________________________________________________________________________________
 ;
-;	8242 BASED PS/2 KEYBOARD DRIVER FOR N8VEM
+;	8242 BASED PS/2 KEYBOARD DRIVER FOR SBC
 ;
 ;	ORIGINAL CODE BY DR JAMES MOXHAM
 ;	ROMWBW ADAPTATION BY WAYNE WARTHEN

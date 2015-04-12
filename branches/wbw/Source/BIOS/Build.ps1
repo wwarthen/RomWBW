@@ -3,8 +3,8 @@ param([string]$Platform = "", [string]$Config = "", [string]$RomSize = "512", [s
 $Platform = $Platform.ToUpper()
 while ($true)
 {
-	if (($Platform -eq "N8VEM") -or ($Platform -eq "ZETA") -or ($Platform -eq "ZETA2") -or ($Platform -eq "N8") -or ($Platform -eq "MK4") -or ($Platform -eq "UNA") -or ($Platform -eq "S2I") -or ($Platform -eq "S100")) {break}
-	$Platform = (Read-Host -prompt "Platform [N8VEM|ZETA|ZETA2|N8|MK4|UNA|S2I|S100]").Trim().ToUpper()
+	if (($Platform -eq "SBC") -or ($Platform -eq "ZETA") -or ($Platform -eq "ZETA2") -or ($Platform -eq "N8") -or ($Platform -eq "MK4") -or ($Platform -eq "UNA")) {break}
+	$Platform = (Read-Host -prompt "Platform [SBC|ZETA|ZETA2|N8|MK4|UNA]").Trim().ToUpper()
 }
 
 while ($true)
@@ -84,7 +84,7 @@ ROMSIZE		.EQU		${ROMSize}		; SIZE OF ROM IN KB
 ;
 ; INCLUDE PLATFORM SPECIFIC DEVICE DEFINITIONS
 ;
-#INCLUDE "std-n8vem.inc"
+#INCLUDE "std-sbc.inc"
 ;
 #INCLUDE "${ConfigFile}"
 ;
@@ -96,8 +96,7 @@ Copy-Item '..\cpm22\os3bdos.bin' 'bdos.bin'
 Copy-Item '..\zcpr-dj\zcpr.bin' 'zcpr.bin'
 Copy-Item '..\zsdos\zsdos.bin' 'zsdos.bin'
 
-Asm 'cbios' "-dBLD_SYS=SYS_CPM" -Output "cbios_cpm.bin"
-Asm 'cbios' "-dBLD_SYS=SYS_ZSYS" -Output "cbios_zsys.bin"
+Asm 'cbios'
 Asm 'dbgmon'
 Asm 'prefix'
 Asm 'romldr'
@@ -115,8 +114,8 @@ if ($Platform -ne "UNA")
 
 "Building ${RomName} output files..."
 
-Concat 'ccp.bin','bdos.bin','cbios_cpm.bin' 'cpm.bin'
-Concat 'zcpr.bin','zsdos.bin','cbios_zsys.bin' 'zsys.bin'
+Concat 'ccp.bin','bdos.bin','cbios.bin' 'cpm.bin'
+Concat 'zcpr.bin','zsdos.bin','cbios.bin' 'zsys.bin'
 
 Concat 'prefix.bin','cpm.bin' 'cpm.sys'
 Concat 'prefix.bin','zsys.bin' 'zsys.sys'

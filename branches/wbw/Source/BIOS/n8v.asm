@@ -1,5 +1,5 @@
 ;======================================================================
-;	N8 VDU DRIVER FOR N8VEM PROJECT
+;	N8 VDU DRIVER FOR SBC PROJECT
 ;
 ;	WRITTEN BY: DOUGLAS GOODALL
 ;	UPDATED BY: WAYNE WARTHEN -- 4/7/2013

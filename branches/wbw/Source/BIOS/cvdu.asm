@@ -1,5 +1,5 @@
 ;======================================================================
-;	COLOR VDU DRIVER FOR N8VEM PROJECT
+;	COLOR VDU DRIVER FOR SBC PROJECT
 ;
 ;	WRITTEN BY: DAN WERNER -- 11/4/2011
 ;	ROMWBW ADAPTATION BY: WAYNE WARTHEN -- 11/9/2012

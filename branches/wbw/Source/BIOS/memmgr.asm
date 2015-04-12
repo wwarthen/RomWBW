@@ -7,7 +7,7 @@
 ;______________________________________________________________________________________________________________________
 ;
 
-#IF ((PLATFORM == PLT_N8VEM) | (PLATFORM == PLT_ZETA))
+#IF ((PLATFORM == PLT_SBC) | (PLATFORM == PLT_ZETA))
 BNKSEL:
 	OUT	(MPCL_ROM),A
 	OUT	(MPCL_RAM),A
@@ -18,7 +18,7 @@ BNKSEL:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; ZETA SBC V2 USES 16K PAGES. ANY PAGE CAN BE MAPPED TO ONE OF FOUR BANKS:
 ; BANK_0: 0K - 16K; BANK_1: 16K - 32K; BANK_2: 32K - 48K; BANK_3: 48K - 64K
-; THIS BNKSEL EMULATES N8VEM / ZETA BEHAVIOR BY SETTING BANK_0 and BANK_1 TO
+; THIS BNKSEL EMULATES SBC / ZETA BEHAVIOR BY SETTING BANK_0 and BANK_1 TO
 ; TWO CONSECUTIVE PAGES
 
 #IF (PLATFORM == PLT_ZETA2)
@@ -71,16 +71,6 @@ BNKSEL:
 	RLCA
 	RLCA
 	OUT0	(CPU_BBR),A
-	RET
-#ENDIF
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; NOTE: S2I HAS NO BANKED MEMORY!
-;       ALL FUNCTIONALITY IS NULLED OUT HERE.
-;
-#IF (PLATFORM == PLT_S2I)
-BNKSEL:
 	RET
 #ENDIF
 

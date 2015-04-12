@@ -1,6 +1,6 @@
 ;__________________________________________________________________________________________________
 ;
-;	PARALLEL PORT KEYBOARD DRIVER FOR N8VEM
+;	PARALLEL PORT KEYBOARD DRIVER FOR SBC
 ;       SUPPORT KEYBOARD/MOUSE ON VDU AND N8
 ;
 ;	ORIGINAL CODE BY DR JAMES MOXHAM
