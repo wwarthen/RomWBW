@@ -48,6 +48,7 @@ $RomDiskFile = "RomDisk.tmp"
 $RomFile = "${OutDir}/${RomName}.rom"
 $ComFile = "${OutDir}/${RomName}.com"
 $ImgFile = "${OutDir}/${RomName}.img"
+if ($Platform -eq "UNA") {$CBiosFile = '../CBIOS/cbios_una.bin'} else {$CBiosFile = '../CBIOS/cbios_wbw.bin'}
 
 ""
 "Building ${RomName}: ${ROMSize}KB ROM configuration ${Config} for Z${CPUType}..."
@@ -96,7 +97,7 @@ Copy-Item '..\cpm22\os3bdos.bin' 'bdos.bin'
 Copy-Item '..\zcpr-dj\zcpr.bin' 'zcpr.bin'
 Copy-Item '..\zsdos\zsdos.bin' 'zsdos.bin'
 
-Asm 'cbios'
+#Asm 'cbios'
 Asm 'dbgmon'
 Asm 'prefix'
 Asm 'romldr'
@@ -114,8 +115,8 @@ if ($Platform -ne "UNA")
 
 "Building ${RomName} output files..."
 
-Concat 'ccp.bin','bdos.bin','cbios.bin' 'cpm.bin'
-Concat 'zcpr.bin','zsdos.bin','cbios.bin' 'zsys.bin'
+Concat 'ccp.bin','bdos.bin',$CBiosFile 'cpm.bin'
+Concat 'zcpr.bin','zsdos.bin',$CBiosFile 'zsys.bin'
 
 Concat 'prefix.bin','cpm.bin' 'cpm.sys'
 Concat 'prefix.bin','zsys.bin' 'zsys.sys'
