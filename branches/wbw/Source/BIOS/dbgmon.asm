@@ -18,6 +18,7 @@
 ;_____________________________________________________________________________
 ;
 #INCLUDE "std.asm"
+#INCLUDE "hbios.inc"
 ;
 ;__CONSTANTS__________________________________________________________________
 ;	
@@ -41,6 +42,8 @@ BS:		 .EQU	08H		; ASCII BACKSPACE CHARACTER
 #INCLUDE "util.asm"
 ;
 #INCLUDE "memmgr.asm"
+;
+#IF DSKYENABLE
 ;
 ;__DSKY_ENTRY_________________________________________________________________
 ;
@@ -87,28 +90,9 @@ EXIT:
 ;_____________________________________________________________________________
 ;
 DOBOOT:
-	; ENSURE DEFAULT MEMORY PAGE CONFIGURATION
-;#IF (PLATFORM == PLT_N8)
-;	LD	A,DEFACR
-;	OUT0	(ACR),A
-;	XOR	A
-;	OUT0	(RMAP),A
-;#ELSE
-;	XOR	A
-;	OUT	(MPCL_ROM),A
-;	OUT	(MPCL_RAM),A
-;#ENDIF
-#IF (PLATFORM == PLT_UNA)
-	LD	BC,$01FB		; UNA FUNC = SET BANK
-	LD	DE,$0000		; ROM BANK 0
-	CALL	$FFFD			; DO IT (RST 08 NOT SAFE HERE)
-#ELSE
-	LD	A,BID_BOOT
-	CALL	BNKSEL
-#ENDIF
-	; JUMP TO RESTART ADDRESS
-	JP	0000H
-;
+	JP	BOOT
+
+
 ;__DOPORTREAD_________________________________________________________________
 ;
 ;	PERFORM PORT READ FRONT PANEL ACTION
@@ -545,6 +529,11 @@ GETVALUECLEAR:
 	LD	(DISPLAYBUF),A		;
 	LD	(DISPLAYBUF+1),A	;
 	JP	GETVALUE1		;
+;
+#ELSE
+DSKY_ENTRY:
+	CALL	PANIC
+#ENDIF
 
 
 ;__UART_ENTRY_________________________________________________________________
@@ -591,7 +580,7 @@ SERIALCMDLOOP:
 	INC	HL			; INC POINTER
 
 	CP	'B'			; IS IT "B" (Y/N)
-	JP	Z,DOBOOT		; IF YES DO BOOT
+	JP	Z,BOOT			; IF YES BOOT
 	CP	'R'			; IS IT "R" (Y/N)
 	JP	Z,RUN			; IF YES GO RUN ROUTINE
 	CP	'P'			; IS IT "P" (Y/N)
@@ -617,6 +606,33 @@ SERIALCMDLOOP:
 
 
 
+;__BOOT_______________________________________________________________________
+;
+;	PERFORM BOOT ACTION
+;_____________________________________________________________________________
+;
+BOOT:
+	; ENSURE DEFAULT MEMORY PAGE CONFIGURATION
+;#IF (PLATFORM == PLT_N8)
+;	LD	A,DEFACR
+;	OUT0	(ACR),A
+;	XOR	A
+;	OUT0	(RMAP),A
+;#ELSE
+;	XOR	A
+;	OUT	(MPCL_ROM),A
+;	OUT	(MPCL_RAM),A
+;#ENDIF
+#IF (PLATFORM == PLT_UNA)
+	LD	BC,$01FB		; UNA FUNC = SET BANK
+	LD	DE,$0000		; ROM BANK 0
+	CALL	$FFFD			; DO IT (RST 08 NOT SAFE HERE)
+#ELSE
+	LD	A,BID_BOOT
+	CALL	BNKSEL
+#ENDIF
+	; JUMP TO RESTART ADDRESS
+	JP	0000H
 
 
 ;__KLOP_______________________________________________________________________
@@ -1254,6 +1270,8 @@ INITIALIZE:
 	RET
 ;
 
+#IF DSKYENABLE
+
 ;__MTERM_INIT_________________________________________________________________
 ;
 ;  SETUP 8255, MODE 0, PORT A=OUT, PORT B=IN, PORT C=OUT/OUT
@@ -1464,6 +1482,8 @@ SEGDISPLAY_LP:
 	POP	BC			; RESTORE BC
 	POP	AF			; RESTORE AF
 	RET
+
+#ENDIF
 
 ;
 ;__WORK_AREA__________________________________________________________________

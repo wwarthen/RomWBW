@@ -3,6 +3,11 @@
 ; PARPORTPROP DRIVER
 ;==================================================================================================
 ;
+PPIA		.EQU 	PPIBASE + 0	; PORT A
+PPIB		.EQU 	PPIBASE + 1	; PORT B
+PPIC		.EQU 	PPIBASE + 2	; PORT C
+PPIX	 	.EQU 	PPIBASE + 3	; PPI CONTROL PORT
+;
 ; COMMAND BYTES
 ;
 PPP_CMDNOP	.EQU	$00           ; DO NOTHING

@@ -83,10 +83,6 @@ Function Concat($InputFileList, $OutputFile)
 PLATFORM	.EQU		PLT_${Platform}		; HARDWARE PLATFORM
 ROMSIZE		.EQU		${ROMSize}		; SIZE OF ROM IN KB
 ;
-; INCLUDE PLATFORM SPECIFIC DEVICE DEFINITIONS
-;
-#INCLUDE "std-sbc.inc"
-;
 #INCLUDE "${ConfigFile}"
 ;
 "@ | Out-File "build.inc" -Encoding ASCII
@@ -97,7 +93,6 @@ Copy-Item '..\cpm22\os3bdos.bin' 'bdos.bin'
 Copy-Item '..\zcpr-dj\zcpr.bin' 'zcpr.bin'
 Copy-Item '..\zsdos\zsdos.bin' 'zsdos.bin'
 
-#Asm 'cbios'
 Asm 'dbgmon'
 Asm 'prefix'
 Asm 'romldr'

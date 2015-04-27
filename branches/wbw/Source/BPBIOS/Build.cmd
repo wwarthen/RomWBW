@@ -58,7 +58,7 @@ if exist bpsys.$$$ del bpsys.$$$
 if exist bp33n.img del bp33n.img
 if exist bpsys.img ren bpsys.img bp33n.img
 
-REM goto :startup
+rem goto :startup
 
 rem
 rem Z33 + ZSDOS11 w/ Banked BPBIOS
@@ -153,6 +153,8 @@ zx bpbuild -bpsys.$$$ <bpbld2.rsp
 if exist bpsys.$$$ del bpsys.$$$
 if exist bp34n.img del bp34n.img
 if exist bpsys.img ren bpsys.img bp34n.img
+
+rem goto :startup
 
 rem
 rem Z34 + ZSDOS11 w/ Banked BPBIOS
@@ -252,16 +254,16 @@ if exist bpsys.img ren bpsys.img bp41n.img
 
 pause
 
-cpmrm.exe -f wbw_hd0 ../../hd0.img 0:ws*.*
+cpmrm.exe -f wbw_hd0 ../../Output/hd0.img 0:ws*.*
 
-cpmrm.exe -f wbw_hd0 ../../hd0.img 0:*.img
-cpmcp.exe -f wbw_hd0 ../../hd0.img *.img 0:
+cpmrm.exe -f wbw_hd0 ../../Output/hd0.img 0:*.img
+cpmcp.exe -f wbw_hd0 ../../Output/hd0.img *.img 0:
 
-cpmrm.exe -f wbw_hd0 ../../hd0.img 0:*.rel
-cpmcp.exe -f wbw_hd0 ../../hd0.img *.rel 0:
+cpmrm.exe -f wbw_hd0 ../../Output/hd0.img 0:*.rel
+cpmcp.exe -f wbw_hd0 ../../Output/hd0.img *.rel 0:
 
-cpmrm.exe -f wbw_hd0 ../../hd0.img 0:*.zex
-cpmcp.exe -f wbw_hd0 ../../hd0.img *.zex 0:
+cpmrm.exe -f wbw_hd0 ../../Output/hd0.img 0:*.zex
+cpmcp.exe -f wbw_hd0 ../../Output/hd0.img *.zex 0:
 
-cpmrm.exe -f wbw_hd0 ../../hd0.img 0:myterm.z3t
-cpmcp.exe -f wbw_hd0 ../../hd0.img myterm.z3t 0:myterm.z3t
+cpmrm.exe -f wbw_hd0 ../../Output/hd0.img 0:myterm.z3t
+cpmcp.exe -f wbw_hd0 ../../Output/hd0.img myterm.z3t 0:myterm.z3t

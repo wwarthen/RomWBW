@@ -10,7 +10,7 @@
 ;
 HBIOS	EQU	YES			; Use HBIOS functions
 INTPXY	EQU	YES			; Internal HBIOS Proxy
-HBLOC	EQU	0FE00H			; Location of HBIOS proxy (if used)
+HBLOC	EQU	0FE00H			; Location of HBIOS proxy (used if not INTPXY)
 ;
 ; Set exactly one of the following to YES to specify platform
 ;
@@ -42,7 +42,7 @@ HB_ROMBLKS	EQU	192		; 512K - 128K reserved / 2K per block
 ;
 ; Layout of RAM banks
 ;
-	IF N8VEM OR ZETA
+	IF N8VEM OR ZETA OR MK4
 BID_RAMD	EQU	80H
 BID_RAMM	EQU	8BH
 BID_SYS		EQU	8CH
@@ -58,14 +58,6 @@ BID_HB		EQU	9DH
 BID_USR		EQU	9EH
 BID_COM		EQU	9FH
 	ENDIF
-	IF MK4
-BID_RAMD	EQU	10H
-BID_RAMM	EQU	1BH
-BID_SYS		EQU	1CH
-BID_HB		EQU	1DH
-BID_USR		EQU	1EH
-BID_COM		EQU	1FH
-	ENDIF
 ;
 	IF N8 OR MK4
 HB_IODEV	EQU	HBCIO_ASCI
@@ -74,7 +66,7 @@ HB_IODEV	EQU	HBCIO_UART
 	ENDIF
 ;
 	IF INTPXY
-MEMTOP	EQU	0FFDFH		; Reserve memory above this for HBIOS
+MEMTOP	EQU	0FFE0H - 1	; Start of HBIOS 32 byte control block
 	ELSE
-MEMTOP	EQU	HBLOC - 1	; Reserve memory above this for HBIOS
+MEMTOP	EQU	HBLOC - 1	; Start of HBIOS 512 byte proxy
 	ENDIF

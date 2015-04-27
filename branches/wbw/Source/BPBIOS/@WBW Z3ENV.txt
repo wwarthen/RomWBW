@@ -109,9 +109,15 @@ Ext FCB		FDD0            FDD0            F9D0            E9D0            FDD0
 Ext Stack	FFD0            FFD0            FBB0            EBB0            FFB0
 
 
-Type X: All segments shifted down by size of HBIOS Proxy (1K)
+Type X: All segments shifted down by size of HBIOS Proxy (1024 bytes)
 Type T: Segments rearranged to allow space for HBIOS Proxy
         FC00-FFFF --> EA00-EBFF
 	Environment, Cmd Line, Named Dirs, Ext Path, Shell Stack, Msg Buffer, Ext FCB, Ext Stack
 Type N: Frees up HBIOS interface area at FFE0-FFFF by shrinking Cmd Line and shifting
 	Ext Stack down by 32 bytes
+
+
+If built with INTPXY=NO, then LDSYS BP34T, BP34TBNK, or BP41T
+If built with INTPXY=YES, then LDSYS BP33N, BP33NBNK, BP34N, BP34NBNK, or BP41N
+
+
