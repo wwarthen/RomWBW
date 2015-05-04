@@ -64,6 +64,26 @@ DRIVE_TRANSFER_NOT_SET	=	242	; DRIVE NOT 8 & NOT 16 BIT
 
 
 
+
+BIOS stub:
+=========
+
+The UNA BIOS stub occupies highest memory from 0xFF00 (current start)
+up to 0xFFFF.  The three highest jump vectors are assigned as
+follows:
+
+0xFFF7	chain:	JP inter-page execution chain operation
+0xFFFA	  map:	JP low 32K page set-map operation
+0xFFFD  ubios:	JP BIOS function entry point
+
+These vectors will not change.  The vector at 0xFFFD should be copied
+to 0x0008 .. 0x000A to enable the short BIOS call with RST 8.  The
+map vector at 0xFFFA is filled in at system start depending upon the
+CPU board in use.
+
+
+
+
 BIOS calls:
 ==========
 
@@ -198,6 +218,26 @@ BIOS calls:
 ;	NO_ERROR	Z flag is set
 ;	XXX		Z flag is clear (NZ)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Function 18 -- Get Line/Driver information
+;
+;  Enter with:
+;	C	= 0x18
+;	B	= unit number
+;
+;  Exit with:
+;	C	= error code
+;	DE	= line characteristics (see DE def. for INIT call (0x10)
+;	H	= driver ID
+;	L	= number of 0x1? drivers
+;
+;  Errors:
+;	NO_ERROR	Z flag is set
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 
 
 
