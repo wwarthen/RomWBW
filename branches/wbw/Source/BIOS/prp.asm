@@ -3,11 +3,12 @@
 ; PROPIO DRIVER
 ;==================================================================================================
 ;
-;
 ; GLOBAL PARPORTPROP INITIALIZATION
 ;
 PRP_INIT:
-	PRTS("PRP:$")
+	PRTS("PRP: IO=0x$")
+	LD	A,PRPIOB
+	CALL	PRTHEXBYTE
 ;
 	CALL	PRPSD_INIT		; SD CARD INITIALIZATION
 	

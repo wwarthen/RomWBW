@@ -2730,7 +2730,7 @@ CMDLEN	.EQU	$ - CMD
 ;
 STR_INITRAMDISK	.DB	"\r\nFormatting RAMDISK...$"
 STR_LDR		.DB	"\r\n   $"
-STR_DPHINIT	.DB	"\r\n\r\nConfiguring Drives...$"
+STR_DPHINIT	.DB	"\r\nConfiguring Drives...$"
 STR_HEAPOVF	.DB	" *** Insufficient Memory ***$"
 STR_INVMED	.DB	" *** Invalid Device ID ***$"
 STR_MEMFREE	.DB	" CBIOS Heap Bytes Free\r\n$"
