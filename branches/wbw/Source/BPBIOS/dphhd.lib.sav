@@ -19,7 +19,7 @@
 XDPH50:	DEFB	TRUE		; Format lock flag (Lock First Hard Drive)
 	DEFB	FIXDSK		; Disk drive type
 	DEFB	2		; Driver ID
-	DEFB	HB_HDDEV + 0	; Physical drive [0..2] for this Partition
+	DEFB	0		; Physical drive [0..2] for this Partition
 DPH$50:	DEFW	0		; Skew table pointer
 	DEFW	0,0,0		; Scratch area
 	DEFW	DIRBUF		; Directory buffer pointer
@@ -31,7 +31,7 @@ DPH$50:	DEFW	0		; Skew table pointer
 XDPH51:	DEFB	TRUE		; --- Second Hard Drive/Partition
 	DEFB	FIXDSK
 	DEFB	2
-	DEFB	HB_HDDEV + 0
+	DEFB	0
 DPH$51:	DEFW	0
 	DEFW	0,0,0
 	DEFW	DIRBUF
@@ -43,7 +43,7 @@ DPH$51:	DEFW	0
 XDPH52:	DEFB	TRUE		; --- Third Hard Drive/Partition
 	DEFB	FIXDSK
 	DEFB	2
-	DEFB	HB_HDDEV + 0
+	DEFB	0
 DPH$52:	DEFW	0
 	DEFW	0,0,0
 	DEFW	DIRBUF
@@ -55,7 +55,7 @@ DPH$52:	DEFW	0
 XDPH53:	DEFB	TRUE		; --- Fourth Hard Drive/Partition
 	DEFB	FIXDSK
 	DEFB	2
-	DEFB	HB_HDDEV + 0
+	DEFB	0
 DPH$53:	DEFW	0
 	DEFW	0,0,0
 	DEFW	DIRBUF
@@ -67,7 +67,7 @@ DPH$53:	DEFW	0
 XDPH54:	DEFB	TRUE		; --- Fifth Hard Drive/Partition
 	DEFB	FIXDSK
 	DEFB	2
-	DEFB	HB_HDDEV + 1
+	DEFB	1
 DPH$54:	DEFW	0
 	DEFW	0,0,0
 	DEFW	DIRBUF
@@ -79,7 +79,7 @@ DPH$54:	DEFW	0
 XDPH55:	DEFB	TRUE		; --- Sixth Hard Drive/Partition
 	DEFB	FIXDSK
 	DEFB	2
-	DEFB	HB_HDDEV + 1
+	DEFB	1
 DPH$55:	DEFW	0
 	DEFW	0,0,0
 	DEFW	DIRBUF
@@ -91,7 +91,7 @@ DPH$55:	DEFW	0
 XDPH56:	DEFB	TRUE		; --- Seventh Hard Drive/Partition
 	DEFB	FIXDSK
 	DEFB	2
-	DEFB	HB_HDDEV + 1
+	DEFB	1
 DPH$56:	DEFW	0
 	DEFW	0,0,0
 	DEFW	DIRBUF
@@ -103,7 +103,7 @@ DPH$56:	DEFW	0
 XDPH57:	DEFB	TRUE		; --- Eighth Hard Drive/Partition
 	DEFB	FIXDSK
 	DEFB	2
-	DEFB	HB_HDDEV + 1
+	DEFB	1
 DPH$57:	DEFW	0
 	DEFW	0,0,0
 	DEFW	DIRBUF
@@ -116,7 +116,7 @@ DPH$57:	DEFW	0
 XDPH58:	DEFB	TRUE		; --- Ninth Hard Drive/Partition
 	DEFB	FIXDSK
 	DEFB	2
-	DEFB	HB_MDDEV + 0
+	DEFB	1
 DPH$58:	DEFW	0
 	DEFW	0,0,0
 	DEFW	DIRBUF
@@ -128,7 +128,7 @@ DPH$58:	DEFW	0
 XDPH59:	DEFB	TRUE		; --- Tenth Hard Drive/Partition
 	DEFB	FIXDSK
 	DEFB	2
-	DEFB	HB_MDDEV + 1
+	DEFB	1
 DPH$59:	DEFW	0
 	DEFW	0,0,0
 	DEFW	DIRBUF
@@ -140,7 +140,7 @@ DPH$59:	DEFW	0
 XDPH60:	DEFB	TRUE		; --- Eleventh Hard Drive/Partition
 	DEFB	FIXDSK
 	DEFB	2
-	DEFB	2
+	DEFB	1
 DPH$60:	DEFW	0
 	DEFW	0,0,0
 	DEFW	DIRBUF
@@ -190,3 +190,4 @@ ALV$60:	DEFS	HSIZ10/8+1
 	  ENDIF
 
 ;======================= End of DPHHD.LIB =========================
+

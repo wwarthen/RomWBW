@@ -9,23 +9,14 @@
 ;.....
 ; Set DMA address given by registers B and C
 
-SETDMA:	
-	LD	(DMAADR),BC	; Save the address
-;	CALL	PRINT
-;	DEFB	'[SETDMA',']'+80H
+SETDMA:	LD	(DMAADR),BC	; Save the address
 	RET
 
 ;.....
 ; Set track given by BC.  While the entire word is saved here, only the
 ;  lower byte is used in Floppy, SCSI and RAM Drivers.
 
-SETTRK:	
-	LD	(SEKTRK),BC
-;	CALL	PRTSTRD
-;	DEFB	'[SETTRK$'
-;	CALL	PRTHEXWORD
-;	CALL	PRTSTRD
-;	DEFB	']$'
+SETTRK:	LD	(SEKTRK),BC
 	RET
 
 ;.....
@@ -34,30 +25,17 @@ SETTRK:
 ;  should reflect the Sector Number returned from SECTRAN.  While the entire
 ;  word is saved here, only the lower byte is used in Floppy, SCSI and RAM.
 
-SETSEC:
-	LD	(SEKSEC),BC
-;	CALL	PRTSTRD
-;	DEFB	'[SETSEC$'
-;	CALL	PRTHEXWORD
-;	CALL	PRTSTRD
-;	DEFB	']$'
-	RET
-	
+SETSEC:	LD	(SEKSEC),BC
+			;..fall thru to Return..
 ;.....
 ; Home the selected drive
 
-HOME:
-;	CALL	PRTSTRD
-;	DEFB	'[HOME]$'
-	RET			; Done by SELDSK
+HOME:	RET			; Done by SELDSK
 
 ;.....
 ; Flush the host buffer to disk if any writes pending
 
-FLUSH:	
-;	CALL	PRTSTRD
-;	DEFB	'[FLUSH]$'
-	LD	A,(HSTWRT)	; Write pending?
+FLUSH:	LD	A,(HSTWRT)	; Write pending?
 	OR	A
 	RET	Z		; ..quit if nothing pending
 	  IF  BANKED
@@ -71,9 +49,6 @@ FLUSH:
 ;  routines are logical drives.
 
 READ:
-;	CALL	PRTSTRD
-;	DEFB	'[READ]$'
-
 	  IF  BANKED
 	CALL	BIOSTK
 	CALL	GOSYSB
@@ -86,21 +61,11 @@ BREAD:	LD	A,1		; Non-zero
 	LD	(READOP),A	; Read operation
 	INC	A		; Treat as un-allocated (=wrual)
 	LD	(WRTYPE),A	; Save it
-;	JR	ALLOC		; Go to common code
-	JP	ALLOC		; Go to common code
+	JR	ALLOC		; Go to common code
 
 
 	CSEG
 WRITE:
-;	PUSH	AF
-;	LD	A,C
-;	CALL	PRTSTRD
-;	DEFB	'[WRITE($'
-;	CALL	PRTHEXBYTE
-;	CALL	PRTSTRD
-;	DEFB	')]$'
-;	POP	AF
-
 	  IF  BANKED
 	CALL	BIOSTK
 	CALL	GOSYSB
@@ -112,33 +77,22 @@ WRITE:
 BWRT:	XOR	A
 	LD	(READOP),A	; Write operation
 	LD	A,C		; Get write type from dos
-;	CALL	PRTHEXBYTE
 	LD	(WRTYPE),A	; Save it
 	CP	WRUAL		; Unallocated write?
 	JR	NZ,CHKUNA	; ..jump if Not. check for unallocated sector
 
 ; Write to un-allocated sector, set parameters
 
-;	CALL	PRTSTRD
-;	DEFB	'[SETPARMS]$'
 	LD	A,(UCOUNT)	; Records/allocation group
-;	CALL	PRTHEXBYTE
 	LD	(UNACNT),A	; Unallocated count
 	LD	HL,SEKDSK	; Selcted disk, track & sector for us
 	LD	DE,UNADSK	; (unadsk=sekdsk)
 	LD	BC,4		; (unatrk=sektrk)
 	LDIR			; (unasec=cpmsec)
 
-CHKUNA:	
-;	CALL	PRTSTRD
-;	DEFB	'[TP0]$'
-
-	LD	A,(UNACNT)	; Any unallocated records remaining?
+CHKUNA:	LD	A,(UNACNT)	; Any unallocated records remaining?
 	OR	A
 	JR	Z,ALLOC		; ..jump if none remain
-;	CALL	PRTSTRD
-;	DEFB	'[TP1]$'
-	
 
 ; More unallocated records remain. Check for any change.
 
@@ -148,10 +102,7 @@ CHKUNA:
 	LD	HL,UNADSK	; Compare Old Disk, Track & Sector
 	LD	DE,SEKDSK	; .to New Disk, Track & Sector
 SLP0:	LD	A,(DE)
-;	CALL	PRTHEXBYTE
 	CP	(HL)		; Same?
-;	LD	A,(HL)		; WW
-;	CALL	PRTHEXBYTE
 	JR	NZ,ALLOC	; ..jump if not
 	INC	HL		; Else advance to next
 	INC	DE
@@ -159,11 +110,6 @@ SLP0:	LD	A,(DE)
 
 ; Everything matches, anticipate the next sector
 
-;	CALL	PRTSTRD
-;	DEFB	'[MATCH]$'
-	;**********************
-	DEC	HL		; **** WW ****
-	;**********************
 	INC	(HL)		; Unasec+1
 	LD	A,(CPMSPT)	; Max sectors per track
 	CP	(HL)		; Compare them
@@ -183,12 +129,7 @@ NOOVF:	XOR	A		; Indicate no pre-read required
 
 ; Not an unallocated record.  Requires pre-read
 
-ALLOC:
-;	CALL	PRTSTRD
-;	DEFB	'[ALLOC]$'
-
-
-	XOR	A		; Clear acc
+ALLOC:	XOR	A		; Clear acc
 	LD	(UNACNT),A	; Start over
 	INC	A
 ALLOC1:	LD	(RSFLAG),A	; Force pre-read if a=1
@@ -244,6 +185,7 @@ FILHST:	CALL	FLUSH		; Empty hstbuf if write pending
 	INC	HL		; Skip over logical sector
 	LD	C,4		; B=0 from above
 	LDIR			; Set Host DPH and DPB, physical sector
+
 	LD	A,(RSFLAG)	; Pre-read necessary?
 	OR	A
 	CALL	NZ,READHST	; Read a sector if so.
@@ -263,45 +205,6 @@ MATCH:	LD	A,(SECMSK)	; Get the sector mask
 
 ; HL now has relative host buffer address of seksec
 
-	  IF  HBIOS
-;
-; Modified to use HBIOS host buffer
-;
-	LD	A,BID_HB	; HSTBUF is in HBIOS
-	LD	C,A
-	  IF  BANKED
-	LD	A,(DMABNK)	; Set Read Destination Bank
-	  ELSE
-	LD	A,(TPABNK)	; Set Read Destination Bank
-	  ENDIF
-	LD	B,A
-	LD	A,(READOP)	; Direction?
-	OR	A
-	JR	NZ,OKBNKS	; ..jump if read
-	LD	A,B		; Else reverse banks
-	LD	B,C
-	LD	C,A
-OKBNKS:	CALL	HBX_XCOPY	; Set source & destination banks
-;	LD	DE,HBBUF	; Host buffer address in HBIOS bank
-	LD	DE,(HB_DSKBUF)	; Host buffer address in HBIOS bank
-	ADD	HL,DE		; Point to the sector
-	LD	DE,(DMAADR)	; User's buffer
-	LD	BC,128		; Number of bytes to transfer
-	LD	A,(READOP)	; Direction?
-	OR	A		; Set flags
-	JR	NZ,RWMOVE	; ..jump if Read
-
-; Must be Write.  Mark and change direction.
-
-	INC	A		; A = 1
-	LD	(HSTWRT),A	; Set write pending flag
-	EX	DE,HL		; Swap source and destination
-
-; Move the data
-
-RWMOVE:	CALL	HBX_COPY	; Handle possible inter-bank move
-
-	  ELSE	; HBIOS
 	  IF  BANKED
 	  IF  INROM
 	LD	A,(TPABNK)	; If bank in ROM, HSTBUF is in TPA
@@ -337,8 +240,6 @@ OKBNKS:	CALL	XMOVE		; Set source & destination banks
 ; Move the data
 
 RWMOVE:	CALL	MOVE		; Handle possible inter-bank move
-
-	  ENDIF	; HBIOS
 
 ; Data has been moved
 

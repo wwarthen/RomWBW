@@ -206,7 +206,7 @@ DEVMAP:
 	.DB	LD_UL1			; LST:=UL1: (IOBYTE 11XXXXXX)
 ;
 ;==================================================================================================
-;   DRIVE MAPPING TABLE
+;   DRIVE MAPPING TABLE (DRVMAP)
 ;==================================================================================================
 ;
 ; Disk mapping is done using a drive map table (DRVMAP) which is built
@@ -875,20 +875,20 @@ UNA_INI:
 	; SETUP UNACNT AND UNASPT
 	LD	HL,(SEKDPH)	; HL POINTS TO DPH
 	LD	DE,10		; OFFSET OF DPB ADDRESS IN DPH
-	ADD	HL,DE		; DPH POINTS TO DPB ADDRESS
-	LD	A,(HL)
-	INC	HL
-	LD	H,(HL)
-	LD	L,A		; HL POINTS TO DPB
-	LD	C,(HL)
-	INC	HL
-	LD	B,(HL)		; BC HAS SPT
+	ADD	HL,DE		; HL PIONTS TO DPB ENTRY IN DPH
+	LD	A,(HL)		; DEREFERENCE HL
+	INC	HL		; ... TO GET
+	LD	H,(HL)		; ... DPB ADDRESS
+	LD	L,A		; ... SO HL NOW POINTS TO DPB ADDRESS
+	LD	C,(HL)		; DEREFERENCE HL
+	INC	HL		; ... INTO BC SO THAT
+	LD	B,(HL)		; ... BC NOW HAS SPT
 	LD	(UNASPT),BC	; SAVE SECTORS PER TRACK
-	DEC	HL
-	DEC	HL		; HL POINTS TO RECORDS PER BLOCK (BYTE IN FRONT OF DPB)
+	DEC	HL		; BACKUP TO START OF DPB
+	DEC	HL		; BACKUP ONE BYTE FOR RECORDS PER BLOCK (BYTE IN FRONT OF DPB)
 	LD	A,(HL)		; GET IT
 	LD	(UNACNT),A	; SAVE IT
-	
+
 	RET
 ;
 ;__________________________________________________________________________________________________
@@ -1820,7 +1820,12 @@ INIT2:
 	CALL	WRITESTR		; DISPLAY OS LABEL
 	LD	DE,STR_BANNER		; POINT TO BANNER
 	CALL	WRITESTR		; DISPLAY IT
+	LD	HL,BDOS_LOC / 1024	; TPA SIZE IS START OF BDOS
+	CALL	PRTDEC			; PRINT IT
+	LD	DE,STR_TPA		; AND SUFFIX
+	CALL	WRITESTR
 	CALL	NEWLINE			; FORMATTING
+	
 
 #IFDEF PLTUNA
 	; SAVE COMMAND PROCESSOR IMAGE TO MALLOCED CACHE IN UNA BIOS PAGE
@@ -2334,7 +2339,7 @@ DRV_INIT7:	; PROCESS DEVICE/UNIT
 ;
 DRV_INIT8:	; SLICE CREATION LOOP
 ;
-	; INC DRVMAP ENTRY COUNT AND CHECK FOR 16 ENTRY MAXIMUM
+	; INC DRVMAP ENTRY COUNT AND ENFORCE FOR 16 ENTRY MAXIMUM
 	LD	HL,(DRVMAPADR)		; POINT TO DRIVE MAP
 	DEC	HL			; BACKUP TO POINT TO ENTRY COUNT
 	LD	A,(HL)			; CURRENT COUNT TO ACCUM
@@ -2734,15 +2739,17 @@ STR_DPHINIT	.DB	"\r\nConfiguring Drives...$"
 STR_HEAPOVF	.DB	" *** Insufficient Memory ***$"
 STR_INVMED	.DB	" *** Invalid Device ID ***$"
 STR_MEMFREE	.DB	" CBIOS Heap Bytes Free\r\n$"
-STR_CPM		.DB	"CP/M-80 2.2$"
-STR_ZSDOS	.DB	"ZSDOS 1.1$"
+STR_CPM		.DB	"CP/M-80 v2.2$"
+STR_ZSDOS	.DB	"ZSDOS v1.1$"
 STR_BANNER	.DB	", CBIOS v", BIOSVER
 #IFDEF PLTWBW
-		.DB	" [WBW]$"
+		.DB	" [WBW]"
 #ENDIF
 #IFDEF PLTUNA
-		.DB	" [UNA]$"
+		.DB	" [UNA]"
 #ENDIF
+		.DB	" $"
+STR_TPA		.DB	"K TPA$"
 ;
 ;==================================================================================================
 ;

@@ -1,0 +1,89 @@
+;===============================================************************
+;		RAM Disk Driver.		**  Hardware Specific **
+;	   D-X Designs Pty Ltd P112		************************
+;
+; 1.1 - 28 Jul 01 - Updated to latest fix for external driver.	HFB
+; 1.0 - 10 Jun 96 - Initial Release for P112 from YASBEC.	HFB
+;=======================================================================
+
+	CSEG
+	  IF  BANKED
+	COMMON	/BANK2/
+	  ENDIF
+
+; This module creates a RAM Drive using the available memory (if available)
+; above the TPA and possible System banks.  For a banked system, the minimum
+; needed is a 64k Main TPA and a 32k System Bank.
+
+;.....
+; Select the RAM Drive.  This routine performs any setup required in a select.
+
+SELRAM:	JP	SETPARMS	; No action locally.
+
+;.....
+; Read a 128-byte logical sector from the RAM Drive to main memory.
+;  This routine uses the HSTxxx values from the base BIOS routines.
+
+RAMRD:	OR	0FFH		; Set Read flag (non-0)
+	JR	RamRW		; ..go to common code
+
+;.....
+; Write a 128-byte logical sector from main memory to the RAM Drive.
+;  This routine uses the HSTxxx values from the base BIOS routines.
+
+RAMWR:	XOR	A		; Set Write flag with 0, Read w/AFH
+	LD	(HSTWRT),A	;  clear pending write flag
+			;..fall thru to common code..
+
+; The following performs calculations for the proper address and bank, sets
+; the DMA block and executes the Move to/from the Host Buffer.
+
+RamRW:
+	PUSH	AF		; Save R/W flag for later
+	; BUILD TOTAL BYTE OFFSET INTO A:HL
+	XOR	A,A		; A STARTS OUT ZERO
+	LD	HL,(HSTTRK)	; HL STARTS WITH TRACK NUM
+	LD	H,0		; ONLY LSB IS NEEDED (INIRAMD PASSES INVALID MSB)
+	LD	B,5		; MULT BY 32 SECTORS PER TRACK
+RAMWR1:
+	ADD	HL,HL		; DOUBLE VALUE
+	ADC	A,A		; ... INCLUDING A WITH CARRY
+	DJNZ	RAMWR1		; LOOP 5 TIMES FOR MULT BY 32
+	LD	DE,(HSTSEC)	; SECTOR VALUE TO 3 (ONE BYTE)
+	LD	D,0		; CLEAR MSB SINCE HSTSEC IS JUST ONE BYTE
+	ADD	HL,DE		; ADD TO WORKING VALUE
+	ADC	A,0		; HANDLE POSSIBLE CARRY
+	LD	B,7		; MULT BY 128 BYTES PER SECTOR
+RAMWR2:
+	ADD	HL,HL		; DOUBLE VALUE
+	ADC	A,A		; ... INCLUDING A WITH CARRY
+	DJNZ	RAMWR2		; LOOP 7 TIME FOR MULT BY 128
+	; CONVERT BYTE OFFSET IN A:HL TO BANK(A):OFFSET(HL)
+	SLA	H		; ROTATE HIGH BIT OF H INTO CF
+	RL	A		; ROTATE CF INTO LOW BIT OF A
+	SRL	H		; FIX H (ROTATE BACK W/ ZERO INTO HIGH BIT)
+	; ADJUST FOR STARTING RAM BANK
+	LD	C,A		; BANK TO C
+	LD	A,(RAMBNK)	; GET STARTING RAM BANK NUM
+	ADD	A,C		; COMBINE TO GET ACTUAL SOURCE BANK NUM
+	; SETUP FOR INTERBANK COPY
+	LD	C,A		; SOURCE BANK TO C
+	LD	B,BID_HB	; DEST BANK TO B (HSTBUF IN HBIOS)
+	LD	DE,(HB_DSKBUF)	; DEST ADDRESS TO DE; HL ALREADY HAS SOURCE ADDRESS
+	; REVERSE VALUES IF WRITE
+	POP	AF		; Read or Write?
+	JR	NZ,RAMWR3	; ..jump if Read
+	EX	DE,HL		; Else swap things around
+	LD	A,C
+	LD	C,B
+	LD	B,A
+RAMWR3:
+	; PERFORM THE COPY
+	CALL	HBX_XCOPY	; SET BANKS FOR COPY
+	LD	BC,128		; SET LENGTH OF COPY (ONE SECTOR)
+	CALL	HBX_COPY	; DO THE COPY
+	; CLEAN UP AND RETURN
+	XOR	A		; SIGNAL SUCCESS
+	RET			; AND RETURN
+
+;================== End of RAM Disk Code ====================

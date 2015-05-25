@@ -72,7 +72,11 @@ NO	EQU	FALSE
 YES	EQU	TRUE
 				; << ******  SYSTEM SPECIFIC  ****** >>
 				; <<  Insert DEF-xxxx.LIB definition >>
-	INCLUDE	DEF-DX.LIB	; <<   file for your configuration.  >>
+	INCLUDE	DEF-WW.LIB	; <<   file for your configuration.  >>
+
+				; << ******  SYSTEM SPECIFIC  ****** >>
+				; <<  Insert DEF-xxxx.LIB definition >>
+	INCLUDE	ROMWBW.LIB	; <<   file for your configuration.  >>
 
 	CSEG
 ;.....
@@ -94,7 +98,7 @@ WRUAL	EQU	2		; DOS code for unallocated write
 LOCKF	EQU	LOW [NOT AUTOSL] ;Lock flag for format default
 ALONE	EQU	FALSE		; Boot code equate
 	  IF  Z3
-	MACLIB	Z3BASE		; Include ENV definitions
+	MACLIB	Z3BASE.LIB	; Include ENV definitions
 	  ENDIF
 	PAGE
 ;* * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -189,11 +193,11 @@ JBSTRN:	JP	BSTRN		; BIOS Sectran
 ;* * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 				; << ****** HARDWARE SPECIFIC ****** >>
 				; <<  Insert ICFG-xxx to initialize  >>
-	INCLUDE	ICFG-DX.Z80	; <<    your computer's IO system    >>
+	INCLUDE	ICFG-WW.Z80	; <<    your computer's IO system    >>
 	PAGE
 				; << ****** Hardware Specific ****** >>
 				; << Enter Low level Byte I/O driver >>
-	INCLUDE	IIO-DX.Z80	; <<  routines in file IIO-xxxx.Z80  >>
+	INCLUDE	IIO-WW.Z80	; <<  routines in file IIO-xxxx.Z80  >>
 	PAGE
 ;* * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 ;		Cold   Start   Code 
@@ -236,7 +240,7 @@ MXFALC	EQU	880		; If High Density or 8" drives can be handled,
 	COMMON  /BANK2/
 	  ENDIF
 DPB:				; Marker for DPB start
-	.XLIST			; Don't print these due to size
+	;.XLIST			; Don't print these due to size
 	  IF  AUTOSL
 	INCLUDE DPB.LIB		; Default selection of common DD formats
 	   IF  FLOPYH
@@ -256,25 +260,25 @@ DPB:				; Marker for DPB start
 NRDPB	EQU	[$-DPB]/DPBSIZ	; Calc number of DPB's
 
 	CSEG			; Hard & Ramdisk DPBs and DPHs go in Code Seg
-	.xlist
+	;.xlist
 	  IF  HARDDSK
 				; << ****** Hardware Specific ****** >>
 				; <<  Insert DPB Info for Hard Disk  >>
-	INCLUDE	DPBHD-DX.LIB	; <<     Drives as DPBHD-xx.LIB      >>
+	INCLUDE	DPBHD-WW.LIB	; <<     Drives as DPBHD-xx.LIB      >>
 	  ENDIF
-	.list
+	;.list
 	  IF  RAMDSK
 				; << ****** Hardware Specific ****** >>
 				; <<  Insert DPB Info for RAM Disk   >>
-	INCLUDE	DPBM-DX.LIB	; <<     in file DPBM-xxx.LIB        >>
+	INCLUDE	DPBM-WW.LIB	; <<     in file DPBM-xxx.LIB        >>
 	  ENDIF
 	PAGE
 	INCLUDE	DPH.LIB		; Disk parameter headers
-	.xlist
+	;.xlist
 	  IF  HARDDSK
 	INCLUDE	DPHHD.LIB	; Insert DPH Info for Hard Disk Partitions
 	  ENDIF
-	.list
+	;.list
 	  IF  RAMDSK
 	INCLUDE	DPHM.LIB	; Insert DPH Info for RAM Disk
 	  ENDIF
@@ -290,6 +294,9 @@ NRDPB	EQU	[$-DPB]/DPBSIZ	; Calc number of DPB's
 ;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 	CSEG
 DIRDIO:
+;	CALL	PRINT
+;	DEFB	'[DIRDIO',']'+80H
+
 	  IF  BANKED
 	CALL	BIOSTK
 	CALL	GOSYSB		; Bank in the system bank
@@ -394,9 +401,9 @@ MAXHFN	EQU	[$-HDFUNC]/2
 
 	  IF  BANKED		; << ****** HARDWARE SPECIFIC ****** >>
 				; <<  Enter the Inter-Bank Movement  >>
-	INCLUDE	IBMV-DX.Z80	; <<    routines in IBMV-xxx.Z80     >>
+	INCLUDE	IBMV-WW.Z80	; <<    routines in IBMV-xxx.Z80     >>
 
-	  ELSE			; If Not Banked, Use these hooks
+	ELSE			; If Not Banked, Use these hooks
 
 MOVE:	LDIR
 	RET
@@ -450,6 +457,8 @@ RETBIO:	LD	BC,BIOSJT	; Get address of bios base
 ;	Return  DPH  Table  Address
 ;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
+	INCLUDE UTIL.Z80
+
 DRVTBL:	LD	HL,DPHTBL	; Point to DPH table
 	RET
 
@@ -476,25 +485,38 @@ DRVTBL:	LD	HL,DPHTBL	; Point to DPH table
 	PAGE
 			 	; << ****** Hardware Specific ****** >>
 				; <<  Enter routines for your timer  >>
-	INCLUDE	TIM-DX.Z80	; <<    and clock in TIM-xxxx.Z80    >>
+	INCLUDE	TIM-WW.Z80	; <<    and clock in TIM-xxxx.Z80    >>
 	PAGE
 
 	  IF  HARDDSK		; << ****** Hardware Specific ****** >>
-	   IF  IDE		; << Enter driver routines for your  >>
-	INCLUDE	HARDIDE.Z80	; <<    Hard Disk in HARD-xxx.Z80    >>
-	   ELSE
-	INCLUDE	HARD-DX.Z80
+	   IF  SCSI		; << Enter driver routines for your  >>
+	INCLUDE	HARD-WW.Z80     ; <<    Hard Disk in HARD-xxx.Z80    >>
+	   ENDIF
+	   IF  IDE
+	INCLUDE	HARDIDE.Z80
+	   ENDIF
+	   IF  HDSK
+	     IF  HBIOS
+	INCLUDE	HARDHB.Z80
+	     ELSE
+	INCLUDE	HARDSIM.Z80
+	     ENDIF
 	   ENDIF
 	PAGE
 	  ENDIF
 
 	  IF  RAMDSK		; << ****** Hardware Specific ****** >>
-	INCLUDE	RAMD-DX.Z80	; <<  Enter driver routines for RAM  >>
+	INCLUDE	RAMD-WW.Z80	; <<  Enter driver routines for RAM  >>
 	PAGE			; <<      Disk in RAMD-xxx.Z80       >>
 	  ENDIF
+
 				; << ****** Hardware Specific ****** >>
 				; <<   Enter Warm Boot routines in   >>
-	INCLUDE	WBOOT-DX.Z80	; <<          WBOOT-xx.Z80           >>
+	INCLUDE	WBOOT-WW.Z80	; <<          WBOOT-xx.Z80           >>
+
+				; << ****** Hardware Specific ****** >>
+				; <<   HBIOS interface routines in   >>
+	INCLUDE	HBIOS.Z80	; <<          HBIOS.Z80              >>
 ;.....
 ; Status bytes of general use placed at end of Data area
 

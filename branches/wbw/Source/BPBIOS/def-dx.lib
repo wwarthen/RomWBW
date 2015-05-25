@@ -11,7 +11,7 @@
 ; BIOS Configuration Equates and Macros
 
 DATE	  MACRO
-	DEFB	'17 Jan 14'	; Date of this version
+	DEFB	'30 Aug 01'	; Date of this version
 	  ENDM
 
 ;--- Basic System and Z-System Section ---
@@ -22,24 +22,25 @@ VERS	EQU	13H		; Version number in BCD (Hex) (Major/Minor)
 	  ELSE
 VERS	EQU	21H		; Version number w/Device Swapping permitted
 	  ENDIF
-BANKED	EQU	YES 		; Is this a banked BIOS?
-ZSDOS2	EQU	YES		; Yes = Banked Dos, No = CP/M 2.2 Compatible
+BANKED	EQU	NO 		; Is this a banked BIOS?
+ZSDOS2	EQU	yes		; Yes = Banked Dos, No = CP/M 2.2 Compatible
 INROM	EQU	NO  		; Alternate bank in ROM?
 MHZ	EQU	18		; Set to Speed in MHZ (6/9/12/16/18/24)
-FASTWB	EQU	YES		; Yes if restoring CPR from banked RAM
+FASTWB	EQU	yes		; Yes if restoring CPR from banked RAM
 				; ..No if restoring from Drive A
 Z3	EQU	YES		; Include ZCPR init code?
-HAVIOP	EQU	no		; Include IOP code into Jump table?
+HAVIOP	EQU	yes		; Include IOP code into Jump table?
 
 ;--- Memory configuration Section --- (Expansion Memory configured here)
 
-IBMOVS	EQU	NO		; Yes = Inter-bank Moves allowed (Z180/64180)
+IBMOVS	EQU	YES		; Yes = Inter-bank Moves allowed (Z180/64180)
 				;  No = Include Common RAM transfer buffer
+
 ;--- Character Device Section ---
 
-MORDEV	EQU	NO		; YES = Include any extra Char Device Drivers
+MORDEV	EQU	yes		; YES = Include any extra Char Device Drivers
 				;  NO = Only use the 4 defined Char Devices
-ESCC_B	EQU	no		; Include ESCC Channel B Driver?
+ESCC_B	EQU	true		; Include ESCC Channel B Driver?
 		; The following two devices result in non-standard data rates
 		; with the standard 16.00 MHz crystal in the P112.  If a more
 		; "standard" crystal is used (12.288, 18.432, 24.576 MHz etc)
@@ -48,65 +49,62 @@ ESCC_B	EQU	no		; Include ESCC Channel B Driver?
 		; assembling Polled or Interrupt-driven buffered input.
 		; Select the desired option for ASCI0 with the BUFFA0 flag,
 		; and BUFFA1 for ASCI1.
-ASCI_0	EQU	false		; Include ASCI0 Driver?
+ASCI_0	EQU	true		; Include ASCI0 Driver?
 BUFFA0	EQU	false		;   Use buffered ASCI0 Input Driver?
-ASCI_1	EQU	false		; Include ASCI1 Driver?
-BUFFA1	EQU	false		;   Use buffered ASCI1 Input Driver?
+ASCI_1	EQU	true		; Include ASCI1 Driver?
+BUFFA1	EQU	true		;   Use buffered ASCI1 Input Driver?
 
 QSIZE	EQU	32		; size of interrupt typeahead buffers (if used)
 				; ..must be 2^n with n<8
-RTSCTS	EQU	no		; Include RTS/CTS code on Serial Outputs?
+RTSCTS	EQU	yes		; Include RTS/CTS code on Serial Outputs?
 XONOFF	EQU	no		; Include Xon/Xoff handshaking in Serial lines?
 
 ;--- Clock and Time Section ---
 
 CLOCK	EQU	YES		; Include ZSDOS Clock Driver Code?
-DS1202	EQU	YES		; Use Dallas DS-1202 instead of Interrupt RTC?
-CLKSET	EQU	YES		; Allow DS-1202 Clock Sets? (Error if No)
+DS1202	EQU	yes		; Use Dallas DS-1202 instead of Interrupt RTC?
+CLKSET	EQU	no		; Allow DS-1202 Clock Sets? (Error if No)
 TICTOC	EQU	NO		;== NOT USED IN P112 ("heartbeat" count)
 
 ;--- Floppy Diskette Section ---
 
 BIOERM	EQU	yes		; Print BIOS error messages?
 CALCSK	EQU	YES		; Calculate skew table?
-AUTOSL	EQU	NO		; Auto select floppy formats?
+AUTOSL	EQU	YES		; Auto select floppy formats?
 				; If AUTOSL=True, the next two are active...
 FDDMA	EQU	no		; Use DMA Control for Floppy Drive Transfers?
-FLOPYH	EQU	no		; Include "Hi-Density" Floppy Formats?
+FLOPYH	EQU	yes		; Include "Hi-Density" Floppy Formats?
 FLOPY8	EQU	no		; Include 8" Floppy Formats?
 MORDPB	EQU	NO		; Include additional Floppy DPB Formats?
 
 ;--- RAM Disk Section ---
 
-RAMDSK	EQU	NO		; YES = Make RAM-Disk Code, NO = No code made
+RAMDSK	EQU	yes		; YES = Make RAM-Disk Code, NO = No code made
 
 ;--- Hard Disk Section ---
 
 HARDDSK	EQU	YES		; YES = Add Hard-disk Code, NO = Floppy Only
-				;  (Pick 1 of 3 options below)
-SCSI	EQU	NO		; YES = Use SCSI Driver
-IDE	EQU	NO		; YES = Use IDE Driver
-HDSK	EQU	YES		; YES = Use SIMH HDSK Driver
-HDDMA	EQU	NO		; Use DMA-Controlled Hard Disk Data Transfers?
+IDE	EQU	no		; YES = Use IDE Driver, NO = Use SCSI
+HDDMA	EQU	yes		; Use DMA-Controlled Hard Disk Data Transfers?
 				;  (DMA not implemented for GIDE)
 UNIT_0	EQU	YES		; Hard Disk Physical Unit 1
-UNIT_1	EQU	YES		; Hard Disk Physical Unit 2
-UNIT_2	EQU	YES		; Hard Disk Physical Unit 3
+UNIT_1	EQU	yes		; Hard Disk Physical Unit 2
+UNIT_2	EQU	NO		; Hard Disk Physical Unit 3
 
 ;--- Logical Drive Section ---
 
-DRV_A	EQU	no		; Set each of these equates for the drive and
-DRV_B	EQU	no		; partition complement of your system.  Assume
+DRV_A	EQU	yes		; Set each of these equates for the drive and
+DRV_B	EQU	yes		; partition complement of your system.  Assume
 DRV_C	EQU	no		; that A-D are Floppies.
-DRV_D	EQU	no
+DRV_D	EQU	yes
 DRV_E	EQU	yes		; Assume that E-L and N-P are Hard Disk
 DRV_F	EQU	yes		;  Partitions
 DRV_G	EQU	yes
 DRV_H	EQU	yes
-DRV_I	EQU	yes
-DRV_J	EQU	yes
-DRV_K	EQU	yes
-DRV_L	EQU	yes
+DRV_I	EQU	no
+DRV_J	EQU	no
+DRV_K	EQU	no
+DRV_L	EQU	no
 	  IF  RAMDSK
 DRV_M	EQU	yes		; This is Yes for RAM drive
 	  ELSE
@@ -114,7 +112,7 @@ DRV_M	EQU	no		; This is for drive if No RAM Drive present
 	  ENDIF
 DRV_N	EQU	yes
 DRV_O	EQU	yes
-DRV_P	EQU	no
+DRV_P	EQU	yes
 
 ;========== Configuration Unique Equates  (P112) ===========
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>> W A R N I N G <<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -123,7 +121,7 @@ DRV_P	EQU	no
 
 REFRSH	EQU	NO		; Set to NO for only Static RAM, needed for
 				;  systems with dynamic RAMs.
-NOWAIT	EQU	NO		; Set to NO to use configured Wait States in
+NOWAIT	EQU	no		; Set to NO to use configured Wait States in
 				;  Hard Disk Driver.  Yes to eliminate Waits.
 
 ;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -132,13 +130,13 @@ NOWAIT	EQU	NO		; Set to NO to use configured Wait States in
 ; increment and is ambiguously addressed occupying 0-1FFFFH.  The upper
 ; memory bounds (BNKU, BNK3 and BNKM) should be set for your configuration.
 
-BNK0	EQU	BID_USR		; First TPA Bank (switched in/out)	40000H
-BNK1	EQU	BID_HB		;   Second TPA Bank (Common Bank)	48000H
-BNK2	EQU	BID_SYS		; System Bank (BIOS, DOS, CPR)		50000H
-BNKU	EQU	00H		; User Area Bank			58000H
+BNK0	EQU	08H		; First TPA Bank (switched in/out)	40000H
+BNK1	EQU	09H		;   Second TPA Bank (Common Bank)	48000H
+BNK2	EQU	0AH		; System Bank (BIOS, DOS, CPR)		50000H
+BNKU	EQU	0BH		; User Area Bank			58000H
 				; (set to 0 to disable)
-BNK3	EQU	BID_RAMD	; First Bank for RAM disk		60000H
-BNKM	EQU	BID_RAMM	; Maximum Bank #			F8000H
+BNK3	EQU	0CH		; First Bank for RAM disk		60000H
+BNKM	EQU	1FH		; Maximum Bank #			F8000H
 				;  With both on-board RAMs only (MEM1 or MEM2),
 				;  the maximum Bank number is 11 (0BH).
 
@@ -282,18 +280,18 @@ _DMA	EQU	0A0H		; Diskette DMA Address
 
 ; FDC37C665/6 Serial Port  (National 16550 compatible)
 
-_RBR	EQU	68H		;R	Receiver Buffer
-_THR	EQU	68H		;W	Transmit Holding Reg
-_IER	EQU	69H		;RW	Interrupt-Enable Reg
-_IIR	EQU	6AH		;R	Interrupt Ident. Reg
-_FCR	EQU	6AH		;W	FIFO Control Reg
-_LCR	EQU	6BH		;RW	Line Control Reg
-_MCR	EQU	6CH		;RW	Modem Control Reg
-_LSR	EQU	6DH		;RW	Line Status Reg
-_MMSR	EQU	6EH		;RW	Modem Status Reg
-_SCR	EQU	6FH		;N/A	Scratch Reg. (not avail in XT)
-_DDL	EQU	68H		;RW	Divisor LSB | wih DLAB
-_DLM	EQU	69H		;RW	Divisor MSB | set High
+_RBR	EQU	98H		;R	Receiver Buffer
+_THR	EQU	98H		;W	Transmit Holding Reg
+_IER	EQU	99H		;RW	Interrupt-Enable Reg
+_IIR	EQU	9AH		;R	Interrupt Ident. Reg
+_FCR	EQU	9AH		;W	FIFO Control Reg
+_LCR	EQU	9BH		;RW	Line Control Reg
+_MCR	EQU	9CH		;RW	Modem Control Reg
+_LSR	EQU	9DH		;RW	Line Status Reg
+_MMSR	EQU	9EH		;RW	Modem Status Reg
+_SCR	EQU	9FH		;N/A	Scratch Reg. (not avail in XT)
+_DDL	EQU	98H		;RW	Divisor LSB | wih DLAB
+_DLM	EQU	99H		;RW	Divisor MSB | set High
 
 ;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ;  Equates for the National DP8490/NCR 5380 Prototype SCSI controller

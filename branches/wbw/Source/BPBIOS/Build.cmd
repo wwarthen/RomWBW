@@ -12,15 +12,15 @@ rem
 rem Z33 + ZSDOS11 w/ Non-banked BPBIOS
 rem
 
-copy def-z33.lib def-dx.lib
-copy icfg-z33.z80 icfg-dx.z80
-zx ZMAC -BPBIO-DX -/P
-echo ErrorLevel: %ERRORLEVEL%
+copy def-ww-z33.lib def-ww.lib
+zx ZMAC -BPBIO-WW -/P
+if exist bp33.prn del bp33.prn
+ren bpbio-ww.prn bp33.prn
 
 pause
 
 if exist bp33.rel del bp33.rel
-ren bpbio-dx.rel bp33.rel
+ren bpbio-ww.rel bp33.rel
 
 if exist bpsys.img del bpsys.img
 zx bpbuild -bp33.dat <bpbld1.rsp
@@ -64,12 +64,13 @@ rem
 rem Z33 + ZSDOS11 w/ Banked BPBIOS
 rem
 
-copy def-z33bnk.lib def-dx.lib
-copy icfg-z33.z80 icfg-dx.z80
-zx ZMAC -BPBIO-DX -/P
+copy def-ww-z33bnk.lib def-ww.lib
+zx ZMAC -BPBIO-WW -/P
+if exist bp33bnk.prn del bp33bnk.prn
+ren bpbio-ww.prn bp33bnk.prn
 
 if exist bp33bnk.rel del bp33bnk.rel
-ren bpbio-dx.rel bp33bnk.rel
+ren bpbio-ww.rel bp33bnk.rel
 
 if exist bpsys.img del bpsys.img
 zx bpbuild -bp33bnk.dat <bpbld1.rsp
@@ -111,12 +112,13 @@ rem
 rem Z34 + ZSDOS11 w/ Non-banked BPBIOS
 rem
 
-copy def-z34.lib def-dx.lib
-copy icfg-z34.z80 icfg-dx.z80
-zx ZMAC -BPBIO-DX -/P
+copy def-ww-z34.lib def-ww.lib
+zx ZMAC -BPBIO-WW -/P
+if exist bp34.prn del bp34.prn
+ren bpbio-ww.prn bp34.prn
 
 if exist bp34.rel del bp34.rel
-ren bpbio-dx.rel bp34.rel
+ren bpbio-ww.rel bp34.rel
 
 if exist bpsys.img del bpsys.img
 zx bpbuild -bp34.dat <bpbld1.rsp
@@ -160,12 +162,13 @@ rem
 rem Z34 + ZSDOS11 w/ Banked BPBIOS
 rem
 
-copy def-z34bnk.lib def-dx.lib
-copy icfg-z34.z80 icfg-dx.z80
-zx ZMAC -BPBIO-DX -/P
+copy def-ww-z34bnk.lib def-ww.lib
+zx ZMAC -BPBIO-WW -/P
+if exist bp34bnk.prn del bp34bnk.prn
+ren bpbio-ww.prn bp34bnk.prn
 
 if exist bp34bnk.rel del bp34bnk.rel
-ren bpbio-dx.rel bp34bnk.rel
+ren bpbio-ww.rel bp34bnk.rel
 
 if exist bpsys.img del bpsys.img
 zx bpbuild -bp34bnk.dat <bpbld1.rsp
@@ -207,12 +210,13 @@ rem
 rem Z41 + ZSDOS2 w/ Banked BPBIOS
 rem
 
-copy def-z41.lib def-dx.lib
-copy icfg-z41.z80 icfg-dx.z80
-zx ZMAC -BPBIO-DX -/P
+copy def-ww-z41.lib def-ww.lib
+zx ZMAC -BPBIO-WW -/P
+if exist bp41.prn del bp41.prn
+ren bpbio-ww.prn bp41.prn
 
 if exist bp41.rel del bp41.rel
-ren bpbio-dx.rel bp41.rel
+ren bpbio-ww.rel bp41.rel
 
 if exist bpsys.img del bpsys.img
 zx bpbuild -bp41.dat <bpbld1.rsp
