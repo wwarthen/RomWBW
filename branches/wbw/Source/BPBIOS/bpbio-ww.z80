@@ -206,7 +206,7 @@ JBSTRN:	JP	BSTRN		; BIOS Sectran
 	DSEG
 				; << ***** Hardware Specific ***** >>
 				; << Insert the Cold boot routines >>
-	INCLUDE	CBOOT-DX.Z80	; <<     in file CBOOT-xx.Z80      >>
+	INCLUDE	CBOOT-WW.Z80	; <<     in file CBOOT-xx.Z80      >>
 
 ; Deblocking Buffer Allocation
 
@@ -294,8 +294,8 @@ NRDPB	EQU	[$-DPB]/DPBSIZ	; Calc number of DPB's
 ;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 	CSEG
 DIRDIO:
-;	CALL	PRINT
-;	DEFB	'[DIRDIO',']'+80H
+;	CALL	PRTSTRD
+;	DEFB	'[DIRDIO',']$'
 
 	  IF  BANKED
 	CALL	BIOSTK
@@ -481,7 +481,7 @@ DRVTBL:	LD	HL,DPHTBL	; Point to DPH table
 	PAGE
 				; << ****** Hardware Specific ****** >>
 				; << This Driver is for the Standard >>
-	INCLUDE	FDC-DX.Z80	; <<  MicroSystems (SMC) FDC37C665   >>
+	INCLUDE	FDC-WW.Z80	; <<  MicroSystems (SMC) FDC37C665   >>
 	PAGE
 			 	; << ****** Hardware Specific ****** >>
 				; <<  Enter routines for your timer  >>

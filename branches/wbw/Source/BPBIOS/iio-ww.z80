@@ -142,13 +142,15 @@ COM1IS:
 ; Remain in Loop until Char ready, then Return Char in A
 
 COM1IN:
+	PUSH	BC
 	PUSH	DE
 	PUSH	HL
 	LD	BC,0000H + HB_IODEV	; Func=$00 (IN), Device/Unit=HB_IODEV
 	CALL	HBX_INVOKE
-	LD	C,E
+	LD	A,E
 	POP	HL
 	POP	DE
+	POP	BC
 	RET
 
 ;.....

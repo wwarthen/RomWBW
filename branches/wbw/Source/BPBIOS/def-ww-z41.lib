@@ -15,7 +15,7 @@ DATE	  MACRO
 	  ENDM
 
 AUTOCL	  MACRO
-	DEFB	'ZEX Z41 '	; Autostart command line
+	DEFB	8,'ZEX Z41 ',0	; Autostart command line
 	  ENDM
 
 ;--- Basic System and Z-System Section ---
@@ -73,7 +73,7 @@ TICTOC	EQU	NO		;== NOT USED IN P112 ("heartbeat" count)
 
 BIOERM	EQU	yes		; Print BIOS error messages?
 CALCSK	EQU	YES		; Calculate skew table?
-AUTOSL	EQU	NO		; Auto select floppy formats?
+AUTOSL	EQU	YES		; Auto select floppy formats?
 				; If AUTOSL=True, the next two are active...
 FDDMA	EQU	no		; Use DMA Control for Floppy Drive Transfers?
 FLOPYH	EQU	no		; Include "Hi-Density" Floppy Formats?

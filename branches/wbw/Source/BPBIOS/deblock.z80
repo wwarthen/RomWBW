@@ -11,8 +11,8 @@
 
 SETDMA:	
 	LD	(DMAADR),BC	; Save the address
-;	CALL	PRINT
-;	DEFB	'[SETDMA',']'+80H
+;	CALL	PRTSTRD
+;	DEFB	'[SETDMA',']$'
 	RET
 
 ;.....

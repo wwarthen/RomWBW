@@ -124,17 +124,13 @@ ISFALSE: XOR	A
 ;.....
 ; Print routine prints to console the Null or Zero-terminated string at (SP)
 
-PRINT:
-	EX	(SP),HL		; Print inline 0 or Hi-bit terminated
+PRINT:	EX	(SP),HL		; Print inline 0 or Hi-bit terminated
 PSTR:	LD	A,(HL)		; General purpose print 0 or Hi-bit
 	INC	HL		; Terminated string pointed to by HL
 	OR	A
 	JR	Z,PSTRX		; Exit if null found in string
 	LD	C,A
-	PUSH	BC		; WW
-	RES	7,C		; WW
 	CALL	CONOUT		; Send to console device
-	POP	BC		; WW
 	BIT	7,C		; Test for Hi-bit terminator
 	JR	Z,PSTR		; ..loop if Not finished
 PSTRX:	EX	(SP),HL		; Else swap Ptr to next instr for entry HL val

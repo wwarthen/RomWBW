@@ -23,7 +23,7 @@ OPT1	DEFL	OPT1+[BANKED AND ZSDOS2 AND 8]  ; Bit 3 = ALV/CSV in Banked RAM
 ;					    If set to 1, LDSYS will not load a
 ;					    new system over the running one.
 
-	DEFB	'B/P-DX'	; Six-char string for Text ID Matching
+	DEFB	'B/P-WW'	; Six-char string for Text ID Matching
 
 CONFIG:
 IOBYT:	DEFB	10010100B	; LST:=PIO, AUX:=COM2, CON:=COM1
@@ -56,7 +56,7 @@ DPBADR:
 	DEFW	0		; Pointer to first XDPB in Alternate Bank
 	  ENDIF
 
-AUTOCMD: DEFB	8,'ZEX Z41 ',0	; Startup command for Z3
+AUTOCMD: AUTOCL			; Startup command for Z3
 
 ENVADR:	DEFW	Z3ENV		; Pointer to the Environment Descriptor
 

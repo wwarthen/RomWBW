@@ -68,7 +68,7 @@ SPEED8	EQU	10000000B
 ;  When calculating Skew for Read/Write, a Negative Number indicates the
 ;  Sectors are to be Read without Skew Translation.
 
-;WW	CSEG
+	CSEG
 ;.....
 ; DS/QD AMPRO/SB180/ON
 
