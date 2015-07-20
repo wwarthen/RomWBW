@@ -133,7 +133,7 @@ if ($Platform -eq "UNA")
 	Copy-Item 'osimg.bin' ${OutDir}\UNA_WBW_SYS.bin
 	Copy-Item $RomDiskFile ${OutDir}\UNA_WBW_ROM${ROMSize}.bin
 
-	Concat 'UNA\UNA-BIOS.BIN','osimg.bin','UNA\FSFAT.BIN',$RomDiskFile $RomFile
+	Concat '..\UBIOS\UNA-BIOS.BIN','osimg.bin','..\UBIOS\FSFAT.BIN',$RomDiskFile $RomFile
 }
 else 
 {

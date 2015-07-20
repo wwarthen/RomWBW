@@ -10,4 +10,4 @@ pushd CBIOS && call Clean.cmd && popd
 
 pushd BPBIOS && call Clean.cmd && popd
 
-pushd BIOS && call Clean.cmd && popd
+pushd HBIOS && call Clean.cmd && popd

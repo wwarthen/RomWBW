@@ -34,7 +34,7 @@ DOP_WRITE	.EQU	1		; WRITE OPERATION
 DEV_BAT		.EQU	$FE		; BAT:
 DEV_NUL		.EQU	$FF		; NUL:
 ;
-#INCLUDE "../BIOS/ver.inc"
+#INCLUDE "../HBIOS/ver.inc"
 ;
 #INCLUDE "config.asm"
 ;
@@ -55,11 +55,11 @@ CBIOS_END	.EQU	CPM_END
 MEMTOP		.EQU	$10000
 ;
 #IFDEF PLTWBW
-#INCLUDE "../BIOS/hbios.inc"
+#INCLUDE "../HBIOS/hbios.inc"
 #ENDIF
 ;
 #IFDEF PLTUNA
-#INCLUDE "../BIOS/ubios.inc"
+#INCLUDE "../HBIOS/ubios.inc"
 #ENDIF
 ;
      	.ORG	CBIOS_LOC		; DEFINED IN STD.ASM

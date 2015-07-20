@@ -424,7 +424,7 @@ HBX_STACK	.EQU	$
 	JP	HBX_BNKSEL	; FIXED ADR ENTRY FOR HBX_BNKSEL
 	JP	HBX_BNKCPY	; FIXED ADR ENTRY FOR HBX_BNKCPY
 	JP	HBX_BNKCALL	; FIXED ADR ENTRY FOR HBX_BNKCALL
-	.DW	HBX_IDENT	; ADDRESS OF HBIOX PROXY START
+	.DW	HBX_IDENT	; ADDRESS OF HBIOS PROXY START
 	.DW	HBX_IDENT	; ADDRESS OF HBIOS IDENT INFO DATA BLOCK
 ;
 	.FILL	$MEMTOP - $		; FILL TO END OF MEMORY (AS NEEDED)
@@ -790,7 +790,7 @@ CIO_GETINF1:
 ;
 ;==================================================================================================
 ;   DISK I/O DEVICE DISPATCHER
-;================= =================================================================================
+;==================================================================================================
 ;
 ; ROUTE CALL TO SPECIFIED DISK I/O DRIVER
 ;   B: FUNCTION
@@ -1197,7 +1197,7 @@ SYS_HCBPUTB:
 ;
 ; GET HCB VALUE WORD
 ;   C: HCB INDEX (OFFSET INTO HCB)
-;   RETURN BYTE VALUE IN DE
+;   RETURN WORD VALUE IN DE
 ;
 SYS_HCBGETW:
 	CALL	SYS_HCBPTR	; LOAD HL WITH PTR
