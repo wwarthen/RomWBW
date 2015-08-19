@@ -227,7 +227,7 @@ init:
 	jr	nz,init1	; if not, not UNA
 	ld	hl,unamod	; point to UNA mode flag
 	ld	(hl),$ff	; set UNA mode
-	ld	a,7		; UNA platform ID
+	ld	a,6		; UNA platform ID
 	ld	(bioplt),a	; save it
 	ld	de,msgub	; point to UBIOS string
 

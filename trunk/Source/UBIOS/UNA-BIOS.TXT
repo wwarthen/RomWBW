@@ -1,0 +1,869 @@
+			UNA error codes
+			===============
+
+All UNA BIOS calls return a completion code in the C-register.  If no
+error has occurred, the code will be Zero, and the Z-flag will be
+set.  If any error has occurred, the Z-flag will be clear, and the
+C-register indicates the nature of the error.
+
+
+Calling conventions:
+===================
+
+UNA BIOS calls are made with a function code in the C-register.  Some
+calls will have a unit number in the B-register; other calls will
+have a subfunction number in the B-register.  Parameters are passed
+in the other registers, as documented for each BIOS call.  The BIOS
+is invoked with an "RST 8" single-byte instruction.
+
+Values are returned in various registers, or buffers, as specified
+for each function call.  Unless a value is specifically returned in a
+register, the register is preserved across the BIOS call.  The
+exception to this rule is the AF register.  Neither is preserved; and
+the Flags-register always returns the Z-flag to indicate any error
+condition (set==no error, clear==error code in C-register).
+
+
+Error codes:
+===========
+
+; error.s
+
+; error codes follow
+NO_ERROR	=	0
+;
+;	Mild errors 1..63
+;
+ERR_NOT_YET	=	1	; Method still being implemented
+
+;	Definite errors	64..127
+;
+ERR_UNKNOWN	=	65	; Unknown call
+ERR_UNIT_NO	=	66	; unit no. bad
+ERR_METHOD	=	67	; method number is bad
+ERR_ADDRESS	=	68	; address out of range (must be >=0x8000)
+ERR_DECODE	=	69	; not an encoded value (decode.s)
+ERR_CAPACITY	=	70	; LBA address beyond disk capacity
+ERR_NO_MEDIA	=	71	; no Media in drive socket
+ERR_WRONG_MEDIA =	72	; not SDSC or SDHC
+ERR_WRITE_PROT	=	73	; media is write-protected
+
+ERR_NO_PROTO	=	129	; no Instance prototype found
+ERR_NO_MEMORY	=	130	; ran out of Heap memory
+ERR_NO_UNIT	=	131	; no new unit available
+ERR_SIO_BAUD	=	132	; serial baud rate setup not possible
+ERR_DISK_IO	=	133	; disk I/O error
+ERR_TIMEOUT	=	134	; timeout
+ERR_CRC16	=	135	; CRC16 error on data read
+
+CATASTROPHE_HEAP	=	241	; HEAP catastrophe
+DRIVE_TRANSFER_NOT_SET	=	242	; DRIVE NOT 8 & NOT 16 BIT
+
+
+;end error.s
+
+
+
+
+BIOS stub:
+=========
+
+The UNA BIOS stub occupies highest memory from 0xFF00 (current start)
+up to 0xFFFF.  The three highest jump vectors are assigned as
+follows:
+
+0xFFF7	chain:	JP inter-page execution chain operation
+0xFFFA	  map:	JP low 32K page set-map operation
+0xFFFD  ubios:	JP BIOS function entry point
+
+These vectors will not change.  The vector at 0xFFFD should be copied
+to 0x0008 .. 0x000A to enable the short BIOS call with RST 8.  The
+map vector at 0xFFFA is filled in at system start depending upon the
+CPU board in use.
+
+
+
+
+BIOS calls:
+==========
+
+
+*** Serial I/O calls
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Function 10 -- INIT
+;
+;  Enter with:
+;	C	= 0x10
+;	B	= unit number
+;	DE	= setup parameters or -1 (use previous values)
+;
+;  Exit with:
+;	C	= error code (0==no error)
+;	Z flag is clear/set on error/no error
+;
+;  Setup Parameter Word:
+;   _______________________________  _______________________________
+;  |       |   |     encoded       ||   |   |           |   |       |
+;  |       |rts|    Baud Rate      ||dtr|xon|  parity   |stp| 8/7/6 |
+;  |_______|___|___|_______________||___|___|___________|___|_______|
+;   15  14  13  12  11  10   9   8    7   6   5   4   3   2   1   0
+;            D register                       E register
+;
+;   _______________________________  _______________________________
+;  |   | re| te|~rs| er|8/7  pe stp||	|   |	|   |	|	    |
+;  | 0 | 1 | 1 | 0 | 0 | m2  m1  m0|| 0 | 0 | ps|peo| dr|    SSS    |
+;  |___|___|___|___|___|___________||___|___|___|___|___|___________|
+;   15  14  13  12  11  10   9   8    7   6   5   4   3   2   1   0
+;            CNTLA0                          CNTLB0
+;
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Function 11 -- Read a character (wait for input)
+;
+;  Enter with:
+;	C	= 0x11		function code
+;	B	= unit number
+;
+;  Exit with:
+;	E	= character read in
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Function 12 -- Write a character
+;
+;  Enter with:
+;	C	= 0x12		function code
+;	B	= unit number
+;	E	= character to write out
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Function 13 -- Input status (number of waiting characters)
+;
+;  Enter with:
+;	C	= 0x13
+;	B	= unit number
+;
+;  Exit with:
+;	E	= number of characters in input queue
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Function 14 -- Output status (space available in output buffer)
+;
+;  Enter with:
+;	C	= 0x13
+;	B	= unit number
+;
+;  Exit with:
+;	E	= number of empty character slots in output queue
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Function 15 -- Output characters until terminator
+;		 i.e., output string
+;
+;  Enter with:
+;	C	= 0x15
+;	B	= unit number
+;	DE	= buffer address
+;	L	= terminator (usually NUL or '$')
+;
+;  Exit with:
+;	C	= completion code
+;	All other registers preserved
+;
+;  Errors:
+;	NO_ERROR	Z flag is set
+;	ERR_ADDRESS	Z flag is clear (NZ)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Function 16 -- Input count characters
+;
+;  Enter with:
+;	C	= 0x16
+;	B	= unit number
+;	DE	= buffer address
+;	HL	= count of characters to input
+;
+;  Exit with:
+;	C	= completion code
+;	HL	= count of characters actually read
+;	All other registers preserved
+;
+;  Errors:
+;	NO_ERROR	Z flag is set
+;	XXX		Z flag is clear (NZ)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Function 17 -- Output count characters
+;
+;  Enter with:
+;	C	= 0x17
+;	B	= unit number
+;	DE	= buffer address
+;	HL	= count of characters to put out
+;
+;  Exit with:
+;	C	= completion code
+;	HL	= count of characters actually put out
+;	All other registers preserved
+;
+;  Errors:
+;	NO_ERROR	Z flag is set
+;	XXX		Z flag is clear (NZ)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Function 18 -- Get Line/Driver information
+;
+;  Enter with:
+;	C	= 0x18
+;	B	= unit number
+;
+;  Exit with:
+;	C	= error code
+;	DE	= line characteristics (see DE def. for INIT call (0x10)
+;	H	= driver ID
+;	L	= number of 0x1? drivers
+;
+;  Errors:
+;	NO_ERROR	Z flag is set
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+*** IDE disk calls (c.f., SD card disk calls)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Function 40 -- Reset the IDE device and controller
+;
+;  Enter with:
+;	C	= 0x40		function code
+;	B	= unit number (0...)
+;	D	= flags2 values
+;	E	= flags value
+; DE == -1 means use previously set values
+;
+;  Exit with:
+;	C	= error code, or success=0
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Function 41 -- set Logical Block Address for next transfer
+;
+;  Enter with:
+;	C	= 0x41		function code
+;	B	= unit number
+;	DE:HL	= 28-bit LBA address of next transfer (R/W)
+;
+;  Exit with:
+;	C	= error code
+;
+;  Errors:
+;	ERR_CAPACITY	LBA address exceeds drive capacity
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Function 42 -- Read Sectors
+;
+;  Enter with:
+;	C	= 0x42		function code
+;	B	= unit number
+;	DE	= address of n*512 byte buffer
+;	L	= number of sectors to read
+;
+;  Exit with:
+;	C	= 0 if no error
+;	DE	= unchanged
+;	L	= number of sectors read
+;
+;  Errors:
+;	ERR_ADDRESS
+;	ERR_DISK_IO
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Function 43 -- Write Sectors
+;
+;  Enter with:
+;	C	= 0x43		function code
+;	B	= unit number
+;	DE	= address of n*512 byte buffer
+;	L	= number of sectors to write
+;
+;  Exit with:
+;	C	= 0 if no error
+;	DE	= unchanged
+;	L	= number of sectors written
+;
+;  Errors:
+;	ERR_ADDRESS
+;	ERR_DISK_IO
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Function 44 -- Verify Sectors
+;
+;  Enter with:
+;	C	= 0x44		function code
+;	B	= unit number
+;	L	= number of sectors to verify
+;
+;  Exit with:
+;	C	= 0 if no error
+;	L	= number of sectors verified
+;
+;  Errors:
+;	ERR_ADDRESS
+;	ERR_DISK_IO
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Function 45 -- Get IDE Disk Information
+;
+;  Enter with:
+;	C	= 0x45		function code
+;	B	= unit number
+;	DE	= pointer to 512 byte buffer (first call)
+;  if DE == null (0), then return what was previously noted
+;
+;  Exit with:
+;	B	= 'or' of  flags and flags2
+;	DE:HL	= sector capacity of the disk
+;
+;
+;	LBA capacity of disk noted in private instance data
+;	logical CHS information noted
+;	disk ID string noted
+;
+;  Errors:
+;	ERR_ADDRESS
+;	ERR_TIMEOUT
+;	ERR_DISK_IO
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Function 46 -- Get Disk Geometry Information
+;
+;  Enter with:
+;	C	= 0x46		function code
+;	B	= unit number
+;
+;  Exit with:
+;	DE	= number of cylinders
+;	H	= number of heads per cylinder
+;	L	= number of sectors per track
+;
+;  Errors:
+;	ERR_DISK_IO
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Function 47 -- Get Disk Error Status
+;
+;  Enter with:
+;	C	= 0x47		function code
+;	B	= unit number
+;
+;  Exit with:
+;	D	= contents of Status register after last operation
+;	E	= contents of Error register after last operation
+;
+;  Errors:
+;	none
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Function 48 -- Get Disk Type
+;
+;  Enter with:
+;	C	= 0x48		function code
+;	B	= unit number
+;
+;  Exit with:
+;	D	= disk driver ID
+;	E	= disk software type (may be different from Floppies)
+;	L	= total disk units in the system
+;	H	= disk physical type (pertinent to Floppies)
+;
+;  Errors:
+;	none
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+*** SDcard disk calls (c.f., IDE disk calls)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Function 40 -- Reset the Disk device and controller
+;
+;  Enter with:
+;	C	= 0x40		function code
+;	B	= unit number (0...)
+;	D	= flags2 values
+;	E	= flags value
+; DE == -1 means use previously set values
+;
+;  Exit with:
+;	C	= error code, or success=0
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Function 41 -- set Logical Block Address for next transfer
+;
+;  Enter with:
+;	C	= 0x41		function code
+;	B	= unit number
+;	DE:HL	= 32-bit LBA address of next transfer (R/W)
+;
+;  Exit with:
+;	C	= error code
+;
+;  Errors:
+;	ERR_CAPACITY	LBA address exceeds drive capacity
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Function 42 -- Read Sectors
+;
+;  Enter with:
+;	C	= 0x42		function code
+;	B	= unit number
+;	DE	= address of n*512 byte buffer
+;	L	= number of sectors to read
+;
+;  Exit with:
+;	C	= 0 if no error
+;	DE	= unchanged
+;	L	= number of sectors read
+;
+;  Errors:
+;	ERR_ADDRESS
+;	ERR_NO_MEDIA
+;	ERR_DISK_IO
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Function 43 -- Write Sectors
+;
+;  Enter with:
+;	C	= 0x43		function code
+;	B	= unit number
+;	DE	= address of n*512 byte buffer
+;	L	= number of sectors to write
+;
+;  Exit with:
+;	C	= 0 if no error
+;	DE	= unchanged
+;	L	= number of sectors written
+;
+;  Errors:
+;	ERR_ADDRESS
+;	ERR_NO_MEDIA
+;	ERR_WRITE_PROT
+;	ERR_DISK_IO
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Function 44 -- Verify Sectors
+;
+;  Enter with:
+;	C	= 0x44		function code
+;	B	= unit number
+;	L	= number of sectors to verify
+;
+;  Exit with:
+;	C	= 0 if no error
+;	L	= number of sectors verified
+;
+;  Errors:
+;	ERR_ADDRESS
+;	ERR_DISK_IO
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Function 45 -- Get (IDE) Disk Information
+;
+;  Enter with:
+;	C	= 0x45		function code
+;	B	= unit number
+;	DE	= pointer to 512 byte buffer (36 bytes used for SD cards)
+;  if DE == NULL(0), then nothing is to be returned in the buffer
+;
+;  Exit with:
+;	B	= 'or' of  flags and flags2
+;	DE:HL	= sector capacity of the disk
+;
+;	Buffer contains CID, CSD, OCR information from Function 40 call
+;
+;  Errors:
+;	ERR_ADDRESS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Function 46 -- Get Disk Geometry Information
+;
+;  Enter with:
+;	C	= 0x46		function code
+;	B	= unit number
+;
+;  Exit with:
+;	DE	= number of cylinders
+;	H	= number of heads per cylinder
+;	L	= number of sectors per track
+;
+;  Errors:
+;	ERR_DISK_IO
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Function 47 -- Get Disk Error Status
+;
+;  Enter with:
+;	C	= 0x47		function code
+;	B	= unit number
+;
+;  Exit with:
+;	D	= contents of Status register after last operation
+;	E	= contents of Error register after last operation
+;
+;  Errors:
+;	none
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Function 48 -- Get Disk Type
+;
+;  Enter with:
+;	C	= 0x48		function code
+;	B	= unit number
+;
+;  Exit with:
+;	D	= disk driver ID
+;	E	= disk software type (may be different from Floppies)
+;	L	= total disk units in the system
+;	H	= disk physical type (pertinent to Floppies)
+;
+;  Errors:
+;	none
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+*** CPU functions with no Unit number
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Function 0xF0		RESET / INITIALIZE
+;
+;  Enter with:
+;	C	= 0xF0
+;
+;  Exit with:
+;	DE	= lowest heap address
+;	HL	= amount of heap memory in bytes
+;
+;  Errors:
+;	CATASTROPHE_HEAP		; ran out of HEAP memory
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Function 0xF1		Get HMA
+;
+;  Enter with:
+;	C	= 0xF1
+;
+;  Exit with:
+;	HL = start address of HBIOS stub in high memory
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Function 0xF2		GET/SET NVRAM
+;
+;  Enter with:
+;	C	= 0xF2
+;	B	= 0 get NVRAM copy from CPU instance
+;		= 1 set NVRAM copy to CPU instance
+;	DE	= destination/source buffer (31 chars)
+;
+;  Errors:
+;	ERR_ADDRESS		; if address is <0x8000
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Function 0xF3		FIND PROTOTYPE
+;
+;  Enter with:
+;	C	= 0xF3
+;	B	ID of Instance Prototype to Find
+;
+;  Exit with:
+;	DE	= HBIOS memory address of prototype
+;
+;  Errors:
+;	ERR_NO_PROTO
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Function 0xF4		PEEK
+;
+;  Enter with:
+;	C	= 0xF4
+;	DE	= address in range 0..7FFF
+;
+;  Exit with:
+;	B	= Byte value at (DE)
+;
+;  Errors:
+;	ERR_ADDRESS
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Function 0xF5		POKE
+;
+;  Enter with:
+;	C	= 0xF5
+;	B	= Byte value to POKE at (DE)
+;	DE	= address in range 0..7FFF
+;
+;  Exit with:
+;	nothing
+;
+;  Errors:
+;	ERR_ADDRESS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Function 0xF6		NEW INSTANCE
+;
+;  Enter with:
+;	C	= 0xF6
+;	DE	= Instance Prototype pointer
+;	L	= new instance device code
+;
+;  Exit with:
+;	DE	= new Instance pointer
+;	B	= new Unit number
+;
+;  Errors:
+;	ERR_NO_MEMORY
+;	ERR_NO_UNIT
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Function 0xF7		MALLOC
+;
+;  Enter with:
+;	C	= 0xF7
+;	DE	= number of bytes to allocate from the heap
+;
+;  Exit with:
+;	DE	= number of bytes actually allocated
+;	HL	= address in HBIOS memory of DE bytes
+;
+;  Errors:
+;	ERR_NO_MEMORY
+;	DE 	= 0
+;	HL	= max. allocation remaining
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Function 0xF8		get PHI  --  get the CPU clock rate
+;
+;  Enter with:
+;	C	= 0xF8
+;
+;  Exit with:
+;	DE:HL	= CPU clock rate (phi) in Hz
+;
+;  Errors:
+;	none
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Function 0xF9		get CPU info
+;			get the CPU type and encoded clock rate (PHI)
+;
+;  Enter with:
+;	C	= 0xF9
+;
+;  Exit with:
+;	D	= CPU model number (0=Z80, 1,2,3=level of Z180
+;	E	= CPU encoded clock rate (PHI) or 0xFF if not encoded
+;
+;  Errors:
+;	none
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;  get BIOS info  --  get BIOS information in various forms
+;
+; Enter with:
+;	C	= 0xFA
+;	B	= <subfunction code>
+;
+; Subfunction entry codes:
+;
+;   Get 4 character signature
+;	B	= 0	get 4 character signature in registers
+;			DE & HL  D='-', E='A', H='N', L='U'
+;   Returns:
+;	DE	= 0x2D41
+;	HL	= 0x4E55
+;
+;
+;   Get 79 character BIOS version string + null
+;	B	= 1	get 79 character BIOS version string + null
+;	DE	=  pointer to an 80 character buffer in high memory
+;
+;   Returns:
+;	buffer is filled with up to 80 bytes
+;
+;
+;   Get 511 character BIOS version + copyright + license notice + null
+;	B	= 2	get 511 long informatin + null terminator
+;	DE	=  pointer to a 512 character buffer in high memory
+;
+;   Returns:
+;	buffer is filled with up to 512 bytes
+;
+;
+;   Get current execution environment (32K page codes)
+;	B	= 3
+;
+;   Returns:
+;	DE	= currently executing page, ROM or RAM (usually EXEC_PAGE)
+;	HL	= page containing UBIOS in RAM (always UBIOS_PAGE)
+;		  (see "pages.inc" for the encodings)
+;
+;
+;   Get BIOS date and version information
+;	B	= 4
+;
+;   Returns:
+;	B	= subversion load sequence number
+;	D	= major version number
+;	E	= minor version number in bits (0..6)
+;		  alpha/beta indicator if bit 7 is set
+;	HL	= BIOS date, packed (7/4/5) where Y=year-2000
+;		  YYYYYYY MMMM DDDDD
+;
+;
+;   Get user execution environment (32K page codes)
+;	B	= 5
+;
+;   Returns:
+;	DE	= low memory user RAM page (EXEC_PAGE)
+;	HL	= high memory user RAM page (HIGH_PAGE)
+;		  (see "pages.inc" for the encodings)
+;
+;
+; Errors:
+;	ERR_ADDRESS	if DE is not in the upper 32k (B==1 or 2)
+;	ERR_METHOD	if B-reg value is not recognized
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Function 0xFB		Get/set lower page bank
+;
+; Enter with:
+;	C	= 0xFB
+;
+;	B	= 0	get the page currently mapped into low memory
+;			page returned in DE
+;		= 1	set map the page in DE into low memory
+;			and return the current page in DE
+;	DE	= page (from 'pages.inc') to map in, if B==1
+;
+; Exit with:
+;	DE	= page currently mapped into low 32k memory bank
+;		= page previously mapped into low 32k mem. bank  (set)
+;
+; Errors:
+;	ERR_METHOD	if B is not 0 or 1
+;
+; CAUTION:  This is a dangerous function.  It may only be called from
+;	the high memory bank, since it changes the low memory mapping.
+;	Likewise, the stack must be in the high memory bank.
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;  Get/set bootstrap history
+;
+; Enter with:
+;	C	= 0xFC
+;
+;	B	= 0	get the saved bootstrap history
+;		= 1	set the bootstrap history for later retrieval
+;
+;	Data registers to retain, if a Set
+;
+; Get or Set Data:
+;	DE	= ROM page last booted (or -1, if not applicable)
+;	L	= most recently booted disk unit number (or -1, if
+;		  not applicable)
+; Exit with:
+;	Registers with data, if a Get
+;	H	= current boot disk BIOS unit number (from NVRAM)
+;
+; Errors:
+;	ERR_METHOD	if B is not 0 or 1
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+
+

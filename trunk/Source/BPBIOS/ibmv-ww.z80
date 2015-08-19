@@ -191,21 +191,5 @@ CURBNK:	DEFS	1		; Current bank #
 DMABNK:	DEFS	1		; Target bank # for disk xfers
 	DEFS	64		; 32 level stack
 USP:	DEFS	2		; User stack pointer
-ASAVE:	DEFS	1		; Temp storage for User's A-Register
-
-;; Z-180 DMA transfer block for inter-bank moves
-;
-;ISRC:	DEFS	2		; Source Segment address
-;	DEFS	1		; ..Source Bank in physical RAM
-;IDST:	DEFS	2		; Destination Segment address
-;	DEFS	1		; ..Destination Bank in physical RAM
-;ICNT:	DEFS	2		; Number of bytes to move
-
-; The P112 does not need this buffer, but other versions might
-
-	  IF  INROM OR [NOT IBMOVS]
-	DSEG
-IBMVBF:	DEFS	256		; Inter-bank move buffer
-	  ENDIF
 
 ;======================= End of IBMV-DX ===========================

@@ -11,8 +11,8 @@
 
 SETDMA:	
 	LD	(DMAADR),BC	; Save the address
-;	CALL	PRINT
-;	DEFB	'[SETDMA',']'+80H
+;	CALL	PRTSTRD
+;	DEFB	'[SETDMA',']$'
 	RET
 
 ;.....
@@ -92,8 +92,14 @@ BREAD:	LD	A,1		; Non-zero
 
 	CSEG
 WRITE:
+;	PUSH	AF
+;	LD	A,C
 ;	CALL	PRTSTRD
-;	DEFB	'[WRITE]$'
+;	DEFB	'[WRITE($'
+;	CALL	PRTHEXBYTE
+;	CALL	PRTSTRD
+;	DEFB	')]$'
+;	POP	AF
 
 	  IF  BANKED
 	CALL	BIOSTK
@@ -238,10 +244,6 @@ FILHST:	CALL	FLUSH		; Empty hstbuf if write pending
 	INC	HL		; Skip over logical sector
 	LD	C,4		; B=0 from above
 	LDIR			; Set Host DPH and DPB, physical sector
-	
-;	LD	A,(SEKPDN)	; WW
-;	LD	(HSTPDN),A	; WW
-
 	LD	A,(RSFLAG)	; Pre-read necessary?
 	OR	A
 	CALL	NZ,READHST	; Read a sector if so.

@@ -59,7 +59,7 @@
 				;   sectors per track
 	DEFB	0		; Physical tracks/side (No Meaning in HD)
 
-HSIZ0	EQU	2048		; # of blocks in first Partition  (498 trks)
+HSIZ0	EQU	996		; # of blocks in first Partition  (498 trks)
 
 				;	SQ-312	SQ312A	SQ-306	ST-225  ST125N
 				;	------	------	------	------  ------
@@ -68,10 +68,10 @@ DPB50:	DEFW	64	; Sctrs/Trk	  64	  64	  64	  64	  64
 	DEFB	31	; Block Mask	  31	  31	  31	  31	  31
 	DEFB	1	; Extent Mask	   1	   1	   1	   1	   1
 	DEFW	HSIZ0-1	; Disk Size-1	  683	 995	 495	 995	 995
-	DEFW	511	; Dir Max	  767	 767	 767	 767	 767
-	DEFB	0F0H,0	; Alloc 0,1	  0FC	 0FC	 0FC	 0FC	 0FC
+	DEFW	1023	; Dir Max	  767	 767	 767	 767	 767
+	DEFB	0FFH,0	; Alloc 0,1	  0FC	 0FC	 0FC	 0FC	 0FC
 	DEFW	0	; Check Size	   0	   0	   0	   0	   0
-	DEFW	2096	; Trk Offset	   2	   2	   2	   2	   2
+	DEFW	2	; Trk Offset	   2	   2	   2	   2	   2
 	  ENDIF
 
 ;.....

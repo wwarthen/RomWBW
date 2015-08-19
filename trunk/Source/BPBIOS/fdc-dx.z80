@@ -299,12 +299,7 @@ SPEC3:	OR	B		; Add in Step Rate
 ; Assumes STHDRV, SPEC, STSIZE and STMODE called first.
 ;:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-RECAL:
-	CALL	PRINT
-	DEFB	'[RECAL',']'+80H
-
-
-	LD	A,3		; Give this 3 chances to Home
+RECAL:	LD	A,3		; Give this 3 chances to Home
 RECAL1:	LD	(RETRYS),A
 	PUSH	BC		; Save needed regs
 	LD	BC,2*256+7	; Two bytes, Recalibrate = 7
@@ -651,8 +646,7 @@ FDCI2:	INI			; Read a byte from (C) to (HL)
 
 ; Enter the Result Phase of the Command.  Gather returned bytes
 
-FDCRES:	
-;WW	EI			; Interrupts Ok now if in Result Phase
+FDCRES:	EI			; Interrupts Ok now if in Result Phase
 	LD	HL,ST0		; Point to Status Result area
 ISGO:	CALL	WRDY
 	BIT	4,A		; End of Status/Result?
@@ -667,7 +661,7 @@ ISGO:	CALL	WRDY
 ;  executing a Check Interrupt Command returning ST0 in A.
 
 FDCDN:	PUSH	HL		; Don't alter regs
-;WW	EI			;  (Ints Ok Now)
+	EI			;  (Ints Ok Now)
 FDCDN0:	CALL	WRDY		; Ready? (leave Ints alone)
 	LD	A,08H		; Else Issue Sense Interrupt Status Comnd
 	OUT0	(DR),A
@@ -704,7 +698,7 @@ MOTOR:	PUSH	AF		; Save Reg
 	OR	A		; Already On?
 	LD	A,(MONTIM)	;  (get Default On Time)
 	LD	(MOTIM),A	;   always reset
-;WW	EI			; Insure Ints are Active
+	EI			; Insure Ints are Active
 	JR	NZ,MOTORX	; ..exit if Motors On..they will stay On
 
 	LD	A,(HDR)		; Get current Drive
@@ -1138,7 +1132,7 @@ Int0X:	POP	HL		; Restore Regs
 	POP	DE
 	POP	BC
 	    ; Restore Stack if Needed
-;WW	EI			; Insure Interrupts are Enabled
+	EI			; Insure Interrupts are Enabled
 	RET
 
 ;.....
