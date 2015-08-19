@@ -1,1 +1,0 @@
-bstc -Ox -ls -e -p0 -dCOM5: vgademo.spin

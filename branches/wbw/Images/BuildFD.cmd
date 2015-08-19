@@ -1,1 +1,0 @@
-@PowerShell .\BuildFD.ps1 %*

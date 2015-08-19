@@ -1,1 +1,0 @@
-@PowerShell .\BuildHD.ps1 %*
