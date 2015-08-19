@@ -15,17 +15,6 @@
 ; associated with each DPB.
 
 SECTRN:
-;	PUSH	AF
-;	PUSH	BC
-;	PUSH	DE
-;	PUSH	HL
-;	CALL	PRINT
-;	DEFB	'[SECTRN',']'+80H
-;	POP	HL
-;	POP	DE
-;	POP	BC
-;	POP	AF
-
 	  IF  BANKED
 	CALL	BIOSTK
 	CALL	GOSYSB
@@ -40,7 +29,6 @@ BSTRN:	LD	(CPMSEC),BC	; Save logical record from Dos for deblocker
 	LD	H,B
 	LD	L,C		; Sector number to hl
 	RET	Z		; Return if no translation
-;	RET			; Return if no translation
 
 	LD	A,C		; Logical record number
 	CALL	PHYSEC		; Convert to logical host sector

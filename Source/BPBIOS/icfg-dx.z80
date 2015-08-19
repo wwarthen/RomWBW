@@ -56,7 +56,7 @@ DPBADR:
 	DEFW	0		; Pointer to first XDPB in Alternate Bank
 	  ENDIF
 
-AUTOCMD: DEFB	8,'ZEX Z41 ',0	; Startup command for Z3
+AUTOCMD: DEFB	8,'STARTUP ',0	; Startup command for Z3
 
 ENVADR:	DEFW	Z3ENV		; Pointer to the Environment Descriptor
 

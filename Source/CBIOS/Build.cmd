@@ -11,12 +11,14 @@ set ZXBINDIR=%TOOLS%/cpm/bin/
 set ZXLIBDIR=%TOOLS%/cpm/lib/
 set ZXINCDIR=%TOOLS%/cpm/include/
 
-call :asm cbios || goto :eof
-
-goto :eof
-
-:asm
 echo.
-echo Building %1...
-tasm -t80 -b -g3 -fFF %1.asm %1.bin %1.lst
-goto :eof
+echo Building CBIOS for RomWBW...
+echo.
+tasm -t80 -b -g3 -fFF -dPLTWBW cbios.asm cbios_wbw.bin cbios_wbw.lst
+if errorlevel 1 goto :eof
+
+echo.
+echo Building CBIOS for UNA...
+echo.
+tasm -t80 -b -g3 -fFF -dPLTUNA cbios.asm cbios_una.bin cbios_una.lst
+if errorlevel 1 goto :eof

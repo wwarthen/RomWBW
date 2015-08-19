@@ -312,7 +312,7 @@ COUT:
 	POP	AF
 	RET
 ;
-STR_PANIC	DB	"\r\n\r\n>>> FATAL ERROR:$"
+STR_PANIC	DB	CR,LF,CR,LF,">>> FATAL ERROR:$"
 STR_AF		DB	" AF=$"
 STR_BC		DB	" BC=$"
 STR_DE		DB	" DE=$"

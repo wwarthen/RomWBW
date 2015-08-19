@@ -15,22 +15,9 @@ WBOOT:
 	  ELSE
 	LD	SP,80H		; Use space below default buffer
 	  ENDIF
-	  
 	  IF  FASTWB
-	; Restore command processor from
-	; cache in (SYSBNK):100H.  We assume that the
-	; command processor lives in high memory.
-	LD	A,(SYSBNK)	; Source bank is SYSBNK
-	LD	C,A		; Put it in C
-	LD	A,(TPABNK)	; Destination bank is TPABNK
-	LD	B,A		; Put it in B
-	CALL	HBX_XCOPY	; Set banks for extended copy
-	LD	HL,100H		; Copy from start of cache in SYS
-	LD	DE,(CPADR)	; .. to location of command processor in TPA
-	LD	BC,(CPLEN)	; Length of command processor
-	CALL	HBX_COPY	; Do it
-
-WBOOTV:
+	LD	HL,SARL		; Point to DMA Initialization block
+WBOOTV:	CALL	DMAMOV
 	XOR	A	 	; Indicate "A" logged as Host Disk
 	LD	(HSTDSK),A	; ..by showing Host Disk already logged
 	  ELSE
@@ -40,7 +27,6 @@ WBOOTV:
 	   ELSE
 	LD	SP,EXTSTK+32	; Place default stack up high
 	   ENDIF
-
 	LD	A,0FFH		; Insure the default drive is logged
 	LD	(HSTDSK),A	; ..by unlogging the Host Disk
 	LD	A,(SYSDRV)
@@ -127,29 +113,21 @@ GOZSYS:	LD	BC,80H		; Default DMA address is 80H
 	LD	D,(HL)		; Get the vector
 	DEC	HL
 	LD	E,(HL)
-	PUSH	DE		; Save CCP entry address
-
 	  IF  BANKED
-	; Copy vectors from TPA page zero to SYS page zero
-	LD	BC,(TPABNK)	; C := TPABNK, B := SYSBNK
-	CALL	XMOVE		; Set source/dest banks for copy
-	LD	HL,0		; Source address is zero
-	LD	DE,0		; Destination address is zero
-	LD	BC,40H		; Copy 40H bytes
-	CALL	MOVE		; Do it
+	LD	HL,CPYVEC	; Copy Page0 Vectors and RSTs to System Bank
+	CALL	DMAMOV
 	LD	A,(TPABNK)	; Set all Bank regs to TPA
+	LD	(SRCBNK),A
+	LD	(DSTBNK),A
 	LD	(DMABNK),A
-
 	CALL	SELMEM		; Insure TPA in context (also set USRBNK)
 	XOR	A
 	LD	(BIOSTK),A	; Init bank switcher
 	  ENDIF
 	LD	A,(4)		; Get current disk number
 	LD	C,A		; Send to the CCP
-;	EI			; Enable the interrupt system
-;	EX	DE,HL		; ..put destination in HL
-	POP	HL		; Restore CCP entry address
-	
+	EI			; Enable the interrupt system
+	EX	DE,HL		; ..put destination in HL
 	JP	(HL)		; Go to Z-System for further processing
 
 ;.....
@@ -181,11 +159,25 @@ IOPRET:	JP	CONST
 
 	DSEG			; Put the following areas in Data Segment
 
-; Command processor address and length used when saving
-; and restoring cached copy.
+; This table in unitialized RAM is filled from the Cold Boot module.
+
 	  IF  FASTWB
-CPADR	DEFS	2		; Command processor address
-CPLEN	DEFS	2		; Command processor length
+SARL:	DEFS	2		; Source Segment address
+	DEFS	1		; Source Bank Number
+	DEFS	2		; Destination Segment address
+	DEFS	1		; Destination Bank Number (TPA)
+	DEFS	2		; Number of bytes to move
 	  ENDIF		;fastwb
+
+; This table is used to copy Page 0 vectors from TPA to base of System bank
+; on Warm Boots to insure that needed IO can vector to the correct devices.
+
+	  IF  BANKED
+CPYVEC:	DEFS	2		; Offset of Source area
+	DEFS	1		; ..Source Bank (Base of TPA) [BNK0 SHR 1]
+	DEFS	2		; Offset of Destination
+	DEFS	1		; ..Dest Bank (Base of System Bank) [BNK2 SHR 1]
+	DEFS	2		; Length of move
+	  ENDIF
 ;========================= End of WBOOT ============================
 

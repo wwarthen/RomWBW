@@ -12,11 +12,6 @@
 	CSEG
 
 SELDSK:
-;	CALL	PRTSTRD
-;	DEFB	'[SELDSK]$'
-;	LD	A,C
-;	CALL	PRTHEXBYTE
-
 	  IF  BANKED
 	CALL	BIOSTK
 	CALL	GOSYSB
@@ -60,8 +55,6 @@ SELDKV:
 	LD	(HL),A		; Save back in DPH
 SELDK0:	LD	(SEKDVT),A	; Save Drive Type Byte locally
 	POP	DE		; Restore new mount flag
-
-	
 	BIT	0,E		; New mount?
 	JR	NZ,SETPARMS	; Set params if old mount
 
@@ -120,22 +113,19 @@ DVRVCT:	DEFW	SELERR		; Driver 0 Select
 	DEFW	SELHD		; Driver 2 Select (Hard Drive)
 	DEFW	HDREAD		; Driver 2 Read
 	DEFW	HDWRIT		; Driver 2 Write
-	  ELSE
+	  ENDIF		; harddsk
+	  IF  [RAMDSK AND NOT HARDDSK]
 	DEFW	SELERR		; Driver 2 Select (Dummy if No Hard Drive)
 	DEFW	ISTRUE		; Driver 2 Read
 	DEFW	ISTRUE		; Driver 2 Write
-	  ENDIF		;harddsk
+	  ENDIF		;ramdsk & not harddsk
 
 	  IF  RAMDSK
 	DEFW	SELRAM		; Driver 3 Select (RAM Drive)
 	DEFW	RAMRD		; Driver 3 Read
 	DEFW	RAMWR		; Driver 3 Write
-	  ELSE
-	DEFW	SELERR		; Driver 3 Select (Dummy if No RAM Drive)
-	DEFW	ISTRUE		; Driver 3 Read
-	DEFW	ISTRUE		; Driver 3 Write
 	  ENDIF		;ramdsk
-	  
+
 SELERR:	LD	HL,0		; Send null DPH pointer back to caller
 	RET
 
@@ -243,7 +233,6 @@ GETDPH:	ADD	A,A		; Form table index value
 ; RAM Storage
 
 SEKPDN:	DEFS	1		; Physical drive number to use
-HSTPDN:	DEFS	1		; WW
 SEKDVT:	DEFS	1		; Drive type byte for selected drive
 
 ;============================= End of SELRWD ==============================

@@ -1,4 +1,4 @@
 @echo off
 setlocal
 
-pushd BIOS && Powershell .\Build.ps1 %* && popd
+pushd HBIOS && Powershell .\Build.ps1 %* && popd
