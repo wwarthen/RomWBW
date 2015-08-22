@@ -1,7 +1,13 @@
 ;
 ;==================================================================================================
-;   SETUP
+;   IMAGE LOADER
+;
+; CREATES A BINARY IMAGE THAT WILL LAUNCH ROMWBW ASSUMING IMAGE
+; HAS BEEN PRE-LOADED INTO THE USER BANK.  INTENDED FOR USE WITH
+; UNA FATFS.
 ;==================================================================================================
+;
+#define MODE LM_IMG
 ;
 #INCLUDE "std.asm"
 #INCLUDE "hbios.exp"
@@ -14,7 +20,6 @@
 ;
 	.FILL	(000H - $),0FFH		; RST 0
 	JP	START			; JUMP TO BOOT CODE
-	.FILL	(004H - $),0FFH		; FILL TO START OF SIG PTR
 	.DW	ROM_SIG
 	.FILL	(008H - $),0FFH		; RST 8
 	RET
@@ -46,12 +51,10 @@ ROM_SIG:
 ;
 NAME	.DB	"ROMWBW v", BIOSVER, ", ", TIMESTAMP, 0
 AUTH	.DB	"WBW",0
-DESC	.DB	"ROMWBW v", BIOSVER, ", Copyright 2014, Wayne Warthen, GNU GPL v3", 0
+DESC	.DB	"ROMWBW v", BIOSVER, ", Copyright 2015, Wayne Warthen, GNU GPL v3", 0
 ;
 	.FILL	($100 - $),$FF		; PAD REMAINDER OF PAGE ZERO
 ;
-#define ROMLOAD
 #INCLUDE "loader.asm"
 ;
-	.FILL	$8000 - $,$FF
 	.END

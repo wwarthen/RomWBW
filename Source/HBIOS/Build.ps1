@@ -100,10 +100,9 @@ if ($Platform -ne "UNA")
 {
 	Asm 'hbios'
 	Asm 'hbfill'
-	Asm 'loader' "-dMODE=LM_ROM" -Output "ldr_rom.bin"
-	Asm 'setup' # uses exported values from loader compilation above!!!
-	Asm 'loader' "-dMODE=LM_COM" -Output "ldr_com.bin"
-	Asm 'loader' "-dMODE=LM_IMG" -Output "ldr_img.bin"
+	Asm 'setup'
+	Asm 'comldr'
+	Asm 'imgldr'
 }
 
 # Generate result files using components above
@@ -137,9 +136,9 @@ if ($Platform -eq "UNA")
 }
 else 
 {
-	Concat 'ldr_rom.bin','setup.bin','hbios.bin','hbfill.bin','osimg.bin','osimg.bin',$RomDiskFile $RomFile
-	Concat 'ldr_com.bin','hbios.bin','osimg.bin' $ComFile
-	Concat 'ldr_img.bin','hbios.bin','osimg.bin' $ImgFile
+	Concat 'setup.bin','hbios.bin','hbfill.bin','osimg.bin','osimg.bin',$RomDiskFile $RomFile
+	Concat 'comldr.bin','hbios.bin','osimg.bin' $ComFile
+	Concat 'imgldr.bin','hbios.bin','osimg.bin' $ImgFile
 }
 
 # Cleanup
