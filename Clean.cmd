@@ -8,4 +8,4 @@ pushd Images && call Clean && popd
 if exist *.img del *.img /Q
 if exist *.log del *.log /Q
 
-if exist Output\*.* del Output\*.* /Q
+if exist Output rd /s /q Output
