@@ -122,19 +122,19 @@ PUB clrbtm(ColorVal) | i
    repeat i from 36 to rows - 1                         'was 35
     colors[i] := $0000 + ColorVal
 
-PUB cls1(c,screencolor,pcport,ascii,CR) | i,x,y
+PUB cls1(VerStr) | i
 
   longfill(@screen[0], $20202020, chars / 4)
 
   clrbtm(TURQUOISE)
   
   inverse := 1
-
-  statprint(36,0, string("                         N8VEM ParPortProp | RomWBW                        v0.92"))
+  'statprint(36,0, string("                          N8VEM PropIO V2 | RomWBW                         v0.95"))
+  statprint(36, 0, VerStr)
   inverse := 0
-  statprint(37,0, string("                                                                                "))
-  statprint(38,0, string("                                                                                "))
-  statprint(39,0, string("                                                                                "))
+
+  repeat i from 37 to (rows - 1)    
+    statprint(37,0, string("                                                                                "))
 
  
 {{
@@ -152,7 +152,7 @@ PUB cls1(c,screencolor,pcport,ascii,CR) | i,x,y
   yloc :=36
   loc  := xloc + yloc*cols
   inverse := 1
-  str(string("                                    propIO  V 0.91                              "))
+  str(string("                                                                                "))
   inverse := 0
   str(string("Baud Rate: "))
   i:= BR[6]
@@ -215,7 +215,7 @@ PUB clsupdate(c,screencolor,PCPORT,ascii,CR) | i,x,y,locold
   yloc :=36
   loc  := xloc + yloc*cols
   inverse := 1
-  str(string("                                    propIO  V 0.81                              "))
+  str(string("                                                                                "))
   inverse := 0
   xloc := 0
   yloc :=37

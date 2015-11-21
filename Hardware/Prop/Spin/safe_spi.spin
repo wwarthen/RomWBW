@@ -25,6 +25,9 @@ CON
   ERR_3v3_NOT_SUPPORTED         = -2
   ERR_OCR_FAILED                = -3
   ERR_BLOCK_NOT_LONG_ALIGNED    = -4
+  ERR_CRC_ONOFF_FAILED          = -5
+  ERR_STATUS_FAILED             = -6
+  ERR_CSD_FAILED                = -7
   '...
   ' These errors are for the assembly engine...they are negated inside, and need to be <= 511
   ERR_ASM_NO_READ_TOKEN         = 100
@@ -58,14 +61,17 @@ CON
   ' buffer size for my debug cmd log
   'LOG_SIZE = 256<<1
 
-{
+
 VAR
-  long SPI_engine_cog
-  ' these are used for interfacing with the assembly engine | temporary initialization usage
-  long SPI_command              ' "t", "r", "w", 0 =>done, <0 => error          | pin mask
-  long SPI_block_index          ' which 512-byte block to read/write            | cnt at init
-  long SPI_buffer_address       ' where to get/put the data in Hub RAM          | unused
-'}
+  'long SPI_engine_cog
+  '' these are used for interfacing with the assembly engine | temporary initialization usage
+  'long SPI_command              ' "t", "r", "w", 0 =>done, <0 => error          | pin mask
+  'long SPI_block_index          ' which 512-byte block to read/write            | cnt at init
+  'long SPI_buffer_address       ' where to get/put the data in Hub RAM          | unused
+
+  'long  SPI_capacity
+  'byte  SPI_csdbuf[16]
+
 DAT
 '' I'm placing these variables in a DAT section to make this driver a singleton.
 '' If for some reason you really need more than one driver (e.g. if you have more
@@ -75,6 +81,9 @@ SPI_engine_cog          long 0
 SPI_command             long 0  ' "t", "r", "w", 0 =>done, <0 => error          | unused
 SPI_block_index         long 0  ' which 512-byte block to read/write            | cnt at init
 SPI_buffer_address      long 0  ' where to get/put the data in Hub RAM          | unused
+
+SPI_capacity            long 0
+SPI_csdbuf              byte 0 [16]
 
 {
 VAR
@@ -114,6 +123,12 @@ PUB writeblock( block_index, buffer_address )
   repeat while SPI_command == "w"
   if SPI_command < 0
     abort SPI_command
+
+PUB getcapacity
+  Result := SPI_capacity
+
+PUB getcsd( buffer_address )
+  bytemove(buffer_address, @SPI_csdbuf, 16)
 
 PUB get_seconds
   if SPI_engine_cog == 0
@@ -217,10 +232,48 @@ PUB start_explicit( DO, CLK, DI, CS ) : card_type | tmp, i
       repeat while send_cmd_slow( CMD1, 0, $F9 )
     ' some SD or MMC cards may have the wrong block size, set it here
     send_cmd_slow( CMD16, 512, $15 )
+
   ' card is mounted, make sure the CRC is turned off
-  send_cmd_slow( CMD59, 0, $91 )
-  '  check the status
-  'send_cmd_slow( CMD13, 0, $0D )    
+  if send_cmd_slow( CMD59, 0, $91 ) <> 0
+    crash( ERR_CRC_ONOFF_FAILED )
+
+  '  check card status
+  if send_cmd_slow ( CMD13, 0, $FF) <> 0
+    crash( ERR_STATUS_FAILED )
+  read_slow                    ' swallow second byte of status
+    
+  '  get card capacity
+  if send_cmd_slow ( CMD9, 0, $FF) <> 0
+    crash( ERR_CSD_FAILED )
+  i := 32                       ' arbitrary timeout
+  repeat while (read_slow <> $FE)
+    if i == 0
+      crash( ERR_CSD_FAILED )
+  repeat i from 0 to 15         ' 16 bytes of CSD data
+    SPI_csdbuf[i] := read_slow
+  read_slow                     ' discard CRC - first byte
+  read_slow                     ' discard CRC - second byte
+
+  case (card_type)
+    type_MMC, type_SD:
+      tmp := SPI_csdbuf[9]
+      tmp := (tmp << 8) | SPI_csdbuf[10]
+      i := ((tmp >> 7) & $07)   ' c_size_mult
+      tmp := SPI_csdbuf[5]
+      i += tmp & $0F            ' mask out read_bl_len and add to c_size_mult
+      tmp := SPI_csdbuf[6] & $03
+      tmp := (tmp << 8) | SPI_csdbuf[7]
+      tmp := (tmp << 8) | SPI_csdbuf[8]
+      tmp := (tmp >> 6)           ' c_size
+      SPI_capacity := ((tmp + 1) << (2 + i)) >> 9 
+    type_SDHC:
+      tmp := SPI_csdbuf[7] & $3F
+      tmp := (tmp << 8) | SPI_csdbuf[8]    
+      tmp := (tmp << 8) | SPI_csdbuf[9]
+      SPI_capacity := (tmp + 1) * 1024
+    other:
+      SPI_capacity := 0
+
   ' done with the SPI bus for now
   outa |= maskCS
   ' set my counter modes for super fast SPI operation
