@@ -3,6 +3,22 @@
 ;   MD DISK DRIVER (MEMORY DISK)
 ;==================================================================================================
 ;
+;
+;
+MD_INIT:
+	PRTS("MD: UNITS=2 $")
+	PRTS("ROMDISK=$")
+	LD	HL,ROMSIZE - 128
+	CALL	PRTDEC
+	PRTS("KB RAMDISK=$")
+	LD	HL,RAMSIZE - 128
+	CALL	PRTDEC
+	PRTS("KB$")
+	XOR	A		; INIT SUCCEEDED
+	RET			; RETURN
+;
+;
+;
 MD_DISPATCH:
 	LD	A,B		; GET REQUESTED FUNCTION
 	AND	$0F
@@ -28,20 +44,6 @@ MD_MEDIA:
 	CALL	NC,PANIC	; PANIC IF TOO HIGH
 	ADD	A,MID_MDROM	; SET CORRECT MEDIA VALUE
 	RET
-;
-;
-;
-MD_INIT:
-	PRTS("MD: UNITS=2 $")
-	PRTS("ROMDISK=$")
-	LD	HL,ROMSIZE - 128
-	CALL	PRTDEC
-	PRTS("KB RAMDISK=$")
-	LD	HL,RAMSIZE - 128
-	CALL	PRTDEC
-	PRTS("KB$")
-	XOR	A		; INIT SUCCEEDED
-	RET			; RETURN
 ;
 ;
 ;

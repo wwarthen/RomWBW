@@ -154,6 +154,8 @@ PUB start_explicit( DO, CLK, DI, CS ) : card_type | tmp, i
 }}
   ' Start from scratch
   stop
+  ' Reset card capacity
+  SPI_capacity := 0
   ' clear my log buffer
   {
   bytefill( @log_cmd_resp, 0, LOG_SIZE+1 )
