@@ -54,7 +54,8 @@ if ($Platform -eq "UNA") {$CBiosFile = '../CBIOS/cbios_una.bin'} else {$CBiosFil
 "Building ${RomName}: ${ROMSize}KB ROM configuration ${Config} for Z${CPUType}..."
 ""
 
-$TimeStamp = '"' + (Get-Date -Format 'dd-MMM-yyyy') + '"'
+# $TimeStamp = '"' + (Get-Date -Format 'dd-MMM-yyyy') + '"'
+$TimeStamp = '"' + (Get-Date -Format 'yyyy-MM-dd') + '"'
 
 Function Asm($Component, $Opt, $Architecture=$CPUType, $Output="${Component}.bin")
 {
