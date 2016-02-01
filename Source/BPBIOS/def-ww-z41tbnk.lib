@@ -34,9 +34,9 @@ FASTWB	EQU	YES		; Yes if restoring CPR from banked RAM
 				; ..No if restoring from Drive A
 Z3	EQU	YES		; Include ZCPR init code?
 HAVIOP	EQU	NO		; Include IOP code into Jump table?
-INTPXY	EQU	YES		; Internal HBIOS Mini Proxy
-CONF_T	EQU	NO		; Set for Segment Configuration T
-CONF_N	EQU	YES		; Set for Segment Configuration N
+INTPXY	EQU	NO		; Internal HBIOS Mini Proxy
+CONF_T	EQU	YES		; Set for Segment Configuration T
+CONF_N	EQU	NO		; Set for Segment Configuration N
 
 ;--- Memory configuration Section --- (Expansion Memory configured here)
 

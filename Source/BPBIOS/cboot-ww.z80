@@ -371,11 +371,11 @@ BLKMV:	POP	BC		; And number of bytes to move
 	; Get and save the internal HBIOS physical disk
 	; buffer address which is assumed to be in the
 	; HBIOS bank.
-	LD	B,19H		; Set buffer function call
+	LD	B,18H		; Get buffer function call (assumes already allocated!!!)
 	LD	HL,0		; ... with address 0 to get HBIOS buf adr
 	CALL	HBX_INVOKE	; ... to return internal HBIOS buffer adr
 	LD	(HB_DSKBUF),HL	; Record the buffer address
-
+	
 	  IF  HAVIOP
 	LD	HL,IOPRET
 	LD	(BIOSJT+1),HL

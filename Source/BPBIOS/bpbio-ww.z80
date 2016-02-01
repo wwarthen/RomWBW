@@ -98,7 +98,13 @@ WRUAL	EQU	2		; DOS code for unallocated write
 LOCKF	EQU	LOW [NOT AUTOSL] ;Lock flag for format default
 ALONE	EQU	FALSE		; Boot code equate
 	  IF  Z3
-	MACLIB	Z3BASE.LIB	; Include ENV definitions
+;	MACLIB	Z3BASE.LIB	; Include ENV definitions
+	    IF CONF_T
+	MACLIB	Z3BASET.LIB
+	    ENDIF
+	    IF CONF_N
+	MACLIB	Z3BASEN.LIB
+	    ENDIF
 	  ENDIF
 	PAGE
 ;* * * * * * * * * * * * * * * * * * * * * * * * * * * * * *

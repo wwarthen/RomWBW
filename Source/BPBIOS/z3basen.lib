@@ -14,8 +14,9 @@
 ; alternative, just leave this file alone and configure everything with
 ; the utilities provided.
 
-;  FFD0 - FFFF	 48 Bytes	ZCPR3 External Stack
-;  FF00 - FFCF	208 Bytes	Multiple Command Line Buffer
+;  FFE0 - FFFF   32 Bytes	HBIOS Reserved
+;  FFB0 - FFDF	 48 Bytes	ZCPR3 External Stack
+;  FF00 - FFAF	176 Bytes	Multiple Command Line Buffer
 ;  FE00 - FEFF	256 Bytes	Environment Descriptor
 ;				Bytes 00H-7FH:  Z3 Parameters
 ;				Bytes 80H-FFH:  Z3 TCAP
@@ -49,14 +50,16 @@ NO	EQU	FALSE
 ; The External Stack is placed in the very top position in memory.  It is
 ; mandatory for B/P Bios and ZCPR 3.3.
 
-EXTSTK	EQU	0FFD0H		; ZCPR3 External Stack
+;EXTSTK	EQU	0FFD0H		; ZCPR3 External Stack
+EXTSTK	EQU	0FFB0H		; ZCPR3 External Stack
 EXTSTKS	EQU	YES
 
 ; The Multiple Command Line Buffer is placed in the Top Page of Memory to
 ; place it above the Environment.  It is mandatory for ZCPR 3.3.
 
 Z3CL	EQU	0FF00H		; ZCPR3 Command Line Buffer
-Z3CLS	EQU	208-5		; Size of Command Line Buffer-5
+;Z3CLS	EQU	208-5		; Size of Command Line Buffer-5
+Z3CLS	EQU	176-5		; Size of Command Line Buffer-5
 
 ; The ZCPR3 External Environment Descriptor is mandatory B/P Bios & ZCPR 3.3.
 ; The Environment Descriptor MUST begin on an even Page Boundary (xx00H).

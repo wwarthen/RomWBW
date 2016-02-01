@@ -8,8 +8,10 @@ set ZXBINDIR=../../../tools/cpm/bin/
 set ZXLIBDIR=../../../tools/cpm/lib/
 set ZXINCDIR=../../../tools/cpm/include/
 
-copy ..\z3base.lib .
+copy ..\z3baset.lib .
+zx ZMAC -zcpr33t.z80 -/P
+copy zcpr33t.rel ..
 
-zx ZMAC -zcpr33.z80 -/P
-
-copy zcpr33.rel ..
+copy ..\z3basen.lib .
+zx ZMAC -zcpr33n.z80 -/P
+copy zcpr33n.rel ..

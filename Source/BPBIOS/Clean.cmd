@@ -4,3 +4,5 @@ if exist *.err del *.err
 if exist *.img del *.img
 if exist bp*.rel del bp*.rel
 if exist *.bak del *.bak
+
+pushd ZCPR33 && call Clean.cmd && popd

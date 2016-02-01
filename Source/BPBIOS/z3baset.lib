@@ -14,11 +14,7 @@
 ; alternative, just leave this file alone and configure everything with
 ; the utilities provided.
 
-;  FFD0 - FFFF	 48 Bytes	ZCPR3 External Stack
-;  FF00 - FFCF	208 Bytes	Multiple Command Line Buffer
-;  FE00 - FEFF	256 Bytes	Environment Descriptor
-;				Bytes 00H-7FH:  Z3 Parameters
-;				Bytes 80H-FFH:  Z3 TCAP
+;  FE00 - FFFF  512 Bytes	HBIOS Reserved
 ;  FDFF		  1 Byte	Wheel byte
 ;  FDF4 - FDFE	 11 Bytes	Path (5 elements)
 ;  FDD0 - FDF3	 36 Bytes	ZCPR3 External FCB
@@ -28,15 +24,20 @@
 ;  FA00 - FBFF	512 Bytes	Flow Command Package
 ;  F200 - F9FF	2.0 KBytes	Resident Command Package
 ;  EC00 - F1FF	1.5 KBytes	IO Package
-;  E900 - EBFF	.75 KBytes	Resident User Space
+;  EBD0 - EBFF	 48 Bytes	ZCPR3 External Stack
+;  EB00 - EBAF	176 Bytes	Multiple Command Line Buffer
+;  EA00 - EAFF	256 Bytes	Environment Descriptor
+;				Bytes 00H-7FH:  Z3 Parameters
+;				Bytes 80H-FFH:  Z3 TCAP
+;  E700 - E9FF	.75 KBytes	Resident User Space
 
 ; The remainder is for the Operating System.  Exact sizes vary depending
 ; primarily on the Number and sizes of Hard Drive Partitions, but may be:
 
-;  D100 - EBFF	5.0 KBytes	B/P BIOS (unbanked version)
-;  C300 - D0FF	3.5 KBytes	ZSDOS 1.0 BDOS
-;  BB00 - C2FF	  2 KBytes	ZCPR 3.3 Command Processor
-;  0100 - BAFF	~46 KBytes	Transient Program Area
+;  D300 - E6FF	5.0 KBytes	B/P BIOS (unbanked version)
+;  C500 - D2FF	3.5 KBytes	ZSDOS 1.0 BDOS
+;  BD00 - C4FF	  2 KBytes	ZCPR 3.3 Command Processor
+;  0100 - BCFF	~47 KBytes	Transient Program Area
 ;  0000 - 00FF	256 Bytes	Standard CP/M Buffers
 ;========================================================================
 
@@ -49,19 +50,19 @@ NO	EQU	FALSE
 ; The External Stack is placed in the very top position in memory.  It is
 ; mandatory for B/P Bios and ZCPR 3.3.
 
-EXTSTK	EQU	0FFD0H		; ZCPR3 External Stack
+EXTSTK	EQU	0EBD0H		; ZCPR3 External Stack
 EXTSTKS	EQU	YES
 
 ; The Multiple Command Line Buffer is placed in the Top Page of Memory to
 ; place it above the Environment.  It is mandatory for ZCPR 3.3.
 
-Z3CL	EQU	0FF00H		; ZCPR3 Command Line Buffer
+Z3CL	EQU	0EB00H		; ZCPR3 Command Line Buffer
 Z3CLS	EQU	208-5		; Size of Command Line Buffer-5
 
 ; The ZCPR3 External Environment Descriptor is mandatory B/P Bios & ZCPR 3.3.
 ; The Environment Descriptor MUST begin on an even Page Boundary (xx00H).
 
-Z3ENV	EQU	0FE00H		; Environment Descriptors
+Z3ENV	EQU	0EA00H		; Environment Descriptors
 Z3ENVS	EQU	2		; Size of Env Descriptor in 128-Byte Blks
 
 ; The ZCPR3 Wheel Byte is mandatory for ZCPR 3.3.
@@ -118,7 +119,7 @@ IOPS	DEFL	12		; (IOP Size = 128 * IOPS = 1.5 kBytes)
 ; The USPC Value marks the Lower Limit of Reserved Common High Memory and
 ;   MUST BE PRESENT!
 
-USPC	EQU	0E900H		; Start of Resident User Space (MANDATORY)
+USPC	EQU	0E700H		; Start of Resident User Space (MANDATORY)
 USPCS	EQU	6		; (USPC Size = 128 * USPCS = 0.75 kBytes)
 
 ;--- End of Z3BASE.LIB ---

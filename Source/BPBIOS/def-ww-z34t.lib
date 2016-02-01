@@ -15,7 +15,7 @@ DATE	  MACRO
 	  ENDM
 
 AUTOCL	  MACRO
-	DEFB	8,'ZEX Z41 ',0	; Autostart command line
+	DEFB	8,'ZEX Z34 ',0	; Autostart command line
 	  ENDM
 
 ;--- Basic System and Z-System Section ---
@@ -26,22 +26,23 @@ VERS	EQU	13H		; Version number in BCD (Hex) (Major/Minor)
 	  ELSE
 VERS	EQU	21H		; Version number w/Device Swapping permitted
 	  ENDIF
-BANKED	EQU	YES 		; Is this a banked BIOS?
-ZSDOS2	EQU	YES		; Yes = Banked Dos, No = CP/M 2.2 Compatible
+BANKED	EQU	NO 		; Is this a banked BIOS?
+ZSDOS2	EQU	NO		; Yes = Banked Dos, No = CP/M 2.2 Compatible
 INROM	EQU	NO  		; Alternate bank in ROM?
 MHZ	EQU	18		; Set to Speed in MHZ (6/9/12/16/18/24)
 FASTWB	EQU	YES		; Yes if restoring CPR from banked RAM
 				; ..No if restoring from Drive A
 Z3	EQU	YES		; Include ZCPR init code?
 HAVIOP	EQU	NO		; Include IOP code into Jump table?
-INTPXY	EQU	YES		; Internal HBIOS Mini Proxy
-CONF_T	EQU	NO		; Set for Segment Configuration T
-CONF_N	EQU	YES		; Set for Segment Configuration N
+INTPXY	EQU	NO		; Internal HBIOS Mini Proxy
+CONF_T	EQU	YES		; Set for Segment Configuration T
+CONF_N	EQU	NO		; Set for Segment Configuration N
 
 ;--- Memory configuration Section --- (Expansion Memory configured here)
 
 IBMOVS	EQU	NO		; Yes = Inter-bank Moves allowed (Z180/64180)
 				;  No = Include Common RAM transfer buffer
+				
 ;--- Character Device Section ---
 
 MORDEV	EQU	NO		; YES = Include any extra Char Device Drivers

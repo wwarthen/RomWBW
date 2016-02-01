@@ -1358,11 +1358,11 @@ SD_GET1:
 	OUT	(SD_OPRREG),A		; DO IT
 	DJNZ	SD_GET1			; REPEAT FOR ALL 8 BITS
 	LD	A,C			; GET BYTE RECEIVED INTO A
-#IF (SDMODE == SDMODE_UART)
+  #IF (SDMODE == SDMODE_UART)
 	XOR	$FF			; DO IS INVERTED ON UART
+  #ENDIF
 #ENDIF
 	RET
-#ENDIF
 ;
 ;=============================================================================
 ; ERROR HANDLING AND DIAGNOSTICS

@@ -15,7 +15,7 @@ DATE	  MACRO
 	  ENDM
 
 AUTOCL	  MACRO
-	DEFB	8,'ZEX Z34 ',0	; Autostart command line
+	DEFB	8,'ZEX Z33 ',0	; Autostart command line
 	  ENDM
 
 ;--- Basic System and Z-System Section ---
@@ -33,18 +33,21 @@ MHZ	EQU	18		; Set to Speed in MHZ (6/9/12/16/18/24)
 FASTWB	EQU	YES		; Yes if restoring CPR from banked RAM
 				; ..No if restoring from Drive A
 Z3	EQU	YES		; Include ZCPR init code?
-HAVIOP	EQU	no		; Include IOP code into Jump table?
+HAVIOP	EQU	NO		; Include IOP code into Jump table?
+INTPXY	EQU	NO		; Internal HBIOS Mini Proxy
+CONF_T	EQU	YES		; Set for Segment Configuration T
+CONF_N	EQU	NO		; Set for Segment Configuration N
 
 ;--- Memory configuration Section --- (Expansion Memory configured here)
 
 IBMOVS	EQU	NO		; Yes = Inter-bank Moves allowed (Z180/64180)
 				;  No = Include Common RAM transfer buffer
-				
+
 ;--- Character Device Section ---
 
 MORDEV	EQU	NO		; YES = Include any extra Char Device Drivers
 				;  NO = Only use the 4 defined Char Devices
-ESCC_B	EQU	no		; Include ESCC Channel B Driver?
+ESCC_B	EQU	NO		; Include ESCC Channel B Driver?
 		; The following two devices result in non-standard data rates
 		; with the standard 16.00 MHz crystal in the P112.  If a more
 		; "standard" crystal is used (12.288, 18.432, 24.576 MHz etc)

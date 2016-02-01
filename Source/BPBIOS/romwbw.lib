@@ -9,7 +9,7 @@
 ;       HBIOS configuration.
 ;
 HBIOS	EQU	YES			; Use HBIOS functions
-INTPXY	EQU	YES			; Internal HBIOS Proxy
+;INTPXY	EQU	YES			; Internal HBIOS Proxy
 HBLOC	EQU	0FE00H			; Location of HBIOS proxy (used if not INTPXY)
 ;
 ; Set exactly one of the following to YES to specify platform
