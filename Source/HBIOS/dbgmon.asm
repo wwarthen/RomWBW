@@ -37,12 +37,14 @@ BS:		 .EQU	08H		; ASCII BACKSPACE CHARACTER
 	JP	DSKY_ENTRY
 	JP	UART_ENTRY
 ;
-#DEFINE	CIOMODE_HBIOS
 #INCLUDE "util.asm"
 ;
 #INCLUDE "memmgr.asm"
 ;
 #IF DSKYENABLE
+;
+#INCLUDE "dsky.asm"
+;
 ;
 ;__DSKY_ENTRY_________________________________________________________________
 ;
@@ -685,6 +687,76 @@ GETLNDONE:
 	LD	(HL),00H		; STORE NULL IN BUFFER
 	POP	DE			; RESTORE DE
 	RET				;
+;
+;__COUT_______________________________________________________________________
+;
+;	OUTPUT CHARACTER FROM A
+;_____________________________________________________________________________
+;
+COUT:
+	; SAVE ALL INCOMING REGISTERS
+	PUSH	AF
+	PUSH	BC
+	PUSH	DE
+	PUSH	HL
+;
+	; OUTPUT CHARACTER TO CONSOLE VIA HBIOS
+	LD	E,A			; OUTPUT CHAR TO E
+	LD	C,CIODEV_CONSOLE	; CONSOLE UNIT TO C
+	LD	B,BF_CIOOUT		; HBIOS FUNC: OUTPUT CHAR
+	RST	08			; HBIOS OUTPUTS CHARACTDR
+;
+	; RESTORE ALL REGISTERS
+	POP	HL
+	POP	DE
+	POP	BC
+	POP	AF
+	RET
+;
+;__CIN________________________________________________________________________
+;
+;	INPUT CHARACTER TO A
+;_____________________________________________________________________________
+;
+CIN:
+	; SAVE INCOMING REGISTERS (AF IS OUTPUT)
+	PUSH	BC
+	PUSH	DE
+	PUSH	HL
+;
+	; INPUT CHARACTER FROM CONSOLE VIA HBIOS
+	LD	C,CIODEV_CONSOLE	; CONSOLE UNIT TO C
+	LD	B,BF_CIOIN		; HBIOS FUNC: INPUT CHAR
+	RST	08			; HBIOS READS CHARACTDR
+	LD	A,E			; MOVE CHARACTER TO A FOR RETURN
+;
+	; RESTORE REGISTERS (AF IS OUTPUT)
+	POP	HL
+	POP	DE
+	POP	BC
+	RET
+;
+;__CST________________________________________________________________________
+;
+;	RETURN INPUT STATUS IN A (0 = NO CHAR, !=0 CHAR WAITING)
+;_____________________________________________________________________________
+;
+CST:
+	; SAVE INCOMING REGISTERS (AF IS OUTPUT)
+	PUSH	BC
+	PUSH	DE
+	PUSH	HL
+;
+	; GET CONSOLE INPUT STATUS VIA HBIOS
+	LD	C,CIODEV_CONSOLE	; CONSOLE UNIT TO C
+	LD	B,BF_CIOIST		; HBIOS FUNC: INPUT STATUS
+	RST	08			; HBIOS RETURNS STATUS IN A
+;
+	; RESTORE REGISTERS (AF IS OUTPUT)
+	POP	HL
+	POP	DE
+	POP	BC
+	RET
 ;
 ;__KIN________________________________________________________________________
 ;

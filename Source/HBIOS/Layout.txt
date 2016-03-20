@@ -1,0 +1,114 @@
+------------------
+Final Output Files
+------------------
+
+ROM Output File [512K] -> <config>.rom
+  setup [32K]			romboot?
+  hbios+hbfill [32K]
+  OSIMG [32K]
+  OSIMG [32K] (used as filler)
+  romdisk - [384K]
+
+COM Output File -> <config>.com
+  comldr [varies]		appboot?
+  hbios [varies]
+  OSIMG [32K]
+
+IMG Output File -> <config>.img
+  imgldr [varies]		imgboot?
+  hbios [varies]
+  OSIMG [32K]
+
+-------------------------
+Intermediate Output Files
+-------------------------
+
+OSIMG [32K] -> osimg.bin
+  romldr [4K]			osldr?
+  dbgmon [4K]			tbasic?
+  CPM (ccp/bdos/cbios) [12K]
+  ZSYS (zcpr/zsdos/cbios) [12K]
+
+CPM [12K] -> cpm.bin
+  ccp [2K]
+  bdos [3.5K]
+  cbios [6.5K]
+
+ZSYS [12K] -> zsys.bin
+  zcpr [2K]
+  zsdos [3.5K]
+  cbios [6.5K]
+
+-----------------
+Compilation Units
+-----------------
+
+setup.asm -> setup.bin:		romboot?
+  std.asm
+    ver.inc
+    hbios.inc
+    build.inc
+      <config>.asm
+    plt_<platform>.inc
+  hbios.exp
+  loader			boot?
+    xio
+    memmgr
+
+comldr.asm -> comldr.bin:	appboot?
+  std.asm
+    ver.inc
+    hbios.inc
+    build.inc
+      <config>.asm
+    plt_<platform>.inc
+  hbios.exp
+  loader			boot?
+    xio
+    memmgr
+
+imgldr.asm -> imgldr.bin:	imgboot?
+  std.asm
+    ver.inc
+    hbios.inc
+    build.inc
+      <config>.asm
+    plt_<platform>.inc
+  hbios.exp
+  loader			boot?
+    xio
+    memmgr
+
+hbios.bin:
+  std.asm
+    ver.inc
+    hbios.inc
+    build.inc
+      <config>.asm
+    plt_<platform>.inc
+  <device drivers>
+  util.asm
+  time.asm
+  bcd.asm
+  dsky.asm
+
+romldr.asm -> romldr.bin:	loader?
+  std.asm
+    ver.inc
+    hbios.inc
+    build.inc
+      <config>.asm
+    plt_<platform>.inc
+  util.asm
+  dsky.asm
+
+dbgmon.asm -> dbgmon.bin:
+  std.asm
+    ver.inc
+    hbios.inc
+    build.inc
+      <config>.asm
+    plt_<platform>.inc
+  util.asm
+  memmgr.asm
+  dsky.asm
