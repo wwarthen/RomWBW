@@ -18,6 +18,7 @@
 ;_______________________________________________________________________________
 ;
 ; Change Log:
+;   2016-03-21 [WBW] Updated for HBIOS 2.8
 ;_______________________________________________________________________________
 ;
 ; ToDo:
@@ -37,7 +38,7 @@ bdos	.equ	$0005		; BDOS invocation vector
 stamp	.equ	$40		; loc of RomWBW CBIOS zero page stamp
 ;
 rmj	.equ	2		; CBIOS version - major
-rmn	.equ	7		; CBIOS version - minor
+rmn	.equ	8		; CBIOS version - minor
 ;
 ;===============================================================================
 ; Code Section
@@ -283,22 +284,18 @@ devlist:
 	or	a		; set flags
 	jr	nz,devlstu	; do UNA mode dev list
 ;
-	ld	b,$1a		; hbios func: diodevcnt
-	rst	08		; call hbios, device count to B
+	ld	b,$f7		; hbios func: sysget
+	ld	c,$10		; sysget subfunc: diocnt
+	rst	08		; call hbios, E := device count 
+	ld	b,e		; use device count for loop count
 	ld	c,0		; use C for device index
 devlist1:
 	call	crlf		; formatting
 	ld	de,indent	; indent
 	call	prtstr		; ... to look nice
 	push	bc		; preserve loop control
-	ld	b,$1b		; hbios func: diodevinf
-	rst	08		; call hbios, return device/unit in C
-	ld	a,c		; device/unit to A
-	push	af		; save it
+	ld	c,a		; device to A
 	call	prtdev		; print device mnemonic
-	pop	af		; get device/unit back
-	and	$0f		; isolate unit num
-	call	prtdecb		; append unit num
 	ld	a,':'		; colon for device/unit format
 	call	prtchr		; print it
 	pop	bc		; restore loop control
@@ -426,7 +423,7 @@ dph_init2:
 	push	bc		; save DPH location
 	push	bc		; move DPH location
 	pop	de		; ... to DE
-	ld	a,(hl)		; device/unit to A
+	ld	a,(hl)		; unit to A
 	call	makdph		; make the DPH
 	pop	de		; restore DPH pointer to DE
 	pop	hl		; restore drive map pointer to HL
@@ -644,11 +641,11 @@ valid2:		; setup for inner loop
 ;
 valid3:		; inner loop
 	; bypass unassigned drives (only need to test 1)
-	ld	a,(hl)		; get first drive device/unit in A
+	ld	a,(hl)		; get first drive unit in A
 	cp	$ff		; unassigned?
 	jr	z,valid4	; yes, skip
 ;
-	; compare device/unit/slice values
+	; compare unit/slice values
 	ld	a,(de)		; first byte to A
 	cp	(hl)		; compare
 	jr	nz,valid4	; if not equal, continue loop
@@ -768,7 +765,7 @@ drvswap:
 	xor	a		; signal success
 	ret			; exit
 ;
-; Assign drive to specified device/unit/slice
+; Assign drive to specified unit/slice
 ;
 drvmap:
 	; check for UNA mode
@@ -801,32 +798,46 @@ drvmap1:	; loop through device table looking for a match
 	djnz	drvmap1		; and loop
 	jp	errdev
 ;
-drvmap2:	; verify the unit is eligible for assignment (hard disk unit only!)
-	ld	a,c		; get the specified device number
-;	call	chktyp		; check it
-;	jp	nz,errtyp	; abort with bad unit error
-;
-	; construct the requested dph table entry
-	ld	a,c		; C has device num
+drvmap2:	
+	; convert index to device type id
+	ld	a,c		; index to accum
 	rlca			; move it to upper nibble
 	rlca			; ...
 	rlca			; ...
 	rlca			; ...
-	ld	c,a		; stash it back in C
-	ld	a,(unit)	; get the unit number
-	or	c		; combine device and unit
-	ld	c,a		; and save in C
-	ld	a,(slice)	; get the slice
-	ld	b,a		; and save in B
+	ld	(device),a	; save as device id
 ;
-	; check for valid device/unit (supported by BIOS)
-	push	bc		; save device/unit/slice
-	ld	a,c		; device/unit to A
-	call	chkdev		; device/unit OK?
-	pop	bc		; restore device/unit/slice
-;	jp	nz,errdev	; invalid device specified
-	ret	nz
+	; loop thru hbios units looking for device type/unit match
+	ld	b,$f7		; hbios func: sysget
+	ld	c,$10		; sysget subfunc: diocnt
+	rst	08		; call hbios, E := device count 
+	ld	b,e		; use device count for loop count
+	ld	c,0		; use C for device index
+drvmap3:
+	push	bc		; preserve loop control
+	ld	b,$17		; hbios func: diodevice
+	rst	08		; call hbios, D := device, E := unit
+	pop	bc		; restore loop control
+	ld	a,(device)
+	cp	d
+	jr	nz,drvmap4
+	ld	a,(unit)
+	cp	e
+	jr	z,drvmap5	; match, continue, C = BIOS unit
+drvmap4:
+	; continue looping
+	inc	c
+	djnz	drvmap3
+	jp	errdev		; invalid device specified
 ;
+drvmap5:
+	; check for valid unit (supported by BIOS)
+	push	bc		; save unit
+	ld	a,c		; unit to A
+	call	chkdev		; check validity
+	pop	bc		; restore unit
+	ret	nz		; bail out on error
+	
 	; resolve the CBIOS DPH table entry
 	ld	a,(dstdrv)	; dest drv num to A
 	call	chkdrv		; valid drive?
@@ -837,10 +848,11 @@ drvmap2:	; verify the unit is eligible for assignment (hard disk unit only!)
 	call	addhl		; adjust HL to point to entry
 	ld	(dstptr),hl	; save it
 ;
-	; shove updated device/unit/slice into the entry
-	ld	(hl),c		; save device/unit byte
+	; shove updated unit/slice into the entry
+	ld	(hl),c		; save unit byte
 	inc	hl		; bump to next byte
-	ld	(hl),b		; save slice
+	ld	a,(slice)
+	ld	(hl),a		; save slice
 ;
 	; finish up
 	ld	a,(dstdrv)	; get the destination drive
@@ -911,14 +923,7 @@ drvmapu1:
 	call	addhl		; adjust HL to point to entry
 	ld	(dstptr),hl	; save it
 ;
-;	; verify the drive letter being assigned is a hard disk
-;	ld	a,(hl)		; get the device/unit byte
-;	push	hl		; save pointer
-;	call	chktypu		; check it
-;	pop	hl		; recover pointer
-;	jp	nz,errtyp	; abort with bad device type error
-;
-	; shove updated device/unit/slice into the entry
+	; shove updated unit/slice into the entry
 	ld	a,(unit)	; get specified unit
 	ld	(hl),a		; save it
 	inc	hl		; next byte is slice
@@ -945,7 +950,9 @@ showall:
 ;
 showall1:	; loop
 	ld	a,c		;
+	push	bc		; save loop control
 	call	showass
+	pop	bc		; restore loop control
 	inc	c
 	djnz	showall1
 	or	$ff
@@ -962,7 +969,7 @@ showass:
 	rlca
 	rlca
 	call	addhl		; HL = address of drive map table entry
-	ld	a,(hl)		; get device/unit value
+	ld	a,(hl)		; get unit value
 	cp	$ff		; compare to unassigned value
 	ld	a,c		; recover original drive num
 	ret	z		; bail out if unassigned drive
@@ -997,16 +1004,13 @@ showone:
 	call 	prtchr		; print it
 ;
 	; render the map entry
-	ld	a,(hl)		; load device/unit
+	ld	a,(hl)		; load unit
 	cp	$FF		; empty?
 	ret	z		; yes, bypass
 	call	prtdev		; print device mnemonic
-	ld	a,(hl)		; load device/unit again
-	and	$0f		; isolate unit num
-	call	prtdecb		; print it
-	inc	hl		; point to slice num
-	ld	a,':'		; colon to separate slice
+	ld	a,':'		; colon for device/unit format
 	call	prtchr		; print it
+	inc	hl		; point to slice num
 	ld	a,(hl)		; load slice num
 	call	prtdecb		; print it
 ;
@@ -1033,6 +1037,11 @@ prtdev:
 	or	a		; set flags
 	ld	a,e		; put device num back
 	jr	nz,prtdevu	; print device in UNA mode
+	ld	b,$17		; hbios func: diodevice
+	ld	c,a		; unit to C
+	rst	08		; call hbios, D := device, E := unit
+	push	de		; save results
+	ld	a,d		; device to A
 	rrca			; isolate high nibble (device)
 	rrca			;   ...
 	rrca			;   ...
@@ -1048,54 +1057,63 @@ prtdev:
 	ld	e,a		;   ...
 	call	prtstr		; print the device nmemonic
 	pop	hl		; restore HL
+	pop	de		; get device/unit data back
+	ld	a,e		; device id to a
+	call	prtdecb		; print it
 	ret			; done
 ;
 prtdevu:
-	ld	e,a		; save unit num in E
 	push	bc
 	push	de
 	push	hl
+;	
 	; UNA mode version of print device
 	ld	b,a		; B := unit num
+	push	bc		; save for later
 	ld	c,$48		; UNA func: get disk type
 	rst	08		; call UNA
 	ld	a,d		; disk type to A
-	pop	hl
-	pop	de
-	pop	bc
+	pop	bc		; get unit num back in C
 ;
+	; pick string based on disk type
 	cp	$40		; RAM/ROM?
 	jr	z,prtdevu1	; if so, handle it
 	cp	$41		; IDE?
 	ld	de,udevide	; load string
-	jp	z,prtstr	; if IDE, print and return
+	jr	z,prtdevu2	; if IDE, print and return
 	cp	$42		; PPIDE?
 	ld	de,udevppide	; load string
-	jp	z,prtstr	; if PPIDE, print and return
+	jr	z,prtdevu2	; if PPIDE, print and return
 	cp	$43		; SD?
 	ld	de,udevsd	; load string
-	jp	z,prtstr	; if SD, print and return
+	jr	z,prtdevu2	; if SD, print and return
 	cp	$44		; DSD?
 	ld	de,udevdsd	; load string
-	jp	z,prtstr	; if DSD, print and return
+	jr	z,prtdevu2	; if DSD, print and return
 	ld	de,udevunk	; load string for unknown
-	jp	prtstr		; and print it
+	jr	prtdevu2	; and print it
 ;
 prtdevu1:
 	; handle RAM/ROM
-	push	bc
-	push	hl
-	ld	b,e		; unit num to B
+	push	bc		; save unit num
 	ld	c,$45		; UNA func: get disk info
 	ld	de,$9000	; 512 byte buffer *** FIX!!! ***
 	rst	08		; call UNA
 	bit	7,b		; test RAM drive bit
-	pop	hl
-	pop	bc
+	pop	bc		; restore unit num
 	ld	de,udevrom	; load string
-	jp	z,prtstr	; print and return
+	jr	z,prtdevu2	; print and return
 	ld	de,udevram	; load string
-	jp	prtstr		; print and return
+	jr	prtdevu2	; print and return
+;
+prtdevu2:
+	call	prtstr		; print the device nmemonic
+	ld	a,b		; get the unit num back
+	call	prtdecb		; append it
+	pop	hl
+	pop	de
+	pop	bc
+	ret
 ;
 ; Check that specified drive num is valid
 ;
@@ -1105,36 +1123,32 @@ chkdrv:
 	cp	a		; set Z to signal good
 	ret			; and return
 ;
-; Check that the device/unit value in A is valid
+; Check that the unit value in A is valid
 ; according to active BIOS support.
 ;
 ;
 chkdev:		; HBIOS variant
-	push	af		; save incoming device/unit
-	ld	b,$1a		; hbios func: diodevcnt
-	rst	08		; call hbios, device count to B
-	ld	c,0		; use C for device index
-	pop	af		; restore incoming device/unit
-chkdev1:
-	push	bc		; preserve loop control
-	push	af		; save incoming device/unit
-	ld	b,$1b		; hbios func: diodevinf
-	rst	08		; call hbios, return device/unit in C
-	pop	af		; restore incoming device/unit
-	cp	c		; match to device/unit from BIOS list?
-	pop	bc		; restore loop control
-	jr	z,chkdev2	; yes, match
-	inc	c		; next device list entry
-	djnz	chkdev1		; loop as needed
-	jp	errdev		; no match, handle error
+	push	af		; save incoming unit
+	ld	b,$f7		; hbios func: sysget
+	ld	c,$10		; sysget subfunc: diocnt
+	rst	08		; call hbios, E := device count
+	pop	af		; restore incoming unit
+	cp	e		; compare to unit count
+	jp	nc,errdev	; if too high, error
 ;
-chkdev2:	; check slice support
+	; get device/unit info
+	ld	b,$17		; hbios func: diodevice
+	ld	c,a		; unit to C
+	rst	08		; call hbios, D := device, E := unit
+	ld	a,d		; device to A
+;
+	; check slice support
 	cp	$30		; A has device/unit, in hard disk range?
-	jr	c,chkdev3	; if not hard disk, check slice val
+	jr	c,chkdev1	; if not hard disk, check slice val
 	xor	a		; otherwise, signal OK
 	ret
 ;
-chkdev3:	; not a hard disk, make sure slice == 0
+chkdev1:	; not a hard disk, make sure slice == 0
 	ld	a,(slice)	; get specified slice
 	or	a		; set flags
 	jp	nz,errslc	; invalid slice error
@@ -1615,10 +1629,10 @@ stack	.equ	$		; stack top
 ; Messages
 ;
 indent	.db	"   ",0
-msgban1	.db	"ASSIGN v1.0a for RomWBW CP/M 2.2, 25-Oct-2014",0
+msgban1	.db	"ASSIGN v1.0b for RomWBW CP/M 2.2, 20-Mar-2016",0
 msghb	.db	" (HBIOS Mode)",0
 msgub	.db	" (UBIOS Mode)",0
-msgban2	.db	"Copyright 2014, Wayne Warthen, GNU GPL v3",0
+msgban2	.db	"Copyright 2016, Wayne Warthen, GNU GPL v3",0
 msguse	.db	"Usage: ASSIGN D:[=[{D:|<device>[<unitnum>]:[<slicenum>]}]][,...]",13,10
 	.db	"  ex. ASSIGN           (display all active assignments)",13,10
 	.db	"      ASSIGN /?        (display version and usage)",13,10

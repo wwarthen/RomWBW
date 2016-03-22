@@ -687,6 +687,83 @@ GETLNDONE:
 	LD	(HL),00H		; STORE NULL IN BUFFER
 	POP	DE			; RESTORE DE
 	RET				;
+
+#IF (PLATFORM == PLT_UNA)
+
+;
+;__COUT_______________________________________________________________________
+;
+;	OUTPUT CHARACTER FROM A
+;_____________________________________________________________________________
+;
+COUT:
+	; SAVE ALL INCOMING REGISTERS
+	PUSH	AF
+	PUSH	BC
+	PUSH	DE
+	PUSH	HL
+;
+	; OUTPUT CHARACTER TO CONSOLE VIA UBIOS
+	LD	E,A
+	LD	BC,$12
+	RST	08
+;
+	; RESTORE ALL REGISTERS
+	POP	HL
+	POP	DE
+	POP	BC
+	POP	AF
+	RET
+	RET
+;
+;__CIN________________________________________________________________________
+;
+;	INPUT CHARACTER TO A
+;_____________________________________________________________________________
+;
+CIN:
+	; SAVE INCOMING REGISTERS (AF IS OUTPUT)
+	PUSH	BC
+	PUSH	DE
+	PUSH	HL
+;
+	; INPUT CHARACTER FROM CONSOLE VIA UBIOS
+	LD	BC,$11
+	RST	08
+	LD	A,E
+;
+	; RESTORE REGISTERS (AF IS OUTPUT)
+	POP	HL
+	POP	DE
+	POP	BC
+	RET
+	RET
+;
+;__CST________________________________________________________________________
+;
+;	RETURN INPUT STATUS IN A (0 = NO CHAR, !=0 CHAR WAITING)
+;_____________________________________________________________________________
+;
+CST:
+	; SAVE INCOMING REGISTERS (AF IS OUTPUT)
+	PUSH	BC
+	PUSH	DE
+	PUSH	HL
+;
+	; GET CONSOLE INPUT STATUS VIA UBIOS
+	LD	BC,$13
+	RST	08
+	LD	A,E
+;
+	; RESTORE REGISTERS (AF IS OUTPUT)
+	POP	HL
+	POP	DE
+	POP	BC
+	RET
+	RET
+	
+#ELSE
+
 ;
 ;__COUT_______________________________________________________________________
 ;
@@ -757,6 +834,8 @@ CST:
 	POP	DE
 	POP	BC
 	RET
+
+#ENDIF
 ;
 ;__KIN________________________________________________________________________
 ;

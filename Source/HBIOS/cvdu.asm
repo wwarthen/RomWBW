@@ -42,13 +42,13 @@ CVDU_INIT:
 	LD	C,CIODEV_CVDU		; DEVICE TYPE
 	LD	DE,0			; UNIT DATA BLOB ADDRESS
 	CALL	CIO_ADDENT		; ADD ENTRY, A := UNIT ASSIGNED
+	LD	(CVDU_CIOUNIT),A	; SAVE IT LOCALLY
 	LD	(HCB + HCB_CRTDEV),A	; SET OURSELVES AS THE CRT DEVICE
 	
-	CALL	TSTPT			; *DEBUG*
 	LD	D,VDAEMU		; DEFAULT EMULATION
 	LD	E,0			; VIDEO MODE = 0
 	JP	CVDU_VDAINI
-;	
+;
 ;======================================================================
 ; CVDU DRIVER - CHARACTER I/O (CIO) DISPATCHER AND FUNCTIONS
 ;======================================================================
@@ -101,12 +101,12 @@ CVDU_VDAINI:
 	POP	DE			; RECOVER EMULATION TYPE
 
 	; INITIALIZE EMULATION
-	LD	C,D			; EMULATION MODE TO C
+	LD	B,D			; EMULATION TYPE TO B
+	LD	A,(CVDU_CIOUNIT)	; CIO UNIT NUMBER
+	LD	C,A			; ... IS PASSED IN C
 	LD	DE,CVDU_DISPATCH	; DISPATCH ADDRESS TO DE
-	CALL	TSTPT			; *DEBUG*
 	CALL	EMU_INIT		; INITIALIZE EMULATION, DE := CIO DISPATCHER
 	LD	(CVDU_CIODISPADR),DE	; SAVE EMULATORS CIO DISPATCH INTERFACE ADDRESS
-	CALL	TSTPT			; *DEBUG*
 
 	XOR	A			; SIGNAL SUCCESS
 	RET
@@ -648,6 +648,8 @@ CVDU_BLKCPY1:
 ;==================================================================================================
 ;   CVDU DRIVER - DATA
 ;==================================================================================================
+;
+CVDU_CIOUNIT		.DB	$FF	; LOCAL COPY OF OUR CIO UNIT NUMBER
 ;
 CVDU_ATTR		.DB	0	; CURRENT COLOR
 CVDU_POS		.DW 	0	; CURRENT DISPLAY POSITION
