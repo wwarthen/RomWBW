@@ -2,88 +2,114 @@
 HBIOS Management Functions
 ==========================
 
-GET ($05):
-  BC=Function/Subfunction			A=Result
+GET ($07):
+  BC=Function/Subfunction                       A=Result
 
   Subfunctions:
 
     CIOCNT ($00):
-      BC=Function/Subfunction			A=Result
-						E=Serial Unit Count
+      BC=Function/Subfunction                   A=Result
+                                                E=Serial Unit Count
 
     DIOCNT ($10):
-      BC=Function/Subfunction			A=Result
-						E=Disk Unit Count
+      BC=Function/Subfunction                   A=Result
+                                                E=Disk Unit Count
 
-    BIOSVER ($F0):
-      BC=Function/Subfunction			A=Result
-						DE=BIOS Version
-						L=Platform
+    VDACNT ($40):
+      BC=Function/Subfunction                   A=Result
+                                                E=Video Unit Count
 
-SET ($06):
-  BC=Function/Subfunction			A=Result
+    BOOTINFO ($E0):
+      BC=Function/Subfunction                   A=Result
+                                                L=Boot Bank Id
+                                                DE=Boot Volume (Disk Unit/Slice)
 
+    CPUINFO ($F0):
+      BC=Function/Subfunction                   A=Result
+                                                H=Z80 CPU Variant
+                                                L=CPU Speed in MHz
+                                                DE=CPU Speed in KHz
 
+    MEMINFO ($F1):
+      BC=Function/Subfunction                   A=Result
+                                                D=# ROM Banks
+                                                E=# RAM Banks
 
+    BNKINFO ($F2):
+      BC=Function/Subfunction                   A=Result
+                                                D=BIOS Bank Id
+                                                E=User Bank Id
 
+SET ($08):
+  BC=Function/Subfunction                       A=Result
+
+    BOOTINFO ($E0):
+      BC=Function/Subfunction                   A=Result
+                                                L=Boot Bank Id
+                                                DE=Boot Volume (Disk Unit/Slice)
 
 ================
 Serial Functions
 ================
 
 IN ($00):
-  BC=Function/Unit			A=Result
-					E=Byte Input
+  BC=Function/Unit                      A=Result
+                                        E=Byte Input
 
   Wait for a single character to be available at the specified device and return the character in E. Function
   will wait indefinitely for a character to be available.
 
 OUT ($01):
-  BC=Function/Unit			A=Result
+  BC=Function/Unit                      A=Result
   E=Character to Output
 
-  Wait for device/unit to be ready to send a character, then send the character specified in E.
+  Wait for device to be ready to send a character, then send the character specified in E.
 
 IST ($02):
-  BC=Function/Unit			A=Result
-					*E=# Bytes Pending
+  BC=Function/Unit                      A=Result
+                                        *E=# Bytes Pending
 
 OST ($03):
-  BC=Function/Unit			A=Result
-					*E=# Buffer Bytes Available
+  BC=Function/Unit                      A=Result
+                                        *E=# Buffer Bytes Available
 
 INIT ($04):
-  BC=Function/Unit			A=Result
+  BC=Function/Unit                      A=Result
   DE=Line Characteristics
+  L=Terminal Type
 
 QUERY ($05)
-  BC=Function/Unit			A=Result
-					DE=Line Characteristics
+  BC=Function/Unit                      A=Result
+                                        DE=Line Characteristics (Baud, Flow Control, etc.)
+                                        H=Device Type (RS-232, Terminal, etc.)
+                                        L=Terminal Type (TTY, VT-102, etc.)
 
 DEVICE ($06):
-  BC=Function/Unit			A=Result
-					D=Device Type
-					E=Physical Unit
+  BC=Function/Unit                      A=Result
+                                        D=Device Type
+                                        E=Device Number
+                                        H=Media Type (RS-232, Terminal, etc.)
+                                        L=Video Unit Id (if Media Type == VDA)
 
 ==============
 Disk Functions
 ==============
 
 STATUS ($10):
-  BC=Function/Unit			A=Result
+  BC=Function/Unit                      A=Result
 
   Return current status result code of specified unit.  Does not clear
   the status.
 
 RESET ($11):
-  BC=Function/Unit			A=Result
-  
+  BC=Function/Unit                      A=Result
+
   Reset the physical interface associated with the specified unit.  Flag all units
   associated with the interface for unit initialization at next I/O call.  Clear
   media identified unless locked.  Reset result code of all associated units.
 
 SEEK ($12):
-  BC=Function/Unit			A=Result
+  BC=Function/Unit                      A=Result
   D:7=Address Type (0=CHS, 1=LBA)
   CHS: D:0-6=Head,E=Sector,HL=Track
   LBA: DE:HL
@@ -92,7 +118,7 @@ SEEK ($12):
   Physical seek is typically deferred until subsequent I/O operation.
 
 READ ($13) / WRITE ($14) / VERIFY ($15):
-  BC=Function/Unit			A=Result
+  BC=Function/Unit                      A=Result
   HL=Buffer Address
   E=Block Count
 
@@ -101,7 +127,7 @@ READ ($13) / WRITE ($14) / VERIFY ($15):
   target sector is sector where error occurred.
 
 FORMAT ($16):
-  BC=Function/Unit			A=Result
+  BC=Function/Unit                      A=Result
   CHS: D=Head, HL=Cylinder
   E=Fill Byte
 
@@ -112,87 +138,151 @@ FORMAT ($16):
   *** Need to specify interleave/sector id's somehow.
 
 DEVICE ($17)
-  BC=Function/Unit			A=Result
-					D=Device Type
-					E=Physical Unit
+  BC=Function/Unit                      A=Result
+                                        D=Device Type (MD, FD, IDE, etc.)
+                                        E=Device Number (0..n)
+					C=Disk Attributes
 
-  Report the device type (Floppy, IDE, SD, etc.) and physical unit number.  Call
+  Report the Device Type (Floppy, IDE, SD, etc.) and Device Number.  Call
   does not perform any I/O and succeeds even if the device is in an error state.
   It does not reset the unit status.
 
+  Disk Device Attribute Byte:
+    7: 1=Floppy, 0=Hard Disk (or similar, e.g. CF, SD, RAM)
+  
+    If Floppy:
+      6-5: Form Factor (0=8", 1=5.25", 2=3.5", 3=Other)
+        4: Sides (0=SS, 1=DS)
+      3-2: Density (0=SD, 1=DD, 2=HD, 3=ED)
+      1-0: Reserved
+  
+    If Hard Disk:
+        6: Removable
+      5-3: Type (0=Hard, 1=CF, 2=SD, 3=USB, 4=ROM, 5=RAM, 6=RAMF, 7=?)
+      2-0: Reserved
+  
+  Note: IDE value 848Ah in IDENTIFY DEVICE data word 0 indicates CF Card
+
 MEDIA ($18):
-  BC=Function/Unit			A=Result
-  E0:=Enable Media Discovery		E=Media ID (legacy)
+  BC=Function/Unit                      A=Result
+  E:0=Enable Media Discovery            E=Media ID (legacy)
 
   Report the media definition for media in specified unit.  If bit 0 of E is
   set, then perform media discovery or verification.  If no media in device,
   return no media error.
 
 DEFMED ($19):
-  BC=Function/Unit			A=Result
-					E=Media ID (legacy)
+  BC=Function/Unit                      A=Result
+                                        E=Media ID (legacy)
 
   Define media in unit.
 
 CAPACITY ($1A):
-  BC=Function/Unit			DE:HL=Blocks on Device
-					BC=Block Size
-					A=Result
+  BC=Function/Unit                      DE:HL=Blocks on Device
+                                        BC=Block Size
+                                        A=Result
 
   Return device capacity information.
   If media is unknown, return error (no media)
 
 GEOMETRY ($1B):
-  BC=Function/Unit			HL=Cylinders
-					D:0-6=Heads
-					D:7=LBA Capable
-					E=Sectors
-					BC=Block Size
-					A=Result
+  BC=Function/Unit                      HL=Cylinders
+                                        D:0-6=Heads
+                                        D:7=LBA Capable
+                                        E=Sectors
+                                        BC=Block Size
+                                        A=Result
 
   Return device geometry information.
   If media is unknown, return error (no media)
 
 INFO ($1F):
-    BC=Function/Sub-function		A=Result
+    BC=Function/Sub-function            A=Result
 
   C=0: Report total unit count in system:
-    BC=Function/Sub-function		A=Result
-					B=Count
+    BC=Function/Sub-function            A=Result
+                                        B=Count
 
-
-
-A: RAM0		B: ROM0		C:
-
-
-
-Unit 	Device	Board	Part	Slice	Cap
--------	-------	-------	-------	-------	-------
-#0	RAM	MK4			384K
-#1	ROM	MK4			384K
-#2	FD0	DIO3			3.5" DS/HD
-#3	IDE0	DIO3		0	8M
-
-
-
-Unit 0: RAMDISK on MK4 (384K)
-Unit 1: ROMDISK on MK4 (384K)
-Unit 2: FD0 on DISKIO3 (3.5")
-Unit 3: FD1 on DISKIO3 (5.25")
-Unit 4: IDE0 on DISKIO3 (4096M)
-
-A: RAM0		MK4 RAM Disk, 384K
-B: ROM0		MK4 ROM Disk, 384K
-C: FD0		DiskIO3 Floppy Disk 0, 3.5" DS/HD
-D: FD1		DiskIO3 Floppy Disk 1, 5.25" DS/DD
-E: IDE0:0	MK4 IDE Hard Disk 0, Slice 0, 8M
-F: IDE0:1	MK4 IDE Hard Disk 0, Slice 1, 8M
-G: PRPSD0:0	PropIO SD Card, Slice 0
+===============
+Video Functions
+===============
 
 
 
 
+-----------------------------------------------------------------------------------
 
+Unit        Device      Type              Capacity/Mode
+----------  ----------  ----------------  --------------------
+Disk 0      MD0:        ROM Disk          384K, LBA
+Disk 1      MD1:        RAM Disk          384K, LBA
+Disk 2      FD0:        Floppy Disk       3.5", DS/HD, CHS
+Disk 3      FD1:        Floppy Disk       5.25", DS/HD, CHS
+Disk 4      PPIDE0:     Hard Disk         2345M, LBA
+Disk 5      IDE0:       Compact Flash     2048M, LBA
+Disk 6      SD0:        SD Card           4096M, LBA
+Disk 7      PRPSD0:     SD Card           2048M, LBA
+Disk 8      RF0:        RAM Floppy        4M, LBA
+Serial 0    UART0:      RS-232            38400,8N1,HFC
+Serial 1    PRPCON0:    Direct            --
+Serial 2    CVDU0:      Direct            --
+Serial 2    VDU0:       Direct            --
+Serial 2    SCG0:       Direct            --
+Video 0     PRPCON0:    VDA               Text 80x25, ANSI
+Video 1     CVDU0:      VDA               Text 80x25, ANSI
+Video 2     VDU0:       VDA               Text 80x25, ANSI
+Video 3     SCG0:       VDA               Text 40x25, TTY
+
+Unit: Function Group & Unit Index
+Device: <driver>_DEVICE Device Type & Device Num
+Type: <driver>_DEVICE Type & Attributes
+Capacity/Mode:
+  Disk: <driver>_DEVICE Attributes & <driver>_CAPACITY
+  Serial: <driver>_QUERY
+  Video: <driver>_QUERY
+
+
+
+-----------------------------------------------------------------------------------
+
+<VDA>_INIT:
+  - INIT HARDWARE
+  - ADD OURSELVES TO VDA_TBL
+  - ADD OURSELVES TO CIO_TBL
+  - GOTO <VDA>_VDAINIT
+
+<VDA>_VDAINIT: (BC=FUNCTION/DEVID, HL=BITMAP ADR, D=TERMTYPE, E=VIDEO MODE)
+  - CALL <VDA>_VDARESET
+  - INITIALIZE EMULATION BY CALLING EMU_INIT (B=TERMTYPE, C=DEVTYPE, DE=VDADISPADR) ==> (DE=CIODISPADR)
+  - SAVE DE TO <VDA>_CIODISPADR TO FORWARD SUBSEQUENT CIO FUNCTION CALLS
+  - RETURN (A=STATUS)
+
+<VDA>_VDARESET:
+  - RESET HARDWARE
+  - RETURN (A=STATUS)
+
+EMU_INIT: (B=TERMTYPE, C=DEVTYPE, DE=VDADISPADR) ==> (DE=CIODISPADR)
+  - GOTO TO <EMU>_INIT BASED ON VALUE IN B
+
+<EMU>_INIT: (C=DEVTYPE, DE=VDADISPADR) ==> (DE=CIODISPADR)
+  - RECORD C TO <EMU>_DEVTYPE SO <EMU>_DEVICE FUNCTION CAN RETURN IT
+  - RECORD DE IN <EMU>_VDADISPADR FOR LATER USE IN CALLING PARENT VDA DRIVER
+  - INITIALIZE/RESET EMULATION ENGINE
+  - RETURN (A=STATUS, DE=CIODISPADR)
+
+--------------------------
+
+md
+hdsk
+rf
+ide
+sd
+ppide
+fd
+prp
+ppp
+
+--------------------------
 
 0: RAM-  RAMdrive on the Z180 SBC Mark IV board
 LBASupported    UserAddressableSectors 832
@@ -235,42 +325,4 @@ CP/M 2.2 Copyright 1979 (c) by Digital Research
 
 ---
 
-<VDA>_INIT:
-  - ADD OURSELVES TO VDA_TBL
-  - ADD OURSELVES TO CIO_TBL & RECORD <VDA>_CIOUNIT
-  - INIT HARDWARE
-  - GOTO <VDA>_INI
 
-<VDA>_INI:
-  - CALL <VDA>_RES
-  - INITIALIZE EMULATION BY CALLING EMU_INIT (PASS IN B=EMU_TYPE, C=VDA CIO UNIT NUM, DE=VDA DISPATCH ADR)
-  - RECORD DE (EMULATOR CIO DISPATCH ADR) <VDA>_CIODISPADR TO FORWARD SUBSEQUENT CIO FUNCTION CALLS
-  - RETURN (A=STATUS)
-
-<VDA>_RES:
-  - RESET HARDWARE
-  - RETURN (A=STATUS)
-
-EMU_INIT: (B=EMU TYPE, C=VDA CIO UNIT #, DE=VDA DISPATCH ADR) ==> (DE=EMULATOR CIO DISPATCH ADR)
-  - GOTO TO <EMU>_INIT BASED ON VALUE IN B
-
-<EMU>_INIT: (C=VDA CIO UNIT #, DE=VDA DISPATCH ADR) ==> (DE=EMULATOR CIO DISPATCH ADR)
-  - RECORD C (VDA CIO UNIT) IN <EMU>_VDACIOUNIT SO <EMU>_DEVICE FUNCTION CAN RETURN IT
-  - RECORD DE IN <EMU>_VDADISPADR FOR LATER USE IN CALLING PARENT VDA DRIVER
-  - INITIALIZE/RESET EMULATION ENGINE
-  - RETURN (A=STATUS, DE=EMULATOR CIO DISPATCH)
-
-
-
-
-
--------------------------- 
-md
-hdsk
-rf
-ide
-sd
-ppide
-fd
-prp
-ppp
