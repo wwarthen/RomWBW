@@ -368,13 +368,13 @@ BLKMV:	POP	BC		; And number of bytes to move
 	DEC	A		; 0 --> FF
 	LD	(Z3WHL),A	; Set the Wheel Byte
 
-	; Get and save the internal HBIOS physical disk
-	; buffer address which is assumed to be in the
-	; HBIOS bank.
-	LD	B,18H		; Get buffer function call (assumes already allocated!!!)
-	LD	HL,0		; ... with address 0 to get HBIOS buf adr
-	CALL	HBX_INVOKE	; ... to return internal HBIOS buffer adr
-	LD	(HB_DSKBUF),HL	; Record the buffer address
+	; Allocate disk buffer in HBIOS bank and
+	; save it for use later in disk access.
+	LD	B,0F4H			; BIOS FUNC: ALLOCATE HEAP MEMORY
+	LD	HL,512			; 1 SECTOR, 512 BYTES
+	CALL	HBX_INVOKE		; DO IT
+	CALL	NZ,PANIC		; HANDLE ERROR
+	LD	(HB_DSKBUF),HL		; RECORD THE BUFFER ADDRESS
 	
 	  IF  HAVIOP
 	LD	HL,IOPRET

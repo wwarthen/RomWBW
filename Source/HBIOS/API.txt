@@ -233,12 +233,13 @@ CAPACITY ($1A):
   If media is unknown, return error (no media)
 
 GEOMETRY ($1B):
-  BC=Function/Unit                      HL=Cylinders
+  BC=Function/Unit                      A=Result
+  					HL=Cylinders
                                         D:0-6=Heads
                                         D:7=LBA Capable
                                         E=Sectors
                                         BC=Block Size
-                                        A=Result
+                                        
 
   Report current media geometry information.
   If media is unknown, return error (no media)

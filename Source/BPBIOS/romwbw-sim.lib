@@ -9,7 +9,7 @@
 ;       HBIOS configuration.
 ;
 HBIOS	EQU	YES			; Use HBIOS functions
-INTPXY	EQU	YES			; Internal HBIOS Proxy
+;INTPXY	EQU	YES			; Internal HBIOS Proxy
 HBLOC	EQU	0FE00H			; Location of HBIOS proxy (used if not INTPXY)
 ;
 ; Set exactly one of the following to YES to specify platform
@@ -26,13 +26,15 @@ HBCLK	EQU	YES			; HBIOS clock driver
 ;
 ; Set HB_HDDEV to appropriate hard disk driver
 ;
-HB_HDDEV	EQU	HBDEV_HDSK	; SIMH HDSK Driver
-;HB_HDDEV	EQU	HBDEV_IDE	; IDE Driver
-;HB_HDDEV	EQU	HBDEV_SD	; SD Card Driver
+;HB_HDDEV	EQU	HBDEV_HDSK	; SIMH HDSK Driver
+;;HB_HDDEV	EQU	HBDEV_IDE	; IDE Driver
+;;HB_HDDEV	EQU	HBDEV_SD	; SD Card Driver
+HB_HDDEV	EQU	2
 ;
 ; Set HB_MDDEV to appropriate memory disk driver
 ;
-HB_MDDEV	EQU	HBDEV_MD	; Memory Disk Driver
+;HB_MDDEV	EQU	HBDEV_MD	; Memory Disk Driver
+HB_MDDEV	EQU	0
 ;
 ; RAM/ROM disk sizes expressed as count of 2K blocks
 ;
@@ -60,10 +62,12 @@ BID_COM		EQU	9FH
 	ENDIF
 ;
 	IF N8 OR MK4
-HB_IODEV	EQU	HBCIO_ASCI
-	ELSE
-HB_IODEV	EQU	HBCIO_UART
+;HB_IODEV	EQU	HBCIO_ASCI
+;	ELSE
+;HB_IODEV	EQU	HBCIO_UART
 	ENDIF
+;
+HB_IODEV	EQU	0
 ;
 	IF INTPXY
 MEMTOP	EQU	0FFE0H - 1	; Start of HBIOS 32 byte control block
