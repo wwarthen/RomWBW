@@ -2,7 +2,39 @@
 HBIOS Management Functions
 ==========================
 
-GET ($07):
+SETBNK ($F0):
+  B=Function                       		A=Result
+  C=Bank Id					C=Previous Bank Id
+
+GETBNK ($F1):
+  B=Function                       		A=Result
+						C=Bank Id
+
+SETCPY ($F2):
+  B=Function                       		A=Result
+  D=Destination Bank Id
+  E=Source Bank Id
+  HL=Count of Bytes to Copy
+
+BNKCPY ($F3):
+  B=Function                       		A=Result
+  DE=Destination Address
+  HL=Source Address
+
+ALLOC ($F4):
+  B=Function                       		A=Result
+  HL=Size					HL=Address of Allocated Memory Block
+
+FREE ($F5):
+  B=Function                       		A=Result
+  HL=Address of Memory Block to Free
+
+VER ($F6):
+  B=Function                       		A=Result
+  C=Reserved (set to 0)				DE=Version (Maj/Min/Upd/Pat)
+						L=Platform Id
+
+GET ($F7):
   BC=Function/Subfunction                       A=Result
 
   Subfunctions:
@@ -40,13 +72,24 @@ GET ($07):
                                                 D=BIOS Bank Id
                                                 E=User Bank Id
 
-SET ($08):
+SET ($F8):
   BC=Function/Subfunction                       A=Result
 
     BOOTINFO ($E0):
       BC=Function/Subfunction                   A=Result
                                                 L=Boot Bank Id
                                                 DE=Boot Volume (Disk Unit/Slice)
+
+PEEK: ($F9):
+  B=Function                       		A=Result
+  D=Bank					E=Byte Value
+  HL=Address
+
+POKE: ($FA):
+  B=Function                       		A=Result
+  D=Bank
+  E=Byte Value
+  HL=Address
 
 ================
 Serial Functions
@@ -76,18 +119,22 @@ OST ($03):
 INIT ($04):
   BC=Function/Unit                      A=Result
   DE=Line Characteristics
-  L=Terminal Type
+  L=Terminal Type?
 
 QUERY ($05)
   BC=Function/Unit                      A=Result
                                         DE=Line Characteristics (Baud, Flow Control, etc.)
-                                        H=Device Type (RS-232, Terminal, etc.)
-                                        L=Terminal Type (TTY, VT-102, etc.)
+					L=Terminal Type? (TTY, VT-100, etc.)
 
 DEVICE ($06):
   BC=Function/Unit                      A=Result
                                         D=Device Type
                                         E=Device Number
+					C=Device Attributes
+
+  Serial Device Attributes Byte:
+    ;7: 1=Floppy, 0=Hard Disk (or similar, e.g. CF, SD, RAM)
+
                                         H=Media Type (RS-232, Terminal, etc.)
                                         L=Video Unit Id (if Media Type == VDA)
 
@@ -141,13 +188,13 @@ DEVICE ($17)
   BC=Function/Unit                      A=Result
                                         D=Device Type (MD, FD, IDE, etc.)
                                         E=Device Number (0..n)
-					C=Disk Attributes
+					C=Device Attributes
 
   Report the Device Type (Floppy, IDE, SD, etc.) and Device Number.  Call
   does not perform any I/O and succeeds even if the device is in an error state.
   It does not reset the unit status.
 
-  Disk Device Attribute Byte:
+  Disk Device Attributes Byte:
     7: 1=Floppy, 0=Hard Disk (or similar, e.g. CF, SD, RAM)
   
     If Floppy:
@@ -182,7 +229,7 @@ CAPACITY ($1A):
                                         BC=Block Size
                                         A=Result
 
-  Return device capacity information.
+  Report current media capacity information.
   If media is unknown, return error (no media)
 
 GEOMETRY ($1B):
@@ -193,15 +240,8 @@ GEOMETRY ($1B):
                                         BC=Block Size
                                         A=Result
 
-  Return device geometry information.
+  Report current media geometry information.
   If media is unknown, return error (no media)
-
-INFO ($1F):
-    BC=Function/Sub-function            A=Result
-
-  C=0: Report total unit count in system:
-    BC=Function/Sub-function            A=Result
-                                        B=Count
 
 ===============
 Video Functions
@@ -227,11 +267,11 @@ Serial 0    UART0:      RS-232            38400,8N1,HFC
 Serial 1    PRPCON0:    Direct            --
 Serial 2    CVDU0:      Direct            --
 Serial 2    VDU0:       Direct            --
-Serial 2    SCG0:       Direct            --
+Serial 2    TMS0:       Direct            --
 Video 0     PRPCON0:    VDA               Text 80x25, ANSI
 Video 1     CVDU0:      VDA               Text 80x25, ANSI
 Video 2     VDU0:       VDA               Text 80x25, ANSI
-Video 3     SCG0:       VDA               Text 40x25, TTY
+Video 3     TMS0:       VDA               Text 40x25, TTY
 
 Unit: Function Group & Unit Index
 Device: <driver>_DEVICE Device Type & Device Num

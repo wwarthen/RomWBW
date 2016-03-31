@@ -247,6 +247,7 @@ init1:
 	ld	(biover),hl	; save version
 	ld	b,bfgbnk	; HBIOS func: get current bank
 	rst	08		; do it
+	ld	a,c		; move to A
 	ld	(tpabnk),a	; save it
 
 init2:
