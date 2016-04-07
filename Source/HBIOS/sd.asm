@@ -214,6 +214,7 @@ SD_CAPACITY	.EQU	2		; CARD CAPACITY (1 DWORD/4 BYTES)
 ;=============================================================================
 ;
 SD_INIT:
+	CALL	NEWLINE			; FORMATTING
 	PRTS("SD:$")
 ;
 ; SETUP THE DISPATCH TABLE ENTRIES

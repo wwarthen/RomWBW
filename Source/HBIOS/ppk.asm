@@ -70,6 +70,7 @@ PPK_WAITTO	.DW	0	; TIMEOUT WAIT LOOP COUNT (COMPUTED IN INIT)
 ;__________________________________________________________________________________________________
 ;
 PPK_INIT:
+	CALL	NEWLINE			; FORMATTING
 	PRTS("PPK: IO=0x$")
 	LD	A,PPK_PPIA
 	CALL	PRTHEXBYTE

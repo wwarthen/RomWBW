@@ -9,6 +9,7 @@ while ($true)
 
 while ($true)
 {
+	$PlatformConfigFile = "Config/plt_${Platform}.asm"
 	$ConfigFile = "Config/${Platform}_${Config}.asm"
 	if (Test-Path $ConfigFile) {break}
 	if ($Config -ne "") {Write-Host "${ConfigFile} does not exist!"}
@@ -84,6 +85,7 @@ Function Concat($InputFileList, $OutputFile)
 PLATFORM	.EQU		PLT_${Platform}		; HARDWARE PLATFORM
 ROMSIZE		.EQU		${ROMSize}		; SIZE OF ROM IN KB
 ;
+#INCLUDE "${PlatformConfigFile}"
 #INCLUDE "${ConfigFile}"
 ;
 "@ | Out-File "build.inc" -Encoding ASCII

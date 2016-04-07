@@ -62,6 +62,7 @@ KBD_IDLE	.DB	0	; IDLE COUNT
 ;__________________________________________________________________________________________________
 ;
 KBD_INIT:
+	CALL	NEWLINE			; FORMATTING
 	PRTS("KBD: IO=0x$")
 	LD	A,KBD_IOBASE
 	CALL	PRTHEXBYTE
