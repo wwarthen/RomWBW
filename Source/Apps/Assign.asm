@@ -19,6 +19,7 @@
 ;
 ; Change Log:
 ;   2016-03-21 [WBW] Updated for HBIOS 2.8
+;   2016-04-07 [WBW] Determine key memory addresses dynamically
 ;_______________________________________________________________________________
 ;
 ; ToDo:
@@ -77,11 +78,11 @@ exit:	; clean up and return to command processor
 ;
 init:
 ;
-	; locate cbios function table address
+	; locate start of cbios (function jump table)
 	ld	hl,(restart+1)	; load address of CP/M restart vector
 	ld	de,-3		; adjustment for start of table
 	add	hl,de		; HL now has start of table
-	ld	(cbftbl),hl	; save it
+	ld	(bioloc),hl	; save it
 ;
 	; get location of config data and verify integrity
 	ld	hl,stamp	; HL := adr or RomWBW zero page stamp
@@ -134,6 +135,10 @@ init:
 	ld 	b,0		; ... so BC is length to copy
 	ldir			; do the copy
 ;
+	; determine end of CBIOS (assume HBIOS for now)
+	ld	hl,($FFFE)	; get proxy start address
+	ld	(bioend),hl	; save as CBIOS end address
+;
 	; check for UNA (UBIOS)
 	ld	a,($fffd)	; fixed location of UNA API vector
 	cp	$c3		; jp instruction?
@@ -148,8 +153,23 @@ init:
 	jr	nz,initx	; if not, not UNA
 	ld	hl,unamod	; point to UNA mode flag
 	ld	(hl),$ff	; set UNA mode
+	ld	hl,$FF00	; assumed start of UNA proxy
+	ld	(bioend),hl	; save as CBIOS end address
 ;
 initx:
+	; compute size of CBIOS
+	ld	hl,(bioend)	; HL := end address
+	ld	de,(bioloc)	; DE := starting address
+	xor	a		; clear carry
+	sbc	hl,de		; subtract to get size in HL
+	ld	(biosiz),hl	; and save it
+;
+	; establish heap limit
+	ld	hl,(bioend)	; HL := end of CBIOS address
+	ld	de,-$40		; allow 40 bytes for CBIOS stack
+	add	hl,de		; adjust
+	ld	(heaplim),hl	; save it
+;
  	; return success
 	xor	a		; signal success
 	ret			; return
@@ -336,19 +356,19 @@ devlstu1:
 ;
 install:
 	; capture CBIOS snapshot and stack frame for error recovery
-	ld	hl,$e600	; start of CBIOS
+	ld	hl,(bioloc)	; start of CBIOS
 	ld	de,$8000	; save it here
-	ld	bc,$fc00 - $e600	; size of CBIOS
+	ld	bc,(biosiz)	; size of CBIOS
 	ldir			; save it
 	ld	(xstksav),sp	; save stack frame
 	; clear CBIOS buffer area
 	ld	hl,(maploc)	; start fill at drive map
-	ld	a,$FC		; stop when msb is $FC
+	ld	a,(bioend + 1)	; msb of CBIOS end address to A
 install1:
 	ld	e,0		; fill with null
 	ld	(hl),e		; fill next byte
 	inc	hl		; point to next byte
-	cp	h		; is H == $FC?
+	cp	h		; is H == msb of CBIOS end address?
 	jr	nz,install1	; if not, loop
 ;
 	; determine the drive map entry count
@@ -384,15 +404,13 @@ install3:
 	ld	de,(maploc)	; target is CBIOS map loc
 	ldir			; do it
 ;
-	; set start of allocation memory
-	ld	(buftop),de	; DE has next byte available
+	; set start of memory allocation heap
+	ld	(heaptop),de	; DE has next byte available
 ;
 	; allocate directory buffer
-	ld	bc,128		; size of directory buffer
+	ld	hl,128		; size of directory buffer
 	call	alloc		; allocate the space
-	jp	nz,instovf	; handle overflow error
-	push	bc		; move mem pointer
-	pop	hl		; ... to hl
+	jp	c,instovf	; handle overflow error
 	ld	(dirbuf),hl	; ... and save in dirbuf
 ;
 dph_init:
@@ -415,16 +433,16 @@ dph_init1:
 	jr	dph_init3
 ;
 dph_init2:
+	ld	a,(hl)		; unit to A
 	push	bc		; save loop control
 	push	hl		; save drive map pointer
-	ld	bc,16		; size of a DPH structure
+	ld	hl,16		; size of a DPH structure
 	call	alloc		; allocate space for dph
-	jp	nz,instovf	; handle overflow error
-	push	bc		; save DPH location
-	push	bc		; move DPH location
+	jp	c,instovf	; handle overflow error
+	push	hl		; save DPH location
+	push	hl		; move DPH location
 	pop	de		; ... to DE
-	ld	a,(hl)		; unit to A
-	call	makdph		; make the DPH
+	call	makdph		; make the DPH, unit in A from above
 	pop	de		; restore DPH pointer to DE
 	pop	hl		; restore drive map pointer to HL
 	pop	bc		; restore loop control
@@ -443,8 +461,8 @@ dph_init3:
 	call	crlf2
 	ld	de,indent
 	call	prtstr
-	ld	hl,$fc00	; subtract high water
-	ld	de,(buftop)	; ... from top of cbios
+	ld	hl,(heaplim)	; subtract high water
+	ld	de,(heaptop)	; ... from top of cbios
 	or	a		; ... with cf clear
 	sbc	hl,de		; ... so hl gets bytes free
 	call	prtdecw		; print it
@@ -544,19 +562,57 @@ makdph1:
 	dec	de		; ... prefix data (cks & als buf sizes)
 	call	makdph2		; handle cks buf, then fall thru for als buf
 	ret	nz		; bail out on error
+
+;makdph2:
+;	ex	de,hl		; point hl to cks/als size adr
+;	ld	c,(hl)		; bc := cks/als size
+;	inc	hl		; ... and bump
+;	ld	b,(hl)		; ... past
+;	inc	hl		; ... cks/als size
+;	ex	de,hl		; bc and hl roles restored
+;	ld	a,b		; check to see
+;	or	c		; ... if bc is zero
+;	jr	z,makdph3	; if zero, bypass alloc, use zero for address
+;	call	alloc		; alloc bc bytes, address returned in bc
+;	jp	nz,instovf	; handle overflow error
+;makdph3:
+;	ld	(hl),c		; save cks/als buf
+;	inc	hl		; ... address in
+;	ld	(hl),b		; ... dph and bump
+;	inc	hl		; ... to next dph entry	
+;	xor	a		; signal success
+;	ret
+
 makdph2:
-	ex	de,hl		; point hl to cks/als size adr
-	ld	c,(hl)		; bc := cks/als size
-	inc	hl		; ... and bump
-	ld	b,(hl)		; ... past
-	inc	hl		; ... cks/als size
-	ex	de,hl		; bc and hl roles restored
-	ld	a,b		; check to see
-	or	c		; ... if bc is zero
-	jr	z,makdph3	; if zero, bypass alloc, use zero for address
-	call	alloc		; alloc bc bytes, address returned in bc
-	jp	nz,instovf	; handle overflow error
+	; DE = address of CKS or ALS buf to allocate
+	; HL = address of field in DPH to get allocated address
+	push	hl		; save DPH field ptr
+	pop	bc		; into BC
+;
+	; HL := alloc size, DE bumped
+	ex	de,hl
+	ld	e,(hl)		; get size to allocate 
+	inc	hl		; ...
+	ld	d,(hl)		; ... into HL
+	inc	hl		; and bump DE
+	ex	de,hl
+;
+	; check for size of zero, special case
+	ld	a,h		; check to see
+	or	l		; ... if hl is zero
+	jr	z,makdph3	; if so, jump ahead using hl as address
+;
+	; allocate memory
+	call	alloc		; do the allocation
+	jp	c,instovf	; bail out on overflow
+	
 makdph3:
+	; swap hl and bc
+	push	bc		; bc -> (sp)
+	ex	(sp),hl		; (sp) -> hl, hl -> (sp)
+	pop	bc		; (sp) -> bc
+;
+	; save allocated address
 	ld	(hl),c		; save cks/als buf
 	inc	hl		; ... address in
 	ld	(hl),b		; ... dph and bump
@@ -570,40 +626,30 @@ instovf:
 	; restore stack frame and CBIOS image
 	ld	sp,(xstksav)	; restore stack frame
 	ld	hl,$8000	; start of CBIOS image buffer
-	ld	de,$e600	; start of CBIOS
-	ld	bc,$fc00 - $e600	; size of CBIOS
+	ld	de,(bioloc)	; start of CBIOS
+	ld	bc,(biosiz)	; size of CBIOS
 	ldir			; restore it
 	jp	errovf
 ;
+; Allocate HL bytes from heap
+; Return pointer to allocated memory in HL
+; On overflow error, C set
+;
 alloc:
-;
-; allocate bc bytes from buf pool, return starting
-; address in bc.  leave all other regs alone except a
-; z for success, nz for failure
-;
-	push	de		; save original de
-	push	hl		; save original hl
-	ld	hl,(buftop)	; hl := current buffer top
-	push	hl		; save as start of new buffer
-	push	bc		; get byte count
-	pop	de		; ... into de
-	add	hl,de		; add it to buffer top
-	ld	a,$ff		; assume overflow failure
-	jr	c,alloc1	; if overflow, bypass with a == $ff
-	push	hl		; save it
-	ld	de,$10000 - $FC00 + $40	; setup de for overflow test
-	add	hl,de		; check for overflow
-	pop	hl		; recover hl
-	ld	a,$ff		; assume failure
-	jr	c,alloc1	; if overflow, continue with a == $ff
-	ld	(buftop),hl	; save new top
-	inc	a		; signal success
-;
-alloc1:
-	pop	bc		; buf start address to bc
-	pop	hl		; restore original hl
-	pop	de		; restore original de
-	or	a		; signal success
+	push	de		; save de so we can use it for work reg
+	ld	de,(heaptop)	; get current heap top
+	push	de		; and save for return value
+	add	hl,de		; add requested space, hl := new heap top
+	jr	c,allocx	; test for cpu memory space overflow
+	ld	de,(heaplim)	; load de with heap limit
+	ex	de,hl		; de=new heaptop, hl=heaplim
+	sbc	hl,de		; heaplim - heaptop
+	jr	c,allocx	; c set on overflow error
+	; allocation succeeded, commit new heaptop              
+	ld	(heaptop),de	; save new heaptop
+allocx:                         
+	pop	hl		; return value to hl
+	pop	de		; recover de
 	ret
 ;
 ; Scan drive map table for integrity
@@ -1461,7 +1507,7 @@ cbios:
 	ld	a,(hl)		; get the function offset
 	inc	hl		; point past value following call instruction
 	ex	(sp),hl		; put address back at top of stack and recover HL
-	ld	hl,(cbftbl)	; address of CBIOS function table to HL
+	ld	hl,(bioloc)	; address of CBIOS function table to HL
 	call	addhl		; determine specific function address
 	jp	(hl)		; invoke CBIOS
 ;
@@ -1564,9 +1610,13 @@ err2:	; without the string
 ; Storage Section
 ;===============================================================================
 ;
-cbftbl	.dw	0		; address of CBIOS function table
+;
+bioloc	.dw	0		; CBIOS starting address
+bioend	.dw	0		; CBIOS ending address
+biosiz	.dw	0		; CBIOS size (in bytes)
 maploc	.dw	0		; location of CBIOS drive map table
 dpbloc	.dw	0		; location of CBIOS DPB map table
+;
 drives:
 dstdrv	.db	0		; destination drive
 srcdrv	.db	0		; source drive
@@ -1582,7 +1632,9 @@ dstptr	.dw	0		; destination pointer for copy
 tmpent	.fill	4,0		; space to save a table entry
 tmpstr	.fill	9,0		; temporary string of up to 8 chars, zero term
 ;
-buftop	.dw	0		; memory allocation buffer top
+heaptop	.dw	0		; current address of top of heap memory
+heaplim	.dw	0		; heap limit address
+;
 dirbuf	.dw	0		; directory buffer location
 ;
 mapwrk	.fill	(4 * 16),$FF	; working copy of drive map
@@ -1629,7 +1681,7 @@ stack	.equ	$		; stack top
 ; Messages
 ;
 indent	.db	"   ",0
-msgban1	.db	"ASSIGN v1.0b for RomWBW CP/M 2.2, 20-Mar-2016",0
+msgban1	.db	"ASSIGN v1.0c for RomWBW CP/M 2.2, 7-Apr-2016",0
 msghb	.db	" (HBIOS Mode)",0
 msgub	.db	" (UBIOS Mode)",0
 msgban2	.db	"Copyright 2016, Wayne Warthen, GNU GPL v3",0
