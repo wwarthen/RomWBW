@@ -609,11 +609,11 @@ INITSYS2:
 ;==================================================================================================
 ;
 HB_INITTBL:
-#IF (UARTENABLE)
-	.DW	UART_INIT
-#ENDIF
 #IF (ASCIENABLE)
 	.DW	ASCI_INIT
+#ENDIF
+#IF (UARTENABLE)
+	.DW	UART_INIT
 #ENDIF
 #IF (SIMRTCENABLE)
 	.DW	SIMRTC_INIT

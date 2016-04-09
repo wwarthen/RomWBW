@@ -755,9 +755,9 @@ PRTDRV:
 	LD	A,E		; LOAD DRIVER MODE/UNIT
 	AND	$0F		; ISOLATE UNIT
 	CALL	PRTDECB		; PRINT IT
-;	CALL	PC_COLON	; FORMATTING
-;	LD	A,E		; LOAD LU
-;	CALL	PRTDECB		; PRINT IT
+	CALL	PC_COLON	; FORMATTING
+	;LD	A,E		; LOAD LU
+	;CALL	PRTDECB		; PRINT IT
 	RET
 ;
 DEVTBL:	; DEVICE TABLE
@@ -867,7 +867,7 @@ STR_CPMLOC	.DB	"LOC=$"
 STR_CPMEND	.DB	"END=$"
 STR_CPMENT	.DB	"ENT=$"
 STR_LABEL	.DB	"LABEL=$"
-STR_DRVLIST	.DB	"\r\nDevices:\r\n$"
+STR_DRVLIST	.DB	"\r\nDisk Devices:\r\n$"
 STR_PREFIX	.DB	"\r\n   $"
 STR_LOADING	.DB	"\r\nLoading$"
 STR_NODISK	.DB	"\r\nNo disk!$"
@@ -876,7 +876,7 @@ STR_BOOTERR	.DB	"\r\nBoot failure!$"
 ;
 STR_BANNER	.DB	"\r\n", PLATFORM_NAME, " Boot Loader$"
 STR_BOOTMENU	.DB	"\r\nBoot: (C)PM, (Z)System, (M)onitor,\r\n"
-		.DB	"      (L)ist devices, or Device ID ===> $"
+		.DB	"      (L)ist disks, or Disk Unit # ===> $"
 ;
 	.IF DSKYENABLE
 BOOT:

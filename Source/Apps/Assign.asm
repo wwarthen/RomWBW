@@ -19,7 +19,7 @@
 ;
 ; Change Log:
 ;   2016-03-21 [WBW] Updated for HBIOS 2.8
-;   2016-04-07 [WBW] Determine key memory addresses dynamically
+;   2016-04-08 [WBW] Determine key memory addresses dynamically
 ;_______________________________________________________________________________
 ;
 ; ToDo:
@@ -140,20 +140,21 @@ init:
 	ld	(bioend),hl	; save as CBIOS end address
 ;
 	; check for UNA (UBIOS)
-	ld	a,($fffd)	; fixed location of UNA API vector
-	cp	$c3		; jp instruction?
+	ld	a,($FFFD)	; fixed location of UNA API vector
+	cp	$C3		; jp instruction?
 	jr	nz,initx	; if not, not UNA
-	ld	hl,($fffe)	; get jp address
+	ld	hl,($FFFE)	; get jp address
 	ld	a,(hl)		; get byte at target address
-	cp	$fd		; first byte of UNA push ix instruction
+	cp	$FD		; first byte of UNA push ix instruction
 	jr	nz,initx	; if not, not UNA
 	inc	hl		; point to next byte
 	ld	a,(hl)		; get next byte
-	cp	$e5		; second byte of UNA push ix instruction
+	cp	$E5		; second byte of UNA push ix instruction
 	jr	nz,initx	; if not, not UNA
 	ld	hl,unamod	; point to UNA mode flag
-	ld	(hl),$ff	; set UNA mode
-	ld	hl,$FF00	; assumed start of UNA proxy
+	ld	(hl),$FF	; set UNA mode flag
+	ld	c,$F1		; UNA func: Get HMA
+	rst	08		; call UNA, HL := UNA proxy start address
 	ld	(bioend),hl	; save as CBIOS end address
 ;
 initx:
@@ -169,6 +170,23 @@ initx:
 	ld	de,-$40		; allow 40 bytes for CBIOS stack
 	add	hl,de		; adjust
 	ld	(heaplim),hl	; save it
+;
+#if 0
+	ld	a,' '
+	call	crlf
+	ld	bc,(bioloc)
+	call	prthexword
+	call	prtchr
+	ld	bc,(bioend)
+	call	prthexword
+	call	prtchr
+	ld	bc,(maploc)
+	call	prthexword
+	call	prtchr
+	ld	bc,(heaplim)
+	call	prthexword
+	
+#endif
 ;
  	; return success
 	xor	a		; signal success
@@ -295,7 +313,7 @@ usage:
 	call	crlf2		; blank line
 	ld	de,msguse	; point to usage message
 	call	prtstr		; print it
-	or	$ff		; signal no action performed
+	or	$FF		; signal no action performed
 	ret			; and return
 ;
 devlist:
@@ -304,7 +322,7 @@ devlist:
 	or	a		; set flags
 	jr	nz,devlstu	; do UNA mode dev list
 ;
-	ld	b,$f7		; hbios func: sysget
+	ld	b,$F7		; hbios func: sysget
 	ld	c,$10		; sysget subfunc: diocnt
 	rst	08		; call hbios, E := device count 
 	ld	b,e		; use device count for loop count
@@ -321,7 +339,7 @@ devlist1:
 	pop	bc		; restore loop control
 	inc	c		; next device index
 	djnz	devlist1	; loop as needed
-	or	$ff		; signal no action taken
+	or	$FF		; signal no action taken
 	ret			; done
 ;
 devlstu:
@@ -427,7 +445,7 @@ dph_init:
 dph_init1:
 	; no DPH if drive not assigned
 	ld	a,(hl)
-	cp	$ff
+	cp	$FF
 	jr	nz,dph_init2
 	ld	de,0		; not assigned, use DPH pointer of zero
 	jr	dph_init3
@@ -519,7 +537,7 @@ makdphwbw:	; determine appropriate dpb (WBW mode)
 	ld	e,2		; assume ram
 	cp	$00+1		; ram?
 	jr	z,makdph0	; yes, jump ahead
-	and	$f0		; ignore unit nibble now
+	and	$F0		; ignore unit nibble now
 	ld	e,6		; assume floppy
 	cp	$10		; floppy?
 	jr	z,makdph0	; yes, jump ahead
@@ -661,7 +679,7 @@ valid:
 	ld	b,16 - 1	; loop one less times than num entries
 ;
 	; check that drive A: is assigned
-	ld	a,$ff		; value that indicates unassigned
+	ld	a,$FF		; value that indicates unassigned
 	cp	(hl)		; compare to A: value
 	jp	z,errnoa	; handle failure
 ;
@@ -688,7 +706,7 @@ valid2:		; setup for inner loop
 valid3:		; inner loop
 	; bypass unassigned drives (only need to test 1)
 	ld	a,(hl)		; get first drive unit in A
-	cp	$ff		; unassigned?
+	cp	$FF		; unassigned?
 	jr	z,valid4	; yes, skip
 ;
 	; compare unit/slice values
@@ -735,7 +753,7 @@ drvdel:
 	rlca			; ... as drive num * 4
 	call	addhl		; get final table offset
 	; wipe out the drive letter
-	ld	a,$ff		; dev/unit := $FF (unassigned)
+	ld	a,$FF		; dev/unit := $FF (unassigned)
 	ld	(hl),a		; do it
 	xor	a		; zero accum
 	inc	hl		; slice := 0
@@ -854,7 +872,7 @@ drvmap2:
 	ld	(device),a	; save as device id
 ;
 	; loop thru hbios units looking for device type/unit match
-	ld	b,$f7		; hbios func: sysget
+	ld	b,$F7		; hbios func: sysget
 	ld	c,$10		; sysget subfunc: diocnt
 	rst	08		; call hbios, E := device count 
 	ld	b,e		; use device count for loop count
@@ -991,7 +1009,7 @@ showall:
 	ld	c,0		; map index (drive letter)
 ;
 	ld	a,b		; load count
-	or	$ff		; signal no action
+	or	$FF		; signal no action
 	ret	z		; bail out if zero
 ;
 showall1:	; loop
@@ -1001,7 +1019,7 @@ showall1:	; loop
 	pop	bc		; restore loop control
 	inc	c
 	djnz	showall1
-	or	$ff
+	or	$FF
 	ret
 ;
 ; Display drive letter assignment IF it is assigned
@@ -1016,7 +1034,7 @@ showass:
 	rlca
 	call	addhl		; HL = address of drive map table entry
 	ld	a,(hl)		; get unit value
-	cp	$ff		; compare to unassigned value
+	cp	$FF		; compare to unassigned value
 	ld	a,c		; recover original drive num
 	ret	z		; bail out if unassigned drive
 	; fall thru to display drive
@@ -1065,11 +1083,11 @@ showone:
 ; Force BDOS to reset (logout) all drives
 ;
 drvrst:
-	ld	c,$0d		; BDOS Reset Disk function
+	ld	c,$0D		; BDOS Reset Disk function
 	call	bdos		; do it
 ;
 	ld	c,$25		; BDOS Reset Multiple Drives
-	ld	de,$ffff	; all drives
+	ld	de,$FFFF	; all drives
 	call	bdos		; do it
 ;
 	xor	a		; signal success
@@ -1092,7 +1110,7 @@ prtdev:
 	rrca			;   ...
 	rrca			;   ...
 	rrca			;   ... into low nibble
-	and	$0f		; mask out undesired bits
+	and	$0F		; mask out undesired bits
 	push	hl		; save HL
 	add	a,a		; multiple A by two for word table
 	ld	hl,devtbl	; point to start of device name table
@@ -1175,7 +1193,7 @@ chkdrv:
 ;
 chkdev:		; HBIOS variant
 	push	af		; save incoming unit
-	ld	b,$f7		; hbios func: sysget
+	ld	b,$F7		; hbios func: sysget
 	ld	c,$10		; sysget subfunc: diocnt
 	rst	08		; call hbios, E := device count
 	pop	af		; restore incoming unit
@@ -1308,7 +1326,7 @@ hexascii:
 ; Convert low nibble of A to ascii hex
 ;
 hexconv:
-	and	$0f	     	; low nibble only
+	and	$0F	     	; low nibble only
 	add	a,$90
 	daa	
 	adc	a,$40
@@ -1402,7 +1420,7 @@ delim:	or	a
 	ret	z
 	cp	':'		; colon
 	ret	z
-	cp	$3b		; semicolon
+	cp	$3B		; semicolon
 	ret	z
 	cp	'<'		; less than
 	ret	z
@@ -1500,7 +1518,7 @@ strcmp:
 ; The CBIOS function offset must be stored in the byte
 ; following the call instruction.  ex:
 ;	call	cbios
-;	.db	$0c		; offset of CONOUT CBIOS function
+;	.db	$0C		; offset of CONOUT CBIOS function
 ;
 cbios:
 	ex	(sp),hl
@@ -1603,7 +1621,7 @@ err1:	; without the leading crlf
 ;
 err2:	; without the string
 ;	call	crlf		; print newline
-	or	$ff		; signal error
+	or	$FF		; signal error
 	ret			; done
 ;
 ;===============================================================================
@@ -1624,7 +1642,7 @@ device	.db	0		; source device
 unit	.db	0		; source unit
 slice	.db	0		; source slice
 ;
-unamod	.db	0		; $ff indicates UNA UBIOS active
+unamod	.db	0		; $FF indicates UNA UBIOS active
 modcnt	.db	0		; count of drive map modifications
 ;
 srcptr	.dw	0		; source pointer for copy
