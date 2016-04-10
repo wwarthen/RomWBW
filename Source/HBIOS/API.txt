@@ -132,11 +132,10 @@ DEVICE ($06):
                                         E=Device Number
 					C=Device Attributes
 
-  Serial Device Attributes Byte:
-    ;7: 1=Floppy, 0=Hard Disk (or similar, e.g. CF, SD, RAM)
-
-                                        H=Media Type (RS-232, Terminal, etc.)
-                                        L=Video Unit Id (if Media Type == VDA)
+  Disk Device Attributes Byte:
+    7: 0=RS-232, 1=Terminal
+    
+    If Terminal, 3-0 is attached Video Unit #
 
 ==============
 Disk Functions
@@ -265,14 +264,15 @@ Disk 6      SD0:        SD Card           4096M, LBA
 Disk 7      PRPSD0:     SD Card           2048M, LBA
 Disk 8      RF0:        RAM Floppy        4M, LBA
 Serial 0    UART0:      RS-232            38400,8N1,HFC
-Serial 1    PRPCON0:    Direct            --
-Serial 2    CVDU0:      Direct            --
-Serial 2    VDU0:       Direct            --
-Serial 2    TMS0:       Direct            --
-Video 0     PRPCON0:    VDA               Text 80x25, ANSI
-Video 1     CVDU0:      VDA               Text 80x25, ANSI
-Video 2     VDU0:       VDA               Text 80x25, ANSI
-Video 3     TMS0:       VDA               Text 40x25, TTY
+Serial 1    PRPCON0:    Terminal          Video 0
+Serial 2    CVDU0:      Terminal          Video 1
+Serial 3    VDU0:       Terminal          Video 2
+Serial 4    TMS0:       Terminal          Video 3
+Video 0     PRPCON0:    CRT               Text 80x25, ANSI
+Video 1     CVDU0:      CRT               Text 80x25, ANSI
+Video 2     VDU0:       CRT               Text 80x25, ANSI
+Video 3     TMS0:       CRT               Text 40x25, TTY
+Video 4     NEC0	CRT               Graphics 600x400
 
 Unit: Function Group & Unit Index
 Device: <driver>_DEVICE Device Type & Device Num
@@ -287,83 +287,30 @@ Capacity/Mode:
 -----------------------------------------------------------------------------------
 
 <VDA>_INIT:
-  - INIT HARDWARE
+  - INIT CRT HARDWARE
+  - INIT KEYBOARD HARDWARE
+  - CALL <VDA>_VDARES (<NO PARMS>)
   - ADD OURSELVES TO VDA_TBL
-  - ADD OURSELVES TO CIO_TBL
-  - GOTO <VDA>_VDAINIT
+  - CALL TERM_ATTACH (C=VIDEO UNIT, DE=<VDA>_DISPATCH)
 
-<VDA>_VDAINIT: (BC=FUNCTION/DEVID, HL=BITMAP ADR, D=TERMTYPE, E=VIDEO MODE)
-  - CALL <VDA>_VDARESET
-  - INITIALIZE EMULATION BY CALLING EMU_INIT (B=TERMTYPE, C=DEVTYPE, DE=VDADISPADR) ==> (DE=CIODISPADR)
-  - SAVE DE TO <VDA>_CIODISPADR TO FORWARD SUBSEQUENT CIO FUNCTION CALLS
+<VDA>_VDARES: (<NO PARMS>)
+  - HOME CURSOR
+  - CLEAR SCREEN
   - RETURN (A=STATUS)
 
-<VDA>_VDARESET:
-  - RESET HARDWARE
+TERM_ATTACH: (C=VIDEO UNIT, DE=<VDA>_DISPATCH)
+  - CALL <EMU>_INIT (B=TERM DEV NUM, C=VIDEO UNIT, DE=<VDA>_DISPATCH)
+  - ADD OURSELVES TO CIO_TBL USING <EMU>_DISPATCH
   - RETURN (A=STATUS)
 
-EMU_INIT: (B=TERMTYPE, C=DEVTYPE, DE=VDADISPADR) ==> (DE=CIODISPADR)
-  - GOTO TO <EMU>_INIT BASED ON VALUE IN B
+<EMU>_INIT: (B=TERM DEV NUM, C=VIDEO UNIT, DE=<VDA>_DISPATCH)
+  - SAVE TERM DEV NUM TO <EMU>_DEVNUM
+  - SAVE VIDEO UNIT TO <EMU>_VDAUNIT
+  - SAVE <VDA>_DISPATCH TO <EMU>_VDADISPADR
+  - CALL <EMU>_RESET (<NO PARMS>)
+  - RETURN (DE=<EMU>_DISPATCH, A=STATUS)
 
-<EMU>_INIT: (C=DEVTYPE, DE=VDADISPADR) ==> (DE=CIODISPADR)
-  - RECORD C TO <EMU>_DEVTYPE SO <EMU>_DEVICE FUNCTION CAN RETURN IT
-  - RECORD DE IN <EMU>_VDADISPADR FOR LATER USE IN CALLING PARENT VDA DRIVER
-  - INITIALIZE/RESET EMULATION ENGINE
-  - RETURN (A=STATUS, DE=CIODISPADR)
-
---------------------------
-
-md
-hdsk
-rf
-ide
-sd
-ppide
-fd
-prp
-ppp
-
---------------------------
-
-0: RAM-  RAMdrive on the Z180 SBC Mark IV board
-LBASupported    UserAddressableSectors 832
-
-1: ROM-  ROMdrive on the Z180 SBC Mark IV board
-LBASupported    UserAddressableSectors 768
-
-2: IDE-  SanDisk SDCFHSNJC-004G
-s/n:       DMZ031215013440   fmw:  HDX 7.08
-CHS: 7751:16:63     nSectors 7813008     MaxBlkTransfer 1
-LBASupported    UserAddressableSectors 7813120
-
-3: IDE-  SanDisk SDCFHSNJC-004G
-s/n:       BKZ031215015432   fmw:  HDX 7.08
-CHS: 7751:16:63     nSectors 7813008     MaxBlkTransfer 1
-LBASupported    UserAddressableSectors 7813120
-
-4:  SD-  SD  SU02G
-s/n:           139401536   fmw:  8.0   d/c:  2013-07
-LBASupported    UserAddressableSectors 1931264
-
-Boot UNA unit number or ROM? [R,X,0..4] (R):
-
-N8VEM UNA CP/M (Will Sowerbutts, 2014-08-01 git cbed09)
-
-Unit Disk  Driver   Capacity  Slices   Start LBA  Flags
-0    RAM0  Memory    416.0KB       1  0x00000000  (formatted)
-1    ROM0  Memory    384.0KB       1  0x00000000
-2    IDE0  Dual-IDE    3.7GB     469  0x00000000  MBR FGN
-3    IDE1  Dual-IDE    3.7GB     469  0x00000000  MBR FGN
-4    SD0   CSIO-SD   943.0MB       0  0x00000000  MBR FGN
-
-Drive A: assigned to RAM0 slice 0
-Drive B: assigned to ROM0 slice 0
-Drive C: assigned to IDE0 slice 0
-Drive D: assigned to IDE1 slice 0
-
-Loading Residual CP/M at 0xE100 ... done.
-CP/M 2.2 Copyright 1979 (c) by Digital Research
-
----
-
-
+<EMU>_RESET: (<NO PARMS>)
+  - QUERY ATTACHED VDA FOR SCREEN SIZE (VIA <EMU>_VDADISP)
+  - INITIALIZE ALL WORKING VARIABLES AND EMULATOR STATE
+  - RETURN (A=STATUS)

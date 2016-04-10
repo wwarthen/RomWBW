@@ -65,7 +65,7 @@ ZSYSIMG	.EQU	$5000
 	.ORG	$ + $8000	; SET ORG BASED ON OUR NEW LOCATION IN RAM
 PHASE2:
 	; BANNER
-	CALL	NEWLINE
+	;CALL	NEWLINE
 	LD	DE,STR_BANNER
 	CALL	WRITESTR
 
@@ -875,7 +875,8 @@ STR_NOBOOT	.DB	"\r\nDisk not bootable!$"
 STR_BOOTERR	.DB	"\r\nBoot failure!$"
 ;
 STR_BANNER	.DB	"\r\n", PLATFORM_NAME, " Boot Loader$"
-STR_BOOTMENU	.DB	"\r\nBoot: (C)PM, (Z)System, (M)onitor,\r\n"
+STR_BOOTMENU	.DB	"\r\n"
+		.DB	"Boot: (C)PM, (Z)System, (M)onitor,\r\n"
 		.DB	"      (L)ist disks, or Disk Unit # ===> $"
 ;
 	.IF DSKYENABLE

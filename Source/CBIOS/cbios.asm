@@ -40,8 +40,8 @@ DEV_NUL		.EQU	$FF		; NUL:
 ;
 ; MEMORY LAYOUT
 ;
-IOBYTE		.EQU 	3	; LOC IN PAGE 0 OF I/O DEFINITION BYTE
-CDISK		.EQU 	4	; LOC IN PAGE 0 OF CURRENT DISK NUMBER 0=A,...,15=P
+IOBYTE		.EQU 	3		; LOC IN PAGE 0 OF I/O DEFINITION BYTE
+CDISK		.EQU 	4		; LOC IN PAGE 0 OF CURRENT DISK NUMBER 0=A,...,15=P
 ;
 CCP_LOC		.EQU	CPM_LOC
 CCP_SIZ		.EQU	$800
@@ -221,12 +221,36 @@ DEVMAP:
 ; Disk mapping is done using a drive map table (DRVMAP) which is built
 ; dynamically at cold boot.  See the DRV_INIT routine.  This table is
 ; made up of entries as documented below.  The table is prefixed with one
-; byte indicating the number of entries.  The index of the entry indicates
+; byte indicating the number of entries.  The postion of the entry indicates
 ; the drive letter, so the first entry is A:, the second entry is B:, etc.
 ;
-;	BYTE: UNIT
-;	BYTE: SLICE
-;	WORD: DPH ADDRESS
+;	UNIT:	BIOS DISK UNIT # (BYTE)
+;	SLICE:	DISK SLICE NUMBER (BYTE)
+;	DPH:	DPH ADDRESS OF DRIVE (WORD)
+;
+; DRVMAP --+
+;          |   DRIVE A          |   DRIVE B          |     |   DRIVE N          |
+;    +-----V------+-------+-----+--------------------+     +--------------------+
+;    |  N  | UNIT | SLICE | DPH | UNIT | SLICE | DPH | ... | UNIT | SLICE | DPH |
+;    +----8+-----8+------8+-+-16+-----8+------8+-+-16+     +-----8+------8+-+-16+
+;                           |                    |                          |
+;      +--------------------+                    +-> [DPH]                  +-> [DPH]
+;      |                                         
+;      V-----+-------+-------+-------+--------+-----+-----+-----+   
+; DPH: | XLT | 0000H | 0000H | 0000H | DIRBUF | DPB | CSV | ALV |   
+;      +---16+-----16+-----16+-----16+------16+-+-16+-+-16+-+-16+   
+;                  (ONE DPH PER DRIVE)          |     |     |
+;                                               |     |     +----------+
+;                                               |     |                |
+;                        +----------------------+     V-------------+  V-------------+
+;                        |                            |   CSV BUF   |  |   ALV BUF   |
+;                        |                            +-------------+  +-------------+
+;                        |                              (CSZ BYTES)      (ASZ BYTES)
+;                        |
+;      +-----+-----+-----V-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+    
+; DPB: | CSZ | ASZ | BLS | SPT | BSH | BLM | EXM | DSM | DRM | AL0 | AL1 | CKS | OFF |    
+;      +---16+---16+----8+---16+----8+----8+----8+---16+---16+----8+----8+---16+---16+    
+;      |<--- PREFIX ---->|<------------------- STANDARD CP/M DPB ------------------->|
 ;
 ;==================================================================================================
 ; DPB MAPPING TABLE
@@ -1996,7 +2020,8 @@ DEV_INIT0:
 	RST	08			; D := DEVICE TYPE, E := PHYSICAL UNIT NUMBER
 	POP	HL			; RESTORE TARGET
 	LD	A,D			; DEVICE TYPE TO A
-	CP	CIODEV_VDU		; COMPARE TO  FIRST VIDEO DEVICE
+	; FIX: BELOW SHOULD TEST THE "TERMINAL" BIT INSTEAD OF CHECKING DEVICE NUMBER
+	CP	CIODEV_TERM		; COMPARE TO FIRST VIDEO DEVICE
 	POP	BC			; RESTORE LOOP CONTROL
 	LD	A,C			; UNIT INDEX TO ACCUM
 	;CALL	C,JPHL			; DO IT IF DEVICE TYPE < VDU
