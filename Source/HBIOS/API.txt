@@ -91,6 +91,9 @@ POKE: ($FA):
   E=Byte Value
   HL=Address
 
+RESET: ($FF):
+  B=Function					A=Result
+
 ================
 Serial Functions
 ================
