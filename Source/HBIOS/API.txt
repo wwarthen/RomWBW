@@ -2,39 +2,41 @@
 HBIOS Management Functions
 ==========================
 
-SETBNK ($F0):
+RESET: ($F0):
+  B=Function					A=Result
+
+VER ($F1):
+  B=Function                       		A=Result
+  C=Reserved (set to 0)				DE=Version (Maj/Min/Upd/Pat)
+						L=Platform Id
+SETBNK ($F2):
   B=Function                       		A=Result
   C=Bank Id					C=Previous Bank Id
 
-GETBNK ($F1):
+GETBNK ($F3):
   B=Function                       		A=Result
 						C=Bank Id
 
-SETCPY ($F2):
+SETCPY ($F4):
   B=Function                       		A=Result
   D=Destination Bank Id
   E=Source Bank Id
   HL=Count of Bytes to Copy
 
-BNKCPY ($F3):
+BNKCPY ($F5):
   B=Function                       		A=Result
   DE=Destination Address
   HL=Source Address
 
-ALLOC ($F4):
+ALLOC ($F6):
   B=Function                       		A=Result
   HL=Size					HL=Address of Allocated Memory Block
 
-FREE ($F5):
+FREE ($F7):
   B=Function                       		A=Result
   HL=Address of Memory Block to Free
 
-VER ($F6):
-  B=Function                       		A=Result
-  C=Reserved (set to 0)				DE=Version (Maj/Min/Upd/Pat)
-						L=Platform Id
-
-GET ($F7):
+GET ($F8):
   BC=Function/Subfunction                       A=Result
 
   Subfunctions:
@@ -72,7 +74,7 @@ GET ($F7):
                                                 D=BIOS Bank Id
                                                 E=User Bank Id
 
-SET ($F8):
+SET ($F9):
   BC=Function/Subfunction                       A=Result
 
     BOOTINFO ($E0):
@@ -80,19 +82,16 @@ SET ($F8):
                                                 L=Boot Bank Id
                                                 DE=Boot Volume (Disk Unit/Slice)
 
-PEEK: ($F9):
+PEEK: ($FA):
   B=Function                       		A=Result
   D=Bank					E=Byte Value
   HL=Address
 
-POKE: ($FA):
+POKE: ($FB):
   B=Function                       		A=Result
   D=Bank
   E=Byte Value
   HL=Address
-
-RESET: ($FF):
-  B=Function					A=Result
 
 ================
 Serial Functions
@@ -227,9 +226,9 @@ DEFMED ($19):
   Define media in unit.
 
 CAPACITY ($1A):
-  BC=Function/Unit                      DE:HL=Blocks on Device
+  BC=Function/Unit			A=Result
+					DE:HL=Blocks on Device
                                         BC=Block Size
-                                        A=Result
 
   Report current media capacity information.
   If media is unknown, return error (no media)
@@ -242,7 +241,6 @@ GEOMETRY ($1B):
                                         E=Sectors
                                         BC=Block Size
                                         
-
   Report current media geometry information.
   If media is unknown, return error (no media)
 

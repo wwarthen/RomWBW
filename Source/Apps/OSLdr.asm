@@ -89,8 +89,8 @@ osbin	.equ	osimg + hdrsiz	; Start of actual OS binary (after header)
 ;
 ; HBIOS internal info (adjust if HBIOS changes)
 ;
-bfgbnk	.equ	$F1		; HBIOS Get Bank function
-bfver	.equ	$F6		; HBIOS Get Version function
+bfgbnk	.equ	$F3		; HBIOS Get Bank function
+bfver	.equ	$F1		; HBIOS Get Version function
 sigptr	.equ	hbimg + 3	; HBIOS signature pointer
 hbmrk	.equ	hbimg + $100	; HBIOS marker
 hbver	.equ	hbimg + $102	; HBIOS version

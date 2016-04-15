@@ -322,7 +322,7 @@ devlist:
 	or	a		; set flags
 	jr	nz,devlstu	; do UNA mode dev list
 ;
-	ld	b,$F7		; hbios func: sysget
+	ld	b,$F8		; hbios func: sysget
 	ld	c,$10		; sysget subfunc: diocnt
 	rst	08		; call hbios, E := device count 
 	ld	b,e		; use device count for loop count
@@ -872,7 +872,7 @@ drvmap2:
 	ld	(device),a	; save as device id
 ;
 	; loop thru hbios units looking for device type/unit match
-	ld	b,$F7		; hbios func: sysget
+	ld	b,$F8		; hbios func: sysget
 	ld	c,$10		; sysget subfunc: diocnt
 	rst	08		; call hbios, E := device count 
 	ld	b,e		; use device count for loop count
@@ -1193,7 +1193,7 @@ chkdrv:
 ;
 chkdev:		; HBIOS variant
 	push	af		; save incoming unit
-	ld	b,$F7		; hbios func: sysget
+	ld	b,$F8		; hbios func: sysget
 	ld	c,$10		; sysget subfunc: diocnt
 	rst	08		; call hbios, E := device count
 	pop	af		; restore incoming unit
