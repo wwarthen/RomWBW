@@ -123,6 +123,29 @@ INIT ($04):
   DE=Line Characteristics
   L=Terminal Type?
 
+  Setup Parameter Word:
+   _______________________________  _______________________________
+  |       |   |     encoded       ||   |   |           |   |       |
+  |       |rts|    Baud Rate      ||dtr|xon|  parity   |stp| 8/7/6 |
+  |_______|___|___|_______________||___|___|___________|___|_______|
+   15  14  13  12  11  10   9   8    7   6   5   4   3   2   1   0
+            D register                       E register
+
+   _______________________________  _______________________________
+  |       |   |                   ||   |   |           |   |       |
+  | 0   0 |AFE|LP  OT2 OT1 RTS DTR||DLB|BRK|STK EPS PEN|STB|  WLS  |
+  |_______|___|___________________||___|___|___________|___|_______|
+   15  14  13  12  11  10   9   8    7   6   5   4   3   2   1   0
+              -- MCR --                        -- LCR --
+
+   _______________________________  _______________________________
+  |   | re| te|~rs| er|8/7  pe stp||   |   |   |   |   |           |
+  | 0 | 1 | 1 | 0 | 0 | m2  m1  m0|| 0 | 0 | ps|peo| dr|    SSS    |
+  |___|___|___|___|___|___________||___|___|___|___|___|___________|
+   15  14  13  12  11  10   9   8    7   6   5   4   3   2   1   0
+            CNTLA0                          CNTLB0
+
+
 QUERY ($05)
   BC=Function/Unit                      A=Result
                                         DE=Line Characteristics (Baud, Flow Control, etc.)
@@ -134,7 +157,7 @@ DEVICE ($06):
                                         E=Device Number
 					C=Device Attributes
 
-  Disk Device Attributes Byte:
+  Serial Device Attributes Byte:
     7: 0=RS-232, 1=Terminal
     
     If Terminal, 3-0 is attached Video Unit #
