@@ -332,7 +332,7 @@ devlist1:
 	ld	de,indent	; indent
 	call	prtstr		; ... to look nice
 	push	bc		; preserve loop control
-	ld	c,a		; device to A
+	ld	a,c		; device to A
 	call	prtdev		; print device mnemonic
 	ld	a,':'		; colon for device/unit format
 	call	prtchr		; print it
@@ -1071,9 +1071,11 @@ showone:
 	ld	a,(hl)		; load unit
 	cp	$FF		; empty?
 	ret	z		; yes, bypass
+	push	hl		; preserve HL
 	call	prtdev		; print device mnemonic
 	ld	a,':'		; colon for device/unit format
 	call	prtchr		; print it
+	pop	hl		; recover HL
 	inc	hl		; point to slice num
 	ld	a,(hl)		; load slice num
 	call	prtdecb		; print it
@@ -1699,7 +1701,7 @@ stack	.equ	$		; stack top
 ; Messages
 ;
 indent	.db	"   ",0
-msgban1	.db	"ASSIGN v1.0c for RomWBW CP/M 2.2, 7-Apr-2016",0
+msgban1	.db	"ASSIGN v1.0c for RomWBW CP/M 2.2, 21-Apr-2016",0
 msghb	.db	" (HBIOS Mode)",0
 msgub	.db	" (UBIOS Mode)",0
 msgban2	.db	"Copyright 2016, Wayne Warthen, GNU GPL v3",0
