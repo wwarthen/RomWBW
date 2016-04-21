@@ -693,37 +693,30 @@ MULT8X16_2:
 ;	RET
 ;===============================================================
 ;
-; COMPUTE HL / DE = BC W/ REMAINDER IN HL
+; COMPUTE HL / DE = BC W/ REMAINDER IN HL & ZF
 ;
 DIV16:
-	; HL -> AC
-	LD	A,H
-	LD	C,L
-
-	; SETUP
-	LD	HL,0
-	LD	B,16
-;
+	LD	A,H			; HL -> AC
+	LD	C,L			; ...
+	LD	HL,0			; INIT HL
+	LD	B,16			; INIT LOOP COUNT
 DIV16A:
-	; LOOP
-;	.DB	$CB,$31		; SLL	C
-	SLA	C
-	SET	0,C
-	RLA
-	ADC	HL,HL
-	SBC	HL,DE
-	JR	NC,DIV16B
-	ADD	HL,DE
-	DEC	C
-DIV16B:
-	DJNZ	DIV16A
-
-	; AC -> BC
-	LD	B,A
-
-	RET
+	SCF
+	RL	C
+	RLA	
+	ADC	HL,HL	
+	SBC	HL,DE	
+	JR	NC,DIV16B	
+	ADD	HL,DE	
+	DEC	C	
+DIV16B:	
+	DJNZ	DIV16A			; LOOP AS NEEDED
+	LD	B,A			; AC -> BC
+	LD	A,H			; SET ZF
+	OR	L			; ... BASED ON REMAINDER
+	RET				; DONE
 ;
-; INTEGER DIVIDES DE:HL BY C
+; INTEGER DIVIDE DE:HL BY C
 ; RESULT IN DE:HL, REMAINDER IN A
 ; CLOBBERS F, B
 ;

@@ -1773,7 +1773,7 @@ SIZ_TERM	.EQU	$ - ORG_TERM
 #INCLUDE "util.asm"
 #INCLUDE "time.asm"
 #INCLUDE "bcd.asm"
-#INCLUDE "encode.asm"
+#INCLUDE "decode.asm"
 #INCLUDE "xio.asm"
 ;
 #IF (DSKYENABLE)
@@ -2263,6 +2263,7 @@ PS_PRTSC:
 	INC	A			; SET Z IF DE == $FF
 	JP	Z,PS_PRTNUL		; $FF == NO CONFIG DEFINED
 ;
+PS_PRTSC0:
 	; PRINT BAUD RATE
 	PUSH	DE			; PRESERVE DE
 	LD	A,D

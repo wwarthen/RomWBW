@@ -163,6 +163,7 @@ STR_BOOT	.DB	"RomWBW$"
 ; IMBED DIRECT SERIAL I/O ROUTINES
 ;
 #INCLUDE "xio.asm"
+#INCLUDE "decode.asm"
 ;
 ;______________________________________________________________________________________________________________________
 ;
