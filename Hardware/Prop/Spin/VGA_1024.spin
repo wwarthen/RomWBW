@@ -129,12 +129,11 @@ PUB cls1(VerStr) | i
   clrbtm(TURQUOISE)
   
   inverse := 1
-  'statprint(36,0, string("                          N8VEM PropIO V2 | RomWBW                         v0.95"))
   statprint(36, 0, VerStr)
   inverse := 0
 
   repeat i from 37 to (rows - 1)    
-    statprint(37,0, string("                                                                                "))
+    statprint(i,0, string("                                                                                "))
 
  
 {{
