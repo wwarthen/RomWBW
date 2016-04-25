@@ -15,6 +15,7 @@
 ;_______________________________________________________________________________
 ;
 ; Change Log:
+;   2016-04-24 [WBW] Updated to preserve MBR partition table
 ;_______________________________________________________________________________
 ;
 ; ToDo:
@@ -31,7 +32,8 @@ stksiz	.equ	$40		; we are a stack pig
 restart	.equ	$0000		; CP/M restart vector
 bdos	.equ	$0005		; BDOS invocation vector
 ;
-buf	.equ	$900		; load point for system image (from original SYSGEN)
+imgbuf	.equ	$900		; load point for system image (from original SYSGEN)
+mbrbuf	.equ	imgbuf+$4000	; load point for MBR storage
 ;
 ;===============================================================================
 ; Code Section
@@ -142,16 +144,16 @@ confirm:
 	ld	de,sconf3
 	call	prtstr
 ;
-	; get input
+	; get input (imgbuf is used for temp storage)
 	ld	c,$0A		; get console buffer
-	ld	de,buf		; into buf
+	ld	de,imgbuf		; into buf
 	ld	a,1		; max of 1 character
 	ld	(de),a		; set up buffer
 	call	bdos		; invoke BDOS
-	ld	a,(buf+1)	; get num chars entered
+	ld	a,(imgbuf+1)	; get num chars entered
 	dec	a		; check that we got exactly one char
 	jr	nz,confirm	; bad input, re-prompt
-	ld	a,(buf+2)	; get the character
+	ld	a,(imgbuf+2)	; get the character
 	and	$DF		; force upper case
 	cp	'Y'		; compare to Y
 	ret			; return with Z set appropriately
@@ -190,7 +192,7 @@ rdfil:
 	ld	(rwfun),a	; save bdos function
 	ld	a,12		; start with 1536 byte header (12 records)
 	ld	(reccnt),a	; init record counter
-	ld	hl,buf		; start of buffer
+	ld	hl,imgbuf	; start of buffer
 	ld	(bufptr),hl	; init buffer pointer
 	call	rwfil		; read the header
 	ret	nz		; abort on error (no need to close file)
@@ -237,7 +239,7 @@ wrfil1:	; create target file
 	ld	(rwfun),a	; save bdos function
 	ld	a,(imgsiz)	; number of records to read
 	ld	(reccnt),a	; init record counter
-	ld	hl,buf		; start of buffer
+	ld	hl,imgbuf	; start of buffer
 	ld	(bufptr),hl	; init buffer pointer
 	call	rwfil		; do it
 	ret	nz		; abort on error
@@ -329,7 +331,36 @@ wrdsk:
 	; force return to go through disk reset
 	ld	hl,resdsk	; load address of reset disk routine
 	push	hl		; and put it on the stack
-	; set drive for subsequent writes
+	; setup to read existing MBR
+	ld	a,(destfcb)	; get the drive
+	dec	a		; adjust for zero indexing
+	call	setdsk		; setup disk
+	ret	nz		; abort on error
+	ld	hl,mbrbuf	; override to read
+	ld	(bufptr),hl	; ... into MBR buffer
+	ld	a,4		; 4 records = 1 512 byte sector
+	; set function to read
+	ld	hl,(cbftbl)	; get address of CBIOS function table
+	ld	a,$27		; $27 is CBIOS READ entry offset
+	call	addhl		; set HL to resultant entry point
+	ld	(actfnc),hl	; save it
+	; read the existing MBR into memory
+	call	rwdsk		; read the sector
+	ret	nz		; abort on error
+	; test for valid partition table ($55, $AA at offset $1FE)
+	ld	hl,(mbrbuf+$1FE); HL := signature
+	ld	a,$55		; load expected value of first byte
+	cp	l		; check for proper value
+	jr	nz,wrdsk1	; mismatch, ignore old partition table
+	ld	a,$AA		; load expected value of second byte
+	cp	h		; check for proper value
+	jr	nz,wrdsk1	; mismatch, ignore old partition table
+	; valid MBR, copy existing partition table over to new image
+	ld	hl,mbrbuf+$1BE	; copy from MBR offset of existing MBR
+	ld	de,imgbuf+$1BE	; copy to MBR offset of new image
+	ld	bc,$40		; size of MBR
+	ldir			; do it
+wrdsk1:	; setup to write the image from memory to disk
 	ld	a,(destfcb)	; get the drive
 	dec	a		; adjust for zero indexing
 	call	setdsk		; setup disk
@@ -396,7 +427,7 @@ setdsk:
 	ld	hl,0
 	ld	(acttrk),hl	; active track := 0
 	ld	(actsec),hl	; active sector := 0
-	ld	hl,buf
+	ld	hl,imgbuf	; assume r/w to image buffer
 	ld	(bufptr),hl	; reset buffer pointer
 ;
 	xor	a		; signal success
@@ -458,14 +489,14 @@ jphl:	jp	(hl)		; indirect jump
 ;
 chkhdr:
 	; check signature
-	ld	hl,(buf+$580)	; get signature
+	ld	hl,(imgbuf+$580)	; get signature
 	ld	de,$A55A	; signature value
 	or	a		; clear CF
 	sbc	hl,de		; compare
 	jp	nz,errsig	; invalid signature
 	; compute the image size (does not include size of header)
-	ld	hl,(buf+$5FC)	; get CPM_END
-	ld	de,(buf+$5FA)	; get CPM_LOC
+	ld	hl,(imgbuf+$5FC)	; get CPM_END
+	ld	de,(imgbuf+$5FA)	; get CPM_LOC
 	or	a		; clear CF
 	sbc	hl,de		; image size := CPM_END - CPM_LOC
 	xor	a		; signal success

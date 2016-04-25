@@ -108,11 +108,15 @@ One of the following optional command line arguments may be specified at the
 end of the command line to force FLASH4 to use a particular method to access
 the flash ROM chip:
 
+BIOS interfaces:
   /ROMWBW         For ROMWBW BIOS version 2.6 and later
   /ROMWBWOLD      For ROMWBW BIOS version 2.5 and earlier
   /UNABIOS        For UNA BIOS
+
+Direct hardware interfaces:
   /Z180DMA        For Z180 DMA
   /P112           For DX-Designs P112
+  /N8VEMSBC       For N8VEM SBC (v1, v2), Zeta (v1) SBC
 
 If no option is specified FLASH4 attempts to determine the best available
 method automatically.
