@@ -102,8 +102,8 @@ Asm 'romldr'
 if ($Platform -ne "UNA")
 {
 	Asm 'hbios' '-dROMBOOT' -Output 'hbios_rom.bin' -List 'hbios_rom.lst'
-	Asm 'hbios' '-dAPPBOOT' -Output 'hbios_app.bin' -List 'hbios_rom.lst'
-	Asm 'hbios' '-dIMGBOOT' -Output 'hbios_img.bin' -List 'hbios_rom.lst'
+	Asm 'hbios' '-dAPPBOOT' -Output 'hbios_app.bin' -List 'hbios_app.lst'
+	Asm 'hbios' '-dIMGBOOT' -Output 'hbios_img.bin' -List 'hbios_img.lst'
 }
 
 # Generate result files using components above
