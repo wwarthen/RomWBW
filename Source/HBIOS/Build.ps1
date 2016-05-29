@@ -58,9 +58,9 @@ if ($Platform -eq "UNA") {$CBiosFile = '../CBIOS/cbios_una.bin'} else {$CBiosFil
 # $TimeStamp = '"' + (Get-Date -Format 'dd-MMM-yyyy') + '"'
 $TimeStamp = '"' + (Get-Date -Format 'yyyy-MM-dd') + '"'
 
-Function Asm($Component, $Opt, $Architecture=$CPUType, $Output="${Component}.bin")
+Function Asm($Component, $Opt, $Architecture=$CPUType, $Output="${Component}.bin", $List="${Component}.lst")
 {
-  $Cmd = "tasm -t${Architecture} -g3 ${Opt} ${Component}.asm ${Output}"
+  $Cmd = "tasm -t${Architecture} -g3 ${Opt} ${Component}.asm ${Output} ${List}"
   $Cmd | write-host
   Invoke-Expression $Cmd | write-host
   if ($LASTEXITCODE -gt 0) {throw "TASM returned exit code $LASTEXITCODE"}
@@ -101,11 +101,9 @@ Asm 'prefix'
 Asm 'romldr'
 if ($Platform -ne "UNA")
 {
-	Asm 'hbios'
-	Asm 'hbfill'
-	Asm 'setup'
-	Asm 'comldr'
-	Asm 'imgldr'
+	Asm 'hbios' '-dROMBOOT' -Output 'hbios_rom.bin' -List 'hbios_rom.lst'
+	Asm 'hbios' '-dAPPBOOT' -Output 'hbios_app.bin' -List 'hbios_rom.lst'
+	Asm 'hbios' '-dIMGBOOT' -Output 'hbios_img.bin' -List 'hbios_rom.lst'
 }
 
 # Generate result files using components above
@@ -139,9 +137,9 @@ if ($Platform -eq "UNA")
 }
 else 
 {
-	Concat 'setup.bin','hbios.bin','hbfill.bin','osimg.bin','osimg.bin',$RomDiskFile $RomFile
-	Concat 'comldr.bin','hbios.bin','osimg.bin' $ComFile
-	Concat 'imgldr.bin','hbios.bin','osimg.bin' $ImgFile
+	Concat 'hbios_rom.bin','osimg.bin','osimg.bin','osimg.bin',$RomDiskFile $RomFile
+	Concat 'hbios_app.bin','osimg.bin' $ComFile
+	Concat 'hbios_img.bin','osimg.bin' $ImgFile
 }
 
 # Cleanup

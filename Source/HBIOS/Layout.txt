@@ -3,20 +3,18 @@ Final Output Files
 ------------------
 
 ROM Output File [512K] -> <config>.rom
-  setup [32K]			romboot?
-  hbios+hbfill [32K]
+  hbios_rom [32K]
   OSIMG [32K]
+  OSIMG [32K] (used as filler)
   OSIMG [32K] (used as filler)
   romdisk - [384K]
 
 COM Output File -> <config>.com
-  comldr [varies]		appboot?
-  hbios [varies]
+  hbios_com [varies]
   OSIMG [32K]
 
 IMG Output File -> <config>.img
-  imgldr [varies]		imgboot?
-  hbios [varies]
+  hbios_img [varies]
   OSIMG [32K]
 
 -------------------------
@@ -43,43 +41,7 @@ ZSYS [12K] -> zsys.bin
 Compilation Units
 -----------------
 
-setup.asm -> setup.bin:		romboot?
-  std.asm
-    ver.inc
-    hbios.inc
-    build.inc
-      <config>.asm
-    plt_<platform>.inc
-  hbios.exp
-  loader			boot?
-    xio
-    memmgr
-
-comldr.asm -> comldr.bin:	appboot?
-  std.asm
-    ver.inc
-    hbios.inc
-    build.inc
-      <config>.asm
-    plt_<platform>.inc
-  hbios.exp
-  loader			boot?
-    xio
-    memmgr
-
-imgldr.asm -> imgldr.bin:	imgboot?
-  std.asm
-    ver.inc
-    hbios.inc
-    build.inc
-      <config>.asm
-    plt_<platform>.inc
-  hbios.exp
-  loader			boot?
-    xio
-    memmgr
-
-hbios.bin:
+hbios.asm -> hbios_rom.bin, hbios_app.bin, hbios_img.bin
   std.asm
     ver.inc
     hbios.inc
@@ -112,3 +74,30 @@ dbgmon.asm -> dbgmon.bin:
   util.asm
   memmgr.asm
   dsky.asm
+  
+=======================================================================
+HBIOS Loading Modes:
+  ROMBOOT: Startup from ROM Bank BID_BOOT
+  APPBOOT: Startup as CP/M application
+  IMGBOOT: Startup from RAM Bank BID_USR
+=======================================================================
+
+ - If not (APPBOOT), include page 0
+
+ - Base Hardware Init
+   - Iff (ROMBOOT), init BBR
+
+ - Install Proxy
+   - Set CURBNK:
+     - If ROMBOOT, then BID_BOOT, else BID_USR
+
+ - Install HBIOS
+   - Copy from CURBNK:0 --> BID_BIOS:0 ($8000 bytes)
+
+ - Transition to HBIOS in BID_BIOS
+
+ - Copy OS Image to USR Bank
+   - If (ROM_MODE), copy BID_OS:0 --> BID_USR:0
+   - Else, copy BID_USR:<os image start> --> BID_USR:0
+
+ - Chain to BID_USR:0

@@ -39,8 +39,6 @@ BS:		 .EQU	08H		; ASCII BACKSPACE CHARACTER
 ;
 #INCLUDE "util.asm"
 ;
-#INCLUDE "memmgr.asm"
-;
 #IF DSKYENABLE
 ;
 #INCLUDE "dsky.asm"
@@ -613,28 +611,16 @@ SERIALCMDLOOP:
 ;_____________________________________________________________________________
 ;
 BOOT:
-	; ENSURE DEFAULT MEMORY PAGE CONFIGURATION
-;#IF (PLATFORM == PLT_N8)
-;	LD	A,DEFACR
-;	OUT0	(ACR),A
-;	XOR	A
-;	OUT0	(RMAP),A
-;#ELSE
-;	XOR	A
-;	OUT	(MPCL_ROM),A
-;	OUT	(MPCL_RAM),A
-;#ENDIF
 #IF (PLATFORM == PLT_UNA)
 	LD	BC,$01FB		; UNA FUNC = SET BANK
 	LD	DE,$0000		; ROM BANK 0
 	CALL	$FFFD			; DO IT (RST 08 NOT SAFE HERE)
+	JP	0000H			; JUMP TO RESTART ADDRESS
 #ELSE
-	LD	A,BID_BOOT
-	CALL	BNKSEL
+	LD	A,BID_BOOT		; BOOT BANK
+	LD	HL,0			; ADDRESS ZERO
+	CALL	HB_BNKCALL		; DOES NOT RETURN
 #ENDIF
-	; JUMP TO RESTART ADDRESS
-	JP	0000H
-
 
 ;__KLOP_______________________________________________________________________
 ;
