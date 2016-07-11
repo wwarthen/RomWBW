@@ -3,6 +3,7 @@
 setlocal
 
 pushd Source && call Clean && popd
+pushd Doc && call Clean && popd
 pushd Images && call Clean && popd
 pushd Hardware && call Clean && popd
 
