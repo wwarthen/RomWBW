@@ -1,9 +1,9 @@
 @echo off
 setlocal
 
-pushd Apps && call Build && popd
-pushd CPM22 && call Build && popd
-pushd ZCPR && call Build && popd
-pushd ZCPR-DJ && call Build && popd
-pushd ZSDOS && call Build && popd
-pushd CBIOS && call Build && popd
+setlocal & pushd Apps && call Build & endlocal
+setlocal & pushd CPM22 && call Build & endlocal
+setlocal & pushd ZCPR && call Build & endlocal
+setlocal & pushd ZCPR-DJ && call Build & endlocal
+setlocal & pushd ZSDOS && call Build & endlocal
+setlocal & pushd CBIOS && call Build & endlocal

@@ -1,0 +1,807 @@
+.bp 1
+.op
+.cs 5
+.mt 5
+.mb 6
+.pl 66
+.ll 65
+.po 10
+.hm 2
+.fm 2
+.he
+.ft                                6-%
+.pc 1
+.tc 6  CP/M 2 Alteration
+.ce
+.sh
+Section 6
+.qs
+.sp
+.ce
+.sh
+CP/M 2 Alteration
+.qs
+.sp 3
+.tc    6.1  Introduction
+.he CP/M Operating System Manual                    6.1  Introduction
+.sh
+6.1  Introduction
+.qs
+.pp
+The standard CP/M system assumes operation on an Intel Model 
+800 microcomputer development system , but is designed so you can alter a
+specific set of subroutines that define the hardware operating 
+environment.
+.pp
+Although standard CP/M 2 is configured for single-density floppy 
+disks, field-alteration features allow adaptation to a wide 
+variety of disk subsystems from single-drive minidisks to 
+high-capacity, hard disk systems.  To simplify the following 
+adaptation process, it is assumed that CP/M 2 is first 
+configured for single-density floppy disks where minimal editing 
+and debugging tools are available.  If an earlier version of CP/M 
+is available, the customizing process is eased considerably.  In 
+this latter case, you might want to review the system 
+generation process and skip to later sections that discuss system 
+alteration for nonstandard disk systems.
+.pp
+To achieve device independence, CP/M is separated into three 
+distinct modules:
+.sp
+.in 5
+.ti -2
+o BIOS is the Basic I/O System, which is environment dependent.
+.sp
+.ti -2
+o BDOS is the Basic Disk Operating System, which is not dependent upon the
+hardware configuration.
+.sp
+.ti -2
+o CCP is the Console Command Processor, which uses the BDOS.
+.fi
+.in 0
+.pp
+Of these modules, only the BIOS is dependent upon the particular 
+hardware.  You can patch the distribution version 
+of CP/M to provide a new BIOS that provides a customized 
+interface between the remaining CP/M modules and the 
+hardware system.  This document provides a step-by-step 
+procedure for patching a new BIOS into CP/M.
+.mb 4
+.fm 1
+.pp
+All disk-dependent portions of CP/M 2 are placed into a BIOS, a 
+resident disk parameter block, which is either hand coded or 
+produced automatically using the disk definition macro library 
+provided with CP/M 2.  The end user need only specify the maximum 
+number of active disks, the starting and ending sector numbers, 
+the data allocation size, the maximum extent of the logical disk, 
+directory size information, and reserved track values.
+The macros use this information to generate 
+the appropriate tables and table references for use during CP/M 2 
+operation.  Deblocking information is provided, which aids in 
+assembly or disassembly of sector sizes that are multiples of the 
+fundamental 128-byte data unit, and the system alteration manual 
+includes general purpose subroutines that use the deblocking 
+information to take advantage of larger sector sizes.  Use of 
+these subroutines, together with the table-drive data access 
+algorithms, makes CP/M 2 a universal data management system.
+.pp
+File expansion is achieved by providing up to 512 logical file 
+extents, where each logical extent contains 16K bytes of data.  
+CP/M 2 is structured, however, so that as much as 128K bytes of 
+data are addressed by a single physical extent, corresponding to a 
+single directory entry, maintaining compatibility with previous 
+versions while taking advantage of directory space.
+.pp
+If CP/M is being tailored to a computer system for the first 
+time, the new BIOS requires some simple software development and 
+testing.  The standard BIOS is listed in Appendix A and can be 
+used as a model for the customized package.  A skeletal version 
+of the BIOS given in Appendix B can serve as the basis for a 
+modified BIOS.
+.mb 6
+.fm 2
+.pp
+In addition to the BIOS, you must write a simple memory 
+loader, called GETSYS, which brings the operating system into 
+memory.  To patch the new BIOS into CP/M, you must write the 
+reverse of GETSYS, called PUTSYS, which places an altered version 
+of CP/M back onto the disk.  PUTSYS can be derived from GETSYS by 
+changing the disk read commands into disk write commands.  Sample 
+skeletal GETSYS and PUTSYS programs are described in Section 6.4 
+and listed in Appendix C.
+.pp
+To make the CP/M system load automatically, you must also 
+supply a cold start loader, similar to the one provided with 
+CP/M, listed in Appendixes A and D.  A skeletal form of a cold 
+start loader is given in Appendix E, which serves as a model for 
+the loader.
+.mb 4
+.fm 1
+.sp 2
+.tc    6.2  First-level System Regeneration
+.he CP/M Operating System Manual        6.2  First-level Regeneration
+.sh
+6.2  First-level System Regeneration
+.qs
+.pp
+The procedure to patch the CP/M system is given below.  Address 
+references in each step are shown with H denoting the 
+hexadecimal radix, and are given for a 20K CP/M system.  For 
+larger CP/M systems, a bias is added to each address that is 
+shown with a +b following it, where b is equal to the memory 
+size-20K.  Values for b in various standard memory sizes are listed in
+Table 6-1.
+.sp 2
+.sh
+             Table 6-1.  Standard Memory Size Values
+
+.nf
+          Memory Size                Value
+.fi
+.sp
+.in 13
+24K:         b = 24K - 20K =  4K = 1000H
+.sp
+32K:         b = 32K - 20K = 12K = 3000H
+.sp
+40K:         b = 40K - 20K = 20K = 5000H
+.sp
+48K:         b = 48K - 20K = 28K = 7000H
+.sp
+56K:         b = 56K - 20K = 36K = 9000H
+.sp
+62K:         b = 62K - 20K = 42K = A800H
+.sp
+64K:         b = 64K - 20K = 44K = B000H
+.fi
+.in 0
+.pp
+Note that the standard distribution version of CP/M is set for
+operation within a 20K CP/M system. Therefore, you must first bring up
+the 20K CP/M system, then configure it for actual 
+memory size (see Section 6.3).
+.pp
+Follow these steps to patch your CP/M system:
+.sp 2
+.in 8
+.ti -3
+1) Read Section 6.4 and write a GETSYS program that reads the 
+first two tracks of a disk into memory.  The program from the 
+disk must be loaded starting at location 3380H.  GETSYS is coded 
+to start at location 100H (base of the TPA) as shown in Appendix 
+C.
+.mb 6
+.fm 2
+.sp
+.ti -3
+2) Test the GETSYS program by reading a blank disk into memory, 
+and check to see that the data has been read properly and that 
+the disk has not been altered in any way by the GETSYS program.
+.sp
+.ti -3
+3) Run the GETSYS program using an initialized CP/M disk to see 
+if GETSYS loads CP/M starting at 3380H (the operating system 
+actually starts 128 bytes later at 3400H).
+.sp
+.ti -3
+4) Read Section 6.4 and write the PUTSYS program.  This writes 
+memory starting at 3380H back onto the first two tracks of the 
+disk.  The PUTSYS program should be located at 200H, as shown in 
+Appendix C.
+.sp
+.ti -3
+5) Test the PUTSYS program using a blank, uninitialized disk by 
+writing a portion of memory to the first two tracks; clear memory 
+and read it back using GETSYS.  Test PUTSYS completely, because 
+this program will be used to alter CP/M on disk.
+.sp
+.ti -3
+6) Study Sections 6.5, 6.6, and 6.7 along with the distribution 
+version of the BIOS given in Appendix A and write a simple 
+version that performs a similar function for the customized 
+environment.  Use the program given in Appendix B as a model.  
+Call this new BIOS by name CBIOS (customized BIOS).  Implement 
+only the primitive disk operations on a single drive and simple 
+console input/output functions in this phase.
+.sp
+.ti -3
+7) Test CBIOS completely to ensure that it properly performs 
+console character I/O and disk reads and writes.  Be careful to 
+ensure that no disk write operations occur during read operations 
+and check that the proper track and sectors are addressed on all 
+reads and writes.  Failure to make these checks might cause 
+destruction of the initialized CP/M system after it is patched.
+.mb 4
+.fm 1
+.sp
+.ti -3
+8) Referring to Table 6-3 in Section 6.5, note that the BIOS is 
+placed between locations 4A00H and 4FFFH.  Read the CP/M system 
+using GETSYS and replace the BIOS segment by the CBIOS developed 
+in step 6 and tested in step 7.  This replacement is done in 
+memory.
+.sp
+.ti -3
+9) Use PUTSYS to place the patched memory image of CP/M onto the 
+first two tracks of a blank disk for testing.
+.sp
+.ti -4
+10) Use GETSYS to bring the copied memory image from the test 
+disk back into memory at 3380H and check to ensure that it has 
+loaded back properly (clear memory, if possible, before the 
+load).  Upon successful load, branch to the cold start code at 
+location 4A00H.  The cold start routine initializes page 
+zero, then jumps to the CCP at location 3400H, which calls the 
+BDOS, which calls the CBIOS.  The CCP asks the CBIOS to read 
+sixteen sectors on track 2, and CP/M types A>, the system 
+prompt.
+.mb 6
+.fm 2
+.sp
+If difficulties are encountered, use whatever debug facilities 
+are available to trace and breakpoint the CBIOS.
+.sp
+.ti -4
+11) Upon completion of step 10, CP/M has prompted the console for 
+a command input.  To test the disk write operation, type
+.sp
+SAVE 1 X.COM
+.sp
+All commands must be followed by a carriage return.  CP/M 
+responds with another prompt after several disk accesses:
+.sp
+A>
+.sp
+If it does not, debug the disk write functions and retry.
+.sp
+.ti -4
+12) Test the directory command by typing
+.sp
+DIR
+.sp
+CP/M responds with
+.sp
+A:X     COM
+.sp
+.ti -4
+13) Test the erase command by typing
+.sp
+ERA X.COM
+.sp
+CP/M responds with the A prompt.  This is now an operational 
+system that only requires a bootstrap loader to function 
+completely.
+.sp
+.ti -4
+14) Write a bootstrap loader that is similar to GETSYS and place 
+it on track 0, sector 1, using PUTSYS (again using the test disk, 
+not the distribution disk).  See Sections 6.5 and 6.8 for more 
+information on the bootstrap operation.
+.sp
+.ti -4
+15) Retest the new test disk with the bootstrap loader installed 
+by executing steps 11, 12, and 13.  Upon completion of these 
+tests, type a CTRL-C.  The system executes a warm start, which 
+reboots the system, and types the A prompt.
+.sp
+.ti -4
+16) At this point, there is probably a good version of the 
+customized CP/M system on the test disk.  Use GETSYS to load CP/M 
+from the test disk.  Remove the test disk, place the distribution 
+disk, or a legal copy, into the drive, and use PUTSYS to 
+replace the distribution version with the customized version.  
+Do not make this replacement if you are unsure of the patch 
+because this step destroys the system that was obtained from 
+Digital Research.
+.sp
+.ti -4
+17) Load the modified CP/M system and test it by typing
+.sp
+DIR
+.sp
+CP/M responds with a list of files that are provided on the 
+initialized disk.  The file DDT.COM is the memory image for the 
+debugger.  Note that from now on, you must always reboot the 
+CP/M system (CTRL-C is sufficient) when the disk is removed and 
+replaced by another disk, unless the new disk is to be Read-Only.
+.sp
+.ti -4
+18) Load and test the debugger by typing
+.sp
+DDT
+.sp
+See Chapter 4 for operating procedures.
+.sp
+.ti -4
+19) Before making further CBIOS modifications, practice using the 
+editor (see Chapter 2), and assembler (see Chapter 3).  Recode 
+and test the GETSYS, PUTSYS, and CBIOS programs using ED, ASM, 
+and DDT.  Code and test a COPY program that does a sector-to-sector
+copy from one disk to another to obtain back-up copies of 
+the original disk.  Read the CP/M Licensing Agreement specifying 
+legal responsibilities when copying the CP/M system.  Place the 
+following copyright notice:
+.sp
+.nf
+Copyright (c), 1983
+ Digital Research
+.fi
+.sp
+on each copy that is made with the COPY program.
+.sp
+.ti -4
+20) Modify the CBIOS to include the extra functions for punches, 
+readers, and sign-on messages, and add the facilities for 
+additional disk drives, if desired.  These changes can be made 
+with the GETSYS and PUTSYS programs or by referring to the 
+regeneration process in Section 6.3.
+.fi
+.in 0
+.sp
+.pp
+You should now have a good copy of the customized CP/M 
+system.  Although the CBIOS portion of CP/M belongs to the user, 
+the modified version cannot be legally copied.
+.pp
+It should be noted that the system remains file-compatible with 
+all other CP/M systems (assuming media compatibility) which 
+allows transfer of nonproprietary software between CP/M users.
+.tc    6.3  Second-level System Generation
+.bp
+.he CP/M Operating System Manual  6.3  Second-level System Generation
+.sh
+6.3  Second-level System Generation
+.qs
+.pp
+Once the system is running, the next step is to configure CP/M 
+for the desired memory size.  Usually, a memory image is first 
+produced with the MOVCPM program (system relocator) and then 
+placed into a named disk file.  The disk file can then be loaded, 
+examined, patched, and replaced using the debugger and the 
+system generation program (refer to Chapter 1).
+.pp
+The CBIOS and BOOT are modified using ED and assembled using ASM, 
+producing files called CBIOS.HEX and BOOT.HEX, which contain the 
+code for CBIOS and BOOT in Intel hex format.
+.pp
+To get the memory image of CP/M into the TPA configured for the 
+desired memory size, type the command:
+.sp
+.ti 8
+MOVCPM xx*
+.sp
+where xx is the memory size in decimal K bytes, for example, 32 
+for 32K.  The response is as follows:
+.sp
+.nf
+.in 8
+CONSTRUCTING xxK CP/M VERS 2.0
+.sp
+READY FOR "SYSGEN" OR
+.sp
+"SAVE 34 CPMxx.COM"
+.fi
+.in 0
+.pp
+An image of CP/M in the TPA is configured for the requested 
+memory size.  The memory image is at location 0900H through 
+227FH, that is, the BOOT is at 0900H, the CCP is at 980H, the 
+BDOS starts at 1180H, and the BIOS is at 1F80H.  Note that the 
+memory image has the standard Model 800 BIOS and BOOT on it.  It is now 
+necessary to save the memory image in a file so that you can 
+patch the CBIOS and CBOOT into it:
+.sp
+.ti 8
+SAVE 34 CPMxx.COM
+.pp
+The memory image created by the MOVCPM program is offset by a 
+negative bias so that it loads into the free area of the TPA, and 
+thus does not interfere with the operation of CP/M in higher 
+memory.  This memory image can be subsequently loaded under DDT 
+and examined or changed in preparation for a new generation of 
+the system.  DDT is loaded with the memory image by typing:
+.sp
+.ti 8
+DDT CPMxx.COM       Loads DDT, then reads the CP/M image.
+.sp
+DDT should respond with the following:
+.sp
+.nf
+.in 8
+NEXT PC
+2300 0100
+-                                          The DDT prompt
+.fi
+.in 0
+.sp
+You can then give the display and disassembly commands to examine
+portions of the memory image between 900H and 227FH.
+Note, however, that to find any particular address 
+within the memory image, you must apply the negative bias to the 
+CP/M address to find the actual address.  Track 00, sector 01, is 
+loaded to location 900H (the user should find the cold start 
+loader at 900H to 97FH); track 00, sector 02, is loaded into 980H 
+(this is the base of the CCP); and so on through the entire CP/M 
+system load.  In a 20K system, for example, the CCP resides at 
+the CP/M address 3400H, but is placed into memory at 980H by the 
+SYSGEN program.  Thus, the negative bias, denoted by n, satisfies
+.sp
+.ti 8
+3400H + n = 980H, or n =980H - 3400H
+.sp
+Assuming two's complement arithmetic, n = D580H, which can be 
+checked by
+.sp
+.ti 8
+.nf
+3400H + D580H = 10980H = 0980H (ignoring high-order
+                                       overflow).
+.fi
+.pp
+Note that for larger systems, n satisfies
+.sp
+.nf
+.in 8
+(3400H+b) + n = 980H, or
+n = 980H - (3400H + b), or
+n = D580H - b
+.fi
+.in 0
+.sp
+The value of n for common CP/M systems is given below.
+.sp 2
+.sh
+           Table 6-2.  Common Values for CP/M Systems
+.sp
+.nf
+         Memory Size      BIAS b      Negative Offset n
+.sp
+.in 13
+20K          0000H     D580H - 0000H = D580H
+24K          1000H     D580H - 1000H = C580H
+32K          3000H     D580H - 3000H = A580H
+40K          5000H     D580H - 5000H = 8580H
+48K          7000H     D580H - 7000H = 6580H
+56K          9000H     D580H - 9000H = 4580H
+62K          A800H     D580H - A800H = 2D80H
+64K          B000H     D580H - B000H = 2580H
+.fi
+.in 0
+.sp
+.pp
+If you want to locate the address x within the memory image 
+loaded under DDT in a 20K system, first type
+.sp
+.ti 8
+Hx,n            Hexadecimal sum and difference
+.sp
+and DDT responds with the value of x+n (sum) and x-n 
+(difference).  The first number printed by DDT is the actual memory 
+address in the image where the data or code is located.  For example,
+the following DDT command:
+.sp
+.ti 8
+H3400,D580
+.sp
+produces 980H as the sum, which is where the CCP 
+is located in the memory image under DDT.
+.pp
+Type the L command to disassemble portions of the 
+BIOS located at (4A00H+b)-n, which, when one uses the H command, 
+produces an actual address of 1F80H.  The disassembly command 
+would thus be as follows:
+.sp
+.ti 8
+L1F80
+.sp
+It is now necessary to patch in the CBOOT and CBIOS routines.  The BOOT
+resides at location 0900H in the memory image.  If the actual 
+load address is n, then to calculate the bias (m), 
+type the command:
+.sp
+.ti 8
+H900,n          Subtract load address from target address.
+.pp
+The second number typed by DDT in response to the command is the 
+desired bias (m).  For example, if the BOOT executes at 0080H, 
+the command
+.sp
+.ti 8
+H900,80
+.sp
+produces
+.sp
+.ti 8
+0980 0880       Sum and difference in hex.
+.sp
+Therefore, the bias m would be 0880H.  To read-in the BOOT, give the command:
+.sp
+.ti 8
+ICBOOT.HEX      Input file CBOOT.HEX
+.sp
+Then
+.sp
+.ti 8
+Rm              Read CBOOT with a bias of m (=900H-n).
+.sp
+Examine the CBOOT with
+.sp
+.ti 8
+L900
+.sp
+You are now ready to replace the CBIOS by examining the area at 
+1F80H, where the original version of the CBIOS resides, and then 
+typing
+.sp
+.ti 8
+ICBIOS.HEX      Ready the hex file for loading.
+.pp
+Assume that the CBIOS is being integrated into a 20K 
+CP/M system and thus originates at location 4A00H.  To locate the 
+CBIOS properly in the memory image under DDT, you must apply the 
+negative bias n for a 20K system when loading the hex file.  This 
+is accomplished by typing
+.sp
+.ti 8
+RD580           Read the file with bias D580H.
+.sp
+Upon completion of the read, reexamine the area 
+where the CBIOS has been loaded (use an L1F80 command) to ensure 
+that it is properly loaded.  When you are satisfied that the change has 
+been made, return from DDT using a CTRL-C or, G0 command.
+.pp
+SYSGEN is used to replace the patched memory image back onto a 
+disk (you use a test disk until sure of the 
+patch) as shown in the following interaction:
+.sp 2
+.nf
+.in 8
+SYSGEN                    Start the SYSGEN program.
+.sp
+SYSGEN VERSION 2.0        Sign-on message from SYSGEN.
+.sp
+SOURCE DRIVE NAME         Respond with a carriage return
+(OR RETURN TO SKIP)       to skip the CP/M read operation
+                          because the system is already
+                          in memory.
+.sp
+DESTINATION DRIVE NAME    Respond with B to write the new
+(OR RETURN TO REBOOT)     system to the disk in drive B.
+
+.sp
+DESTINATION ON B,         Place a scratch disk in drive
+THEN TYPE RETURN          B, then press RETURN.
+.sp
+FUNCTION COMPLETE
+DESTINATION DRIVE NAME
+(OR RETURN TO REBOOT)
+.fi
+.in 0
+.sp
+.pp
+Place the scratch disk in drive A, then 
+perform a cold start to bring up the newly-configured CP/M 
+system.
+.pp
+The new CP/M system is then tested and the Digital Research 
+copyright notice is placed on the disk, as specified in the 
+Licensing Agreement:
+.sp
+.nf
+.in 8
+Copyright (c), 1979
+ Digital Research
+.fi
+.in 0
+.sp 2
+.tc    6.4  Sample GETSYS and PUTSYS Programs
+.he CP/M Operating System Manual        6.4  Sample GETSYS and PUTSYS
+.sh
+6.4  Sample GETSYS and PUTSYS Programs
+.qs
+.pp
+The following program provides a framework for the GETSYS and 
+PUTSYS programs referenced in Sections 6.1 and 6.2.  To read and
+write the specific sectors, you must insert the READSEC and WRITESEC
+subroutines.
+.bp
+.nf
+;  GETSYS PROGRAM -- READ TRACKS 0 AND 1 TO MEMORY AT 3380H
+;  REGISTER                    USE
+.sp
+;         A               (SCRATCH REGISTER)
+.sp
+;         B               TRACK COUNT (0, 1)
+.sp
+;         C               SECTOR COUNT (1,2,...,26)
+.sp
+;         DE              (SCRATCH REGISTER PAIR)
+.sp
+;         HL              LOAD ADDRESS
+.sp
+;         SP              SET TO STACK ADDRESS
+.sp
+;
+START:    LXI  SP,3380H   ;SET STACK POINTER TO SCRATCH
+                          ;AREA
+          LXI  H,3380H    ;SET BASE LOAD ADDRESS
+          MVI  B,0        ;START WITH TRACK 0
+RDTRK:                    ;READ NEXT TRACK (INITIALLY 0)
+          MVI  C,1        ;READ STARTING WITH SECTOR 1
+.sp
+RDSEC:                    ;READ NEXT SECTOR
+          CALL READSEC    ;USER-SUPPLIED SUBROUTINE
+          LXI  D,128      ;MOVE LOAD ADDRESS TO NEXT 1/2
+                          ;PAGE
+          DAD  D          ;HL = HL + 128
+          INR  C          ;SECTOR = SECTOR + 1
+          MOV  A,C        ;CHECK FOR END OF TRACK
+          CPI  27
+          JC   RDSEC      ;CARRY GENERATED IF SECTOR <27
+.sp
+;
+;  ARRIVE HERE AT END OF TRACK, MOVE TO NEXT TRACK
+          INR  B
+          MOV  A,B        ;TEST FOR LAST TRACK
+          CPI  2
+          JC   RDTRK      ;CARRY GENERATED IF TRACK <2
+.sp
+;
+;  USER-SUPPLIED SUBROUTINE TO READ THE DISK
+READSEC:
+;  ENTER WITH TRACK NUMBER IN REGISTER B,
+          SECTOR NUMBER IN REGISTER C, AND
+.sp
+;         ADDRESS TO FILL IN HL
+.sp
+;
+          PUSH B          ;SAVE B AND C REGISTERS
+          PUSH H          ;SAVE HL REGISTERS
+.sp 2
+.sh
+                  Listing 6-1.  GETSYS Program
+.bp
+          .................................................
+          perform disk read at this point, branch to
+          label START if an error occurs
+          .................................................
+          POP H           ;RECOVER HL
+          POP B           ;RECOVER B AND C REGISTERS
+          RET             ;BACK TO MAIN PROGRAM
+.sp
+          END START
+.fi
+.in 0
+.sp 2
+.sh
+                    Listing 6-1.  (continued)
+.sp 2
+.pp
+This program is assembled and listed in Appendix B for reference 
+purposes, with an assumed origin of 100H.  The hexadecimal 
+operation codes that are listed on the left might be useful if the 
+program has to be entered through the panel switches.
+.pp
+The PUTSYS program can be constructed from GETSYS by changing 
+only a few operations in the GETSYS program given above, as shown 
+in Appendix C.  The register pair HL becomes the dump address, 
+next address to write, and operations on these registers do not 
+change within the program.  The READSEC subroutine is replaced by 
+a WRITESEC subroutine, which performs the opposite function; data
+from address HL is written to the track given by register B 
+and sector given by register C.  It is often useful to combine 
+GETSYS and PUTSYS into a single program during the test and 
+development phase, as shown in Appendix C.
+.sp 2
+.tc    6.5  Disk Organization
+.he CP/M Operating System Manual               6.5  Disk Organization
+.sh
+6.5  Disk Organization
+.qs
+.pp
+The sector allocation for the standard distribution version of 
+CP/M is given here for reference purposes.  The first sector contains
+an optional software boot section (see the table on the following 
+page.   Disk controllers are often set up to bring track 0, 
+sector 1, into memory at a specific location, often location 
+0000H.  The program in this sector, called BOOT, has the 
+responsibility of bringing the remaining sectors into memory 
+starting at location 3400H+b.  If the controller does not 
+have a built-in sector load, the program in track 0, sector 1 can 
+be ignored.  In this case, load the program from track 0, sector 
+2, to location 3400H+b.
+.pp
+As an example, the Intel Model 800 
+hardware cold start loader brings track 0, sector 1, into 
+absolute address 3000H.  Upon loading this sector, control 
+transfers to location 3000H, where the bootstrap operation 
+commences by loading the remainder of track 0 and all of track 1 
+into memory, starting at 3400H+b.  Note that this bootstrap 
+loader is of little use in a non-microcomputer development system 
+environment, although it is useful to examine it because some of 
+the boot actions will have to be duplicated in the user's cold 
+start loader.
+.bp
+.sh
+             Table 6-3.  CP/M Disk Sector Allocation
+.sp
+.nf
+Track #    Sector   Page#   Memory Address    CP/M Module name
+.sp
+  00         01             (boot address)    Cold Start Loader
+  00         02      00        3400H+b               CCP
+  '          03      '         3480H+b                '
+  '          04      01        3500H+b                '
+  '          05      '         3580H+b                '
+  '          06      02        3600H+b                '
+  '          07      '         3680H+b                '
+  '          08      03        3700H+b                '
+  '          09      '         3780H+b                '
+  '          10      04        3800H+b                '
+  '          11      '         3880H+b                '
+  '          12      05        3900H+b                '
+  '          13      '         3980H+b                '
+  '          14      06        3A00H+b                '
+  '          15      '         3A80H+b                '
+  '          16      07        3B00H+b                '
+  00         17      '         3B80H+b               CCP
+  00         18      08        3C00H+b              BDOS
+  '          19      '         3C80H+b                '
+  '          20      09        3D00H+b                '
+  '          21      '         3D80H+b                '
+  '          22      10        3E00H+b                '
+  '          23      '         3E80H+b                '
+  '          24      11        3F00H+b                '
+  '          25      '         3F80H+b                '
+  '          26      12        4000H+b                '
+  01         01      '         4080H+b                '
+  '          02      13        4100H+b                '
+  '          03      '         4180H+B                '
+  '          04      14        4200H+b                '
+  '          05      '         4280H+b                '
+  '          06      15        4300H+b                '
+  '          07      '         4380H+b                '
+  '          08      16        4400H+b                '
+  '          09      '         4480H+b                '
+  '          10      17        4500H+b                '
+  '          11      '         4580H+b                '
+  '          12      18        4600H+b                '
+  '          13      '         4680H+b                '
+  '          14      19        4700H+b                '
+  '          15      '         4780H+b                '
+  '          16      20        4800H+b                '
+  '          17      '         4880H+b                '
+  '          18      21        4900H+b                '
+.mb 4
+.fm 1
+  01         19      '         4900H+b              BDOS
+  07         20      22        4A00H+b              BIOS
+  '          21      '         4A80H+b                '
+  '          22      23        4B00H+b                '
+  '          23      '         4B80H+b                '
+  '          24      24        4C00H+b                '
+  01         25      '         4C80H+b              BIOS
+  01         26      25        4D00H+b              BIOS
+02-76      01-26                            (directory and data)
+.fi
+.nx sixb
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,4 +1,4 @@
 @echo off
 setlocal
 
-pushd HBIOS && Powershell .\Build.ps1 %* && popd
+setlocal & pushd HBIOS && Powershell .\Build.ps1 %* & endlocal

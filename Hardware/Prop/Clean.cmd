@@ -2,5 +2,5 @@
 
 setlocal
 
-if exist *.eeprom del *.eeprom /Q
-if exist *.list del *.list /Q
+if exist *.eeprom del *.eeprom
+if exist *.list del *.list

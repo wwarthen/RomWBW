@@ -1,4 +1,4 @@
 @echo off
 setlocal
 
-pushd Doc && call Build && popd
+setlocal & pushd Source\Doc && call Build & endlocal

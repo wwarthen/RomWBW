@@ -1,2 +1,2 @@
 @echo off
-if exist *.tmp del *.tmp /Q
+if exist *.tmp del *.tmp

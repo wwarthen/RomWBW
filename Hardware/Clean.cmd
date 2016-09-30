@@ -2,4 +2,4 @@
 
 setlocal
 
-pushd Prop && call Clean && popd
+setlocal & pushd Prop && call Clean & endlocal

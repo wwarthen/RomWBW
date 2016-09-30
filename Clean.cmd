@@ -2,12 +2,10 @@
 
 setlocal
 
-pushd Source && call Clean && popd
-pushd Doc && call Clean && popd
-pushd Images && call Clean && popd
-pushd Hardware && call Clean && popd
+setlocal & pushd Source && call Clean & endlocal
+setlocal & pushd Images && call Clean & endlocal
+setlocal & pushd Hardware && call Clean & endlocal
+setlocal & pushd Output && call Clean & endlocal
 
-if exist *.img del *.img /Q
-if exist *.log del *.log /Q
-
-if exist Output rd /s /q Output
+if exist *.img del *.img
+if exist *.log del *.log

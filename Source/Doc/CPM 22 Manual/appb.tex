@@ -1,0 +1,371 @@
+.pl 51
+.nf
+.bp 1
+.ft                                                       B-%
+                                                    Appendix B
+
+                                                 A Skeletal CBIOS
+
+
+
+
+  1                       ;        skeletal cbios for first level of cp/m 2.0 alteration
+  2                       ;
+  3      0014 =           msize    equ    20             ;cp/m version memory size in kilobytes
+  4                       ;
+  5                       ;        "bias" is address offset from 3400h for memory systems
+  6                       ;        than 16k (referred to as "b" throughout the text)
+  7                       ;
+  8      0000 =           bias     equ    (msize-20)*1024
+  9      3400 =           ccp      equ    3400h+bias     ;base of ccp
+ 10      3c06 =           bdos     equ    ccp+806h       ;base of bdos
+ 11      4a00 =           bios     equ    ccp+1600h      ;base of bios
+ 12      0004 =           cdisk    equ    0004h          ;current disk number 0=a,..., 15=p
+ 13      0003 =           iobyte   equ    0003h          ;intel i/o byte
+ 14                       ;
+ 15      4a00                      org    bios           ;origin of this program
+ 16      002c =           nsects   equ    ($-ccp)/128    ;warm start sector count
+ 17                       ;
+ 18                       ;        jump vector for individual subroutines
+ 19      4a00 c39c4a               jmp    boot           ;cold start
+ 20      4a03 c3a64a      wboote:  jmp    wboot          ;warm start
+ 21      4a06 c3114b               jmp    const          ;console status
+ 22      4a09 c3244b               jmp    conin          ;console character in
+ 23      4a0c c3374b               jmp    conout         ;console character out
+ 24      4a0f c3494b               jmp    list           ;list character out
+ 25      4a12 c34d4b               jmp    punch          ;punch character out
+ 26      4a15 c34f4b               jmp    reader         ;reader character out
+ 27      4a18 c3544b               jmp    home           ;move head to home position
+ 28      4a1b c35a4b               jmp    seldsk         ;select disk
+ 29      4a1e c37d4b               jmp    settrk         ;set track number
+ 30      4a21 c3924b               jmp    setsec         ;set sector number
+ 31      4a24 c3ad4b               jmp    setdma         ;set dma address
+ 32      4a27 c3c34b               jmp    read           ;read disk
+ 33      4a2a c3d64b               jmp    write          ;write disk
+ 34      4a2d c34b4b               jmp    listst         ;return list status
+ 35      4a30 c3a74b               jmp    sectran        ;sector translate
+ 36                       ;
+ 37                       ;        fixed data tables for four-drive standard
+ 38                       ;        ibm-compatible 8" disks
+ 39                       ;        disk parameter header for disk 00
+ 40      4a33 734a0000    dpbase:  dw     trans, 0000h
+ 41      4a37 00000000             dw     0000h, 0000h
+ 42      4a3b f04c8d4a             dw     dirbf, dpblk
+ 43      4a3f ec4d704d             dw     chk00, all00
+ 44                       ;        disk parameter header for disk 01
+ 45      4a43 734a0000             dw     trans, 0000h
+ 46      4a47 00000000             dw     0000h, 0000h
+ 47      4a4b f04c8d4a             dw     dirbf, dpblk
+ 48      4a4f fc4d8f4d             dw     chk01, all01
+ 49                       ;        disk parameter header for disk 02
+ 50      4a53 734a0000             dw     trans, 0000h
+ 51      4a57 00000000             dw     0000h, 0000h
+ 52      4a5b f04c8d4a             dw     dirbf, dpblk
+ 53      4a5f 0c4eae4d             dw     chk02, all02
+ 54                       ;        disk parameter header for disk 03
+ 55      4a63 734a0000             dw     trans, 0000h
+ 56      4a67 00000000             dw     0000h, 0000h
+ 57      4a6b f04c8d4a             dw     dirbf, dpblk
+ 58      4a6f 1c4ecd4d             dw     chk03, all03
+ 59                       ;
+ 60                       ;        sector translate vector
+ 61      4a73 01070d13    trans:   db     1, 7, 13, 19   ;sectors 1, 2, 3, 4
+ 62      4a77 19050b11             db     25, 5, 11, 17  ;sectors 5, 6, 7, 8
+ 63      4a7b 1703090f             db     23, 3, 9, 15   ;sectors 9, 10, 11, 12
+ 64      4a7f 1502080e             db     21, 2, 8, 14   ;sectors 13, 14, 15, 16
+ 65      4a83 141a060c             db     20, 26, 6, 12  ;sectors 17, 18, 19, 20
+ 66      4a87 1218040a             db     18, 24, 4, 10  ;sectors 21, 22, 23, 24
+ 67      4a8b 1016                 db     16, 22         ;sectors 25, 26
+ 68                       ;
+ 69                       dpblk:   ;disk parameter block, common to all disks
+ 70      4a8d 1a00                 dw     26             ;sectors per track
+ 71      4a8f 03                   db     3              ;block shift factor
+ 72      4a90 07                   db     7              ;block mask
+ 73      4a91 00                   db     0              ;null mask
+ 74      4a92 f200                 dw     242            ;disk size-1
+ 75      4a94 3f00                 dw     63             ;directory max
+ 76      4a96 c0                   db     192            ;alloc 0
+ 77      4a97 00                   db     0              ;alloc 1
+ 78      4a98 1000                 dw     16             ;check size
+ 79      4a9a 0200                 dw     2              ;track offset
+ 80                       ;
+ 81                       ;        end of fixed tables
+ 82                       ;
+ 83                       ;        individual subroutines to perform each function
+ 84                       boot:    ;simplest case is to just perform parameter initialization
+ 85      4a9c af                   xra    a              ;zero in the accum
+ 86      4a9d 320300               sta    iobyte         ;clear the iobyte
+ 87      4aa0 320400               sta    cdisk          ;select disk zero
+ 88      4aa3 c3ef4a               jmp    gocpm          ;initialize and go to cp/m
+ 89                       ;
+ 90                       wboot:   ;simplest case is to read the disk until all sectors loaded
+ 91      4aa6 318000               lxi    sp, 80h        ;use space below buffer for stack
+ 92      4aa9 0e00                 mvi    c, 0           ;select disk 0
+ 93      4aab cd5a4b               call   seldsk
+ 94      4aae cd544b               call   home           ;go to track 00
+ 95                       ;
+ 96      4ab1 062c                 mvi    b, nsects      ;b counts # of sectors to load
+ 97      4ab3 0e00                 mvi    c, 0           ;c has the current track number
+ 98      4ab5 1602                 mvi    d, 2           ;d has the next sector to read
+ 99                       ;        note that we begin by reading track 0, sector 2 since sector 1
+100                       ;        contains the cold start loader, which is skipped in a warm start
+101      4ab7 210034               lxi    h, ccp         ;base of cp/m (initial load point)
+102                       load1:   ;load one more sector
+103      4aba c5                   push   b              ;save sector count, current track
+104      4abb d5                   push   d              ;save next sector to read
+105      4abc e5                   push   h              ;save dma address
+106      4abd 4a                   mov    c, d           ;get sector address to register c
+107      4abe cd924b               call   setsec         ;set sector address from register c
+108      4ac1 c1                   pop    b              ;recall dma address to b, c
+109      4ac2 c5                   push   b              ;replace on stack for later recall
+110      4ac3 cdad4b               call   setdma         ;set dma address from b, c
+111                       ;
+112                       ;        drive set to 0, track set, sector set, dma address set
+113      4ac6 cdc34b               call   read
+114      4ac9 fe00                 cpi    00h            ;any errors?
+115      4acb c2a64a               jnz    wboot          ;retry the entire boot if an error occurs
+116                       ;
+117                       ;        no error, move to next sector
+118      4ace e1                   pop    h              ;recall dma address
+119      4acf 118000               lxi    d, 128         ;dma=dma+128
+120      4ad2 19                   dad    d              ;new dma address is in h, l
+121      4ad3 d1                   pop    d              ;recall sector address
+122      4ad4 c1                   pop    b              ;recall number of sectors remaining, and current trk
+123      4ad5 05                   dcr    b              ;sectors=sectors-1
+124      4ad6 caef4a               jz     gocpm          ;transfer to cp/m if all have been loaded
+125                       ;
+126                       ;        more sectors remain to load, check for track change
+127      4ad9 14                   inr    d
+128      4ada 7a                   mov    a,d            ;sector=27?, if so, change tracks
+129      4adb fe1b                 cpi    27
+130      4add daba4a               jc     load1          ;carry generated if sector<27
+131                       ;
+132                       ;        end of current track, go to next track
+133      4ae0 1601                 mvi    d, 1           ;begin with first sector of next track
+134      4ae2 0c                   inr    c              ;track=track+1
+135                       ;
+136                       ;        save register state, and change tracks
+137      4ae3 c5                   push   b
+138      4ae4 d5                   push   d
+139      4ae5 e5                   push   h
+140      4ae6 cd7d4b               call   settrk         ;track address set from register c
+141      4ae9 e1                   pop    h
+142      4aea d1                   pop    d
+143      4aeb c1                   pop    b
+144      4aec c3ba4a               jmp    load1          ;for another sector
+145                       ;
+146                       ;        end of load operation, set parameters and go to cp/m
+147                       gocpm:
+148      4aef 3ec3                 mvi    a, 0c3h        ;c3 is a jmp instruction
+149      4af1 320000               sta    0              ;for jmp to wboot
+150      4af4 21034a               lxi    h, wboote      ;wboot entry point
+151      4af7 220100               shld   1              ;set address field for jmp at 0
+152                       ;
+153      4afa 320500               sta    5              ;for jmp to bdos
+154      4afd 21063c               lxi    h, bdos        ;bdos entry point
+155      4b00 220600               shld   6              ;address field of jump at 5 to bdos
+156                       ;
+157      4b03 018000               lxi    b, 80h         ;default dma address is 80h
+158      4b06 cdad4b               call   setdma
+159                       ;
+160      4b09 fb                   ei                    ;enable the interrupt system
+161      4b0a 3a0400               lda    cdisk          ;get current disk number
+162      4b0d 4f                   mov    c, a           ;send to the ccp
+163      4b0e c30034               jmp    ccp            ;go to cp/m for further processing
+164                       ;
+165                       ;
+166                       ;        simple i/o handlers (must be filled in by user)
+167                       ;        in each case, the entry point is provided, with space reserved
+168                       ;        to insert your own code
+169                       ;
+170                       const:   ;console status, return 0ffh if character ready, 00h if not
+171      4b11                      ds     10h            ;space for status subroutine
+172      4b21 3e00                 mvi    a, 00h
+173      4b23 c9                   ret
+174                       ;
+175                       conin:   ;console character into register a
+176      4b24                      ds     10h            ;space for input routine
+177      4b34 e67f                 ani    7fh            ;strip parity bit
+178      4b36 c9                   ret
+179                       ;
+180                       conout:  ;console character output from register c
+181      4b37 79                   mov    a, c           ;get to accumulator
+182      4b38                      ds     10h            ;space for output routine
+183      4b48 c9                   ret
+184                       ;
+185                       list:    ;list character from register c
+186      4b49 79                   mov    a, c           ;character to register a
+187      4b4a c9                   ret                   ;null subroutine
+188                       ;
+189                       listst:  ;return list status (0 if not ready, 1 if ready)
+190      4b4b af                   xra    a              ;0 is always ok to return
+191      4b4c c9                   ret
+192                       ;
+193                       punch:   ;punch character from register c
+194      4b4d 79                   mov    a, c           ;character to register a
+195      4b4e c9                   ret                   ;null subroutine
+196                       ;
+197                       ;
+198                       reader:  ;reader character into register a from reader device
+199      4b4f 3e1a                 mvi    a, 1ah         ;enter end of file for now (replace later)
+200      4b51 e67f                 ani    7fh            ;remember to strip parity bit
+201      4b53 c9                   ret
+202                       ;
+203                       ;
+204                       ;        i/o drivers for the disk follow
+205                       ;        for now, we will simply store the parameters away for use
+206                       ;        in the read and write subroutines
+207                       ;
+208                       home:    ;move to the track 00 position of current drive
+209                       ;        translate this call into a settrk call with parameter 00
+210      4b54 0e00                 mvi    c, 0           ;select track 0
+211      4b56 cd7d4b               call   settrk
+212      4b59 c9                   ret                   ;we will move to 00 on first read/write
+213                       ;
+214                       seldsk:  ;select disk given by register c
+215      4b51 210000               lxi    h, 0000h       ;error return code
+216      4b5d 79                   mov    a, c
+217      4b5e 32ef4c               sta    diskno
+218      4b61 fe04                 cpi    4              ;must be between 0 and 3
+219      4b63 d0                   rnc                   ;no carry if 4, 5,...
+220                       ;        disk number is in the proper range
+221      4b64                      ds     10             ;space for disk select
+222                       ;        compute proper disk parameter header address
+223      4b6e 3aef4c               lda    diskno
+224      4b71 6f                   mov    l, a           ;l=disk number 0, 1, 2, 3
+225      4b72 2600                 mvi    h, 0           ;high order zero
+226      4b74 29                   dad    h              ;*2
+227      4b75 29                   dad    h              ;*4
+228      4b76 29                   dad    h              ;*8
+229      4b77 29                   dad    h              ;*16 (size of each header)
+230      4b78 11334a               lxi    d, dpbase
+231      4b7b 19                   dad    0              ;hl=.dpbase (diskno*16)
+232      4b7c c9                   ret
+233                       ;
+234                       settrk:  ;set track given by register c
+235      4b7d 79                   mov    a, c
+236      4b7e 32e94c               sta    track
+237      4b81                      ds     10h            ;space for track select
+238      4b91 c9                   ret
+239                       ;
+240                       setsec:  ;set sector given by register c
+241      4b92 79                   mov    a, c
+242      4b93 32eb4c               sta    sector
+243      4b96                      ds     10h            ;space for sector select
+244      4ba6 c9                   ret
+245                       ;
+246                       sectran:
+247                                ;translate the sector given by bc using the
+248                                ;translate table given by de
+249      4ba7 eb                   xchg                  ;hl=.trans
+250      4ba8 09                   dad    b              ;hl=.trans (sector)
+251      4ba9 6e                   mov    l, m           ;l=trans (sector)
+252      4baa 2600                 mvi    h, 0           ;hl=trans (sector)
+253      4bac c9                   ret                   ;with value in hl
+254                       ;
+255                       setdma:  ;set dma address given by registers b and c
+256      4bad 69                   mov    l, c           ;low order address
+257      4bae 60                   mov    h, b           ;high order address
+258      4baf 22ed4c               shld   dmaad          ;save the address
+259      4bb2                      ds     10h            ;space for setting the dma address
+260      4bc2 c9                   ret
+261                       ;
+262                       read:    ;perform read operation (usually this is similar to write
+263                       ;        so we will allow space to set up read command, then use
+264                       ;        common code in write)
+265      4bc3                      ds     10h            ;set up read command
+266      4bd3 c3e64b               jmp    waitio         ;to perform the actual i/o
+267                       ;
+268                       write:   ;perform a write operation
+269      4bd6                      ds     10h            ;set up write command
+270                       ;
+271                       waitio:  ;enter here from read and write to perform the actual i/o
+272                       ;        operation. return a 00h in register a if the operation completes
+273                       ;        properly, and 01h if an error occurs during the read or write
+274                       ;
+275                       ;        in this case, we have saved the disk number in 'diskno' (0, 1)
+276                       ;                              the track number in 'track' (0-76)
+277                       ;                              the sector number in 'sector' (1-26)
+278                       ;                              the dma address in 'dmaad' (0-65535)
+279      4be6                      ds     256            ;space reserved for i/o drivers
+280      4ce6 3e01                 mvi    a, 1           ;error condition
+281      4ce8 c9                   ret                   ;replaced when filled-in
+282                       ;
+283                       ;        the remainder of the cbios is reserved uninitialized
+284                       ;        data area, and does not need to be a part of the
+285                       ;        system memory image (the space must be available,
+286                       ;        however, between "begdat" and "enddat").
+287                       ;
+288      4ce9             track:   ds     2              ;two bytes for expansion
+289      4ceb             sector:  ds     2              ;two bytes for expansion
+290      4ced             dmaad:   ds     2              ;direct memory address
+291      4cef             diskno:  ds     1              ;disk number 0-15
+292                       ;
+293                       ;        scratch ram area for bdos use
+294      4cf0=            begdat   equ    $              ;beginning of data area
+295      4cf0             dirfb:   ds     128            ;scratch directory area
+296      4d70             all00:   ds     31             ;allocation vector 0
+297      4d8f             all01:   ds     31             ;allocation vector 1
+298      4dae             all02:   ds     31             ;allocation vector 2
+299      4dcd             all03:   ds     31             ;allocation vector 3
+300      4dec             chk00:   ds     16             ;check vector 0
+301      4dfc             chk01:   ds     16             ;check vector 1
+302      4e0c             chk02:   ds     16             ;check vector 2
+303      4e1c             chk03:   ds     16             ;check vector 3
+304                       ;
+305      4e2c             enddat   equ    $              ;end of data area
+306      013c=            datsiz   equ    $-begdat;      ;size of data area
+307      4e2c                      end
+
+all00          4d70      43     296#
+all01          4d8f      48     297#
+all02          4dae      53     298#
+all03          4dcd      58     299#
+bdos           3c06      10#    154
+begdat         4cf0     294#    306
+bias           0000       8#      9
+bios           4a00      11#     15
+boot           4a9c      19      84#
+ccp            3400       9#     10      11      16     101     163
+cdisk          0004      12#     87     161
+chk00          4dec      43     300#
+chk01          4dfc      48     301#
+chk02          4e0c      53     302#
+chk03          4e1c      58     303#
+conin          4b24      22     175#
+conout         4b37      23     180#
+const          4b11      21     170#
+datsiz         013c     306#
+dirbf          4cf0      42      47      52      57     295#
+diskno         4cef     217     223     291#
+dmaad          4ced     258     290#
+dpbase         4a33      40#    230
+dpblk          4a8d      42      47      52      57      69#
+enddat         4e2c     305#
+gocpm          4aef      88     124     147#
+home           4b54      27      94     208#
+iobyte         0003      13#     86
+list           4b49      24     185#
+listst         4b4b      34     189#
+load1          4aba     102#    130     144
+msize          0014       3#      8
+nsects         002c      16#     96
+punch          4b4d      25     193#
+read           4bc3      32     113     262#
+reader         4b4f      26     198#
+sector         4ceb     242     289#
+sectran        4ba7      35     246#
+seldsk         4b5a      28      93     214#
+setdma         4bad      31     110     158     255#
+setsec         4b92      30     107     240#
+settrk         4b7d      29     140     211     234#
+track          4ce9     236     288#
+trans          4a73      40      45      50      55      61#
+waitio         4be6     266     271#
+wboot          4aa6      20      90#    115
+wboote         4a03      20#    150
+write          4bd6      33     268#
+
+
+.nx appc
+

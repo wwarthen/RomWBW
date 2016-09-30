@@ -1,0 +1,35 @@
+\documentclass[letterpaper,10pt,oneside]{book}
+\usepackage[defaultmono]{droidmono}
+\usepackage{verbatim}
+\usepackage{geometry}
+\usepackage{pdflscape}
+%\usepackage{showframe}				% Diagnostic
+
+% Suppress headers and footers completely
+\pagestyle{empty}
+
+% 66 lines per page, portrait
+%\geometry{top=0.0in, bottom=0.0in, left=1.0in, right=0.5in}
+\geometry{top=0.0in, bottom=0.0in, left=0.5in, right=0.5in}
+
+\begin{document}
+
+% Part 1 (main document sections)
+\hspace{1pt} \verbatiminput{part1.txt}
+
+% 51 lines per page, landscape
+%\newgeometry{top=1.0in, bottom=0.5in, left=0.0in, right=0.0in}
+\newgeometry{top=0.5in, bottom=0.5in, left=0.0in, right=0.0in}
+\begin{landscape}
+
+% Part 2 (appendices A-G, source listings)
+\hspace{1pt} \verbatiminput{part2.txt}
+
+% back to standard geometry
+\end{landscape}
+\restoregeometry
+
+% Part 3 (appendices H-I, index)
+\hspace{1pt} \verbatiminput{part3.txt}
+
+\end{document}

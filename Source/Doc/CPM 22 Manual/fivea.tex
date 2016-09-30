@@ -1,0 +1,671 @@
+.bp 1
+.op
+.cs 5
+.mt 5
+.mb 6
+.pl 66
+.ll 65
+.po 10
+.hm 2
+.fm 2
+.he
+.ft                                5-%
+.pc 1
+.ce
+.sh
+Section 5
+.qs
+.sp
+.ce
+.sh
+CP/M 2 System Interface
+.qs
+.tc 5  CP/M 2 System Interface
+.sp 2
+.he CP/M Operating System Manual                    5.1  Introduction
+.tc    5.1  Introduction
+5.1  Introduction
+.fi
+.pp 5
+This chapter describes CP/M (release 2) system organization including the
+structure of memory and system entry points.  This section provides
+the information you need to write programs that operate under CP/M and
+that use the peripheral and disk I/O facilities of the system.
+.pp
+CP/M is logically divided into four parts, called the Basic Input/Output 
+System (BIOS), the Basic Disk Operating System (BDOS), the Console Command
+Processor (CCP), and the Transient Program Area (TPA).  The BIOS is a
+hardware-dependent module that defines the exact low level interface with a
+particular computer system that is necessary for peripheral device I/O.
+Although a standard BIOS is supplied by Digital Research, explicit
+instructions are provided for field reconfiguration of the BIOS to match
+nearly any hardware environment, see Section 6.
+.pp
+The BIOS and BDOS are
+logically combined into a single module with a common entry point and
+referred to as the FDOS.  The CCP is a distinct program that uses the FDOS to
+provide a human-oriented interface with the information that is cataloged on
+the back-up storage device.  The TPA is an area of memory, 
+not used by the FDOS and CCP, where various nonresident operating
+system commands and user programs are executed.  The lower portion of memory
+is reserved for system information and is detailed in later sections.  Memory
+organization of the CP/M system is shown in Figure 5-1.
+.sp 3
+.nf
+                  High
+                  Memory     FDOS (BDOS+BIOS)
+                  FBASE:
+
+                                   CCP
+                  CBASE:
+
+                                   TPA
+                  TBASE:
+
+                             System Parameters
+                  BOOT:
+.sp 2
+.ce
+.sh
+Figure 5-1.  CP/M Memory Organization
+.qs
+.fi
+.sp 2
+.pp
+The exact memory addresses corresponding to BOOT, TBASE, CBASE, and FBASE
+vary from version to version and are described fully in Section 6.  All
+standard CP/M versions assume BOOT=0000H, which is the base of
+random access memory.  The machine code found at location BOOT performs a
+system warm start, which loads and initializes the programs and variables
+necessary to return control to the CCP.  Thus, transient programs need only
+jump to location BOOT to return control to CP/M at the command level.
+Further, the standard versions assume TBASE=BOOT+0100H, which is normally
+location 0100H.  The principal entry point to the FDOS is at location
+BOOT+0005H (normally 0005H) where a jump to FBASE is found.  The address
+field at BOOT+0006H (normally 0006H) contains the value of FBASE and can be
+used to determine the size of available memory, assuming that the CCP is
+being overlaid by a transient program.
+.pp
+Transient programs are loaded into the TPA and executed as follows.  The
+operator communicates with the CCP by typing command lines following each
+prompt.  Each command line takes one of the following forms:
+.sp
+.nf
+.in 8
+command
+command file1
+command file1 file2
+.fi
+.in 0
+.sp
+where command is either a built-in function, such as DIR or TYPE, or the name
+of a transient command or program.  If the command is a built-in function of
+CP/M, it is executed immediately.  Otherwise, the CCP searches the currently
+addressed disk for a file by the name
+.sp
+.ti 8
+command.COM
+.pp
+If the file is found, it is assumed to be a memory image of a program that
+executes in the TPA and thus implicity originates at TBASE in memory.  The
+CCP loads the COM file from the disk into memory starting at TBASE and can
+extend up to CBASE.
+.pp
+If the command is followed by one or two file specifications, the CCP prepares
+one or two File Control Block (FCB) names in the system 
+parameter area.  These optional FCBs are in the form necessary to 
+access files through the FDOS and are described in Section 5.2.
+.pp
+The transient program receives control from the CCP and begins 
+execution, using the I/O facilities of the FDOS.  The transient 
+program is called from the CCP.  Thus, it can simply return to the CCP upon
+completion of its processing, or can jump to BOOT to pass control back to
+CP/M.  In the first case, the transient program must not use memory above
+CBASE, while in the latter case, memory up through FBASE-1 can be used.
+.pp
+The transient program can use the CP/M I/O facilities to communicate with the
+operator's console and peripheral devices, including the disk subsystem.  The
+I/O system is accessed by passing a function number and an information address
+to CP/M through the FDOS entry point at BOOT+0005H.  In the case of a disk
+read, for example, the transient program sends the number corresponding to a
+disk read, along with the address of an FCB to the CP/M FDOS.  The FDOS, in
+turn, performs the operation and returns with either a disk read completion
+indication or an error number indicating that the disk read was unsuccessful.
+.sp 2
+.tc    5.2  Operating System Call Conventions
+.he CP/M Operating System Manual                5.2  Call Conventions
+.sh
+5.2  Operating System Call Conventions
+.qs
+.pp
+This section provides detailed information for performing direct operating
+system calls from user programs.  Many of the functions listed below, however,
+are accessed more simply through the I/O macro library provided with the
+MAC macro assembler and listed in the Digital Research manual 
+entitled, \c
+.ul
+Programmer's Utilities Guide for the CP/M Family of Operating Systems.
+.qu
+.pp
+CP/M facilities that are available for access by transient programs fall into
+two general categories:  simple device I/O and disk file I/O.  The simple
+device operations are
+.sp
+.nf
+.in 5
+.ti -2
+o read a console character
+.ti -2
+o write a console character
+.ti -2
+o read a sequential character
+.ti -2
+o write a sequential character
+.ti -2
+o get or set I/O status
+.ti -2
+o print console buffer
+.ti -2
+o interrogate console ready
+.sp
+The following FDOS operations perform disk I/O:
+.sp
+.ti -2
+o disk system reset
+.ti -2
+o drive selection
+.ti -2
+o file creation
+.ti -2
+o file close
+.ti -2
+o directory search
+.ti -2
+o file delete
+.ti -2
+o file rename
+.ti -2
+o random or sequential read
+.ti -2
+o random or sequential write
+.ti -2
+o interrogate available disks
+.ti -2
+o interrogate selected disk
+.ti -2
+o set DMA address
+.ti -2
+o set/reset file indicators.
+.fi
+.in 0
+.pp
+As mentioned above, access to the FDOS functions is accomplished by passing
+a function number and information address through the primary point at
+location BOOT+0005H.  In general, the function number is passed in register C
+with the information address in the double byte pair DE.  Single byte values
+are returned in register A, with double byte values returned in HL, a zero
+value is returned when the function number is out of range.  For reasons of
+compatibility, register A = L and register B = H upon return in all cases.
+Note that the register passing conventions of CP/M agree with
+those of the Intel PL/M systems programming language.  CP/M functions and
+their numbers are listed below.
+.bp
+.nf
+.in 5
+ O  System Reset             19  Delete File
+ 1  Console Input            20  Read Sequential
+ 2  Console Output           21  Write Sequential
+ 3  Reader Input             22  Make File
+ 4  Punch Output             23  Rename File
+ 5  List Output              24  Return Login Vector
+ 6  Direct Console I/O       25  Return Current Disk
+ 7  Get I/O Byte             26  Set DMA Address
+ 8  Set I/O Byte             27  Get Addr(Alloc)
+ 9  Print String             28  Write Protect Disk
+10  Read Console Buffer      29  Get R/0 Vector
+11  Get Console Status       30  Set File Attributes
+12  Return Version Number    31  Get Addr(Disk Parms)
+13  Reset Disk System        32  Set/Get User Code
+14  Select Disk              33  Read Random
+15  Open File                34  Write Random
+16  Close File               35  Compute File Size
+17  Search for First         36  Set Random Record
+18  Search for Next          37  Reset Drive
+                             40  Write Random with Zero Fill
+.fi
+.in 0
+.sp
+.pp
+Functions 28 and 32 should be avoided in application programs to
+maintain upward compatibility with CP/M.
+.pp
+Upon entry to a transient program, the CCP leaves the stack 
+pointer set to an eight-level stack area with the CCP return 
+address pushed onto the stack, leaving seven levels before 
+overflow occurs.  Although this stack is usually not used by a 
+transient program (most transients return to the CCP 
+through a jump to location 0000H) it is large enough to 
+make CP/M system calls because the FDOS switches to a local stack 
+at system entry.  For example, the assembly-language program segment below 
+reads characters continuously until an asterisk is 
+encountered, at which time control returns to the CCP, assuming a 
+standard CP/M system with BOOT = 0000H.
+.sp 2
+.nf
+.in 8
+BDOS      EQU        0005H      ;STANDARD CP/M ENTRY
+CONIN     EQU        1          ;CONSOLE INPUT FUNCTION
+;
+          ORG        0100H      ;BASE OF TPA
+NEXTC:    MVI        C,CONIN    ;READ NEXT CHARACTER
+          CALL       BDOS       ;RETURN CHARACTER IN <A>
+          CPI        '*'        ;END OF PROCESSING?
+          JNZ        NEXTC      ;LOOP IF NOT
+          RET                   ;RETURN TO CCP
+          END
+.fi
+.in 0
+.sp
+.pp
+CP/M implements a named file structure on each disk, providing a 
+logical organization that allows any particular file to contain 
+any number of records from completely empty to the full capacity 
+of the drive.  Each drive is logically distinct with a disk 
+directory and file data area.  The disk filenames are in three 
+parts: the drive select code, the filename (consisting of one to 
+eight nonblank characters), and the filetype (consisting of zero 
+to three nonblank characters).  The filetype names the generic 
+category of a particular file, while the filename distinguishes 
+individual files in each category.  The filetypes listed in Table 5-1 
+name a few generic categories that have been established, 
+although they are somewhat arbitrary.
+.sp 2
+.sh
+                   Table 5-1.  CP/M Filetypes
+.qs
+.sp
+.nf
+                Filetype           Meaning
+.sp
+.in 30
+.ti -11
+ASM        Assembler Source
+.ti -11
+PRN        Printer Listing
+.ti -11
+HEX        Hex Machine Code
+.ti -11
+BAS        Basic Source File
+.ti -11
+INT        Intermediate Code
+.ti -11
+COM        Command File
+.ti -11
+PLI        PL/I Source File
+.ti -11
+REL        Relocatable Module
+.ti -11
+TEX        TEX Formatter Source
+.ti -11
+BAK        ED Source Backup
+.ti -11
+SYM        SID Symbol File
+.ti -11
+$$$        Temporary File
+.fi
+.in 0
+.sp
+.pp
+Source files are treated as a sequence of ASCII characters, where 
+each line of the source file is followed by a carriage return, and 
+line-feed sequence (0DH followed by 0AH).  Thus, one 128-byte CP/M 
+record can contain several lines of source text.  The end of an 
+ASCII file is denoted by a CTRL-Z character (1AH) or a real 
+end-of-file returned by the CP/M read operation.  CTRL-Z characters embedded
+within machine code files (for example, COM files) are ignored and 
+the end-of-file condition returned by CP/M is used to terminate 
+read operations.
+.pp
+Files in CP/M can be thought of as a sequence of up to 65536 
+records of 128 bytes each, numbered from 0 through 65535, thus 
+allowing a maximum of 8 megabytes per file.  Note, however, 
+that although the records may be considered logically 
+contiguous, they may not be physically contiguous in the disk 
+data area.  Internally, all files are divided into 16K byte 
+segments called logical extents, so that counters are easily 
+maintained as 8-bit values.  The division into extents is 
+discussed in the paragraphs that follow:  however, they are not 
+particularly significant for the programmer, because each extent is 
+automatically accessed in both sequential and random access  
+modes.
+.pp
+In the file operations starting with Function 15, DE 
+usually addresses a FCB.  Transient programs 
+often use the default FCB area reserved by CP/M at 
+location BOOT+005CH (normally 005CH) for simple file operations.  
+The basic unit of file information is a 128-byte record used for 
+all file operations.  Thus, a default location for disk I/O is 
+provided by CP/M at location BOOT+0080H (normally 0080H) which 
+is the initial default DMA address.  See Function 26.
+.pp
+All directory operations take place in a reserved area that does not 
+affect write buffers as was the case in release 1, with the 
+exception of Search First and Search Next, where compatibility is 
+required.
+.pp
+The FCB data area consists of a sequence of 33 bytes for 
+sequential access and a series of 36 bytes in the case when the 
+file is accessed randomly.  The default FCB, normally located at 
+005CH, can be used for random access files, because the three bytes 
+starting at BOOT+007DH are available for this purpose.  Figure 5-2 shows
+the FCB format with the following fields.
+.sp 3
+.nf
+    dr f1 f2 / / f8 t1 t2 t3 ex s1 s2 rc d0 / / dn cr r0 r1 r2
+    00 01 02 ... 08 09 10 11 12 13 14 15 16 ... 31 32 33 34 35
+.fi
+.sp 2
+.sh
+             Figure 5-2.  File Control Block Format
+.sp 3
+The following table lists and describes each of the fields in the File Control
+Block figure.
+.sp 2
+.sh
+              Table 5-2.  File Control Block Fields
+.nf
+.sp
+       Field                        Definition
+.sp
+     dr                   drive code (0-16)
+                          0 = use default drive for file
+                          1 = auto disk select drive A,
+                          2 = auto disk select drive B,
+                          .
+                          .
+                          .
+                          16= auto disk select drive P.
+.sp
+     f1...f8              contain the filename in ASCII
+                          upper-case, with high bit = 0
+.sp
+     t1, t2, t3           contain the filetype in ASCII
+                          upper-case, with high bit = 0
+                          t1', t2', and t3' denote the
+                          bit of these positions,
+                          t1' = 1 =>Read-Only file,
+                          t2' = 1 =>SYS file, no DIR list
+.sp
+     ex                   contains the current extent
+                          number, normally set to 00 by
+                          the user, but in range 0-31
+                          during file I/O
+.bp
+.sh
+                     Table 5-2.  (continued)
+.qs
+.sp
+       Field                        Definition
+.sp
+     s1                   reserved for internal system use
+.sp
+     s2                   reserved for internal system use,
+                          set to zero on call to OPEN, MAKE,
+                          SEARCH
+.sp
+     rc                   record count for extent ex;
+                          takes on values from 0-127
+.sp
+     d0...dn              filled in by CP/M; reserved for
+                          system use
+.sp
+     cr                   current record to read or write in
+                          a sequential file operation;
+                          normally set to zero by user
+.sp
+     r0, r1, r2           optional random record number in
+                          the range 0-65535, with overflow
+                          to r2, r0, r1 constitute a 16-bit
+                          value with low byte r0, and high
+                          byte r1
+.fi
+.sp
+.pp
+Each file being accessed through CP/M must have a corresponding 
+FCB, which provides the name and allocation information for all 
+subsequent file operations.  When accessing files, it is the 
+programmer's responsibility to fill the lower 16 bytes of the FCB 
+and initialize the cr field.  Normally, bytes 1 through 11 are 
+set to the ASCII character values for the filename and filetype,
+while all other fields are zero.
+.pp
+FCBs are stored in a directory area of the disk, and are brought 
+into central memory before the programmer proceeds with file 
+operations (see the OPEN and MAKE functions).  The memory copy of 
+the FCB is updated as file operations take place and later 
+recorded permanently on disk at the termination of the file 
+operation, (see the CLOSE command).
+.pp
+The CCP constructs the first 16 bytes of two optional FCBs for a 
+transient by scanning the remainder of the line following the 
+transient name, denoted by file1 and file2 in the prototype 
+command line described above, with unspecified fields set to 
+ASCII blanks.  The first FCB is constructed at location 
+BOOT+005CH and can be used as is for subsequent file operations.  
+The second FCB occupies the d0...dn portion of the first FCB and 
+must be moved to another area of memory before use.  If, for 
+example, the following command line is typed:
+.sp
+.ti 8
+PROGNAME B:X.ZOT Y.ZAP
+.bp
+the file PROGNAME.COM is loaded into the TPA, and the default FCB 
+at BOOT+005CH is initialized to drive code 2, filename X, and 
+filetype ZOT.  The second drive code takes the default value 0, 
+which is placed at BOOT-006CH, with the filename Y placed into 
+location BOOT+006DH and filetype ZAP located 8 bytes later at 
+BOOT+0075H.  All remaining fields through cr are set to zero.  
+Note again that it is the programmer's 
+responsibility to move this second filename and filetype to another 
+area, usually a separate file control block, before opening the 
+file that begins at BOOT+005CH, because the open operation 
+overwrites the second name and type.
+.pp
+If no filenames are specified in the original command, the 
+fields beginning at BOOT+005DH and BOOT+006DH contain blanks.  In 
+all cases, the CCP translates lower-case alphabetics to upper-case
+to be consistent with the CP/M file naming conventions.
+.pp
+As an added convenience, the default buffer area at location 
+BOOT+0080H is initialized to the command line tail typed by the 
+operator following the program name.  The first position contains 
+the number of characters, with the characters themselves 
+following the character count.  Given the above command line, the 
+area beginning at BOOT+0080H is initialized as follows:
+.sp 2
+.nf
+.in 5
+BOOT+0080H:
+.sp
++00 +01 +02 +03 +04 +05 +06 +07 +08 +09 +A  +B  +C  +D  +E
+E   ''  'B' ':' 'X' '.' 'Z' 'O' 'T' ''  'Y' '.' 'Z' 'A' 'P'
+.fi
+.in 0
+.sp 2
+where the characters are translated to upper-case ASCII with 
+uninitialized memory following the last valid character.  Again, 
+it is the responsibility of the programmer to extract the 
+information from this buffer before any file operations are 
+performed, unless the default DMA address is explicitly changed.
+.pp
+Individual functions are described in detail in the pages that 
+follow.
+.bp
+.sp 4
+.nf
+                    FUNCTION 0:  SYSTEM RESET
+.sp
+                    Entry Parameters:
+                           Register C:  00H
+.fi
+.sp 2
+.pp
+The System Reset function returns control to the CP/M operating 
+system at the CCP level.  The CCP reinitializes the disk 
+subsystem by selecting and logging-in disk drive A.  This 
+function has exactly the same effect as a jump to location BOOT.
+.sp 6
+.nf
+                   FUNCTION 1:  CONSOLE INPUT
+.sp
+                Entry Parameters:
+                      Register C:  01H
+.sp
+                Returned Value:
+                      Register A:  ASCII Character
+.fi
+.sp 2
+.pp
+The Console Input function reads the next console character to 
+register A.  Graphic characters, along with carriage return, line-feed,
+and back space (CTRL-H) are echoed to the console.  Tab 
+characters, CTRL-I, move the cursor to the next tab stop.  A check 
+is made for start/stop scroll, CTRL-S, and start/stop printer echo, 
+CTRL-P.  The FDOS does not return to the calling program until a 
+character has been typed, thus suspending execution if a 
+character is not ready.
+.bp
+.sp 4
+.nf
+                   FUNCTION 2:  CONSOLE OUTPUT
+.sp
+                Entry Parameters
+                      Register C:  02H
+                      Register E:  ASCII Character
+.fi
+.sp 2
+.pp
+The ASCII character from register E is sent to the console 
+device.  As in Function 1, tabs are expanded and checks are made 
+for start/stop scroll and printer echo.
+.sp 6
+.nf
+                    FUNCTION 3:  READER INPUT
+.sp
+                Entry Parameters:
+                      Register C:  03H
+.sp
+                Returned Value:
+                      Register A:  ASCII Character
+.fi
+.sp 2
+.pp
+The Reader Input function reads the next character from the 
+logical reader into register A.  See the IOBYTE definition in 
+Chapter 6.  Control does not return until the character has been 
+read.
+.bp
+.sp 4
+.nf
+                    FUNCTION 4:  PUNCH OUTPUT
+.sp
+                 Entry Parameters:
+                       Register C:  04H
+                       register E:  ASCII Character
+.fi
+.sp 2
+.pp
+The Punch Output function sends the character from register E to 
+the logical punch device.
+.sp 6
+.nf
+                    FUNCTION 5:  LIST OUTPUT
+.sp
+                Entry Parameters:
+                      Register C:  05H
+                      Register E:  ASCII Character
+.fi
+.sp 2
+.pp
+The List Output function sends the ASCII character in register E 
+to the logical listing device.
+.bp
+.sp 4
+.nf
+                 FUNCTION 6:  DIRECT CONSOLE I/O
+.sp
+                Entry Parameters:
+                      Register C:  06H
+                      Register E:  0FFH (input) or
+                                   char (output)
+.sp
+                Returned Value:
+                      Register A:  char or status
+.fi
+.sp 2
+.pp
+Direct Console I/O is supported under CP/M for those specialized 
+applications where basic console input and output are required.  
+Use of this function should, in general, be avoided since it 
+bypasses all of the CP/M normal control character functions (for example, 
+CTRL-S and CTRL-P).  Programs that perform direct I/O 
+through the BIOS under previous releases of CP/M, however, should 
+be changed to use direct I/O under BDOS so that they can be fully 
+supported under future releases of MP/M \ and CP/M.
+.pp
+Upon entry to Function 6, register E either contains hexadecimal 
+FF, denoting a console input request, or an ASCII character.  If 
+the input value is FF, Function 6 returns A = 00 if no character 
+is ready, otherwise A contains the next console input character.
+.pp
+If the input value in E is not FF, Function 6 assumes that E 
+contains a valid ASCII character that is sent to the console.
+.pp
+Function 6 must not be used in conjunction with other console I/O 
+functions.
+.sp 6
+.nf
+                    FUNCTION 7:  GET I/O BYTE
+.sp
+                Entry Parameters:
+                      Register C:  07H
+.sp
+                Returned Value:
+                      Register A:  I/O Byte Value
+.fi
+.sp 2
+.pp
+The Get I/O Byte function returns the current value of IOBYTE in 
+register A.  See Chapter 6 for IOBYTE definition.
+.bp
+.sp 4
+.nf
+                    FUNCTION 8:  SET I/O BYTE
+.sp
+                Entry Parameters:
+                      Register C:  08H
+                      Register E:  I/O Byte Value
+.fi
+.sp 2
+.pp
+The SET I/O Byte function changes the IOBYTE value to that given 
+in register E.
+.sp 6
+.nf
+                    FUNCTION 9:  PRINT STRING
+.sp
+               Entry Parameters:
+                     Register C:  09H
+                   Registers DE:  String Address
+.fi
+.sp 2
+.pp
+The Print String function sends the character string stored in 
+memory at the location given by DE to the console device, until a 
+$ is encountered in the string.  Tabs are expanded as in Function 
+2, and checks are made for start/stop scroll and printer echo.
+.nx fiveb.tex
+
+
+
+

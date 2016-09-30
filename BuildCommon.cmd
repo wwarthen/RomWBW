@@ -1,5 +1,5 @@
 @echo off
 setlocal
 
-pushd Source && call BuildCommon && popd
-pushd Hardware && call Build && popd
+setlocal & pushd Source && call BuildCommon & endlocal
+setlocal & pushd Hardware && call Build & endlocal

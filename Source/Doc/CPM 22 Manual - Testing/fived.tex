@@ -1,0 +1,497 @@
+.cs 5
+.mt 5
+.mb 6
+.pl 66
+.ll 65
+.po 10
+.hm 2
+.fm 2
+.sp 3
+.he CP/M Operating System Manual   5.5   Sample Random Access Program
+.sh
+5.5  A Sample Random Access Program
+.qs
+.tc    5.5  A Sample Random Access Program
+.pp
+This chapter concludes with an extensive example of random access operation.
+The program listed below performs the simple function of reading or writing
+random records upon command from the terminal.  When a
+program has been created, assembled, and placed into a file 
+labeled RANDOM.COM, the CCP level command
+.sp
+.ti 8
+RANDOM X.DAT
+.sp
+starts the test program.  The program looks for a file by the 
+name X.DAT and, if found, proceeds to prompt the console for 
+input.  If not found, the file is created before the prompt is 
+given.  Each prompt takes the form
+.sp
+.ti 8
+next command?
+.sp
+and is followed by operator input, followed by a carriage 
+return.  The input commands take the form
+.sp
+.ti 8
+nW  nR  Q
+.sp
+where n is an integer value in the range 0 to 65535, and W, R, 
+and Q are simple command characters corresponding to random 
+write, random read, and quit processing, respectively.  If the W 
+command is issued, the RANDOM program issues the prompt
+.sp
+.ti 8
+type data:
+.sp
+The operator then responds by typing up to 127 characters, 
+followed by a carriage return.  RANDOM then writes the character 
+string into the X.DAT file at record n.  If the R command is 
+issued, RANDOM reads record number n and displays the string 
+value at the console,  If the Q command is issued, the X.DAT file 
+is closed, and the program returns to the CCP.  In the interest 
+of brevity, the only error message is
+.sp
+.ti 8
+error, try again.
+.pp
+The program begins with an initialization section where the input 
+file is opened or created, followed by a continuous loop at the 
+label ready where the individual commands are interpreted.  The 
+DFBC at 005CH and the default buffer at 0080H are used in all 
+disk operations.  The utility subroutines then follow, which 
+contain the principal input line processor, called readc.  This 
+particular program shows the elements of random access 
+processing, and can be used as the basis for further program 
+development.
+.ll 75
+.sp 3
+.nf
+.sh
+                            Sample Random Access Program for CP/M 2.0
+.qs
+
+0100                              org    100h      ;base of tpa
+                         ;
+0000 =                   reboot   equ    0000h     ;system reboot
+0005 =                   bdos     equ    0005h     ;bdos entry point
+                         ;
+0001 =                   coninp   equ    1         ;console input function
+0002 =                   conout   equ    2         ;console output function
+0009 =                   pstring  equ    9         ;print string until '$'
+000a =                   rstring  equ    10        ;read console buffer
+000c =                   version  equ    12        ;return version number
+000f =                   openf    equ    15        ;file open function
+0010 =                   closef   equ    16        ;close function
+0016 =                   makef    equ    22        ;make file function
+0021 =                   readr    equ    33        ;read random
+0022 =                   writer   equ    34        ;write random
+                         ;
+005c =                   fcb      equ    005ch     ;default file control
+                                                   ;block
+007d =                   ranrec   equ    fcb+33    ;random record position
+007f =                   ranovf   equ    fcb+35    ;high order (overflow)
+                                                   ;byte
+0080 =                   buff     equ    0080h     ;buffer address
+                         ;
+000d =                   cr       equ    0dh       ;carriage return
+000a =                   lf       equ    0ah       ;line feed
+                         ;
+
+
+.sh
+                          Load SP, Set-Up File for Random Access
+.qs
+
+0100 31bc00                       lxi    sp,stack
+                         ;
+                         ;        version 2.0
+0103 0e0c                         mvi    c,version
+0105 cd0500                       call   bdos
+0108 fe20                         cpi    20h       ;version 2.0 or better?
+010a d21600                       jnc    versok
+                         ;        bad version, message and go back
+010d 111b00                       lxi    d,badver
+0110 cdda00                       call   print
+0113 c30000                       jmp    reboot
+                         ;
+                         versok:
+                         ;        correct versionm for random access
+0116 0e0f                         mvi    c,openf   ;open default fcb
+0118 115c00                       lxi    d,fcb
+011b cd 0500                      call   bdos
+011e 3c                           inr    a         ;err 255 becomes zero
+011f c23700                       jnz    ready
+                         ;
+                         ;        connot open file, so create it
+0122 0e16                         mvi    c,makef
+0124 115c00                       lxi    d,fcb
+0127 cd0500                       call   bdos
+012a 3c                           inr    a         ;err 255 becomes zero
+012b c23700                       jnz    ready
+                         ;
+                         ;        cannot create file, directory full
+012e 113a00                       lxi    d,nospace
+0131 cdda00                       call   print
+0134 c30000                       jmp    reboot    ;back to ccp
+.sp 2
+.sh
+                          Loop Back to Ready After Each Command
+.qs
+.sp
+                         ;
+                         ready:
+                         ;        file is ready for processing
+                         ;
+0137 cde500                       call   readcom   ;read next command
+013a 227d00                       shld   ranrec    ;store input record#
+013d 217f00                       lxi    h,ranovf
+0140 3600                         mvi    m,0       ;clear high byte if set
+0142 fe51                         cpi    'Q'       ;quit?
+0144 c25600                       jnz    notq
+                         ;
+                         ;        quit processing, close file
+0147 0e10                         mvi    c,closef
+0149 115c00                       lxi    d,fcb
+014c cd0500                       call   bdos
+014f 3c                           inr    a         ;err 255 becomes 0
+0150 cab900                       jz     error     ;error message, retry
+0153 c30000                       jmp    reboot    ;back to ccp
+                         ;
+.sp 2
+.sh
+                          End of Quit Command, Process Write
+.qs
+.sp
+                         notq:
+                         ;        not the quit command, random write?
+0156 fe57                         cpi    'W'
+0158 c28900                       jnz    notw
+                         ;
+                         ;        this is a random write, fill buffer untill cr
+015b 114d00                       lxi    d,datmsg
+015e cdda00                       call   print     ;data prompt
+0161 0e7f                         mvi    c,127     ;up to 127 characters
+0163 218000                       lxi    h,buff    ;destination
+                         rloop:   ;read next character to buff
+0166 c5                           push   b         ;save counter
+0167 e5                           push   h         ;next destination
+0168 cdc200                       call   getchr    ;character to a
+016b e1                           pop    h         ;restore counter
+016c c1                           pop    b         ;restore next to fill
+016d fe0d                         cpi    cr        ;end of line?
+016f ca7800                       jz     erloop
+                         ;        not end, store character
+0172 77                           mov    m,a
+0173 23                           inx    h         ;next to fill
+0174 0d                           dcr    c         ;counter goes down
+0175 c26600                       jnz    rloop     ;end of buffer?
+                         erloop:
+                         ;        end of read loop, store 00
+0178 3600                         mvi    m,0
+                         ;
+                         ;        write the record to selected record number
+017a 0e22                         mvi    c,writer
+017c 115c00                       lxi    d,fcb
+017c cd0500                       call   bdos
+0182 b7                           ora    a         ;erro code zero?
+0183 c2b900                       jnz    error     ;message if not
+0186 c33700                       jmp    ready     ;for another record
+                         ;
+.sp 2
+.sh
+                          End of Write Command, Process Read
+.qs
+.sp
+                         notw:
+                         ;        not a write command, read record?
+0189 fe52                         cpi    'R'
+018b c2b900                       jnz    error     ;skip if not
+                         ;
+                         ;        read random record
+018e 0e21                         mvi    c,readr
+0190 115c00                       lxi    d,fcb
+0193 cd0500                       call   bdos
+0196 b7                           ora    a         ;return code 00?
+0197 c2b900                       jnz    error
+                         ;
+                         ;        read was successful, write to console
+019a cdcf00                       call   crlf      ;new line
+019d 0e80                         mvi    c,128     ;max 128 characters
+019f 218000                       lxi    h,buff    ;next to get
+                         wloop:
+01a2 7e                           mov    a,m       ;next character
+01a3 23                           inx    h         ;next to get
+01a4 e67f                         ani    7fh       ;mask parity
+01a6 ca3700                       jz     ready     ;for another command
+                                                   ;if 00
+01a9 c5                           push   b         ;save counter
+01aa e5                           push   h         ;save next to get
+01ab fe20                         cpi    ''        ;graphic?
+01ad d4c800                       cnc    putchr    ;skip output if not
+01b0 e1                           pop    h
+01b1 c1                           pop    b
+01b2 0d                           dcr    c         ;count=count-1
+01b3 c2a200                       jnz    wloop
+01b6 c33700                       jmp    ready
+.bp
+.sh
+                          End of Read Command, All Errors End Up Here
+.qs
+.sp
+                         ;
+                         error:
+01b9 115900                       lxi    d,errmsg
+01bc cdda00                       call   print
+01bf c33700                       jmp    ready
+                         ;
+.sp 2
+.sh
+                          Utility Subroutines for Console I/O
+.qs
+.sp
+                         getchr:
+                                  ;read next console character to a
+01c2 0e01                         mvi    c,coninp
+01c4 cd0500                       call   bdos
+01c7 c9                           ret
+                         ;
+                         putchr:
+                                  ;write character from a to console
+01c8 0e02                         mvi    c,conout
+01ca 5f                           mov    e,a       ;character to send
+01cb cd0500                       call   bdos      ;send character
+01ce c9                           ret
+                         ;
+                         crlf:
+                                  ;send carriage return line feed
+01cf 3e0d                         mvi    a,cr      ;carriage return
+01d1 cdc800                       call   putchr
+01d4 3e0a                         mvi    a,lf      ;line feed
+01d6 cdc800                       call   putchr
+01d9 c9                           ret
+                         ;
+                         print:
+                                  ;print the buffer addressed by de untill $
+01da d5                           push   d
+01db cdcf00                       call   crlf
+01de d1                           pop    d         ;new line
+01df 0e09                         mvi    c,pstring
+01e0 cd0500                       call   bdos      ;print the string
+01e4 c9                           ret
+                         ;
+                         readcom:
+                                  ;read the next command line to the conbuf
+01e5 116b00                       lxi    d,prompt
+01e8 cdda00                       call   print     ;command?
+01eb 0e0a                         mvi    c,rstring
+01ed 117a00                       lxi    d,conbuf
+01f0 cd0500                       call   bdos      ;read command line
+                         ;        command line is present, scan it
+01f3 210000                       lxi    h,0       ;start with 0000
+01f6 117c00                       lxi    d,conlin  ;command line
+01f9 1a                  readc:   ldax   d         ;next command
+                                                   ;character
+01fa 13                           inx    d         ;to next command
+                                                   ;position
+01fb b7                           ora    a         ;cannot be end of
+                                                   ;command
+01fc c8                           rz
+                         ;        not zero, numeric?
+01fd d630                         sui    '0'
+01ff fe0a                         cpi    10        ;carry if numeric
+0201 d21300                       jnc    endrd
+                         ;        add-in next digit
+0204 29                           dad    h         ;*2
+0205 4d                           mov    c,l
+0206 44                           mov    b,h       ;bc = value * 2
+0207 29                           dad    h         ;*4
+0208 29                           dad    h         ;*8
+0209 09                           dad    b         ;*2 + *8 = *10
+020a 85                           add    l         ;*digit
+020b 6f                           mov    l,a
+020c d2f900                       jnc    readc     ;for another char
+020f24                            inr    h         ;overflow
+0210 c3f900                       jmp    readc     ;for another char
+                         endrd:
+                         ;        end of read, restore value in a
+0213 c630                         adi    '0'       ;command
+0215 fe61                         cpi    'a'       ;translate case?
+0217 d8                           rc
+                         ;        lower case, mask lower case bits
+0218 e65f                         ani    101$1111b
+021a c9                           ret
+                         ;
+.sp 2
+.sh
+                          String Data Area for Console Messages
+.qs
+.sp
+                         badver:
+021b 536f79                       db     'sorry, you need cp/m version 2$'
+                         nospace:
+023a 4e6f29                       db     'no directory space$'
+                         datmsg:
+024d 547970                       db     'type data: $'
+                         errmsg:
+0259 457272                       db     'error, try again.$'
+                         prompt:
+026b 4e6570                       db     'next command? $'
+                         ;
+.sp 2
+.mb 5
+.fm 1
+.sh
+                          Fixed and Variable Data Area
+.qs
+.sp
+027a 21                  conbuf:  db     conlen     ;length of console buffer
+027b                     consiz:  ds     1          ;resulting size after read
+027c                     conlin:  ds     32         ;length 32 buffer
+0021 =                   conlen   equ    $-consiz
+                         ;
+029c                              ds     32         ;16 level stack
+                         stack:
+02bc                              end
+.ll 65
+.fi
+.pp
+Major improvements could be made to this particular program to enhance
+its operation.  In fact, with some work, this program could 
+evolve into a simple data base management system.  One could, for 
+example, assume a standard record size of 128 bytes, consisting 
+to arbitrary fields within the record.  A program, called GETKEY, 
+could be developed that first reads a sequential file and 
+extracts a specific field defined by the operator.  For example, 
+the command
+.mb 6
+.fm 2
+.sp
+.ti 8
+GETKEY NAMES.DAT LASTNAME 10 20
+.sp
+would cause GETKEY to read the data base file NAMES.DAT and 
+extract the LAST-NAME field from each record, starting in 
+position 10 and ending at character 20.  GETKEY builds a table in 
+memory consisting of each particular LASTNAME field, along with 
+its 16-bit record number location within the file.  The GETKEY 
+program then sorts this list and writes a new file, called 
+LASTNAME.KEY, which is an alphabetical list of LASTNAME fields 
+with their corresponding record numbers.  This list is called an 
+inverted index in information retrieval parlance.
+.pp
+If the programmer were to rename the program shown above as QUERY 
+and modify it so that it reads a sorted key file into memory, 
+the command line might appear as
+.sp
+.ti 8
+QUERY NAMES.DAT LASTNAME.KEY
+.sp
+Instead of reading a number, the QUERY program reads an 
+alphanumeric string that is a particular key to find in the 
+NAMES.DAT data base.  Because the LASTNAME.KEY list is sorted, one 
+can find a particular entry rapidly by performing a binary 
+search, similar to looking up a name in the telephone book.  
+Starting at both ends of the list, one examines the 
+entry halfway in between and, if not matched, splits either the 
+upper half or the lower half for the next search.  You will 
+quickly reach the item you are looking for and find the 
+corresponding record number.  You should fetch and display 
+this record at the console, just as was done in the program shown 
+above.
+.pp
+With some more work, you can allow a fixed grouping size 
+that differs from the 128-byte record shown above.  This is 
+accomplished by keeping track of the record number and the 
+byte offset within the record.  Knowing the group size, you 
+randomly access the record containing the proper group, offset 
+to the beginning of the group within the record read sequentially 
+until the group size has been exhausted.
+.pp
+Finally, you can improve QUERY considerably by allowing boolean 
+expressions, which compute the set of records that satisfy 
+several relationships, such as a LASTNAME between HARDY and 
+LAUREL and an AGE lower than 45.  Display all the records that 
+fit this description.  Finally, if your lists are getting 
+too big to fit into memory, randomly access key 
+files from the disk as well.
+.bp
+.tc    5.6  System Function Summary
+.he CP/M Operating System Manual         5.6  System Function Summary
+.sh
+5.6  System Function Summary
+.qs
+.sp
+.nf
+Function        Function                Input                Output
+Number          Name
+.sp
+Decimal     Hex
+.sp
+ 0           0   System Reset            C = 00H              none
+ 1           1   Console Input           C = 01H              A = ASCII char
+ 2           2   Console Output          E = char             none
+ 3           3   Reader Input                                 A = ASCII char
+ 4           4   Punch Output            E = char             none
+ 5           5   List Output             E = char             none
+ 6           6   Direct Console I/O      C = 06H              A = char or status
+
+                                         E = 0FFH (input) or  (no value)
+                                             0FEH (status) or
+                                             char (output)
+ 7           7   Get I/O Byte            none                 A = I/O byte
+                                                               Value
+ 8           8   Set I/O Byte            E = I/O Byte         none
+ 9           9   Print String            DE = Buffer Address  none
+10           A   Read Console Buffer     DE = Buffer          Console
+                                                               Characters
+                                                               in Buffer
+11           B   Get Console Status      none                 A = 00/non zero
+12           C   Return Version Number   none                 HL: Version
+                                                                 Number
+13           D   Reset Disk System       none                   none
+14           E   Select Disk             E = Disk Number        none
+15           F   Open File               DE = FCB Address       FF if not found
+16          10   Close File              DE = FCB Address       FF if not found
+17          11   Search For First        DE = FCB Address       A = Directory
+                                                                  Code
+18          12   Search For Next         none                   A = Directory
+                                                                  Code
+19          13   Delete File             DE = FCB Address       A = none
+20          14   Read Sequential         DE = FCB Address       A = Error Code
+21          15   Write Sequential        DE = FCB Address       A = Error Code
+22          16   Make File               DE = FCB Address       A = FF if no DIR
+                                                                  Space
+23          17   Rename File             DE = FCB Address       A = FF in not
+                                                                  found
+24          18   Return Login Vector     none                   HL = Login
+                                                                   Vector*
+25          19   Return Current Disk     none                   A = Current Disk
+                                                                  Number
+26          1A   Set DMA Address         DE = DMA Address       none
+27          1B   Get ADDR (ALLOC)        none                   HL = ALLOC
+                                                                   Address*
+28          1C   Write Protect Disk      none                   none
+29          1D   Get Read/only Vector    none                   HL = R/O
+                                                                 Vector Value*
+30          1E   Set File Attributes     DE = FCB Address       A = none
+31          1F   Get ADDR (Disk Parms)   none                   HL = DPB
+                                                                 Address
+32          20   Set/Get User Code       E = 0FFH for Get       User Number
+                                         E = 00 to 0FH for Set
+33          21   Read Random             DE = FCB Address       A = Error Code
+34          22   Write Random            DE = FCB Address       A = Error Code
+35          23   Compute File Size       DE = FCB Address       r0, r1, r2
+36          24   Set Random Record       DE = FCB Address       r0, r1, r2
+37          25   Reset Drive             DE = Drive Vector      A = 0
+38          26   Access Drive            not supported
+39          27   Free Drive              not supported
+40          28   Write Random with Fill  DE = FCB               A = Error Code
+.fi
+.sp 4
+*Note that A = L, and B = H upon return.
+.sp 2
+.ce
+End of Section 5
+.nx sixa
+

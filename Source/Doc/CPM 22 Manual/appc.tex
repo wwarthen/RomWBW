@@ -1,0 +1,143 @@
+.pl 51
+.nf
+.bp 1
+.ft                                                       C-%
+                                     Appendix C
+
+                          A Skeletal GETSYS/PUTSYS Program
+
+
+
+                               ;          combined getsys and putsys programs from
+                               ;          Sec 6.4
+                               ;          Start the programs at the base of the TPA
+
+0100                                      org 0100h
+
+0014 =                         msize      equ 20            ;size of cp/m in Kbytes
+
+                               ;"bias" is the amount to add to addresses for > 20k
+                               ;          (referred to as "b" throughout the text)
+
+0000 =                         bias       equ (msize-20)*1024
+3400 =                         ccp        equ 3400h+bias
+3c00 =                         bdos       equ ccp+0800h
+4a00 =                         bios       equ ccp+1600h
+
+                               ;          getsys programs tracks 0 and 1 to memory at
+                               ;          3880h + bias
+
+                               ;          register                usage
+                               ;          a                 (scratch register)
+                               ;          b                 track count (0...76)
+                               ;          c                 sector count (1...26)
+                               ;          d,e               (scratch register pair)
+                               ;          h,l               load address
+                               ;          sp                set to track address
+
+                               gstart:                      ;start of getsys
+0100 318033                               lxi  sp,ccp-0080h ;convenient place
+0103 218033                               lxi  h,ccp-0080h  ;set initial load
+0106 0600                                 mvi  b 0          ;start with track
+                               rd$trk:                      ;read next track
+0108 0e01                                 mvi  c,1          ;each track start
+                               rd$sec:
+010a cd0003                               call read$sec     ;get the next sector
+010d 118000                               lxi  d,128        ;offset by one sector
+0110 19                                   dad  d            ; (hl=hl+128)
+0111 0c                                   inr  c            ;next sector
+0112 79                                   mov  a,c          ;fetch sector number
+0113 felb                                 cpi  27           ;and see if last
+0115 da0a01                               jc   rdsec        ;<, do one more
+
+                               ;arrive here at end of track, move to next track
+
+0118 04                                   inr  b            ;track = track+1
+0119 78                                   mov  a,b          ;check for last
+011a fe02                                 cpi  2            ;track = 2 ?
+011c da0801                               jc   rd$trk       ;<, do another
+
+                               ;arrive here at end of load, halt for lack of anything
+                               ;better
+
+011f fb                                   ei
+0120 76                                   hlt
+                               ;          putsys program, places memory image
+                               ;          starting at
+                               ;          3880h + bias back to tracks 0 and 1
+                               ;          start this program at the next page boundary
+0200                                      org ($+0100h) and 0ff00h
+
+                               put$sys:
+0200 318033                               lxi  sp,ccp-0080h ;convenient place
+0203 218033                               lxi  h,ccp-0080h  ;start of dump
+0206 0600                                 mvi  b,0          ;start with track
+                               wr$trk:
+0208 0e01                                 mvi  b,1          ;start with sector
+                               wr$sec:
+020a cd0004                               call write$sec    ;write one sector
+020d 118000                               lxi  d,128        ;length of each
+0210 19                                   dad  d            ;<hl>=<hl> + 128
+0211 0c                                   inr  c            ; <c>=<c> + 1
+0212 79                                   mov  a,c          ;see if
+0213 felb                                 cpi  27           ;past end of track
+0215 da0a02                               jc   wr$sec       ;no, do another
+
+                               ;arrive here at end of track, move to next track
+
+0218 04                                   inr  b            ;track = track+1
+0219 78                                   mov  a,b          ;see if
+021a fe02                                 cpi  2            ;last track
+021c da0802                               jc   wr$trk       ;no, do another
+
+                               ;          done with putsys, halt for lack of anything
+                               ;          better
+
+02lf fb                                   ei
+0220 76                                   hit
+
+                               ;user supplied subroutines for sector read and write
+
+                               ;          move to next page boundary
+
+0300                                      org ($+0100h) and 0ff00h
+
+                               read$sec:
+                                          ;read the next sector
+                                          ;track in <b>,
+                                          ;sector in <c>
+                                          ;dmaaddr in <hl>
+
+0300 c5                                   push b
+0301 e5                                   push h
+
+                               ;user defined read operation goes here
+0302                                      ds   64
+
+0342 el                                   pop  h
+0343 cl                                   pop  b
+0344 c9                                   ret
+
+0400                                      org ($+0100h) and 0ff00h ;another page
+                                                                   ;boundary
+
+                               write$sec:
+
+                                          ;same parameters as read$sec
+
+0400 c5                                   push b
+0401 e5                                   push h
+
+                               ;user defined write operation goes here
+0402                                      ds   64
+
+0442 el                                   pop  h
+0443 cl                                   pop  b
+0444 c9                                   ret
+
+                               ;end of getsys/putsys program
+
+0445                                      end
+
+.nx appd
+

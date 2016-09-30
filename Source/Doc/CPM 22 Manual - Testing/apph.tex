@@ -1,0 +1,904 @@
+.bp 1
+.op
+.cs 5
+.mt 5
+.mb 6
+.pl 66
+.ll 65
+.po 10
+.hm 2
+.fm 2
+.he
+.ft                                H-%
+.pc 1
+.tc H  Glossary
+.ce 2
+.sh
+Appendix H
+.sp
+.sh
+Glossary
+.qs
+.he CP/M Operating System Manual                          H  Glossary
+.sp 3
+.sh
+address:  \c
+.qs
+Number representing the location of a byte in memory.  Within 
+CP/M there are two kinds of addresses:  logical and physical.  A 
+physical address refers to an absolute and unique location within 
+the computer's memory space.  A logical address refers to the 
+offset or displacement of a byte in relation to a base location.  
+A standard CP/M program is loaded at address 0100H, the base 
+value; the first instruction of a program has a physical address 
+of 0100H and a relative address or offset of OH.
+.sp
+.sh
+allocation vector (ALV):  \c
+.qs
+An allocation vector is maintained in the BIOS for each logged-in 
+disk drive.  A vector consists of a string of bits, one for each 
+block on the drive.  The bit corresponding to a particular block 
+is set to one when the block has been allocated and to zero 
+otherwise.  The first two bytes of this vector are initialized 
+with the bytes AL0 and AL1 on, thus allocating the directory 
+blocks.  CP/M Function 27 returns the allocation vector address.
+.sp
+.sh
+AL0, AL1:  \c
+.qs
+Two bytes in the disk parameter block that reserve data blocks 
+for the directory.  These two bytes are copied into the first two 
+bytes of the allocation vector when a drive is logged in.  See \c
+.sh
+allocation vector.
+.sp
+.sh
+ALV:  \c
+.qs
+See \c
+.sh
+allocation vector.
+.sp
+.sh
+ambiguous filename:  \c
+.qs
+Filename that contains either of the CP/M wildcard characters, ? 
+or *, in the primary filename, filetype, or both.  When you 
+replace characters in a filename with these wildcard characters, 
+you create an ambiguous filename and can easily reference more 
+than one CP/M file in a single command line.
+.sp
+.sh
+American Standard Code for Information Interchange:  \c
+.qs
+See \c
+.sh
+ASCII.
+.sp
+.sh
+applications program:  \c
+.qs
+Program designed to solve a specific problem.  Typical 
+applications programs are business accounting packages, word 
+processing (editing) programs and mailing list programs.
+.sp
+.sh
+archive attribute:  \c
+.qs
+File attribute controlled by the high-order bit of the t3 byte 
+(FCB+11) in a directory element.  This attribute is set if the 
+file has been archived.
+.sp
+.sh
+argument:  \c
+.qs
+Symbol, usually a letter, indicating a place into which you can 
+substitute a number, letter, or name to give an appropriate 
+meaning to the formula in question.
+.sp
+.sh
+ASCII:  \c
+.qs
+American Standard Code for Information Interchange.  ASCII is a 
+standard set of seven-bit numeric character codes used to 
+represent characters in memory.  Each character requires one byte 
+of memory with the high-order bit usually set to zero.  
+Characters can be numbers, letters, and symbols.  An ASCII file can be 
+intelligibly displayed on the video screen or printed on paper.
+.sp
+.sh
+assembler:  \c
+.qs
+Program that translates assembly language into the binary machine 
+code.  Assembly language is simply a set of mnemonics used to 
+designate the instruction set of the CPU.  See \c
+.sh
+ASM \c
+.qs
+in Section 3 of this manual.
+.sp
+.sh
+back-up:  \c
+.qs
+Copy of a disk or file made for safekeeping, or the creation of 
+the duplicate disk or file.
+.sp
+.sh
+Basic Disk Operating System:  \c
+.qs
+See \c
+.sh
+BDOS.
+.sp
+.sh
+BDOS:  \c
+.qs
+Basic Disk Operating System.  The BDOS module of the CP/M 
+operating system provides an interface for a user program to the 
+operating system.  This interface is in the form of a set of 
+function calls which may be made to the BDOS through calls to 
+location 0005H in page zero.  The user program specifies the 
+number of the desired function in register C.  User programs 
+running under CP/M should use BDOS functions for all I/O 
+operations to remain compatible with other CP/M systems and 
+future releases.  The BDOS normally resides in high memory 
+directly below the BIOS.
+.sp
+.sh
+bias:  \c
+.qs
+Address value which when added to the origin address of your BIOS 
+module produces 1F80H, the address of the BIOS module in the 
+MOVCPM image.  There is also a bias value that when added to the 
+BOOT module origin produces 0900H, the address of the BOOT module 
+in the MOVCPM image.  You must use these bias values with the R 
+command under DDT or SID \ \ when you patch a CP/M system.  If you do 
+not, the patched system may fail to function.
+.sp
+.sh
+binary:  \c
+.qs
+Base 2 numbering system.  A binary digit can have one of two 
+values:  0 or 1.  Binary numbers are used in computers because 
+the hardware can most easily exhibit two states:  off and on. 
+Generally, a bit in memory represents one binary digit.
+.sp
+.sh
+Basic Input/Output System:  \c
+.qs
+See \c
+.sh
+BIOS.
+.sp
+.sh
+BIOS:  \c
+.qs
+Basic Input/Output System.  The BIOS is the only hardware-
+dependent module of the CP/M system.  It provides the BDOS with a 
+set of primitive I/O operations.  The BIOS is an assembly 
+language module usually written by the user, hardware 
+manufacturer, or independent software vendor, and is the key to 
+CP/M's portability.  The BIOS interfaces the CP/M system to its 
+hardware environment through a standardized jump table at the 
+front of the BIOS routine and through a set of disk parameter 
+tables which define the disk environment.  Thus, the BIOS 
+provides CP/M with a completely table-driven I/O system.
+.sp
+.sh
+BIOS base:  \c
+.qs
+Lowest address of the BIOS module in memory, that by definition  
+must be the first entry point in the BIOS jump table.
+.bp
+.sh
+bit:  \c
+.qs
+Switch in memory that can be set to on (1) or off (0).  Bits are 
+grouped into bytes, eight bits to a byte, which is the smallest 
+directly addressable unit in an Intel 8080 or Zilog Z80.  By 
+common convention, the bits in a byte are numbered from right, 0 
+for the low-order bit, to left, 7 for the high-order bit.  Bit 
+values are often represented in hexadecimal notation by grouping 
+the bits from the low-order bit in groups of four.  Each group of 
+four bits can have a value from 0 to 15 and thus can easily be 
+represented by one hexadecimal digit.
+.sp
+.sh
+BLM:  \c
+.qs
+See \c
+.sh
+block mask.
+.sp
+.sh
+block:  \c
+.qs
+Basic unit of disk space allocation.  Each disk drive has a fixed 
+block size (BLS) defined in its disk parameter block in the BIOS.  
+A block can consist of 1K, 2K, 4K, 8K, or 16K consecutive bytes.  
+Blocks are numbered relative to zero so that each block is unique 
+and has a byte displacement in a file equal to the block number 
+times the block size.
+.sp
+.sh
+block mask (BLM):  \c
+.qs
+Byte value in the disk parameter block at DPB + 3.  The block 
+mask is always one less than the number of 128 byte sectors that 
+are in one block.  Note that BLM = (2 ** BSH) - 1.
+.sp
+.sh
+block shift (BSH):  \c
+.qs
+Byte parameter in the disk parameter block at DPB + 2.  
+Block shift and block mask (BLM) values are determined by the 
+block size (BLS).  Note that BLM = (2 ** BSH) - 1.
+.sp
+.sp 0
+.sh
+blocking & deblocking algorithm:  \c
+.qs
+In some disk subsystems the disk sector size is larger than 128 
+bytes, usually 256, 512, 1024, or 2048 bytes.  When the host 
+sector size is larger than 128 bytes, host sectors must be 
+buffered in memory and the 128-byte CP/M sectors must be blocked 
+and deblocked by adding an additional module, the blocking and 
+deblocking algorithm, between the BIOS disk I/O routines and the 
+actual disk I/O.  The host sector size must be an even multiple 
+of 128 bytes for the algorithm to work correctly.  The blocking 
+and deblocking algorithm allows the BDOS and BIOS to function 
+exactly as if the entire disk consisted only of 128-byte sectors, 
+as in the standard CP/M installation.
+.sp
+.sh
+BLS:  \c
+.qs
+Block size in bytes.  See \c
+.sh
+block.
+.sp
+.sh
+boot:  \c
+.qs
+Process of loading an operating system into memory.  A boot 
+program is a small piece of code that is automatically executed 
+when you power-up or reset your computer.  The boot program loads 
+the rest of the operating system into memory in a manner similar 
+to a person pulling himself up by his own bootstraps.  This 
+process is sometimes called a cold boot or cold start.  Bootstrap 
+pocedures vary from system to system.  The boot program must be 
+customized for the memory size and hardware environment that the 
+operating system manages.  Typically, the boot resides on the 
+first sector of the system tracks on your system disk.  When 
+executed, the boot loads the remaining sectors of the system 
+tracks into high memory at the location for which the CP/M system 
+has been configured.  Finally, the boot transfers execution to 
+the boot entry point in the BIOS jump table so that the system 
+can initialize itself.  In this case, the boot program should be 
+placed at 900H in the SYSGEN image.  Alternatively, the boot 
+program may be located in ROM.
+.sp
+.sh
+bootstrap:  \c
+.qs
+See \c
+.sh
+boot.
+.sp
+.sh
+BSH:  \c
+.qs
+See \c
+.sh
+block shift.
+.sp
+.sh
+BTREE:  \c
+.qs
+General purpose file access method that has become the standard 
+organization for indexes in large data base systems.  BTREE 
+provides near optimum performance over the full range of file 
+operations, such as insertion, deletion, search, and search next.
+.sp
+.sh
+buffer:  \c
+.qs
+Area of memory that temporarily stores data during the transfer 
+of information.
+.sp
+.sh
+built-in commands:  \c
+.qs
+Commands that permanently reside in memory.  They respond quickly 
+because they are not accessed from a disk.
+.sp
+.sh
+byte:  \c
+.qs
+Unit of memory or disk storage containing eight bits.  A byte can 
+represent a binary number between 0 and 255, and is the smallest 
+unit of memory that can be addressed directly in 8-bit CPUs such 
+as the Intel 8080 or Zilog Z80.
+.sp
+.sh
+CCP:  \c
+.qs
+Console Command Processor.  The CCP is a module of the CP/M 
+operating system.  It is loaded directly below the BDOS module 
+and interprets and executes commands typed by the console user.  
+Usually these commands are programs that the CCP loads and calls.  
+Upon completion, a command program may return control to the CCP 
+if it has not overwritten it.  If it has, the program can reload 
+the CCP into memory by a warm boot operation initiated by either 
+a jump to zero, BDOS system reset (Function 0), or a cold boot.  
+Except for its location in high memory, the CCP works like any 
+other standard CP/M program; that is, it makes only BDOS function 
+calls for its I/O operations.
+.sp
+.sh
+CCP base:  \c
+.qs
+Lowest address of the CCP module in memory.  This term sometimes 
+refers to the base of the CP/M system in memory, as the CCP is 
+normally the lowest CP/M module in high memory.
+.sp
+.sh
+checksum vector (CSV):  \c
+.qs
+Contiguous data area in the BIOS, with one byte for each 
+directory sector to be checked, that is, CKS bytes.  See \c
+.sh
+CKS.  \c
+.qs
+A checksum vector is initialized and maintained for each logged-in
+drive.  Each directory access by the system results in a checksum 
+calculation that is compared with the one in the checksum vector.  
+If there is a discrepancy, the drive is set to Read-Only status.  
+This feature prevents the user from inadvertently switching disks 
+without logging in the new disk.  If the new disk is not logged-in,
+it is treated the same as the old one, and data on it might be 
+destroyed if writing is done.
+.sp
+.mb 5
+.fm 1
+.sh
+CKS:  \c
+.qs
+Number of directory records to be checked summed on directory 
+accesses.  This is a parameter in the disk parameter block 
+located in the BIOS.  If the value of CKS is zero, then no 
+directory records are checked.  CKS is also a parameter in the 
+diskdef macro library, where it is the actual number of directory 
+elements to be checked rather than the number of directory 
+records.
+.sp
+.sh
+cold boot:  \c
+.qs
+See \c
+.sh
+boot.  \c
+.qs
+Cold boot also refers to a jump to the boot entry point in the 
+BIOS jump table.
+.sp
+.mb 6
+.fm 2
+.sh
+COM:  \c
+.qs
+Filetype for a CP/M command file.  See \c
+.sh
+command file.
+.sp
+.sh
+command:  \c
+.qs
+CP/M command line.  In general, a CP/M command line has three 
+parts:  the command keyword, command tail, and a carriage return.  
+To execute a command, enter a CP/M command line directly after 
+the CP/M prompt at the console and press the carriage return or 
+enter key.
+.sp
+.sh
+command file:  \c
+.qs
+Executable program file of filetype COM.  A command file is a 
+machine language object module ready to be loaded and executed at 
+the absolute address of 0100H.  To execute a command file, enter 
+its primary filename as the command keyword in a CP/M command 
+line.
+.sp
+.sh
+command keyword:  \c
+.qs
+Name that identifies a CP/M command, usually the primary filename 
+of a file of type COM, or a built-in command.  The command 
+keyword precedes the command tail and the carriage return in the 
+command line.
+.sp
+.sh
+command syntax:  \c
+.qs
+Statement that defines the correct way to enter a command.  The 
+correct structure generally includes the command keyword, the 
+command tail, and a carriage return.  A syntax line usually 
+contains symbols that you should replace with actual values when 
+you enter the command.
+.sp
+.sh
+command tail:  \c
+.qs
+Part of a command that follows the command keyword in the command 
+line.  The command tail can include a drive specification, a 
+filename and filetype, and options or parameters.  Some 
+commands do not require a command tail.
+.sp
+.sh
+CON:  \c
+.qs
+Mnemonic that represents the CP/M console device.
+For example, the CP/M command PIP CON:=TEST.SUB displays the 
+file TEST.SUB on the console device.  The explanation of the STAT 
+command tells how to assign the logical device CON: to various 
+physical devices.  \c
+See \c
+.sh
+console.
+.sp
+.sh
+concatenate:  \c
+.qs
+Name of the PIP operation that copies two or more separate files 
+into one new file in the the specified sequence.
+.sp
+.sh
+concurrency:  \c
+.qs
+Execution of two processes or operations simultaneously.
+.sp
+.sh
+CONIN:  \c
+.qs
+BIOS entry point to a routine that reads a character from the 
+console device.
+.sp
+.sh
+CONOUT:  \c
+.qs
+BIOS entry point to a routine that sends a character to the 
+console device.
+.bp
+.sh
+console:  \c
+.qs
+Primary input/output device.  The console consists of a listing 
+device, such as a screen or teletype, and a keyboard through 
+which the user communicates with the operating system or 
+applications program.
+.sp
+.sh
+Console Command Processor:  \c
+.qs
+See \c
+.sh
+CCP.
+.sp
+.sh
+CONST:  \c
+.qs
+BIOS entry point to a routine that returns the status of the 
+console device.
+.sp
+.sh
+control character:  \c
+.qs
+Nonprinting character combination.  CP/M interprets some control 
+characters as simple commands such as line editing functions.  To 
+enter a control character, hold down the CONTROL key and strike 
+the specified character key.
+.sp
+.sh
+Control Program for Microcomputers:  \c
+.qs
+See \c
+.sh
+CP/M.
+.sp
+.sh
+CP/M:  \c
+.qs
+Control Program for Microcomputers.  An operating system that 
+manages computer resources and provides a standard systems 
+interface to software written for a large variety of 
+microprocessor-based computer systems.
+.sp
+.sh
+CP/M 1.4l compatibility:  \c
+.qs
+For a CP/M 2 system to be able to read correctly single-density 
+disks produced under a CP/M 1.4 system, the extent mask must be 
+zero and the block size 1K.  This is because under CP/M 2 an FCB 
+may contain more than one extent.  The number of extents that may 
+be contained by an FCB is EXM+1.  The issue of CP/M 1.4 
+compatibility also concerns random file I/O.  To perform random 
+file I/O under CP/M 1.4, you must maintain an FCB for each extent 
+of the file.  This scheme is upward compatible with CP/M 2 for 
+files not exceeding 512K bytes, the largest file size supported 
+under CP/M 1.4.  If you wish to implement random I/O for files 
+larger than 512K bytes under CP/M 2, you must use the random read 
+and random write functions, BDOS functions 33, 34, and 36.  In 
+this case, only one FCB is used, and if CP/M 1.4 compatiblity is 
+required, the program must use the return version number 
+function, BDOS Function 12, to determine which method to employ.
+.sp
+.sh
+CP/M prompt:  \c
+.qs
+Characters that indicate that CP/M is ready to execute your next 
+command.  The CP/M prompt consists of an upper-case letter, A-P, 
+followed by a > character; for example, A>.  The letter 
+designates which drive is currently logged in as the default 
+drive.  CP/M will search this drive for the command file 
+specified, unless the command is a built-in command or prefaced 
+by a select drive command: for example, B:STAT.
+.sp
+.sh
+CP/NET:  \c
+.qs
+Digital Research network operating system enabling microcomputers 
+to obtain access to common resources via a network.  CP/NET 
+consists of MP/M masters and CP/M slaves with a network interface 
+between them.
+.sp
+.sh
+CSV:  \c
+.qs
+See \c
+.sh
+checksum vector.
+.sp
+.mb 5
+.fm 1
+.sh
+cursor:  \c
+.qs
+One-character symbol that can appear anywhere on the console 
+screen.  The cursor indicates the position where the next 
+keystroke at the console will have an effect.
+.sp
+.sh
+data file:  \c
+.qs
+File containing information that will be processed by a program.
+.sp
+.mb 6
+.fm 2
+.sh
+deblocking:  \c
+.qs
+See \c
+.sh
+blocking & deblocking algorithm.
+.sp
+.sh
+default:  \c
+.qs
+Currently selected disk drive and user number.  Any command that 
+does not specify a disk drive or a user number references the 
+default disk drive and user number.  When CP/M is first invoked, 
+the default disk drive is drive A, and the default user number is 
+0.
+.sp
+.sh
+default buffer:  \c
+.qs
+Default 128-byte buffer maintained at 0080H in page zero.  When 
+the CCP loads a COM file, this buffer is initialized to the 
+command tail; that is, any characters typed after the COM file 
+name are loaded into the buffer.  The first byte at 0080H 
+contains the length of the command tail, while the command tail 
+itself begins at 0081H.  The command tail is terminated by a byte 
+containing a binary zero value.  The I command under DDT and SID 
+initializes this buffer in the same way as the CCP.
+.sp
+.sh
+default FCB:  \c
+.qs
+Two default FCBs are maintained by the CCP at 005CH and 006CH in 
+page zero.  The first default FCB is initialized from the first 
+delimited field in the command tail.  The second default FCB 
+is initialized from the next field in the command tail.
+.sp
+.sp 0
+.sh
+delimiter:  \c
+.qs
+Special characters that separate different items in a command 
+line; for example, a colon separates the drive specification from 
+the filename.  The CCP recognizes the following characters as 
+delimiters:  . : = ; < > _, blank, and carriage return.  Several 
+CP/M commands also treat the following as delimiter characters:  
+, [ ] ( ) $.  It is advisable to avoid the use of delimiter 
+characters and lower-case characters in CP/M filenames.
+.sp
+.sh
+DIR:  \c
+.qs
+Parameter in the diskdef macro library that specifies the number 
+of directory elements on the drive.
+.sp
+.sh
+DIR attribute:  \c
+.qs
+File attribute.  A file with the DIR attribute can be displayed 
+by a DIR command.  The file can be accessed from the default user 
+number and drive only.
+.sp
+.sh
+DIRBUF:  \c
+.qs
+128-byte scratchpad area for directory operations, 
+usually located at the end of the BIOS.  DIRBUF is used by the 
+BDOS during its directory operations.  DIRBUF also refers to the 
+two-byte address of this scratchpad buffer in the disk parameter 
+header at DPbase + 8 bytes.
+.sp
+.sh
+directory:  \c
+.qs
+Portion of a disk that contains entries for each file on the 
+disk.  In response to the DIR command, CP/M displays the 
+filenames stored in the directory.  The directory also contains  
+the locations of the blocks allocated to the files.  Each file 
+directory element is in the form of a 32-byte FCB, although one 
+file can have several elements, depending on its size.  The 
+maximum number of directory elements supported is specified by 
+the drive's disk parameter block value for DRM.
+.bp
+.sh
+directory element:  \c
+.qs
+Data structure.  Each file on a disk has one or more 32-byte 
+directory elements associated with it.  There are four directory 
+elements per directory sector.  Directory elements can also be 
+referred to as directory FCBs.
+.sp
+.sh
+directory entry:  \c
+.qs
+File entry displayed by the DIR command.  Sometimes this term 
+refers to a physical directory element.
+.sp
+.sp 0
+.sh
+disk, diskette:  \c
+.qs
+Magnetic media used for mass storage in a computer system.  
+Programs and data are recorded on the disk in the same way music 
+can be recorded on cassette tape.  The CP/M operating system must 
+be initially loaded from disk when the computer is turned on.  
+Diskette refers to smaller capacity removable floppy diskettes, 
+while disk may refer to either a diskette, removable cartridge  
+disk, or fixed hard disk.  Hard disk capacities range from five 
+to several hundred megabytes of storage.
+.sp
+.sh
+diskdef macro library:  \c
+.qs
+Library of code that when used with MAC, the Digital Research 
+macro assembler, creates disk definition tables such as the DPB 
+and DPH automatically.
+.sp
+.sh
+disk drive:  \c
+.qs
+Peripheral device that reads and writes information on disk.
+CP/M assigns a letter to each drive under its 
+control.  For example, CP/M may refer to the drives in a
+four-drive system as A, B, C, and D.
+.sp
+.sh
+disk parameter block (DPB):  \c
+.qs
+Data structure referenced by one or more disk parameter headers.  
+The disk parameter block defines disk characteristics in the 
+fields listed below:
+.sp
+.in 5
+.nf
+SPT is the total number of sectors per track.
+BSH is the data allocation block shift factor.
+BLM is the data allocation block mask.
+EXM is the extent mask determined by BLS and DSM.
+DSM is the maximum data block number.
+DRM is the maximum number of directory entries--1.
+AL0 reserves directory blocks.
+AL1 reserves directory blocks.
+CKS is the number of directory sectors check summed.
+OFF is the number of reserved system tracks.
+.fi
+.in 0
+.sp
+The address of the disk parameter block is located in the disk 
+parameter header at DPbase +0AH.  CP/M Function 31 returns the 
+DPB address.  Drives with the same characteristics can use the 
+same disk parameter header, and thus the same DPB.  However, 
+drives with different characteristics must each have their own 
+disk parameter header and disk parameter blocks.  When the BDOS 
+calls the SELDSK entry point in the BIOS, SELDSK must return the 
+address of the drive's disk parameter header in register HL.
+.sp
+.sh
+disk parameter header (DPH):  \c
+.qs
+Data structure that contains information about the disk drive and 
+provides a scratchpad area for certain BDOS operations.  The disk 
+parameter header contains six bytes of scratchpad area for the 
+BDOS, and the following five 2-byte parameters:
+.sp
+.in 5
+.nf
+XLT is the sector translation table address.
+DIRBUF is the directory buffer address.
+DPB is the disk parameter block address.
+CSV is the checksum vector address.
+ALV is the allocation vector address.
+.fi
+.in 0
+.sp
+Given n disk drives, the disk parameter headers are arranged in a 
+table whose first row of 16 bytes corresponds to drive 0, with 
+the last row corresponding to drive n-1.
+.sp
+.sh
+DKS:  \c
+.qs
+Parameter in the diskdef macro library specifying the number of 
+data blocks on the drive.
+.sp
+.sh
+DMA:  \c
+.qs
+Direct Memory Access.  DMA is a method of transferring data from 
+the disk into memory directly.  In a CP/M system, the BDOS calls 
+the BIOS entry point READ to read a sector from the disk into the 
+currently selected DMA address.  The DMA address must be the 
+address of a 128-byte buffer in memory, either the default buffer 
+at 0080H in page zero, or a user-assigned buffer in the TPA.  
+Similarly, the BDOS calls the BIOS entry point WRITE to write the 
+record at the current DMA address to the disk.
+.sp
+.sh
+DN:  \c
+.qs
+Parameter in the diskdef macro library specifying the logical 
+drive number.
+.sp
+.sh
+DPB:  \c
+.qs
+See \c
+.sh
+disk parameter block.
+.sp
+.sh
+DPH:  \c
+.qs
+See \c
+.sh
+disk parameter header.
+.sp
+.sh
+DRM:  \c
+.qs
+2-byte parameter in the disk parameter block at DPB + 7.  DRM is 
+one less than the total number of directory entries allowed for 
+the drive.  This value is related to DPB bytes AL0 and AL1, which 
+allocates up to 16 blocks for directory entries.
+.sp
+.sh
+DSM:  \c
+.qs
+2-byte parameter of the disk parameter block at DPB + 5.  DSM is 
+the maximum data block number supported by the drive.  The 
+product BLS times (DSM+1) is the total number of bytes held by 
+the drive.  This must not exceed the capacity of the physical 
+disk less the reserved system tracks.
+.sp
+.sh
+editor:  \c
+.qs
+Utility program that creates and modifies text files.  An editor 
+can be used for creation of documents or creation of code for 
+computer programs.  The CP/M editor is invoked by typing the 
+command ED next to the system prompt on the console.
+.sp
+.sh
+EX:  \c
+.qs
+Extent number field in an FCB.  See \c
+.sh
+extent.
+.sp
+.sh
+executable:  \c
+.qs
+Ready to be run by the computer.  Executable code is a series of 
+instructions that can be carried out by the computer.  For 
+example, the computer cannot execute names and addresses, but it 
+can execute a program that prints all those names and addresses 
+on mailing labels.
+.sp
+.sh
+execute a program:  \c
+.qs
+Start the processing of executable code.
+.sp
+.sh
+EXM:  \c
+.qs
+See \c
+.sh
+extent mask.
+.sp
+.sh
+extent:  \c
+.qs
+16K consecutive bytes in a file.  Extents are numbered from 0 to 
+31.  One extent can contain 1, 2, 4, 8, or 16 blocks.  EX is the 
+extent number field of an FCB and is a one-byte field at FCB + 
+12, where FCB labels the first byte in the FCB.  Depending on the 
+block size (BLS) and the maximum data block number (DSM), an FCB 
+can contain 1, 2, 4, 8, or 16 extents.  The EX field is normally 
+set to 0 by the user but contains the current extent number 
+during file I/O.  The term FCB folding describes FCBs containing 
+more than one extent.  In CP/M version 1.4, each FCB contained 
+only one extent.  Users attempting to perform random record I/O 
+and maintain CP/M 1.4 compatiblity should be aware of the 
+implications of this difference.  See \c
+.sh
+CP/M 1.4 compatibility.
+.sp
+.sh
+extent mask (EXM):  \c
+.qs
+A byte parameter in the disk parameter block located at DPB + 3.  
+The value of EXM is determined by the block size (BLS) and 
+whether the maximum data block number (DSM) exceeds 255.  There 
+are EXM + 1 extents per directory FCB.
+.sp
+.sh
+FCB:  \c
+.qs
+See \c
+.sh
+File Control Block.
+.sp
+.sh
+file:  \c
+.qs
+Collection of characters, instructions, or data that can be 
+referenced by a unique identifier.  Files are usually stored on 
+various types of media, such as disk, or magnetic 
+tape.  A CP/M file is identified by a file specification and 
+resides on disk as a collection of from zero to 65,536 records.  
+Each record is 128 bytes and can contain either binary or ASCII 
+data.  Binary files contain bytes of data that can vary in value 
+from 0H to 0FFH.  ASCII files contain sequences of character 
+codes delineated by a carriage return and line-feed combination; 
+normally byte values range from 0H to 7FH.  The directory maps 
+the file as a series of physical blocks.  Although files are 
+defined as a sequence of consecutive logical records, these 
+records can not reside in consecutive sectors on the disk.  See 
+also \c
+.sh
+block, directory, extent, record, \c
+.qs
+and \c
+.sh
+sector.
+.qs
+.nx apph2.tex
+

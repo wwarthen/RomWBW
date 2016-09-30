@@ -1,0 +1,263 @@
+.pl 51
+.nf
+.bp 1
+.ft                                                       F-%
+                                        Appendix F
+
+                               CP/M Disk Definition Library
+
+
+  1:;                       CP/M 2.0 disk re-definition library
+  2:;
+  3:;                       Copyright (c) 1979
+  4:;                       Digital Research
+  5:;                       Box 579
+  6:;                       Pacific Grove, CA
+  7:;                       93950
+  8:;
+  9:;                       CP/M logical disk drives are defined using the
+ 10:;                       macros given below, where the sequence of calls
+ 11:;                       is:
+ 12:;
+ 13:;                       disks n
+ 14:;                       diskdef parameter-list-0
+ 15:;                       diskdef parameter-list-1
+ 16:;                       ...
+ 17:;                       diskdef parameter-list-n
+ 18:;                       endef
+ 19:;
+ 20:;                       where n is the number of logical disk drives attached
+ 21:;                       to the CP/M system, and parameter-list-i defines the
+ 22:;                       characteristics of the ith drive (i=0,1,...,n-1)
+ 23:;
+ 24:;                       each parameter-list-i takes the form
+ 25:;                                dn,fsc,lsc,[skf],bls,dks,dir,cks,ofs,[0]
+ 26:;                       where
+ 27:;                       dn       is the disk number 0,1,...,n-1
+ 28:;                       fsc      is the first sector number (usually 0 or 1)
+ 29:;                       lsc      is the last sector number on a track
+ 30:;                       skf      is optional "skew factor" for sector translate
+ 31:;                       bls      is the data block size (1024,2048,...,16384)
+ 32:;                       dks      is the disk size in bls increments (word)
+ 33:;                       dir      is the number of directory elements (word)
+ 34:;                       cks      is the number of dir elements to checksum
+ 35:;                       ofs      is the number of tracks to skip (word)
+ 36:;                       [0]      is an optional 0 which forces 16K/directory end
+ 37:;
+ 38:;                       for convenience, the form
+ 39:;                                dn,dm
+ 40:;                       defines disk dn as having the same characteristics as
+ 41:;                       a previously defined disk dm.
+ 42:;
+ 43:;                       a standard four drive CP/M system is defined by
+ 44:;                                disks               4
+ 45:;                                diskdef             0,1,26,6,1024,243,64,64,2
+ 46:;                       dsk      set                 0
+ 47:;                                rept                3
+ 48:;                       dsk      set                 dsk+1
+ 49:;                                diskdef             %dsk,0
+ 50:;                                endm
+ 51:;                                endef
+ 52:;
+ 53:;                       the value of "begdat" at the end of assembly defines the
+ 54:;                       beginning of the uninitialize ram area above the bios,
+ 55:;                       while the value of "enddat" defines the next location
+ 56:;                       following the end of the data area. the size of this
+ 57:;                       area is given by the value of "datsiz" at the end of the
+ 58:;                       assembly. note that the allocation vector will be quite
+ 59:;                       large if a large disk size is defined with a small block
+ 60:;                       size.
+ 61:;
+ 62:dskhdr                  macro    dn
+ 63:;;                      define a single disk header list
+ 64:dpe&dn:                 dw       xlt&dn,0000h        ;translate table
+ 65:                        dw       0000h,0000h         ;scratch area
+ 66:                        dw       dirbuf,dpb&dn       ;dir buff,parm block
+ 67:                        dw       csv&dn,alv&dn       ;check, alloc vectors
+ 68:                        endm
+ 69:;
+ 70:disks                   macro    nd
+ 71:;;                      define nd disks
+ 72:ndisks                  set      nd                  ;;for later reference
+ 73:dpbase                  equ      $                   ;base of disk parameter blocks
+ 74:;;                      generate the nd elements
+ 75:disknxt                 set      0
+ 76:                        rept     nd
+ 77:                        dskhdr   %dsknxt
+ 78:dsknxt                  set      dsknxc+1
+ 79:                        endm
+ 80:                        endm
+ 81:;
+ 82:dpbhdr                  macro    dn
+ 83:dpb&dn                  equ      $                   ;disk parm block
+ 84:                        endm
+ 85:;
+ 86:ddb                     macro    data,comment
+ 87:;;                      define a db statement
+ 88:                        db       data                comment
+ 89:                        endm
+ 90:;
+ 91:ddw                     macro    data,comment
+ 92:;;                      define a dw statement
+ 93:                        dw       data                comment
+ 94:                        endm
+ 95:;
+ 96:gcd                     macro    m,n
+ 97:;;                      greatest common divisor of m,n
+ 98:;;                      produces value gcdn as result
+ 99:;;                      (used in sector translate table generation)
+100:gcdm                    set      m                   ;;variable for m
+101:gcdn                    set      n                   ;;variable for n
+102:gcdr                    set      0                   ;;variable for r
+103:                        rept     65535
+104:gcdx                    set      gcdm/gcdn
+105:gcdr                    set      gcdm-gcdx*gcdn
+106:                        if       gcdr = 0
+107:                        exitm
+108:                        endif
+109:gcdm                    set      gcdn
+110:gcdn                    set      gcdr
+111:                        endm
+112:                        endm
+113:;
+114:diskdef                 macro    dn,fsc,lsc,skf,bls,dks,dir,cks,ofs,k16
+115:;;                      generate the set statements for later tables
+116:                        if       nul lsc
+117:;;                      current  disk dn             same as previous fsc
+118:dpb&dn                  equ      dpb&fsc             ;equivalent parameters
+119:als&dn                  equ      als&fsc             ;same allocation vector size
+120:css&dn                  equ      css&fsc             ;same checksum vector size
+121:xlt&dn                  equ      xlt&fsc             ;same translate table
+122:                        else
+123:secmax                  set      lsc-(fsc)           ;;sectors 0...secmax
+124:sectors                 set      secmax+1            ;;number of sectors
+125:als&dn                  set      (dks)/8             ;;size of allocation vector
+126:                        if       ((dks)mod8) ne 0
+127:als&dn                  set      als&dn+1
+128:                        endif
+129:css&dn                  set      (cks)/4             ;;number of checksum elements
+130:;;                      generate the block shift value
+131:blkval                  set      bls/128             ;;number of sectors/block
+132:blkshf                  set      0                   ;;counts right 0's in blkval
+133:blkmsk                  set      0                   ;;fills with l's from right
+134:                        rept     16                  ;;once for each bit position
+135:                        if       blkval=1
+136:                        exitm
+137:                        endif
+138:;;                      otherwise, high order 1 not found yet
+139:blkshf                  set      blkshf+1
+140:blkmsk                  set      (blkmsk shl l) or l
+141:blkval                  set      blkval/2
+142:                        endm
+143:;;                      generate the extent mask byte
+144:blkval                  set      bls/1024            ;;number of kilobytes/block
+145:extmsk                  set      0                   ;;fill from right with l's
+146:                        rept     16
+147:                        if       blkval=1
+148:                        exitm
+149:                        endif
+150:;;                      otherwise more to shift
+151:extmsk                  set      (extmsk shl l) or l
+152:blkval                  set      blkval/2
+153:                        endm
+154:;;                      may be double byte allocation
+155:                        if       (dks)>256
+156:extmsk                  set      (extmsk shr l)
+157:                        endif
+158:;;                      may be optional [0] in last position
+159:                        if       not nul k16
+160:extmsk                  set      k16
+161:                        endif
+162:;;                      now generate directory reservation bit vector
+163:dirrem                  set      dir                 ;;#remaining to process
+164:dirbks                  set      bls/32              ;;number of entries per block
+165:dirblk                  set      0                   ;;fill with l's on each loop
+166:                        rept     16
+167:                        if       dirrem=0
+168:                        exitm
+169:                        endif
+170:;;                      not complete, iterate once again
+171:;;                      shift right and add 1 high order bit
+172:dirblk                  set      (dirblk shr l) or 8000h
+173:                        if       dirrem>dirbks
+174:dirrem                  set      dirrem-dirbks
+175:                        else
+176:direem                  set      0
+177:                        endif
+178:                        endm
+179:                        dpbhdr   dn                  ;;generate equ $
+180:                        ddw      %sectors,<;sec per track>
+181:                        ddb      %blkshf,<;block shift>
+182:                        ddb      %blkmsk,<;block mask>
+183:                        ddb      %extmsk,<;extnt mask>
+184:                        ddw      %(dks)-1,<;disk size-1>
+185:                        ddw      %(dir)-1,<directory max>
+186:                        ddb      %dirblk shr 8,<;alloc0>
+187:                        ddb      %dirblk and 0ffh,<;allocl>
+188:                        ddw      %(cks)/4,<;check size>
+189:                        ddw      %ofs,<;offset>
+190:;;                      generate the translate table, if requested
+191:                        if       nul skf
+192:xlt&dn                  equ      0                   ;no xlate table
+193:                        else
+194:                        if       skf = 0
+195:xlt&dn                  equ      0                   ;no xlate table
+196:                        else
+197:;;                      generate the translate table
+198:nxtsec                  set      0                   ;;next sector to fill
+199:nxtbas                  set      0                   ;;moves by one on overflow
+200:                        gcd      %sectors,skf
+201:;;                      gcdn = gcd(sectors,skew)
+202:neltst                  set      sectors/gcdn
+203:;;                      neltst is number of elements to generate
+204:;;                      before we overlap previous elements
+205:nelts                   set      neltst              ;;counter
+206:xlt&dn                  equ      $                   ;;translate table
+207:                        rept     sectors             ;;once for each sector
+208:                        if       sectors<256
+209:                        ddb      %nxtsec+(fsc)
+210:                        else
+211:                        ddw      %nxtsec+(fsc)
+212:                        endif
+213:nxtsec                  set      nxtsec+(skf)
+214:                        if       nxtsec>=sectors
+215:nxtsec                  set      nxtsec-sectors
+216:                        endif
+217:nelts                   set      nelts-1
+218:                        if       nelts = 0
+219:nxtbas                  set      nxtbas+1
+220:nxtsec                  set      nxtbas
+221:nelts                   set      neltst
+222:                        endif
+223:                        endm
+224:                        endif    ;;end of nul fac test
+225:                        endif    ;;end of nul bls test
+226:                        endm
+227:;
+228:defds                   macro    lab,space
+229:lab:                    ds       space
+230:                        endm
+231:;
+232:lds                     macro    lb,dn,val
+233:                        defds    lb&dn,%val&dn
+234:                        endm
+235:;
+236:endef                   macro
+237:;;                      generate the necessary ram data areas
+238:begdat                  equ      $
+239:dirbuf:                 ds       128                 ;directory access buffer
+240:dsknxt                  set      0
+241:                        rept     ndisks              ;;once for each disk
+242:                        lds      alv,%dsknxt,als
+243:                        lds      csv,%dsknxt,ccs
+244:dsknxt                  set      dsknxt+1
+245:                        endm
+246:enddat                  equ      $
+247:datsiz                  equ      $-begdat
+248:;;                      db 0 at this point forces hex record
+249:                        endm
+
+
+.nx appg
+
+
