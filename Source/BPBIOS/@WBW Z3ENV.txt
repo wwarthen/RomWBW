@@ -167,7 +167,7 @@ ORIGINAL DISTRIBUTION CONFIGURATION (NO HBIOS):
 =============================================================================
 
 =============================================================================
-T CONFIGURATION (HBIOS FULL PROXY @ FC00-FFFF):
+T CONFIGURATION (HBIOS FULL PROXY @ FE00-FFFF):
   This configuration uses a modified layout of the ZSystem segments so
   that critical segments can be located at the same address as the
   "stock" configuration.  Some segments are built with an assumed
