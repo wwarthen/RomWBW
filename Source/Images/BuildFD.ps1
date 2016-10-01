@@ -1,6 +1,6 @@
 $ErrorAction = 'Stop'
 
-$CpmToolsPath = '..\Tools\cpmtools'
+$CpmToolsPath = '../..\Tools\cpmtools'
 
 $env:PATH = $CpmToolsPath + ';' + $env:PATH
 
@@ -16,9 +16,9 @@ for ($Dsk=0; $Dsk -lt 2; $Dsk++)
 	copy Blank.tmp fd${Dsk}.img
 	for ($Usr=0; $Usr -lt 16; $Usr++)
 	{
-		if (Test-Path ("Source/fd${Dsk}/u${Usr}/*")) 
+		if (Test-Path ("fd${Dsk}/u${Usr}/*")) 
 		{
-			$Cmd = "cpmcp -f wbw_fd144 fd${Dsk}.img Source/fd${Dsk}/u${Usr}/*.* ${Usr}:"
+			$Cmd = "cpmcp -f wbw_fd144 fd${Dsk}.img fd${Dsk}/u${Usr}/*.* ${Usr}:"
 			$Cmd
 			Invoke-Expression $Cmd
 		}
@@ -26,7 +26,7 @@ for ($Dsk=0; $Dsk -lt 2; $Dsk++)
 }
 
 "Moving images into output directory..."
-&$env:COMSPEC /c move fd*.img ..\Output\
+&$env:COMSPEC /c move fd*.img ..\..\Binary\
 
 Remove-Item *.tmp
 

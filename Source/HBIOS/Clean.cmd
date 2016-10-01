@@ -1,4 +1,6 @@
 @echo off
+setlocal
+
 if exist *.bin del *.bin
 if exist *.com del *.com
 if exist *.img del *.img

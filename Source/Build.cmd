@@ -1,4 +1,8 @@
 @echo off
 setlocal
 
-setlocal & pushd HBIOS && Powershell .\Build.ps1 %* & endlocal
+setlocal & call BuildDoc || exit /b 1 & endlocal
+setlocal & call BuildHardware || exit /b 1 & endlocal
+setlocal & call BuildImages || exit /b 1 & endlocal
+setlocal & call BuildShared || exit /b 1 & endlocal
+setlocal & call BuildROM %* || exit /b 1 & endlocal

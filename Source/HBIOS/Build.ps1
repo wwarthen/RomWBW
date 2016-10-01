@@ -42,7 +42,7 @@ $CpmToolsPath = '..\..\tools\cpmtools'
 $env:TASMTABS = $TasmPath
 $env:PATH = $TasmPath + ';' + $CpmToolsPath + ';' + $env:PATH
 
-$OutDir = "../../Output"
+$OutDir = "../../Binary"
 $RomFmt = "wbw_rom${RomSize}"
 $BlankROM = "Blank${RomSize}KB.dat"
 $RomDiskFile = "RomDisk.tmp"

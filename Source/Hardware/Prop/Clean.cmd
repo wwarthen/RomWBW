@@ -1,5 +1,4 @@
 @echo off
-
 setlocal
 
 if exist *.eeprom del *.eeprom

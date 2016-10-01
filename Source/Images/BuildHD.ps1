@@ -1,6 +1,6 @@
 $ErrorAction = 'Stop'
 
-$CpmToolsPath = '../Tools/cpmtools'
+$CpmToolsPath = '../../Tools/cpmtools'
 
 $env:PATH = $CpmToolsPath + ';' + $env:PATH
 
@@ -19,9 +19,9 @@ for ($Dsk=0; $Dsk -lt 2; $Dsk++)
 		copy Blank.tmp slice${Slice}.tmp
 		for ($Usr=0; $Usr -lt 16; $Usr++)
 		{
-			if (Test-Path ("Source/hd${Dsk}/s${Slice}/u${Usr}/*")) 
+			if (Test-Path ("hd${Dsk}/s${Slice}/u${Usr}/*")) 
 			{
-				$Cmd = "cpmcp -f wbw_hd0 slice${Slice}.tmp Source/hd${Dsk}/s${Slice}/u${Usr}/*.* ${Usr}:"
+				$Cmd = "cpmcp -f wbw_hd0 slice${Slice}.tmp hd${Dsk}/s${Slice}/u${Usr}/*.* ${Usr}:"
 				$Cmd
 				Invoke-Expression $Cmd
 			}
@@ -29,7 +29,7 @@ for ($Dsk=0; $Dsk -lt 2; $Dsk++)
 	}
 
 	"Combining slices into final disk image hd${Dsk}..."
-	&$env:COMSPEC /c copy /b slice*.tmp ..\Output\hd${Dsk}.img
+	&$env:COMSPEC /c copy /b slice*.tmp ..\..\Binary\hd${Dsk}.img
 	
 	Remove-Item slice*.tmp
 }

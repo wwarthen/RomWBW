@@ -1,15 +1,19 @@
 @echo off
 setlocal
 
-setlocal & pushd Apps && call Clean.cmd & endlocal
-setlocal & pushd CPM22 && call Clean.cmd & endlocal
-setlocal & pushd ZCPR && call Clean.cmd & endlocal
-setlocal & pushd ZCPR-DJ && call Clean.cmd & endlocal
-setlocal & pushd ZSDOS && call Clean.cmd & endlocal
-setlocal & pushd CBIOS && call Clean.cmd & endlocal
+setlocal & cd Apps && call Clean.cmd & endlocal
+setlocal & cd CPM22 && call Clean.cmd & endlocal
+setlocal & cd ZCPR && call Clean.cmd & endlocal
+setlocal & cd ZCPR-DJ && call Clean.cmd & endlocal
+setlocal & cd ZSDOS && call Clean.cmd & endlocal
+setlocal & cd CBIOS && call Clean.cmd & endlocal
 
-setlocal & pushd BPBIOS && call Clean.cmd & endlocal
+setlocal & cd BPBIOS && call Clean.cmd & endlocal
 
-setlocal & pushd HBIOS && call Clean.cmd & endlocal
+setlocal & cd HBIOS && call Clean.cmd & endlocal
 
-setlocal & pushd Doc && call Clean.cmd & endlocal
+setlocal & cd Doc && call Clean.cmd & endlocal
+
+setlocal & cd Images && call Clean & endlocal
+
+setlocal & cd Hardware && call Clean & endlocal

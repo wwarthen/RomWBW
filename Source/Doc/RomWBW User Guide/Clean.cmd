@@ -1,4 +1,6 @@
 @echo off
+setlocal
+
 if exist *.aux del *.aux
 if exist *.log del *.log
 if exist *.toc del *.toc
