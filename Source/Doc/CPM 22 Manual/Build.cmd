@@ -9,7 +9,7 @@ set ZXBINDIR=%TOOLS%/cpm/bin/
 set ZXLIBDIR=%TOOLS%/cpm/lib/
 set ZXINCDIR=%TOOLS%/cpm/include/
 
-rem set TEXOPT=-$D
+rem set TEXOPT=-$D -$Q
 
 zx TEX21A PART1 %TEXOPT%
 zx TEX21A PART2 %TEXOPT%

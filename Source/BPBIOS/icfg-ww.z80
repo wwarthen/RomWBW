@@ -141,45 +141,44 @@ CNTRLR:	DEFB	80H	; Controller Types recognized are:
 			; 3- Seagate SCSI		   8- Syquest SCSI
 			; 4- Shugart 1610-4 Minimal SCSI   80H- GIDE (IDE/ATA)
 
-; First drive (Parameters for Toshiba MK-1544 IDE)
+; First drive (Generic HBIOS drive configuration)
 
-BITS	DEFL	00000000B	; SCSI - Physical Device 0, Logical Unit 0
-				;  IDE - Drive 0 = Master
+BITS	DEFL	00000000B	; First HBIOS Hard Disk Drive
+
 BITS	DEFL	BITS+[UNIT_0 AND 10H]	; If active, set Bit 4
 
 HDRV0:	DEFB	BITS		; Set Device, Unit, and Active bits
-	DEFW	581		; Number of Cylinders
-	DEFB	2		; Number of Heads
-	DEFW	36		; SCSI - Cylinder # to start reduced write
-				;  IDE - Number of Sectors Per Track
+	DEFW	520		; Number of Cylinders
+	DEFB	16		; Number of Heads
+	DEFW	16		; IDE - Number of Sectors Per Track
 	DEFW	0000		; Cylinder # to start precompensation
 	DEFB	0		; Step Rate (0=3ms, 1=28us, 2=12us)
 
-; Second drive (Parameters for Seagate ST-125N SCSI)
+; Second drive (Generic HBIOS drive configuration)
 
-BITS	DEFL	00000001B	; SCSI - Physical Device 1, Logical Unit 0
-				;  IDE - Drive 1 = Slave
+BITS	DEFL	00000001B	; Second HBIOS Hard Disk Drive
+
 BITS	DEFL	BITS+[UNIT_1 AND 10H]	; If active, set Bit 4
 
 HDRV1:	DEFB	BITS		; Set Device, Unit, and Active bits
-	DEFW	615		; Syquest ST-125N
-	DEFB	4
-	DEFW	0000
-	DEFW	0000
-	DEFB	0
+	DEFW	520		; Number of Cylinders
+	DEFB	16		; Number of Heads
+	DEFW	16		; IDE - Number of Sectors Per Track
+	DEFW	0000		; Cylinder # to start precompensation
+	DEFB	0		; Step Rate (0=3ms, 1=28us, 2=12us)
 
-; Third drive (Parameters for Miniscribe 8425 SCSI)
+; Third drive (Generic HBIOS drive configuration)
 
-BITS	DEFL	00000010B	; Physical Device 2, Logical Unit 0
-				;  IDE - (undefined)
+BITS	DEFL	00000010B	; Third HBIOS Hard Disk Drive
+
 BITS	DEFL	BITS+[UNIT_2 AND 10H]	; If active, set Bit 4
 
-	DEFB	BITS		; Set Device, Unit, and Active bits
-	DEFW	615
-	DEFB	4
-	DEFW	615
-	DEFW	300
-	DEFB	2
+HDRV2:	DEFB	BITS		; Set Device, Unit, and Active bits
+	DEFW	520		; Number of Cylinders
+	DEFB	16		; Number of Heads
+	DEFW	16		; IDE - Number of Sectors Per Track
+	DEFW	0000		; Cylinder # to start precompensation
+	DEFB	0		; Step Rate (0=3ms, 1=28us, 2=12us)
 
 	DEFB	0,0,0,0,0	; (Reserved)
 

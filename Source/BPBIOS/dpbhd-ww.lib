@@ -33,10 +33,10 @@
 ; NOTE: No Skew Table is needed since Hard Disk Format is locked
 
 ;.....
-; Partition A.  SIMH HDSK0, Slice 0
+; Partition A.  HBIOS Disk 0, Slice 0
 
 	  IF  DRV_E
-	DEFB	'HDSK0:0  ','A'+80H ; Id - 10 bytes
+	DEFB	'HBDSK0:0 ','A'+80H ; Id - 10 bytes
 	DEFB	FIXDSK		    ; Format type byte 0
 	DEFB	SPEED8+SEC512+ALC4K ; Format type byte 1
 	DEFB	-2		; Skew factor (== Only the +/- sign used)
@@ -60,10 +60,10 @@ DPB50:	DEFW	64	; Sctrs/Trk
 	  ENDIF
 
 ;.....
-; Partition B.  SIMH HDSK0, Slice 1
+; Partition B.  HBIOS Disk 0, Slice 1
 
 	  IF  DRV_F
-	DEFB	'HDSK0:1  ','B'+80H ; Id - 10 bytes
+	DEFB	'HBDSK0:1 ','B'+80H ; Id - 10 bytes
 	DEFB	FIXDSK		    ; Format type byte 0
 	DEFB	SPEED8+SEC512+ALC4K ; Format type byte 1
 	DEFB	-2		; Skew factor
@@ -87,10 +87,10 @@ DPB51:	DEFW	64	; Scts/Trk
 	  ENDIF
 
 ;.....
-; Partition C.  SIMH HDSK0, Slice 2
+; Partition C.  HBIOS Disk 0, Slice 2
 
 	  IF  DRV_G
-	DEFB	'HDSK0:2  ','C'+80H ; Id - 10 bytes
+	DEFB	'HBDSK0:2 ','C'+80H ; Id - 10 bytes
 	DEFB	FIXDSK		    ; Format type byte 0
 	DEFB	SPEED8+SEC512+ALC4K ; Format type byte 1
 	DEFB	-2		; Skew factor
@@ -114,10 +114,10 @@ DPB52:	DEFW	64	; Scts/Trk
 	  ENDIF
 
 ;.....
-; Partition D.  SIMH HDSK0, Slice 3
+; Partition D.  HBIOS Disk 0, Slice 3
 
 	  IF  DRV_H
-	DEFB	'HDSK0:3  ','D'+80H ; Id - 10 bytes
+	DEFB	'HBDSK0:3 ','D'+80H ; Id - 10 bytes
 	DEFB	FIXDSK		    ; Format type byte 0
 	DEFB	SPEED8+SEC512+ALC4K ; Format type byte 1
 	DEFB	-2		; Skew factor
@@ -141,10 +141,10 @@ DPB53:	DEFW	64	; Scts/Trk
 	  ENDIF
 
 ;.....
-; Partition A.  SIMH HDSK1, Slice 0
+; Partition A.  HBIOS Disk 1, Slice 0
 
-	  IF  DRV_F
-	DEFB	'HDSK1:0  ','A'+80H ; Id - 10 bytes
+	  IF  DRV_I
+	DEFB	'HBDSK1:0 ','E'+80H ; Id - 10 bytes
 	DEFB	FIXDSK		    ; Format type byte 0
 	DEFB	SPEED8+SEC512+ALC4K ; Format type byte 1
 	DEFB	-2		; Skew factor (== Only the +/- sign used)
@@ -168,10 +168,10 @@ DPB54:	DEFW	64	; Sctrs/Trk
 	  ENDIF
 
 ;.....
-; Partition B.  SIMH HDSK1, Slice 1
+; Partition B.  HBIOS Disk 1, Slice 1
 
-	  IF  DRV_G
-	DEFB	'HDSK1:1  ','B'+80H ; Id - 10 bytes
+	  IF  DRV_J
+	DEFB	'HBDSK1:1 ','F'+80H ; Id - 10 bytes
 	DEFB	FIXDSK		    ; Format type byte 0
 	DEFB	SPEED8+SEC512+ALC4K ; Format type byte 1
 	DEFB	-2		; Skew factor
@@ -195,10 +195,10 @@ DPB55:	DEFW	64	; Scts/Trk
 	  ENDIF
 
 ;.....
-; Partition C.  SIMH HDSK1, Slice 2
+; Partition C.  HBIOS Disk 1, Slice 2
 
-	  IF  DRV_H
-	DEFB	'HDSK1:2  ','C'+80H ; Id - 10 bytes
+	  IF  DRV_K
+	DEFB	'HBDSK1:2 ','G'+80H ; Id - 10 bytes
 	DEFB	FIXDSK		    ; Format type byte 0
 	DEFB	SPEED8+SEC512+ALC4K ; Format type byte 1
 	DEFB	-2		; Skew factor
@@ -222,10 +222,10 @@ DPB56:	DEFW	64	; Scts/Trk
 	  ENDIF
 
 ;.....
-; Partition D.  SIMH HDSK1, Slice 3
+; Partition D.  HBIOS Disk 1, Slice 3
 
-	  IF  DRV_I
-	DEFB	'HDSK1:3  ','D'+80H ; Id - 10 bytes
+	  IF  DRV_L
+	DEFB	'HBDSK1:3 ','H'+80H ; Id - 10 bytes
 	DEFB	FIXDSK		    ; Format type byte 0
 	DEFB	SPEED8+SEC512+ALC4K ; Format type byte 1
 	DEFB	-2		; Skew factor
@@ -259,7 +259,6 @@ DPB57:	DEFW	64	; Scts/Trk
 	DEFB	16		; Logical Sectors per track
 	DEFB	0		; Physical tracks/side (No Meaning in HD)
 
-;HSIZ8	EQU	464		; Number of blocks in Fourth Logical Drive
 HSIZ8	EQU	HB_ROMBLKS
 
 DPB58:	DEFW	64	; Scts/Trk
@@ -286,7 +285,6 @@ DPB58:	DEFW	64	; Scts/Trk
 	DEFB	16		; Logical Sectors per track
 	DEFB	0		; Physical tracks/side (No Meaning in HD)
 
-;HSIZ9	EQU	192		; Number of blocks in Fourth Logical Drive
 HSIZ9	EQU	HB_RAMBLKS
 
 DPB59:	DEFW	64	; Scts/Trk

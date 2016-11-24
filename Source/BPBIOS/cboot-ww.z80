@@ -370,7 +370,7 @@ BLKMV:	POP	BC		; And number of bytes to move
 
 	; Allocate disk buffer in HBIOS bank and
 	; save it for use later in disk access.
-	LD	B,0F4H			; BIOS FUNC: ALLOCATE HEAP MEMORY
+	LD	B,0F6H			; BIOS FUNC: ALLOCATE HEAP MEMORY
 	LD	HL,512			; 1 SECTOR, 512 BYTES
 	CALL	HBX_INVOKE		; DO IT
 	CALL	NZ,PANIC		; HANDLE ERROR
@@ -454,12 +454,11 @@ MEMOK:
 	    IF  IDE
 	DEFB	CR,LF,'  GIDE Hard Disk Driver'
 	    ENDIF
-	    IF  HDSK
-	     IF  HBIOS
-	DEFB	CR,LF,'  HBIOS Hard Disk Driver'
-	     ELSE
+	    IF  SIMHDSK
 	DEFB	CR,LF,'  SIMH Hard Disk Driver'
-	     ENDIF
+	    ENDIF
+	    IF  HBDSK
+	DEFB	CR,LF,'  HBIOS Hard Disk Driver'
 	    ENDIF
 	     IF  HDDMA
 	DEFB	' (DMA-driven IO)'

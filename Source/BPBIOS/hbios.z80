@@ -3,33 +3,6 @@
 ;					*****************************
 ;
 ;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-;;
-;; CHARACTER DEVICES (ONLY FIRST NIBBLE RELEVANT, SECOND NIBBLE RESERVED FOR UNIT)
-;;
-;HBCIO_UART	EQU	000H
-;HBCIO_ASCI	EQU	010H
-;HBCIO_VDU	EQU	020H
-;HBCIO_CVDU	EQU	030H
-;HBCIO_UPD7220	EQU	040H
-;HBCIO_N8V	EQU	050H
-;HBCIO_PRPCON	EQU	060H
-;HBCIO_PPPCON	EQU	070H
-;HBCIO_CRT	EQU	0D0H
-;HBCIO_BAT	EQU	0E0H
-;HBCIO_NUL	EQU	0F0H
-;;
-;; DISK DEVICES (ONLY FIRST NIBBLE RELEVANT, SECOND NIBBLE RESERVED FOR UNIT)
-;;
-;HBDEV_MD	EQU	000H
-;HBDEV_FD	EQU	010H
-;HBDEV_RF	EQU	020H
-;HBDEV_IDE	EQU	030H
-;HBDEV_ATAPI	EQU	040H
-;HBDEV_PPIDE	EQU	050H
-;HBDEV_SD	EQU	060H
-;HBDEV_PRPSD	EQU	070H
-;HBDEV_PPPSD	EQU	080H
-;HBDEV_HDSK	EQU	090H
 ;
 HB_DEFBNK	EQU	BID_USR		; Default bank number
 ;
@@ -39,6 +12,23 @@ HB_DISPATCH	EQU	0403H
 ;
 ; PLATFORM SPECIFIC CONSTANTS
 ;
+	IF N8VEM OR ZETA OR ZETA2
+SBC_BASE	EQU	60H
+	ENDIF
+
+	IF N8VEM OR ZETA
+MPCL_RAM	EQU 	SBC_BASE + 18H	; BASE IO ADDRESS OF RAM MEMORY PAGER CONFIGURATION LATCH
+MPCL_ROM	EQU 	SBC_BASE + 1CH	; BASE IO ADDRESS OF ROM MEMORY PAGER CONFIGURATION LATCH
+	ENDIF
+
+	IF ZETA2
+MPGSEL_0	EQU	SBC_BASE + 18H
+MPGSEL_1	EQU	SBC_BASE + 19H
+MPGSEL_2	EQU	SBC_BASE + 1AH
+MPGSEL_3	EQU	SBC_BASE + 1BH
+MPGENA		EQU	SBC_BASE + 1CH
+	ENDIF
+
 	IF N8
 N8_BASE		EQU	80H		; BASE I/O ADDRESS BOARD PERIPHERALS (NON-CPU)
 ACR		EQU	N8_BASE + 14H	; AUXILLARY CONTROL REGISTER
@@ -61,7 +51,7 @@ HB_XFCIMG	EQU	$
 
 	.PHASE	HB_XFC 
 HB_CURBNK	DB	0
-HB_PRVBNK	DB	0		; DEPRECATED!!!
+HB_INVBNK	DB	0
 HB_SRCADR	DW	0
 HB_SRCBNK	DB	0
 HB_DSTADR	DW	0
@@ -126,14 +116,6 @@ HBX_INIT:
 	
 	RET
 
-;
-;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-; SETBNK - Set memory bank specified in A.
-;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-;
-HBX_SETBNK:
-	JP	HBX_BNKSEL
-
 HBX_XCOPY:
 	LD	A,C
 	LD	(HB_SRCBNK),A
@@ -147,6 +129,8 @@ HBX_COPY:
 	CALL	HBX_BNKCPY	; Do the work with private stack active
 	LD	SP,(HBX_STKSAV)	; Back to original stack
 	RET
+
+
 	
 	IF INTPXY
 ;
@@ -156,6 +140,21 @@ HBX_BNKSEL:
 	IF N8VEM OR ZETA
 	OUT	(MPCL_ROM),A
 	OUT	(MPCL_RAM),A
+	RET
+	ENDIF
+	
+	IF ZETA2
+	BIT	7,A			; BIT 7 SET REQUESTS RAM PAGE
+	JR	Z,HBX_ROM		; NOT SET, SELECT ROM PAGE
+	RES	7,A			; RAM PAGE REQUESTED: CLEAR ROM BIT
+	ADD	A,16			; ADD 16 x 32K - RAM STARTS FROM 512K 
+;					
+HBX_ROM:				
+	RLCA				; TIMES 2 - GET 16K PAGE INSTEAD OF 32K
+	OUT	(MPGSEL_0),A		; BANK_0: 0K - 16K
+	INC	A			;
+	OUT	(MPGSEL_1),A		; BANK_1: 16K - 32K
+	RET
 	ENDIF
 
 	IF N8
@@ -186,17 +185,8 @@ HBX_ROM:
 	RLCA
 	RLCA
 	OUT0	(CPU_BBR),A
+	RET
 	ENDIF
-
-	RET
-;
-;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-; GETBNK - Get current memory bank and return in A.
-;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-;
-HBX_GETBNK:
-	LD	A,(HB_CURBNK)
-	RET
 ;
 ; Entry point HBX_BNKCPY is for use internally and
 ; assumes a valid stack already exists in upper 32K.
@@ -266,31 +256,28 @@ HBX_COPY4:
 
 	RET			; Done
 ;
-;==================================================================================================
-;   HBIOS ENTRY FOR RST 08 PROCESSING
-;==================================================================================================
-;
 ; ENTRY POINT FOR BIOS FUNCTIONS (TARGET OF RST 08)
 ;
 HBX_INVOKE:
 	LD	(HBX_STKSAV),SP	; SAVE ORIGINAL STACK FRAME
-	LD	SP,HBX_STACK	; SETUP NEW STACK FRAME
-
 	LD	A,(HB_CURBNK)	; GET CURRENT BANK
-	LD	(HBX_INVBNK),A	; SETUP TO RESTORE AT EXIT
+	LD	(HB_INVBNK),A	; SAVE INVOCATION BANK
 
+	;DI
+	LD	SP,HBX_STACK	; SETUP NEW STACK FRAME
 	LD	A,BID_HB	; HBIOS BANK
 	CALL	HBX_BNKSEL	; SELECT IT
+	;EI
 
 	CALL	HB_DISPATCH	; CALL HBIOS FUNCTION DISPATCHER
 
+	;DI
 	PUSH	AF		; SAVE AF (FUNCTION RETURN)
-	LD	A,0FFH		; LOAD ORIGINAL BANK ($FF IS REPLACED AT ENTRY)
-HBX_INVBNK	EQU	$ - 1
+	LD	A,(HB_INVBNK)	; LOAD ORIGINAL BANK
 	CALL	HBX_BNKSEL	; SELECT IT
 	POP	AF		; RESTORE AF
-
 	LD	SP,(HBX_STKSAV)	; RESTORE ORIGINAL STACK FRAME
+	;EI
 
 	RET			; RETURN TO CALLER
 	
@@ -303,25 +290,18 @@ HBX_INVBNK	EQU	$ - 1
 HBX_FRGETB:
 	LD	(HBX_STKSAV),SP	; Save current stack
 	LD	SP,HBX_STACK	; Activate our private stack
-	
 	LD	A,(HB_CURBNK)	; Get current bank
 	LD	(HBX_BNKSAV),A	; Save current bank
-
 	PUSH	BC
 	LD	A,C
-	DI
-
+	;DI
 	CALL	HBX_BNKSEL
-
 	LD	C,(HL)
 	LD	A,(HBX_BNKSAV)
-
 	CALL	HBX_BNKSEL
-
-;WW	EI
+	;EI
 	LD	A,C
 	POP	BC
-
 	LD	SP,(HBX_STKSAV)	; RESTORE ORIGINAL STACK FRAME
 	RET
 
@@ -332,25 +312,18 @@ HBX_FRGETB:
 HBX_FRGETW:
 	LD	(HBX_STKSAV),SP	; Save current stack
 	LD	SP,HBX_STACK	; Activate our private stack
-
 	LD	A,(HB_CURBNK)	; Get current bank
 	LD	(HBX_BNKSAV),A	; Save current bank
-
 	LD	A,C
-	DI
-
+	;DI
 	CALL	HBX_BNKSEL
-
 	LD	E,(HL)
 	INC	HL
 	LD	D,(HL)
 	DEC	HL
 	LD	A,(HBX_BNKSAV)
-
 	CALL	HBX_BNKSEL
-
-;WW	EI
-
+	;EI
 	LD	SP,(HBX_STKSAV)	; RESTORE ORIGINAL STACK FRAME
 	RET
 
@@ -361,27 +334,20 @@ HBX_FRGETW:
 HBX_FRPUTB:	
 	LD	(HBX_STKSAV),SP	; Save current stack
 	LD	SP,HBX_STACK	; Activate our private stack
-
 	PUSH	AF
 	LD	A,(HB_CURBNK)	; Get current bank
 	LD	(HBX_BNKSAV),A	; Save current bank
 	POP	AF
-
 	PUSH	BC
 	LD	B,A
 	LD	A,C
-	DI
-
+	;DI
 	CALL	HBX_BNKSEL
-
 	LD	(HL),B
 	LD	A,(HBX_BNKSAV)
-
 	CALL	HBX_BNKSEL
-
-;WW	EI
+	;EI
 	POP	BC
-
 	LD	SP,(HBX_STKSAV)	; RESTORE ORIGINAL STACK FRAME
 	RET
 
@@ -392,25 +358,18 @@ HBX_FRPUTB:
 HBX_FRPUTW:	
 	LD	(HBX_STKSAV),SP	; Save current stack
 	LD	SP,HBX_STACK	; Activate our private stack
-
 	LD	A,(HB_CURBNK)	; Get current bank
 	LD	(HBX_BNKSAV),A	; Save current bank
-
 	LD	A,C
-	DI
-
+	;DI
 	CALL	HBX_BNKSEL
-
 	LD	(HL),E
 	INC	HL
 	LD	(HL),D
 	DEC	HL
 	LD	A,(HBX_BNKSAV)
-
 	CALL	HBX_BNKSEL
-
-;WW	EI
-
+	;EI
 	LD	SP,(HBX_STKSAV)	; RESTORE ORIGINAL STACK FRAME
 	RET
 
@@ -422,7 +381,6 @@ HBX_FRPUTW:
 	DSEG
 
 HB_DSKBUF	DEFW	0	; Address of physical disk buffer in HBIOS bank
-
 HBX_BNKSAV	DEFB	0	; Saved bank id during HBIOS calls
 HBX_STKSAV	DEFW	0	; Saved stack pointer during HBIOS calls
 		DEFS	64	; Private stack for HBIOS
@@ -431,7 +389,6 @@ HBX_STACK	EQU	$	; Top of private stack
 	IF INTPXY
 
 HBX_RETBNK	DEFB	0	; Bank to activate on return from BNKCPY
-
 HBX_BUF		DEFS	80H	; Interbank copy buffer
 
 	ENDIF

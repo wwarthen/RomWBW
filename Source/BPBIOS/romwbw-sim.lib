@@ -9,13 +9,13 @@
 ;       HBIOS configuration.
 ;
 HBIOS	EQU	YES			; Use HBIOS functions
-;INTPXY	EQU	YES			; Internal HBIOS Proxy
 HBLOC	EQU	0FE00H			; Location of HBIOS proxy (used if not INTPXY)
 ;
 ; Set exactly one of the following to YES to specify platform
 ;
 N8VEM	EQU	YES
 ZETA	EQU	NO
+ZETA2	EQU	NO
 N8	EQU	NO
 MK4	EQU	NO
 ;
@@ -24,16 +24,16 @@ MK4	EQU	NO
 SIMHCLK	EQU	NO			; Direct SIMH clock access
 HBCLK	EQU	YES			; HBIOS clock driver
 ;
+; Set HB_IODEV to appropriate console device
+;
+HB_IODEV	EQU	0
+;
 ; Set HB_HDDEV to appropriate hard disk driver
 ;
-;HB_HDDEV	EQU	HBDEV_HDSK	; SIMH HDSK Driver
-;;HB_HDDEV	EQU	HBDEV_IDE	; IDE Driver
-;;HB_HDDEV	EQU	HBDEV_SD	; SD Card Driver
 HB_HDDEV	EQU	2
 ;
 ; Set HB_MDDEV to appropriate memory disk driver
 ;
-;HB_MDDEV	EQU	HBDEV_MD	; Memory Disk Driver
 HB_MDDEV	EQU	0
 ;
 ; RAM/ROM disk sizes expressed as count of 2K blocks
@@ -44,7 +44,7 @@ HB_ROMBLKS	EQU	192		; 512K - 128K reserved / 2K per block
 ;
 ; Layout of RAM banks
 ;
-	IF N8VEM OR ZETA OR MK4
+	IF N8VEM OR ZETA OR ZETA2 OR MK4
 BID_RAMD	EQU	80H
 BID_RAMM	EQU	8BH
 BID_SYS		EQU	8CH
@@ -60,14 +60,6 @@ BID_HB		EQU	9DH
 BID_USR		EQU	9EH
 BID_COM		EQU	9FH
 	ENDIF
-;
-	IF N8 OR MK4
-;HB_IODEV	EQU	HBCIO_ASCI
-;	ELSE
-;HB_IODEV	EQU	HBCIO_UART
-	ENDIF
-;
-HB_IODEV	EQU	0
 ;
 	IF INTPXY
 MEMTOP	EQU	0FFE0H - 1	; Start of HBIOS 32 byte control block

@@ -93,7 +93,8 @@ HARDDSK	EQU	YES		; YES = Add Hard-disk Code, NO = Floppy Only
 				;  (Pick 1 of 3 options below)
 SCSI	EQU	NO		; YES = Use SCSI Driver
 IDE	EQU	NO		; YES = Use IDE Driver
-HDSK	EQU	YES		; YES = Use SIMH HDSK Driver
+SIMHDSK	EQU	NO		; YES = Use SIMH HDSK Driver
+HBDSK	EQU	YES		; YES = Use HBIOS Disk Driver
 HDDMA	EQU	NO		; Use DMA-Controlled Hard Disk Data Transfers?
 				;  (DMA not implemented for GIDE)
 UNIT_0	EQU	YES		; Hard Disk Physical Unit 1

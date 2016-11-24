@@ -30,7 +30,7 @@ BIOSTK:	DEFB	0		; NOP if not currently in bank,
 	LD	(USP-7),HL	; Save entry HL
 	POP	HL		; Retrieve caller's return address from stack
 	LD	(USP-5),HL	; ..and set in our stack for local return
-	DI			; No interrupts while we play with the stack
+	;DI			; No interrupts while we play with the stack
 	LD	(USP),SP	; Save User's Stack Pointer
 	LD	SP,USP-1	; ..and point locally, saving 1 byte for Bank
 	PUSH	AF		; Save entry A and Flags
@@ -43,15 +43,15 @@ BIOSTK:	DEFB	0		; NOP if not currently in bank,
 	PUSH	HL		; ..at USP-2 & 3
 	LD	SP,USP-7	; Point stack pointer to do local return
 	POP	HL		; .restoring entry HL
-;WW	EI			; ..enabling interrupts
+	;EI			; ..enabling interrupts
 	RET			; And return to caller
 
 ; Restore User Stack and Bank Routine
 
 USRSTK:	PUSH	AF
 	LD	A,(USP-1)	; Get bank control byte from entry
-	LD	(CURBNK),A	; WW: I ADDED THIS, IS IT RIGHT???
-	CALL	HBX_SETBNK
+	CALL	HBX_BNKSEL
+	LD	(CURBNK),A
 	XOR	A
 	LD	(BIOSTK),A	; Patch NOP back in at start of code
 	POP	AF
@@ -64,8 +64,8 @@ USRSTK:	PUSH	AF
 
 FRCLR:	PUSH	AF		; Save any entry in AF
 	LD	A,(USP-1)	; Get bank control byte
+	CALL	HBX_BNKSEL
 	LD	(CURBNK),A	; WW: I ADDED THIS, IS IT RIGHT???
-	CALL	HBX_SETBNK
 	XOR	A
 	LD	(BIOSTK),A	; Patch NOP to enable stack switcher
 	POP	AF
@@ -100,6 +100,7 @@ RETMEM:	LD	A,(CURBNK)
 
 SELMEM:	LD	(USRBNK),A	; Update user bank
 			;..fall thru to set specified bank..
+
 ;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ; SELBNK - Switch Memory Bank to Bank in A and show as current.
 ;  Must preserve all Registers including Flags.
@@ -107,8 +108,8 @@ SELMEM:	LD	(USRBNK),A	; Update user bank
 ;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 SELBNK:	PUSH	AF		; Save regs
-SELBN0:	LD	(CURBNK),A	; Save as current bank #
-	CALL	HBX_SETBNK
+SELBN0:	CALL	HBX_BNKSEL
+	LD	(CURBNK),A	; Save as current bank #
 	POP	AF		; restore regs
 	RET
 
