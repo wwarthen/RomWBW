@@ -8,7 +8,8 @@ HB_DEFBNK	EQU	BID_USR		; Default bank number
 ;
 ; LOCATION OF DISPATCH ENTRY IN HBIOS BANK
 ;
-HB_DISPATCH	EQU	0403H
+HB_DISPATCH	EQU	403H
+HB_STACK	EQU	500H
 ;
 ; PLATFORM SPECIFIC CONSTANTS
 ;
@@ -76,7 +77,7 @@ HBX_BNKCPY	EQU	0FFF6H
 HBX_BNKCALL	EQU	0FFF9H
 
 HB_CURBNK	EQU	0FFE0H
-;HB_PRVBNK	EQU	0FFE1H
+HB_INVBNK	EQU	0FFE1H
 HB_SRCADR	EQU	0FFE2H
 HB_SRCBNK	EQU	0FFE4H
 HB_DSTADR	EQU	0FFE5H
@@ -114,6 +115,19 @@ HBX_INIT:
 	LD	(HB_SRCBNK),A
 	LD	(HB_DSTBNK),A
 	
+	IF  BANKED
+
+	; Copy vectors from TPA page zero to SYS page zero
+	LD	BC,(TPABNK)	; C := TPABNK, B := SYSBNK
+	CALL	XMOVE		; Set source/dest banks for copy
+	LD	HL,0		; Source address is zero
+	LD	DE,0		; Destination address is zero
+	LD	BC,40H		; Copy 40H bytes
+	CALL	MOVE		; Do it
+	LD	A,(TPABNK)	; Set all Bank regs to TPA
+
+	ENDIF
+	
 	RET
 
 HBX_XCOPY:
@@ -124,16 +138,14 @@ HBX_XCOPY:
 	RET
 
 HBX_COPY:
-	LD	(HBX_STKSAV),SP	; Save current stack
-	LD	SP,HBX_STACK	; Activate our private stack
-	CALL	HBX_BNKCPY	; Do the work with private stack active
-	LD	SP,(HBX_STKSAV)	; Back to original stack
-	RET
-
-
+	JP	HBX_BNKCPY
 	
 	IF INTPXY
-;
+
+;==================================================================================================
+; SELECT MEMORY BANK FOR LOWER 32K
+;==================================================================================================
+
 HBX_BNKSEL:
 	LD	(HB_CURBNK),A
 
@@ -186,136 +198,131 @@ HBX_ROM:
 	RLCA
 	OUT0	(CPU_BBR),A
 	RET
+
 	ENDIF
-;
-; Entry point HBX_BNKCPY is for use internally and
-; assumes a valid stack already exists in upper 32K.
-;
+
+;==================================================================================================
+; INTERBANK MEMORY COPY
+;==================================================================================================
+
 HBX_BNKCPY:
-	; Save current bank to restore at end
-	LD	A,(HB_CURBNK)
-	LD	(HBX_CPYBNK),A
+	HB_DI			; NOTE: ONLY REQUIRED WHEN USING IM 1
 
-	; Setup for copy loop
-	LD	(HB_SRCADR),HL	; Init working source adr
-	LD	(HB_DSTADR),DE	; Init working dest adr 
-	LD	H,B		; Move bytes to copy from BC...
-	LD	L,C		;   to HL to use as byte counter
-
-HBX_COPY2:	; Copy loop
-	LD	A,L		; Low byte of count to A
-	AND	7FH		; Isolate bits relevant to 128 byte buf
-	LD	BC,80H		; Assume full buf copy
-	JR	Z,HBX_COPY3	; If full buf copy, go do it
-	LD	C,A		; Otherwise, BC := bytes to copy
-
-HBX_COPY3:
-	PUSH	HL		; Save bytes left to copy
-	CALL	HBX_COPY4	; Do it
-	POP	HL		; Recover bytes left to copy
-	XOR	A		; Clear CF
-	SBC	HL,BC		; Reflect bytes copied in HL
-	JR	NZ,HBX_COPY2	; If any left, then loop
-
-	; FIX: this should be done elsewhere!!!
-	LD	A,HB_DEFBNK	; Default bank id
-	LD	(HB_SRCBNK),A	; ... to source bank id
-	LD	(HB_DSTBNK),A	; ... and destination bank id
-
-	LD	A,0FFH		; Load original bank ($FF is replaced at entry)
-HBX_CPYBNK	EQU	$ - 1
-
-	JR	HBX_BNKSEL	; Return via bank set
-
-HBX_COPY4:
-	; Switch to source bank
-	LD	A,(HB_SRCBNK)	; Get source bank
-	CALL	HBX_BNKSEL	; Set bank without making it current
-
-	; Copy BC bytes from HL -> BUF
-	; Allow HL to increment
-	PUSH	BC		; Save copy length
-	LD	HL,(HB_SRCADR)	; Point to source adr
-	LD	DE,HBX_BUF	; Setup buffer as interim destination
-	LDIR			; Copy BC bytes: src -> buffer
-	LD	(HB_SRCADR),HL	; Update source adr
-	POP	BC		; Recover copy length
+	LD	(HBX_STKSAV),SP
+	LD	SP,HBX_TMPSTK
+	LD	A,(HB_CURBNK)	; GET CURRENT BANK
+	PUSH	AF		; AND SAVE TO RESTORE LATER
+	PUSH	BC		; CUR LEN -> (SP)
+;
+HBX_BC_LOOP:
+	EX	(SP),HL		; HL := CUR LEN, (SP) := CUR SRC
+	LD	BC,HBX_BUFSIZ	; SET BC TO BOUNCE BUFFER SIZE
+	OR	A		; CLEAR CARRY FLAG
+	SBC	HL,BC		; CUR LEN := CUR LEN - BBUF SIZE
+	JR	C,HBX_BC_LAST	; END GAME, LESS THAN BBUF BYTES LEFT
+	EX	(SP),HL		; HL := CUR SRC, (SP) := REM LEN
+	CALL	HBX_BC_ITER	; DO A FULL BBUF SIZE CHUNK
+	JR	HBX_BC_LOOP	; AND REPEAT TILL DONE
+;
+HBX_BC_LAST:
+	; HL IS BETWEEN -(BBUF SIZE) AND -1, BC = BBUF SIZE
+	OR	A		; CLEAR CARRY
+	ADC	HL,BC		; HL := REM LEN (0 - 127)
+	EX	(SP),HL		; HL := CUR SRC, (SP) := REM LEN
+	POP	BC		; BC := REM LEN
+	CALL	NZ,HBX_BC_ITER	; DO FINAL CHUNK, BUT ONLY IF NOT ZERO BYTES
+	POP	AF		; RECOVER ORIGINAL BANK
+	CALL	HBX_BNKSEL	; SWITCH TO CURRENT BANK AND EXIT
+	LD	SP,(HBX_STKSAV)
 	
-	; Switch to dest bank
-	LD	A,(HB_DSTBNK)	; Get destination bank
-	CALL	HBX_BNKSEL	; Set bank without making it current
+	HB_EI			; NOTE: ONLY REQUIRED WHEN USING IM 1
 
-	; Copy BC bytes from BUF -> HL
-	; Allow DE to increment
-	PUSH	BC		; Save copy length
-	LD	HL,HBX_BUF	; Use the buffer as source now
-	LD	DE,(HB_DSTADR)	; Setup final destination for copy
-	LDIR			; Copy BC bytes: buffer -> dest
-	LD	(HB_DSTADR),DE	; Update dest adr
-	POP	BC		; Recover copy length
-
-	RET			; Done
+	RET
 ;
+HBX_BC_ITER:
+	; HL = SRC ADR, DE = DEST ADR, BC = LEN
+	PUSH	BC		; SAVE COPY LEN
+	PUSH	DE		; FINAL DEST ON STACK
+	LD	DE,HBX_BUF	; SET DEST TO BUF
+	LD	A,(HB_SRCBNK)	; GET SOURCE BANK
+	CALL	HBX_BNKSEL	; SWITCH TO SOURCE BANK
+	LDIR			; HL -> BUF (DE), BC BYTES, HL UPDATED SRC ADR
+	POP	DE		; DE := FINAL DEST
+	POP	BC		; GET LEN BACK IN BC
+	PUSH	HL		; SAVE UPDATED SRC ADR
+	LD	HL,HBX_BUF	; SET SRC ADR TO BUF
+	LD	A,(HB_DSTBNK)	; GET DEST BANK
+	CALL	HBX_BNKSEL	; SWITCH TO DEST BANK
+	LDIR			; BUF (HL) -> DE, BC BYTES, DE UPDATED DEST ADR
+	POP	HL		; RECOVER UPDATED SRC ADR
+	; HL = UPD SRC, DE = UPD DEST, BC = 0
+	RET
+
+;==================================================================================================
 ; ENTRY POINT FOR BIOS FUNCTIONS (TARGET OF RST 08)
-;
+;==================================================================================================
+
 HBX_INVOKE:
-	LD	(HBX_STKSAV),SP	; SAVE ORIGINAL STACK FRAME
+	LD	(HBX_INVSP),SP	; SAVE ORIGINAL STACK FRAME
 	LD	A,(HB_CURBNK)	; GET CURRENT BANK
 	LD	(HB_INVBNK),A	; SAVE INVOCATION BANK
 
-	;DI
-	LD	SP,HBX_STACK	; SETUP NEW STACK FRAME
+;	HB_DI
+	LD	SP,HBX_TMPSTK	; USE SMALL TEMP STACK FRAME IN HI MEM FOR BANK SWITCH
 	LD	A,BID_HB	; HBIOS BANK
 	CALL	HBX_BNKSEL	; SELECT IT
-	;EI
+	LD	SP,HB_STACK	; NOW USE FULL HBIOS STACK IN HBIOS BANK
+;	HB_EI
 
 	CALL	HB_DISPATCH	; CALL HBIOS FUNCTION DISPATCHER
 
-	;DI
+;	HB_DI
+	LD	SP,HBX_TMPSTK	; USE SMALL TEMP STACK FRAME IN HI MEM FOR BANK SWITCH
 	PUSH	AF		; SAVE AF (FUNCTION RETURN)
 	LD	A,(HB_INVBNK)	; LOAD ORIGINAL BANK
 	CALL	HBX_BNKSEL	; SELECT IT
 	POP	AF		; RESTORE AF
-	LD	SP,(HBX_STKSAV)	; RESTORE ORIGINAL STACK FRAME
-	;EI
+	LD	SP,0		; RESTORE ORIGINAL STACK FRAME
+HBX_INVSP	EQU	$ - 2
+;	HB_EI
 
 	RET			; RETURN TO CALLER
 	
 	ENDIF
 
 ;==================================================================================================
-;	Load  A,(HL)  from  Alternate  Bank  (in Reg C)
+;	LD	A,(C:HL)
 ;==================================================================================================
 
 HBX_FRGETB:
 	LD	(HBX_STKSAV),SP	; Save current stack
-	LD	SP,HBX_STACK	; Activate our private stack
+	LD	SP,HBX_TMPSTK	; Activate our private stack
 	LD	A,(HB_CURBNK)	; Get current bank
 	LD	(HBX_BNKSAV),A	; Save current bank
 	PUSH	BC
 	LD	A,C
-	;DI
+	HB_DI
 	CALL	HBX_BNKSEL
 	LD	C,(HL)
 	LD	A,(HBX_BNKSAV)
 	CALL	HBX_BNKSEL
-	;EI
+	HB_EI
 	LD	A,C
 	POP	BC
 	LD	SP,(HBX_STKSAV)	; RESTORE ORIGINAL STACK FRAME
 	RET
 
 ;==================================================================================================
-;	Load  DE,(HL)  from  Alternate  Bank
+;	LD	DE,(C:HL)
 ;==================================================================================================
 
 HBX_FRGETW:
 	LD	(HBX_STKSAV),SP	; Save current stack
-	LD	SP,HBX_STACK	; Activate our private stack
+	LD	SP,HBX_TMPSTK	; Activate our private stack
 	LD	A,(HB_CURBNK)	; Get current bank
 	LD	(HBX_BNKSAV),A	; Save current bank
 	LD	A,C
-	;DI
+	HB_DI
 	CALL	HBX_BNKSEL
 	LD	E,(HL)
 	INC	HL
@@ -323,17 +330,17 @@ HBX_FRGETW:
 	DEC	HL
 	LD	A,(HBX_BNKSAV)
 	CALL	HBX_BNKSEL
-	;EI
+	HB_EI
 	LD	SP,(HBX_STKSAV)	; RESTORE ORIGINAL STACK FRAME
 	RET
 
 ;==================================================================================================
-;	Load  (HL),A  to  Alternate  Bank  (in Reg C)
+;	LD	(C:HL),A
 ;==================================================================================================
 
 HBX_FRPUTB:	
 	LD	(HBX_STKSAV),SP	; Save current stack
-	LD	SP,HBX_STACK	; Activate our private stack
+	LD	SP,HBX_TMPSTK	; Activate our private stack
 	PUSH	AF
 	LD	A,(HB_CURBNK)	; Get current bank
 	LD	(HBX_BNKSAV),A	; Save current bank
@@ -341,27 +348,27 @@ HBX_FRPUTB:
 	PUSH	BC
 	LD	B,A
 	LD	A,C
-	;DI
+	HB_DI
 	CALL	HBX_BNKSEL
 	LD	(HL),B
 	LD	A,(HBX_BNKSAV)
 	CALL	HBX_BNKSEL
-	;EI
+	HB_EI
 	POP	BC
 	LD	SP,(HBX_STKSAV)	; RESTORE ORIGINAL STACK FRAME
 	RET
 
 ;==================================================================================================
-;	Load  (HL),DE  to  Alternate  Bank
+;	LD	(C:HL),DE
 ;==================================================================================================
 
 HBX_FRPUTW:	
 	LD	(HBX_STKSAV),SP	; Save current stack
-	LD	SP,HBX_STACK	; Activate our private stack
+	LD	SP,HBX_TMPSTK	; Activate our private stack
 	LD	A,(HB_CURBNK)	; Get current bank
 	LD	(HBX_BNKSAV),A	; Save current bank
 	LD	A,C
-	;DI
+	HB_DI
 	CALL	HBX_BNKSEL
 	LD	(HL),E
 	INC	HL
@@ -369,26 +376,25 @@ HBX_FRPUTW:
 	DEC	HL
 	LD	A,(HBX_BNKSAV)
 	CALL	HBX_BNKSEL
-	;EI
+	HB_EI
 	LD	SP,(HBX_STKSAV)	; RESTORE ORIGINAL STACK FRAME
 	RET
 
 ;==================================================================================================
-;
 ; PRIVATE DATA
-;
+;==================================================================================================
 
 	DSEG
 
 HB_DSKBUF	DEFW	0	; Address of physical disk buffer in HBIOS bank
 HBX_BNKSAV	DEFB	0	; Saved bank id during HBIOS calls
 HBX_STKSAV	DEFW	0	; Saved stack pointer during HBIOS calls
-		DEFS	64	; Private stack for HBIOS
-HBX_STACK	EQU	$	; Top of private stack
+		DEFS	32	; Private stack for HBIOS
+HBX_TMPSTK	EQU	$	; Top of private stack
 
 	IF INTPXY
 
-HBX_RETBNK	DEFB	0	; Bank to activate on return from BNKCPY
-HBX_BUF		DEFS	80H	; Interbank copy buffer
+HBX_BUFSIZ	EQU	40H
+HBX_BUF		DEFS	HBX_BUFSIZ	; Interbank copy buffer
 
 	ENDIF

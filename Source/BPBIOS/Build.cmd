@@ -10,7 +10,7 @@ set ZXINCDIR=../../tools/cpm/include/
 
 pushd ZCPR33 && call Build.cmd && popd
 
-pause
+rem pause
 
 call :makebp 33t
 call :makebp 33tbnk
@@ -25,7 +25,7 @@ call :makebp 34nbnk
 call :makebp 41tbnk
 call :makebp 41nbnk
 
-pause
+rem pause
 
 cpmrm.exe -f wbw_hd0 ../../Binary/hd0.img 0:ws*.*
 
