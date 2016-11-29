@@ -32,8 +32,8 @@ DPBRAM:	DEFW	32		; Sectors/Track
 	DEFB	0FH		; Block Mask
 	DEFB	1		; Extent Mask
 	DEFW	MSIZ-1		; Disk Size-1      256 kB    512 kB   1024 kB
-	DEFW	128 - 1		; Dir Max    -or-    64       128       256
-	DEFB	0C0H, 00	; Alloc 0, 1        80H,0    0C0H,0    0F0H,0
+	DEFW	256 - 1		; Dir Max    -or-    64       128       256
+	DEFB	0F0H, 00	; Alloc 0, 1        80H,0    0C0H,0    0F0H,0
 	DEFW	0000		; Check Size
 	DEFW	0000		; Trk Offset from beginning of Ram Bank base
 

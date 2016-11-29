@@ -2,15 +2,13 @@
 
 setlocal
 
+setlocal & cd ZCPR33 && call Build || exit /b 1 & endlocal
+
 set PATH=%PATH%;..\..\Tools\zx;..\..\Tools\cpmtools;
 
 set ZXBINDIR=../../tools/cpm/bin/
 set ZXLIBDIR=../../tools/cpm/lib/
 set ZXINCDIR=../../tools/cpm/include/
-
-pushd ZCPR33 && call Build.cmd && popd
-
-rem pause
 
 call :makebp 33t
 call :makebp 33tbnk

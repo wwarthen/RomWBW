@@ -166,9 +166,9 @@ READID:	CALL	PANIC
 ;:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 RETDST:	CALL	PANIC
-	LD	HL,ST0		; Point to Status Byte (Reg 3 contents)
-	LD	A,(HL)		;  fetch it
-	LD	BC,765		;   load Controller ID
+	;LD	HL,ST0		; Point to Status Byte (Reg 3 contents)
+	;LD	A,(HL)		;  fetch it
+	;LD	BC,765		;   load Controller ID
 	RET
 
 ;:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -187,7 +187,7 @@ RETDST:	CALL	PANIC
 ;:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 FMTTRK:	CALL	PANIC
-	XOR	A
+	;XOR	A
 	RET
 
 ;=============================================================================
@@ -198,8 +198,8 @@ FMTTRK:	CALL	PANIC
 ; Uses : AF,BC
 
 FDCMD:	CALL	PANIC
-	LD	A,(ST0)		; Else get first byte of Status
-	AND	0C0H		;  check for Normal termination
+	;LD	A,(ST0)		; Else get first byte of Status
+	;AND	0C0H		;  check for Normal termination
 	RET			; ..return w/Error Flags set
 
 ;:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -212,7 +212,7 @@ FDCMD:	CALL	PANIC
 ; Return: Head Delay bit set in Command in A if needed
 ; Uses  : None.  All Registers Preserved/Not Affected
 
-;MOTOR:	CALL	PANIC
+MOTOR:	CALL	PANIC
 	XOR	A
 	RET
 
@@ -231,7 +231,7 @@ FDCMD:	CALL	PANIC
 ;:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 FHDRW:	CALL	PANIC
-	XOR	A
+	;XOR	A
 	RET
 
 
@@ -271,35 +271,35 @@ HDR:	DEFS	1		; Head (B2), Drive (B0,1)	(** Global **)
 
 ; FDC Operation Result Storage Area
 
-ST0:	DEFS	1		; Status Byte 0
-ST1:	DEFS	1		; Status Byte 1 (can also be PCN)
-ST2:	DEFS	1		; Status Byte 2
+;ST0:	DEFS	1		; Status Byte 0
+;ST1:	DEFS	1		; Status Byte 1 (can also be PCN)
+;ST2:	DEFS	1		; Status Byte 2
 RC:	DEFS	1		; Track #			(** Global **)
-RH:	DEFS	1		; Head # (0/1)
+;RH:	DEFS	1		; Head # (0/1)
 RR:	DEFS	1		; Sector #			(** Global **)
 RN:	DEFS	1		; Sector Size			(** Global **)
 
 ;-->>>  Do NOT re-order the following two bytes !! <<<--
 
-MTM:	DEFS	1		; Floppy Time down-counter
-MOTIM:	DEFS	1		; Motor On Time Counter
+;MTM:	DEFS	1		; Floppy Time down-counter
+;MOTIM:	DEFS	1		; Motor On Time Counter
 
 ; DISK Subsystem Variable Storage
 
-FDMOT:	DEFS	1		; Motor on required flag
+;FDMOT:	DEFS	1		; Motor on required flag
 RDOP:	DEFS	1		; Read/write flag
-RETRYS:	DEFS	1		; Number of times to try Opns
-RWRTRY:	DEFS	1		; Number of read/write tries
-DRVSPD:	DEFS	1		; Drive Speed
-DRVSIZ:	DEFS	1		; Drive Size
+;RETRYS:	DEFS	1		; Number of times to try Opns
+;RWRTRY:	DEFS	1		; Number of read/write tries
+;DRVSPD:	DEFS	1		; Drive Speed
+;DRVSIZ:	DEFS	1		; Drive Size
 STEP2:	DEFS	1		; <> 0 for Double Step		(** Global **)
-MODE:	DEFS	1		; Bit 6 = 1 if MFM, 0 = FM
-ACTIVE:	DEFS	1		; Current bits written to Dev Contr Reg (DCR)
-DLYCNT:	DEFS	1		; Delay value reading Main Status Reg
-FSPT:	DEFS	1		; Format Sectors/Track value
+;MODE:	DEFS	1		; Bit 6 = 1 if MFM, 0 = FM
+;ACTIVE:	DEFS	1		; Current bits written to Dev Contr Reg (DCR)
+;DLYCNT:	DEFS	1		; Delay value reading Main Status Reg
+;FSPT:	DEFS	1		; Format Sectors/Track value
 TSBSCF:	DEFS	1		; 0=Hd always 0 (TSBSC)		(** Global **)
 
 TTRK:	DEFS	1		; Storage for Track		(** Global **)
-TRKARY:	DEFS	4		; Track storage locations for four drives
+;TRKARY:	DEFS	4		; Track storage locations for four drives
 
 ;=========================== End of FDC-DX ==============================

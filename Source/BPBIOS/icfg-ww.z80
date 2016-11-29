@@ -113,7 +113,7 @@ MONTIM:	 DEFB	100		; Motor On Time (1 to 255) in tenths-of-seconds
 SPINUP:	 DEFB	8		; Spinup delay (1 to 255) in tenths-of-seconds
 MXRTRY:	 DEFB	4		; Maximum Number of retries on Floppy Opns
 
-IVCT:	DEFW	INTTBL		; Pointer to interrupt vectors
+IVCT:	DEFW	0		; Pointer to interrupt vectors
 
 ;-------- Physical Hard Drive Configuration Information ----------
 ; Hard Disk data begins w/Controller Type, followed by data for 3 drives.

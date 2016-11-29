@@ -38,8 +38,7 @@
 ; Uses : A,HL
 ;:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-HDVALS:	LD	(DATADR),DE	; Save the Users Data Area
-	LD	A,CMDSIZ
+HDVALS:	CALL	PANIC		; NOT IMPLEMENTED!!!!
 	RET
 
 ;:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -49,8 +48,7 @@ HDVALS:	LD	(DATADR),DE	; Save the Users Data Area
 ; Uses : AF
 ;:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-HDSLCT:	AND	01H		; Strip any garbage
-	LD	(hdUnit),A	;  save in Command Block
+HDSLCT:	CALL	PANIC		; NOT IMPLEMENTED!!!!
 	RET
 
 ;:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -120,26 +118,6 @@ HDREAD:
 	DSEG
 	  ENDIF
 
-HRTrys:	DEFS	1		; Retry counter storage
-hdUnit:	DEFS	1		; IDE Drive (0 = Master, 1 = Slave)
-hdTrks:	DEFS	2		; Number of Tracks on IDE Drive
-hdHds:	DEFS	1		; Number of Heads on IDE Drive
-hdSPT:	DEFS	1		; Number of Sectors-Per-Track on IDE Drive
-
-; IDE Command Block for User Direct Driver Access
-
-hdComd:	DEFS	1		; Command Byte
-hdBMap:	DEFS	1		; Bit Map (B6..0) of Following Bytes to Set
-hdHead:	DEFS	1		; Head Number/Number of Heads in B3..0
-hdTrkH:	DEFS	1		; Hi-Track (Cylinder) Byte
-hdTrkL:	DEFS	1		; Lo-Track (Cylinder) Byte
-hdSec:	DEFS	1		; Sector Number
-hdSCnt:	DEFS	1		; Sector Count
-hdErr:	DEFS	1		; Error Reg Value
-hdDigO:	DEFS	1		; Digital Output Reg Value
-CMDSIZ	EQU	$-hdComd	; Size of Command Block
-
-DATADR:	DEFS	2		; Pointer to User Buffer Space (user bank)
 ;======================= End of HARDIDE ===========================
 
 

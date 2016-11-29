@@ -130,7 +130,13 @@ PSTR:	LD	A,(HL)		; General purpose print 0 or Hi-bit
 	OR	A
 	JR	Z,PSTRX		; Exit if null found in string
 	LD	C,A
+	PUSH	BC
+	PUSH	DE
+	PUSH	HL
 	CALL	CONOUT		; Send to console device
+	POP	HL
+	POP	DE
+	POP	BC
 	BIT	7,C		; Test for Hi-bit terminator
 	JR	Z,PSTR		; ..loop if Not finished
 PSTRX:	EX	(SP),HL		; Else swap Ptr to next instr for entry HL val

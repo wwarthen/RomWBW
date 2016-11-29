@@ -17,7 +17,6 @@ rel	equ	yes		; This equate MUST be set to YES if assembling
 				; to a REL file, and it MUST be set to NO if
 				; assembling to a HEX or COM file.
 
-base	equ	0
 
 ;=============================================================================
 ;

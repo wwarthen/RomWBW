@@ -152,20 +152,6 @@ GOZSYS:	LD	BC,80H		; Default DMA address is 80H
 	
 	JP	(HL)		; Go to Z-System for further processing
 
-;.....
-; Common DMA move sequence placed here in CSEG for Common access
-;   Enter with HL pointing to a DMA definition block
-
-	  IF  [BANKED OR FASTWB OR RAMDSK]
-DMAMOV:	LD	BC,8*256+SAR0L	; Send 8 bytes to Ports SAR0L
-	OTIMR
-	LD	A,00000010B	; Set DMA Mode control to Burst Mode
-	OUT0	(DMODE),A
-	LD	A,40H		; Enable DMA0
-	OUT0	(DSTAT),A	; ..and move the block
-	RET
-	  ENDIF
-
 	  IF  [Z3 AND HAVIOP]
 ; Aux Jump Table so IOP's can find routines.  After Cold Boot, the
 ; address of this table is placed in BIOSJT+1.

@@ -34,10 +34,10 @@
 ; The remainder is for the Operating System.  Exact sizes vary depending
 ; primarily on the Number and sizes of Hard Drive Partitions, but may be:
 
-;  D100 - EBFF	5.0 KBytes	B/P BIOS (unbanked version)
-;  C300 - D0FF	3.5 KBytes	ZSDOS 1.0 BDOS
-;  BB00 - C2FF	  2 KBytes	ZCPR 3.3 Command Processor
-;  0100 - BAFF	~46 KBytes	Transient Program Area
+;  CE00 - E8FF	5.0 KBytes	B/P BIOS (unbanked version)
+;  C000 - CDFF	3.5 KBytes	ZSDOS 1.0 BDOS
+;  B800 - BFFF	  2 KBytes	ZCPR 3.3 Command Processor
+;  0100 - B7FF	~46 KBytes	Transient Program Area
 ;  0000 - 00FF	256 Bytes	Standard CP/M Buffers
 ;========================================================================
 
@@ -46,6 +46,10 @@ TRUE	EQU	NOT FALSE
 
 YES	EQU	TRUE
 NO	EQU	FALSE
+
+BASE	EQU	0
+
+CCP	EQU	0C000H		; ZCPR3 COMMAND PROCESSOR
 
 ; The External Stack is placed in the very top position in memory.  It is
 ; mandatory for B/P Bios and ZCPR 3.3.
@@ -125,4 +129,3 @@ USPC	EQU	0E900H		; Start of Resident User Space (MANDATORY)
 USPCS	EQU	6		; (USPC Size = 128 * USPCS = 0.75 kBytes)
 
 ;--- End of Z3BASE.LIB ---
-

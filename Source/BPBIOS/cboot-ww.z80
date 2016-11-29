@@ -24,56 +24,9 @@
 ;  beginning of B2RAM and DSEG.
 
 CBOOT:	DI			; Disable interrupt system
-;	IN0	A,(DDRA)	; Get Data Definition of Port A
-;	SET	4,A		;  Bit 4 is Input for SCSI "Int" input
-;	OUT0	(DDRA),A	;   and reset bits
-
-;	LD	A,(HICOMM)	; Set Common Bank start to Header locn
-;	OUT0	(CBAR),A
-
-;	CALL	FDRst		; Reset FDC Controller, Re-Initialize
-				;  (Needed in case ROM Timed out for HD Boot)
-;	CALL	MOTOFF		; Turn Floppy motors Off, clear timer
-
-;	XOR	A		; Get a Byte of Zeros
-;	OUT0	(SCR),A		;   and activate ASCI0/ASCI1 vs MIMIC
 
 	LD	HL,(IOBYT)	; Get IOBYTE, Default Drive & User
 	LD	(3),HL		;   Set values in TPA bank
-
-; Set BIOS Bank Numbers to the RAM base Number as set by Boot ROM.  In-context
-; RAM will be reflected in CBR which is base.  We adjust other bank numbers
-; based on configured differences, except for MaxBnk which remains as config'd.
-; Since the bootable systems (MOVCPM set to YES) are not banked, the Fast Boot
-; option should be OFF, and only the TPABNK will necessarily be Accurate.
-
-;	IN0	C,(CBR)		; Read Current 4k base of RAM
-;	RR	C		;  divide
-;	RR	C		;   by
-;	RR	C		;    8 for 32k Bank base
-;	LD	HL,TPABNK
-;	LD	B,(HL)		; Get configured TPA Bank #
-;	LD	(HL),C		;  (Store actual)
-;	  IF  NOT MOVCPM
-;	DEC	HL
-;	LD	A,(HL)		; Get Any User Bank
-;	SUB	B		;  (compute difference from TPA)
-;	JR	C,NoUsrB	; ..jump if None
-;	ADD	A,C		; Else Compute new User Bank #
-;	LD	(HL),A		;  (save)
-;NoUsrB:	INC	HL		;   advance to System Bank #
-;	INC	HL
-;	LD	A,(HL)		;    fetch
-;	SUB	B		; Compute diff from System Bnk to TPA Bnk
-;	ADD	A,C		;  add new base
-;	LD	(HL),A		;   (save)
-;	INC	HL		; Advance to RAM Drive Start Bank #
-;	LD	A,(HL)
-;	SUB	B		;  compute difference
-;	ADD	A,C		;   Add true base
-;	LD	(HL),A		;    (save)
-;	  ENDIF		;~Movcpm.  Max Bank # Stays as configured
-;
 
 	  IF  BANKED
 	LD	SP,USP		; Set to User Stack in High memory
@@ -286,70 +239,14 @@ BMOVE:
 	RR	L		;   to give HL = CPR length in bytes
 	   ENDIF	;~Movcpm
 
-;	;
-;	; SETUP FOR FASTWB
-;	;
-;	; BTTBL IS USED TO SAVE ORIGINAL CPR
-;	; SARL IS USED TO RESTORE CPR
-;	;
-;	; 0-2:	SRC ADDRESS (LLHHB)
-;	; 3-5:	DEST ADDRESS (LLHHB)
-;	; 6-7:	LEN (LLHH)
-;	;
-;	; SET TRANSFER LENGTH IN BTTBL AND SARL
-;	LD	(BTTBL+6),HL	; Save length in boot block
-;	LD	(SARL+6),HL	;   and DMA WB block
-;	;
-;	; L=TPA BANK, H=SYS BANK
-;	LD	HL,(TPABNK)	; Get TPA (L) and System (H) Banks
-;	;
-;	; CONVERT BANK:DE -> BHHLL, SAVE AS SRC IN BTTBL AND DEST IN SARL
-;	LD	A,L		; Load TPA Bank #
-;	RL	D		; Move MSB of Address to Carry
-;	ADC	A,0		; Add Carry to Bank # (in case cross banks)
-;	RRA			;  shift for DMA Bank #
-;	LD	(SARL+5),A	;   save in Warm Boot DMA Block
-;	LD	(BTTBL+2),A	;    and initial move to bank
-;	RR	D		; Move Bank # LSB (Carry) to MSB of Address
-;	LD	(SARL+3),DE	; Save CPR logical address in WB DMA block
-;	LD	(BTTBL),DE	;   and initial move to bank
-;	;
-;	; CONVERT BANK:$0100 -> BHHLL, SAVE AS DEST IN BTTBL AND SRC IN SARL
-;	LD	A,H		; Load System Bank #
-;	LD	HL,100H		; Load Bank Address of CPR Image Start
-;	RL	H		;  get rid of MSB
-;				;   Since we know the MSB=0, bypass adc 0
-;	RRA			; Shift for DMA Bank #
-;	LD	(BTTBL+5),A	;  save as initial dest bank byte
-;	LD	(SARL+2),A	;   and DMA Source Bank byte
-;	RR	H		; Rotate Carry (Bank LSB) to MSB of Address
-;	LD	(SARL),HL	; Save Source Addr in WB DMA block
-;	LD	(BTTBL+3),HL	;   and initial move block
+	;
+	; SETUP FOR FASTWB
+	;
 
 	LD	(CPLEN),HL	; Save command processor length
 	LD	(CPADR),DE	; Save command processor address (in TPA)
 
 	  ENDIF		;fastwb
-
-;	  IF  BANKED
-;	;
-;	; SETUP CPYVEC TO COPY IMAGE OF TPA BANK PAGE ZERO TO SYS BANK PAGE ZERO
-;	LD	HL,0000		; If we are banked, set to copy Page 0
-;	LD	A,(TPABNK)	;  of TPA to System Bank
-;	OR	A
-;	RRA			; Shift TPA Bank #
-;	LD	(CPYVEC+2),A	;  store in DMA Block
-;	RR	H		;   adjust Address by Bank LSB (Carry)
-;	LD	(CPYVEC),HL	;    and store
-;	LD	H,0
-;	LD	A,(SYSBNK)
-;	RRA			; Shift System Bank #
-;	LD	(CPYVEC+5),A	;  store in DMA Block
-;	RR	H		;   adjust Address by Bank LSB (Carry)
-;	LD	(CPYVEC+3),HL	;    and store
-;	LD	HL,40H		; Set length of move
-;	LD	(CPYVEC+6),HL	;   and store in DMA Block
-;	  ENDIF		;banked
 
 	LD	(STKSAV),SP	; Save entry stack since we alter it here
 	LD	A,(BLOCKE-BLOCK)/6
@@ -380,11 +277,6 @@ BLKMV:	POP	BC		; And number of bytes to move
 	LD	HL,IOPRET
 	LD	(BIOSJT+1),HL
 	  ENDIF		;haviop
-
-;	LD	HL,INTTBL	; Set the Interrupt Vector
-;	LD	A,H		;  first the page
-;	LD	I,A		;   to CPU Register
-;	OUT0	(IL),L		;    then the segment addr
 
 	  IF  BANKED
 	CALL	JDVINI		; Call directly because we are in High Stack
@@ -514,25 +406,25 @@ PTHPTR:	DEFW	EXPATH
 IOPPTR:	DEFW	IOP
 	  ENDIF
 
-	  IF  HARDDSK AND HDDMA AND (NOT IDE)
-	DEFW	DMALEN
-	DEFW	DMADAT
-	DEFW	DMATBL
-	  ENDIF
+;	  IF  HARDDSK AND HDDMA AND (NOT IDE)
+;	DEFW	DMALEN
+;	DEFW	DMADAT
+;	DEFW	DMATBL
+;	  ENDIF
 
 BLOCKE	EQU	$
 
 ;.....
 ; Initial HD DMA Control Block data
 
-	  IF  HARDDSK AND HDDMA
-DMADAT:	DEFW	HSTBUF		; Physical sector address
-	DEFB	00		;  BNK2 SHR 1 if banked, BNK0 SHR 1 If not
-	DEFW	DMAACK		; Dack port address
-	DEFB	0
-	DEFW	400H		; Number of bytes to transfer (1Sct+slop=2Scts)
-DMALEN	EQU	$-DMADAT
-	  ENDIF
+;	  IF  HARDDSK AND HDDMA
+;DMADAT:	DEFW	HSTBUF		; Physical sector address
+;	DEFB	00		;  BNK2 SHR 1 if banked, BNK0 SHR 1 If not
+;	DEFW	DMAACK		; Dack port address
+;	DEFB	0
+;	DEFW	400H		; Number of bytes to transfer (1Sct+slop=2Scts)
+;DMALEN	EQU	$-DMADAT
+;	  ENDIF
 
 CMDSET:	DEFW	Z3CL+4		; Point to first character in command buffer
 	DEFB	Z3CLS		; Command buffer size

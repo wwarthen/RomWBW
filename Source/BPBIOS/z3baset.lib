@@ -47,6 +47,10 @@ TRUE	EQU	NOT FALSE
 YES	EQU	TRUE
 NO	EQU	FALSE
 
+BASE	EQU	0
+
+CCP	EQU	0BD00H		; ZCPR3 COMMAND PROCESSOR
+
 ; The External Stack is placed in the very top position in memory.  It is
 ; mandatory for B/P Bios and ZCPR 3.3.
 
@@ -123,4 +127,3 @@ USPC	EQU	0E700H		; Start of Resident User Space (MANDATORY)
 USPCS	EQU	6		; (USPC Size = 128 * USPCS = 0.75 kBytes)
 
 ;--- End of Z3BASE.LIB ---
-
