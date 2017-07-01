@@ -1,196 +1,111 @@
-You should find the following ROM
-images in the Output driectory.
-Refer to the descriptions below to select 
-one that matches your hardware 
-configuration, burn it, and use it.
+***********************************************************************
+***                                                                 ***
+***                          R o m W B W                            ***
+***                                                                 ***
+***                    Z80/Z180 System Software                     ***
+***                                                                 ***
+***********************************************************************
 
-All builds have the following:
+This directory ("Binary") is part of the RomWBW System Software 
+distribution archive.  Refer to the ReadMe.txt file in this 
+directory for more information on the overall contents of the 
+directory.
+
+When distributed, RomWBW contains a set of pre-built ROM images that 
+are ready to program onto the EEPROM of any of the Z80/Z180 based 
+RetroBrew Computers CPU boards.  Additionally, any custom built ROM 
+images will be placed in this directory.
+
+All of the pre-built ROM images are 512KB.  This size is compatible 
+with all of the Z80/Z180 systems.  Some systems can accept different 
+size ROM images.  Creating alternative sizes requires a custom ROM 
+build (see ReadMe.txt in the Source directory).
+
+It is critical that the right ROM Imgae be selected for the target 
+platform being used.  The table below indicates the correct ROM 
+image to use for each platform:
+
+	SBC V1/V2	SBC_std.rom
+	Zeta V1		ZETA_std.rom
+	Zeta V2		ZETA2_std.rom
+	N8		N8_std.rom
+	Mark IV		MK4_std.rom
+
+You will find there is one additional ROM image called 
+"UNA_std.rom". This ROM image is an UNA-based RomWBW ROM image.  As 
+such, this ROM image can be used on any Z80/Z180 platform supported 
+by John Coffman's UNA BIOS.  Refer to RetroBrew Computers Wiki for 
+more information on UNA hardware support.
+
+For each of the ROM Images (".rom"), there are corresponding files 
+with the extensions of ".com" and ".img".  The .com variant can be 
+copied to a functional RomWBW-based system and executed like a 
+normal application under CP/M or Z-System. This will load the new 
+ROM on-the-fly.  It is an excellent way to test a ROM Image before 
+actually burning it.  Similarly, the .img files can be loaded using 
+the UNA FAT loader for testing.
+
+All of the standard ROM Images are configured with:
  - 512KB ROM Disk
  - 512KB RAM Disk
- - 38.4Kbps baud console
+ - 38.4Kbps baud serial console
+ - Auto-discovery of all serial ports
 
-All of the above can be modified by using
-a custom build.  See Build.txt in the 
-Doc directory.
+All hard disk type devices (IDE, PPIDE, CF Card, SD Card) will be 
+automatically assigned two drive letters per device.  The drive 
+letters will refer to the first 2 slices of the device. The ASSIGN 
+command can be used to display and reassign drives to disk devices 
+and slices as desired.
 
-Note have all hard disk units are assumed to have
-at least 2 slices and therefore two drive letters
-are assigned per disk unit by default.  However,
-you can easily add/remove drive letters and slices
-by using the ASSIGN command to modify drive
-letter to disk/slice mapping on the fly at
-the command line.
+Standard ROM Image Notes
+------------------------
 
-Note that there are no longer separate
-ROM images for CP/M and ZSystem.  Both
-OS variants are now imbedded in the ROM
-image and you are given the ability to
-choose the one you want to boot at
-startup.
+The standard ROM images will detect and install support for certain 
+devices and peripherals that are on-board or frequently used with 
+each platform as documented below.  If the device or peripheral is 
+not detected at boot, the ROM will simply bypass support 
+appropriately.
 
-  N8VEM_std.rom for N8VEM Z80 SBC V1/V2:
-    - Drives A:=ROM, B:=RAM
+SBC:
+ - Includes support for PPIDE/CF Card(s) connected to on-board    
+   parallel port.
+ - Includes support for CVDU and VGA3 boards.  If detected at
+   startup, support for video and keyboard is installed
+   including VT-100/ANSI terminal emulation.
+ - Auto-detects PropIO or PropIO V2 and installs associated
+   video, keyboard and SD Card support if present.
+ - If PropIO, PropIO V2, CVDU, or VGA hardware is detected,
+   initial console output is determined by JP2.  If JP2 is
+   shorted, console will go to on-board serial port, if JP2
+   is open, console will go to the detected video and keyboard
+   ports.
+ - SBC V1 has a known race condition in the bank switching
+   circuit which is likely to cause system instability.  SBC
+   V2 does not have this issue.
 
-  N8VEM_diskio.rom for N8VEM Z80 SBC V1/V2 + DISKIO:
-    - Floppy support via DISKIO
-    - IDE support via DISKIO
-    - Drives A:=ROM, B:=RAM, C:=FD0, D:=FD1, E:=IDE0:00, F:=IDE0:01
+ZETA/ZETA2:
+ - Includes support for on-board floppy disk controller and
+   two attached floppy disks.
+ - Auto-detects ParPortProp and includes support for it if it
+   is attached.
+ - If ParPortProp is installed, initial console output is
+   determined by JP1.  If JP1 is shorted, console will go to
+   on-board serial port, if JP1 is open, console will go to
+   ParPortProp video and keyboard ports.
 
-  N8VEM_dide.rom for N8VEM Z80 SBC V1/V2 + DUAL IDE:
-    - Floppy support via DISKIO
-    - IDE support via DISKIO
-    - Drives A:=ROM, B:=RAM, C:=FD0, D:=FD1, E:=IDE0:00, F:=IDE0:01
-    
-  N8VEM_diskio3.rom for N8VEM Z80 SBC V1/V2 + DISKIO3:
-    - Floppy support via DISKIO3
-    - IDE support via DISKIO3
-    - Drives A:=ROM, B:=RAM, C:=FD0, D:=FD1, E:=IDE0:00, F:=IDE0:01
+N8:
+ - Includes support for on-board floppy disk controller and
+   two attached floppy disks.
+ - Includes support for on-board TMS9918 video and keyboard
+   including VT-100/ANSI terminal emulation.
+ - Includes support for on-board SD Card as hard disk and
+   assumes a production level N8 board (date code >= 2312).
 
-  N8VEM_diskio3+cvdu.rom for N8VEM Z80 SBC V1/V2 + DISKIO3:
-    - Floppy support via DISKIO3
-    - IDE support via DISKIO3
-    - ColorVDU board support
-    - Console defaults to VGA & PS/2 Keyboard.  Short JP2 (CONFIG)
-      to use the serial port as the console.
-    - Drives A:=ROM, B:=RAM, C:=FD0, D:=FD1, E:=IDE0:00, F:=IDE0:01
-
-  N8VEM_ppide.rom for N8VEM Z80 SBC V1/V2 + PPIDE:
-    - PPIDE support via built-in PPI
-    - Drives A:=ROM, B:=RAM, C:=PPIDE0:00, D:=PPIDE0:01
-    
-  N8VEM_ppisd.rom for N8VEM Z80 SBC V1/V2 + PPISD:
-    - PPISD support
-    - Drives A:=ROM, B:=RAM, C:=SD0:00, D:=SD0:01
-    
-  N8VEM_dsd.rom for N8VEM Z80 SBC V1/V2 + Dual SD:
-    - Dual SD support
-    - Drives A:=ROM, B:=RAM, C:=SD0:00, D:=SD0:01
-    
-  N8VEM_propio.rom for N8VEM Z80 SBC V1/V2 + PROPIO:
-    - SD Card support via PropIO
-    - VGA console support via PropIO
-    - PS/2 Keyboard support via PropIO
-    - You *MUST* use the RomWBW specific firmware
-      for the Propeller found in the Support directory!
-    - Console defaults to VGA & PS/2 Keyboard.  Short JP2 (CONFIG)
-      to use the serial port as the console.
-    - Drives A:=ROM, B:=RAM, C:=PRPSD0:00, D:=PRPSD0:01
-
-  N8VEM_mfp.rom for N8VEM Z80 SBC V1/V2:
-    - IDE support via Multifunction / PIC
-    - Second UART via Multifunction / PIC
-    - Drives A:=ROM, B:=RAM, C:=PPIDE0:00, D:=PPIDE0:01
-
-  N8VEM_ci.rom for N8VEM Z80 SBC V1/V2:
-    - Cassette Interface mapped to RDR/PUN
-    - Drives A:=ROM, B:=RAM
-
-  N8VEM_simh.rom for N8VEM SIMH Simulator:
-    - SIMH HDSK (simulated hard disk) support
-    - Drives A:=ROM, B:=RAM, C:=HDSK0:00, D:=HDSK0:01
-
-  N8VEM_rf.rom for N8VEM Z80 SBC V1/2 + RAM Flopppy:
-    - RAM Floppy support
-    - Drives A:=ROM, B:=RAM, C:=RF0, D:=RF1
-
-  N8VEM_vdu.rom for N8VEM Z80 SBC V1/V2:
-    - VDU board support
-    - Drives A:=ROM, B:=RAM
-	- NOTE: Console defaults to CRT & PS/2 Keyboard.  Short JP2
-	  (one bit input port) to use the serial port as the console.
-    
-  N8VEM_cvdu.rom for N8VEM Z80 SBC V1/V2:
-    - ColorVDU board support
-    - Console defaults to VGA & PS/2 Keyboard.  Short JP2 (CONFIG)
-      to use the serial port as the console.
-    - Drives A:=ROM, B:=RAM
-    
-  ZETA_std.rom for Zeta Z80 SBC:
-    - Floppy support via built-in FDC
-    - Drives A:=ROM, B:=RAM, C:=FD0, D:=FD1, E:=PPIDE00-0, F:=PPIDE0:01
-
-  ZETA_ppide.rom for Zeta Z80 SBC + PPIDE:
-    - Floppy support via built-in FDC
-    - PPIDE support via built-in PPI
-    - Drives A:=ROM, B:=RAM, C:=PPIDE0:00, D:=PPIDE0:01
-    
-  ZETA_ppisd.rom for Zeta Z80 SBC + PPISD:
-    - Floppy support via built-in FDC
-    - PPISD support
-    - Drives A:=ROM, B:=RAM, C:=SD0:00, D:=SD0:01
-    
-  ZETA_ppp.rom for Zeta Z80 SBC w/ ParPortProp:
-    - Floppy support via built-in FDC
-    - SD Card support via ParPortProp
-    - VGA console support via ParPortProp
-    - PS/2 Keyboard support via ParPortProp
-    - You *MUST* use the RomWBW specific firmware
-      for the Propeller found in the Support directory!
-    - Console defaults to VGA & PS/2 Keyboard.  Short JP1 (CONFIG)
-      to use the serial port as the console.
-    - Drives A:=ROM, B:=RAM, C:=FD0, D:=FD1, E:=PPPSD0:00, F:=PPPSD0:01
-
-  ZETA2_std.rom for Zeta 2 Z80 SBC:
-    - Floppy support via built-in FDC
-    - PPIDE support via built-in PPI
-    - Drives A:=ROM, B:=RAM, C:=FD0, D:=FD1, E:=PPIDE00-0, F:=PPIDE0:01
-
-  ZETA2_ppide.rom for Zeta 2 Z80 SBC + PPIDE:
-    - Floppy support via built-in FDC
-    - PPIDE support via built-in PPI
-    - Drives A:=ROM, B:=RAM, C:=PPIDE0:00, D:=PPIDE0:01
-    
-  ZETA2_ppisd.rom for Zeta 2 Z80 SBC + PPISD:
-    - Floppy support via built-in FDC
-    - PPISD support
-    - Drives A:=ROM, B:=RAM, C:=SD0:00, D:=SD0:01
-    
-  ZETA2_ppp.rom for Zeta 2 Z80 SBC w/ ParPortProp:
-    - Floppy support via built-in FDC
-    - SD Card support via ParPortProp
-    - VGA console support via ParPortProp
-    - PS/2 Keyboard support via ParPortProp
-    - You *MUST* use the RomWBW specific firmware
-      for the Propeller found in the Support directory!
-    - Console defaults to VGA & PS/2 Keyboard.  Short JP1 (CONFIG)
-      to use the serial port as the console.
-    - Drives A:=ROM, B:=RAM, C:=FD0, D:=FD1, E:=PPPSD0:00, F:=PPPSD0:01
-
-  N8_2511.rom for N8 2511 Z180:
-    - Assumes CPU oscillator frequency of 18.432MHz
-    - Floppy support via built-in FDC
-    - SD card support via built-in SD card slot
-    - Drives A:=ROM, B:=RAM, C:=FD0, D:=FD1, E:=SD0:00, F:=SD0:01
-
-  N8_2312.rom for N8 2312 Z180:
-    - Assumes CPU oscillator frequency of 18.432MHz
-    - Floppy support via built-in FDC
-    - SD card support via built-in SD card slot
-    - Drives A:=ROM, B:=RAM, C:=FD0, D:=FD1, E:=SD0:00, F:=SD0:01
-
-  MK4_std.rom for Mark IV Z180 SBC:
-    - Assumes CPU oscillator frequency of 18.432MHz
-    - Onboard SD Card
-    - Onboard IDE
-    - Drives A:=ROM, B:=RAM, C:=SD0-0, D:=SD0-1, E:=IDE0:00, F:=IDE0:01
-
-  MK4_diskio3.rom for Mark IV Z180 SBC:
-    - Assumes CPU oscillator frequency of 18.432MHz
-    - Floppy support via DISKIO3
-    - IDE support via DISKIO3
-    - Drives A:=ROM, B:=RAM, C:=FD0, D:=FD1, E:=IDE0:00, F:=IDE0:01
-
-  MK4_propio.rom for Mark IV Z180 SBC:
-    - Assumes CPU oscillator frequency of 18.432MHz
-    - SD Card support via PropIO
-    - VGA console support via PropIO
-    - PS/2 Keyboard support via PropIO
-    - You *MUST* use the RomWBW specific firmware
-      for the Propeller found in the Support directory!
-    - Drives A:=ROM, B:=RAM, C:=PRPSD0:00, D:=PRPSD0:01
-
-  UNA_std.rom for all UNA supported platforms (SBC V1/2, Zeta, Mark IV)
-    - Initial baud rate is 9600, but can be configured
-    - Resources are managed dynamically by UNA BIOS
-    - Refer to UNA project for more details
-    - Drive assignments occur dynamically based on UNA config
+MK4:
+ - Includes support for on-board IDE port (CF Card via adapter).
+ - Includes support for on-board SD Card port.
+ - Auto-detects PropIO or PropIO V2 and installs associated
+   video, keyboard and SD Card support if present.
+ - Includes support for CVDU and VGA3 boards.  If detected at
+   startup, support for video and keyboard is installed
+   including VT-100/ANSI terminal emulation. 

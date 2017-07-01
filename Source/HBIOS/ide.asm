@@ -218,7 +218,16 @@ IDE_TOFAST	.EQU	10		; FAST TIMEOUT IS 0.5 SECS
 ;
 IDE_INIT:
 	CALL	NEWLINE			; FORMATTING
-	PRTS("IDE:$")			; LABEL FOR IO ADDRESS
+	PRTS("IDE:$")
+	CALL	IDE_DETECT		; CHECK FOR HARDWARE
+	JR	Z,IDE_INIT00		; CONTINUE IF PRESENT
+;
+	; HARDWARE NOT PRESENT
+	PRTS(" NOT PRESENT$")
+	OR	$FF			; SIGNAL FAILURE
+	RET
+;
+IDE_INIT00:
 ;
 ; SETUP THE DISPATCH TABLE ENTRIES
 ;
@@ -318,6 +327,20 @@ IDE_INIT2:
 ;
 	XOR	A			; SIGNAL SUCCESS
 	RET				; RETURN WITH A=0, AND Z SET
+;
+;----------------------------------------------------------------------
+; PROBE FOR IDE HARDWARE
+;----------------------------------------------------------------------
+;
+; ON RETURN, ZF SET INDICATES HARDWARE FOUND
+;
+IDE_DETECT:
+;
+#IF (IDEMODE == IDEMODE_DIDE)
+#ENDIF
+;
+	XOR	A			; SIGNAL SUCCESS
+	RET				; AND RETURN
 ;
 ;=============================================================================
 ; FUNCTION DISPATCH ENTRY POINT

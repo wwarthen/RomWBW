@@ -1,13 +1,11 @@
 ;
 ;==================================================================================================
-;   SBC SIMH CONFIGURATION
+;   SBC SIMH EMULATOR CONFIGURATION
 ;==================================================================================================
 ;
-CPUOSC		.SET	20000000	; EMULATOR RUNS FAST...
+#include "cfg_sbc.asm"
 ;
-INTTYPE		.SET	IT_SIMH
+DSRTCENABLE	.SET	FALSE		; DS-1302 CLOCK DRIVER
+SIMRTCENABLE	.SET	TRUE		; SIMH CLOCK DRIVER
 ;
-SIMRTCENABLE	.SET	TRUE
-DSRTCENABLE	.SET	FALSE
-;
-HDSKENABLE	.SET	TRUE
+HDSKENABLE	.SET	TRUE		; TRUE FOR SIMH HDSK SUPPORT

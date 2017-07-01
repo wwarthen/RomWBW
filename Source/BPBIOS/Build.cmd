@@ -11,6 +11,7 @@ set ZXLIBDIR=../../tools/cpm/lib/
 set ZXINCDIR=../../tools/cpm/include/
 
 call :makebp 33t
+
 call :makebp 33tbnk
 call :makebp 33n
 call :makebp 33nbnk
@@ -52,19 +53,27 @@ echo Building BPBIOS Variant "%VER%"...
 echo.
 
 copy def-ww-z%VER%.lib def-ww.lib
-if exist bpbio-ww.rel del bpbio-ww.rel
+rem if exist bpbio-ww.rel del bpbio-ww.rel
 zx ZMAC -BPBIO-WW -/P
 if exist bp%VER%.prn del bp%VER%.prn
 ren bpbio-ww.prn bp%VER%.prn
 
 rem pause
 
+rem BPBUILD attempts to rename bpsys.img -> bpsys.bak
+rem while is is still open.  Real CP/M does not care,
+rem but zx fails due to host OS.  Below, a temp file
+rem is used to avoid the problematic rename.
+
 if exist bpsys.img del bpsys.img
-zx bpbuild -bp%VER%.dat <bpbld1.rsp
-if exist bpsys.$$$ del bpsys.$$$
-ren bpsys.img bpsys.$$$
-zx bpbuild -bpsys.$$$ <bpbld2.rsp
-if exist bpsys.$$$ del bpsys.$$$
+if exist bpsys.tmp del bpsys.tmp
+copy bp%VER%.dat bpsys.tmp
+rem bpsys.tmp -> bpsys.img
+zx bpbuild -bpsys.tmp <bpbld1.rsp
+if exist bpsys.tmp del bpsys.tmp
+copy bpsys.img bpsys.tmp
+rem bpsys.tmp -> bpsys.img
+zx bpbuild -bpsys.tmp <bpbld2.rsp
 if exist bp%VER%.img del bp%VER%.img
 if exist bpsys.img ren bpsys.img bp%VER%.img
 

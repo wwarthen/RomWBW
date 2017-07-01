@@ -1,1 +1,1 @@
-@PowerShell .\BuildHD.ps1 %*
+@PowerShell -ExecutionPolicy Unrestricted .\BuildHD.ps1 %*

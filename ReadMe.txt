@@ -1,167 +1,288 @@
-************************************************************
-***                     R o m W B W                      ***
-***                                                      ***
-***       System Software for N8VEM Z80 Projects         ***
-************************************************************
+***********************************************************************
+***                                                                 ***
+***                          R o m W B W                            ***
+***                                                                 ***
+***                    Z80/Z180 System Software                     ***
+***                                                                 ***
+***********************************************************************
 
-Builders: Wayne Warthen (wwarthen@gmail.com)
-          Douglas Goodall (douglas_goodall@mac.com)
-          David Giles (vk5dg@internode.on.net)
+Wayne Warthen (wwarthen@gmail.com)
+Version 2.8.0, 2017-06-10
+https://www.retrobrewcomputers.org/
 
-Updated: 2015-04-07
-Version: 2.7.1
+RomWBW is a ROM-based implementation of CP/M-80 2.2 and Z-System for 
+all RetroBrew Computers Z80/Z180 hardware platforms including SBC 
+1/2, Zeta 1/2, N8, and Mark IV. Virtually all RetroBrew hardware is 
+supported including floppy, hard disk (IDE, CF Card, SD Card), Video, 
+and keyboard. VT-100 terminal emulation is built-in.
 
-This is an adaptation of CP/M-80 2.2 and ZSDOS/ZCPR
-targeting ROMs for all N8VEM Z80 hardware variations
-including SBC 1/2, Zeta 1/2, N8, and Mark IV.
+The RomWBW ROM loads and runs the built-in operating systems directly
+from the ROM and includes a selection of standard/useful applications
+accessed via a ROM disk drive.  A RAM disk drive is also provided
+to allow temporary file storage.
 
-NOTE: This is very much a work-in-progress.  It is
-severely lacking appropriate documentation.  I am 
-happy to answer questions and provide support though.
+Pre-built ROM images are included for all platforms.  Detailed system 
+customization is achieved by making simple modifications to a 
+configuration file and running a build script to generate a custom 
+ROM image. All source and build tools are included in the 
+distribution. As distributed, the build scripts run under any modern 
+32 or 64 bit version of Microsoft Windows.
 
-Acknowledgements
-----------------
+John Coffman's UNA hardware BIOS is fully supported by RomWBW. In the 
+case of UNA, a single ROM image (pre-built) is used for all supported 
+platforms and is customized using a ROM-based setup program. See the 
+UNA section below for more information.
 
-While I have heavily modified much of the code, I want
-to acknowledge that much of this is derived or
-copied from the work of others in the N8VEM
-project including Andrew Lynch, Dan Werner, Max Scane,
-David Giles, John Coffman, and probably many others 
-I am not clearly aware of (let me know if I omitted
-someone!).
+Quick Start
+-----------
 
-I especially want to credit Douglas Goodall for 
-contributing code, time, testing, and advice.  He created
-an entire suite of application programs to enhance the
-use of RomWBW.  However, he is looking for someone to
-continue the maintenance of these applications and
-they have become unusable due to changes within
-RomWBW.  As of RomWBW 2.6, these applications are
-no longer provided.
+A pre-built ROM image is included for each of the hardware platforms 
+supported. These ROM images are found in the Binary directory of the 
+distribution and have a file extension of ".rom". Simply program the 
+ROM of your system with the appropriate ROM image. Please see the 
+RomList.txt file in the Binary directory for details on selecting the 
+correct ROM image for your system and platform specific information.
 
-David Giles has contributed support for building the
-ROM under Linux and the CSIO support in the SD Card driver.
+Connect a serial terminal or computer with terminal emulation 
+software to the primary RS-232 port of your CPU board.  A null-modem 
+connection is generally required.  Set the line characteristics to 
+38400 baud, 8 data bits, 1 stop bit, no parity, and no flow control. 
+Select VT-100 terminal emulation.
 
-Usage Instructions
-------------------
+Upon power-up, your terminal should display a sign-on banner within 2 
+seconds followed by hardware inventory and discovery information.  
+When hardware initialization is completed, a boot loader prompt 
+allows you to choose a ROM-based operating system, system monitor, or 
+boot from a disk device.
 
-The distribution includes many pre-built ROM
-images in the Output directory.  The simplest way of
-using this ROM is to simply pick the pre-built ROM
-that most closely matches your preferences, burn it,
-and use it.
+CPU Speed
+---------
 
-Refer to the file called RomList.txt for a complete
-list of the ROMs that are included and the required
-hardware configuration that they support.
+RomWBW ROM images support virtually any CPU speed your system is
+running. However, there are some hardware-oriented caveats to be
+aware of.
+
+The use of high density floppy disks requires a CPU speed of 8 MHz or
+greater.
+
+The latest X-Modem file transfer programs (XM.COM, XM-A0.COM, and
+XM-A1.COM) require a CPU speeed of 6 MHz or greater to support the
+default RomWBW serial port speed of 38400 baud. Older variants of
+the X-Modem programs are included (XM5.COM, XM5-A0, and XM5-A1) which
+will handle 38400 baud on system running down to 4 MHz.
 
 Upgrading from Previous Versions
 --------------------------------
 
-Burn a new ROM image appropriate for your system
-and boot under that new ROM.  You may want to use
-a different ROM chip in case the new version does
-not work.
+Program a new ROM chip from an image in the new distribution. Install 
+the new ROM chip and boot your system. At the boot loader "Boot:" 
+prompt, select either CP/M or Z-System to load the OS from ROM.
 
-If you are using "boot from disk", you will need
-to update the OS image on all drives you boot from.
-To do this, use SYSCOPY.  Something like this
-would make sense:
+If you have spare rom chips for your system, it is always safest to
+keep your existing, work rom chip and program a new one so that you
+can return to the old one if the new one does not work properly.
 
-    B:SYSCOPY C:=B:ZSYS.SYS
+If you use a customized ROM image, it is recommended that you first
+try the pre-built ROM image first and then move on to generating a
+custom image.
 
-CPU Speed & Baud Rate
----------------------
+It is entirely possible to reprogram your system ROM using the FLASH
+utility from Will Sowerbutts on your ROM drive (B:). In this case,
+you would need to transfer the new ROM image to your system using
+X-Modem. Obviously, there is some risk to this approach since any
+issues with the programming or ROM image could result in a
+non-functional system.
 
-The startup serial port baud rate in all pre-built
-RomWBW variants is 38.4Kbps.  While this speed is
-nice in that it provides great display and file
-transfer performance, it does push the limits of
-slower hardware.  Specifically, XModem v12.5 (the
-default XM.COM) on the distribution is unable to
-service the serial port fast enough if the CPU is
-running at 4MHz.  Your options are to 1) use the
-old version of XModem (XM5.COM), put a faster CPU
-oscillator in your system (6MHz or above), or
-3) decrease the baud rate by building a custom
-ROM.
+If your system has any bootable drives, then update the OS image on
+each drive using SYSCOPY. For example, if C: is a bootable drive
+with the Z-System OS, you would update the OS image on this drive
+with the command:
 
-UNA Variant
------------
+    B>SYSCOPY C:=B:ZSYS.SYS
 
-RomWBW will now run under it's native BIOS (HBIOS) or
-under UNA BIOS (UBIOS).  There are pre-built ROM
-images for UNA in the Output directory.
+If you have copies of any of the system utilities on drives other
+than the ROM disk drive, you need to copy the latest version of the
+programs from the ROM drive (B:) to any drives containing these
+programs. For example, if you have a copy of the ASSIGN.COM program
+on C:, you would update it from the new ROM using the COPY command:
 
-CP/M vs. ZSystem
-----------------
+    B>COPY B:ASSIGN.COM C:
 
-There are two OS variants included in this distribution
-and you may choose which one you prefer to use.
+The following programs are maintained with the ROM images and all
+copies of these programs should be updated when upgrading to a new
+ROM version:
 
-The traditional Digital Research (DRI) CP/M code is the first
-choice.  The Doc directory contains a manual for CP/M
-usage (cpm22-m.pdf).  If you are new to the N8VEM systems,
-I would currently recommend using the CP/M variant to
-start with simply because they have gone through more
-testing and you are less likely to encounter problems.
+    - ASSIGN.COM
+    - FORMAT.COM
+    - OSLDR.COM
+    - SYSCOPY.COM
+    - TALK.COM
+    - FD.COM
+    - XM*.COM
 
-The other choice is to use the most popular non-DRI
-CP/M "clone" which is generally referred to as
-ZSystem.  These are intended to be functionally equivalent
-to CP/M and should run all CP/M 2.2 code.  They are
-optimized for the Z80 CPU (as opposed to 8080 for CP/M)
-and have some potentially useful improvements.  Please
-refer to the Doc directory and look at the files for
-zsdos and zcpr (zsdos.pdf & zcpr.doc as well as ZSystem.txt).
+UNA Hardware BIOS
+-----------------
 
-Both variants are now included in the pre-built ROM images.
-You will be given the choice to boot either CP/M or
-ZSystem at startup.
+John Coffman has produced a new generation of hardware BIOS called 
+UNA. In addition to the classic ROM images, RomWBW comes with a 
+UNA-based image that combines the UNA BIOS with the RomWBW OS 
+implementations and applications.
 
-Building a Custom ROM
----------------------
+UNA is customized dynamically using a ROM based setup routine and the
+setup is persisted in the system NVRAM of the RTC chip. This means
+that a single UNA-based ROM image can be used on most of the
+RetroBrew platforms and is easily customized. UNA also supports FAT
+file system access that can be used for in-situ ROM programming and
+loading system images.
 
-I strongly suggest you start with burning one of the
-pre-built ROMs and making sure that works first.  Once
-you have gotten past that hurdle, you should consider
-building a custom ROM.  It is very easy and the
-distribution comes with everything that is needed to
-run a build on a Windows 32 bit or 64 bit system --
-basically Windows XP or above.  There is also a
-Linux build now available.
+While John is likely to enhance UNA over time, there are currently a
+few things that UNA does not support:
 
-Creating a custom ROM allows you to customize a lot
-of useful stuff like adding support for a DSKY if
-you have one.
+    - Floppy Drives
+    - Video/Keyboard/Terminal Emulation
+    - Zeta 1 and N8 Systems
+    - Some older support boards
 
-Please refer to the Build.txt file in the Doc directory
-for detailed instructions for building a custom ROM.  If
-you are using Linux, also read the LinuxBuild.txt file.
+If you wish to try the UNA variant of RomWBW, then just program your
+ROM with the ROM image called "UNA_std.rom" in the Binary directory.
+This one image is suitable on all of the platforms and hardware UNA
+supports.
 
-Formatting Media
-----------------
+Please refer to the RetroBrew Computers Wiki for more information on
+UNA.
 
-<TBD>
+CP/M vs. Z-System
+-----------------
 
-Creating Bootable Media
+There are two OS variants included in this distribution and you may
+choose which one you prefer to use. Both variants are now included
+in the pre-built ROM images. You will be given the choice to boot
+either CP/M or Z-System at startup.
+
+The traditional Digital Research (DRI) CP/M OS is the first choice.
+The Doc directory contains a manual for CP/M usage ("CPM
+Manual.pdf"). If you are new to the RetroBrew Computer systems, I
+would currently recommend using the CP/M variant to start with simply
+because it has gone through more testing and you are less likely to
+encounter problems.
+
+The other choice is to use the most popular non-DRI CP/M "clone"
+which is generally referred to as Z-System. It is intended to be
+functionally equivalent to CP/M and should run all CP/M 2.2 code. It
+is optimized for the Z80 CPU (as opposed to 8080 for CP/M) and has
+some potentially useful improvements. Please refer to "ZSDOS
+Manual.pdf" and "ZCPR Manual.pdf" in the Doc directory for more
+information on Z-System usage.
+
+ROM Customization
+-----------------
+
+The pre-built ROM images are configured for the basic capabilities of
+each platform. If you add board(s) to your system, you will need to
+customize your ROM image to include support for the added board(s).
+
+Essentially, the creation of a custom ROM is accomplished by updating
+a small configuration file, then running a script to compile the
+software and generate the custom ROM image. At this time, the build
+process runs on Windows 32 or 64 bit versions. All tools (compilers,
+assemblers, etc.) are included in the distribution, so it is not
+necessary to setup a build environment on your computer.
+
+For those who are interested in more than basic system customization, 
+note that all source code is included (including the operating 
+systems).
+
+Note that the ROM customization process does not apply to UNA. All
+UNA customization is performed within the ROM setup script.
+
+Complete documentation of the customization process is found in the
+ReadMe.txt file in the Source directory.
+
+Source Code Respository
 -----------------------
 
-<TBD>
+All source code and distributions are maintained on GitHub at
+"https://github.com/wwarthen/RomWBW".  Code contributions are very
+welcome.
 
-Using Slices on Mass Storage Devices
-------------------------------------
+Distribution Directory Layout
+-----------------------------
 
-<TBD>
+The RomWBW distribution is a compressed zip archive file organized in 
+a set of directories.  Each of these directories has it's own
+ReadMe.txt file describing the contents in detail.  In summary, these
+directories are:
 
-Managing Console I/O
---------------------
+  Binary: The final output files of the build process are placed
+          here.  Most importantly, are the ROM images with the
+	  file names ending in ".rom".
 
-<TBD>
+  Doc:    Contains various detailed documentation including the
+          operating systems, RomWBW architecture, etc.
 
-Notes
+  Source: Contains the source code files used to build the software
+          and ROM images.
+  
+  Tools:  Contains the MS Windows programs that are used by the
+          build process or that may be useful in setting up your
+	  system.
+
+Acknowledgements
+----------------
+
+While I have heavily modified much of the code, I want to acknowledge
+that much of the work is derived or copied from the work of others in
+the RetroBrew Computers project including Andrew Lynch, Dan Werner,
+Max Scane, David Giles, John Coffman, and probably many others I am
+not clearly aware of (let me know if I omitted someone!).
+
+I especially want to credit Douglas Goodall for contributing code,
+time, testing, and advice. He created an entire suite of application
+programs to enhance the use of RomWBW. However, he is looking for
+someone to continue the maintenance of these applications and they
+have become unusable due to changes within RomWBW. As of RomWBW 2.6,
+these applications are no longer provided.
+
+David Giles has contributed support for the CSIO support in the SD
+Card driver.
+
+The UNA BIOS is a product of John Coffman.
+
+License
+-------
+
+The Tools directory contains a variety of programs that are included 
+for convenience.  They are all subject to their own licensing 
+restrictions (if any) and are not considered part of RomWBW.
+
+With respect to RomWBW:
+
+This program is free software: you can redistribute it and/or modify 
+it under the terms of the GNU General Public License as published by 
+the Free Software Foundation, either version 3 of the License, or (at 
+your option) any later version.
+
+This program is distributed in the hope that it will be useful, but 
+WITHOUT ANY WARRANTY; without even the implied warranty of 
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU 
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License 
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+Getting Assistance
+------------------
+
+The best way to get assistance with RomWBW or any aspect of the
+RetroBrew Computers projects is via the community forum at
+"https://www.retrobrewcomputers.org/forum/".
+
+Also feel free to email Wayne Warthen at wwarthen@gmail.com.
+
+To Do
 -----
 
-I realize these instructions are very minimal.  I am happy to answer
-questions.  You will find the Google Group 'N8VEM' to be a great
-source of information as well.
+    - Formatting Media
+    - Making a Disk Bootable
+    - Assigning disks/slices to drives
+    - Managing the Console

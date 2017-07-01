@@ -15,9 +15,13 @@
 ; CVDU DRIVER - CONSTANTS
 ;======================================================================
 ;
-CVDU_STAT	.EQU	$E4		; READ M8563 STATUS
-CVDU_REG	.EQU	$E4		; SELECT M8563 REGISTER
-CVDU_DATA	.EQU	$EC		; READ/WRITE M8563 DATA
+CVDU_BASE	.EQU	$E0
+;
+CVDU_KBDDATA	.EQU	CVDU_BASE + $02	; KBD CTLR DATA PORT
+CVDU_KBDST	.EQU	CVDU_BASE + $0A	; KBD CTLR STATUS/CMD PORT
+CVDU_STAT	.EQU	CVDU_BASE + $04	; READ M8563 STATUS
+CVDU_REG	.EQU	CVDU_BASE + $04	; SELECT M8563 REGISTER
+CVDU_DATA	.EQU	CVDU_BASE + $0C	; READ/WRITE M8563 DATA
 ;
 CVDU_ROWS	.EQU	25
 CVDU_COLS	.EQU	80
@@ -29,11 +33,21 @@ TERMENABLE	.SET	TRUE		; INCLUDE TERMINAL PSEUDODEVICE DRIVER
 ;======================================================================
 ;
 CVDU_INIT:
+	LD	IY,CVDU_IDAT		; POINTER TO INSTANCE DATA
+
 	CALL	NEWLINE			; FORMATTING
 	PRTS("CVDU: IO=0x$")
 	LD	A,CVDU_STAT
 	CALL	PRTHEXBYTE
+	CALL	CVDU_PROBE		; CHECK FOR HW PRESENCE
+	JR	Z,CVDU_INIT1		; CONTINUE IF HW PRESENT
 ;
+	; HARDWARE NOT PRESENT
+	PRTS(" NOT PRESENT$")
+	OR	$FF			; SIGNAL FAILURE
+	RET
+;
+CVDU_INIT1:
 	PRTS(" VDURAM=$")
 	CALL 	CVDU_CRTINIT		; SETUP THE CVDU CHIP REGISTERS
 	CALL	PRTDEC
@@ -43,14 +57,14 @@ CVDU_INIT:
 	CALL	KBD_INIT		; INITIALIZE KEYBOARD DRIVER
 
 	; ADD OURSELVES TO VDA DISPATCH TABLE
-	LD	B,0			; PHYSICAL UNIT IS ZERO
-	LD	C,VDADEV_CVDU		; DEVICE TYPE
-	LD	DE,0			; UNIT DATA BLOB ADDRESS
+	LD	BC,CVDU_DISPATCH	; BC := DISPATCH ADDRESS
+	LD	DE,CVDU_IDAT		; DE := VGA INSTANCE DATA PTR
 	CALL	VDA_ADDENT		; ADD ENTRY, A := UNIT ASSIGNED
 
 	; INITIALIZE EMULATION
 	LD	C,A			; C := ASSIGNED VIDEO DEVICE NUM
 	LD	DE,CVDU_DISPATCH	; DE := DISPATCH ADDRESS
+	LD	HL,CVDU_IDAT		; HL := CVDU INSTANCE DATA PTR
 	CALL	TERM_ATTACH		; DO IT
 
 	XOR	A			; SIGNAL SUCCESS
@@ -266,6 +280,37 @@ CVDU_RDX:
 	RET
 ;
 ;----------------------------------------------------------------------
+; PROBE FOR CVDU HARDWARE
+;----------------------------------------------------------------------
+;
+; ON RETURN, ZF SET INDICATES HARDWARE FOUND
+;
+CVDU_PROBE:
+	; WRITE TEST PATTERN $A5 $5A TO START OF VRAM
+	LD	HL,0			; POINT TO FIRST BYTE OF VRAM
+	LD	C,18			; ADDRESS REGISTER PAIR
+	CALL	CVDU_WRX		; UPDATE VRAM ADDRESS POINTER
+	LD	A,$A5			; INITIAL TEST VALUE
+	LD	B,A			; SAVE IN B
+	LD	C,31			; DATA REGISTER
+	CALL	CVDU_WR			; WRITE VALUE TO LOC 0, ADR PTR INCREMENTS
+	CPL				; INVERT TEST VALUE
+	CALL	CVDU_WR			; WRITE INVERTED VALUE TO LOC 1
+	
+	; READ TEST PATTERN BACK TO CONFIRM HARDWARE EXISTS
+	LD	HL,0			; POINT TO FIRST BYTE OF VRAM
+	LD	C,18			; ADDRESS REGISTER PAIR
+	CALL	CVDU_WRX		; UPDATE VRAM ADDRESS POINTER
+	LD	C,31			; DATA REGISTER
+	CALL	CVDU_RD			; GET BYTE AT LOC 0, ADR PTR INCREMENTS
+	CP	B			; CHECK IT
+	RET	NZ			; ABORT IF BAD COMPARE
+	CALL	CVDU_RD			; GET BYTE AT LOC 1
+	CPL				; INVERT IT
+	CP	B			; CHECK FOR INVERTED TEST VALUE
+	RET				; RETURN WITH ZF SET BASED ON CP
+;
+;----------------------------------------------------------------------
 ; MOS 8563 DISPLAY CONTROLLER CHIP INITIALIZATION
 ;----------------------------------------------------------------------
 ;
@@ -330,7 +375,7 @@ CVDU_LOADFONT:
 	LD	C,18			; UPDATE ADDRESS REGISTER PAIR
 	CALL	CVDU_WRX		; DO IT
 
-	LD	HL,CVDU_FONTDATA	; POINTER TO FONT DATA
+	LD	HL,FONT_HI		; POINTER TO FONT DATA
 	LD	DE,$2000		; LENGTH OF FONT DATA
 	LD	C,31			; DATA REGISTER
 CVDU_LOADFONT1:
@@ -701,55 +746,92 @@ CVDU_POS		.DW 	0	; CURRENT DISPLAY POSITION
 ; 35	$23	DEE7	DEE6	DEE5	DEE4	DEE3	DEE2	DEE1	DEE0	Display Enable End
 ; 36	$24	--	--	--	--	DRR3	DRR2	DRR1	DRR0	DRAM Refresh Rate
 ;
-; EGA 720X368  9-BIT CHARACTERS
-;   - requires 16.257Mhz oscillator frequency
 ;
 CVDU_INIT8563:
-	.DB	97		; 0: hor. total - 1
-	.DB	80		; 1: hor. displayed
-	.DB	90		; 2: hor. sync position 85
+#IF 1
+; EGA 720X368  9-BIT CHARACTERS
+;   - requires 16.257Mhz oscillator frequency
+	.DB	$61		; 0: hor. total - 1
+	.DB	$50		; 1: hor. displayed
+	.DB	$5A		; 2: hor. sync position 85
 	.DB	$14		; 3: vert/hor sync width 		or 0x4F -- MDA
-	.DB	26		; 4: vert total
-	.DB	2		; 5: vert total adjust
-	.DB	25		; 6: vert. displayed
-	.DB	26		; 7: vert. sync postition
-	.DB	0		; 8: interlace mode
-	.DB	13		; 9: char height - 1
-	.DB	(2<<5)+12	; 10: cursor mode, start line
-	.DB	13		; 11: cursor end line
-	.DB	0		; 12: display start addr hi
-	.DB	0		; 13: display start addr lo
-	.DB	7		; 14: cursor position hi
-	.DB	128		; 15: cursor position lo
-	.DB	1		; 16: light pen vertical
-	.DB	1		; 17: light pen horizontal
-	.DB	0		; 18: update address hi
-	.DB	0		; 19: update address lo
-	.DB	8		; 20: attribute start addr hi
-	.DB	0		; 21: attribute start addr lo
+	.DB	$1A		; 4: vert total
+	.DB	$02		; 5: vert total adjust
+	.DB	$19		; 6: vert. displayed
+	.DB	$1A		; 7: vert. sync postition
+	.DB	$00		; 8: interlace mode
+	.DB	$0D		; 9: char height - 1
+	.DB	$4C		; 10: cursor mode, start line
+	.DB	$0D		; 11: cursor end line
+	.DB	$00		; 12: display start addr hi
+	.DB	$00		; 13: display start addr lo
+	.DB	$00		; 14: cursor position hi
+	.DB	$00		; 15: cursor position lo
+	.DB	$00		; 16: light pen vertical
+	.DB	$00		; 17: light pen horizontal
+	.DB	$00		; 18: update address hi
+	.DB	$00		; 19: update address lo
+	.DB	$08		; 20: attribute start addr hi
+	.DB	$00		; 21: attribute start addr lo
 	.DB	$89		; 22: char hor size cntrl 		0x78
-	.DB	13		; 23: vert char pixel space - 1, increase to 13 with new font
-	.DB	0		; 24: copy/fill, reverse, blink rate; vertical scroll
+	.DB	$0D		; 23: vert char pixel space - 1, increase to 13 with new font
+	.DB	$00		; 24: copy/fill, reverse, blink rate; vertical scroll
 	.DB	$48		; 25: gr/txt, color/mono, pxl-rpt, dbl-wide; horiz. scroll
 	.DB	$E0		; 26: fg/bg colors (monochr)
-	.DB	0		; 27: row addr display incr
-	.DB	$20+(1<<4)	; 28: char set addr; RAM size (64/16)
-	.DB	13		; 29: underline position
-	.DB	0		; 30: word count - 1
-	.DB	0		; 31: data
-	.DB	0		; 32: block copy src hi
-	.DB	0		; 33: block copy src lo
-	.DB	6		; 34: display enable begin
-	.DB	88		; 35: display enable end
-	.DB	0		; 36: refresh rate
-
-;	.DB	126,80,102,73,32,224,25,29,252,231,160,231,0,0,7,128
-;	.DB	18,23,15,208,8,32,120,232,32,71,240,0,47,231,79,7,15,208,125,100,245
+	.DB	$00		; 27: row addr display incr
+	.DB	$30		; 28: char set addr; RAM size (64/16)
+	.DB	$0D		; 29: underline position
+	.DB	$00		; 30: word count - 1
+	.DB	$00		; 31: data
+	.DB	$00		; 32: block copy src hi
+	.DB	$00		; 33: block copy src lo
+	.DB	$06		; 34: display enable begin
+	.DB	$56		; 35: display enable end
+	.DB	$00		; 36: refresh rate
+#ELSE
+	.DB	$7E		; 0: hor. total - 1
+	.DB	$50		; 1: hor. displayed
+	.DB	$66		; 2: hor. sync position 85
+	.DB	$49		; 3: vert/hor sync width 		or 0x4F -- MDA
+	.DB	$20		; 4: vert total
+	.DB	$E0		; 5: vert total adjust
+	.DB	$19		; 6: vert. displayed
+	.DB	$1D		; 7: vert. sync postition
+	.DB	$FC		; 8: interlace mode
+	.DB	$E7		; 9: char height - 1
+	.DB	$A0		; 10: cursor mode, start line
+	.DB	$E7		; 11: cursor end line
+	.DB	$00		; 12: display start addr hi
+	.DB	$00		; 13: display start addr lo
+	.DB	$07		; 14: cursor position hi
+	.DB	$80		; 15: cursor position lo
+	.DB	$12		; 16: light pen vertical
+	.DB	$17		; 17: light pen horizontal
+	.DB	$0F		; 18: update address hi
+	.DB	$D0		; 19: update address lo
+	.DB	$08		; 20: attribute start addr hi
+	.DB	$20		; 21: attribute start addr lo
+	.DB	$78		; 22: char hor size cntrl 		0x78
+	.DB	$E8		; 23: vert char pixel space - 1, increase to 13 with new font
+	.DB	$20		; 24: copy/fill, reverse, blink rate; vertical scroll
+	.DB	$47		; 25: gr/txt, color/mono, pxl-rpt, dbl-wide; horiz. scroll
+	.DB	$F0		; 26: fg/bg colors (monochr)
+	.DB	$00		; 27: row addr display incr
+	.DB	$2F		; 28: char set addr; RAM size (64/16)
+	.DB	$E7		; 29: underline position
+	.DB	$4F		; 30: word count - 1
+	.DB	$07		; 31: data
+	.DB	$0F		; 32: block copy src hi
+	.DB	$D0		; 33: block copy src lo
+	.DB	$7D		; 34: display enable begin
+	.DB	$64		; 35: display enable end
+	.DB	$F5		; 36: refresh rate
+#ENDIF
 ;
 ;==================================================================================================
-;   CVDU DRIVER - FONT DATA
+;   CVDU DRIVER - INSTANCE DATA
 ;==================================================================================================
 ;
-#INCLUDE "cvdu_font.asm"
-;
-#INCLUDE "kbd.asm"
+CVDU_IDAT:
+	.DB	CVDU_KBDST
+	.DB	CVDU_KBDDATA

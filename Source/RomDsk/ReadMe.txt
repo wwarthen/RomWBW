@@ -1,30 +1,37 @@
-This is the parent directory for all files to
-be included in the rom disk when the ROM is built.
+***********************************************************************
+***                                                                 ***
+***                          R o m W B W                            ***
+***                                                                 ***
+***                    Z80/Z180 System Software                     ***
+***                                                                 ***
+***********************************************************************
 
-When constructing the ROM disk as part of a build,
-the build process first grabs all of the "standard"
-files for the size of ROM being built and the type
-of the OS being used.  So, if you are building a
-ZSystem, 1MB ROM, all of the files in ZSYS_1024KB
-will be pulled in.  If you are building a CP/M
-512KB ROM, then all the files in CPM_512KB will
-be pulled in.
+This is the parent directory for all files to be included in the ROM
+Disk when a ROM is built.
 
-After adding all of the standard files for the
-size of ROM being built, the build process will
-add the files from the appropriate configuration
-directory.  So, if you are building the standard
-Zeta configuration (zeta_std), all of the files
-in the zeta_std directory will be added.
+When constructing the ROM disk as part of a build, the build process
+first grabs all of the "standard" files for the size of ROM being
+built.  So, if you are building a normal 512KB ROM, all of the files
+in 512KB directory will be pulled in.
 
-If you are building your own ROM, you will need to
-add a new directory of the name xxx_yyy where xxx
-is the name of your platform (N8VEM, N8, ZETA, etc.)
-and yyy is the name of the configuration you have
-created.  The xxx_yyy name must match the
-xxx_yyy.asm file in the Config directory.  You
-will want to add any specific files you want added
-to your ROM build to this directory.  Note that the
-build will complain if there are no files in your
-custom configuration directory, but it is not a
-real problem (error can be ignored).
+After adding all of the standard files for the size of ROM being
+built, the build process will add the files from the appropriate
+platform directory.  So, if you are building a ROM for the Zeta
+platform, all of the files in the zeta directory will be added.
+
+The reason for the platform directories is that some programs are
+specific to a platform.  The platform directories provide a mechanism
+to add platform specific programs.
+
+You may freely add/delete/update the files in these directories to
+change the contents of the ROM Disk of your ROM firmware.
+
+CAUTION: The space on the ROM Disk is very limited and adding files
+is likely to cause the ROM Disk to run out of space.  If this
+happens, you will see an error like the following when running the
+BuildROM script:
+
+    cpmcp: can not write cpm.sys: device full
+
+The resulting ROM Disk is still OK to use, but will not contain the
+file(s) that did not fit.

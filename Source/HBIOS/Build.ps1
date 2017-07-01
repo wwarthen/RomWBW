@@ -9,7 +9,7 @@ while ($true)
 
 while ($true)
 {
-	$PlatformConfigFile = "Config/plt_${Platform}.asm"
+;	$PlatformConfigFile = "Config/plt_${Platform}.asm"
 	$ConfigFile = "Config/${Platform}_${Config}.asm"
 	if (Test-Path $ConfigFile) {break}
 	if ($Config -ne "") {Write-Host "${ConfigFile} does not exist!"}
@@ -85,7 +85,7 @@ Function Concat($InputFileList, $OutputFile)
 PLATFORM	.EQU		PLT_${Platform}		; HARDWARE PLATFORM
 ROMSIZE		.EQU		${ROMSize}		; SIZE OF ROM IN KB
 ;
-#INCLUDE "${PlatformConfigFile}"
+;#INCLUDE "${PlatformConfigFile}"
 #INCLUDE "${ConfigFile}"
 ;
 "@ | Out-File "build.inc" -Encoding ASCII
@@ -124,7 +124,8 @@ Concat 'romldr.bin', 'dbgmon.bin','cpm.bin','zsys.bin' osimg.bin
 
 Copy-Item $BlankROM $RomDiskFile
 cpmcp -f $RomFmt $RomDiskFile ../RomDsk/ROM_${RomSize}KB/*.* 0:
-cpmcp -f $RomFmt $RomDiskFile ../RomDsk/${Platform}_${Config}/*.* 0:
+#cpmcp -f $RomFmt $RomDiskFile ../RomDsk/${Platform}_${Config}/*.* 0:
+cpmcp -f $RomFmt $RomDiskFile ../RomDsk/${Platform}/*.* 0:
 cpmcp -f $RomFmt $RomDiskFile ../Apps/*.com 0:
 cpmcp -f $RomFmt $RomDiskFile *.sys 0:
 

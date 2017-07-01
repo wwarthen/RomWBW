@@ -1,1 +1,1 @@
-@PowerShell .\BuildFD.ps1 %*
+@PowerShell -ExecutionPolicy Unrestricted .\BuildFD.ps1 %*

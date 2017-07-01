@@ -216,6 +216,15 @@ SD_CAPACITY	.EQU	2		; CARD CAPACITY (1 DWORD/4 BYTES)
 SD_INIT:
 	CALL	NEWLINE			; FORMATTING
 	PRTS("SD:$")
+	CALL	SD_PROBE		; CHECK FOR HARDWARE
+	JR	Z,SD_INIT00		; CONTINUE IF PRESENT
+;
+	; HARDWARE NOT PRESENT
+	PRTS(" NOT PRESENT$")
+	OR	$FF			; SIGNAL FAILURE
+	RET
+;
+SD_INIT00:
 ;
 ; SETUP THE DISPATCH TABLE ENTRIES
 ;
@@ -415,6 +424,25 @@ SD_INITUNIT2:
 	RET	Z			; IF NOT, DONE
 	PRTS(" WP$")			; NOTIFY USER
 	RET				; DONE
+;
+;----------------------------------------------------------------------
+; PROBE FOR SD HARDWARE
+;----------------------------------------------------------------------
+;
+; ON RETURN, ZF SET INDICATES HARDWARE FOUND
+;
+SD_PROBE:
+;
+#IF (SDMODE == SDMODE_DSD)
+	LD	A,$03			; SET BIT 0 & 1
+	OUT	(SD_SELREG),A		; WRITE TO SELECT REG
+	IN	A,(SD_SELREG)		; READ BACK, BIT 1 IS ALWAYS 0
+	CP	$01			; ... SO SHOULD READ BACK AS $01
+	RET
+#ENDIF
+;
+	XOR	A			; SIGNAL SUCCESS
+	RET				; AND RETURN
 ;
 ;=============================================================================
 ; FUNCTION DISPATCH ENTRY POINT

@@ -1,1 +1,0 @@
-@..\tools\gcc\mingw32-make %*
