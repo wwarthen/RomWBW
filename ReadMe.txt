@@ -7,7 +7,7 @@
 ***********************************************************************
 
 Wayne Warthen (wwarthen@gmail.com)
-Version 2.8.0, 2017-06-10
+Version 2.8.0, 2017-07-02
 https://www.retrobrewcomputers.org/
 
 RomWBW is a ROM-based implementation of CP/M-80 2.2 and Z-System for 
@@ -247,28 +247,6 @@ David Giles has contributed support for the CSIO support in the SD
 Card driver.
 
 The UNA BIOS is a product of John Coffman.
-
-License
--------
-
-The Tools directory contains a variety of programs that are included 
-for convenience.  They are all subject to their own licensing 
-restrictions (if any) and are not considered part of RomWBW.
-
-With respect to RomWBW:
-
-This program is free software: you can redistribute it and/or modify 
-it under the terms of the GNU General Public License as published by 
-the Free Software Foundation, either version 3 of the License, or (at 
-your option) any later version.
-
-This program is distributed in the hope that it will be useful, but 
-WITHOUT ANY WARRANTY; without even the implied warranty of 
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU 
-General Public License for more details.
-
-You should have received a copy of the GNU General Public License 
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Getting Assistance
 ------------------

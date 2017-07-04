@@ -55,8 +55,8 @@ GET ($F8):
 
     BOOTINFO ($E0):
       BC=Function/Subfunction                   A=Result
-                                                L=Boot Bank Id
                                                 DE=Boot Volume (Disk Unit/Slice)
+                                                L=Boot Bank Id
 
     CPUINFO ($F0):
       BC=Function/Subfunction                   A=Result
@@ -79,8 +79,8 @@ SET ($F9):
 
     BOOTINFO ($E0):
       BC=Function/Subfunction                   A=Result
-                                                L=Boot Bank Id
-                                                DE=Boot Volume (Disk Unit/Slice)
+      DE=Boot Volume (Disk Unit/Slice)
+      L=Boot Bank Id
 
 PEEK: ($FA):
   B=Function                       		A=Result
@@ -244,7 +244,7 @@ MEDIA ($18):
 
 DEFMED ($19):
   BC=Function/Unit                      A=Result
-                                        E=Media ID (legacy)
+  E=Media ID (legacy)
 
   Define media in unit.
 
