@@ -1,3 +1,7 @@
+Version 2.8.2
+-------------
+- WBW: Adjusted VGA3 register setup per John's recommendations
+
 Version 2.8.1
 -------------
 - WBW: Fix FDISK80
