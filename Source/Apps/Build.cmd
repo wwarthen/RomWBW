@@ -19,6 +19,8 @@ call :asm OSLdr || goto :eof
 
 zx Z80ASM -SYSGEN/F
 
+setlocal & cd XM125 && call Build || exit /b 1 & endlocal
+
 goto :eof
 
 :asm

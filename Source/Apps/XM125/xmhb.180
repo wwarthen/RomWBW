@@ -1,0 +1,329 @@
+;=======================================================================
+;
+; XMHB.Z80 - XMODEMXX PATCH FILE FOR ROMWBW HBIOS
+;
+;   Wayne Warthen - wwarthen@gmail.com
+;   Updated: 2017-08-09
+;
+;=======================================================================
+;
+; Overlay file is Z80, build with M80:
+;   M80 =XMHB
+;   L80 XMHB,XMHB/N/X/E
+;
+	.Z80
+	ASEG
+;
+NO	EQU	0
+YES	EQU	NOT NO
+;
+ERRDET	EQU	NO		; detect parity/framing/overrun errs
+;
+BASE	EQU	100H		; start of cp/m normal program area
+;
+;=======================================================================
+;
+; Jump table: The jump table must be in exactly the same sequence as the
+; one in XMODEM.  Note the ORG of 103H - This jump table has no jump to
+; 'BEGIN'.
+;
+	ORG	BASE + 3	;start after 'JMP BEGIN'
+;
+	JP	CONOUT		;must be 00000h if not used, see below
+	JP	MINIT		;initialization routine (if needed)
+	JP	UNINIT		;undo whatever 'MINIT' did (or return)
+JPTBL:
+	JP	SENDR		;send character (via pop psw)
+	JP	CAROK		;test for carrier
+	JP	MDIN		;receive data byte
+	JP	GETCHR		;get character from modem
+	JP	RCVRDY		;check receive ready
+	JP	SNDRDY		;check send ready
+	JP	SPEED		;get speed value for file transfer time
+	JP	EXTRA1		;extra for custom routine
+	JP	EXTRA2		;extra for custom routine
+	JP	EXTRA3		;extra for custom routine
+;
+;-----------------------------------------------------------------------
+;
+; Output character to console
+;
+CONOUT	EQU	0		; not used
+;
+;-----------------------------------------------------------------------
+;
+; Initialize modem
+;
+; This procedure has been usurped to dynamically detect the type
+; of system we are running on and install the *real* jump table
+; entries as appropriate.
+;
+MINIT:
+	; Get system type
+	LD	D,2
+	LD	E,2
+	MLT	DE
+	BIT	2,E		; bit 2 wil be set if mlt happend
+	LD	HL,U_JPTBL	; assume Z80 (UART)
+	JR	Z,MINIT2	; yes, Z80, do vector copy
+	LD	HL,A_JPTBL	; otherwise Z180 (ASCI)
+;
+MINIT2:
+	; Copy real vectors into active jump table
+	LD	DE,JPTBL
+	LD	BC,7 * 3	; copy 7 3-byte entries
+	LDIR
+;
+	RET			; no initialization required
+;
+;-----------------------------------------------------------------------
+;
+; Uninitialize modem
+;
+UNINIT:
+	RET			; not initialized, so no 'UN-INITIALIZE'
+;
+;-----------------------------------------------------------------------
+;
+; The following are all dummy routines that are unused because MINIT
+; dynamically installs the real jump table.
+;
+SENDR:
+CAROK:
+MDIN:
+GETCHR:
+RCVRDY:
+SNDRDY:
+SPEED:
+EXTRA1:
+EXTRA2:
+EXTRA3:
+	RET
+;
+;=======================================================================
+;=======================================================================
+;
+; Standard RBC Projects 8250-like UART port @ 68H
+;
+; Will be used for all RBC Z80 systems.
+;
+;=======================================================================
+;=======================================================================
+;
+; UART port constants
+;
+U_BASE	EQU	68H		; UART base port
+U_DATP	EQU	U_BASE + 0	; data in port
+U_DATO	EQU	U_BASE + 0	; data out port
+U_CTLP	EQU	U_BASE + 5	; control/status port
+U_SNDB	EQU	20H		; bit to test for send ready
+U_SNDR	EQU	20H		; value when ready to send
+U_RCVB	EQU	01H		; bit to test for receive ready
+U_RCVR	EQU	01H		; value when ready to receive
+U_PARE	EQU	04H		; bit for parity error
+U_OVRE	EQU	02H		; bit for overrun error
+U_FRME	EQU	08H		; bit for framing error
+;
+; Following jump table is dynamically patched into real jump
+; table at program startup.  See MINIT above.  Note that only a
+; subset of the jump table is overlaid (SENDR to SPEED).
+;
+U_JPTBL:
+	JP	U_SENDR		; send character (via pop psw)
+	JP	U_CAROK		; test for carrier
+	JP	U_MDIN		; receive data byte
+	JP	U_GETCHR	; get character from modem
+	JP	U_RCVRDY	; check receive ready
+	JP	U_SNDRDY	; check send ready
+	JP	U_SPEED		; get speed value for file transfer time
+;
+;-----------------------------------------------------------------------
+;
+; Send character on top of stack
+;
+U_SENDR:
+	POP	AF		; get character to send from stack
+	OUT	(U_DATO),A	; send to port
+	RET
+;
+;-----------------------------------------------------------------------
+;
+; Test and rep;ort carrier status, Z set if carrier present
+;
+U_CAROK:
+	XOR	A		; not used, always indicate present
+	RET
+;
+;-----------------------------------------------------------------------
+;
+; Get a character (assume character ready has already been tested)
+;
+U_MDIN:
+U_GETCHR:
+	IN	A,(U_DATP)	; read character from port
+	RET
+;
+;-----------------------------------------------------------------------
+;
+; Test for character ready to receive, Z = ready
+; Error code returned in A register
+; *** Error code does not seem to be used ***
+;
+U_RCVRDY:
+	IN	A,(U_CTLP)	; get modem status
+;
+	 IF ERRDET
+;
+	; With error detection (slower)
+	PUSH	BC		; save scratch register
+	PUSH	AF		; save full status on stack
+	AND	U_FRME | U_OVRE | U_PARE ; isolate line err bits
+	LD	B,A		; save err status in B
+	POP	AF		; get full status back
+	AND	U_RCVB		; isolate ready bit
+	CP	U_RCVR		; test it (set flags)
+	LD	A,B		; get the error code back
+	POP	BC		; restore scratch register
+;
+	 ELSE
+;
+	; No error detection (faster)
+	AND	U_RCVB		; isolate ready bit
+	CP	U_RCVR		; test it (set flags)
+	LD	A,0		; report no line errors
+;
+	 ENDIF
+;
+	RET
+;
+;-----------------------------------------------------------------------
+;
+; Test for ready to send a character, Z = ready
+;
+U_SNDRDY:
+	IN	A,(U_CTLP)	; get status
+	AND	U_SNDB		; isolate transmit ready bit
+	CP	U_SNDR		; test for ready value
+	RET
+;
+;-----------------------------------------------------------------------
+;
+; Report baud rate (index into SPTBL returned in regsiter A)
+;
+U_SPEED:
+	LD	A,8		; arbitrarily return 9600 baud
+	RET
+;
+;=======================================================================
+;=======================================================================
+;
+; Standard RBC Projects Z180 primary ASCI port
+;
+; Will be used for all RBC Z180 systems.
+;
+;=======================================================================
+;=======================================================================
+;
+; ASCI port constants
+;
+A_DATP	EQU	48H		;Z180 TSR - ASCI receive data port
+A_DATO	EQU	46H		;Z180 TDR - ASCI transmit data port
+A_CTLP	EQU	44H		;Z180 STAT - ASCI status port
+A_CTL2	EQU	40H		;Z180 CNTLA - ASCI control port
+A_SNDB	EQU	02H		;Z180 STAT:TDRE - xmit data reg empty bit
+A_SNDR	EQU	02H		;Z180 STAT:TDRE - xmit data reg empty value
+A_RCVB	EQU	80H		;Z180 STAT:RDRF - rcv data reg full bit
+A_RCVR	EQU	80H		;Z180 STAT:RDRF - rcv data reg full value
+A_PARE	EQU	20H		;Z180 STAT:PE - parity error bit
+A_OVRE	EQU	40H		;Z180 STAT:OVRN - overrun error bit
+A_FRME	EQU	10H		;Z180 STAT:FE - framing error bit
+;
+; Following jump table is dynamically patched over initial jump
+; table at program startup.  See MINIT above.  Note that only a
+; subset of the jump table is overlaid (SENDR to SPEED).
+;
+A_JPTBL:
+	JP	A_SENDR		;send character (via pop psw)
+	JP	A_CAROK		;test for carrier
+	JP	A_MDIN		;receive data byte
+	JP	A_GETCHR	;get character from modem
+	JP	A_RCVRDY	;check receive ready
+	JP	A_SNDRDY	;check send ready
+	JP	A_SPEED		;get speed value for file transfer time
+;
+;-----------------------------------------------------------------------
+;
+; Send character on top of stack
+;
+A_SENDR:
+	POP	AF		; get character to send from stack
+	OUT0	(A_DATO),A	; send to port
+	RET
+;
+;-----------------------------------------------------------------------
+;
+; Test and rep;ort carrier status, Z set if carrier present
+;
+A_CAROK:
+	XOR	A		; not used, always indicate present
+	RET
+;
+;-----------------------------------------------------------------------
+;
+; Get a character (assume character ready has already been tested)
+;
+A_MDIN:
+A_GETCHR:
+	IN0	A,(A_DATP)	; read character from port
+	RET
+;
+;-----------------------------------------------------------------------
+;
+; Test for character ready to receive, Z = ready
+; Error code returned in A register
+; *** Error code does not seem to be used ***
+;
+A_RCVRDY:
+	IN0	A,(A_CTLP)	; get modem status
+	PUSH	BC		; save scratch register
+	PUSH	AF		; save full status on stack
+	AND	A_FRME | A_OVRE | A_PARE ; isolate line err bits
+	LD	B,A		; save err status in B
+	
+	; Z180 ASCI ports will stall if there are errors.
+	; Error bits are NOT cleared by merely reading
+	; the status register.  Below, bit 3 of ASCI
+	; control register is written with a zero to 
+	; clear error(s) if needed.
+	JP	Z,A_RCVRDY2	; if no errs, continue
+	IN0	A,(A_CTL2)	; get current control register
+	AND	0F7H		; force err reset bit to zero
+	OUT0	(A_CTL2),A	; write control register
+
+A_RCVRDY2:
+	POP	AF		; get full status back
+	AND	A_RCVB		; isolate ready bit
+	CP	A_RCVR		; test it (set flags)
+	LD	A,B		; get the error code back
+	POP	BC		; restore scratch register
+	RET
+;
+;-----------------------------------------------------------------------
+;
+; Test for ready to send a character, Z = ready
+;
+A_SNDRDY:
+	IN	A,(A_CTLP)	; get status
+	AND	A_SNDB		; isolate transmit ready bit
+	CP	A_SNDR		; test for ready value
+	RET
+;
+;-----------------------------------------------------------------------
+;
+; Report baud rate (index into SPTBL returned in regsiter A)
+;
+A_SPEED:
+	LD	A,8		; arbitrarily return 9600 baud
+	RET
+;
+	END
