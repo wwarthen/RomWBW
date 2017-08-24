@@ -365,11 +365,16 @@ comsetu:
 	jr	comsetx		; common exit
 ;
 comsetx:
+	ld	a,(pflag)	; get prompt flag
+	or	a		; set flags
+	jr	z,comsetx2	; bypass if not requested
+comsetx1:
 	ld	c,$01		; console read
 	call	bdos		; do it
 	cp	$0D		; CR?
-	jr	nz,comsetx	; loop as needed
+	jr	nz,comsetx1	; loop as needed
 ;
+comsetx2:
 	xor	a
 	ret
 ;
