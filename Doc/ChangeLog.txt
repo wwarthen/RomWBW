@@ -1,3 +1,11 @@
+Version 2.8.3
+-------------
+- WBW: Added MODE command
+- WBW: Removed obsolete 1200.COM, 9600.COM, and 38400.COM
+- WBW: New XM.COM that automatically adapts to primary port of platform
+- WBW: XM.COM now handles 38400 baud at 4MHz
+- WBW: Removed obsolete XM versions: XM5.COM, XM-A0.COM, XM-A1.COM
+
 Version 2.8.2
 -------------
 - WBW: Adjusted VGA3 register setup per John's recommendations

@@ -199,6 +199,10 @@ comset:
 comset1:
 	call	ldcom		; load config for port
 ;
+	ld	a,(comatr)	; get attributes
+	bit	7,a		; terminal?
+	jp	nz,prtcom	; terminal not configurable
+;
 	ld	a,(ix)		; get current char
 	cp	0		; nothing more?
 	jp	z,prtcom	; no config parms, print current device config
