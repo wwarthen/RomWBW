@@ -70,7 +70,7 @@ STX	EQU	02H	; 'Start of header' for 1024 byte blocks
 ;
 ; Conditional equates - change to suit your system, then assemble
 ;
-MHZ	EQU	4	; Clock speed, use integer (2,4,5,8, etc.)
+MHZ	EQU	10	; Clock speed, use integer (2,4,5,8, etc.)
 CPM3	EQU	NO	; Yes, if operating in CP/M v3.0 environment
 STOPBIT	EQU	NO	; No, if using 1 stop bit, yes if using 2
 BYEBDOS	EQU	NO	; Yes, if using BYE338-up, BYE501-up, or NUBYE
@@ -817,6 +817,7 @@ BADROP:	POP	PSW		; Restore stack
 ALLSET:	CALL	GETCHR
 	CALL	GETCHR
 	CALL	MINIT
+	STA	CPUMHZ		; WBW: Update CPU speed from MINIT in A
 ;
 ; Jump to appropriate function
 ;
@@ -3458,7 +3459,11 @@ RECVDG:	CALL	GETCHR
 	CALL	GETCHR
 ;
 RECV:	PUSH	D		; Save 'DE' regs.
-	MVI	E,MHZ		; Get the clock speed
+;WBW BEGIN: Use dynamic CPU speed
+;	MVI	E,MHZ		; Get the clock speed
+	LDA	CPUMHZ		; Get the clock speed
+	MOV	E,A		; Put speed in E
+;WBW END
 	XRA	A		; Clear the 'A' reg.
 ;
 MSLOOP:	ADD	B		; Number of seconds
@@ -3546,14 +3551,27 @@ CARCK2:	LDA	OPTSAV		; Get option
 ; Delay - 100 millisecond delay.
 ;
 DELAY:	PUSH	B		; Save 'BC'
-	LXI	B,MHZ*4167	; Value for 100 ms. delay
-;
+; WBW BEGIN: Use dynamic CPU speed
+; Loop below is 105TS on Z80 and 96TS on Z180
+; Approx 1024 iter per 100ms per MHz
+; Loop time below extended to accommodate CPU speeds up to 64MHz
+;	LXI	B,MHZ*4167	; Value for 100 ms. delay
+; Init BC w/ CPU MHz * 1024
+	LDA	CPUMHZ		; CPU MHz to A
+	RLC			; * 2
+	RLC			; * 2, A now has MHz * 4
+	MOV	B,A		; Use as high byte
+	MVI	C,0		; Zero low byte, BC now has MHz * 1024
+; WBW END
 DELAY2:	DCX	B		; Update count
 	MOV	A,B		; Get MSP byte
 	ORA	C		; Count = zero?
 	JNZ	DELAY2		; If not, continue
+	CALL	DELAY3		; WBW: Extend loop time
+	CALL	DELAY3		; WBW: Extend loop time
+	CALL	DELAY3		; WBW: Extend loop time
 	POP	B		; Restore 'BC'
-	RET			; Return to CARCK1
+DELAY3:	RET			; Return to CARCK1
 ;
 ;-----------------------------------------------------------------------
 ;
@@ -3933,9 +3951,16 @@ INPUT:	PUSH	H		; Save current values
 	PUSH	D
 	PUSH	B
 ;
-INPUT1:	LXI	D,1200		; Outer loop count (about 2 minutes)
+; WBW BEGIN: Use dynamic CPU speed
+;INPUT1:	LXI	D,1200		; Outer loop count (about 2 minutes)
+;;
+;INPUT2:	LXI	B,MHZ*100	; Roughly 100 ms.
+INPUT1:	LXI	D,468		; Outer loop count (about 2 minutes)
 ;
-INPUT2:	LXI	B,MHZ*100	; Roughly 100 ms.
+INPUT2:	LDA	CPUMHZ		; CPU MHz to A
+	MOV	B,A		; Put in B
+	MVI	C,0		; Zero C, BC is now CPU MHz * 256, ~256ms
+; WBW END
 ;
 INPUT3:	PUSH	D		; Save the outer delay count
 	PUSH	B		; Save the inner delay count
@@ -5614,6 +5639,7 @@ MSGFLG:	DB	0		; Message upload flag
 SAVEHL:	DW	0		; Saves TBUF command line address
 TOTERR:	DW	0		; Total errors for transmission attempt
 VRECNO:	DW	0		; Virtual record # in 128 byte records
+CPUMHZ:	DW	MHZ		; WBW: CPU speed in MHz, *word value*
 ;
 EOFLG:	DB	0		; 'EOF' flag (1=yes)
 EOFCTR:	DB	0		; EOF send counter

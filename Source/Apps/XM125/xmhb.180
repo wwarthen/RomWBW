@@ -65,8 +65,10 @@ MINIT:
 	MLT	DE
 	BIT	2,E		; bit 2 wil be set if mlt happend
 	LD	HL,U_JPTBL	; assume Z80 (UART)
+	LD	A,10		; assume 10MHz CPU in case of Z80
 	JR	Z,MINIT2	; yes, Z80, do vector copy
 	LD	HL,A_JPTBL	; otherwise Z180 (ASCI)
+	LD	A,20		; assume 20MHz CPU in case of Z180
 ;
 MINIT2:
 	; Copy real vectors into active jump table
@@ -74,7 +76,37 @@ MINIT2:
 	LD	BC,7 * 3	; copy 7 3-byte entries
 	LDIR
 ;
-	RET			; no initialization required
+	; Check for UNA (UBIOS)
+	LD	A,(0FFFDH)	; fixed location of UNA API vector
+	CP	0C3H		; jp instruction?
+	JR	NZ,MINIT3	; if not, not UNA
+	LD	HL,(0FFFEH)	; get jp address
+	LD	A,(HL)		; get byte at target address
+	CP	0FDH		; first byte of UNA push ix instruction
+	JR	NZ,MINIT3	; if not, not UNA
+	INC	HL		; point to next byte
+	LD	A,(HL)		; get next byte
+	CP	0E5H		; second byte of UNA push ix instruction
+	JR	NZ,MINIT3	; if not, not UNA
+;
+	; Get CPU speed from UNA
+	LD	C,0F8H		; UNA BIOS Get PHI function
+	RST	08		; Returns speed in Hz in DE:HL
+	LD	A,E		; Hack to get approx speed in MHz
+	SRL	A		; ... by dividing by 1,048,576
+	SRL	A		; ...
+	SRL	A		; ...
+	SRL	A		; ...
+	INC	A		; Fix up for value truncation
+	RET			; done
+;
+MINIT3:
+	; Not UNA, use HBIOS for CPU speed lookup
+	LD	B,0F8H		; HBIOS SYSGET function 0xF8
+	LD	C,0F0H		; CPUINFO subfunction 0xF0
+	RST	08		; do it, L := CPU speed in MHz
+	LD	A,L		; move it to A
+	RET			; done
 ;
 ;-----------------------------------------------------------------------
 ;
