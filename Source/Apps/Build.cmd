@@ -16,6 +16,7 @@ call :asm Assign || goto :eof
 call :asm Format || goto :eof
 call :asm Talk || goto :eof
 call :asm OSLdr || goto :eof
+call :asm Mode || goto :eof
 
 zx Z80ASM -SYSGEN/F
 
@@ -26,6 +27,5 @@ goto :eof
 :asm
 echo.
 echo Building %1...
-rem tasm -t80 -b -g3 -fFF %1.asm %1.com %1.lst
 tasm -t80 -g3 -fFF %1.asm %1.com %1.lst
 goto :eof
