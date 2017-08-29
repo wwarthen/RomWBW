@@ -21,6 +21,8 @@ ERRDET	EQU	NO		; detect parity/framing/overrun errs
 ;
 BASE	EQU	100H		; start of cp/m normal program area
 ;
+BDOS	EQU	00005H		; BDOS function dispatch vector
+;
 ;=======================================================================
 ;
 ; Jump table: The jump table must be in exactly the same sequence as the
@@ -59,22 +61,33 @@ CONOUT	EQU	0		; not used
 ; entries as appropriate.
 ;
 MINIT:
+;
+	; Announce
+	LD	DE,RBC		; RetroBrew Computers
+	LD	C,9		; BDOS string display function
+	CALL	BDOS		; Do it
+;
 	; Get system type
-	LD	D,2
-	LD	E,2
-	MLT	DE
-	BIT	2,E		; bit 2 wil be set if mlt happend
-	LD	HL,U_JPTBL	; assume Z80 (UART)
-	LD	A,10		; assume 10MHz CPU in case of Z80
-	JR	Z,MINIT2	; yes, Z80, do vector copy
-	LD	HL,A_JPTBL	; otherwise Z180 (ASCI)
-	LD	A,20		; assume 20MHz CPU in case of Z180
+	LD	DE,00202H	; D := 2, E := 2
+	MLT	DE		; DE := D * E == 4
+	BIT	2,E		; Bit 2 wil be set if mlt happend
+	LD	HL,U_JPTBL	; Assume Z80 (UART)
+	LD	DE,UART		; UART port notification string
+	JR	Z,MINIT2	; Yes, Z80, do vector copy
+	LD	HL,A_JPTBL	; Otherwise Z180 (ASCI)
+	LD	DE,ASCI		; ASCI port notification string
 ;
 MINIT2:
+	; Display port notification string
+	PUSH	HL		; Save HL
+	LD	C,9		; BDOS string display function
+	CALL	BDOS		; Do it
+	POP	HL		; Recover HL
+;
 	; Copy real vectors into active jump table
-	LD	DE,JPTBL
-	LD	BC,7 * 3	; copy 7 3-byte entries
-	LDIR
+	LD	DE,JPTBL	; Real jump table is destination
+	LD	BC,7 * 3	; Copy 7 3-byte entries
+	LDIR			; Do the copy
 ;
 	; Check for UNA (UBIOS)
 	LD	A,(0FFFDH)	; fixed location of UNA API vector
@@ -89,7 +102,12 @@ MINIT2:
 	CP	0E5H		; second byte of UNA push ix instruction
 	JR	NZ,MINIT3	; if not, not UNA
 ;
-	; Get CPU speed from UNA
+	; Display UNA notification string
+	LD	DE,UBIOS	; BIOS notification string
+	LD	C,9		; BDOS string display function
+	CALL	BDOS
+;
+	; Get CPU speed from UNA and return
 	LD	C,0F8H		; UNA BIOS Get PHI function
 	RST	08		; Returns speed in Hz in DE:HL
 	LD	A,E		; Hack to get approx speed in MHz
@@ -98,15 +116,47 @@ MINIT2:
 	SRL	A		; ...
 	SRL	A		; ...
 	INC	A		; Fix up for value truncation
-	RET			; done
+	RET			; Done
 ;
 MINIT3:
-	; Not UNA, use HBIOS for CPU speed lookup
+	; Not UNA, try RomwBW HBIOS for CPU speed lookup
+	LD	HL,(0FFFEH)	; HL := HBIOS ident location
+	LD	A,'W'		; First byte of ident
+	CP	(HL)		; Compare
+	JR	NZ,MINIT4	; Not HBIOS
+	INC	HL		; Next byte of ident
+	LD	A,~'W'		; Second byte of ident
+	CP	(HL)		; Compare
+	JR	NZ,MINIT4	; Not HBIOS
+;
+	; Display RomWBW notification string
+	LD	DE,HBIOS	; BIOS notification string
+	LD	C,9		; BDOS string display function
+	CALL	BDOS		; Do it
+;
+	; Get CPU speed from RomWBW HBIOS and return
 	LD	B,0F8H		; HBIOS SYSGET function 0xF8
 	LD	C,0F0H		; CPUINFO subfunction 0xF0
-	RST	08		; do it, L := CPU speed in MHz
-	LD	A,L		; move it to A
-	RET			; done
+	RST	08		; Do it, L := CPU speed in MHz
+	LD	A,L		; Move it to A
+	RET			; Done
+;
+MINIT4:
+	; Neither UNA nor RomWBW
+	LD	DE,BIOERR	; BIOS error message
+	LD	C,9		; BDOS string display function
+	CALL	BDOS		; Do it
+	JP	0		; Bail out!
+;
+RBC	DB	"RBC, 28-Aug-2017, $"
+;
+UART	DB	"UART0$"
+ASCI	DB	"ASCI0$"
+;
+UBIOS	DB	" [UNA]", 13, 10, "$"
+HBIOS	DB	" [WBW]", 13, 10, "$"
+;
+BIOERR	DB	13, 10, 13, 10, "*** Unknown BIOS ***", 13, 10, "$"
 ;
 ;-----------------------------------------------------------------------
 ;

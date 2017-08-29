@@ -29,6 +29,7 @@
 ;
 ; Change Log:
 ;   2017-08-16 [WBW] Initial release
+;   2017-08-28 [WBW] Handle UNACPM
 ;_______________________________________________________________________________
 ;
 ; ToDo:
@@ -44,7 +45,7 @@ stksiz	.equ	$40		; Working stack size
 restart	.equ	$0000		; CP/M restart vector
 bdos	.equ	$0005		; BDOS invocation vector
 ;
-stamp	.equ	$40		; loc of RomWBW CBIOS zero page stamp
+ident	.equ	$FFFE		; loc of RomWBW HBIOS ident ptr
 ;
 rmj	.equ	2		; intended CBIOS version - major
 rmn	.equ	8		; intended CBIOS version - minor
@@ -85,28 +86,11 @@ exit:	; clean up and return to command processor
 ; Initialization
 ;
 init:
-;
 	; locate start of cbios (function jump table)
 	ld	hl,(restart+1)	; load address of CP/M restart vector
 	ld	de,-3		; adjustment for start of table
 	add	hl,de		; HL now has start of table
 	ld	(bioloc),hl	; save it
-;
-	; get location of config data and verify integrity
-	ld	hl,stamp	; HL := adr or RomWBW zero page stamp
-	ld	a,(hl)		; get first byte of RomWBW marker
-	cp	'W'		; match?
-	jp	nz,errinv	; abort with invalid config block
-	inc	hl		; next byte (marker byte 2)
-	ld	a,(hl)		; load it
-	cp	~'W'		; match?
-	jp	nz,errinv	; abort with invalid config block
-	inc	hl		; next byte (major/minor version)
-	ld	a,(hl)		; load it
-	cp	rmj << 4 | rmn	; match?
-	jp	nz,errver	; abort with invalid os version
-	inc	hl		; bump past
-	inc	hl		; ... version info
 ;
 	; check for UNA (UBIOS)
 	ld	a,($FFFD)	; fixed location of UNA API vector
@@ -120,22 +104,38 @@ init:
 	ld	a,(hl)		; get next byte
 	cp	$E5		; second byte of UNA push ix instruction
 	jr	nz,initwbw	; if not, not UNA
+;
+	; UNA initialization
 	ld	hl,unamod	; point to UNA mode flag
 	ld	(hl),$FF	; set UNA mode flag
 	ld	a,$FF		; assume max units for UNA
-	ld	a,2		; *debug*
 	ld	(comcnt),a	; ... and save it
 	jr	initx		; UNA init done
 ;
 initwbw:
-	; get count of serial units
+	; get location of config data and verify integrity
+	ld	hl,(ident)	; HL := adr or RomWBW HBIOS ident
+	ld	a,(hl)		; get first byte of RomWBW marker
+	cp	'W'		; match?
+	jp	nz,errinv	; abort with invalid config block
+	inc	hl		; next byte (marker byte 2)
+	ld	a,(hl)		; load it
+	cp	~'W'		; match?
+	jp	nz,errinv	; abort with invalid config block
+	inc	hl		; next byte (major/minor version)
+	ld	a,(hl)		; load it
+	cp	rmj << 4 | rmn	; match?
+	jp	nz,errver	; abort with invalid os version
+;
+	; RomWBW initialization
 	ld	b,bf_sysget	; BIOS SYSGET function
 	ld	c,$00		; CIOCNT subfunction
 	rst	08		; E := serial device unit count
 	ld	a,e		; count to A
 	ld	(comcnt),a	; save it
 ;
-initx:	; initialization complete
+initx
+	; initialization complete
 	xor	a		; signal success
 	ret			; return
 ;
@@ -215,8 +215,6 @@ comset1:
 	jr	nc,comset1a	; ... to handle empty
 ;
 	call	getnum32	; get baud rate into DE:HL
-	;call	crlf		; *debug*
-	;call	prthex32	; *debug*
 	jp	c,errcfg	; Handle error
 	ld	c,75		; Constant for baud rate encode
 	call	encode		; encode into C:4-0
@@ -944,11 +942,11 @@ errprm:	; command parameter error (syntax)
 	ld	de,msgprm
 	jr	err
 ;
-errinv:	; invalid CBIOS, zp signature not found
+errinv:	; invalid HBIOS, signature not found
 	ld	de,msginv
 	jr	err
 ;
-errver:	; CBIOS version is not as expected
+errver:	; unsupported HBIOS version
 	ld	de,msgver
 	jr	err
 ;
@@ -1018,18 +1016,18 @@ stack	.equ	$		; stack top
 ; Messages
 ;
 indent	.db	"   ",0
-msgban1	.db	"MODE v1.0 for RomWBW CP/M 2.2, 22-Aug-2017",0
+msgban1	.db	"MODE v1.1, 28-Aug-2017",0
 msghb	.db	" [HBIOS]",0
 msgub	.db	" [UBIOS]",0
-msgban2	.db	"Copyright 2017, Wayne Warthen, GNU GPL v3",0
+msgban2	.db	"Copyright (C) 2017, Wayne Warthen, GNU GPL v3",0
 msguse	.db	"Usage: MODE COM<n>: [<baud>[,<parity>[,<databits>[,<stopbits>]]]] [/P]",13,10
 	.db	"  ex. MODE /?                (display version and usage)",13,10
 	.db	"      MODE                   (display config of all serial ports)",13,10
 	.db	"      MODE COM0:             (display serial unit 0 config)",13,10
 	.db	"      MODE COM1: 9600,N,8,1  (set serial unit 1 config)",0
 msgprm	.db	"Parameter error (MODE /? for usage)",0
-msginv	.db	"Unexpected CBIOS (signature missing)",0
-msgver	.db	"Unexpected CBIOS version",0
+msginv	.db	"Invalid BIOS (signature missing)",0
+msgver	.db	"Unexpected HBIOS version",0
 msgdev	.db	"Invalid device name",0
 msgnum	.db	"Unit or slice number invalid",0
 msgunt	.db	"Invalid device unit number specified",0
