@@ -1,3 +1,9 @@
+Version 2.8.4
+-------------
+- WBW: FD.COM renamed to FDU.COM and integrated with build
+- WBW: FDU.COM enhanced to select FDC hardare at startup to
+       eliminate multiple versions.
+
 Version 2.8.3
 -------------
 - WBW: Added MODE command

@@ -201,12 +201,12 @@ stksav	.dw	0		; stack pointer saved at start
 	.fill	stksiz,0	; stack
 stack	.equ	$		; stack top
 ;
-msgban1	.db	"FORMAT v0.1 for RomWBW CP/M 2.2, 24-Apr-2016",0
+msgban1	.db	"FORMAT v0.1a for RomWBW CP/M 2.2, 02-Sep-2017",0
 msghb	.db	" (HBIOS Mode)",0
 msgub	.db	" (UBIOS Mode)",0
-msgban2	.db	"Copyright 2016, Wayne Warthen, GNU GPL v3",0
+msgban2	.db	"Copyright (C) 2017, Wayne Warthen, GNU GPL v3",0
 msguse	.db	"FORMAT command is not yet implemented!",13,10,13,10
-	.db	"Use FD command to physically format floppy diskettes",13,10
+	.db	"Use FDU command to physically format floppy diskettes",13,10
 	.db	"Use CLRDIR command to (re)initialize directories",13,10
 	.db	"Use SYSCOPY command to make disks bootable",13,10
 	.db	"Use FDISK80 command to partition mass storage media",0
