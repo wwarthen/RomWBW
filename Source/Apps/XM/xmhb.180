@@ -110,12 +110,13 @@ MINIT2:
 	; Get CPU speed from UNA and return
 	LD	C,0F8H		; UNA BIOS Get PHI function
 	RST	08		; Returns speed in Hz in DE:HL
-	LD	A,E		; Hack to get approx speed in MHz
-	SRL	A		; ... by dividing by 1,048,576
-	SRL	A		; ...
-	SRL	A		; ...
-	SRL	A		; ...
-	INC	A		; Fix up for value truncation
+	LD	B,4		; Divide MHz in DE:HL by 100000H 
+MINIT2A:
+	SRL	D		; ... to get approx CPU speed in
+	RR	E		; ...MHz.  Throw away HL, and
+	DJNZ	MINIT2A		; ...right shift DE by 4.
+	INC	E		; Fix up for value truncation
+	LD	A,E		; Put in A
 	RET			; Done
 ;
 MINIT3:
