@@ -1,3 +1,7 @@
+Version 2.8.5
+-------------
+- WBW: Cleaned up support in TMS driver for SCG board
+
 Version 2.8.4
 -------------
 - WBW: FD.COM renamed to FDU.COM and integrated with build
