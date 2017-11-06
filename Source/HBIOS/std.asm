@@ -8,6 +8,7 @@
 ; 4. N8		MSX-compatible Z180 SBC w/ onboard video and sound
 ; 5. MK4	Mark IV Z180 based SBC w/ ECB interface
 ; 6. UNA	Any Z80/Z180 computer with UNA BIOS
+; 7. RC		RC2014 based system with SMB 512K RAM/ROM card
 
 ; All the classes require certain generic definitions, and these are
 ; defined here prior to the inclusion of platform specific .inc files.
@@ -32,6 +33,7 @@ PLT_ZETA2	.EQU	3		; ZETA Z80 V2 SBC
 PLT_N8		.EQU	4		; N8 (HOME COMPUTER) Z180 SBC
 PLT_MK4		.EQU	5		; MARK IV
 PLT_UNA		.EQU	6		; UNA BIOS
+PLT_RC		.EQU	7		; RC2014
 ;
 #IF (PLATFORM != PLT_UNA)
 #INCLUDE "hbios.inc"
@@ -85,6 +87,7 @@ IDEMODE_NONE	.EQU	0
 IDEMODE_DIO	.EQU	1		; DISKIO V1
 IDEMODE_DIDE	.EQU	2		; DUAL IDE
 IDEMODE_MK4	.EQU	3		; MARK IV ONBOARD IDE (8 BIT)
+IDEMODE_RC	.EQU	4		; RC2014 CF BOARD (8 BIT)
 ;
 ; PPIDE MODE SELECTIONS
 ;
@@ -189,6 +192,9 @@ IT_CTC		.EQU	3
 #IF (PLATFORM == PLT_UNA)
   #DEFINE	PLATFORM_NAME	"UNA"
 #ENDIF
+#IF (PLATFORM == PLT_RC)
+  #DEFINE	PLATFORM_NAME	"RC2014"
+#ENDIF
 ;
 ; INCLUDE PLATFORM SPECIFIC HARDWARE DEFINITIONS
 ;
@@ -206,6 +212,10 @@ IT_CTC		.EQU	3
 ;
 #IF (PLATFORM == PLT_UNA)
 #INCLUDE "plt_una.inc"
+#ENDIF
+;
+#IF (PLATFORM == PLT_RC)
+#INCLUDE "plt_rc.inc"
 #ENDIF
 ;
 ; SETUP DEFAULT CPU SPEED VALUES

@@ -3,8 +3,8 @@ param([string]$Platform = "", [string]$Config = "", [string]$RomSize = "512", [s
 $Platform = $Platform.ToUpper()
 while ($true)
 {
-	if (($Platform -eq "SBC") -or ($Platform -eq "ZETA") -or ($Platform -eq "ZETA2") -or ($Platform -eq "N8") -or ($Platform -eq "MK4") -or ($Platform -eq "UNA")) {break}
-	$Platform = (Read-Host -prompt "Platform [SBC|ZETA|ZETA2|N8|MK4|UNA]").Trim().ToUpper()
+	if (($Platform -eq "SBC") -or ($Platform -eq "ZETA") -or ($Platform -eq "ZETA2") -or ($Platform -eq "RC") -or ($Platform -eq "N8") -or ($Platform -eq "MK4") -or ($Platform -eq "UNA")) {break}
+	$Platform = (Read-Host -prompt "Platform [SBC|ZETA|ZETA2|RC|N8|MK4|UNA]").Trim().ToUpper()
 }
 
 while ($true)
