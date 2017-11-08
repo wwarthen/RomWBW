@@ -38,7 +38,7 @@
 ;	| IDE_IO_STAT		| 0x07	| R	| STATUS REGISTER		|
 ;	| IDE_IO_CMD		| 0x07	| W	| COMMAND REGISTER (EXECUTE)	|
 ;	+-----------------------+-------+-------+-------------------------------+
-;	* LBA0-4 ARE ALTERNATE DEFINITIONS OF SECT, CYL, AND DRVHD PORTS
+;	* LBA0-3 ARE ALTERNATE DEFINITIONS OF SECT, CYL, AND DRVHD PORTS
 ;
 ;	=== STATUS REGISTER ===
 ;

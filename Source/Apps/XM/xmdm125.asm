@@ -328,7 +328,7 @@ MAXMIN	EQU	60	; Minutes for maximum file transfer time.
 ; Length of external patch program.  If over 128 bytes, get/set size
 ;
 LARGEIO	EQU	YES	; Yes, if modem patch area over 128 bytes
-LARSIZE	EQU	180H	; If 'LARGEIO' set patch area size (bytes) here
+LARSIZE	EQU	500H	; If 'LARGEIO' set patch area size (bytes) here
 ;
 ;=======================================================================
 ;
