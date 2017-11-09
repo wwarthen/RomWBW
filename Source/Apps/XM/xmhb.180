@@ -3,7 +3,7 @@
 ; XMHB.Z80 - XMODEMXX PATCH FILE FOR ROMWBW HBIOS
 ;
 ;   Wayne Warthen - wwarthen@gmail.com
-;   Updated: 2017-08-09
+;   Updated: 2017-11-08
 ;
 ;=======================================================================
 ;
@@ -84,7 +84,7 @@ MINIT:
 HINIT:
 ;
 	; Display RomWBW notification string
-	LD	DE,HBIOS	; BIOS notification string
+	LD	DE,HBTAG	; BIOS notification string
 	LD	C,9		; BDOS string display function
 	CALL	BDOS		; Do it
 ;
@@ -106,7 +106,7 @@ HINIT:
 UINIT:
 ;
 	; Display UNA notification string
-	LD	DE,UBIOS	; BIOS notification string
+	LD	DE,UBTAG	; BIOS notification string
 	LD	C,9		; BDOS string display function
 	CALL	BDOS		; Do it
 ;
@@ -146,25 +146,11 @@ MINIT2:
 	JR	MINIT3		; Complete the initialization
 ;
 RCINIT:
-	; Check for SIO/2 serial port
-	LD	C,080H		; SIO command port
-	XOR	A		; RD0
-	OUT	(C),A		; Access RD0
-	IN	A,(C)		; Get RD0 value
-	LD	B,A		; Save it
-	LD	A,1		; RD1
-	OUT	(C),A		; Access RD1
-	IN	A,(C)		; Get RD1 value
-	CP	B		; Compare
-	JR	Z,RCINIT1	; If equal, no SIO port there
-	LD	HL,SIO_JPTBL	; SIO jump table address
-	LD	DE,SIO		; SIO port notification string
-	JR	MINIT3		; Complete the initialization
-;
-RCINIT1:
-	; Assume RC2014 ACIA port
-	LD	HL,ACIA_JPTBL	; ACIA jump table address
-	LD	DE,ACIA		; ACIA port notification string
+	; RC2014, use HBIOS calls
+	LD	HL,HBIOS_JPTBL	; HBIOS jump table address
+	LD	DE,HBCON	; HBIOS console notification string
+	LD	A,1		; Force lower CPU speed
+	LD	(CPUSPD),A	; ... to compensate for BIOS overhead
 	JR	MINIT3		; Complete the initialization
 ;
 MINIT3:
@@ -232,15 +218,15 @@ BIOID	DB	0		; BIOS ID, 1=HBIOS, 2=UBIOS
 PLTID	DB	0		; Platform ID
 CPUSPD	DB	0		; CPU speed in MHz
 ;
-RBC	DB	"RBC, 06-Nov-2017$"
+RBC	DB	"RBC, 08-Nov-2017$"
 ;
 UART	DB	", UART0$"
 ASCI	DB	", ASCI0$"
-SIO	DB	", SIO0$"
-ACIA	DB	", ACIA0$"
+HBCON	DB	", HBIOS CONSOLE$"
+UBCON	DB	", UBIOS CONSOLE$"
 ;
-UBIOS	DB	" [UNA]$"
-HBIOS	DB	" [WBW]$"
+UBTAG	DB	" [UNA]$"
+HBTAG	DB	" [WBW]$"
 ;
 CRLF	DB	13, 10, "$"
 ;
@@ -496,46 +482,47 @@ A_SPEED:
 	LD	A,8		; arbitrarily return 9600 baud
 	RET
 ;
-;=======================================================================
-;=======================================================================
-;
-; RC2014 SIO/2
+; HBIOS CONSOLE
 ;
 ;=======================================================================
 ;=======================================================================
-;
-; SIO port constants
-;
-S_CMD	EQU	80H		; SIO Command port
-S_DAT	EQU	81H		; SIO Data port
 ;
 ; Following jump table is dynamically patched over initial jump
 ; table at program startup.  See MINIT above.  Note that only a
 ; subset of the jump table is overlaid (SENDR to SPEED).
 ;
-SIO_JPTBL:
-	JP	S_SENDR		;send character (via pop psw)
-	JP	S_CAROK		;test for carrier
-	JP	S_MDIN		;receive data byte
-	JP	S_GETCHR	;get character from modem
-	JP	S_RCVRDY	;check receive ready
-	JP	S_SNDRDY	;check send ready
-	JP	S_SPEED		;get speed value for file transfer time
+HBIOS_JPTBL:
+	JP	HB_SENDR	;send character (via pop psw)
+	JP	HB_CAROK	;test for carrier
+	JP	HB_MDIN		;receive data byte
+	JP	HB_GETCHR	;get character from modem
+	JP	HB_RCVRDY	;check receive ready
+	JP	HB_SNDRDY	;check send ready
+	JP	HB_SPEED	;get speed value for file transfer time
 ;
 ;-----------------------------------------------------------------------
 ;
 ; Send character on top of stack
 ;
-S_SENDR:
+HB_SENDR:
 	POP	AF		; get character to send from stack
-	OUT	(S_DAT),A	; send to port
+	PUSH	BC
+	PUSH	DE
+	PUSH	HL
+	LD	B,01H		; HBIOS OUT function
+	LD	C,0		; console is unit 0 by fiat
+	LD	E,A		; character to E
+	RST	08		; HBIOS call
+	POP	HL
+	POP	DE
+	POP	BC
 	RET
 ;
 ;-----------------------------------------------------------------------
 ;
 ; Test and rep;ort carrier status, Z set if carrier present
 ;
-S_CAROK:
+HB_CAROK:
 	XOR	A		; not used, always indicate present
 	RET
 ;
@@ -543,9 +530,18 @@ S_CAROK:
 ;
 ; Get a character (assume character ready has already been tested)
 ;
-S_MDIN:
-S_GETCHR:
-	IN	A,(S_DAT)	; read character from port
+HB_MDIN:
+HB_GETCHR:
+	PUSH	BC
+	PUSH	DE
+	PUSH	HL
+	LD	B,00H		; HBIOS IN function
+	LD	C,0		; console is unit 0 by fiat
+	RST	08		; HBIOS call
+	LD	A,E		; byte received to A
+	POP	HL
+	POP	DE
+	POP	BC
 	RET
 ;
 ;-----------------------------------------------------------------------
@@ -554,89 +550,47 @@ S_GETCHR:
 ; Error code returned in A register
 ; *** Error code does not seem to be used ***
 ;
-S_RCVRDY:
-	XOR	A		; A := 0
-	OUT	(S_CMD),A	; Access RD0
-	IN	A,(S_CMD)	; Get RD0
-	AND	00000001B	; Isolate rx ready bit
-	CP	00000001B	; ZF = rx ready
-;
-	 IF ERRDET
-;
-	; With error detection (slower)
-	PUSH	BC		; save BC
-	PUSH	AF		; save AF
-	LD	A,1		; A := 1
-	OUT	(S_CMD),A	; Access RD1
-	IN	A,(S_CMD)	; Get RD1
-	AND	01110000B	; isolate line err bits
-	POP	AF		; restore AF
-	LD	A,B		; err bits (B) to A
-	POP	BC		; restore BC
-;
-	 ELSE
-;
-	; No error detection (faster)
+HB_RCVRDY:
+	PUSH	BC
+	PUSH	DE
+	PUSH	HL
+	LD	B,02H		; HBIOS IST function
+	LD	C,0		; console is unit 0 by fiat
+	RST	08		; HBIOS call, A := bytes pending
+	SUB	1		; CF set IFF zero
+	RL	A		; CF to bit 0 of A
+	AND	01H		; set Z flag as needed
 	LD	A,0		; report no line errors
-;
-	 ENDIF
-;
+	POP	HL
+	POP	DE
+	POP	BC
 	RET
 ;
 ;-----------------------------------------------------------------------
 ;
 ; Test for ready to send a character, Z = ready
 ;
-S_SNDRDY:
-	XOR	A		; A := 0
-	OUT	(S_CMD),A	; Access RD0
-	IN	A,(S_CMD)	; Get RD0
-	AND	00000100B	; Isolate tx empty bit
-	CP	00000100B	; ZF = tx empty
+HB_SNDRDY:
+	PUSH	BC
+	PUSH	DE
+	PUSH	HL
+	LD	B,03H		; HBIOS OST function
+	LD	C,0		; console is unit 0 by fiat
+	RST	08		; HBIOS call, A := bytes pending
+	SUB	1		; CF set IFF zero
+	RL	A		; CF to bit 0 of A
+	AND	01H		; set Z flag as needed
+	POP	HL
+	POP	DE
+	POP	BC
 	RET
 ;
 ;-----------------------------------------------------------------------
 ;
 ; Report baud rate (index into SPTBL returned in regsiter A)
 ;
-S_SPEED:
+HB_SPEED:
 	LD	A,8		; arbitrarily return 9600 baud
 	RET
-;
-;=======================================================================
-;=======================================================================
-;
-; RC2014 ACIA
-;
-;=======================================================================
-;=======================================================================
-;
-; ACIA port constants
-;
-C_CMD	EQU	80H		; SIO Command port
-C_DAT	EQU	81H		; SIO Data port
-;
-; Following jump table is dynamically patched over initial jump
-; table at program startup.  See MINIT above.  Note that only a
-; subset of the jump table is overlaid (SENDR to SPEED).
-;
-ACIA_JPTBL:
-	JP	C_SENDR		;send character (via pop psw)
-	JP	C_CAROK		;test for carrier
-	JP	C_MDIN		;receive data byte
-	JP	C_GETCHR	;get character from modem
-	JP	C_RCVRDY	;check receive ready
-	JP	C_SNDRDY	;check send ready
-	JP	C_SPEED		;get speed value for file transfer time
-;
-C_SENDR:
-C_CAROK:
-C_MDIN:
-C_GETCHR:
-C_RCVRDY:
-C_SNDRDY:
-C_SPEED:
-	; Not yet implemeted...
-	JP	0
 ;
 	END
