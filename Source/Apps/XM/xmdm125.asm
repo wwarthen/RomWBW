@@ -71,6 +71,7 @@ STX	EQU	02H	; 'Start of header' for 1024 byte blocks
 ; Conditional equates - change to suit your system, then assemble
 ;
 MHZ	EQU	10	; Clock speed, use integer (2,4,5,8, etc.)
+SCL	EQU	6600	; WBW: Receive loop timeout scalar
 CPM3	EQU	NO	; Yes, if operating in CP/M v3.0 environment
 STOPBIT	EQU	NO	; No, if using 1 stop bit, yes if using 2
 BYEBDOS	EQU	NO	; Yes, if using BYE338-up, BYE501-up, or NUBYE
@@ -817,7 +818,8 @@ BADROP:	POP	PSW		; Restore stack
 ALLSET:	CALL	GETCHR
 	CALL	GETCHR
 	CALL	MINIT
-	STA	CPUMHZ		; WBW: Update CPU speed from MINIT in A
+	STA	CPUMHZ		; WBW: Save CPU speed from MINIT
+	SHLD	RCVSCL		; WBW: Save rcv loop scalar from MINIT
 ;
 ; Jump to appropriate function
 ;
@@ -3472,7 +3474,12 @@ MSLOOP:	ADD	B		; Number of seconds
 	MOV	B,A		; Put total value back into 'B'
 ;
 MSEC:	 IF	NOT BYEBDOS
-	LXI	D,6600		; 1 second DCR count
+;WBW BEGIN: Use scalar passed in by patch
+	;LXI	D,6600		; 1 second DCR count
+	XCHG
+	LHLD	RCVSCL		; Use scalar value from patch
+	XCHG
+;WBW END
 	 ENDIF
 ;
 	 IF	BYEBDOS
@@ -5639,7 +5646,8 @@ MSGFLG:	DB	0		; Message upload flag
 SAVEHL:	DW	0		; Saves TBUF command line address
 TOTERR:	DW	0		; Total errors for transmission attempt
 VRECNO:	DW	0		; Virtual record # in 128 byte records
-CPUMHZ:	DW	MHZ		; WBW: CPU speed in MHz, *word value*
+CPUMHZ:	DB	MHZ		; WBW: CPU speed in MHz
+RCVSCL: DW	SCL		; WBW: Recv loop scalar
 ;
 EOFLG:	DB	0		; 'EOF' flag (1=yes)
 EOFCTR:	DB	0		; EOF send counter

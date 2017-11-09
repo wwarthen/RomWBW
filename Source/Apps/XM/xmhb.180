@@ -147,10 +147,10 @@ MINIT2:
 ;
 RCINIT:
 	; RC2014, use HBIOS calls
+	LD	HL,1250		; Smaller receive loop tiemout scalar
+	LD	(RCVSCL),HL	; ... to compensate for BIOS overhead
 	LD	HL,HBIOS_JPTBL	; HBIOS jump table address
-	LD	DE,HBCON	; HBIOS console notification string
-	LD	A,1		; Force lower CPU speed
-	LD	(CPUSPD),A	; ... to compensate for BIOS overhead
+	LD	DE,COMX		; HBIOS console notification string
 	JR	MINIT3		; Complete the initialization
 ;
 MINIT3:
@@ -172,7 +172,8 @@ MINIT3:
 	LDIR			; Do the copy
 ;
 	; Return with CPU speed in A
-	LD	A,(CPUSPD)	; Get CPU speed saved above
+	LD	A,(CPUSPD)	; A := CPU speed in MHz
+	LD	HL,(RCVSCL)	; HL := receive scalar
 	RET			; and return
 ;
 ; Identify active BIOS.  RomWBW HBIOS=1, UNA UBIOS=2, else 0
@@ -216,21 +217,21 @@ IDBIO2:
 ;
 BIOID	DB	0		; BIOS ID, 1=HBIOS, 2=UBIOS
 PLTID	DB	0		; Platform ID
-CPUSPD	DB	0		; CPU speed in MHz
+CPUSPD	DB	10		; CPU speed in MHz
+RCVSCL	DW	2800		; RECV loop timeout scalar
 ;
 RBC	DB	"RBC, 08-Nov-2017$"
 ;
 UART	DB	", UART0$"
 ASCI	DB	", ASCI0$"
-HBCON	DB	", HBIOS CONSOLE$"
-UBCON	DB	", UBIOS CONSOLE$"
+COMX	DB	", COM0$"
 ;
 UBTAG	DB	" [UNA]$"
 HBTAG	DB	" [WBW]$"
 ;
 CRLF	DB	13, 10, "$"
 ;
-BIOERR	DB	13, 10, 13, 10, "*** Unknown BIOS ***", 13, 10, "$"
+BIOERR	DB	13, 10, 13, 10, "++ Unknown BIOS ++", 13, 10, "$"
 ;
 ;-----------------------------------------------------------------------
 ;
