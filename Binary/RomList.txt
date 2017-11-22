@@ -30,6 +30,7 @@ image to use for each platform:
 	Zeta V2		ZETA2_std.rom
 	N8		N8_std.rom
 	Mark IV		MK4_std.rom
+	RC2014		RC_std.rom
 
 You will find there is one additional ROM image called 
 "UNA_std.rom". This ROM image is an UNA-based RomWBW ROM image.  As 
@@ -48,7 +49,7 @@ the UNA FAT loader for testing.
 All of the standard ROM Images are configured with:
  - 512KB ROM Disk
  - 512KB RAM Disk
- - 38.4Kbps baud serial console
+ - 38.4Kbps baud serial console (RC2014 is determined by hardware)
  - Auto-discovery of all serial ports
 
 All hard disk type devices (IDE, PPIDE, CF Card, SD Card) will be 
@@ -108,4 +109,10 @@ MK4:
    video, keyboard and SD Card support if present.
  - Includes support for CVDU and VGA3 boards.  If detected at
    startup, support for video and keyboard is installed
-   including VT-100/ANSI terminal emulation. 
+   including VT-100/ANSI terminal emulation.
+
+RC2014:
+ - Requires Scott Baker's 512K RAM/ROM module
+ - Auto detects Serial I/O Module (ACIA) and Dual Serial
+   Module (SIO/2).  Either one may be used.
+ - Includes support for Compact Flash Module

@@ -94,6 +94,7 @@ to determine the <plt> component of the configuration filename:
 	Zeta V2		ZETA2_std.rom
 	N8		N8_std.rom
 	Mark IV		MK4_std.rom
+	RC2014		RC_std.rom
 
 You can use any name you choose for the <cfg> component of the 
 configuration filename.  So, let's say you want to create a custom 

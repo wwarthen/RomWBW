@@ -7,14 +7,14 @@
 ***********************************************************************
 
 Wayne Warthen (wwarthen@gmail.com)
-Version 2.8.5, 2017-10-09
+Version 2.8.6, 2017-10-09
 https://www.retrobrewcomputers.org/
 
 RomWBW is a ROM-based implementation of CP/M-80 2.2 and Z-System for 
 all RetroBrew Computers Z80/Z180 hardware platforms including SBC 
-1/2, Zeta 1/2, N8, and Mark IV. Virtually all RetroBrew hardware is 
-supported including floppy, hard disk (IDE, CF Card, SD Card), Video, 
-and keyboard. VT-100 terminal emulation is built-in.
+1/2, Zeta 1/2, N8, Mark IV, and RC2014. Virtually all RetroBrew 
+hardware is supported including floppy, hard disk (IDE, CF Card, SD 
+Card), Video, and keyboard. VT-100 terminal emulation is built-in.
 
 The RomWBW ROM loads and runs the built-in operating systems directly
 from the ROM and includes a selection of standard/useful applications
@@ -47,7 +47,8 @@ Connect a serial terminal or computer with terminal emulation
 software to the primary RS-232 port of your CPU board.  A null-modem 
 connection is generally required.  Set the line characteristics to 
 38400 baud, 8 data bits, 1 stop bit, no parity, and no flow control. 
-Select VT-100 terminal emulation.
+Select VT-100 terminal emulation.  In the case of the RC2014, the
+baud rate is determined by hardware, but is normally 115200 baud.
 
 Upon power-up, your terminal should display a sign-on banner within 2 
 seconds followed by hardware inventory and discovery information.  
@@ -64,12 +65,6 @@ aware of.
 
 The use of high density floppy disks requires a CPU speed of 8 MHz or
 greater.
-
-The latest X-Modem file transfer programs (XM.COM, XM-A0.COM, and
-XM-A1.COM) require a CPU speeed of 6 MHz or greater to support the
-default RomWBW serial port speed of 38400 baud. Older variants of
-the X-Modem programs are included (XM5.COM, XM5-A0, and XM5-A1) which
-will handle 38400 baud on system running down to 4 MHz.
 
 Upgrading from Previous Versions
 --------------------------------
@@ -117,8 +112,8 @@ ROM version:
     - OSLDR.COM
     - SYSCOPY.COM
     - TALK.COM
-    - FD.COM
-    - XM*.COM
+    - FDU.COM
+    - XM.COM
 
 UNA Hardware BIOS
 -----------------
