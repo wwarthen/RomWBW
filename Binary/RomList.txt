@@ -116,3 +116,5 @@ RC2014:
  - Auto detects Serial I/O Module (ACIA) and Dual Serial
    Module (SIO/2).  Either one may be used.
  - Includes support for Compact Flash Module
+ - Support for PPIDE Module may be enabled in config
+ - Support for Scott Baker SIO board may be enabled in config

@@ -125,7 +125,11 @@ Concat 'romldr.bin', 'dbgmon.bin','cpm.bin','zsys.bin' osimg.bin
 Copy-Item $BlankROM $RomDiskFile
 cpmcp -f $RomFmt $RomDiskFile ../RomDsk/ROM_${RomSize}KB/*.* 0:
 #cpmcp -f $RomFmt $RomDiskFile ../RomDsk/${Platform}_${Config}/*.* 0:
-cpmcp -f $RomFmt $RomDiskFile ../RomDsk/${Platform}/*.* 0:
+#cpmcp -f $RomFmt $RomDiskFile ../RomDsk/${Platform}/*.* 0:
+if ((Get-Item "../RomDsk/${Platform}/*.*").Count -gt 0)
+{
+	cpmcp -f $RomFmt $RomDiskFile ../RomDsk/${Platform}/*.* 0:
+}
 cpmcp -f $RomFmt $RomDiskFile ../Apps/*.com 0:
 cpmcp -f $RomFmt $RomDiskFile *.sys 0:
 
