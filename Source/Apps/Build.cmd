@@ -17,6 +17,7 @@ call :asm Format || goto :eof
 call :asm Talk || goto :eof
 call :asm OSLdr || goto :eof
 call :asm Mode || goto :eof
+call :asm RTC || goto :eof
 
 zx Z80ASM -SYSGEN/F
 
