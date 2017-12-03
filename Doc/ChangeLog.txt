@@ -1,3 +1,12 @@
+Version 2.8.6
+-------------
+- WBW: Added support for RC2014 (SIO and ACIA drivers primarily)
+- WBW: Automatically detect and run PROFILE.SUB on boot drive if it exists
+- WBW: Fixed Dual SD Board detection
+- WBW: Added console support to XModem (for RC2014 primarily)
+- E?B: Fixed IDE/PPIDE when used with non-CF drives
+- WBW: Patched SUBMIT.COM so that it always puts temp file on A: for immediate execution
+
 Version 2.8.5
 -------------
 - WBW: Cleaned up support in TMS driver for SCG board
