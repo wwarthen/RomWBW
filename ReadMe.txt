@@ -7,7 +7,7 @@
 ***********************************************************************
 
 Wayne Warthen (wwarthen@gmail.com)
-Version 2.8.6, 2017-10-09
+Version 2.8.6, 2017-12-10
 https://www.retrobrewcomputers.org/
 
 RomWBW is a ROM-based implementation of CP/M-80 2.2 and Z-System for 
@@ -74,7 +74,7 @@ the new ROM chip and boot your system. At the boot loader "Boot:"
 prompt, select either CP/M or Z-System to load the OS from ROM.
 
 If you have spare rom chips for your system, it is always safest to
-keep your existing, work rom chip and program a new one so that you
+keep your existing, working ROM chip and program a new one so that you
 can return to the old one if the new one does not work properly.
 
 If you use a customized ROM image, it is recommended that you first
@@ -114,6 +114,7 @@ ROM version:
     - TALK.COM
     - FDU.COM
     - XM.COM
+    - RTC.COM
 
 UNA Hardware BIOS
 -----------------
