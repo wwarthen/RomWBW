@@ -15,6 +15,9 @@
 ;
 ;VERSION LIST - Most recent version first.
 ;
+;16/Dec/17 - Handle 16-bit port addressing using
+;            Z80 IN A,(C) instruction.     Wayne Warthen
+;
 ;06/Jul/82 - Added Godbout DISK 1 equate and added SKIP equate
 ;	    Bill Bolton - Software Tools, Australia
 ;
@@ -239,7 +242,7 @@ START:
 	SHLD	OLDSP
 	LXI	SP,FINIS+64
 	CALL	TYPE			; Type initial CRLF
-	DB	TAB,TAB,'*** System Survey (June 82) ***'
+	DB	TAB,TAB,'*** System Survey (December 17) ***'
 	DW	CRLF,CRLFE
 
 ;DISK SURVEY
@@ -594,14 +597,13 @@ PORTLP:
 	JZ	ISPORT			; Print mask port
 	ENDIF
 
-	mov	b,a			; save port #
-	STA	INPORT+1
-INPORT:
-	IN	0			; Modifiable code
-; by trial and error, inactive port could return FF or echo port #
+	mov	c,a			; port number to reg c
+	mvi	b,0			; for 16 bit  port addressing
+	db	0edh,078h		; z80: in a,(c)
+; inactive port could return 0xFF or 0x78
 	CPI	0FFH
 	JZ	NEXTPT
-	cmp	b
+	cpi	078h
 	jz	nextpt
 ISPORT:
 	mov	a,d			; got a live one, probably
