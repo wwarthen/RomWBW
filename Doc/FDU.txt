@@ -1,9 +1,9 @@
 ================================================================
-Floppy Disk Utility (FDU) v5.0 for RetroBrew Computers 
+Floppy Disk Utility (FDU) v5.1 for RetroBrew Computers 
 Disk IO / Zeta / Dual-IDE / N8
 ================================================================
 
-Updated September 2, 2017
+Updated December 16, 2017
 by Wayne Warthen (wwarthen@gmail.com)
 
 Application to test the hardware functionality of the Floppy 
@@ -471,3 +471,6 @@ WW 9/2/2017: v5.0
 Renamed from FD to FDU.
 Added runtime selection of FDC hardware.
 Added runtime timing adjustment.
+
+WW 12/16/2017: v5.1
+Improved polling version of read/write to fix occasional overrun errors.
