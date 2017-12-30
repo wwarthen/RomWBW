@@ -185,17 +185,23 @@ SEEK ($12):
   CHS: D:0-6=Head,E=Sector,HL=Track
   LBA: DE:HL
 
-  Update target CHS or LBA for next I/O request on designated unit.
-  Physical seek is typically deferred until subsequent I/O operation.
+  Seek function establishes current sector for next I/O function for the specified
+  unit and invalidates the current sector for all other units.  A seek must precede
+  read/write/verify function calls.  Physical seek is typically deferred until
+  subsequent I/O operation.
 
 READ ($13) / WRITE ($14) / VERIFY ($15):
   BC=Function/Unit                      A=Result
-  HL=Buffer Address
+  HL=Buffer Address			E=Blocks Read
   E=Block Count
 
-  Read, write, or verify sectors starting at current target sector.  Current
-  target sector is incremented on each successful operation.  On error,
-  target sector is sector where error occurred.
+  Read, write, or verify block count sectors to buffer address starting at current target
+  sector.  Current sector must be established by prior seek function; however, multiple
+  read/write/verify function calls can be made after a seek function.  Current sector is
+  incremented after each sector successfully read.  On error, current sector is sector is
+  sector where error occurred.  Blocks read indicates number of sectors successfully read.
+  Caller must ensure buffer address is large enough to contain data for all sectors
+  requested.
 
 FORMAT ($16):
   BC=Function/Unit                      A=Result
