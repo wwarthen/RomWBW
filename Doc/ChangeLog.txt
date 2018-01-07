@@ -1,3 +1,9 @@
+Version 2.8.7
+-------------
+- WBW: Implemented multi-sector I/O in all disk drivers
+- WBW: Added support for RC2014 SMB Floppy controller modules (SMC and WDC)
+- WBW: New function dispatching for disk drivers
+
 Version 2.8.6
 -------------
 - WBW: Added support for RC2014 (SIO and ACIA drivers primarily)
@@ -6,6 +12,7 @@ Version 2.8.6
 - WBW: Added console support to XModem (for RC2014 primarily)
 - E?B: Fixed IDE/PPIDE when used with non-CF drives
 - WBW: Patched SUBMIT.COM so that it always puts temp file on A: for immediate execution
+- WBW: Accommodate spin up time for true IDE hard disks (IDE or PPIDE)
 
 Version 2.8.5
 -------------
