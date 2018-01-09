@@ -1,8 +1,9 @@
-Version 2.8.7
+Version 2.9.0
 -------------
 - WBW: Implemented multi-sector I/O in all disk drivers
 - WBW: Added support for RC2014 SMB Floppy controller modules (SMC and WDC)
 - WBW: New function dispatching for disk drivers
+- WBW: Updated FDU app to support RC2014 floppy controllers
 
 Version 2.8.6
 -------------

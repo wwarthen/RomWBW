@@ -473,4 +473,11 @@ Added runtime selection of FDC hardware.
 Added runtime timing adjustment.
 
 WW 12/16/2017: v5.1
+
 Improved polling version of read/write to fix occasional overrun errors.
+
+WW 1/8/2018: v5.2
+
+Added support for RC2014 hardware:
+  - Scott Baker SMC 9266 FDC module
+  - Scott Baker WDC 37C65 FDC module

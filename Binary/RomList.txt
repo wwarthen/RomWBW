@@ -118,3 +118,5 @@ RC2014:
  - Includes support for Compact Flash Module
  - Support for PPIDE Module may be enabled in config
  - Support for Scott Baker SIO board may be enabled in config
+ - Support for Scott Baker floppy controllers (SMC & WDC) may
+   be enabled in config
