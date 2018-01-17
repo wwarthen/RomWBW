@@ -2,8 +2,10 @@ Version 2.9.0
 -------------
 - WBW: Implemented multi-sector I/O in all disk drivers
 - WBW: Added support for RC2014 SMB Floppy controller modules (SMC and WDC)
-- WBW: New function dispatching for disk drivers
+- WBW: New function dispatching for character/disk/video drivers
 - WBW: Updated FDU app to support RC2014 floppy controllers
+- WBW: Added TIMER app to display system timer value
+- WBW: Refactored interrupt management code
 
 Version 2.8.6
 -------------

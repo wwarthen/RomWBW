@@ -52,6 +52,10 @@ GET ($F8):
     VDACNT ($40):
       BC=Function/Subfunction                   A=Result
                                                 E=Video Unit Count
+						
+    TIMER ($D0):
+      BC=Function/Subfunction                   A=Result
+                                                DE:HL=Timer Value (32 bit)
 
     BOOTINFO ($E0):
       BC=Function/Subfunction                   A=Result
@@ -76,6 +80,10 @@ GET ($F8):
 
 SET ($F9):
   BC=Function/Subfunction                       A=Result
+
+    TIMER ($D0):
+      BC=Function/Subfunction                   A=Result
+      DE:HL=Timer Value (32 bit)
 
     BOOTINFO ($E0):
       BC=Function/Subfunction                   A=Result

@@ -115,7 +115,7 @@ hbxcpy	.equ	$FFF6		; Bank copy function entry address
 	; relocate ourselves to upper memory
 	ld	hl,$0000	; from startup location
 	ld	de,runloc	; to running location
-	ld	bc,$1000	; assume we are no more that $3000 bytes
+	ld	bc,$0800	; assume we are no more that 2048 bytes
 	ldir			; copy ourselves
 	jp	phase2		; jump to new location
 
@@ -991,7 +991,7 @@ bufptr	.dw	0		; active pointer into buffer
 ;
 ; Messages
 ;
-msgban	.db	"OSLDR v1.0 for RomWBW, 08-Oct-2014",0
+msgban	.db	"OSLDR v1.1 for RomWBW, 16-Jan-2018",0
 msghb	.db	" (HBIOS Mode)",0
 msgub	.db	" (UBIOS Mode)",0
 msguse	.db	"Usage: OSLDR [/F] <osimg> [<hbiosimg>]\r\n"

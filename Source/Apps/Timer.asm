@@ -1,5 +1,5 @@
 ;===============================================================================
-; STARTUP - Application run automatically at OS startup
+; SIMER - Display system timer value
 ;
 ;===============================================================================
 ;
@@ -7,19 +7,20 @@
 ;_______________________________________________________________________________
 ;
 ; Usage:
-;   MODE [/?]
+;   TIMER [/C] [/?]
+;     ex: TIMER		(display current timer value)
+;         TIMER /?	(display version and usage)
+;         TIMER /C	(display timer value continuously)
 ;
 ; Operation:
-;   Determines if STARTUP.CMD exists on startup drive, user 0.  If it is
-;   found, it is run via SUBMIT.
+;   Reads and displays system timer value.
 ;_______________________________________________________________________________
 ;
 ; Change Log:
-;   2017-12-01 [WBW] Initial release
+;   2018-01-14 [WBW] Initial release
 ;_______________________________________________________________________________
 ;
 ; ToDo:
-;  1) Detect OS type (CP/M or ZSYS) and run different batch files as a result.
 ;_______________________________________________________________________________
 ;
 ;===============================================================================
@@ -36,10 +37,8 @@ ident	.equ	$FFFE		; loc of RomWBW HBIOS ident ptr
 rmj	.equ	2		; intended CBIOS version - major
 rmn	.equ	9		; intended CBIOS version - minor
 ;
-bf_cioinit	.equ	$04	; HBIOS: CIOINIT function
-bf_cioquery	.equ	$05	; HBIOS: CIOQUERY function
-bf_ciodevice	.equ	$06	; HBIOS: CIODEVICE function
 bf_sysget	.equ	$F8	; HBIOS: SYSGET function
+bf_sysgettimer	.equ	$D0	; TIMER subfunction
 ;
 ;===============================================================================
 ; Code Section
@@ -68,6 +67,9 @@ exit:	; clean up and return to command processor
 ; Initialization
 ;
 init:
+	call	crlf		; formatting
+	ld	de,msgban	; point to version message part 1
+	call	prtstr		; print it
 ;
 initx
 	; initialization complete
@@ -77,73 +79,84 @@ initx
 ; Process
 ;
 process:
-	; skip to start of first parm
-	ld	ix,$81		; point to start of parm area (past len byte)
+	; look for start of parms
+	ld	hl,$81		; point to start of parm area (past len byte)
 	call	nonblank	; skip to next non-blank char
-	jp	z,runcmd	; no parms, do command processing
+	jp	z,process0	; no parms, go to display
+;
+	; check for special option, introduced by a "/"
+	cp	'/'		; start of options?
+	jp	nz,usage	; yes, handle option
+	call	option		; do option processing
+	ret	nz		; done if non-zero reture
+;
+process0:
+	call	crlf2		; formatting
 ;
 process1:
-	; process options (if any)
-	cp	'/'		; option prefix?
-	jp	nz,erruse	; invalid option introducer
-	call	option		; process option
-	ret	nz		; some options mean we are done (e.g., "/?")
-	inc	ix		; skip option character
-	call 	nonblank	; skip whitespace
-	jr	nz,process1	; continue option checking
-	jp	runcmd		; end of parms, do cmd processing
+	ld	b,bf_sysget	; HBIOS SYSGET function
+	ld	c,bf_sysgettimer	; TIMER subfunction
+	rst	08		; call HBIOS, DE:HL := timer value
+	
+	ld	a,(first)
+	or	a
+	ld	a,0
+	ld	(first),a
+	jr	nz,process1a
+	
+	; test for new value
+	ld	a,(last)	; last LSB value to A
+	cp	l		; compare to current LSB
+	jr	z,process2	; if equal, bypass display
+
+process1a:	
+	; save and print new value
+	ld	a,l		; new LSB value to A
+	ld	(last),a	; save as last value
+	call	prtcr		; back to start of line
+	call	nz,prthex32	; display it
 ;
+process2:
+	ld	a,(cont)	; continuous display?
+	or	a		; test for true/false
+	jr	z,process3	; if false, get out
 ;
+	ld	c,6		; BDOS: direct console I/O
+	ld	e,$FF		; input char
+	call	bdos		; call BDOS, A := char
+	or	a		; test for zero
+	jr	z,process1	; loop until char pressed
 ;
-runcmd:
-	call	ldfil		; load executable
-	ret	nz		; abort on error
-;
-	xor	a
+process3:
+	xor	a		; signal success
 	ret
 ;
-; Load file for execution
-;
-ldfil:
-	ld	c,15		; BDOS function: Open File
-	ld	de,fcb		; pointer to FCB
-	call	bdos		; do it
-	inc	a		; check for err, 0xFF --> 0x00
-	jp	z,errfil	; handle file not found err
-;
-	ld	c,16		; BDOS function: Close File
-	ld	de,fcb		; pointer to FCB
-	call	bdos		; do it
-	inc	a		; check for err, 0xFF --> 0x00
-	jp	z,errfil	; handle file close err
-;
-	xor	a		; signal success
-	ret			; done
-
-	
-;
-; Handle options
+; Handle special options
 ;
 option:
 ;
-	inc	ix		; next char
-	ld	a,(ix)		; get it
-	cp	'?'		; is it a '?' as expected?
+	inc	hl		; next char
+	ld	a,(hl)		; get it
+	cp	'?'		; is it a '?'?
 	jp	z,usage		; yes, display usage
+	cp	'C'		; is it a 'C', continuous?
+	jp	z,setcont	; yes, set continuous display
 	jp	errprm		; anything else is an error
-;
-; Display usage
 ;
 usage:
 ;
-	call	crlf		; formatting
-	ld	de,msgban	; point to version message part 1
-	call	prtstr		; print it
 	call	crlf2		; blank line
 	ld	de,msguse	; point to usage message
 	call	prtstr		; print it
 	or	$FF		; signal no action performed
 	ret			; and return
+;
+setcont:
+;
+	or	$FF		; set A to true
+	ld	(cont),a	; and save it
+	xor	a		; signal success
+	ret			; and done
 ;
 ; Print character in A without destroying any registers
 ;
@@ -164,6 +177,15 @@ prtdot:
 	; shortcut to print a dot preserving all regs
 	push	af		; save af
 	ld	a,'.'		; load dot char
+	call	prtchr		; print it
+	pop	af		; restore af
+	ret			; done
+;
+prtcr:
+;
+	; shortcut to print a dot preserving all regs
+	push	af		; save af
+	ld	a,13		; load CR value
 	call	prtchr		; print it
 	pop	af		; restore af
 	ret			; done
@@ -312,12 +334,12 @@ crlf:
 ; Get the next non-blank character from (HL).
 ;
 nonblank:
-	ld	a,(ix)		; load next character
+	ld	a,(hl)		; load next character
 	or	a		; string ends with a null
 	ret	z		; if null, return pointing to null
 	cp	' '		; check for blank
 	ret	nz		; return if not blank
-	inc	ix		; if blank, increment character pointer
+	inc	hl		; if blank, increment character pointer
 	jr	nonblank	; and loop
 ;
 ; Convert character in A to uppercase
@@ -353,11 +375,6 @@ erruse:	; command usage error (syntax)
 errprm:	; command parameter error (syntax)
 	ld	de,msgprm
 	jr	err
-;
-errfil:	; STARTUP.CMD file not present
-	ld	de,msgfil
-	jr	err
-;
 err:	; print error string and return error signal
 	call	crlf		; print newline
 ;
@@ -373,16 +390,9 @@ err2:	; without the string
 ; Storage Section
 ;===============================================================================
 ;
-fcb	.db	0		; Drive code, 0 = current drive
-	.db	"START   "	; File name, 8 chars
-	.db	"COM"		; File type, 3 chars
-	.fill	36-($-fcb),0	; zero fill remainder of fcb
-;
-cmdblk	.db	cmdlen		; length
-cmdtxt	.db	"        B:SUBMIT START"
-	.db	0		; null terminator
-cmdlen	.equ	$ - cmdtxt
-cmdend	.equ	$
+last	.db	0		; last LSB of timer value
+cont	.db	0		; non-zero indicates continuous display
+first	.db	$FF		; first pass flag (true at start)
 ;
 stksav	.dw	0		; stack pointer saved at start
 	.fill	stksiz,0	; stack
@@ -390,10 +400,12 @@ stack	.equ	$		; stack top
 ;
 ; Messages
 ;
-msgban	.db	"STARTUP v1.0, 01-Dec-2017",13,10
-	.db	"Copyright (C) 2017, Wayne Warthen, GNU GPL v3",0
-msguse	.db	"Usage: STARTUP [/?]",0
-msgprm	.db	"Parameter error (STARTUP /? for usage)",0
-msgfil	.db	"STARTUP.CMD file missing",0
+msgban	.db	"TIMER v1.0, 14-Jan-2018",13,10
+	.db	"Copyright (C) 2018, Wayne Warthen, GNU GPL v3",0
+msguse	.db	"Usage: TIMER [/C] [/?]",13,10
+	.db	"  ex. TIMER           (display current timer value)",13,10
+	.db	"      TIMER /?        (display version and usage)",13,10
+	.db	"      TIMER /C        (display timer value continuously)",0
+msgprm	.db	"Parameter error (TIMER /? for usage)",0
 ;
 	.end
