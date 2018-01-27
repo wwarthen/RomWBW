@@ -2,6 +2,7 @@
 setlocal
 
 set TOOLS=../../Tools
+set APPBIN=..\..\Binary\Apps
 
 set PATH=%TOOLS%\tasm32;%TOOLS%\zx;%PATH%
 
@@ -27,6 +28,9 @@ zx MLOAD25 -SURVEY.COM=SURVEY.HEX
 
 setlocal & cd XM && call Build || exit /b 1 & endlocal
 setlocal & cd FDU && call Build || exit /b 1 & endlocal
+setlocal & cd PTxPlay && call Build || exit /b 1 & endlocal
+
+copy *.com %APPBIN%\
 
 goto :eof
 

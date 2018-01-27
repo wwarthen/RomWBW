@@ -9,5 +9,5 @@ tasm -t80 -b -fFF FDU.asm FDU.com FDU.lst
 
 if errorlevel 1 goto :eof
 
-move /Y FDU.com ..
+copy /Y FDU.com ..\..\..\Binary\Apps\
 copy /Y FDU.txt ..\..\..\Doc\

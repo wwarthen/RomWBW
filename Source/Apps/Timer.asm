@@ -18,6 +18,7 @@
 ;
 ; Change Log:
 ;   2018-01-14 [WBW] Initial release
+;   2018-01-17 [WBW] Add HBIOS check
 ;_______________________________________________________________________________
 ;
 ; ToDo:
@@ -37,6 +38,7 @@ ident	.equ	$FFFE		; loc of RomWBW HBIOS ident ptr
 rmj	.equ	2		; intended CBIOS version - major
 rmn	.equ	9		; intended CBIOS version - minor
 ;
+bf_sysver	.equ	$F1	; BIOS: VER function
 bf_sysget	.equ	$F8	; HBIOS: SYSGET function
 bf_sysgettimer	.equ	$D0	; TIMER subfunction
 ;
@@ -71,6 +73,14 @@ init:
 	ld	de,msgban	; point to version message part 1
 	call	prtstr		; print it
 ;
+	call	idbio		; identify active BIOS
+	cp	1		; check for HBIOS
+	jp	nz,errbio	; handle BIOS error
+;
+	ld	a,rmj << 4 | rmn	; expected HBIOS ver
+	cp	d		; compare with result above
+	jp	nz,errbio	; handle BIOS error
+;
 initx
 	; initialization complete
 	xor	a		; signal success
@@ -81,14 +91,17 @@ initx
 process:
 	; look for start of parms
 	ld	hl,$81		; point to start of parm area (past len byte)
-	call	nonblank	; skip to next non-blank char
-	jp	z,process0	; no parms, go to display
 ;
-	; check for special option, introduced by a "/"
+process00:
+	call	nonblank	; skip to next non-blank char
+	jp	z,process0	; no more parms, go to display
+;
+	; check for option, introduced by a "/"
 	cp	'/'		; start of options?
 	jp	nz,usage	; yes, handle option
 	call	option		; do option processing
-	ret	nz		; done if non-zero reture
+	ret	nz		; done if non-zero return
+	jr	process00	; continue looking for options
 ;
 process0:
 	call	crlf2		; formatting
@@ -137,6 +150,10 @@ option:
 ;
 	inc	hl		; next char
 	ld	a,(hl)		; get it
+	or	a		; zero terminator?
+	ret	z		; done if so
+	cp	' '		; blank?
+	ret	z		; done if so
 	cp	'?'		; is it a '?'?
 	jp	z,usage		; yes, display usage
 	cp	'C'		; is it a 'C', continuous?
@@ -145,17 +162,58 @@ option:
 ;
 usage:
 ;
-	call	crlf2		; blank line
-	ld	de,msguse	; point to usage message
-	call	prtstr		; print it
-	or	$FF		; signal no action performed
-	ret			; and return
+	jp	erruse		; display usage and get out
 ;
 setcont:
 ;
 	or	$FF		; set A to true
-	ld	(cont),a	; and save it
-	xor	a		; signal success
+	ld	(cont),a	; and set continuous flag
+	jr	option		; check for more option letters
+;
+; Identify active BIOS.  RomWBW HBIOS=1, UNA UBIOS=2, else 0
+;
+idbio:
+;
+	; Check for UNA (UBIOS)
+	ld	a,($FFFD)	; fixed location of UNA API vector
+	cp	$C3		; jp instruction?
+	jr	nz,idbio1	; if not, not UNA
+	ld	hl,($FFFE)	; get jp address
+	ld	a,(hl)		; get byte at target address
+	cp	$FD		; first byte of UNA push ix instruction
+	jr	nz,idbio1	; if not, not UNA
+	inc	hl		; point to next byte
+	ld	a,(hl)		; get next byte
+	cp	$E5		; second byte of UNA push ix instruction
+	jr	nz,idbio1	; if not, not UNA, check others
+;
+	ld	bc,$04FA	; UNA: get BIOS date and version
+	rst	08		; DE := ver, HL := date
+;
+	ld	a,2		; UNA BIOS id = 2
+	ret			; and done
+;
+idbio1:
+	; Check for RomWBW (HBIOS)
+	ld	hl,($FFFE)	; HL := HBIOS ident location
+	ld	a,'W'		; First byte of ident
+	cp	(hl)		; Compare
+	jr	nz,idbio2	; Not HBIOS
+	inc	hl		; Next byte of ident
+	ld	a,~'W'		; Second byte of ident
+	cp	(hl)		; Compare
+	jr	nz,idbio2	; Not HBIOS
+;
+	ld	b,bf_sysver	; HBIOS: VER function
+	ld	c,0		; required reserved value
+	rst	08		; DE := version, L := platform id
+;	
+	ld	a,1		; HBIOS BIOS id = 1
+	ret			; and done
+;
+idbio2:
+	; No idea what this is
+	xor	a		; Setup return value of 0
 	ret			; and done
 ;
 ; Print character in A without destroying any registers
@@ -375,8 +433,13 @@ erruse:	; command usage error (syntax)
 errprm:	; command parameter error (syntax)
 	ld	de,msgprm
 	jr	err
+;
+errbio:	; invalid BIOS or version
+	ld	de,msgbio
+	jr	err
+;
 err:	; print error string and return error signal
-	call	crlf		; print newline
+	call	crlf2		; print newline
 ;
 err1:	; without the leading crlf
 	call	prtstr		; print error string
@@ -407,5 +470,7 @@ msguse	.db	"Usage: TIMER [/C] [/?]",13,10
 	.db	"      TIMER /?        (display version and usage)",13,10
 	.db	"      TIMER /C        (display timer value continuously)",0
 msgprm	.db	"Parameter error (TIMER /? for usage)",0
+msgbio	.db	"Incompatible BIOS or version, "
+	.db	"HBIOS v", '0' + rmj, ".", '0' + rmn, " required",0
 ;
 	.end

@@ -51,6 +51,8 @@ $ComFile = "${OutDir}/${RomName}.com"
 $ImgFile = "${OutDir}/${RomName}.img"
 if ($Platform -eq "UNA") {$CBiosFile = '../CBIOS/cbios_una.bin'} else {$CBiosFile = '../CBIOS/cbios_wbw.bin'}
 
+$RomApps = "assign","fdu","format","mode","osldr","rtc","survey","syscopy","sysgen","talk","timer","xm"
+
 ""
 "Building ${RomName}: ${ROMSize}KB ROM configuration ${Config} for Z${CPUType}..."
 ""
@@ -129,7 +131,14 @@ if (Test-Path "../RomDsk/${Platform}/*.*")
 {
 	cpmcp -f $RomFmt $RomDiskFile ../RomDsk/${Platform}/*.* 0:
 }
-cpmcp -f $RomFmt $RomDiskFile ../Apps/*.com 0:
+
+foreach ($App in $RomApps)
+{
+	cpmcp -f $RomFmt $RomDiskFile ../../Binary/Apps/$App.com 0:
+}
+
+
+# cpmcp -f $RomFmt $RomDiskFile ../Apps/*.com 0:
 cpmcp -f $RomFmt $RomDiskFile *.sys 0:
 
 if ($Platform -eq "UNA")

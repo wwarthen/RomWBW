@@ -16,4 +16,4 @@ zx mload25 XM=xmdm125,xmhb
 rem set PROMPT=[Build] %PROMPT%
 rem %comspec%
 
-move /Y XM.com ..
+copy /Y XM.com ..\..\..\Binary\Apps\

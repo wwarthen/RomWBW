@@ -9,3 +9,4 @@ if exist *.prn del *.prn
 
 setlocal & cd XM && call Clean || exit /b 1 & endlocal
 setlocal & cd FDU && call Clean || exit /b 1 & endlocal
+setlocal & cd PTxPlay && call Clean || exit /b 1 & endlocal

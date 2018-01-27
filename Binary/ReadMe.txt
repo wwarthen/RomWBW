@@ -105,3 +105,10 @@ indicates which file targets each of the Propeller board variants:
 
 Refer to the board documentation of the boards for more information 
 on how to program the EEPROMs on these boards.
+
+Apps Directory
+--------------
+
+The Apps subdirectory contains the executable application files that
+are specific to RomWBW.  The source for these applications is found
+in the Source\Apps directory of the distribution.
