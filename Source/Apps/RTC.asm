@@ -28,6 +28,7 @@ mask_rst	.EQU	%00010000	; De-activate RTC reset line
 PORT_SBC	.EQU	$70		; RTC port for SBC/ZETA
 PORT_N8		.EQU	$88		; RTC port for N8
 PORT_MK4	.EQU	$8A		; RTC port for MK4
+PORT_RC		.EQU	$C0		; RTC port for RC2014
 
 BDOS		.EQU	5		; BDOS invocation vector
 ;
@@ -276,7 +277,7 @@ RTC_WR1:
 	PUSH	AF			; save accumulator as it is the index counter in FOR loop
 	LD	A,C			; get the value to be written in A from C (passed value to write in C)
 	BIT	0,A			; is LSB a 0 or 1?
-	JP	Z,RTC_WR2		; if it’s a 0, handle it at RTC_WR2.
+	JP	Z,RTC_WR2		; if it's a 0, handle it at RTC_WR2.
 					; LSB is a 1, handle it below
 					; setup RTC latch with RST and DATA high, SCLK low
 	LD	A,mask_rst + mask_data
@@ -1062,6 +1063,10 @@ HINIT:
 	LD	DE,PLT_MK4
 	CP	$05		; Mark IV
 	JR	Z,RTC_INIT2
+	LD	C,PORT_RC
+	LD	DE,PLT_RC
+	CP	$07		; RC2014
+	JR	Z,RTC_INIT2
 ;
 	; Unknown platform
 	LD	DE,PLTERR	; BIOS error message
@@ -1673,6 +1678,7 @@ UBTAG	.TEXT	"UNA UBIOS"
 PLT_SBC	.TEXT	", RTC Latch Port 0x70\r\n$"
 PLT_N8	.TEXT	", RTC Latch Port 0x88\r\n$"
 PLT_MK4	.TEXT	", RTC Latch Port 0x8A\r\n$"
+PLT_RC	.TEXT	", RTC Latch Port 0xC0\r\n$"
 
 ;
 ; Generic FOR-NEXT loop algorithm
