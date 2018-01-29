@@ -6,5 +6,5 @@
 ***                                                                 ***
 ***********************************************************************
 
-This directory contains some sample ProTracker sound
-files that can be played by the PTxPlay application.
+This directory contains some sample ProTracker and MYM sound
+files that can be played by the TUNE application.

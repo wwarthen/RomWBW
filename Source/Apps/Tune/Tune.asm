@@ -1,38 +1,47 @@
 ;===============================================================================
-; PTXPLAY - Play PT2/PT3 sound files
+; TUNE - Play PT2/PT3/MYM sound files
 ;
 ;===============================================================================
 ;
 ;	Author:  Wayne Warthen (wwarthen@gmail.com)
 ;
-;	This application is basically just a RomWBW wrapper of the
-;       Universal PT2 and PT3 player by S.V.Bulba.  See comments
-;       below.
+;	This application is basically just a RomWBW wrapper for the
+;       Universal PT2 and PT3 player by S.V.Bulba and the MYM player
+;       by Marq/Lieves!Tuore.  See comments below.
 ;_______________________________________________________________________________
 ;
 ; Usage:
-;   PTXPLAY <filename>
+;   TUNE <filename>
 ;
 ;   <filename> of sound file to load and play
-;   Filename extension determines file type (.pt2 or .pt3)
+;   Filename extension determines file type (.PT2, .PT3, or .MYM)
 ;
 ; Notes:
-;   - Supports AY-3-8910 or compatible (such as YM2149).
+;   - Supports AY-3-8910, YM2149, etc.
+;   - Plays PT2, PT3, or MYM format files.  File extension (.PT2, .PT3, or .MYM)
+;     determines file type.
 ;   - Max Z80 CPU clock is about 8MHz or sound chip will not handle speed.
-;   - Z180 is automatically switched to maximum I/O wait state insertions
-;     during I/O to sound chip.
+;   - Higher CPU clock speeds are possible on Z180 because extra I/O
+;     wait states are added during I/O to sound chip.
 ;   - Uses hardware timer support on Z180 processors.  Otherwise, a delay
 ;     loop calibrated to CPU speed is used.
-;   - Plays PT2 or PT3 format files.  File extension (.PT2 or .PT3) determines
-;     file type.
+;   - Delay loop is calibrated to CPU speed, but it does not compensate for
+;     time variations in each quark loop resulting from data decompression.
+;     An average quark processing time is assumed in each loop.
 ;_______________________________________________________________________________
 ;
 ; Change Log:
 ;   2018-01-26 [WBW] Initial release
+;   2018-01-28 [WBW] Added support for MYM sound files
 ;_______________________________________________________________________________
 ;
 ; ToDo:
+;   1) Add an option to play file in a continuous loop?
 ;_______________________________________________________________________________
+;
+;===============================================================================
+; Main program
+;===============================================================================
 ;
 RESTART		.EQU	$0000		; CP/M restart vector
 BDOS		.EQU	$0005		; BDOS invocation vector
@@ -49,197 +58,272 @@ DCNTL		.EQU	$72		; Z180 DCNTL PORT
 ;
 FCB		.EQU	$5C		; Location of default FCB
 ;
+HEAPEND		.EQU	$C000		; End of heap storage
+;
+TYPPT2		.EQU	1		; FILTYP value for PT2 sound file
+TYPPT3		.EQU	2		; FILTYP value for PT3 sound file
+TYPMYM		.EQU	3		; FILTYP value for MYM sound file
+;
 ;
 ;
 	.ORG	$0100
 ;
 	CALL	CRLF
-	LD	DE,MSGBAN	; Point to banner message
-	CALL	PRTSTR		; Print message
-;	
-	; Check BIOS and version
-	CALL	IDBIO		; Identify hardware BIOS
-	CP	1		; RomWBW HBIOS?
-	JP	NZ,ERRBIO	; If not, handle BIOS error
-	LD	A,RMJ << 4 | RMN	; expected HBIOS ver
-	CP	D		; compare with result above
-	JP	NZ,ERRBIO	; handle BIOS error
+	LD	DE,MSGBAN		; Point to banner message
+	CALL	PRTSTR			; Print message
+;		
+	; Check BIOS and version	
+	CALL	IDBIO			; Identify hardware BIOS
+	CP	1			; RomWBW HBIOS?
+	JP	NZ,ERRBIO		; If not, handle BIOS error
+	LD	A,RMJ << 4 | RMN	; Expected HBIOS ver
+	CP	D			; Compare with result above
+	JP	NZ,ERRBIO		; Handle BIOS error
 ;	
 	; Use platform id to derive port addresses
-	LD	A,L		; Platform ID is still in L from above
-	LD	C,L		; Save platform id in C for now
-	LD	HL,$D0D8	; For RC2014, RSEL=D8, RDAT=D0
-	LD	DE,MSGRC	; Message for RC2014 platform
-	CP	7		; RC2014?
-	JR	Z,_SETP		; If so, set ports
-	LD	HL,$9D9C	; For N8, RSEL=9C, RDAT=9D
-	LD	DE,MSGN8	; Message for N8 platform
-	CP	4		; N8?
-	JR	Z,_SETP		; If so, set ports
-	LD	HL,$9B9A	; Otherwise SCG, RSEL=9A, RDAT=9B
-	LD	DE,MSGSCG	; Message for SCG platform
-	LD	A,$FF		; Write $FF to the
-	OUT	($9C),A		; ... SCG ACR register to activate card
-_SETP	LD	(PORTS),HL	; Save port values
-	CALL	CRLF		; Formatting
-	CALL	PRTSTR		; Display platform string
+	LD	A,L			; Platform ID is still in L from above
+	LD	C,L			; Save platform id in C for now
+	LD	HL,$D0D8		; For RC2014, RSEL=D8, RDAT=D0
+	LD	DE,MSGRC		; Message for RC2014 platform
+	CP	7			; RC2014?
+	JR	Z,_SETP			; If so, set ports
+	LD	HL,$9D9C		; For N8, RSEL=9C, RDAT=9D
+	LD	DE,MSGN8		; Message for N8 platform
+	CP	4			; N8?
+	JR	Z,_SETP			; If so, set ports
+	LD	HL,$9B9A		; Otherwise SCG, RSEL=9A, RDAT=9B
+	LD	DE,MSGSCG		; Message for SCG platform
+	LD	A,$FF			; Write $FF to the
+	OUT	($9C),A			; ... SCG ACR register to activate card
+_SETP	LD	(PORTS),HL		; Save port values
+	CALL	CRLF			; Formatting
+	CALL	PRTSTR			; Display platform string
 ;	
 	; Choose quark wait mode based on platform
-	LD	A,C		; Recover platform id
-	LD	B,1		; Assume timer mode
-	LD	DE,MSGTIM	; Corresponding display string
-	CP	4		; N8?
-	JR	Z,_SETM		; If so, commit timer mode
-	CP	5		; MK4?
-	JR	Z,_SETM		; If so, commit timer mode
-	LD	B,0		; Otherwise, delay mode
-	LD	DE,MSGDLY	; Corresponding display string
-_SETM	LD	A,B		; Mode flag value to A
-	LD	(WMOD),A	; Save wait mode
-	CALL	PRTSTR		; Print it
+	LD	A,C			; Recover platform id
+	LD	B,1			; Assume timer mode
+	LD	DE,MSGTIM		; Corresponding display string
+	CP	4			; N8?
+	JR	Z,_SETM			; If so, commit timer mode
+	CP	5			; MK4?
+	JR	Z,_SETM			; If so, commit timer mode
+	LD	B,0			; Otherwise, delay mode
+	LD	DE,MSGDLY		; Corresponding display string
+_SETM	LD	A,B			; Mode flag value to A
+	LD	(WMOD),A		; Save wait mode
+	CALL	PRTSTR			; Print it
 ;	
 	; Get CPU speed & type from RomWBW HBIOS and compute quark delay factor
-	LD	B,$F8		; HBIOS SYSGET function 0xF8
-	LD	C,$F0		; CPUINFO subfunction 0xF0
-	RST	08		; Do it, DE := CPU speed in KHz
-	SRL	D		; Divide by 2
-	RR	E		; ... for delay factor
-	EX	DE,HL		; Move result to HL
-	OR	A		; Clear carry
-	LD	DE,185		; Avg TS / quark = 7400, so 185 delay loops
-	SBC	HL,DE		; ... removed for quark processing overhead
-	LD	(QDLY),HL	; Save result as quark delay factor
+	LD	B,$F8			; HBIOS SYSGET function 0xF8
+	LD	C,$F0			; CPUINFO subfunction 0xF0
+	RST	08			; Do it, DE := CPU speed in KHz
+	SRL	D			; Divide by 2
+	RR	E			; ... for delay factor
+	EX	DE,HL			; Move result to HL
+	LD	(QDLY),HL		; Save result as quark delay factor
 ;	
 	; Test for hardware (sound chip detection)
-	LD	DE,(PORTS)	; D := RDAT, E := RSEL
-	LD	C,E		; Port = RSEL
-	LD	A,2		; Register 2
-	OUT	(C),A		; Select register 2
-	LD	C,D		; Port = RDAT
-	LD	A,$AA		; Value = $AA
-	OUT	(C),A		; Write $AA to register 2
-	LD	C,E		; Port = RSEL
-	IN	A,(C)		; Read back value in register 2
-	;CALL	PRTHEX		; *debug*
-	CP	$AA		; Value as written?
-	JP	NZ,ERRHW	; If not, handle hardware error
+	LD	DE,(PORTS)		; D := RDAT, E := RSEL
+	LD	C,E			; Port = RSEL
+	LD	A,2			; Register 2
+	OUT	(C),A			; Select register 2
+	LD	C,D			; Port = RDAT
+	LD	A,$AA			; Value = $AA
+	OUT	(C),A			; Write $AA to register 2
+	LD	C,E			; Port = RSEL
+	IN	A,(C)			; Read back value in register 2
+	;CALL	PRTHEX			; *debug*
+	CP	$AA			; Value as written?
+	JP	NZ,ERRHW		; If not, handle hardware error
+;
+	; Clear heap storage
+	LD	HL,HEAP			; Point to heap start
+	XOR	A			; A := zero
+	LD	(HEAP),A		; Clear first byte of heap
+	LD	DE,HEAP+1		; Set dest to next byte
+	LD	BC,HEAPEND-HEAP-1	; Size of heap except first byte
+	LDIR				; Propagate zero to rest of heap
 ;	
-	; Check sound filename (must be *.PT2 or *.PT3)
-	LD	A,(FCB+1)	; Get first char of filename
-	CP	' '		; Compare to blank
-	JP	Z,ERRNAM	; If so, missing filename
-	LD	A,(FCB+9)	; Extension char 1
-	CP	'P'		; Check for 'P'
-	JP	NZ,ERRNAM	; If not, bad file extension
-	LD	A,(FCB+10)	; Extension char 2
-	CP	'T'		; Check for 'T'
-	JP	NZ,ERRNAM	; If not, bad file extension
-	LD	A,(FCB+11)	; Extension char 3
-	LD	C,2		; SETUP value of 2 for PT2 sound file
-	CP	'2'		; Check for '2'
-	JR	Z,_SET		; If so, commit SETUP value
-	LD	C,0		; SETUP value of 0 for PT3 sound file
-	CP	'3'		; Check for '3'
-	JR	Z,_SET		; If so, commit SETUP value
-	JP	ERRNAM		; Anything else is a bad file extension
-_SET	LD	A,C		; Get SETUP value
-	LD	(START+10),A	; Save SETUP value
+	; Check sound filename (must be *.PT2, *.PT3, or *.MYM)
+	LD	A,(FCB+1)		; Get first char of filename
+	CP	' '			; Compare to blank
+	JP	Z,ERRCMD		; If so, missing filename
+	LD	A,(FCB+9)		; Extension char 1
+	CP	'P'			; Check for 'P'
+	JP	NZ,CHKMYM		; If not, check for MYM extension
+	LD	A,(FCB+10)		; Extension char 2
+	CP	'T'			; Check for 'T'
+	JP	NZ,ERRNAM		; If not, bad file extension
+	LD	A,(FCB+11)		; Extension char 3
+	LD	C,TYPPT2		; Assume PT2 file type
+	CP	'2'			; Check for '2'
+	JR	Z,_SET			; If so, commit file type value
+	LD	C,TYPPT3		; Assume PT3 file type
+	CP	'3'			; Check for '3'
+	JR	Z,_SET			; If so, commit file type value
+	JP	ERRNAM			; Anything else is a bad file extension
+CHKMYM	LD	A,(FCB+9)		; Extension char 1
+	CP	'M'			; Check for 'M'
+	JP	NZ,ERRNAM		; If not, bad file extension
+	LD	A,(FCB+10)		; Extension char 2
+	CP	'Y'			; Check for 'Y'
+	JP	NZ,ERRNAM		; If not, bad file extension
+	LD	A,(FCB+11)		; Extension char 3
+	LD	C,TYPMYM		; Assume MYM file type
+	CP	'M'			; Check for 'M'
+	JR	Z,_SET			; If so, commit file type value
+	JP	ERRNAM			; Anything else is a bad file extension
+_SET	LD	A,C			; Get file type value
+	LD	(FILTYP),A		; Save file type value
 ;
 	; Load sound file
-_LD0	LD	C,15		; CPM Open File function
-	LD	DE,FCB		; FCB
-	CALL	BDOS		; Do it
-	INC	A		; Test for error $FF
-	JP	Z,ERRFIL	; Handle file error
+_LD0	LD	C,15			; CPM Open File function
+	LD	DE,FCB			; FCB
+	CALL	BDOS			; Do it
+	INC	A			; Test for error $FF
+	JP	Z,ERRFIL		; Handle file error
 ;	
-	LD	HL,MDLADDR
-	LD	(DMA),HL
+	LD	A,(FILTYP)		; Get file type
+	LD	HL,MDLADDR		; Assume load address
+	LD	(DMA),HL		; ... for PTx files
+	CP	TYPMYM			; MYM file?
+	JR	NZ,_LD			; If not, all set
+	LD	HL,rows			; Otherwise, load address
+	LD	(DMA),HL		; ... for MYM files
 ;
-_LD	LD	HL,(DMA)	; Get load address
-	PUSH	HL		; Save it
-	LD	DE,128		; Bump by size of
-	ADD	HL,DE		; ... one record
-	LD	(DMA),HL	; Save for next loop
-	LD	A,$C0		; A := page limit for load
-	CP	H		; Check to see if limit hit
-	JP	Z,ERRSIZ	; Handle size error
-	POP	DE		; Restore current DMA to DE
-	LD	C,26		; CPM Set DMA function
-	CALL	BDOS		; Read next 128 bytes
-;	
-	LD	C,20		; CPM Read Sequential function
-	LD	DE,FCB		; FCB
-	CALL	BDOS		; Read next 128 bytes
-	OR	A		; Set flags to check EOF
-	JR	NZ,_LDX		; Non-zero is EOF
-	JR	Z,_LD		; Load loop
-;	
-_LDX	LD	C,16		; CPM Close File function
-	LD	DE,FCB		; FCB
-	CALL	BDOS		; Do it
-;	
-	; Play loop
-	CALL	CRLF2		; Formatting
-	LD	DE,MSGPLY	; Playing message
-	CALL	PRTSTR		; Print message
-	;CALL	CRLF2		; Formatting
-;	
-	CALL	START		; Do initialization
-_LP	CALL	START+5		; Play one quark
-	LD	A,(START+10)	; Get setup byte
-	BIT	7,A		; Check bit 7 (loop point passed)
-	JR	NZ,EXIT		; Bail out when done playing
-	CALL	GETKEY		; Check for keypress
-	JR	NZ,EXIT		; Abort on keypress
-	;LD	A,13		; Back to
-	;CALL	PRTCHR		; ... start of line
-	;LD	A,(CurPos)	; Get current position
-	;CALL	PRTHEX		; ... and display it
-	CALL	WAITQ		; Wait one quark period
-	JR	_LP		; Loop for next quark
+_LD	LD	HL,(DMA)		; Get load address
+	PUSH	HL			; Save it
+	LD	DE,128			; Bump by size of
+	ADD	HL,DE			; ... one record
+	LD	(DMA),HL		; Save for next loop
+	LD	A,HEAPEND >> 8		; A := page limit for load
+	CP	H			; Check to see if limit hit
+	JP	Z,ERRSIZ		; Handle size error
+	POP	DE			; Restore current DMA to DE
+	LD	C,26			; CPM Set DMA function
+	CALL	BDOS			; Read next 128 bytes
+;		
+	LD	C,20			; CPM Read Sequential function
+	LD	DE,FCB			; FCB
+	CALL	BDOS			; Read next 128 bytes
+	OR	A			; Set flags to check EOF
+	JR	NZ,_LDX			; Non-zero is EOF
+	JR	Z,_LD			; Load loop
+;		
+_LDX	LD	C,16			; CPM Close File function
+	LD	DE,FCB			; FCB
+	CALL	BDOS			; Do it
+;		
+	; Play loop	
+	CALL	CRLF2			; Formatting
+	LD	DE,MSGPLY		; Playing message
+	CALL	PRTSTR			; Print message
+	;CALL	CRLF2			; Formatting
+	
+	LD	A,(FILTYP)		; Get file type
+	CP	TYPPT2			; PT2?
+	JR	Z,GOPT2			; If so, do it
+	CP	TYPPT3			; PT3?
+	JR	Z,GOPT3			; If so, do it
+	CP	TYPMYM			; MYM?
+	JR	Z,gomym			; If so, do it
+	JP	ERRNAM			; This should never happen
+
+GOPT2	LD	A,2			; SETUP value to PT2 sound files
+	LD	(START+10),A		; Save it
+	; Avg TS / quark for PT2 files has *not* been measured!!!
+	LD	DE,185			; Avg TS / quark = 7400, so 185 delay loops
+	JR	GOPTX			; Play PTx file
+
+GOPT3	LD	A,0			; SETUP value to PT3 sound files
+	LD	(START+10),A		; Save it
+	LD	DE,185			; Avg TS / quark = 7400, so 185 delay loops
+	JR	GOPTX			; Play PTx file
+
+GOPTX	LD	HL,(QDLY)		; Get basic quark delay
+	OR	A			; Clear carry
+	SBC	HL,DE			; Adjust for file type
+	LD	(QDLY),HL		; Save updated quark delay factor
+	CALL	START			; Do initialization
+PTXLP	CALL	START+5			; Play one quark
+	LD	A,(START+10)		; Get setup byte
+	BIT	7,A			; Check bit 7 (loop point passed)
+	JR	NZ,EXIT			; Bail out when done playing
+	CALL	GETKEY			; Check for keypress
+	JR	NZ,EXIT			; Abort on keypress
+	;LD	A,13			; Back to
+	;CALL	PRTCHR			; ... start of line
+	;LD	A,(CurPos)		; Get current position
+	;CALL	PRTHEX			; ... and display it
+	CALL	WAITQ			; Wait one quark period
+	JR	PTXLP			; Loop for next quark
 ;
-EXIT	CALL	START+8		; Mute audio
-	;CALL	CRLF2		; Formatting
-	LD	DE,MSGEND	; Completion message
-	CALL	PRTSTR		; Print message
-	CALL	CRLF		; Formatting
-	JP	0		; Exit the easy way
+gomym	ld	hl,(QDLY)		; Get basic quark delay
+	or	a			; Clear carry
+	ld	de,125			; Avg TS / quark = ~5000, so 125 delay loops
+	sbc	hl,de			; Adjust for file type
+	ld	(QDLY),hl		; Save updated quark delay factor
+	;ld	bc,(rows)
+	;call	PRTHEXWORD
+	call	mymini			; Initialize player
+        call    extract         	; Unpack the first fragment
+mymlp	call	extract
+	jr	nc,EXIT			; CF clear at end of tune
+waitvb	call	WAITQ
+	call	upsg			; Update PSG registers
+	call	GETKEY			; Check for keypess
+	jr	nz,EXIT			; Bail out if so
+	ld      a,(played)      	; Wait until VBI has played a fragment
+        or      a
+        jr      nz,waitvb
+        ld      (psource),iy
+        ld      a,FRAG
+        ld      (played),a
+	;call	PRTDOT
+	jr	mymlp
+;	
+EXIT	CALL	START+8			; Mute audio
+	;CALL	CRLF2			; Formatting
+	LD	DE,MSGEND		; Completion message
+	CALL	PRTSTR			; Print message
+	CALL	CRLF			; Formatting
+	JP	0			; Exit the easy way
 ;
 ; Wait for quark play time.  Can use hardware timer if
 ; supported by hardware or simple delay loop otherwise.
 ; Delay loop requires QDLY to be pre-set to to achieve 
 ; optimal 20ms wait time.
 ;
-WAITQ	LD	A,(WMOD)	; Get delay mode
-	OR	A		; Set flags
-	JR	Z,DLY		; Delay mode
+WAITQ	LD	A,(WMOD)		; Get delay mode
+	OR	A			; Set flags
+	JR	Z,DLY			; Delay mode
+;		
+	; Timer loop	
+	CALL	TIM2			; Read timer LSB into A
+	LD	C,A			; Init prev value
+TIM1	PUSH	BC			; Save prev value
+	CALL	TIM2			; Read timer LSB into A
+	POP	BC			; Recover prev value
+	CP	C			; Compare to prev
+	RET	NZ			; Done if changed
+	JR	TIM1			; Else, loop
 ;	
-	; Timer loop
-	CALL	TIM2		; Read timer LSB into A
-	LD	C,A		; Init prev value
-TIM1	PUSH	BC		; Save prev value
-	CALL	TIM2		; Read timer LSB into A
-	POP	BC		; Recover prev value
-	CP	C		; Compare to prev
-	RET	NZ		; Done if changed
-	JR	TIM1		; Else, loop
-;
-TIM2	LD	B,$F8		; BIOS SYSGET function
-	LD	C,$D0		; TIMER sub-function
-	RST	08		; Call BIOS
-	LD	A,L		; MSB to A
-	RET			; Return to loop
+TIM2	LD	B,$F8			; BIOS SYSGET function
+	LD	C,$D0			; TIMER sub-function
+	RST	08			; Call BIOS
+	LD	A,L			; MSB to A
+	RET				; Return to loop
 ;	
 	; Delay spin loop (40 tstates per loop)
-DLY	LD	BC,(QDLY)	; Load quark delay factor
-DLY1	DEC	BC              ; [6]
-	NOP			; [4]
-	NOP			; [4]
-	NOP			; [4]
-	NOP			; [4]
-	LD	A,B             ; [4]
-	OR	C               ; [4]
-	JP	NZ,DLY1		; [10]
+DLY	LD	BC,(QDLY)		; Load quark delay factor
+DLY1	DEC	BC              	; [6]
+	NOP				; [4]
+	NOP				; [4]
+	NOP				; [4]
+	NOP				; [4]
+	LD	A,B             	; [4]
+	OR	C               	; [4]
+	JP	NZ,DLY1			; [10]
 	RET
 ;
 ; Get a keystroke from CPM
@@ -477,6 +561,10 @@ ERRHW:	; Hardware error, sound chip not detected
 	LD	DE,MSGHW
 	JR	ERR
 ;
+ERRCMD:	; Command error, display usage info
+	LD	DE,MSGUSE
+	JR	ERR
+;
 ERRNAM:	; Missing or invalid filename parameter
 	LD	DE,MSGNAM
 	JR	ERR
@@ -503,6 +591,7 @@ QDLY	.DW	0		; quark delay factor
 WMOD	.DB	0		; delay mode, non-zero to use timer
 DCSAV	.DB	0		; for saving Z180 DCNTL value
 DMA	.DW	0		; Working DMA
+FILTYP	.DB	0		; Sound file type (TYPPT2, TYPPT3, TYPMYM)
 
 TMP	.DB	0		; work around use of undocumented Z80
 
@@ -510,13 +599,15 @@ PORTS:
 RSEL	.DB	0		; Register selection port
 RDAT	.DB	0		; Register data port
 	
-MSGBAN	.DB	"PTxPlayer for RomWBW v1.0, 26-Jan-2018",13,10
-	.DB	"Copyright (C) 2018, Wayne Warthen, GNU GPL v3",13,10
-	.DB	"Copyright (C) 2004-2007 S.V.Bulba",0
+MSGBAN	.DB	"Tune Player for RomWBW v2.0, 28-Jan-2018",0
+MSGUSE	.DB	"Copyright (C) 2018, Wayne Warthen, GNU GPL v3",13,10
+	.DB	"PTxPlayer Copyright (C) 2004-2007 S.V.Bulba",13,10
+	.DB	"MYMPlay by Marq/Lieves!Tuore",13,10,13,10
+	.DB	"Usage: TUNE <filename>.[PT2|PT3|MYM]",0
 MSGBIO	.DB	"Incompatible BIOS or version, "
 	.DB	"HBIOS v", '0' + RMJ, ".", '0' + RMN, " required",0
 MSGHW	.DB	"Hardware error, sound chip not detected!",0
-MSGNAM	.DB	"Sound filename missing or invalid (must be .PT2 or .PT3)",0
+MSGNAM	.DB	"Sound filename invalid (must be .PT2, .PT3, or .MYM)",0
 MSGFIL	.DB	"Sound file not found!",0
 MSGSIZ	.DB	"Sound file too large to load!",0
 MSGRC	.DB	"RC2014 Ed Brindley Sound Module",0
@@ -525,8 +616,12 @@ MSGSCG	.DB	"RetroBrew SCG ECB Adapter",0
 MSGTIM	.DB	", timer mode",0
 MSGDLY	.DB	", delay mode",0
 MSGPLY	.DB	"Playing...",0
-MSGEND	.DB	"Done",0
-
+MSGEND	.DB	" Done",0
+;
+;===============================================================================
+; PTx Player Routines
+;===============================================================================
+;
 ;Universal PT2 and PT3 player for ZX Spectrum and MSX
 ;(c)2004-2007 S.V.Bulba <vorobey@mail.khstu.ru>
 ;http://bulba.untergrund.net (http://bulba.at.kz)
@@ -2030,56 +2125,7 @@ T_PACK	.DB $06EC*2/256,$06EC*2
 	.DB $0D60-$0C80
 	.DB $0E10-$0D60
 	.DB $0EF8-$0E10
-
-;vars from here can be stripped
-;you can move VARS to any other address
-
-VARS
-
-ChanA	.FILL CHP,$00
-ChanB	.FILL CHP,$00
-ChanC	.FILL CHP,$00
-
-;GlobalVars
-DelyCnt	.DB 0
-CurESld	.DW 0
-CurEDel	.DB 0
-Ns_Base_AddToNs
-Ns_Base	.DB 0
-AddToNs	.DB 0
-
-AYREGS
-
-VT_	.FILL 256,$00 ;CreatedVolumeTableAddress
-
-EnvBase	.EQU VT_+14
-
-T1_	.EQU VT_+16 ;Tone tables data depacked here
-
-T_OLD_1	.EQU T1_
-T_OLD_2	.EQU T_OLD_1+24
-T_OLD_3	.EQU T_OLD_2+24
-T_OLD_0	.EQU T_OLD_3+2
-T_NEW_0	.EQU T_OLD_0
-T_NEW_1	.EQU T_OLD_1
-T_NEW_2	.EQU T_NEW_0+24
-T_NEW_3	.EQU T_OLD_3
-
-PT2EMPTYORN .EQU VT_+31 ;1,0,0 sequence
-
-NT_	.FILL 192,$00 ;CreatedNoteTableAddress
-
-;local var
-Ampl	.EQU AYREGS+AmplC
-
-VAR0END	.EQU VT_+16 ;INIT zeroes from VARS to VAR0END-1
-
-VARSEND .EQU $
-
-MDLADDR .EQU $
-
-	.END
-
+;
 ;Release 0 steps:
 ;02/27/2005
 ;Merging PT2 and PT3 players; debug
@@ -2122,3 +2168,368 @@ MDLADDR .EQU $
 ;Notes:
 ;Pro Tracker 3.4r can not be detected by header, so PT3.4r tone
 ;tables realy used only for modules of 3.3 and older versions.
+;
+;===============================================================================
+; MYM Player Routines
+;===============================================================================
+;
+; MYMPLAY - Player for MYM-tunes
+; MSX-version by Marq/Lieves!Tuore & Fit 30.1.2000
+:
+; 1.2.2000  - Added the disk loader. Thanks to Yzi & Plaque for examples.
+; 7.2.2000  - Removed one unpack window -> freed 1.7kB memory
+;
+; Source suitable for Table-driven assembler (TASM), sorry all
+; Devpac freaks :v/
+
+FRAG    .equ    128     ; Fragment size
+REGS    .equ    14      ; Number of PSG registers
+FBITS   .equ    7       ; Bits needed to store fragment offset
+;
+mymini  exx                     ; Starting values for procedure readbits
+        ld      e,1
+        ld      d,0
+        ld      hl,data
+        exx
+
+        ld      hl,uncomp+FRAG  ; Starting values for the playing variables
+        ld      (dest1),hl
+        ld      (dest2),hl
+        ld      (psource),hl
+        ld      a,FRAG
+        ld      (played),a
+        ld      hl,0
+        ld      (prows),hl
+;
+; *** Unpack a fragment. Returns IY=new playing position for VBI
+extract:
+        ld      a,0
+regloop:
+        push    af
+        ld      c,a
+        ld      b,0
+        ld      hl,regbits      ; D=Bits in this PSG register
+        add     hl,bc
+        ld      d,(hl)
+        ld      hl,current      ; E=Current value of a PSG register
+        add     hl,bc
+        ld      e,(hl)
+
+        ld      bc,FRAG*3
+        ld      hl,(dest1)      ; IX=Destination 1
+        ld      ix,(dest1)
+        add     hl,bc
+        ld      (dest1),hl
+        ld      hl,(dest2)      ; HL=Destination 2
+        push    hl
+        add     hl,bc
+        ld      (dest2),hl
+        pop     hl
+
+        ex      af,af'
+        ld      a,FRAG          ; AF'=fragment end counter
+        ex      af,af'
+        ld      a,1             ; Get fragment bit
+        call    readbits
+        or      a
+        jr      nz,compfrag     ; 1=Compressed fragment, 0=Unchanged
+
+        ld      b,FRAG          ; Unchanged fragment: just set all to E
+sweep:  ld      (hl),e
+        inc     hl
+        ld      (ix),e
+        inc     ix
+        djnz    sweep
+        jp      nextreg
+
+compfrag:                       ; Compressed fragment
+        ld      a,1
+        call    readbits
+        or      a
+        jr      nz,notprev      ; 0=Previous register value, 1=raw/compressed
+
+        ld      (hl),e          ; Unchanged register
+        inc     hl
+        ld      (ix),e
+        inc     ix
+        ex      af,af'
+        dec     a
+        ex      af,af'
+        jp      nextbit
+
+notprev:
+        ld      a,1
+        call    readbits
+        or      a
+        jr      z,packed        ; 0=compressed data, 1=raw data
+
+        ld      a,d             ; Raw data, read regbits[i] bits
+        call    readbits
+        ld      e,a
+        ld      (hl),a
+        inc     hl
+        ld      (ix),a
+        inc     ix
+        ex      af,af'
+        dec     a
+        ex      af,af'
+        jp      nextbit
+
+packed: ld      a,FBITS         ; Reference to previous data:
+        call    readbits        ; Read the offset
+        ld      c,a
+        ld      a,FBITS         ; Read the number of bytes
+        call    readbits
+        ld      b,a
+
+        push    hl
+        push    bc
+        ld      bc,-FRAG
+        add     hl,bc
+        pop     bc
+        ld      a,b
+        ld      b,0
+        add     hl,bc
+        ld      b,a
+        push    hl
+        pop     iy              ; IY=source address
+        pop     hl
+
+        inc     b
+copy:   ld      a,(iy)          ; Copy from previous data
+        inc     iy
+        ld      e,a             ; Set current value
+        ld      (hl),a
+        inc     hl
+        ld      (ix),a
+        inc     ix
+        ex      af,af'
+        dec     a
+        ex      af,af'
+        djnz    copy
+
+nextbit:
+        ex      af,af'          ; If AF'=0 then fragment is done
+        ld      c,a
+        ex      af,af'
+        ld      a,c
+        or      a
+        jp      nz,compfrag
+
+nextreg:
+        pop     af
+        ld      b,0             ; Save the current value of PSG reg
+        ld      c,a
+        push    hl
+        ld      hl,current
+        add     hl,bc
+        ld      (hl),e
+        pop     hl
+
+        inc     a               ; Check if all registers are done
+        cp      REGS
+        jp      nz,regloop
+
+        or      a               ; Check if dest2 must be wrapped
+        ld      bc,rows
+        sbc     hl,bc
+        jr      nz,nowrap
+
+        ld      ix,FRAG+uncomp
+        ld      hl,FRAG+uncomp
+        ld      iy,(2*FRAG)+uncomp
+        jr      endext
+
+nowrap: ld      ix,uncomp
+        ld      hl,(2*FRAG)+uncomp
+        ld      iy,(FRAG)+uncomp
+
+endext: ld      (dest1),ix
+        ld      (dest2),hl
+
+        ld      bc,FRAG         ; Check end-of-file. Clumsy :v/
+        ld      hl,(prows)
+        add     hl,bc
+        ld      (prows),hl
+        ld      bc,(rows)
+        or      a
+        sbc     hl,bc
+	
+;        jr      c,noend         ; If rows>played rows then exit
+;        exx                     ; Otherwise restart
+;        ld      e,1
+;        ld      d,0
+;        ld      hl,data
+;        exx
+;        ld      hl,0
+;        ld      (prows),hl
+
+noend:  ret
+
+; *** Reads A bits from data, returns bits in A
+readbits:
+        exx
+        ld      b,a
+        ld      c,0
+
+onebit: sla     c               ; Get one bit at a time
+        rrc     e
+        jr      nc,nonew        ; Wrap the AND value
+        ld      d,(hl)
+        inc     hl
+
+nonew:  ld      a,e
+        and     d
+        jr      z,zero
+        inc     c
+zero:   djnz    onebit
+
+        ld      a,c
+        exx
+        ret
+
+; *** Update PSG registers
+upsg:	ld	a,(WMOD)	; if WMOD = 1, CPU is z180
+	or	a		; set flags
+	jr	z,upsg1		; skip z180 stuff
+	di
+	in0	a,(DCNTL)	; get wait states
+	ld	(DCSAV),a	; save value
+	or	%00110000	; force slow operation (i/o w/s=3)
+	out0	(DCNTL),a	; and update DCNTL
+
+upsg1:	ld	hl,(psource)
+	ld	de,(PORTS)	; E := RSEL, D := RDAT
+        xor     a
+
+psglp:	ld	c,e		; C := RSEL
+	out	(c),a		; Select register
+	ld	c,d		; C := RDAT
+	outi			; Set register value
+        inc     a		; Next register
+        ld      bc,(3*FRAG)-1   ; Bytes to skip before next reg-1
+        add     hl,bc		; Update HL
+        cp      REGS-1		; Check for next to last register?
+        jr      nz,psglp	; If not, loop
+
+        ld      a,$FF		; Prepare to check for $FF value
+        cp      (hl)            ; If last reg (13) is $FF
+        jr      z,notrig	; ... then don't output
+        ld      a,13		; Register 13
+	ld	c,e		; C := RSEL
+	out	(c),a		; Select register
+	ld	c,d		; C := RDAT
+        outi			; Set register value
+
+notrig: ld      hl,(psource)
+        inc     hl
+        ld      (psource),hl
+
+        ld      a,(played)
+        or      a
+        jr      z,endint
+        dec     a
+        ld      (played),a
+
+endint:	ld a,(WMOD)		; If WMOD = 1, CPU is Z180
+	or a			; Set flags
+	ret z			; Skip Z180 stuff
+	ld a,(DCSAV)		; Get saved DCNTL value
+	out0 (DCNTL),a		; And restore it
+	ei	
+	ret			; And done
+;
+; *** Program data
+played	.db	0       	; VBI counter
+dest1	.dw	0       	; Uncompress destination 1
+dest2	.dw	0       	; - " -                  2
+psource	.dw	0       	; Playing offset for the VB-player
+prows	.dw	0       	; Rows played so far
+
+; Bits per PSG register
+regbits	.db	8,4,8,4,8,4,5,8,5,5,5,8,8,8
+; Current values of PSG registers
+current	.db	0,0,0,0,0,0,0,0,0,0,0,0,0,0
+;
+;===============================================================================
+;===============================================================================
+; PTx/MYM Shared Heap Storage
+;===============================================================================
+;===============================================================================
+;
+; Note that two different storage layouts are defined below.  One for PTx and
+; one for MYM.  They share the same storage area starting at the HEAP marker,
+; but only one defintion will be active depending on the type of file
+; being played.
+;
+HEAP	.EQU	$
+;
+;===============================================================================
+; PTx Player Storage
+;===============================================================================
+;
+	.ORG	HEAP
+;
+;vars from here can be stripped
+;you can move VARS to any other address
+
+VARS
+
+ChanA	.DS CHP
+ChanB	.DS CHP
+ChanC	.DS CHP
+
+;GlobalVars
+DelyCnt	.DS 1
+CurESld	.DS 2
+CurEDel	.DS 1
+Ns_Base_AddToNs
+Ns_Base	.DS 1
+AddToNs	.DS 1
+
+AYREGS
+
+VT_	.DS 256		;CreatedVolumeTableAddress
+
+EnvBase	.EQU VT_+14
+
+T1_	.EQU VT_+16	;Tone tables data depacked here
+
+T_OLD_1	.EQU T1_
+T_OLD_2	.EQU T_OLD_1+24
+T_OLD_3	.EQU T_OLD_2+24
+T_OLD_0	.EQU T_OLD_3+2
+T_NEW_0	.EQU T_OLD_0
+T_NEW_1	.EQU T_OLD_1
+T_NEW_2	.EQU T_NEW_0+24
+T_NEW_3	.EQU T_OLD_3
+
+PT2EMPTYORN .EQU VT_+31	;1,0,0 sequence
+
+NT_	.FILL 192	;CreatedNoteTableAddress
+
+;local var
+Ampl	.EQU AYREGS+AmplC
+
+VAR0END	.EQU VT_+16 ;INIT zeroes from VARS to VAR0END-1
+
+VARSEND .EQU $
+
+MDLADDR .EQU $
+;
+;===============================================================================
+; MYM Player Storage
+;===============================================================================
+;
+	.ORG	HEAP
+; Reserve room for uncompressed data
+uncomp:
+.org $+(3*FRAG*REGS)
+
+; The tune is stored here
+rows:   .dw     0
+data:
+;
+;===============================================================================
+	.END
+

@@ -1,0 +1,50 @@
+
+      MYMPLAY 0.4 by Lieves!Tuore
+
+This is just a quick project inspired
+by discussion in comp.sys.msx.
+
+STSound by Leonard/Oxygene is a player
+for YM files, which are basically just
+plain PSG register dumps. The format is
+unfortunately not well suited for a
+low-memory system like MSX1. Therefore,
+I introduced a brand new fileformat
+called MYM. It holds the same data but
+compressed differently.
+
+To convert between YM and MYM there's a
+utility, YM2MYM. It packs a _raw_ YM
+file to a MYM file. So before you start
+to convert shitload of YM tunes, unpack
+them with LHA first. Only YM2/YM3/YM3b
+files can be converted at the moment.
+Many new YM's are YM5, however.
+
+The other files are MYM2YM for reverse
+conversion and of course the player
+itself (including the source). The
+assembly source is for Table-driven
+assembler (TASM), not GEN80, sorry
+about that. I stripped the tailing 0's
+from the final .COM file to make it
+smaller (Now it IS small ;v)
+
+Thanks to Spectrum and CPC fanatics
+we now have version for both platforms
+too. MSX version is the most "mature"
+one at the moment, but let's see about
+that...
+
+Version 0.4 comes with an updated
+YM2MYM converter that now recognizes
+YM5 files. The actual MYMPlay is
+better too, it takes 1.7kB less memory
+so you can play bigger tunes (if any).
+
+You'll find a pile of MYM tunes here:
+ftp://ftp.kameli.net/pub/mym/
+And the latest version of MYMPLAY here:
+http://www.kameli.net/lt/
+
+        Marq/L!T, marq@iki.fi
