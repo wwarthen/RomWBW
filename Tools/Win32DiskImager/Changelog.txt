@@ -1,0 +1,87 @@
+Release 1.0.0
+=============
+Add Verify Image function
+Added SHA1 and SHA256 checksums
+Read Only Allocated Partitions
+Save last opened folder
+Additional language translations and translation files location change
+Detect and disable USB Floppy (for now)
+Updated Innosetup for Windows 10 compatibility
+Updated QT/MinGW for Windows 10 compatibility/bug fixes
+
+Bug fixes:
+LP: 1285238 - Need to check filename text box for valid filename (not just a directory).
+LP: 1323876 - Installer doesn't create the correct permissions on install
+LP: 1330125 - Multi-partition SD card only partly copied
+SF:  7 - Windows 8 x64 USB floppy access denied. Possibly imaging C drive
+SF:  8 - Browse Dialog doesnt open then crashes application
+SF:  9 - Cannot Read SD Card
+SF: 13 - 0.9.5 version refuses to open read-only image
+SF: 15 - Open a image for write, bring window in the background
+SF: 27 - Error1: Incorrect function
+SF: 35 - Mismatch between allocating and deleting memory buffer
+SF: 39 - Miswrote to SSD
+SF: 40 - Disk Imager scans whole %USERPROFILE% on start
+SF: 45 - Translation files adustment
+
+Release 0.9.5
+=============
+Update copyright headers, bump for point release
+Fixed broken translation (caused build error).
+Converted build environment to QT 5.2/Mingw 4.8
+Added Italian translation (LP#1270388)
+Added translations.
+Start work on installer with Innosetup.
+
+
+Release 0.9
+===========
+Added custom file dialog window.
+
+Bug fixes:
+LP:1118217 - can not select SD card to write image to.
+LP:1191156 - File-open dialog does not accept non-existing *.img files as targets.
+
+
+Release 0.8
+===========
+Added drag and drop - Drag a file from Windows Explorer and drop it in the
+text window.
+Added DiskImagesDir environment variable for default images directory.
+Improved startup Downloads directory search.
+Add copy button for MD5.
+
+Bug fixes:
+LP:1080880 Add a copy button for MD5.
+LP:1157849 - Partial sectors not written.
+LP:1117840 Initial startup can take a long time (+20s) due to the "Downloads" find routine.
+LP:1118349 Application does not start.
+LP:1157849 Partial sectors not written.
+SF:1 Application doesn't start. No window appears.
+SF:3 No support of Russian characters in image file path
+SF:5 Very long app opening time
+
+
+Release 0.7
+===========
+Added default directory path pointing to the user's download directory.
+Fixed permission settings to require administrator privileges in Vista/7
+Reinstated DiskImager.rc rc file (qmake method lost too many options - may revisit later).
+Make MD5Sum selectable for copying.  Fixes LP:1080880.
+Add version info to the main window.
+Cleanup, move winver resources to project file.
+Renamed base translation for English.
+More translation updates, minor cleanup.
+Added translation capabilities.  Cleaned up some code formatting (broke up long lines).
+Testing changes for UTF16 support.
+Clean up mixed indentation types, some minor code cleanup.  no functional changes.
+Updating the 'driveLabel' stuff to use QString rather than char * on a suggestion from Roland Rudenauer
+
+Bug fixes:
+Fixed LP:1100228 "An error occurred while accessing the device. Error1: Incorrect function"
+Fixed LP:1102608 "Cannot load images from network shares"
+Fixed LP:1095038 "Error message encoding is messed up"
+Fixed LP:984510  "Cannot select Device"
+Fixed LP:923719  "An error occurred while accessing the device. Error1: Incorrect function"
+Fixed LP:985080  "C: with windows 7 partition erased with all data" (NOT FULLY VERIFIED)
+fixing memory leak
