@@ -1670,15 +1670,15 @@ RTC_GET_BUFFER:
 	.DB	0Ah, 0Dh		; line feed and carriage return
 	.DB	"$"			; line terminator
 
-BIOERR	.TEXT	"Unknown BIOS, aborting...\r\n$"
-PLTERR	.TEXT	"Unknown hardware platform, aborting...\r\n$"
-UBERR	.TEXT	"UNA UBIOS is not currently supported, aborting...\r\n$"
+BIOERR	.TEXT	"\r\nUnknown BIOS, aborting...\r\n$"
+PLTERR	.TEXT	"\r\n\r\nUnknown hardware platform, aborting...\r\n$"
+UBERR	.TEXT	"\r\nUNA UBIOS is not currently supported, aborting...\r\n$"
 HBTAG	.TEXT	"RomWBW HBIOS$"
 UBTAG	.TEXT	"UNA UBIOS"
-PLT_SBC	.TEXT	", RTC Latch Port 0x70\r\n$"
-PLT_N8	.TEXT	", RTC Latch Port 0x88\r\n$"
-PLT_MK4	.TEXT	", RTC Latch Port 0x8A\r\n$"
-PLT_RC	.TEXT	", RTC Latch Port 0xC0\r\n$"
+PLT_SBC	.TEXT	", SBC/Zeta RTC Latch Port 0x70\r\n$"
+PLT_N8	.TEXT	", N8 RTC Latch Port 0x88\r\n$"
+PLT_MK4	.TEXT	", Mark 4 RTC Latch Port 0x8A\r\n$"
+PLT_RC	.TEXT	", RC2014 RTC Latch Port 0xC0\r\n$"
 
 ;
 ; Generic FOR-NEXT loop algorithm
