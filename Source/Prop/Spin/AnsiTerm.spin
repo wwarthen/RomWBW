@@ -1,6 +1,7 @@
 '' AnsiTerm.spin
 ''
 '' MODIFIED BY WAYNE WARTHEN FOR ANSI COLOR CHARACTER SUPPORT
+'' SPEAKER ENHANCEMENT BY MICHAEL SCHWEIKERT
 ''
 '' based on...
 ''
@@ -12,7 +13,7 @@
 
 CON
   cols          = 80                  	' screen columns
-  rows          = 40                  	' screen rows
+  rows          = 30                  	' screen rows
   chars         = rows * cols         	' screen characters
   termRows      = 25                  	' rows in terminal area
   termChars     = termRows * cols      	' characters in terminal area
@@ -20,10 +21,16 @@ CON
   statArea	= termChars		' starting position of status area
   statRows	= rows - TermRows	' status area rows
   blank         = $20
+  
+  spkVol	= 75
+  spkMaxFrq	= 1_200
+  spkMinFrq	= 200
+  spkBase	= 13			' Speaker pin
 
 OBJ
   vga : "vgacolour"
   'vga : "vga8x8d"
+  spk : "E555_SPKEngine"
 
 VAR
   word  screen[chars]           	' screen character buffer
@@ -82,6 +89,17 @@ PUB vidOn
   
 PUB vidOff
   vga.stop
+  
+PUB speakerFrequency(newFrequency)
+  result := spk.speakerFrequency(newFrequency, spkBase)
+
+PUB speakerVolume(newVolume)
+  result := spk.speakerVolume(newVolume, spkBase)
+
+PUB beep
+  spk.speakerFrequency(1000, spkBase)
+  waitcnt((clkfreq >> 4) + cnt)
+  spk.speakerFrequency(-1, spkBase)
 
 PUB cls
   wordfill(@screen, (curAttr | blank), chars)
@@ -150,7 +168,7 @@ PUB statStr(row, col, attr, strVal) | nxtPos
 
 PUB statFill(row, col, attr, charVal, count)
   wordfill(@screen + ((statArea + (row * cols) + col) * 2), (attr | charVal), count)
-
+  
 PRI clsTerm
   wordfill (@screen, (curAttr | blank), termChars)
 
@@ -445,6 +463,10 @@ PUB processChar(c)
          pos -= 1
        setCursorPos(pos)
       return
+
+     if c == 7				' bel
+       beep
+       return
 
     1:					' Process char following escape
       case c

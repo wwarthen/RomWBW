@@ -127,8 +127,8 @@ PUB stop | i
 '' Stop VGA driver - frees two COGs
 
 	repeat i from 0 to 1
-	if cog[i]
-	cogstop(cog[i]~ - 1)
+	  if cog[i]
+	    cogstop(cog[i]~ - 1)
 
 
 CON

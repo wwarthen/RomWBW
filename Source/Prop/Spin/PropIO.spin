@@ -1,11 +1,11 @@
 {{
 
-  *********************************
-  *  PropIO 2 for RomWBW          *
-  *  Interface to RBC PropIO 2    *
-  *  Version 0.96                 *
-  *  March 11, 2018               *
-  *********************************
+  *******************************
+  *  PropIO for RomWBW          *
+  *  Interface to RBC PropIO    *
+  *  Version 0.96               *
+  *  March 11, 2018             *
+  *******************************
 
   Wayne Warthen
   wwarthen@gmail.com
@@ -31,7 +31,7 @@
 
     2012-02-20 WBW: Updated VGA_1024 ANSI emulation to handle 'f' the same as 'H'
     2014-01-16 WBW: /WAIT optimzation per Marko
-    2014-02-08 WBW: Adaptation for PropIO 2
+    2014-02-09 WBW: Clean up
     2015-11-15 WBW: Added SD card capacity reporting
     2018-03-11 WBW: Implement character attributes
 
@@ -43,13 +43,13 @@ CON
   _CLKMODE = XTAL1 + PLL16X
   _XINFREQ = 5_000_000
   
-  SLEEP = 60 * 5                ' Screen saver timeout in seconds
+  'SLEEP = 60 * 5                ' Screen saver timeout in seconds
+  SLEEP = 0			' Zero for no screen saver
   
   VGA_BASE = 16                 ' VGA Video pins 16-23 (??)
   KBD_BASE = 14                 ' PS/2 Keyboard pins 14-15 (DATA, CLK)
   SD_BASE = 24                  ' SD Card pins 24-27 (DO, CLK, DI, CS)
-  SPK_BASE = 13                 ' Speaker pin
-  
+
   STAT_ATTR1 = %00110000_00000000	' Status area screen attribute (first line)
   STAT_ATTR = %01110000_00000000	' Status area screen attribute
 
@@ -84,7 +84,6 @@ OBJ
   dsp : "AnsiTerm"                                      ' VGA Terminal Driver
   kbd : "Keyboard"                                      ' PS/2 Keyboard Driver
   sdc : "safe_spi"                                      ' SD Card Driver
-  spk : "E555_SPKEngine"                                ' Speaker Driver
   dbg : "Parallax Serial Terminal Null"                 ' Serial Port Driver (debug output)                                              
 
 VAR
@@ -101,7 +100,7 @@ VAR
   long  TimerCount
   long  DiskResult
   long  CardType
-  
+   
   byte	statRows
   byte	statCols
   
@@ -122,8 +121,7 @@ PUB main
     dsp.cls
   MsgNewLine
 
-  TimerCount := SLEEP  
-  dsp.vidOn
+  dsp.VidOn
 
   statRows := (dsp.statInfo >> 8)  & $FF
   statCols := dsp.statInfo & $FF
@@ -168,14 +166,15 @@ PUB main
     MsgStr(string(" OK"))
   MsgNewLine
 
-  MsgStr(string("Starting Timer..."))
-  Result := cognew(Timer, @TimerStack) 
-  if (Result < 0)
-    MsgStr(string(" Failed!   Error: "))
-    MsgDec(Result)
-  else
-    MsgStr(string(" OK"))
-  MsgNewLine
+  if (SLEEP > 0)
+    MsgStr(string("Starting Timer..."))
+    Result := cognew(Timer, @TimerStack) 
+    if (Result < 0)
+      MsgStr(string(" Failed!   Error: "))
+      MsgDec(Result)
+    else
+      MsgStr(string(" OK"))
+    MsgNewLine
 
   MsgStr(string("Starting PortIO cog..."))
   Result := cognew(@PortIO, 0) + 1
@@ -185,10 +184,6 @@ PUB main
   else
     MsgStr(string(" OK"))
   MsgNewLine
-
-  spk.speakerFrequency(1000, SPK_BASE)
-  waitcnt((clkfreq >> 4) + cnt)
-  spk.speakerFrequency(-1, SPK_BASE)
 
   MsgStr(string("PropIO Ready!"))
   MsgNewLine
@@ -319,13 +314,14 @@ PRI Timer
     waitcnt(clkfreq * 1 + cnt)
     if (TimerCount > 0)
       if (TimerCount == 1)
-        dsp.vidOff
+        dsp.VidOff
       TimerCount--
 
 PRI Activity
-  if (TimerCount == 0)
-    dsp.vidOn
-  TimerCount := SLEEP
+  if (SLEEP > 0)
+    if (TimerCount == 0)
+      dsp.VidOn
+    TimerCount := SLEEP
 
 {
 PRI DumpBuffer(Buffer) | i, j
@@ -342,17 +338,17 @@ PRI DumpBuffer(Buffer) | i, j
 DAT
 
 strVer	byte	"F/W v0.96",0
-strHW	byte	"PropIO v2",0
+strHW	byte	"PropIO",0
 strROM	byte	"RomWBW",0
 
 {{                        Ports
 
 
-                    +------ CLR
-                    |+----- /RD
+                    +------/WAIT
+                    |+-----/RD
                     ||+---- A1
                     |||+--- A0
-                    ||||+-- /CS
+                    ||||+--/CS
                     |||||
                     |||||
    P15..P0  -->  xxxxxxxx_xxxxxxxx
@@ -375,16 +371,25 @@ strROM	byte	"RomWBW",0
                         org 0
 
 PortIO
-                        mov     dira, BitCLR            ' Make sure we can write to CLR
-                        or      outa, BitCLR            ' Toggle CLR, make it high
-                        andn    outa, BitCLR            '   then low
+                        or  outa, BitWait               ' deassert wait (high)
+                        waitpeq BitCS, MaskCS           ' wait for CS to be deasserted (high)
+                        mov dira, DirMask               ' tri-state data and set cntl for input
 
-                        waitpeq MaskCS, MaskCS          ' wait for CS to be deasserted (high)
-                        waitpeq Zero, MaskCS            ' wait for CS to be asserted (low)
+                        'waitpeq Zero, MaskCS
+                        'andn outa, BitWait             ' assert wait (low)
 
-                        mov     TempAdr, ina            ' get input bits
-                        shr     TempAdr, #9             ' /RD, A1, A0 -> bits 2,1,0
-                        and     TempAdr, #$07           ' isolate the 3 bits
+                        ' Technique below from Marko using the 'wr' modifier on waitpeq:
+                        '   waitpeq target, mask wr will perform target += mask
+                        ' On entry outa is $1000 and WaitMask is $1100.  When waitpeq
+                        ' completes, outa += WaitMast ($2100).  So bit 16 will now be zero and
+                        ' this results in pin 16 going low (/WAIT asserted) as a side effect!  
+                        mov     outa, BitWait           ' /WAIT deasserted (high)
+                        waitpeq outa, WaitMask wr       ' wait for /CS low, note result is written!
+                        mov     outa, #0                ' clean up value of outa
+
+                        mov TempAdr, ina                ' get input bits
+                        shr TempAdr, #9                 ' /RD, A1, A0 -> bits 2,1,0
+                        and TempAdr, #$07               ' isolate the 3 bits
 
                         add     TempAdr,#JmpTable
                         movs    JmpCmd,TempAdr
@@ -482,7 +487,7 @@ BitsData                long    $00FF
 Zero                    long    $0000
 MaskCS                  long    $0100
 BitCS                   long    $0100
-BitCLR                  long    $1000
+BitWait                 long    $1000
 DirMask                 long    $1000
 WaitMask                long    $1100
 

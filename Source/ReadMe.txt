@@ -279,12 +279,11 @@ You may notice there are a few additional Build*.cmd files in the
 Source directory.  They are not used or required for building ROM 
 firmware.  Their purpose is described below:
 
-BuildHardware: Some of the RetroBrew Computer support boards
-               require onboard firmware separate from the CPU
-	       board firmware.  For the most part, this is the
-	       Propeller-based boards (ParPortProp and PropIO).
-	       This build script generates the firmware for these
-	       boards.
+BuildProp: Some RetroBrew Computer peripheral boards are based
+           on the Parallax Propeller.  The Propeller requires
+           custom onboard EEPROM firmware to operate.  This
+           command file builds the firmware images for each
+           of the Propeller-based boards.
 
 BuildImages: RomWBW has the ability to create floppy disk and hard
              disk images for use on systems running the RomWBW

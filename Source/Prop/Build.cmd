@@ -1,7 +1,7 @@
 @echo off
 setlocal
 
-set TOOLS=../../../Tools
+set TOOLS=../../Tools
 
 set PATH=%TOOLS%\bst;%PATH%
 
@@ -16,5 +16,5 @@ echo.
 echo Building %1...
 bstc Spin\%1 -e -l
 if errorlevel 1 goto :eof
-move /Y %1.eeprom "..\..\..\Binary"
+move /Y %1.eeprom "..\..\Binary"
 goto :eof

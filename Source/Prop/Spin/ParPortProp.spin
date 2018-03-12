@@ -38,17 +38,12 @@ CON
   _CLKMODE = XTAL1 + PLL16X
   _XINFREQ = 5_000_000
 
-  SLEEP = 60 * 5                ' Screen saver timeout in seconds
+  'SLEEP = 60 * 5                ' Screen saver timeout in seconds
+  SLEEP = 0			' Zero for no screen saver
   
-  SPK_VOL = 75
-
-  SPK_MAXFRQ = 1_200
-  SPK_MINFRQ = 200
-
   VGA_BASE = 16                 ' VGA Video pins 16-23 (??)
   KBD_BASE = 14                 ' PS/2 Keyboard pins 14-15 (DATA, CLK)
   SD_BASE = 24                  ' SD Card pins 24-27 (DO, CLK, DI, CS)
-  SPK_BASE = 13                 ' Speaker pin
 
   STAT_ATTR1 = %00110000_00000000	' Status area screen attribute (first line)
   STAT_ATTR = %01110000_00000000	' Status area screen attribute
@@ -106,7 +101,6 @@ OBJ
   sdc : "safe_spi"                                      ' SD Card Driver
   'dbg : "Parallax Serial Terminal"                      ' Serial Port Driver (debug output)
   dbg : "Parallax Serial Terminal Null"                 ' Do nothing for debug output
-  spk : "E555_SPKEngine"                                ' Speaker Driver
   sio : "FullDuplexSerial"                              ' Serial I/O                                              
   'sio : "FullDuplexSerialNull"                          ' Dummy driver to use when debugging                                              
 
@@ -148,7 +142,6 @@ PUB main | tmp
     dsp.cls
   MsgNewLine
 
-  TimerCount := SLEEP  
   dsp.VidOn
 
   statRows := (dsp.statInfo >> 8)  & $FF
@@ -209,14 +202,15 @@ PUB main | tmp
     MsgStr(string(" OK"))
   MsgNewLine
 
-  MsgStr(string("Starting Timer..."))
-  Result := cognew(Timer, @TimerStack) 
-  if (Result < 0)
-    MsgStr(string(" Failed!   Error: "))
-    MsgDec(Result)
-  else
-    MsgStr(string(" OK"))
-  MsgNewLine
+  if (SLEEP > 0)
+    MsgStr(string("Starting Timer..."))
+    Result := cognew(Timer, @TimerStack) 
+    if (Result < 0)
+      MsgStr(string(" Failed!   Error: "))
+      MsgDec(Result)
+    else
+      MsgStr(string(" OK"))
+    MsgNewLine
 
   MsgStr(string("Starting PortIO cog..."))
   Result := cognew(@Entry, 0) + 1
@@ -227,9 +221,7 @@ PUB main | tmp
     MsgStr(string(" OK"))
   MsgNewLine
 
-  spk.speakerFrequency(1000, SPK_BASE)
-  waitcnt((clkfreq >> 4) + cnt)
-  spk.speakerFrequency(-1, SPK_BASE)
+  dsp.beep
 
   MsgStr(string("ParPortProp Ready!"))
   MsgNewLine
@@ -481,9 +473,9 @@ PRI SpeakerTone | Freq, Duration, tmp
   dbg.Str(String("ms"))
   dbg.NewLine
 
-  spk.speakerFrequency(Freq, SPK_BASE)
+  dsp.speakerFrequency(Freq)
   waitcnt(Duration + cnt)
-  spk.speakerFrequency(-1, SPK_BASE)
+  dsp.speakerFrequency(-1)
 
   return
 
@@ -609,9 +601,10 @@ PRI Timer
       TimerCount--
 
 PRI Activity
-  if (TimerCount == 0)
-    dsp.VidOn
-  TimerCount := SLEEP
+  if (SLEEP > 0)
+    if (TimerCount == 0)
+      dsp.VidOn
+    TimerCount := SLEEP
 
 DAT
 
