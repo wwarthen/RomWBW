@@ -73,7 +73,7 @@ PUB vidon
   if (!vga.start(vgabasepin, @screen, @colors, @cursor, @sync))
     return false
   
-  waitcnt(clkfreq * 1 + cnt)    'wait 1 second for cogs to start
+  'waitcnt(clkfreq * 1 + cnt)    'wait 1 second for cogs to start
 
 
 PUB vidoff

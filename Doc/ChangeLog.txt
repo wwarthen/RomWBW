@@ -3,6 +3,7 @@ Version 2.9.1
 - E?B: Added support for RC2014 RTC
 - WBW: Converted PTXPLAY to TUNE (now plays PT2/PT3/MYM sounds files)
 - WBW: Updated Win32DiskImager to v1.0
+- WBW: Implemented character attributes on Propeller based consoles
 
 Version 2.9.0
 -------------
