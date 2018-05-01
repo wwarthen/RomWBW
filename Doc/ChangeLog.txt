@@ -5,6 +5,9 @@ Version 2.9.1
 - WBW: Updated Win32DiskImager to v1.0
 - WBW: Implemented character attributes on Propeller based consoles
 - M?S: Added support for BEL function in Propeller based consoles
+- WBW: Support additional escape sequences in Propeller console ANSI emulation
+- WBW: Map LPT: to second serial port, UL1: to third serial port
+- WBW: Update default IOBYTE so that LST:=LPT: by default
 
 Version 2.9.0
 -------------

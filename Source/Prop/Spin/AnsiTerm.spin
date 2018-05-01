@@ -199,6 +199,18 @@ PRI setMode(n)
     blink := 1
   elseif (n == 7)
     reverse := 1
+  
+  elseif (n == 21)
+    bold := 0
+  elseif (n == 22)
+    bold := 0
+  elseif (n == 24)
+    underscore := 0
+  elseif (n == 25)
+    blink := 0
+  elseif (n == 27)
+    reverse := 0
+    
   elseif ((n => 30) & (n =< 37))
     fg := cmap[(n - 30)]
   elseif ((n => 40) & (n =< 47))
