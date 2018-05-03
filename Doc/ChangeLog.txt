@@ -8,6 +8,7 @@ Version 2.9.1
 - WBW: Support additional escape sequences in Propeller console ANSI emulation
 - WBW: Map LPT: to second serial port, UL1: to third serial port
 - WBW: Update default IOBYTE so that LST:=LPT: by default
+- WBW: Fixed missing drive/head setup for writes in PPIDE
 
 Version 2.9.0
 -------------
