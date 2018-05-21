@@ -1,0 +1,165 @@
+SIMH (X)
+----
+- Test UART driver
+- Test HDSK driver
+
+Zeta 1 (X)
+------
+- Test UART driver
+- Test PPP detection (startup w/ and w/o PPP)
+- Test boot to CRT
+- Test PPPSD driver
+- Test PPPCON driver (video & kbd)
+- Test FD driver
+- Test FDU app
+
+Zeta 2 (X)
+------
+- Test UART driver
+- Test PPP detection (startup w/ and w/o PPP)
+- Test boot to CRT
+- Test PPPSD driver
+- Test PPPCON driver (video & kbd)
+- Test FD driver
+- Test FDU app
+
+RC2014 (X)
+------
+- Test SIO driver (Serial Module)
+- Test ACIA driver (Dual Serial Module)
+- Test IDE driver (Compact Flash Module)
+- Test PPIDE driver (IDE Module)
+- Test FD driver (SMC and WDC)
+- Test FDU app (SMC and WDC)
+
+N8-2312 (X)
+-------
+- Test ASCI driver
+- Test SD driver (CSIO mode)
+- Test FD driver
+- Test FDU app
+- Test TMS driver (video & kbd)
+
+N8-2511 ( )
+-------
+- Test ASCI driver
+- Test SD driver (Juha mode)
+- Test FD driver
+- Test FDU app
+- Test TMS driver (video & kbd)
+
+SBC (X)
+---
+- Test UART driver
+- Test PPIDE driver
+- Test PPISD driver
+- Test PRP detection
+- Test boot to CRT console
+
+MK4 (X)
+---
+- Test ASCI driver
+- Test IDE driver
+- Test SD driver
+- Test PRP detection
+
+RAMF (X)
+----
+- Test RAMF driver
+
+PRP (X)
+---
+- Test PRPSD driver
+- Test PRPCON driver (video & kbd)
+
+SCG (X)
+---
+- Test TMS driver (video)
+
+VDU (X)
+---
+- Test CVDU driver (video & kbd)
+
+CVDU (X)
+----
+- Test CVDU driver (video & kbd)
+
+VGA (X)
+---
+- Test VGA driver (video & kbd)
+
+DIO (X)
+---
+- Test FD driver
+- Test FDU app
+- Test IDE driver
+
+DIO3 (X)
+----
+- Test FD driver
+- Test FDU app
+- Test PPIDE driver
+
+DIDE (X)
+----
+- Test FD driver
+- Test FDU app
+- Test IDE driver
+
+DSD (X)
+---
+- Test SD driver
+
+4UART (X)
+-----
+- Test UART driver
+
+
+UNA (X)
+---
+- General Startup
+- Boot from disk functionality
+- Image loading
+- Monitor
+- XM app
+- ASSIGN app
+- MODE app
+- SYSCOPY app
+- OSLDR app
+- FDU app
+- FDISK80 app
+
+GENERAL (X)
+-------
+- Boot to ROM
+- Boot to Disk
+- Boot to Monitor
+- XM app
+- XM port auto-detect
+- ASSIGN app
+- MODE app
+- SYSCOPY app
+- OSLDR app
+- FDU app
+- FDISK80 app
+- TUNE app
+
+RESULTS
+-------
+- Missing HBIOS startup banner (X)
+- PANIC while printing Serial device inventory (X)
+- Unexpected interrupt signals not handled well (X)
+- Fix IT_??? usage (X)
+- Fix HB_DI/HB_EI in PEEK/POKE/BNKCPY (X)
+- Fix SIMH timer interrupt setup (X)
+- Move DI/EI in PEEK/POKE/BNKCPY to API layer? (X)
+- RETI vs. JP in page zero when INTMODE = 0 (X)
+- Check interrupt stack space (X)
+- If an early INT fires, we return with INTs enabled (not good) (X)
+- PPPCON init should display ANSI 80x25 or similar (X)
+- Add INT MODE X message to early boot messages (X)
+- OSLDR fails when LDDS is loaded (X)
+- Add "!!!" to force assembly error as needed ( )
+- TIMER app should check for HBIOS active (X)
+- Halt system after bad interrupt??? ( )
+- Adapt and bundle PLAYER.COM (X)

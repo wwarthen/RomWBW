@@ -125,7 +125,7 @@ UINIT1:
 ;
 MINIT1:
 	; NOTE: PLTID is only set if RomWBW HBIOS is active.  This is OK
-	; because RC2014 is only support by RomWBW HBIOS at this point.
+	; because RC2014 is only supported by RomWBW HBIOS at this point.
 	LD	A,(PLTID)	; Get the platform id
 	CP	7		; Check for RC2014
 	JR	Z,RCINIT	; Handle RC2014 special
@@ -483,7 +483,12 @@ A_SPEED:
 	LD	A,8		; arbitrarily return 9600 baud
 	RET
 ;
-; HBIOS CONSOLE
+;=======================================================================
+;=======================================================================
+;
+; HBIOS CONSOLE (COM0:)
+;
+; Will be used for all RC2014 systems
 ;
 ;=======================================================================
 ;=======================================================================
@@ -531,15 +536,25 @@ HB_CAROK:
 ;
 ; Get a character (assume character ready has already been tested)
 ;
+; This routine must NOT block.
+;
 HB_MDIN:
 HB_GETCHR:
 	PUSH	BC
 	PUSH	DE
 	PUSH	HL
+	LD	B,02H		; HBIOS IST function
+	LD	C,0		; console is unit 0 by fiat
+	RST	08		; HBIOS call, A := bytes pending
+	JR	NZ,HB_MDIN1	; If char(s) waiting, go get it
+	XOR	A		; otherwise, return null
+	JR	HB_MDIN2	; and done
+HB_MDIN1:
 	LD	B,00H		; HBIOS IN function
 	LD	C,0		; console is unit 0 by fiat
 	RST	08		; HBIOS call
 	LD	A,E		; byte received to A
+HB_MDIN2:
 	POP	HL
 	POP	DE
 	POP	BC
@@ -577,7 +592,7 @@ HB_SNDRDY:
 	PUSH	HL
 	LD	B,03H		; HBIOS OST function
 	LD	C,0		; console is unit 0 by fiat
-	RST	08		; HBIOS call, A := bytes pending
+	RST	08		; HBIOS call, A := xmit buf bytes avail
 	SUB	1		; CF set IFF zero
 	RL	A		; CF to bit 0 of A
 	AND	01H		; set Z flag as needed

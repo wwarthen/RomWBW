@@ -1,0 +1,78 @@
+                             -- RELEASE.NOT --
+
+                             January 20, 1989
+
+         This file contains last-minute information about NZ-COM.
+
+
+----------  NZ-COM RELEASE 1.2d    January 20, 1989
+
+NZCOM.COM  version 1.2d fixes yet another minor bug by forcing a warm  boot 
+whenever a new DOS module is loaded by itself.  The progress report is also 
+a little less verbose unless declaring the /T(est) option.  If the /Q(uiet) 
+option is declared, NZCOM is now completely silent.
+
+New versions of SAVE.COM, ERA.COM, REN.COM, P.COM, POKE.COM and their  Type 
+3 counterparts are included in this release.  
+
+NZSUB version 1.0 is released.  Unlike SUB.COM, NZSUB is not ZCPR3 specific 
+and  runs  as  well  under CP/M.  Its batch  files  can  be  formatted  and 
+commented much like those of ZEX4.  See NZSUB.SUB for an example.  
+
+TCSELECT version 1.2 can now be run successfully under CP/M.
+
+
+----------  NZ-COM RELEASE 1.2     November 1, 1988
+
+NZCOM.COM version 1.2 includes two changes of significance.  First, due  to 
+an  oversight, when version 1.0 was told to load a new ZCM or ENV file  for 
+which no new modules had to be loaded, it also failed to update data in the 
+environment, such as printer characteristics, maximum drives and users, and 
+so on.  It will now do so.
+
+The second change was in the safety checking performed by NZCOM.COM to make 
+sure that it was being requested to load a version that was consistent with 
+the  underlying  CP/M system.  This check turned out to  be  stricter  than 
+necessary  and  was preventing NZ-COM from running on some  systems  (e.g., 
+Lobo Max) that, in fact, could support it quite nicely.
+
+
+----------  NEW FILES: NZCPR.LBR, NZFCP.LBR, NZRCP.LBR
+
+The  main  NZCOM.LBR now contains only the standard configurations  of  the 
+CPR, FCP, and RCP modules to minimize disk space requirements.  Alternative 
+versions of these modules are now supplied in separate libraries.   Modules 
+can  be  loaded directly from these libraries, or individual files  can  be 
+extracted  and  put  into NZCOM.LBR to replace  the  default  files.   Each 
+library  has a brief DOC file describing the modules (one of which  is  the 
+default version included in NZCOM.LBR).
+
+
+----------  NEW PROGRAM:  ZEX TYPE 4
+
+Named  ZEX4.COM  in this release, this is a new version of  ZEX  with  many 
+features not seen before (See ZEX4.DOC).  This program is brand new and may 
+well exhibit one or two un-planned 'features'.  Please report any problems.
+
+
+----------  EASE PROBLEMS
+
+There  are  unfortunately serious defects in the coding of EASE.   On  many 
+computers  EASE  appears  to  work without problems,  on  some  it  crashes 
+completely,  and  on others it works but causes other strange  behavior  to 
+occur.  We tried using it on a Kaypro with the K-ROM (?), and as soon as we 
+loaded ease we started to get BIOS errors on disk reads.  We hope that  the 
+author of EASE (or someone else) will discover and correct these  problems. 
+The program is so nice conceptually.  Use it with caution.
+
+
+----------  VLU VERSIONS
+
+We  forgot  when writing the manual that VLU, like ZFILER,  has  two  quite 
+different  versions depending on whether your terminal uses reverse or  dim 
+video for highlighting.  Therefore, you will find on the release disk  VLU-
+REV.COM  and  VLU-DIM.COM.  Copy the appropriate one to your  working  disk 
+under the name VLU.COM.
+
+                          - End of RELEASE.NOT -
+
