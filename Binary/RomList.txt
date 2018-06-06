@@ -31,6 +31,7 @@ image to use for each platform:
 	N8		N8_std.rom
 	Mark IV		MK4_std.rom
 	RC2014		RC_std.rom
+	RC2014 w/ Z180	RC180_std.rom
 
 You will find there is one additional ROM image called 
 "UNA_std.rom". This ROM image is an UNA-based RomWBW ROM image.  As 
@@ -112,11 +113,20 @@ MK4:
    including VT-100/ANSI terminal emulation.
 
 RC2014:
- - Requires Scott Baker's 512K RAM/ROM module
+ - Requires 512K RAM/ROM module
  - Auto detects Serial I/O Module (ACIA) and Dual Serial
    Module (SIO/2).  Either one may be used.
  - Includes support for Compact Flash Module
  - Support for PPIDE Module may be enabled in config
  - Support for Scott Baker SIO board may be enabled in config
+ - Support for Scott Baker floppy controllers (SMC & WDC) may
+   be enabled in config
+
+RC2014 w/ Z180:
+ - Requires 512K RAM/ROM module
+ - Console attached to Z180 onboard serial ports at 38400 baud
+ - Includes support for Compact Flash Module
+ - Support for PPIDE Module may be enabled in config
+ - Support for alternative serial modules may be enabled in config
  - Support for Scott Baker floppy controllers (SMC & WDC) may
    be enabled in config
