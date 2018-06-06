@@ -559,10 +559,10 @@ UART_ENTRY:
 ; D XXXXH YYYYH  DUMP MEMORY FROM XXXX TO YYYY
 ; F XXXXH YYYYH ZZH FILL MEMORY FROM XXXX TO YYYY WITH ZZ
 ; H LOAD INTEL HEX FORMAT DATA
-; IXX INPUT FROM PORT XX AND SHOW HEX DATA
+; I XX INPUT FROM PORT XX AND SHOW HEX DATA
 ; K ECHO KEYBOARD INPUT
 ; M XXXXH YYYYH ZZZZH MOVE MEMORY BLOCK XXXX TO YYYY TO ZZZZ
-; OXX YY OUTPUT TO PORT XX HEX DATA YY
+; O XX YY OUTPUT TO PORT XX HEX DATA YY
 ; P XXXXH YYH PROGRAM RAM FROM XXXXH WITH VALUE IN YYH, WILL PROMPT FOR NEXT LINES FOLLOWING UNTIL CR
 ; R RUN A PROGRAM FROM CURRENT LOCATION
 ;
@@ -987,12 +987,13 @@ PHL:
 ;
 POUT:
 POUT1:
-;	INC	HL			;
+	INC	HL			;
 	CALL	HEXIN			; GET PORT
 	LD	C,A			; SAVE PORT POINTER
 	INC	HL			;
 	CALL	HEXIN			; GET DATA
 OUTIT:
+	LD	B,0			; MAKE SURE MSB IS ZERO
 	OUT	(C),A			;
 	JP	SERIALCMDLOOP		;
 
@@ -1003,10 +1004,11 @@ OUTIT:
 ;_____________________________________________________________________________
 ;
 PIN:
-;	INC 	HL			;
+	INC 	HL			;
 	CALL	HEXIN			; GET PORT
 	LD	C,A			; SAVE PORT POINTER
 	CALL	CRLF			;
+	LD	B,0			; MAKE SURE MSB IS ZERO
 	IN	A,(C)			; GET DATA
 	CALL	HXOUT			; SHOW IT
 	JP	SERIALCMDLOOP	        ;
@@ -1651,27 +1653,6 @@ PROMPT:
 	.DB  	CR,LF,'>',ENDT
 
 TXT_READY:
-	.DB   CR,LF
-	.TEXT   "         NN      NN      8888      VV      VV    EEEEEEEEEE   MM          MM"
-	.DB   CR,LF
-	.TEXT   "        NNNN    NN    88    88    VV      VV    EE           MMMM      MMMM"
-	.DB   CR,LF
-	.TEXT   "       NN  NN  NN    88    88    VV      VV    EE           MM  MM  MM  MM"
-	.DB   CR,LF
-	.TEXT   "      NN    NNNN    88    88    VV      VV    EE           MM    MM    MM"
-	.DB   CR,LF
-	.TEXT   "     NN      NN      8888      VV      VV    EEEEEEE      MM          MM"
-	.DB   CR,LF
-	.TEXT   "    NN      NN    88    88     VV    VV     EE           MM          MM"
-	.DB   CR,LF
-	.TEXT   "   NN      NN    88    88      VV  VV      EE           MM          MM"
-	.DB   CR,LF
-	.TEXT   "  NN      NN    88    88        VVV       EE           MM          MM"
-	.DB   CR,LF
-	.TEXT   " NN      NN      8888           V        EEEEEEEEEE   MM          MM    S B C"
-	.DB   CR,LF
-	.DB   CR,LF                                                                                                                                                
-	.TEXT   " ****************************************************************************"
 	.DB   CR,LF
 	.TEXT   "MONITOR READY "
 	.DB   CR,LF,ENDT

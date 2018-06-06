@@ -3,7 +3,9 @@
 ; XMHB.Z80 - XMODEMXX PATCH FILE FOR ROMWBW HBIOS
 ;
 ;   Wayne Warthen - wwarthen@gmail.com
-;   Updated: 2017-11-08
+;   Updated: 2018-06-06
+;
+; 2018-06-06 WBW Added support for RC2014 w/ Z180
 ;
 ;=======================================================================
 ;
@@ -129,6 +131,8 @@ MINIT1:
 	LD	A,(PLTID)	; Get the platform id
 	CP	7		; Check for RC2014
 	JR	Z,RCINIT	; Handle RC2014 special
+	CP	8		; Check for RC2014 w/ Z180
+	JR	Z,ARCINIT	; Handle RC2014 w/ Z180
 ;
 	; Check for Z180 which implies ASCI serial port
 	LD	DE,00202H	; D := 2, E := 2
@@ -151,6 +155,12 @@ RCINIT:
 	LD	(RCVSCL),HL	; ... to compensate for BIOS overhead
 	LD	HL,HBIOS_JPTBL	; HBIOS jump table address
 	LD	DE,COMX		; HBIOS console notification string
+	JR	MINIT3		; Complete the initialization
+;
+ARCINIT:
+	; RC2014 running Z180
+	LD	HL,ARC_JPTBL	; ASCI RC2014 jump table address
+	LD	DE,ASCIRC	; ASCI RC2014 console notification string
 	JR	MINIT3		; Complete the initialization
 ;
 MINIT3:
@@ -220,10 +230,11 @@ PLTID	DB	0		; Platform ID
 CPUSPD	DB	10		; CPU speed in MHz
 RCVSCL	DW	2800		; RECV loop timeout scalar
 ;
-RBC	DB	"RBC, 08-Nov-2017$"
+RBC	DB	"RBC, 06-Jun-2018$"
 ;
 UART	DB	", UART0$"
 ASCI	DB	", ASCI0$"
+ASCIRC	DB	", ASCI0 (RC2014)$"
 COMX	DB	", COM0$"
 ;
 UBTAG	DB	" [UNA]$"
@@ -365,7 +376,7 @@ U_SNDRDY:
 ;
 ;-----------------------------------------------------------------------
 ;
-; Report baud rate (index into SPTBL returned in regsiter A)
+; Report baud rate (index into SPTBL returned in register A)
 ;
 U_SPEED:
 	LD	A,8		; arbitrarily return 9600 baud
@@ -387,6 +398,7 @@ A_DATP	EQU	48H		;Z180 TSR - ASCI receive data port
 A_DATO	EQU	46H		;Z180 TDR - ASCI transmit data port
 A_CTLP	EQU	44H		;Z180 STAT - ASCI status port
 A_CTL2	EQU	40H		;Z180 CNTLA - ASCI control port
+;
 A_SNDB	EQU	02H		;Z180 STAT:TDRE - xmit data reg empty bit
 A_SNDR	EQU	02H		;Z180 STAT:TDRE - xmit data reg empty value
 A_RCVB	EQU	80H		;Z180 STAT:RDRF - rcv data reg full bit
@@ -477,9 +489,114 @@ A_SNDRDY:
 ;
 ;-----------------------------------------------------------------------
 ;
-; Report baud rate (index into SPTBL returned in regsiter A)
+; Report baud rate (index into SPTBL returned in register A)
 ;
 A_SPEED:
+	LD	A,8		; arbitrarily return 9600 baud
+	RET
+;
+;=======================================================================
+;=======================================================================
+;
+; RC2014 Z180 primary ASCI port
+;
+; Will be used for all RC2014 Z180 systems.
+;
+;=======================================================================
+;=======================================================================
+;
+; ASCI port constants for RC2014
+;
+AR_DATP	EQU	0C8H		;Z180 TSR - ASCI receive data port
+AR_DATO	EQU	0C6H		;Z180 TDR - ASCI transmit data port
+AR_CTLP	EQU	0C4H		;Z180 STAT - ASCI status port
+AR_CTL2	EQU	0C0H		;Z180 CNTLA - ASCI control port
+;
+; Following jump table is dynamically patched over initial jump
+; table at program startup.  See MINIT above.  Note that only a
+; subset of the jump table is overlaid (SENDR to SPEED).
+;
+ARC_JPTBL:
+	JP	AR_SENDR	;send character (via pop psw)
+	JP	AR_CAROK	;test for carrier
+	JP	AR_MDIN		;receive data byte
+	JP	AR_GETCHR	;get character from modem
+	JP	AR_RCVRDY	;check receive ready
+	JP	AR_SNDRDY	;check send ready
+	JP	AR_SPEED	;get speed value for file transfer time
+;
+;-----------------------------------------------------------------------
+;
+; Send character on top of stack
+;
+AR_SENDR:
+	POP	AF		; get character to send from stack
+	OUT0	(AR_DATO),A	; send to port
+	RET
+;
+;-----------------------------------------------------------------------
+;
+; Test and rep;ort carrier status, Z set if carrier present
+;
+AR_CAROK:
+	XOR	A		; not used, always indicate present
+	RET
+;
+;-----------------------------------------------------------------------
+;
+; Get a character (assume character ready has already been tested)
+;
+AR_MDIN:
+AR_GETCHR:
+	IN0	A,(AR_DATP)	; read character from port
+	RET
+;
+;-----------------------------------------------------------------------
+;
+; Test for character ready to receive, Z = ready
+; Error code returned in A register
+; *** Error code does not seem to be used ***
+;
+AR_RCVRDY:
+	IN0	A,(AR_CTLP)	; get modem status
+	PUSH	BC		; save scratch register
+	PUSH	AF		; save full status on stack
+	AND	A_FRME | A_OVRE | A_PARE ; isolate line err bits
+	LD	B,A		; save err status in B
+	
+	; Z180 ASCI ports will stall if there are errors.
+	; Error bits are NOT cleared by merely reading
+	; the status register.  Below, bit 3 of ASCI
+	; control register is written with a zero to 
+	; clear error(s) if needed.
+	JP	Z,A_RCVRDY2	; if no errs, continue
+	IN0	A,(AR_CTL2)	; get current control register
+	AND	0F7H		; force err reset bit to zero
+	OUT0	(AR_CTL2),A	; write control register
+
+AR_RCVRDY2:
+	POP	AF		; get full status back
+	AND	A_RCVB		; isolate ready bit
+	CP	A_RCVR		; test it (set flags)
+	LD	A,B		; get the error code back
+	POP	BC		; restore scratch register
+	RET
+;
+;-----------------------------------------------------------------------
+;
+; Test for ready to send a character, Z = ready
+;
+AR_SNDRDY:
+	IN	A,(AR_CTLP)	; get status
+	AND	A_SNDB		; isolate transmit ready bit
+	CP	A_SNDR		; test for ready value
+	RET
+;
+;-----------------------------------------------------------------------
+;
+; Report baud rate (index into SPTBL returned in register A)
+;
+AR_SPEED:
 	LD	A,8		; arbitrarily return 9600 baud
 	RET
 ;
@@ -603,7 +720,7 @@ HB_SNDRDY:
 ;
 ;-----------------------------------------------------------------------
 ;
-; Report baud rate (index into SPTBL returned in regsiter A)
+; Report baud rate (index into SPTBL returned in register A)
 ;
 HB_SPEED:
 	LD	A,8		; arbitrarily return 9600 baud
