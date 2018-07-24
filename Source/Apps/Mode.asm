@@ -30,6 +30,7 @@
 ; Change Log:
 ;   2017-08-16 [WBW] Initial release
 ;   2017-08-28 [WBW] Handle UNACPM
+;   2018-07-24 [WBW] Fixed bug in getnum23 routine (credit Phil Summers)
 ;_______________________________________________________________________________
 ;
 ; ToDo:
@@ -215,7 +216,7 @@ comset1:
 	jr	nc,comset1a	; ... to handle empty
 ;
 	call	getnum32	; get baud rate into DE:HL
-	jp	c,errcfg	; Handle error
+	jp	c,errcfg	; Handle overflow error
 	ld	c,75		; Constant for baud rate encode
 	call	encode		; encode into C:4-0
 	jp	nz,errcfg	; Error if encode fails
@@ -817,7 +818,7 @@ getnum32a:
 	cp	'9' + 1		; compare to ascii '9'
 	jr	nc,getnum32c	; abort if above
 ;
-	; valid digit, multiply DE:BC by 10
+	; valid digit, multiply DE:HL by 10
 	; X * 10 = (((x * 2 * 2) + x)) * 2
 	push	de
 	push	hl
@@ -846,11 +847,13 @@ getnum32a:
 	ld	l,a		; back to L
 	jr	nc,getnum32b	; if no carry, done
 	inc	h		; otherwise, bump H
-	jr	nc,getnum32b	; if no carry, done
+	jr	nz,getnum32b	; if no overflow, done
 	inc	e		; otherwise, bump E
-	jr	nc,getnum32b	; if no carry, done
+	jr	nz,getnum32b	; if no overflow, done
 	inc	d		; otherwise, bump D
-	ret	c		; if overflow, ret w/ CF
+	jr	nz,getnum32b	; if no overflow, done
+	scf			; set carry flag to indicate overflow
+	ret			; and return
 ;
 getnum32b:
 	inc	ix		; bump to next char
@@ -967,7 +970,7 @@ errcfg:	; Invalid device configuration specified
 	jr	err
 ;
 err:	; print error string and return error signal
-	call	crlf		; print newline
+	call	crlf2		; print newline
 ;
 err1:	; without the leading crlf
 	call	prtstr		; print error string
@@ -1016,7 +1019,7 @@ stack	.equ	$		; stack top
 ; Messages
 ;
 indent	.db	"   ",0
-msgban1	.db	"MODE v1.1, 28-Aug-2017",0
+msgban1	.db	"MODE v1.2, 24-Jul-2018",0
 msghb	.db	" [HBIOS]",0
 msgub	.db	" [UBIOS]",0
 msgban2	.db	"Copyright (C) 2017, Wayne Warthen, GNU GPL v3",0

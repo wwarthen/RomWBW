@@ -2300,9 +2300,11 @@ diskwr11:
 ;
 diskwr2:			;a has vrecord, c=2 if new block or
 				; new record #
-	dcr	c
-	dcr	c
-	jnz	noupdate
+	; WW: DRI Patch 01 Start
+	nop			; dcr	c
+	nop			; dcr	c
+	lxi	h,0		; jnz	noupdate
+	; WW: DRI Patch 01 End
 	push	psw		;save vrecord value
 	call	getmodnum	;hl=.fcb(modnum),a=fcb(modnum)
 				;reset the file write flag to mark

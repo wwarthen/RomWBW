@@ -1700,8 +1700,10 @@ diskwrite:	;(may enter here from seqdiskwrite above)
 		mvi c,2 ;mark as record count incremented
 	diskwr2:
 	;A has vrecord, C=2 if new block or new record#
+	; WW: DRI BDOS Patch start
 	;dcr c! ;dcr c! ;jnz noupdate
-	nop! nop! lxi h,0 ; WW: DRI BDOS Patch
+	nop! nop! lxi h,0
+	; WW: DRI BDOS Patch end
 		push psw ;save vrecord value
 		call getmodnum ;HL=.fcb(modnum), A=fcb(modnum)
 		;reset the file write flag to mark as written fcb

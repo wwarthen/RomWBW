@@ -12,6 +12,7 @@ Version 2.9.1
 - WBW: Fixed XModem HBIOS console driver for file send operations
 - WBW: Preliminary support for RC180 platform (Z180 module in RC2014)
 - WBW: Added NZCOM distribution files to third slice of hard disk image
+- WBW: Fixed getnum32 bug in MODE command (found by Phil Summers)
 
 Version 2.9.0
 -------------
