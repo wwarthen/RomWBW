@@ -815,16 +815,17 @@ BROK:
 	AND $04
 	RLA
 	OR D			; carry gets reset here
+	LD D,A
 	
 	
-;	LD A,E			; get the parity bits
-;	SRL A			; move them to bottom two bits
-;	SRL A			; we know top bits are zero from previous test
-;	SRL A			; add stop bits
-;	OR D
-
-	LD	DE,SIO_INITVALS+3
-	LD (DE),A
+	LD A,E			; get the parity bits
+	SRL A			; move them to bottom two bits
+	SRL A			; we know top bits are zero from previous test
+	SRL A			; add stop bits
+	OR D 			; carry = 0
+	
+	LD	BC,SIO_INITVALS+3
+	LD (BC),A
 	
 #IF (SIODEBUG)
 	PUSH AF
@@ -832,9 +833,70 @@ BROK:
 	CALL	PRTHEXBYTE
 	PRTC(']')
 	POP AF
+#ENDIF
+
+; THE # DATA BITS NEED TO BE CONVERTED FROM THE 
+; ROMWBW REPRESENTATION TO THE SIO XILOG CODING
+	
+;	XOR A
+;	RR E			; d0 of bits into carry
+;	RR A			; d0 into msb
+;	RR E			; d1 of bits into carry
+;	RR A			; d1 into msb
+;;	SCF				; 1 into msb
+;	RR A
+;	OR $8a
+
+	LD A,E
+
+	#IF (SIODEBUG)
+	PUSH AF
+	PRTS(" BITS[$")
+	CALL	PRTHEXBYTE
+	PRTC(']')
+	POP AF
+#ENDIF	
+					; 112233445566d1d0 CC
+	RRA				; CC112233445566d1 d0
+	RRA				; d0CC112233445566 d1
+	RRA 			; d1d0CC1122334455 66
+	LD D,A
+	RRA				; 66d1d0CC11223344 55
+	AND $60			; 0011110000000000 00
+	OR $8a
+;	
+; SET TRANSMIT DATA BITS WR5	
+;
+	LD	BC,SIO_INITVALS+11
+	LD (BC),A	
+
+#IF (SIODEBUG)
+	PUSH AF
+	PRTS(" TXDATA[$")
+	CALL	PRTHEXBYTE
+	PRTC(']')
+	POP AF
+#ENDIF	
+;
+; SET RECEIVE DATA BITS WR3 
+;	
+	LD A,D
+	AND $C0
+	OR $01
+	
+	LD	BC,SIO_INITVALS+9
+	LD (BC),A	
+
+#IF (SIODEBUG)
+	PUSH AF
+	PRTS(" RXDATA[$")
+	CALL	PRTHEXBYTE
+	PRTC(']')
+	POP AF
 #ENDIF	
 	
 	POP	DE			; RESTORE CONFIG
+
 	LD	(IY + 4),E		; SAVE LOW WORD
 	LD	(IY + 5),D		; SAVE HI WORD
 	
@@ -877,7 +939,7 @@ SIO_INITVALS:
 	.DB	$01, $18	; WR1: INTERRUPT ON ALL RECEIVE CHARACTERS
 	.DB	$02, IVT_SER0	; WR2: INTERRUPT VECTOR OFFSET
 	.DB	$03, $C1	; WR3: 8 BIT RCV, RX ENABLE
-	.DB	$05, $EA	; WR5: DTR, 8 BITS SEND,  TX ENABLE, RTS
+	.DB	$05, $EA	; WR5: DTR, 8 BITS SEND,  TX ENABLE, RTS 1 11 0 1 0 1 0 (1=DTR,11=8bits,0=sendbreak,1=TxEnable,0=sdlc,1=RTS,0=txcrc)
 SIO_INITLEN	.EQU	$ - SIO_INITVALS
 ;
 ;
