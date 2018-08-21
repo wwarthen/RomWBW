@@ -1135,6 +1135,9 @@ INITSYS3:
 ;==================================================================================================
 ;
 HB_INITTBL:
+#IF (SNDENABLE)
+	.DW	SND_INIT						; AUDIBLE INDICATOR OF BOOT START
+#ENDIF
 #IF (ASCIENABLE)
 	.DW	ASCI_INIT
 #ENDIF
@@ -2227,6 +2230,16 @@ SIZ_TERM	.EQU	$ - ORG_TERM
 		.ECHO	SIZ_TERM
 		.ECHO	" bytes.\n"
 #ENDIF
+;
+#IF (SNDENABLE)
+ORG_SND	.EQU	$
+  #INCLUDE "sound.asm"
+SIZ_SND	.EQU	$ - ORG_SND
+		.ECHO	"SND occupies "
+		.ECHO	SIZ_SND
+		.ECHO	" bytes.\n"
+#ENDIF
+
 ;
 #DEFINE USEDELAY
 #INCLUDE "util.asm"
