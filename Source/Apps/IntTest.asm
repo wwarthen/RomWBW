@@ -1,5 +1,5 @@
 ;===============================================================================
-; TIMER - Display system timer value
+; INTTEST - Test HBIOS interrupt API functions
 ;
 ;===============================================================================
 ;
@@ -7,21 +7,7 @@
 ;_______________________________________________________________________________
 ;
 ; Usage:
-;   TIMER [/C] [/?]
-;     ex: TIMER		(display current timer value)
-;         TIMER /?	(display version and usage)
-;         TIMER /C	(display timer value continuously)
-;
-; Operation:
-;   Reads and displays system timer value.
-;_______________________________________________________________________________
-;
-; Change Log:
-;   2018-01-14 [WBW] Initial release
-;   2018-01-17 [WBW] Add HBIOS check
-;_______________________________________________________________________________
-;
-; ToDo:
+;   INTTEST
 ;_______________________________________________________________________________
 ;
 ;===============================================================================
@@ -33,14 +19,16 @@ stksiz	.equ	$40		; Working stack size
 restart	.equ	$0000		; CP/M restart vector
 bdos	.equ	$0005		; BDOS invocation vector
 ;
-ident	.equ	$FFFE		; loc of RomWBW HBIOS ident ptr
+bf_sysint	.equ	$FC	; INT function
 ;
-rmj	.equ	2		; intended CBIOS version - major
-rmn	.equ	9		; intended CBIOS version - minor
+bf_sysintinfo	.equ	$00	; INT INFO subfunction
+bf_sysintget	.equ	$10	; INT GET subfunction
+bf_sysintset	.equ	$20	; INT SET subfunction
 ;
-bf_sysver	.equ	$F1	; BIOS: VER function
-bf_sysget	.equ	$F8	; HBIOS: SYSGET function
-bf_sysgettimer	.equ	$D0	; TIMER subfunction
+z180_base	.equ	$40		; i/o base address for internal z180 registers
+z180_tcr	.equ	z180_base + $10	; timer control
+z180_tmdr0l	.equ	z180_base + $0C	; timer 0 data lo
+
 ;
 ;===============================================================================
 ; Code Section
@@ -73,13 +61,11 @@ init:
 	ld	de,msgban	; point to version message part 1
 	call	prtstr		; print it
 ;
-	call	idbio		; identify active BIOS
-	cp	1		; check for HBIOS
-	jp	nz,errbio	; handle BIOS error
-;
-	ld	a,rmj << 4 | rmn	; expected HBIOS ver
-	cp	d		; compare with result above
-	jp	nz,errbio	; handle BIOS error
+	; relocate handler
+	ld	hl,reladr
+	ld	de,$8000
+	ld	bc,hsiz
+	ldir
 ;
 initx
 	; initialization complete
@@ -89,132 +75,172 @@ initx
 ; Process
 ;
 process:
-	; look for start of parms
-	ld	hl,$81		; point to start of parm area (past len byte)
 ;
-process00:
-	call	nonblank	; skip to next non-blank char
-	jp	z,process0	; no more parms, go to display
+; Get info
 ;
-	; check for option, introduced by a "/"
-	cp	'/'		; start of options?
-	jp	nz,usage	; yes, handle option
-	call	option		; do option processing
-	ret	nz		; done if non-zero return
-	jr	process00	; continue looking for options
+	call	crlf2
+	ld	de,msginfo	; message
+	call	prtstr
 ;
-process0:
-	call	crlf2		; formatting
+	ld	b,bf_sysint	; INT function
+	ld	c,bf_sysintinfo	; INFO subfunction
+	rst	08
+	ld	a,d
+	ld	(intmod),a	; save int mode
+	ld	a,e
+	ld	(veccnt),a	; save vector count
 ;
-process1:
-	ld	b,bf_sysget	; HBIOS SYSGET function
-	ld	c,bf_sysgettimer	; TIMER subfunction
-	rst	08		; call HBIOS, DE:HL := timer value
-	
-	ld	a,(first)
+	push	de
+	call	crlf
+	ld	de,msgmode	; mode
+	call	prtstr
+	pop	de
+	push	de
+	ld	a,d		; interrupt mode
+	call	prtdecb
+	call	crlf
+	ld	de,msgcnt	; count of vectors
+	call	prtstr
+	pop	de
+	ld	a,e
+	call	prtdecb
+;
+; Done if int mode is 0
+;
+	ld	a,(intmod)
 	or	a
-	ld	a,0
-	ld	(first),a
-	jr	nz,process1a
-	
-	; test for new value
-	ld	a,(last)	; last LSB value to A
-	cp	l		; compare to current LSB
-	jr	z,process2	; if equal, bypass display
-
-process1a:	
-	; save and print new value
-	ld	a,l		; new LSB value to A
-	ld	(last),a	; save as last value
-	call	prtcr		; back to start of line
-	call	nz,prthex32	; display it
+	ret	z
 ;
-process2:
-	ld	a,(cont)	; continuous display?
-	or	a		; test for true/false
-	jr	z,process3	; if false, get out
+; List vectors
 ;
-	ld	c,6		; BDOS: direct console I/O
-	ld	e,$FF		; input char
-	call	bdos		; call BDOS, A := char
-	or	a		; test for zero
-	jr	z,process1	; loop until char pressed
+	call	crlf2
+	ld	de,msglst	
+	call	prtstr
+	ld	a,(veccnt)	; get count of vectors
+	or	a
+	jr	z,estidx	; bypass if nothing to list
+	ld	b,a		; make it the loop counter
+	ld	c,0		; vector entry index
 ;
-process3:
-	xor	a		; signal success
+lstlp:
+	push	bc
+	call	crlf
+	ld	a,' '
+	call	prtchr
+	call	prtchr
+	ld	a,c
+	call	prthex
+	ld	a,':'
+	call	prtchr
+	ld	e,c
+	ld	b,bf_sysint
+	ld	c,bf_sysintget
+	rst	08
+	push	hl
+	pop	bc
+	call	prthexword
+	pop	bc
+	inc	c
+	djnz	lstlp
+;
+; Establish interrupt vector index to hook
+;
+estidx:
+	ld	a,(intmod)
+	ld	c,0
+	cp	1
+	jr	z,setidx
+	ld	c,2		; assume timer in entry 2 if im2
+	cp	2
+	jr	z,setidx
+	ret			; neither im1 or im2, bail out
+setidx:
+	ld	a,c
+	ld	(vecidx),a
+;
+; Hook vector
+;
+	call	crlf2
+	ld	de,msghook
+	call	prtstr
+	call	crlf2
+	ld	a,$ff
+	ld	(count),a	; set counter to max value
+;	
+	ld	a,(intmod)
+	cp	1
+	jr	z,hkim1
+	cp	2
+	jr	z,hkim2
 	ret
 ;
-; Handle special options
+; IM1 specific code
 ;
-option:
+hkim1:
+	ld	hl,m1int	; pointer to my interrupt handler
+	ld	b,bf_sysint
+	ld	c,bf_sysintset	; set new vector
+	ld	a,(vecidx)	; get vector idx
+	ld	e,a		; put in E
+	di
+	rst	08		; do it
+	ld	(chain),hl	; save the chain address
+	ei			; interrupts back on
+	jr	start
 ;
-	inc	hl		; next char
-	ld	a,(hl)		; get it
-	or	a		; zero terminator?
-	ret	z		; done if so
-	cp	' '		; blank?
-	ret	z		; done if so
-	cp	'?'		; is it a '?'?
-	jp	z,usage		; yes, display usage
-	cp	'C'		; is it a 'C', continuous?
-	jp	z,setcont	; yes, set continuous display
-	jp	errprm		; anything else is an error
+; IM2 specific code
 ;
-usage:
+hkim2:
+	ld	hl,m2stub	; pointer to my interrupt stub
+	ld	b,bf_sysint
+	ld	c,bf_sysintset	; set new vector
+	ld	a,(vecidx)	; get vector idx
+	ld	e,a		; put in E
+	di
+	rst	08		; do it
+	ld	(chain),hl	; save the chain address
+	ld	(engadr),de	; insert the int routing engine address
+	ei			; interrupts back on
+	jr	start
 ;
-	jp	erruse		; display usage and get out
+; Wait for counter to countdown to zero
 ;
-setcont:
+start:
+	ld	a,(count)
+	ld	e,a
+	call 	prthex		; print it
+	ld	a,13
+	call	prtchr
+loop:
+	ld	a,(count)	; get current count value
+	cp	e
+	jr	z,loop
+	push	af
+	call 	prthex		; print it
+	ld	a,13
+	call	prtchr
+	pop	af
+	or	a		; set flags
+	jr	z,loop1		; done
+	jr	loop		; and loop
+loop1:
 ;
-	or	$FF		; set A to true
-	ld	(cont),a	; and set continuous flag
-	jr	option		; check for more option letters
+; Unhook
 ;
-; Identify active BIOS.  RomWBW HBIOS=1, UNA UBIOS=2, else 0
+	call	crlf2
+	ld	de,msgunhk
+	call	prtstr
+	ld	hl,(chain)	; original vector
+	ld	b,bf_sysint
+	ld	c,bf_sysintset	; set new vector
+	ld	a,(vecidx)	; get vector idx
+	ld	e,a		; put in E
+	di
+	rst	08		; do it
+	ei			; interrupts back on
 ;
-idbio:
-;
-	; Check for UNA (UBIOS)
-	ld	a,($FFFD)	; fixed location of UNA API vector
-	cp	$C3		; jp instruction?
-	jr	nz,idbio1	; if not, not UNA
-	ld	hl,($FFFE)	; get jp address
-	ld	a,(hl)		; get byte at target address
-	cp	$FD		; first byte of UNA push ix instruction
-	jr	nz,idbio1	; if not, not UNA
-	inc	hl		; point to next byte
-	ld	a,(hl)		; get next byte
-	cp	$E5		; second byte of UNA push ix instruction
-	jr	nz,idbio1	; if not, not UNA, check others
-;
-	ld	bc,$04FA	; UNA: get BIOS date and version
-	rst	08		; DE := ver, HL := date
-;
-	ld	a,2		; UNA BIOS id = 2
-	ret			; and done
-;
-idbio1:
-	; Check for RomWBW (HBIOS)
-	ld	hl,($FFFE)	; HL := HBIOS ident location
-	ld	a,'W'		; First byte of ident
-	cp	(hl)		; Compare
-	jr	nz,idbio2	; Not HBIOS
-	inc	hl		; Next byte of ident
-	ld	a,~'W'		; Second byte of ident
-	cp	(hl)		; Compare
-	jr	nz,idbio2	; Not HBIOS
-;
-	ld	b,bf_sysver	; HBIOS: VER function
-	ld	c,0		; required reserved value
-	rst	08		; DE := version, L := platform id
-;	
-	ld	a,1		; HBIOS BIOS id = 1
-	ret			; and done
-;
-idbio2:
-	; No idea what this is
-	xor	a		; Setup return value of 0
-	ret			; and done
+	xor	a		; signal success
+	ret			; done
 ;
 ; Print character in A without destroying any registers
 ;
@@ -424,38 +450,13 @@ addhl:
 jphl:
 	jp	(hl)
 ;
-; Errors
-;
-erruse:	; command usage error (syntax)
-	ld	de,msguse
-	jr	err
-;
-errprm:	; command parameter error (syntax)
-	ld	de,msgprm
-	jr	err
-;
-errbio:	; invalid BIOS or version
-	ld	de,msgbio
-	jr	err
-;
-err:	; print error string and return error signal
-	call	crlf2		; print newline
-;
-err1:	; without the leading crlf
-	call	prtstr		; print error string
-;
-err2:	; without the string
-;	call	crlf		; print newline
-	or	$FF		; signal error
-	ret			; done
-;
 ;===============================================================================
 ; Storage Section
 ;===============================================================================
 ;
-last	.db	0		; last LSB of timer value
-cont	.db	0		; non-zero indicates continuous display
-first	.db	$FF		; first pass flag (true at start)
+intmod	.db	0		; active interrupt mode
+veccnt	.db	0		; count of ingterrupt vectors
+vecidx	.db	0		; vector index to hook
 ;
 stksav	.dw	0		; stack pointer saved at start
 	.fill	stksiz,0	; stack
@@ -463,14 +464,56 @@ stack	.equ	$		; stack top
 ;
 ; Messages
 ;
-msgban	.db	"TIMER v1.0, 14-Jan-2018",13,10
+msgban	.db	"INTTEST v1.0, 27-Aug-2018",13,10
 	.db	"Copyright (C) 2018, Wayne Warthen, GNU GPL v3",0
-msguse	.db	"Usage: TIMER [/C] [/?]",13,10
-	.db	"  ex. TIMER           (display current timer value)",13,10
-	.db	"      TIMER /?        (display version and usage)",13,10
-	.db	"      TIMER /C        (display timer value continuously)",0
-msgprm	.db	"Parameter error (TIMER /? for usage)",0
-msgbio	.db	"Incompatible BIOS or version, "
-	.db	"HBIOS v", '0' + rmj, ".", '0' + rmn, " required",0
+msginfo	.db	"Interrupt information request...",0
+msgmode	.db	"  Active interrupt mode: ",0
+msgcnt	.db	"  Vector entries in use: ",0
+msglst	.db	"Interrupt vector address list:",0
+msghook	.db	"Hooking vector...",0
+msgunhk	.db	"Unhooking vector...",0
 ;
+;===============================================================================
+; Interrupt Handler
+;===============================================================================
+;
+reladr	.equ	$		; relocation start adr
+;
+	.org	$8000		; code will run here
+;
+m1int:
+	; count down to zero
+	ld	a,(count)
+	or	a
+	jr	z,m1int1
+	dec	a
+	ld	(count),a
+m1int1:
+	; follow the chain...
+	ld	hl,(chain)
+	jp	(hl)
+;
+m2stub:
+	push	hl
+	ld	hl,m2int
+	jp	$0000
+engadr	.equ	$ - 2
+;
+m2int:
+	; count down to zero
+	ld	a,(count)
+	or	a
+	jr	z,m2int1
+	dec	a
+	ld	(count),a
+m2int1:
+	; ack/reset z180 timer interrupt
+	in0	a,(z180_tcr)
+	in0	a,(z180_tmdr0l)
+	ret
+;
+chain	.dw	$0000		; chain address
+count	.db	0		; counter
+
+hsiz	.equ	$ - $8000	; size of handler to relocate
 	.end

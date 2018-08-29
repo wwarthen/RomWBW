@@ -20,6 +20,7 @@ call :asm OSLdr || goto :eof
 call :asm Mode || goto :eof
 call :asm RTC || goto :eof
 call :asm Timer || goto :eof
+call :asm180 IntTest || goto :eof
 
 zx Z80ASM -SYSGEN/F
 
@@ -38,4 +39,10 @@ goto :eof
 echo.
 echo Building %1...
 tasm -t80 -g3 -fFF %1.asm %1.com %1.lst
+goto :eof
+
+:asm180
+echo.
+echo Building %1...
+tasm -t180 -g3 -fFF %1.asm %1.com %1.lst
 goto :eof

@@ -2,7 +2,7 @@
 HBIOS Management Functions
 ==========================
 
-RESET: ($F0):
+RESET ($F0):
   B=Function					A=Result
 
 VER ($F1):
@@ -52,7 +52,7 @@ GET ($F8):
     VDACNT ($40):
       BC=Function/Subfunction                   A=Result
                                                 E=Video Unit Count
-						
+
     TIMER ($D0):
       BC=Function/Subfunction                   A=Result
                                                 DE:HL=Timer Value (32 bit)
@@ -90,16 +90,100 @@ SET ($F9):
       DE=Boot Volume (Disk Unit/Slice)
       L=Boot Bank Id
 
-PEEK: ($FA):
+PEEK ($FA):
   B=Function                       		A=Result
   D=Bank					E=Byte Value
   HL=Address
 
-POKE: ($FB):
+POKE ($FB):
   B=Function                       		A=Result
   D=Bank
   E=Byte Value
   HL=Address
+
+INT ($FC): Interrupt vector management functions
+  BC=Function/Subfunction                       A=Result
+
+  Subfunctions:
+
+    INTINF ($00): Query interrupt system information
+      BC=Function/Subfunction                   A=Result
+						D=Interrupt Mode
+                                                E=Interrupt Vector Table Size
+
+      Report interrupt interrupt management system information.
+
+      Interrupt Mode:
+        0: Interrupts disabled
+        1: Z80 Interrupt Mode 1 active
+        2: Z80 Interrupt Mode 2 active
+
+      Interrupt Vector Table Size:
+        If interrupts are disabled, this will be zero.  if interrupt mode 1, this
+        will be the number of entries in the interrupt call list.  if interrupt mode
+        2, this will be the number of slots in the interrupt vector table.
+
+    INTGET ($10): Get interrupt vector
+      BC=Function/Subfunction			A=Result
+      E=Interrupt Vector Table Position		HL=Interrupt Vector
+
+      Return the Interrupt Vector for the specified Interrupt Vector Table Position.
+
+    INTSET ($20): Set interrupt vector
+      BC=Function/Subfunction			A=Result
+      HL=Interrupt Vector			HL=Previous Vector
+      E=Interrupt Vector Table Position		DE=Interrupt Routing Engine Address
+
+      Set the Interrupt Vector for the specified Interrupt Vector Table Position to the
+      specified Interrupt Vector.  The previous value at the specified table position
+      will be returned.  The Vector Table Position is a zero-based index into the
+      interrupt vector table and must specify a position less than or equal to the
+      size of the table.
+
+      The new interrupt vector must point to a proper interrupt handler located in the
+      top 32K of CPU address space.  Note that during interrupt processing, the lower
+      32K of CPU address space will contain the RomWBW HBIOS code bank, not the lower
+      32K of application TPA.  As such, a dynamically installed interrupt handler does
+      not have access to the lower 32K of TPA and must be careful to avoid modifying
+      the contents of the lower 32K of memory.  Invoking RomWBW HBIOS functions within
+      an interrupt handler is not supported.  The interrupt management framework takes
+      care of saving and restoring AF, BC, DE, HL, and IY.  Any other registers modified
+      must be saved and restored by the interrupt handler.
+
+      Interrupt handlers are different for IM1 or IM2.
+
+      For IM1:
+
+          The new interrupt handler is responsible for chaining (JP) to the previous vector
+          if the interrupt is not handled.  The interrupt handler must return with ZF set
+          if interrupt is handled and ZF cleared if not handled.
+
+      For IM2:
+
+          The interrupt handler requires an invocation stub separate from the actual interrupt
+	  handling code.  The stub must be:
+
+	      PUSH	HL
+	      LD	HL,<adr of actual interrupt handler>
+	      JP	<adr of int routing engine>
+	      
+	  When calling Set Interrupt Vector, the address of the stub must be provided for the
+	  Interrupt Vector parameter.  The address of the Interrupt Routing Engine will be
+	  returned in DE and must be inserted into the stub code as indicated above.  In the
+	  case of IM2 mode interrutps, the actual interrupt handler should not chain to the
+	  previous entry.  The new interrupt handler must assume all responsibilities for
+	  the specific interrupt slot being occupied.
+
+      If the caller is transient, then the caller must remove the new interrupt handler and
+      restore the original one prior to termination.  This is accomplished by calling this
+      function with the Interrupt Vector set to the Previous Vector returned in the original
+      call.
+
+      The caller is responsible for disabling interrupts prior to making an INTSET call and
+      enabling them afterwards.  The caller is responsible for ensuring that a valid interrupt
+      handler is installed prior to enabling any hardware interrupts associated with the handler.
+      Also, if the handler is transient, the caller must disable the hardware interrupt(s)
+      associated with the handler prior to uninstalling it.
 
 ================
 Serial Functions
@@ -167,7 +251,7 @@ DEVICE ($06):
 
   Serial Device Attributes Byte:
     7: 0=RS-232, 1=Terminal
-    
+
     If Terminal, 3-0 is attached Video Unit #
 
 ==============
@@ -234,18 +318,18 @@ DEVICE ($17)
 
   Disk Device Attributes Byte:
     7: 1=Floppy, 0=Hard Disk (or similar, e.g. CF, SD, RAM)
-  
+
     If Floppy:
       6-5: Form Factor (0=8", 1=5.25", 2=3.5", 3=Other)
         4: Sides (0=SS, 1=DS)
       3-2: Density (0=SD, 1=DD, 2=HD, 3=ED)
       1-0: Reserved
-  
+
     If Hard Disk:
         6: Removable
       5-3: Type (0=Hard, 1=CF, 2=SD, 3=USB, 4=ROM, 5=RAM, 6=RAMF, 7=?)
       2-0: Reserved
-  
+
   Note: IDE value 848Ah in IDENTIFY DEVICE data word 0 indicates CF Card
 
 MEDIA ($18):
@@ -277,7 +361,7 @@ GEOMETRY ($1B):
                                         D:7=LBA Capable
                                         E=Sectors
                                         BC=Block Size
-                                        
+
   Report current media geometry information.
   If media is unknown, return error (no media)
 

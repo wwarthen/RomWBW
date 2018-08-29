@@ -14,6 +14,7 @@ Version 2.9.1
 - WBW: Added NZCOM distribution files to third slice of hard disk image
 - WBW: Fixed getnum32 bug in MODE command (found by Phil Summers)
 - P?S: Added serial support for Zilog Peripherals Baord
+- WBW: Added preliminary support for interrupt management API
 
 Version 2.9.0
 -------------

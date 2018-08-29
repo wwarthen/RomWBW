@@ -104,7 +104,7 @@ $ImgFile = "${OutDir}/${RomName}.img"	# Final name of IMG image (memory loadable
 if ($Platform -eq "UNA") {$CBiosFile = '../CBIOS/cbios_una.bin'} else {$CBiosFile = '../CBIOS/cbios_wbw.bin'}
 
 # List of RomWBW proprietary apps to imbed in ROM disk.
-$RomApps = "assign","fdu","format","mode","osldr","rtc","survey","syscopy","sysgen","talk","timer","xm"
+$RomApps = "assign","fdu","format","mode","osldr","rtc","survey","syscopy","sysgen","talk","timer","xm","inttest"
 
 ""
 "Building ${RomName}: ${ROMSize}KB ROM configuration ${Config} for Z${CPUType}..."
