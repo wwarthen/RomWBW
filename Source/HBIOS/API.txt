@@ -278,9 +278,8 @@ SEEK ($12):
   LBA: DE:HL
 
   Seek function establishes current sector for next I/O function for the specified
-  unit and invalidates the current sector for all other units.  A seek must precede
-  read/write/verify function calls.  Physical seek is typically deferred until
-  subsequent I/O operation.
+  unit.  A seek must precede read/write/verify function calls.  Physical seek is
+  typically deferred until subsequent I/O operation.
 
 READ ($13) / WRITE ($14) / VERIFY ($15):
   BC=Function/Unit                      A=Result
