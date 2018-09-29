@@ -1,9 +1,9 @@
 ================================================================
-Floppy Disk Utility (FDU) v5.1 for RetroBrew Computers 
-Disk IO / Zeta / Dual-IDE / N8
+Floppy Disk Utility (FDU) v5.3 for RetroBrew Computers 
+Disk IO / Zeta / Dual-IDE / N8 / RC2014 / SmallZ80
 ================================================================
 
-Updated December 16, 2017
+Updated September 5, 2018
 by Wayne Warthen (wwarthen@gmail.com)
 
 Application to test the hardware functionality of the Floppy 
@@ -74,6 +74,9 @@ supported:
  - Zeta 2
  - N8
  - Mark IV
+ - RC2014 w/ SMC
+ - RC2014 w/ WDC
+ - SmallZ80
 
 You must be using either a RomWBW or UBA based OS version.
 
@@ -85,13 +88,15 @@ You must have one of the following floppy disk controllers:
  - Zeta SBC onboard FDC
  - Zeta 2 SBC onboard FDC
  - N8 SBC onboard FDC
+ - RC2014 Scott Baker SMC-based Floppy Module
+ - RC2014 Scott Baker WDC-based Floppy Module
  
 Finally, you will need a floppy drive connected via an 
 appropriate cable:
 
 Disk IO - no twist in cable, drive unit 0/1 must be selected by jumper on drive
-DISK IO 3, Zeta, Zeta 2 - cable with twist, unit 0 after twist, unit 1 before twist
-DIDE, N8 - cable with twist, unit 0 before twist, unit 1 after twist
+DISK IO 3, Zeta, Zeta 2, RC2014 - cable with twist, unit 0 after twist, unit 1 before twist
+DIDE, N8, Mark IV, SmallZ80 - cable with twist, unit 0 before twist, unit 1 after twist
 
 Note that FDU does not utilize your systems ROM or OS to 
 access the floppy system.  FDU interacts directly with 
@@ -138,6 +143,16 @@ P5 (bd ID): 1-2, 3-4 (for $20-$3F port range)
 There are no specific N8 jumper settings, but the default
 I/O range starting at $80 is assumed in the published code.
 
+The RC2014 Scott Baker SMC-based floppy module should be jumpered
+for I/O base address 0x50 (SV1: 11-12), JP1 (TS) shorted,
+JP2 (/FAULT) shorted, JP3 (MINI): 2-3, JP4 (/DC/RDY): 2-3.
+
+The RC2014 Scott Baker WDC-based floppy module should be jumpered
+for I/O base address 0x50 (SV1: 11-12), JP1 (/DACK): 1-2,
+JP2 (TC): 2-3.
+
+SmallZ80 does not have any relevant jumper settings.  The 
+hardwired I/O ranges are assumed in the code.
 
 Modes of Operation
 ------------------
@@ -481,3 +496,12 @@ WW 1/8/2018: v5.2
 Added support for RC2014 hardware:
   - Scott Baker SMC 9266 FDC module
   - Scott Baker WDC 37C65 FDC module
+
+WW 9/5/2018: v5.3
+  - Removed use of pulsing TC to end R/W operations after one sector and
+    instead set EOT = R (sector number) so that after desired sector is
+    read, R/W stops with end of cylinder error which is a documented
+    method for controling number of sectors R/W.  This specific termination
+    condition is no longer considered an error, but a successful end of
+    operation.
+  - Added support for SmallZ80

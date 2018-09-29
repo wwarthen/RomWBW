@@ -17,6 +17,7 @@ Version 2.9.1
 - WBW: Added preliminary support for interrupt management API
 - P?S: Improved boot messages in RAM-Floppy driver
 - P?S: Added charge setting display to RTC boot messages
+- WBW: Add SmallZ80 support to FDU
 
 Version 2.9.0
 -------------
