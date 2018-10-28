@@ -163,6 +163,10 @@ Copy-Item '..\zsdos\zsdos.bin' 'zsdos.bin'
 Asm 'dbgmon'
 Asm 'prefix'
 Asm 'romldr'
+Asm 'nascom'
+Asm 'tastybasic'
+Asm	'imgpad'
+Asm 'imgpad0'
 if ($Platform -ne "UNA")
 {
 	Asm 'hbios' '-dROMBOOT' -Output 'hbios_rom.bin' -List 'hbios_rom.lst'
@@ -185,7 +189,8 @@ Concat 'prefix.bin','cpm.bin' 'cpm.sys'
 Concat 'prefix.bin','zsys.bin' 'zsys.sys'
 
 # Build 32K OS chunk containing the loader, debug monitor, and OS images
-Concat 'romldr.bin', 'dbgmon.bin','cpm.bin','zsys.bin' osimg.bin
+Concat 'romldr.bin', 'dbgmon.bin','cpm.bin','zsys.bin', 'imgpad.bin' osimg.bin
+Concat 'nascom.bin', 'tastybasic.bin', 'imgpad0.bin' osimg1.bin
 
 #
 # Now the ROM disk image is created.  This is done by starting with a
