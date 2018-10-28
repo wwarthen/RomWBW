@@ -23,20 +23,6 @@
 
 #INCLUDE "std.asm"
 
-zemu			.equ	0
-
-#if zemu
-tty_data        .equ 7ch                    ; Z80 Emulator
-tty_status      .equ 7dh
-rx_full         .equ 1
-tx_empty        .equ 0
-#else
-tty_data        .equ 67h                  ; SBC V2
-tty_status      .equ 68h
-rx_full         .equ 1
-tx_empty        .equ 0
-#endif
-
 ctrlc           .equ 03h
 bs              .equ 08h
 lf              .equ 0ah
@@ -46,7 +32,7 @@ ctrlu           .equ 15h
 
 #define dwa(addr) .db (addr >> 8) + 080h\ .db addr & 0ffh
 
-                .org TBC_LOC
+				.org TBC_LOC
 start:
                 ld sp,stack                 ; ** Cold Start **
                 ld a,0ffh
@@ -745,12 +731,12 @@ gl3:
                 cp buffer & 0ffh            ; if there are any?
                 jr z,gl4                    ; no, redo whole line
                 dec de                      ; yes, back pointer
-                ld a,5ch                    ; and echo a backslash
+                ld a,bs                    	; and echo a backslash 5ch **
                 call outc
                 jr gl1                      ; and get next character
 gl4:
                 call crlf                   ; redo entire line
-                ld a,5eh
+                ld a,'>'					; 5eh **
                 jr getline
 findline:
                 ld a,h                      ; ** FindLine **
@@ -1216,6 +1202,12 @@ new:
 endd:
                 call endchk                 ; ** End **
                 jp rstart
+
+bye:			call endchk					; ** Reboot **
+				LD A,BID_BOOT				; BOOT BANK
+				LD HL,0				 		; ADDRESS ZERO
+				CALL HB_BNKCALL				; DOES NOT RETURN
+				HALT
 run:
                 call endchk                 ; ** Run **
                 ld de,textbegin
@@ -1525,38 +1517,38 @@ patloop:
                 jr nz,patloop
                 ld de,msg1                  ; then output welcome message
                 call printstr
-                ld hl,start                  ; initialise random pointer
+                ld hl,start                 ; initialise random pointer
                 ld (rndptr),hl
                 ld hl,textbegin             ; initialise text area pointers
                 ld (textunfilled),hl
                 jp rstart
 
 chkio:
- ;               in a,(tty_status)           ; check if character available
- ;               bit rx_full,a
 				; SAVE INCOMING REGISTERS (AF IS OUTPUT)
 				PUSH	BC
 				PUSH	DE
 				PUSH	HL
-				; GET CONSOLE INPUT STATUS VIA HBIOS
-				LD		C,CIODEV_CONSOLE; CONSOLE UNIT TO C
-				LD		B,BF_CIOIST		; HBIOS FUNC: INPUT STATUS
-				RST		08				; HBIOS RETURNS STATUS IN A
-				; RESTORE REGISTERS (AF IS OUTPUT)
+											; GET CONSOLE INPUT STATUS VIA HBIOS
+				LD		C,CIODEV_CONSOLE	; CONSOLE UNIT TO C
+				LD		B,BF_CIOIST			; HBIOS FUNC: INPUT STATUS
+				RST		08					; HBIOS RETURNS STATUS IN A
+				
+											; RESTORE REGISTERS (AF IS OUTPUT)
+											
+											
 				POP		HL
 				POP		DE
 				POP		BC
 				ret z                       ; no, return
-; 				in a,(tty_data)             ; get the character
 				PUSH	BC
 				PUSH	DE
 				PUSH	HL
-				; INPUT CHARACTER FROM CONSOLE VIA HBIOS
-				LD		C,CIODEV_CONSOLE; CONSOLE UNIT TO C
-				LD		B,BF_CIOIN		; HBIOS FUNC: INPUT CHAR
-				RST		08				; HBIOS READS CHARACTDR
-				LD		A,E				; MOVE CHARACTER TO A FOR RETURN
-				; RESTORE REGISTERS (AF IS OUTPUT)
+											; INPUT CHARACTER FROM CONSOLE VIA HBIOS
+				LD		C,CIODEV_CONSOLE	; CONSOLE UNIT TO C
+				LD		B,BF_CIOIN			; HBIOS FUNC: INPUT CHAR
+				RST		08					; HBIOS READS CHARACTDR
+				LD		A,E					; MOVE CHARACTER TO A FOR RETURN
+											; RESTORE REGISTERS (AF IS OUTPUT)
 				POP		HL
 				POP		DE
 				POP		BC
@@ -1587,51 +1579,49 @@ io3:
                 ret nz                      ; no
                 jp rstart                   ; yes, restart tasty basic
 crlf:
-                ld a,cr
-outc:
-#if				zemu 
+                ld a,cr						; outc will alway output a lf after a cr
+outc:										; using a recursice call
 				push af
                 ld a,(ocsw)                 ; check output control switch
                 or a
-                jr nz,uart_tx               ; output is enabled
+                jr nz,outen		            ; output is enabled
                 pop af                      ; output is disabled
-                ret                         ; so return
-uart_tx:
-                call uart_tx_ready          ; see if transmit is available
-                pop af                      ; restore the character
-                out (tty_data),a            ; and send it
-                cp cr                       ; was it a cr?
-                ret nz                      ; no, return
-                ld a,lf                     ; send a lf
-                call outc
-                ld a,cr                     ; restore register
-                ret                         ; and return
-uart_tx_ready:
-                push af
-uart_tx_ready_loop:
-                in a,(tty_status)
-                bit tx_empty,a
-                jp z,uart_tx_ready_loop
-                pop af
                 ret
-#else			; USE HBIOS
-				; SAVE ALL INCOMING REGISTERS
-				PUSH	AF
+			
+outen:			;call canoutc				; 
+				pop		af					; recover character to output
+				push	af
 				PUSH	BC
 				PUSH	DE
 				PUSH	HL
-				; OUTPUT CHARACTER TO CONSOLE VIA HBIOS
-				LD		E,A				; OUTPUT CHAR TO E
-				LD		C,CIODEV_CONSOLE; CONSOLE UNIT TO C
-				LD		B,BF_CIOOUT		; HBIOS FUNC: OUTPUT CHAR
-				RST		08				; HBIOS OUTPUTS CHARACTDR
-				; RESTORE ALL REGISTERS
+											; OUTPUT CHARACTER TO CONSOLE VIA HBIOS
+				LD		E,A					; OUTPUT CHAR TO E
+				LD		C,CIODEV_CONSOLE	; CONSOLE UNIT TO C
+				LD		B,BF_CIOOUT			; HBIOS FUNC: OUTPUT CHAR
+				RST		08					; HBIOS OUTPUTS CHARACTER
 				POP		HL
 				POP		DE
 				POP		BC
 				POP		AF
+                cp		cr                  ; was it a cr?
+                ret		nz                  ; no, return
+                ld		a,lf                ; send a lf
+                call outc
+                ld		a,cr                ; restore register
 				RET
-#endif				
+
+;canoutc:
+;                push af
+;uart_tx_ready_loop:
+;				LD		C,CIODEV_CONSOLE; CONSOLE UNIT TO C
+;				LD		B,BF_CIOOST		; HBIOS FUNC: CHAR OUTPUT STATUS
+;				RST		08				; HBIOS CHECK STATUS
+;                OR		A
+;                bit tx_empty,a
+;                jp z,uart_tx_ready_loop
+;                pop af
+;                ret
+				
 
 ;*************************************************************
 ;
@@ -1691,6 +1681,8 @@ tab2:                                       ; direct/statement
                 dwa(poke)
                 .db "END"
                 dwa(endd)
+				.db	"BYE"
+				dwa(bye)
                 dwa(deflt)
 tab4:                                       ; functions
                 .db "PEEK"
@@ -1766,19 +1758,10 @@ ex5:
                 jp (hl)
 
 ;-------------------------------------------------------------------------------
-
-lstrom:                                     ; all above can be rom
-;               .org TBC_SIZ+09feh
+usrfunc        jp qhow                      ; default user defined function
 usrvector:     .db usrfunc & 0ffh          ; location of user defined
                .db (usrfunc >> 8) & 0ffh   ; function
-
-;               .org TBC_SIZ+0a00h                   ; following must be in ram
-usrfunc        jp qhow                      ; default user defined function
-
-codend			.equ		$
-
-;               .org TBC_SIZ+01000h                  ; start of state
-ocsw           .DS 1                        ; output control switch
+ocsw           .db			0ffh            ; output control switch
 current        .DS 2                        ; points to current line
 stkgos         .DS 2                        ; saves sp in 'GOSUB'
 varnext        .ds 2                        ; temp storage
@@ -1790,21 +1773,20 @@ loopln         .ds 2                        ; loop line number
 loopptr        .ds 2                        ; loop text pointer
 rndptr         .ds 2                        ; random number pointer
 textunfilled   .ds 2                        ; -> unfilled text area
-textbegin      .ds 2                        ; start of text save area
+;textbegin      .ds 2                        ; start of text save area
 ;               .org 07fffh
-textend        .ds 0                        ; end of text area
+;textend        .ds 0                        ; end of text area
 varbegin       .ds 55                       ; variable @(0)
 buffer         .ds 72                       ; input buffer
 bufend         .ds 1
 stacklimit     .ds 1
-stack          .equ 0fe00h
-               
-;TBC_STACK		.EQU	$			   
-			   
-SLACK			.EQU	(TBC_END - codend)
+textbegin		.equ	$
+lstrom:			.equ	$ 
+stack			.equ	0fd00h
+textend			.equ	stack-0100h            
+  
+SLACK			.EQU	(TBC_END - lstrom)
 				.FILL	SLACK,'t'
-;
-
 ;
 				.ECHO	"TASTYBASIC space remaining: "
 				.ECHO	SLACK
