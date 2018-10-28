@@ -234,7 +234,7 @@ if ($Platform -eq "UNA")
 }
 else 
 {
-	Concat 'hbios_rom.bin','osimg.bin','osimg.bin','osimg.bin',$RomDiskFile $RomFile
+	Concat 'hbios_rom.bin','osimg.bin','osimg1.bin','osimg.bin',$RomDiskFile $RomFile
 	Concat 'hbios_app.bin','osimg.bin' $ComFile
 	Concat 'hbios_img.bin','osimg.bin' $ImgFile
 }
