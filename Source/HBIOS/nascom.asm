@@ -296,7 +296,7 @@ WORDS:  .BYTE   'E'+80H,"ND"
         .BYTE   'L'+80H,"INES"
         .BYTE   'C'+80H,"LS"
         .BYTE   'W'+80H,"IDTH"
-        .BYTE   'M'+80H,"ONITOR"
+        .BYTE   'B'+80H,"YE"
         .BYTE   'S'+80H,"ET"
         .BYTE   'R'+80H,"ESET"
         .BYTE   'P'+80H,"RINT"
@@ -385,7 +385,7 @@ WORDTB: .WORD   PEND
         .WORD   LINES
         .WORD   CLS
         .WORD   WIDTH
-        .WORD   MONITR
+        .WORD   MONITR				; BYE
         .WORD   PSET
         .WORD   RESET
         .WORD   PRINT
