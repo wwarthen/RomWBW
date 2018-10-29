@@ -1726,7 +1726,7 @@ exec:
 ex1:
                 ld a,(de)
                 inc de
-                cp 23h
+                cp '.'
                 jr z,ex3
                 inc hl
                 cp (hl)
@@ -1756,13 +1756,13 @@ ex5:
                 ld h,a
                 pop af
                 jp (hl)
-
+usrfunc:		jp qhow                      ; default user defined function
 ;-------------------------------------------------------------------------------
-usrfunc        jp qhow                      ; default user defined function
-usrvector:     .db usrfunc & 0ffh          ; location of user defined
-               .db (usrfunc >> 8) & 0ffh   ; function
-ocsw           .db			0ffh            ; output control switch
-current        .DS 2                        ; points to current line
+usrvector:		.db usrfunc & 0ffh          ; location of user defined
+				.db (usrfunc >> 8) & 0ffh   ; function
+ocsw			.db			0ffh            ; output control switch
+lstrom:			.equ	$ 
+current			.DS 2                        ; points to current line
 stkgos         .DS 2                        ; saves sp in 'GOSUB'
 varnext        .ds 2                        ; temp storage
 stkinp         .ds 2                        ; save sp in 'INPUT'
@@ -1773,18 +1773,18 @@ loopln         .ds 2                        ; loop line number
 loopptr        .ds 2                        ; loop text pointer
 rndptr         .ds 2                        ; random number pointer
 textunfilled   .ds 2                        ; -> unfilled text area
-;textbegin      .ds 2                        ; start of text save area
-;               .org 07fffh
-;textend        .ds 0                        ; end of text area
-varbegin       .ds 55                       ; variable @(0)
-buffer         .ds 72                       ; input buffer
+textbegin		.ds 	2					; start of text save area
+
+				.org	0fcffh
+textend			.ds		1
+varbegin       .ds		55					; variable @(0)
+buffer         .ds 		72					; input buffer
 bufend         .ds 1
 stacklimit     .ds 1
-textbegin		.equ	$
-lstrom:			.equ	$ 
-stack			.equ	0fd00h
-textend			.equ	stack-0100h            
-  
+
+				.org	0fdffh
+stack			.equ	$
+
 SLACK			.EQU	(TBC_END - lstrom)
 				.FILL	SLACK,'t'
 ;
