@@ -163,6 +163,7 @@ Copy-Item '..\zsdos\zsdos.bin' 'zsdos.bin'
 Asm 'dbgmon'
 Asm 'prefix'
 Asm 'romldr'
+Asm	'eastaegg'
 Asm 'nascom'
 Asm 'tastybasic'
 Asm	'imgpad'
@@ -189,7 +190,7 @@ Concat 'prefix.bin','cpm.bin' 'cpm.sys'
 Concat 'prefix.bin','zsys.bin' 'zsys.sys'
 
 # Build 32K OS chunk containing the loader, debug monitor, and OS images
-Concat 'romldr.bin', 'dbgmon.bin','cpm.bin','zsys.bin', 'imgpad.bin' osimg.bin
+Concat 'romldr.bin', 'dbgmon.bin','cpm.bin','zsys.bin', 'eastaegg.bin', 'imgpad.bin' osimg.bin
 Concat 'nascom.bin', 'tastybasic.bin', 'imgpad0.bin' osimg1.bin
 
 #
