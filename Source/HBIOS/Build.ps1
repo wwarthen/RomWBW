@@ -119,10 +119,7 @@ Function Asm($Component, $Opt, $Architecture=$CPUType, $Output="${Component}.bin
   $Cmd = "tasm -t${Architecture} -g3 ${Opt} ${Component}.asm ${Output} ${List}"
   $Cmd | write-host
   Invoke-Expression $Cmd | write-host
-  if ($LASTEXITCODE -gt 0) 
-  {
-	throw "TASM returned exit code" + $LASTEXITCODE
-  }
+  if ($LASTEXITCODE -gt 0) {throw "TASM returned exit code $LASTEXITCODE"}
 }
 
 # Function to concatenate two binary files.
