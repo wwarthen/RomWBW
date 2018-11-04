@@ -14,4 +14,6 @@ set ZXINCDIR=%TOOLS%/cpm/include/
 zx z80mr camel80
 zx MLOAD25 -camel80.bin=camel80.hex
 
+copy camel80.bin ..\
+
 goto :eof
