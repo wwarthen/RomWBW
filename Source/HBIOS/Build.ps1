@@ -119,7 +119,10 @@ Function Asm($Component, $Opt, $Architecture=$CPUType, $Output="${Component}.bin
   $Cmd = "tasm -t${Architecture} -g3 ${Opt} ${Component}.asm ${Output} ${List}"
   $Cmd | write-host
   Invoke-Expression $Cmd | write-host
-  if ($LASTEXITCODE -gt 0) {throw "TASM returned exit code $LASTEXITCODE"}
+  if ($LASTEXITCODE -gt 0) 
+  {
+	throw "TASM returned exit code" + $LASTEXITCODE
+  }
 }
 
 # Function to concatenate two binary files.
@@ -191,7 +194,7 @@ Concat 'prefix.bin','zsys.bin' 'zsys.sys'
 
 # Build 32K OS chunk containing the loader, debug monitor, and OS images
 Concat 'romldr.bin', 'dbgmon.bin','cpm.bin','zsys.bin', 'eastaegg.bin', 'imgpad.bin' osimg.bin
-Concat 'nascom.bin', 'tastybasic.bin', 'imgpad0.bin' osimg1.bin
+Concat 'nascom.bin', 'tastybasic.bin', 'camel80.bin', 'imgpad0.bin' osimg1.bin
 
 #
 # Now the ROM disk image is created.  This is done by starting with a
