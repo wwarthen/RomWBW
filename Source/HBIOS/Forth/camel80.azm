@@ -4,6 +4,7 @@ CIOOUT			EQU	01h	; CHARACTER OUTPUT
 CIOIST			EQU 02h ; CHARACTER INPUT STATUS
 BID_BOOT		EQU	00h
 HB_BNKCALL		EQU 0fff9h
+FTH_SIZ			EQU	1700h
 
 ; Listing 2.
 ; ===============================================
@@ -1045,5 +1046,11 @@ snext:  next
 *INCLUDE camel80h.azm   ; High Level words
 lastword EQU link   ; nfa of last word in dict.
 enddict EQU $       ; user's code starts here
+
+		; force padding to page boundary
+
+		ds (FTH_SIZ-(enddict-reset)-1)
+		nop
+		
         END
 
