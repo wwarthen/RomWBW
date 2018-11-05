@@ -190,9 +190,8 @@ Concat 'prefix.bin','cpm.bin' 'cpm.sys'
 Concat 'prefix.bin','zsys.bin' 'zsys.sys'
 
 # Build 32K OS chunk containing the loader, debug monitor, and OS images
-Concat 'romldr.bin', 'dbgmon.bin','cpm.bin','zsys.bin', 'eastaegg.bin', 'imgpad.bin' osimg.bin
-Concat 'nascom.bin', 'tastybasic.bin', 'camel80.bin', 'imgpad0.bin' osimg1.bin
-
+Concat 'romldr.bin', 'dbgmon.bin', 'cpm.bin', 'zsys.bin', 'eastaegg.bin', 'imgpad.bin' osimg.bin
+Concat 'camel80.bin', 'nascom.bin', 'tastybasic.bin', 'imgpad0.bin' osimg1.bin
 #
 # Now the ROM disk image is created.  This is done by starting with a
 # blank ROM disk image of the correct size, then cpmtools is used to

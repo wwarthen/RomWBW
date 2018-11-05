@@ -1539,7 +1539,7 @@ chkio:
 				POP		HL
 				POP		DE
 				POP		BC
-				ret z                       ; no, return
+				RET 	Z                   ; no, return
 				PUSH	BC
 				PUSH	DE
 				PUSH	HL
