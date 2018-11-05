@@ -1,3 +1,9 @@
+CIODEV_CONSOLE	EQU	0D0h
+CIOOUT			EQU	01h	; CHARACTER OUTPUT
+CIOIST			EQU 02h
+CIOIN			EQU 00h
+BID_BOOT		EQU	00h
+HB_BNKCALL		EQU 0fff9h
 
 ; Listing 2.
 ; ===============================================
@@ -109,8 +115,8 @@ nexthl  MACRO
 ; Instead, we have the...
 
 ; CP/M ENTRY POINT
-        org 100h
-reset:  ld hl,(6h)   ; BDOS address, rounded down
+        org 0A00h    ; Execute address 
+reset:  ld hl,0FDFFh ; HBIOS address, rounded down
         ld l,0       ;    = end of avail.mem (EM)
         dec h        ; EM-100h
         ld sp,hl     ;      = top of param stack
@@ -122,18 +128,19 @@ reset:  ld hl,(6h)   ; BDOS address, rounded down
         push hl
         pop iy       ;      = bottom of user area
         ld de,1      ; do reset if COLD returns
+;		jp	tst
         jp COLD      ; enter top-level Forth word
 
 ; Memory map:
 ;   0080h       Terminal Input Buffer, 128 bytes
-;   0100h       Forth kernel = start of CP/M TPA
+;   0A00h       Forth kernel = starts after ROMLDR
 ;     ? h       Forth dictionary (user RAM)
 ;   EM-200h     User area, 128 bytes
 ;   EM-180h     Parameter stack, 128B, grows down
 ;   EM-100h     HOLD area, 40 bytes, grows down
 ;   EM-0D8h     PAD buffer, 88 bytes
 ;   EM-80h      Return stack, 128 B, grows down
-;   EM          End of RAM = start of CP/M BDOS
+;   EM          End of RAM = start of HBIOS
 ; See also the definitions of U0, S0, and R0
 ; in the "system variables & constants" area.
 ; A task w/o terminal input requires 200h bytes.
@@ -256,39 +263,69 @@ dodoes: ; -- a-addr
         next
 
 ; CP/M TERMINAL I/O =============================
-cpmbdos EQU 5h          ; CP/M BDOS entry point
-
-;Z BDOS   de c -- a   call CP/M BDOS
-    head BDOS,4,BDOS,docode
-        ex de,hl    ; save important Forth regs
-        pop de      ;  (DE,IX,IY) & pop DE value
-        push hl
-        push ix
-        push iy
-        call cpmbdos
-        ld c,a      ; result in TOS
-        ld b,0
-        pop iy      ; restore Forth regs
-        pop ix
-        pop de
-        next
-
+ 
 ;C EMIT     c --    output character to console
-;   6 BDOS DROP ;
-; warning: if c=0ffh, will read one keypress
-    head EMIT,4,EMIT,docolon
-        DW LIT,06H,BDOS,DROP,EXIT
-
+    head EMIT,4,EMIT,docode
+ 		push	AF
+		PUSH	BC
+		PUSH	DE
+		PUSH	HL					; OUTPUT CHARACTER TO CONSOLE VIA HBIOS
+		LD		E,C					; OUTPUT CHAR TO E
+		LD		C,CIODEV_CONSOLE	; CONSOLE UNIT TO C
+		LD		B,CIOOUT			; HBIOS FUNC: OUTPUT CHAR
+		RST		08					; HBIOS OUTPUTS CHARACTER
+		POP		HL
+		POP		DE
+		POP		BC
+		POP		AF
+		pop		BC
+		next
+;		
 ;Z SAVEKEY  -- addr  temporary storage for KEY?
     head savekey,7,SAVEKEY,dovar
-        DW 0
+SVKY:	DW 0
+
+DBG:
+ 		push	AF
+		PUSH	BC
+		PUSH	DE
+		PUSH	HL					; OUTPUT CHARACTER TO CONSOLE VIA HBIOS
+;		LD		E,'1'				; OUTPUT CHAR TO E
+		LD		C,CIODEV_CONSOLE	; CONSOLE UNIT TO C
+		LD		B,CIOOUT			; HBIOS FUNC: OUTPUT CHAR
+		RST		08					; HBIOS OUTPUTS CHARACTER
+		POP		HL
+		POP		DE
+		POP		BC
+		POP		AF
+		ret
 
 ;X KEY?     -- f    return true if char waiting
-;   0FF 6 BDOS DUP SAVEKEY C! ;   rtns 0 or key
-; must use BDOS function 6 to work with KEY
-    head querykey,4,KEY?,docolon
-        DW LIT,0FFH,LIT,06H,BDOS
-        DW DUP,SAVEKEY,CSTORE,EXIT
+    head querykey,4,KEY?,docode
+;        DW LIT,0FFH,LIT,06H,BDOS
+;        DW DUP,SAVEKEY,CSTORE,EXIT
+		PUSH	DE
+		PUSH	HL					; GET CONSOLE INPUT STATUS VIA HBIOS					
+		LD		C,CIODEV_CONSOLE	; CONSOLE UNIT TO C
+		LD		B,CIOIST			; HBIOS FUNC: INPUT STATUS
+		RST		08					; HBIOS RETURNS STATUS IN A
+		LD		BC,0000h
+		OR		A
+		JR		Z,key3
+									; INPUT CHARACTER FROM CONSOLE VIA HBIOS
+		LD		C,CIODEV_CONSOLE	; CONSOLE UNIT TO C
+		LD		B,CIOIN				; HBIOS FUNC: INPUT CHAR
+		RST		08					; HBIOS READS CHARACTDR
+		LD		B,E
+		LD		C,0
+key3:	LD		HL,SVKY
+		LD		(HL),B
+		INC		HL
+		LD		(HL),C
+		POP		HL					; RESTORE REGISTERS (AF IS OUTPUT)	
+		POP		DE
+		PUSH	BC
+		next
 
 ;C KEY      -- c    get character from keyboard
 ;   BEGIN SAVEKEY C@ 0= WHILE KEY? DROP REPEAT
@@ -301,20 +338,12 @@ KEY1:   DW SAVEKEY,CFETCH,ZEROEQUAL,qbranch,KEY2
 KEY2:   DW SAVEKEY,CFETCH,LIT,0,SAVEKEY,CSTORE
         DW EXIT
 
-;Z CPMACCEPT  c-addr +n -- +n'  get line of input
-;   SWAP 2 - TUCK C!      max # of characters
-;   DUP 0A BDOS DROP      CP/M Get Console Buffer
-;   1+ C@  0A EMIT ;      get returned count
-; Note: requires the two locations before c-addr
-; to be available for use.
-    head CPMACCEPT,9,CPMACCEPT,docolon
-        DW SWOP,LIT,2,MINUS,TUCK,CSTORE
-        DW DUP,LIT,0Ah,BDOS,DROP
-        DW ONEPLUS,CFETCH,LIT,0Ah,EMIT,EXIT
-
 ;X BYE     i*x --    return to CP/M
     head bye,3,bye,docode
-        jp 0
+		LD A,BID_BOOT				; BOOT BANK
+		LD HL,0				 		; ADDRESS ZERO
+		CALL HB_BNKCALL				; DOES NOT RETURN
+		HALT
 
 ; STACK OPERATIONS ==============================
 

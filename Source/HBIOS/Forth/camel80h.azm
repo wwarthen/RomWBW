@@ -44,9 +44,11 @@
 ;X tib     -- a-addr     Terminal Input Buffer
 ;  HEX 82 CONSTANT TIB   CP/M systems: 126 bytes
 ;  HEX -80 USER TIB      others: below user area
-    head TIB,3,TIB,docon
-        dw 82h
-
+;    head TIB,3,TIB,docon
+;       dw 82h
+    head TIB,3,TIB,douser
+        dw -80h
+		
 ;Z u0      -- a-addr       current user area adrs
 ;  0 USER U0
     head U0,2,U0,douser
@@ -677,7 +679,7 @@ INTER9: DW DROP,EXIT
     head QUIT,4,QUIT,docolon
         DW L0,LP,STORE
         DW R0,RPSTORE,LIT,0,STATE,STORE
-QUIT1:  DW TIB,DUP,TIBSIZE,CPMACCEPT,SPACE
+QUIT1:  DW TIB,DUP,TIBSIZE,ACCEPT,SPACE                 ;CPMACCEPT
         DW INTERPRET
         DW STATE,FETCH,ZEROEQUAL,qbranch,QUIT2
         DW CR,XSQUOTE
@@ -1016,7 +1018,7 @@ DOTS2:  DW EXIT
 ;   ABORT ;
     head COLD,4,COLD,docolon
         DW UINIT,U0,NINIT,CMOVE
-        DW LIT,80h,COUNT,INTERPRET
+;        DW LIT,80h,COUNT,INTERPRET
         DW XSQUOTE
         DB 35,'Z80 CamelForth v1.01  25 Jan 1995'
         DB 0dh,0ah
