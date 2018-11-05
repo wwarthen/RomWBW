@@ -1,7 +1,7 @@
 CIODEV_CONSOLE	EQU	0D0h
+CIOIN			EQU 00h ; CHARACTER INPPUT
 CIOOUT			EQU	01h	; CHARACTER OUTPUT
-CIOIST			EQU 02h
-CIOIN			EQU 00h
+CIOIST			EQU 02h ; CHARACTER INPUT STATUS
 BID_BOOT		EQU	00h
 HB_BNKCALL		EQU 0fff9h
 
@@ -51,6 +51,8 @@ HB_BNKCALL		EQU 0fff9h
 ;       for interpreter input; TIB at 82h.
 ;   02 Mar 95 v1.02  changed ALIGN to ALIGNED in
 ;       S" (S"); changed ,BRANCH to ,XT in DO.
+;   05 Nov 18 v1.02 Initial ROMWBW HBIOS version.
+;       b1ackmai1er difficultylevelhigh@gmail.com
 ; ===============================================
 ; Macros to define Forth headers
 ; HEAD  label,length,name,action
@@ -128,11 +130,10 @@ reset:  ld hl,0FDFFh ; HBIOS address, rounded down
         push hl
         pop iy       ;      = bottom of user area
         ld de,1      ; do reset if COLD returns
-;		jp	tst
         jp COLD      ; enter top-level Forth word
 
 ; Memory map:
-;   0080h       Terminal Input Buffer, 128 bytes
+;               Terminal Input Buffer, 128 bytes
 ;   0A00h       Forth kernel = starts after ROMLDR
 ;     ? h       Forth dictionary (user RAM)
 ;   EM-200h     User area, 128 bytes
@@ -266,8 +267,6 @@ dodoes: ; -- a-addr
  
 ;C EMIT     c --    output character to console
     head EMIT,4,EMIT,docode
- 		push	AF
-		PUSH	BC
 		PUSH	DE
 		PUSH	HL					; OUTPUT CHARACTER TO CONSOLE VIA HBIOS
 		LD		E,C					; OUTPUT CHAR TO E
@@ -276,62 +275,40 @@ dodoes: ; -- a-addr
 		RST		08					; HBIOS OUTPUTS CHARACTER
 		POP		HL
 		POP		DE
-		POP		BC
-		POP		AF
-		pop		BC
+		pop		BC					; PUT TOP OF STACK IN BC
 		next
 ;		
 ;Z SAVEKEY  -- addr  temporary storage for KEY?
     head savekey,7,SAVEKEY,dovar
 SVKY:	DW 0
 
-DBG:
- 		push	AF
-		PUSH	BC
-		PUSH	DE
-		PUSH	HL					; OUTPUT CHARACTER TO CONSOLE VIA HBIOS
-;		LD		E,'1'				; OUTPUT CHAR TO E
-		LD		C,CIODEV_CONSOLE	; CONSOLE UNIT TO C
-		LD		B,CIOOUT			; HBIOS FUNC: OUTPUT CHAR
-		RST		08					; HBIOS OUTPUTS CHARACTER
-		POP		HL
-		POP		DE
-		POP		BC
-		POP		AF
-		ret
-
 ;X KEY?     -- f    return true if char waiting
     head querykey,4,KEY?,docode
-;        DW LIT,0FFH,LIT,06H,BDOS
-;        DW DUP,SAVEKEY,CSTORE,EXIT
+		PUSH	BC					; SAVE TOP OF STACK
 		PUSH	DE
 		PUSH	HL					; GET CONSOLE INPUT STATUS VIA HBIOS					
 		LD		C,CIODEV_CONSOLE	; CONSOLE UNIT TO C
 		LD		B,CIOIST			; HBIOS FUNC: INPUT STATUS
 		RST		08					; HBIOS RETURNS STATUS IN A
-		LD		BC,0000h
+		LD		B,A
 		OR		A
-		JR		Z,key3
-									; INPUT CHARACTER FROM CONSOLE VIA HBIOS
+		JR		Z,key3				; INPUT CHARACTER FROM CONSOLE VIA HBIOS
 		LD		C,CIODEV_CONSOLE	; CONSOLE UNIT TO C
 		LD		B,CIOIN				; HBIOS FUNC: INPUT CHAR
 		RST		08					; HBIOS READS CHARACTDR
 		LD		B,E
-		LD		C,0
-key3:	LD		HL,SVKY
+key3:	LD		C,0
+		LD		HL,SVKY
 		LD		(HL),B
 		INC		HL
 		LD		(HL),C
-		POP		HL					; RESTORE REGISTERS (AF IS OUTPUT)	
+		POP		HL					 
 		POP		DE
-		PUSH	BC
 		next
 
 ;C KEY      -- c    get character from keyboard
 ;   BEGIN SAVEKEY C@ 0= WHILE KEY? DROP REPEAT
 ;   SAVEKEY C@  0 SAVEKEY C! ;
-; must use CP/M direct console I/O to avoid echo
-; (BDOS function 6, contained within KEY?)
     head KEY,3,KEY,docolon
 KEY1:   DW SAVEKEY,CFETCH,ZEROEQUAL,qbranch,KEY2
         DW QUERYKEY,DROP,branch,KEY1
