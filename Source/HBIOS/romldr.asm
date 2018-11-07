@@ -250,7 +250,7 @@ MENU_1:	MENU_L("CP/M $   $", "C", GOROM,    BID_BIOSIMG, CPM_ENT,    1A00h,     
 		MENU_L("T-BASIC $$", "T", GOROMB,   BID_OSIMG,   TBC_LOC,    3700h,      TBC_LOC,    TBC_SIZ,   BID_USR,    "Tasty BASIC$ ")  
 
 #IF (DSKYENABLE)
-		MENU_L("DSKY-MON $", "D", GOROM,    BID_BIOSIMG, MON_DSKY,   0A00h,      MON_LOC,    MON_SIZ,   BID_USR,     DSKY Monitor$")
+		MENU_L("DSKY-MON $", "D", GOROM,    BID_BIOSIMG, MON_DSKY,   0A00h,      MON_LOC,    MON_SIZ,   BID_USR,    "DSKY Monitor$")
 #ENDIF
 	
 		.DB "REBOOT$   ", "R"
