@@ -4,9 +4,9 @@ Final Output Files
 
 ROM Output File [512K] -> <config>.rom
   hbios_rom [32K]
-  OSIMG [32K]
-  OSIMG [32K] (used as filler)
-  OSIMG [32K] (used as filler)
+  OSIMG  [32K]
+  OSIMG1 [32K] 
+  OSIMG  [32K] (used as filler)
   romdisk - [384K]
 
 COM Output File -> <config>.com
@@ -23,9 +23,17 @@ Intermediate Output Files
 
 OSIMG [32K] -> osimg.bin
   romldr [4K]			osldr?
-  dbgmon [4K]			tbasic?
+  dbgmon [4K]			
   CPM (ccp/bdos/cbios) [12K]
   ZSYS (zcpr/zsdos/cbios) [12K]
+  eastaegg [0.5K]
+  imagepad [-]
+
+OSIMG1 [32K] -> osimg0.bin
+  camel80 [5.75K]
+  nascom [8K]
+  tastybasic [2.25K]
+  imagepad0 [-]
 
 CPM [12K] -> cpm.bin
   ccp [2K]
@@ -74,6 +82,35 @@ dbgmon.asm -> dbgmon.bin:
   util.asm
   memmgr.asm
   dsky.asm
+
+eastaegg.asm -> eastaegg.bin
+  std.asm
+    ver.inc
+    hbios.inc
+    build.inc
+      <config>.asm
+    plt_<platform>.inc
+
+Forth\camel80.azm -> Forth\camel80.bin -> ..\camel80.bin
+  camel80d.azm
+  camel80h.azm	
+
+nascom.asm -> nascom.bin
+  std.asm
+    ver.inc
+    hbios.inc
+    build.inc
+      <config>.asm
+    plt_<platform>.inc
+
+tastybasic.asm -> tastybasic.bin
+  std.asm
+    ver.inc
+    hbios.inc
+    build.inc
+      <config>.asm
+    plt_<platform>.inc
+ 
   
 =======================================================================
 HBIOS Loading Modes:
