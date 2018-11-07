@@ -194,6 +194,24 @@ UNA customization is performed within the ROM setup script.
 Complete documentation of the customization process is found in the
 ReadMe.txt file in the Source directory.
 
+Inbuild ROM Applications
+------------------------
+
+Additonal software other than the CP/M and Z-System application can
+be included in the ROM image for execution from the ROM loader. 
+
+Current inclusions are:
+
+	Monitor     - Z80 debug monitor with hexload capability.
+	Forth       - Brad Rodriguez's ANS compatible Forth.
+	Basic	    - Nascom 8K BASIC.
+	Tasty BASIC	- Dimitri Theulings Tiny BASIC implementation.
+	
+	Note: To exit type B in Monitor and BYE in other applications.
+	
+Space is available in the ROM image for the inclusion of other software.
+Any inbuild application can be set up to launch automatically at startup.
+
 Source Code Respository
 -----------------------
 
