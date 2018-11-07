@@ -21,6 +21,7 @@ call :asm Mode || goto :eof
 call :asm RTC || goto :eof
 call :asm Timer || goto :eof
 call :asm180 IntTest || goto :eof
+call :asm Reboot || goto :eof
 
 zx Z80ASM -SYSGEN/F
 
