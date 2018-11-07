@@ -1,7 +1,7 @@
 @echo off
 setlocal
 
-set TOOLS=../../../Tools
+set TOOLS=../../Tools
 
 set PATH=%TOOLS%\tasm32;%TOOLS%\zx;%PATH%
 
@@ -13,7 +13,3 @@ set ZXINCDIR=%TOOLS%/cpm/include/
 
 zx z80mr camel80
 zx MLOAD25 -camel80.bin=camel80.hex
-
-copy camel80.bin ..\
-
-goto :eof
