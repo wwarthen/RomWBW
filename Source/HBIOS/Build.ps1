@@ -151,22 +151,25 @@ ROMSIZE		.EQU		${ROMSize}		; SIZE OF ROM IN KB
 ;
 "@ | Out-File "build.inc" -Encoding ASCII
 
-# Create a local copy of the CP/M CCP and BDOS images for later use.
+# Bring over previously assembled binary copy of the CP/M CCP and BDOS images for later use.
 Copy-Item '..\cpm22\os2ccp.bin' 'ccp.bin'
 Copy-Item '..\cpm22\os3bdos.bin' 'bdos.bin'
 
-# Create a local copy of the ZSystem CCP and BDOS images for later use.
+# Bring over previously assembled binary copy of the ZSystem CCP and BDOS images for later use.
 Copy-Item '..\zcpr-dj\zcpr.bin' 'zcpr.bin'
 Copy-Item '..\zsdos\zsdos.bin' 'zsdos.bin'
+
+# Bring over previously assembled binary copy of Forth for later use.
+Copy-Item '..\Forth\camel80.bin' 'camel80.bin'
 
 # Assemble individual components.  Note in the case of UNA, there is less to build.
 Asm 'dbgmon'
 Asm 'prefix'
 Asm 'romldr'
-Asm	'eastaegg'
+Asm 'eastaegg'
 Asm 'nascom'
 Asm 'tastybasic'
-Asm	'imgpad'
+Asm 'imgpad'
 Asm 'imgpad0'
 if ($Platform -ne "UNA")
 {
