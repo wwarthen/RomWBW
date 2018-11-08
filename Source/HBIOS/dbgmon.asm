@@ -1003,6 +1003,7 @@ TXT_HELP:
 ;
 #IF DSKYENABLE
 ;
+#DEFINE DSKY_KBD
 #INCLUDE "dsky.asm"
 ;
 ;
@@ -1337,6 +1338,45 @@ GETADDRDISP:
 	LD	(ADDR+3),A		;
 	JP	GETADDR1		;
 ;
+;__DSPSECTOR__________________________________________________________________
+;
+;	DISPLAY SECTOR IN HL ON FRONT PANEL
+;_____________________________________________________________________________
+;
+DSPSECTOR:
+	PUSH	BC			; STORE BC
+	PUSH	HL			; STORE HL
+	LD	A,H			; DISPLAY HIGH BYTE, HIGH NIBBLE
+	SRL 	A			;	
+	SRL 	A			;	
+	SRL 	A			;	
+	SRL 	A			;	
+	AND	0FH			;
+	CALL 	DECODEDISPLAY		;
+	LD	(SEC+3),A		;
+	LD      A,H			; DISPLAY HIGH BYTE, LOW NIBBLE
+	AND	0FH			;
+	CALL 	DECODEDISPLAY		;
+	LD	(SEC+2),A		;
+	LD	A,L			; DISPLAY LOW BYTE, HIGH NIBBLE
+	AND	0F0H			;
+	SRL 	A			;	
+	SRL 	A			;	
+	SRL 	A			;	
+	SRL 	A			;		
+	AND	0FH			;
+	CALL 	DECODEDISPLAY		;
+	LD	(SEC+1),A		; DISPLAY LOW BYTE, LOW NIBBLE
+	LD      A,L			;
+	AND	0FH			;
+	CALL 	DECODEDISPLAY		;
+	LD	(SEC),A			;
+	LD	HL,SEC			; DISPLAY PROMPT
+	CALL	SEGDISPLAY		; 
+	POP	HL			; RESTORE HL
+	POP	BC			; RESTORE BC
+	RET
+;
 ;__GETPORT____________________________________________________________________
 ;
 ;	GET PORT FROM FRONT PANEL
@@ -1463,91 +1503,11 @@ MTERM_INIT:
 ;_____________________________________________________________________________
 ;
 KB_GET:
-	PUSH 	HL			; STORE HL
-KB_GET_LOOP:				; WAIT FOR KEY
-	CALL	KB_SCAN			;  SCAN KB ONCE
-	CP	00H			;  NULL?
-	JR	Z,KB_GET_LOOP		;  LOOP WHILE NOT ZERO
-	LD      D,A			;  STORE A
-	LD	A,4FH | 30H		;  SCAN ALL COL LINES
-	OUT 	(PPIC),A		;  SEND TO COLUMN LINES
-        CALL    KB_SCAN_DELAY		;  DELAY TO ALLOW LINES TO STABILIZE
-KB_CLEAR_LOOP:				; WAIT FOR KEY TO CLEAR
-	IN	A,(PPIB)		;  GET ROWS
-	AND	7FH			;ignore PB7 for PPISD
-	CP	00H 			;  ANYTHING PRESSED?
-	JR	NZ,KB_CLEAR_LOOP	;  YES, EXIT 
-	LD	A,D			;  RESTORE A
-	LD	D,00H			;
-	LD	HL,KB_DECODE		;  POINT TO BEGINNING OF TABLE	
-KB_GET_LLOOP:
-	CP	(HL)			;  MATCH?	
-	JR	Z,KB_GET_DONE		;  FOUND, DONE
-	INC	HL
-	INC	D			;  D + 1	
-	JP	NZ,KB_GET_LLOOP		;  NOT FOUND, LOOP UNTIL EOT			
-KB_GET_DONE:
-	LD	A,D			;  RESULT INTO A
+	PUSH 	HL			; SAVE HL
+	CALL	KY_GET			; GET A KEY
 	POP	HL			; RESTORE HL
 	RET
 ;
-;__KB_SCAN____________________________________________________________________
-;
-;  SCAN KEYBOARD MATRIX FOR AN INPUT
-;     
-;_____________________________________________________________________________
-;
-KB_SCAN:
-	LD      C,0000H
-	LD	A,41H | 30H		;  SCAN COL ONE
-	OUT 	(PPIC),A		;  SEND TO COLUMN LINES
-        CALL    KB_SCAN_DELAY		;  DELAY TO ALLOW LINES TO STABILIZE
-	IN	A,(PPIB)		;  GET ROWS
-	AND	7FH			;ignore PB7 for PPISD
-	CP	00H 			;  ANYTHING PRESSED?
-	JR	NZ,KB_SCAN_FOUND	;  YES, EXIT 
-
-	LD      C,0040H
-	LD	A,42H | 30H		;  SCAN COL TWO
-	OUT 	(PPIC),A		;  SEND TO COLUMN LINES
-        CALL    KB_SCAN_DELAY		;  DELAY TO ALLOW LINES TO STABILIZE
-	IN	A,(PPIB)		;  GET ROWS
-	AND	7FH			;ignore PB7 for PPISD
-	CP	00H 			;  ANYTHING PRESSED?
-	JR	NZ,KB_SCAN_FOUND	;  YES, EXIT 
-
-	LD      C,0080H
-	LD	A,44H | 30H		;  SCAN COL THREE
-	OUT 	(PPIC),A		;  SEND TO COLUMN LINES
-        CALL    KB_SCAN_DELAY		;  DELAY TO ALLOW LINES TO STABILIZE
-	IN	A,(PPIB)		;  GET ROWS
-	AND	7FH			;ignore PB7 for PPISD
-	CP	00H 			;  ANYTHING PRESSED?
-	JR	NZ,KB_SCAN_FOUND	;  YES, EXIT 
-
-	LD      C,00C0H			;
-	LD	A,48H | 30H		;  SCAN COL FOUR
-	OUT 	(PPIC),A		;  SEND TO COLUMN LINES
-        CALL    KB_SCAN_DELAY		;  DELAY TO ALLOW LINES TO STABILIZE
-	IN	A,(PPIB)		;  GET ROWS
-	AND	7FH			;ignore PB7 for PPISD
-	CP	00H 			;  ANYTHING PRESSED?
-	JR	NZ,KB_SCAN_FOUND	;  YES, EXIT 
-
-	LD	A, 40H | 30H		;  TURN OFF ALL COLUMNS
-	OUT 	(PPIC),A		;  SEND TO COLUMN LINES
-	LD	A, 00H			;  RETURN NULL
-	RET				;  EXIT
-
-KB_SCAN_FOUND:
-	AND	3FH			;  CLEAR TOP TWO BITS
-	OR	C			;  ADD IN ROW BITS 
-	LD	C,A			;  STORE VALUE
-	LD	A, 00H | 30H		;  TURN OFF ALL COLUMNS
-	OUT 	(PPIC),A		;  SEND TO COLUMN LINES
-	LD	A,C			;  RESTORE VALUE
-	RET
-
 PAUSE:
 KB_SCAN_DELAY:
 	NOP
@@ -1656,10 +1616,10 @@ SEGDISPLAY_LP:
 	POP	AF			; RESTORE AF
 	RET
 ;
-CPUUP	.DB 	$84,$EE,$BB,$80,$BB,$EE,$CB,$84	; "-CPU UP-"
-ADDR	.DB 	$00,$00,$00,$00,$8C,$BD,$BD,$FE ; "Addr    "
-PORT	.DB 	$00,$00,$80,$80,$94,$8C,$9D,$EE ; "Port  .."
-SEC	.DB 	$80,$80,$80,$80,$80,$CB,$CF,$D7 ; "SEC     "
+CPUUP	.DB 	$84,$EE,$BB,$80,$BB,$EE,$CB,$84
+ADDR	.DB 	$00,$00,$00,$00,$8C,$BD,$BD,$FE
+PORT	.DB 	$00,$00,$80,$80,$94,$8C,$9D,$EE
+SEC	.DB 	$80,$80,$80,$80,$80,$CB,$CF,$D7
 
 ;_KB DECODE TABLE_____________________________________________________________
 ; 
@@ -1683,13 +1643,11 @@ KB_DECODE:
 ;
 ;_HEX 7_SEG_DECODE_TABLE______________________________________________________
 ; 
-; 0,1,2,3,4,5,6,7,8,9,A,B,C,D,E,F, ,-,.,P,o
+; 0,1,2,3,4,5,6,7,8,9,A,B,C,D,E,F, ,-
 ; AND WITH 7FH TO TURN ON DP 
 ;_____________________________________________________________________________
 SEGDECODE:
-	;	0   1   2   3   4   5   6   7   8   9   A   B
 	.DB	$FB,$B0,$ED,$F5,$B6,$D7,$DF,$F0,$FF,$F7,$FE,$9F
-	;	C   D   E   F       -   .   P   o
 	.DB	$CB,$BD,$CF,$CE,$80,$84,$00,$EE,$9D
 ;
 DISPLAYBUF:	.FILL	8,0
