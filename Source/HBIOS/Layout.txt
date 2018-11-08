@@ -22,12 +22,11 @@ Intermediate Output Files
 -------------------------
 
 OSIMG [32K] -> osimg.bin
-  romldr [4K]			osldr?
-  dbgmon [4K]			
+  romldr [3.5K]
+  eastaegg [0.5K]
+  dbgmon [4K]		
   CPM (ccp/bdos/cbios) [12K]
   ZSYS (zcpr/zsdos/cbios) [12K]
-  eastaegg [0.5K]
-  imagepad [-]
 
 OSIMG1 [32K] -> osimg0.bin
   camel80 [5.75K]

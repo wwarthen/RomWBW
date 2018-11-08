@@ -1,4 +1,5 @@
 ;___ROM_MONITOR_PROGRAM_______________________________________________________
+;___ROM_MONITOR_PROGRAM_______________________________________________________
 ;
 ;  ORIGINAL CODE BY:	ANDREW LYNCH (LYNCHAJ@YAHOO COM)	13 FEB 2007
 ;
@@ -21,7 +22,6 @@
 ;
 ;__CONSTANTS__________________________________________________________________
 ;	
-ENDT:		 .EQU	0FFh		; MARK END OF TEXT
 CR:		 .EQU	0DH		; ASCII CARRIAGE RETURN CHARACTER
 LF:		 .EQU	0AH		; ASCII LINE FEED CHARACTER
 ESC:		 .EQU	1BH		; ASCII ESCAPE CHARACTER
@@ -39,6 +39,969 @@ BS:		 .EQU	08H		; ASCII BACKSPACE CHARACTER
 ;
 #INCLUDE "util.asm"
 ;
+;__UART_ENTRY_________________________________________________________________
+;
+;	SERIAL MONITOR STARTUP
+;_____________________________________________________________________________
+;
+UART_ENTRY:
+	LD	SP,MON_STACK		; SET THE STACK POINTER
+	EI				; INTS OK NOW
+	CALL	INITIALIZE		; INITIALIZE SYSTEM
+
+	LD	HL,TXT_READY		; POINT AT TEXT
+	CALL	MSG			; SHOW WE'RE HERE
+;
+;__SERIAL_MONITOR_COMMANDS____________________________________________________
+;
+; B - BOOT SYSTEM
+; D XXXX YYYY - DUMP MEMORY FROM XXXX TO YYYY
+; F XXXX YYYY ZZ - FILL MEMORY FROM XXXX TO YYYY WITH ZZ
+; H - LOAD INTEL HEX FORMAT DATA
+; K - ECHO KEYBOARD INPUT
+; L XX - INPUT FROM PORT XX AND SHOW HEX DATA
+; M XXXX YYYY ZZZZ - MOVE MEMORY BLOCK XXXX TO YYYY TO ZZZZ
+; O XX YY - OUTPUT TO PORT XX HEX DATA YY
+; P XXXX - PROGRAM RAM STARTING AT XXXXH, WILL PROMPT FOR SUCCESSIVE VALUES
+; R XXXX - RUN A PROGRAM FROM LOCATION XXXX
+;
+;__COMMAND_PARSE______________________________________________________________
+;
+;	PROMPT USER FOR COMMANDS, THEN PARSE THEM
+;_____________________________________________________________________________
+;
+
+SERIALCMDLOOP:
+	LD	SP,MON_STACK		; RESET STACK
+	CALL	CRLFA			; CR,LF,>
+	LD	HL,KEYBUF		; SET POINTER TO KEYBUF AREA
+	CALL 	GETLN			; GET A LINE OF INPUT FROM THE USER
+	LD	HL,KEYBUF		; RESET POINTER TO START OF KEYBUF
+	LD	A,(HL)			; LOAD FIRST CHAR INTO A (THIS SHOULD BE THE COMMAND)
+	INC	HL			; INC POINTER
+
+	CP	'B'			; IS IT "B" (Y/N)
+	JP	Z,BOOT			; IF YES BOOT
+	CP	'R'			; IS IT "R" (Y/N)
+	JP	Z,RUN			; IF YES GO RUN ROUTINE
+	CP	'P'			; IS IT "P" (Y/N)
+	JP	Z,PROGRM		; IF YES GO PROGRAM ROUTINE
+	CP	'O'			; IS IT AN "O" (Y/N)
+	JP	Z,POUT			; PORT OUTPUT
+	CP	'L'			; IS IT A "L" (Y/N)
+	JP	Z,HXLOAD		; INTEL HEX FORMAT LOAD DATA
+	CP	'I'			; IS IT AN "I" (Y/N)
+	JP	Z,PIN			; PORT INPUT
+	CP	'D'			; IS IT A "D" (Y/N)
+	JP	Z,DUMPMEM		; DUMP MEMORY
+	CP	'K'
+	JP	Z,KLOP			; LOOP ON KEYBOARD
+	CP	'M'			; IS IT A "M" (Y/N)
+	JP	Z,MOVEMEM		; MOVE MEMORY COMMAND
+	CP	'F'			; IS IT A "F" (Y/N)
+	JP	Z,FILLMEM		; FILL MEMORY COMMAND
+	CP	'H'			; IS IT A "H" (Y/N)
+	JP	Z,HELP			; HELP COMMAND
+	LD	HL,TXT_COMMAND		; POINT AT ERROR TEXT
+	CALL	MSG			; PRINT COMMAND LABEL
+
+	JR	SERIALCMDLOOP
+;
+;__INITIALIZE_________________________________________________________________
+;
+;	INITIALIZE SYSTEM
+;_____________________________________________________________________________
+;
+INITIALIZE:
+;	CALL	CIOCON_DISP + (CF_INIT * 3)
+#IF (PLATFORM == PLT_UNA)
+	; INSTALL UNA INVOCATION VECTOR FOR RST 08
+	LD	A,$C3		; JP INSTRUCTION
+	LD	(8),A		; STORE AT 0x0008
+	LD	HL,($FFFE)	; UNA ENTRY VECTOR
+	LD	(9),HL		; STORE AT 0x0009
+#ENDIF
+	RET
+;
+;__BOOT_______________________________________________________________________
+;
+;	PERFORM BOOT ACTION
+;_____________________________________________________________________________
+;
+BOOT:
+#IF (PLATFORM == PLT_UNA)
+	LD	BC,$01FB		; UNA FUNC = SET BANK
+	LD	DE,$0000		; ROM BANK 0
+	CALL	$FFFD			; DO IT (RST 08 NOT SAFE HERE)
+	JP	0000H			; JUMP TO RESTART ADDRESS
+#ELSE
+	LD	A,BID_BOOT		; BOOT BANK
+	LD	HL,0			; ADDRESS ZERO
+	CALL	HB_BNKCALL		; DOES NOT RETURN
+#ENDIF
+;__RUN________________________________________________________________________
+;
+;	TRANSFER OUT OF MONITOR, USER OPTION "R"
+;	SYNTAX: R <ADDR>
+;_____________________________________________________________________________
+;
+RUN:
+	CALL	WORDPARM		; GET START ADDRESS
+	JP	C,ERR			; HANDLE ERRORS
+	PUSH	DE			; SAVE VALUE
+	CALL	NONBLANK		; LOOK FOR EXTRANEOUS PARAMETERS
+	CP	0			; TEST FOR TERMINATING NULL
+	JP	NZ,ERR			; ERROR IF NOT TERMINATING NULL
+	POP	HL			; RECOVER START ADDRESS
+	JP	(HL)			; GO
+;
+;__PROGRM_____________________________________________________________________
+;
+;	PROGRAM RAM LOCATIONS, USER OPTION "P"
+;_____________________________________________________________________________
+;
+PROGRM:
+	CALL	WORDPARM		; GET STARTING LOCATION
+	JP	C,ERR			; HANDLE SYNTAX ERRORS
+	PUSH	DE			; SAVE VALUE
+	CALL	NONBLANK		; LOOK FOR EXTRANEOUS PARAMETERS
+	CP	0			; TEST FOR TERMINATING NULL
+	JP	NZ,ERR			; ERROR IF NOT TERMINATING NULL
+PROGRM1:
+	CALL	CRLF
+	POP	HL
+	PUSH	HL
+	CALL	PHL
+	LD	A,':'
+	CALL	COUT
+	CALL	SPACE
+	CALL	COUT
+	LD	HL,KEYBUF
+	CALL	GETLN
+	LD	HL,KEYBUF
+	CALL	NONBLANK
+	CP	0
+	JP	Z,SERIALCMDLOOP
+	CALL	BYTEPARM
+	JR	C,PROGRM2		; SYNTAX ERROR
+	POP	DE
+	LD	(DE),A
+	INC	DE
+	PUSH	DE
+	JR	PROGRM1
+PROGRM2:
+	LD	HL,TXT_BADNUM
+	CALL	MSG
+	JR	PROGRM1
+;
+;__KLOP_______________________________________________________________________
+;
+;	READ FROM THE SERIAL PORT AND ECHO, MONITOR COMMAND "K"
+;_____________________________________________________________________________
+;
+KLOP:
+	CALL	CRLF			;
+KLOP1:
+	CALL	KIN			; GET A KEY
+	CP	ESC			; IS <ESC>?
+	JP	Z,SERIALCMDLOOP		; IF SO, ALL DONE
+	CALL	COUT			; OUTPUT KEY TO SCREEN
+	JR	KLOP1			; LOOP
+;	
+;__HXLOAD_____________________________________________________________________
+;
+;	LOAD INTEL HEX FORMAT FILE FROM THE SERIAL PORT, USER OPTION "H"
+;
+;	 [INTEL HEX FORMAT IS:
+;	 1) COLON (FRAME 0)
+;	 2) RECORD LENGTH FIELD (FRAMES 1 AND 2)
+;	 3) LOAD ADDRESS FIELD (FRAMES 3,4,5,6)
+;	 4) RECORD TYPE FIELD (FRAMES 7 AND 8)
+;	 5) DATA FIELD (FRAMES 9 TO 9+2*(RECORD LENGTH)-1
+;	 6) CHECKSUM FIELD - SUM OF ALL BYTE VALUES FROM RECORD LENGTH TO AND 
+;	   INCLUDING CHECKSUM FIELD = 0 ]
+;
+; EXAMPLE OF INTEL HEX FORMAT FILE
+; EACH LINE CONTAINS A CARRIAGE RETURN AS THE LAST CHARACTER
+; :18F900002048454C4C4F20574F524C4420FF0D0AFF0D0A3EFF0D0A54BF
+; :18F918006573742050726F746F7479706520524F4D204D6F6E69746FF1
+; :18F9300072205265616479200D0AFF0D0A434F4D4D414E4420524543F2
+; :18F948004549564544203AFF0D0A434845434B53554D204552524F52CD
+; :16F96000FF0A0D20202D454E442D4F462D46494C452D20200A0DA4
+; :00000001FF
+;_____________________________________________________________________________
+;
+HXLOAD:
+	CALL	CRLF			; SHOW READY
+HXLOAD0:
+	CALL	KIN			; GET THE FIRST CHARACTER, EXPECTING A ':'
+HXLOAD1:
+	CP	03Ah			; IS IT COLON ':'? START OF LINE OF INTEL HEX FILE
+	JR	NZ,HXLOADERR		; IF NOT, MUST BE ERROR, ABORT ROUTINE
+	LD	E,0			; FIRST TWO CHARACTERS IS THE RECORD LENGTH FIELD
+	CALL	HEXINS			; GET US TWO CHARACTERS INTO BC, CONVERT IT TO A BYTE <A>
+	CALL	HXCHKSUM		; UPDATE HEX CHECK SUM
+	LD	D,A			; LOAD RECORD LENGTH COUNT INTO D
+	CALL	HEXINS			; GET NEXT TWO CHARACTERS, MEMORY LOAD ADDRESS <H>
+	CALL	HXCHKSUM		; UPDATE HEX CHECK SUM
+	LD	H,A			; PUT VALUE IN H REGISTER 
+	CALL	HEXINS			; GET NEXT TWO CHARACTERS, MEMORY LOAD ADDRESS <L>
+	CALL	HXCHKSUM		; UPDATE HEX CHECK SUM
+	LD	L,A			; PUT VALUE IN L REGISTER 
+	CALL	HEXINS			; GET NEXT TWO CHARACTERS, RECORD FIELD TYPE
+	CALL	HXCHKSUM		; UPDATE HEX CHECK SUM
+	CP	001h			; RECORD FIELD TYPE 00 IS DATA, 01 IS END OF FILE
+	JR	NZ,HXLOAD2		; MUST BE THE END OF THAT FILE
+	CALL	HEXINS			; GET NEXT TWO CHARACTERS, ASSEMBLE INTO BYTE
+	CALL	HXCHKSUM		; UPDATE HEX CHECK SUM
+	LD	A,E			; RECALL THE CHECKSUM BYTE
+	AND	A			; IS IT ZERO?
+        JP      Z,HXLOADEXIT		; MUST BE O K., GO BACK FOR SOME MORE, ELSE
+	JR	HXLOADERR		; CHECKSUMS DON'T ADD UP, ERROR OUT	
+HXLOAD2:
+	LD	A,D			; RETRIEVE LINE CHARACTER COUNTER	
+	AND	A			; ARE WE DONE WITH THIS LINE?
+	JR	Z,HXLOAD3		; GET TWO MORE ASCII CHARACTERS, BUILD A BYTE AND CHECKSUM
+	CALL	HEXINS			; GET NEXT TWO CHARS, CONVERT TO BYTE IN A, CHECKSUM IT
+	CALL	HXCHKSUM		; UPDATE HEX CHECK SUM
+	LD	(HL),A			; CHECKSUM OK, MOVE CONVERTED BYTE IN A TO MEMORY LOCATION
+	INC	HL			; INCREMENT POINTER TO NEXT MEMORY LOCATION	
+	DEC	D			; DECREMENT LINE CHARACTER COUNTER
+	JR	HXLOAD2			; AND KEEP LOADING INTO MEMORY UNTIL LINE IS COMPLETE		
+HXLOAD3:
+	CALL	HEXINS			; GET TWO CHARS, BUILD BYTE AND CHECKSUM
+	CALL	HXCHKSUM		; UPDATE HEX CHECK SUM
+	LD	A,E			; CHECK THE CHECKSUM VALUE
+	AND	A			; IS IT ZERO?
+	JR	Z,HXLOADAGAIN		; IF THE CHECKSUM IS STILL OK, CONTINUE ON, ELSE
+HXLOADERR:
+	LD	HL,TXT_CKSUMERR		; GET "CHECKSUM ERROR" MESSAGE
+	CALL	MSG			; PRINT MESSAGE FROM (HL) AND TERMINATE THE LOAD
+	JP	HXLOADEXIT		; RETURN TO PROMPT
+HXCHKSUM:
+	LD	C,A			; BUILD THE CHECKSUM
+	LD	A,E			;
+	SUB	C			; THE CHECKSUM SHOULD ALWAYS .EQUAL ZERO WHEN CHECKED
+	LD	E,A			; SAVE THE CHECKSUM BACK WHERE IT CAME FROM
+	LD	A,C			; RETRIEVE THE BYTE AND GO BACK
+	RET				; BACK TO CALLER
+HXLOADAGAIN:
+	CALL	KIN			; CATCH THE TRAILING CARRIAGE RETURN
+	JP	HXLOAD0			; LOAD ANOTHER LINE OF DATA
+HXLOADEXIT:
+	CALL	KIN			; CATCH ANY STRAY TRAILING CHARACTERS
+	JP	SERIALCMDLOOP		; RETURN TO PROMPT
+;
+;__POUT_______________________________________________________________________
+;
+;	OUTPUT TO AN I/O PORT, MONITOR COMMAND "O"
+;	SYNTAX: O <PORT> <VALUE>
+;	NOTE: A WORD VALUE IS USED FOR THE PORT NUMBER BECAUSE THE
+;             Z80 WILL ACTUALLY PLACE 16 BITS ON THE BUS USING
+;             THE B AND C REGISTERS IN AN "OUT (C),A"
+;_____________________________________________________________________________
+;
+POUT:
+	CALL	WORDPARM		; GET PORT NUMBER
+	JP	C,ERR			; HANDLE ERRORS
+	PUSH	DE			; SAVE IT FOR NOW
+	CALL	BYTEPARM		; GET VALUE TO WRITE
+	JP	C,ERR			; HANDLE ERRORS
+	POP	BC			; RESTORE PORT NUMBER TO BC
+	OUT	(C),A			; SEND VALUE TO PORT
+	JP	SERIALCMDLOOP		; DONE, BACK TO COMMAND LOOP
+;
+;__PIN________________________________________________________________________
+;
+;	INPUT FROM AN I/O PORT, MONITOR COMMAND "I"
+;	SYNTAX: I <PORT>
+;       NOTE: A WORD VALUE IS USED FOR THE PORT NUMBER BECAUSE THE
+;             Z80 WILL ACTUALLY PLACE 16 BITS ON THE BUS USING
+;             THE B AND C REGISTERS IN AN "INC A,(C)"
+;_____________________________________________________________________________
+;
+PIN:
+	CALL	WORDPARM		; GET PORT NUMBER
+	JP	C,ERR			; HANDLE ERRORS
+	PUSH	DE			; SAVE IT
+	CALL	CRLF			;
+	POP	BC			; RESTORE TO BC
+	IN	A,(C)			; GET PORT VALUE
+	CALL	HXOUT			; PRINT HEX VALUE
+	JP	SERIALCMDLOOP		; DONE, BACK TO COMMAND LOOP
+;
+;__DUMPMEM____________________________________________________________________
+;
+;	PRINT A MEMORY DUMP, USER OPTION "D"
+;	SYNTAX: D <START ADR> <END ADR>
+;_____________________________________________________________________________
+;
+DUMPMEM:
+	CALL	WORDPARM		; GET START ADDRESS
+	JP	C,ERR			; HANDLE ERRORS
+	PUSH	DE			; SAVE IT
+	CALL	WORDPARM		; GET END ADDRESS
+	JP	C,ERR			; HANDLE ERRORS
+	PUSH	DE			; SAVE IT
+	
+	POP	DE			; DE := END ADDRESS
+	POP	HL			; HL := START ADDRESS
+
+GDATA:
+	INC	DE			; BUMP DE FOR LATER COMPARE
+	CALL	CRLF			;	
+BLKRD:
+	CALL	PHL			; PRINT START LOCATION
+	LD	A,':'
+	CALL	COUT
+	CALL	SPACE
+	CALL	COUT
+	LD	C,16			; SET FOR 16 LOCS
+	PUSH	HL			; SAVE STARTING HL
+NXTONE:
+	EXX				;
+	LD	C,E			;
+	IN	A,(C)			;
+	EXX				;
+	AND	7FH			;
+	CP	ESC			;
+	JP	Z,SERIALCMDLOOP		;
+	CP	19			;
+	JR	Z,NXTONE		;
+	LD 	A,(HL)			; GET BYTE
+	CALL	HXOUT			; PRINT IT
+	CALL	SPACE			;
+UPDH:	
+	INC	HL			; POINT NEXT
+	DEC	C			; DEC  LOC COUNT
+	JR	NZ,NXTONE		; IF LINE NOT DONE
+					; NOW PRINT 'DECODED' DATA TO RIGHT OF DUMP
+PCRLF:
+	CALL	SPACE			; SPACE IT
+	LD	C,16			; SET FOR 16 CHARS
+	POP	HL			; GET BACK START
+PCRLF0:
+	LD	A,(HL)			; GET BYTE
+	AND	060H			; SEE IF A 'DOT'
+	LD	A,(HL)			; O K. TO GET
+	JR	NZ,PDOT			;
+DOT:
+	LD	A,2EH			; LOAD A DOT	
+PDOT:
+	CALL	COUT			; PRINT IT
+	INC	HL			; 
+	LD	A,D			;
+	CP	H			;
+	JR	NZ,UPDH1		;
+	LD	A,E			;
+	CP	L			;
+	JP	Z,SERIALCMDLOOP		;
+;
+;IF BLOCK NOT DUMPED, DO NEXT CHARACTER OR LINE
+UPDH1:
+	DEC	C			; DEC  CHAR COUNT
+	JR	NZ,PCRLF0		; DO NEXT
+CONTD:
+	CALL	CRLF			;
+	JP	BLKRD			;
+;
+;__MOVEMEM____________________________________________________________________
+;
+;	MOVE MEMORY, USER OPTION "M"
+;	SYNTAX: M <SRC-START> <SRC-END> <TGT>
+;_____________________________________________________________________________
+;
+MOVEMEM:
+	CALL	WORDPARM		; GET WORD VALUE INTO DE (MOVE SRC START ADR)
+	JP	C,ERR			; SYNTAX ERROR IF HEXWORD FAILED
+	PUSH	DE			; SAVE IT
+	CALL	WORDPARM		; GET WORD VALUE INTO DE (MOVE SRC END ADR)
+	JP	C,ERR			; SYNTAX ERROR IF HEXWORD FAILED
+	PUSH	DE			; SAVE IT
+	CALL	WORDPARM		; GET WORD VALUE INTO DE (MOVE TGT ADR)
+	JP	C,ERR			; SYNTAX ERROR IF HEXBYTE FAILED
+	PUSH	DE			; SAVE IT
+	CALL	NONBLANK		; LOOK FOR EXTRANEOUS PARAMETERS
+	CP	0			; TEST FOR TERMINATING NULL
+	JP	NZ,ERR			; ERROR IF NOT TERMINATING NULL
+
+	POP	DE			; TGT ADR TO DE
+	POP	BC			; SRC END ADR TO BC
+	POP	HL			; SRC START ADR TO HL
+	DEC	HL			; PRE-DECREMENT
+	DEC	DE			; PRE-DECREMENT
+MOVEMEM1:
+	INC	HL			; BUMP CUR SRC ADR
+	INC	DE			; BUMP CUR TGT ADR
+	LD	A,(HL)			; GET SOURCE VAUEE
+	LD	(DE),A			; WRITE TO TARGET LOC
+	LD	A,H			; CHECK MSB OF END ADR
+	CP	B			; 
+	JR	NZ,MOVEMEM1		; NO MATCH, LOOP
+	LD	A,L			; CHECK LSB OF END ADR
+	CP	C			;
+	JR	NZ,MOVEMEM1		; NO MATCH, LOOP
+	JP	SERIALCMDLOOP		; LSB AND MSB MATCH, ALL DONE
+;
+;__FILLMEM____________________________________________________________________
+;
+;	FILL MEMORY, USER OPTION "M"
+;	SYNTAX: F <START> <END> <VALUE>
+;_____________________________________________________________________________
+;
+FILLMEM:
+	CALL	WORDPARM		; GET WORD VALUE INTO DE (FILL START ADR)
+	JP	C,ERR			; SYNTAX ERROR IF HEXWORD FAILED
+	PUSH	DE			; SAVE IT
+	CALL	WORDPARM		; GET WORD VALUE INTO DE (FILL END ADR)
+	JP	C,ERR			; SYNTAX ERROR IF HEXWORD FAILED
+	PUSH	DE			; SAVE IT
+	CALL	BYTEPARM		; GET BYTE VALUE (FILL VALUE) INTO A
+	JP	C,ERR			; SYNTAX ERROR IF HEXBYTE FAILED
+	LD	C,A			; FILL VALUE TO C
+	CALL	NONBLANK		; LOOK FOR EXTRANEOUS PARAMETERS
+	CP	0			; TEST FOR TERMINATING NULL
+	JP	NZ,ERR			; ERROR IF NOT TERMINATING NULL
+	
+	POP	DE			; END ADR TO DE
+	POP	HL			; START ADR TO HL
+	DEC	HL			; PRE-DECREMENT
+FILLMEM1:
+	INC	HL			; BUMP CUR ADR
+	LD	A,C			; FILL VALUE TO A
+	LD	(HL),A			; WRITE FILL VALUE TO CUR ADR (HL)
+	LD	A,H			; CHECK MSB OF END ADR
+	CP	D			; 
+	JR	NZ,FILLMEM1		; NO MATCH, LOOP
+	LD	A,L			; CHECK LSB OF END ADR
+	CP	E			;
+	JR	NZ,FILLMEM1		; NO MATCH, LOOP
+	JP	SERIALCMDLOOP		; LSB AND MSB MATCH, ALL DONE
+;
+;__HELP_______________________________________________________________________
+;
+;	SYNTAX HELP, USER OPTION "H"
+;_____________________________________________________________________________
+;
+HELP:
+	LD	HL,TXT_HELP		; POINT AT SYNTAX HELP TEXT
+	CALL	MSG			; DISPLAY IT
+	JP	SERIALCMDLOOP		; AND BACK TO COMMAND LOOP
+;
+;__ERR________________________________________________________________________
+;
+;	SYNTAX ERROR
+;_____________________________________________________________________________
+;
+ERR:
+	LD	HL,TXT_ERR		; POINT AT ERROR TEXT
+	CALL	MSG			; DISPLAY IT
+	JP	SERIALCMDLOOP		; AND BACK TO COMMAND LOOP
+;
+;__BYTEPARM___________________________________________________________________
+;
+;	ATTEMPT TO GET A BYTE PARM, VALUE RETURNED IN A
+;       CF SET ON ERROR
+;_____________________________________________________________________________
+;
+BYTEPARM:
+	CALL	NONBLANK		; SKIP LEADING BLANKS
+	JP	Z,ERR			; SYNTAX ERROR IF PARM NOT FOUND
+	CALL	ISHEX			; HEX CHAR?
+	JP	NZ,BYTEPARM1		; IF NOT, ERR
+	JP	HEXBYTE			; RETURN VIA HEXBYTE
+BYTEPARM1:
+	SCF				; SIGNAL ERROR
+	RET				; RETURN
+;
+;__WORDPARM___________________________________________________________________
+;
+;	ATTEMPT TO GET A WORD PARM, VALUE RETURNED IN DE
+;       CF SET ON ERROR
+;_____________________________________________________________________________
+;
+WORDPARM:
+	CALL	NONBLANK		; SKIP LEADING BLANKS
+	JP	Z,ERR			; SYNTAX ERROR IF PARM NOT FOUND
+	CALL	ISHEX			; HEX CHAR?
+	JP	NZ,WORDPARM1		; IF NOT, ERR
+	JP	HEXWORD			; RETURN VIA HEXWORD
+WORDPARM1:
+	SCF				; SIGNAL ERROR
+	RET				; RETURN
+;
+;__GETLN______________________________________________________________________
+;
+;	READ A LINE(80) OF TEXT FROM THE SERIAL PORT, HANDLE <BS>, TERM ON <CR> 
+;       EXIT IF TOO MANY CHARS    STORE RESULT IN HL.  CHAR COUNT IN C.
+;_____________________________________________________________________________
+;
+GETLN:
+	LD	C,00H			; ZERO CHAR COUNTER
+	PUSH	DE			; STORE DE
+GETLNLOP:
+	CALL	KIN			; GET A KEY
+	CP	CR			; IS <CR>?
+	JR	Z,GETLNDONE		; YES, EXIT 
+	CALL	COUT			; OUTPUT KEY TO SCREEN
+	CP	BS			; IS <BS>?
+	JR	NZ,GETLNSTORE		; NO, STORE CHAR
+	LD	A,C			; A=C
+	CP	0			;
+	JR	Z,GETLNLOP		; NOTHING TO BACKSPACE, IGNORE & GET NEXT KEY
+	DEC	HL			; PERFORM BACKSPACE
+	DEC	C			; LOWER CHAR COUNTER	
+	LD	A,0			;
+	LD	(HL),A			; STORE NULL IN BUFFER
+	LD	A,20H			; BLANK OUT CHAR ON TERM
+	CALL	COUT			;
+	LD	A,BS			;
+	CALL	COUT			;
+	JR	GETLNLOP		; GET NEXT KEY
+GETLNSTORE:
+	LD	(HL),A			; STORE CHAR IN BUFFER
+	INC	HL			; INC POINTER
+	INC	C			; INC CHAR COUNTER	
+	LD	A,C			; A=C
+	CP	4DH			; OUT OF BUFFER SPACE?
+	JR	NZ,GETLNLOP		; NOPE, GET NEXT CHAR
+GETLNDONE:
+	LD	(HL),00H		; STORE NULL IN BUFFER
+	POP	DE			; RESTORE DE
+	RET				;
+;
+;__KIN________________________________________________________________________
+;
+;	READ FROM THE SERIAL PORT AND ECHO & CONVERT INPUT TO UCASE
+;_____________________________________________________________________________
+;
+KIN:
+	CALL	CIN
+	AND	7FH			; STRIP HI BIT
+	CP	'A'			; KEEP NUMBERS, CONTROLS
+	RET	C			; AND UPPER CASE
+	CP	7BH			; SEE IF NOT LOWER CASE
+	RET	NC
+	AND	5FH			; MAKE UPPER CASE
+	RET
+;
+;__CRLFA______________________________________________________________________
+;
+;	PRINT COMMAND PROMPT TO THE SERIAL PORT
+;_____________________________________________________________________________
+;
+CRLFA:
+	PUSH	HL			; PROTECT HL FROM OVERWRITE
+	LD	HL,PROMPT		;
+	CALL	MSG			;
+	POP	HL			; PROTECT HL FROM OVERWRITE
+	RET				; DONE
+;
+;__CRLF_______________________________________________________________________
+;
+;	SEND CR & LF TO THE SERIAL PORT
+;_____________________________________________________________________________
+;
+CRLF:
+	PUSH	HL			; PROTECT HL FROM OVERWRITE
+	LD	HL,TCRLF		; LOAD MESSAGE POINTER
+	CALL	MSG			; SEBD MESSAGE TO SERIAL PORT
+	POP	HL			; PROTECT HL FROM OVERWRITE
+	RET				;
+;
+;__NONBLANK___________________________________________________________________
+;
+;	FIND NEXT NONBLANK CHARACTER IN BUFFER AT (HL)
+;_____________________________________________________________________________
+;
+NONBLANK:
+	LD	A,(HL)			; GET NEXT CHAR
+	CP	' '			; COMPARE TO BLANK
+	RET	NZ			; DONE IF NOT BLANK
+	INC	HL			; BUMP TO NEXT CHAR
+	JR	NONBLANK		; AND LOOP
+;
+;__ISHEX______________________________________________________________________
+;
+;	CHECK BYTE AT (HL) FOR HEX CHAR, RET Z IF SO, ELSE NZ
+;_____________________________________________________________________________
+;
+ISHEX:
+	LD	A,(HL)			; CHAR TO AS
+	CP	'0'			; < '0'?
+	JR	C,ISHEX1		; YES, NOT 0-9, CHECK A-F
+	CP	'9' + 1			; > '9'
+	JR	NC,ISHEX1		; YES, NOT 0-9, CHECK A-F
+	XOR	A			; MUST BE 0-9, SET ZF
+	RET				; AND DONE
+ISHEX1:
+	CP	'A'			; < 'A'?
+	JR	C,ISHEX2		; YES, NOT A-F, FAIL
+	CP	'F' + 1			; > 'F'
+	JR	NC,ISHEX2		; YES, NOT A-F, FAIL
+	XOR	A			; MUST BE 0-9, SET ZF
+	RET				; AND DONE
+ISHEX2:
+	OR	$FF			; CLEAR ZF
+	RET				; AND DONE
+;
+;__HEXBYTE____________________________________________________________________
+;
+;	GET ONE BYTE OF HEX DATA FROM BUFFER IN HL, RETURN IN A
+;_____________________________________________________________________________
+;
+HEXBYTE:
+	LD	C,0			; INIT WORKING VALUE
+HEXBYTE1:
+	CALL	ISHEX			; DO WE HAVE A HEX CHAR?
+	JR	NZ,HEXBYTE3		; IF NOT, WE ARE DONE
+	LD	B,4			; SHIFT WORKING VALUE (C := C * 16)
+HEXBYTE2:
+	SLA	C			; SHIFT ONE BIT
+	RET	C			; RETURN W/ CF SET INDICATING OVERFLOW ERROR
+	DJNZ	HEXBYTE2		; LOOP FOR 4 BITS
+	CALL	NIBL			; CONVERT HEX CHAR TO BINARY VALUE IN A & INC HL
+	OR	C			; COMBINE WITH WORKING VALUE
+	LD	C,A			; AND PUT BACK IN WORKING VALUE
+	JR	HEXBYTE1		; DO ANOTHER CHARACTER
+HEXBYTE3:
+	LD	A,C			; WORKING VALUE TO A
+	OR	A			; CLEAR CARRY
+	RET				; AND DONE
+;
+;__HEXWORD____________________________________________________________________
+;
+;	GET ONE WORD OF HEX DATA FROM BUFFER IN HL, RETURN IN DE
+;_____________________________________________________________________________
+;
+HEXWORD:
+	LD	DE,0			; INIT WORKING VALUE
+HEXWORD1:
+	CALL	ISHEX			; DO WE HAVE A HEX CHAR?
+	JR	NZ,HEXWORD3		; IF NOT, WE ARE DONE
+	LD	B,4			; SHIFT WORKING VALUE (DE := DE * 16)
+HEXWORD2:
+	SLA	E			; SHIFT LSB ONE BIT
+	RL	D			; SHIFT MSB ONE BIT
+	RET	C			; RETURN W/ CF SET INDICATING OVERFLOW ERROR
+	DJNZ	HEXWORD2		; LOOP FOR 4 BITS
+	CALL	NIBL			; CONVERT HEX CHAR TO BINARY VALUE IN A & INC HL
+	OR	E			; COMBINE WITH LSB
+	LD	E,A			; AND PUT BACK IN WROKING VALUE
+	JR	HEXWORD1		; DO ANOTHER CHARACTER
+HEXWORD3:
+	OR	A			; CLEAR CARRY
+	RET				; AND DONE
+;
+;__NIBL_______________________________________________________________________
+;
+;	GET ONE BYTE OF HEX DATA FROM BUFFER IN HL, RETURN IN A
+;_____________________________________________________________________________
+;
+NIBL:
+	LD	A,(HL)			; GET K B. DATA
+	INC	HL			; INC KB POINTER
+	CP	40H			; TEST FOR ALPHA
+	JR	NC,ALPH			;
+	AND	0FH			; GET THE BITS
+	RET				;
+ALPH:
+	AND	0FH			; GET THE BITS
+	ADD	A,09H			; MAKE IT HEX A-F
+	RET				;
+;
+;__HEXINS_____________________________________________________________________
+;
+;	GET ONE BYTE OF HEX DATA FROM SERIAL PORT, RETURN IN A
+;_____________________________________________________________________________
+;
+HEXINS:
+	PUSH	BC			;SAVE BC REGS 
+	CALL	NIBLS			;DO A NIBBLE
+	RLC	A			;MOVE FIRST BYTE UPPER NIBBLE  
+	RLC	A			; 
+	RLC	A			; 
+	RLC	A			; 
+	LD	B,A			; SAVE ROTATED BYTE
+	CALL	NIBLS			; DO NEXT NIBBLE
+	ADD	A,B			; COMBINE NIBBLES IN ACC 
+	POP	BC			; RESTORE BC
+	RET				; DONE  
+NIBLS:
+	CALL	KIN			; GET K B. DATA
+	CP	40H			; TEST FOR ALPHA
+	JR	NC,ALPH			;
+	AND	0FH			; GET THE BITS
+	RET				;
+;
+;__PHL________________________________________________________________________
+;
+;	PRINT THE HL REG ON THE SERIAL PORT
+;_____________________________________________________________________________
+;
+PHL:
+	LD	A,H			; GET HI BYTE
+	CALL	HXOUT			; DO HEX OUT ROUTINE
+	LD	A,L			; GET LOW BYTE
+	CALL	HXOUT			; HEX IT
+	RET				; DONE  
+;
+;__HXOUT______________________________________________________________________
+;
+;	PRINT THE ACCUMULATOR CONTENTS AS HEX DATA ON THE SERIAL PORT
+;_____________________________________________________________________________
+;
+HXOUT:
+	PUSH	BC			; SAVE BC
+	LD	B,A			;
+	RLC	A			; DO HIGH NIBBLE FIRST  
+	RLC	A			;
+	RLC	A			;
+	RLC	A			;
+	AND	0FH			; ONLY THIS NOW
+	ADD	A,30H			; TRY A NUMBER
+	CP	3AH			; TEST IT
+	JR	C,OUT1			; IF CY SET PRINT 'NUMBER'
+	ADD	A,07H			; MAKE IT AN ALPHA
+OUT1:
+	CALL	COUT			; SCREEN IT
+	LD	A,B			; NEXT NIBBLE
+	AND	0FH			; JUST THIS
+	ADD	A,30H			; TRY A NUMBER
+	CP	3AH			; TEST IT
+	JR	C,OUT2			; PRINT 'NUMBER'
+	ADD	A,07H			; MAKE IT ALPHA
+OUT2:
+	CALL	COUT			; SCREEN IT
+	POP	BC			; RESTORE BC
+	RET				;
+;
+;__SPACE______________________________________________________________________
+;
+;	PRINT A SPACE CHARACTER ON THE SERIAL PORT
+;_____________________________________________________________________________
+;
+SPACE:
+	PUSH	AF			; STORE AF
+	LD	A,20H			; LOAD A "SPACE"
+	CALL	COUT			; SCREEN IT
+	POP	AF			; RESTORE AF
+	RET				; DONE
+;
+;__MSG________________________________________________________________________
+;
+;	PRINT A STRING  TO THE SERIAL PORT
+;_____________________________________________________________________________
+;
+MSG:
+	LD	A,(HL)			; GET CHARACTER TO A
+	OR	A			; SET FLAGS
+	RET	Z			; DONE IF NULL
+	CALL	COUT			; PRINT CHARACTER
+	INC	HL			; INC POINTER, TO NEXT CHAR
+	JR	MSG			; LOOP
+;
+#IF (PLATFORM == PLT_UNA)
+;
+;__COUT_______________________________________________________________________
+;
+;	OUTPUT CHARACTER FROM A
+;_____________________________________________________________________________
+;
+COUT:
+	; SAVE ALL INCOMING REGISTERS
+	PUSH	AF
+	PUSH	BC
+	PUSH	DE
+	PUSH	HL
+;
+	; OUTPUT CHARACTER TO CONSOLE VIA UBIOS
+	LD	E,A
+	LD	BC,$12
+	RST	08
+;
+	; RESTORE ALL REGISTERS
+	POP	HL
+	POP	DE
+	POP	BC
+	POP	AF
+	RET
+;
+;__CIN________________________________________________________________________
+;
+;	INPUT CHARACTER TO A
+;_____________________________________________________________________________
+;
+CIN:
+	; SAVE INCOMING REGISTERS (AF IS OUTPUT)
+	PUSH	BC
+	PUSH	DE
+	PUSH	HL
+;
+	; INPUT CHARACTER FROM CONSOLE VIA UBIOS
+	LD	BC,$11
+	RST	08
+	LD	A,E
+;
+	; RESTORE REGISTERS (AF IS OUTPUT)
+	POP	HL
+	POP	DE
+	POP	BC
+	RET
+;
+;__CST________________________________________________________________________
+;
+;	RETURN INPUT STATUS IN A (0 = NO CHAR, !=0 CHAR WAITING)
+;_____________________________________________________________________________
+;
+CST:
+	; SAVE INCOMING REGISTERS (AF IS OUTPUT)
+	PUSH	BC
+	PUSH	DE
+	PUSH	HL
+;
+	; GET CONSOLE INPUT STATUS VIA UBIOS
+	LD	BC,$13
+	RST	08
+	LD	A,E
+;
+	; RESTORE REGISTERS (AF IS OUTPUT)
+	POP	HL
+	POP	DE
+	POP	BC
+	RET
+;	
+#ELSE
+;
+;__COUT_______________________________________________________________________
+;
+;	OUTPUT CHARACTER FROM A
+;_____________________________________________________________________________
+;
+COUT:
+	; SAVE ALL INCOMING REGISTERS
+	PUSH	AF
+	PUSH	BC
+	PUSH	DE
+	PUSH	HL
+;
+	; OUTPUT CHARACTER TO CONSOLE VIA HBIOS
+	LD	E,A			; OUTPUT CHAR TO E
+	LD	C,CIODEV_CONSOLE	; CONSOLE UNIT TO C
+	LD	B,BF_CIOOUT		; HBIOS FUNC: OUTPUT CHAR
+	RST	08			; HBIOS OUTPUTS CHARACTDR
+;
+	; RESTORE ALL REGISTERS
+	POP	HL
+	POP	DE
+	POP	BC
+	POP	AF
+	RET
+;
+;__CIN________________________________________________________________________
+;
+;	INPUT CHARACTER TO A
+;_____________________________________________________________________________
+;
+CIN:
+	; SAVE INCOMING REGISTERS (AF IS OUTPUT)
+	PUSH	BC
+	PUSH	DE
+	PUSH	HL
+;
+	; INPUT CHARACTER FROM CONSOLE VIA HBIOS
+	LD	C,CIODEV_CONSOLE	; CONSOLE UNIT TO C
+	LD	B,BF_CIOIN		; HBIOS FUNC: INPUT CHAR
+	RST	08			; HBIOS READS CHARACTDR
+	LD	A,E			; MOVE CHARACTER TO A FOR RETURN
+;
+	; RESTORE REGISTERS (AF IS OUTPUT)
+	POP	HL
+	POP	DE
+	POP	BC
+	RET
+;
+;__CST________________________________________________________________________
+;
+;	RETURN INPUT STATUS IN A (0 = NO CHAR, !=0 CHAR WAITING)
+;_____________________________________________________________________________
+;
+CST:
+	; SAVE INCOMING REGISTERS (AF IS OUTPUT)
+	PUSH	BC
+	PUSH	DE
+	PUSH	HL
+;
+	; GET CONSOLE INPUT STATUS VIA HBIOS
+	LD	C,CIODEV_CONSOLE	; CONSOLE UNIT TO C
+	LD	B,BF_CIOIST		; HBIOS FUNC: INPUT STATUS
+	RST	08			; HBIOS RETURNS STATUS IN A
+;
+	; RESTORE REGISTERS (AF IS OUTPUT)
+	POP	HL
+	POP	DE
+	POP	BC
+	RET
+;
+#ENDIF
+;
+;__WORK_AREA__________________________________________________________________
+;
+;	RESERVED RAM FOR MONITOR WORKING AREA
+;_____________________________________________________________________________
+;
+KEYBUF:  	.FILL	80,' '
+;
+;__TEXT_STRINGS_______________________________________________________________
+;
+;	SYSTEM TEXT STRINGS
+;_____________________________________________________________________________
+;
+TCRLF:
+	.DB  	CR,LF,0
+
+PROMPT:
+	.DB  	CR,LF,'>',0
+
+TXT_READY:
+	.DB	CR,LF
+	.TEXT   "MONITOR READY ('H' FOR HELP)"
+	.DB	0
+
+TXT_COMMAND:
+	.DB	CR,LF
+	.TEXT   "UNKNOWN COMMAND ('H' FOR HELP)"
+	.DB	0
+
+TXT_ERR:
+	.DB	CR,LF
+	.TEXT	"SYNTAX ERROR ('H' FOR HELP)"
+	.DB	0
+
+TXT_CKSUMERR:
+	.DB	CR,LF
+	.TEXT   "CHECKSUM ERROR"
+	.DB	0
+
+TXT_BADNUM:
+	.TEXT	"  *INVALID VALUE*"
+	.DB	0
+
+TXT_HELP:
+	.DB	CR,LF
+	.TEXT	"MONITOR COMMANDS (ALL VALUES IN HEX):\r\n"
+	.TEXT	"B                - BOOT SYSTEM\r\n"
+	.TEXT	"D XXXX YYYY      - DUMP MEMORY FROM XXXX TO YYYY\r\n"
+	.TEXT	"F XXXX YYYY ZZ   - FILL MEMORY FROM XXXX TO YYYY WITH ZZ\r\n"
+	.TEXT	"I XX             - SHOW VALUE FROM PORT XX\r\n"
+	.TEXT	"K                - ECHO KEYBOARD INPUT\r\n"
+	.TEXT	"L                - LOAD INTEL HEX FORMAT DATA\r\n"
+	.TEXT	"M XXXX YYYY ZZZZ - MOVE MEMORY BLOCK XXXX-YYYY TO ZZZZ\r\n"
+	.TEXT	"O XX YY          - WRITE VALUE YY TO PORT XX\r\n"
+	.TEXT	"P XXXX           - PROGRAM RAM STARTING AT XXXX\r\n"
+	.TEXT	"R XXXX           - RUN A PROGRAM AT ADDRESS XXXX"
+	.DB	0
+;
 #IF DSKYENABLE
 ;
 #INCLUDE "dsky.asm"
@@ -46,23 +1009,28 @@ BS:		 .EQU	08H		; ASCII BACKSPACE CHARACTER
 ;
 ;__DSKY_ENTRY_________________________________________________________________
 ;
+;	DSKY FRONT PANEL STARTUP
+;_____________________________________________________________________________
+;
 DSKY_ENTRY:
 	LD	SP,MON_STACK		; SET THE STACK POINTER
 	EI				; INTS OK NOW
 	CALL	INITIALIZE		; INITIALIZE SYSTEM
-
+;
 ;__FRONT_PANEL_STARTUP________________________________________________________
 ;
-;	START UP THE SYSTEM WITH THE FRONT PANEL INTERFACE
-;	
+;	START UP THE SYSTEM WITH THE FRONT PANEL INTERFACE	
 ;_____________________________________________________________________________
 ;
 	CALL    MTERM_INIT		; INIT 8255 FOR MTERM
 	LD	HL,CPUUP		; SET POINTER TO DATA BUFFER
 	CALL	SEGDISPLAY		; DISPLAY 
-
-
-
+;
+;__COMMAND_PARSE______________________________________________________________
+;
+;	PROMPT USER FOR COMMANDS, THEN PARSE THEM
+;_____________________________________________________________________________
+;
 FRONTPANELLOOP:
 	CALL	KB_GET			; GET KEY FROM KB
 
@@ -82,8 +1050,7 @@ FRONTPANELLOOP:
 	JR	FRONTPANELLOOP		; LOOP
 EXIT:
 	RET	
-
-
+;
 ;__DOBOOT_____________________________________________________________________
 ;
 ;	PERFORM BOOT FRONT PANEL ACTION
@@ -91,8 +1058,7 @@ EXIT:
 ;
 DOBOOT:
 	JP	BOOT
-
-
+;
 ;__DOPORTREAD_________________________________________________________________
 ;
 ;	PERFORM PORT READ FRONT PANEL ACTION
@@ -140,7 +1106,7 @@ PORTREADEXIT:
 	LD	HL,CPUUP		; SET POINTER TO DATA BUFFER
 	CALL	SEGDISPLAY		; DISPLAY 
 	JP	FRONTPANELLOOP		;
-
+;
 ;__DOPORTWRITE________________________________________________________________
 ;
 ;	PERFORM PORT WRITE FRONT PANEL ACTION
@@ -171,8 +1137,7 @@ PORTWRITELOOP:
 	LD	HL,CPUUP		; SET POINTER TO DATA BUFFER
 	CALL	SEGDISPLAY		; DISPLAY 
 	JP	FRONTPANELLOOP		;
-
-
+;
 ;__DOGO_______________________________________________________________________
 ;
 ;	PERFORM GO FRONT PANEL ACTION
@@ -181,9 +1146,7 @@ PORTWRITELOOP:
 DOGO:
 	CALL 	GETADDR			; GET ADDRESS INTO HL
 	JP	(HL)			; GO THERE!
-
-
-
+;
 ;__DODEPOSIT__________________________________________________________________
 ;
 ;	PERFORM DEPOSIT FRONT PANEL ACTION
@@ -234,10 +1197,7 @@ DEPOSITEXIT:
 	LD	HL,CPUUP		; SET POINTER TO DATA BUFFER
 	CALL	SEGDISPLAY		; DISPLAY 
 	JP	FRONTPANELLOOP		;
-
-
-
-
+;
 ;__DOEXAMINE__________________________________________________________________
 ;
 ;	PERFORM EXAMINE FRONT PANEL ACTION
@@ -296,8 +1256,7 @@ EXAMINEEXIT:
 	LD	HL,CPUUP		; SET POINTER TO DATA BUFFER
 	CALL	SEGDISPLAY		; DISPLAY 
 	JP	FRONTPANELLOOP		;
-
-
+;
 ;__GETADDR____________________________________________________________________
 ;
 ;	GET ADDRESS FROM FRONT PANEL
@@ -378,9 +1337,7 @@ GETADDRDISP:
 	CALL 	DECODEDISPLAY		;
 	LD	(ADDR+3),A		;
 	JP	GETADDR1		;
-
-
-
+;
 ;__DSPSECTOR__________________________________________________________________
 ;
 ;	DISPLAY SECTOR IN HL ON FRONT PANEL
@@ -419,9 +1376,7 @@ DSPSECTOR:
 	POP	HL			; RESTORE HL
 	POP	BC			; RESTORE BC
 	RET
-
-
-
+;
 ;__GETPORT____________________________________________________________________
 ;
 ;	GET PORT FROM FRONT PANEL
@@ -478,8 +1433,7 @@ GETPORTDISP:
 	CALL 	DECODEDISPLAY		;
 	LD	(PORT+1),A		;
 	JP	GETPORT1		;
-
-
+;
 ;__GETVALUE___________________________________________________________________
 ;
 ;	GET VALUE FROM FRONT PANEL
@@ -530,912 +1484,24 @@ GETVALUECLEAR:
 	LD	(DISPLAYBUF+1),A	;
 	JP	GETVALUE1		;
 ;
-#ELSE
-DSKY_ENTRY:
-	CALL	PANIC
-#ENDIF
-
-
-;__UART_ENTRY_________________________________________________________________
-;
-;	SERIAL MONITOR STARTUP
-;_____________________________________________________________________________
-;
-UART_ENTRY:
-	LD	SP,MON_STACK		; SET THE STACK POINTER
-	EI				; INTS OK NOW
-	CALL	INITIALIZE		; INITIALIZE SYSTEM
-
-	XOR	A			;ZERO OUT ACCUMULATOR (ADDED)
-	PUSH	HL			;PROTECT HL FROM OVERWRITE     
-	LD	HL,TXT_READY		;POINT AT TEXT
-	CALL	MSG			;SHOW WE'RE HERE
-	POP	HL			;PROTECT HL FROM OVERWRITE
-
-;
-;__SERIAL_MONITOR_COMMANDS____________________________________________________
-;
-; B XX BOOT CPM FROM DRIVE XX
-; D XXXXH YYYYH  DUMP MEMORY FROM XXXX TO YYYY
-; F XXXXH YYYYH ZZH FILL MEMORY FROM XXXX TO YYYY WITH ZZ
-; H LOAD INTEL HEX FORMAT DATA
-; I XX INPUT FROM PORT XX AND SHOW HEX DATA
-; K ECHO KEYBOARD INPUT
-; M XXXXH YYYYH ZZZZH MOVE MEMORY BLOCK XXXX TO YYYY TO ZZZZ
-; O XX YY OUTPUT TO PORT XX HEX DATA YY
-; P XXXXH YYH PROGRAM RAM FROM XXXXH WITH VALUE IN YYH, WILL PROMPT FOR NEXT LINES FOLLOWING UNTIL CR
-; R RUN A PROGRAM FROM CURRENT LOCATION
-;
-;__COMMAND_PARSE______________________________________________________________
-;
-;	PROMPT USER FOR COMMANDS, THEN PARSE THEM
-;_____________________________________________________________________________
-;
-
-SERIALCMDLOOP:
-	CALL	CRLFA			; CR,LF,>
-	LD	HL,KEYBUF		; SET POINTER TO KEYBUF AREA
-	CALL 	GETLN			; GET A LINE OF INPUT FROM THE USER
-	LD	HL,KEYBUF		; RESET POINTER TO START OF KEYBUF
-	LD	A,(HL)			; LOAD FIRST CHAR INTO A (THIS SHOULD BE THE COMMAND)
-	INC	HL			; INC POINTER
-
-	CP	'B'			; IS IT "B" (Y/N)
-	JP	Z,BOOT			; IF YES BOOT
-	CP	'R'			; IS IT "R" (Y/N)
-	JP	Z,RUN			; IF YES GO RUN ROUTINE
-	CP	'P'			; IS IT "P" (Y/N)
-	JP	Z,PROGRM		; IF YES GO PROGRAM ROUTINE
-	CP	'O'			; IS IT AN "O" (Y/N)
-	JP	Z,POUT			; PORT OUTPUT
-	CP	'H'			; IS IT A "H" (Y/N)
-	JP	Z,HXLOAD		; INTEL HEX FORMAT LOAD DATA
-	CP	'I'			; IS IT AN "I" (Y/N)
-	JP	Z,PIN			; PORT INPUT
-	CP	'D'			; IS IT A "D" (Y/N)
-	JP	Z,DUMP			; DUMP MEMORY
-	CP	'K'
-	JP	Z,KLOP			; LOOP ON KEYBOARD
-	CP	'M'			; IS IT A "M" (Y/N)
-	JP	Z,MOVE			; MOVE MEMORY COMMAND
-	CP	'F'			; IS IT A "F" (Y/N)
-	JP	Z,FILLMEM		; FILL MEMORY COMMAND
-	LD	HL,TXT_COMMAND		; POINT AT ERROR TEXT
-	CALL	MSG			; PRINT COMMAND LABEL
-
-	JR	SERIALCMDLOOP
-
-
-
-;__BOOT_______________________________________________________________________
-;
-;	PERFORM BOOT ACTION
-;_____________________________________________________________________________
-;
-BOOT:
-#IF (PLATFORM == PLT_UNA)
-	LD	BC,$01FB		; UNA FUNC = SET BANK
-	LD	DE,$0000		; ROM BANK 0
-	CALL	$FFFD			; DO IT (RST 08 NOT SAFE HERE)
-	JP	0000H			; JUMP TO RESTART ADDRESS
-#ELSE
-	LD	A,BID_BOOT		; BOOT BANK
-	LD	HL,0			; ADDRESS ZERO
-	CALL	HB_BNKCALL		; DOES NOT RETURN
-#ENDIF
-
-;__KLOP_______________________________________________________________________
-;
-;	READ FROM THE SERIAL PORT AND ECHO, MONITOR COMMAND "K"
-;_____________________________________________________________________________
-;
-KLOP:
-	CALL	KIN			; GET A KEY
-	CALL	COUT			; OUTPUT KEY TO SCREEN
-	CP	ESC			; IS <ESC>?
-	JR	NZ,KLOP			; NO, LOOP
-	JP	SERIALCMDLOOP		;
-
-;__GETLN______________________________________________________________________
-;
-;	READ A LINE(80) OF TEXT FROM THE SERIAL PORT, HANDLE <BS>, TERM ON <CR> 
-;       EXIT IF TOO MANY CHARS    STORE RESULT IN HL.  CHAR COUNT IN C.
-;_____________________________________________________________________________
-;
-GETLN:
-	LD	C,00H			; ZERO CHAR COUNTER
-	PUSH	DE			; STORE DE
-GETLNLOP:
-	CALL	KIN			; GET A KEY
-	CALL	COUT			; OUTPUT KEY TO SCREEN
-	CP	CR			; IS <CR>?
-	JR	Z,GETLNDONE		; YES, EXIT 
-	CP	BS			; IS <BS>?
-	JR	NZ,GETLNSTORE		; NO, STORE CHAR
-	LD	A,C			; A=C
-	CP	0			;
-	JR	Z,GETLNLOP		; NOTHING TO BACKSPACE, IGNORE & GET NEXT KEY
-	DEC	HL			; PERFORM BACKSPACE
-	DEC	C			; LOWER CHAR COUNTER	
-	LD	A,0			;
-	LD	(HL),A			; STORE NULL IN BUFFER
-	LD	A,20H			; BLANK OUT CHAR ON TERM
-	CALL	COUT			;
-	LD	A,BS			;
-	CALL	COUT			;
-	JR	GETLNLOP		; GET NEXT KEY
-GETLNSTORE:
-	LD	(HL),A			; STORE CHAR IN BUFFER
-	INC	HL			; INC POINTER
-	INC	C			; INC CHAR COUNTER	
-	LD	A,C			; A=C
-	CP	4DH			; OUT OF BUFFER SPACE?
-	JR	NZ,GETLNLOP		; NOPE, GET NEXT CHAR
-GETLNDONE:
-	LD	(HL),00H		; STORE NULL IN BUFFER
-	POP	DE			; RESTORE DE
-	RET				;
-
-#IF (PLATFORM == PLT_UNA)
-
-;
-;__COUT_______________________________________________________________________
-;
-;	OUTPUT CHARACTER FROM A
-;_____________________________________________________________________________
-;
-COUT:
-	; SAVE ALL INCOMING REGISTERS
-	PUSH	AF
-	PUSH	BC
-	PUSH	DE
-	PUSH	HL
-;
-	; OUTPUT CHARACTER TO CONSOLE VIA UBIOS
-	LD	E,A
-	LD	BC,$12
-	RST	08
-;
-	; RESTORE ALL REGISTERS
-	POP	HL
-	POP	DE
-	POP	BC
-	POP	AF
-	RET
-	RET
-;
-;__CIN________________________________________________________________________
-;
-;	INPUT CHARACTER TO A
-;_____________________________________________________________________________
-;
-CIN:
-	; SAVE INCOMING REGISTERS (AF IS OUTPUT)
-	PUSH	BC
-	PUSH	DE
-	PUSH	HL
-;
-	; INPUT CHARACTER FROM CONSOLE VIA UBIOS
-	LD	BC,$11
-	RST	08
-	LD	A,E
-;
-	; RESTORE REGISTERS (AF IS OUTPUT)
-	POP	HL
-	POP	DE
-	POP	BC
-	RET
-	RET
-;
-;__CST________________________________________________________________________
-;
-;	RETURN INPUT STATUS IN A (0 = NO CHAR, !=0 CHAR WAITING)
-;_____________________________________________________________________________
-;
-CST:
-	; SAVE INCOMING REGISTERS (AF IS OUTPUT)
-	PUSH	BC
-	PUSH	DE
-	PUSH	HL
-;
-	; GET CONSOLE INPUT STATUS VIA UBIOS
-	LD	BC,$13
-	RST	08
-	LD	A,E
-;
-	; RESTORE REGISTERS (AF IS OUTPUT)
-	POP	HL
-	POP	DE
-	POP	BC
-	RET
-	RET
-	
-#ELSE
-
-;
-;__COUT_______________________________________________________________________
-;
-;	OUTPUT CHARACTER FROM A
-;_____________________________________________________________________________
-;
-COUT:
-	; SAVE ALL INCOMING REGISTERS
-	PUSH	AF
-	PUSH	BC
-	PUSH	DE
-	PUSH	HL
-;
-	; OUTPUT CHARACTER TO CONSOLE VIA HBIOS
-	LD	E,A			; OUTPUT CHAR TO E
-	LD	C,CIODEV_CONSOLE	; CONSOLE UNIT TO C
-	LD	B,BF_CIOOUT		; HBIOS FUNC: OUTPUT CHAR
-	RST	08			; HBIOS OUTPUTS CHARACTDR
-;
-	; RESTORE ALL REGISTERS
-	POP	HL
-	POP	DE
-	POP	BC
-	POP	AF
-	RET
-;
-;__CIN________________________________________________________________________
-;
-;	INPUT CHARACTER TO A
-;_____________________________________________________________________________
-;
-CIN:
-	; SAVE INCOMING REGISTERS (AF IS OUTPUT)
-	PUSH	BC
-	PUSH	DE
-	PUSH	HL
-;
-	; INPUT CHARACTER FROM CONSOLE VIA HBIOS
-	LD	C,CIODEV_CONSOLE	; CONSOLE UNIT TO C
-	LD	B,BF_CIOIN		; HBIOS FUNC: INPUT CHAR
-	RST	08			; HBIOS READS CHARACTDR
-	LD	A,E			; MOVE CHARACTER TO A FOR RETURN
-;
-	; RESTORE REGISTERS (AF IS OUTPUT)
-	POP	HL
-	POP	DE
-	POP	BC
-	RET
-;
-;__CST________________________________________________________________________
-;
-;	RETURN INPUT STATUS IN A (0 = NO CHAR, !=0 CHAR WAITING)
-;_____________________________________________________________________________
-;
-CST:
-	; SAVE INCOMING REGISTERS (AF IS OUTPUT)
-	PUSH	BC
-	PUSH	DE
-	PUSH	HL
-;
-	; GET CONSOLE INPUT STATUS VIA HBIOS
-	LD	C,CIODEV_CONSOLE	; CONSOLE UNIT TO C
-	LD	B,BF_CIOIST		; HBIOS FUNC: INPUT STATUS
-	RST	08			; HBIOS RETURNS STATUS IN A
-;
-	; RESTORE REGISTERS (AF IS OUTPUT)
-	POP	HL
-	POP	DE
-	POP	BC
-	RET
-
-#ENDIF
-;
-;__KIN________________________________________________________________________
-;
-;	READ FROM THE SERIAL PORT AND ECHO & CONVERT INPUT TO UCASE
-;_____________________________________________________________________________
-;
-KIN:
-	CALL	CIN
-	AND	7FH			; STRIP HI BIT
-	CP	'A'			; KEEP NUMBERS, CONTROLS
-	RET	C			; AND UPPER CASE
-	CP	7BH			; SEE IF NOT LOWER CASE
-	RET	NC
-	AND	5FH			; MAKE UPPER CASE
-	RET
-;
-;__CRLF_______________________________________________________________________
-;
-;	SEND CR & LF TO THE SERIAL PORT
-;_____________________________________________________________________________
-;
-CRLF:
-	PUSH	HL			; PROTECT HL FROM OVERWRITE
-	LD	HL,TCRLF		; LOAD MESSAGE POINTER
-	CALL	MSG			; SEBD MESSAGE TO SERIAL PORT
-	POP	HL			; PROTECT HL FROM OVERWRITE
-	RET				;
-
-
-;__LDHL_______________________________________________________________________
-;
-;	GET ONE WORD OF HEX DATA FROM BUFFER POINTED TO BY HL SERIAL PORT, RETURN IN HL
-;_____________________________________________________________________________
-;
-LDHL:
-	PUSH	DE			; STORE DE
-	CALL	HEXIN			; GET K B. AND MAKE HEX
-	LD	D,A			; THATS THE HI BYTE
-	CALL	HEXIN			; DO HEX AGAIN
-	LD	L,A			; THATS THE LOW BYTE
-	LD	H,D			; MOVE TO HL
-	POP	DE			; RESTORE BC
-	RET				; GO BACK WITH ADDRESS  
-
-
-;__HEXIN______________________________________________________________________
-;
-;	GET ONE BYTE OF HEX DATA FROM BUFFER IN HL, RETURN IN A
-;_____________________________________________________________________________
-;
-HEXIN:
-	PUSH	BC			;SAVE BC REGS 
-	CALL	NIBL			;DO A NIBBLE
-	RLC	A			;MOVE FIRST BYTE UPPER NIBBLE  
-	RLC	A			; 
-	RLC	A			; 
-	RLC	A			; 
-	LD	B,A			; SAVE ROTATED BYTE
-	CALL	NIBL			; DO NEXT NIBBLE
-	ADD	A,B			; COMBINE NIBBLES IN ACC 
-	POP	BC			; RESTORE BC
-	RET				; DONE  
-NIBL:
-	LD	A,(HL)			; GET K B. DATA
-	INC	HL			; INC KB POINTER
-	CP	40H			; TEST FOR ALPHA
-	JR	NC,ALPH			;
-	AND	0FH			; GET THE BITS
-	RET				;
-ALPH:
-	AND	0FH			; GET THE BITS
-	ADD	A,09H			; MAKE IT HEX A-F
-	RET				;
-
-
-;__HEXINS_____________________________________________________________________
-;
-;	GET ONE BYTE OF HEX DATA FROM SERIAL PORT, RETURN IN A
-;_____________________________________________________________________________
-;
-HEXINS:
-	PUSH	BC			;SAVE BC REGS 
-	CALL	NIBLS			;DO A NIBBLE
-	RLC	A			;MOVE FIRST BYTE UPPER NIBBLE  
-	RLC	A			; 
-	RLC	A			; 
-	RLC	A			; 
-	LD	B,A			; SAVE ROTATED BYTE
-	CALL	NIBLS			; DO NEXT NIBBLE
-	ADD	A,B			; COMBINE NIBBLES IN ACC 
-	POP	BC			; RESTORE BC
-	RET				; DONE  
-NIBLS:
-	CALL	KIN			; GET K B. DATA
-	CP	40H			; TEST FOR ALPHA
-	JR	NC,ALPH			;
-	AND	0FH			; GET THE BITS
-	RET				;
-
-
-;__HXOUT______________________________________________________________________
-;
-;	PRINT THE ACCUMULATOR CONTENTS AS HEX DATA ON THE SERIAL PORT
-;_____________________________________________________________________________
-;
-HXOUT:
-	PUSH	BC			; SAVE BC
-	LD	B,A			;
-	RLC	A			; DO HIGH NIBBLE FIRST  
-	RLC	A			;
-	RLC	A			;
-	RLC	A			;
-	AND	0FH			; ONLY THIS NOW
-	ADD	A,30H			; TRY A NUMBER
-	CP	3AH			; TEST IT
-	JR	C,OUT1			; IF CY SET PRINT 'NUMBER'
-	ADD	A,07H			; MAKE IT AN ALPHA
-OUT1:
-	CALL	COUT			; SCREEN IT
-	LD	A,B			; NEXT NIBBLE
-	AND	0FH			; JUST THIS
-	ADD	A,30H			; TRY A NUMBER
-	CP	3AH			; TEST IT
-	JR	C,OUT2			; PRINT 'NUMBER'
-	ADD	A,07H			; MAKE IT ALPHA
-OUT2:
-	CALL	COUT			; SCREEN IT
-	POP	BC			; RESTORE BC
-	RET				;
-
-
-;__SPACE______________________________________________________________________
-;
-;	PRINT A SPACE CHARACTER ON THE SERIAL PORT
-;_____________________________________________________________________________
-;
-SPACE:
-	PUSH	AF			; STORE AF
-	LD	A,20H			; LOAD A "SPACE"
-	CALL	COUT			; SCREEN IT
-	POP	AF			; RESTORE AF
-	RET				; DONE
-
-;__PHL________________________________________________________________________
-;
-;	PRINT THE HL REG ON THE SERIAL PORT
-;_____________________________________________________________________________
-;
-PHL:
-	LD	A,H			; GET HI BYTE
-	CALL	HXOUT			; DO HEX OUT ROUTINE
-	LD	A,L			; GET LOW BYTE
-	CALL	HXOUT			; HEX IT
-	CALL	SPACE			; 
-	RET				; DONE  
-
-;__POUT_______________________________________________________________________
-;
-;	OUTPUT TO AN I/O PORT, MONITOR COMMAND "O"
-;_____________________________________________________________________________
-;
-POUT:
-POUT1:
-	INC	HL			;
-	CALL	HEXIN			; GET PORT
-	LD	C,A			; SAVE PORT POINTER
-	INC	HL			;
-	CALL	HEXIN			; GET DATA
-OUTIT:
-	LD	B,0			; MAKE SURE MSB IS ZERO
-	OUT	(C),A			;
-	JP	SERIALCMDLOOP		;
-
-
-;__PIN________________________________________________________________________
-;
-;	INPUT FROM AN I/O PORT, MONITOR COMMAND "I"
-;_____________________________________________________________________________
-;
-PIN:
-	INC 	HL			;
-	CALL	HEXIN			; GET PORT
-	LD	C,A			; SAVE PORT POINTER
-	CALL	CRLF			;
-	LD	B,0			; MAKE SURE MSB IS ZERO
-	IN	A,(C)			; GET DATA
-	CALL	HXOUT			; SHOW IT
-	JP	SERIALCMDLOOP	        ;
-
-
-
-
-
-;__CRLFA______________________________________________________________________
-;
-;	PRINT COMMAND PROMPT TO THE SERIAL PORT
-;_____________________________________________________________________________
-;
-CRLFA:
-	PUSH	HL			; PROTECT HL FROM OVERWRITE
-	LD	HL,PROMPT		;
-	CALL	MSG			;
-	POP	HL			; PROTECT HL FROM OVERWRITE
-	RET				; DONE
-
-
-;__MSG________________________________________________________________________
-;
-;	PRINT A STRING  TO THE SERIAL PORT
-;_____________________________________________________________________________
-;
-MSG:
-
-TX_SERLP:
-	LD	A,(HL)			; GET CHARACTER TO A
-	CP	ENDT			; TEST FOR END BYTE
-	JP	Z,TX_END		; JUMP IF END BYTE IS FOUND
-	CALL	COUT			;
-	INC	HL			; INC POINTER, TO NEXT CHAR
-	JP	TX_SERLP		; TRANSMIT LOOP
-TX_END:
-	RET				;ELSE DONE
-
-;__RUN________________________________________________________________________
-;
-;	TRANSFER OUT OF MONITOR, USER OPTION "R"
-;_____________________________________________________________________________
-;
-RUN:
-	INC	HL			; SHOW READY
-	CALL	LDHL			; GET START ADDRESS
-	JP	(HL)			;	
-
-
-;__PROGRM_____________________________________________________________________
-;
-;	PROGRAM RAM LOCATIONS, USER OPTION "P"
-;_____________________________________________________________________________
-;
-PROGRM:
-	INC	HL			; SHOW READY
-	PUSH	HL			; STORE HL
-	CALL	LDHL			; GET START ADDRESS
-	LD	D,H			;
-	LD	E,L			; DE POINTS TO ADDRESS TO PROGRAM
-	POP	HL			;
-	INC	HL			;
-	INC	HL			;
-	INC	HL			;
-	INC	HL			;
-	INC	HL			;
-PROGRMLP:
-	CALL	HEXIN			; GET NEXT HEX NUMBER
-	LD	(DE),A			; STORE IT
-	INC	DE			; NEXT ADDRESS;
-	CALL	CRLFA			; CR,LF,>
-	LD      A,'P'			;
-	CALL	COUT			;
-	CALL  	SPACE			;
-	LD	H,D			;
-	LD	L,E			;
-	CALL	PHL			;
-	LD	HL,KEYBUF		; SET POINTER TO KEYBUF AREA
-	CALL 	GETLN			; GET A LINE OF INPUT FROM THE USER
-	LD	HL,KEYBUF		; RESET POINTER TO START OF KEYBUF
-        LD      A,(HL)			; LOAD FIRST CHAR INTO A 
-	CP	00H			; END OF LINE?
-	JP	Z,PROGRMEXIT		; YES, EXIT
-	JP	PROGRMLP		; NO, LOOP
-PROGRMEXIT:
-	JP	SERIALCMDLOOP	
-
-
-
-
-
-
-
-;__DUMP_______________________________________________________________________
-;
-;	PRINT A MEMORY DUMP, USER OPTION "D"
-;_____________________________________________________________________________
-;
-DUMP:
-	INC	HL			; SHOW READY
-	PUSH	HL			; STORE HL
-	CALL	LDHL			; GET START ADDRESS
-	LD	D,H			;
-	LD	E,L			;
-	POP	HL			;
-	PUSH	DE			; SAVE START
-	INC	HL			;
-	INC	HL			;
-	INC	HL			;
-	INC	HL			;
-	INC	HL			;
-	CALL	LDHL			; GET END ADDRESS
-	INC	HL			; ADD ONE MORE FOR LATER COMPARE
-	EX	DE,HL			; PUT END ADDRESS IN DE
-	POP	HL			; GET BACK START
-GDATA:	
-	CALL	CRLF			;	
-BLKRD:
-	CALL	PHL			; PRINT START LOCATION
-	LD	C,16			; SET FOR 16 LOCS
-	PUSH	HL			; SAVE STARTING HL
-NXTONE:
-	EXX				;
-	LD	C,E			;
-	IN	A,(C)			;
-	EXX				;
-	AND	7FH			;
-	CP	ESC			;
-	JP	Z,SERIALCMDLOOP		;
-	CP	19			;
-	JR	Z,NXTONE		;
-	LD 	A,(HL)			; GET BYTE
-	CALL	HXOUT			; PRINT IT
-	CALL	SPACE			;
-UPDH:	
-	INC	HL			; POINT NEXT
-	DEC	C			; DEC  LOC COUNT
-	JR	NZ,NXTONE		; IF LINE NOT DONE
-					; NOW PRINT 'DECODED' DATA TO RIGHT OF DUMP
-PCRLF:
-	CALL	SPACE			; SPACE IT
-	LD	C,16			; SET FOR 16 CHARS
-	POP	HL			; GET BACK START
-PCRLF0:
-	LD	A,(HL)			; GET BYTE
-	AND	060H			; SEE IF A 'DOT'
-	LD	A,(HL)			; O K. TO GET
-	JR	NZ,PDOT			;
-DOT:
-	LD	A,2EH			; LOAD A DOT	
-PDOT:
-	CALL	COUT			; PRINT IT
-	INC	HL			; 
-	LD	A,D			;
-	CP	H			;
-	JR	NZ,UPDH1		;
-	LD	A,E			;
-	CP	L			;
-	JP	Z,SERIALCMDLOOP		;
-;
-;IF BLOCK NOT DUMPED, DO NEXT CHARACTER OR LINE
-UPDH1:
-	DEC	C			; DEC  CHAR COUNT
-	JR	NZ,PCRLF0		; DO NEXT
-CONTD:
-	CALL	CRLF			;
-	JP	BLKRD			;
-
-
-;__HXLOAD_____________________________________________________________________
-;
-;	LOAD INTEL HEX FORMAT FILE FROM THE SERIAL PORT, USER OPTION "H"
-;
-;	 [INTEL HEX FORMAT IS:
-;	 1) COLON (FRAME 0)
-;	 2) RECORD LENGTH FIELD (FRAMES 1 AND 2)
-;	 3) LOAD ADDRESS FIELD (FRAMES 3,4,5,6)
-;	 4) RECORD TYPE FIELD (FRAMES 7 AND 8)
-;	 5) DATA FIELD (FRAMES 9 TO 9+2*(RECORD LENGTH)-1
-;	 6) CHECKSUM FIELD - SUM OF ALL BYTE VALUES FROM RECORD LENGTH TO AND 
-;	   INCLUDING CHECKSUM FIELD = 0 ]
-;
-; EXAMPLE OF INTEL HEX FORMAT FILE
-; EACH LINE CONTAINS A CARRIAGE RETURN AS THE LAST CHARACTER
-; :18F900002048454C4C4F20574F524C4420FF0D0AFF0D0A3EFF0D0A54BF
-; :18F918006573742050726F746F7479706520524F4D204D6F6E69746FF1
-; :18F9300072205265616479200D0AFF0D0A434F4D4D414E4420524543F2
-; :18F948004549564544203AFF0D0A434845434B53554D204552524F52CD
-; :16F96000FF0A0D20202D454E442D4F462D46494C452D20200A0DA4
-; :00000001FF
-;_____________________________________________________________________________
-HXLOAD:
-	CALL	CRLF			; SHOW READY
-HXLOAD0:
-	CALL	KIN			; GET THE FIRST CHARACTER, EXPECTING A ':'
-HXLOAD1:
-	CP	03Ah			; IS IT COLON ':'? START OF LINE OF INTEL HEX FILE
-	JR	NZ,HXLOADERR		; IF NOT, MUST BE ERROR, ABORT ROUTINE
-	LD	E,0			; FIRST TWO CHARACTERS IS THE RECORD LENGTH FIELD
-	CALL	HEXINS			; GET US TWO CHARACTERS INTO BC, CONVERT IT TO A BYTE <A>
-	CALL	HXCHKSUM		; UPDATE HEX CHECK SUM
-	LD	D,A			; LOAD RECORD LENGTH COUNT INTO D
-	CALL	HEXINS			; GET NEXT TWO CHARACTERS, MEMORY LOAD ADDRESS <H>
-	CALL	HXCHKSUM		; UPDATE HEX CHECK SUM
-	LD	H,A			; PUT VALUE IN H REGISTER 
-	CALL	HEXINS			; GET NEXT TWO CHARACTERS, MEMORY LOAD ADDRESS <L>
-	CALL	HXCHKSUM		; UPDATE HEX CHECK SUM
-	LD	L,A			; PUT VALUE IN L REGISTER 
-	CALL	HEXINS			; GET NEXT TWO CHARACTERS, RECORD FIELD TYPE
-	CALL	HXCHKSUM		; UPDATE HEX CHECK SUM
-	CP	001h			; RECORD FIELD TYPE 00 IS DATA, 01 IS END OF FILE
-	JR	NZ,HXLOAD2		; MUST BE THE END OF THAT FILE
-	CALL	HEXINS			; GET NEXT TWO CHARACTERS, ASSEMBLE INTO BYTE
-	CALL	HXCHKSUM		; UPDATE HEX CHECK SUM
-	LD	A,E			; RECALL THE CHECKSUM BYTE
-	AND	A			; IS IT ZERO?
-        JP      Z,HXLOADEXIT		; MUST BE O K., GO BACK FOR SOME MORE, ELSE
-	JR	HXLOADERR		; CHECKSUMS DON'T ADD UP, ERROR OUT	
-HXLOAD2:
-	LD	A,D			; RETRIEVE LINE CHARACTER COUNTER	
-	AND	A			; ARE WE DONE WITH THIS LINE?
-	JR	Z,HXLOAD3		; GET TWO MORE ASCII CHARACTERS, BUILD A BYTE AND CHECKSUM
-	CALL	HEXINS			; GET NEXT TWO CHARS, CONVERT TO BYTE IN A, CHECKSUM IT
-	CALL	HXCHKSUM		; UPDATE HEX CHECK SUM
-	LD	(HL),A			; CHECKSUM OK, MOVE CONVERTED BYTE IN A TO MEMORY LOCATION
-	INC	HL			; INCREMENT POINTER TO NEXT MEMORY LOCATION	
-	DEC	D			; DECREMENT LINE CHARACTER COUNTER
-	JR	HXLOAD2			; AND KEEP LOADING INTO MEMORY UNTIL LINE IS COMPLETE		
-HXLOAD3:
-	CALL	HEXINS			; GET TWO CHARS, BUILD BYTE AND CHECKSUM
-	CALL	HXCHKSUM		; UPDATE HEX CHECK SUM
-	LD	A,E			; CHECK THE CHECKSUM VALUE
-	AND	A			; IS IT ZERO?
-	JR	Z,HXLOADAGAIN		; IF THE CHECKSUM IS STILL OK, CONTINUE ON, ELSE
-HXLOADERR:
-	LD	HL,TXT_CKSUMERR		; GET "CHECKSUM ERROR" MESSAGE
-	CALL	MSG			; PRINT MESSAGE FROM (HL) AND TERMINATE THE LOAD
-	JP	HXLOADEXIT		; RETURN TO PROMPT
-HXCHKSUM:
-	LD	C,A			; BUILD THE CHECKSUM
-	LD	A,E			;
-	SUB	C			; THE CHECKSUM SHOULD ALWAYS .EQUAL ZERO WHEN CHECKED
-	LD	E,A			; SAVE THE CHECKSUM BACK WHERE IT CAME FROM
-	LD	A,C			; RETRIEVE THE BYTE AND GO BACK
-	RET				; BACK TO CALLER
-HXLOADAGAIN:
-	CALL	KIN			; CATCH THE TRAILING CARRIAGE RETURN
-	JP	HXLOAD0			; LOAD ANOTHER LINE OF DATA
-HXLOADEXIT:
-	CALL	KIN			; CATCH ANY STRAY TRAILING CHARACTERS
-	JP	SERIALCMDLOOP		; RETURN TO PROMPT
-
-
-;__MOVE_______________________________________________________________________
-;
-;	MOVE MEMORY, USER OPTION "M"
-;_____________________________________________________________________________
-;
-MOVE:
-	LD	C,03
-					; START GETNM REPLACEMENT
-					; GET SOURCE STARTING MEMORY LOCATION
-	INC	HL			; SHOW EXAMINE READY
-	PUSH	HL			;
-	CALL	LDHL			; LOAD IN HL REGS 
-	LD	D,H			;
-	LD	E,L			;
-	POP	HL			;
-	PUSH	DE			; PUSH MEMORY ADDRESS ON STACK
-	INC	HL			;
-	INC	HL			;
-	INC	HL			;
-	INC	HL			;
-	INC 	HL			; PRINT SPACE SEPARATOR
-	PUSH	HL			;
-	CALL	LDHL			; LOAD IN HL REGS 
-	LD	D,H			;
-	LD	E,L			;
-	POP	HL			;
-	PUSH	DE			; PUSH MEMORY ADDRESS ON STACK
-	INC	HL			;
-	INC	HL			;
-	INC	HL			;
-	INC	HL			;
-	INC	HL			; PRINT SPACE SEPARATOR
-	CALL	LDHL			; LOAD IN HL REGS 
-	PUSH	HL			; PUSH MEMORY ADDRESS ON STACK
-					; END GETNM REPLACEMENT
-	POP	DE			; DEST
-	POP	BC			; SOURCE END
-	POP	HL			; SOURCE
-	PUSH    HL			;
-	LD	A,L			;
-	CPL				;
-	LD	L,A			;
-	LD	A,H			;
-	CPL				;
-	LD	H,A			;
-	INC	HL			;
-	ADD	HL,BC			;
-	LD	C,L			;
-	LD	B,H			;
-	POP     HL        		;
-	CALL    MOVE_LOOP		;
-	JP	SERIALCMDLOOP			; EXIT MOVE COMMAND ROUTINE
-MOVE_LOOP:
-	LD	A,(HL)			; FETCH
-	LD	(DE),A			; DEPOSIT
-	INC     HL			; BUMP  SOURCE
-	INC     DE			; BUMP DEST
-	DEC     BC			; DEC COUNT
-	LD	A,C			;
-	OR	B       		;
-	JP	NZ,MOVE_LOOP		; TIL COUNT=0
-	RET				;
-               
-;__FILLMEM____________________________________________________________________
-;
-;	FILL MEMORY, USER OPTION "M"
-;_____________________________________________________________________________
-;
-FILLMEM:
-	LD	C,03			;
-					; START GETNM REPLACEMENT
-					; GET FILL STARTING MEMORY LOCATION
-	INC	HL			; SHOW EXAMINE READY
-	PUSH	HL			;
-	CALL	LDHL			; LOAD IN HL REGS 
-	LD	D,H			;
-	LD	E,L			;
-	POP	HL			;
-	PUSH	DE			; PUSH MEMORY ADDRESS ON STACK
-	INC	HL			;
-	INC	HL			;
-	INC	HL			;
-	INC	HL			;
-	INC	HL			; PRINT SPACE SEPARATOR
-					; GET FILL ENDING MEMORY LOCATION
-	PUSH	HL			;
-	CALL	LDHL			; LOAD IN HL REGS 
-	LD	D,H			;
-	LD	E,L			;
-	POP	HL			;
-	PUSH	DE			; PUSH MEMORY ADDRESS ON STACK
-	INC	HL			;
-	INC	HL			;
-	INC	HL			;
-	INC	HL			;
-	INC	HL			; PRINT SPACE SEPARATOR
-					; GET TARGET STARTING MEMORY LOCATION
-	CALL	HEXIN			; GET K B. AND MAKE HEX
-	LD	C,A			; PUT FILL VALUE IN F SO IT IS SAVED FOR LATER
-	PUSH	BC			; PUSH FILL VALUE BYTE ON STACK
-					; END GETNM REPLACEMENT
-	POP	BC			; BYTE
-	POP	DE			; END
-	POP	HL			; START
-	LD	(HL),C			;
-FILL_LOOP:
-	LD	(HL),C			;
-	INC     HL			;
-	LD	A,E			;
-	SUB     L			;
-	LD	B,A			;
-	LD	A,D			;
-	SUB     H			;
-	OR	B			;
-	JP	NZ,FILL_LOOP		;
-	JP	SERIALCMDLOOP		;
-
-;__GOCPM______________________________________________________________________
-;
-;	BOOT CP/M FROM ROM DRIVE, USER OPTION "C"
-;_____________________________________________________________________________
-;
-GOCPM:
-;___________________________
-; REMOVE COMMENTS WHEN BURNED IN ROM
-;___________________________
-
-;	LD	A,000000000b		; RESET MPCL LATCH TO DEFAULT ROM
-;	OUT	(MPCL),A		;
-;	LD	HL,ROMSTART_CPM		; WHERE IN ROM CP/M IS STORED (FIRST BYTE)
-;        LD	DE,RAMTARG_CPM		; WHERE IN RAM TO MOVE MONITOR TO (FIRST BYTE)
-;	LD	BC,MOVSIZ_CPM		; NUMBER OF BYTES TO MOVE FROM ROM TO RAM
-;	LDIR				; PERFORM BLOCK COPY OF CP/M TO UPPER RAM PAGE
-;	LD	A,010000000b		; RESET MPCL LATCH TO DEFAULT CP/M WITH 64K SETTING
-;	OUT	(MPCL),A		;
-
-	JP	CPM_ENT
-;
-;__INITIALIZE_________________________________________________________________
-;
-;	INITIALIZE SYSTEM
-;_____________________________________________________________________________
-;
-INITIALIZE:
-;	CALL	CIOCON_DISP + (CF_INIT * 3)
-#IF (PLATFORM == PLT_UNA)
-	; INSTALL UNA INVOCATION VECTOR FOR RST 08
-	LD	A,$C3		; JP INSTRUCTION
-	LD	(8),A		; STORE AT 0x0008
-	LD	HL,($FFFE)	; UNA ENTRY VECTOR
-	LD	(9),HL		; STORE AT 0x0009
-#ENDIF
-	RET
-;
-
-#IF DSKYENABLE
-
 ;__MTERM_INIT_________________________________________________________________
 ;
 ;  SETUP 8255, MODE 0, PORT A=OUT, PORT B=IN, PORT C=OUT/OUT
-;     
 ;_____________________________________________________________________________
+;
 MTERM_INIT:
 	LD	A, 82H
 	OUT	(PPIX),A
 	LD	A, 30H			;set PC4,5 to disable PPISD (if used)
 	OUT	(PPIC),A		;won't affect DSKY
 	RET
-
+;
 ;__KB_GET_____________________________________________________________________
 ;
 ;  GET A SINGLE KEY AND DECODE
 ;     
 ;_____________________________________________________________________________
+;
 KB_GET:
 	PUSH 	HL			; STORE HL
 KB_GET_LOOP:				; WAIT FOR KEY
@@ -1534,14 +1600,13 @@ KB_SCAN_DELAY:
 	NOP
 	NOP
 	RET
-
-
-
+;
 ;__HEXDISPLAY_________________________________________________________________
 ;
 ;  DISPLAY CONTENTS OF DISPLAYBUF IN DECODED HEX BITS 0-3 ARE DISPLAYED DIG, BIT 7 IS DP
 ;     
 ;_____________________________________________________________________________
+;
 HEXDISPLAY:
 	PUSH	HL			; STORE HL
 	PUSH	AF			; STORE AF
@@ -1575,12 +1640,13 @@ HEXDISPLAY_LP:
 	POP	AF			; RESTORE AF
 	POP	HL			; RESTORE HL
 	RET
-
+;
 ;__DECODEDISPLAY______________________________________________________________
 ;
 ;  DISPLAY CONTENTS OF DISPLAYBUF IN DECODED HEX BITS 0-3 ARE DISPLAYED DIG, BIT 7 IS DP
 ;     
 ;_____________________________________________________________________________
+;
 DECODEDISPLAY:
 	PUSH	BC			; STORE BC
 	PUSH	HL			; STORE HL
@@ -1592,13 +1658,13 @@ DECODEDISPLAY:
 	POP	HL			; RESTORE HL
 	POP	BC			; RESTORE BC
 	RET
-
-
+;
 ;__SEGDISPLAY_________________________________________________________________
 ;
 ;  DISPLAY CONTENTS OF DISPLAYBUF IN DECODED HEX BITS 0-3 ARE DISPLAYED DIG, BIT 7 IS DP
 ;     
 ;_____________________________________________________________________________
+;
 SEGDISPLAY:
 	PUSH	AF			; STORE AF
 	PUSH	BC			; STORE BC
@@ -1629,63 +1695,20 @@ SEGDISPLAY_LP:
 	POP	BC			; RESTORE BC
 	POP	AF			; RESTORE AF
 	RET
-
-#ENDIF
-
 ;
-;__WORK_AREA__________________________________________________________________
-;
-;	RESERVED RAM FOR MONITOR WORKING AREA
-;_____________________________________________________________________________
-;
-KEYBUF:  	.FILL	80,' '
-DISPLAYBUF:	.FILL	8,0
-;
-;__TEXT_STRINGS_______________________________________________________________
-;
-;	SYSTEM TEXT STRINGS
-;_____________________________________________________________________________
-;
-TCRLF:
-	.DB  	CR,LF,ENDT
-
-PROMPT:
-	.DB  	CR,LF,'>',ENDT
-
-TXT_READY:
-	.DB   CR,LF
-	.TEXT   "MONITOR READY "
-	.DB   CR,LF,ENDT
-
-TXT_COMMAND:
-	.DB   CR,LF
-	.TEXT   "UNKNOWN COMMAND."
-	.DB   ENDT
-
-TXT_CKSUMERR:
-	.DB   CR,LF
-	.TEXT   "CHECKSUM ERROR."
-	.DB   ENDT
-CPUUP:
-	.DB 	084H,0EEH,0BBH,080H,0BBH,0EEH,0CBH,084H
-ADDR:
-	.DB 	00H,00H,00H,00H,08CH,0BDH,0BDH,0FEH
-
-
-PORT:
-	.DB 	00H,00H,80H,80H,094H,08CH,09DH,0EEH
-SEC:
-	.DB 	80H,80H,80H,80H,80H,0CBH,0CFH,0D7H
-
+CPUUP	.DB 	$84,$EE,$BB,$80,$BB,$EE,$CB,$84
+ADDR	.DB 	$00,$00,$00,$00,$8C,$BD,$BD,$FE
+PORT	.DB 	$00,$00,$80,$80,$94,$8C,$9D,$EE
+SEC	.DB 	$80,$80,$80,$80,$80,$CB,$CF,$D7
 
 ;_KB DECODE TABLE_____________________________________________________________
 ; 
 ;
 KB_DECODE:
-;                0  1   2   3   4   5   6   7   8   9   A   B   C   D   E   F
-	.DB	41H,02H,42H,82H,04H,44H,84H,08H,48H,88H,10H,50H,90H,20H,60H,0A0H
+;               0   1   2   3   4   5   6   7   8   9   A   B   C   D   E   F
+	.DB	$41,$02,$42,$82,$04,$44,$84,$08,$48,$88,$10,$50,$90,$20,$60,$A0
 ;               FW  BK  CL  EN  DP  EX  GO  BO
-	.DB	01H,81H,0C1H,0C2H,0C4H,0C8H,0D0H,0E0H
+	.DB	$01,$81,$C1,$C2,$C4,$C8,$D0,$E0
 ;
 ; F-KEYS,
 ; FW = FORWARD
@@ -1697,14 +1720,24 @@ KB_DECODE:
 ; GO = GO
 ; BO = BOOT
 ;_____________________________________________________________________________
+;
 ;_HEX 7_SEG_DECODE_TABLE______________________________________________________
 ; 
 ; 0,1,2,3,4,5,6,7,8,9,A,B,C,D,E,F, ,-
 ; AND WITH 7FH TO TURN ON DP 
 ;_____________________________________________________________________________
 SEGDECODE:
-	.DB	0FBH,0B0H,0EDH,0F5H,0B6H,0D7H,0DFH,0F0H,0FFH,0F7H,0FEH,09FH
-	.DB	0CBH,0BDH,0CFH,0CEH,080H,084H,00H,0EEH,09DH
+	.DB	$FB,$B0,$ED,$F5,$B6,$D7,$DF,$F0,$FF,$F7,$FE,$9F
+	.DB	$CB,$BD,$CF,$CE,$80,$84,$00,$EE,$9D
+;
+DISPLAYBUF:	.FILL	8,0
+;
+#ELSE
+;
+DSKY_ENTRY:
+	CALL	PANIC
+;
+#ENDIF
 
 ;********************* END OF PROGRAM ***********************************
 ;

@@ -239,18 +239,18 @@ DB_INVALID:
 #DEFCONT \ .DB M9
 #DEFCONT \ .DB M10
 ;
-;		       name          menu exec      source-bank  dest-exec   source-addr dest-addr   img-size   dest-bank   desc
+;	       name          menu exec      source-bank  dest-exec   source-addr dest-addr   img-size   dest-bank   desc
 ;              DB            DB   DW        DB           DW          DW          DW          DW         DB          DB   
-MENU_S:	MENU_L("MONITOR $$", "M", GOROM,    BID_BIOSIMG, MON_SERIAL, 0A00h,      MON_LOC,    MON_SIZ,   BID_USR,    "Monitor$12345")
-MENU_1:	MENU_L("CP/M $   $", "C", GOROM,    BID_BIOSIMG, CPM_ENT,    1A00h,      CPM_LOC,    CPM_SIZ,   BID_USR,    "CP/M 80 2.2$ ")
-		MENU_L("Z-SYSTEM $", "Z", GOROM,    BID_BIOSIMG, CPM_ENT,    4A00h,      CPM_LOC,    CPM_SIZ,   BID_USR,    "ZSDOS V1.1 $ ")
-		MENU_L("$        $", "E", GOROM,	BID_BIOSIMG, EGG_LOC,    7A00h,      EGG_LOC,    EGG_SIZ,   BID_USR,    "Easter Egg $ ")
-		MENU_L("FORTH $  $", "F", GOROMB,   BID_OSIMG,   FTH_LOC,    0000h,      FTH_LOC,    FTH_SIZ,   BID_USR,    "Camel Forth$ ")
-		MENU_L("BASIC $  $", "B", GOROMB,   BID_OSIMG,   BAS_LOC,    1700h,      BAS_LOC,    BAS_SIZ,   BID_USR,    "Nascom BASIC$") 
-		MENU_L("T-BASIC $$", "T", GOROMB,   BID_OSIMG,   TBC_LOC,    3700h,      TBC_LOC,    TBC_SIZ,   BID_USR,    "Tasty BASIC$ ")  
+MENU_S:	MENU_L("MONITOR $$", "M", GOROM,    BID_BIOSIMG, MON_SERIAL, 1000h,      MON_LOC,    MON_SIZ,   BID_USR,    "Monitor$12345")
+MENU_1:	MENU_L("CP/M $   $", "C", GOROM,    BID_BIOSIMG, CPM_ENT,    2000h,      CPM_LOC,    CPM_SIZ,   BID_USR,    "CP/M 80 2.2$ ")
+	MENU_L("Z-SYSTEM $", "Z", GOROM,    BID_BIOSIMG, CPM_ENT,    5000h,      CPM_LOC,    CPM_SIZ,   BID_USR,    "ZSDOS V1.1 $ ")
+	MENU_L("$        $", "E", GOROM,    BID_BIOSIMG, EGG_LOC,    0E00h,      EGG_LOC,    EGG_SIZ,   BID_USR,    "Easter Egg $ ")
+	MENU_L("FORTH $  $", "F", GOROMB,   BID_OSIMG,   FTH_LOC,    0000h,      FTH_LOC,    FTH_SIZ,   BID_USR,    "Camel Forth$ ")
+	MENU_L("BASIC $  $", "B", GOROMB,   BID_OSIMG,   BAS_LOC,    1700h,      BAS_LOC,    BAS_SIZ,   BID_USR,    "Nascom BASIC$") 
+	MENU_L("T-BASIC $$", "T", GOROMB,   BID_OSIMG,   TBC_LOC,    3700h,      TBC_LOC,    TBC_SIZ,   BID_USR,    "Tasty BASIC$ ")  
 
 #IF (DSKYENABLE)
-		MENU_L("DSKY-MON $", "D", GOROM,    BID_BIOSIMG, MON_DSKY,   0A00h,      MON_LOC,    MON_SIZ,   BID_USR,    "DSKY Monitor$")
+	MENU_L("DSKY-MON $", "D", GOROM,    BID_BIOSIMG, MON_DSKY,   1000h,      MON_LOC,    MON_SIZ,   BID_USR,    "DSKY Monitor$")
 #ENDIF
 	
 		.DB "REBOOT$   ", "R"
