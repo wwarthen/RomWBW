@@ -17,9 +17,11 @@
 ;[2017/11/29] WBW modified to adjust to RTC in use dynamically
 ;             using HBIOS platform detection
 ;
+;[2018/11/8] v1.2 PMS Add boot option. Code optimization.
+;
+;
 ; Constants
 ;
-
 mask_data	.EQU	%10000000	; RTC data line
 mask_clk	.EQU	%01000000	; RTC Serial Clock line
 mask_rd		.EQU	%00100000	; Enable data read from RTC
@@ -31,6 +33,10 @@ PORT_MK4	.EQU	$8A		; RTC port for MK4
 PORT_RC		.EQU	$C0		; RTC port for RC2014
 
 BDOS		.EQU	5		; BDOS invocation vector
+
+BID_BOOT	.EQU	$00
+HB_BNKCALL	.EQU	$FFF9
+
 ;
 ; Program
 ;
@@ -710,9 +716,6 @@ RTC_GET_TIME:
 	ADD	A,'0'
 	LD	(RTC_PRINT_BUFFER+19),A
 
-
-
-
 ;    { Read year }
 
 	CALL	RTC_RD			; read value from DS1302, value is in Reg C
@@ -1195,6 +1198,7 @@ IDBIO2:
 ;       end;
 ;    end loop;
 ;  END toploop;
+;  Note:above code is not fully in sync with current menu code
 
 RTC_TOP_LOOP:
 	LD	DE,CRLF_MSG
@@ -1209,14 +1213,6 @@ RTC_TOP_LOOP:
 	CALL	RTC_BIT_DELAY
 	CALL	RTC_BIT_DELAY
 
-;	CALL	RTC_TEST_BIT_DELAY
-
-;	CALL	RTC_CHARGE_DISABLE	; *vk5dg* using supercap so leave on
-	
-;	LD	DE,RTC_TOP_LOOP1_MSG
-;	LD	C,09H			; CP/M write string to console call
-;	CALL	0005H
-
 RTC_TOP_LOOP_1:
 	LD	DE,RTC_TOP_LOOP1_PROMPT
 	LD	C,09H			; CP/M write string to console call
@@ -1227,61 +1223,70 @@ RTC_TOP_LOOP_1:
 
 	AND	%01011111		; handle lower case responses to menu
 
-	CP	'E'
-	JP	Z,RTC_TOP_LOOP_EXIT
-
-	CP	'C'
-	JP	Z,RTC_TOP_LOOP_CHARGE
-
-	CP	'N'
-	JP	Z,RTC_TOP_LOOP_NOCHARGE
-
-	CP	'A'
-	JP	Z,RTC_TOP_LOOP_START
-
-	CP	'T'
-	JP	Z,RTC_TOP_LOOP_TIME
-
-	CP	'R'
-	JP	Z,RTC_TOP_LOOP_RAW
-
 	CP	'L'
 	JP	Z,RTC_TOP_LOOP_LOOP
-
-	CP	'H'
-	JP	Z,RTC_TOP_LOOP_HELP
-
-	CP	'D'
-	JP	Z,RTC_TOP_LOOP_DELAY
-
-	CP	'S'
-	JP	Z,RTC_TOP_LOOP_SET
-
-	CP	'I'
-	JP	Z,RTC_TOP_LOOP_INIT
-
+	
+	CP	'R'
+	JP	Z,RTC_TOP_LOOP_RAW
+	
 	CP	'G'
 	JP	Z,RTC_TOP_LOOP_GET
 
 	CP	'P'
 	JP	Z,RTC_TOP_LOOP_PUT
+	
+	CP	'E'
+;	JP	Z,RTC_TOP_LOOP_EXIT
+	RET	Z
+	
+	CP	'H'
+	JR	Z,RTC_TOP_LOOP_HELP
+	
+	CP	'D'
+	JR	Z,RTC_TOP_LOOP_DELAY	
 
-	LD	DE,RTC_TOP_LOOP1_OTHER1
-	LD	C,09H			; CP/M write string to console call
-	CALL	0005H
+	CP	'B'
+	JR	Z,RTC_TOP_LOOP_BOOT	
 
-	LD	E,A
-	LD	C,02H			; CP/M Console output call
-	CALL	0005H
+	CP	'C'
+	JR	Z,RTC_TOP_LOOP_CHARGE
 
-	LD	DE,RTC_TOP_LOOP1_OTHER2
+	CP	'N'
+	JR	Z,RTC_TOP_LOOP_NOCHARGE
+
+	CP	'A'
+	JR	Z,RTC_TOP_LOOP_START
+
+	CP	'S'
+	JP	Z,RTC_TOP_LOOP_SET
+
+	CP	'I'
+	JR	Z,RTC_TOP_LOOP_INIT
+	
+	CP	'T'
+	JR	Z,RTC_TOP_LOOP_TIME
+
+	LD	DE,CRLF_MSG
 	LD	C,09H			; CP/M write string to console call
 	CALL	0005H
 	
-	JP	RTC_TOP_LOOP_1
+	JR	RTC_TOP_LOOP_1
 
-RTC_TOP_LOOP_EXIT:
-	RET
+;RTC_TOP_LOOP_EXIT:
+;	RET
+
+RTC_TOP_LOOP_HELP:
+	CALL	RTC_HELP
+	JP	RTC_TOP_LOOP_1
+	
+RTC_TOP_LOOP_DELAY:
+	CALL	RTC_TEST_BIT_DELAY
+	JP	RTC_TOP_LOOP_1
+	
+RTC_TOP_LOOP_BOOT:
+	LD		A,BID_BOOT		; BOOT BANK
+	LD		HL,0			; ADDRESS ZERO
+	CALL	HB_BNKCALL		; DOES NOT RETURN
 
 RTC_TOP_LOOP_CHARGE:
 	LD	DE,RTC_TOP_LOOP1_CHARGE
@@ -1303,6 +1308,20 @@ RTC_TOP_LOOP_START:
 	CALL	0005H
 	CALL	RTC_RESTART
 	JP	RTC_TOP_LOOP_1
+	
+RTC_TOP_LOOP_SET:
+	LD	DE,RTC_TOP_LOOP1_SET
+	LD	C,09H			; CP/M write string to console call
+	CALL	0005H
+	CALL	RTC_SET_NOW
+	JP	RTC_TOP_LOOP_1
+
+RTC_TOP_LOOP_INIT:
+	LD	DE,RTC_TOP_LOOP1_INIT
+	LD	C,09H			; CP/M write string to console call
+	CALL	0005H
+	CALL	RTC_INIT_NOW
+	JP	RTC_TOP_LOOP_1
 
 RTC_TOP_LOOP_TIME:
 	LD	DE,RTC_TOP_LOOP1_TIME
@@ -1313,7 +1332,7 @@ RTC_TOP_LOOP_TIME:
 	LD	C,09H			; CP/M write string to console call
 	CALL	0005H
 	JP	RTC_TOP_LOOP_1
-
+	
 RTC_TOP_LOOP_RAW:
 	LD	DE,RTC_TOP_LOOP1_RAW
 	LD	C,09H			; CP/M write string to console call
@@ -1415,28 +1434,6 @@ RTC_TOP_LOOP_LOOP1:
 
 	JP	RTC_TOP_LOOP_1
 
-RTC_TOP_LOOP_SET:
-	LD	DE,RTC_TOP_LOOP1_SET
-	LD	C,09H			; CP/M write string to console call
-	CALL	0005H
-	CALL	RTC_SET_NOW
-	JP	RTC_TOP_LOOP_1
-
-RTC_TOP_LOOP_INIT:
-	LD	DE,RTC_TOP_LOOP1_INIT
-	LD	C,09H			; CP/M write string to console call
-	CALL	0005H
-	CALL	RTC_INIT_NOW
-	JP	RTC_TOP_LOOP_1
-
-RTC_TOP_LOOP_DELAY:
-	CALL	RTC_TEST_BIT_DELAY
-	JP	RTC_TOP_LOOP_1
-
-RTC_TOP_LOOP_HELP:
-	CALL	RTC_HELP
-	JP	RTC_TOP_LOOP_1
-
 RTC_TOP_LOOP_PUT:
 	LD	A,$01			; set PUT as true
 	LD	(GET_PUT),A
@@ -1476,7 +1473,7 @@ NUM1:	ADD	A,'0'
 NUM2:	ADD	A,'0'
 	LD	(RTC_GET_BUFFER+1),A
 
-	LD	DE,RTC_TOP_LOOP1_OTHER2
+	LD	DE,CRLF_MSG
 	LD	C,09H			; CP/M write string to console call
 	CALL	0005H
 
@@ -1510,18 +1507,12 @@ RTC_GET_PUT_EXIT:
 	LD	(GET_PUT),A
 	JP	RTC_TOP_LOOP_1
 
-
-
-
 ;
 ; Text Strings
 ;
 
 MSG:
 	.TEXT	"Start RTC Program"
-	.DB	0Ah, 0Dh		; line feed and carriage return
-	.DB	"$"			; Line terminator
-
 CRLF_MSG:
 	.DB	0Ah, 0Dh		; line feed and carriage return
 	.DB	"$"			; Line terminator
@@ -1542,15 +1533,9 @@ TESTING_BIT_DELAY_OVER:
 
 RTC_HELP_MSG:
 	.DB	0Ah, 0Dh		; line feed and carriage return
-	.TEXT	"RTC: Version 1.1"
+	.TEXT	"RTC: Version 1.2"
 	.DB	0Ah, 0Dh		; line feed and carriage return
-	.TEXT	"RTC: Commands: E)xit T)ime st(A)rt S)et R)aw L)oop C)harge N)ocharge D)elay I)nit G)et P)ut H)elp"
-	.DB	0Ah, 0Dh		; line feed and carriage return
-	.DB	"$"			; Line terminator
-
-RTC_TOP_LOOP1_MSG:
-	.DB	0Ah, 0Dh		; line feed and carriage return
-	.TEXT	"RTC: trickle charger disabled."
+	.TEXT	"Commands: E)xit T)ime st(A)rt S)et R)aw L)oop C)harge N)ocharge D)elay I)nit G)et P)ut B)oot H)elp"
 	.DB	0Ah, 0Dh		; line feed and carriage return
 	.DB	"$"			; Line terminator
 
@@ -1651,15 +1636,6 @@ RTC_TOP_LOOP1_INIT_YEAR:
 	.TEXT	"YEAR:"
 	.DB	"$"			; Line terminator
 
-RTC_TOP_LOOP1_OTHER1:
-	.DB	0Ah, 0Dh		; line feed and carriage return
-	.TEXT	"YOU TYPED: "
-	.DB	"$"			; Line terminator
-
-RTC_TOP_LOOP1_OTHER2:
-	.DB	0Ah, 0Dh		; line feed and carriage return
-	.DB	"$"			; Line terminator
-
 RTC_PRINT_BUFFER:
 	.FILL	20,0			; Buffer for formatted date & time to print
 	.DB	0Ah, 0Dh		; line feed and carriage return
@@ -1693,13 +1669,13 @@ PLT_RC	.TEXT	", RC2014 RTC Latch Port 0xC0\r\n$"
 ;	JP	NZ,FOR_LOOP		; No, do FOR loop again
 ;	RET				; Yes, end function and return.  Read RTC value is in C
 
-YEAR	.DB	$17
+YEAR	.DB	$18
 MONTH	.DB	$11
-DATE	.DB	$29
+DATE	.DB	$08
 HOURS	.DB	$00
 MINUTES	.DB	$00
 SECONDS	.DB	$00
-DAY	.DB	$04
+DAY	.DB	$05
 GET_PUT	.DB	$00
 
 PUT_ADR	.DB	0
