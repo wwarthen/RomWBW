@@ -1,5 +1,4 @@
 ;___ROM_MONITOR_PROGRAM_______________________________________________________
-;___ROM_MONITOR_PROGRAM_______________________________________________________
 ;
 ;  ORIGINAL CODE BY:	ANDREW LYNCH (LYNCHAJ@YAHOO COM)	13 FEB 2007
 ;
@@ -1338,45 +1337,6 @@ GETADDRDISP:
 	LD	(ADDR+3),A		;
 	JP	GETADDR1		;
 ;
-;__DSPSECTOR__________________________________________________________________
-;
-;	DISPLAY SECTOR IN HL ON FRONT PANEL
-;_____________________________________________________________________________
-;
-DSPSECTOR:
-	PUSH	BC			; STORE BC
-	PUSH	HL			; STORE HL
-	LD	A,H			; DISPLAY HIGH BYTE, HIGH NIBBLE
-	SRL 	A			;	
-	SRL 	A			;	
-	SRL 	A			;	
-	SRL 	A			;	
-	AND	0FH			;
-	CALL 	DECODEDISPLAY		;
-	LD	(SEC+3),A		;
-	LD      A,H			; DISPLAY HIGH BYTE, LOW NIBBLE
-	AND	0FH			;
-	CALL 	DECODEDISPLAY		;
-	LD	(SEC+2),A		;
-	LD	A,L			; DISPLAY LOW BYTE, HIGH NIBBLE
-	AND	0F0H			;
-	SRL 	A			;	
-	SRL 	A			;	
-	SRL 	A			;	
-	SRL 	A			;		
-	AND	0FH			;
-	CALL 	DECODEDISPLAY		;
-	LD	(SEC+1),A		; DISPLAY LOW BYTE, LOW NIBBLE
-	LD      A,L			;
-	AND	0FH			;
-	CALL 	DECODEDISPLAY		;
-	LD	(SEC),A			;
-	LD	HL,SEC			; DISPLAY PROMPT
-	CALL	SEGDISPLAY		; 
-	POP	HL			; RESTORE HL
-	POP	BC			; RESTORE BC
-	RET
-;
 ;__GETPORT____________________________________________________________________
 ;
 ;	GET PORT FROM FRONT PANEL
@@ -1696,10 +1656,10 @@ SEGDISPLAY_LP:
 	POP	AF			; RESTORE AF
 	RET
 ;
-CPUUP	.DB 	$84,$EE,$BB,$80,$BB,$EE,$CB,$84
-ADDR	.DB 	$00,$00,$00,$00,$8C,$BD,$BD,$FE
-PORT	.DB 	$00,$00,$80,$80,$94,$8C,$9D,$EE
-SEC	.DB 	$80,$80,$80,$80,$80,$CB,$CF,$D7
+CPUUP	.DB 	$84,$EE,$BB,$80,$BB,$EE,$CB,$84	; "-CPU UP-"
+ADDR	.DB 	$00,$00,$00,$00,$8C,$BD,$BD,$FE ; "Addr    "
+PORT	.DB 	$00,$00,$80,$80,$94,$8C,$9D,$EE ; "Port  .."
+SEC	.DB 	$80,$80,$80,$80,$80,$CB,$CF,$D7 ; "SEC     "
 
 ;_KB DECODE TABLE_____________________________________________________________
 ; 
@@ -1723,11 +1683,13 @@ KB_DECODE:
 ;
 ;_HEX 7_SEG_DECODE_TABLE______________________________________________________
 ; 
-; 0,1,2,3,4,5,6,7,8,9,A,B,C,D,E,F, ,-
+; 0,1,2,3,4,5,6,7,8,9,A,B,C,D,E,F, ,-,.,P,o
 ; AND WITH 7FH TO TURN ON DP 
 ;_____________________________________________________________________________
 SEGDECODE:
+	;	0   1   2   3   4   5   6   7   8   9   A   B
 	.DB	$FB,$B0,$ED,$F5,$B6,$D7,$DF,$F0,$FF,$F7,$FE,$9F
+	;	C   D   E   F       -   .   P   o
 	.DB	$CB,$BD,$CF,$CE,$80,$84,$00,$EE,$9D
 ;
 DISPLAYBUF:	.FILL	8,0
