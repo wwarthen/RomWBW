@@ -210,15 +210,32 @@ DSKY_HEXOUT1:
 	INC	HL
 	INC	DE			; NEXT BYTE
 	DJNZ	DSKY_HEXOUT1
+	LD	HL,DSKY_BUF
+	JR	DSKY_SHOWHEX
+;
+;==================================================================================================
+; DSKY SHOW BUFFER
+;   HL: ADDRESS OF BUFFER
+;   ENTER @ SHOWHEX FOR HEX DECODING
+;   ENTER @ SHOWRAW FOR DIRECT SEGMENT DECODING
+;==================================================================================================
+;
+DSKY_SHOWHEX:
+	LD	A,$D0			; 7218 -> (DATA COMING, HEXA DECODE)
+	JR	DSKY_SHOW
 
+DSKY_SHOWRAW:
+	LD	A,$F0			; 7218 -> (DATA COMING, NO DECODE)
+	JR	DSKY_SHOW
+
+DSKY_SHOW:
+	PUSH	AF			; SAVE 7218 CONTROL BITS
 	LD	A,82H			; SETUP PPI
 	OUT	(PPIX),A
 	CALL	DSKY_COFF
-	LD	A,0D0H			; 7218 -> (DATA COMING, HEXA DECODE)
+	POP	AF
 	OUT	(PPIA),A
 	CALL	DSKY_STROBEC
-
-	LD	HL,DSKY_BUF		; POINT TO START OF BUF
 	LD	B,DSKY_BUFLEN		; NUMBER OF DIGITS
 	LD	C,PPIA
 DSKY_HEXOUT2:
