@@ -4,7 +4,12 @@ CIOOUT			EQU	01h	; CHARACTER OUTPUT
 CIOIST			EQU 02h ; CHARACTER INPUT STATUS
 BID_BOOT		EQU	00h
 HB_BNKCALL		EQU 0fff9h
+
+; THE FOLLOWING NEED TO BE SYNCED WITH STD.ASM SO ROMLDR
+; KNOWS WHERE THIS EXECUTES AT
+
 FTH_SIZ			EQU	1700h
+FTH_LOC			EQU	0200h
 
 ; Listing 2.
 ; ===============================================
@@ -53,6 +58,7 @@ FTH_SIZ			EQU	1700h
 ;   02 Mar 95 v1.02  changed ALIGN to ALIGNED in
 ;       S" (S"); changed ,BRANCH to ,XT in DO.
 ;   05 Nov 18 v1.02 Initial ROMWBW HBIOS version.
+;   10-Nov 18 v1.02 New org address.
 ;       b1ackmai1er difficultylevelhigh@gmail.com
 ; ===============================================
 ; Macros to define Forth headers
@@ -118,7 +124,7 @@ nexthl  MACRO
 ; Instead, we have the...
 
 ; CP/M ENTRY POINT
-        org 0A00h    ; Execute address 
+        org FTH_LOC  ; Execute address 
 reset:  ld hl,0FDFFh ; HBIOS address, rounded down
         ld l,0       ;    = end of avail.mem (EM)
         dec h        ; EM-100h
@@ -135,7 +141,7 @@ reset:  ld hl,0FDFFh ; HBIOS address, rounded down
 
 ; Memory map:
 ;               Terminal Input Buffer, 128 bytes
-;   0A00h       Forth kernel = starts after ROMLDR
+;   FTH_LOC     Forth kernel = starts after ROMLDR
 ;     ? h       Forth dictionary (user RAM)
 ;   EM-200h     User area, 128 bytes
 ;   EM-180h     Parameter stack, 128B, grows down
