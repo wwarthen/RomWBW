@@ -44,7 +44,7 @@ KY_BO	.EQU	017H	; BOOT
 ;
 ;__DSKY_INIT_________________________________________________________________________________________
 ;
-;  CHECK FOR KEY PRESS, SAVE RAW VALUE, RETURN STATUS
+;  CONFIGURE PARALLEL PORT AND CLEAR ANY BUFFERED CHARACTER
 ;____________________________________________________________________________________________________
 ;
 DSKY_INIT:
