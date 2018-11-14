@@ -15,9 +15,12 @@ Version 2.9.1
 - WBW: Fixed getnum32 bug in MODE command (found by Phil Summers)
 - P?S: Added serial support for Zilog Peripherals Baord
 - WBW: Added preliminary support for interrupt management API
-- P?S: Improved boot messages in RAM-Floppy driver
-- P?S: Added charge setting display to RTC boot messages
+- PMS: Improved boot messages in RAM-Floppy driver
+- PMS: Added charge setting display to RTC boot messages
 - WBW: Add SmallZ80 support to FDU
+- WBW: Refactored Debug Monitor w/ improved syntax parsing and help
+- PMS: Added Forth, Nascom BASIC, and Tasty BASIC to ROM
+- PMS: Refactored Rom Loader to support more ROM images, now table driven
 
 Version 2.9.0
 -------------
