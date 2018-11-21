@@ -1,190 +1,204 @@
 ;
 ;==================================================================================================
-; DSKY KEYBOARD ROUTINES
+; DSKY ROUTINES
 ;==================================================================================================
 ;
 PPIA		.EQU 	PPIBASE + 0	; PORT A
 PPIB		.EQU 	PPIBASE + 1	; PORT B
 PPIC		.EQU 	PPIBASE + 2	; PORT C
 PPIX	 	.EQU 	PPIBASE + 3	; PPI CONTROL PORT
-
 ;
-;    _____C0______C1______C2______C3__
-;B5 |	$20 D	$60 E	$A0 F	$E0 BO
-;B4 |	$10 A	$50 B	$90 C	$D0 GO
-;B3 |	$08 7	$48 8	$88 9	$C8 EX
-;B2 |	$04 4	$44 5	$84 6	$C4 DE
-;B1 |	$02 1	$42 2	$82 3	$C2 EN
-;B0 |	$01 FW	$41 0	$81 BK	$C1 CL
+;		ICM7218A	KEYPAD		PPISD
+;		--------	--------	--------
+; PA0-7		IO0-7
+; PB0-5				COLS 0-5
+; PB6
+; PB7						DO (<SD)
+; PC0				ROW 0		DI (>SD)
+; PC1				ROW 1		CLK (>SD)
+; PC2-3				ROWS 2-3
+; PC4						/CS (PRI)
+; PC5						/CS (SEC)
+; PC6		/WR
+; PC7		MODE
 ;
-KY_0	.EQU	000H
-KY_1	.EQU	001H
-KY_2	.EQU	002H
-KY_3	.EQU	003H
-KY_4	.EQU	004H
-KY_5	.EQU	005H
-KY_6	.EQU	006H
-KY_7	.EQU	007H
-KY_8	.EQU	008H
-KY_9	.EQU	009H
-KY_A	.EQU	00AH
-KY_B	.EQU	00BH
-KY_C	.EQU	00CH
-KY_D	.EQU	00DH
-KY_E	.EQU	00EH
-KY_F	.EQU	00FH
-KY_FW	.EQU	010H	; FORWARD
-KY_BK	.EQU	011H	; BACKWARD
-KY_CL	.EQU	012H	; CLEAR
-KY_EN	.EQU	013H	; ENTER
-KY_DE	.EQU	014H	; DEPOSIT
-KY_EX	.EQU	015H	; EXAMINE
-KY_GO	.EQU	016H	; GO
-KY_BO	.EQU	017H	; BOOT
+; DSKY SCAN CODES ARE ONE BYTE: CCRRRRRR
+; BITS 7-6 IDENTFY THE COLUMN OF THE KEY PRESSED
+; BITS 5-0 ARE A BITMAP, WITH A BIT ON TO INDICATE ROW OF KEY PRESSED
+;
+;      ____PC0________PC1________PC2_______PC3___
+; PB5 |	 $20 [D]    $60 [E]    $A0 [F]	$E0 [BO]
+; PB4 |	 $10 [A]    $50 [B]    $90 [C]	$D0 [GO]
+; PB3 |	 $08 [7]    $48 [8]    $88 [9]	$C8 [EX]
+; PB2 |	 $04 [4]    $44 [5]    $84 [6]	$C4 [DE]
+; PB1 |	 $02 [1]    $42 [2]    $82 [3]	$C2 [EN]
+; PB0 |	 $01 [FW]   $41 [0]    $81 [BK]	$C1 [CL]
 ;
 ;__DSKY_INIT_________________________________________________________________________________________
 ;
-;  CONFIGURE PARALLEL PORT AND CLEAR ANY BUFFERED CHARACTER
+;  CONFIGURE PARALLEL PORT AND CLEAR KEYPAD BUFFER
 ;____________________________________________________________________________________________________
 ;
 DSKY_INIT:
-	LD	A,82H
+	OR	$FF			; SIGNAL TO WAIT FOR KEY RELEASE
+	LD	(DSKY_KEYBUF),A		; SET IT
+DSKY_RESET:
+	PUSH	AF
+	LD	A,$82			; PA OUT, PB IN, PC OUT
 	OUT 	(PPIX),A
-	LD	A,30H			;disable /CS on PPISD card(s)
+	OR	$70			; PPISD AND 7218 INACTIVE
 	OUT	(PPIC),A
-	XOR	A
-	LD	(KY_BUF),A
+	POP	AF
 	RET
-
+;
 #IFDEF DSKY_KBD
 ;
-;__KY_STAT___________________________________________________________________________________________
+KY_0	.EQU	$00
+KY_1	.EQU	$01
+KY_2	.EQU	$02
+KY_3	.EQU	$03
+KY_4	.EQU	$04
+KY_5	.EQU	$05
+KY_6	.EQU	$06
+KY_7	.EQU	$07
+KY_8	.EQU	$08
+KY_9	.EQU	$09
+KY_A	.EQU	$0A
+KY_B	.EQU	$0B
+KY_C	.EQU	$0C
+KY_D	.EQU	$0D
+KY_E	.EQU	$0E
+KY_F	.EQU	$0F
+KY_FW	.EQU	$10	; FORWARD
+KY_BK	.EQU	$11	; BACKWARD
+KY_CL	.EQU	$12	; CLEAR
+KY_EN	.EQU	$13	; ENTER
+KY_DE	.EQU	$14	; DEPOSIT
+KY_EX	.EQU	$15	; EXAMINE
+KY_GO	.EQU	$16	; GO
+KY_BO	.EQU	$17	; BOOT
+;
+;__DSKY_GETKEY_____________________________________________________________________________________
+;
+;  WAIT FOR A DSKY KEYPRESS AND RETURN
+;____________________________________________________________________________________________________
+;
+DSKY_GETKEY:
+	CALL	DSKY_STAT		; CHECK STATUS
+	JR	Z,DSKY_GETKEY		; LOOP IF NOTHING READY
+	LD	A,(DSKY_KEYBUF)
+	LD	B,24			; SIZE OF DECODE TABLE
+	LD	C,0			; INDEX
+	LD	HL,DSKY_KEYMAP		; POINT TO BEGINNING OF TABLE
+DSKY_GETKEY1:
+	CP	(HL)			; MATCH?
+	JR	Z,DSKY_GETKEY2		; FOUND, DONE
+	INC	HL
+	INC	C			; BUMP INDEX
+	DJNZ	DSKY_GETKEY1		; LOOP UNTIL EOT
+	LD	A,$FF			; NOT FOUND ERR, RETURN $FF
+	RET
+DSKY_GETKEY2:
+	LD	A,$FF			; SET KEY BUF TO $FF
+	LD	(DSKY_KEYBUF),A		; DO IT
+	; RETURN THE INDEX POSITION WHERE THE SCAN CODE WAS FOUND
+	LD	A,C			; RETURN INDEX VALUE
+	RET
+;
+;__DSKY_STAT_________________________________________________________________________________________
 ;
 ;  CHECK FOR KEY PRESS, SAVE RAW VALUE, RETURN STATUS
 ;____________________________________________________________________________________________________
 ;
-KY_STAT:
-	; IF WE ALREADY HAVE A KEY, RETURN WITH NZ
-	LD	A,(KY_BUF)
-	OR	A
-	RET	NZ
-	; SCAN FOR A KEYPRESS, A=0 NO DATA OR A=RAW BYTE
-	CALL	KY_SCAN			; SCAN KB ONCE
-	OR	A			; SET FLAGS
-	RET	Z			; NOTHING FOUND, GET OUT
-	LD	(KY_BUF),A		; SAVE RAW KEYCODE
-	RET				; RETURN
+DSKY_STAT:
+	LD	A,(DSKY_KEYBUF)		; GET CURRENT BUF VAL
+	CP	$FF			; $FF MEANS WE ARE WAITING FOR PREV KEY TO BE RELEASED
+	JR	Z,DSKY_STAT1		; CHECK FOR PREV KEY RELEASE
+	OR	A			; DO WE HAVE A SCAN CODE BUFFERED ALREADY?
+	RET	NZ			; IF SO, WE ARE DONE
+	JR	DSKY_STAT2		; OTHERWISE, DO KEY CHECK
+	
+DSKY_STAT1:
+	; WAITING FOR PREVIOUS KEY RELEASE
+	CALL	DSKY_KEY		; SCAN
+	JR	Z,DSKY_STAT2		; IF ZERO, PREV KEY RELEASED, CONTINUE
+	XOR	A			; SIGNAL NO KEY PRESSED
+	RET				; AND DONE
+
+DSKY_STAT2:
+	CALL	DSKY_KEY		; SCAN
+	LD	(DSKY_KEYBUF),A		; SAVE RESULT
+	RET				; RETURN WITH ZF SET APPROPRIATELY
 ;
-;__KY_GET____________________________________________________________________________________________
+;__DSKY_KEY_______________________________________________________________________________________
 ;
-;  GET A SINGLE KEY (WAIT FOR ONE IF NECESSARY)
+;  CHECK FOR KEY PRESS W/ DEBOUNCE
 ;____________________________________________________________________________________________________
 ;
-KY_GET:
-	; SEE IF WE ALREADY HAVE A KEY SAVED, GO TO DECODE IF SO
-	LD	A,(KY_BUF)
-	OR	A
-	JR	NZ,KY_DECODE
-	; NO KEY SAVED, WAIT FOR ONE
-KY_STATLOOP:
-	CALL	KY_STAT
-	OR	A
-	JR	Z,KY_STATLOOP
-	; DECODE THE RAW VALUE
-KY_DECODE:
-	LD	D,00H
-	LD	HL,KY_KEYMAP		; POINT TO BEGINNING OF TABLE
-KY_GET_LOOP:
-	CP	(HL)			; MATCH?
-	JR	Z,KY_GET_DONE		; FOUND, DONE
-	INC	HL
-	INC	D			; D + 1
-	JR	NZ,KY_GET_LOOP		; NOT FOUND, LOOP UNTIL EOT
-KY_GET_DONE:
-	; CLEAR OUT KEY_BUF
-	XOR	A
-	LD	(KY_BUF),A
-	; RETURN THE INDEX POSITION WHERE THE RAW VALUE WAS FOUND
-	LD	A,D
-	RET
+DSKY_KEY:
+	CALL	DSKY_SCAN		; INITIAL KEY PRESS SCAN
+	LD	E,A			; SAVE INITIAL SCAN VALUE
+DSKY_KEY1:
+	; MAX BOUNCE TIME FOR OMRON B3F IS 3MS
+	PUSH	DE			; SAVE DE
+	LD	DE,300			; ~3MS DELAY
+	CALL	VDELAY			; DO IT
+	CALL	DSKY_SCAN		; REPEAT SCAN
+	POP	DE			; RESTORE DE
+	RET	Z			; IF NOTHING PRESSED, DONE
+	CP	E			; SAME?
+	JR	DSKY_KEY2		; YES, READY TO RETURN
+	LD	E,A			; OTHERWISE, SAVE NEW SCAN VAL
+	JR	DSKY_KEY1		; AND LOOP UNTIL STABLE VALUE
+DSKY_KEY2:
+	OR	A			; SET FLAGS BASED ON VALUE
+	RET				; AND DONE
 ;
-;__KY_SCAN____________________________________________________________________________________________
+;__DSKY_SCAN______________________________________________________________________________________
 ;
-;  SCAN KEYBOARD MATRIX FOR AN INPUT
+;  SCAN KEYPAD AND RETURN RAW SCAN CODE (RETURNS ZERO IF NO KEY PRESSED)
 ;____________________________________________________________________________________________________
 ;
-KY_SCAN:
-	LD	C,0000H
-	LD	A,41H | 30H		;  SCAN COL ONE
-	OUT 	(PPIC),A		;  SEND TO COLUMN LINES
-	CALL	DLY2			;  DEBOUNCE
-	IN	A,(PPIB)		;  GET ROWS
-	AND	7FH			;ignore PB7 for PPISD
-	CP	00H 			;  ANYTHING PRESSED?
-	JR	NZ,KY_SCAN_FOUND	;  YES, EXIT
-
-	LD	C,0040H
-	LD	A,42H | 30H		;  SCAN COL TWO
-	OUT 	(PPIC),A		;  SEND TO COLUMN LINES
-	CALL	DLY2			;  DEBOUNCE
-	IN	A,(PPIB)		;  GET ROWS
-	AND	7FH			;ignore PB7 for PPISD
-	CP	00H 			;  ANYTHING PRESSED?
-	JR	NZ,KY_SCAN_FOUND	;  YES, EXIT
-
-	LD	C,0080H
-	LD	A,44H | 30H		;  SCAN COL THREE
-	OUT	(PPIC),A		;  SEND TO COLUMN LINES
-	CALL	DLY2		;  DEBOUNCE
-	IN	A,(PPIB)		;  GET ROWS
-	AND	7FH			;ignore PB7 for PPISD
-	CP	00H 			;  ANYTHING PRESSED?
-	JR	NZ,KY_SCAN_FOUND	;  YES, EXIT
-
-	LD	C,00C0H			;
-	LD	A,48H | 30H		;  SCAN COL FOUR
-	OUT	(PPIC),A		;  SEND TO COLUMN LINES
-	CALL	DLY2			;  DEBOUNCE
-	IN	A,(PPIB)		;  GET ROWS
-	AND	7FH			;ignore PB7 for PPISD
-	CP	00H 			;  ANYTHING PRESSED?
-	JR	NZ,KY_SCAN_FOUND	;  YES, EXIT
-
-	LD	A,040H | 30H		;  TURN OFF ALL COLUMNS
-	OUT	(PPIC),A		;  SEND TO COLUMN LINES
-	LD	A,00H			;  RETURN NULL
-	RET				;  EXIT
-
-KY_SCAN_FOUND:
-	AND	3FH			;  CLEAR TOP TWO BITS
-	OR	C			;  ADD IN ROW BITS
-	LD	C,A			;  STORE VALUE
-
-	; WAIT FOR KEY TO BE RELEASED
-	LD	A,4FH | 30H		; SCAN ALL COL LINES
-	OUT	(PPIC),A		; SEND TO COLUMN LINES
-	CALL	DLY2			; DEBOUNCE
-KY_CLEAR_LOOP:				; WAIT FOR KEY TO CLEAR
-	IN	A,(PPIB)		; GET ROWS
-	AND	7FH			;ignore PB7 for PPISD
-	CP	00H 			; ANYTHING PRESSED?
-	JR	NZ,KY_CLEAR_LOOP	; YES, LOOP UNTIL KEY RELEASED
-
-	LD	A,040H | 30H		;  TURN OFF ALL COLUMNS
-	OUT 	(PPIC),A		;  SEND TO COLUMN LINES
-
-	LD	A,C			;  RESTORE VALUE
-	RET
+DSKY_SCAN:
+	LD	B,4			; 4 COLUMNS
+	LD	C,$01			; FIRST COLUMN
+	LD	E,0			; INITIAL COL ID
+DSKY_SCAN1:
+	LD	A,C			; COL TO A
+	OR	$70			; KEEP PPISD AND 7218 INACTIVE
+	OUT	(PPIC),A		; ACTIVATE COL
+	IN	A,(PPIB)		; READ ROW BITS
+	AND	$3F			; MASK, WE ONLY HAVE 6 ROWS, OTHERS UNDEFINED
+	JR	NZ,DSKY_SCAN2		; IF NOT ZERO, GOT SOMETHING
+	RLC	C			; NEXT COL
+	INC	E			; BUMP COL ID
+	DJNZ	DSKY_SCAN1		; LOOP THROUGH ALL COLS
+	XOR	A			; NOTHING FOUND, RETURN ZERO
+	JR	DSKY_RESET		; RETURN VIA RESET
+DSKY_SCAN2:
+	RRC	E			; MOVE COL ID
+	RRC	E			; ... TO HIGH BITS 6 & 7
+	OR	E			; COMBINE WITH ROW
+	JR	DSKY_RESET		; RETURN VIA RESET
 ;
 ;_KEYMAP_TABLE_____________________________________________________________________________________________________________
 ;
-KY_KEYMAP:
-;               0    1    2    3    4    5    6    7
-	.DB	041H,002H,042H,082H,004H,044H,084H,008H
-;               8    9    A    B    C    D    E    F
-	.DB	048H,088H,010H,050H,090H,020H,060H,0A0H
-;               FW   BK   CL   EN   DE   EX   GO   BO
-	.DB	001H,081H,0C1H,0C2H,0C4H,0C8H,0D0H,0E0H
+DSKY_KEYMAP:
+	; POS	$00  $01  $02  $03  $04  $05  $06  $07
+	; KEY   [0]  [1]  [2]  [3]  [4]  [5]  [6]  [7]
+	.DB	$41, $02, $42, $82, $04, $44, $84, $08
+;                                                  
+	; POS	$08  $09  $0A  $0B  $0C  $0D  $0E  $0F
+	; KEY   [8]  [9]  [A]  [B]  [C]  [D]  [E]  [F]
+	.DB	$48, $88, $10, $50, $90, $20, $60, $A0
+;                                                  
+	; POS	$10  $11  $12  $13  $14  $15  $16  $17
+	; KEY   [FW] [BK] [CL] [EN] [DE] [EX] [GO] [BO]
+	.DB	$01, $81, $C1, $C2, $C4, $C8, $D0, $E0
+;
+; KBD WORKING STORAGE
+;
+DSKY_KEYBUF	.DB	0
 ;
 #ENDIF	; DSKY_KBD
 ;
@@ -217,14 +231,14 @@ DSKY_HEXOUT1:
 ; DSKY SHOW BUFFER
 ;   HL: ADDRESS OF BUFFER
 ;   ENTER @ SHOWHEX FOR HEX DECODING
-;   ENTER @ SHOWRAW FOR DIRECT SEGMENT DECODING
+;   ENTER @ SHOWSEG FOR SEGMENT DECODING
 ;==================================================================================================
 ;
 DSKY_SHOWHEX:
 	LD	A,$D0			; 7218 -> (DATA COMING, HEXA DECODE)
 	JR	DSKY_SHOW
 
-DSKY_SHOWRAW:
+DSKY_SHOWSEG:
 	LD	A,$F0			; 7218 -> (DATA COMING, NO DECODE)
 	JR	DSKY_SHOW
 
@@ -235,34 +249,30 @@ DSKY_SHOW:
 	CALL	DSKY_COFF
 	POP	AF
 	OUT	(PPIA),A
-	CALL	DSKY_STROBEC
+	CALL	DSKY_STROBEC		; STROBE COMMAND
 	LD	B,DSKY_BUFLEN		; NUMBER OF DIGITS
 	LD	C,PPIA
 DSKY_HEXOUT2:
 	OUTI
 	JP	Z,DSKY_STROBE		; DO FINAL STROBE AND RETURN
-	CALL	DSKY_STROBE
+	CALL	DSKY_STROBE		; STROBE BYTE VALUE
 	JR	DSKY_HEXOUT2
-
-DSKY_STROBEC:
+DSKY_STROBEC:	; COMMAND STROBE
 	LD	A,80H | 30H
 	JP	DSKY_STROBE0
-
-DSKY_STROBE:
+DSKY_STROBE:	; DATA STROBE
 	LD	A,00H | 30H		; SET WRITE STROBE
-
 DSKY_STROBE0:
 	OUT	(PPIC),A		; OUT TO PORTC
 	CALL	DLY2			; DELAY
 DSKY_COFF
-	LD	A,40H | 30H		; SET CONTROL PORT OFF
+	LD	A,40H | 30H		; QUIESCE
 	OUT	(PPIC),A		; OUT TO PORTC
 ;	CALL	DSKY_DELAY		; WAIT
 	RET
 ;
+; SEG DISPLAY WORKING STORAGE
 ;
-;
-KY_BUF		.DB	0
 DSKY_BUF:	.FILL	8,0
 DSKY_BUFLEN	.EQU	$ - DSKY_BUF
 DSKY_HEXBUF	.FILL	4,0

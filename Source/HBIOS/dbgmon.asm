@@ -29,6 +29,7 @@
 	JP	DSKY_ENTRY
 	JP	UART_ENTRY
 ;
+#DEFINE USEDELAY
 #INCLUDE "util.asm"
 ;
 ;__UART_ENTRY_________________________________________________________________
@@ -106,13 +107,14 @@ SERIALCMDLOOP:
 ;_____________________________________________________________________________
 ;
 INITIALIZE:
-;	CALL	CIOCON_DISP + (CF_INIT * 3)
 #IF (PLATFORM == PLT_UNA)
 	; INSTALL UNA INVOCATION VECTOR FOR RST 08
 	LD	A,$C3		; JP INSTRUCTION
 	LD	(8),A		; STORE AT 0x0008
 	LD	HL,($FFFE)	; UNA ENTRY VECTOR
 	LD	(9),HL		; STORE AT 0x0009
+#ELSE
+	CALL	DELAY_INIT
 #ENDIF
 	RET
 ;
@@ -914,6 +916,8 @@ TXT_HELP:
 #DEFINE DSKY_KBD
 #INCLUDE "dsky.asm"
 ;
+KY_PR	.EQU	KY_FW		; USE [FW] FOR [PR] (PORT READ)
+KY_PW	.EQU	KY_BK		; USE [BW] FOR [PW] (PORT WRITE)
 ;
 ;__DSKY_ENTRY_________________________________________________________________
 ;
@@ -923,14 +927,14 @@ TXT_HELP:
 DSKY_ENTRY:
 	LD	SP,MON_STACK		; SET THE STACK POINTER
 	EI				; INTS OK NOW
-	CALL	INITIALIZE		; INITIALIZE SYSTEM
+	CALL	INITIALIZE
 ;
 ;__FRONT_PANEL_STARTUP________________________________________________________
 ;
 ;	START UP THE SYSTEM WITH THE FRONT PANEL INTERFACE	
 ;_____________________________________________________________________________
 ;
-	CALL    MTERM_INIT		; INIT 8255 FOR MTERM
+	CALL    DSKY_INIT		; INIT 8255
 ;
 ;__COMMAND_PARSE______________________________________________________________
 ;
@@ -939,21 +943,21 @@ DSKY_ENTRY:
 ;
 FRONTPANELLOOP:
 	LD	HL,CPUUP		; SET POINTER TO DATA BUFFER
-	CALL	DSKY_SHOWRAW		; DISPLAY
+	CALL	DSKY_SHOWSEG		; DISPLAY
 
 	CALL	KB_GET			; GET KEY FROM KB
 
-	CP	10H			; IS PORT READ?
+	CP	KY_PR			; IS PORT READ?
 	JP	Z,DOPORTREAD		; YES, JUMP
-	CP	11H			; IS PORT WRITE?
+	CP	KY_PW			; IS PORT WRITE?
 	JP	Z,DOPORTWRITE		; YES, JUMP
-	CP	14H			; IS DEPOSIT?
+	CP	KY_DE			; IS DEPOSIT?
 	JP	Z,DODEPOSIT		; YES, JUMP
-	CP	15H			; IS EXAMINE?
+	CP	KY_EX			; IS EXAMINE?
 	JP	Z,DOEXAMINE		; YES, JUMP
-	CP	16H			; IS GO?
+	CP	KY_GO			; IS GO?
 	JP	Z,DOGO			; YES, JUMP
-	CP	17H			; IS BO?
+	CP	KY_BO			; IS BOOT?
 	JP	Z,DOBOOT		; YES, JUMP
 
 	JR	FRONTPANELLOOP		; LOOP
@@ -988,9 +992,9 @@ PORTREADLOOP:
 	CALL	ENCDISPLAY		; DISPLAY BUFFER CONTENTS
 PORTREADGETKEY:
 	CALL	KB_GET			; GET KEY FROM KB
-	CP	12H			; [CL] PRESSED, EXIT
+	CP	KY_CL			; [CL] PRESSED, EXIT
 	JR	Z,FRONTPANELLOOP	;
-	CP	10H			; [PR] PRESSED, PROMPT FOR NEW PORT
+	CP	KY_PR			; [PR] PRESSED, PROMPT FOR NEW PORT
 	JR	Z,DOPORTREAD		;
 	JR	PORTREADGETKEY		; NO VALID KEY, LOOP
 ;
@@ -1015,9 +1019,9 @@ PORTWRITELOOP:
 	CALL	ENCDISPLAY		; DISPLAY BUFFER CONTENTS
 PORTWRITEGETKEY:
 	CALL	KB_GET			; GET KEY FROM KB
-	CP	12H			; [CL] PRESSED, EXIT
+	CP	KY_CL			; [CL] PRESSED, EXIT
 	JR	Z,FRONTPANELLOOP	;
-	CP	11H			; [PW] PRESSED, PROMPT FOR NEW PORT
+	CP	KY_PW			; [PW] PRESSED, PROMPT FOR NEW PORT
 	JR	Z,DOPORTWRITE		;
 	JR	PORTWRITEGETKEY		; NO VALID KEY, LOOP
 ;
@@ -1065,11 +1069,11 @@ EXAMINELOOP:
 	CALL	ENCDISPLAY		; DISPLAY BUFFER ON DISPLAYS
 EXAMINEGETKEY:
 	CALL	KB_GET			; GET KEY FROM KB
-	CP	12H			; [CL] PRESSED, EXIT
+	CP	KY_CL			; [CL] PRESSED, EXIT
 	JP	Z,FRONTPANELLOOP	;
-	CP	13H			; [EN] PRESSED, INC ADDRESS AND LOOP
+	CP	KY_EN			; [EN] PRESSED, INC ADDRESS AND LOOP
 	JR	Z,EXAMINEFW		; 
-	CP	15H			; [DE] PRESSED, PROMPT FOR NEW ADDRESS
+	CP	KY_EX			; [EX] PRESSED, PROMPT FOR NEW ADDRESS
 	JR	Z,DOEXAMINE		;
 	JR	EXAMINEGETKEY		; NO VALID KEY, LOOP
 EXAMINEFW:
@@ -1102,11 +1106,11 @@ DEPOSITLOOP:
 	CALL	ENCDISPLAY		; DISPLAY BUFFER CONTENTS
 DEPOSITGETKEY:
 	CALL	KB_GET			; GET KEY FROM KB
-	CP	12H			; [CL] PRESSED, EXIT
+	CP	KY_CL			; [CL] PRESSED, EXIT
 	JP	Z,FRONTPANELLOOP	;
-	CP	13H			; [EN] PRESSED, INC ADDRESS AND LOOP
+	CP	KY_EN			; [EN] PRESSED, INC ADDRESS AND LOOP
 	JR	Z,DEPOSITFW		; 
-	CP	14H			; [DE] PRESSED, PROMPT FOR NEW ADDRESS
+	CP	KY_DE			; [DE] PRESSED, PROMPT FOR NEW ADDRESS
 	JR	Z,DODEPOSIT		;
 	JR	DEPOSITGETKEY		; NO VALID KEY, LOOP
 DEPOSITFW:
@@ -1133,7 +1137,7 @@ GETADDR:
 ;_____________________________________________________________________________
 ;
 GETVALW:
-	LD	A,80H			;
+	LD	A,$80			;
 	LD	(DISPLAYBUF+4),A	;
 	LD	(DISPLAYBUF+5),A	;
 	LD	(DISPLAYBUF+6),A	;
@@ -1142,11 +1146,11 @@ GETVALW1:
 	CALL	ENCDISPLAY		; 
 GETVALWLOOP:
 	CALL	KB_GET			;	
-	CP	10H			;
+	CP	$10			;
 	JP	M,GETVALWNUM		; NUMBER PRESSED, STORE IT
-	CP	13H			; EN PRESSED, DONE
+	CP	KY_EN			; [EN] PRESSED, DONE
 	JR	Z,GETVALWDONE		;
-	CP	12H			; CLEAR PRESSED, CLEAR
+	CP	KY_CL			; CLEAR PRESSED, CLEAR
 	JR	Z,GETVALW		; 
 	JR	GETVALWLOOP		; INVALID KEY, LOOP
 GETVALWNUM:
@@ -1206,18 +1210,18 @@ GETPORT:
 ;_____________________________________________________________________________
 ;
 GETVALUE:
-	LD	A,80H			;
+	LD	A,$80			;
 	LD	(DISPLAYBUF+6),A	;
 	LD	(DISPLAYBUF+7),A	;
 GETVALUE1:
 	CALL	ENCDISPLAY		; 
 GETVALUELOOP:
 	CALL	KB_GET			;	
-	CP	10H			;
+	CP	$10			;
 	JP	M,GETVALUENUM		; NUMBER PRESSED, STORE IT
-	CP	13H			; EN PRESSED, DONE
+	CP	KY_EN			; [EN] PRESSED, DONE
 	JR	Z,GETVALUEDONE		;
-	CP	12H			; CLEAR PRESSED, CLEAR
+	CP	KY_CL			; CLEAR PRESSED, CLEAR
 	JR	Z,GETVALUE		; 
 	JR	GETVALUELOOP		; INVALID KEY, LOOP
 GETVALUENUM:
@@ -1263,18 +1267,6 @@ PUTVALUE:
 	INC	DE			; NEXT BUFFER POSITION
 	RET				; DONE
 ;
-;__MTERM_INIT_________________________________________________________________
-;
-;  SETUP 8255, MODE 0, PORT A=OUT, PORT B=IN, PORT C=OUT/OUT
-;_____________________________________________________________________________
-;
-MTERM_INIT:
-	LD	A, 82H
-	OUT	(PPIX),A
-	LD	A, 30H			;set PC4,5 to disable PPISD (if used)
-	OUT	(PPIC),A		;won't affect DSKY
-	RET
-;
 ;__KB_GET_____________________________________________________________________
 ;
 ;  GET A SINGLE KEY AND DECODE
@@ -1285,7 +1277,7 @@ KB_GET:
 	PUSH	BC
 	PUSH	DE
 	PUSH 	HL			; SAVE HL
-	CALL	KY_GET			; GET A KEY
+	CALL	DSKY_GETKEY		; GET A KEY
 	POP	HL			; RESTORE HL
 	POP	DE
 	POP	BC
@@ -1297,13 +1289,9 @@ KB_GET:
 ;_____________________________________________________________________________
 ;
 INITBUF:
-	;PUSH	BC
-	;PUSH	DE
 	LD	DE,DISPLAYBUF
 	LD	BC,8
 	LDIR
-	;POP	DE
-	;POP	BC
 	RET
 ;
 ;__ENCDISPLAY_________________________________________________________________
@@ -1327,7 +1315,7 @@ ENCBUF0:
 	PUSH	AF			; SAVE AF
 	PUSH	BC			; SAVE BC
 	PUSH	DE			; SAVE DE
-	LD	DE,DECODEBUF		; DESTINATION FOR DECODED BYTES
+	LD	DE,DSKY_BUF		; DESTINATION FOR DECODED BYTES
 	LD	B,8			; NUMBER OF BYTES TO DECODE
 ENCBUF1:
 	LD	A,(HL)			; GET SOURCE BYTE
@@ -1347,8 +1335,8 @@ ENCBUF1:
 	INC	DE			; INC DEST BUF PTR
 	POP	HL			; RESTORE POINTER
 	DJNZ	ENCBUF1			; LOOP THRU ALL BUF POSITIONS
-	LD	HL,DECODEBUF		; POINT TO DECODED BUFFER
-	CALL	DSKY_SHOWRAW		; DISPLAY IT
+	LD	HL,DSKY_BUF		; POINT TO DECODED BUFFER
+	CALL	DSKY_SHOWSEG		; DISPLAY IT
 	POP	DE			; RESTORE DE
 	POP	BC			; RESTORE BC
 	POP	AF			; RESTORE AF
@@ -1359,38 +1347,26 @@ CPUUP	.DB 	$84,$CB,$EE,$BB,$80,$BB,$EE,$84	; "-CPU UP-" (RAW)
 ADDR	.DB	$17,$18,$19,$10,$00,$00,$00,$00	; "Adr 0000" (ENCODED)
 PORT	.DB	$13,$14,$15,$16,$10,$10,$00,$00	; "Port  00" (ENCODED)
 GOTO	.DB	$1A,$14,$10,$10,$00,$00,$00,$00	; "Go  0000" (ENCODED)
-
-;_KB DECODE TABLE_____________________________________________________________
 ;
-KB_DECODE:
-;               0   1   2   3   4   5   6   7   8   9   A   B   C   D   E   F
-	.DB	$41,$02,$42,$82,$04,$44,$84,$08,$48,$88,$10,$50,$90,$20,$60,$A0
-;               FW  BK  CL  EN  DP  EX  GO  BO
-	.DB	$01,$81,$C1,$C2,$C4,$C8,$D0,$E0
-;
-; F-KEYS,
-; FW = FORWARD
-; BK = BACKWARD
-; CL = CLEAR
-; EN = ENTER
-; DP = DEPOSIT (INTO MEM)
-; EX = EXAMINE (MEM)
-; GO = GO
-; BO = BOOT
-;_____________________________________________________________________________
-;
-;_HEX 7_SEG_DECODE_TABLE______________________________________________________
+;_HEX_7_SEG_DECODE_TABLE______________________________________________________
 ; 
 ; SET BIT 7 TO DISPLAY W/ DECIMAL POINT
 ;_____________________________________________________________________________
+;
 SEGDECODE:
-	;	0   1   2   3   4   5   6   7   8   9   A   B   C   D   E   F
-	.DB	$7B,$30,$6D,$75,$36,$57,$5F,$70,$7F,$77,$7E,$1F,$4B,$3D,$4F,$4E
-	;	    -   .   P   o   r   t   A   d   r   G
-	.DB	$00,$04,$00,$6E,$1D,$0C,$14,$7E,$3D,$0C,$5B
+	; POS	$00  $01  $02  $03  $04  $05  $06  $07
+	; GLYPH '0'  '1'  '2'  '3'  '4'  '5'  '6'  '7'  
+	.DB	$7B, $30, $6D, $75, $36, $57, $5F, $70
+;                                                  
+	; POS	$08  $09  $0A  $0B  $0C  $0D  $0E  $0F
+	; GLYPH	'8'  '9'  'A'  'B'  'C'  'D'  'E'  'F'
+	.DB	$7F, $77, $7E, $1F, $4B, $3D, $4F, $4E
+;                                                  
+	; POS	$10  $11  $12  $13  $14  $15  $16  $17  $18  $19  $1A
+	; GLYPH	' '  '-'  '.'  'P'  'o'  'r'  't'  'A'  'd'  'r'  'G'
+	.DB	$00, $04, $00, $6E, $1D, $0C, $14, $7E, $3D, $0C, $5B
 ;
 DISPLAYBUF:	.FILL	8,0
-DECODEBUF:	.FILL	8,0
 ;
 #ELSE
 ;
@@ -1398,8 +1374,7 @@ DSKY_ENTRY:
 	CALL	PANIC
 ;
 #ENDIF
-
-;********************* END OF PROGRAM ***********************************
+;
 ;
 SLACK		.EQU	(MON_END - $)
 		.FILL	SLACK,00H

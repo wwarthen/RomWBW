@@ -21,6 +21,7 @@ Version 2.9.1
 - WBW: Refactored Debug Monitor w/ improved syntax parsing and help
 - PMS: Added Forth, Nascom BASIC, and Tasty BASIC to ROM
 - PMS: Refactored Rom Loader to support more ROM images, now table driven
+- WBW: Refactored DSKY code
 
 Version 2.9.0
 -------------
