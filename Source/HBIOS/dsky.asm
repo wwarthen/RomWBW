@@ -26,13 +26,13 @@ PPIX	 	.EQU 	PPIBASE + 3	; PPI CONTROL PORT
 ; BITS 7-6 IDENTFY THE COLUMN OF THE KEY PRESSED
 ; BITS 5-0 ARE A BITMAP, WITH A BIT ON TO INDICATE ROW OF KEY PRESSED
 ;
-;      ____PC0________PC1________PC2_______PC3___
-; PB5 |	 $20 [D]    $60 [E]    $A0 [F]	$E0 [BO]
-; PB4 |	 $10 [A]    $50 [B]    $90 [C]	$D0 [GO]
-; PB3 |	 $08 [7]    $48 [8]    $88 [9]	$C8 [EX]
-; PB2 |	 $04 [4]    $44 [5]    $84 [6]	$C4 [DE]
-; PB1 |	 $02 [1]    $42 [2]    $82 [3]	$C2 [EN]
-; PB0 |	 $01 [FW]   $41 [0]    $81 [BK]	$C1 [CL]
+;      ____PC0________PC1________PC2________PC3____
+; PB5 |	 $20 [D]    $60 [E]    $A0 [F]	  $E0 [BO]
+; PB4 |	 $10 [A]    $50 [B]    $90 [C]	  $D0 [GO]
+; PB3 |	 $08 [7]    $48 [8]    $88 [9]	  $C8 [EX]
+; PB2 |	 $04 [4]    $44 [5]    $84 [6]	  $C4 [DE]
+; PB1 |	 $02 [1]    $42 [2]    $82 [3]	  $C2 [EN]
+; PB0 |	 $01 [FW]   $41 [0]    $81 [BK]	  $C1 [CL]
 ;
 ;__DSKY_INIT_________________________________________________________________________________________
 ;
@@ -42,12 +42,32 @@ PPIX	 	.EQU 	PPIBASE + 3	; PPI CONTROL PORT
 DSKY_INIT:
 	OR	$FF			; SIGNAL TO WAIT FOR KEY RELEASE
 	LD	(DSKY_KEYBUF),A		; SET IT
-DSKY_RESET:
-	PUSH	AF
+	
+	; PPI PORT B IS NORMALLY SET TO INPUT, BUT DURING HERE WE
+	; TEMPORARILY SET IT TO OUTPUT.  WHILE IN OUTPUT MODE, WE
+	; WRITE A VALUE OF $FF WHICH WILL BE PERSISTED BY THE PPI
+	; CHIP BUS HOLD CIRCUIT IF THERE IS NO DSKY PRESENT.  SO,
+	; WE CAN SUBSEQUENTLY TEST FOR PPIB=$FF TO SEE IF THERE IS
+	; NO DSKY AND PREVENT PROBLEMS WITH PHANTOM DSKY KEY PRESSES.
+	; IF A DSKY IS PRESENT, IT WILL SIMPLY OVERPOWER THE PPI
+	; BUS HOLD CIRCUIT.
+	LD	A,$80			; PA OUT, PB OUT, PC OUT
+	OUT	(PPIX),A
+	LD	A,$FF			; SET PPIB=$FF, BUS HOLD
+	OUT	(PPIB),A
+	
 	LD	A,$82			; PA OUT, PB IN, PC OUT
 	OUT 	(PPIX),A
-	OR	$70			; PPISD AND 7218 INACTIVE
+
+	;IN	A,(PPIB)		; *DEBUG*
+	;CALL	PRTHEXBYTE		; *DEBUG*
+	
+DSKY_RESET:
+	PUSH	AF
+
+	LD	A,$70			; PPISD AND 7218 INACTIVE
 	OUT	(PPIC),A
+	
 	POP	AF
 	RET
 ;
@@ -136,6 +156,11 @@ DSKY_STAT2:
 ;____________________________________________________________________________________________________
 ;
 DSKY_KEY:
+	; IF PPIB VALUE IS $FF, THERE IS NO DSKY, SEE DSKY_INIT
+	IN	A,(PPIB)
+	INC	A
+	RET	Z
+
 	CALL	DSKY_SCAN		; INITIAL KEY PRESS SCAN
 	LD	E,A			; SAVE INITIAL SCAN VALUE
 DSKY_KEY1:
@@ -179,7 +204,7 @@ DSKY_SCAN2:
 	RRC	E			; MOVE COL ID
 	RRC	E			; ... TO HIGH BITS 6 & 7
 	OR	E			; COMBINE WITH ROW
-	JR	DSKY_RESET		; RETURN VIA RESET
+	JP	DSKY_RESET		; RETURN VIA RESET
 ;
 ;_KEYMAP_TABLE_____________________________________________________________________________________________________________
 ;
