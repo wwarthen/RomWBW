@@ -17,6 +17,16 @@ released the directory is populated with the default output files.
 However, the output of custom builds will be placed in this directory 
 as well.
 
+If you only see a few files in this directory, then you downloaded just 
+the source from GitHub.  To retrieve the full release download package, 
+go to https://github.com/wwarthen/RomWBW.  On this page, look for the 
+text "XX releases" where XX is a number. Click on this text to go to the 
+releases page.  On this page, you will see the latest releases listed.  
+For each release, you will see a package file called something like 
+"RomWBW-2.9.0-Package.zip".  Click on the package file for the release 
+you want to download.
+
+
 ROM Firmware Images (<plt>_<cfg>.rom)
 -------------------------------------
 
