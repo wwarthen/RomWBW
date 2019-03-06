@@ -13,15 +13,17 @@ Version 2.9.1
 - WBW: Preliminary support for RC180 platform (Z180 module in RC2014)
 - WBW: Added NZCOM distribution files to third slice of hard disk image
 - WBW: Fixed getnum32 bug in MODE command (found by Phil Summers)
-- P?S: Added serial support for Zilog Peripherals Baord
+- PMS: Added serial support for Zilog Peripherals Baord
 - WBW: Added preliminary support for interrupt management API
 - PMS: Improved boot messages in RAM-Floppy driver
 - PMS: Added charge setting display to RTC boot messages
 - WBW: Add SmallZ80 support to FDU
 - WBW: Refactored Debug Monitor w/ improved syntax parsing and help
 - PMS: Added Forth, Nascom BASIC, and Tasty BASIC to ROM
-- PMS: Refactored Rom Loader to support more ROM images, now table driven
+- PMS: Refactored ROM Loader to support more ROM images, now table driven
 - WBW: Refactored DSKY code
+- S?K: Initial support for Easy Z80
+- PMS: Enhance VDU driver to support alternative screen dimensions
 
 Version 2.9.0
 -------------
