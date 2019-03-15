@@ -1070,6 +1070,10 @@ HINIT:
 	LD	DE,PLT_RC
 	CP	$07		; RC2014
 	JR	Z,RTC_INIT2
+	CP	$08		; RC2014 w/ Z180
+	JR	Z,RTC_INIT2
+	CP	$09		; Easy Z80
+	JR	Z,RTC_INIT2
 ;
 	; Unknown platform
 	LD	DE,PLTERR	; BIOS error message
@@ -1654,7 +1658,7 @@ UBTAG	.TEXT	"UNA UBIOS"
 PLT_SBC	.TEXT	", SBC/Zeta RTC Latch Port 0x70\r\n$"
 PLT_N8	.TEXT	", N8 RTC Latch Port 0x88\r\n$"
 PLT_MK4	.TEXT	", Mark 4 RTC Latch Port 0x8A\r\n$"
-PLT_RC	.TEXT	", RC2014 RTC Latch Port 0xC0\r\n$"
+PLT_RC	.TEXT	", RC2014 RTC Module Latch Port 0xC0\r\n$"
 
 ;
 ; Generic FOR-NEXT loop algorithm
