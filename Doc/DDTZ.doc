@@ -1,0 +1,564 @@
+
+                           DDTZ v2.7
+                       by C.B. Falconer
+                  edited by George A. Havach
+
+Introduction:
+============
+DDTZ v2.7 is a complete replacement for DDT,  Digital  Research's 
+famous Dynamic Debugging Tool,  with improved functionality,  bug 
+extermination,  and full Z80 support.  In general,  DDTZ is fully 
+compatible  with  the  original utility,  but it  has  extra  and 
+extended  commands  and  many  fewer  quirks.   All  Z80-specific 
+instructions can be (dis)assembled,  though in Intel rather  then 
+Zilog format. Furthermore, DDTZ will correctly trace ('T' and 'U' 
+commands) both 8080 and Z80 instructions,  depending on which CPU 
+is operating.  On startup,  the program announces which CPU it is 
+running on.
+
+DDTZ v2.7 now handles the 64180 added opcodes.  It does NOT  test 
+for  a  64180 CPU,  since this cannot be done  without  executing 
+illegal   Z80  instructions,   which  in  turn  will  crash  some 
+simulators.  However v2.7 does not execute any 64180 instructions 
+internally, only in the subject program.
+
+This  issue supplies the "M" version assembled,  to avoid  errors 
+when switching between MSDOS and CPM systems.   The command table 
+is updated accordingly.  Most CPM users are also MSDOS users, but 
+not vice-versa.
+
+The program is invoked by typing
+
+      ddtz<ret>
+or
+      ddtz [d:]filespec<ret>
+
+In  the  second  form,  DDTZ will load the  specified  file  into  
+memory starting at 0100H,  unless it's a .HEX file that sets  its 
+own  load  address.  Besides reporting the NEXT free address  and  
+the PC (program counter) after a successful load, DDTZ also shows 
+the number of memory pages needed for a SAVE.  Instead of  having 
+to write all this down,  just use the 'X' command at any time  to 
+redisplay these three values for the current application.
+
+NOTE:  loading  more  code above the NEXT pointer  revises  these 
+       values.
+
+As  in DDT,  when a program is loaded above the area holding  the 
+'A'  and  'U'  (and now 'W') command  code,  these  commands  are 
+disabled,  and the extra memory  is released to the user.   Thus,  
+DDTZ can occupy  as little as 3K total memory space.  Unlike DDT,  
+however,  DDTZ will not overwrite itself or the system on program 
+loads (except .HEX files).
+
+At initialization,  the stack pointer (SP) points to a return  to 
+DDTZ,  just like for the CCP. Thus, programs that normally return 
+to   the  CCP  will  be  returned  to  DDTZ.    The  'B'  command  
+reinitializes this condition.
+
+
+The intercept vector copies  the BDOS version number,   etc.,  so 
+an  object program  does not know that  DDTZ is running   (except 
+for BIOS-BDOS vector size). Thus, programs that check the version 
+number should execute correctly under DDTZ.
+
+All input parameters can now be entered in any of three formats:
+
+       (1) hexadecimal (as in DDT),
+       (2) decimal, by adding a leading '#' character,
+       (3) ASCII, by enclosing between either single or double
+           quotes; either one or two characters are allowed.
+
+Leading  blanks  in  command lines and parameters  are  absorbed. 
+Either  a  comma  or a (single) space   is   a  valid  delimiter.   
+Either uppercase or lowercase input is accepted.
+
+The  default command  (for anything  not otherwise  recognizable)  
+is 'H'.  This allows convenient calculation, along with the other 
+features described below.   So,  to convert a number,  just enter 
+it!
+
+As  in  DDT,   the prompt character is '-',  and the  only  error 
+message  is  the query ('?'),  which generally kicks you back  to 
+command mode. 
+
+New Commands (Over DDT):
+=======================
+
+NOTE: letters in parenthesis,  e.g.  "(U)",  show the  equivalent 
+      command for DDTZM version (compatible with MSDOS debug).
+
+   @  Sets  or  shows (with no parameter)  the internally  stored 
+      "base" value.   Also used with the 'S' and 'D' commands  as 
+      an optional parameter  (though without the '@')  to display 
+      memory  from an arbitrary base marker (offset). When set to 
+      zero (the default), it does not affect any screen displays.
+
+   B  B)egin: resets the USER stack pointer to its initial value, 
+      such  that any program that exits by an RET will return  to 
+      DDTZ.   DDTZ   provides    a  default   stack   space    of 
+      approximately 24 bytes for user programs.
+
+   C  C)ompare first_address,last_address,against_address:  shows 
+      all  the byte differences between two memory areas,  in the 
+      format
+
+       XXXX aa YYYY bb
+
+      where  XXXX and YYYY  are the comparative memory addresses, 
+      and aa  and  bb  are the corresponding byte values.  Can be 
+      used  to  verify   the identity  of  two  files   by  first 
+      loading  them   into  different memory areas with  the  'R' 
+      command (see below).
+
+
+   W  Write:   stores the modified memory area to disk under  the 
+  (K) filename  specified  by the 'I'  command,  overwriting  the 
+      original file from which it was loaded (the user is queried 
+      before  doing  so).  By default,  the image of memory  from 
+      0100H through the "NEXT" value -1 is saved.  "K first_addr, 
+      last_address"  overrides this and allows writing ANY memory 
+      area to a file. Almost a necessity for CPM 3.0 (no SAVE!).
+      K)eep on DDTZ
+
+   X  eXamine:  redisplays the "NEXT PC SAVE" report at any time.
+  (Q) Q)uery size on DDTZ.
+
+   S  S)earch  first_address,   last_addr,  value:  searches  the 
+  (W) specified memory area for the value (a 16-bit word,  not  a 
+      byte) and shows the locations of all such.  Very useful for 
+      finding  CALL's  or JMP's to a particular address, etc.
+      W)here on DDTZ
+
+   Y  Y)our_option  parm1,parm2,address:  executes  an  arbitrary 
+      routine  at  the  specified address,   with the BC  and  DE 
+      registers  set to parm1 and parm2, respectively.
+
+   Z  Displays (but does not alter) the Z80's alternate  register 
+      set,  including the index registers (disabled if running on 
+      an  8080).  On Z80's,   automatically included  as the last 
+      part of the display by the 'X' command.
+
+
+Based (Offset) Displays:
+=======================
+ 
+The  'D' and 'E' commands  can use a stored base value  (offset),  
+as  set  by   the  '@' command.   The current  @  value   may  be 
+overridden for a single execution of these commands by adding the 
+base as an extra parameter  in the command line.   The effect  is  
+to  add  this  value   to  the  first/last  address  and  display 
+accordingly.  The address listing on the left becomes  XXXX:YYYY,  
+where  XXXX  is the offset address and YYYY is the actual  memory 
+address being displayed.   For example,  if you have a data  area  
+located at  42B7H  and wish to  preserve easy access,  just enter 
+"@42b7".  Now, "d0,3f" will dump memory starting at 4237H.
+
+
+Further Changes from DDT:
+========================
+
+   A  A)ssemble  now  accepts   the  full Z80  as  well  as  8080 
+      instruction  set,  although it expects them in Intel rather 
+      than  Zilog  format  (see  notes  below   under   the   'L' 
+      command).    When in doubt, see the mnemnonic list below.
+
+   D  D)isplay or D)ump  will accept  an optional third parameter  
+      to  set the base value for a single execution only.  Format 
+      has been cleaned up.
+
+   H  H)ex_arithmetic    on   two  values   also   shows    their 
+      difference  in decimal.  With only one value,  converts  to 
+      hexadecimal, decimal, and ASCII (low-order byte only).
+
+
+   N  N)ame  now allows drive specification  (d:...)  and sets up 
+  (I) the  complete  command  line,   including  both  FCB's  (at 
+      addresses 005CH and 006CH).   The tail (stored at 0081H up) 
+      is NOT upshifted.
+      I)nput on DDTZ
+
+   U  U)nassemble now displays the raw hexcode,  especially handy 
+  (L) when examining non-code areas. Intel (8080 style) mnemonics 
+      are  used,  so  some  disassembled  instructions  may  look 
+      strange.  E.g., the Z80's 'IN B,(C)' and 'OUT (C),B' become  
+      'INP B' and 'OUTP B', respectively;  'LD (nnnn),BC' becomes 
+      'SBCD nnnn',  'ADD IX,  BC' becomes 'DADX B', and 'JP (IX)' 
+      becomes 'PCIX'. 
+      L)ist on DDTZ
+
+   L  L)oad   now  permits  loading a file into memory   with  an 
+  (R) offset,  which  is  added to the default  load  address  of 
+      0100H.   When reading in  a .HEX file  with  a preset bias,  
+      the   'R'  command will not transfer control to an  invalid 
+      execution point.  Another execution of the 'R' command will 
+      reread the input file, e.g.:
+
+         n blah<ret>
+         l<ret>
+         ...modify the code and generally mess about...
+         l<ret>
+
+      The original file  is reloaded,  and the modifications  are 
+      removed.
+      R)ead on DDTZ
+
+   E  E)nter,  like  D)isplay,  now  accepts an  optional  second 
+  (S) parameter  to  set the base value for  a  single  execution 
+      only.
+      S)ubstitute or S)et on DDTZ
+
+   T  T)rap/trace   on  termination  now shows  the complete  CPU 
+      state. Traps and traces no longer lock up  when  a user RST 
+      7 instruction is executed.   Tracing of BDOS/BIOS calls  is 
+      heavily trun cated,  avoiding clutter and preventing system 
+      crashes.
+
+NOTE: Most of the UNDOCUMENTED Z80 op-codes are handled.  Others
+      can crash the system.
+
+   R  R)egisters  also shows what two-byte values the HL  and  SP 
+  (X) registers are actually pointing to.  On Z80's, displays the 
+      alternate register set.
+      eX)amine on DDTZ
+
+NOTE: Any  use  of the 'W' or 'L' command  resets the system  DMA 
+      transfer address to the standard default value of 0080H.
+
+
+; This is the output of DDTZ when disassembling OPTYPE.TRY
+NOP                     LDA     06A4            MOV     M,H
+LXI     B,06A4          DCX     SP              MOV     M,L
+STAX    B               INR     A               HLT        
+INX     B               DCR     A               MOV     M,A
+INR     B               MVI     A,20            MOV     A,B
+DCR     B               CMC                     MOV     A,C
+MVI     B,20            MOV     B,B             MOV     A,D
+RLC                     MOV     B,C             MOV     A,E
+EXAF                    MOV     B,D             MOV     A,H
+DAD     B               MOV     B,E             MOV     A,L
+LDAX    B               MOV     B,H             MOV     A,M
+DCX     B               MOV     B,L             MOV     A,A
+INR     C               MOV     B,M             ADD     B  
+DCR     C               MOV     B,A             ADD     C  
+MVI     C,20            MOV     C,B             ADD     D  
+RRC                     MOV     C,C             ADD     E  
+DJNZ    0134            MOV     C,D             ADD     H  
+LXI     D,06A4          MOV     C,E             ADD     L  
+STAX    D               MOV     C,H             ADD     M  
+INX     D               MOV     C,L             ADD     A  
+INR     D               MOV     C,M             ADC     B  
+DCR     D               MOV     C,A             ADC     C  
+MVI     D,20            MOV     D,B             ADC     D  
+RAL                     MOV     D,C             ADC     E  
+JR      0134            MOV     D,D             ADC     H  
+DAD     D               MOV     D,E             ADC     L  
+LDAX    D               MOV     D,H             ADC     M  
+DCX     D               MOV     D,L             ADC     A  
+INR     E               MOV     D,M             SUB     B  
+DCR     E               MOV     D,A             SUB     C  
+MVI     E,20            MOV     E,B             SUB     D  
+RAR                     MOV     E,C             SUB     E  
+JRNZ    0134            MOV     E,D             SUB     H  
+LXI     H,06A4          MOV     E,E             SUB     L  
+SHLD    06A4            MOV     E,H             SUB     M  
+INX     H               MOV     E,L             SUB     A  
+INR     H               MOV     E,M             SBB     B  
+DCR     H               MOV     E,A             SBB     C  
+MVI     H,20            MOV     H,B             SBB     D  
+DAA                     MOV     H,C             SBB     E  
+JRZ     0134            MOV     H,D             SBB     H  
+DAD     H               MOV     H,E             SBB     L  
+LHLD    06A4            MOV     H,H             SBB     M  
+DCX     H               MOV     H,L             SBB     A  
+INR     L               MOV     H,M             ANA     B  
+DCR     L               MOV     H,A             ANA     C  
+MVI     L,20            MOV     L,B             ANA     D  
+CMA                     MOV     L,C             ANA     E  
+JRNC    0134            MOV     L,D             ANA     H  
+LXI     SP,06A4         MOV     L,E             ANA     L  
+STA     06A4            MOV     L,H             ANA     M  
+INX     SP              MOV     L,L             ANA     A  
+INR     M               MOV     L,M             XRA     B  
+DCR     M               MOV     L,A             XRA     C  
+MVI     M,20            MOV     M,B             XRA     D  
+STC                     MOV     M,C             XRA     E  
+JRC     0134            MOV     M,D             XRA     H  
+DAD     SP              MOV     M,E             XRA     L  
+
+
+XRA     M               JPE     06A4            SLAR     M  
+XRA     A               XCHG                    SLAR     A  
+ORA     B               CPE     06A4            SRAR     B  
+ORA     C               XRI     20              SRAR     C  
+ORA     D               RST     5               SRAR     D  
+ORA     E               RP                      SRAR     E  
+ORA     H               POP     PSW             SRAR     H  
+ORA     L               JP      06A4            SRAR     L  
+ORA     M               DI                      SRAR     M  
+ORA     A               CP      06A4            SRAR     A  
+CMP     B               PUSH    PSW             SLLR     B  
+CMP     C               ORI     20              SLLR     C  
+CMP     D               RST     6               SLLR     D  
+CMP     E               RM                      SLLR     E  
+CMP     H               SPHL                    SLLR     H  
+CMP     L               JM      06A4            SLLR     L  
+CMP     M               EI                      SLLR     M  
+CMP     A               CM      06A4            SLLR     A  
+RNZ                     CPI     20              SRLR     B  
+POP     B               RST     7               SRLR     C  
+JNZ     06A4            RLCR    B               SRLR     D  
+JMP     06A4            RLCR    C               SRLR     E  
+CNZ     06A4            RLCR    D               SRLR     H  
+PUSH    B               RLCR    E               SRLR     L  
+ADI     20              RLCR    H               SRLR     M  
+RST     0               RLCR    L               SRLR     A  
+RZ                      RLCR    M               BIT     0,B
+RET                     RLCR    A               BIT     0,C
+JZ      06A4            RRCR    B               BIT     0,D
+CZ      06A4            RRCR    C               BIT     0,E
+CALL    06A4            RRCR    D               BIT     0,H
+ACI     20              RRCR    E               BIT     0,L
+RST     1               RRCR    H               BIT     0,M
+RNC                     RRCR    L               BIT     0,A
+POP     D               RRCR    M               BIT     1,B
+JNC     06A4            RRCR    A               BIT     1,C
+OUT     20              RALR    B               BIT     1,D
+CNC     06A4            RALR    C               BIT     1,E
+PUSH    D               RALR    D               BIT     1,H
+SUI     20              RALR    E               BIT     1,L
+RST     2               RALR    H               BIT     1,M
+RC                      RALR    L               BIT     1,A
+EXX                     RALR    M               BIT     2,B
+JC      06A4            RALR    A               BIT     2,C
+IN      20              RARR    B               BIT     2,D
+CC      06A4            RARR    C               BIT     2,E
+SBI     20              RARR    D               BIT     2,H
+RST     3               RARR    E               BIT     2,L
+RPO                     RARR    H               BIT     2,M
+POP     H               RARR    L               BIT     2,A
+JPO     06A4            RARR    M               BIT     3,B
+XTHL                    RARR    A               BIT     3,C
+CPO     06A4            SLAR    B               BIT     3,D
+PUSH    H               SLAR    C               BIT     3,E
+ANI     20              SLAR    D               BIT     3,H
+RST     4               SLAR    E               BIT     3,L
+RPE                     SLAR    H               BIT     3,M
+PCHL                    SLAR    L               BIT     3,A
+
+
+BIT     4,B             RES     3,D             SET     2,H      
+BIT     4,C             RES     3,E             SET     2,L      
+BIT     4,D             RES     3,H             SET     2,M      
+BIT     4,E             RES     3,L             SET     2,A      
+BIT     4,H             RES     3,M             SET     3,B      
+BIT     4,L             RES     3,A             SET     3,C      
+BIT     4,M             RES     4,B             SET     3,D      
+BIT     4,A             RES     4,C             SET     3,E      
+BIT     5,B             RES     4,D             SET     3,H      
+BIT     5,C             RES     4,E             SET     3,L      
+BIT     5,D             RES     4,H             SET     3,M      
+BIT     5,E             RES     4,L             SET     3,A      
+BIT     5,H             RES     4,M             SET     4,B      
+BIT     5,L             RES     4,A             SET     4,C      
+BIT     5,M             RES     5,B             SET     4,D      
+BIT     5,A             RES     5,C             SET     4,E      
+BIT     6,B             RES     5,D             SET     4,H      
+BIT     6,C             RES     5,E             SET     4,L      
+BIT     6,D             RES     5,H             SET     4,M      
+BIT     6,E             RES     5,L             SET     4,A      
+BIT     6,H             RES     5,M             SET     5,B      
+BIT     6,L             RES     5,A             SET     5,C      
+BIT     6,M             RES     6,B             SET     5,D      
+BIT     6,A             RES     6,C             SET     5,E      
+BIT     7,B             RES     6,D             SET     5,H      
+BIT     7,C             RES     6,E             SET     5,L      
+BIT     7,D             RES     6,H             SET     5,M      
+BIT     7,E             RES     6,L             SET     5,A      
+BIT     7,H             RES     6,M             SET     6,B      
+BIT     7,L             RES     6,A             SET     6,C      
+BIT     7,M             RES     7,B             SET     6,D      
+BIT     7,A             RES     7,C             SET     6,E      
+RES     0,B             RES     7,D             SET     6,H      
+RES     0,C             RES     7,E             SET     6,L      
+RES     0,D             RES     7,H             SET     6,M      
+RES     0,E             RES     7,L             SET     6,A      
+RES     0,H             RES     7,M             SET     7,B      
+RES     0,L             RES     7,A             SET     7,C      
+RES     0,M             SET     0,B             SET     7,D      
+RES     0,A             SET     0,C             SET     7,E      
+RES     1,B             SET     0,D             SET     7,H      
+RES     1,C             SET     0,E             SET     7,L      
+RES     1,D             SET     0,H             SET     7,M      
+RES     1,E             SET     0,L             SET     7,A      
+RES     1,H             SET     0,M             DADX    B        
+RES     1,L             SET     0,A             DADX    D        
+RES     1,M             SET     1,B             LXI     X,06A4   
+RES     1,A             SET     1,C             SIXD    06A4     
+RES     2,B             SET     1,D             INX     X        
+RES     2,C             SET     1,E             DADX    X        
+RES     2,D             SET     1,H             LIXD    06A4     
+RES     2,E             SET     1,L             DCX     X        
+RES     2,H             SET     1,M             INR     [X+05]   
+RES     2,L             SET     1,A             DCR     [X+05]   
+RES     2,M             SET     2,B             MVI     [X+05],20
+RES     2,A             SET     2,C             DADX    SP       
+RES     3,B             SET     2,D             MOV     B,[X+05] 
+RES     3,C             SET     2,E             MOV     C,[X+05] 
+
+
+MOV     D,[X+05]        DSBC    B               DADY    B       
+MOV     E,[X+05]        SBCD    06A4            DADY    D       
+MOV     H,[X+05]        NEG                     LXI     Y,06A4  
+MOV     L,[X+05]        RETN                    SIYD    06A4    
+MOV     [X+05],B        IM0                     INX     Y       
+MOV     [X+05],C        LDIA                    DADY    Y       
+MOV     [X+05],D        INP     C               LIYD    06A4    
+MOV     [X+05],E        OUTP    C               DCX     Y       
+MOV     [X+05],H        DADC    B               INR     [Y+05]  
+MOV     [X+05],L        LBCD    06A4            DCR     [Y+05]  
+MOV     [X+05],A        RETI                    MVI     [Y+05],2
+MOV     A,[X+05]        LDRA                    DADY    SP      
+ADD     [X+05]          INP     D               MOV     B,[Y+05]
+ADC     [X+05]          OUTP    D               MOV     C,[Y+05]
+SUB     [X+05]          DSBC    D               MOV     D,[Y+05]
+SBB     [X+05]          SDED    06A4            MOV     E,[Y+05]
+ANA     [X+05]          IM1                     MOV     H,[Y+05]
+XRA     [X+05]          LDAI                    MOV     L,[Y+05]
+ORA     [X+05]          INP     E               MOV     [Y+05],B
+CMP     [X+05]          OUTP    E               MOV     [Y+05],C
+POP     X               DADC    D               MOV     [Y+05],D
+XTIX                    LDED    06A4            MOV     [Y+05],E
+PUSH    X               IM2                     MOV     [Y+05],H
+PCIX                    LDAR                    MOV     [Y+05],L
+SPIX                    INP     H               MOV     [Y+05],A
+RLCR    [X+05]          OUTP    H               MOV     A,[Y+05]
+RRCR    [X+05]          DSBC    H               ADD     [Y+05]  
+RALR    [X+05]          shld    06A4            ADC     [Y+05]  
+RARR    [X+05]          RRD                     SUB     [Y+05]  
+SLAR    [X+05]          INP     L               SBB     [Y+05]  
+SRAR    [X+05]          OUTP    L               ANA     [Y+05]  
+SRLR    [X+05]          DADC    H               XRA     [Y+05]  
+BIT     0,[X+05]        lhld    06A4            ORA     [Y+05]  
+BIT     1,[X+05]        RLD                     CMP     [Y+05]  
+BIT     2,[X+05]        INP     M               POP     Y       
+BIT     3,[X+05]        OUTP    M               XTIY            
+BIT     4,[X+05]        DSBC    SP              PUSH    Y       
+BIT     5,[X+05]        SSPD    06A4            PCIY            
+BIT     6,[X+05]        INP     A               SPIY            
+BIT     7,[X+05]        OUTP    A               RLCR    [Y+05]  
+RES     0,[X+05]        DADC    SP              RRCR    [Y+05]  
+RES     1,[X+05]        LSPD    06A4            RALR    [Y+05]  
+RES     2,[X+05]        LDI                     RARR    [Y+05]  
+RES     3,[X+05]        CCI                     SLAR    [Y+05]  
+RES     4,[X+05]        INI                     SRAR    [Y+05]  
+RES     5,[X+05]        OTI                     SRLR    [Y+05]  
+RES     6,[X+05]        LDD                     BIT     0,[Y+05]
+RES     7,[X+05]        CCD                     BIT     1,[Y+05]
+SET     0,[X+05]        IND                     BIT     2,[Y+05]
+SET     1,[X+05]        OTD                     BIT     3,[Y+05]
+SET     2,[X+05]        LDIR                    BIT     4,[Y+05]
+SET     3,[X+05]        CCIR                    BIT     5,[Y+05]
+SET     4,[X+05]        INIR                    BIT     6,[Y+05]
+SET     5,[X+05]        OTIR                    BIT     7,[Y+05]
+SET     6,[X+05]        LDDR                    RES     0,[Y+05]
+SET     7,[X+05]        CCDR                    RES     1,[Y+05]
+INP     B               INDR                    RES     2,[Y+05]
+OUTP    B               OTDR                    RES     3,[Y+05]
+
+
+RES     4,[Y+05]        SET     0,[Y+05]        SET     4,[Y+05]
+RES     5,[Y+05]        SET     1,[Y+05]        SET     5,[Y+05]
+RES     6,[Y+05]        SET     2,[Y+05]        SET     6,[Y+05]
+RES     7,[Y+05]        SET     3,[Y+05]        SET     7,[Y+05]
+
+; These are the result of disassembling 64180OPS.TRY
+; These opcodes are available ONLY on the 64180 CPU
+; DDTZ will both assemble and disassemble these.
+IN0     B,20            TST     E               MLT     B 
+OUT0    20,B            IN0     H,20            MLT     D 
+TST     B               OUT0    20,H            TSTI    20
+IN0     C,20            TST     H               MLT     H 
+OUT0    20,C            IN0     L,20            TSIO    20
+TST     C               OUT0    20,L            SLP       
+IN0     D,20            TST     L               MLT     SP
+OUT0    20,D            TST     M               OTIM      
+TST     D               IN0     A,20            OTDM      
+IN0     E,20            OUT0    20,A            OIMR      
+OUT0    20,E            TST     A               ODMR      
+
+; The following are UNDOCUMENTED z80 opcodes from XTDOPS.TRY.
+; DDTZ will disassemble these, but will not assemble them.
+; They use xh/xl (or yh/yl) as separate byte registers.
+; Use these at your own risk.
+INRX    H               ACXR    H               MOVY    H,B  
+DCRX    H               ACXR    L               MOVY    H,C  
+MVIX    H,20            SUXR    H               MOVY    H,D  
+INRX    L               SUXR    L               MOVY    H,E  
+DCRX    L               SBXR    H               MOVY    H,A  
+MVIX    L,20            SBXR    L               MOVY    L,B  
+MOVX    B,H             NDXR    H               MOVY    L,C  
+MOVX    B,L             NDXR    L               MOVY    L,D  
+MOVX    C,H             XRXR    H               MOVY    L,E  
+MOVX    C,L             XRXR    L               MOVY    L,A  
+MOVX    D,H             ORXR    H               MOVY    A,H  
+MOVX    D,L             ORXR    L               MOVY    A,L  
+MOVX    E,H             CPXR    H               ADYR    H    
+MOVX    E,L             CPXR    L               ADYR    L    
+MOVX    H,B             INRY    H               ACYR    H    
+MOVX    H,C             DCRY    H               ACYR    L    
+MOVX    H,D             MVIY    H,20            SUYR    H    
+MOVX    H,E             INRY    L               SUYR    L    
+MOVX    H,A             DCRY    L               SBYR    H    
+MOVX    L,B             MVIY    L,20            SBYR    L    
+MOVX    L,C             MOVY    B,H             NDYR    H    
+MOVX    L,D             MOVY    B,L             NDYR    L    
+MOVX    L,E             MOVY    C,H             XRYR    H    
+MOVX    L,A             MOVY    C,L             XRYR    L    
+MOVX    A,H             MOVY    D,H             ORYR    H    
+MOVX    A,L             MOVY    D,L             ORYR    L    
+ADXR    H               MOVY    E,H             CPYR    H    
+ADXR    L               MOVY    E,L             CPYR    L    
+
+
+Command Summary:
+===============
+
+DDTZM command                                         DDTZ command
+=============                                         ============
+@ (base)
+A)ssemble first_address                                  A
+B)egin {i.e., initialize stack and return}               B
+C)ompare first_address,last_address,against_address      C
+D)ump first_address[,last_address[,base]]                D
+E)nter_in_memory first_address[,base]                    S)ubstitute
+F)ill first_address,last_address,value                   F
+G)o_to [address][,trap1[,trap2]]                         G
+H)ex_arithmetic value1(,value2)                          H
+L)oad_file (offset)                                      R)ead
+M)ove first_address,last_address,destination             M
+N)nput FCBs_command_line                                 I)nput
+Q)uit                                                    (not avail)
+R)egister examine/change [register|flag]                 X)amine
+S)earch first_address,last_address,word                  W)hereis
+T)race_execution [count]                                 T
+        Untrace_execution [count] (i.e. do count instr)  U)ntrace
+U)nassemble_code first_address[,last_address]            L)ist code
+W)rite [first_address,last_address]                      K)eep
+X)amine {i.e. display memory parameters for application} Q)uery
+Y)our_option BC:=parm1,DE:=parm2,call_address            Y
+Z)80_register_display                                    Z
+
+
+If you find this program useful, contributions will be gratefully
+accepted and will encourage further development and release of
+useful CPM programs.  My practice is to include source.
+
+C.B. Falconer
+680 Hartford Turnpike,
+Hamden, Conn. 06517           (203) 281-1438
+
+DDTZ and its associated documentation and other files are
+copyright (c) 1980-1988 by C.B. Falconer.  They may be freely
+copied and used for non-commercial purposes ONLY.
+Ты
