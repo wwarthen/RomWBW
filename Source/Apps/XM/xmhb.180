@@ -133,6 +133,8 @@ MINIT1:
 	JR	Z,RCINIT	; Handle RC2014 special
 	CP	8		; Check for RC2014 w/ Z180
 	JR	Z,ARCINIT	; Handle RC2014 w/ Z180
+	CP	9		; Check for Easy Z80
+	JR	Z,RCINIT	; Treat same as RC2014 for now
 ;
 	; Check for Z180 which implies ASCI serial port
 	LD	DE,00202H	; D := 2, E := 2

@@ -32,6 +32,7 @@ image to use for each platform:
 	Mark IV		MK4_std.rom
 	RC2014		RC_std.rom
 	RC2014 w/ Z180	RC180_std.rom
+	Easy Z80	EZZ180_std.rom
 
 You will find there is one additional ROM image called 
 "UNA_std.rom". This ROM image is an UNA-based RomWBW ROM image.  As 
@@ -50,8 +51,11 @@ the UNA FAT loader for testing.
 All of the standard ROM Images are configured with:
  - 512KB ROM Disk
  - 512KB RAM Disk
- - 38.4Kbps baud serial console (RC2014 is determined by hardware)
+ - 38.4Kbps baud serial console (*)
  - Auto-discovery of all serial ports
+
+* RC2014 & Easy Z80 serial port speed is determined by hardware
+  and is typically 115,200 baud.
 
 All hard disk type devices (IDE, PPIDE, CF Card, SD Card) will be 
 automatically assigned two drive letters per device.  The drive 
@@ -69,6 +73,7 @@ not detected at boot, the ROM will simply bypass support
 appropriately.
 
 SBC:
+ - CPU speed is detected at startup
  - Includes support for PPIDE/CF Card(s) connected to on-board    
    parallel port.
  - Includes support for CVDU and VGA3 boards.  If detected at
@@ -86,6 +91,7 @@ SBC:
    V2 does not have this issue.
 
 ZETA/ZETA2:
+ - CPU speed is detected at startup
  - Includes support for on-board floppy disk controller and
    two attached floppy disks.
  - Auto-detects ParPortProp and includes support for it if it
@@ -96,6 +102,7 @@ ZETA/ZETA2:
    ParPortProp video and keyboard ports.
 
 N8:
+ - CPU speed is detected at startup
  - Includes support for on-board floppy disk controller and
    two attached floppy disks.
  - Includes support for on-board TMS9918 video and keyboard
@@ -104,6 +111,7 @@ N8:
    assumes a production level N8 board (date code >= 2312).
 
 MK4:
+ - CPU speed is detected at startup
  - Includes support for on-board IDE port (CF Card via adapter).
  - Includes support for on-board SD Card port.
  - Auto-detects PropIO or PropIO V2 and installs associated
@@ -113,6 +121,7 @@ MK4:
    including VT-100/ANSI terminal emulation.
 
 RC2014:
+ - Assumes CPU oscillator of 7.3728 MHz
  - Requires 512K RAM/ROM module
  - Auto detects Serial I/O Module (ACIA) and Dual Serial
    Module (SIO/2).  Either one may be used.
@@ -123,6 +132,7 @@ RC2014:
    be enabled in config
 
 RC2014 w/ Z180:
+ - Assumes CPU oscillator of 18.432 MHz
  - Requires 512K RAM/ROM module
  - Console attached to Z180 onboard serial ports at 38400 baud
  - Includes support for Compact Flash Module
@@ -130,3 +140,8 @@ RC2014 w/ Z180:
  - Support for alternative serial modules may be enabled in config
  - Support for Scott Baker floppy controllers (SMC & WDC) may
    be enabled in config
+
+EZZ80:
+ - Assumes CPU oscillator of 10.000 MHz
+ - Includes support for on-board SIO
+ - Includes support for IDE via RC bus

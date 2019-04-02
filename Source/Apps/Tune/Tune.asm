@@ -87,6 +87,9 @@ TYPMYM		.EQU	3		; FILTYP value for MYM sound file
 	LD	DE,MSGRC		; Message for RC2014 platform
 	CP	7			; RC2014?
 	JR	Z,_SETP			; If so, set ports
+	LD	DE,MSGEZ		; Message for Easy Z80 platform
+	CP	9			; Easy Z80?
+	JR	Z,_SETP			; If so, same ports as RC2014
 	LD	HL,$9D9C		; For N8, RSEL=9C, RDAT=9D
 	LD	DE,MSGN8		; Message for N8 platform
 	CP	4			; N8?
@@ -610,9 +613,10 @@ MSGHW	.DB	"Hardware error, sound chip not detected!",0
 MSGNAM	.DB	"Sound filename invalid (must be .PT2, .PT3, or .MYM)",0
 MSGFIL	.DB	"Sound file not found!",0
 MSGSIZ	.DB	"Sound file too large to load!",0
-MSGRC	.DB	"RC2014 Ed Brindley Sound Module",0
+MSGRC	.DB	"RC2014 w/ Ed Brindley Sound Module",0
+MSGEZ	.DB	"Easy Z80 w/ Ed Brindley Sound Module",0
 MSGN8	.DB	"RetroBrew N8 Onboard Sound System",0
-MSGSCG	.DB	"RetroBrew SCG ECB Adapter",0
+MSGSCG	.DB	"RetroBrew SCG ECB Adapter Sound System",0
 MSGTIM	.DB	", timer mode",0
 MSGDLY	.DB	", delay mode",0
 MSGPLY	.DB	"Playing...",0
