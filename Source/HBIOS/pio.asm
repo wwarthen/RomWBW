@@ -191,6 +191,8 @@ PIO_LPT:
 	OUT		($F0),A		; output char
 	RET
 
+
+
 ; ------------------------------------
 ; ZILOG PIO FUNCTION TABLE ROUTINES
 ;-------------------------------------
@@ -239,7 +241,7 @@ PIO_OST:
 ; PIO_INITDEV - Configure device.
 ; If DE = FFFF then extract the configuration information from the table of devices and program the device using those settings.
 ; Otherwise use the configuration information in DE to program those settings and save them in the device table
-
+;
 ;  SETUP PARAMETER WORD:
 ;  +-------------------------------+ +-------+-----------+---+-------+
 ;  |         BIT CONTROL           | | MODE  | C2 C1 C0  | A |  INT  |
@@ -247,6 +249,20 @@ PIO_OST:
 ;    F   E   D   C   B   A   9   8     7   6   5   4   3   2   1   0
 ;       -- MSB (D REGISTER) --           -- LSB (E REGISTER) --
 ;
+;
+; MSB = BIT MAP USE IN MODE 3 
+; MODE B7 B6 = 00 Mode 0 Output
+;              01 Mode 1 Input
+;              10 Mode 2 Bidir
+;              11 Mode 3 Bit Mode
+; CHIP CHANNEL B5 B4 B3 001 Channel 1
+;                       010 Channel 2
+;                       100 Channel 3
+;
+; INTERUPT  B1 B0 00 IVT 1
+;                 01 IVT 2
+;                 10 IVT 3
+;                 11 IVT 4
 PIO_INITDEV:
 	; TEST FOR -1 (FFFF) WHICH MEANS USE CURRENT CONFIG (JUST REINIT)
 	LD	A,D			; TEST DE FOR
@@ -492,10 +508,10 @@ PIO_CFG:
 DEFPIO(PIO_ZPIO,PIOZBASE,M_Output,M_BitCtrl,M_BitAllOut,M_BitAllOut,PIO0FT,PIO1FT,INT_Y,INT_N)
 #ENDIF
 #IF	PIO_4P
-DEFPIO(PIO_ZPIO,PIO4BASE+0,M_BitCtrl,M_BitCtrl,M_BitAllOut,M_BitAllOut,PIO2FT,PIO3FT,INT_Y,INT_N)
-DEFPIO(PIO_ZPIO,PIO4BASE+4,M_BitCtrl,M_BitCtrl,M_BitAllOut,M_BitAllOut,PIO4FT,PIO5FT,INT_Y,INT_N)
-DEFPIO(PIO_ZPIO,PIO4BASE+8,M_BitCtrl,M_BitCtrl,M_BitAllOut,M_BitAllOut,PIO6FT,PIO7FT,INT_Y,INT_N)
-DEFPIO(PIO_ZPIO,PIO4BASE+12,M_BitCtrl,M_BitCtrl,M_BitAllOut,M_Output,PIO8FT,PIO9FT,INT_N,INT_N)
+DEFPIO(PIO_ZPIO,PIO4BASE+0,M_Output,M_BitCtrl,M_BitAllOut,M_BitAllOut,PIO2FT,PIO3FT,INT_N,INT_N)
+DEFPIO(PIO_ZPIO,PIO4BASE+4,M_Output,M_Input,M_BitAllOut,M_BitAllOut,PIO4FT,PIO5FT,INT_N,INT_N)
+DEFPIO(PIO_ZPIO,PIO4BASE+8,M_Output,M_Output,M_BitAllOut,M_BitAllOut,PIO6FT,PIO7FT,INT_N,INT_N)
+DEFPIO(PIO_ZPIO,PIO4BASE+12,M_Output,M_Output,M_BitAllOut,M_Output,PIO8FT,PIO9FT,INT_N,INT_N)
 #ENDIF
 ; PPI_SBC & (PLATFORM == PLT_SBC) & (PPIDEMODE != PPIDEMODE_SBC))
 
