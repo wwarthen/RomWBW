@@ -25,6 +25,7 @@ Version 2.9.1
 - S?K: Initial support for Easy Z80
 - PMS: Enhance VDU driver to support alternative screen dimensions
 - WBW: DDT and DDTZ modified to use RST 30 instead of RST 38 to avoid conflicts with IM 1 interrupts
+- WBW: Support LBA style access in floppy driver
 
 Version 2.9.0
 -------------
