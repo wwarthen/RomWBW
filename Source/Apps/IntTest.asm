@@ -146,24 +146,32 @@ lstlp:
 ; Establish interrupt vector index to hook
 ;
 estidx:
-	ld	a,(intmod)
-	ld	c,0
-	cp	1
-	jr	z,setidx
-	ld	c,2		; assume timer in entry 2 if im2
-	cp	2
-	jr	z,setidx
-	ret			; neither im1 or im2, bail out
-setidx:
-	ld	a,c
+	call	crlf2
+	ld	de,msgvec
+	call	prtstr
+	call	getbuf
+	ld	hl,lnbuf+1
+	ld	a,(hl)		; get line length
+	or	a		; set flags
+	jr	z,estidx	; nothing entered
+	ld	b,a		; set b to line length
+	inc	hl
+	call	hexbyt
+	jr	c,estidx
 	ld	(vecidx),a
+	ld	hl,veccnt	; check index against valid range
+	cp	(hl)
+	jr	nc,estidx	; vector index out of bounds
 ;
 ; Hook vector
 ;
 	call	crlf2
-	ld	de,msghook
+	ld	de,msghk1
 	call	prtstr
-	call	crlf2
+	ld	a,(vecidx)
+	call	prthex
+	ld	de,msghk2
+	call	prtstr
 	ld	a,$ff
 	ld	(count),a	; set counter to max value
 ;	
@@ -190,31 +198,51 @@ hkim1:
 ;
 ; IM2 specific code
 ;
+;hkim2:
+;	ld	hl,m2stub	; pointer to my interrupt stub
+;	ld	b,bf_sysint
+;	ld	c,bf_sysintset	; set new vector
+;	ld	a,(vecidx)	; get vector idx
+;	ld	e,a		; put in E
+;	di
+;	rst	08		; do it
+;	ld	(chain),hl	; save the chain address
+;	ld	(engadr),de	; insert the int routing engine address
+;	ei			; interrupts back on
+;	jr	start
+;
 hkim2:
-	ld	hl,m2stub	; pointer to my interrupt stub
+	ld	hl,m2int	; pointer to my interrupt handler
 	ld	b,bf_sysint
 	ld	c,bf_sysintset	; set new vector
-	ld	a,(vecidx)	; get vector idx
+	ld	a,(vecidx)	; get vector index
 	ld	e,a		; put in E
 	di
-	rst	08		; do it
+	rst	08		; install our vector
 	ld	(chain),hl	; save the chain address
-	ld	(engadr),de	; insert the int routing engine address
-	ei			; interrupts back on
+	ei
 	jr	start
 ;
 ; Wait for counter to countdown to zero
 ;
 start:
+	call	crlf2
+	ld	de,msgrun	; message
+	call	prtstr
+	call	crlf2
 	ld	a,(count)
 	ld	e,a
 	call 	prthex		; print it
 	ld	a,13
 	call	prtchr
 loop:
+	call	getchr		; check console
+	cp	$1B		; <esc> to exit
+	jr	z,loop1		; if so, bail out
 	ld	a,(count)	; get current count value
 	cp	e
 	jr	z,loop
+	ld	e,a
 	push	af
 	call 	prthex		; print it
 	ld	a,13
@@ -241,6 +269,35 @@ loop1:
 ;
 	xor	a		; signal success
 	ret			; done
+;
+; Get a character from console, return in A
+; returs zero if nothing available
+;
+getchr:
+	push	bc		; save registers
+	push	de
+	push	hl
+	ld	e,$FF		; read a character
+	ld	c,$06		; BDOS direct i/o function
+	call	bdos		; do it
+	pop	hl		; restore registers
+	pop	de
+	pop	bc
+	ret
+;
+; Get console buffer
+;
+getbuf:
+	push	bc
+	push	de
+	push	hl
+	ld	de,lnbuf
+	ld	c,$0A
+	call	bdos
+	pop	hl
+	pop	de
+	pop	bc
+	ret
 ;
 ; Print character in A without destroying any registers
 ;
@@ -450,6 +507,59 @@ addhl:
 jphl:
 	jp	(hl)
 ;
+; Convert hex chars to a byte value.
+; Enter with HL pointing to buffer with chars to convert
+; and B contining number of chars.  Returns value in A.
+; CF set to indicate error (overflow or invalid char).
+;
+hexbyt:
+	ld	c,0		; working value starts at zero
+hexbyt1:
+	sla	c		; rotate low nibble to high
+	ret	c
+	sla	c
+	ret	c
+	sla	c
+	ret	c
+	sla	c
+	ret	c
+	ld	a,(hl)		; load next char
+	call	hexnibl		; convert to binary
+	ret	c		; abort on error
+	or	c		; combine w/ working value
+	ld	c,a		; and put back in c
+	inc	hl		; next position
+	djnz	hexbyt1		; next character
+	ld	a,c		; ret val to a
+	or	a		; clear carry
+	ret
+;
+; Convert hex character at (HL) to binary value
+; Set CF to indicate invalid character
+;
+hexnibl:
+	; handle '0'-'9'
+	cp	'0'
+	jr	c,hexnibl1		; if < '0', out of range
+	cp	'9'+1
+	jr	nc,hexnibl1		; if > '9', out of range
+	and	$0F			; convert to binary value
+	ret				; and done
+hexnibl1:	
+	; handle 'A'-'F'
+	call	ucase			; force upper case
+	cp	'A'
+	jr	c,hexnibl2		; if < 'A', out of range
+	cp	'F'+1
+	jr	nc,hexnibl2		; if > 'F', out of range
+	and	$0F			; convert to binary value
+	add	a,9			; 
+	ret				; and done
+hexnibl2:
+	; invalid character
+	scf				; signal error
+	ret
+;
 ;===============================================================================
 ; Storage Section
 ;===============================================================================
@@ -457,6 +567,8 @@ jphl:
 intmod	.db	0		; active interrupt mode
 veccnt	.db	0		; count of ingterrupt vectors
 vecidx	.db	0		; vector index to hook
+lnbuf	.db	10,0		; 10 char BDOS line input buffer
+	.fill	10
 ;
 stksav	.dw	0		; stack pointer saved at start
 	.fill	stksiz,0	; stack
@@ -464,14 +576,17 @@ stack	.equ	$		; stack top
 ;
 ; Messages
 ;
-msgban	.db	"INTTEST v1.0, 27-Aug-2018",13,10
-	.db	"Copyright (C) 2018, Wayne Warthen, GNU GPL v3",0
+msgban	.db	"INTTEST v1.1, 10-May-2019",13,10
+	.db	"Copyright (C) 2019, Wayne Warthen, GNU GPL v3",0
 msginfo	.db	"Interrupt information request...",0
 msgmode	.db	"  Active interrupt mode: ",0
 msgcnt	.db	"  Vector entries in use: ",0
 msglst	.db	"Interrupt vector address list:",0
-msghook	.db	"Hooking vector...",0
+msghk1	.db	"Hooking vector ",0
+msghk2	.db	"...",0
 msgunhk	.db	"Unhooking vector...",0
+msgrun	.db	"Interrupt countdown (press <esc> to exit)...",0
+msgvec	.db	"Enter vector to hook (hex): ",0
 ;
 ;===============================================================================
 ; Interrupt Handler
@@ -483,37 +598,54 @@ reladr	.equ	$		; relocation start adr
 ;
 m1int:
 	; count down to zero
-	ld	a,(count)
-	or	a
-	jr	z,m1int1
-	dec	a
-	ld	(count),a
+	ld	a,(count)	; get current count value
+	or	a               ; test for zero
+	jr	z,m1int1        ; if zero, leave it alone
+	dec	a               ; decrement
+	ld	(count),a       ; and save
 m1int1:
 	; follow the chain...
-	ld	hl,(chain)
-	jp	(hl)
-;
-m2stub:
-	push	hl
-	ld	hl,m2int
-	jp	$0000
-engadr	.equ	$ - 2
+	ld	hl,(chain)	; get chain adr
+	jp	(hl)		; go there
+;;
+;m2stub:
+;	push	hl
+;	ld	hl,m2int
+;	jp	$0000
+;engadr	.equ	$ - 2
+;;
+;m2int:
+;	; count down to zero
+;	ld	a,(count)
+;	or	a
+;	jr	z,m2int1
+;	dec	a
+;	ld	(count),a
+;m2int1:
+;	; ack/reset z180 timer interrupt
+;	in0	a,(z180_tcr)
+;	in0	a,(z180_tmdr0l)
+;	ret
 ;
 m2int:
+	; N.B., all used register values MUST be preserved!!!
+	push	hl		; save incoming HL
+	push	af		; save incoming AF
 	; count down to zero
-	ld	a,(count)
-	or	a
-	jr	z,m2int1
-	dec	a
-	ld	(count),a
+	ld	a,(count)	; get current count value
+	or	a		; test for zero
+	jr	z,m2int1	; if zero, leave it alone
+	dec	a		; decrement
+	ld	(count),a	; and save
 m2int1:
-	; ack/reset z180 timer interrupt
-	in0	a,(z180_tcr)
-	in0	a,(z180_tmdr0l)
-	ret
+	pop	af		; restore AF
+	; funky way to restore original HL and follow the chain
+	ld	hl,(chain)	; get chain adr to HL
+	ex	(sp),hl		; chain adr to TOS and restore original HL
+	ret			; will "JP" to chain address
 ;
 chain	.dw	$0000		; chain address
 count	.db	0		; counter
-
+;
 hsiz	.equ	$ - $8000	; size of handler to relocate
 	.end
