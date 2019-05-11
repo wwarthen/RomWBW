@@ -604,6 +604,7 @@ m1int:
 	dec	a               ; decrement
 	ld	(count),a       ; and save
 m1int1:
+	xor	a		; signal int has NOT been handled
 	; follow the chain...
 	ld	hl,(chain)	; get chain adr
 	jp	(hl)		; go there
