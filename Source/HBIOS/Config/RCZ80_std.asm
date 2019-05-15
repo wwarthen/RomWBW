@@ -3,7 +3,7 @@
 ;   RC2014 STANDARD CONFIGURATION
 ;==================================================================================================
 ;
-#include "cfg_rc.asm"
+#include "cfg_rcz80.asm"
 ;
 CPUOSC		.SET	7372800		; CPU OSC FREQ
 DEFSERCFG	.SET	SER_115200_8N1	; DEFAULT SERIAL LINE CONFIG (SHOULD MATCH ABOVE)

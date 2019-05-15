@@ -28,8 +28,8 @@ param([string]$Platform = "", [string]$Config = "", [string]$RomSize = "512", [s
 $Platform = $Platform.ToUpper()
 while ($true)
 {
-	if (($Platform -eq "SBC") -or ($Platform -eq "ZETA") -or ($Platform -eq "ZETA2") -or ($Platform -eq "RC") -or ($Platform -eq "EZZ80") -or ($Platform -eq "RC180") -or ($Platform -eq "N8") -or ($Platform -eq "MK4") -or ($Platform -eq "UNA")) {break}
-	$Platform = (Read-Host -prompt "Platform [SBC|ZETA|ZETA2|RC|EZZ80|RC180|N8|MK4|UNA]").Trim().ToUpper()
+	if (($Platform -eq "SBC") -or ($Platform -eq "ZETA") -or ($Platform -eq "ZETA2") -or ($Platform -eq "RCZ80") -or ($Platform -eq "EZZ80") -or ($Platform -eq "RCZ180") -or ($Platform -eq "N8") -or ($Platform -eq "MK4") -or ($Platform -eq "UNA")) {break}
+	$Platform = (Read-Host -prompt "Platform [SBC|ZETA|ZETA2|RCZ80|EZZ80|RCZ180|N8|MK4|UNA]").Trim().ToUpper()
 }
 
 #
@@ -66,7 +66,7 @@ while ($true)
 # TASM should be invoked with the proper CPU type.  Below, the CPU type is inferred
 # from the platform.
 #
-if (($Platform -eq "N8") -or ($Platform -eq "MK4") -or ($Platform -eq "RC180")) {$CPUType = "180"} else {$CPUType = "80"}
+if (($Platform -eq "N8") -or ($Platform -eq "MK4") -or ($Platform -eq "RCZ180")) {$CPUType = "180"} else {$CPUType = "80"}
 
 #
 # The $RomName variable determines the name of the image created by the script.  By default,

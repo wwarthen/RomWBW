@@ -4,7 +4,7 @@ Version 2.9.1
 - WBW: Converted PTXPLAY to TUNE (now plays PT2/PT3/MYM sounds files)
 - WBW: Updated Win32DiskImager to v1.0
 - WBW: Implemented character attributes on Propeller based consoles
-- M?S: Added support for BEL function in Propeller based consoles
+- MS:  Added support for BEL function in Propeller based consoles
 - WBW: Support additional escape sequences in Propeller console ANSI emulation
 - WBW: Map LPT: to second serial port, UL1: to third serial port
 - WBW: Update default IOBYTE so that LST:=LPT: by default
@@ -22,10 +22,13 @@ Version 2.9.1
 - PMS: Added Forth, Nascom BASIC, and Tasty BASIC to ROM
 - PMS: Refactored ROM Loader to support more ROM images, now table driven
 - WBW: Refactored DSKY code
-- S?K: Initial support for Easy Z80
+- SK:  Initial support for Easy Z80
 - PMS: Enhance VDU driver to support alternative screen dimensions
 - WBW: DDT and DDTZ modified to use RST 30 instead of RST 38 to avoid conflicts with IM 1 interrupts
+- WBW: Added timer interrupt support for CTC under Zeta 2 and Easy Z80
 - WBW: Support LBA style access in floppy driver
+- WBW: Added beta version of FAT filesystem utility (copy, dir, del, ren)
+- SCC: Added support for native memory addressing on Z180-based RC2014
 
 Version 2.9.0
 -------------

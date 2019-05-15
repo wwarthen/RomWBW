@@ -26,12 +26,14 @@ platform being used.  The table below indicates the correct ROM
 image to use for each platform:
 
 	SBC V1/V2	SBC_std.rom
+	SBC SimH	SBC_simh.rom
 	Zeta V1		ZETA_std.rom
 	Zeta V2		ZETA2_std.rom
 	N8		N8_std.rom
 	Mark IV		MK4_std.rom
 	RC2014		RC_std.rom
-	RC2014 w/ Z180	RC180_std.rom
+	RC2014 w/ Z180	RC180_nat.rom	(native Z180 memory addressing)
+	RC2014 w/ Z180	RC180_ext.rom	(512K RAM/ROM module)
 	Easy Z80	EZZ180_std.rom
 
 You will find there is one additional ROM image called 
@@ -72,7 +74,7 @@ each platform as documented below.  If the device or peripheral is
 not detected at boot, the ROM will simply bypass support 
 appropriately.
 
-SBC:
+SBC (SBC_std.rom):
  - CPU speed is detected at startup
  - Includes support for PPIDE/CF Card(s) connected to on-board    
    parallel port.
@@ -89,8 +91,13 @@ SBC:
  - SBC V1 has a known race condition in the bank switching
    circuit which is likely to cause system instability.  SBC
    V2 does not have this issue.
+   
+SBC (SBC_simh.rom):
+ - SBC variant customized to run under SimH
+ - Implments two emulated SimH hard disk images
+ - Uses SimH RTC
 
-ZETA/ZETA2:
+ZETA (ZETA_std.rom):
  - CPU speed is detected at startup
  - Includes support for on-board floppy disk controller and
    two attached floppy disks.
@@ -101,7 +108,19 @@ ZETA/ZETA2:
    on-board serial port, if JP1 is open, console will go to
    ParPortProp video and keyboard ports.
 
-N8:
+ZETA2 (ZETA2_std.rom):
+ - CPU speed is detected at startup
+ - Includes support for on-board floppy disk controller and
+   two attached floppy disks.
+ - Auto-detects ParPortProp and includes support for it if it
+   is attached.
+ - Uses CTC to generate periodic timer interrupts.
+ - If ParPortProp is installed, initial console output is
+   determined by JP1.  If JP1 is shorted, console will go to
+   on-board serial port, if JP1 is open, console will go to
+   ParPortProp video and keyboard ports.
+
+N8 (N8_std.rom):
  - CPU speed is detected at startup
  - Includes support for on-board floppy disk controller and
    two attached floppy disks.
@@ -110,7 +129,7 @@ N8:
  - Includes support for on-board SD Card as hard disk and
    assumes a production level N8 board (date code >= 2312).
 
-MK4:
+MK4 (MK4_std.rom):
  - CPU speed is detected at startup
  - Includes support for on-board IDE port (CF Card via adapter).
  - Includes support for on-board SD Card port.
@@ -120,7 +139,7 @@ MK4:
    startup, support for video and keyboard is installed
    including VT-100/ANSI terminal emulation.
 
-RC2014:
+RCZ80 (RCZ80_std.rom):
  - Assumes CPU oscillator of 7.3728 MHz
  - Requires 512K RAM/ROM module
  - Auto detects Serial I/O Module (ACIA) and Dual Serial
@@ -131,17 +150,23 @@ RC2014:
  - Support for Scott Baker floppy controllers (SMC & WDC) may
    be enabled in config
 
-RC2014 w/ Z180:
+RCZ180 (RCZ180_nat.rom & RCZ180_ext.rom):
  - Assumes CPU oscillator of 18.432 MHz
- - Requires 512K RAM/ROM module
  - Console attached to Z180 onboard serial ports at 38400 baud
  - Includes support for Compact Flash Module
  - Support for PPIDE Module may be enabled in config
  - Support for alternative serial modules may be enabled in config
  - Support for Scott Baker floppy controllers (SMC & WDC) may
    be enabled in config
+ - You must pick the _nat or _ext variant depending on which
+   memory module you are using:
+   - RCZ180_nat.rom uses the built-in Z180 memory manager
+     for use with memory modules allow direct physical
+     addressing of memory, such as the SC119
+   - RCZ180_ext.rom uses external bank management to access
+     memory, such as the 512K RAM/ROM module.
 
-EZZ80:
+EZZ80 (EZZ80_std.rom):
  - Assumes CPU oscillator of 10.000 MHz
  - Includes support for on-board SIO
  - Includes support for IDE via RC bus

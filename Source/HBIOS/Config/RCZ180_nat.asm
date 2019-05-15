@@ -1,9 +1,9 @@
 ;
 ;==================================================================================================
-;   RC2014 STANDARD CONFIGURATION
+;   RC2014 W/ Z180 CPU USING NATIVE Z180 MEMORY MANAGER
 ;==================================================================================================
 ;
-#include "cfg_rc180.asm"
+#include "cfg_rcz180.asm"
 ;
 Z180_CLKDIV	.SET	1		; 0=OSC/2, 1=OSC, 2=OSC*2
 Z180_MEMWAIT	.SET	0		; MEMORY WAIT STATES TO INSERT (0-3)
