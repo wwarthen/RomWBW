@@ -1,4 +1,5 @@
 ;===============================================================================
+;
 ; INTTEST - Test HBIOS interrupt API functions
 ;
 ;===============================================================================
@@ -24,11 +25,6 @@ bf_sysint	.equ	$FC	; INT function
 bf_sysintinfo	.equ	$00	; INT INFO subfunction
 bf_sysintget	.equ	$10	; INT GET subfunction
 bf_sysintset	.equ	$20	; INT SET subfunction
-;
-z180_base	.equ	$40		; i/o base address for internal z180 registers
-z180_tcr	.equ	z180_base + $10	; timer control
-z180_tmdr0l	.equ	z180_base + $0C	; timer 0 data lo
-
 ;
 ;===============================================================================
 ; Code Section
@@ -177,15 +173,15 @@ estidx:
 ;	
 	ld	a,(intmod)
 	cp	1
-	jr	z,hkim1
+	jr	z,hkim
 	cp	2
-	jr	z,hkim2
+	jr	z,hkim
 	ret
 ;
-; IM1 specific code
+; Setup interrupt handler
 ;
-hkim1:
-	ld	hl,m1int	; pointer to my interrupt handler
+hkim:
+	ld	hl,int		; pointer to my interrupt handler
 	ld	b,bf_sysint
 	ld	c,bf_sysintset	; set new vector
 	ld	a,(vecidx)	; get vector idx
@@ -194,33 +190,6 @@ hkim1:
 	rst	08		; do it
 	ld	(chain),hl	; save the chain address
 	ei			; interrupts back on
-	jr	start
-;
-; IM2 specific code
-;
-;hkim2:
-;	ld	hl,m2stub	; pointer to my interrupt stub
-;	ld	b,bf_sysint
-;	ld	c,bf_sysintset	; set new vector
-;	ld	a,(vecidx)	; get vector idx
-;	ld	e,a		; put in E
-;	di
-;	rst	08		; do it
-;	ld	(chain),hl	; save the chain address
-;	ld	(engadr),de	; insert the int routing engine address
-;	ei			; interrupts back on
-;	jr	start
-;
-hkim2:
-	ld	hl,m2int	; pointer to my interrupt handler
-	ld	b,bf_sysint
-	ld	c,bf_sysintset	; set new vector
-	ld	a,(vecidx)	; get vector index
-	ld	e,a		; put in E
-	di
-	rst	08		; install our vector
-	ld	(chain),hl	; save the chain address
-	ei
 	jr	start
 ;
 ; Wait for counter to countdown to zero
@@ -238,7 +207,7 @@ start:
 loop:
 	call	getchr		; check console
 	cp	$1B		; <esc> to exit
-	jr	z,loop1		; if so, bail out
+	jr	z,unhook	; if so, bail out
 	ld	a,(count)	; get current count value
 	cp	e
 	jr	z,loop
@@ -249,12 +218,12 @@ loop:
 	call	prtchr
 	pop	af
 	or	a		; set flags
-	jr	z,loop1		; done
+	jr	z,unhook	; done
 	jr	loop		; and loop
-loop1:
 ;
 ; Unhook
 ;
+unhook:
 	call	crlf2
 	ld	de,msgunhk
 	call	prtstr
@@ -509,7 +478,7 @@ jphl:
 ;
 ; Convert hex chars to a byte value.
 ; Enter with HL pointing to buffer with chars to convert
-; and B contining number of chars.  Returns value in A.
+; and B containing number of chars.  Returns value in A.
 ; CF set to indicate error (overflow or invalid char).
 ;
 hexbyt:
@@ -576,7 +545,7 @@ stack	.equ	$		; stack top
 ;
 ; Messages
 ;
-msgban	.db	"INTTEST v1.1, 10-May-2019",13,10
+msgban	.db	"INTTEST v1.2, 15-May-2019",13,10
 	.db	"Copyright (C) 2019, Wayne Warthen, GNU GPL v3",0
 msginfo	.db	"Interrupt information request...",0
 msgmode	.db	"  Active interrupt mode: ",0
@@ -596,54 +565,19 @@ reladr	.equ	$		; relocation start adr
 ;
 	.org	$8000		; code will run here
 ;
-m1int:
+int:
 	; count down to zero
 	ld	a,(count)	; get current count value
 	or	a               ; test for zero
-	jr	z,m1int1        ; if zero, leave it alone
+	jr	z,int1		; if zero, leave it alone
 	dec	a               ; decrement
 	ld	(count),a       ; and save
-m1int1:
+int1:
 	xor	a		; signal int has NOT been handled
 	; follow the chain...
 	ld	hl,(chain)	; get chain adr
 	jp	(hl)		; go there
-;;
-;m2stub:
-;	push	hl
-;	ld	hl,m2int
-;	jp	$0000
-;engadr	.equ	$ - 2
-;;
-;m2int:
-;	; count down to zero
-;	ld	a,(count)
-;	or	a
-;	jr	z,m2int1
-;	dec	a
-;	ld	(count),a
-;m2int1:
-;	; ack/reset z180 timer interrupt
-;	in0	a,(z180_tcr)
-;	in0	a,(z180_tmdr0l)
 ;	ret
-;
-m2int:
-	; N.B., all used register values MUST be preserved!!!
-	push	hl		; save incoming HL
-	push	af		; save incoming AF
-	; count down to zero
-	ld	a,(count)	; get current count value
-	or	a		; test for zero
-	jr	z,m2int1	; if zero, leave it alone
-	dec	a		; decrement
-	ld	(count),a	; and save
-m2int1:
-	pop	af		; restore AF
-	; funky way to restore original HL and follow the chain
-	ld	hl,(chain)	; get chain adr to HL
-	ex	(sp),hl		; chain adr to TOS and restore original HL
-	ret			; will "JP" to chain address
 ;
 chain	.dw	$0000		; chain address
 count	.db	0		; counter
