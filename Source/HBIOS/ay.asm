@@ -4,9 +4,15 @@
 ; WILL ALSO WORK WITH YM2149
 ;======================================================================
 ;
+#IF (PLATFORM == PLT_N8)
+AY_RSEL		.EQU	N8_PSG+0
+AY_RDAT		.EQU	N8_PSG+1
+AY_ACR		.EQU	N8_DEFACR
+#ELSE
 AY_RSEL		.EQU	$9A
 AY_RDAT		.EQU	$9B
 AY_ACR		.EQU	$9C
+#ENDIF
 AY_R0CHAP	.EQU	$00
 AY_R1CHAP	.EQU	$01
 AY_R2CHBP	.EQU	$02
