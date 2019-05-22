@@ -1266,6 +1266,7 @@ PSCNX	.EQU	$ + 1
 	LD	L,A			; 1 means Z180 - 80180
 	LD	A,$30			; 2 means Z180 S-class, SL1960 version
 	ADD	A,L			; 3 means Z180 advanced S-class, with Baud Rate Generator
+	PRTS(" Type: $")
 	CALL	COUT			; Courtesy John Coffman MK IV UnaBIOS
 	PRTS(", IO=0x$")
 	LD	A,Z180_BASE
