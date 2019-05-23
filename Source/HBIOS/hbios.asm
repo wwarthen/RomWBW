@@ -1255,6 +1255,7 @@ PSCNX	.EQU	$ + 1
 	PRTS("MHz$")
 #IF ((PLATFORM == PLT_N8) | (PLATFORM == PLT_MK4) | (PLATFORM == PLT_RCZ180))
 	LD	L,1			; flag Z180
+	LD	D,0
 	OUT0	(Z180_ASTC1L),D		; D = 0 at this point
 	IN0	A,(Z180_FRC)		; supposedly only on S-class
 	INC	A			; FF or 00 -> 0 or 1 (weak S-class or higher)
