@@ -1254,8 +1254,22 @@ PSCNX	.EQU	$ + 1
 	CALL	PRTD3M			; PRINT AS DECIMAL WITH 3 DIGIT MANTISSA
 	PRTS("MHz$")
 #IF ((PLATFORM == PLT_N8) | (PLATFORM == PLT_MK4) | (PLATFORM == PLT_RCZ180))
-	CALL	PC_COMMA
-	PRTS(" IO=0x$")
+	LD	L,1			; flag Z180
+	LD	D,0
+	OUT0	(Z180_ASTC1L),D		; D = 0 at this point
+	IN0	A,(Z180_FRC)		; supposedly only on S-class
+	INC	A			; FF or 00 -> 0 or 1 (weak S-class or higher)
+	ADD	A,L
+	LD	L,A			; result to L and A
+	IN0	A,(Z180_ASTC1L)		; counter reg
+	INC	A			; FF or 00 -> 0 or 1 (super-S)
+	ADD	A,L
+	LD	L,A			; 1 means Z180 - 80180
+	LD	A,$30			; 2 means Z180 S-class, SL1960 version
+	ADD	A,L			; 3 means Z180 advanced S-class, with Baud Rate Generator
+	PRTS(" Type: $")
+	CALL	COUT			; Courtesy John Coffman MK IV UnaBIOS
+	PRTS(", IO=0x$")
 	LD	A,Z180_BASE
 	CALL	PRTHEXBYTE
 #ENDIF
