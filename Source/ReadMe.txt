@@ -35,7 +35,7 @@ Build System Requirements
 
 All that is required to build the firmware is a computer running 
 Microsoft Windows and the RomWBW distribution zip archive file.  
-The zip archive includes all of the required source code 
+The zip archive package includes all of the required source code 
 (including the operating systems) and the programs required to run 
 the build.
 
@@ -60,10 +60,13 @@ The basic steps to create a custom ROM are:
 
   4) Program the resultant ROM image and try it.
 
-It is *not* necessary to perform steps 1 or 2 before running a 
-build.  In fact, I strongly recommend that you perform steps 3 and 
-4 initially to make sure that you have no issues building and 
-programming a ROM that works the same as a pre-built ROM.
+Note that steps 1 and 2 are performed to customize your ROM as 
+desired.  If you want to simply build a standard configuration, it is 
+*not* necessary to perform steps 1 or 2 before running a build.  In 
+fact, I strongly recommend that you skip steps 1 and 2 initially and 
+just perform perform steps 3 and 4 using the standard configuraion to 
+make sure that you have no issues building and programming a ROM that 
+works the same as a pre-built ROM.
 
 Each of the 4 steps above is described in more detail below.
 
@@ -81,7 +84,7 @@ series of files named <plt>_<cfg>.asm where <plt> refers to the
 CPU board in your system and <cfg> is used to name the specific 
 configuration so you can maintain multiple configurations.
 
-You will notice that there is initially one configuration file for 
+You will notice that there is generaly one configuration file for 
 each CPU platform with a name of "std".  For example, you there is 
 a file called MK4_std.asm.  This is the standard ("std") 
 configuration for a Mark IV CPU board.
@@ -90,20 +93,21 @@ The platform names are predefined.  Refer to the following table
 to determine the <plt> component of the configuration filename:
 
 	SBC V1/V2	SBC_std.rom
+	SBC SimH	SBC_simh.rom
 	Zeta V1		ZETA_std.rom
 	Zeta V2		ZETA2_std.rom
 	N8		N8_std.rom
 	Mark IV		MK4_std.rom
 	RC2014		RC_std.rom
-	Easy Z80	EZZ80_std.rom
+	RC2014 w/ Z180	RC180_nat.rom	(native Z180 memory addressing)
+	RC2014 w/ Z180	RC180_ext.rom	(512K RAM/ROM module)
+	Easy Z80	EZZ180_std.rom
 
 You can use any name you choose for the <cfg> component of the 
 configuration filename.  So, let's say you want to create a custom 
 ROM for the Mark IV.  You would simply copy "MK4_std.asm" to 
-something like "MK4_cust.asm".
-
-Now, just edit the new file ("MK4_cust.asm" in this example) as 
-desired.
+something like "MK4_cust.asm".  Now, just edit the new file 
+("MK4_cust.asm" in this example) as desired.
 
 You will see that the file already has lines for all of the common 
 options and there is a comment after each option indicating the 
@@ -148,6 +152,10 @@ with the platform specified in the ROM Build.
 There is a ReadMe.txt document in the \Source\RomDsk directory 
 with a more detailed description of this process.
 
+Note that the standard 512K ROM disk is absolutely full.  So, if
+you want to add files to it, you will need to delete other files
+to free up some space.
+
 3. Run the Build Process
 ------------------------
 
@@ -180,7 +188,7 @@ This command will prompt you twice as it runs.  These prompts
 determine the platform and configuration to be built.  The first 
 prompt is for the platform, as shown below:
 
-    Platform [SBC|ZETA|ZETA2|N8|MK4|UNA]:
+    Platform [SBC|ZETA|ZETA2|RCZ80|EZZ80|RCZ180|N8|MK4|UNA]:
 
 Enter the option corresponding to the platform of the ROM firmware 
 you are building.  If you enter something other than one of the 
@@ -232,7 +240,7 @@ used:
 
 Upon completion of a successful build, you should find the 
 resulting firmware in the Binary directory.  These output files 
-will have names that match the config filename, but will different 
+will have names that match the config filename, but with different 
 extensions.
 
 Three output files will be created for a single BuildROM run:
@@ -257,21 +265,23 @@ information on the other two file extensions created.
 Specifying Build Options on Command Line
 ----------------------------------------
 
-If you don't want to be prompted for the options to the "BuildROM" 
+If you don't want to be prompteded for the options to the "BuildROM" 
 command, you can specify the options right on the command line.
 
 For example:
 
     C:\RomWBW\Source> BuildROM MK4 cust
 
-In this case, you will not be prompted.  This is useful if you 
-wish to automate your build process.
+In this case, you will not be prompted.  This is useful if you wish 
+to automate your build process.
 
 There is a third parameter that you can specify to the BuildROM 
-command via a command line.  If you want to build a 1024K (1MB) 
-ROM, you can add "1024" to the end of the line, like this:
+command via a command line.  If you want to build a 1024K (1MB) ROM, 
+you can add "1024" to the end of the line, like this:
 
     C:\RomWBW\Source> BuildROM MK4 cust 1024
+
+You must ensure that your system actually supports a 1024K ROM.
 
 Special Build Commands
 ----------------------

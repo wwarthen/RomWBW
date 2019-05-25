@@ -7,14 +7,15 @@
 ***********************************************************************
 
 Wayne Warthen (wwarthen@gmail.com)
-Version 2.9.1-pre.15, 2019-05-15
+Version 2.9.1-pre.16, 2019-05-25
 https://www.retrobrewcomputers.org/
 
 RomWBW is a ROM-based implementation of CP/M-80 2.2 and Z-System for 
 all RetroBrew Computers Z80/Z180 hardware platforms including SBC 
-1/2, Zeta 1/2, N8, Mark IV, and RC2014. Virtually all RetroBrew 
-hardware is supported including floppy, hard disk (IDE, CF Card, SD 
-Card), Video, and keyboard. VT-100 terminal emulation is built-in.
+1/2, Zeta 1/2, N8, Mark IV, RC2014, and Easy Z80. Virtually all 
+RetroBrew hardware is supported including floppy, hard disk (IDE, CF 
+Card, SD Card), Video, and keyboard. VT-100 terminal emulation is 
+built-in.
 
 The RomWBW ROM loads and runs the built-in operating systems directly
 from the ROM and includes a selection of standard/useful applications
@@ -219,8 +220,9 @@ Current inclusions are:
 	
 	Note: To exit type B in Monitor and BYE in other applications.
 	
-Space is available in the ROM image for the inclusion of other software.
-Any inbuild application can be set up to launch automatically at startup.
+Space is available in the ROM image for the inclusion of other 
+software. Any inbuild application can be set up to launch 
+automatically at startup.
 
 Source Code Respository
 -----------------------
@@ -281,8 +283,8 @@ RetroBrew Computers projects is via the community forum at
 
 Also feel free to email Wayne Warthen at wwarthen@gmail.com.
 
-To Do
------
+Documentation To Do
+-------------------
 
     - Formatting Media
     - Making a Disk Bootable

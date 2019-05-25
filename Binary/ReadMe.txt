@@ -17,15 +17,14 @@ released the directory is populated with the default output files.
 However, the output of custom builds will be placed in this directory 
 as well.
 
-If you only see a few files in this directory, then you downloaded just 
-the source from GitHub.  To retrieve the full release download package, 
-go to https://github.com/wwarthen/RomWBW.  On this page, look for the 
-text "XX releases" where XX is a number. Click on this text to go to the 
-releases page.  On this page, you will see the latest releases listed.  
-For each release, you will see a package file called something like 
-"RomWBW-2.9.0-Package.zip".  Click on the package file for the release 
-you want to download.
-
+If you only see a few files in this directory, then you downloaded 
+just the source from GitHub.  To retrieve the full release download 
+package, go to https://github.com/wwarthen/RomWBW.  On this page, 
+look for the text "XX releases" where XX is a number. Click on this 
+text to go to the releases page.  On this page, you will see the 
+latest releases listed.  For each release, you will see a package 
+file called something like "RomWBW-2.9.0-Package.zip".  Click on the 
+package file for the release you want to download.
 
 ROM Firmware Images (<plt>_<cfg>.rom)
 -------------------------------------
@@ -33,15 +32,15 @@ ROM Firmware Images (<plt>_<cfg>.rom)
 The files with a ".rom" extension are binary images ready to program 
 into an appropriate PROM.  These files are named with the format 
 <plt>_<cfg>.rom. <plt> refers to the primary platform such as Zeta, 
-N8, Mark IV, etc.  <cfg> refers to the specific configuration.  When 
-released, there will be a standard configuration ("std") for each 
+N8, Mark IV, etc.  <cfg> refers to the specific configuration.  In 
+general, there will be a standard configuration ("std") for each 
 platform.  So, for example, the file called MK4_std.rom is a ROM 
 image for the Mark IV with the standard configuration. If a custom 
 configuration called "custom" is created and built, a new file called 
 MK4_custom.rom will be added to this directory.
 
 Documentation of the pre-built ROM Images is contained in the 
-RomList.txt file.
+RomList.txt file in this directory.
 
 ROM Executable Images (<plt>_<cfg>.com)
 ---------------------------------------
@@ -54,6 +53,11 @@ be copied to a working system and run like a normal application.
 When run on the target system, they install in RAM just like they had 
 been programmed into the ROM.  This allows a new ROM build to be 
 tested without reprogramming the actual ROM.
+
+WARNING: In a few cases the .com file is too big to load.  If you get 
+a message like "Full" or "BAD LOAD" when trying to load one of the 
+.com files, it is too big.  In these cases, you will not be able to 
+test the ROM prior to programming it.
 
 ROM Binary Images (<plt>_<cfg>.img)
 -----------------------------------
@@ -84,7 +88,9 @@ RomWBW-based system.
 Essentially, these files contain prepared floppy and hard disk images 
 with a large set of programs and related files.  By copying the 
 contents of these files to appropriate media as described below, you 
-can quickly create ready-to-use media.
+can quickly create ready-to-use media.  Win32DiskImager or
+RawWriteWin can be used to copy images directly to media.  These
+programs are included in the RomWBW Tools directory.
 
 The fd*.img files are floppy disk images.  They are sized for 1.44MB 
 floppy media and can be copied to actual floppy disks using 
