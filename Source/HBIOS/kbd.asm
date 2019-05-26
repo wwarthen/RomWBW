@@ -674,10 +674,11 @@ KBD_DECNEW:	; START NEW KEYPRESS (CLEAR ALL STATUS BITS)
 	LD	(KBD_STATUS),A		; CLEAR STATUS
 	JP	KBD_DEC1		; RESTART THE ENGINE
 ;
-;__________________________________________________________________________________________________
-; MAPPING TABLES
+#IF (KBDKBLOUT == KBD_US)
 ;__________________________________________________________________________________________________
 ;
+; MAPPING TABLES US/ENGLISH
+;__________________________________________________________________________________________________
 KBD_MAPSTD:	; SCANCODE IS INDEX INTO TABLE TO RESULTANT LOOKUP KEYCODE
 	.DB	$FF,$E8,$FF,$E4,$E2,$E0,$E1,$EB,$FF,$E9,$E7,$E5,$E3,$09,'`',$FF
 	.DB	$FF,$B4,$B0,$FF,$B2,'q','1',$FF,$FF,$FF,'z','s','a','w','2',$FF
@@ -713,6 +714,54 @@ KBD_MAPEXT:	; PAIRS ARE [SCANCODE,KEYCODE] FOR EXTENDED SCANCODES
 KBD_MAPNUMPAD:	; KEYCODE TRANSLATION FROM NUMPAD RANGE TO STD ASCII/KEYCODES
 	.DB	$F3,$F7,$F5,$F8,$FF,$F9,$F2,$F6,$F4,$F0,$F1,$2F,$2A,$2D,$2B,$0D
 	.DB	$31,$32,$33,$34,$35,$36,$37,$38,$39,$30,$2E,$2F,$2A,$2D,$2B,$0D
+#ENDIF
+#IF (KBDKBLOUT == KBD_DE)
+;__________________________________________________________________________________________________
+;
+; MAPPING TABLES GERMAN
+;__________________________________________________________________________________________________
+;
+KBD_MAPSTD: ; SCANCODE IS INDEX INTO TABLE TO RESULTANT LOOKUP KEYCODE             ROW
+
+; Column 0   1   2   3   4   5   6   7   8   9   A   B   C   D   E   F		;	Special adjustments listed below
+      .DB   $FF,$E8,$FF,$E4,$E2,$E0,$E1,$EB,$FF,$E9,$E7,$E5,$E3,$09,'^',$FF     ;0	for German keyboard keys that give
+      .DB   $FF,$B4,$B0,$FF,$B2,'q','1',$FF,$FF,$FF,'y','s','a','w','2',$FF     ;1	different characters than are printed
+      .DB   $FF,'c','x','d','e','4','3',$FF,$FF,' ','v','f','t','r','5',$FF     ;2	on the keys.
+      .DB   $FF,'n','b','h','g','z','6',$FF,$FF,$FF,'m','j','u','7','8',$FF     ;3	'german key' --> 'new occupied with'
+      .DB   $FF,',','k','i','o','0','9',$FF,$FF,'.','-','l','[','p',$5C,$FF     ;4 	Assembler ERROR: '\'-->$5C ; 'ö'-->'['
+      .DB   $FF,$FF,'@',$FF,']','|',$FF,$FF,$BC,$B1,$0D,'+',$FF,'#',$FF,$FF     ;5	'ä'-->'@' ; 'ü'-->']'
+      .DB   $FF,'<',$FF,$FF,$FF,$FF,$08,$FF,$FF,$C0,$FF,$C3,$C6,'<',$FF,$FF     ;6
+      .DB   $C9,$CA,$C1,$C4,$C5,$C7,$1B,$BD,$FA,$CE,$C2,$CD,$CC,$C8,$BE,$FF     ;7
+      .DB   $FF,$FF,$FF,$E6,$EC                                                 ;8
+ 
+KBD_MAPSIZ  .EQU  ($ - KBD_MAPSTD)
+;
+KBD_MAPSHIFT:     ; SCANCODE IS INDEX INTO TABLE TO RESULTANT LOOKUP KEYCODE WHEN SHIFT ACTIVE
+
+      .DB   $FF,$E8,$FF,$E4,$E2,$E0,$E1,$EB,$FF,$E9,$E7,$E5,$E3,$09,'~',$FF        ; '°' --> '~'
+      .DB   $FF,$B4,$B0,$FF,$B2,'Q','!',$FF,$FF,$FF,'Y','S','A','W',$22,$FF       
+      .DB   $FF,'C','X','D','E','$',$20,$FF,$FF,' ','V','F','T','R','%',$FF        ; '§'-->$20; '§'=Paragraph not used in CP/M
+      .DB   $FF,'N','B','H','G','Z','&',$FF,$FF,$FF,'M','J','U','/','(',$FF
+      .DB   $FF,';','K','I','O','=',')',$FF,$FF,':','_','L','{','P','?',$FF        ; 'Ö'-->'{'
+      .DB   $FF,$FF,'@',$FF,'}','`',$FF,$FF,$BC,$B1,$0D,'*',$FF,$27,$FF,$FF        ; 'Ä'-->'@' ; 'Ü'-->'}'
+      .DB   $FF,'>',$FF,$FF,$FF,$FF,$08,$FF,$FF,$D0,$FF,$D3,$D6,'>',$FF,$FF
+      .DB   $D9,$DA,$D1,$D4,$D5,$D7,$1B,$BD,$FA,$DE,$D2,$DD,$DC,$D8,$BE,$FF
+      .DB   $FF,$FF,$FF,$E6,$EC
+
+KBD_MAPEXT: ; PAIRS ARE [SCANCODE,KEYCODE] FOR EXTENDED SCANCODES
+      .DB   $11,$B5,    $14,$B3,    $1F,$B6,    $27,$B7
+      .DB   $2F,$EF,    $37,$FA,    $3F,$FB,    $4A,$CB
+      .DB   $5A,$CF,    $5E,$FC,    $69,$F3,    $6B,$13           ; All keys listed below are customized for "Wordstar".
+      .DB   $6C,$F2,    $70,$16,    $71,$07,    $72,$18           ; n.a. , Toggle Insert/Overwrite , Del Char , Cursor down
+      .DB   $74,$04,    $75,$05,    $7A,$1A,    $7C,$ED           ; Cursor right , Cursor up , Page down
+      .DB   $7D,$17,    $7E,$FD,    $00,$00                      ; Page up , n.a. , END KBD_MAPEXT (Pairs end)
+;
+KBD_MAPNUMPAD:    ; KEYCODE TRANSLATION FROM NUMPAD RANGE TO STD ASCII/KEYCODES
+
+      .DB   $F3,$F7,$F5,$F8,$FF,$F9,$F2,$F6,$F4,$F0,$F1,$2F,$2A,$2D,$2B,$0D
+      .DB   $31,$32,$33,$34,$35,$36,$37,$38,$39,$30,$2E,$2F,$2A,$2D,$2B,$0D
+;
+#ENDIF
 ;
 ;__________________________________________________________________________________________________
 ; KEYCODE VALUES RETURNED BY THE DECODER
