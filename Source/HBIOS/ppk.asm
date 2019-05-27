@@ -862,12 +862,12 @@ PPK_MAPSHIFT:     ; SCANCODE IS INDEX INTO TABLE TO RESULTANT LOOKUP KEYCODE WHE
       .DB   $FF,$FF,$FF,$E6,$EC
 
 PPK_MAPEXT: ; PAIRS ARE [SCANCODE,KEYCODE] FOR EXTENDED SCANCODES
-      .DB   $11,$B5,    $14,$B3,    $1F,$B6,    $27,$B7
-      .DB   $2F,$EF,    $37,$FA,    $3F,$FB,    $4A,$CB
-      .DB   $5A,$CF,    $5E,$FC,    $69,$F3,    $6B,$13           ; All keys listed below are customized for "Wordstar".
-      .DB   $6C,$F2,    $70,$16,    $71,$07,    $72,$18           ; n.a. , Toggle Insert/Overwrite , Del Char , Cursor down
-      .DB   $74,$04,    $75,$05,    $7A,$1A,    $7C,$ED           ; Cursor right , Cursor up , Page down
-      .DB   $7D,$17,    $7E,$FD,    $00,$00                      ; Page up , n.a. , END PPK_MAPEXT (Pairs end)
+	.DB         $11,$B5,	$14,$B3,	$1F,$B6,	$27,$B7
+	.DB         $2F,$EF,	$37,$FA,	$3F,$FB,	$4A,$CB		; All keys listed below are customized for Wordstar.
+	.DB         $5A,$CF,	$5E,$FC,	$69,$06,	$6B,$13		; n.a , n.a , word right , n.a.
+	.DB         $6C,$01,	$70,$16,	$71,$07,	$72,$18		; Word left , Toggle Insert/Overwrite , Del Char , Cursor down
+	.DB         $74,$04,	$75,$05,	$7A,$1A,	$7C,$ED		; Cursor right , Cursor up , Page down
+	.DB         $7D,$17,	$7E,$FD,	$00,$00				; Page up , n.a. , END PPK_MAPEXT (Pairs end)
 ;
 PPK_MAPNUMPAD:    ; KEYCODE TRANSLATION FROM NUMPAD RANGE TO STD ASCII/KEYCODES
 
