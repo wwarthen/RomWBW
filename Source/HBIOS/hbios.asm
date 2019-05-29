@@ -945,10 +945,12 @@ HB_START1:				; BNKCALL ARRIVES HERE, BUT NOW RUNNING IN RAM BANK
 	LD	HL,MSG_HBVER
 	CALL	DSKY_SHOWSEG
 #ENDIF
-
-#IF	(WBWDEBUG=USEMIO)		; BUFFER OUTPUT UNTIL
+;
+#IF (WBWDEBUG == USEMIO)		; BUFFER OUTPUT UNTIL
 	CALL	MIO_INIT		; WE GET TO BOOT MESSAGE
 #ENDIF
+;
+#IF 0
 ;
 ; TEST DEBUG ***************************************************************************************
 ;
@@ -959,6 +961,7 @@ HB_START1:				; BNKCALL ARRIVES HERE, BUT NOW RUNNING IN RAM BANK
 ;
 ; TEST DEBUG ***************************************************************************************
 ;
+#ENDIF
 ;
 ; DISCOVER CPU TYPE
 ;
@@ -1031,13 +1034,16 @@ HB_CPU1:
 ;
 ; PRE-CONSOLE INITIALIZATION
 ;
-
+#IF 0
+;
 ; TEST DEBUG ***************************************************************************************
 ;
 	CALL	NEWLINE
 	CALL	REGDMP
 ;
 ; TEST DEBUG ***************************************************************************************
+;
+#ENDIF
 ;
 #IF (ASCIENABLE)
 	CALL	ASCI_PREINIT
@@ -1054,12 +1060,17 @@ HB_CPU1:
 #IF (PIO_4P | PIO_ZP)
 	CALL	PIO_PREINIT
 #ENDIF
+;
+#IF 0
+;
 ; TEST DEBUG ***************************************************************************************
 ;
 	CALL	NEWLINE
 	CALL	REGDMP
 ;
 ; TEST DEBUG ***************************************************************************************
+;
+#ENDIF
 ;
 	DIAG(%01111111)
 ;
@@ -1070,7 +1081,7 @@ HB_CPU1:
 	XOR	A			; INITIALLY, FIRST SERIAL UNIT IS CONSOLE
 	LD	(CB_CONDEV),A		; SAVE IT, ACTIVATES CONSOLE ON HBIOS
 
-#IF	(WBWDEBUG=USEMIO)		; OUTPUT ANY CACHED DEBUG TEXT
+#IF (WBWDEBUG == USEMIO)		; OUTPUT ANY CACHED DEBUG TEXT
 	LD	HL,MIOOUTPTR
 	LD	E,(HL)
 	INC	HL
@@ -1088,6 +1099,8 @@ NXTMIO:	LD	A,(HL)
 ;	CALL	WRITESTR		; WRITESTR WILL WORK WILL ONLY PRINT UP TO FIRST $
 #ENDIF
 ;
+#IF 0
+;
 ; TEST DEBUG ***************************************************************************************
 ;
 	CALL	NEWLINE2
@@ -1096,6 +1109,8 @@ NXTMIO:	LD	A,(HL)
 	CALL	DUMP_BUFFER
 ;
 ; TEST DEBUG ***************************************************************************************
+;
+#ENDIF
 ;
 ; ANNOUNCE HBIOS
 ;
@@ -2762,10 +2777,10 @@ SIZ_PIO		.EQU	$ - ORG_PIO
 #INCLUDE "bcd.asm"
 #INCLUDE "decode.asm"
 ;
-#IF	WBWDEBUG=USEXIO
+#IF (WBWDEBUG == USEXIO)
 #INCLUDE "xio.asm"
 #ENDIF
-#IF	WBWDEBUG=USEMIO
+#IF (WBWDEBUG == USEMIO)
 #INCLUDE "mio.asm"
 #ENDIF
 ;
@@ -3560,11 +3575,12 @@ COUT:
 ;
 COUT1:
 ;	
-#IF	WBWDEBUG=USEXIO
+#IF (WBWDEBUG == USEXIO)
 	LD	A,E			; GET OUTPUT CHAR BACK TO ACCUM
 	CALL	XIO_OUTC		; OUTPUT VIA XIO
 #ENDIF
-#IF	WBWDEBUG=USEMIO
+;
+#IF (WBWDEBUG == USEMIO)
 	LD	A,E
 	CALL	MIO_OUTC		; OUTPUT VIA MIO
 #ENDIF
@@ -3598,10 +3614,11 @@ CIN:
 ;
 CIN1:
 ;
-#IF	WBWDEBUG=USEXIO
+#IF (WBWDEBUG == USEXIO)
 	CALL	XIO_INC			; GET CHAR
 #ENDIF
-#IF	WBWDEBUG=USEMIO
+;
+#IF (WBWDEBUG == USEMIO)
 	CALL	MIO_INC			; GET CHAR
 #ENDIF
 ;
@@ -3633,10 +3650,11 @@ CST:
 ;
 CST1:
 ;
-#IF	WBWDEBUG=USEXIO
+#IF (WBWDEBUG == USEXIO)
 	CALL	XIO_IST			; GET STATUS
 #ENDIF
-#IF	WBWDEBUG=USEMIO
+;
+#IF (WBWDEBUG == USEMIO)
 	CALL	MIO_IST			; GET STATUS
 #ENDIF
 ;
