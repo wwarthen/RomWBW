@@ -30,6 +30,7 @@ Version 2.9.1
 - WBW: Added beta version of FAT filesystem utility (copy, dir, del, ren)
 - SCC: Added support for native memory addressing on Z180-based RC2014
 - PMS: Dynamically discover and display processor type at boot
+- J?L: Added German keyboard support to PPK and KBD drivers
 
 Version 2.9.0
 -------------
