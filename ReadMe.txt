@@ -7,7 +7,7 @@
 ***********************************************************************
 
 Wayne Warthen (wwarthen@gmail.com)
-Version 2.9.1-pre.16, 2019-05-25
+Version 2.9.1, 2019-06-03
 https://www.retrobrewcomputers.org/
 
 RomWBW is a ROM-based implementation of CP/M-80 2.2 and Z-System for 
@@ -145,7 +145,7 @@ few things that UNA does not support:
 
     - Floppy Drives
     - Video/Keyboard/Terminal Emulation
-    - Zeta 1 and N8 systems
+    - Zeta 1, N8, and RC2014 systems
     - Some older support boards
     - RC2014 systems
     - Easy Z80 systems
@@ -216,7 +216,7 @@ Current inclusions are:
 	Monitor     - Z80 debug monitor with hexload capability.
 	Forth       - Brad Rodriguez's ANS compatible Forth.
 	Basic	    - Nascom 8K BASIC.
-	Tasty BASIC	- Dimitri Theulings Tiny BASIC implementation.
+	Tasty BASIC - Dimitri Theulings Tiny BASIC implementation.
 	
 	Note: To exit type B in Monitor and BYE in other applications.
 	
