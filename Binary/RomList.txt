@@ -50,14 +50,19 @@ ROM on-the-fly.  It is an excellent way to test a ROM Image before
 actually burning it.  Similarly, the .img files can be loaded using 
 the UNA FAT loader for testing.
 
-All of the standard ROM Images are configured with:
+WARNING: In a few cases the .com file is too big to load.  If you get 
+a message like "Full" or "BAD LOAD" when trying to load one of the 
+.com files, it is too big.  In these cases, you will not be able to 
+test the ROM prior to programming it.
+
+All of the standard ROM Images are configured for:
  - 512KB ROM Disk
  - 512KB RAM Disk
  - 38.4Kbps baud serial console (*)
  - Auto-discovery of all serial ports
 
-* RC2014 & Easy Z80 serial port speed is determined by hardware
-  and is typically 115,200 baud.
+* RC2014 Z80 & Easy Z80 serial port speed is determined by hardware
+  and is typically 115,200 baud.  RC2014 Z180 is normal 38.4Kbps.
 
 All hard disk type devices (IDE, PPIDE, CF Card, SD Card) will be 
 automatically assigned two drive letters per device.  The drive 
