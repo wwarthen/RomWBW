@@ -19,6 +19,8 @@
 ;
 ;[2018/11/8] v1.2 PMS Add boot option. Code optimization.
 ;
+;[2019/06/21] v1.3 Finalized RC2014 Z180 support.
+;
 ;
 ; Constants
 ;
@@ -30,7 +32,9 @@ mask_rst	.EQU	%00010000	; De-activate RTC reset line
 PORT_SBC	.EQU	$70		; RTC port for SBC/ZETA
 PORT_N8		.EQU	$88		; RTC port for N8
 PORT_MK4	.EQU	$8A		; RTC port for MK4
-PORT_RC		.EQU	$C0		; RTC port for RC2014
+PORT_RCZ80	.EQU	$C0		; RTC port for RC2014
+PORT_RCZ180	.EQU	$0C		; RTC port for RC2014
+PORT_EZZ80	.EQU	$C0		; RTC port for EZZ80 (actually does not have one!!!)
 
 BDOS		.EQU	5		; BDOS invocation vector
 
@@ -1066,14 +1070,18 @@ HINIT:
 	LD	DE,PLT_MK4
 	CP	$05		; Mark IV
 	JR	Z,RTC_INIT2
-	LD	C,PORT_RC
-	LD	DE,PLT_RC
-	CP	$07		; RC2014
+	LD	C,PORT_RCZ80
+	LD	DE,PLT_RCZ80
+	CP	$07		; RC2014 w/ Z80
 	JR	Z,RTC_INIT2
+	LD	C,PORT_RCZ180
+	LD	DE,PLT_RCZ180
 	CP	$08		; RC2014 w/ Z180
 	JR	Z,RTC_INIT2
-	CP	$09		; Easy Z80
-	JR	Z,RTC_INIT2
+	;LD	C,PORT_EZZ80
+	;LD	DE,PLT_EZZ80
+	;CP	$09		; Easy Z80
+	;JR	Z,RTC_INIT2
 ;
 	; Unknown platform
 	LD	DE,PLTERR	; BIOS error message
@@ -1288,8 +1296,8 @@ RTC_TOP_LOOP_DELAY:
 	JP	RTC_TOP_LOOP_1
 	
 RTC_TOP_LOOP_BOOT:
-	LD		A,BID_BOOT		; BOOT BANK
-	LD		HL,0			; ADDRESS ZERO
+	LD	A,BID_BOOT		; BOOT BANK
+	LD	HL,0			; ADDRESS ZERO
 	CALL	HB_BNKCALL		; DOES NOT RETURN
 
 RTC_TOP_LOOP_CHARGE:
@@ -1537,7 +1545,7 @@ TESTING_BIT_DELAY_OVER:
 
 RTC_HELP_MSG:
 	.DB	0Ah, 0Dh		; line feed and carriage return
-	.TEXT	"RTC: Version 1.2"
+	.TEXT	"RTC: Version 1.3"
 	.DB	0Ah, 0Dh		; line feed and carriage return
 	.TEXT	"Commands: E)xit T)ime st(A)rt S)et R)aw L)oop C)harge N)ocharge D)elay I)nit G)et P)ut B)oot H)elp"
 	.DB	0Ah, 0Dh		; line feed and carriage return
@@ -1650,15 +1658,17 @@ RTC_GET_BUFFER:
 	.DB	0Ah, 0Dh		; line feed and carriage return
 	.DB	"$"			; line terminator
 
-BIOERR	.TEXT	"\r\nUnknown BIOS, aborting...\r\n$"
-PLTERR	.TEXT	"\r\n\r\nUnknown hardware platform, aborting...\r\n$"
-UBERR	.TEXT	"\r\nUNA UBIOS is not currently supported, aborting...\r\n$"
-HBTAG	.TEXT	"RomWBW HBIOS$"
-UBTAG	.TEXT	"UNA UBIOS"
-PLT_SBC	.TEXT	", SBC/Zeta RTC Latch Port 0x70\r\n$"
-PLT_N8	.TEXT	", N8 RTC Latch Port 0x88\r\n$"
-PLT_MK4	.TEXT	", Mark 4 RTC Latch Port 0x8A\r\n$"
-PLT_RC	.TEXT	", RC2014 RTC Module Latch Port 0xC0\r\n$"
+BIOERR		.TEXT	"\r\nUnknown BIOS, aborting...\r\n$"
+PLTERR		.TEXT	"\r\n\r\nUnknown/unsupported hardware platform, aborting...\r\n$"
+UBERR		.TEXT	"\r\nUNA UBIOS is not currently supported, aborting...\r\n$"
+HBTAG		.TEXT	"RomWBW HBIOS$"
+UBTAG		.TEXT	"UNA UBIOS"
+PLT_SBC		.TEXT	", SBC/Zeta RTC Latch Port 0x70\r\n$"
+PLT_N8		.TEXT	", N8 RTC Latch Port 0x88\r\n$"
+PLT_MK4		.TEXT	", Mark 4 RTC Latch Port 0x8A\r\n$"
+PLT_RCZ80	.TEXT	", RC2014 Z80 RTC Module Latch Port 0xC0\r\n$"
+PLT_RCZ180	.TEXT	", RC2014 Z180 RTC Module Latch Port 0x0C\r\n$"
+PLT_EZZ80	.TEXT	", Easy Z80 RTC Module Latch Port 0xC0\r\n$"
 
 ;
 ; Generic FOR-NEXT loop algorithm

@@ -1,4 +1,5 @@
 ; The purpose of this file is to define generic symbols and to include
+; The purpose of this file is to define generic symbols and to include
 ; the appropriate std-*.inc file to bring in platform specifics.
 
 ; There are several classes of systems supported by SBC.
@@ -145,6 +146,7 @@ SDMODE_PPI	.EQU	4		; PPISD MINI BOARD
 SDMODE_UART	.EQU	5		; SD INTERFACE VIA UART
 SDMODE_DSD	.EQU	6		; DUAL SD
 SDMODE_MK4	.EQU	7		; MARK IV
+SDMODE_SC126	.EQU	8		; SC126
 ;
 ; SERIAL DEVICE CONFIGURATION CONSTANTS
 ;
