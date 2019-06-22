@@ -1,3 +1,9 @@
+Version 2.9.2
+-------------
+- PMS: Fixed DS1210-related issue resulting in "Invalid BIOS" errors
+- SCC: Support for SC126 motherboard
+- WBW: Enable Auto-CTS/DCD in SIO driver for pacing output data
+
 Version 2.9.1
 -------------
 - E?B: Added support for RC2014 RTC
