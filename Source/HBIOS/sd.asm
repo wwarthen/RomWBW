@@ -9,14 +9,14 @@
 ;    - TEST XC CARD TYPE DETECTION
 ;    - TRY TO GET INIT TO FAIL, REMOVE DELAYS AT START OF GOIDLE?
 ;
-;------------------------------------------------------------------------------
-; SD Signal	Active	JUHA	N8	CSIO	PPI	UART	DSD	MK4
-; ------------	------- ------- ------- ------- ------- ------- ------- -------
-; CS (DAT3)	LO ->	RTC:2	RTC:2	RTC:2	~PC:4	~MCR:3	OPR:2	MK4_SD:2
-; CLK		HI ->	RTC:1	RTC:1	N/A	PC:1	~MCR:2	OPR:1	N/A
-; DI (CMD)	HI ->	RTC:0	RTC:0	N/A	PC:0	~MCR:0	OPR:0	N/A
-; DO (DAT0)	HI ->	RTC:7	RTC:6	N/A	PB:7	~MSR:5	OPR:0	N/A
-;------------------------------------------------------------------------------
+;--------------------------------------------------------------------------------------
+; SD Signal	Active	JUHA	N8	CSIO	PPI	UART	DSD	MK4      SC126
+; ------------	------- ------- ------- ------- ------- ------- ------- -------	------- 
+; CS (DAT3)	LO ->	RTC:2	RTC:2	RTC:2	~PC:4	~MCR:3	OPR:2	SD:2	~RTC:2	
+; CLK		HI ->	RTC:1	RTC:1	CSIO	PC:1	~MCR:2	OPR:1	CSIO	CSIO
+; DI (CMD)	HI ->	RTC:0	RTC:0	CSIO	PC:0	~MCR:0	OPR:0	CSIO	CSIO
+; DO (DAT0)	HI ->	RTC:7	RTC:6	CSIO	PB:7	~MSR:5	OPR:0	CSIO	CSIO
+;--------------------------------------------------------------------------------------
 ;
 ; CS = CHIP SELECT (AKA DAT3 FOR NON-SPI MODE)
 ; CLK = CLOCK
@@ -158,7 +158,7 @@ SD_CNTR		.EQU	Z180_CNTR
 SD_TRDR		.EQU	Z180_TRDR
 #ENDIF
 ;
-#IF (SDMODE == SDMODE_SC126)		; N8-2312
+#IF (SDMODE == SDMODE_SC126)		; SC126
 SD_DEVCNT	.EQU	1		; NUMBER OF PHYSICAL UNITS (SOCKETS)
 SD_OPRREG	.EQU	RTC		; USES RTC LATCHES FOR OPERATION
 SD_OPRDEF	.EQU	%00001101	; QUIESCENT STATE
