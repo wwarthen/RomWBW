@@ -1044,9 +1044,6 @@ HB_CPU1:
 	CALL	FILL			; DO IT
 ;
 	DIAG(%00111111)
-;
-; PRE-CONSOLE INITIALIZATION
-;
 #IF 0
 ;
 ; TEST DEBUG ***************************************************************************************
@@ -1058,21 +1055,28 @@ HB_CPU1:
 ;
 #ENDIF
 ;
-#IF (ASCIENABLE)
-	CALL	ASCI_PREINIT
-#ENDIF
-#IF (UARTENABLE)
-	CALL	UART_PREINIT
-#ENDIF
-#IF (SIOENABLE)
-	CALL	SIO_PREINIT
-#ENDIF
-#IF (ACIAENABLE)
-	CALL	ACIA_PREINIT
-#ENDIF
-#IF (PIO_4P | PIO_ZP)
-	CALL	PIO_PREINIT
-#ENDIF
+; PRE-CONSOLE INITIALIZATION
+;
+	LD	A,FORCECON		; CALCULATE PRE-INIT TABLE
+	RLCA				; ENTRY THAT WE WANT TO
+	LD	DE,(PC_INITTBL)		; EXECUTE FIRST
+	LD	HL,PC_INITTBL
+	PUSH	HL
+	PUSH	DE
+	PUSH	HL
+	CALL	ADDHLA
+	POP	DE			; PLACE IT AT THE TOP OF THE
+	PUSH	HL			; TABLE BY SWAPPING IT
+	LDI				; WITH THE FIRST (DUMMY)
+	LDI				; ENTRY
+	POP	HL
+	POP	DE
+	LD	(HL),D
+	INC	HL
+	LD	(HL),E
+	LD	B,PC_INITTBLLEN
+	POP	DE
+	CALL	CALLLIST		; PROCESS THE PRE-INIT CALL TABLE
 ;
 #IF 0
 ;
@@ -1437,19 +1441,7 @@ HB_PCPU:
 	CALL	NEWLINE
 	LD	B,HB_INITTBLLEN
 	LD	DE,HB_INITTBL
-INITSYS1:
-	LD	A,(DE)
-	LD	L,A
-	INC	DE
-	LD	A,(DE)
-	LD	H,A
-	INC	DE
-	PUSH	DE
-	PUSH	BC
-	CALL	JPHL
-	POP	BC
-	POP	DE
-	DJNZ	INITSYS1
+	CALL	CALLLIST
 ;
 ; RECORD HEAP CURB AT THE CURRENT VALUE OF HEAP TOP.  HEAP CURB
 ; MARKS THE POINT IN THE HEAP AFTER WHICH MEMORY IS RELEASED
@@ -1532,6 +1524,50 @@ INITSYS3:
 ;
 	RET
 ;
+;	CALL A LIST OF ROUTINES POINTED TO BY DE OF LENGTH B.
+;
+CALLLIST:
+	LD	A,(DE)
+	LD	L,A
+	INC	DE
+	LD	A,(DE)
+	LD	H,A
+	INC	DE
+	PUSH	DE
+	PUSH	BC
+	CALL	JPHL
+	POP	BC
+	POP	DE
+	DJNZ	CALLLIST
+CALLDUMMY:
+	RET
+;
+;==================================================================================================
+;   TABLE OF PRE-CONSOLE INITIALIZATION ENTRY POINTS
+;==================================================================================================
+
+PC_INITTBL:
+	.DW	CALLDUMMY	; RESERVED FOR FORCING PRIMARY CONSOLE
+#IF (ASCIENABLE)
+	.DW	ASCI_PREINIT
+#ENDIF
+#IF (UARTENABLE)
+	.DW	UART_PREINIT
+#ENDIF
+#IF (SIOENABLE)
+	.DW	SIO_PREINIT
+#ENDIF
+#IF (ACIAENABLE)
+	.DW	ACIA_PREINIT
+#ENDIF
+#IF (PIO_4P | PIO_ZP)
+	.DW	PIO_PREINIT
+#ENDIF
+#IF (UFENABLE)
+	.DW	UF_PREINIT
+#ENDIF
+PC_INITTBLLEN	.EQU	(($ - PC_INITTBL) / 2)
+
 ;==================================================================================================
 ;   TABLE OF INITIALIZATION ENTRY POINTS
 ;==================================================================================================
@@ -1608,6 +1644,9 @@ HB_INITTBL:
 #ENDIF
 #IF (PIO_4P | PIO_ZP)
 	.DW	PIO_INIT
+#ENDIF
+#IF (UFENABLE)
+	.DW	UF_INIT
 #ENDIF
 ;
 HB_INITTBLLEN	.EQU	(($ - HB_INITTBL) / 2)
@@ -2702,7 +2741,7 @@ SIZ_MD		.EQU	$ - ORG_MD
 		.ECHO	SIZ_MD
 		.ECHO	" bytes.\n"
 #ENDIF
-
+;
 #IF (FDENABLE)
 ORG_FD		.EQU	$
   #INCLUDE "fd.asm"
@@ -2711,7 +2750,7 @@ SIZ_FD		.EQU	$ - ORG_FD
 		.ECHO	SIZ_FD
 		.ECHO	" bytes.\n"
 #ENDIF
-
+;
 #IF (RFENABLE)
 ORG_RF	.EQU	$
   #INCLUDE "rf.asm"
@@ -2720,7 +2759,7 @@ SIZ_RF	.EQU	$ - ORG_RF
 		.ECHO	SIZ_RF
 		.ECHO	" bytes.\n"
 #ENDIF
-
+;
 #IF (IDEENABLE)
 ORG_IDE		.EQU	$
   #INCLUDE "ide.asm"
@@ -2729,7 +2768,7 @@ SIZ_IDE		.EQU	$ - ORG_IDE
 		.ECHO	SIZ_IDE
 		.ECHO	" bytes.\n"
 #ENDIF
-
+;
 #IF (PPIDEENABLE)
 ORG_PPIDE	.EQU	$
   #INCLUDE "ppide.asm"
@@ -2738,7 +2777,7 @@ SIZ_PPIDE	.EQU	$ - ORG_PPIDE
 		.ECHO	SIZ_PPIDE
 		.ECHO	" bytes.\n"
 #ENDIF
-
+;
 #IF (SDENABLE)
 ORG_SD		.EQU	$
   #INCLUDE "sd.asm"
@@ -2747,7 +2786,7 @@ SIZ_SD		.EQU	$ - ORG_SD
 		.ECHO	SIZ_SD
 		.ECHO	" bytes.\n"
 #ENDIF
-
+;
 #IF (HDSKENABLE)
 ORG_HDSK	.EQU	$
   #INCLUDE "hdsk.asm"
@@ -2756,7 +2795,7 @@ SIZ_HDSK	.EQU	$ - ORG_HDSK
 		.ECHO	SIZ_HDSK
 		.ECHO	" bytes.\n"
 #ENDIF
-
+;
 #IF (TERMENABLE)
 ORG_TERM	.EQU	$
   #INCLUDE "term.asm"
@@ -2783,6 +2822,7 @@ SIZ_AY	.EQU	$ - ORG_AY
 		.ECHO	SIZ_AY
 		.ECHO	" bytes.\n"
 #ENDIF
+;
 #IF (PIO_4P | PIO_ZP | PPI_SBC)
 ORG_PIO		.EQU	$
   #INCLUDE "pio.asm"
@@ -2791,7 +2831,15 @@ SIZ_PIO		.EQU	$ - ORG_PIO
 		.ECHO	SIZ_PIO
 		.ECHO	" bytes.\n"
 #ENDIF
-
+;
+#IF (UFENABLE)
+ORG_UF	.EQU	$
+  #INCLUDE "usbfifo.asm"
+SIZ_UF	.EQU	$ - ORG_UF
+		.ECHO	"USB-FIFO occupies "
+		.ECHO	SIZ_UF
+		.ECHO	" bytes.\n"
+#ENDIF
 ;
 #DEFINE USEDELAY
 #INCLUDE "util.asm"
