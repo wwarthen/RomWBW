@@ -2741,7 +2741,7 @@ SIZ_MD		.EQU	$ - ORG_MD
 		.ECHO	SIZ_MD
 		.ECHO	" bytes.\n"
 #ENDIF
-
+;
 #IF (FDENABLE)
 ORG_FD		.EQU	$
   #INCLUDE "fd.asm"
@@ -2750,7 +2750,7 @@ SIZ_FD		.EQU	$ - ORG_FD
 		.ECHO	SIZ_FD
 		.ECHO	" bytes.\n"
 #ENDIF
-
+;
 #IF (RFENABLE)
 ORG_RF	.EQU	$
   #INCLUDE "rf.asm"
@@ -2759,7 +2759,7 @@ SIZ_RF	.EQU	$ - ORG_RF
 		.ECHO	SIZ_RF
 		.ECHO	" bytes.\n"
 #ENDIF
-
+;
 #IF (IDEENABLE)
 ORG_IDE		.EQU	$
   #INCLUDE "ide.asm"
@@ -2768,7 +2768,7 @@ SIZ_IDE		.EQU	$ - ORG_IDE
 		.ECHO	SIZ_IDE
 		.ECHO	" bytes.\n"
 #ENDIF
-
+;
 #IF (PPIDEENABLE)
 ORG_PPIDE	.EQU	$
   #INCLUDE "ppide.asm"
@@ -2777,7 +2777,7 @@ SIZ_PPIDE	.EQU	$ - ORG_PPIDE
 		.ECHO	SIZ_PPIDE
 		.ECHO	" bytes.\n"
 #ENDIF
-
+;
 #IF (SDENABLE)
 ORG_SD		.EQU	$
   #INCLUDE "sd.asm"
@@ -2786,7 +2786,7 @@ SIZ_SD		.EQU	$ - ORG_SD
 		.ECHO	SIZ_SD
 		.ECHO	" bytes.\n"
 #ENDIF
-
+;
 #IF (HDSKENABLE)
 ORG_HDSK	.EQU	$
   #INCLUDE "hdsk.asm"
@@ -2795,7 +2795,7 @@ SIZ_HDSK	.EQU	$ - ORG_HDSK
 		.ECHO	SIZ_HDSK
 		.ECHO	" bytes.\n"
 #ENDIF
-
+;
 #IF (TERMENABLE)
 ORG_TERM	.EQU	$
   #INCLUDE "term.asm"
@@ -2822,6 +2822,7 @@ SIZ_AY	.EQU	$ - ORG_AY
 		.ECHO	SIZ_AY
 		.ECHO	" bytes.\n"
 #ENDIF
+;
 #IF (PIO_4P | PIO_ZP | PPI_SBC)
 ORG_PIO		.EQU	$
   #INCLUDE "pio.asm"
@@ -2830,7 +2831,15 @@ SIZ_PIO		.EQU	$ - ORG_PIO
 		.ECHO	SIZ_PIO
 		.ECHO	" bytes.\n"
 #ENDIF
-
+;
+#IF (UFENABLE)
+ORG_UF	.EQU	$
+  #INCLUDE "usbfifo.asm"
+SIZ_UF	.EQU	$ - ORG_UF
+		.ECHO	"USB-FIFO occupies "
+		.ECHO	SIZ_UF
+		.ECHO	" bytes.\n"
+#ENDIF
 ;
 #DEFINE USEDELAY
 #INCLUDE "util.asm"
