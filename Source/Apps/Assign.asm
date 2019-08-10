@@ -20,6 +20,7 @@
 ; Change Log:
 ;   2016-03-21 [WBW] Updated for HBIOS 2.8
 ;   2016-04-08 [WBW] Determine key memory addresses dynamically
+;   2019-08-07 [WBW] Fixed DPB selection error
 ;_______________________________________________________________________________
 ;
 ; ToDo:
@@ -529,15 +530,21 @@ makdphuna1:	; handle ram/rom
 	ld	e,2		; otherwise, must be ram drive
 	jr	makdph0		; continue
 ;
-makdphwbw:	; determine appropriate dpb (WBW mode)
+makdphwbw:	; determine appropriate dpb (WBW mode, unit number in A)
 ;
+	ld	c,a		; unit number to C
+	ld	b,$17		; HBIOS: Report Device Info
+	rst	08		; call HBIOS, return w/ device type in D, physical unit in E
+	ld	a,d		; device type to A
+	cp	$00		; ram/rom?
+	jr	nz,makdph00	; if not, skip ahead to other types
+	ld	a,e		; physical unit number to A
 	ld	e,1		; assume rom
-	cp	$00+0		; rom?
+	cp	$00		; rom?
 	jr	z,makdph0	; yes, jump ahead
-	ld	e,2		; assume ram
-	cp	$00+1		; ram?
-	jr	z,makdph0	; yes, jump ahead
-	and	$F0		; ignore unit nibble now
+	ld	e,2		; otherwise ram
+	jr	makdph0		; jump ahead
+makdph00:	
 	ld	e,6		; assume floppy
 	cp	$10		; floppy?
 	jr	z,makdph0	; yes, jump ahead
@@ -580,27 +587,7 @@ makdph1:
 	dec	de		; ... prefix data (cks & als buf sizes)
 	call	makdph2		; handle cks buf, then fall thru for als buf
 	ret	nz		; bail out on error
-
-;makdph2:
-;	ex	de,hl		; point hl to cks/als size adr
-;	ld	c,(hl)		; bc := cks/als size
-;	inc	hl		; ... and bump
-;	ld	b,(hl)		; ... past
-;	inc	hl		; ... cks/als size
-;	ex	de,hl		; bc and hl roles restored
-;	ld	a,b		; check to see
-;	or	c		; ... if bc is zero
-;	jr	z,makdph3	; if zero, bypass alloc, use zero for address
-;	call	alloc		; alloc bc bytes, address returned in bc
-;	jp	nz,instovf	; handle overflow error
-;makdph3:
-;	ld	(hl),c		; save cks/als buf
-;	inc	hl		; ... address in
-;	ld	(hl),b		; ... dph and bump
-;	inc	hl		; ... to next dph entry	
-;	xor	a		; signal success
-;	ret
-
+;
 makdph2:
 	; DE = address of CKS or ALS buf to allocate
 	; HL = address of field in DPH to get allocated address
@@ -1701,10 +1688,10 @@ stack	.equ	$		; stack top
 ; Messages
 ;
 indent	.db	"   ",0
-msgban1	.db	"ASSIGN v1.0c for RomWBW CP/M 2.2, 21-Apr-2016",0
+msgban1	.db	"ASSIGN v1.0d for RomWBW CP/M 2.2, 08-Aug-2019",0
 msghb	.db	" (HBIOS Mode)",0
 msgub	.db	" (UBIOS Mode)",0
-msgban2	.db	"Copyright 2016, Wayne Warthen, GNU GPL v3",0
+msgban2	.db	"Copyright 2019, Wayne Warthen, GNU GPL v3",0
 msguse	.db	"Usage: ASSIGN D:[=[{D:|<device>[<unitnum>]:[<slicenum>]}]][,...]",13,10
 	.db	"  ex. ASSIGN           (display all active assignments)",13,10
 	.db	"      ASSIGN /?        (display version and usage)",13,10
