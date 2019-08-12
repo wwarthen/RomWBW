@@ -21,6 +21,8 @@
 ;
 ;[2019/06/21] v1.3 Finalized RC2014 Z180 support.
 ;
+;[2019/08/11] v1.4 Support SC126 platform.
+;
 ;
 ; Constants
 ;
@@ -34,6 +36,7 @@ PORT_N8		.EQU	$88		; RTC port for N8
 PORT_MK4	.EQU	$8A		; RTC port for MK4
 PORT_RCZ80	.EQU	$C0		; RTC port for RC2014
 PORT_RCZ180	.EQU	$0C		; RTC port for RC2014
+PORT_SC126	.EQU	$0C		; RTC port for SBC126
 PORT_EZZ80	.EQU	$C0		; RTC port for EZZ80 (actually does not have one!!!)
 
 BDOS		.EQU	5		; BDOS invocation vector
@@ -1078,6 +1081,10 @@ HINIT:
 	LD	DE,PLT_RCZ180
 	CP	$08		; RC2014 w/ Z180
 	JR	Z,RTC_INIT2
+	LD	C,PORT_SC126
+	LD	DE,PLT_SC126
+	CP	$0A		; SC126
+	JR	Z,RTC_INIT2
 	;LD	C,PORT_EZZ80
 	;LD	DE,PLT_EZZ80
 	;CP	$09		; Easy Z80
@@ -1545,7 +1552,7 @@ TESTING_BIT_DELAY_OVER:
 
 RTC_HELP_MSG:
 	.DB	0Ah, 0Dh		; line feed and carriage return
-	.TEXT	"RTC: Version 1.3"
+	.TEXT	"RTC: Version 1.4"
 	.DB	0Ah, 0Dh		; line feed and carriage return
 	.TEXT	"Commands: E)xit T)ime st(A)rt S)et R)aw L)oop C)harge N)ocharge D)elay I)nit G)et P)ut B)oot H)elp"
 	.DB	0Ah, 0Dh		; line feed and carriage return
@@ -1668,6 +1675,7 @@ PLT_N8		.TEXT	", N8 RTC Latch Port 0x88\r\n$"
 PLT_MK4		.TEXT	", Mark 4 RTC Latch Port 0x8A\r\n$"
 PLT_RCZ80	.TEXT	", RC2014 Z80 RTC Module Latch Port 0xC0\r\n$"
 PLT_RCZ180	.TEXT	", RC2014 Z180 RTC Module Latch Port 0x0C\r\n$"
+PLT_SC126	.TEXT	", SC126 Z180 RTC Module Latch Port 0x0C\r\n$"
 PLT_EZZ80	.TEXT	", Easy Z80 RTC Module Latch Port 0xC0\r\n$"
 
 ;

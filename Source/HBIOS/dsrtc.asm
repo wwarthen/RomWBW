@@ -71,7 +71,7 @@
 ; D4 WR	RTC_CE  RTC_CE  --	RTC_CE  RTC_CE  RTC_CE  
 ; D3 WR	NC      SPK     /RTC_CE	NC      NC      /SPI_CS2      
 ; D2 WR	NC      CLKHI   RTC_CLK	SPI_CS	SPI_CS	/SPI_CS1 
-; D1 WR	--      --	RTC_WE	SPI_CLK	NC	FS 
+; D1 WR	--      --	RTC_WE	SPI_CLK	NC	FS
 ; D0 WR	--	--	RTC_OUT	SPI_DI	NC	I2C_SCL    
 ;                       
 ; D7 RD	--	--	--	--	--	I2C_SDA	 

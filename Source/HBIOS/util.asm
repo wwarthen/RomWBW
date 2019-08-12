@@ -517,7 +517,7 @@ BYTE2BCD1:
 	POP	BC
 	RET
 
-#IF (PLATFORM != PLT_UNA)
+#IF (BIOS == BIOS_WBW)
 
 #IFDEF USEDELAY
 
@@ -543,7 +543,7 @@ DELAY:				; 17TS (FROM INVOKING CALL)	|
 DELAY1:				;				|
 	; --- LOOP = ((CPUSCL * 16) - 5) TS ------------+	|
 	DEC	A		; 4TS			|	|
-#IFDEF CPU_Z180			;			|	|
+#IF (CPUFAM == CPU_Z180)	;			|	|
 	OR	A		; +4TS FOR Z180		|	|
 #ENDIF				;			|	|
 	JR	NZ,DELAY1	; 12TS (NZ) / 7TS (Z)	|	|
@@ -574,7 +574,7 @@ VDELAY:				; 17TS (FROM INVOKING CALL)		|
 ;								|	|
 VDELAY1:			;				|	|
 	; --- INNER LOOP = ((CPUSCL * 16) - 5) TS ------+	|	|
-#IFDEF CPU_Z180			;			|	|	|
+#IF (CPUFAM == CPU_Z180)	;			|	|	|
 	OR	A		; +4TS FOR Z180		|	|	|
 #ENDIF				;			|	|	|
 	DEC	A		; 4TS			|	|	|
@@ -582,7 +582,7 @@ VDELAY1:			;				|	|
 	; ----------------------------------------------+	|	|
 ;								|	|
 	DEC	DE		; 6TS				|	|
-#IFDEF CPU_Z180			;				|	|
+#IF (CPUFAM == CPU_Z180)	;				|	|
 	OR	A		; +4TS FOR Z180			|	|
 #ENDIF				;				|	|
 	LD	A,D		; 4TS				|	|
@@ -610,7 +610,7 @@ LDELAY:
 ; CPU SCALER := MAX(1, (PHIMHZ - 2))
 ;
 DELAY_INIT:
-#IF (PLATFORM == PLT_UNA)
+#IF (BIOS == BIOS_UNA)
 	LD	C,$F8			; UNA BIOS GET PHI FUNCTION
 	RST	08			; RETURNS SPEED IN HZ IN DE:HL
 	LD	B,4			; DIVIDE MHZ IN DE:HL BY 100000H 
