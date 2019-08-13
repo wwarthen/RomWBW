@@ -19,17 +19,23 @@ param([string]$Platform = "", [string]$Config = "", [string]$RomSize = "512", [s
 # setup mechanism so that multiple configuration are not needed.  When building for UNA, the pre-built
 # UNA BIOS is simply imbedded, it is not built here.
 #
+$PlatformListZ80 = "SBC", "ZETA", "ZETA2", "RCZ80", "EZZ80", "UNA"
+$PlatformListZ180 = "N8", "MK4", "RCZ180", "SC126"
 
 #
 # Establish the build platform.  It may have been passed in on the command line.  Validate
 # $Platform and loop requesting a new value as long as it is not valid.  The valid platform
 # names are just hard-coded for now.
 #
+$PlatformList = $PlatformListZ80 + $PlatformListZ180
+$Prompt = "Platform ["
+ForEach ($PlatformName in $PlatformList) {$Prompt += $PlatformName + "|"}
+$Prompt = $Prompt.Substring(0, $Prompt.Length - 1) + "]"
 $Platform = $Platform.ToUpper()
 while ($true)
 {
-	if (($Platform -eq "SBC") -or ($Platform -eq "ZETA") -or ($Platform -eq "ZETA2") -or ($Platform -eq "RCZ80") -or ($Platform -eq "EZZ80") -or ($Platform -eq "RCZ180") -or ($Platform -eq "N8") -or ($Platform -eq "MK4") -or ($Platform -eq "UNA")) {break}
-	$Platform = (Read-Host -prompt "Platform [SBC|ZETA|ZETA2|RCZ80|EZZ80|RCZ180|N8|MK4|UNA]").Trim().ToUpper()
+	if ($PlatformList -contains $Platform) {break}
+	$Platform = (Read-Host -prompt $Prompt).Trim().ToUpper()
 }
 
 #
@@ -66,7 +72,8 @@ while ($true)
 # TASM should be invoked with the proper CPU type.  Below, the CPU type is inferred
 # from the platform.
 #
-if (($Platform -eq "N8") -or ($Platform -eq "MK4") -or ($Platform -eq "RCZ180")) {$CPUType = "180"} else {$CPUType = "80"}
+#if (($Platform -eq "N8") -or ($Platform -eq "MK4") -or ($Platform -eq "RCZ180") -or ($Platform -eq "SC126")) {$CPUType = "180"} else {$CPUType = "80"}
+if ($PlatformListZ180 -contains $Platform) {$CPUType = "180"} else {$CPUType = "80"}
 
 #
 # The $RomName variable determines the name of the image created by the script.  By default,
@@ -107,7 +114,7 @@ if ($Platform -eq "UNA") {$CBiosFile = '../CBIOS/cbios_una.bin'} else {$CBiosFil
 $RomApps = "assign","fdu","format","mode","osldr","rtc","survey","syscopy","sysgen","talk","timer","xm","inttest"
 
 ""
-"Building ${RomName}: ${ROMSize}KB ROM configuration ${Config} for Z${CPUType}..."
+"Building ${RomName} ${ROMSize}KB ROM configuration ${Config} for Z${CPUType}..."
 ""
 
 # Current date/time is queried here to be subsequently imbedded in image
@@ -146,7 +153,6 @@ Function Concat($InputFileList, $OutputFile)
 PLATFORM	.EQU		PLT_${Platform}		; HARDWARE PLATFORM
 ROMSIZE		.EQU		${ROMSize}		; SIZE OF ROM IN KB
 ;
-;#INCLUDE "${PlatformConfigFile}"
 #INCLUDE "${ConfigFile}"
 ;
 "@ | Out-File "build.inc" -Encoding ASCII

@@ -111,15 +111,18 @@ SERIALCMDLOOP:
 ;_____________________________________________________________________________
 ;
 INITIALIZE:
-#IF (PLATFORM == PLT_UNA)
+#IF (BIOS == BIOS_UNA)
 	; INSTALL UNA INVOCATION VECTOR FOR RST 08
 	LD	A,$C3		; JP INSTRUCTION
 	LD	(8),A		; STORE AT 0x0008
 	LD	HL,($FFFE)	; UNA ENTRY VECTOR
 	LD	(9),HL		; STORE AT 0x0009
-#ELSE
+#ENDIF
+
+#IF (BIOS == BIOS_WBW)
 	CALL	DELAY_INIT
 #ENDIF
+
 	RET
 ;
 ;__BOOT_______________________________________________________________________
@@ -128,7 +131,7 @@ INITIALIZE:
 ;_____________________________________________________________________________
 ;
 BOOT:
-#IF (PLATFORM == PLT_UNA)
+#IF (BIOS == BIOS_UNA)
 	LD	BC,$01FB		; UNA FUNC = SET BANK
 	LD	DE,0			; ROM BANK 0
 	CALL	$FFFD			; DO IT (RST 08 NOT SAFE HERE)
@@ -737,7 +740,7 @@ PRTSTRH:
 	LD	HL,TXT_MINIHELP
 	JP	PRTSTR
 ;
-#IF (PLATFORM == PLT_UNA)
+#IF (BIOS == BIOS_UNA)
 ;
 ;__COUT_______________________________________________________________________
 ;

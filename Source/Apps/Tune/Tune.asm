@@ -83,12 +83,18 @@ TYPMYM		.EQU	3		; FILTYP value for MYM sound file
 	; Use platform id to derive port addresses
 	LD	A,L			; Platform ID is still in L from above
 	LD	C,L			; Save platform id in C for now
-	LD	HL,$D0D8		; For RC2014, RSEL=D8, RDAT=D0
-	LD	DE,MSGRC		; Message for RC2014 platform
-	CP	7			; RC2014?
+	LD	HL,$D0D8		; For RC2014 Z80, RSEL=D8, RDAT=D0
+	LD	DE,MSGRCZ80		; Message for RC2014 Z80 platform
+	CP	7			; RC2014 Z80?
 	JR	Z,_SETP			; If so, set ports
 	LD	DE,MSGEZ		; Message for Easy Z80 platform
 	CP	9			; Easy Z80?
+	LD	HL,$6068		; For RC2014 Z180, RSEL=D8, RDAT=D0
+	LD	DE,MSGRCZ180		; Message for RC2014 Z180 platform
+	CP	8			; RC2014 Z80?
+	JR	Z,_SETP			; If so, set ports
+	LD	DE,MSGSC126		; Message for SC126 Z180 platform
+	CP	10			; SC126?
 	JR	Z,_SETP			; If so, same ports as RC2014
 	LD	HL,$9D9C		; For N8, RSEL=9C, RDAT=9D
 	LD	DE,MSGN8		; Message for N8 platform
@@ -590,37 +596,39 @@ ERR2:	; without the string
 	CALL	CRLF		; print newline
 	JP	0		; fast exit
 
-QDLY	.DW	0		; quark delay factor
-WMOD	.DB	0		; delay mode, non-zero to use timer
-DCSAV	.DB	0		; for saving Z180 DCNTL value
-DMA	.DW	0		; Working DMA
-FILTYP	.DB	0		; Sound file type (TYPPT2, TYPPT3, TYPMYM)
-
-TMP	.DB	0		; work around use of undocumented Z80
-
-PORTS:
-RSEL	.DB	0		; Register selection port
-RDAT	.DB	0		; Register data port
-	
-MSGBAN	.DB	"Tune Player for RomWBW v2.0, 28-Jan-2018",0
-MSGUSE	.DB	"Copyright (C) 2018, Wayne Warthen, GNU GPL v3",13,10
-	.DB	"PTxPlayer Copyright (C) 2004-2007 S.V.Bulba",13,10
-	.DB	"MYMPlay by Marq/Lieves!Tuore",13,10,13,10
-	.DB	"Usage: TUNE <filename>.[PT2|PT3|MYM]",0
-MSGBIO	.DB	"Incompatible BIOS or version, "
-	.DB	"HBIOS v", '0' + RMJ, ".", '0' + RMN, " required",0
-MSGHW	.DB	"Hardware error, sound chip not detected!",0
-MSGNAM	.DB	"Sound filename invalid (must be .PT2, .PT3, or .MYM)",0
-MSGFIL	.DB	"Sound file not found!",0
-MSGSIZ	.DB	"Sound file too large to load!",0
-MSGRC	.DB	"RC2014 w/ Ed Brindley Sound Module",0
-MSGEZ	.DB	"Easy Z80 w/ Ed Brindley Sound Module",0
-MSGN8	.DB	"RetroBrew N8 Onboard Sound System",0
-MSGSCG	.DB	"RetroBrew SCG ECB Adapter Sound System",0
-MSGTIM	.DB	", timer mode",0
-MSGDLY	.DB	", delay mode",0
-MSGPLY	.DB	"Playing...",0
-MSGEND	.DB	" Done",0
+QDLY		.DW	0	; quark delay factor
+WMOD		.DB	0	; delay mode, non-zero to use timer
+DCSAV		.DB	0	; for saving Z180 DCNTL value
+DMA		.DW	0	; Working DMA
+FILTYP		.DB	0	; Sound file type (TYPPT2, TYPPT3, TYPMYM)
+				
+TMP		.DB	0	; work around use of undocumented Z80
+				
+PORTS:	                        
+RSEL		.DB	0	; Register selection port
+RDAT		.DB	0	; Register data port
+		
+MSGBAN		.DB	"Tune Player for RomWBW v2.1, 11-Aug-2019",0
+MSGUSE		.DB	"Copyright (C) 2019, Wayne Warthen, GNU GPL v3",13,10
+		.DB	"PTxPlayer Copyright (C) 2004-2007 S.V.Bulba",13,10
+		.DB	"MYMPlay by Marq/Lieves!Tuore",13,10,13,10
+		.DB	"Usage: TUNE <filename>.[PT2|PT3|MYM]",0
+MSGBIO		.DB	"Incompatible BIOS or version, "
+		.DB	"HBIOS v", '0' + RMJ, ".", '0' + RMN, " required",0
+MSGHW		.DB	"Hardware error, sound chip not detected!",0
+MSGNAM		.DB	"Sound filename invalid (must be .PT2, .PT3, or .MYM)",0
+MSGFIL		.DB	"Sound file not found!",0
+MSGSIZ		.DB	"Sound file too large to load!",0
+MSGRCZ80	.DB	"RC2014 Z80 w/ Ed Brindley Sound Module",0
+MSGRCZ180	.DB	"RC2014 Z180 w/ Ed Brindley Sound Module",0
+MSGSC126	.DB	"SC126 Z180 w/ Ed Brindley Sound Module",0
+MSGEZ		.DB	"Easy Z80 w/ Ed Brindley Sound Module",0
+MSGN8		.DB	"RetroBrew N8 Onboard Sound System",0
+MSGSCG		.DB	"RetroBrew SCG ECB Adapter Sound System",0
+MSGTIM		.DB	", timer mode",0
+MSGDLY		.DB	", delay mode",0
+MSGPLY		.DB	"Playing...",0
+MSGEND		.DB	" Done",0
 ;
 ;===============================================================================
 ; PTx Player Routines

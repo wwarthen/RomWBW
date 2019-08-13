@@ -7,6 +7,9 @@ Version 2.9.2
 - WBW: Support two SIO modules w/ auto-detection
 - PMS: Support ECB USB-FIFO board
 - WBW: Fixed ASSIGN issue with incorrect DPB selection
+- WBW: Add RC2014 Z180 AY sound support to TUNE app
+- WBW: Add RC2014 AY sound support to AY driver
+- WBW: Add SC126 platform
 
 Version 2.9.1
 -------------

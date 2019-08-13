@@ -135,6 +135,8 @@ MINIT1:
 	JR	Z,ARCINIT	; Handle RC2014 w/ Z180
 	CP	9		; Check for Easy Z80
 	JR	Z,RCINIT	; Treat same as RC2014 for now
+	CP	10		; Check for SC126 w/ Z180
+	JR	Z,ARCINIT	; Handle SC126 w/ Z180
 ;
 	; Check for Z180 which implies ASCI serial port
 	LD	DE,00202H	; D := 2, E := 2
@@ -152,6 +154,17 @@ MINIT2:
 	JR	MINIT3		; Complete the initialization
 ;
 RCINIT:
+	;; RC2014, use SIO
+	;; Suppress interrupts
+	;LD	A,01H		; WR1
+	;OUT	(S_CTLP),A	; Select WR1
+	;XOR	A		; No interrupts
+	;OUT	(S_CTLP),A	; Do it
+	;; Setup JP table
+	;LD	HL,SIO_JPTBL	; HBIOS jump table address
+	;LD	DE,SIO		; HBIOS console notification string
+	;JR	MINIT3		; Complete the initialization
+
 	; RC2014, use HBIOS calls
 	LD	HL,1250		; Smaller receive loop tiemout scalar
 	LD	(RCVSCL),HL	; ... to compensate for BIOS overhead
@@ -232,11 +245,12 @@ PLTID	DB	0		; Platform ID
 CPUSPD	DB	10		; CPU speed in MHz
 RCVSCL	DW	2800		; RECV loop timeout scalar
 ;
-RBC	DB	"RBC, 06-Jun-2018$"
+RBC	DB	"RBC, 11-Aug-2019$"
 ;
 UART	DB	", UART0$"
 ASCI	DB	", ASCI0$"
 ASCIRC	DB	", ASCI0 (RC2014)$"
+SIO	DB	", SIO$"
 COMX	DB	", COM0$"
 ;
 UBTAG	DB	" [UNA]$"
@@ -251,6 +265,15 @@ BIOERR	DB	13, 10, 13, 10, "++ Unknown BIOS ++", 13, 10, "$"
 ; Uninitialize modem
 ;
 UNINIT:
+	LD	A,(BIOID)
+	CP	1		; Is HBIOS?
+	RET	NZ		; If not, just return
+	
+	; Reset character device 0
+	LD	B,04H		; HBIOS CIOINIT function 0x04
+	LD	C,0		; Unit = 0
+	LD	DE,-1		; Reset w/ current settings
+	RST	08		; Do it
 	RET			; not initialized, so no 'UN-INITIALIZE'
 ;
 ;-----------------------------------------------------------------------
@@ -318,7 +341,7 @@ U_SENDR:
 ;
 ;-----------------------------------------------------------------------
 ;
-; Test and rep;ort carrier status, Z set if carrier present
+; Test and report carrier status, Z set if carrier present
 ;
 U_CAROK:
 	XOR	A		; not used, always indicate present
@@ -433,7 +456,7 @@ A_SENDR:
 ;
 ;-----------------------------------------------------------------------
 ;
-; Test and rep;ort carrier status, Z set if carrier present
+; Test and report carrier status, Z set if carrier present
 ;
 A_CAROK:
 	XOR	A		; not used, always indicate present
@@ -538,7 +561,7 @@ AR_SENDR:
 ;
 ;-----------------------------------------------------------------------
 ;
-; Test and rep;ort carrier status, Z set if carrier present
+; Test and report carrier status, Z set if carrier present
 ;
 AR_CAROK:
 	XOR	A		; not used, always indicate present
@@ -566,7 +589,7 @@ AR_RCVRDY:
 	AND	A_FRME | A_OVRE | A_PARE ; isolate line err bits
 	LD	B,A		; save err status in B
 	
-	; Z180 ASCI ports will stall if there are errors.
+	; Z8S180 Rev. N ASCI ports will stall if there are line errors.
 	; Error bits are NOT cleared by merely reading
 	; the status register.  Below, bit 3 of ASCI
 	; control register is written with a zero to 
@@ -599,6 +622,100 @@ AR_SNDRDY:
 ; Report baud rate (index into SPTBL returned in register A)
 ;
 AR_SPEED:
+	LD	A,8		; arbitrarily return 9600 baud
+	RET
+;
+;=======================================================================
+;=======================================================================
+;
+; Standard RBC Projects SIO port @ 80H
+;
+;=======================================================================
+;=======================================================================
+;
+; SIO port constants
+;
+S_BASE	EQU	80H		; SIO base port
+S_DATP	EQU	S_BASE + 1	; data in port
+S_DATO	EQU	S_BASE + 1	; data out port
+S_CTLP	EQU	S_BASE + 0	; control/status port
+S_SNDB	EQU	04H		; bit to test for send ready
+S_SNDR	EQU	04H		; value when ready to send
+S_RCVB	EQU	01H		; bit to test for receive ready
+S_RCVR	EQU	01H		; value when ready to receive
+;
+; Following jump table is dynamically patched into real jump
+; table at program startup.  See MINIT above.  Note that only a
+; subset of the jump table is overlaid (SENDR to SPEED).
+;
+SIO_JPTBL:
+	JP	S_SENDR		; send character (via pop psw)
+	JP	S_CAROK		; test for carrier
+	JP	S_MDIN		; receive data byte
+	JP	S_GETCHR	; get character from modem
+	JP	S_RCVRDY	; check receive ready
+	JP	S_SNDRDY	; check send ready
+	JP	S_SPEED		; get speed value for file transfer time
+;
+;-----------------------------------------------------------------------
+;
+; Send character on top of stack
+;
+S_SENDR:
+	POP	AF		; get character to send from stack
+	OUT	(S_DATO),A	; send to port
+	RET
+;
+;-----------------------------------------------------------------------
+;
+; Test and report carrier status, Z set if carrier present
+;
+S_CAROK:
+	XOR	A		; not used, always indicate present
+	RET
+;
+;-----------------------------------------------------------------------
+;
+; Get a character (assume character ready has already been tested)
+;
+S_MDIN:
+S_GETCHR:
+	IN	A,(S_DATP)	; read character from port
+	RET
+;
+;-----------------------------------------------------------------------
+;
+; Test for character ready to receive, Z = ready
+; Error code returned in A register
+; *** Error code does not seem to be used ***
+;
+S_RCVRDY:
+	;XOR	A
+	;OUT	(S_CTLP),A	; select WR0
+	IN	A,(S_CTLP)	; get status
+	AND	S_RCVB		; isolate ready bit
+	CP	S_RCVR		; test it (set flags)
+	LD	A,0		; report no line errors
+	RET
+;
+;-----------------------------------------------------------------------
+;
+; Test for ready to send a character, Z = ready
+;
+S_SNDRDY:
+	;XOR	A
+	;OUT	(S_CTLP),A	; select WR0
+	IN	A,(S_CTLP)	; get status
+	AND	S_SNDB		; isolate ready bit
+	CP	S_SNDR		; test it (set flags)
+	LD	A,0		; report no line errors
+	RET
+;
+;-----------------------------------------------------------------------
+;
+; Report baud rate (index into SPTBL returned in register A)
+;
+S_SPEED:
 	LD	A,8		; arbitrarily return 9600 baud
 	RET
 ;
@@ -645,7 +762,7 @@ HB_SENDR:
 ;
 ;-----------------------------------------------------------------------
 ;
-; Test and rep;ort carrier status, Z set if carrier present
+; Test and report carrier status, Z set if carrier present
 ;
 HB_CAROK:
 	XOR	A		; not used, always indicate present
