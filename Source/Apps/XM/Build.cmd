@@ -11,9 +11,12 @@ set ZXINCDIR=%TOOLS%\cpm\include\
 
 zx mac xmdm125.asm $PO
 zx slr180 -xmhb/HF
+zx slr180 -xmuf/HF
 zx mload25 XM=xmdm125,xmhb
+zx mload25 XMUF=xmdm125,xmuf
 
 rem set PROMPT=[Build] %PROMPT%
 rem %comspec%
 
 copy /Y XM.com ..\..\..\Binary\Apps\
+copy /Y XMUF.com ..\..\..\Binary\Apps\
