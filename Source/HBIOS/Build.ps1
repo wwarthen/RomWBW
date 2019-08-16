@@ -123,7 +123,7 @@ $TimeStamp = '"' + (Get-Date -Format 'yyyy-MM-dd') + '"'
 # Function to run TASM and throw an exception if an error occurs.
 Function Asm($Component, $Opt, $Architecture=$CPUType, $Output="${Component}.bin", $List="${Component}.lst")
 {
-  $Cmd = "tasm -t${Architecture} -g3 ${Opt} ${Component}.asm ${Output} ${List}"
+  $Cmd = "tasm -t${Architecture} -g3 -e ${Opt} ${Component}.asm ${Output} ${List}"
   $Cmd | write-host
   Invoke-Expression $Cmd | write-host
   if ($LASTEXITCODE -gt 0) {throw "TASM returned exit code $LASTEXITCODE"}
@@ -150,8 +150,7 @@ Function Concat($InputFileList, $OutputFile)
 ;
 #DEFINE		TIMESTAMP	${TimeStamp}
 ;
-PLATFORM	.EQU		PLT_${Platform}		; HARDWARE PLATFORM
-ROMSIZE		.EQU		${ROMSize}		; SIZE OF ROM IN KB
+ROMSIZE		.EQU		${ROMSize}
 ;
 #INCLUDE "${ConfigFile}"
 ;

@@ -1,24 +1,17 @@
 ; The purpose of this file is to define generic symbols and to include
-; The purpose of this file is to define generic symbols and to include
-; the appropriate std-*.inc file to bring in platform specifics.
+; the requested build configuraton file to bring in platform specifics.
 
-; There are several classes of systems supported by SBC.
-; 1. SBC 	Z80 SBC (v1 or v2) w/ ECB interface
-; 2. ZETA	Standalone Z80 SBC w/ SBC compatibility
-; 3. ZETA2	Second version of ZETA with enhanced memory bank switching
-; 4. N8		MSX-compatible Z180 SBC w/ onboard video and sound
-; 5. MK4	Mark IV Z180 based SBC w/ ECB interface
-; 6. UNA	Any Z80/Z180 computer with UNA BIOS
-; 7. RCZ80	RC2014 based system with 512K banked RAM/ROM card
-; 8. RCZ180	RC2014 based system with Z180 CPU
-; 9. EZZ80	Easy Z80, Z80 SBC w/ RC2014 bus and CTC
+; There are several hardware platforms supported by SBC.
+; 1.  SBC 	Z80 SBC (v1 or v2) w/ ECB interface
+; 2.  ZETA	Standalone Z80 SBC w/ SBC compatibility
+; 3.  ZETA2	Second version of ZETA with enhanced memory bank switching
+; 4.  N8	MSX-ish Z180 SBC w/ onboard video and sound
+; 5.  MK4	Mark IV Z180 based SBC w/ ECB interface
+; 6.  UNA	Any Z80/Z180 computer with UNA BIOS
+; 7.  RCZ80	RC2014 based system with 512K banked RAM/ROM card
+; 8.  RCZ180	RC2014 based system with Z180 CPU
+; 9.  EZZ80	Easy Z80, Z80 SBC w/ RC2014 bus and CTC
 ; 10. SC126	SC126 Z180 based system
-
-; All the classes require certain generic definitions, and these are
-; defined here prior to the inclusion of platform specific .inc files.
-
-; It is unfortunate, but all the possible config items must be defined
-; here because the config gets read before the specific std-*.inc's
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -105,11 +98,6 @@ MID_FD111	.EQU	9
 DSRTCMODE_NONE	.EQU	0		; NO DSRTC
 DSRTCMODE_STD	.EQU	1		; ORIGINAL DSRTC CIRCUIT (SBC, ZETA, MK4)
 DSRTCMODE_MFPIC	.EQU	2		; MF/PIC VARIANT
-;
-; ACIA MODE SELECTIONS
-;
-ACIAMODE_NONE	.EQU	0
-ACIAMODE_RC	.EQU	1		; RC2014 ACIA MODULE (SPENCER OWEN)
 ;
 ; SIO MODE SELECTIONS
 ;
@@ -271,6 +259,11 @@ SER_1843200_8N1	.EQU	SER_BAUD1843200 | SER_DATA8 | SER_PARNONE | SER_STOP1
 SER_3686400_8N1	.EQU	SER_BAUD3686400 | SER_DATA8 | SER_PARNONE | SER_STOP1		
 SER_7372800_8N1	.EQU	SER_BAUD7372800 | SER_DATA8 | SER_PARNONE | SER_STOP1	
 ;
+; TERMENABLE CONTROLS INCLUSION OF TERMINAL PSEUDO-DEVICE DRIVER
+; IT IS SET TO TRUE BY THE INCLUSION OF ANY VDA DRIVER.
+;
+TERMENABLE	.EQU	FALSE		; TERM PSEUDO DEVICE, WILL AUTO-ENABLE IF A VDA IS ENABLED
+;
 ; ECB-VDU MODES
 ;
 V80X24		.EQU	0
@@ -291,73 +284,29 @@ KBD_DE		.EQU	1	; GERMAN
 ;
 FORCECON	.EQU	0	; DEFAULT IS TO FOLLOW NORMAL SEQUENCE
 ;
-#INCLUDE "build.inc"			; INCLUDE USER CONFIG, ADD VARIANT, TIMESTAMP, & ROMSIZE
+#INCLUDE "build.inc"		; INCLUDE USER CONFIG, ADD VARIANT, TIMESTAMP, & ROMSIZE
 ;
-#IF ((PLATFORM == PLT_N8) | (PLATFORM == PLT_MK4) | (PLATFORM == PLT_RCZ180) | (PLATFORM == PLT_SC126))
-CPUFAM	.EQU	CPU_Z180
-#ELSE
-CPUFAM	.EQU	CPU_Z80
-#ENDIF
+; INCLUDE Z180 REGISTER DEFINITIONS
 ;
-#IF (PLATFORM == PLT_UNA)
-BIOS	.EQU	BIOS_UNA
-#ELSE
-BIOS	.EQU	BIOS_WBW
-#ENDIF
-;
-; INCLUDE PLATFORM SPECIFIC HARDWARE DEFINITIONS
-;
-#IF (PLATFORM == PLT_SBC)
-#INCLUDE "plt_sbc.inc"
-#ENDIF
-;
-#IF (PLATFORM == PLT_ZETA)
-#INCLUDE "plt_zeta.inc"
-#ENDIF
-;
-#IF (PLATFORM == PLT_ZETA2)
-#INCLUDE "plt_zeta2.inc"
-#ENDIF
-;
-#IF (PLATFORM == PLT_N8)
-#INCLUDE "plt_n8.inc"
-#ENDIF
-;
-#IF (PLATFORM == PLT_MK4)
-#INCLUDE "plt_mk4.inc"
-#ENDIF
-;
-#IF (PLATFORM == PLT_UNA)
-#INCLUDE "plt_una.inc"
-#ENDIF
-;
-#IF (PLATFORM == PLT_RCZ80)
-#INCLUDE "plt_rcz80.inc"
-#ENDIF
-;
-#IF (PLATFORM == PLT_RCZ180)
-#INCLUDE "plt_rcz180.inc"
-#ENDIF
-;
-#IF (PLATFORM == PLT_EZZ80)
-#INCLUDE "plt_ezz80.inc"
-#ENDIF
-;
-#IF (PLATFORM == PLT_SC126)
-#INCLUDE "plt_sc126.inc"
+#IF (BIOS == BIOS_WBW)
+  #IF (CPUFAM == CPU_Z180)
+    #INCLUDE "z180.inc"
+  #ENDIF
 #ENDIF
 ;
 ; SETUP DEFAULT CPU SPEED VALUES
 ;
 CPUKHZ	.EQU	CPUOSC / 1000	; CPU FREQ IN KHZ
 ;
-#IF (CPUFAM == CPU_Z180)
-#IF (Z180_CLKDIV == 0)
+#IF (BIOS == BIOS_WBW)
+  #IF (CPUFAM == CPU_Z180)
+    #IF (Z180_CLKDIV == 0)
 CPUKHZ	.SET	CPUKHZ / 2	; ADJUST FOR HALF SPEED OPERATION
-#ENDIF
-#IF (Z180_CLKDIV == 2)
+    #ENDIF
+    #IF (Z180_CLKDIV == 2)
 CPUKHZ	.SET	CPUKHZ * 2	; ADJUST FOR DOUBLE SPEED OPERATION
-#ENDIF
+    #ENDIF
+  #ENDIF
 #ENDIF
 ;
 CPUMHZ	.EQU	CPUKHZ / 1000	; CPU FREQ IN MHZ
@@ -472,10 +421,10 @@ INT_SIO1	.EQU	14	; ZILOG SIO 1, CHANNEL A & B
   
 ; Z80-BASED SYSTEMS
 
-INT_CTC0A	.EQU	0	; ZILOG CTC #0, CHANNEL A
-INT_CTC0B	.EQU	1	; ZILOG CTC #0, CHANNEL B
-INT_CTC0C	.EQU	2	; ZILOG CTC #0, CHANNEL C
-INT_CTC0D	.EQU	3	; ZILOG CTC #0, CHANNEL D
+INT_CTC0A	.EQU	0	; ZILOG CTC 0, CHANNEL A
+INT_CTC0B	.EQU	1	; ZILOG CTC 0, CHANNEL B
+INT_CTC0C	.EQU	2	; ZILOG CTC 0, CHANNEL C
+INT_CTC0D	.EQU	3	; ZILOG CTC 0, CHANNEL D
 INT_SIO0	.EQU	7	; ZILOG SIO 0, CHANNEL A & B
 INT_SIO1	.EQU	8       ; ZILOG SIO 1, CHANNEL A & B
 INT_PIO0A	.EQU	9	; ZILOG PIO 0, CHANNEL A
