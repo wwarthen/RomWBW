@@ -11,6 +11,8 @@ Version 2.9.2
 - WBW: Add RC2014 AY sound support to AY driver
 - WBW: Add SC126 platform
 - WBW: Config files cleanup
+- WBW: Add interrupt support to ASCI driver
+- WBW: Refactored XModem overlay, merged USB-FIFO support
 
 Version 2.9.1
 -------------
