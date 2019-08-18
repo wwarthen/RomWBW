@@ -30,6 +30,7 @@ zx MLOAD25 -SURVEY.COM=SURVEY.HEX
 setlocal & cd XM && call Build || exit /b 1 & endlocal
 setlocal & cd FDU && call Build || exit /b 1 & endlocal
 setlocal & cd Tune && call Build || exit /b 1 & endlocal
+setlocal & cd FAT && call Build || exit /b 1 & endlocal
 
 copy *.com %APPBIN%\
 
