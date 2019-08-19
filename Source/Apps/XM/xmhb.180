@@ -128,10 +128,10 @@ HINIT:
 	CP	000H		; UART?
 	JP	Z,U_INIT	; If so, do UART init
 	CP	010H		; ASCI?
-	JP	HINIT1		; If so, handle it below
+	JP	Z,HINIT1	; If so, handle it below
 	CP	080H		; USB-FIFO?
-	JP	UF_INIT		; If so, do USB-FIFO init
-	JR	HWERR		; Unknown hardware error
+	JP	Z,UF_INIT	; If so, do USB-FIFO init
+	JP	H_INIT		; Otherwise, use HBIOS I/O
 ;
 HINIT1:
 	; Use platform to select ASCI driver

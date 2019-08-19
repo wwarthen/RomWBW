@@ -7,7 +7,7 @@
 ***********************************************************************
 
 Wayne Warthen (wwarthen@gmail.com)
-Version 2.9.2-pre.5, 2019-08-15
+Version 2.9.2-pre.6, 2019-08-18
 https://www.retrobrewcomputers.org/
 
 RomWBW is a ROM-based implementation of CP/M-80 2.2 and Z-System for 
