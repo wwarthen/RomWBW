@@ -6,6 +6,7 @@
 ;
 ; 2018-06-06 WBW Added support for RC2014 w/ Z180
 ; 2019-08-17 WBW Refactored and merged Phil's ECB-FIFO support
+; 2019-08-28 WBW Refactored ASCI support
 ;
 ;=======================================================================
 ;
@@ -106,13 +107,6 @@ HINIT:
 	LD	C,9		; BDOS string display function
 	CALL	BDOS		; Do it
 ;
-	; Get platform id from RomWBW HBIOS and save it
-	LD	B,0F1H		; HBIOS VER function 0xF1
-	LD	C,0		; Required reserved value
-	RST	08		; Do it, L := Platform ID
-	LD	A,L		; Move to A
-	LD	(PLTID),A	; Save it
-;
 	; Get CPU speed from RomWBW HBIOS and save it
 	LD	B,0F8H		; HBIOS SYSGET function 0xF8
 	LD	C,0F0H		; CPUINFO subfunction 0xF0
@@ -128,23 +122,10 @@ HINIT:
 	CP	000H		; UART?
 	JP	Z,U_INIT	; If so, do UART init
 	CP	010H		; ASCI?
-	JP	Z,HINIT1	; If so, handle it below
+	JP	Z,A_INIT	; If so, do ASCI init
 	CP	080H		; USB-FIFO?
 	JP	Z,UF_INIT	; If so, do USB-FIFO init
 	JP	H_INIT		; Otherwise, use HBIOS I/O
-;
-HINIT1:
-	; Use platform to select ASCI driver
-	LD	A,(PLTID)	; Get platform id
-	CP	4		; N8?
-	JP	Z,A4_INIT	; Init ASCI @ $40
-	CP	5		; Mark IV?
-	JP	Z,A4_INIT	; Init ASCI @ $40
-	CP	8		; RCZ180?
-	JP	Z,AC_INIT	; Init ASCI @ $C0
-	CP	10		; SC126?
-	JP	Z,AC_INIT	; Init ASCI @ $C0
-	JR	HWERR		; Unknown hardware error
 ;
 UINIT:
 	; Display UNA notification string
@@ -164,12 +145,12 @@ UINIT1:
 	LD	A,E		; Put in A
 	LD	(CPUSPD),A	; Save it
 ;
-	; Check CPU, Z80=UART, A180=ASCI @ $40
+	; Check CPU, Z80=UART, Z180=ASCI
 	LD	DE,00202H	; D := 2, E := 2
 	MLT	DE		; DE := D * E == 4
 	BIT	2,E		; Bit 2 wil be set if mlt happend
 	JP	Z,U_INIT	; UART initialization
-	JP	A4_INIT		; ASCI @ $40 initialization
+	JP	A_INIT		; otherwise, ASCI
 ;
 HWERR:
 	; Failed to identify target comm hardware
@@ -261,15 +242,13 @@ EXTRA3:
 	RET
 ;
 BIOID	DB	0		; BIOS ID, 1=HBIOS, 2=UBIOS
-PLTID	DB	0		; Platform ID
 CPUSPD	DB	10		; CPU speed in MHz
 RCVSCL	DW	2800		; RECV loop timeout scalar
 ;
-RBC	DB	"RBC, 17-Aug-2019$"
+RBC	DB	"RBC, 28-Aug-2019$"
 ;
 U_LBL	DB	", UART$"
-A4_LBL	DB	", ASCI @ 40H$"
-AC_LBL	DB	", ASCI @ C0H$"
+A_LBL	DB	", ASCI$"
 S_LBL	DB	", SIO$"
 H_LBL	DB	", COM$"
 UF_LBL	DB	", USB-FIFO$"
@@ -285,7 +264,7 @@ ERR_HW	DB	13, 10, 13, 10, "++ Unknown Hardware ++", 13, 10, "$"
 ;=======================================================================
 ;=======================================================================
 ;
-; Standard RBC Projects 8250-like UART port @ 68H
+; 8250-like UART @ Port 68H
 ;
 ;=======================================================================
 ;=======================================================================
@@ -407,66 +386,97 @@ U_SPEED:
 ;=======================================================================
 ;=======================================================================
 ;
-; Standard RBC Projects Z180 primary ASCI port @ 40H
+; Z180 Primary ASCI
+;
+; - Port is determined dynamically in A_INIT
 ;
 ;=======================================================================
 ;=======================================================================
 ;
 ; ASCI port constants
 ;
-A4_DATP	EQU	48H		;Z180 TSR - ASCI receive data port
-A4_DATO	EQU	46H		;Z180 TDR - ASCI transmit data port
-A4_CTLP	EQU	44H		;Z180 STAT - ASCI status port
-A4_CTL2	EQU	40H		;Z180 CNTLA - ASCI control port
-;
-A_SNDB	EQU	02H		;Z180 STAT:TDRE - xmit data reg empty bit
-A_SNDR	EQU	02H		;Z180 STAT:TDRE - xmit data reg empty value
-A_RCVB	EQU	80H		;Z180 STAT:RDRF - rcv data reg full bit
-A_RCVR	EQU	80H		;Z180 STAT:RDRF - rcv data reg full value
-A_PARE	EQU	20H		;Z180 STAT:PE - parity error bit
-A_OVRE	EQU	40H		;Z180 STAT:OVRN - overrun error bit
-A_FRME	EQU	10H		;Z180 STAT:FE - framing error bit
+A_DATP	EQU	08H		; Z180 TSR - ASCI receive data port
+A_DATO	EQU	06H		; Z180 TDR - ASCI transmit data port
+A_CTLP	EQU	04H		; Z180 STAT - ASCI status port
+A_CTL2	EQU	00H		; Z180 CNTLA - ASCI control port
+;                                 
+A_SNDB	EQU	02H		; Z180 STAT:TDRE - xmit data reg empty bit
+A_SNDR	EQU	02H		; Z180 STAT:TDRE - xmit data reg empty value
+A_RCVB	EQU	80H		; Z180 STAT:RDRF - rcv data reg full bit
+A_RCVR	EQU	80H		; Z180 STAT:RDRF - rcv data reg full value
+A_PARE	EQU	20H		; Z180 STAT:PE - parity error bit
+A_OVRE	EQU	40H		; Z180 STAT:OVRN - overrun error bit
+A_FRME	EQU	10H		; Z180 STAT:FE - framing error bit
 A_ERRS	EQU	A_FRME | A_OVRE | A_PARE
+;
+A_BASE	DB	00H		; internal IO base address for Z180
 ;
 ; Following jump table is dynamically patched over initial jump
 ; table at program startup.  See MINIT above.  Note that only a
 ; subset of the jump table is overlaid (SENDR to SPEED).
 ;
-A4_JPTBL:
-	JP	A4_SENDR	; send character (via pop psw)
-	JP	A4_CAROK	; test for carrier
-	JP	A4_MDIN		; receive data byte
-	JP	A4_GETCHR	; get character from modem
-	JP	A4_RCVRDY	; check receive ready
-	JP	A4_SNDRDY	; check send ready
-	JP	A4_SPEED	; get speed value for file transfer time
+A_JPTBL:
+	JP	A_SENDR		; send character (via pop psw)
+	JP	A_CAROK		; test for carrier
+	JP	A_MDIN		; receive data byte
+	JP	A_GETCHR	; get character from modem
+	JP	A_RCVRDY	; check receive ready
+	JP	A_SNDRDY	; check send ready
+	JP	A_SPEED		; get speed value for file transfer time
 ;
 ;-----------------------------------------------------------------------
 ;
 ; ASCI initialization
 ;
-A4_INIT:
-	XOR	A		; Clear interrupt enable flags
-	OUT0	(A4_CTLP),A	; Do it
+A_INIT:
+	; Test for location of Z180 internal registers
+	; and use appropriate I/O address.
+	LD	B,0		; set MSB for 16 bit I/O
+	LD	C,040H|3FH	; internal registers @ 40H?
+	IN	A,(C)		; read
+	CP	040H|01FH	; same value except for bit 5?
+	JR	Z,A_INIT1	; do ASCI init (port in C)
+	LD	C,0C0H|3FH	; internal registers @ C0H?
+	IN	A,(C)		; read
+	CP	0C0H|1FH	; same value except for bit 5?
+	JR	Z,A_INIT1	; do ASCI init (port in C)
+	JP	HWERR		; unknown hardware error
 ;
-	LD	HL,A4_JPTBL
-	LD	DE,A4_LBL
+A_INIT1:
+	LD	A,C		; test port value to A
+	AND	0C0H		; only top two bits relevant
+	LD	(A_BASE),A	; save it
+	ADD	A,A_CTLP	; status port offset
+	LD	C,A		; put in C for I/O
+	LD	B,0		; MSB for 16 bit I/O
+	XOR	A		; clear interrupt enable flags
+	OUT	(C),A		; do it
+;
+	LD	HL,A_JPTBL
+	LD	DE,A_LBL
 	JP	MINIT_RET
 ;
 ;-----------------------------------------------------------------------
 ;
 ; Send character on top of stack
 ;
-A4_SENDR:
-	POP	AF		; get character to send from stack
-	OUT0	(A4_DATO),A	; send to port
-	RET
+A_SENDR:
+	EX	(SP),HL		; save HL, HL := char to send
+	PUSH	BC		; save scratch register
+	LD	A,(A_BASE)	; IO base address
+	ADD	A,A_DATO	; data out port offset
+	LD	C,A		; put in C for I/O
+	LD	B,0		; MSB for 16 bit I/O
+	OUT	(C),H		; send to port
+	POP	BC		; restore scratch reg
+	POP	HL		; restore HL
+	RET			; done
 ;
 ;-----------------------------------------------------------------------
 ;
 ; Test and report carrier status, Z set if carrier present
 ;
-A4_CAROK:
+A_CAROK:
 	XOR	A		; not used, always indicate present
 	RET
 ;
@@ -474,9 +484,15 @@ A4_CAROK:
 ;
 ; Get a character (assume character ready has already been tested)
 ;
-A4_MDIN:
-A4_GETCHR:
-	IN0	A,(A4_DATP)	; read character from port
+A_MDIN:
+A_GETCHR:
+	PUSH	BC		; save scratch register
+	LD	A,(A_BASE)	; IO base address
+	ADD	A,A_DATP	; data in port offset
+	LD	C,A		; put in C for I/O
+	LD	B,0		; MSB for 16 bit I/O
+	IN	A,(C)		; read character from port
+	POP	BC		; restore scratch reg
 	RET
 ;
 ;-----------------------------------------------------------------------
@@ -485,9 +501,13 @@ A4_GETCHR:
 ; Error code returned in A register
 ; *** Error code does not seem to be used ***
 ;
-A4_RCVRDY:
-	IN0	A,(A4_CTLP)	; get modem status
+A_RCVRDY:
 	PUSH	BC		; save scratch register
+	LD	A,(A_BASE)	; IO base address
+	ADD	A,A_CTLP	; status port offset
+	LD	C,A		; put in C for I/O
+	LD	B,0		; MSB for 16 bit I/O
+	IN	A,(C)		; get modem status
 	PUSH	AF		; save full status on stack
 	AND	A_ERRS		; isolate line err bits
 	LD	B,A		; save err status in B
@@ -497,12 +517,18 @@ A4_RCVRDY:
 	; the status register.	Below, bit 3 of ASCI
 	; control register is written with a zero to
 	; clear error(s) if needed.
-	JP	Z,A4_RCVRDY2	; if no errs, continue
-	IN0	A,(A4_CTL2)	; get current control register
+	JR	Z,A_RCVRDY2	; if no errs, continue
+	PUSH	BC		; save scratch reg
+	LD	A,(A_BASE)	; IO base address
+	ADD	A,A_CTL2	; status port offset
+	LD	C,A		; put in C for I/O
+	LD	B,0		; MSB for 16 bit I/O
+	IN	A,(C)		; get current control reg value
 	AND	0F7H		; force err reset bit to zero
-	OUT0	(A4_CTL2),A	; write control register
-
-A4_RCVRDY2:
+	OUT	(C),A		; write control register
+	POP	BC		; restore scratch reg
+;
+A_RCVRDY2:
 	POP	AF		; get full status back
 	AND	A_RCVB		; isolate ready bit
 	CP	A_RCVR		; test it (set flags)
@@ -514,141 +540,30 @@ A4_RCVRDY2:
 ;
 ; Test for ready to send a character, Z = ready
 ;
-A4_SNDRDY:
-	IN	A,(A4_CTLP)	; get status
-	AND	A_SNDB		; isolate transmit ready bit
-	CP	A_SNDR		; test for ready value
-	RET
-;
-;-----------------------------------------------------------------------
-;
-; Report baud rate (index into SPTBL returned in register A)
-;
-A4_SPEED:
-	LD	A,8		; arbitrarily return 9600 baud
-	RET
-;
-;=======================================================================
-;=======================================================================
-;
-; RC2014 Z180 primary ASCI port
-;
-; Will be used for all RC2014 Z180 systems.
-;
-;=======================================================================
-;=======================================================================
-;
-; ASCI port constants for RC2014
-;
-AC_DATP	EQU	0C8H		; Z180 TSR - ASCI receive data port
-AC_DATO	EQU	0C6H		; Z180 TDR - ASCI transmit data port
-AC_CTLP	EQU	0C4H		; Z180 STAT - ASCI status port
-AC_CTL2	EQU	0C0H		; Z180 CNTLA - ASCI control port
-;
-; Following jump table is dynamically patched over initial jump
-; table at program startup.  See MINIT above.  Note that only a
-; subset of the jump table is overlaid (SENDR to SPEED).
-;
-AC_JPTBL:
-	JP	AC_SENDR	; send character (via pop psw)
-	JP	AC_CAROK	; test for carrier
-	JP	AC_MDIN		; receive data byte
-	JP	AC_GETCHR	; get character from modem
-	JP	AC_RCVRDY	; check receive ready
-	JP	AC_SNDRDY	; check send ready
-	JP	AC_SPEED	; get speed value for file transfer time
-;
-;-----------------------------------------------------------------------
-;
-; ASCI initialization
-;
-AC_INIT:
-	XOR	A		; Clear interrupt enable flags
-	OUT0	(AC_CTLP),A	; Do it
-;
-	LD	HL,AC_JPTBL
-	LD	DE,AC_LBL
-	JP	MINIT_RET
-;
-;-----------------------------------------------------------------------
-;
-; Send character on top of stack
-;
-AC_SENDR:
-	POP	AF		; get character to send from stack
-	OUT0	(AC_DATO),A	; send to port
-	RET
-;
-;-----------------------------------------------------------------------
-;
-; Test and report carrier status, Z set if carrier present
-;
-AC_CAROK:
-	XOR	A		; not used, always indicate present
-	RET
-;
-;-----------------------------------------------------------------------
-;
-; Get a character (assume character ready has already been tested)
-;
-AC_MDIN:
-AC_GETCHR:
-	IN0	A,(AC_DATP)	; read character from port
-	RET
-;
-;-----------------------------------------------------------------------
-;
-; Test for character ready to receive, Z = ready
-; Error code returned in A register
-; *** Error code does not seem to be used ***
-;
-AC_RCVRDY:
-	IN0	A,(AC_CTLP)	; get modem status
+A_SNDRDY:
 	PUSH	BC		; save scratch register
-	PUSH	AF		; save full status on stack
-	AND	A_ERRS		; isolate line err bits
-	LD	B,A		; save err status in B
-
-	; Z8S180 Rev. N ASCI ports will stall if there are line errors.
-	; Error bits are NOT cleared by merely reading
-	; the status register.	Below, bit 3 of ASCI
-	; control register is written with a zero to
-	; clear error(s) if needed.
-	JP	Z,AC_RCVRDY2	; if no errs, continue
-	IN0	A,(AC_CTL2)	; get current control register
-	AND	0F7H		; force err reset bit to zero
-	OUT0	(AC_CTL2),A	; write control register
-
-AC_RCVRDY2:
-	POP	AF		; get full status back
-	AND	A_RCVB		; isolate ready bit
-	CP	A_RCVR		; test it (set flags)
-	LD	A,B		; get the error code back
-	POP	BC		; restore scratch register
-	RET
-;
-;-----------------------------------------------------------------------
-;
-; Test for ready to send a character, Z = ready
-;
-AC_SNDRDY:
-	IN	A,(AC_CTLP)	; get status
+	LD	A,(A_BASE)	; IO base address
+	ADD	A,A_CTLP	; status port offset
+	LD	C,A		; put in C for I/O
+	LD	B,0		; MSB for 16 bit I/O
+	IN	A,(C)		; get modem status
 	AND	A_SNDB		; isolate transmit ready bit
 	CP	A_SNDR		; test for ready value
+	POP	BC		; restore scratch register
 	RET
 ;
 ;-----------------------------------------------------------------------
 ;
 ; Report baud rate (index into SPTBL returned in register A)
 ;
-AC_SPEED:
+A_SPEED:
 	LD	A,8		; arbitrarily return 9600 baud
 	RET
 ;
 ;=======================================================================
 ;=======================================================================
 ;
-; Standard RBC Projects SIO port @ 80H
+; Zilog SIO @ Port 80H
 ;
 ;=======================================================================
 ;=======================================================================
@@ -761,9 +676,7 @@ S_SPEED:
 ;=======================================================================
 ;=======================================================================
 ;
-; HBIOS CONSOLE (COM0:)
-;
-; Will be used for all RC2014 systems
+; HBIOS Console (COM0:)
 ;
 ;=======================================================================
 ;=======================================================================
