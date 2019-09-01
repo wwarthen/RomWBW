@@ -24,8 +24,8 @@
 ; would be required to support this configuration. As the HBIOS only has an allocation of
 ; 16, a full implmentation is impractical.
 ;
-; The compromise solution is to allow 4 interrupts for the PIO driver.; All remaining PIO's
-; are limited to Bit mode or blind read and writed to the input/output ports.
+; The compromise solution is to allow 4 interrupts for the PIO driver. All remaining PIO's
+; are limited to Bit mode or blind read and write to the input/output ports.
 ;
 ; Zilog PIO reset state:
 ;
@@ -130,7 +130,7 @@ PIO_PREINIT0:
 ;	PUSH	HL			; SAVE IT
 ;	POP	IY			; ... TO IY
 
-	CALL	IDXCFG
+	CALL	IDXCFG			
 
 	LD	(HL),C
 
@@ -215,8 +215,12 @@ SKPINIT:DJNZ	PIO_PREINIT0		; LOOP UNTIL DONE
 	XOR	A			; SIGNAL SUCCESS
 	RET				; AND RETURN
 ;
-; X24
+; INDEX INTO THE CONFIG TABLE
+; ON ENTRY C = UNIT NUMBER
+; ON EXIT IY = CONFIG DATA POINTER
+; ON EXIT DE = CONFIG TABLE START
 ;
+; EACH CONFIG TABLE IS 24 BYTES LONG
 ;
 CFG_SIZ		.EQU	24
 ;
@@ -778,14 +782,9 @@ PIO_PRTCFG:
 	; PRINT THE PIO TYPE
 	CALL	PC_SPACE		; FORMATTING
 	LD	A,(IY+1)		; GET PIO TYPE BYTE
-	RLCA				; MAKE IT A WORD OFFSET
-	LD	HL,PIO_TYPE_MAP		; POINT HL TO TYPE MAP TABLE
-	CALL	ADDHLA			; HL := ENTRY
-	LD	E,(HL)			; DEREFERENCE
-	INC	HL			; ...
-	LD	D,(HL)			; ... TO GET STRING POINTER
-	CALL	WRITESTR		; PRINT IT
-;
+	LD	DE,PIO_TYPE_STR		; POINT HL TO TYPE MAP TABLE
+	CALL	PRTIDXDEA
+
 	; ALL DONE IF NO PIO WAS DETECTED
 	LD	A,(IY+1)		; GET PIO TYPE BYTE
 	OR	A			; SET FLAGS
@@ -812,16 +811,11 @@ PIO_DEV		.DB	0		; DEVICE NUM USED DURING INIT
 ;	
 ; DESCRIPTION OF DIFFERENT PORT TYPES
 ;
-PIO_TYPE_MAP:
-		.DW	PIO_STR_NONE
-		.DW	PIO_STR_PIO
-		.DW 	PIO_STR_8255
-		.DW	PIO_STR_PORT
-
-PIO_STR_NONE	.DB	"<NOT PRESENT>$"
-PIO_STR_PIO	.DB	"Zilog PIO$"
-PIO_STR_8255	.DB 	"i8255 PPI$"
-PIO_STR_PORT	.DB	"IO Port$"
+PIO_TYPE_STR:
+		.TEXT	"<NOT PRESENT>$"	; IDX 0
+		.TEXT	"Zilog PIO$"		; IDX 1
+		.TEXT	"i8255 PPI$"		; IDX 2
+		.TEXT	"IO Port$"		; IDX 3
 ;
 ; Z80 PIO PORT TABLE - EACH ENTRY IS FOR 1 CHIP I.E. TWO PORTS
 ;
@@ -974,6 +968,7 @@ PIO_INIT1:
 ;	POP	AF
 ;	CALL	ADDHLA			; HL := ENTRY ADDRESS
 ;	PUSH	HL			; COPY CFG DATA PTR
+;	POP	IY			; ... TO IY
 ;	POP	IY			; ... TO IY
 
 	CALL	IDXCFG
