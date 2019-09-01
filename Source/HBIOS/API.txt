@@ -132,7 +132,7 @@ INT ($FC): Interrupt vector management functions
     INTSET ($20): Set interrupt vector
       BC=Function/Subfunction			A=Result
       HL=Interrupt Vector			HL=Previous Vector
-      E=Interrupt Vector Table Position		DE=Interrupt Routing Engine Address
+      E=Interrupt Vector Table Position
 
       Set the Interrupt Vector for the specified Interrupt Vector Table Position to the
       specified Interrupt Vector.  The previous value at the specified table position
@@ -151,28 +151,25 @@ INT ($FC): Interrupt vector management functions
       must be saved and restored by the interrupt handler.
 
       Interrupt handlers are different for IM1 or IM2.
-
+      
       For IM1:
 
           The new interrupt handler is responsible for chaining (JP) to the previous vector
-          if the interrupt is not handled.  The interrupt handler must return with ZF set
-          if interrupt is handled and ZF cleared if not handled.
+	  if the interrupt is not handled. If the interrupt is handled, the new handler may
+	  simply return (RET) with ZF cleared (NZ).
 
       For IM2:
 
-          The interrupt handler requires an invocation stub separate from the actual interrupt
-	  handling code.  The stub must be:
+          The new interrupt handler may either replace or hook the previous interrupt
+	  handler. To replace the previous interrupt handler, the new handler just returns
+	  (RET) when done. To hook the previous handler, the new handler can chain (JP)
+	  to the previous vector. Note that initially all IM2 interrupt vectors are set
+	  to be handled as “BAD” meaning that the interrupt is unexpected. In most cases,
+	  you do not want to chain to the previous vector because it will cause the
+	  interrupt to display a “BAD INT” system panic message.
 
-	      PUSH	HL
-	      LD	HL,<adr of actual interrupt handler>
-	      JP	<adr of int routing engine>
-	      
-	  When calling Set Interrupt Vector, the address of the stub must be provided for the
-	  Interrupt Vector parameter.  The address of the Interrupt Routing Engine will be
-	  returned in DE and must be inserted into the stub code as indicated above.  In the
-	  case of IM2 mode interrutps, the actual interrupt handler should not chain to the
-	  previous entry.  The new interrupt handler must assume all responsibilities for
-	  the specific interrupt slot being occupied.
+      The interrupt framework will take care of issuing an EI and RETI instruction.
+      Do not put these instructions in your new handler.
 
       If the caller is transient, then the caller must remove the new interrupt handler and
       restore the original one prior to termination.  This is accomplished by calling this
@@ -236,8 +233,9 @@ DEVICE ($06):
 
   Serial Device Attributes Byte:
     7: 0=RS-232, 1=Terminal
+    6: 1=Parallel Port
 
-    If Terminal, 3-0 is attached Video Unit #
+    If device is of type Terminal, bits 3-0 indicate attached Video Unit #
 
 ==============
 Disk Functions
