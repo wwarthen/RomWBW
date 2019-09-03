@@ -267,15 +267,16 @@ SEEK ($12):
 READ ($13) / WRITE ($14) / VERIFY ($15):
   BC=Function/Unit                      A=Result
   HL=Buffer Address			E=Blocks Read
+  D=Buffer Bank ID
   E=Block Count
 
-  Read, write, or verify block count sectors to buffer address starting at current target
+  Read, write, or verify block count sectors to/from buffer bank/address starting at current target
   sector.  Current sector must be established by prior seek function; however, multiple
   read/write/verify function calls can be made after a seek function.  Current sector is
-  incremented after each sector successfully read.  On error, current sector is sector is
-  sector where error occurred.  Blocks read indicates number of sectors successfully read.
+  incremented after each sector successfully read/written.  On error, current sector is
+  sector where error occurred.  Block count indicates number of sectors successfully read/written.
   Caller must ensure buffer address is large enough to contain data for all sectors
-  requested.
+  read/written.  If buffer is not in upper 32K, then sectors will be double buffered.
 
 FORMAT ($16):
   BC=Function/Unit                      A=Result

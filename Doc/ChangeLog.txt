@@ -14,6 +14,8 @@ Version 2.9.2
 - WBW: Add interrupt support to ASCI driver
 - WBW: Refactored XModem overlay, merged USB-FIFO support
 - PMS: Added DS1210 low battery detection/message
+- PMS: Added note playing ability to SPK driver
+- WBW: Support disk I/O to any memory bank
 
 Version 2.9.1
 -------------
