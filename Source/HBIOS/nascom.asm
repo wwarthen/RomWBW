@@ -4416,7 +4416,7 @@ OUTNCR: CALL    OUTC            ; Output character in A
 		
 ; ---------------------------------------------------------------------------------------
 
-;	PLAY	N		; PLAY NOTE N
+;	PLAY	N,D		; PLAY NOTE N, DURATION D
 
 PLAY:	CALL    GETNUM          ; GET NOTE TO PLAY
 	CALL	DEINT		; ITS IN DE
@@ -4433,29 +4433,38 @@ PLAY:	CALL    GETNUM          ; GET NOTE TO PLAY
 	ADD	HL,HL
 	ADD	HL,DE		; ITS IN HL
 
-	CALL	SPK_BEEP
+	EX	(SP),HL		; RESTORE SYNTAX POINTER
+				; IN HL. DE ON STACK
+
+        CALL    CHKSYN          ; Make sure ',' follows
+        .BYTE   ','
+        CALL    GETINT          ; GET DURATION
+
+        EX	(SP),HL         ; RECALL NOTE ENTRY
+				; A = DURATION
+	CALL SPK_BEEP
 	
-	POP	HL		; RESTORE SYNTAX POINTER
+	POP	HL		; RECALL SYNTAX POINTER
 	RET
 
 SPK_BEEP:
-	LD	A,(HL)			; LOAD 1ST ARG
-	INC	HL			; IN DE
+	LD	A,(HL)		; LOAD 1ST ARG
+	INC	HL		; IN DE
 	LD	E,A
 	LD	A,(HL)
 	INC	HL
 	LD	D,A
 ;
-	LD	A,(HL)			; LOAD 2ND ARG
-	INC	HL			; IN BC
+	LD	A,(HL)		; LOAD 2ND ARG
+	INC	HL		; IN BC
 	LD	C,A
 	LD	A,(HL)	
 	INC	HL
 	LD	B,A
-	PUSH	BC			; SETUP ARG IN HL
+	PUSH	BC		; SETUP ARG IN HL
 	POP	HL
 ;
-	CALL	SPK_BEEPER		; PLAY 
+	CALL	SPK_BEEPER	; PLAY 
 ;
 	RET
 ;
@@ -4753,6 +4762,223 @@ SPK_TUNTBL:
 	.DW $1B80, $23 ; A8
 	.DW $1D22, $21 ;  A
 	.DW $1EDE, $37; B8
+#ENDIF
+#IF (CPUOSC=4000000)
+	.DW $10, $3BBA ; C0
+	.DW $11, $3862 ;  C
+	.DW $12, $3537 ; D0
+	.DW $13, $3235 ;  D
+	.DW $14, $2F67 ; E0
+	.DW $15, $2CBC ; F0
+	.DW $17, $2A3D ;  F
+	.DW $18, $27DC ; G0
+	.DW $19, $259E ;  G
+	.DW $1B, $2382 ; A0
+	.DW $1D, $2183 ;  A
+	.DW $1E, $1FA2 ; B0
+	.DW $20, $1DDD ; C1
+	.DW $22, $1C2F ;  C
+	.DW $24, $1A9A ; D1
+	.DW $26, $191C ;  D
+	.DW $29, $17B3 ; E1
+	.DW $2B, $165F ; F1
+	.DW $2E, $151D ;  F
+	.DW $31, $13EE ; G1
+	.DW $33, $12D0 ;  G
+	.DW $37, $11C1 ; A1
+	.DW $3A, $10C2 ;  A
+	.DW $3D, $FD1 ; B1
+	.DW $41, $EEE ; C2
+	.DW $45, $E17 ;  C
+	.DW $49, $D4D ; D2
+	.DW $4D, $C8E ;  D
+	.DW $52, $BD9 ; E2
+	.DW $57, $B2F ; F2
+	.DW $5C, $A8E ;  F
+	.DW $62, $9F7 ; G2
+	.DW $67, $967 ;  G
+	.DW $6E, $8E0 ; A2
+	.DW $74, $861 ;  A
+	.DW $7B, $7E8 ; B2
+	.DW $82, $777 ; C3
+	.DW $8A, $70B ;  C
+	.DW $92, $6A6 ; D3
+	.DW $9B, $647 ;  D
+	.DW $A4, $5EC ; E3
+	.DW $AE, $597 ; F3
+	.DW $B9, $547 ;  F
+	.DW $C4, $4FB ; G3
+	.DW $CF, $4B3 ;  G
+	.DW $DC, $470 ; A3
+	.DW $E9, $430 ;  A
+	.DW $F6, $3F4 ; B3
+	.DW $105, $3BB ; C4
+	.DW $115, $385 ;  C
+	.DW $125, $353 ; D4
+	.DW $137, $323 ;  D
+	.DW $149, $2F6 ; E4
+	.DW $15D, $2CB ; F4
+	.DW $171, $2A3 ;  F
+	.DW $188, $27D ; G4
+	.DW $19F, $259 ;  G
+	.DW $1B8, $238 ; A4
+	.DW $1D2, $218 ;  A
+	.DW $1ED, $1FA ; B4
+	.DW $20B, $1DD ; C5
+	.DW $22A, $1C2 ;  C
+	.DW $24B, $1A9 ; D5
+	.DW $26E, $191 ;  D
+	.DW $293, $17B ; E5
+	.DW $2BA, $165 ; F5
+	.DW $2E3, $151 ;  F
+	.DW $30F, $13E ; G5
+	.DW $33E, $12C ;  G
+	.DW $370, $11C ; A5
+	.DW $3A4, $10C ;  A
+	.DW $3DB, $FD ; B5
+	.DW $416, $EE ; C6
+	.DW $454, $E1 ;  C
+	.DW $496, $D4 ; D6
+	.DW $4DC, $C8 ;  D
+	.DW $526, $BD ; E6
+	.DW $574, $B2 ; F6
+	.DW $5C7, $A8 ;  F
+	.DW $61F, $9F ; G6
+	.DW $67D, $96 ;  G
+	.DW $6E0, $8E ; A6
+	.DW $748, $86 ;  A
+	.DW $7B7, $7E ; B6
+	.DW $82D, $77 ; C7
+	.DW $8A9, $70 ;  C
+	.DW $92D, $6A ; D7
+	.DW $9B9, $64 ;  D
+	.DW $A4D, $5E ; E7
+	.DW $AE9, $59 ; F7
+	.DW $B8F, $54 ;  F
+	.DW $C3F, $4F ; G7
+	.DW $CFA, $4B ;  G
+	.DW $DC0, $47 ; A7
+	.DW $E91, $43 ;  A
+	.DW $F6F, $3F ; B7
+	.DW $105A, $3B ; C8
+	.DW $1152, $38 ;  C
+	.DW $125A, $35 ; D8
+	.DW $1372, $32 ;  D
+	.DW $149A, $2F ; E8
+	.DW $15D3, $2C ; F8
+	.DW $171F, $2A ;  F
+	.DW $187F, $27 ; G8
+	.DW $19F4, $25 ;  G
+	.DW $1B80, $23 ; A8
+	.DW $1D22, $21 ;  A
+	.DW $10, $12AA4 ; C0
+	.DW $11, $119EA ;  C
+	.DW $12, $10A17 ; D0
+	.DW $13, $FB0B ;  D
+	.DW $14, $ED07 ; E0
+	.DW $15, $DFAC ; F0
+	.DW $17, $D331 ;  F
+	.DW $18, $C74C ; G0
+	.DW $19, $BC17 ;  G
+	.DW $1B, $B18E ; A0
+	.DW $1D, $A790 ;  A
+	.DW $1E, $9E2C ; B0
+	.DW $20, $9552 ; C1
+	.DW $22, $8CEB ;  C
+	.DW $24, $8502 ; D1
+	.DW $26, $7D8D ;  D
+	.DW $29, $7683 ; E1
+	.DW $2B, $6FDC ; F1
+	.DW $2E, $6993 ;  F
+	.DW $31, $63A6 ; G1
+	.DW $33, $5E10 ;  G
+	.DW $37, $58C7 ; A1
+	.DW $3A, $53CB ;  A
+	.DW $3D, $4F16 ; B1
+	.DW $41, $4AA6 ; C2
+	.DW $45, $4675 ;  C
+	.DW $49, $4281 ; D2
+	.DW $4D, $3EC6 ;  D
+	.DW $52, $3B40 ; E2	
+	.DW $57, $37EC ; F2
+	.DW $5C, $34C9 ;  F
+	.DW $62, $31D3 ; G2
+	.DW $67, $2F06 ;  G
+	.DW $6E, $2C63 ; A2
+	.DW $74, $29E5 ;  A
+	.DW $7B, $278B ; B2
+	.DW $82, $2553 ; C3
+	.DW $8A, $233B ;  C
+	.DW $92, $2141 ; D3
+	.DW $9B, $1F63 ;  D
+	.DW $A4, $1DA0 ; E3
+	.DW $AE, $1BF6 ; F3
+	.DW $B9, $1A64 ;  F
+	.DW $C4, $18E9 ; G3
+	.DW $CF, $1783 ;  G
+	.DW $DC, $1631 ; A3
+	.DW $E9, $14F2 ;  A
+	.DW $F6, $13C5 ; B3
+	.DW $105, $12A9 ; C4
+	.DW $115, $119D ;  C
+	.DW $125, $10A0 ; D4
+	.DW $137, $FB1 ;  D
+	.DW $149, $ED0 ; E4
+	.DW $15D, $DFB ; F4
+	.DW $171, $D32 ;  F
+	.DW $188, $C74 ; G4
+	.DW $19F, $BC1 ;  G
+	.DW $1B8, $B18 ; A4
+	.DW $1D2, $A79 ;  A
+	.DW $1ED, $9E2 ; B4
+	.DW $20B, $954 ; C5
+	.DW $22A, $8CE ;  C
+	.DW $24B, $850 ; D5
+	.DW $26E, $7D8 ;  D
+	.DW $293, $768 ; E5
+	.DW $2BA, $6FD ; F5
+	.DW $2E3, $699 ;  F
+	.DW $30F, $63A ; G5
+	.DW $33E, $5E0 ;  G
+	.DW $370, $58C ; A5
+	.DW $3A4, $53C ;  A
+	.DW $3DB, $4F1 ; B5
+	.DW $416, $4AA ; C6
+	.DW $454, $467 ;  C
+	.DW $496, $428 ; D6
+	.DW $4DC, $3EC ;  D
+	.DW $526, $3B4 ; E6
+	.DW $574, $37E ; F6
+	.DW $5C7, $34C ;  F
+	.DW $61F, $31D ; G6
+	.DW $67D, $2F0 ;  G
+	.DW $6E0, $2C6 ; A6
+	.DW $748, $29E ;  A
+	.DW $7B7, $278 ; B6
+	.DW $82D, $255 ; C7
+	.DW $8A9, $233 ;  C
+	.DW $92D, $214 ; D7
+	.DW $9B9, $1F6 ;  D
+	.DW $A4D, $1DA ; E7
+	.DW $AE9, $1BF ; F7
+	.DW $B8F, $1A6 ;  F
+	.DW $C3F, $18E ; G7
+	.DW $CFA, $178 ;  G
+	.DW $DC0, $163 ; A7
+	.DW $E91, $14F ;  A
+	.DW $F6F, $13C ; B7
+	.DW $105A, $12A ; C8
+	.DW $1152, $119 ;  C
+	.DW $125A, $10A ; D8
+	.DW $1372, $FB ;  D
+	.DW $149A, $ED ; E8
+	.DW $15D3, $DF ; F8
+	.DW $171F, $D3 ;  F
+	.DW $187F, $C7 ; G8
+	.DW $19F4, $BC ;  G
+	.DW $1B80, $B1 ; A8
+	.DW $1D22, $A7 ;  A
+	.DW $1EDE, $9E ; B8
 #ENDIF
 #IF (CPUOSC=10000000)
 	.DW $0, $0000 ;	.DW $10, $12AA4 ; C0
