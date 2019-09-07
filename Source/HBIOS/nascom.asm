@@ -4416,7 +4416,7 @@ OUTNCR: CALL    OUTC            ; Output character in A
 		
 ; ---------------------------------------------------------------------------------------
 
-;	PLAY	N,D		; PLAY NOTE N, DURATION D
+;	PLAY	N,D		; PLAY NOTE N, DURATION DIVIDER
 
 PLAY:	CALL    GETNUM          ; GET NOTE TO PLAY
 	CALL	DEINT		; ITS IN DE
@@ -4442,12 +4442,14 @@ PLAY:	CALL    GETNUM          ; GET NOTE TO PLAY
 
         EX	(SP),HL         ; RECALL NOTE ENTRY
 				; A = DURATION
-	CALL SPK_BEEP
+	CALL	SPK_BEEP
 	
 	POP	HL		; RECALL SYNTAX POINTER
 	RET
 
 SPK_BEEP:
+	PUSH	AF		; SAVE DURATION
+
 	LD	A,(HL)		; LOAD 1ST ARG
 	INC	HL		; IN DE
 	LD	E,A
@@ -4463,6 +4465,24 @@ SPK_BEEP:
 	LD	B,A
 	PUSH	BC		; SETUP ARG IN HL
 	POP	HL
+
+DIV_HL_C:			; DIVIDE THE NOTE
+	POP	BC		; BY DURATION
+;	JR	DIV_SKIP
+
+	LD	C,B
+	XOR	A
+	LD	B,16
+DIV_HL_LP:
+	ADD	HL,HL
+	RLA
+	JR	C,$+5
+	CP	C
+	JR	C,$+4
+	SUB	C
+	INC	L
+	DJNZ	DIV_HL_LP
+DIV_SKIP:
 ;
 	CALL	SPK_BEEPER	; PLAY 
 ;
