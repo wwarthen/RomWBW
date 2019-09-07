@@ -33,7 +33,7 @@ LF      .EQU    0AH             ; Line feed
 CS      .EQU    0CH             ; Clear screen
 CR      .EQU    0DH             ; Carriage return
 CTRLO   .EQU    0FH             ; Control "O"
-CTRLQ	.EQU	11H		        ; Control "Q"
+CTRLQ	.EQU	11H		; Control "Q"
 CTRLR   .EQU    12H             ; Control "R"
 CTRLS   .EQU    13H             ; Control "S"
 CTRLU   .EQU    15H             ; Control "U"
@@ -41,6 +41,11 @@ ESC     .EQU    1BH             ; Escape
 DEL     .EQU    7FH             ; Delete
 
 ; BASIC WORK SPACE LOCATIONS
+
+; 0200H - 2000H	BASIC EXECUTABLE
+; 2000H - 2090H STACK
+; 2090H - 20F8H BASIC EXECUTABLE VARAIABLES / WORKSPACE
+; 20F9H -       BASIC PROGRAM START
 
 WRKSPC  .EQU    BAS_END+90H			; WAS 4090H             ; BASIC Work space
 USR     .EQU    WRKSPC+3H           ; "USR (x)" jump
@@ -132,7 +137,7 @@ MO      .EQU    24H             ; Missing operand
 HX      .EQU    26H             ; HEX error
 BN      .EQU    28H             ; BIN error
 
-        .ORG    BAS_LOC			; WAS 02000H
+        .ORG    BAS_LOC		; WAS 02000H
 
 COLD:	JP      STARTB          ; Jump for cold start
 WARM:   JP      WARMST          ; Jump for warm start
@@ -173,8 +178,8 @@ MSIZE:  LD      HL,MEMMSG       ; Point to message
 MLOOP:  INC     HL              ; Next byte
 ;        LD      A,H             ; Above address FFFF ?
 ;        OR      L
-		LD		A,H				; Memory top set below HBIOS Proxy @ FE00 
-		CP		$FD
+	LD	A,H		; Memory top set below HBIOS Proxy @ FE00 
+	CP	$FD
         JP      Z,SETTOP        ; Yes - 64K RAM
         LD      A,(HL)          ; Get contents
         LD      B,A             ; Save it
@@ -303,7 +308,7 @@ WORDS:  .BYTE   'E'+80H,"ND"
         .BYTE   'C'+80H,"ONT"
         .BYTE   'L'+80H,"IST"
         .BYTE   'C'+80H,"LEAR"
-        .BYTE   'C'+80H,"LOAD"
+        .BYTE   'P'+80H,"LAY"
         .BYTE   'C'+80H,"SAVE"
         .BYTE   'N'+80H,"EW"
 
@@ -392,7 +397,7 @@ WORDTB: .WORD   PEND
         .WORD   CONT
         .WORD   LIST
         .WORD   CLEAR
-        .WORD   REM
+        .WORD   PLAY
         .WORD   REM
         .WORD   NEW
 
@@ -573,10 +578,10 @@ CHKSTK: PUSH    HL              ; Save code string address
         ADD     HL,BC
         .BYTE   3EH             ; Skip "PUSH HL"
 ENFMEM: PUSH    HL              ; Save code string address
-        LD      A,0D0H ;LOW -48 ; 48 Bytes minimum RAM
+        LD      A,0D0H 		;LOW -48 ; 48 Bytes minimum RAM
         SUB     L
         LD      L,A
-        LD      A,0FFH; HIGH (-48) ; 48 Bytes minimum RAM
+        LD      A,0FFH		; HIGH (-48) ; 48 Bytes minimum RAM
         SBC     A,H
         JP      C,OMERR         ; Not enough - ?OM Error
         LD      H,A
@@ -1257,34 +1262,36 @@ UPDATA: LD      (NXTDAT),HL     ; Update DATA pointer
         EX      DE,HL           ; Restore code string address
         RET
 
+;	 GET CONSOLE INPUT STATUS VIA HBIOS
 
 TSTBRK: 
-		; SAVE INCOMING REGISTERS (AF IS OUTPUT)
-		PUSH	BC
-		PUSH	DE
-		PUSH	HL
-		; GET CONSOLE INPUT STATUS VIA HBIOS
-		LD		C,CIODEV_CONSOLE; CONSOLE UNIT TO C
-		LD		B,BF_CIOIST		; HBIOS FUNC: INPUT STATUS
-		RST		08				; HBIOS RETURNS STATUS IN A
-		; RESTORE REGISTERS (AF IS OUTPUT)
-		POP		HL
-		POP		DE
-		POP		BC
+	PUSH	BC		; SAVE INCOMING REGISTERS (AF IS OUTPUT)
+	PUSH	DE
+	PUSH	HL
+
+	LD	C,CIODEV_CONSOLE; CONSOLE UNIT TO C
+	LD	B,BF_CIOIST	; HBIOS FUNC: INPUT STATUS
+	RST	08		; HBIOS RETURNS STATUS IN A
+
+	POP	HL		; RESTORE REGISTERS (AF IS OUTPUT)
+	POP	DE
+	POP	BC
         RET     Z               ; No key, go back
-		PUSH	BC
-		PUSH	DE
-		PUSH	HL
-		; INPUT CHARACTER FROM CONSOLE VIA HBIOS
-		LD		C,CIODEV_CONSOLE; CONSOLE UNIT TO C
-		LD		B,BF_CIOIN		; HBIOS FUNC: INPUT CHAR
-		RST		08				; HBIOS READS CHARACTDR
-		LD		A,E				; MOVE CHARACTER TO A FOR RETURN
+	PUSH	BC
+	PUSH	DE
+	PUSH	HL
+
+; 	INPUT CHARACTER FROM CONSOLE VIA HBIOS
+
+	LD	C,CIODEV_CONSOLE; CONSOLE UNIT TO C
+	LD	B,BF_CIOIN	; HBIOS FUNC: INPUT CHAR
+	RST	08		; HBIOS READS CHARACTDR
+	LD	A,E		; MOVE CHARACTER TO A FOR RETURN
 ;
-		; RESTORE REGISTERS (AF IS OUTPUT)
-		POP		HL
-		POP		DE
-		POP		BC
+		
+	POP	HL		; RESTORE REGISTERS (AF IS OUTPUT)
+	POP	DE
+	POP	BC
  
         CP      ESC             ; Escape key?
         JR      Z,BRK           ; Yes, break
@@ -1292,22 +1299,22 @@ TSTBRK:
         JR      Z,BRK           ; Yes, break
         CP      CTRLS           ; Stop scrolling?
         RET     NZ              ; Other key, ignore
-STALL:  		            ; Wait for key
-		; SAVE INCOMING REGISTERS (AF IS OUTPUT)
-		PUSH	BC
-		PUSH	DE
-		PUSH	HL
+STALL:  		        ; Wait for key
+
+	PUSH	BC		; SAVE INCOMING REGISTERS (AF IS OUTPUT)
+	PUSH	DE
+	PUSH	HL
 ;
-		; INPUT CHARACTER FROM CONSOLE VIA HBIOS
-		LD		C,CIODEV_CONSOLE	; CONSOLE UNIT TO C
-		LD		B,BF_CIOIN		; HBIOS FUNC: INPUT CHAR
-		RST		08			; HBIOS READS CHARACTDR
-		LD		A,E			; MOVE CHARACTER TO A FOR RETURN
+;	INPUT CHARACTER FROM CONSOLE VIA HBIOS
 ;
-		; RESTORE REGISTERS (AF IS OUTPUT)
-		POP		HL
-		POP		DE
-		POP		BC	
+	LD	C,CIODEV_CONSOLE; CONSOLE UNIT TO C
+	LD	B,BF_CIOIN	; HBIOS FUNC: INPUT CHAR
+	RST	08		; HBIOS READS CHARACTDR
+	LD	A,E		; MOVE CHARACTER TO A FOR RETURN
+;	
+	POP	HL		; RESTORE REGISTERS (AF IS OUTPUT)
+	POP	DE
+	POP	BC	
         CP      CTRLQ           ; Resume scrolling?
         RET      Z              ; Release the chokehold
         CP      CTRLC           ; Second break?
@@ -1356,7 +1363,6 @@ NULL:   CALL    GETINT          ; Get integer 0-255
         RET     NZ              ; Return if bad value
         LD      (NULLS),A       ; Set nulls number
         RET
-
 
 ACCSUM: PUSH    HL              ; Save address in array
         LD      HL,(CHKSUM)     ; Get check sum
@@ -1967,8 +1973,8 @@ OPRND:  XOR     A               ; Get operand routine
         JP      C,ASCTFP        ; Number - Get value
         CALL    CHKLTR          ; See if a letter
         JP      NC,CONVAR       ; Letter - Find variable
-        CP		'&'				; &H = HEX, &B = BINARY
-        JR		NZ, NOTAMP
+        CP	'&'		; &H = HEX, &B = BINARY
+        JR	NZ, NOTAMP
         CALL    GETCHR          ; Get next character
         CP      'H'             ; Hex number indicated? [function added]
         JP      Z,HEXTFP        ; Convert Hex to FPREG
@@ -2981,14 +2987,14 @@ VAL:    CALL    GETLEN          ; Get length of string
         EX      (SP),HL         ; Save string end,get start
         PUSH    BC              ; Save end+1 byte
         LD      A,(HL)          ; Get starting byte
-    CP	'$'		; Hex number indicated? [function added]
-    JP	NZ,VAL1
-    CALL	HEXTFP		; Convert Hex to FPREG
-    JR	VAL3
+	CP	'$'		; Hex number indicated? [function added]
+	JP	NZ,VAL1
+	CALL	HEXTFP		; Convert Hex to FPREG
+	JR	VAL3
 VAL1:	CP	'%'		; Binary number indicated? [function added]
-    JP	NZ,VAL2
-    CALL	BINTFP		; Convert Bin to FPREG
-    JR	VAL3
+	JP	NZ,VAL2
+	CALL	BINTFP		; Convert Bin to FPREG
+	JR	VAL3
 VAL2:   CALL    ASCTFP          ; Convert ASCII string to FP
 VAL3:   POP     BC              ; Restore end+1 byte
         POP     HL              ; Restore end+1 address
@@ -3054,7 +3060,7 @@ POKE:   CALL    GETNUM          ; Get memory address
         CALL    DEINT           ; Get integer -32768 to 3276
         PUSH    DE              ; Save memory address
         CALL    CHKSYN          ; Make sure ',' follows
-        .BYTE      ','
+        .BYTE   ','
         CALL    GETINT          ; Get integer 0-255
         POP     DE              ; Restore memory address
         LD      (DE),A          ; Load it into memory
@@ -4143,19 +4149,21 @@ ATNTAB: .BYTE   9                       ; Table used by ATN
 
 ARET:   RET                     ; A RETurn instruction
 
+;	INPUT CHARACTER FROM CONSOLE VIA HBIOS
+
 GETINP: 
-		PUSH	BC
-		PUSH	DE
-		PUSH	HL
-		; INPUT CHARACTER FROM CONSOLE VIA HBIOS
-		LD	C,CIODEV_CONSOLE	; CONSOLE UNIT TO C
-		LD	B,BF_CIOIN			; HBIOS FUNC: INPUT CHAR
-		RST	08				; HBIOS READS CHARACTDR
-		LD	A,E				; MOVE CHARACTER TO A FOR RETURN
-		; RESTORE REGISTERS (AF IS OUTPUT)
-		POP	HL
-		POP	DE
-		POP	BC
+	PUSH	BC
+	PUSH	DE
+	PUSH	HL
+
+	LD	C,CIODEV_CONSOLE; CONSOLE UNIT TO C
+	LD	B,BF_CIOIN	; HBIOS FUNC: INPUT CHAR
+	RST	08		; HBIOS READS CHARACTDR
+	LD	A,E		; MOVE CHARACTER TO A FOR RETURN
+		
+	POP	HL		; RESTORE REGISTERS (AF IS OUTPUT)
+	POP	DE
+	POP	BC
         RET
 CLS: 
         LD      A,CS            ; ASCII Clear screen
@@ -4199,26 +4207,26 @@ DOKE:   CALL    GETNUM          ; Get a number
 HEX: 	CALL	TSTNUM          ; Verify it's a number
         CALL	DEINT           ; Get integer -32768 to 32767
         PUSH	BC              ; Save contents of BC
-        LD	    HL,PBUFF
-        LD	    A,D             ; Get high order into A
+        LD	HL,PBUFF
+        LD	A,D             ; Get high order into A
         CP      $0
-		JR      Z,HEX2          ; Skip output if both high digits are zero
+	JR      Z,HEX2          ; Skip output if both high digits are zero
         CALL    BYT2ASC         ; Convert D to ASCII
-		LD      A,B
-		CP      '0'
-		JR      Z,HEX1          ; Don't store high digit if zero
-        LD	    (HL),B          ; Store it to PBUFF
-        INC	    HL              ; Next location
-HEX1:   LD	    (HL),C          ; Store C to PBUFF+1
+	LD      A,B
+	CP      '0'
+	JR      Z,HEX1          ; Don't store high digit if zero
+        LD	(HL),B          ; Store it to PBUFF
+        INC	HL              ; Next location
+HEX1:   LD	(HL),C          ; Store C to PBUFF+1
         INC     HL              ; Next location
-HEX2:   LD	    A,E             ; Get lower byte
+HEX2:   LD	A,E             ; Get lower byte
         CALL    BYT2ASC         ; Convert E to ASCII
-		LD      A,D
+	LD      A,D
         CP      $0
-		JR      NZ,HEX3         ; If upper byte was not zero then always print lower byte
-		LD      A,B
-		CP      '0'             ; If high digit of lower byte is zero then don't print
-		JR      Z,HEX4
+	JR      NZ,HEX3         ; If upper byte was not zero then always print lower byte
+	LD      A,B
+	CP      '0'             ; If high digit of lower byte is zero then don't print
+	JR      Z,HEX4
 HEX3:   LD      (HL),B          ; to PBUFF+2
         INC     HL              ; Next location
 HEX4:   LD      (HL),C          ; to PBUFF+3
@@ -4254,6 +4262,7 @@ ADD301	ADD     A,$30           ; And make it full ASCII
 ; Convert "&Hnnnn" to FPREG
 ; Gets a character from (HL) checks for Hexadecimal ASCII numbers "&Hnnnn"
 ; Char is in A, NC if char is ;<=>?@ A-z, CY is set if 0-9
+;
 HEXTFP  EX      DE,HL           ; Move code string pointer to DE
         LD      HL,$0000        ; Zero out the value
         CALL    GETHEX          ; Check the number for valid hex
@@ -4362,39 +4371,38 @@ CHKBIN: INC     DE
 BINERR: LD      E,BN            ; ?BIN Error
         JP      ERROR
 
-
 JJUMP1: 
         LD      IX,-1           ; Flag cold start
         JP      CSTART          ; Go and initialise
 
-MONOUT: 
-		; SAVE ALL INCOMING REGISTERS
-		PUSH	AF
-		PUSH	BC
-		PUSH	DE
-		PUSH	HL
-		; OUTPUT CHARACTER TO CONSOLE VIA HBIOS
-		LD		E,A				; OUTPUT CHAR TO E
-		LD		C,CIODEV_CONSOLE; CONSOLE UNIT TO C
-		LD		B,BF_CIOOUT		; HBIOS FUNC: OUTPUT CHAR
-		RST		08				; HBIOS OUTPUTS CHARACTDR
-		; RESTORE ALL REGISTERS
-		POP		HL
-		POP		DE
-		POP		BC
-		POP		AF
-		RET
+;	OUTPUT CHARACTER TO CONSOLE VIA HBIOS
 
-MONITR: LD		A,BID_BOOT		; BOOT BANK
-		LD		HL,0			; ADDRESS ZERO
-		CALL	HB_BNKCALL		; DOES NOT RETURN
+MONOUT: 
+	PUSH	AF		; SAVE ALL INCOMING REGISTERS
+	PUSH	BC
+	PUSH	DE
+	PUSH	HL
+
+	LD	E,A		; OUTPUT CHAR TO E
+	LD	C,CIODEV_CONSOLE; CONSOLE UNIT TO C
+	LD	B,BF_CIOOUT	; HBIOS FUNC: OUTPUT CHAR
+	RST	08		; HBIOS OUTPUTS CHARACTDR
+
+	POP	HL		; RESTORE ALL REGISTERS
+	POP	DE
+	POP	BC
+	POP	AF
+	RET
+
+MONITR: LD	A,BID_BOOT	; BOOT BANK
+	LD	HL,0		; ADDRESS ZERO
+	CALL	HB_BNKCALL	; DOES NOT RETURN
 
 INITST: LD      A,0             ; Clear break flag
         LD      (BRKFLG),A
         JP      INIT
 
 ARETN:  RETN                    ; Return from NMI
-
 
 TSTBIT: PUSH    AF              ; Save bit mask
         AND     B               ; Get common bits
@@ -4406,19 +4414,470 @@ TSTBIT: PUSH    AF              ; Save bit mask
 OUTNCR: CALL    OUTC            ; Output character in A
         JP      PRNTCRLF        ; Output CRLF
 		
+; ---------------------------------------------------------------------------------------
+
+;	PLAY	N		; PLAY NOTE N
+
+PLAY:	CALL    GETNUM          ; GET NOTE TO PLAY
+	CALL	DEINT		; ITS IN DE
+
+	LD	A,SPK_NUMNOT-1	; EXIT IF NOTE
+	CP	E		; OUT OF RANGE
+	RET	M
+
+	PUSH	HL		; SAVE SYNTAX POINTER
+
+	LD	HL,SPK_TUNTBL	; POINT TO NOTE ENTRY
+	EX	DE,HL
+	ADD	HL,HL
+	ADD	HL,HL
+	ADD	HL,DE		; ITS IN HL
+
+	CALL	SPK_BEEP
+	
+	POP	HL		; RESTORE SYNTAX POINTER
+	RET
+
+SPK_BEEP:
+	LD	A,(HL)			; LOAD 1ST ARG
+	INC	HL			; IN DE
+	LD	E,A
+	LD	A,(HL)
+	INC	HL
+	LD	D,A
+;
+	LD	A,(HL)			; LOAD 2ND ARG
+	INC	HL			; IN BC
+	LD	C,A
+	LD	A,(HL)	
+	INC	HL
+	LD	B,A
+	PUSH	BC			; SETUP ARG IN HL
+	POP	HL
+;
+	CALL	SPK_BEEPER		; PLAY 
+;
+	RET
+;
+;	The following SPK_BEEPER routine is a modification of code from 
+;	"The Complete SPECTRUM ROM DISSASSEMBLY" by Dr Ian Logan & Dr Frank O’Hara
+;
+;	https://www.esocop.org/docs/CompleteSpectrumROMDisassemblyThe.pdf
+;
+;	DE 	Number of passes to make through the sound generation loop
+;	HL 	Loop delay parameter
+
+;RTCIO	.EQU	$70
+RTCVAL	.EQU	0
+;
+SPK_BEEPER:
+	PUSH	IX
+	DI 				; Disable the interrupt for the duration of a 'beep'.
+	LD	A,L 			; Save L temporarily.
+	SRL	L 			; Each '1' in the L register is to count 4 T states, but take INT (L/4) and count 16 T states instead.
+	SRL	L
+	CPL 				; Go back to the original value in L and find how many were lost by taking 3-(A mod 4).
+	AND	$03
+	LD	C,A
+	LD	B,$00
+	LD	IX,SPK_DLYADJ 		; The base address of the timing loop.
+	ADD	IX,BC			; Alter the length of the timing loop. Use an earlier starting point for each '1' lost by taking INT (L/4).
+	LD	A,(RTCVAL)		; Fetch the present border colour from BORDCR and move it to bits 2, 1 and 0 of the A register.
+;
+;	The HL register holds the 'length of the timing loop' with 16 T states being used for each '1' in the L register and 1024 T states for each '1' in the H register.
+;
+SPK_DLYADJ:
+	NOP 				; Add 4 T states for each earlier entry point that is used.
+	NOP
+	NOP
+	INC	B 			; The values in the B and C registers will come from the H and L registers - see below.
+	INC	C
+BE_H_L_LP:
+	DEC	C			; The 'timing loop', i.e. BC*4 T states. (But note that at the half-cycle point, C will be equal to L+1.)
+	JR	NZ,BE_H_L_LP
+	LD	C,$3F
+	DEC	B
+	JP	NZ,BE_H_L_LP
+;
+;	The loudspeaker is now alternately activated and deactivated.
+;
+	XOR	%00000100		; Flip bit 2.
+	OUT	(RTCIO),A		; Perform the 'OUT' operation, leaving other bits unchanged.
+	LD	B,H			; Reset the B register.
+	LD	C,A			; Save the A register.
+	BIT	4,A 			; Jump if at the half-cycle point.
+	JR	NZ,BE_AGAIN
+;
+;	After a full cycle the DE register pair is tested.
+;
+	LD	A,D			; Jump forward if the last complete pass has been made already.
+	OR	E
+	JR	Z,BE_END
+	LD	A,C			; Fetch the saved value.
+	LD	C,L			; Reset the C register.
+	DEC	DE			; Decrease the pass counter.
+	JP	(IX)			; Jump back to the required starting location of the loop.
+;
+;	The parameters for the second half-cycle are set up.
+;	
+BE_AGAIN:
+	LD	C,L			; Reset the C register.
+	INC	C 			; Add 16 T states as this path is shorter.
+	JP	(IX)			; Jump back.
+BE_END:
+	EI
+	POP	IX
+	RET
+;
+;	STANDARD ONE SECOND TONE TABLES AT 1MHZ (UNCOMPENSATED). FOR SPK_BEEPER, FIRST WORD LOADED INTO DE, SECOND INTO HL
+;	EXCEL SPREADSHEET FOR CALCULATION CAN BE FOUND HERE:
+;	https://www.retrobrewcomputers.org/lib/exe/fetch.php?media=boards:sbc:sbc_v2:sbc_v2-004:spk_beep_tuntbl.xlsx
+;
+SPK_TUNTBL:
+#IF (CPUOSC=1000000)
+	.DW $10, $1DDD ; C0
+	.DW $11, $1C31 ;  C
+	.DW $12, $1A9B ; D0
+	.DW $13, $191A ;  D
+	.DW $14, $17B3 ; E0
+	.DW $15, $165E ; F0
+	.DW $17, $151E ;  F
+	.DW $18, $13EE ; G0
+	.DW $19, $12CF ;  G
+	.DW $1B, $11C1 ; A0
+	.DW $1D, $10C1 ;  A
+	.DW $1E, $FD1 ; B0
+	.DW $20, $EEE ; C1
+	.DW $22, $E17 ;  C
+	.DW $24, $D4D ; D1
+	.DW $26, $C8E ;  D
+	.DW $29, $BD9 ; E1
+	.DW $2B, $B2F ; F1
+	.DW $2E, $A8E ;  F
+	.DW $31, $9F7 ; G1
+	.DW $33, $968 ;  G
+	.DW $37, $8E0 ; A1
+	.DW $3A, $861 ;  A
+	.DW $3D, $7E8 ; B1
+	.DW $41, $777 ; C2
+	.DW $45, $70B ;  C
+	.DW $49, $6A6 ; D2
+	.DW $4D, $647 ;  D
+	.DW $52, $5EC ; E2
+	.DW $57, $597 ; F2
+	.DW $5C, $547 ;  F
+	.DW $62, $4FB ; G2
+	.DW $67, $4B3 ;  G
+	.DW $6E, $470 ; A2
+	.DW $74, $430 ;  A
+	.DW $7B, $3F4 ; B2
+	.DW $82, $3BB ; C3
+	.DW $8A, $385 ;  C
+	.DW $92, $353 ; D3
+	.DW $9B, $323 ;  D
+	.DW $A4, $2F6 ; E3
+	.DW $AE, $2CB ; F3
+	.DW $B9, $2A3 ;  F
+	.DW $C4, $27D ; G3
+	.DW $CF, $259 ;  G
+	.DW $DC, $238 ; A3
+	.DW $E9, $218 ;  A
+	.DW $F6, $1FA ; B3
+	.DW $105, $1DD ; C4
+	.DW $115, $1C2 ;  C
+	.DW $125, $1A9 ; D4
+	.DW $137, $191 ;  D
+	.DW $149, $17B ; E4
+	.DW $15D, $165 ; F4
+	.DW $171, $151 ;  F
+	.DW $188, $13E ; G4
+	.DW $19F, $12C ;  G
+	.DW $1B8, $11C ; A4
+	.DW $1D2, $10C ;  A
+	.DW $1ED, $FD ; B4
+	.DW $20B, $EE ; C5
+	.DW $22A, $E1 ;  C
+	.DW $24B, $D4 ; D5
+	.DW $26E, $C8 ;  D
+	.DW $293, $BD ; E5
+	.DW $2BA, $B2 ; F5
+	.DW $2E3, $A8 ;  F
+	.DW $30F, $9F ; G5
+	.DW $33E, $96 ;  G
+	.DW $370, $8E ; A5
+	.DW $3A4, $86 ;  A
+	.DW $3DB, $7E ; B5
+	.DW $416, $77 ; C6
+	.DW $454, $70 ;  C
+	.DW $496, $6A ; D6
+	.DW $4DC, $64 ;  D
+	.DW $526, $5E ; E6
+	.DW $574, $59 ; F6
+	.DW $5C7, $54 ;  F
+	.DW $61F, $4F ; G6
+	.DW $67D, $4B ;  G
+	.DW $6E0, $47 ; A6
+	.DW $748, $43 ;  A
+	.DW $7B7, $3F ; B6
+	.DW $82D, $3B ; C7
+	.DW $8A9, $38 ;  C
+	.DW $92D, $35 ; D7
+	.DW $9B9, $32 ;  D
+	.DW $A4D, $2F ; E7
+	.DW $AE9, $2C ; F7
+	.DW $B8F, $2A ;  F
+	.DW $C3F, $27 ; G7
+	.DW $CFA, $25 ;  G
+	.DW $DC0, $23 ; A7
+	.DW $E91, $21 ;  A
+	.DW $F6F, $1F ; B7	
+	.DW $105A, $1D ; C8
+	.DW $1152, $1C ;  C
+	.DW $125A, $1A ; D8
+	.DW $1372, $19 ;  D
+	.DW $149A, $17 ; E8
+	.DW $15D3, $16 ; F8
+	.DW $171F, $15 ;  F
+	.DW $187F, $13 ; G8
+	.DW $19F4, $12 ;  G
+	.DW $1B80, $11 ; A8
+	.DW $1D22, $10 ;  A
+	.DW $1EDE, $F ; B8
+#ENDIF
+#IF (CPUOSC=2000000)
+	.DW $10, $3BBA ; C0
+	.DW $11, $3862 ;  C
+	.DW $12, $3537 ; D0
+	.DW $13, $3235 ;  D
+	.DW $14, $2F67 ; E0
+	.DW $15, $2CBC ; F0
+	.DW $17, $2A3D ;  F
+	.DW $18, $27DC ; G0
+	.DW $19, $259E ;  G
+	.DW $1B, $2382 ; A0
+	.DW $1D, $2183 ;  A
+	.DW $1E, $1FA2 ; B0
+	.DW $20, $1DDD ; C1
+	.DW $22, $1C2F ;  C
+	.DW $24, $1A9A ; D1
+	.DW $26, $191C ;  D
+	.DW $29, $17B3 ; E1
+	.DW $2B, $165F ; F1
+	.DW $2E, $151D ;  F
+	.DW $31, $13EE ; G1
+	.DW $33, $12D0 ;  G
+	.DW $37, $11C1 ; A1
+	.DW $3A, $10C2 ;  A
+	.DW $3D, $FD1 ; B1
+	.DW $41, $EEE ; C2
+	.DW $45, $E17 ;  C
+	.DW $49, $D4D ; D2
+	.DW $4D, $C8E ;  D
+	.DW $52, $BD9 ; E2
+	.DW $57, $B2F ; F2
+	.DW $5C, $A8E ;  F
+	.DW $62, $9F7 ; G2
+	.DW $67, $967 ;  G
+	.DW $6E, $8E0 ; A2
+	.DW $74, $861 ;  A
+	.DW $7B, $7E8 ; B2
+	.DW $82, $777 ; C3
+	.DW $8A, $70B ;  C
+	.DW $92, $6A6 ; D3
+	.DW $9B, $647 ;  D
+	.DW $A4, $5EC ; E3
+	.DW $AE, $597 ; F3
+	.DW $B9, $547 ;  F
+	.DW $C4, $4FB ; G3
+	.DW $CF, $4B3 ;  G
+	.DW $DC, $470 ; A3
+	.DW $E9, $430 ;  A
+	.DW $F6, $3F4 ; B3
+	.DW $105, $3BB ; C4
+	.DW $115, $385 ;  C
+	.DW $125, $353 ; D4
+	.DW $137, $323 ;  D
+	.DW $149, $2F6 ; E4
+	.DW $15D, $2CB ; F4
+	.DW $171, $2A3 ;  F
+	.DW $188, $27D ; G4
+	.DW $19F, $259 ;  G
+	.DW $1B8, $238 ; A4
+	.DW $1D2, $218 ;  A
+	.DW $1ED, $1FA ; B4
+	.DW $20B, $1DD ; C5
+	.DW $22A, $1C2 ;  C
+	.DW $24B, $1A9 ; D5
+	.DW $26E, $191 ;  D
+	.DW $293, $17B ; E5
+	.DW $2BA, $165 ; F5
+	.DW $2E3, $151 ;  F
+	.DW $30F, $13E ; G5
+	.DW $33E, $12C ;  G
+	.DW $370, $11C ; A5
+	.DW $3A4, $10C ;  A
+	.DW $3DB, $FD ; B5
+	.DW $416, $EE ; C6
+	.DW $454, $E1 ;  C
+	.DW $496, $D4 ; D6
+	.DW $4DC, $C8 ;  D
+	.DW $526, $BD ; E6
+	.DW $574, $B2 ; F6
+	.DW $5C7, $A8 ;  F
+	.DW $61F, $9F ; G6
+	.DW $67D, $96 ;  G
+	.DW $6E0, $8E ; A6
+	.DW $748, $86 ;  A
+	.DW $7B7, $7E ; B6
+	.DW $82D, $77 ; C7
+	.DW $8A9, $70 ;  C
+	.DW $92D, $6A ; D7
+	.DW $9B9, $64 ;  D
+	.DW $A4D, $5E ; E7
+	.DW $AE9, $59 ; F7
+	.DW $B8F, $54 ;  F
+	.DW $C3F, $4F ; G7
+	.DW $CFA, $4B ;  G
+	.DW $DC0, $47 ; A7
+	.DW $E91, $43 ;  A
+	.DW $F6F, $3F ; B7
+	.DW $105A, $3B ; C8
+	.DW $1152, $38 ;  C
+	.DW $125A, $35 ; D8
+	.DW $1372, $32 ;  D
+	.DW $149A, $2F ; E8
+	.DW $15D3, $2C ; F8
+	.DW $171F, $2A ;  F
+	.DW $187F, $27 ; G8
+	.DW $19F4, $25 ;  G
+	.DW $1B80, $23 ; A8
+	.DW $1D22, $21 ;  A
+	.DW $1EDE, $37; B8
+#ENDIF
+#IF (CPUOSC=10000000)
+	.DW $0, $0000 ;	.DW $10, $12AA4 ; C0
+	.DW $0, $0000 ;	.DW $11, $119EA ;  C
+	.DW $0, $0000 ;	.DW $12, $10A17 ; D0
+	.DW $13, $FB0B ;  D
+	.DW $14, $ED07 ; E0
+	.DW $15, $DFAC ; F0
+	.DW $17, $D331 ;  F
+	.DW $18, $C74C ; G0
+	.DW $19, $BC17 ;  G
+	.DW $1B, $B18E ; A0
+	.DW $1D, $A790 ;  A
+	.DW $1E, $9E2C ; B0
+	.DW $20, $9552 ; C1
+	.DW $22, $8CEB ;  C
+	.DW $24, $8502 ; D1
+	.DW $26, $7D8D ;  D
+	.DW $29, $7683 ; E1
+	.DW $2B, $6FDC ; F1
+	.DW $2E, $6993 ;  F
+	.DW $31, $63A6 ; G1
+	.DW $33, $5E10 ;  G
+	.DW $37, $58C7 ; A1
+	.DW $3A, $53CB ;  A
+	.DW $3D, $4F16 ; B1
+	.DW $41, $4AA6 ; C2
+	.DW $45, $4675 ;  C
+	.DW $49, $4281 ; D2
+	.DW $4D, $3EC6 ;  D
+	.DW $52, $3B40 ; E2
+	.DW $57, $37EC ; F2
+	.DW $5C, $34C9 ;  F
+	.DW $62, $31D3 ; G2
+	.DW $67, $2F06 ;  G
+	.DW $6E, $2C63 ; A2
+	.DW $74, $29E5 ;  A
+	.DW $7B, $278B ; B2
+	.DW $82, $2553 ; C3
+	.DW $8A, $233B ;  C
+	.DW $92, $2141 ; D3
+	.DW $9B, $1F63 ;  D
+	.DW $A4, $1DA0 ; E3
+	.DW $AE, $1BF6 ; F3
+	.DW $B9, $1A64 ;  F
+	.DW $C4, $18E9 ; G3
+	.DW $CF, $1783 ;  G
+	.DW $DC, $1631 ; A3
+	.DW $E9, $14F2 ;  A
+	.DW $F6, $13C5 ; B3
+	.DW $105, $12A9 ; C4
+	.DW $115, $119D ;  C 
+	.DW $125, $10A0 ; D4
+	.DW $137, $FB1 ;  D
+	.DW $149, $ED0 ; E4
+	.DW $15D, $DFB ; F4
+	.DW $171, $D32 ;  F
+	.DW $188, $C74 ; G4
+	.DW $19F, $BC1 ;  G
+	.DW $1B8, $B18 ; A4
+	.DW $1D2, $A79 ;  A
+	.DW $1ED, $9E2 ; B4
+	.DW $20B, $954 ; C5
+	.DW $22A, $8CE ;  C
+	.DW $24B, $850 ; D5
+	.DW $26E, $7D8 ;  D
+	.DW $293, $768 ; E5
+	.DW $2BA, $6FD ; F5
+	.DW $2E3, $699 ;  F
+	.DW $30F, $63A ; G5
+	.DW $33E, $5E0 ;  G
+	.DW $370, $58C ; A5
+	.DW $3A4, $53C ;  A
+	.DW $3DB, $4F1 ; B5
+	.DW $416, $4AA ; C6
+	.DW $454, $467 ;  C
+	.DW $496, $428 ; D6
+	.DW $4DC, $3EC ;  D
+	.DW $526, $3B4 ; E6
+	.DW $574, $37E ; F6
+	.DW $5C7, $34C ;  F
+	.DW $61F, $31D ; G6
+	.DW $67D, $2F0 ;  G
+	.DW $6E0, $2C6 ; A6
+	.DW $748, $29E ;  A
+	.DW $7B7, $278 ; B6
+	.DW $82D, $255 ; C7
+	.DW $8A9, $233 ;  C
+	.DW $92D, $214 ; D7
+	.DW $9B9, $1F6 ;  D
+	.DW $A4D, $1DA ; E7
+	.DW $AE9, $1BF ; F7
+	.DW $B8F, $1A6 ;  F
+	.DW $C3F, $18E ; G7
+	.DW $CFA, $178 ;  G
+	.DW $DC0, $163 ; A7
+	.DW $E91, $14F ;  A
+	.DW $F6F, $13C ; B7
+	.DW $105A, $12A ; C8
+	.DW $1152, $119 ;  C
+	.DW $125A, $10A ; D8
+	.DW $1372, $FB ;  D
+	.DW $149A, $ED ; E8
+	.DW $15D3, $DF ; F8
+	.DW $171F, $D3 ;  F
+	.DW $187F, $C7 ; G8
+	.DW $19F4, $BC ;  G
+	.DW $1B80, $B1 ; A8
+	.DW $1D22, $A7 ;  A
+	.DW $1EDE, $9E ; B8
+#ENDIF
+
+SPK_NUMNOT	.EQU	($-SPK_TUNTBL)/4
+
 TXT_READY:
 	.DB   CR,LF
 	.TEXT   "BASIC READY "
 	.DB   CR,LF,0FFH	
 		
-SLACK		.EQU	(BAS_END - $)
-		.FILL	SLACK,00H
+SLACK	.EQU	(BAS_END - $)
+	.FILL	SLACK,00H
 ;
-BAS_STACK	.EQU	$
-;
-		.ECHO	"BASIC space remaining: "
-		.ECHO	SLACK
-		.ECHO	" bytes.\n"
+	.ECHO	"BASIC space remaining: "
+	.ECHO	SLACK
+	.ECHO	" bytes.\n"
 
 .end
 
