@@ -16,6 +16,7 @@ Version 2.9.2
 - PMS: Added DS1210 low battery detection/message
 - PMS: Added note playing ability to SPK driver
 - WBW: Support disk I/O to any memory bank
+- WBW: Fix floppy I/O error on slow CPUs w/ ints active (credit Jorge Rodrigues)
 
 Version 2.9.1
 -------------
