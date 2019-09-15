@@ -4400,6 +4400,7 @@ MONITR: LD	A,BID_BOOT	; BOOT BANK
 
 INITST: LD      A,0             ; Clear break flag
         LD      (BRKFLG),A
+	CALL	SET_DUR_TBL	; SET UP SOUND TABLE
         JP      INIT
 
 ARETN:  RETN                    ; Return from NMI
@@ -4416,7 +4417,7 @@ OUTNCR: CALL    OUTC            ; Output character in A
 		
 ; ---------------------------------------------------------------------------------------
 
-;	PLAY	O,N,D		; PLAY OCTAVE 0-7, NOTE N (0-11), DURATION (1-8)
+;	PLAY	O,N,D		; PLAY OCTAVE 0-8, NOTE N (0-11), DURATION (1-8)
 
 PLAY:	CALL    GETINT          ; GET OCTAVE
 	PUSH	AF		; AND SAVE
@@ -4441,7 +4442,7 @@ PLAY:	CALL    GETINT          ; GET OCTAVE
         CALL    GETINT          ; GET DURATION
 
 	POP	DE		; GET NOTE PTR IN DE
-        EX	(SP),HL	        ; GET OCTAVE IN HL. SYTAX POINTER ON STACK
+        EX	(SP),HL	        ; GET OCTAVE IN HL. SYNTAX POINTER ON STACK
 	EX	DE,HL		; PUT NOTE PTR IN HL, OCTAVE IN DE
 
 	PUSH	BC
@@ -4453,9 +4454,7 @@ PLAY:	CALL    GETINT          ; GET OCTAVE
 	RET
 
 SPK_BEEP:
-;	PUSH	AF		; SAVE DURATION
-
-	CALL	SET_DUR_TBL
+	PUSH	AF		; SAVE DURATION
 
 	LD	A,(HL)		; LOAD 1ST ARG
 	INC	HL		; IN DE
@@ -4464,112 +4463,121 @@ SPK_BEEP:
 	INC	HL		; THE EIGTH
 	LD	D,A		; OCTAVE
 
-	LD	A,7		; DIVIDE THE
-	SUB	B		; FREQENCY BASE
-	LD	C,A		; ON THE OCTAVE
-SPK_OCTDIV:			; REQUESTED
-	SRL	D
-	RRC	E
-	DJNZ	SPK_OCTDIV
-SPK_OCTOK:
+	PUSH	DE
 
 	LD	A,(HL)		; LOAD 2ND ARG
-	INC	HL		; IN BC
-	LD	C,A		; WHICH IS THE 
+	INC	HL		; IN DE
+	LD	E,A		; WHICH IS THE 
 	LD	A,(HL)		; DURATION
-	INC	HL
-	LD	B,A
-	PUSH	BC		; SETUP ARG IN HL
-	POP	HL
+	LD	D,A
 
-	CALL	SPK_BEEPER	; PLAY 
-;
-	RET
+	PUSH	DE		; SETUP ARGS IN HL
+	POP	HL		; AND DE
+	POP	DE
+
+	LD	A,8		; DIVIDE THE
+	SUB	B		; FREQENCY BASED
+	JR	Z,SPK_OCTOK	; ON THE OCTAVE
+	LD	C,A		; REQUESTED
+SPK_OCTDIV:
+	SRL	D	; 0>D>C	; MULTIPLY THE	
+	RR	E	; C>E>C	; DURATION EVERY	
+	SLA	L	; C<L<0	; TIME WE DIVIDE
+	RL	H	; C<H<C	; THE FREQUENCY
+	DJNZ	SPK_OCTDIV
+SPK_OCTOK:		
+	POP	BC		; RECALL DURATION
+	LD	C,B
+
+	LD	B,16		; DIVIDE BY DURATION
+	XOR	A
+	ADD	HL,HL
+	RLA
+	CP	C
+	JR	C,$+4
+	INC	L
+	SUB	C
+	DJNZ	$-7
+	ADD	A,A
+	CP	C
+	JR	C,$+3
+	INC	HL
 ;
 ;	The following SPK_BEEPER routine is a modification of code from 
 ;	"The Complete SPECTRUM ROM DISSASSEMBLY" by Dr Ian Logan & Dr Frank O’Hara
-;
 ;	https://www.esocop.org/docs/CompleteSpectrumROMDisassemblyThe.pdf
 ;
 ;	DE 	Number of passes to make through the sound generation loop
 ;	HL 	Loop delay parameter
 
-;RTCIO	.EQU	$70
-RTCVAL	.EQU	0
-;
 SPK_BEEPER:
 	PUSH	IX
-	DI 				; Disable the interrupt for the duration of a 'beep'.
-	LD	A,L 			; Save L temporarily.
-	SRL	L 			; Each '1' in the L register is to count 4 T states, but take INT (L/4) and count 16 T states instead.
+	DI 			; Disable the interrupt for the duration of a 'beep'.
+	LD	A,L 		; Save L temporarily.
+	SRL	L 		; Each '1' in the L register is to count 4 T states, but take INT (L/4) and count 16 T states instead.
 	SRL	L
-	CPL 				; Go back to the original value in L and find how many were lost by taking 3-(A mod 4).
+	CPL 			; Go back to the original value in L and find how many were lost by taking 3-(A mod 4).
 	AND	$03
 	LD	C,A
 	LD	B,$00
-	LD	IX,SPK_DLYADJ 		; The base address of the timing loop.
-	ADD	IX,BC			; Alter the length of the timing loop. Use an earlier starting point for each '1' lost by taking INT (L/4).
-	LD	A,(RTCVAL)		; Fetch the present border colour from BORDCR and move it to bits 2, 1 and 0 of the A register.
+	LD	IX,SPK_DLYADJ 	; The base address of the timing loop.
+	ADD	IX,BC		; Alter the length of the timing loop. Use an earlier starting point for each '1' lost by taking INT (L/4).
+	LD	A,(RTCVAL)	; Fetch the present border colour from BORDCR and move it to bits 2, 1 and 0 of the A register.
 ;
 ;	The HL register holds the 'length of the timing loop' with 16 T states being used for each '1' in the L register and 1024 T states for each '1' in the H register.
 ;
 SPK_DLYADJ:
-	NOP 				; Add 4 T states for each earlier entry point that is used.
+	NOP 			; Add 4 T states for each earlier entry point that is used.
 	NOP
 	NOP
-	INC	B 			; The values in the B and C registers will come from the H and L registers - see below.
+	INC	B 		; The values in the B and C registers will come from the H and L registers - see below.
 	INC	C
 BE_H_L_LP:
-	DEC	C			; The 'timing loop', i.e. BC*4 T states. (But note that at the half-cycle point, C will be equal to L+1.)
+	DEC	C		; The 'timing loop', i.e. BC*4 T states. (But note that at the half-cycle point, C will be equal to L+1.)
 	JR	NZ,BE_H_L_LP
 	LD	C,$3F
 	DEC	B
 	JP	NZ,BE_H_L_LP
 ;
-;	The loudspeaker is now alternately activated and deactivated.
-;
-	XOR	%00000100		; Flip bit 2.
-	OUT	(RTCIO),A		; Perform the 'OUT' operation, leaving other bits unchanged.
-	LD	B,H			; Reset the B register.
-	LD	C,A			; Save the A register.
-	BIT	4,A 			; Jump if at the half-cycle point.
+	XOR	%00000100	; Flip bit 2. The loudspeaker is now alternately activated and deactivated.
+	OUT	(RTCIO),A	; Perform the 'OUT' operation, leaving other bits unchanged.
+	LD	B,H		; Reset the B register.
+	LD	C,A		; Save the A register.
+	BIT	4,A 		; Jump if at the half-cycle point.
 	JR	NZ,BE_AGAIN
 ;
-;	After a full cycle the DE register pair is tested.
-;
-	LD	A,D			; Jump forward if the last complete pass has been made already.
+	LD	A,D		; After a full cycle the DE register pair is tested.
 	OR	E
-	JR	Z,BE_END
-	LD	A,C			; Fetch the saved value.
-	LD	C,L			; Reset the C register.
-	DEC	DE			; Decrease the pass counter.
-	JP	(IX)			; Jump back to the required starting location of the loop.
-;
-;	The parameters for the second half-cycle are set up.
+	JR	Z,BE_END	; Jump forward if the last complete pass has been made already.
+	LD	A,C		; Fetch the saved value.
+	LD	C,L		; Reset the C register.
+	DEC	DE		; Decrease the pass counter.
+	JP	(IX)		; Jump back to the required starting location of the loop.
 ;	
-BE_AGAIN:
-	LD	C,L			; Reset the C register.
-	INC	C 			; Add 16 T states as this path is shorter.
-	JP	(IX)			; Jump back.
-BE_END:
-	EI
+BE_AGAIN:			; The parameters for the second half-cycle are set up.
+	LD	C,L		; Reset the C register.
+	INC	C 		; Add 16 T states as this path is shorter.
+	JP	(IX)		; Jump back.
+
+BE_END:	EI
 	POP	IX
 	RET
-
+;
+RTCVAL	.DB	0
 ;
 ;	SETUP THE ONE SECOND TONE DURATION TABLE BASED ON PROCESSOR SPEED AND TONE FREQUENCY
 ;
-;	DURATION = (CPUKHZ / 8) / FREQUENCY
+;	DURATION = (CPUMHZ / 8) / FREQUENCY
 ;	DURATION = (CPUKHZ * 1000 / 8 ) / FREQUENCY
 ;	DURATION = (CPUKHZ * 125 ) / FREQUENCY
 ;	DURATION = (CPUKHZ * 256 / 2 - CPUKHZ - (2 * CPUKHZ) ) / FREQUENCY
 
 SET_DUR_TBL:
-	PUSH	IX
-	PUSH	IY
-	PUSH	HL
-	PUSH	DE
-	PUSH	BC
+;	PUSH	IX
+;	PUSH	IY
+;	PUSH	HL
+;	PUSH	DE
+;	PUSH	BC
 
 	LD	B,BF_SYSGET		; GET CPU SPEED
 	LD	C,BF_SYSGET_CPUINFO	; FROM HBIOS
@@ -4583,22 +4591,19 @@ SET_DUR_TBL:
 	LD	D,0
 	LD	L,D
 
-	SRL	E			; DEHL = DEHL / 2
-	RR	H
-	RR	L
+	SRL	E		; 0>E>C	; DEHL = DEHL / 2
+	RR	H		; C>H>C ;
+	RR	L		; C>L>C	;
 
 	SBC	HL,BC			; DEHL = DEHL - CPUKHZ
-	JR	NC,FRQ_ADJ1
+	JR	NC,FRQ_AJ1
 	DEC	DE
-FRQ_ADJ1:
-	SLA	C			; DEHL = DEHL - (2 * CPUKHZ)
-	RL	B
+FRQ_AJ1:SLA	C		; C<C<0	; DEHL = DEHL - (2 * CPUKHZ)
+	RL	B		; C<B<C
 	SBC	HL,BC
-	JR	NC,FRQ_ADJ2
+	JR	NC,FRQ_AJ2
 	DEC	DE
-FRQ_ADJ2:
-
-	PUSH	HL			; DEHL = CPUKHZ / 8) / FREQUENCY
+FRQ_AJ2:PUSH	HL			; DEHL = CPUKHZ / 8) / FREQUENCY
 	POP	IX			; HLIX = DENOMINATOR
 	EX	DE,HL
 
@@ -4611,9 +4616,8 @@ TBL_LP:	PUSH	BC
 
 	PUSH	IX			; STORE DENOMINATOR FOR NEXT LOOP
 	PUSH	HL
-
-DIV_3216:				; HLIX = HLIX / BC, DE = REMAINDER
- 	LD	DE,0
+		
+ 	LD	DE,0			; HLIX = HLIX / BC, DE = REMAINDER
 	LD	A,32
 DIV_LP:	ADD	IX,IX
 	ADC	HL,HL
@@ -4644,11 +4648,11 @@ DIV_CANSUB:
 	POP	BC			; RETREIVE THE
 	DJNZ	TBL_LP			; LOOP COUNTER
 
-	POP	BC
-	POP	DE
-	POP	HL
-	POP	IY
-	POP	IX
+;	POP	BC
+;	POP	DE
+;	POP	HL
+;	POP	IY
+;	POP	IX
 
 	RET
 
