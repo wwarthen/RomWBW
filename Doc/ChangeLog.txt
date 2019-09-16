@@ -17,6 +17,7 @@ Version 2.9.2
 - PMS: Added note playing ability to SPK driver
 - WBW: Support disk I/O to any memory bank
 - WBW: Fix floppy I/O error on slow CPUs w/ ints active (credit Jorge Rodrigues)
+- WBW: Support for KIO chip (based on board by Tom Szolyga)
 
 Version 2.9.1
 -------------
