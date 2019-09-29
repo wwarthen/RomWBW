@@ -19,6 +19,8 @@ Version 2.9.2
 - WBW: Fix floppy I/O error on slow CPUs w/ ints active (credit Jorge Rodrigues)
 - WBW: Support for KIO chip (based on board by Tom Szolyga)
 - N?B: Made ZCAL Y2K compliant
+- WBW: Show disk activity on diagnostic LEDs
+- WBW: DSRTC now detects DS-1302 presence dynamically
 
 Version 2.9.1
 -------------
