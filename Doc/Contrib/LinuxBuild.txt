@@ -1,5 +1,9 @@
 Assembling the RomWBW firmware under Linux.
 
+Note: This process is generally deprecated as it has not been maintained.
+This document remains in the hope that someday it will be useful for
+resurrecting a Linux build.
+
 Note: Updated on 6/25/2013 to eliminate the need for the separate Linux
 makefile.  The standard makefile now has conditionals to allow it to be
 used under Windows or Linux (I hope) --WW

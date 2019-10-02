@@ -98,9 +98,10 @@ to determine the <plt> component of the configuration filename:
 	Zeta V2		ZETA2_std.rom
 	N8		N8_std.rom
 	Mark IV		MK4_std.rom
-	RC2014		RC_std.rom
-	RC2014 w/ Z180	RC180_nat.rom	(native Z180 memory addressing)
-	RC2014 w/ Z180	RC180_ext.rom	(512K RAM/ROM module)
+	RC2014 w/ Z80	RCZ80_std.rom
+	RC2014 w/ Z180	RCZ180_nat.rom	(native Z180 memory addressing)
+	RC2014 w/ Z180	RCZ180_ext.rom	(external 512K RAM/ROM module)
+	SC-series	SC126, SC130
 	Easy Z80	EZZ180_std.rom
 
 You can use any name you choose for the <cfg> component of the 

@@ -20,7 +20,7 @@ param([string]$Platform = "", [string]$Config = "", [string]$RomSize = "512", [s
 # UNA BIOS is simply imbedded, it is not built here.
 #
 $PlatformListZ80 = "SBC", "ZETA", "ZETA2", "RCZ80", "EZZ80", "UNA"
-$PlatformListZ180 = "N8", "MK4", "RCZ180", "SC126"
+$PlatformListZ180 = "N8", "MK4", "RCZ180", "SCZ180"
 
 #
 # Establish the build platform.  It may have been passed in on the command line.  Validate
@@ -72,7 +72,6 @@ while ($true)
 # TASM should be invoked with the proper CPU type.  Below, the CPU type is inferred
 # from the platform.
 #
-#if (($Platform -eq "N8") -or ($Platform -eq "MK4") -or ($Platform -eq "RCZ180") -or ($Platform -eq "SC126")) {$CPUType = "180"} else {$CPUType = "80"}
 if ($PlatformListZ180 -contains $Platform) {$CPUType = "180"} else {$CPUType = "80"}
 
 #

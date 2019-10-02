@@ -31,9 +31,10 @@ image to use for each platform:
 	Zeta V2		ZETA2_std.rom
 	N8		N8_std.rom
 	Mark IV		MK4_std.rom
-	RC2014		RC_std.rom
-	RC2014 w/ Z180	RC180_nat.rom	(native Z180 memory addressing)
-	RC2014 w/ Z180	RC180_ext.rom	(512K RAM/ROM module)
+	RC2014 w/ Z80	RCZ80_std.rom
+	RC2014 w/ Z180	RCZ180_nat.rom	(native Z180 memory addressing)
+	RC2014 w/ Z180	RCZ180_ext.rom	(external 512K RAM/ROM module)
+	SC-series	SC126, SC130
 	Easy Z80	EZZ180_std.rom
 
 You will find there is one additional ROM image called 
@@ -155,6 +156,16 @@ RCZ80 (RCZ80_std.rom):
  - Support for Scott Baker floppy controllers (SMC & WDC) may
    be enabled in config
 
+RCZ80 w/ KIO (RCZ80_kio.rom):
+ - Assumes CPU oscillator of 7.3728 MHz
+ - Requires 512K RAM/ROM module
+ - Requires KIO module
+ - Includes support for Compact Flash Module
+ - Support for PPIDE Module may be enabled in config
+ - Support for Scott Baker SIO board may be enabled in config
+ - Support for Scott Baker floppy controllers (SMC & WDC) may
+   be enabled in config
+
 RCZ180 (RCZ180_nat.rom & RCZ180_ext.rom):
  - Assumes CPU oscillator of 18.432 MHz
  - Console attached to Z180 onboard serial ports at 38400 baud
@@ -170,6 +181,17 @@ RCZ180 (RCZ180_nat.rom & RCZ180_ext.rom):
      addressing of memory, such as the SC119
    - RCZ180_ext.rom uses external bank management to access
      memory, such as the 512K RAM/ROM module.
+
+SCZ180 (SCZ180_126.rom & SCZ180_130.rom):
+ - Assumes CPU oscillator of 18.432 MHz
+ - Console attached to Z180 onboard serial ports at 38400 baud
+ - Includes support for Compact Flash Module
+ - Support for PPIDE Module may be enabled in config
+ - Support for alternative serial modules may be enabled in config
+ - Support for Scott Baker floppy controllers (SMC & WDC) may
+   be enabled in config
+ - The _126 and _130 varians are functionally identical, they just
+   display a different system label at startup
 
 EZZ80 (EZZ80_std.rom):
  - Assumes CPU oscillator of 10.000 MHz

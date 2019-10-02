@@ -7,12 +7,12 @@
 ***********************************************************************
 
 Wayne Warthen (wwarthen@gmail.com)
-Version 2.9.2-pre.12, 2019-09-29
+Version 2.9.2-pre.13, 2019-10-02
 https://www.retrobrewcomputers.org/
 
 RomWBW is a ROM-based implementation of CP/M-80 2.2 and Z-System for 
 all RetroBrew Computers Z80/Z180 hardware platforms including SBC 
-1/2, Zeta 1/2, N8, Mark IV, RC2014, and Easy Z80. Virtually all 
+1/2, Zeta 1/2, N8, Mark IV, RC2014, SC, and Easy Z80. Virtually all 
 RetroBrew hardware is supported including floppy, hard disk (IDE, CF 
 Card, SD Card), Video, and keyboard. VT-100 terminal emulation is 
 built-in.
@@ -145,10 +145,8 @@ few things that UNA does not support:
 
     - Floppy Drives
     - Video/Keyboard/Terminal Emulation
-    - Zeta 1, N8, and RC2014 systems
+    - Zeta 1, N8, RC2014, SC, and Easy Z80 systems
     - Some older support boards
-    - RC2014 systems
-    - Easy Z80 systems
 
 If you wish to try the UNA variant of RomWBW, then just program your
 ROM with the ROM image called "UNA_std.rom" in the Binary directory.

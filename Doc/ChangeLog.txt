@@ -21,6 +21,7 @@ Version 2.9.2
 - N?B: Made ZCAL Y2K compliant
 - WBW: Show disk activity on diagnostic LEDs
 - WBW: DSRTC now detects DS-1302 presence dynamically
+- WBW: SC126 platform renamed to SCZ180 w/ configs for SC126, SC130
 - WBW: Add status LED support
 
 Version 2.9.1
