@@ -63,7 +63,7 @@
 ;
 ; CONSTANTS
 ;
-; RTC	SBC	SBC-004	MFPIC	N8	N8-CSIO	SC126	
+; RTC	SBC	SBC-004	MFPIC	N8	N8-CSIO	SC	
 ; -----	-------	-------	-------	-------	-------	-------	
 ; D7 WR	RTC_OUT RTC_OUT --	RTC_OUT RTC_OUT RTC_OUT, I2C_SDA
 ; D6 WR	RTC_CLK RTC_CLK --	RTC_CLK RTC_CLK RTC_CLK 

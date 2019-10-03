@@ -93,8 +93,8 @@ TYPMYM		.EQU	3		; FILTYP value for MYM sound file
 	LD	DE,MSGRCZ180		; Message for RC2014 Z180 platform
 	CP	8			; RC2014 Z80?
 	JR	Z,_SETP			; If so, set ports
-	LD	DE,MSGSC126		; Message for SC126 Z180 platform
-	CP	10			; SC126?
+	LD	DE,MSGSCZ180		; Message for SC Z180 platform
+	CP	10			; SCZ180?
 	JR	Z,_SETP			; If so, same ports as RC2014
 	LD	HL,$9D9C		; For N8, RSEL=9C, RDAT=9D
 	LD	DE,MSGN8		; Message for N8 platform
@@ -621,7 +621,7 @@ MSGFIL		.DB	"Sound file not found!",0
 MSGSIZ		.DB	"Sound file too large to load!",0
 MSGRCZ80	.DB	"RC2014 Z80 w/ Ed Brindley Sound Module",0
 MSGRCZ180	.DB	"RC2014 Z180 w/ Ed Brindley Sound Module",0
-MSGSC126	.DB	"SC126 Z180 w/ Ed Brindley Sound Module",0
+MSGSCZ180	.DB	"SC Z180 w/ Ed Brindley Sound Module",0
 MSGEZ		.DB	"Easy Z80 w/ Ed Brindley Sound Module",0
 MSGN8		.DB	"RetroBrew N8 Onboard Sound System",0
 MSGSCG		.DB	"RetroBrew SCG ECB Adapter Sound System",0

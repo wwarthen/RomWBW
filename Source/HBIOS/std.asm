@@ -11,7 +11,7 @@
 ; 7.  RCZ80	RC2014 based system with 512K banked RAM/ROM card
 ; 8.  RCZ180	RC2014 based system with Z180 CPU
 ; 9.  EZZ80	Easy Z80, Z80 SBC w/ RC2014 bus and CTC
-; 10. SC126	SC126 Z180 based system
+; 10. SCZ180	Steve Cousins Z180 based system
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -40,7 +40,7 @@ PLT_UNA		.EQU	6		; UNA BIOS
 PLT_RCZ80	.EQU	7		; RC2014 W Z80
 PLT_RCZ180	.EQU	8		; RC2014 W/ Z180
 PLT_EZZ80	.EQU	9		; EASY Z80
-PLT_SC126	.EQU	10		; SC126
+PLT_SCZ180	.EQU	10		; SCZ180
 ;
 #IF (BIOS == BIOS_WBW)
 #INCLUDE "hbios.inc"
@@ -154,7 +154,7 @@ SDMODE_PPI	.EQU	4		; PPISD MINI BOARD
 SDMODE_UART	.EQU	5		; SD INTERFACE VIA UART
 SDMODE_DSD	.EQU	6		; DUAL SD
 SDMODE_MK4	.EQU	7		; MARK IV
-SDMODE_SC126	.EQU	8		; SC126
+SDMODE_SC	.EQU	8		; SC (Steve Cousins)
 ;
 ; SOUND CHIP MODE SELECTIONS
 ;
