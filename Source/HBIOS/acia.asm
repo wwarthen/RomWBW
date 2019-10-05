@@ -691,7 +691,7 @@ ACIA0_CFG:
         .DB     0                       ; ACIA TYPE (SET DURING INIT)
         .DB     0                       ; MODULE ID
         .DB     ACIA0BASE               ; BASE PORT
-        .DW     DEFSERCFG               ; LINE CONFIGURATION
+        .DW     ACIA0CFG                ; LINE CONFIGURATION
         .DW     ACIA0_RCVBUF            ; POINTER TO RCV BUFFER STRUCT
 	.DW     ACIA0_INT		; INT HANDLER POINTER
 	.DW	(ACIA0CLK / ACIA0DIV) & $FFFF	; CLOCK FREQ AS
@@ -707,7 +707,7 @@ ACIA1_CFG:
         .DB     0                       ; ACIA TYPE (SET DURING INIT)
         .DB     1                       ; MODULE ID
         .DB     ACIA1BASE               ; BASE PORT
-        .DW     DEFSERCFG               ; LINE CONFIGURATION
+        .DW     ACIA1CFG                ; LINE CONFIGURATION
         .DW     ACIA1_RCVBUF            ; POINTER TO RCV BUFFER STRUCT
 	.DW     ACIA1_INT		; INT HANDLER POINTER
 	.DW	(ACIA1CLK / ACIA1DIV) & $FFFF	; CLOCK FREQ AS
