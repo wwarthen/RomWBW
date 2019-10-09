@@ -1,7 +1,7 @@
 RomWBW HBIOS CP/M FAT Utility ("FAT.COM")
 
 Author: Wayne Warthen
-Updated: 8-May-2019
+Updated: 8-Oct-2019
 
 Application to manipulate and exchange files with a FAT (DOS)
 filesystem.  Runs on any HBIOS hosted CP/M implementation.
@@ -92,3 +92,4 @@ HISTORY:
  2-May-2019: v0.9 initial release (beta)
  7-May-2019: v0.9.1 added REN and DEL (beta)
  8-May-2019: v0.9.2 handle file collisions w/ user prompt (beta)
+ 8-Oct-2019: v0.9.3 fixed incorrect filename buffer size (MAX_FN)
