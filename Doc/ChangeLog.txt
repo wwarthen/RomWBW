@@ -23,6 +23,7 @@ Version 2.9.2
 - WBW: DSRTC now detects DS-1302 presence dynamically
 - WBW: SC126 platform renamed to SCZ180 w/ configs for SC126, SC130
 - WBW: Add status LED support
+- WBW: Add support for secondry SPI (SD Card) on SC126
 
 Version 2.9.1
 -------------
