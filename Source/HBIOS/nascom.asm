@@ -282,43 +282,43 @@ FNCTAB: .WORD   SGN
 
 ; RESERVED WORD LIST
 
-WORDS:  .BYTE   'E'+80H,"ND"
-        .BYTE   'F'+80H,"OR"
-        .BYTE   'N'+80H,"EXT"
-        .BYTE   'D'+80H,"ATA"
-        .BYTE   'I'+80H,"NPUT"
-        .BYTE   'D'+80H,"IM"
-        .BYTE   'R'+80H,"EAD"
-        .BYTE   'L'+80H,"ET"
-        .BYTE   'G'+80H,"OTO"
-        .BYTE   'R'+80H,"UN"
-        .BYTE   'I'+80H,"F"
-        .BYTE   'R'+80H,"ESTORE"
-        .BYTE   'G'+80H,"OSUB"
-        .BYTE   'R'+80H,"ETURN"
-        .BYTE   'R'+80H,"EM"
-        .BYTE   'S'+80H,"TOP"
-        .BYTE   'O'+80H,"UT"
-        .BYTE   'O'+80H,"N"
-        .BYTE   'N'+80H,"ULL"
-        .BYTE   'W'+80H,"AIT"
-        .BYTE   'D'+80H,"EF"
-        .BYTE   'P'+80H,"OKE"
-        .BYTE   'D'+80H,"OKE"
-        .BYTE   'S'+80H,"CREEN"
-        .BYTE   'L'+80H,"INES"
-        .BYTE   'C'+80H,"LS"
-        .BYTE   'W'+80H,"IDTH"
-        .BYTE   'B'+80H,"YE"
-        .BYTE   'S'+80H,"ET"
-        .BYTE   'R'+80H,"ESET"
-        .BYTE   'P'+80H,"RINT"
-        .BYTE   'C'+80H,"ONT"
-        .BYTE   'L'+80H,"IST"
-        .BYTE   'C'+80H,"LEAR"
-        .BYTE   'P'+80H,"LAY"
-        .BYTE   'C'+80H,"SAVE"
-        .BYTE   'N'+80H,"EW"
+WORDS:  .BYTE   'E'+80H,"ND"		; PEND:
+        .BYTE   'F'+80H,"OR"		; FOR:
+        .BYTE   'N'+80H,"EXT"		; NEXT:
+        .BYTE   'D'+80H,"ATA"		; DATA:
+        .BYTE   'I'+80H,"NPUT"		; INPUT:
+        .BYTE   'D'+80H,"IM"		; DIM:
+        .BYTE   'R'+80H,"EAD"		; READ:
+        .BYTE   'L'+80H,"ET"		; SET:
+        .BYTE   'G'+80H,"OTO"		; GOTO:
+        .BYTE   'R'+80H,"UN"		; RUN:
+        .BYTE   'I'+80H,"F"		; IF:
+        .BYTE   'R'+80H,"ESTORE"	; RESTOR:
+        .BYTE   'G'+80H,"OSUB"		; GOSUB:
+        .BYTE   'R'+80H,"ETURN"		; RETURN:
+        .BYTE   'R'+80H,"EM"		; REM:
+        .BYTE   'S'+80H,"TOP"		; STOP:
+        .BYTE   'O'+80H,"UT"		; POUT:
+        .BYTE   'O'+80H,"N"		: ON:
+        .BYTE   'N'+80H,"ULL"		; NULL:
+        .BYTE   'W'+80H,"AIT"		: WAIT:
+        .BYTE   'D'+80H,"EF"		: DEF:
+        .BYTE   'P'+80H,"OKE"		: POKE:
+        .BYTE   'D'+80H,"OKE"		: DOKE:
+        .BYTE   'S'+80H,"CREEN"		: REM: NOT IMPLEMENTED
+        .BYTE   'L'+80H,"INES"		: LINES
+        .BYTE   'C'+80H,"LS"		: CLS:
+        .BYTE   'W'+80H,"IDTH"		: WIDTH:
+        .BYTE   'B'+80H,"YE"		: MONITR:
+        .BYTE   'S'+80H,"ET"		: PSET:
+        .BYTE   'R'+80H,"ESET"		; RESET:
+        .BYTE   'P'+80H,"RINT"		: PRINT:
+        .BYTE   'C'+80H,"ONT"		: CONT:
+        .BYTE   'L'+80H,"IST"		: LIST:
+        .BYTE   'C'+80H,"LEAR"		: CLEAR:
+        .BYTE   'P'+80H,"LAY"		: PLAY: WAS CLOAD
+        .BYTE   'C'+80H,"SAVE"		: REM: NOT IMPLEMENTED
+        .BYTE   'N'+80H,"EW"		: NEW
 
         .BYTE   'T'+80H,"AB("
         .BYTE   'T'+80H,"O"
@@ -434,7 +434,7 @@ ZTIMES  .EQU    0AEH            ; *
 ZDIV    .EQU    0AFH            ; /
 ZOR     .EQU    0B2H            ; OR
 ZGTR    .EQU    0B3H            ; >
-ZEQUAL  .EQU    0B4H            ; M
+ZEQUAL  .EQU    0B4H            ; =
 ZLTH    .EQU    0B5H            ; <
 ZSGN    .EQU    0B6H            ; SGN
 ZPOINT  .EQU    0C7H            ; POINT
