@@ -25,15 +25,17 @@
 ; 20181027 - Initial retrobrewcomputer SBC V2 version - difficultylevelhigh@gmail.com
 ; 20191012 - Add PLAY command for SBC-V2-004 Sound support.
 ; 20191013 - Add option for long error messages.
+;	   - Add option to use VT100 escape codes for screen controls.
 ;
 #INCLUDE "std.asm"
 ;
 ; CUSTOMIZATION
 ;
 ABBRERR	.EQU	FALSE		; Choose between long error message and abbreviated error messages.
+VT100	.EQU	TRUE		; Use VT100 escape codes for CLS
 ;
 ; GENERAL EQUATES
-
+;
 CTRLC   .EQU    03H             ; Control "C"
 CTRLG   .EQU    07H             ; Control "G"
 BKSP    .EQU    08H             ; Back space
@@ -48,8 +50,9 @@ CTRLU   .EQU    15H             ; Control "U"
 ESC     .EQU    1BH             ; Escape
 DEL     .EQU    7FH             ; Delete
 
+;
 ; BASIC WORK SPACE LOCATIONS
-
+;
 ; 0200H - 2000H	BASIC EXECUTABLE
 ; 2000H - 2090H STACK
 ; 2090H - 20F8H BASIC EXECUTABLE VARAIABLES / WORKSPACE
@@ -4211,9 +4214,19 @@ GETINP:
 	POP	DE
 	POP	BC
         RET
-CLS: 
-        LD      A,CS            ; ASCII Clear screen
-        JP      MONOUT          ; Output character
+CLS:
+#IF	VT100
+	LD	HL,VT_CLS	; Output zero terminated
+VT0OUT:	LD	A,(HL)		; VT100 escape sequence
+	INC	HL		; directly to console.
+	OR	A
+	CALL	NZ,MONOUT	; clear screen
+	JR	NZ,VT0OUT	; and home cursor
+	RET
+#ELSE
+       LD      A,CS            ; ASCII Clear screen
+       JP      MONOUT          ; Output character
+#ENDIF
 
 WIDTH:  CALL    GETINT          ; Get integer 0-255
         LD      A,E             ; Width to A
@@ -4714,7 +4727,11 @@ FRQDURTBL:
 	.DW	$1EDE, $0		; B
 ;
 FDTBSIZ	.EQU	($-FRQDURTBL)/4
-
+;
+#IF VT100
+VT_CLS	.BYTE	ESC,"[2J",ESC,"[H",0	; vt100 clear screen & home
+#ENDIF
+;
 SLACK	.EQU	(BAS_END - $)
 	.FILL	SLACK,00H
 ;
