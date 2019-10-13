@@ -19,10 +19,18 @@
 ; Adapted for the freeware Zilog Macro Assembler 2.10 to produce
 ; the original ROM code (checksum A934H). PA
 ;
-; SBC V2 BOOTROM VERSION 27/10/2018 
-; difficultylevelhigh@gmail.com
+;==================================================================================
+; SBC V2 BOOTROM VERSION
+; 
+; 20181027 - Initial retrobrewcomputer SBC V2 version - difficultylevelhigh@gmail.com
+; 20191012 - Add PLAY command for SBC-V2-004 Sound support.
+; 20191013 - Add option for long error messages.
 ;
 #INCLUDE "std.asm"
+;
+; CUSTOMIZATION
+;
+ABBRERR	.EQU	FALSE		; Choose between long error message and abbreviated error messages.
 ;
 ; GENERAL EQUATES
 
@@ -457,27 +465,51 @@ PRITAB: .BYTE   79H             ; Precedence value
 
 ; BASIC ERROR CODE LIST
 
-ERRORS: .BYTE   "NF"            ; NEXT without FOR
-        .BYTE   "SN"            ; Syntax error
-        .BYTE   "RG"            ; RETURN without GOSUB
-        .BYTE   "OD"            ; Out of DATA
-        .BYTE   "FC"            ; Illegal function call
-        .BYTE   "OV"            ; Overflow error
-        .BYTE   "OM"            ; Out of memory
-        .BYTE   "UL"            ; Undefined line
-        .BYTE   "BS"            ; Bad subscript
-        .BYTE   "DD"            ; Re-DIMensioned array
-        .BYTE   "/0"            ; Division by zero
-        .BYTE   "ID"            ; Illegal direct
-        .BYTE   "TM"            ; Type mis-match
-        .BYTE   "OS"            ; Out of string space
-        .BYTE   "LS"            ; String too long
-        .BYTE   "ST"            ; String formula too complex
-        .BYTE   "CN"            ; Can't CONTinue
-        .BYTE   "UF"            ; Undefined FN function
-        .BYTE   "MO"            ; Missing operand
-        .BYTE   "HX"            ; HEX error
-        .BYTE   "BN"            ; BIN error
+#IF ABBRERR
+ERRORS:	.BYTE   "NF"            ; NEXT without FOR
+	.BYTE   "SN"            ; Syntax error
+	.BYTE   "RG"            ; RETURN without GOSUB
+	.BYTE   "OD"            ; Out of DATA
+	.BYTE   "FC"            ; Illegal function call
+	.BYTE   "OV"            ; Overflow error
+	.BYTE   "OM"            ; Out of memory
+	.BYTE   "UL"            ; Undefined line
+	.BYTE   "BS"            ; Bad subscript
+	.BYTE   "DD"            ; Re-DIMensioned array
+	.BYTE   "/0"            ; Division by zero
+	.BYTE   "ID"            ; Illegal direct
+	.BYTE   "TM"            ; Type mis-match
+	.BYTE   "OS"            ; Out of string space
+	.BYTE   "LS"            ; String too long
+	.BYTE   "ST"            ; String formula too complex
+	.BYTE   "CN"            ; Can't CONTinue
+	.BYTE   "UF"            ; Undefined FN function
+	.BYTE   "MO"            ; Missing operand
+	.BYTE   "HX"            ; HEX error
+	.BYTE   "BN"            ; BIN error
+#ELSE
+ERRORS: .BYTE   "NEXT without FOR",0
+        .BYTE   "Syntax",0
+        .BYTE   "RETURN without GOSUB",0
+        .BYTE   "Out of DATA",0
+        .BYTE   "Illegal function call",0
+        .BYTE   "Overflow",0
+        .BYTE   "Out of memory",0
+        .BYTE   "Undefined line",0
+        .BYTE   "Bad subscript",0
+        .BYTE   "Re-DIMensioned array",0
+        .BYTE   "Division by zero",0
+        .BYTE   "Illegal direct",0
+        .BYTE   "Type mis-match",0
+        .BYTE   "Out of string space",0
+        .BYTE   "String too long",0
+        .BYTE   "String formula too complex",0
+        .BYTE   "Can't CONTinue",0
+        .BYTE   "Undefined FN function",0
+        .BYTE   "Missing operand",0
+        .BYTE   "HEX",0
+        .BYTE   "BIN",0
+#ENDIF
 
 ; INITIALISATION TABLE -------------------------------------------------------
 
@@ -614,11 +646,25 @@ ERROR:  CALL    CLREG           ; Clear registers and stack
         LD      D,A             ; D = 0 (A is 0)
         LD      A,'?'
         CALL    OUTC            ; Output '?'
-        ADD     HL,DE           ; Offset to correct error code
-        LD      A,(HL)          ; First character
-        CALL    OUTC            ; Output it
-        CALL    GETCHR          ; Get next character
-        CALL    OUTC            ; Output it
+#IF ABBRERR
+	ADD	HL,DE           ; Offset to correct error code
+	LD	A,(HL)          ; First character
+	CALL	OUTC            ; Output it
+	CALL	GETCHR          ; Get next character
+	CALL	OUTC            ; Output it
+#ELSE
+	PUSH	BC		; Count through
+	LD	B,E		; the error list
+	SRL	B		; until we get
+	JR	Z,CHRZRO	; error message
+NXCHR:	LD	A,(HL)		; 
+	OR	A		; E/2 = entry
+	INC	HL		; number in the
+	JR	NZ,NXCHR	; list.
+	DJNZ	NXCHR
+CHRZRO:	CALL	PRS		; Display message.
+	POP	BC
+#ENDIF
         LD      HL,ERRMSG       ; "Error" message
 ERRIN:  CALL    PRS             ; Output message
         LD      HL,(LINEAT)     ; Get line of error
