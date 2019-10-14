@@ -1,0 +1,116 @@
+	title 'bank & move module for CP/M3 linked BIOS'
+
+	cseg
+
+	public	?move,?xmove,?bank,?bnkxlt
+	public	?mvinit,@hbbio,@hbusr
+	extrn 	@cbnk
+	
+?mvinit:
+	ld	bc,0F8F2H	; HBIOS GET BNKINFO
+	;rst	08		; D: BIOS Bank, E: User Bank
+	call	0FFF0H
+	ld	a,d
+	ld	(@hbbio),a
+	ld	a,e
+	ld	(@hbusr),a
+	ret
+	
+?xmove:
+	ld	(movbnk),bc	; save source & dest banks
+	or	0FFH		; flag interbank move type
+	ld	(movtyp),a	; save it
+	ret
+
+?move:
+	ld	a,(movtyp)	; get move type flag
+	or	a		; set flags
+	jr	nz,xbnkmov	; if so, go to interbank move
+
+	; Intrabank move
+	ex	de,hl	; we are passed source in DE and dest in HL
+	ldir		; use Z80 block move instruction
+	ex	de,hl	; need next addresses in same regs
+	ret
+
+xbnkmov:
+	;ld	ix,8888H
+	;halt
+	; Interbank move
+	xor	a		; zero
+	ld	(movtyp),a	; clear move type flag
+	push	de
+	push	hl
+	push	bc
+	pop	hl
+	ld	a,(srcbnk)
+	call	?bnkxlt
+	ld	e,a
+	ld	a,(dstbnk)
+	call	?bnkxlt
+	ld	d,a
+	ld	b,0F4H		; SETCPY
+	;rst	08
+	call	0FFF0H
+	pop	hl
+	pop	de
+	ex	de,hl		; swap address regs for call
+	ld	b,0F5H		; BNKCPY
+	;rst	08
+	call	0FFF0H
+	ex	de,hl		; next addresses in same regs
+	;ld	ix,9999H
+	;halt
+	ret
+
+?bank:
+	call	?bnkxlt		; xlat to HBIOS bank id
+	jp	0FFF3H		; do it and return
+
+;
+; Convert from CPM3 bank id to HBIOS bank id.
+; CPM3 wants TPA for it's bank 0, so that is special
+; case mapping to HBIOS BID_USR (8EH).  Otherwise, we index
+; down below BID_HBIOS (8DH).  So CPM3 bank usage grows
+; downward.
+;
+; CPM3		HBIOS
+; ------------- -------------------
+; COMMON	8FH - BID_COM
+; 0 - OS/BUFS	8EH - BID_USR
+;		8DH - BID_BIOS		
+; 1 - TPA	8CH - BID_AUX		
+; 2 - BUFS	8BH - BID_AUX-1	
+; 3 - BUFS	8AH - BID_AUX-2	
+; ...
+;
+; N.B., Below BID_AUX is considered RAM disk bank.  Need to
+; make sure RAM disk is kept small enough to stay below
+; banks used for OS buffers.
+;
+?bnkxlt:
+	;ld	ix,5555H
+	;halt
+	;cp	2
+	;jr	c,xxx
+	;ld	ix,6666H
+	;halt
+;xxx:
+	or	a
+	jr	z,bank0
+	neg			; 2 -> -2
+	add	a,08DH		; 8DH - 2 = 8BH
+@hbbio	equ	$ - 1		; BID_BIOS
+	ret
+bank0:
+	ld	a,08EH		; 0 -> 8EH
+@hbusr	equ	$ - 1		; BID_USR
+	ret
+	
+movtyp	db	0		; non-zero for interbank move
+
+movbnk:
+srcbnk	db	0
+dstbnk	db	0
+
+	end

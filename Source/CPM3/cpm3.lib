@@ -1,0 +1,180 @@
+;	Macro Definitions for CP/M3 BIOS Data Structures.
+
+	; dtbl	<dph0,dph1,...>		- drive table
+
+	; dph	translate$table,	- disk parameter header
+	;	disk$parameter$block,
+	;	checksum$size,			(optional)
+	;	alloc$size			(optional)
+
+	; skew	sectors,		- skew table
+	;	skew$factor,
+	;	first$sector$number
+
+	; dpb	physical$sector$size,	- disk parameter block
+	;	physical$sectors$per$track,
+	;	number$tracks,
+	;	block$size,
+	;	number$dir$entries,
+	;	track$offset,
+	;	checksum$vec$size		(optional)
+
+
+;	Drive Table.  Contains 16 one word entries.
+
+dtbl macro ?list
+    local ?n
+?n  aset 0
+    irp ?drv,<?list>
+?n  aset ?n+1
+	dw	?drv
+    endm
+
+    if ?n > 16
+.' Too many drives.  Max 16 allowed'
+	exitm
+    endif
+
+    if ?n < 16
+	rept (16-?n)
+	dw	0
+	endm
+    endif
+ endm
+ 
+dph macro ?trans,?dpb,?csize,?asize
+    local ?csv,?alv
+	dw ?trans		; translate table address
+	db 0,0,0,0,0,0,0,0,0	; BDOS Scratch area
+	db 0			; media flag
+	dw ?dpb			; disk parameter block
+    if not nul ?csize
+	dw ?csv			; checksum vector
+    else
+	dw 0FFFEh		; checksum vector allocated by
+    endif			; GENCPM
+    if not nul ?asize
+	dw ?alv			; allocation vector
+    else
+	dw 0FFFEh		; alloc vector allocated by GENCPM
+    endif
+	dw 0fffeh,0fffeh,0fffeh	; dirbcb, dtabcb, hash allocd
+				; by GENCPM
+	db 0			; hash bank
+
+    if not nul ?csize
+?csv	ds	?csize		; checksum vector
+    endif
+    if not nul ?asize
+?alv	ds	?asize		; allocation vector
+    endif
+
+    endm
+
+dpb macro ?psize,?pspt,?trks,?bls,?ndirs,?off,?ncks
+    local ?spt,?bsh,?blm,?exm,?dsm,?drm,?al0,?al1,?cks,?psh,?psm
+    local ?n
+;; physical sector mask and physical sector shift
+    ?psh	aset 0
+    ?n		aset ?psize/128
+    ?psm	aset ?n-1
+	rept 8
+	?n	aset ?n/2
+ 	    if (?n = 0)
+	    exitm
+	    endif
+	?psh	aset ?psh + 1
+	endm
+    ?spt	aset ?pspt*(?psize/128)
+
+    ?bsh	aset 3
+    ?n		aset ?bls/1024
+	rept 8
+	?n	aset ?n/2
+	    if (?n = 0)
+	    exitm
+	    endif
+	?bsh	aset ?bsh + 1
+	endm
+    ?blm	aset ?bls/128-1
+    ?size	aset (?trks-?off)*?spt
+    ?dsm	aset ?size/(?bls/128)-1
+
+    ?exm	aset ?bls/1024
+	if ?dsm > 255
+	    if ?bls = 1024
+.'Error, can''t have this size disk with 1k block size'
+	    exitm
+	    endif
+	?exm	aset ?exm/2
+	endif
+    ?exm	aset ?exm-1
+    ?all	aset 0
+    ?n		aset (?ndirs*32+?bls-1)/?bls
+	rept ?n
+	?all	aset (?all shr 1) or 8000h
+	endm
+    ?al0	aset high ?all
+    ?al1	aset low ?all
+    ?drm	aset ?ndirs-1
+    if not nul ?ncks
+    	?cks	aset ?ncks
+    else
+	?cks	aset ?ndirs/4
+    endif
+	dw	?spt		; 128 byte records per track
+	db	?bsh,?blm	; block shift and mask
+	db	?exm		; extent mask
+	dw	?dsm		; maximum block number
+	dw	?drm		; maximum directory entry number
+	db	?al0,?al1	; alloc vector for directory
+	dw	?cks		; checksum size
+	dw	?off		; offset for system tracks
+	db	?psh,?psm	; physical sector size shift
+				; and mask
+    endm
+
+;
+gcd macro ?m,?n
+	    ;;	greatest common divisor of m,n
+		    ;;	produces value gcdn as result
+		    ;;	(used in sector translate table generation)
+    ?gcdm	aset ?m	;;variable for m
+    ?gcdn	aset ?n	;;variable for n
+    ?gcdr	aset 0	;;variable for r
+	rept 65535
+	?gcdx	aset ?gcdm/?gcdn
+	?gcdr	aset ?gcdm - ?gcdx*?gcdn
+	    if ?gcdr = 0
+	    exitm
+	    endif
+	?gcdm	aset ?gcdn
+	?gcdn	aset ?gcdr
+	endm
+    endm
+
+skew macro ?secs,?skf,?fsc
+;;	generate the translate table
+    ?nxtsec	aset 0	;;next sector to fill
+    ?nxtbas	aset 0	;;moves by one on overflow
+    gcd %?secs,?skf
+    ;;	?gcdn = gcd(?secs,skew)
+    ?neltst	aset ?secs/?gcdn
+    ;;	neltst is number of elements to generate
+    ;;	before we overlap previous elements
+    ?nelts	aset ?neltst	;;counter
+	rept ?secs	;;once for each sector
+	db	?nxtsec+?fsc
+	?nxtsec	aset ?nxtsec+?skf
+	    if ?nxtsec >= ?secs
+	    ?nxtsec	aset ?nxtsec-?secs
+	    endif
+	?nelts	aset ?nelts-1
+	    if ?nelts = 0
+	    ?nxtbas	aset ?nxtbas+1
+	    ?nxtsec	aset ?nxtbas
+	    ?nelts	aset ?neltst
+	    endif
+	endm
+    endm
+

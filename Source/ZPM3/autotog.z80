@@ -1,0 +1,131 @@
+
+;+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+;			A U T O T O G
+;			  for ZPM3
+;			by Simeon Cran
+;			   30/3/92
+;
+; This program toggles the Auto Command Prompting facility of ZPM3. It is
+; presented in source code form to inform users about how the facility is
+; manipulated.
+
+; Be aware that when Auto Command Prompting is enabled with this program,
+; it won't actually operate until turned on at the keyboard with ^Q. This
+; program simply enables the ^Q toggling of Auto Command Prompting.
+
+; When ZPM3 is booted, Auto Command Prompting is disabled. Usually, a
+; startup file would include the AUTOTOG command to turn it on unless it
+; is felt that the facility could confuse the operator (as may happen with
+; a remote ZPM3 system).
+;+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+; SYNTAX:
+;  AUTOTOG	Toggles the state of the Auto Command Prompting
+;  AUTOTOG ON	Enables Auto Command Prompting
+;  AUTOTOG OFF	Disables Auto Command Prompting
+;  AUTOTOG //	Displays a brief help message
+
+;+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+;
+; Automatic Command Prompting is enabled and disabled by a bit 6 of offset
+; 85h of the SCB page. This offset can not be directly accessed by the SCB
+; function (31h). Instead, we get the SCB base page with function 31h, and
+; then find the offset from there. No other bits in the byte may be touched.
+;
+;===============================================================================
+
+BDOS	equ	5
+deffcb	equ	5ch
+SCBfunc	equ	31h	; Get/Set SCB function number
+SCBoff	equ	3bh	; Offset in SCB to get SCB base page
+ACPoff	equ	85h	; Offset in SCB base page of Auto Command Prompting bit
+
+	jp	start	; Jump over general data
+
+HELPmsg:
+	db	' SYNTAX:'
+	db	10,13
+	db	'  AUTOTOG	Toggles the state of the Auto Command Prompting'
+	db	10,13
+	db	'  AUTOTOG ON	Enables Auto Command Prompting'
+	db	10,13
+	db	'  AUTOTOG OFF	Disables Auto Command Prompting'
+	db	10,13
+	db	'  AUTOTOG //	Displays a brief help message'
+	db	'$'
+ONmsg:
+	db	'ZPM3 Auto Command Prompting is now enabled. Toggle with ^Q.'
+	db	'$'
+OFFmsg:
+	db	'ZPM3 Auto Command Prompting is now disabled.'
+	db	'$'
+
+ONword:	; Word to match to turn Auto Command Prompting on
+	db	'ON      '
+OFFword:	; Word to match to turn Auto Command Prompting off
+	db	'OFF     '
+TOGword:	; Word to match to toggle Auto Command Prompting
+	db	'        '
+
+HELP:	ld	de,HELPmsg
+MSGexit:
+	ld	c,9
+	call	bdos
+	rst	0
+
+start:	; Get the address of the bit which controls Auto Command Prompting.
+	ld	c,SCBfunc
+	ld	de,SCBPB
+	call	bdos		; Get base page of SCB
+	ld	h,a
+	ld	l,ACPoff	; HL is now the address of the byte
+	ld	(ACPaddr),hl	; Save it	
+
+; Find out what the user wants to do. If the argument matches
+;  any of the three control words, act accordingly, otherwise
+;  show the help message and exit.
+	ld	hl,ONword
+	call	matchWord
+	jr	z,TurnON
+	ld	hl,OFFword
+	call	matchWord
+	jr	z,TurnOFF
+	ld	hl,TOGword
+	call	matchWord
+	jr	nz,HELP
+; Toggle the Auto Command Prompting.
+	ld	hl,(ACPaddr)
+	bit	6,(hl)
+	jr	z,TurnON
+TurnOFF:	; Turn the Auto Command Prompting off.
+	ld	hl,(ACPaddr)
+	res	6,(hl)
+	ld	de,OFFmsg
+	jr	MSGexit	
+
+TurnON:		; Turn the Auto Command Prompting on.
+	ld	hl,(ACPaddr)
+	set	6,(hl)
+	ld	de,ONmsg
+	jr	MSGexit
+
+
+
+matchWord:	; Compare the string at HL with the string at defFCB+1 for
+		;  8 bytes. Return Z if it matches.
+	ld	de,defFCB
+	ld	bc,8
+matchW1:
+	inc	de
+	ld	a,(de)
+	cpi
+	ret	nz
+	jp	pe,matchW1
+	ret
+	
+SCBPB:	; System control block function parameter block.
+ACPaddr:	; Save the address of the ACP bit here too.
+	db	03bh
+	db	0		; Get operation
+
+

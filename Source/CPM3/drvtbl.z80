@@ -1,0 +1,12 @@
+	public @dtbl
+	extrn dph0,dph1,dph2,dph3,dph4,dph5,dph6,dph7
+	extrn dph8,dph9,dph10,dph11,dph12,dph13,dph14,dph15
+
+	maclib	cpm3.lib
+
+	cseg
+
+@dtbl	dw	dph0,dph1,dph2,dph3,dph4,dph5,dph6,dph7
+	dw	dph8,dph9,dph10,dph11,dph12,dph13,dph14,dph15
+
+	end

@@ -512,45 +512,24 @@ HBX_STACK	.EQU	$
 ;
 ; HBIOS INTERRUPT SLOT ASSIGNMENTS
 ;
-; #	SBC		ZETA		N8,MK4,RCZ180	
-; ---	--------------	--------------	--------------	
-; 0	CTC0A				Z180/INT1	
-; 1	CTC0B				Z180/INT2	
-; 2	CTC0C				Z180/TIM0	
-; 3	CTC0D				Z180/TIM1	
-; 4					Z180/DMA0
-; 5					Z180/DMA1
-; 6					Z180/CSIO
-; 7	SIO0A/B				Z180/SER0
-; 8	SIO1A/B				Z180/SER1
-; 9	PIO0A				PIO0A
-; 10	PIO0B				PIO0B
-; 11	PIO1A				PIO1A
-; 12	PIO1B				PIO1B
-; 13
-; 14
-; 15
-; 16
-;
-; #	RCZ80		EZZ80		ZETA2
-; ---	--------------	-------------   --------------
-; 0	CTC0A		CTC0A/SIO0CLK   CTC0A/PRESCL
-; 1	CTC0B		CTC0B/SIO1CLK   CTC0B/TIMER
-; 2	CTC0C		CTC0C/PRESCL    CTC0C/UART
-; 3	CTC0D		CTC0D/TIMER     CTC0D/FDC
-; 4			
-; 5			
-; 6			
-; 7	SIO0A/B		SIO0A/B
-; 8	SIO1A/B		SIO1A/B
+; #	Z80		Z180
+; ---	--------------	--------------	
+; 0	CTC0A		INT1 -+
+; 1	CTC0B		INT2  |	
+; 2	CTC0C		TIM0  |
+; 3	CTC0D		TIM1  |
+; 4			DMA0  +- Z180 INTERNAL
+; 5			DMA1  |
+; 6			CSIO  |
+; 7	SIO0		SER0  |
+; 8	SIO1		SER1 -+
 ; 9	PIO0A		PIO0A
 ; 10	PIO0B		PIO0B
 ; 11	PIO1A		PIO1A
 ; 12	PIO1B		PIO1B
-; 13
-; 14
+; 13			SIO0
+; 14			SIO1
 ; 15
-; 16
 ;
 HBX_IVT:
 	.DW	HBX_IV00

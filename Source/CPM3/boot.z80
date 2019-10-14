@@ -1,0 +1,362 @@
+	title	'Boot loader module for CP/M 3.0'
+	
+	maclib	options.lib
+
+	public	?init,?ldccp,?rlccp,?time
+	public	@bootdu
+	extrn	?pmsg,?conin
+	extrn	?mvinit,?bnkxlt,?xmove,?move
+	extrn	@civec,@covec,@aivec,@aovec,@lovec
+	extrn 	@cbnk,?bnksl,?bank
+	extrn	@sysdr,@ccpdr
+	extrn	dph0
+	extrn	@dtbl
+	
+bdos	equ 5
+
+	if banked
+tpa$bank	equ 1
+	else
+tpa$bank	equ 0
+	endif
+
+	dseg	; init done from banked memory
+
+?init:
+	call	?mvinit
+;	lxi	h,08000h ! shld @civec ! shld @covec	; assign console to CRT:
+	ld	hl,8000H		; device 0
+	ld	(@civec),hl		; assign to console input
+	ld	(@covec),hl		; assign to console output
+;	lxi	h,04000h ! shld @lovec 			; assign printer to LPT:
+;	lxi	h,02000h ! shld @aivec ! shld @aovec	; assign AUX to CRT1:
+;	lxi	h,signon$msg ! call ?pmsg		; print signon message
+	ld	hl,signon$msg			; signon message
+	call	?pmsg				; print it
+
+	if banked
+
+	; clone page zero from bank 0 to additional banks
+	ld	b,2			; last bank
+	ld	c,0			; src bank
+init$0:
+	push	bc			; save bank id's
+	call	init$1			; copy page zero
+	pop	bc			; restore bank id's
+	djnz	init$0			; loop till done
+	jr	init$2
+	
+init$1:
+	call	?xmove			; set src/dest banks
+	ld	bc,0100h		; size is one page
+	ld	hl,0			; dest adr is 0
+	ld	de,0			; src adr is 0
+	call	?move			; do it
+	ret
+
+	endif
+
+init$2:
+	; get boot disk unit and save it
+	ld	bc,0F8E0h	; HBIOS func: get boot info
+	call	0FFF0h		; do it, D := boot unit
+	ld	a,d		; move to A
+	ld	(@bootdu),a	; save it
+
+	call	dinit
+	ret
+
+dinit:
+
+	; loop through all disk devices to count hard disk units
+	ld	b,0F8h			; SYS GET
+	ld	c,010h			; Disk Drive Unit Count
+	call	0FFF0h			; e := disk unit count
+	ld	b,e			; count to b
+	ld	a,b			; count to a
+	or	a			; set flags
+	ret	z			; !!! handle zero devices (albeit poorly) !!!
+;
+	; loop thru devices to count total hard disk volumes
+	push	bc			; save the device count
+	ld	c,0			; use c as device list index
+	ld	e,0			; init e for hard disk volume count
+;
+dinit2:
+	push	bc			; save loop control
+	call	dinit3			; check drive
+	pop	bc			; restore loop control
+	inc	c			; next unit
+	djnz	dinit2			; loop
+	pop	bc			; restore unit count in b
+	jr	dinit4			; continue
+;
+dinit3:
+	push	de			; save de (hard disk volume counter)
+	ld	b,017h			; hbios func: report device info
+	call	0FFF0h			; call hbios, unit to c
+	ld	a,d			; device type to a
+	pop	de			; restore de
+	cp	050h			; hard disk device?
+	ret	c			; nope, return
+	inc	e			; increment hard disk count
+	ret				; and return
+;
+dinit4:	; set slices per volume (hdspv) based on hard disk volume count
+	ld	a,e			; hard disk volume count to a
+	ld	e,8			; assume 8 slices per volume
+	dec	a			; dec accum to check for count = 1
+	jr	z,dinit5		; yes, skip ahead to implement 8 hdspv
+	ld	e,4			; now assume 4 slices per volume
+	dec	a			; dec accum to check for count = 2
+	jr	z,dinit5		; yes, skip ahead to implement 4 hdspv
+	ld	e,2			; in all other cases, we use 2 hdspv
+;
+dinit5:
+	ld	a,e			; slices per volume value to accum
+	ld	(hdspv),a		; save it
+;
+	; setup to enumerate devices to build drvmap
+	ld	b,0F8h			; SYS GET
+	ld	c,010h			; Disk Drive Unit Count
+	call	0FFF0h			; e := disk unit count
+	ld	b,e			; count to b
+	ld	c,0			; use c as device list index
+	;ld	hl,dph0			; point to first dph
+	ld	hl,0			; dph index
+;
+dinit6:	; loop thru all units available
+	push	bc			; preserve loop control
+	push	hl			; preserve dph pointer
+	ld	b,017h			; hbios func: report device info
+	call	0FFF0h			; call hbios, d := device type
+	pop	hl			; restore dph pointer
+	pop	bc			; get unit index back in c
+	push	bc			; resave loop control
+	call	dinit7			; update dph entries
+	pop	bc			; restore loop control
+	inc	c			; increment list index
+	djnz	dinit6			; loop as needed
+
+	; zero out remaining dph table entries
+	ld	a,16			; dph table entries
+	sub	l			; subtract entries used
+	ret	z			; return if all entries used
+	ld	b,a			; save as loop counter
+	ld	a,l			; current dph to accum
+	rlca				; *2 for word entry
+	ld	hl,@dtbl		; start of dtbl
+	call	addhla			; hl now points to entry
+dinit6a:
+	xor	a			; zero accum
+	ld	(hl),a			; zero lsb
+	inc	hl			; next byte
+	ld	(hl),a			; zero msb
+	inc	hl			; next byte
+	djnz	dinit6a
+
+	ret				; finished
+;
+dinit7:	; process unit
+	ld	e,0			; initialize slice index
+	ld	b,1			; default loop counter
+	ld	a,d			; device type to accum
+	ld	d,c			; unit number to d
+	cp	050h			; hard disk device?
+	jr	c,dinit8		; nope, leave loop count at 1
+	ld	a,(hdspv)		; get slices per volume to accum
+	ld	b,a			; move to b for loop counter
+;
+dinit8:
+	; d=unit, e=slice, l=dph#
+	ld	a,l			; dph # to accum
+	cp	16			; dph table size
+	ret	z			; bail out if overflow
+	push	hl			; save dph #
+	rlca				; *2 for adr entry
+	ld	hl,@dtbl		; dph table start
+	call	addhla			; offset hl to desired entry
+	ld	a,(hl)			; dereference
+	inc	hl
+	ld	h,(hl)
+	ld	l,a
+	dec	hl			; backup to slice field
+	ld	(hl),e			; update slice number
+	dec	hl			; backup to unit number
+	ld	(hl),d			; update unit number
+	inc	e			; next slice
+	pop	hl			; restore dph #
+	inc	hl			; next dph #
+	djnz	dinit8			; loop till done with unit
+	ret
+
+addhla:
+	add	a,l
+	ld	l,a
+	ret	nc
+	inc	h
+	ret
+
+
+	cseg	; boot loading most be done from resident memory
+	
+    ;	This version of the boot loader loads the CCP from a file
+    ;	called CCP.COM on the system drive (A:).
+
+?ldccp:
+	; First time, load the A:CCP.COM file into TPA
+	ld	a,(@sysdr)		; get system boot drive
+	inc	a			; drive + 1 for FCB
+	ld	(ccp$fcb),a		; stuff into FCB
+	add	'A' - 1			; drive letter
+	ld	(ccp$msg$drv),a		; save for load msg
+	xor	a
+	ld	(ccp$fcb+15),a
+	ld	hl,0
+	ld	(fcb$nr),hl
+	ld	de,ccp$fcb
+	call	open
+	inc	a
+	jr	z,no$CCP
+	ld	de,0100H
+	call	setdma
+	ld	de,128
+	call	setmulti
+	ld	de,ccp$fcb
+	call	read
+
+	if banked
+
+;					; now,
+;					;   copy CCP to bank 0 for reloading
+;	lxi h,0100h ! lxi b,0C80h	; clone 3K, just in case
+;	lda @cbnk ! push psw		; save current bank
+;ld$1:
+;	mvi a,tpa$bank ! call ?bnksl	; select TPA
+;	mov a,m ! push psw		; get a byte
+;	mvi a,2 ! call ?bnksl		; select extra bank
+;	pop psw ! mov m,a		; save the byte
+;	inx h ! dcx b			; bump pointer, drop count
+;	mov a,b ! ora c			; test for done
+;	jnz ld$1
+;	pop psw ! call ?bnksl		; restore original bank
+
+;					; now,
+;					;   copy CCP to bank 0 for reloading
+	ld	hl,0100h		; clone 3K, just in case
+	ld	bc,0C80h
+	ld	a,(@cbnk)		; save current bank
+	push	af
+ld$1:
+	ld	a,tpa$bank		; select TPA
+	call	?bnksl
+	ld	a,(hl)			; get a byte
+	push	af
+	ld	a,2			; select extra bank
+	call	?bnksl
+	pop	af			; save the byte
+	ld	(hl),a
+	inc	hl			; bump pointer, drop count
+	dec	bc
+	ld	a,b			; test for done
+	or	c
+	jr	nz,ld$1
+	pop	af			; restore original bank
+	call	?bnksl
+	
+	endif
+	
+	; Force CCP to use system boot drive as initial default
+	ld	a,(@sysdr)		; get system boot drive
+	ld	(@ccpdr),a		; set CCP current drive
+
+	ret
+
+no$CCP:			; here if we couldn't find the file
+	ld	hl,ccp$msg
+	call	?pmsg
+	call	?conin
+	jp	?ldccp
+
+
+?rlccp:
+
+	if banked
+
+;	lxi h,0100h ! lxi b,0C00h	; clone 3K
+;rl$1:
+;	mvi a,2 ! call ?bnksl		; select extra bank
+;	mov a,m ! push psw		; get a byte
+;	mvi a,tpa$bank ! call ?bnksl	; select TPA
+;	pop psw ! mov m,a		; save the byte
+;	inx h ! dcx b			; bump pointer, drop count
+;	mov a,b ! ora c			; test for done
+;	jnz rl$1
+;	ret
+
+	ld	hl,0100h		; clone 3K
+	ld	bc,0C80h
+rl$1:
+	ld	a,2			; select extra bank
+	call	?bnksl
+	ld	a,(hl)			; get a byte
+	push	af
+	ld	a,tpa$bank		; select TPA
+	call	?bnksl
+	pop	af			; save the byte
+	ld	(hl),a
+	inc	hl			; bump pointer, drop count
+	dec	bc
+	ld	a,b			; test for done
+	or	c
+	jr	nz,rl$1
+	ret
+	
+	else
+
+	jr	?ldccp
+
+	endif
+
+    ; No external clock.
+?time:
+	ret
+
+	; CP/M BDOS Function Interfaces
+
+open:
+	ld	c,15
+	jp	bdos
+
+setdma:
+	ld	c,26
+	jp	bdos
+
+setmulti:
+	ld	c,44
+	jp	bdos
+
+read:
+	ld	c,20
+	jp	bdos
+
+
+signon$msg	db	13,10,'CP/M v3.0'
+	if banked
+		db	' [BANKED]'
+	endif
+		db	', HBIOS v2.9.2',13,10,13,10,0
+
+ccp$msg		db	13,10,'BIOS Err on '
+ccp$msg$drv	db	'?'
+		db	': No CCP.COM file',0
+
+
+ccp$fcb		db	0,'CCP     ','COM',0,0,0,0
+		ds	16
+fcb$nr		db	0,0,0
+
+@bootdu		db	0
+hdspv		db	2		; slices per volume for hard disks (must be >= 1)
+
+	end
