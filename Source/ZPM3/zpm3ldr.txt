@@ -1,0 +1,68 @@
+
+
+                    ZPM3LDR.REL
+                    ===========
+
+     A CPMLDR.REL replacement for CP/M 3.0 and ZPM3 systems.
+
+
+CPMLDR.REL, as supplied by DRI, has a bug on some systems which 
+prevents the loading of CPM3.SYS files larger than 16k. This is a 
+significant problem especially if you intend to enlarge your bios 
+or increase the number of buffers allocated to your system.
+
+ZPM3LDR.REL was developed primarily to overcome this bug. 
+ZPM3LDR.REL is able to load CPM3.SYS files up to the maximum 
+possible system size without any problem. ZPM3LDR.REL also offers 
+some convenient enhancements.
+
+
+The usual way to use ZPM3LDR.REL is exactly as you would use 
+CPMLDR.REL: link it to your loader bios and SCB.REL files to make 
+the loader program which must be installed onto your system 
+tracks. Before you install the program however, you may choose to 
+patch the file at locations provided for in ZPM3LDR.REL.
+
+The messages issued by ZPM3LDR can be changed. They take a 
+standard '$' terminated form (as used by BDOS function 9). Using 
+a debugger such as SID.COM, you should be able to view these 
+messages and note that they have extra '$' terminators at then 
+end of each. This is the room in which you may expand or alter 
+the ZPM3LDR messages. Just remember not to overwrite the next 
+message.
+
+The CPM3.SYS FCB will be visible there too, allowing you to 
+change it so that ZPM3LDR will load a file of a different name 
+instead.
+
+The copyright message is there but not to show that DRI has 
+copyright on ZPM3LDR.REL (which it doesn't!).  That is part of an 
+advanced feature of ZPM3LDR.REL which allows it to check for 
+valid CPM3.SYS files.  CPMLDR.REL would attempt to load any file 
+called CPM3.SYS, even if it wasn't really a CP/M 3.0 system file. 
+The results could be catastrophic.  ZPM3LDR.REL will always check 
+for the 112 byte signature at the start of the file, and will 
+refuse to load CPM3.SYS unless the signature is correct.
+
+This has another advantage. You may patch this signature to 
+whatever you wish.  Then, after generating your CPM3.SYS file 
+(using GENCPM.COM) you should patch it too. The patch might be to 
+put in the version of your BIOS or some such thing.  On MYZ80, I 
+use this system whenever I change the MYZ80 80x86 bios in such a 
+way that the CPM3.SYS files won't work properly anymore. That 
+way, any old CPM3.SYS files that are not valid anymore, won't get 
+loaded accidentally.
+
+For your information, the first 128 bytes of CPM3.SYS always 
+begin with 6 bytes which tell CPMLDR where to load each section 
+and where the cold boot entry is. After that there are 10 bytes 
+of 0. ZPM3LDR does not check these bytes against anything so you 
+can patch them with whatever you like.
+
+The next 112 bytes would normally contain the DRI copyright 
+message, the serial number of your system, then a fill of 0 bytes 
+to the next record. Because ZPM3LDR looks for the copyright 
+message as a signature of a valid CPM3.SYS, if it is changed, you 
+will have to change ZPM3LDR as well.
+
+

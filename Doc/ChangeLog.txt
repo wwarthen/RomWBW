@@ -26,6 +26,7 @@ Version 2.9.2
 - WBW: Add support for secondry SPI (SD Card) on SC126
 - PMS: Add sound support to NASCOM BASIC
 - WBW: Updated FAT to add MD and FORMAT commands
+- WBW: Add CP/M 3 (experimental)
 
 Version 2.9.1
 -------------

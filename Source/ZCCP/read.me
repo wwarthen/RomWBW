@@ -1,0 +1,103 @@
+
+
+
+
+                     Z C C P  by Simeon Cran
+                     =======================
+
+
+February 1993.
+ZCCP has been improved slightly from the original release. It 
+should run much the same as before however modifications have 
+been made in an attempt to allow it to work successfully from 
+systems which boot from other than the A: drive. Also, the 
+terminal dimensions are now automatically taken from the SCB (as 
+set up by GENCPM). Special thanks go to Randy Winchester who is 
+sharing his easy to follow instructions about ZCCP. Read ZCCP.TXT 
+in this package for the expert help.
+
+
+
+
+ZCCP Quick Instructions
+=======================
+
+ZCCP is a direct replacement for the CP/M 3.0 CCP. It requires 
+ZPM3 and provides a ZCPR compatible system. There are some minor 
+incompatibilities with ZCPR however the advantages of ZCCP more 
+than outweigh these.
+
+You must replace your current CCP with the ZCCP.COM. How you do 
+this will depend on the setup of your computer so no details are 
+given here.
+
+When ZCCP starts, it reads ZINSTAL.ZPM (which must be on the 
+default boot drive (usually A:) in user area 0). This file can 
+be patched to set initial values for MHZ (speed of the computer), 
+MAXU (maximum user number) and MAXD (highest disk drive). These 
+values are set near the start of the ZINSTAL.ZPM file and there 
+are ASCII pointers to them (which can be seen with a debugger 
+such as SID.COM).
+
+After ZINSTAL.ZPM has been read, ZCCP attempts to run the command 
+STARTZPM.COM. This is usually an "alias" containing a number of 
+commands used to put the system into a useful state. Typically 
+STARTZPM.COM would contain commands to load a TCAP and named 
+directory file, to set the path, and to set an error handler.
+
+LOADSEG.COM is a ZCCP utility used to load RSXes, TCAPs and Named 
+Directory files. It contains some online help.
+
+RSXDIR.COM is a ZCPR utility which displays RSXes in memory. It 
+has been included to help you understand how LOADSEG places 
+various segments in high memory.
+
+DISKINFO.COM is a ZCPR utility which gives information about your 
+disks. It has been included for your interest.
+
+Note that ZCCP has very few resident commands. If you are 
+switching from a standard CP/M 3.0 CCP you will find that you are 
+unable to perform certain simple functions (such as directory 
+displays!). You should therefore obtain replacements for the CCP 
+resident commands before installing ZCCP. The Z-Node bulletin 
+boards in Australia and the USA are a good source. Note that ZCCP 
+will not load Type-4 ZCPR programs.
+
+If you are familiar with ZCPR systems you should have little 
+trouble in getting the most from ZCCP. If you are new to ZCPR, I 
+suggest that you learn as much as you can. ZCPR is a complex and 
+powerful system which does very little without proper setup.
+
+RCP's and IOP's are not implemented (which saves TPA space) and 
+FCP's are not implemented although flow control is. To use flow 
+control you must have an IF.COM program to handle IF commands. 
+ZCCP handles the standard flow control commands internally (XIF, 
+FI, ELSE, AND, OR). There are two other internal commands 
+implemented: NOTE (a do-nothing command) and CLS (to clear the 
+screen).
+
+
+The ZCCP package presented here may be freely distributed and 
+used for your own private use. No commercial or institutional use 
+is allowed without prior written agreement.
+
+
+The ZCCP package is copyright 1992,1993 by Simeon Cran, Brisbane, 
+Australia.
+
+
+The Z-Node 62 BBS in Perth, Western Australia may be contacted 
+from Australia on 09 450 0200 or from overseas on +619 4500200. 
+Z-Node 62 also is a distribution point for ZPM3 and MYZ80. MYZ80 
+is a high performance Z80 emulator for IBM AT (and better) 
+computers. MYZ80 is able to run ZPM3.
+
+
+No support for ZCCP is being offered at this stage. Use at your 
+own risk.
+
+
+Simeon Cran.
+February 1993.
+
+

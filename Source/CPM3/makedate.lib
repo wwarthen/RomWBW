@@ -1,0 +1,16 @@
+;
+; [JCE] Have the date and copyright messages in only one source file
+;
+@BDATE	MACRO
+	db	'101198'
+	ENDM
+
+@LCOPY	MACRO
+	db	'Copyright 1998, '
+	db	'Caldera, Inc.   '
+	ENDM
+
+@SCOPY	MACRO
+	db	'(c) 98 Caldera'
+	ENDM
+

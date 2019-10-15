@@ -7,7 +7,7 @@
 ***********************************************************************
 
 Wayne Warthen (wwarthen@gmail.com)
-Version 2.9.2-pre.17, 2019-10-11
+Version 2.9.2-pre.18, 2019-10-14
 https://www.retrobrewcomputers.org/
 
 RomWBW is a ROM-based implementation of CP/M-80 2.2 and Z-System for 
@@ -178,6 +178,18 @@ is optimized for the Z80 CPU (as opposed to 8080 for CP/M) and has
 some potentially useful improvements. Please refer to "ZSDOS
 Manual.pdf" and "ZCPR Manual.pdf" in the Doc directory for more
 information on Z-System usage.
+
+CP/M 3
+------
+
+CP/M 3 exists in an experimental state.  CP/M 3 must be started
+from a disk drive.  In the distribution archive, in the Binary
+directory, you will find a cpm_hd.img file that can be copied
+over to a CF or SD Card.  Start your system with this card
+installed and boot to CP/M 2.2 or ZSystem as usual.  Switch to
+the drive containing the CP/M 3 image and use the CPMLDR command
+to load CP/M.  It will ask you for the disk unit number containing
+the CP/M 3 system files which are on the disk image you created.
 
 ROM Customization
 -----------------

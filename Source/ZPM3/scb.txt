@@ -1,0 +1,435 @@
+The following has been taken direct from the ZPM3 source and is 
+provided as a reference. No guarantees are made with regard to 
+its accuracy. The only SCB entries that you should manipulate in 
+CP/M 3.0 are the ones published by its authors.
+
+
+;-------------------------------------------------------------------------------
+;68	TRAPS FOR WARM BOOT and CONSOLE FUNCTIONS
+;-------------------------------------------------------------------------------
+; This table allows you to replace certain BIOS functions with new ones in the
+;	TPA.  Because of the banked nature of CP/M 3, simply changing the BIOS
+;	vector could cause a problem as some BIOS functions need to be in the
+;	system bank.  If you redirect any of these functions, you should replace
+;	the first jump (0c3h) in each group with a LD HL, (21h).  When restoring
+;	the jumps check first that the BIOS vectors you are restoring are in
+;	fact to the BIOS and not to another redirection.  To do this, make sure
+;	that the BIOS jumps are pointing above themselves, not down into TPA.
+
+; For ZPM, the need for the traps has been eliminated.
+;  Because pre-ZPM programs may attempt to write to the first byte of each
+;  trap, these bytes can only be used for other things with some caution!
+
+; Warm boot trap
+	jp	?wboot		;68
+	jp	dotpa		;6b
+; Console status trap
+	jp	?const		;6e
+	jp	dotpa		;71
+; Console input trap
+	jp	?conin		;74
+	jp	dotpa		;77
+; Console output trap
+	jp	?conout		;7a
+	jp	dotpa		;7d
+
+;;; List output trap
+;;	jp	?list		;80
+;;	jp	dotpa		;83
+
+
+	db	0c3h	;80 This first byte should not be used as it
+			; could get changed by programs which attempt to
+			; redirect the printer	
+
+	db	0	;81 Not used yet
+
+	db	0	;82 Function 59 load user number.  Normally
+			; function 59 loads from the current user
+			; however by setting this byte to a user
+			; number + 1, function 59 will load from
+			; that user area instead (only works with
+			; the ZCCP loader RSX).  0=current user number.
+
+	dw	0	; -19		83
+			; This word is set to the address of the
+			;  ZCPR system environment.  If it is 0000h
+			;  the BDOS assumes that the normal CP/M 3
+			;  CCP system is running.  Otherwise, the BDOS
+			;  will perform certain functions differently.
+			;  For example function 152 will use named
+			;  directories if available, function 10
+			;  will the use message buffers for CCP running
+			;  flag and wheel protection of files is enabled.
+
+			;  Note that Z3PLUS users can set this word
+			;  once Z3PLUS is installed to enable the
+			;  extra functions. ZCCP users need not worry
+			;  as it will be done automatically.
+
+	db	0	;		-17	85
+			; This byte holds control flags for various ZPM3
+			;  functions.
+			; bit 7: Setting this bit will clear the function
+			;	  10 history buffer. Write only.
+			; bit 6: Controls enabling of the function 10 AUTO
+			;	  COMMAND facility.  If set, control-Q toggles
+			;	  the facility on and off.  If clear, control-Q
+			;	  has no effect.  Read/Write.
+			; bit 5: After function 152 has been called, if a DU:
+			;	  D:,U: or DIR: spec has been found, this
+			;	  bit is set and the drive and user is
+			;	  set in the FCB.
+			; bit 4: This flag is for system use only.  It is
+			;	  set after a function 55 call, but is reset
+			;	  after any other call.
+			; bit 3: After function 152 has been called, if a
+			;	  DIR: spec has been parsed, this bit is set
+			;	  and the user and drive is set in the FCB.
+			; bits 2-0: Not used yet			
+;-------------------------------------------------------------------------------
+;	SYSTEM CONTROL BLOCK (unofficial)
+;-------------------------------------------------------------------------------
+; None of these is accessed by the resident BDOS or the user
+	dw	0	;				-16	86
+	dw	0	;				-14	88
+	dw	0	;				-12	8a
+	dw	0	;				-10	8c
+	dw	0	;				-e	8e
+
+	dw	0	; Bit mapped vector of drives	-c	90
+			;  with open files since last warm boot.
+	dw	0	; Bit mapped vector of drives	-a	92
+			;  accessed since last warm boot.
+
+	dw	0	;				-8	94
+	dw	07h	;				-6	96
+	dw	base+6	; This word is the address	-4	98
+			;  of the entry to the BDOS.
+			;  It can be used to find the
+			;  actual BDOS as opposed to
+			;  the top of TPA.
+	db	0	;				-2	9a
+	db	0	;				-1	9b
+;------------------------------------------------------------------------------
+;9c	SYSTEM CONTROL BLOCK
+;------------------------------------------------------------------------------
+; The official system control block starts here.  In reality, the control block
+;	begins before this point, but this is the data section that we are
+;	told about in the DRI literature
+; In this section, a code is used to signify which sections of the code
+;	access the bytes: a * means that that user may read and write the bytes
+; a + means that the resident portion of the BDOS accesses the bytes
+; a ~ means the banked portion of the BDOS accesses the bytes
+; a ~~ means the banked portion of ZPM3 accesses the bytes, but CPM doesn't
+scb:
+	db	0	;+ Reserved			0	9c
+	dw	0	;+ Reserved			1	9d
+	db	0	;  Reserved			3	9f
+	db	0	;  Reserved			4	a0
+
+	db	31h	; BDOS version number (in BCD)	5	a1
+
+			; The following four bytes may be used for any purpose.
+			; Note that CCP104 used 8 and 9. ZCCP and ZPM3 do not
+			; affect these bytes at all.
+	db	0	;* Reserved for user		6	a2
+	db	0	;* Reserved for user		7	a3
+	db	0	;* Reserved for user		8	a4
+	db	0	;* Reserved for user		9	a5
+
+	db	0	; Reserved			0a	a6
+	db	0	; Reserved			0b	a7
+	db	0	; Reserved			0c	a8
+	db	0	; Reserved			0d	a9
+	db	0	; Reserved			0e	aa
+	db	0	; Reserved			0f	ab
+
+	dw	0	;* Program Error Return Code.	10	ac
+			; This 2-byte field can be used by a program to pass
+			; an error code or value to chained programs.  CP/M 3's
+			; conditional command facility also uses this field to
+			; determine if a program executes successfuly.  The
+			; BDOS Function 108 (Get/SET Program Return Code) is
+			; used to get/set this value
+
+			; Following byte holds the base page of the top
+			; multiple command RSX (only used by CCP).
+	db	0	; Reserved			12	ae
+
+			; The following bytes are the default disk and user
+			; of the CCP.  When the CCP is run, the disk and user
+			; is restored to these values unless flagged not to
+			; by the chain command.
+	db	0	; CCP disk			13	af
+	db	0	; CCP user number		14	b0
+
+			; The following word holds the address of the next
+			; command to get if running multiple commands or
+			; shells.  It should not be set by the user.
+
+	dw	0	; Multiple command pointer. CCP	15	b1
+
+	db	0	; System flag	CCP use		17	b3
+			; This byte is bit mapped as follows:
+			; Bit 0 Submit flag (set if a file beginning with '$'
+			;       is found, cleared by CCP)
+			;     1 RSX flag (set by loader when it loads a null
+			;	file with RSXs attached (indicates to CCP
+			;	not to attempt to remove the RSXs until the
+			;	second warm boot).  May be set by RSXs
+			;     2-5 unknown (probably used by utilities)
+			;     6 Change default DU to last program's DU
+			;	when chaining.
+			;     7 Chain flag.  Set to indicate to CCP that
+			;	there is a command to chain to at 080h.
+			
+	db	0	; System flag	CCP use		18	b4
+			; This byte is bit mapped as follows:
+			; Bit 0	Display command flag
+			;     1 Display command flag
+			;     2 Unknown
+			;     3 File type search order
+			;     4 File type search order
+			;     5 Reset disk system
+			;     6 "GET" RSX flag (set if GET RSX is redirecting)
+			;     7 CCP running flag
+			; Bit 7 is the only one used by the BDOS (in function 10)
+
+	db	0	; System flag	CCP use		19	b5
+			; This byte is bit mapped as follows:
+			; Bit 0 Unknown
+			;     1 Cold boot flag
+			;     2-7 Unknown
+
+	db	0	;* Console Width		1a	b6
+			; This byte contains the number of columns
+			; (characters) per line on your console relative
+			; to zero.  Most systems default this value to
+			; 79.  You can set this default value by using
+			; GENCPM or the DEVICE utility.  The console width
+			; value is used by CP/M 3 in BDOS function 10.  It
+			; is not used by ZPM3. Typing a character into the 
+			; last position of the screen, as specified by the
+			; Console Width field, must not cause the terminal
+			; to advance to the next line.
+
+	db	0	; Console Column Position	1b	b7
+			; This byte contains the current console column postion
+
+	db	0	;* Console Page Length		1c	b8
+			; This byte contains the number of lines (rows) on your
+			; console relative to zero.  Most systems default this
+			; value to 23.  This default value may be changed by
+			; using GENCPM or the DEVICE utility. 
+
+	db	0	; Reserved			1d	b9
+			; The following word is used by function 10 and points
+			; to the next character to get in an initialised
+			; function 10 buffer.  If a ^C termination occurs or
+			; if a null terminator is found before a CR or LF,
+			; this word is set 0.  By setting DE NZ and pointing
+			; this word to a buffer before calling it, you
+			; can have it initialize buffers other than
+			; the default DMA.
+
+	dw	0	;+~Reserved			1e	ba
+			; The following word is used by multiple commands and
+			; shells.  When function 10 retrieves information from
+			; an initialised buffer, it stores the next character
+			; position at offset 1e and here at 20.  If a ^C
+			; termination occurs, 1e is set to 00, but 20 is left
+			; as it was so that the next command can be retrieved.
+			; Therefore, if 1e is 00 and 20 is NZ it means that
+			; a ^C termination happened
+
+	dw	0	;~ Reserved			20	bc
+
+
+			; Redirection flags (following) for each of the five
+			; logical character devices.  If your system's BIOS
+			; supports assignment of logical devices to physical
+			; devices, you can direct each of the five logical
+			; character devices to any combination of up to 12
+			; physical devices.  The 16 bit word for each device
+			; represents the following:
+			;
+			; Each bit represents a physical device where bit 15
+			; corresponds to device zero and bit 4 corresponds to
+			; device 11.  Bits zero through 3 are reserved for
+			; system use and are used for redirection to disk files.
+			;
+	dw	0	;* CONIN Redirection Flag	22	be
+	dw	0	;* CONOUT Redirection Flag	24	c0
+	dw	0	;* AUXIN Redirection Flag	26	c2
+	dw	0	;* AUXOUT Redirection Flag	28	c4
+	dw	0	;* LIST Redirection Flag	2a	c6
+
+	db	0	;* Page Mode			2c	c8
+			; If this byte is set to zero, some CP/M 3 utilities
+			; and CCP built in commands display one page of data
+			; at a time; you display the next page by pressing
+			; any key.  If this byte is not set to zero, the system
+			; displays data on the screen without stopping.  To
+			; stop and start the display, you can press CTRL-S and
+			; CTRL-Q respectively.
+
+	db	0	; Default page mode		2d	c9
+
+	db	0	;* ~~				2e	ca
+			; Determines if CTRL-H is interpreted as a rub/del
+			; character.  If this byte is set to 0, then CTRL-H is
+			; a backspace character (moves back and deletes).  If
+			; this byte is set to 0ffh, then CTRL-H is a rub/del
+			; character, echoes the deleted character.
+			; Under ZPM3, the byte has no effect.  It should not
+			; be used however as it may be written to by
+			; applications.
+			
+	db	0	;*				2f	cb
+			; Determines if rub/del is interpreted as CTRL-H
+			; character.  If this byte is set to 0, then rub/del
+			; echoes the deleted character.  If this byte is
+			; set to 0ffh, then rub/del is interpreted as a
+			; CTRL-H character (moves back and deletes).
+			; Under ZPM3, the byte has no effect.  It should not
+			; be used however as it may be written to by
+			; applications.
+
+	db	0	;~ Reserved			30	cc
+
+			; Following two bytes are probably used by CP/M3 utilities
+	db	0	; Reserved			31	cd
+	db	0	; Reserved			32	ce
+
+	dw	0	;*+ Console Mode		33	cf
+			; This is a 16 bit system parameter that determines
+			; the action of certain BDOS Console I/O functions.
+
+	dw	bnkbuf	; Address of 128 byte buffer	35	d1
+
+	db	'$'	;*+ Output delimiter character.	37	d3
+			; The default output delimiter character is $, but
+			; you can change this value by using the BDOS Function
+			; 110 Get/Set Output Delimiter.
+
+	db	0	;* List Output Flag		38	d4
+			; If this byte is reset to 0, console output is not
+			; echoed to the list device.  If this byte is set
+			; to 1, console output is echoed to the list device.
+
+	db	0	; Scroll flag				39	d5
+			; Following bits set when in system bank and:
+			; Bit 7 is set when function 11 is checking the status.
+			; Bit 6 is set when function 2 is checking input.
+			; Note that raw input (function 6 and function 2 raw)
+			;  will not set these bits.
+			 
+	dw	scb	; Holds the address of the SCB		3a	d6
+
+	dw	0080h	;+ Current DMA Address.			3c	d8
+			; This address can be set by BDOS Function 26.  The
+			; CCP initializes this value to 0080h.  BDOS Function
+			; 13, Reset Disk System also sets the DMA address to
+			; 0080h.
+
+	db	0	; Current Disk.				3e	da
+			; This byte contains the currently selected default
+			; disk number.  This value ranges from 0-15
+			; corresponding to drives a-p, respectively.  BDOS
+			; Function 24, Return Current Disk, can be used to
+			; determine the current disk value.
+
+	dw	0	; BDOS variable 'INFO'			3f	db
+			; This word is used by the banked portion of the
+			; BDOS.  It is normally an entry parameter.
+
+	db	0	; FCB flag				41	dd
+			; If this byte = 0ffh, the word at 03fh is a valid
+			; FCB address.
+
+	db	0	; Same drive flag			42	de
+
+	db	0	;+ BDOS function for error		43	df
+
+	db	0	; Current User Number.			44	e0
+			; This byte contains the current user number.  This
+			; value ranges from 0-15.  BDOS Function 32,
+			; Get/Set User Code can change or interrogate
+			; the currently active user number.  Under ZPM3 you may
+			; change the currently active user number directly
+			; by writing to this byte.
+
+	dw	0	;+ Reserved				45	e1
+			; Holds the current directory entry number.  Lower
+			;  two bits are the search return code.
+			
+	dw	0	;+ Search FCB address			47	e3
+			; Holds the FCB address of the last search for
+			;  first/next operation.
+
+	db	0	;+ Search type flag			49	e5
+			; 0=? in drive code search.
+			; 0fh=normal search.
+			
+	db	01	;* BDOS Multi-Sector Count.		4a	e6
+			; This field is set by BDOS Function 44, Set Multi-
+			; Sector Count.
+
+	db	0	;* BDOS Error Mode.			4b	e7
+			; This field is set by BDOS Function 45, Set BDOS
+			; Error Mode.  If this byte is set to 0ffh, the
+			; system returns to the current program without
+			; displaying any error messages.
+
+
+	db	0	;* Drive Search Chain 1			4c	e8
+	db	0ffh	;* Drive Search Chain 2			4d	e9
+	db	0ffh	;* Drive Search Chain 3			4e	ea
+	db	0ffh	;* Drive Search Chain 4			4f	eb
+
+	db	0	;* Temporary File Drive			50	ec
+
+	db	0	; Error Drive.				51	ed
+			; This byte contains the drive number of the selected
+			; drive when the last physical or extended error
+			; occured.
+
+	db	0	; Reserved				52	ee
+	db	0	; Reserved				53	ef
+
+	db	0	; Media Flag				54	f0
+			; This flag may be set by the BIOS to indicate that
+			; a drive door has opened thus signalling the BDOS
+			; to relog the drive if required.
+	db	0	; Reserved				55	f1
+	db	0	; Reserved				56	f2
+
+	db	080h	; BDOS Flags.				57	f3
+			; bit 7= expanded error messages
+			;     6= single byte allocation vectors
+			
+	dw	0ffffh	;* Date in days in binary since 1 Jan 78 58	f4
+	db	0ffh	;* Hour in BCD				5a	f6
+	db	0ffh	;* Minutes in BCD			5b	f7
+	db	0ffh	;* Seconds in BCD			5c	f8
+
+COMBASE:
+	dw	0	; Common Memory Base address		5d	f9
+			; This value is zero for nonbanked systems, and
+			; nonzero for banked systems.  Because the base
+			; address must reside on a page boundary, the
+			; first byte will always be 0.  The second byte
+			; is the important one being the common memory
+			; base page.
+
+	jp	bnkdos2	; Pointer to second entry in banked DOS	5f	fb
+			; This entry handles the displaying of errors to
+			; the user
+
+	dw	start	; Top of user TPA			62	fe
+			; This word always reflects the top of TPA and
+			; should be the same as the word at 0006h unless a
+			; transient changes (0006h) without knowing about
+			; this word
+

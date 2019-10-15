@@ -1,0 +1,49 @@
+
+;+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+;			C L R H I S T
+;			  for ZPM3
+;			by Simeon Cran
+;			   26/4/92
+;
+; This program clears the ZPM3 function 10 history buffer. It is presented in
+; source code form to inform users about how the facility is manipulated.
+
+; The only real use for clearing the history buffer is as a security feature
+; on RZPM3 systems (remote ZPM3 systems (such as BBSes)). Note that individual
+; commands may be cleared from the history buffer with control-V.
+;+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+; SYNTAX:
+;  CLRHIST	Clears the history buffer
+
+;+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+;
+; The history buffer is cleared by setting bit 7 of offset 85h of the SCB page.
+; This offset can not be directly accessed by the SCB function (31h). Instead
+; we get the SCB base page with function 31h, and then find the offset from
+; there. No other bits in the byte may be touched.
+;===============================================================================
+
+BDOS	equ	5
+deffcb	equ	5ch
+SCBfunc	equ	31h	; Get/Set SCB function number
+SCBoff	equ	3bh	; Offset in SCB to get SCB base page
+CLHoff	equ	85h	; Offset in SCB base page of Clear History buffer bit.
+
+	jp	start	; Jump over general data
+
+start:	; Get the address of the bit which controls History buffer clearing
+	ld	c,SCBfunc
+	ld	de,SCBPB
+	call	bdos		; Get base page of SCB
+	ld	h,a
+	ld	l,CLHoff	; HL is now the address of the byte
+
+	set	7,(hl)		; All to do
+	rst	0
+
+SCBPB:	; System control block function parameter block.
+	db	03bh
+	db	0		; Get operation
+
+
