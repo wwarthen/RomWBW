@@ -10,7 +10,7 @@
 	extrn 	@cbnk,?bnksl,?bank
 	extrn	@sysdr,@ccpdr
 	extrn	dph0
-	extrn	@dtbl
+	extrn	@dtbl,@ctbl
 	
 bdos	equ 5
 
@@ -24,15 +24,9 @@ tpa$bank	equ 0
 
 ?init:
 	call	?mvinit
-;	lxi	h,08000h ! shld @civec ! shld @covec	; assign console to CRT:
-	ld	hl,8000H		; device 0
-	ld	(@civec),hl		; assign to console input
-	ld	(@covec),hl		; assign to console output
-;	lxi	h,04000h ! shld @lovec 			; assign printer to LPT:
-;	lxi	h,02000h ! shld @aivec ! shld @aovec	; assign AUX to CRT1:
-;	lxi	h,signon$msg ! call ?pmsg		; print signon message
-	ld	hl,signon$msg			; signon message
-	call	?pmsg				; print it
+	call	cinit			; char device init
+	ld	hl,signon$msg		; signon message
+	call	?pmsg			; print it
 
 	if banked
 
@@ -59,19 +53,66 @@ init$1:
 init$2:
 	; get boot disk unit and save it
 	ld	bc,0F8E0h	; HBIOS func: get boot info
-	call	0FFF0h		; do it, D := boot unit
+	rst	08		; do it, D := boot unit
 	ld	a,d		; move to A
 	ld	(@bootdu),a	; save it
 
+
 	call	dinit
 	ret
+	
+	
+cinit:
+	; Setup CON: I/O vector based on HBIOS console device
+	ld	b,0FAh			; HBIOS Peek Function
+	ld	d,0			; Bank 0 has HCB
+	ld	hl,112h			; Offset 112h is current console device
+	rst	08			; Call HBIOS, value in E
+	push	de			; save console unit value
+	ld	b,e			; Use as loop counter
+	inc	b			; ... but loop 1 extra time
+	ld	hl,0			; Clear vector bitmap
+	scf				; Set carry
+cinit$1:
+	rr	h			; Rotate carry flag
+	rr	l			; ... into correct vector position
+	djnz	cinit$1			; loop as needed
+	
+	;ld	hl,8000H		; device 0
+	ld	(@civec),hl		; assign to console input
+	ld	(@covec),hl		; assign to console output
+
+	; Setup AUX: I/O vector if there are 2+ char devices in system
+	ld	bc,0F800h		; HBIOS GET Character Device Count
+	rst	08			; do it, count in E
+	ld	a,e			; device count to accum
+	pop	de			; recover console unit num to E
+	cp	2			; check for 2+ char devices
+	jr	c,cinit$3		; if not, skip aux assignment
+	or	a			; check for zero
+	ld	hl,4000h		; assume aux on second char device
+	jr	nz,cinit$2		; if console on unit 0, assumption good
+	ld	hl,8000h		; otherwise, aux goes to first char device
+cinit$2:	
+	;ld	hl,4000H		; device 1
+	ld	(@aivec),hl		; assign to aux input
+	ld	(@aovec),hl		; assign to aux output
+cinit$3:
+	; Truncate char table based on actual num of char devices
+	rlca				; A still has char device count
+	rlca				; * 8 for ctbl entry size
+	rlca				; "
+	ld	hl,@ctbl		; Start of char table
+	call	addhla			; Skip used entries
+	xor	a			; Zero to accum
+	ld	(hl),0			; Set table terminator
 
 dinit:
 
 	; loop through all disk devices to count hard disk units
 	ld	b,0F8h			; SYS GET
 	ld	c,010h			; Disk Drive Unit Count
-	call	0FFF0h			; e := disk unit count
+	rst	08			; e := disk unit count
 	ld	b,e			; count to b
 	ld	a,b			; count to a
 	or	a			; set flags
@@ -94,7 +135,7 @@ dinit2:
 dinit3:
 	push	de			; save de (hard disk volume counter)
 	ld	b,017h			; hbios func: report device info
-	call	0FFF0h			; call hbios, unit to c
+	rst	08			; call hbios, unit to c
 	ld	a,d			; device type to a
 	pop	de			; restore de
 	cp	050h			; hard disk device?
@@ -119,7 +160,7 @@ dinit5:
 	; setup to enumerate devices to build drvmap
 	ld	b,0F8h			; SYS GET
 	ld	c,010h			; Disk Drive Unit Count
-	call	0FFF0h			; e := disk unit count
+	rst	08			; e := disk unit count
 	ld	b,e			; count to b
 	ld	c,0			; use c as device list index
 	;ld	hl,dph0			; point to first dph
@@ -129,7 +170,7 @@ dinit6:	; loop thru all units available
 	push	bc			; preserve loop control
 	push	hl			; preserve dph pointer
 	ld	b,017h			; hbios func: report device info
-	call	0FFF0h			; call hbios, d := device type
+	rst	08			; call hbios, d := device type
 	pop	hl			; restore dph pointer
 	pop	bc			; get unit index back in c
 	push	bc			; resave loop control
@@ -201,10 +242,10 @@ addhla:
 	cseg	; boot loading most be done from resident memory
 	
     ;	This version of the boot loader loads the CCP from a file
-    ;	called CCP.COM on the system drive (A:).
+    ;	called CCP.COM on the system drive.
 
 ?ldccp:
-	; First time, load the A:CCP.COM file into TPA
+	; First time, load the CCP.COM file into TPA
 	ld	a,(@sysdr)		; get system boot drive
 	inc	a			; drive + 1 for FCB
 	ld	(ccp$fcb),a		; stuff into FCB
@@ -345,7 +386,7 @@ signon$msg	db	13,10,'CP/M v3.0'
 	if banked
 		db	' [BANKED]'
 	endif
-		db	', HBIOS v2.9.2',13,10,13,10,0
+		db	' for RomWBW HBIOS v2.9.2',13,10,13,10,0
 
 ccp$msg		db	13,10,'BIOS Err on '
 ccp$msg$drv	db	'?'

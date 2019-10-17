@@ -9,7 +9,7 @@
 ;	maclib ports	; define port addresses
 	maclib modebaud.lib	; define mode bits and baud equates
 
-max$devices	equ 6
+;max$devices	equ 6
 
 	cseg
 
@@ -47,7 +47,9 @@ max$devices	equ 6
 
 
 ?ci:		; character input
-	ld	bc,0000H	; unit 0, func 0 = CIN
+	;ld	bc,0000H	; unit 0, func 0 = CIN
+	ld	c,b		; Unit number to C
+	ld	b,00h		; HBIOS CIN Function
 	rst	08		; do it
 	ld	a,e		; put char in A
 	ret			; done
@@ -64,7 +66,9 @@ max$devices	equ 6
 ;	ret
 
 ?cist:		; character input status
-	ld	bc,0200H		; unit 0, func 2 = IST
+	;ld	bc,0200H		; unit 0, func 2 = IST
+	ld	c,b			; Unit number to C
+	ld	b,02h			; HBIOS IST Function
 	rst	08			; do it
 	or	a			; set flags
 	ret	z			; return w/ ZF set if no char ready
@@ -86,7 +90,9 @@ max$devices	equ 6
 
 ?co:		; character output
 	ld	e,c		; char to E
-	ld	bc,0100H	; unit 0, func 1 = COUT
+	;ld	bc,0100H	; unit 0, func 1 = COUT
+	ld	c,b		; Unit number to C
+	ld	b,01h		; HBIOS COUT Function
 	rst	08		; do it
 	ret			; done
 
@@ -111,7 +117,9 @@ max$devices	equ 6
 ;	ret
 
 ?cost:		; character output status
-	ld	bc,0300H		; unit 0, func 3 = OST
+	;ld	bc,0300H		; unit 0, func 3 = OST
+	ld	c,b			; Unit number to C
+	ld	b,03h			; HBIOS OST Function
 	rst	08			; do it
 	or	a			; set flags
 	ret	z			; return w/ ZF set if not ready to send
@@ -146,6 +154,39 @@ max$devices	equ 6
 @ctbl	db	'COM0  '
 	db	mb$in$out+mb$serial+baud$none
 	db	baud$none
+	db	'COM1  '
+	db	mb$in$out+mb$serial+baud$none
+	db	baud$none
+	db	'COM2  '
+	db	mb$in$out+mb$serial+baud$none
+	db	baud$none
+	db	'COM3  '
+	db	mb$in$out+mb$serial+baud$none
+	db	baud$none
+	db	'COM4  '
+	db	mb$in$out+mb$serial+baud$none
+	db	baud$none
+	db	'COM5  '
+	db	mb$in$out+mb$serial+baud$none
+	db	baud$none
+	db	'COM6  '
+	db	mb$in$out+mb$serial+baud$none
+	db	baud$none
+	db	'COM7  '
+	db	mb$in$out+mb$serial+baud$none
+	db	baud$none
+	db	'COM8  '
+	db	mb$in$out+mb$serial+baud$none
+	db	baud$none
+	db	'COM9  '
+	db	mb$in$out+mb$serial+baud$none
+	db	baud$none
+	db	'COM10 '
+	db	mb$in$out+mb$serial+baud$none
+	db	baud$none
+	db	'COM11 '
+	db	mb$in$out+mb$serial+baud$none
+	db	baud$none
 	db	0
 
 ;@ctbl	db 'CRT   '	; device 0, CRT port 0
@@ -170,7 +211,6 @@ max$devices	equ 6
 ;	db mb$output
 ;	db baud$none
 ;	db 0			; table terminator
-
 
 ;speed$table	db	0,255,255,255,233,208,104,208,104,69,52,35,26,17,13,7
 ;
