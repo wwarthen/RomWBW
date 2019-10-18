@@ -24,43 +24,45 @@ tpa$bank	equ 0
 
 ?init:
 	call	?mvinit
-	call	cinit			; char device init
-	ld	hl,signon$msg		; signon message
-	call	?pmsg			; print it
+
+	; Clear reserved area in page zero
+	xor	a
+	ld	hl,40h
+	ld	b,10h
+init$1:
+	ld	(hl),a
+	inc	hl
+	djnz	init$1
 
 	if banked
 
-	; clone page zero from bank 0 to additional banks
+	; Clone page zero from bank 0 to additional banks
 	ld	b,2			; last bank
 	ld	c,0			; src bank
-init$0:
+init$2:
 	push	bc			; save bank id's
-	call	init$1			; copy page zero
-	pop	bc			; restore bank id's
-	djnz	init$0			; loop till done
-	jr	init$2
-	
-init$1:
 	call	?xmove			; set src/dest banks
 	ld	bc,0100h		; size is one page
 	ld	hl,0			; dest adr is 0
 	ld	de,0			; src adr is 0
 	call	?move			; do it
-	ret
-
+	pop	bc			; restore bank id's
+	djnz	init$2			; loop till done
+	
 	endif
 
-init$2:
-	; get boot disk unit and save it
+	call	cinit			; char device init
+	ld	hl,signon$msg		; signon message
+	call	?pmsg			; print it
+
+	; Get boot disk unit and save it
 	ld	bc,0F8E0h	; HBIOS func: get boot info
 	rst	08		; do it, D := boot unit
 	ld	a,d		; move to A
 	ld	(@bootdu),a	; save it
 
-
 	call	dinit
 	ret
-	
 	
 cinit:
 	; Setup CON: I/O vector based on HBIOS console device
@@ -237,7 +239,6 @@ addhla:
 	ret	nc
 	inc	h
 	ret
-
 
 	cseg	; boot loading most be done from resident memory
 	

@@ -188,25 +188,6 @@ set$jumps:
 	sta 0 ! sta 5		; set up jumps in page zero
 	lxi h,?wboot ! shld 1	; BIOS warm start entry
 	lhld @MXTPA ! shld 6	; BDOS system call entry
-
-;	xor	a
-;	ld	hl,40h
-;	ld	b,10h
-;set$jumps1:
-;	ld	(hl),a
-;	inc	hl
-;	djnz	set$jumps1
-
-	; Clear reserved area in page zero
-	xra	a
-	lxi	h,40h
-	mvi	b,10h
-set$jumps1:
-	mov	m,a
-	inx	h
-	dcr	b
-	jnz	set$jumps1
-
 	ret
 
 

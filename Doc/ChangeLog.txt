@@ -27,6 +27,7 @@ Version 2.9.2
 - PMS: Add sound support to NASCOM BASIC
 - WBW: Updated FAT to add MD and FORMAT commands
 - WBW: Add CP/M 3 (experimental)
+- M?T: Support Shift register SPI WIZNET for RC2014
 
 Version 2.9.1
 -------------
