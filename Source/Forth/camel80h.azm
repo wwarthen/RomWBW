@@ -56,7 +56,7 @@
 
 ;C >IN     -- a-addr        holds offset into TIB
 ;  2 USER >IN
-    head TOIN,3,>IN,douser
+    head TOIN,3,!>IN,douser
         dw 2
 
 ;C BASE    -- a-addr       holds conversion radix
@@ -132,7 +132,7 @@ TICKSOURCE: call douser         ; in name!
 
 ;C S>D    n -- d          single -> double prec.
 ;   DUP 0< ;
-    head STOD,3,S>D,docolon
+    head STOD,3,S!>D,docolon
         dw DUP,ZEROLESS,EXIT
 
 ;Z ?NEGATE  n1 n2 -- n3  negate n1 if n2 negative
@@ -254,7 +254,7 @@ MIN1:   dw DROP,EXIT
 ;C 2!    x1 x2 a-addr --    store 2 cells
 ;   SWAP OVER ! CELL+ ! ;
 ;   the top of stack is stored at the lower adrs
-    head TWOSTORE,2,2!,docolon
+    head TWOSTORE,2,2!!,docolon
         dw SWOP,OVER,STORE,CELLPLUS,STORE,EXIT
 
 ;C 2DROP  x1 x2 --          drop 2 cells
@@ -348,25 +348,25 @@ TYP5:   DW EXIT
 
 ;Z (S")     -- c-addr u   run-time code for S"
 ;   R> COUNT 2DUP + ALIGNED >R  ;
-    head XSQUOTE,4,(S"),docolon
+    head XSQUOTE,4,(S""!),docolon
         DW RFROM,COUNT,TWODUP,PLUS,ALIGNED,TOR
         DW EXIT
 
 ;C S"       --         compile in-line string
 ;   COMPILE (S")  [ HEX ]
 ;   22 WORD C@ 1+ ALIGNED ALLOT ; IMMEDIATE
-    immed SQUOTE,2,S",docolon
+    immed SQUOTE,2,S"",docolon
         DW LIT,XSQUOTE,COMMAXT
         DW LIT,22H,WORD,CFETCH,ONEPLUS
         DW ALIGNED,ALLOT,EXIT
 
 ;C ."       --         compile string to print
 ;   POSTPONE S"  POSTPONE TYPE ; IMMEDIATE
-    immed DOTQUOTE,2,.",docolon
+    immed DOTQUOTE,2,."",docolon
         DW SQUOTE
         DW LIT,TYPE,COMMAXT
         DW EXIT
-                        
+                       
 ; NUMERIC OUTPUT ================================
 ; Numeric conversion is done l.s.digit first, so
 ; the output buffer is built backwards in memory.
@@ -394,12 +394,12 @@ TYP5:   DW EXIT
 
 ;C <#    --             begin numeric conversion
 ;   PAD HP ! ;          (initialize Hold Pointer)
-    head LESSNUM,2,<#,docolon
+    head LESSNUM,2,!<#,docolon
         DW PAD,HP,STORE,EXIT
 
 ;Z >digit   n -- c      convert to 0..9A..Z
 ;   [ HEX ] DUP 9 > 7 AND + 30 + ;
-    head TODIGIT,6,>DIGIT,docolon
+    head TODIGIT,6,!>DIGIT,docolon
         DW DUP,LIT,9,GREATER,LIT,7,AND,PLUS
         DW LIT,30H,PLUS,EXIT
 
@@ -417,7 +417,7 @@ NUMS1:  DW NUM,TWODUP,OR,ZEROEQUAL,qbranch,NUMS1
 
 ;C #>    ud1 -- c-addr u    end conv., get string
 ;   2DROP HP @ PAD OVER - ;
-    head NUMGREATER,2,#>,docolon
+    head NUMGREATER,2,#!>,docolon
         DW TWODROP,HP,FETCH,PAD,OVER,MINUS,EXIT
 
 ;C SIGN  n --           add minus sign if n<0
@@ -434,7 +434,7 @@ SIGN1:  DW EXIT
 
 ;C .     n --           display n signed
 ;   <# DUP ABS 0 #S ROT SIGN #> TYPE SPACE ;
-    head DOT,1,'.',docolon
+    head DOT,1,.,docolon
         DW LESSNUM,DUP,ABS,LIT,0,NUMS
         DW ROT,SIGN,NUMGREATER,TYPE,SPACE,EXIT
 
@@ -465,12 +465,12 @@ SIGN1:  DW EXIT
 
 ;C ,    x --           append cell to dict
 ;   HERE ! 1 CELLS ALLOT ;
-    head COMMA,1,',',docolon
+    head COMMA,1,!,,docolon
         dw HERE,STORE,lit,1,CELLS,ALLOT,EXIT
 
 ;C C,   char --        append char to dict
 ;   HERE C! 1 CHARS ALLOT ;
-    head CCOMMA,2,'C,',docolon
+    head CCOMMA,2,C!,,docolon
         dw HERE,CSTORE,lit,1,CHARS,ALLOT,EXIT
 
 ; INTERPRETER ===================================
@@ -491,7 +491,7 @@ SIGN1:  DW EXIT
 
 ;Z >counted  src n dst --     copy to counted str
 ;   2DUP C! CHAR+ SWAP CMOVE ;
-    head TOCOUNTED,8,>COUNTED,docolon
+    head TOCOUNTED,8,!>COUNTED,docolon
         DW TWODUP,CSTORE,CHARPLUS,SWOP,CMOVE,EXIT
 
 ;C WORD   char -- c-addr n   word delim'd by char
@@ -516,12 +516,12 @@ WORD1:  DW RFROM,RFROM,ROT,MINUS,TOIN,PLUSSTORE
 
 ;Z NFA>LFA   nfa -- lfa    name adr -> link field
 ;   3 - ;
-    head NFATOLFA,7,NFA>LFA,docolon
+    head NFATOLFA,7,NFA!>LFA,docolon
         DW LIT,3,MINUS,EXIT
 
 ;Z NFA>CFA   nfa -- cfa    name adr -> code field
 ;   COUNT 7F AND + ;       mask off 'smudge' bit
-    head NFATOCFA,7,NFA>CFA,docolon
+    head NFATOCFA,7,NFA!>CFA,docolon
         DW COUNT,LIT,07FH,AND,PLUS,EXIT
 
 ;Z IMMED?    nfa -- f      fetch immediate flag
@@ -599,7 +599,7 @@ QSIGN1: DW EXIT
 ;       R> M+ 2SWAP
 ;       1 /STRING
 ;   REPEAT ;
-    head TONUMBER,7,>NUMBER,docolon
+    head TONUMBER,7,!>NUMBER,docolon
 TONUM1: DW DUP,qbranch,TONUM3
         DW OVER,CFETCH,DIGITQ
         DW ZEROEQUAL,qbranch,TONUM2,DROP,EXIT
@@ -701,7 +701,7 @@ QABO1:  DW TWODROP,EXIT
 ;C ABORT"  i*x 0  -- i*x   R: j*x -- j*x  x1=0
 ;C         i*x x1 --       R: j*x --      x1<>0
 ;   POSTPONE S" POSTPONE ?ABORT ; IMMEDIATE
-    immed ABORTQUOTE,6,ABORT",docolon
+    immed ABORTQUOTE,6,ABORT"",docolon
         DW SQUOTE
         DW LIT,QABORT,COMMAXT
         DW EXIT
@@ -753,14 +753,14 @@ TICK:   call docolon
 ;   R>              adrs of headless DOES> def'n
 ;   LATEST @ NFA>CFA    code field to fix up
 ;   !CF ;
-    head XDOES,7,(DOES>),docolon
+    head XDOES,7,(DOES!>),docolon
         DW RFROM,LATEST,FETCH,NFATOCFA,STORECF
         DW EXIT
 
 ;C DOES>    --      change action of latest def'n
 ;   COMPILE (DOES>)
 ;   dodoes ,CF ; IMMEDIATE
-    immed DOES,5,DOES>,docolon
+    immed DOES,5,DOES!>,docolon
         DW LIT,XDOES,COMMAXT
         DW LIT,dodoes,COMMACF,EXIT
 
@@ -807,7 +807,7 @@ TICK:   call docolon
 ;C ;
 ;   REVEAL  ,EXIT
 ;   POSTPONE [  ; IMMEDIATE
-    immed SEMICOLON,1,';',docolon
+    immed SEMICOLON,1,!;,docolon
         DW REVEAL,CEXIT
         DW LEFTBRACKET,EXIT
 
@@ -911,12 +911,12 @@ POST2:  DW EXIT
 
 ;Z >L   x --   L: -- x        move to leave stack
 ;   CELL LP +!  LP @ ! ;      (L stack grows up)
-    head TOL,2,>L,docolon
+    head TOL,2,!>L,docolon
         DW CELL,LP,PLUSSTORE,LP,FETCH,STORE,EXIT
 
 ;Z L>   -- x   L: x --      move from leave stack
 ;   LP @ @  CELL NEGATE LP +! ;
-    head LFROM,2,L>,docolon
+    head LFROM,2,L!>,docolon
         DW LP,FETCH,FETCH
         DW CELL,NEGATE,LP,PLUSSTORE,EXIT
 
@@ -1020,7 +1020,7 @@ DOTS2:  DW EXIT
         DW UINIT,U0,NINIT,CMOVE
 ;        DW LIT,80h,COUNT,INTERPRET
         DW XSQUOTE
-        DB 55,'Z80 CamelForth v1.02  25 Jan 1995, ROMWBW 10 Nov 2018'
+        DB 55,'Z80 CamelForth v1.02  25 Jan 1995, ROMWBW 19 Oct 2019'
         DB 0dh,0ah
         DW TYPE,ABORT       ; ABORT never returns
 ; DON'T FORGET TO UPDATE THE BYTE COUNT IF YOU CHANCGE THE SIZE OF THE BOOT MSG
