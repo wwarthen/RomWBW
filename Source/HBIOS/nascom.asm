@@ -19,13 +19,23 @@
 ; Adapted for the freeware Zilog Macro Assembler 2.10 to produce
 ; the original ROM code (checksum A934H). PA
 ;
-; SBC V2 BOOTROM VERSION 27/10/2018 
-; difficultylevelhigh@gmail.com
+;==================================================================================
+; SBC V2 BOOTROM VERSION
+; 
+; 20181027 - Initial retrobrewcomputer SBC V2 version - difficultylevelhigh@gmail.com
+; 20191012 - Add PLAY command for SBC-V2-004 Sound support.
+; 20191013 - Add option for long error messages.
+;	   - Add option to use VT100 escape codes for screen controls.
 ;
 #INCLUDE "std.asm"
 ;
+; CUSTOMIZATION
+;
+ABBRERR	.EQU	FALSE		; Choose between long error message and abbreviated error messages.
+VT100	.EQU	TRUE		; Use VT100 escape codes for CLS
+;
 ; GENERAL EQUATES
-
+;
 CTRLC   .EQU    03H             ; Control "C"
 CTRLG   .EQU    07H             ; Control "G"
 BKSP    .EQU    08H             ; Back space
@@ -40,8 +50,9 @@ CTRLU   .EQU    15H             ; Control "U"
 ESC     .EQU    1BH             ; Escape
 DEL     .EQU    7FH             ; Delete
 
+;
 ; BASIC WORK SPACE LOCATIONS
-
+;
 ; 0200H - 2000H	BASIC EXECUTABLE
 ; 2000H - 2090H STACK
 ; 2090H - 20F8H BASIC EXECUTABLE VARAIABLES / WORKSPACE
@@ -274,43 +285,43 @@ FNCTAB: .WORD   SGN
 
 ; RESERVED WORD LIST
 
-WORDS:  .BYTE   'E'+80H,"ND"
-        .BYTE   'F'+80H,"OR"
-        .BYTE   'N'+80H,"EXT"
-        .BYTE   'D'+80H,"ATA"
-        .BYTE   'I'+80H,"NPUT"
-        .BYTE   'D'+80H,"IM"
-        .BYTE   'R'+80H,"EAD"
-        .BYTE   'L'+80H,"ET"
-        .BYTE   'G'+80H,"OTO"
-        .BYTE   'R'+80H,"UN"
-        .BYTE   'I'+80H,"F"
-        .BYTE   'R'+80H,"ESTORE"
-        .BYTE   'G'+80H,"OSUB"
-        .BYTE   'R'+80H,"ETURN"
-        .BYTE   'R'+80H,"EM"
-        .BYTE   'S'+80H,"TOP"
-        .BYTE   'O'+80H,"UT"
-        .BYTE   'O'+80H,"N"
-        .BYTE   'N'+80H,"ULL"
-        .BYTE   'W'+80H,"AIT"
-        .BYTE   'D'+80H,"EF"
-        .BYTE   'P'+80H,"OKE"
-        .BYTE   'D'+80H,"OKE"
-        .BYTE   'S'+80H,"CREEN"
-        .BYTE   'L'+80H,"INES"
-        .BYTE   'C'+80H,"LS"
-        .BYTE   'W'+80H,"IDTH"
-        .BYTE   'B'+80H,"YE"
-        .BYTE   'S'+80H,"ET"
-        .BYTE   'R'+80H,"ESET"
-        .BYTE   'P'+80H,"RINT"
-        .BYTE   'C'+80H,"ONT"
-        .BYTE   'L'+80H,"IST"
-        .BYTE   'C'+80H,"LEAR"
-        .BYTE   'P'+80H,"LAY"
-        .BYTE   'C'+80H,"SAVE"
-        .BYTE   'N'+80H,"EW"
+WORDS:  .BYTE   'E'+80H,"ND"		; PEND:
+        .BYTE   'F'+80H,"OR"		; FOR:
+        .BYTE   'N'+80H,"EXT"		; NEXT:
+        .BYTE   'D'+80H,"ATA"		; DATA:
+        .BYTE   'I'+80H,"NPUT"		; INPUT:
+        .BYTE   'D'+80H,"IM"		; DIM:
+        .BYTE   'R'+80H,"EAD"		; READ:
+        .BYTE   'L'+80H,"ET"		; SET:
+        .BYTE   'G'+80H,"OTO"		; GOTO:
+        .BYTE   'R'+80H,"UN"		; RUN:
+        .BYTE   'I'+80H,"F"		; IF:
+        .BYTE   'R'+80H,"ESTORE"	; RESTOR:
+        .BYTE   'G'+80H,"OSUB"		; GOSUB:
+        .BYTE   'R'+80H,"ETURN"		; RETURN:
+        .BYTE   'R'+80H,"EM"		; REM:
+        .BYTE   'S'+80H,"TOP"		; STOP:
+        .BYTE   'O'+80H,"UT"		; POUT:
+        .BYTE   'O'+80H,"N"		: ON:
+        .BYTE   'N'+80H,"ULL"		; NULL:
+        .BYTE   'W'+80H,"AIT"		: WAIT:
+        .BYTE   'D'+80H,"EF"		: DEF:
+        .BYTE   'P'+80H,"OKE"		: POKE:
+        .BYTE   'D'+80H,"OKE"		: DOKE:
+        .BYTE   'S'+80H,"CREEN"		: REM: NOT IMPLEMENTED
+        .BYTE   'L'+80H,"INES"		: LINES
+        .BYTE   'C'+80H,"LS"		: CLS:
+        .BYTE   'W'+80H,"IDTH"		: WIDTH:
+        .BYTE   'B'+80H,"YE"		: MONITR:
+        .BYTE   'S'+80H,"ET"		: PSET:
+        .BYTE   'R'+80H,"ESET"		; RESET:
+        .BYTE   'P'+80H,"RINT"		: PRINT:
+        .BYTE   'C'+80H,"ONT"		: CONT:
+        .BYTE   'L'+80H,"IST"		: LIST:
+        .BYTE   'C'+80H,"LEAR"		: CLEAR:
+        .BYTE   'P'+80H,"LAY"		: PLAY: WAS CLOAD
+        .BYTE   'C'+80H,"SAVE"		: REM: NOT IMPLEMENTED
+        .BYTE   'N'+80H,"EW"		: NEW
 
         .BYTE   'T'+80H,"AB("
         .BYTE   'T'+80H,"O"
@@ -426,7 +437,7 @@ ZTIMES  .EQU    0AEH            ; *
 ZDIV    .EQU    0AFH            ; /
 ZOR     .EQU    0B2H            ; OR
 ZGTR    .EQU    0B3H            ; >
-ZEQUAL  .EQU    0B4H            ; M
+ZEQUAL  .EQU    0B4H            ; =
 ZLTH    .EQU    0B5H            ; <
 ZSGN    .EQU    0B6H            ; SGN
 ZPOINT  .EQU    0C7H            ; POINT
@@ -457,27 +468,51 @@ PRITAB: .BYTE   79H             ; Precedence value
 
 ; BASIC ERROR CODE LIST
 
-ERRORS: .BYTE   "NF"            ; NEXT without FOR
-        .BYTE   "SN"            ; Syntax error
-        .BYTE   "RG"            ; RETURN without GOSUB
-        .BYTE   "OD"            ; Out of DATA
-        .BYTE   "FC"            ; Illegal function call
-        .BYTE   "OV"            ; Overflow error
-        .BYTE   "OM"            ; Out of memory
-        .BYTE   "UL"            ; Undefined line
-        .BYTE   "BS"            ; Bad subscript
-        .BYTE   "DD"            ; Re-DIMensioned array
-        .BYTE   "/0"            ; Division by zero
-        .BYTE   "ID"            ; Illegal direct
-        .BYTE   "TM"            ; Type mis-match
-        .BYTE   "OS"            ; Out of string space
-        .BYTE   "LS"            ; String too long
-        .BYTE   "ST"            ; String formula too complex
-        .BYTE   "CN"            ; Can't CONTinue
-        .BYTE   "UF"            ; Undefined FN function
-        .BYTE   "MO"            ; Missing operand
-        .BYTE   "HX"            ; HEX error
-        .BYTE   "BN"            ; BIN error
+#IF ABBRERR
+ERRORS:	.BYTE   "NF"            ; NEXT without FOR
+	.BYTE   "SN"            ; Syntax error
+	.BYTE   "RG"            ; RETURN without GOSUB
+	.BYTE   "OD"            ; Out of DATA
+	.BYTE   "FC"            ; Illegal function call
+	.BYTE   "OV"            ; Overflow error
+	.BYTE   "OM"            ; Out of memory
+	.BYTE   "UL"            ; Undefined line
+	.BYTE   "BS"            ; Bad subscript
+	.BYTE   "DD"            ; Re-DIMensioned array
+	.BYTE   "/0"            ; Division by zero
+	.BYTE   "ID"            ; Illegal direct
+	.BYTE   "TM"            ; Type mis-match
+	.BYTE   "OS"            ; Out of string space
+	.BYTE   "LS"            ; String too long
+	.BYTE   "ST"            ; String formula too complex
+	.BYTE   "CN"            ; Can't CONTinue
+	.BYTE   "UF"            ; Undefined FN function
+	.BYTE   "MO"            ; Missing operand
+	.BYTE   "HX"            ; HEX error
+	.BYTE   "BN"            ; BIN error
+#ELSE
+ERRORS: .BYTE   "NEXT without FOR",0
+        .BYTE   "Syntax",0
+        .BYTE   "RETURN without GOSUB",0
+        .BYTE   "Out of DATA",0
+        .BYTE   "Illegal function call",0
+        .BYTE   "Overflow",0
+        .BYTE   "Out of memory",0
+        .BYTE   "Undefined line",0
+        .BYTE   "Bad subscript",0
+        .BYTE   "Re-DIMensioned array",0
+        .BYTE   "Division by zero",0
+        .BYTE   "Illegal direct",0
+        .BYTE   "Type mis-match",0
+        .BYTE   "Out of string space",0
+        .BYTE   "String too long",0
+        .BYTE   "String formula too complex",0
+        .BYTE   "Can't CONTinue",0
+        .BYTE   "Undefined FN function",0
+        .BYTE   "Missing operand",0
+        .BYTE   "HEX",0
+        .BYTE   "BIN",0
+#ENDIF
 
 ; INITIALISATION TABLE -------------------------------------------------------
 
@@ -614,11 +649,25 @@ ERROR:  CALL    CLREG           ; Clear registers and stack
         LD      D,A             ; D = 0 (A is 0)
         LD      A,'?'
         CALL    OUTC            ; Output '?'
-        ADD     HL,DE           ; Offset to correct error code
-        LD      A,(HL)          ; First character
-        CALL    OUTC            ; Output it
-        CALL    GETCHR          ; Get next character
-        CALL    OUTC            ; Output it
+#IF ABBRERR
+	ADD	HL,DE           ; Offset to correct error code
+	LD	A,(HL)          ; First character
+	CALL	OUTC            ; Output it
+	CALL	GETCHR          ; Get next character
+	CALL	OUTC            ; Output it
+#ELSE
+	PUSH	BC		; Count through
+	LD	B,E		; the error list
+	SRL	B		; until we get
+	JR	Z,CHRZRO	; error message
+NXCHR:	LD	A,(HL)		; 
+	OR	A		; E/2 = entry
+	INC	HL		; number in the
+	JR	NZ,NXCHR	; list.
+	DJNZ	NXCHR
+CHRZRO:	CALL	PRS		; Display message.
+	POP	BC
+#ENDIF
         LD      HL,ERRMSG       ; "Error" message
 ERRIN:  CALL    PRS             ; Output message
         LD      HL,(LINEAT)     ; Get line of error
@@ -4165,9 +4214,19 @@ GETINP:
 	POP	DE
 	POP	BC
         RET
-CLS: 
-        LD      A,CS            ; ASCII Clear screen
-        JP      MONOUT          ; Output character
+CLS:
+#IF	VT100
+	LD	HL,VT_CLS	; Output zero terminated
+VT0OUT:	LD	A,(HL)		; VT100 escape sequence
+	INC	HL		; directly to console.
+	OR	A
+	CALL	NZ,MONOUT	; clear screen
+	JR	NZ,VT0OUT	; and home cursor
+	RET
+#ELSE
+       LD      A,CS            ; ASCII Clear screen
+       JP      MONOUT          ; Output character
+#ENDIF
 
 WIDTH:  CALL    GETINT          ; Get integer 0-255
         LD      A,E             ; Width to A
@@ -4668,7 +4727,11 @@ FRQDURTBL:
 	.DW	$1EDE, $0		; B
 ;
 FDTBSIZ	.EQU	($-FRQDURTBL)/4
-
+;
+#IF VT100
+VT_CLS	.BYTE	ESC,"[2J",ESC,"[H",0	; vt100 clear screen & home
+#ENDIF
+;
 SLACK	.EQU	(BAS_END - $)
 	.FILL	SLACK,00H
 ;

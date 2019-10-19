@@ -60,6 +60,12 @@ FTH_LOC			EQU	0200h
 ;   05 Nov 18 v1.02 Initial ROMWBW HBIOS version.
 ;   10-Nov 18 v1.02 New org address.
 ;       b1ackmai1er difficultylevelhigh@gmail.com
+;   19-Oct 19 v1.02 Convert to zsm assembler which
+;                   identified and fixed incorrect
+;                   case conversion when lowercase
+;                   keywords are being passed in a
+;                   macro.
+;       b1ackmai1er difficultylevelhigh@gmail.com
 ; ===============================================
 ; Macros to define Forth headers
 ; HEAD  label,length,name,action
@@ -75,25 +81,25 @@ FTH_LOC			EQU	0200h
 DOCODE  EQU 0      ; flag to indicate CODE words
 link    DEFL 0     ; link to previous Forth word
 
-head    MACRO   #label,#length,#name,#action
+head    MACRO  label,length,name,action
         DW link
         DB 0
 link    DEFL $
-        DB #length,'#name'
-#label:
-        IF  .NOT.(#action=DOCODE)
-        call #action
+        DB length,"&name"
+label:
+        IFF (action EQ DOCODE)
+        call action
         ENDIF
         ENDM
 
-immed   MACRO   #label,#length,#name,#action
+immed   MACRO   label,length,name,action
         DW link
         DB 1
 link    DEFL $
-        DB #length,'#name'
-#label:
-        IF  .NOT.(#action=DOCODE)
-        call #action
+        DB length,"&name"
+label:
+        IFF (action EQ DOCODE)
+        call action
         ENDIF
         ENDM
 
@@ -123,8 +129,10 @@ nexthl  MACRO
 ; ...are not used in the CP/M implementation
 ; Instead, we have the...
 
-; CP/M ENTRY POINT
-        org FTH_LOC  ; Execute address 
+; RELOCATED ENTRY POINT
+
+	.PHASE	0200H
+
 reset:  ld hl,0FDFFh ; HBIOS address, rounded down
         ld l,0       ;    = end of avail.mem (EM)
         dec h        ; EM-100h
@@ -384,7 +392,7 @@ poptos: pop bc
         DW SWOP,OVER,EXIT
 
 ;C >R    x --   R: -- x   push to return stack
-    head TOR,2,>R,docode
+    head TOR,2,!>R,docode
         dec ix          ; push TOS onto rtn stk
         ld (ix+0),b
         dec ix
@@ -393,7 +401,7 @@ poptos: pop bc
         next
 
 ;C R>    -- x    R: x --   pop from return stack
-    head RFROM,2,R>,docode
+    head RFROM,2,R!>,docode
         push bc         ; push old TOS
         ld c,(ix+0)     ; pop top rtn stk item
         inc ix          ;       to TOS
@@ -418,7 +426,7 @@ poptos: pop bc
         next
 
 ;Z SP!  a-addr --       set data stack pointer
-    head SPSTORE,3,SP!,docode
+    head SPSTORE,3,SP!!,docode
         ld h,b
         ld l,c
         ld sp,hl
@@ -433,7 +441,7 @@ poptos: pop bc
         next
 
 ;Z RP!  a-addr --       set return stack pointer
-    head RPSTORE,3,RP!,docode
+    head RPSTORE,3,RP!!,docode
         push bc
         pop ix
         pop bc
@@ -442,7 +450,7 @@ poptos: pop bc
 ; MEMORY AND I/O OPERATIONS =====================
 
 ;C !        x a-addr --   store cell in memory
-    head STORE,1,!,docode
+    head STORE,1,!!,docode
         ld h,b          ; address in hl
         ld l,c
         pop bc          ; data in bc
@@ -453,7 +461,7 @@ poptos: pop bc
         next
 
 ;C C!      char c-addr --    store char in memory
-    head CSTORE,2,C!,docode
+    head CSTORE,2,C!!,docode
         ld h,b          ; address in hl
         ld l,c
         pop bc          ; data in bc
@@ -478,7 +486,7 @@ poptos: pop bc
         next
 
 ;Z PC!     char c-addr --    output char to port
-    head PCSTORE,3,PC!,docode
+    head PCSTORE,3,PC!!,docode
         pop hl          ; char in L
         out (c),l       ; to port (BC)
         pop bc          ; pop new TOS
@@ -588,7 +596,7 @@ mplus1: pop de          ; restore saved IP
         next
 
 ;Z ><      x1 -- x2         swap bytes (not ANSI)
-    head swapbytes,2,><,docode
+    head swapbytes,2,!>!<,docode
         ld a,b
         ld b,c
         ld c,a
@@ -632,7 +640,7 @@ rsh2:   djnz rsh1
         next
 
 ;C +!     n/u a-addr --       add cell to memory
-    head PLUSSTORE,2,+!,docode
+    head PLUSSTORE,2,+!!,docode
         pop hl
         ld a,(bc)       ; low byte
         add a,l
@@ -657,7 +665,7 @@ rsh2:   djnz rsh1
         next
 
 ;C 0<     n -- flag      true if TOS negative
-    head ZEROLESS,2,0<,docode
+    head ZEROLESS,2,0!<,docode
         sla b           ; sign bit -> cy flag
         sbc a,a         ; propagate cy through A
         ld b,a          ; put 0000 or FFFF in TOS
@@ -674,11 +682,11 @@ tosfalse: ld bc,0
         next
 
 ;X <>     x1 x2 -- flag    test not eq (not ANSI)
-    head NOTEQUAL,2,<>,docolon
+    head NOTEQUAL,2,!<!>,docolon
         DW EQUAL,ZEROEQUAL,EXIT
 
 ;C <      n1 n2 -- flag        test n1<n2, signed
-    head LESS,1,<,docode
+    head LESS,1,!<,docode
         pop hl
         or a
         sbc hl,bc       ; n1-n2 in HL, SZVC valid
@@ -695,11 +703,11 @@ revsense: jp m,tosfalse ; OV: if -ve, reslt false
         jr tostrue      ;     if +ve, result true
 
 ;C >     n1 n2 -- flag         test n1>n2, signed
-    head GREATER,1,>,docolon
+    head GREATER,1,!>,docolon
         DW SWOP,LESS,EXIT
 
 ;C U<    u1 u2 -- flag       test u1<n2, unsigned
-    head ULESS,2,U<,docode
+    head ULESS,2,U!<,docode
         pop hl
         or a
         sbc hl,bc       ; u1-u2 in HL, SZVC valid
@@ -709,7 +717,7 @@ revsense: jp m,tosfalse ; OV: if -ve, reslt false
         next
 
 ;X U>    u1 u2 -- flag     u1>u2 unsgd (not ANSI)
-    head UGREATER,2,U>,docolon
+    head UGREATER,2,U!>,docolon
         DW SWOP,ULESS,EXIT
 
 ; LOOP AND BRANCH OPERATIONS ====================
@@ -949,7 +957,7 @@ cmovedone: exx
 
 ;X CMOVE>  c-addr1 c-addr2 u --  move from top
 ; as defined in the ANSI optional String word set
-    head CMOVEUP,6,CMOVE>,docode
+    head CMOVEUP,6,CMOVE!>,docode
         push bc
         exx
         pop bc      ; count
@@ -1048,8 +1056,8 @@ sdiff:  ; mismatch!  undo last 'cpi' increment
         ld c,a
 snext:  next
 
-*INCLUDE camel80d.azm   ; CPU Dependencies
-*INCLUDE camel80h.azm   ; High Level words
+INCLUDE camel80d.azm   ; CPU Dependencies
+INCLUDE camel80h.azm   ; High Level words
 lastword EQU link   ; nfa of last word in dict.
 enddict EQU $       ; user's code starts here
 
@@ -1057,6 +1065,7 @@ enddict EQU $       ; user's code starts here
 
 		ds (FTH_SIZ-(enddict-reset)-1)
 		nop
+	.DEPHASE
 		
         END
 
