@@ -37,6 +37,8 @@ if exist zpm3.sys del zpm3.sys
 ren cpm3.sys zpm3.sys
 rem pause
 
+if not exist ../../Binary/hd_cpm3.img goto :eof
+
 rem Update cpm_hd.img
 echo.
 echo.

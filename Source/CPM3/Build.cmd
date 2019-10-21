@@ -67,6 +67,8 @@ rem *** Banked ***
 copy cpm3bnk.sys cpm3.sys
 copy genbnk.dat gencpm.dat
 
+if not exist ../../Binary/hd_cpm3.img goto :eof
+
 rem Update cpm_hd.img
 echo.
 echo.
@@ -90,6 +92,7 @@ for %%f in (
   readme.1st
   cpm3fix.pat
 ) do call :upd_img %%f
+
 goto :eof
 
 :upd_img
