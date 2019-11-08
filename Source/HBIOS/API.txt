@@ -57,6 +57,10 @@ GET ($F8):
       BC=Function/Subfunction                   A=Result
                                                 DE:HL=Timer Value (32 bit)
 
+    SECONDS ($D1):
+      BC=Function/Subfunction                   A=Result
+                                                DE:HL=Seconds Value (32 bit)
+
     BOOTINFO ($E0):
       BC=Function/Subfunction                   A=Result
                                                 DE=Boot Volume (Disk Unit/Slice)
@@ -84,6 +88,10 @@ SET ($F9):
     TIMER ($D0):
       BC=Function/Subfunction                   A=Result
       DE:HL=Timer Value (32 bit)
+
+    SECONDS ($D1):
+      BC=Function/Subfunction                   A=Result
+      DE:HL=Seconds Value (32 bit)
 
     BOOTINFO ($E0):
       BC=Function/Subfunction                   A=Result

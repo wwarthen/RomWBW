@@ -19,6 +19,7 @@
 ; Change Log:
 ;   2018-01-14 [WBW] Initial release
 ;   2018-01-17 [WBW] Add HBIOS check
+;   2019-11-08 [WBW] Add seconds support
 ;_______________________________________________________________________________
 ;
 ; ToDo:
@@ -41,6 +42,7 @@ rmn	.equ	9		; intended CBIOS version - minor
 bf_sysver	.equ	$F1	; BIOS: VER function
 bf_sysget	.equ	$F8	; HBIOS: SYSGET function
 bf_sysgettimer	.equ	$D0	; TIMER subfunction
+bf_sysgetsecs	.equ	$D1	; SECONDS subfunction
 ;
 ;===============================================================================
 ; Code Section
@@ -127,7 +129,18 @@ process1a:
 	ld	a,l		; new LSB value to A
 	ld	(last),a	; save as last value
 	call	prtcr		; back to start of line
-	call	nz,prthex32	; display it
+	;call	nz,prthex32	; display it
+	call	prthex32	; display it
+	ld	de,strtick	; tag
+	call	prtstr		; display it
+
+	; get and print seconds value
+	ld	b,bf_sysget	; HBIOS SYSGET function
+	ld	c,bf_sysgetsecs	; SECONDS subfunction
+	rst	08		; call HBIOS, DE:HL := seconds value
+	call	prthex32	; display it
+	ld	de,strsec	; tag
+	call	prtstr		; display it
 ;
 process2:
 	ld	a,(cont)	; continuous display?
@@ -463,8 +476,8 @@ stack	.equ	$		; stack top
 ;
 ; Messages
 ;
-msgban	.db	"TIMER v1.0, 14-Jan-2018",13,10
-	.db	"Copyright (C) 2018, Wayne Warthen, GNU GPL v3",0
+msgban	.db	"TIMER v1.1, 8-Nov-2019",13,10
+	.db	"Copyright (C) 2019, Wayne Warthen, GNU GPL v3",0
 msguse	.db	"Usage: TIMER [/C] [/?]",13,10
 	.db	"  ex. TIMER           (display current timer value)",13,10
 	.db	"      TIMER /?        (display version and usage)",13,10
@@ -472,5 +485,7 @@ msguse	.db	"Usage: TIMER [/C] [/?]",13,10
 msgprm	.db	"Parameter error (TIMER /? for usage)",0
 msgbio	.db	"Incompatible BIOS or version, "
 	.db	"HBIOS v", '0' + rmj, ".", '0' + rmn, " required",0
+strtick	.db	" Ticks, ",0
+strsec	.db	" Seconds",0
 ;
 	.end
