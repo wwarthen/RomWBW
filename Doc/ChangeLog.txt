@@ -28,7 +28,7 @@ Version 2.9.2
 - WBW: Updated FAT to add MD and FORMAT commands
 - WBW: Add CP/M 3 (experimental)
 - M?T: Support Shift register SPI WIZNET for RC2014
-- WBW: Added seconds register in HBIOS
+- P?S: Added seconds register in HBIOS
 
 Version 2.9.1
 -------------
