@@ -60,6 +60,7 @@ GET ($F8):
     SECONDS ($D1):
       BC=Function/Subfunction                   A=Result
                                                 DE:HL=Seconds Value (32 bit)
+						C=Ticks within current second
 
     BOOTINFO ($E0):
       BC=Function/Subfunction                   A=Result
