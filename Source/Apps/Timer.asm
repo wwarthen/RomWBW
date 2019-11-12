@@ -139,6 +139,10 @@ process1a:
 	ld	c,bf_sysgetsecs	; SECONDS subfunction
 	rst	08		; call HBIOS, DE:HL := seconds value
 	call	prthex32	; display it
+	ld	a,'.'		; fraction separator
+	call	prtchr		; print it
+	ld	a,c		; get fractional component
+	call	prthex		; print it
 	ld	de,strsec	; tag
 	call	prtstr		; display it
 ;
@@ -476,7 +480,7 @@ stack	.equ	$		; stack top
 ;
 ; Messages
 ;
-msgban	.db	"TIMER v1.1, 8-Nov-2019",13,10
+msgban	.db	"TIMER v1.1, 10-Nov-2019",13,10
 	.db	"Copyright (C) 2019, Wayne Warthen, GNU GPL v3",0
 msguse	.db	"Usage: TIMER [/C] [/?]",13,10
 	.db	"  ex. TIMER           (display current timer value)",13,10
