@@ -131,7 +131,7 @@ STPSIZ	.EQU	$ - STPIMG
 ;
 ; The following section contains key information and addresses for the
 ; RomWBW CBIOS.  A pointer to the start of this section is stored with
-; with the ZPX data in page zero at $44 (see above).
+; with the CBX data in page zero at $44 (see above).
 ;
 CBX:
 DEVMAPADR	.DW	DEVMAP		; DEVICE MAP ADDRESS

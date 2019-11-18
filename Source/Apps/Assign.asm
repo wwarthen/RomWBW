@@ -27,7 +27,6 @@
 ; ToDo:
 ;  1) Do something to prevent assigning slices when device does not support them
 ;  2) ASSIGN C: causes drive map to be reinstalled unnecessarily
-;  3) Need to find a way to verify RomWBW under CP/M 3
 ;_______________________________________________________________________________
 ;
 ;===============================================================================
@@ -106,7 +105,6 @@ init:
 	ld	(cpmver),hl	; save it
 	ld	a,l		; low byte
 	cp	$30		; CP/M 3.0?
-	jp	nc,initcpm3	; handle CP/M 3.0 or greater
 ;
 	; get location of config data and verify integrity
 	ld	hl,stamp	; HL := adr or RomWBW zero page stamp
@@ -146,6 +144,11 @@ init:
 	inc	hl		; ... into DE to get
 	ld	d,(hl)		; ... DPB map pointer
 	ld	(dpbloc),de	; and save it	
+;
+	; test for CP/M 3 and branch if so
+	ld	a,(cpmver)	; low byte of cpm version
+	cp	$30		; CP/M 3.0?
+	jp	nc,initcpm3	; handle CP/M 3.0 or greater
 ;
 	; make a local working copy of the drive map
 	ld	hl,(maploc)	; copy from CBIOS drive map
