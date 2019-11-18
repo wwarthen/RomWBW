@@ -131,7 +131,7 @@ STPSIZ	.EQU	$ - STPIMG
 ;
 ; The following section contains key information and addresses for the
 ; RomWBW CBIOS.  A pointer to the start of this section is stored with
-; with the ZPX data in page zero at $44 (see above).
+; with the CBX data in page zero at $44 (see above).
 ;
 CBX:
 DEVMAPADR	.DW	DEVMAP		; DEVICE MAP ADDRESS
@@ -237,7 +237,7 @@ DEVMAP:
 ; Disk mapping is done using a drive map table (DRVMAP) which is built
 ; dynamically at cold boot.  See the DRV_INIT routine.  This table is
 ; made up of entries as documented below.  The table is prefixed with one
-; byte indicating the number of entries.  The postion of the entry indicates
+; byte indicating the number of entries.  The position of the entry indicates
 ; the drive letter, so the first entry is A:, the second entry is B:, etc.
 ;
 ;	UNIT:	BIOS DISK UNIT # (BYTE)
@@ -272,8 +272,8 @@ DEVMAP:
 ; DPB MAPPING TABLE
 ;==================================================================================================
 ;
-; MAP MEDIA ID'S TO APPROPRIATE DPB ADDRESSEES
-; THE ENTRIES IN THIS TABLE MUST CONCIDE WITH THE VALUES
+; MAP MEDIA ID'S TO APPROPRIATE DPB ADDRESSES
+; THE ENTRIES IN THIS TABLE MUST COINCIDE WITH THE VALUES
 ; OF THE MEDIA ID'S (SAME SEQUENCE, NO GAPS)
 ;
 	.DB	DPBCNT
