@@ -33,6 +33,7 @@
 ; Change Log:
 ;   2018-01-26 [WBW] Initial release
 ;   2018-01-28 [WBW] Added support for MYM sound files
+;   2019-11-21 [WBW] Added table-driven configuration
 ;_______________________________________________________________________________
 ;
 ; ToDo:
@@ -53,8 +54,6 @@ RMN		.EQU	9		; intended CBIOS version - minor
 ;
 BF_SYSVER	.EQU	$F1		; BIOS: VER function
 BF_SYSGET	.EQU	$F8		; HBIOS: SYSGET function
-;
-DCNTL		.EQU	$72		; Z180 DCNTL PORT
 ;
 FCB		.EQU	$5C		; Location of default FCB
 ;
@@ -79,48 +78,60 @@ TYPMYM		.EQU	3		; FILTYP value for MYM sound file
 	LD	A,RMJ << 4 | RMN	; Expected HBIOS ver
 	CP	D			; Compare with result above
 	JP	NZ,ERRBIO		; Handle BIOS error
-;	
-	; Use platform id to derive port addresses
+;
+	; Use platform id to setup active configuration
 	LD	A,L			; Platform ID is still in L from above
-	LD	C,L			; Save platform id in C for now
-	LD	HL,$D0D8		; For RC2014 Z80, RSEL=D8, RDAT=D0
-	LD	DE,MSGRCZ80		; Message for RC2014 Z80 platform
-	CP	7			; RC2014 Z80?
-	JR	Z,_SETP			; If so, set ports
-	LD	DE,MSGEZ		; Message for Easy Z80 platform
-	CP	9			; Easy Z80?
-	LD	HL,$6068		; For RC2014 Z180, RSEL=D8, RDAT=D0
-	LD	DE,MSGRCZ180		; Message for RC2014 Z180 platform
-	CP	8			; RC2014 Z80?
-	JR	Z,_SETP			; If so, set ports
-	LD	DE,MSGSCZ180		; Message for SC Z180 platform
-	CP	10			; SCZ180?
-	JR	Z,_SETP			; If so, same ports as RC2014
-	LD	HL,$9D9C		; For N8, RSEL=9C, RDAT=9D
-	LD	DE,MSGN8		; Message for N8 platform
-	CP	4			; N8?
-	JR	Z,_SETP			; If so, set ports
-	LD	HL,$9B9A		; Otherwise SCG, RSEL=9A, RDAT=9B
-	LD	DE,MSGSCG		; Message for SCG platform
-	LD	A,$FF			; Write $FF to the
-	OUT	($9C),A			; ... SCG ACR register to activate card
-_SETP	LD	(PORTS),HL		; Save port values
+	RLCA				; Adjust for table entry size (4 bytes)
+	PUSH	AF			; Save ID * 2 for later
+	RLCA
+	LD	HL,CFGTBL		; Point to start of config table
+	CALL	ADDHLA			; HL := desired config table entry
+	LD	DE,CFG			; Dest is active config
+	LD	BC,4			; Copy 4 bytes
+	LDIR				; Copy to active config
+;
+	LD	HL,PLTSTR		; Point to platform string table
+	POP	AF			; Recover platform id * 2 for table offset
+	CALL	ADDHLA			; HL := Platform string index adr
+	LD	E,(HL)			; DE := Platform string adr
+	INC	HL
+	LD	D,(HL)
 	CALL	CRLF			; Formatting
 	CALL	PRTSTR			; Display platform string
-;	
-	; Choose quark wait mode based on platform
-	LD	A,C			; Recover platform id
-	LD	B,1			; Assume timer mode
-	LD	DE,MSGTIM		; Corresponding display string
-	CP	4			; N8?
-	JR	Z,_SETM			; If so, commit timer mode
-	CP	5			; MK4?
-	JR	Z,_SETM			; If so, commit timer mode
-	LD	B,0			; Otherwise, delay mode
-	LD	DE,MSGDLY		; Corresponding display string
-_SETM	LD	A,B			; Mode flag value to A
+;
+	LD	A,(CFG)			; RSEL port address to A
+	INC	A			; Test for $FF
+	JP	Z,ERRPLT		; Bail out if unsupported platform
+;
+	; Test for timer running to determine if it can be used for delay
+	LD	B,BF_SYSGET		; HBIOS: GET function
+	LD	C,$D0			; TIMER subfunction
+	RST	08			; DE:HL := current tick count
+	LD	A,L			; DE:HL == 0?
+	OR	H	
+	OR	E	
+	OR	D	
+	LD	A,0			; Assume no timer
+	LD	DE,MSGDLY		; Delay mode msg
+	JR	Z,SETDLY		; If tick count is zero, no timer active
+	LD	A,$FF			; Value for timer active
+	LD	DE,MSGTIM		; Timer mode msg
+SETDLY:	
 	LD	(WMOD),A		; Save wait mode
 	CALL	PRTSTR			; Print it
+;
+;	; *DEBUG*
+;	LD	A,','
+;	CALL	PRTCHR
+;	LD	HL,CFG
+;	LD	B,4
+;DBGLP:
+;	LD	A,' '
+;	CALL	PRTCHR
+;	LD	A,(HL)
+;	INC	HL
+;	CALL	PRTHEX
+;	DJNZ	DBGLP
 ;	
 	; Get CPU speed & type from RomWBW HBIOS and compute quark delay factor
 	LD	B,$F8			; HBIOS SYSGET function 0xF8
@@ -130,9 +141,19 @@ _SETM	LD	A,B			; Mode flag value to A
 	RR	E			; ... for delay factor
 	EX	DE,HL			; Move result to HL
 	LD	(QDLY),HL		; Save result as quark delay factor
+;
+	; Activate SCG card if applicable
+	LD	A,(CFG+3)
+	CP	$FF
+	JR	Z,NOSCG
+	LD	C,A
+	LD	A,$FF
+	OUT	(C),A
+NOSCG:
 ;	
 	; Test for hardware (sound chip detection)
-	LD	DE,(PORTS)		; D := RDAT, E := RSEL
+	CALL	SLOWIO
+	LD	DE,(CFG)		; D := RDAT, E := RSEL
 	LD	C,E			; Port = RSEL
 	LD	A,2			; Register 2
 	OUT	(C),A			; Select register 2
@@ -141,6 +162,9 @@ _SETM	LD	A,B			; Mode flag value to A
 	OUT	(C),A			; Write $AA to register 2
 	LD	C,E			; Port = RSEL
 	IN	A,(C)			; Read back value in register 2
+	PUSH	AF
+	CALL	NORMIO
+	POP	AF
 	;CALL	PRTHEX			; *debug*
 	CP	$AA			; Value as written?
 	JP	NZ,ERRHW		; If not, handle hardware error
@@ -228,7 +252,7 @@ _LDX	LD	C,16			; CPM Close File function
 	LD	DE,MSGPLY		; Playing message
 	CALL	PRTSTR			; Print message
 	;CALL	CRLF2			; Formatting
-	
+	;CALL	SLOWCPU
 	LD	A,(FILTYP)		; Get file type
 	CP	TYPPT2			; PT2?
 	JR	Z,GOPT2			; If so, do it
@@ -292,6 +316,7 @@ waitvb	call	WAITQ
 	jr	mymlp
 ;	
 EXIT	CALL	START+8			; Mute audio
+	;CALL	NORMCPU
 	;CALL	CRLF2			; Formatting
 	LD	DE,MSGEND		; Completion message
 	CALL	PRTSTR			; Print message
@@ -388,6 +413,70 @@ IDBIO2:
 	; No idea what this is
 	XOR	A		; Setup return value of 0
 	RET			; and done
+;
+;
+;
+SLOWCPU:
+	LD A,(CFG+2)	; Z180 base I/O port
+	CP $FF		; Check for no value
+	RET Z		; Bail out if no value
+	ADD A,$1E	; Apply offset of CMR register
+	LD C,A		; And put it in C
+	LD B,0		; MSB for 16-bit I/O
+	IN A,(C)	; Get current value
+	LD (CMRSAV),A	; Save it to restore later
+	XOR A		; Go slow
+	OUT (C),A	; And update CMR
+	INC C		; Now point to CCR register
+	IN A,(C)	; Get current value
+	LD (CCRSAV),A	; Save it to restore later
+	XOR A		; Go slow
+	OUT (C),A	; And update CCR
+	RET
+;
+;
+;
+NORMCPU:
+	LD A,(CFG+2)	; Z180 base I/O port
+	CP $FF		; Check for no value
+	RET Z		; Bail out if no value
+	ADD A,$1E	; Apply offset of CMR register
+	LD C,A		; And put it in C
+	LD B,0		; MSB for 16-bit I/O
+	LD A,(CMRSAV)	; Get original CMR value
+	OUT (C),A	; And update CMR
+	INC C		; Now point to CCR register
+	LD A,(CCRSAV)	; Get original CCR value
+	OUT (C),A	; And update CCR
+	RET
+;
+;
+;
+SLOWIO:
+	LD A,(CFG+2)	; Z180 base I/O port
+	CP $FF		; Check for no value
+	RET Z		; Bail out if no value
+	ADD A,$32	; Apply offset of DCNTL register
+	LD C,A		; And put it in C
+	LD B,0		; MSB for 16-bit I/O
+	IN A,(C)	; Get current value
+	LD (DCSAV),A	; Save it to restore later
+	OR %00110000	; Force slow operation (I/O W/S=3)
+	OUT (C),A	; And update DCNTL
+	RET
+;
+;
+;
+NORMIO:
+	LD A,(CFG+2)	; Z180 base I/O port
+	CP $FF		; Check for no value
+	RET Z		; Bail out if no value
+	ADD A,$32	; Apply offset of DCNTL register
+	LD C,A		; And put it in C
+	LD B,0		; MSB for 16-bit I/O
+	LD A,(DCSAV)	; Get saved DCNTL value
+	OUT (C),A	; And restore it
+	RET
 ;
 ; Print character in A without destroying any registers
 ;
@@ -562,8 +651,23 @@ CRLF:
 	POP	AF		; restore AF
 	RET
 ;
+; ADD HL,A
+;
+;   A REGISTER IS DESTROYED!
+;
+ADDHLA:
+	ADD	A,L
+	LD	L,A
+	RET	NC
+	INC	H
+	RET
+;
 ERRBIO:	; Invalid BIOS or version
 	LD	DE,MSGBIO
+	JR	ERR
+;
+ERRPLT:	; Invalid BIOS or version
+	LD	DE,MSGPLT
 	JR	ERR
 ;
 ERRHW:	; Hardware error, sound chip not detected
@@ -595,40 +699,80 @@ ERR1:	; without the leading crlf
 ERR2:	; without the string
 	CALL	CRLF		; print newline
 	JP	0		; fast exit
-
-QDLY		.DW	0	; quark delay factor
-WMOD		.DB	0	; delay mode, non-zero to use timer
-DCSAV		.DB	0	; for saving Z180 DCNTL value
-DMA		.DW	0	; Working DMA
-FILTYP		.DB	0	; Sound file type (TYPPT2, TYPPT3, TYPMYM)
-				
-TMP		.DB	0	; work around use of undocumented Z80
-				
-PORTS:	                        
+;
+; CONFIG TABLE, ENTRY ORDER MATCHES HBIOS PLATFORM ID
+;
+CFGTBL:		;	RSEL	RDAT	Z180	ACR
+		.DB	$FF,	$FF,	$FF,	$FF	; PLATFORM ID 0 IS INVALID
+		.DB	$9A,	$9B,	$FF,	$9C	; SBC W/ SCG
+		.DB	$FF,	$FF,	$FF,	$FF	; ZETA (NOT POSSIBLE)
+		.DB	$FF,	$FF,	$FF,	$FF	; ZETA 2 (NOT POSSIBLE)
+		.DB	$9C,	$9D,	$40,	$FF	; N8 W/ ONBOARD PSG
+		.DB	$9A,	$9B,	$40,	$9C	; MK4 W/ SCG
+		.DB	$9A,	$9B,	$FF,	$FF	; UNA (NOT SUPPORTED)
+		.DB	$D8,	$D0,	$FF,	$FF	; RCZ80 W/ RC SOUND MODULE (EB)
+		.DB	$68,	$60,	$C0,	$FF	; RCZ180 W/ RC SOUND MODULE (EB)
+		.DB	$D8,	$D0,	$FF,	$FF	; EZZ80 W/ RC SOUND MODULE (EB)
+		.DB	$68,	$60,	$C0,	$FF	; SCZ180 W/ RC SOUND MODULE (EB)
+;
+CFG:		; ACTIVE CONFIG VALUES (FROM SELECTED CFGTBL)
 RSEL		.DB	0	; Register selection port
 RDAT		.DB	0	; Register data port
+Z180		.DB	0	; Z180 base I/O port
+ACR		.DB	0	; Aux Ctrl Reg I/O port on SCG
+;
+QDLY		.DW	0	; quark delay factor
+WMOD		.DB	0	; delay mode, non-zero to use timer
+DCSAV		.DB	0	; for saving original Z180 DCNTL value
+CCRSAV		.DB	0	; for saving original Z180 CCR value
+CMRSAV		.DB	0	; for saving original Z180 CMR value
+;
+DMA		.DW	0	; Working DMA
+FILTYP		.DB	0	; Sound file type (TYPPT2, TYPPT3, TYPMYM)
+;				
+TMP		.DB	0	; work around use of undocumented Z80
+;
 		
-MSGBAN		.DB	"Tune Player for RomWBW v2.1, 11-Aug-2019",0
+MSGBAN		.DB	"Tune Player for RomWBW v2.2, 21-Nov-2019",0
 MSGUSE		.DB	"Copyright (C) 2019, Wayne Warthen, GNU GPL v3",13,10
 		.DB	"PTxPlayer Copyright (C) 2004-2007 S.V.Bulba",13,10
 		.DB	"MYMPlay by Marq/Lieves!Tuore",13,10,13,10
 		.DB	"Usage: TUNE <filename>.[PT2|PT3|MYM]",0
 MSGBIO		.DB	"Incompatible BIOS or version, "
 		.DB	"HBIOS v", '0' + RMJ, ".", '0' + RMN, " required",0
+MSGPLT		.DB	"Hardware error, system not supported!",0
 MSGHW		.DB	"Hardware error, sound chip not detected!",0
 MSGNAM		.DB	"Sound filename invalid (must be .PT2, .PT3, or .MYM)",0
 MSGFIL		.DB	"Sound file not found!",0
 MSGSIZ		.DB	"Sound file too large to load!",0
-MSGRCZ80	.DB	"RC2014 Z80 w/ Ed Brindley Sound Module",0
-MSGRCZ180	.DB	"RC2014 Z180 w/ Ed Brindley Sound Module",0
-MSGSCZ180	.DB	"SC Z180 w/ Ed Brindley Sound Module",0
-MSGEZ		.DB	"Easy Z80 w/ Ed Brindley Sound Module",0
-MSGN8		.DB	"RetroBrew N8 Onboard Sound System",0
-MSGSCG		.DB	"RetroBrew SCG ECB Adapter Sound System",0
 MSGTIM		.DB	", timer mode",0
 MSGDLY		.DB	", delay mode",0
 MSGPLY		.DB	"Playing...",0
 MSGEND		.DB	" Done",0
+;
+PLTSTR:
+		.DW	0
+		.DW	PLTSTR_SBC
+		.DW	PLTSTR_ZETA
+		.DW	PLTSTR_ZETA2
+		.DW	PLTSTR_N8
+		.DW	PLTSTR_MK4
+		.DW	PLTSTR_UNA
+		.DW	PLTSTR_RCZ80
+		.DW	PLTSTR_RCZ180
+		.DW	PLTSTR_EZZ80
+		.DW	PLTSTR_SCZ180
+;
+PLTSTR_SBC	.DB	"SBC w/ SCG ECB Sound Card",0
+PLTSTR_ZETA	.DB	"Zeta -- Not Supported!!!",0
+PLTSTR_ZETA2	.DB	"Zeta 2 -- Not Supported!!!",0
+PLTSTR_N8	.DB	"N8 Onboard Sound System",0
+PLTSTR_MK4	.DB	"Mark IV w/ SCG ECB Sound Card",0
+PLTSTR_UNA	.DB	"UNA -- Not Supported!!!",0
+PLTSTR_RCZ80	.DB	"RC2014 Z80 w/ Sound Module (EB)",0
+PLTSTR_RCZ180	.DB	"RC2014 Z180 w/ Sound Module (EB)",0
+PLTSTR_EZZ80	.DB	"Easy Z80 w/ Sound Module (EB)",0
+PLTSTR_SCZ180	.DB	"SC Z180 w/ Sound Module (EB)",0
 ;
 ;===============================================================================
 ; PTx Player Routines
@@ -2012,15 +2156,9 @@ LOUT	OUT (C),A
 #ENDIF
 
 #IF WBW
-	LD A,(WMOD)	; If WMOD = 1, CPU is Z180
-	OR A		; Set flags
-	JR Z,LOUT0	; Skip Z180 stuff
 	DI
-	IN0 A,(DCNTL)	; Get wait states
-	LD (DCSAV),A	; Save value
-	OR %00110000	; Force slow operation (I/O W/S=3)
-	OUT0 (DCNTL),A	; And update DCNTL
-LOUT0	LD DE,(PORTS)	; D := RDAT, E := RSEL
+	CALL SLOWIO
+	LD DE,(CFG)	; D := RDAT, E := RSEL
 	XOR A		; start with reg 0
 	LD C,E		; point to address port
 	LD HL,AYREGS	; start of value list
@@ -2037,11 +2175,8 @@ LOUT	OUT (C),A	; select register
 	JP M,LOUT2	; if bit 7 set, return w/o writing value
 	LD C,D		; select data port
 	OUT (C),A	; write value to register 13
-LOUT2	LD A,(WMOD)	; If WMOD = 1, CPU is Z180
-	OR A		; Set flags
-	RET Z		; Skip Z180 stuff
-	LD A,(DCSAV)	; Get saved DCNTL value
-	OUT0 (DCNTL),A	; And restore it
+LOUT2
+	CALL NORMIO
 	EI
 	RET		; And done
 #ENDIF
@@ -2405,13 +2540,10 @@ upsg:	ld	a,(WMOD)	; if WMOD = 1, CPU is z180
 	or	a		; set flags
 	jr	z,upsg1		; skip z180 stuff
 	di
-	in0	a,(DCNTL)	; get wait states
-	ld	(DCSAV),a	; save value
-	or	%00110000	; force slow operation (i/o w/s=3)
-	out0	(DCNTL),a	; and update DCNTL
+	call	SLOWIO
 
 upsg1:	ld	hl,(psource)
-	ld	de,(PORTS)	; E := RSEL, D := RDAT
+	ld	de,(CFG)	; E := RSEL, D := RDAT
         xor     a
 
 psglp:	ld	c,e		; C := RSEL
@@ -2443,11 +2575,7 @@ notrig: ld      hl,(psource)
         dec     a
         ld      (played),a
 
-endint:	ld a,(WMOD)		; If WMOD = 1, CPU is Z180
-	or a			; Set flags
-	ret z			; Skip Z180 stuff
-	ld a,(DCSAV)		; Get saved DCNTL value
-	out0 (DCNTL),a		; And restore it
+endint:	call	NORMIO
 	ei	
 	ret			; And done
 ;

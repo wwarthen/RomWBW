@@ -29,6 +29,7 @@ Version 2.9.2
 - WBW: Add CP/M 3 (experimental)
 - M?T: Support Shift register SPI WIZNET for RC2014
 - PLS: Added seconds register in HBIOS
+- WBW: More flexible table-driven config in TUNE.COM
 
 Version 2.9.1
 -------------
