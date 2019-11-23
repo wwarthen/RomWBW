@@ -200,7 +200,7 @@ then use the COPYSYS command to make the desired drive bootable.
 
 You would use a command like the following to make drive C bootable.
 
-  | B>COPYSYS C:=CPM.SYS
+  | B>SYSCOPY C:=CPM.SYS
   
 Notes
 -----

@@ -23,7 +23,7 @@
 ;
 ; ===============================================
 ; CAMEL80H.AZM: High Level Words
-;   Source code is for the Z80MR macro assembler.
+;   Source code is for the ZSM assembler.
 ;   Forth words are documented as follows:
 ;*   NAME     stack -- stack    description
 ;   Word names in upper case are from the ANS
@@ -1023,5 +1023,5 @@ DOTS2:  DW EXIT
         DB 55,'Z80 CamelForth v1.02  25 Jan 1995, ROMWBW 19 Oct 2019'
         DB 0dh,0ah
         DW TYPE,ABORT       ; ABORT never returns
-; DON'T FORGET TO UPDATE THE BYTE COUNT IF YOU CHANCGE THE SIZE OF THE BOOT MSG
+; DON'T FORGET TO UPDATE THE BYTE COUNT IF YOU CHANGE THE SIZE OF THE BOOT MSG
 

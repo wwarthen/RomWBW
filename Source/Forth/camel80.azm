@@ -1,5 +1,5 @@
 CIODEV_CONSOLE	EQU	0D0h
-CIOIN			EQU 00h ; CHARACTER INPPUT
+CIOIN			EQU 00h ; CHARACTER INPUT
 CIOOUT			EQU	01h	; CHARACTER OUTPUT
 CIOIST			EQU 02h ; CHARACTER INPUT STATUS
 BID_BOOT		EQU	00h
@@ -35,7 +35,7 @@ FTH_LOC			EQU	0200h
 ;
 ; ===============================================
 ; CAMEL80.AZM: Code Primitives
-;   Source code is for the Z80MR macro assembler.
+;   Source code is for the ZSM assembler.
 ;   Forth words are documented as follows:
 ;x   NAME     stack -- stack    description
 ;   where x=C for ANS Forth Core words, X for ANS
@@ -126,12 +126,12 @@ nexthl  MACRO
         ENDM
 
 ; RESET AND INTERRUPT VECTORS ===================
-; ...are not used in the CP/M implementation
+; ...are not used in the ROMWBW implementation
 ; Instead, we have the...
 
 ; RELOCATED ENTRY POINT
 
-	.PHASE	0200H
+	.PHASE	FTH_LOC
 
 reset:  ld hl,0FDFFh ; HBIOS address, rounded down
         ld l,0       ;    = end of avail.mem (EM)
