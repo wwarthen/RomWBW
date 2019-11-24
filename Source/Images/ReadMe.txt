@@ -196,11 +196,11 @@ choice best left to the user.
 
 The simplest way to make a resultant image bootable is to do it from 
 your running CP/M system.  Boot your system using the ROM selection, 
-then use the COPYSYS command to make the desired drive bootable.
+then use the SYSCOPY command to make the desired drive bootable.
 
 You would use a command like the following to make drive C bootable.
 
-  | B>COPYSYS C:=CPM.SYS
+  | B>SYSCOPY C:=CPM.SYS
   
 Notes
 -----
