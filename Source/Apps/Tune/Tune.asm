@@ -23,11 +23,14 @@
 ;   - Max Z80 CPU clock is about 8MHz or sound chip will not handle speed.
 ;   - Higher CPU clock speeds are possible on Z180 because extra I/O
 ;     wait states are added during I/O to sound chip.
-;   - Uses hardware timer support on Z180 processors.  Otherwise, a delay
-;     loop calibrated to CPU speed is used.
+;   - Uses hardware timer support on systems that support a timer.  Otherwise,
+;     a delay loop calibrated to CPU speed is used.
 ;   - Delay loop is calibrated to CPU speed, but it does not compensate for
 ;     time variations in each quark loop resulting from data decompression.
 ;     An average quark processing time is assumed in each loop.
+;   - Most sound files originally targeted MSX or ZX Spectrum which used
+;     1.7897725 MHz and 1.773400 MHz respectively for the PSG clock.  For best
+;     sound playback, PSG should be run at approx. this clock rate.
 ;_______________________________________________________________________________
 ;
 ; Change Log:
