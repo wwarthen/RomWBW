@@ -21,6 +21,7 @@
 ;   2016-03-21 [WBW] Updated for HBIOS 2.8
 ;   2016-04-08 [WBW] Determine key memory addresses dynamically
 ;   2019-08-07 [WBW] Fixed DPB selection error
+;   2019-11-17 [WBW] Added preliminary CP/M 3 support
 ;_______________________________________________________________________________
 ;
 ; ToDo:
@@ -47,6 +48,19 @@ rmn	.equ	9		; CBIOS version - minor
 ;===============================================================================
 ;
 	.org	$100
+;
+	; relocate to high memory
+	ld	hl,image
+	ld	de,$8000
+	ld	bc,modsize
+	ldir
+	jp	start
+;
+image	.equ	$
+;
+	.org	$8000
+;
+start:
 ;
 	; setup stack (save old value)
 	ld	(stksav),sp	; save stack
@@ -84,6 +98,13 @@ init:
 	ld	de,-3		; adjustment for start of table
 	add	hl,de		; HL now has start of table
 	ld	(bioloc),hl	; save it
+;
+	; get CP/M version and save it
+	ld	c,$0C		; function number
+	call	bdos		; do it, HL := version
+	ld	(cpmver),hl	; save it
+	ld	a,l		; low byte
+	cp	$30		; CP/M 3.0?
 ;
 	; get location of config data and verify integrity
 	ld	hl,stamp	; HL := adr or RomWBW zero page stamp
@@ -123,6 +144,11 @@ init:
 	inc	hl		; ... into DE to get
 	ld	d,(hl)		; ... DPB map pointer
 	ld	(dpbloc),de	; and save it	
+;
+	; test for CP/M 3 and branch if so
+	ld	a,(cpmver)	; low byte of cpm version
+	cp	$30		; CP/M 3.0?
+	jp	nc,initcpm3	; handle CP/M 3.0 or greater
 ;
 	; make a local working copy of the drive map
 	ld	hl,(maploc)	; copy from CBIOS drive map
@@ -188,6 +214,66 @@ initx:
 	call	prthexword
 	
 #endif
+;
+ 	; return success
+	xor	a		; signal success
+	ret			; return
+;
+; CP/M 3 initialization
+;
+initcpm3:
+	ld	hl,(bioloc)
+	ld	de,22*3		; offset of DRVTBL func
+	add	hl,de		; HL := DRVTBL func
+	call	jphl		; do it, HL := DRVTBL adr
+	ld	(drvtbl),hl	; save it
+;
+	; switch to sysbnk
+	ld	hl,(bioloc)
+	ld	de,27*3		; offset of SELMEM func
+	add	hl,de		; HL := SELMEM func
+	ld	a,0		; bank 0 is system bank
+	call	jphl
+;
+	; copy CP/M 3 drvtbl to drvmap working copy
+	ld	hl,(drvtbl)	; get drive table in HL
+	ld	de,mapwrk	; DE := working drive map
+	ld	b,16
+initc2:
+	push	hl		; save drvtbl entry adr
+	ld	a,(hl)		; deref HL to get DPH adr
+	inc	hl		; ...
+	ld	h,(hl)		; ...
+	ld	l,a		; ...
+	ld	a,l		; check for
+	or	h		; ... zero
+	jr	nz,initc3	; if not zero, copy entry
+	inc	de		; ... else bump past unit field
+	jr	initc4		; ... and continue without copying
+initc3:
+	dec	hl		; back up to
+	dec	hl		; ... unit
+	ld	a,(hl)		; get unit from drvtbl
+	ld	(de),a		; save unit to drvmap
+	inc	hl		; bump to slice
+	inc	de		; bump to slice
+	ld	a,(hl)		; get slice from drvtbl
+	ld	(de),a		; save slice to drvmap
+initc4:	
+	inc	de		; bump past slice
+	inc	de		; skip
+	inc	de		; ... dph
+	pop	hl		; back to drvtbl entry
+	inc	hl		; bump to
+	inc	hl		; ... next drvtbl entry
+	djnz	initc2
+;
+	; switch back to tpabnk
+	ld	hl,(bioloc)
+	ld	de,27*3		; offset of SELMEM func
+	add	hl,de		; HL := SELMEM func
+	ld	a,1		; bank 1 is tpa bank
+	call	jphl
 ;
  	; return success
 	xor	a		; signal success
@@ -374,6 +460,10 @@ devlstu1:
 ; Install the new drive map into CBIOS
 ;
 install:
+	ld	a,(cpmver)	; low byte of CP/M version
+	cp	$30		; CP/M 3.0?
+	jp	nc,instcpm3	; handle CP/M 3.0 or greater
+;
 	; capture CBIOS snapshot and stack frame for error recovery
 	ld	hl,(bioloc)	; start of CBIOS
 	ld	de,$8000	; save it here
@@ -622,6 +712,90 @@ makdph3:
 	inc	hl		; ... address in
 	ld	(hl),b		; ... dph and bump
 	inc	hl		; ... to next dph entry	
+	xor	a		; signal success
+	ret
+;
+;
+;
+instcpm3:
+;
+	; switch to sysbnk
+	ld	hl,(bioloc)
+	ld	de,27*3		; offset of SELMEM func
+	add	hl,de		; HL := SELMEM func
+	ld	a,0		; bank 0 is system bank
+	call	jphl
+;
+	; copy drvmap working copy to CP/M 3 drvtbl
+	ld	hl,(drvtbl)	; get drvtbl address
+	ld	a,(hl)		; deref HL to get DPH0 adr
+	inc	hl		; ...
+	ld	h,(hl)		; ...
+	ld	l,a		; ...
+	ld	(dphadr),hl	; save starting dphadr
+	
+	
+	ld	hl,(drvtbl)	; get drive table in HL
+	ld	de,mapwrk	; DE := working drive map
+	ld	b,16
+instc1:
+	ld	a,(de)		; get unit field of mapwrk
+	inc	a		; test for $FF
+	jr	nz,instc2	; if used, do copy
+	xor	a		; zero accum
+	ld	(hl),a		; zero lsb of drvtbl entry adr
+	inc	hl		; move to msb
+	ld	(hl),a		; zero msb of drvtbl entry adr
+	inc	hl		; bump to start of next drvtbl entry
+	inc	de		; bump to next mapwrk entry
+	inc	de		; ...
+	inc	de		; ...
+	inc	de		; ...
+	jr	instc3		; resume loop without copy
+;
+instc2:	
+	push	hl		; save drvtbl entry adr
+	push	de		; save mapwrk entry adr
+	ld	de,(dphadr)	; get cur dph adr
+	ld	(hl),e		; save dph adr to drvtbl
+	inc	hl		; ...
+	ld	(hl),d		; ...
+	ex	de,hl		; dph adr to HL
+	pop	de		; restore mapwrk entry adr
+	dec	hl		; backup to unit
+	dec	hl		; ...
+	ld	a,(de)		; get unit from mapwrk
+	ld	(hl),a		; put unit into DPH field
+	inc	de		; bump to slice field of mapwrk
+	inc	hl		; bump to slice field of DPH field
+	ld	a,(de)		; get slice from mapwrk
+	ld	(hl),a		; put slice into DPH field
+	inc	de		; bump to next mapwrk entry
+	inc	de		; ...
+	inc	de		; ...
+	pop	hl		; back to drvtbl entry
+	inc	hl		; bump to
+	inc	hl		; ... next drvtbl entry
+instc3:
+	push	hl		; save drvtbl entry adr
+	push	de		; save mapwrk entry adr
+	ld	hl,(dphadr)	; get cur dph address
+	ld	de,$23		; size of xdph
+	add	hl,de		; bump to next dph
+	ld	(dphadr),hl	; save it
+	pop	de		; recover mapwrk entry adr
+	pop	hl		; recover drvtbl entry adr
+	djnz	instc1
+;
+	; switch back to tpabnk
+	ld	hl,(bioloc)
+	ld	de,27*3		; offset of SELMEM func
+	add	hl,de		; HL := SELMEM func
+	ld	a,1		; bank 1 is tpa bank
+	call	jphl
+;
+	call	drvrst		; perform BDOS drive reset
+;
 	xor	a		; signal success
 	ret
 ;
@@ -1623,6 +1797,9 @@ bioend	.dw	0		; CBIOS ending address
 biosiz	.dw	0		; CBIOS size (in bytes)
 maploc	.dw	0		; location of CBIOS drive map table
 dpbloc	.dw	0		; location of CBIOS DPB map table
+cpmver	.dw	0		; CP/M version
+drvtbl	.dw	0		; CP/M 3 drive table address
+dphadr	.dw	0		; CP/M 3 working value for DPH
 ;
 drives:
 dstdrv	.db	0		; destination drive
@@ -1688,7 +1865,7 @@ stack	.equ	$		; stack top
 ; Messages
 ;
 indent	.db	"   ",0
-msgban1	.db	"ASSIGN v1.0d for RomWBW CP/M 2.2, 08-Aug-2019",0
+msgban1	.db	"ASSIGN v1.1 for RomWBW CP/M, 17-Nov-2019",0
 msghb	.db	" (HBIOS Mode)",0
 msgub	.db	" (UBIOS Mode)",0
 msgban2	.db	"Copyright 2019, Wayne Warthen, GNU GPL v3",0
@@ -1715,5 +1892,7 @@ msgint	.db	"Multiple drive letters reference one filesystem, aborting!",0
 msgnoa	.db	"Drive A: is unassigned, aborting!",0
 msgdos	.db	"DOS error, return code=0x",0
 msgmem	.db	" Disk Buffer Bytes Free",0
+;
+modsize	.equ	$ - start
 ;
 	.end

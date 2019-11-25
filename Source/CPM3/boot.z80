@@ -12,6 +12,8 @@
 	extrn	dph0
 	extrn	@dtbl,@ctbl
 	
+	include	ver.inc
+	
 bdos	equ 5
 
 	if banked
@@ -25,14 +27,11 @@ tpa$bank	equ 0
 ?init:
 	call	?mvinit
 
-	; Clear reserved area in page zero
-	xor	a
-	ld	hl,40h
-	ld	b,10h
-init$1:
-	ld	(hl),a
-	inc	hl
-	djnz	init$1
+	; Install RomWBW CBIOS stamp in page zero
+	ld	hl,stpimg
+	ld	de,stploc
+	ld	bc,stpsiz
+	ldir
 
 	if banked
 
@@ -382,12 +381,13 @@ read:
 	ld	c,20
 	jp	bdos
 
-
 signon$msg	db	13,10,'CP/M v3.0'
 	if banked
 		db	' [BANKED]'
 	endif
-		db	' for RomWBW HBIOS v2.9.2',13,10,13,10,0
+		db	' on HBIOS v'
+		biosver
+		db	13,10,13,10,0
 
 ccp$msg		db	13,10,'BIOS Err on '
 ccp$msg$drv	db	'?'
@@ -401,4 +401,27 @@ fcb$nr		db	0,0,0
 @bootdu		db	0
 hdspv		db	2		; slices per volume for hard disks (must be >= 1)
 
+; RomWBW CBIOS page zero stamp starts at $40
+; $40-$41: Marker ('W', ~'W')
+; $42-$43: Version bytes: major/minor, update/patch
+; $44-$45: CBIOS Extension Info address
+;
+stploc	equ	40h
+stpimg	db	'W',~'W'		; marker
+	db	rmj << 4 | rmn		; first byte of version info
+	db	rup << 4 | rtp		; second byte of version info
+	dw	cbx			; address of cbios ext data
+stpsiz	equ	$ - stpimg
+
+;
+; The following section contains key information and addresses for the
+; RomWBW CBIOS.  A pointer to the start of this section is stored with
+; with the CBX data in page zero at $44 (see above).
+;
+cbx:
+devmapadr	dw	0		; device map address
+drvtbladr	dw	@dtbl		; drive map address (filled in later)
+dphtbladr	dw	dph0		; dpb map address
+cbxsiz		equ	$ - cbx
+;
 	end
