@@ -30,6 +30,7 @@ Version 2.9.2
 - M?T: Support Shift register SPI WIZNET for RC2014
 - PLS: Added seconds register in HBIOS
 - WBW: More flexible table-driven config in TUNE.COM
+- PLS: Added timer support for Zilog Peripherals ECB Board
 
 Version 2.9.1
 -------------
