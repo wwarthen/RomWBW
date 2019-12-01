@@ -184,7 +184,18 @@ NOSCG:
 	LD	A,(FCB+1)		; Get first char of filename
 	CP	' '			; Compare to blank
 	JP	Z,ERRCMD		; If so, missing filename
-	LD	A,(FCB+9)		; Extension char 1
+	LD	A,(FCB+9)		; If the filetype
+	CP	' '			; is blanks
+	JR	NZ,HASEXT		; then assume
+	LD	A,'P'			; type PT3.
+	LD	(FCB+9),A	
+	LD	A,'T'			; Fill in
+	LD	(FCB+10),A		; the file
+	LD	A,'3'			; extension
+	LD	(FCB+11),A		; and the
+	LD	C,TYPPT3		; file type
+	JR	_SET
+HASEXT	LD	A,(FCB+9)		; Extension char 1
 	CP	'P'			; Check for 'P'
 	JP	NZ,CHKMYM		; If not, check for MYM extension
 	LD	A,(FCB+10)		; Extension char 2
