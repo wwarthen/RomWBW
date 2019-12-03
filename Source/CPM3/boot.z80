@@ -11,6 +11,7 @@
 	extrn	@sysdr,@ccpdr
 	extrn	dph0
 	extrn	@dtbl,@ctbl
+	extrn	@date,@hour,@min,@sec
 	
 	include	ver.inc
 	
@@ -359,11 +360,179 @@ rl$1:
 
 	endif
 
-    ; No external clock.
 ?time:
+
+	; branch to get or set routine
+	ld	a,c		; get switch value
+	or	a		; test for zero
+	jr	nz,time$set	; 0 means get time, else set time
+
+	; RTC -> cpm date/time in SCB
+	
+	; read time from RTC
+	ld	b,020h		; HBIOS func: get time
+	ld	hl,tim$buf	; time buffer
+	rst	08		; do it
+	
+	; convert yymmss in time buffer -> cpm3 epoch date offset
+	call	date2cpm	; time buf (yr, mon, day) -> SCB (@date)
+
+	; set time fields in SCB
+	ld	a,(tim$hr)	; get hour from time buf
+	ld	(@hour),a	; ... and put in SCB
+	ld	a,(tim$min)	; get minute from time buf
+	ld	(@min),a        ; ... and put in SCB
+	ld	a,(tim$sec)	; get second from time buf
+	ld	(@sec),a        ; ... and put in SCB
+	
 	ret
 
-	; CP/M BDOS Function Interfaces
+time$set:
+	; CPM date/time in SCB -> RTC
+	
+	; convert CPM3 epoch date offset in SCB -> yymmss in time buffer
+	call	cpm2date	; SCB (@date) -> time buf (yr, mon, day)
+	
+	; copy CPM3 time values from SCB -> time buffer
+	ld	a,(@hour)	; get hour from SCB
+	ld	(tim$hr),a	; ... and put in tim$hr
+	ld	a,(@min)	; get minute from SCB
+	ld	(tim$min),a     ; ... and put in tim$min
+	ld	a,(@sec)	; get second from SCB
+	ld	(tim$sec),a     ; ... and put in tim$sec
+	
+	; send time to RTC
+	ld	b,021h		; HBIOS func: set time
+	ld	hl,tim$buf	; ... from time buffer
+	rst	08		; do it
+	
+	ret
+
+date2cpm:
+	; Convert YYMMSS from time buffer at HL
+	; into offset from CPM epoch and store
+	; result in SCB.
+	
+	ld	hl,0		; initialize day counter
+	; Add in days for elapsed years
+	ld	a,(tim$yr)	; get current year
+	call	bcd2bin		; convert to binary
+	sub	78		; epoch year
+	jr	nc,d2c1		; if not negative, good to go
+	add	a,100		; else, adjust for Y2K wrap
+d2c1:
+	ld	b,a		; loop counter
+	ld	c,3		; leap counter, 78->79->80, so  3
+	ld	de,365		; days in non-leap year
+	or	a		; check for zero
+	jr	z,d2c10		; skip if zero
+d2c2:
+	add	hl,de		; add non-leap days
+	dec	c		; dec leap counter
+	jr	nz,d2c3		; if not leap, bypss leap inc
+	inc	hl		; add leap day
+	ld	c,4		; reset leap year counter
+d2c3:
+	djnz	d2c2		; loop for all years
+d2c10:
+	; Add in days for elapsed months
+	ex	de,hl		; save HL in DE
+	ld	hl,daystbl	; point to table of cum days by month
+	ld	a,(tim$mon)	; get current month
+	call	bcd2bin		; convert to binary
+	dec	a		; index from zero
+	rlca			; table entries are 2 bytes
+	call	addhla		; offset to desired month entry
+	ld	a,(hl)		; get the entry into HL
+	inc	hl		; ...
+	ld	h,(hl)		; ...
+	ld	l,a		; ...
+	ex	de,hl		; HL = day count, DE = months count
+	add	hl,de		; add months count into day count
+	; Add leap day for current year if appropriate
+	dec	c		; C still has leap counter
+	jr	nz,d2c20	; skip if not leap year
+	ld	a,(tim$mon)	; get cur mon
+	cp	3		; March?
+	jr	c,d2c20		; skip if mon less than March
+	inc	hl		; add leap day for cur year
+d2c20:
+	; Add in days elapsed within month
+	; Note that we don't adjust the date to be a zero
+	; offset which seems wrong.  From what I can tell
+	; the CP/M epoch is really 1/0/1978 rather than the
+	; 1/1/1978 that the documentation claims.  Below seems
+	; to work correctly.
+	ld	a,(tim$day)	; get day
+	call	bcd2bin		; make binary
+	call	addhla		; add in days
+	ld	(@date),hl	; store in SCB
+	ret
+
+cpm2date:
+	; Convert CPM epoch date offset in SCB
+	; into YYMMSS values and store result in
+	; time buffer at HL.
+	ld	a,019h
+	ld	(tim$yr),a
+	ld	a,001h
+	ld	(tim$mon),a
+	ld	a,001h
+	ld	(tim$day),a
+	
+	ret
+
+daystbl:
+	; cumulative days elapsed by month (non-leap year)
+	dw	0		; January
+	dw	31		; February (non-leap)
+	dw	59		; March
+	dw	90		; April
+	dw	120		; May
+	dw	151		; June
+	dw	181		; July
+	dw	212		; August
+	dw	243		; September
+	dw	273		; October
+	dw	304		; November
+	dw	334		; December
+
+bcd2bin:
+	; convert A from packed bcd to binary
+	push	bc
+	ld	c,a
+	and	0F0h
+	srl	a
+	ld	b,a
+	srl	a
+	srl	a
+	add	a,b
+	ld	b,a
+	ld	a,c
+	and	0Fh
+	add	a,b
+	pop	bc
+	ret
+
+bin2bcd:
+	; convert A from binary to packed bcd
+	push	bc
+	ld	b,10
+	ld	c,-1
+bin2bcd1:
+	inc	c
+	sub	b
+	jr	nc,bin2bcd1
+	add	a,b
+	ld	b,a
+	ld	a,c
+	add	a,a
+	add	a,a
+	add	a,a
+	add	a,a
+	or	b
+	pop	bc
+	ret
 
 open:
 	ld	c,15
@@ -401,11 +570,20 @@ fcb$nr		db	0,0,0
 @bootdu		db	0
 hdspv		db	2		; slices per volume for hard disks (must be >= 1)
 
+		; RTC time buffer (all values packed bcd)
+tim$buf:
+tim$yr		db	0
+tim$mon		db	0
+tim$day		db	0
+tim$hr		db	0
+tim$min		db	0
+tim$sec		db	0
+
 ; RomWBW CBIOS page zero stamp starts at $40
 ; $40-$41: Marker ('W', ~'W')
 ; $42-$43: Version bytes: major/minor, update/patch
 ; $44-$45: CBIOS Extension Info address
-;
+
 stploc	equ	40h
 stpimg	db	'W',~'W'		; marker
 	db	rmj << 4 | rmn		; first byte of version info
@@ -413,15 +591,14 @@ stpimg	db	'W',~'W'		; marker
 	dw	cbx			; address of cbios ext data
 stpsiz	equ	$ - stpimg
 
-;
 ; The following section contains key information and addresses for the
 ; RomWBW CBIOS.  A pointer to the start of this section is stored with
 ; with the CBX data in page zero at $44 (see above).
-;
+
 cbx:
 devmapadr	dw	0		; device map address
 drvtbladr	dw	@dtbl		; drive map address (filled in later)
 dphtbladr	dw	dph0		; dpb map address
 cbxsiz		equ	$ - cbx
-;
+
 	end
