@@ -64,12 +64,14 @@ boot1:
 	call	writestr
 	
 	call	cin
-	call	cout
-
+	
 	push	af
+	call	cout
 	ld	de,crlf
 	call	writestr
 	pop	af
+	
+	ld	sp,(stksav)
 	
 	sub	'0'
 	jr	c,boot1
@@ -118,9 +120,6 @@ dsk$login1:
 	inc	hl
 	ld	(hl),d		; udpate MSB
 
-
-	
-	ld	sp,(stksav)
 	ret
 	
 wboot:
@@ -253,41 +252,19 @@ xmove:
 	halt
 	
 cin:
-	; save incoming registers (af is output)
-	push	bc
-	push	de
-	push	hl
-
 	; input character from console via hbios
 	ld	c,0D0H			; console unit to c
 	ld	b,00H			; hbios func: input char
 	call	0FFF0H			; hbios reads character
 	ld	a,e			; move character to a for return
-
-	; restore registers (af is output)
-	pop	hl
-	pop	de
-	pop	bc
 	ret
 
 cout:
-	; save all incoming registers
-	push	af
-	push	bc
-	push	de
-	push	hl
-
 	; output character to console via hbios
 	ld	e,a			; output char to e
 	ld	c,0D0H			; console unit to c
 	ld	b,01H			; hbios func: output char
 	call	0FFF0H			; hbios outputs character
-
-	; restore all registers
-	pop	hl
-	pop	de
-	pop	bc
-	pop	af
 	ret
 
 writestr:
@@ -296,7 +273,9 @@ writestr1:
 	ld	a,(de)
 	cp	'$'			; test for string terminator
 	jp	z,writestr2
+	push	de
 	call	cout
+	pop	de
 	inc	de
 	jp	writestr1
 writestr2:
@@ -473,7 +452,7 @@ alvbuf	ds	512	; length (ALV) = ((DSM+1)/4)
 dirbuf	ds	512	; sector buffer
 dtabuf	ds	512	; sector buffer
 
-	ds	32
+	ds	64
 stack	equ	$
 stksav	dw	0
 

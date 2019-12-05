@@ -12,7 +12,6 @@ if exist system.odd del system.odd
 if exist biosldr.rel del biosldr.rel
 if exist *.sym del *.sym
 if exist zpmldr.com del zpmldr.com
-if exist zccp.com del zccp.com
 if exist startzpm.com del startzpm.com
 if exist gencpm.com del gencpm.com
 if exist *.dat del *.dat

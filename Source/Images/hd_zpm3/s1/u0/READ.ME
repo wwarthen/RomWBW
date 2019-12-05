@@ -1,0 +1,2141 @@
+			--THE README FILE--
+		      ------------------------
+
+README contains late-breaking news and tips about WordStar,
+and information about printers.
+
+
+THE DISKS THAT CAME IN YOUR PACKAGE
+-----------------------------------
+
+The file HOMONYMS.TXT is included on the Speller disk
+contrary to what is listed in Appendix D.
+
+
+INSTALLATION
+------------
+
+WINSTALL and WSCHANGE
+
+  WordStar has two installation programs:
+
+  o  WINSTALL contains the basic choices to install WordStar.
+     It is recommended for all users.
+
+     Be sure and install your valid disk drives since WordStar 
+     running under CP/M cannot recover from attempts to access non-
+     existent disk drives.
+
+  o  WSCHANGE contains every installation and customization
+     choice.  It is designed for advanced users and users who
+     want to customize WordStar after they're familiar with it.
+     Use the menu listing below for a directory of the menus
+     in WSCHANGE.
+
+Directory of WSCHANGE Menus
+
+  The chart below shows the organization of menus in WSCHANGE.
+  Print it out and refer to it as you customize WordStar.
+
+  Main Installation Menu
+
+  A Console
+    A Monitor
+      A Monitor selection
+      B Monitor name
+      C Screen sizing
+    B Function keys
+    C Monitor patches
+      A Special characters
+      B Cursor control
+      C Screen control
+    D Keyboard patches
+      A Function keys
+      B Save function keys
+    E Interface patches
+      A Console busy handshaking
+      B Special I/O subroutines
+  B Printer
+    A Printer choices
+      A Printer selection
+      B Printer name
+      C Default printer driver
+    B Printer driver library
+      A Select library file
+      B Create smaller library
+      C Add new printer driver
+      D Change printer driver data
+    C WS printer patches
+      A Custom print controls, printer initialization
+
+  NOTE:  Disregard the "CUSTOM & SIMPLE Controls  Save CUSTOM/SIMPLE
+  Controls" option shown.  This is not available from this menu.
+
+    D Printing defaults
+    E Printer interface
+      A Printer port selection
+      B Printer busy handshaking
+      C Printer subroutines
+  C Computer
+    A Disk drives
+      A Valid disk drives
+      B Maximum valid user number
+      C Delay disk access if typing
+    B Operating system
+      A Single-user system
+      B Multi-user MP/M
+      C Multi-user Turbo DOS
+      D ZCPR3
+    C Memory usage
+    D WordStar files
+    E Directory display
+    F Computer patches
+  D WordStar
+    A Page layout
+      A Page sizing & margins
+      B Headers & footers
+      C Tabs
+    B Editing settings
+      A Edit screen & help level
+      B Typing
+      C Paragraph alignment
+      D Blocks
+      E Erase & unerase
+      F Lines & characters
+      G Find & replace
+      H WordStar 3.3 compatibility
+      I Printing defaults
+    C Other features
+      A Spelling checks
+      B Nondocument mode
+      C Indexing
+      D Shorthand (key macros)
+      E Merge printing
+      F Miscellaneous
+  E Patching
+    A Auto patcher
+    B Save settings
+    C Reset all settings
+
+MEMORY USAGE
+------------
+
+  WordStar requires a minimum TPA size of 50 kbytes to run  
+  using the factory defaults.  The TPA is the amount of memory  
+  available in your computer for use by programs that have a  
+  file type of COM.  To see how big the TPA is in your computer,
+  press the question mark key (?) at the Opening Menu.
+
+  The amount of memory required by WordStar can be reduced by 
+  approximately 3 kbytes if necessary.  Use the WSCHANGE program 
+  to select the minimum memory configuration option.  The menu  
+  will show you what capabilities are being reduced.
+
+  WordStar uses a general-purpose buffer for a variety of  
+  tasks.  WordStar allocates memory to this buffer for editing,  
+  for merge printing, and at the Opening Menu (see BFSIZE in 
+  PATCH.LST).  The buffer used for editing is usually the most 
+  sensitive to a reduced TPA size.  (You may be able to use the 
+  Opening Menu and print, but there may be insufficient memory 
+  for editing.)
+
+  The merge print buffer is used only to hold merge print  
+  variable names and data.  Increase it if you run out of memory 
+  while merge printing.
+
+  The  Opening Menu buffer is used primarily to hold the file 
+  directory, and for miscellaneous tasks.
+
+
+LOW-MEMORY INDICATOR IN STATUS LINE 
+-----------------------------------
+
+  If the Low-Memory indicator appears in the status line, it  
+  means that WordStar was unable to complete some function.   
+  The most common symptoms are:  the line number in the  
+  status line is wrong, or a paragraph alignment could not be 
+  completed. You may correct the line counter by saving your 
+  file, exiting WordStar, and re-loading your file.  To correct 
+  the paragraph alignment, move your cursor to the point where 
+  paragraph alignment stopped, and then press ^B again.
+
+  The reason this comes up is that WordStar was not able to fit  
+  a big enough chunk of text into memory at one time.
+
+  When you first begin editing, WordStar uses the value from 
+  EDSIZE in the user area to determine the minimum amount  
+  of memory required for a page of text.  The default  
+  is set for approximately a 55 line by 66 column page.  If 
+  your page size is routinely larger than this, you may want  
+  to increase EDSIZE.  Multiply the number of lines by the 
+  number of columns, and divide by 128.
+
+  If the Low-Memory indicator comes on while printing, it is due 
+  to either the same reasons as for editing, or there is  
+  insufficient memory to print the text proportionally spaced.  
+  The amount of memory required depends on which printer 
+  driver you  are using.  If you aren't using the .PS ON dot 
+  command to turn proportional spacing on in your document, 
+  low memory won't be a problem.  Also, WordStar uses more 
+  memory for merge printing than it does for regular printing 
+  (around 2.5 kbytes more).
+
+  The Low-Memory indicator will also appear when a full disk error
+  is encountered during editing.  Treat the disk-full error as you
+  would normally.
+
+
+RAM-RESIDENT PROGRAMS
+---------------------
+
+  RAM-resident programs, such as SmartKey, reduce the amount of 
+  working memory (TPA) that WordStar can use. The new features in 
+  WordStar, such as shorthand, may reduce the need for these 
+  RAM-resident programs, thus freeing memory for WordStar.
+
+
+ZCPR3 SUPPORT
+-------------
+
+  In order to enable the ZCPR facilities within WordStar, the user 
+  must use the Z3INS utility provided with ZCPR to install the 
+  address of the ZCPR "environment" into WordStar. The environment 
+  contains information that WordStar uses to support ZCPR-specific 
+  functions.
+  
+  Generally, the user should log onto the drive containing the file 
+  WS.COM, and issue the command:
+  
+  	Z3INS SYS.ENV WS.COM
+  	
+  The user should also run either WINSTALL or WSCHANGE to further 
+  install WordStar for ZCPR. However, this is not mandatory because 
+  the only thing that happens is that the WordStar sign-on says 
+  "ZCPR3," and the LGLUSR location in the user area is changed for a 
+  maximum user number of 31. (The normal default for LGLUSR is 15.)
+  
+  Once the user has installed WordStar for use with ZCPR, the user 
+  will be able to use the following ZCPR features:
+  
+  - A named directory may be used when logging onto a new drive/user.
+  	
+  - A named directory may be used instead of a drive/user as part
+    of any file name.
+  	  
+  - The drive/user always appears above file directories. (For CP/M
+    only the drive letter is shown if the user number is zero.)
+  	  
+  - The directory name also appears above the directory if one has
+    been defined for the currently logged drive/user.
+  	  
+  - If WordStar does not find its OVR files on the current drive and
+    user, it will search the drives and user numbers in the ZCPR
+    search path rather than using its standard search pattern.
+  	  
+  - WordStar installs itself as a ZCPR "shell" process which lets the
+    user enter any legal ZCPR command when running a program. (CP/M
+    can only run programs that are COM files.)
+
+
+OSBORNE USERS
+-------------
+
+  The command to change a hard carriage return to a soft carriage
+  return (document mode) or to turn Auto-indent ON (nondocument
+  mode) does not function on the Osborne because of a limitation
+  in its BIOS.  The following patch can be applied to change the
+  command from ^^ to ^- (Ctrl-Hyphen):
+
+  Using DDT or SID in the file WSMSGS.OVR:
+
+	At 02DA replace 1E with a 1D
+	At 02EF replace 1E with a 1D
+	At 0359 replace 1E with a 1D
+	At 06B2 replace 1E with a 1D
+	At 06C9 replace 1E with a 1D
+
+  At the system prompt type SAVE 53 WSMSGS.OVR
+
+  For more information on how to use SID or DDT, see your CP/M
+  reference guide.  As always, be sure and apply the patch to a
+  COPY of the file.
+
+
+INSTRUCTIONS FOR TWO FLOPPY DISK COMPUTERS
+------------------------------------------
+
+  Do not remove the Program disk while you are using WordStar.
+
+  The Printer Driver Library file (WSPRINT.OVR) on the WordStar 
+  program disk is much smaller than the Printer Driver Library 
+  file contained on the disk labeled PRINTER. Be sure to read the 
+  section in "Starting" that discusses the printer library file.
+
+
+RUN A PROGRAM
+-------------
+
+  Once you press R you can type the drive and user number for the 
+  program you want to run. You may run only .COM files. CCP commands, 
+  such as DIR cannot be used. 
+
+
+INDEXING
+--------
+
+Using StarIndex
+
+  StarIndex 1.01 works with files created with this release of
+  WordStar.  
+
+"Can't Use That Printer" Message
+
+  When WordStar creates an index or table of contents, it uses
+  the printer drivers $INDEX and $TOC.  If you created a smaller
+  WSPRINT.OVR file, you may have left these drivers out.  To
+  return them to the file, copy the original WSPRINT.OVR file
+  onto your disk.  When you create a smaller file again, be sure
+  to save these drivers.  See Appendix C in the WordStar manual 
+  for a list of other drivers to save.
+
+
+SPELL CHECKING
+--------------
+
+  Dual floppy disk users:
+  
+  Unless you have sufficient room on your working WordStar program 
+  disk for the files TW.COM, SPELL.COM, MARKFIX.COM, REVIEW.COM and 
+  MAINDICT.CMP you will not be able to run a spell check from the 
+  Opening Menu.  You will need to exit WordStar and replace the 
+  working WordStar program disk with the dictionary disk you created 
+  during installation.  This disk should contain the files listed 
+  above.  Make sure the disk in drive B has the file you want to 
+  spell-check.
+  
+  Follow the directions for running a spell check in The WORD Plus 
+  manual. 
+  
+
+UPGRADING FROM A PREVIOUS RELEASE
+---------------------------------
+
+  This release of WordStar contains many new features and commands.
+  See the "What's New" booklet for a complete list.  The following
+  changes came in too late to be included in the documentation.
+
+Printer Patches
+
+  Previous versions of WordStar treat most dot matrix printers 
+  and other non-daisy wheel printers as a DRAFT printer with a 
+  few patchable items. Because of this, many users have used 
+  these patches to be able to use certain features of their 
+  printers. Sometimes the patches have been quite extensive, and 
+  some users have many files that count on them.
+
+  The printer drivers of WordStar Release 4, on the other hand, 
+  are very powerful. Almost every driver recognizes all the print 
+  controls and all the dot commands. In fact, if a document is 
+  written to be printed on one kind of printer, it is likely that 
+  it will also print fine on some other printer.
+
+  However, if you want to use your existing files with WordStar 
+  4, and those files rely on the user area being patched in a 
+  special way, you can probably do so by moving the patches into 
+  WordStar 4, and using the CUSTOM or SIMPLE printer driver.
+
+  On the INSTALL disk is a program called MOVEPRN.COM that 
+  copies the printer driver portion of the previous release's 
+  user area into files that can be installed into Release 4 with 
+  the "auto patcher" feature.
+
+  Copy the program MOVEPRN.COM onto the disk containing the 
+  WS.COM file for the previous version. Type 
+
+     MOVEPRN WS.COM FILE1.PAT FILE2.PAT
+
+  MOVEPRN extracts the proper portions of the user area and 
+  writes them into two files that may then be used with the "auto 
+  patcher" feature of WSCHANGE.
+
+  FILE1.PAT is to be used with the general patching menu 
+  (Choose E "Patching" on the WSCHANGE Main Menu, then A "Auto 
+  Patcher").  FILE2.PAT should be used to install strings first 
+  into the SIMPLE driver, and then into the CUSTOM driver (choose
+  B "Printer" on the WSCHANGE Main Menu, then B "Printer driver
+  library", D "Change printer driver data" and D "Driver auto
+  patcher").
+
+  Test print your document first with the SIMPLE driver, and then 
+  with the CUSTOM driver to see which one produces the most 
+  satisfactory results.
+  
+  Also read Appendix C for more information on using the Auto 
+  Patcher.
+
+
+Hanging Indents
+
+  For WordStar Professional Release 4, MailMerge reformats indented 
+  text created with ^OG to the current margins.  If you want the text 
+  to remain  indented, use embedded ruler lines or the .RM, .LM, 
+  and .PM commands.  See the "Reference Guide" for more information.
+
+  Pressing ^OG to wrap back to the first tab on the ruler line after 
+  having reached the last tab works the same way it did in previous 
+  versions of WordStar, contrary to what is stated in the manual.
+
+
+TERMINALS
+---------
+
+  WordStar comes installed for an "idealized" special terminal. 
+  WINSTALL and WSCHANGE allow you to install many terminals by 
+  name, thus allowing WordStar to take advantage of the special 
+  features that the terminal might support, such as underlining 
+  or the function keys.
+    
+  Use either WINSTALL or WSCHANGE to pick your specific terminal 
+  or computer screen from the Monitor menu.  If your terminal 
+  isn't on the menu, it probably emulates one of those that is 
+  there.   Look in your terminal documentation to find out.
+
+  After you install WordStar for the proper terminal, run 
+  WordStar and open the file PRINT.TST to see  which attributes 
+  (such as bold and underline) work on your screen.  
+  WordStar will highlight the following in some way...
+
+     Bold           (^PB)
+     Underline      (^PS)
+     Strike-out     (^PX)
+     Subscript      (^PV)
+     Superscript    (^PT)
+     Doublestrike   (^PD)
+     Italics        (^PY)
+     Blocks         (^KB, ^KK)
+     Error messages
+
+  Most of the time, normal text will be shown in dim intensity, 
+  and highlighted text will be shown in bright intensity.  You 
+  may have to use a brightness and/or contrast knob to adjust  
+  your screen the first time you use WordStar this way.
+
+  If your dim intensity is too dim to see well, and you can't  
+  adjust it, you can change the BRITE flag to ON using WSCHANGE.  
+  This will invert bright and dim in your text, so that regular 
+  text is displayed bright, and highlighted text will be 
+  displayed as dim. However, text in the menus is not affected.
+
+
+DISPLAY PROBLEMS WITH TERMINALS
+-------------------------------
+
+  Once you have installed WordStar for the proper terminal, you 
+  may still experience display problems.
+
+  If text from the previous screen remains after WordStar 
+  displays a new screenful of text, the most likely cause is 
+  cursor wrap.  Basically, WordStar must know what happens to the 
+  cursor when a character is displayed at the rightmost position 
+  of the screen.  It can either remain at the right edge, or it 
+  can wrap to the beginning of  the next  line.  The WRAP flag in 
+  WordStar must be set either on or off to correspond to the 
+  way the terminal works.  (It is generally set for the 
+  terminal's factory default, but the default can usually be 
+  changed using the terminal's setup mode.)
+
+  Another possible cause for display problems is your terminal's 
+  incomplete emulation of some other terminal.  The most 
+  common differences are...
+
+     Line insert (LININS), line delete (LINDEL),
+     Erase to end of screen (ERAEOS),
+     Erase to end of line (ERAEOL),
+     And, erase screen (ERASCR).
+
+  Look in the manual for your terminal and use WSCHANGE to see  
+  if the control sequences match.
+
+
+PRINTERS
+--------
+
+WHAT'S IN THIS SECTION
+
+  This section contains the following information:
+
+  Choosing a Printer
+  Setting Up Your Printer
+  Printer Drivers
+  Proportional Printing
+  Laser Printers
+  Information on Specific Printers
+
+CHOOSING A PRINTER
+
+  WordStar is ready to work with over 100 printers. The printer you
+  choose during installation becomes your default printer. However, 
+  when you print a document, you can choose any other printer. To 
+  choose a default printer, follow these steps:
+
+  1. Look at the Printer Information brochure that came in your 
+     package.  The first chart shows the printers listed on the 
+     Printer Selection Menus. If your printer is on the menu, 
+     simply choose it during installation.
+
+  2. If your printer isn't listed on the menu, it may work like a
+     printer that is. Refer to the second chart in the Printer
+     Information brochure for a list of printers that work like
+     printers on the menu. When WordStar asks you to choose a
+     printer, choose the printer that works like yours.
+
+  3. If neither chart lists your printer, choose Typewriter Printer
+     (if your printer can backspace) or Draft Printer (if it can't).
+     These choices may not take advantage of all your printer's
+     features, but they will work with almost any printer.
+ 
+  Note:  If you choose Draft or Typewriter, you can modify custom
+  print controls and printer initialization.
+
+  If you want to make more modifications to take advantage of your
+  printer's feature, choose the Custom or Simple drivers, then use 
+  the WS Printer Patches section of WSCHANGE to tell WordStar the 
+  codes for your printer. Refer to your printer manual for these 
+  codes. Some printers work better with the Custom driver and some
+  with the Simple driver. Try using both and see which works better 
+  with your printer. See the "Reference Guide" for more information. 
+
+SETTING UP YOUR PRINTER
+
+Choosing a Printer Port
+
+  Each printer is connected to a printer port at the back of
+  the computer. WordStar looks for printers on the LST: port.
+  If your printer is connected to a different port, use
+  WSCHANGE to tell WordStar the correct port.
+
+Testing Your Printer Connection
+
+  At the operating system prompt, type "PIP LST:=READ.ME." This 
+  file should be printed by your printer. If it is not, your printer 
+  may be connected to a different port. See your computer reference 
+  manual, and the section on the STAT command in your CP/M 
+  reference manual for more information.
+
+
+PRINTER DRIVERS
+
+  The WSPRINT.OVR file on the Printers disk contains a printer 
+  driver for each printer on the Printer Selection Menu. The printer 
+  driver for a printer contains all the codes WordStar needs to work 
+  with that printer.  
+  
+  Each printer driver has a short name. If you choose a printer when
+  you print a document, you see the names of the printer drivers, not
+  the names of the printers.
+
+PROPORTIONAL PRINTING
+
+  WordStar supports proportional printing on a number of printers.
+  To turn on proportional printing, either install WordStar to
+  default to proportional printing, or place a ".PS on" command
+  in your document. At print time, WordStar selects the
+  appropriate proportional font based on the character width
+  (.CW) currently in effect.
+
+  The specific printer descriptions later in this section show
+  recommended character widths for proportional typefaces.
+  These widths are for a normal mix of upper- and lowercase
+  letters. If you have many words or phrases all in uppercase
+  or if you want your text less densely printed, choose a larger
+  character width.
+
+  While WordStar mostly sets character widths based on the
+  proportional-width table in the driver, on the more advanced
+  daisy wheel printers, WordStar uses the printer's proportional-
+  spacing mode. WordStar determines how much white space is needed
+  to right-justify the line based on its own proportional width 
+  tables. If the table values don't match the wheel installed,
+  WordStar won't be able to justify the line correctly.
+
+  WordStar sends standard ASCII characters; if a proportional wheel 
+  uses a different spoke mapping, set up the printer to handle this.
+
+LASER PRINTERS
+
+  WordStar supports laser printer features such as font changes
+  and proportional spacing.
+
+  WordStar supports several laser printers: the Canon LPB-8 A1 & A2;
+  the Hewlett-Packard LaserJet, LaserJet+, and LaserJet 500+; 
+  and the Ricoh LP4080. Refer to the "Specific Printer
+  Information" section of this file for information on these 
+  printers. General notes about using laser printers are given below.
+
+Paper Size and Margins
+
+  Laser printers come with preset page margins. You need to 
+  compensate for these margins by changing page length in your 
+  WordStar documents. The chart below shows the recommended 
+  settings for 8 1/2 X 11 inch paper for both portrait and landscape 
+  orientations. These settings allow 55 lines of text for portrait 
+  orientation and 40 lines of text for landscape orientation (at 6 
+  lines per inch). They also allow for a footer of up to 3 lines 
+  and a one-line header. If you use multiple-line headers, adjust 
+  the top margin accordingly.
+
+                 Dot      Default  Portrait     Landscape
+  Setting        Command  Value    Orientation  Orientation
+  -------        -------  -------  -----------  -----------
+  page length     .PL       66         62           47
+  top margin      .MT        3          2            2
+  bottom margin   .MB        8          5            5
+  header margin   .HM        2          1            1
+  footer margin   .FM        2          2            2
+
+  If the laser printer is your primary printer, you can use WSCHANGE
+  to make these settings the defaults.
+
+  Because laser printers leave small margins at the left and right
+  sides of the page, you may want to use a smaller page offset 
+  setting (the default is .PO 8).
+
+Form Feeds
+
+  When you print with a laser printer, answer Y for yes to the "Use
+  form feeds (Y/N)?" prompt at print time. (The default is NO.) If
+  the laser printer is your primary printer, you can use WSCHANGE to
+  change the default to yes.
+
+WordStar Commands for Font Selection
+
+  The WordStar dot commands and print control commands listed below
+  determine the fonts used for printing a document.
+
+  .PR  .PR OR=L selects landscape orientation; .PR OR=P (or just
+       .PR OR) selects portrait orientation (the default). If
+       either of these commands appears after the first printing
+       line on a page, the orientation will not change until the
+       following page. 
+
+  .PS  .PS ON selects proportionally spaced characters; .PS OFF
+       (the default) selects fixed-spaced characters.
+
+  .CW  The character-width setting (.CW followed by the width in
+       120ths of an inch) determines the character pitch and font
+       selected for fixed-width printing. For proportional fonts, it
+       determines the point size and proportional-width table 
+       selected.
+
+  .LQ  .LQ ON selects near letter quality print (if supported by
+       your printer).  LQ OFF selects draft quality print.  Default
+       is ON.
+
+  ^PY  The italic print control toggles between normal and italic
+       characters when the appropriate italic font is available.
+
+  ^PB  The boldface print control toggles between normal and bold
+       characters when the appropriate bold font is available.
+
+  ^PD  The double strike print control used with the laser printers
+       toggles overprinting with a horizontal offset of 1/120"
+       between the two character images. This allows a bold effect
+       where no bold font is available. 
+
+  ^PA  ^PA turns alternate pitch on. Use .CW to assign different
+       character widths to normal pitch (see ^PN below) and alternate
+       pitch so that each pitch accesses a different font. You can 
+       then change fonts by switching between the two pitches. This 
+       is the only way to use two fonts on the same line. 
+       (See "Character width" and "Pitch" in the "Reference Guide.")
+
+  ^PN  ^PN turns normal pitch on. You can use it with ^PA as
+       described above.
+
+  ^P@  When working with columns, if you use alternate and normal
+       pitch for two fonts, or if you use proportional spacing, you
+       may need to use ^P@ to make sure the columns line up.
+       Remember that the column position set with ^P@ is determined
+       by the normal pitch character width. (See "Columns" and
+       "Proportional spacing" in the "Reference Guide." 
+
+INFORMATION ON SPECIFIC PRINTERS
+
+  This section describes the capabilities of each printer listed on 
+  the Printer Selection Menu. The printers are listed in alphabetical 
+  order (except for the generic printers such as "Draft," 
+  "Typewriter," "Custom," "Simple," and the various print-to-disk 
+  options, which are listed first).  
+
+  There is a chart for each printer explaining how features work and 
+  listing any special notes about the printer.  Each printer is 
+  described in the following format:
+
+PRINTER NAME ----- Driver: (short name)
+
+ ^PY    Effect of italics/ribbon color print control
+ ^PT/V  Subscript/superscript information
+ .CW    Information on available character widths and fonts.  The
+        chart shows the .CW, .LQ, and .PS settings required to use 
+        different fonts.
+
+        .LQ OFF   .LQ ON    .PS ON                      Font Name
+        -------   ------    ------                      ---------
+        .cw val   .cw val   recommended value (range)   font 1
+        .cw val   .cw val   recommended value (range)   font 2
+
+ .UL    Continuous-underline information (if restrictions)
+ .UJ    Microspace-justification information (if restrictions)
+
+        N/A means a command has no effect on this printer.
+
+ NOTES  Switch settings, special features, anomalies.
+
+DRAFT PRINTER (nonbackspacing) ----- Driver: DRAFT
+
+ ^PD    Overprints the line twice
+ ^PB    Overprints the line three times
+ ^PS    Overprints the underscore character in a separate pass
+ ^PT/V  Prints super/subscripts with a full line between
+        super/subscript and text
+ .LH    Sets line height only in multiples of full lines
+ .CW    N/A
+ .PS    N/A
+ .LQ    N/A
+ .UJ    N/A
+
+ NOTES  This driver works with any printer that doesn't automatically
+ perform a line feed when it receives a carriage return command.  All
+ overprinting is done by returning the carriage and passing over the
+ line again.
+
+TYPEWRITER PRINTER (backspacing) ----- Driver: TYPEWR
+
+ ^PD    Backspaces and overprints each character twice
+ ^PB    Backspaces and overprints each character three times
+ ^PS    Backspaces and overprints the underscore character
+ ^PT/V  Prints super/subscripts with a full line between
+        super/subscript and text
+ .LH    Sets line height only in multiples of full lines
+ .CW    N/A
+ .PS    N/A
+ .LQ    N/A
+ .UJ    N/A
+
+ NOTES  This driver works with any printer that doesn't automatically
+ perform a line feed when a it receives a carriage return command,
+ and responds to a backspace character.  Overprinting is done by
+ backspacing.
+
+AUTO LINE FEED PRINTER (backspacing) ----- Driver: AUTOLF
+
+ ^PD    Backspaces and overprints each character twice
+ ^PB    Backspaces and overprints each character three times
+ ^PS    Backspaces and overprints the underscore character
+ ^PT/V  Prints super/subscripts with a full line between
+        super/subscript and text
+ .LH    Sets line height only in multiples of full lines
+ .CW    N/A
+ .PS    N/A
+ .LQ    N/A
+ .UJ    N/A
+
+ NOTES  This driver works with any printer that automatically
+ performs a line feed when it receives a carriage return character,
+ and responds to a backspace command.  Overprinting is done by
+ backspacing.
+
+SIMPLE CUSTOMIZABLE PRINTERS ----- Driver: SIMPLE
+
+ All print controls cause control strings (on and off) in
+ the user area to be sent to the printer.  These strings
+ are used by both the SIMPLE and CUSTOM drivers.  They can
+ be installed with the WSCHANGE program.
+
+ .LQ    Controlled by user area strings
+ .PS    Controlled by user area strings
+ .CW    N/A
+ .UJ    N/A
+ .LH    N/A
+
+ NOTES  This printer driver prints the line in one pass, sending
+ control strings from the user area to select print enhancements.
+
+CUSTOMIZABLE PRINTERS ----- Driver: CUSTOM
+
+ All print controls cause control strings (on and off) in
+ the user area to be sent to the printer.  These strings
+ are used by both the SIMPLE and CUSTOM drivers.  They can
+ be installed with the WSCHANGE program.
+
+ .LQ    ON/OFF controlled by user area strings
+ .PS    ON/OFF controlled by user area strings
+ .LH    Sets line height only in multiples of full lines
+ .UJ    N/A
+ .CW    N/A
+
+ NOTES  This driver prints the line in multiple passes, sending
+ control strings from the user area to select print enhancements.
+
+PREVIEW TO DISK ----- Driver: PRVIEW
+
+ This driver prints documents to the PREVIEW.WS file to allow
+ you to preview the format and appearance of a document before
+ printing. Headers, footers, and pagination are shown correctly
+ and print controls remain in the file to display onscreen
+ attributes.  Dot commands are not printed.
+
+PRINT TO DISK WITHOUT PRINT CONTROLS ----- Driver: ASCII
+
+ This driver prints to the ASCII.WS file, stripping headers and
+ footers, high bits, and print controls.
+
+PRINT TO DISK WITHOUT HEADERS AND FOOTERS ----- Driver: XTRACT
+
+ This driver prints to the XTRACT.WS disk file, stripping headers
+ and footers, but preserving high bits and print controls.
+
+ANADEX 9500A, 9500B ----- Driver: 9500
+
+ ^PY    N/A
+ ^PT/V  Even superscript roll
+
+ .CW    .CW  Font name
+        ---  ---------
+         9   13.3 cpi
+        10   12   cpi
+        12   10   cpi
+        18    6.7 cpi
+        20    6   cpi
+        24    5   cpi
+
+ .LH    1/24" resolution, use even values
+ .UJ    This printer has no incremental horizontal positioning
+ .PS    N/A
+ .LQ    N/A
+
+ANADEX 9501B, INTEQ 5100B ----- Driver: 9501B
+
+ ^PY    N/A
+ ^PT/V  Even superscript roll
+
+ .CW    .CW  Font name
+        ---  ---------
+         7   16.7 cpi
+         8   15   cpi
+        10   12.5 cpi
+        12   10   cpi
+        14    8.3 cpi
+        16    7.5 cpi
+        20    6.2 cpi
+        24    5   cpi
+
+ .LH    1/24" resolution, use even values
+ .UJ    This printer has no incremental horizontal positioning
+ .PS    N/A
+ .LQ    N/A
+
+C. ITOH STARWRITER 1550 AND 8510 ----- Driver: C1550
+
+ ^PY    N/A
+ ^PT/V  Prints full-size characters with roll
+
+ .CW    .CW  Font Name
+        ---  ---------
+         7   compressed
+        10   elite
+        12   pica
+        14   expanded compressed
+        20   expanded elite
+        24   expanded pica
+
+ .LQ    N/A
+ .PS    N/A
+ .UL    Continuous underlining suppresses microspace justification
+
+C. ITOH F10 STARWRITER ----- Driver: QUME
+
+ See Diablo 630, 1610, 1620 Daisy Wheel.
+ 
+ Note:  Proportional printing was tested with a Theme 10 wheel.
+
+CANON LBP-8A1 AND LBP-8A2 LASER PRINTER ----- Driver: LBP8
+
+ ^PY    Selects italics if appropriate font installed
+ ^PT/V  Prints full-size characters with roll
+         .PS .PS
+ .CW     OFF  ON           Font Name
+         ---  --           ---------
+          6   -            20 cpi
+          8   -            15 cpi
+          9   -            13.3 cpi
+         10   -            12 cpi (elite)
+         12   -            10 cpi
+         20   -            6 cpi
+         24   -            5 cpi
+         16   -            7.5 cpi
+         -     7 (0-8)     Garland 8 point
+         -    10 (9-11)    Garland 12 point
+         -    14 (12-17)   Expanded 8 point
+         -    20 (18-30)   Expanded 12 point
+
+ .LQ    N/A
+ .PL    For 11 inch paper, a value of 62 is recommended
+ .PR OR "=Landscape" or "=Portrait" to select orientation
+
+ NOTES  Answer yes to the "Use form feeds" prompt. This driver is 
+ configured to select all the built-in fonts in the LBP8, as well 
+ as fixed pitch cartridges and the Garland PS cartridge.  Other 
+ proportional cartridges require modifying the proportional spacing 
+ tables with WSCHANGE.  For more information on laser printers, see 
+ the "Laser Printers" section above.
+
+CITIZEN MSP ----- Driver: CITMSP
+
+ ^PY    Selects italics
+ ^PT/V  Prints half-size if .SR 0; otherwise, full-size with roll
+
+ .CW    .CW    Font Name
+        ---    ---------
+         7     compressed
+        10     elite
+        12     pica
+        14     expanded compressed
+        20     expanded elite
+        24     expanded pica
+
+ .LH    Use even values.  Driver operates at 2/48 resolution.
+ .PS    N/A
+ .UJ    Microjustification slows printing.  Continuous underlining
+        suppresses microjustification.
+
+
+DATAPRODUCTS PAPER TIGER SPG-8050 & SPG-8070 ----- Driver: SP8050
+
+ ^PY    Selects italics
+ ^PT/V  Prints half-size if .SR 0; otherwise, prints full-size
+        .LQ  .LQ  .PS
+ .CW     ON  OFF   ON          Font name
+        ---  ---  ---          ---------
+         7    7     5 (0-6)    condensed
+        10   10     8 (7-8)    elite
+        12   12    10 (9-13)   pica
+        14   14     -          expanded condensed   
+        20   20    16 (14-17)  expanded elite  
+        24   24    20 (18-30)  expanded pica
+
+DIABLO 630, 1610, 1620 DAISY WHEEL ----- Driver: DIABLO
+
+ ^PY    Selects red/black ribbon color
+ ^PT/V  Prints super/subscripts in separate pass with specified roll
+ .CW    Supports any value from 0 to 30.  Usual fixed pitch values 
+        are 8 (15 cpi), 10 (12 cpi), and 12 (10 cpi).
+ .BP    ON selects bidirectional printing; OFF selects left-to-right
+        printing
+ .LQ    N/A
+ .UL    Continuous underlining does not suppresses microspace
+        justification.  Continuous underlining may be irregular.
+ .PS    ON selects proportional spacing; OFF selects fixed pitch
+        spacing.  If a proportional print wheel has a non-standard
+        spoke pattern, configure the printer to translate spoke
+        position into the appropriate character.  This driver
+        explicitly positions each character when proportional spacing
+        is selected.
+
+ NOTES  The proportional spacing tables are set up for a Diablo
+ metal 96 character BOLD PS wheel.
+
+DIABLO 630 DAISY WHEEL WITH WP OPTIONS ----- Driver: 630WP
+
+ ^PY    Selects red/black ribbon color
+ ^PT/V  Prints super/subscripts in separate pass with specified roll
+ .CW    Supports any value from 0 to 30.  Usual fixed pitch values 
+        are 8 (15 cpi), 10 (12 cpi), and 12 (10 cpi).
+ .LQ    N/A
+ .UL    Continuous underlining does not affect microspace justifi-
+        cation
+ .PS    ON selects proportional spacing; OFF selects fixed pitch
+        spacing.  If a proportional print wheel has a non-standard
+        spoke pattern, configure the printer to translate spoke
+        position into the appropriate character.  This driver sends
+        codes to the printer to turn proportional spacing on and off,
+        and the printer controls character to character spacing.
+
+ NOTES  The proportional spacing tables are set up for a Diablo
+ metal 96 character BOLD PS wheel.
+
+DIABLO 630 DAISY WHEEL, EXTENDED CHARACTER SET ----- Driver: 630ECS
+
+ ^PY    N/A
+ ^PT/V  Prints super/subscripts in separate pass with specified roll
+ .CW    Supports any value from 0 to 30.  Usual fixed pitch values 
+        are 8 (15 cpi), 10 (12 cpi), and 12 (10 cpi).
+ .LQ    N/A
+ .UL    Continuous underlining does not affect microspace justifi-
+        cation
+ .PS    ON selects proportional spacing; OFF selects fixed pitch
+        spacing.  If a proportional print wheel has a non-standard
+        spoke pattern, configure the printer to translate spoke
+        position into the appropriate character.  This driver sends
+        codes to the printer to turn proportional spacing on and off,
+        and the printer controls character to character spacing.
+
+ NOTES  The proportional spacing tables have been set up for a Diablo
+ metal 96 character BOLD PS wheel.
+
+DIABLO C150 & C200 COLOR JET PRINTERS ----- Driver: C150
+
+ ^PY    Selects red/black ink
+ .CW    10 characters per inch only
+ .LH    1/30" resolution
+ .PS    N/A
+ .LQ    N/A
+
+EPSON FX-80 AND FX-100 ----- Driver: FX80
+
+ ^PY    Selects italics
+ ^PT/V  Prints half-size if .SR 0; otherwise, full-size with roll
+
+ .CW    .CW  Font Name
+        ---  ---------
+         7   compressed
+        10   elite
+        12   pica
+        14   expanded compressed
+        20   expanded elite
+        24   expanded pica
+
+ .LH    Use even values.  Driver operates at 2/48" resolution.
+ .LQ    N/A
+ .PS    N/A
+ .UL    Continuous underlining suppresses microspace justification
+ .UJ    Microspace justification slows printing. Default is OFF.
+
+EPSON FX-85, FX-185 AND FX-286 ----- Driver: FX85
+
+ ^PY    Selects draft quality italics
+ ^PT/V  Prints half-size if .SR 0; otherwise, full-size with roll
+        .LQ  .LQ
+ .CW    OFF   ON  .PS ON       Font Name
+        ---  ---  ------       ---------
+         6   -    -            compressed elite
+         7   -    -            compressed
+        10   -    -            elite
+        12   12   11 (10-13)   courier
+        14   -    -            expanded compressed
+        20   -    -            expanded elite
+        24   24   22 (20-30)   expanded courier
+
+ .UL    Continuous underlining suppresses microspace justification
+ .UJ    Microspace justification slows printing. Default is OFF.
+        .UJ must be on for proportional text to be right-justified.
+
+EPSON LQ-800 AND LQ-1000 ----- Driver: LQ800
+
+ ^PY    Selects italics
+ ^PT/V  Prints half-size if .SR 0; otherwise, full-size with roll
+        .LQ  .LQ
+ .CW    OFF   ON  .PS ON     Font Name
+        ---  ---  ------     ---------
+        -    -    -          compressed script
+         6    6   -          compressed elite
+         7    7    6 (0-7)   compressed
+         8        -          subscript 15 cpi
+        10   10   -          elite
+        12   12   10 (8-16)  pica
+        14   14   -          expanded compressed
+        16        -          expanded script
+        20   20   -          expanded elite
+        24   24   -          expanded courier
+
+EPSON LQ-1500, VERSION 2.0 ----- Driver: LQ1500
+
+ ^PY    Selects italics
+ ^PT/V  Prints half-size if .SR 0; otherwise, full-size with roll
+        .LQ  .LQ
+ .CW    OFF   ON  .PS ON       Font Name
+        ---  ---  ------       ---------
+         7   -    -            compressed
+        10   10   -            elite
+        -    -     8 (1-9)     subscript 15 cpi
+        12   12   11 (10-13)   courier
+        14   -    -            expanded compressed
+        -    -    15 (14-18)   expanded script
+        20   20   -            expanded elite
+        24   24   20 (19-30)   expanded courier
+
+ .UL    Continuous underlining suppresses microspace justification.
+        In proportional fonts, continuous underlining may appear
+        broken between words.
+
+ NOTES  If you have an older LQ-1500 (firmware version 1.8), your
+ printer will have horizontal position registration problems.  For
+ best results, contact your printer dealer about a ROM upgrade.
+
+EPSON LX-80 - Driver: LX80
+
+ ^PY    Selects draft mode italics
+ ^PT/V  Prints half height if .SR 0, else full height with roll
+
+        .LQ  .LQ
+ .CW    OFF   ON  Font Name
+        ---  ---  ---------
+         7   -    compressed
+        10   -    elite
+        12   12   courier
+        14   -    expanded compressed
+        20   -    expanded elite
+        24   24   expanded courier
+
+ .LH    Use even values.  Driver operates at 2/48" resolution.
+ .PS    N/A
+ .UL    Continuous underlining suppresses microspace justification
+ .UJ    Microspace justification slows printing. Default is OFF.
+
+EPSON MX-80 AND MX-100 WITH GRAFTRAX+
+EPSON MX-80 III AND MX-100 III ----- Driver: MX80
+
+ ^PY    Selects italics
+ ^PT/V  Prints half-size if .SR 0; otherwise, full-size with roll
+
+ .CW    .CW  Font Name
+        ---  ---------
+         7   compressed
+        12   pica
+        14   expanded compressed
+        24   expanded pica
+
+ .LH    Use even values.  Driver operates at 2/48" resolution.
+ .LQ    N/A
+ .PS    N/A
+ .UL    Continuous underlining suppresses microspace justification
+ .UJ    Microspace justification slows printing. Default is OFF.
+
+ NOTES  Older MX-80 and MX-100 printers don't have graphics mode (for
+ fine horizontal spacing), variable line height setting, printer
+ controlled underlining, or printer controlled super/subscripts.  If
+ you have one of these printers, use the DRAFT driver, or adapt the
+ CUSTOM or SIMPLE driver to your needs.
+
+EPSON RX-80 AND RX-100 ----- Driver: RX80
+
+ ^PY    Selects italics
+ ^PT/V  Prints half-size if .SR 0; otherwise, full-size with roll
+
+ .CW    .CW  Font Name
+        ---  ---------
+         7   compressed
+        10   elite
+        12   pica
+        14   expanded compressed
+        20   expanded elite
+        24   expanded pica
+
+ .LH    Use even values.  Driver operates at 2/48" resolution.
+ .LQ    N/A
+ .PS    N/A
+ .UL    Continuous underlining suppresses microspace justification
+ .UJ    Microspace justification slows printing. Default is OFF.
+
+HEWLETT-PACKARD LASERJET PRINTERS
+
+ The following information applies to the LaserJet, the LaserJet+,
+ and the LaserJet 500+.  For general information on laser printers,
+ see the "Laser Printers" section above.
+
+The LaserJet Fonts
+
+ The LaserJet has three different types of fonts:
+
+ - The "internal" fonts that came with the printer
+ - Plug-in cartridges
+ - Soft fonts that must be downloaded through your computer.
+   (Only the LaserJet+ and LaserJet 500+ can use downloaded fonts.)
+
+ The fonts available in your LaserJet depend on which cartridge
+ you have installed and which fonts you have downloaded.
+
+Font Installation
+
+ Internal Fonts:
+
+ The fonts that came with your printer are already in memory and
+ ready to use. Different LaserJet models come with different sets
+ of internal fonts.
+
+ Cartridges:
+
+ Cartridges containing a variety of character fonts can be
+ inserted into any LaserJet model. See your printer manual for
+ instructions.
+
+ The font selection guidelines in the sections below contain
+ information about specific cartridges. The letter that identifies
+ your cartridge is on the front label, directly following the
+ number 92286.  For example, the Y cartridge is labeled 92286Y.
+
+ Soft fonts:
+
+ Soft, or downloadable, fonts are supplied on disk.  These fonts 
+ are not explicitly supported by WordStar.
+
+LaserJet Font Selection
+
+ Each LaserJet font has several characteristics associated with
+ it. When a printer driver specifies font characteristics to the
+ LaserJet, the LaserJet searches its available fonts for the best
+ match to the characteristics requested. The following table
+ describes these characteristics, in the order in which the
+ LaserJet evaluates them when selecting a font.
+
+ Characteristic                         WordStar Control
+ --------------                         -----------------
+ * Orientation (portrait or landscape)  .PR OR=P/L
+ * Symbol Set (Roman-8, USASCII,        Printer driver
+   Line Draw, etc.)
+ * Proportional or fixed spacing        .PS ON/OFF
+ * Print pitch (fixed-width fonts)      .CW
+ * Character height (point size)        .CW
+ * Character style (upright or italic)  ^PY
+ * Stroke weight (light, medium, bold)  ^PB
+
+ Note that symbol set is high in the list of characteristics:
+ make sure that the driver you select is compatible with the symbol 
+ set of your cartridge or downloaded fonts. The symbol sets used by 
+ each driver are listed in the table in the next section. For example, 
+ if your cartridge has the USASCII Symbol Set, you can't use the 
+ HPLJ:U driver because it uses only the Roman-8 Symbol Set.
+
+LaserJet Printer Drivers
+
+ WordStar provides two printer drivers for use with different
+ LaserJet font cartridges. Each of these drivers
+ lets you print with several of the available fonts. You can 
+ use any of these drivers with the LaserJet, LaserJet+, or
+ LaserJet 500+, depending on the cartridge.
+ Refer to the table below to see which driver works
+ best for you.
+
+ The table lists the following information for each driver:
+
+ o  The symbol sets used for fixed and proportional spacing
+
+    These must correspond to the symbol sets on the installed
+    fonts you want to use. The "Default" symbol set refers to the
+    one the LaserJet defaults to.
+
+ o  The proportional-spacing tables used by the driver
+
+    These tables are part of the LaserJet's method of proportional
+    spacing. The tables determine the width of each character in a 
+    proportionally spaced font. The fonts corresponding to these 
+    tables are used if available. If the corresponding font is not 
+    installed, the table is still used, and the closest available 
+    font is used. This may cause the spacing to appear too tight or 
+    too loose. In this column, the number is the point size, R stands 
+    for regular, B stands for bold, and I stands for italics (the 
+    LaserJet has separate tables for each of these).
+
+ o  The font cartridges that work best with
+    the symbol sets and tables used by the driver
+
+    The cartridges listed are the only ones directly
+    supported for use with WordStar. If your cartridge is not 
+    listed, you may still be able to use it. Look at
+    the font information below and try the most compatible driver. 
+    You may need to try different dot command settings or another 
+    driver. The HPLJET is the most "general purpose" driver, so if 
+    you're not sure which driver to use, try it first.
+
+         Fixed-width  Proportional  Proportional   Downloaded
+ Driver  Symbol Set   Symbol Set    Tables         Fonts/Cartridges
+ ------  -----------  ------------  -------------  ----------------
+
+ HPLJET  Default      Default       TmsRmn 8R,     F, P, most fixed
+                                    10R,10B,10I
+                                    Helv 14B
+
+ HPLJ:B  Default      USASCII       TmsRmn 8R,     B
+                                    10R,10B,10I
+                                    Helv 14B
+
+ HPLJ:U  Roman-8,     Roman-8       Helv 6R,8R,    U, V
+         Line Draw                  10R,12R,14R
+
+ HPLJ:Y  PCSET1       USASCII       TmsRmn         Y, AC
+         PCSET2                     6,8,10,12,14
+                                    (all in R,B,I)
+                                    18B,24B,30B
+
+ HPL:AD  Roman-8,     Roman-8       TmsRmn         AD
+         Line Draw                  6,8,10,12,14
+                                    (all in R,B,I)
+                                    18B,24B,30B
+
+ The printer driver charts below show the actual fonts that print
+ with each printer driver and the recommended font cartridges. 
+ The charts show the fonts used for both fixed
+ and proportional spacing and for different character width (.CW)
+ settings.
+
+ The recommended .CW settings are shown first. The settings in
+ parentheses select the same font, but the spacing of characters
+ within a line may appear tighter or looser.
+
+ After the name of each font, the charts note whether regular (R),
+ bold (B), and italic (I) fonts are available. If a bold font is
+ not available, you can use the ^PD (double strike) command to get
+ a boldface effect.
+
+ The last column shows whether you can print in landscape (chosen
+ in WordStar with .PR OR=L) as well as portrait orientation.
+
+ To use a particular font, choose the settings listed.  For example,
+ to use the Times Roman 8 font with the HPLJET printer driver, insert
+ the F cartridge, turn .PS on and set character width to .CW 7.
+
+HP LASERJET, LASERJET+ (F cartridge and others) ----- Driver: HPLJET
+
+ ^PY    Selects italics if appropriate font installed
+ ^PT/V  Prints full-size characters with roll
+
+  Cartridge/
+  Soft font .PS  .CW        Font/Point Size   R B I  Landscape
+  --------- ---  --------   ---------------   - - -  ---------
+     F      on    7 (0-7)   Times Roman 8     x
+                  9 (8-11)  Times Roman 10    x x x
+                 13 (12-30) Helvetica 14        x
+            off   7 (0-11)  Line Printer 8.5  x
+                 12 (12-30) Courier 12        x         x
+     P      on    9 (0-30)  Times Roman 10    x x x     x
+            off   7 (0-11)  Line Printer 8.5  x
+                 12 (12-30) Courier 12        x         x (0-30)
+
+        The following fixed pitch fonts may be available depending
+        on your cartridge. (Note that these are measure by pitch, 
+        not by point size.):
+
+          .CW  Font Name
+          ---  ---------
+           7   16.7 pitch
+          10   12 pitch
+          12   10 pitch
+          15   8.1 pitch
+          18   6.5 pitch
+          21   5.8 pitch
+          27   4.5 pitch
+
+ .LQ    N/A
+ .PL    For 11 inch paper, a value of 62 is recommended.
+        Too large a value will cause text to be lost at page bottom.
+ .PR OR "=Landscape" or "=Portrait" to select orientation.
+
+ NOTES  Answer yes to the "Use form feeds" prompt.  This driver has
+ proportional spacing tables for all fonts in the F and P cartridges.
+ It should also work with many fixed width cartridges.
+.p
+
+HP LASERJET, LASERJET+ (B cartridge) ----- Driver: HPLJ:B
+
+ ^PY    Selects italics if appropriate font installed
+ ^PT/V  Prints full-size characters with roll
+
+  Cartridge/
+  Soft font .PS  .CW        Font/Point Size   R B I  Landscape
+  --------- ---  --------   ---------------   - - -  ---------
+     B      on    7 (0-7)   Times Roman 8     x
+                  9 (8-11)  Times Roman 10    x x x
+                 13 (12-30) Helvetica 14        x
+            off   7 (0-11)  Line Printer 8.5* x         x
+                 12 (12-30) Courier 12        x         x
+        * Line printer 8.5 is not available in portrait mode
+          unless the LaserJet+ is used.
+
+ .LQ    N/A
+ .PL    For 11 inch paper, a value of 62 is recommended.
+        Too large a value will cause text to be lost at page bottom.
+ .PR OR "=Landscape" or "=Portrait" to select orientation.
+
+ NOTES  Answer yes to the "Use form feeds" prompt. This driver has
+ proportional spacing tables for all fonts in the B cartridge.
+.p
+
+HP LASERJET, LASERJET+ (U and V cartridges) ----- Driver: HPLJ:U
+
+ ^PY    Selects italics if appropriate font installed
+ ^PT/V  Prints full-size characters with roll
+
+  Cartridge/
+  Soft font .PS  .CW        Font/Point Size   R B I  Landscape
+  --------- ---  --------   ---------------   - - -  ---------
+     U      on    5 (0-5)   Helvetica 6       x
+                  7 (6-7)   Helvetica 8       x
+                  9 (8-9)   Helvetica 10        x
+                 11 (10-11) Helvetica 12        x
+                 13 (12-30) Helvetica 14        x
+            off   7 (0-11)  Letter Gothic 9.5 x
+                 12 (12-30) Courier 12        x        x (0-30)
+
+     V      on    5 (0-5)   Helvetica 6       x     landscape only*
+                  7 (6-7)   Helvetica 8       x        "*
+                  9 (8-9)   Helvetica 10        x      "*
+                 11 (10-11) Helvetica 12        x      "*
+                 13 (12-30) Helvetica 14        x      "*
+            off   7 (0-11)  Letter Gothic 9.5 x         **
+                 12 (12-30) Courier 12        x
+         * No proportional font is available in portrait orientation.
+        ** With fixed spacing, in portrait orientation, .CW7 (0-11)
+           produces Line Printer 8.5 on the LaserJet+ and Courier 12
+           on the LaserJet.
+
+ .LQ    N/A
+ .PL    For 11 inch paper, a value of 62 is recommended.
+        Too large a value will cause text to be lost at page bottom.
+ .PR OR "=Landscape" or "=Portrait" to select orientation.
+
+ NOTES  Answer yes to the "Use form feeds" prompt. This driver has
+ proportional spacing tables for all fonts in the U and V cartridges.
+.p
+
+HP LASERJET, LASERJET+ (Y cartridge, AC TmsRmn) ----- Driver: HPLJ:Y
+
+ ^PY    Selects italics if appropriate font installed
+ ^PT/V  Prints full-size characters with roll
+
+  Cartridge/
+  Soft font .PS  .CW        Font/Point Size   R B I  Landscape
+  --------- ---  --------   ---------------   - - -  ---------
+     Y      on   none available
+            off   7 (0-11)  Line Printer 8.5  x        x
+                 12 (12-30) PC Courier 12     x x x
+
+    AC*     on    5 (0-5)   Times Roman 6     x x x    x
+                  7 (6-7)   Times Roman 8     x x x    x
+                  9 (8-9)   Times Roman 10    x x x    x
+                 11 (10-11) Times Roman 12    x x x    x
+                 13 (12-14) Times Roman 14    x x x    x
+                 16 (15-18) Times Roman 18      x      x
+                 20 (19-24) Times Roman 24      x      x
+                 25 (25-30) Times Roman 30      x      x
+            off   7 (0-11)  Line Printer 8.5  x        x (0-30)
+                 12 (12-30) Courier 12        x
+        * Other .CW settings may access additional fonts if a
+          cartridge is also installed.
+
+ .LQ    N/A
+ .PL    For 11 inch paper, a value of 62 is recommended.
+        Too large a value will cause text to be lost at page bottom.
+ .PR OR "=Landscape" or "=Portrait" to select orientation.
+ 
+ NOTES  Answer yes to the "Use form feeds" prompt. This driver is for 
+ use with the Y cartridge, which provides an IBM PC compatible symbol
+ set.  In addition, this driver has complete proportional spacing 
+ tables for the AC set of downloadable TmsRmn fonts.
+.p
+
+HP LASERJET, LASERJET+ (AD TmsRmn) ----- Driver: HPL:AD
+
+ ^PY    Selects italics if appropriate font installed
+ ^PT/V  Prints full-size characters with roll
+
+  Cartridge/
+  Soft font .PS  .CW        Font/Point Size   R B I  Landscape
+  --------- ---  --------   ---------------   - - -  ---------
+    AD*     on    5 (0-5)   Times Roman 6     x x x    x
+                  7 (6-7)   Times Roman 8     x x x    x
+                  9 (8-9)   Times Roman 10    x x x    x
+                 11 (10-11) Times Roman 12    x x x    x
+                 13 (12-14) Times Roman 14    x x x    x
+                 16 (15-18) Times Roman 18      x      x
+                 20 (19-24) Times Roman 24      x      x
+                 25 (25-30) Times Roman 30      x      x
+            off   7 (0-11)  Line Printer 8.5  x
+                 12 (12-30) Courier 12        x        x (0-30)
+
+        The following fixed pitch fonts may be available depending
+        on your cartridge. (Note that these are measure by pitch, 
+        not by point size.):
+
+          .CW  Font Name
+          ---  ---------
+           7   16.7 pitch
+          10   12 pitch
+          12   10 pitch
+          15   8.1 pitch
+          18   6.5 pitch
+          21   5.8 pitch
+          27   4.5 pitch
+
+ .LQ    N/A
+ .PL    For 11 inch paper, a value of 62 is recommended.
+        Too large a value will cause text to be lost at page bottom.
+ .PR OR "=Landscape" or "=Portrait" to select orientation.
+ 
+ NOTES  Answer yes to the "Use form feeds" prompt. This driver is for
+ use with the AD TmsRmn downloaded fonts, and for a ROMAN8 or 
+ ROMAN8+LINEDRAW fixed width font cartridge. The driver includes 
+ complete proportional spacing tables for the AD set of downloadable 
+ TmsRmn fonts.
+             
+HP THINKJET, IBM mode ----- Driver: HPTJI
+
+ ^PY    N/A
+ ^PT/V  Prints full-size characters with roll
+
+ .CW    .CW  Font Name
+        ---  ---------
+         7   compressed
+        10   elite
+        12   pica
+        14   expanded compressed
+        20   expanded elite
+        24   expanded pica
+
+ .LH    Use even values.  Driver operates at 2/48" resolution.
+ .LQ    N/A
+ .PS    N/A
+ .UL    Continuous underlining suppresses microspace justification
+ .UJ    Microspace justification slows printing. Default is ON.
+
+ NOTES  This printer does not have a true 10 pitch font, so character
+ widths are not exact, and ^P@ does not align exactly with text.  
+ Because the printer has an automatic page offset, set the WordStar
+ page offset to zero.
+
+IBM COLOR PRINTER 5182 ----- Driver: IBMCLR
+
+ ^PY    Selects red/black ribbon color
+ ^PT/V  Prints half-size if .SR 0; otherwise, full-size with roll
+        .LQ  .LQ  .PS
+ .CW    OFF   ON   ON         Font Name
+        ---  ---  --------    ---------
+         7    7    5 (0-6)    compressed
+        10   10    8 (7-8)    elite
+        12   12   10 (9-13)   pica
+        14   14    -          expanded compressed
+        20   20   15 (14-16)  expanded elite
+        24   24   20 (17-30)  expanded pica
+
+ .LH    Use even values.  Driver operates at 2/48" resolution.
+ .LQ    Has same effect as ^PD
+ .UL    Underlining may be irregular with microspace justification on
+ .UJ    Microspace justification slows printing. Default is OFF.
+
+IBM GRAPHICS PRINTER 5152 ----- Driver: IBMGR
+
+ ^PY    N/A
+ ^PT/V  Prints half-size if .SR 0; otherwise, full-size with roll
+
+ .CW    .CW  Font Name
+        ---  ---------
+         7   compressed
+        12   pica
+        14   expanded compressed
+        24   expanded pica
+
+ .LH    Use even values.  Driver operates at 2/48" resolution.
+ .LQ    N/A
+ .PS    N/A
+ .UL    Continuous underlining suppresses microspace justification
+ .UJ    Microspace justification slows printing. Default is OFF.
+
+IBM PROPRINTER 4201 ----- Driver: IBMPRO
+
+ ^PY    N/A
+ ^PT/V  Prints half-size if .SR 0; otherwise, full-size with roll
+        .LQ  .LQ
+ .CW    OFF   ON  Font Name
+        ---  ---  ---------
+         7    7   compressed
+        10   10   elite
+        12   12   pica
+        14   14   expanded compressed
+        20   20   expanded elite
+        24   24   expanded pica
+
+ .LH    Use even values.  Driver operates at 2/48" resolution.
+ .PS    N/A
+ .LQ    Has same effect as ^PD
+ .UL    Continuous underlining suppresses microspace justification
+ .UJ    Microspace justification slows printing. Default is OFF.
+
+ NOTES  If you have a Proprinter XL, you can use WSCHANGE to patch
+ in the extra features.
+
+IBM QUIETWRITER 5201 ----- Driver: IBMQUI
+
+ ^PY    Toggles between A and * font cartridge.  Set character
+        width to match cartridge in use.  (A cartridge uses current
+        ^PN character width; * cartridge uses ^PA character width.)
+ ^PT/V  Prints full-size characters with roll
+ .CW    Selects character width.  Character width must correspond
+        to the cartridge being used.
+ .LQ    N/A
+ .PS    ON selects proportional spacing, OFF selects fixed pitch
+        spacing
+
+IBM WHEELPRINTER 5216 ----- Driver: IBMWP
+
+ ^PY    N/A
+ ^PT/V  Printer determined roll if .SR 0
+ .CW    Selects character spacing.  Any value from 0 to 30 is
+        supported.   Usual fixed pitch values are 8 (15 characters
+        per inch), 10 (12 cpi) and 12 (10 cpi).
+ .LQ    N/A
+ .UL    Continuous underlining does not affect microjustification
+ .PS    ON selects proportional spacing, OFF selects fixed pitch.
+        This driver sends codes to the printer to turn proportional
+        spacing on and off, and the printer controls character to
+        character spacing.
+
+ NOTES  The proportional spacing tables are set up for an IBM
+ BOLD PS wheel.
+
+IBM WHEELPRINTER 5223 E ----- Driver: IBMWPE
+
+ ^PY    N/A
+ ^PT/V  Printer determined roll if .SR 0
+ .CW    Selects character spacing.  Any value from 0 to 30 is
+        supported.   Usual fixed pitch values are 8 (15 characters
+        per inch), 10 (12 cpi) and 12 (10 cpi).
+ .LQ    N/A
+ .UL    Continuous underlining does not affect microjustification.  
+        Continuous underlining will be somewhat irregular.
+ .PS    ON selects proportional spacing, OFF selects fixed pitch.
+        This driver will send codes to the printer to turn propor-
+        tional spacing on and off, and the printer will control
+        character to character spacing.
+
+ NOTES  The proportional spacing tables are set up for an IBM
+ BOLD PS wheel.
+
+MANNESMANN TALLY MT-160L ----- Driver: MT160L
+
+ ^PY    N/A
+ ^PT/V  Prints full-size characters with specified even roll
+        .LQ  .LQ
+ .CW    OFF   ON  Font Name
+        ---  ---  ---------
+         6   -    compressed elite
+         7   -    compressed
+        10   10   elite
+        12   12   pica
+        14   -    expanded compressed
+        20   -    expanded elite
+        24   -    expanded pica
+
+ .LH    Use even values.  Driver operates at 2/48" resolution.
+ .UJ    N/A
+
+ NOTES  This printer is not capable of incremental horizontal
+ positioning.  As a result, microspace justification is not possible.
+ In addition, when changing character widths, characters may not
+ align to closer than one full character width.  Also, page offsets
+ smaller than a character will not work.
+
+MPI PRINTMATE 99 & 350 ----- Driver: MPI99
+
+ ^PY    N/A
+ ^PT/V  Even superscript roll
+        .LQ  .LQ  
+ .CW    OFF   ON  Font name
+        ---  ---  ---------
+         7    -   17.1 cpi
+        10    -   12   cpi
+        12   12   10   cpi
+        14    -    8.5 cpi
+        20    -    6   cpi
+        24   24    5   cpi
+
+ .LH    1/24" resolution, use even values
+ .PS    N/A
+ .UJ    N/A
+
+NEC PINWRITER P2-3, P2-6, P3-3, P6-6 ----- Driver: NECP2I
+
+ ^PY    N/A
+ ^PT/V  Prints half-size if .SR 0; otherwise, full-size with roll
+        .LQ  .LQ
+ .CW    OFF   ON  Font Name
+        ---  ---  ---------
+         7   -    compressed
+        10   10   elite
+        12   12   pica
+        14   -    expanded compressed
+        20   20   expanded elite
+        24   24   expanded pica
+
+ .PS    N/A
+ .UL    Continuous underline suppresses microspace justification
+ .UJ    Microspace justification slows printing.  Default is OFF.
+
+ NOTES  Page offsets smaller than the character width in effect are
+ not supported.  Make sure switch 5 on the printer is off.
+
+NEC PINWRITER P5XL, P6, P7 ----- Driver: NECP5
+
+ ^PY    Selects italics
+ ^PT/V  Prints half-size if .SR 0; otherwise, full-size with roll
+        .LQ  .LQ
+ .CW    OFF   ON  .PS ON       Font Name
+        ---  ---  ------       ---------
+         6    6   -            compressed elite
+         7    7    6 (0-8)     compressed
+         8    8   -            subscript 15 cpi
+        10   10   -            elite
+        12   12   10 (9-17)    pica
+        14   14   -            expanded compressed
+        16   16   -            expanded script
+        20   20   -            expanded elite
+        24   24   20 (18-26)   expanded courier
+        30   30   30 (27-30)   triple elite
+
+
+NEC SPINWRITER 2000R, 3500R
+NEC SPINWRITER 2010, 3510, 7710
+NEC SPINWRITER 2030, 3530, 7730 ----- Driver: SPINWR
+
+ See Diablo 630, 1610, 1620 Daisy Wheel.
+
+ .BP    N/A
+
+ NOTES  The proportional spacing tables are set up for a NEC BOLD PS
+ wheel. Proportional spacing is not supported on the 2010 and 2030.
+
+NEC SPINWRITER 2015, 3515, 7715 ----- Driver: DIABLO
+
+ See Diablo 630, 1610, 1620 Daisy Wheel.
+
+ .BP    N/A
+
+ NOTES  The proportional spacing tables are set up for a NEC BOLD PS
+ wheel. This printer does not respond correctly to the phantom blank
+ and phantom rubout characters, and may lose horizontal alignment if
+ they are included in your document. Proportional spacing is not
+ supported on the 2015.
+
+NEC SPINWRITER 2050, 3550, 8850 ----- Driver: SPIN50
+
+ See Diablo 630, 1610, 1620 Daisy Wheel.
+
+ .BP    N/A
+
+ NOTES  The proportional spacing tables are set up for a NEC BOLD PS
+ wheel. Proportional spacing is not supported on the 2050.
+
+OKIDATA MICROLINE 84 STEP 2, STANDARD ----- Driver: ML84
+
+ ^PY    N/A
+ ^PT/V  Printer controlled if .SR 0; otherwise, full-size with roll
+        .LQ  .LQ
+ .CW    OFF   ON  Font Name
+        ---  ---  ---------
+         7    7   compressed
+        10   10   elite
+        12   12   pica
+        14   14   expanded compressed
+        20   20   expanded elite
+        24   24   expanded pica
+
+ .PS    N/A
+ .UJ    In draft mode (.LQ OFF), this printer is not capable of
+        microspace justification.  Different character widths may
+        not line up correctly.
+
+ NOTES  Page offsets smaller than the character width in effect are
+ not supported.
+
+OKIDATA MICROLINE 92 AND 93, STANDARD ----- Driver: ML92
+
+ ^PY    N/A
+ ^PT/V  Printer controlled if .SR 0; otherwise, full-size with roll
+        .LQ  .LQ
+ .CW    OFF   ON  Font Name
+        ---  ---  ---------
+         7        compressed
+        10   10   elite
+        12   12   pica
+        14        expanded compressed
+        20   20   expanded elite
+        24   24   expanded pica
+
+ .PS    N/A
+ .UJ    In draft mode (.LQ OFF), this printer is not capable of
+        microspace justification.  Different character widths may
+        not line up correctly.
+
+ NOTES  Page offsets smaller than the character width in effect are
+ not supported.
+
+OKIDATA MICROLINE 84, 92, 93, IBM PLUG & PLAY ----- Driver: ML92I
+
+ ^PY    N/A
+ ^PT/V  Printer controlled if .SR 0; otherwise, full-size with roll
+        .LQ  .LQ
+ .CW    OFF   ON  Font Name
+        ---  ---  ---------
+         7        compressed
+        12   12   pica
+        14        expanded compressed
+        24   24   expanded pica
+
+ .PS    N/A
+ .UJ    In draft mode (.LQ OFF), this printer is not capable of
+        microspace justification.  Different character widths may
+        not line up correctly.
+
+ NOTES  Page offsets smaller than the character width in effect are
+ not supported.
+
+OKIDATA MICROLINE 182, STANDARD ----- Driver: ML182
+OKIDATA MICROLINE 182, IBM                    ML182I
+
+ ^PY    N/A
+ ^PT/V  Prints half-size if .SR 0; otherwise, full-size with roll
+        .LQ  .LQ
+ .CW    OFF   ON  Font Name
+        ---  ---  ---------
+         7   -    compressed
+        10   10   elite
+        12   12   pica
+        14   -    expanded compressed
+        20   20   expanded elite
+        24   24   expanded pica
+
+ NOTES  This printer is not capable of incremental horizontal 
+ positioning, so microspace justification is not possible. In
+ addition, when changing character widths, characters may not align
+ to closer than one full character width. Also, page offsets smaller
+ than a character do not work.
+
+OKIDATA MICROLINE 192, STANDARD ----- Driver: ML192
+OKIDATA MICROLINE 192, IBM                    ML192I
+
+ ^PY    Selects draft mode italics.  No half height italics
+ ^PT/V  Prints half-size if .SR 0; otherwise, full-size with roll
+        .LQ  .LQ
+ .CW    OFF   ON  .PS ON      Font Name
+        ---  ---  ------      ---------
+         7   -    -           compressed
+        10   10    9 (9-10)   elite
+        12   12   11 (11-17)  pica
+        14   -    -           expanded compressed
+        20   20   18 (18-20)  expanded elite
+        24   24   22 (21-30)  expanded pica
+
+ NOTES  This printer does not have control strings to select
+ proportional and fixed pitch printing. This choice can only be
+ made through the printer's own menu functions. For reasonable
+ results, make sure that your document and printer are both fixed
+ pitch or both proportional.
+
+OKIDATA MICROLINE 292, STANDARD ----- Driver: ML292
+OKIDATA MICROLINE 292, IBM                    ML292I
+
+ ^PY    Selects italics.  No half height italics
+ ^PT/V  Prints half-size if .SR 0; otherwise, full-size with roll
+        .LQ  .LQ
+ .CW    OFF   ON  .PS ON      Font Name
+        ---  ---  ------      ---------
+         7    7    7 (6-8)    compressed
+        10   10    9 (9-10)   elite
+        12   12   11 (11-12)  pica
+        14   14   13 (13-17)  expanded compressed
+        20   20   18 (18-20)  expanded elite
+        24   24   22 (21-30)  expanded pica
+
+ NOTES  This printer does not have control strings to select
+ proportional and fixed pitch printing. This choice can only be
+ made through the printer's own menu functions. For reasonable
+ results, make sure that your document and printer are both fixed
+ pitch or both proportional.
+
+OKIDATA PACEMARK 2410, STANDARD ----- Driver: PM2410
+
+ ^PY    N/A
+ ^PT/V  Prints full-size characters with roll
+        .LQ  .LQ
+ .CW    OFF   ON  Font Name
+        ---  ---  ---------
+         7   -    compressed
+        10   10   elite
+        12   12   pica
+        14   -    expanded compressed
+        20   20   expanded elite
+        24   24   expanded pica
+
+ .UJ    Compressed and expanded compressed characters will not be
+        microspace justified.  Also, they may not align perfectly
+        with other character widths.
+
+ NOTES  If you have the IBM-compatible printer, do not use this 
+ installation.  Instead, choose the IBM Graphics Printer.
+
+PANASONIC KX-P1090 ----- Driver: P1090
+
+ ^PY    Selects italics
+ ^PT/V  Prints half-size if .SR 0; otherwise, full-size with roll
+
+ .CW    .CW  Font Name
+        ---  ---------
+         7   compressed
+        10   elite
+        12   pica
+        14   expanded compressed
+        20   expanded elite
+        24   expanded pica
+
+ .LH    Use even values.  Driver operates at 2/48" resolution.
+ .LQ    N/A
+ .PS    N/A
+ .UL    Continuous underlining suppresses microspace justification.
+
+QUME SPRINT SERIES ----- Driver: QUME
+
+ See Diablo 630, 1610, 1620 Daisy Wheel.
+
+ .PS    N/A
+
+ NOTES  Make sure you use the appropriate switch settings for your
+ interface module.  Set the switches on the module accordingly:
+   IBM Centronics module:  1, 2, 8, 9 ON.  All others OFF.
+   RS-232-C module:        1, 2 ON.  All others OFF.
+
+QUME SPRINT WITH WP OPTION ----- Driver: QUMEWP
+
+ See Diablo 630, 1610, 1620 Daisy Wheel.
+
+ .PS    N/A
+
+RICOH LP4080R LASER PRINTER ----- Driver: LP4080
+
+ ^PY    N/A
+ ^PT/V  Prints full-size characters with roll
+        .PS  .PS
+ .CW    OFF   ON         Font Name
+        ---  ---         ---------
+         8   -           15 cpi
+        10   -           12 cpi elite
+        12   -           10 cpi courier
+        -    11 (0-30)   proportional
+
+ .LQ    N/A
+ .PL    For 11 inch paper, a value of 62 is recommended
+ .PR OR "=Landscape" or "=Portrait" to select orientation
+
+ NOTES  Answer yes to the "Use form feeds" prompt. This driver is 
+ configured to select all the built in fonts in the LP4080R, in both
+ portrait and landscape mode.  For more information on laser printers,
+ see the "Laser Printers" section above.
+
+SILVER REED EXP-550/500 DAISY WHEEL ----- Driver: SR550
+
+ See Diablo 630, 1610, 1620 Daisy Wheel.
+
+ NOTES  Proportional spacing tables (Model 500 does not support 
+ proportional printing) are set up for a Silver Reed PS wheel.  
+ You need to change the switch settings for proportional
+ fonts.  Set the SW-1 switches accordingly: 
+   For proportional fonts:     1, 2 ON, 3-6 OFF
+   For nonproportional fonts:  All OFF.
+
+STAR MICRONICS GEMINI 10X AND 15X ----- Driver: GEM10X
+
+ ^PY    Selects italics
+ ^PT/V  Prints half-size if .SR 0; otherwise, full-size with roll
+
+ .CW    .CW  Font Name
+        ---  ---------
+         7   compressed
+        10   elite
+        12   pica
+        14   expanded compressed
+        20   expanded elite
+        24   expanded pica
+
+ .LH    Use even values.  Driver operates at 2/48" resolution.
+ .LQ    N/A
+ .PS    N/A
+ .UL    Continuous underlining suppresses microspace justification
+ .UJ    Microspace justification slows printing. Default is OFF.
+
+STAR MICRONICS NX-10 ----- Driver: NX10
+
+ ^PY    Selects draft quality italics
+ ^PT/V  Prints half-size if .SR 0; otherwise full-size with roll
+        .LQ  .LQ  .PS
+ .CW    OFF   ON   ON          Font Name
+        ---  ---  ---          ---------
+         6   -     4 (0-5)     compressed elite
+         7   -     7 (6-7)     compressed
+        10   -     9 (8-9)     elite
+        12   12   11 (10-12)   pica
+        14   -    -            expanded compressed
+        20   -    -            expanded elite
+        24   24   -            expanded pica
+
+ .UL    Continuous underlining suppresses microjustification
+ .UJ    Microjustification slows printing
+
+STAR MICRONICS SG10  ---- Driver: SG10
+STAR MICRONICS SG10I ---- Driver: SG10I
+
+ ^PY    Selects draft mode italics
+ ^PT/V  Prints full size characters with roll
+
+        .LQ  .LQ  
+ .CW    OFF   ON  .PS ON       Font Name
+        ---  ---  ------       ---------
+         7   -    -            compressed
+        10   -    10 (9-12)    elite
+        12   12   -            pica
+        14   -    -            expanded compressed
+        20   -    20 (18-24)   expanded elite
+        24   24   -            expanded pica
+
+ .UL    Continuous underlining suppresses microjustification
+ .UJ    Microjustification slows printing
+ .PS	Draft quality proportional
+
+  NOTE:  Because of printer firmware limitations, combinations of
+  print enhancements may cause poor printed output.
+  
+TANDY DMP-130 MATRIX PRINTER ----- Driver: DMP13
+
+ ^PY    Selects italics
+ ^PT/V  Prints half-size characters (17 cpi, or 8.5 cpi for 
+        expanded fonts)
+        .LQ  .LQ
+ .CW    OFF   ON  .PS ON       Font Name
+        ---  ---  ------       ---------
+         7   -    -            compressed
+        -    10   -            elite
+        12   12   11 (11-13)   pica
+        14   -    -            expanded compressed
+        -    20   -            expanded elite
+        24   24   22 (21-30)   expanded pica
+
+ NOTES  Printer must be in Tandy mode.  
+
+TANDY DMP-2100P MATRIX PRINTER ----- Driver: D2100P
+
+ ^PY    N/A
+ ^PT/V  Prints full-size characters with roll
+        .LQ  .LQ
+ .CW    OFF   ON  .PS ON       Font Name
+        ---  ---  ------       ---------
+         7   -    -            compressed
+        -    10    9 (9-10)    elite
+        12   12   11 (11-13)   pica
+        14   -    -            expanded compressed
+        -    20   18 (18-20)   expanded elite
+        24   24   22 (21-30)   expanded pica
+
+ NOTES  Printer must be in Tandy mode.  
+
+TANDY DMP-2110 MATRIX PRINTER ----- Driver: D2110
+
+ ^PY    Selects italics
+ ^PT/V  Prints half-size if .SR 0; otherwise, full-size with roll
+        .LQ  .LQ
+ .CW    OFF   ON  .PS ON       Font Name
+        ---  ---  ------       ---------
+         7   -    -            compressed
+        -    10    9 (9-10)    elite
+        12   12   11 (11-13)   pica
+        14   -    -            expanded compressed
+        -    20   18 (18-20)   expanded elite
+        24   24   22 (21-30)   expanded pica
+
+ NOTES  Printer must be in Tandy mode.  
+
+TANDY DWP-230 DAISY WHEEL ----- Driver: DWP230
+TANDY DWP-520 DAISY WHEEL ----- Driver: DWP520
+
+ ^PY    N/A
+ ^PT/V  Prints super/subscripts in separate pass with specified roll
+ .CW    Supports any value from 0 to 30.  Usual fixed pitch values are
+        10 (12 cpi) and 12 (10 cpi).
+ .BP    N/A
+ .LQ    N/A
+ .PS    ON selects proportional spacing.  Spacing tables are set up for
+        a DIABLO BOLD PS wheel, #303029-01.
+ .UL    Continuous underlining does not suppress microjustification
+        for DWP230; does suppress it for DWP520.
+
+TEXAS INSTRUMENTS 855 AND 865 ----- Driver: TI855
+
+ ^PY    N/A
+ ^PT/V  Prints full-size characters with roll
+        .LQ  .LQ
+ .CW    OFF   ON  .PS ON       Font Name
+        ---  ---  ------       ---------
+         6    6    6 (0-8)     compressed
+        10   10   10 (9-11)    elite
+        12   12   12 (12-17)   pica
+        14   14   -            expanded compressed
+        20   20   20 (18-22)   expanded elite
+        24   24   24 (23-30)   expanded pica
+
+TOSHIBA P351, P351C, P341, P321 ----- Driver: P351
+
+ ^PY    Selects italics
+ ^PT/V  Prints full-size characters with roll
+        .LQ  .LQ
+ .CW    OFF   ON  .PS ON       Font Name
+        ---  ---  ------       ---------
+         7   -    -            compressed
+        -    10    9 (0-9)     elite
+        12   12   11 (10-14)   pica
+        14   -    -            expanded compressed
+        -    20   18 (15-19)   expanded elite
+        24   24   22 (20-30)   expanded pica
+
+TOSHIBA P1340 ----- Driver: P1340
+
+ ^PY    No effect
+ ^PT/V  Prints full-size characters with roll
+        .LQ  .LQ
+ .CW    OFF   ON  Font Name
+        ---  ---  ---------
+        10   10   elite
+        12   12   pica
+        14   -    expanded compressed
+        20   -    expanded elite
+        24   24   expanded pica
+
+TOSHIBA P1351 ----- Driver: P1351
+
+ ^PY    N/A
+ ^PT/V  Prints full-size characters with roll
+        .LQ  .LQ
+ .CW    OFF   ON  .PS ON      Font Name
+        ---  ---  ------      ---------
+         7   -    -           compressed
+        -    10    9 (0-9)    elite
+        12   12   11 (10-14)  pica
+        14   -    -           expanded compressed
+        -    20   18 (15-19)  expanded elite
+        24   24   22 (20-30)  expanded pica
+
+ZENITH Z-125AA ----- Driver: Z125
+
+ ^PY    N/A
+ ^PT/V  No incremental vertical positioning
+
+ .CW    .CW  Font name
+        ---  ---------
+         7   16.7 cpi
+         9   13.3 cpi
+        10   12   cpi
+        12   10   cpi
+        14    8.3 cpi
+        18    6.7 cpi
+        20    6   cpi
+        24    5   cpi
+
+ .LH    Full lines only
+ .UJ    N/A
+ .PS    N/A
+ .LQ    N/A
+
