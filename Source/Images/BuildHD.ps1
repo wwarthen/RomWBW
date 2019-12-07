@@ -11,7 +11,7 @@ if (!(Test-Path('Blank.tmp'))) {Set-Content -Value $Blank -Encoding byte -Path '
 
 "Creating hard disk images..."
 #for ($Dsk=0; $Dsk -lt 2; $Dsk++)
-foreach ($Dsk in @("hd0","hd1","hd_cpm3"))
+foreach ($Dsk in @("hd0","hd1","hd_cpm3","hd_zpm3"))
 {
 	"Generating Hard Disk ${Dsk}..."
 	for ($Slice=0; $Slice -lt 4; $Slice++)
