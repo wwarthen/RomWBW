@@ -22,6 +22,7 @@
 ;   2016-04-08 [WBW] Determine key memory addresses dynamically
 ;   2019-08-07 [WBW] Fixed DPB selection error
 ;   2019-11-17 [WBW] Added preliminary CP/M 3 support
+;   2019-12-24 [WBW] Fixed location of BIOS save area
 ;_______________________________________________________________________________
 ;
 ; ToDo:
@@ -466,7 +467,7 @@ install:
 ;
 	; capture CBIOS snapshot and stack frame for error recovery
 	ld	hl,(bioloc)	; start of CBIOS
-	ld	de,$8000	; save it here
+	ld	de,$1000	; save it here
 	ld	bc,(biosiz)	; size of CBIOS
 	ldir			; save it
 	ld	(xstksav),sp	; save stack frame
@@ -804,7 +805,7 @@ instc3:
 instovf:
 	; restore stack frame and CBIOS image
 	ld	sp,(xstksav)	; restore stack frame
-	ld	hl,$8000	; start of CBIOS image buffer
+	ld	hl,$1000	; start of CBIOS image buffer
 	ld	de,(bioloc)	; start of CBIOS
 	ld	bc,(biosiz)	; size of CBIOS
 	ldir			; restore it
@@ -1865,7 +1866,7 @@ stack	.equ	$		; stack top
 ; Messages
 ;
 indent	.db	"   ",0
-msgban1	.db	"ASSIGN v1.1 for RomWBW CP/M, 17-Nov-2019",0
+msgban1	.db	"ASSIGN v1.1a for RomWBW CP/M, 24-Dec-2019",0
 msghb	.db	" (HBIOS Mode)",0
 msgub	.db	" (UBIOS Mode)",0
 msgban2	.db	"Copyright 2019, Wayne Warthen, GNU GPL v3",0
