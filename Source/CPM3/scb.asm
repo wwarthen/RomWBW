@@ -5,6 +5,7 @@
         public @mltio, @ermde, @erdsk, @media, @bflgs
 	public @date, @hour, @min, @sec, ?erjmp, @mxtpa
 	public @ccpdr
+	public @srch1, @srch2, @srch3, @srch4
 
 
 scb$base equ    0FE00H          ; Base of the SCB
@@ -34,6 +35,10 @@ scb$base equ    0FE00H          ; Base of the SCB
 @MLTIO	equ	scb$base+4Ah	; Current Multi-Sector Count
 				; (byte,r/w)
 @ERMDE  equ     scb$base+4Bh    ; BDOS Error Mode (byte, r/o)
+@SRCH1	equ	scb$base+4Ch	; BDOS Drive Search Chain 1
+@SRCH2	equ	scb$base+4Dh	; BDOS Drive Search Chain 2
+@SRCH3	equ	scb$base+4Eh	; BDOS Drive Search Chain 3
+@SRCH4	equ	scb$base+4Fh	; BDOS Drive Search Chain 4
 @ERDSK	equ	scb$base+51h	; BDOS Error Disk (byte,r/o)
 @MEDIA	equ	scb$base+54h	; Set by BIOS to indicate
 				; open door (byte,r/w)

@@ -13,10 +13,11 @@ copy ..\ZCCP\ccp.com .
 copy ..\ZCCP\zinstal.zpm .
 copy ..\ZCCP\startzpm.com .
 copy ..\CPM3\genbnk.dat .
-rem copy ..\CPM3\bios3.spr .
-copy ..\CPM3\bnkbios3.spr .
+copy ..\CPM3\swpbios3.spr bnkbios3.spr
 copy ..\CPM3\gencpm.com .
 copy ..\CPM3\biosldr.rel .
+
+copy ..\CPM3\cpmldr.com .
 
 rem ZPM Loader
 echo.
@@ -54,7 +55,7 @@ for %%f in (
   makedos.com
   bnkbdos3.spr
   resbdos3.spr
-  zpm3.sub
+  cpmldr.com
 ) do call :upd_img %%f
 goto :eof
 

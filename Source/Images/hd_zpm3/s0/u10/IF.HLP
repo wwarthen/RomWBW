@@ -1,0 +1,172 @@
+;
+				 IF.COM 				
+
+		   Author:	 Jay Sage
+		   Version:	 1.6 (includes type 4 for Z34)
+		   Last Update:  4/28/89
+
+
+		  1- Overview		   4- Error Messages
+		  2- Syntax		   5- Examples of use
+		  3- Options
+
+:1
+Overview of IF.COM
+
+   IF  is the transient counterpart of the FCP-resident  IF  command.	IF.COM
+tests the indicated condition to see if it is TRUE and,  if so,  sets the Flow
+State to TRUE (allowing the following commands to execute).   If the condition
+is  FALSE,  the  Flow  State is set to FALSE (allowing only Flow  Commands  to
+execute).
+
+   IF.COM is invoked if the current FCP has the IF.COM facility  enabled.   If
+this is the case,  whenever an IF command is issued,  the FCP will load IF.COM
+from  the  ROOT  directory into memory and execute it.	 The command  tail  is
+passed to IF.COM, and IF.COM acts as a conventional COM file.
+
+   Under  NZFCP  distributed  with NZ-COM and ZCPR vs.	3.4, IF.COM is invoked
+only  if  the  indicated condition  is  NOT  included  in  the  condition  set
+available  with  the  resident  FCP.   IF.COM may be invoked directly  if  its
+invocation is preceeded by a colon, i.e. :IF .. etc.
+:2
+   Syntax:  (1) IF ARG1=ARG2
+	    (2) IF REGISTER# value
+	    (3) IF CONDITION ARGUMENTS
+
+   In form (1), the arguments are tested for literal equality and  must  match
+character  for	character.   No space is permitted preceeding or following the
+equal sign.  A more flexible comparison is provided by using form (3) with the
+comparison  conditions,  i.e.	IF  EQ ARG1 ARG2 or IF = ARG1 ARG2.  This form
+permits the use of the condition set EQ, NE, GT, GE, LT, LE as well  as  their
+symbolic equivalents =, <> or ><, >, >=, <, <=.
+
+   In all forms which permit or require the use of numeric values such as form
+(2) or the VALUE and REG conditions, numeric entry may be specified as	octal,
+binary or hexadecimal by appending the letters o, b or h to the number.
+
+   In form (3), only the first two letters of the condition are signifigant.
+
+   A '~' may be used to negate all conditions in forms (2) and (3).
+:3
+  Options:
+
+T	      - Flow State set to unconditionally to TRUE
+
+F	      - Flow State set unconditionally to FALSEŠ
+AMBIG fnme    - Flow state set TRUE if file name is ambiguous
+
+ARCHIVE fnme  - Flow state set TRUE if archive attribute set
+
+BG	      - Flow state set TRUE if BackGrounder present
+
+COMPR fnme    - Flow state set TRUE if file is squeezed or Crunched
+
+DS	      - Flow state set TRUE if DateStamper present
+
+EMPTY afn,... - if any file in indicated list is EMPTY (size is 0k),
+		Flow State is set to TRUE
+
+ERROR [value] - if ZCPR3 error flag is set, Flow State is set to TRUE.	If
+		value is present, flow state is set TRUE only if error
+		number matches value.
+Options (continued):
+
+EXIST afn,... - if all files in the list exist, Flow State is set to TRUE
+
+INPUT [text]  - user input is enabled, and if user strikes T, Y, <cr>, or
+		<sp>, Flow State is set to TRUE.  Text appears as a prompt and
+		may use '^' to generate control characters, %< to display
+		upper case, %> to display lower case and ctl-a/ctl-b to
+		enable/disable screen standout mode.
+
+LIST tail     - Flow state set TRUE if tail contains items separated by commas
+
+NULL afn      - if no 'afn' (field is blank), then Flow State is set to TRUE
+
+PAUSE n [txt} -	Like INPUT above except that Flow State is automatically
+		set to True if user does not respond within n seconds.
+
+REG m op n    - Flow state set TRUE if expression is true.  M is a register
+		number, n is a test value and op is a member of the operator
+		set =, <>, ><, >, >=, <, <=.  All can be negated with '~'.
+
+RO fnme       - Flow state set TRUE if file Read Only attribute set
+Options (continued):
+
+SHELL [name]  - Flow state set TRUE if a shell is on shell stack.  If name is
+		present, it is compared to the name on the top of the shell
+		stack and the flow state set TRUE if they match.  Name may
+		ambiguous.
+
+SYS fnme      - Flow state set TRUE if file Sys attribute set
+
+TAG fnme n    - Flow state set TRUE if attribute n set in file name.
+
+TCAP [string] - if a Z3TCAP is installed, Flow State is set to TRUE.  If
+		string is present it is compared to the TCAP ID string (up
+		to the length of the former) and the flow state set TRUE if
+		they match.  String may contain '?' wildcards.
+
+VALUE m op n  - Flow state set TRUE if expression is true.  M and n are values
+		and op is an operater from the set =, <>, ><, >, >=, <, <=.
+		All can be negated with '~'.
+
+WHEEL	      - if WHEEL byte set, Flow State is set to TRUE
+Options (continued):
+
+ZEX	      - Flow state set TRUE if ZEX is running
+
+reg# value    - if reg (0-31) has indicated value (0-255), Flow State is
+		set to TRUE
+
+afn1=afn2     - if two afns are identical in name, Flow State is set to TRUE
+
+   A  leading  tilde  (~) char before a condition negates the  effect  of  the
+condition.   If the condition is FALSE,  the Flow State is set to  TRUE.   For
+each condition, only the first two chars are significant (eg. NU for NULL).
+
+Examples:  "IF ~T" is the same as "IF F"
+	   "IF ~NULL arg" is TRUE if 'arg' is non-blank
+	   "IF ~EXIST afn,..." is TRUE if any 'afn' in the
+		list does not exist.
+:4
+Error Message:
+
+IF.COM generates  several  error  messages  relating  to  improper  entry  of
+condition  arguments.  These messages are self-explanatory.  See the help for
+IF.COM Options for correct syntax for each condition.
+
+The message 'IF overflow' indicates a nesting beyond the permitted 8 levels.
+:5
+Examples of Use:
+
+   a. IF NULL $1
+      - if the indicated parameter (from within a SUBMIT or ZEX command file)
+	is not provided, set the Flow State to TRUE
+
+   b. IF ~EXIST ZEX.ASM,ZEX.ZEX
+      - if any one of these files does not exist, Flow State is set to TRUE
+
+   c. IF EXIST ZEX.ASM,ZEX.ZEX
+      - if any one of these files does not exist, Flow State is set to FALSE
+	(i.e., all files must exist for a TRUE Flow State)
+
+   d. IF NEC=$1
+      - if the first passed parameter is the same as the file name "NEC.",
+	then the Flow State is Set to TRUE
+
+   e. IF 5 7h
+      - if Register 5 = 7 hexidecimal, the Flow State is Set to TRUE
+
+Examples (continued):
+
+   f. IF LT $1 FEE
+      - if the first passed parameter preceeds 'FEE' in alphabetical order,
+	the flow state is set to TRUE.
+
+
+==============================================================================
+
+   Z-System HELP file on 'flow-control' commands (IF, IF.COM, IFSTAT.COM,
+ELSE, FI, XIF, etc.).
+

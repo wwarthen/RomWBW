@@ -1,16 +1,20 @@
-With the following exceptions, the files in this directory
-came from the CP/M 3 binary distribution on "The Unofficial
-CP/M Web site" at http://www.cpm.z80.de/binary.html.
+This an experimental adaptation of ZPM3 for RomWBW.
 
-As documented in the "README.1ST" file, the included
-files have been patched with all applicable DRI patches
-per CPM3FIX.PAT.
+Launch ZPM3 using CPMLDR.  ZPMLDR is not working reliably
+at this time.
 
-In addition, the following have been added:
+I have not found a way to make ZPM3 start up with any drive
+other than A: as the system drive.  So, during the load
+process, the boot drive and drive A: are "swapped" so that
+the boot drive is always drive A:.  Use the ASSIGN
+command after starting ZPM3 to see how the drives get
+mapped.
 
-- INITDIR.COM was not included.  The copy included is the
-  original DRI distribution, with both patches installed.
+Per ZPM3 standard, files are distributed across different
+user areas depending on their usage.  Normal applications
+are in user 15.  Help files in user 10.  Configuration 
+files in user 14.
 
-- ZSID6.COM is the original DRI ZSID distribution, but
-  patched to use RST 6 instead of RST 7 to avoid conflicting
-  with mode 1 interrupts.
+ZSID6.COM is the original DRI ZSID distribution, but
+patched to use RST 6 instead of RST 7 to avoid conflicting
+with mode 1 interrupts.
