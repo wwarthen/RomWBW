@@ -6,4 +6,4 @@ false	equ not true
 
 banked	equ true
 
-drvswap	equ true
+zpm	equ true

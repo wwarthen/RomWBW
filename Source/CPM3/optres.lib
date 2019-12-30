@@ -5,4 +5,4 @@ false	equ not true
 
 banked	equ false
 
-drvswap	equ false
+zpm	equ false

@@ -1,7 +1,7 @@
 @echo off
 setlocal
 
-if exist ccp.com del ccp.com
+if exist zccp.com del zccp.com
 if exist *.sys del *.sys
 if exist gencpm.dat del gencpm.dat
 if exist loader.cim del loader.cim

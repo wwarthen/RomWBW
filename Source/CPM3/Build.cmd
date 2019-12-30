@@ -24,7 +24,7 @@ rem pause
 rem Resident CPM3
 echo.
 echo.
-echo *** Resident BIOS ***
+echo *** Resident CPM3 BIOS ***
 echo.
 copy optres.lib options.lib
 copy genres.dat gencpm.dat
@@ -43,7 +43,7 @@ rem pause
 rem Banked CPM3
 echo.
 echo.
-echo *** Banked BIOS ***
+echo *** Banked CPM3 BIOS ***
 echo.
 copy optbnk.lib options.lib
 copy genbnk.dat gencpm.dat
@@ -57,6 +57,25 @@ zx Z80ASM -DISKIO/MF
 zx LINK -BNKBIOS3[B]=BIOSKRNL,SCB,BOOT,CHARIO,MOVE,DRVTBL,DISKIO
 zx GENCPM -AUTO -DISPLAY
 copy cpm3.sys cpm3bnk.sys
+rem pause
+
+rem Banked ZPM3
+echo.
+echo.
+echo *** Banked ZPM3 BIOS ***
+echo.
+copy optzpm.lib options.lib
+copy genbnk.dat gencpm.dat
+zx RMAC -BIOSKRNL
+zx RMAC -SCB
+zx Z80ASM -BOOT/MF
+zx Z80ASM -CHARIO/MF
+zx Z80ASM -MOVE/MF
+zx Z80ASM -DRVTBL/MF
+zx Z80ASM -DISKIO/MF
+zx LINK -ZPMBIOS3[B]=BIOSKRNL,SCB,BOOT,CHARIO,MOVE,DRVTBL,DISKIO
+rem zx GENCPM -AUTO -DISPLAY
+rem copy cpm3.sys zpm3.sys
 rem pause
 
 rem *** Resident ***
