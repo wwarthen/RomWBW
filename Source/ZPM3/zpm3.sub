@@ -1,4 +1,0 @@
-b:copy zinstal.zpm a:
-b:copy startzpm.com a:
-zpmldr
-

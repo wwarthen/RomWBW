@@ -12,6 +12,7 @@
 	extrn	dph0
 	extrn	@dtbl,@ctbl
 	extrn	@date,@hour,@min,@sec
+	extrn	@srch1
 	
 	include	ver.inc
 	
@@ -37,7 +38,7 @@ tpa$bank	equ 0
 	if banked
 
 	; Clone page zero from bank 0 to additional banks
-	ld	b,2			; last bank
+	ld	b,3			; last bank
 	ld	c,0			; src bank
 init$2:
 	push	bc			; save bank id's
@@ -196,6 +197,7 @@ dinit6a:
 	inc	hl			; next byte
 	djnz	dinit6a
 	ret				; finished
+
 dinit7:	; process unit
 	ld	e,0			; initialize slice index
 	ld	b,1			; default loop counter
@@ -247,9 +249,34 @@ stpsiz	equ	$ - stpimg
     ;	called CCP.COM on the system drive.
 
 ?ldccp:
+
+	if zpm
+
+	; Swap A: and system drive (make A: the system drive)
+	ld	bc,(@dtbl)		; get drive A DPH
+	ld	hl,@dtbl		; point to boot drive DPH
+	ld	a,(@sysdr)
+	rlca
+	call	addhla
+	ld	e,(hl)			; set boot drive to drive A DPH
+	ld	(hl),c			; ... and save boot drive DPH
+	inc	hl
+	ld	d,(hl)
+	ld	(hl),b
+	ld	(@dtbl),de		; set drive a DPH to boot drive
+	
+	xor	a			; update @sysdr
+	ld	(@sysdr),a
+	
+	endif
+	
+	; Force CCP to use system boot drive as initial default
+	ld	a,(@sysdr)		; get system boot drive
+	ld	(@ccpdr),a		; set CCP current drive
+
 	; First time, load the CCP.COM file into TPA
 	ld	a,(@sysdr)		; get system boot drive
-	;ld	(4),a			; save in page zero (zpm?)
+	;ld	(4),a			; save in page zero???
 	inc	a			; drive + 1 for FCB
 	ld	(ccp$fcb),a		; stuff into FCB
 	add	'A' - 1			; drive letter
@@ -310,9 +337,13 @@ ld$1:
 	
 	endif
 	
-	; Force CCP to use system boot drive as initial default
-	ld	a,(@sysdr)		; get system boot drive
-	ld	(@ccpdr),a		; set CCP current drive
+	;; Set first search path to system boot drive
+	;inc	a
+	;ld	(@srch1),a
+	
+	;ld	e,a
+	;ld	c,14
+	;call	bdos
 
 	ret
 
@@ -367,11 +398,23 @@ rl$1:
 	push	hl
 	push	de
 	
+	; force return through time$ret
+	ld	hl,time$ret
+	push	hl
+	
 	; branch to get or set routine
 	ld	a,c		; get switch value
 	or	a		; test for zero
-	jr	nz,time$set	; 0 means get time, else set time
+	jr	z,time$get	; 0 means get time
+	jr	time$set	; else set time
 
+time$ret:
+	; restore HL, DE
+	pop	de
+	pop	hl
+	ret
+
+time$get:
 	; RTC -> cpm date/time in SCB
 	
 	; read time from RTC
@@ -390,7 +433,7 @@ rl$1:
 	ld	a,(tim$sec)	; get second from time buf
 	ld	(@sec),a        ; ... and put in SCB
 	
-	jr	time$ret
+	ret
 
 time$set:
 	; CPM date/time in SCB -> RTC
@@ -411,14 +454,7 @@ time$set:
 	ld	hl,tim$buf	; ... from time buffer
 	rst	08		; do it
 	
-	jr	time$ret
-
-time$ret:
-	; restore HL, DE
-	pop	de
-	pop	hl
 	ret
-
 
 date2cpm:
 	; Convert YYMMSS from time buffer at HL
@@ -578,6 +614,27 @@ bin2bcd1:
 	pop	bc
 	ret
 
+	if zpm
+
+signon$msg	db	13,10,'ZPM3'
+	if banked
+		db	' [BANKED]'
+	endif
+		db	' on HBIOS v'
+		biosver
+		db	13,10,13,10,0
+		
+ccp$msg		db	13,10,'BIOS Err on '
+ccp$msg$drv	db	'?'
+		db	': No ZCCP.COM file',0
+
+
+ccp$fcb		db	0,'ZCCP    ','COM',0,0,0,0
+		ds	16
+fcb$nr		db	0,0,0
+
+	else
+
 signon$msg	db	13,10,'CP/M v3.0'
 	if banked
 		db	' [BANKED]'
@@ -594,6 +651,8 @@ ccp$msg$drv	db	'?'
 ccp$fcb		db	0,'CCP     ','COM',0,0,0,0
 		ds	16
 fcb$nr		db	0,0,0
+
+	endif
 
 @bootdu		db	0
 hdspv		db	2		; slices per volume for hard disks (must be >= 1)

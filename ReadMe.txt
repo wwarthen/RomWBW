@@ -191,6 +191,20 @@ the drive containing the CP/M 3 image and use the CPMLDR command
 to load CP/M.  It will ask you for the disk unit number containing
 the CP/M 3 system files which are on the disk image you created.
 
+ZPM3
+----
+
+Like CP/M 3, ZPM3  exists in an experimental state and is started
+just like CP/M 3 above.  Just use the zpm_hd.img file to create
+your CF or SD Card.  There is an issue with the ZPMLDR app used
+to start ZPM.  Instead, just use CPMLDR which works exactly the
+same way.
+
+Note that ZPM3 seems to be completely constrainted to use drive
+A: as the boot drive.  So, the RomWBW adaptation of ZPM3 will
+"swap" the initial drive A: (typically RAM drive) with the
+ZPM3 boot drive at startup.
+
 ROM Customization
 -----------------
 

@@ -1,0 +1,442 @@
+:
+ ZFILER HISTORY 
+
+ Version 1.1  Jan 9, 1993       Jay Sage 
+
+     1. Texô  messageó  werå  gathereä  intï á blocë  iî  ordeò  tï  supporô 
+        languagå  overlayó  aó  explaineä  iî mù  articlå  iî  Thå  Computeò 
+        Journal®  Englisè  anä Germaî versionó arå supplieä witè thå initiaì 
+        release.
+
+     2. The CFG configuration file for use with ZCNFG was extensively
+        overhauled.
+
+     3. The source code is now being released.
+ Versioî 1.0ñ Jaî 9¬ 199² Roâ Friefelä ¦ Jaù Sage
+
+     1. Addeä  optioî  tï filteò VIE× anä PRINÔ output®  Iæ ON¬  thå  filteò 
+        removeó thå higè bit¬  theî printó onlù alphanumerics¬  CR¬  anä LF®  
+        Iæ  assemblù  optioî EXPTAÂ iæ false¬  TABÓ arå  alsï  output®   Thå 
+        filteò settinç maù bå toggleä froí thå Optionó command.
+
+     2. ZFILEÒ  caî  remembeò alì thå filå tagó wheî iô returnó  afteò  á  Ú 
+        commanä  oò macrï run®  Thå filå lisô ió writteî tï á temporarù disë 
+        filå (ZFILER.TAG¬  iî á configurablå directory)¬  anä  automaticallù 
+        reaä  back®  Thió featurå caî bå turneä off¬  iæ desired¬  froí  thå 
+        Optionó command.
+
+     3. Grouğ  Tag/Untaç anä Wilä Tag/Untaç maù bå separatelù seô tï worë oî 
+        thå entirå ring¬ oò jusô froí thå filå pointer® Grouğ Reverså alwayó 
+        workó oî thå entirå ring®  Toggleó arå oî Optionó list®  Lisô macroó 
+        no÷ sofô taç fileó jusô likå regulaò grouğ macros.
+
+     4. Thå  Optionó lisô ió no÷ 1µ itemó long®  Theså flagó werå previouslù 
+        saveä witè thå filå mask¬  sï onlù 1± itemó coulä bå reliablù saved® 
+        Theù  arå no÷ bit-encodeä iî thå lasô twï byteó oæ thå  shelì  stacë 
+        entry®  (Thå  NOÔ  USESTË  assemblù optioî haó noô beeî  recodeä  tï 
+        reflecô thió change®  Itó limitó werå lonç agï exceeded.)
+
+     5. Z33OPÔ arå flaç byteó copieä froí ZCPÒ tï á locaì buffer¬  useä  foò 
+        controllinç  passworä  checking®  Previouó versioî waó checkinç  thå  
+        wronç  bits®  Sincå thå locaì buffeò ió loadeä aô  runtime¬  iô  waó  
+        moveä tï DSEG.
+ Version 1.0p           May 16, 1991                    Rob Friefeld 
+
+  ---   BUGS FIXED:
+     1. Copù  tï existinç r/ï filå failed®  Thå destinatioî attributeó  werå 
+        neveò  checkeä iæ "Seô Desô Att¢ optioî waó false®
+     2. Oî  disë full¬  partiallù copieä filå ió closeä beforå  deletioî  sï 
+        thaô disë spacå reporô ió no÷ correct.
+     3. Iæ  thå ZEØ batcè filå ió locateä iî á specifiã DÕ noô oî thå  path¬ 
+        ZEØ  won'ô  finä it®  Althougè thå MACROCMDº  patcè poinô  coulä  bå 
+        altereä tï "ZEØ DU:ZFILER"¬  ZÆ wilì no÷ dï thió automaticallù afteò 
+        creatinç thå .ZEØ file® Aó á result¬ thå MACROCMÄ entrù MUSÔ uså á ³ 
+        letteò  commanä  namå  iæ yoõ patcè iô tï ruî somethinç  otheò  thaî 
+        'ZEX'.
+
+ ---    ALTERATIONS:
+     1. DINIT called on exit.
+     2. Installatioî optioî availablå tï eraså finisheä ZFILER.ZEØ oî  shelì 
+        run®  Yoõ  maù  wanô  tï seô thió flaç afteò  debugginç  youò  macrï 
+        commanä file.
+     3. Clear screen on exit (EXITCLS) is config option now.
+     4. Grouğ  Taç anä Grouğ Untaç operatå froí thå filå pointeò tï thå  enä 
+        oæ thå list¬  ratheò thaî oî thå entirå list® (Thió ió á restoratioî 
+        oæ somethinç ZÆ useä tï do.© 
+
+ ---    NEW:
+     1. ZF10P.CFÇ configuratioî filå foò uså witè ZCNFG.COM® Handleó alì thå 
+        configuratioî excepô macrï strinç installation.
+
+     2. Grouğ Macrï putó taggeä filå counô intï (configurable© useò registeò 
+        #µ  beforå  running®  Thå macrï caî theî dowî counô  anä  takå  somå 
+        additionaì  actioî  afteò  iô  haó ruî oî  eacè  taggeä  file®   Thå 
+        intendeä uså foò thió ió tï creatå librarieó oæ cruncheä fileó  witè 
+        onå macrï command®  Foò example¬ thå script
+
+ 1 ! $d$u:;$!crunch $f M1:;reg m5;if reg 5= 0;$"Library DU ":;
+          lput $"Library Name: " M1:*.* +1;era M1:*.?Z?;fi;$h:
+
+        cruncheó  taggeä fileó tï á fixeä directorù M1º  (oî thå RAÍ  disk)¬ 
+        makeó  á  librarù  ouô oæ theí (leavinç rooí foò ± morå  file©  witè 
+        inpuô   foò  librarù  namå  anä  location¬   theî  eraseó  alì   thå 
+        "crunchettes".
+
+        Foò  consistency¬  singlå  macroó puô á "1¢ counô iî thå  useò  reg® 
+        Therå  ió nï codå tï enforcå thå 0..¹ useò registeò range¬  iî  caså 
+        yoõ wanô tï uså 18..3± (10-1µ arå reserved¬  16-1· arå useä bù otheò 
+        programs).
+
+        REÇ  musô  bå á Type³ oò Type´ (oò RCP© foò thå ZEØ GÏ "$!¢  tï  ruî 
+        CRUNCÈ repeatedly.
+ Version 1.0o       September 21, 1989       Carson Wilson 
+
+   --- Implementeä lisô capabilitù foò grouğ macros®  Iæ á ZFILER.CMÄ scripô 
+       beginó  witè  á commá (beforå oò afteò thå leadinç  "!¢  shelì  pauså  
+       parameter)¬  ZFILEÒ  wilì alwayó expanä thå macrï directlù tï  ZCPR'ó  
+       multiplå commanä line®  Iî thå caså oæ á grouğ macro¬  $P¬ $F¬ anä $Ô 
+       parameteró  arå expandeä tï á lisô oæ alì taggeä files¬  separateä bù  
+       thå characteò followinç thå leadinç comma® Foò example¬ thå script
+
+          ± ¬ !echï thå taggeä fileó arå $F
+
+       displayó  "THÅ TAGGEÄ FILEÓ ARÅ "¬  followeä bù á lisô oæ thå  taggeä  
+       fileó separateä bù ¢ ¢ oî thå consolå (assuminç ECHÏ ió á valiä  ZCPÒ 
+       command)®  ZFILEÒ  theî  promptó  foò á  keypresó  beforå  returning®  
+       Pleaså  notå thaô thió macrï bufferó thå entirå lisô oæ taggeä  fileó 
+       tï CP/M'ó commanä linå buffer¬ whicè ió onlù 12µ byteó iî length® Thå  
+       abovå commanä thereforå normallù causeó á "Commanä toï long¢ erroò iæ 
+       morå  thaî abouô ¸ fileó arå tagged¬  dependinç oî thå lengthó oæ thå  
+       taggeä names.
+
+   --- Madå  thå  escapå characteò anä thå characteró tï quotå witè iô  wheî  
+       writinç á grouğ macrï commanä tï ZEØ oò SUBMIÔ fileó installablå (seå 
+       ZFCNFN.Z8°  foò  details)®  Escapå characteò ió  currentlù  "$"¬  anä  
+       quoteä characteró arå currentlù "$"¬ "|"¬ anä "<"¬ aó requireä bù ZEØ 
+       versioî 5.
+
+   --- Iô  ió no÷ possiblå tï answeò ZFILER'ó "Logiî [DIR][:MASKİ  ¢  prompô  
+       witè  ".<cr>¢  (samå aó ":<cr>"© tï loç iî alì fileó iî  thå  currenô  
+       directory®  Previouslù  thió loggeä iî alì fileó aô useò zerï oæ  thå  
+       currenô  drive®  Thå  Logiî commanä no÷ alsï seemó tï  accepô  ".afn¢  
+       insteaä oæ ":afn".
+
+   --- Shelì biô seô whilå waitinç foò useò commands¬ theî immediatelù reseô 
+       wheî á commanä keù ió received®  Thió shoulä allo÷ Bridgeò Mitchell'ó 
+       AÔ  commanä  scheduleò  RSØ tï interrupô ZFILEÒ aó iô woulä  thå  CCĞ 
+       whilå ZFILEÒ ió promptinç foò commands.
+
+   --- Fixeä buç whicè preventeä anù Grouğ commandó froí operatinç wheî  thå 
+       configuratioî bytå MACFLAÇ waó patcheä tï false.
+
+   --- Removeä codå whicè attempteä tï uså thå ZCPÒ Environmenô tï determinå 
+       ho÷  manù  lineó oæ texô tï displaù witè thå Ö command¬  aó thió  waó 
+       onlù partiallù implemented¬ resultinç iî difficultù oî terminaló witè 
+       oveò 2´ rows®  Texô lineó no÷ hard-codeä tï 22¬ sï ZFILEÒ shoulä worë 
+       oî  anù terminaì witè 2´ oò morå screeî rows.
+
+   --- Fixeä  smalì  buç  whicè  causeä  "Publiã  Filå  Error¢  messagå   tï 
+       disappear.
+
+   --- Control-É ió no÷ aî aliaó foò control-Ê (jumğ tï filå again)¬ foò uså 
+       witè  terminaì definitionó (TCAPs© whicè definå control-Ê aó aî arro÷ 
+       key.
+
+   --- Ideá  foò futurå versionsº  iô woulä bå verù difficulô tï allo÷  filå  
+       rinç  sortinç  baseä oî filå dateó (woulä neeä tï storå  datå  stampó 
+       witè ring¬ requirinç majoò rewrite)® Iô woulä bå relativelù simplå tï  
+       allo÷  thå Logiî anä startuğ commandó tï accepô anä matcè fileó tï  á  
+       datespec¬ though...
+ Version 1.0n       March 20, 1989      Carson Wilson 
+
+   --- Addeä $ª scripô parameteò tï cleaò thå screeî during¬ anä rebuilä  iô 
+       afteò á scripô prompt® Usagå ió $"$*..text..¢ Prompô texô  appearó aô 
+       thå toğ oæ á cleareä screen.
+
+   --- Iî  anticipatioî  oæ  thå  ZEØ 4.0x¬  '$§ anä '|§ arå  no÷  thå  onlù  
+       characteró  whicè arå quoteä wheî ZFILEÒ buildó thå ZFILER.ZEØ  file®  
+       Iæ  theù  appeaò iî á ZFILER.CMÄ scripô theså characteró  arå  quoteä  
+       witè  á  leadinç  dollaò sigî wheî ZFILER.ZEØ  ió  built®  Alì  otheò  
+       characteró  arå passeä "aó is¢ tï thå ZEØ file®  Thió meanó thaô  yoõ  
+       cannoô uså ZEØ directiveó sucè aó $1¬  |crlf|¬  etc® dynamically¬ buô  
+       thió waó neveò thå intentioî oæ thå interfacå betweeî ZFILEÒ anä  ZEØ 
+       - thå  ideá  waó simplù tï providå multiplå executionó oæ  á   ZFILEÒ 
+       commanä script.
+
+   --- For efficiency ZFILER no longer resets disks under Z3PLUS.
+ Version 1.0m  January 24, 1989 Carson Wilson
+
+   --- Copù anä Movå commandó no÷ worë properlù witè Z3PLUS¬ anä thå currenô 
+       12-houò timå showó aô thå toğ oæ thå screeî undeò Z3PLUS.
+
+   --- Patè  fileó  conflictó  arå nï  longeò  reporteä  undeò  ZSDOS®  Thió  
+       produceä  problemó  wheî useró trieä tï backuğ directorieó alonç  thå 
+       path®  ZSDOÓ publiã conflictó arå stilì reported.
+
+   --- Grouğ Movå anä Grouğ Copù erroò messageó arå no÷ sustaineä untiì  thå 
+       useò strikeó á key¬ ratheò thaî disappearinç immediately.
+
+   --- Promptó iî scriptó maù no÷ contaiî controì characteró aó "^x¢ wherå ø 
+       ió anù characteò froí À tï z.
+
+   --- Thå dollaò sigî ió no÷ aî "escapå character¢ foò scripô prompts¬  anä 
+       caî bå useä tï includå thå $¬ ^¬ "¬ anä § characteró iî prompts.
+
+ Examples:
+  Script    Result
+  $"Enter name or $^C: "   Enter name or ^C: 
+  $"Type $"//$" for help: " Type "//" for help: 
+
+   --- Movå  anä  Grouğ Movå no÷ uså thå optioî menõ selectionó wheî  movinç  
+       fileó insteaä oæ alwayó copyinç filå attributes.
+
+   --- Cleaned up help screen.
+
+   --- Tï  savå  debugginç  timå  É havå changeä  thå  defaulô  optioî  menõ 
+       settingó tï mù preferences.
+ Version 1.0l  September 13, 1988 Carson Wilson 
+
+   --- Bugó iî thå Grouğ Copy¬  Grouğ Move¬  anä Grouğ Deletå commandó whicè 
+       occurreä wheî thå useò aborteä certaiî promptó witè á control-Ã  havå 
+       beeî corrected.
+
+   --- Á  buç whicè resulteä iî erratiã behavioò iæ ZFILER.CMÄ waó noô founä 
+       waó fixed.
+
+   --- Thå unsQueezå commanä waó removeä tï reducå prograí size®  Sincå  fe÷ 
+       ne÷ fileó arå squeezeä anä UNCRUNCÈ no÷ supportó unsqueezinç iô seemó 
+       preferablå  tï exporô thió functioî bù callinç UNCRUNCÈ witè á ZFILEÒ 
+       macro®  Aî  additionaì  benefiô oæ thió techniquå ió  thaô  á  singlå 
+       commanä no÷ maù bå useä foò botè uncrunchinç anä unsqueezing®  ZFILEÒ 
+       wilì  stilì  displaù  anä  prinô  squeezeä  files®
+
+   --- ZFILEÒ  no÷ performó consistentlù wheî invokeä witè ZCPR'ó GÏ oò JUMĞ 
+       commands®  Previouó  versionó  faileä wheî morå thaî onå Ú  oò  macrï 
+       commanä waó useä afteò invokinç ZFILEÒ witè GO/JUMP.
+
+   --- (DateStampeò  versionó  only)®  Iæ á DateStampeò (BDOÓ  functioî  12© 
+       real-timå clocë ió available¬  thå currenô 12-houò timå ió printeä tï 
+       thå  lefô oæ thå "ZFILER¢ namå aô thå toğ oæ thå screen.
+
+   --- Iæ  runninç  undeò ZSDOÓ oò ZDDOS¬  disë resetó arå skippeä  foò  alì 
+       commandó  excepô Space®  Thió considerablù increaseó  performancå  oî 
+       floppù disë systems.
+
+   --- Thå  environmenô addresó ió loadeä froí locatioî 10¹ aô ruî timå  foò 
+       compatibilitù witè ZCPÒ 3.° systems.
+
+   --- Thå  performancå  oæ thå Delete¬  Copy¬  Move¬  Archive¬  anä  Renamå 
+       commandó haó beeî improveä bù minimizinç disë accesses.
+
+   --- Thå  Spacå  commanä  no÷  resetó  individuaì  drives®  Thió  ió  morå 
+       efficienô anä makeó thå Ó commanä practicaì witè virtuaì drives.
+
+   --- Thå  Spacå  anä Filesizå commandó no÷ worë  properlù  afteò  printinç 
+       files.
+
+   --- ZFILEÒ  no÷  checkó  foò anä reportó Publiã oò  Patè  conflictó  wheî 
+       Copying¬  Renaming¬  Moving¬  anä  Archivinç  fileó undeò  ZSDOS®  Iî 
+       addition¬  fileó  createä  witè Copy/Move/Archivå arå alwayó  seô  tï 
+       Privatå (higè biô oæ f2=0© tï avoiä possiblå ZSDOÓ Publiã conflicts.
+
+   --- Single file View no longer affects file tags.
+
+   --- Single file Copy or Move no longer skip to the next file afterwards.
+
+   --- (DateStampeò  versionó only)®  Iæ  available¬  Copy/Move/Archivå  uså 
+       ZSDOS'ó  morå  efficienô  Geô Stamğ anä Seô Stamğ functioî  calló  tï 
+       preservå  filå  datestampó  acrosó  copies®   Thå  oldeò  methoä   oæ 
+       datestampinç ió retaineä foò non-ZSDOÓ systems.
+
+   --- Rename error messages no longer disappear before they can be read.
+ Version 1.0k  May 3, 1988  Jay Sage 
+
+   --- Fixeä  somå  minoò  bugó iî thå codå (slipuğ oæ usinç á  DÂ  wherå  É 
+       intendeä á DÓ tï allocatå spacå foò longeò stringó tï bå patchable)
+ Version 1.0j  May 1, 1988  Jay Sage 
+
+   --- Improveä  flexibilitù oæ grouğ macrï operatioî bù puttinç threå itemó 
+       iî thå configuratioî page®  Thå strinç MACROCMÄ ió á  null-terminateä 
+       strinç witè thå grouğ macrï commanä line®  Thå strinç MACLEADSTÒ ió á 
+       null-terminateä  strinç oæ characteró tï bå writteî aô thå  beginninç 
+       oæ  thå grouğ macrï batcè filå (ZEØ oò SUBMIT)®  Thå strinç  MACROFCÂ 
+       markó  thå  filå  controì  blocë foò thå filå witè  thå  grouğ  macrï 
+       commands.
+
+   --- Fixeä á buç iî thå expansioî oæ filå nameó iî macrï  parameters®  Thå 
+       codå  waó noô maskinç ouô filå attributes®  Iô happeneä thaô thió diä 
+       noô matteò excepô foò blankó witè attributeó set¬ buô no÷ thå codå ió 
+       correct.
+
+   --- Therå  ió  aî additionaì configuratioî optioî (lasô  bytå  iî  CONFIÇ 
+       sectioî jusô beforå OPÔ string© thaô allowó filå nameó tï bå showî iî 
+       loweò case® Seô thå bytå tï FÆ foò uppeò case¬ ° foò loweò case.
+ Version 1.0i  April 14, 1988  Jay Sage 
+
+   --- Thå  sourcå codå tï 1.0è waó losô iî á disë crash®  Thå featureó havå 
+       beeî recreated® Thå operatioî witè GÏ oò JUMĞ haó beeî improved.
+
+   --- Thå  shelì stacë entrù no÷ includeó thå expliciô directorù wherå  thå 
+       filå waó founä iæ Z3³ oò lateò ió running.
+ Version 1.0h  September 16, 1987 Jay Sage 
+
+   --- Fixeä buç iî thå codå foò logginç iî thå displayeä directorù wheî thå 
+       Ú  commanä ió executed®  Iô waó noô workinç correctlù undeò  standarä 
+       ZCPR3° oò BackGrounder.
+
+   --- Addeä optionó tï controì ho÷ thå ZFILER.CMÄ macrï filå ió located®  Á 
+       choicå  oî thå optioî menõ allowó onå tï turî oî oò ofæ searchinç  oæ 
+       thå entirå patè (includinç currenô directory)® Iæ thaô optioî ió off¬ 
+       eitheò  thå  rooô directorù oò á specifieä directorù  wilì  bå  used¬ 
+       dependinç oî thå configuratioî oæ thå program.
+
+   --- ZFILEÒ caî no÷ bå reexecuteä usinç thå GÏ command® É borroweä á tricë 
+       froí Aì Hawley®  Wheî invokeä originally¬ ZFILEÒ checkó thå namå useä 
+       tï invokå it®  Iæ thå namå ió 'GO'¬  theî á defaulô namå storeä iî aî 
+       internaì  buffeò ió used®  Otherwise¬  iæ thå namå ió copieä tï  thaô 
+       buffeò froí thå externaì FCB® É believå thió changå wilì allo÷ ZFILEÒ 
+       tï bå reconfigureä usinç thå 'O§ commanä anä theî cloneä usinç SAVE.
+
+   --- Á  morå  extensivå  useò configuratioî filå haó beeî  provideä  whicè 
+       compriseó sectionó oæ ZFHDR.Z8° (thå definitionó file© anä ZFMAIN.Z8° 
+       (thå beginninç oæ thå maiî code)®  Aó before¬  reconfiguratioî caî bå 
+       carrieä  ouô bù editinç ZFCNFH.Z8° anä assemblinç iô tï á  HEØ  file® 
+       Theî "MLOAÄ ZFNEW=ZF0LD.COM,ZFCNFH¢ wilì instalì thå changes.
+ Version 1.0g  August 23, 1987  Carson Wilson 
+
+   --- Reverså video¬ dim¬ oò '_§ arå no÷ useä oî thå statuó linå tï displaù 
+       alì currenô filå attributes® 'r§ read-onlù tagó werå interferinç witè 
+       thå tagginç commandó anä arå nï longeò used.
+
+   --- Corrected bug preventing view/unsqueeze of squeezed system files.
+
+   --- Correcteä  buç  causinç squeezeä read-onlù fileó tï bå unsqueezeä  aó 
+       systeí fileó wheî copyinç attributes.
+
+   --- Made invalid command display show actual command.
+
+   --- Removeä  ZFILEÒ  commanä prompô oî exiô tï  avoiä  confusioî  betweeî 
+       systeí anä ZFILER'ó 'Z§ command®
+
+   --- Fixeä initiaì helğ screeî froí commanä line.
+
+   --- Added space before 'OK' after copy/unsqueeze.
+ Version 1.0f  June 12, 1987  Jay Sage 
+
+   --- Addeä  rudimentarù grouğ macrï capabilitù bù havinç ZFILEÒ  construcô 
+       anä invokå á ZEØ script.
+ Version 1.0c  April 27, 1987  Jay Sage 
+
+   --- Madå changeó foò compatibilitù witè ZCPR33®  No÷ oî manuaì invocatioî 
+       ZFILEÒ returnó tï thå commanä processoò iæ ZEØ ió runninç sï thaô ZEØ 
+       caî continuå tï supplù commandó eveî iæ therå arå nï morå commandó oî 
+       thå currenô commanä line.
+ Version 1.0b  January 13, 1987 Jay Sage 
+
+   --- Addeä DateStampeò support® No÷ oî filå copieó anä moves¬ thå timå anä 
+       datå stamğ oæ thå sourcå filå ió carrieä tï thå destination.
+
+   --- Modifieä handlinç oæ directorieó witè 'L§ (oò 'N'© command®  Thå codå 
+       no÷ respectó thå DUOË flaç iî thå environment® Iæ iô ió set¬ theî anù 
+       attempô  tï  loç iî á directorù ió checkeä againsô thå  maxdrivå  anä 
+       maxuseò  valueó iî thå environment®  Iæ thå requesô passeó thaô test¬ 
+       theî thå directorù ió loggeä iî eveî iæ iô haä beeî specifieä usinç á 
+       DIÒ  forí  anä  eveî iæ á passworä ió associateä  witè  it®   Iæ  thå 
+       requesteä  directorù ió beyonä thå maxdrive/maxuseò rangå oò iæ  DUOË 
+       ió noô set¬  theî thå nameä directorù registeò ió checked®  Passwordó 
+       arå  checkeä  aó  needeä  usinç  improveä  codå  (shorteò  anä   morå 
+       accurate).
+
+   --- Addeä smalì biô oæ codå tï thå ZFILEÒ initializatioî tï changå thå JĞ 
+       opcodå  aô 100È tï REÔ sï thaô ZFILEÒ cannoô bå reruî usinç thå  "GO¢ 
+       commanä (thió haó baä consequences¬  sincå thå shelì stacë entrù theî 
+       woulä havå thå commanä "GO¢ storeä iî it!).
+ Version 1.0a  January 1, 1987  Jay Sage 
+
+   --- IMPORTANÔ  CHANGEº  Tï  makå  ZFILEÒ  consistenô  witè  otheò  scripô 
+       processinç programs¬  thå defaulô parameteò designatioî characteò haó 
+       beeî changeä froí '%§ tï '$'® Thå parameteò '$'¬ aî alternatå foò 'P§ 
+       (completeä   Pointed-to-filå   specº   du:name.typ©   waó   thereforå 
+       eliminated® Theså changeó wilì requirå editinç oæ anù VFILER.CMÄ filå 
+       wheî convertinç tï ZFILER.CMÄ (thå macrï filå useä bù ZFILER).
+
+   --- Modifieä thå waù thå shelì stacë entrù ió used® Iô no÷ keepó botè thå 
+       originaì directorù anä thå requesteä directorù oî thå stack® Thió haó 
+       twï majoò advantages® Bù keepinç thå originaì directorù oî thå stack¬ 
+       oî  exiô witè thå 'X§ commanä ZFILEÒ caî returî tï thå directorù froí 
+       whicè iô waó originallù invokeä nï matteò ho÷ manù otheò  directorieó 
+       havå beeî loggeä iî bù uså oæ thå 'Z§ commanä oò á macro® Keepinç thå 
+       requesteä (displayed© directorù oî thå shelì stacë avoidó thå probleí 
+       witè  á passwordeä directorù oæ havinç tï reenteò thå passworä  everù 
+       timå ZFILEÒ returneä froí á macrï oò 'Z§ operation.
+
+   --- Addeä  featurå witè 'Z§ commanä tï allo÷ avoidancå oæ thå "Strikå anù 
+       Key¢  messagå oî returî tï ZFILER®  Iæ thå commanä linå entereä  witè 
+       thå  'Z§  commanä beginó witè á space¬  theî shelì  waitinç  wilì  bå 
+       disabled.
+
+   --- Fixeä á buç causeä bù thå GÁ command®  Oncå thaô commanä waó used¬ aî 
+       archivinç  flaç  waó seô anä neveò cleared®  Á lateò GÃ commanä  theî 
+       useä  thå group-archivå promptinç optionó insteaä oæ  thå  group-copù 
+       options®  Thió flaç ió no÷ reseô beforå alì grouğ operations.
+
+   --- Addeä  optioî  oî  filå  copù anä unsqueezå functionó  tï  allo÷  thå 
+       destinatioî  filå  attributeó tï bå seô tï thoså oæ á  filå  thaô  ió 
+       beinç overwritten® Iæ therå ió nï sucè filå anä thå attributå settinç 
+       optioî ió engaged¬ theî thå sourcå filå attributeó wilì bå used.
+
+   --- Changeä  codå foò filå viewinç sï thaô scrollinç wilì stoğ aô thå enä 
+       oæ á filå (carriagå returî anä spacå wilì noô causå thå nexô filå  tï 
+       start)®  Onlù  control-Ø oò control-Ã wilì bå effectivå aô thå enä oæ 
+       file®  Alsï addeä control-Ú optioî tï gï straighô tï thå enä oæ  filå 
+       withouô paging.
+
+   --- Changeä thå codå thaô allowó interruptioî oæ grouğ operationó sï thaô 
+       á  carriagå  returî wilì noô causå aî aborô (manù useró  answeò  somå 
+       promptó  thaô  requirå nï returî witè á returî anä founä  thaô  grouğ 
+       operationó  workeä onlù oî thå firsô file)®  Anù characteò otheò thaî 
+       carriagå returî wilì aborô masó operations.
+
+   --- Madå iô possiblå tï geô thå macrï helğ screeî bù pressinç thå  leadiî 
+       characteò  á  seconä timå iî responså tï thå 'Macro§ prompô (thió  ió 
+       mucè easieò anä morå naturaì thaî enterinç thå '#§ command).
+
+   --- Fixeä  á  buç  iî thå macrï helğ displaù  thaô  waó  echoinç  controì 
+       characteró tï thå screen®  Theså arå no÷ filtered®  Onå caî no÷ enteò 
+       ESÃ ESÃ tï seå thå macrï helğ screeî anä á thirä ESÃ tï returî tï thå 
+       filå display.
+
+   --- Addeä  ^Ê  commanä  tï jumğ tï nexô filå thaô matcheó thå  lasô  masë 
+       specifieä  iî á "J¢ command®  Thió allowó onå tï jumğ easilù  tï  thå 
+       seconä oò thirä filå thaô matcheó á simplå filå spec.
+
+   --- Fixeä  buç  iî "M¢ anä "GM¢ commandó thaô alloweä sourcå filå  tï  bå 
+       deleteä, eveî wheî copù haä noô beeî performed.
+
+   --- Addeä "GR¢ grouğ reverså functioî tï reverså filå tags®  Taggeä fileó 
+       becomå untagged»  untaggeä fileó becomå tagged» anä soft-taggeä fileó 
+       remaiî soft-tagged.
+
+   --- Cleaneä  uğ  loç commanä ("L¢ oò "N")®  Removeä speciaì  handlinç  oæ 
+       answeò  "x¢  foò directorù namå (nï longeò needed© anä changeä  erroò 
+       handlinç code.
+
+   --- Addeä  á configuratioî optioî tï automaticallù loç iî  thå  displayeä 
+       directorù foò thå "Z¢ commanä iæ thå useò numbeò ió lesó thaî 16®  Iæ 
+       thió  optioî ió configureä in¬  theî thå disë systeí ió reseô  beforå 
+       thå  commanä  linå  ió ruî (thió ió thå disadvantagå  oæ  usinç  thió 
+       option).
+
+   --- Made rename command preserve all file attributes.
+
+   --- Addeä  optionó  tï copù attributeó witè fileó anä tï alwayó  seô  thå 
+       archivå  attributå  iî  thå destinatioî file®  Iæ thå filå  ió  beinç 
+       moved¬  thå attributeó arå alwayó copieä anä thå archivå biô ió  lefô 
+       aó  iô was»  iæ thå filå ió beinç unsqueezed¬  thå attributeó arå noô 
+       copieä anä thå archivå biô ió seô accordinç tï itó optioî setting.
+
+---------------------------------------------------------------------------
+
+ See the VFHIST.DOC file in VFILER Version 4.1 for the history of the
+ development of VFILER.
+ 
