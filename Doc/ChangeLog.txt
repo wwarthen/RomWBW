@@ -33,6 +33,8 @@ Version 2.9.2
 - PMS: Added timer support for Zilog Peripherals ECB Board
 - PLS: Enhanced Intel Hex Load in dbgmon
 - WBW: Overhaul disk image creation
+- WBW: Added support for Dyno platform (based on work by Steve Garcia)
+- S?G: Added support for BQ4845 RTC (bqrtc.asm)
 
 Version 2.9.1
 -------------

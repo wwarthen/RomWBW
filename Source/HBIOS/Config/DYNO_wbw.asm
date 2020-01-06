@@ -1,0 +1,5 @@
+#DEFINE		PLATFORM_NAME	"DYNO (wbw)"
+;
+#include "cfg_dyno.asm"
+;
+FDENABLE	.SET	TRUE		; FD: ENABLE FLOPPY DISK DRIVER (FD.ASM)
