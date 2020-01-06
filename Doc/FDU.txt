@@ -511,4 +511,4 @@ WW 9/5/2018: v5.3
   - Added support for SmallZ80
 
 WW 5/1/2020: v5.4
-  - Added support for Dyno
+  - Added support for Dyno (based on work by Steve Garcia)
