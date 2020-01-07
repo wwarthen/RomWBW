@@ -7,15 +7,15 @@
 ***********************************************************************
 
 Wayne Warthen (wwarthen@gmail.com)
-Version 2.9.2-pre.22, 2019-11-27
+Version 2.9.2-pre.25, 2020-01-06
 https://www.retrobrewcomputers.org/
 
 RomWBW is a ROM-based implementation of CP/M-80 2.2 and Z-System for 
 all RetroBrew Computers Z80/Z180 hardware platforms including SBC 
-1/2, Zeta 1/2, N8, Mark IV, RC2014, SC, and Easy Z80. Virtually all 
-RetroBrew hardware is supported including floppy, hard disk (IDE, CF 
-Card, SD Card), Video, and keyboard. VT-100 terminal emulation is 
-built-in.
+1/2, Zeta 1/2, N8, Mark IV, RC2014, SC, Easy Z80, and Dyno. 
+Virtually all RetroBrew hardware is supported including floppy, hard 
+disk (IDE, CF Card, SD Card), Video, and keyboard. VT-100 terminal 
+emulation is built-in.
 
 The RomWBW ROM loads and runs the built-in operating systems directly
 from the ROM and includes a selection of standard/useful applications
@@ -190,6 +190,20 @@ installed and boot to CP/M 2.2 or ZSystem as usual.  Switch to
 the drive containing the CP/M 3 image and use the CPMLDR command
 to load CP/M.  It will ask you for the disk unit number containing
 the CP/M 3 system files which are on the disk image you created.
+
+ZPM3
+----
+
+Like CP/M 3, ZPM3  exists in an experimental state and is started
+just like CP/M 3 above.  Just use the zpm_hd.img file to create
+your CF or SD Card.  There is an issue with the ZPMLDR app used
+to start ZPM.  Instead, just use CPMLDR which works exactly the
+same way.
+
+Note that ZPM3 seems to be completely constrainted to use drive
+A: as the boot drive.  So, the RomWBW adaptation of ZPM3 will
+"swap" the initial drive A: (typically RAM drive) with the
+ZPM3 boot drive at startup.
 
 ROM Customization
 -----------------

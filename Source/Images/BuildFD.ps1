@@ -1,6 +1,6 @@
 $ErrorAction = 'Stop'
 
-$CpmToolsPath = '../..\Tools\cpmtools'
+$CpmToolsPath = '../../Tools/cpmtools'
 
 $env:PATH = $CpmToolsPath + ';' + $env:PATH
 
@@ -10,15 +10,15 @@ $Blank = ([byte[]](0xE5) * 1440KB)
 if (!(Test-Path('Blank.tmp'))) {Set-Content -Value $Blank -Encoding byte -Path 'Blank.tmp'}
 
 "Creating floppy disk images..."
-for ($Dsk=0; $Dsk -lt 2; $Dsk++)
+foreach ($Dsk in @("cpm3","cpm22","nzcom","ws4","zpm3","zsdos"))
 {
 	"Generating Floppy Disk ${Dsk}..."
-	copy Blank.tmp fd${Dsk}.img
+	copy "Blank.tmp" "fd_${Dsk}.img"
 	for ($Usr=0; $Usr -lt 16; $Usr++)
 	{
-		if (Test-Path ("fd${Dsk}/u${Usr}/*")) 
+		if (Test-Path ("d_${Dsk}/u${Usr}/*")) 
 		{
-			$Cmd = "cpmcp -f wbw_fd144 fd${Dsk}.img fd${Dsk}/u${Usr}/*.* ${Usr}:"
+			$Cmd = "cpmcp -f wbw_fd144 fd_${Dsk}.img d_${Dsk}/u${Usr}/*.* ${Usr}:"
 			$Cmd
 			Invoke-Expression $Cmd
 		}
@@ -26,7 +26,7 @@ for ($Dsk=0; $Dsk -lt 2; $Dsk++)
 }
 
 "Moving images into output directory..."
-&$env:COMSPEC /c move fd*.img ..\..\Binary\
+&$env:COMSPEC /c move fd_*.img ..\..\Binary\
 
 Remove-Item *.tmp
 

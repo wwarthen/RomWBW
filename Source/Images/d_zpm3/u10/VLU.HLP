@@ -1,0 +1,499 @@
+:VLU106
+Copyright 1987, 1988 Esoteric Software                  Michal Carson
+
+
+This program is distributed through ZSIG.
+
+
+
+
+VLU is a ZCPR3-specific library utility with crunch, uncrunch, and
+unsqueeze capabilities.  It will allow the user to view,
+uncompress, or extract library members or to view, uncompress
+(uncrunch or unsqueeze, VLU will decide), or crunch disk files.
+VLU will build libraries from disk files, crunching the files as
+they are added.  Date and time stamping is supported.
+
+The utility will display a list of disk files on the screen along
+with a cursor and other information.  Placing the cursor next to
+the name of a file with the extension .LBR and pressing 'O' for
+Open will display the contents of the library and shift the cursor
+into that directory.
+
+
+What is a Library?
+
+
+The Library file format was developed to overcome two persistent
+limitations of CP/M disk storage capacity: limited directory
+entries and large blocking.
+
+Although CP/M writes files in units of 128 bytes (sectors), most
+manufacturers have used larger blocks for storage on disk.  On a
+Kaypro with double-sided disks, for instance, all files are stored
+in 2K blocks; even a file one sector in length will occupy 2K on
+the disk.  Because the Kaypro disk format allows only 64 directory
+entries (files) on one disk, 64 of these 1-sector files (8K) will
+fill a 390K disk.
+
+In a library, a one sector file occupies one sector (plus 32 bytes
+for internal directory information).  The library itself occupies
+only one directory entry on the disk.  If 64 one-sector files are
+placed into a library, the library will occupy 10K.
+
+This is obviously an extreme example but illustrates the
+usefulness of libraries.  Other reasons exist; for instance,
+libraries keep related files together.  VLU will make files within
+libraries more accessible.
+
+
+What is an ARC?  Which is better?
+
+
+An ARC is another popular format for storing files in reduced space.
+ARCs store files sequentially each preceded by its own header of
+information which may be 18 to 29 bytes.  LBRs use a 32 byte
+directory entry at the beginning of the LBR; the directory
+indicates where the matching file may be found.
+
+The information stored in an ARC file header is similar to the
+information stored in an LBR directory.  Both formats store the
+file name, exact file length, the last modification date and time,
+and a CRC-16 for integrity.  LBRs also store the file's creation
+date and time.
+
+There are many arguments in favor of each format.  To the casual 
+user, these arguments are not important and either format will 
+serve for any purpose--long-term or short, organizational, 
+archival, or for transfer.  Neither format is an effective storage 
+format for sequential access devices such as tape.  Anyone who 
+insists on the absolute superiority of one format over the other 
+is behaving parochially.
+
+VLU is the best effort to date in supporting the complete
+Novosielski LBR definition.  A like effort expended on behalf of
+the ARC format might make it similarly useful.
+
+
+In this Library
+
+
+Two executable versions are distributed:  VLUxxx-R.COM is for
+machines using reverse video as highlighting.  VLUxxx-D.COM is for
+machines using dim video as highlighting.  VLU.FOR is a short
+description of the utility; VLU.HLP is full documentation
+compatible with the ZCPR3 HELP text display utility.  VLU.UPD
+contains a trail of the changes in VLU since its initial release.
+
+
+The Help display
+
+
+Pressing "/" or "?" will evoke a display summarizing the commands
+available to the user.  These commands change according to Wheel
+status and directory choice (e.g., Delete is not available in the
+library and is never available to non-wheels).  Pressing either of
+these keys a second time will clear the display.
+
+
+Invoking VLU
+
+
+Use VLU as an extension to a ZCPR3 shell, such as ZFiler, invoked
+through a macro.  To install it, one need only open the ZFILER.CMD
+file with a word processor and enter a line of the form "1 vlu".
+Thereafter, positioning ZFiler's cursor beside a library file and
+pressing "1" (possibly preceded by [esc]) will bring up VLU with
+the library already open.  A better thought is to assign this
+macro to the "O" key--"O $d1$u1:;vlu" in ZFILER.CMD--so that [esc]
+"O" will open the indicated library.
+
+Some aspects of VLU were designed to make it an extension of
+tools like ZFiler.  Most of these tools use the ZCPR system files
+to store the name of the current file (the file the cursor was
+pointing to on exit).  VLU checks these filenames and interprets
+the current file (sys file 2) as a library.  On starting up, VLU
+will try to open a library file of this name in the current
+directory.
+
+This allows the user to invoke VLU from the "Z" prompt of ZFiler
+or through a macro, pass no parameters, yet open the current file
+if it is a library (or shares the same name as a library though it
+may have a different extension).  If a different library is opened
+before returning to ZFiler, VLU will modify the filename in
+system file 2 (and thus cause ZFiler to believe it was pointing to
+this library when it exited).
+
+As a command file, VLU can, of course, be invoked from the system
+command prompt.  If a library name is entered on the command line,
+that name will take priority over any name currently in system
+file 2 and the library will be opened if it exists.  Even from
+ZFiler's "Z" prompt, with the pointer on ABC.LBR, entering the
+command "VLU DEF" will open DEF.LBR and place that name into
+system file 2.
+
+If the invocation is followed by a DU: specification or by the
+name of a ZCPR named directory (DIR:), VLU will display the
+filenames in that directory instead of the default directory.
+That is, "VLU TOOLS:" will display the contents of the TOOLS:
+directory.
+
+VLU can be re-entered with the GO command.
+
+
+Changing libraries
+
+
+When a library is opened, when VLU is invoked with a library name
+in the command line, or when a new directory is logged in with a
+library open, the VLU cursor will point into the library
+directory.  Pressing the [esc] key will shift the cursor back into
+the disk directory.  Opening a different library is as simple as
+positioning the cursor in front of the name and pressing "O".
+
+
+Cursor motion
+
+
+Moving the cursor (pointer) in VLU is effected using the WordStar
+cursor motion controls.  Ctrl-E moves the cursor up one line, ctrl-
+X moves it down.  Ctrl-S moves the cursor left one file, ctrl-D
+moves it right.  Ctrl-F brings a new directory onscreen if there
+are more files in the directory (as if the display were moving
+right by a directory), ctrl-A moves back toward the beginning of
+the file list.  Ctrl-F will wrap around from the final directory
+to the original.
+
+The arrow keys will also function if they are properly defined in
+the users Environment descriptor.  The symbols "+" and "-" (and
+"=", the usual non-shifted counterpart of "+") have the same
+effect on the directories as ctrl-F and ctrl-A, respectively.
+
+The [esc] key shifts directories: from the library to the disk,
+from the disk to library.  In most instances the cursor will
+"remember" where it was when it last pointed into that directory.
+
+
+Extracting and Uncompressing library members
+
+
+Positioning the cursor beside the name of a member file within a
+library and pressing "E" for Extract will cause the file to be
+copied from the library to the disk with no change in form.  If it
+is crunched or squeezed within the library, it will be crunched or
+squeezed on the disk.
+
+Pressing "U" for Uncompress will cause a crunched file to be
+uncrunched onto the disk, a squeezed file to be unsqueezed onto the
+disk, or an uncompressed file to be extracted sic.
+
+
+Changing directories
+
+
+Library members may be extracted to a disk and/or user area other
+than the one which contains the library.  Open the library first,
+then use the Login command to move to the destination directory
+and perform the extraction or decompression.  The move is
+accomplished by pressing "L" (cursor position makes no difference
+with this command) and answering the prompt "Directory ".  The
+user may enter a DU: specification (e.g., A0:, B14:, F:) or the
+name of a ZCPR3 named directory to be found in the current system
+(e.g., MODEM:, DUNGEON:).  The colon is not necessary in any case
+and an invalid directory or denied access will relog the current
+area.  No entry at all will also relog the current area to
+facilitate disk changes.
+
+
+Tagging files
+
+
+The "T" command will tag an untagged file and the "Y" command will
+remove the tag from a tagged file.  The tag appears as a hash (#)
+immediately following the filename.  After a group operation
+(actually, during the group operation) hard tags represented by
+the hash are replaced by soft tags which appear as an apostrophe
+(').  Soft tags may be transformed back into hard tags by the
+retag command: "#".
+
+Wildcard tagging is accomplished by pressing "W" and providing a
+wildcard file specification in response to the prompt.  All files
+in the directory, starting from the beginning, which match the
+file spec will be tagged.
+
+Group Tag ("GT") is equivalent to a *.* wildcard tag.
+
+It may be convenient at times to untag all files.  This can be
+accomplished by relogging the directory with the Login command.
+Certain file operations which affect the disk directory (anything
+that adds or deletes files) will also end by relogging the
+directory and any remaining tags will be erased.  Group operations
+obviously prevent this relogging until all files have been
+operated upon.
+
+
+Group operations
+
+
+"G" will evoke the Group prompt.  From this prompt, several
+commands are available to wheels.  Only the View and Tag commands
+are available to non-wheels.  If the wheel byte is not zero, the
+prompt will indicate by the first letter of each command that
+View, Tag, Uncompress, crunch, and either Extract or Delete and
+Build are available.  Any selection is carried out on all tagged
+files.  The Group manager will check for ctrl-C between each file
+and abort if it is seen.
+
+
+Viewing files and library members
+
+
+Crunched, squeezed, and uncompressed files may be viewed by 
+pressing "V" at the VLU prompt.  The screen will clear and the 
+file's name will appear at the top of the screen.  Just below the 
+filename, the file's datestamps, if present, will be shown.  These 
+will be taken from the disk in the case of ordinary text files, 
+from the library directory if the file is a member, or from the 
+internal datestamp of a compressed file.  The display will stop 
+with the prompt "[strike any key]" after, in general, 22 lines.  
+The number of lines (the size of a screen page) is taken from the 
+ZCPR3 Environment descriptor.  The number provided there, by 
+convention, is two lines less than the screen height.  This should 
+give the viewer two lines of overlap with each page.  If this is 
+unsatisfactory, the user's Environment descriptor can be adjusted.
+
+At any time during the viewing, pressing ctrl-S will pause the
+display.  Pressing ctrl-C will abort the operation.  Under Group
+control, ctrl-C will abort the entire operation and no more files
+will be presented; the user will be returned to the file directory
+display.  Unscreened files will remain tagged.  Ctrl-X may be used
+to skip to the next file under Group execution; it has the same
+effect as ctrl-C if only one file is being viewed; id est, we
+abort.
+
+At the "[strike any key]" prompt, pressing the period will bring
+one more logical line to the screen.
+
+Ctrl-Z will suppress the "[strike any key]" prompt and the file
+will scroll continuously.  The viewer is then left with ctrl-S to
+stop the display (and any key except ctrl-X and ctrl-C will
+restart it).  Another Ctrl-Z will restore the paging mode and
+stop the screen immediately.  This is handy for long files when
+the interesting text is near the end.
+
+Certain file extensions are proscripted (e.g., COM, LBR, ARK, SYS,
+RCP, REL, PRL, etc.) and VLU will give the message "may not type"
+followed by the file name.  Crunched files of proscripted types 
+may have a "stamp" of interest to the user.  If a proscripted file 
+is crunched, VLU will give the filename as it appears and attempt 
+to extract the original filename and any stamp contained in the 
+first record of the file.  Thus, the datestamps of COM and REL 
+files may be inspected using the View command.
+
+
+Crunching disk files
+
+
+The crunching faculty of VLU is incidental.  Because of the Group
+operations, it is quite useful but, ab ovo, crunching files on 
+disk has been secondary to the project of crunching files into 
+libraries.  Selecting "K" at the command prompt will cause VLU to 
+crunch the file pointed to by its cursor.
+
+VLU will first prompt for a "stamp."  By convention, this is a
+message of up to 40 characters enclosed in square brackets.  The
+message is imbedded in the first record of the crunched file to be
+displayed when the file is either uncrunched or viewed.  Often,
+the message reports the date of the crunching, the author or
+origin of the file, or its expanded size.
+
+VLU will allow the entry of up to 38 characters.  Two characters
+are reserved so that VLU can insert the square brackets if the
+user omits one or both.  VLU will remove any trailing spaces from
+the message; if the user wishes the spaces to appear, the user
+must enter at least the final closing bracket.
+
+VLU will also imbed the current datestamp of the file, if present, 
+in the form established by CRUNCH23D.  To use the datestamp in 
+place of a text stamp simply type a return at the "Enter stamp" 
+prompt.
+
+The crunching operation will be aborted if the file is already
+compressed (either crunched or squeezed) or is of a proscripted
+filetype.  Proscripted filetypes are ARC, ARK, BAD, and, if the 
+target is a library, FOR and CIM (vide infra).
+
+VLU will allow the user to crunch a member out of a library onto
+the disk.  There seems no harm in such an operation (and as little
+use).
+
+
+File size report
+
+
+The size of a file in kilobytes and sectors (records) is reported 
+when the user presses either "F" or carriage return.  If the file 
+is a library member, size is reported to the nearest higher 1K.  
+If the file is on disk, size is reported according to the blocking 
+factor of the disk.
+
+
+Renaming files
+
+
+To rename a library member or a disk file, position the cursor 
+beside the file and press "R".  Enter the new name at the prompt.
+
+
+Deleting files
+
+
+To delete a library member or a disk file, position the cursor 
+beside the file and press "D".  The user will be prompted to 
+confirm that the file is to be deleted.  Under Group Delete, the 
+first prompt applies to all tagged files.  Answering Yes to this 
+prompt will delete all files with no further prompts.  Answering 
+No will abort the operation entirely (no files deleted).  
+Answering Verify will cause a prompt to appear for each file in 
+the group.
+
+
+Building libraries
+
+
+In order for VLU to build a library, all files to be included
+must be located in the same directory.  The library may, if
+necessary, be built in a foreign directory.
+
+As distributed, VLU will crunch all files as they are added to the
+library (unless the extension is unacceptable as previously
+stated).  See the configuration section for possible attenuation
+of this practice.
+
+VLU does have limits governing the maximum size library it may 
+build or deal with.  Those limits will vary with the size of the 
+current TPA.  Most users will never approach VLU's limits, but for 
+curiosity's sake, a TPA of 58K is sufficient to manipulate a 
+library of over 1200 members.
+
+To initiate the construction, tag the files which are to be
+included and then type "GB" for Group and Build.  VLU will prompt
+for the name and directory of the "new library" and the number of
+entries to allow.  A carriage return at the "entries" prompt will
+build a library with the minimum directory size, only large enough
+to accommodate the currently tagged files.  If you specify the 
+number of members (say, 40), VLU will build a library large enough 
+to hold at least this many members and will report the actual 
+number of possible entries ("initializing 43 entries").
+
+Rather than count the number of members you have tagged and add to 
+that the number of members you expect to add in the future, you 
+may simply enter "+40" to have VLU make the calculation.  VLU will 
+build a library large enough to hold the presently tagged files 
+and 40 more.  If no files are currently tagged, VLU will build an 
+empty library large enough to hold at least 40 members.
+
+VLU will then initialize the library directory area.  The
+directory list (onscreen)  will be reset to the first screen; the
+cursor will move to the first tagged file and a message will
+display that the file is being crunched or added as appropriate.
+If any files are to be crunched, the "stamp" prompt will appear
+and the stamp thus entered will be in effect for all files
+crunched into the library.
+
+Under this operation, as under the Wildcard and other Group
+operations, the directory list onscreen will shift through all
+files searching for tags.  This will be more noticeable in larger
+directories (which require more than one display) and during the
+Building of libraries (because of the pause to close the library).
+
+The datestamps for file creation date/time and file modification 
+date/time will be copied into the library directory if they are 
+available on the disk.  They may also be imbedded in crunched 
+members (if no stamp is entered).  The current time/date will be 
+placed in the library directory to indicate when the library was 
+originally constructed.
+
+
+Adding files to a Library
+
+
+Adding files to an existing library is a simple as constructing 
+the library in the first place and the files will be compressed 
+according to the same rules.  Date/time stamps will be preserved.  
+The current date/time will be written into the library directory 
+to indicate the library's last modification.
+
+Files may be added individually or tagged and added in a Group 
+operation.  The library to which they will be added must be open 
+and must have unused directory entries (deleted entries will not 
+be overwritten).
+
+
+Configuration
+
+
+Several configuration bytes are located in the first sector of the 
+VLU command file where they may be easily patched.  For the exact 
+location and function of these bytes, see the accompanying file, 
+VLUxxxC.Z80.
+
+
+Option menu
+
+
+The Option menu, accessed by typing "M" at the command prompt, 
+will toggle many of the configuration bytes.  This allows 
+temporary assignment of the options.
+
+
+Security
+
+
+The Login command of VLU will use the Z33 parser when it is
+available, thus behaving exactly as the operating system would in
+allowing admittance to directory areas.  When Z33 is not available,
+VLU allows immediate entry to any du: or dir: within the MAXDSK
+and MAXUSR limits of the environment.  Dir: forms outside these
+limits are also accepted; passwords, if present, are enforced.
+
+Commands Delete and Rename and any commands that would create new
+files are available only while the wheel byte is set.
+
+
+Contributors
+
+
+VLU directly incorporates the work of many "better makers."  My
+thanks to all of them as much and more for the opportunity to read
+and learn from their code as well as for their library releases.
+Among them, the following:
+
+Richard Conn, Howard Goldstein, Jay Sage, Al Dunsmuir et al. for
+SYSLIB, Z3LIB, Z33LIB and VLIB--and ZCPR, itself.
+
+C.B. Falconer and Steven Greenberg for USQREL, UNCREL, CRN, and
+BUFFERS.
+
+Steven Cohen for M24.  Carson Wilson for DATEHL and Z80DOS.  
+Bridger Mitchell for FRESET and CRUNCH23D.
+
+Martin Murray for NULU, the standard for these efforts.  And Gary
+Novosielski for the library format.
+
+
+Note from the programmer
+
+
+VLU, its source code, and its documentation are copyright 1987, 
+1988 by Esoteric Software.  VLU is distributed for non-commercial 
+use only; any commercial use or any re-distribution in association 
+with a commercial product or package requires the prior written 
+permission of the author.
+
+I may be reached on Z-nodes 2 and 3--Al Hawley's Ladera and Jay
+Sage's Newton Centre; both are available via PC-Pursuit.  I log
+into these nodes approximately semi-weekly.  If it is important to
+reach me sooner, my home Z-node is #58, operated by Kent Mason in
+Oklahoma City (405/943-8638).
+

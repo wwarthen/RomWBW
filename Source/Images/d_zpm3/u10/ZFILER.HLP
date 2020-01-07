@@ -1,0 +1,545 @@
+;                   -------------------------------------
+                   |                                   |
+                   | ZFILER, The Point-and-Shoot Shell |
+                   |                                   |
+                   -------------------------------------
+
+
+                    Z >> Introduction to Z-System Shells
+                          F >> What is ZFILER for?
+
+
+I >> Invoking ZFILER                        C >> ZFILER Commands 
+D >> The ZFILER Display                S >> Single-File Built-In Functions
+O >> Thå Optioî Commanä                G >> Built-In Group Commands       
+J >> Credits                           P >> Pointeò Commandó              
+H >> History of ZFILER                 N >> Otheò Non-Filå Commandó       
+
+
+                    M >> ZFILER's Script Macro Facility
+:Z
+ Z-System Shells 
+
+     Á  Z-Systeí shelì ió á prograí thaô takeó oveò thå user-inpuô  functioî 
+oæ  thå  commanä  processor®   Thå  waù  thió workó  ió  thaô  thå  Z-Systeí 
+environmenô  includeó á speciaì areá iî memorù calleä thå shelì stacë  wherå 
+shelì  commanä lineó caî bå kept®   Wheneveò thå ZCPR³ commanä processoò  ió 
+finisheä  processinç  alì thå commandó thaô havå beeî passeä tï  iô  iî  thå 
+commanä  linå buffeò (anotheò speciaì areá iî memory)¬  iô checkó thå  shelì 
+stack®   Onlù iæ nï commanä linå ió presenô therå doeó thå commanä processoò 
+itselæ  prompô thå useò foò thå nexô commanä line®   Iæ therå ió aî entrù iî 
+thå  shelì stack¬  theî thaô commanä linå ió ruî instead¬  anä thå  useò  nï 
+longeò seeó thå commanä processoò directly.
+
+     Somå  shells¬  likå thå EASÅ oò LSÈ historù shell¬  whilå makinç á  biç 
+changå iî ho÷ thå systeí ió actually‚ running¬  makå relativelù littlå changå 
+iî  ho÷  iô appears‚ tï run®   Á commanä prompô ió stilì presented¬  anä  onå 
+enteró  commandó morå oò lesó aó usual®   Thå differencå ió thaô onå  haó  á 
+morå  capablå  editoò  aô one'ó disposal¬  anä thå commandó arå saveä  tï  á 
+historù filå froí whicè theù caî bå recalled¬  edited¬ anä ruî again®  Aó wå 
+shalì see¬  thå ZFILEÒ shelì presentó thå useò witè á dramaticallù differenô 
+useò interface.
+:F
+ Whaô ió ZFILEÒ For¿ 
+
+     Historically¬  ZFILEÒ  ió á descendanô iî thå linå oæ filå  maintenancå 
+utilitieó  likå SWEEĞ anä NSWĞ (hencå thå "filer¢ parô oæ thå  name)®   Filå 
+maintenancå  ió  generallù concerneä witè copyinç files¬  lookinç  aô  theiò 
+contents¬ renaminç them¬ erasinç them¬ anä sï on®  ZFILEÒ provideó alì theså 
+functionó anä more.
+Š     ZFILER'ó  immediatå parenô waó VFILER¬  wherå thå "V¢ stooä foò  video® 
+Thå  TCAĞ facilitù iî Z-Systeí makeó iô easù foò programó tï takå  advantagå 
+oæ  thå full-screeî capabilitieó oæ whateveò videï displaù terminaì  happenó 
+tï bå iî uså aô anù time®   Iî contrasô tï applicationó undeò CP/M¬ Z-Systeí 
+programó neeä noô bå configureä tï matcè thå terminal®   Iô was¬  therefore¬ 
+naturaì tï builä á filå maintenancå prograí iî whicè thå fileó arå displayeä 
+graphicallù  oî thå screen®   Wheî É decideä tï explorå somå ne÷  directionó 
+witè VFILER¬  tï avoiä confusioî É gavå thå prograí thå ne÷ namå ZFILER¬ foò 
+Z-Systeí Filer.
+     Thå  filå maintenancå taskó describeä abovå woulä noô requirå á  shell® 
+Makinç thå prograí á shell¬  however¬  allowó iô tï gï beyonä thå  functionó 
+includeä iî thå program'ó owî code®   Becauså á shelì caî pasó commanä lineó 
+tï thå operatinç system¬  ZFILEÒ caî perforí anù operatioî thaô thå computeò 
+ió capablå of®  Likå á menõ system¬ however¬ iô helpó thå useò bù generatinç 
+thå commandó automaticallù aô thå toucè oæ á key.
+
+     Wheî  ZFILEÒ  ió  running¬  thå screeî ió filleä witè  aî  alphabetizeä 
+displaù oæ thå fileó iî á specifieä directory¬  anä therå ió á pointeò  thaô 
+thå  useò  caî manipulatå usinç cursoò controì keys®   Iæ wå haä á mouså  tï 
+movå thå pointer¬  iô woulä bå á littlå likå havinç á Macintosh®   Actually¬ 
+iô woulä bå á loô more®  Iô woulä bå likå havinç á mouså witè fiftù buttons¡ 
+Oncå  thå pointeò haó beeî positioneä oî á file¬  pressinç á keù (oò twï  oò 
+three©  causeó  anù oæ á greaô numbeò oæ functionó tï bå invokeä tï  acô  oî 
+thaô file®  Wå wilì describå ho÷ thió workó iî morå detaiì shortly.
+:I
+ Invokinç ZFILEÒ 
+
+     Sincå  ZFILEÒ  performó  full-screeî  operations¬   á  propeò  Z-Systeí 
+terminaì  descriptoò  (TCAP© musô havå beeî loaded®   Iæ yoõ havå  noô  donå 
+that¬  oò  iæ  yoõ havå selecteä á terminaì thaô doeó noô  supporô  alì  thå 
+functionó  ZFILEÒ needs¬  theî ZFILEÒ wilì givå yoõ aî erroò  message®   Thå 
+TCAP¬  unfortunately¬  doeó  noô  includå informatioî abouô whetheò  dií  oò 
+reverså  videï  ió  useä  bù thå terminal¬  anä sincå theså  twï  modeó  foò 
+highlightinç  regionó  oî  thå  screeî arå  sï  different¬  ZFILEÒ  ió  madå 
+availablå iî separatå versionó foò each.
+
+     Therå  ió  alsï aî optioî tï havå eitheò fouò oò fivå columnó  oæ  filå 
+nameó iî thå display®   Personally¬  É prefeò thå four-columî version¬ whicè 
+giveó  aî uncluttereä screeî witè plentù oæ restfuì whitå spacå anä  á  verù 
+distinct¬  easy-to-spoô  pointer®   Otheró thinë iô ió morå importanô tï  bå 
+ablå  tï seå thå maximuí numbeò oæ fileó oî eacè screeî anä prefeò thå five-
+columî display.
+
+     Theî therå ió thå issuå oæ supporô foò timå anä datå stampinç oæ files® 
+ZFILEÒ  containó  thå  codå foò preservinç thå timå stampó  wheî  fileó  arå 
+copied®   Sï  aó noô tï inflicô thå overheaä oæ thió codå oî thoså whï  havå 
+noô  implementeä DateStampeò (thougè theù shoulä dï that!)¬  ZFILEÒ ió  alsï 
+provideä iî versionó witè anä withouô thå DateStampeò code.
+     Iæ wå supporteä alì combinationó oæ thå abovå choices¬  therå woulä  bå 
+eighô  differenô versionó oæ ZFILER®   Typically¬  thå distributioî  librarù 
+containó fouò oò fivå oæ thå combinations®   Foò example¬ á five-columî filå 
+displaù  ió  noô  particularlù compatiblå witè reverså  videï  highlighting¬ 
+becauså  thå  reverså  videï oæ taggeä fileó  runó  intï  thå  reverse-videï 
+pointer.
+
+     Wheî  yoõ  geô  ZFILER¬  yoõ havå tï chooså whicè versioî  yoõ  prefer¬ 
+extracô iô foò thå distributioî library¬ anä givå iô á workinç namå (somå oæ 
+thå  earlù  Z-Systeí shelló haä tï havå á specifiã name¬  buô yoõ  caî  givå 
+ZFILEÒ anù namå yoõ like)®  É prefeò thå namå ZF¬ sincå iô ió verù quicë anä 
+easù tï type¬ anä É wilì uså thaô namå iî alì thå exampleó thaô follow.
+
+     Thå generaì syntaø foò invokinç ZFILEÒ is:
+
+		ZÆ filespec
+
+wherå  "filespec¢ ió á standarä Z-Systeí ambiguouó filå specificatioî  (thaô 
+is¬  iô  maù  contaiî thå wildcarä characteró "?¢ anä  "*")®   Thå  filespeã 
+selectó  thå directorù areá anä thå fileó froí thaô areá tï bå  includeä  iî 
+thå screeî display.
+     Variouó partó oæ thå filespeã caî bå omitted®   Iæ nï filespeã ió giveî 
+aô all¬ theî "*.*¢ foò thå currentlù loggeä directorù ió assumed® Similarly¬ 
+iæ onlù á directorù ió specifieä (e.g.¬  Bº oò 3º oò B3º oò WORK:)¬ theî alì 
+thå  fileó ("*.*"© iî thaô directorù arå displayed®   Iæ á filå name/typå ió 
+included¬  theî iô wilì servå aó á masë oî thå fileó tï bå displayed®   Thuó 
+"ZÆ WORK:*.DOC¢ wilì sho÷ onlù fileó oæ typå DOÃ iî thå directorù WORK:.
+
+     Thå  directorù anä filå masë caî botè bå changeä froí inside‚ ZFILEÒ  aó 
+welì usinç thå "L¢ oò LOÇ command®   É brinç thió uğ no÷ becauså therå ió  á 
+confusinç  differencå iî thå waù thå "L¢ commanä works®   VFILEÒ  originallù 
+alloweä  onå tï changå onlù thå directorù anä noô thå filå masë froí  insidå 
+thå  program®   Tï  savå  thå useò thå troublå oæ typinç thå coloî  afteò  á 
+directory¬   itó  inclusioî  waó  madå  optional®   Sincå  useró  becamå  sï 
+accustomeä tï thió shorthand¬  iô waó carrieä oveò intï ZFILER®   Becauså oæ 
+this¬ iæ yoõ wanô tï changå onlù thå filå mask¬ yoõ musô remembeò tï precedå 
+iô  witè  á  colon®   Otherwiså youò masë wilì bå takeî aó  thå  namå  oæ  á 
+directorù (whicè generallù resultó iî aî erroò message).
+
+  Iô  ió  no÷ possiblå tï answeò ZFILER'ó "Logiî [DIR][:MASKİ ¢ prompô  witè 
+".<cr>¢  (samå  aó ":<cr>"© tï loç iî alì fileó iî  thå  currenô  directory®  
+Previouslù thió loggeä iî alì fileó aô useò zerï oæ thå currenô drive®   Thå 
+Logiî commanä no÷ alsï seemó tï accepô ".afn¢ insteaä oæ ":afn".
+     Onå  brieæ asidå foò programmeò types®   ZFILEÒ caî bå loadeä froí  anù 
+directory®  Onå oæ thå speciaì featureó oæ Z-Systeí sincå versioî 3.³ oæ thå 
+commanä  processoò  allowó á prograí tï finä ouô botè itó owî namå  anä  thå 
+directorù froí whicè iô waó actuallù loaded¬ perhapó aó thå resulô oæ á patè 
+search®   ZFILEÒ  buildó  thå shelì stacë entrù tï invokå ZFILEÒ  undeò  itó 
+currenô  namå  froí  thå directorù iî whicè iô ió  actuallù  located®   Thió 
+sometimeó  makeó iô ruî faster¬  anä iô allowó ZFILEÒ tï bå invokeä  froí  á 
+directorù thaô ió noô oî thå searcè path.
+:D
+ Thå ZFILEÒ Displaù 
+
+     Thå maiî ZFILEÒ displaù containó threå parts®  Aô thå toğ oæ thå screeî 
+therå  ió á messagå line®   Iî thå versioî oæ ZFILEÒ thaô ió currenô aô  thå 
+timå É aí writinç thió columî (versioî 1.0L)¬  thió linå contains¬ froí lefô 
+tï right¬ thå followinç information:
+
+     (1)  thå  directorù thaô haó beeî selected¬  iî botè DÕ anä DIÒ  (nameä 
+          directory© format;
+
+     (2)  thå  indicatoò  "[PUBLIC]¢, iæ thaô directorù ió  á  ZRDOÓ  publiã 
+          directorù (iæ yoõ don'ô kno÷ whaô thió is¬ jusô ignorå it);
+
+     (3)  thå  currenô  timå  oæ daù iæ DateStampeò oò onå oæ thå  ne÷  DOSó 
+          (ZSDOÓ oò ZDDOS© ió running;
+
+     (4)  thå program'ó officiaì namå anä version;
+
+     (5)  thå texô strinç "Currenô File:";
+
+and  (6)  thå  namå oæ thå filå currentlù beinç pointeä tï (thió changeó  aó 
+          thå pointeò ió moved).
+     Aô thå bottoí oæ thå screeî ió á commanä prompô oæ thå form
+
+          Command¿ (/=Help¬ X=Quit)º 
+
+Thå  cursoò (don'ô confuså thió witè thå filå pointer© ió  positioneä  afteò 
+thió  commanä  prompô tï indicatå thaô ZFILEÒ ió waitinç foò yoõ tï presó  á 
+key.
+
+     Thå  centeò  2°  lineó oæ thå screeî  sho÷  thå  selecteä  files®   Thå 
+characteò strinç "-->¢ (onlù "->¢ iî thå five-columî display© floató betweeî 
+thå rowó oæ filå nameó anä designateó thå so-calleä "pointed-to¢ file®  Manù 
+oæ thå ZFILEÒ commandó automaticallù operatå oî thió file.
+
+     Whaô wå havå describeä sï faò ió thå maiî ZFILEÒ screen¬  buô iô ió noô 
+thå onlù one®   Aó thå commanä prompô suggests¬ pressinç thå slasè characteò 
+(oò  "?¢ iæ yoõ prefer© bringó uğ á helğ screeî thaô summarizeó thå built-iî 
+commandó oæ ZFILER®   Thió helğ screeî replaceó thå filå displaù buô  leaveó 
+thå  statuó linå aô thå toğ anä thå commanä linå aô thå bottom¬  excepô thaô 
+"/=Help¢ changeó tï "/=Files"®   Aó yoõ might¬  therefore¬  guess¬  pressinç 
+slasè agaiî wilì takå yoõ bacë tï thå filå displaù screen.
+     É  dï  noô kno÷ iæ anyonå makeó uså oæ thió  feature¬  buô  alì  ZFILEÒ 
+commanä operationó caî bå invokeä froí thå helğ screen®  Althougè yoõ cannoô 
+seå  thå filå pointer¬  yoõ caî manipulatå iô iî thå usuaì way¬  anä yoõ caî 
+telì  whaô  filå yoõ arå pointinç tï froí thå namå displayeä  aô  thå  uppeò 
+righô oî thå statuó line.
+:C
+ ZFILEÒ Commandó 
+
+     Basically¬  thå commandó falì intï severaì classes®  Onå classificatioî 
+reflectó wherå thå codå foò thå commanä resides®  Therå arå twï categories:
+
+	A® Built-Iî Commands
+	B® Macrï Commands
+
+     Clasó  Á includeó thå functionó foò whicè thå codå ió parô  oæ  ZFILER®  
+Macrï commandó arå likå aliaseó iî thaô theù generatå commanä lineó thaô arå 
+passeä tï thå commanä processoò foò execution®  Theså commandó makå ZFILEÒ á 
+shell®
+
+     Á  seconä classificatioî dependó oî whaô thå commanä actó upon®   Threå 
+categorieó describå thå objecô oæ thå commands:
+
+	1® thå pointed-tï file
+	2® á grouğ oæ taggeä files
+	3® neitheò oæ thå above
+
+     Helğ  foò commandó iî clasó A3¬  residenô commandó thaô dï noô  perforí 
+anù  actioî oî thå files¬  maù bå founä bù selectinç  Ğ ‚ froí thå maiî menu®  
+Help for the others may be found by selecting  N .
+:P
+ Pointeò Commandó 
+
+     Clasó A³ includeó thå commandó thaô movå thå filå pointer®   Theså  arå 
+showî oî thå helğ screen¬  anä É wilì noô lisô theí here®   Onå caî movå thå 
+pointeò  tï  thå  nexô  filå  oî thå screeî oò tï  thå  previouó  onå  (witè 
+wraparound)»  up¬  down¬  left¬  oò righô (witè wraparound)» tï thå firsô oò 
+lasô filå oî thå currenô screen»  oò tï thå verù firsô oò verù lasô filå  oæ 
+thoså  selecteä  bù thå filå mask®   Onå caî advancå tï thå nexô  screeî  oæ 
+fileó oò tï thå previouó screen®  Obviously¬ somå oæ theså functionó wilì bå 
+redundanô iî somå cases¬  sucè aó wheî alì thå selecteä fileó caî fiô oî onå 
+screeî (thinë whaô happenó wheî therå ió exactlù onå filå selected).
+
+     ZFILEÒ  learnó froí thå TCAĞ thå controì characteró senô bù anù speciaì 
+cursoò  keyó oî thå keyboarä (provideä theù senä á singlå controì  characteò 
+anä provideä thå TCAĞ haó beeî seô uğ correctly)¬ anä iô makeó theí generatå 
+thå  up¬  down¬  left¬  anä righô functions®   Iæ thå cursoò  keyó  generatå 
+controì codeó normallù useä foò anotheò function¬ theî thaô functioî wilì bå 
+losô  (thå  cursoò keyó takå precedence)®   Thaô caî  causå  problems®   Onå 
+solutioî  ió tï eliminatå thå definitioî oæ thå cursoò keyó iî thå TCAĞ  anä 
+simplù   uså  thå  defaulô  WordStaò  diamonä  keyó  foò  thoså   functions® ŠAlternatively¬  onå  caî  patcè  ZFILEÒ tï uså differenô keyó  foò  itó  owî 
+functions¬ buô thió ió noô straightforwarä tï do¬ anä É wilì noô describå iô 
+here.
+     Thå "J¢ (Jump© commanä allowó yoõ tï jumğ tï á filå thaô yoõ name® Thió 
+ió  verù handù wheî therå arå manù fileó iî thå displaù oò wheî thå filå yoõ 
+wanô  ió  noô oî thå currenô screen®   Presó thå "J¢ key¬  anä yoõ  wilì  bå 
+prompteä foò á filå name®   Yoõ dï noô havå tï enteò thå exacô name®  ZFILEÒ 
+automaticallù convertó whaô yoõ typå intï á wildcarä filespec¬  anä iô findó 
+thå firsô filå thaô matches®  Foò example¬ iæ yoõ enteò onlù "Z¢ followeä bù 
+á return¬  thió ió equivalenô tï "Z*.*"¬ anä ZFILEÒ wilì movå thå pointeò tï 
+thå firsô filå thaô startó witè á "Z"®  Similarly¬ iæ yoõ enteò ".D"¬ ZFILEÒ 
+wilì movå tï thå firsô filå witè á filå typå thaô startó witè "D".
+
+     Thå "J¢ functioî ió verù handy»  however¬  therå ió more®   Manù peoplå 
+arå  noô  awarå thaô yoõ maù presó control-Ê tï repeaô thå samå  searcè  anä 
+finä  thå nexô matchinç file®   Thå searcè wilì wrağ arounä froí thå enä  oæ 
+thå  fileó bacë tï thå beginning®   Thió functioî ió noô listeä oî thå  helğ 
+screeî becauså É coulä noô finä rooí foò it.
+
+     Control-É (TAB© ió aî aliaó foò control-Ê (jumğ tï filå again)¬ foò uså 
+witè terminaì definitionó (TCAPs© whicè definå control-Ê aó aî arro÷ key.
+:N
+ Otheò Non-Filå Commandó 
+
+     Somå otheò commandó thaô dï noô acô oî fileó areº  X¬ L¬ A¬ S¬ E¬ H¬ Z¬ 
+anä O®  "X"¬ aó thå commanä prompô remindó you¬ ió useä tï exiô froí ZFILER® 
+Besideó  terminatinç thå currenô executioî oæ thå program¬  iô alsï  removeó 
+ZFILER'ó entrù iî thå shelì stacë (iæ iô diä not¬  yoõ woulä jusô reenteò iô 
+righô away).
+
+     Wå  alreadù  spokå  abouô  thå "L¢  (Log©  commanä  earlier®   Thå  "A¢ 
+(Alphabetizå  oò Arrangå oò Alphá sort© toggleó thå waù iî whicè  thå  fileó 
+arå  sorted¬  namelù  alphabeticallù bù thå filå namå oò bù thå  filå  type®      
+Thå  "S¢ (Status© commanä promptó yoõ foò á disë drivå letteò anä theî telló 
+yoõ thå amounô oæ spacå remaininç oî thaô disk.
+
+     Thå "E¢ commanä (refresè scrEEî -- É kno÷ that'ó stretchinç things¬ buô 
+"R¢ waó alreadù used© redrawó thå screen®   Yoõ mighô thinë thaô thió  woulä 
+neveò  bå needed¬  buô therå arå twï circumstanceó iî whicè iô comeó iî verù 
+handy®   Onå  ió wheî ZFILEÒ ió beinç useä oî á remotå system®   Iô ió  truå 
+thaô verù fe÷ RASó makå ZFILEÒ available¬ buô É dï oî Z-Nodå #3®  Iæ yoõ geô 
+somå  linå noise¬  thå screeî caî becomå garbled®   Theî thå "E¢ keù caî  bå 
+useä tï dra÷ á fresè screen.
+     Thå  otheò circumstancå iî whicè thå "E¢ commanä saveó thå daù ió  witè 
+Backgrounder-ié  iæ yoõ dï noô havå á screeî driveò (É don'ô foò mù  Concepô 
+10¸  terminaì  -- neveò goô arounä tï writinç one¬  partlù becauså  alì  thå 
+programó É uså frequentlù havå á redra÷ keù likå thió one)®  É simplù definå 
+á  BGié  keù  macrï  specifyinç  "E¢ aó  thå  "redraw¢  key¬  savå  thå  keù 
+definitionó  tï  ZFILER.BG¬  anä attacè thaô  definitioî  tï  ZF.COM®   Theî 
+wheneveò  É swağ taskó bacë intï ZFILER¬  BGié simulateó mù pressinç thå "E¢ 
+key¬  anä thå screeî ió redrawn®   Thió ofteî giveó á fasteò screeî  refresè 
+thaî onå getó witè á full-fledgeä screeî driver.
+
+     Thå "H¢ (Help© commanä generateó á macrï commanä tï invokå thå Z-Systeí 
+HELĞ  facility®   Tï  telì thå truth¬  É havå noô useä thió anä  don'ô  eveî 
+remembeò preciselù whaô iô does®  É woulä havå tï looë aô thå sourcå code.
+     Thå "Z¢ (Z-system© commanä promptó yoõ foò á command¬  anä whateveò yoõ 
+enteò  ió  passeä  oî  tï  thå Z-Systeí multiplå  commanä  linå  buffeò  foò 
+execution®   Wheî  thaô  commanä  linå  ió  complete¬  ZFILEÒ  ió  reinvokeä 
+automatically.
+
+     Wheî  yoõ  uså thå "Z¢ command¬  yoõ wilì normallù bå loggeä  intï  thå 
+directorù  thaô ió currentlù displayed®   However¬  thió wilì noô alwayó  bå 
+possible®   ZFILEÒ allowó yoõ tï selecô directorieó witè useò numberó froí ° 
+tï 31®  Unlesó yoõ arå usinç á versioî oæ ZCPR3³ oò ZCPR3´ witè thå HIGHUSEÒ 
+optioî  enabled¬  yoõ  cannoô loç intï useò areaó abovå 15®   Iî  thaô  caså 
+ZFILEÒ  wilì puô yoõ iî thå directorù youò werå iî wheî yoõ invokeä  ZFILER® 
+Iî anù case¬  thå commanä prompô wilì indicatå thå directorù froí whicè youò 
+commanä linå wilì bå executed.
+     Sincå  commandó yoõ ruî usinç thå "Z¢ functioî maù puô somå informatioî 
+oî  thå  screeî thaô yoõ woulä noô wanô ZFILEÒ  tï  obliteratå  immediately¬ 
+therå ió á flaç seô thaô signaló ZFILEÒ tï prompô yoõ anä tï waiô foò yoõ tï 
+presó  á  keù  beforå puttinç uğ itó display®   Herå ió á tiğ  foò  advanceä 
+users®  Iæ yoõ enteò youò commanä linå witè onå oò morå leadinç spaces¬ thió 
+shell-waiô flaç wilì noô bå set¬  anä ZFILEÒ wilì returî withouô youò havinç 
+tï  presó  á key®   Thå leadinç spaceó arå strippeä froí  thå  commanä  linå 
+beforå  iô ió passeä tï thå commanä processor®   Thió meanó thaô yoõ  cannoô 
+uså  á  leadinç spacå tï forcå invocatioî oæ thå extendeä commanä  processoò 
+(ECP)»  yoõ havå tï uså thå slasè prefiø instead®   Á spacå anä á slasè wilì 
+forcå invocatioî oæ thå ECĞ anä wilì disablå thå shell-waiô flag.
+
+     Thå   finaì  commanä  iî  clasó  A³  ió  thå  "O¢  (Options©   command®  
+Informatioî regarding it can be found in the  O  menu.
+:S
+ Single-Filå Built-Iî Functionó 
+
+     No÷ let'ó discusó thå commandó iî clasó A1¬  thå built-iî commandó thaô 
+acô  oî  thå  pointed-tï file®   Theså arå invokeä bù pressinç  onå  oæ  thå 
+followinç  keys¬  whoså  meaninç ió indicateä iî parenthesesº  Ã  (Copy)¬  Í 
+(Move)¬ Ä (Delete)¬ Ò (Rename)¬ Ö (View)¬ Ğ (Print)¬ Æ (Filå size)¬ Ô (Tag)¬ 
+anä Õ (Untag)®   Somå oæ theså arå self-explanatory¬  anä É wilì noô discusó 
+them.
+     Thå "C¢ commanä copieó á filå tï anotheò directorù undeò thå samå name» 
+iô doeó noô allo÷ onå tï givå á ne÷ namå foò thå destinatioî filå  (however¬ 
+yoõ caî dï thaô witè á macrï command)®  Thå "M¢ commanä doeó noô reallù movå 
+á file» iô copieó thå filå anä then¬ iæ thå copù waó successful¬ deleteó thå 
+originaì  file®   Iô ió reallù á combinatioî oæ "C¢ anä "D"®   Movinç á filå 
+thió waù ió inefficienô iæ thå destinatioî directorù ió oî thå samå drivå aó 
+thå sourcå file®  Á macrï commanä thaô invokeó aî ARUNÚ aliaó caî geô arounä 
+thió limitatioî (anä almosô alì otheò ZFILEÒ limitations).
+
+      Thå  "V¢ (View© anä "P¢ (Print© commandó no÷ havå á switchablå  filteò 
+whicè onlù passeó printablå characters¬ carriagå return¬ anä linå feeds.
+     Thå taç anä untaç commandó arå useä tï selecô á grouğ oæ fileó oî whicè 
+operationó  caî bå performed®   Taggeä fileó arå indicateä iî twï  ways®   Á 
+speciaì characteò ("#"© ió placeä afteò thå filå namå iî thå  display¬  and¬ 
+iæ thå terminaì supportó videï highlighting¬ thå filå ió highlighted.
+
+     Twï  relateä commandó arå × (Wilä tag© anä Ù (Yanë back?)®   "W¢ allowó 
+yoõ  tï taç oò untaç groupó oæ fileó designateä bù aî ambiguouó  filå  spec® 
+Afteò  taggeä fileó arå operateä oî bù thå built-iî grouğ commandó describeä 
+below¬  thå taç markeò "#¢ ió changeä tï "'¢ (á sofô tag)®   Thå "Y¢ commanä 
+changeó  thå sofô tagó bacë intï harä tagó sï thaô furtheò grouğ  operationó 
+caî bå performeä oî thoså files.
+
+     ZFILEÒ  no÷ rememberó alì thå filå tagó wheî iô returnó froí á macrï oò 
+Ú  commanä  (iô  writeó á temporarù  file¬  ZFILER.TAG¬  tï  á  configurablå 
+directorù whicè containó thå filå list).
+:G
+ Built-Iî Grouğ Commandó 
+
+     Grouğ  commandó  arå initiateä bù pressinç thå "G¢  (Group©  key®   Thå 
+commanä prompô aô thå bottoí oæ thå screeî changeó to
+
+      Command¿ (/=Help¬ X=Quit© ‚ Groupº (A,C,D,F,M,P,R,T,U,V)
+
+Foò  no÷ wå wilì consideò onlù thå built-iî grouğ functionó (clasó  A2©  anä 
+wilì takå uğ grouğ macrï commandó (clasó B2© nexô time.
+
+     Excepô  foò thå fouò functionó describeä below¬  thå letteró invokå thå 
+samå actioî aó thå individuaì commanä correspondinç tï thaô letter¬  buô thå 
+functioî  ió performeä oî alì thå taggeä files®   Wå wilì noô discusó  thoså 
+further®   Notå  iî particulaò thaô thå keyó "A¢ anä "R"¬  however¬  havå  á 
+grouğ functioî thaô ió completelù differenô froí thå individuaì function.
+     Thå  "U¢ anä "T¢ grouğ functionó dï noô acô oî thå taggeä  files»  theù 
+changå thå tagging®  Thå formeò untagó alì files» thå latteò tagó theí all.
+
+     Grouğ  Tag/Untaç anä Wilä Taç caî bå independentlù seô tï operatå  froí 
+thå  filå  pointeò tï thå enä oæ thå ring¬  ratheò thaî oî thå entirå  ring®  
+Grouğ  Tag/Untaç  seeí  tï bå thå mosô usefuì iæ aô thå starô  aô  thå  filå 
+pointer®  Uså thå Optionó commanä tï controì this.
+
+     Thå "R¢ grouğ functioî ió anotheò onå thaô doeó not¬ strictlù speaking¬ 
+acô oî thå taggeä files®   Iô reverseó thå tags¬  tagginç thå fileó thaô haä 
+beeî untaggeä anä untagginç thå oneó thaô haä beeî tagged®  Thió caî bå verù 
+handù iî severaì circumstances®  Foò example¬ yoõ mighô wanô tï copù alì thå 
+fileó  excepô two®   Iô ió easieò tï taç thoså twï anä theî tï  reverså  thå 
+tags®   Aó  anotheò  example¬  yoõ mighô wanô tï copù somå oæ thå  displayeä 
+fileó  tï  onå  diskettå anä thå otheró tï á seconä  diskette®   É  dï  thió 
+frequently®   É begiî bù tagginç thå oneó tï gï tï thå firsô diskette®  Theî 
+É grouğ copù ("GC"© theí tï thå destinatioî diskette®  Next¬ É yanë bacë thå 
+tagó usinç thå "Y¢ commanä anä theî reverså thå tagó witè "GR"®   No÷ É  caî 
+grouğ copù thå resô tï thå seconä diskette.
+     Thå  "A¢ (Archive© grouğ commanä ió verù handù foò automatinç  backups® 
+Wheî iô ió entered¬  thå tagó arå removeä froí anù taggeä filå whoså archivå 
+flaç ió set®  Aó á result¬ onlù fileó thaô havå beeî modifieä sincå thå flaç 
+waó  lasô  seô  wilì remaiî tagged®   Iî addition¬  thå  "A¢  grouğ  commanä 
+automaticallù initiateó á grouğ copù operatioî buô witè onå speciaì feature® 
+Afteò thå filå haó beeî copieä successfully¬  thå archivå flaç oî thå sourcå 
+filå ió seô tï indicatå thaô thå filå haó beeî backeä up.
+
+     Undeò  lateò  versionó oæ VFILER¬  thå grouğ "A¢ commanä  automaticallù 
+taggeä alì unarchiveä files» undeò ZFILEÒ iô untagó thå archiveä ones®  Thió 
+differencå ió verù important®   Witè VFILER¬  yoõ werå forceä tï bacë uğ alì 
+thå fileó selecteä bù thå VFILEÒ filå mask®  Undeò ZFILEÒ yoõ caî selecô thå 
+fileó thaô wilì bå candidateó foò backinç up®   Iæ yoõ wanô thå achievå  thå 
+samå  functioî aó undeò VFILER¬  jusô taç alì thå fileó firsô witè "GT¢  anä 
+theî archivå theí witè "GA"®   Oî thå otheò hand¬  iæ yoõ wanô tï exludå BAË 
+fileó froí thå backup¬ yoõ caî "GT¢ alì files¬ untaç thå "*.BAK¢ fileó usinç 
+thå "W¢ command¬ anä theî uså thå "GA¢ command.
+     Afteò  yoõ  enteò  thå  commanä  "GA"¬  yoõ  wilì  bå  prompteä  foò  á 
+destinatioî directory®   Yoõ dï noô havå tï supplù one¡  Iæ yoõ simplù enteò 
+á carriagå return¬  thå copù operatioî wilì bå skipped¬ anä yoõ wilì bå lefô 
+witè tagó oî thå fileó thaô neeä tï bå backeä up®   Yoõ caî theî uså á macrï 
+functioî  tï  bacë  theí  uğ  iî  á  specializeä  way¬   sucè  aó  crunchinç 
+(compressing© theí tï thå backuğ disë (insteaä oæ copyinç theí aó theù  are© 
+oò puttinç theí intï á librarù oî thå backuğ diskette®  Thå macrï techniqueó 
+requireä tï dï thió arå iî thå FILEÒ Scripô Macrï Facility‚ section.
+:O
+ Thå Optioî Commanä 
+
+     Wheî thå optioî commanä letteò "O¢ ió pressed¬ á speciaì optionó screeî 
+ió  displayed®   Eleveî operatinç characteristicó caî bå changeä froí á menõ 
+witè thå followinç appearancå (approximately):
+
+	A® singlå replacå querù		Y
+	B® grouğ replacå querù		Y
+	C® archivå replacå querù	N
+	D® verifù querù			Y
+	E® verifù defaulô		Y
+	F® suppresó SYÓ fileó		Y
+	G® sorô bù filå namå		N
+	H® seô copieä filå attributeó	Y
+	I® uså desô filå attributeó	Y
+	J® archivå destinatioî		Y
+	K® searcè patè foò CMÄ filå	N
+     Wå  wilì  explaiî  thå meaninç oæ eacè oæ theså optionó  iî  á  moment®  
+Firsô á fe÷ wordó abouô thå mechanics®  Whilå thå optionó menõ ió displayed¬ 
+pressinç  thå  indeø  letteò  aô thå lefô wilì  causå  thå  settinç  oæ  thå 
+correspondinç  optioî tï bå toggled¬  anä thå ne÷ statå wilì bå showî iî thå 
+columî  aô  thå right®   Thå listinç abovå showó thå initiaì  statå  oæ  thå 
+optionó  iî mù personaì versioî oæ ZFILER®   Wheî yoõ arå finisheä  togglinç 
+options¬ jusô presó carriagå returî tï returî tï thå maiî ZFILEÒ menu® Theså 
+optioî  settingó  arå storeä iî thå ZFILEÒ shelì stacë entrù anä  wilì  thuó 
+continuå  iî  effecô througè alì ZFILEÒ operationó untiì thå commanä "X¢  ió 
+useä tï terminatå thå shell.
+
+     Thå  firsô threå optionó concerî ho÷ ZFILEÒ respondó wheî  copyinç  (oò 
+moving©  fileó anä á filå oæ thå samå namå alreadù existó iî thå destinatioî 
+directory®   Iteí  Á applieó wheî individuaì fileó arå copieä (commandó  "C¢ 
+anä "M")»  iteí Â applieó wheî á grouğ copù ió performeä (commandó "GC¢  anä 
+"GM")»  anä  iteí Ã applieó wheî performinç aî archivinç operatioî  (commanä 
+"GA")®   Iæ thå optioî ió "YES"¬ theî ZFILEÒ wilì prompô onå beforå existinç 
+fileó  arå  eraseä anä givå onå thå chancå tï canceì thå operatioî foò  thaô 
+file¬  leavinç thå existinç filå intact®   Iæ thå optioî ió toggleä tï "NO"¬ 
+theî existinç fileó wilì bå overwritteî withouô eveî á message.
+     Thå nexô twï optionó affecô thå verificatioî oæ thå copieä filå iî  thå 
+destinatioî  directory®   Iteí Ä determineó whetheò oò noô thå useò wilì  bå 
+askeä abouô verification®   Iæ thió optioî ió seô tï "N"¬  theî thå statå oæ 
+optioî  Å  wilì determinå whetheò oò noô verificatioî ió performeä  oî  filå 
+copies®   Iæ thió optioî ió seô tï "Y"¬  theî beforå eacè copy¬  move¬ grouğ 
+copy¬ oò grouğ move¬ ZFILEÒ wilì puô uğ thå prompô "Verifù (Y/N)?".
+
+     Thå  nexô twï optionó affecô thå waù fileó arå displayeä oî thå screen® 
+Iæ iteí Æ ió seô tï "Y"¬  theî fileó witè thå "system¢ oò SYÓ attributå wilì 
+bå  suppressed¬  thaô  is¬  noô includeä amonç thå selecteä fileó  oî  whicè 
+ZFILEÒ acts®   Thió ió á reasonablå choicå foò thió option¬  sincå thå  mosô 
+commoî  uså  oæ  thå  SYÓ  attributå ió tï makå  thå  fileó  disappeaò  froí 
+consideratioî durinç filå maintenancå anä displaù operations®  Iteí Ç oî thå 
+optionó  menõ determineó whetheò fileó arå sorteä firsô bù namå anä theî  bù 
+typå oò vicå versa®  Changinç thió optioî ió presentlù equivalenô tï thå "A¢ 
+commanä froí thå maiî ZFILEÒ commanä menu.
+     Thå  nexô  threå optionó concerî ho÷ filå attributeó arå  treateä  wheî 
+fileó arå copied®  Onå possibilitù ió tï creatå ne÷ fileó witè á cleaî slatå 
+oæ attributeó (thaô is¬  alì attributeó resetº  noô read-only¬  noô SYS¬ noô 
+archived)®   Thió ió whaô wilì happeî wheî optioî È ió seô tï "N¢ (buô  notå 
+optioî J¬  whicè maù overridå this)®  Wheî thå attributeó oæ thå destinatioî 
+filå arå tï bå set¬  theù caî bå seô iî twï possiblå ways®  Iæ á filå oæ thå 
+samå  namå  existeä iî thå destinatioî directory¬  theî itó filå  attributeó 
+coulä bå useä foò thå copù thaô replaceó it®   Thió ió whaô wilì bå donå  iæ 
+optioî  É  ió  seô tï "Y"®   Iæ optioî É ió seô tï "N¢ oò iæ  therå  waó  nï 
+matchinç filå iî thå destinatioî directory¬  theî thå attributeó wilì bå seô 
+tï matcè thoså oæ thå sourcå file.
+     Optioî  Ê caî seô á speciaì overridå foò thå archivå oò ARÃ  attribute®  
+Iæ thå optioî ió seô tï "N"¬ theî thå ARÃ attributå ió treateä jusô likå thå 
+otheò  attributeó accordinç tï optionó È anä I®   Iæ optioî Ê ió seô tï YES¬ 
+theî thå destinatioî filå alwayó haó itó ARÃ attributå set.
+
+     Therå waó aô onå timå á greaô deaì oæ controversù oveò thå waù thå  ARÃ 
+attributå ió handleä undeò ZFILER®  Aô onå timå iô waó alwayó reset¬ sï thaô 
+thå  destinatioî filå woulä bå markeä aó noô backeä up®   Anotheò schooì  oæ 
+thoughô asserteä that¬  oî thå contrary¬ thå filå waó backeä up¬ sincå therå 
+waó  á copù oæ iô oî thå sourcå disë froí whicè thå filå waó  copied®   Thaô 
+latteò  argumenô madå considerablå senså iî thå caså oæ copyinç fileó froí á 
+masteò  disë  tï á RAÍ disë beforå á worë session®   Herå iô  waó  certainlù 
+importanô tï starô witè alì fileó markeä witè thå ARÃ attributå sï thaô  onå 
+coulä easilù telì aô thå enä oæ thå sessioî whicè fileó haä beeî modifieä sï 
+thaô theù coulä bå copieä bacë tï thå permanenô storagå medium.
+
+     Alì  iî  all¬  É neveò understooä thió  controversy®   Botè  approacheó 
+clearlù havå merit¬  anä sincå ZFILEÒ supportó both¬ É sa÷ nï reasoî foò alì 
+thå argument®   Iî á futurå versioî oæ ZFILER¬ É thinë É woulä likå tï adä á 
+flaç  worä thaô woulä indicatå whicè driveó shoulä automaticallù seô thå ARÃ 
+flaç wheî thå Ê optioî ió seô tï YES®  Thaô way¬ thå optioî coulä bå madå tï 
+applù tï RAÍ driveó only.
+     Thå finaì iteí oî thå optioî menu¬  optioî K¬  determineó ho÷ thå macrï 
+commanä filå ZFILER.CMÄ (seå discussioî below© wilì bå located®   Therå  arå 
+twï choices®   Iæ optioî Ë ió seô tï YES¬ theî ZFILEÒ wilì looë foò iô firsô 
+iî  thå currentlù displayeä directorù anä theî alonç thå entirå ZCPR³ searcè 
+path®   Thió  optioî ió usefuì iæ onå wantó tï havå differenô macrï  commanä 
+fileó thaô applù tï specifiã directorù areas®  Alternatively¬ iæ optioî Ë ió 
+seô  tï  NO¬  theî  ZFILEÒ  locateó thå CMÄ filå  withouô  usinç  thå  path® 
+Dependinç oî ho÷ ZFILEÒ ió configureä (thió wilì bå discusseä anotheò time)¬ 
+thå  filå wilì bå soughô eitheò iî thå rooô directorù oæ thå patè (thå  lasô 
+directorù  specifieä  oî thå searcè path© oò iî á specifiã  drive/useò  areá 
+codeä intï ZF.COM®  Thió alternativå resultó iî fasteò operation¬ especiallù 
+iæ thå specifieä directorù resideó oî á RAÍ disk.
+
+     Thå  optionó  controlleä  bù thå optioî menõ caî  alsï  bå  permanentlù 
+changeä iî thå ZFILEÒ prograí filå usinç á patchinç utilitù likå ZPATCH®  Iî 
+thå  firsô  pagå oæ thå file¬  yoõ wilì seå thå ascié  strinç  "OPT:"®   Thå 
+eleveî byteó followinç thió strinç contaiî thå startuğ valueó foò thå eleveî 
+options®  Patcè á bytå tï 0° foò NÏ oò FÆ foò YES.
+
+     Onå maù alsï uså Aì Hawley'ó Zconfig¬ alonç witè thå .CFÇ filå provideä 
+witè  youò  copù  oæ  ZFILER¬  iî ordeò tï instalì ZFILER  tï  youò  tastes®  
+Handleó  alì  thå configuratioî normallù needed®   Yoõ maù alsï uså  á  filå 
+patcheò  tï changå thå defaulô nameó oæ somå oæ ZFILER'ó temporarù fileó, iæ 
+yoõ wish.
+:M:ZFMACRO
+:H:ZFHIST
+:J
+ Creditó 
+
+     Thió  documenô containó thå texô oæ twï articleó oî ZFILEÒ bù Jaù  Sagå 
+whicè  originallù  appeareä  iî  Thå Computeò Journaì issueó  #3¶  anä  #37®  
+Reprinteä witè permissioî oæ thå publisher:
+
+     Thå Computeò Journal
+     P.O® Boø 12
+     S® Plainfield¬ NÊ  07080-0012
+
+     Theså  .HLĞ fileó foò ZFILEÒ werå editeä bù Leï M®  Cavanaugè IIÉ  froí 
+thå documentatioî provideä witè ZFILER.
+

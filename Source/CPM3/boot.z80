@@ -12,6 +12,7 @@
 	extrn	dph0
 	extrn	@dtbl,@ctbl
 	extrn	@date,@hour,@min,@sec
+	extrn	@srch1
 	
 	include	ver.inc
 	
@@ -37,7 +38,7 @@ tpa$bank	equ 0
 	if banked
 
 	; Clone page zero from bank 0 to additional banks
-	ld	b,2			; last bank
+	ld	b,3			; last bank
 	ld	c,0			; src bank
 init$2:
 	push	bc			; save bank id's
@@ -110,7 +111,6 @@ cinit$3:
 	ld	(hl),0			; Set table terminator
 
 dinit:
-
 	; loop through all disk devices to count hard disk units
 	ld	b,0F8h			; SYS GET
 	ld	c,010h			; Disk Drive Unit Count
@@ -119,12 +119,12 @@ dinit:
 	ld	a,b			; count to a
 	or	a			; set flags
 	ret	z			; !!! handle zero devices (albeit poorly) !!!
-;
+
 	; loop thru devices to count total hard disk volumes
 	push	bc			; save the device count
 	ld	c,0			; use c as device list index
 	ld	e,0			; init e for hard disk volume count
-;
+
 dinit2:
 	push	bc			; save loop control
 	call	dinit3			; check drive
@@ -133,7 +133,7 @@ dinit2:
 	djnz	dinit2			; loop
 	pop	bc			; restore unit count in b
 	jr	dinit4			; continue
-;
+
 dinit3:
 	push	de			; save de (hard disk volume counter)
 	ld	b,017h			; hbios func: report device info
@@ -144,7 +144,7 @@ dinit3:
 	ret	c			; nope, return
 	inc	e			; increment hard disk count
 	ret				; and return
-;
+
 dinit4:	; set slices per volume (hdspv) based on hard disk volume count
 	ld	a,e			; hard disk volume count to a
 	ld	e,8			; assume 8 slices per volume
@@ -154,20 +154,19 @@ dinit4:	; set slices per volume (hdspv) based on hard disk volume count
 	dec	a			; dec accum to check for count = 2
 	jr	z,dinit5		; yes, skip ahead to implement 4 hdspv
 	ld	e,2			; in all other cases, we use 2 hdspv
-;
+
 dinit5:
 	ld	a,e			; slices per volume value to accum
 	ld	(hdspv),a		; save it
-;
+
 	; setup to enumerate devices to build drvmap
 	ld	b,0F8h			; SYS GET
 	ld	c,010h			; Disk Drive Unit Count
 	rst	08			; e := disk unit count
 	ld	b,e			; count to b
 	ld	c,0			; use c as device list index
-	;ld	hl,dph0			; point to first dph
 	ld	hl,0			; dph index
-;
+
 dinit6:	; loop thru all units available
 	push	bc			; preserve loop control
 	push	hl			; preserve dph pointer
@@ -197,9 +196,8 @@ dinit6a:
 	ld	(hl),a			; zero msb
 	inc	hl			; next byte
 	djnz	dinit6a
-
 	ret				; finished
-;
+
 dinit7:	; process unit
 	ld	e,0			; initialize slice index
 	ld	b,1			; default loop counter
@@ -209,7 +207,7 @@ dinit7:	; process unit
 	jr	c,dinit8		; nope, leave loop count at 1
 	ld	a,(hdspv)		; get slices per volume to accum
 	ld	b,a			; move to b for loop counter
-;
+
 dinit8:
 	; d=unit, e=slice, l=dph#
 	ld	a,l			; dph # to accum
@@ -233,12 +231,17 @@ dinit8:
 	djnz	dinit8			; loop till done with unit
 	ret
 
-addhla:
-	add	a,l
-	ld	l,a
-	ret	nc
-	inc	h
-	ret
+; RomWBW CBIOS page zero stamp starts at $40
+; $40-$41: Marker ('W', ~'W')
+; $42-$43: Version bytes: major/minor, update/patch
+; $44-$45: CBIOS Extension Info address
+
+stploc	equ	40h
+stpimg	db	'W',~'W'		; marker
+	db	rmj << 4 | rmn		; first byte of version info
+	db	rup << 4 | rtp		; second byte of version info
+	dw	cbx			; address of cbios ext data
+stpsiz	equ	$ - stpimg
 
 	cseg	; boot loading most be done from resident memory
 	
@@ -246,8 +249,34 @@ addhla:
     ;	called CCP.COM on the system drive.
 
 ?ldccp:
+
+	if zpm
+
+	; Swap A: and system drive (make A: the system drive)
+	ld	bc,(@dtbl)		; get drive A DPH
+	ld	hl,@dtbl		; point to boot drive DPH
+	ld	a,(@sysdr)
+	rlca
+	call	addhla
+	ld	e,(hl)			; set boot drive to drive A DPH
+	ld	(hl),c			; ... and save boot drive DPH
+	inc	hl
+	ld	d,(hl)
+	ld	(hl),b
+	ld	(@dtbl),de		; set drive a DPH to boot drive
+	
+	xor	a			; update @sysdr
+	ld	(@sysdr),a
+	
+	endif
+	
+	; Force CCP to use system boot drive as initial default
+	ld	a,(@sysdr)		; get system boot drive
+	ld	(@ccpdr),a		; set CCP current drive
+
 	; First time, load the CCP.COM file into TPA
 	ld	a,(@sysdr)		; get system boot drive
+	;ld	(4),a			; save in page zero???
 	inc	a			; drive + 1 for FCB
 	ld	(ccp$fcb),a		; stuff into FCB
 	add	'A' - 1			; drive letter
@@ -308,9 +337,13 @@ ld$1:
 	
 	endif
 	
-	; Force CCP to use system boot drive as initial default
-	ld	a,(@sysdr)		; get system boot drive
-	ld	(@ccpdr),a		; set CCP current drive
+	;; Set first search path to system boot drive
+	;inc	a
+	;ld	(@srch1),a
+	
+	;ld	e,a
+	;ld	c,14
+	;call	bdos
 
 	ret
 
@@ -359,14 +392,29 @@ rl$1:
 	jr	?ldccp
 
 	endif
-
+	
 ?time:
-
+	; per CP/M 3 docs, *must* preserve HL, DE
+	push	hl
+	push	de
+	
+	; force return through time$ret
+	ld	hl,time$ret
+	push	hl
+	
 	; branch to get or set routine
 	ld	a,c		; get switch value
 	or	a		; test for zero
-	jr	nz,time$set	; 0 means get time, else set time
+	jr	z,time$get	; 0 means get time
+	jr	time$set	; else set time
 
+time$ret:
+	; restore HL, DE
+	pop	de
+	pop	hl
+	ret
+
+time$get:
 	; RTC -> cpm date/time in SCB
 	
 	; read time from RTC
@@ -497,6 +545,38 @@ daystbl:
 	dw	304		; November
 	dw	334		; December
 
+		; RTC time buffer (all values packed bcd)
+tim$buf:
+tim$yr		db	80h
+tim$mon		db	05h
+tim$day		db	10h
+tim$hr		db	01h
+tim$min		db	02h
+tim$sec		db	03h
+
+open:
+	ld	c,15
+	jp	bdos
+
+setdma:
+	ld	c,26
+	jp	bdos
+
+setmulti:
+	ld	c,44
+	jp	bdos
+
+read:
+	ld	c,20
+	jp	bdos
+	
+addhla:
+	add	a,l
+	ld	l,a
+	ret	nc
+	inc	h
+	ret
+
 bcd2bin:
 	; convert A from packed bcd to binary
 	push	bc
@@ -534,21 +614,26 @@ bin2bcd1:
 	pop	bc
 	ret
 
-open:
-	ld	c,15
-	jp	bdos
+	if zpm
 
-setdma:
-	ld	c,26
-	jp	bdos
+signon$msg	db	13,10,'ZPM3'
+	if banked
+		db	' [BANKED]'
+	endif
+		db	' on HBIOS v'
+		biosver
+		db	13,10,13,10,0
+		
+ccp$msg		db	13,10,'BIOS Err on '
+ccp$msg$drv	db	'?'
+		db	': No ZCCP.COM file',0
 
-setmulti:
-	ld	c,44
-	jp	bdos
 
-read:
-	ld	c,20
-	jp	bdos
+ccp$fcb		db	0,'ZCCP    ','COM',0,0,0,0
+		ds	16
+fcb$nr		db	0,0,0
+
+	else
 
 signon$msg	db	13,10,'CP/M v3.0'
 	if banked
@@ -557,7 +642,7 @@ signon$msg	db	13,10,'CP/M v3.0'
 		db	' on HBIOS v'
 		biosver
 		db	13,10,13,10,0
-
+		
 ccp$msg		db	13,10,'BIOS Err on '
 ccp$msg$drv	db	'?'
 		db	': No CCP.COM file',0
@@ -567,29 +652,10 @@ ccp$fcb		db	0,'CCP     ','COM',0,0,0,0
 		ds	16
 fcb$nr		db	0,0,0
 
+	endif
+
 @bootdu		db	0
 hdspv		db	2		; slices per volume for hard disks (must be >= 1)
-
-		; RTC time buffer (all values packed bcd)
-tim$buf:
-tim$yr		db	0
-tim$mon		db	0
-tim$day		db	0
-tim$hr		db	0
-tim$min		db	0
-tim$sec		db	0
-
-; RomWBW CBIOS page zero stamp starts at $40
-; $40-$41: Marker ('W', ~'W')
-; $42-$43: Version bytes: major/minor, update/patch
-; $44-$45: CBIOS Extension Info address
-
-stploc	equ	40h
-stpimg	db	'W',~'W'		; marker
-	db	rmj << 4 | rmn		; first byte of version info
-	db	rup << 4 | rtp		; second byte of version info
-	dw	cbx			; address of cbios ext data
-stpsiz	equ	$ - stpimg
 
 ; The following section contains key information and addresses for the
 ; RomWBW CBIOS.  A pointer to the start of this section is stored with
