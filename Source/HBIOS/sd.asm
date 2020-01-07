@@ -58,14 +58,14 @@
 ;	+---+---+---+---+---+---+---+---+
 ;	| 0 | X | X | X | X | X | X | X |
 ;	+---+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-;		  |	  |   |	  |   |	  |   |
-;		  |	  |   |	  |   |	  |   +--- IDLE
-;		  |	  |   |	  |   |	  +------- ERASE RESET
-;		  |	  |   |	  |   +----------- ILLEGAL COMMAND
-;		  |	  |   |	  +--------------- COM CRC ERROR
-;		  |	  |   +------------------- ERASE SEQUENCE ERROR
-;		  |	  +----------------------- ADDRESS ERROR
-;		  +--------------------------- PARAMETER ERROR
+;	  |	  |   |	  |   |	  |   |
+;	  |	  |   |	  |   |	  |   +--- IDLE
+;	  |	  |   |	  |   |	  +------- ERASE RESET
+;	  |	  |   |	  |   +----------- ILLEGAL COMMAND
+;	  |	  |   |	  +--------------- COM CRC ERROR
+;	  |	  |   +------------------- ERASE SEQUENCE ERROR
+;	  |	  +----------------------- ADDRESS ERROR
+;	  +--------------------------- PARAMETER ERROR
 ;
 ;	=== DATA ERROR TOKEN ===
 ;
