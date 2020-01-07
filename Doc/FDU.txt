@@ -96,8 +96,8 @@ Finally, you will need a floppy drive connected via an
 appropriate cable:
 
 Disk IO - no twist in cable, drive unit 0/1 must be selected by jumper on drive
-DISK IO 3, Zeta, Zeta 2, RC2014 - cable with twist, unit 0 after twist, unit 1 before twist
-DIDE, N8, Mark IV, SmallZ80, Dyno - cable with twist, unit 0 before twist, unit 1 after twist
+DISK IO 3, Zeta, Zeta 2, RC2014, Dyno - cable with twist, unit 0 after twist, unit 1 before twist
+DIDE, N8, Mark IV, SmallZ80 - cable with twist, unit 0 before twist, unit 1 after twist
 
 Note that FDU does not utilize your systems ROM or OS to 
 access the floppy system.  FDU interacts directly with 
@@ -511,4 +511,4 @@ WW 9/5/2018: v5.3
   - Added support for SmallZ80
 
 WW 5/1/2020: v5.4
-  - Added support for Dyno
+  - Added support for Dyno (based on work by Steve Garcia)
