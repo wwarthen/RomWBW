@@ -4,15 +4,15 @@
 ;=============================================================================
 ;
 ; 1) TESTING
-;    - TRY TO TEST GOIDLE, FIND CARD THAT REQUIRES 2 REQUESTS
-;    - DUAL CARDS
-;    - TEST XC CARD TYPE DETECTION
-;    - TRY TO GET INIT TO FAIL, REMOVE DELAYS AT START OF GOIDLE?
+;	- TRY TO TEST GOIDLE, FIND CARD THAT REQUIRES 2 REQUESTS
+;	- DUAL CARDS
+;	- TEST XC CARD TYPE DETECTION
+;	- TRY TO GET INIT TO FAIL, REMOVE DELAYS AT START OF GOIDLE?
 ;
 ;----------------------------------------------------------------------------------------------
 ; SD Signal	Active	JUHA	N8	CSIO	PPI	UART	DSD	MK4	SC	MT
-; ------------	------- ------- ------- ------- ------- ------- ------- -------	-------	------- 
-; CS (DAT3)	LO ->	RTC:2	RTC:2	RTC:2	~PC:4	~MCR:3	OPR:2	SD:2	~RTC:2/3OPR:4/5	
+; ------------	------- ------- ------- ------- ------- ------- ------- -------	-------	-------
+; CS (DAT3)	LO ->	RTC:2	RTC:2	RTC:2	~PC:4	~MCR:3	OPR:2	SD:2	~RTC:2/3OPR:4/5
 ; CLK		HI ->	RTC:1	RTC:1	CSIO	PC:1	~MCR:2	OPR:1	CSIO	CSIO	SPI
 ; DI (CMD)	HI ->	RTC:0	RTC:0	CSIO	PC:0	~MCR:0	OPR:0	CSIO	CSIO	SPI
 ; DO (DAT0)	HI ->	RTC:7	RTC:6	CSIO	PB:7	~MSR:5	OPR:0	CSIO	CSIO	SPI
@@ -58,13 +58,13 @@
 ;	+---+---+---+---+---+---+---+---+
 ;	| 0 | X | X | X | X | X | X | X |
 ;	+---+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-;	      |	  |   |	  |   |	  |   |
-;	      |	  |   |	  |   |	  |   +--- IDLE
-;	      |	  |   |	  |   |	  +------- ERASE RESET
-;	      |	  |   |	  |   +----------- ILLEGAL COMMAND
-;	      |	  |   |	  +--------------- COM CRC ERROR
-;	      |	  |   +------------------- ERASE SEQUENCE ERROR
-;	      |	  +----------------------- ADDRESS ERROR
+;	      |   |   |   |   |	  |   |
+;	      |   |   |   |   |	  |   +--- IDLE
+;	      |   |   |   |   |	  +------- ERASE RESET
+;	      |   |   |   |   +----------- ILLEGAL COMMAND
+;	      |   |   |   +--------------- COM CRC ERROR
+;	      |   |   +------------------- ERASE SEQUENCE ERROR
+;	      |   +----------------------- ADDRESS ERROR
 ;	      +--------------------------- PARAMETER ERROR
 ;
 ;	=== DATA ERROR TOKEN ===
@@ -1281,7 +1281,7 @@ SD_EXECCMD:
 #ENDIF
 ;
 	CALL	SD_SELECT
-;	
+;
 #IF (SD_NOPULLUP)
 	; DO NOT WAIT FOR READY PRIOR TO CMD0!  THIS HACK IS REQUIRED BY
 	; STUPID SD CARD ADAPTERS THAT NOW OMIT THE MISO PULL-UP.  SEE
@@ -1290,11 +1290,11 @@ SD_EXECCMD:
 	CP	SD_CMD_GO_IDLE_STATE
 	JR	Z,SD_EXECCMD0
 #ENDIF
-;	
+;
 	; WAIT FOR CARD TO BE READY
 	CALL	SD_WAITRDY		; WAIT FOR CARD TO BE READY FOR A COMMAND
 	JP	NZ,SD_ERRRDYTO		; HANDLE TIMEOUT ERROR
-;	
+;
 SD_EXECCMD0:
 	; SEND THE COMMAND
 	LD	HL,SD_CMDBUF		; POINT TO COMMAND BUFFER
@@ -1422,7 +1422,7 @@ SD_PUTDATA:
 #IF (SDMODE == SDMODE_MT)
 	LD	D,B			; length to DB
 	LD	B,C
-	LD	A,$FE			; PACKET START	
+	LD	A,$FE			; PACKET START
 	OUT	(SD_WRTR),A		; SEND IT
 
 	LD	C,SD_WRTR
@@ -1438,7 +1438,7 @@ SD_PUTDATA1:
 	JR	NZ,SD_PUTDATA1		; LOOP FOR ALL BYTES
 
 	LD	A,$FF			; DUMMY CRC BYTE
-	OUT	(SD_WRTR),A			
+	OUT	(SD_WRTR),A
 	OUT	(SD_WRTR),A		; SEND IT TWICE
 
 	LD	DE,$7FFF		; LOOP MAX (TIMEOUT)
@@ -1471,7 +1471,7 @@ SD_PUTDATA2:
 #ENDIF
 	CP	$FF			; WANT BYTE != $FF
 	JR	NZ,SD_PUTDATA3		; NOT $FF, MOVE ON
-	DEC    DE
+	DEC	DE
 	BIT	7,D
 	JR	Z,SD_PUTDATA2		; KEEP TRYING UNTIL TIMEOUT
 SD_PUTDATA3:
@@ -2025,6 +2025,7 @@ SD_DSKBUF	.DW	0		; ADR OF ACTIVE DISK BUFFER
 ;
 MIRROR:
 #IF (((SDMODE == SDMODE_CSIO) | (SDMODE == SDMODE_MK4) | (SDMODE == SDMODE_SC)) & SDCSIOFAST)
+					; FASTEST BUT USES MOST CODE SPACE
 	LD	BC,MIRTAB		; 256 BYTE MIRROR TABLE
 	ADD	A,C			; ADD OFFSET
 	LD	C,A
@@ -2034,12 +2035,23 @@ MIRROR2:
 	LD	A,(BC)			; GET RESULT
 	LD	C,A			; RETURN RESULT IN C
 	RET
-#ELSE					; FASTEST BUT USES MOST CODE SPACE
-	LD	B,8			; BIT COUNTER
-MIRROR1:
-	RLA				; ROTATE BIT 7 INTO CARRY
-	RR	C			; ROTATE CARRY INTO RESULT
-	DJNZ	MIRROR1			; DO ALL 8 BITS
+#ELSE
+					; SLOWER BUT LESS CODE SPACE
+	LD  C,A				; A = 76543210
+	RLCA
+	RLCA				; A = 54321076
+	XOR C
+	AND 0AAH
+	XOR C				; A = 56341270
+	LD C,A
+	RLCA
+	RLCA
+	RLCA				; A = 41270563
+	RRC C				; C = 05634127
+	XOR C
+	AND 066H
+	XOR C				; A = 01234567
+	LD C,A				; RETURN RESULT IN C
 	RET
 #ENDIF
 ;
