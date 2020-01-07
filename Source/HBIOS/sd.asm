@@ -58,14 +58,14 @@
 ;	+---+---+---+---+---+---+---+---+
 ;	| 0 | X | X | X | X | X | X | X |
 ;	+---+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-;	  |	  |   |	  |   |	  |   |
-;	  |	  |   |	  |   |	  |   +--- IDLE
-;	  |	  |   |	  |   |	  +------- ERASE RESET
-;	  |	  |   |	  |   +----------- ILLEGAL COMMAND
-;	  |	  |   |	  +--------------- COM CRC ERROR
-;	  |	  |   +------------------- ERASE SEQUENCE ERROR
-;	  |	  +----------------------- ADDRESS ERROR
-;	  +--------------------------- PARAMETER ERROR
+;	      |   |   |   |   |	  |   |
+;	      |   |   |   |   |	  |   +--- IDLE
+;	      |   |   |   |   |	  +------- ERASE RESET
+;	      |   |   |   |   +----------- ILLEGAL COMMAND
+;	      |   |   |   +--------------- COM CRC ERROR
+;	      |   |   +------------------- ERASE SEQUENCE ERROR
+;	      |   +----------------------- ADDRESS ERROR
+;	      +--------------------------- PARAMETER ERROR
 ;
 ;	=== DATA ERROR TOKEN ===
 ;
@@ -1691,9 +1691,9 @@ SD_PUT:
 	SET	4,A			; SET TRANSMIT ENABLE
 	OUT0	(SD_CNTR),A
   #ELSE
-	#IF (SDMODE == SDMODE_UART)
+    #IF (SDMODE == SDMODE_UART)
 	XOR	$FF			; DI IS INVERTED ON UART
-	#ENDIF
+    #ENDIF
 	LD	C,A			; C=BYTE TO SEND
 	LD	B,8			; SEND 8 BITS (LOOP 8 TIMES)
 	LD	A,(SD_OPRVAL)		; LOAD CURRENT OPR VALUE
@@ -1737,29 +1737,29 @@ SD_GET1:
 	XOR	SD_CLK			; TOGGLE CLOCK
 	OUT	(SD_OPRREG),A		; UPDATE CLOCK
 	IN	A,(SD_INPREG)		; READ THE DATA WHILE CLOCK IS ACTIVE
-	#IF ((SDMODE == SDMODE_JUHA) | (SDMODE == SDMODE_PPI))
+    #IF ((SDMODE == SDMODE_JUHA) | (SDMODE == SDMODE_PPI))
 	RLA				; ROTATE INP:7 INTO CF
-	#ENDIF
-	#IF (SDMODE == SDMODE_N8)
+    #ENDIF
+    #IF (SDMODE == SDMODE_N8)
 	RLA				; ROTATE INP:6 INTO CF
 	RLA				; "
-	#ENDIF
-	#IF (SDMODE == SDMODE_UART)
+    #ENDIF
+    #IF (SDMODE == SDMODE_UART)
 	RLA				; ROTATE INP:5 INTO CF
 	RLA				; "
 	RLA				; "
-	#ENDIF
-	#IF (SDMODE == SDMODE_DSD)
+    #ENDIF
+    #IF (SDMODE == SDMODE_DSD)
 	RRA				; ROTATE INP:0 INTO CF
-	#ENDIF
+    #ENDIF
 	RL	C			; ROTATE CF INTO C:0
 	LD	A,(SD_OPRVAL)		; BACK TO INITIAL VALUES (TOGGLE CLOCK)
 	OUT	(SD_OPRREG),A		; DO IT
 	DJNZ	SD_GET1			; REPEAT FOR ALL 8 BITS
 	LD	A,C			; GET BYTE RECEIVED INTO A
-	#IF (SDMODE == SDMODE_UART)
+    #IF (SDMODE == SDMODE_UART)
 	XOR	$FF			; DO IS INVERTED ON UART
-	#ENDIF
+    #ENDIF
   #ENDIF
 #ENDIF
 	RET
