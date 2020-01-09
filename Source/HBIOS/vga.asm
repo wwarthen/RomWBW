@@ -21,8 +21,16 @@ VGA_HI		.EQU	VGA_BASE + $05	; BOARD RAM HI ADDRESS
 VGA_LO		.EQU	VGA_BASE + $06	; BOARD RAM LO ADDRESS
 VGA_DAT		.EQU	VGA_BASE + $07	; BOARD RAM BYTE R/W
 ;
+#IF (VGASIZ=V80X25)
 VGA_ROWS	.EQU	25
 VGA_COLS	.EQU	80
+VGA_SCANL	.EQU	16
+#ENDIF
+#IF (VGASIZ=V80X30)
+VGA_ROWS	.EQU	30
+VGA_COLS	.EQU	80
+VGA_SCANL	.EQU	16
+#ENDIF
 ;
 #DEFINE		DEFREGS		REGS_VGA
 ;
@@ -134,7 +142,7 @@ VGA_VDARES:
 	LD	DE,0		; ROW = 0, COL = 0
 	CALL	VGA_XY		; SEND CURSOR TO TOP LEFT
 	LD	A,' '		; BLANK THE SCREEN
-	LD	DE,$800		; FILL ENTIRE BUFFER
+	LD	DE,(VGA_ROWS*VGA_COLS)	; FILL ENTIRE BUFFER
 	CALL	VGA_FILL	; DO IT
 	LD	DE,0		; ROW = 0, COL = 0
 	CALL	VGA_XY		; SEND CURSOR TO TOP LEFT
@@ -514,7 +522,7 @@ VGA_XY2IDX1:
 	RET				; RETURN
 ;
 ;----------------------------------------------------------------------
-; WRITE VALUE IN A TO CURRENT VDU BUFFER POSTION, ADVANCE CURSOR
+; WRITE VALUE IN A TO CURRENT VDU BUFFER POSITION, ADVANCE CURSOR
 ;----------------------------------------------------------------------
 ;
 VGA_PUTCHAR:
@@ -829,8 +837,9 @@ VGA_RUB		.DB	0	; REVERSE/UNDERLINE/BLINK (-----RUB)
 ;   BIT 1: FG GREEN
 ;   BIT 0: FG BLUE
 ;
+#IF	(VGASIZ=V80X25)
 ;===============================================================================
-; DEFAULT REGISTER VALUES
+; 80x25 REGISTER VALUES
 ;===============================================================================
 ;
 REGS_VGA:
@@ -852,7 +861,31 @@ REGS_VGA:
 	.DB	30,$01 | $08	; CTL 1, 2 WINDOWS & ENABLE R27 VSYNC FINE ADJ
 	
 	.DB	$FF		; END MARKER
+#ENDIF
+#IF	(VGASIZ=V80X30)
+;===============================================================================
+; 80x30 REGISTER VALUES
+;===============================================================================
 ;
+REGS_VGA:
+	.DB	0,100 - 1	; HORZ TOT - 1
+	.DB	1,80		; HORZ DISP
+	.DB	2,80 + 2	; HORZ DISP + HORZ FP
+	.DB	3,44		; VERT SW, HORZ SW
+	.DB	4,33 - 1	; VERT TOT - 1
+	.DB	5,13		; VERT TOT ADJ
+	.DB	6,30		; VERT DISP
+	.DB	7,30 + 0	; VERT DISP + VERT FP ROWS
+	.DB	9,16 - 1	; CHAR HEIGHT - 1
+	.DB	10,109		; CURSOR START & CURSOR BLINK
+	.DB	11,14		; CURSOR END
+	.DB	12,0		; SCRN 1 START (HI)
+	.DB	13,0		; SCRN 1 START (LO)			
+	.DB	18,-1		; S2 ROW - 1
+	.DB	27,0		; VERT SYNC POS ADJ
+	.DB	30,$01 | $08	; CTL 1, 2 WINDOWS & ENABLE R27 VSYNC FINE ADJ
+	.DB	$FF		; END MARKER
+#ENDIF
 ;==================================================================================================
 ;   VGA DRIVER - INSTANCE DATA
 ;==================================================================================================
