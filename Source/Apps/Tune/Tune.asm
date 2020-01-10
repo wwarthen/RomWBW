@@ -2172,6 +2172,8 @@ LOUT	OUT (C),A
 #IF WBW
 	DI
 	CALL SLOWIO
+	LD A,8		; sbc-v2-004 change to
+	OUT (112),A	; half clock speed
 	LD DE,(CFG)	; D := RDAT, E := RSEL
 	XOR A		; start with reg 0
 	LD C,E		; point to address port
@@ -2190,6 +2192,8 @@ LOUT	OUT (C),A	; select register
 	LD C,D		; select data port
 	OUT (C),A	; write value to register 13
 LOUT2
+	LD A,0		; sbc-v2-004 change to
+	OUT (112),A	; full clock speed
 	CALL NORMIO
 	EI
 	RET		; And done
