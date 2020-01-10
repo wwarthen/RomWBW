@@ -1,3 +1,5 @@
+;	Zap font zap-vga-09 (c) John Zaitseff released under GNU General Public Licence. Refer www.gnu.org/licenses/
+;
 	.DB   $7E, $C3, $99, $F3, $E7, $FF, $E7, $7E, $00, $00, $00, $00, $00, $00, $00, $00
 	.DB   $00, $00, $7F, $E6, $66, $66, $C3, $00, $00, $00, $00, $00, $00, $00, $00, $00
 	.DB   $0C, $18, $FC, $30, $FC, $60, $C0, $00, $00, $00, $00, $00, $00, $00, $00, $00
