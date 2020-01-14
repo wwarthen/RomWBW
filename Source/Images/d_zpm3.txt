@@ -1,0 +1,39 @@
+#
+# Add files from CPM3 build
+#
+../ZPM3/zpmldr.com 0:
+../ZPM3/cpmldr.com 0:
+../ZPM3/autotog.com 0:
+../ZPM3/clrhist.com 0:
+../ZPM3/setz3.com 0:
+../ZPM3/cpm3.sys 0:
+../ZPM3/zccp.com 0:
+../ZPM3/zinstal.zpm 0:
+../ZPM3/startzpm.com 0:
+../ZPM3/makedos.com 0:
+../ZPM3/gencpm.dat 0:
+../ZPM3/bnkbios3.spr 0:
+../ZPM3/bnkbdos3.spr 0:
+../ZPM3/resbdos3.spr 0:
+#
+# Add RomWBW utilities
+#
+../../Binary/Apps/assign.com 0:
+../../Binary/Apps/fat.com 0:
+../../Binary/Apps/fdu.com 0:
+../../Binary/Apps/format.com 0:
+../../Binary/Apps/mode.com 0:
+../../Binary/Apps/osldr.com 0:
+../../Binary/Apps/rtc.com 0:
+../../Binary/Apps/survey.com 0:
+../../Binary/Apps/syscopy.com 0:
+../../Binary/Apps/sysgen.com 0:
+../../Binary/Apps/talk.com 0:
+../../Binary/Apps/timer.com 0:
+../../Binary/Apps/xm.com 0:
+../../Binary/Apps/inttest.com 0:
+#
+# Add Tune application and sample files
+#
+../../Binary/Apps/tune.com 3:
+../../Binary/Apps/Tunes/*.* 3:

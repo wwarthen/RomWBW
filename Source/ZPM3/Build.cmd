@@ -34,34 +34,3 @@ echo.
 copy genbnk.dat gencpm.dat
 zx gencpm -auto -display
 rem pause
-
-if not exist ../../Binary/hd_zpm3.img goto :eof
-
-rem Update hd_zpm3.img
-echo.
-echo.
-echo *** Update Disk Image ***
-echo.
-for %%f in (
-  zpmldr.com
-  cpmldr.com
-  autotog.com
-  clrhist.com
-  setz3.com
-  cpm3.sys
-  zccp.com
-  zinstal.zpm
-  startzpm.com
-  makedos.com
-  gencpm.dat
-  bnkbios3.spr
-  bnkbdos3.spr
-  resbdos3.spr
-) do call :upd_img %%f
-goto :eof
-
-:upd_img
-echo   %1...
-cpmrm.exe -f wbw_hd0 ../../Binary/hd_zpm3.img 0:%1
-cpmcp.exe -f wbw_hd0 ../../Binary/hd_zpm3.img %1 0:%1
-goto :eof

@@ -85,37 +85,3 @@ rem copy genres.dat getcpm.dat
 rem *** Banked ***
 copy cpm3bnk.sys cpm3.sys
 copy genbnk.dat gencpm.dat
-
-if not exist ../../Binary/hd_cpm3.img goto :eof
-
-rem Update cpm_hd.img
-echo.
-echo.
-echo *** Update Disk Image ***
-echo.
-for %%f in (
-  cpmldr.com
-  ccp.com
-  gencpm.com
-  genres.dat
-  genbnk.dat
-  bios3.spr
-  bnkbios3.spr
-  bdos3.spr
-  bnkbdos3.spr
-  resbdos3.spr
-  cpm3res.sys
-  cpm3bnk.sys
-  gencpm.dat
-  cpm3.sys
-  readme.1st
-  cpm3fix.pat
-) do call :upd_img %%f
-
-goto :eof
-
-:upd_img
-echo   %1...
-cpmrm.exe -f wbw_hd0 ../../Binary/hd_cpm3.img 0:%1
-cpmcp.exe -f wbw_hd0 ../../Binary/hd_cpm3.img %1 0:%1
-goto :eof
