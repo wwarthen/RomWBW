@@ -54,6 +54,7 @@
 ;      - config/<plt>_<cfg>.asm
 ;        - cfg_<plt>.asm
 ;  - <drivers>.asm
+;  - <fonts>.asm
 ;  - util.asm
 ;  - time.asm
 ;  - bcd.asm
@@ -61,6 +62,7 @@
 ;  - encode.asm
 ;  - [xio|mio].asm
 ;  - dsky.asm
+;  - unlzsa2s.asm
 ; 
 ;
 ; INCLUDE GENERIC STUFF
@@ -2862,7 +2864,11 @@ VGA_FONT:
  #IF (CVDUENABLE)
 CVDU_FONT:
  #ENDIF
-  #INCLUDE "font8x16.asm"
+  #IF USEZLSA2
+   #INCLUDE "font8x16c.asm"
+  #ELSE 
+   #INCLUDE "font8x16u.asm" 
+  #ENDIF
   .ECHO "8X16 " 
 #ENDIF
 ;
@@ -2871,7 +2877,11 @@ CVDU_FONT:
 #IF (VGAENABLE)
  #IF (VGASIZ=V80X43))
 VGA_FONT:
-   #INCLUDE "font8X11.asm"
+  #IF USEZLSA2
+   #INCLUDE "font8x11c.asm"
+  #ELSE 
+   #INCLUDE "font8x11u.asm" 
+  #ENDIF
    .ECHO "8X11 "
  #ENDIF
 #ENDIF
@@ -2885,7 +2895,11 @@ VGA_FONT:
  #IF (TMSENABLE)
 TMS_FONT:
  #ENDIF
-  #INCLUDE "font_8x8.asm" 
+  #IF USEZLSA2
+   #INCLUDE "font8x8c.asm"
+  #ELSE 
+   #INCLUDE "font8x8u.asm" 
+  #ENDIF
   .ECHO "8X8 " 
 #ENDIF
 ;
@@ -3064,6 +3078,12 @@ SIZ_CTC	.EQU	$ - ORG_CTC
 #IF (DSKYENABLE)
 #DEFINE	DSKY_KBD
 #INCLUDE "dsky.asm"
+;
+; INCLUDE ZLSA2 decompression engine if required.
+;
+#ENDIF
+#IF ((VGAENABLE | CVDUENABLE | TMSENABLE) & USEZLSA2)
+#INCLUDE "unlzsa2s.asm"
 #ENDIF
 ;
 ; DETECT CPU SPEED USING DS-1302 RTC
