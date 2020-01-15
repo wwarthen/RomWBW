@@ -14,7 +14,7 @@ $env:PATH = $CpmToolsPath + ';' + $env:PATH
 
 "Generating Floppy Disk ${Disk}..."
 
-$Blank = "".PadLeft(1440KB, 0xE5)
+$Blank = ([string]([char]0xE5)) * 1440KB
 Set-Content -Value $Blank -NoNewLine -Path "fd_${Disk}.img"
 
 for ($Usr=0; $Usr -lt 16; $Usr++)

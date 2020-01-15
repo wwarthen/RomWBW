@@ -14,7 +14,7 @@ $env:PATH = $CpmToolsPath + ';' + $env:PATH
 
 "Generating Hard Disk ${Disk}..."
 
-$Blank = "".PadLeft((128KB * 65), 0xE5)
+$Blank = ([string]([char]0xE5)) * (128KB * 65)
 Set-Content -Value $Blank -NoNewLine -Path "hd_${Disk}.img"
 
 for ($Usr=0; $Usr -lt 16; $Usr++)
