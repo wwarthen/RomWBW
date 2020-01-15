@@ -57,8 +57,8 @@ command prompt.  Build.cmd in turn invokes separate scripts to create
 the floppy and hard disk images.
 
 As distributed, you will see that there are several d_ directories 
-populated with files.  If you look at the BuildFD.ps1 and BuildHD.ps1 
-scripts, you will find that the names of each of these directories is 
+populated with files.  If you look at the Build.cmd 
+script, you will find that the names of each of these directories is 
 listed.  If you want to add a new d_ directory to be converted into a 
 disk image, you will need to add the name of your new directory to 
 this list.  Note that each d_ directory may be turned into a floppy 
@@ -76,10 +76,10 @@ hard disk.  Note that cpmtools is used to generate the images and is
 included in the distribution under the Tools directory.
 
 The scripts are intended to be run from a command prompt.  Open a 
-command prompt and navigate to the Images directory.  To build the 
-floppy disk images, use the command "BuildFD". To build the hard disk 
-images, use the command "BuildHD".  You can use the command "Build" 
-to build both the floppy and hard disk images in one run.
+command prompt and navigate to the Images directory.  Use the command
+"Build" to build both the floppy and hard disk images in one run.
+You can build a single disk image by running either BuildFD.cmd or
+BuildHD.cmd with a single parameter specifying the disk name.
 
 After completion of the script, the resultant image files are placed 
 in the Binary directory with names such as fd_xxx.img and hd_xxx.img.

@@ -1,33 +1,48 @@
+Param([Parameter(Mandatory)]$Disk)
+
 $ErrorAction = 'Stop'
+
+if (-not (Test-Path("d_${Disk}/")))
+{
+	"Source directory d_${Disk} for disk ${Disk} not found!"
+	return
+}
 
 $CpmToolsPath = '../../Tools/cpmtools'
 
 $env:PATH = $CpmToolsPath + ';' + $env:PATH
 
-$Blank = ([byte[]](0xE5) * 1440KB)
+"Generating Floppy Disk ${Disk}..."
 
-"Creating work file..."
-if (!(Test-Path('Blank.tmp'))) {Set-Content -Value $Blank -Encoding byte -Path 'Blank.tmp'}
+$Blank = "".PadLeft(1440KB, 0xE5)
+Set-Content -Value $Blank -NoNewLine -Path "fd_${Disk}.img"
 
-"Creating floppy disk images..."
-foreach ($Dsk in @("cpm3","cpm22","nzcom","ws4","zpm3","zsdos"))
+for ($Usr=0; $Usr -lt 16; $Usr++)
 {
-	"Generating Floppy Disk ${Dsk}..."
-	copy "Blank.tmp" "fd_${Dsk}.img"
-	for ($Usr=0; $Usr -lt 16; $Usr++)
+	if (Test-Path ("d_${Disk}/u${Usr}/*")) 
 	{
-		if (Test-Path ("d_${Dsk}/u${Usr}/*")) 
+		$Cmd = "cpmcp -f wbw_fd144 fd_${Disk}.img d_${Disk}/u${Usr}/*.* ${Usr}:"
+		$Cmd
+		Invoke-Expression $Cmd
+	}
+}
+
+if (Test-Path("d_${Disk}.txt"))
+{
+	foreach($Line in Get-Content "d_${Disk}.txt")
+	{
+		$Spec = $Line.Trim()
+		if (($Spec.Length -gt 0) -and ($Spec.Substring(0,1) -ne "#"))
 		{
-			$Cmd = "cpmcp -f wbw_fd144 fd_${Dsk}.img d_${Dsk}/u${Usr}/*.* ${Usr}:"
+			$Cmd = "cpmcp -f wbw_fd144 fd_${Disk}.img ${Spec}"
 			$Cmd
 			Invoke-Expression $Cmd
 		}
 	}
 }
 
-"Moving images into output directory..."
-&$env:COMSPEC /c move fd_*.img ..\..\Binary\
+"Moving image fd_${Disk}.img into output directory..."
 
-Remove-Item *.tmp
+&$env:COMSPEC /c move fd_${Disk}.img ..\..\Binary\
 
 return
