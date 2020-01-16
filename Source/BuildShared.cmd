@@ -11,3 +11,4 @@ setlocal & cd CPM3 && call Build || exit /b 1 & endlocal
 setlocal & cd ZPM3 && call Build || exit /b 1 & endlocal
 setlocal & cd Forth && call Build || exit /b 1 & endlocal
 setlocal & cd Fonts && call Build || exit /b 1 & endlocal
+setlocal & cd BL && call Build || exit /b 1 & endlocal

@@ -17,8 +17,5 @@ fonttool font8x8c.bin > font8x8c.asm
 fonttool font8x11c.bin > font8x11c.asm
 fonttool font8x16c.bin > font8x16c.asm
 
-copy *c.asm %HBIOS%\
-copy *u.asm %HBIOS%\
-
 goto :eof
 
