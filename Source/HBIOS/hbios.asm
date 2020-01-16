@@ -3078,10 +3078,10 @@ SIZ_CTC	.EQU	$ - ORG_CTC
 #IF (DSKYENABLE)
 #DEFINE	DSKY_KBD
 #INCLUDE "dsky.asm"
+#ENDIF
 ;
 ; INCLUDE ZLSA2 decompression engine if required.
 ;
-#ENDIF
 #IF ((VGAENABLE | CVDUENABLE | TMSENABLE) & USEZLSA2)
 #INCLUDE "unlzsa2s.asm"
 #ENDIF
