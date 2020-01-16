@@ -164,20 +164,3 @@ ReadNibble:	ld c,a \ xor a \ ex af,af' \ ret m
 UpdateNibble	ld a,(hl) \ or $F0 \ ex af,af'
 		ld a,(hl) \ NEXT_HL \ or $0F
 		rrca \ rrca \ rrca \ rrca \ ret
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
