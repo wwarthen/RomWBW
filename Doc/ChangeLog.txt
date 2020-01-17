@@ -37,6 +37,8 @@ Version 2.9.2
 - S?G: Added support for BQ4845 RTC (bqrtc.asm)
 - PMS: Added 80x30 video mode to VGA3 driver
 - PMS: Added 80x43 video mode
+- PMS: Added font compression option
+- PMS: Added a "safe mode" startup w/ minimal device support
 
 Version 2.9.1
 -------------

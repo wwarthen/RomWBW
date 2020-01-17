@@ -19,7 +19,7 @@ To reduce the size of the HBIOS image, fonts can be compressed by using the USEZ
 
 Use the following in your custom configuration to turn on font compression:
 
-USEZLSA2	.SET	TRUE 
+USELZSA2	.SET	TRUE 
 
 Compressed fonts are created using lzsa utility.
 
