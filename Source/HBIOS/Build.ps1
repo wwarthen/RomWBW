@@ -166,6 +166,9 @@ Copy-Item '..\zsdos\zsdos.bin' 'zsdos.bin'
 # Bring over previously assembled binary copy of Forth for later use.
 Copy-Item '..\Forth\camel80.bin' 'camel80.bin'
 
+# Bring over previously generated font files.
+Copy-Item '..\Fonts\font*.asm' '.'
+
 # Assemble individual components.  Note in the case of UNA, there is less to build.
 Asm 'dbgmon'
 Asm 'prefix'
