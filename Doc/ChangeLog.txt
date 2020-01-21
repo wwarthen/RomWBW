@@ -34,7 +34,7 @@ Version 2.9.2
 - PLS: Enhanced Intel Hex Load in dbgmon
 - WBW: Overhaul disk image creation
 - WBW: Added support for Dyno platform (based on work by Steve Garcia)
-- S?G: Added support for BQ4845 RTC (bqrtc.asm)
+- SLG: Added support for BQ4845 RTC (bqrtc.asm)
 - PMS: Added 80x30 video mode to VGA3 driver
 - PMS: Added 80x43 video mode
 - PMS: Added font compression option

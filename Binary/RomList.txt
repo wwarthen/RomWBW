@@ -36,6 +36,7 @@ image to use for each platform:
 	RC2014 w/ Z180	RCZ180_ext.rom	(external 512K RAM/ROM module)
 	SC-series	SC126, SC130
 	Easy Z80	EZZ180_std.rom
+	Dyno		DYNO_std.rom
 
 You will find there is one additional ROM image called 
 "UNA_std.rom". This ROM image is an UNA-based RomWBW ROM image.  As 
@@ -190,10 +191,18 @@ SCZ180 (SCZ180_126.rom & SCZ180_130.rom):
  - Support for alternative serial modules may be enabled in config
  - Support for Scott Baker floppy controllers (SMC & WDC) may
    be enabled in config
- - The _126 and _130 varians are functionally identical, they just
+ - The _126 and _130 variants are functionally identical, they just
    display a different system label at startup
 
 EZZ80 (EZZ80_std.rom):
  - Assumes CPU oscillator of 10.000 MHz
  - Includes support for on-board SIO
  - Includes support for IDE via RC bus
+
+DYNO (DYNO_std.rom):
+ - Assumes CPU oscillator of 18.432 MHz
+ - Console attached to Z180 onboard serial ports at 38400 baud
+ - Includes support for BQ4842 RTC
+ - Includes support for onboard PPIDE
+ - Console attached to Z180 onboard serial ports at 38400 baud
+ - Support for Dyno floppy controllers may be enabled in config
