@@ -3,5 +3,5 @@ rmn	equ	9
 rup	equ	2
 rtp	equ	0
 biosver	macro
-	db	"2.9.2-pre.26"
+	db	"2.9.2-pre.27"
 	endm
