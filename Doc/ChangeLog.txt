@@ -39,6 +39,7 @@ Version 2.9.2
 - PMS: Added 80x43 video mode
 - PMS: Added font compression option
 - PMS: Added a "safe mode" startup w/ minimal device support
+- WBW: Switch RC/SC Z180 platforms to 115,200 default baud rate
 
 Version 2.9.1
 -------------

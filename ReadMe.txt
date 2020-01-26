@@ -7,7 +7,7 @@
 ***********************************************************************
 
 Wayne Warthen (wwarthen@gmail.com)
-Version 2.9.2-pre.26, 2020-01-17
+Version 2.9.2-pre.27, 2020-01-26
 https://www.retrobrewcomputers.org/
 
 RomWBW is a ROM-based implementation of CP/M-80 2.2 and Z-System for 
@@ -54,10 +54,8 @@ Connect a serial terminal or computer with terminal emulation
 software to the primary RS-232 port of your CPU board.  A null-modem 
 connection is generally required.  Set the line characteristics to 
 38400 baud, 8 data bits, 1 stop bit, no parity, and no flow control. 
-Select VT-100 terminal emulation.  In the case of the RC2014 with a 
-Z80 CPU or Easy Z80, the baud rate is determined by hardware, but is 
-normally 115200 baud.  RC2014 with a Z180 CPU defaults to the 
-built-in Z180 serial ports and will run at 38400 baud.
+Select VT-100 terminal emulation.  For RC2014 platforms (including
+Stephen Cousins' kits) the baud rate is 115,200.
 
 Upon power-up, your terminal should display a sign-on banner within 2 
 seconds followed by hardware inventory and discovery information.  
