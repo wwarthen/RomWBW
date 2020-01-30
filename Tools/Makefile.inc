@@ -102,7 +102,7 @@ all:: $(OBJECTS)
 	done
 
 clean::
-	-rm -f $$($(CASEFN) *.sym *.lst *.prn $(OTHERS) $(OBJECTS))
+	-rm -f $$($(CASEFN) *.sym *.lst *.prn $(OTHERS) $(filter-out $(NODELETE),$(OBJECTS)))
 	@for dir in $(SUBDIRS) ; do \
 		( echo "cleaning in `pwd`/$$dir" ; cd "$$dir" ; make clean ) ; \
 	done
