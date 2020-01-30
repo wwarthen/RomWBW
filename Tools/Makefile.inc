@@ -122,7 +122,7 @@ install:: all
 		( echo "install in `pwd`/$$dir" ; cd "$$dir" ; make clobber ) ; \
 	done
 
-clobber: clean
+clobber:: clean
 	-rm -f $$($(CASEFN) $(filter-out $(NODELETE),$(OBJECTS)))
 	@for dir in $(SUBDIRS) ; do \
 		( echo "clobbering in `pwd`/$$dir" ; cd "$$dir" ; make clobber ) ; \
