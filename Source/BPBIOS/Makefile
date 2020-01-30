@@ -19,7 +19,7 @@ zcpr33n.rel zcpr33t.rel:
 all:: $(OBJECTS)
 	$(CPMCP) -f wbw_hd0 ../../Binary/hd0.img *.img *.rel *.zex myterm.z3t 0:
 
-%.img:
+%.img: zcpr33n.rel zcpr33t.rel
 	$(eval VER := $(subst .img,,$(subst bp,,$@)))
 	cp def-ww-z$(VER).lib def-ww.lib
 	rm -f bpbio-ww.rel
