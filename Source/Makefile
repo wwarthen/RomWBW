@@ -1,0 +1,6 @@
+NOTDONE = \
+	Doc CPNET ZCCP ZPM3 
+SUBDIRS = \
+	Prop Apps CPM22 ZCPR ZCPR-DJ ZSDOS CBIOS CPM3 Forth BPBIOS HBIOS Images
+TOOLS = ../Tools
+include $(TOOLS)/Makefile.inc

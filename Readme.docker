@@ -1,0 +1,12 @@
+my mac has a case-insensitive filesystem, so I built a case sensitive one and mounted it as /Volumes/sensitive.
+
+create a docker instance and put tools into it
+
+docker run -d --name ubuntu -v /Volumes/IronKey:/sensitive -ti ubuntu /bin/bash
+docker exec ubuntu /bin/bash -c 'apt update ; apt-get install -y make gcc'
+docker attach ubuntu
+
+inside it:
+
+	cd /sensitive/src/RomWBW
+	make

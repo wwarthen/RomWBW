@@ -1,0 +1,80 @@
+.TH FSCK.CPM 1 "October 25, 2014" "CP/M tools" "User commands"
+.SH NAME ..\"{{{roff}}}\"{{{
+fsck.cpm \- check a CP/M file system
+.\"}}}
+.SH SYNOPSIS .\"{{{
+.ad l
+.B fsck.cpm
+.RB [ \-f
+.IR format ]
+.RB [ \-n ]
+.I image
+.ad b
+.\"}}}
+.SH DESCRIPTION .\"{{{
+\fBfsck.cpm\fP is used to check and repair a CP/M file system.  After
+reading the directory, it makes two passes.  The first pass checks extent
+fields for range and format violations (bad status, extent number, last
+record byte count, file name, extension, block number, record count,
+size of \&.COM files, time stamp format, invalid password characters,
+invalid time stamp mode).  The second pass checks extent connectivity
+(multiple allocated blocks and duplicate directory entries).
+.P
+\fBfsck.cpm\fP can not yet repair all errors.
+.\"}}}
+.SH OPTIONS .\"{{{
+.IP "\fB\-f\fP \fIformat\fP"
+Use the given CP/M disk \fIformat\fP instead of the default format.
+.IP "\fB\-T\fP \fIlibdsk-type\fP"
+libdsk driver type, e.g. \fBtele\fP for Teledisk images or \fBraw\fP for raw images 
+(requires building cpmtools with support for libdsk).
+.IP "\fB\-n\fP"
+Open the file system read-only and do not repair any errors.
+.\"}}}
+.SH "RETURN VALUE" .\"{{{
+Upon successful completion, exit code 0 is returned.
+.\"}}}
+.SH ERRORS .\"{{{
+Any errors are indicated by exit code 1.
+.\"}}}
+.SH FILES .\"{{{
+${prefix}/share/diskdefs	CP/M disk format definitions
+.\"}}}
+.SH ENVIRONMENT \"{{{
+CPMTOOLSFMT     Default format
+.\"}}}
+.SH DIAGNOSTICS .\"{{{
+.IP "\fIimage\fP: \fIused\fP/\fItotal\fP files (\fIn\fP.\fIn\fP% non-contiguos), \fIused\fP/\fItotal\fP blocks"
+No inconsistencies could be found.  The number of used files actually
+is the number of used extents.  Since a file may use more than
+one extent, this may be greather than the actual number of files, but a
+correct measure would not reflect how many files could still be created
+at most.  A file is considered fragmented, if sequential data blocks
+pointed to by the same extent do not have sequential block numbers.
+The number of used blocks includes the blocks used for system tracks
+and the directory.
+.\"}}}
+.SH AUTHORS .\"{{{
+This program is copyright 1997\(en2012 Michael Haardt
+<michael@moria.de>.  The Windows port is copyright 2000, 2001, 2011 John Elliott
+<jce@seasip.demon.co.uk>.
+.PP
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 3 of the License, or
+(at your option) any later version.
+.PP
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+.PP
+You should have received a copy of the GNU General Public License along
+with this program.  If not, write to the Free Software Foundation, Inc.,
+59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+.\"}}}
+.SH "SEE ALSO" .\"{{{
+.IR fsck (8),
+.IR mkfs.cpm (1),
+.IR cpm (5)
+.\"}}}
