@@ -6,7 +6,7 @@ VERSIONS = \
 	41tbnk 41nbnk
 
 OBJECTS = $(foreach ver,$(VERSIONS),bp$(ver).img)
-OTHERS = zcpr33n.rel zcpr33t.rel bpbio-ww.rel bpsys.dat bpsys.bak
+OTHERS = zcpr33n.rel zcpr33t.rel bpbio-ww.rel bpsys.dat bpsys.bak bpbio-ww.err def-ww.lib
 TOOLS = ../../Tools
 CPMCP = $(TOOLS)/`uname`/cpmcp
 
