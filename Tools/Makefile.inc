@@ -128,13 +128,21 @@ clobber:: clean
 		( echo "clobbering in `pwd`/$$dir" ; cd "$$dir" ; make clobber ) ; \
 	done
 
+#
+# this is used to verify that the unix and windows tool chains are generating
+# the same objects
+#
 diff::
 	@for dir in $(SUBDIRS) ; do \
-		( echo "diffing in `pwd`/$$dir" ; cd "$$dir" ; make diff ) ; \
+		( echo "diff in $(HERE)/$$dir" ; cd "$$dir" ; make diff ) ; \
 	done
 	@for i in $(OBJECTS) ; do \
-        sf=$$($(CASEFN) $$i) ; df=$$($(CASEFN) $(DIFFPATH)/$$i) ; \
-        echo diffing $$sf and $$df ; \
-        diff $$sf $$df ; \
+        sf=$$($(CASEFN) $$i) ; \
+		df=$$($(CASEFN) $(DIFFPATH)/$$i) ; \
+        if [ -f $$df -a -f $$sf ] ; then \
+			if ! cmp -s $$sf $$df ; then \
+				echo $$sf and $$df differ ; \
+			fi \
+		fi \
     done
 
