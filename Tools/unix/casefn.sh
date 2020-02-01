@@ -22,22 +22,39 @@ fi
 #
 # normalize to lower case all input file names
 #
-if echo $* | grep -q / ; then
-	echo "no paths allowed"
-	exit 1
-fi
 
 for infn in $* ; do
-	echo $infn | tr '[A-Z]' '[a-z]' >> $in
+	dirn=$(dirname $infn)
+	df=
+	for dl in ${dirs[@]} ; do
+		if [ $dl == $dirn ] ; then
+			df=$dl
+			break;
+		fi
+	done
+	if [ -z $df ] ; then
+		dirs+=( $dirn )
+	fi
+	echo -n $dirn/ >> $in
+	basename $infn | tr '[A-Z]' '[a-z]' >> $in
 done
-sort $in > $search
+
+sort -u $in > $search
+#echo search: 
+#cat $search
+
+here=$(pwd)
 
 #
 # build join list of file names and lower case forms
 #
 rm -f $in
-for i in * ; do
-	echo $(echo "$i" | tr '[A-Z]' '[a-z]')",$i" >> $in
+for dn in ${dirs[@]} ; do
+	cd $here
+	cd $dn
+	for i in * ; do
+		echo $dn/$(echo "$i" | tr '[A-Z]' '[a-z]')",$dn/$i" >> $in
+	done
 done
 sort $in > $all
 
