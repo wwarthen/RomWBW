@@ -135,7 +135,20 @@ static const char *sync(const char *p)
 	return p;
 }
 
-static FILE *fout;
+/* the written bitmap */
+unsigned char membit[65536 / 8];
+
+void
+setbit(int pc)
+{
+	membit[pc / 8] |= (1 << (pc % 8));
+}
+
+int
+isset(int pc)
+{
+	return membit[pc / 8] & (1 << (pc % 8));
+}
 
 /* 
  * Generates a byte to the output and updates s_pc, s_minpc and s_maxpc.
@@ -157,6 +170,8 @@ void genb(int b, const char *ep)
 		exit(EXIT_FAILURE);
 	}
 	s_mem[s_pc] = (unsigned char) b;
+	setbit(s_pc);
+
 	if (s_pass == 1)
 		list_genb(b);
 	if (s_pc < s_minpc)
@@ -164,10 +179,6 @@ void genb(int b, const char *ep)
 	s_pc++;
 	if (s_pc > s_maxpc)
 		s_maxpc = s_pc;
-
-	if (s_pass == 1) {
-		fwrite(&b, 1, 1, fout);
-	}
 }
 
 /* 
@@ -1014,18 +1025,6 @@ static void install_predefs(void)
 		pp_define(pdef->name);
 }
 
-static void open_output()
-{
-	fout = efopen(s_objfname, "wb");
-}
-
-static void close_output()
-{
-	if (fclose(fout) == EOF) {
-		eprint(_("cannot close file %s\n"), s_objfname);
-	}
-}
-
 /* Do a pass through the source. */
 static void dopass(const char *fname)
 {
@@ -1041,7 +1040,6 @@ static void dopass(const char *fname)
 		list_open(s_lstfname);
 		s_codes = 1;
 		s_list_on = 1;
-		open_output();
 	}
 
 	install_predefs();
@@ -1072,25 +1070,35 @@ static void dopass(const char *fname)
 
 	if (s_pass > 0) {
 		list_close();
-		close_output();
 	}
 }
 
 /* Write the object file. */
-static void output ()
+static void output()
 {
-	open_output();
+	int i;
+	FILE *fout;
+
+	// fprintf(stderr, "output: min: %x max: %x\n", s_minpc, s_maxpc);
+
+	fout = efopen(s_objfname, "wb");
 	if (s_minpc < 0)
 		s_minpc = 0;
 	if (s_maxpc < 0)
 		s_maxpc = 0;
 
-	fwrite(s_mem + s_minpc, 1, s_maxpc - s_minpc, fout);
+	for (i = s_minpc; i < s_maxpc; i++) {
+		if (isset(i)) {
+			fwrite(&s_mem[i], 1, 1, fout);
+		}
+	}
 	if (ferror(fout)) {
 		eprint(_("cannot write to file %s\n"), s_objfname);
 		clearerr(fout);
 	}
-	close_output();
+	if (fclose(fout) == EOF) {
+		eprint(_("cannot close file %s\n"), s_objfname);
+	}
 }
 
 /* Start the assembly using the config in options.c. */
@@ -1116,5 +1124,5 @@ void uz80as(void)
 		exit(EXIT_FAILURE);
 	}
 
-	// output();
+	output();
 }
