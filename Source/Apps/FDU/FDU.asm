@@ -3346,7 +3346,7 @@ FXRR5:	INC	C			; [04] POINT TO DATA PORT
 ;
 	; AVOID RETURN FROM HALT IN PROBLEMATIC ADDRESS RANGE XX30-XX3F!!!
 	.IF ((($ & 0F0H) == 20H) | (($ & 0F0H) == 30H))
-		.DS	(($ & 0FF00H) + 40H) - $
+		.FILL	(($ & 0FF00H) + 40H) - $
 		; .ORG	(($ & 0FF00H) + 40H)
 	.ENDIF
 ;
@@ -3375,7 +3375,7 @@ IFXRRX	.EQU	$ - IFXRR
 ;
 	; AVOID RETURN FROM HALT IN PROBLEMATIC ADDRESS RANGE XX30-XX3F!!!
 	.IF ((($ & 0F0H) == 20H) | (($ & 0F0H) == 30H))
-		.DS	(($ & 0FF00H) + 40H) - $
+		.FILL	(($ & 0FF00H) + 40H) - $
 	  ; .ORG	(($ & 0FF00H) + 40H)
 	.ENDIF
 ;
@@ -3454,7 +3454,7 @@ FXRW5:	INC	C			; [04] POINT TO DATA PORT
 ;	
 	; AVOID RETURN FROM HALT IN PROBLEMATIC ADDRESS RANGE XX30-XX3F!!!
 	.IF ((($ & 0F0H) == 20H) | (($ & 0F0H) == 30H))
-		.DS	(($ & 0FF00H) + 40H) - $
+		.FILL	(($ & 0FF00H) + 40H) - $
 	  ; .ORG	(($ & 0FF00H) + 40H)
 	.ENDIF
 ;
@@ -3481,7 +3481,7 @@ IFXRW2:	EI
 ;
 	; AVOID RETURN FROM HALT IN PROBLEMATIC ADDRESS RANGE XX30-XX3F!!!
 	.IF ((($ & 0F0H) == 20H) | (($ & 0F0H) == 30H))
-		.DS	(($ & 0FF00H) + 40H) - $
+		.FILL	(($ & 0FF00H) + 40H) - $
 	  ; .ORG	(($ & 0FF00H) + 40H)
 	.ENDIF
 ;

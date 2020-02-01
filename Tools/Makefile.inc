@@ -142,9 +142,11 @@ diff::
         if [ -f $$df -a -f $$sf ] ; then \
 			if ! cmp -s $$sf $$df ; then \
 				echo $$sf and $$df differ ; \
-				cmp -bl $$sf $$df ; \
-				hexdump -Cv $$sf > $$sf.dump ; \
-				hexdump -Cv $$df > $$(basename $$df).dump.diff ; \
+				if [ "$(VERBOSEDIFF)" ] ; then \
+					cmp -bl $$sf $$df ; \
+					hexdump -Cv $$sf > $$sf.dump ; \
+					hexdump -Cv $$df > $$(basename $$df).dump.diff ; \
+				fi \
 			fi \
 		fi \
     done
