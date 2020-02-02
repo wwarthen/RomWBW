@@ -23,6 +23,7 @@
 ;
 ;[2019/08/11] v1.4 Support SCZ180 platform.
 ;
+;[2020/02/02] v1.5 PMS Basic command line support
 ;
 ; Constants
 ;
@@ -40,6 +41,7 @@ PORT_SCZ180	.EQU	$0C		; RTC port for SBCZ180
 PORT_EZZ80	.EQU	$C0		; RTC port for EZZ80 (actually does not have one!!!)
 
 BDOS		.EQU	5		; BDOS invocation vector
+FCB		.EQU	05CH		; Start of command line
 
 BID_BOOT	.EQU	$00
 HB_BNKCALL	.EQU	$FFF9
@@ -1220,17 +1222,21 @@ IDBIO2:
 ;  Note:above code is not fully in sync with current menu code
 
 RTC_TOP_LOOP:
+	CALL	RTC_RESET_ON
+	CALL	RTC_BIT_DELAY
+	CALL	RTC_BIT_DELAY
+	CALL	RTC_BIT_DELAY
+
+	LD	A,(FCB+1)		; If there a command line tail
+	CP	'/'			; get the command and feed it 
+	LD	A,(FCB+2)		; into the input stream
+	JR	Z,RTC_UCL		
+
 	LD	DE,CRLF_MSG
 	LD	C,09H			; CP/M write string to console call
 	CALL	0005H
 
 	CALL	RTC_HELP
-
-	CALL	RTC_RESET_ON
-
-	CALL	RTC_BIT_DELAY
-	CALL	RTC_BIT_DELAY
-	CALL	RTC_BIT_DELAY
 
 RTC_TOP_LOOP_1:
 	LD	DE,RTC_TOP_LOOP1_PROMPT
@@ -1239,7 +1245,7 @@ RTC_TOP_LOOP_1:
 	
 	LD	C,01H			; CP/M console input call
 	CALL	0005H
-
+RTC_UCL:
 	AND	%01011111		; handle lower case responses to menu
 
 	CP	'L'
@@ -1312,6 +1318,9 @@ RTC_TOP_LOOP_CHARGE:
 	LD	C,09H			; CP/M write string to console call
 	CALL	0005H
 	CALL	RTC_CHARGE_ENABLE
+	LD	A,(FCB+1)		; If we came from the
+	CP	'/'			; command line
+	RET	Z			; exit back to CP/M
 	JP	RTC_TOP_LOOP_1
 
 RTC_TOP_LOOP_NOCHARGE:
@@ -1319,6 +1328,9 @@ RTC_TOP_LOOP_NOCHARGE:
 	LD	C,09H			; CP/M write string to console call
 	CALL	0005H
 	CALL	RTC_CHARGE_DISABLE
+	LD	A,(FCB+1)		; If we came from the
+	CP	'/'			; command line
+	RET	Z			; exit back to CP/M
 	JP	RTC_TOP_LOOP_1
 
 RTC_TOP_LOOP_START:
@@ -1350,6 +1362,9 @@ RTC_TOP_LOOP_TIME:
 	LD	DE,RTC_PRINT_BUFFER
 	LD	C,09H			; CP/M write string to console call
 	CALL	0005H
+	LD	A,(FCB+1)		; If we came from the
+	CP	'/'			; command line
+	RET	Z			; exit back to CP/M
 	JP	RTC_TOP_LOOP_1
 	
 RTC_TOP_LOOP_RAW:
@@ -1552,7 +1567,7 @@ TESTING_BIT_DELAY_OVER:
 
 RTC_HELP_MSG:
 	.DB	0Ah, 0Dh		; line feed and carriage return
-	.TEXT	"RTC: Version 1.4"
+	.TEXT	"RTC: Version 1.5"
 	.DB	0Ah, 0Dh		; line feed and carriage return
 	.TEXT	"Commands: E)xit T)ime st(A)rt S)et R)aw L)oop C)harge N)ocharge D)elay I)nit G)et P)ut B)oot H)elp"
 	.DB	0Ah, 0Dh		; line feed and carriage return
