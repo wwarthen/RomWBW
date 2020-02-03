@@ -244,7 +244,7 @@ co$next:
 	push h		; save the vector
 	push b		; save the count and character
 not$out$ready:
-	call coster ! ora a ! jz not$out$ready
+	push b ! call coster ! pop b ! ora a ! jz not$out$ready
 	pop b ! push b	; restore and resave the character and device
 	call ?co	; if device selected, print it
 	pop b		; recover count and character
