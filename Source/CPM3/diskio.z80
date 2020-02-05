@@ -36,6 +36,8 @@
 	extrn	?const		; get console status
 	
 	extrn	?bnkxlt
+	
+	;extrn	phex8, cout
 
 
     ; CP/M 3 Disk definition macros
@@ -365,6 +367,9 @@ dsk$login:
 		;	simple single density only environment.
 		
 		
+	;ld	a,'L'
+	;call	cout
+
 	push	de		; save DPH ptr
 	
 	; check media
@@ -372,7 +377,8 @@ dsk$login:
 	;halt
 	ld	c,a		; put in C
 	ld	b,18h		; HBIOS Media function
-	ld	e,1		; Enabled media check/discovery
+	ld	e,1		; Enable media check/discovery
+	;rst	08
 	call	0FFF0H		; HBIOS call
 	ld	a,e		; Resultant media id to accum
 	or	a		; Set flags
@@ -380,8 +386,11 @@ dsk$login:
 	;
 	; !!! Need to do something on error !!!
 	;
-	ret	z		; Bail out on error
+	jr	nz,dsk$login0	; continue if OK
+	pop	de		; else error
+	ret			; return
 	
+dsk$login0:
 	ld	hl,dpb$start - dpb$sz
 	ld	de,dpb$sz
 	ld	b,a		; loop count
@@ -422,6 +431,9 @@ dsk$read:
 ;	ld	ix,30H
 ;	halt
 
+	;ld	a,'R'
+	;call	cout
+
 	push	de		; save XDPH pointer
 	call	dsk$seek	; disk seek
 	pop	hl		; restore pointer to HL
@@ -440,8 +452,10 @@ dsk$read:
   endif
 	ld	d,a		; set desk bank
 	ld	e,1		; 1 sector
-	;rst	08		; do it
-	call	0FFF0H
+	rst	08		; do it
+	;call	0FFF0H
+
+	;call	phex8
 	ret			; return
 
 ;	lxi h,read$msg		; point at " Read "
@@ -470,8 +484,8 @@ dsk$write:
   endif
 	ld	d,a		; set desk bank
 	ld	e,1		; 1 sector
-	;rst	08		; do it
-	call	0FFF0H
+	rst	08		; do it
+	;call	0FFF0H
 	ret			; return
 
 ;	lxi h,write$msg		; point at " Write "
@@ -485,34 +499,44 @@ dsk$seek:
 	ld	c,a		; BIOS Disk Unit in C
 	ld	b,12H		; HBIOS SEEK function
 	push	bc		; save it
-	
+	push	de		; save XDPH pointer
+	ld	b,17h		; HBIOS DEVICE function
+	rst	08		; Do it, D=device type
+	ld	a,d		; put in accum
+	and	0F0h		; isolate high bits
+	ld	b,1		; assume it is floppy, 1 head bit
+	ld	c,01h		; 1 bit head mask
+	cp	10h		; floppy?
+	jr	z,seek0	; yup, skip ahead
+	ld	b,4		; must be hard disk, 4 head bits
+	ld	c,0Fh		; 4 bit head mask
+seek0:
+	pop	de		; recover XDPH pointer
+	push	bc		; save bc
 	inc	de		; point to slice field of XDPH
 	ld	a,(de)		; get it
 	ld	e,a		; slice to E
 	ld	h,65		; number of tracks per slice
 	call	mult8		; HL now has track offset for slice
-	push	hl		; save it for now
-
+	pop	bc		; recover bc
+	push	hl		; save track offset for now
 	ld	hl,(@trk)	; get track value
 	ld	a,l		; lsb of track to a
-	and	0FH		; isolate head in low 4 bits
-	ld	d,a		; stuff it in d
-	ld	a,(@sect)	; get sector
-	ld	e,a		; stuff it in e
-	ld	b,4		; prepare to shift out 4 bit head value
+	and	c		; apply mask
+	ld	d,a		; save in d
 seek1:                          
 	srl	h		; shift one bit out
 	rr	l		; ... of hl
-	djnz	seek1		; do all 4 bits
-	
+	djnz	seek1		; do all bits
+	ld	a,(@sect)	; get sector
+	ld	e,a		; stuff it in e
 	ex	de,hl		; de=track, hl=head/sect
-	ex	(sp),hl		; save head/sect, hl = offset
+	ex	(sp),hl	; save head/sect, hl = offset
 	add	hl,de		; hl has final track value
 	pop	de		; recover head/sect to de
-	
 	pop	bc		; recover function & unit
-	;rst	08		; perform seek
-	call	0FFF0H
+	rst	08		; perform seek
+	;call	0FFF0H
 	ret
 
 ;
