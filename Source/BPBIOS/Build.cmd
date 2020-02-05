@@ -26,22 +26,22 @@ call :makebp 41nbnk
 
 rem pause
 
-cpmrm.exe -f wbw_hd0 ../../Binary/hd0.img 0:ws*.*
+cpmrm.exe -f wbw_hd0 ../../Binary/hd_bp.img 0:ws*.*
 
-cpmrm.exe -f wbw_hd0 ../../Binary/hd0.img 0:*.img
-cpmcp.exe -f wbw_hd0 ../../Binary/hd0.img *.img 0:
+cpmrm.exe -f wbw_hd0 ../../Binary/hd_bp.img 0:*.img
+cpmcp.exe -f wbw_hd0 ../../Binary/hd_bp.img *.img 0:
 
-cpmrm.exe -f wbw_hd0 ../../Binary/hd0.img 0:*.rel
-cpmcp.exe -f wbw_hd0 ../../Binary/hd0.img *.rel 0:
+cpmrm.exe -f wbw_hd0 ../../Binary/hd_bp.img 0:*.rel
+cpmcp.exe -f wbw_hd0 ../../Binary/hd_bp.img *.rel 0:
 
-rem cpmrm.exe -f wbw_hd0 ../../Binary/hd0.img 0:*.dat
-rem cpmcp.exe -f wbw_hd0 ../../Binary/hd0.img *.dat 0:
+rem cpmrm.exe -f wbw_hd0 ../../Binary/hd_bp.img 0:*.dat
+rem cpmcp.exe -f wbw_hd0 ../../Binary/hd_bp.img *.dat 0:
 
-cpmrm.exe -f wbw_hd0 ../../Binary/hd0.img 0:*.zex
-cpmcp.exe -f wbw_hd0 ../../Binary/hd0.img *.zex 0:
+cpmrm.exe -f wbw_hd0 ../../Binary/hd_bp.img 0:*.zex
+cpmcp.exe -f wbw_hd0 ../../Binary/hd_bp.img *.zex 0:
 
-cpmrm.exe -f wbw_hd0 ../../Binary/hd0.img 0:myterm.z3t
-cpmcp.exe -f wbw_hd0 ../../Binary/hd0.img myterm.z3t 0:myterm.z3t
+cpmrm.exe -f wbw_hd0 ../../Binary/hd_bp.img 0:myterm.z3t
+cpmcp.exe -f wbw_hd0 ../../Binary/hd_bp.img myterm.z3t 0:myterm.z3t
 
 goto :eof
 

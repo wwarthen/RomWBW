@@ -747,8 +747,8 @@ FILTYP		.DB	0	; Sound file type (TYPPT2, TYPPT3, TYPMYM)
 TMP		.DB	0	; work around use of undocumented Z80
 ;
 		
-MSGBAN		.DB	"Tune Player for RomWBW v2.2, 21-Nov-2019",0
-MSGUSE		.DB	"Copyright (C) 2019, Wayne Warthen, GNU GPL v3",13,10
+MSGBAN		.DB	"Tune Player for RomWBW v2.2a, 02-Feb-2020",0
+MSGUSE		.DB	"Copyright (C) 2020, Wayne Warthen, GNU GPL v3",13,10
 		.DB	"PTxPlayer Copyright (C) 2004-2007 S.V.Bulba",13,10
 		.DB	"MYMPlay by Marq/Lieves!Tuore",13,10,13,10
 		.DB	"Usage: TUNE <filename>.[PT2|PT3|MYM]",0
@@ -2629,47 +2629,47 @@ HEAP	.EQU	$
 
 VARS
 
-ChanA	.DS CHP
-ChanB	.DS CHP
-ChanC	.DS CHP
+ChanA	.DS	CHP
+ChanB	.DS	CHP
+ChanC	.DS	CHP
 
 ;GlobalVars
-DelyCnt	.DS 1
-CurESld	.DS 2
-CurEDel	.DS 1
+DelyCnt	.DS	1
+CurESld	.DS	2
+CurEDel	.DS	1
 Ns_Base_AddToNs
-Ns_Base	.DS 1
-AddToNs	.DS 1
+Ns_Base	.DS	1
+AddToNs	.DS	1
 
 AYREGS
 
-VT_	.DS 256		;CreatedVolumeTableAddress
+VT_	.DS	256	;CreatedVolumeTableAddress
 
-EnvBase	.EQU VT_+14
+EnvBase	.EQU	VT_+14
 
-T1_	.EQU VT_+16	;Tone tables data depacked here
+T1_	.EQU	VT_+16	;Tone tables data depacked here
 
-T_OLD_1	.EQU T1_
-T_OLD_2	.EQU T_OLD_1+24
-T_OLD_3	.EQU T_OLD_2+24
-T_OLD_0	.EQU T_OLD_3+2
-T_NEW_0	.EQU T_OLD_0
-T_NEW_1	.EQU T_OLD_1
-T_NEW_2	.EQU T_NEW_0+24
-T_NEW_3	.EQU T_OLD_3
+T_OLD_1	.EQU	T1_
+T_OLD_2	.EQU	T_OLD_1+24
+T_OLD_3	.EQU	T_OLD_2+24
+T_OLD_0	.EQU	T_OLD_3+2
+T_NEW_0	.EQU	T_OLD_0
+T_NEW_1	.EQU	T_OLD_1
+T_NEW_2	.EQU	T_NEW_0+24
+T_NEW_3	.EQU	T_OLD_3
 
-PT2EMPTYORN .EQU VT_+31	;1,0,0 sequence
+PT2EMPTYORN	.EQU VT_+31	;1,0,0 sequence
 
-NT_	.FILL 192	;CreatedNoteTableAddress
+NT_	.DS	192	;CreatedNoteTableAddress
 
 ;local var
-Ampl	.EQU AYREGS+AmplC
+Ampl	.EQU	AYREGS+AmplC
 
-VAR0END	.EQU VT_+16 ;INIT zeroes from VARS to VAR0END-1
+VAR0END	.EQU	VT_+16 ;INIT zeroes from VARS to VAR0END-1
 
-VARSEND .EQU $
+VARSEND .EQU	$
 
-MDLADDR .EQU $
+MDLADDR .EQU	$
 ;
 ;===============================================================================
 ; MYM Player Storage
@@ -2678,10 +2678,11 @@ MDLADDR .EQU $
 	.ORG	HEAP
 ; Reserve room for uncompressed data
 uncomp:
-.org $+(3*FRAG*REGS)
+	.DS	(3*FRAG*REGS)
 
 ; The tune is stored here
-rows:   .dw     0
+rows:
+	.DS	2	; WORD value
 data:
 ;
 ;===============================================================================

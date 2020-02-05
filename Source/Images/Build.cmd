@@ -33,3 +33,4 @@ call BuildHD.cmd nzcom zsys_wbw
 call BuildHD.cmd cpm3
 call BuildHD.cmd zpm3
 call BuildHD.cmd ws4
+call BuildHD.cmd bp
