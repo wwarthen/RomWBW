@@ -1,102 +1,79 @@
-OBJECTS =
+#
+# this makefile subsumes all the work done in Build.cmd, Build{Hd,Fd}.*
+#
+SYSTEMS = cpm_wbw.sys cpm_una.sys zsys_wbw.sys zsys_una.sys
+FDIMGS = fd_cpm22.img fd_zsdos.img fd_nzcom.img fd_cpm3.img fd_zpm3.img fd_ws4.img
+HDIMGS = hd_cpm22.img hd_zsdos.img hd_nzcom.img hd_cpm3.img hd_zpm3.img hd_ws4.img
+OBJECTS = $(FDIMGS) $(HDIMGS)
+DEST=../../Binary
+
 TOOLS = ../../Tools
 include $(TOOLS)/Makefile.inc
 
-# cbios_wbw.bin: cbios.asm 
-# 	$(TASM) -DPLTWBW -o $@ -l cbios_wbw.lst $<
-# 
-# cbios_una.bin: cbios.asm
-# 	$(TASM) -DPLTUNA -o $@ -l cbios_una.lst $<
-# 
-# @echo off
-# setlocal
-# 
-# echo :
-# echo : Cleaning...
-# echo :
-# call Clean.cmd
-# echo :
-# echo : Building Floppy Disk Images...
-# echo :
-# call BuildFD.cmd
-# echo :
-# echo : Building Hard Disk Images...
-# echo :
-# call BuildHD.cmd
-# @PowerShell -ExecutionPolicy Unrestricted .\BuildFD.ps1 %*@PowerShell -ExecutionPolicy Unrestricted .\BuildHD.ps1 %*@echo off
-# setlocal
-# 
-# if exist *.tmp del *.tmp
-# if exist *.img del *.img
-# $ErrorAction = 'Stop'
-# 
-# $CpmToolsPath = '../..\Tools\cpmtools'
-# 
-# $env:PATH = $CpmToolsPath + ';' + $env:PATH
-# 
-# $Blank = ([byte[]](0xE5) * 1440KB)
-# 
-# "Creating work file..."
-# if (!(Test-Path('Blank.tmp'))) {Set-Content -Value $Blank -Encoding byte -Path 'Blank.tmp'}
-# 
-# "Creating floppy disk images..."
-# for ($Dsk=0; $Dsk -lt 2; $Dsk++)
-# {
-# 	"Generating Floppy Disk ${Dsk}..."
-# 	copy Blank.tmp fd${Dsk}.img
-# 	for ($Usr=0; $Usr -lt 16; $Usr++)
-# 	{
-# 		if (Test-Path ("fd${Dsk}/u${Usr}/*")) 
-# 		{
-# 			$Cmd = "cpmcp -f wbw_fd144 fd${Dsk}.img fd${Dsk}/u${Usr}/*.* ${Usr}:"
-# 			$Cmd
-# 			Invoke-Expression $Cmd
-# 		}
-# 	}
-# }
-# 
-# "Moving images into output directory..."
-# &$env:COMSPEC /c move fd*.img ..\..\Binary\
-# 
-# Remove-Item *.tmp
-# 
-# return$ErrorAction = 'Stop'
-# 
-# $CpmToolsPath = '../../Tools/cpmtools'
-# 
-# $env:PATH = $CpmToolsPath + ';' + $env:PATH
-# 
-# $Blank = ([byte[]](0xE5) * (128KB * 65))
-# 
-# "Creating work file..."
-# if (!(Test-Path('Blank.tmp'))) {Set-Content -Value $Blank -Encoding byte -Path 'Blank.tmp'}
-# 
-# "Creating hard disk images..."
-# #for ($Dsk=0; $Dsk -lt 2; $Dsk++)
-# foreach ($Dsk in @("hd0","hd1","hd_cpm3"))
-# {
-# 	"Generating Hard Disk ${Dsk}..."
-# 	for ($Slice=0; $Slice -lt 4; $Slice++)
-# 	{
-# 		"Adding files to slice ${Slice}..."
-# 		copy Blank.tmp slice${Slice}.tmp
-# 		for ($Usr=0; $Usr -lt 16; $Usr++)
-# 		{
-# 			if (Test-Path ("${Dsk}/s${Slice}/u${Usr}/*")) 
-# 			{
-# 				$Cmd = "cpmcp -f wbw_hd0 slice${Slice}.tmp ${Dsk}/s${Slice}/u${Usr}/*.* ${Usr}:"
-# 				$Cmd
-# 				Invoke-Expression $Cmd
-# 			}
-# 		}
-# 	}
-# 
-# 	"Combining slices into final disk image ${Dsk}..."
-# 	&$env:COMSPEC /c copy /b slice*.tmp ..\..\Binary\${Dsk}.img
-# 	
-# 	Remove-Item slice*.tmp
-# }
-# 
-# Remove-Item *.tmp
-# 
-# return
+#
+# create the os's, which are the bootloader, ccp, bdos and bios
+#
+cpm_wbw.sys:
+	cat $$($(CASEFN) \
+		../BL/bl.bin \
+		../CPM22/os2ccp.bin ../CPM22/OS3BDOS.BIN \
+		../CBIOS/cbios_wbw.bin) > cpm_wbw.sys
+
+cpm_una.sys:
+	cat $$($(CASEFN) \
+		../BL/bl.bin \
+		../CPM22/os2ccp.bin ../CPM22/OS3BDOS.BIN \
+		../CBIOS/cbios_una.bin) > cpm_una.sys
+
+zsys_wbw.sys:
+	cat $$($(CASEFN) \
+		../BL/bl.bin \
+		../ZCPR-DJ/zcpr.bin ../ZSDOS/ZSDOS.BIN \
+		../CBIOS/cbios_wbw.bin) > zsys_wbw.sys
+
+zsys_una.sys:
+	cat $$($(CASEFN) \
+		../BL/bl.bin \
+		../ZCPR-DJ/zcpr.bin ../ZSDOS/ZSDOS.BIN \
+		../CBIOS/cbios_una.bin) > zsys_una.sys
+
+HDSIZE=$(shell expr 128 '*' 65)
+
+#
+# this somewhat impenetrable and fragile code is used to build each of the images
+# at build time, a few variables are set (sys, fmt, type, size, d) based on the
+# target to build.  first, we build an empty image using the a tr, dd pipeline.
+# we then scan the d_{d}/u* directories, copying in files to user numbers
+# then process the d_{d}.txt file, copying in those files, and finally maybe put
+# an OS at the start of each image
+#
+%.img:: $(SYSTEMS)
+	sys= ; \
+	case $@ in (*cpm22*) sys=cpm_wbw.sys;; (*zsdos* | *nzcom) sys=zsys_wbw.sys;; esac ; \
+	if echo $@ | grep -q ^f ; then \
+		fmt=wbw_fd144 ; type=fd_ ; size=1440 ; \
+	else \
+		fmt=wbw_hd0 ; type=hd_ ; size=$(HDSIZE) ; \
+	fi ; \
+	d=$$(echo $(basename $@) | sed s/$$type//) ; \
+	echo $@ $$d $$type $$size $$fmt $$sys ; \
+	LANG=en_US.US-ASCII tr '\000' '\345' </dev/zero | dd of=$@ bs=1024 count=$$size ; \
+	for u in $$(seq 0 15) ; do \
+		dir=d_$$d/u$$u ; \
+		if [ -d $$dir ] ; then \
+			echo $(CPMCP) -f $$fmt $@ $$dir/*.* $$u: ; \
+			$(CPMCP) -f $$fmt $@ $$dir/*.* $$u: ; \
+		fi ; \
+	done ; \
+	if [ -f d_$$d.txt ] ; then \
+		grep -v ^# d_$$d.txt | while read file user ; do \
+			echo $(CPMCP) -f $$fmt $@ $$file $$user ; \
+			$(CPMCP) -f $$fmt $@ $$file $$user ; \
+		done ; \
+	fi ; \
+	if [ "$$sys" ] ; then \
+		echo copying system $$sys to $@ ; \
+		dd if=$$sys of=$@ conv=notrunc ; \
+	fi
+
+install::
