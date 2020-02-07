@@ -368,6 +368,7 @@ MENU_1:	MENU_L("~CP/M$    ", "C", KY_BK, CPM_ENT,     2000h,  CPM_LOC,   CPM_SIZ
 	MENU_L("~Forth$   ", "F", KY_EX, FTH_LOC,     0000h,  FTH_LOC,   FTH_SIZ,  BID_IMG1,    BID_USR, "Camel Forth$ ")
 	MENU_L("~BASIC$   ", "B", KY_DE, BAS_LOC,     1700h,  BAS_LOC,   BAS_SIZ,  BID_IMG1,    BID_USR, "Nascom BASIC$")
 	MENU_L("~T-BASIC$ ", "T", KY_EN, TBC_LOC,     3700h,  TBC_LOC,   TBC_SIZ,  BID_IMG1,    BID_USR, "Tasty BASIC$ ")
+	MENU_L("~PLAY$    ", "P", $FF,   GAM_LOC,     4000h,  GAM_LOC,   GAM_SIZ,  BID_IMG1,    BID_USR, "Game$        ")
 #ENDIF
 #IF (DSKYENABLE)
 	MENU_L("~DSKY$    ", "D", KY_GO, MON_DSKY,    1000h,  MON_LOC,   MON_SIZ,  BID_CUR,     BID_USR, "DSKY Monitor$")

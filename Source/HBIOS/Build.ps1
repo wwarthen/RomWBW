@@ -170,14 +170,10 @@ Copy-Item '..\Forth\camel80.bin' 'camel80.bin'
 Copy-Item '..\Fonts\font*.asm' '.'
 
 # Assemble individual components.  Note in the case of UNA, there is less to build.
-Asm 'dbgmon'
-Asm 'prefix'
-Asm 'romldr'
-Asm 'eastaegg'
-Asm 'nascom'
-Asm 'tastybasic'
-Asm 'imgpad'
-Asm 'imgpad0'
+#
+$RomComponentList = "dbgmon", "prefix", "romldr", "eastaegg", "nascom", "tastybasic", "game", "imgpad", "imgpad0"
+ForEach ($RomComponentName in $RomComponentList) {Asm $RomComponentName}
+
 if ($Platform -ne "UNA")
 {
 	Asm 'hbios' '-dROMBOOT' -Output 'hbios_rom.bin' -List 'hbios_rom.lst'
@@ -201,7 +197,7 @@ Concat 'prefix.bin','zsys.bin' 'zsys.sys'
 
 # Build 32K OS chunk containing the loader, debug monitor, and OS images
 Concat 'romldr.bin', 'eastaegg.bin','dbgmon.bin', 'cpm.bin', 'zsys.bin' osimg.bin
-Concat 'camel80.bin', 'nascom.bin', 'tastybasic.bin', 'imgpad0.bin' osimg1.bin
+Concat 'camel80.bin', 'nascom.bin', 'tastybasic.bin', 'game.bin', 'imgpad0.bin' osimg1.bin
 #
 # Now the ROM disk image is created.  This is done by starting with a
 # blank ROM disk image of the correct size, then cpmtools is used to
@@ -249,5 +245,5 @@ else
 	Concat 'hbios_img.bin','osimg.bin' $ImgFile
 }
 
-# Remove the temprary working ROM disk file
+# Remove the temporary working ROM disk file
 Remove-Item $RomDiskFile
