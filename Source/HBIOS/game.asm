@@ -115,6 +115,9 @@ LOOP:
 K3          CP      CTRL_C
             JP      Z,EXIT
 
+            CP      1BH
+            JP      Z,K1
+
             CP      CTRL_E
             JP      Z,TOP
             CP      CTRL_X
@@ -133,12 +136,18 @@ K3          CP      CTRL_C
             CP      'A'
             JP      Z,LEFT
 
+            CP      '8'
+            JP      Z,TOP
+            CP      '2'
+            JP      Z,BOTTOM
+            CP      '6'
+            JP      Z,RIGHT
+            CP      '4'
+            JP      Z,LEFT
+
             CP      'Q'
             JP      Z,QUIT
-            
-            CP      1BH
-            JP      Z,K1
-
+  
 ;            LD      C,02H
 ;            LD      E,BEL
 ;            CALL    BDOS
@@ -147,15 +156,15 @@ K3          CP      CTRL_C
             JP      LOOP
 
 K1:
-;           LD      C,06H
+;            LD      C,06H
 ;            LD      E,0FFH
 ;            CALL    BDOS
 ;            CP      0
 ;            JP      Z,K1
 	    CALL    CIN
            
-            CP      'O'
-            JP      NZ,K2
+            CP      '['
+            JP      NZ,LOOP
 
 K4:
 ;          LD      C,06H
@@ -1120,7 +1129,7 @@ BTMBORDER   .DB     0DFH
             .DB     0DFH, 1BH, "[0m", EOS
 
 MSG1:       .DB     1BH, "[0m"
-	    .DB     "w=up s=down a=right d=right q=quit"
+	    .DB     "UDLR = wsad ^E^X^S^D 8246 : Q=QUIT"
 
             .DB     EOS
 MSG2:       .DB     1BH, "[0m"
