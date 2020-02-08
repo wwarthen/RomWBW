@@ -140,7 +140,7 @@ Function Concat($InputFileList, $OutputFile)
 
 #
 # Since TASM has no mechanism to include files dynamically based on variables, a file
-# if built on-the-fly here for imbedding in the build process.  This file is basically
+# is built on-the-fly here for imbedding in the build process.  This file is basically
 # just used to include the platform and config files.  It also passes in some values
 # from the build to include in the build.
 
