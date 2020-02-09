@@ -171,7 +171,7 @@ dinit3:
 	pop	bc			; restore loop control
 	pop	hl			; restore drive list ptr
 	pop	de			; restore de
-	cp	50h			; hard disk device?
+	cp	30h			; hard disk device?
 	jr	nc,dinit3a		; if so, handle special
 	ld	(hl),c			; save unit num in list
 	inc	hl			; bump ptr
