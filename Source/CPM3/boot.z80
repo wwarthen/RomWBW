@@ -14,6 +14,7 @@
 	extrn	@date,@hour,@min,@sec
 	extrn	@srch1
 	extrn	addhla, bcd2bin, bin2bcd
+	;extrn	cout, phex8
 	
 	include	ver.inc
 	
@@ -121,32 +122,113 @@ dinit:
 	or	a			; set flags
 	ret	z			; !!! handle zero devices (albeit poorly) !!!
 
-	; loop thru devices to count total hard disk volumes
-	push	bc			; save the device count
-	ld	c,0			; use c as device list index
-	ld	e,0			; init e for hard disk volume count
+;	; loop thru devices to count total hard disk volumes
+;	push	bc			; save the device count
+;	ld	c,0			; use c as device list index
+;	ld	e,0			; init e for hard disk volume count
+;
+;dinit2:
+;	push	bc			; save loop control
+;	call	dinit3			; check drive
+;	pop	bc			; restore loop control
+;	inc	c			; next unit
+;	djnz	dinit2			; loop
+;	pop	bc			; restore unit count in b
+;	jr	dinit4			; continue
 
+	; loop thru devices to count total hard disk volumes
+	ld	c,0			; init c as device list index
+	ld	d,0			; init d as total device count
+	ld	e,0			; init e for hard disk device count
+	ld	hl,drvlst		; init hl ptr to drive list
+;
 dinit2:
-	push	bc			; save loop control
 	call	dinit3			; check drive
-	pop	bc			; restore loop control
 	inc	c			; next unit
 	djnz	dinit2			; loop
-	pop	bc			; restore unit count in b
+	ld	a,d			; total device count to d
+	ld	(drvlstc),a		; save the count
 	jr	dinit4			; continue
 
+;dinit3:
+;	push	de			; save de (hard disk volume counter)
+;	ld	b,017h			; hbios func: report device info
+;	rst	08			; call hbios, unit to c
+;	ld	a,d			; device type to a
+;	pop	de			; restore de
+;	cp	050h			; hard disk device?
+;	ret	c			; nope, return
+;	inc	e			; increment hard disk count
+;	ret				; and return
+	
 dinit3:
 	push	de			; save de (hard disk volume counter)
-	ld	b,017h			; hbios func: report device info
+	push	hl			; save drive list ptr
+	push	bc			; save loop control
+	ld	b,17h			; hbios func: report device info
 	rst	08			; call hbios, unit to c
 	ld	a,d			; device type to a
+	pop	bc			; restore loop control
+	pop	hl			; restore drive list ptr
 	pop	de			; restore de
-	cp	050h			; hard disk device?
-	ret	c			; nope, return
+	cp	30h			; hard disk device?
+	jr	nc,dinit3a		; if so, handle special
+	ld	(hl),c			; save unit num in list
+	inc	hl			; bump ptr
+	inc	d			; inc total device count
+	ret
+;
+dinit3a:
+	; check for active and return if not
+	push	de			; save de (hard disk volume counter)
+	push	hl			; save drive list ptr
+	push	bc			; save loop control
+	
+	ld	b,18h			; hbios func: sense media
+	ld	e,1			; perform media discovery
+	rst	08
+
+	pop	bc			; restore loop control
+	pop	hl			; restore drive list ptr
+	pop	de			; restore de
+	
+	ret	nz			; if no media, just return
+	
+	; if active...
+	ld	(hl),c			; save unit num in list
+	inc	hl			; bump ptr
+	inc	d			; inc total device count
 	inc	e			; increment hard disk count
 	ret				; and return
 
+
+;dinit4:	; set slices per volume (hdspv) based on hard disk volume count
+;	ld	a,e			; hard disk volume count to a
+;	ld	e,8			; assume 8 slices per volume
+;	dec	a			; dec accum to check for count = 1
+;	jr	z,dinit5		; yes, skip ahead to implement 8 hdspv
+;	ld	e,4			; now assume 4 slices per volume
+;	dec	a			; dec accum to check for count = 2
+;	jr	z,dinit5		; yes, skip ahead to implement 4 hdspv
+;	ld	e,2			; in all other cases, we use 2 hdspv
+
 dinit4:	; set slices per volume (hdspv) based on hard disk volume count
+
+;	; *** debug ***
+;	;call	newline2
+;	ld	a,(drvlstc)
+;	ld	b,a
+;	call	phex8
+;	ld	a,' '
+;	call	cout
+;	ld	hl,drvlst
+;temp1:
+;	ld	a,(hl)
+;	inc	hl
+;	call	phex8
+;	djnz	temp1
+;	; *** debug ***
+
 	ld	a,e			; hard disk volume count to a
 	ld	e,8			; assume 8 slices per volume
 	dec	a			; dec accum to check for count = 1
@@ -156,29 +238,56 @@ dinit4:	; set slices per volume (hdspv) based on hard disk volume count
 	jr	z,dinit5		; yes, skip ahead to implement 4 hdspv
 	ld	e,2			; in all other cases, we use 2 hdspv
 
+;dinit5:
+;	ld	a,e			; slices per volume value to accum
+;	ld	(hdspv),a		; save it
+;
+;	; setup to enumerate devices to build drvmap
+;	ld	b,0F8h			; SYS GET
+;	ld	c,010h			; Disk Drive Unit Count
+;	rst	08			; e := disk unit count
+;	ld	b,e			; count to b
+;	ld	c,0			; use c as device list index
+;	ld	hl,0			; dph index
+
 dinit5:
 	ld	a,e			; slices per volume value to accum
 	ld	(hdspv),a		; save it
-
-	; setup to enumerate devices to build drvmap
-	ld	b,0F8h			; SYS GET
-	ld	c,010h			; Disk Drive Unit Count
-	rst	08			; e := disk unit count
-	ld	b,e			; count to b
-	ld	c,0			; use c as device list index
+	ld	a,(drvlstc)		; active drive list count to accum
+	ld	b,a			; ... and move to b for loop counter
+	ld	de,drvlst		; de is ptr to active drive list
 	ld	hl,0			; dph index
 
+;dinit6:	; loop thru all units available
+;	push	bc			; preserve loop control
+;	push	hl			; preserve dph pointer
+;	ld	b,017h			; hbios func: report device info
+;	rst	08			; call hbios, d := device type
+;	pop	hl			; restore dph pointer
+;	pop	bc			; get unit index back in c
+;	push	bc			; resave loop control
+;	call	dinit7			; update dph entries
+;	pop	bc			; restore loop control
+;	inc	c			; increment list index
+;	djnz	dinit6			; loop as needed
+
 dinit6:	; loop thru all units available
+	push	de			; preserve drive list ptr
+	ex	de,hl			; list ptr to hl
+	ld	c,(hl)			; get unit num from list
+	ex	de,hl			; list ptr back to de
 	push	bc			; preserve loop control
 	push	hl			; preserve dph pointer
-	ld	b,017h			; hbios func: report device info
+	ld	b,17h			; hbios func: report device info
 	rst	08			; call hbios, d := device type
 	pop	hl			; restore dph pointer
 	pop	bc			; get unit index back in c
 	push	bc			; resave loop control
-	call	dinit7			; update dph entries
+	call	dinit7			; make drive map entry(s)
 	pop	bc			; restore loop control
 	inc	c			; increment list index
+	pop	de			; restore drive list ptr
+	inc	de			; increment active drive list ptr
 	djnz	dinit6			; loop as needed
 
 	; zero out remaining dph table entries
@@ -613,6 +722,8 @@ fcb$nr		db	0,0,0
 
 @bootdu		db	0
 hdspv		db	2		; slices per volume for hard disks (must be >= 1)
+drvlst		ds	32		; active drive list used durint drv_init
+drvlstc		db	0		; entry count for active drive list
 
 ; The following section contains key information and addresses for the
 ; RomWBW CBIOS.  A pointer to the start of this section is stored with
