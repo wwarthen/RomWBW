@@ -163,7 +163,7 @@ Copy-Item '..\Fonts\font*.asm' '.'
 
 # Assemble individual components.  Note in the case of UNA, there is less to build.
 #
-$RomComponentList = "dbgmon", "prefix", "romldr", "eastaegg", "nascom", "tastybasic", "game", "imgpad", "imgpad0"
+$RomComponentList = "dbgmon", "prefix", "romldr", "eastaegg", "nascom", "tastybasic", "game", "usrrom", "imgpad", "imgpad0"
 ForEach ($RomComponentName in $RomComponentList) {Asm $RomComponentName}
 
 if ($Platform -ne "UNA")
@@ -181,7 +181,7 @@ if ($Platform -ne "UNA")
 
 # Build 32K OS chunk containing the loader, debug monitor, and OS images
 Concat 'romldr.bin', 'eastaegg.bin','dbgmon.bin', "..\cpm22\cpm_${Bios}.bin", "..\zsdos\zsys_${Bios}.bin" osimg.bin
-Concat 'camel80.bin', 'nascom.bin', 'tastybasic.bin', 'game.bin', 'imgpad0.bin' osimg1.bin
+Concat 'camel80.bin', 'nascom.bin', 'tastybasic.bin', 'game.bin', 'imgpad0.bin', 'usrrom.bin' osimg1.bin
 
 #
 # Now the ROM disk image is created.  This is done by starting with a
