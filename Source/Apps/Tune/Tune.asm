@@ -37,6 +37,7 @@
 ;   2018-01-26 [WBW] Initial release
 ;   2018-01-28 [WBW] Added support for MYM sound files
 ;   2019-11-21 [WBW] Added table-driven configuration
+;   2020-02-11 [WBW] Made hardware config & detection more flexible
 ;_______________________________________________________________________________
 ;
 ; ToDo:
@@ -81,30 +82,48 @@ TYPMYM		.EQU	3		; FILTYP value for MYM sound file
 	LD	A,RMJ << 4 | RMN	; Expected HBIOS ver
 	CP	D			; Compare with result above
 	JP	NZ,ERRBIO		; Handle BIOS error
+	LD	A,L			; Platform id to A
+	LD	(CURPLT),A		; Save as current platform id
 ;
-	; Use platform id to setup active configuration
-	LD	A,L			; Platform ID is still in L from above
-	RLCA				; Adjust for table entry size (4 bytes)
-	PUSH	AF			; Save ID * 2 for later
-	RLCA
 	LD	HL,CFGTBL		; Point to start of config table
-	CALL	ADDHLA			; HL := desired config table entry
-	LD	DE,CFG			; Dest is active config
-	LD	BC,4			; Copy 4 bytes
-	LDIR				; Copy to active config
+CFGSEL:
+	LD	A,$FF			; End of table marker
+	CP	(HL)			; Compare
+	JP	Z,ERRHW			; Bail out if no more configs to try
 ;
-	LD	HL,PLTSTR		; Point to platform string table
-	POP	AF			; Recover platform id * 2 for table offset
-	CALL	ADDHLA			; HL := Platform string index adr
-	LD	E,(HL)			; DE := Platform string adr
-	INC	HL
-	LD	D,(HL)
+	LD	BC,CFGSIZ		; Size of one entry
+	LD	DE,CFG			; Active config structure
+	LDIR				; Update active config structure
+;
+	LD	A,(CURPLT)		; Get current running platform id
+	LD	E,A			; Put in E
+	LD	A,(PLT)			; Get platform id of loaded config
+	CP	E			; Equal?
+	JR	NZ,CFGSEL		; If no match keep trying
+;	
+	; Test for hardware (sound chip detection)
+	CALL	SLOWIO
+	LD	DE,(PORTS)		; D := RDAT, E := RSEL
+	LD	C,E			; Port = RSEL
+	LD	A,2			; Register 2
+	OUT	(C),A			; Select register 2
+	LD	C,D			; Port = RDAT
+	LD	A,$AA			; Value = $AA
+	OUT	(C),A			; Write $AA to register 2
+	;LD	C,E			; Port = RSEL
+	LD	A,(RIN)			; Port = RIN
+	LD	C,A			; ... to C
+	IN	A,(C)			; Read back value in register 2
+	PUSH	AF
+	CALL	NORMIO
+	POP	AF
+	;CALL	PRTHEX			; *debug*
+	CP	$AA			; Value as written?
+	JR	NZ,CFGSEL		; If not, keep trying configs
+;
 	CALL	CRLF			; Formatting
-	CALL	PRTSTR			; Display platform string
-;
-	LD	A,(CFG)			; RSEL port address to A
-	INC	A			; Test for $FF
-	JP	Z,ERRPLT		; Bail out if unsupported platform
+	LD	DE,(DESC)		; Load hardware description pointer
+	CALL	PRTSTR			; Print description
 ;
 	; Test for timer running to determine if it can be used for delay
 	LD	B,BF_SYSGET		; HBIOS: GET function
@@ -123,19 +142,6 @@ SETDLY:
 	LD	(WMOD),A		; Save wait mode
 	CALL	PRTSTR			; Print it
 ;
-;	; *DEBUG*
-;	LD	A,','
-;	CALL	PRTCHR
-;	LD	HL,CFG
-;	LD	B,4
-;DBGLP:
-;	LD	A,' '
-;	CALL	PRTCHR
-;	LD	A,(HL)
-;	INC	HL
-;	CALL	PRTHEX
-;	DJNZ	DBGLP
-;	
 	; Get CPU speed & type from RomWBW HBIOS and compute quark delay factor
 	LD	B,$F8			; HBIOS SYSGET function 0xF8
 	LD	C,$F0			; CPUINFO subfunction 0xF0
@@ -146,31 +152,13 @@ SETDLY:
 	LD	(QDLY),HL		; Save result as quark delay factor
 ;
 	; Activate SCG card if applicable
-	LD	A,(CFG+3)
+	LD	A,(ACR)
 	CP	$FF
 	JR	Z,NOSCG
 	LD	C,A
 	LD	A,$FF
 	OUT	(C),A
 NOSCG:
-;	
-	; Test for hardware (sound chip detection)
-	CALL	SLOWIO
-	LD	DE,(CFG)		; D := RDAT, E := RSEL
-	LD	C,E			; Port = RSEL
-	LD	A,2			; Register 2
-	OUT	(C),A			; Select register 2
-	LD	C,D			; Port = RDAT
-	LD	A,$AA			; Value = $AA
-	OUT	(C),A			; Write $AA to register 2
-	LD	C,E			; Port = RSEL
-	IN	A,(C)			; Read back value in register 2
-	PUSH	AF
-	CALL	NORMIO
-	POP	AF
-	;CALL	PRTHEX			; *debug*
-	CP	$AA			; Value as written?
-	JP	NZ,ERRHW		; If not, handle hardware error
 ;
 	; Clear heap storage
 	LD	HL,HEAP			; Point to heap start
@@ -431,7 +419,7 @@ IDBIO2:
 ;
 ;
 SLOWCPU:
-	LD A,(CFG+2)	; Z180 base I/O port
+	LD A,(Z180)	; Z180 base I/O port
 	CP $FF		; Check for no value
 	RET Z		; Bail out if no value
 	ADD A,$1E	; Apply offset of CMR register
@@ -451,7 +439,7 @@ SLOWCPU:
 ;
 ;
 NORMCPU:
-	LD A,(CFG+2)	; Z180 base I/O port
+	LD A,(Z180)	; Z180 base I/O port
 	CP $FF		; Check for no value
 	RET Z		; Bail out if no value
 	ADD A,$1E	; Apply offset of CMR register
@@ -467,7 +455,7 @@ NORMCPU:
 ;
 ;
 SLOWIO:
-	LD A,(CFG+2)	; Z180 base I/O port
+	LD A,(Z180)	; Z180 base I/O port
 	CP $FF		; Check for no value
 	RET Z		; Bail out if no value
 	ADD A,$32	; Apply offset of DCNTL register
@@ -482,7 +470,7 @@ SLOWIO:
 ;
 ;
 NORMIO:
-	LD A,(CFG+2)	; Z180 base I/O port
+	LD A,(Z180)	; Z180 base I/O port
 	CP $FF		; Check for no value
 	RET Z		; Bail out if no value
 	ADD A,$32	; Apply offset of DCNTL register
@@ -716,25 +704,56 @@ ERR2:	; without the string
 ;
 ; CONFIG TABLE, ENTRY ORDER MATCHES HBIOS PLATFORM ID
 ;
-CFGTBL:		;	RSEL	RDAT	Z180	ACR
-		.DB	$FF,	$FF,	$FF,	$FF	; PLATFORM ID 0 IS INVALID
-		.DB	$9A,	$9B,	$FF,	$9C	; SBC W/ SCG
-		.DB	$FF,	$FF,	$FF,	$FF	; ZETA (NOT POSSIBLE)
-		.DB	$FF,	$FF,	$FF,	$FF	; ZETA 2 (NOT POSSIBLE)
-		.DB	$9C,	$9D,	$40,	$FF	; N8 W/ ONBOARD PSG
-		.DB	$9A,	$9B,	$40,	$9C	; MK4 W/ SCG
-		.DB	$9A,	$9B,	$FF,	$FF	; UNA (NOT SUPPORTED)
-		.DB	$D8,	$D0,	$FF,	$FF	; RCZ80 W/ RC SOUND MODULE (EB)
-		.DB	$68,	$60,	$C0,	$FF	; RCZ180 W/ RC SOUND MODULE (EB)
-		.DB	$D8,	$D0,	$FF,	$FF	; EZZ80 W/ RC SOUND MODULE (EB)
-		.DB	$68,	$60,	$C0,	$FF	; SCZ180 W/ RC SOUND MODULE (EB)
+CFGSIZ	.EQU	8
 ;
-CFG:		; ACTIVE CONFIG VALUES (FROM SELECTED CFGTBL)
+CFGTBL:	;	PLT	RSEL	RDAT	RIN	Z180	ACR
+	;	DESC
+	.DB	$01,	$9A,	$9B,	$9A,	$FF,	$9C	; SBC W/ SCG
+	.DW	HWSTR_SCG	
+;	
+	.DB	$04,	$9C,	$9D,	$9C,	$40,	$FF	; N8 W/ ONBOARD PSG
+	.DW	HWSTR_N8	
+;	
+	.DB	$05,	$9A,	$9B,	$9A,	$40,	$9C	; MK4 W/ SCG
+	.DW	HWSTR_SCG	
+;	
+	.DB	$07,	$D8,	$D0,	$D8,	$FF,	$FF	; RCZ80 W/ RC SOUND MODULE (EB)
+	.DW	HWSTR_RCEB	
+;	
+	.DB	$07,	$D1,	$D0,	$D0,	$FF,	$FF	; RCZ80 W/ RC SOUND MODULE (MF)
+	.DW	HWSTR_RCMF
+;	
+	.DB	$08,	$68,	$60,	$68,	$C0,	$FF	; RCZ180 W/ RC SOUND MODULE (EB)
+	.DW	HWSTR_RCEB	
+;	
+	.DB	$08,	$61,	$60,	$60,	$C0,	$FF	; RCZ180 W/ RC SOUND MODULE (MF)
+	.DW	HWSTR_RCMF
+;
+	.DB	$09,	$D8,	$D0,	$D8,	$FF,	$FF	; EZZ80 W/ RC SOUND MODULE (EB)
+	.DW	HWSTR_RCEB	
+;
+	.DB	$09,	$D1,	$D0,	$D0,	$FF,	$FF	; EZZ80 W/ RC SOUND MODULE (EB)
+	.DW	HWSTR_RCMF
+;
+	.DB	$0A,	$68,	$60,	$68,	$C0,	$FF	; SCZ180 W/ RC SOUND MODULE (EB)
+	.DW	HWSTR_RCEB
+;
+	.DB	$0A,	$61,	$60,	$60,	$C0,	$FF	; SCZ180 W/ RC SOUND MODULE (MF)
+	.DW	HWSTR_RCMF
+;
+	.DB	$FF					; END OF TABLE MARKER
+;
+CFG:		; ACTIVE CONFIG VALUES (FROM SELECTED CFGTBL ENTRY)
+PLT		.DB	0	; RomWBW HBIOS platform id
+PORTS:
 RSEL		.DB	0	; Register selection port
 RDAT		.DB	0	; Register data port
+RIN		.DB	0	; Register input port
 Z180		.DB	0	; Z180 base I/O port
 ACR		.DB	0	; Aux Ctrl Reg I/O port on SCG
+DESC		.DW	0	; Hardware description string adr
 ;
+CURPLT		.DB	0	; Current platform id reported by HBIOS
 QDLY		.DW	0	; quark delay factor
 WMOD		.DB	0	; delay mode, non-zero to use timer
 DCSAV		.DB	0	; for saving original Z180 DCNTL value
@@ -747,7 +766,7 @@ FILTYP		.DB	0	; Sound file type (TYPPT2, TYPPT3, TYPMYM)
 TMP		.DB	0	; work around use of undocumented Z80
 ;
 		
-MSGBAN		.DB	"Tune Player for RomWBW v2.2a, 02-Feb-2020",0
+MSGBAN		.DB	"Tune Player for RomWBW v2.3, 11-Feb-2020",0
 MSGUSE		.DB	"Copyright (C) 2020, Wayne Warthen, GNU GPL v3",13,10
 		.DB	"PTxPlayer Copyright (C) 2004-2007 S.V.Bulba",13,10
 		.DB	"MYMPlay by Marq/Lieves!Tuore",13,10,13,10
@@ -764,29 +783,10 @@ MSGDLY		.DB	", delay mode",0
 MSGPLY		.DB	"Playing...",0
 MSGEND		.DB	" Done",0
 ;
-PLTSTR:
-		.DW	0
-		.DW	PLTSTR_SBC
-		.DW	PLTSTR_ZETA
-		.DW	PLTSTR_ZETA2
-		.DW	PLTSTR_N8
-		.DW	PLTSTR_MK4
-		.DW	PLTSTR_UNA
-		.DW	PLTSTR_RCZ80
-		.DW	PLTSTR_RCZ180
-		.DW	PLTSTR_EZZ80
-		.DW	PLTSTR_SCZ180
-;
-PLTSTR_SBC	.DB	"SBC w/ SCG ECB Sound Card",0
-PLTSTR_ZETA	.DB	"Zeta -- Not Supported!!!",0
-PLTSTR_ZETA2	.DB	"Zeta 2 -- Not Supported!!!",0
-PLTSTR_N8	.DB	"N8 Onboard Sound System",0
-PLTSTR_MK4	.DB	"Mark IV w/ SCG ECB Sound Card",0
-PLTSTR_UNA	.DB	"UNA -- Not Supported!!!",0
-PLTSTR_RCZ80	.DB	"RC2014 Z80 w/ Sound Module (EB)",0
-PLTSTR_RCZ180	.DB	"RC2014 Z180 w/ Sound Module (EB)",0
-PLTSTR_EZZ80	.DB	"Easy Z80 w/ Sound Module (EB)",0
-PLTSTR_SCZ180	.DB	"SC Z180 w/ Sound Module (EB)",0
+HWSTR_SCG	.DB	"SCG ECB Board",0
+HWSTR_N8	.DB	"N8 Onboard Sound",0
+HWSTR_RCEB	.DB	"RC2014 Sound Module (EB)",0
+HWSTR_RCMF	.DB	"RC2014 Sound Module (MF)",0
 ;
 ;===============================================================================
 ; PTx Player Routines
@@ -2172,7 +2172,7 @@ LOUT	OUT (C),A
 #IF WBW
 	DI
 	CALL SLOWIO
-	LD DE,(CFG)	; D := RDAT, E := RSEL
+	LD DE,(PORTS)	; D := RDAT, E := RSEL
 	XOR A		; start with reg 0
 	LD C,E		; point to address port
 	LD HL,AYREGS	; start of value list
@@ -2557,7 +2557,7 @@ upsg:	ld	a,(WMOD)	; if WMOD = 1, CPU is z180
 	call	SLOWIO
 
 upsg1:	ld	hl,(psource)
-	ld	de,(CFG)	; E := RSEL, D := RDAT
+	ld	de,(PORTS)	; E := RSEL, D := RDAT
         xor     a
 
 psglp:	ld	c,e		; C := RSEL
