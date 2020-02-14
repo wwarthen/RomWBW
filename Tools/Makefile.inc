@@ -37,6 +37,7 @@ ZXCC=$(TOOLS)/$(UNAME)/zx
 TASM=$(TOOLS)/$(UNAME)/uz80as
 OPENSPIN=$(TOOLS)/$(UNAME)/openspin
 BSTC=$(TOOLS)/$(UNAME)/bstc
+CPMCP=$(TOOLS)/$(UNAME)/cpmcp
 
 #
 # directory containing cpm binaries
@@ -102,7 +103,7 @@ all:: $(OBJECTS)
 	done
 
 clean::
-	-rm -f $$($(CASEFN) *.sym *.lst *.prn $(OTHERS) $(filter-out $(NODELETE),$(OBJECTS)))
+	-rm -f $$($(CASEFN) make.out *.sym *.lst *.prn *.diff *.dump $(OTHERS) $(filter-out $(NODELETE),$(OBJECTS)))
 	@for dir in $(SUBDIRS) ; do \
 		( echo "cleaning in `pwd`/$$dir" ; cd "$$dir" ; make clean ) ; \
 	done

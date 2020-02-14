@@ -5,6 +5,8 @@ SYSTEMS = cpm_wbw.sys cpm_una.sys zsys_wbw.sys zsys_una.sys
 FDIMGS = fd_cpm22.img fd_zsdos.img fd_nzcom.img fd_cpm3.img fd_zpm3.img fd_ws4.img
 HDIMGS = hd_cpm22.img hd_zsdos.img hd_nzcom.img hd_cpm3.img hd_zpm3.img hd_ws4.img
 OBJECTS = $(FDIMGS) $(HDIMGS)
+OTHERS = $(SYSTEMS)
+
 DEST=../../Binary
 
 TOOLS = ../../Tools
