@@ -75,7 +75,7 @@ should be consulted to understand these.  The build process used here
 produces several different configurations which can be loaded at runtime.
 The original distributed memory segment configuration occupies the top
 of memory which, unfortunately, conflicts with the RomWBW HBIOS need to
-occupt this space.
+occupy this space.
 
 Although RomWBW HBIOS is implemented in it's own dedicated memory bank, it
 requires a small proxy at the top of memory which acts as a mechansim to
