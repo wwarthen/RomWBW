@@ -38,6 +38,8 @@
 #include <string.h>
 #endif
 
+static void output();
+
 static const char *d_null(const char *);
 static const char *d_block(const char *);
 static const char *d_byte(const char *);
@@ -97,6 +99,12 @@ static struct direc {
 	{ "WORD", d_word },
 };
 
+/* binary output file */
+FILE *fout;
+
+/* output in source order */
+int b_flag = 1;
+
 /* The target. */
 const struct target *s_target;
 
@@ -150,6 +158,20 @@ isset(int pc)
 	return membit[pc / 8] & (1 << (pc % 8));
 }
 
+void
+open_output()
+{
+	fout = efopen(s_objfname, "wb");
+}
+
+void
+close_output()
+{
+	if (fclose(fout) == EOF) {
+		eprint(_("cannot close file %s\n"), s_objfname);
+	}
+}
+
 /* 
  * Generates a byte to the output and updates s_pc, s_minpc and s_maxpc.
  * Will issue a fatal error if we write beyong 64k.
@@ -172,8 +194,13 @@ void genb(int b, const char *ep)
 	s_mem[s_pc] = (unsigned char) b;
 	setbit(s_pc);
 
-	if (s_pass == 1)
+	if (s_pass == 1) {
 		list_genb(b);
+		if (b_flag) {
+			fwrite(&s_mem[s_pc], 1, 1, fout);
+		}
+	}
+
 	if (s_pc < s_minpc)
 		s_minpc = s_pc;
 	s_pc++;
@@ -1028,8 +1055,6 @@ static void install_predefs(void)
 /* Do a pass through the source. */
 static void dopass(const char *fname)
 {
-	fprintf(stderr, "start pass %d\n", s_pass);
-
 	/* Fill memory with default value. */
 	if ((s_pass == 0 && s_mem_fillval != 0) || s_pass > 0) {
 		memset(s_mem, s_mem_fillval, sizeof(s_mem));
@@ -1041,6 +1066,7 @@ static void dopass(const char *fname)
 		s_codes = 1;
 		s_list_on = 1;
 	}
+
 
 	install_predefs();
 	s_minpc = -1;
@@ -1073,15 +1099,15 @@ static void dopass(const char *fname)
 	}
 }
 
-/* Write the object file. */
+/*
+ * Write the object file in memory order
+ */
 static void output()
 {
 	int i;
-	FILE *fout;
 
 	// fprintf(stderr, "output: min: %x max: %x\n", s_minpc, s_maxpc);
 
-	fout = efopen(s_objfname, "wb");
 	if (s_minpc < 0)
 		s_minpc = 0;
 	if (s_maxpc < 0)
@@ -1096,9 +1122,6 @@ static void output()
 		eprint(_("cannot write to file %s\n"), s_objfname);
 		clearerr(fout);
 	}
-	if (fclose(fout) == EOF) {
-		eprint(_("cannot close file %s\n"), s_objfname);
-	}
 }
 
 /* Start the assembly using the config in options.c. */
@@ -1111,6 +1134,9 @@ void uz80as(void)
 	}
 
 	for (s_pass = 0; s_nerrors == 0 && s_pass < 2; s_pass++) {
+		if ((s_pass > 0) && (s_nerrors == 0)) {
+			open_output();
+		}
 		dopass(s_asmfname);
 		if (s_pass == 0 && !s_end_seen) {
 			wprint(_("no .END statement in the source\n"));
@@ -1124,5 +1150,8 @@ void uz80as(void)
 		exit(EXIT_FAILURE);
 	}
 
-	output();
+	if (!b_flag) {
+		output();
+	}
+	close_output();
 }
