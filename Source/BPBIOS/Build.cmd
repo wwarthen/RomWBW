@@ -3,6 +3,8 @@
 setlocal
 
 setlocal & cd ZCPR33 && call Build || exit /b 1 & endlocal
+setlocal & cd Z34RCP11 && call Build || exit /b 1 & endlocal
+setlocal & cd NZFCP13 && call Build || exit /b 1 & endlocal
 
 set PATH=%PATH%;..\..\Tools\zx;..\..\Tools\cpmtools;
 
@@ -26,22 +28,22 @@ call :makebp 41nbnk
 
 rem pause
 
-cpmrm.exe -f wbw_hd0 ../../Binary/hd_bp.img 0:ws*.*
-
-cpmrm.exe -f wbw_hd0 ../../Binary/hd_bp.img 0:*.img
-cpmcp.exe -f wbw_hd0 ../../Binary/hd_bp.img *.img 0:
-
-cpmrm.exe -f wbw_hd0 ../../Binary/hd_bp.img 0:*.rel
-cpmcp.exe -f wbw_hd0 ../../Binary/hd_bp.img *.rel 0:
-
-rem cpmrm.exe -f wbw_hd0 ../../Binary/hd_bp.img 0:*.dat
-rem cpmcp.exe -f wbw_hd0 ../../Binary/hd_bp.img *.dat 0:
-
-cpmrm.exe -f wbw_hd0 ../../Binary/hd_bp.img 0:*.zex
-cpmcp.exe -f wbw_hd0 ../../Binary/hd_bp.img *.zex 0:
-
-cpmrm.exe -f wbw_hd0 ../../Binary/hd_bp.img 0:myterm.z3t
-cpmcp.exe -f wbw_hd0 ../../Binary/hd_bp.img myterm.z3t 0:myterm.z3t
+rem cpmrm.exe -f wbw_hd0 ../../Binary/hd_bp.img 0:ws*.*
+rem 
+rem cpmrm.exe -f wbw_hd0 ../../Binary/hd_bp.img 0:*.img
+rem cpmcp.exe -f wbw_hd0 ../../Binary/hd_bp.img *.img 0:
+rem 
+rem cpmrm.exe -f wbw_hd0 ../../Binary/hd_bp.img 0:*.rel
+rem cpmcp.exe -f wbw_hd0 ../../Binary/hd_bp.img *.rel 0:
+rem 
+rem rem cpmrm.exe -f wbw_hd0 ../../Binary/hd_bp.img 0:*.dat
+rem rem cpmcp.exe -f wbw_hd0 ../../Binary/hd_bp.img *.dat 0:
+rem 
+rem cpmrm.exe -f wbw_hd0 ../../Binary/hd_bp.img 0:*.zex
+rem cpmcp.exe -f wbw_hd0 ../../Binary/hd_bp.img *.zex 0:
+rem 
+rem cpmrm.exe -f wbw_hd0 ../../Binary/hd_bp.img 0:myterm.z3t
+rem cpmcp.exe -f wbw_hd0 ../../Binary/hd_bp.img myterm.z3t 0:myterm.z3t
 
 goto :eof
 
