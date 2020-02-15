@@ -25,4 +25,5 @@ call BuildHD.cmd nzcom ..\zsdos\zsys_wbw.sys
 call BuildHD.cmd cpm3
 call BuildHD.cmd zpm3
 call BuildHD.cmd ws4
-call BuildHD.cmd bp
+
+if exist ..\BPBIOS\bpbio-ww.rel call BuildHD.cmd bp
