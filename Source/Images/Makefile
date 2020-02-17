@@ -63,14 +63,15 @@ HDSIZE=$(shell expr 128 '*' 65)
 	for u in $$(seq 0 15) ; do \
 		dir=d_$$d/u$$u ; \
 		if [ -d $$dir ] ; then \
-			echo $(CPMCP) -f $$fmt $@ $$dir/*.* $$u: ; \
-			$(CPMCP) -f $$fmt $@ $$dir/*.* $$u: ; \
+			echo $(CPMCP) -f $$fmt $@ $$($(CASEFN) $$dir/*.*) $$u: ; \
+			$(CPMCP) -f $$fmt $@ $$($(CASEFN) $$dir/*.*) $$u: ; \
 		fi ; \
 	done ; \
 	if [ -f d_$$d.txt ] ; then \
 		grep -v ^# d_$$d.txt | while read file user ; do \
-			echo $(CPMCP) -f $$fmt $@ $$file $$user ; \
-			$(CPMCP) -f $$fmt $@ $$file $$user ; \
+			echo $$file $$user ; \
+			echo $(CPMCP) -f $$fmt $@ $$($(CASEFN) $$file) $$user ; \
+			$(CPMCP) -f $$fmt $@ $$($(CASEFN) $$file) $$user ; \
 		done ; \
 	fi ; \
 	if [ "$$sys" ] ; then \

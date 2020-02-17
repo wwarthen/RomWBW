@@ -1,0 +1,5 @@
+*.prn
+*.rel
+*.img
+bpsys.dat
+def-ww.lib

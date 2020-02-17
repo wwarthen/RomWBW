@@ -1,4 +1,5 @@
-OBJECTS = ZPMLDR.COM cpm3.sys zinstal.zpm startzpm.com zccp.com
+OBJECTS = ZPMLDR.COM cpm3.sys zinstal.zpm startzpm.com zccp.com \
+	setz3.com clrhist.com autotog.com
 OTHERS = biosldr.rel gencpm.com gencpm.dat bnkbios3.spr
 TOOLS =../../Tools
 RELPATH = Source/ZPM3
@@ -32,3 +33,8 @@ zinstal.zpm: ../ZCCP/zinstal.zpm
 startzpm.com: ../ZCCP/startzpm.com
 	cp $< $@
 
+setz3.com: setz3.z80
+
+clrhist.com: clrhist.z80
+
+autotog.com: autotog.z80

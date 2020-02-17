@@ -5,8 +5,13 @@ SUBDIRS += ZPM3
 SUBDIRS += Forth
 NOTDONE += Fonts
 SUBDIRS += BL
-SUBDIRS += Images
 SUBDIRS += BPBIOS
 SUBDIRS += HBIOS
 TOOLS = ../Tools
 include $(TOOLS)/Makefile.inc
+
+install:: SUBDIRS += Images
+
+clean:: SUBDIRS += Images
+
+clobber:: SUBDIRS += Images

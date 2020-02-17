@@ -1,6 +1,7 @@
 all:
 	cd Tools/unix ; make install
 	cd Source ; make all
+	cd Source/Images ; make al
 
 clean:
 	cd Tools/unix ; make clean

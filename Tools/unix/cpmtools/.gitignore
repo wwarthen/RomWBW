@@ -1,0 +1,8 @@
+cpmchattr
+cpmchmod
+cpmcp
+cpmls
+cpmrm
+fsck.cpm
+mkfs.cpm
+*.o

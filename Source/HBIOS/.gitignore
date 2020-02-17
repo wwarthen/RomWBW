@@ -1,0 +1,8 @@
+*.bin
+*.lst
+*.rom
+*.dat
+*.tmp
+build.inc
+cpm.sys
+zsys.sys
