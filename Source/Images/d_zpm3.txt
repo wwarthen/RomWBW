@@ -2,7 +2,9 @@
 # Add files from CPM3 build
 #
 ../ZPM3/zpmldr.com 0:
-../ZPM3/cpmldr.com 0:
+../ZPM3/zpmldr.sys 0:
+../CPM3/cpmldr.com 0:
+../CPM3/cpmldr.sys 0:
 ../ZPM3/autotog.com 0:
 ../ZPM3/clrhist.com 0:
 ../ZPM3/setz3.com 0:

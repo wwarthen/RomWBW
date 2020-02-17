@@ -10,5 +10,6 @@ if exist *.err del *.err
 if exist *.lst del *.lst
 if exist *.sym del *.sym
 if exist *.sys del *.sys
+if exist *.bin del *.bin
 if exist gencpm.dat del gencpm.dat
 if exist options.lib del options.lib
