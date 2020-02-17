@@ -3,9 +3,9 @@
 #
 SYSTEMS = cpm_wbw.sys cpm_una.sys zsys_wbw.sys zsys_una.sys
 FDIMGS = fd_cpm22.img fd_zsdos.img fd_nzcom.img fd_cpm3.img fd_zpm3.img fd_ws4.img
-HDIMGS = hd_cpm22.img hd_zsdos.img hd_nzcom.img hd_cpm3.img hd_zpm3.img hd_ws4.img
+HDIMGS = hd_cpm22.img hd_zsdos.img hd_nzcom.img hd_cpm3.img hd_zpm3.img hd_ws4.img hd_bp.img
 OBJECTS = $(FDIMGS) $(HDIMGS)
-OTHERS = $(SYSTEMS)
+OTHERS = $(SYSTEMS) blank144 blankhd
 
 DEST=../../Binary
 
@@ -48,13 +48,17 @@ zsys_una.sys:
 # an OS at the start of each image
 #
 blank144:
-	LANG=en_US.US-ASCII tr '\000' '\345' </dev/zero | dd of=$@ bs=1024 count=1440
+	@echo Making Blank Floppy of size 1440k
+	@LANG=en_US.US-ASCII tr '\000' '\345' </dev/zero | dd of=$@ bs=1024 count=1440 2>/dev/null
+
+HDSIZE := $(shell expr 128 '*' 65)
 
 blankhd:
-	LANG=en_US.US-ASCII tr '\000' '\345' </dev/zero | dd of=$@ bs=1024 count=$(shell expr 128 '*' 65)
+	@echo Making Blank Hd of size $(HDSIZE)k
+	@LANG=en_US.US-ASCII tr '\000' '\345' </dev/zero | dd of=$@ bs=1024 count=$(HDSIZE) 2>/dev/null
 
 %.img:: $(SYSTEMS) blank144 blankhd
-	sys= ; \
+	@sys= ; \
 	case $@ in (*cpm22*) sys=cpm_wbw.sys;; (*zsdos* | *nzcom) sys=zsys_wbw.sys;; esac ; \
 	if echo $@ | grep -q ^f ; then \
 		fmt=wbw_fd144 ; type=fd_ ; proto=blank144 ; \
@@ -62,25 +66,29 @@ blankhd:
 		fmt=wbw_hd0 ; type=hd_ ; proto=blankhd ; \
 	fi ; \
 	d=$$(echo $(basename $@) | sed s/$$type//) ; \
-	echo $@ $$d $$type $$fmt $$sys $$proto ; \
+	echo Generating $@ ; \
 	cp $$proto $@ ; \
 	for u in $$(seq 0 15) ; do \
 		dir=d_$$d/u$$u ; \
 		if [ -d $$dir ] ; then \
-			echo $(CPMCP) -f $$fmt $@ $$($(CASEFN) $$dir/*.*) $$u: ; \
+			echo " " copying directory $$dir ; \
 			$(CPMCP) -f $$fmt $@ $$($(CASEFN) $$dir/*.*) $$u: ; \
 		fi ; \
 	done ; \
 	if [ -f d_$$d.txt ] ; then \
+		echo " " copying files from d_$$d.txt ; \
 		grep -v ^# d_$$d.txt | tr -d '\r' | while read file user ; do \
-			echo $$file $$user ; \
-			echo $(CPMCP) -f $$fmt $@ $$($(CASEFN) $$file) $$user ; \
-			$(CPMCP) -f $$fmt $@ $$($(CASEFN) $$file) $$user ; \
+			rf=$$($(CASEFN) $$file) ; \
+			if [ "$$rf" == nofile ] ; then \
+				echo " " $$file missing ; \
+			else \
+				$(CPMCP) -f $$fmt $@ $$rf $$user ; \
+			fi ; \
 		done ; \
 	fi ; \
 	if [ "$$sys" ] ; then \
 		echo copying system $$sys to $@ ; \
-		dd if=$$sys of=$@ conv=notrunc ; \
+		dd if=$$sys of=$@ conv=notrunc 2>/dev/null ; \
 	fi
 
 install::

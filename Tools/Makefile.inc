@@ -6,8 +6,7 @@
 # make is very much case-sensitive, so we use this.  if your underlying
 # filesystem is not case-preserving, forget it.
 #
-# .asm:  TASM sources, except ZCPR, where they are MAC.
-# .ASM:  MAC or RMAC sources
+# .asm:  TASM sources, except somewheres it is MAC or RMAC
 # .z80:  Z80ASM sources, except ZSDOS, where they are ZMAC
 # .azm:  zsm sources
 #
@@ -44,20 +43,25 @@ CPMCP=$(TOOLS)/$(UNAME)/cpmcp
 #
 CPM=$(TOOLS)/cpm/bin
 
-%.HEX: %.asm
+%.com: %.asm
+	if [ "$(USETASM)" = 1 ] ; then \
+		$(TASM) $< $@ ; \
+	else \
+		$(ZXCC) $(CPM)/MAC -$< -$$PO ; \
+		$(ZXCC) $(CPM)/MLOAD25 -tmp.bin=$*.hex ; \
+		mv tmp.bin $@ ; \
+		rm -f $$($(CASEFN) $*.hex) ; \
+	fi
+
+%.bin: %.ASM
 	$(ZXCC) $(CPM)/MAC -$< -$$PO
-
-%.HEX: %.ASM
-	$(ZXCC) $(CPM)/MAC -$< -$$PO
-
-%.BIN: %.HEX
-	$(ZXCC) $(CPM)/MLOAD25 -$@=$<
-
-%.com: %.HEX
-	$(ZXCC) $(CPM)/MLOAD25 -$@=$<
+	$(ZXCC) $(CPM)/MLOAD25 -tmp.bin=$*.hex
+	mv tmp.bin $@
+	rm -f $$($(CASEFN) $*.hex)
 
 %.com: %.z80
-	$(ZXCC) $(CPM)/Z80ASM -$(basename $<)/F
+	$(ZXCC) $(CPM)/Z80ASM -$(basename $<)/F ; \
+	mv $$($(CASEFN) $@) tmp.com ; mv tmp.com $@
 	
 %.bin: %.asm
 	$(TASM) $< $@
@@ -68,7 +72,7 @@ CPM=$(TOOLS)/cpm/bin
 %.rel: %.z80
 	$(ZXCC) $(CPM)/Z80ASM -$(basename $<)/MF
 
-%.HEX: %.180 
+%.hex: %.180 
 	$(ZXCC) $(CPM)/SLR180 -$(basename $<)/HF
 
 %.rel: %.azm 
@@ -109,16 +113,16 @@ clean::
 	done
 
 install:: all
-	@for file in $(OBJECTS) ; do \
+	@if [ "$(DEST)" ] ; then for file in $(OBJECTS) ; do \
 		mkdir -p $(DEST) ; \
 		echo copy $$file to $(DEST) ; \
 		cp $$($(CASEFN) $$file) $(DEST) ; \
-	done
-	@for file in $(DOCS) ; do \
+	done ; fi
+	@if [ "$(DOCDEST)" ] ; then for file in $(DOCS) ; do \
 		mkdir -p $(DOCDEST) ; \
 		echo copy $$file to $(DOCDEST) ; \
 		cp $$($(CASEFN) $$file) $(DOCDEST) ; \
-	done
+	done ; fi
 	@for dir in $(SUBDIRS) ; do \
 		( echo "install in `pwd`/$$dir" ; cd "$$dir" ; make install ) ; \
 	done

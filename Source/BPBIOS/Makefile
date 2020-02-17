@@ -5,7 +5,7 @@ VERSIONS = \
 	34n 34nbnk \
 	41tbnk 41nbnk
 
-HD0IMG = ../../Binary/hd0.img
+HD0IMG = ../../Binary/hd_bp.img
 IMGFILES = $(foreach ver,$(VERSIONS),bp$(ver).img)
 DISTFILES = *.zex *.rel myterm.z3t
 

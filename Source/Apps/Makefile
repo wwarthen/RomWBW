@@ -1,6 +1,6 @@
 OBJECTS = SysGen.com Survey.com \
-	SysCopy.COM Assign.COM Format.COM Talk.COM OSLdr.COM Mode.COM RTC.COM \
-	Timer.COM IntTest.COM
+	SysCopy.com Assign.com Format.com Talk.com OSLdr.com Mode.com RTC.com \
+	Timer.com IntTest.com
 OTHERS = *.hex *.com
 SUBDIRS = XM FDU FAT 
 # Tune - left out for now
@@ -9,6 +9,7 @@ TOOLS =../../Tools
 
 include $(TOOLS)/Makefile.inc
 
-%.COM: %.asm
-	$(TASM) $< $@
+USETASM = 1
+
+Survey.com: USETASM=0
 
