@@ -72,8 +72,8 @@ ROMSIZE		.EQU	$romsize
 ;
 EOF
 
-cp ../CPM22/os2ccp.bin ccp.bin
-cp ../CPM22/os3bdos.bin bdos.bin
+cp ../CPM22/OS2CCP.bin ccp.bin
+cp ../CPM22/OS3BDOS.bin bdos.bin
 cp ../ZCPR-DJ/zcpr.bin zcpr.bin
 cp ../ZSDOS/zsdos.bin zsdos.bin
 cp ../Forth/camel80.bin camel80.bin
