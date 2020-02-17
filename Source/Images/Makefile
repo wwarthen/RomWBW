@@ -39,8 +39,6 @@ zsys_una.sys:
 		../ZCPR-DJ/zcpr.bin ../ZSDOS/ZSDOS.BIN \
 		../CBIOS/cbios_una.bin) > zsys_una.sys
 
-HDSIZE=$(shell expr 128 '*' 65)
-
 #
 # this somewhat impenetrable and fragile code is used to build each of the images
 # at build time, a few variables are set (sys, fmt, type, size, d) based on the
@@ -49,17 +47,23 @@ HDSIZE=$(shell expr 128 '*' 65)
 # then process the d_{d}.txt file, copying in those files, and finally maybe put
 # an OS at the start of each image
 #
-%.img:: $(SYSTEMS)
+blank144:
+	LANG=en_US.US-ASCII tr '\000' '\345' </dev/zero | dd of=$@ bs=1024 count=1440
+
+blankhd:
+	LANG=en_US.US-ASCII tr '\000' '\345' </dev/zero | dd of=$@ bs=1024 count=$(shell expr 128 '*' 65)
+
+%.img:: $(SYSTEMS) blank144 blankhd
 	sys= ; \
 	case $@ in (*cpm22*) sys=cpm_wbw.sys;; (*zsdos* | *nzcom) sys=zsys_wbw.sys;; esac ; \
 	if echo $@ | grep -q ^f ; then \
-		fmt=wbw_fd144 ; type=fd_ ; size=1440 ; \
+		fmt=wbw_fd144 ; type=fd_ ; proto=blank144 ; \
 	else \
-		fmt=wbw_hd0 ; type=hd_ ; size=$(HDSIZE) ; \
+		fmt=wbw_hd0 ; type=hd_ ; proto=blankhd ; \
 	fi ; \
 	d=$$(echo $(basename $@) | sed s/$$type//) ; \
-	echo $@ $$d $$type $$size $$fmt $$sys ; \
-	LANG=en_US.US-ASCII tr '\000' '\345' </dev/zero | dd of=$@ bs=1024 count=$$size ; \
+	echo $@ $$d $$type $$fmt $$sys $$proto ; \
+	cp $$proto $@ ; \
 	for u in $$(seq 0 15) ; do \
 		dir=d_$$d/u$$u ; \
 		if [ -d $$dir ] ; then \
@@ -68,7 +72,7 @@ HDSIZE=$(shell expr 128 '*' 65)
 		fi ; \
 	done ; \
 	if [ -f d_$$d.txt ] ; then \
-		grep -v ^# d_$$d.txt | while read file user ; do \
+		grep -v ^# d_$$d.txt | tr -d '\r' | while read file user ; do \
 			echo $$file $$user ; \
 			echo $(CPMCP) -f $$fmt $@ $$($(CASEFN) $$file) $$user ; \
 			$(CPMCP) -f $$fmt $@ $$($(CASEFN) $$file) $$user ; \

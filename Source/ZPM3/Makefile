@@ -2,7 +2,6 @@ OBJECTS = ZPMLDR.COM cpm3.sys zinstal.zpm startzpm.com zccp.com \
 	setz3.com clrhist.com autotog.com
 OTHERS = biosldr.rel gencpm.com gencpm.dat bnkbios3.spr
 TOOLS =../../Tools
-RELPATH = Source/ZPM3
 
 include $(TOOLS)/Makefile.inc
 

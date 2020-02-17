@@ -1,0 +1,31 @@
+#
+# Add RomWBW utilities
+#
+../../Binary/Apps/assign.com 0:
+../../Binary/Apps/fat.com 0:
+../../Binary/Apps/fdu.com 0:
+../../Binary/Apps/format.com 0:
+../../Binary/Apps/mode.com 0:
+../../Binary/Apps/osldr.com 0:
+../../Binary/Apps/rtc.com 0:
+../../Binary/Apps/survey.com 0:
+../../Binary/Apps/syscopy.com 0:
+../../Binary/Apps/sysgen.com 0:
+../../Binary/Apps/talk.com 0:
+../../Binary/Apps/timer.com 0:
+../../Binary/Apps/xm.com 0:
+../../Binary/Apps/inttest.com 0:
+#
+# Add Tune application and sample files
+#
+../../Binary/Apps/tune.com 3:
+../../Binary/Apps/Tunes/*.* 3:
+#
+# Add ZSystem images
+#
+../BPBIOS/*.img 0:
+../BPBIOS/*.rel 0:
+../BPBIOS/*.zex 0:
+../BPBIOS/myterm.z3t 0:
+../BPBIOS/Z34RCP11/z34rcp11.rel 0:rcp.zrl
+../BPBIOS/NZFCP13/nzfcp13.rel 0:fcp.zrl

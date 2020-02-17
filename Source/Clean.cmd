@@ -11,7 +11,6 @@ setlocal & cd CPM3 && call Clean.cmd & endlocal
 setlocal & cd ZPM3 && call Clean.cmd & endlocal
 setlocal & cd Forth && call Clean.cmd & endlocal
 setlocal & cd Fonts && call Clean.cmd & endlocal
-setlocal & cd BL && call Clean.cmd & endlocal
 setlocal & cd BPBIOS && call Clean.cmd & endlocal
 setlocal & cd HBIOS && call Clean.cmd & endlocal
 setlocal & cd Doc && call Clean.cmd & endlocal

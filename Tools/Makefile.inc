@@ -112,15 +112,15 @@ install:: all
 	@for file in $(OBJECTS) ; do \
 		mkdir -p $(DEST) ; \
 		echo copy $$file to $(DEST) ; \
-		cp $$file $(DEST) ; \
+		cp $$($(CASEFN) $$file) $(DEST) ; \
 	done
 	@for file in $(DOCS) ; do \
 		mkdir -p $(DOCDEST) ; \
 		echo copy $$file to $(DOCDEST) ; \
-		cp $$file $(DOCDEST) ; \
+		cp $$($(CASEFN) $$file) $(DOCDEST) ; \
 	done
 	@for dir in $(SUBDIRS) ; do \
-		( echo "install in `pwd`/$$dir" ; cd "$$dir" ; make clobber ) ; \
+		( echo "install in `pwd`/$$dir" ; cd "$$dir" ; make install ) ; \
 	done
 
 clobber:: clean

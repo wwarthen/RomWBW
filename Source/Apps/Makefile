@@ -6,7 +6,6 @@ SUBDIRS = XM FDU FAT
 # Tune - left out for now
 DEST = ../../Binary/Apps
 TOOLS =../../Tools
-RELPATH = Source/Apps
 
 include $(TOOLS)/Makefile.inc
 

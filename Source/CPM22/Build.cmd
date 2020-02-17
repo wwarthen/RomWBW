@@ -32,6 +32,14 @@ zx MLOAD25 -OS2CCP.BIN=OS2CCP.HEX
 zx MAC -OS3BDOS.ASM -$PO
 zx MLOAD25 -OS3BDOS.BIN=OS3BDOS.HEX
 
+tasm -t80 -g3 -fFF loader.asm loader.bin loader.lst
+
+copy /b os2ccp.bin + os3bdos.bin + ..\cbios\cbios_wbw.bin cpm_wbw.bin
+copy /b os2ccp.bin + os3bdos.bin + ..\cbios\cbios_una.bin cpm_una.bin
+
+copy /b loader.bin + cpm_wbw.bin cpm_wbw.sys
+copy /b loader.bin + cpm_una.bin cpm_una.sys
+
 goto :eof
 
 :asm

@@ -26,15 +26,15 @@ HBCLK	EQU	YES			; HBIOS clock driver
 ;
 ; Set HB_IODEV to appropriate console device
 ;
-HB_IODEV	EQU	0
+HB_IODEV	EQU	0		; Assume we want to use first HBIOS serial device
 ;
 ; Set HB_HDDEV to appropriate hard disk driver
 ;
-HB_HDDEV	EQU	2
+HB_HDDEV	EQU	2		; Assumes disk device #2 is first hard disk device
 ;
 ; Set HB_MDDEV to appropriate memory disk driver
 ;
-HB_MDDEV	EQU	0
+HB_MDDEV	EQU	0		; Assumes disk device #0 is ROM disk device
 ;
 ; RAM/ROM disk sizes expressed as count of 2K blocks
 ;
@@ -65,4 +65,18 @@ BID_COM		EQU	9FH
 MEMTOP	EQU	0FFE0H - 1	; Start of HBIOS 32 byte control block
 	ELSE
 MEMTOP	EQU	HBLOC - 1	; Start of HBIOS 512 byte proxy
+	ENDIF
+
+	IF INTPXY
+HB_EI	MACRO
+	ENDM
+HB_DI	MACRO
+	ENDM
+	ELSE
+HB_EI	MACRO
+	EI
+	ENDM
+HB_DI	MACRO
+	DI
+	ENDM
 	ENDIF

@@ -1,6 +1,7 @@
-clean:
+TOOLS = ../Tools
+SUBDIRS = Apps
 
-clobber:
+include $(TOOLS)/Makefile.inc
+
+clobber::
 	rm -f *.bin *.com *.img *.rom *.pdf *.log *.eeprom
-
-all:

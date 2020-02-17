@@ -10,3 +10,5 @@ if exist zcpr33*.rel del zcpr33*.rel
 if exist *.bak del *.bak
 
 setlocal & cd ZCPR33 && call Clean.cmd & endlocal
+setlocal & cd Z34RCP11 && call Clean.cmd & endlocal
+setlocal & cd NZFCP13 && call Clean.cmd & endlocal

@@ -6,24 +6,24 @@ VERSIONS = \
 	41tbnk 41nbnk
 
 HD0IMG = ../../Binary/hd0.img
-OBJECTS = $(foreach ver,$(VERSIONS),bp$(ver).img)
+IMGFILES = $(foreach ver,$(VERSIONS),bp$(ver).img)
+DISTFILES = *.zex *.rel myterm.z3t
+
 OTHERS = zcpr33n.rel zcpr33t.rel \
 	bpbio-ww.rel bpsys.dat bpsys.bak bpbio-ww.err def-ww.lib
 
 TOOLS = ../../Tools
-CPMCP = $(TOOLS)/`uname`/cpmcp
-IMGFILES = *.img *.rel *.zex myterm.z3t
 
 SUBDIRS = ZCPR33
 include $(TOOLS)/Makefile.inc
 
 $(HD0IMG): $(IMGFILES)
-	$(CPMCP) -f wbw_hd0 $(HD0IMG) $(IMGFILES) 0:
+	$(CPMCP) -f wbw_hd0 $(HD0IMG) $(IMGFILES) $(DISTFILES) 0:
 
 zcpr33n.rel zcpr33t.rel:
 	(cd ZCPR33 ; make install)
 
-all:: $(OBJECTS) $(HD0IMG)
+all:: $(HD0IMG)
 
 clobber::
 	rm -f $(HD0IMG)
