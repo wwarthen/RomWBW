@@ -14,7 +14,7 @@ OTHERS = zcpr33n.rel zcpr33t.rel \
 
 TOOLS = ../../Tools
 
-SUBDIRS = ZCPR33
+SUBDIRS = ZCPR33 NZFCP13 Z34RCP11
 include $(TOOLS)/Makefile.inc
 
 $(HD0IMG): $(IMGFILES)

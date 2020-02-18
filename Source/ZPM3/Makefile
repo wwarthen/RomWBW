@@ -23,6 +23,9 @@ gencpm.com: ../CPM3/gencpm.com
 biosldr.rel: ../CPM3/biosldr.rel
 	cp $< $@
 
+cpmldr.com: ../CPM3/cpmldr.com
+	cp $< $@
+
 zccp.com: ../ZCCP/ccp.com
 	cp $< $@
 
