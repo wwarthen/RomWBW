@@ -1,4 +1,6 @@
 
+	maclib	ldropts.lib
+
 	maclib	cpm3.lib
 
 	cseg
@@ -50,16 +52,13 @@
 	jp	0	; reserved for future expansion
 
 boot:
-	;ld	bc,0F8E0h	; HBIOS func: get boot info
-	;call	0FFF0h		; do it, D := boot unit
-	;ld	a,d		; move to A
-	;ld	(unit),a	; save it
-	;ret
 
+	  if cmdline
+
+boot1:
 	ld	(stksav),sp
 	ld	sp,stack
 
-boot1:
 	ld	de,prompt
 	call	writestr
 	
@@ -86,12 +85,21 @@ boot1:
 	ld	l,0		; Bank
 	call	0FFF0h		; do it
 	
+	  else
 	
+	ld	bc,0F8E0h	; HBIOS func: get boot info
+	call	0FFF0h		; do it, D := boot unit, E: := slice
+	ld	a,d		; move unit to A
+	ld	(unit),a	; save it
+	ld	a,e		; move slice to A
+	ld	(slice),a	; save it
+
+	  endif
 
 	ld	a,(unit)	; Get boot unit
 	ld	c,a		; put in C
 	ld	b,18h		; HBIOS Media function
-	ld	e,1		; Enabled media check/discovery
+	ld	e,1		; Enable media check/discovery
 	call	0FFF0H		; HBIOS call
 	ld	a,e		; Resultant media id to accum
 	or	a		; Set flags
@@ -110,7 +118,6 @@ dsk$login1:
 	
 	; hl is ptr to desired dpb
 	ld	de,dph0		; load DPH pointer
-	;halt
 	ex	de,hl		; de = DPB adr, hl = DPH adr
 	push	de		; save DPB adr
 	ld	de,12		; offset of DPB in DPH
@@ -166,23 +173,48 @@ setdma:
 	ld	(dma),bc
 	ret
 read:
-	; Seek
+	ld	a,(unit)	; get unit
+	ld	c,a		; BIOS Disk Unit in C
+	ld	b,12H		; HBIOS SEEK function
+	push	bc		; save it
+	;push	de		; save XDPH pointer
+	ld	b,17h		; HBIOS DEVICE function
+	rst	08		; Do it, D=device type
+	ld	a,d		; put in accum
+	and	0F0h		; isolate high bits
+	ld	b,1		; assume it is floppy, 1 head bit
+	ld	c,01h		; 1 bit head mask
+	cp	10h		; floppy?
+	jr	z,seek0	; yup, skip ahead
+	ld	b,4		; must be hard disk, 4 head bits
+	ld	c,0Fh		; 4 bit head mask
+seek0:
+	;pop	de		; recover XDPH pointer
+	push	bc		; save bc
+	ld	a,(slice)	; get slice
+	ld	e,a		; slice to E
+	ld	h,65		; number of tracks per slice
+	call	mult8		; HL now has track offset for slice
+	pop	bc		; recover bc
+	push	hl		; save track offset for now
 	ld	hl,(trk)	; get track value
 	ld	a,l		; lsb of track to a
-	and	0FH		; isolate head in low 4 bits
-	ld	d,a		; stuff it in d
-	ld	a,(sect)	; get sector
-	ld	e,a		; stuff it in e
-	ld	b,4		; prepare to shift out 4 bit head value
-read1:                          
+	and	c		; apply mask
+	ld	d,a		; save in d
+seek1:                          
 	srl	h		; shift one bit out
 	rr	l		; ... of hl
-	djnz	read1		; do all 4 bits
-	ld	b,12h		; HBIOS seek
-	ld	a,(unit)	; get boot unit
-	ld	c,a		; put in C
+	djnz	seek1		; do all bits
+	ld	a,(sect)	; get sector
+	ld	e,a		; stuff it in e
+	ex	de,hl		; de=track, hl=head/sect
+	ex	(sp),hl		; save head/sect, hl = offset
+	add	hl,de		; hl has final track value
+	pop	de		; recover head/sect to de
+	pop	bc		; recover function & unit
 	;rst	08		; perform seek
 	call	0FFF0H
+
 	; Read Sector
 	ld	b,13h		; HBIOS read
 	ld	a,(unit)	; get boot unit
@@ -280,6 +312,23 @@ writestr1:
 	jp	writestr1
 writestr2:
 	pop	af
+	ret
+
+;
+; multiply 8-bit values
+; in:  multiply h by e
+; out: hl = result, e = 0, b = 0
+;
+mult8:
+	ld	d,0
+	ld	l,d
+	ld	b,8
+mult8_loop:
+	add	hl,hl
+	jr	nc,mult8_noadd
+	add	hl,de
+mult8_noadd:
+	djnz	mult8_loop
 	ret
 
 prompt	db	13,10,'Boot CP/M 3 from Disk Unit: $'
@@ -443,6 +492,7 @@ dtabcb:	db	0ffh		; drv
 	dw	dtabuf		; buffad
 
 unit	ds	1	; HBIOS unit number
+slice	ds	1	; HBIOS slice number
 trk	ds	2	; current track
 sect	ds	2	; current sector
 dma	ds	2	; current DMA address

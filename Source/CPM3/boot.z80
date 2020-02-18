@@ -3,7 +3,7 @@
 	maclib	options.lib
 
 	public	?init,?ldccp,?rlccp,?time
-	public	@bootdu
+	public	@bootdu,@bootsl
 	extrn	?pmsg,?conin
 	extrn	?mvinit,?bnkxlt,?xmove,?move
 	extrn	@civec,@covec,@aivec,@aovec,@lovec
@@ -60,9 +60,11 @@ init$2:
 
 	; Get boot disk unit and save it
 	ld	bc,0F8E0h	; HBIOS func: get boot info
-	rst	08		; do it, D := boot unit
-	ld	a,d		; move to A
+	rst	08		; do it, D := boot unit, E: := boot slice
+	ld	a,d		; move boot unit to A
 	ld	(@bootdu),a	; save it
+	ld	a,e		; move boot slice to A
+	ld	(@bootsl),a	; save it
 
 	call	dinit
 	ret
@@ -720,7 +722,8 @@ fcb$nr		db	0,0,0
 
 	endif
 
-@bootdu		db	0
+@bootdu		db	0		; boot disk unit
+@bootsl		db	0		; boot slice
 hdspv		db	2		; slices per volume for hard disks (must be >= 1)
 drvlst		ds	32		; active drive list used durint drv_init
 drvlstc		db	0		; entry count for active drive list

@@ -47,6 +47,8 @@ Version 2.9.2
 - D?R: Contributed SC126 How-To: Preparing a MicroSD Card to Transfer Files to/from a Linux System
 - PMS: Updated romldr to handle more than 9 drives
 - PMS: Added "user" rom module template
+- PMS: Added CP/M 3 manuals
+- WBW: Boot from any slice
 
 Version 2.9.1
 -------------
