@@ -20,3 +20,7 @@
 #
 ../../Binary/Apps/tune.com 3:
 ../../Binary/Apps/Tunes/*.* 3:
+#
+# Add OS image
+#
+../ZSDOS/zsys_wbw.sys 0:zsys.sys

@@ -16,3 +16,6 @@ if exist cpmldr.com del cpmldr.com
 if exist startzpm.com del startzpm.com
 if exist gencpm.com del gencpm.com
 if exist *.dat del *.dat
+if exist biosldr?.rel del biosldr?.rel
+if exist *.bin del *.bin
+if exist *.lst del *.lst

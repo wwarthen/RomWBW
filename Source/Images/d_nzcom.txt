@@ -20,3 +20,8 @@
 #
 ../../Binary/Apps/tune.com 3:
 ../../Binary/Apps/Tunes/*.* 3:
+#
+# Add OS images
+#
+../CPM22/cpm_wbw.sys 0:cpm.sys
+../ZSDOS/zsys_wbw.sys 0:zsys.sys

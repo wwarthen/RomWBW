@@ -25,6 +25,7 @@
 #
 ../BPBIOS/*.img 0:
 ../BPBIOS/*.rel 0:
+../BPBIOS/*.zrl 0:
 ../BPBIOS/*.zex 0:
 ../BPBIOS/myterm.z3t 0:
 ../BPBIOS/Z34RCP11/z34rcp11.rel 0:rcp.zrl
