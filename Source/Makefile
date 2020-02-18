@@ -6,11 +6,6 @@ SUBDIRS += Forth
 NOTDONE += Fonts
 SUBDIRS += BPBIOS
 SUBDIRS += HBIOS
+SUBDIRS += Images
 TOOLS = ../Tools
 include $(TOOLS)/Makefile.inc
-
-install:: SUBDIRS += Images
-
-clean:: SUBDIRS += Images
-
-clobber:: SUBDIRS += Images
