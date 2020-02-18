@@ -481,7 +481,7 @@ ERRORS:	.BYTE   "NF"            ; NEXT without FOR
 	.BYTE   "DD"            ; Re-DIMensioned array
 	.BYTE   "/0"            ; Division by zero
 	.BYTE   "ID"            ; Illegal direct
-	.BYTE   "TM"            ; Type mis-match
+	.BYTE   "TM"            ; Type mismatch
 	.BYTE   "OS"            ; Out of string space
 	.BYTE   "LS"            ; String too long
 	.BYTE   "ST"            ; String formula too complex
@@ -503,7 +503,7 @@ ERRORS: .BYTE   "NEXT without FOR",0
         .BYTE   "Re-DIMensioned array",0
         .BYTE   "Division by zero",0
         .BYTE   "Illegal direct",0
-        .BYTE   "Type mis-match",0
+        .BYTE   "Type mismatch",0
         .BYTE   "Out of string space",0
         .BYTE   "String too long",0
         .BYTE   "String formula too complex",0
