@@ -53,6 +53,9 @@ CPM=$(TOOLS)/cpm/bin
 		rm -f $$($(CASEFN) $*.hex) ; \
 	fi
 
+%.hex: %.asm
+	$(ZXCC) $(CPM)/MAC -$< -$$PO ; \
+	
 %.bin: %.ASM
 	$(ZXCC) $(CPM)/MAC -$< -$$PO
 	$(ZXCC) $(CPM)/MLOAD25 -tmp.bin=$*.hex
@@ -105,14 +108,6 @@ all:: $(OBJECTS)
 	@for dir in $(SUBDIRS) ; do \
 		( echo "building in `pwd`/$$dir" ; cd "$$dir" ; make all ) ; \
 	done
-
-clean::
-	-rm -f $$($(CASEFN) make.out *.sym *.lst *.prn *.diff *.dump $(OTHERS) $(filter-out $(NODELETE),$(OBJECTS)))
-	@for dir in $(SUBDIRS) ; do \
-		( echo "cleaning in `pwd`/$$dir" ; cd "$$dir" ; make clean ) ; \
-	done
-
-install:: all
 	@if [ "$(DEST)" ] ; then for file in $(OBJECTS) ; do \
 		mkdir -p $(DEST) ; \
 		echo copy $$file to $(DEST) ; \
@@ -123,8 +118,11 @@ install:: all
 		echo copy $$file to $(DOCDEST) ; \
 		cp $$($(CASEFN) $$file) $(DOCDEST) ; \
 	done ; fi
+
+clean::
+	-rm -f $$($(CASEFN) make.out *.sym *.lst *.prn *.diff *.dump $(OTHERS) $(filter-out $(NODELETE),$(OBJECTS)))
 	@for dir in $(SUBDIRS) ; do \
-		( echo "install in `pwd`/$$dir" ; cd "$$dir" ; make install ) ; \
+		( echo "cleaning in `pwd`/$$dir" ; cd "$$dir" ; make clean ) ; \
 	done
 
 clobber:: clean

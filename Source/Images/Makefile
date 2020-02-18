@@ -79,7 +79,7 @@ blankhd:
 		echo " " copying files from d_$$d.txt ; \
 		grep -v ^# d_$$d.txt | tr -d '\r' | while read file user ; do \
 			rf=$$($(CASEFN) $$file) ; \
-			if [ "$$rf" == nofile ] ; then \
+			if [ "$$rf" = nofile ] ; then \
 				echo " " $$file missing ; \
 			else \
 				$(CPMCP) -f $$fmt $@ $$rf $$user ; \
@@ -91,4 +91,3 @@ blankhd:
 		dd if=$$sys of=$@ conv=notrunc 2>/dev/null ; \
 	fi
 
-install::

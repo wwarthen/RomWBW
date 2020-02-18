@@ -21,7 +21,7 @@ $(HD0IMG): $(IMGFILES)
 	$(CPMCP) -f wbw_hd0 $(HD0IMG) $(IMGFILES) $(DISTFILES) 0:
 
 zcpr33n.rel zcpr33t.rel:
-	(cd ZCPR33 ; make install)
+	(cd ZCPR33 ; make)
 
 all:: $(HD0IMG)
 
@@ -40,60 +40,3 @@ clobber::
 	$(ZXCC) ./bpbuild.com -bpsys.dat 0 < bpbld2.rsp
 	mv bpsys.img bp$(VER).img
 
-# 
-# 
-# rem cpmrm.exe -f wbw_hd0 ../../Binary/hd0.img 0:*.dat
-# rem cpmcp.exe -f wbw_hd0 ../../Binary/hd0.img *.dat 0:
-# 
-# cpmrm.exe -f wbw_hd0 ../../Binary/hd0.img 0:*.zex
-# 
-# cpmrm.exe -f wbw_hd0 ../../Binary/hd0.img 0:myterm.z3t
-# 
-# goto :eof
-# 
-# :makebp
-# 
-# set VER=%1
-# echo.
-# echo Building BPBIOS Variant "%VER%"...
-# echo.
-# 
-# copy def-ww-z%VER%.lib def-ww.lib
-# rem if exist bpbio-ww.rel del bpbio-ww.rel
-# zx ZMAC -BPBIO-WW -/P
-# if exist bp%VER%.prn del bp%VER%.prn
-# ren bpbio-ww.prn bp%VER%.prn
-# 
-# rem pause
-# 
-# rem BPBUILD attempts to rename bpsys.img -> bpsys.bak
-# rem while is is still open.  Real CP/M does not care,
-# rem but zx fails due to host OS.  Below, a temp file
-# rem is used to avoid the problematic rename.
-# 
-# if exist bpsys.img del bpsys.img
-# if exist bpsys.tmp del bpsys.tmp
-# copy bp%VER%.dat bpsys.tmp
-# rem bpsys.tmp -> bpsys.img
-# zx bpbuild -bpsys.tmp <bpbld1.rsp
-# if exist bpsys.tmp del bpsys.tmp
-# copy bpsys.img bpsys.tmp
-# rem bpsys.tmp -> bpsys.img
-# zx bpbuild -bpsys.tmp <bpbld2.rsp
-# if exist bp%VER%.img del bp%VER%.img
-# if exist bpsys.img ren bpsys.img bp%VER%.img
-# 
-# rem pause
-# 
-# goto :eof@echo off
-# setlocal
-# 
-# if exist *.tmp del *.tmp
-# if exist *.prn del *.prn
-# if exist *.err del *.err
-# if exist *.img del *.img
-# if exist bp*.rel del bp*.rel
-# if exist zcpr33*.rel del zcpr33*.rel
-# if exist *.bak del *.bak
-# 
-# setlocal & cd ZCPR33 && call Clean.cmd & endlocal

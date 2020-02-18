@@ -16,11 +16,6 @@ all:
 		(cd $$i ; make all ) \
 	done
 
-install:
-	@for i in $(SUBDIRS) ; do \
-		(cd $$i ; make install ) \
-	done
-
 clobber:
 	@for i in $(SUBDIRS) ; do \
 		(cd $$i ; make clobber ) \

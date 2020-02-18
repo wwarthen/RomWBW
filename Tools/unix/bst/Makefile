@@ -12,14 +12,12 @@ endif
 DEST = ../../$(UNAME)
 
 all: $(DEST)
-
-$(DEST):
-	mkdir $(DEST)
-
-install:
 	-for i in *.$(SUFFIX) ; do \
 		cp $$i $(DEST)/$$(basename $$i .$(SUFFIX)) ; \
 	done
+
+$(DEST):
+	mkdir $(DEST)
 
 clobber:
 	-for i in *.$(SUFFIX) ; do \

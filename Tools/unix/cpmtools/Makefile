@@ -16,7 +16,8 @@ DEVICEOBJ =	device_posix.o
 
 OBJECTS = cpmls cpmrm cpmcp cpmchmod cpmchattr mkfs.cpm fsck.cpm
 
-all: $(OBJECTS)
+all: $(OBJECTS) $(DEST)
+	cp $(OBJECTS) $(DEST)
 
 cpmls:	cpmls.o cpmfs.o getopt.o getopt1.o $(DEVICEOBJ)
 	$(CC) $(LDFLAGS) -o $@ cpmls.o cpmfs.o getopt.o getopt1.o $(DEVICEOBJ)
@@ -44,9 +45,6 @@ fsed.cpm: fsed.cpm.o cpmfs.o getopt.o getopt1.o $(DEVICEOBJ)
 
 $(DEST):
 	mkdir -p $(DEST)
-
-install: all $(DEST)
-	cp $(OBJECTS) $(DEST)
 
 clean:
 	-rm -f *.o $(OBJECTS)

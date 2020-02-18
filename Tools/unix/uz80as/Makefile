@@ -43,13 +43,11 @@ SOURCES = \
 	mos6502.c \
 	mc6800.c
 
-all: uz80as
+all: uz80as $(DEST)
+	cp uz80as $(DEST)
 
 $(DEST):
 	mkdir -p $(DEST)
-
-install: uz80as $(DEST)
-	cp uz80as $(DEST)
 
 clobber: clean
 	-rm -f uz80as $(DEST)/uz80as

@@ -16,7 +16,8 @@ OBJECTS = zx.o cpmdrv.o cpmglob.o cpmparse.o cpmredir.o \
 	drdos.o util.o xlt.o zxbdos.o zxcbdos.o zxdbdos.o z80.o
 UNUSED = dirent.o
 
-all: zx
+all: zx $(DEST)
+	cp bios.bin zx $(DEST)
 
 $(DEST):
 	mkdir -p $(DEST)
@@ -26,9 +27,6 @@ clean:
 
 clobber: clean
 	-rm -f $(DEST)/zx $(DEST)/bios.bin zx
-
-install: zx $(DEST)
-	cp bios.bin zx $(DEST)
 
 $(OBJECTS): config.h
 

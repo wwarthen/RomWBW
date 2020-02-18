@@ -1,7 +1,7 @@
 all:
-	cd Tools/unix ; make install
-	cd Source ; make install
-	cd Source/Images ; make all
+	cd Tools/unix ; make
+	cd Source ; make
+	cd Source/Images ; make
 
 clean:
 	cd Tools/unix ; make clean
