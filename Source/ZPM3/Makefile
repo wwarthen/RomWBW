@@ -1,11 +1,11 @@
-OBJECTS = ZPMLDR.COM cpm3.sys zinstal.zpm startzpm.com zccp.com \
-	setz3.com clrhist.com autotog.com
+OBJECTS = zpmldr.com cpm3.sys zinstal.zpm startzpm.com zccp.com \
+	setz3.com clrhist.com autotog.com cpmldr.com
 OTHERS = biosldr.rel gencpm.com gencpm.dat bnkbios3.spr
 TOOLS =../../Tools
 
 include $(TOOLS)/Makefile.inc
 
-ZPMLDR.COM:	zpm3ldr.rel biosldr.rel
+zpmldr.com:	zpm3ldr.rel biosldr.rel
 	$(ZXCC) $(CPM)/LINK -ZPMLDR[L100]=ZPM3LDR,BIOSLDR
 
 cpm3.sys: gencpm.com gencpm.dat bnkbios3.spr
