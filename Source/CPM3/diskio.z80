@@ -14,7 +14,7 @@
     ; Linked BIOS variables
 
 	public	@sysdr
-	extrn	@bootdu
+	extrn	@bootdu,@bootsl
 
     ; Variables containing parameters passed by BDOS
 
@@ -323,18 +323,19 @@ dpb_fd111:	; 8" DS/DD Floppy Drive (1.11M)
 ;		called for first time initialization.
 
 dsk$init:
+	ld	a,(@rdrv)		; unit being initialized
+	ld	hl,@bootdu
+	cp	(hl)			; compare to boot unit
+	ret	nz			; done if no match
+	
 	inc	de			; point to slice in XDPH
 	inc	de
 	inc	de
 	ld	a,(de)			; get slice
-	or	a			; set flags
+	ld	hl,@bootsl
+	cp	(hl)			; compare to boot slice
 	ret	nz			; done if not zero
 
-	ld	a,(@rdrv)		; unit being initialized
-	ld	hl,@bootdu
-	cp	(hl)
-	ret	nz			; done if no match
-	
 	ld	a,(@adrv)		; get cp/m drive
 	ld	(@sysdr),a		; and save it
 	ret
@@ -531,7 +532,7 @@ seek1:
 	ld	a,(@sect)	; get sector
 	ld	e,a		; stuff it in e
 	ex	de,hl		; de=track, hl=head/sect
-	ex	(sp),hl	; save head/sect, hl = offset
+	ex	(sp),hl		; save head/sect, hl = offset
 	add	hl,de		; hl has final track value
 	pop	de		; recover head/sect to de
 	pop	bc		; recover function & unit
