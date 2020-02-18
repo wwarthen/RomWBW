@@ -27,3 +27,5 @@ call BuildHD.cmd zpm3 ..\cpm3\cpmldr.sys
 call BuildHD.cmd ws4
 
 if exist ..\BPBIOS\bpbio-ww.rel call BuildHD.cmd bp
+
+copy /b ..\..\Binary\hd_cpm22.img + ..\..\Binary\hd_zsdos.img + ..\..\Binary\hd_nzcom.img + ..\..\Binary\hd_cpm3.img + ..\..\Binary\hd_zpm3.img + ..\..\Binary\hd_ws4.img ..\..\Binary\hd_combo.img
