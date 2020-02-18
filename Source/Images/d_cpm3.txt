@@ -2,6 +2,7 @@
 # Add files from CPM3 build
 #
 ../CPM3/cpmldr.com 0:
+../CPM3/cpmldr.sys 0:
 ../CPM3/ccp.com 0:
 ../CPM3/gencpm.com 0:
 ../CPM3/genres.dat 0:

@@ -3,25 +3,31 @@ setlocal
 
 set TOOLS=../../Tools
 
-set PATH=%TOOLS%\zx;%TOOLS%\cpmtools;%PATH%
+set PATH=%TOOLS%\tasm32;%TOOLS%\zx;%TOOLS%\cpmtools;%PATH%
+
+set TASMTABS=%TOOLS%\tasm32
 
 set ZXBINDIR=%TOOLS%/cpm/bin/
 set ZXLIBDIR=%TOOLS%/cpm/lib/
 set ZXINCDIR=%TOOLS%/cpm/include/
 
-rem cmd
-
-rem CPM Loader
 echo.
 echo.
 echo *** CPM Loader ***
 echo.
 zx RMAC -CPMLDR
+copy optdsk.lib ldropts.lib
 zx Z80ASM -BIOSLDR/MF
-zx LINK -CPMLDR[L100]=CPMLDR,BIOSLDR
+move /Y biosldr.rel biosldrd.rel
+zx LINK -CPMLDRD[L100]=CPMLDR,BIOSLDRD
+move /Y cpmldrd.com cpmldr.bin
+copy optcmd.lib ldropts.lib
+zx Z80ASM -BIOSLDR/MF
+move /Y biosldr.rel biosldrc.rel
+zx LINK -CPMLDRC[L100]=CPMLDR,BIOSLDRC
+move /Y cpmldrc.com cpmldr.com
 rem pause
 
-rem Resident CPM3
 echo.
 echo.
 echo *** Resident CPM3 BIOS ***
@@ -41,7 +47,6 @@ zx GENCPM -AUTO -DISPLAY
 copy cpm3.sys cpm3res.sys
 rem pause
 
-rem Banked CPM3
 echo.
 echo.
 echo *** Banked CPM3 BIOS ***
@@ -61,7 +66,6 @@ zx GENCPM -AUTO -DISPLAY
 copy cpm3.sys cpm3bnk.sys
 rem pause
 
-rem Banked ZPM3
 echo.
 echo.
 echo *** Banked ZPM3 BIOS ***
@@ -82,9 +86,17 @@ rem copy cpm3.sys zpm3.sys
 rem pause
 
 rem *** Resident ***
+
 rem copy cpm3res.sys cpm3.sys
 rem copy genres.dat getcpm.dat
 
 rem *** Banked ***
+
 copy cpm3bnk.sys cpm3.sys
 copy genbnk.dat gencpm.dat
+
+rem Loader
+
+tasm -t80 -g3 -fFF loader.asm loader.bin loader.lst
+
+copy /b loader.bin + cpmldr.bin cpmldr.sys

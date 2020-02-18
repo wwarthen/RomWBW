@@ -1,4 +1,6 @@
 
+	maclib	ldropts.lib
+
 	maclib	cpm3.lib
 
 	cseg
@@ -50,16 +52,13 @@
 	jp	0	; reserved for future expansion
 
 boot:
-	;ld	bc,0F8E0h	; HBIOS func: get boot info
-	;call	0FFF0h		; do it, D := boot unit
-	;ld	a,d		; move to A
-	;ld	(unit),a	; save it
-	;ret
 
+	  if cmdline
+
+boot1:
 	ld	(stksav),sp
 	ld	sp,stack
 
-boot1:
 	ld	de,prompt
 	call	writestr
 	
@@ -86,12 +85,19 @@ boot1:
 	ld	l,0		; Bank
 	call	0FFF0h		; do it
 	
+	  else
 	
+	ld	bc,0F8E0h	; HBIOS func: get boot info
+	call	0FFF0h		; do it, D := boot unit
+	ld	a,d		; move to A
+	ld	(unit),a	; save it
+
+	  endif
 
 	ld	a,(unit)	; Get boot unit
 	ld	c,a		; put in C
 	ld	b,18h		; HBIOS Media function
-	ld	e,1		; Enabled media check/discovery
+	ld	e,1		; Enable media check/discovery
 	call	0FFF0H		; HBIOS call
 	ld	a,e		; Resultant media id to accum
 	or	a		; Set flags
@@ -110,7 +116,6 @@ dsk$login1:
 	
 	; hl is ptr to desired dpb
 	ld	de,dph0		; load DPH pointer
-	;halt
 	ex	de,hl		; de = DPB adr, hl = DPH adr
 	push	de		; save DPB adr
 	ld	de,12		; offset of DPB in DPH

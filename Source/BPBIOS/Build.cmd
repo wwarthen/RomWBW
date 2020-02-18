@@ -59,6 +59,8 @@ rem if exist bpbio-ww.rel del bpbio-ww.rel
 zx ZMAC -BPBIO-WW -/P
 if exist bp%VER%.prn del bp%VER%.prn
 ren bpbio-ww.prn bp%VER%.prn
+ren bpbio-ww.err bp%VER%.err
+copy bpbio-ww.rel bp%VER%.rel
 
 rem pause
 
