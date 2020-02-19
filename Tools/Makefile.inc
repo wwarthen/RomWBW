@@ -11,6 +11,7 @@
 # .azm:  zsm sources
 #
 UNAME := $(shell uname)
+BINDIR = $(TOOLS)/$(UNAME)
 
 #
 # since this file is included from below, it's handy to have an idea
@@ -32,11 +33,11 @@ DIFFPATH := $(DIFFTO)/$(RELPATH)
 #
 CASEFN = $(TOOLS)/unix/casefn.sh
 
-ZXCC=$(TOOLS)/$(UNAME)/zx
-TASM=$(TOOLS)/$(UNAME)/uz80as
-OPENSPIN=$(TOOLS)/$(UNAME)/openspin
-BSTC=$(TOOLS)/$(UNAME)/bstc
-CPMCP=$(TOOLS)/$(UNAME)/cpmcp
+ZXCC=$(BINDIR)/zx
+TASM=$(BINDIR)/uz80as
+OPENSPIN=$(BINDIR)/openspin
+BSTC=$(BINDIR)//bstc
+CPMCP=$(BINDIR)/cpmcp
 
 #
 # directory containing cpm binaries

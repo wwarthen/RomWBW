@@ -18,7 +18,12 @@ SUBDIRS = ZCPR33 NZFCP13 Z34RCP11
 include $(TOOLS)/Makefile.inc
 
 $(HD0IMG): $(IMGFILES)
-	$(CPMCP) -f wbw_hd0 $(HD0IMG) $(IMGFILES) $(DISTFILES) 0:
+	if [ -f $(HD0IMG) ] ; then \
+		for f in $(IMGFILES) $(DISTFILES) ; do \
+			$(BINDIR)/cpmrm -f wbw_hd0 $(HD0IMG) 0:$$f ; \
+		done ; \
+		$(CPMCP) -f wbw_hd0 $(HD0IMG) $(IMGFILES) $(DISTFILES) 0: ; \
+	fi
 
 zcpr33n.rel zcpr33t.rel:
 	(cd ZCPR33 ; make)

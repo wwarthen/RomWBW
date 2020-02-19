@@ -6,7 +6,7 @@ TOOLS = ../../Tools
 include $(TOOLS)/Makefile.inc
 
 cpm_wbw.sys: loader.bin OS2CCP.bin OS3BDOS.bin ../CBIOS/cbios_wbw.bin
-	cat loader.bin OS2CCP.bin OS3BDOS.bin ../CBIOS/cbios_wbw.bin > cpm_wbw.sys
+	cat loader.bin OS2CCP.bin OS3BDOS.bin ../CBIOS/cbios_wbw.bin > $@
 
 cpm_una.sys: loader.bin OS2CCP.bin OS3BDOS.bin ../CBIOS/cbios_una.bin
-	cat loader.bin OS2CCP.bin OS3BDOS.bin ../CBIOS/cbios_una.bin > cpm_una.sys
+	cat loader.bin OS2CCP.bin OS3BDOS.bin ../CBIOS/cbios_una.bin > $@

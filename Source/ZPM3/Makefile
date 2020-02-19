@@ -1,12 +1,20 @@
-OBJECTS = zpmldr.com cpm3.sys zinstal.zpm startzpm.com zccp.com \
-	setz3.com clrhist.com autotog.com cpmldr.com
+OBJECTS = zpmldr.com zpmldr.sys cpm3.sys zinstal.zpm startzpm.com zccp.com \
+	setz3.com clrhist.com autotog.com
 OTHERS = biosldr.rel gencpm.com gencpm.dat bnkbios3.spr
 TOOLS =../../Tools
 
 include $(TOOLS)/Makefile.inc
 
-zpmldr.com:	zpm3ldr.rel biosldr.rel
-	$(ZXCC) $(CPM)/LINK -ZPMLDR[L100]=ZPM3LDR,BIOSLDR
+zpmldr.bin: zpm3ldr.rel biosldrd.rel
+	$(ZXCC) $(CPM)/LINK -ZPMLDRD[L100]=ZPM3LDR,BIOSLDRD
+	mv zpmldrd.com zpmldr.bin
+
+zpmldr.com:	zpm3ldr.rel biosldrc.rel
+	$(ZXCC) $(CPM)/LINK -ZPMLDRC[L100]=ZPM3LDR,BIOSLDRC
+	mv zpmldrc.com zpmldr.com
+
+zpmldr.sys: zpmldr.bin loader.bin
+	cat loader.bin zpmldr.bin > $@
 
 cpm3.sys: gencpm.com gencpm.dat bnkbios3.spr
 	$(ZXCC) gencpm -auto -display
@@ -20,10 +28,10 @@ gencpm.dat: ../CPM3/genbnk.dat
 gencpm.com: ../CPM3/gencpm.com
 	cp $< $@
 
-biosldr.rel: ../CPM3/biosldr.rel
+biosldrc.rel: ../CPM3/biosldrc.rel
 	cp $< $@
 
-cpmldr.com: ../CPM3/cpmldr.com
+biosldrd.rel: ../CPM3/biosldrd.rel
 	cp $< $@
 
 zccp.com: ../ZCCP/ccp.com
