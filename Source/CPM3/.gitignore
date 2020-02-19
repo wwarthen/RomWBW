@@ -1,0 +1,10 @@
+*.sym
+*.lst
+*.sys
+*.rel
+cpmldr.com
+gencpm.dat
+bios3.spr
+bnkbios3.spr
+options.lib
+zpmbios3.spr

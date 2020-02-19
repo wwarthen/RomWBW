@@ -1,0 +1,4 @@
+*.bin
+*.hex
+*.lst
+*.sys

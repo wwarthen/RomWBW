@@ -1,0 +1,38 @@
+0001   0000             #DEFINE MENU_L(M1,M2,M3,M4,M5,M6,M7,M8,M9,M10) \
+0002   0000             #DEFCONT \ .DB M1
+0003   0000             #DEFCONT \ .DB M2
+0004   0000             #DEFCONT \ .DB M3
+0005   0000             #DEFCONT \ .DW M4
+0006   0000             #DEFCONT \ .DW M5
+0007   0000             #DEFCONT \ .DW M6
+0008   0000             #DEFCONT \ .DW M7
+0009   0000             #DEFCONT \ .DB M8
+0010   0000             #DEFCONT \ .DB M9
+0011   0000             #DEFCONT \ .DB M10
+0012   0000             
+0013   0000             KY_CL .equ 1
+0014   0000             MON_LOC .equ 1
+0015   0000             MON_SIZ .equ 1
+0016   0000             BID_USR .equ 1
+0017   0000             MON_SERIAL .equ 1
+0018   0000             BID_CUR .equ 1
+0019   0000             
+0020   0000             MENU_S:	MENU_L("~Monitor$ ", "M", KY_CL, MON_SERIAL,  1000h,  MON_LOC,   MON_SIZ,  BID_CUR,     BID_USR, "Monitor$     ")
+0020   0000             
+0020   0000 7E 4D 6F 6E 
+0020   0004 69 74 6F 72 
+0020   0008 24 20 
+0020   000A 4D          
+0020   000B 01          
+0020   000C 01 00       
+0020   000E 00 10       
+0020   0010 01 00       
+0020   0012 01 00       
+0020   0014 01          
+0020   0015 01          
+0020   0016 4D 6F 6E 69 
+0020   001A 74 6F 72 24 
+0020   001E 20 20 20 20 
+0020   0022 20 
+0021   0023             
+0022   0023             	.end
