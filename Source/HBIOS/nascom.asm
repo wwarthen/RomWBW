@@ -29,6 +29,11 @@
 ;
 #INCLUDE "std.asm"
 ;
+; *** HACK TO GET THIS TO BUILD UNDER UNA ***
+#IF (BIOS == BIOS_UNA)
+#INCLUDE "hbios.inc"
+#ENDIF
+;
 ; CUSTOMIZATION
 ;
 ABBRERR	.EQU	FALSE		; Choose between long error message and abbreviated error messages.
