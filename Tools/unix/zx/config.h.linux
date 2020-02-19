@@ -3,6 +3,7 @@
 #define HAVE_UTIME_H
 #define HAVE_FCNTL_H
 #define HAVE_SYS_VFS_H
+#define	HAVE_UNISTD_H
 #define BINDIR80 getenv("ZXBINDIR")
 #define LIBDIR80 getenv("ZXLIBDIR")
 #define INCDIR80 getenv("ZXINCDIR")

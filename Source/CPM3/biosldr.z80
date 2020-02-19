@@ -55,34 +55,47 @@ boot:
 
 	  if cmdline
 
-boot1:
 	ld	(stksav),sp
 	ld	sp,stack
 
-	ld	de,prompt
+boot1:
+	ld	de,msgunit
 	call	writestr
-	
 	call	cin
-	
 	push	af
 	call	cout
-	ld	de,crlf
-	call	writestr
 	pop	af
-	
-	ld	sp,(stksav)
 	
 	sub	'0'
 	jr	c,boot1
 	cp	10		; !!! Need to test against max disk unit num !!!
 	jr	nc,boot1
-
 	ld	(unit),a
+
+	ld	de,msgslc
+	call	writestr
+	call	cin
+	push	af
+	call	cout
+	pop	af
 	
+	sub	'0'
+	jr	c,boot1
+	cp	10
+	jr	nc,boot1
+	ld	(slice),a
+
+	ld	de,crlf
+	call	writestr
+
+	ld	sp,(stksav)
+
 	ld	bc,0F9E0h	; HBIOS func: set boot info
-	ld	d,a		; Unit
-	ld	e,0		; Slice
-	ld	l,0		; Bank
+	ld	a,(unit)	; get unit
+	ld	d,a		; put in D
+	ld	a,(slice)	; get slice
+	ld	e,a		; put in E
+	ld	l,0		; Bank is always zero
 	call	0FFF0h		; do it
 	
 	  else
@@ -331,7 +344,8 @@ mult8_noadd:
 	djnz	mult8_loop
 	ret
 
-prompt	db	13,10,'Boot CP/M 3 from Disk Unit: $'
+msgunit	db	13,10,13,10,'Boot CP/M 3 from Disk Unit: $'
+msgslc	db	'   Slice: $'
 crlf	db	13,10,'$'
 
 dpb$start:

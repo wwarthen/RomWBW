@@ -12,6 +12,7 @@ clobber:
 	cd Tools/unix ; make clobber
 	cd Source ; make clobber
 	cd Binary ; make clobber
+	rm -f typescript
 
 diff:
 	cd Source ; make diff

@@ -681,7 +681,7 @@ static int diskdefReadSuper(struct cpmSuperBlock *d, const char *format)
   d->type=0;
   if (
 	(fp=fopen("diskdefs","r"))==(FILE*)0 && 
-	(ddenv && ((fp=fopen(DISKDEFS,"r"))==(FILE*)0)) &&
+	(ddenv && ((fp=fopen(ddenv,"r"))==(FILE*)0)) &&
   	(fp=fopen(DISKDEFS,"r"))==(FILE*)0)
   {
     fprintf(stderr,"%s: Neither `diskdefs' nor `" DISKDEFS "' could be opened.\n",cmd);
