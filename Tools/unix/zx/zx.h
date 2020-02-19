@@ -31,7 +31,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#ifdef LINUX
+#if defined(LINUX) || defined(DARWIN)
 #include <unistd.h>
 #define	_isatty(a) isatty(a)
 #define	_fileno(a) fileno(a)
@@ -87,7 +87,7 @@ extern char **argv;
 extern int argc;
 extern byte RAM[65536]; /* The Z80's address space */
 
-extern usestdio;
+extern int usestdio;
 
 /* Z80 CPU emulation */
 
