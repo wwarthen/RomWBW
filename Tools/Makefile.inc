@@ -24,7 +24,7 @@ RELPATH := $(subst $(TREEROOT),,$(HERE))
 #
 # where's a copy of this tree for windows so we can diff binaries
 #
-DIFFTO := /Volumes/Github/RomWBW
+DIFFTO := $(shell cd $(TREEROOT)/../RomWBW.windows; pwd)
 DIFFPATH := $(DIFFTO)/$(RELPATH)
 
 #
@@ -144,9 +144,12 @@ diff::
         sf=$$($(CASEFN) $$i) ; \
 		df=$$($(CASEFN) $(DIFFPATH)/$$i) ; \
         if [ -f $$df -a -f $$sf ] ; then \
+			if [ "$(VERBOSEDIFF)" ] ; then \
+				echo compare $$sf and $$df ; \
+			fi ; \
 			if ! cmp -s $$sf $$df ; then \
 				echo $$sf and $$df differ ; \
-				if [ "$(VERBOSEDIFF)" ] ; then \
+				if [ "$(VERBOSEDIFF)" = "2" ] ; then \
 					cmp -bl $$sf $$df ; \
 					hexdump -Cv $$sf > $$sf.dump ; \
 					hexdump -Cv $$df > $$(basename $$df).dump.diff ; \

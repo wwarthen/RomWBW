@@ -2,5 +2,5 @@ TOOLS = ../../../Tools
 
 include $(TOOLS)/Makefile.inc
 
-clean::
-	rm -f *.pt? *.mym
+clobber::
+	-rm -f *.pt3 *.mym

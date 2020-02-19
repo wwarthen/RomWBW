@@ -11,7 +11,7 @@ TOOLS = ../../Tools
 include $(TOOLS)/Makefile.inc
 
 BIOSOBJS = bioskrnl.rel scb.rel boot.rel chario.rel 
-BIOSOBJS += move.rel drvtbl.rel diskio.rel
+BIOSOBJS += move.rel drvtbl.rel diskio.rel util.rel
 COMMA := ,
 NULL :=
 SPACE := $(NULL) $(NULL)

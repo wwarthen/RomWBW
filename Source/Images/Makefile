@@ -16,6 +16,8 @@ DEST=../../Binary
 TOOLS = ../../Tools
 include $(TOOLS)/Makefile.inc
 
+DIFFPATH = $(DIFFTO)/Binary
+
 hd_combo.img:	$(HDIMGS)
 	cat $(HDIMGS) > $@
 
