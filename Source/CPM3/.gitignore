@@ -2,6 +2,7 @@
 *.lst
 *.sys
 *.rel
+*.bin
 cpmldr.com
 gencpm.dat
 bios3.spr

@@ -2,3 +2,5 @@
 *.rel
 *.prn
 *.sym
+*.sys
+*.lst
