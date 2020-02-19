@@ -29,6 +29,11 @@
 ;
 #INCLUDE "std.asm"
 ;
+; *** HACK TO GET THIS TO BUILD UNDER UNA ***
+#IF (BIOS == BIOS_UNA)
+#INCLUDE "hbios.inc"
+#ENDIF
+;
 ; CUSTOMIZATION
 ;
 ABBRERR	.EQU	FALSE		; Choose between long error message and abbreviated error messages.
@@ -302,26 +307,26 @@ WORDS:  .BYTE   'E'+80H,"ND"		; PEND:
         .BYTE   'R'+80H,"EM"		; REM:
         .BYTE   'S'+80H,"TOP"		; STOP:
         .BYTE   'O'+80H,"UT"		; POUT:
-        .BYTE   'O'+80H,"N"		: ON:
+        .BYTE   'O'+80H,"N"		; ON:
         .BYTE   'N'+80H,"ULL"		; NULL:
-        .BYTE   'W'+80H,"AIT"		: WAIT:
-        .BYTE   'D'+80H,"EF"		: DEF:
-        .BYTE   'P'+80H,"OKE"		: POKE:
-        .BYTE   'D'+80H,"OKE"		: DOKE:
-        .BYTE   'S'+80H,"CREEN"		: REM: NOT IMPLEMENTED
-        .BYTE   'L'+80H,"INES"		: LINES
-        .BYTE   'C'+80H,"LS"		: CLS:
-        .BYTE   'W'+80H,"IDTH"		: WIDTH:
-        .BYTE   'B'+80H,"YE"		: MONITR:
-        .BYTE   'S'+80H,"ET"		: PSET:
+        .BYTE   'W'+80H,"AIT"		; WAIT:
+        .BYTE   'D'+80H,"EF"		; DEF:
+        .BYTE   'P'+80H,"OKE"		; POKE:
+        .BYTE   'D'+80H,"OKE"		; DOKE:
+        .BYTE   'S'+80H,"CREEN"		; REM: NOT IMPLEMENTED
+        .BYTE   'L'+80H,"INES"		; LINES
+        .BYTE   'C'+80H,"LS"		; CLS:
+        .BYTE   'W'+80H,"IDTH"		; WIDTH:
+        .BYTE   'B'+80H,"YE"		; MONITR:
+        .BYTE   'S'+80H,"ET"		; PSET:
         .BYTE   'R'+80H,"ESET"		; RESET:
-        .BYTE   'P'+80H,"RINT"		: PRINT:
-        .BYTE   'C'+80H,"ONT"		: CONT:
-        .BYTE   'L'+80H,"IST"		: LIST:
-        .BYTE   'C'+80H,"LEAR"		: CLEAR:
-        .BYTE   'P'+80H,"LAY"		: PLAY: WAS CLOAD
-        .BYTE   'C'+80H,"SAVE"		: REM: NOT IMPLEMENTED
-        .BYTE   'N'+80H,"EW"		: NEW
+        .BYTE   'P'+80H,"RINT"		; PRINT:
+        .BYTE   'C'+80H,"ONT"		; CONT:
+        .BYTE   'L'+80H,"IST"		; LIST:
+        .BYTE   'C'+80H,"LEAR"		; CLEAR:
+        .BYTE   'P'+80H,"LAY"		; PLAY: WAS CLOAD
+        .BYTE   'C'+80H,"SAVE"		; REM: NOT IMPLEMENTED
+        .BYTE   'N'+80H,"EW"		; NEW
 
         .BYTE   'T'+80H,"AB("
         .BYTE   'T'+80H,"O"

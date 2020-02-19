@@ -17,6 +17,11 @@
 ;
 #include        "std.asm"
 
+; *** HACK TO GET THIS TO BUILD UNDER UNA ***
+#IF (BIOS == BIOS_UNA)
+#INCLUDE "hbios.inc"
+#ENDIF
+
 cr				.equ	0dh
 lf				.equ	0ah
 eos				.equ	00h

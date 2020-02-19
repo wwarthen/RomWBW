@@ -2336,7 +2336,7 @@ T_PACK	.DB $06EC*2/256,$06EC*2
 ;
 ; MYMPLAY - Player for MYM-tunes
 ; MSX-version by Marq/Lieves!Tuore & Fit 30.1.2000
-:
+;
 ; 1.2.2000  - Added the disk loader. Thanks to Yzi & Plaque for examples.
 ; 7.2.2000  - Removed one unpack window -> freed 1.7kB memory
 ;

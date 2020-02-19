@@ -1,0 +1,7 @@
+prerequisites:
+
+gcc
+yacc
+make
+g++
+
