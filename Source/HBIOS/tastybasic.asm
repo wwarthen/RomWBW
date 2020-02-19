@@ -40,6 +40,11 @@ TBC_LOC			.equ 0
 #else									; RomWBW
 #include		"std.asm"
 #endif
+; *** HACK TO GET THIS TO BUILD UNDER UNA ***
+#IF (BIOS == BIOS_UNA)
+#INCLUDE "hbios.inc"
+#ENDIF
+
 				.org TBC_LOC
 start:
 				ld sp,stack				; ** Cold Start **
