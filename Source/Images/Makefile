@@ -1,10 +1,14 @@
 #
 # this makefile subsumes all the work done in Build.cmd, Build{Hd,Fd}.*
 #
-SYSTEMS = cpm_wbw.sys cpm_una.sys zsys_wbw.sys zsys_una.sys
-FDIMGS = fd_cpm22.img fd_zsdos.img fd_nzcom.img fd_cpm3.img fd_zpm3.img fd_ws4.img
-HDIMGS = hd_cpm22.img hd_zsdos.img hd_nzcom.img hd_cpm3.img hd_zpm3.img hd_ws4.img hd_bp.img
-OBJECTS = $(FDIMGS) $(HDIMGS)
+SYSTEMS = ../CPM22/cpm_wbw.sys ../ZSDOS/zsys_wbw.sys ../CPM3/cpmldr.sys
+
+FDIMGS = fd_cpm22.img fd_zsdos.img fd_nzcom.img \
+	fd_cpm3.img fd_zpm3.img fd_ws4.img
+HDIMGS = hd_cpm22.img hd_zsdos.img hd_nzcom.img \
+	hd_cpm3.img hd_zpm3.img hd_ws4.img hd_bp.img
+
+OBJECTS = $(FDIMGS) $(HDIMGS) hd_combo.img
 OTHERS = $(SYSTEMS) blank144 blankhd
 
 DEST=../../Binary
@@ -12,32 +16,8 @@ DEST=../../Binary
 TOOLS = ../../Tools
 include $(TOOLS)/Makefile.inc
 
-#
-# create the os's, which are the bootloader, ccp, bdos and bios
-#
-cpm_wbw.sys:
-	cat $$($(CASEFN) \
-		../BL/bl.bin \
-		../CPM22/os2ccp.bin ../CPM22/OS3BDOS.BIN \
-		../CBIOS/cbios_wbw.bin) > cpm_wbw.sys
-
-cpm_una.sys:
-	cat $$($(CASEFN) \
-		../BL/bl.bin \
-		../CPM22/os2ccp.bin ../CPM22/OS3BDOS.BIN \
-		../CBIOS/cbios_una.bin) > cpm_una.sys
-
-zsys_wbw.sys:
-	cat $$($(CASEFN) \
-		../BL/bl.bin \
-		../ZCPR-DJ/zcpr.bin ../ZSDOS/ZSDOS.BIN \
-		../CBIOS/cbios_wbw.bin) > zsys_wbw.sys
-
-zsys_una.sys:
-	cat $$($(CASEFN) \
-		../BL/bl.bin \
-		../ZCPR-DJ/zcpr.bin ../ZSDOS/ZSDOS.BIN \
-		../CBIOS/cbios_una.bin) > zsys_una.sys
+hd_combo.img:	$(HDIMGS)
+	cat $(HDIMGS) > $@
 
 #
 # this somewhat impenetrable and fragile code is used to build each of the images
@@ -59,7 +39,11 @@ blankhd:
 
 %.img:: $(SYSTEMS) blank144 blankhd
 	@sys= ; \
-	case $@ in (*cpm22*) sys=cpm_wbw.sys;; (*zsdos* | *nzcom) sys=zsys_wbw.sys;; esac ; \
+	case $@ in \
+		(*cpm22*) sys=../CPM22/cpm_wbw.sys;; \
+		(*zsdos* | *nzcom*) sys=../ZSDOS/zsys_wbw.sys;; \
+		(*cpm3* | *zpm3*) sys=../CPM3/cpmldr.sys;; \
+	esac ; \
 	if echo $@ | grep -q ^f ; then \
 		fmt=wbw_fd144 ; type=fd_ ; proto=blank144 ; \
 	else \
