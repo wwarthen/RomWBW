@@ -1,6 +1,12 @@
+VERBOSEDIFF=2
 OBJECTS = ZETA2_std.rom
+MOREDIFF = camel80.bin game.bin hbios_rom.bin nascom.bin prefix.bin usrrom.bin \
+	dbgmon.bin hbios_app.bin imgpad0.bin osimg1.bin romldr.bin \
+	eastaegg.bin hbios_img.bin imgpad.bin osimg.bin tastybasic.bin \
+	game.bin usrrom.bin
+
 SUBDIRS = 
-DEST = ../../Binary/Apps
+DEST = ../../Binary
 TOOLS =../../Tools
 OTHERS =  *.bin *.z80 cpm.sys zsys.sys Build.inc
 include $(TOOLS)/Makefile.inc
