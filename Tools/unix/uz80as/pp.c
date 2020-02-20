@@ -631,7 +631,7 @@ static void pif(const char *p)
 		return;
 
 	p = skipws(p + sizeof(IFSTR) - 1);
-	if (!expr(p, &v, s_pc, 0, &ex_ec, &ep)) {
+	if (!expr(p, &v, s_pc, 1, &ex_ec, &ep)) {
 		s_skipon = 1;
 		exprint(ex_ec, s_line, ep);
 		newerr();
