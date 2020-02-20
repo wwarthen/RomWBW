@@ -140,7 +140,7 @@ diff::
 	@for dir in $(SUBDIRS) ; do \
 		( echo "diff in $(HERE)/$$dir" ; cd "$$dir" ; make diff ) ; \
 	done
-	@for i in $(OBJECTS) ; do \
+	@for i in $(OBJECTS) $(MOREDIFF) ; do \
         sf=$$($(CASEFN) $$i) ; \
 		df=$$($(CASEFN) $(DIFFPATH)/$$i) ; \
         if [ -f $$df -a -f $$sf ] ; then \
@@ -148,7 +148,7 @@ diff::
 				echo compare $$sf and $$df ; \
 			fi ; \
 			if ! cmp -s $$sf $$df ; then \
-				echo $$sf and $$df differ ; \
+				echo " " $$sf and $$df differ ; \
 				if [ "$(VERBOSEDIFF)" = "2" ] ; then \
 					cmp -bl $$sf $$df ; \
 					hexdump -Cv $$sf > $$sf.dump ; \
