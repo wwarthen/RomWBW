@@ -10,11 +10,14 @@ CFLAGS = -g
 
 DEFFORMAT = ibm-3740
 DEVICE = posix
+DISKDEFS=$(shell cd ../../cpmtools ; pwd)/diskdefs
+DEFFORMAT=wbw_fd144
+
 CPPFLAGS = -DDISKDEFS=\"$(DISKDEFS)\" -DFORMAT=\"$(DEFFORMAT)\"
 
 DEVICEOBJ =	device_posix.o 
 
-OBJECTS = cpmls cpmrm cpmcp cpmchmod cpmchattr mkfs.cpm fsck.cpm
+OBJECTS = cpmls cpmrm cpmcp cpmchmod cpmchattr mkfs.cpm fsck.cpm fsed.cpm
 
 all: $(OBJECTS) $(DEST)
 	cp $(OBJECTS) $(DEST)
@@ -41,7 +44,7 @@ fsck.cpm: fsck.cpm.o cpmfs.o getopt.o getopt1.o $(DEVICEOBJ)
 	$(CC) $(LDFLAGS) -o $@ fsck.cpm.o cpmfs.o getopt.o getopt1.o $(DEVICEOBJ)
 
 fsed.cpm: fsed.cpm.o cpmfs.o getopt.o getopt1.o $(DEVICEOBJ)
-	$(CC) $(LDFLAGS) -o $@ fsed.cpm.o cpmfs.o getopt.o getopt1.o $(DEVICEOBJ)
+	$(CC) $(LDFLAGS) -o $@ fsed.cpm.o cpmfs.o getopt.o getopt1.o $(DEVICEOBJ) -lncurses
 
 $(DEST):
 	mkdir -p $(DEST)
