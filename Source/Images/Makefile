@@ -39,7 +39,7 @@ blankhd:
 	@echo Making Blank Hd of size $(HDSIZE)k
 	@LANG=en_US.US-ASCII tr '\000' '\345' </dev/zero | dd of=$@ bs=1024 count=$(HDSIZE) 2>/dev/null
 
-%.img:: $(SYSTEMS) blank144 blankhd
+%.img:: $(SYSTEMS) blank144 blankhd Makefile
 	@sys= ; \
 	case $@ in \
 		(*cpm22*) sys=../CPM22/cpm_wbw.sys;; \
@@ -54,6 +54,10 @@ blankhd:
 	d=$$(echo $(basename $@) | sed s/$$type//) ; \
 	echo Generating $@ ; \
 	cp $$proto $@ ; \
+	if [ "$$sys" ] ; then \
+		echo copying system $$sys to $@ ; \
+		$(BINDIR)/mkfs.cpm -f $$fmt -b $$sys $@ ; \
+	fi ; \
 	for u in $$(seq 0 15) ; do \
 		dir=d_$$d/u$$u ; \
 		if [ -d $$dir ] ; then \
@@ -72,8 +76,19 @@ blankhd:
 			fi ; \
 		done ; \
 	fi ; \
-	if [ "$$sys" ] ; then \
-		echo copying system $$sys to $@ ; \
-		dd if=$$sys of=$@ conv=notrunc 2>/dev/null ; \
-	fi
 
+
+clean::
+	rm -f *.ls
+
+imgdiff:
+	@for i in $(FDIMGS) $(HDIMGS) ; do \
+		echo $$i ; \
+		if echo $$i | grep -q ^f ; then \
+			fmt=wbw_fd144 ; \
+		else \
+			fmt=wbw_hd0 ; \
+		fi ; \
+		$(BINDIR)/cpmls -f $$fmt $$i > $$i.ls ; \
+		$(BINDIR)/cpmls -f $$fmt $(DIFFPATH)/$$i > $$i.diff.ls ; \
+	done \
