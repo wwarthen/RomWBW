@@ -9,7 +9,7 @@ HDIMGS = hd_cpm22.img hd_zsdos.img hd_nzcom.img \
 	hd_cpm3.img hd_zpm3.img hd_ws4.img hd_bp.img
 
 OBJECTS = $(FDIMGS) $(HDIMGS) hd_combo.img
-OTHERS = $(SYSTEMS) blank144 blankhd
+OTHERS = blank144 blankhd
 
 DEST=../../Binary
 
@@ -39,7 +39,7 @@ blankhd:
 	@echo Making Blank Hd of size $(HDSIZE)k
 	@LANG=en_US.US-ASCII tr '\000' '\345' </dev/zero | dd of=$@ bs=1024 count=$(HDSIZE) 2>/dev/null
 
-%.img:: $(SYSTEMS) blank144 blankhd Makefile
+%.img: $(SYSTEMS) blank144 blankhd Makefile
 	@sys= ; \
 	case $@ in \
 		(*cpm22*) sys=../CPM22/cpm_wbw.sys;; \
@@ -62,13 +62,18 @@ blankhd:
 		dir=d_$$d/u$$u ; \
 		if [ -d $$dir ] ; then \
 			echo " " copying directory $$dir ; \
-			$(CPMCP) -f $$fmt $@ $$($(CASEFN) $$dir/*.*) $$u: ; \
+			for i in $$dir/* ; do \
+				f=$$($(CASEFN) $$i) ; \
+				echo "    " $$f ; \
+				$(CPMCP) -f $$fmt $@ $$f $$u: ; \
+			done ; \
 		fi ; \
 	done ; \
 	if [ -f d_$$d.txt ] ; then \
 		echo " " copying files from d_$$d.txt ; \
 		grep -v ^# d_$$d.txt | tr -d '\r' | while read file user ; do \
-			rf=$$($(CASEFN) $$file) ; \
+			rf=$$($(CASEFN) $$file | sort -V) ; \
+			echo "    " $$rf ; \
 			if [ "$$rf" = nofile ] ; then \
 				echo " " $$file missing ; \
 			else \
@@ -89,6 +94,6 @@ imgdiff:
 		else \
 			fmt=wbw_hd0 ; \
 		fi ; \
-		$(BINDIR)/cpmls -f $$fmt $$i > $$i.ls ; \
-		$(BINDIR)/cpmls -f $$fmt $(DIFFPATH)/$$i > $$i.diff.ls ; \
+		$(BINDIR)/cpmls -i -f $$fmt $$i > $$i.ls ; \
+		$(BINDIR)/cpmls -i -f $$fmt $(DIFFPATH)/$$i > $$i.diff.ls ; \
 	done \
