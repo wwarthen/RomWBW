@@ -10,7 +10,6 @@ SUBDIRS += ZPM3
 SUBDIRS += Forth
 NOTDONE += Fonts
 SUBDIRS += BPBIOS
-SUBDIRS += HBIOS
 SUBDIRS += Images
 TOOLS = ../Tools
 include $(TOOLS)/Makefile.inc
