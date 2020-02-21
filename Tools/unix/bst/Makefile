@@ -13,6 +13,7 @@ DEST = ../../$(UNAME)
 
 all: $(DEST)
 	-for i in *.$(SUFFIX) ; do \
+		chmod +x $$i ; \
 		cp $$i $(DEST)/$$(basename $$i .$(SUFFIX)) ; \
 	done
 
