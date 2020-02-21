@@ -12,7 +12,7 @@ function cleanup {
 	rm -f $all $search $in
 }
 
-trap cleanup EXIT
+#trap cleanup EXIT
 cleanup
 
 if [ $# -lt 1 ] ; then
@@ -53,10 +53,14 @@ for dn in ${dirs[@]} ; do
 	cd $here
 	cd $dn
 	for i in * ; do
+		# skip any file names containing a space
+		if echo "$i" | grep -sq " " ; then
+			continue
+		fi
 		echo $dn/$(echo "$i" | tr '[A-Z]' '[a-z]')",$dn/$i" >> $in
 	done
 done
-sort $in > $all
+sort -t, -k 1,1 $in > $all
 
 join -t, -o 1.2 $all $search | sort -u > $in
 if [ $(wc -l < $in) -gt 0 ] ; then

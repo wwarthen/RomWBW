@@ -24,7 +24,7 @@ RELPATH := $(subst $(TREEROOT),,$(HERE))
 #
 # where's a copy of this tree for windows so we can diff binaries
 #
-DIFFTO := /Volumes/Github/RomWBW
+DIFFTO := $(shell cd $(TREEROOT)/../RomWBW.windows; pwd)
 DIFFPATH := $(DIFFTO)/$(RELPATH)
 
 #
@@ -121,13 +121,13 @@ all:: $(OBJECTS)
 	done ; fi
 
 clean::
-	-rm -f $$($(CASEFN) make.out *.sym *.lst *.prn *.diff *.dump $(OTHERS) $(filter-out $(NODELETE),$(OBJECTS)))
+	@-rm -f $$($(CASEFN) make.out *.sym *.lst *.prn *.diff *.dump $(OTHERS) $(filter-out $(NODELETE),$(OBJECTS)))
 	@for dir in $(SUBDIRS) ; do \
 		( echo "cleaning in `pwd`/$$dir" ; cd "$$dir" ; make clean ) ; \
 	done
 
 clobber:: clean
-	-rm -f $$($(CASEFN) $(filter-out $(NODELETE),$(OBJECTS)))
+	@-rm -f $$($(CASEFN) $(filter-out $(NODELETE),$(OBJECTS)))
 	@for dir in $(SUBDIRS) ; do \
 		( echo "clobbering in `pwd`/$$dir" ; cd "$$dir" ; make clobber ) ; \
 	done
@@ -140,13 +140,16 @@ diff::
 	@for dir in $(SUBDIRS) ; do \
 		( echo "diff in $(HERE)/$$dir" ; cd "$$dir" ; make diff ) ; \
 	done
-	@for i in $(OBJECTS) ; do \
+	@for i in $(OBJECTS) $(MOREDIFF) ; do \
         sf=$$($(CASEFN) $$i) ; \
 		df=$$($(CASEFN) $(DIFFPATH)/$$i) ; \
         if [ -f $$df -a -f $$sf ] ; then \
+			if [ "$(VERBOSEDIFF)" ] ; then \
+				echo compare $$sf and $$df ; \
+			fi ; \
 			if ! cmp -s $$sf $$df ; then \
-				echo $$sf and $$df differ ; \
-				if [ "$(VERBOSEDIFF)" ] ; then \
+				echo " " $$sf and $$df differ ; \
+				if [ "$(VERBOSEDIFF)" = "2" ] ; then \
 					cmp -bl $$sf $$df ; \
 					hexdump -Cv $$sf > $$sf.dump ; \
 					hexdump -Cv $$df > $$(basename $$df).dump.diff ; \

@@ -51,6 +51,7 @@ static const char *d_export(const char *);
 static const char *d_end(const char *);
 static const char *d_equ(const char *);
 static const char *d_fill(const char *);
+static const char *d_ds(const char *);
 static const char *d_list(const char *);
 static const char *d_lsfirst(const char *);
 static const char *d_module(const char *);
@@ -76,7 +77,7 @@ static struct direc {
 	{ "CHK", d_chk },
 	{ "CODES", d_codes },
 	{ "DB", d_byte },
-	{ "DS", d_fill },
+	{ "DS", d_ds },
 	{ "DW", d_word },
 	{ "ECHO", d_echo },
 	{ "EJECT", d_eject },
@@ -466,6 +467,7 @@ found:
 static const char *
 d_null(const char *p)
 {
+	p = sync(p);
 	while (*p != '\0' && *p != '\\') {
 		if (!isspace(*p)) {
 			wprint(_("invalid characters after directive\n"));
@@ -514,6 +516,7 @@ static const char *d_codes(const char *p)
 
 static const char *d_module(const char *p)
 {
+	p = sync(p);
 	while (*p != '\0' && *p != '\\') {
 		if (!isspace(*p)) {
 			wprint(_("invalid characters after directive\n"));
@@ -674,6 +677,50 @@ static const char *d_fill(const char *p)
 
 	while (n--)
 		genb(v, eps);
+
+	if (er)
+		return NULL;
+	else
+		return p;
+}
+
+static const char *d_ds(const char *p)
+{
+	int n, v, er;
+	const char *q;
+	enum expr_ecode ecode;
+	const char *ep, *eps;
+
+	eps = p;
+	er = 0;
+	p = expr(p, &n, s_pc, 0, &ecode, &ep); 
+	if (p == NULL) {
+		exprint(ecode, s_pline, ep);
+		newerr();
+		return NULL;
+	}
+
+	if (n < 0) {
+		eprint(_("number of positions to space over is negative (%d)\n"), n);
+		eprcol(s_pline, eps);
+		exit(EXIT_FAILURE);
+	}
+
+	v = 255;
+	p = skipws(p);
+	if (*p == ',') {
+		p = skipws(p + 1);
+		q = expr(p, &v, s_pc, s_pass == 0, &ecode, &ep);
+		if (q == NULL) {
+			er = 1;
+			exprint(ecode, s_pline, ep);
+			newerr();
+		} else {
+			p = q;
+		}
+	}
+
+	s_pc += n;
 
 	if (er)
 		return NULL;

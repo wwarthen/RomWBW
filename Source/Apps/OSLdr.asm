@@ -58,6 +58,9 @@
 ;     could occur if the BIOS image does not conform to the
 ;     expected structure (size, meta data location, entry point
 ;     location, etc.)
+;  3) Hardware platform has been removed from the bootloader, so the
+;     platform check has been removed for OS loading.  This is fine
+;     unless you attempt to switch between UNA and RomWBW.
 ;_______________________________________________________________________________
 ;
 ;===============================================================================
@@ -476,11 +479,11 @@ chkos:
 	; check for signature
 	; Already verified in chkhdr
 
-	; compare platform id
-	ld	a,(bioplt)	; get current HBIOS platform ID
-	ld	hl,osplt	; point to OS image platform ID
-	cp	(hl)		; compare
-	jp	nz,errplt	; if not equal platform error
+	;; compare platform id
+	;ld	a,(bioplt)	; get current HBIOS platform ID
+	;ld	hl,osplt	; point to OS image platform ID
+	;cp	(hl)		; compare
+	;jp	nz,errplt	; if not equal platform error
 	
 	; bypass version check if UNA running
 	ld	a,(unamod)	; get UNA mode flag
@@ -991,7 +994,7 @@ bufptr	.dw	0		; active pointer into buffer
 ;
 ; Messages
 ;
-msgban	.db	"OSLDR v1.1 for RomWBW, 16-Jan-2018",0
+msgban	.db	"OSLDR v1.2 for RomWBW, 20-Feb-2020",0
 msghb	.db	" (HBIOS Mode)",0
 msgub	.db	" (UBIOS Mode)",0
 msguse	.db	"Usage: OSLDR [/F] <osimg> [<hbiosimg>]\r\n"

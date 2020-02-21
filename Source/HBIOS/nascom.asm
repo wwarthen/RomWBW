@@ -512,7 +512,7 @@ ERRORS: .BYTE   "NEXT without FOR",0
         .BYTE   "Out of string space",0
         .BYTE   "String too long",0
         .BYTE   "String formula too complex",0
-        .BYTE   "Can't CONTinue",0
+        .BYTE   "Can",$27,"t CONTinue",0
         .BYTE   "Undefined FN function",0
         .BYTE   "Missing operand",0
         .BYTE   "HEX",0

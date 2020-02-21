@@ -668,6 +668,24 @@ void cpmglob(int optin, int argc, char * const argv[], struct cpmInode *root, in
 }
 /*}}}*/
 
+FILE *open_diskdefs()
+{
+	FILE *fp;
+	char *ddenv = getenv("DISKDEFS");
+
+	if (fp=fopen("diskdefs","r"))
+		return fp;
+	if (fp=fopen(DISKDEFS,"r"))
+		return fp;
+  	if (ddenv)
+		if (fp=fopen(ddenv,"r"))
+			return fp;
+    fprintf(stderr,"%s: Neither diskdefs%s%s%s nor %s could be opened.\n",
+		cmd, 
+		ddenv ? ", ": "", ddenv ? ddenv : "", ddenv ? "," : "" , DISKDEFS);
+    exit(1);
+}
+
 /* superblock management */
 /* diskdefReadSuper   -- read super block from diskdefs file     */ /*{{{*/
 static int diskdefReadSuper(struct cpmSuperBlock *d, const char *format)
@@ -675,18 +693,11 @@ static int diskdefReadSuper(struct cpmSuperBlock *d, const char *format)
   char line[256];
   FILE *fp;
   int insideDef=0,found=0;
-  char *ddenv = getenv("DISKDEFS");
 
   d->libdskGeometry[0] = '\0';
   d->type=0;
-  if (
-	(fp=fopen("diskdefs","r"))==(FILE*)0 && 
-	(ddenv && ((fp=fopen(ddenv,"r"))==(FILE*)0)) &&
-  	(fp=fopen(DISKDEFS,"r"))==(FILE*)0)
-  {
-    fprintf(stderr,"%s: Neither `diskdefs' nor `" DISKDEFS "' could be opened.\n",cmd);
-    exit(1);
-  }
+  fp = open_diskdefs();
+
   while (fgets(line,sizeof(line),fp)!=(char*)0)
   {
     int argc;
