@@ -8,7 +8,7 @@
 #define HAVE_SYS_TYPES_H 1
 #define HAVE_SYS_STAT_H 1
 #define HAVE_MODE_T 0
-#define NEED_NCURSES 0
+#define NEED_NCURSES 1
 #define HAVE_NCURSES_NCURSES_H 0
 
 #if HAVE_SYS_STAT_H

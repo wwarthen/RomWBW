@@ -36,13 +36,14 @@ fi
 echo Building for $romname for $platform $config $romsize
 
 if [ $platform == UNA ] ; then
-	CBIOS=../CBIOS/cbios_una.bin
+	BIOS=una
 else
-	CBIOS=../CBIOS/cbios_wbw.bin
+	BIOS=wbw
 fi
 
 Apps=(assign fdu format mode osldr rtc survey syscopy sysgen talk timer xm inttest)
 timestamp=$(date +%Y-%m-%d)
+timestamp="2020-02-20"
 
 blankfile=Blank${romsize}.dat
 romdiskfile=RomDisk.tmp
@@ -51,15 +52,6 @@ outdir=../../Binary
 
 echo "creating empty rom disk of size $romsize in $blankfile"
 LANG=en_US.US-ASCII tr '\000' '\345' </dev/zero | dd of=$blankfile bs=1024 count=`expr $romsize - 128`
-
-# # Initialize working variables
-# $OutDir = "../../Binary"		# Output directory for final image file
-# $RomFmt = "wbw_rom${RomSize}"		# Location of files to imbed in ROM disk
-# $BlankROM = "Blank${RomSize}KB.dat"	# An initial "empty" image for the ROM disk of propoer size
-# $RomDiskFile = "RomDisk.tmp"		# Temporary filename used to create ROM disk image
-# $RomFile = "${OutDir}/${RomName}.rom"	# Final name of ROM image
-# $ComFile = "${OutDir}/${RomName}.com"	# Final name of COM image (command line loadable HBIOS/CBIOS)
-# $ImgFile = "${OutDir}/${RomName}.img"	# Final name of IMG image (memory loadable HBIOS/CBIOS image)
 
 cat <<- EOF > build.inc
 ; RomWBW Configured for $platform $config $timestamp
@@ -72,44 +64,54 @@ ROMSIZE		.EQU	$romsize
 ;
 EOF
 
-cp ../CPM22/OS2CCP.bin ccp.bin
-cp ../CPM22/OS3BDOS.bin bdos.bin
-cp ../ZCPR-DJ/zcpr.bin zcpr.bin
-cp ../ZSDOS/zsdos.bin zsdos.bin
 cp ../Forth/camel80.bin camel80.bin
+cp ../Fonts/font*.asm .
 
-make -f Makefile dbgmon.bin prefix.bin romldr.bin eastaegg.bin nascom.bin \
-	tastybasic.bin imgpad.bin imgpad0.bin
+make dbgmon.bin prefix.bin romldr.bin eastaegg.bin nascom.bin \
+	tastybasic.bin game.bin usrrom.bin imgpad.bin imgpad0.bin
 if [ $platform != UNA ] ; then
-	make -f Makefile hbios_rom.bin hbios_app.bin hbios_img.bin
+	make hbios_rom.bin hbios_app.bin hbios_img.bin
 fi
 
-cat ccp.bin bdos.bin $CBIOS >cpm.bin
-cat zcpr.bin zsdos.bin $CBIOS >zsys.bin
+echo "Building $romname output files..."
 
-cat prefix.bin cpm.bin >cpm.sys
-cat prefix.bin zsys.bin >zsys.sys
-
-cat romldr.bin eastaegg.bin dbgmon.bin cpm.bin zsys.bin >osimg.bin
-cat camel80.bin nascom.bin tastybasic.bin imgpad0.bin >osimg1.bin
+cat romldr.bin eastaegg.bin dbgmon.bin ../CPM22/cpm_$BIOS.bin ../ZSDOS/zsys_$BIOS.bin >osimg.bin
+cat camel80.bin nascom.bin tastybasic.bin game.bin imgpad0.bin usrrom.bin >osimg1.bin
 
 echo "Building ${romsize}KB $romname ROM disk data file..."
-cp $blankfile $romdiskfile
-$CPMCP -f $romfmt $romdiskfile ../RomDsk/ROM_${romsize}KB/*.* 0:
 
-if [ $(find ../RomDsk/$platform -type f -print 2>/dev/null | wc -l) -gt 0 ] ; then
-	$CPMCP -f $romfmt $romdiskfile ../RomDsk/$platform/*.* 0:
+cp $blankfile $romdiskfile
+
+echo placing files into $romdiskfile
+
+for file in $(ls -1 ../RomDsk/ROM_${romsize}KB/* | sort -V) ; do
+	echo " " $file
+	$CPMCP -f $romfmt $romdiskfile $file 0:
+done
+
+if [ -d ../RomDsk/$platform ] ; then
+	for file in ../RomDsk/$platform/* ; do
+		echo " " $file
+		$CPMCP -f $romfmt $romdiskfile $file 0:
+	done
 fi
 
-for i in ${apps[@]} ; do
-	$CPMCP -f $romfmt $romdiskfile ../../Binary/Apps/$i.com 0:
+echo "adding apps to $romdiskfile"
+for i in assign fdu format mode osldr rtc survey syscopy sysgen talk timer xm inttest ; do
+	f=$(../../Tools/unix/casefn.sh ../../Binary/Apps/$i.com)
+	if [ "$f" = "nofile" ] ; then
+		echo " " $i "not found"
+	else
+		echo " " $f
+		$CPMCP -f $romfmt $romdiskfile $f 0:
+	fi
 done
 
-for i in *.sys ; do
-	$CPMCP -f $romfmt $romdiskfile $i 0:
-done
+echo "copying systems to $romdiskfile"
+$CPMCP -f $romfmt $romdiskfile ../CPM22/cpm_$BIOS.sys 0:cpm.sys
+$CPMCP -f $romfmt $romdiskfile ../ZSDOS/zsys_$BIOS.sys 0:zsys.sys
 
-if [ $platform != UNA ] ; then
+if [ $platform = UNA ] ; then
 	cp osimg.bin $outdir/UNA_WBW_SYS.bin
 	cp $romdiskfile $outdir/UNA_WBW_ROM$romsize.bin
 	cat ../UBIOS/UNA-BIOS.BIN osimg.bin ../UBIOS/FSFAT.BIN $romdiskfile >$romname.rom

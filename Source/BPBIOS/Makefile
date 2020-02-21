@@ -31,7 +31,7 @@ zcpr33n.rel zcpr33t.rel:
 all:: $(HD0IMG)
 
 clobber::
-	rm -f $(HD0IMG)
+	@rm -f $(HD0IMG)
 
 %.img: zcpr33n.rel zcpr33t.rel
 	$(eval VER := $(subst .img,,$(subst bp,,$@)))
