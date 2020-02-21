@@ -21,10 +21,10 @@ DEFCPM3 = bnk
 #DEFCPM3 = res
 
 clean:: biosclean
-	rm -f bios3.spr bnkbios3.spr zpmbios3.spr cpmldr.com gencpm.dat options.lib
+	@rm -f bios3.spr bnkbios3.spr zpmbios3.spr cpmldr.com gencpm.dat options.lib
 
 biosclean:
-	rm -f $(BIOSOBJS)
+	@rm -f $(BIOSOBJS)
 
 cpm3res:
 	make biosclean

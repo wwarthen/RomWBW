@@ -1,4 +1,3 @@
-VERBOSEDIFF=2
 OBJECTS = ZETA2_std.rom
 MOREDIFF = camel80.bin game.bin hbios_rom.bin nascom.bin prefix.bin usrrom.bin \
 	dbgmon.bin hbios_app.bin imgpad0.bin osimg1.bin romldr.bin \
