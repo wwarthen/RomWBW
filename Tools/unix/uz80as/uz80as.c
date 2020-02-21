@@ -467,6 +467,7 @@ found:
 static const char *
 d_null(const char *p)
 {
+	p = sync(p);
 	while (*p != '\0' && *p != '\\') {
 		if (!isspace(*p)) {
 			wprint(_("invalid characters after directive\n"));
@@ -515,6 +516,7 @@ static const char *d_codes(const char *p)
 
 static const char *d_module(const char *p)
 {
+	p = sync(p);
 	while (*p != '\0' && *p != '\\') {
 		if (!isspace(*p)) {
 			wprint(_("invalid characters after directive\n"));
