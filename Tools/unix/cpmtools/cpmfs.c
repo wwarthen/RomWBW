@@ -673,13 +673,17 @@ FILE *open_diskdefs()
 	FILE *fp;
 	char *ddenv = getenv("DISKDEFS");
 
-	if (fp=fopen("diskdefs","r"))
+	if ((fp=fopen("diskdefs","r")) != 0) {
 		return fp;
-	if (fp=fopen(DISKDEFS,"r"))
+	}
+	if ((fp=fopen(DISKDEFS,"r")) != 0) {
 		return fp;
-  	if (ddenv)
-		if (fp=fopen(ddenv,"r"))
+	}
+  	if (ddenv) {
+		if ((fp=fopen(ddenv,"r")) != 0) {
 			return fp;
+		}
+	}
     fprintf(stderr,"%s: Neither diskdefs%s%s%s nor %s could be opened.\n",
 		cmd, 
 		ddenv ? ", ": "", ddenv ? ddenv : "", ddenv ? "," : "" , DISKDEFS);
