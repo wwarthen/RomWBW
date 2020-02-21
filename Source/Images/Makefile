@@ -72,7 +72,9 @@ blankhd:
 	if [ -f d_$$d.txt ] ; then \
 		echo " " copying files from d_$$d.txt ; \
 		grep -v ^# d_$$d.txt | tr -d '\r' | while read file user ; do \
-			rf=$$($(CASEFN) $$file | sort -V) ; \
+			hack= ; \
+			if [ "$$file" = "../../Binary/Apps/Tunes/*.*" ] ; then hack=../../Binary/Apps/Tunes/Makefile ; fi ; \
+			rf=$$($(CASEFN) $$hack $$file | sort -V) ; \
 			echo "    " $$rf ; \
 			if [ "$$rf" = nofile ] ; then \
 				echo " " $$file missing ; \
@@ -84,7 +86,7 @@ blankhd:
 
 
 clean::
-	rm -f *.ls
+	@rm -f *.ls
 
 imgdiff:
 	@for i in $(FDIMGS) $(HDIMGS) ; do \
