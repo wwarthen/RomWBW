@@ -332,7 +332,8 @@ diskdef wbw_hd0
   maxdir 512
   skew 0
   boottrk 1
-  os 2.2
+  # os 2.2
+  os 3
 end
 
 diskdef wbw_hd1
@@ -389,7 +390,8 @@ diskdef wbw_fd144
   maxdir 256
   skew 0
   boottrk 2
-  os 2.2
+  # os 2.2
+  os 3
 end
 
 # RomWBW 360K floppy media
