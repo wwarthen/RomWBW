@@ -124,20 +124,6 @@ dinit:
 	or	a			; set flags
 	ret	z			; !!! handle zero devices (albeit poorly) !!!
 
-;	; loop thru devices to count total hard disk volumes
-;	push	bc			; save the device count
-;	ld	c,0			; use c as device list index
-;	ld	e,0			; init e for hard disk volume count
-;
-;dinit2:
-;	push	bc			; save loop control
-;	call	dinit3			; check drive
-;	pop	bc			; restore loop control
-;	inc	c			; next unit
-;	djnz	dinit2			; loop
-;	pop	bc			; restore unit count in b
-;	jr	dinit4			; continue
-
 	; loop thru devices to count total hard disk volumes
 	ld	c,0			; init c as device list index
 	ld	d,0			; init d as total device count
@@ -152,17 +138,6 @@ dinit2:
 	ld	(drvlstc),a		; save the count
 	jr	dinit4			; continue
 
-;dinit3:
-;	push	de			; save de (hard disk volume counter)
-;	ld	b,017h			; hbios func: report device info
-;	rst	08			; call hbios, unit to c
-;	ld	a,d			; device type to a
-;	pop	de			; restore de
-;	cp	050h			; hard disk device?
-;	ret	c			; nope, return
-;	inc	e			; increment hard disk count
-;	ret				; and return
-	
 dinit3:
 	push	de			; save de (hard disk volume counter)
 	push	hl			; save drive list ptr
@@ -204,16 +179,6 @@ dinit3a:
 	ret				; and return
 
 
-;dinit4:	; set slices per volume (hdspv) based on hard disk volume count
-;	ld	a,e			; hard disk volume count to a
-;	ld	e,8			; assume 8 slices per volume
-;	dec	a			; dec accum to check for count = 1
-;	jr	z,dinit5		; yes, skip ahead to implement 8 hdspv
-;	ld	e,4			; now assume 4 slices per volume
-;	dec	a			; dec accum to check for count = 2
-;	jr	z,dinit5		; yes, skip ahead to implement 4 hdspv
-;	ld	e,2			; in all other cases, we use 2 hdspv
-
 dinit4:	; set slices per volume (hdspv) based on hard disk volume count
 
 ;	; *** debug ***
@@ -240,40 +205,24 @@ dinit4:	; set slices per volume (hdspv) based on hard disk volume count
 	jr	z,dinit5		; yes, skip ahead to implement 4 hdspv
 	ld	e,2			; in all other cases, we use 2 hdspv
 
-;dinit5:
-;	ld	a,e			; slices per volume value to accum
-;	ld	(hdspv),a		; save it
-;
-;	; setup to enumerate devices to build drvmap
-;	ld	b,0F8h			; SYS GET
-;	ld	c,010h			; Disk Drive Unit Count
-;	rst	08			; e := disk unit count
-;	ld	b,e			; count to b
-;	ld	c,0			; use c as device list index
-;	ld	hl,0			; dph index
-
 dinit5:
 	ld	a,e			; slices per volume value to accum
 	ld	(hdspv),a		; save it
+	ld	hl,0			; dph index
+
+	ld	a,(@bootdu)		; boot disk unit
+	ld	d,a			; ... to d
+	ld	a,(@bootsl)		; boot slice
+	ld	e,a			; ... to e
+	ld	b,1			; one slice please
+	call	dinit8a			; make DPH for A:
+
 	ld	a,(drvlstc)		; active drive list count to accum
 	ld	b,a			; ... and move to b for loop counter
 	ld	de,drvlst		; de is ptr to active drive list
-	ld	hl,0			; dph index
 
-;dinit6:	; loop thru all units available
-;	push	bc			; preserve loop control
-;	push	hl			; preserve dph pointer
-;	ld	b,017h			; hbios func: report device info
-;	rst	08			; call hbios, d := device type
-;	pop	hl			; restore dph pointer
-;	pop	bc			; get unit index back in c
-;	push	bc			; resave loop control
-;	call	dinit7			; update dph entries
-;	pop	bc			; restore loop control
-;	inc	c			; increment list index
-;	djnz	dinit6			; loop as needed
-
-dinit6:	; loop thru all units available
+dinit6:
+	; loop thru all units available
 	push	de			; preserve drive list ptr
 	ex	de,hl			; list ptr to hl
 	ld	c,(hl)			; get unit num from list
@@ -310,18 +259,28 @@ dinit6a:
 	djnz	dinit6a
 	ret				; finished
 
-dinit7:	; process unit
+dinit7:	; process a unit (all slices)
 	ld	e,0			; initialize slice index
 	ld	b,1			; default loop counter
 	ld	a,d			; device type to accum
 	ld	d,c			; unit number to d
-	cp	050h			; hard disk device?
+	cp	030h			; hard disk device?
 	jr	c,dinit8		; nope, leave loop count at 1
 	ld	a,(hdspv)		; get slices per volume to accum
 	ld	b,a			; move to b for loop counter
 
-dinit8:
-	; d=unit, e=slice, l=dph#
+dinit8:	; test to avoid reallocating boot disk unit/slice
+	ld	a,(@bootdu)		; boot disk unit to accum
+	cp	d			; compare to cur unit
+	jr	nz,dinit8a		; if ne, ok to continue
+	ld	a,(@bootsl)		; boot slice to accum
+	cp	e			; compare to cur slice
+	jr	nz,dinit8a		; if ne, ok to continue
+	inc	e			; is boot du/slice, skip it
+	jr	dinit8			; and restart loop
+
+dinit8a:
+	; d=unit, e=slice, l=dph#, b=slice cnt
 	ld	a,l			; dph # to accum
 	cp	16			; dph table size
 	ret	z			; bail out if overflow
@@ -337,9 +296,9 @@ dinit8:
 	ld	(hl),e			; update slice number
 	dec	hl			; backup to unit number
 	ld	(hl),d			; update unit number
-	inc	e			; next slice
 	pop	hl			; restore dph #
 	inc	hl			; next dph #
+	inc	e			; next slice
 	djnz	dinit8			; loop till done with unit
 	ret
 
@@ -362,25 +321,25 @@ stpsiz	equ	$ - stpimg
 
 ?ldccp:
 
-	if zpm
-
-	; Swap A: and system drive (make A: the system drive)
-	ld	bc,(@dtbl)		; get drive A DPH
-	ld	hl,@dtbl		; point to boot drive DPH
-	ld	a,(@sysdr)
-	rlca
-	call	addhla
-	ld	e,(hl)			; set boot drive to drive A DPH
-	ld	(hl),c			; ... and save boot drive DPH
-	inc	hl
-	ld	d,(hl)
-	ld	(hl),b
-	ld	(@dtbl),de		; set drive a DPH to boot drive
-	
-	xor	a			; update @sysdr
-	ld	(@sysdr),a
-	
-	endif
+	;if zpm
+	;
+	;; Swap A: and system drive (make A: the system drive)
+	;ld	bc,(@dtbl)		; get drive A DPH
+	;ld	hl,@dtbl		; point to boot drive DPH
+	;ld	a,(@sysdr)
+	;rlca
+	;call	addhla
+	;ld	e,(hl)			; set boot drive to drive A DPH
+	;ld	(hl),c			; ... and save boot drive DPH
+	;inc	hl
+	;ld	d,(hl)
+	;ld	(hl),b
+	;ld	(@dtbl),de		; set drive a DPH to boot drive
+	;
+	;xor	a			; update @sysdr
+	;ld	(@sysdr),a
+	;
+	;endif
 	
 	; Force CCP to use system boot drive as initial default
 	ld	a,(@sysdr)		; get system boot drive

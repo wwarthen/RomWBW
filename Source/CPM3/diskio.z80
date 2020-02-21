@@ -323,21 +323,21 @@ dpb_fd111:	; 8" DS/DD Floppy Drive (1.11M)
 ;		called for first time initialization.
 
 dsk$init:
-	ld	a,(@rdrv)		; unit being initialized
-	ld	hl,@bootdu
-	cp	(hl)			; compare to boot unit
-	ret	nz			; done if no match
-	
-	inc	de			; point to slice in XDPH
-	inc	de
-	inc	de
-	ld	a,(de)			; get slice
-	ld	hl,@bootsl
-	cp	(hl)			; compare to boot slice
-	ret	nz			; done if not zero
-
-	ld	a,(@adrv)		; get cp/m drive
-	ld	(@sysdr),a		; and save it
+	;ld	a,(@rdrv)		; unit being initialized
+	;ld	hl,@bootdu
+	;cp	(hl)			; compare to boot unit
+	;ret	nz			; done if no match
+	;
+	;inc	de			; point to slice in XDPH
+	;inc	de
+	;inc	de
+	;ld	a,(de)			; get slice
+	;ld	hl,@bootsl
+	;cp	(hl)			; compare to boot slice
+	;ret	nz			; done if not zero
+	;
+	;ld	a,(@adrv)		; get cp/m drive
+	;ld	(@sysdr),a		; and save it
 	ret
 
 ;	lxi h,init$table

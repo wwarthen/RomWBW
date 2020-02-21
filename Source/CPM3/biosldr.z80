@@ -67,10 +67,14 @@ boot1:
 	pop	af
 	
 	sub	'0'
-	jr	c,boot1
-	cp	10		; !!! Need to test against max disk unit num !!!
-	jr	nc,boot1
 	ld	(unit),a
+	jr	c,selerr
+	
+	ld	bc,0F810h	; HBIOS, get disk unit count
+	call	0FFF0h		; do it, E := disk unit count
+	ld	a,(unit)	; get unit num back
+	cp 	e		; compare to entry
+	jr	nc,selerr	; loop if too high
 
 	ld	de,msgslc
 	call	writestr
@@ -80,11 +84,19 @@ boot1:
 	pop	af
 	
 	sub	'0'
-	jr	c,boot1
-	cp	10
-	jr	nc,boot1
 	ld	(slice),a
+	jr	c,selerr
+	cp	10
+	jr	nc,selerr
 
+	jr	boot2
+
+selerr:
+	ld	de,msginv
+	call	writestr
+	jr	boot1
+
+boot2:
 	ld	de,crlf
 	call	writestr
 
@@ -346,6 +358,7 @@ mult8_noadd:
 
 msgunit	db	13,10,13,10,'Boot CP/M 3 from Disk Unit: $'
 msgslc	db	'   Slice: $'
+msginv	db	13,10,13,10,'*** Invalid Selection ***$'
 crlf	db	13,10,'$'
 
 dpb$start:

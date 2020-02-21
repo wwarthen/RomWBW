@@ -49,6 +49,7 @@ Version 2.9.2
 - PMS: Added "user" rom module template
 - PMS: Added CP/M 3 manuals
 - WBW: Boot from any slice
+- C?M: Added Unix build process
 
 Version 2.9.1
 -------------
