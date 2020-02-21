@@ -121,13 +121,13 @@ all:: $(OBJECTS)
 	done ; fi
 
 clean::
-	-rm -f $$($(CASEFN) make.out *.sym *.lst *.prn *.diff *.dump $(OTHERS) $(filter-out $(NODELETE),$(OBJECTS)))
+	@-rm -f $$($(CASEFN) make.out *.sym *.lst *.prn *.diff *.dump $(OTHERS) $(filter-out $(NODELETE),$(OBJECTS)))
 	@for dir in $(SUBDIRS) ; do \
 		( echo "cleaning in `pwd`/$$dir" ; cd "$$dir" ; make clean ) ; \
 	done
 
 clobber:: clean
-	-rm -f $$($(CASEFN) $(filter-out $(NODELETE),$(OBJECTS)))
+	@-rm -f $$($(CASEFN) $(filter-out $(NODELETE),$(OBJECTS)))
 	@for dir in $(SUBDIRS) ; do \
 		( echo "clobbering in `pwd`/$$dir" ; cd "$$dir" ; make clobber ) ; \
 	done
