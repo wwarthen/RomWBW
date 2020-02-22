@@ -65,7 +65,15 @@ ROMSIZE		.EQU	$romsize
 EOF
 
 cp ../Forth/camel80.bin camel80.bin
-cp ../Fonts/font*.asm .
+
+echo "Build font files ..."
+
+for file in $(ls -1 ../Fonts/*.bin | sort -V) ; do
+ font=$(basename -- "$file")
+ fontname="${font%.*}.asm"
+ echo " " $fontname
+ ../../Tools/Linux/bin2asm $file > ../HBIOS/$fontname
+done
 
 make dbgmon.bin prefix.bin romldr.bin eastaegg.bin nascom.bin \
 	tastybasic.bin game.bin usrrom.bin imgpad.bin imgpad0.bin
