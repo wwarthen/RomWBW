@@ -24,7 +24,8 @@ RELPATH := $(subst $(TREEROOT),,$(HERE))
 #
 # where's a copy of this tree for windows so we can diff binaries
 #
-DIFFTO := $(shell cd $(TREEROOT)/../RomWBW.windows; pwd)
+WINROOT = $(TREEROOT)/../RomWBW.windows
+DIFFTO := $(shell if [ -d $(WINROOT) ] ; then cd $(WINROOT); pwd; fi)
 DIFFPATH := $(DIFFTO)/$(RELPATH)
 
 #
@@ -127,6 +128,9 @@ clean::
 	done
 
 clobber:: clean
+	@if [ "$(DEST)" ] ; then for file in $(OBJECTS) ; do \
+		rm -f $$($(CASEFN) $(DEST)/$$file) ; \
+	done ; fi
 	@-rm -f $$($(CASEFN) $(filter-out $(NODELETE),$(OBJECTS)))
 	@for dir in $(SUBDIRS) ; do \
 		( echo "clobbering in `pwd`/$$dir" ; cd "$$dir" ; make clobber ) ; \
@@ -137,6 +141,7 @@ clobber:: clean
 # the same objects
 #
 diff::
+ifneq ($(DIFFTO),)
 	@for dir in $(SUBDIRS) ; do \
 		( echo "diff in $(HERE)/$$dir" ; cd "$$dir" ; make diff ) ; \
 	done
@@ -157,4 +162,5 @@ diff::
 			fi \
 		fi \
     done
+endif
 
