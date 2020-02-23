@@ -22,12 +22,12 @@ N8_std.rom: ROMSIZE=1024
 #ZETA2_std.rom:
 #	bash Build.sh ZETA2 std 512
 
-hbios_rom.bin:	hbios.asm
+hbios_rom.bin:	hbios.asm build.inc
 	$(TASM) -dROMBOOT hbios.asm hbios_rom.bin
 
-hbios_app.bin:	hbios.asm
+hbios_app.bin:	hbios.asm build.inc
 	$(TASM) -dAPPBOOT hbios.asm hbios_app.bin
 
-hbios_img.bin:	hbios.asm
+hbios_img.bin:	hbios.asm build.inc
 	$(TASM) -dIMGBOOT hbios.asm hbios_img.bin
 

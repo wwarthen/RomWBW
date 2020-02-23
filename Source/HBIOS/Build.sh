@@ -81,6 +81,7 @@ cp ../Forth/camel80.bin .
 
 make dbgmon.bin prefix.bin romldr.bin eastaegg.bin nascom.bin \
 	tastybasic.bin game.bin usrrom.bin imgpad.bin imgpad0.bin
+
 if [ $platform != UNA ] ; then
 	make hbios_rom.bin hbios_app.bin hbios_img.bin
 fi
