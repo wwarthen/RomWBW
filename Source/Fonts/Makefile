@@ -16,8 +16,3 @@ include $(TOOLS)/Makefile.inc
 
 %.asm: %.bin
 	$(BINDIR)/bin2asm $< > $@
-
-clobber::
-	for i in $(OBJECTS) ; do \
-		rm -f $(DEST)/$$i ; \
-	done
