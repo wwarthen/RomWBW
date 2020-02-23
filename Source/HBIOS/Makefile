@@ -1,4 +1,4 @@
-OBJECTS = ZETA2_std.rom N8_std.rom
+OBJECTS = ZETA2_std.rom N8_std.rom SBC_std.rom
 MOREDIFF = camel80.bin game.bin hbios_rom.bin nascom.bin prefix.bin usrrom.bin \
 	dbgmon.bin hbios_app.bin imgpad0.bin osimg1.bin romldr.bin \
 	eastaegg.bin hbios_img.bin imgpad.bin osimg.bin tastybasic.bin \
