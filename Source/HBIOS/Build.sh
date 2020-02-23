@@ -67,8 +67,17 @@ ROMSIZE		.EQU	$romsize
 ;
 EOF
 
-cp ../Forth/camel80.bin camel80.bin
-cp ../Fonts/font*.asm .
+echo "checking prerequisites"
+for need in ../CPM22/cpm_$BIOS.bin ../ZSDOS/zsys_$BIOS.bin \
+	../Forth/camel80.bin font8x11c.asm font8x11u.asm font8x16c.asm \
+	font8x16u.asm font8x8c.asm font8x8u.asm ; do 
+	if [ ! -f $need ] ; then
+		echo $need missing
+		exit 2
+	fi
+done
+
+cp ../Forth/camel80.bin .
 
 make dbgmon.bin prefix.bin romldr.bin eastaegg.bin nascom.bin \
 	tastybasic.bin game.bin usrrom.bin imgpad.bin imgpad0.bin
