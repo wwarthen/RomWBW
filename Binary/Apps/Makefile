@@ -1,4 +1,5 @@
 TOOLS = ../../Tools
+MOREDIFF := *.com *.COM Tunes/*
 
 include $(TOOLS)/Makefile.inc
 

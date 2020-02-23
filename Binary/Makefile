@@ -1,3 +1,4 @@
+MOREDIFF := *.img *.rom *.com *.eeprom
 TOOLS = ../Tools
 SUBDIRS = Apps
 
