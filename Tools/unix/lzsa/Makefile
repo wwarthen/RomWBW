@@ -38,7 +38,6 @@ all: $(APP)
 $(APP): $(OBJS)
 	@mkdir -p ../../bin/posix
 	$(CC) $^ $(LDFLAGS) -o $(APP)
-	$(STRIP) $(APP)
 
 clean:
 	@rm -rf $(APP) $(OBJDIR)
