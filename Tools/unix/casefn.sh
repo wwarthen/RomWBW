@@ -6,6 +6,11 @@
 #
 # this is a bit slow with lots of files, so there's a cache of the join file
 #
+# the form of this cache file is gnarly:
+# pwd dir:%d dir:%d ...
+# where pwd is the current dir, dir are relative paths, and %d are mod times in
+# seconds from the epoch
+#
 pid=.$$
 search=/tmp/casefn.search$pid
 join=/tmp/casefn.join$pid
@@ -23,6 +28,23 @@ if [ $# -lt 1 ] ; then
 	exit 0
 fi
 
+scmd="stat -c %Y"
+if [ $(uname) = "Darwin" ] ; then
+	scmd="stat -f %m"
+fi
+
+function dirtime {
+	d=$1
+	if [ -d $d ] ; then
+		$scmd $d
+	else
+		echo 0
+	fi
+}
+
+here=$(pwd)
+chead="$here"
+
 #
 # normalize to lower case all input file names
 # while building an enumeration of all distinct directories
@@ -38,22 +60,23 @@ for infn in $* ; do
 	done
 	if [ -z $df ] ; then
 		dirs="$dirs $dirn"
+		chead="$chead $dirn:$(dirtime $dirn)"
 	fi
 	echo -n $dirn/ >> $in
 	basename $infn | tr '[A-Z]' '[a-z]' >> $in
 done
 sort -u $in > $search
 
-here=$(pwd)
-
 #
 # if our cached join list matches our directory list, use it
 #
 if [ -f $cache ] ; then
 	cachedirs="$(head -1 $cache)"
-	if [ "$here $dirs" = "$cachedirs" ] ; then
+	if [ "$chead" = "$cachedirs" ] ; then
+		# echo hit >/dev/stderr
 		tail -n +2 $cache > $join
 	else
+		# echo miss >/dev/stderr
 		rm -f $cache
 	fi
 fi
@@ -63,7 +86,7 @@ fi
 #
 if [ ! -f $join ] ; then
 	rm -f $in
-	for dn in ${dirs[@]} ; do
+	for dn in $dirs ; do
 		cd $here
 		cd $dn
 		for i in * ; do
@@ -75,7 +98,7 @@ if [ ! -f $join ] ; then
 		done
 	done
 	sort -t, -k 1,1 $in > $join
-	echo "$here $dirs" > $cache
+	echo "$chead" > $cache
 	cat $join >> $cache
 fi
 
@@ -84,6 +107,4 @@ if [ $(wc -l < $in) -gt 0 ] ; then
 	cat $in
 	exit 0
 fi
-
-echo nofile
 exit 2
