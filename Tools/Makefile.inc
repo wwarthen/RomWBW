@@ -35,7 +35,7 @@ DIFFPATH := $(DIFFTO)/$(RELPATH)
 CASEFN = $(TOOLS)/unix/casefn.sh
 
 ZXCC=$(BINDIR)/zx
-TASM=$(BINDIR)/uz80as
+TASM=$(BINDIR)/uz80as -t hd64180
 OPENSPIN=$(BINDIR)/openspin
 BSTC=$(BINDIR)//bstc
 CPMCP=$(BINDIR)/cpmcp
