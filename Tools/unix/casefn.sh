@@ -51,7 +51,7 @@ here=$(pwd)
 #
 if [ -f $cache ] ; then
 	cachedirs="$(head -1 $cache)"
-	if [ "$dirs" = "$cachedirs" ] ; then
+	if [ "$here $dirs" = "$cachedirs" ] ; then
 		tail -n +2 $cache > $join
 	else
 		rm -f $cache
@@ -75,7 +75,7 @@ if [ ! -f $join ] ; then
 		done
 	done
 	sort -t, -k 1,1 $in > $join
-	echo "$dirs" > $cache
+	echo "$here $dirs" > $cache
 	cat $join >> $cache
 fi
 
