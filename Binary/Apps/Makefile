@@ -1,5 +1,5 @@
 TOOLS = ../../Tools
-MOREDIFF := *.com *.COM Tunes/*
+MOREDIFF := $(shell $(TOOLS)/unix/casefn.sh *.com Tunes/*)
 
 include $(TOOLS)/Makefile.inc
 

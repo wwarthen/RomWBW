@@ -148,19 +148,21 @@ ifneq ($(DIFFTO),)
 	@for i in $(OBJECTS) $(MOREDIFF) ; do \
         sf=$$($(CASEFN) $$i) ; \
 		df=$$($(CASEFN) $(DIFFPATH)/$$i) ; \
-        if [ -f $$df -a -f $$sf ] ; then \
+        if [ -f "$$df" -a -f "$$sf" ] ; then \
 			if [ "$(VERBOSEDIFF)" ] ; then \
 				echo compare $$sf and $$df ; \
 			fi ; \
 			if ! cmp -s $$sf $$df ; then \
 				echo " " $$sf and $$df differ ; \
 				if [ "$(VERBOSEDIFF)" = "2" ] ; then \
-					cmp -bl $$sf $$df ; \
 					hexdump -Cv $$sf > $$sf.dump ; \
 					hexdump -Cv $$df > $$(basename $$df).dump.diff ; \
 				fi \
 			fi \
-		fi \
+		else \
+			if [ ! -f "$$sf" ] ; then echo $$i missing ; fi ; \
+			if [ ! -f "$$df" ] ; then echo $(DIFFPATH)/$$i missing ; fi ; \
+		fi ; \
     done
 endif
 

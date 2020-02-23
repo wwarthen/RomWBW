@@ -1,5 +1,5 @@
-MOREDIFF := *.img *.rom *.com *.eeprom
 TOOLS = ../Tools
+MOREDIFF := $(shell $(TOOLS)/unix/casefn.sh *.img *.rom *.com *.eeprom)
 SUBDIRS = Apps
 
 include $(TOOLS)/Makefile.inc

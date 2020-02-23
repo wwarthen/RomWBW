@@ -48,7 +48,7 @@ Apps=(assign fdu format mode osldr rtc survey syscopy sysgen talk timer xm intte
 timestamp=$(date +%Y-%m-%d)
 timestamp="2020-02-20"
 
-blankfile=Blank${romsize}.dat
+blankfile=Blank${romsize}KB.dat
 romdiskfile=RomDisk.tmp
 romfmt=wbw_rom${romsize}
 outdir=../../Binary
