@@ -40,6 +40,7 @@
 
 static void output();
 
+static const char *d_align(const char *);
 static const char *d_null(const char *);
 static const char *d_block(const char *);
 static const char *d_byte(const char *);
@@ -72,6 +73,7 @@ static struct direc {
 	const char *name;
 	const char *(*fun)(const char *);
 } s_directab[] = { 
+	{ "ALIGN", d_align },
 	{ "BLOCK", d_block },
 	{ "BYTE", d_byte },
 	{ "CHK", d_chk },
@@ -85,6 +87,7 @@ static struct direc {
 	{ "EQU", d_equ },
 	{ "EXPORT", d_export },
 	{ "FILL", d_fill },
+	{ "GLOBAL", d_export },
 	{ "LIST", d_list },
 	{ "LSFIRST", d_lsfirst },
 	{ "MODULE", d_module },
@@ -94,6 +97,7 @@ static struct direc {
 	{ "NOPAGE", d_null },
 	{ "ORG", d_org },
 	{ "PAGE", d_null },
+	{ "SECTION", d_null },
 	{ "SET", d_set },
 	{ "TEXT", d_text },
 	{ "TITLE", d_title },
@@ -817,6 +821,38 @@ dnlst:
 		goto dnlst;
 	}
 	return p;
+}
+
+static const char *d_align(const char *p)
+{
+	int n, v, er;
+	const char *q;
+	enum expr_ecode ecode;
+	const char *ep, *eps;
+
+	eps = p;
+	er = 0;
+	p = expr(p, &n, s_pc, 0, &ecode, &ep); 
+	if (p == NULL) {
+		exprint(ecode, s_pline, ep);
+		newerr();
+		return NULL;
+	}
+
+	if (n < 0) {
+		eprint(_("align is negative (%d)\n"), n);
+		eprcol(s_pline, eps);
+		exit(EXIT_FAILURE);
+	}
+
+	while (s_pc % n) {
+		genb(0, eps);
+	}
+
+	if (er)
+		return NULL;
+	else
+		return p;
 }
 
 static const char *d_byte(const char *p)
