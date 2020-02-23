@@ -4,15 +4,19 @@
 #
 # we don't handle files with embedded spaces, a horrible idea anyway
 #
-search=/tmp/cn.search.$$
-all=/tmp/cn.all.$$
-in=/tmp/cn.in.$$
+# this is a bit slow with lots of files, so there's a cache of the join file
+#
+pid=.$$
+search=/tmp/casefn.search$pid
+join=/tmp/casefn.join$pid
+in=/tmp/casefn.in$pid
+cache=/tmp/casefn.cache
 
 function cleanup {
-	rm -f $all $search $in
+	rm -f $join $search $in
 }
 
-#trap cleanup EXIT
+trap cleanup EXIT
 cleanup
 
 if [ $# -lt 1 ] ; then
@@ -21,48 +25,61 @@ fi
 
 #
 # normalize to lower case all input file names
+# while building an enumeration of all distinct directories
 #
-
 for infn in $* ; do
 	dirn=$(dirname $infn)
 	df=
-	for dl in ${dirs[@]} ; do
+	for dl in $dirs ; do
 		if [ $dl == $dirn ] ; then
 			df=$dl
 			break;
 		fi
 	done
 	if [ -z $df ] ; then
-		dirs+=( $dirn )
+		dirs="$dirs $dirn"
 	fi
 	echo -n $dirn/ >> $in
 	basename $infn | tr '[A-Z]' '[a-z]' >> $in
 done
-
 sort -u $in > $search
-#echo search: 
-#cat $search
 
 here=$(pwd)
 
 #
+# if our cached join list matches our directory list, use it
+#
+if [ -f $cache ] ; then
+	cachedirs="$(head -1 $cache)"
+	if [ "$dirs" = "$cachedirs" ] ; then
+		tail -n +2 $cache > $join
+	else
+		rm -f $cache
+	fi
+fi
+
+#
 # build join list of file names and lower case forms
 #
-rm -f $in
-for dn in ${dirs[@]} ; do
-	cd $here
-	cd $dn
-	for i in * ; do
-		# skip any file names containing a space
-		if echo "$i" | grep -sq " " ; then
-			continue
-		fi
-		echo $dn/$(echo "$i" | tr '[A-Z]' '[a-z]')",$dn/$i" >> $in
+if [ ! -f $join ] ; then
+	rm -f $in
+	for dn in ${dirs[@]} ; do
+		cd $here
+		cd $dn
+		for i in * ; do
+			# skip any file names containing a space
+			if echo "$i" | grep -sq " " ; then
+				continue
+			fi
+			echo $dn/$(echo "$i" | tr '[A-Z]' '[a-z]')",$dn/$i" >> $in
+		done
 	done
-done
-sort -t, -k 1,1 $in > $all
+	sort -t, -k 1,1 $in > $join
+	echo "$dirs" > $cache
+	cat $join >> $cache
+fi
 
-join -t, -o 1.2 $all $search | sort -u > $in
+join -t, -o 1.2 $join $search | sort -u > $in
 if [ $(wc -l < $in) -gt 0 ] ; then
 	cat $in
 	exit 0
