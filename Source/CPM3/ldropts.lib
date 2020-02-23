@@ -1,7 +1,0 @@
-	; global assembler options for CP/M loader
-	; when loading from a command line
-
-true	equ -1
-false	equ not true
-
-cmdline	equ true

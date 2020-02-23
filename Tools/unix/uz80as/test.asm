@@ -1,22 +1,8 @@
-#DEFINE MENU_L(M1,M2,M3,M4,M5,M6,M7,M8,M9,M10) \
-#DEFCONT \ .DB M1
-#DEFCONT \ .DB M2
-#DEFCONT \ .DB M3
-#DEFCONT \ .DW M4
-#DEFCONT \ .DW M5
-#DEFCONT \ .DW M6
-#DEFCONT \ .DW M7
-#DEFCONT \ .DB M8
-#DEFCONT \ .DB M9
-#DEFCONT \ .DB M10
-
-KY_CL .equ 1
-MON_LOC .equ 1
-MON_SIZ .equ 1
-BID_USR .equ 1
-MON_SERIAL .equ 1
-BID_CUR .equ 1
-
-MENU_S:	MENU_L("~Monitor$ ", "M", KY_CL, MON_SERIAL,  1000h,  MON_LOC,   MON_SIZ,  BID_CUR,     BID_USR, "Monitor$     ")
-
+	.org 0x100
+beep: .text 	"\"\"\"" ; comment
+	.align 4
+	.text "foo"
+	.align 16
+	.text "bar"
+	.db	$45,0x67,'7'
 	.end

@@ -1,4 +1,4 @@
-OBJECTS = ZETA2_std.rom
+OBJECTS = ZETA2_std.rom N8_std.rom SBC_std.rom
 MOREDIFF = camel80.bin game.bin hbios_rom.bin nascom.bin prefix.bin usrrom.bin \
 	dbgmon.bin hbios_app.bin imgpad0.bin osimg1.bin romldr.bin \
 	eastaegg.bin hbios_img.bin imgpad.bin osimg.bin tastybasic.bin \
@@ -11,15 +11,23 @@ OTHERS =  *.bin *.z80 cpm.sys zsys.sys Build.inc
 include $(TOOLS)/Makefile.inc
 DIFFPATH = $(DIFFTO)/Binary
 
-ZETA2_std.rom:
-	bash Build.sh ZETA2 std 512
 
-hbios_rom.bin:	hbios.asm
+ROMSIZE=512
+
+N8_std.rom: ROMSIZE=1024
+
+%.rom:
+	bash Build.sh $(shell echo $* | tr '_' ' ') $(ROMSIZE)
+
+#ZETA2_std.rom:
+#	bash Build.sh ZETA2 std 512
+
+hbios_rom.bin:	hbios.asm build.inc
 	$(TASM) -dROMBOOT hbios.asm hbios_rom.bin
 
-hbios_app.bin:	hbios.asm
+hbios_app.bin:	hbios.asm build.inc
 	$(TASM) -dAPPBOOT hbios.asm hbios_app.bin
 
-hbios_img.bin:	hbios.asm
+hbios_img.bin:	hbios.asm build.inc
 	$(TASM) -dIMGBOOT hbios.asm hbios_img.bin
 

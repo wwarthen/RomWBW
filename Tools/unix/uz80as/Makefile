@@ -58,9 +58,15 @@ clean:
 uz80as: $(OBJECTS)
 	$(CC) $(CFLAGS) -o uz80as $(OBJECTS) 
 
-test: test.asm uz80as
-	./uz80as test.asm
-	cat test.lst
+TESTS=test*.asm
+
+test: uz80as
+	echo "running tests"
+	for i in $(TESTS) ; do \
+		echo "====== $$i ======" ; \
+		./uz80as $$i ; \
+		cat $$(basename $$i .asm).lst ; \
+	done
 
 .c.o:
 	$(CC) $(CFLAGS) -I. -c $< -o $@

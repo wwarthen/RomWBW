@@ -76,7 +76,7 @@ blankhd:
 			if [ "$$file" = "../../Binary/Apps/Tunes/*.*" ] ; then hack=../../Binary/Apps/Tunes/Makefile ; fi ; \
 			rf=$$($(CASEFN) $$hack $$file | sort -V) ; \
 			echo "    " $$rf ; \
-			if [ "$$rf" = nofile ] ; then \
+			if [ -z "$$rf" ] ; then \
 				echo " " $$file missing ; \
 			else \
 				$(CPMCP) -f $$fmt $@ $$rf $$user ; \
