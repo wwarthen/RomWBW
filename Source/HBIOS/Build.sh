@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# fail on any error
+set -e
+
 CPMCP=../../Tools/`uname`/cpmcp
 
 # positional arguments
@@ -99,7 +102,7 @@ fi
 echo "adding apps to $romdiskfile"
 for i in assign fdu format mode osldr rtc survey syscopy sysgen talk timer xm inttest ; do
 	f=$(../../Tools/unix/casefn.sh ../../Binary/Apps/$i.com)
-	if [ "$f" = "nofile" ] ; then
+	if [ -z "$f" ] ; then
 		echo " " $i "not found"
 	else
 		echo " " $f
