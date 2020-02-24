@@ -166,3 +166,6 @@ ifneq ($(DIFFTO),)
     done
 endif
 
+vdiff:
+	make VERBOSEDIFF=2 diff
+

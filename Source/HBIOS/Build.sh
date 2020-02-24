@@ -46,7 +46,7 @@ fi
 
 Apps=(assign fdu format mode osldr rtc survey syscopy sysgen talk timer xm inttest)
 timestamp=$(date +%Y-%m-%d)
-timestamp="2020-02-20"
+#timestamp="2020-02-24"
 
 blankfile=Blank${romsize}KB.dat
 romdiskfile=RomDisk.tmp
