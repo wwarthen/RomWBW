@@ -34,9 +34,11 @@ int main(int argc, char *argv[]) {
         }
 
         // print header
+#ifdef notdef
         printf("        .section .rodata\r\n");
         printf("        .global %s\r\n", name);
         printf("        .align  2\r\n\r\n");
+#endif
         printf("%s:\r\n\r\n", name);
 
         // write lines
