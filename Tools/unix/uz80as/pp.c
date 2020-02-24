@@ -278,8 +278,12 @@ static int expand_line(char *dp, char *dq, const char *p)
 			/* strings */
 			s = p;
 			p++;
-			while (*p != '\0' && *p != '\"')
+			/* skip over the string literal */
+			while (*p != '\0' && *p != '\"') {
+				if (p[0] == '\\' && p[1] == '\"')
+					p++;
 				p++;
+			}
 			if (*p == '\"')
 				p++;
 			dp = copypp(dp, dq, s, p);

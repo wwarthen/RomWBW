@@ -9,7 +9,7 @@ ifeq ($(UNAME), Darwin)
 	SUFFIX=osx
 endif
 
-SUBDIRS= bst uz80as zx cpmtools
+SUBDIRS= bst uz80as zx cpmtools bin2asm lzsa
 
 all:
 	@for i in $(SUBDIRS) ; do \

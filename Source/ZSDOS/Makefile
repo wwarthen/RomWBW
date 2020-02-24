@@ -1,5 +1,6 @@
 SYSFILES = zsys_wbw.sys zsys_una.sys
-OBJECTS = $(SYSFILES)
+BINFILES =  zsys_wbw.bin zsys_una.bin
+OBJECTS = $(SYSFILES) $(BINFILES)
 OTHERS = zsdos.rel zsdos.err loader.bin
 TOOLS = ../../Tools
 CCP = ../ZCPR-DJ/zcpr.bin
@@ -12,9 +13,12 @@ zsdos.rel: zsdos.z80
 zsdos.bin: zsdos.rel
 	$(ZXCC) $(CPM)/LINK -$@=$<[LD800]
 
-zsys_wbw.sys: loader.bin $(CCP) zsdos.bin ../CBIOS/cbios_wbw.bin
-	cat loader.bin $(CCP) zsdos.bin ../CBIOS/cbios_wbw.bin > $@
+%.sys:	%.bin loader.bin
+	cat loader.bin $*.bin > $@
 
-zsys_una.sys: loader.bin $(CCP) zsdos.bin ../CBIOS/cbios_una.bin
-	cat loader.bin $(CCP) zsdos.bin ../CBIOS/cbios_una.bin > $@
+zsys_wbw.bin: $(CCP) zsdos.bin ../CBIOS/cbios_wbw.bin
+	cat $(CCP) zsdos.bin ../CBIOS/cbios_wbw.bin > $@
+
+zsys_una.bin: $(CCP) zsdos.bin ../CBIOS/cbios_una.bin
+	cat $(CCP) zsdos.bin ../CBIOS/cbios_una.bin > $@
 

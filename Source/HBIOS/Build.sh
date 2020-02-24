@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# fail on any error
+set -e
+
 CPMCP=../../Tools/`uname`/cpmcp
 
 # positional arguments
@@ -43,9 +46,9 @@ fi
 
 Apps=(assign fdu format mode osldr rtc survey syscopy sysgen talk timer xm inttest)
 timestamp=$(date +%Y-%m-%d)
-timestamp="2020-02-20"
+#timestamp="2020-02-24"
 
-blankfile=Blank${romsize}.dat
+blankfile=Blank${romsize}KB.dat
 romdiskfile=RomDisk.tmp
 romfmt=wbw_rom${romsize}
 outdir=../../Binary
@@ -64,11 +67,21 @@ ROMSIZE		.EQU	$romsize
 ;
 EOF
 
-cp ../Forth/camel80.bin camel80.bin
-cp ../Fonts/font*.asm .
+echo "checking prerequisites"
+for need in ../CPM22/cpm_$BIOS.bin ../ZSDOS/zsys_$BIOS.bin \
+	../Forth/camel80.bin font8x11c.asm font8x11u.asm font8x16c.asm \
+	font8x16u.asm font8x8c.asm font8x8u.asm ; do 
+	if [ ! -f $need ] ; then
+		echo $need missing
+		exit 2
+	fi
+done
+
+cp ../Forth/camel80.bin .
 
 make dbgmon.bin prefix.bin romldr.bin eastaegg.bin nascom.bin \
 	tastybasic.bin game.bin usrrom.bin imgpad.bin imgpad0.bin
+
 if [ $platform != UNA ] ; then
 	make hbios_rom.bin hbios_app.bin hbios_img.bin
 fi
@@ -99,7 +112,7 @@ fi
 echo "adding apps to $romdiskfile"
 for i in assign fdu format mode osldr rtc survey syscopy sysgen talk timer xm inttest ; do
 	f=$(../../Tools/unix/casefn.sh ../../Binary/Apps/$i.com)
-	if [ "$f" = "nofile" ] ; then
+	if [ -z "$f" ] ; then
 		echo " " $i "not found"
 	else
 		echo " " $f

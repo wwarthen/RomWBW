@@ -24,7 +24,8 @@ RELPATH := $(subst $(TREEROOT),,$(HERE))
 #
 # where's a copy of this tree for windows so we can diff binaries
 #
-DIFFTO := $(shell cd $(TREEROOT)/../RomWBW.windows; pwd)
+WINROOT = $(TREEROOT)/../RomWBW.windows
+DIFFTO := $(shell if [ -d $(WINROOT) ] ; then cd $(WINROOT); pwd; fi)
 DIFFPATH := $(DIFFTO)/$(RELPATH)
 
 #
@@ -34,7 +35,7 @@ DIFFPATH := $(DIFFTO)/$(RELPATH)
 CASEFN = $(TOOLS)/unix/casefn.sh
 
 ZXCC=$(BINDIR)/zx
-TASM=$(BINDIR)/uz80as
+TASM=$(BINDIR)/uz80as -t hd64180
 OPENSPIN=$(BINDIR)/openspin
 BSTC=$(BINDIR)//bstc
 CPMCP=$(BINDIR)/cpmcp
@@ -127,6 +128,9 @@ clean::
 	done
 
 clobber:: clean
+	@if [ "$(DEST)" ] ; then for file in $(OBJECTS) ; do \
+		rm -f $$($(CASEFN) $(DEST)/$$file) ; \
+	done ; fi
 	@-rm -f $$($(CASEFN) $(filter-out $(NODELETE),$(OBJECTS)))
 	@for dir in $(SUBDIRS) ; do \
 		( echo "clobbering in `pwd`/$$dir" ; cd "$$dir" ; make clobber ) ; \
@@ -137,24 +141,31 @@ clobber:: clean
 # the same objects
 #
 diff::
+ifneq ($(DIFFTO),)
 	@for dir in $(SUBDIRS) ; do \
 		( echo "diff in $(HERE)/$$dir" ; cd "$$dir" ; make diff ) ; \
 	done
 	@for i in $(OBJECTS) $(MOREDIFF) ; do \
         sf=$$($(CASEFN) $$i) ; \
 		df=$$($(CASEFN) $(DIFFPATH)/$$i) ; \
-        if [ -f $$df -a -f $$sf ] ; then \
+        if [ -f "$$df" -a -f "$$sf" ] ; then \
 			if [ "$(VERBOSEDIFF)" ] ; then \
 				echo compare $$sf and $$df ; \
 			fi ; \
 			if ! cmp -s $$sf $$df ; then \
 				echo " " $$sf and $$df differ ; \
 				if [ "$(VERBOSEDIFF)" = "2" ] ; then \
-					cmp -bl $$sf $$df ; \
 					hexdump -Cv $$sf > $$sf.dump ; \
 					hexdump -Cv $$df > $$(basename $$df).dump.diff ; \
 				fi \
 			fi \
-		fi \
+		else \
+			if [ ! -f "$$sf" ] ; then echo $$i missing ; fi ; \
+			if [ ! -f "$$df" ] ; then echo $(DIFFPATH)/$$i missing ; fi ; \
+		fi ; \
     done
+endif
+
+vdiff:
+	make VERBOSEDIFF=2 diff
 
