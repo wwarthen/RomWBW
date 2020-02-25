@@ -79,7 +79,7 @@ done
 
 cp ../Forth/camel80.bin .
 
-make dbgmon.bin prefix.bin romldr.bin eastaegg.bin nascom.bin \
+make dbgmon.bin romldr.bin eastaegg.bin nascom.bin \
 	tastybasic.bin game.bin usrrom.bin imgpad.bin imgpad0.bin
 
 if [ $platform != UNA ] ; then

@@ -163,7 +163,7 @@ Copy-Item '..\Fonts\font*.asm' '.'
 
 # Assemble individual components.  Note in the case of UNA, there is less to build.
 #
-$RomComponentList = "dbgmon", "prefix", "romldr", "eastaegg", "nascom", "tastybasic", "game", "usrrom", "imgpad", "imgpad0"
+$RomComponentList = "dbgmon", "romldr", "eastaegg", "nascom", "tastybasic", "game", "usrrom", "imgpad", "imgpad0"
 ForEach ($RomComponentName in $RomComponentList) {Asm $RomComponentName}
 
 if ($Platform -ne "UNA")
