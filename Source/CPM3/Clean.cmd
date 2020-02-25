@@ -13,3 +13,4 @@ if exist *.sys del *.sys
 if exist *.bin del *.bin
 if exist gencpm.dat del gencpm.dat
 if exist options.lib del options.lib
+if exist ldropts.lib del ldropts.lib

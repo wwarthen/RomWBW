@@ -39,4 +39,5 @@
 # Add Tune application and sample files
 #
 ../../Binary/Apps/tune.com 3:
-../../Binary/Apps/Tunes/*.* 3:
+../../Binary/Apps/Tunes/*.pt? 3:
+../../Binary/Apps/Tunes/*.mym 3:
