@@ -81,7 +81,7 @@ EOF
 echo "checking prerequisites"
 for need in ../CPM22/cpm_$BIOS.bin ../ZSDOS/zsys_$BIOS.bin \
 	../Forth/camel80.bin font8x11c.asm font8x11u.asm font8x16c.asm \
-	font8x16u.asm font8x8c.asm font8x8u.asm ; do 
+	font8x16u.asm font8x8c.asm font8x8u.asm ; do
 	if [ ! -f $need ] ; then
 		echo $need missing
 		exit 2
