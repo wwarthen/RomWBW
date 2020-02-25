@@ -7,4 +7,4 @@ all::
 	mkdir -p Tunes
 
 clean::
-	rm -f *.bin *.com *.img *.rom *.pdf *.log *.eeprom *.COM *.BIN Tunes/*
+	rm -f *.bin *.com *.img *.rom *.pdf *.log *.eeprom *.COM *.BIN Tunes/*.mym Tunes/*.pt?

@@ -29,7 +29,7 @@ MOREDIFF = camel80.bin game.bin hbios_rom.bin nascom.bin prefix.bin usrrom.bin \
 SUBDIRS = 
 DEST = ../../Binary
 TOOLS =../../Tools
-OTHERS =  *.img *.rom *.com *.bin *.z80 cpm.sys zsys.sys Build.inc
+OTHERS =  *.img *.rom *.com *.bin *.z80 cpm.sys zsys.sys Build.inc RomDisk.tmp font*.asm
 include $(TOOLS)/Makefile.inc
 DIFFPATH = $(DIFFTO)/Binary
 

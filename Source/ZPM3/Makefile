@@ -1,6 +1,7 @@
-OBJECTS = zpmldr.com zpmldr.sys cpm3.sys startzpm.com zccp.com \
-	setz3.com clrhist.com autotog.com
-ifndef REBUILD_ZPM_TOOLS
+OBJECTS = zpmldr.com zpmldr.sys cpm3.sys startzpm.com zccp.com
+ifdef REBUILD_ZPM_TOOLS
+OBJECTS += setz3.com clrhist.com autotog.com
+else
 NODELETE = setz3.com clrhist.com autotog.com
 endif
 OTHERS = zpmldr.bin loader.bin biosldrd.rel biosldrc.rel gencpm.com gencpm.dat bnkbios3.spr
@@ -46,10 +47,8 @@ zinstal.zpm: ../ZCCP/zinstal.zpm
 startzpm.com: ../ZCCP/startzpm.com
 	cp $< $@
 
-ifdef REBUILD_ZPM_TOOLS
 setz3.com: setz3.z80
 
 clrhist.com: clrhist.z80
 
 autotog.com: autotog.z80
-endif
