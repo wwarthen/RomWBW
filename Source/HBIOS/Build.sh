@@ -5,6 +5,19 @@ set -e
 
 CPMCP=../../Tools/`uname`/cpmcp
 
+timestamp=$(date +%Y-%m-%d)
+#timestamp="2020-02-24"
+
+if [ $1 == '-d' ] ; then
+	shift
+	diffdir=$1
+	shift
+	if [ -f $diffdir/build.inc ] ; then
+		timestamp=$(grep TIMESTAMP $diffdir/build.inc | awk '{print $3}' | tr -d '\015"')	
+		echo diff build using $timestamp
+	fi	
+fi
+
 # positional arguments
 platform=$1
 config=$2
@@ -45,8 +58,6 @@ else
 fi
 
 Apps=(assign fdu format mode osldr rtc survey syscopy sysgen talk timer xm inttest)
-timestamp=$(date +%Y-%m-%d)
-#timestamp="2020-02-24"
 
 blankfile=Blank${romsize}KB.dat
 romdiskfile=RomDisk.tmp
