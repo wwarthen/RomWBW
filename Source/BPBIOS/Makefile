@@ -10,7 +10,7 @@ IMGFILES = $(foreach ver,$(VERSIONS),bp$(ver).img)
 DISTFILES = *.zex *.rel myterm.z3t
 
 OTHERS = zcpr33n.rel zcpr33t.rel \
-	bpbio-ww.rel bpsys.dat bpsys.bak bpbio-ww.err def-ww.lib
+	bpbio-ww.rel bpsys.dat bpsys.bak bpbio-ww.err def-ww.lib *.img
 
 TOOLS = ../../Tools
 
