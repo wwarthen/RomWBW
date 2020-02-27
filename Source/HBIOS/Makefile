@@ -31,6 +31,11 @@ DEST = ../../Binary
 TOOLS =../../Tools
 OTHERS =  *.img *.rom *.com *.bin *.z80 cpm.sys zsys.sys Build.inc RomDisk.tmp font*.asm
 include $(TOOLS)/Makefile.inc
+
+ifeq ($(DIFFMAKE),1)
+	DIFFBUILD := -d $(DIFFTO)/Source/HBIOS
+endif
+
 DIFFPATH = $(DIFFTO)/Binary
 
 
@@ -39,7 +44,7 @@ ROMSIZE=512
 N8_std.rom: ROMSIZE=512
 
 %.rom:
-	bash Build.sh $(shell echo $* | tr '_' ' ') $(ROMSIZE)
+	bash Build.sh $(DIFFBUILD) $(shell echo $* | tr '_' ' ') $(ROMSIZE)
 
 #ZETA2_std.rom:
 #	bash Build.sh ZETA2 std 512
