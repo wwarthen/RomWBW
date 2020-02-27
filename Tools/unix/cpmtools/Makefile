@@ -13,6 +13,9 @@ DEVICE = posix
 DISKDEFS=$(shell cd ../../cpmtools ; pwd)/diskdefs
 DEFFORMAT=wbw_fd144
 
+# Locate the ncurses libs or try a guess if pkg-config does not exist
+NCURSESLIBS=$(shell if env pkg-config --libs ncurses ; then : ; else echo -lncurses ; fi)
+
 CPPFLAGS = -DDISKDEFS=\"$(DISKDEFS)\" -DFORMAT=\"$(DEFFORMAT)\"
 
 DEVICEOBJ =	device_posix.o 
@@ -44,7 +47,7 @@ fsck.cpm: fsck.cpm.o cpmfs.o getopt.o getopt1.o $(DEVICEOBJ)
 	$(CC) $(LDFLAGS) -o $@ fsck.cpm.o cpmfs.o getopt.o getopt1.o $(DEVICEOBJ)
 
 fsed.cpm: fsed.cpm.o cpmfs.o getopt.o getopt1.o $(DEVICEOBJ)
-	$(CC) $(LDFLAGS) -o $@ fsed.cpm.o cpmfs.o getopt.o getopt1.o $(DEVICEOBJ) -lncurses
+	$(CC) $(LDFLAGS) -o $@ fsed.cpm.o cpmfs.o getopt.o getopt1.o $(DEVICEOBJ) $(NCURSESLIBS)
 
 $(DEST):
 	mkdir -p $(DEST)
