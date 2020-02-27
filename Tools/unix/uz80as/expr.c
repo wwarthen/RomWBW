@@ -156,7 +156,7 @@ static int ashr(int r, int n)
 const char *expr(const char *p, int *v, int linepc, int allowfr,
 	enum expr_ecode *ecode, const char **ep)
 {
-	int si, usi;
+	int si, usi, usl;
 	const char *q;
 	char last;
 	int stack[ESTKSZ2];
@@ -172,6 +172,7 @@ const char *expr(const char *p, int *v, int linepc, int allowfr,
 	si = 0;
 	r = 0;
 	last = 'V';	/* first void */
+	usl = 0;
 loop:
 	p = skipws(p);
 	if (*p == '(') {
@@ -184,6 +185,8 @@ loop:
 			}
 			stack[si++] = last;
 			stack[si++] = r;
+			stack[si++] = usl;
+			usl = usi;
 			p++;
 			r = 0;
 			last = 'v';	/* void */
@@ -197,6 +200,7 @@ loop:
 		} else {
 			p++;
 			n = r;
+			usl = stack[--si];
 			r = stack[--si];
 			last = (char) stack[--si];	
 			goto oper;
@@ -396,7 +400,7 @@ uoper:
 	uopstk[usi++] = *p++;
 	goto loop;
 oper:
-	while (usi > 0) {
+	while (usi > usl) {
 		usi--;
 		switch (uopstk[usi]) {
 		case '~': n = ~n; break;
