@@ -17,11 +17,6 @@
 ;
 #include        "std.asm"
 
-; *** HACK TO GET THIS TO BUILD UNDER UNA ***
-#IF (BIOS == BIOS_UNA)
-#INCLUDE "hbios.inc"
-#ENDIF
-
 cr				.equ	0dh
 lf				.equ	0ah
 eos				.equ	00h
@@ -33,7 +28,7 @@ scale           .equ     256                     ; Do NOT change this - the
                                                 ; this scaling factor! :-)
 divergent       .equ     scale * 4
  
-				ld		sp,0fdffh
+				ld		sp,HBX_LOC
 				ld      hl, welcome             ; Print a welcome message
 				call	_puts
  
@@ -178,16 +173,29 @@ inner_loop_end	call	_putcrlf               	; Print a CR/LF pair
 mandel_end      ld      hl, finished            ; Print finished-message
 				call	_puts
 												; GET CONSOLE INPUT STATUS VIA HBIOS
-waitch			LD		C,CIODEV_CONSOLE		; CONSOLE UNIT TO C
-				LD		B,BF_CIOIST				; HBIOS FUNC: INPUT STATUS
-				RST		08						; HBIOS RETURNS STATUS IN A
-												; RESTORE REGISTERS (AF IS OUTPUT)
-				JR		Z,waitch							
-												; Return to the loader
-				LD		A,BID_BOOT				; BOOT BANK
-				LD		HL,0				 	; ADDRESS ZERO
-				CALL	HB_BNKCALL				; DOES NOT RETURN
-				HALT
+waitch
+#IF (BIOS == BIOS_WBW)
+		LD	C,CIODEV_CONSOLE	; CONSOLE UNIT TO C
+		LD	B,BF_CIOIN		; HBIOS FUNC: INPUT CHAR
+		RST	08			; DO IT
+		
+		; RETURN TO THE LOADER
+		LD	A,BID_BOOT		; BOOT BANK
+		LD	HL,0			; ADDRESS ZERO
+		CALL	HB_BNKCALL		; DOES NOT RETURN
+		HALT
+#ENDIF
+#IF (BIOS == BIOS_UNA)
+		LD	B,0			; CONSOLE UNIT TO B
+		LD	C,BF_CIOIN		; UBIOS FUNC: INPUT CHAR
+		CALL	$FFFD			; DO IT
+		
+		; RETURN TO THE LOADER
+		LD	BC,$01FB		; UNA FUNC = SET BANK
+		LD	DE,0			; ROM BANK 0
+		CALL	$FFFD			; DO IT
+		JP	0			; JUMP TO RESTART ADDRESS
+#ENDIF
 				
 _putcrlf		ld		hl, crlf
 _puts			push	af
@@ -200,22 +208,41 @@ puts0			ld		a,(hl)
 puts1			pop		af
 				ret			
 
-_putc			PUSH	AF
-				PUSH	BC
-				PUSH	DE
-				PUSH	HL
-				LD		E,A				; OUTPUT CHAR TO E
-				LD		C,CIODEV_CONSOLE; CONSOLE UNIT TO C
-				LD		B,BF_CIOOUT		; HBIOS FUNC: OUTPUT CHAR
-				RST		08				; HBIOS OUTPUTS CHARACTDR
-				POP		HL
-				POP		DE
-				POP		BC
-				POP		AF
-				RET
+_putc
+#IF (BIOS == BIOS_WBW)
+		PUSH	AF
+		PUSH	BC
+		PUSH	DE
+		PUSH	HL
+		LD	E,A			; OUTPUT CHAR TO E
+		LD	C,CIODEV_CONSOLE	; CONSOLE UNIT TO C
+		LD	B,BF_CIOOUT		; HBIOS FUNC: OUTPUT CHAR
+		RST	08			; HBIOS OUTPUTS CHARACTDR
+		POP	HL
+		POP	DE
+		POP	BC
+		POP	AF
+		RET
+#ENDIF
+#IF (BIOS == BIOS_UNA)
+		PUSH	AF
+		PUSH	BC
+		PUSH	DE
+		PUSH	HL
+		LD	E,A			; OUTPUT CHAR TO E
+		LD	B,0			; CONSOLE UNIT TO B
+		LD	C,BF_CIOOUT		; UBIOS FUNC: OUTPUT CHAR
+		CALL	$FFFD			; UBIOS OUTPUTS CHARACTDR
+		POP	HL
+		POP	DE
+		POP	BC
+		POP	AF
+		RET
+#ENDIF
 
-welcome         .db    "Generating a Mandelbrot set"
-                .db    cr, lf, eos
+
+welcome         .db    "Generating a Mandelbrot set..."
+                .db    cr, lf, cr, lf, eos
 finished        .db    "Computation finished."
 crlf			.db	cr, lf, eos
  

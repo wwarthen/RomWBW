@@ -459,9 +459,10 @@ REBOOT:
 	CALL	HB_BNKCALL		; DOES NOT RETURN
 #ENDIF
 #IF (BIOS == BIOS_UNA)
-	; UMMM... NEED TO DO SOMETHING HERE...
-	LD	DE,STR_INVALID	; SET ERROR STRING MESSAGE
-	JP	MENU		; AND RESTART MENU LOOP
+	LD	BC,$01FB		; UNA FUNC = SET BANK
+	LD	DE,0			; ROM BANK 0
+	RST	08			; DO IT
+	JP	0			; JUMP TO RESTART ADDRESS
 #ENDIF
 ;
 ;==================================================================================================

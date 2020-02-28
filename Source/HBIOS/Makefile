@@ -61,6 +61,7 @@ hbios_img.bin:	hbios.asm build.inc
 romldr.bin:	build.inc
 dbgmon.bin:	build.inc
 nascom.bin:	build.inc
+eastaegg.bin:	build.inc
 
 dumps:
 	for i in $(MOREDIFF) ; do \

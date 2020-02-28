@@ -155,15 +155,14 @@ ROMSIZE		.EQU		${ROMSize}
 ;
 "@ | Out-File "build.inc" -Encoding ASCII
 
-# Bring over previously assembled binary copy of Forth for later use.
-Copy-Item '..\Forth\camel80.bin' 'camel80.bin'
+# # Bring over previously assembled binary copy of Forth for later use.
+# Copy-Item '..\Forth\camel80.bin' 'camel80.bin'
 
 # Bring over previously generated font files.
 Copy-Item '..\Fonts\font*.asm' '.'
 
 # Assemble individual components.  Note in the case of UNA, there is less to build.
-#
-$RomComponentList = "dbgmon", "romldr", "eastaegg", "nascom", "tastybasic", "game", "usrrom", "imgpad", "imgpad0"
+$RomComponentList = "dbgmon", "romldr", "eastaegg", "imgpad"
 ForEach ($RomComponentName in $RomComponentList) {Asm $RomComponentName}
 
 if ($Platform -ne "UNA")
@@ -171,6 +170,12 @@ if ($Platform -ne "UNA")
 	Asm 'hbios' '-dROMBOOT' -Output 'hbios_rom.bin' -List 'hbios_rom.lst'
 	Asm 'hbios' '-dAPPBOOT' -Output 'hbios_app.bin' -List 'hbios_app.lst'
 	Asm 'hbios' '-dIMGBOOT' -Output 'hbios_img.bin' -List 'hbios_img.lst'
+	
+	Asm 'nascom'
+	Asm 'tastybasic'
+	Asm 'game'
+	Asm 'usrrom'
+	Asm 'imgpad0'
 }
 
 #
@@ -181,7 +186,12 @@ if ($Platform -ne "UNA")
 
 # Build 32K OS chunk containing the loader, debug monitor, and OS images
 Concat 'romldr.bin', 'eastaegg.bin','dbgmon.bin', "..\cpm22\cpm_${Bios}.bin", "..\zsdos\zsys_${Bios}.bin" osimg.bin
-Concat 'camel80.bin', 'nascom.bin', 'tastybasic.bin', 'game.bin', 'imgpad0.bin', 'usrrom.bin' osimg1.bin
+
+# Build second 32K chunk containing supplemental ROM apps (not for UNA)
+if ($Platform -ne "UNA")
+{
+	Concat '..\Forth\camel80.bin', 'nascom.bin', 'tastybasic.bin', 'game.bin', 'imgpad0.bin', 'usrrom.bin' osimg1.bin
+}
 
 #
 # Now the ROM disk image is created.  This is done by starting with a
