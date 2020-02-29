@@ -1,6 +1,6 @@
 OBJECTS =
 
-ifeq (1,0)
+ifeq (1,1)
 OBJECTS += DYNO_std.rom 
 OBJECTS += EZZ80_std.rom 
 OBJECTS += MK4_std.rom 
