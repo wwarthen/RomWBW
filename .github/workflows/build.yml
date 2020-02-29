@@ -17,6 +17,7 @@ jobs:
     - name: Build
       run: |
         make
+        make clean
         rm -rf .git
     - name: Upload Archive
       uses: actions/upload-artifact@v1
