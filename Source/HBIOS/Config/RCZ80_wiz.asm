@@ -24,7 +24,7 @@
 ;
 #DEFINE		PLATFORM_NAME	"RC2014 (wiz)"
 ;
-#include "config/RCZ80_std.asm"
+#include "Config/RCZ80_std.asm"
 ;
 SDENABLE	.SET	TRUE
 SDMODE		.SET	SDMODE_MT
