@@ -1,6 +1,6 @@
 OBJECTS =
 
-ifeq (1,0)
+ifeq (1,1)
 OBJECTS += DYNO_std.rom 
 OBJECTS += EZZ80_std.rom 
 OBJECTS += MK4_std.rom 
@@ -17,9 +17,10 @@ OBJECTS += SCZ180_126.rom
 OBJECTS += SCZ180_130.rom 
 OBJECTS += UNA_std.rom
 OBJECTS += ZETA_std.rom
-endif
-
 OBJECTS += ZETA2_std.rom 
+else
+OBJECTS += ZETA2_std.rom 
+endif
 
 MOREDIFF = camel80.bin game.bin hbios_rom.bin nascom.bin prefix.bin usrrom.bin \
 	dbgmon.bin hbios_app.bin imgpad0.bin osimg1.bin romldr.bin \
