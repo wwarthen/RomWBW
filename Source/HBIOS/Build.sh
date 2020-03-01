@@ -81,7 +81,7 @@ EOF
 echo "checking prerequisites"
 for need in ../CPM22/cpm_$BIOS.bin ../ZSDOS/zsys_$BIOS.bin \
 	../Forth/camel80.bin font8x11c.asm font8x11u.asm font8x16c.asm \
-	font8x16u.asm font8x8c.asm font8x8u.asm ; do 
+	font8x16u.asm font8x8c.asm font8x8u.asm ; do
 	if [ ! -f $need ] ; then
 		echo $need missing
 		exit 2
@@ -124,8 +124,10 @@ if [ -d ../RomDsk/$platform ] ; then
 fi
 
 echo "adding apps to $romdiskfile"
-for i in assign fdu format mode osldr rtc survey syscopy sysgen talk timer xm inttest ; do
+for i in $Apps ; do
+	set +e
 	f=$(../../Tools/unix/casefn.sh ../../Binary/Apps/$i.com)
+	set -e
 	if [ -z "$f" ] ; then
 		echo " " $i "not found"
 	else
