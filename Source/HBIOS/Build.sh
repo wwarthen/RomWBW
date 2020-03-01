@@ -124,7 +124,7 @@ if [ -d ../RomDsk/$platform ] ; then
 fi
 
 echo "adding apps to $romdiskfile"
-for i in $Apps ; do
+for i in ${Apps[@]} ; do
 	set +e
 	f=$(../../Tools/unix/casefn.sh ../../Binary/Apps/$i.com)
 	set -e
