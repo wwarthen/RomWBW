@@ -7,8 +7,8 @@ OBJECTS += MK4_std.rom
 OBJECTS += N8_std.rom
 OBJECTS += RCZ180_ext.rom
 OBJECTS += RCZ180_nat.rom
-#OBJECTS += RCZ80_kio.rom
-#OBJECTS += RCZ80_mt.rom
+OBJECTS += RCZ80_kio.rom
+OBJECTS += RCZ80_mt.rom
 OBJECTS += RCZ80_std.rom
 OBJECTS += RCZ80_wiz.rom
 OBJECTS += SBC_simh.rom
@@ -19,7 +19,6 @@ OBJECTS += UNA_std.rom
 OBJECTS += ZETA_std.rom
 OBJECTS += ZETA2_std.rom
 else
-OBJECTS += ZETA_std.rom
 OBJECTS += ZETA2_std.rom
 endif
 
