@@ -55,7 +55,21 @@ Source/ZPM3/gencpm.com
 Source/ZPM3/gencpm.dat
 
 Tools/Linux
-Tools/unix
+Tools/Darwin
+
+Tools/unix/bin2asm/bin2asm
+Tools/unix/cpmtools/cpmchattr
+Tools/unix/cpmtools/cpmchmod
+Tools/unix/cpmtools/cpmcp
+Tools/unix/cpmtools/cpmls
+Tools/unix/cpmtools/cpmrm
+Tools/unix/cpmtools/fsck.cpm
+Tools/unix/cpmtools/fsed.cpm
+Tools/unix/cpmtools/mkfs.cpm
+Tools/unix/lzsa/lzsa
+Tools/unix/uz80as/uz80as
+Tools/unix/zx/config.h
+Tools/unix/zx/zx
 
 !Source/Apps/FAT/FAT.COM
 !Source/BPBIOS/bpbuild.com
