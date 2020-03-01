@@ -8,4 +8,5 @@ Tune.com: Tune.asm
 	$(TASM) Tune.asm Tune.com
 
 all::
+	mkdir -p $(DEST)/Tunes
 	cp Tunes/* $(DEST)/Tunes
