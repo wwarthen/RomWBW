@@ -6,5 +6,5 @@ include $(TOOLS)/Makefile.inc
 all::
 	mkdir -p Tunes
 
-clean::
+clobber::
 	rm -f *.bin *.com *.img *.rom *.pdf *.log *.eeprom *.COM *.BIN Tunes/*.mym Tunes/*.pt?
