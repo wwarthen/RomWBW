@@ -2,5 +2,5 @@
 setlocal
 
 if exist *.com del *.com
-
-setlocal & cd Tunes && call Clean || exit /b 1 & endlocal
+if exist Tunes\*.pt? del Tunes\*.pt?
+if exist Tunes\*.mym del Tunes\*.mym

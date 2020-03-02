@@ -803,7 +803,7 @@ RESETDR:LD	A,(CHGDRV)	; DRIVE CHANGE INDICATED?
 ;**************************************************************
 ;
 	.IF	MON
-MONITOR:RST	38
+MONITOR:RST	38H
 	.ENDIF
 
 ;

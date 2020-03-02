@@ -77,7 +77,7 @@ The VDU video board requires a dedicated onboard ROM containing the
 font data.  The "vdu.rom" file contains the binary data to program 
 onto that chip.
 
-Disk Images (fd*.img, hd*.img)
+Disk Images (fd_*.img, hd_*.img)
 ------------------------------
 
 RomWBW includes a mechanism for generating floppy disk and hard disk 
@@ -92,13 +92,13 @@ can quickly create ready-to-use media.  Win32DiskImager or
 RawWriteWin can be used to copy images directly to media.  These
 programs are included in the RomWBW Tools directory.
 
-The fd*.img files are floppy disk images.  They are sized for 1.44MB 
+The fd_*.img files are floppy disk images.  They are sized for 1.44MB 
 floppy media and can be copied to actual floppy disks using 
 RawWriteWin (as long as you have access to a floppy drive on your 
 Windows computer).  The resulting floppy disks will be usable on any 
 RomWBW-based system with floppy drive(s).
 
-Likewise, the hd*.img files are hard disk images.  Each file is 
+Likewise, the hd_*.img files are hard disk images.  Each file is 
 intended to be copied to the start of any type of hard disk media 
 (typically a CF Card or SD Card). The resulting media will be usable 
 on any RomWBW-based system that accepts the corresponding media type.

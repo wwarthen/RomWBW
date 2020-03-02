@@ -3,7 +3,9 @@ setlocal
 
 set TOOLS=../../Tools
 
-set PATH=%TOOLS%\zx;%TOOLS%\cpmtools;%PATH%
+set PATH=%TOOLS%\tasm32;%TOOLS%\zx;%TOOLS%\cpmtools;%PATH%
+
+set TASMTABS=%TOOLS%\tasm32
 
 set ZXBINDIR=%TOOLS%/cpm/bin/
 set ZXLIBDIR=%TOOLS%/cpm/lib/
@@ -15,15 +17,19 @@ copy ..\ZCCP\startzpm.com .
 copy ..\CPM3\genbnk.dat .
 copy ..\CPM3\zpmbios3.spr bnkbios3.spr
 copy ..\CPM3\gencpm.com .
-copy ..\CPM3\biosldr.rel .
-copy ..\CPM3\cpmldr.com .
+copy ..\CPM3\biosldrd.rel .
+copy ..\CPM3\biosldrc.rel .
+rem copy ..\CPM3\cpmldr.com .
 
 rem ZPM Loader
 echo.
 echo.
 echo *** ZPM Loader ***
 echo.
-zx LINK -ZPMLDR[L100]=ZPM3LDR,BIOSLDR
+zx LINK -ZPMLDRD[L100]=ZPM3LDR,BIOSLDRD
+move /Y zpmldrd.com zpmldr.bin
+zx LINK -ZPMLDRC[L100]=ZPM3LDR,BIOSLDRC
+move /Y zpmldrc.com zpmldr.com
 rem pause
 
 rem Banked ZPM3
@@ -35,33 +41,8 @@ copy genbnk.dat gencpm.dat
 zx gencpm -auto -display
 rem pause
 
-if not exist ../../Binary/hd_zpm3.img goto :eof
+rem Loader
 
-rem Update hd_zpm3.img
-echo.
-echo.
-echo *** Update Disk Image ***
-echo.
-for %%f in (
-  zpmldr.com
-  cpmldr.com
-  autotog.com
-  clrhist.com
-  setz3.com
-  cpm3.sys
-  zccp.com
-  zinstal.zpm
-  startzpm.com
-  makedos.com
-  gencpm.dat
-  bnkbios3.spr
-  bnkbdos3.spr
-  resbdos3.spr
-) do call :upd_img %%f
-goto :eof
+tasm -t80 -g3 -fFF loader.asm loader.bin loader.lst
 
-:upd_img
-echo   %1...
-cpmrm.exe -f wbw_hd0 ../../Binary/hd_zpm3.img 0:%1
-cpmcp.exe -f wbw_hd0 ../../Binary/hd_zpm3.img %1 0:%1
-goto :eof
+copy /b loader.bin + zpmldr.bin zpmldr.sys

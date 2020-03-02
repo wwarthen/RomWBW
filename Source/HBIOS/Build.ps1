@@ -107,7 +107,7 @@ $ComFile = "${OutDir}/${RomName}.com"	# Final name of COM image (command line lo
 $ImgFile = "${OutDir}/${RomName}.img"	# Final name of IMG image (memory loadable HBIOS/CBIOS image)
 
 # Select the proper CBIOS to include in the ROM.  UNA is special.
-if ($Platform -eq "UNA") {$CBiosFile = '../CBIOS/cbios_una.bin'} else {$CBiosFile = '../CBIOS/cbios_wbw.bin'}
+if ($Platform -eq "UNA") {$Bios = 'una'} else {$Bios = 'wbw'}
 
 # List of RomWBW proprietary apps to imbed in ROM disk.
 $RomApps = "assign","fdu","format","mode","osldr","rtc","survey","syscopy","sysgen","talk","timer","xm","inttest"
@@ -140,7 +140,7 @@ Function Concat($InputFileList, $OutputFile)
 
 #
 # Since TASM has no mechanism to include files dynamically based on variables, a file
-# if built on-the-fly here for imbedding in the build process.  This file is basically
+# is built on-the-fly here for imbedding in the build process.  This file is basically
 # just used to include the platform and config files.  It also passes in some values
 # from the build to include in the build.
 
@@ -155,31 +155,27 @@ ROMSIZE		.EQU		${ROMSize}
 ;
 "@ | Out-File "build.inc" -Encoding ASCII
 
-# Bring over previously assembled binary copy of the CP/M CCP and BDOS images for later use.
-Copy-Item '..\cpm22\os2ccp.bin' 'ccp.bin'
-Copy-Item '..\cpm22\os3bdos.bin' 'bdos.bin'
+# # Bring over previously assembled binary copy of Forth for later use.
+# Copy-Item '..\Forth\camel80.bin' 'camel80.bin'
 
-# Bring over previously assembled binary copy of the ZSystem CCP and BDOS images for later use.
-Copy-Item '..\zcpr-dj\zcpr.bin' 'zcpr.bin'
-Copy-Item '..\zsdos\zsdos.bin' 'zsdos.bin'
-
-# Bring over previously assembled binary copy of Forth for later use.
-Copy-Item '..\Forth\camel80.bin' 'camel80.bin'
+# Bring over previously generated font files.
+Copy-Item '..\Fonts\font*.asm' '.'
 
 # Assemble individual components.  Note in the case of UNA, there is less to build.
-Asm 'dbgmon'
-Asm 'prefix'
-Asm 'romldr'
-Asm 'eastaegg'
-Asm 'nascom'
-Asm 'tastybasic'
-Asm 'imgpad'
-Asm 'imgpad0'
+$RomComponentList = "dbgmon", "romldr", "eastaegg", "imgpad"
+ForEach ($RomComponentName in $RomComponentList) {Asm $RomComponentName}
+
 if ($Platform -ne "UNA")
 {
 	Asm 'hbios' '-dROMBOOT' -Output 'hbios_rom.bin' -List 'hbios_rom.lst'
 	Asm 'hbios' '-dAPPBOOT' -Output 'hbios_app.bin' -List 'hbios_app.lst'
 	Asm 'hbios' '-dIMGBOOT' -Output 'hbios_img.bin' -List 'hbios_img.lst'
+	
+	Asm 'nascom'
+	Asm 'tastybasic'
+	Asm 'game'
+	Asm 'usrrom'
+	Asm 'imgpad0'
 }
 
 #
@@ -188,17 +184,15 @@ if ($Platform -ne "UNA")
 #
 "Building ${RomName} output files..."
 
-# Combine the CCP and BDOS portions of CP/M and ZSystem to create OS images
-Concat 'ccp.bin','bdos.bin',$CBiosFile 'cpm.bin'
-Concat 'zcpr.bin','zsdos.bin',$CBiosFile 'zsys.bin'
-
-# Prepend a bit of boot code required to bootstrap the OS images
-Concat 'prefix.bin','cpm.bin' 'cpm.sys'
-Concat 'prefix.bin','zsys.bin' 'zsys.sys'
-
 # Build 32K OS chunk containing the loader, debug monitor, and OS images
-Concat 'romldr.bin', 'eastaegg.bin','dbgmon.bin', 'cpm.bin', 'zsys.bin' osimg.bin
-Concat 'camel80.bin', 'nascom.bin', 'tastybasic.bin', 'imgpad0.bin' osimg1.bin
+Concat 'romldr.bin', 'eastaegg.bin','dbgmon.bin', "..\cpm22\cpm_${Bios}.bin", "..\zsdos\zsys_${Bios}.bin" osimg.bin
+
+# Build second 32K chunk containing supplemental ROM apps (not for UNA)
+if ($Platform -ne "UNA")
+{
+	Concat '..\Forth\camel80.bin', 'nascom.bin', 'tastybasic.bin', 'game.bin', 'imgpad0.bin', 'usrrom.bin' osimg1.bin
+}
+
 #
 # Now the ROM disk image is created.  This is done by starting with a
 # blank ROM disk image of the correct size, then cpmtools is used to
@@ -226,7 +220,8 @@ foreach ($App in $RomApps)
 }
 
 # Add the CP/M and ZSystem system images to the ROM disk (used by SYSCOPY)
-cpmcp -f $RomFmt $RomDiskFile *.sys 0:
+cpmcp -f $RomFmt $RomDiskFile ..\cpm22\cpm_${Bios}.sys 0:cpm.sys
+cpmcp -f $RomFmt $RomDiskFile ..\zsdos\zsys_${Bios}.sys 0:zsys.sys
 
 #
 # Finally, the individual binary components are concatenated together to produce
@@ -246,5 +241,5 @@ else
 	Concat 'hbios_img.bin','osimg.bin' $ImgFile
 }
 
-# Remove the temprary working ROM disk file
+# Remove the temporary working ROM disk file
 Remove-Item $RomDiskFile

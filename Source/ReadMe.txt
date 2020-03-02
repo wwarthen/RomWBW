@@ -101,8 +101,9 @@ to determine the <plt> component of the configuration filename:
 	RC2014 w/ Z80	RCZ80_std.rom
 	RC2014 w/ Z180	RCZ180_nat.rom	(native Z180 memory addressing)
 	RC2014 w/ Z180	RCZ180_ext.rom	(external 512K RAM/ROM module)
-	SC-series	SC126, SC130
+	SCZ180		SC126, SC130
 	Easy Z80	EZZ180_std.rom
+	Dyno		DYNO_std.rom
 
 You can use any name you choose for the <cfg> component of the 
 configuration filename.  So, let's say you want to create a custom 
@@ -189,7 +190,7 @@ This command will prompt you twice as it runs.  These prompts
 determine the platform and configuration to be built.  The first 
 prompt is for the platform, as shown below:
 
-    Platform [SBC|ZETA|ZETA2|RCZ80|EZZ80|RCZ180|N8|MK4|UNA]:
+    Platform [SBC|ZETA|ZETA2|RCZ80|EZZ80|UNA|N8|MK4|RCZ180|SCZ180|DYNO]:
 
 Enter the option corresponding to the platform of the ROM firmware 
 you are building.  If you enter something other than one of the 
@@ -304,6 +305,7 @@ BuildImages: RomWBW has the ability to create floppy disk and hard
 	     and will turn them into a writable disk image.  Refer
 	     to the ReadMe.txt document in the Source\Images
 	     directory for a detailed description of this process.
+	     N.B., BuildShared must be run prior to BuildImages.
 
 BuildBP: This command builds another OS variant called BPBIOS.  It
          is a work in progress and should not be used at this time

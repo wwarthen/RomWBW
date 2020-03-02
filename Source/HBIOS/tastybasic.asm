@@ -40,6 +40,7 @@ TBC_LOC			.equ 0
 #else									; RomWBW
 #include		"std.asm"
 #endif
+
 				.org TBC_LOC
 start:
 				ld sp,stack				; ** Cold Start **

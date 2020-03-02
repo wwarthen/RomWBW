@@ -1,0 +1,106 @@
+Z80ASM SuperFast Relocating Macro Assembler     	    Z80ASM 1.30 Page   1
+BIOS    Z80
+
+    1                   ; BIOS / BDOS for the ZXCC environment.
+    2                   ;
+    3         FE00      	org	0FE00h
+    4 FE00  5A 58 43 43 	DEFB	'ZXCC04'	;Serial number
+    5                   ;
+    6                   ; Some CP/M programs expect a jump at the start of BDOS, so here it is.
+    7                   ;
+    8 FE06  C3 FE09     BDOS0:	JP	BDOS1
+    9                   
+   10 FE09  3E C0       BDOS1:	LD	A,0C0h
+   11 FE0B  ED FE       	DEFB	0EDh,0FEh
+   12 FE0D  C9          	RET
+   13                   ;
+   14                   ; Hack for ZMAC.  ZMAC is using contents of 0FE22H to establish a memory pointer.
+   15                   ; It makes no sense.  We stuff 04F4CH here because it is known to work...
+   16                   ;
+   17         FE22      	org	0FE22H
+   18 FE22  4F4C        	DEFW	04F4CH
+   19                   ;
+   20                   ;This is not a real BIOS, so let its code live below the BIOS jumpblock.
+   21                   ;
+   22 FE24  DD 22 FE33  UBIOS:	LD	(XIX),IX
+   23 FE28  DD E1       	POP	IX		;IX = address of UBIOS function
+   24 FE2A  3E C3       	LD	A,0C3h		;C3h = BIOS call
+   25 FE2C  ED FE       	DEFB	0EDh,0FEh
+   26 FE2E  DD 2A FE33  	LD	IX,(XIX)
+   27 FE32  C9          	RET
+   28                   ;
+   29 FE33  0000        XIX:	DEFW	0
+   30                   
+   31 FE35  21 FF03     CBOOT:  LD      HL,WBOOT0
+   32 FE38  22 0001             LD      (1),HL
+   33 FE3B  21 FE06             LD      HL,BDOS0
+   34 FE3E  22 0006             LD      (6),HL
+   35 FE41  3E C3               LD      A,0C3h
+   36 FE43  32 0000             LD      (0),A
+   37 FE46  32 0005             LD      (5),A
+   38 FE49  3E C9               LD      A,0C9h
+   39 FE4B  32 0038             LD      (038h),A
+   40 FE4E  3E C1               LD      A,0C1h		;C1h = program load
+   41 FE50  ED FE               DEFB    0EDh,0FEh
+   42 FE52  21 0000             LD      HL,0
+   43 FE55  E5                  PUSH    HL      	;In case called program tries to RET
+   44 FE56  C3 0100             JP      0100h
+   45                   ;
+   46 FE59  3E C3       WBOOT:  LD      A,0C3h          ;Program termination
+   47 FE5B  DD 21 0006          LD      IX,6            ;BIOS call 1
+   48 FE5F  ED FE               DEFB    0EDh,0FEh
+   49 FE61  76                  HALT
+   50 FE62  C3 FE62             JP      $
+   51                   ;
+   52         FEEC      	org	0FEECh
+   53 FEEC  FF          tmpdrv:	defb	0FFh		;Temp drive = current
+   54                   
+   55                   
+   56                   ;
+   57                   ;TODO: SCB at FE9Ch
+   58                   ;
+Z80ASM SuperFast Relocating Macro Assembler     	    Z80ASM 1.30 Page   2
+BIOS    Z80
+
+   59         FF00      	org	0FF00h
+   60 FF00  C3 FE35     	JP	CBOOT	;FF00
+   61 FF03  C3 FE59     WBOOT0:	JP	WBOOT	;03
+   62 FF06  CD FE24     	CALL	UBIOS	;06
+   63 FF09  CD FE24     	CALL	UBIOS	;09
+   64 FF0C  CD FE24     	CALL	UBIOS	;0C
+   65 FF0F  CD FE24             CALL    UBIOS	;0F
+   66 FF12  CD FE24             CALL    UBIOS	;12
+   67 FF15  CD FE24             CALL    UBIOS	;15
+   68 FF18  CD FE24             CALL    UBIOS	;18
+   69 FF1B  CD FE24             CALL    UBIOS	;1B
+   70 FF1E  CD FE24             CALL    UBIOS	;1E
+   71 FF21  CD FE24             CALL    UBIOS	;21
+   72 FF24  CD FE24             CALL    UBIOS	;24
+   73 FF27  CD FE24             CALL    UBIOS	;27
+   74 FF2A  CD FE24             CALL    UBIOS	;2A
+   75 FF2D  CD FE24             CALL    UBIOS	;2D
+   76 FF30  CD FE24             CALL    UBIOS	;30
+   77 FF33  CD FE24             CALL    UBIOS	;33
+   78 FF36  CD FE24             CALL    UBIOS	;36
+   79 FF39  CD FE24             CALL    UBIOS	;39
+   80 FF3C  CD FE24             CALL    UBIOS	;42
+   81 FF3F  CD FE24     	CALL	UBIOS	;45
+   82 FF42  CD FE24     	CALL	UBIOS	;48
+   83 FF45  CD FE24     	CALL	UBIOS	;4B
+   84 FF48  CD FE24     	CALL	UBIOS	;4E
+   85 FF4B  CD FE24     	CALL	UBIOS	;51
+   86 FF4E  CD FE24     	CALL	UBIOS	;54
+   87 FF51  CD FE24     	CALL	UBIOS	;57
+   88 FF54  CD FE24     	CALL	UBIOS	;5A, USERF
+   89 FF57  CD FE24     	CALL	UBIOS	;5D, RESERV1
+   90 FF5A  CD FE24     	CALL	UBIOS	;60, RESERV2
+   91                   ;
+   92         FFC0      	org	0FFC0h	;Space for DPB
+   93 FFC0    0020      dpb:	defs	20h
+   94                   
+   95                   	END
+ 0 Error(s) Detected.
+ 480 Absolute Bytes. 9 Symbols Detected.
+  UBIOS	;27
+   74 FF2A  CD FE24             CALL    UBIOS	;2A
+   75 FF2D  CD FE24          

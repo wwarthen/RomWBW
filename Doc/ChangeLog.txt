@@ -34,8 +34,22 @@ Version 2.9.2
 - PLS: Enhanced Intel Hex Load in dbgmon
 - WBW: Overhaul disk image creation
 - WBW: Added support for Dyno platform (based on work by Steve Garcia)
-- S?G: Added support for BQ4845 RTC (bqrtc.asm)
+- SLG: Added support for BQ4845 RTC (bqrtc.asm)
 - PMS: Added 80x30 video mode to VGA3 driver
+- PMS: Added 80x43 video mode
+- PMS: Added font compression option
+- PMS: Added a "safe mode" startup w/ minimal device support
+- WBW: Switch RC/SC Z180 platforms to 115,200 default baud rate
+- PMS: Enhanced PPIDE driver to handle multiple PPI interfaces
+- PMS: Added a ROM based game
+- WBW: Only assign drive letters to hard disk devices with media
+- WBW: Enhanced IDE driver to handle multiple IDE interfaces
+- D?R: Contributed SC126 How-To: Preparing a MicroSD Card to Transfer Files to/from a Linux System
+- PMS: Updated romldr to handle more than 9 drives
+- PMS: Added "user" rom module template
+- PMS: Added CP/M 3 manuals
+- WBW: Boot from any slice
+- C?M: Added Unix build process
 
 Version 2.9.1
 -------------
