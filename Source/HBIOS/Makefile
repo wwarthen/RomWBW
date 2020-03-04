@@ -1,25 +1,25 @@
 OBJECTS =
 
 ifeq (1,1)
-OBJECTS += DYNO_std.rom
-OBJECTS += EZZ80_std.rom
-OBJECTS += MK4_std.rom
-OBJECTS += N8_std.rom
-OBJECTS += RCZ180_ext.rom
-OBJECTS += RCZ180_nat.rom
-OBJECTS += RCZ80_kio.rom
-OBJECTS += RCZ80_mt.rom
-OBJECTS += RCZ80_std.rom
-OBJECTS += RCZ80_wiz.rom
-OBJECTS += SBC_simh.rom
-OBJECTS += SBC_std.rom 
-OBJECTS += SCZ180_126.rom
-OBJECTS += SCZ180_130.rom
+OBJECTS += DYNO_std.rom DYNO_std.com
+OBJECTS += EZZ80_std.rom EZZ80_std.com
+OBJECTS += MK4_std.rom MK4_std.com
+OBJECTS += N8_std.rom N8_std.com
+OBJECTS += RCZ180_ext.rom RCZ180_ext.com
+OBJECTS += RCZ180_nat.rom RCZ180_nat.com
+OBJECTS += RCZ80_kio.rom RCZ80_kio.com
+OBJECTS += RCZ80_mt.rom RCZ80_mt.com
+OBJECTS += RCZ80_std.rom RCZ80_std.com
+OBJECTS += RCZ80_wiz.rom RCZ80_wiz.com
+OBJECTS += SBC_simh.rom SBC_simh.com
+OBJECTS += SBC_std.rom SBC_std.com 
+OBJECTS += SCZ180_126.rom SCZ180_126.com
+OBJECTS += SCZ180_130.rom SCZ180_130.com
 OBJECTS += UNA_std.rom
-OBJECTS += ZETA_std.rom
-OBJECTS += ZETA2_std.rom
+OBJECTS += ZETA_std.rom ZETA_std.com
+OBJECTS += ZETA2_std.rom ZETA2_std.com
 else
-OBJECTS += ZETA2_std.rom
+OBJECTS += ZETA2_std.rom ZETA2_std.com
 endif
 
 MOREDIFF = camel80.bin game.bin hbios_rom.bin nascom.bin prefix.bin usrrom.bin \

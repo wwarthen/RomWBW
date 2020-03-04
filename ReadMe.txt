@@ -122,6 +122,9 @@ ROM version:
     - FDU.COM
     - XM.COM
     - RTC.COM
+    - FAT.COM
+    - TIMER.COM
+    - INTTEST.COM
 
 UNA Hardware BIOS
 -----------------
