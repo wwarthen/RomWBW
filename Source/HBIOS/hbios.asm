@@ -383,7 +383,7 @@ HBX_BNKSEL1:
 ; Copy Data - Possibly between banks.  This resembles CP/M 3, but
 ;  usage of the HL and DE registers is reversed.
 ; Caller MUST preset HBX_SRCBNK and HBX_DSTBNK.
-; Caller MUST disable ints if IM1 active
+; Interrupts are disabled if IM1/IM2 active.
 ; Enter:
 ;	 HL = Source Address
 ;	 DE = Destination Address
@@ -394,6 +394,11 @@ HBX_BNKSEL1:
 ;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;
 HBX_BNKCPY:
+#IF (INTMODE > 0)
+	LD	A,I
+	DI
+	PUSH	AF
+#ENDIF
 	LD	(HBX_BC_SP),SP		; PUT STACK
 	LD	SP,HBX_TMPSTK		; ... IN HI MEM
 
@@ -423,6 +428,11 @@ HBX_BC_LAST:
 
 	LD	SP,$FFFF		; RESTORE STACK
 HBX_BC_SP	.EQU	$ - 2		; ... TO ORIGINAL VALUE
+#IF (INTMODE > 0)
+	POP	AF
+	JP	PO,$+4
+	EI
+#ENDIF
 	RET
 ;
 HBX_BC_ITER:
@@ -2221,17 +2231,7 @@ SYS_BNKCPY:
 	LD	HL,(HB_CPYLEN)		; HL := COPY LEN (SAVED IN SETCPY)
 	EX	(SP),HL			; RESTORE HL & SET (SP) TO COPY LEN
 	POP	BC			; BC := COPY LEN
-#IF (INTMODE > 0)
-	LD	A,I
-	DI
-	PUSH	AF
-#ENDIF
 	CALL	HB_BNKCPY
-#IF (INTMODE > 0)
-	POP	AF
-	JP	PO,$+4
-	EI
-#ENDIF
 	XOR	A
 	RET
 ;
