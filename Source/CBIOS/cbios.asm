@@ -50,7 +50,7 @@ DEF_IOBYTE	.EQU	%10010100	; DEFAULT IOBYTE VALUE
 DEV_BAT		.EQU	$FE		; BAT:
 DEV_NUL		.EQU	$FF		; NUL:
 ;
-#INCLUDE "../HBIOS/ver.inc"
+#INCLUDE "../ver.inc"
 ;
 #INCLUDE "config.asm"
 ;

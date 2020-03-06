@@ -25,7 +25,7 @@
 ;
 ;===============================================================================
 ;
-#INCLUDE "../HBIOS/ver.inc"
+#INCLUDE "../ver.inc"
 ;
 SYS_ENT		.EQU	$0100		; SYSTEM (OS) ENTRY POINT ADDRESS
 SYS_LOC		.EQU	$0100		; STARTING ADDRESS TO LOAD SYSTEM IMAGE
