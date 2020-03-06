@@ -14,7 +14,9 @@ OBJECTS += RCZ80_wiz.rom RCZ80_wiz.com
 OBJECTS += SBC_simh.rom SBC_simh.com
 OBJECTS += SBC_std.rom SBC_std.com 
 OBJECTS += SCZ180_126.rom SCZ180_126.com
+OBJECTS += SCZ180_126_mtx.rom SCZ180_126_mtx.com
 OBJECTS += SCZ180_130.rom SCZ180_130.com
+OBJECTS += SCZ180_130_mtx.rom SCZ180_130_mtx.com
 OBJECTS += UNA_std.rom
 OBJECTS += ZETA_std.rom ZETA_std.com
 OBJECTS += ZETA2_std.rom ZETA2_std.com
@@ -45,7 +47,7 @@ ROMSIZE=512
 N8_std.rom: ROMSIZE=512
 
 %.rom:
-	bash Build.sh $(DIFFBUILD) $(shell echo $* | tr '_' ' ') $(ROMSIZE)
+	bash Build.sh $(DIFFBUILD) $(shell echo $* | sed 's/_/ /') $(ROMSIZE)
 
 #ZETA2_std.rom:
 #	bash Build.sh ZETA2 std 512

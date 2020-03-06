@@ -50,6 +50,7 @@ Version 2.9.2
 - PMS: Added CP/M 3 manuals
 - WBW: Boot from any slice
 - C?M: Added Unix build process
+- PLS: FreeRTOS compatibility
 
 Version 2.9.1
 -------------
