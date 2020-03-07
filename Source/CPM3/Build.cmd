@@ -9,7 +9,8 @@ set TASMTABS=%TOOLS%\tasm32
 
 set ZXBINDIR=%TOOLS%/cpm/bin/
 set ZXLIBDIR=%TOOLS%/cpm/lib/
-set ZXINCDIR=%TOOLS%/cpm/include/
+rem set ZXINCDIR=%TOOLS%/cpm/include/
+set ZXINCDIR=../
 
 echo.
 echo.

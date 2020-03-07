@@ -25,7 +25,7 @@
 ;
 ;===============================================================================
 ;
-#INCLUDE "ver.inc"
+#INCLUDE "../ver.inc"
 ;
 SYS_ENT		.EQU	$E600		; SYSTEM (OS) ENTRY POINT ADDRESS
 SYS_LOC		.EQU	$D000		; STARTING ADDRESS TO LOAD SYSTEM IMAGE

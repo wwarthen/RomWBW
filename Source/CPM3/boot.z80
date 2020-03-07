@@ -16,7 +16,7 @@
 	extrn	addhla, bcd2bin, bin2bcd
 	;extrn	cout, phex8
 	
-	include	ver.inc
+	include	c:ver.lib
 	
 bdos	equ 5
 

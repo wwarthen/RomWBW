@@ -18,7 +18,7 @@
 ;
 ; INCLUDE VERSION
 ;
-#INCLUDE "ver.inc"			; ADD BIOSVER
+#INCLUDE "../ver.inc"			; ADD BIOSVER
 ;
 FALSE		.EQU 	0
 TRUE		.EQU 	~FALSE
