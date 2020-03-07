@@ -21,7 +21,7 @@
 ;
 ;==================================================================================
 ; SBC V2 BOOTROM VERSION
-; 
+;
 ; 20181027 - Initial retrobrewcomputer SBC V2 version - difficultylevelhigh@gmail.com
 ; 20191012 - Add PLAY command for SBC-V2-004 Sound support.
 ; 20191013 - Add option for long error messages.
@@ -38,8 +38,8 @@ VT100	.EQU	TRUE	; Use VT100 escape codes for CLS
 VDULINS	.EQU	25
 VDUCOLS	.EQU	80
 VDUSIZE	.EQU	(VDULINS*VDUCOLS)
-VDUREG	.EQU	0F2H	; ECB-VDU 
-VDUSTS	.EQU	0F2H	; 
+VDUREG	.EQU	0F2H	; ECB-VDU
+VDUSTS	.EQU	0F2H	;
 VDUDTA	.EQU	0F3H	; PORT
 VDURWR	.EQU	0F1H	; REGISTER
 VDURRD	.EQU	0F0H	; ADDRESSES
@@ -161,7 +161,7 @@ BN	.EQU    28H		; BIN error
 ;
 COLD:	JP	STARTB		; Jump for cold start
 WARM:   JP	WARMST		; Jump for warm start
-STARTB: 
+STARTB:
 	LD	IX,0		; Flag cold start
 	JP	CSTART		; Jump to initialise
 ;
@@ -197,7 +197,7 @@ MSIZE:  LD	HL,MEMMSG	; Point to message
 MLOOP:  INC	HL		; Next byte
 ;	LD	A,H		; Above address FFFF ?
 ;	OR	L
-	LD	A,H		; Memory top set below HBIOS Proxy @ FE00 
+	LD	A,H		; Memory top set below HBIOS Proxy @ FE00
 	CP	$FD
 	JP	Z,SETTOP	; Yes - 64K RAM
 	LD	A,(HL)		; Get contents
@@ -523,7 +523,7 @@ ERRORS: .BYTE   "NEXT without FOR",0
 #ENDIF
 ;
 ; INITIALISATION TABLE -------------------------------------------------------
-;	
+;
 INITAB: JP	WARMST		; Warm start jump
 	JP	FCERR		; "USR (X)" jump (Set to Error)
 	OUT	(0),A		; "OUT p,n" skeleton
@@ -567,7 +567,7 @@ INITAB: JP	WARMST		; Warm start jump
 	.WORD   STLOOK		; Temp string space
 	.WORD   -2		; Current line number (cold)
 	.WORD   PROGST+1	; Start of program text
-INITBE:		
+INITBE:
 ;
 ; END OF INITIALISATION TABLE ---------------------------------------------------
 ;
@@ -668,7 +668,7 @@ ERROR:  CALL    CLREG		; Clear registers and stack
 	LD	B,E		; the error list
 	SRL	B		; until we get
 	JR	Z,CHRZRO	; error message
-NXCHR:	LD	A,(HL)		; 
+NXCHR:	LD	A,(HL)		;
 	OR	A		; E/2 = entry
 	INC	HL		; number in the
 	JR	NZ,NXCHR	; list.
@@ -788,28 +788,28 @@ FNDEND: CP	(HL)		; Found end of line?
 
 SRCHLN: LD	HL,(BASTXT)	; Start of program text
 SRCHLP: LD	B,H		; BC = Address to look at
-	LD	C,L	
+	LD	C,L
 	LD	A,(HL)		; Get address of next line
-	INC	HL	
+	INC	HL
 	OR	(HL)		; End of program found?
-	DEC	HL	
+	DEC	HL
 	RET	Z		; Yes - Line not found
-	INC	HL	
-	INC	HL	
+	INC	HL
+	INC	HL
 	LD	A,(HL)		; Get LSB of line number
-	INC	HL	
+	INC	HL
 	LD	H,(HL)		; Get MSB of line number
-	LD	L,A	
+	LD	L,A
 	CALL    CPDEHL		; Compare with line in DE
 	LD	H,B		; HL = Start of this line
-	LD	L,C	
+	LD	L,C
 	LD	A,(HL)		; Get LSB of next line address
-	INC	HL	
+	INC	HL
 	LD	H,(HL)		; Get MSB of next line address
 	LD	L,A		; Next line to HL
-	CCF	
+	CCF
 	RET	Z		; Lines found - Exit
-	CCF	
+	CCF
 	RET	NC		; Line not found,at line after
 	JP	SRCHLP		; Keep looking
 
@@ -1242,7 +1242,7 @@ FORFND: EX	DE,HL		; Code string address to HL
 	CALL    TSTSGN		; Test sign of FPREG
 	POP	HL		; Restore code string address
 SAVSTP: PUSH    BC		; Save the STEP value in block
-	PUSH    DE	
+	PUSH    DE
 	PUSH    AF		; Save sign of STEP
 	INC	SP		; Don't save flags
 	PUSH    HL		; Save code string address
@@ -1321,7 +1321,7 @@ UPDATA: LD	(NXTDAT),HL	; Update DATA pointer
 
 ;	GET CONSOLE INPUT STATUS VIA HBIOS
 
-TSTBRK: 
+TSTBRK:
 	PUSH	BC		; SAVE INCOMING REGISTERS (AF IS OUTPUT)
 	PUSH	DE
 	PUSH	HL
@@ -1345,11 +1345,11 @@ TSTBRK:
 	RST	08		; HBIOS READS CHARACTDR
 	LD	A,E		; MOVE CHARACTER TO A FOR RETURN
 ;
-	
+
 	POP	HL		; RESTORE REGISTERS (AF IS OUTPUT)
 	POP	DE
 	POP	BC
- 
+
 	CP	ESC		; Escape key?
 	JR	Z,BRK		; Yes, break
 	CP	CTRLC		; <Ctrl-C>
@@ -1368,16 +1368,16 @@ STALL:  			; Wait for key
 	LD	B,BF_CIOIN	; HBIOS FUNC: INPUT CHAR
 	RST	08		; HBIOS READS CHARACTDR
 	LD	A,E		; MOVE CHARACTER TO A FOR RETURN
-;	
+;
 	POP	HL		; RESTORE REGISTERS (AF IS OUTPUT)
 	POP	DE
-	POP	BC	
+	POP	BC
 	CP	CTRLQ		; Resume scrolling?
 	RET	Z		; Release the chokehold
 	CP	CTRLC		; Second break?
 	JR	Z,STOP		; Break during hold exits prog
 	JR	STALL		; Loop until <Ctrl-Q> or <brk>
-	
+
 BRK	LD	A,$FF		; Set BRKFLG
 	LD	(BRKFLG),A	; Store it
 
@@ -1464,7 +1464,7 @@ GTLNLP: CALL    GETCHR		; Get next character
 	CALL    CPDEHL		; Number in range?
 	JP	C,SNERR		; No - ?SN Error
 	LD	H,D		; HL = Number
-	LD	L,E	
+	LD	L,E
 	ADD	HL,DE		; Times 2
 	ADD	HL,HL		; Times 4
 	ADD	HL,DE		; Times 5
@@ -1571,9 +1571,9 @@ NXTDTA: POP	HL		; Restore code string address
 
 DATA:   .BYTE	01H,3AH		; ':' End of statement
 REM:    LD	C,0		; 00  End of statement
-	LD	B,0	
+	LD	B,0
 NXTSTL: LD	A,C		; Statement and byte
-	LD	C,B	
+	LD	C,B
 	LD	B,A		; Statement end byte
 NXTSTT: LD	A,(HL)		; Get byte
 	OR	A		; End of line?
@@ -1663,7 +1663,7 @@ IFGO:   CALL    TSTNUM		; Make sure it's numeric
 	CALL    GETCHR		; Get next character
 	JP	C,GOTO		; Number - GOTO that line
 	JP	IFJMP		; Otherwise do statement
-	
+
 MRPRNT: DEC	HL		; DEC 'cos GETCHR INCs
 	CALL    GETCHR		; Get next character
 PRINT:  JP	Z,PRNTCRLF	; CRLF if just PRINT
@@ -1849,7 +1849,7 @@ STRENT: CALL    DTSTR		; Get string terminated by D
 	EX	(SP),HL		; Save HL , get input pointer
 	PUSH    DE		; Save address of string
 	JP	LETSTR		; Assign string to variable
-	
+
 INPBIN: CALL    GETCHR		; Get next character
 	CALL    ASCTFP		; Convert ASCII to FP number
 	EX	(SP),HL		; Save input ptr, Get var addr
@@ -1948,9 +1948,9 @@ CHKTYP: LD	A,(TYPE)	; Check types match
 	OR	A		; Clear carry , set parity
 	RET	PE		; Even parity - Types match
 	JP	TMERR		; Different types - Error
-	
+
 OPNPAR: CALL    CHKSYN		; Make sure "(" follows
-	.BYTE   "("	
+	.BYTE   "("
 EVAL:   DEC	HL		; Evaluate expression & save
 	LD	D,0		; Precedence value
 EVAL1:  PUSH    DE		; Save precedence
@@ -2038,7 +2038,7 @@ OPRND:  XOR	A		; Get operand routine
 	CP	'B'		; Binary number indicated? [function added]
 	JP	Z,BINTFP	; Convert Bin to FPREG
 	LD	E,SN		; If neither then a ?SN Error
-	JP	Z,ERROR		; 
+	JP	Z,ERROR		;
 NOTAMP: CP	ZPLUS		; '+' Token ?
 	JP	Z,OPRND		; Yes - Look for operand
 	CP	'.'		; '.' ?
@@ -2149,7 +2149,7 @@ PAND:   XOR	A		; Flag "AND"
 	LD	A,B		; Get MBS
 	AND	D		; "AND" MSBs
 	JP	(HL)		; Save AC as current (ACPASS)
-	
+
 POR1:   OR	E		; "OR" LSBs
 	LD	C,A		; Save LSB
 	LD	A,B		; Get MSB
@@ -2201,11 +2201,11 @@ CMPSTR: LD	A,E		; Bytes of string 2 to do
 	OR	D		; Bytes of string 1 to do
 	RET	Z		; Exit if all bytes compared
 	LD	A,D		; Get bytes of string 1 to do
-	SUB	1	
+	SUB	1
 	RET	C		; Exit if end of string 1
-	XOR	A	
+	XOR	A
 	CP	E		; Bytes of string 2 to do
-	INC	A	
+	INC	A
 	RET	NC		; Exit if end of string 2
 	DEC	D		; Count bytes in string 1
 	DEC	E		; Count bytes in string 2
@@ -2765,7 +2765,7 @@ ARRLP:  EX	DE,HL
 	CALL    CPDEHL	; All string arrays done?
 	JP	Z,SCNEND	; Yes - Move string if found
 	CALL    LOADFP	; Get array name to BCDE
-	LD	A,E	; Get type of array	
+	LD	A,E	; Get type of array
 	PUSH    HL	; Save address of num of dim'ns
 	ADD	HL,BC	; Start of next array
 	OR	A	; Test type of array
@@ -2811,15 +2811,15 @@ STRADD: LD	A,(HL)	; Get string length
 	LD	L,C
 	RET	NC	; Outside string area - Ignore
 	POP	BC	; Get return , Throw 2 away
-	POP	AF	; 
-	POP	AF	; 
+	POP	AF	;
+	POP	AF	;
 	PUSH    HL	; Save variable pointer
 	PUSH    DE	; Save address of current
 	PUSH    BC	; Put back return address
 	RET	; Go to it
 
 SCNEND: POP	DE	; Addresses of strings
-	POP	HL	; 
+	POP	HL	;
 	LD	A,L	; HL = 0 if no more to do
 	OR	H
 	RET	Z	; No more to do - Return
@@ -2850,7 +2850,7 @@ SCNEND: POP	DE	; Addresses of strings
 	JP	GARBLP	; Look for more strings
 
 CONCAT: PUSH    BC	; Save prec' opr & code string
-	PUSH    HL	; 
+	PUSH    HL	;
 	LD	HL,(FPREG)	; Get first string
 	EX	(SP),HL	; Save first string
 	CALL    OPRND	; Get second string
@@ -3360,7 +3360,7 @@ FPMULT: CALL    TSTSGN	; Test sign of FPREG
 	PUSH    HL	; Save for return
 	LD	HL,MULT8	; Address of 8 bit multiply
 	PUSH    HL	; Save for NMSB,MSB
-	PUSH    HL	; 
+	PUSH    HL	;
 	LD	HL,FPREG	; Point to number
 MULT8:  LD	A,(HL)	; Get LSB of number
 	INC	HL	; Point to NMSB
@@ -3552,392 +3552,392 @@ INVSGN: LD	HL,FPREG+2	; Point to MSB
 	LD	(HL),A	; Re-save sign of mantissa
 	RET
 
-STAKFP: EX	DE,HL	; Save code string address
+STAKFP: EX	DE,HL		; Save code string address
 	LD	HL,(FPREG)	; LSB,NLSB of FPREG
-	EX	(SP),HL	; Stack them,get return
-	PUSH    HL	; Re-save return
+	EX	(SP),HL		; Stack them,get return
+	PUSH    HL		; Re-save return
 	LD	HL,(FPREG+2)    ; MSB and exponent of FPREG
-	EX	(SP),HL	; Stack them,get return
-	PUSH    HL	; Re-save return
-	EX	DE,HL	; Restore code string address
+	EX	(SP),HL		; Stack them,get return
+	PUSH    HL		; Re-save return
+	EX	DE,HL		; Restore code string address
 	RET
 
-PHLTFP: CALL    LOADFP	; Number at HL to BCDE
-FPBCDE: EX	DE,HL	; Save code string address
+PHLTFP: CALL    LOADFP		; Number at HL to BCDE
+FPBCDE: EX	DE,HL		; Save code string address
 	LD	(FPREG),HL	; Save LSB,NLSB of number
-	LD	H,B	; Exponent of number
-	LD	L,C	; MSB of number
+	LD	H,B		; Exponent of number
+	LD	L,C		; MSB of number
 	LD	(FPREG+2),HL    ; Save MSB and exponent
-	EX	DE,HL	; Restore code string address
+	EX	DE,HL		; Restore code string address
 	RET
 
 BCDEFP: LD	HL,FPREG	; Point to FPREG
-LOADFP: LD	E,(HL)	; Get LSB of number
-	INC	HL
-	LD	D,(HL)	; Get NMSB of number
-	INC	HL
-	LD	C,(HL)	; Get MSB of number
-	INC	HL
-	LD	B,(HL)	; Get exponent of number
-INCHL:  INC	HL	; Used for conditional "INC HL"
+LOADFP: LD	E,(HL)		; Get LSB of number
+	INC	HL	
+	LD	D,(HL)		; Get NMSB of number
+	INC	HL	
+	LD	C,(HL)		; Get MSB of number
+	INC	HL	
+	LD	B,(HL)		; Get exponent of number
+INCHL:  INC	HL		; Used for conditional "INC HL"
 	RET
 
 FPTHL:  LD	DE,FPREG	; Point to FPREG
-DETHL4: LD	B,4	; 4 bytes to move
-DETHLB: LD	A,(DE)	; Get source
-	LD	(HL),A	; Save destination
-	INC	DE	; Next source
-	INC	HL	; Next destination
-	DEC	B	; Count bytes
+DETHL4: LD	B,4		; 4 bytes to move
+DETHLB: LD	A,(DE)		; Get source
+	LD	(HL),A		; Save destination
+	INC	DE		; Next source
+	INC	HL		; Next destination
+	DEC	B		; Count bytes
 	JP	NZ,DETHLB	; Loop if more
 	RET
 
 SIGNS:  LD	HL,FPREG+2	; Point to MSB of FPREG
-	LD	A,(HL)	; Get MSB
-	RLCA	; Old sign to carry
-	SCF	; Set MSBit
-	RRA	; Set MSBit of MSB
-	LD	(HL),A	; Save new MSB
-	CCF	; Complement sign
-	RRA	; Old sign to carry
+	LD	A,(HL)		; Get MSB
+	RLCA			; Old sign to carry
+	SCF			; Set MSBit
+	RRA			; Set MSBit of MSB
+	LD	(HL),A		; Save new MSB
+	CCF			; Complement sign
+	RRA			; Old sign to carry
 	INC	HL
 	INC	HL
-	LD	(HL),A	; Set sign of result
-	LD	A,C	; Get MSB
-	RLCA	; Old sign to carry
-	SCF	; Set MSBit
-	RRA	; Set MSBit of MSB
-	LD	C,A	; Save MSB
+	LD	(HL),A		; Set sign of result
+	LD	A,C		; Get MSB
+	RLCA				; Old sign to carry
+	SCF			; Set MSBit
+	RRA			; Set MSBit of MSB
+	LD	C,A		; Save MSB
 	RRA
-	XOR	(HL)	; New sign of result
+	XOR	(HL)		; New sign of result
 	RET
 
-CMPNUM: LD	A,B	; Get exponent of number
+CMPNUM: LD	A,B		; Get exponent of number
 	OR	A
 	JP	Z,TSTSGN	; Zero - Test sign of FPREG
 	LD	HL,RETREL	; Return relation routine
-	PUSH    HL	; Save for return
-	CALL    TSTSGN	; Test sign of FPREG
-	LD	A,C	; Get MSB of number
-	RET	Z	; FPREG zero - Number's MSB
+	PUSH    HL		; Save for return
+	CALL    TSTSGN		; Test sign of FPREG
+	LD	A,C		; Get MSB of number
+	RET	Z		; FPREG zero - Number's MSB
 	LD	HL,FPREG+2	; MSB of FPREG
-	XOR	(HL)	; Combine signs
-	LD	A,C	; Get MSB of number
-	RET	M	; Exit if signs different
-	CALL    CMPFP	; Compare FP numbers
-	RRA	; Get carry to sign
-	XOR	C	; Combine with MSB of number
+	XOR	(HL)		; Combine signs
+	LD	A,C		; Get MSB of number
+	RET	M		; Exit if signs different
+	CALL    CMPFP		; Compare FP numbers
+	RRA			; Get carry to sign
+	XOR	C		; Combine with MSB of number
 	RET
 
-CMPFP:  INC	HL	; Point to exponent
-	LD	A,B	; Get exponent
-	CP	(HL)	; Compare exponents
-	RET	NZ	; Different
-	DEC	HL	; Point to MBS
-	LD	A,C	; Get MSB
-	CP	(HL)	; Compare MSBs
-	RET	NZ	; Different
-	DEC	HL	; Point to NMSB
-	LD	A,D	; Get NMSB
-	CP	(HL)	; Compare NMSBs
-	RET	NZ	; Different
-	DEC	HL	; Point to LSB
-	LD	A,E	; Get LSB
-	SUB	(HL)	; Compare LSBs
-	RET	NZ	; Different
-	POP	HL	; Drop RETurn
-	POP	HL	; Drop another RETurn
+CMPFP:  INC	HL		; Point to exponent
+	LD	A,B		; Get exponent
+	CP	(HL)		; Compare exponents
+	RET	NZ		; Different
+	DEC	HL		; Point to MBS
+	LD	A,C		; Get MSB
+	CP	(HL)		; Compare MSBs
+	RET	NZ		; Different
+	DEC	HL		; Point to NMSB
+	LD	A,D		; Get NMSB
+	CP	(HL)		; Compare NMSBs
+	RET	NZ		; Different
+	DEC	HL		; Point to LSB
+	LD	A,E		; Get LSB
+	SUB	(HL)		; Compare LSBs
+	RET	NZ		; Different
+	POP	HL		; Drop RETurn
+	POP	HL		; Drop another RETurn
 	RET
 
-FPINT:  LD	B,A	; <- Move
-	LD	C,A	; <- exponent
-	LD	D,A	; <- to all
-	LD	E,A	; <- bits
-	OR	A	; Test exponent
-	RET	Z	; Zero - Return zero
-	PUSH    HL	; Save pointer to number
-	CALL    BCDEFP	; Move FPREG to BCDE
-	CALL    SIGNS	; Set MSBs & sign of result
-	XOR	(HL)	; Combine with sign of FPREG
-	LD	H,A	; Save combined signs
+FPINT:  LD	B,A		; <- Move
+	LD	C,A		; <- exponent
+	LD	D,A		; <- to all
+	LD	E,A		; <- bits
+	OR	A		; Test exponent
+	RET	Z		; Zero - Return zero
+	PUSH    HL		; Save pointer to number
+	CALL    BCDEFP		; Move FPREG to BCDE
+	CALL    SIGNS		; Set MSBs & sign of result
+	XOR	(HL)		; Combine with sign of FPREG
+	LD	H,A		; Save combined signs
 	CALL    M,DCBCDE	; Negative - Decrement BCDE
 	LD	A,80H+24	; 24 bits
-	SUB	B	; Bits to shift
-	CALL    SCALE	; Shift BCDE
-	LD	A,H	; Get combined sign
-	RLA	; Sign to carry
+	SUB	B		; Bits to shift
+	CALL    SCALE		; Shift BCDE
+	LD	A,H		; Get combined sign
+	RLA			; Sign to carry
 	CALL    C,FPROND	; Negative - Round number up
-	LD	B,0	; Zero exponent
-	CALL    C,COMPL	; If negative make positive
-	POP	HL	; Restore pointer to number
-	RET
-
-DCBCDE: DEC	DE	; Decrement BCDE
-	LD	A,D	; Test LSBs
-	AND	E
-	INC	A
-	RET	NZ	; Exit if LSBs not FFFF
-	DEC	BC	; Decrement MSBs
+	LD	B,0		; Zero exponent
+	CALL    C,COMPL		; If negative make positive
+	POP	HL		; Restore pointer to number
+	RET	
+	
+DCBCDE: DEC	DE		; Decrement BCDE
+	LD	A,D		; Test LSBs
+	AND	E	
+	INC	A	
+	RET	NZ		; Exit if LSBs not FFFF
+	DEC	BC		; Decrement MSBs
 	RET
 
 INT:    LD	HL,FPEXP	; Point to exponent
-	LD	A,(HL)	; Get exponent
-	CP	80H+24	; Integer accuracy only?
+	LD	A,(HL)		; Get exponent
+	CP	80H+24		; Integer accuracy only?
 	LD	A,(FPREG)	; Get LSB
-	RET	NC	; Yes - Already integer
-	LD	A,(HL)	; Get exponent
-	CALL    FPINT	; F.P to integer
+	RET	NC		; Yes - Already integer
+	LD	A,(HL)		; Get exponent
+	CALL    FPINT		; F.P to integer
 	LD	(HL),80H+24	; Save 24 bit integer
-	LD	A,E	; Get LSB of number
-	PUSH    AF	; Save LSB
-	LD	A,C	; Get MSB of number
+	LD	A,E		; Get LSB of number
+	PUSH    AF		; Save LSB
+	LD	A,C		; Get MSB of number
 	RLA	; Sign to carry
-	CALL    CONPOS	; Set sign of result
-	POP	AF	; Restore LSB of number
-	RET
-
-MLDEBC: LD	HL,0	; Clear partial product
-	LD	A,B	; Test multiplier
-	OR	C
-	RET	Z	; Return zero if zero
-	LD	A,16	; 16 bits
-MLDBLP: ADD	HL,HL	; Shift P.P left
-	JP	C,BSERR	; ?BS Error if overflow
+	CALL    CONPOS		; Set sign of result
+	POP	AF		; Restore LSB of number
+	RET	
+	
+MLDEBC: LD	HL,0		; Clear partial product
+	LD	A,B		; Test multiplier
+	OR	C	
+	RET	Z		; Return zero if zero
+	LD	A,16		; 16 bits
+MLDBLP: ADD	HL,HL		; Shift P.P left
+	JP	C,BSERR		; ?BS Error if overflow
 	EX	DE,HL
-	ADD	HL,HL	; Shift multiplier left
+	ADD	HL,HL		; Shift multiplier left
 	EX	DE,HL
 	JP	NC,NOMLAD	; Bit was zero - No add
-	ADD	HL,BC	; Add multiplicand
-	JP	C,BSERR	; ?BS Error if overflow
-NOMLAD: DEC	A	; Count bits
+	ADD	HL,BC		; Add multiplicand
+	JP	C,BSERR		; ?BS Error if overflow
+NOMLAD: DEC	A		; Count bits
 	JP	NZ,MLDBLP	; More
 	RET
 
-ASCTFP: CP	'-'	; Negative?
-	PUSH    AF	; Save it and flags
+ASCTFP: CP	'-'		; Negative?
+	PUSH    AF		; Save it and flags
 	JP	Z,CNVNUM	; Yes - Convert number
-	CP	'+'	; Positive?
+	CP	'+'		; Positive?
 	JP	Z,CNVNUM	; Yes - Convert number
-	DEC	HL	; DEC 'cos GETCHR INCs
-CNVNUM: CALL    RESZER	; Set result to zero
-	LD	B,A	; Digits after point counter
-	LD	D,A	; Sign of exponent
-	LD	E,A	; Exponent of ten
-	CPL
-	LD	C,A	; Before or after point flag
-MANLP:  CALL    GETCHR	; Get next character
-	JP	C,ADDIG	; Digit - Add to number
+	DEC	HL		; DEC 'cos GETCHR INCs
+CNVNUM: CALL    RESZER		; Set result to zero
+	LD	B,A		; Digits after point counter
+	LD	D,A		; Sign of exponent
+	LD	E,A		; Exponent of ten
+	CPL	
+	LD	C,A		; Before or after point flag
+MANLP:  CALL    GETCHR		; Get next character
+	JP	C,ADDIG		; Digit - Add to number
 	CP	'.'
 	JP	Z,DPOINT	; '.' - Flag point
 	CP	'E'
 	JP	NZ,CONEXP	; Not 'E' - Scale number
-	CALL    GETCHR	; Get next character
-	CALL    SGNEXP	; Get sign of exponent
-EXPLP:  CALL    GETCHR	; Get next character
+	CALL    GETCHR		; Get next character
+	CALL    SGNEXP		; Get sign of exponent
+EXPLP:  CALL    GETCHR		; Get next character
 	JP	C,EDIGIT	; Digit - Add to exponent
-	INC	D	; Is sign negative?
+	INC	D		; Is sign negative?
 	JP	NZ,CONEXP	; No - Scale number
 	XOR	A
-	SUB	E	; Negate exponent
-	LD	E,A	; And re-save it
-	INC	C	; Flag end of number
-DPOINT: INC	C	; Flag point passed
-	JP	Z,MANLP	; Zero - Get another digit
-CONEXP: PUSH    HL	; Save code string address
-	LD	A,E	; Get exponent
-	SUB	B	; Subtract digits after point
+	SUB	E		; Negate exponent
+	LD	E,A		; And re-save it
+	INC	C		; Flag end of number
+DPOINT: INC	C		; Flag point passed
+	JP	Z,MANLP		; Zero - Get another digit
+CONEXP: PUSH    HL		; Save code string address
+	LD	A,E		; Get exponent
+	SUB	B		; Subtract digits after point
 SCALMI: CALL    P,SCALPL	; Positive - Multiply number
 	JP	P,ENDCON	; Positive - All done
-	PUSH    AF	; Save number of times to /10
-	CALL    DIV10	; Divide by 10
-	POP	AF	; Restore count
-	INC	A	; Count divides
+	PUSH    AF		; Save number of times to /10
+	CALL    DIV10		; Divide by 10
+	POP	AF		; Restore count
+	INC	A		; Count divides
 
 ENDCON: JP	NZ,SCALMI	; More to do
-	POP	DE	; Restore code string address
-	POP	AF	; Restore sign of number
+	POP	DE		; Restore code string address
+	POP	AF		; Restore sign of number
 	CALL    Z,INVSGN	; Negative - Negate number
-	EX	DE,HL	; Code string address to HL
+	EX	DE,HL		; Code string address to HL
 	RET
 
-SCALPL: RET	Z	; Exit if no scaling needed
-MULTEN: PUSH    AF	; Save count
-	CALL    MLSP10	; Multiply number by 10
-	POP	AF	; Restore count
-	DEC	A	; Count multiplies
+SCALPL: RET	Z		; Exit if no scaling needed
+MULTEN: PUSH    AF		; Save count
+	CALL    MLSP10		; Multiply number by 10
+	POP	AF		; Restore count
+	DEC	A		; Count multiplies
 	RET
 
-ADDIG:  PUSH    DE	; Save sign of exponent
-	LD	D,A	; Save digit
-	LD	A,B	; Get digits after point
-	ADC	A,C	; Add one if after point
-	LD	B,A	; Re-save counter
-	PUSH    BC	; Save point flags
-	PUSH    HL	; Save code string address
-	PUSH    DE	; Save digit
-	CALL    MLSP10	; Multiply number by 10
-	POP	AF	; Restore digit
-	SUB	'0'	; Make it absolute
-	CALL    RSCALE	; Re-scale number
-	POP	HL	; Restore code string address
-	POP	BC	; Restore point flags
-	POP	DE	; Restore sign of exponent
-	JP	MANLP	; Get another digit
+ADDIG:  PUSH    DE		; Save sign of exponent
+	LD	D,A		; Save digit
+	LD	A,B		; Get digits after point
+	ADC	A,C		; Add one if after point
+	LD	B,A		; Re-save counter
+	PUSH    BC		; Save point flags
+	PUSH    HL		; Save code string address
+	PUSH    DE		; Save digit
+	CALL    MLSP10		; Multiply number by 10
+	POP	AF		; Restore digit
+	SUB	'0'		; Make it absolute
+	CALL    RSCALE		; Re-scale number
+	POP	HL		; Restore code string address
+	POP	BC		; Restore point flags
+	POP	DE		; Restore sign of exponent
+	JP	MANLP		; Get another digit
+	
+RSCALE: CALL    STAKFP		; Put number on stack
+	CALL    FLGREL		; Digit to add to FPREG
+PADD:   POP	BC		; Restore number
+	POP	DE	
+	JP	FPADD		; Add BCDE to FPREG and return
 
-RSCALE: CALL    STAKFP	; Put number on stack
-	CALL    FLGREL	; Digit to add to FPREG
-PADD:   POP	BC	; Restore number
-	POP	DE
-	JP	FPADD	; Add BCDE to FPREG and return
-
-EDIGIT: LD	A,E	; Get digit
-	RLCA	; Times 2
-	RLCA	; Times 4
-	ADD	A,E	; Times 5
+EDIGIT: LD	A,E		; Get digit
+	RLCA			; Times 2
+	RLCA			; Times 4
+	ADD	A,E		; Times 5
 	RLCA	; Times 10
-	ADD	A,(HL)	; Add next digit
-	SUB	'0'	; Make it absolute
-	LD	E,A	; Save new digit
-	JP	EXPLP	; Look for another digit
+	ADD	A,(HL)		; Add next digit
+	SUB	'0'		; Make it absolute
+	LD	E,A		; Save new digit
+	JP	EXPLP		; Look for another digit
 
-LINEIN: PUSH    HL	; Save code string address
+LINEIN: PUSH    HL		; Save code string address
 	LD	HL,INMSG	; Output " in "
-	CALL    PRS	; Output string at HL
-	POP	HL	; Restore code string address
-PRNTHL: EX	DE,HL	; Code string address to DE
+	CALL    PRS		; Output string at HL
+	POP	HL		; Restore code string address
+PRNTHL: EX	DE,HL		; Code string address to DE
 	XOR	A
 	LD	B,80H+24	; 24 bits
-	CALL    RETINT	; Return the integer
+	CALL    RETINT		; Return the integer
 	LD	HL,PRNUMS	; Print number string
-	PUSH    HL	; Save for return
+	PUSH    HL		; Save for return
 NUMASC: LD	HL,PBUFF	; Convert number to ASCII
-	PUSH    HL	; Save for return
-	CALL    TSTSGN	; Test sign of FPREG
+	PUSH    HL		; Save for return
+	CALL    TSTSGN		; Test sign of FPREG
 	LD	(HL),' '	; Space at start
 	JP	P,SPCFST	; Positive - Space to start
 	LD	(HL),'-'	; '-' sign at start
-SPCFST: INC	HL	; First byte of number
+SPCFST: INC	HL		; First byte of number
 	LD	(HL),'0'	; '0' if zero
 	JP	Z,JSTZER	; Return '0' if zero
-	PUSH    HL	; Save buffer address
+	PUSH    HL		; Save buffer address
 	CALL    M,INVSGN	; Negate FPREG if negative
-	XOR	A	; Zero A
-	PUSH    AF	; Save it
-	CALL    RNGTST	; Test number is in range
+	XOR	A		; Zero A
+	PUSH    AF		; Save it
+	CALL    RNGTST		; Test number is in range
 SIXDIG: LD	BC,9143H	; BCDE - 99999.9
 	LD	DE,4FF8H
-	CALL    CMPNUM	; Compare numbers
+	CALL    CMPNUM		; Compare numbers
 	OR	A
 	JP	PO,INRNG	; > 99999.9 - Sort it out
-	POP	AF	; Restore count
-	CALL    MULTEN	; Multiply by ten
-	PUSH    AF	; Re-save count
-	JP	SIXDIG	; Test it again
-
-GTSIXD: CALL    DIV10	; Divide by 10
-	POP	AF	; Get count
-	INC	A	; Count divides
-	PUSH    AF	; Re-save count
-	CALL    RNGTST	; Test number is in range
-INRNG:  CALL    ROUND	; Add 0.5 to FPREG
+	POP	AF		; Restore count
+	CALL    MULTEN		; Multiply by ten
+	PUSH    AF		; Re-save count
+	JP	SIXDIG		; Test it again
+	
+GTSIXD: CALL    DIV10		; Divide by 10
+	POP	AF		; Get count
+	INC	A		; Count divides
+	PUSH    AF		; Re-save count
+	CALL    RNGTST		; Test number is in range
+INRNG:  CALL    ROUND		; Add 0.5 to FPREG
 	INC	A
-	CALL    FPINT	; F.P to integer
-	CALL    FPBCDE	; Move BCDE to FPREG
+	CALL    FPINT		; F.P to integer
+	CALL    FPBCDE		; Move BCDE to FPREG
 	LD	BC,0306H	; 1E+06 to 1E-03 range
-	POP	AF	; Restore count
-	ADD	A,C	; 6 digits before point
-	INC	A	; Add one
+	POP	AF		; Restore count
+	ADD	A,C		; 6 digits before point
+	INC	A		; Add one
 	JP	M,MAKNUM	; Do it in 'E' form if < 1E-02
-	CP	6+1+1	; More than 999999 ?
+	CP	6+1+1		; More than 999999 ?
 	JP	NC,MAKNUM	; Yes - Do it in 'E' form
-	INC	A	; Adjust for exponent
-	LD	B,A	; Exponent of number
-	LD	A,2	; Make it zero after
+	INC	A		; Adjust for exponent
+	LD	B,A		; Exponent of number
+	LD	A,2		; Make it zero after
 
-MAKNUM: DEC	A	; Adjust for digits to do
+MAKNUM: DEC	A		; Adjust for digits to do
 	DEC	A
-	POP	HL	; Restore buffer address
-	PUSH    AF	; Save count
+	POP	HL		; Restore buffer address
+	PUSH    AF		; Save count
 	LD	DE,POWERS	; Powers of ten
-	DEC	B	; Count digits before point
+	DEC	B		; Count digits before point
 	JP	NZ,DIGTXT	; Not zero - Do number
 	LD	(HL),'.'	; Save point
-	INC	HL	; Move on
+	INC	HL		; Move on
 	LD	(HL),'0'	; Save zero
-	INC	HL	; Move on
-DIGTXT: DEC	B	; Count digits before point
+	INC	HL		; Move on
+DIGTXT: DEC	B		; Count digits before point
 	LD	(HL),'.'	; Save point in case
-	CALL    Z,INCHL	; Last digit - move on
-	PUSH    BC	; Save digits before point
-	PUSH    HL	; Save buffer address
-	PUSH    DE	; Save powers of ten
-	CALL    BCDEFP	; Move FPREG to BCDE
-	POP	HL	; Powers of ten table
+	CALL    Z,INCHL		; Last digit - move on
+	PUSH    BC		; Save digits before point
+	PUSH    HL		; Save buffer address
+	PUSH    DE		; Save powers of ten
+	CALL    BCDEFP		; Move FPREG to BCDE
+	POP	HL		; Powers of ten table
 	LD	B, '0'-1	; ASCII '0' - 1
-TRYAGN: INC	B	; Count subtractions
-	LD	A,E	; Get LSB
-	SUB	(HL)	; Subtract LSB
-	LD	E,A	; Save LSB
-	INC	HL
-	LD	A,D	; Get NMSB
-	SBC	A,(HL)	; Subtract NMSB
-	LD	D,A	; Save NMSB
-	INC	HL
-	LD	A,C	; Get MSB
-	SBC	A,(HL)	; Subtract MSB
-	LD	C,A	; Save MSB
-	DEC	HL	; Point back to start
+TRYAGN: INC	B		; Count subtractions
+	LD	A,E		; Get LSB
+	SUB	(HL)		; Subtract LSB
+	LD	E,A		; Save LSB
+	INC	HL	
+	LD	A,D		; Get NMSB
+	SBC	A,(HL)		; Subtract NMSB
+	LD	D,A		; Save NMSB
+	INC	HL	
+	LD	A,C		; Get MSB
+	SBC	A,(HL)		; Subtract MSB
+	LD	C,A		; Save MSB
+	DEC	HL		; Point back to start
 	DEC	HL
 	JP	NC,TRYAGN	; No overflow - Try again
-	CALL    PLUCDE	; Restore number
-	INC	HL	; Start of next number
-	CALL    FPBCDE	; Move BCDE to FPREG
-	EX	DE,HL	; Save point in table
-	POP	HL	; Restore buffer address
-	LD	(HL),B	; Save digit in buffer
-	INC	HL	; And move on
-	POP	BC	; Restore digit count
-	DEC	C	; Count digits
+	CALL    PLUCDE		; Restore number
+	INC	HL		; Start of next number
+	CALL    FPBCDE		; Move BCDE to FPREG
+	EX	DE,HL		; Save point in table
+	POP	HL		; Restore buffer address
+	LD	(HL),B		; Save digit in buffer
+	INC	HL		; And move on
+	POP	BC		; Restore digit count
+	DEC	C		; Count digits
 	JP	NZ,DIGTXT	; More - Do them
-	DEC	B	; Any decimal part?
+	DEC	B		; Any decimal part?
 	JP	Z,DOEBIT	; No - Do 'E' bit
-SUPTLZ: DEC	HL	; Move back through buffer
-	LD	A,(HL)	; Get character
-	CP	'0'	; '0' character?
+SUPTLZ: DEC	HL		; Move back through buffer
+	LD	A,(HL)		; Get character
+	CP	'0'		; '0' character?
 	JP	Z,SUPTLZ	; Yes - Look back for more
-	CP	'.'	; A decimal point?
+	CP	'.'		; A decimal point?
 	CALL    NZ,INCHL	; Move back over digit
 
-DOEBIT: POP	AF	; Get 'E' flag
+DOEBIT: POP	AF		; Get 'E' flag
 	JP	Z,NOENED	; No 'E' needed - End buffer
 	LD	(HL),'E'	; Put 'E' in buffer
-	INC	HL	; And move on
+	INC	HL		; And move on
 	LD	(HL),'+'	; Put '+' in buffer
 	JP	P,OUTEXP	; Positive - Output exponent
 	LD	(HL),'-'	; Put '-' in buffer
-	CPL	; Negate exponent
+	CPL			; Negate exponent
 	INC	A
-OUTEXP: LD	B,'0'-1	; ASCII '0' - 1
-EXPTEN: INC	B	; Count subtractions
-	SUB	10	; Tens digit
+OUTEXP: LD	B,'0'-1		; ASCII '0' - 1
+EXPTEN: INC	B		; Count subtractions
+	SUB	10		; Tens digit
 	JP	NC,EXPTEN	; More to do
 	ADD	A,'0'+10	; Restore and make ASCII
-	INC	HL	; Move on
-	LD	(HL),B	; Save MSB of exponent
-JSTZER: INC	HL	;
-	LD	(HL),A	; Save LSB of exponent
+	INC	HL		; Move on
+	LD	(HL),B		; Save MSB of exponent
+JSTZER: INC	HL		;
+	LD	(HL),A		; Save LSB of exponent
 	INC	HL
-NOENED: LD	(HL),C	; Mark end of buffer
-	POP	HL	; Restore code string address
+NOENED: LD	(HL),C		; Mark end of buffer
+	POP	HL		; Restore code string address
 	RET
 
 RNGTST: LD	BC,9474H	; BCDE = 999999.
 	LD	DE,23F7H
-	CALL    CMPNUM	; Compare numbers
+	CALL    CMPNUM		; Compare numbers
 	OR	A
-	POP	HL	; Return address to HL
+	POP	HL		; Return address to HL
 	JP	PO,GTSIXD	; Too big - Divide by ten
-	JP	(HL)	; Otherwise return to caller
+	JP	(HL)		; Otherwise return to caller
 
 HALF:   .BYTE	00H,00H,00H,80H ; 0.5
 
@@ -3948,82 +3948,82 @@ POWERS: .BYTE	0A0H,086H,001H  ; 100000
 	.BYTE	00AH,000H,000H  ;	10
 	.BYTE	001H,000H,000H  ;	1
 
-NEGAFT: LD  HL,INVSGN	; Negate result
-	EX	(SP),HL	; To be done after caller
-	JP	(HL)	; Return to caller
+NEGAFT: LD  HL,INVSGN		; Negate result
+	EX	(SP),HL		; To be done after caller
+	JP	(HL)		; Return to caller
 
-SQR:    CALL    STAKFP	; Put value on stack
-	LD	HL,HALF	; Set power to 1/2
-	CALL    PHLTFP	; Move 1/2 to FPREG
+SQR:    CALL    STAKFP		; Put value on stack
+	LD	HL,HALF		; Set power to 1/2
+	CALL    PHLTFP		; Move 1/2 to FPREG
 
-POWER:  POP	BC	; Get base
+POWER:  POP	BC		; Get base
 	POP	DE
-	CALL    TSTSGN	; Test sign of power
-	LD	A,B	; Get exponent of base
-	JP	Z,EXP	; Make result 1 if zero
+	CALL    TSTSGN		; Test sign of power
+	LD	A,B		; Get exponent of base
+	JP	Z,EXP		; Make result 1 if zero
 	JP	P,POWER1	; Positive base - Ok
-	OR	A	; Zero to negative power?
-	JP	Z,DZERR	; Yes - ?/0 Error
-POWER1: OR	A	; Base zero?
+	OR	A		; Zero to negative power?
+	JP	Z,DZERR		; Yes - ?/0 Error
+POWER1: OR	A		; Base zero?
 	JP	Z,SAVEXP	; Yes - Return zero
-	PUSH    DE	; Save base
+	PUSH    DE		; Save base
 	PUSH    BC
-	LD	A,C	; Get MSB of base
+	LD	A,C		; Get MSB of base
 	OR	01111111B	; Get sign status
-	CALL    BCDEFP	; Move power to BCDE
+	CALL    BCDEFP		; Move power to BCDE
 	JP	P,POWER2	; Positive base - Ok
-	PUSH    DE	; Save power
+	PUSH    DE		; Save power
 	PUSH    BC
-	CALL    INT	; Get integer of power
-	POP	BC	; Restore power
+	CALL    INT		; Get integer of power
+	POP	BC		; Restore power
 	POP	DE
-	PUSH    AF	; MSB of base
-	CALL    CMPNUM	; Power an integer?
-	POP	HL	; Restore MSB of base
-	LD	A,H	; but don't affect flags
+	PUSH    AF		; MSB of base
+	CALL    CMPNUM		; Power an integer?
+	POP	HL		; Restore MSB of base
+	LD	A,H		; but don't affect flags
 	RRA	; Exponent odd or even?
-POWER2: POP	HL	; Restore MSB and exponent
+POWER2: POP	HL		; Restore MSB and exponent
 	LD	(FPREG+2),HL    ; Save base in FPREG
-	POP	HL	; LSBs of base
+	POP	HL		; LSBs of base
 	LD	(FPREG),HL	; Save in FPREG
 	CALL    C,NEGAFT	; Odd power - Negate result
 	CALL    Z,INVSGN	; Negative base - Negate it
-	PUSH    DE	; Save power
+	PUSH    DE		; Save power
 	PUSH    BC
-	CALL    LOG	; Get LOG of base
-	POP	BC	; Restore power
+	CALL    LOG		; Get LOG of base
+	POP	BC		; Restore power
 	POP	DE
-	CALL    FPMULT	; Multiply LOG by power
+	CALL    FPMULT		; Multiply LOG by power
 
-EXP:    CALL    STAKFP	; Put value on stack
+EXP:    CALL    STAKFP		; Put value on stack
 	LD	BC,08138H	; BCDE = 1/Ln(2)
 	LD	DE,0AA3BH
-	CALL    FPMULT	; Multiply value by 1/LN(2)
+	CALL    FPMULT		; Multiply value by 1/LN(2)
 	LD	A,(FPEXP)	; Get exponent
-	CP	80H+8	; Is it in range?
+	CP	80H+8		; Is it in range?
 	JP	NC,OVTST1	; No - Test for overflow
-	CALL    INT	; Get INT of FPREG
-	ADD	A,80H	; For excess 128
-	ADD	A,2	; Exponent > 126?
+	CALL    INT		; Get INT of FPREG
+	ADD	A,80H		; For excess 128
+	ADD	A,2		; Exponent > 126?
 	JP	C,OVTST1	; Yes - Test for overflow
-	PUSH    AF	; Save scaling factor
+	PUSH    AF		; Save scaling factor
 	LD	HL,UNITY	; Point to 1.
-	CALL    ADDPHL	; Add 1 to FPREG
-	CALL    MULLN2	; Multiply by LN(2)
-	POP	AF	; Restore scaling factor
-	POP	BC	; Restore exponent
+	CALL    ADDPHL		; Add 1 to FPREG
+	CALL    MULLN2		; Multiply by LN(2)
+	POP	AF		; Restore scaling factor
+	POP	BC		; Restore exponent
 	POP	DE
-	PUSH    AF	; Save scaling factor
-	CALL    SUBCDE	; Subtract exponent from FPREG
-	CALL    INVSGN	; Negate result
+	PUSH    AF		; Save scaling factor
+	CALL    SUBCDE		; Subtract exponent from FPREG
+	CALL    INVSGN		; Negate result
 	LD	HL,EXPTAB	; Coefficient table
-	CALL    SMSER1	; Sum the series
-	LD	DE,0	; Zero LSBs
-	POP	BC	; Scaling factor
-	LD	C,D	; Zero MSB
-	JP	FPMULT	; Scale result to correct value
+	CALL    SMSER1		; Sum the series
+	LD	DE,0		; Zero LSBs
+	POP	BC		; Scaling factor
+	LD	C,D		; Zero MSB
+	JP	FPMULT		; Scale result to correct value
 
-EXPTAB: .BYTE	8	; Table used by EXP
+EXPTAB: .BYTE	8		; Table used by EXP
 	.BYTE	040H,02EH,094H,074H	; -1/7! (-1/5040)
 	.BYTE	070H,04FH,02EH,077H	;  1/6! ( 1/720)
 	.BYTE	06EH,002H,088H,07AH	; -1/5! (-1/120)
@@ -4033,129 +4033,129 @@ EXPTAB: .BYTE	8	; Table used by EXP
 	.BYTE	000H,000H,080H,081H	; -1/1! (-1/1)
 	.BYTE	000H,000H,000H,081H	;  1/0! ( 1/1)
 
-SUMSER: CALL    STAKFP	; Put FPREG on stack
-	LD	DE,MULT	; Multiply by "X"
-	PUSH    DE	; To be done after
-	PUSH    HL	; Save address of table
-	CALL    BCDEFP	; Move FPREG to BCDE
-	CALL    FPMULT	; Square the value
-	POP	HL	; Restore address of table
-SMSER1: CALL    STAKFP	; Put value on stack
-	LD	A,(HL)	; Get number of coefficients
-	INC	HL	; Point to start of table
-	CALL    PHLTFP	; Move coefficient to FPREG
-	.BYTE	06H	; Skip "POP AF"
-SUMLP:  POP	AF	; Restore count
-	POP	BC	; Restore number
+SUMSER: CALL    STAKFP		; Put FPREG on stack
+	LD	DE,MULT		; Multiply by "X"
+	PUSH    DE		; To be done after
+	PUSH    HL		; Save address of table
+	CALL    BCDEFP		; Move FPREG to BCDE
+	CALL    FPMULT		; Square the value
+	POP	HL		; Restore address of table
+SMSER1: CALL    STAKFP		; Put value on stack
+	LD	A,(HL)		; Get number of coefficients
+	INC	HL		; Point to start of table
+	CALL    PHLTFP		; Move coefficient to FPREG
+	.BYTE	06H		; Skip "POP AF"
+SUMLP:  POP	AF		; Restore count
+	POP	BC		; Restore number
 	POP	DE
-	DEC	A	; Cont coefficients
-	RET	Z	; All done
-	PUSH    DE	; Save number
+	DEC	A		; Cont coefficients
+	RET	Z		; All done
+	PUSH    DE		; Save number
 	PUSH    BC
-	PUSH    AF	; Save count
-	PUSH    HL	; Save address in table
-	CALL    FPMULT	; Multiply FPREG by BCDE
-	POP	HL	; Restore address in table
-	CALL    LOADFP	; Number at HL to BCDE
-	PUSH    HL	; Save address in table
-	CALL    FPADD	; Add coefficient to FPREG
-	POP	HL	; Restore address in table
-	JP	SUMLP	; More coefficients
+	PUSH    AF		; Save count
+	PUSH    HL		; Save address in table
+	CALL    FPMULT		; Multiply FPREG by BCDE
+	POP	HL		; Restore address in table
+	CALL    LOADFP		; Number at HL to BCDE
+	PUSH    HL		; Save address in table
+	CALL    FPADD		; Add coefficient to FPREG
+	POP	HL		; Restore address in table
+	JP	SUMLP		; More coefficients
 
-RND:    CALL    TSTSGN	; Test sign of FPREG
+RND:    CALL    TSTSGN		; Test sign of FPREG
 	LD	HL,SEED+2	; Random number seed
 	JP	M,RESEED	; Negative - Re-seed
 	LD	HL,LSTRND	; Last random number
-	CALL    PHLTFP	; Move last RND to FPREG
+	CALL    PHLTFP		; Move last RND to FPREG
 	LD	HL,SEED+2	; Random number seed
-	RET	Z	; Return if RND(0)
-	ADD	A,(HL)	; Add (SEED)+2)
+	RET	Z		; Return if RND(0)
+	ADD	A,(HL)		; Add (SEED)+2)
 	AND	00000111B	; 0 to 7
 	LD	B,0
-	LD	(HL),A	; Re-save seed
-	INC	HL	; Move to coefficient table
-	ADD	A,A	; 4 bytes
-	ADD	A,A	; per entry
-	LD	C,A	; BC = Offset into table
-	ADD	HL,BC	; Point to coefficient
-	CALL    LOADFP	; Coefficient to BCDE
-	CALL    FPMULT  ;	; Multiply FPREG by coefficient
+	LD	(HL),A		; Re-save seed
+	INC	HL		; Move to coefficient table
+	ADD	A,A		; 4 bytes
+	ADD	A,A		; per entry
+	LD	C,A		; BC = Offset into table
+	ADD	HL,BC		; Point to coefficient
+	CALL    LOADFP		; Coefficient to BCDE
+	CALL    FPMULT  	; Multiply FPREG by coefficient
 	LD	A,(SEED+1)	; Get (SEED+1)
-	INC	A	; Add 1
+	INC	A		; Add 1
 	AND	00000011B	; 0 to 3
 	LD	B,0
-	CP	1	; Is it zero?
-	ADC	A,B	; Yes - Make it 1
+	CP	1		; Is it zero?
+	ADC	A,B		; Yes - Make it 1
 	LD	(SEED+1),A	; Re-save seed
 	LD	HL,RNDTAB-4	; Addition table
-	ADD	A,A	; 4 bytes
-	ADD	A,A	; per entry
-	LD	C,A	; BC = Offset into table
-	ADD	HL,BC	; Point to value
-	CALL    ADDPHL	; Add value to FPREG
-RND1:   CALL    BCDEFP	; Move FPREG to BCDE
-	LD	A,E	; Get LSB
-	LD	E,C	; LSB = MSB
+	ADD	A,A		; 4 bytes
+	ADD	A,A		; per entry
+	LD	C,A		; BC = Offset into table
+	ADD	HL,BC		; Point to value
+	CALL    ADDPHL		; Add value to FPREG
+RND1:   CALL    BCDEFP		; Move FPREG to BCDE
+	LD	A,E		; Get LSB
+	LD	E,C		; LSB = MSB
 	XOR	01001111B	; Fiddle around
-	LD	C,A	; New MSB
+	LD	C,A		; New MSB
 	LD	(HL),80H	; Set exponent
-	DEC	HL	; Point to MSB
-	LD	B,(HL)	; Get MSB
+	DEC	HL		; Point to MSB
+	LD	B,(HL)		; Get MSB
 	LD	(HL),80H	; Make value -0.5
-	LD	HL,SEED	; Random number seed
-	INC	(HL)	; Count seed
-	LD	A,(HL)	; Get seed
-	SUB	171	; Do it modulo 171
-	JP	NZ,RND2	; Non-zero - Ok
-	LD	(HL),A	; Zero seed
-	INC	C	; Fillde about
-	DEC	D	; with the
-	INC	E	; number
-RND2:   CALL    BNORM	; Normalise number
+	LD	HL,SEED		; Random number seed
+	INC	(HL)		; Count seed
+	LD	A,(HL)		; Get seed
+	SUB	171		; Do it modulo 171
+	JP	NZ,RND2		; Non-zero - Ok
+	LD	(HL),A		; Zero seed
+	INC	C		; Fillde about
+	DEC	D		; with the
+	INC	E		; number
+RND2:   CALL    BNORM		; Normalise number
 	LD	HL,LSTRND	; Save random number
-	JP	FPTHL	; Move FPREG to last and return
+	JP	FPTHL		; Move FPREG to last and return
 
-RESEED: LD	(HL),A	; Re-seed random numbers
+RESEED: LD	(HL),A		; Re-seed random numbers
 	DEC	HL
 	LD	(HL),A
 	DEC	HL
 	LD	(HL),A
-	JP	RND1	; Return RND seed
+	JP	RND1		; Return RND seed
 
 RNDTAB: .BYTE   068H,0B1H,046H,068H	; Table used by RND
 	.BYTE   099H,0E9H,092H,069H
 	.BYTE   010H,0D1H,075H,068H
 
 COS:    LD	HL,HALFPI	; Point to PI/2
-	CALL    ADDPHL	; Add it to PPREG
-SIN:    CALL    STAKFP	; Put angle on stack
+	CALL    ADDPHL		; Add it to PPREG
+SIN:    CALL    STAKFP		; Put angle on stack
 	LD	BC,8349H	; BCDE = 2 PI
 	LD	DE,0FDBH
-	CALL    FPBCDE	; Move 2 PI to FPREG
-	POP	BC	; Restore angle
+	CALL    FPBCDE		; Move 2 PI to FPREG
+	POP	BC		; Restore angle
 	POP	DE
-	CALL    DVBCDE	; Divide angle by 2 PI
-	CALL    STAKFP	; Put it on stack
-	CALL    INT	; Get INT of result
-	POP	BC	; Restore number
+	CALL    DVBCDE		; Divide angle by 2 PI
+	CALL    STAKFP		; Put it on stack
+	CALL    INT		; Get INT of result
+	POP	BC		; Restore number
 	POP	DE
-	CALL    SUBCDE	; Make it 0 <= value < 1
+	CALL    SUBCDE		; Make it 0 <= value < 1
 	LD	HL,QUARTR	; Point to 0.25
-	CALL    SUBPHL	; Subtract value from 0.25
-	CALL    TSTSGN	; Test sign of value
-	SCF	; Flag positive
-	JP	P,SIN1	; Positive - Ok
-	CALL    ROUND	; Add 0.5 to value
-	CALL    TSTSGN	; Test sign of value
-	OR	A	; Flag negative
-SIN1:   PUSH    AF	; Save sign
+	CALL    SUBPHL		; Subtract value from 0.25
+	CALL    TSTSGN		; Test sign of value
+	SCF			; Flag positive
+	JP	P,SIN1		; Positive - Ok
+	CALL    ROUND		; Add 0.5 to value
+	CALL    TSTSGN		; Test sign of value
+	OR	A		; Flag negative
+SIN1:   PUSH    AF		; Save sign
 	CALL    P,INVSGN	; Negate value if positive
 	LD	HL,QUARTR	; Point to 0.25
-	CALL    ADDPHL	; Add 0.25 to value
-	POP	AF	; Restore sign
+	CALL    ADDPHL		; Add 0.25 to value
+	POP	AF		; Restore sign
 	CALL    NC,INVSGN	; Negative - Make positive
 	LD	HL,SINTAB	; Coefficient table
-	JP	SUMSER	; Evaluate sum of series
+	JP	SUMSER		; Evaluate sum of series
 
 HALFPI: .BYTE   0DBH,00FH,049H,081H	; 1.5708 (PI/2)
 
@@ -4168,32 +4168,32 @@ SINTAB: .BYTE   5	; Table used by SIN
 	.BYTE   0E0H,05DH,0A5H,086H	;-41.342
 	.BYTE   0DAH,00FH,049H,083H	;  6.2832
 
-TAN:    CALL    STAKFP	; Put angle on stack
-	CALL    SIN	; Get SIN of angle
-	POP	BC	; Restore angle
+TAN:    CALL    STAKFP		; Put angle on stack
+	CALL    SIN		; Get SIN of angle
+	POP	BC		; Restore angle
 	POP	HL
-	CALL    STAKFP	; Save SIN of angle
-	EX	DE,HL	; BCDE = Angle
-	CALL    FPBCDE	; Angle to FPREG
-	CALL    COS	; Get COS of angle
-	JP	DIV	; TAN = SIN / COS
+	CALL    STAKFP		; Save SIN of angle
+	EX	DE,HL		; BCDE = Angle
+	CALL    FPBCDE		; Angle to FPREG
+	CALL    COS		; Get COS of angle
+	JP	DIV		; TAN = SIN / COS
 
-ATN:    CALL    TSTSGN	; Test sign of value
+ATN:    CALL    TSTSGN		; Test sign of value
 	CALL    M,NEGAFT	; Negate result after if -ve
 	CALL    M,INVSGN	; Negate value if -ve
 	LD	A,(FPEXP)	; Get exponent
-	CP	81H	; Number less than 1?
-	JP	C,ATN1	; Yes - Get arc tangnt
+	CP	81H		; Number less than 1?
+	JP	C,ATN1		; Yes - Get arc tangnt
 	LD	BC,8100H	; BCDE = 1
 	LD	D,C
 	LD	E,C
-	CALL    DVBCDE	; Get reciprocal of number
+	CALL    DVBCDE		; Get reciprocal of number
 	LD	HL,SUBPHL	; Sub angle from PI/2
-	PUSH    HL	; Save for angle > 1
+	PUSH    HL		; Save for angle > 1
 ATN1:   LD	HL,ATNTAB	; Coefficient table
-	CALL    SUMSER	; Evaluate sum of series
+	CALL    SUMSER		; Evaluate sum of series
 	LD	HL,HALFPI	; PI/2 - angle in case > 1
-	RET	; Number > 1 - Sub from PI/2
+	RET			; Number > 1 - Sub from PI/2
 
 ATNTAB: .BYTE   9	; Table used by ATN
 	.BYTE   04AH,0D7H,03BH,078H	; 1/17
@@ -4207,7 +4207,15 @@ ATNTAB: .BYTE   9	; Table used by ATN
 	.BYTE   000H,000H,000H,081H	; 1/1
 
 ARET:   RET			; A RETurn instruction
-
+;
+;	GETXYA
+;	Decode the x,y pixel coordinate from BASIC
+;	Convert pixel coordinate to character coordinate and create the graphic character mask.
+;	Convert character coordinate to screen address
+;
+;	On exit, A = Graphic character byte mask. HL= screen address.
+;	Calling routine set, reset, point uses these to update screen.
+;
 GETXYA: CALL    CHKSYN		; Make sure "(" follows
 	.DB	"("
 	CALL    GETNUM		; Get a number
@@ -4221,7 +4229,10 @@ GETXYA: CALL    CHKSYN		; Make sure "(" follows
 	CALL    DEINT		; Get integer -32768 to 32767
 	PUSH    HL		; Save code string address
 	POP	IY		; In IY
-	CALL    XYPOS		; DE = Character Rows
+
+	CALL    XYPOS		; Convert X,Y Pixels to X,Y character. Create Byte mask
+	OR	10000000B	; Convert Byte mask (0-63) to a charcter (128-192)
+				; A=Byte mask, STACK= character column (0-79). DE= row (0-24)
 
 ;	PUSH	AF
 ;	PUSH	HL
@@ -4231,8 +4242,6 @@ GETXYA: CALL    CHKSYN		; Make sure "(" follows
 ;	POP	HL
 ;	POP	AF
 
-	OR	10000000B	; STACK = Character Columns
-				; A = bit mask
 	POP	BC
 	LD	B,C
 	PUSH    AF		; Save mask
@@ -4241,37 +4250,33 @@ GETXYA: CALL    CHKSYN		; Make sure "(" follows
 	CALL    SCRADR		; Get VDU address
 	POP	AF		; Restore bit mask
 	RET
-
-;	on exit A=BYTE MASK, STACK= CHARACTER COLUMN (0-79). DE=ROW (0-24)
 ;
-; Convert coordinate line A, column on stack
+; Convert character row and column to a screen address. Error if off screen location generated.
+; on entry STACK = Return Address, Character Column, Bit Mask in MSB. A = Character Line
+; on exit HL = screen address, A=
 ;
-
-
-; on entry STACK = Return Address, Character Column, Bit Mask. A = Character Line
-
 SCRADR:
 	LD	HL,-(VDUCOLS)	; SCREEN VDU address (0,0)
-	 LD	B,0
-	 LD	C,A		 ; Line to BC
-	 OR	A			; Test it
-	 JP	Z,FCERR	  ; Zero - ?FC Error
-	 CP	VDULINS+1	; 25 lines
-	 JP	P,FCERR	  ; > 25 - ?FC Error
-	 POP	DE		  ; RETurn address
-	 POP	AF		  ; Get column
-	 PUSH    DE		  ; Re-save RETurn
-	 LD	D,0
-	 LD	E,A		 ; Column to DE
-	 OR	A			; Test it
-	 CP	VDUCOLS+1	; 80 characters per line
-	 JP	P,FCERR	  ; > 80 - ?FC Error
-	 ADD	HL,DE		; Add column to address
-	 LD	DE,VDUCOLS	; Line to DE
-	 LD	B,C		; 80 Bytes per line
-ADD80X: ADD	HL,DE		; Add line
-	 DJNZ    ADD80X		; SIXTY FOUR TIMES!!!
-	 RET
+	LD	B,0
+	LD	C,A		; Line to BC
+	OR	A		; Test it
+	JP	Z,FCERR	  	; Zero - ?FC Error
+	CP	VDULINS+1	; 25 lines
+	JP	P,FCERR	  	; > 25 - ?FC Error
+	POP	DE		; RETurn address
+	POP	AF		; Get column
+	PUSH    DE		; Re-save RETurn
+	LD	D,0
+	LD	E,A		; Column to DE
+	OR	A		; Test it
+	CP	VDUCOLS+1	; 80 characters per line
+	JP	P,FCERR	  	; > 80 - ?FC Error
+	ADD	HL,DE		; Add column to address
+	LD	DE,VDUCOLS	; Line to DE
+	LD	B,C		; 80 Bytes per line
+ADD80X: ADD	HL,DE		; Multiply by lines
+	DJNZ    ADD80X
+	RET
 
 SETB:   CALL    GETXYA		; Get co-ords and VDU address
 	PUSH    AF		; Save bit mask
@@ -4295,7 +4300,7 @@ RESETB: CALL    GETXYA		; Get co-ords and VDU address
 	CALL	VDU_RDHL	; Get character from screen
 	LD	E,A		; Save current character
 	PUSH	DE
-	CP	192		; If it is not a block 
+	CP	192		; If it is not a block
 	JR	C,NOTBLK2	; change it to a blank
 	CP	128
 	JR	C,NOTBLK2
@@ -4318,7 +4323,6 @@ POINTB: CALL    GETXYA		; Get co-ords and VDU address
 	CALL	VDU_RDHL	; Get character from screen
 	LD	B,A
 	POP	AF
-;	LD	B,(HL)		; Get character from screen
 	CALL    TSTBIT		; Test if bit is set
 	JP	NZ,POINT0	; Different - Return zero
 	LD	A,0
@@ -4337,11 +4341,12 @@ POINT0: LD	B,0		; Set zero
 ;
 XYPOS:  POP	BC		; Get return address
 	POP	HL		; Get the pixel column
-	LD	A,L
-	SRL	A		; Store it in the carry
-	LD	L,A		; Make HL a character column
-	SBC	A,A		; if carry was =0, a=2, carry =1 a=1
-	ADD	A,2
+	LD	A,L		; Change HL from a pixel
+	SRL	A		; column to a character column
+	LD	L,A		; by dividing by two.
+	SBC	A,A		; If the pixel column is even
+	INC	A		; then set the byte mask to 00000010
+	ADC	A,A		; if it is odd set mask to 00000001
 
 	PUSH	HL		; Save the character column
 	PUSH	BC		; Save the return address
@@ -4355,19 +4360,19 @@ DIV3LP: SBC	HL,BC		; Subtract 3
 	JP	Z,DIV3EX	; Exactly - Exit
 	JP	P,DIV3LP	; More to do
 
-	; HL=0000, FFFF, FFFE
+	; HL=0000, 3
+	; HL=FFFF, 65535 (1111111111111111)
+	; HL=FFFE, 65534 (1111111111111110)
 
-
-
-DIV3EX: RET	z
-
-;	PUSH	AF
-;	CALL	PRTDEC
-;	POP	AF
+DIV3EX:	PUSH	AF
+	CALL	PRTDEC
+	POP	AF
 
 	ADD	HL,BC		; Restore number
 
-
+	PUSH	AF
+	CALL	PRTDEC
+	POP	AF
 
 	;	DE = ROWS / 3
 	;	HL = REMAINDER 0,1,2
@@ -4381,17 +4386,17 @@ DIV3EX: RET	z
 
 	DEC	L		; Exit if remainder
 	RET	M		; is 0
-	RLCA			; 
+	RLCA			;
 	RLCA
 	DEC	L		; Exit if remainder
 	RET	M		; is 1
-	RLCA			; 
+	RLCA			;
 	RLCA
 	RET			; Exit if remainder is 2
 
 ;
 ;	on entry STACK = RETURN ADDRESS, BIT MASK, Charcater COLUMN (0-79). DE=ROW (0-74)
-; 	on exit STACK = RETURN ADDRESS, Character Column, Character Mask. A = Character Line						
+; 	on exit STACK = RETURN ADDRESS, Character Column, Character Mask. A = Character Line
 
 ;
 ; PRINT VALUE OF HL IN DECIMAL WITH LEADING ZERO SUPPRESSION
@@ -4432,7 +4437,7 @@ PRTDEC3:
 
 ;	INPUT CHARACTER FROM CONSOLE VIA HBIOS
 
-GETINP: 
+GETINP:
 	PUSH	BC
 	PUSH	DE
 	PUSH	HL
@@ -4473,20 +4478,20 @@ DEEK:   CALL    DEINT		; Get integer -32768 to 32767
 	PUSH    DE		; Save number
 	POP	HL		; Number to HL
 	LD	B,(HL)		; Get LSB of contents
-	INC	HL	
+	INC	HL
 	LD	A,(HL)		; Get MSB of contents
 	JP	ABPASS		; Return integer AB
-	
+
 DOKE:   CALL    GETNUM		; Get a number
 	CALL    DEINT		; Get integer -32768 to 32767
 	PUSH    DE		; Save address
 	CALL    CHKSYN		; Make sure ',' follows
-	.BYTE	','	
+	.BYTE	','
 	CALL    GETNUM		; Get a number
 	CALL    DEINT		; Get integer -32768 to 32767
 	EX	(SP),HL		; Save value,get address
 	LD	(HL),E		; Save LSB of value
-	INC	HL	
+	INC	HL
 	LD	(HL),D		; Save MSB of value
 	POP	HL		; Restore code string address
 	RET
@@ -4546,7 +4551,7 @@ ADD30	ADD	A,$30		; And make ASCII
 	ADD	A,$07		; Bring it up to ASCII A-F
 ADD301	ADD	A,$30		; And make it full ASCII
 	LD	B,A		; Store high order byte
-	RET	
+	RET
 
 ; Convert "&Hnnnn" to FPREG
 ; Gets a character from (HL) checks for Hexadecimal ASCII numbers "&Hnnnn"
@@ -4566,7 +4571,7 @@ HEXLP1  ADD	HL,HL		; Rotate 4 bits to the left
 	OR	L		; Add in D0-D3 into L
 	LD	L,A		; Save new value
 	JR	HEXLP		; And continue until all hex characters are in
-	
+
 GETHEX  INC	DE		; Next location
 	LD	A,(DE)		; Load character at pointer
 	CP	' '
@@ -4581,10 +4586,10 @@ GETHEX  INC	DE		; Next location
 NOSUB7  CP	$10		; > Greater than "F"?
 	CCF
 	RET			; CY set if it wasn't valid hex
-    
+
 HEXIT   EX	DE,HL		; Value into DE, Code string into HL
 	LD	A,D		; Load DE into AC
-	LD	C,E		; For prep to 
+	LD	C,E		; For prep to
 	PUSH    HL
 	CALL    ACPASS		; ACPASS to set AC as integer into FPREG
 	POP	HL
@@ -4608,7 +4613,7 @@ ZEROSUP:			; Suppress leading zeros
 	RL	D
 	JR	NC,ZEROSUP
 	JR	BITOUT2
-BITOUT:	
+BITOUT:
 	RL	E
 	RL	D		; Top bit now in carry
 BITOUT2:
@@ -4632,16 +4637,16 @@ BINTFP: EX	DE,HL		; Move code string pointer to DE
 	LD	HL,$0000	; Zero out the value
 	CALL    CHKBIN		; Check the number for valid bin
 	JP	C,BINERR	; First value wasn't bin, HX error
-BINIT:  SUB	'0'	
+BINIT:  SUB	'0'
 	ADD	HL,HL		; Rotate HL left
-	OR	L	
-	LD	L,A	
+	OR	L
+	LD	L,A
 	CALL    CHKBIN		; Get second and addtional characters
 	JR	NC,BINIT	; Process if a bin character
 	EX	DE,HL		; Value into DE, Code string into HL
 	LD	A,D		; Load DE into AC
-	LD	C,E		; For prep to 
-	PUSH    HL		
+	LD	C,E		; For prep to
+	PUSH    HL
 	CALL    ACPASS		; ACPASS to set AC as integer into FPREG
 	POP	HL
 	RET
@@ -4660,13 +4665,13 @@ CHKBIN: INC	DE
 BINERR: LD	E,BN		; ?BIN Error
 	JP	ERROR
 ;
-JJUMP1: 
+JJUMP1:
 	LD	IX,-1		; Flag cold start
 	JP	CSTART		; Go and initialise
 
 ;	OUTPUT CHARACTER A TO CONSOLE VIA HBIOS
 
-MONOUT: 
+MONOUT:
 	PUSH	AF		; SAVE ALL INCOMING REGISTERS
 	PUSH	BC
 	PUSH	DE
@@ -4702,7 +4707,7 @@ TSTBIT: PUSH    AF		; Save bit mask
 
 OUTNCR: CALL    OUTC		; Output character in A
 	JP	PRNTCRLF	; Output CRLF
-	
+
 ; ---------------------------------------------------------------------------------------
 
 ;	PLAY	O,N,D	; PLAY OCTAVE 0-8, NOTE N (0-11), DURATION (1-8) [1/8 - 8/8 SECONDS]
@@ -4717,7 +4722,7 @@ PLAY:	CALL    GETINT		; GET OCTAVE
 	PUSH	HL		; SAVE SYNTAX POINTER
 	LD	L,A
 	LD	H,0
-	ADD	HL,HL		; X2 
+	ADD	HL,HL		; X2
 	ADD	HL,HL		; X4
 	LD	DE,FRQDURTBL	; POINT TO NOTE ENTRY
 	ADD	HL,DE		; ITS IN HL
@@ -4732,23 +4737,23 @@ PLAY:	CALL    GETINT		; GET OCTAVE
 	POP	DE		; GET NOTE PTR IN DE
 	EX	(SP),HL		; GET OCTAVE IN HL. SYNTAX POINTER ON STACK
 	EX	DE,HL		; PUT NOTE PTR IN HL, OCTAVE IN DE
-	
+
 	PUSH	BC		; SAVE SYNTAX POINTER
 	LD	B,D		; SAVE OCTAVE
 	PUSH	AF		; SAVE DURATION
-	
+
 	LD	A,(HL)		; LOAD 1ST ARG
 	INC	HL		; IN DE
 	LD	E,A		; WHICH IS THE
 	LD	A,(HL)		; FREQUENCY FOR
 	INC	HL		; THE EIGHTH
 	LD	D,A		; OCTAVE
-	
+
 	PUSH	DE
 
 	LD	A,(HL)		; LOAD 2ND ARG
 	INC	HL		; IN DE
-	LD	E,A		; WHICH IS THE 
+	LD	E,A		; WHICH IS THE
 	LD	A,(HL)		; PITCH
 	LD	D,A
 
@@ -4761,8 +4766,8 @@ PLAY:	CALL    GETINT		; GET OCTAVE
 	JR	Z,SPK_OCTOK	; ON THE OCTAVE
 	LD	B,A
 SPK_OCTDIV:
-	SRL	D		; 0>D>C	; MULTIPLY THE	
-	RR	E		; C>E>C	; DURATION EVERY	
+	SRL	D		; 0>D>C	; MULTIPLY THE
+	RR	E		; C>E>C	; DURATION EVERY
 	SLA	L		; C<L<0	; TIME WE DIVIDE
 	RL	H		; C<H<C	; THE FREQUENCY
 	DJNZ	SPK_OCTDIV
@@ -4780,7 +4785,7 @@ SPK_OCTOK:
 	LD	L,C
 	CCF
 MULSKP:	ADD	HL,DE
-	JR	NC,MULDLP 
+	JR	NC,MULDLP
 	INC	C
 MULDLP:	DJNZ	MULSKP		; DIVIDE BY 8
 
@@ -4797,7 +4802,7 @@ MULDLP:	DJNZ	MULSKP		; DIVIDE BY 8
 	POP	DE
 	EX	DE,HL
 
-;	The following SPK_BEEPER routine is a modification of code from 
+;	The following SPK_BEEPER routine is a modification of code from
 ;	"The Complete SPECTRUM ROM DISSASSEMBLY" by Dr Ian Logan & Dr Frank O’Hara
 ;	https://www.esocop.org/docs/CompleteSpectrumROMDisassemblyThe.pdf
 ;
@@ -4846,7 +4851,7 @@ BE_H_L_LP:
 	LD	C,L	; Reset the C register.
 	DEC	DE	; Decrease the pass counter.
 	JP	(IX)	; Jump back to the required starting location of the loop.
-;	
+;
 BE_AGAIN:		; The parameters for the second half-cycle are set up.
 	LD	C,L	; Reset the C register.
 	INC	C 	; Add 16 T states as this path is shorter.
@@ -4899,7 +4904,7 @@ FRQ_AJ2:	; AT THIS POINT DEHL = CPUKHZ * 125 E.G.  9982 KHZ * 125 = 0012:DE14
 	POP	IX		; HLIX = DENOMINATOR
 	EX	DE,HL
 
-	LD	IY,FRQDURTBL	; POINT TO THE TABLE WE 
+	LD	IY,FRQDURTBL	; POINT TO THE TABLE WE
 	LD	B,FDTBSIZ	; WANT TO READ AND UPDATE
 TBL_LP:	PUSH	BC
 
@@ -4908,7 +4913,7 @@ TBL_LP:	PUSH	BC
 
 	PUSH	IX		; STORE DENOMINATOR FOR NEXT LOOP
 	PUSH	HL
-	
+
  	LD	DE,0		; HLIX = HLIX / BC, DE = REMAINDER
 	LD	A,32
 DIV_LP:	ADD	IX,IX
@@ -4931,10 +4936,10 @@ DIV_CANSUB:
 DUROVF:	LD	(IY+2),E
 	LD	(IY+3),D
 
-	LD	DE,4		; POINT TO NEXT TABLE 
+	LD	DE,4		; POINT TO NEXT TABLE
 	ADD	IY,DE		; ENTRY TO UPDATE
 
-	POP	HL		; RETREIVE THE DENOMINATOR 
+	POP	HL		; RETREIVE THE DENOMINATOR
 	POP	IX		; FOR THE NEXT LOOP
 
 	POP	BC		; RETREIVE THE
@@ -4943,7 +4948,7 @@ DUROVF:	LD	(IY+2),E
 	RET
 ;
 ;	ONE OCTAVE TONE TABLE IN FREQUENCY, DURATION FORMAT. TO COMPENSATE FOR DIFFERENT
-;	CPU FREQUENCIES THE DURATION IS CALCULATED AND POPULATED AT STARTUP. DIFFERENT OCTAVE 
+;	CPU FREQUENCIES THE DURATION IS CALCULATED AND POPULATED AT STARTUP. DIFFERENT OCTAVE
 ;	AND DURATIONS ARE CALCULATE BY MODIFYING THE VALUES READ FROM THIS TABLE.
 ;
 FRQDURTBL:
@@ -4963,7 +4968,7 @@ FDTBSIZ	.EQU	($-FRQDURTBL)/4
 ;
 SET_ECB_VDU:
 	LD	HL,0		; SET SCREEN START ADDRESS
-	LD	C,12			
+	LD	C,12
 	CALL	VDU_WRREGX
 	LD	C,14		; SET CURSOR START ADDRESS
 	CALL	VDU_WRREGX
@@ -5032,7 +5037,7 @@ VDU_WRHL:
 	CALL	VDU_WAITRDY
 	POP	AF
 	OUT	(VDURWR),A
-	RET	
+	RET
 ;
 #IF VT100
 VT_CLS	.BYTE	ESC,"[2J",ESC,"[H",0	; vt100 clear screen & home
