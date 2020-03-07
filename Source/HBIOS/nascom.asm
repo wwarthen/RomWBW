@@ -35,9 +35,9 @@
 ABBRERR	.EQU	TRUE	; Choose between long error message and abbreviated error messages.
 VT100	.EQU	TRUE	; Use VT100 escape codes for CLS
 
-VDULINS	.EQU	25
+VDUROWS	.EQU	25
 VDUCOLS	.EQU	80
-VDUSIZE	.EQU	(VDULINS*VDUCOLS)
+VDUSIZE	.EQU	(VDUROWS*VDUCOLS)
 VDUREG	.EQU	0F2H	; ECB-VDU
 VDUSTS	.EQU	0F2H	;
 VDUDTA	.EQU	0F3H	; PORT
@@ -4232,19 +4232,35 @@ GETXYA: CALL    CHKSYN		; Make sure "(" follows
 
 	CALL    XYPOS		; Convert X,Y Pixels to X,Y character. Create Byte mask
 	OR	10000000B	; Convert Byte mask (0-63) to a charcter (128-192)
-				; A=Byte mask, STACK= character column (0-79). DE= row (0-24)
+				; A=Byte mask, STACK= character column (0-79). DE= row (1-25)
+
 
 	POP	HL		; Character column
 	PUSH	AF		; Save byte mask
 
 	LD	B,E		; Rows to B
 	LD	A,E		; Rows to A
-	CP	VDULINS		; Error if rows
-;	JP	NC,FCERR	; out of range
+	CP	VDUROWS		; Error if rows
+;	JP	M,FCERR	; out of range
+
+;	PUSH	AF
+;	PUSH	DE
+;	PUSH	HL
+;	LD	D,0
+;	PUSH	DE
+;	POP	HL
+;	CALL	PRTDEC
+;	POP	HL
+;	POP	DE
+;	POP	AF
 
 	LD	A,L		; Column to L
 	CP	VDUCOLS		; Error if Columns
-;	JP	NC,FCERR	; out of range
+;	JP	M,FCERR	; out of range
+
+	;PUSH	AF
+	;CALL	PRTDEC
+	;POP	AF
 
 	LD	E,L		; Columns to E
 
@@ -4330,48 +4346,25 @@ XYPOS:  POP	BC		; Get return address
 	PUSH	HL		; Save the character column
 	PUSH	BC		; Save the return address
 
-	LD	HL,(VDULINS*3)-1; Get row to HL
+	LD	HL,(VDUROWS*3)-1; Get row to HL
 	SBC	HL,DE		; C=0 from above
-	LD	DE,0		; Zero line count
+	LD	DE,-1		; Zero line count
 	LD	BC,3		; 3 blocks per line
 DIV3LP: SBC	HL,BC		; Subtract 3
 	INC	DE		; Count the subtractions
-	JP	Z,DIV3EX	; Exactly - Exit
 	JP	P,DIV3LP	; More to do
 
-	; HL=0000, 3
-	; HL=FFFF, 65535 (1111111111111111)
-	; HL=FFFE, 65534 (1111111111111110)
+	OR	A		; HL is the remainder which defines 
+	DEC	BC		; which pixel row the mask should be on
+	ADC	HL,BC		; HL = -1, 0, 1 and flags are set
 
-DIV3EX:	PUSH	AF
-	CALL	PRTDEC
-	POP	AF
-
-	ADD	HL,BC		; Restore number
-
-	PUSH	AF
-	CALL	PRTDEC
-	POP	AF
-
-	;	DE = ROWS / 3
-	;	HL = REMAINDER 0,1,2
-	;	A = 00000010 or 00000001
-
-	LD	B,A
-	LD	A,C
-	SUB	L
-	LD	L,A
-	LD	A,B
-
-	DEC	L		; Exit if remainder
-	RET	M		; is 0
-	RLCA			;
-	RLCA
-	DEC	L		; Exit if remainder
-	RET	M		; is 1
-	RLCA			;
-	RLCA
-	RET			; Exit if remainder is 2
+	JR	Z,BY4		; Byte mask is in A and
+	RET	P		; set for pixel row 0
+	RLCA			; Move the mask to 
+	RLCA			; pixel row 1 or 2
+BY4:	RLCA			; based on the remainder
+	RLCA			; calculate above in HL
+	RET
 ;
 ; PRINT VALUE OF HL IN DECIMAL WITH LEADING ZERO SUPPRESSION
 ;
