@@ -11,6 +11,8 @@ OTHERS += biosldrc.rel biosldrd.rel
 TOOLS = ../../Tools
 include $(TOOLS)/Makefile.inc
 
+export ZXINCDIR = ../
+
 BIOSOBJS = bioskrnl.rel scb.rel boot.rel chario.rel 
 BIOSOBJS += move.rel drvtbl.rel diskio.rel util.rel
 COMMA := ,
