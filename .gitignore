@@ -71,6 +71,7 @@ Tools/unix/uz80as/uz80as
 Tools/unix/zx/config.h
 Tools/unix/zx/zx
 
+!Source/ver.lib
 !Source/Apps/FAT/FAT.COM
 !Source/BPBIOS/bpbuild.com
 !Source/BPBIOS/movp112.com
