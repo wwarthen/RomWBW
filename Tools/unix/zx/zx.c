@@ -317,6 +317,10 @@ int main(int ac, char **av)
 		fprintf(stderr, "Could not initialise CPMREDIR library\n");
 		zx_exit(1);
 	}
+	
+	printf("BINDIR80='%s'\n", BINDIR80);
+	printf("LIBDIR80='%s'\n", LIBDIR80);
+	printf("INCDIR80='%s'\n", INCDIR80);
 
 	xlt_map(0, BINDIR80);	/* Establish the 3 fixed mappings */
 	xlt_map(1, LIBDIR80);

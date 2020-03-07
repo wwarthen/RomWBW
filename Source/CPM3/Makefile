@@ -28,7 +28,6 @@ clean:: biosclean
 	@rm -f bios3.spr bnkbios3.spr zpmbios3.spr cpmldr.com gencpm.dat options.lib ldropts.lib
 
 biosclean:
-	printenv
 	@rm -f $(BIOSOBJS)
 
 cpm3res:
