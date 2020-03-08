@@ -4467,6 +4467,9 @@ GETINP:
 	POP	BC
 	RET
 CLS:
+#IF VDUGFX
+	CALL	VDU_INIT	; Clear VDU screen
+#ENDIF
 #IF	VT100
 	LD	HL,VT_CLS	; Output zero terminated
 VT0OUT:	LD	A,(HL)		; VT100 escape sequence
