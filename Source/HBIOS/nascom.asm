@@ -34,20 +34,29 @@
 ;
 ABBRERR	.EQU	FALSE	; Choose between long error message and abbreviated error messages.
 VT100	.EQU	TRUE	; Use VT100 escape codes for CLS
-VDUGFX	.EQU	TRUE	; Option to enable ECB-VDU graphics support using SET, RESET and POINT.
+VDUGFX	.EQU	FALSE	; Option to enable ECB-VDU graphics support using SET, RESET and POINT.
 ;
 ;==================================================================================
-; SBC V2 + ECB-VDU GRAPHICS CUSTOMIZATION
-; REQUIRES ECB-VDU WITH 256 CHARACTER MOD AND 12X8GFX1 FONT INSTALLED, VDU MODE SET TO 80X25B.
+; SBC V2 + ECB-VDU GRAPHICS CUSTOMIZATION 160X75 BLOCK GRAPHICS ON AND 80X25 DISPLAY
+; REQUIRES ECB-VDU WITH 256 CHARACTER MOD AND 12X8GFX1 FONT INSTALLED, VDU MODE SET TO 80X25B/24B.
+; SWITCHES LONG ERROR MESSAGES OFF FOR SPACE
 ;
+#IF VDUGFX
+ #IF (VDUSIZ=V80X25B)
 VDUROWS	.EQU	25
 VDUCOLS	.EQU	80
-VDUSIZE	.EQU	(VDUROWS*VDUCOLS)
+ #ENDIF
+ #IF (VDUSIZ=V80X24B)
+VDUROWS	.EQU	24
+VDUCOLS	.EQU	80
+ #ENDIF
+ABBRERR	.SET	TRUE
 VDUREG	.EQU	0F2H	; ECB-VDU
 VDUSTS	.EQU	0F2H	;
 VDUDTA	.EQU	0F3H	; PORT
 VDURWR	.EQU	0F1H	; REGISTER
 VDURRD	.EQU	0F0H	; ADDRESSES
+#ENDIF
 ;
 ; GENERAL EQUATES
 ;
@@ -64,7 +73,6 @@ CTRLS   .EQU    13H	; Control "S"
 CTRLU   .EQU    15H	; Control "U"
 ESC	.EQU    1BH	; Escape
 DEL	.EQU    7FH	; Delete
-
 ;
 ; BASIC WORK SPACE LOCATIONS
 ;
@@ -259,7 +267,11 @@ BRKRET: CALL    CLREG		; Clear registers and stack
 ;
 BFREE:  .BYTE   " Bytes free",CR,LF,0,0
 ;
-SIGNON: .BYTE   "Z80 BASIC Ver 4.7b",CR,LF
+SIGNON: .BYTE   "Z80 BASIC Ver 4.7b"
+#IF VDUGFX
+	.BYTE	"/vdu"
+#ENDIF
+	.BYTE	CR,LF
 	.BYTE   "Copyright ",40,"C",41
 	.BYTE   " 1978 by Microsoft",CR,LF,0,0
 ;
@@ -4293,7 +4305,7 @@ ROW0SKP:OR	10000000B	; Convert Byte mask (0-63) to a font character (128-192)
 	LD	B,E		; Rows to B
 	LD	E,L		; Columns to E
 
-	LD	HL,-(VDUCOLS)	; Base VDU address (0,0)
+	LD	HL,-(VDUCOLS)	; Base VDU address
 	ADD	HL,DE		; Add column to address
 	LD	DE,VDUCOLS	; Line to DE
 ADD80X: ADD	HL,DE		; Multiply by lines
@@ -4365,13 +4377,16 @@ POINT0: LD	B,0		; Set zero
 ;----------------------------------------------------------------------
 ;
 VDU_INIT:
-	LD	HL,0		; SET SCREEN START ADDRESS
-	LD	C,12
-	CALL	VDU_WRREGX
-	LD	C,14		; SET CURSOR START ADDRESS
-	CALL	VDU_WRREGX
+	LD	C,10		; SET CURSOR OFF
+	LD	A,00100000B
+	CALL	VDU_WRREG
+;	LD	HL,0		; SET SCREEN START ADDRESS
+;	LD	C,12
+;	CALL	VDU_WRREGX
+;	LD	C,14		; SET CURSOR START ADDRESS
+;	CALL	VDU_WRREGX
 ;
-	LD	HL,VDUSIZ	; CLEAR SCREEN
+	LD	HL,(VDUROWS*VDUCOLS)	; CLEAR SCREEN
 VDU_FILL:
 	LD	C,18
 	CALL	VDU_WRREGX
@@ -4425,7 +4440,7 @@ VDU_RDHL:
 	CALL	VDU_WAITRDY     
 	IN	A,(VDURRD)      
 	RET                     
-				
+;				
 VDU_WRHL:                       
 	PUSH	AF		; WRITE A BYTE IN A
 	LD	C,18		; TO VIDEO MEMORY
@@ -4436,7 +4451,6 @@ VDU_WRHL:
 	POP	AF
 	OUT	(VDURWR),A
 	RET
-;
 #ENDIF
 ;	INPUT CHARACTER FROM CONSOLE VIA HBIOS
 
