@@ -37,7 +37,7 @@ VT100	.EQU	TRUE	; Use VT100 escape codes for CLS
 VDUGFX	.EQU	FALSE	; Option to enable ECB-VDU graphics support using SET, RESET and POINT.
 ;
 ;==================================================================================
-; SBC V2 + ECB-VDU GRAPHICS CUSTOMIZATION 160X75 BLOCK GRAPHICS ON AND 80X25 DISPLAY
+; SBC V2 + ECB-VDU GRAPHICS CUSTOMIZATION 160X75 BLOCK GRAPHICS ON AN 80X25 DISPLAY
 ; REQUIRES ECB-VDU WITH 256 CHARACTER MOD AND 12X8GFX1 FONT INSTALLED, VDU MODE SET TO 80X25B/24B.
 ; SWITCHES LONG ERROR MESSAGES OFF FOR SPACE
 ;
@@ -4303,6 +4303,7 @@ ROW0SKP:OR	10000000B	; Convert Byte mask (0-63) to a font character (128-192)
 	JP	P,FCERR		; Range
 
 	LD	B,E		; Rows to B
+	INC	B
 	LD	E,L		; Columns to E
 
 	LD	HL,-(VDUCOLS)	; Base VDU address
@@ -4377,6 +4378,8 @@ POINT0: LD	B,0		; Set zero
 ;----------------------------------------------------------------------
 ;
 VDU_INIT:
+	PUSH	BC
+	PUSH	HL
 	LD	C,10		; SET CURSOR OFF
 	LD	A,00100000B
 	CALL	VDU_WRREG
@@ -4399,6 +4402,8 @@ VDU_FILL:
 	OR	L
 	DEC	HL
 	JR	NZ,VDU_FILL
+	POP	HL
+	POP	BC
 	RET
 ;
 ;----------------------------------------------------------------------
@@ -4471,12 +4476,14 @@ CLS:
 	CALL	VDU_INIT	; Clear VDU screen
 #ENDIF
 #IF	VT100
+	PUSH	HL
 	LD	HL,VT_CLS	; Output zero terminated
 VT0OUT:	LD	A,(HL)		; VT100 escape sequence
 	INC	HL		; directly to console.
 	OR	A
 	CALL	NZ,MONOUT	; clear screen
 	JR	NZ,VT0OUT	; and home cursor
+	POP	HL
 	RET
 #ELSE
 	LD	A,CS		; ASCII Clear screen
