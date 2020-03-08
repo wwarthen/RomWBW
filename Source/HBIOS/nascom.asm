@@ -25,16 +25,21 @@
 ; 20181027 - Initial retrobrewcomputer SBC V2 version - difficultylevelhigh@gmail.com
 ; 20191012 - Add PLAY command for SBC-V2-004 Sound support.
 ; 20191013 - Add option for long error messages.
-;	 - Add option to use VT100 escape codes for screen controls.
-; 20200503 - Add ECB-VDU Graphics support for set, reset and point
+;	   - Add option to use VT100 escape codes for screen controls.
+; 20200308 - Add ECB-VDU Graphics support for set, reset and point
 ;
 #INCLUDE "std.asm"
 ;
 ; CUSTOMIZATION
 ;
-ABBRERR	.EQU	TRUE	; Choose between long error message and abbreviated error messages.
+ABBRERR	.EQU	FALSE	; Choose between long error message and abbreviated error messages.
 VT100	.EQU	TRUE	; Use VT100 escape codes for CLS
-
+VDUGFX	.EQU	TRUE	; Option to enable ECB-VDU graphics support using SET, RESET and POINT.
+;
+;==================================================================================
+; SBC V2 + ECB-VDU GRAPHICS CUSTOMIZATION
+; REQUIRES ECB-VDU WITH 256 CHARACTER MOD AND 12X8GFX1 FONT INSTALLED, VDU MODE SET TO 80X25B.
+;
 VDUROWS	.EQU	25
 VDUCOLS	.EQU	80
 VDUSIZE	.EQU	(VDUROWS*VDUCOLS)
@@ -92,7 +97,7 @@ CHKSUM  .EQU    WRKSPC+4AH	; Array load/save check sum
 NMIFLG  .EQU    WRKSPC+4CH	; Flag for NMI break routine
 BRKFLG  .EQU    WRKSPC+4DH	; Break flag
 RINPUT  .EQU    WRKSPC+4EH	; Input reflection
-POINT   .EQU    WRKSPC+51H	; "POINT" reflection (unused)
+POINT   .EQU    WRKSPC+51H	; "POINT" reflection
 PSET    .EQU    WRKSPC+54H	; "SET"   reflection
 RESET   .EQU    WRKSPC+57H	; "RESET" reflection
 STRSPC  .EQU    WRKSPC+5AH	; Bottom of string space
@@ -561,9 +566,15 @@ INITAB: JP	WARMST		; Warm start jump
 	.BYTE   0		; Break not by NMI
 	.BYTE   0		; Break flag
 	JP	TTYLIN		; Input reflection (set to TTY)
+#IF	VDUGFX
 	JP	POINTB		; POINT reflection unused
 	JP	SETB		; SET reflection
 	JP	RESETB		; RESET reflection
+#ELSE
+	JP	REM
+	JP	REM
+	JP	REM
+#ENDIF
 	.WORD   STLOOK		; Temp string space
 	.WORD   -2		; Current line number (cold)
 	.WORD   PROGST+1	; Start of program text
@@ -2083,8 +2094,10 @@ FNOFST: LD	B,0		; Get address of function
 	PUSH    BC		; Save adjusted token value
 	CALL    GETCHR		; Get next character
 	LD	A,C		; Get adjusted token value
+#IF VDUGFX
 	CP	2*(ZPOINT-ZSGN)	; Adjusted "POINT" token?
-	JP	Z,POINTB	; Yes - Do "POINT" (not POINTB)
+	JP	Z,POINT		; Yes - Do "POINT" (not POINTB)
+#ENDIF
 	CP	2*(ZLEFT-ZSGN)-1; Adj' LEFT$,RIGHT$ or MID$ ?
 	JP	C,FNVAL		; No - Do function
 	CALL    OPNPAR		; Evaluate expression  (X,...
@@ -4208,6 +4221,8 @@ ATNTAB: .BYTE   9	; Table used by ATN
 
 ARET:   RET			; A RETurn instruction
 ;
+#IF	VDUGFX
+;
 ;	GETXYA
 ;	Decode the x,y pixel coordinate from BASIC
 ;	Convert pixel coordinate to character coordinate and create the graphic character mask.
@@ -4229,42 +4244,56 @@ GETXYA: CALL    CHKSYN		; Make sure "(" follows
 	CALL    DEINT		; Get integer -32768 to 32767
 	PUSH    HL		; Save code string address
 	POP	IY		; In IY
+;
+;	Pixel column (0-159) is on the stack. DE contains the pixel row (0-74)
+; 	Convert X,Y Pixels co-ord. to X,Y character co-ord. Create Byte mask
+;
+	POP	HL		; Get the pixel column
+	LD	A,L		; Change HL from a pixel
+	SRL	A		; column to a character column
+	LD	L,A		; by dividing by two.
+	SBC	A,A		; If the pixel column is even
+	INC	A		; then set the byte mask to 00000010
+	ADC	A,A		; if it is odd set mask to  00000001
+	PUSH	HL		; Save the character column
 
-	CALL    XYPOS		; Convert X,Y Pixels to X,Y character. Create Byte mask
-	OR	10000000B	; Convert Byte mask (0-63) to a charcter (128-192)
-				; A=Byte mask, STACK= character column (0-79). DE= row (1-25)
+	LD	HL,(VDUROWS*3)-1; Get row to HL
+	SBC	HL,DE		; C=0 from above
+	LD	DE,-1		; Zero line count
+	LD	BC,3		; 3 blocks per line
+DIV3LP: SBC	HL,BC		; Subtract 3
+	INC	DE		; Count the subtractions
+	JP	P,DIV3LP	; More to do
 
+	OR	A		; HL is the remainder which defines 
+	DEC	BC		; which pixel row the mask should be on
+	ADC	HL,BC		; HL = -1, 0, 1 and flags are set
 
+	JR	Z,BY4		; Byte mask is in A and
+	JP	P,ROW0SKP	; set for pixel row 0
+	RLCA			; Move the mask to 
+	RLCA			; pixel row 1 or 2
+BY4:	RLCA			; based on the remainder
+	RLCA			; calculate above in HL
+ROW0SKP:OR	10000000B	; Convert Byte mask (0-63) to a font character (128-192)
+;
+;	A=Byte mask, stack = character column (0-79). DE contains character row (0-24)
+;	Check for valid character co-ord and calculate screen address
+;
 	POP	HL		; Character column
 	PUSH	AF		; Save byte mask
 
+	LD	A,H		; Column high byte to A
+	OR	A		; Error if negative
+	JP	NZ,FCERR	; or >255
+	LD	A,L		; Column low byte to A
+	CP	VDUCOLS		; Error if out of
+	JP	P,FCERR		; Range
+
 	LD	B,E		; Rows to B
-	LD	A,E		; Rows to A
-	CP	VDUROWS		; Error if rows
-;	JP	M,FCERR	; out of range
-
-;	PUSH	AF
-;	PUSH	DE
-;	PUSH	HL
-;	LD	D,0
-;	PUSH	DE
-;	POP	HL
-;	CALL	PRTDEC
-;	POP	HL
-;	POP	DE
-;	POP	AF
-
-	LD	A,L		; Column to L
-	CP	VDUCOLS		; Error if Columns
-;	JP	M,FCERR	; out of range
-
-	;PUSH	AF
-	;CALL	PRTDEC
-	;POP	AF
-
 	LD	E,L		; Columns to E
 
-	LD	HL,-(VDUCOLS)	; SCREEN VDU address (0,0)
+	LD	HL,-(VDUCOLS)	; Base VDU address (0,0)
 	ADD	HL,DE		; Add column to address
 	LD	DE,VDUCOLS	; Line to DE
 ADD80X: ADD	HL,DE		; Multiply by lines
@@ -4331,77 +4360,84 @@ POINTX: POP	HL		; Drop return
 POINT0: LD	B,0		; Set zero
 	JP	POINTX		; Return value
 ;
-;	on entry STACK = RETURN ADDRESS, PIXEL COLUMN (0-159). DE=PIXEL ROW (0-74)
-;	on exit A=BYTE MASK, STACK= CHARACTER COLUMN (0-79). DE=ROW (0-24)
+;----------------------------------------------------------------------
+; INITIALIZE VDU
+;----------------------------------------------------------------------
 ;
-XYPOS:  POP	BC		; Get return address
-	POP	HL		; Get the pixel column
-	LD	A,L		; Change HL from a pixel
-	SRL	A		; column to a character column
-	LD	L,A		; by dividing by two.
-	SBC	A,A		; If the pixel column is even
-	INC	A		; then set the byte mask to 00000010
-	ADC	A,A		; if it is odd set mask to  00000001
-
-	PUSH	HL		; Save the character column
-	PUSH	BC		; Save the return address
-
-	LD	HL,(VDUROWS*3)-1; Get row to HL
-	SBC	HL,DE		; C=0 from above
-	LD	DE,-1		; Zero line count
-	LD	BC,3		; 3 blocks per line
-DIV3LP: SBC	HL,BC		; Subtract 3
-	INC	DE		; Count the subtractions
-	JP	P,DIV3LP	; More to do
-
-	OR	A		; HL is the remainder which defines 
-	DEC	BC		; which pixel row the mask should be on
-	ADC	HL,BC		; HL = -1, 0, 1 and flags are set
-
-	JR	Z,BY4		; Byte mask is in A and
-	RET	P		; set for pixel row 0
-	RLCA			; Move the mask to 
-	RLCA			; pixel row 1 or 2
-BY4:	RLCA			; based on the remainder
-	RLCA			; calculate above in HL
+VDU_INIT:
+	LD	HL,0		; SET SCREEN START ADDRESS
+	LD	C,12
+	CALL	VDU_WRREGX
+	LD	C,14		; SET CURSOR START ADDRESS
+	CALL	VDU_WRREGX
+;
+	LD	HL,VDUSIZ	; CLEAR SCREEN
+VDU_FILL:
+	LD	C,18
+	CALL	VDU_WRREGX
+	LD	A,31
+	OUT	(VDUREG),A
+	CALL	VDU_WAITRDY	; WAIT FOR VDU TO BE READY
+	LD	A,' '
+	OUT	(VDURWR),A
+	LD	A,H
+	OR	L
+	DEC	HL
+	JR	NZ,VDU_FILL
 	RET
 ;
-; PRINT VALUE OF HL IN DECIMAL WITH LEADING ZERO SUPPRESSION
+;----------------------------------------------------------------------
+; WAIT FOR VDU TO BE READY FOR A DATA READ/WRITE
+;----------------------------------------------------------------------
 ;
-PRTDEC:
-	PUSH	BC
-	PUSH	DE
-	PUSH	HL
-	LD	E,'0'
-	LD	BC,-10000
-	CALL	PRTDEC1
-	LD	BC,-1000
-	CALL	PRTDEC1
-	LD	BC,-100
-	CALL	PRTDEC1
-	LD	C,-10
-	CALL	PRTDEC1
-	LD	E,0
-	LD	C,-1
-	CALL	PRTDEC1
-	POP	HL
-	POP	DE
-	POP	BC
+VDU_WAITRDY:
+   	IN 	A,(VDUSTS)	; READ STATUS
+	OR	A		; SET FLAGS
+	RET	M		; IF BIT 7 SET, THEN READY!
+	JR	VDU_WAITRDY	; KEEP CHECKING
+;
+;----------------------------------------------------------------------
+; UPDATE SY6845 REGISTERS
+;   VDU_WRREG WRITES VALUE IN A TO VDU REGISTER SPECIFIED IN C
+;   VDU_WRREGX WRITES VALUE IN HL TO VDU REGISTER PAIR IN C, C+1
+;----------------------------------------------------------------------
+;
+VDU_WRREG:
+	PUSH	AF		; SAVE VALUE TO WRITE
+	LD	A,C		; SET A TO VDU REGISTER TO SELECT
+	OUT	(VDUREG),A	; WRITE IT TO SELECT THE REGISTER
+	POP	AF		; RECOVER VALUE TO WRITE
+	OUT	(VDUDTA),A	; WRITE IT
+	RET                     
+;                               
+VDU_WRREGX:                     
+	LD	A,H		; SETUP MSB TO WRITE
+	CALL	VDU_WRREG	; DO IT
+	INC	C		; NEXT VDU REGISTER
+	LD	A,L		; SETUP LSB TO WRITE
+	JR	VDU_WRREG	; DO IT & RETURN
+;                               
+VDU_RDHL:                       
+	LD	C,18		; READ A BYTE
+	CALL	VDU_WRREGX	; FROM VIDEO MEMORY
+	LD	A,31		; POINTED TO BY HL
+	OUT	(VDUREG),A	; AND RETURN IT IN A
+	CALL	VDU_WAITRDY     
+	IN	A,(VDURRD)      
+	RET                     
+				
+VDU_WRHL:                       
+	PUSH	AF		; WRITE A BYTE IN A
+	LD	C,18		; TO VIDEO MEMORY
+	CALL	VDU_WRREGX	; POINTED TO BY HL
+	LD	A,31
+	OUT	(VDUREG),A
+	CALL	VDU_WAITRDY
+	POP	AF
+	OUT	(VDURWR),A
 	RET
-PRTDEC1:
-	LD	A,'0' - 1
-PRTDEC2:
-	INC	A
-	ADD	HL,BC
-	JR	C,PRTDEC2
-	SBC	HL,BC
-	CP	E
-	JR	Z,PRTDEC3
-	LD	E,0
-	CALL	MONOUT
-PRTDEC3:
-	RET
-
+;
+#ENDIF
 ;	INPUT CHARACTER FROM CONSOLE VIA HBIOS
 
 GETINP:
@@ -4662,7 +4698,9 @@ MONITR: LD	A,BID_BOOT	; BOOT BANK
 INITST: LD	A,0		; Clear break flag
 	LD	(BRKFLG),A
 	CALL	SET_DUR_TBL	; SET UP SOUND TABLE
-	CALL	SET_ECB_VDU	; SET AND CLEAR VDU SCREEN 0
+#IF	VDUGFX
+	CALL	VDU_INIT	; SET AND CLEAR VDU SCREEN 0
+#ENDIF
 	JP	INIT
 
 ARETN:  RETN			; Return from NMI
@@ -4930,83 +4968,6 @@ FRQDURTBL:
 	.DW	$1EDE, $0	; B
 ;
 FDTBSIZ	.EQU	($-FRQDURTBL)/4
-;
-;----------------------------------------------------------------------
-; INITIALIZE VDU
-;----------------------------------------------------------------------
-;
-SET_ECB_VDU:
-	LD	HL,0		; SET SCREEN START ADDRESS
-	LD	C,12
-	CALL	VDU_WRREGX
-	LD	C,14		; SET CURSOR START ADDRESS
-	CALL	VDU_WRREGX
-;
-	LD	HL,VDUSIZ	; CLEAR SCREEN
-VDU_FILL:
-	LD	C,18
-	CALL	VDU_WRREGX
-	LD	A,31
-	OUT	(VDUREG),A
-	CALL	VDU_WAITRDY	; WAIT FOR VDU TO BE READY
-	LD	A,' '
-	OUT	(VDURWR),A
-	LD	A,H
-	OR	L
-	DEC	HL
-	JR	NZ,VDU_FILL
-	RET
-;
-;----------------------------------------------------------------------
-; WAIT FOR VDU TO BE READY FOR A DATA READ/WRITE
-;----------------------------------------------------------------------
-;
-VDU_WAITRDY:
-   	IN 	A,(VDUSTS)	; READ STATUS
-	OR	A		; SET FLAGS
-	RET	M		; IF BIT 7 SET, THEN READY!
-	JR	VDU_WAITRDY	; KEEP CHECKING
-;
-;----------------------------------------------------------------------
-; UPDATE SY6845 REGISTERS
-;   VDU_WRREG WRITES VALUE IN A TO VDU REGISTER SPECIFIED IN C
-;   VDU_WRREGX WRITES VALUE IN HL TO VDU REGISTER PAIR IN C, C+1
-;----------------------------------------------------------------------
-;
-VDU_WRREG:
-	PUSH	AF		; SAVE VALUE TO WRITE
-	LD	A,C		; SET A TO VDU REGISTER TO SELECT
-	OUT	(VDUREG),A	; WRITE IT TO SELECT THE REGISTER
-	POP	AF		; RECOVER VALUE TO WRITE
-	OUT	(VDUDTA),A	; WRITE IT
-	RET                     
-;                               
-VDU_WRREGX:                     
-	LD	A,H		; SETUP MSB TO WRITE
-	CALL	VDU_WRREG	; DO IT
-	INC	C		; NEXT VDU REGISTER
-	LD	A,L		; SETUP LSB TO WRITE
-	JR	VDU_WRREG	; DO IT & RETURN
-;                               
-VDU_RDHL:                       
-	LD	C,18		; READ A BYTE
-	CALL	VDU_WRREGX	; FROM VIDEO MEMORY
-	LD	A,31		; POINTED TO BY HL
-	OUT	(VDUREG),A	; AND RETURN IT IN A
-	CALL	VDU_WAITRDY     
-	IN	A,(VDURRD)      
-	RET                     
-				
-VDU_WRHL:                       
-	PUSH	AF		; WRITE A BYTE IN A
-	LD	C,18		; TO VIDEO MEMORY
-	CALL	VDU_WRREGX	; POINTED TO BY HL
-	LD	A,31
-	OUT	(VDUREG),A
-	CALL	VDU_WAITRDY
-	POP	AF
-	OUT	(VDURWR),A
-	RET
 ;
 #IF VT100
 VT_CLS	.BYTE	ESC,"[2J",ESC,"[H",0	; vt100 clear screen & home
