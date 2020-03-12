@@ -7,7 +7,7 @@
 ***********************************************************************
 
 Wayne Warthen (wwarthen@gmail.com)
-Version 2.9.2-pre.34, 2020-03-05
+Version 2.9.2-pre.35, 2020-03-12
 https://www.retrobrewcomputers.org/
 
 RomWBW is a ROM-based implementation of CP/M-80 2.2 and Z-System for 
@@ -26,8 +26,8 @@ Pre-built ROM images are included for all platforms.  Detailed system
 customization is achieved by making simple modifications to a 
 configuration file and running a build script to generate a custom 
 ROM image. All source and build tools are included in the 
-distribution. As distributed, the build scripts run under any modern 
-32 or 64 bit version of Microsoft Windows.
+distribution.  Build scripts are provided for most modern computers
+including Windows (32 or 64 bit compatible), Linux, or Mac.
 
 John Coffman's UNA hardware BIOS is fully supported by RomWBW. In the 
 case of UNA, a single ROM image (pre-built) is used for all supported 
@@ -215,10 +215,12 @@ customize your ROM image to include support for the added board(s).
 
 Essentially, the creation of a custom ROM is accomplished by updating
 a small configuration file, then running a script to compile the
-software and generate the custom ROM image. At this time, the build
-process runs on Windows 32 or 64 bit versions. All tools (compilers,
-assemblers, etc.) are included in the distribution, so it is not
-necessary to setup a build environment on your computer.
+software and generate the custom ROM image. 
+
+Build scripts are provided for Windows (32 or 64 bit versions), Linux,
+and Mac.  All tools (compilers, assemblers, etc.) are included in the
+distribution, so it is not necessary to setup a build environment
+on your computer.
 
 For those who are interested in more than basic system customization, 
 note that all source code is included (including the operating 

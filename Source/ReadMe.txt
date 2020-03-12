@@ -26,16 +26,19 @@ Thought not necessary, advanced users can easily modify any of
 the software including the operating systems.
 
 A cross-platform approach is used to build the RomWBW firmware. 
-The software is built using a Microsoft Windows computer, then the 
-resulting firmware image is programmed into the ROM of your 
-RetroBrew Computer CPU board.
+The software is built using a modern Windows, Linux, or Mac
+computer, then the resulting firmware image is programmed into
+the ROM of your RetroBrew Computer CPU board.
 
 Build System Requirements
 -------------------------
 
-All that is required to build the firmware is a computer running 
-Microsoft Windows and the RomWBW distribution zip archive file.  
-The zip archive package includes all of the required source code 
+For Linux/Mac computers, refer to the ReadMe.unix file in the
+top directory of the distribution.
+
+For Microsoft Windows computers, All that is required to build the
+firmware is the RomWBW distribution zip archive file.  The zip
+archive package includes all of the required source code 
 (including the operating systems) and the programs required to run 
 the build.
 
@@ -101,7 +104,7 @@ to determine the <plt> component of the configuration filename:
 	RC2014 w/ Z80	RCZ80_std.rom
 	RC2014 w/ Z180	RCZ180_nat.rom	(native Z180 memory addressing)
 	RC2014 w/ Z180	RCZ180_ext.rom	(external 512K RAM/ROM module)
-	SCZ180		SC126, SC130
+	SCZ180		SC126, SC130, SC131
 	Easy Z80	EZZ180_std.rom
 	Dyno		DYNO_std.rom
 
@@ -160,6 +163,11 @@ to free up some space.
 
 3. Run the Build Process
 ------------------------
+
+This section describes the build process for Microsoft Windows
+computers.  The build process for Linux/Mac computers is described
+in the ReadMe.unix file in the top level directory of the
+distribution.
 
 The build involves running commands at the command prompt.  Open a 
 command prompt window for the Source directory.  If you unzipped 
@@ -237,6 +245,19 @@ used:
     SD occupies 2191 bytes.
     HBIOS space remaining: 21434 bytes.
 
+Optionally, you can run one more command that will create the
+RomWBW disk images that can be subsequently written to actual
+disk media.
+
+    C:\RomWBW\Source> BuildImages
+
+After running this command, you will find the resultant
+disk image file in the Binary directory with names in the
+format fd_xxx.img for floppy media or hd_xxx.img for
+hard disk media.  Refer to the DiskList.txt file in the
+Binary directory for more information on using the disk
+image files.
+
 4. Deploy the ROM
 -----------------
 
@@ -251,9 +272,6 @@ Three output files will be created for a single BuildROM run:
      <plt>_<cfg>.com - executable version of the system image
                        that can be copied via X-Modem to a
 		       running system to test the build.
-     <plt>_<cfg>.img - system image that can be written to an
-                       SD/CF Card and loaded via the UNA FS FAT
-		       loader.
 
 The actual ROM image is the file ending in .rom.  It should be 
 exactly 512KB.  Simply burn the .rom image to your ROM and install 
@@ -267,7 +285,7 @@ information on the other two file extensions created.
 Specifying Build Options on Command Line
 ----------------------------------------
 
-If you don't want to be prompteded for the options to the "BuildROM" 
+If you don't want to be prompted for the options to the "BuildROM" 
 command, you can specify the options right on the command line.
 
 For example:
