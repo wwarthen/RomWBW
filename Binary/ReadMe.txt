@@ -48,27 +48,16 @@ ROM Executable Images (<plt>_<cfg>.com)
 When a ROM image (".rom") is created, an executable version of the 
 ROM is also created.  These files have the same naming convention as 
 the ROM Image files, but have the extension ".com".  These files can 
-be copied to a working system and run like a normal application.
+be copied to a working system and run like a normal CP/M application.
 
 When run on the target system, they install in RAM just like they had 
-been programmed into the ROM.  This allows a new ROM build to be 
-tested without reprogramming the actual ROM.
+been loaded from  ROM.  This allows a new ROM build to be tested
+without reprogramming the actual ROM.
 
 WARNING: In a few cases the .com file is too big to load.  If you get 
 a message like "Full" or "BAD LOAD" when trying to load one of the 
 .com files, it is too big.  In these cases, you will not be able to 
 test the ROM prior to programming it.
-
-ROM Binary Images (<plt>_<cfg>.img)
------------------------------------
-
-Also when a ROM image is created, a third variation of the ROM is 
-created again with the same naming convention, but with the extension 
-of .img.  These files are similar to the .com files in that they can 
-be used to test a ROM build without actually programming a new ROM.  
-The .img files are specifically for loading via UNA from a FAT file 
-system.  The functionality of the UNA FAT file system loader is 
-beyond the scope of this document.
 
 VDU ROM Image (vdu.rom)
 -----------------------
@@ -103,10 +92,13 @@ intended to be copied to the start of any type of hard disk media
 (typically a CF Card or SD Card). The resulting media will be usable 
 on any RomWBW-based system that accepts the corresponding media type.
 
-Note that the contents of the floppy/hard disk images are created by 
+Documentation of the pre-built disk images is contained in the 
+DiskList.txt file in this directory.
+
+The contents of the floppy/hard disk images are created by 
 the BuildImages.cmd script in the Source directory.  Additional 
 information on how to generate custom disk images is found in the 
-Source\Images directory.
+Source\Images ReadMe.txt file.
 
 Propeller ROM Images (*.eeprom)
 -------------------------------

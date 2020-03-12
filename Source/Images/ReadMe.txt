@@ -26,6 +26,9 @@ PowerShell. It is included in all versions after Windows XP.  If you
 are using Windows XP, you will need to download it from Microsoft and 
 install it (free download).
 
+Although not documented here, the Linux/Mac build process will also
+create disk images using a similar process based on Makefiles.
+
 The cpmtools toolset is used to generate the actual disk images.  
 This toolset is included in the distribution, so you do not need to 
 download or install it.
@@ -88,6 +91,54 @@ BuildHD.cmd with a single parameter specifying the disk name.
 
 After completion of the script, the resultant image files are placed 
 in the Binary directory with names such as fd_xxx.img and hd_xxx.img.
+
+Sample output from running Build.cmd is provided at the end of
+this file.
+
+Be aware that the script always builds the image file from scratch.  
+It will not update the previous contents. Any contents of a 
+pre-existing image file will be permanently destroyed.
+
+Slices
+------
+
+A RomWBW CP/M filesystem is fixed at 8MB.  This is because it is the 
+largest size filesystem supported by all common CP/M variants. Since 
+all modern hard disks (including SD Cards and CF Cards) are much 
+larger than 8MB, RomWBW supports the concept of "slices".  This 
+simply means that you can concatenate multiple CP/M filesystems (up 
+to 256 of them) on a single physical hard disk and RomWBW will allow 
+you to assign drive letters to them and treat them as multiple 
+independent CP/M drives.
+
+The disk image creation scripts in this directory will only create a 
+single CP/M file system (i.e., a single slice).  However, you can 
+easily create a multi-slice disk image by merely concatenating 
+multiple images together.  For example, if you wanted to create a 2 
+slice disk image that has ZSDOS in the first slice and Wordstar in 
+the second slice, you could use the following command from a Windows 
+command prompt:
+
+  | C:\RomWBW\Binary>copy /b hd_zsdos.img + hd_ws.img hd_multi.img
+
+You can now write hd_multi.img onto your SD or CF Card and you will 
+have ZSDOS in the first slice and Wordstar in the second slice.
+
+The concept of slices applies ONLY to hard disks.  Floppy disks are 
+not large enough to support multiple slices.
+
+Disk Images
+-----------
+
+The standard RomWBW build process builds the disk images defined
+in this directory.  The resultant images are placed in the Binary
+directory and are ready to copy to your media.
+
+A description of the specific image files is found in the file
+called DiskList.txt in the Binary directory of the distribution.
+
+Sample Run
+----------
 
 Below is sample output from building the hard disk images:
 
@@ -408,133 +459,3 @@ C:\Users\Wayne\Projects\RBC\Build\RomWBW\Source\Images>Build.cmd
   | cpmcp -f wbw_hd0 hd_ws4.img d_ws4/u0/*.* 0:
   | Moving image hd_ws4.img into output directory...
   |         1 file(s) moved.
-
-Be aware that the script always builds the image file from scratch.  
-It will not update the previous contents. Any contents of a 
-pre-existing image file will be permanently destroyed.
-
-Installing Images
------------------
-
-First of all, a MAJOR WARNING!!!!  The tools described below are 
-quite capable of obliterating your running Windows system drive.  Use 
-with extreme caution and make sure you have backups.
-
-To install a floppy image on floppy media, you can use the tool 
-called RaWriteWin.  This tool is included in the Tools directory of 
-the distribution. This tool will write your floppy image (fd_xxx.img) 
-to a floppy disk using a raw block transfer.  The tool is GUI based 
-and it's operation is self explanatory.
-
-To install a hard disk image on a CF card or SD card, you must have 
-the appropriate media card slot on your computer. If you do, you can 
-use the tool called Win32 Disk Imager. This tool is also included in 
-the Tools directory of the distribution.  This tool will write your 
-hard disk image (hd_xxx.img) to the designated media card.  This tool 
-is also GUI based and self explanatory.
-
-Use of the SIMH emulator is outside of the scope of this document.  
-However, if you use SIMH, you will find that you can attach the hard 
-disk images to the emulator with lines such as the following in your 
-SIMH configuration file:
-
-  | attach hdsk0 hd_cpm22.img
-  | set hdsk0 format=HDSK
-  | set hdsk0 geom=T:520/N:256/S:512
-  | set hdsk0 wrtenb
-  
-Making Disk Images Bootable
----------------------------
-
-The current generation of these scripts does not make the resultant 
-media bootable.  This is primarily because there are multiple choices 
-for what you can put on the boot tracks of the media and that is a 
-choice best left to the user.
-
-The simplest way to make a resultant image bootable is to do it from 
-your running CP/M system.  Boot your system using the ROM selection, 
-then use the SYSCOPY command to make the desired drive bootable.
-
-You would use a command like the following to make drive C bootable:
-
-  | B>SYSCOPY C:=CPM.SYS
-  
-Slices
-------
-
-A RomWBW CP/M filesystem is fixed at 8MB.  This is because it is the 
-largest size filesystem supported by all common CP/M variants. Since 
-all modern hard disks (including SD Cards and CF Cards) are much 
-larger than 8MB, RomWBW supports the concept of "slices".  This 
-simply means that you can concatenate multiple CP/M filesystems (up 
-to 256 of them) on a single physical hard disk and RomWBW will allow 
-you to assign drive letters to them and treat them as multiple 
-independent CP/M drives.
-
-The disk image creation scripts in this directory will only create a 
-single CP/M file system (i.e., a single slice).  However, you can 
-easily create a multi-slice disk image by merely concatenating 
-multiple images together.  For example, if you wanted to create a 2 
-slice disk image that has ZSDOS in the first slice and Wordstar in 
-the second slice, you could use the following command from a Windows 
-command prompt:
-
-  | C:\RomWBW\Binary>copy /b hd_zsdos.img + hd_ws.img hd_multi.img
-
-You can now write hd_multi.img onto your SD or CF Card and you will 
-have ZSDOS in the first slice and Wordstar in the second slice.
-
-The concept of slices applies ONLY to hard disks.  Floppy disks are 
-not large enough to support multiple slices.
-
-Disk Images
------------
-
-RomWBW comes with several disk images.  These disk images are
-created from this directory using the process described above.
-This is a brief description of the disk images:
-
-cpm22 - DRI CP/M 2.2 (Floppy and Hard Disk)
-
-Standard DRI CP/M 2.2 distribution files along with a few commonly
-used utilities.
-
-zsdos - ZCPR1 + ZSDOS 1.1 (Floppy and Hard Disk)
-
-Contains ZCPR1 and ZSDOS 1.1.  This is roughly equivalent to the
-ROM boot contents, but provides a full set of the applications
-are related files that would not all fit on the ROM drive.
-
-nzcom - NZCOM (Floppy and Hard Disk)
-
-Standard NZCOM distribution.  Note that you will need to run the
-NZCOM setup before this will run properly.  You will need
-to refer to the NZCOM documentation.
-
-cpm3 - DRI CP/M3 (Floppy and Hard Disk)
-
-Standard DRI CP/M 3 adaptation for RomWBW that is ready to run.
-It can be started by running CPMLDR.
-
-zpm3 - ZPM3 (Floppy and Hard Disk)
-
-Simeon Cran's ZCPR 3 compatible OS for CP/M 3 adapted for RomWBW and 
-ready to run.  It can be started by running CPMLDR (which seems 
-wrong, but ZPMLDR is somewhat broken).
-
-ws4 - WorkStar 4 (Floppy and Hard Disk)
-
-Micropro Wordstar 4 full distribution.
-
-bp - BPBIOS (Hard Disk only)
-
-Adaptation of BPBIOS for RomWBW.  This is not complete and NOT
-useable in it's current state.
-  
-Notes
------
-
-I realize these instructions are very minimal.  I am happy to answer 
-questions.  You will find the RetroBrew Computers Forum at 
-https://www.retrobrewcomputers.org/forum/ to be a great source of 
-information as well.

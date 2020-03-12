@@ -191,7 +191,7 @@ RCZ180 (RCZ180_nat.rom & RCZ180_ext.rom):
    - RCZ180_ext.rom uses external bank management to access
      memory, such as the 512K RAM/ROM module.
 
-SCZ180 (SCZ180_126.rom & SCZ180_130.rom):
+SCZ180 (SCZ180_126.rom, SCZ180_130.rom, SCZ180_131.rom):
  - Assumes CPU oscillator of 18.432 MHz
  - Console on Z180 onboard primary ASCI serial port at 115200 baud
  - Includes support for Compact Flash Module
@@ -199,8 +199,9 @@ SCZ180 (SCZ180_126.rom & SCZ180_130.rom):
  - Support for alternative serial modules may be enabled in config
  - Support for Scott Baker floppy controllers (SMC & WDC) may
    be enabled in config
- - The _126 and _130 variants are functionally identical, they just
-   display a different system label at startup
+ - The 3 different variants of SCZ180 are provided to match the
+   3 corresponding systems (SC126, SC130, and SC131) designed by
+   Stephen Cousins.
 
 EZZ80 (EZZ80_std.rom):
  - Assumes CPU oscillator of 10.000 MHz
