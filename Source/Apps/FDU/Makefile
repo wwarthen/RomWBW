@@ -1,10 +1,8 @@
-OBJECTS = FDU.COM
-DOCS = FDU.TXT
+OBJECTS = FDU.com
+DOCS = FDU.txt
 DEST = ../../../Binary/Apps
 DOCDEST = ../../../Doc
 TOOLS = ../../../Tools
 include $(TOOLS)/Makefile.inc
 
-%.COM: %.asm
-	$(TASM) $< $@
-
+%.com: USETASM=1

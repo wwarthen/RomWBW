@@ -1,24 +1,10 @@
 #
 # Add RomWBW utilities
 #
-../../Binary/Apps/assign.com 0:
-../../Binary/Apps/fat.com 0:
-../../Binary/Apps/fdu.com 0:
-../../Binary/Apps/format.com 0:
-../../Binary/Apps/mode.com 0:
-../../Binary/Apps/osldr.com 0:
-../../Binary/Apps/rtc.com 0:
-../../Binary/Apps/survey.com 0:
-../../Binary/Apps/syscopy.com 0:
-../../Binary/Apps/sysgen.com 0:
-../../Binary/Apps/talk.com 0:
-../../Binary/Apps/timer.com 0:
-../../Binary/Apps/xm.com 0:
-../../Binary/Apps/inttest.com 0:
+../../Binary/Apps/*.com 0:
 #
-# Add Tune application and sample files
+# Add Tune sample files
 #
-../../Binary/Apps/tune.com 3:
 ../../Binary/Apps/Tunes/*.pt? 3:
 ../../Binary/Apps/Tunes/*.mym 3:
 #
@@ -26,3 +12,7 @@
 #
 ../CPM22/cpm_wbw.sys 0:cpm.sys
 ../ZSDOS/zsys_wbw.sys 0:zsys.sys
+#
+# Add Common Applications
+#
+Common/*.* 0:
