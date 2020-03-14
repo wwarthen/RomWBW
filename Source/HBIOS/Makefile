@@ -31,7 +31,7 @@ MOREDIFF = camel80.bin game.bin hbios_rom.bin nascom.bin prefix.bin usrrom.bin \
 SUBDIRS = 
 DEST = ../../Binary
 TOOLS =../../Tools
-OTHERS =  *.img *.rom *.com *.bin *.z80 cpm.sys zsys.sys Build.inc RomDisk.tmp font*.asm
+OTHERS =  *.img *.rom *.com *.bin *.z80 cpm.sys zsys.sys Build.inc RomDisk.tmp font*.asm *.dat
 include $(TOOLS)/Makefile.inc
 
 ifeq ($(DIFFMAKE),1)
@@ -47,9 +47,6 @@ N8_std.rom: ROMSIZE=512
 
 %.rom:
 	bash Build.sh $(DIFFBUILD) $(shell echo $* | sed 's/_/ /') $(ROMSIZE)
-
-#ZETA2_std.rom:
-#	bash Build.sh ZETA2 std 512
 
 hbios_rom.bin:	hbios.asm build.inc
 	$(TASM) -dROMBOOT hbios.asm hbios_rom.bin hbios_rom.lst
