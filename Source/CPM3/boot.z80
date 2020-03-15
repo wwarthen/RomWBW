@@ -14,7 +14,7 @@
 	extrn	@date,@hour,@min,@sec
 	extrn	@srch1
 	extrn	addhla, bcd2bin, bin2bcd
-	;extrn	cout, phex8
+	extrn	cout, phex8, phex16, crlf, crlf2
 	
 	include	c:ver.lib
 	
@@ -85,7 +85,6 @@ cinit$1:
 	rr	l			; ... into correct vector position
 	djnz	cinit$1			; loop as needed
 	
-	;ld	hl,8000H		; device 0
 	ld	(@civec),hl		; assign to console input
 	ld	(@covec),hl		; assign to console output
 
@@ -100,8 +99,7 @@ cinit$1:
 	ld	hl,4000h		; assume aux on second char device
 	jr	nz,cinit$2		; if console on unit 0, assumption good
 	ld	hl,8000h		; otherwise, aux goes to first char device
-cinit$2:	
-	;ld	hl,4000H		; device 1
+cinit$2:
 	ld	(@aivec),hl		; assign to aux input
 	ld	(@aovec),hl		; assign to aux output
 cinit$3:
@@ -113,6 +111,7 @@ cinit$3:
 	call	addhla			; Skip used entries
 	xor	a			; Zero to accum
 	ld	(hl),0			; Set table terminator
+	ret				; done
 
 dinit:
 	; loop through all disk devices to count hard disk units
@@ -178,24 +177,7 @@ dinit3a:
 	inc	e			; increment hard disk count
 	ret				; and return
 
-
 dinit4:	; set slices per volume (hdspv) based on hard disk volume count
-
-;	; *** debug ***
-;	;call	newline2
-;	ld	a,(drvlstc)
-;	ld	b,a
-;	call	phex8
-;	ld	a,' '
-;	call	cout
-;	ld	hl,drvlst
-;temp1:
-;	ld	a,(hl)
-;	inc	hl
-;	call	phex8
-;	djnz	temp1
-;	; *** debug ***
-
 	ld	a,e			; hard disk volume count to a
 	ld	e,8			; assume 8 slices per volume
 	dec	a			; dec accum to check for count = 1
@@ -250,6 +232,7 @@ dinit6:
 	rlca				; *2 for word entry
 	ld	hl,@dtbl		; start of dtbl
 	call	addhla			; hl now points to entry
+	
 dinit6a:
 	xor	a			; zero accum
 	ld	(hl),a			; zero lsb
@@ -277,7 +260,8 @@ dinit8:	; test to avoid reallocating boot disk unit/slice
 	cp	e			; compare to cur slice
 	jr	nz,dinit8a		; if ne, ok to continue
 	inc	e			; is boot du/slice, skip it
-	jr	dinit8			; and restart loop
+	djnz	dinit8			; loop till done with unit
+	ret
 
 dinit8a:
 	; d=unit, e=slice, l=dph#, b=slice cnt
@@ -320,27 +304,6 @@ stpsiz	equ	$ - stpimg
     ;	called CCP.COM on the system drive.
 
 ?ldccp:
-
-	;if zpm
-	;
-	;; Swap A: and system drive (make A: the system drive)
-	;ld	bc,(@dtbl)		; get drive A DPH
-	;ld	hl,@dtbl		; point to boot drive DPH
-	;ld	a,(@sysdr)
-	;rlca
-	;call	addhla
-	;ld	e,(hl)			; set boot drive to drive A DPH
-	;ld	(hl),c			; ... and save boot drive DPH
-	;inc	hl
-	;ld	d,(hl)
-	;ld	(hl),b
-	;ld	(@dtbl),de		; set drive a DPH to boot drive
-	;
-	;xor	a			; update @sysdr
-	;ld	(@sysdr),a
-	;
-	;endif
-	
 	; Force CCP to use system boot drive as initial default
 	ld	a,(@sysdr)		; get system boot drive
 	ld	(@ccpdr),a		; set CCP current drive
@@ -369,22 +332,6 @@ stpsiz	equ	$ - stpimg
 
 	if banked
 
-;					; now,
-;					;   copy CCP to bank 0 for reloading
-;	lxi h,0100h ! lxi b,0C80h	; clone 3K, just in case
-;	lda @cbnk ! push psw		; save current bank
-;ld$1:
-;	mvi a,tpa$bank ! call ?bnksl	; select TPA
-;	mov a,m ! push psw		; get a byte
-;	mvi a,2 ! call ?bnksl		; select extra bank
-;	pop psw ! mov m,a		; save the byte
-;	inx h ! dcx b			; bump pointer, drop count
-;	mov a,b ! ora c			; test for done
-;	jnz ld$1
-;	pop psw ! call ?bnksl		; restore original bank
-
-;					; now,
-;					;   copy CCP to bank 0 for reloading
 	ld	hl,0100h		; clone 3K, just in case
 	ld	bc,0C80h
 	ld	a,(@cbnk)		; save current bank
@@ -408,17 +355,9 @@ ld$1:
 	
 	endif
 	
-	;; Set first search path to system boot drive
-	;inc	a
-	;ld	(@srch1),a
-	
-	;ld	e,a
-	;ld	c,14
-	;call	bdos
-
 	ret
 
-no$CCP:			; here if we couldn't find the file
+no$CCP:		; here if we couldn't find the file
 	ld	hl,ccp$msg
 	call	?pmsg
 	call	?conin
@@ -428,17 +367,6 @@ no$CCP:			; here if we couldn't find the file
 ?rlccp:
 
 	if banked
-
-;	lxi h,0100h ! lxi b,0C00h	; clone 3K
-;rl$1:
-;	mvi a,2 ! call ?bnksl		; select extra bank
-;	mov a,m ! push psw		; get a byte
-;	mvi a,tpa$bank ! call ?bnksl	; select TPA
-;	pop psw ! mov m,a		; save the byte
-;	inx h ! dcx b			; bump pointer, drop count
-;	mov a,b ! ora c			; test for done
-;	jnz rl$1
-;	ret
 
 	ld	hl,0100h		; clone 3K
 	ld	bc,0C80h
