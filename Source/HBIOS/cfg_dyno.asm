@@ -1,6 +1,6 @@
 ;
 ;==================================================================================================
-;   ROMWBW 2.X CONFIGURATION DEFAULTS FOR RC2014
+;   ROMWBW 2.X CONFIGURATION DEFAULTS FOR DYNO
 ;==================================================================================================
 ;
 ; THIS FILE CONTAINS THE FULL SET OF DEFAULT CONFIGURATION SETTINGS FOR THE PLATFORM
