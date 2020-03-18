@@ -329,11 +329,6 @@ BuildBP: This command builds another OS variant called BPBIOS.  It
          is a work in progress and should not be used at this time
 	 without contacting Wayne Warthen.
 
-BuildDoc: This command is used to build a new generation of RomWBW
-          documentation based on LaTeX.  This is also a work in
-	  progress and requires LaTeX be installed on your Windows
-	  computer.  It is not intended for use at this time.
-
 Example BuildShared Run
 -----------------------
 
