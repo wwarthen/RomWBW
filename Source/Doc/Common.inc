@@ -1,6 +1,6 @@
 !def(ver)(2.9.2)
-!def(date)(March 18, 2020)
-!def(name)(RomWBW)
+!def(date)(!mdate)
+!def(product)(RomWBW)
 !def(author)(Wayne Warthen)
 !def(authmail)(wwarthen@gmail.com)
 !def(orgname)(RetroBrew Computers Group)

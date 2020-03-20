@@ -1,22 +1,21 @@
 !include(Common.inc)
-!def(name)(Architecture)
+!def(document)(Architecture)
 ---
-title: RomWBW !name
+title: |
+   | !product
+   |
+   | !document
 author: !author (mailto:!authmail)
 date: !date
 institution: !orgname
 documentclass: book
+classoption:
+- oneside
 toc: true
 toc-depth: 1
 numbersections: true
 secnumdepth: 1
-classoption:
-- oneside
 papersize: letter
-fontsize: 12pt
-graphics: yes
-fontfamily: helvet
-# fontfamilyoptions: scaled
 geometry: 
 - top=1in
 - bottom=1in
@@ -26,7 +25,8 @@ geometry:
 # - pass
 linestretch: 1.25
 colorlinks: true
-#pagestyle: empty
+fontfamily: helvet
+fontsize: 12pt
 header-includes:
 - \setlength{\headheight}{15pt}
 - |
@@ -35,8 +35,6 @@ header-includes:
   \usepackage{xcolor}
   \usepackage{xhfill}
   \renewcommand*{\familydefault}{\sfdefault}
-  \renewcommand{\bfdefault}{b}
-  \renewcommand{\contentsname}{Table of Contents}
   \renewcommand{\maketitle}{
     \begin{titlepage}
       \centering
@@ -45,8 +43,8 @@ header-includes:
       \includegraphics[width=\paperwidth]{Graphics/Logo.pdf} \par
       \vfill
       \raggedleft
-      {\scshape \bfseries \fontsize{48pt}{56pt} \selectfont RomWBW \par}
-      {\bfseries \fontsize{32pt}{36pt} \selectfont !name \par}
+      {\scshape \bfseries \fontsize{48pt}{56pt} \selectfont !product \par}
+      {\bfseries \fontsize{32pt}{36pt} \selectfont !document \par}
       \vspace{24pt}
       {\huge Version !ver \\ !date \par}
       \vspace{24pt}
@@ -71,7 +69,7 @@ include-before:
 ```{=latex}
 \clearpage
 \pagenumbering{arabic}
-\lhead{\fancyplain{}{\nouppercase{\footnotesize \bfseries \leftmark \hfill RomWBW !name}}}
+\lhead{\fancyplain{}{\nouppercase{\footnotesize \bfseries \leftmark \hfill !product  !document}}}
 ```
 
 Overview
@@ -419,7 +417,7 @@ bits are defined as YXXXX.
 |       C: Serial Device Unit Number
 
 | _Exit Results_
-|       A: Status
+|       A: Status (0=OK, else error)
 |       E: Character Received
 
 Read a character from the device unit specified in register C and return the character
@@ -433,7 +431,7 @@ value in E. If no character(s) are available, this function will wait indefinite
 |       E: Character to Send
 
 | _Exit Results_
-|       A: Status
+|       A: Status (0=OK, else error)
 
 Send character value in register E to device specified in register C.  If device is
 not ready to send, function will wait indefinitely.
@@ -445,7 +443,7 @@ not ready to send, function will wait indefinitely.
 |       C: Serial Device Unit Number
 
 | _Exit Results_
-|       A: Status
+|       A: Bytes Pending
 
 Return the number of characters available to read in the input buffer of the unit
 specified. If the device has no input buffer, it is acceptable to return simply 0 or
@@ -459,7 +457,7 @@ least one character available to read.
 |       C: Serial Device Unit Number
 
 | _Exit Results_
-|       A: Status
+|       A: Output Buffer Bytes Available
 
 Return the space available in the output buffer expressed as a character count. If a
 16 byte output buffer contained 6 characters waiting to be sent, this function would
@@ -475,7 +473,7 @@ busy and 1 means the port is ready to output a character.
 |       DE: Line Characteristics
 
 | _Exit Results_
-|       A: Status
+|       A: Status (0=OK, else error)
 
 Setup line characteristics (baudrate, framing, etc.) of the specified unit. Register
 pair DE specifies line characteristics. If DE contains -1 (0xFFFF), then the device
@@ -489,7 +487,7 @@ is returned in A with zero indicating success.
 |       C: Serial Device Unit Number
 
 | _Exit Results_
-|       A: Status
+|       A: Status (0=OK, else error)
 |       DE: Line Characteristics
 
 Reports the line characteristics (baudrate, framing, etc.) of the specified unit.
@@ -502,7 +500,7 @@ Register pair DE contains the line characteristics upon return.
 |       C: Serial Device Unit Number
 
 | _Exit Results_
-|       A: Status
+|       A: Status (0=OK, else error)
 |       C: Serial Device Attributes
 |       D: Serial Device Type
 |       E: Serial Device Number
@@ -556,7 +554,7 @@ MID\_FD111   | 9         | 8" 1.11M Floppy
 |       B: 0x10
 
 | _Exit Results_
-|       A: Status (0=OK, 1=Error)
+|       A: Status (0=OK, else error)
 
 ### Function 0x11 -- Disk Status (DIORESET)
 
@@ -565,7 +563,7 @@ MID\_FD111   | 9         | 8" 1.11M Floppy
 |       C: Disk Device Unit ID
 
 | _Exit Results_
-|       A: Status (0=OK, 1=Error)
+|       A: Status (0=OK, else error)
 
 Reset the physical interface associated with the specified unit. Flag 
 all units associated with the interface for unit initialization at next 
@@ -588,7 +586,7 @@ associated units of the physical interface.
 |           DE:HL: Block Address
 
 | _Exit Results_
-|       A: Status (0=OK, 1=Error)
+|       A: Status (0=OK, else error)
 
 Update target CHS or LBA for next I/O request on designated unit.
 Physical seek is typically deferred until subsequent I/O
@@ -614,7 +612,7 @@ determine if the device supports LBA addressing.
 |       HL: Buffer Address
 
 | _Exit Results_
-|       A: Status (0=OK, 1=Error)
+|       A: Status (0=OK, else error)
 |       E: Blocks Reaad
 
 Read Block Count sectors to buffer address starting at current target
@@ -636,7 +634,7 @@ sectors requested, and 2) entire buffer area resides in upper 32K of memory.
 |       HL: Buffer Address
 
 | _Exit Results_
-|       A: Status (0=OK, 1=Error)
+|       A: Status (0=OK, else error)
 |       E: Blocks Written
 
 Write Block Count sectors to buffer address starting at current target
@@ -659,7 +657,7 @@ sectors being written, and 2) entire buffer area resides in upper 32K of memory.
 |       E: Block Count
 
 | _Exit Results_
-|       A: Status (0=OK, 1=Error)
+|       A: Status (0=OK, else error)
 |       E: Blocks Verified
 
 \*\*\*Not Implemented\*\*\*
@@ -674,7 +672,7 @@ sectors being written, and 2) entire buffer area resides in upper 32K of memory.
 |       HL: Cylinder
 
 | _Exit Results_
-|       A: Status (0=OK, 1=Error)
+|       A: Status (0=OK, else error)
 
 \*\*\*Not Implemented\*\*\*
 
@@ -685,7 +683,7 @@ sectors being written, and 2) entire buffer area resides in upper 32K of memory.
 |       C: Disk Device Unit ID
 
 | _Exit Results_
-|       A: Status (0=OK, 1=Error)
+|       A: Status (0=OK, else error)
 |       C: Attributes
 |       D: Device Type
 |       E: Device Number
@@ -734,12 +732,12 @@ etc.) which is identified by a device type id from the table below.
 |       E0: Enable Media Discovery
 
 | _Exit Results_
-|       A: Status (0=OK, 1=Error)
+|       A: Status (0=OK, else error)
 |       E: Media ID
 
 Report the media definition for media in specified unit. If bit 0 of E is
 set, then perform media discovery or verification. If no media in device,
-return no media error.
+function will return an error status.
 
 ### Function 0x19 -- Disk Define Media (DIODEFMED)
 
@@ -749,7 +747,7 @@ return no media error.
 |       E: Media ID
 
 | _Exit Results_
-|       A: Status (0=OK, 1=Error)
+|       A: Status (0=OK, else error)
 
 \*\*\* Not implemented \*\*\*
 
@@ -761,7 +759,7 @@ return no media error.
 |       HL: Buffer Address
 
 | _Exit Results_
-|       A: Status (0=OK, 1=Error)
+|       A: Status (0=OK, else error)
 |       DE:HL: Blocks on Device
 |       BC: Block Size
 
@@ -776,7 +774,7 @@ block size. If media is unknown, an error will be returned.
 |       C: Disk Device Unit ID
 
 | _Exit Results_
-|       A: Status (0=OK, 1=Error)
+|       A: Status (0=OK, else error)
 |       HL: Cylinders
 |       D7: LBA Capability
 |       BC: Block Size
@@ -1199,7 +1197,7 @@ contains a negative number, then reverse scroll should be performed.
 |       C: Video Device Unit ID
 
 | _Exit Results_
-|       A: Status (# Key Codes in Keyboard Buffer)
+|       A:Count of Key Codes in Keyboard Buffer
 
 Return a count of the number of key codes in the keyboard buffer. If it
 is not possible to determine the actual number in the buffer, it is
