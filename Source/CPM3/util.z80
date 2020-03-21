@@ -3,7 +3,7 @@
 	maclib	options.lib
 	
 	public addhla, bcd2bin, bin2bcd
-	public phex16, phex8, cout
+	public phex16, phex8, cout, crlf, crlf2
 	
 	cseg
 
@@ -120,12 +120,28 @@ cout:
 	pop	bc
 	pop	af
 	ret
+;
+; output 1 or 2 newlines
+;
+crlf2:
+	call	crlf
+crlf:
+	; save all incoming registers
+	push	af
+	ld	a,13
+	call	cout
+	ld	a,10
+	call	cout
+	pop	af
+	ret
 
 	else
 
 phex16:
 phex8:
 cout:
+crlf2:
+crlf:
 	halt
 	
 	endif

@@ -1,0 +1,31 @@
+name: Commit Build
+
+on:
+  push:
+    branches: 
+      - master
+    tags-ignore:
+      - v*
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: rlespinasse/github-slug-action@1.1.0
+        
+      - uses: actions/checkout@v2
+          
+      - name: Build
+        run: |
+          sudo apt-get install libncurses-dev
+          make
+          make clean
+          rm -rf .git*
+        
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: RomWBW-${{env.GITHUB_REF_SLUG}}-${{env.GITHUB_SHA_SHORT}}
+          path: .

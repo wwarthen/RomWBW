@@ -13,6 +13,5 @@ setlocal & cd Forth && call Clean.cmd & endlocal
 setlocal & cd Fonts && call Clean.cmd & endlocal
 setlocal & cd BPBIOS && call Clean.cmd & endlocal
 setlocal & cd HBIOS && call Clean.cmd & endlocal
-setlocal & cd Doc && call Clean.cmd & endlocal
 setlocal & cd Images && call Clean & endlocal
 setlocal & cd Prop && call Clean & endlocal

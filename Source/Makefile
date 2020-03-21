@@ -1,7 +1,6 @@
 #
 # order is actually important, because of build dependencies
 #
-NOTDONE = Doc
 SUBDIRS = Prop
 SUBDIRS += Apps 
 SUBDIRS += CBIOS
