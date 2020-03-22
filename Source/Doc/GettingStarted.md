@@ -404,7 +404,7 @@ ZSDOS is the most popular non-DRI CP/M "clone" which is generally referred to as
 
 ## NZCOM Automatic Z-System
 
-NZCOM is a much further refined version of Z-System (ZCPR 3.4).  NZCOM was sold as an enhancement for existing users of CP/M 2.2 or ZSDOS.  For this reason, (by design) NZCOM does not provide a way to boot directly from disk.  Rather, it is loaded after the system boots into a host OS.  On the RomWBW NZCOM disk images, the boot OS is ZSDOS 1.1.
+NZCOM is a much further refined version of Z-System (ZCPR 3.4).  NZCOM was sold as an enhancement for existing users of CP/M 2.2 or ZSDOS.  For this reason, (by design) NZCOM does not provide a way to boot directly from disk.  Rather, it is loaded after the system boots into a host OS.  On the RomWBW NZCOM disk images, the boot OS is ZSDOS 1.1.  After you configure NZCOM, you can add a `PROFILE.SUB` file to automatically launch NZCOM at boot.
 
 To use, NZCOM, you must run through a simple configuration process.  This is well documented in the NZCOM manual in the "NZCOM Users Manual.pdf" file in the RomWBW Doc directory.  Additionally, there are instructions for automatically launching NZCOM when the disk is booted under the host OS via an auto command submission process.
 

@@ -1,4 +1,4 @@
-!def(ver)(2.9.2)
+!def(ver)(2.9.2 Prerelease)
 !def(date)(!mdate)
 !def(product)(RomWBW)
 !def(author)(Wayne Warthen)
