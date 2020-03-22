@@ -12,10 +12,10 @@ classoption:
  - oneside
 papersize: letter
 geometry:
- - top=1in
- - bottom=1in
- - left=1in
- - right=1in
+ - top=1.5in
+ - bottom=1.5in
+ - left=1.5in
+ - right=1.5in
 # - showframe
 linestretch: 1.25
 colorlinks: true

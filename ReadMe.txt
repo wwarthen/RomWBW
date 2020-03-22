@@ -105,40 +105,41 @@ directory contains the pre-built ROM and disk images. The ROM image
 files all end in “.rom”. Based on the table below, carefully pick the
 appropriate ROM image for your hardware.
 
-  --------------------------------------------------------------------------
-  Platform   ROM Image File       Baud Description
-  ---------- ---------------- -------- -------------------------------------
-  SBC V1/V2  SBC_std.rom         38400 RetroBrew SBC v1 or v2 ECB Z80
+  -------------------------------------------------------------------------
+  Platform   ROM Image File        Baud Description
+  ---------- ----------------- -------- -----------------------------------
+  SBC        SBC_std.rom          38400 RetroBrew SBC v1 or v2 ECB Z80
 
-  Zeta V1    ZETA_std.rom        38400 RetroBrew Zeta V1 Z80, ParPortProp
-                                       (optional)
+  Zeta V1    ZETA_std.rom         38400 RetroBrew Zeta V1 Z80, ParPortProp
+                                        (optional)
 
-  Zeta V2    ZETA2_std.rom       38400 RetroBrew Zeta V2 Z80, ParPortProp
-                                       (optional)
+  Zeta V2    ZETA2_std.rom        38400 RetroBrew Zeta V2 Z80, ParPortProp
+                                        (optional)
 
-  N8         N8_std.rom          38400 RetroBrew N8 Z180, date code >= 2312
+  N8         N8_std.rom           38400 RetroBrew N8 Z180, date code >=
+                                        2312
 
-  Mark IV    MK4_std.rom         38400 RetroBrew Mark IV ECB Z180
+  Mark IV    MK4_std.rom          38400 RetroBrew Mark IV ECB Z180
 
-  RC2014 Z80 RCZ80_std.rom      115200 RC2014 w/ Z80 CPU, requires 512K
-                                       RAM/ROM module
+  RC Z80     RCZ80_std.rom       115200 RC2014 w/ Z80 CPU, requires 512K
+                                        RAM/ROM module
 
-  RC2014     RCZ180_ext.rom     115200 RC2014 w/ Z180 CPU & 512K banked
-  Z180*                                RAM/ROM module
+  RC Z180*   RCZ180_ext.rom      115200 RC2014 w/ Z180 CPU & 512K banked
+                                        RAM/ROM module
 
-  RC2014     RCZ180_nat.rom     115200 RC2014 w/ Z180 CPU & 512K native
-  Z180*                                RAM/ROM module
+  RC Z180*   RCZ180_nat.rom      115200 RC2014 w/ Z180 CPU & 512K native
+                                        RAM/ROM module
 
-  Easy Z80   EZZ80_std.rom      115200 Sergey Kiselev’s Easy Z80
+  Easy Z80   EZZ80_std.rom       115200 Sergey Kiselev’s Easy Z80
 
-  SC126      SCZ180_126.rom     115200 Stephen Cousin’s SC126 Z180
+  SC126      SCZ180_126.rom      115200 Stephen Cousin’s SC126 Z180
 
-  SC130      SCZ180_130.rom     115200 Stephen Cousin’s SC130 Z180
+  SC130      SCZ180_130.rom      115200 Stephen Cousin’s SC130 Z180
 
-  SC131      SCZ180_131.rom     115200 Stephen Cousin’s SC131 Z180
+  SC131      SCZ180_131.rom      115200 Stephen Cousin’s SC131 Z180
 
-  Dyno       DYNO_std.rom        38400 Steve Garcia’s Z180 Dyno Computer
-  --------------------------------------------------------------------------
+  Dyno       DYNO_std.rom         38400 Steve Garcia’s Z180 Dyno Computer
+  -------------------------------------------------------------------------
 
 *The RC2014 Z180 requires a separate RAM/ROM memory module. There are
 two types of these modules and you must pick the ROM for your type of
