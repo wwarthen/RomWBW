@@ -422,7 +422,14 @@ Like CP/M 3, to make ZPM3 boot disk, you put CPMLDR.SYS on the system tracks of 
 
 ## FreeRTOS
 
-Note that Phillip Stevens has also ported FreeRTOS to run under RomWBW.  FreeRTOS is not provided in the RomWBW distribution.  You can contact Phillip for availability.
+Note that Phillip Stevens has also ported FreeRTOS to run under RomWBW.
+FreeRTOS is not provided in the RomWBW distribution. FreeRTOS is available
+under the [MIT licence](https://www.freertos.org/a00114.html)
+and further general information is available at
+[FreeRTOS](https://www.freertos.org/RTOS.html).
+
+You can also contact Phillip for detailed information on the Z180
+implementation of FreeRTOS for RomWBW. [@feilipu](https://github.com/feilipu)
 
 # Transferring Files
 
@@ -534,6 +541,7 @@ I especially want to credit Douglas Goodall for contributing code, time, testing
   * David Giles contributed support for the CSIO support in the SD Card driver.
   * Ed Brindley contributed some of the code that supports the RC2014 platform.
   * Phil Summers contributed Forth and BASIC in ROM as well as a long list of general code enhancements.
+  * Phillip Stevens contributed support for FreeRTOS.
   * Curt Mayer contributed the Linux / MacOS build process.
   * UNA BIOS is a product of John Coffman.
 

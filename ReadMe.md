@@ -3,7 +3,7 @@
 ## Z80/Z180 System Software
 
 Version 2.9.2 Prerelease  
-Saturday 21 March 2020
+Sunday 22 March 2020
 
 Wayne Warthen <wwarthen@gmail.com>
 
@@ -779,13 +779,14 @@ tracks of the disk.
 ## FreeRTOS
 
 Note that Phillip Stevens has also ported FreeRTOS to run under RomWBW.
-FreeRTOS is not provided in the RomWBW distribution. FreeRTOS is available
-under the [MIT licence](https://www.freertos.org/a00114.html)
+FreeRTOS is not provided in the RomWBW distribution. FreeRTOS is
+available under the [MIT licence](https://www.freertos.org/a00114.html)
 and further general information is available at
 [FreeRTOS](https://www.freertos.org/RTOS.html).
 
 You can also contact Phillip for detailed information on the Z180
-implementation of FreeRTOS for RomWBW. [@feilipu](https://github.com/feilipu)
+implementation of FreeRTOS for RomWBW.
+\[@feilipu\](https://github.com/feilipu)
 
 # Transferring Files
 
@@ -990,7 +991,7 @@ are:
 | Source      | Contains the source code files used to build the software and ROM images.                                                               |
 | Tools       | Contains the MS Windows programs that are used by the build process or that may be useful in setting up your system.                    |
 
-# Acknowledgements
+# Acknowledgments
 
 While I have heavily modified much of the code, I want to acknowledge
 that much of the work is derived from the work of others in the
@@ -1011,6 +1012,7 @@ applications are no longer provided.
     platform.
   - Phil Summers contributed Forth and BASIC in ROM as well as a long
     list of general code enhancements.
+  - Phillip Stevens contributed support for FreeRTOS.
   - Curt Mayer contributed the Linux / MacOS build process.
   - UNA BIOS is a product of John Coffman.
 

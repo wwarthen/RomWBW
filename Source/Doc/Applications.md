@@ -698,7 +698,7 @@ files in the opposite direction, you just reverse the parameters.
 To rename the file "XXX.DAT" to "YYY.DAT" on a FAT filesystem,
 you could use a command like "FAT REN 2:XXX.DAT 2:YYY.DAT".
 
-To delete a file "XXX.DAT" on a FAT filesystem in director "FOO",
+To delete a file "XXX.DAT" on a FAT filesystem in directory "FOO",
 you would use a command like `FAT DEL 2:\FOO\XXX.DAT`.
 
 To make a directory called "FOO2" on a FAT filesystem, you would
@@ -734,7 +734,7 @@ current CP/M drive is assumed.  For example:
 
 "2:README.TXT" refers to FAT file README.TXT on disk unit #2
 "C:README.TXT" refers to CP/M file README.TXT on CP/M drive C
-"README.TXT" refers to CP/M file README.TXT on current CP/M drive
+"README.TXT" refers to CP/M file README.TXT on the current CP/M drive
 
 Files with SYS, HIDDEN, or R/O only attributes are not given
 any special treatment.  Such files are found and processed
