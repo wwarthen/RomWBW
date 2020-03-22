@@ -223,7 +223,7 @@ system.
 CP/M 3 uses a two phase boot process.  To make a CP/M 3 drive
 bootable, you need to put "CPMLDR.SYS" on the boot tracks of the
 disk and be sure that the drive also contains the "CPM.SYS" file.
-The "CPMLDR.SYS" file is not inlcuded on the ROM disk, but is found
+The "CPMLDR.SYS" file is not included on the ROM disk, but is found
 on the CP/M 3 disk image.
 
 ZPM3 is similar to CP/M 3.  You also put "CPMLDR.SYS" on the system
@@ -265,7 +265,7 @@ any bootable disk when you upgrade your ROM firmware.
 
 The system boot images are **not** tied to specific hardware
 configurations.  System boot images and operating systems
-proviced with RomWBW will work with any supported RomWBW
+provided with RomWBW will work with any supported RomWBW
 platform or hardware as long as they are the same version as
 the RomWBW firmware.
 
@@ -333,7 +333,7 @@ system boot.
 
 Not all character devices support all `MODE` options.  Some devices
 (notably ASCI devices) have limited baud rate divisors.  An attempt
-to set a buad rate that the device cannot support will fail with
+to set a baud rate that the device cannot support will fail with
 an error message.
 
 ## Etymology
@@ -449,7 +449,7 @@ will make it simpler to format media including floppy disks.
 
 This application currently just displays a few lines of information
 briefly instructing a user how to format media.  It performs no
-actual fucntion beyond this display currently.
+actual function beyond this display currently.
 
 ## Etymology
 
@@ -460,7 +460,7 @@ provided in the RomWBW distribution.
 
 # XM
 
-An adaptation of Ward Christensen's X-Modem protrocol for transferring files between systems using a serial port.
+An adaptation of Ward Christensen's X-Modem protocol for transferring files between systems using a serial port.
 
 ## Syntax
 
@@ -486,27 +486,38 @@ To transfer a file from your host computer to your RomWBW
 computer, do the following:
 
 1. Enter one of the `XM` receive commands specifying the name you want to give to the received file.
-2. On your host compouter select a file to send and initiate the XModem send operation.
+2. On your host computer select a file to send and initiate the XModem send operation.
 
 To transfer a file from your RomWBW computer to your host computer, do the following:
 
 1. Enter one of the `XM` send commands specifying the name of the file to be sent.
 2. On your host computer, specify the name to assign to the received file and initiate and XModem receive operation.
 
-Please refer to the doucmentation of your host computer's terminal emulation software for specific instructions on how to use XModem.
+Please refer to the documentation of your host computer's terminal emulation
+software for specific instructions on how to use XModem.
 
 ## Notes
 
-The XModem adaptation that comes with RomWBW will automatically use the primary character device unit (character device unit 0) for the file transfer.
+The XModem adaptation that comes with RomWBW will automatically use the
+primary character device unit (character device unit 0) for the file transfer.
 
-`XM` attempts to determine the best way to drive the serial port based on your hardware configuration.  When possible, it will bypass the HBIOS for faster operation.  However, in many cases, it will use HBIOS so that flow control can be used.
+`XM` attempts to determine the best way to drive the serial port based on your
+hardware configuration.  When possible, it will bypass the HBIOS for
+faster operation.  However, in many cases, it will use HBIOS so that flow
+control can be used.
 
-`XM` is dependent on a reliable communications channel.  You must ensure that the serial port can be serviced fast enough by either using a baud rate that is low enough or ensureing that hardware flow control is fully functional (end to end).
+`XM` is dependent on a reliable communications channel.
+You must ensure that the serial port can be serviced fast enough by either
+using a baud rate that is low enough or ensuring that hardware flow control
+is fully functional (end to end).
 
 ## Etymology
 
-The `XM` application provided in RomWBW is an adaptation of a pre-existing XModem application.  Based on the source code comments, it was originally adapted from Ward Christensen's
-MODEM2 by Keith Petersen and is labeled version 12.5.
+The `XM` application provided in RomWBW is an adaptation of a pre-existing
+XModem application.  Based on the source code comments, it was originally
+adapted from Ward Christensen's MODEM2 by Keith Petersen and is
+labeled version 12.5.
+
 The original source of the application was found in the
 Walnut Creek CD-ROM and is called XMDM125.ARK dated 7/15/86.
 
@@ -551,7 +562,7 @@ Options: (access method is auto-detected by default)
 ## Usage
 
 To program your EEPROM ROM chip, first transfer the file to your
-RomWBW sytem.  Then use the command `FLASH WRITE *`<filename>`*.
+RomWBW system.  Then use the command `FLASH WRITE *`<filename>`*.
 The application will auto-detect the type of EEPROM chip you have
 and will program and verify it.
 
@@ -670,7 +681,7 @@ erase files, format, and list directories of FAT filesystems.
 The `FAT` application determines whether you are referring to a
 CP/M filesystem or a FAT filesystem based on the way you specify
 the file or path.  If the file or path is prefixed with a number (n:),
-then it is assumed this is a FAT filesystem reference and is refering
+then it is assumed this is a FAT filesystem reference and is referring
 to the FAT filesystem on RomWBW disk unit 'n'.  Otherwise, the
 file specification is assumed to be a normal CP/M file specification.
 
@@ -687,7 +698,8 @@ files in the opposite direction, you just reverse the parameters.
 To rename the file "XXX.DAT" to "YYY.DAT" on a FAT filesystem,
 you could use a command like "FAT REN 2:XXX.DAT 2:YYY.DAT".
 
-To delete a file "XXX.DAT" on a FAT filesystem in director "FOO", you would use a command like `FAT DEL 2:\FOO\XXX.DAT`.
+To delete a file "XXX.DAT" on a FAT filesystem in director "FOO",
+you would use a command like `FAT DEL 2:\FOO\XXX.DAT`.
 
 To make a directory called "FOO2" on a FAT filesystem, you would
 use a command line `FAT MD 2:\FOO2`.
@@ -755,7 +767,8 @@ full project and source code is found in the
 
 # TUNE
 
-If your RomWBW system has a sound card based on either an AY-3-8190 or YM2149F sound chip, you can use the `TUNE` application to play PT or MYM
+If your RomWBW system has a sound card based on either an AY-3-8190
+or YM2149F sound chip, you can use the `TUNE` application to play PT or MYM
 sound files.
 
 ## Syntax
@@ -771,7 +784,8 @@ determines the format of the file from the extension of the file,
 so your tune filenames should end in .PT2, .PT3, or .MYM.
 
 To play a sound file, just use the command and specify the file to
-play after the command.  So, for example, `TUNE ATTACK.PT2` will immedaitely begin playing the PT sound file "ATTACK.PT2".
+play after the command.  So, for example, `TUNE ATTACK.PT2` will
+immediately begin playing the PT sound file "ATTACK.PT2".
 
 ## Notes
 

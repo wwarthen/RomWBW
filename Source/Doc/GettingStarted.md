@@ -525,7 +525,7 @@ The RomWBW distribution is a compressed zip archive file organized in a set of d
 | Source      | Contains the source code files used to build the software and ROM images. |
 | Tools       | Contains the MS Windows programs that are used by the build process or that may be useful in setting up your system. |
 
-# Acknowledgements
+# Acknowledgments
 
 While I have heavily modified much of the code, I want to acknowledge that much of the work is derived from the work of others in the RetroBrew Computers Community including Andrew Lynch, Dan Werner, Max Scane, David Giles, John Coffman, and probably many others I am not clearly aware of (let me know if I omitted someone!).
 

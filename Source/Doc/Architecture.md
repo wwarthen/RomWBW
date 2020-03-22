@@ -108,7 +108,7 @@ RomWBW firmware includes:
 
 It is appropriate to note that much of the code and components that make
 up a complete RomWBW package are derived from pre-existing work. Most
-notably, the imbedded operating system is simply a ROM-based copy of
+notably, the embedded operating system is simply a ROM-based copy of
 generic CP/M or ZSDOS. Much of the hardware support code was originally
 produced by other members of the RetroBrew Computers Community.
 
