@@ -16,7 +16,7 @@ toc-depth: 1
 numbersections: true
 secnumdepth: 1
 papersize: letter
-geometry: 
+geometry:
 - top=1in
 - bottom=1in
 - left=1in
@@ -94,17 +94,17 @@ ROM.
 
 RomWBW firmware includes:
 
--   System startup code (bootstrap)
+* System startup code (bootstrap)
 
--   A basic system/debug monitor
+* A basic system/debug monitor
 
--   HBIOS (Hardware BIOS) providing support for the vast majority of
-    RetroBrew Computers I/O components
+* HBIOS (Hardware BIOS) providing support for the vast majority of
+RetroBrew Computers I/O components
 
--   A complete operating system (either CP/M 2.2 or ZSDOS 1.1)
+* A complete operating system (either CP/M 2.2 or ZSDOS 1.1)
 
--   A built-in CP/M filesystem containing the basic applications and
-    utilities for the operating system and hardware being used
+* A built-in CP/M filesystem containing the basic applications and
+utilities for the operating system and hardware being used
 
 It is appropriate to note that much of the code and components that make
 up a complete RomWBW package are derived from pre-existing work. Most
@@ -297,12 +297,12 @@ a ROM Boot.
 Notes
 -----
 
-1.  Size of ROM disk and RAM disk will be decreased as needed to
-    accommodate RAM and ROM memory bank usage for the banked BIOS.
+1. Size of ROM disk and RAM disk will be decreased as needed to
+accommodate RAM and ROM memory bank usage for the banked BIOS.
 
-2.  There is no support for interrupt driven drivers at this time. Such
-    support should be possible in a variety of ways, but none are yet
-    implemented.
+2. There is no support for interrupt driven drivers at this time. Such
+support should be possible in a variety of ways, but none are yet
+implemented.
 
 Driver Model
 ============
@@ -375,22 +375,51 @@ HBIOS Reference
 Invocation
 ----------
 
-HBIOS functions are invoked by placing the required parameters in CPU registers and executing an RST 08 instruction. Note that HBIOS does not preserve register values that are unused. However, it will not modify the Z80 alternate registers or IX/IY (these registers may be used within HBIOS, but will be saved and restored internally).
+HBIOS functions are invoked by placing the required parameters in CPU
+registers and executing an RST 08 instruction. Note that HBIOS does not
+preserve register values that are unused. However, it will not modify the
+Z80 alternate registers or IX/IY (these registers may be used within HBIOS,
+but will be saved and restored internally).
 
-Normally, applications will not call HBIOS functions directly. It is intended that the operating system makes all HBIOS function calls. Applications that are considered system utilities may use HBIOS, but must be careful not to modify the operating environment in any way that the operating system does not expect.
+Normally, applications will not call HBIOS functions directly. It is
+intended that the operating system makes all HBIOS function calls.
+Applications that are considered system utilities may use HBIOS, but must
+be careful not to modify the operating environment in any way that the
+operating system does not expect.
 
-In general, the desired function is placed in the B register. Register C is frequently used to specify a subfunction or a target device unit number. Additional registers are used as defined by the specific function. Register A should be used to return function result information. A=0 should indicate success, other values are function specific.
+In general, the desired function is placed in the B register. Register C is
+frequently used to specify a subfunction or a target device unit number.
+Additional registers are used as defined by the specific function. Register
+A should be used to return function result information. A=0 should
+indicate success, other values are function specific.
 
-The character, disk, and video device functions all refer to target devices using a logical device unit number that is passed in the C register. Keep in mind that these unit numbers are assigned dynamically at HBIOS initialization during the device discovery process. The assigned unit numbers are displayed on the consoled at the conclusion of device initialization. The unit assignments will never change after HBIOS initialization. However, they can change at the next boot if there have been hardware or BIOS customization changes. Code using HBIOS functions should not assume fixed unit assignments.
+The character, disk, and video device functions all refer to target devices
+using a logical device unit number that is passed in the C register. Keep
+in mind that these unit numbers are assigned dynamically at HBIOS
+initialization during the device discovery process. The assigned unit
+numbers are displayed on the consoled at the conclusion of device
+initialization. The unit assignments will never change after HBIOS
+initialization. However, they can change at the next boot if there have
+been hardware or BIOS customization changes. Code using HBIOS functions
+should not assume fixed unit assignments.
 
-Some functions utilize pointers to memory buffers. Unless otherwise stated, such buffers can be located anywhere in the Z80 CPU 64K address space. However, performance sensitive buffers (primarily disk I/O buffers) will require double-buffering if the caller’s buffer is in the lower 32K of CPU address space. For optimal performance, such buffers should be placed in the upper 32K of CPU address space.
+Some functions utilize pointers to memory buffers. Unless otherwise stated,
+such buffers can be located anywhere in the Z80 CPU 64K address space.
+However, performance sensitive buffers (primarily disk I/O buffers) will
+require double-buffering if the caller’s buffer is in the lower 32K of CPU
+address space. For optimal performance, such buffers should be placed in
+the upper 32K of CPU address space.
 
-\newpage
+`\clearpage`{=latex}
 
 Character Input/Output (CIO)
 ----------------------------
 
-Character input/output functions require that a Character Unit be specified in the C register. This is the logical device unit number assigned during the boot process that identifies all character I/O devices uniquely. A special value of 0x80 can be used for Unit to refer to the current console device.
+Character input/output functions require that a Character Unit be specified
+in the C register. This is the logical device unit number assigned during
+the boot process that identifies all character I/O devices uniquely. A
+special value of 0x80 can be used for Unit to refer to the current console
+device.
 
 Character devices can usually be configured with line characteristics
 such as speed, framing, etc. A word value (16 bit) is used to describe
@@ -420,8 +449,9 @@ bits are defined as YXXXX.
 |       A: Status (0=OK, else error)
 |       E: Character Received
 
-Read a character from the device unit specified in register C and return the character
-value in E. If no character(s) are available, this function will wait indefinitely.
+Read a character from the device unit specified in register C and return
+the character value in E. If no character(s) are available, this function
+will wait indefinitely.
 
 ### Function 0x01 -- Character Output (CIOOUT)
 
@@ -433,8 +463,8 @@ value in E. If no character(s) are available, this function will wait indefinite
 | _Exit Results_
 |       A: Status (0=OK, else error)
 
-Send character value in register E to device specified in register C.  If device is
-not ready to send, function will wait indefinitely.
+Send character value in register E to device specified in register C. If
+device is not ready to send, function will wait indefinitely.
 
 ### Function 0x02 -- Character Input Status (CIOIST)
 
@@ -445,10 +475,10 @@ not ready to send, function will wait indefinitely.
 | _Exit Results_
 |       A: Bytes Pending
 
-Return the number of characters available to read in the input buffer of the unit
-specified. If the device has no input buffer, it is acceptable to return simply 0 or
-1 where 0 means there is no character available to read and 1 means there is at
-least one character available to read.
+Return the number of characters available to read in the input buffer of
+the unit specified. If the device has no input buffer, it is acceptable to
+return simply 0 or 1 where 0 means there is no character available to read
+and 1 means there is at least one character available to read.
 
 ### Function 0x03 -- Character Output Status (CIOOST)
 
@@ -459,11 +489,12 @@ least one character available to read.
 | _Exit Results_
 |       A: Output Buffer Bytes Available
 
-Return the space available in the output buffer expressed as a character count. If a
-16 byte output buffer contained 6 characters waiting to be sent, this function would
-return 10, the number of positions available in the output buffer. If the port has
-no output buffer, it is acceptable to return simply 0 or 1 where 0 means the port is
-busy and 1 means the port is ready to output a character.
+Return the space available in the output buffer expressed as a character
+count. If a 16 byte output buffer contained 6 characters waiting to be
+sent, this function would return 10, the number of positions available in
+the output buffer. If the port has no output buffer, it is acceptable to
+return simply 0 or 1 where 0 means the port is busy and 1 means the port is
+ready to output a character.
 
 ### Function 0x04 -- Character IO Initialization (CIOINIT)
 
@@ -475,10 +506,11 @@ busy and 1 means the port is ready to output a character.
 | _Exit Results_
 |       A: Status (0=OK, else error)
 
-Setup line characteristics (baudrate, framing, etc.) of the specified unit. Register
-pair DE specifies line characteristics. If DE contains -1 (0xFFFF), then the device
-will be reinitialized with the last line characteristics used.  Result of function
-is returned in A with zero indicating success.
+Setup line characteristics (baudrate, framing, etc.) of the specified unit.
+Register pair DE specifies line characteristics. If DE contains -1
+(0xFFFF), then the device will be reinitialized with the last line
+characteristics used. Result of function is returned in A with zero
+indicating success.
 
 ### Function 0x05 -- Character IO Query (CIOQUERY)
 
@@ -490,8 +522,8 @@ is returned in A with zero indicating success.
 |       A: Status (0=OK, else error)
 |       DE: Line Characteristics
 
-Reports the line characteristics (baudrate, framing, etc.) of the specified unit.
-Register pair DE contains the line characteristics upon return.
+Reports the line characteristics (baudrate, framing, etc.) of the specified
+unit. Register pair DE contains the line characteristics upon return.
 
 ### Function 0x06 -- Character IO Device (CIODEVICE)
 
@@ -505,11 +537,14 @@ Register pair DE contains the line characteristics upon return.
 |       D: Serial Device Type
 |       E: Serial Device Number
 
-Reports information about the character device unit specified. Register C indicates
-the device attributes: 0=RS-232 and 1=Terminal. Register D indicates the device type
-(driver) and register E indicates the physical device number assigned by the driver.
+Reports information about the character device unit specified. Register C
+indicates the device attributes: 0=RS-232 and 1=Terminal. Register D
+indicates the device type (driver) and register E indicates the physical
+device number assigned by the driver.
 
-Each character device is handled by an appropriate driver (UART, ASCI, etc.). The driver can be identified by the Device Type. The assigned Device Types are listed below.
+Each character device is handled by an appropriate driver (UART, ASCI,
+etc.). The driver can be identified by the Device Type. The assigned Device
+Types are listed below.
 
 _Id_ | _Device Type / Driver_
 ---- | ----------------------
@@ -523,17 +558,18 @@ _Id_ | _Device Type / Driver_
 0x70 | PIO
 0x80 | UF
 
-\newpage
+`\clearpage`{=latex}
 
 Disk Input/Output (DIO)
 -----------------------
 
-Character input/output functions require that a character unit be
-specified in the C register. This is the logical disk unit number
-assigned during the boot process that identifies all disk i/o devices
-uniquely.
+Character input/output functions require that a character unit be specified
+in the C register. This is the logical disk unit number assigned during
+the boot process that identifies all disk i/o devices uniquely.
 
-A fixed set of media types are defined. The currently defined media types are listed below. Each driver will support a subset of the defined media types.
+A fixed set of media types are defined. The currently defined media types
+are listed below. Each driver will support a subset of the defined media
+types.
 
 **Media ID** | **Value** | **Format**
 ------------ | --------- | ----------
@@ -565,9 +601,9 @@ MID\_FD111   | 9         | 8" 1.11M Floppy
 | _Exit Results_
 |       A: Status (0=OK, else error)
 
-Reset the physical interface associated with the specified unit. Flag 
-all units associated with the interface for unit initialization at next 
-I/O call. Clear media identified unless locked. Reset result code of all 
+Reset the physical interface associated with the specified unit. Flag
+all units associated with the interface for unit initialization at next
+I/O call. Clear media identified unless locked. Reset result code of all
 associated units of the physical interface.
 
 ### Function 0x12 -- Disk Seek (DIOSEEK)
@@ -588,9 +624,8 @@ associated units of the physical interface.
 | _Exit Results_
 |       A: Status (0=OK, else error)
 
-Update target CHS or LBA for next I/O request on designated unit.
-Physical seek is typically deferred until subsequent I/O
-operation.
+Update target CHS or LBA for next I/O request on designated unit. Physical
+seek is typically deferred until subsequent I/O operation.
 
 Bit 7 of D indicates whether the disk seek address is specified as
 cylinder/head/sector (CHS) or Logical Block Address (LBA). If D:7=1, then
@@ -613,17 +648,18 @@ determine if the device supports LBA addressing.
 
 | _Exit Results_
 |       A: Status (0=OK, else error)
-|       E: Blocks Reaad
+|       E: Blocks Read
 
 Read Block Count sectors to buffer address starting at current target
-sector. Current sector must be established by prior seek function;
-however, multiple read/write/verify function calls can be made after a
-seek function. Current sector is incremented after each sector
-successfully read. On error, current sector is sector is sector where
-error occurred. Blocks read indicates number of sectors successfully read.
+sector. Current sector must be established by prior seek function; however,
+multiple read/write/verify function calls can be made after a seek
+function. Current sector is incremented after each sector successfully
+read. On error, current sector is sector is sector where error occurred.
+Blocks read indicates number of sectors successfully read.
 
-Caller must ensure: 1) buffer address is large enough to contain data for all
-sectors requested, and 2) entire buffer area resides in upper 32K of memory.
+Caller must ensure: 1) buffer address is large enough to contain data for
+all sectors requested, and 2) entire buffer area resides in upper 32K of
+memory.
 
 ### Function 0x14 -- Disk Write (DIOWRITE)
 
@@ -638,15 +674,15 @@ sectors requested, and 2) entire buffer area resides in upper 32K of memory.
 |       E: Blocks Written
 
 Write Block Count sectors to buffer address starting at current target
-sector. Current sector must be established by prior seek function;
-however, multiple read/write/verify function calls can be made after a
-seek function. Current sector is incremented after each sector
-successfully written. On error, current sector is sector is sector where
-error occurred. Blocks written indicates number of sectors successfully
-written. 
+sector. Current sector must be established by prior seek function; however,
+multiple read/write/verify function calls can be made after a seek
+function. Current sector is incremented after each sector successfully
+written. On error, current sector is sector is sector where error occurred.
+Blocks written indicates number of sectors successfully written.
 
-Caller must ensure: 1) buffer address is large enough to contain data for all
-sectors being written, and 2) entire buffer area resides in upper 32K of memory.
+Caller must ensure: 1) buffer address is large enough to contain data for
+all sectors being written, and 2) entire buffer area resides in upper 32K
+of memory.
 
 ### Function 0x15 -- Disk Verify (DIOVERIFY)
 
@@ -782,7 +818,7 @@ block size. If media is unknown, an error will be returned.
 Report current media geometry information. If media is unknown, return
 error (no media).
 
-\newpage
+`\clearpage`{=latex}
 
 Real Time Clock (RTC)
 ---------------------
@@ -836,8 +872,8 @@ pointed to by HL.
 |       A: Status (0=OK, else error)
 |       E: Value
 
-Read a single byte value from the Non-Volatile RAM at the index
-specified by C. The value is returned in register E.
+Read a single byte value from the Non-Volatile RAM at the index specified
+by C. The value is returned in register E.
 
 ### Function 0x23 -- RTC Set NVRAM Byte (RTCSETBYT)
 
@@ -849,8 +885,8 @@ specified by C. The value is returned in register E.
 |       A: Status (0=OK, else error)
 |       E: Value
 
-Write a single byte value into the Non-Volatile RAM at the index
-specified by C. The value to be written is specified in E.
+Write a single byte value into the Non-Volatile RAM at the index specified
+by C. The value to be written is specified in E.
 
 ### Function 0x24 -- RTC Get NVRAM Block (RTCGETBLK)
 
@@ -873,9 +909,10 @@ to by HL. HL must point to a location in the top 32K of CPU address space.
 | _Exit Results_
 |       A: Status (0=OK, else error)
 
-Write the entire contents of the Non-Volatile RAM from the buffer
-pointed to by HL. HL must point to a location in the top 32K of CPU
-address space.
+Write the entire contents of the Non-Volatile RAM from the buffer pointed
+to by HL. HL must point to a location in the top 32K of CPU address space.
+
+`\clearpage`{=latex}
 
 Video Display Adapter (VDA)
 ---------------------------
@@ -889,11 +926,10 @@ attributes may or may not be supported. If the hardware does not support
 these capabilities, they will be ignored.
 
 Color byte values are constructed using typical RGBI
-(Red/Green/Blue/Intensity) bits. The high four bits of the value
-determine the background color and the low four bits determine the
-foreground color. This results in 16 unique color values for both
-foreground and background. The following table illustrates the color
-byte value construction:
+(Red/Green/Blue/Intensity) bits. The high four bits of the value determine
+the background color and the low four bits determine the foreground color.
+This results in 16 unique color values for both foreground and background.
+The following table illustrates the color byte value construction:
 
 &nbsp;     | **Bit** | **Color**
 ---------- | ------- | ---------
@@ -1254,6 +1290,8 @@ Keycodes are generally returned as appropriate ASCII values, if
 possible. Special keys, like function keys, are returned as reserved
 codes as described at the start of this section.
 
+`\clearpage`{=latex}
+
 System (SYS)
 ------------
 
@@ -1364,10 +1402,10 @@ change.
 WARNINGS:
 
 * This function is inherently dangerous and does not prevent you from
-  corrupting critical areas of memory. Use with **extreme** caution.
+corrupting critical areas of memory. Use with **extreme** caution.
 
 * Overlapping source and destination memory ranges are not supported and
-  will result in undetermined behavior.
+will result in undetermined behavior.
 
 * Copying of byte ranges that cross bank boundaries is undefined.
 
@@ -1409,7 +1447,7 @@ allocated memory.
 |           A: Status (0=OK, else error)
 
 This function will report various system information based on the
-sub-function value.  The following lists the subfunctions
+sub-function value. The following lists the subfunctions
 available along with the registers/information returned.
 
 #### SYSGET Subfunction 0x00 -- Get Serial Device Unit Count (CIOCNT)
@@ -1581,50 +1619,59 @@ The bank specified is not range checked.
 |      _Returned Values_
 |           A: Status (0=OK, else error)
 
-This function allows the caller to query information about the interrupt configuration of 
-the running system and allows adding or hooking interrupt handlers dynamically. Register C 
-is used to specify a subfunction. Additional input and output registers may be used as 
-defined by the sub-function.
+This function allows the caller to query information about the interrupt
+configuration of the running system and allows adding or hooking interrupt
+handlers dynamically. Register C is used to specify a subfunction.
+Additional input and output registers may be used as defined by the
+sub-function.
 
-Note that during interrupt processing, the lower 32K of CPU address space will contain the 
-RomWBW HBIOS code bank, not the lower 32K of application TPA. As such, a dynamically 
-installed interrupt handler does not have access to the lower 32K of TPA and must be 
-careful to avoid modifying the contents of the lower 32K of memory. Invoking RomWBW HBIOS 
-functions within an interrupt handler is not supported.
+Note that during interrupt processing, the lower 32K of CPU address space
+will contain the RomWBW HBIOS code bank, not the lower 32K of application
+TPA. As such, a dynamically installed interrupt handler does not have
+access to the lower 32K of TPA and must be careful to avoid modifying the
+contents of the lower 32K of memory. Invoking RomWBW HBIOS functions
+within an interrupt handler is not supported.
 
 Interrupt handlers are different for IM1 or IM2.
 
 For IM1:
 
-> The new interrupt handler is responsible for chaining (JP) to the previous vector if the 
-  interrupt is not handled. If the interrupt is handled, the new handler may simply return 
-  (RET). When chaining to the previous interrupt handler, ZF must be set if interrupt is 
-  handled and ZF cleared if not handled. The interrupt management framework takes care of 
-  saving and restoring AF, BC, DE, HL, and IY. Any other registers modified must be saved
-  and restored by the interrupt handler.
+> The new interrupt handler is responsible for chaining (JP) to the
+previous vector if the interrupt is not handled. If the interrupt is
+handled, the new handler may simply return (RET). When chaining to the
+previous interrupt handler, ZF must be set if interrupt is handled and
+ZF cleared if not handled. The interrupt management framework takes care
+of saving and restoring AF, BC, DE, HL, and IY. Any other registers
+modified must be saved and restored by the interrupt handler.
 
 For IM2:
 
-> The new interrupt handler may either replace or hook the previous interrupt handler. To 
-  replace the previous interrupt handler, the new handler just returns (RET) when done. To 
-  hook the previous handler, the new handler can chain (JP) to the previous vector. Note
-  that initially all IM2 interrupt vectors are set to be handled as “BAD” meaning that the 
-  interrupt is unexpected. In most cases, you do not want to chain to the previous vector 
-  because it will cause the interrupt to display a “BAD INT” system panic message.
+> The new interrupt handler may either replace or hook the previous
+interrupt handler. To replace the previous interrupt handler, the new
+handler just returns (RET) when done. To hook the previous handler, the
+new handler can chain (JP) to the previous vector. Note that initially
+all IM2 interrupt vectors are set to be handled as “BAD” meaning that the
+interrupt is unexpected. In most cases, you do not want to chain to the
+previous vector because it will cause the interrupt to display a “BAD
+INT” system panic message.
 
-  The interrupt framework will take care of issuing an EI and RETI instruction. Do not put 
-  these instructions in your new handler. Additionally, interrupt management framework takes care of saving and restoring AF, BC, DE, HL, and IY. Any other registers modified must be saved and restored by the interrupt handler. 
+The interrupt framework will take care of issuing an EI and RETI
+instruction. Do not put these instructions in your new handler.
+Additionally, interrupt management framework takes care of saving and
+restoring AF, BC, DE, HL, and IY. Any other registers modified must be
+saved and restored by the interrupt handler.
 
+If the caller is transient, then the caller must remove the new interrupt
+handler and restore the original one prior to termination. This is
+accomplished by calling this function with the Interrupt Vector set to the
+Previous Vector returned in the original call.
 
-If the caller is transient, then the caller must remove the new interrupt handler and 
-restore the original one prior to termination. This is accomplished by calling this 
-function with the Interrupt Vector set to the Previous Vector returned in the original call.
-
-The caller is responsible for disabling interrupts prior to making an INTSET call and 
-enabling them afterwards. The caller is responsible for ensuring that a valid interrupt 
-handler is installed prior to enabling any hardware interrupts associated with the handler.
-Also, if the handler is transient, the caller must disable the hardware interrupt(s) 
-associated with the handler prior to uninstalling it.
+The caller is responsible for disabling interrupts prior to making an
+INTSET call and enabling them afterwards. The caller is responsible for
+ensuring that a valid interrupt handler is installed prior to enabling any
+hardware interrupts associated with the handler. Also, if the handler is
+transient, the caller must disable the hardware interrupt(s) associated
+with the handler prior to uninstalling it.
 
 #### SYSINT Subfunction 0x00 -- Interrupt Info (INTINF)
 
@@ -1636,9 +1683,9 @@ associated with the handler prior to uninstalling it.
 |           D: Interrupt Mode
 |           E: Size (# entries) of Interrupt Vector Table
 
-Return interrupt mode in D and size of interrupt vector table in E. For 
-IM1, the size of the table is the number of vectors chained together. 
-For IM2, the size of the table is the number of slots in the vector 
+Return interrupt mode in D and size of interrupt vector table in E. For
+IM1, the size of the table is the number of vectors chained together.
+For IM2, the size of the table is the number of slots in the vector
 table.
 
 #### SYSINT Subfunction 0x10) -- Get Interrupt (INTGET)
@@ -1651,8 +1698,8 @@ table.
 |           A: Status (0=OK, else error)
 |           HL: Current Interrupt Vector Address
 
-On entry, register E must contain an index into the interrupt vector 
-table. On return, HL will contain the address of the current interrupt 
+On entry, register E must contain an index into the interrupt vector
+table. On return, HL will contain the address of the current interrupt
 vector at the specified index.
 
 #### SYSINT Subfunction 0x20) -- Set Interrupt (INTSET)
@@ -1667,6 +1714,7 @@ vector at the specified index.
 |           HL: Previous Interrupt Vector Address
 |           DE: Interrupt Routing Engine Address (IM2)
 
-On entry, register E must contain an index into the interrupt vector table and register HL 
-must contain the address of the new interrupt vector to be inserted in the table at the 
-index. On return, HL will contain the previous address in the table at the index.
+On entry, register E must contain an index into the interrupt vector table
+and register HL must contain the address of the new interrupt vector to
+be inserted in the table at the index. On return, HL will contain the
+previous address in the table at the index.

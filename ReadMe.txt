@@ -41,8 +41,8 @@ RomWBW is distributed as both source code and pre-built ROM and disk
 images. Some of the provided software can be launched directly from the
 ROM firmware itself:
 
--   System monitor
--   Operating systems (CP/M 2.2, ZSDOS)
+-   System Monitor
+-   Operating Systems (CP/M 2.2, ZSDOS)
 -   ROM BASIC (Nascom BASIC and Tasty BASIC)
 -   ROM Forth
 
@@ -51,8 +51,8 @@ operating system drive letters to any available disk media.
 Additionally, mass media devices (IDE Disk, CF Card, SD Card) support
 the use of multiple slices (up to 256 per device). Each slice contains a
 complete CP/M filesystem and can be mapped independently to any drive
-letter. This overcomes the inherent size limitations in legacy OSes
-providing up to 2GB of accessible storage on a single device.
+letter. This overcomes the inherent size limitations in legacy OSes and
+allows up to 2GB of accessible storage on a single device.
 
 The pre-built ROM firmware images are generally optimal for most users.
 However, it is also very easy to modify and build custom ROM images that
@@ -103,7 +103,7 @@ Looking at the extracted distribution archive, You will see that the
 distribution is broken up into a few sub-directories. The Binary
 directory contains the pre-built ROM and disk images. The ROM image
 files all end in “.rom”. Based on the table below, carefully pick the
-appropriate ROM image:
+appropriate ROM image for your hardware.
 
   --------------------------------------------------------------------------
   Platform   ROM Image File       Baud Description
@@ -169,9 +169,9 @@ choose a ROM-based operating system, system monitor, application, or
 boot from a disk device.
 
 Initially, you should try the ROM boot options. By selecting either CP/M
-2.2 or Z-System, the operating system will be loaded from ROM and you
-will see the a B> disk prompt. In this scenario, A: will be an empty RAM
-disk and B: will refer to your ROM disk containing some typical
+2.2 or Z-System, the selected operating system will be loaded from ROM
+and you will see the a B> disk prompt. In this scenario, A: will be an
+empty RAM disk and B: will refer to your ROM disk containing some common
 applications. This provides a simple environment for learning to use
 your system. Be aware that files saved to the RAM disk (A:) will
 disappear at the next power on (RAM is generally not persistent). Also
@@ -182,33 +182,34 @@ Upgrading
 
 Upgrading to a newer release of RomWBW is essentially just a matter of
 updating the ROM chip in your system. If you have spare ROM chips for
-your system and a ROM programmer, it is always safest to keep your
+your system and a ROM programmer, it is always safest to retain your
 existing, working ROM chip and program a new one with the new firmware.
 If the new one fails to boot, you can easily return to the known working
 ROM.
 
 Prior to attempting to reprogram your actual ROM chip, you may wish to
-“try” the upgrade. With RomWBW, you can upload a new system image and
-load it from the command line. For each ROM image file (.rom) in the
-Binary directory, you will also find a corresponding application file
-(.com). For example, for SBC_std.rom, there is also an SBC_std.com file.
-You can upload the .com file to your system using XModem, then simply
-run the .com file. You will see your system go through the normal
-startup process just like it was started from ROM. However, your ROM has
-not been updated and the next time you boot your system, it will revert
-to the system image contained in ROM. You may find that you are unable
-to load the .com file because it is too large to fit in available
-application RAM (TPA). Unfortunately, in this case, you will not be able
-to use the .com file mechanism to start your system.
+“try” the upgrade. With RomWBW, you can upload a new system image
+executable and load it from the command line. For each ROM image file
+(.rom) in the Binary directory, you will also find a corresponding
+application file (.com). For example, for SBC_std.rom, there is also an
+SBC_std.com file. You can upload the .com file to your system using
+XModem, then simply run the .com file. You will see your system go
+through the normal startup process just like it was started from ROM.
+However, your ROM has not been updated and the next time you boot your
+system, it will revert to the system image contained in ROM. You may
+find that you are unable to load the .com file because it is too large
+to fit in available application RAM (TPA). Unfortunately, in this case,
+you will not be able to use the .com file mechanism to start your
+system.
 
 If you do not have easy access to a ROM programmer, it is usually
 possible to reprogram your system ROM using the FLASH utility from Will
-Sowerbutts. This application called FLASH.COM can be found on the ROM
+Sowerbutts. This application, called FLASH.COM, can be found on the ROM
 drive of any running system. In this case, you would need to transfer
 the new ROM image (.rom) over to your system using XModem (or one of the
 other mechanisms described in the Transferring Files section below). The
-ROM image will be too large to fit on your RAM drive, so you will need
-to transfer it to a larger storage drive. Once the ROM image is on your
+ROM image is too large to fit on your RAM drive, so you will need to
+transfer it to a larger storage drive. Once the ROM image is on your
 system, you can use the FLASH application to update your ROM. The
 following is a typical example of transferring ROM image using XModem
 and flashing the chip in-situ.
@@ -255,11 +256,10 @@ If you wish to update existing disk media in your system, you need to
 perform the following steps.
 
 If the disk is bootable, you need to update the system tracks of the
-disk. This is done using a SYSCOPY command such as
-SYSCOPY C:=B:ZSYS.SYS. For a ZSDOS boot disk, use ZSYS.SYS. For a CP/M
-2.2 disk, use CPM.SYS. For a CP/M 3 or ZPM3 disk, use CPMLDR.SYS.
-CPMLDR.SYS is not provided on the ROM disk, so you would need to upload
-it from the distribution.
+disk.This is done using a SYSCOPY command such as SYSCOPY C:=B:ZSYS.SYS.
+For a ZSDOS boot disk, use ZSYS.SYS. For a CP/M 2.2 disk, use CPM.SYS.
+For a CP/M 3 or ZPM3 disk, use CPMLDR.SYS. CPMLDR.SYS is not provided on
+the ROM disk, so you would need to upload it from the distribution.
 
 Finally, if you have copies of any of the RomWBW custom applications on
 your hard disk, you need to update them with the latest copies. The
@@ -267,33 +267,316 @@ following applications are found on your ROM disk. Use COPY to copy them
 over any older versions of the app on your disk:
 
 -   ASSIGN.COM
--   FORMAT.COM
--   OSLDR.COM
 -   SYSCOPY.COM
--   TALK.COM
--   FDU.COM (was FDTST.COM)
--   XM.COM
 -   MODE.COM
+-   FDU.COM (was FDTST.COM)
+-   OSLDR.COM
+-   FORMAT.COM
+-   XM.COM
+-   FLASH.COM
+-   FDISK80.COM
+-   TALK.COM
 -   RTC.COM
 -   TIMER.COM
 -   INTTEST.COM
 
 For example: B>COPY ASSIGN.COM C:
 
+Some RomWBW custom applications are too large to fit on the ROM disk. If
+you are using any of these you will need to transfer them to your system
+and then update all copies. These applications are found in the
+Binary\Apps directory of the distribution and in all of the disk images.
+
+-   FAT.COM
+-   TUNE.COM
+
+General Usage
+
+Each of the operating systems and ROM applications included with RomWBW
+are sophisticated tools in their own right. It is not reasonable to
+document their usage here. However, you will find complete manuals in
+PDF format in the Doc directory of the distribution. The intention of
+this section is to document the RomWBW specific enhancements to these
+operating systems.
+
+Inbuilt ROM Applications
+
+In addition to CP/M 2.2 and Z-System, there are several ROM applications
+that can be launched directly from ROM. These applications are not
+hosted by an operating system and so they are unable to save files to
+disk devices.
+
+The following ROM applications are available at the boot loader prompt:
+
+  Application   
+  ------------- --------------------------------------------------------
+  Monitor       Z80 system debug monitor w/ Intel Hex loader
+  Forth         Brad Rodriguez’s ANSI compatible Forth language
+  Basic         Nascom 8K BASIC language
+  Tasty BASIC   Dimitri Theuling’s Tiny BASIC implementation
+  Play          A simple video game (requires ANSI terminal emulation)
+
+In general, the command to exit these applications and restart the
+system is BYE. The exceptions are the Monitor which uses B and Play
+which uses Q.
+
+Space is available in the ROM image for the inclusion of other software.
+Any inbuilt application can be set up to launch automatically at
+startup.
+
+Devices and Units
+
+In order to support a wide variety of hardware, RomWBW HBIOS uses a
+modular approach to implementing device drivers and presenting devices
+to the operating system. In general, all devices are classified as one
+of the following:
+
+-   Disk (Hard Disk, CF Card, SD Card, RAM/ROM Disk, etc.)
+-   Character (Serial Ports, Parallel Ports, etc.)
+-   Video (Video Display/Keyboard Interfaces)
+-   RTC/NVRAM (Real Time Clock, Non-volatile RAM)
+
+HBIOS uses the concept of unit numbers to present a complex set of
+hardware devices to the operating system. As an example, a typical
+system might have a ROM Disk, RAM Disk, Floppy Drives, and Disk Drives.
+All of these are considered Disk devices and are presented to the
+operating system as generic block devices. This means that the operating
+system does not need to understand the difference between a floppy drive
+and a ROM disk.
+
+As RomWBW boots, it assigns a unit number to each device. This unit
+number is used by the operating system to refer to the device. It is,
+therefore, important to know the unit number assigned to each device.
+This information is displayed in the unit summary table at startup. Here
+is an example:
+
+    Unit        Device      Type              Capacity/Mode
+    ----------  ----------  ----------------  --------------------
+    Char 0      UART0:      RS-232            38400,8,N,1
+    Char 1      UART1:      RS-232            38400,8,N,1
+    Disk 0      MD1:        RAM Disk          384KB,LBA
+    Disk 1      MD0:        ROM Disk          384KB,LBA
+    Disk 2      FD0:        Floppy Disk       3.5",DS/HD,CHS
+    Disk 3      FD1:        Floppy Disk       3.5",DS/HD,CHS
+    Disk 4      IDE0:       CompactFlash      3815MB,LBA
+    Disk 5      IDE1:       Hard Disk         --
+    Disk 6      PRPSD0:     SD Card           1886MB,LBA
+    Video 0     CVDU0:      CRT               Text,80x25
+
+In this example, you can see that the system has a total of 7 Disk Units
+numbered 0-6. There are also 2 Character Units and 1 Video Unit. The
+table shows the unit numbers assigned to each of the devices. Notice how
+the unit numbers are assigned sequentially regardless of the specific
+device.
+
+There may or may not be media in the disk devices listed. For example,
+the floppy disk devices (Disk Units 2 & 3) may not have a floppy in the
+drive. Also note that Disk Unit 4 shows a disk capacity, but Disk Unit 5
+does not. This is because the PPIDE interface of the system supports up
+to two drives, but there is only one actual drive attached. A unit
+number is assigned to all possible devices regardless of whether they
+have actual media installed at boot time.
+
+Note that Character Unit 0 is always the initial system console by
+definition.
+
+If your system has an RTC/NVRAM device, it will not be listed in the
+unit summary table. Since only a single RTC/NVRAM device can exist in
+one system, unit numbers are not required nor used for this type of
+device.
+
+Drive Letter Assignment
+
+In legacy CP/M-type operating systems, drive letters were generally
+mapped to disk drives in a completely fixed way. For example, drive A:
+would always refer to the first floppy drive. Since RomWBW supports a
+wide variety of hardware configurations, it implements a much more
+flexible drive letter assignment mechanism so that any drive letter can
+be assigned to any disk device.
+
+At boot, you will notice that RomWBW automatically assigns drive letters
+to the available disk devices. These assignments are displayed during
+the startup of the selected operating system. Additionally, you can
+review the current drive assignments at any time using the ASSIGN
+command. CP/M 3 and ZPM3 do not automatically display the assignments at
+startup, but you can use ASSIGN do display them.
+
+The drive letter assignments do not change during an OS session unless
+you use the ASSIGN command yourself to do it. Additionally, the
+assignments at boot will stay the same on each boot as long as you do
+not make changes to your hardware configuration. Note that the
+assignments are dependent on the media currently inserted in hard disk
+drives. So, notice that if you insert or remove an SD Card or CF Card,
+the drive assignments will change. Since drive letter assignments can
+change, you must be careful when doing destructive things like using
+CLRDIR to make sure the drive letter you use is referring to the desired
+media.
+
+When performing a ROM boot of an operating system, note that A: will be
+your RAM disk and B: will be your ROM disk. When performing a disk boot,
+the disk you are booting from will be assigned to A: and the rest of the
+drive letters will be offset to accommodate this. This is done because
+most legacy operating systems expect that A: will be the boot drive.
+
+Slices
+
+The vintage operating systems included with RomWBW were produced at a
+time when mass storage devices were quite small. CP/M 2.2 could only
+handle filesystems up to 8MB. In order to achieve compatibility across
+all of the operating systems supported by RomWBW, the hard disk
+filesystem format used is 8MB. This ensures any filesystem will be
+accessible to any of the operating systems.
+
+Since storage devices today are quite large, RomWBW implements a
+mechanism called slicing to allow up to 256 8MB filesystems on a single
+large storage device. This allows up to 2GB of usable space on a single
+media. You can think of slices as a way to refer to any of the first 256
+8MB chunks of space on a single media.
+
+Of course, the problem is that CP/M-like operating systems have only 16
+drive letters (A:-P:) available. Under the covers, RomWBW allows you to
+use any drive letter to refer to any slice of any media. The ASSIGN
+command is allows you to view or change the drive letter mappings at any
+time. At startup, the operating system will automatically allocate a
+reasonable number of drive letters to the available storage devices. The
+allocation will depend on the number of large storage devices available
+at boot. For example, if you have only one hard disk type media, you
+will see that 8 drive letters are assigned to the first 8 slices of that
+media. If you have two large storage devices, you will see that each
+device is allocated four drive letters.
+
+Referring to slices within a storage device is done by appending a :
+where is the device relative slice number from 0-255. For example, if
+you have an IDE device, it will show up as IDE0: in the boot messages
+meaning the first IDE device. To refer to the fourth slice of IDE0, you
+would type “IDE0:3”. Here are some examples:
+
+  -------- ------------------------------
+  IDE0:0   First slice of disk in IDE0
+  IDE0:    First slice of disk in IDE0
+  IDE0:3   Fourth slice of disk in IDE0
+  -------- ------------------------------
+
+So, if I wanted to use drive letter L: to refer to the fourth slice of
+IDE0, I could use the command ASSIGN L:=IDE0:3. There are a couple of
+rules to be aware of when assigning drive letters. First, you may only
+refer to a specific device/slice with one drive letter. Said another
+way, you cannot have multiple drive letters referring to a single
+device/slice at the same time. Second, there must always be a drive
+assigned to A:. Any attempt to violate these rules will be blocked by
+the ASSIGN command.
+
+Unlike MS-DOS partitions, slices are not allocated – there is no
+partitioning for slices. Think of every hard disk type device as having
+a pre-allocated set of 256 8MB slices at the start of the media. You can
+refer to any of them simply by assigning a drive letter. RomWBW will not
+check to see if there is anything else on the hard disk in the slice you
+are referring to, nor will it verify that the hard disk media is large
+enough to have a slice at the location you refer to. If you attempt to
+write past the end of your media, you will get an I/O error displayed,
+so you will know if you make a mistake. There is no tracking of your use
+of slices – you will need to keep track of your use of slices yourself.
+
+Nothing automatically initializes a slice as a file system. You must do
+that yourself using CLRDIR. Since CLRDIR works on drive letters, make
+absolutely sure you know what media and slice are assigned to that drive
+letter before using CLRDIR.
+
+While it is probably obvious, you cannot use slices on any media less
+than 8MB in size. Specifically, you cannot slice RAM disks, ROM disks,
+floppy disks, etc.
+
+RomWBW Custom Applications
+
+The operation of the RomWBW hosted operating systems is enhanced through
+several custom applications. These applications are functional on all of
+the OS variants included with RomWBW.
+
+The following custom applications are found on the ROM disk and are,
+therefore, globally available.
+
+  --------------------------------------------------------------------------
+  Application   Description
+  ------------- ------------------------------------------------------------
+  ASSIGN        Add, change, and delete drive letter assignments. Use ASSIGN
+                /? for usage instructions.
+
+  SYSCOPY       Copy system image to a device to make it bootable. Use
+                SYSCOPY with no parms for usage instructions.
+
+  FDU           Format and test floppy disks. Menu driven interface.
+
+  OSLDR         Load a new OS on the fly. For example, you can switch to
+                Z-System when running CP/M. Use OSLDR with no parms for
+                usage instructions.
+
+  FORMAT        Will someday be a command line tool to format floppy disks.
+                Currently does nothing!
+
+  MODE          Reconfigures serial ports dynamically.
+
+  XM            XModem file transfer program adapted to hardware.
+                Automatically uses primary serial port on system.
+
+  FDISK80       John Coffman’s Z80 hard disk partitioning tool. See
+                documentation in Doc directory.
+
+  FAT           Access MS-DOS FAT filesystems from RomWBW (based on FatFs).
+
+  FLASH         Will Sowerbutts’ in-situ ROM programming utility.
+
+  CLRDIR        Initialize the directory area of a CP/M disk (Max Scane).
+  --------------------------------------------------------------------------
+
+Some custom applications do not fit on the ROM disk. They are found on
+the disk image files or the individual files can be found in the
+Binary\Apps directory of the distribution.
+
+  Application   Description
+  ------------- -------------------------------------------------------------
+  TUNE          Play .PT2, .PT3, .MYM audio files.
+  FAT           Access MS-DOS FAT filesystems from RomWBW (based on FatFs).
+
+There is additional documentation on some of these applications at the
+RomWBW Applications Page.
+
 Using Disks
+
+ROM & RAM Disks
+
+RomWBW utilizes a portion of the ROM and RAM memory in your system to
+implement small memory-based disks.
+
+The RAM disk provides a small CP/M filesystem that you can use for the
+temporary storage of files. Unless your system has a battery backed
+mechanism for persisting your RAM contents, the RAM disk contents will
+be lost at each power-off. However, the RAM disk is an excellent choice
+for storing temporary files because it is very fast.
+
+Like the RAM disk, the ROM disk also provides a small CP/M filesystem,
+but it’s contents are static – they are part of the ROM. As such, you
+cannot save files to the ROM disk. Any attempt to do this will result in
+a disk I/O error. The contents of the ROM disk have been chosen to
+provide a core set of tools and applications that are helpful for either
+CP/M 2.2 or ZSDOS. Since ZSDOS is CP/M 2.2 compatible, this works fairly
+well. However, you will find some files on the ROM disk that will work
+with ZSDOS, but will not work on CP/M 2.2. For example, LDDS, which
+loads the ZSDOS date/time stamper will only run on ZSDOS.
+
+Disk Devices
 
 While the RAM/ROM disks provide a functional system, they are not useful
 in the long term because you cannot save data across power cycles. They
 are also constrained by limited space.
 
 The systems supported by RomWBW all have the ability to use persistent
-disk media. I am referring to all kinds of disk devices including floppy
-drives, hard disks, CF Cards, and SD Cards. Some systems have disk
-interfaces built-in, while others will require add-in cards. You will
-need to refer to the documentation for your system for your specific
-options.
+disk media. A wide variety of disk devices are supported including
+floppy drives, hard disks, CF Cards, and SD Cards. Some systems have
+disk interfaces built-in, while others will require add-in cards. You
+will need to refer to the documentation for your system for your
+specific options.
 
-In the RomWBW bootup messages, you will see hardware discovery messages.
+In the RomWBW boot messages, you will see hardware discovery messages.
 If you have a disk drive interface, you should see messages listing
 device types like FD:, IDE:, PPIDE:, SD:. Additionally, you will see
 messages indicating the media that has been found on the interfaces. As
@@ -324,11 +607,11 @@ an example of this:
        D:=IDE0:1
 
 You will probably see more drive letters than this. The drive letter
-assignment process is described in more detail later in this document.
-Be aware that RomWBW will only assign drive letters to disk interfaces
-that actually have media in them. If you do not see drive letters
-assigned as expected, refer to the prior system boot messages to ensure
-media has been detected in the interface. Actually, there is one
+assignment process is described above in the Drive Letter Assignment
+section. Be aware that RomWBW will only assign drive letters to disk
+interfaces that actually have media in them. If you do not see drive
+letters assigned as expected, refer to the prior system boot messages to
+ensure media has been detected in the interface. Actually, there is one
 exception to this rule: floppy drives will be assigned a drive letter
 regardless of whether there is any media inserted at boot.
 
@@ -337,17 +620,17 @@ interface like IDE0. This is important as it is telling you what each
 drive letter refers to. Also notice that mass storage disks (like IDE)
 will normally have multiple drive letters assigned. The extra drive
 letters refer to additional “slices” on the disk. The concept of slices
-is also explained later in this document.
+is described above in the Slices section.
 
 Once you are seeing drive letters referring to your disk media, you can
 follow the instructions below to begin using the disk media with the
 operating system. Your disk media must be initialized prior to being
 used. There are two ways to initialize your media for use.
 
-You can initialize the media in-place using your RomWBW system. This
-process is described below under Disk Initialization. In this scenario,
-you will need to subsequently copy any files you want to use onto the
-newly initialized disk (see Transferring Files).
+One option is to initialize the media in-place using your RomWBW system.
+This process is described below under Disk Initialization. In this
+scenario, you will need to subsequently copy any files you want to use
+onto the newly initialized disk (see Transferring Files).
 
 Alternatively, you can use your modern Windows, Linux, or Mac computer
 to copy a disk image onto the disk media. RomWBW comes with a variety of
@@ -459,10 +742,10 @@ well as real spinning hard disks.
 
 In addition to the disk images above, there is also a special hard disk
 image called hd_combo.img. This image contains all of the images above,
-but in a single image with 6 slices (see below for information on disk
-slices). At the boot loader prompt, you can choose a disk with the combo
-image, then select the specific slice you want. This allows a single
-disk to have all of the possible operating system options.
+but in a single image with 6 slices. At the boot loader prompt, you can
+choose a disk with the combo image, then select the specific slice you
+want. This allows a single disk to have all of the possible operating
+system options.
 
 This is the layout of the hd_combo disk image:
 
@@ -499,7 +782,7 @@ You will notice that you do not have an option to boot a drive letter
 here (like C:). This is because the operating system is not yet loaded.
 When you ran SYSCOPY previously, remember that C: was assigned to IDE0:0
 which means device IDE0, slice 0. So, to boot the disk that you just
-setup with SYSCOPY, you would choose option 1. You will then be prompted
+setup with SYSCOPY, you would choose option 2. You will then be prompted
 for the slice on IDE0 that you want to boot. For now, just press enter
 to choose slice 0. Once you are familiar with slices, you can SYSCOPY
 and boot alternate slices. Here is what you would see when booting to a
@@ -533,199 +816,6 @@ in the Disk boot line, they are not “bootable” disks because they have
 no system tracks on them. Attempting to boot to one of them, will fail
 with a “Disk not bootable!” error message and return to the loader
 prompt.
-
-General Usage
-
-Each of the operating systems and ROM applications included with RomWBW
-are sophisticated tools in their own right. It is not reasonable to
-document their usage here. However, you will find complete manuals in
-PDF format in the Doc directory of the distribution. The intention of
-this section is to document the RomWBW specific enhancements to these
-operating systems.
-
-ROM Disk
-
-In addition to the ROM-based operating systems and applications, the ROM
-also contains a ROM disk with a small CP/M filesystem. The contents of
-the ROM disk have been chosen to provide a core set of tools and
-applications that are helpful for either CP/M 2.2 or ZSDOS. Since ZSDOS
-is CP/M 2.2 compatible, this works fairly well. However, you will find
-some files on the ROM disk that will work with ZSDOS, but will not work
-on CP/M 2.2. For example, LDDS, which loads the ZSDOS date/time stamper
-will only run on ZSDOS.
-
-Drive Letter Assignment
-
-In legacy CP/M-type operating systems, drive letters were generally
-mapped to disk drives in a completely fixed way. For example, drive A:
-would always refer to the first floppy drive. Since RomWBW supports a
-wide variety of hardware configurations, it implements a much more
-flexible drive letter assignment mechanism so that any drive letter can
-be assigned to any disk device.
-
-At boot, you will notice that RomWBW automatically assigns drive letters
-to the available disk devices. These assignments are displayed during
-the startup of the selected operating system. Additionally, you can
-review the current drive assignments at any time using the ASSIGN
-command. CP/M 3 and ZPM3 do not automatically display the assignments at
-startup, but you can use ASSIGN do display them.
-
-The drive letter assignments do not change during an OS session unless
-you use the ASSIGN command yourself to do it. Additionally, the
-assignments at boot will stay the same on each boot as long as you do
-not make changes to your hardware configuration. Note that the
-assignments are dependent on the media currently inserted in hard disk
-drives. So, notice that if you insert or remove an SD Card or CF Card,
-the drive assignments will change. Since drive letter assignments can
-change, you must be careful when doing destructive things like using
-CLRDIR to make sure the drive letter you use is referring to the desired
-media.
-
-When performing a ROM boot of an operating system, note that A: will be
-your RAM disk and B: will be your ROM disk. When performing a disk boot,
-the disk you are booting from will be assigned to A: and the rest of the
-drive letters will be offset to accommodate this. This is done because
-most legacy operating systems expect that A: will be the boot drive.
-
-Slices
-
-The vintage operating systems included with RomWBW were produced at a
-time when mass storage devices were quite small. CP/M 2.2 could only
-handle filesystems up to 8MB. In order to achieve compatibility across
-all of the operating systems supported by RomWBW, the hard disk
-filesystem format used is 8MB. This ensures any filesystem will be
-accessible to any of the operating systems.
-
-Since storage devices today are quite large, RomWBW implements a
-mechanism called slicing to allow up to 256 8MB filesystems on a single
-large storage device. This allows up to 2GB of useable space on a single
-media. You can think of slices as a way to refer to any of the first 256
-8MB chunks of space on a single media.
-
-Of course, the problem is that CP/M-like operating systems have only 16
-drive letters (A:-P:) available. Under the covers, RomWBW allows you to
-use any drive letter to refer to any slice of any media. The ASSIGN
-command is provided to allow you to view or change the drive letter
-mappings at any time. At startup, the operating system will
-automatically allocate a reasonable number of drive letters to the
-available storage devices. The allocation will depend on the number of
-large storage devices available at boot. For example, if you have only
-one hard disk type media, you will see that 8 drive letters are assigned
-to the first 8 slices of that media. If you have two large storage
-devices, you will see that each device is allocated four drive letters.
-
-Referring to slices within a storage device is done by appending a :n
-where n is the device relative slice number from 0-255. For example, if
-you have an IDE device, it will show up as IDE0: in the boot messages
-meaning the first IDE device. To refer to the fourth slice of IDE0, you
-would type “IDE0:3”. So, if I wanted to use drive letter L: to refer to
-the fourth slice of IDE0, I could use the command ASSIGN L:=IDE0:3.
-
-There are a couple of rules to be aware of when assigning drive letters.
-First, you may only refer to a specific device/slice with one drive
-letter. Said another way, you cannot have multiple drive letters
-referring to a single device/slice at the same time. Second, there must
-always be a drive assigned to A:. Any attempt to violate these rules
-will be blocked by the ASSIGN command.
-
-Unlike MS-DOS partitions, slices are not allocated – there is no
-partitioning of slices. Think of every hard disk type device as having a
-pre-allocated set of 256 8MB slices at the start of the media. You can
-refer to any of them simply by assigning a drive letter. RomWBW will not
-check to see if there is anything else on the hard disk in the slice you
-are referring to, nor will it verify that the hard disk media is large
-enough to have a slice at the location you refer to. If you attempt to
-write past the end of your media, you will get an I/O error displayed,
-so you will know if you make a mistake. There is no tracking of your use
-of slices – you will need to keep track of your use of slices yourself.
-
-Nothing automatically initializes a slice as a file system. You must do
-that yourself using CLRDIR. Since CLRDIR works on drive letters, make
-absolutely sure you know what media and slice are assigned to that drive
-letter before using CLRDIR.
-
-While it is probably obvious, you cannot use slices on any media less
-than 8MB in size. Specifically, you cannot slice RAM disks, ROM disks,
-floppy disks, etc.
-
-Inbuilt ROM Applications
-
-In addition to CP/M 2.2 and Z-System, there are several ROM applications
-that can be launched directly from ROM. These applications are not
-hosted by an operating system and so they are unable to save files to
-disk devices.
-
-The following ROM applications are available at the boot loader prompt:
-
-  Application   
-  ------------- --------------------------------------------------------
-  Monitor       Z80 system debug monitor w/ Intel Hex loader
-  Forth         Brad Rodriguez’s ANSI compatible Forth language
-  Basic         Nascom 8K BASIC language
-  Tasty BASIC   Dimitri Theuling’s Tiny BASIC implementation
-  Play          A simple video game (requires ANSI terminal emulation)
-
-In general, the command to exit these applications and restart the
-system is BYE. The exceptions are the Monitor which uses B and Play
-which uses Q.
-
-Space is available in the ROM image for the inclusion of other software.
-Any inbuilt application can be set up to launch automatically at
-startup.
-
-RomWBW Custom Applications
-
-The operation of the RomWBW hosted operating systems is enhanced through
-several custom applications. These applications are functional on all of
-the OS variants included with RomWBW.
-
-The following custom applications are found on the ROM disk and are,
-therefore, globally available.
-
-  --------------------------------------------------------------------------
-  Application   Description
-  ------------- ------------------------------------------------------------
-  ASSIGN        Add, change, and delete drive letter assignments. Use ASSIGN
-                /? for usage instructions.
-
-  SYSCOPY       Copy system image to a device to make it bootable. Use
-                SYSCOPY with no parms for usage instructions.
-
-  FDU           Format and test floppy disks. Menu driven interface.
-
-  OSLDR         Load a new OS on the fly. For example, you can switch to
-                Z-System when running CP/M. Use OSLDR with no parms for
-                usage instructions.
-
-  FORMAT        Will someday be a command line tool to format floppy disks.
-                Currently does nothing!
-
-  MODE          Reconfigures serial ports dynamically.
-
-  XM            XModem file transfer program adapted to hardware.
-                Automatically uses primary serial port on system.
-
-  FDISK80       John Coffman’s Z80 hard disk partitioning tool. See
-                documentation in Doc directory.
-
-  FAT           Access MS-DOS FAT filesystems from RomWBW (based on FatFs).
-
-  FLASH         Will Sowerbutts’ in-situ ROM programming utility.
-
-  CLRDIR        Initialize the directory area of a CP/M disk (Max Scane).
-  --------------------------------------------------------------------------
-
-Some custom applications do not fit on the ROM disk. They are found on
-the disk image files or the individual files can be found in the
-Binary\Apps directory of the distribution.
-
-  Application   Description
-  ------------- -------------------------------------------------------------
-  TUNE          Play .PT2, .PT3, .MYM audio files.
-  FAT           Access MS-DOS FAT filesystems from RomWBW (based on FatFs).
-
-There is additional documentation on some of these applications at the
-RomWBW Applications Page.
 
 Operating Systems
 
@@ -860,10 +950,13 @@ computer is:
 
 1.  Use cpmtools on your modern computer to create a RomWBW CP/M
     filesystem image.
+
 2.  Insert your RomWBW media (CF Card, SD Card, or floppy disk) in your
     modern computer.
+
 3.  Use a disk imaging tool to copy the RomWBW filesystem image onto the
     media.
+
 4.  Move the media back to the RomWBW computer.
 
 This process is a little complicated, but it has the benefit of allowing
@@ -890,7 +983,7 @@ computer to make an SD Card or CF Card with a standard FAT32 filesystem
 on it, then place that media in your RomWBW computer and access the
 files.
 
-When formatting the media on your modern computer, but sure to pick the
+When formatting the media on your modern computer, be sure to pick the
 FAT filesystem. NTFS and other filesystems will not work.
 
 On your RomWBW computer you can use the FAT application to access the
@@ -1048,7 +1141,8 @@ applications are no longer provided.
     list of general code enhancements.
 -   Phillip Stevens contributed support for FreeRTOS.
 -   Curt Mayer contributed the Linux / MacOS build process.
--   UNA BIOS is a product of John Coffman.
+-   UNA BIOS and FDISK80 is a product of John Coffman.
+-   FLASH4 is a product of Will Sowerbutts.
 
 Contributions of all kinds to RomWBW are very welcome.
 
