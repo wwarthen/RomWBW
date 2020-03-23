@@ -110,7 +110,7 @@ $ImgFile = "${OutDir}/${RomName}.img"	# Final name of IMG image (memory loadable
 if ($Platform -eq "UNA") {$Bios = 'una'} else {$Bios = 'wbw'}
 
 # List of RomWBW proprietary apps to imbed in ROM disk.
-$RomApps = "assign","fdu","format","mode","osldr","rtc","survey","syscopy","sysgen","talk","timer","xm","inttest"
+$RomApps = "assign","fdu","format","mode","rtc","survey","syscopy","sysgen","talk","timer","xm","inttest"
 
 ""
 "Building ${RomName} ${ROMSize}KB ROM configuration ${Config} for Z${CPUType}..."

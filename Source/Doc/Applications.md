@@ -69,7 +69,6 @@ found:
 | SYSCOPY     | Yes      | Yes        | Yes      |
 | MODE        | Yes      | Yes        | Yes      |
 | FDU         | Yes      | Yes        | Yes      |
-| OSLDR       | Yes      | Yes        | Yes      |
 | FORMAT      | Yes      | Yes        | Yes      |
 | XM          | Yes      | Yes        | Yes      |
 | FLASH       | Yes      | Yes        | Yes      |
@@ -402,63 +401,6 @@ provided in the RomWBW distribution.
 
 `\clearpage`{=latex}
 
-# OSLDR
-
-RomWBW supports loading new operating systems on-the-fly. For example,
-if CP/M 2.2 is currently running, you can load and run Z-System from
-the command line. The `OSLDR` application provides this functionality.
-
-## Syntax
-
-`OSLDR [/F] `*`<osimg>`*` [`*`<hbiosimg>`*`]`
-
-*`<osimg>`* is the name of a file containing an operating system image
-
-*`<hbiosimg>`* is the name of a file containing an HBIOS firmware image
-
-`/F` forces operation bypassing compatibility checking
-
-## Usage
-
-`OSLDR `*`<osimg>`* will read the specified file, confirm it is an
-operating system image file, then load it as though it was being
-booted. For example, `OSLDR ZSYS.SYS` would load the Z-System
-operating system.
-
-`OSLDR `*`<osimg>`* *`<hbiosimg>`* will first read and load the
-specified *`<hbiosimg>`* file as a new HBIOS image and then read and
-load the specified *`<osimg>`* file. HBIOS image can be produced by
-the RomWBW build process, but they are not produced by default. You
-are encouraged to contact Wayne Warthen for more information on this
-capability.
-
-## Notes
-
-The primary function of `OSLDR` is to allow switching to a new
-operating system while the system if running without a full reboot.
-
-`OSLDR` is considered generally reliable for when used simply to load
-a new operating system (one parameter). However, using it to load an
-HBIOS image is considered experimental and should not be relied upon.
-
-`OSLDR` can also be used to load "test" versions of operating systems
-from files transferred to your system. This is especially useful in
-when loading both an operating system and HBIOS image because you can
-essentially simulate starting your system with new firmware without
-reprogramming your ROM.
-
-`OSLDR` attempts to check the file(s) specified for correctness before
-loading them, but it is far from perfect. This application should be
-used with caution and may not work in some cases that are hard to
-define.
-
-## Etymology
-
-The `OSLDR` command is an original product and the source code is
-provided in the RomWBW distribution.
-
-`\clearpage`{=latex}
-
 # FORMAT
 
 This application is just a placeholder for a future version that will
@@ -476,7 +418,7 @@ function beyond this display currently.
 
 ## Etymology
 
-The `OSLDR` command is an original product and the source code is
+The `FORMAT` command is an original product and the source code is
 provided in the RomWBW distribution.
 
 `\clearpage`{=latex}

@@ -3,7 +3,7 @@
 ## Z80/Z180 System Software
 
 Version 2.9.2 Prerelease  
-Sunday 22 March 2020
+Monday 23 March 2020
 
 Wayne Warthen <wwarthen@gmail.com>
 
@@ -258,7 +258,6 @@ over any older versions of the app on your disk:
   - SYSCOPY.COM
   - MODE.COM
   - FDU.COM (was FDTST.COM)
-  - OSLDR.COM
   - FORMAT.COM
   - XM.COM
   - FLASH.COM
@@ -484,19 +483,18 @@ the OS variants included with RomWBW.
 The following custom applications are found on the ROM disk and are,
 therefore, globally available.
 
-| Application | Description                                                                                                                          |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| ASSIGN      | Add, change, and delete drive letter assignments. Use ASSIGN /? for usage instructions.                                              |
-| SYSCOPY     | Copy system image to a device to make it bootable. Use SYSCOPY with no parms for usage instructions.                                 |
-| FDU         | Format and test floppy disks. Menu driven interface.                                                                                 |
-| OSLDR       | Load a new OS on the fly. For example, you can switch to Z-System when running CP/M. Use OSLDR with no parms for usage instructions. |
-| FORMAT      | Will someday be a command line tool to format floppy disks. Currently does nothing\!                                                 |
-| MODE        | Reconfigures serial ports dynamically.                                                                                               |
-| XM          | XModem file transfer program adapted to hardware. Automatically uses primary serial port on system.                                  |
-| FDISK80     | John Coffman’s Z80 hard disk partitioning tool. See documentation in Doc directory.                                                  |
-| FAT         | Access MS-DOS FAT filesystems from RomWBW (based on FatFs).                                                                          |
-| FLASH       | Will Sowerbutts’ in-situ ROM programming utility.                                                                                    |
-| CLRDIR      | Initialize the directory area of a CP/M disk (Max Scane).                                                                            |
+| Application | Description                                                                                          |
+| ----------- | ---------------------------------------------------------------------------------------------------- |
+| ASSIGN      | Add, change, and delete drive letter assignments. Use ASSIGN /? for usage instructions.              |
+| SYSCOPY     | Copy system image to a device to make it bootable. Use SYSCOPY with no parms for usage instructions. |
+| FDU         | Format and test floppy disks. Menu driven interface.                                                 |
+| FORMAT      | Will someday be a command line tool to format floppy disks. Currently does nothing\!                 |
+| MODE        | Reconfigures serial ports dynamically.                                                               |
+| XM          | XModem file transfer program adapted to hardware. Automatically uses primary serial port on system.  |
+| FDISK80     | John Coffman’s Z80 hard disk partitioning tool. See documentation in Doc directory.                  |
+| FAT         | Access MS-DOS FAT filesystems from RomWBW (based on FatFs).                                          |
+| FLASH       | Will Sowerbutts’ in-situ ROM programming utility.                                                    |
+| CLRDIR      | Initialize the directory area of a CP/M disk (Max Scane).                                            |
 
 Some custom applications do not fit on the ROM disk. They are found on
 the disk image files or the individual files can be found in the

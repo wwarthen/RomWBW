@@ -292,7 +292,6 @@ them over any older versions of the app on your disk:
 * SYSCOPY.COM
 * MODE.COM
 * FDU.COM (was FDTST.COM)
-* OSLDR.COM
 * FORMAT.COM
 * XM.COM
 * FLASH.COM
@@ -529,7 +528,6 @@ therefore, globally available.
 | ASSIGN      | Add, change, and delete drive letter assignments. Use ASSIGN /? for usage instructions. |
 | SYSCOPY     | Copy system image to a device to make it bootable. Use SYSCOPY with no parms for usage instructions. |
 | FDU         | Format and test floppy disks. Menu driven interface. |
-| OSLDR       | Load a new OS on the fly. For example, you can switch to Z-System when running CP/M. Use OSLDR with no parms for usage instructions. |
 | FORMAT      | Will someday be a command line tool to format floppy disks. Currently does nothing! |
 | MODE        | Reconfigures serial ports dynamically. |
 | XM          | XModem file transfer program adapted to hardware. Automatically uses primary serial port on system. |
