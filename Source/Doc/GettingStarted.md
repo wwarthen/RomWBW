@@ -196,122 +196,6 @@ to the RAM disk (A:) will disappear at the next power on (RAM is
 generally not persistent). Also note that attempts to save files to
 the ROM disk (B:) will fail because ROM is not writable.
 
-# Upgrading
-
-Upgrading to a newer release of RomWBW is essentially just a matter of
-updating the ROM chip in your system. If you have spare ROM chips for
-your system and a ROM programmer, it is always safest to retain your
-existing, working ROM chip and program a new one with the new
-firmware. If the new one fails to boot, you can easily return to the
-known working ROM.
-
-Prior to attempting to reprogram your actual ROM chip, you may wish to
-"try" the upgrade. With RomWBW, you can upload a new system image
-executable and load it from the command line. For each ROM image file
-(.rom) in the Binary directory, you will also find a corresponding
-application file (.com). For example, for SBC_std.rom, there is also
-an SBC_std.com file. You can upload the .com file to your system using
-XModem, then simply run the .com file. You will see your system go
-through the normal startup process just like it was started from ROM.
-However, your ROM has not been updated and the next time you boot your
-system, it will revert to the system image contained in ROM. You may
-find that you are unable to load the .com file because it is too large
-to fit in available application RAM (TPA). Unfortunately, in this
-case, you will not be able to use the .com file mechanism to start
-your system.
-
-If you do not have easy access to a ROM programmer, it is usually
-possible to reprogram your system ROM using the FLASH utility from
-Will Sowerbutts. This application, called FLASH.COM, can be found on the
-ROM drive of any running system. In this case, you would need to
-transfer the new ROM image (.rom) over to your system using XModem (or
-one of the other mechanisms described in the Transferring Files
-section below). The ROM image is too large to fit on your RAM drive,
-so you will need to transfer it to a larger storage drive. Once the
-ROM image is on your system, you can use the FLASH application to
-update your ROM. The following is a typical example of transferring
-ROM image using XModem and flashing the chip in-situ.
-
-```
-E>xm r rom.img
-
-XMODEM v12.5 - 07/13/86
-RBC, 28-Aug-2019 [WBW], ASCI
-
-Receiving: E0:ROM.IMG
-7312k available for uploads
-File open - ready to receive
-To cancel: Ctrl-X, pause, Ctrl-X
-
-Thanks for the upload
-
-E>flash write rom.img
-FLASH4 by Will Sowerbutts <will@sowerbutts.com> version 1.2.3
-
-Using RomWBW (v2.6+) bank switching.
-Flash memory chip ID is 0xBFB7: 39F040
-Flash memory has 128 sectors of 4096 bytes, total 512KB
-Write complete: Reprogrammed 2/128 sectors.
-Verify (128 sectors) complete: OK!
-```
-
-Obviously, there is some risk to this approach since any issues with the
-programming or ROM image could result in a non-functional system.
-
-To confirm your ROM chip has been successfully updated, restart your
-system and boot an operating system from ROM. Do not boot from a disk
-device yet. Review the boot messages to see if any issues have
-occurred.
-
-Once you are satisfied that the ROM is working well, you will need to
-update the system images and RomWBW custom applications on your disk
-drives. The system images and custom applications are matched to the
-RomWBW ROM firmware in use. If you attempt to boot a disk or run
-applications that have not been updated to match the current ROM
-firmware, you are likely to have odd problems.
-
-The simplest way to update your disk media is to just use your modern
-computer to overwrite the entire media with the latest disk image of your
-choice. This process is described below in the Disk Images section. If
-you wish to update existing disk media in your system, you need to perform
-the following steps.
-
-If the disk is bootable, you need to update the system tracks of the
-disk.This is done using a SYSCOPY command such as `SYSCOPY
-C:=B:ZSYS.SYS`. For a ZSDOS boot disk, use ZSYS.SYS. For a CP/M 2.2
-disk, use CPM.SYS. For a CP/M 3 or ZPM3 disk, use CPMLDR.SYS.
-CPMLDR.SYS is not provided on the ROM disk, so you would need to
-upload it from the distribution.
-
-Finally, if you have copies of any of the RomWBW custom applications
-on your hard disk, you need to update them with the latest copies. The
-following applications are found on your ROM disk. Use COPY to copy
-them over any older versions of the app on your disk:
-
-* ASSIGN.COM
-* SYSCOPY.COM
-* MODE.COM
-* FDU.COM (was FDTST.COM)
-* FORMAT.COM
-* XM.COM
-* FLASH.COM
-* FDISK80.COM
-* TALK.COM
-* RTC.COM
-* TIMER.COM
-* INTTEST.COM
-
-For example: `B>COPY ASSIGN.COM C:`
-
-Some RomWBW custom applications are too large to fit on the ROM disk.
-If you are using any of these you will need to transfer them to your
-system and then update all copies. These applications are found in
-the Binary\\Apps directory of the distribution and in all of the disk
-images.
-
-* FAT.COM
-* TUNE.COM
-
 # General Usage
 
 Each of the operating systems and ROM applications included with
@@ -523,18 +407,20 @@ functional on all of the OS variants included with RomWBW.
 The following custom applications are found on the ROM disk and are,
 therefore, globally available.
 
-| Application | Description                                                    |
-| ----------- | -------------------------------------------------------------- |
-| ASSIGN      | Add, change, and delete drive letter assignments. Use ASSIGN /? for usage instructions. |
+| Application | Description                                                                                          |
+| ----------- | ---------------------------------------------------------------------------------------------------- |
+| ASSIGN      | Add, change, and delete drive letter assignments. Use ASSIGN /? for usage instructions.              |
 | SYSCOPY     | Copy system image to a device to make it bootable. Use SYSCOPY with no parms for usage instructions. |
-| FDU         | Format and test floppy disks. Menu driven interface. |
-| FORMAT      | Will someday be a command line tool to format floppy disks. Currently does nothing! |
-| MODE        | Reconfigures serial ports dynamically. |
-| XM          | XModem file transfer program adapted to hardware. Automatically uses primary serial port on system. |
-| FDISK80     | John Coffman's Z80 hard disk partitioning tool.  See documentation in Doc directory. |
-| FAT         | Access MS-DOS FAT filesystems from RomWBW (based on FatFs). |
-| FLASH       | Will Sowerbutts' in-situ ROM programming utility. |
-| CLRDIR      | Initialize the directory area of a CP/M disk (Max Scane). |
+| MODE        | Reconfigures serial ports dynamically.                                                               |
+| FDU         | Format and test floppy disks. Menu driven interface.                                                 |
+| FORMAT      | Will someday be a command line tool to format floppy disks. Currently does nothing!                  |
+| XM          | XModem file transfer program adapted to hardware. Automatically uses primary serial port on system.  |
+| FLASH       | Will Sowerbutts' in-situ ROM programming utility.                                                    |
+| FDISK80     | John Coffman's Z80 hard disk partitioning tool.  See documentation in Doc directory.                 |
+| TALK        | Direct console I/O to a specified character device.                                                  |
+| RTC         | Manage and test the Real Time Clock hardware.                                                        |
+| TIMER       | Display value of running periodic system timer.                                                      |
+| INTTEST     | Test interrupt vector hooking.                                                                       |
 
 Some custom applications do not fit on the ROM disk. They are found on the
 disk image files or the individual files can be found in the Binary\\Apps
@@ -545,8 +431,8 @@ directory of the distribution.
 | TUNE        | Play .PT2, .PT3, .MYM audio files.                             |
 | FAT         | Access MS-DOS FAT filesystems from RomWBW (based on FatFs).    |
 
-There is additional documentation on some of these applications at the
-[RomWBW Applications Page](https://www.retrobrewcomputers.org/doku.php?id=software:firmwareos:romwbw:apps).
+Additional documentation on all of these applications can be found in
+"RomWBW Applications.pdf" in the Doc directory of the distribution.
 
 # Using Disks
 
@@ -1116,6 +1002,126 @@ support for VGA3 as soon as it reaches production status.
 Please refer to the
 [UNA BIOS Firmware Page](https://www.retrobrewcomputers.org/doku.php?id=software:firmwareos:una:start)
 for more information on UNA.
+
+# Upgrading
+
+Upgrading to a newer release of RomWBW is essentially just a matter of
+updating the ROM chip in your system. If you have spare ROM chips for
+your system and a ROM programmer, it is always safest to retain your
+existing, working ROM chip and program a new one with the new
+firmware. If the new one fails to boot, you can easily return to the
+known working ROM.
+
+Prior to attempting to reprogram your actual ROM chip, you may wish to
+"try" the upgrade. With RomWBW, you can upload a new system image
+executable and load it from the command line. For each ROM image file
+(.rom) in the Binary directory, you will also find a corresponding
+application file (.com). For example, for SBC_std.rom, there is also
+an SBC_std.com file. You can upload the .com file to your system using
+XModem, then simply run the .com file. You will see your system go
+through the normal startup process just like it was started from ROM.
+However, your ROM has not been updated and the next time you boot your
+system, it will revert to the system image contained in ROM.
+
+There are two restrictions to be aware of related to loading a system
+image as a .com application.  First, this is only supported under
+Z-System and CP/M 2.2.  You must boot into one of these OSes before
+attempting to launch the .com file.  Second, you may find that you
+are  unable to load the .com file because it is too large to fit in
+available application RAM (TPA).  Your only recourse in this
+situation  is to build a custom ROM with fewer features.
+
+If you do not have easy access to a ROM programmer, it is usually
+possible to reprogram your system ROM using the FLASH utility from
+Will Sowerbutts. This application, called FLASH.COM, can be found on the
+ROM drive of any running system. In this case, you would need to
+transfer the new ROM image (.rom) over to your system using XModem (or
+one of the other mechanisms described in the Transferring Files
+section). The ROM image is too large to fit on your RAM drive,
+so you will need to transfer it to a larger storage drive. Once the
+ROM image is on your system, you can use the FLASH application to
+update your ROM. The following is a typical example of transferring
+ROM image using XModem and flashing the chip in-situ.
+
+```
+E>xm r rom.img
+
+XMODEM v12.5 - 07/13/86
+RBC, 28-Aug-2019 [WBW], ASCI
+
+Receiving: E0:ROM.IMG
+7312k available for uploads
+File open - ready to receive
+To cancel: Ctrl-X, pause, Ctrl-X
+
+Thanks for the upload
+
+E>flash write rom.img
+FLASH4 by Will Sowerbutts <will@sowerbutts.com> version 1.2.3
+
+Using RomWBW (v2.6+) bank switching.
+Flash memory chip ID is 0xBFB7: 39F040
+Flash memory has 128 sectors of 4096 bytes, total 512KB
+Write complete: Reprogrammed 2/128 sectors.
+Verify (128 sectors) complete: OK!
+```
+
+Obviously, there is some risk to this approach since any issues with the
+programming or ROM image could result in a non-functional system.
+
+To confirm your ROM chip has been successfully updated, restart your
+system and boot an operating system from ROM. Do not boot from a disk
+device yet. Review the boot messages to see if any issues have
+occurred.
+
+Once you are satisfied that the ROM is working well, you will need to
+update the system images and RomWBW custom applications on your disk
+drives. The system images and custom applications are matched to the
+RomWBW ROM firmware in use. If you attempt to boot a disk or run
+applications that have not been updated to match the current ROM
+firmware, you are likely to have odd problems.
+
+The simplest way to update your disk media is to just use your modern
+computer to overwrite the entire media with the latest disk image of
+your choice. This process is described below in the Disk Images
+section. If you wish to update existing disk media in your system, you
+need to perform the following steps.
+
+If the disk is bootable, you need to update the system tracks of the
+disk. This is done using a SYSCOPY command such as `SYSCOPY
+C:=B:ZSYS.SYS`. For a ZSDOS boot disk, use ZSYS.SYS. For a CP/M 2.2
+disk, use CPM.SYS. For a CP/M 3 or ZPM3 disk, use CPMLDR.SYS.
+CPMLDR.SYS is not provided on the ROM disk, so you will need to
+upload it from the distribution.
+
+Finally, if you have copies of any of the RomWBW custom applications
+on your hard disk, you need to update them with the latest copies. The
+following applications are found on your ROM disk. Use COPY to copy
+them over any older versions of the app on your disk:
+
+* ASSIGN.COM
+* SYSCOPY.COM
+* MODE.COM
+* FDU.COM (was FDTST.COM)
+* FORMAT.COM
+* XM.COM
+* FLASH.COM
+* FDISK80.COM
+* TALK.COM
+* RTC.COM
+* TIMER.COM
+* INTTEST.COM
+
+For example: `B>COPY ASSIGN.COM C:`
+
+Some RomWBW custom applications are too large to fit on the ROM disk.
+If you are using any of these you will need to transfer them to your
+system and then update all copies. These applications are found in
+the Binary\\Apps directory of the distribution and in all of the disk
+images.
+
+* FAT.COM
+* TUNE.COM
 
 # RomWBW Distribution
 
