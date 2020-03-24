@@ -1265,31 +1265,31 @@ RTC_UCL:
 	RET	Z
 	
 	CP	'H'
-	JR	Z,RTC_TOP_LOOP_HELP
+	JP	Z,RTC_TOP_LOOP_HELP
 	
 	CP	'D'
-	JR	Z,RTC_TOP_LOOP_DELAY	
+	JP	Z,RTC_TOP_LOOP_DELAY	
 
 	CP	'B'
-	JR	Z,RTC_TOP_LOOP_BOOT	
+	JP	Z,RTC_TOP_LOOP_BOOT	
 
 	CP	'C'
-	JR	Z,RTC_TOP_LOOP_CHARGE
+	JP	Z,RTC_TOP_LOOP_CHARGE
 
 	CP	'N'
-	JR	Z,RTC_TOP_LOOP_NOCHARGE
+	JP	Z,RTC_TOP_LOOP_NOCHARGE
 
 	CP	'A'
-	JR	Z,RTC_TOP_LOOP_START
+	JP	Z,RTC_TOP_LOOP_START
 
 	CP	'S'
 	JP	Z,RTC_TOP_LOOP_SET
 
 	CP	'I'
-	JR	Z,RTC_TOP_LOOP_INIT
+	JP	Z,RTC_TOP_LOOP_INIT
 	
 	CP	'T'
-	JR	Z,RTC_TOP_LOOP_TIME
+	JP	Z,RTC_TOP_LOOP_TIME
 
 	LD	DE,CRLF_MSG
 	LD	C,09H			; CP/M write string to console call
@@ -1309,6 +1309,16 @@ RTC_TOP_LOOP_DELAY:
 	JP	RTC_TOP_LOOP_1
 	
 RTC_TOP_LOOP_BOOT:
+	LD	DE,BOOTMSG		; BOOT message
+	LD	C,9			; BDOS string display function
+	CALL	BDOS			; Do it
+	; WAIT FOR MESSAGE TO BE DISPLAYED
+	LD	HL,10000
+DELAY_LOOP:				; LOOP IS 26TS
+	DEC	HL			; 6TS
+	LD	A,H			; 4TS
+	OR	L			; 4TS
+	JR	NZ,DELAY_LOOP		; 12TS
 	LD	A,BID_BOOT		; BOOT BANK
 	LD	HL,0			; ADDRESS ZERO
 	CALL	HB_BNKCALL		; DOES NOT RETURN
@@ -1685,6 +1695,7 @@ PLTERR		.TEXT	"\r\n\r\nUnknown/unsupported hardware platform, aborting...\r\n$"
 UBERR		.TEXT	"\r\nUNA UBIOS is not currently supported, aborting...\r\n$"
 HBTAG		.TEXT	"RomWBW HBIOS$"
 UBTAG		.TEXT	"UNA UBIOS"
+BOOTMSG		.TEXT	"\r\n\r\nRebooting...$"
 PLT_SBC		.TEXT	", SBC/Zeta RTC Latch Port 0x70\r\n$"
 PLT_N8		.TEXT	", N8 RTC Latch Port 0x88\r\n$"
 PLT_MK4		.TEXT	", Mark 4 RTC Latch Port 0x8A\r\n$"
