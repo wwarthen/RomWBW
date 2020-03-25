@@ -3,7 +3,7 @@
 ## Z80/Z180 System Software
 
 Version 2.9.2 Prerelease  
-Monday 23 March 2020
+Tuesday 24 March 2020
 
 Wayne Warthen <wwarthen@gmail.com>
 
@@ -704,6 +704,16 @@ usage (“CPM Manual.pdf”). If you are new to the CP/M world, I would
 recommend using this CP/M variant to start with simply because it is the
 most stable and you are less likely to encounter problems.
 
+### Errata
+
+  - The original versions of DDT, DDTZ, and ZSID used the RST 38 vector
+    which conflicts with interrupt mode 1 use of this vector. The DDT,
+    DDTZ, and ZSID applications in RomWBW have been modified to use RTS
+    30 to avoid this issue.
+
+  - Z-System applications will not run under CP/M 2.2. For example, the
+    `LDDS` date stamper with not run.
+
 ## ZSDOS 1.1
 
 ZSDOS is the most popular non-DRI CP/M “clone” which is generally
@@ -718,6 +728,13 @@ Additionally, the official documentation for Z-System is included in the
 RomWBW distribution Doc directory (“ZSDOS Manual.pdf” and “ZCPR
 Manual.pdf”).
 
+### Errata
+
+  - Although most CP/M 2.2 applications will run under Z-System, some
+    may not work as expected. The best example is PIP which is not aware
+    of the ZSDOS paths and will fail in some scenarios (use `COPY`
+    instead).
+
 ## NZCOM Automatic Z-System
 
 NZCOM is a much further refined version of Z-System (ZCPR 3.4). NZCOM
@@ -728,11 +745,17 @@ On the RomWBW NZCOM disk images, the boot OS is ZSDOS 1.1. After you
 configure NZCOM, you can add a `PROFILE.SUB` file to automatically
 launch NZCOM at boot.
 
-To use, NZCOM, you must run through a simple configuration process. This
-is well documented in the NZCOM manual in the “NZCOM Users Manual.pdf”
-file in the RomWBW Doc directory. Additionally, there are instructions
-for automatically launching NZCOM when the disk is booted under the host
-OS via an auto command submission process.
+NZCOM is not pre-configured. You must run through a simple configuration
+process before loading it. Run MKZCM to do this.
+
+NZCOM has substantially more functionality than CP/M or basic Z-System.
+It is important to read the the “NZCOM Users Manual.pdf” file in the
+RomWBW Doc directory.
+
+### Errata
+
+  - SuperZap (`ZAP.COM`) is not working under NZCOM.
+  - There is no `DIR` command, you must use `SDZ` instead.
 
 ## Digital Research CP/M 3
 
@@ -744,7 +767,13 @@ support tools and help system.
 
 Note that to make a CP/M 3 boot disk, you actually place CPMLDR.SYS on
 the system tracks of the disk. You do not place CPM3.SYS on the system
-tracks.
+tracks. `CPMLDR.SYS` chain loads `CPM3.SYS`.
+
+### Errata
+
+  - CLRDIR is not working right under CP/M 3. It only partially clears
+    the disk sectors of the directory area. The extent of this issue has
+    not been evaluated, but it is not a RomWBW issue.
 
 ## Simeon Cran’s ZPM3
 
@@ -754,12 +783,23 @@ ZCPR 3. Essentially, it has the features of and compatibility with both.
 Like CP/M 3, to make ZPM3 boot disk, you put CPMLDR.SYS on the system
 tracks of the disk.
 
+### Errata
+
+  - CLRDIR is not working right under ZPM3. It only partially clears the
+    disk sectors of the directory area. The extent of this issue has not
+    been evaluated, but it is not a RomWBW issue.
+  - ZPMLDR is included with ZPM3, but it is not working correctly.
+  - The ZPM operatins system is contained in the file called CPM3.SYS
+    which is confusing, but it is the author’s intended way of using
+    ZPM3.
+  - SuperZap (`ZAP.COM`) is not working under ZPM3.
+
 ## FreeRTOS
 
-Note that Phillip Stevens has also ported FreeRTOS to run under RomWBW.
-FreeRTOS is not provided in the RomWBW distribution. FreeRTOS is
-available under the [MIT licence](https://www.freertos.org/a00114.html)
-and further general information is available at
+Phillip Stevens has ported FreeRTOS to run under RomWBW. FreeRTOS is not
+provided in the RomWBW distribution. FreeRTOS is available under the
+[MIT licence](https://www.freertos.org/a00114.html) and further general
+information is available at
 [FreeRTOS](https://www.freertos.org/RTOS.html).
 
 You can also contact Phillip for detailed information on the Z180
