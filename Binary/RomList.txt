@@ -170,7 +170,7 @@ RCZ80 w/ KIO (RCZ80_kio.rom):
  - Requires KIO module
  - Console on KIO primary serial port at 115200 baud
  - Includes support for Compact Flash Module
- - Support for PPIDE Module may be enabled in config
+ - Includes support for PPIDE Module
  - Support for Scott Baker SIO board may be enabled in config
  - Support for Scott Baker floppy controllers (SMC & WDC) may
    be enabled in config
@@ -179,7 +179,7 @@ RCZ180 (RCZ180_nat.rom & RCZ180_ext.rom):
  - Assumes CPU oscillator of 18.432 MHz
  - Console on Z180 onboard primary ASCI serial port at 115200 baud
  - Includes support for Compact Flash Module
- - Support for PPIDE Module may be enabled in config
+ - Includes support for PPIDE Module
  - Support for alternative serial modules may be enabled in config
  - Support for Scott Baker floppy controllers (SMC & WDC) may
    be enabled in config
@@ -195,7 +195,7 @@ SCZ180 (SCZ180_126.rom, SCZ180_130.rom, SCZ180_131.rom):
  - Assumes CPU oscillator of 18.432 MHz
  - Console on Z180 onboard primary ASCI serial port at 115200 baud
  - Includes support for Compact Flash Module
- - Support for PPIDE Module may be enabled in config
+ - Includes support for PPIDE Module
  - Support for alternative serial modules may be enabled in config
  - Support for Scott Baker floppy controllers (SMC & WDC) may
    be enabled in config
@@ -207,7 +207,8 @@ EZZ80 (EZZ80_std.rom):
  - Assumes CPU oscillator of 10.000 MHz
  - Console on primary SIO serial port at 115200 baud
  - Includes support for on-board SIO
- - Includes support for IDE via RC bus
+ - Includes support for RC2014 Compact Flash Module
+ - Includes support for rc2014 PPIDE Module
 
 DYNO (DYNO_std.rom):
  - Assumes CPU oscillator of 18.432 MHz
