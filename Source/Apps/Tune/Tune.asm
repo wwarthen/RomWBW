@@ -100,9 +100,19 @@ CFGSEL:
 	LD	A,(PLT)			; Get platform id of loaded config
 	CP	E			; Equal?
 	JR	NZ,CFGSEL		; If no match keep trying
+;
+	; Activate card if applicable
+	CALL	SLOWIO			; Slow down I/O now
+	LD	A,(ACR)			; Get ACR port address (if any)
+	INC	A			; $FF -> $00 & set flags
+	JR	Z,PROBE			; Skip ahead to probe if no ACR
+	DEC	A			; Restore real ACR port address
+	LD	C,A			; Put in C for I/O
+	LD	A,$FF			; Value to activate card
+	OUT	(C),A			; Write value to ACR
 ;	
+PROBE:
 	; Test for hardware (sound chip detection)
-	CALL	SLOWIO
 	LD	DE,(PORTS)		; D := RDAT, E := RSEL
 	LD	C,E			; Port = RSEL
 	LD	A,2			; Register 2
@@ -110,17 +120,16 @@ CFGSEL:
 	LD	C,D			; Port = RDAT
 	LD	A,$AA			; Value = $AA
 	OUT	(C),A			; Write $AA to register 2
-	;LD	C,E			; Port = RSEL
 	LD	A,(RIN)			; Port = RIN
 	LD	C,A			; ... to C
 	IN	A,(C)			; Read back value in register 2
-	PUSH	AF
-	CALL	NORMIO
-	POP	AF
-	;CALL	PRTHEX			; *debug*
 	CP	$AA			; Value as written?
-	JR	NZ,CFGSEL		; If not, keep trying configs
+	JR	Z,MAT			; Hardware matched!
+	CALL	NORMIO			; Back to normal I/O speeds
+	JR	CFGSEL			; And keep trying
 ;
+MAT:
+	; Hardware matched!
 	CALL	CRLF			; Formatting
 	LD	DE,(DESC)		; Load hardware description pointer
 	CALL	PRTSTR			; Print description
@@ -150,15 +159,6 @@ SETDLY:
 	RR	E			; ... for delay factor
 	EX	DE,HL			; Move result to HL
 	LD	(QDLY),HL		; Save result as quark delay factor
-;
-	; Activate SCG card if applicable
-	LD	A,(ACR)
-	CP	$FF
-	JR	Z,NOSCG
-	LD	C,A
-	LD	A,$FF
-	OUT	(C),A
-NOSCG:
 ;
 	; Clear heap storage
 	LD	HL,HEAP			; Point to heap start
@@ -766,7 +766,7 @@ FILTYP		.DB	0	; Sound file type (TYPPT2, TYPPT3, TYPMYM)
 TMP		.DB	0	; work around use of undocumented Z80
 ;
 		
-MSGBAN		.DB	"Tune Player for RomWBW v2.3, 11-Feb-2020",0
+MSGBAN		.DB	"Tune Player for RomWBW v2.4, 23-Mar-2020",0
 MSGUSE		.DB	"Copyright (C) 2020, Wayne Warthen, GNU GPL v3",13,10
 		.DB	"PTxPlayer Copyright (C) 2004-2007 S.V.Bulba",13,10
 		.DB	"MYMPlay by Marq/Lieves!Tuore",13,10,13,10

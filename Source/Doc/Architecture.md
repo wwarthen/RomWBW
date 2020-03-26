@@ -17,10 +17,10 @@ numbersections: true
 secnumdepth: 1
 papersize: letter
 geometry:
-- top=1in
-- bottom=1in
-- left=1in
-- right=1in
+- top=1.5in
+- bottom=1.5in
+- left=1.5in
+- right=1.5in
 # - showframe
 # - pass
 linestretch: 1.25
@@ -1327,13 +1327,16 @@ The hardware platform is identified in L:
 Id | Platform
 -- | ---------------------------------------------------
 1  | SBC V1 or V2
-2  | ZETA
-3  | ZETA 2
+2  | Zeta
+3  | Zeta V2
 4  | N8
-5  | MK4
+5  | Mark IV
 6  | UNA
 7  | RC2014 w/ Z80
-8  | RC2014 w/ Z180
+8  | RC2014 w/ Z180 & banked memory module
+9  | RC2014 w/ Z180 & linear memory module
+10 | SCZ180 (SC126, SC130, SC131)
+11 | Dyno
 
 ### Function 0xF2 -- System Set Bank (SYSSETBNK)
 

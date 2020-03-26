@@ -57,7 +57,7 @@ else
 	BIOS=wbw
 fi
 
-Apps=(assign fdu format mode osldr rtc survey syscopy sysgen talk timer xm inttest)
+Apps=(assign fdu format mode rtc survey syscopy sysgen talk timer xm inttest)
 
 blankfile=Blank${romsize}KB.dat
 romdiskfile=RomDisk.tmp

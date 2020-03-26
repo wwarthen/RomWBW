@@ -51,6 +51,7 @@ Version 2.9.2
 - WBW: Boot from any slice
 - C?M: Added Unix build process
 - PLS: FreeRTOS compatibility
+- WWB: Removed OSLDR application (can't handle new OSes)
 
 Version 2.9.1
 -------------

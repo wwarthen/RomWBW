@@ -59,14 +59,15 @@ init$2:
 	call	?pmsg			; print it
 
 	; Get boot disk unit and save it
-	ld	bc,0F8E0h	; HBIOS func: get boot info
-	rst	08		; do it, D := boot unit, E: := boot slice
-	ld	a,d		; move boot unit to A
-	ld	(@bootdu),a	; save it
-	ld	a,e		; move boot slice to A
-	ld	(@bootsl),a	; save it
+	ld	bc,0F8E0h		; HBIOS func: get boot info
+	rst	08			; do it, D := boot unit, E: := boot slice
+	ld	a,d			; move boot unit to A
+	ld	(@bootdu),a		; save it
+	ld	a,e			; move boot slice to A
+	ld	(@bootsl),a		; save it
 
 	call	dinit
+	call	clrram
 	ret
 	
 cinit:
@@ -297,6 +298,75 @@ stpimg	db	'W',~'W'		; marker
 	db	rup << 4 | rtp		; second byte of version info
 	dw	cbx			; address of cbios ext data
 stpsiz	equ	$ - stpimg
+
+
+	cseg	; ram disk init must be done from resident memory
+	
+;
+; Initialize ram disk by filling directory with 'e5' bytes
+; Fill first 8k of ram disk track 1 with 'e5'
+;
+clrram:
+	di				; no interrupts
+	ld	a,(0FFE0h)		; get current bank
+	push 	af			; save it
+	;ld	a,(bnkramd)		; first bank of ram disk
+	ld	a,080h			; first bank of ram disk
+	;call	hb_bnksel		; select bank
+	call	0FFF3h			; select bank
+
+	; Check first 32 directory entries.  If any start with an invalid
+	; value, init the ram disk.  Valid entries are e5 (empty entry) or
+	; 0-15 (user number).
+	ld	hl,0
+	ld	de,32
+	ld	b,32
+clrram0:
+	ld	a,(hl)
+	cp	0E5h
+	jr	z,clrram1		; e5 is valid
+	cp	16
+	jr	c,clrram1		; 0-15 is also valid
+	jr	clrram2			; invalid entry! jump to init
+clrram1:
+	add	hl,de			; loop for 32 entries
+	djnz	clrram0
+;	jr	clrram2			; *debug*
+	jr	clrram3			; all entries valid, bypass init
+clrram2:
+	ld	hl,0			; source adr for fill
+	ld	bc,2000h		; length of fill is 8k
+	ld	a,0E5h			; fill value
+	call	fill			; do it
+	or	0ffh			; flag value for cleared
+	ld	(clrflg),a		; save it
+clrram3:
+	;ld	a,(bnkuser)		; usr bank (tpa)
+	pop	af			; recover original bank
+	;call	hb_bnksel		; select bank
+	call	0FFF3h			; select bank
+	ei				; resume interrupts
+
+	ld	a,(clrflg)		; get cleared flag
+	or	a			; set flags
+	ld	hl,clr$msg		; clear ram disk message
+	call	nz,?pmsg		; print msg if true
+	
+	ret
+	
+;
+; Fill memory at hl with value a, length in bc. All regs used.
+; Length *must* be greater than 1 for proper operation!!!
+;
+fill:
+	ld	d,h		; set de to hl
+	ld	e,l		; so destination equals source
+	ld	(hl),a		; fill the first byte with desired value
+	inc	de		; increment destination
+	dec	bc		; decrement the count
+	ldir			; do the rest
+	ret			; return
+
 
 	cseg	; boot loading most be done from resident memory
 	
@@ -569,6 +639,9 @@ read:
 	ld	c,20
 	jp	bdos
 	
+clrflg		db	0		; RAM disk cleared flag
+clr$msg		db	'RAM Disk Initialized',13,10,13,10,0
+
 	if zpm
 
 signon$msg	db	13,10,'ZPM3'
