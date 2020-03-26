@@ -17,3 +17,7 @@
 ../BPBIOS/myterm.z3t 0:
 ../BPBIOS/Z34RCP11/z34rcp11.rel 0:rcp.zrl
 ../BPBIOS/NZFCP13/nzfcp13.rel 0:fcp.zrl
+#
+# Add Common Applications
+#
+Common/*.* 0:

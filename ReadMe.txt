@@ -3,7 +3,7 @@ RomWBW
 Z80/Z180 System Software
 
 Version 2.9.2 Prerelease
-Tuesday 24 March 2020
+Wednesday 25 March 2020
 
 Wayne Warthen wwarthen@gmail.com
 
@@ -783,7 +783,6 @@ RomWBW Doc directory.
 
 Errata
 
--   SuperZap (ZAP.COM) is not working under NZCOM.
 -   There is no DIR command, you must use SDZ instead.
 
 Digital Research CP/M 3
@@ -821,7 +820,6 @@ Errata
 -   The ZPM operatins system is contained in the file called CPM3.SYS
     which is confusing, but it is the author’s intended way of using
     ZPM3.
--   SuperZap (ZAP.COM) is not working under ZPM3.
 
 FreeRTOS
 

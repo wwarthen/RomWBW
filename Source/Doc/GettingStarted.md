@@ -802,7 +802,6 @@ Manual.pdf" file in the RomWBW Doc directory.
 
 ### Errata
 
-- SuperZap (`ZAP.COM`) is not working under NZCOM.
 - There is no `DIR` command, you must use `SDZ` instead.
 
 ## Digital Research CP/M 3
@@ -840,7 +839,6 @@ has not been evaluated, but it is not a RomWBW issue.
 - ZPMLDR is included with ZPM3, but it is not working correctly.
 - The ZPM operatins system is contained in the file called CPM3.SYS
 which is confusing, but it is the author's intended way of using ZPM3.
-- SuperZap (`ZAP.COM`) is not working under ZPM3.
 
 ## FreeRTOS
 
