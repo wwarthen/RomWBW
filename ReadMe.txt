@@ -837,8 +837,7 @@ provided in the RomWBW distribution. FreeRTOS is available under the MIT
 licence and further general information is available at FreeRTOS.
 
 You can also contact Phillip for detailed information on the Z180
-implementation of FreeRTOS for RomWBW.
-[@feilipu](https://github.com/feilipu)
+implementation of FreeRTOS for RomWBW. https://github.com/feilipu
 
 Transferring Files
 
