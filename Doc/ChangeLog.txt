@@ -1,3 +1,7 @@
+Version 3.0.0
+-------------
+- WBW: v2.9.2 -> 3.0 version upgrade due to scope of changes
+
 Version 2.9.2
 -------------
 - PMS: Fixed DS1210-related issue resulting in "Invalid BIOS" errors
