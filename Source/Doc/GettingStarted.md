@@ -860,7 +860,7 @@ information is available at
 
 You can also contact Phillip for detailed information on the Z180
 implementation of FreeRTOS for RomWBW.
-[@feilipu](https://github.com/feilipu)
+[feilipu](https://github.com/feilipu)
 
 # Transferring Files
 

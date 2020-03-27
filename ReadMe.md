@@ -806,10 +806,12 @@ tracks of the disk.
 Phillip Stevens has ported FreeRTOS to run under RomWBW. FreeRTOS is not
 provided in the RomWBW distribution. FreeRTOS is available under the
 [MIT licence](https://www.freertos.org/a00114.html) and further general
-information is available at [FreeRTOS](https://www.freertos.org/RTOS.html).
+information is available at
+[FreeRTOS](https://www.freertos.org/RTOS.html).
 
 You can also contact Phillip for detailed information on the Z180
-implementation of FreeRTOS for RomWBW. [feilipu](https://github.com/feilipu).
+implementation of FreeRTOS for RomWBW.
+[feilipu](https://github.com/feilipu)
 
 # Transferring Files
 
