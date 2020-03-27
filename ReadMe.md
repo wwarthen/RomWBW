@@ -809,7 +809,7 @@ provided in the RomWBW distribution. FreeRTOS is available under the
 information is available at [FreeRTOS](https://www.freertos.org/RTOS.html).
 
 You can also contact Phillip for detailed information on the Z180
-implementation of FreeRTOS for RomWBW. [feilipu](https://github.com/feilipu)
+implementation of FreeRTOS for RomWBW. [feilipu](https://github.com/feilipu).
 
 # Transferring Files
 
