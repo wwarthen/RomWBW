@@ -30,8 +30,8 @@ bdos	.equ	$0005		; BDOS invocation vector
 ;;
 ;stamp	.equ	$40		; loc of RomWBW CBIOS zero page stamp
 ;
-rmj	.equ	2		; CBIOS version - major
-rmn	.equ	9		; CBIOS version - minor
+rmj	.equ	3		; CBIOS version - major
+rmn	.equ	0		; CBIOS version - minor
 ;
 ;===============================================================================
 ; Code Section

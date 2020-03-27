@@ -753,7 +753,7 @@ are new to the CP/M world, I would recommend using this CP/M variant
 to start with simply because it is the most stable and you are less
 likely to encounter problems.
 
-### Errata
+### Notes
 
 - The original versions of DDT, DDTZ, and ZSID used the RST 38
 vector which conflicts with interrupt mode 1 use of this vector.
@@ -777,7 +777,7 @@ Additionally, the official documentation for Z-System is included in
 the RomWBW distribution Doc directory ("ZSDOS Manual.pdf" and "ZCPR
 Manual.pdf").
 
-### Errata
+### Notes
 
 - Although most CP/M 2.2 applications will run under Z-System, some
 may not work as expected.  The best example is PIP which is not aware
@@ -800,9 +800,10 @@ NZCOM has substantially more functionality than CP/M or basic
 Z-System.  It is important to read the the "NZCOM Users
 Manual.pdf" file in the RomWBW Doc directory.
 
-### Errata
+### Notes
 
-- There is no `DIR` command, you must use `SDZ` instead.
+- There is no `DIR` command, you must use `SDZ` instead.  If you don't
+like this, look into the ALIAS facility.
 
 ## Digital Research CP/M 3
 
@@ -816,11 +817,16 @@ Note that to make a CP/M 3 boot disk, you actually place CPMLDR.SYS
 on the system tracks of the disk. You do not place CPM3.SYS on the
 system tracks.  `CPMLDR.SYS` chain loads `CPM3.SYS`.
 
-### Errata
+### Notes
 
-- CLRDIR is not working right under CP/M 3.  It only partially clears
+- `CLRDIR` is not working right under CP/M 3.  It only partially clears
 the disk sectors of the directory area.  The extent of this issue
-has not been evaluated, but it is not a RomWBW issue.
+has not been evaluated, but it is not a RomWBW issue.  To use CLRDIR,
+you can temporarily boot back into Z-System.
+
+- The `DATE` command cannot yet be used to set the RTC.  The RTC is
+used to read the current date/time for file stamping, etc.  You can
+use the `RTC` app to set the RTC clock.
 
 ## Simeon Cran's ZPM3
 
@@ -831,13 +837,16 @@ both.
 Like CP/M 3, to make ZPM3 boot disk, you put CPMLDR.SYS on the system
 tracks of the disk.
 
-### Errata
+### Notes
 
-- CLRDIR is not working right under ZPM3.  It only partially clears
+- `CLRDIR` is not working right under ZPM3.  It only partially clears
 the disk sectors of the directory area.  The extent of this issue
-has not been evaluated, but it is not a RomWBW issue.
-- ZPMLDR is included with ZPM3, but it is not working correctly.
-- The ZPM operatins system is contained in the file called CPM3.SYS
+has not been evaluated, but it is not a RomWBW issue.  To use CLRDIR,
+you can temporarily boot back into Z-System.
+
+- `ZPMLDR` is included with ZPM3, but it is not working correctly.
+
+- The ZPM operating system is contained in the file called CPM3.SYS
 which is confusing, but it is the author's intended way of using ZPM3.
 
 ## FreeRTOS
