@@ -1,6 +1,6 @@
 ;===============================================================================
 ; SysCopy - Copy System Image to/from reserved tracks of disk for RomWBW
-;           adaptation of CP/M 2.2
+;           adaptation of CP/M 2.2 & CP/M 3
 ;===============================================================================
 ;
 ;	Author:  Wayne Warthen (wwarthen@gmail.com)
@@ -16,6 +16,7 @@
 ;
 ; Change Log:
 ;   2016-04-24 [WBW] Updated to preserve MBR partition table
+;   2020-02-17 [WBW] Updated for CP/M 3
 ;_______________________________________________________________________________
 ;
 ; ToDo:
@@ -26,6 +27,9 @@
 ;===============================================================================
 ; Definitions
 ;===============================================================================
+;
+false	.equ	0		; define true
+true	.equ	~false		; define false
 ;
 stksiz	.equ	$40		; we are a stack pig
 ;
@@ -86,6 +90,18 @@ main:
 init:
 	; add check for RomWBW?
 	;
+	; get OS version
+	ld	c,12		; BDOS get os version
+	call	bdos		; do it, L=version
+	cp	$30		; Test for v3.0
+	jr	c,init1		; if <, pre v3.0
+	ld	a,true		; OS v3.0 or above
+	ld	(v3os),a	; save it
+	jr	init2
+init1:
+	ld	a,false		; OS < v3.0
+	ld	(v3os),a	; save it
+init2:
 	; locate cbios function table address
 	ld	hl,(restart+1)	; load address of CP/M restart vector
 	ld	de,-3		; adjustment for start of table
@@ -96,6 +112,20 @@ init:
 	call	bdos		; invoke BDOS function
 	inc	a		; 1-based index for fcb
 	ld	(defdrv),a	; save it
+	; print version banner
+	call	crlf		; formatting
+	ld	de,msgban1	; point to version message part 1
+	call	prtstr		; print it
+	ld	a,(v3os)	; get OS version flag
+	or	a		; set flags
+	ld	de,msgv2	; point to V2 mode message
+	call	z,prtstr	; if V2, say so
+	ld	de,msgv3	; point to V3 mode message
+	call	nz,prtstr	; if V3, say so
+	call	crlf		; formatting
+	ld	de,msgban2	; point to version message part 2
+	call	prtstr		; print it
+	call	crlf		; formatting
 	; return success
 	xor	a
 	ret
@@ -237,7 +267,7 @@ wrfil1:	; create target file
 	; write the image
 	ld	a,$15		; setup for bdos write sequential
 	ld	(rwfun),a	; save bdos function
-	ld	a,(imgsiz)	; number of records to read
+	ld	a,(imgsiz)	; number of records to write
 	ld	(reccnt),a	; init record counter
 	ld	hl,imgbuf	; start of buffer
 	ld	(bufptr),hl	; init buffer pointer
@@ -292,10 +322,8 @@ rddsk:
 	call	setdsk		; setup disk
 	ret	nz		; abort on error
 	; set function to read
-	ld	hl,(cbftbl)	; get address of CBIOS function table
-	ld	a,$27		; $27 is CBIOS READ entry offset
-	call	addhl		; set HL to resultant entry point
-	ld	(actfnc),hl	; save it
+	ld	a,13		; CBIOS func 13: Read
+	ld	(actfnc),a	; save it
 	; read the header
 	ld	a,12		; start with 1536 byte header (12 records)
 	ld	(reccnt),a	; initialize record counter
@@ -339,11 +367,10 @@ wrdsk:
 	ld	hl,mbrbuf	; override to read
 	ld	(bufptr),hl	; ... into MBR buffer
 	ld	a,4		; 4 records = 1 512 byte sector
+	ld	(reccnt),a	; initialize record counter
 	; set function to read
-	ld	hl,(cbftbl)	; get address of CBIOS function table
-	ld	a,$27		; $27 is CBIOS READ entry offset
-	call	addhl		; set HL to resultant entry point
-	ld	(actfnc),hl	; save it
+	ld	a,13		; CBIOS func 13: Read
+	ld	(actfnc),a	; save it
 	; read the existing MBR into memory
 	call	rwdsk		; read the sector
 	ret	nz		; abort on error
@@ -366,10 +393,8 @@ wrdsk1:	; setup to write the image from memory to disk
 	call	setdsk		; setup disk
 	ret	nz		; abort on error
 	; set function to write
-	ld	hl,(cbftbl)	; get address of CBIOS function table
-	ld	a,$2A		; $2A is CBIOS WRITE entry offset
-	call	addhl		; set HL to resultant entry point
-	ld	(actfnc),hl	; save it
+	ld	a,14		; CBIOS func 14: Write
+	ld	(actfnc),a	; save it
 	; setup the record count to write
 	ld	a,(imgsiz)	; get previously recorded image size
 	ld	(reccnt),a	; save it as pending record count
@@ -399,7 +424,8 @@ setdsk:
 	ld	c,a		; move to c
 	ld	e,0		; treat as first select
 	call	cbios		; invoke cbios with...
-	.db	$1B		; SELDSK entry offset
+	;.db	$1B		; SELDSK entry offset
+	.db	9		; SELDSK entry offset
 	; check return (sets HL to DPH address)
 	ld	a,h
 	or	l
@@ -436,29 +462,47 @@ setdsk:
 ; Read or write (reccnt) sectors to/from disk via CBIOS
 ;
 rwdsk:
+	ld	hl,128		; assume rec len for < CP/M 3
+	ld	(reclen),hl	; and save it
+	ld	a,(v3os)	; CP/M 3 or greater?
+	or	a		; set flags
+	jr	z,rwdsk0	; if not, continue
+	; adjust reccnt, logical (128) to physical (512)
+	ld	a,(reccnt)	; get pending rec cnt
+	add	a,3		; round up
+	srl	a		; shift to
+	srl	a		; ... divide by 4
+	ld	(reccnt),a	; and resave it
+	ld	hl,512		; use physical rec len
+	ld	(reclen),hl	; and save it
+rwdsk0:
 	; setup to read/write a sector
 	ld	bc,(acttrk)	; get active track
 	call	cbios		; invoke cbios with...
-	.db	$1E		; SETTRK entry offset
+	;.db	$1E		; SETTRK entry offset
+	.db	10		; SETTRK entry offset
 	ld	bc,(actsec)	; get active sector
 	call	cbios		; invoke cbios with...
-	.db	$21		; SETSEC entry offset
+	;.db	$21		; SETSEC entry offset
+	.db	11		; SETSEC entry offset
 	ld	bc,(bufptr)	; get active buffer pointer
 	call	cbios		; invoke cbios with...
-	.db	$24		; SETDMA entry offset
+	;.db	$24		; SETDMA entry offset
+	.db	12		; SETDMA entry offset
 	; read/write sector
 	ld	a,(reccnt)	; get the pending record count
 	dec	a		; last record?
 	ld	c,2		; allow cached writes by default
 	jr	nz,rwdsk1	; not last record, continue
 	ld	c,1		; last record, no caching please
-rwdsk1:	ld	hl,(actfnc)	; load the CBIOS function vector
-	call	jphl		; indirect call (read or write)
+rwdsk1:	
+	ld	a,(actfnc)
+	call	cbiosfn
 	or	a		; set flags on return code
 	jp	nz,errio	; if not zero, error abort
 	; adjust buffer pointer
 	ld	hl,(bufptr)	; get buffer pointer
-	ld	de,128		; record length is 128 bytes
+	ld	de,(reclen)	; get rec len
 	add	hl,de		; adjust buffer ptr for next record
 	ld	(bufptr),hl	; save it
 	; next sector
@@ -479,7 +523,7 @@ rwdsk1:	ld	hl,(actfnc)	; load the CBIOS function vector
 rwdsk2:	ld	hl,reccnt
 	dec	(hl)		; decrement pending record count
 	ret	z		; if zero, done, return with Z set
-	jr	rwdsk		; otherwise, loop
+	jr	rwdsk0		; otherwise, loop
 ;
 jphl:	jp	(hl)		; indirect jump
 ;
@@ -656,6 +700,15 @@ chkfcb4:
 	or	a		; set flags
 	ret
 ;
+; Print dot
+;
+prtdot:
+	push	af
+	ld	a,'.'
+	call	prtchr
+	pop	af
+	ret
+;
 ; Print character in A without destroying any registers
 ;
 prtchr:
@@ -775,12 +828,36 @@ delim1:
 ;
 cbios:
 	ex	(sp),hl
-	ld	a,(hl)		; get the function offset
+	ld	a,(hl)		; get the function number
 	inc	hl		; point past value following call instruction
 	ex	(sp),hl		; put address back at top of stack and recover HL
+	
+cbiosfn:
+	; enter here if function already in reg A
+	ld	(bpb_fn),a	; save function
+;	
+	ld	a,(v3os)	; CP/M 3 or greater?
+	or	a		; set flags
+	jr	nz,cbios2	; if >= V3, handle it
+;
+	; CBIOS call for CP/M < v3
+	ld	a,(bpb_fn)	; get pending function number
+	ld	l,a		; function number to L
+	add	a,l		; ... and multiply by 3 for
+	add	a,l		; ... jump table offset
 	ld	hl,(cbftbl)	; address of CBIOS function table to HL
 	call	addhl		; determine specific function address
 	jp	(hl)		; invoke CBIOS
+;
+cbios2:
+	; CBIOS call for CP/M v3 or greater
+	ld	(bpb_bc),bc
+	ld	(bpb_de),de
+	ld	(bpb_hl),hl
+	
+	ld	c,50		; direct bios call function number
+	ld	de,bpb		; BIOS parameter block
+	jp	bdos		; return via BDOS call
 ;
 ; Add the value in A to HL (HL := HL + A)
 ;
@@ -862,10 +939,24 @@ actdsk	.db	0		; active disk no
 acttrk	.dw	0		; active track
 actsec	.dw	0		; active sector
 actspt	.dw	0		; active sectors per track
-actfnc	.dw	0		; active function (read or write)
+actfnc	.db	0		; active cbios i/o function (read or write)
+v3os	.db	0		; true ($FF) if OS v3.0 or greater
+reclen	.dw	0		; active record length
+;
+bpb:				; BIOS parameter block for CP/M 3 BIOS calls
+bpb_fn	.db	0		; function
+bpb_a	.db	0		; reg A
+bpb_bc	.dw	0		; reg BC
+bpb_de	.dw	0		; reg DE
+bpb_hl	.dw	0		; reg HL
 ;
 ; Messages
 ;
+msgban1	.db	"SYSCOPY v2.0 for RomWBW CP/M, 17-Feb-2020$"
+msgv2	.db	" (CP/M 2 Mode)$"
+msgv3	.db	" (CP/M 3 Mode)$"
+msgban2	.db	"Copyright 2020, Wayne Warthen, GNU GPL v3$"
+
 msguse	.db	"Usage: SYSCOPY <dest>[=<source>]$"
 msgamb	.db	"Ambiguous file specification not allowed$"
 msgdlm	.db	"Invalid delimiter$"

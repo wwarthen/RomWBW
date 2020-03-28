@@ -1,0 +1,167 @@
+***********************************************************************
+***                                                                 ***
+***                          R o m W B W                            ***
+***                                                                 ***
+***                    Z80/Z180 System Software                     ***
+***                                                                 ***
+***********************************************************************
+
+This directory ("Binary") is part of the RomWBW System Software 
+distribution archive.  Refer to the ReadMe.txt file in this 
+directory for more information on the overall contents of the 
+directory.
+
+RomWBW includes a set of disk images that are ready to copy onto
+a floppy or hard/CF/SD disk.  You can use your modern computer
+(Windows/Linux/Mac) to copy the disk image file onto your disk
+media.  The disk media will then be ready to use in your RomWBW
+System.
+
+A description of the disk images is provided later in this file.
+For more information on the creatioin of these images including
+instructions for customizing them or creating your own, refer to
+the ReadMe.txt file in the Source\Images directory.
+
+Installing Images
+-----------------
+
+The following instructions apply to Windows computers.  Alternatively,
+you can use the "dd" command on Linux or Mac.
+
+First of all, a MAJOR WARNING!!!!  The tools described below are 
+quite capable of obliterating your running Windows system drive.  Use 
+with extreme caution and make sure you have backups.
+
+To install a floppy image on floppy media, you can use the tool 
+called RaWriteWin.  This tool is included in the Tools directory of 
+the distribution. This tool will write your floppy image (fd_xxx.img) 
+to a floppy disk using a raw block transfer.  The tool is GUI based 
+and it's operation is self explanatory.
+
+To install a hard disk image on a CF card or SD card, you must have 
+the appropriate media card slot on your computer. If you do, you can 
+use the tool called Win32DiskImager. This tool is also included in 
+the Tools directory of the distribution.  It will write your 
+hard disk image (hd_xxx.img) to the designated media card.  This tool 
+is also GUI based and self explanatory.
+
+The use of the SIMH emulator is outside of the scope of this document.  
+However, if you use SIMH, you will find that you can attach the hard 
+disk images to the emulator with lines such as the following in your 
+SIMH configuration file:
+
+  | attach hdsk0 hd_cpm22.img
+  | set hdsk0 format=HDSK
+  | set hdsk0 geom=T:2048/N:256/S:512
+  | set hdsk0 wrtenb
+  
+Making Disk Images Bootable
+---------------------------
+
+The Operating System disk images below are ready to boot by the
+RomWBW Boot Loader.  However, if you update your RomWBW ROM, then
+you should also update the system tracks of your bootable disk
+images.  You would use SYSCOPY to do this.  SYSCOPY can also be
+used to make a disk bootable if it is not already bootable.
+
+You would use a command like the following to make drive C bootable:
+
+  | B>SYSCOPY C:=CPM.SYS
+
+The system file to use depends on the operating system you are trying
+to boot from the slice you are initializing with SYSCOPY:
+
+  CP/M 2.2 - cpm.sys
+  ZSDOS 1.1 - zsys.sys
+  CP/M 3 - cpmldr.sys
+  ZPM3 - cpmldr.sys
+  
+Slices
+------
+
+A RomWBW CP/M filesystem is fixed at 8MB.  This is because it is the 
+largest size filesystem supported by all common CP/M variants. Since 
+all modern hard disks (including SD Cards and CF Cards) are much 
+larger than 8MB, RomWBW supports the concept of "slices".  This 
+simply means that you can concatenate multiple CP/M filesystems (up 
+to 256 of them) on a single physical hard disk and RomWBW will allow 
+you to assign drive letters to them and treat them as multiple 
+independent CP/M drives.
+
+With the exception of the hd_combo image, each of the disk images
+includes a single CP/M file system (i.e., a single slice).  However,
+you can easily create a multi-slice disk image by merely concatenating 
+multiple images together.  For example, if you wanted to create a 2 
+slice disk image that has ZSDOS in the first slice and Wordstar in 
+the second slice, you could use the following command from a Windows 
+command prompt:
+
+  | C:\RomWBW\Binary>copy /b hd_zsdos.img + hd_ws.img hd_multi.img
+
+You can now write hd_multi.img onto your SD or CF Card and you will 
+have ZSDOS in the first slice and Wordstar in the second slice.
+
+The hd_combo disk image is an example of this.  It contains several
+slices in one image file.  The contents of this special disk image
+are described below.
+
+The concept of slices applies ONLY to hard disks.  Floppy disks are 
+not large enough to support multiple slices.
+
+Disk Image Contents
+-------------------
+
+What follows is a brief description of the contents of the
+disk images automatically provided in the RomWBW distribution.
+Note that all of the OS images include the RomWBW custom
+support apps.
+
+cpm22 - DRI CP/M 2.2 (Bootable Floppy and Hard Disk)
+
+  Standard DRI CP/M 2.2 distribution files along with a few commonly
+  used utilities.
+
+zsdos - ZCPR1 + ZSDOS 1.1 (Bootable Floppy and Hard Disk)
+
+  Contains ZCPR1 and ZSDOS 1.1.  This is roughly equivalent to the
+  ROM boot contents, but provides a full set of the applications
+  and related files that would not all fit on the ROM drive.
+
+nzcom - NZCOM (Bootable Floppy and Hard Disk)
+
+  Standard NZCOM distribution.  Note that you will need to run the
+  NZCOM setup before this will run properly.  You will need
+  to refer to the NZCOM documentation.  
+
+cpm3 - DRI CP/M3 (Bootable Floppy and Hard Disk)
+
+  Standard DRI CP/M 3 adaptation for RomWBW that is ready to run.
+  It can be started by running CPMLDR.
+
+zpm3 - ZPM3 (Bootable Floppy and Hard Disk)
+
+  Simeon Cran's ZCPR 3 compatible OS for CP/M 3 adapted for RomWBW and 
+  ready to run.  It can be started by running CPMLDR (which seems 
+  wrong, but ZPMLDR is somewhat broken).
+
+ws4 - WordStar 4 (Floppy and Hard Disk)
+
+  Micropro Wordstar 4 full distribution.  This image is not bootable
+  and is intended to be added as an additional slice to an OS image.
+
+bp - BPBIOS (Hard Disk only)
+
+  Adaptation of BPBIOS for RomWBW.  This is NOT complete and NOT
+  useable in it's current state.
+
+combo - Multi-Boot Combination (Bootable Hard Disk)
+
+  A pre-created combo image that contains the following slices.  The
+  slices are identical to the individual images listed above.
+
+    Slice 0: cpm22 (bootable)
+    Slice 1: zsdos (bootable)
+    Slice 2: nzcom (bootable)
+    Slice 3: cpm3 (bootable)
+    Slice 4: zpm3 (bootable)
+    Slice 5: ws4 (not bootable)

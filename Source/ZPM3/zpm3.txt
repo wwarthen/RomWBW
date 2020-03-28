@@ -1,0 +1,483 @@
+
+                    Z P M 3   by Simeon Cran
+                    ========================
+
+          A Z80 coded CP/M 3.0 compatible BDOS replacement.
+
+               The first public release: 27/3/92
+                    This document dated: 16/6/92
+
+          Distributed at: Z-Node 62 (Perth, Western Australia)
+                     V21,V22,V22bis 09 450 0200
+
+
+WELCOME TO ZPM3
+~~~~~~~~~~~~~~~
+Welcome to the best CP/M compatible operating system for Z80 
+based computers with banked memory. The best? Yes, we believe so. 
+CP/M 3.0 has had bad press, but the fact is that it is faster 
+than CP/M 2.2 ever was, and it offered more integrated 
+facilities. Perhaps it was all the Z80 replacement BDOSes for 
+CP/M 2.2 which stole the limelight from CP/M 3.0, or was it just 
+that few computers had the required banked memory?
+
+Whatever the reason for CP/M 3.0's lack of success in the 
+marketplace, there are still plenty of users who will stand by 
+its wonderful facilities and speed. For those users ZPM3 provides 
+the long awaited Z80 coded update.
+
+ZPM3 offers all the good things that CP/M 3.0 does, and then it 
+offers more. Because ZPM3 is written in Z80 code rather than the 
+8080 code of CP/M 3.0, it can do everything that CP/M 3.0 does, 
+but in much less space. With the extra space recovered, ZPM3 
+packs in a number of new facilities. Yet the whole package fits 
+in exactly the same space as CP/M 3.0 so you can directly replace 
+your old CP/M 3.0 BDOS with ZPM3 without a worry.
+
+ZPM3 is also fast. Faster, in fact, than CP/M 3.0. This is 
+possible because the rich Z80 instruction set allows many 
+algorithms to be implemented more efficiently. In addition, the 
+extra space available in ZPM3 has been put to use to further 
+optimise the code. Lots of small optimisations smooth the 
+execution flow, so ZPM3 becomes the fastest operating system on 
+most banked CP/M computers.
+
+
+THE FEATURES
+~~~~~~~~~~~~
+ZPM3, in addition to complete CP/M 3.0 compatibility, offers the 
+following features:
+
+
+Random Read Bug fixed.
+++++++++++++++++++++++
+Maybe you didn't know, but CP/M 3.0 has a bug. It affects random 
+reads under very specific circumstances, and can result in a 
+program thinking that you don't have some pieces of data in a 
+file when in fact you do. The bug would occur very, very rarely, 
+but it is real. ZPM3 finally squashes it.
+
+
+Protected SCB User code
++++++++++++++++++++++++
+The System Control Block of CP/M 3.0 was a revolution at the 
+time. ZCPR has a system environment and most other operating 
+systems have other similar structures, but the SCB of CP/M 3.0 
+was one of the very first.
+
+Unfortunately, Digital Research never properly documented it, and 
+some programmers found things out about it that weren't quite 
+true and started programming accordingly. As well, because it is 
+available in the TPA bank, runaway programs can overwrite it 
+causing problems.
+
+Mostly though, the SCB will survive, or at least any problems 
+will be so obvious that the user will realise that a crash has 
+occurred and will reboot. A real problem exists with the CP/M 3.0 
+code however when the user value is written over with a value 
+above 15. Many programs now directly write to this byte, and if 
+they put a value in that is above 15, all sorts of havoc can 
+happen with the disk system. Actually, CP/M 3.0 will handle user 
+areas above 15 with this method, and all seems ok until the 
+operating system mistakes one of these directory entries as an 
+XFCB. Simply put, user areas above 15 must not be used with CP/M 
+3.0.
+
+ZPM3 has code which prevents these problems, making the system 
+even more stable.
+
+
+Obsoleted Trap system.
+++++++++++++++++++++++
+One of the problems of the banked operating system was that it 
+was possible to redirect the BIOS to code below common memory, in 
+which case the banked BDOS could not access it. One solution is 
+to call all BIOS code from common memory, but this involves a 
+bank switch for every BIOS call, and this slows things down 
+considerably.
+
+CP/M 3.0 got around the problem by providing special code just 
+below the SCB. If you redirected the BIOS, you also had to change 
+this code which caused a bank switch when your new BIOS routine 
+was called. When you removed the redirection, you also had to 
+restore the special code.
+
+This system has major drawbacks. For a start, if you redirect the 
+BIOS, then another program redirects your redirection, then you 
+remove your first redirection (along with the special code), the 
+bank switch won't happen for the second redirection and the 
+system will crash.
+
+If a CP/M 2.2 program tried to do the redirection, it would know 
+nothing about CP/M 3.0 and would not adjust the special code, so 
+a crash would result in that case too.
+
+The special code was called the "Trap System" as it was meant to 
+trap redirection (as long as you set the trap). ZPM3 has 
+eliminated the need for the traps. They are still there, and 
+programs can still fiddle with them, but it doesn't matter how 
+they are set, they are ignored. There is simply no need for them 
+anymore. And this has been achieved without a performance 
+penalty. In fact, in the case of a program which sets the traps 
+but forgets to restore them, performance is now much better.
+
+
+Semi-Permanent Read Only status for drives.
++++++++++++++++++++++++++++++++++++++++++++
+In recent years, a trend in CP/M 2.2 is to make drives which have 
+been set read only to remain that way until explicitly changed by 
+function 37. ZPM3 now adopts this logic. Previously a control-C 
+would return a read only drive to read write. The advantage is 
+that a program can now make a drive read only for a session and 
+know that it will stay that way.
+
+
+ZCPR compatible function 152
+++++++++++++++++++++++++++++
+Function 152 is the CP/M 3.0 parser. It was a great innovation at 
+the time as parsing is one of the more tedious aspects of 
+programming for CP/M. Unfortunately, almost as soon as it 
+appeared, it was made obsolete by the fact that it didn't handle 
+references to user number (DU references). A line such as 
+A:FILE.TYP would be correctly parsed, but A3:FILE.TYP would not. 
+CP/M 3.0 programs would often parse the drive and user 
+separately, then give function 152 the line without the DU: 
+reference. All this extra work should not have been necessary if 
+CP/M 3.0 had included user number parsing.
+
+ZPM3 parses the user number, and goes even further by handling 
+named directories for ZCPR. This is possible as long as you set a 
+special word in the SCB which tells ZPM3 where to find the ZCPR 
+system environment descriptor. ZCCP, a companion CCP for ZPM3, 
+handles this automatically, but for Z3PLUS users, a special 
+utility is available which automatically sets this word.
+
+The result is that CP/M 3.0 programs will not balk at DU: 
+references and ZPM3 aware programs can use the full DU: and DIR: 
+facilities of function 152. It has also made the brilliant ZCCP 
+code possible.
+
+
+New Functions 54 and 55
++++++++++++++++++++++++
+Datestamps in CP/M 3.0 are wonderful, but difficult to 
+manipulate. Two new functions make them easier to handle and at 
+the same time give compatibility to Z80DOS aware programs.
+
+Function 54 (Get Stamp) returns a Z80DOS compatible datestamp. 
+Any program (such as many directory programs) which recognise the 
+Z80DOS standard can make use of function 54. There is only one 
+slight difference between Z80DOS datestamps and ZPM3's which you 
+should be aware of. Z80DOS will return a correct datestamp after 
+any successful open or search of any extent. ZPM3 can only return 
+a correct datestamp after a successful open or search of the 
+first extent of the file. This is because CP/M 3.0 datestamps are 
+only saved for the first extents of each file, in order to 
+provide the highest performance.
+
+Even more interesting is Function 55 (Use Stamp) which provides a 
+mechanism for changing datestamps on files. Trying to do this 
+with CP/M 3.0 was virtually impossible because it involved direct 
+sector writes. With Function 55 you can simply set the stamp and 
+then write.
+
+
+Wheel protected files
++++++++++++++++++++++
+If you are using a ZCPR system (ZCCP or Z3PLUS), ZPM3 has access 
+to the wheel byte and supports wheel protected files. Such files 
+act normally if the wheel is set (signifying a priveleged user), 
+but if the wheel is not set, the files can not be changed. This 
+is of most benefit to BBS systems. The implementation is 
+virtually the same as most current Z80 CP/M 2.2 compatible 
+BDOSes.
+
+
+Better error messages
++++++++++++++++++++++
+CP/M 3.0 introduced the best error messages that CP/M had ever 
+had. ZPM3 goes further. The main difference you will notice is 
+that the user number as well as the drive is shown in the error 
+message. This is invaluable in helping you identify which file 
+might have caused a problem.
+
+
+Function 10 history buffer and improved editing.
+++++++++++++++++++++++++++++++++++++++++++++++++
+Function 10 is used by the CCP to input command lines. Many other 
+programs use function 10 for input.
+
+CP/M 3.0 introduced a history buffer for function 10. You press 
+control-W and you were returned the last command. It is a great 
+facility, but because it only remembers one command it is rather 
+limited. There have been RSXes written which give a much larger 
+history buffer, but RSXes take up extra program memory so are 
+undesirable.
+
+ZPM3 gives a large (approximately 250 bytes) history buffer which 
+can store multiple commands. It also makes very intelligent use 
+of the buffer so that identical commands are not stored twice, 
+and commands of less than three characters are not stored. The 
+history buffer takes up no additional memory, and is always 
+available.
+
+For security, it is possible to clear the history buffer so that 
+other users can not see what commands you have used.
+
+The ZPM3 history buffer feature is so good, that for many users, 
+the ZPM3 upgrade is completely justified by it.
+
+As part of the history buffer system, ZPM3 also offers a facility 
+called Automatic Command Prompting. This can be disabled, or can 
+be made switchable from the keyboard. When it is on, ZPM3 tries 
+to fill in the rest of your command based on what commands you 
+used most recently. It is like magic, and can save you typing out 
+complicated commands many times. In effect, it looks through the 
+history buffer for you and finds the command it thinks you want. 
+As you keep typing, if it turns out that the command doesn't 
+match anymore, it will try to match another command, and if it 
+can't, it lets you make the command by yourself. This facility is 
+quite amazing to watch.
+
+And to integrate the history buffer and the automatic command 
+prompting, function 10 has the best command line editing you'll 
+find anywhere. Most of the control keys do something when you are 
+editing a function 10 line, and for the most part they mimic the 
+standard WordStar/NewWord/ZDE functions. You can jump to 
+different words in the command, delete individual words, delete 
+individual letters, insert letters, and a whole lot more.
+
+
+Here is a list of what the various control keys do for function 
+10:
+
+A    Move left one word
+B    Go to the beginning or end of the line
+C    Warm boot if at start of line, otherwise nothing
+D    Go right one character
+E    Go backwards one command in the history buffer
+F    Go right one word
+G    Delete current character
+H    Destructive backspace
+I
+J    Enter line
+K    Delete all to the right
+L
+M    Enter line
+N
+O
+P    Toggle printing
+Q    Toggle automatic command prompting (if enabled)
+R
+S    Go left one character
+T    Delete current word
+U    Add current line to history buffer
+V    Clear line and delete from history buffer
+W    Go forwards one command in the history buffer
+X    Delete all to the left
+Y    Clear the whole line
+Z
+
+
+CPMLDR.REL bug fixed.
++++++++++++++++++++++
+If you have ever tried to use the CPMLDR.REL code supplied with 
+CP/M 3.0 to load a CPM3.SYS file larger than 16k, you have 
+probably come across the CPMLDR.REL bug. The computer probably 
+crashed, and you were left wondering what you did wrong in your 
+bios.
+
+Well CPMLDR.REL has a bug. To solve this for you ZPM3 comes with 
+ZPM3LDR.REL which directly replaces CPMLDR.REL. It is also 
+somewhat better in that all the messages, and the fcb for loading 
+CPM3.SYS, are at the start of the file along with plenty of spare 
+room. As a result you can easily patch the signon and error 
+messages to say whatever you like and even change the FCB to load 
+a file called something other than CPM3.SYS.
+
+
+
+
+All About the Random Read Bug.
+==============================
+Never heard of it? Well it's there in CP/M 3.0. I spent a lot of 
+time trying to work out what it was and just why it was 
+happening, and if you are interested, here are the details.
+
+CP/M 3.0 uses the Record Count byte of an active FCB a little 
+differently from the way CP/M 2.2 does. It is mentioned in the 
+CP/M 3.0 manuals that the record count may contain numbers 
+greater than 128, but in such a case it implies that the record 
+count is really 128. CP/M 2.2 would not return record counts 
+greater than 128.
+
+The reason for the use of the record count in this way is to help 
+speed up some of the logic used to find records in a file. It 
+works very well for sequential access. When it comes to random 
+access, the system has some failings.
+
+The idea behind CP/M 3.0's unusual use of the record count is to 
+keep the record count of the last logical extent of the current 
+physical extent always in the Record Count byte. When accessing 
+extents before the last one, bit 7 of the byte is set. That way 
+it will always be at least 128 for logical extents before the 
+last (which CP/M 3.0 translates to mean equal to 128), and the 
+lower 7 bits are used as convenient storage for the record count 
+of the last logical extent. This is particularly convenient 
+because it means there is no need to go and read the directory 
+entry again when it comes time to read the last logical extent.
+
+I hope you have followed that! In sequential access, this scheme 
+is great. The problem occurs with random access. In this case it 
+is possible to access a logical extent which has no records in 
+it. This could be any logical extent past the last one. In such a 
+case the record count must be returned as 0 (which is correct). 
+If we then go back to a previous logical extent in the same 
+physical extent, CP/M 3.0 gets confused and assumes that there 
+must be 128 records in that extent because the one we just came 
+from had no records and we are now accessing an earlier extent. 
+You're probably well and truly lost by now!
+
+Anyhow, the assumption that CP/M 3.0 makes is quite wrong. The 
+record count ends up being set to 128, a read is allowed to go 
+ahead as if nothing was wrong, no error is returned, and the 
+record count remains incorrectly set until a different physical 
+extent is opened. The result could be chaos, but mostly it just 
+means that a program returns the wrong information.
+
+Remember, a logical extent is always 16k. A physical extent can 
+be a multiple of 16k and is all the data described by one 
+directory entry. If your system has physical extents which are 
+16k, you would never have the problem because a new physical 
+extent would be properly opened for every new logical extent that 
+was accessed.
+
+Typically though, a physical extent is 32k, so it holds 2 logical 
+extents. The problem won't arise until the file grows past the 
+32k mark in such a case. And when the file gets over 48k the 
+problem can't occur again until it gets over 64k... and so on. 
+Even then, it can only happen if reads are attempted to 
+particular extents in a particular order. So you shouldn't be too 
+surprised if the bug hasn't been too noticeable to you.
+
+ZPM3 squashes the bug once and for all by using the correct 
+logic. In the situation where the bug would normally occur, ZPM3 
+makes sure it gets the correct record count information, and the 
+reads return the correct record count every time.
+
+If you are interested in seeing a demonstration of the bug in 
+action (on CP/M 3.0) and comparing it with ZPM3, there is a file 
+floating around various bulletin boards which contains 
+demonstrations for the bug and an RSX to fix it. The RSX is a 
+less than perfect way of overcoming the bug, although it seems to 
+work. However, now that you have ZPM3, you don't need to worry.
+
+
+
+
+Other things you should know about ZPM3
+=======================================
+ZPM3 has worked on EVERY CP/M 3.0 system tried so far except one. 
+This is a Bondwell computer, and as yet it isn't clear why it 
+won't work. I will study the source code of its BIOS and come up 
+with a fix shortly.
+
+The MAKEDOS.COM utility is not perfect (as mentioned previously) 
+and it seems that nobody has managed to get it to work with the 
+Commodore C128 system. You must use the conventional method for 
+installing ZPM3 on such systems.
+
+If you have a computer that ZPM3 will not install on with MAKEDOS 
+and you do not have access to the files required to do a 
+conventional install, please contact me. I am interested in 
+making ZPM3 as universal as possible and will help you to install 
+it on your system.
+
+The ESCAPE key is ignored by function 10. There has been some 
+lively discussion about this but the decision is final: it stays 
+ignored. Remember what function 10 is for and you will understand 
+why I made it ignore the ESCAPE key. The argument against this 
+has been from people who control their terminals from the command 
+line. Apparently some people type in an escape sequence at the 
+command line (which CP/M 3.0 will not output correctly anyhow 
+(converting the escape character to ^[)) then press return to 
+have the CCP echo back the line including the escape character.
+
+Sorry folks, that is a KLUDGE in my books! Anybody using Z-System 
+would of course use an ALIAS and ECHO to do this properly, but 
+for those who will continue to complain that I have sacrificed 
+CP/M 3.0 compatibility I am now including ECHOTERM.COM to solve 
+your problems. Run it and whatever you type will be sent to the 
+terminal correctly after you press RETURN. Press RETURN twice to 
+exit the program.
+
+And a reminder that the ability to put control characters into 
+function 10 lines was always limited by the fact that some 
+control keys were used to edit the command line. CP/M 3.0 added 
+even more, and ZPM3 uses virtually all the control keys. The few 
+that aren't used are ignored, and this is in fact a FEATURE which 
+guarantees that unusable characters can't get into function 10 
+lines by accident.
+
+
+
+
+LEGALS and SUCH
+===============
+The ZPM3 package is supplied free of charge, on the condition 
+that you don't use it to make money. If you want to use it 
+commercially you must contact me to get the OK (and negotiate our 
+fee).
+
+If you find anyone (except myself) charging money for ZPM3, 
+please inform me!
+
+Nobody is making any guarantees about this software. None at all. 
+If it causes your house to burn down, or a divorce, or just a bad 
+day, this is unfortunate, regrettable, but there is nothing that 
+I can or will do about it. You have been warned.
+
+The ZPM3 package must only be distributed in the form that you 
+found it. Do not change or add anything. Don't even change it 
+into a different type of archive. Just leave it alone. However 
+you are free to distribute it to as many places and people that 
+you can. Just don't charge for it.
+
+
+
+If in using ZPM3 you find that it doesn't act as described, 
+please forward the details to me so that either the ZPM3 code or 
+the documentation can be changed. If you would like further 
+details, please forward your specific questions to me. SJC.
+
+
+
+
+As a service to all our ZPM3 fans, the latest version of the ZPM3 
+package can now be ordered. At this stage we can only supply IBM 
+formatted 3.5 inch 720k disks, however if you are keen enough 
+that shouldn't matter. ZPM3 remains free, however this service 
+will cost you $15 Australian (for the disk, copying, postage and 
+packing) to most places in the Western World (others by 
+arrangement).
+
+This is a good way to guarantee you have the latest version, and 
+to guarantee that your package has not been corrupted by some 
+unscrupulous person.
+
+When we fill your order, we will make sure to include the latest 
+demonstration copy of MYZ80 - the fastest and best Z80 emulator 
+for IBM AT (and better) compatibles. MYZ80 can run ZPM3 with 
+ease. It also handles ZCPR and CP/M 2.2. And yes, we do mean 
+FASTEST.
+
+Send your international money order to:
+
+          Software by Simeon
+          ZPM3 Package
+          2 Maytone Ave
+          Killara   NSW
+          Australia 2071
+
+Your order will be promptly filled.
+

@@ -19,6 +19,11 @@
 ;
 ;[2018/11/8] v1.2 PMS Add boot option. Code optimization.
 ;
+;[2019/06/21] v1.3 Finalized RC2014 Z180 support.
+;
+;[2019/08/11] v1.4 Support SCZ180 platform.
+;
+;[2020/02/02] v1.5 PMS Basic command line support
 ;
 ; Constants
 ;
@@ -30,9 +35,13 @@ mask_rst	.EQU	%00010000	; De-activate RTC reset line
 PORT_SBC	.EQU	$70		; RTC port for SBC/ZETA
 PORT_N8		.EQU	$88		; RTC port for N8
 PORT_MK4	.EQU	$8A		; RTC port for MK4
-PORT_RC		.EQU	$C0		; RTC port for RC2014
+PORT_RCZ80	.EQU	$C0		; RTC port for RC2014
+PORT_RCZ180	.EQU	$0C		; RTC port for RC2014
+PORT_SCZ180	.EQU	$0C		; RTC port for SBCZ180
+PORT_EZZ80	.EQU	$C0		; RTC port for EZZ80 (actually does not have one!!!)
 
 BDOS		.EQU	5		; BDOS invocation vector
+FCB		.EQU	05CH		; Start of command line
 
 BID_BOOT	.EQU	$00
 HB_BNKCALL	.EQU	$FFF9
@@ -66,7 +75,7 @@ LOOP:
 ; uses BC
 ;
 ; based on following algorithm:
-:
+;
 ;  const
 ;    hextab : string = ('0','1','2','3','4','5','6','7','8',
 ;                       '9','A','B','C','D','E','F');
@@ -1066,10 +1075,22 @@ HINIT:
 	LD	DE,PLT_MK4
 	CP	$05		; Mark IV
 	JR	Z,RTC_INIT2
-	LD	C,PORT_RC
-	LD	DE,PLT_RC
-	CP	$07		; RC2014
+	LD	C,PORT_RCZ80
+	LD	DE,PLT_RCZ80
+	CP	$07		; RC2014 w/ Z80
 	JR	Z,RTC_INIT2
+	LD	C,PORT_RCZ180
+	LD	DE,PLT_RCZ180
+	CP	$08		; RC2014 w/ Z180
+	JR	Z,RTC_INIT2
+	LD	C,PORT_SCZ180
+	LD	DE,PLT_SCZ180
+	CP	$0A		; SCZ180
+	JR	Z,RTC_INIT2
+	;LD	C,PORT_EZZ80
+	;LD	DE,PLT_EZZ80
+	;CP	$09		; Easy Z80
+	;JR	Z,RTC_INIT2
 ;
 	; Unknown platform
 	LD	DE,PLTERR	; BIOS error message
@@ -1201,17 +1222,21 @@ IDBIO2:
 ;  Note:above code is not fully in sync with current menu code
 
 RTC_TOP_LOOP:
+	CALL	RTC_RESET_ON
+	CALL	RTC_BIT_DELAY
+	CALL	RTC_BIT_DELAY
+	CALL	RTC_BIT_DELAY
+
+	LD	A,(FCB+1)		; If there a command line tail
+	CP	'/'			; get the command and feed it 
+	LD	A,(FCB+2)		; into the input stream
+	JR	Z,RTC_UCL		
+
 	LD	DE,CRLF_MSG
 	LD	C,09H			; CP/M write string to console call
 	CALL	0005H
 
 	CALL	RTC_HELP
-
-	CALL	RTC_RESET_ON
-
-	CALL	RTC_BIT_DELAY
-	CALL	RTC_BIT_DELAY
-	CALL	RTC_BIT_DELAY
 
 RTC_TOP_LOOP_1:
 	LD	DE,RTC_TOP_LOOP1_PROMPT
@@ -1220,7 +1245,7 @@ RTC_TOP_LOOP_1:
 	
 	LD	C,01H			; CP/M console input call
 	CALL	0005H
-
+RTC_UCL:
 	AND	%01011111		; handle lower case responses to menu
 
 	CP	'L'
@@ -1240,31 +1265,31 @@ RTC_TOP_LOOP_1:
 	RET	Z
 	
 	CP	'H'
-	JR	Z,RTC_TOP_LOOP_HELP
+	JP	Z,RTC_TOP_LOOP_HELP
 	
 	CP	'D'
-	JR	Z,RTC_TOP_LOOP_DELAY	
+	JP	Z,RTC_TOP_LOOP_DELAY	
 
 	CP	'B'
-	JR	Z,RTC_TOP_LOOP_BOOT	
+	JP	Z,RTC_TOP_LOOP_BOOT	
 
 	CP	'C'
-	JR	Z,RTC_TOP_LOOP_CHARGE
+	JP	Z,RTC_TOP_LOOP_CHARGE
 
 	CP	'N'
-	JR	Z,RTC_TOP_LOOP_NOCHARGE
+	JP	Z,RTC_TOP_LOOP_NOCHARGE
 
 	CP	'A'
-	JR	Z,RTC_TOP_LOOP_START
+	JP	Z,RTC_TOP_LOOP_START
 
 	CP	'S'
 	JP	Z,RTC_TOP_LOOP_SET
 
 	CP	'I'
-	JR	Z,RTC_TOP_LOOP_INIT
+	JP	Z,RTC_TOP_LOOP_INIT
 	
 	CP	'T'
-	JR	Z,RTC_TOP_LOOP_TIME
+	JP	Z,RTC_TOP_LOOP_TIME
 
 	LD	DE,CRLF_MSG
 	LD	C,09H			; CP/M write string to console call
@@ -1284,8 +1309,18 @@ RTC_TOP_LOOP_DELAY:
 	JP	RTC_TOP_LOOP_1
 	
 RTC_TOP_LOOP_BOOT:
-	LD		A,BID_BOOT		; BOOT BANK
-	LD		HL,0			; ADDRESS ZERO
+	LD	DE,BOOTMSG		; BOOT message
+	LD	C,9			; BDOS string display function
+	CALL	BDOS			; Do it
+	; WAIT FOR MESSAGE TO BE DISPLAYED
+	LD	HL,10000
+DELAY_LOOP:				; LOOP IS 26TS
+	DEC	HL			; 6TS
+	LD	A,H			; 4TS
+	OR	L			; 4TS
+	JR	NZ,DELAY_LOOP		; 12TS
+	LD	A,BID_BOOT		; BOOT BANK
+	LD	HL,0			; ADDRESS ZERO
 	CALL	HB_BNKCALL		; DOES NOT RETURN
 
 RTC_TOP_LOOP_CHARGE:
@@ -1293,6 +1328,9 @@ RTC_TOP_LOOP_CHARGE:
 	LD	C,09H			; CP/M write string to console call
 	CALL	0005H
 	CALL	RTC_CHARGE_ENABLE
+	LD	A,(FCB+1)		; If we came from the
+	CP	'/'			; command line
+	RET	Z			; exit back to CP/M
 	JP	RTC_TOP_LOOP_1
 
 RTC_TOP_LOOP_NOCHARGE:
@@ -1300,6 +1338,9 @@ RTC_TOP_LOOP_NOCHARGE:
 	LD	C,09H			; CP/M write string to console call
 	CALL	0005H
 	CALL	RTC_CHARGE_DISABLE
+	LD	A,(FCB+1)		; If we came from the
+	CP	'/'			; command line
+	RET	Z			; exit back to CP/M
 	JP	RTC_TOP_LOOP_1
 
 RTC_TOP_LOOP_START:
@@ -1331,6 +1372,9 @@ RTC_TOP_LOOP_TIME:
 	LD	DE,RTC_PRINT_BUFFER
 	LD	C,09H			; CP/M write string to console call
 	CALL	0005H
+	LD	A,(FCB+1)		; If we came from the
+	CP	'/'			; command line
+	RET	Z			; exit back to CP/M
 	JP	RTC_TOP_LOOP_1
 	
 RTC_TOP_LOOP_RAW:
@@ -1533,7 +1577,7 @@ TESTING_BIT_DELAY_OVER:
 
 RTC_HELP_MSG:
 	.DB	0Ah, 0Dh		; line feed and carriage return
-	.TEXT	"RTC: Version 1.2"
+	.TEXT	"RTC: Version 1.5"
 	.DB	0Ah, 0Dh		; line feed and carriage return
 	.TEXT	"Commands: E)xit T)ime st(A)rt S)et R)aw L)oop C)harge N)ocharge D)elay I)nit G)et P)ut B)oot H)elp"
 	.DB	0Ah, 0Dh		; line feed and carriage return
@@ -1646,15 +1690,19 @@ RTC_GET_BUFFER:
 	.DB	0Ah, 0Dh		; line feed and carriage return
 	.DB	"$"			; line terminator
 
-BIOERR	.TEXT	"\r\nUnknown BIOS, aborting...\r\n$"
-PLTERR	.TEXT	"\r\n\r\nUnknown hardware platform, aborting...\r\n$"
-UBERR	.TEXT	"\r\nUNA UBIOS is not currently supported, aborting...\r\n$"
-HBTAG	.TEXT	"RomWBW HBIOS$"
-UBTAG	.TEXT	"UNA UBIOS"
-PLT_SBC	.TEXT	", SBC/Zeta RTC Latch Port 0x70\r\n$"
-PLT_N8	.TEXT	", N8 RTC Latch Port 0x88\r\n$"
-PLT_MK4	.TEXT	", Mark 4 RTC Latch Port 0x8A\r\n$"
-PLT_RC	.TEXT	", RC2014 RTC Latch Port 0xC0\r\n$"
+BIOERR		.TEXT	"\r\nUnknown BIOS, aborting...\r\n$"
+PLTERR		.TEXT	"\r\n\r\nUnknown/unsupported hardware platform, aborting...\r\n$"
+UBERR		.TEXT	"\r\nUNA UBIOS is not currently supported, aborting...\r\n$"
+HBTAG		.TEXT	"RomWBW HBIOS$"
+UBTAG		.TEXT	"UNA UBIOS"
+BOOTMSG		.TEXT	"\r\n\r\nRebooting...$"
+PLT_SBC		.TEXT	", SBC/Zeta RTC Latch Port 0x70\r\n$"
+PLT_N8		.TEXT	", N8 RTC Latch Port 0x88\r\n$"
+PLT_MK4		.TEXT	", Mark 4 RTC Latch Port 0x8A\r\n$"
+PLT_RCZ80	.TEXT	", RC2014 Z80 RTC Module Latch Port 0xC0\r\n$"
+PLT_RCZ180	.TEXT	", RC2014 Z180 RTC Module Latch Port 0x0C\r\n$"
+PLT_SCZ180	.TEXT	", SC Z180 RTC Module Latch Port 0x0C\r\n$"
+PLT_EZZ80	.TEXT	", Easy Z80 RTC Module Latch Port 0xC0\r\n$"
 
 ;
 ; Generic FOR-NEXT loop algorithm

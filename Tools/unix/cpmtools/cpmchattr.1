@@ -1,0 +1,92 @@
+.TH CPMCHATTR 1 "October 25, 2014" "CP/M tools" "User commands"
+.SH NAME \"{{{roff}}}\"{{{
+cpmchattr \- change file attributes on CP/M files
+.\"}}}
+.SH SYNOPSIS \"{{{
+.ad l
+.B cpmchattr
+.RB [ \-f
+.IR format ]
+.I image
+.I attrib
+.I file-pattern
+\&...
+.ad b
+.\"}}}
+.SH DESCRIPTION \"{{{
+\fBCpmchattr\fP changes the file attributes for files on CP/M disks.
+.\"}}}
+.SH OPTIONS \"{{{
+.IP "\fB\-f\fP \fIformat\fP"
+Use the given CP/M disk \fIformat\fP instead of the default format.
+.IP "\fB\-T\fP \fIlibdsk-type\fP"
+libdsk driver type, e.g. \fBtele\fP for Teledisk images or \fBraw\fP for raw images 
+(requires building cpmtools with support for libdsk).
+.IP "\fIattrib\fP"
+Set the file attributes as given.
+.\"}}}
+.SH "FILE ATTRIBUTES" \"{{{
+The file attribute string can contain the characters
+1,2,3,4,r,s,a,n and m.
+The meanings of these are:
+.TP
+.B 1-4
+The CP/M "user attributes" F1-F4.  CP/M does not assign any
+meaning to these attributes, though MP/M does.
+.TP
+.B r
+The file is read-only.  This is the same as using
+.I cpmchmod(1)
+to revoke write permissions.
+.TP
+.B s
+The file is a system file.  This attribute can also be set by
+.I cpmchmod(1).
+.TP
+.B a
+The file has been backed up.
+.TP
+.B n
+Reset all attributes to zero.  So the string "n1r" resets all attributes and
+then sets F1 and Read-Only.
+.TP
+.B m
+Attributes after an m are unset rather than set.  The string "12m34" sets
+atttributes F1 and F2, and unsets F3 and F4.
+.\"}}}
+.SH "RETURN VALUE" \"{{{
+Upon successful completion, exit code 0 is returned.
+.\"}}}
+.SH ERRORS \"{{{
+Any errors are indicated by exit code 1.
+.\"}}}
+.SH ENVIRONMENT \"{{{
+CPMTOOLSFMT	Default format
+.\"}}}
+.SH FILES \"{{{
+${prefix}/share/diskdefs	CP/M disk format definitions
+.\"}}}
+.SH AUTHORS \"{{{
+This program is copyright 1997\(en2012 Michael Haardt
+<michael@moria.de> and copyright 2000, 2001, 2011 John Elliott
+<jce@seasip.demon.co.uk>.
+.PP
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 3 of the License, or
+(at your option) any later version.
+.PP
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+.PP
+You should have received a copy of the GNU General Public License along
+with this program.  If not, write to the Free Software Foundation, Inc.,
+59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+.\"}}}
+.SH "SEE ALSO" \"{{{
+.IR cpmls (1),
+.IR cpmchmod (1),
+.IR cpm (5)
+.\"}}}

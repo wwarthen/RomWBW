@@ -11,6 +11,11 @@
 ;:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 	CSEG
+	
+; Table has been reordered so that hard disk entries come before
+; floppy entries.  This means that "DRV_A" appears as I: and "DRV_E"
+; appears as A:.  The point is to allow booting from the first
+; hard drive which pretty much needs to be A:
 
 DPHTBL:
 	  IF  DRV_E AND HARDDSK
@@ -34,27 +39,6 @@ DPHTBL:
 	DEFW	00
 	  ENDIF
 
-	  IF  DRV_A
-	DEFW	DPH$00		; Dph for drive A (Floppy)
-	  ELSE
-	DEFW	00
-	  ENDIF
-	  IF  DRV_B
-	DEFW	DPH$01		; Dph for drive B (Floppy)
-	  ELSE
-	DEFW	00
-	  ENDIF
-	  IF  DRV_C
-	DEFW	DPH$02		; Dph for drive C (Floppy)
-	  ELSE
-	DEFW	00
-	  ENDIF
-	  IF  DRV_D
-	DEFW	DPH$03		; Dph for drive D (Floppy)
-	  ELSE
-	DEFW	0		; Dph for drive D
-	  ENDIF
-
 	  IF  DRV_I AND HARDDSK
 	DEFW	DPH$54		; Dph for Hard drive Partition I
 	  ELSE
@@ -74,6 +58,27 @@ DPHTBL:
 	DEFW	DPH$57		; Dph for Hard drive Partition L
 	  ELSE
 	DEFW	00
+	  ENDIF
+
+	  IF  DRV_A
+	DEFW	DPH$00		; Dph for drive A (Floppy)
+	  ELSE
+	DEFW	00
+	  ENDIF
+	  IF  DRV_B
+	DEFW	DPH$01		; Dph for drive B (Floppy)
+	  ELSE
+	DEFW	00
+	  ENDIF
+	  IF  DRV_C
+	DEFW	DPH$02		; Dph for drive C (Floppy)
+	  ELSE
+	DEFW	00
+	  ENDIF
+	  IF  DRV_D
+	DEFW	DPH$03		; Dph for drive D (Floppy)
+	  ELSE
+	DEFW	0		; Dph for drive D
 	  ENDIF
 
 	  IF  DRV_M AND RAMDSK

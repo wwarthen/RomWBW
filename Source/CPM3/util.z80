@@ -1,0 +1,149 @@
+	title	'Utility module for RomWBW'
+	
+	maclib	options.lib
+	
+	public addhla, bcd2bin, bin2bcd
+	public phex16, phex8, cout, crlf, crlf2
+	
+	cseg
+
+addhla:
+	add	a,l
+	ld	l,a
+	ret	nc
+	inc	h
+	ret
+
+bcd2bin:
+	; convert A from packed bcd to binary
+	push	bc
+	ld	c,a
+	and	0F0h
+	srl	a
+	ld	b,a
+	srl	a
+	srl	a
+	add	a,b
+	ld	b,a
+	ld	a,c
+	and	0Fh
+	add	a,b
+	pop	bc
+	ret
+
+bin2bcd:
+	; convert A from binary to packed bcd
+	push	bc
+	ld	b,10
+	ld	c,-1
+bin2bcd1:
+	inc	c
+	sub	b
+	jr	nc,bin2bcd1
+	add	a,b
+	ld	b,a
+	ld	a,c
+	add	a,a
+	add	a,a
+	add	a,a
+	add	a,a
+	or	b
+	pop	bc
+	ret
+
+	if 0
+;
+; Print the hex word value in HL
+;
+phex16:
+	push	af
+	ld	a,h
+	call	phex8
+	ld	a,l
+	call	phex8
+	pop	af
+	ret
+;
+; Print the hex byte value in A
+;
+phex8:
+	push	af
+	push	de
+	call	hexascii
+	ld	a,d
+	call	cout
+	ld	a,e
+	call	cout
+	pop	de
+	pop	af
+	ret
+	
+;
+; Convert binary value in A to ascii hex characters in DE
+;
+hexascii:
+	ld	d,a
+	call	hexconv
+	ld	e,a
+	ld	a,d
+	rlca
+	rlca
+	rlca
+	rlca
+	call	hexconv
+	ld	d,a
+	ret
+;
+; convert low nibble of A to ascii hex
+;
+hexconv:
+	and	0Fh	     ;low nibble only
+	add	a,90h
+	daa
+	adc	a,40h
+	daa
+	ret
+;
+; output character from A
+;
+cout:
+	; save all incoming registers
+	push	af
+	push	bc
+	push	de
+	push	hl
+	ld	e,a
+	ld	bc,0100h
+	rst	08
+	pop	hl
+	pop	de
+	pop	bc
+	pop	af
+	ret
+;
+; output 1 or 2 newlines
+;
+crlf2:
+	call	crlf
+crlf:
+	; save all incoming registers
+	push	af
+	ld	a,13
+	call	cout
+	ld	a,10
+	call	cout
+	pop	af
+	ret
+
+	else
+
+phex16:
+phex8:
+cout:
+crlf2:
+crlf:
+	halt
+	
+	endif
+
+	end

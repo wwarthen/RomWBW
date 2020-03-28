@@ -1,0 +1,59 @@
+.TH CPMRM 1 "October 25, 2014" "CP/M tools" "User commands"
+.SH NAME \"{{{roff}}}\"{{{
+cpmrm \- remove files on CP/M disks
+.\"}}}
+.SH SYNOPSIS \"{{{
+.ad l
+.B cpmrm
+.RB [ \-f
+.IR format ]
+.I image
+.I file-pattern
+\&...
+.ad b
+.\"}}}
+.SH DESCRIPTION \"{{{
+\fBcpmrm\fP removes files from CP/M disks.
+.\"}}}
+.SH OPTIONS \"{{{
+.IP "\fB\-f\fP \fIformat\fP"
+Use the given CP/M disk \fIformat\fP instead of the default format.
+.IP "\fB\-T\fP \fIlibdsk-type\fP"
+libdsk driver type, e.g. \fBtele\fP for Teledisk images or \fBraw\fP for raw images 
+(requires building cpmtools with support for libdsk).
+.\"}}}
+.SH "RETURN VALUE" \"{{{
+Upon successful completion, exit code 0 is returned.
+.\"}}}
+.SH ERRORS \"{{{
+Any errors are indicated by exit code 1.
+.\"}}}
+.SH ENVIRONMENT \"{{{
+CPMTOOLSFMT     Default format
+.\"}}}
+.SH FILES \"{{{
+${prefix}/share/diskdefs	CP/M disk format definitions
+.\"}}}
+.SH AUTHORS \"{{{
+This program is copyright 1997\(en2012 Michael Haardt
+<michael@moria.de>.  The Windows port is copyright 2000, 2001, 2011 John Elliott
+<jce@seasip.demon.co.uk>.
+.PP
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 3 of the License, or
+(at your option) any later version.
+.PP
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+.PP
+You should have received a copy of the GNU General Public License along
+with this program.  If not, write to the Free Software Foundation, Inc.,
+59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+.\"}}}
+.SH "SEE ALSO" \"{{{
+.IR cpmls (1),
+.IR cpm (5)
+.\"}}}

@@ -1,33 +1,69 @@
+#Param([Parameter(Mandatory)]$Disk, $SysFile="")
+Param($Disk, $SysFile="")
+
 $ErrorAction = 'Stop'
 
-$CpmToolsPath = '../..\Tools\cpmtools'
+$ImgFile = "fd_${Disk}.img"
+$Fmt = "wbw_fd144"
+$Size = 1440KB
+
+$CpmToolsPath = '../../Tools/cpmtools'
 
 $env:PATH = $CpmToolsPath + ';' + $env:PATH
 
-$Blank = ([byte[]](0xE5) * 1440KB)
-
-"Creating work file..."
-if (!(Test-Path('Blank.tmp'))) {Set-Content -Value $Blank -Encoding byte -Path 'Blank.tmp'}
-
-"Creating floppy disk images..."
-for ($Dsk=0; $Dsk -lt 2; $Dsk++)
+if (-not (Test-Path("d_${Disk}/")))
 {
-	"Generating Floppy Disk ${Dsk}..."
-	copy Blank.tmp fd${Dsk}.img
-	for ($Usr=0; $Usr -lt 16; $Usr++)
+	"Source directory d_${Disk} for disk ${Disk} not found!"
+	return
+}
+
+"Generating Floppy Disk ${Disk}..."
+
+#$Blank = ([string]([char]0xE5)) * $Size
+#Set-Content -Value $Blank -NoNewLine -Path $ImgFile
+$Blank = ([byte[]](0xE5) * $Size)
+[System.IO.File]::WriteAllBytes($ImgFile, $Blank)
+
+if ($SysFile.Length -gt 0)
+{
+	"Adding System Image $SysFile..."
+	#$Sys = Get-Content -Path "$SysFile.sys" -Raw
+	#$Img = Get-Content -Path $ImgFile -Raw
+	#$NewImg = $Sys + $Img.SubString($Sys.Length, $Img.Length - $Sys.Length)
+	#Set-Content -NoNewLine -Path $ImgFile $NewImg
+	
+	$Cmd = "mkfs.cpm -f $Fmt -b $SysFile $ImgFile"
+	$Cmd
+	Invoke-Expression $Cmd
+}
+
+for ($Usr=0; $Usr -lt 16; $Usr++)
+{
+	if (Test-Path ("d_${Disk}/u${Usr}/*")) 
 	{
-		if (Test-Path ("fd${Dsk}/u${Usr}/*")) 
+		$Cmd = "cpmcp -f $Fmt $ImgFile d_${Disk}/u${Usr}/*.* ${Usr}:"
+		$Cmd
+		Invoke-Expression $Cmd
+	}
+}
+
+if (Test-Path("d_${Disk}.txt"))
+{
+	foreach($Line in Get-Content "d_${Disk}.txt")
+	{
+		$Spec = $Line.Trim()
+		if (($Spec.Length -gt 0) -and ($Spec.Substring(0,1) -ne "#"))
 		{
-			$Cmd = "cpmcp -f wbw_fd144 fd${Dsk}.img fd${Dsk}/u${Usr}/*.* ${Usr}:"
+			$Cmd = "cpmcp -f $Fmt $ImgFile ${Spec}"
 			$Cmd
 			Invoke-Expression $Cmd
 		}
 	}
 }
 
-"Moving images into output directory..."
-&$env:COMSPEC /c move fd*.img ..\..\Binary\
+"Moving image $ImgFile into output directory..."
 
-Remove-Item *.tmp
+#&$env:COMSPEC /c move $ImgFile ..\..\Binary\
+Move-Item $ImgFile -Destination "..\..\Binary\" -Force
 
 return

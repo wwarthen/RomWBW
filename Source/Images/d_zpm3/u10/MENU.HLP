@@ -1,0 +1,23 @@
+;
+    ZHELP - Online Documentation for Z3 Tools
+
+     A - Alias (The ZCPR3 ALIAS Facility)
+     I - IF (Conditional Command Processor)
+     V - VLU (Visual Library Utility)
+     F - ZFiler (Point and Shoot Shell)
+     Z - ZPatch (File/Disk/Memory Record Patcher)
+
+ZHELP can also be used to access help files directly by
+entering ZHELP followed by the name of the help file.
+
+The Z3 help files are stored in user area 10.  You can view the
+directory of this user area for a listing of help topics available.
+
+To access help for the standard CP/M Plus programs, use the
+command HELP.
+
+:A:ALIAS.HLP
+:I:IF.HLP
+:V:VLU.HLP
+:F:ZFILER.HLP
+:Z:ZP.HLP

@@ -1,10 +1,69 @@
+Version 3.0.0
+-------------
+- WBW: v2.9.2 -> 3.0 version upgrade due to scope of changes
+
+Version 2.9.2
+-------------
+- PMS: Fixed DS1210-related issue resulting in "Invalid BIOS" errors
+- SCC: Support for SC126 motherboard
+- WBW: Enable Auto-CTS/DCD in SIO driver for pacing output data
+- WBW: Support missing pull-up resistors on SPI SD adapter boards (common)
+- WBW: Support two SIO modules w/ auto-detection
+- PMS: Support ECB USB-FIFO board
+- WBW: Fixed ASSIGN issue with incorrect DPB selection
+- WBW: Add RC2014 Z180 AY sound support to TUNE app
+- WBW: Add RC2014 AY sound support to AY driver
+- WBW: Add SC126 platform
+- WBW: Config files cleanup
+- WBW: Add interrupt support to ASCI driver
+- WBW: Refactored XModem overlay, merged USB-FIFO support
+- PMS: Added DS1210 low battery detection/message
+- PMS: Added note playing ability to SPK driver
+- WBW: Support disk I/O to any memory bank
+- WBW: Fix floppy I/O error on slow CPUs w/ ints active (credit Jorge Rodrigues)
+- WBW: Support for KIO chip (based on board by Tom Szolyga)
+- N?B: Made ZCAL Y2K compliant
+- WBW: Show disk activity on diagnostic LEDs
+- WBW: DSRTC now detects DS-1302 presence dynamically
+- WBW: SC126 platform renamed to SCZ180 w/ configs for SC126, SC130
+- WBW: Add status LED support
+- WBW: Add support for secondry SPI (SD Card) on SC126
+- PMS: Add sound support to NASCOM BASIC
+- WBW: Updated FAT to add MD and FORMAT commands
+- WBW: Add CP/M 3 (experimental)
+- M?T: Support Shift register SPI WIZNET for RC2014
+- PLS: Added seconds register in HBIOS
+- WBW: More flexible table-driven config in TUNE.COM
+- PMS: Added timer support for Zilog Peripherals ECB Board
+- PLS: Enhanced Intel Hex Load in dbgmon
+- WBW: Overhaul disk image creation
+- WBW: Added support for Dyno platform (based on work by Steve Garcia)
+- SLG: Added support for BQ4845 RTC (bqrtc.asm)
+- PMS: Added 80x30 video mode to VGA3 driver
+- PMS: Added 80x43 video mode
+- PMS: Added font compression option
+- PMS: Added a "safe mode" startup w/ minimal device support
+- WBW: Switch RC/SC Z180 platforms to 115,200 default baud rate
+- PMS: Enhanced PPIDE driver to handle multiple PPI interfaces
+- PMS: Added a ROM based game
+- WBW: Only assign drive letters to hard disk devices with media
+- WBW: Enhanced IDE driver to handle multiple IDE interfaces
+- D?R: Contributed SC126 How-To: Preparing a MicroSD Card to Transfer Files to/from a Linux System
+- PMS: Updated romldr to handle more than 9 drives
+- PMS: Added "user" rom module template
+- PMS: Added CP/M 3 manuals
+- WBW: Boot from any slice
+- C?M: Added Unix build process
+- PLS: FreeRTOS compatibility
+- WWB: Removed OSLDR application (can't handle new OSes)
+
 Version 2.9.1
 -------------
 - E?B: Added support for RC2014 RTC
 - WBW: Converted PTXPLAY to TUNE (now plays PT2/PT3/MYM sounds files)
 - WBW: Updated Win32DiskImager to v1.0
 - WBW: Implemented character attributes on Propeller based consoles
-- M?S: Added support for BEL function in Propeller based consoles
+- MS:  Added support for BEL function in Propeller based consoles
 - WBW: Support additional escape sequences in Propeller console ANSI emulation
 - WBW: Map LPT: to second serial port, UL1: to third serial port
 - WBW: Update default IOBYTE so that LST:=LPT: by default
@@ -22,8 +81,15 @@ Version 2.9.1
 - PMS: Added Forth, Nascom BASIC, and Tasty BASIC to ROM
 - PMS: Refactored ROM Loader to support more ROM images, now table driven
 - WBW: Refactored DSKY code
-- S?K: Initial support for Easy Z80
+- SK:  Initial support for Easy Z80
 - PMS: Enhance VDU driver to support alternative screen dimensions
+- WBW: DDT and DDTZ modified to use RST 30 instead of RST 38 to avoid conflicts with IM 1 interrupts
+- WBW: Added timer interrupt support for CTC under Zeta 2 and Easy Z80
+- WBW: Support LBA style access in floppy driver
+- WBW: Added beta version of FAT filesystem utility (copy, dir, del, ren)
+- SCC: Added support for native memory addressing on Z180-based RC2014
+- PMS: Dynamically discover and display processor type at boot
+- J?L: Added German keyboard support to PPK and KBD drivers
 
 Version 2.9.0
 -------------
