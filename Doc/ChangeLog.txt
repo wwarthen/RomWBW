@@ -1,3 +1,7 @@
+Version 3.0.1
+-------------
+- WBW: Increase XModem timeout waiting for host to start sending
+
 Version 3.0.0
 -------------
 - WBW: v2.9.2 -> 3.0 version upgrade due to scope of changes
