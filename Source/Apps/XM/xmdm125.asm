@@ -2232,7 +2232,8 @@ RCVRPT:	 IF	CONFUN		; Check for function key?
 	JNZ	RCVSABT		; If so, bail out now...
 	 ENDIF
 ;
-	MVI	B,10-1		; 10-second timeout
+	;MVI	B,10-1		; 10-second timeout
+	MVI	B,5-1		; WBW: 5-second timeout
 	CALL	RECV		; Get any character received
 	JC	RCVSTOT		; Timeout
 ;

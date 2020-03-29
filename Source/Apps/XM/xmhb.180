@@ -243,7 +243,7 @@ EXTRA3:
 ;
 BIOID	DB	0		; BIOS ID, 1=HBIOS, 2=UBIOS
 CPUSPD	DB	10		; CPU speed in MHz
-RCVSCL	DW	2800		; RECV loop timeout scalar
+RCVSCL	DW	6600		; RECV loop timeout scalar
 ;
 RBC	DB	"RBC, 28-Aug-2019$"
 ;
@@ -302,6 +302,9 @@ U_JPTBL:
 ; UART initialization
 ;
 U_INIT:
+	LD	HL,13000	; Receive loop timeout scalar
+	LD	(RCVSCL),HL	; ... for UART RCVRDY timing
+;
 	LD	HL,U_JPTBL
 	LD	DE,U_LBL
 	JP	MINIT_RET
@@ -429,6 +432,9 @@ A_JPTBL:
 ; ASCI initialization
 ;
 A_INIT:
+	LD	HL,7500		; Receive loop timeout scalar
+	LD	(RCVSCL),HL	; ... for ASCI RCVRDY timing
+;
 	; Test for location of Z180 internal registers
 	; and use appropriate I/O address.
 	LD	B,0		; set MSB for 16 bit I/O
@@ -601,6 +607,9 @@ S_JPTBL:
 ; SIO initialization
 ;
 S_INIT:
+	LD	HL,12000	; Receive loop timeout scalar
+	LD	(RCVSCL),HL	; ... for UART RCVRDY timing
+;
 	; Suppress interrupts
 	LD	A,01H		; WR1
 	OUT	(S_CTLP),A	; Select WR1
@@ -841,6 +850,9 @@ UF_JPTBL:
 ; USB-FIFO initialization
 ;
 UF_INIT:
+	LD	HL,12000	; Receive loop timeout scalar
+	LD	(RCVSCL),HL	; ... for UART RCVRDY timing
+;
 	LD	HL,UF_JPTBL
 	LD	DE,UF_LBL
 	JP	MINIT_RET
