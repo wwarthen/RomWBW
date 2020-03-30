@@ -1,6 +1,7 @@
 Version 3.0.1
 -------------
 - WBW: Increase XModem timeout waiting for host to start sending
+- WBW: Update TMS driver to dynamically increase Z180 I/O W/S inside driver
 
 Version 3.0.0
 -------------

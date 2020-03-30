@@ -38,6 +38,7 @@
 ;   2018-01-28 [WBW] Added support for MYM sound files
 ;   2019-11-21 [WBW] Added table-driven configuration
 ;   2020-02-11 [WBW] Made hardware config & detection more flexible
+;   2020-03-29 [WBW] Fix error in Z180 I/O W/S bracketing
 ;_______________________________________________________________________________
 ;
 ; ToDo:
@@ -124,8 +125,10 @@ PROBE:
 	LD	C,A			; ... to C
 	IN	A,(C)			; Read back value in register 2
 	CP	$AA			; Value as written?
-	JR	Z,MAT			; Hardware matched!
+	PUSH	AF			; Save AF
 	CALL	NORMIO			; Back to normal I/O speeds
+	POP	AF			; Recover AF
+	JR	Z,MAT			; Hardware matched!
 	JR	CFGSEL			; And keep trying
 ;
 MAT:
@@ -766,7 +769,7 @@ FILTYP		.DB	0	; Sound file type (TYPPT2, TYPPT3, TYPMYM)
 TMP		.DB	0	; work around use of undocumented Z80
 ;
 		
-MSGBAN		.DB	"Tune Player for RomWBW v2.4, 23-Mar-2020",0
+MSGBAN		.DB	"Tune Player for RomWBW v2.5, 29-Mar-2020",0
 MSGUSE		.DB	"Copyright (C) 2020, Wayne Warthen, GNU GPL v3",13,10
 		.DB	"PTxPlayer Copyright (C) 2004-2007 S.V.Bulba",13,10
 		.DB	"MYMPlay by Marq/Lieves!Tuore",13,10,13,10
