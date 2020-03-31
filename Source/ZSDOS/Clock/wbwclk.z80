@@ -1,15 +1,15 @@
-	TITLE	"N8VEM HBIOS Clock Interface"
+	TITLE	"ROMWBW HBIOS Clock Interface"
 	SUBTTL	"Description of Clock Module"
 ;===================================================================
-; HBCLK.Z80
-;  HBIOS Clock driver for N8VEM Z80 Series Computer
+; WBWCLK.Z80
+;  HBIOS Clock driver for RomWBW System Software
 ;				Wayne Warthen
-; Version: 18 Apr 2014
+; Version: 31 Mar 2020
 ;===================================================================
 
-VERS	EQU	10
+VERS	EQU	11
        .Z80
-       NAME	HBIOS
+       NAME	WBWCLK
        
 	MACLIB	CLOCK.LIB
 
@@ -17,10 +17,10 @@ VERS	EQU	10
 
 DESCST: DEFW	0		; Pointer to static year value if required
 
-CLKNAM:	DEFB	'N8VEM HBIOS Clock       '	; Exactly 24 chars in name
+CLKNAM:	DEFB	'RomWBW HBIOS Clock      '	; Exactly 24 chars in name
 	DEFB    VERS/10+'0','.',VERS MOD 10 +'0',0
 
-DESCR:	DEFB	'N8VEM Z80 Series HBIOS Clock',0
+DESCR:	DEFB	'RomWBW Series HBIOS Clock',0
 
 	  IF  [$-DESCST] > 256
 	OVER2
@@ -55,9 +55,9 @@ GETTIM:	PUSH	HL		; Save final buffer pointer
 	LD	HL,TIMBUF	; Point to temp buf for HBIOS read
 	LD	B,20H		; HBIOS Read Clock function = $20
 	RST	08		; Call HBIOS to get time
-	JR	NZ,ERRRET	; Error return
 	LD	HL,TIMBUF	; Source is start of temp buf
 	POP	DE		; Destination is buffer provided originally
+	JR	NZ,ERRRET	; Error return
 	LD	BC,5		; Copy just the first 5 bytes
 	LDIR			; Do it
 	LD	A,(DE)		; Save the original seconds value
@@ -80,7 +80,7 @@ WRCLK:	LD	DE,TIMBUF	; Copy to temp buf
 	LD	A,1		; Signal success
 	RET			; Done
 ;
-ERRRET:	XOR	A		; Error
+ERRRET:	OR	0FFH		; Error
 	RET			; Done
 ;
 TIMBUF	DEFS	6		; Temp date/time buffer
