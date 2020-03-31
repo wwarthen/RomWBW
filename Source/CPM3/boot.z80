@@ -495,6 +495,7 @@ time$get:
 	ld	b,020h		; HBIOS func: get time
 	ld	hl,tim$buf	; time buffer
 	rst	08		; do it
+	ret	nz		; bail out on error
 	
 	; convert yymmss in time buffer -> cpm3 epoch date offset
 	call	date2cpm	; time buf (yr, mon, day) -> SCB (@date)
