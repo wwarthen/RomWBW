@@ -1,4 +1,4 @@
-!def(ver)(3.0)
+!def(ver)(3.0.1)
 !def(date)(!mdate)
 !def(product)(RomWBW)
 !def(author)(Wayne Warthen)
