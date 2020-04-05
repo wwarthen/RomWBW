@@ -67,8 +67,9 @@ CIN:	PUSH	BC
 	POP	BC
 	RET
 ;
-BOOTMSG:.DB	"No User ROM Installed."
-	.DB	CR,LF
+BOOTMSG:.DB	CR,LF,CR,LF
+	.DB	"No User ROM Installed."
+	.DB	CR,LF,CR,LF
 	.DB	"Press a key to return to Boot Loader.$"
 ;				
 SLACK	.EQU	(USR_END - $)

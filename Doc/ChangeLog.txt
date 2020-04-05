@@ -1,3 +1,8 @@
+Version 3.1
+-----------
+- WBW: Refactored ROM Loader
+- WBW: INTRTC periodic timer based clock
+
 Version 3.0.1
 -------------
 - WBW: Increase XModem timeout waiting for host to start sending
