@@ -94,6 +94,8 @@ ifeq ($(UNAME), Linux)
 	$(BSTC) -e -l $<
 endif
 
+.ONESHELL:
+
 #
 # darwin bstc won't run, since mac os does not do 32 bit binaries any more
 # openspin ought to work
@@ -108,7 +110,7 @@ endif
 #
 all:: $(OBJECTS)
 	@for dir in $(SUBDIRS) ; do \
-		( echo "building in `pwd`/$$dir" ; cd "$$dir" ; make all ) ; \
+		( echo "building in `pwd`/$$dir" ; $(MAKE) --directory "$$dir" all ) ; \
 	done
 	@if [ "$(DEST)" ] ; then for file in $(OBJECTS) ; do \
 		mkdir -p $(DEST) ; \
