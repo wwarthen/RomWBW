@@ -55,7 +55,7 @@ BDOS		.EQU	$0005		; BDOS invocation vector
 IDENT		.EQU	$FFFE		; loc of RomWBW HBIOS ident ptr
 ;	
 RMJ		.EQU	3		; intended CBIOS version - major
-RMN		.EQU	0		; intended CBIOS version - minor
+RMN		.EQU	1		; intended CBIOS version - minor
 ;
 BF_SYSVER	.EQU	$F1		; BIOS: VER function
 BF_SYSGET	.EQU	$F8		; HBIOS: SYSGET function
