@@ -31,7 +31,7 @@ BUFLEN	.EQU	40			; INPUT LINE LENGTH
 	JP	DSKY_ENTRY
 	JP	UART_ENTRY
 ;
-#DEFINE USEDELAY
+;#DEFINE USEDELAY
 #INCLUDE "util.asm"
 ;
 ;__UART_ENTRY_________________________________________________________________
@@ -125,9 +125,9 @@ INITIALIZE:
 	LD	(9),HL		; STORE AT 0x0009
 #ENDIF
 
-#IF (BIOS == BIOS_WBW)
-	CALL	DELAY_INIT
-#ENDIF
+;#IF (BIOS == BIOS_WBW)
+;	CALL	DELAY_INIT
+;#ENDIF
 
 	RET
 ;
@@ -890,7 +890,7 @@ KEYBUF:  	.FILL	BUFLEN,0
 ;_____________________________________________________________________________
 ;
 TXT_PROMPT	.TEXT	"\r\n>$"
-TXT_READY	.TEXT	"\r\nMonitor Ready$"
+TXT_READY	.TEXT	"\r\n\r\nMonitor Ready$"
 TXT_COMMAND	.TEXT	"\r\nUnknown Command$"
 TXT_ERR		.TEXT	"\r\nSyntax Error$"
 TXT_CKSUMERR	.TEXT	"\r\nChecksum Error$"

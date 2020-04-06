@@ -1020,7 +1020,8 @@ DOTS2:  DW EXIT
         DW UINIT,U0,NINIT,CMOVE
 ;        DW LIT,80h,COUNT,INTERPRET
         DW XSQUOTE
-        DB 55,'Z80 CamelForth v1.02  25 Jan 1995, ROMWBW 19 Oct 2019'
+        DB 59,0dh,0ah,0dh,0ah
+	DB 'Z80 CamelForth v1.02  25 Jan 1995, RomWBW 19 Oct 2019'
         DB 0dh,0ah
         DW TYPE,ABORT       ; ABORT never returns
 ; DON'T FORGET TO UPDATE THE BYTE COUNT IF YOU CHANGE THE SIZE OF THE BOOT MSG
