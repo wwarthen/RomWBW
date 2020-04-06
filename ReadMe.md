@@ -2,8 +2,8 @@
 
 ## Z80/Z180 System Software
 
-Version 3.0  
-Friday 27 March 2020
+Version 3.0.1  
+Monday 30 March 2020
 
 Wayne Warthen <wwarthen@gmail.com>
 
@@ -771,12 +771,7 @@ tracks. `CPMLDR.SYS` chain loads `CPM3.SYS`.
 
 ### Notes
 
-  - `CLRDIR` is not working right under CP/M 3. It only partially clears
-    the disk sectors of the directory area. The extent of this issue has
-    not been evaluated, but it is not a RomWBW issue. To use CLRDIR, you
-    can temporarily boot back into Z-System.
-
-  - The `DATE` command cannot yet be used to set the RTC. The RTC is
+  - The `DATE` command cannot yet be used to **set** the RTC. The RTC is
     used to read the current date/time for file stamping, etc. You can
     use the `RTC` app to set the RTC clock.
 
@@ -789,11 +784,6 @@ Like CP/M 3, to make ZPM3 boot disk, you put CPMLDR.SYS on the system
 tracks of the disk.
 
 ### Notes
-
-  - `CLRDIR` is not working right under ZPM3. It only partially clears
-    the disk sectors of the directory area. The extent of this issue has
-    not been evaluated, but it is not a RomWBW issue. To use CLRDIR, you
-    can temporarily boot back into Z-System.
 
   - `ZPMLDR` is included with ZPM3, but it is not working correctly.
 

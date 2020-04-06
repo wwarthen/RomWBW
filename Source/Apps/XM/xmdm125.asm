@@ -2213,6 +2213,14 @@ ILLDU:	CALL	ERXIT
 ;
 RCVRECD:XRA	A		; Initialize error count to zero
 	STA	ERRCT
+;	
+;WBW BEGIN: Be more patient waiting for host to start sending file
+	LDA	FRSTIM		; WBW: Get first time flag
+	ORA	A		; WBW: Set CPU flags
+	JNZ	RCVRPT		; WBW: If not first time, bypass
+	MVI	A,-10		; WBW: Else increase error limit
+	STA	ERRCT		; WBW: Save error new limit
+;WBW END
 ;
 RCVRPT:	 IF	CONFUN		; Check for function key?
 	CALL	FUNCHK		; Yeah, why not?
@@ -2224,7 +2232,8 @@ RCVRPT:	 IF	CONFUN		; Check for function key?
 	JNZ	RCVSABT		; If so, bail out now...
 	 ENDIF
 ;
-	MVI	B,10-1		; 10-second timeout
+	;MVI	B,10-1		; 10-second timeout
+	MVI	B,5-1		; WBW: 5-second timeout
 	CALL	RECV		; Get any character received
 	JC	RCVSTOT		; Timeout
 ;

@@ -162,12 +162,12 @@ const:
 	ld	a,82H
 	halt
 conin:
-	ld	bc,0000H	; unit 0, func 0 = CIN
+	ld	bc,0080H	; unit 80h (console), func 0 = CIN
 	call	0FFF0H
 	
 conout:
 	ld	e,c		; output character in E
-	ld	bc,0100H	; unit 0, func 1 = COUT
+	ld	bc,0180H	; unit 80h (console), func 1 = COUT
 	;rst	08		; do it
 	call	0FFF0H
 	ret			; return
@@ -310,7 +310,7 @@ xmove:
 	
 cin:
 	; input character from console via hbios
-	ld	c,0D0H			; console unit to c
+	ld	c,080H			; console unit to c
 	ld	b,00H			; hbios func: input char
 	call	0FFF0H			; hbios reads character
 	ld	a,e			; move character to a for return
@@ -319,7 +319,7 @@ cin:
 cout:
 	; output character to console via hbios
 	ld	e,a			; output char to e
-	ld	c,0D0H			; console unit to c
+	ld	c,080H			; console unit to c
 	ld	b,01H			; hbios func: output char
 	call	0FFF0H			; hbios outputs character
 	ret

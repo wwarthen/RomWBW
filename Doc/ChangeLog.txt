@@ -1,3 +1,12 @@
+Version 3.0.1
+-------------
+- WBW: Increase XModem timeout waiting for host to start sending
+- WBW: Update TMS driver to dynamically increase Z180 I/O W/S inside driver
+- MJS: Update CLRDIR for CP/M 3 compatibility
+- WBW: Corrected cursor on/off esc sequence in pre-configured ZDE
+- WBW: Fix automatic CRT console switching under CP/M 3 and ZPM3
+- WBW: DSRTC driver now correctly returns an error if there is no RTC present
+
 Version 3.0.0
 -------------
 - WBW: v2.9.2 -> 3.0 version upgrade due to scope of changes

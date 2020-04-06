@@ -13,6 +13,7 @@
 	extrn	@dtbl,@ctbl
 	extrn	@date,@hour,@min,@sec
 	extrn	@srch1
+	extrn	@hbbio
 	extrn	addhla, bcd2bin, bin2bcd
 	extrn	cout, phex8, phex16, crlf, crlf2
 	
@@ -73,7 +74,8 @@ init$2:
 cinit:
 	; Setup CON: I/O vector based on HBIOS console device
 	ld	b,0FAh			; HBIOS Peek Function
-	ld	d,0			; Bank 0 has HCB
+	ld	a,(@hbbio)		; HBIOS bank id
+	ld	d,a			; ... goes in D
 	ld	hl,112h			; Offset 112h is current console device
 	rst	08			; Call HBIOS, value in E
 	push	de			; save console unit value
@@ -94,16 +96,19 @@ cinit$1:
 	rst	08			; do it, count in E
 	ld	a,e			; device count to accum
 	pop	de			; recover console unit num to E
+	push	af			; save device count
 	cp	2			; check for 2+ char devices
 	jr	c,cinit$3		; if not, skip aux assignment
+	ld	a,e			; console unit num to A
 	or	a			; check for zero
 	ld	hl,4000h		; assume aux on second char device
-	jr	nz,cinit$2		; if console on unit 0, assumption good
+	jr	z,cinit$2		; if console on unit 0, assumption good
 	ld	hl,8000h		; otherwise, aux goes to first char device
 cinit$2:
 	ld	(@aivec),hl		; assign to aux input
 	ld	(@aovec),hl		; assign to aux output
 cinit$3:
+	pop	af			; recover device count
 	; Truncate char table based on actual num of char devices
 	rlca				; A still has char device count
 	rlca				; * 8 for ctbl entry size
@@ -490,6 +495,7 @@ time$get:
 	ld	b,020h		; HBIOS func: get time
 	ld	hl,tim$buf	; time buffer
 	rst	08		; do it
+	ret	nz		; bail out on error
 	
 	; convert yymmss in time buffer -> cpm3 epoch date offset
 	call	date2cpm	; time buf (yr, mon, day) -> SCB (@date)
