@@ -1,1595 +1,1247 @@
 ;
-;=======================================================================
-; RomWBW Loader
-;=======================================================================
+;==================================================================================================
+;   ROMWBW LOADER
+;==================================================================================================
 ;
-; The loader code is invoked immediately after HBIOS completes system
-; initialization. it is responsible for loading a runnable image
-; (operating system, etc.) into memory and transferring control to that
-; image.  The image may come from ROM (romboot), RAM (appboot/imgboot)
-; or from disk (disk boot).
+; THE LOADER CODE IS INVOKED IMMEDIATELY AFTER HBIOS COMPLETES SYSTEM INITIALIZATION.
+; IT IS RESPONSIBLE FOR LOADING A RUNNABLE IMAGE (OPERATING SYSTEM, ETC.) INTO MEMORY
+; AND TRANSFERRING CONTROL TO THAT IMAGE.  THE IMAGE MAY COME FROM ROM (ROMBOOT),
+; RAM (APPBOOT/IMGBOOT) OR FROM DISK (DISK BOOT).
 ;
-; In the case of a ROM boot, the selected executable image is copied
-; from ROM into the default RAM and then control is passed to the
-; starting address in RAM.  In the case of an appboot or imgboot
-; startup (see hbios.asm) the source of the image may be RAM.
+; IN THE CASE OF A ROM BOOT, THE SELECTED EXECUTABLE IMAGE IS COPIED FROM ROM
+; INTO A THE DEFAULT RAM AND THEN CONTROL IS PASSED TO THE STARTING ADDRESS
+; IN RAM.  IN THE CASE OF AN APPBOOT OR IMGBOOT STARTUP (SEE HBIOS.ASM)
+; THE SOURCE OF THE IMAGE MAY BE RAM.
 ;
-; In the case of a disk boot, sector 2 (the third sector) of the disk
-; device will be read -- this is the boot info sector and is expected
-; to have the format defined at bl_infosec below.  the last three words
-; of data in this sector determine the final destination starting and
-; ending address for the disk load operation as well as the entry point
-; to transfer control to.  The actual image to be loaded *must* be on
-; the disk in the sectors immediately following the boot info sector.
-; This means the image to be loaded must begin in sector 3 (the fourth
-; sector) and occupy sectors contiguously after that.
+; IN THE CASE OF A DISK BOOT, SECTOR 2 (THE THIRD SECTOR) OF THE DISK DEVICE WILL
+; BE READ -- THIS IS REFERRED TO AS THE BOOT INFO SECTOR AND IS EXPECTED TO HAVE
+; THE FORMAT DEFINED AT BL_INFOSEC BELOW.  THE LAST THREE WORDS OF DATA IN THIS
+; SECTOR DETERMINE THE FINAL DESTINATION STARTING AND ENDING ADDRESS FOR THE DISK
+; LOAD OPERATION AS WELL AS THE ENTRY POINT TO TRANSFER CONTROL TO.  THE ACTUAL
+; IMAGE TO BE LOADED *MUST* BE ON THE DISK IN THE SECTORS IMMEDIATELY FOLLOWING
+; THE BOOT INFO SECTOR.  THIS MEANS THE IMAGE TO BE LOADED MUST BEGIN IN SECTOR
+; 3 (THE FOURTH SECTOR) AND OCCUPY SECTORS CONTIGUOUSLY AFTER THAT.
 ;
-; The code below relocates itself at startup to the start of common RAM
-; at $8000.  This means that the code, data, and stack will all stay
-; within $8000-$8FFF.  Since all code images like to be loaded either
-; high or low (never in the middle), the $8000-$8FFF location tends to
-; avoid the problem where the code is overlaid during the loading of
-; the desired executable image.
+; THE CODE BELOW RELOCATES ITSELF AT STARTUP TO THE START OF COMMON RAM
+; AT $8000.  THIS MEANS THAT THE CODE, DATA, AND STACK WILL ALL STAY
+; WITHIN $8000-$8FFF.  SINCE ALL CODE IMAGES LIKE TO BE LOADED EITHER
+; HIGH OR LOW (NEVER IN THE MIDDLE), THE $8000-$8FFF LOCATION TENDS
+; TO AVOID THE PROBLEM WHERE THE CODE IS OVERLAID DURING THE LOADING
+; OF THE DESIRED EXECUTABLE IMAGE.
 ;
-#INCLUDE "std.asm"	; standard RomWBW constants
+; INCLUDE GENERIC STUFF
 ;
-#ifndef BOOT_DEFAULT
-#define BOOT_DEFAULT "H"
-#endif
+#INCLUDE "std.asm"
 ;
-bel	.equ	7	; ASCII bell
-bs	.equ	8	; ASCII backspace
-lf	.equ	10	; ASCII linefeed
-cr	.equ	13	; ASCII carriage return
+INT_IM1	.EQU	$FF00
 ;
-cmdbuf	.equ	$80	; cmd buf is in second half of page zero
-cmdmax	.equ	60	; max cmd len (arbitrary), must be < bufsiz
-bufsiz	.equ	$80	; size of cmd buf
+BID_CUR	.EQU	-1	; SPECIAL BANK ID VALUE INDICATES CURRENT BANK
 ;
-int_im1	.equ	$FF00	; IM1 vector target for RomWBW HBIOS proxy
+	.ORG	0
 ;
-bid_cur	.equ	-1	; used below to indicate current bank
+;==================================================================================================
+; NORMAL PAGE ZERO SETUP, RET/RETI/RETN AS APPROPRIATE
+;==================================================================================================
 ;
-	.org	0	; we expect to be loaded at $0000
+	JP	$100			; RST 0: JUMP TO BOOT CODE
+	.FILL	(008H - $),0FFH
+#IF (BIOS == BIOS_UNA)
+	JP	$FFFD			; RST 8: INVOKE UBIOS FUNCTION
+#ELSE
+	JP	HB_INVOKE		; RST 8: INVOKE HBIOS FUNCTION
+#ENDIF
+	.FILL	(010H - $),0FFH
+	RET				; RST 10
+	.FILL	(018H - $),0FFH
+	RET				; RST 18
+	.FILL	(020H - $),0FFH
+	RET				; RST 20
+	.FILL	(028H - $),0FFH
+	RET				; RST 28
+	.FILL	(030H - $),0FFH
+	RET				; RST 30
+	.FILL	(038H - $),0FFH
+#IF (BIOS == BIOS_UNA)
+	RETI				; RETURN W/ INTS DISABLED
+#ELSE
+  #IF (INTMODE == 1)
+	JP	INT_IM1			; JP TO INTERRUPT HANDLER IN HI MEM		
+  #ELSE
+	RETI				; RETURN W/ INTS DISABLED
+  #ENDIF
+#ENDIF
+	.FILL	(066H - $),0FFH
+	RETN				; NMI
 ;
-;=======================================================================
-; Normal page zero setup, ret/reti/retn as appropriate
-;=======================================================================
+	.FILL	(100H - $),0FFH		; PAD REMAINDER OF PAGE ZERO
 ;
-	jp	$100			; rst 0: jump to boot code
-	.fill	($08 - $)
-#if (BIOS == BIOS_WBW)
-	jp	HB_INVOKE		; rst 8: invoke HBIOS function
-#else
-	jp	$FFFD			; rst 8: invoke UBIOS function
-#endif
-	.fill	($10 - $)
-	ret				; rst 10
-	.fill	($18 - $)
-	ret				; rst 18
-	.fill	($20 - $)
-	ret				; rst 20
-	.fill	($28 - $)
-	ret				; rst 28
-	.fill	($30 - $)
-	ret				; rst 30
-	.fill	($38 - $)
-#if (BIOS == BIOS_WBW)
-  #if (INTMODE == 1)
-	jp	int_im1			; go to handler in hi mem
-  #else
-	ret				; return w/ ints left disabled
-  #endif
-#else
-	ret				; return w/ ints disabled
-#endif
-	.fill	($66 - $)
-	retn				; nmi
+;==================================================================================================
+;   STARTUP AND LOADER INITIALIZATION
+;==================================================================================================
 ;
-	.fill	($100 - $)		; pad remainder of page zero
+	DI			; NO INTERRUPTS FOR NOW
 ;
-;=======================================================================
-; Startup and loader initialization
-;=======================================================================
-;
-; Note: at startup, we should not assume which bank we are operating in.
-;
-	; Relocate to start of common ram at $8000
-	ld	hl,0
-	ld	de,$8000
-	ld	bc,LDR_SIZ
-	ldir
-;
-	jp	start
+	; RELOCATE TO START OF COMMON RAM AT $8000
+	LD	HL,0
+	LD	DE,$8000
+	LD	BC,LDR_SIZ
+	LDIR
+	JP	START
 ;
 	.ORG	$8000 + $
 ;
-start:
-	ld	sp,bl_stack		; setup private stack
-	call	DELAY_INIT		; init delay functions
+START:	LD	SP,BL_STACK	; SETUP STACK
 ;
-; Disable interrupts if IM1 is active because we are switching to page
-; zero in user bank and it has not been prepared with IM1 vector yet.
+#IF (BIOS == BIOS_WBW)
+	CALL	DELAY_INIT	; INIT DELAY FUNCTIONS
+#ENDIF
 ;
-#if (INTMODE == 1)
-	di
-#endif
+#IF (BIOS == BIOS_UNA)
+;	; COPY UNA BIOS PAGE ZERO TO USER BANK, LEAVE USER BANK ACTIVE
+;	LD	BC,$01FB	; UNA FUNC = SET BANK
+;	LD	DE,BID_BIOS	; UBIOS_PAGE (SEE PAGES.INC)
+;	CALL	$FFFD		; DO IT (RST 08 NOT YET INSTALLED)
+;	PUSH	DE		; SAVE PREVIOUS BANK
+;;	                        
+;	LD	HL,0		; FROM ADDRESS 0 (PAGE ZERO)
+;	LD	DE,$9000	; USE $9000 AS BOUNCE BUFFER
+;	LD	BC,256		; ONE PAGE IS 256 BYTES
+;	LDIR			; DO IT
+;;
+;	LD	BC,$01FB	; UNA FUNC = SET BANK
+;	;POP	DE		; RECOVER OPERATING BANK
+;	LD	DE,BID_USR	; TO USER BANK
+;	CALL	$FFFD		; DO IT (RST 08 NOT YET INSTALLED)
+;;
+;	LD	HL,$9000	; USE $9000 AS BOUNCE BUFFER
+;	LD	DE,0		; TO PAGE ZERO OF OPERATING BANK
+;	LD	BC,256		; ONE PAGE IS 256 BYTES
+;	LDIR			; DO IT
+;;
+;;	; INSTALL UNA INVOCATION VECTOR FOR RST 08
+;;	; *** IS THIS REDUNDANT? ***
+;;	LD	A,$C3		; JP INSTRUCTION
+;;	LD	(8),A		; STORE AT 0x0008
+;;	LD	HL,($FFFE)	; UNA ENTRY VECTOR
+;;	LD	(9),HL		; STORE AT 0x0009
+;;
+;	LD	BC,$01FB	; UNA FUNC = SET BANK
+;	POP	DE		; RECOVER OPERATING BANK
+;	CALL	$FFFD		; DO IT (RST 08 NOT YET INSTALLED)
+#ELSE
+	; PREP THE USER BANK (SETUP PAGE ZERO)
+	LD	B,BF_SYSSETCPY	; HBIOS FUNC: SETUP BANK COPY
+	LD	D,BID_USR	; D = DEST BANK = USER BANK
+	LD	E,BID_BIOS	; E = SRC BANK = BIOS BANK
+	LD	HL,256		; HL = COPY LEN = 1 PAGE = 256 BYTES
+	RST	08		; DO IT
+	LD	B,BF_SYSBNKCPY	; HBIOS FUNC: PERFORM BANK COPY
+	LD	HL,0		; COPY FROM BIOS ADDRESS 0
+	LD	DE,0		; TO USER ADDRESS 0
+	RST	08		; DO IT
+#ENDIF
+	EI
 ;
-; Switch banked memory to user RAM bank and setup page zero.
+;==================================================================================================
+;   BOOT LOADER MENU DISPLAY
+;==================================================================================================
 ;
-#if (BIOS == BIOS_WBW)
-	ld	b,BF_SYSSETBNK		; HBIOS func: set bank
-	ld	c,BID_USR		; select user bank
-	rst	08			; do it
-	ld	a,c			; previous bank to A
-	ld	(bid_ldr),a		; save previous bank for later
-#endif
+	LD	DE,STR_BANNER	; DISPLAY BOOT BANNER
 ;
-#if (BIOS == BIOS_UNA)
-	ld	bc,$01FB		; UNA func: set bank
-	ld	de,BID_USR		; select user bank
-	rst	08			; do it
-	ld	a,c			; save previous bank
-	ld	(bid_ldr),de		; ... for later
-#endif
+MENU:
+	CALL	WRITESTR	; DISPLAY MESSAGE OR ERROR
+	CALL	NEWLINE2		
 ;
-; Copy original page zero into user page zero
+#IF (DSKYENABLE)
+	CALL	DSKY_RESET
+	; DISPLAY DSKY BOOT MESSAGE
+	LD	HL,MSG_SEL	; POINT TO BOOT MESSAGE	
+	CALL 	DSKY_SHOWSEG	; DISPLAY MESSAGE
+#ENDIF
 ;
-	ld	hl,$8000		; page zero was copied here
-	ld	de,0			; put it in user page zero
-	ld 	bc,$100			; full page
-	ldir				; do it
+#IF (BOOTTYPE == BT_AUTO)
+	; INITIALIZE BOOT TIMEOUT DOWNCOUNTER
+	LD	BC,100 * BOOT_TIMEOUT
+	LD	(BL_TIMEOUT),BC
+#ENDIF
 ;
-; Page zero in user bank is ready for interrupts now.
+	; DISPLAY ROM MENU ENTRIES
+	PRTS("ROM: $")
+	LD	B,MENU_N	; B IS LOOP COUNTER, # OF ENTRIES
+	LD	HL,MENU_S	; HL POINTS TO START OF ENTRY
+MENU1:
+	; PROCESS A TABLE ENTRY
+	PUSH	HL		; COPY HL TO
+	POP	DE		; ... DE FOR USE AS CHAR PTR
+MENU2:
+	LD	A,(DE)		; GET NEXT CHAR
+	INC	DE		; BUMP CHAR PTR FOR FUTURE
+	CP	'$'		; TERMINATOR?
+	JR	Z,MENU4		; IF YES, DONE WITH THIS ENTRY
+	CP	'~'		; HOT KEY PREFIX?
+	JR	NZ,MENU3	; IF NOT, JUST SKIP AHEAD
+	CALL	PC_LPAREN	; L PAREN BEFORE HOT KEY
+	LD	A,(DE)		; GET THE ACTUAL HOT KEY
+	INC	DE		; BUMP CHAR PTR FOR FUTURE
+	CALL	COUT		; OUTPUT HOT KEY
+	LD	A,')'		; R PAREN WILL PRINT BELOW
+MENU3:
+	CALL	COUT		; OUTPUT CHAR
+	JR	MENU2		; AND LOOP
+MENU4:
+	; END OF AN ENTRY
+	CALL	PC_SPACE	; PRINT SEPARATOR
+	LD	A,MENU_V	; LOAD ENTRY LENGTH
+	CALL	ADDHLA		; BUMP HL TO NEXT ENTRY
+	DJNZ	MENU1		; LOOP UNTIL COUNT EXPIRES
 ;
-#if (INTMODE == 1)
-	ei
-#endif
+	; DISPLAY AVAILABLE DISK DRIVES
+	PRTS("\r\nDisk: $")
+	CALL	PRTALL		; PRINT DRIVE LIST
 ;
-;=======================================================================
-; Loader prompt
-;=======================================================================
+	LD	DE,STR_BOOTSEL
+	CALL	WRITESTR
 ;
-	call	nl2			; formatting
-	ld	hl,str_banner		; display boot banner
-	call	pstr			; do it
-	call	clrbuf			; zero fill the cmd buffer
+;==================================================================================================
+;   BOOT SELECTION PROCESSING
+;==================================================================================================
 ;
-#if (BOOT_TIMEOUT > 0)
-	; Initialize auto command timeout downcounter
-	or	$FF			; auto cmd active value
-	ld	(acmd_act),a		; set flag
-	ld	bc,BOOT_TIMEOUT * 100	; hundredths of seconds
-	ld	(acmd_to),bc		; save auto cmd timeout
-	;ld	a,b			; check for
-	;or	c			; ... zero
-	;jr	nz,prompt		; not zero, prompt w/ timeout
-	;call	nl2			; formatting
-	;ld	hl,str_boot		; command string prefix
-	;call	pstr			; show it
-	;call	autocmd			; else, handle w/o prompt
-	;jr	reprompt		; restart w/ autocmd disable
-#endif
+SEL:	; HANDLE SERIAL CONSOLE INPUT
+	CALL	CST		; CHECK CONSOLE INPUT
+	OR	A		; ZERO?
+	JR	Z,SEL1		; IF NOT, CONTINUE
+#IF (BIOS == BIOS_WBW)
+  #IF (DIAGENABLE)
+	XOR	A		; ZERO ACCUM
+	OUT	(DIAGPORT),A	; CLEAR DIAG LEDS
+  #ENDIF
+  #IF (LEDENABLE)
+	OR	$FF		; LED IS INVERTED
+	OUT	(LEDPORT),A	; CLEAR LED
+  #ENDIF
+#ENDIF
+	CALL	CINUC			; GET THE KEY
+	CALL	COUT			; ECHO KEY
+	CP	'R'			; CHECK FOR
+	JP	Z,REBOOT		; REBOOT REQUEST
+	LD	DE,MENU_S+10-MENU_V	; POINT TO SERIAL MENU COLUMN
+	LD	C,2			; SET SERIAL FLAG
+	JR	MATS			; GO CHECK MENU SELECTION
 ;
-prompt:
-	ld	hl,reprompt		; adr of prompt restart routine
-	push	hl			; put it on stack
-	call	nl2			; formatting
-	ld	hl,str_prompt		; display boot prompt
-	call	pstr			; do it
-	call	clrbuf			; zero fill the cmd buffer
+SEL1:
+#IF (DSKYENABLE)
+	; HANDLE DSKY KEY INPUT
+	CALL	DSKY_STAT	; CHECK DSKY INPUT
+	OR	A		; TEST FOR ZERO
+	JR	Z,SEL2		; IF ZERO, NO KEY PRESSED
+#IF (BIOS == BIOS_WBW)
+  #IF (DIAGENABLE)
+	XOR	A		; ZERO ACCUM
+	OUT	(DIAGPORT),A	; CLEAR DIAG LEDS
+  #ENDIF
+  #IF (LEDENABLE)
+	OR	$FF		; LED IS INVERTED
+	OUT	(LEDPORT),A	; CLEAR LED
+  #ENDIF
+#ENDIF
+	CALL	DSKY_GETKEY		; GET PENDING KEY PRESS		; NOTE DESKY_GETKEY
+	CP	$FF			; CHECK FOR ERROR
+	JR	Z,SEL2			; IF SO, IGNORE KEY, AND CONT LOOPING
+	CP	KY_BO			; CHECK FOR REBOOT		; CAN RETURN AN INVALID
+	JP	Z,REBOOT		; REBOOT REQUEST		; KEYSCAN AS FFH WHICH 
+	LD	DE,MENU_S+11-MENU_V	; POINT TO DSKY MENU COLUMN	; MAY BE MATCHED WITH
+	LD	C,1			; SET DSKY FLAG			; DUMMY MENU ENTRIES
+	JR	MATS			; GO CHECK MENU SELECTION
+#ENDIF
 ;
-#if (DSKYENABLE)
-	call	DSKY_RESET		; clear DSKY
-	ld	hl,msg_sel		; boot select msg
-	call	DSKY_SHOWSEG		; show on DSKY
-#endif
+SEL2:
+#IF (BOOTTYPE == BT_AUTO)
+	; CHECK FOR AUTOBOOT TIMEOUT
+	LD	DE,625		; DELAY FOR 10MS TO MAKE TIMEOUT CALC EASY
+	CALL	VDELAY		; 16US * 625 = 10MS
+	LD	BC,(BL_TIMEOUT)	; CHECK/INCREMENT TIMEOUT
+	DEC	BC
+	LD	(BL_TIMEOUT),BC
+	LD	A,B
+	OR	C
+	JP	NZ,SEL3
 ;
-wtkey:
-	; wait for a key or timeout
-	call	cst			; check for keyboard key
-	jr	nz,concmd		; if pending, do console command
+#IF (BIOS == BIOS_WBW)
+  #IF (DIAGENABLE)
+	XOR	A		; ZERO ACCUM
+	OUT	(DIAGPORT),A	; CLEAR DIAG LEDS
+  #ENDIF
+  #IF (LEDENABLE)
+	OR	$FF		; LED IS INVERTED
+	OUT	(LEDPORT),A	; CLEAR LED
+  #ENDIF
+#ENDIF
+	LD	A,BOOT_DEFAULT		; TIMEOUT EXPIRED,
+	LD	DE,MENU_S+10-MENU_V	; POINT TO SERIAL MENU COLUMN
+	LD	C,2			; SET SERIAL FLAG
+	JR	MATS			; PERFORM DEFAULT BOOT ACTION
+#ENDIF
 ;
-#if (DSKYENABLE)
-	call	DSKY_STAT		; check DSKY for keypress
-	or	a			; set flags
-	jp	nz,dskycmd		; if pending, do DSKY command
-#endif
+SEL3:
+	; NO USER SELECTION YET
+	JR	SEL		; LOOP
 ;
-#if (BOOT_TIMEOUT > 0)
-	; check for timeout and handle auto boot here
-	ld	a,(acmd_act)		; get auto cmd active flag
-	or	a			; set flags
-	jr	z,wtkey			; if not active, just loop
-	ld	bc,(acmd_to)		; load timeout value
-	ld	a,b			; test for
-	or	c			; ... zero
-	jr	z,autocmd		; if so, handle it
-	dec	bc			; decrement
-	ld	(acmd_to),bc		; resave it
-	ld	de,625			; 16us * 625 = 10ms
-	call	VDELAY			; 10ms delay
-#endif
+;==================================================================================================
+;   ROM MENU TABLE MATCHING
+;==================================================================================================
 ;
-	jr	wtkey			; loop
+MATS:	LD	B,MENU_N	; LOOP THROUGH THE	; ON ENTRY DE POINTS TO
+	LD	HL,MENU_V	; MENU TABLE AND	; THE MENU COLUMN WE ARE
+MATS1:	EX	DE,HL		; CHECK IF THE		; CHECKING AND C CONTAINS
+	ADD	HL,DE		; KEYPRESS MATCHES	; A FLAG TELLING US IF WE
+	CP	(HL)            ; ANY OF 		; HAVE DSKY OR SERIAL INPUT
+	EX	DE,HL           ; THE MENU ITEMS.
+	JR	Z,MATS2
+	DJNZ	MATS1		; IF WE REACH THE TABLE END AND DON'T HAVE
+	JR	MATD		; A MATCH GO AND CHECK FOR A DISK SELECTION
 ;
-reprompt:
-	xor	a			; zero accum
-	ld	(acmd_act),a		; set auto cmd inactive
-	jr	prompt			; back to loader prompt
+MATS2:	LD	B,0		; WE GOT A MATCH FROM THE MENU TABLE. POINT
+	EX	DE,HL		; TO THE ROM ADDRESS TO EXECUTE. ADJUST THE
+	ADD	HL,BC		; POINTER TO THE ROM ENTRY BASED ON WHETHER WE
+	EX	DE,HL		; GOT A MATCH IN THE DSKY OR SERIAL MENU COLUMN
+	JP	GOROM		; JUMP TO THE ROM HANDLER.
 ;
-clrbuf:
-	ld	hl,cmdbuf
-	ld	b,bufsiz
-	xor	a
-clrbuf1:
-	ld	(hl),a
-	djnz	clrbuf1
-	ret
+MATD:	LD	B,A
+	LD	A,C		; IF INPUT WAS SERIAL 
+	LD	(BL_INPFLG),A	; SAVE INPUT FLAG
+	DEC	C		; CONVERT TO FROM. 
+	LD	A,B		; ASCII TO DECIMAL.
+	JR	Z,MATD1		; DSKY NUMBERS ARE 
+	SUB	'0'		; ALREADY DECIMAL
+MATD1:	CP	10		; DO A RANGE CHECK
+	JR	NC,MATX		; NOT VALID, HANDLE IT BELOW
 ;
-;=======================================================================
-; Process a command line from buffer
-;=======================================================================
+#IF (BIOS == BIOS_WBW)
+	PUSH	BC
+	PUSH	AF			; HOW MANY DISK
+	LD	B,BF_SYSGET		; DEVICES DO WE
+	LD	C,BF_SYSGET_DIOCNT	; HAVE IN THE 
+	RST	08			; SYSTEM ?
+	POP	AF
+	POP	BC
+#ELSE
+	LD	E,9		; HACK TO HANDLE UNA, NEED TO FIX
+#ENDIF
+;	JR	MATD2		; IF MORE THEN 9	; UNCOMMENT TO TEST DOUBLE CHAR ENTRY
+	CP	10		; THEN WE NEED TO GET
+	JR	NC,MATD2	; ANOTHER CHARACTER
 ;
-concmd:
-	call	clrled			; clear LEDs
-;
-	; Get a command line from console and handle it
-	call	rdln			; get a line from the user
-	ld	de,cmdbuf		; point to buffer
-	call	skipws			; skip whitespace
-	or	a			; set flags to check for null
-	jr	nz,runcmd		; got a cmd, process it
-	; if no cmd entered, fall thru to process default cmd
-;
-autocmd:
-	; Copy autocmd string to buffer and process it
-	ld	hl,acmd			; auto cmd string
-	call	pstr			; display it
-	ld	hl,acmd			; auto cmd string
-	ld	de,cmdbuf		; cmd buffer adr
-	ld	bc,acmd_len		; auto cmd length
-	ldir				; copy to command line buffer
-;
-runcmd:
-	; Process command line
-;
-	ld	de,cmdbuf		; point to start of buf
-	call	skipws			; skip whitespace
-	or	a			; check for null terminator
-	ret	z			; if empty line, just bail out
-	ld	a,(de)			; get character
-	call	upcase			; make upper case
-;
-	; Attempt built-in commands
-	cp	'H'			; H = display help
-	jp	z,help			; if so, do it
-	cp	'?'			; '?' alias for help
-	jp	z,help			; if so, do it
-	cp	'L'			; L = List ROM applications
-	jp	z,applst		; if so, do it
-	cp	'D'			; D = device inventory
-	jp	z,devlst		; if so, do it
-	cp	'R'			; R = reboot system
-	jp	z,reboot		; if so, do it
-;
-	; Attempt ROM application launch
-	ld	ix,ra_tbl		; point to start of ROM app tbl
-	ld	c,a			; save command in C
-runcmd1:
-	ld	a,(ix+ra_conkey)	; get match char
-	and	~$80			; clear "hidden entry" bit
-	cp	c			; compare
-	jp	z,romload		; if match, load it
-	ld	de,ra_entsiz		; table entry size
-	add	ix,de			; bump IX to next entry
-	ld	a,(ix)			; check for end
-	or	(ix+1)			; ... of table
-	jr	nz,runcmd1		; loop till done
-;
-	; Attempt disk boot
-	ld	de,cmdbuf		; start of buffer
-	call	skipws			; skip whitespace
-	call	isnum			; do we have a number?
-	jp	nz,err_invcmd		; invalid format if empty
-	call	getnum			; parse a number
-	jp	c,err_invcmd		; handle overflow error
-	ld	(bootunit),a		; save boot unit
-	xor	a			; zero accum
-	ld	(bootslice),a		; save default slice
-	call	skipws			; skip possible whitespace
-	ld	a,(de)			; get separator char
-	or	a			; test for terminator
-	jp	z,diskboot		; if so, boot the disk unit
-	cp	'.'			; otherwise, is '.'?
-	jr	z,runcmd2		; yes, handle slice spec
-	cp	':'			; or ':'?
-	jr	z,runcmd2		; alt sep for slice spec
-	jp	err_invcmd		; if not, format error
-runcmd2:
-	inc	de			; bump past separator
-	call	skipws			; skip possible whitespace
-	call	isnum			; do we have a number?
-	jp	nz,err_invcmd		; if not, format error
-	call	getnum			; get number
-	jp	c,err_invcmd		; handle overflow error
-	ld	(bootslice),a		; save boot slice
-	jp	diskboot		; boot the disk unit/slice
-;
-;=======================================================================
-; Process a DSKY command from key in A
-;=======================================================================
-;
-#if (DSKYENABLE)
-;
-dskycmd:
-	call	clrled			; clear LEDs
-;
-	call 	DSKY_GETKEY		; get DSKY key
-	cp	$FF			; check for error
-	ret	z			; abort if so
-;
-	; Attempt built-in commands
-	cp	KY_BO			; reboot system
-	jp	z,reboot		; if so, do it
-;
-	; Attempt ROM application launch
-	ld	ix,ra_tbl		; point to start of ROM app tbl
-	ld	c,a			; save DSKY key in C
-dskycmd1:
-	ld	a,(ix+ra_dskykey)	; get match char
-	cp	c			; compare
-	jp	z,romload		; if match, load it
-	ld	de,ra_entsiz		; table entry size
-	add	ix,de			; bump IX to next entry
-	ld	a,(ix)			; check for end
-	or	(ix+1)			; ... of table
-	jr	nz,dskycmd1		; loop till done
-;
-	; Attempt disk boot
-	ld	a,c			; copy key to A
-	cp	KY_F + 1		; over max?
-	ret	nc			; abort if so
-	ld	(bootunit),a		; set as boot unit
-	xor	a			; zero A
-	ld	(bootslice),a		; boot slice always zero here
-	jp	diskboot		; go do it
-;
-#endif
-;
-;=======================================================================
-; Special command processing
-;=======================================================================
-;
-; Display Help
-;
-help:
-	ld	hl,str_help		; point to help string
-	call	pstr			; display it
-	ret
-;
-; List ROM apps
-;
-applst:
-	ld	hl,str_applst
-	call	pstr
-	call	nl
-	ld	ix,ra_tbl
-applst1:
-	; check for end of table
-	ld	a,(ix)
-	or	(ix+1)
-	ret	z
-;
-	ld	a,(ix+ra_conkey)
-	bit	7,a
-	jr	nz,applst2
-	push	af
-	call	nl
-	ld	a,' '
-	call	cout
-	call	cout
-	pop	af
-	call	cout
-	ld	a,':'
-	call	cout
-	ld	a,' '
-	call	cout
-	ld	l,(ix+ra_name)
-	ld	h,(ix+ra_name+1)
-	call	pstr
-;
-applst2:
-	ld	bc,ra_entsiz
-	add	ix,bc
-	jr	applst1
+	CP	E		; WE DON'T HAVE MORE THAN 10 DEVICES SO	; A = REQUESTED UNIT 
+	JP	C,GOBOOTDISK	; CHECK IT IS IN RANGE. BOOT IF IT IS	; E = AVAILABLE UNITS
+	JR	MATX		; IT IF NOT VALID, HANDLE IT BELOW
 
-	ret
-;
-; Device list
-;
-devlst:
-	ld	hl,str_devlst		; device list header string
-	call	pstr			; display it
-	jp	prtall			; do it
-;
-; Restart system
-;
-reboot:
-	ld	hl,str_reboot		; point to message
-	call	pstr			; print it
-	call	LDELAY			; wait for message to display
-;
-#if (BIOS == BIOS_WBW)
-;
-#if (DSKYENABLE)
-	ld	hl,msg_boot		; point to boot message
-	call 	DSKY_SHOWSEG		; display message
-#endif
-;
-	; switch to rom bank 0 and jump to address 0
-	ld	a,BID_BOOT		; boot bank
-	ld	hl,0			; address zero
-	call	HB_BNKCALL		; does not return
-#endif
-;
-#if (BIOS == BIOS_UNA)
-	; switch to rom bank 0 and jump to address 0
-	ld	bc,$01FB		; UNA func = set bank
-	ld	de,0			; ROM bank 0
-	rst	08			; do it
-	jp	0			; jump to restart address
-#endif
-;
-;=======================================================================
-; Load and run a ROM application, IX=ROM app table entry
-;=======================================================================
-;
-romload:
-;
-	; Notify user
-	ld	hl,str_load
-	call	pstr
-	ld	l,(ix+ra_name)
-	ld	h,(ix+ra_name+1)
-	call	pstr
-;
-#if (DSKYENABLE)
-	ld	hl,msg_load		; point to load message
-	call 	DSKY_SHOWSEG		; display message
-#endif
-;
-#if (BIOS == BIOS_WBW)
-;
-	; Copy image to it's running location
-	ld	a,(ix+ra_bnk)		; get image source bank id
-	cp	bid_cur			; special value?
-	jr	nz,romload1		; if not, continue
-	ld	a,(bid_ldr)		; else substitute
-romload1:
-	push	af			; save source bank
-	ld	e,a			; source bank to E
-	ld	d,BID_USR		; dest is user bank
-	ld	l,(ix+ra_siz)		; HL := image size
-	ld	h,(ix+ra_siz+1)		; ...
-	ld	b,BF_SYSSETCPY		; HBIOS func: setup bank copy
-	rst	08			; do it
-	ld	a,'.'			; dot character
-	call	cout			; show progress
-	ld	e,(ix+ra_dest)		; DE := run dest adr
-	ld	d,(ix+ra_dest+1)	; ...
-	ld	l,(ix+ra_src)		; HL := image source adr
-	ld	h,(ix+ra_src+1)		; ...
-	ld	b,BF_SYSBNKCPY		; HBIOS func: bank copy
-	rst	08			; do it
-	ld	a,'.'			; dot character
-	call	cout			; show progress
-;
-	; Record boot information
-	pop	af			; recover source bank
-	ld	l,a			; L := source bank
-	ld	de,$0100		; boot volume/slice
-	ld	b,BF_SYSSET		; HBIOS func: system set
-	ld	c,BF_SYSSET_BOOTINFO	; BBIOS subfunc: boot info
-	rst	08			; do it
-	ld	a,'.'			; dot character
-	call	cout			; show progress
-;
-#endif
-;
-#if (BIOS == BIOS_UNA)
-;
-; Note: UNA has no interbank memory copy, so we can only load
-; images from the current bank.  We switch to the original bank
-; use a simple ldir to relocate the image, then switch back to the
-; user bank to launch.  This will only work if the images are in
-; the lower 32K and the relocation adr is in the upper 32K.
-;
-	; Switch to original bank
-	ld	bc,$01FB		; UNA func: set bank
-	ld	de,(bid_ldr)		; select user bank
-	rst	08			; do it
-	ld	a,'.'			; dot character
-	call	cout			; show progress
-;
-	; Copy image to running location
-	ld	l,(ix+ra_src)		; HL := image source adr
-	ld	h,(ix+ra_src+1)		; ...
-	ld	e,(ix+ra_dest)		; DE := run dest adr
-	ld	d,(ix+ra_dest+1)	; ...
-	ld	c,(ix+ra_siz)		; BC := image size
-	ld	b,(ix+ra_siz+1)		; ...
-	ldir				; copy image
-	ld	a,'.'			; dot character
-	call	cout			; show progress
-;
-	; Switch back to user bank
-	ld	bc,$01FB		; UNA func: set bank
-	ld	de,(bid_ldr)		; select user bank
-	rst	08			; do it
-	ld	a,'.'			; dot character
-	call	cout			; show progress
-;
-	; Record boot information
-	ld	de,(bid_ldr)		; original bank
-	ld	l,$01			; encoded boot slice/unit
-	ld	bc,$01FC		; UNA func: set bootstrap hist
-	rst	08			; call una
-;
-#endif
-;
-#if (DSKYENABLE)
-	ld	hl,msg_go		; point to go message
-	call 	DSKY_SHOWSEG		; display message
-#endif
-;
-	ld	l,(ix+ra_ent)		; HL := app entry address
-	ld	h,(ix+ra_ent+1)		; ...
-	jp	(hl)			; go
-;
-;=======================================================================
-; Boot disk unit/slice
-;=======================================================================
-;
-diskboot:
-;
-	; Notify user
-	ld	hl,str_boot1
-	call	pstr
-	ld	a,(bootunit)
-	call	PRTDECB
-	ld	hl,str_boot2
-	call	pstr
-	ld	a,(bootslice)
-	call	PRTDECB
-;
-#if (DSKYENABLE)
-	ld	hl,msg_load		; point to load message
-	call 	DSKY_SHOWSEG		; display message
-#endif
-;
-#if (BIOS == BIOS_WBW)
-;
-	; Check that drive actually exists
-	ld	c,a			; put in C for func call
-	ld	b,BF_SYSGET		; HBIOS func: sys get
-	ld	c,BF_SYSGET_DIOCNT	; HBIOS sub-func: disk count
-	rst	08			; do it, E=disk count
-	ld	a,(bootunit)		; get boot disk unit
-	cp	e			; compare to count
-	jp	nc,err_nodisk		; handle no disk err
-;
-	; If non-zero slice requested, confirm device can handle it
-	ld	a,(bootslice)		; get slice
-	or	a			; set flags
-	jr	z,diskboot1		; slice 0, skip slice check
-	ld	a,(bootunit)		; get disk unit
-	ld	c,a			; put in C for func call
-	ld	b,BF_DIODEVICE		; HBIOS func: device info
-	rst	08			; do it
-	ld	a,d			; device type to A
-	cp	DIODEV_IDE		; IDE is max slice device type
-	jp	c,err_noslice		; no such slice, handle err
-;
-diskboot1:
-	; Sense media
-	ld	a,(bootunit)		; get boot disk unit
-	ld	c,a			; put in C for func call
-	ld	b,BF_DIOMEDIA		; HBIOS func: media
-	ld	e,1			; enable media check/discovery
-	rst	08			; do it
-	jp	nz,err_diskio		; handle error
-	call	pdot			; show progress
-;
-	; Seek to boot info sector, third sector
-	ld	a,(bootslice)		; get boot slice
-	ld	e,a			; move to E for mult
-	ld	h,65			; 65 tracks per slice
-	call	MULT8			; hl := h * e
-	ld	de,$0002		; head 0, sector 2
-	ld	b,BF_DIOSEEK	   	; HBIOS func: seek
-	ld	a,(bootunit)		; get boot disk unit
-	ld	c,a			; put in C
-	rst	08			; do it
-	jp	nz,err_diskio		; handle error
-	call	pdot			; show progress
-;
-	; Read sector into local buffer
-	ld	b,BF_DIOREAD		; HBIOS func: disk read
-	ld	a,(bootunit)		; get boot disk unit
-	ld	c,a			; put in C for func call
-	ld	hl,bl_infosec     	; read into info sec buffer
-	ld	d,BID_USR		; user bank
-	ld	e,1			; transfer one sector
-	rst	08			; do it
-	jp	nz,err_diskio		; handle error
-	call	pdot			; show progress
-;
-#endif
-;
-#if (BIOS == BIOS_UNA)
-;
-	; Check that drive actually exists
-	ld	a,(bootunit)		; get disk unit to boot
-	ld	b,a			; put in B for func call
-	ld	c,$48			; UNA func: get disk type
-	rst	08			; call UNA, B preserved
-	jp	nz,err_nodisk		; handle error if no such disk
-;
-	; If non-zero slice requested, confirm device can handle it
-	ld	a,(bootslice)		; get slice
-	or	a			; set flags
-	jr	z,diskboot1		; slice 0, skip slice check
-	ld	a,d			; disk type to A
-	cp	$41			; IDE?
-	jr	z,diskboot1		; if so, OK
-	cp	$42			; PPIDE?
-	jr	z,diskboot1		; if so, OK
-	cp	$43			; SD?
-	jr	z,diskboot1		; if so, OK
-	cp	$44			; DSD?
-	jr	z,diskboot1		; if so, OK
-	jp	err_noslice		; no such slice, handle err
-;
-diskboot1:
-	; Add slice offset
-	ld	a,(bootslice)		; get boot slice, A is loop cnt
-	ld	hl,0			; DE:HL is LBA
-	ld	de,0			; ... initialize to zero
-	ld	bc,16640		; sectors per slice
-diskboot2:
-	or	a			; set flags to check loop ctr
-	jr	z,diskboot4		; done if counter exhausted
-	add	hl,bc			; add one slice to low word
-	jr	nc,diskboot3		; check for carry
-	inc	de			; if so, bump high word
-diskboot3:
-	dec	a			; dec loop downcounter
-	jr	diskboot2		; and loop
-;
-diskboot4:
-	ld	(loadlba),hl		; save lba, low word
-	ld	(loadlba+2),de		; save lba, high word
-;
-	; Seek to boot info sector, third sector
-	ld	bc,2			; sector offset
-	add	hl,bc			; add to LBA value low word
-	jr	nc,diskboot5		; check for carry
-	inc	de			; if so, bump high word
-diskboot5:
-	ld	a,(bootunit)		; get disk unit to boot
-	ld	b,a			; put in B for func call
-	ld	c,$41			; UNA func: set lba
-	rst	08			; set lba
-	jp	nz,err_api		; handle error
-	call	pdot			; show progress
-;
-	; Read sector into local buffer
-	ld	c,$42			; UNA func: read sectors
-	ld	de,bl_infosec		; dest of cpm image
-	ld	l,1			; sectors to read
-	rst	08			; do read
-	jp	nz,err_diskio		; handle error
-;
-#endif
-;
-	; Check signature
-	ld	de,(bb_sig)		; get signature read
-	ld	a,$A5			; expected value of first byte
-	cp	d			; compare
-	jp	nz,err_sig		; handle error
-	ld	a,$5A			; expected value of second byte
-	cp	e			; compare
-	jp	nz,err_sig		; handle error
-;
-	; Print disk boot info
-	; Volume "xxxxxxx" (0xXXXX-0xXXXX, entry @ 0xXXXX)
-	ld	hl,str_binfo1		; load string
-	call	pstr			; print
-	push	hl			; save string ptr
-	ld	hl,bb_label		; point to label
-	call	pvol			; print it
-	pop	hl			; restore string ptr
-	call	pstr			; print
-	push	hl			; save string ptr
-	ld	bc,(bb_cpmloc)		; get load loc
-	call	PRTHEXWORD		; print it
-	pop	hl			; restore string ptr
-	call	pstr			; print
-	push	hl			; save string ptr
-	ld	bc,(bb_cpmend)		; get load end
-	call	PRTHEXWORD		; print it
-	pop	hl			; restore string ptr
-	call	pstr			; print
-	push	hl			; save string ptr
-	ld	bc,(bb_cpment)		; get load end
-	call	PRTHEXWORD		; print it
-	pop	hl			; restore string ptr
-	call	pstr			; print
-;
-	; Compute number of sectors to load
-	ld	hl,(bb_cpmend)		; hl := end
-	ld	de,(bb_cpmloc)		; de := start 
-	or	a			; clear carry
-	sbc	hl,de			; hl := length to load
-	ld	a,h			; determine 512 byte sector count
-	rra				; ... by dividing msb by two
-	ld	(loadcnt),a		; ... and save it
-	call	pdot			; show progress
-;
-#if (BIOS == BIOS_WBW)
-;
-	; Load image into memory
-	ld	b,BF_DIOREAD		; HBIOS func: read sectors
-	ld	a,(bootunit)		; get boot disk unit
-	ld	c,a			; put in C
-	ld	hl,(bb_cpmloc)     	; load address
-	ld	d,BID_USR		; user bank
-	ld	a,(loadcnt)		; get sectors to read
-	ld	e,a			; number of sectors to load
-	rst	08			; do it
-	jp	nz,err_diskio		; handle errors
-	call	pdot			; show progress
-;
-	; Record boot unit/slice
-	ld	b,BF_SYSSET		; hb func: set hbios parameter
-	ld	c,BF_SYSSET_BOOTINFO	; hb subfunc: set boot info
-	ld	a,(bid_ldr)		; original bank is boot bank
-	ld	l,a			; ... and save as boot bank
-	ld	a,(bootunit)		; load boot unit
-	ld	d,a			; save in D
-	ld	a,(bootslice)		; load boot slice
-	ld	e,a			; save in E
-	rst	08
-	jp	nz,err_api		; handle errors
-	call	pdot			; show progress
-;
-#endif
-;
-#if (BIOS == BIOS_UNA)
-;
-	; Start os load at sector 3
-	ld	hl,(loadlba)		; low word of saved LBA
-	ld	de,(loadlba+2)		; high word of saved LBA
-	ld	bc,3			; offset for sector 3
-	add	hl,bc			; apply it
-	jr	nc,diskboot6		; check for carry
-	inc	de			; bump high word if so
-diskboot6:
-	ld	c,$41			; UNA func: set lba
-	ld	a,(bootunit)		; get boot disk unit
-	ld	b,a			; move to B
-	rst	08			; set lba
-	jp	nz,err_api		; handle error
-;
-	; Read OS image into memory
-	ld	c,$42			; UNA func: read sectors
-	ld	a,(bootunit)		; get boot disk unit
-	ld	b,a			; move to B
-	ld	de,(bb_cpmloc)		; dest of cpm image
-	ld	a,(loadcnt)		; get sectors to read
-	ld	l,a			; sectors to read
-	rst	08			; do read
-	jp	nz,err_diskio		; handle error
-	call	pdot			; show progress
-;
-	; Record boot unit/slice
-	; UNA provides only a single byte to record the boot unit
-	; so we encode the unit/slice into one byte by using the
-	; high nibble for unit and low nibble for slice.
-	ld	de,-1			; boot rom page, -1 for n/a
-	ld	a,(bootslice)		; get boot slice
-	and	$0F			; 4 bits only
-	rlca				; rotate to high bits
-	rlca				; ...
-	rlca				; ...
-	rlca				; ...
-	ld	l,a			; put in L
-	ld	a,(bootunit)		; get boot disk unit
-	and	$0F			; 4 bits only
-	or	l			; combine
-	ld	l,a			; back to L
-	ld	bc,$01FC		; UNA func: set bootstrap hist
-	rst	08			; call UNA
-	jp	nz,err_api		; handle error
-	call	pdot			; show progress
-;
-#endif
-;
-#if (DSKYENABLE)
-	ld	hl,msg_go		; point to go message
-	call 	DSKY_SHOWSEG		; display message
-#endif
-;
-	; Jump to entry vector
-	ld	hl,(bb_cpment)		; get entry vector
-	jp	(hl)			; and go there
-;
-;=======================================================================
-; Utility functions
-;=======================================================================
-;
-; Clear LEDs
-;
-clrled:
-#if (BIOS == BIOS_WBW)
-  #if (DIAGENABLE)
-	xor	a		; zero accum
-	out	(DIAGPORT),a	; clear diag leds
-  #endif
-  #if (LEDENABLE)
-	or	$FF		; led is inverted
-	out	(LEDPORT),a	; clear led
-  #endif
-#endif
-	ret
-;
-; Print string at HL on console, null terminated
-;
-pstr:
-	ld	a,(hl)			; get next character
-	or	a			; set flags
-	inc	hl			; bump pointer regardless
-	ret	z			; done if null
-	call	cout			; display character
-	jr	pstr			; loop till done
-;
-; Print volume label string at HL, '$' terminated, 16 chars max
-;
-pvol:
-	ld	b,16			; init max char downcounter
-pvol1:
-	ld	a,(hl)			; get next character
-	cp	'$'			; set flags
-	inc	hl			; bump pointer regardless
-	ret	z			; done if null
-	call	cout			; display character
-	djnz	pvol1			; loop till done
-	ret				; hit max of 16 chars
-;
-; Start a newline on console (cr/lf)
-;
-nl2:
-	call	nl			; double newline
-nl:
-	ld	a,cr			; cr
-	call	cout			; send it
-	ld	a,lf			; lf
-	jp	cout			; send it and return
-;
-; Print a dot on console
-;
-pdot:
-	push	af
-	ld	a,'.'
-	call	cout
-	pop	af
-	ret
-;
-; Read a string on the console
-;
-; Uses address $0080 in page zero for buffer
-; Input is zero terminated
-;
-rdln:
-	ld	de,cmdbuf		; init buffer address ptr
-rdln_nxt:
-	call	cin			; get a character
-	cp	bs			; backspace?
-	jr	z,rdln_bs		; handle it if so
-	cp	cr			; return?
-	jr	z,rdln_cr		; handle it if so
-;
-	; check for non-printing characters
-	cp	' '			; first printable is space char
-	jr	c,rdln_bel		; too low, beep and loop
-	cp	'~'+1			; last printable char
-	jr	nc,rdln_bel		; too high, beep and loop
-;
-	; need to check for buffer overflow here!!!
-	ld	hl,cmdbuf+cmdmax	; max cmd length
-	or	a			; clear carry
-	sbc	hl,de			; test for max
-	jr	z,rdln_bel		; at max, beep and loop
-;
-	; good to go, echo and store character
-	call	cout			; echo character input
-	ld	(de),a			; save in buffer
-	inc	de			; inc buffer ptr
-	jr	rdln_nxt		; loop till done
-;
-rdln_bs:
-	ld	hl,cmdbuf			; start of buffer
-	or	a			; clear carry
-	sbc	hl,de			; subtract from cur buf ptr
-	jr	z,rdln_bel		; at buf start, just beep
-	ld	hl,str_bs		; backspace sequence
-	call	pstr			; send it
-	dec	de			; backup buffer pointer
-	jr	rdln_nxt		; and loop
-;
-rdln_bel:
-	ld	a,bel			; Bell characters
-	call	cout			; send it
-	jr	rdln_nxt		; and loop
-;
-rdln_cr:
-	xor	a			; null to A
-	ld	(de),a			; store terminator
-	ret				; and return
-;
-; Skip whitespace at buffer adr in DE, returns with first
-; non-whitespace character in A.
-;
-skipws:
-	ld	a,(de)			; get next char
-	cp	' '			; blank?
-	ret	nz			; nope, done
-	inc	de			; bump buffer pointer
-	jr	skipws			; and loop
+MATD2:	LD	B,A		; PROCESS FURTHER INPUT ; B = REQUESTED UNIT 
+	LD	A,C		; CHECK WHERE TO GET    ; C = DSKY/SERIAL FLAG
+	DEC	C		; THE INPUT FROM AND GO
+	JR	NZ,MATD3	; GET ANOTHER CHARACTER
+;
+#IF (DSKYENABLE)		; INPUT DSKY
+;
+MATD4:	;CALL	DSKY_STAT	; WAIT FOR
+	;OR	A		; ANOTHER
+	;JR	Z,MATD4		; KEY FROM
+	;CALL	DSKY_GETKEY	; DSKY
+	CALL	DSKY_KEY
+
+	CP	KY_EN		; IF NEXT KEY IS ENTER
+	JR	Z,MATD6		; OR GO, PROCESS AS A 
+	CP	KY_GO		; SINGLE DIGIT NUMBER
+	JR	Z,MATD6		; OTHERWISE JOIN TWO
+	JR	MATD5		; CHARCTERS IN ONE DECIMAL
+#ENDIF
+;
+;				; INPUT SERIAL
+;
+MATD3:	;CALL	CST		; WAIT FOR
+	;OR	A		; ANOTHER
+	;JR	Z,MATD3		; KEY FROM
+	CALL	CINUC		; SERIAL
+	CALL	COUT		
+;
+	CP	CHR_CR		; IF NEXT KEY IS RETURN PROCESS
+	JR	Z,MATD6		; AS A SINGLE DIGIT NUMBER
+;
+	SUB	'0'		; CONVERT THE SERIAL NUMBER TO DECIMAL
+	CP	10		; DO A RANGE CHECK
+	JR	NC,MATX		; NOT VALID, HANDLE IT BELOW
+
+MATD5:	LD	C,A		; C CONTAINS SECOND CHARACTER INPUT 0..9
+	LD	A,B		; A CONTAINS FIRST NUMBER INPUT 0..9
+	ADD	A,A		
+	LD	B,A		; MULTIPLY FIRST DIGIT BY 10					
+	ADD	A,A		; AND ADD SECOND DIGIT	
+	ADD	A,A		
+	ADD	A,B		; CONVERT TWO INPUTTED
+	ADD	A,C		; CHARACTERS TO DECIMAL.
+	LD	B,A 
+;
+MATD6:	LD	A,B		; PUT THE DEVICE NUMBER TO BOOT 
+	JP	GOBOOTDISK	; IN A AND GO BOOT DEVICE
+;
+MATX:	LD	DE,STR_INVALID	; SET ERROR STRING MESSAGE
+	JP	MENU		; AND RESTART MENU LOOP
+;
+;==================================================================================================
+;   ROM MENU TABLE
+;==================================================================================================
+;
+#DEFINE MENU_L(M1,M2,M3,M4,M5,M6,M7,M8,M9,M10) \
+#DEFCONT \ .DB M1
+#DEFCONT \ .DB M2
+#IF (DSKYENABLE)	
+#DEFCONT \ .DB M3
+#ELSE
+#DEFCONT \ .DB $FF
+#ENDIF
+#DEFCONT \ .DW M4
+#DEFCONT \ .DW M5
+#DEFCONT \ .DW M6
+#DEFCONT \ .DW M7
+#DEFCONT \ .DB M8
+#DEFCONT \ .DB M9
+#DEFCONT \ .DB M10
+;
+; NOTE: THE FORMATTING OF THE FOLLOWING IS CRITICAL. TASM DOES NOT PASS MACRO ARGUMENTS WELL.
+;       ENSURE STD.ASM HOLDS THE DEFINITIONS FOR *_LOC, *_SIZ *_END AND ANY CODE GENERATED WHICH DOES NOT 
+;	INCLUDE STD.ASM IS SYNCED.
+;
+; NOTE: THE LOADABLE ROM IMAGES ARE PLACED IN ROM BANKS BID_IMG0 AND BID_IMG1.  HOWEVER, ROMWBW
+;       SUPPORTS A MECHANISM TO LOAD A COMPLETE NEW SYSTEM DYNAMICALLY AS A RUNNABLE APPLICATION
+;       (SEE APPBOOT AND IMGBOOT IN HBIOS.ASM).  IN THIS CASE, THE CONTENTS OF BID_IMG0 WILL
+;       PRE-LOADED INTO THE CURRENTLY EXECUTING RAM BANK THEREBY ALLOWING THOSE IMAGES TO BE
+;       DYNAMICALLY LOADED AS WELL.  TO SUPPORT THIS CONCEPT, A PSEUDO-BANK CALLED BID_CUR
+;       IS USED TO SPECIFY THE IMAGES NORMALLY FOUND IN BID_IMG0.  IN GOROM, THIS SPECIAL
+;       VALUE WILL CAUSE THE ASSOCIATED IMAGE TO BE LOADED FROM THE CURRENTLY EXECUTING BANK
+;       WHICH WILL BE CORRECT REGARDLESS OF THE LOAD MODE.  IMAGES IN OTHER BANKS (BID_IMG1)
+;	WILL ALWAYS BE LOADED DIRECTLY FROM ROM.
+;
+;              name          menu dsky   dest-exec    source  dest-addr  img-size  source-bank  dest     desc  
+;              DB            DB   DB     DW           DW      DW         DW        DB           DB       DB
+MENU_S:	MENU_L("~Monitor$ ", "M", KY_CL, MON_SERIAL,  1000h,  MON_LOC,   MON_SIZ,  BID_CUR,     BID_USR, "Monitor$     ")
+MENU_1:	MENU_L("~CP/M$    ", "C", KY_BK, CPM_ENT,     2000h,  CPM_LOC,   CPM_SIZ,  BID_CUR,     BID_USR, "CP/M 80 v2.2$")
+	MENU_L("~Z-System$", "Z", KY_FW, CPM_ENT,     5000h,  CPM_LOC,   CPM_SIZ,  BID_CUR,     BID_USR, "ZSDOS v1.1$  ")
+#IF (BIOS == BIOS_WBW)
+	MENU_L("~Forth$   ", "F", KY_EX, FTH_LOC,     0000h,  FTH_LOC,   FTH_SIZ,  BID_IMG1,    BID_USR, "Camel Forth$ ")
+	MENU_L("~BASIC$   ", "B", KY_DE, BAS_LOC,     1700h,  BAS_LOC,   BAS_SIZ,  BID_IMG1,    BID_USR, "Nascom BASIC$")
+	MENU_L("~T-BASIC$ ", "T", KY_EN, TBC_LOC,     3700h,  TBC_LOC,   TBC_SIZ,  BID_IMG1,    BID_USR, "Tasty BASIC$ ")
+	MENU_L("~PLAY$    ", "P", $FF,   GAM_LOC,     4000h,  GAM_LOC,   GAM_SIZ,  BID_IMG1,    BID_USR, "Game$        ")
+	MENU_L("~USER ROM$", "U", $FF,   USR_LOC,     7000h,  USR_LOC,   USR_SIZ,  BID_IMG1,    BID_USR, "User ROM$    ")
+#ENDIF
+#IF (DSKYENABLE)
+	MENU_L("~DSKY$    ", "D", KY_GO, MON_DSKY,    1000h,  MON_LOC,   MON_SIZ,  BID_CUR,     BID_USR, "DSKY Monitor$")
+#ENDIF
+	MENU_L("$         ", "E", $FF,   EGG_LOC,     0E00h,  EGG_LOC,   EGG_SIZ,  BID_CUR,     BID_USR, "Easter Egg$  ")
+;
+MENU_E	.EQU	$				; END OF TABLE
+MENU_V	.EQU	MENU_1 - MENU_S			; LENGTH OF EACH MENU RECORD
+MENU_N	.EQU	((MENU_E - MENU_S) / MENU_V)	; NUMBER OF MENU ITEMS
+;
+;==================================================================================================
+;   SYSTEM REBOOT HANDLER
+;==================================================================================================
+;
+REBOOT:
+;
+	LD	DE,STR_REBOOT		; POINT TO MESSAGE
+	CALL	WRITESTR		; PRINT IT
+;
+	; WAIT FOR MESSAGE TO BE DISPLAYED
+	LD	HL,10000
+REBOOT1:				; LOOP IS 26TS
+	DEC	HL			; 6TS
+	LD	A,H			; 4TS
+	OR	L			; 4TS
+	JR	NZ,REBOOT1		; 12TS
+;
+#IF (BIOS == BIOS_WBW)
+;
+#IF (DSKYENABLE)
+	LD	HL,MSG_BOOT		; POINT TO BOOT MESSAGE	
+	CALL 	DSKY_SHOWSEG		; DISPLAY MESSAGE
+#ENDIF
+;
+	; SWITCH TO ROM BANK 0 AND JUMP TO ADDRESS 0
+	LD	A,BID_BOOT		; BOOT BANK
+	LD	HL,0			; ADDRESS ZERO
+	CALL	HB_BNKCALL		; DOES NOT RETURN
+#ENDIF
+;
+#IF (BIOS == BIOS_UNA)
+	; SWITCH TO ROM BANK 0 AND JUMP TO ADDRESS 0
+	LD	BC,$01FB		; UNA FUNC = SET BANK
+	LD	DE,0			; ROM BANK 0
+	RST	08			; DO IT
+	JP	0			; JUMP TO RESTART ADDRESS
+#ENDIF
+;
+;==================================================================================================
+;   ROM IMAGE LOAD HANDLER
+;==================================================================================================
+;
+; AT ENTRY, DE POINTS TO THE EXEC ADR FIELD OF THE ACTIVE ROM
+; TABLE ENTRY
+;
+; ROM IMAGES MUST NOT OVERLAY THE SPACE OCCUPIED BY THE LOADER WHICH
+; IS $8000-$8FFF.
+;
+GOROM:	PUSH	DE			; SAVE ROM TABLE ENTRY EXEC ADR PTR
+	LD	DE,STR_BOOTROM		; ROM LOADING MSG PREFIX
+	CALL	WRITESTR		; PRINT IT
+#IF (DSKYENABLE)
+	LD	HL,MSG_LOAD		; POINT TO LOAD MESSAGE	
+	CALL 	DSKY_SHOWSEG		; DISPLAY MESSAGE
+#ENDIF
+	POP	HL			; EXEC ADR TO HL
+	PUSH	HL			; AND RESAVE IT
+	LD	A,10			; OFFSET TO IMAGE DESC
+	CALL	ADDHLA			; APPLY IT
+	EX	DE,HL			; MOVE TO DE, ORIG VALUE TO HL
+	CALL	WRITESTR		; AND PRINT IT
+	PRTS("...$")			; ADD SOME DOTS
+	POP	HL			; RESTORE EXEC ADR TO HL
+;
+	LD	B,5			; PUT NEXT FIVE WORDS ON STACK
+GOROM1:	LD	E,(HL)			; (1) EXEC ADR
+	INC	HL			; (2) SOURCE ADR
+	LD	D,(HL)			; (3) DEST ADR
+	INC	HL			; (4) IMAGE SIZE
+	PUSH	DE			; (5) SRC/DEST BANKS
+	DJNZ	GOROM1			; LOOP TILL DONE
+;
+#IF (BIOS == BIOS_UNA)
+;
+; NOTE: UNA HAS NO INTERBANK MEMORY COPY, SO WE CAN ONLY LOAD
+; IMAGES FROM THE CURRENT BANK.  A SIMPLE LDIR IS USED TO
+; RELOCATE THE IMAGES.  AT SOME POINT AN UNA INTERBANK COPY
+; SHOULD BE IMPLEMENTED HERE.
+;
+	; COPY IMAGE TO IT'S RUNNING LOCATION
+	POP	HL			; POP AND DISCARD BANKS
+	POP	BC			; GET IMAGE SIZE TO BC
+	POP	DE			; GET DESTINATION ADR TO DE
+	POP	HL			; GET SOURCE ADR TO HL
+	LDIR				; MOVE IT
+;
+	; RECORD BOOT INFO
+	LD	BC,$00FB		; GET LOWER PAGE ID
+	RST	08			; DE := LOWER PAGE ID == BOOT ROM PAGE
+	LD	L,1			; BOOT DISK UNIT IS ROM (UNIT ID = 1)
+	LD	BC,$01FC		; UNA FUNC: SET BOOTSTRAP HISTORY
+	RST	08			; CALL UNA
+;
+	; LAUNCH IMAGE W/ USER BANK ACTIVE
+	; NOTE: UNA EXEC CHAIN CALL USES ADDRESS ON TOS
+	CALL	NEWLINE2
+	LD	DE,BID_USR		; TARGET BANK ID
+	PUSH	DE			; ... ON STACK
+	;DI				; ENTER WITH INTS DISABLED
+	JP	$FFF7			; UNA INTER-PAGE EXEC CHAIN
+#ELSE
+;
+; NOTE: CHECK FOR SPECIAL CASE WHERE SOURCE BANK IS BID_CUR.  IN THIS CASE
+; WE COPY THE IMAGE FROM THE BANK THAT WE ARE CURRENTLY RUNNING IN.  THIS
+; IS DONE TO SUPPORT THE APPBOOT AND IMGBOOT MODES AS DEFINED IN HBIOS.
+; IN THE CASE OF THESE MODES IT IS INTENDED THAT THE IMAGES BE LOADED
+; FROM THE CURRENT RAM BANK AND NOT FROM THEIR NORMAL ROM LOCATIONS.
+;
+	; COPY IMAGE TO IT'S RUNNING LOCATION
+	POP	DE			; GET BANKS (E=SRC, D=DEST)
+	POP	HL			; GET IMAGE SIZE
+	LD	A,E			; SOURCE BANK TO A
+	CP	BID_CUR			; SPECIAL CASE, BID_CUR?
+	JR	NZ,GOROM2		; IF NOT, GO RIGHT TO COPY
+	LD	A,(HB_CURBNK)		; GET CURRENT BANK
+	LD	E,A			; AND SUBSTITUE THE VALUE
+GOROM2:	LD	B,BF_SYSSETCPY		; HBIOS FUNC: SETUP BANK COPY
+	RST	08			; DO IT
+	POP	DE			; GET DEST ADR
+	POP	HL			; GER SOURCE ADR
+	LD	B,BF_SYSBNKCPY		; HBIOS FUNC: PERFORM BANK COPY
+	RST	08			; DO IT
+;
+	; RECORD BOOT INFO
+	LD	A,(HB_CURBNK)		; GET CURRENT BANK ID FROM PROXY DATA
+	LD	B,BF_SYSSET		; HB FUNC: SET HBIOS PARAMETER
+	LD	C,BF_SYSSET_BOOTINFO	; HB SUBFUNC: SET BOOT INFO
+	LD	L,A			; ... AND SAVE AS BOOT BANK
+	LD	DE,$0100		; BOOT VOLUME (UNIT, SLICE)
+	RST	08
+;
+#IF (DSKYENABLE)
+	LD	HL,MSG_GO		; POINT TO BOOT MESSAGE	
+	CALL 	DSKY_SHOWSEG		; DISPLAY MESSAGE
+#ENDIF
+;
+	; LAUNCH IMAGE W/ USER BANK ACTIVE
+	CALL	NEWLINE2
+	LD	A,BID_USR		; ACTIVATE USER BANK
+	POP	HL			; RECOVER EXEC ADDRESS
+	;DI				; ENTER WITH INTS DISABLED
+	CALL	HB_BNKCALL		; AND GO
+	HALT				; WE SHOULD NEVER RETURN!!!
+#ENDIF
+;
+;==================================================================================================
+;   DISK BOOT HANDLER
+;==================================================================================================
+;
+GOBOOTDISK:
+	LD	(BL_BOOTID),A		; SAVE INCOMING BOOTID
+;
+	; SET THE INITIAL BOOT UNIT AND SLICE
+	;LD	A,(BL_BOOTID)		; GET BOOTID
+	LD	(BL_DEVICE),A		; STORE IT
+	XOR	A			; LU DEFAULTS TO 0
+	LD	(BL_LU),A		; STORE IT
+;
+#IF (BIOS == BIOS_WBW)
+;
+	LD	A,(BL_INPFLG)		; GET INPUT FLAG
+	CP	1			; DSKY?
+	JR	Z,GOBOOTDISK1		; IF SO, SLICE 0 IS ASSUMED
+;
+	LD	A,(BL_DEVICE)		; GET BOOT DEVICE
+	LD	C,A			; PUT IN C
+	LD	B,BF_DIODEVICE		; HBIOS: DIO DEVICE FUNC
+	RST	08
+	LD	A,D			; DEVICE TYPE TO A
+	CP	DIODEV_IDE		; HARD DISK DEVICE?
+	JR	C,GOBOOTDISK1		; NOT SLICE WORTHY, SKIP AHEAD
+;
+	LD	DE,STR_SLICESEL		; SLICE SELECTION STRING
+	CALL	WRITESTR		; DISPLAY IT
+	CALL	CINUC			; GET THE KEY
+	CALL	COUT			; ECHO KEY
+;
+	LD	DE,STR_INVALID		; SETUP IN CASE OF INVALID
+	CP	13			; ENTER?
+	JR	Z,GOBOOTDISK1		; IF SO, DONE
+	CP	'0'			; START OF RANGE?
+	JP	C,MENU			; BACK TO MENU IF TOO LOW
+	CP	'9' + 1			; END OF RANGE
+	JP	NC,MENU			; BACK TO MENU IF TOO HIGH
+	SUB	'0'			; CONVERT TO BINARY
+	LD	(BL_LU),A		; AND SAVE IT
+GOBOOTDISK1:
+;
+#ENDIF
+;
+	LD	DE,STR_BOOTDISK
+	CALL	WRITESTR
+	LD	A,(BL_DEVICE)
+	CALL	PRTDECB
+	LD	DE,STR_BOOTDISK1
+	CALL	WRITESTR
+	LD	A,(BL_LU)
+	CALL	PRTDECB
+	PRTS("...$")
+#IF (DSKYENABLE)
+	LD	HL,MSG_LOAD		; POINT TO LOAD MESSAGE	
+	CALL 	DSKY_SHOWSEG		; DISPLAY MESSAGE
+#ENDIF
+;
+	LD	DE,STR_BOOTREAD	; DISK BOOT MESSAGE
+	CALL	WRITESTR		; PRINT IT
+;	
+#IF (BIOS == BIOS_UNA)
+	LD	A,(BL_BOOTID)		; GET BOOT DEVICE ID
+	LD	B,A			; MOVE TO B
+;
+	; LOAD SECTOR 2 (BOOT INFO)
+	LD	C,$41			; UNA FUNC: SET LBA
+	LD	DE,0			; HI WORD OF LBA IS ALWAYS ZERO
+	LD	HL,2			; LOAD STARTING INFO SECTOR 2
+	RST	08			; SET LBA
+	JP	NZ,DB_ERR		; HANDLE ERROR
+;
+	LD	C,$42			; UNA FUNC: READ SECTORS
+	LD	DE,BL_INFOSEC		; DEST OF CPM IMAGE
+	LD	L,1			; SECTORS TO READ
+	RST	08			; DO READ
+	JP	NZ,DB_ERR		; HANDLE ERROR
+#ELSE
+	; CHECK FOR VALID DRIVE LETTER
+	LD	A,(BL_BOOTID)		; BOOT DEVICE TO A
+	PUSH	AF			; SAVE BOOT DEVICE
+	LD	B,BF_SYSGET
+	LD	C,BF_SYSGET_DIOCNT
+	RST	08			; E := DISK UNIT COUNT
+	POP	AF			; RESTORE BOOT DEVICE
+	CP	E			; CHECK MAX (INDEX - COUNT)
+	JP	NC,DB_NODISK		; HANDLE INVALID SELECTION
+;
+	; SENSE MEDIA
+	LD	A,(BL_DEVICE)		; GET DEVICE/UNIT
+	LD	C,A			; STORE IN C
+	LD	B,BF_DIOMEDIA		; DRIVER FUNCTION = DISK MEDIA
+	LD	E,1			; ENABLE MEDIA CHECK/DISCOVERY
+	RST	08			; CALL HBIOS
+	JP	NZ,DB_ERR		; HANDLE ERROR
+;	
+	; SEEK TO SECTOR 2 OF LU
+	LD	A,(BL_LU)		; GET LU SPECIFIED
+	LD	E,A			; LU INDEX
+	LD	H,65			; 65 TRACKS PER LU
+	CALL	MULT8			; HL := H * E
+	LD	DE,$02			; HEAD 0, SECTOR 2
+	LD	B,BF_DIOSEEK	   	; SETUP FOR NEW SEEK CALL
+	LD	A,(BL_DEVICE)		; GET BOOT DISK UNIT
+	LD	C,A			; PUT IN C
+	RST	08			; DO IT
+	JP	NZ,DB_ERR		; HANDLE ERROR
+;
+	; READ
+	LD	B,BF_DIOREAD		; FUNCTION IN B
+	LD	A,(BL_DEVICE)		; GET BOOT DISK UNIT
+	LD	C,A			; PUT IN C
+	LD	HL,BL_INFOSEC     	; READ INTO INFO SEC BUFFER
+	LD	D,BID_USR		; USER BANK		; 
+	LD	E,1			; TRANSFER ONE SECTOR
+	RST	08			; DO IT
+	JP	NZ,DB_ERR		; HANDLE ERROR
+;	
+#ENDIF
+;
+	; CHECK SIGNATURE
+	LD	DE,(BB_SIG)		; GET THE SIGNATURE
+	LD	A,$A5			; FIRST BYTE SHOULD BE $A5
+	CP	D			; COMPARE
+	JP	NZ,DB_NOBOOT		; ERROR IF NOT EQUAL
+	LD	A,$5A			; SECOND BYTE SHOULD BE $5A
+	CP	E			; COMPARE
+	JP	NZ,DB_NOBOOT		; ERROR IS NOT EQUAL
+;
+	; PRINT CPMLOC VALUE
+	PRTS("\r\nLoc=$")
+	LD	BC,(BB_CPMLOC)
+	CALL	PRTHEXWORD
+;
+	; PRINT CPMEND VALUE
+	PRTS(" End=$")
+	LD	BC,(BB_CPMEND)
+	CALL	PRTHEXWORD
+;	
+	; PRINT CPMENT VALUE
+	PRTS(" Ent=$")
+	LD	BC,(BB_CPMENT)
+	CALL	PRTHEXWORD
+;
+	; PRINT DISK LABEL
+	PRTS(" Label=$")
+	LD	DE,BB_LABEL 		; if it is there, then a printable
+	LD	A,(BB_TERM)		; Display Disk Label if Present
+	CP	'$'			; (dwg 2/7/2012)
+	CALL	Z,WRITESTR		; label is there as well even if spaces.
+;
+	LD	DE,STR_LOADING		; LOADING MESSAGE
+	CALL	WRITESTR		; PRINT IT
+;
+	; COMPUTE NUMBER OF SECTORS TO LOAD
+	LD	HL,(BB_CPMEND)		; HL := END
+	LD	DE,(BB_CPMLOC)		; DE := START 
+	OR	A			; CLEAR CARRY
+	SBC	HL,DE			; HL := LENGTH TO LOAD
+	LD	A,H			; DETERMINE 512 BYTE SECTOR COUNT
+	RRA				; ... BY DIVIDING MSB BY TWO
+	LD	(BL_COUNT),A		; ... AND SAVE IT
+;
+#IF (BIOS == BIOS_UNA)
+;
+	; START OS LOAD AT SECTOR 3
+	LD	C,$41			; UNA FUNC: SET LBA
+	LD	A,(BL_BOOTID)		; GET BOOT DEVICE ID
+	LD	B,A			; MOVE TO B
+	LD	DE,0			; HI WORD OF LBA IS ALWAYS ZERO
+	LD	HL,3			; LOAD STARTING INFO SECTOR 2
+	RST	08			; SET LBA
+	JP	NZ,DB_ERR		; HANDLE ERROR
+;
+	; READ OS IMAGE INTO MEMORY
+	LD	C,$42			; UNA FUNC: READ SECTORS
+	LD	A,(BL_BOOTID)		; GET BOOT DEVICE ID
+	LD	B,A			; MOVE TO B
+	LD	DE,(BB_CPMLOC)		; DEST OF CPM IMAGE
+	LD	A,(BL_COUNT)		; GET SECTORS TO READ
+	LD	L,A			; SECTORS TO READ
+	RST	08			; DO READ
+	JP	NZ,DB_ERR		; HANDLE ERROR
+;
+	; PASS BOOT DEVICE/UNIT/LU TO CBIOS COLD BOOT
+	LD	DE,-1			; BOOT ROM PAGE, -1 FOR N/A
+	LD	A,(BL_BOOTID)		; GET BOOT DISK UNIT ID
+	LD	L,A			; PUT IN L
+	LD	BC,$01FC		; UNA FUNC: SET BOOTSTRAP HISTORY
+	RST	08			; CALL UNA
+	JP	NZ,DB_ERR		; HANDLE ERROR
+;
+	; JUMP TO COLD BOOT ENTRY
+	LD	HL,(BB_CPMENT)		; GET THE ENTRY POINT
+	PUSH	HL			; PUT ON STACK FOR UNA CHAIN FUNC
+	LD	DE,BID_USR		; TARGET BANK ID IS USER BANK
+	PUSH	DE			; PUT ON STACK FOR UNA CHAIN FUNC
+	;DI				; ENTER WITH INTS DISABLED
+	JP	$FFF7			; UNA INTER-PAGE EXEC CHAIN
+;
+#ELSE
+;
+	; READ OS IMAGE INTO MEMORY
+	LD	B,BF_DIOREAD		; FUNCTION IN B
+	LD	A,(BL_DEVICE)		; GET BOOT DISK UNIT
+	LD	C,A			; PUT IN C
+	LD	HL,(BB_CPMLOC)     	; LOAD ADDRESS
+	LD	D,BID_USR		; USER BANK
+	LD	A,(BL_COUNT)		; GET SECTORS TO READ
+	LD	E,A			; NUMBER OF SECTORS TO LOAD
+	RST	08
+	JP	NZ,DB_ERR		; HANDLE ERRORS
+;	
+	; PASS BOOT DEVICE/UNIT/LU TO CBIOS COLD BOOT
+	LD	B,BF_SYSSET		; HB FUNC: SET HBIOS PARAMETER
+	LD	C,BF_SYSSET_BOOTINFO	; HB SUBFUNC: SET BOOT INFO
+	LD	A,(HB_CURBNK)		; GET CURRENT BANK ID FROM PROXY DATA
+	LD	L,A			; ... AND SAVE AS BOOT BANK
+	LD	A,(BL_DEVICE)		; LOAD BOOT DEVICE/UNIT
+	LD	D,A			; SAVE IN D
+	LD	A,(BL_LU)		; LOAD BOOT LU
+	LD	E,A			; SAVE IN E
+	RST	08
+	JP	NZ,DB_ERR		; HANDLE ERRORS
+;
+#IF (DSKYENABLE)
+	LD	HL,MSG_GO		; POINT TO BOOT MESSAGE	
+	CALL 	DSKY_SHOWSEG		; DISPLAY MESSAGE
+#ENDIF
+;	
+	; JUMP TO COLD BOOT ENTRY
+	LD	A,BID_USR		; ACTIVATE USER BANK
+	LD	HL,(BB_CPMENT)		; OS ENTRY ADDRESS
+	;DI				; ENTER WITH INTS DISABLED
+	CALL	HB_BNKCALL		; AND GO
+	HALT				; WE SHOULD NEVER RETURN!!!
+;
+#ENDIF
+;
+DB_NODISK:
+	; SELDSK DID NOT LIKE DRIVE SELECTION
+	LD	DE,STR_NODISK
+	JP	MENU
+;
+DB_NOBOOT:
+	; DISK IS NOT BOOTABLE
+	LD	DE,STR_NOBOOT
+	JP	MENU
+;
+DB_ERR:
+	; I/O ERROR DURING BOOT ATTEMPT
+	LD	DE,STR_BOOTERR
+	JP	MENU
+;
+#IF (BIOS == BIOS_UNA)
+;
+; PRINT LIST OF ALL DRIVES UNDER UNA
+;
+PRTALL:
+	LD	B,0			; START WITH UNIT 0
+;
+PRTALL1:	; LOOP THRU ALL UNITS AVAILABLE
+	LD	C,$48			; UNA FUNC: GET DISK TYPE
+	LD	L,0			; PRESET UNIT COUNT TO ZERO
+	RST	08			; CALL UNA, B IS ASSUMED TO BE UNTOUCHED!!!
+	LD	A,L			; UNIT COUNT TO A
+	OR	A			; PAST END?
+	RET	Z			; WE ARE DONE
+	PUSH	BC			; SAVE UNIT
+	CALL	PRTDRV			; PROCESS THE UNIT
+	POP	BC			; RESTORE UNIT
+	INC	B			; NEXT UNIT
+	JR	PRTALL1		; LOOP
+;
+; PRINT THE UNA UNIT INFO
+; ON INPUT B HAS UNIT
+;
+PRTDRV:
+	PUSH	BC			; SAVE UNIT
+	PUSH	DE			; SAVE DISK TYPE
+	LD	A,'('			; NEWLINE AND SPACING
+	CALL	COUT			; PRINT IT
+	LD	A,B			; DRIVE LETTER TO A
+	CALL	PRTDECB
+	LD	A,')'			; DRIVE LETTER COLON
+	CALL	COUT			; PRINT IT
+	POP	DE			; RECOVER DISK TYPE
+	LD	A,D			; DISK TYPE TO A
+	CP	$40			; RAM/ROM?
+	JR	Z,PRTDRV1		; HANDLE RAM/ROM
+	LD	DE,DEVIDE		; ASSUME IDE
+	CP	$41			; IDE?
+	JR	Z,PRTDRV2		; PRINT IT
+	LD	DE,DEVPPIDE		; ASSUME PPIDE
+	CP	$42			; PPIDE?
+	JR	Z,PRTDRV2		; PRINT IT
+	LD	DE,DEVSD		; ASSUME SD
+	CP	$43			; SD?
+	JR	Z,PRTDRV2		; PRINT IT
+	LD	DE,DEVDSD		; ASSUME DSD
+	CP	$44			; DSD?
+	JR	Z,PRTDRV2		; PRINT IT
+	LD	DE,DEVUNK		; OTHERWISE UNKNOWN
+	JR	PRTDRV2
+;
+PRTDRV1:	; HANDLE RAM/ROM
+	LD	C,$45			; UNA FUNC: GET DISK INFO
+	LD	DE,BL_INFOSEC		; 512 BYTE BUFFER
+	RST	08			; CALL UNA
+	BIT	7,B			; TEST RAM DRIVE BIT
+	LD	DE,DEVROM		; ASSUME ROM
+	JR	Z,PRTDRV2		; IF SO, PRINT IT
+	LD	DE,DEVRAM		; OTHERWISE RAM
+	JR	PRTDRV2			; PRINT IT
+;
+PRTDRV2:	; PRINT DEVICE
+	POP	BC			; RECOVER UNIT
+	CALL	WRITESTR		; PRINT DEVICE NAME
+	LD	A,B			; UNIT TO A
+	ADD	A,'0'			; MAKE IT PRINTABLE NUMERIC			
+	CALL	COUT			; PRINT IT
+	LD	A,','			; DEVICE NAME SEPARATOR
+	CALL	COUT			; PRINT IT
+	RET				; DONE
+;
+DEVRAM		.DB	"RAM$"
+DEVROM		.DB	"ROM$"
+DEVIDE		.DB	"IDE$"
+DEVPPIDE	.DB	"PPIDE$"
+DEVSD		.DB	"SD$"
+DEVDSD		.DB	"DSD$"
+DEVUNK		.DB	"UNK$"
+;
+#ELSE
+;
+; PRINT LIST OF ALL DRIVES
+;
+PRTALL:
+;
+	LD	B,BF_SYSGET
+	LD	C,BF_SYSGET_DIOCNT
+	RST	08		; E := DISK UNIT COUNT
+	LD	B,E		; COUNT TO B
+	LD	A,B		; COUNT TO A
+	OR	A		; SET FLAGS
+	RET	Z		; BAIL OUT IF ZERO
+	LD	C,0		; INIT DEVICE INDEX
+;
+PRTALL1:
+	LD	A,'('		; FORMATTING
+	CALL	COUT		; PRINT IT
+	LD	A,C		; INDEX TO A
+	CALL	PRTDECB
+	LD	A,')'		; FORMATTING
+	CALL	COUT		; PRINT IT
+	PUSH	BC		; SAVE LOOP CONTROL
+	LD	B,BF_DIODEVICE	; HBIOS FUNC: REPORT DEVICE INFO
+	RST	08		; CALL HBIOS
+	CALL 	PRTDRV		; PRINT IT
+	POP	BC		; RESTORE LOOP CONTROL
+	INC	C		; BUMP INDEX
+	DJNZ	PRTALL1		; LOOP AS NEEDED
+	RET			; DONE
+;
+; PRINT THE DRIVER DEVICE/UNIT INFO
+; ON INPUT D HAS DRIVER ID, E HAS DRIVER MODE/UNIT
+; DESTROY NO REGISTERS OTHER THAN A
+;
+PRTDRV:
+	PUSH	DE		; PRESERVE DE
+	PUSH	HL		; PRESERVE HL
+	LD	A,D		; LOAD DEVICE/UNIT
+	RRCA			; ROTATE DEVICE
+	RRCA			; ... BITS
+	RRCA			; ... INTO
+	RRCA			; ... LOWEST 4 BITS
+	AND	$0F		; ISOLATE DEVICE BITS
+	ADD	A,A		; MULTIPLE BY TWO FOR WORD TABLE
+	LD	HL,DEVTBL	; POINT TO START OF DEVICE NAME TABLE
+	CALL	ADDHLA		; ADD A TO HL TO POINT TO TABLE ENTRY
+	LD	A,(HL)		; DEREFERENCE HL TO LOC OF DEVICE NAME STRING
+	INC	HL		; ...
+	LD	D,(HL)		; ...
+	LD	E,A		; ...
+	CALL	WRITESTR	; PRINT THE DEVICE NMEMONIC
+	POP	HL		; RECOVER HL
+	POP	DE		; RECOVER DE
+	LD	A,E		; LOAD DRIVER MODE/UNIT
+	AND	$0F		; ISOLATE UNIT
+	CALL	PRTDECB		; PRINT IT
+	CALL	PC_SPACE	; FORMATTING
+	;LD	A,E		; LOAD LU
+	;CALL	PRTDECB		; PRINT IT
+	RET
+;
+DEVTBL:	; DEVICE TABLE
+	.DW	DEV00, DEV01, DEV02, DEV03
+	.DW	DEV04, DEV05, DEV06, DEV07
+	.DW	DEV08, DEV09, DEV10, DEV11
+	.DW	DEV12, DEV13, DEV14, DEV15
+;
+DEVUNK	.DB	"???$"
+DEV00	.DB	"MD$"
+DEV01	.DB	"FD$"
+DEV02	.DB	"RAMF$"
+DEV03	.DB	"IDE$"
+DEV04	.DB	"ATAPI$"
+DEV05	.DB	"PPIDE$"
+DEV06	.DB	"SD$"
+DEV07	.DB	"PRPSD$"
+DEV08	.DB	"PPPSD$"
+DEV09	.DB	"HDSK$"
+DEV10	.EQU	DEVUNK
+DEV11	.EQU	DEVUNK
+DEV12	.EQU	DEVUNK
+DEV13	.EQU	DEVUNK
+DEV14	.EQU	DEVUNK
+DEV15	.EQU	DEVUNK
+;
+#ENDIF
+;
+;==================================================================================================
+;   STRINGS
+;==================================================================================================
+;
+STR_BANNER	.DB	"\r\n\r\n", PLATFORM_NAME, " Boot Loader$"
+STR_BOOTSEL	.DB	"\r\n\r\nBoot Selection? $"
+STR_SLICESEL	.DB	"    Slice(0-9)[0]? $"
+STR_BOOTDISK	.DB	"\r\n\r\nBooting Disk Unit $"
+STR_BOOTDISK1	.DB	", Slice $"
+STR_BOOTROM	.DB	"\r\n\r\nLoading $"
+STR_REBOOT	.DB	"\r\n\r\nRestarting System...$"
+STR_INVALID	.DB	"\r\n\r\n*** Invalid Selection ***$"
+STR_NODISK	.DB	"\r\n\r\nNo disk!$"
+STR_NOBOOT	.DB	"\r\n\r\nDisk not bootable!$"
+STR_BOOTERR	.DB	"\r\n\r\nBoot failure!$"
+STR_BOOTREAD	.DB	"\r\n\r\nReading disk information...$"
+STR_LOADING	.DB	"\r\n\r\nLoading...$"
+;
+#IF (DSKYENABLE)
+MSG_SEL		.DB	$FF,$9D,$9D,$8F,$EC,$80,$80,$80	; "Boot?   "
+MSG_BOOT	.DB	$FF,$9D,$9D,$8F,$00,$00,$00,$80	; "Boot... "
+MSG_LOAD	.DB	$8B,$9D,$FD,$BD,$00,$00,$00,$80	; "Load... "
+MSG_GO		.DB	$DB,$9D,$00,$00,$00,$80,$80,$80	; "Go...   "
+#ENDIF
+
 
 ;
-; Uppercase character in A
-;
-upcase:
-	cp	'a'			; below 'a'?
-	ret	c			; if so, nothing to do
-	cp	'z'+1			; above 'z'?
-	ret	nc			; if so, nothing to do
-	and	~$20			; convert character to lower
-	ret				; done
-;
-; Get numeric chars at DE and convert to number returned in A
-; Carry flag set on overflow
-;
-getnum:
-	ld	c,0		; C is working register
-getnum1:
-	ld	a,(de)		; get the active char
-	cp	'0'		; compare to ascii '0'
-	jr	c,getnum2	; abort if below
-	cp	'9' + 1		; compare to ascii '9'
-	jr	nc,getnum2	; abort if above
-;
-	; valid digit, add new digit to C
-	ld	a,c		; get working value to A
-	rlca			; multiply by 10
-	ret	c		; overflow, return with carry set
-	rlca			; ...
-	ret	c		; overflow, return with carry set
-	add	a,c		; ...
-	ret	c		; overflow, return with carry set
-	rlca			; ...
-	ret	c		; overflow, return with carry set
-	ld	c,a		; back to C
-	ld	a,(de)		; get new digit
-	sub	'0'		; make binary
-	add	a,c		; add in working value
-	ret	c		; overflow, return with carry set
-	ld	c,a		; back to C
-;
-	inc	de		; bump to next char
-	jr	getnum1		; loop
-;
-getnum2:	; return result
-	ld	a,c		; return result in A
-	or	a		; with flags set, CF is cleared
-	ret
-;
-; Is character in A numberic? NZ if not
-;
-isnum:
-	cp	'0'		; compare to ascii '0'
-	jr	c,isnum1	; abort if below
-	cp	'9' + 1		; compare to ascii '9'
-	jr	nc,isnum1	; abort if above
-	cp	a		; set Z
-	ret
-isnum1:
-	or	$FF		; set NZ
-	ret			; and done
-;
-;=======================================================================
-; Console character I/O helper routines (registers preserved)
-;=======================================================================
-;
-#if (BIOS == BIOS_WBW)
-;
-; Output character from A
-;
-cout:
-	; Save all incoming registers
-	push	af
-	push	bc
-	push	de
-	push	hl
-;
-	; Output character to console via HBIOS
-	ld	e,a			; output char to E
-	ld	c,CIO_CONSOLE		; console unit to C
-	ld	b,BF_CIOOUT		; HBIOS func: output char
-	rst	08			; HBIOS outputs character
-;
-	; Restore all registers
-	pop	hl
-	pop	de
-	pop	bc
-	pop	af
-	ret
-;
-; Input character to A
-;
-cin:
-	; Save incoming registers (AF is output)
-	push	bc
-	push	de
-	push	hl
-;
-	; Input character from console via hbios
-	ld	c,CIO_CONSOLE		; console unit to c
-	ld	b,BF_CIOIN		; HBIOS func: input char
-	rst	08			; HBIOS reads charactdr
-	ld	a,e			; move character to A for return
-;
-	; Restore registers (AF is output)
-	pop	hl
-	pop	de
-	pop	bc
-	ret
-;
-; Return input status in A (0 = no char, != 0 char waiting)
-;
-cst:
-	; Save incoming registers (AF is output)
-	push	bc
-	push	de
-	push	hl
-;
-	; Get console input status via HBIOS
-	ld	c,CIO_CONSOLE		; console unit to C
-	ld	b,BF_CIOIST		; HBIOS func: input status
-	rst	08			; HBIOS returns status in A
-;
-	; Restore registers (AF is output)
-	pop	hl
-	pop	de
-	pop	bc
-	ret
-;
-#endif
-;
-#if (BIOS == BIOS_UNA)
-;
-; Output character from A
-;
-cout:
-	; Save all incoming registers
-	push	af
-	push	bc
-	push	de
-	push	hl
-;
-	; Output character to console via UBIOS
-	ld	e,a
-	ld	bc,$12
-	rst	08
-;
-	; Restore all registers
-	pop	hl
-	pop	de
-	pop	bc
-	pop	af
-	ret
-;
-; Input character to A
-;
-cin:
-	; Save incoming registers (AF is output)
-	push	bc
-	push	de
-	push	hl
-;
-	; Input character from console via UBIOS
-	ld	bc,$11
-	rst	08
-	ld	a,e
-;
-	; Restore registers (AF is output)
-	pop	hl
-	pop	de
-	pop	bc
-	ret
-;
-; Return input status in A (0 = no char, != 0 char waiting)
-;
-cst:
-	; Save incoming registers (AF is output)
-	push	bc
-	push	de
-	push	hl
-;
-	; Get console input status via UBIOS
-	ld	bc,$13
-	rst	08
-	ld	a,e
-	or	a
-;
-	; Restore registers (AF is output)
-	pop	hl
-	pop	de
-	pop	bc
-	ret
-;
-#endif
-;
-; Generic console I/O
-;
-CIN	.equ	cin
-COUT	.equ	cout
-CST	.equ	cst
-;
-;=======================================================================
-; Device inventory display
-;=======================================================================
-;
-; Print list of all drives (WBW)
-;
-#if (BIOS == BIOS_WBW)
-;
-prtall:
-	call	nl			; formatting
-	ld	b,BF_SYSGET
-	ld	c,BF_SYSGET_DIOCNT
-	rst	08			; E := disk unit count
-	ld	b,e			; count to B
-	ld	a,b			; count to A
-	or	a			; set flags
-	ret	z			; bail out if zero
-	ld	c,0			; init device index
-;
-prtall1:
-	ld	hl,str_disk		; prefix string
-	call	pstr			; display it
-	ld	a,c			; index
-	call	PRTDECB			; print it
-	ld	hl,str_on		; separator string
-	call	pstr
-	push	bc			; save loop control
-	ld	b,BF_DIODEVICE		; HBIOS func: report device info
-	rst	08			; call HBIOS
-	call 	prtdrv			; print it
-	pop	bc			; restore loop control
-	inc	c			; bump index
-	djnz	prtall1			; loop as needed
-	ret				; done
-;
-; Print the device info
-; On input D has device type, E has device number
-; Destroy no registers other than A
-;
-prtdrv:
-	push	de			; preserve de
-	push	hl			; preserve HL
-	ld	a,d			; load device/unit
-	rrca				; rotate device
-	rrca				; ... bits
-	rrca				; ... into
-	rrca				; ... lowest 4 bits
-	and	$0F			; isolate device bits
-	add	a,a			; multiple by two for word table
-	ld	hl,devtbl		; point to start of table
-	call	ADDHLA			; add A to HL for table entry
-	ld	a,(hl)			; deref HL for string adr
-	inc	hl			; ...
-	ld	h,(hl)			; ...
-	ld	l,a			; ...
-	call	pstr			; print the device nmemonic
-	pop	hl			; recover HL
-	pop	de			; recover DE
-	ld	a,e			; device number
-	call	PRTDECB			; print it
-	ld	a,':'			; suffix
-	call	cout			; print it
-	ret
-;
-devtbl:	; device table
-	.dw	dev00, dev01, dev02, dev03
-	.dw	dev04, dev05, dev06, dev07
-	.dw	dev08, dev09, dev10, dev11
-	.dw	dev12, dev13, dev14, dev15
-;
-devunk	.db	"???",0
-dev00	.db	"MD",0
-dev01	.db	"FD",0
-dev02	.db	"RAMF",0
-dev03	.db	"IDE",0
-dev04	.db	"ATAPI",0
-dev05	.db	"PPIDE",0
-dev06	.db	"SD",0
-dev07	.db	"PRPSD",0
-dev08	.db	"PPPSD",0
-dev09	.db	"HDSK",0
-dev10	.equ	devunk
-dev11	.equ	devunk
-dev12	.equ	devunk
-dev13	.equ	devunk
-dev14	.equ	devunk
-dev15	.equ	devunk
-;
-#endif
-;
-;
-;
-#if (BIOS == BIOS_UNA)
-;
-; Print list of all drives (UNA)
-;
-prtall:
-	call	nl			; formatting
-	ld	b,0			; start with unit 0
-;
-prtall1:	; loop thru all units available
-	ld	c,$48			; UNA func: get disk type
-	ld	l,0			; preset unit count to zero
-	rst	08			; call UNA, B preserved
-	ld	a,l			; unit count to a
-	or	a			; past end?
-	ret	z			; we are done
-	push	bc			; save unit
-	call	prtdrv			; process the unit
-	pop	bc			; restore unit
-	inc	b			; next unit
-	jr	prtall1			; loop
-;
-; print the una unit info
-; on input b has unit
-;
-prtdrv:
-	push	bc			; save unit
-	push	de			; save disk type
-	ld	hl,str_disk		; prefix string
-	call	pstr			; display it
-	ld	a,b			; index
-	call	PRTDECB			; print it
-	ld	a,' '			; formatting
-	call	cout			; do it
-	ld	a,'='			; formatting
-	call	cout			; do it
-	ld	a,' '			; formatting
-	call	cout			; do it
-	pop	de			; recover disk type
-	ld	a,d			; disk type to a
-	cp	$40			; ram/rom?
-	jr	z,prtdrv1		; handle ram/rom
-	ld	hl,devide		; assume ide
-	cp	$41			; ide?
-	jr	z,prtdrv2		; print it
-	ld	hl,devppide		; assume ppide
-	cp	$42			; ppide?
-	jr	z,prtdrv2		; print it
-	ld	hl,devsd		; assume sd
-	cp	$43			; sd?
-	jr	z,prtdrv2		; print it
-	ld	hl,devdsd		; assume dsd
-	cp	$44			; dsd?
-	jr	z,prtdrv2		; print it
-	ld	hl,devunk		; otherwise unknown
-	jr	prtdrv2
-;
-prtdrv1:	; handle ram/rom
-	ld	c,$45			; una func: get disk info
-	ld	de,bl_infosec		; 512 byte buffer
-	rst	08			; call una
-	bit	7,b			; test ram drive bit
-	ld	hl,devrom		; assume rom
-	jr	z,prtdrv2		; if so, print it
-	ld	hl,devram		; otherwise ram
-	jr	prtdrv2			; print it
-;
-prtdrv2:	; print device
-	pop	bc			; recover unit
-	call	pstr			; print device name
-	ld	a,b			; unit to a
-	call	PRTDECB			; print it
-	ld	a,':'			; device name suffix
-	call	cout			; print it
-	ret				; done
-;
-devram		.db	"RAM",0
-devrom		.db	"ROM",0
-devide		.db	"IDE",0
-devppide	.db	"PPIDE",0
-devsd		.db	"SD",0
-devdsd		.db	"DSD",0
-devunk		.db	"UNK",0
-;
-#endif
-;
-;=======================================================================
-; Error handlers
-;=======================================================================
-;
-err_invcmd:
-	ld	hl,str_err_invcmd
-	jr	err
-err_nodisk:
-	ld	hl,str_err_nodisk
-	jr	err
-;
-err_noslice:
-	ld	hl,str_err_noslice
-	jr	err
-;
-err_diskio:
-	ld	hl,str_err_diskio
-	jr	err
-;
-err_sig:
-	ld	hl,str_err_sig
-	jr	err
-;
-err_api:
-	ld	hl,str_err_api
-	jr	err
-;
-err:
-	push	hl
-;	ld	a,(acmd_act)		; get auto cmd active flag
-;	or	a			; set flags
-;	call	nz,showcmd		; if auto cmd act, show cmd
-;	ld	a,bel			; bel character
-;	call	cout			; beep
-	ld	hl,str_err_prefix
-	call	pstr
-	pop	hl
-	jp	pstr
-;
-str_err_prefix	.db	bel,"\r\n\r\n*** ",0
-str_err_invcmd	.db	"Invalid command",0
-str_err_nodisk	.db	"Disk unit not available",0
-str_err_noslice	.db	"Disk unit does not support slices",0
-str_err_diskio	.db	"Disk I/O failure",0
-str_err_sig	.db	"No system image on disk",0
-str_err_api	.db	"Unexpected hardware BIOS API failure",0
-;
-;=======================================================================
-; Includes
-;=======================================================================
-;
-#define USEDELAY
-#include "util.asm"
-;
-#if (DSKYENABLE)
-#define	DSKY_KBD
-#include "dsky.asm"
-#endif
-;
-;=======================================================================
-; Working data storage (initialized)
-;=======================================================================
-;
-acmd		.db	BOOT_DEFAULT,0	; auto cmd string
-acmd_len	.equ	$ - acmd	; len of auto cmd
-acmd_act	.db	$FF		; auto cmd active
-acmd_to		.dw	BOOT_TIMEOUT	; auto cmd timeout
-;
-;=======================================================================
-; Strings
-;=======================================================================
-;
-str_banner	.db	PLATFORM_NAME," Boot Loader",0
-;str_prompt	.db	"Boot [(H)elp]: ",0
-str_prompt	.db	"Boot [H=Help]: ",0
-str_bs		.db	bs,' ',bs,0
-str_reboot	.db	"\r\n\r\nRestarting System...",0
-str_applst	.db	"\r\n\r\nROM Applications:",0
-str_devlst	.db	"\r\n\r\nDevices:",0
-str_invcmd	.db	"\r\n\r\n*** Invalid Command ***",bel,0
-str_load	.db	"\r\n\r\nLoading ",0
-str_disk	.db	"\r\n  Disk Unit ",0
-str_on		.db	" on ",0
-str_boot1	.db	"\r\n\r\nBooting Disk Unit ",0
-str_boot2	.db	", Slice ",0
-str_binfo1	.db	"\r\n\r\nVolume ",$22,0
-str_binfo2	.db	$22," [0x",0
-str_binfo3	.db	"-0x",0
-str_binfo4	.db	", entry @ 0x",0
-str_binfo5	.db	"]",0
-;
-str_help	.db	"\r\n"
-		.db	"\r\n  L: List ROM Applications"
-		.db	"\r\n  D: Device Inventory"
-		.db	"\r\n  R: Reboot System"
-		.db	"\r\n  <u>[.<s>]: Boot Disk Unit/Slice"
-		.db	0
-;
-#if (DSKYENABLE)
-msg_sel		.db	$ff,$9d,$9d,$8f,$ec,$80,$80,$80	; "boot?   "
-msg_boot	.db	$ff,$9d,$9d,$8f,$00,$00,$00,$80	; "boot... "
-msg_load	.db	$8b,$9d,$fd,$bd,$00,$00,$00,$80	; "load... "
-msg_go		.db	$db,$9d,$00,$00,$00,$80,$80,$80	; "go...   "
-#endif
-;
-;=======================================================================
-; ROM Application Table
-;=======================================================================
-;
-; Macro ra_ent:
-;
-;						WBW		UNA
-; p1: Application name string adr		word (+0)	word (+0)
-; p2: Console keyboard selection key		byte (+2)       byte (+2)
-; p3: DSKY selection key			byte (+3)       byte (+3)
-; p4: Application image bank			byte (+4)       word (+4)
-; p5: Application image source address		word (+5)       word (+6)
-; p6: Application image dest load address	word (+7)       word (+8)
-; p7: Application image size			word (+9)       word (+10)
-; p8: Application entry address			word (+11)      word (+12)
-;
-#if (BIOS == BIOS_WBW)
-ra_name		.equ	0
-ra_conkey	.equ	2
-ra_dskykey      .equ	3
-ra_bnk          .equ	4
-ra_src          .equ	5
-ra_dest         .equ	7
-ra_siz          .equ	9
-ra_ent          .equ	11
-#endif
-;
-#if (BIOS == BIOS_UNA)
-ra_name		.equ	0
-ra_conkey	.equ	2
-ra_dskykey      .equ	3
-ra_bnk          .equ	4
-ra_src          .equ	6
-ra_dest         .equ	8
-ra_siz          .equ	10
-ra_ent          .equ	12
-#endif
-;
-#define		ra_ent(p1,p2,p3,p4,p5,p6,p7,p8) \
-#defcont	.dw	p1 \
-#defcont	.db	p2 \
-#if (DSKYENABLE)
-#defcont	.db	p3 \
-#else
-#defcont	.db	$FF \
-#endif
-#if (BIOS == BIOS_WBW)
-#defcont	.db	p4 \
-#endif
-#if (BIOS == BIOS_UNA)
-#defcont	.dw	p4 \
-#endif
-#defcont	.dw	p5 \
-#defcont	.dw	p6 \
-#defcont	.dw	p7 \
-#defcont	.dw	p8
-;
-; Note: The formatting of the following is critical. TASM does not pass
-; macro arguments well. Ensure std.asm holds the definitions for *_LOC,
-; *_SIZ *_END and any code generated which does not include std.asm is
-; synced.
-;
-; Note: The loadable ROM images are placed in ROM banks bid_img0 and
-; bid_img1.  However, RomWBW supports a mechanism to load a complete
-; new system dynamically as a runnable application (see appboot and
-; imgboot in hbios.asm).  In this case, the contents of bid_img0 will
-; be pre-loaded into the currently executing ram bank thereby allowing
-; those images to be dynamically loaded as well.  To support this
-; concept, a pseudo-bank called bid_cur is used to specify the images
-; normally found in bid_img0.  In romload, this special value will cause
-; the associated image to be loaded from the currently executing bank
-; which will be correct regardless of the load mode.  Images in other
-; banks (bid_img1) will always be loaded directly from ROM.
-;
-ra_tbl:
-;      Name       Key      Dsky   Bank      Src    Dest     Size     Entry
-;      ---------  -------  -----  --------  -----  -------  -------  ----------
-ra_ent(str_mon,   'M',     KY_CL, bid_cur,  $1000, MON_LOC, MON_SIZ, MON_SERIAL)
-ra_entsiz	.equ	$ - ra_tbl
-ra_ent(str_cpm22, 'C',     KY_BK, bid_cur,  $2000, CPM_LOC, CPM_SIZ, CPM_ENT)
-ra_ent(str_zsys,  'Z',     KY_FW, bid_cur,  $5000, CPM_LOC, CPM_SIZ, CPM_ENT)
-#if (BIOS == BIOS_WBW)
-ra_ent(str_fth,   'F',     KY_EX, BID_IMG1, $0000, FTH_LOC, FTH_SIZ, FTH_LOC)
-ra_ent(str_bas,   'B',     KY_DE, BID_IMG1, $1700, BAS_LOC, BAS_SIZ, BAS_LOC)
-ra_ent(str_tbas,  'T',     KY_EN, BID_IMG1, $3700, TBC_LOC, TBC_SIZ, TBC_LOC)
-ra_ent(str_play,  'P',     $FF,   BID_IMG1, $4000, GAM_LOC, GAM_SIZ, GAM_LOC)
-ra_ent(str_user,  'U',     $FF,   BID_IMG1, $7000, USR_LOC, USR_SIZ, USR_LOC)
-#endif
-#if (DSKYENABLE)
-ra_ent(str_dsky,  'Y'+$80, KY_GO, bid_cur, $1000, MON_LOC, MON_SIZ, MON_DSKY)
-#endif
-ra_ent(str_egg,   'E'+$80, $FF  , bid_cur, $0E00, EGG_LOC, EGG_SIZ, EGG_LOC)
-		.dw	0		; table terminator
-;
-str_mon		.db	"Monitor",0
-str_cpm22	.db	"CP/M 2.2",0
-str_zsys	.db	"Z-System",0
-str_dsky	.db	"DSKY Monitor",0
-str_fth		.db	"Forth",0
-str_bas		.db	"BASIC",0
-str_tbas	.db	"Tasty BASIC",0
-str_play	.db	"Play a Game",0
-str_user	.db	"User App",0
-str_egg		.db	"",0
-;
-;=======================================================================
-; Pad remainder of ROM Loader
-;=======================================================================
-;
-slack		.equ	($8000 + LDR_SIZ - $)
-		.fill	slack
-;
-		.echo	"LOADER space remaining: "
-		.echo	slack
-		.echo	" bytes.\n"
-;
-;=======================================================================
-; Working data storage (uninitialized)
-;=======================================================================
-;
-		.ds	64		; 32 level stack
-bl_stack	.equ	$		; ... top is here
-;
-#if (BIOS == BIOS_WBW)
-bid_ldr		.ds	1		; bank at startup
-#endif
-#if (BIOS == BIOS_UNA)
-bid_ldr		.ds	2		; bank at startup
-loadlba		.ds	4		; lba for load, dword
-#endif
-;
-bootunit	.ds	1		; boot disk unit
-bootslice	.ds	1		; boot disk slice
-loadcnt		.ds	1		; num disk sectors to load
-;
-; Boot info sector is read into area below.
-; The third sector of a disk device is reserved for boot info.
-;
-bl_infosec	.equ	$
-		.ds	(512 - 128)
-bb_metabuf	.equ	$
-bb_sig		.ds	2		; signature (0xA55A if set)
-bb_platform	.ds	1		; formatting platform
-bb_device	.ds	1		; formatting device
-bb_formatter	.ds	8		; formatting program
-bb_drive	.ds	1		; physical disk drive #
-bb_lu		.ds	1		; logical unit (lu)
-		.ds	1		; msb of lu, now deprecated
-		.ds	(bb_metabuf + 128) - $ - 32
-bb_protect	.ds	1		; write protect boolean
-bb_updates	.ds	2		; update counter
-bb_rmj		.ds	1		; rmj major version number
-bb_rmn		.ds	1		; rmn minor version number
-bb_rup		.ds	1		; rup update number
-bb_rtp		.ds	1		; rtp patch level
-bb_label	.ds	16		; 16 character drive label
-bb_term		.ds	1		; label terminator ('$')
-bb_biloc	.ds	2		; loc to patch boot drive info
-bb_cpmloc	.ds	2		; final ram dest for cpm/cbios
-bb_cpmend	.ds	2		; end address for load
-bb_cpment	.ds	2		; CP/M entry point (cbios boot)
-;
-	.end
+;==================================================================================================
+;   INCLUDES
+;==================================================================================================
+;
+#DEFINE USEDELAY
+#INCLUDE "util.asm"
+;
+#IF (DSKYENABLE)
+#DEFINE	DSKY_KBD
+#INCLUDE "dsky.asm"
+#ENDIF
+;
+;==================================================================================================
+; CONSOLE CHARACTER I/O HELPER ROUTINES (REGISTERS PRESERVED)
+;==================================================================================================
+;
+#IF (BIOS == BIOS_WBW)
+;
+; OUTPUT CHARACTER FROM A
+;
+COUT:
+	; SAVE ALL INCOMING REGISTERS
+	PUSH	AF
+	PUSH	BC
+	PUSH	DE
+	PUSH	HL
+;
+	; OUTPUT CHARACTER TO CONSOLE VIA HBIOS
+	LD	E,A			; OUTPUT CHAR TO E
+	LD	C,CIO_CONSOLE		; CONSOLE UNIT TO C
+	LD	B,BF_CIOOUT		; HBIOS FUNC: OUTPUT CHAR
+	RST	08			; HBIOS OUTPUTS CHARACTDR
+;
+	; RESTORE ALL REGISTERS
+	POP	HL
+	POP	DE
+	POP	BC
+	POP	AF
+	RET
+;
+; INPUT CHARACTER TO A
+;
+CIN:
+	; SAVE INCOMING REGISTERS (AF IS OUTPUT)
+	PUSH	BC
+	PUSH	DE
+	PUSH	HL
+;
+	; INPUT CHARACTER FROM CONSOLE VIA HBIOS
+	LD	C,CIO_CONSOLE		; CONSOLE UNIT TO C
+	LD	B,BF_CIOIN		; HBIOS FUNC: INPUT CHAR
+	RST	08			; HBIOS READS CHARACTDR
+	LD	A,E			; MOVE CHARACTER TO A FOR RETURN
+;
+	; RESTORE REGISTERS (AF IS OUTPUT)
+	POP	HL
+	POP	DE
+	POP	BC
+	RET
+;
+; RETURN INPUT STATUS IN A (0 = NO CHAR, !=0 CHAR WAITING)
+;
+CST:
+	; SAVE INCOMING REGISTERS (AF IS OUTPUT)
+	PUSH	BC
+	PUSH	DE
+	PUSH	HL
+;
+	; GET CONSOLE INPUT STATUS VIA HBIOS
+	LD	C,CIO_CONSOLE		; CONSOLE UNIT TO C
+	LD	B,BF_CIOIST		; HBIOS FUNC: INPUT STATUS
+	RST	08			; HBIOS RETURNS STATUS IN A
+;
+	; RESTORE REGISTERS (AF IS OUTPUT)
+	POP	HL
+	POP	DE
+	POP	BC
+	RET
+;
+#ENDIF
+;
+#IF (BIOS == BIOS_UNA)
+;
+; OUTPUT CHARACTER FROM A
+;
+COUT:
+	; SAVE ALL INCOMING REGISTERS
+	PUSH	AF
+	PUSH	BC
+	PUSH	DE
+	PUSH	HL
+;
+	; OUTPUT CHARACTER TO CONSOLE VIA UBIOS
+	LD	E,A
+	LD	BC,$12
+	RST	08
+;
+	; RESTORE ALL REGISTERS
+	POP	HL
+	POP	DE
+	POP	BC
+	POP	AF
+	RET
+;
+; INPUT CHARACTER TO A
+;
+CIN:
+	; SAVE INCOMING REGISTERS (AF IS OUTPUT)
+	PUSH	BC
+	PUSH	DE
+	PUSH	HL
+;
+	; INPUT CHARACTER FROM CONSOLE VIA UBIOS
+	LD	BC,$11
+	RST	08
+	LD	A,E
+;
+	; RESTORE REGISTERS (AF IS OUTPUT)
+	POP	HL
+	POP	DE
+	POP	BC
+	RET
+;
+; RETURN INPUT STATUS IN A (0 = NO CHAR, !=0 CHAR WAITING)
+;
+CST:
+	; SAVE INCOMING REGISTERS (AF IS OUTPUT)
+	PUSH	BC
+	PUSH	DE
+	PUSH	HL
+;
+	; GET CONSOLE INPUT STATUS VIA UBIOS
+	LD	BC,$13
+	RST	08
+	LD	A,E
+;
+	; RESTORE REGISTERS (AF IS OUTPUT)
+	POP	HL
+	POP	DE
+	POP	BC
+	RET
+;
+#ENDIF
+;
+; READ A CONSOLE CHARACTER AND CONVERT TO UPPER CASE
+;
+CINUC:
+	CALL	CIN
+	AND	7FH			; STRIP HI BIT
+	CP	'A'			; KEEP NUMBERS, CONTROLS
+	RET	C			; AND UPPER CASE
+	CP	7BH			; SEE IF NOT LOWER CASE
+	RET	NC
+	AND	5FH			; MAKE UPPER CASE
+	RET
+;
+;==================================================================================================
+;   FILL REMAINDER OF BANK
+;==================================================================================================
+;
+SLACK:		.EQU	($8000 + LDR_SIZ - $)
+		.FILL	SLACK
+;
+		.ECHO	"LOADER space remaining: "
+		.ECHO	SLACK
+		.ECHO	" bytes.\n"
+;
+;==================================================================================================
+;   WORKING DATA STORAGE
+;==================================================================================================
+		.ORG	$8000 + LDR_SIZ
+;
+		.DS	64		; 32 LEVEL STACK
+BL_STACK	.EQU	$		; ... TOP IS HERE
+;
+BL_INPFLG	.DS	1		; INPUT FLAG, 1=DSKY, 2=SERIAL
+BL_COUNT	.DS	1		; LOAD COUNTER
+BL_TIMEOUT	.DS	2		; AUTOBOOT TIMEOUT COUNTDOWN COUNTER
+BL_BOOTID	.DS	1		; BOOT DEVICE ID CHOSEN BY USER
+BL_DEVICE	.DS	1		; DEVICE TO LOAD FROM
+BL_LU		.DS	1		; LU TO LOAD FROM
+;
+; BOOT INFO SECTOR IS READ INTO AREA BELOW
+; THE THIRD SECTOR OF A DISK DEVICE IS RESERVED FOR BOOT INFO
+;
+BL_INFOSEC	.EQU	$
+		.DS	(512 - 128)
+BB_METABUF	.EQU	$
+BB_SIG		.DS	2	; SIGNATURE (WILL BE 0A55AH IF SET)
+BB_PLATFORM	.DS	1	; FORMATTING PLATFORM
+BB_DEVICE	.DS	1	; FORMATTING DEVICE
+BB_FORMATTER	.DS	8	; FORMATTING PROGRAM
+BB_DRIVE	.DS	1	; PHYSICAL DISK DRIVE #
+BB_LU		.DS	1	; LOGICAL UNIT (LU)
+		.DS	1	; MSB OF LU, NOW DEPRECATED
+		.DS	(BB_METABUF + 128) - $ - 32
+BB_PROTECT	.DS	1	; WRITE PROTECT BOOLEAN
+BB_UPDATES	.DS	2	; UPDATE COUNTER
+BB_RMJ		.DS	1	; RMJ MAJOR VERSION NUMBER
+BB_RMN		.DS	1	; RMN MINOR VERSION NUMBER
+BB_RUP		.DS	1	; RUP UPDATE NUMBER
+BB_RTP		.DS	1	; RTP PATCH LEVEL
+BB_LABEL	.DS	16	; 16 CHARACTER DRIVE LABEL
+BB_TERM		.DS	1	; LABEL TERMINATOR ('$')
+BB_BILOC	.DS	2	; LOC TO PATCH BOOT DRIVE INFO TO (IF NOT ZERO)
+BB_CPMLOC	.DS	2	; FINAL RAM DESTINATION FOR CPM/CBIOS
+BB_CPMEND	.DS	2	; END ADDRESS FOR LOAD
+BB_CPMENT	.DS	2	; CP/M ENTRY POINT (CBIOS COLD BOOT)
+;
+	.END

@@ -566,6 +566,8 @@ BYTE2BCD1:
 	POP	BC
 	RET
 
+#IF (BIOS == BIOS_WBW)
+
 #IFDEF USEDELAY
 
 ;
@@ -590,11 +592,9 @@ DELAY:				; 17TS (FROM INVOKING CALL)	|
 DELAY1:				;				|
 	; --- LOOP = ((CPUSCL * 16) - 5) TS ------------+	|
 	DEC	A		; 4TS			|	|
-  #IF (BIOS == BIOS_WBW)	;			|	|
-    #IF (CPUFAM == CPU_Z180)	;			|	|
+#IF (CPUFAM == CPU_Z180)	;			|	|
 	OR	A		; +4TS FOR Z180		|	|
-    #ENDIF			;			|	|
-  #ENDIF			;			|	|
+#ENDIF				;			|	|
 	JR	NZ,DELAY1	; 12TS (NZ) / 7TS (Z)	|	|
 	; ----------------------------------------------+	|
 ;								|
@@ -623,21 +623,17 @@ VDELAY:				; 17TS (FROM INVOKING CALL)		|
 ;								|	|
 VDELAY1:			;				|	|
 	; --- INNER LOOP = ((CPUSCL * 16) - 5) TS ------+	|	|
-  #IF (BIOS == BIOS_WBW)	;			|	|	|
-    #IF (CPUFAM == CPU_Z180)	;			|	|	|
+#IF (CPUFAM == CPU_Z180)	;			|	|	|
 	OR	A		; +4TS FOR Z180		|	|	|
-    #ENDIF			;			|	|	|
-  #ENDIF			;			|	|	|
+#ENDIF				;			|	|	|
 	DEC	A		; 4TS			|	|	|
 	JR	NZ,VDELAY1	; 12TS (NZ) / 7TS (Z)	|	|	|
 	; ----------------------------------------------+	|	|
 ;								|	|
 	DEC	DE		; 6TS				|	|
-  #IF (BIOS == BIOS_WBW)	;			|	|	|
-    #IF (CPUFAM == CPU_Z180)	;				|	|
+#IF (CPUFAM == CPU_Z180)	;				|	|
 	OR	A		; +4TS FOR Z180			|	|
-    #ENDIF			;				|	|
-  #ENDIF			;				|	|
+#ENDIF				;				|	|
 	LD	A,D		; 4TS				|	|
 	OR	E		; 4TS				|	|
 	JP	NZ,VDELAY	; 10TS				|	|
@@ -663,7 +659,7 @@ LDELAY:
 ; CPU SCALER := MAX(1, (PHIMHZ - 2))
 ;
 DELAY_INIT:
-  #IF (BIOS == BIOS_UNA)
+#IF (BIOS == BIOS_UNA)
 	LD	C,$F8			; UNA BIOS GET PHI FUNCTION
 	RST	08			; RETURNS SPEED IN HZ IN DE:HL
 	LD	B,4			; DIVIDE MHZ IN DE:HL BY 100000H 
@@ -673,12 +669,12 @@ DELAY_INIT0:
 	DJNZ	DELAY_INIT0		; ...RIGHT SHIFT DE BY 4.
 	INC	E			; FIX UP FOR VALUE TRUNCATION
 	LD	A,E			; PUT IN A
-  #ELSE
+#ELSE
 	LD	B,BF_SYSGET		; HBIOS FUNC=GET SYS INFO
 	LD	C,BF_SYSGET_CPUINFO	; HBIOS SUBFUNC=GET CPU INFO
 	RST	08			; CALL HBIOS, RST 08 NOT YET INSTALLED
 	LD	A,L			; PUT SPEED IN MHZ IN ACCUM
-  #ENDIF
+#ENDIF
 	CP	3			; TEST FOR <= 2 (SPECIAL HANDLING)
 	JR	C,DELAY_INIT1		; IF <= 2, SPECIAL PROCESSING
 	SUB	2			; ADJUST AS REQUIRED BY DELAY FUNCTIONS
@@ -689,11 +685,13 @@ DELAY_INIT2:
 	LD	(CPUSCL),A		; UPDATE CPU SCALER VALUE
 	RET
 
-  #IF (CPUMHZ < 3)
+#IF (CPUMHZ < 3)
 CPUSCL	.DB	1			; CPU SCALER MUST BE > 0
-  #ELSE
+#ELSE
 CPUSCL	.DB	CPUMHZ - 2		; OTHERWISE 2 LESS THAN PHI MHZ
-  #ENDIF
+#ENDIF
+;
+#ENDIF
 ;
 #ENDIF
 ;
@@ -702,15 +700,13 @@ CPUSCL	.DB	CPUMHZ - 2		; OTHERWISE 2 LESS THAN PHI MHZ
 ; NUMBER OF CALL/RET INVOCATIONS.  A SINGLE CALL/RET IS
 ; 27 T-STATES ON A Z80, 25 T-STATES ON A Z180
 ;
-;			; Z80	Z180
-;			; ----	----
-DLY64:	CALL	DLY32	; 1728	1600
-DLY32:	CALL	DLY16	; 864	800
-DLY16:	CALL	DLY8	; 432	400
-DLY8:	CALL	DLY4	; 216	200
-DLY4:	CALL	DLY2	; 108	100
-DLY2:	CALL	DLY1	; 54	50
-DLY1:	RET		; 27	25
+DLY64:	CALL	DLY32
+DLY32:	CALL	DLY16
+DLY16:	CALL	DLY8
+DLY8:	CALL	DLY4
+DLY4:	CALL	DLY2
+DLY2:	CALL	DLY1
+DLY1:	RET
 ;
 ; MULTIPLY 8-BIT VALUES
 ; IN:  MULTIPLY H BY E
