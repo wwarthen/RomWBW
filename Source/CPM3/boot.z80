@@ -490,21 +490,16 @@ time$ret:
 
 time$get:
 	; RTC -> cpm date/time in SCB
-
+	
 	; read time from RTC
 	ld	b,020h		; HBIOS func: get time
 	ld	hl,tim$buf	; time buffer
 	rst	08		; do it
 	ret	nz		; bail out on error
 	
-	ld	a,(datehack)
-	or	a
-	jr	nz,time$get1
-	
 	; convert yymmss in time buffer -> cpm3 epoch date offset
 	call	date2cpm	; time buf (yr, mon, day) -> SCB (@date)
 
-time$get1:
 	; set time fields in SCB
 	ld	a,(tim$hr)	; get hour from time buf
 	ld	(@hour),a	; ... and put in SCB
@@ -519,23 +514,7 @@ time$set:
 	; CPM date/time in SCB -> RTC
 	
 	; convert CPM3 epoch date offset in SCB -> yymmss in time buffer
-	;call	cpm2date	; SCB (@date) -> time buf (yr, mon, day)
-
-	; this is a temporary hack!!!
-	; since we cannot actually set the date on the RTC, we
-	; just read the current RTC date and use that so that we
-	; don't clobber a potentially good date.
-	; read time from RTC
-	ld	b,020h		; HBIOS func: get time
-	ld	hl,tim$buf	; time buffer
-	rst	08		; do it
-	ret	nz		; bail out on error
-	;
-	; now we set a hack active flag so that future time$get
-	; calls do not update the date field in the SCB
-	;
-	ld	a,0FFh		; true value
-	ld	(datehack),a	; save it
+	call	cpm2date	; SCB (@date) -> time buf (yr, mon, day)
 	
 	; copy CPM3 time values from SCB -> time buffer
 	ld	a,(@hour)	; get hour from SCB
@@ -649,8 +628,6 @@ tim$day		db	10h
 tim$hr		db	01h
 tim$min		db	02h
 tim$sec		db	03h
-
-datehack	db	00h
 
 open:
 	ld	c,15
