@@ -1388,8 +1388,7 @@ str_err_api	.db	"Unexpected hardware BIOS API failure",0
 ; Working data storage (initialized)
 ;=======================================================================
 ;
-acmd		.db	BOOT_DEFAULT	; auto cmd string
-		.db	0
+acmd		.db	BOOT_DEFAULT,0	; auto cmd string
 acmd_len	.equ	$ - acmd	; len of auto cmd
 acmd_act	.db	$FF		; auto cmd active
 acmd_to		.dw	BOOT_TIMEOUT	; auto cmd timeout
