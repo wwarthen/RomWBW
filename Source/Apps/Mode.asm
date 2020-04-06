@@ -49,7 +49,7 @@ bdos	.equ	$0005		; BDOS invocation vector
 ident	.equ	$FFFE		; loc of RomWBW HBIOS ident ptr
 ;
 rmj	.equ	3		; intended CBIOS version - major
-rmn	.equ	1		; intended CBIOS version - minor
+rmn	.equ	0		; intended CBIOS version - minor
 ;
 bf_cioinit	.equ	$04	; HBIOS: CIOINIT function
 bf_cioquery	.equ	$05	; HBIOS: CIOQUERY function
