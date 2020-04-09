@@ -31,7 +31,10 @@ BUFLEN	.EQU	40			; INPUT LINE LENGTH
 	JP	DSKY_ENTRY
 	JP	UART_ENTRY
 ;
-;#DEFINE USEDELAY
+#IF DSKYENABLE
+  #DEFINE USEDELAY
+#ENDIF
+;
 #INCLUDE "util.asm"
 ;
 ;__UART_ENTRY_________________________________________________________________
