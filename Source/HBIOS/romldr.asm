@@ -115,7 +115,7 @@ start:
 	di
 #endif
 ;
-; Switch banked memory to user RAM bank and setup page zero.
+; Switch to user RAM bank
 ;
 #if (BIOS == BIOS_WBW)
 	ld	b,BF_SYSSETBNK		; HBIOS func: set bank
@@ -123,15 +123,24 @@ start:
 	rst	08			; do it
 	ld	a,c			; previous bank to A
 	ld	(bid_ldr),a		; save previous bank for later
+	cp	BID_IMG0		; starting from ROM?
 #endif
 ;
 #if (BIOS == BIOS_UNA)
 	ld	bc,$01FB		; UNA func: set bank
 	ld	de,BID_USR		; select user bank
 	rst	08			; do it
-	ld	a,c			; save previous bank
 	ld	(bid_ldr),de		; ... for later
+	ld	a,d			; starting from ROM?
+	or	e			; ... bank == 0?
 #endif
+;
+	; For app mode startup, use alternate table
+	ld	hl,ra_tbl		; assume ROM startup
+	jr	z,start1		; if so, ra_tbl OK, skip ahead
+	ld	hl,ra_tbl_app		; not ROM boot, get app tbl loc
+start1:
+	ld	(ra_tbl_loc),hl		; and overlay pointer
 ;
 ; Copy original page zero into user page zero
 ;
@@ -274,7 +283,7 @@ runcmd:
 	jp	z,reboot		; if so, do it
 ;
 	; Attempt ROM application launch
-	ld	ix,ra_tbl		; point to start of ROM app tbl
+	ld	ix,(ra_tbl_loc)		; point to start of ROM app tbl
 	ld	c,a			; save command in C
 runcmd1:
 	ld	a,(ix+ra_conkey)	; get match char
@@ -334,7 +343,7 @@ dskycmd:
 	jp	z,reboot		; if so, do it
 ;
 	; Attempt ROM application launch
-	ld	ix,ra_tbl		; point to start of ROM app tbl
+	ld	ix,(ra_tbl_loc)		; point to start of ROM app tbl
 	ld	c,a			; save DSKY key in C
 dskycmd1:
 	ld	a,(ix+ra_dskykey)	; get match char
@@ -374,7 +383,7 @@ applst:
 	ld	hl,str_applst
 	call	pstr
 	call	nl
-	ld	ix,ra_tbl
+	ld	ix,(ra_tbl_loc)
 applst1:
 	; check for end of table
 	ld	a,(ix)
@@ -1493,25 +1502,26 @@ ra_ent          .equ	12
 ; *_SIZ *_END and any code generated which does not include std.asm is
 ; synced.
 ;
-; Note: The loadable ROM images are placed in ROM banks bid_img0 and
-; bid_img1.  However, RomWBW supports a mechanism to load a complete
+; Note: The loadable ROM images are placed in ROM banks BID_IMG0 and
+; BID_IMG1.  However, RomWBW supports a mechanism to load a complete
 ; new system dynamically as a runnable application (see appboot and
-; imgboot in hbios.asm).  In this case, the contents of bid_img0 will
+; imgboot in hbios.asm).  In this case, the contents of BID_IMG0 will
 ; be pre-loaded into the currently executing ram bank thereby allowing
 ; those images to be dynamically loaded as well.  To support this
 ; concept, a pseudo-bank called bid_cur is used to specify the images
-; normally found in bid_img0.  In romload, this special value will cause
+; normally found in BID_IMG0.  In romload, this special value will cause
 ; the associated image to be loaded from the currently executing bank
 ; which will be correct regardless of the load mode.  Images in other
-; banks (bid_img1) will always be loaded directly from ROM.
+; banks (BID_IMG1) will always be loaded directly from ROM.
 ;
 ra_tbl:
+;
 ;      Name       Key      Dsky   Bank      Src    Dest     Size     Entry
 ;      ---------  -------  -----  --------  -----  -------  -------  ----------
-ra_ent(str_mon,   'M',     KY_CL, bid_cur,  $1000, MON_LOC, MON_SIZ, MON_SERIAL)
+ra_ent(str_mon,   'M',     KY_CL, BID_IMG0, $1000, MON_LOC, MON_SIZ, MON_SERIAL)
 ra_entsiz	.equ	$ - ra_tbl
-ra_ent(str_cpm22, 'C',     KY_BK, bid_cur,  $2000, CPM_LOC, CPM_SIZ, CPM_ENT)
-ra_ent(str_zsys,  'Z',     KY_FW, bid_cur,  $5000, CPM_LOC, CPM_SIZ, CPM_ENT)
+ra_ent(str_cpm22, 'C',     KY_BK, BID_IMG0, $2000, CPM_LOC, CPM_SIZ, CPM_ENT)
+ra_ent(str_zsys,  'Z',     KY_FW, BID_IMG0, $5000, CPM_LOC, CPM_SIZ, CPM_ENT)
 #if (BIOS == BIOS_WBW)
 ra_ent(str_fth,   'F',     KY_EX, BID_IMG1, $0000, FTH_LOC, FTH_SIZ, FTH_LOC)
 ra_ent(str_bas,   'B',     KY_DE, BID_IMG1, $1700, BAS_LOC, BAS_SIZ, BAS_LOC)
@@ -1520,9 +1530,21 @@ ra_ent(str_play,  'P',     $FF,   BID_IMG1, $4000, GAM_LOC, GAM_SIZ, GAM_LOC)
 ra_ent(str_user,  'U',     $FF,   BID_IMG1, $7000, USR_LOC, USR_SIZ, USR_LOC)
 #endif
 #if (DSKYENABLE)
-ra_ent(str_dsky,  'Y'+$80, KY_GO, bid_cur, $1000, MON_LOC, MON_SIZ, MON_DSKY)
+ra_ent(str_dsky,  'Y'+$80, KY_GO, bid_cur,  $1000, MON_LOC, MON_SIZ, MON_DSKY)
 #endif
-ra_ent(str_egg,   'E'+$80, $FF  , bid_cur, $0E00, EGG_LOC, EGG_SIZ, EGG_LOC)
+ra_ent(str_egg,   'E'+$80, $FF  , bid_cur,  $0E00, EGG_LOC, EGG_SIZ, EGG_LOC)
+		.dw	0		; table terminator
+;
+ra_tbl_app:
+;
+;      Name       Key      Dsky   Bank      Src    Dest     Size     Entry
+;      ---------  -------  -----  --------  -----  -------  -------  ----------
+ra_ent(str_mon,   'M',     KY_CL, bid_cur,  $1000, MON_LOC, MON_SIZ, MON_SERIAL)
+ra_ent(str_zsys,  'Z',     KY_FW, bid_cur,  $2000, CPM_LOC, CPM_SIZ, CPM_ENT)
+#if (DSKYENABLE)
+ra_ent(str_dsky,  'Y'+$80, KY_GO, bid_cur,  $1000, MON_LOC, MON_SIZ, MON_DSKY)
+#endif
+ra_ent(str_egg,   'E'+$80, $FF  , bid_cur,  $0E00, EGG_LOC, EGG_SIZ, EGG_LOC)
 		.dw	0		; table terminator
 ;
 str_mon		.db	"Monitor",0
@@ -1562,6 +1584,7 @@ bid_ldr		.ds	2		; bank at startup
 loadlba		.ds	4		; lba for load, dword
 #endif
 ;
+ra_tbl_loc	.ds	2		; points to active ra_tbl
 bootunit	.ds	1		; boot disk unit
 bootslice	.ds	1		; boot disk slice
 loadcnt		.ds	1		; num disk sectors to load

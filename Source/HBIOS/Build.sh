@@ -100,6 +100,7 @@ fi
 echo "Building $romname output files..."
 
 cat romldr.bin eastaegg.bin dbgmon.bin ../CPM22/cpm_$BIOS.bin ../ZSDOS/zsys_$BIOS.bin >osimg.bin
+cat romldr.bin eastaegg.bin dbgmon.bin ../ZSDOS/zsys_$BIOS.bin >osimg_small.bin
 
 if [ $platform != UNA ] ; then
 	cat camel80.bin nascom.bin tastybasic.bin game.bin imgpad0.bin usrrom.bin >osimg1.bin
@@ -146,8 +147,8 @@ if [ $platform = UNA ] ; then
 	cat ../UBIOS/UNA-BIOS.BIN osimg.bin ../UBIOS/FSFAT.BIN $romdiskfile >$romname.rom
 else
 	cat hbios_rom.bin osimg.bin osimg1.bin osimg.bin $romdiskfile >$romname.rom
-	cat hbios_app.bin osimg.bin > $romname.com
-	cat hbios_img.bin osimg.bin > $romname.img
+	cat hbios_app.bin osimg_small.bin > $romname.com
+	# cat hbios_img.bin osimg_small.bin > $romname.img
 fi
 
 #rm $romdiskfile

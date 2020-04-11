@@ -3,7 +3,7 @@ RomWBW
 Z80/Z180 System Software
 
 Version 3.1 Pre-release
-Monday 30 March 2020
+Saturday 11 April 2020
 
 Wayne Warthen wwarthen@gmail.com
 
@@ -1030,14 +1030,6 @@ XModem, then simply run the .com file. You will see your system go
 through the normal startup process just like it was started from ROM.
 However, your ROM has not been updated and the next time you boot your
 system, it will revert to the system image contained in ROM.
-
-There are two restrictions to be aware of related to loading a system
-image as a .com application. First, this is only supported under
-Z-System and CP/M 2.2. You must boot into one of these OSes before
-attempting to launch the .com file. Second, you may find that you are
-unable to load the .com file because it is too large to fit in available
-application RAM (TPA). Your only recourse in this situation is to build
-a custom ROM with fewer features.
 
 If you do not have easy access to a ROM programmer, it is usually
 possible to reprogram your system ROM using the FLASH utility from Will

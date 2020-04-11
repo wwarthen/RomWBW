@@ -3,6 +3,8 @@ Version 3.1
 - WBW: Refactored ROM Loader
 - WBW: INTRTC periodic timer based clock
 - WBW: FDISK80 updated to allow reserving up to 256 slices
+- WBW: Added support dual 16C550 UART on RC2014 platform
+- WBW: Made .com images smaller (contain only Z-System now)
 
 Version 3.0.1
 -------------

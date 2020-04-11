@@ -184,8 +184,11 @@ if ($Platform -ne "UNA")
 #
 "Building ${RomName} output files..."
 
-# Build 32K OS chunk containing the loader, debug monitor, and OS images
+# Build 32K OS chunk containing the loader, debug monitor, and two OS images
 Concat 'romldr.bin', 'eastaegg.bin','dbgmon.bin', "..\cpm22\cpm_${Bios}.bin", "..\zsdos\zsys_${Bios}.bin" osimg.bin
+
+# Build 20K OS chunk containing the loader, debug monitor, and one OS image
+Concat 'romldr.bin', 'eastaegg.bin','dbgmon.bin', "..\zsdos\zsys_${Bios}.bin" osimg_small.bin
 
 # Build second 32K chunk containing supplemental ROM apps (not for UNA)
 if ($Platform -ne "UNA")
@@ -237,8 +240,8 @@ if ($Platform -eq "UNA")
 else 
 {
 	Concat 'hbios_rom.bin','osimg.bin','osimg1.bin','osimg.bin',$RomDiskFile $RomFile
-	Concat 'hbios_app.bin','osimg.bin' $ComFile
-	# Concat 'hbios_img.bin','osimg.bin' $ImgFile
+	Concat 'hbios_app.bin','osimg_small.bin' $ComFile
+	# Concat 'hbios_img.bin','osimg_small.bin' $ImgFile
 }
 
 # Remove the temporary working ROM disk file
