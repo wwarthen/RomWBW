@@ -67,7 +67,7 @@ Note that steps 1 and 2 are performed to customize your ROM as
 desired.  If you want to simply build a standard configuration, it is 
 *not* necessary to perform steps 1 or 2 before running a build.  In 
 fact, I strongly recommend that you skip steps 1 and 2 initially and 
-just perform perform steps 3 and 4 using the standard configuraion to 
+just perform perform steps 3 and 4 using the standard configuration to 
 make sure that you have no issues building and programming a ROM that 
 works the same as a pre-built ROM.
 
@@ -76,7 +76,7 @@ Each of the 4 steps above is described in more detail below.
 1. Create/Update Configuration File
 -----------------------------------
 
-The options for a build are primarily controled by a configuration 
+The options for a build are primarily controlled by a configuration 
 file that is included in the build process.  In order to customize 
 your settings, it is easiest to make a copy of an existing 
 configuration file and make your changes there.
@@ -87,7 +87,7 @@ series of files named <plt>_<cfg>.asm where <plt> refers to the
 CPU board in your system and <cfg> is used to name the specific 
 configuration so you can maintain multiple configurations.
 
-You will notice that there is generaly one configuration file for 
+You will notice that there is generally one configuration file for 
 each CPU platform with a name of "std".  For example, you there is 
 a file called MK4_std.asm.  This is the standard ("std") 
 configuration for a Mark IV CPU board.
@@ -148,7 +148,7 @@ These directories are already populated in the distribution.  You do
 not need to do anything unless you want to change the files that are 
 included in the ROM Disk.
 
-In summary, the ROM Disk imbedded in the ROM firmware you build, 
+In summary, the ROM Disk embedded in the ROM firmware you build, 
 will include the files from the ROM_512KB directory (or the 
 ROM_1024KB directory if building a 1024KB firmware).  
 Additionally, files will be added from the directory associated 
