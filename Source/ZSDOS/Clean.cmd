@@ -9,3 +9,4 @@ if exist *.hex del *.hex
 if exist *.rel del *.rel
 if exist *.sym del *.sym
 if exist *.err del *.err
+if exist *.sys del *.sys

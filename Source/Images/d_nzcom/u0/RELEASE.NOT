@@ -1,0 +1,266 @@
+
+                 RELEASE.NOT - UPDATE INFORMATION ON NZCOM
+
+
+Please understand that unlike purely commercial enterprises, Z-System is 
+mainly the work of enthusiasts.  As such, Z-System never truly reaches 
+completion; each new development is more of a plateau upon which further 
+innovation occurs.  Though we have done our best, the printed documentation 
+inevitably lags behind the most recent enhancements.  Try to consult as 
+much material as possible about a given command before proceeding; if there 
+is a help or document file pertaining to the command, it supercedes printed
+instructions, especially with regard to such matters as syntax or technical
+specifications.
+
+
+Notes of September 12, 1991
+===========================
+
+   Release 1.2H involves a significant updating of the support utilities that 
+we distribute as a courtesy with NZCOM.  We suggest that any Z-System user who 
+is not in regular contact with a Z-Node consider taking advantage of the Z-
+System Software Update Service (ZSUS).  Here are some of the important changes 
+with this release.
+
+ZCNFG.COM, CONFIG.LBR:
+        Al Hawley has introduced a powerful and convenient method for 
+        configuring programs.  ZCNFG works either with individual CFG files or 
+        with CFG files stored in the CONFIG.LBR library.  For example, try 
+        running the command "ZCNFG ZLT".  ZCNFG will automatically extract 
+        ZLT15.CFG from CONFIG.LBR.
+
+NZBLITZ.COM, NZBLTZ14.HZP, NZBLTZ14.CFG:
+        These programs can be used to coldboot an NZCOM system very rapidly 
+        with the complete system, including error handlers, shells, and TCAPs 
+        already in place.  Run "HELP NZBLTZ14" to learn more about it.  Some 
+        of its features can be tailored by running "ZCNFG NZBLITZ" with the 
+        CFG file in the same directory.
+
+LBREXT.COM:
+        This replaces LGET for extracting member files from LBR library files.
+
+HELP.COM, LBRHELP.COM, HLPFILES.LBR:
+        HELP (actually HELPC14) is an improved version of the help utility.  
+        It can work with normal help files (HLP) and crunched help files 
+        (HZP).  LBRHELP can work with normal or crunched help files that are 
+        stored in a library (which is where we have put all the help files 
+        distributed with NZCOM and Z3PLUS).
+
+DOCFILES.LBR:
+        Documentation and help files have been collected into an LBR file.
+
+ZLT.COM:
+        This is a full Z-System replacement for LT, and it handles the latest 
+        LZH-compressed files.
+
+COPY.COM:
+        This is the version of COPY from the ZSDOS/ZDDOS release.  Enter "COPY 
+        //" for syntax information.  It replaces a dangerously defective copy 
+        program provided with earlier releases.
+
+LSH.COM, LSH.WZ, LSH-HELP.COM, LSHINST.COM, ZERR.COM:
+        These are the latest LSH command history shell and command-line editor 
+        and the associated error handler (fixed-log versions).  These 
+        completely replace EASE.
+
+CLEDINST.COM, CLEDSAVE.COM:
+        A transient history shell like LSH can be slow on floppy systems with 
+        sluggish disk drives, even if the files have been placed in optimal 
+        locations.  Some of the RCP modules supplied no include an RCP-
+        resident command-line editor called CLED.  Its features can be 
+        configured using CLEDINST.COM, and the history can be saved to a file 
+        using CLEDSAVE.COM.
+
+TCAP.LBR, XTCAP.COM:
+        A number of programs now require a terminal capabilities descriptor 
+        (TCAP) with extended functions.  The standard TCAPs loaded with 
+        TCSELECT do not have these functions.  TCAP.LBR is a collection of 
+        extended TCAPs for some terminals.  XTCAP.COM is a program that can 
+        add the most important extensions to a standard TCAP (it is a quick-
+        and-dirty fix until the full set of TCAPs is updated).
+
+VIEW.COM:
+        This is Bridger Mitchell's file viewing utility.  It is very powerful 
+        (but it requires an extended TCAP).
+
+NAME.COM:
+        This program can quickly add or remove a name for a single directory.
+
+TCJ.INF:
+        TCJ has a new publisher (one of our own Z-Node sysops), and this file 
+        tells how to take out a subscription (which all Z-System users 
+        absolutely should do!).
+
+ZFILEB38.LZT:
+        This is the BRIEF listing of all the support programs currently 
+        available for use with Z-System.  There is another file which includes 
+        descriptions of all the programs, but it would fill up an entire 
+        diskette!
+
+
+Notes of November 5, 1989
+=========================
+
+               1.  NEW FILES: NZCPR.LBR, FCP.LBR, RCP.LBR.
+               2.  TCSELECT PROBLEM.
+               3.  ERA.COM, REN.COM, SAVE.COM, ETC.
+               4.  LSH REPLACES EASE.
+               5.  NZBLITZ IS HERE!
+               6.  MINOR UPDATE NOTES.
+               7.  TO NEW Z-SYSTEM USERS.
+               8.  ALERT ABOUT NZCPM.COM AND NZCOM.CCP
+               9.  CHANGE IN MKZCM DEFAULT AND STANDARD RCP
+              10.  NZBIO+.ZRL
+
+1.  NEW FILES: NZCPR.LBR, FCP.LBR, RCP.LBR.
+
+The main NZCOM.LBR now contains only the standard configurations of the 
+CPR, FCP, and RCP modules to minimize disk space requirements.  Alternative 
+versions of these modules are now supplied in separate libraries.  Modules 
+can be loaded directly from these libraries, or individual files can be 
+extracted and put into NZCOM.LBR to replace the default files.  Each 
+library has a brief DOC file describing the modules (one of which is the 
+default version included in NZCOM.LBR).
+
+
+2.  TCSELECT PROBLEM.
+
+A problem has been discovered with the operation of TCSELECT as described 
+in the manual.  TCSELECT is a Z-System program and does not function 
+reliably under CP/M (on some systems it causes a crash).  Fortunately there 
+is a simple fix: reverse the order of the instructions in the manual.  Boot 
+up NZ-COM before attempting to create MYTERM.Z3T, and run TCSELECT only 
+after NZ-COM is running.  Remember that you need both TCSELECT.COM and
+Z3TCAP.TCP to generate your .Z3T file.  The entries in the Z3TCAP library
+for the Xerox computers has been patched to correct a long-standing error.
+
+
+3.  ERA.COM, REN.COM, SAVE.COM, ETC.
+
+The standard configuration of Z-System does not include resident commands 
+for REN, DIR, or SAVE.  These are provided instead as transient programs 
+(COM files), and you should copy any that you need to your working disk.  
+Several other functions that are often resident (but not always) are also 
+provided as COM files.  Many of these are type-4 programs (see the manual). 
+We recommend using SDZ.COM as your standard directory display utility.  It 
+is far more functional than the resident DIR commands in either Z-System or 
+CP/M, and it is designed to work properly under both.
+
+
+4.  LSH REPLACES EASE.
+
+EASE has been replaced by a newer, more versatile, and well-behaved program 
+named LSH (Log SHell).  Like EASE, LSH allows you to edit command lines 
+using WordStar-like control.  Consult LSH.WZ before use for general 
+information and/or run HELPLSH while running LSH for a display of LSH's 
+capabilities.  LSHINST installs and customizes LSH to taste.  Error 
+handling is now taken care of by ZERR.COM, a separate program.  Our great
+thanks to Rob Friefeld for writing these superb Z-System tools and for
+allowing us to include them with NZ-COM.
+
+
+5.  NZBLITZ IS HERE!
+
+NZBLITZ is now included with NZ-COM.  True to its name, NZBLITZ loads NZCOM
+(and ZSDOS/ZDDOS, if present) in a flash, making it extremely helpful in
+saving and reloading a given system configuration.  Once you have configured
+your system as wanted, log to drive A0: and type NZBLITZ NZLOAD.  From now
+on, your startup to Z-System is MUCH faster; just type "NZLOAD".  Be
+forewarned that NZBLITZ saves EVERYTHING as currently active, so be sure you
+are at the directory (usually A0:) you wish the system to start in, and be
+sure all active shells, flow states, terminal definitions, and so on are the
+desired ones before proceeding.  See NZBLITZ.NZT for more information.
+
+
+6.  MINOR UPDATE NOTES.
+
+- The RCP WHLQ command no longer used.  "WHL" alone displays the current 
+  wheel status.  As before, "WHL password" turns the wheel byte on.  "WHL 
+  xxx" now turns the wheel byte OFF if xxx is something other than the 
+  correct password.
+
+- ARUNZ is now a type-4 program which loads at the highest possible 
+  memory location so as to save lower memory for immediate re-execution 
+  with GO.  See ARUNZ09R.DZC and TCJ31.MZG (as well as your NZ-COM or 
+  Z3PLUS manual) for more on the amazing ARUNZ.
+
+- VLU is no longer included, as it was not reliable.  Please use LDIR, 
+  LGET, LPUT, and LT instead to manipulate library files.
+
+- At this writing, we are sorry to note that both Z-Node Central and the
+  Lillipute Z-Nodes mentioned in Chapter 7 of your manual are out of
+  service.  Z-Nodes 2 and 3 are still going strong, however, as are the
+  many others listed in ZNODES.LST.  Z-Node 2 is the new Z-Node Central. 
+  We cannot recommend highly enough that you get a modem and investigate at
+  least one Z-Node as a source of inspiration and support.
+
+- Version 5.0 of the ZEX batch processor replaces earlier versions.  ZEX 
+  now runs under both NZ-COM and Z3PLUS and is a very powerful means of 
+  customizing programs and commands.  The ZEX.RSX file mentioned in the 
+  manual is no longer required.  See ZEX50.DZC for help.
+
+
+7.  TO NEW Z-SYSTEM USERS.
+
+- All files whose middle filetype character is "Z" (e.g., SAMPLE.DZC) are 
+  "crunched" files which must be uncompressed with LT.COM or UNCRUNCH.COM 
+  before use.
+
+- As outlined in section 4.3.2 of your manual, most Z-System programs 
+  have built-in help; type the name of any program followed by "//" for a 
+  short description if you are confused.
+
+- Finally, it is not at all necessary to master every nuance of the system 
+  before it becomes useful.  Please don't try to devour all of Z-System at 
+  once.  Instead, we suggest that you decide what aspects of the system you 
+  will find most helpful and try to master one or two of those before 
+  exploring further.  We think you will find that if you choose wisely, 
+  learning one aspect fully not only makes that aspect of your computing 
+  world easier, it also equips you with the skills and confidence with 
+  which to surmount other aspects of Z-System more confidently.
+
+
+8.  ALERT ABOUT NZCPM.COM AND NZCOM.CCP
+
+Some users have been tripped up by the way NZCOM handles the generation of
+an NZCPM.COM file: it writes such a file only if one does not already exist. 
+This speeds up loading of the system.  However, should you ever make any
+change to your base CP/M system (such as installing ZSDOS/ZDDOS or a new
+version of the BIOS), you should be sure to erase the NZCPM.COM file so that
+NZCOM will create a new one the next time it is run.  You should also be
+sure to use NZCOM and not NZBLITZ to load the system the first time after
+such a change.
+
+You should also be aware that warmboots of the NZ-COM Z-System are performed
+by loading the NZCOM.CCP file containing the image of the current command
+processor.  This means that you must not change the diskette in the A: drive
+unless you have copied the **CURRENT** NZCOM.CCP file (if you only use one
+system configuration, the current version will not change) to the diskette
+you are going to place in the A: drive.
+
+
+9.  CHANGE IN MKZCM DEFAULT AND STANDARD RCP
+
+Carson Wilson and Rob Friefeld have made some major changes in the RCP code
+(see the DOC file in RCP.LBR).  The standard RCP module is now 18 records
+long instead of 16.  MKZCM.COM has been patched to provide this value as a
+default.
+
+
+10.   NZBIO+.ZRL
+
+The BIOS in some computers uses the Z80 index and alternate registers
+without
+saving them on the stack and restoring them.  These computers include the
+TeleVideo 80x machines, the Oneac On!, the Zorba, and a number of other
+machines.  Some programs (JETLDR and EDITNDR, for example) will not function
+properly under these conditions.  The file NZBIO+.ZRL in NZCOM.LBR is a
+special version of the NZ-COM virtual BIOS that protects the Zilog registers
+across all BIOS calls.  To use this BIOS, you much use MKZCM to allocate 4
+records to the BIOS.  If you observe strange behavior on your system with
+NZ-COM, you might want to try using this special BIOS.
+
+
+
+                          - End of RELEASE.NOT -
+                                                                                                              

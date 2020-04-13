@@ -1,0 +1,409 @@
+;                     ----------------------------------
+                     |                                |
+                     | ZFILER's Script Macro Facility |
+                     |                                |
+                     ----------------------------------
+
+
+                    M >> Introduction to ZFILEÒ's Macros
+
+
+      << Macro Execution >>            << Macro Writing >> 
+
+     I >> Invokinç Macros             S >> Macrï Scripts
+     G >> Group Macros                D >> Defininç Macroó -- Thå CMÄ File
+                                      R >> Ruleó foò Scripô Expansion
+                                      E >> Macrï Examples
+                                      L >> Sample Macro CMD Listing
+:M
+ Introduction to ZFILEÒ's Macros 
+
+     Althougè ZFILEÒ caî accomplisè manù taskó usinç itó built-iî functions¬ 
+itó reaì poweò comeó froí thå macrï facility¬ whicè allowó iô tï bå extendeä 
+tï  includå anù functionó thaô caî bå performeä usinç combinationó oæ  otheò 
+programs®   Thió  ió wherå ZFILEÒ reallù makeó uså oæ itó poweò aó á  shell® 
+Firsô  É  wilì  describå ho÷ thå macrï facilitù ió used¬  anä  theî  É  wilì 
+describå  ho÷  thå useò defineó thå macrï functions®   Aó witè thå  built-iî 
+functions¬  macrï functionó caî operatå eitheò oî singlå fileó oò oî  groupó 
+oæ files®   Thå single-filå macrï facilitù ió welì developeä anä waó alreadù 
+presenô  iî nearlù thå samå forí iî VFILER»  thå grouğ macrï facilitù ió ne÷ 
+witè ZFILEÒ and has been greatly expanded.
+:I
+ Invokinç Macros 
+
+     Onå  waù  tï initiatå á macrï operatioî oî thå pointed-tï  filå  ió  tï 
+presó thå macrï invocatioî key¬  whicè ió normallù thå escapå key®  Á prompô 
+oæ  "Macro:¢  wilì appeaò afteò thå normaì ZFILEÒ commanä prompt®   Aô  thió 
+poinô  yoõ havå severaì choices®   Iæ yoõ kno÷ thå keù correspondinç tï  thå 
+macrï yoõ wanô tï run¬ theî yoõ caî simplù presó thaô key®  ZFILEÒ wilì theî 
+construcô  á  commanä  linå  anä pasó iô oî tï  thå  commanä  processoò  foò 
+execution®   Iæ  ZFILEÒ  ió  configureä  foò  instanô  macrï  operatioî  (iô 
+generallù is)¬  theî macroó associateä witè thå numbeò keyó "0¢ througè  "9¢ 
+caî bå initiateä withouô thå macrï invocatioî key»  thaô is¬  thå numbeò keù 
+entereä  alonå  aô  thå maiî ZFILEÒ commanä prompô wilì generatå  thå  macrï 
+function.
+
+   Iæ yoõ presó thå macrï invocatioî keù á seconä time¬  á user-createä helğ 
+screeî  wilì bå displayed®   Thió screeî generallù listó thå availablå macrï 
+functions®   Yoõ caî no÷ presó thå keù foò thå desireä function¬  oò yoõ caî 
+presó  carriagå returî tï canceì thå macrï operatioî anä returî tï thå  maiî 
+ZFILEÒ menu®   Thå helğ menõ screeî wilì alsï bå displayeä iæ yoõ presó  thå Š"#¢  key®   Thió ió á holdoveò froí VFILEÒ anä ariseó iî parô becauså oæ thå 
+structurå  oæ  thå  filå  iî whicè thå macroó  arå  defineä  (morå  oî  thió 
+shortly).
+:G
+ Group Macros 
+
+     Grouğ  macroó  arå  invokeä iî á similaò waù froí  thå  grouğ  functioî 
+commanä line®   Afteò yoõ havå taggeä á grouğ oæ files¬ presó thå "G¢ keù tï 
+enteò  grouğ mode®   Thå prompô wilì lisô onlù thå built-iî grouğ functions¬ 
+buô  iæ  yoõ presó thå macrï invocatioî key¬  yoõ caî proceeä  aó  describeä 
+abovå foò single-filå macrï operations¬  excepô thaô thå macrï functioî wilì 
+bå performeä oî eacè oæ thå taggeä files.
+
+     Thå  grouğ macrï facilitù workó á littlå differentlù thaî  thå  single-
+filå  macrï  facility®   Sincå thå commanä linå woulä generallù noô bå  lonç 
+enougè  tï contaiî thå commandó foò alì thå taggeä files¬  thå  grouğ  macrï 
+facilitù  workó bù writinç ouô á batcè filå foò processinç bù ZEØ oò SUBMIT®  
+Iî  thió  waù therå ió virtuallù nï limiô tï thå numbeò oæ  fileó  oî  whicè 
+grouğ macroó caî operate.
+   Therå arå manù configurablå optionó (describeä below© thaô arå associateä 
+witè  thå grouğ macrï operation®   Theså includå thå namå oæ thå ZEØ oò  SUÂ 
+batcè file¬  thå directorù tï whicè iô ió written¬ anä thå commanä linå thaô 
+ZFILEÒ  generateó  tï initiatå thå batcè operation®   Thå NZ-COÍ versioî  oæ 
+ZFILEÒ useó á filå calleä ZFILER.ZEØ anä thå commanä linå "ZEØ ZFILER"®  Thå 
+Z3PLUÓ version¬  undeò whicè ZEØ wilì noô run¬ useó á filå calleä ZFILER.SUÂ 
+anä á commanä linå oæ "SUBMIÔ ZFILER".
+
+     Sincå macroó (anä thå maiî menõ "Z¢ function© worë bù passinç  commandó 
+tï  thå  commanä processor¬  filå tagó werå oncå losô bù oldeò  versionó  oæ 
+ZFILER»  wheî  theså oldeò versionó resumeä operation¬  thå procesó  starteä 
+afresh®  ZFILEÒ no÷ rememberó alì thå filå tagó wheî iô returnó froí á macrï 
+oò Ú commanä (iô writeó á temporarù file¬  "ZFILER.TAG"¬  tï á  configurablå 
+directorù whicè containó thå filå list).
+ List Capability for Group Macros 
+
+     Iæ á ZFILER.CMÄ scripô beginó witè á commá (beforå oò afteò thå leadinç 
+"!¢ shelì pauså parameter)¬  ZFILEÒ wilì alwayó expanä thå macrï directlù tï 
+ZCPR'ó multiplå commanä line®   Iî thå caså oæ á grouğ macro¬ $P¬ $F¬ anä $Ô 
+parameteró  arå  expandeä tï á lisô oæ alì taggeä files¬  separateä  bù  thå 
+characteò followinç thå leadinç comma®  
+
+For example, the script:
+
+		1 , !echo the tagged files are $F
+
+displayó  "THÅ  TAGGEÄ FILEÓ ARÅ "¬  followeä bù á lisô oæ thå taggeä  fileó 
+separateä  bù  ¢ ¢ oî thå consolå (assuminç ECHÏ ió á valiä  ZCPÒ  command)®  
+ZFILEÒ theî promptó foò á keypresó beforå returning®   Pleaså notå thaô thió 
+macrï bufferó thå entirå lisô oæ taggeä fileó tï CP/M'ó commanä linå buffer¬ 
+whicè ió onlù 12µ byteó iî length®   Thå abovå command¬  therefore¬ normallù 
+causeó  á  "Commanä toï long¢ erroò iæ morå thaî abouô ¸ fileó  arå  tagged¬ 
+dependinç oî thå lengthó oæ thå taggeä names.
+
+     Lisô capabilitù allowó programó whicè accepô á filå list¬  sucè aó LPUÔ 
+oò V¬ tï ruî oî taggeä files®  ZEØ ió NOÔ involved.
+ Group Macro Tagged File Count 
+
+     Thå  numbeò oæ fileó taggeä ió puô intï Useò Registeò #µ (configurable© 
+beforå runninç ZEX®   Thå macrï caî theî dowî counô anä takå somå additionaì 
+actioî afteò iô haó ruî oî eacè taggeä file.
+
+     For example, if you press "G<ESC>1", the script:
+
+	1 ! $d$u:;$!crunch $f B1:;reg m5;if reg 5= 0;$"Library DU ":;
+	        lput $"Library Name: " B1:*.* +1;era B1:*.?Z?;fi;$h:
+
+cruncheó taggeä fileó tï á fixeä emptù directorù B1:¬ makeó á librarù ouô oæ 
+theí  (leavinç  rooí  foò  ± morå file© witè  inpuô  foò  librarù  namå  anä 
+location¬  theî  eraseó alì "thå crunchettes"®   Thió macrï requireó REÇ  tï 
+decremenô Registeò 5.
+
+     Notå  thaô REÇ musô bå á Type³ oò Type´ (oò RCP© foò thå ZEØ GÏ "$!¢ tï 
+ruî CRUNCÈ repeatedly®  Alsï notå thaô registeró onlù holä á 25µ count¡  Foò 
+consistency¬  singlå  macroó  puô á "1¢ counô iî thå  Useò  Register®   Useò 
+registeò rangå 0..¹ ió noô enforced¬  sï yoõ caî uså registeró 10..3± iæ yoõ 
+wish®  However¬ 10-1µ arå reserved¬ while 16-1· arå useä bù other programs.
+:S
+ Macrï Scriptó 
+
+     ZFILEÒ  macrï  scriptó arå similaò tï thoså iî ARUNÚ anä iî  thå  otheò 
+menõ  shelló  (MENU¬  VMENU¬  FMANAGER©  iî thaô parameteò  expressionó  caî 
+appear®  Thå  criticaì parameteró -- thå oneó thaô implemenô functionó  thaô 
+cannoô bå achieveä anù otheò waù -- arå thoså thaô conveù informatioî  abouô 
+thå  directorù currentlù displayeä bù ZFILEÒ anä abouô thå pointed-tï  file® 
+Parameteró  consisô  oæ  á "$¢ characteò followeä bù onå oæ  thå  characteró 
+listeä below.
+	Useò prompô parameters:
+
+		§	Useò inpuô prompt
+		¢	Useò inpuô prompt
+                *       Clear screen in user prompt
+                $       Escape character (example: '$"' for double quote)
+                ^       Control character (example: '^x' for control-X)
+
+
+	Parameteró foò directories:
+
+	  - currentlù displayeä directory
+		Ã	DIÒ form
+		Ä	Drivå letter
+		Õ	Useò number
+
+  	  - homå directorù (froí where ZFILEÒ waó invoked)
+		È	DÕ form
+		Ò	Homå DIR
+	Parameteró foò pointed-tï file:
+
+		Ğ	Fulì informatioî (DU:FN.FT)
+		Æ	Filå namå (FN.FT)
+		Î	Filå namå only
+		Ô	Filå typå only
+
+	Speciaì parameters:
+
+		¡	GÏ substitutioî indicator
+		¤	Thå dollaò character
+
+     Thå parameteró arå listeä iî á speciaì ordeò above¬ anä wå wilì explaiî 
+thaô later®  Firsô wå wilì jusô presenô thå meaninç foò eacè parameter.
+
+     Thå  parameteò  expressionó  $¢ anä $§ arå useä  tï  displaù  á  prompô 
+messagå  tï  thå useò anä tï reaä iî á responså string®   Singlå anä  doublå 
+quoteó  arå equivalent®   Oncå thå prompô parameteò haó beeî  detected¬  alì 
+subsequenô characteró uğ tï onå oæ thå quotå characteró arå displayeä aó thå 
+useò prompt®   Thus¬  iæ É aí noô mistaken¬ therå ió presentlù nï waù tï puô 
+eitheò quotå characteò intï thå prompt®   Thå enä oæ thå linå oò thå enä  oæ 
+thå filå wilì alsï terminatå thå prompt.
+     Iæ yoõ wanô tï makå fancù screens¬ yoõ caî includå escapå sequenceó anä 
+somå controì characteró (obviouslù carriagå returî won'ô work)®   Promptó iî 
+scriptó  maù  contaiî controì characteró aó "^x"¬  wherå ø ió anù  characteò 
+froí À tï z.
+
+     Thå  dollaò sigî maù bå useä aî "escapå character¢ foò scripô  prompts¬ 
+anä caî be used to include the $, ^, ", and ' characters in prompts.
+
+	Examples:
+		Script				Result
+		$"Enter name or $^C: " 		Enter name or ^C: 
+		$"Type $"//$" for help: "	Type "//" for help: 
+
+     Thå $ª scripô parameteò clearó thå screeî during¬ anä rebuildó iô afteò 
+á scripô prompt®  Usagå ió $"$*..text.."®  Prompô texô appearó aô thå toğ oæ 
+á cleared screen.
+     No÷  foò  thå directorù parameters®   Parameteró C¬  D¬  anä  Õ  returî 
+informatioî  abouô thå currentlù displayeä directory¬  whilå È anä Ò  returî 
+informatioî  abouô  thå  homå  directory¬  thå onå  froí  whicè  ZFILEÒ  waó 
+originallù  invoked®   PLEASÅ  NOTEº  macroó alwayó operatå  froí  thå  homå 
+directory®   Thå reasoî foò thió ió thaô ZFILEÒ caî displaù directorieó witè 
+useò  numberó higheò thaî 1µ eveî wheî iô ió noô possiblå tï loç intï  theså 
+areas®   Iæ yoõ wanô tï operatå iî thå displayeä directory¬ theî youò scripô 
+musô includå aî expliciô directory-changå commanä oæ thå forí "$D$U:¢ aô thå 
+beginninç  (oò  "$C:¢ iæ youò systeí requireó thå uså oæ nameä  directories© 
+anä á commanä oæ thå forí "$H:¢ (oò "$R:"© aô thå end.
+
+     Onå speciaì notå abouô thå parameteró thaô returî directorù names®   Iæ 
+thå directorù haó nï name¬  theî thå strinç "Noname¢ ió returned®  Thió wilì 
+presumablù noô matcè anù actuaì namå anä wilì lead¬  onå hopes¬  tï á benigî 
+erroò condition®  Theså parameteró arå includeä onlù foò systemó thaô dï noô 
+allo÷ directorieó tï bå indicateä usinç thå DÕ forí (É hopå thaô fe÷ iæ  anù 
+systemó arå seô uğ thió way).
+     No÷  wå  comå  tï  thå fouò filå namå parameters®   Theù  allo÷  uó  tï 
+generatå  easilù thå completå filå specificatioî oò anù parô  oæ  it®   Notå 
+thaô  "$F¢ ió noô quitå thå samå aó "$N.$T"®   Thå latteò alwayó containó  á 
+dot» thå formeò doeó noô iæ thå filå haó nï filå type.
+
+     Finally¬  wå havå twï speciaì parameters®   "$$¢ ió includeä tï allo÷ á 
+dollaò  sigî  characteò tï bå entereä intï thå script®   "$!¢ ió  á  controì 
+parameteò thaô ió useä onlù wheî á grouğ macrï ió executed®  Iæ iô ió placeä 
+immediatelù  beforå  á tokeî (strinç oæ contiguouó  characters)¬  theî  thaô 
+tokeî  wilì bå replaceä bù thå strinç "GO¢ oî alì buô thå firsô expansioî oæ 
+thå script®   Thió allowó grouğ macrï scriptó tï operatå fasteò bù  avoidinç 
+repetitivå  loadinç  oæ  á COÍ file®   Iô musô bå useä witè greaô  carå  anä 
+consideration¬ however¬ foò reasonó thaô É wilì noô gï intï here.
+:D
+ Defininç Macroó ‚ --  Thå CMÄ File
+
+     No÷  let'ó  learî  ho÷ tï definå thå macrï functionó  wå  want®   Aó  É 
+indicateä earlier¬ thå macroó arå defineä iî á filå calleä "ZFILER.CMD¢ (thå 
+ZFILEÒ ComManÄ file)®   Iî thå versioî oæ ZFILEÒ distributeä witè NZ-COÍ anä 
+Z3PLUS¬  thå  CMÄ  filå ió searcheä foò iî thå rooô directorù oæ  thå  ZCPR³ 
+commanä  searcè  path®   Aó describeä earlier¬  thå optioî menõ  allowó  thå 
+entirå patè tï bå used®  Therå arå alsï somå additionaì configurablå optionó 
+thaô  wilì  bå  discusseä  anotheò  time®   Yoõ musô bå  surå  tï  puô  youò 
+ZFILER.CMÄ  filå  iî  thå appropriatå directory®   Iæ  thå  filå  cannoô  bå 
+located¬  yoõ wilì stilì geô thå macrï prompt¬ but¬ afteò yoõ havå specifieä 
+á macrï key¬ thå erroò messagå "ZFILER.CMÄ NOÔ Found¢ wilì bå displayed.
+
+     Thå  ZFILER.CMÄ filå ió aî ordinarù texô filå thaô yoõ caî creatå  witè 
+anù  editoò  oò wordprocessoò thaô caî makå plaiî ASCIÉ fileó  (WordStaò  iî 
+nondocumenô mode¬ foò example)®  Thå CMÄ filå haó twï parts®  Thå firsô parô 
+containó thå macrï commanä definitions»  thå seconä containó thå helğ screeî 
+(describeä earlier).
+     Iî  thå firsô parô oæ thå CMÄ file¬  eacè linå defineó  á  macro®   Thå 
+characteò  iî  thå firsô columî ió thå keù associateä witè  thaô  definitioî 
+(caså  doeó noô matter)®   Macroó caî bå associateä witè thå 1° numbeò keys¬ 
+2¶  letteò  keys¬  anä  alì  printablå speciaì  characteró  excepô  foò  "#¢ 
+(explaineä below)®   Thå spacå characteò anä alì controì characteró arå  noô 
+allowed®   Owinç  tï  aî  oversight¬  thå  rubouô  (DEL©  characteò  caî  bå 
+associateä witè á macro!
+
+     Afteò  thå  characteò thaô nameó thå macrï therå maù bå anù  numbeò  oæ 
+blankó (includinç zero)®   Iæ thå firsô non-blanë characteò ió "!"¬ theî thå 
+"strikå  anù key¢ (shell-wait© prompô wilì appeaò beforå ZFILEÒ putó uğ  thå 
+filå displaù afteò á macrï commanä ió run®  Thió shoulä bå useä wheneveò thå 
+macrï  wilì  leavå  informatioî oî thå screeî thaô yoõ wilì  wanô  tï  read®  
+Afteò  thå "!¢ therå caî agaiî bå anù numbeò oæ spaces®   Anù remaininç texô 
+oî thå linå ió takeî aó thå scripô foò thå macrï command.
+   Thå  seconä parô oæ thå CMÄ filå startó wheî á "#¢ characteò ió founä  iî 
+thå  firsô  columî (hencå thå exclusioî oæ thaô characteò aó á macrï  name)® 
+Oncå thaô characteò appears¬ alì remaininç text¬ includinç texô oî thå line¬ 
+wilì bå useä aó thå helğ screen®   Sincå ZFILEÒ wilì adä somå informatioî tï 
+thå  displaù  (thå  namå oæ thå pointed-tï filå  anä  á  prompt)¬  yoõ  wilì 
+generallù  wanô tï keeğ thå helğ screeî tï nï morå thaî 2° lines¬  includinç 
+aî extrá blanë linå aô thå enä foò spacing®   Witè somå experimentatioî  yoõ 
+wilì geô thå hanç oæ designinç thió screen.
+
+
+  Here is a parameter reminder you can include in your ZFILER.CMD file:
+
+    $!     ZEX 'GO'          $P  DU:FN.FT       $D  Current Drive
+    $".."  PROMPT            $F  FN.FT          $U  Current User
+    $'..'  PROMPT            $N  FN             $C  Current DIR
+    $*     CLS on Prompt     $T  FT             $H  Home DU   $R  Home DIR  
+:R
+ Ruleó foò Scripô Expansioî 
+
+     ZFILEÒ  followó á specifiã sequencå oæ stepó wheî expandinç  á  script¬ 
+onå thaô giveó iô á speciaì featurå that¬ É woulä guess¬ fe÷ useró arå awarå 
+of®   Thå  firsô  steğ  iî thå expansioî ió tï procesó onlù  thå  user-inpuô 
+prompô parameters¬  substitutinç foò thå prompô whateveò thå useò entereä iî 
+response®   Thió resultó iî á modifieä scripô thaô ió theî processeä bù  thå 
+seconä  steğ iî thå expansion®   Becauså thå expansioî ió handleä thió  way¬ 
+thå useò inpuô caî includå ZFILEÒ scripô parameters¡   Thus¬  thå scripô caî 
+bå useä tï writå á script®  Yoõ wilì seå aî examplå oæ thió later.
+
+     Thå  seconä  steğ  iî  thå expansioî ió tï substitutå  valueó  foò  thå 
+directorù parameters¬ whicè arå somewhaô likå constants®  Theù dï noô changå 
+aó  á  functioî oæ thå pointed-tï file®   Finally¬  iî  á  thirä  step¬  thå 
+remaininç parameteró arå expanded®  Foò grouğ macros¬ thió finaì steğ iî thå 
+expansioî ió repeateä foò eacè oæ thå taggeä files®  Thå filå parameteró arå 
+expandeä  differentlù foò eacè file¬  and¬  startinç witè thå seconä  taggeä 
+file¬ thå "$!¢ parameteò causeó "GO¢ substitution.
+:E
+ Macrï Exampleó 
+
+     Thå  macrï CMÄ listinç iî sectioî  Ì ‚ showó aî examplå oæ á  ZFILER.CMÄ 
+file¬  onå  designeä tï illustratå somå techniqueó oæ macrï writing®   Whilå 
+writinç thió article¬ É discovereä thaô onå caî includå blanë lineó aó showî 
+tï makå thå CMÄ filå easieò tï read®  Thå helğ screeî parô oæ thå listinç ió 
+takeî froí mù personaì scripô filå (oî which¬  É havå tï confess¬ É havå noô 
+reallù workeä verù hard)®  Thå macrï definitioî parô oæ thå listinç includeó 
+onlù  á fe÷ oæ thå definitions®   Yoõ maù wisè tï uså thå Prinô functioî  oæ 
+thå  HELĞ utilitù tï prinô ouô thió section¬  iî ordeò tï follo÷ alonç  witè 
+thió discussion.
+     Thå macrï "Q¢ ió includeä tï illustratå á verù simple¬ buô useful¬ typå 
+oæ macro®   Iô invokeó thå verù powerfuì filå typinç prograí QÌ (quicë look© 
+oî  thå pointed-tï file®   Thió ió handù wheî yoõ wanô morå powerfuì viewinç 
+capabilitù  thaî thaô offereä bù thå built-iî "V¢ command®   QÌ  caî  handlå 
+cruncheä  fileó  anä libraries¬  anä iô caî displaù texô oò heø  forwarä  oò 
+backward.
+
+     Macrï  "U¢ uncompresseó á file®   Iô illustrateó á morå compleø  scripô 
+thaô involveó flo÷ controì anä parameteró thaô extracô individuaì componentó 
+oæ  thå pointed-tï filå name®   Iô testó thå filå typå tï seå iæ thå  middlå 
+letteò ió "Q¢ oò "Z"®   Iî thå formeò case¬  iô unsqueezeó thå file»  iî thå 
+latter¬  iô  uncruncheó  it®   Thå uncompresseä filå iô puô intï thå  sourcå 
+file'ó directory.
+
+     Macroó S¬  K¬  anä Â illustratå thå uså oæ inpuô prompting®   Thå firsô 
+onå allowó thå useò tï specifù thå filå attributeó tï bå set®  Notå thaô thå 
+prompô includeó á helpfuì remindeò oæ thå syntaø requireä bù SFA.
+     Macrï  Ë  cruncheó  fileó tï á  user-specifieä  destination®   Iô  alsï 
+illustrateó ho÷ onå logó intï thå currentlù displayeä directory®   É dï thió 
+herå sï thaô á nulì answeò tï thå prompô (i.e.¬ jusô á carriagå return© wilì 
+resulô  iî  thå  cruncheä  fileó beinç placeä  iî  thå  currentlù  displayeä 
+directorù ratheò thaî iî thå homå directory¬  aó woulä otherwiså bå thå caså 
+(sincå thaô ió wherå thå macrï runó from¬  remember)®  Aó á result¬ however¬ 
+thió  macrï wilì noô operatå properlù iî useò areaó abovå 1µ undeò  BGié  oò 
+versionó  oæ thå commanä processoò thaô dï noô allo÷ logginç intï higè  useò 
+areas.
+
+     Macrï  Â  performó  á  slightlù morå compleø  function®   Iô  noô  onlù 
+compresseó thå pointed-tï filå tï á specifieä destinatioî directory¬  buô iô 
+theî markó thå sourcå filå aó havinç beeî backeä up®   Á combinatioî oæ  thå 
+grouğ  archivå  built-iî commanä (tï taç fileó thaô neeä backinç up©  anä  á 
+grouğ macrï Â (tï perforí thå backup© giveó thå ZFILEÒ useò á waù tï bacë uğ 
+fileó iî cruncheä forí oî thå backuğ disk.
+     Macrï  Í ió includeä tï sho÷ thaô á ZFILEÒ macro¬  wheî iô needó tï  dï 
+somethinç  morå compleø thaî iô ió capablå oæ doinç alì bù itself¬  caî pasó 
+thå  tasë tï aî ARUNÚ alias®   Thå MOVÅ aliaó firsô determineó  whetheò  thå 
+sourcå  anä destinatioî arå oî thå samå drive®   Iî thaô case¬  MOVE.COÍ  ió 
+useä  tï  perforí thå move®   Otherwise¬  thå sourcå filå ió copieä  tï  thå 
+destinatioî anä theî deleted®   Whaô wå have¬  therefore¬  ió á MOVÅ commanä 
+thaô freeó thå useò oæ thå responsibilitù oæ worryinç abouô whicè driveó arå 
+involveä -- anotheò examplå oæ ho÷ Z-Systeí caî freå yoõ froí considerationó 
+thaô neeä noô concerî you¬ thaô dï noô requirå humaî intelligencå tï decide.
+
+     Thå  finaì threå macrï exampleó arå executioî macros®   Macrï Ø  causeó 
+thå  pointed-tï  filå tï bå executed®   Á morå sophisticateä  versioî  mighô 
+checë  tï makå surå thaô thå filå typå ió COM®   É opteä foò thå flexibilitù 
+oæ pointing¬  foò example¬  tï PROGRAM.Z8° anä havinç PROGRAM.COÍ  run®   Iæ 
+therå ió nï COÍ filå witè á matchinç name¬  thå erroò handleò wilì takå carå 
+oæ things®   Yoõ wilì notå thå leadinç coloî beforå thå "$n¢ parameter®   Iô 
+makeó  surå thaô thå currenô directorù ió searcheä eveî iæ iô ió noô oî  thå 
+path®  Prompteä inpuô ió useä tï allo÷ á commanä taiì tï bå included.
+     Thå  Ú macrï performó á user-specifieä functioî oî thå pointed-tï file® 
+Twï  separatå useò promptó allo÷ botè thå commanä anä á commanä taiì  tï  bå 
+given®   Foò  example¬  iæ yoõ wanteä tï squeezå thå filå tï A0:¬  yoõ woulä 
+enteò  "SQ¢  iî responså tï thå firsô prompô anä "A0:¢ iî  responså  tï  thå 
+second.
+
+     Thå  ° macrï illustrateó ho÷ thå responså tï á prompô caî bå useä aó  á 
+ZFILEÒ  script®   Thió macrï takeó carå oæ alì thoså functionó wå forgoô  tï 
+includå iî ZFILER.CMD®  Thå wholå macrï ió jusô prompteä input¬ anä whateveò 
+wå answeò wilì bå ruî aó á script®   É uså thió functioî sï ofteî thaô É puô 
+iô  oî á numbeò keù sï thaô iô caî bå invokeä witè á singlå keù ratheò  thaî 
+thå usuaì pair®   Also¬ aó yoõ maù havå noticed¬ É includå iî thå macrï helğ 
+screeî á lisô oæ thå parameteró thaô caî bå used.
+
+     Thå  onlù  reaì limitatioî oæ thió macro-to-write-a-macrï  approacè  ió 
+thaô  prompteä inpuô cannoô bå includeä iî thå response®   Aó É writå  this¬ 
+however¬  iô  occuró  tï  må  thaô  thió limitatioî  coulä  bå  overcomå  bù 
+recursivelù parsinç thå prompô parameteró untiì nonå remain¬  anä onlù  theî 
+goinç oî tï thå subsequenô macrï expansioî steps.
+:L
+                            SAMPLE MACRO LISTINÇ 
+                            --------------------
+Ñ   qì $p
+
+Õ ¡ iæ $t=?q?;$!sys:uæ $ğ $d$u:;else;$!sys:uncò $ğ $d$u:;fi
+
+Ó ¡ $!sfá $ğ $¢ SFÁ Optionó (/o,o.® o=ARC,-ARC,R/O,R/W,SYS,DIR)º "
+Ë ¡ $d$u:;$!cruncè $æ $"Destinatioî directorù (DU:© -- ";$h:
+Â   $d$u:;cruncè $æ $"Destinatioî directorù (DU:© -- ";sfá $æ /arc;$h:
+
+Í ¡ /movå $ğ $"Destinatioî directorù foò moveº "
+
+Ø ¡ $d$u:;:$î $¢ Commanä Tailº ";$h:
+Ú ¡ $d$u:;$¢ Commanä tï perforí oî fileº ¢ $æ $¢ Tailº ";$h:
+° ¡ $"Enteò ZFILEÒ macrï scriptº "
+£		   SAMPLÅ ZFILEÒ MACROÓ FOÒ TCJ
+
+0® on-linå macrï	A® seô Archivå biô		N® NULU
+1® LPUÔ			B® Backuğ (cr/sfa©		O.
+2® Z80ASÍ tï COÍ	C® CRÃ				P® Protect
+3® Z80ASÍ tï REÌ	D® Datå displaù			Q® QL
+4® Comparå Fileó	E® Ediô				R.
+5®			F®				S® SFA
+6®			G®				T® Type
+7®			H®				U® Uncompress
+8®			I®				V® VLU
+9®			J®				W.
+			K® Kruncè			X® eXecute
+			L® LDIÒ				Y.
+			M® Movå				Z® ruî command
+
+$¡     ZEØ  'GO§    $Ä  DRIVÅ      $Ğ  DU:FN.FÔ        $Æ  FN.FT
+$"..¢  PROMPÔ       $Õ  USEÒ       $Î  FÎ              $Ô  FT
+$'..§  PROMPÔ       $È  HOME
+

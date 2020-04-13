@@ -1,0 +1,51 @@
+name: Release Build
+
+on:
+  release:
+    types: published
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Create Package Label
+        run: |
+          LABEL=`echo "$GITHUB_REF" | sed "s|^refs/tags/||"`
+          echo "::set-env name=PKGLBL::$LABEL"
+         
+      - name: Display Diagnostics
+        run: |
+          echo PKGLBL: "$PKGLBL"
+          echo Upload URL: "${{github.event.release.upload_url}}"
+          echo GITHUB_TOKEN: "${{secrets.GITHUB_TOKEN}}"
+          
+      - name: Build
+        run: |
+          sudo apt-get install libncurses-dev
+          make
+          make clean
+          rm -rf .git*
+      
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: RomWBW-${{env.PKGLBL}}-Package
+          path: .
+      
+      - name: Create Package Archive
+        run: |
+            zip -r Package.zip .
+          
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        with:
+          upload_url: ${{github.event.release.upload_url}}
+          asset_path: Package.zip
+          asset_name: RomWBW-${{env.PKGLBL}}-Package.zip
+          asset_content_type: application/zip

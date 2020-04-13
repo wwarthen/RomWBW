@@ -11,5 +11,7 @@ set ZXBINDIR=%TOOLS%/cpm/bin/
 set ZXLIBDIR=%TOOLS%/cpm/lib/
 set ZXINCDIR=%TOOLS%/cpm/include/
 
-zx z80mr camel80
-zx MLOAD25 -camel80.bin=camel80.hex
+zx zsm =camel80.azm
+zx link -CAMEL80.BIN=CAMEL80
+
+

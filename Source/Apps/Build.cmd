@@ -16,7 +16,6 @@ call :asm SysCopy || goto :eof
 call :asm Assign || goto :eof
 call :asm Format || goto :eof
 call :asm Talk || goto :eof
-call :asm OSLdr || goto :eof
 call :asm Mode || goto :eof
 call :asm RTC || goto :eof
 call :asm Timer || goto :eof
@@ -30,6 +29,7 @@ zx MLOAD25 -SURVEY.COM=SURVEY.HEX
 setlocal & cd XM && call Build || exit /b 1 & endlocal
 setlocal & cd FDU && call Build || exit /b 1 & endlocal
 setlocal & cd Tune && call Build || exit /b 1 & endlocal
+setlocal & cd FAT && call Build || exit /b 1 & endlocal
 
 copy *.com %APPBIN%\
 

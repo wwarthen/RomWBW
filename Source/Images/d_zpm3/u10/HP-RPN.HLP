@@ -1,0 +1,202 @@
+;
+                                                  ‚ 
+                           ---  H P - R P N  ---          
+                                                   
+
+                    RPN Notation for the HP Calculator
+
+
+                         R -->  RPN Notation        
+                         S -->  Stack Operations    
+                         F -->  Stack Functions     
+                         N -->  Numeric Functions   
+                         H -->  HP Calculator     
+                         Z -->  ZP                
+:R
+RPÎ Notatioî
+
+Reverså Polisè Notatioî (RPN)¬ alsï calleä postfiø notation¬ ió á simplå 
+buô powerfuì stacë orienteä notatioî commonlù useä iî Hewlett-Packarä 
+calculators®  Yoõ firsô enteò thå twï numberó yoõ wisè tï operatå on¬ usinç 
+thå <RETURN¾ keù tï separatå thå twï numberó yoõ arå enterinç anä theî yoõ 
+enteò thå functioî yoõ wisè tï perform®  Thå numberó yoõ enteò arå pusheä 
+ontï á stacë anä thå functioî performeä oî thå numberó iî thå stack®  Thå 
+resulô ió displayeä immediatelù afteò thå functioî ió entered.
+
+Withiî it'ó limits¬ HĞ followó thå RPÎ conventionó useä bù Hewlett-Packarä 
+iî theiò linå oæ RPÎ calculators.
+
+Foò examplå (assuminç thå decimaì displaù mode)º
+
+     Tï Solvå  Functioî            Keystrokeó   Displaù
+     -------­  ----------------­   ---------­   ------­
+     9+3=1²    ¹ pluó ³            9<RET>3«        1²
+     9-3=¶     ¹ minuó ³           9<RET>3­         ¶
+     9*3=2·    ¹ timeó ³           9<RET>3ª        2·
+     9/3=³     ¹ divideä bù ³      9<RET>3¯         ³
+     9^3=72¹   ¹ tï thå 3rä poweò  9<RET>3Ş       72¹
+:S
+Stacë
+
+RPÎ ió baseä oî thå stack®  Á numbeò ió entereä ontï thå stacë bù keyinç iî 
+thå digits¬ endinç witè <RET>®  Eacè subsequenô numbeò keyeä iî wilì pusè 
+thå existinç contentó oæ thå stacë onå leveì higher.
+
+Thå structurå oæ HP'ó ´ leveì stacë ió showî belowº
+
+               Ô -¾ 000°      Stacë registeò ´
+               Ú -¾ 000°      Stacë registeò ³
+               Ù -¾ 000°      Stacë registeò ²
+               -------------------------------------------­
+               Ø -¾ 000°      Stacë registeò ± <­ Displayeä
+
+HĞ alwayó displayó thå contentó oæ thå Ø register®  Wheî thå stacë ió 
+lifted¬ thå contentó oæ eacè stacë registeò arå moveä uğ onå level¬ thå 
+contentó oæ registeò Ø arå copieä intï Ù anä thå contentó oæ registeò T¬ Šthå topmosô register¬ arå lost.
+
+Wheî thå stacë ió dropped¬ thå contentó oæ eacè stacë registeò arå moveä 
+dowî onå leveì anä thå contentó oæ thå Ô registeò arå copieä intï registeò 
+Z®  Thå resulô oæ thå calculatoò operatioî ió placeä iî registeò X.
+
+Bù enterinç á numbeò ´ timeó tï copù iô intï eacè stacë register¬ thaô 
+numbeò becomeó á 'constant§ iî thå Ù registeò foò subsequenô chaiî 
+operations®  Eacè subsequenô operatioî wilì droğ thå stack¬ restorinç thå 
+samå 'constant§ valuå tï thå Ù registeò foò thå nexô operation.
+:F
+ Stacë Functionó
+
+HĞ haó severaì functionó thaô affecô onlù thå stack®  Iî eacè oæ theså 
+examples¬ eacè stacë registeò startó ouô loadeä witè thå numbeò oæ thaô 
+register.
+
+Clearinç thå Stacë (^X)
+
+Control-Ø clearó thå entirå stack®  Thå valueó containeä iî thå LAST-Ø anä 
+memorù registeró arå noô affected®  HĞ startó witè á cleaò stacë wheî 
+loadeä froí disk.
+
+               Ô -¾ ´         Ô -¾ °
+               Ú -¾ ³         Ú -¾ °
+               Ù -¾ ²         Ù -¾ °
+               ------------------------------------­
+               Ø -¾ ±         Ø -¾ °    <­ Displayeä
+                    Keyº ^Ø             (Cleaò stack©
+Enterinç á numbeò (<RET>)
+
+<RET>¬ useä aó thå ENTEÒ key¬ terminateó entrù oæ á numbeò anä placeó iô oî 
+thå stack® Iô alsï separateó twï numberó entereä onå afteò thå other® <RET¾ 
+liftó thå stacë anä copyó thå numbeò iî thå Ø registeò tï thå Ù register¬ 
+replacinç iô witè thå numbeò thaô haó jusô beeî keyeä in® Thå valuå iî thå 
+toğ stacë register¬ registeò T¬ ió lost.
+
+               Ô -¾ ´         Ô -¾ ³    Previouó Ô (4© losô
+               Ú -¾ ³         Ú -¾ ²
+               Ù -¾ ²         Ù -¾ ±
+               ------------------------------------­
+               Ø -¾ ±         Ø -¾ 78¹  <­ Displayeä
+                    Keyº 789<RET¾       (Enteò 789©
+Stacë drop
+
+Á numeriã functioî wilì droğ thå stacë onå leveì anä replacå thå valuå iî Ø 
+witè thå numeriã result® Thå valuå iî registeò Ô ió copieä dowî tï registeò 
+Ú wheneveò thå stacë ió dropped.
+
+               Ô -¾ ´         Ô -¾ ´    Valuå iî Ô copieä tï Ú
+               Ú -¾ ³         Ú -¾ ´
+               Ù -¾ ²         Ù -¾ ³
+               ------------------------------------­
+               Ø -¾ ±         Ø -¾ ³    <­ Displayeä
+                    Keyº «              (X+Y©
+                         (2+1=3©
+Rolì stacë uğ (>© oò dowî (<)
+
+Wheî thå stacë ió rolleä up¬ thå stacë ió lifteä onå leveì anä thå previouó 
+valuå oæ Ô ió moveä dowî tï X®  Wheî thå stacë ió rolleä down¬ thå stacë ió 
+droppeä onå leveì anä thå previouó valuå oæ Ø ió moveä uğ tï T®  Nï valueó 
+arå lost.
+
+               Ô -¾ ´         Ô -¾ ³    Valuå froí Ô moveä
+               Ú -¾ ³         Ú -¾ ²         dowî tï Ø
+               Ù -¾ ²         Ù -¾ ±
+               ------------------------------------­
+               Ø -¾ ±         Ø -¾ ´    <­ Displayeä
+                    Keyº ¾              (Rolì Up©
+
+               Ô -¾ ´         Ô -¾ ±    Valuå froí Ø moveä
+               Ú -¾ ³         Ú -¾ ´         uğ tï Ô
+               Ù -¾ ²         Ù -¾ ³
+               ------------------------------------­
+               Ø -¾ ±         Ø -¾ ²    <­ Displayeä
+                    Keyº ¼              (Rolì Down©
+Exchangå contentó oæ Ø anä Ù (=)
+
+Thå contentó oæ registeró Ø anä Ù arå exchanged® Nï otheò registeró arå 
+affected® Thió functioî ió usefuì wheî yoõ neeä tï reverså thå ordeò oæ thå 
+operandó beforå yoõ perforí aî operatioî sensitivå tï thå ordeò oæ thå 
+operands¬ sucè aó subtraction¬ division¬ oò exponentiation.
+
+               Ù -¾ ²         Ù -¾ ±
+               ------------------------------------­
+               Ø -¾ ±         Ø -¾ ²    <­ Displayeä
+                    Keyº ½              (X<>Y©
+Lasô Ø (L)
+
+Wheî á numeriã functioî ió executed¬ á copù oæ thå lasô valuå iî thå Ø 
+registeò beforå thå functioî ió executeä ió saveä iî thå Last-Ø register® 
+Thaô valuå caî bå restoreä tï thå Ø registeò usinç thå 'L§ key® Thå stacë 
+ió lifted¬ movinç thå currenô contentó oæ thå Ø registeò tï thå Ù register¬ 
+etc® Thå valuå iî thå Last-Ø registeò ió noô affected.
+
+               Ô -¾ ³         Ô -¾ ³         Ô -¾ ³
+               Ú -¾ ²         Ú -¾ ³         Ú -¾ ²
+               Ù -¾ ±         Ù -¾ ²         Ù -¾ ¹
+               ------------------------------------------------­
+     Last-Ø -¾ Ø -¾ ¸         Ø -¾ ¹         Ø -¾ ¸ <­ Displayeä
+                    Keyº «         Keyº Ì           (Last-X©
+                         (1+8=9©
+:N
+Numeriã Functionó
+
+Wheî yoõ wanô tï keù iî twï numbers¬ onå afteò thå other¬ yoõ uså thå <RET¾ 
+keù betweeî entrieó tï separatå thå numbers®  Wheî yoõ wanô tï keù iî á 
+numbeò anä executå á functioî thaô useó thå valuå alreadù iî thå Ø registeò 
+aó thå otheò operand¬ yoõ don'ô neeä tï uså thå <RET¾ key®  Instead¬ yoõ 
+enteò thå seconä operanä directlù followeä bù thå desireä operatioî key.
+
+               Ô -¾ ´         Ô -¾ ³         Ô -¾ ³
+               Ú -¾ ³         Ú -¾ ²         Ú -¾ ³
+               Ù -¾ ²         Ù -¾ ±         Ù -¾ ²
+               ------------------------------------------------­
+               Ø -¾ ±         Ø -¾ µ         Ø -¾ ¶ <­ Displayeä
+                    Keyº µ         Keyº «           (X=X+5©
+                                        (1+5=6©
+
+Thå functionó <RET¾ anä ^Ø (cleaò stack© disablå thå automatiã stacë lifô 
+wheî thå nexô numbeò ió keyeä in®  Wheî anù otheò functioî ió used¬ thå 
+stacë lifô ió enabled¬ causinç thå stacë tï automaticallù lifô wheî thå 
+nexô numbeò ió keyeä in®  Thió effecô ió verù naturaì anä yoõ probablù 
+won'ô havå tï thinë abouô it.
+One-Numbeò Function
+
+Negatioî (two'ó complement© ió HP'ó onlù onå one-numbeò function®  Iô 
+operateó oî thå currenô valuå iî thå Ø register¬ placinç thå resulô iî thå 
+Ø register®  Thå resô oæ thå stacë ió unaffected.
+
+Two-Numbeò Functions
+
+Thå remaindeò oæ HP'ó numeriã functionó uså thå valueó iî botè thå Ø anä Ù 
+registers®  Iî operationó sucè aó subtractioî oò division¬ thå lasô numbeò 
+keyeä iî ió thå numbeò yoõ arå subtractinç oò dividinç by®  Iæ yoõ havå thå 
+numberó entereä iî thå wronç order¬ uså thå '=§ keù tï exchangå thå valueó 
+oæ thå Ø anä Ù registers.
+
+               Ô -¾ ³         Ô -¾ ²         Ô -¾ ²
+               Ú -¾ ²         Ú -¾ ±         Ú -¾ ²
+               Ù -¾ ±         Ù -¾ ¸         Ù -¾ ±
+               ------------------------------------------------­
+               Ø -¾ ¸         Ø -¾ ´         Ø -¾ ² <­ Displayeä
+     Keyº 8<RET¾    Keyº ´         Keyº ¯           (Y/X©
+                                        (8/4=2©
+:H:HP-ZP.HLP
+:Z:ZP.HLP
+

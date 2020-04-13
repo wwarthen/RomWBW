@@ -1,0 +1,331 @@
+;=======================================================================
+;
+; XMUF.Z80 - XMODEMXX PATCH FILE FOR ECB USB-FIFO
+;
+;   Phil Summers - difficultylevelhigh@gmail.com
+;   Updated: 2019-08-16
+;
+;=======================================================================
+;
+; Overlay file is Z80, build with M80:
+;   M80 =XMHB
+;   L80 XMHB,XMHB/N/X/E
+;
+	.Z80
+	ASEG
+;
+NO	EQU	0
+YES	EQU	NOT NO
+;
+ERRDET	EQU	NO		; detect parity/framing/overrun errs
+;
+BASE	EQU	100H		; start of cp/m normal program area
+;
+BDOS	EQU	00005H		; BDOS function dispatch vector
+;
+;=======================================================================
+;
+; Jump table: The jump table must be in exactly the same sequence as the
+; one in XMODEM.  Note the ORG of 103H - This jump table has no jump to
+; 'BEGIN'.
+;
+	ORG	BASE + 3	;start after 'JMP BEGIN'
+;
+	JP	CONOUT		;must be 00000h if not used, see below
+	JP	MINIT		;initialization routine (if needed)
+	JP	UNINIT		;undo whatever 'MINIT' did (or return)
+JPTBL:
+	JP	SENDR		;send character (via pop psw)
+	JP	CAROK		;test for carrier
+	JP	MDIN		;receive data byte
+	JP	GETCHR		;get character from modem
+	JP	RCVRDY		;check receive ready
+	JP	SNDRDY		;check send ready
+	JP	SPEED		;get speed value for file transfer time
+	JP	EXTRA1		;extra for custom routine
+	JP	EXTRA2		;extra for custom routine
+	JP	EXTRA3		;extra for custom routine
+;
+;-----------------------------------------------------------------------
+;
+; Output character to console
+;
+CONOUT	EQU	0		; not used
+;
+;-----------------------------------------------------------------------
+;
+; Initialize modem
+;
+; This procedure has been usurped to dynamically detect the type
+; of system we are running on and install the *real* jump table
+; entries as appropriate.
+;
+MINIT:
+;
+	; Announce
+	LD	DE,RBC		; RetroBrew Computers
+	LD	C,9		; BDOS string display function
+	CALL	BDOS		; Do it
+;
+	; Identify BIOS (RomWBW HBIOS or UNA UBIOS)
+	CALL	IDBIO		; 1=HBIOS, 2=UBIOS
+	LD	(BIOID),A	; Save it
+	DEC	A		; Test for HBIOS
+	JR	Z,HINIT		; Do HBIOS setup
+	DEC	A		; Test for UBIOS
+	JR	Z,UINIT		; Do UBIOS setup
+;
+	; Neither UNA nor RomWBW
+	LD	DE,BIOERR	; BIOS error message
+	LD	C,9		; BDOS string display function
+	CALL	BDOS		; Do it
+	JP	0		; Bail out!
+;
+HINIT:
+;
+	; Display RomWBW notification string
+	LD	DE,HBTAG	; BIOS notification string
+	LD	C,9		; BDOS string display function
+	CALL	BDOS		; Do it
+;
+	; Get platform id from RomWBW HBIOS and save it
+	LD	B,0F1H		; HBIOS VER function 0xF1
+	LD	C,0		; Required reserved value
+	RST	08		; Do it, L := Platform ID
+	LD	A,L		; Move to A
+	LD	(PLTID),A	; Save it
+;
+	; Get CPU speed from RomWBW HBIOS and save it
+	LD	B,0F8H		; HBIOS SYSGET function 0xF8
+	LD	C,0F0H		; CPUINFO subfunction 0xF0
+	RST	08		; Do it, L := CPU speed in MHz
+	LD	A,L		; Move it to A
+	LD	(CPUSPD),A	; Save it
+	JR	MINIT1		; Continue general initialization
+;
+UINIT:
+;
+	; Display UNA notification string
+	LD	DE,UBTAG	; BIOS notification string
+	LD	C,9		; BDOS string display function
+	CALL	BDOS		; Do it
+;
+	; Get CPU speed from UNA and save it
+	LD	C,0F8H		; UNA BIOS Get PHI function
+	RST	08		; Returns speed in Hz in DE:HL
+	LD	B,4		; Divide MHz in DE:HL by 100000H 
+UINIT1:
+	SRL	D		; ... to get approx CPU speed in
+	RR	E		; ...MHz.  Throw away HL, and
+	DJNZ	UINIT1		; ...right shift DE by 4.
+	INC	E		; Fix up for value truncation
+	LD	A,E		; Put in A
+	LD	(CPUSPD),A	; Save it
+	JR	MINIT1		; Continue general initialization
+;
+MINIT1:
+	LD	HL,1250		; Smaller receive loop timeout scalar
+	LD	(RCVSCL),HL	; ... to compensate for BIOS overhead
+	LD	HL,UF_JPTBL	; HBIOS jump table address
+	LD	DE,USB_FIFO	; HBIOS console notification string
+	JR	MINIT3		; Complete the initialization
+;
+MINIT3:
+	PUSH	HL		; Save HL
+
+	; Display port notification string
+	LD	C,9		; BDOS string display function
+	CALL	BDOS		; Do it
+;
+	; Newline
+	LD	C,9		; BDOS string display function
+	LD	DE,CRLF		; Newline
+	CALL	BDOS		; Do it
+;
+	; Copy real vectors into active jump table
+	POP	HL		; Recover HL
+	LD	DE,JPTBL	; Real jump table is destination
+	LD	BC,7 * 3	; Copy 7 3-byte entries
+	LDIR			; Do the copy
+;
+	; Return with CPU speed in A
+	LD	A,(CPUSPD)	; A := CPU speed in MHz
+	LD	HL,(RCVSCL)	; HL := receive scalar
+
+	RET			; and return
+;
+; Identify active BIOS.  RomWBW HBIOS=1, UNA UBIOS=2, else 0
+;
+IDBIO:
+;
+	; Check for UNA (UBIOS)
+	LD	A,(0FFFDH)	; fixed location of UNA API vector
+	CP	0C3H		; jp instruction?
+	JR	NZ,IDBIO1	; if not, not UNA
+	LD	HL,(0FFFEH)	; get jp address
+	LD	A,(HL)		; get byte at target address
+	CP	0FDH		; first byte of UNA push ix instruction
+	JR	NZ,IDBIO1	; if not, not UNA
+	INC	HL		; point to next byte
+	LD	A,(HL)		; get next byte
+	CP	0E5H		; second byte of UNA push ix instruction
+	JR	NZ,IDBIO1	; if not, not UNA, check others
+	LD	A,2		; UNA BIOS id = 2
+	RET			; and done
+;
+IDBIO1:
+	; Check for RomWBW (HBIOS)
+	LD	HL,(0FFFEH)	; HL := HBIOS ident location
+	LD	A,'W'		; First byte of ident
+	CP	(HL)		; Compare
+	JR	NZ,IDBIO2	; Not HBIOS
+	INC	HL		; Next byte of ident
+	LD	A,~'W'		; Second byte of ident
+	CP	(HL)		; Compare
+	JR	NZ,IDBIO2	; Not HBIOS
+	LD	A,1		; HBIOS BIOS id = 1
+	RET			; and done
+;
+IDBIO2:
+	; No idea what this is
+	XOR	A		; Setup return value of 0
+	RET			; and done
+;
+;
+;
+BIOID	DB	0		; BIOS ID, 1=HBIOS, 2=UBIOS
+PLTID	DB	0		; Platform ID
+CPUSPD	DB	10		; CPU speed in MHz
+RCVSCL	DW	2800		; RECV loop timeout scalar
+;
+RBC	DB	"RBC, 16-Aug-2018$"
+;
+USB_FIFO	DB	", USB-FIFO$"
+;
+UBTAG	DB	" [UNA]$"
+HBTAG	DB	" [WBW]$"
+;
+CRLF	DB	13, 10, "$"
+;
+BIOERR	DB	13, 10, 13, 10, "++ Unknown BIOS ++", 13, 10, "$"
+;
+;-----------------------------------------------------------------------
+;
+; Uninitialize modem
+;
+UNINIT:
+	LD	A,(BIOID)
+	CP	1		; Is HBIOS?
+	RET	NZ		; If not, just return
+	
+	; Reset character device 0
+	LD	B,04H		; HBIOS CIOINIT function 0x04
+	LD	C,0		; Unit = 0
+	LD	DE,-1		; Reset w/ current settings
+	RST	08		; Do it
+	RET			; not initialized, so no 'UN-INITIALIZE'
+;
+;-----------------------------------------------------------------------
+;
+; The following are all dummy routines that are unused because MINIT
+; dynamically installs the real jump table.
+;
+SENDR:
+CAROK:
+MDIN:
+GETCHR:
+RCVRDY:
+SNDRDY:
+SPEED:
+EXTRA1:
+EXTRA2:
+EXTRA3:
+	RET
+;
+;=======================================================================
+;=======================================================================
+;
+; WILL SOWERBUTTS ECB USB-FIFO 
+;
+;=======================================================================
+;=======================================================================
+;
+FIFO_BASE	EQU	0CH
+FIFO_DATA       EQU	(FIFO_BASE+0)
+FIFO_STATUS     EQU	(FIFO_BASE+1)
+FIFO_SEND_IMM   EQU	(FIFO_BASE+2)
+;
+; Following jump table is dynamically patched over initial jump
+; table at program startup.  See MINIT above.  Note that only a
+; subset of the jump table is overlaid (SENDR to SPEED).
+;
+UF_JPTBL:
+	JP	UF_SENDR		;send character (via pop psw)
+	JP	UF_CAROK		;test for carrier
+	JP	UF_MDIN			;receive data byte
+	JP	UF_GETCHR		;get character from modem
+	JP	UF_RCVRDY		;check receive ready
+	JP	UF_SNDRDY		;check send ready
+	JP	UF_SPEED		;get speed value for file transfer time
+;
+;-----------------------------------------------------------------------
+;
+; Send character on top of stack
+;
+UF_SENDR:
+
+	POP	AF			; get character to send from stack
+	OUT	(FIFO_DATA),A		; WRITE TO FIFO
+	OUT	(FIFO_SEND_IMM),A	; SEND IMMEDIATE
+	RET
+;
+;-----------------------------------------------------------------------
+;
+; Test and report carrier status, Z set if carrier present
+;
+UF_CAROK:
+	XOR	A			; not used, always indicate present
+	RET
+;
+;-----------------------------------------------------------------------
+;
+; Get a character (assume character ready has already been tested)
+;
+; This routine must NOT block.
+;
+UF_MDIN:
+UF_GETCHR:
+	IN	A,(FIFO_DATA)		; GET CHAR
+	RET
+;
+;-----------------------------------------------------------------------
+;
+; Test for character ready to receive, Z = ready
+; Error code returned in A register
+; *** Error code does not seem to be used ***
+;
+UF_RCVRDY:
+	IN	A,(FIFO_STATUS)		; B7=0 IF CHAR AVAIL, =1 IF NO CHAR.
+	RLCA				; B0=0 IF CHAR AVAIL, =1 IF NO CHAR.
+	AND	00000001B		; A=0, ZF=1 IF NO CHAR, A=1, ZF=0 IF CHAR AVAIL, 
+	LD	A,0
+	RET
+;
+;-----------------------------------------------------------------------
+;
+; Test for ready to send a character, Z = ready
+;
+UF_SNDRDY:
+	IN	A,(FIFO_STATUS)		; Bit 0=0 IF SPACE AVAIL, =1 IF FULL
+	AND	00000001B		; A=0, ZF=1 IF SPACE AVAIL, A=1, ZF=0 IF FULL.
+	RET
+;
+;-----------------------------------------------------------------------
+;
+; Report baud rate (index into SPTBL returned in register A)
+;
+UF_SPEED:
+	LD	A,8			; arbitrarily return 9600 baud
+	RET
+;
+	END

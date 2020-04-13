@@ -1,9 +1,9 @@
 ================================================================
 Floppy Disk Utility (FDU) v5.3 for RetroBrew Computers 
-Disk IO / Zeta / Dual-IDE / N8 / RC2014 / SmallZ80
+Disk IO / Zeta / Dual-IDE / N8 / RC2014 / SmallZ80 / Dyno
 ================================================================
 
-Updated September 5, 2018
+Updated January 5, 2020
 by Wayne Warthen (wwarthen@gmail.com)
 
 Application to test the hardware functionality of the Floppy 
@@ -77,6 +77,7 @@ supported:
  - RC2014 w/ SMC
  - RC2014 w/ WDC
  - SmallZ80
+ - Dyno
 
 You must be using either a RomWBW or UBA based OS version.
 
@@ -95,7 +96,7 @@ Finally, you will need a floppy drive connected via an
 appropriate cable:
 
 Disk IO - no twist in cable, drive unit 0/1 must be selected by jumper on drive
-DISK IO 3, Zeta, Zeta 2, RC2014 - cable with twist, unit 0 after twist, unit 1 before twist
+DISK IO 3, Zeta, Zeta 2, RC2014, Dyno - cable with twist, unit 0 after twist, unit 1 before twist
 DIDE, N8, Mark IV, SmallZ80 - cable with twist, unit 0 before twist, unit 1 after twist
 
 Note that FDU does not utilize your systems ROM or OS to 
@@ -152,6 +153,9 @@ for I/O base address 0x50 (SV1: 11-12), JP1 (/DACK): 1-2,
 JP2 (TC): 2-3.
 
 SmallZ80 does not have any relevant jumper settings.  The 
+hardwired I/O ranges are assumed in the code.
+
+Dyno does not have any relevant jumper settings.  The 
 hardwired I/O ranges are assumed in the code.
 
 Modes of Operation
@@ -505,3 +509,6 @@ WW 9/5/2018: v5.3
     condition is no longer considered an error, but a successful end of
     operation.
   - Added support for SmallZ80
+
+WW 5/1/2020: v5.4
+  - Added support for Dyno (based on work by Steve Garcia)

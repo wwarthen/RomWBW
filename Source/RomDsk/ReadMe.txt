@@ -14,15 +14,6 @@ first grabs all of the "standard" files for the size of ROM being
 built.  So, if you are building a normal 512KB ROM, all of the files
 in 512KB directory will be pulled in.
 
-After adding all of the standard files for the size of ROM being
-built, the build process will add the files from the appropriate
-platform directory.  So, if you are building a ROM for the Zeta
-platform, all of the files in the zeta directory will be added.
-
-The reason for the platform directories is that some programs are
-specific to a platform.  The platform directories provide a mechanism
-to add platform specific programs.
-
 You may freely add/delete/update the files in these directories to
 change the contents of the ROM Disk of your ROM firmware.
 

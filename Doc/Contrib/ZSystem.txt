@@ -32,6 +32,8 @@ The remainder of this document details the changes I made as I went along.  In a
 
 6. Updated FILEATTR to v1.6A.  Original FILEATTR.CFG was invalid.  FILEATTR.CFG replaced with FA16.CFG.  Added associated files FA16.DOC, FA16A.FOR, FA16CFG.TXT.
 
+7. ZCAL patched to be Y2K compliant.  Contributed by Nick Brok.
+
 
 Usage Notes
 -----------

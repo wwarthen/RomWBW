@@ -1,0 +1,344 @@
+;                                             
+                                   Z   P           
+                                             
+                                Version 1.7
+
+             A ZCPR3 Screen-Oriented File/Disk/Memory Patcher
+
+                          I -->  Installation    
+                          C -->  Configuration   
+                          O -->  Overview        
+                          S -->  Syntax          
+                          R -->  Running ZP      
+                          M -->    Memory Mode   
+                          D -->    Disk Mode     
+                          F -->    File Mode     
+                          X -->    String Search 
+                          E -->    Record Edit            
+                          H -->    HP Calculator 
+                          Q -->    HP Quik Ref    
+                          K -->    Record Cache  
+:I
+Installation
+ 
+Thå distributioî versioî oæ ZĞ ió supplieä readù foò uså iî ZCPR33« 
+environments®  ZCPR3° useró shoulä instalì ZĞ usinç theiò normaì method® 
+:C
+Configuration
+
+ZCNFÇ anä ZP.CFÇ maù bå useä tï configurå ZĞ tï alteò thå operatioî oæ thå 
+prograí tï suiô thå user®  Defaulô values¬ sucè aó thå startinç memorù modå 
+addresó anä thå ASCIÉ recorä characteò displaù modå maù bå configured®  
+
+Thå linå graphicó menõ boø displaù maù bå configureä tï displaù thå menõ 
+boø iî linå graphicó (foò useró witè reverså videï standout)¬ standouô linå 
+graphicó (foò useró witè darë screenó anä dií standout© anä tï noô displaù 
+thå menõ boø aô all.
+
+Foò useró witè reverså videï standouô anä unblinkinç blocë cursors¬ ZĞ maù 
+bå configureä tï refresè thå recorä displaù oî enterinç thå ediô modå iî 
+ordeò tï deletå thå standouô videï placå markeró produceä bù á strinç 
+searcè oò aî addresó find®  Thå heø recorä displaù standouô markeò caî 
+causå confusioî wheî attemptinç tï ediô thå markeä byte witè aî unblinkinç 
+cursor.
+
+ZĞ maù alsï bå configureä tï cleaò thå screeî oî exit®  Thå defaulô ió tï 
+leave the screen display on screen.
+:O
+Overview
+
+ZĞ (Zcpr3 Patcher© ió á Z8° screen-orienteä recorä editor-patcher®  ZP.1OM¬ 
+á typå ± version¬ loadinç anä executinç aô 100h¬ wilì ruî undeò anù versioî 
+oæ ZCPR3®  ZP.4OM¬ á typå ´ version¬ executeó onlù undeò ZCPR34+¬ Z3PLUÓ oò 
+BGii®  Botè versionó requirå aî extendeä Z3TCAĞ (aó defineä bù VLIB4D+© anä 
+alsï requirå thaô thå ZCPR³ wheeì bytå bå set®  Thå sourcå codå maù alsï bå 
+assembleä tï producå á typå ³ version¬ runninç aô 8000è undeò ZCPR33+¬ ŠZ3PLUÓ oò BGii.
+
+ZĞ waó originallù looselù baseä oî SUPERZAP¬ aká SPÚ oò ZAP33¬ anä waó 
+developeä aó á work-alikå foò Steveî Cohen'ó greaô ZPATCH1° thaô would¬ iî 
+additioî tï editinç filå records¬ alsï providå screen-orienteä editinç oæ 
+memorù anä disë records®  ZĞ ió intendeä tï complemenô ratheò thaî replacå 
+ZPATCH¬ aó welì aó tï complemenô Roâ Friefeld'ó excellenô BCOMĞ anä VCOMP¬ 
+especiallù wheî theù arå patcheä tï uså thå ZPATCH/WÓ commanä sets®  Iî 
+ordeò tï keeğ ZĞ relativelù simple¬ iô lackó ZPATCH'ó comprehensivå strinç 
+searcè optionó anä doeó noô havå á commanä tï senä thå currenô recorä tï 
+thå printer®  Unlikå ZPATCH¬ ZĞ ió á transienô utilitù anä noô á shell.
+
+ZĞ haó á one-recorä cachå foò temporarù recorä storagå anä caî movå thå 
+cachå contentó betweeî file¬ memorù anä disë records®  Thió allowó you¬ foò 
+example¬ tï takå á one-recorä Z3TCAP.Z3Ô filå anä patcè iô intï memorù iî 
+thå ZCPR³ environment®  
+
+ZĞ alsï containó thå powerfuì anä full-featureä HP12 RPÎ programmer'ó 
+integeò calculator¬ whicè maù bå calleä uğ iî file¬ disk¬ memorù oò recorä 
+ediô modeó (eveî durinç thå editinç process)¬ tï perform¬ savå oò recalì 
+thå resultó oæ integeò calculationó oò logicaì operationó iî hex¬ decimal¬ 
+binary¬ oò characteò modes® 
+:S
+Syntax
+
+Whilå ZĞ allowó thå useò tï freelù switcè amonç modeó durinç prograí 
+operation¬ iô alsï maù bå instructeä tï comå uğ iî thå desireä initiaì modå 
+bù usinç thå followinç commanä linå syntax:
+
+     ZP [hex_addr]  - Memory mode at hex address
+     ZP dir:        - Disk mode
+     ZP [dir:]afn   - File mode 
+     ZP //          - Display syntax help screen
+:R
+Running ZP
+
+Excepô foò thå HĞ calculator¬ ZĞ ió menu-driveî anä useó commandó similaò 
+tï ZPATCH10¬ sï iô shoulä requirå littlå iî thå waù oæ instruction®  Morå 
+specifiã informatioî abouô thå operatioî oæ eacè modå maù bå founä iî thå 
+following sectionó.  
+
+Severaì alternatå commands¬ however¬ dï noô appeaò iî thå menu®  Foò 
+example¬ therå arå severaì alternatå exiô commands®  Whilå thå 'Q§ commanä 
+ió thå onlù exiô commanä showî iî thå commanä menus¬ 'X§ anä ESÃ arå 
+also accepted as exiô commands®  
+
+Foò easieò browsing¬ thå spacå characteò ió accepteä aó aî alternatå next-
+screeî commanä aô thå memory¬ filå anä disë menus.
+ASCII Record Display Mode
+
+ZĞ caî displaù characteró iî thå ASCIÉ parô oæ thå recorä displaù iî onå oæ 
+twï user-selectablå ways®  ZP'ó distributioî defaulô ASCIÉ displaù modå 
+displays onlù thå actuaì displayablå characters¬ displayinç alì otheò 
+characteró aó '.'s®  Thió typå oæ display¬ typicaì oæ DDT¬ ió relativelù 
+uncluttereä buô iô ió morå difficulô tï reaä texô thaô haó thå higè bitó oæ 
+characters set, such as WordStaò fileó anä disë directorieó.
+
+Alternately¬ ZĞ caî bå commandeä tï filteò thå higè bitó oæ thå characteró 
+beinç displayed¬ convertinç ASCIÉ characteró witè thå higè biô seô tï 
+displayablå characteró anä displayinç alì otheò characteró aó '.'s®  Thió 
+typå oæ display¬ typicaì oæ PEEK¬ convertó morå characteró tï ASCII®  Whilå 
+iô caî ofteî appeaò morå cluttered¬ iô ió easieò tï reaä WordStaò fileó anä 
+disë directorieó iî thió mode®  
+
+Durinç operation¬ thå useò caî togglå thå typå oæ ASCIÉ displaù desireä bù 
+usinç thå non-menõ commanä Control-Á (^A© aô anù oæ thå maiî modå menus®  
+Therå ió alsï á ZCNFG-configurablå flaç thaô controló thå defaulô ASCIÉ 
+displaù mode®  
+:M
+Memory Mode
+
+Memorù modå ió ZP'ó defaulô modå oæ operatioî wheî nï otheò modå ió 
+specifieä oî thå commanä line®  Iæ nï startinç addresó ió specifieä oî thå 
+commanä line¬ thå addresó oæ thå ZCPR³ environmenô ió thå defaulô startinç 
+addresó foò thå ZĞ display¬ buô ZCNFÇ maù bå useä tï configurå á differenô 
+defaulô startinç address¬ sucè aó 100h¬ iæ desired®  Thå displaù wilì alsï 
+starô aô thió configureä addresó wheî memorù modå ió entereä froí anotheò 
+ZĞ mode.
+
+Iæ yoõ includå á startinç addresó oî thå commanä linå (uğ tï ´ hexidecimaì 
+characteró witè NÏ non-heø characters)¬ ZĞ wilì begiî itó displaù aô thå 
+memorù recorä containinç thå specifieä address®  Á subsequenô ediô commanä 
+wilì alsï begiî aô thå specifieä address®  
+
+ZĞ useó thå commanä buffeò aô 80è aó itó workinç recorä buffer¬ sï wheneveò 
+yoõ vie÷ thå commanä buffeò record¬ yoõ wilì actuallù bå lookinç aô á copù 
+oæ thå recorä thaô waó previouslù viewed®  Notå ho÷ thå commanä buffeò 
+displaù changeó wheî yoõ steğ througè iô froí oppositå directions®  Wheî iô 
+ió displayinç thå commanä buffeò contents¬ ZĞ alsï displayó á speciaì 
+headeò tï reminä yoõ thaô yoõ arå viewinç thå commanä buffer¬ aó iô ió 
+generallù inadvisablå (anä usuallù futile© tï attempô tï ediô thå contentó 
+oæ thå commanä buffer.
+
+Thå 'T§ (Toğ oæ Memory© commanä displayó thå highesô memorù recorä (FF80h-
+FFFFh© anä thå 'B§ (Bottoí oæ Memory© commanä displayó thå firsô memorù 
+recorä (0000h-007Fh)®  
+
+Thå 'A§ commanä allowó yoõ tï selecô thå addresó oæ á memorù 'record§ tï 
+view®  ZĞ wilì displaù thå 12¸ bytå 'record§ containinç thaô address¬ witè 
+thå bytå aô thå specifieä addresó highlighteä iî botè thå Heø anä ASCIÉ 
+displays®  Iæ thå ediô modå ió subsequentlù selected¬ thå ediô cursoò wilì 
+alsï bå positioneä aô thå specifieä address.
+:D
+Disk Mode
+
+Wheî yoõ selecô thå drivå yoõ wisè tï accesó iî disë mode¬ yoõ maù alsï 
+specifù á useò area¬ usinç eitheò á DUº oò DIRº specification®  Thå 
+specifieä drive/useò theî becomeó thå defaulô foò anù subsequenô filå 
+accesses.
+
+ZĞ startó thå disë modå displaù witè thå firsô directorù record®  Otheò 
+recordó maù bå selecteä bù block¬ record¬ oò track®  
+
+Floppù disë systeí tracë recordó maù bå displayeä bù selectinç tracë ° oò 
+bù steppinç bacë froí thå directory®  Harä disë systeí recordó maù bå 
+displayeä wheî thå 'first§ disë (á DPÂ OFFSEÔ oæ lesó thaî 10© ió loggeä 
+in®  Otherwiså thå displaù ió limiteä tï thå actuaì loggeä disë tracks®  
+Wheî steppinç pasô thå firsô oò lasô tracë oò recorä oæ thå disk¬ ZĞ wilì 
+wrağ arounä tï thå otheò enä oæ thå disk.
+:F
+File Mode
+
+Thå drive/useò containeä iî anù filenamå specificatioî becomeó thå defaulô 
+foò anù subsequenô filå oò disë accesses®  
+
+Wheî wildcarä filenameó arå entered¬ ZĞ wilì displaù thå firsô filå founä 
+iî thå directorù thaô matcheó thå specifieä ambiguouó filename®  Iæ thå 
+filenamå entereä ió á COÍ file¬ á displaù offseô oæ 0100è wilì bå addeä 
+automaticallù tï thå filå recorä addresseó sï thaô thå firsô filå recorä 
+wilì starô aô á displaù addresó oæ 0100h®  Otheò filå typeó wilì bå 
+displayeä startinç aô aî addresó oæ 0000è (offseô ½ 0)®  Thå 'O§ (Offset© 
+commanä allowó yoõ tï changå thå displaù offseô aó desired.
+
+Thå 'A§ commanä allowó yoõ tï selecô aî addresó iî thå file®  ZĞ wilì 
+displaù thå 12¸ bytå recorä containinç thaô address¬ witè thå bytå aô thå 
+specifieä addresó highlighteä iî botè thå Heø anä ASCIÉ displays®  Iæ thå 
+ediô modå ió subsequentlù selected¬ thå ediô cursoò wilì alsï bå positioneä 
+aô thå specifieä address.
+:X
+String Search
+
+ZP'ó strinç searcè functioî ió similaò tï ZPATCH's¬ buô iô ió mucè morå 
+basiã anä haó nï options®  Stringó tï bå locateä maù bå entereä aó heø oò 
+ASCIÉ characteró oò anù combination®  ASCIÉ stringó arå entereä delimiteä 
+bù singlå oò doublå quoteó anä wilì bå automaticallù capitalized®  Heø 
+characteró arå entereä delimiteä bù commaó oò spaces®  Botè singlå anä 
+doublå quotå characteró musô bå entereä aó heø characters®  Thå remaindeò Šoæ thå terminaì displaù linå afteò thå prompt¬ abouô 4µ characters¬ maù bå 
+useä foò characteò entry®  Foò example¬ thå entry:
+
+     'Fil',65,6e,61 "me" will create the search string 'FILENAME'
+
+Á fe÷ compromiseó anä assumptionó havå beeî madå sï thaô thå samå searcè 
+routinå maù bå useä iî alì situations®  Wheî doinç thå search¬ ZĞ wilì 
+firsô comparå á searcè characteò witè thå buffeò characteò withouô regarä 
+tï ASCIÉ case®  Iæ nï matcè ió found¬ thå buffeò characteò wilì bå filtereä 
+anä capitalizeä (iæ ASCII© anä anotheò comparisoî made®  Thió allowó yoõ tï 
+searcè foò texô iî WordStaò fileó oò disë directorieó withouô worryinç 
+abouô caså oò higè bits¬ whilå stilì retaininç thå abilitù tï dï searcheó 
+foò heø characteró sucè aó commanä oò addresó characters®  Foò example:
+
+     'Filename§ wilì matcè 'FILEN','A'+80h,'ME§ or 'FILENAME§ 
+          (wherå thå 'A§ haó thå higè biô set)¬ while 
+
+     'Filen',E1,"me¢ wilì matcè 'FILEN','A'+80h,'ME'¬ buô noô           
+          'FILENAME§ (specificallù insistinç oî aî exacô matcè 
+          foò E1h¬ whicè ió 'A§ witè thå higè biô set).
+
+Aó á resulô oæ thió relativelù simplå searcè scheme¬ heø searcè characteró 
+thaô happeî tï alsï bå loweò caså ASCIÉ characteró wilì matcè botè exacô 
+anä 'capitalized§ characters¬ whicè mighô resulô iî aî occasionaì falså 
+positivå match®  Foò examplå 65è ('e'© wilì matcè botè 65è anä 45è ('E').
+
+Strinç searcheó maù bå stoppeä aô anù timå bù enterinç anù character®  Disë 
+modå strinç searcheó wilì continuå untiì á matcè ió founä oò untiì yoõ stoğ 
+thå search¬ wrappinç aô thå lasô tracë bacë tï thå firsô track®  
+
+Wheî thå 'C§ commanä ió useä tï continuå á search¬ thå searcè wilì starô 
+froí thå addresó oæ thå lasô matcè iæ iô ió locateä iî thå recorä currentlù 
+displayed¬ otherwiså iô wilì starô aô thå beginninç oæ thå currenô record.
+
+Wheî á strinç ió located¬ thå recorä iî whicè iô ió founä wilì bå displayeä 
+anä thå firsô bytå oæ thå strinç wilì bå highlighteä iî botè thå Heø anä 
+ASCIÉ displays®  Iæ thå ediô modå ió theî selected¬ thå ediô cursoò wilì bå 
+positioneä aô thå starô oæ thå founä string®  Iæ á strinç ió noô found¬ thå 
+currenô recorä wilì bå redisplayed.
+:E
+Record Edit
+
+ZP¬ likå ZPATCH¬ useó thå WordStaò diamonä keyó (^S¬ ^E¬ ^D¬ ^X© tï controì 
+thå cursoò durinç editing®  Thå backspacå keù ió aî alternatå tï ^Ó tï movå 
+thå cursoò left®  Thå arro÷ keyó defineä iî thå Z3TCAĞ arå alsï mappeä aó 
+alternatå cursoò controì keys¬ eveî thougè theù arå noô showî iî thå ediô 
+modå commanä menu®  
+
+Somå terminals¬ sucè aó ANSÉ terminals¬ have arro÷ keyó thaô generatå morå 
+thaî onå character®  Foò theså terminals¬ thå arro÷ keù definitionó iî thå 
+Z3TCAĞ wilì probablù bå thå WordStaò diamonä keys®  Pressinç aî actuaì 
+arro÷ keù maù causå itó strinç tï bå interpreteä bù ZĞ aó thå equivalenô 
+serieó oæ characters®  Thió wilì usuallù bå undesirable®  Iî thå caså oæ 
+ANSÉ terminals¬ thå arro÷ codeó wilì causå aî exiô froí ZP.
+
+Wheî thå ediô modå ió entereä followinç á strinç searcè oò aî addresó 
+specification¬ thå ediô cursoò wilì bå placeä aô thå beginninç oæ thå founä 
+strinç oò aô thå specifieä address®  Specifyinç thå desireä ediô addresó 
+beforå enterinç thå ediô modå ió á quicë waù tï directlù reacè thå desireä 
+addresó iî thå recorä beinç edited®  Thå addresó oæ thå bytå currentlù 
+beinç editeä ió displayeä iî thå ediô modå menõ box.
+
+Thå ESÃ keù toggleó thå ediô modå betweeî thå Heø anä ASCIÉ displays®  
+
+ZĞ haó á speciaì Filì commanä (^F© thaô allowó yoõ tï filì á numbeò oæ 
+byteó iî thå 12¸ bytå recorä beinç editeä witè á specifieä filì byte®  Thå 
+fill syntaø isº 
+ 
+     Filì bytå (iî heø oò quoteä ASCII:  0, e5, ff, '*', etc)
+     Separatoò (comma¬ spacå oò tab© 
+     Decimaì numbeò oæ byteó tï bå filled (* = fill to end of record)
+  
+Filló begin witè thå currenô cursoò position®  Filì lengthó uğ tï 25µ (FFh© 
+wilì bå accepted¬ buô á maximuí oæ 12¸ byteó can bå filled®  Thå filì wilì 
+alwayó stoğ aô thå enä oæ thå recorä iæ yoõ enteò á lengtè greateò thaî thå 
+numbeò oæ byteó remaininç iî thå record®  Yoõ maù alsï enteò thå speciaì 
+lengtè characteò ª tï telì ZĞ tï filì tï thå enä oæ thå record®  Enteò '?§ 
+aô thå filì prompô foò á helğ screen.
+
+ZĞ useó thå ZPATCÈ commandó tï exiô thå ediô mode®  Enteò ^Ñ tï quiô 
+withouô savinç thå changes¬ anä enteò ^× tï savå thå changeó anä exit® 
+:Q
+HP Calculator Quick Reference
+
+ZĞ containó thå powerfuì anä full-featureä HP12 RPÎ programmer'ó integeò 
+calculator®  Thå calculatoò maù bå calleä uğ aô anù timå (eveî durinç thå 
+editinç process© tï perform¬ savå oò recalì thå resultó oæ integeò 
+calculationó oò logicaì operationó iî hex¬ decimal¬ binary¬ oò characteò 
+modes® 
+
+Thå calculatoò ió botè invokeä anä exiteä bù enterinç ^C®  Sincå thå 
+calculatoò retainó alì registeò informatioî aó lonç aó ZĞ ió running¬ 
+calculatoò registeró maù bå useä tï storå referencå datá betweeî otheò ZĞ 
+operations®  Thå calculatoò maù alsï bå invokeä durinç recorä editinç 
+operationó withouô affectinç thå editinç procesó iî anù way.
+HP12 Command Summary
+
+    ^X         Clear entire stack
+     BS        Delete last character
+   <RET>       Enter number into register X
+     =         Exchange the contents of X and Y
+     L         Restore last X value
+     < or ,    Roll stack down one level
+     > or .    Roll stack up one level
+     Sn        Store contents of X in memory register n (0-5 or R)
+     Rn        Recall contents of memory register n to register X
+    ^C         Exit HP12
+
+HP12 Math Function Summary
+
+     «         Addition¬ X=Y+Ø
+     ­         Subtraction¬ X=Y-Ø
+     ª         Multiplication¬ X=Y*Ø
+     Ş         Exponentiation¬ X=Y^Ø  (Y to the power X)
+     ¯         Integeò quotient¬ X=INT(Y/X©
+                    - Remainder in Register R=X*(Y/X-INT(Y/X)© 
+     ¦         Bitwiså AND¬ X=Y&X
+     ü         Bitwiså OR¬ X=Y|X
+     ş         Negatioî [2'ó complement]¬ X=~Ø
+:K
+Record Cache
+
+ZĞ provideó á one-recorä buffeò intï whicè yoõ caî copù thå currentlù 
+displayeä record®  Yoõ caî lateò exchangå thå cacheä recorä witè thå recorä 
+beinç currentlù displayed®  Thió allowó you¬ foò example¬ tï experimentallù 
+ediô á recorä whilå maintaininç á copù oæ thå unediteä recorä iî thå cachå 
+buffer®  Notå thaô wheî yoõ exiô ZP¬ thå contentó oæ thå cachå buffeò wilì 
+bå lost¬ sï iæ yoõ wisè tï preservå á record¬ exchangå iô witè á recorä 
+froí á 'holding§ filå oæ aô leasô onå recorä iî lengtè thaô yoõ havå 
+previouslù reserveä foò recorä storagå (ZĞ wilì noô creatå files.©  Yoõ caî 
+alsï savå á cacheä recorä iî aî unuseä 12¸ bytå 'record§ iî memory¬ usinç 
+SAVE.COÍ tï savå thå memorù recorä tï á filå afteò yoõ exiô ZP®  Finally¬ 
+ZĞ contentó wilì remaiî preserveä iæ yoõ reenteò iô usinç thå JUMĞ (tï thå 
+loaä addresó displayeä iî thå signoî banner© command¬ assuminç thaô yoõ 
+haven'ô overwritteî thå ZĞ locations.
+
+Thå seconä ZĞ statuó linå displayó thå thå origiî oæ thå current cacheä 
+record®  Copyinç á recorä intï thå cachå wilì overwritå thå previouó 
+contentó oæ thå cache®  Performinç á cachå copù oò exchangå operatioî 
+automaticallù returnó yoõ tï youò previouó modå anä updateó thå currenô 
+recorä display.
+:N:HP-RPN.HLP
+:H:HP-ZP.HLP
+

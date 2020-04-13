@@ -23,16 +23,22 @@
 ;   - Max Z80 CPU clock is about 8MHz or sound chip will not handle speed.
 ;   - Higher CPU clock speeds are possible on Z180 because extra I/O
 ;     wait states are added during I/O to sound chip.
-;   - Uses hardware timer support on Z180 processors.  Otherwise, a delay
-;     loop calibrated to CPU speed is used.
+;   - Uses hardware timer support on systems that support a timer.  Otherwise,
+;     a delay loop calibrated to CPU speed is used.
 ;   - Delay loop is calibrated to CPU speed, but it does not compensate for
 ;     time variations in each quark loop resulting from data decompression.
 ;     An average quark processing time is assumed in each loop.
+;   - Most sound files originally targeted MSX or ZX Spectrum which used
+;     1.7897725 MHz and 1.773400 MHz respectively for the PSG clock.  For best
+;     sound playback, PSG should be run at approx. this clock rate.
 ;_______________________________________________________________________________
 ;
 ; Change Log:
 ;   2018-01-26 [WBW] Initial release
 ;   2018-01-28 [WBW] Added support for MYM sound files
+;   2019-11-21 [WBW] Added table-driven configuration
+;   2020-02-11 [WBW] Made hardware config & detection more flexible
+;   2020-03-29 [WBW] Fix error in Z180 I/O W/S bracketing
 ;_______________________________________________________________________________
 ;
 ; ToDo:
@@ -48,13 +54,11 @@ BDOS		.EQU	$0005		; BDOS invocation vector
 ;	
 IDENT		.EQU	$FFFE		; loc of RomWBW HBIOS ident ptr
 ;	
-RMJ		.EQU	2		; intended CBIOS version - major
-RMN		.EQU	9		; intended CBIOS version - minor
+RMJ		.EQU	3		; intended CBIOS version - major
+RMN		.EQU	1		; intended CBIOS version - minor
 ;
 BF_SYSVER	.EQU	$F1		; BIOS: VER function
 BF_SYSGET	.EQU	$F8		; HBIOS: SYSGET function
-;
-DCNTL		.EQU	$72		; Z180 DCNTL PORT
 ;
 FCB		.EQU	$5C		; Location of default FCB
 ;
@@ -79,49 +83,36 @@ TYPMYM		.EQU	3		; FILTYP value for MYM sound file
 	LD	A,RMJ << 4 | RMN	; Expected HBIOS ver
 	CP	D			; Compare with result above
 	JP	NZ,ERRBIO		; Handle BIOS error
+	LD	A,L			; Platform id to A
+	LD	(CURPLT),A		; Save as current platform id
+;
+	LD	HL,CFGTBL		; Point to start of config table
+CFGSEL:
+	LD	A,$FF			; End of table marker
+	CP	(HL)			; Compare
+	JP	Z,ERRHW			; Bail out if no more configs to try
+;
+	LD	BC,CFGSIZ		; Size of one entry
+	LD	DE,CFG			; Active config structure
+	LDIR				; Update active config structure
+;
+	LD	A,(CURPLT)		; Get current running platform id
+	LD	E,A			; Put in E
+	LD	A,(PLT)			; Get platform id of loaded config
+	CP	E			; Equal?
+	JR	NZ,CFGSEL		; If no match keep trying
+;
+	; Activate card if applicable
+	CALL	SLOWIO			; Slow down I/O now
+	LD	A,(ACR)			; Get ACR port address (if any)
+	INC	A			; $FF -> $00 & set flags
+	JR	Z,PROBE			; Skip ahead to probe if no ACR
+	DEC	A			; Restore real ACR port address
+	LD	C,A			; Put in C for I/O
+	LD	A,$FF			; Value to activate card
+	OUT	(C),A			; Write value to ACR
 ;	
-	; Use platform id to derive port addresses
-	LD	A,L			; Platform ID is still in L from above
-	LD	C,L			; Save platform id in C for now
-	LD	HL,$D0D8		; For RC2014, RSEL=D8, RDAT=D0
-	LD	DE,MSGRC		; Message for RC2014 platform
-	CP	7			; RC2014?
-	JR	Z,_SETP			; If so, set ports
-	LD	HL,$9D9C		; For N8, RSEL=9C, RDAT=9D
-	LD	DE,MSGN8		; Message for N8 platform
-	CP	4			; N8?
-	JR	Z,_SETP			; If so, set ports
-	LD	HL,$9B9A		; Otherwise SCG, RSEL=9A, RDAT=9B
-	LD	DE,MSGSCG		; Message for SCG platform
-	LD	A,$FF			; Write $FF to the
-	OUT	($9C),A			; ... SCG ACR register to activate card
-_SETP	LD	(PORTS),HL		; Save port values
-	CALL	CRLF			; Formatting
-	CALL	PRTSTR			; Display platform string
-;	
-	; Choose quark wait mode based on platform
-	LD	A,C			; Recover platform id
-	LD	B,1			; Assume timer mode
-	LD	DE,MSGTIM		; Corresponding display string
-	CP	4			; N8?
-	JR	Z,_SETM			; If so, commit timer mode
-	CP	5			; MK4?
-	JR	Z,_SETM			; If so, commit timer mode
-	LD	B,0			; Otherwise, delay mode
-	LD	DE,MSGDLY		; Corresponding display string
-_SETM	LD	A,B			; Mode flag value to A
-	LD	(WMOD),A		; Save wait mode
-	CALL	PRTSTR			; Print it
-;	
-	; Get CPU speed & type from RomWBW HBIOS and compute quark delay factor
-	LD	B,$F8			; HBIOS SYSGET function 0xF8
-	LD	C,$F0			; CPUINFO subfunction 0xF0
-	RST	08			; Do it, DE := CPU speed in KHz
-	SRL	D			; Divide by 2
-	RR	E			; ... for delay factor
-	EX	DE,HL			; Move result to HL
-	LD	(QDLY),HL		; Save result as quark delay factor
-;	
+PROBE:
 	; Test for hardware (sound chip detection)
 	LD	DE,(PORTS)		; D := RDAT, E := RSEL
 	LD	C,E			; Port = RSEL
@@ -130,11 +121,47 @@ _SETM	LD	A,B			; Mode flag value to A
 	LD	C,D			; Port = RDAT
 	LD	A,$AA			; Value = $AA
 	OUT	(C),A			; Write $AA to register 2
-	LD	C,E			; Port = RSEL
+	LD	A,(RIN)			; Port = RIN
+	LD	C,A			; ... to C
 	IN	A,(C)			; Read back value in register 2
-	;CALL	PRTHEX			; *debug*
 	CP	$AA			; Value as written?
-	JP	NZ,ERRHW		; If not, handle hardware error
+	PUSH	AF			; Save AF
+	CALL	NORMIO			; Back to normal I/O speeds
+	POP	AF			; Recover AF
+	JR	Z,MAT			; Hardware matched!
+	JR	CFGSEL			; And keep trying
+;
+MAT:
+	; Hardware matched!
+	CALL	CRLF			; Formatting
+	LD	DE,(DESC)		; Load hardware description pointer
+	CALL	PRTSTR			; Print description
+;
+	; Test for timer running to determine if it can be used for delay
+	LD	B,BF_SYSGET		; HBIOS: GET function
+	LD	C,$D0			; TIMER subfunction
+	RST	08			; DE:HL := current tick count
+	LD	A,L			; DE:HL == 0?
+	OR	H	
+	OR	E	
+	OR	D	
+	LD	A,0			; Assume no timer
+	LD	DE,MSGDLY		; Delay mode msg
+	JR	Z,SETDLY		; If tick count is zero, no timer active
+	LD	A,$FF			; Value for timer active
+	LD	DE,MSGTIM		; Timer mode msg
+SETDLY:	
+	LD	(WMOD),A		; Save wait mode
+	CALL	PRTSTR			; Print it
+;
+	; Get CPU speed & type from RomWBW HBIOS and compute quark delay factor
+	LD	B,$F8			; HBIOS SYSGET function 0xF8
+	LD	C,$F0			; CPUINFO subfunction 0xF0
+	RST	08			; Do it, DE := CPU speed in KHz
+	SRL	D			; Divide by 2
+	RR	E			; ... for delay factor
+	EX	DE,HL			; Move result to HL
+	LD	(QDLY),HL		; Save result as quark delay factor
 ;
 	; Clear heap storage
 	LD	HL,HEAP			; Point to heap start
@@ -148,7 +175,18 @@ _SETM	LD	A,B			; Mode flag value to A
 	LD	A,(FCB+1)		; Get first char of filename
 	CP	' '			; Compare to blank
 	JP	Z,ERRCMD		; If so, missing filename
-	LD	A,(FCB+9)		; Extension char 1
+	LD	A,(FCB+9)		; If the filetype
+	CP	' '			; is blanks
+	JR	NZ,HASEXT		; then assume
+	LD	A,'P'			; type PT3.
+	LD	(FCB+9),A	
+	LD	A,'T'			; Fill in
+	LD	(FCB+10),A		; the file
+	LD	A,'3'			; extension
+	LD	(FCB+11),A		; and the
+	LD	C,TYPPT3		; file type
+	JR	_SET
+HASEXT	LD	A,(FCB+9)		; Extension char 1
 	CP	'P'			; Check for 'P'
 	JP	NZ,CHKMYM		; If not, check for MYM extension
 	LD	A,(FCB+10)		; Extension char 2
@@ -219,7 +257,7 @@ _LDX	LD	C,16			; CPM Close File function
 	LD	DE,MSGPLY		; Playing message
 	CALL	PRTSTR			; Print message
 	;CALL	CRLF2			; Formatting
-	
+	;CALL	SLOWCPU
 	LD	A,(FILTYP)		; Get file type
 	CP	TYPPT2			; PT2?
 	JR	Z,GOPT2			; If so, do it
@@ -283,6 +321,7 @@ waitvb	call	WAITQ
 	jr	mymlp
 ;	
 EXIT	CALL	START+8			; Mute audio
+	;CALL	NORMCPU
 	;CALL	CRLF2			; Formatting
 	LD	DE,MSGEND		; Completion message
 	CALL	PRTSTR			; Print message
@@ -379,6 +418,70 @@ IDBIO2:
 	; No idea what this is
 	XOR	A		; Setup return value of 0
 	RET			; and done
+;
+;
+;
+SLOWCPU:
+	LD A,(Z180)	; Z180 base I/O port
+	CP $FF		; Check for no value
+	RET Z		; Bail out if no value
+	ADD A,$1E	; Apply offset of CMR register
+	LD C,A		; And put it in C
+	LD B,0		; MSB for 16-bit I/O
+	IN A,(C)	; Get current value
+	LD (CMRSAV),A	; Save it to restore later
+	XOR A		; Go slow
+	OUT (C),A	; And update CMR
+	INC C		; Now point to CCR register
+	IN A,(C)	; Get current value
+	LD (CCRSAV),A	; Save it to restore later
+	XOR A		; Go slow
+	OUT (C),A	; And update CCR
+	RET
+;
+;
+;
+NORMCPU:
+	LD A,(Z180)	; Z180 base I/O port
+	CP $FF		; Check for no value
+	RET Z		; Bail out if no value
+	ADD A,$1E	; Apply offset of CMR register
+	LD C,A		; And put it in C
+	LD B,0		; MSB for 16-bit I/O
+	LD A,(CMRSAV)	; Get original CMR value
+	OUT (C),A	; And update CMR
+	INC C		; Now point to CCR register
+	LD A,(CCRSAV)	; Get original CCR value
+	OUT (C),A	; And update CCR
+	RET
+;
+;
+;
+SLOWIO:
+	LD A,(Z180)	; Z180 base I/O port
+	CP $FF		; Check for no value
+	RET Z		; Bail out if no value
+	ADD A,$32	; Apply offset of DCNTL register
+	LD C,A		; And put it in C
+	LD B,0		; MSB for 16-bit I/O
+	IN A,(C)	; Get current value
+	LD (DCSAV),A	; Save it to restore later
+	OR %00110000	; Force slow operation (I/O W/S=3)
+	OUT (C),A	; And update DCNTL
+	RET
+;
+;
+;
+NORMIO:
+	LD A,(Z180)	; Z180 base I/O port
+	CP $FF		; Check for no value
+	RET Z		; Bail out if no value
+	ADD A,$32	; Apply offset of DCNTL register
+	LD C,A		; And put it in C
+	LD B,0		; MSB for 16-bit I/O
+	LD A,(DCSAV)	; Get saved DCNTL value
+	OUT (C),A	; And restore it
+	RET
 ;
 ; Print character in A without destroying any registers
 ;
@@ -553,8 +656,23 @@ CRLF:
 	POP	AF		; restore AF
 	RET
 ;
+; ADD HL,A
+;
+;   A REGISTER IS DESTROYED!
+;
+ADDHLA:
+	ADD	A,L
+	LD	L,A
+	RET	NC
+	INC	H
+	RET
+;
 ERRBIO:	; Invalid BIOS or version
 	LD	DE,MSGBIO
+	JR	ERR
+;
+ERRPLT:	; Invalid BIOS or version
+	LD	DE,MSGPLT
 	JR	ERR
 ;
 ERRHW:	; Hardware error, sound chip not detected
@@ -586,37 +704,92 @@ ERR1:	; without the leading crlf
 ERR2:	; without the string
 	CALL	CRLF		; print newline
 	JP	0		; fast exit
-
-QDLY	.DW	0		; quark delay factor
-WMOD	.DB	0		; delay mode, non-zero to use timer
-DCSAV	.DB	0		; for saving Z180 DCNTL value
-DMA	.DW	0		; Working DMA
-FILTYP	.DB	0		; Sound file type (TYPPT2, TYPPT3, TYPMYM)
-
-TMP	.DB	0		; work around use of undocumented Z80
-
+;
+; CONFIG TABLE, ENTRY ORDER MATCHES HBIOS PLATFORM ID
+;
+CFGSIZ	.EQU	8
+;
+CFGTBL:	;	PLT	RSEL	RDAT	RIN	Z180	ACR
+	;	DESC
+	.DB	$01,	$9A,	$9B,	$9A,	$FF,	$9C	; SBC W/ SCG
+	.DW	HWSTR_SCG	
+;	
+	.DB	$04,	$9C,	$9D,	$9C,	$40,	$FF	; N8 W/ ONBOARD PSG
+	.DW	HWSTR_N8	
+;	
+	.DB	$05,	$9A,	$9B,	$9A,	$40,	$9C	; MK4 W/ SCG
+	.DW	HWSTR_SCG	
+;	
+	.DB	$07,	$D8,	$D0,	$D8,	$FF,	$FF	; RCZ80 W/ RC SOUND MODULE (EB)
+	.DW	HWSTR_RCEB	
+;	
+	.DB	$07,	$D1,	$D0,	$D0,	$FF,	$FF	; RCZ80 W/ RC SOUND MODULE (MF)
+	.DW	HWSTR_RCMF
+;	
+	.DB	$08,	$68,	$60,	$68,	$C0,	$FF	; RCZ180 W/ RC SOUND MODULE (EB)
+	.DW	HWSTR_RCEB	
+;	
+	.DB	$08,	$61,	$60,	$60,	$C0,	$FF	; RCZ180 W/ RC SOUND MODULE (MF)
+	.DW	HWSTR_RCMF
+;
+	.DB	$09,	$D8,	$D0,	$D8,	$FF,	$FF	; EZZ80 W/ RC SOUND MODULE (EB)
+	.DW	HWSTR_RCEB	
+;
+	.DB	$09,	$D1,	$D0,	$D0,	$FF,	$FF	; EZZ80 W/ RC SOUND MODULE (EB)
+	.DW	HWSTR_RCMF
+;
+	.DB	$0A,	$68,	$60,	$68,	$C0,	$FF	; SCZ180 W/ RC SOUND MODULE (EB)
+	.DW	HWSTR_RCEB
+;
+	.DB	$0A,	$61,	$60,	$60,	$C0,	$FF	; SCZ180 W/ RC SOUND MODULE (MF)
+	.DW	HWSTR_RCMF
+;
+	.DB	$FF					; END OF TABLE MARKER
+;
+CFG:		; ACTIVE CONFIG VALUES (FROM SELECTED CFGTBL ENTRY)
+PLT		.DB	0	; RomWBW HBIOS platform id
 PORTS:
-RSEL	.DB	0		; Register selection port
-RDAT	.DB	0		; Register data port
-	
-MSGBAN	.DB	"Tune Player for RomWBW v2.0, 28-Jan-2018",0
-MSGUSE	.DB	"Copyright (C) 2018, Wayne Warthen, GNU GPL v3",13,10
-	.DB	"PTxPlayer Copyright (C) 2004-2007 S.V.Bulba",13,10
-	.DB	"MYMPlay by Marq/Lieves!Tuore",13,10,13,10
-	.DB	"Usage: TUNE <filename>.[PT2|PT3|MYM]",0
-MSGBIO	.DB	"Incompatible BIOS or version, "
-	.DB	"HBIOS v", '0' + RMJ, ".", '0' + RMN, " required",0
-MSGHW	.DB	"Hardware error, sound chip not detected!",0
-MSGNAM	.DB	"Sound filename invalid (must be .PT2, .PT3, or .MYM)",0
-MSGFIL	.DB	"Sound file not found!",0
-MSGSIZ	.DB	"Sound file too large to load!",0
-MSGRC	.DB	"RC2014 Ed Brindley Sound Module",0
-MSGN8	.DB	"RetroBrew N8 Onboard Sound System",0
-MSGSCG	.DB	"RetroBrew SCG ECB Adapter",0
-MSGTIM	.DB	", timer mode",0
-MSGDLY	.DB	", delay mode",0
-MSGPLY	.DB	"Playing...",0
-MSGEND	.DB	" Done",0
+RSEL		.DB	0	; Register selection port
+RDAT		.DB	0	; Register data port
+RIN		.DB	0	; Register input port
+Z180		.DB	0	; Z180 base I/O port
+ACR		.DB	0	; Aux Ctrl Reg I/O port on SCG
+DESC		.DW	0	; Hardware description string adr
+;
+CURPLT		.DB	0	; Current platform id reported by HBIOS
+QDLY		.DW	0	; quark delay factor
+WMOD		.DB	0	; delay mode, non-zero to use timer
+DCSAV		.DB	0	; for saving original Z180 DCNTL value
+CCRSAV		.DB	0	; for saving original Z180 CCR value
+CMRSAV		.DB	0	; for saving original Z180 CMR value
+;
+DMA		.DW	0	; Working DMA
+FILTYP		.DB	0	; Sound file type (TYPPT2, TYPPT3, TYPMYM)
+;				
+TMP		.DB	0	; work around use of undocumented Z80
+;
+		
+MSGBAN		.DB	"Tune Player for RomWBW v2.5, 29-Mar-2020",0
+MSGUSE		.DB	"Copyright (C) 2020, Wayne Warthen, GNU GPL v3",13,10
+		.DB	"PTxPlayer Copyright (C) 2004-2007 S.V.Bulba",13,10
+		.DB	"MYMPlay by Marq/Lieves!Tuore",13,10,13,10
+		.DB	"Usage: TUNE <filename>.[PT2|PT3|MYM]",0
+MSGBIO		.DB	"Incompatible BIOS or version, "
+		.DB	"HBIOS v", '0' + RMJ, ".", '0' + RMN, " required",0
+MSGPLT		.DB	"Hardware error, system not supported!",0
+MSGHW		.DB	"Hardware error, sound chip not detected!",0
+MSGNAM		.DB	"Sound filename invalid (must be .PT2, .PT3, or .MYM)",0
+MSGFIL		.DB	"Sound file not found!",0
+MSGSIZ		.DB	"Sound file too large to load!",0
+MSGTIM		.DB	", timer mode",0
+MSGDLY		.DB	", delay mode",0
+MSGPLY		.DB	"Playing...",0
+MSGEND		.DB	" Done",0
+;
+HWSTR_SCG	.DB	"SCG ECB Board",0
+HWSTR_N8	.DB	"N8 Onboard Sound",0
+HWSTR_RCEB	.DB	"RC2014 Sound Module (EB)",0
+HWSTR_RCMF	.DB	"RC2014 Sound Module (MF)",0
 ;
 ;===============================================================================
 ; PTx Player Routines
@@ -2000,15 +2173,9 @@ LOUT	OUT (C),A
 #ENDIF
 
 #IF WBW
-	LD A,(WMOD)	; If WMOD = 1, CPU is Z180
-	OR A		; Set flags
-	JR Z,LOUT0	; Skip Z180 stuff
 	DI
-	IN0 A,(DCNTL)	; Get wait states
-	LD (DCSAV),A	; Save value
-	OR %00110000	; Force slow operation (I/O W/S=3)
-	OUT0 (DCNTL),A	; And update DCNTL
-LOUT0	LD DE,(PORTS)	; D := RDAT, E := RSEL
+	CALL SLOWIO
+	LD DE,(PORTS)	; D := RDAT, E := RSEL
 	XOR A		; start with reg 0
 	LD C,E		; point to address port
 	LD HL,AYREGS	; start of value list
@@ -2025,11 +2192,8 @@ LOUT	OUT (C),A	; select register
 	JP M,LOUT2	; if bit 7 set, return w/o writing value
 	LD C,D		; select data port
 	OUT (C),A	; write value to register 13
-LOUT2	LD A,(WMOD)	; If WMOD = 1, CPU is Z180
-	OR A		; Set flags
-	RET Z		; Skip Z180 stuff
-	LD A,(DCSAV)	; Get saved DCNTL value
-	OUT0 (DCNTL),A	; And restore it
+LOUT2
+	CALL NORMIO
 	EI
 	RET		; And done
 #ENDIF
@@ -2175,7 +2339,7 @@ T_PACK	.DB $06EC*2/256,$06EC*2
 ;
 ; MYMPLAY - Player for MYM-tunes
 ; MSX-version by Marq/Lieves!Tuore & Fit 30.1.2000
-:
+;
 ; 1.2.2000  - Added the disk loader. Thanks to Yzi & Plaque for examples.
 ; 7.2.2000  - Removed one unpack window -> freed 1.7kB memory
 ;
@@ -2393,10 +2557,7 @@ upsg:	ld	a,(WMOD)	; if WMOD = 1, CPU is z180
 	or	a		; set flags
 	jr	z,upsg1		; skip z180 stuff
 	di
-	in0	a,(DCNTL)	; get wait states
-	ld	(DCSAV),a	; save value
-	or	%00110000	; force slow operation (i/o w/s=3)
-	out0	(DCNTL),a	; and update DCNTL
+	call	SLOWIO
 
 upsg1:	ld	hl,(psource)
 	ld	de,(PORTS)	; E := RSEL, D := RDAT
@@ -2431,11 +2592,7 @@ notrig: ld      hl,(psource)
         dec     a
         ld      (played),a
 
-endint:	ld a,(WMOD)		; If WMOD = 1, CPU is Z180
-	or a			; Set flags
-	ret z			; Skip Z180 stuff
-	ld a,(DCSAV)		; Get saved DCNTL value
-	out0 (DCNTL),a		; And restore it
+endint:	call	NORMIO
 	ei	
 	ret			; And done
 ;
@@ -2475,47 +2632,47 @@ HEAP	.EQU	$
 
 VARS
 
-ChanA	.DS CHP
-ChanB	.DS CHP
-ChanC	.DS CHP
+ChanA	.DS	CHP
+ChanB	.DS	CHP
+ChanC	.DS	CHP
 
 ;GlobalVars
-DelyCnt	.DS 1
-CurESld	.DS 2
-CurEDel	.DS 1
+DelyCnt	.DS	1
+CurESld	.DS	2
+CurEDel	.DS	1
 Ns_Base_AddToNs
-Ns_Base	.DS 1
-AddToNs	.DS 1
+Ns_Base	.DS	1
+AddToNs	.DS	1
 
 AYREGS
 
-VT_	.DS 256		;CreatedVolumeTableAddress
+VT_	.DS	256	;CreatedVolumeTableAddress
 
-EnvBase	.EQU VT_+14
+EnvBase	.EQU	VT_+14
 
-T1_	.EQU VT_+16	;Tone tables data depacked here
+T1_	.EQU	VT_+16	;Tone tables data depacked here
 
-T_OLD_1	.EQU T1_
-T_OLD_2	.EQU T_OLD_1+24
-T_OLD_3	.EQU T_OLD_2+24
-T_OLD_0	.EQU T_OLD_3+2
-T_NEW_0	.EQU T_OLD_0
-T_NEW_1	.EQU T_OLD_1
-T_NEW_2	.EQU T_NEW_0+24
-T_NEW_3	.EQU T_OLD_3
+T_OLD_1	.EQU	T1_
+T_OLD_2	.EQU	T_OLD_1+24
+T_OLD_3	.EQU	T_OLD_2+24
+T_OLD_0	.EQU	T_OLD_3+2
+T_NEW_0	.EQU	T_OLD_0
+T_NEW_1	.EQU	T_OLD_1
+T_NEW_2	.EQU	T_NEW_0+24
+T_NEW_3	.EQU	T_OLD_3
 
-PT2EMPTYORN .EQU VT_+31	;1,0,0 sequence
+PT2EMPTYORN	.EQU VT_+31	;1,0,0 sequence
 
-NT_	.FILL 192	;CreatedNoteTableAddress
+NT_	.DS	192	;CreatedNoteTableAddress
 
 ;local var
-Ampl	.EQU AYREGS+AmplC
+Ampl	.EQU	AYREGS+AmplC
 
-VAR0END	.EQU VT_+16 ;INIT zeroes from VARS to VAR0END-1
+VAR0END	.EQU	VT_+16 ;INIT zeroes from VARS to VAR0END-1
 
-VARSEND .EQU $
+VARSEND .EQU	$
 
-MDLADDR .EQU $
+MDLADDR .EQU	$
 ;
 ;===============================================================================
 ; MYM Player Storage
@@ -2524,10 +2681,11 @@ MDLADDR .EQU $
 	.ORG	HEAP
 ; Reserve room for uncompressed data
 uncomp:
-.org $+(3*FRAG*REGS)
+	.DS	(3*FRAG*REGS)
 
 ; The tune is stored here
-rows:   .dw     0
+rows:
+	.DS	2	; WORD value
 data:
 ;
 ;===============================================================================

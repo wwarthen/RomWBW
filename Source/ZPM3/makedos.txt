@@ -1,0 +1,90 @@
+     Using the MAKEDOS utility.
+     ==========================
+
+In an ideal world, MAKEDOS would not be required as every 
+computer manufacturer would have provided the source code for 
+your BIOS and the GENCPM.COM utility. This however is not an 
+ideal world.
+
+If you have all the appropriate files, use GENCPM with the new 
+ZPM3 BNKBDOS3.SPR and RESBDOS3.SPR to make a new CP/M system. If 
+you only have your CP/M 3.0 system file, then read on to learn 
+how to use MAKEDOS.COM to convert it from CP/M 3.0 to ZPM3.
+
+
+You CP/M 3.0 system file could be called one of a number of 
+things. Ideally it will be called CPM3.SYS. But it might have 
+another name such as J14CPM3.EMS (Amstrad computers). Even if you 
+find it, you must know how the system uses it. For example does 
+it load it from A0: when you boot your computer? If it does then 
+you are going to have to return your modified file to A0:. Or 
+does it keep the file hidden in system tracks of your disk? If 
+that is the case you will have to find out how to change the 
+system tracks. Chances are though that the file is read from A0: 
+on each cold boot.
+
+Before continuing, make sure you have a backup bootable disk. If 
+you overwrite your only system file and it fails to work you are 
+going to be pretty unhappy... so don't let it happen!
+
+Put your system file, MAKEDOS.COM, BNKBDOS3.SPR and RESBDOS3.SPR 
+onto the same disk and user area. Note that you must do this ON 
+THE SAME COMPUTER RUNNING CP/M 3.0 as the system is intended for. 
+This is most important because MAKEDOS gets information from its 
+host computer, and if the computer is different from the one the 
+system is intended for, it will get the wrong information.
+
+Type MAKEDOS SYSTEM.FIL at the prompt (replacing the SYSTEM.FIL 
+in the above command with the actual name of your system file 
+(such as MAKEDOS CPM3.SYS)).  MAKEDOS will churn away for a while 
+and tell you some information. If it doesn't come up with an 
+error message, all is well and you can proceed.
+
+MAKEDOS makes three files. RES.DAT, BNK.DAT and another file with 
+the same name as your original but with the tail .NEW (eg 
+CPM3.SYS becomes CPM3.NEW). Your original file has not been 
+touched. Obviously, you have to rename the .NEW file so that it 
+has the correct name as the system. MAKEDOS doesn't do this for 
+you just in case something goes wrong... until you rename the new 
+file, you will still have a copy of the original. So, rename the 
+new file, put it where it needs to be for it to become the 
+system, and reboot the computer. All being well, you will come up 
+running ZPM3.
+
+Possible problems:
+~~~~~~~~~~~~~~~~~~
+A few things may cause a failure and should be checked if you get 
+an error message.
+
+You must have enough disk space for all the files. Figure on 
+having enough for the new system (same size as the old system), 
+plus about another 16k.
+
+Another problem is that your serial number gets overwritten. 
+MAKEDOS uses your CP/M 3.0 serial number to find the BDOS in your 
+system file. It checks the serial number in the file against the 
+serial number on the host machine. However, it is possible for 
+your serial number to become corrupted. In such a case you should 
+reboot and try again.
+
+It is unlikely to affect anyone, but MAKEDOS may fail with 
+system files larger than 48k. If you need to convert such a file, 
+please contact me.
+
+Be aware that running MAKEDOS on a machine different from the 
+machine that the system file is intended for may not result in 
+any error messages, but will most likely cause the file to not be 
+converted properly. Always use the host computer, and make sure 
+you are running CP/M 3.0 or ZPM3.
+
+
+Once you have successfully installed ZPM3, it may not be obvious 
+that it is running. ZPM3 will act just like CP/M 3.0 for the most 
+part. The easiest way to check is to enter a few commands, then 
+press control-W a few times. Unlike CP/M 3.0, ZPM3 remembers more 
+than one previous command, and you should see them presented to 
+you with control-W.
+
+If you have any further trouble, all you can really do is talk to 
+me, via Z-Node 62 in Perth, Western Australia (09 450 0200). Good 
+luck.

@@ -26,16 +26,19 @@ Thought not necessary, advanced users can easily modify any of
 the software including the operating systems.
 
 A cross-platform approach is used to build the RomWBW firmware. 
-The software is built using a Microsoft Windows computer, then the 
-resulting firmware image is programmed into the ROM of your 
-RetroBrew Computer CPU board.
+The software is built using a modern Windows, Linux, or Mac
+computer, then the resulting firmware image is programmed into
+the ROM of your RetroBrew Computer CPU board.
 
 Build System Requirements
 -------------------------
 
-All that is required to build the firmware is a computer running 
-Microsoft Windows and the RomWBW distribution zip archive file.  
-The zip archive includes all of the required source code 
+For Linux/Mac computers, refer to the ReadMe.unix file in the
+top directory of the distribution.
+
+For Microsoft Windows computers, All that is required to build the
+firmware is the RomWBW distribution zip archive file.  The zip
+archive package includes all of the required source code 
 (including the operating systems) and the programs required to run 
 the build.
 
@@ -60,17 +63,20 @@ The basic steps to create a custom ROM are:
 
   4) Program the resultant ROM image and try it.
 
-It is *not* necessary to perform steps 1 or 2 before running a 
-build.  In fact, I strongly recommend that you perform steps 3 and 
-4 initially to make sure that you have no issues building and 
-programming a ROM that works the same as a pre-built ROM.
+Note that steps 1 and 2 are performed to customize your ROM as 
+desired.  If you want to simply build a standard configuration, it is 
+*not* necessary to perform steps 1 or 2 before running a build.  In 
+fact, I strongly recommend that you skip steps 1 and 2 initially and 
+just perform perform steps 3 and 4 using the standard configuration to 
+make sure that you have no issues building and programming a ROM that 
+works the same as a pre-built ROM.
 
 Each of the 4 steps above is described in more detail below.
 
 1. Create/Update Configuration File
 -----------------------------------
 
-The options for a build are primarily controled by a configuration 
+The options for a build are primarily controlled by a configuration 
 file that is included in the build process.  In order to customize 
 your settings, it is easiest to make a copy of an existing 
 configuration file and make your changes there.
@@ -81,7 +87,7 @@ series of files named <plt>_<cfg>.asm where <plt> refers to the
 CPU board in your system and <cfg> is used to name the specific 
 configuration so you can maintain multiple configurations.
 
-You will notice that there is initially one configuration file for 
+You will notice that there is generally one configuration file for 
 each CPU platform with a name of "std".  For example, you there is 
 a file called MK4_std.asm.  This is the standard ("std") 
 configuration for a Mark IV CPU board.
@@ -90,19 +96,23 @@ The platform names are predefined.  Refer to the following table
 to determine the <plt> component of the configuration filename:
 
 	SBC V1/V2	SBC_std.rom
+	SBC SimH	SBC_simh.rom
 	Zeta V1		ZETA_std.rom
 	Zeta V2		ZETA2_std.rom
 	N8		N8_std.rom
 	Mark IV		MK4_std.rom
-	RC2014		RC_std.rom
+	RC2014 w/ Z80	RCZ80_std.rom
+	RC2014 w/ Z180	RCZ180_nat.rom	(native Z180 memory addressing)
+	RC2014 w/ Z180	RCZ180_ext.rom	(external 512K RAM/ROM module)
+	SCZ180		SC126, SC130, SC131
+	Easy Z80	EZZ180_std.rom
+	Dyno		DYNO_std.rom
 
 You can use any name you choose for the <cfg> component of the 
 configuration filename.  So, let's say you want to create a custom 
 ROM for the Mark IV.  You would simply copy "MK4_std.asm" to 
-something like "MK4_cust.asm".
-
-Now, just edit the new file ("MK4_cust.asm" in this example) as 
-desired.
+something like "MK4_cust.asm".  Now, just edit the new file 
+("MK4_cust.asm" in this example) as desired.
 
 You will see that the file already has lines for all of the common 
 options and there is a comment after each option indicating the 
@@ -138,7 +148,7 @@ These directories are already populated in the distribution.  You do
 not need to do anything unless you want to change the files that are 
 included in the ROM Disk.
 
-In summary, the ROM Disk imbedded in the ROM firmware you build, 
+In summary, the ROM Disk embedded in the ROM firmware you build, 
 will include the files from the ROM_512KB directory (or the 
 ROM_1024KB directory if building a 1024KB firmware).  
 Additionally, files will be added from the directory associated 
@@ -147,8 +157,17 @@ with the platform specified in the ROM Build.
 There is a ReadMe.txt document in the \Source\RomDsk directory 
 with a more detailed description of this process.
 
+Note that the standard 512K ROM disk is absolutely full.  So, if
+you want to add files to it, you will need to delete other files
+to free up some space.
+
 3. Run the Build Process
 ------------------------
+
+This section describes the build process for Microsoft Windows
+computers.  The build process for Linux/Mac computers is described
+in the ReadMe.unix file in the top level directory of the
+distribution.
 
 The build involves running commands at the command prompt.  Open a 
 command prompt window for the Source directory.  If you unzipped 
@@ -179,7 +198,7 @@ This command will prompt you twice as it runs.  These prompts
 determine the platform and configuration to be built.  The first 
 prompt is for the platform, as shown below:
 
-    Platform [SBC|ZETA|ZETA2|N8|MK4|UNA]:
+    Platform [SBC|ZETA|ZETA2|RCZ80|EZZ80|UNA|N8|MK4|RCZ180|SCZ180|DYNO]:
 
 Enter the option corresponding to the platform of the ROM firmware 
 you are building.  If you enter something other than one of the 
@@ -226,12 +245,25 @@ used:
     SD occupies 2191 bytes.
     HBIOS space remaining: 21434 bytes.
 
+Optionally, you can run one more command that will create the
+RomWBW disk images that can be subsequently written to actual
+disk media.
+
+    C:\RomWBW\Source> BuildImages
+
+After running this command, you will find the resultant
+disk image file in the Binary directory with names in the
+format fd_xxx.img for floppy media or hd_xxx.img for
+hard disk media.  Refer to the DiskList.txt file in the
+Binary directory for more information on using the disk
+image files.
+
 4. Deploy the ROM
 -----------------
 
 Upon completion of a successful build, you should find the 
 resulting firmware in the Binary directory.  These output files 
-will have names that match the config filename, but will different 
+will have names that match the config filename, but with different 
 extensions.
 
 Three output files will be created for a single BuildROM run:
@@ -240,9 +272,6 @@ Three output files will be created for a single BuildROM run:
      <plt>_<cfg>.com - executable version of the system image
                        that can be copied via X-Modem to a
 		       running system to test the build.
-     <plt>_<cfg>.img - system image that can be written to an
-                       SD/CF Card and loaded via the UNA FS FAT
-		       loader.
 
 The actual ROM image is the file ending in .rom.  It should be 
 exactly 512KB.  Simply burn the .rom image to your ROM and install 
@@ -263,14 +292,16 @@ For example:
 
     C:\RomWBW\Source> BuildROM MK4 cust
 
-In this case, you will not be prompted.  This is useful if you 
-wish to automate your build process.
+In this case, you will not be prompted.  This is useful if you wish 
+to automate your build process.
 
 There is a third parameter that you can specify to the BuildROM 
-command via a command line.  If you want to build a 1024K (1MB) 
-ROM, you can add "1024" to the end of the line, like this:
+command via a command line.  If you want to build a 1024K (1MB) ROM, 
+you can add "1024" to the end of the line, like this:
 
     C:\RomWBW\Source> BuildROM MK4 cust 1024
+
+You must ensure that your system actually supports a 1024K ROM.
 
 Special Build Commands
 ----------------------
@@ -292,15 +323,11 @@ BuildImages: RomWBW has the ability to create floppy disk and hard
 	     and will turn them into a writable disk image.  Refer
 	     to the ReadMe.txt document in the Source\Images
 	     directory for a detailed description of this process.
+	     N.B., BuildShared must be run prior to BuildImages.
 
 BuildBP: This command builds another OS variant called BPBIOS.  It
          is a work in progress and should not be used at this time
 	 without contacting Wayne Warthen.
-
-BuildDoc: This command is used to build a new generation of RomWBW
-          documentation based on LaTeX.  This is also a work in
-	  progress and requires LaTeX be installed on your Windows
-	  computer.  It is not intended for use at this time.
 
 Example BuildShared Run
 -----------------------

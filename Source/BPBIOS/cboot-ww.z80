@@ -304,7 +304,7 @@ MEMOK:
 	  IF  MOVCPM		; Space is critical for boot tracks
 	DEFB	CR,LF,'P112 - '	;  Save all bytes possible
 	  ELSE			;   Otherwise sign on with complete name
-	DEFB	CR,LF,'D-X Designs P112 - '
+	DEFB	CR,LF,'RomWBW - '
 	  ENDIF
  	DEFB	'B/P 50.00k Bios'	;**** Do NOT alter this string ****
 
@@ -322,7 +322,7 @@ MEMOK:
 	DEFB	'  ZCPR3+ Env'
 	   IF  CLOCK
 	    IF  DS1202
-	DEFB	CR,LF,'  Dallas DS-1202 Clock, '
+	DEFB	CR,LF,'  RomWBW HBIOS Clock, '
 	     IF  CLKSET
 	DEFB	'with '
 	     ELSE

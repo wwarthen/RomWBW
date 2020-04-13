@@ -1,0 +1,45 @@
+Font files for ROMWBW.
+
+There are three fonts associated with ROMWBW supported hardware - ECB-SCG, ECB-CVDU and the ECB-VGA3.
+
+Name            Format      Size    Board & Display Mode
+------------------------------------------------------------------------------------
+font8x8u.bin    8x8         2048    ECB-SCG, ECB-VGA3 (80x60)     
+font8x11u.bin   8x11        2816    ECB-VGA3 (80x43)
+font8x16u.bin   8x16        4096    ECB-CVDU (80x25), ECB-VGA3 (80x24, 80x25, 80x30)
+
+For inclusion in HBIOS the .bin format files must be convert to assembler .asm format.
+This is acheived using the fonttool utility and is completed automatically as part of the build process.
+i.e. fonts files are converted to .asm format and then copied to the HBIOS directory. 
+
+To replace a font, simply copy it to the Fonts directory using the same naming convention above, 
+ensuring format and size match. Then complete a new build process.
+
+To reduce the size of the HBIOS image, fonts can be compressed by using the USEZLSA2 equate.
+
+Use the following in your custom configuration to turn on font compression:
+
+USELZSA2	.SET	TRUE 
+
+Compressed fonts are created using lzsa utility.
+
+During the build process, fonts are compressed using the command line compressor by Emmanuel Marty
+The compression is done as follows:
+
+lzsa.exe -f2 -r <sourcefile> <outfile>
+
+where option -f2 selects lzsa version 2 compression.
+where option -r asks for the generation of raw (frame-less) data.
+
+Original compression source code and files available here:
+
+Latest github code:
+ https://github.com/emmanuel-marty/lzsa
+Implementation example (older version):
+ https://cpcrulez.fr/applications_tools_cruncher_LZSA2_Z80.htm
+x86 lzsa compressor application:
+ http://www.pouet.net/prod.php?which=81573
+
+
+
+
