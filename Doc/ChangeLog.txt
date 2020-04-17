@@ -6,6 +6,7 @@ Version 3.1
 - WBW: Added support dual 16C550 UART on RC2014 platform
 - WBW: Made .com images smaller (contain only Z-System now)
 - WBW: Support automatic clock hardware detection and fallback
+- WBW: Support use of CTC for SIO baud rate divisors
 
 Version 3.0.1
 -------------

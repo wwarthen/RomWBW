@@ -3,7 +3,7 @@ RomWBW
 Z80/Z180 System Software
 
 Version 3.1 Pre-release
-Saturday 11 April 2020
+Wednesday 15 April 2020
 
 Wayne Warthen wwarthen@gmail.com
 
@@ -325,7 +325,7 @@ media. You can think of slices as a way to refer to any of the first 256
 Of course, the problem is that CP/M-like operating systems have only 16
 drive letters (A:-P:) available. Under the covers, RomWBW allows you to
 use any drive letter to refer to any slice of any media. The ASSIGN
-command is allows you to view or change the drive letter mappings at any
+command allows you to view or change the drive letter mappings at any
 time. At startup, the operating system will automatically allocate a
 reasonable number of drive letters to the available storage devices. The
 allocation will depend on the number of large storage devices available
