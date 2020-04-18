@@ -3457,9 +3457,18 @@ RSDMA:	LXI	D,TBUF		; Reset DMA address
 WRERR:	CALL	RSDMA		; Reset DMA to normal
 	MVI	C,CAN		; Cancel
 	CALL	SEND		; Sender
+; WBW BEGIN: RCVSABT does not return, so file write error
+; message was never being displayed.  Swapped things around
+; to fix this.
+;	CALL	RCVSABT		; Kill receive file
+;	CALL	ERXIT		; Exit with msg:
+;	DB	'++ Error writing file ++$'
+; WBW: -----
+	CALL	ILPRT		; Dispaly error msg
+	DB	CR,LF,'++ Error writing file ++',CR,LF,0
 	CALL	RCVSABT		; Kill receive file
-	CALL	ERXIT		; Exit with msg:
-	DB	'++ Error writing file ++$'
+; WBW END
+	
 ;
 ; Receive a character - timeout time is in 'B' in seconds.  Entry via
 ; 'RECVDG' deletes garbage characters on the line.  For example, having
