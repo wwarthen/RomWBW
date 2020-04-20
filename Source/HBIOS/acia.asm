@@ -598,6 +598,7 @@ ACIA_DETECT2:
         RET     NZ                      ; RETURN IF NOT ZERO
         LD      A,$02                   ; CLEAR MASTER RESET
         OUT     (C),A                   ; DO IT
+	IN	A,(C)			; GET STATUS AGAIN
         ; CHECK FOR EXPECTED BITS:
         ;   TDRE=1, DCD & CTS = 0
         AND     %00001110               ; BIT MASK FOR "STABLE" BITS
