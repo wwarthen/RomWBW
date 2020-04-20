@@ -65,7 +65,7 @@ romfmt=wbw_rom${romsize}
 outdir=../../Binary
 
 echo "creating empty rom disk of size $romsize in $blankfile"
-LANG=en_US.US-ASCII tr '\000' '\345' </dev/zero | dd of=$blankfile bs=1024 count=`expr $romsize - 128`
+LC_CTYPE=en_US.US-ASCII tr '\000' '\345' </dev/zero | dd of=$blankfile bs=1024 count=`expr $romsize - 128`
 
 cat <<- EOF > build.inc
 ; RomWBW Configured for $platform $config $timestamp
