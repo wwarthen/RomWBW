@@ -251,10 +251,10 @@ DEVMAP:
 ;    +----8+-----8+------8+-+-16+-----8+------8+-+-16+     +-----8+------8+-+-16+
 ;                           |                    |                          |
 ;      +--------------------+                    +-> [DPH]                  +-> [DPH]
-;      |                                         
-;      V-----+-------+-------+-------+--------+-----+-----+-----+   
-; DPH: | XLT | 0000H | 0000H | 0000H | DIRBUF | DPB | CSV | ALV |   
-;      +---16+-----16+-----16+-----16+------16+-+-16+-+-16+-+-16+   
+;      |
+;      V-----+-------+-------+-------+--------+-----+-----+-----+
+; DPH: | XLT | 0000H | 0000H | 0000H | DIRBUF | DPB | CSV | ALV |
+;      +---16+-----16+-----16+-----16+------16+-+-16+-+-16+-+-16+
 ;                  (ONE DPH PER DRIVE)          |     |     |
 ;                                               |     |     +----------+
 ;                                               |     |                |
@@ -263,9 +263,9 @@ DEVMAP:
 ;                        |                            +-------------+  +-------------+
 ;                        |                              (CSZ BYTES)      (ASZ BYTES)
 ;                        |
-;      +-----+-----+-----V-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+    
-; DPB: | CSZ | ASZ | BLS | SPT | BSH | BLM | EXM | DSM | DRM | AL0 | AL1 | CKS | OFF |    
-;      +---16+---16+----8+---16+----8+----8+----8+---16+---16+----8+----8+---16+---16+    
+;      +-----+-----+-----V-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+; DPB: | CSZ | ASZ | BLS | SPT | BSH | BLM | EXM | DSM | DRM | AL0 | AL1 | CKS | OFF |
+;      +---16+---16+----8+---16+----8+----8+----8+---16+---16+----8+----8+---16+---16+
 ;      |<--- PREFIX ---->|<------------------- STANDARD CP/M DPB ------------------->|
 ;
 ;==================================================================================================
@@ -353,7 +353,7 @@ WBOOT:
 	LD	DE,(BNKBIOS)	; UBIOS_PAGE (SEE PAGES.INC)
 	RST	08		; DO IT
 	PUSH	DE		; SAVE PREVIOUS BANK
-	
+
 	LD	HL,(CCPBUF)	; ADDRESS OF CCP BUF IN BIOS MEM
 	LD	DE,CCP_LOC	; ADDRESS IN HI MEM OF CCP
 	LD	BC,CCP_SIZ	; SIZE OF CCP
@@ -383,11 +383,11 @@ WBOOT:
 	LD	BC,6
 	XOR	A
 	CALL	FILL
-;	
+;
 	CALL	RESCPM		; RESET CPM
 	JR	GOCPM		; THEN OFF TO CP/M WE GO...
 ;
-;__________________________________________________________________________________________________			
+;__________________________________________________________________________________________________
 RESCPM:
 ;
 	LD	A,$C3			; LOAD A WITH 'JP' INSTRUCTION (USED BELOW)
@@ -406,7 +406,7 @@ RESCPM:
 ;	LD	($0038),A
 ;	LD	HL,PANIC		; PANIC ROUTINE ADDRESS
 ;	LD	($0039),HL		; POKE IT
-	
+
 	; CALL 5 -> INVOKE BDOS
 	LD	($0005),A		; JP OPCODE AT $0005
 	LD	HL,BDOS_LOC + 6		; GET BDOS ENTRY ADDRESS
@@ -427,7 +427,7 @@ RESCPM:
 ;
 	RET
 ;
-;__________________________________________________________________________________________________			
+;__________________________________________________________________________________________________
 GOCPM:
 ;
 	; ENSURE VALID DISK AND JUMP TO CCP
@@ -444,7 +444,7 @@ GOCCP:
 	LD	C,A			; SETUP C WITH CURRENT USER/DISK, ASSUME IT IS OK
 	JP	CCP_LOC			; JUMP TO COMMAND PROCESSOR
 ;
-;__________________________________________________________________________________________________			
+;__________________________________________________________________________________________________
 GOMON:
 	CALL	PANIC
 ;
@@ -460,7 +460,7 @@ GOMON:
 ;	LD	BC,MON_SIZ
 ;	LDIR
 ;	CALL	RAMPGZ
-	
+
 ;	; JUMP TO MONITOR WARM ENTRY
 ;	JP	MON_UART
 ;
@@ -479,7 +479,7 @@ CONST:
 	LD	HL,CIOST	; HL = ADDRESS OF COMPLETION ROUTINE
 	JR	CONIO
 ;
-;__________________________________________________________________________________________________			
+;__________________________________________________________________________________________________
 CONIN:
 ; CONSOLE CHARACTER INTO REGISTER A
 ;
@@ -487,7 +487,7 @@ CONIN:
 	LD	HL,CIOIN	; HL = ADDRESS OF COMPLETION ROUTINE
 	JR	CONIO
 
-;__________________________________________________________________________________________________			
+;__________________________________________________________________________________________________
 CONOUT:
 ; CONSOLE CHARACTER OUTPUT FROM REGISTER C
 ;
@@ -496,7 +496,7 @@ CONOUT:
 	LD	E,C		; E = CHARACTER TO SEND
 ;	JR	CONIO		; COMMENTED OUT, FALL THROUGH OK
 ;
-;__________________________________________________________________________________________________			
+;__________________________________________________________________________________________________
 CONIO:
 ;
 	LD	A,(IOBYTE)	; GET IOBYTE
@@ -504,8 +504,8 @@ CONIO:
 	;OR	$00		; PUT LOGICAL DEVICE IN BITS 2-3 (CON:=$00, RDR:=$04, PUN:=$08, LST:=$0C
 	JR	CIO_DISP
 ;
-;__________________________________________________________________________________________________			
-LIST:					
+;__________________________________________________________________________________________________
+LIST:
 ; LIST CHARACTER FROM REGISTER C
 ;
 	LD	B,BF_CIOOUT	; B = FUNCTION
@@ -513,7 +513,7 @@ LIST:
 	LD	E,C		; E = CHARACTER TO SEND
 	JR	LISTIO
 ;
-;__________________________________________________________________________________________________			
+;__________________________________________________________________________________________________
 LISTST:
 ; RETURN LIST STATUS (0 IF NOT READY, 1 IF READY)
 ;
@@ -521,7 +521,7 @@ LISTST:
 	LD	HL,CIOST	; HL = ADDRESS OF COMPLETION ROUTINE
 	;JR	LISTIO		; COMMENTED OUT, FALL THROUGH OK
 ;
-;__________________________________________________________________________________________________			
+;__________________________________________________________________________________________________
 LISTIO:
 ;
 	LD	A,(IOBYTE)	; GET IOBYTE
@@ -531,7 +531,7 @@ LISTIO:
 	OR	$0C		; PUT LOGICAL DEVICE IN BITS 2-3 (CON:=$00, RDR:=$04, PUN:=$08, LST:=$0C
 	JR	CIO_DISP
 ;
-;__________________________________________________________________________________________________			
+;__________________________________________________________________________________________________
 PUNCH:
 ; PUNCH CHARACTER FROM REGISTER C
 ;
@@ -540,7 +540,7 @@ PUNCH:
 	LD	E,C		; E = CHARACTER TO SEND
 	;JR	PUNCHIO		; COMMENTED OUT, FALL THROUGH OK
 ;
-;__________________________________________________________________________________________________			
+;__________________________________________________________________________________________________
 PUNCHIO:
 ;
 	LD	A,(IOBYTE)	; GET IOBYTE
@@ -552,7 +552,7 @@ PUNCHIO:
 	OR	$08		; PUT LOGICAL DEVICE IN BITS 2-3 (CON:=$00, RDR:=$04, PUN:=$08, LST:=$0C
 	JR	CIO_DISP
 ;
-;__________________________________________________________________________________________________			
+;__________________________________________________________________________________________________
 READER:
 ; READ CHARACTER INTO REGISTER A FROM READER DEVICE
 ;
@@ -560,7 +560,7 @@ READER:
 	LD	HL,CIOIN	; HL = ADDRESS OF COMPLETION ROUTINE
 	JR	READERIO
 ;
-;__________________________________________________________________________________________________			
+;__________________________________________________________________________________________________
 READERST:
 ; RETURN READER STATUS (0 IF NOT READY, 1 IF READY)
 ;
@@ -568,7 +568,7 @@ READERST:
 	LD	HL,CIOST	; HL = ADDRESS OF COMPLETION ROUTINE
 ;	JR	READERIO	; COMMENTED OUT, FALL THROUGH OK
 ;
-;__________________________________________________________________________________________________			
+;__________________________________________________________________________________________________
 READERIO:
 ;
 	LD	A,(IOBYTE)	; GET IOBYTE
@@ -578,20 +578,20 @@ READERIO:
 	OR	$04		; PUT LOGICAL DEVICE IN BITS 2-3 (CON:=$00, RDR:=$04, PUN:=$08, LST:=$0C
 	JR	CIO_DISP
 ;
-;__________________________________________________________________________________________________			
+;__________________________________________________________________________________________________
 CIOIN:
 ; COMPLETION ROUTINE FOR CHARACTER INPUT FUNCTIONS
 ;
 	LD	A,E		; MOVE CHARACTER RETURNED TO A
 	RET			; FALL THRU
 ;;
-;;__________________________________________________________________________________________________			
+;;__________________________________________________________________________________________________
 ;CIOOUT:
 ;; COMPLETION ROUTINE FOR CHARACTER OUTPUT FUNCTIONS
 ;;
 ;	RET
 ;
-;__________________________________________________________________________________________________			
+;__________________________________________________________________________________________________
 CIOST:
 ; COMPLETION ROUTINE FOR CHARACTER STATUS FUNCTIONS (IST/OST)
 ;
@@ -621,7 +621,7 @@ CIO_DISP:
 
 	LD	HL,DEVMAP	; HL = ADDRESS OF DEVICE MAP
 	CALL	ADDHLA		; ADD OFFSET
-	
+
 	LD	A,(HL)		; LOOKUP DEVICE CODE
 #IFDEF PLTUNA
 	LD	C,B		; MOVE FUNCTION TO C
@@ -695,13 +695,13 @@ SELDSK:
 ;
 	JP	DSK_SELECT
 ;
-;__________________________________________________________________________________________________	
+;__________________________________________________________________________________________________
 HOME:
 ; SELECT TRACK 0 (BC = 0) AND FALL THRU TO SETTRK
 #IF DSKTRACE
 	CALL	PRTHOME
 #ENDIF
-;	
+;
 	LD	A,(HSTWRT)	; CHECK FOR PENDING WRITE
 	OR	A		; SET FLAGS
 	JR	NZ,HOMED	; BUFFER IS DIRTY
@@ -764,7 +764,7 @@ BLKRES:
 	XOR	A
 	LD	(HSTACT),A	; BUFFER NO LONGER VALID
 	LD	(UNACNT),A	; CLEAR UNALLOC COUNT
-	
+
 	RET
 ;__________________________________________________________________________________________________
 ;
@@ -812,7 +812,7 @@ BLKRW:
 	XOR	A		; ZERO TO A
 	LD	(WRTYPE),A	; SET WRITE TYPE = 0 (WRT_ALC) TO ENSURE READ OCCURS
 	LD	(UNACNT),A	; SET UNACNT TO ABORT SEQ WRITE PROCESSING
-	
+
 	JR	BLKRW4		; GO TO I/O
 
 BLKRW1:
@@ -821,7 +821,7 @@ BLKRW1:
 	LD	A,(WRTYPE)	; GET WRITE TYPE
 	CP	WRT_UNA		; IS IT WRITE TO UNALLOC?
 	JR	NZ,BLKRW2	; NOPE, BYPASS
-	
+
 	; INITIALIZE START OF SEQUENTIAL WRITING TO UNALLOCATED BLOCK
 	; AND THEN TREAT SUBSEQUENT PROCESSING AS A NORMAL WRITE
 	CALL	UNA_INI		; INITIALIZE SEQUENTIAL WRITE TRACKING
@@ -835,11 +835,11 @@ BLKRW2:
 
 	CALL	UNA_CHK		; CHECK FOR CONTINUATION OF SEQ WRITES TO UNALLOCATED BLOCK
 	JR	NZ,BLKRW3	; NOPE, ABORT
-	
+
 	; WE MATCHED EVERYTHING, TREAT AS WRITE TO UNALLOCATED BLOCK
 	LD	A,WRT_UNA	; WRITE TO UNALLOCATED
 	LD	(WRTYPE),A	; SAVE WRITE TYPE
-	
+
 	CALL	UNA_INC		; INCREMENT SEQUENTIAL WRITE TRACKING
 	JR	BLKRW4		; PROCEED TO I/O PROCESSING
 
@@ -870,16 +870,16 @@ BLKRW4:
 
 	; IMPLEMENT THE TRANSLATED VALUES
 	CALL	BLK_SAV		; SAVE XLAT VALUES: XLT... -> HST...
-	
+
 	; IF WRITE TO UNALLOC BLOCK, BYPASS READ, LEAVES BUFFER UNDEFINED
 	LD	A,(WRTYPE)
 	CP	2
 	JR	Z,BLKRW6
-	
+
 	; DO THE ACTUAL READ
 	CALL	DSK_READ	; READ PHYSICAL SECTOR INTO BUFFER
 	JR	Z,BLKRW6	; GOOD READ, CONTINUE
-	
+
 	; IF READ FAILED, RESET (DE)BLOCKING ALGORITHM AND RETURN ERROR
 	PUSH	AF		; SAVE ERROR STATUS
 	CALL	BLKRES		; INVALIDATE (DE)BLOCKING BUFFER
@@ -896,7 +896,7 @@ BLKRW6:
 	CALL	BLK_DEBLOCK	; EXTRACT DATA FROM BLOCK
 	XOR	A		; NO ERROR
 	RET			; ALL DONE
-	
+
 BLKRW7:
 	; THIS IS A WRITE OPERATION, INSERT DATA INTO BLOCK
 	CALL	BLK_BLOCK	; INSERT DATA INTO BLOCK
@@ -904,7 +904,7 @@ BLKRW7:
 	; MARK THE BUFFER AS WRITTEN
 	LD	A,TRUE		; BUFFER DIRTY = TRUE
 	LD	(HSTWRT),A	; SAVE IT
-	
+
 	; CHECK WRITE TYPE, IF WRT_DIR, FORCE THE PHYSICAL WRITE
 	LD	A,(WRTYPE)	; GET WRITE TYPE
 	CP	WRT_DIR		; 1 = DIRECTORY WRITE
@@ -974,24 +974,24 @@ UNA_INC:
 	; DECREMENT THE BLOCK RECORD COUNT
 	LD	HL,UNACNT
 	DEC	(HL)
-	
+
 	; INCREMENT THE SECTOR
 	LD	DE,(UNASEC)
 	INC	DE
 	LD	(UNASEC),DE
-	
+
 	; CHECK FOR END OF TRACK
 	LD	HL,(UNASPT)
 	XOR	A
 	SBC	HL,DE
 	RET	NZ
-	
+
 	; HANDLE END OF TRACK
 	LD	(UNASEC),HL	; SECTOR BACK TO 0 (NOTE: HL=0 AT THIS POINT)
 	LD	HL,(UNATRK)	; GET CURRENT TRACK
 	INC	HL		; BUMP IT
 	LD	(UNATRK),HL	; SAVE IT
-	
+
 	RET
 #ELSE
 ;
@@ -1022,15 +1022,15 @@ BLKRW1:
 	CALL	BLK_DEBLOCK	; EXTRACT DATA FROM BLOCK
 	XOR	A		; NO ERROR
 	RET			; ALL DONE
-	
+
 BLKRW2:
 	CALL	BLK_BLOCK	; INSERT DATA INTO BLOCK
 	CALL	DSK_WRITE	; WRITE PHYSICAL SECTOR FROM BUFFER
 	RET	NZ		; BAIL OUT ON ERROR
-	
+
 	LD	A,TRUE		; BUFFER IS NOW VALID
 	LD	(HSTACT),A	; SAVE IT
-	
+
 	XOR	A		; ALL IS WELL, SET RETURN CODE 0
 	RET			; RETURN
 #ENDIF
@@ -1247,7 +1247,7 @@ DSK_SELECT:
 	LD	E,(HL)		; DEREFERENCE HL...
 	INC	HL		; INTO DE...
 	LD	D,(HL)		; DE = ADDRESS OF DESIRED DPB
-;	
+;
 	; PLUG DPB INTO THE ACTIVE DPH
 	LD	HL,(SEKDPH)
 	LD	BC,10		; OFFSET OF DPB IN DPH
@@ -1272,7 +1272,7 @@ DSK_STATUS:
 	; C HAS CPM DRIVE, LOOKUP UNIT AND CHECK FOR INVALID DRIVE
 	CALL	DSK_GETINF	; B := UNIT
 	RET	NZ		; INVALID DRIVE ERROR
-	
+
 	; VALID DRIVE, DISPATCH TO DRIVER
 	LD	C,D		; C := UNIT
 	LD	B,BF_DIOSTATUS	; B := FUNCTION: STATUS
@@ -1360,7 +1360,7 @@ CHS:
 ;
 ; FLOPPY SPECIFIC TRANSLATION ASSUMES FLOPPY IS DOUBLE-SIDED AND
 ; USES LOW ORDER BIT OF TRACK AS HEAD VALUE
-; 
+;
 ; HBIOS SEEK: HL=CYLINDER, D=HEAD, E=SECTOR
 ;
 	LD	DE,(HSTSEC)		; SECTOR -> DE, HEAD(D) BECOMES ZERO
@@ -1846,12 +1846,12 @@ INIT:
 	LD	DE,(BNKBIOS)		; UBIOS_PAGE (SEE PAGES.INC)
 	CALL	$FFFD			; DO IT (RST 08 NOT YET INSTALLED)
 	PUSH	DE			; SAVE PREVIOUS BANK
-	
+
 	LD	HL,0			; FROM ADDRESS 0 (PAGE ZERO)
 	LD	DE,SECBUF		; USE SECBUF AS BOUNCE BUFFER
 	LD	BC,256			; ONE PAGE IS 256 BYTES
 	LDIR				; DO IT
-	
+
 	LD	BC,$01FB		; UNA FUNC = SET BANK
 	POP	DE			; RECOVER OPERATING BANK
 	CALL	$FFFD			; DO IT (RST 08 NOT YET INSTALLED)
@@ -1860,7 +1860,7 @@ INIT:
 	LD	DE,0			; TO PAGE ZERO OF OPERATING BANK
 	LD	BC,256			; ONE PAGE IS 256 BYTES
 	LDIR				; DO IT
-	
+
 	; INSTALL UNA INVOCATION VECTOR FOR RST 08
 	LD	A,$C3			; JP INSTRUCTION
 	LD	(8),A			; STORE AT 0x0008
@@ -1880,7 +1880,7 @@ INIT:
 	; SOFT RESET HBIOS
 	LD	B,BF_SYSRESET		; HB FUNC: RESET
 	RST	08			; DO IT
-	
+
 	; CREATE A TEMP COPY OF THE HBIOS CONFIG BLOCK (HCB)
 	; FOR REFERENCE USE DURING INIT
 	LD	B,BF_SYSSETCPY		; HBIOS FUNC: SETUP BANK COPY
@@ -1891,7 +1891,7 @@ INIT:
 	LD	HL,HCB_LOC		; COPY FROM FIXED LOCATION IN HB BANK
 	LD	DE,HCB			; TO TEMP LOCATION IN USR BANK
 	RST	08			; DO IT
-	
+
 	; CAPTURE RAM DRIVE STARTING BANK
 	LD	A,(HCB + HCB_BIDRAMD0)
 	LD	(BNKRAMD),A
@@ -1905,7 +1905,7 @@ INIT:
 	CALL	NEWLINE2		; FORMATTING
 	LD	DE,STR_BANNER		; POINT TO BANNER
 	CALL	WRITESTR		; DISPLAY IT
-	
+
 #IFDEF PLTUNA
 	; SAVE COMMAND PROCESSOR IMAGE TO MALLOCED CACHE IN UNA BIOS PAGE
 	LD	C,$F7		; UNA MALLOC
@@ -1978,7 +1978,7 @@ INIT:
 	CALL	PRTDEC			; PRINT IT
 	LD	DE,STR_MEMFREE		; ADD DESCRIPTION
 	CALL	WRITESTR		; AND PRINT IT
-;	
+;
 	LD	A,(DEFDRIVE)		; GET DEFAULT DRIVE
 	LD	(CDISK),A		; ... AND SETUP CDISK
 ;
@@ -1997,7 +1997,7 @@ INIT2:
 	CALL	PRTDECB			; PRINT IT
 	CALL	PC_PERIOD		; DECIMAL POINT
 	LD	A,0 + (((BDOS_LOC % 1024) * 100) / 1024)
-	CALL	PRTDECB			; MANTISSA 
+	CALL	PRTDECB			; MANTISSA
 	LD	DE,STR_TPA2		; AND TPA SUFFIX
 	CALL	WRITESTR
 	CALL	NEWLINE			; FORMATTING
@@ -2510,7 +2510,7 @@ DRV_INIT3A:
 	PUSH	DE			; SAVE DE (HARD DISK VOLUME COUNTER)
 	PUSH	HL			; SAVE DRIVE LIST PTR
 	PUSH	BC			; SAVE LOOP CONTROL
-	
+
 	LD	B,BF_DIOMEDIA		; HBIOS FUNC: SENSE MEDIA
 	LD	E,1			; PERFORM MEDIA DISCOVERY
 	RST	08
@@ -2518,9 +2518,9 @@ DRV_INIT3A:
 	POP	BC			; RESTORE LOOP CONTROL
 	POP	HL			; RESTORE DRIVE LIST PTR
 	POP	DE			; RESTORE DE
-	
+
 	RET	NZ			; IF NO MEDIA, JUST RETURN
-	
+
 	; IF ACTIVE...
 	LD	(HL),C			; SAVE UNIT NUM IN LIST
 	INC	HL			; BUMP PTR
@@ -2677,7 +2677,7 @@ DPH_INIT1:
 	CALL	PRTDRV		; PRINT DRIVE INFO
 	LD	A,D		; A := UNIT
 	PUSH	HL		; SAVE DRIVE MAP POINTER
-DPH_INIT1A:	
+DPH_INIT1A:
 	LD	DE,(DPHTOP)	; GET ADDRESS OF NEXT DPH
 	PUSH	DE		; ... AND SAVE IT
 	; INVOKE THE DPH BUILD ROUTINE
@@ -2776,7 +2776,7 @@ MAKDPH1:
 	POP	HL		; HL := START OF DPH
 	LD	A,8		; SIZE OF DPH RESERVED AREA
 	CALL	ADDHLA		; LEAVE IT ALONE (ZERO FILLED)
-	
+
 	LD	BC,(DIRBUF)	; ADDRESS OF DIRBUF
 	LD	(HL),C		; PLUG DIRBUF
 	INC	HL		; ... INTO DPH
@@ -2813,7 +2813,7 @@ MAKDPH2:
 	LD	(HL),C		; SAVE CKS/ALS BUF
 	INC	HL		; ... ADDRESS IN
 	LD	(HL),B		; ... DPH AND BUMP
-	INC	HL		; ... TO NEXT DPH ENTRY	
+	INC	HL		; ... TO NEXT DPH ENTRY
 	XOR	A		; SIGNAL SUCCESS
 	RET
 ;
@@ -2831,9 +2831,9 @@ ALLOC:
 	EX	DE,HL		; DE=NEW HEAPTOP, HL=HEAPLIM
 	SBC	HL,DE		; HEAPLIM - HEAPTOP
 	JR	C,ALLOCX	; C SET ON OVERFLOW ERROR
-	; ALLOCATION SUCCEEDED, COMMIT NEW HEAPTOP              
+	; ALLOCATION SUCCEEDED, COMMIT NEW HEAPTOP
 	LD	(HEAPTOP),DE	; SAVE NEW HEAPTOP
-ALLOCX:                         
+ALLOCX:
 	POP	HL		; RETURN VALUE TO HL
 	POP	DE		; RECOVER DE
 	RET
@@ -2862,15 +2862,15 @@ PRTDRV:
 	PUSH	BC		; PRESERVE BC
 	PUSH	DE		; PRESERVE DE
 	PUSH	HL		; PRESERVE HL
-	
+
 	LD	B,D		; B := UNIT
 	LD	C,$48		; UNA FUNC: GET DISK TYPE
 	CALL	$FFFD		; CALL UNA
 	LD	A,D		; DISK TYPE TO A
-	
+
 	CP	$40
 	JR	Z,PRTDRV1	; IF SO, HANDLE RAM/ROM
-	
+
 	LD	DE,DEVIDE	; IDE STRING
 	CP	$41		; IDE?
 	JR	Z,PRTDRVX	; IF YES, PRINT

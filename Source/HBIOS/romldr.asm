@@ -738,7 +738,7 @@ diskboot5:
 ;
 	; Compute number of sectors to load
 	ld	hl,(bb_cpmend)		; hl := end
-	ld	de,(bb_cpmloc)		; de := start 
+	ld	de,(bb_cpmloc)		; de := start
 	or	a			; clear carry
 	sbc	hl,de			; hl := length to load
 	ld	a,h			; determine 512 byte sector count

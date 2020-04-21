@@ -13,9 +13,9 @@ if [ $1 == '-d' ] ; then
 	diffdir=$1
 	shift
 	if [ -f $diffdir/build.inc ] ; then
-		timestamp=$(grep TIMESTAMP $diffdir/build.inc | awk '{print $3}' | tr -d '\015"')	
+		timestamp=$(grep TIMESTAMP $diffdir/build.inc | awk '{print $3}' | tr -d '\015"')
 		echo diff build using $timestamp
-	fi	
+	fi
 fi
 
 # positional arguments
@@ -65,7 +65,7 @@ romfmt=wbw_rom${romsize}
 outdir=../../Binary
 
 echo "creating empty rom disk of size $romsize in $blankfile"
-LC_CTYPE=en_US.US-ASCII tr '\000' '\345' </dev/zero | dd of=$blankfile bs=1024 count=`expr $romsize - 128`
+dd of=$blankfile bs=1024 count=`expr $romsize - 128` < <(LC_CTYPE=en_US.US-ASCII tr '\000' '\345' </dev/zero)
 
 cat <<- EOF > build.inc
 ; RomWBW Configured for $platform $config $timestamp
