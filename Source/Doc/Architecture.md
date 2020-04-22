@@ -1292,6 +1292,81 @@ codes as described at the start of this section.
 
 `\clearpage`{=latex}
 
+Sound (SND)
+------------
+
+### Function 0x50 -- Sound Reset (SNDRESET)
+
+| _Entry Parameters_
+|       B: 0x50
+|       C: The audio device unit number
+
+| _Exit Results_
+|       A: Status (0=OK, else error)
+
+Reset the sound chip.  Turn off all sounds and set volume on all
+channels to silence.
+
+### Function 0x51 -- Sound Volume (SNDVOL)
+
+| _Entry Parameters_
+|       B: 0x51
+|       C: The audio device unit number
+|       L: The volume to be applied (00=Silence, FF=Maximum)
+
+| _Exit Results_
+|       A: Status (0=OK, else error)
+
+This function set the volume configuration command.  The volume will
+be applied when the SNDPLAY function is invoked.
+
+### Function 0x52 -- Sound Volume (SNDPIT)
+
+| _Entry Parameters_
+|       B: 0x52
+|       C: The audio device unit number
+|       HL: The pitch to be applied (0000=lowest note, FFFF=highest note)
+
+This function set the pitch configuration command.  The pitch will
+be applied when the SNDPLAY function is invoked.
+
+### Function 0x53 -- Sound Volume (SNDNOTE)
+
+| _Entry Parameters_
+|       B: 0x52
+|       C: The audio device unit number
+|       L: A number from 0 to 255 selecting quarter notes
+
+This function will apply a pitch value to the sound chip.
+
+The value correspond to standard musical notes.  The value allows for selection
+of a quarter of a semitone by giving a value between 0 and upto the drivers maximum
+supported value. The lowest note is (0).
+
+For the SN76490 chip, 0 corresponds to note A1# and the value 249 is the maximum
+supported value, and it corresponds to note C7.
+
+### Function 0x54 -- Sound Play (SNDPLAY)
+
+| _Entry Parameters_
+|       B: 0x53
+|       C: The audio device unit number
+|       D: The channel to play the previously configured tone
+
+This function set the pitch and volume previously configured with the SNDPIT
+and SNDVOL functions.
+
+For example, to play a specific note, on the first installed driver, the following
+HBIOS calls would need to be made
+
+```
+HBIOS B=51 C=00 L=80      ; Set volume to half level
+HBIOS B=53 C=00 L=69      ; Select Middle C (C4) assuming SN76489
+HBIOS B=54 C=00 D=01      ; Play note on Channel 1
+```
+
+`\clearpage`{=latex}
+
 System (SYS)
 ------------
 
@@ -1569,6 +1644,14 @@ available along with the registers/information used as input.
 |      _Entry Parameters_
 |           BC: 0xF9D1
 |           DE:HL: Seconds Count Value
+
+|      _Returned Values_
+|           A: Status (0=OK, else error)
+
+#### SYSSET Subfunction 0xD2 -- Inc Timer (TIMER)
+
+|      _Entry Parameters_
+|           BC: 0xF9D2
 
 |      _Returned Values_
 |           A: Status (0=OK, else error)

@@ -2,7 +2,7 @@
 # order is actually important, because of build dependencies
 #
 SUBDIRS = Prop
-SUBDIRS += Apps 
+SUBDIRS += Apps
 SUBDIRS += CBIOS
 SUBDIRS += Forth
 SUBDIRS += Fonts
