@@ -1194,8 +1194,11 @@ platform.
 list of general code enhancements.
 * Phillip Stevens contributed support for FreeRTOS.
 * Curt Mayer contributed the Linux / MacOS build process.
-* UNA BIOS and FDISK80 is a product of John Coffman.
+* UNA BIOS and FDISK80 are the products of John Coffman.
 * FLASH4 is a product of Will Sowerbutts.
+* CLRDIR is a product of Max Scane.
+* Dean Netherton contributed the sound driver interface and
+the SN76489 sound driver.
 
 Contributions of all kinds to RomWBW are very welcome.
 

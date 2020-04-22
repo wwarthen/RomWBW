@@ -9,6 +9,8 @@ Version 3.1
 - WBW: Support use of CTC for SIO baud rate divisors
 - WBW: Updated IDE and PPIDE drivers to improve old CF Card compatibility
 - WBW: Support TIMER mode in CTC driver
+- D?N: Added sound driver support
+- D?N: Added SN76489 sound chip driver
 
 Version 3.0.1
 -------------

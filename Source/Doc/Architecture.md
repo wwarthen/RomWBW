@@ -1299,7 +1299,7 @@ Sound (SND)
 
 | _Entry Parameters_
 |       B: 0x50
-|       C: The audio device unit number
+|       C: Audio Device Unit ID
 
 | _Exit Results_
 |       A: Status (0=OK, else error)
@@ -1311,53 +1311,62 @@ channels to silence.
 
 | _Entry Parameters_
 |       B: 0x51
-|       C: The audio device unit number
-|       L: The volume to be applied (00=Silence, FF=Maximum)
+|       C: Audio Device Unit ID
+|       L: Volume (00=Silence, FF=Maximum)
 
 | _Exit Results_
 |       A: Status (0=OK, else error)
 
-This function set the volume configuration command.  The volume will
-be applied when the SNDPLAY function is invoked.
+This function sets the sound chip volume parameter.  The volume will
+be applied when the next SNDPLAY function is invoked.
 
-### Function 0x52 -- Sound Volume (SNDPIT)
+Note that not all sounds chips implement 256 volume levels.  The
+driver will scale the volume to the closest possible level the
+chip provides.
 
-| _Entry Parameters_
-|       B: 0x52
-|       C: The audio device unit number
-|       HL: The pitch to be applied (0000=lowest note, FFFF=highest note)
-
-This function set the pitch configuration command.  The pitch will
-be applied when the SNDPLAY function is invoked.
-
-### Function 0x53 -- Sound Volume (SNDNOTE)
+### Function 0x52 -- Sound Pitch (SNDPIT)
 
 | _Entry Parameters_
 |       B: 0x52
-|       C: The audio device unit number
-|       L: A number from 0 to 255 selecting quarter notes
+|       C: Audio Device Unit ID
+|       HL: Pitch (0000=lowest note, FFFF=highest note)
 
-This function will apply a pitch value to the sound chip.
+This function sets the sound chip pitch parameter.  The pitch will
+be applied when the next SNDPLAY function is invoked.
 
-The value correspond to standard musical notes.  The value allows for selection
-of a quarter of a semitone by giving a value between 0 and upto the drivers maximum
-supported value. The lowest note is (0).
+The pitch value is a driver specific value.  To play standardized
+notes, use the SNDNOTE function.
 
-For the SN76490 chip, 0 corresponds to note A1# and the value 249 is the maximum
-supported value, and it corresponds to note C7.
+### Function 0x53 -- Sound Note (SNDNOTE)
+
+| _Entry Parameters_
+|       B: 0x53
+|       C: Audio Device Unit ID
+|       L: Note (0 to 255 quarter notes)
+
+This function sets the sound chip pitch parameter according to
+standardized notes.
+
+The value corresponds to standard musical notes.  The value allows 
+for selection of a quarter of a semitone by giving a value between 0 
+and up to the drivers maximum supported value. The lowest note is (0).
+
+For the SN76490 chip, 0 corresponds to note A1# and the value 249 is 
+the maximum supported value, and it corresponds to note C7.
 
 ### Function 0x54 -- Sound Play (SNDPLAY)
 
 | _Entry Parameters_
-|       B: 0x53
-|       C: The audio device unit number
-|       D: The channel to play the previously configured tone
+|       B: 0x54
+|       C: Audio Device Unit ID
+|       D: Channel
 
-This function set the pitch and volume previously configured with the SNDPIT
-and SNDVOL functions.
+This function applies the previously specified volume and pitch by
+programming the sound chip with the appropriate values.  The values
+are applied to the specified channel of the chip.
 
-For example, to play a specific note, on the first installed driver, the following
-HBIOS calls would need to be made
+For example, to play a specific note on Audio Device UNit 0,
+the following HBIOS calls would need to be made:
 
 ```
 HBIOS B=51 C=00 L=80      ; Set volume to half level
@@ -1554,6 +1563,15 @@ available along with the registers/information returned.
 |      _Returned Values_
 |           A: Status (0=OK, else error)
 |           E: Count of Video Device Units
+
+#### SYSGET Subfunction 0x50 -- Get Sound Device Unit Count (SNDCNT)
+
+|      _Entry Parameters_
+|           BC: 0xF850
+
+|      _Returned Values_
+|           A: Status (0=OK, else error)
+|           E: Count of Sound Device Units
 
 #### SYSGET Subfunction 0xD0 -- Get Timer Tick Count (TIMER)
 
