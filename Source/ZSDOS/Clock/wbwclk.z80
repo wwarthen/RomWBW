@@ -1,0 +1,113 @@
+	TITLE	"ROMWBW HBIOS Clock Interface"
+	SUBTTL	"Description of Clock Module"
+;===================================================================
+; WBWCLK.Z80
+;  HBIOS Clock driver for RomWBW System Software
+;				Wayne Warthen
+; Version: 31 Mar 2020
+;===================================================================
+
+VERS	EQU	11
+       .Z80
+       NAME	WBWCLK
+       
+	MACLIB	CLOCK.LIB
+
+       COMMON  /_CLKID/
+
+DESCST: DEFW	0		; Pointer to static year value if required
+
+CLKNAM:	DEFB	'RomWBW HBIOS Clock      '	; Exactly 24 chars in name
+	DEFB    VERS/10+'0','.',VERS MOD 10 +'0',0
+
+DESCR:	DEFB	'RomWBW Series HBIOS Clock',0
+
+	  IF  [$-DESCST] > 256
+	OVER2
+	  ENDIF
+
+	PAGE
+	SUBTTL	"Configurable Clock Hardware Parameters"
+
+	COMMON  /_PARM_/
+
+PARBAS:	DEFW	0	; # of parameters (Set to 00 if none)
+	DEFW    0	; Pointer to STRS (Set to 00 if none)
+
+	CSEG
+
+;-----------------------------------------------------------
+;	Z S D O S  C L O C K  H E A D E R
+;-----------------------------------------------------------
+; Enter: HL points to a 6-byte buffer to Get/Set time
+; Exit : A=1 on Success, A=FFH if error
+;	HL points to last char in buffer
+;	E contains original seconds (HL+5)
+
+;- - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;	R e a d / W r i t e  t h e  C l o c k
+;- - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+PRGBAS:	JP	GETTIM	; Jump to Read Clock
+	JP      WRCLK	; Jump to Set Clock
+;
+GETTIM:	PUSH	HL		; Save final buffer pointer
+	LD	HL,TIMBUF	; Point to temp buf for HBIOS read
+	LD	B,20H		; HBIOS Read Clock function = $20
+	RST	08		; Call HBIOS to get time
+	LD	HL,TIMBUF	; Source is start of temp buf
+	POP	DE		; Destination is buffer provided originally
+	JR	NZ,ERRRET	; Error return
+	LD	BC,5		; Copy just the first 5 bytes
+	LDIR			; Do it
+	LD	A,(DE)		; Save the original seconds value
+	INC	BC		; Setup to copy final byte (BC := 1)
+	LDIR			; Do the last byte (seconds)
+	EX	DE,HL		; Setup HL to point to seconds for return
+	DEC	HL		; Need to dec HL back to seconds adr
+	LD	D,0		; Tenths of seconds is always zero
+	LD	E,A		; Original seconds value to E
+	LD	A,1		; Signal success
+	RET			; Done
+;
+WRCLK:	LD	DE,TIMBUF	; Copy to temp buf
+	LD	BC,6		; 6 bytes
+	LDIR			; Do it
+	LD	HL,TIMBUF	; Point to temp buf for HBIOS call
+	LD	B,21H		; Set clock function
+	RST	08		; Call HBIOS to set the time
+	JR	NZ,ERRRET	; Error return
+	LD	A,1		; Signal success
+	RET			; Done
+;
+ERRRET:	OR	0FFH		; Error
+	RET			; Done
+;
+TIMBUF	DEFS	6		; Temp date/time buffer
+
+	PAGE
+	SUBTTL	"Run-Time Configuration of Ports and Masks"
+
+; This code installs configurable items into the clock module
+; Enter with DE pointing to the physical address of the relocatable module
+
+	COMMON  /_POST_/
+	RET		; This RETURN MUST be present even if no other
+			; code is included in this section
+
+	COMMON  /_PRE_/
+
+;---------------------------------------------------------------
+; Read clock and wait for seconds to roll - watchdog protected
+; Enter with: DE pointing to relocated clock read routine
+;	HL pointing to base of high module
+
+; This module is executed just prior to installing the module to insure
+; that a valid clock is present
+; Enter with DE pointing to beginning of relocated clock CSEG
+
+	COMMON	/_PRE_/
+
+	INCLUDE	PRECLOCK.LIB
+
+	END

@@ -10,6 +10,8 @@ TSTRD:	JR	TSTRD0		; Jump around address store
 
 TSTRD0:	LD	(CKCLK+1),DE	; Patch GETTIM address in
 	CALL	CKCLK		; Get time to start with
+	DEC	A		; WBW: 1 -> 0
+	JR	NZ,BAD		; WBW: NO GOOD
 	LD	A,(HL)		; Get seconds
 	CP	60H		; Check for valid digit
 	JR	NC,BAD		; >= 60h

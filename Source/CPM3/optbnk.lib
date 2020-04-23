@@ -1,0 +1,8 @@
+	; global assembler options for BANKED BIOS
+	
+true	equ -1
+false	equ not true
+
+banked	equ true
+
+zpm	equ false

@@ -11,3 +11,4 @@ if exist *.tmp del *.tmp
 if exist *.mrk del *.mrk
 if exist *.sys del *.sys
 if exist build.inc del build.inc
+if exist font*.asm del font*.asm

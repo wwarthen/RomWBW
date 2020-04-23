@@ -1,0 +1,230 @@
+          NOTES on your CP/M 3.0 BIOS and ZPM3
+          ====================================
+                 Last updated 19/4/92
+
+ZPM3 will work fine with your current CP/M 3.0 BIOS. This 
+document is not meant to tell you how to change your BIOS for 
+ZPM3, but rather to point out some interesting and useful facts 
+about the way ZPM3 uses the BIOS, and how you should configure 
+your BIOS.
+
+
+
+XMOVE routine.
+~~~~~~~~~~~~~~
+If you have 128 byte physical sectors, or your BIOS does all the 
+deblocking so that it appears to the BDOS that you have 128 byte 
+physical sectors, XMOVE does not get used at all by ZPM3. Such 
+was not the case with CP/M 3.0 which would make redundant calls 
+to XMOVE. Make sure XMOVE is implemented and working anyhow as 
+applications may attempt to use it.
+
+When the BDOS is operating in the system bank (bank 0) and it 
+needs to move data in the TPA bank, it switches to the TPA bank 
+and does an ordinary LDIR. As such, XMOVE will never get called 
+by the BDOS with B=C (source bank and destination bank the same).
+
+In the CP/M 3.0 manuals, there are two differing opinions about 
+XMOVE as far as whether B is the source or the destination. The 
+truth is that C is the source and B is the destination. Anything 
+you see to the contrary is a misprint.
+
+MOVE routine.
+~~~~~~~~~~~~~
+When CP/M 3.0 was released, it was made 8080 compatible simply 
+because CP/M 2.2 was 8080 compatible. I have never heard of an 
+8080 machine running CP/M 3.0, and it is likely that there has 
+never been one. Digital Research knew that the Z80 was the CPU of 
+choice for modern PC's, and while they wrote their code for the 
+8080, they recognised the Z80 with the MOVE routine (which a Z80 
+BIOS could implement in just three instructions).
+
+ZPM3 uses the MOVE routine much less than CP/M 3.0 does. In fact, 
+the only time ZPM3 uses MOVE is with an XMOVE call directly 
+preceding it. If you have 128 byte physical sectors (or the BIOS 
+does the sector deblocking), MOVE will never get called.
+
+Always remember that MOVE must return with HL and DE pointing to 
+the end of the moved data. If they don't, you will have trouble.
+
+
+TIME routine.
+~~~~~~~~~~~~~
+Be aware that the DATE program supplied with CP/M 3.0 will not 
+work properly if your BIOS does not update the SCB with 
+interrupts. There have been replacements since then that are 
+available in the public domain.
+
+One common trap for BIOS writers is forgetting that HL and DE 
+must be saved by the TIME routine. There is no obvious reason for 
+it, and really they should be saved in the BDOS.
+
+ZPM3 does not expect HL to be saved. If you have had trouble with 
+your CP/M 3.0 clock things might work now. It was decided that 
+seeing as TIME was the only routine (apart from MOVE) which 
+required HL to be saved, it was too easy to overlook, and a real 
+pain to implement (some systems use HL to switch banks on entry 
+to the BIOS. MOVE is always accounted for, but TIME sometimes 
+isn't (Morrow MD11 owners take note!)).
+
+Ideally, there should be no reason to save HL in your BIOS, 
+unless you intend to run CP/M 3.0 sometimes (although I can't 
+imagine why). Any applications which attempt to use TIME through 
+the function 50 are not guaranteed that HL will be saved anyhow.
+
+Buffers.
+~~~~~~~~
+CP/M 3.0 (and therefore ZPM3) keeps special disk buffers. The 
+system is rather complex. The directory is buffered separately 
+from the rest of the disk (and in the case of 128 byte sectors 
+the rest of the disk isn't buffered anyhow).
+
+You decide how many buffers to give to each disk's directory and 
+data, and you may choose to have buffers shared by different 
+drives. All these choices can make for lots of fun for the 
+hacker, but without knowing much about the internal workings of 
+the BDOS how do you best set the buffer up?
+
+There are many cases to consider depending on how much RAM you 
+have available to allocate to buffers. If you have virtually 
+unlimited RAM, you might as well allocate as many buffers as 
+GENCPM will allow. The only catch to this is that more buffers 
+implies the BDOS will take more time to look through them all 
+before coming to the decision that a disk read is required. The 
+good news is that the ZPM3 searching algorithm is particularly 
+fast.  Empty buffers are discovered even faster than buffers 
+which are valid but don't match, so large numbers of empty 
+buffers pose very little problem. In general, even with the 
+maximum number of buffers, the advantages they give outweigh the 
+disadvantages.
+
+Of course, few people have unlimited RAM. If you have very little 
+room available, spend most of it on the directory buffers. These 
+buffers act like a cache of the directory, and can save the disk 
+heads from moving back to the directory tracks to find out where 
+the next block is stored. Even on very fast hard disks, the 
+advantages that decent directory buffers give are great.
+
+When dividing up directory buffers between a number of drives, 
+consider which drive holds the most files and which drive does 
+the most work. A drive which holds a lot of files but is rarely 
+accessed is not worth wasting buffers on. If you have a system 
+with one hard drive and one floppy drive, and you don't intend to 
+use the floppy drive very much, give only one buffer to the 
+floppy and all the rest to your hard drive. This will penalise 
+the floppy's performance somewhat, but the improvement it gives 
+to the hard drive will make it worthwhile.
+
+Data buffers, like directory buffers, perform two tasks: 
+deblocking of physical sectors, and cacheing. For data buffers 
+however the cacheing is the less important job, unless you have a 
+lot of data buffers available. The reason for this is that the 
+buffer algorithms work by taking the least recently used buffer 
+and using it for deblocking. If you are working on a file which 
+is 8k long, but you only have 4k of buffers, the BDOS will run 
+out of buffers before it has read the whole file and will grab 
+the least recently used one even though it contains valid data 
+from the file which could be required later on. The result is 
+that the BDOS does much searching through its 4k of buffers, but 
+rarely finds anything which matches and must read from the disk 
+anyhow.
+
+In practice the system works a little better than that because of 
+the way files are used by most programs, so data buffers are 
+still worthwhile, but to take real advantage of their cacheing 
+ability you must have more room in the data buffers than the size 
+of the file you are working with. With word processors such as 
+Wordstar and NewWord creating extra files as they work, you 
+really need more than twice as much room in the buffers than the 
+size of the file.
+
+So you can see why data buffers are less important than directory 
+buffers. Something else you should be aware of concerns multi- 
+sector i/o and the data buffers. When the BDOS is told to read a 
+file it searches its buffers and if it can't find the data there 
+it reads it from the disk. Normally it deblocks the data one 
+record at a time through its data buffers, leaving the data in 
+the buffers in case it is required again. However multi-sector 
+i/o does not usually need to deblock its data, so the data is 
+sent straight to the TPA without going through the data buffers. 
+If any of that data is required again, it will not be in the data 
+buffers and must be read from the disk. So two reads of the same 
+data using multi-sector i/o might actually be slower than reads 
+that are done a sector at a time!
+
+And the really important thing about all this is that the CCP 
+uses multi-sector i/o to load programs. So if you thought that 
+implementing large numbers of data buffers would give you faster 
+loading of programs, you were wrong. The data buffers won't help 
+program loading unless the data can be put into the buffers 
+first.
+
+If you use ZCCP, you will find there is a facility to prevent the 
+data buffers from being bypassed on program loads. It involves 
+simply setting the f1' bit of the file. The idea is that you set 
+f1' on all the files which are small enough not to clog up your 
+buffers, and then they run as if they are on a ram disk, but one 
+in which you can never lose data. The system is quite wonderful 
+in that the RAM used to hold the files is available to buffer 
+other data if required. Unlike a ram disk, the RAM is dynamically 
+allocated and the data is completely safe. But you must be using 
+ZCCP, and you must have at least 6k of data buffers before it 
+does anything useful. If you currently have a ram disk but few 
+data buffers, consider taking a chunk of your ram disk for data 
+buffers and switching to ZCCP.
+
+CPMLDR bug.
+~~~~~~~~~~~
+This is closely related to the subject of buffers because you 
+will find that if you increase your buffers past a certain point, 
+the system will not boot. Almost certainly you will suspect a 
+problem with your BIOS code (you normally should), however the 
+CPMLDR.REL code supplied by DRI has a bug in it.
+
+You may be wondering if everything DRI did with CP/M 3.0 was 
+buggy! I must say that what they achieved was terrific, but it 
+had its faults as well. Hopefully ZPM3 has addressed them all.
+
+The CPMLDR problem occurs when your CPM3.SYS grows from being 16k 
+or less, to over 16k (and therefore two logical extents). You may 
+not have this problem under certain drive configurations, but if 
+you do, the symptom is that described above.
+
+There really is no way of patching around this, but if you have 
+your loader BIOS, you can certainly use the (somewhat superior) 
+ZPM3LDR.REL code instead. This works very similarly to the DRI 
+code, except that it works properly. Unlike the DRI code, you 
+will find that ZPM3LDR has all its messages at the head of the 
+file so that you can patch them and change them if you wish.
+
+ZPM3LDR does not clear the screen on boot up (CPMLDR does by 
+sending multiple linefeeds), but you could patch this if you 
+like. ZPM3LDR.REL will directly replace CPMLDR.REL. ZPM3LDR 
+however does not use the MOVE routine that CPMLDR requires 
+(although there is nothing much to be gained by removing it from 
+your loader bios code).
+
+
+GENCPM bugs.
+~~~~~~~~~~~~
+GENCPM has bugs in it. If you can, try and set up all your 
+buffers manually. That way you'll know where they are and you are 
+in complete control.
+
+The biggest fault I have found with GENCPM is that it will 
+allocate allocation vectors incorrectly. CP/M 3.0 can use double 
+bit allocation vectors, but doesn't necessarily. Sometimes (and I 
+think it is mainly with big disks), GENCPM will only allocate 
+enough room for single bit allocation vectors when double bit 
+vectors had been specified. The symptoms of this are varied, but 
+often, you can use your A: drive for a while, but as soon as you 
+use your B: drive funny things happen. If you only use A: and C: 
+drives, things appear to work OK.
+
+The first thing to try if you suspect a GENCPM induced problem is 
+setting up with only one drive and a single buffer. If that fixes 
+it, the problem could well be with GENCPM.
+
+Naturally, your BIOS code could still be the problem, so look out 
+for that too!
+

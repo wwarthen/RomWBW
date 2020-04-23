@@ -1,0 +1,96 @@
+; BIOS / BDOS for the ZXCC environment.
+;
+	org	0FE00h
+	DEFB	'ZXCC04'	;Serial number
+;
+; Some CP/M programs expect a jump at the start of BDOS, so here it is.
+;
+BDOS0:	JP	BDOS1
+
+BDOS1:	LD	A,0C0h
+	DEFB	0EDh,0FEh
+	RET
+;
+; Hack for ZMAC.  ZMAC is using contents of 0FE22H to establish a memory pointer.
+; It makes no sense.  We stuff 04F4CH here because it is known to work...
+;
+	org	0FE22H
+	DEFW	04F4CH
+;
+;This is not a real BIOS, so let its code live below the BIOS jumpblock.
+;
+UBIOS:	LD	(XIX),IX
+	POP	IX		;IX = address of UBIOS function
+	LD	A,0C3h		;C3h = BIOS call
+	DEFB	0EDh,0FEh
+	LD	IX,(XIX)
+	RET
+;
+XIX:	DEFW	0
+
+CBOOT:  LD      HL,WBOOT0
+        LD      (1),HL
+        LD      HL,BDOS0
+        LD      (6),HL
+        LD      A,0C3h
+        LD      (0),A
+        LD      (5),A
+        LD      A,0C9h
+        LD      (038h),A
+        LD      A,0C1h		;C1h = program load
+        DEFB    0EDh,0FEh
+        LD      HL,0
+        PUSH    HL      	;In case called program tries to RET
+        JP      0100h
+;
+WBOOT:  LD      A,0C3h          ;Program termination
+        LD      IX,6            ;BIOS call 1
+        DEFB    0EDh,0FEh
+        HALT
+        JP      $
+;
+	org	0FEECh
+tmpdrv:	defb	0FFh		;Temp drive = current
+
+
+;
+;TODO: SCB at FE9Ch
+;
+	org	0FF00h
+	JP	CBOOT	;FF00
+WBOOT0:	JP	WBOOT	;03
+	CALL	UBIOS	;06
+	CALL	UBIOS	;09
+	CALL	UBIOS	;0C
+        CALL    UBIOS	;0F
+        CALL    UBIOS	;12
+        CALL    UBIOS	;15
+        CALL    UBIOS	;18
+        CALL    UBIOS	;1B
+        CALL    UBIOS	;1E
+        CALL    UBIOS	;21
+        CALL    UBIOS	;24
+        CALL    UBIOS	;27
+        CALL    UBIOS	;2A
+        CALL    UBIOS	;2D
+        CALL    UBIOS	;30
+        CALL    UBIOS	;33
+        CALL    UBIOS	;36
+        CALL    UBIOS	;39
+        CALL    UBIOS	;42
+	CALL	UBIOS	;45
+	CALL	UBIOS	;48
+	CALL	UBIOS	;4B
+	CALL	UBIOS	;4E
+	CALL	UBIOS	;51
+	CALL	UBIOS	;54
+	CALL	UBIOS	;57
+	CALL	UBIOS	;5A, USERF
+	CALL	UBIOS	;5D, RESERV1
+	CALL	UBIOS	;60, RESERV2
+;
+	org	0FFC0h	;Space for DPB
+dpb:	defs	20h
+
+	END
+	

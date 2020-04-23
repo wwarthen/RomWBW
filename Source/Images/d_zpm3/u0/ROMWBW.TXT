@@ -1,0 +1,47 @@
+This is a generic ZPM3 adaptation for RomWBW.
+
+There are two ways to launch ZPM3.  First, you can run the command
+CPMLDR from a CP/M 2.2 or Z-System command line.  Alternatively, you
+boot directly into ZPM3 by choosing the ZPM3 disk from the RomWBW
+loader prompt.  The ZPM3 disk must be bootable in this case.
+
+You may notice that there is a ZPMLDR application on the hard disk
+image.  This application is equivalent to CPMLDR, but it has some
+issues with the number of drives that RomWBW supports.  So, as
+indicated above, use CPMLDR to launch ZPM3.
+
+I have not found a way to make ZPM3 start up with any drive other
+than A: as the system drive.  So, during the load process, the boot
+drive and drive A: are "swapped" so that the boot drive is always
+drive A:.  Use the ASSIGN command after starting ZPM3 to see how the
+drives get mapped.
+
+Per ZPM3 standard, files are distributed across different user areas
+depending on their usage.  Normal applications are in user 15.  Help
+files in user 10.  Configuration files in user 14.
+
+In addition to the applications provided in the ZPM3 distributio, the
+normal CP/M 3 files are included in user area 15.  A few typical ZCPR
+utility programs are also included in user area 15:
+
+ - ALIAS
+ - ARUNZ
+ - ERASE
+ - HELPC (named ZHELP)
+ - LBREXT
+ - SALIAS
+ - SETPATH
+ - VERRROR
+ - VLU
+ - ZCNFG
+ - ERASE (named ZERASE)
+ - ZEX
+ - ZFILER
+ - ZP
+ - SHOW (named ZSHOW)
+ - ZXD
+
+It is a bit confusing, but the ZPM3 system file is called CPM3.SYS.
+This is the ZPM3 default configuration and I guess it is done this
+way to maximize compatibility with CP/M 3.  You will notice that the
+startup banner will indicate ZPM3.

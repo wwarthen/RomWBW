@@ -1,0 +1,39 @@
+CP/M 3
+======
+
+  This archive contains an almost complete build of CP/M 3.
+
+  If you have the source distribution, the file MAKING.DOC explains how to
+set up the build environment on your computer.
+
+Differences from Digital Research CP/M 3
+========================================
+
+  All the CP/M 3 patches described in the document CPM3FIX.PAT have been
+applied to the source code, except those to INITDIR. Patches 1-18 (except
+nos. 5 and 9) were applied.
+
+  CP/M 3 is now fully Year 2000 compliant. This affects the programs 
+DATE.COM, DIR.COM and SHOW.COM.
+
+  Dates can be displayed in US, UK or Year-Month-Day format. This is set by 
+SETDEF:
+
+      SETDEF [US]
+      SETDEF [UK]
+      SETDEF [YMD]  respectively.
+  
+  The CCP has a further bug fix: A command sequence such as:
+
+  C1
+  :C2
+  :C3
+
+  will now not execute the command C3 if the command C1 failed.
+
+What's missing?
+===============
+INITDIR.COM - because it is written in PL/I and I can't make the
+            PL/I compiler at <http://cdl.uta.edu/cpm> compile it.
+            Apparently a more recent version of the compiler is 
+            required.

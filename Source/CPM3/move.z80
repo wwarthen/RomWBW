@@ -1,0 +1,99 @@
+	title 'bank & move module for CP/M3 linked BIOS'
+
+	cseg
+
+	public	?move,?xmove,?bank,?bnkxlt
+	public	?mvinit,@hbbio,@hbusr
+	extrn 	@cbnk
+	
+?mvinit:
+	ld	bc,0F8F2h	; HBIOS GET BNKINFO
+	;rst	08		; D: BIOS Bank, E: User Bank
+	call	0FFF0h		; D: BIOS Bank, E: User Bank
+	ld	a,d
+	ld	(@hbbio),a
+	ld	a,e
+	ld	(@hbusr),a
+	ret
+	
+?xmove:
+	ld	(movbnks),bc	; save source & dest banks
+	or	0FFh		; flag interbank move type
+	ld	(movtyp),a	; save it
+	ret
+
+?move:
+	ld	a,(movtyp)	; get move type flag
+	or	a		; set flags
+	jr	nz,xbnkmov	; if so, go to interbank move
+
+	; Intrabank move
+	ex	de,hl	; we are passed source in DE and dest in HL
+	ldir		; use Z80 block move instruction
+	ex	de,hl	; need next addresses in same regs
+	ret
+
+xbnkmov:
+	;ld	ix,8888H
+	;halt
+	; Interbank move
+	xor	a		; zero
+	ld	(movtyp),a	; clear move type flag
+	ld	a,(srcbnk)
+	call	?bnkxlt
+	ld	(0FFE4h),a
+	ld	a,(dstbnk)
+	call	?bnkxlt
+	ld	(0FFE7h),a
+	ex	de,hl		; swap address regs for call
+	call	0FFF6h		; HBIOS BNKCPY
+	ex	de,hl		; next addresses in same regs
+	ret
+
+?bank:
+	call	?bnkxlt		; xlat to HBIOS bank id
+	jp	0FFF3h		; do it and return
+
+;
+; Convert from CPM3 bank id to HBIOS bank id.
+; CPM3 wants TPA for it's bank 0, so that is special
+; case mapping to HBIOS BID_USR (8Eh).  Otherwise, we index
+; down below BID_HBIOS (8Dh).  So CPM3 bank usage grows
+; downward.
+;
+; CPM3		HBIOS		Typical
+; ------------	--------------	-------
+; COMMON	BID_COM		8Fh
+; 0: OS/BUFS	BID_USR         8Eh
+;		BID_BIOS	8Dh	
+; 1: TPA	BID_AUX		8Ch
+; 2: BUFS	BID_AUX-1	8Bh
+; 3: BUFS	BID_AUX-2	8Ah
+; ...
+;
+; N.B., Below BID_AUX is considered RAM disk bank.  Need to
+; make sure RAM disk is kept small enough to stay below
+; banks used for OS buffers.
+;
+; @hbbio & @hbusr are dynamically updated during init
+; to adjust for real size of RAM in system
+;
+?bnkxlt:
+	or	a
+	jr	z,bank0
+	neg			; 2 -> -2
+	add	a,8Dh		; 8Dh - 2 = 8Bh
+@hbbio	equ	$ - 1		; BID_BIOS
+	ret
+bank0:
+	ld	a,8Eh		; 0 -> 8Eh
+@hbusr	equ	$ - 1		; BID_USR
+	ret
+	
+movtyp	db	0		; non-zero for interbank move
+
+movbnks:
+srcbnk	db	0
+dstbnk	db	0
+
+	end

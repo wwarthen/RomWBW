@@ -1,0 +1,80 @@
+
+;+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+;			 S E T Z 3
+;			 for  ZPM3
+;			by Simeon Cran
+;			   30/3/92
+;
+; This program automatically sets the system environment address in the ZPM3
+; SCB for Z3PLUS users. Certain advanced ZCPR facilities such as wheel
+; protection of files will then be activated.
+;
+; Z3PLUS users should run SETZ3.COM once when they start up Z3PLUS and again
+; when returning to regular (non-Z-System) operation. When run after Z3PLUS
+; is started, the SCB environment address word is set with the ZCPR environment
+; address. When run after returning to regular operation, the SCB environment
+; address word is cleared to 0000h.
+;
+;+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+;===============================================================================
+
+BDOS	equ	5
+deffcb	equ	5ch
+SCBfunc	equ	31h	; Get/Set SCB function number
+SCBoff	equ	3bh	; Offset in SCB to get SCB base page
+Z3ENVoff equ	83h	; Offset in SCB base page of the ZCPR system
+			;  environment pointer.
+
+	jp	start	; Jump over general data
+	db	'Z3ENV'
+	db	1
+Z3ENV:	dw	0
+	dw	0
+HELPmsg:
+	db	' SYNTAX:'
+	db	10,13
+	db	'  SETZ3'
+	db	10,13
+	db	'              Sets the ZCPR environment address in the SCB,'
+	db	10,13
+	db	'              or else clears it if not running ZCPR.'
+	db	10,13
+	db	'  SETZ3 //    Displays this brief help message'
+	db	'$'
+
+HELP:	ld	de,HELPmsg
+MSGexit:
+	ld	c,9
+	call	bdos
+	rst	0
+
+start:	; Get the address of the SCB environment address pointer.
+	ld	de,(Z3ENV)
+	ld	a,d
+	or	e		; Has it been set by Z3PLUS?
+	jr	nz,Zinstall	; Jump if it has
+	ex	de,hl
+	ld	a,d
+	or	e		; Was it in HL instead?
+	jr	nz,Zinstall
+Zinstall:	; DE holds 0 if uninstalling, otherwise the address of the
+		;  ZCPR evironment descriptor.
+	push	de
+	ld	c,SCBfunc
+	ld	de,SCBPB
+	call	bdos		; Get base page of SCB
+	ld	h,a
+	ld	l,Z3ENVoff	; HL is now the address of the word
+	pop	de
+	ld	(hl),e
+	inc	hl
+	ld	(hl),d		; Set it appropriately
+	rst	0		; And exit.
+	
+	
+SCBPB:	; System control block function parameter block.
+	db	03bh
+	db	0		; Get operation
+
+

@@ -13,8 +13,8 @@ image to a floppy or hard disk (including CF and SD cards).
 In summary, CP/M files are placed inside of a pre-defined Windows 
 directory structure.  A script is then run to create the floppy and 
 hard disk images from the directory tree contents.  The resultant 
-images may be copied directly to floppy or hard disk media or used 
-for SIMH emulator disk images.
+images may be copied directly to floppy or hard disk media or used as 
+SIMH emulator disk images.
  
 System Requirements
 -------------------
@@ -26,186 +26,436 @@ PowerShell. It is included in all versions after Windows XP.  If you
 are using Windows XP, you will need to download it from Microsoft and 
 install it (free download).
 
+Although not documented here, the Linux/Mac build process will also
+create disk images using a similar process based on Makefiles.
+
 The cpmtools toolset is used to generate the actual disk images.  
-This toolset is included in the distribution.
+This toolset is included in the distribution, so you do not need to 
+download or install it.
 
 Preparing the Source Directory Contents
 ---------------------------------------
 
 The script expects your files to be found inside a specific directory 
-structure.  Note that you will see there are some CP/M files in the 
-Source directory tree in the distribution.  These are simply test 
-files I used and have no specific meaing.  You will probably want to 
-replace them with your own files as desired.
+structure.  The structure is:
 
-If you look at the Images directory, you will find 4 
-sub-directories.  fd0 and fd1 will contain the files to be placed in 
-the two floppy images gneerated. hd0 and hd1 will contain the files 
-to be used to generate the two hard disk images.  There is nothing 
-magic about the fact that there are two of each kind of image 
-generated.  It just seemed like a good number to the author.  A quick 
-review of the scripts and you will see it is very easy to modify the 
-number of images generated if you want.
+  d_xxx --+--> u0
+          +--> u1
+	  +--> u2
+	  |    .
+	  |    .
+	  |    .
+	  +--> u15
 
-For floppy disks, the structure is:
+A given disk is reprsented by a directory named d_xxx where xxx can 
+be anything you want.  Within the d_xxx directory, the CP/M user 
+areas are represented by subdirectories names u0 thru u15. The files 
+to be placed in the disk image are placed inside of the u0 thru u15 
+directories depending on which user area you want the file(s) to 
+appear.  You do not need to create all of the u## subdirectories, 
+only the ones corresponding to the user areas you want to put files in.
 
-  fd0 --+--> u0
-        +--> u1
-	|
-	+--> u15
+To build the disk images, you run the Build.cmd batch file from a 
+command prompt.  Build.cmd in turn invokes separate scripts to create 
+the floppy and hard disk images.
 
-Above, fd0 refers to the first floppy disk image and u0...u15 refer 
-to the user areas on the disk.  You place whatever files you want on 
-fd0, user 0 in the fd0\u0 directory.  You will notice that not all of 
-the u0...u15 directories exist.  The script does not care and treats 
-a non-existent directory as a directory with no files.  The fd1 
-directory is exactly the same as fd0 -- it is simply the second 
-floppy image.
+As distributed, you will see that there are several d_ directories 
+populated with files.  If you look at the Build.cmd 
+script, you will find that the names of each of these directories is 
+listed.  If you want to add a new d_ directory to be converted into a 
+disk image, you will need to add the name of your new directory to 
+this list.  Note that each d_ directory may be turned into a floppy 
+image or a hard disk image or both.
 
 At present, the scripts assume that the floppy media is 1.44MB.  You 
 will need to modify the scripts if you want to create different media.
-
-For hard disks, the structure has one more level:
-
-  hd0 --+--> s0 --+--> u0
-        |         +--> u1
-	|         |
-	|         +--> u15
-	|
-        +--> s1 --+--> u0
-        |         +--> u1
-	|         |
-	|         +--> u15
-	|
-        +--> s2 --+--> u0
-        |         +--> u1
-	|         |
-	|         +--> u15
-	|
-        +--> s3 --+--> u0
-                  +--> u1
-	          |
-	          +--> u15
-
-The above uses the same concept as the floppy disk source structure, 
-but includes an additional directory layer to represent the first 4 
-slices of the hard disk.  For most RomWBW builds, s0-s3 would show up 
-as the first 4 hard disk drive letters, frequently E: to H:.
-
-No files should be placed in the first two layers of the tree (hd0 or 
-s0-s3).  All files go into the lowest level of the tree (u0-u15).  As 
-above, empty or non-existent directories are not a problem for the 
-script.  Just fill in or create the appropriate directories.  The 
-only constraint is the the script will only look for two hard disks 
-(hd0-hd1), 4 slices (s0-s4), and 16 user areas (u0-u15).  The number 
-of hard disks and number of slices could be changed by modifying the 
-generation scripts.
 
 Building the Images
 -------------------
 
 The image creation process simply traverses the directory structures 
-described above and builds a raw image each floppy disk or hard 
-disk.  Note that cpmtools is used to generate the images and is 
+described above and builds a raw disk image for each floppy disk or 
+hard disk.  Note that cpmtools is used to generate the images and is 
 included in the distribution under the Tools directory.
 
+Many of the disk images depend upon files that are produced by
+building the shared components of RomWBW.  Prior to running
+the Build command in the Images directory, you should first
+run the BuildShared command in the Source directory.
+
 The scripts are intended to be run from a command prompt.  Open a 
-command prompt and navigate to the Images directory.  To build the 
-floppy disk images (fd0 and fd1), use the command "BuildFD". To build 
-the hard disk images (hd0, hd1), use the command "BuildHD".  You can 
-use the command "BuildAll" to build both the floppy and hard disk 
-images in one run.
+command prompt and navigate to the Images directory.  Use the command
+"Build" to build both the floppy and hard disk images in one run.
+You can build a single disk image by running either BuildFD.cmd or
+BuildHD.cmd with a single parameter specifying the disk name.
 
 After completion of the script, the resultant image files are placed 
-in the Binary directory with names such as fd0.img and hd0.img.
+in the Binary directory with names such as fd_xxx.img and hd_xxx.img.
 
-Below is sample output from building the hard disk images:
-
-  | C:\Users\WWarthen\Projects\N8VEM\Build\RomWBW\Images>BuildHD
-  | Creating work file...
-  | Creating hard disk images...
-  | Generating Hard Disk 0...
-  | Adding files to slice 0...
-  | cpmcp -f wbw_hd0 slice0.tmp Source/hd0/s0/u0/*.* 0:
-  | cpmcp -f wbw_hd0 slice0.tmp Source/hd0/s0/u2/*.* 2:
-  | Adding files to slice 1...
-  | cpmcp -f wbw_hd0 slice1.tmp Source/hd0/s1/u0/*.* 0:
-  | Adding files to slice 2...
-  | Adding files to slice 3...
-  | Combining slices into final disk image hd0...
-  | slice0.tmp
-  | slice1.tmp
-  | slice2.tmp
-  | slice3.tmp
-  |         1 file(s) copied.
-  | Generating Hard Disk 1...
-  | Adding files to slice 0...
-  | Adding files to slice 1...
-  | Adding files to slice 2...
-  | Adding files to slice 3...
-  | Combining slices into final disk image hd1...
-  | slice0.tmp
-  | slice1.tmp
-  | slice2.tmp
-  | slice3.tmp
-  |         1 file(s) copied.
-  | 
-  | C:\Users\WWarthen\Projects\N8VEM\Build\RomWBW\Images>
+Sample output from running Build.cmd is provided at the end of
+this file.
 
 Be aware that the script always builds the image file from scratch.  
 It will not update the previous contents. Any contents of a 
 pre-existing image file will be permanently destroyed.
 
-Installing Images
------------------
+Slices
+------
 
-First of all, a MAJOR WARNING!!!!  The tools described below are 
-quite capable of obliterating your running Windows system drive.  Use 
-with extreme caution and make sure you have backups.
+A RomWBW CP/M filesystem is fixed at 8MB.  This is because it is the 
+largest size filesystem supported by all common CP/M variants. Since 
+all modern hard disks (including SD Cards and CF Cards) are much 
+larger than 8MB, RomWBW supports the concept of "slices".  This 
+simply means that you can concatenate multiple CP/M filesystems (up 
+to 256 of them) on a single physical hard disk and RomWBW will allow 
+you to assign drive letters to them and treat them as multiple 
+independent CP/M drives.
 
-To install a floppy image on floppy media, you can use the tool 
-called RaWriteWin.  This tool is included in the Tools directory of 
-the distribution. This tool will write your floppy image (fd0.img or 
-fd1.img) to a floppy disk using a raw block transfer.  The tool is 
-GUI based and it's operation is self explanatory.
+The disk image creation scripts in this directory will only create a 
+single CP/M file system (i.e., a single slice).  However, you can 
+easily create a multi-slice disk image by merely concatenating 
+multiple images together.  For example, if you wanted to create a 2 
+slice disk image that has ZSDOS in the first slice and Wordstar in 
+the second slice, you could use the following command from a Windows 
+command prompt:
 
-To install a hard disk image on a CF card or SD card, you must have 
-the appropriate media card slot on your computer. If you do, you can 
-use the tool called Win32 Disk Imager. This tool is also included in 
-the Tools directory of the distribution.  This tool will write your 
-hard disk image (hd0.img or hd1.img) to the designated media card.  
-This tool is also GUI based and self explanatory.
+  | C:\RomWBW\Binary>copy /b hd_zsdos.img + hd_ws.img hd_multi.img
 
-Use of the SIMH emulator is outside of the scope of this document.  
-However, if you use SIMH, you will find that you can attach the hard 
-disk images to the emulator with lines such as the following in your 
-SIMH configuration file:
+You can now write hd_multi.img onto your SD or CF Card and you will 
+have ZSDOS in the first slice and Wordstar in the second slice.
 
-  | attach hdsk0 hd0.img
-  | set hdsk0 format=HDSK
-  | set hdsk0 geom=T:520/N:256/S:512
-  | set hdsk0 wrtenb
-  
-Making Disk Images Bootable
----------------------------
+The concept of slices applies ONLY to hard disks.  Floppy disks are 
+not large enough to support multiple slices.
 
-The current generation of these scripts does not make the resultant 
-media bootable.  This is primarily because there are multiple choices 
-for what you can put on the boot tracks of the media and that is a 
-choice best left to the user.
+Disk Images
+-----------
 
-The simplest way to make a resultant image bootable is to do it from 
-your running CP/M system.  Boot your system using the ROM selection, 
-then use the COPYSYS command to make the desired drive bootable.
+The standard RomWBW build process builds the disk images defined
+in this directory.  The resultant images are placed in the Binary
+directory and are ready to copy to your media.
 
-You would use a command like the following to make drive C bootable.
+A description of the specific image files is found in the file
+called DiskList.txt in the Binary directory of the distribution.
 
-  | B>COPYSYS C:=CPM.SYS
-  
-Notes
------
+Sample Run
+----------
 
-I realize these instructions are very minimal.  I am happy to answer 
-questions.  You will find the RetroBrew Computers Forum at 
-https://www.retrobrewcomputers.org/forum/ to be a great source of 
-information as well.
+Below is sample output from building the hard disk images:
+
+C:\Users\Wayne\Projects\RBC\Build\RomWBW\Source\Images>Build.cmd
+  | :
+  | : Cleaning...
+  | :
+  | :
+  | : Creating System Images
+  | :
+  | ..\bl\bl.bin
+  | ..\cpm22\os2ccp.bin
+  | ..\cpm22\os3bdos.bin
+  | ..\cbios\cbios_wbw.bin
+  |         1 file(s) copied.
+  | ..\bl\bl.bin
+  | ..\cpm22\os2ccp.bin
+  | ..\cpm22\os3bdos.bin
+  | ..\cbios\cbios_una.bin
+  |         1 file(s) copied.
+  | ..\bl\bl.bin
+  | ..\zcpr-dj\zcpr.bin
+  | ..\zsdos\zsdos.bin
+  | ..\cbios\cbios_wbw.bin
+  |         1 file(s) copied.
+  | ..\bl\bl.bin
+  | ..\zcpr-dj\zcpr.bin
+  | ..\zsdos\zsdos.bin
+  | ..\cbios\cbios_una.bin
+  |         1 file(s) copied.
+  | :
+  | : Building Floppy Disk Images...
+  | :
+  | Generating Floppy Disk cpm22...
+  | cpmcp -f wbw_fd144 fd_cpm22.img d_cpm22/u0/*.* 0:
+  | cpmcp -f wbw_fd144 fd_cpm22.img d_cpm22/u1/*.* 1:
+  | cpmcp -f wbw_fd144 fd_cpm22.img ../../Binary/Apps/assign.com 0:
+  | cpmcp -f wbw_fd144 fd_cpm22.img ../../Binary/Apps/fat.com 0:
+  | cpmcp -f wbw_fd144 fd_cpm22.img ../../Binary/Apps/fdu.com 0:
+  | cpmcp -f wbw_fd144 fd_cpm22.img ../../Binary/Apps/format.com 0:
+  | cpmcp -f wbw_fd144 fd_cpm22.img ../../Binary/Apps/mode.com 0:
+  | cpmcp -f wbw_fd144 fd_cpm22.img ../../Binary/Apps/osldr.com 0:
+  | cpmcp -f wbw_fd144 fd_cpm22.img ../../Binary/Apps/rtc.com 0:
+  | cpmcp -f wbw_fd144 fd_cpm22.img ../../Binary/Apps/survey.com 0:
+  | cpmcp -f wbw_fd144 fd_cpm22.img ../../Binary/Apps/syscopy.com 0:
+  | cpmcp -f wbw_fd144 fd_cpm22.img ../../Binary/Apps/sysgen.com 0:
+  | cpmcp -f wbw_fd144 fd_cpm22.img ../../Binary/Apps/talk.com 0:
+  | cpmcp -f wbw_fd144 fd_cpm22.img ../../Binary/Apps/timer.com 0:
+  | cpmcp -f wbw_fd144 fd_cpm22.img ../../Binary/Apps/xm.com 0:
+  | cpmcp -f wbw_fd144 fd_cpm22.img ../../Binary/Apps/inttest.com 0:
+  | cpmcp -f wbw_fd144 fd_cpm22.img ../../Binary/Apps/tune.com 3:
+  | cpmcp -f wbw_fd144 fd_cpm22.img ../../Binary/Apps/Tunes/*.* 3:
+  | Adding System Image cpm_wbw...
+  | Moving image fd_cpm22.img into output directory...
+  |         1 file(s) moved.
+  | Generating Floppy Disk zsdos...
+  | cpmcp -f wbw_fd144 fd_zsdos.img d_zsdos/u0/*.* 0:
+  | cpmcp -f wbw_fd144 fd_zsdos.img d_zsdos/u1/*.* 1:
+  | cpmcp -f wbw_fd144 fd_zsdos.img ../../Binary/Apps/assign.com 0:
+  | cpmcp -f wbw_fd144 fd_zsdos.img ../../Binary/Apps/fat.com 0:
+  | cpmcp -f wbw_fd144 fd_zsdos.img ../../Binary/Apps/fdu.com 0:
+  | cpmcp -f wbw_fd144 fd_zsdos.img ../../Binary/Apps/format.com 0:
+  | cpmcp -f wbw_fd144 fd_zsdos.img ../../Binary/Apps/mode.com 0:
+  | cpmcp -f wbw_fd144 fd_zsdos.img ../../Binary/Apps/osldr.com 0:
+  | cpmcp -f wbw_fd144 fd_zsdos.img ../../Binary/Apps/rtc.com 0:
+  | cpmcp -f wbw_fd144 fd_zsdos.img ../../Binary/Apps/survey.com 0:
+  | cpmcp -f wbw_fd144 fd_zsdos.img ../../Binary/Apps/syscopy.com 0:
+  | cpmcp -f wbw_fd144 fd_zsdos.img ../../Binary/Apps/sysgen.com 0:
+  | cpmcp -f wbw_fd144 fd_zsdos.img ../../Binary/Apps/talk.com 0:
+  | cpmcp -f wbw_fd144 fd_zsdos.img ../../Binary/Apps/timer.com 0:
+  | cpmcp -f wbw_fd144 fd_zsdos.img ../../Binary/Apps/xm.com 0:
+  | cpmcp -f wbw_fd144 fd_zsdos.img ../../Binary/Apps/inttest.com 0:
+  | cpmcp -f wbw_fd144 fd_zsdos.img ../../Binary/Apps/tune.com 3:
+  | cpmcp -f wbw_fd144 fd_zsdos.img ../../Binary/Apps/Tunes/*.* 3:
+  | Adding System Image zsys_wbw...
+  | Moving image fd_zsdos.img into output directory...
+  |         1 file(s) moved.
+  | Generating Floppy Disk nzcom...
+  | cpmcp -f wbw_fd144 fd_nzcom.img d_nzcom/u0/*.* 0:
+  | cpmcp -f wbw_fd144 fd_nzcom.img ../../Binary/Apps/assign.com 0:
+  | cpmcp -f wbw_fd144 fd_nzcom.img ../../Binary/Apps/fat.com 0:
+  | cpmcp -f wbw_fd144 fd_nzcom.img ../../Binary/Apps/fdu.com 0:
+  | cpmcp -f wbw_fd144 fd_nzcom.img ../../Binary/Apps/format.com 0:
+  | cpmcp -f wbw_fd144 fd_nzcom.img ../../Binary/Apps/mode.com 0:
+  | cpmcp -f wbw_fd144 fd_nzcom.img ../../Binary/Apps/osldr.com 0:
+  | cpmcp -f wbw_fd144 fd_nzcom.img ../../Binary/Apps/rtc.com 0:
+  | cpmcp -f wbw_fd144 fd_nzcom.img ../../Binary/Apps/survey.com 0:
+  | cpmcp -f wbw_fd144 fd_nzcom.img ../../Binary/Apps/syscopy.com 0:
+  | cpmcp -f wbw_fd144 fd_nzcom.img ../../Binary/Apps/sysgen.com 0:
+  | cpmcp -f wbw_fd144 fd_nzcom.img ../../Binary/Apps/talk.com 0:
+  | cpmcp -f wbw_fd144 fd_nzcom.img ../../Binary/Apps/timer.com 0:
+  | cpmcp -f wbw_fd144 fd_nzcom.img ../../Binary/Apps/xm.com 0:
+  | cpmcp -f wbw_fd144 fd_nzcom.img ../../Binary/Apps/inttest.com 0:
+  | cpmcp -f wbw_fd144 fd_nzcom.img ../../Binary/Apps/tune.com 3:
+  | cpmcp -f wbw_fd144 fd_nzcom.img ../../Binary/Apps/Tunes/*.* 3:
+  | Adding System Image zsys_wbw...
+  | Moving image fd_nzcom.img into output directory...
+  |         1 file(s) moved.
+  | Generating Floppy Disk cpm3...
+  | cpmcp -f wbw_fd144 fd_cpm3.img d_cpm3/u0/*.* 0:
+  | cpmcp -f wbw_fd144 fd_cpm3.img ../CPM3/cpmldr.com 0:
+  | cpmcp -f wbw_fd144 fd_cpm3.img ../CPM3/ccp.com 0:
+  | cpmcp -f wbw_fd144 fd_cpm3.img ../CPM3/gencpm.com 0:
+  | cpmcp -f wbw_fd144 fd_cpm3.img ../CPM3/genres.dat 0:
+  | cpmcp -f wbw_fd144 fd_cpm3.img ../CPM3/genbnk.dat 0:
+  | cpmcp -f wbw_fd144 fd_cpm3.img ../CPM3/bios3.spr 0:
+  | cpmcp -f wbw_fd144 fd_cpm3.img ../CPM3/bnkbios3.spr 0:
+  | cpmcp -f wbw_fd144 fd_cpm3.img ../CPM3/bdos3.spr 0:
+  | cpmcp -f wbw_fd144 fd_cpm3.img ../CPM3/bnkbdos3.spr 0:
+  | cpmcp -f wbw_fd144 fd_cpm3.img ../CPM3/resbdos3.spr 0:
+  | cpmcp -f wbw_fd144 fd_cpm3.img ../CPM3/cpm3res.sys 0:
+  | cpmcp -f wbw_fd144 fd_cpm3.img ../CPM3/cpm3bnk.sys 0:
+  | cpmcp -f wbw_fd144 fd_cpm3.img ../CPM3/gencpm.dat 0:
+  | cpmcp -f wbw_fd144 fd_cpm3.img ../CPM3/cpm3.sys 0:
+  | cpmcp -f wbw_fd144 fd_cpm3.img ../CPM3/readme.1st 0:
+  | cpmcp -f wbw_fd144 fd_cpm3.img ../CPM3/cpm3fix.pat 0:
+  | cpmcp -f wbw_fd144 fd_cpm3.img ../../Binary/Apps/assign.com 0:
+  | cpmcp -f wbw_fd144 fd_cpm3.img ../../Binary/Apps/fat.com 0:
+  | cpmcp -f wbw_fd144 fd_cpm3.img ../../Binary/Apps/fdu.com 0:
+  | cpmcp -f wbw_fd144 fd_cpm3.img ../../Binary/Apps/format.com 0:
+  | cpmcp -f wbw_fd144 fd_cpm3.img ../../Binary/Apps/mode.com 0:
+  | cpmcp -f wbw_fd144 fd_cpm3.img ../../Binary/Apps/osldr.com 0:
+  | cpmcp -f wbw_fd144 fd_cpm3.img ../../Binary/Apps/rtc.com 0:
+  | cpmcp -f wbw_fd144 fd_cpm3.img ../../Binary/Apps/survey.com 0:
+  | cpmcp -f wbw_fd144 fd_cpm3.img ../../Binary/Apps/syscopy.com 0:
+  | cpmcp -f wbw_fd144 fd_cpm3.img ../../Binary/Apps/sysgen.com 0:
+  | cpmcp -f wbw_fd144 fd_cpm3.img ../../Binary/Apps/talk.com 0:
+  | cpmcp -f wbw_fd144 fd_cpm3.img ../../Binary/Apps/timer.com 0:
+  | cpmcp -f wbw_fd144 fd_cpm3.img ../../Binary/Apps/xm.com 0:
+  | cpmcp -f wbw_fd144 fd_cpm3.img ../../Binary/Apps/inttest.com 0:
+  | cpmcp -f wbw_fd144 fd_cpm3.img ../../Binary/Apps/tune.com 3:
+  | cpmcp -f wbw_fd144 fd_cpm3.img ../../Binary/Apps/Tunes/*.* 3:
+  | Moving image fd_cpm3.img into output directory...
+  |         1 file(s) moved.
+  | Generating Floppy Disk zpm3...
+  | cpmcp -f wbw_fd144 fd_zpm3.img d_zpm3/u0/*.* 0:
+  | cpmcp -f wbw_fd144 fd_zpm3.img d_zpm3/u10/*.* 10:
+  | cpmcp -f wbw_fd144 fd_zpm3.img d_zpm3/u14/*.* 14:
+  | cpmcp -f wbw_fd144 fd_zpm3.img d_zpm3/u15/*.* 15:
+  | cpmcp -f wbw_fd144 fd_zpm3.img ../ZPM3/zpmldr.com 0:
+  | cpmcp -f wbw_fd144 fd_zpm3.img ../ZPM3/cpmldr.com 0:
+  | cpmcp -f wbw_fd144 fd_zpm3.img ../ZPM3/autotog.com 0:
+  | cpmcp -f wbw_fd144 fd_zpm3.img ../ZPM3/clrhist.com 0:
+  | cpmcp -f wbw_fd144 fd_zpm3.img ../ZPM3/setz3.com 0:
+  | cpmcp -f wbw_fd144 fd_zpm3.img ../ZPM3/cpm3.sys 0:
+  | cpmcp -f wbw_fd144 fd_zpm3.img ../ZPM3/zccp.com 0:
+  | cpmcp -f wbw_fd144 fd_zpm3.img ../ZPM3/zinstal.zpm 0:
+  | cpmcp -f wbw_fd144 fd_zpm3.img ../ZPM3/startzpm.com 0:
+  | cpmcp -f wbw_fd144 fd_zpm3.img ../ZPM3/makedos.com 0:
+  | cpmcp -f wbw_fd144 fd_zpm3.img ../ZPM3/gencpm.dat 0:
+  | cpmcp -f wbw_fd144 fd_zpm3.img ../ZPM3/bnkbios3.spr 0:
+  | cpmcp -f wbw_fd144 fd_zpm3.img ../ZPM3/bnkbdos3.spr 0:
+  | cpmcp -f wbw_fd144 fd_zpm3.img ../ZPM3/resbdos3.spr 0:
+  | cpmcp -f wbw_fd144 fd_zpm3.img ../../Binary/Apps/assign.com 0:
+  | cpmcp -f wbw_fd144 fd_zpm3.img ../../Binary/Apps/fat.com 0:
+  | cpmcp -f wbw_fd144 fd_zpm3.img ../../Binary/Apps/fdu.com 0:
+  | cpmcp -f wbw_fd144 fd_zpm3.img ../../Binary/Apps/format.com 0:
+  | cpmcp -f wbw_fd144 fd_zpm3.img ../../Binary/Apps/mode.com 0:
+  | cpmcp -f wbw_fd144 fd_zpm3.img ../../Binary/Apps/osldr.com 0:
+  | cpmcp -f wbw_fd144 fd_zpm3.img ../../Binary/Apps/rtc.com 0:
+  | cpmcp -f wbw_fd144 fd_zpm3.img ../../Binary/Apps/survey.com 0:
+  | cpmcp -f wbw_fd144 fd_zpm3.img ../../Binary/Apps/syscopy.com 0:
+  | cpmcp -f wbw_fd144 fd_zpm3.img ../../Binary/Apps/sysgen.com 0:
+  | cpmcp -f wbw_fd144 fd_zpm3.img ../../Binary/Apps/talk.com 0:
+  | cpmcp -f wbw_fd144 fd_zpm3.img ../../Binary/Apps/timer.com 0:
+  | cpmcp -f wbw_fd144 fd_zpm3.img ../../Binary/Apps/xm.com 0:
+  | cpmcp -f wbw_fd144 fd_zpm3.img ../../Binary/Apps/inttest.com 0:
+  | cpmcp -f wbw_fd144 fd_zpm3.img ../../Binary/Apps/tune.com 3:
+  | cpmcp -f wbw_fd144 fd_zpm3.img ../../Binary/Apps/Tunes/*.* 3:
+  | Moving image fd_zpm3.img into output directory...
+  |         1 file(s) moved.
+  | Generating Floppy Disk ws4...
+  | cpmcp -f wbw_fd144 fd_ws4.img d_ws4/u0/*.* 0:
+  | Moving image fd_ws4.img into output directory...
+  |         1 file(s) moved.
+  | :
+  | : Building Hard Disk Images...
+  | :
+  | Generating Hard Disk cpm22...
+  | cpmcp -f wbw_hd0 hd_cpm22.img d_cpm22/u0/*.* 0:
+  | cpmcp -f wbw_hd0 hd_cpm22.img d_cpm22/u1/*.* 1:
+  | cpmcp -f wbw_hd0 hd_cpm22.img ../../Binary/Apps/assign.com 0:
+  | cpmcp -f wbw_hd0 hd_cpm22.img ../../Binary/Apps/fat.com 0:
+  | cpmcp -f wbw_hd0 hd_cpm22.img ../../Binary/Apps/fdu.com 0:
+  | cpmcp -f wbw_hd0 hd_cpm22.img ../../Binary/Apps/format.com 0:
+  | cpmcp -f wbw_hd0 hd_cpm22.img ../../Binary/Apps/mode.com 0:
+  | cpmcp -f wbw_hd0 hd_cpm22.img ../../Binary/Apps/osldr.com 0:
+  | cpmcp -f wbw_hd0 hd_cpm22.img ../../Binary/Apps/rtc.com 0:
+  | cpmcp -f wbw_hd0 hd_cpm22.img ../../Binary/Apps/survey.com 0:
+  | cpmcp -f wbw_hd0 hd_cpm22.img ../../Binary/Apps/syscopy.com 0:
+  | cpmcp -f wbw_hd0 hd_cpm22.img ../../Binary/Apps/sysgen.com 0:
+  | cpmcp -f wbw_hd0 hd_cpm22.img ../../Binary/Apps/talk.com 0:
+  | cpmcp -f wbw_hd0 hd_cpm22.img ../../Binary/Apps/timer.com 0:
+  | cpmcp -f wbw_hd0 hd_cpm22.img ../../Binary/Apps/xm.com 0:
+  | cpmcp -f wbw_hd0 hd_cpm22.img ../../Binary/Apps/inttest.com 0:
+  | cpmcp -f wbw_hd0 hd_cpm22.img ../../Binary/Apps/tune.com 3:
+  | cpmcp -f wbw_hd0 hd_cpm22.img ../../Binary/Apps/Tunes/*.* 3:
+  | Adding System Image cpm_wbw...
+  | Moving image hd_cpm22.img into output directory...
+  |         1 file(s) moved.
+  | Generating Hard Disk zsdos...
+  | cpmcp -f wbw_hd0 hd_zsdos.img d_zsdos/u0/*.* 0:
+  | cpmcp -f wbw_hd0 hd_zsdos.img d_zsdos/u1/*.* 1:
+  | cpmcp -f wbw_hd0 hd_zsdos.img ../../Binary/Apps/assign.com 0:
+  | cpmcp -f wbw_hd0 hd_zsdos.img ../../Binary/Apps/fat.com 0:
+  | cpmcp -f wbw_hd0 hd_zsdos.img ../../Binary/Apps/fdu.com 0:
+  | cpmcp -f wbw_hd0 hd_zsdos.img ../../Binary/Apps/format.com 0:
+  | cpmcp -f wbw_hd0 hd_zsdos.img ../../Binary/Apps/mode.com 0:
+  | cpmcp -f wbw_hd0 hd_zsdos.img ../../Binary/Apps/osldr.com 0:
+  | cpmcp -f wbw_hd0 hd_zsdos.img ../../Binary/Apps/rtc.com 0:
+  | cpmcp -f wbw_hd0 hd_zsdos.img ../../Binary/Apps/survey.com 0:
+  | cpmcp -f wbw_hd0 hd_zsdos.img ../../Binary/Apps/syscopy.com 0:
+  | cpmcp -f wbw_hd0 hd_zsdos.img ../../Binary/Apps/sysgen.com 0:
+  | cpmcp -f wbw_hd0 hd_zsdos.img ../../Binary/Apps/talk.com 0:
+  | cpmcp -f wbw_hd0 hd_zsdos.img ../../Binary/Apps/timer.com 0:
+  | cpmcp -f wbw_hd0 hd_zsdos.img ../../Binary/Apps/xm.com 0:
+  | cpmcp -f wbw_hd0 hd_zsdos.img ../../Binary/Apps/inttest.com 0:
+  | cpmcp -f wbw_hd0 hd_zsdos.img ../../Binary/Apps/tune.com 3:
+  | cpmcp -f wbw_hd0 hd_zsdos.img ../../Binary/Apps/Tunes/*.* 3:
+  | Adding System Image zsys_wbw...
+  | Moving image hd_zsdos.img into output directory...
+  |         1 file(s) moved.
+  | Generating Hard Disk nzcom...
+  | cpmcp -f wbw_hd0 hd_nzcom.img d_nzcom/u0/*.* 0:
+  | cpmcp -f wbw_hd0 hd_nzcom.img ../../Binary/Apps/assign.com 0:
+  | cpmcp -f wbw_hd0 hd_nzcom.img ../../Binary/Apps/fat.com 0:
+  | cpmcp -f wbw_hd0 hd_nzcom.img ../../Binary/Apps/fdu.com 0:
+  | cpmcp -f wbw_hd0 hd_nzcom.img ../../Binary/Apps/format.com 0:
+  | cpmcp -f wbw_hd0 hd_nzcom.img ../../Binary/Apps/mode.com 0:
+  | cpmcp -f wbw_hd0 hd_nzcom.img ../../Binary/Apps/osldr.com 0:
+  | cpmcp -f wbw_hd0 hd_nzcom.img ../../Binary/Apps/rtc.com 0:
+  | cpmcp -f wbw_hd0 hd_nzcom.img ../../Binary/Apps/survey.com 0:
+  | cpmcp -f wbw_hd0 hd_nzcom.img ../../Binary/Apps/syscopy.com 0:
+  | cpmcp -f wbw_hd0 hd_nzcom.img ../../Binary/Apps/sysgen.com 0:
+  | cpmcp -f wbw_hd0 hd_nzcom.img ../../Binary/Apps/talk.com 0:
+  | cpmcp -f wbw_hd0 hd_nzcom.img ../../Binary/Apps/timer.com 0:
+  | cpmcp -f wbw_hd0 hd_nzcom.img ../../Binary/Apps/xm.com 0:
+  | cpmcp -f wbw_hd0 hd_nzcom.img ../../Binary/Apps/inttest.com 0:
+  | cpmcp -f wbw_hd0 hd_nzcom.img ../../Binary/Apps/tune.com 3:
+  | cpmcp -f wbw_hd0 hd_nzcom.img ../../Binary/Apps/Tunes/*.* 3:
+  | Adding System Image zsys_wbw...
+  | Moving image hd_nzcom.img into output directory...
+  |         1 file(s) moved.
+  | Generating Hard Disk cpm3...
+  | cpmcp -f wbw_hd0 hd_cpm3.img d_cpm3/u0/*.* 0:
+  | cpmcp -f wbw_hd0 hd_cpm3.img ../CPM3/cpmldr.com 0:
+  | cpmcp -f wbw_hd0 hd_cpm3.img ../CPM3/ccp.com 0:
+  | cpmcp -f wbw_hd0 hd_cpm3.img ../CPM3/gencpm.com 0:
+  | cpmcp -f wbw_hd0 hd_cpm3.img ../CPM3/genres.dat 0:
+  | cpmcp -f wbw_hd0 hd_cpm3.img ../CPM3/genbnk.dat 0:
+  | cpmcp -f wbw_hd0 hd_cpm3.img ../CPM3/bios3.spr 0:
+  | cpmcp -f wbw_hd0 hd_cpm3.img ../CPM3/bnkbios3.spr 0:
+  | cpmcp -f wbw_hd0 hd_cpm3.img ../CPM3/bdos3.spr 0:
+  | cpmcp -f wbw_hd0 hd_cpm3.img ../CPM3/bnkbdos3.spr 0:
+  | cpmcp -f wbw_hd0 hd_cpm3.img ../CPM3/resbdos3.spr 0:
+  | cpmcp -f wbw_hd0 hd_cpm3.img ../CPM3/cpm3res.sys 0:
+  | cpmcp -f wbw_hd0 hd_cpm3.img ../CPM3/cpm3bnk.sys 0:
+  | cpmcp -f wbw_hd0 hd_cpm3.img ../CPM3/gencpm.dat 0:
+  | cpmcp -f wbw_hd0 hd_cpm3.img ../CPM3/cpm3.sys 0:
+  | cpmcp -f wbw_hd0 hd_cpm3.img ../CPM3/readme.1st 0:
+  | cpmcp -f wbw_hd0 hd_cpm3.img ../CPM3/cpm3fix.pat 0:
+  | cpmcp -f wbw_hd0 hd_cpm3.img ../../Binary/Apps/assign.com 0:
+  | cpmcp -f wbw_hd0 hd_cpm3.img ../../Binary/Apps/fat.com 0:
+  | cpmcp -f wbw_hd0 hd_cpm3.img ../../Binary/Apps/fdu.com 0:
+  | cpmcp -f wbw_hd0 hd_cpm3.img ../../Binary/Apps/format.com 0:
+  | cpmcp -f wbw_hd0 hd_cpm3.img ../../Binary/Apps/mode.com 0:
+  | cpmcp -f wbw_hd0 hd_cpm3.img ../../Binary/Apps/osldr.com 0:
+  | cpmcp -f wbw_hd0 hd_cpm3.img ../../Binary/Apps/rtc.com 0:
+  | cpmcp -f wbw_hd0 hd_cpm3.img ../../Binary/Apps/survey.com 0:
+  | cpmcp -f wbw_hd0 hd_cpm3.img ../../Binary/Apps/syscopy.com 0:
+  | cpmcp -f wbw_hd0 hd_cpm3.img ../../Binary/Apps/sysgen.com 0:
+  | cpmcp -f wbw_hd0 hd_cpm3.img ../../Binary/Apps/talk.com 0:
+  | cpmcp -f wbw_hd0 hd_cpm3.img ../../Binary/Apps/timer.com 0:
+  | cpmcp -f wbw_hd0 hd_cpm3.img ../../Binary/Apps/xm.com 0:
+  | cpmcp -f wbw_hd0 hd_cpm3.img ../../Binary/Apps/inttest.com 0:
+  | cpmcp -f wbw_hd0 hd_cpm3.img ../../Binary/Apps/tune.com 3:
+  | cpmcp -f wbw_hd0 hd_cpm3.img ../../Binary/Apps/Tunes/*.* 3:
+  | Moving image hd_cpm3.img into output directory...
+  |         1 file(s) moved.
+  | Generating Hard Disk zpm3...
+  | cpmcp -f wbw_hd0 hd_zpm3.img d_zpm3/u0/*.* 0:
+  | cpmcp -f wbw_hd0 hd_zpm3.img d_zpm3/u10/*.* 10:
+  | cpmcp -f wbw_hd0 hd_zpm3.img d_zpm3/u14/*.* 14:
+  | cpmcp -f wbw_hd0 hd_zpm3.img d_zpm3/u15/*.* 15:
+  | cpmcp -f wbw_hd0 hd_zpm3.img ../ZPM3/zpmldr.com 0:
+  | cpmcp -f wbw_hd0 hd_zpm3.img ../ZPM3/cpmldr.com 0:
+  | cpmcp -f wbw_hd0 hd_zpm3.img ../ZPM3/autotog.com 0:
+  | cpmcp -f wbw_hd0 hd_zpm3.img ../ZPM3/clrhist.com 0:
+  | cpmcp -f wbw_hd0 hd_zpm3.img ../ZPM3/setz3.com 0:
+  | cpmcp -f wbw_hd0 hd_zpm3.img ../ZPM3/cpm3.sys 0:
+  | cpmcp -f wbw_hd0 hd_zpm3.img ../ZPM3/zccp.com 0:
+  | cpmcp -f wbw_hd0 hd_zpm3.img ../ZPM3/zinstal.zpm 0:
+  | cpmcp -f wbw_hd0 hd_zpm3.img ../ZPM3/startzpm.com 0:
+  | cpmcp -f wbw_hd0 hd_zpm3.img ../ZPM3/makedos.com 0:
+  | cpmcp -f wbw_hd0 hd_zpm3.img ../ZPM3/gencpm.dat 0:
+  | cpmcp -f wbw_hd0 hd_zpm3.img ../ZPM3/bnkbios3.spr 0:
+  | cpmcp -f wbw_hd0 hd_zpm3.img ../ZPM3/bnkbdos3.spr 0:
+  | cpmcp -f wbw_hd0 hd_zpm3.img ../ZPM3/resbdos3.spr 0:
+  | cpmcp -f wbw_hd0 hd_zpm3.img ../../Binary/Apps/assign.com 0:
+  | cpmcp -f wbw_hd0 hd_zpm3.img ../../Binary/Apps/fat.com 0:
+  | cpmcp -f wbw_hd0 hd_zpm3.img ../../Binary/Apps/fdu.com 0:
+  | cpmcp -f wbw_hd0 hd_zpm3.img ../../Binary/Apps/format.com 0:
+  | cpmcp -f wbw_hd0 hd_zpm3.img ../../Binary/Apps/mode.com 0:
+  | cpmcp -f wbw_hd0 hd_zpm3.img ../../Binary/Apps/osldr.com 0:
+  | cpmcp -f wbw_hd0 hd_zpm3.img ../../Binary/Apps/rtc.com 0:
+  | cpmcp -f wbw_hd0 hd_zpm3.img ../../Binary/Apps/survey.com 0:
+  | cpmcp -f wbw_hd0 hd_zpm3.img ../../Binary/Apps/syscopy.com 0:
+  | cpmcp -f wbw_hd0 hd_zpm3.img ../../Binary/Apps/sysgen.com 0:
+  | cpmcp -f wbw_hd0 hd_zpm3.img ../../Binary/Apps/talk.com 0:
+  | cpmcp -f wbw_hd0 hd_zpm3.img ../../Binary/Apps/timer.com 0:
+  | cpmcp -f wbw_hd0 hd_zpm3.img ../../Binary/Apps/xm.com 0:
+  | cpmcp -f wbw_hd0 hd_zpm3.img ../../Binary/Apps/inttest.com 0:
+  | cpmcp -f wbw_hd0 hd_zpm3.img ../../Binary/Apps/tune.com 3:
+  | cpmcp -f wbw_hd0 hd_zpm3.img ../../Binary/Apps/Tunes/*.* 3:
+  | Moving image hd_zpm3.img into output directory...
+  |         1 file(s) moved.
+  | Generating Hard Disk ws4...
+  | cpmcp -f wbw_hd0 hd_ws4.img d_ws4/u0/*.* 0:
+  | Moving image hd_ws4.img into output directory...
+  |         1 file(s) moved.

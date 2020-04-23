@@ -1,0 +1,35 @@
+                    ZPM3 by Simeon Cran.
+                    ====================
+ZPM3 is a Z80 coded BDOS replacement for banked CP/M 3.0 systems.
+
+This is release 0010 on 1/2/93.
+
+Since version 0009 the .SPR files have been updated. They are 
+slightly faster and will possibly work on the Bondwell or other 
+machines that they seemed to fail on before. ZPM3LDR.REL has also 
+been modified. The main improvements throughout should be in 
+speed. The differences may not be obvious, but you should upgrade 
+to this latest version. SJC.
+
+Files in this release are:
+
+VERSION.NOT
+ZPM3.TXT
+RESBDOS3.SPR
+BNKBDOS3.SPR
+AUTOTOG.COM
+AUTOTOG.Z80
+SETZ3.COM
+SETZ3.Z80
+MAKEDOS.COM
+MAKEDOS.TXT
+BIOS.TXT
+SCB.TXT
+ZPM3LDR.TXT
+ZPM3LDR.REL
+CLRHIST.COM
+CLRHIST.Z80
+ECHOTERM.COM
+============
+17 files
+============

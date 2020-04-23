@@ -20,17 +20,17 @@ does for MS-DOS.
 
 bst:
 
-The bst tool set is a multi-platform set of tools for developing 
-with the Parallax Propeller microcontroller. bst stands for 
-“Brad's Spin Tool”, however it is never capitalised.  This toolset 
-is used to compile the Propeller firmware for PropIO and 
-ParPortProp.
+The bst tool set is a multi-platform set of tools for developing with 
+the Parallax Propeller microcontroller. bst stands for “Brad's Spin 
+Tool”, however it is never capitalised.  This toolset is used to 
+compile the Propeller firmware for PropIO and ParPortProp.
 
 cpm:
 
-This is the root of a directory tree containing CP/M-80 programs. 
-These programs are used (via the Windows CP/M command line 
-emulator 'zx') to build certain components of RomWBW.  The use of 
+This is the root of a directory tree containing native CP/M-80 
+programs. These programs cannot be invoked directly by DOS/Windows.
+Instead, they are executed via the Windows CP/M command line 
+emulator 'zx' to build certain components of RomWBW.  The use of 
 real CP/M-80 programs as part of the build process ensures proper 
 construction of these components.
 

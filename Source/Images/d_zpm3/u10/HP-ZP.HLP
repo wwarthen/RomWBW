@@ -1,0 +1,263 @@
+;
+                                               
+                               ---  H P  ---          
+                                               
+                                Version 1.4
+
+                Programmer'ó Integeò RPÎ Calculator for ZP
+
+
+                         O -->  Overview           
+                         H -->  Invoking HP        
+                         D -->  Display Modes      
+                         S -->  Stack              
+                         E -->  Entering Numbers   
+                         F -->  Math Functions     
+                         M -->  Memory Registers   
+                         N -->  RPN Notation     
+                         Z -->  ZP               
+:O                       
+Overview
+
+HĞ ió á simplå anä verù usefuì programmer'ó integeò calculatoò modeleä 
+afteò á Hewlett-Packarä calculatoò witè RPÎ notation®  
+
+HĞ caî operatå iî anù oæ fouò displaù modesº  hexadecimal¬ decimal¬ binary¬ 
+anä character¬ makinç iô verù usefuì foò quicklù convertinç integeò numberó 
+froí onå baså tï another®  Iô caî dï integeò addition¬ subtraction¬ 
+multiplication¬ division¬ exponentiatioî anä bitwiså logicaì ANÄ anä OÒ 
+operations®  Iô haó á ´ leveì stacë anä ¶ memorù storagå registers.
+
+Alì HĞ internaì storagå anä arithmetiã ió unsigneä 1¶ bit®  Thuó 6553· 
+becomeó 00001¬ -± becomeó 65535¬ anä sï on®  Multiplicatioî anä 
+exponentiatioî overflo÷ anä divisioî bù ° wilì generatå errors®  Iî binarù 
+anä characteò modes¬ thå displaù showó onlù thå lowesô ¸ bitó oæ 16¬ sï 8-
+biô overflo÷ doeó noô usuallù causå aî error.
+
+Iæ yoõ arå noô familiaò witè RPÎ notation¬ see the section on RPN notation,
+whicè alsï haó morå detaiì oî ho÷ HĞ useó itó stacë durinç stacë anä 
+numeriã operations.
+:H
+Invoking HP
+
+Uså ^Ã tï invokå HP®  Iô wilì displaù itó singlå operatinç linå anä waiô 
+foò youò input:
+
+               H¾     0000
+
+Thå 'H>§ indicateó hexadecimaì displaù modå (thå defaulô displaù mode)¬ anä 
+'0000§ ió thå fouò digiô heø calculatoò displaù oæ registeò X¬ whicè ió thå 
+registeò alwayó displayed®  Thå HĞ stacë anä memorù arå initializeä tï zerï 
+wheî ZP ió firsô loadeä into memory.
+
+ Exiting HP 
+
+Uså ^Ã tï exiô HĞ anä returî tï ZP®  Wheî yoõ uså ^Ã tï reruî HP¬ yoõ wilì Šreturî tï iô jusô wherå yoõ lefô off® 
+:D
+Display Modes
+
+HĞ caî operatå iî anù oæ fouò displaù modesº  hexadecimal¬ decimal¬ binary¬ 
+anä character¬ makinç iô verù usefuì foò quicklù convertinç integeò numberó 
+froí onå baså tï another®  Tï changå displaù modes¬ enteò thå escapå <ESC¾ 
+keù followeä bù thå firsô letteò oæ thå desireä mode®  Eitheò uppeò oò 
+loweò caså letteró maù bå useä tï selecô thå mode®  Thå displaù indicateó 
+thå currenô mode¬ anä thå numbeò iî thå Ø registeò wilì bå displayeä iî thå 
+currenô mode®  Yoõ maù translatå numberó froí onå baså tï anotheò bù simplù 
+changinç displaù modes.
+Heø Displaù Mode
+
+Tï selecô thå heø displaù mode¬ enteò <ESC>H®  Iî heø mode¬ numberó displaù 
+aó fouò heø digitó froí 0000-FFFF.
+
+Decimaì Displaù Mode
+
+Tï selecô thå decimaì displaù mode¬ enteò <ESC>D®  Iî decimaì mode¬ numberó 
+displaù aó fivå decimaì digitó froí 00000-65535.
+
+Binarù Displaù Mode
+
+Tï selecô thå binarù displaù mode¬ enteò <ESC>B®  Iî binarù mode¬ thå leasô 
+significanô bytå oæ thå numbeò displayó aó ¸ binarù digits from 
+00000000-11111111.
+Character Display Mode
+
+Tï selecô thå characteò displaù mode¬ enteò <ESC>C®  Iî characteò mode¬ thå 
+leasô significanô · bitó oæ thå numbeò displaù aó aî ASCIÉ character®  
+Controì characteró arå indicateä bù á '^§ prefix®  Foò example¬ 03È wilì 
+displaù aó '^C§ anä DEÌ (7FH)¬ wilì displaù aó '^?'.
+
+Alì non-commanä characteró caî bå directlù entereä aó datá iî thå characteò 
+displaù mode®  Characteró thaô havå commanä functionó sucè aó 'L'¬ '/'¬ 
+'='¬ ^C¬ <RET¾ (^M)¬ etc¬ caî bå entereä aó datá iî thå characteò modå bù 
+prefixinç theí witè thå <ESC¾ character®  Seå thå sectioî oî Enterinç 
+Speciaì Characteró foò morå information.
+:S
+Stack
+
+Thå structurå oæ HP'ó ´ leveì stacë ió showî below:
+
+               Ô -¾ 000°      Stacë registeò 4
+               Ú -¾ 000°      Stacë registeò 3
+               Ù -¾ 000°      Stacë registeò 2
+               --------------------------------------------
+               Ø -¾ 000°      Stacë registeò ± <­ Displayed
+
+HĞ alwayó displayó thå contentó oæ thå Ø registeò anä alì valueó entereä 
+arå entereä intï thå Ø register®  Wheî á numbeò ió entereä intï thå Ø 
+register¬ thå previouó contentó oæ thå Ø registeò arå automaticallù moveä 
+uğ tï thå Ù register¬ thå previouó contentó oæ thå Ù registeò arå moveä uğ 
+tï thå Ú register¬ etc®  
+
+Seå thå filå HP-RPN.HLP foò morå detaiì oî ho÷ HP'ó functionó affecô thå 
+stacë registers.
+Enterinç á Number
+
+<RET¾ liftó thå stack¬ pushinç thå numbeò iî registeò Ø intï registeò Y®  
+Thå numbeò beinç entereä ió theî placeä iî registeò X®  Stacë lifô ió 
+disabled.
+
+Clearinç thå Stack
+
+Yoõ caî cleaò thå entirå stacë witè Control-Ø (^X© aô anù time®  Memorù anä 
+Last-Ø registeró arå noô affected.
+
+Exchanginç Ø anä Y
+
+Yoõ caî exchangå thå contentó oæ thå twï lowesô stacë registeró Ø anä Ù 
+witè thå '=§ functioî (X<>Y)®  Nï otheò registeró arå affected®  Thió 
+functioî ió usefuì wheî yoõ neeä tï reverså thå ordeò oæ operandó beforå 
+performinç á functioî sensitivå tï operanä ordeò sucè aó subtraction¬ 
+divisoî oò exponentiation.
+Last-X
+
+Wheî á numeriã functioî ió executed¬ á copù oæ thå lasô valuå iî thå Ø 
+registeò beforå thå functioî ió executeä ió saveä iî thå Last-Ø register®  
+Thaô valuå caî bå restoreä tï  thå Ø registeò usinç thå 'L§ (oò 'l'© key®  
+Thå stacë ió lifted¬ pushinç thå currenô contentó oæ thå Ø registeò tï thå 
+Ù register¬ etc¬ unlesó stacë lifô haó beeî disableä bù thå <RET¾ oò 
+backspacå key®  Thå valuå iî thå Last-Ø registeò ió noô affected®  Thå 
+Last-Ø functioî saveó yoõ froí havinç tï reenteò numberó yoõ wisè tï uså 
+agaiî anä caî assisô yoõ iî erroò recovery.
+
+Stacë Roll
+
+Yoõ caî rolì thå stacë bù usinç '>§ (oò thå unshifteä equivalenô '.'© tï 
+rolì iô uğ onå leveì anä '<§ (oò ','© tï rolì iô dowî onå level®  Wheî thå 
+stacë ió rolleä up¬ thå contentó oæ alì stacë registeró arå moveä uğ onå 
+leveì anä thå valuå iî thå toğ stacë registeò ió moveä dowî tï thå Ø 
+register®  Wheî thå stacë ió rolleä down¬ thå contentó oæ alì stacë 
+registeró arå moveä dowî onå leveì anä thå valuå iî thå Ø registeò ió moveä 
+uğ tï thå toğ stacë register®  Nï stacë valueó arå losô aó á resulô oæ 
+stacë rolì operations.
+:E
+Entering Numbers
+
+Invokå HĞ anä trù enterinç thå followinç sequencå oæ keys:
+
+               ^X  <ESC>Ä  ± <RET¾  ²  «  ´  *
+
+Yoõ havå cleareä thå stack¬ selecteä thå decimaì mode¬ entereä thå decimaì 
+numberó '1§ anä '2'¬ addeä them¬ entereä '4§ anä multiplieä ´ timeó thå 
+previouó result®  Thå displaù shoulä sho÷ '00012'¬ whicè ió (1+2)*4.
+
+Youò <ENTER¾ oò <RET¾ keù correspondó tï thå HĞ <ENTER¾ key®  Iô ió useä tï 
+separatå twï numberó aó theù arå beinç entereä onå afteò thå otheò oò tï 
+copù thå numbeò iî thå displayeä Ø registeò intï thå Ù register®  Yoõ 
+normallù keù iî á strinç oæ digits¬ theî presó <RET¾ tï enteò thå numbeò iî 
+thå displayeä Ø register®  Yoõ dï noô neeä tï uså <RET¾ afteò everù numbeò 
+entry¬ however¬ aó thå uså oæ thå functioî keyó alsï automaticallù 
+terminateó digiô entry.
+
+Dependinç oî thå currenô displaù mode¬ á maximuí numbeò oæ digitó caî bå 
+entereä intï thå display¬ afteò whicè thå leadinç digitó wilì begiî tï bå 
+discarded®  HĞ acceptó á maximuí oæ fouò digitó iî thå heø displaù mode¬ 
+fivå digitó iî thå decimaì displaù mode¬ eighô digitó iî thå binarù displaù 
+modå anä onå digiô iî thå characteò displaù mode®  Thå consolå belì wilì 
+rinç iæ yoõ enteò á characteò thaô ió noô acceptablå iî thå currenô displaù 
+mode.
+
+Correctinç Entrieó
+
+Thå backspacå keù (^H© workó likå thå lefô arro÷ '<--§ keù oî aî HĞ 
+calculator®  Iô haó twï functions®  Durinç digiô entry¬ iô wilì deletå thå 
+lasô digiô typed®  Otherwiså iô wilì cleaò thå Ø registeò anä leavå thå 
+stacë lifô disabled.
+Enterinç Speciaì Characters
+
+Thå <ESC¾ keù maù bå useä aó á prefiø iî thå characteò displaù modå tï 
+allo÷ yoõ tï enteò aó á digiô thoså characteró thaô woulä otherwiså bå 
+interpreteä bù HĞ aó calculatoò functions:
+
+                       +-*^/&|~=lLsSrR<>.,
+
+aó welì aó thå controì characteró ^X¬ ^Ã anä <RET¾ (^M).
+
+Tï enteò thå characteò 's'¬ foò example¬ enteò '<ESC>s§ insteaä oæ 's'¬ 
+sincå enterinç 's§ initiateó á storå tï á memorù register.
+:F
+Math Functions
+
+HP'ó integeò numeriã functionó anä thå keyó tï invokå theí are:
+
+     +    Addition, X=Y+Ø 
+     -    Subtraction, X=Y-Ø 
+     *    Multiplication, X=Y*Ø 
+     ^    Exponentiation, X=Y^Ø  (Ù tï thå Xtè power© 
+     /    Integer quotient, X=INT(Y/X©  
+               - Remainder Register R=X*(Y/X-INT(Y/X)© 
+     &    Bitwise AND, X=Y&X 
+     |    Bitwise OR, X=Y|X 
+     ~    Negation [2's complement], X=~X
+
+Negatioî affectó onlù thå Ø register®  Thå otheò operationó uså thå numberó 
+iî thå firsô twï registeró Ø anä Ù aó operands¬ anä displaù thå resulô iî 
+thå Ø register¬ droppinç thå stack.
+
+Wheî aî integeò divisioî ió performed¬ yoõ arå ofteî interesteä iî botè thå 
+quotienô anä thå remainder®  Thå remaindeò ió saveä iî thå speciaì reserveä 
+memorù registeò Ò durinç thå divisioî operation®  Memorù registeò Ò maù bå 
+accesseä jusô likå anù oæ thå regulaò memorù registeró 0-5®  Iô maù alsï bå 
+useä tï storå numberó likå anù otheò register¬ buô anù contentó wilì bå 
+overwritteî bù thå remaindeò durinç integeò divisioî operations.
+
+Thå consolå belì wilì rinç iæ aî undefineä keù ió presseä aó aî operator®  
+Iô wilì alsï rinç anä thå currenô multiplicatioî (*)¬ divisioî (/© oò 
+exponentiatioî (^© functioî wilì noô operatå iæ 16-biô overflo÷ occuró oò 
+iæ divisioî bù ° ió attempted®  Thå stacë ió lefô unchanged®  Uså thå 
+backspacå keù tï deletå thå offendinç operanä iæ yoõ wisè tï trù again.
+:M
+Memory Storage Registers
+
+Therå arå ¶ memorù storagå registeró numbereä 0-µ thaô maù bå useä tï storå 
+constantó oò intermediatå valueó durinç calculations¬ foò recalleä aó 
+needeä later®  Thå contentó oæ memorù registeró arå noô affecteä bù thå 
+cleaò stacë (^X© operation®  Eitheò uppeò oò loweò caså letteró maù bå useä 
+tï specifù memorù registeò Storå oò Recalì functions.
+
+Storing a Number
+
+Thå numbeò iî thå Ø registeò maù bå storeä iî anù oæ thå memorù registeró 
+usinç thå commanä 'S§ followeä bù thå numbeò oæ thå desireä memorù 
+register®  Thå previouó contentó oæ thå memorù registeò wilì bå 
+overwritten¬ buô thå numbeò iî thå Ø registeò wilì noô bå affected®  Foò 
+example¬ tï storå thå numbeò iî registeò Ø iî memorù registeò 2¬ enteò 
+'S2'®  
+Recalling a Number
+
+Numberó maù bå recalleä froí á memorù registeò tï registeò Ø usinç thå 'R§ 
+commanä followeä bù thå numbeò oæ thå memorù register®  Thå stacë wilì bå 
+lifted¬ pushinç thå previouó contentó oæ registeò Ø intï registeò Y¬ buô 
+thå numbeò iî thå memorù registeò wilì noô bå affected®  Foò example¬ tï 
+recalì memorù registeò ° tï registeò X¬ enteò 'R0'.
+
+Remainder Register 
+
+Aî additionaì speciaì memorù registeò Ò ió useä bù thå divisioî operatioî 
+tï storå thå remainder®  Iô maù alsï bå useä tï storå anä recalì numbers¬ 
+buô anù contentó wilì bå overwritteî durinç á divisioî operation®  Thå 
+commanä 'RR§ (Recalì Remainder© afteò á divisioî operatioî wilì storå á 
+copù oæ thå remaindeò iî registeò Ø anä pusè thå quotienô tï registeò Y®  
+Aî exchangå (=© operatioî wilì swağ theí iæ desired®  
+:N:HP-RPN.HLP
+:Z:ZP.HLP
+
