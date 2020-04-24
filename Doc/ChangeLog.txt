@@ -11,6 +11,7 @@ Version 3.1
 - WBW: Support TIMER mode in CTC driver
 - D?N: Added sound driver support
 - D?N: Added SN76489 sound chip driver
+- M?O: RomWBW Disk Catalog document
 
 Version 3.0.1
 -------------
