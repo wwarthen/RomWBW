@@ -51,9 +51,9 @@
 ;
 RESTART		.EQU	$0000		; CP/M restart vector
 BDOS		.EQU	$0005		; BDOS invocation vector
-;	
+;
 IDENT		.EQU	$FFFE		; loc of RomWBW HBIOS ident ptr
-;	
+;
 RMJ		.EQU	3		; intended CBIOS version - major
 RMN		.EQU	1		; intended CBIOS version - minor
 ;
@@ -75,8 +75,8 @@ TYPMYM		.EQU	3		; FILTYP value for MYM sound file
 	CALL	CRLF
 	LD	DE,MSGBAN		; Point to banner message
 	CALL	PRTSTR			; Print message
-;		
-	; Check BIOS and version	
+;
+	; Check BIOS and version
 	CALL	IDBIO			; Identify hardware BIOS
 	CP	1			; RomWBW HBIOS?
 	JP	NZ,ERRBIO		; If not, handle BIOS error
@@ -111,7 +111,7 @@ CFGSEL:
 	LD	C,A			; Put in C for I/O
 	LD	A,$FF			; Value to activate card
 	OUT	(C),A			; Write value to ACR
-;	
+;
 PROBE:
 	; Test for hardware (sound chip detection)
 	LD	DE,(PORTS)		; D := RDAT, E := RSEL
@@ -142,15 +142,15 @@ MAT:
 	LD	C,$D0			; TIMER subfunction
 	RST	08			; DE:HL := current tick count
 	LD	A,L			; DE:HL == 0?
-	OR	H	
-	OR	E	
-	OR	D	
+	OR	H
+	OR	E
+	OR	D
 	LD	A,0			; Assume no timer
 	LD	DE,MSGDLY		; Delay mode msg
 	JR	Z,SETDLY		; If tick count is zero, no timer active
 	LD	A,$FF			; Value for timer active
 	LD	DE,MSGTIM		; Timer mode msg
-SETDLY:	
+SETDLY:
 	LD	(WMOD),A		; Save wait mode
 	CALL	PRTSTR			; Print it
 ;
@@ -170,7 +170,7 @@ SETDLY:
 	LD	DE,HEAP+1		; Set dest to next byte
 	LD	BC,HEAPEND-HEAP-1	; Size of heap except first byte
 	LDIR				; Propagate zero to rest of heap
-;	
+;
 	; Check sound filename (must be *.PT2, *.PT3, or *.MYM)
 	LD	A,(FCB+1)		; Get first char of filename
 	CP	' '			; Compare to blank
@@ -179,7 +179,7 @@ SETDLY:
 	CP	' '			; is blanks
 	JR	NZ,HASEXT		; then assume
 	LD	A,'P'			; type PT3.
-	LD	(FCB+9),A	
+	LD	(FCB+9),A
 	LD	A,'T'			; Fill in
 	LD	(FCB+10),A		; the file
 	LD	A,'3'			; extension
@@ -220,7 +220,7 @@ _LD0	LD	C,15			; CPM Open File function
 	CALL	BDOS			; Do it
 	INC	A			; Test for error $FF
 	JP	Z,ERRFIL		; Handle file error
-;	
+;
 	LD	A,(FILTYP)		; Get file type
 	LD	HL,MDLADDR		; Assume load address
 	LD	(DMA),HL		; ... for PTx files
@@ -240,19 +240,19 @@ _LD	LD	HL,(DMA)		; Get load address
 	POP	DE			; Restore current DMA to DE
 	LD	C,26			; CPM Set DMA function
 	CALL	BDOS			; Read next 128 bytes
-;		
+;
 	LD	C,20			; CPM Read Sequential function
 	LD	DE,FCB			; FCB
 	CALL	BDOS			; Read next 128 bytes
 	OR	A			; Set flags to check EOF
 	JR	NZ,_LDX			; Non-zero is EOF
 	JR	Z,_LD			; Load loop
-;		
+;
 _LDX	LD	C,16			; CPM Close File function
 	LD	DE,FCB			; FCB
 	CALL	BDOS			; Do it
-;		
-	; Play loop	
+;
+	; Play loop
 	CALL	CRLF2			; Formatting
 	LD	DE,MSGPLY		; Playing message
 	CALL	PRTSTR			; Print message
@@ -319,7 +319,7 @@ waitvb	call	WAITQ
         ld      (played),a
 	;call	PRTDOT
 	jr	mymlp
-;	
+;
 EXIT	CALL	START+8			; Mute audio
 	;CALL	NORMCPU
 	;CALL	CRLF2			; Formatting
@@ -330,14 +330,14 @@ EXIT	CALL	START+8			; Mute audio
 ;
 ; Wait for quark play time.  Can use hardware timer if
 ; supported by hardware or simple delay loop otherwise.
-; Delay loop requires QDLY to be pre-set to to achieve 
+; Delay loop requires QDLY to be pre-set to to achieve
 ; optimal 20ms wait time.
 ;
 WAITQ	LD	A,(WMOD)		; Get delay mode
 	OR	A			; Set flags
 	JR	Z,DLY			; Delay mode
-;		
-	; Timer loop	
+;
+	; Timer loop
 	CALL	TIM2			; Read timer LSB into A
 	LD	C,A			; Init prev value
 TIM1	PUSH	BC			; Save prev value
@@ -346,13 +346,13 @@ TIM1	PUSH	BC			; Save prev value
 	CP	C			; Compare to prev
 	RET	NZ			; Done if changed
 	JR	TIM1			; Else, loop
-;	
+;
 TIM2	LD	B,$F8			; BIOS SYSGET function
 	LD	C,$D0			; TIMER sub-function
 	RST	08			; Call BIOS
 	LD	A,L			; MSB to A
 	RET				; Return to loop
-;	
+;
 	; Delay spin loop (40 tstates per loop)
 DLY	LD	BC,(QDLY)		; Load quark delay factor
 DLY1	DEC	BC              	; [6]
@@ -410,7 +410,7 @@ IDBIO1:
 	LD	B,BF_SYSVER	; HBIOS: VER function
 	LD	C,0		; required reserved value
 	RST	08		; DE := version, L := platform id
-;	
+;
 	LD	A,1		; HBIOS BIOS id = 1
 	RET			; and done
 ;
@@ -530,7 +530,7 @@ PRTSTR1:
 ;
 PRTSTR2:
 	POP	DE		; restore registers
-	RET	
+	RET
 ;
 ; Print the value in A in hex without destroying any registers
 ;
@@ -553,7 +553,7 @@ PRTHEXWORD:
 	LD	A,B
 	CALL	PRTHEX
 	LD	A,C
-	CALL	PRTHEX 
+	CALL	PRTHEX
 	POP	AF
 	RET
 ;
@@ -590,9 +590,9 @@ HEXASCII:
 HEXCONV:
 	AND	$0F	     	; low nibble only
 	ADD	A,$90
-	DAA	
+	DAA
 	ADC	A,$40
-	DAA	
+	DAA
 	RET
 ;
 ; Print value of A or HL in decimal with leading zero suppression
@@ -712,28 +712,28 @@ CFGSIZ	.EQU	8
 CFGTBL:	;	PLT	RSEL	RDAT	RIN	Z180	ACR
 	;	DESC
 	.DB	$01,	$9A,	$9B,	$9A,	$FF,	$9C	; SBC W/ SCG
-	.DW	HWSTR_SCG	
-;	
+	.DW	HWSTR_SCG
+;
 	.DB	$04,	$9C,	$9D,	$9C,	$40,	$FF	; N8 W/ ONBOARD PSG
-	.DW	HWSTR_N8	
-;	
+	.DW	HWSTR_N8
+;
 	.DB	$05,	$9A,	$9B,	$9A,	$40,	$9C	; MK4 W/ SCG
-	.DW	HWSTR_SCG	
-;	
+	.DW	HWSTR_SCG
+;
 	.DB	$07,	$D8,	$D0,	$D8,	$FF,	$FF	; RCZ80 W/ RC SOUND MODULE (EB)
-	.DW	HWSTR_RCEB	
-;	
+	.DW	HWSTR_RCEB
+;
 	.DB	$07,	$D1,	$D0,	$D0,	$FF,	$FF	; RCZ80 W/ RC SOUND MODULE (MF)
 	.DW	HWSTR_RCMF
-;	
+;
 	.DB	$08,	$68,	$60,	$68,	$C0,	$FF	; RCZ180 W/ RC SOUND MODULE (EB)
-	.DW	HWSTR_RCEB	
-;	
+	.DW	HWSTR_RCEB
+;
 	.DB	$08,	$61,	$60,	$60,	$C0,	$FF	; RCZ180 W/ RC SOUND MODULE (MF)
 	.DW	HWSTR_RCMF
 ;
 	.DB	$09,	$D8,	$D0,	$D8,	$FF,	$FF	; EZZ80 W/ RC SOUND MODULE (EB)
-	.DW	HWSTR_RCEB	
+	.DW	HWSTR_RCEB
 ;
 	.DB	$09,	$D1,	$D0,	$D0,	$FF,	$FF	; EZZ80 W/ RC SOUND MODULE (EB)
 	.DW	HWSTR_RCMF
@@ -765,10 +765,10 @@ CMRSAV		.DB	0	; for saving original Z180 CMR value
 ;
 DMA		.DW	0	; Working DMA
 FILTYP		.DB	0	; Sound file type (TYPPT2, TYPPT3, TYPMYM)
-;				
+;
 TMP		.DB	0	; work around use of undocumented Z80
 ;
-		
+
 MSGBAN		.DB	"Tune Player for RomWBW v2.5, 29-Mar-2020",0
 MSGUSE		.DB	"Copyright (C) 2020, Wayne Warthen, GNU GPL v3",13,10
 		.DB	"PTxPlayer Copyright (C) 2004-2007 S.V.Bulba",13,10
@@ -843,7 +843,7 @@ Id		.EQU	1
 ;into RAM or INIT subprogram was not called before.
 
 ;Call MUTE or INIT one more time to mute sound after stopping
-;playing 
+;playing
 
 	;ORG $C000
 ;Test codes (commented)
@@ -1128,7 +1128,7 @@ TP_2	LD A,H
   #IF CurPosCounter
 	LD (CurPos),A
   #ENDIF
-	
+
 #ENDIF
 
 	LD HL,VARS
@@ -1441,7 +1441,7 @@ PD_VOL	RRCA
 	RRCA
 	LD (IX-12+Volume),A
 	JR PD_LP2
-	
+
 PD_EOff	LD (IX-12+Env_En),A
 	LD (IX-12+PsInOr),A
 	JR PD_LP2
@@ -1660,7 +1660,7 @@ C_DELAY	LD A,(BC)
 	INC BC
 	LD (Delay),A
 	RET
-	
+
 SETENV	LD (IX-12+Env_En),E
 	LD (AYREGS+EnvTp),A
 	LD A,(BC)
@@ -1783,7 +1783,7 @@ CH_SMPS	LD (IX+PsInSm),A
 ;Convert PT2 sample to PT3
 		;PT2		PT3
 SamCnv	POP HL  ;BIT 2,C	JR e_
-	POP HL	
+	POP HL
 	LD H,B
 	JR NZ,$+8
 	EX DE,HL
@@ -2137,7 +2137,7 @@ ABC
 	LD HL,AYREGS
 LOUT	OUT (C),A
 	LD B,E
-	OUTI 
+	OUTI
 	LD B,D
 	INC A
 	CP 13
@@ -2158,7 +2158,7 @@ LOUT	OUT (C),A
 	LD HL,AYREGS
 LOUT	OUT (C),A
 	INC C
-	OUTI 
+	OUTI
 	DEC C
 	INC A
 	CP 13
@@ -2197,7 +2197,7 @@ LOUT2
 	EI
 	RET		; And done
 #ENDIF
-	
+
 #IF ACBBAC
 CHTABLE	.EQU $-4
 	.DB 4,5,15,%001001,0,7,7,%100100
@@ -2518,7 +2518,7 @@ endext: ld      (dest1),ix
         ld      bc,(rows)
         or      a
         sbc     hl,bc
-	
+
 ;        jr      c,noend         ; If rows>played rows then exit
 ;        exx                     ; Otherwise restart
 ;        ld      e,1
@@ -2593,7 +2593,7 @@ notrig: ld      hl,(psource)
         ld      (played),a
 
 endint:	call	NORMIO
-	ei	
+	ei
 	ret			; And done
 ;
 ; *** Program data
