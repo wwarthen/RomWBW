@@ -57,7 +57,7 @@ CPM=$(TOOLS)/cpm/bin
 
 %.hex: %.asm
 	$(ZXCC) $(CPM)/MAC -$< -$$PO ; \
-	
+
 %.bin: %.ASM
 	$(ZXCC) $(CPM)/MAC -$< -$$PO
 	$(ZXCC) $(CPM)/MLOAD25 -tmp.bin=$*.hex
@@ -67,7 +67,7 @@ CPM=$(TOOLS)/cpm/bin
 %.com: %.z80
 	$(ZXCC) $(CPM)/Z80ASM -$(basename $<)/F ; \
 	mv $$($(CASEFN) $@) tmp.com ; mv tmp.com $@
-	
+
 %.bin: %.asm
 	$(TASM) $< $@
 
@@ -77,10 +77,10 @@ CPM=$(TOOLS)/cpm/bin
 %.rel: %.z80
 	$(ZXCC) $(CPM)/Z80ASM -$(basename $<)/MF
 
-%.hex: %.180 
+%.hex: %.180
 	$(ZXCC) $(CPM)/SLR180 -$(basename $<)/HF
 
-%.rel: %.azm 
+%.rel: %.azm
 	$(ZXCC) $(CPM)/ZSM =$<
 
 %.bin: %.rel
