@@ -39,6 +39,7 @@
 ;   2019-11-21 [WBW] Added table-driven configuration
 ;   2020-02-11 [WBW] Made hardware config & detection more flexible
 ;   2020-03-29 [WBW] Fix error in Z180 I/O W/S bracketing
+;   2020-04-25 [DEN] Added support to use HBIOS Sound driver
 ;_______________________________________________________________________________
 ;
 ; ToDo:
@@ -49,43 +50,65 @@
 ; Main program
 ;===============================================================================
 ;
-RESTART		.EQU	$0000		; CP/M restart vector
-BDOS		.EQU	$0005		; BDOS invocation vector
-;
-IDENT		.EQU	$FFFE		; loc of RomWBW HBIOS ident ptr
-;
-RMJ		.EQU	3		; intended CBIOS version - major
-RMN		.EQU	1		; intended CBIOS version - minor
-;
-BF_SYSVER	.EQU	$F1		; BIOS: VER function
-BF_SYSGET	.EQU	$F8		; HBIOS: SYSGET function
-;
-FCB		.EQU	$5C		; Location of default FCB
-;
+#include	"hbios.inc"
+#include	"cpm.inc"
+#include	"tune.inc"
+
 HEAPEND		.EQU	$C000		; End of heap storage
 ;
 TYPPT2		.EQU	1		; FILTYP value for PT2 sound file
 TYPPT3		.EQU	2		; FILTYP value for PT3 sound file
 TYPMYM		.EQU	3		; FILTYP value for MYM sound file
 ;
-;
-;
+
+;Conditional assembly - use  -D switch on TASM or uz80as assembler to control
+_ZX		.EQU    0		; 1) Version of ROUT (ZX or MSX standards)
+_MSX		.EQU    0
+_WBW		.EQU    0
+HBIOS		.EQU    0
+#IFDEF ZX
+_ZX		.SET	1
+FAIL
+#ELSE
+#IFDEF MSX
+_MSX		.SET	1
+FAIL
+#ELSE
+_WBW		.SET	1
+
+#ENDIF
+#ENDIF
+
+CurPosCounter	.EQU	0	; 2) Current position counter at (START+11)
+ACBBAC		.EQU	0	; 3) Allow channels allocation bits at (START+10)
+LoopChecker	.EQU	1	; 4) Allow loop checking and disabling
+Id		.EQU	1	; 5) Insert official identificator
+#DEFINE Release "1"		; Release number
+
 	.ORG	$0100
 ;
-	CALL	CRLF
-	LD	DE,MSGBAN		; Point to banner message
-	CALL	PRTSTR			; Print message
-;
+	PRTCRLF
+	PRTSTRDE(MSGBAN)		; Print to banner message
+
+	CALL	CLI_ABRT_IF_OPT_FIRST
+	CALL	CLI_HAVE_HBIOS_SWITCH
+	JP	CONTINUE
+
+CONTINUE:
 	; Check BIOS and version
 	CALL	IDBIO			; Identify hardware BIOS
 	CP	1			; RomWBW HBIOS?
-	JP	NZ,ERRBIO		; If not, handle BIOS error
-	LD	A,RMJ << 4 | RMN	; Expected HBIOS ver
+	JP	NZ, ERRBIO		; If not, handle BIOS error
+	LD	A, RMJ << 4 | RMN	; Expected HBIOS ver
 	CP	D			; Compare with result above
-	JP	NZ,ERRBIO		; Handle BIOS error
-	LD	A,L			; Platform id to A
+	JP	NZ, ERRBIO		; Handle BIOS error
+	LD	A, L			; Platform id to A
 	LD	(CURPLT),A		; Save as current platform id
-;
+
+	LD	A, (HBIOSMD)
+	OR	A
+	JR	NZ, TSTTIMER		; skip hardware check if using hbios
+
 	LD	HL,CFGTBL		; Point to start of config table
 CFGSEL:
 	LD	A,$FF			; End of table marker
@@ -137,21 +160,9 @@ MAT:
 	LD	DE,(DESC)		; Load hardware description pointer
 	CALL	PRTSTR			; Print description
 ;
-	; Test for timer running to determine if it can be used for delay
-	LD	B,BF_SYSGET		; HBIOS: GET function
-	LD	C,$D0			; TIMER subfunction
-	RST	08			; DE:HL := current tick count
-	LD	A,L			; DE:HL == 0?
-	OR	H
-	OR	E
-	OR	D
-	LD	A,0			; Assume no timer
-	LD	DE,MSGDLY		; Delay mode msg
-	JR	Z,SETDLY		; If tick count is zero, no timer active
-	LD	A,$FF			; Value for timer active
-	LD	DE,MSGTIM		; Timer mode msg
-SETDLY:
-	LD	(WMOD),A		; Save wait mode
+
+TSTTIMER:
+	CALL	PROBETIMER
 	CALL	PRTSTR			; Print it
 ;
 	; Get CPU speed & type from RomWBW HBIOS and compute quark delay factor
@@ -214,6 +225,8 @@ CHKMYM	LD	A,(FCB+9)		; Extension char 1
 _SET	LD	A,C			; Get file type value
 	LD	(FILTYP),A		; Save file type value
 ;
+	CALL	CLI_ABRT_UNSUPPFILTYP
+
 	; Load sound file
 _LD0	LD	C,15			; CPM Open File function
 	LD	DE,FCB			; FCB
@@ -327,43 +340,12 @@ EXIT	CALL	START+8			; Mute audio
 	CALL	PRTSTR			; Print message
 	CALL	CRLF			; Formatting
 	JP	0			; Exit the easy way
-;
-; Wait for quark play time.  Can use hardware timer if
-; supported by hardware or simple delay loop otherwise.
-; Delay loop requires QDLY to be pre-set to to achieve
-; optimal 20ms wait time.
-;
-WAITQ	LD	A,(WMOD)		; Get delay mode
-	OR	A			; Set flags
-	JR	Z,DLY			; Delay mode
-;
-	; Timer loop
-	CALL	TIM2			; Read timer LSB into A
-	LD	C,A			; Init prev value
-TIM1	PUSH	BC			; Save prev value
-	CALL	TIM2			; Read timer LSB into A
-	POP	BC			; Recover prev value
-	CP	C			; Compare to prev
-	RET	NZ			; Done if changed
-	JR	TIM1			; Else, loop
-;
-TIM2	LD	B,$F8			; BIOS SYSGET function
-	LD	C,$D0			; TIMER sub-function
-	RST	08			; Call BIOS
-	LD	A,L			; MSB to A
-	RET				; Return to loop
-;
-	; Delay spin loop (40 tstates per loop)
-DLY	LD	BC,(QDLY)		; Load quark delay factor
-DLY1	DEC	BC              	; [6]
-	NOP				; [4]
-	NOP				; [4]
-	NOP				; [4]
-	NOP				; [4]
-	LD	A,B             	; [4]
-	OR	C               	; [4]
-	JP	NZ,DLY1			; [10]
-	RET
+
+#include "timing.inc"
+#include "strings.inc"
+#include "cli.inc"
+#include "printing.inc"
+
 ;
 ; Get a keystroke from CPM
 ;
@@ -482,190 +464,7 @@ NORMIO:
 	LD A,(DCSAV)	; Get saved DCNTL value
 	OUT (C),A	; And restore it
 	RET
-;
-; Print character in A without destroying any registers
-;
-PRTCHR:
-	PUSH	BC		; save registers
-	PUSH	DE
-	PUSH	HL
-	LD	E,A		; character to print in E
-	LD	C,$02		; BDOS function to output a character
-	CALL	BDOS		; do it
-	POP	HL		; restore registers
-	POP	DE
-	POP	BC
-	RET
-;
-PRTDOT:
-;
-	; shortcut to print a dot preserving all regs
-	PUSH	AF		; save af
-	LD	A,'.'		; load dot char
-	CALL	PRTCHR		; print it
-	POP	AF		; restore af
-	RET			; done
-;
-PRTCR:
-;
-	; shortcut to print a dot preserving all regs
-	PUSH	AF		; save af
-	LD	A,13		; load CR value
-	CALL	PRTCHR		; print it
-	POP	AF		; restore af
-	RET			; done
-;
-; Print a zero terminated string at (DE) without destroying any registers
-;
-PRTSTR:
-	PUSH	DE
-;
-PRTSTR1:
-	LD	A,(DE)		; get next char
-	OR	A
-	JR	Z,PRTSTR2
-	CALL	PRTCHR
-	INC	DE
-	JR	PRTSTR1
-;
-PRTSTR2:
-	POP	DE		; restore registers
-	RET
-;
-; Print the value in A in hex without destroying any registers
-;
-PRTHEX:
-	PUSH	AF		; save AF
-	PUSH	DE		; save DE
-	CALL	HEXASCII	; convert value in A to hex chars in DE
-	LD	A,D		; get the high order hex char
-	CALL	PRTCHR		; print it
-	LD	A,E		; get the low order hex char
-	CALL	PRTCHR		; print it
-	POP	DE		; restore DE
-	POP	AF		; restore AF
-	RET			; done
-;
-; print the hex word value in bc
-;
-PRTHEXWORD:
-	PUSH	AF
-	LD	A,B
-	CALL	PRTHEX
-	LD	A,C
-	CALL	PRTHEX
-	POP	AF
-	RET
-;
-; print the hex dword value in de:hl
-;
-PRTHEX32:
-	PUSH	BC
-	PUSH	DE
-	POP	BC
-	CALL	PRTHEXWORD
-	PUSH	HL
-	POP	BC
-	CALL	PRTHEXWORD
-	POP	BC
-	RET
-;
-; Convert binary value in A to ascii hex characters in DE
-;
-HEXASCII:
-	LD	D,A		; save A in D
-	CALL	HEXCONV		; convert low nibble of A to hex
-	LD	E,A		; save it in E
-	LD	A,D		; get original value back
-	RLCA			; rotate high order nibble to low bits
-	RLCA
-	RLCA
-	RLCA
-	CALL	HEXCONV		; convert nibble
-	LD	D,A		; save it in D
-	RET			; done
-;
-; Convert low nibble of A to ascii hex
-;
-HEXCONV:
-	AND	$0F	     	; low nibble only
-	ADD	A,$90
-	DAA
-	ADC	A,$40
-	DAA
-	RET
-;
-; Print value of A or HL in decimal with leading zero suppression
-; Use prtdecb for A or prtdecw for HL
-;
-PRTDECB:
-	PUSH	HL
-	LD	H,0
-	LD	L,A
-	CALL	PRTDECW		; print it
-	POP	HL
-	RET
-;
-PRTDECW:
-	PUSH	AF
-	PUSH	BC
-	PUSH	DE
-	PUSH	HL
-	CALL	PRTDEC0
-	POP	HL
-	POP	DE
-	POP	BC
-	POP	AF
-	RET
-;
-PRTDEC0:
-	LD	E,'0'
-	LD	BC,-10000
-	CALL	PRTDEC1
-	LD	BC,-1000
-	CALL	PRTDEC1
-	LD	BC,-100
-	CALL	PRTDEC1
-	LD	C,-10
-	CALL	PRTDEC1
-	LD	E,0
-	LD	C,-1
-PRTDEC1:
-	LD	A,'0' - 1
-PRTDEC2:
-	INC	A
-	ADD	HL,BC
-	JR	C,PRTDEC2
-	SBC	HL,BC
-	CP	E
-	RET	Z
-	LD	E,0
-	CALL	PRTCHR
-	RET
-;
-; Start a new line
-;
-CRLF2:
-	CALL	CRLF		; two of them
-CRLF:
-	PUSH	AF		; preserve AF
-	LD	A,13		; <CR>
-	CALL	PRTCHR		; print it
-	LD	A,10		; <LF>
-	CALL	PRTCHR		; print it
-	POP	AF		; restore AF
-	RET
-;
-; ADD HL,A
-;
-;   A REGISTER IS DESTROYED!
-;
-ADDHLA:
-	ADD	A,L
-	LD	L,A
-	RET	NC
-	INC	H
-	RET
+
 ;
 ERRBIO:	; Invalid BIOS or version
 	LD	DE,MSGBIO
@@ -767,13 +566,15 @@ DMA		.DW	0	; Working DMA
 FILTYP		.DB	0	; Sound file type (TYPPT2, TYPPT3, TYPMYM)
 ;
 TMP		.DB	0	; work around use of undocumented Z80
-;
 
-MSGBAN		.DB	"Tune Player for RomWBW v2.5, 29-Mar-2020",0
+HBIOSOPT:	.DB	"--HBIOS", 0
+HBIOSMD		.DB	0	; NON-ZERO IF USING HBIOS SOUND DRIVER, ZERO OTHERWISE
+
+MSGBAN		.DB	"Tune Player for RomWBW v3.1, 25-Apr-2020",0
 MSGUSE		.DB	"Copyright (C) 2020, Wayne Warthen, GNU GPL v3",13,10
 		.DB	"PTxPlayer Copyright (C) 2004-2007 S.V.Bulba",13,10
 		.DB	"MYMPlay by Marq/Lieves!Tuore",13,10,13,10
-		.DB	"Usage: TUNE <filename>.[PT2|PT3|MYM]",0
+		.DB	"Usage: TUNE <filename>.[PT2|PT3|MYM] [--hbios]",0
 MSGBIO		.DB	"Incompatible BIOS or version, "
 		.DB	"HBIOS v", '0' + RMJ, ".", '0' + RMN, " required",0
 MSGPLT		.DB	"Hardware error, system not supported!",0
@@ -785,11 +586,14 @@ MSGTIM		.DB	", timer mode",0
 MSGDLY		.DB	", delay mode",0
 MSGPLY		.DB	"Playing...",0
 MSGEND		.DB	" Done",0
+MSGERR		.DB	"App Error", 0
 ;
 HWSTR_SCG	.DB	"SCG ECB Board",0
 HWSTR_N8	.DB	"N8 Onboard Sound",0
 HWSTR_RCEB	.DB	"RC2014 Sound Module (EB)",0
 HWSTR_RCMF	.DB	"RC2014 Sound Module (MF)",0
+
+MSGUNSUP	.db	"MYM FILES NOT SUPPORTED YET\r\n", 0
 ;
 ;===============================================================================
 ; PTx Player Routines
@@ -799,23 +603,6 @@ HWSTR_RCMF	.DB	"RC2014 Sound Module (MF)",0
 ;(c)2004-2007 S.V.Bulba <vorobey@mail.khstu.ru>
 ;http://bulba.untergrund.net (http://bulba.at.kz)
 
-;Release number
-;Release 	.EQU "1"
-#DEFINE Release "1"
-
-;Conditional assembly
-;1) Version of ROUT (ZX or MSX standards)
-ZX		.EQU	0
-MSX		.EQU	0
-WBW		.EQU	1
-;2) Current position counter at (START+11)
-CurPosCounter	.EQU	0
-;3) Allow channels allocation bits at (START+10)
-ACBBAC		.EQU	0
-;4) Allow loop checking and disabling
-LoopChecker	.EQU	1
-;5) Insert official identificator
-Id		.EQU	1
 
 ;Features
 ;--------
@@ -2130,7 +1917,7 @@ RxCA2	OR E
 ABC
 #ENDIF
 
-#IF ZX
+#IF _ZX
 	XOR A
 	LD DE,$FFBF
 	LD BC,$FFFD
@@ -2151,7 +1938,7 @@ LOUT	OUT (C),A
 	RET
 #ENDIF
 
-#IF MSX
+#IF _MSX
 ;MSX version of ROUT (c)Dioniso
 	XOR A
 	LD C,$A0
@@ -2172,30 +1959,111 @@ LOUT	OUT (C),A
 	RET
 #ENDIF
 
-#IF WBW
+#IF _WBW
+	ISHBIOS
+	JR	NZ, PLAYVIAHBIOS
+
 	DI
-	CALL SLOWIO
-	LD DE,(PORTS)	; D := RDAT, E := RSEL
-	XOR A		; start with reg 0
-	LD C,E		; point to address port
-	LD HL,AYREGS	; start of value list
-LOUT	OUT (C),A	; select register
-	LD C,D		; point to data port
-	OUTI		; write (HL) to data port, bump HL
-	LD C,E		; point to address port
-	INC A		; next register
-	CP 13		; reg 13?
-	JR NZ,LOUT	; if not, loop
-	OUT (C),A	; select register 13
-	LD A,(HL)	; get value for register 13
-	AND A		; set flags
-	JP M,LOUT2	; if bit 7 set, return w/o writing value
-	LD C,D		; select data port
-	OUT (C),A	; write value to register 13
+	CALL 	SLOWIO
+	LD 	DE, (PORTS)	; D := RDAT, E := RSEL
+	XOR 	A		; START WITH REG 0
+	LD 	C, E		; POINT TO ADDRESS PORT
+	LD 	HL, AYREGS	; START OF VALUE LIST
+LOUT	OUT 	(C), A		; SELECT REGISTER
+	LD 	C, D		; POINT TO DATA PORT
+	OUTI			; WRITE (HL) TO DATA PORT, BUMP HL
+	LD 	C, E		; POINT TO ADDRESS PORT
+	INC 	A		; NEXT REGISTER
+	CP 	13		; REG 13?
+	JR 	NZ, LOUT	; IF NOT, LOOP
+	OUT 	(C), A		; SELECT REGISTER 13
+	LD 	A, (HL)		; GET VALUE FOR REGISTER 13
+	AND 	A		; SET FLAGS
+	JP 	M, LOUT2	; IF BIT 7 SET, RETURN W/O WRITING VALUE
+	LD 	C, D		; SELECT DATA PORT
+	OUT 	(C), A		; WRITE VALUE TO REGISTER 13
 LOUT2
-	CALL NORMIO
+	CALL 	NORMIO
 	EI
-	RET		; And done
+	RET			; AND DONE
+
+PLAYVIAHBIOS:
+	LD	B, BF_SNDVOL
+	LD	C, 0
+	LD	H, 0
+	LD	A, (AYREGS + AmplA)
+	AND	$0F
+	rlca
+	rlca
+	rlca
+	rlca
+	LD	L, A
+	RST	08
+
+	LD	B, BF_SNDPIT
+	LD	C, 0
+	LD	HL, (AYREGS+TonA)
+	ld	a, h
+	AND	$3F
+	LD	H, A
+	RST	08
+
+	LD	B, BF_SNDPLAY
+	LD	C, 0
+	LD	D, 0
+	RST	08
+
+	LD	B, BF_SNDVOL
+	LD	C, 0
+	LD	H, 0
+	LD	A, (AYREGS + AmplB)
+	AND	$0F
+	rlca
+	rlca
+	rlca
+	rlca
+	LD	L, A
+	RST	08
+
+	LD	B, BF_SNDPIT
+	LD	C, 0
+	LD	HL, (AYREGS+TonB)
+	ld	a, h
+	AND	$3F
+	LD	H, A
+	RST	08
+
+	LD	B, BF_SNDPLAY
+	LD	C, 0
+	LD	D, 1
+	RST	08
+
+	LD	B, BF_SNDVOL
+	LD	C, 0
+	LD	H, 0
+	LD	A, (AYREGS + AmplC)
+	AND	$0F
+	rlca
+	rlca
+	rlca
+	rlca
+	LD	L, A
+	RST	08
+
+	LD	B, BF_SNDPIT
+	LD	C, 0
+	LD	HL, (AYREGS+TonC)
+	ld	a, h
+	AND	$3F
+	LD	H, A
+	RST	08
+
+	LD	B, BF_SNDPLAY
+	LD	C, 0
+	LD	D, 2
+	RST	08
+
+	RET
 #ENDIF
 
 #IF ACBBAC
@@ -2553,9 +2421,16 @@ zero:   djnz    onebit
         ret
 
 ; *** Update PSG registers
-upsg:	ld	a,(WMOD)	; if WMOD = 1, CPU is z180
+upsg:
+	ISHBIOS
+	JR	Z, upsg0
+	ERRWITHMSG(MSGERR)
+
+upsg0:
+	ld	a,(WMOD)	; if WMOD = 1, CPU is z180
 	or	a		; set flags
 	jr	z,upsg1		; skip z180 stuff
+
 	di
 	call	SLOWIO
 
@@ -2563,29 +2438,29 @@ upsg1:	ld	hl,(psource)
 	ld	de,(PORTS)	; E := RSEL, D := RDAT
         xor     a
 
-psglp:	ld	c,e		; C := RSEL
-	out	(c),a		; Select register
-	ld	c,d		; C := RDAT
+psglp:	ld	c, e		; C := RSEL
+	out	(c), a		; Select register
+	ld	c, d		; C := RDAT
 	outi			; Set register value
-        inc     a		; Next register
-        ld      bc,(3*FRAG)-1   ; Bytes to skip before next reg-1
-        add     hl,bc		; Update HL
-        cp      REGS-1		; Check for next to last register?
-        jr      nz,psglp	; If not, loop
+	inc	a		; Next register
 
-        ld      a,$FF		; Prepare to check for $FF value
+        ld      bc, (3 * FRAG) - 1   ; Bytes to skip before next reg-1
+        add     hl, bc		; Update HL
+        cp      REGS-1          ; Check for next to last register?
+        jr      nz,psglp        ; If not, loop
+
+        ld      a, $FF		; Prepare to check for $FF value
         cp      (hl)            ; If last reg (13) is $FF
-        jr      z,notrig	; ... then don't output
-        ld      a,13		; Register 13
-	ld	c,e		; C := RSEL
-	out	(c),a		; Select register
-	ld	c,d		; C := RDAT
+        jr      z, notrig	; ... then don't output
+        ld      a, 13		; Register 13
+	ld	c, e		; C := RSEL
+	out	(c), a		; Select register
+	ld	c, d		; C := RDAT
         outi			; Set register value
 
-notrig: ld      hl,(psource)
+notrig:	ld      hl,(psource)
         inc     hl
         ld      (psource),hl
-
         ld      a,(played)
         or      a
         jr      z,endint
@@ -2596,6 +2471,7 @@ endint:	call	NORMIO
 	ei
 	ret			; And done
 ;
+
 ; *** Program data
 played	.db	0       	; VBI counter
 dest1	.dw	0       	; Uncompress destination 1
