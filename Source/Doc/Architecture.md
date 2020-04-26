@@ -1292,6 +1292,90 @@ codes as described at the start of this section.
 
 `\clearpage`{=latex}
 
+Sound (SND)
+------------
+
+### Function 0x50 -- Sound Reset (SNDRESET)
+
+| _Entry Parameters_
+|       B: 0x50
+|       C: Audio Device Unit ID
+
+| _Exit Results_
+|       A: Status (0=OK, else error)
+
+Reset the sound chip.  Turn off all sounds and set volume on all
+channels to silence.
+
+### Function 0x51 -- Sound Volume (SNDVOL)
+
+| _Entry Parameters_
+|       B: 0x51
+|       C: Audio Device Unit ID
+|       L: Volume (00=Silence, FF=Maximum)
+
+| _Exit Results_
+|       A: Status (0=OK, else error)
+
+This function sets the sound chip volume parameter.  The volume will
+be applied when the next SNDPLAY function is invoked.
+
+Note that not all sounds chips implement 256 volume levels.  The
+driver will scale the volume to the closest possible level the
+chip provides.
+
+### Function 0x52 -- Sound Pitch (SNDPIT)
+
+| _Entry Parameters_
+|       B: 0x52
+|       C: Audio Device Unit ID
+|       HL: Pitch (0000=lowest note, FFFF=highest note)
+
+This function sets the sound chip pitch parameter.  The pitch will
+be applied when the next SNDPLAY function is invoked.
+
+The pitch value is a driver specific value.  To play standardized
+notes, use the SNDNOTE function.
+
+### Function 0x53 -- Sound Note (SNDNOTE)
+
+| _Entry Parameters_
+|       B: 0x53
+|       C: Audio Device Unit ID
+|       L: Note (0 to 255 quarter notes)
+
+This function sets the sound chip pitch parameter according to
+standardized notes.
+
+The value corresponds to standard musical notes.  The value allows 
+for selection of a quarter of a semitone by giving a value between 0 
+and up to the drivers maximum supported value. The lowest note is (0).
+
+For the SN76490 chip, 0 corresponds to note A1# and the value 249 is 
+the maximum supported value, and it corresponds to note C7.
+
+### Function 0x54 -- Sound Play (SNDPLAY)
+
+| _Entry Parameters_
+|       B: 0x54
+|       C: Audio Device Unit ID
+|       D: Channel
+
+This function applies the previously specified volume and pitch by
+programming the sound chip with the appropriate values.  The values
+are applied to the specified channel of the chip.
+
+For example, to play a specific note on Audio Device UNit 0,
+the following HBIOS calls would need to be made:
+
+```
+HBIOS B=51 C=00 L=80      ; Set volume to half level
+HBIOS B=53 C=00 L=69      ; Select Middle C (C4) assuming SN76489
+HBIOS B=54 C=00 D=01      ; Play note on Channel 1
+```
+
+`\clearpage`{=latex}
+
 System (SYS)
 ------------
 
@@ -1480,6 +1564,15 @@ available along with the registers/information returned.
 |           A: Status (0=OK, else error)
 |           E: Count of Video Device Units
 
+#### SYSGET Subfunction 0x50 -- Get Sound Device Unit Count (SNDCNT)
+
+|      _Entry Parameters_
+|           BC: 0xF850
+
+|      _Returned Values_
+|           A: Status (0=OK, else error)
+|           E: Count of Sound Device Units
+
 #### SYSGET Subfunction 0xD0 -- Get Timer Tick Count (TIMER)
 
 |      _Entry Parameters_
@@ -1569,6 +1662,14 @@ available along with the registers/information used as input.
 |      _Entry Parameters_
 |           BC: 0xF9D1
 |           DE:HL: Seconds Count Value
+
+|      _Returned Values_
+|           A: Status (0=OK, else error)
+
+#### SYSSET Subfunction 0xD2 -- Inc Timer (TIMER)
+
+|      _Entry Parameters_
+|           BC: 0xF9D2
 
 |      _Returned Values_
 |           A: Status (0=OK, else error)

@@ -3,7 +3,7 @@ RomWBW
 Z80/Z180 System Software
 
 Version 3.1 Pre-release
-Wednesday 15 April 2020
+Thursday 23 April 2020
 
 Wayne Warthen wwarthen@gmail.com
 
@@ -1173,8 +1173,13 @@ applications are no longer provided.
     list of general code enhancements.
 -   Phillip Stevens contributed support for FreeRTOS.
 -   Curt Mayer contributed the Linux / MacOS build process.
--   UNA BIOS and FDISK80 is a product of John Coffman.
+-   UNA BIOS and FDISK80 are the products of John Coffman.
 -   FLASH4 is a product of Will Sowerbutts.
+-   CLRDIR is a product of Max Scane.
+-   Tasty Basic is a product of Dimitri Theulings.
+-   Dean Netherton contributed the sound driver interface and the
+    SN76489 sound driver.
+-   The RomWBW Disk Catalog document was produced by Mykl Orders.
 
 Contributions of all kinds to RomWBW are very welcome.
 

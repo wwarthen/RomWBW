@@ -9,6 +9,11 @@ Version 3.1
 - WBW: Support use of CTC for SIO baud rate divisors
 - WBW: Updated IDE and PPIDE drivers to improve old CF Card compatibility
 - WBW: Support TIMER mode in CTC driver
+- DEN: Added sound driver support
+- DEN: Added SN76489 sound chip driver
+- M?O: RomWBW Disk Catalog document
+- DEN: Updated TMS to optionally trigger SYSTIMER interrupt (TMSTIMENABLE)
+- J?M: Updated KERMIT applications with VT100 terminal support
 
 Version 3.0.1
 -------------
@@ -280,7 +285,7 @@ Version 2.0
 - DWG: Entire new suite of Apps written in Aztec C
 - DWG:   BANKER.COM - displays bank identification and version information
 - DWG:   CPMNAME.COM - displays CBIOS header data and SYSCFG data, names and vaues
-- DWG:   CHARS.COM - displays ascii map as reference 
+- DWG:   CHARS.COM - displays ascii map as reference
 - DWG:   CLS.COM - clears screen
 - DWG:   LABEL.COM - displays and changes drive labels for drives with reserved tracks
 - DWG:   MAP.COM - like old map command, displays drives and logical unit labels and changes LU values
@@ -312,7 +317,7 @@ Version 1.5.1
 - WBW: Added ZSDOS clock drivers (see Support\Clock)
 - WBW: Overhaul of ZSystem ROM Disk (see Doc\ZSystem.txt)
 - WBW: Update PropIO ANSI emulation for compatiblity with ASSIGN
-- DWG: Added version tags to all applications, and IDENT program to 
+- DWG: Added version tags to all applications, and IDENT program to
        check version of utilities.
 - DWG: Added MULTIFMT program which prepares new media for use by
        initializing the metadata and clearing the directory sectors of
@@ -322,8 +327,8 @@ Version 1.5.1
 - DWG: ANALYSE and HELLO programs removed from ROM due space concerns
 - DWG: Additional macro librarties added supporting program identification
        (IDENTITY.LIB/ASM) and access to drive metadata (METADATA.LIB/ASM),
-       and realtime selection of logical units from within new application 
-       programs (LOGICALS.LIB/ASM). 
+       and realtime selection of logical units from within new application
+       programs (LOGICALS.LIB/ASM).
 - DWG: Added TERM_VT52 for VDU compatbility, all apps now compliant
 - DGG: Contributed Linux build (see Doc\BuildLinux.txt)
 
@@ -351,7 +356,7 @@ Version 1.4
 - DWG: Add various .SUB files used for application maintenance
 - DWG: Enhanced utility building .SUB files to only contain libs utilitized
 - DWG: Add BUILD.SUB to build all applications and DEVFILES.LBR
-- DWG: Add/update RMAC macro libraries used in Apps - 
+- DWG: Add/update RMAC macro libraries used in Apps -
 - DWG:	 BIOSHDR, STDLIB, STRCPY, STRLEN, CPMBIOS, CPMBDOS, TERMINAL, HARDWARE,
 - DWG:   CPMAPPL, GLOBALS, ATOI, LUBIND, APPLVERS, MEMORY(memcpy,memset), PORTAB
 - DWG: Add/Repair BIOS support for Boot Drive login during CP/M Coldstart
@@ -370,7 +375,7 @@ Version 1.4
 - DWG: Add LABEL utility to insert label into drive/slice metadata
 - DWG: Add 16 char label field to metadata
 - DWG: ASSIGN utility displays and manipulates DPH/DPB & logical unit parameters
-- DWG/WBW: Collaborated on design of Logical Unit DPH enhancemnt 
+- DWG/WBW: Collaborated on design of Logical Unit DPH enhancemnt
 - WBW: Proposed MAP utility functionality
 - WBW: Implement slice selection API for DSK devices
 - WBW: Record boot drive in config memory at load time

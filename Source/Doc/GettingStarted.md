@@ -1194,8 +1194,13 @@ platform.
 list of general code enhancements.
 * Phillip Stevens contributed support for FreeRTOS.
 * Curt Mayer contributed the Linux / MacOS build process.
-* UNA BIOS and FDISK80 is a product of John Coffman.
+* UNA BIOS and FDISK80 are the products of John Coffman.
 * FLASH4 is a product of Will Sowerbutts.
+* CLRDIR is a product of Max Scane.
+* Tasty Basic is a product of Dimitri Theulings.
+* Dean Netherton contributed the sound driver interface and
+the SN76489 sound driver.
+* The RomWBW Disk Catalog document was produced by Mykl Orders.
 
 Contributions of all kinds to RomWBW are very welcome.
 
@@ -1208,6 +1213,7 @@ RetroBrew Computers projects is via the community forums:
 * [RC2014 Google Group](https://groups.google.com/forum/#!forum/rc2014-z80)
 * [retro-comp Google Group](https://groups.google.com/forum/#!forum/retro-comp)
 
-Submission of issues and bugs are welcome at the [RomWBW GitHub Repository](https://github.com/wwarthen/RomWBW).
+Submission of issues and bugs are welcome at the
+[RomWBW GitHub Repository](https://github.com/wwarthen/RomWBW).
 
 Also feel free to email !author at [!authmail](mailto:!authmail).

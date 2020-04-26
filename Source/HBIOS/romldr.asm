@@ -146,7 +146,7 @@ start1:
 ;
 	ld	hl,$8000		; page zero was copied here
 	ld	de,0			; put it in user page zero
-	ld 	bc,$100			; full page
+	ld	bc,$100			; full page
 	ldir				; do it
 ;
 ; Page zero in user bank is ready for interrupts now.
@@ -281,6 +281,10 @@ runcmd:
 	jp	z,devlst		; if so, do it
 	cp	'R'			; R = reboot system
 	jp	z,reboot		; if so, do it
+#if (BIOS == BIOS_WBW)
+	cp	'I'			; C = set console interface
+	jp	z,setcon		; if so, do it
+#endif
 ;
 	; Attempt ROM application launch
 	ld	ix,(ra_tbl_loc)		; point to start of ROM app tbl
@@ -334,7 +338,7 @@ runcmd2:
 dskycmd:
 	call	clrled			; clear LEDs
 ;
-	call 	DSKY_GETKEY		; get DSKY key
+	call	DSKY_GETKEY		; get DSKY key
 	cp	$FF			; check for error
 	ret	z			; abort if so
 ;
@@ -422,6 +426,52 @@ devlst:
 	call	pstr			; display it
 	jp	prtall			; do it
 ;
+; Set console interface unit
+;
+#if (BIOS == BIOS_WBW)
+;
+setcon:
+	; On entry DE is expected to be pointing to start
+	; of command
+	call	findws			; skip command
+	call	skipws			; and skip it
+	call	isnum			; do we have a number?
+	jp	nz,err_invcmd		; if not, invalid
+	call	getnum			; parse number into A
+	jp	c,err_nocon		; handle overflow error
+;
+	; Check against max char unit
+	push	af			; save requested unit
+	ld	b,BF_SYSGET		; HBIOS func: SYS GET
+	ld	c,BF_SYSGET_CIOCNT	; HBIOS subfunc: CIO unit count
+	rst	08			; E := unit count
+	pop	af			; restore requested unit
+	cp	e			; compare
+	jp	nc,err_nocon		; handle invalid unit
+;
+	; Notify user, we're outta here....
+	push	af			; save new console unit
+	ld	hl,str_newcon		; new console msg
+	call	pstr			; print string on cur console
+	pop	af			; restore new console unit
+	call	PRTDECB			; print unit num
+;
+	; Set console unit
+	ld	b,BF_SYSPOKE		; HBIOS func: POKE
+	ld	d,BID_BIOS		; BIOS bank
+	ld	e,a			; Char unit value
+	ld	hl,HCB_LOC + HCB_CONDEV	; Con unit num in HCB
+	rst	08			; do it
+;
+	; Display loader prompt on new console
+	call	nl2			; formatting
+	ld	hl,str_banner		; display boot banner
+	call	pstr			; do it
+;
+	ret				; done
+;
+#endif
+;
 ; Restart system
 ;
 reboot:
@@ -433,7 +483,7 @@ reboot:
 ;
 #if (DSKYENABLE)
 	ld	hl,msg_boot		; point to boot message
-	call 	DSKY_SHOWSEG		; display message
+	call	DSKY_SHOWSEG		; display message
 #endif
 ;
 	; switch to rom bank 0 and jump to address 0
@@ -465,7 +515,7 @@ romload:
 ;
 #if (DSKYENABLE)
 	ld	hl,msg_load		; point to load message
-	call 	DSKY_SHOWSEG		; display message
+	call	DSKY_SHOWSEG		; display message
 #endif
 ;
 #if (BIOS == BIOS_WBW)
@@ -509,9 +559,9 @@ romload1:
 #if (BIOS == BIOS_UNA)
 ;
 ; Note: UNA has no interbank memory copy, so we can only load
-; images from the current bank.  We switch to the original bank
+; images from the current bank.	 We switch to the original bank
 ; use a simple ldir to relocate the image, then switch back to the
-; user bank to launch.  This will only work if the images are in
+; user bank to launch.	This will only work if the images are in
 ; the lower 32K and the relocation adr is in the upper 32K.
 ;
 	; Switch to original bank
@@ -549,7 +599,7 @@ romload1:
 ;
 #if (DSKYENABLE)
 	ld	hl,msg_go		; point to go message
-	call 	DSKY_SHOWSEG		; display message
+	call	DSKY_SHOWSEG		; display message
 #endif
 ;
 	ld	l,(ix+ra_ent)		; HL := app entry address
@@ -574,7 +624,7 @@ diskboot:
 ;
 #if (DSKYENABLE)
 	ld	hl,msg_load		; point to load message
-	call 	DSKY_SHOWSEG		; display message
+	call	DSKY_SHOWSEG		; display message
 #endif
 ;
 #if (BIOS == BIOS_WBW)
@@ -616,7 +666,7 @@ diskboot1:
 	ld	h,65			; 65 tracks per slice
 	call	MULT8			; hl := h * e
 	ld	de,$0002		; head 0, sector 2
-	ld	b,BF_DIOSEEK	   	; HBIOS func: seek
+	ld	b,BF_DIOSEEK		; HBIOS func: seek
 	ld	a,(bootunit)		; get boot disk unit
 	ld	c,a			; put in C
 	rst	08			; do it
@@ -627,7 +677,7 @@ diskboot1:
 	ld	b,BF_DIOREAD		; HBIOS func: disk read
 	ld	a,(bootunit)		; get boot disk unit
 	ld	c,a			; put in C for func call
-	ld	hl,bl_infosec     	; read into info sec buffer
+	ld	hl,bl_infosec		; read into info sec buffer
 	ld	d,BID_USR		; user bank
 	ld	e,1			; transfer one sector
 	rst	08			; do it
@@ -752,7 +802,7 @@ diskboot5:
 	ld	b,BF_DIOREAD		; HBIOS func: read sectors
 	ld	a,(bootunit)		; get boot disk unit
 	ld	c,a			; put in C
-	ld	hl,(bb_cpmloc)     	; load address
+	ld	hl,(bb_cpmloc)		; load address
 	ld	d,BID_USR		; user bank
 	ld	a,(loadcnt)		; get sectors to read
 	ld	e,a			; number of sectors to load
@@ -827,7 +877,7 @@ diskboot6:
 ;
 #if (DSKYENABLE)
 	ld	hl,msg_go		; point to go message
-	call 	DSKY_SHOWSEG		; display message
+	call	DSKY_SHOWSEG		; display message
 #endif
 ;
 	; Jump to entry vector
@@ -947,6 +997,16 @@ rdln_cr:
 	ld	(de),a			; store terminator
 	ret				; and return
 ;
+; Find next whitespace character at buffer adr in DE, returns with first
+; whitespace character in A.
+;
+findws:
+	ld	a,(de)			; get next char
+	cp	' '			; blank?
+	ret	z			; nope, done
+	inc	de			; bump buffer pointer
+	jr	findws			; and loop
+;
 ; Skip whitespace at buffer adr in DE, returns with first
 ; non-whitespace character in A.
 ;
@@ -956,7 +1016,6 @@ skipws:
 	ret	nz			; nope, done
 	inc	de			; bump buffer pointer
 	jr	skipws			; and loop
-
 ;
 ; Uppercase character in A
 ;
@@ -1186,7 +1245,7 @@ prtall1:
 	push	bc			; save loop control
 	ld	b,BF_DIODEVICE		; HBIOS func: report device info
 	rst	08			; call HBIOS
-	call 	prtdrv			; print it
+	call	prtdrv			; print it
 	pop	bc			; restore loop control
 	inc	c			; bump index
 	djnz	prtall1			; loop as needed
@@ -1349,6 +1408,10 @@ err_noslice:
 	ld	hl,str_err_noslice
 	jr	err
 ;
+err_nocon:
+	ld	hl,str_err_nocon
+	jr	err
+;
 err_diskio:
 	ld	hl,str_err_diskio
 	jr	err
@@ -1377,6 +1440,7 @@ str_err_prefix	.db	bel,"\r\n\r\n*** ",0
 str_err_invcmd	.db	"Invalid command",0
 str_err_nodisk	.db	"Disk unit not available",0
 str_err_noslice	.db	"Disk unit does not support slices",0
+str_err_nocon	.db	"Invalid character unit",0
 str_err_diskio	.db	"Disk I/O failure",0
 str_err_sig	.db	"No system image on disk",0
 str_err_api	.db	"Unexpected hardware BIOS API failure",0
@@ -1408,12 +1472,12 @@ acmd_to		.dw	BOOT_TIMEOUT	; auto cmd timeout
 ;=======================================================================
 ;
 str_banner	.db	PLATFORM_NAME," Boot Loader",0
-;str_prompt	.db	"Boot [(H)elp]: ",0
 str_prompt	.db	"Boot [H=Help]: ",0
 str_bs		.db	bs,' ',bs,0
 str_reboot	.db	"\r\n\r\nRestarting System...",0
+str_newcon	.db	"\r\n\r\n  Console on Unit #",0
 str_applst	.db	"\r\n\r\nROM Applications:",0
-str_devlst	.db	"\r\n\r\nDevices:",0
+str_devlst	.db	"\r\n\r\nDisk Devices:",0
 str_invcmd	.db	"\r\n\r\n*** Invalid Command ***",bel,0
 str_load	.db	"\r\n\r\nLoading ",0
 str_disk	.db	"\r\n  Disk Unit ",0
@@ -1427,10 +1491,13 @@ str_binfo4	.db	", entry @ 0x",0
 str_binfo5	.db	"]",0
 ;
 str_help	.db	"\r\n"
-		.db	"\r\n  L: List ROM Applications"
-		.db	"\r\n  D: Device Inventory"
-		.db	"\r\n  R: Reboot System"
-		.db	"\r\n  <u>[.<s>]: Boot Disk Unit/Slice"
+		.db	"\r\n  L         - List ROM Applications"
+		.db	"\r\n  D         - Disk Device Inventory"
+		.db	"\r\n  R         - Reboot System"
+#if (BIOS == BIOS_WBW)
+		.db	"\r\n  I <u>     - Set Console Interface"
+#endif
+		.db	"\r\n  <u>[.<s>] - Boot Disk Unit/Slice"
 		.db	0
 ;
 #if (DSKYENABLE)
@@ -1448,34 +1515,34 @@ msg_go		.db	$db,$9d,$00,$00,$00,$80,$80,$80	; "go...   "
 ;
 ;						WBW		UNA
 ; p1: Application name string adr		word (+0)	word (+0)
-; p2: Console keyboard selection key		byte (+2)       byte (+2)
-; p3: DSKY selection key			byte (+3)       byte (+3)
-; p4: Application image bank			byte (+4)       word (+4)
-; p5: Application image source address		word (+5)       word (+6)
-; p6: Application image dest load address	word (+7)       word (+8)
-; p7: Application image size			word (+9)       word (+10)
-; p8: Application entry address			word (+11)      word (+12)
+; p2: Console keyboard selection key		byte (+2)	byte (+2)
+; p3: DSKY selection key			byte (+3)	byte (+3)
+; p4: Application image bank			byte (+4)	word (+4)
+; p5: Application image source address		word (+5)	word (+6)
+; p6: Application image dest load address	word (+7)	word (+8)
+; p7: Application image size			word (+9)	word (+10)
+; p8: Application entry address			word (+11)	word (+12)
 ;
 #if (BIOS == BIOS_WBW)
 ra_name		.equ	0
 ra_conkey	.equ	2
-ra_dskykey      .equ	3
-ra_bnk          .equ	4
-ra_src          .equ	5
-ra_dest         .equ	7
-ra_siz          .equ	9
-ra_ent          .equ	11
+ra_dskykey	.equ	3
+ra_bnk		.equ	4
+ra_src		.equ	5
+ra_dest		.equ	7
+ra_siz		.equ	9
+ra_ent		.equ	11
 #endif
 ;
 #if (BIOS == BIOS_UNA)
 ra_name		.equ	0
 ra_conkey	.equ	2
-ra_dskykey      .equ	3
-ra_bnk          .equ	4
-ra_src          .equ	6
-ra_dest         .equ	8
-ra_siz          .equ	10
-ra_ent          .equ	12
+ra_dskykey	.equ	3
+ra_bnk		.equ	4
+ra_src		.equ	6
+ra_dest		.equ	8
+ra_siz		.equ	10
+ra_ent		.equ	12
 #endif
 ;
 #define		ra_ent(p1,p2,p3,p4,p5,p6,p7,p8) \
@@ -1516,35 +1583,35 @@ ra_ent          .equ	12
 ;
 ra_tbl:
 ;
-;      Name       Key      Dsky   Bank      Src    Dest     Size     Entry
+;      Name	  Key	   Dsky	  Bank	    Src	   Dest	    Size     Entry
 ;      ---------  -------  -----  --------  -----  -------  -------  ----------
-ra_ent(str_mon,   'M',     KY_CL, BID_IMG0, $1000, MON_LOC, MON_SIZ, MON_SERIAL)
+ra_ent(str_mon,	  'M',	   KY_CL, BID_IMG0, $1000, MON_LOC, MON_SIZ, MON_SERIAL)
 ra_entsiz	.equ	$ - ra_tbl
-ra_ent(str_cpm22, 'C',     KY_BK, BID_IMG0, $2000, CPM_LOC, CPM_SIZ, CPM_ENT)
-ra_ent(str_zsys,  'Z',     KY_FW, BID_IMG0, $5000, CPM_LOC, CPM_SIZ, CPM_ENT)
+ra_ent(str_cpm22, 'C',	   KY_BK, BID_IMG0, $2000, CPM_LOC, CPM_SIZ, CPM_ENT)
+ra_ent(str_zsys,  'Z',	   KY_FW, BID_IMG0, $5000, CPM_LOC, CPM_SIZ, CPM_ENT)
 #if (BIOS == BIOS_WBW)
-ra_ent(str_fth,   'F',     KY_EX, BID_IMG1, $0000, FTH_LOC, FTH_SIZ, FTH_LOC)
-ra_ent(str_bas,   'B',     KY_DE, BID_IMG1, $1700, BAS_LOC, BAS_SIZ, BAS_LOC)
-ra_ent(str_tbas,  'T',     KY_EN, BID_IMG1, $3700, TBC_LOC, TBC_SIZ, TBC_LOC)
-ra_ent(str_play,  'P',     $FF,   BID_IMG1, $4000, GAM_LOC, GAM_SIZ, GAM_LOC)
-ra_ent(str_user,  'U',     $FF,   BID_IMG1, $7000, USR_LOC, USR_SIZ, USR_LOC)
+ra_ent(str_fth,	  'F',	   KY_EX, BID_IMG1, $0000, FTH_LOC, FTH_SIZ, FTH_LOC)
+ra_ent(str_bas,	  'B',	   KY_DE, BID_IMG1, $1700, BAS_LOC, BAS_SIZ, BAS_LOC)
+ra_ent(str_tbas,  'T',	   KY_EN, BID_IMG1, $3700, TBC_LOC, TBC_SIZ, TBC_LOC)
+ra_ent(str_play,  'P',	   $FF,	  BID_IMG1, $4000, GAM_LOC, GAM_SIZ, GAM_LOC)
+ra_ent(str_user,  'U',	   $FF,	  BID_IMG1, $7000, USR_LOC, USR_SIZ, USR_LOC)
 #endif
 #if (DSKYENABLE)
 ra_ent(str_dsky,  'Y'+$80, KY_GO, bid_cur,  $1000, MON_LOC, MON_SIZ, MON_DSKY)
 #endif
-ra_ent(str_egg,   'E'+$80, $FF  , bid_cur,  $0E00, EGG_LOC, EGG_SIZ, EGG_LOC)
+ra_ent(str_egg,	  'E'+$80, $FF	, bid_cur,  $0E00, EGG_LOC, EGG_SIZ, EGG_LOC)
 		.dw	0		; table terminator
 ;
 ra_tbl_app:
 ;
-;      Name       Key      Dsky   Bank      Src    Dest     Size     Entry
+;      Name	  Key	   Dsky	  Bank	    Src	   Dest	    Size     Entry
 ;      ---------  -------  -----  --------  -----  -------  -------  ----------
-ra_ent(str_mon,   'M',     KY_CL, bid_cur,  $1000, MON_LOC, MON_SIZ, MON_SERIAL)
-ra_ent(str_zsys,  'Z',     KY_FW, bid_cur,  $2000, CPM_LOC, CPM_SIZ, CPM_ENT)
+ra_ent(str_mon,	  'M',	   KY_CL, bid_cur,  $1000, MON_LOC, MON_SIZ, MON_SERIAL)
+ra_ent(str_zsys,  'Z',	   KY_FW, bid_cur,  $2000, CPM_LOC, CPM_SIZ, CPM_ENT)
 #if (DSKYENABLE)
 ra_ent(str_dsky,  'Y'+$80, KY_GO, bid_cur,  $1000, MON_LOC, MON_SIZ, MON_DSKY)
 #endif
-ra_ent(str_egg,   'E'+$80, $FF  , bid_cur,  $0E00, EGG_LOC, EGG_SIZ, EGG_LOC)
+ra_ent(str_egg,	  'E'+$80, $FF	, bid_cur,  $0E00, EGG_LOC, EGG_SIZ, EGG_LOC)
 		.dw	0		; table terminator
 ;
 str_mon		.db	"Monitor",0
