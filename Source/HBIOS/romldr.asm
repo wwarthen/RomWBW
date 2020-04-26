@@ -282,7 +282,7 @@ runcmd:
 	cp	'R'			; R = reboot system
 	jp	z,reboot		; if so, do it
 #if (BIOS == BIOS_WBW)
-	cp	'C'			; C = set console unit
+	cp	'I'			; C = set console interface
 	jp	z,setcon		; if so, do it
 #endif
 ;
@@ -426,7 +426,7 @@ devlst:
 	call	pstr			; display it
 	jp	prtall			; do it
 ;
-; Set console unit
+; Set console interface unit
 ;
 #if (BIOS == BIOS_WBW)
 ;
@@ -462,6 +462,12 @@ setcon:
 	ld	e,a			; Char unit value
 	ld	hl,HCB_LOC + HCB_CONDEV	; Con unit num in HCB
 	rst	08			; do it
+;
+	; Display loader prompt on new console
+	call	nl2			; formatting
+	ld	hl,str_banner		; display boot banner
+	call	pstr			; do it
+;
 	ret				; done
 ;
 #endif
@@ -1489,7 +1495,7 @@ str_help	.db	"\r\n"
 		.db	"\r\n  D         - Disk Device Inventory"
 		.db	"\r\n  R         - Reboot System"
 #if (BIOS == BIOS_WBW)
-		.db	"\r\n  C <u>     - Set Console Unit"
+		.db	"\r\n  I <u>     - Set Console Interface"
 #endif
 		.db	"\r\n  <u>[.<s>] - Boot Disk Unit/Slice"
 		.db	0
