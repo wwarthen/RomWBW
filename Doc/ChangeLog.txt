@@ -13,6 +13,7 @@ Version 3.1
 - DEN: Added SN76489 sound chip driver
 - M?O: RomWBW Disk Catalog document
 - DEN: Updated TMS to optionally trigger SYSTIMER interrupt (TMSTIMENABLE)
+- J?M: Updated KERMIT applications with VT100 terminal support
 
 Version 3.0.1
 -------------
