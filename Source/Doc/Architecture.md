@@ -1324,20 +1324,20 @@ Note that not all sounds chips implement 256 volume levels.  The
 driver will scale the volume to the closest possible level the
 chip provides.
 
-### Function 0x52 -- Sound Pitch (SNDPIT)
+### Function 0x52 -- Sound period (SNDPRD)
 
 | _Entry Parameters_
 |       B: 0x52
 |       C: Audio Device Unit ID
-|       HL: Pitch (0000=lowest note, FFFF=highest note)
+|       HL: period (0000=lowest note, FFFF=highest note)
 
 |      _Returned Values_
 |           A: Status (0=OK, else error)
 
-This function sets the sound chip pitch parameter.  The pitch will
+This function sets the sound chip period parameter.  The period will
 be applied when the next SNDPLAY function is invoked.
 
-The pitch value is a driver specific value.  To play standardized
+The period value is a driver specific value.  To play standardized
 notes, use the SNDNOTE function.
 
 ### Function 0x53 -- Sound Note (SNDNOTE)
@@ -1350,7 +1350,7 @@ notes, use the SNDNOTE function.
 |      _Returned Values_
 |           A: Status (0=OK, else error)
 
-This function sets the sound chip pitch parameter according to
+This function sets the sound chip period parameter according to
 standardized notes.
 
 The value corresponds to standard musical notes.  The value allows
@@ -1370,7 +1370,7 @@ the maximum supported value, and it corresponds to note C7.
 |      _Returned Values_
 |           A: Status (0=OK, else error)
 
-This function applies the previously specified volume and pitch by
+This function applies the previously specified volume and period by
 programming the sound chip with the appropriate values.  The values
 are applied to the specified channel of the chip.
 
@@ -1418,7 +1418,7 @@ key aspects of the specific Audio Device.
 |           H: 0
 |           L: Current volume setting
 
-#### SNDQUERY Subfunction 0x03 -- Get current pitch setting (SNDQ_PITCH)
+#### SNDQUERY Subfunction 0x03 -- Get current period setting (SNDQ_PERIOD)
 
 |      _Entry Parameters_
 |           B: 0x54
@@ -1426,7 +1426,7 @@ key aspects of the specific Audio Device.
 
 |      _Returned Values_
 |           A: Status (0=OK, else error)
-|           HL: Current pitch setting
+|           HL: Current period setting
 
 #### SNDQUERY Subfunction 0x04 -- Get device details (SNDQ_DEV)
 
