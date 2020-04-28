@@ -2002,7 +2002,7 @@ PLAYVIAHBIOS:
 	LD	C, 0
 	LD	HL, (AYREGS+TonA)
 	ld	a, h
-	AND	$3F
+	AND	$0F
 	LD	H, A
 	RST	08
 
@@ -2027,7 +2027,7 @@ PLAYVIAHBIOS:
 	LD	C, 0
 	LD	HL, (AYREGS+TonB)
 	ld	a, h
-	AND	$3F
+	AND	$0F
 	LD	H, A
 	RST	08
 
@@ -2052,7 +2052,7 @@ PLAYVIAHBIOS:
 	LD	C, 0
 	LD	HL, (AYREGS+TonC)
 	ld	a, h
-	AND	$3F
+	AND	$0F
 	LD	H, A
 	RST	08
 
