@@ -1324,12 +1324,12 @@ Note that not all sounds chips implement 256 volume levels.  The
 driver will scale the volume to the closest possible level the
 chip provides.
 
-### Function 0x52 -- Sound period (SNDPRD)
+### Function 0x52 -- Sound Period (SNDPRD)
 
 | _Entry Parameters_
 |       B: 0x52
 |       C: Audio Device Unit ID
-|       HL: period (0000=lowest note, FFFF=highest note)
+|       HL: Period (0000=lowest note, FFFF=highest note)
 
 |      _Returned Values_
 |           A: Status (0=OK, else error)
@@ -1383,7 +1383,7 @@ HBIOS B=53 C=00 L=69      ; Select Middle C (C4) assuming SN76489
 HBIOS B=54 C=00 D=01      ; Play note on Channel 1
 ```
 
-### Function 0x55 -- Sound Play (SNDQUERY)
+### Function 0x55 -- Sound Query (SNDQUERY)
 
 | _Entry Parameters_
 |       B: 0x54
@@ -1393,7 +1393,7 @@ HBIOS B=54 C=00 D=01      ; Play note on Channel 1
 |      _Returned Values_
 |           A: Status (0=OK, else error)
 
-This function will return the status of current pending command or
+This function will return the status of the current pending command or
 key aspects of the specific Audio Device.
 
 #### SNDQUERY Subfunction 0x01 -- Get count of audio channels supported (SNDQ_CHCNT)
@@ -1443,12 +1443,12 @@ key aspects of the specific Audio Device.
 Reports information about the audio device unit specified.
 
 At this stage, only one driver type is supported (SN76489), but is
-envisage that more will be added in the future.
+envisaged that more will be added in the future.
 
 Register B reports the audio device type (see below).
 
-Registers HL and DE contain relevant port address for the hardware
-as such are specific to each device type.
+Registers HL and DE contain relevant port addresses for the hardware
+specific to each device type.
 
 The currently defined audio device types are:
 
