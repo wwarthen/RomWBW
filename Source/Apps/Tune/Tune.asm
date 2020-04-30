@@ -717,7 +717,9 @@ CurPos	.DB 0 ;for visualization only (i.e. no need for playing)
 
 ;Identifier
 	.IF Id
-	.DB "=Uni PT2 and PT3 Player r.",Release,"="
+	.DB "=Uni PT2 and PT3 Player r."
+	.DB Release
+	.DB "="
 	.ENDIF
 
 	.IF LoopChecker
