@@ -912,6 +912,51 @@ to by HL. HL must point to a location in the top 32K of CPU address space.
 Write the entire contents of the Non-Volatile RAM from the buffer pointed
 to by HL. HL must point to a location in the top 32K of CPU address space.
 
+### Function 0x26 -- RTC Get Alarm (RTCGETALM)
+
+| _Entry Parameters_
+|       B: 0x26
+
+| _Exit Results_
+|       A: Status (0=OK, else error)
+
+Documentation required...
+
+### Function 0x27 -- RTC Set Alarm (RTCSETALM)
+
+| _Entry Parameters_
+|       B: 0x27
+
+| _Exit Results_
+|       A: Status (0=OK, else error)
+
+Documentation required...
+
+### Function 0x28 -- RTC DEVICE (DIODEVICE)
+
+| _Entry Parameters_
+|       B: 0x28
+|       C: RTC Device Unit ID
+
+| _Exit Results_
+|       A: Status (0=OK, else error)
+|       D: Device Type
+|       E: Device Number
+
+Reports information about the RTC device unit specified. Register D
+indicates the device type (driver) and register E indicates the physical
+device number assigned by the driver.
+
+Each RTC device is handled by an appropriate driver (DSRTC, BQRTC,
+etc.) which is identified by a device type id from the table below.
+
+**Type ID** | **Disk Device Type**
+----------- | --------------------
+0x00        | DS1322
+0x10        | BQ4845P
+0x20        | SIMH
+0x30        | System Periodic Timer
+
 `\clearpage`{=latex}
 
 Video Display Adapter (VDA)
@@ -1638,6 +1683,15 @@ available along with the registers/information returned.
 |      _Returned Values_
 |           A: Status (0=OK, else error)
 |           E: Count of Disk Device Units
+
+#### SYSGET Subfunction 0x20 -- Get Disk Device Unit Count (RTCCNT)
+
+|      _Entry Parameters_
+|           BC: 0xF820
+
+|      _Returned Values_
+|           A: Status (0=OK, else error)
+|           E: Count of RTC Device Units
 
 #### SYSGET Subfunction 0x40 -- Get Video Device Unit Count (VDACNT)
 
