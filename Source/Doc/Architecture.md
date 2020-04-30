@@ -912,6 +912,51 @@ to by HL. HL must point to a location in the top 32K of CPU address space.
 Write the entire contents of the Non-Volatile RAM from the buffer pointed
 to by HL. HL must point to a location in the top 32K of CPU address space.
 
+### Function 0x26 -- RTC Get Alarm (RTCGETALM)
+
+| _Entry Parameters_
+|       B: 0x26
+
+| _Exit Results_
+|       A: Status (0=OK, else error)
+
+Documentation required...
+
+### Function 0x27 -- RTC Set Alarm (RTCSETALM)
+
+| _Entry Parameters_
+|       B: 0x27
+
+| _Exit Results_
+|       A: Status (0=OK, else error)
+
+Documentation required...
+
+### Function 0x28 -- RTC DEVICE (DIODEVICE)
+
+| _Entry Parameters_
+|       B: 0x28
+|       C: RTC Device Unit ID
+
+| _Exit Results_
+|       A: Status (0=OK, else error)
+|       D: Device Type
+|       E: Device Number
+
+Reports information about the RTC device unit specified. Register D
+indicates the device type (driver) and register E indicates the physical
+device number assigned by the driver.
+
+Each RTC device is handled by an appropriate driver (DSRTC, BQRTC,
+etc.) which is identified by a device type id from the table below.
+
+**Type ID** | **Disk Device Type**
+----------- | --------------------
+0x00        | DS1322
+0x10        | BQ4845P
+0x20        | SIMH
+0x30        | System Periodic Timer
+
 `\clearpage`{=latex}
 
 Video Display Adapter (VDA)
@@ -1324,17 +1369,20 @@ Note that not all sounds chips implement 256 volume levels.  The
 driver will scale the volume to the closest possible level the
 chip provides.
 
-### Function 0x52 -- Sound Pitch (SNDPIT)
+### Function 0x52 -- Sound Period (SNDPRD)
 
 | _Entry Parameters_
 |       B: 0x52
 |       C: Audio Device Unit ID
-|       HL: Pitch (0000=lowest note, FFFF=highest note)
+|       HL: Period (0000=lowest note, FFFF=highest note)
 
-This function sets the sound chip pitch parameter.  The pitch will
+|      _Returned Values_
+|           A: Status (0=OK, else error)
+
+This function sets the sound chip period parameter.  The period will
 be applied when the next SNDPLAY function is invoked.
 
-The pitch value is a driver specific value.  To play standardized
+The period value is a driver specific value.  To play standardized
 notes, use the SNDNOTE function.
 
 ### Function 0x53 -- Sound Note (SNDNOTE)
@@ -1344,14 +1392,17 @@ notes, use the SNDNOTE function.
 |       C: Audio Device Unit ID
 |       L: Note (0 to 255 quarter notes)
 
-This function sets the sound chip pitch parameter according to
+|      _Returned Values_
+|           A: Status (0=OK, else error)
+
+This function sets the sound chip period parameter according to
 standardized notes.
 
-The value corresponds to standard musical notes.  The value allows 
-for selection of a quarter of a semitone by giving a value between 0 
+The value corresponds to standard musical notes.  The value allows
+for selection of a quarter of a semitone by giving a value between 0
 and up to the drivers maximum supported value. The lowest note is (0).
 
-For the SN76490 chip, 0 corresponds to note A1# and the value 249 is 
+For the SN76490 chip, 0 corresponds to note A1# and the value 249 is
 the maximum supported value, and it corresponds to note C7.
 
 ### Function 0x54 -- Sound Play (SNDPLAY)
@@ -1359,9 +1410,12 @@ the maximum supported value, and it corresponds to note C7.
 | _Entry Parameters_
 |       B: 0x54
 |       C: Audio Device Unit ID
-|       D: Channel
+|       E: Channel
 
-This function applies the previously specified volume and pitch by
+|      _Returned Values_
+|           A: Status (0=OK, else error)
+
+This function applies the previously specified volume and period by
 programming the sound chip with the appropriate values.  The values
 are applied to the specified channel of the chip.
 
@@ -1373,6 +1427,81 @@ HBIOS B=51 C=00 L=80      ; Set volume to half level
 HBIOS B=53 C=00 L=69      ; Select Middle C (C4) assuming SN76489
 HBIOS B=54 C=00 D=01      ; Play note on Channel 1
 ```
+
+### Function 0x55 -- Sound Query (SNDQUERY)
+
+| _Entry Parameters_
+|       B: 0x54
+|       C: Audio Device Unit ID
+|       E: Subfunction
+
+|      _Returned Values_
+|           A: Status (0=OK, else error)
+
+This function will return the status of the current pending command or
+key aspects of the specific Audio Device.
+
+#### SNDQUERY Subfunction 0x01 -- Get count of audio channels supported (SNDQ_CHCNT)
+
+|      _Entry Parameters_
+|           B: 0x54
+|           E: 0x01
+
+|      _Returned Values_
+|           A: Status (0=OK, else error)
+|           B: Count of standard tone channels
+|           C: Count of noise tone channels
+
+#### SNDQUERY Subfunction 0x01 -- Get current volume setting (SNDQ_VOL)
+
+|      _Entry Parameters_
+|           B: 0x54
+|           E: 0x02
+
+|      _Returned Values_
+|           A: Status (0=OK, else error)
+|           H: 0
+|           L: Current volume setting
+
+#### SNDQUERY Subfunction 0x03 -- Get current period setting (SNDQ_PERIOD)
+
+|      _Entry Parameters_
+|           B: 0x54
+|           E: 0x03
+
+|      _Returned Values_
+|           A: Status (0=OK, else error)
+|           HL: Current period setting
+
+#### SNDQUERY Subfunction 0x04 -- Get device details (SNDQ_DEV)
+
+|      _Entry Parameters_
+|           B: 0x54
+|           E: 0x04
+
+|      _Returned Values_
+|           A: Status (0=OK, else error)
+|           B: Driver identity
+|           HL: Driver specific port settings
+|           DE: Driver specific port settings
+
+Reports information about the audio device unit specified.
+
+At this stage, only one driver type is supported (SN76489), but is
+envisaged that more will be added in the future.
+
+Register B reports the audio device type (see below).
+
+Registers HL and DE contain relevant port addresses for the hardware
+specific to each device type.
+
+The currently defined audio device types are:
+
+AUDIO ID       | Value | Device     | Returned registers
+-------------- | ----- | ---------- | --------------------------------------------
+SND_SN76489    | 0x01  | SN76489    | E: Left channel port, L: Right channel port
+SND_SNAY38910  | 0x02  | AY-3-8910  | D: Address port, E: Data port
+
 
 `\clearpage`{=latex}
 
@@ -1554,6 +1683,15 @@ available along with the registers/information returned.
 |      _Returned Values_
 |           A: Status (0=OK, else error)
 |           E: Count of Disk Device Units
+
+#### SYSGET Subfunction 0x20 -- Get Disk Device Unit Count (RTCCNT)
+
+|      _Entry Parameters_
+|           BC: 0xF820
+
+|      _Returned Values_
+|           A: Status (0=OK, else error)
+|           E: Count of RTC Device Units
 
 #### SYSGET Subfunction 0x40 -- Get Video Device Unit Count (VDACNT)
 

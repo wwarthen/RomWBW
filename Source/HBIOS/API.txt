@@ -49,6 +49,10 @@ GET ($F8):
       BC=Function/Subfunction                   A=Result
                                                 E=Disk Unit Count
 
+    RTCCNT ($20):
+      BC=Function/Subfunction                   A=Result
+                                                E=RTC Unit Count
+
     VDACNT ($40):
       BC=Function/Subfunction                   A=Result
                                                 E=Video Unit Count

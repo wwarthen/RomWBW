@@ -717,7 +717,9 @@ CurPos	.DB 0 ;for visualization only (i.e. no need for playing)
 
 ;Identifier
 	.IF Id
-	.DB "=Uni PT2 and PT3 Player r.",Release,"="
+	.DB "=Uni PT2 and PT3 Player r."
+	.DB Release
+	.DB "="
 	.ENDIF
 
 	.IF LoopChecker
@@ -1998,11 +2000,11 @@ PLAYVIAHBIOS:
 	LD	L, A
 	RST	08
 
-	LD	B, BF_SNDPIT
+	LD	B, BF_SNDPRD
 	LD	C, 0
 	LD	HL, (AYREGS+TonA)
 	ld	a, h
-	AND	$3F
+	AND	$0F
 	LD	H, A
 	RST	08
 
@@ -2023,11 +2025,11 @@ PLAYVIAHBIOS:
 	LD	L, A
 	RST	08
 
-	LD	B, BF_SNDPIT
+	LD	B, BF_SNDPRD
 	LD	C, 0
 	LD	HL, (AYREGS+TonB)
 	ld	a, h
-	AND	$3F
+	AND	$0F
 	LD	H, A
 	RST	08
 
@@ -2048,11 +2050,11 @@ PLAYVIAHBIOS:
 	LD	L, A
 	RST	08
 
-	LD	B, BF_SNDPIT
+	LD	B, BF_SNDPRD
 	LD	C, 0
 	LD	HL, (AYREGS+TonC)
 	ld	a, h
-	AND	$3F
+	AND	$0F
 	LD	H, A
 	RST	08
 

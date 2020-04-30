@@ -159,6 +159,10 @@ BQRTC_DISPATCH:
 	JP	Z, BQRTC_GETALM			; Get Alarm
 	DEC	A
 	JP	Z, BQRTC_SETALM			; Set Alarm
+	DEC	A
+	JP	Z, BQRTC_DEVICE			; Report RTC device info
+	CALL	PANIC
+	
 ;
 ; NVRAM FUNCTIONS ARE NOT AVAILABLE
 ;
@@ -328,6 +332,14 @@ BQRTC_SETALM:
 	; clean up and return
 	XOR	A				; Signal success
 	RET					; And return
+;
+; REPORT RTC DEVICE INFO
+;
+BQRTC_DEVICE:
+	LD	D,RTCDEV_BQ		; D := DEVICE TYPE
+	LD	E,0			; E := PHYSICAL DEVICE NUMBER
+	XOR	A			; SIGNAL SUCCESS
+	RET
 
 BQRTC_SUSPEND:
 	IN0	A, (BQRTC_CONTROL)		; Suspend Clock
