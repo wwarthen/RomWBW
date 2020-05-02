@@ -1404,7 +1404,7 @@ The value corresponds to standard musical notes.  The value allows
 for selection of a quarter of a semitone by giving a value between 0
 and up to the drivers maximum supported value. The lowest note is (0).
 
-For the SN76490 chip, 0 corresponds to note A1# and the value 249 is
+For the SN76489 chip, 0 corresponds to note A1# and the value 249 is
 the maximum supported value, and it corresponds to note C7.
 
 ### Function 0x54 -- Sound Play (SNDPLAY)
