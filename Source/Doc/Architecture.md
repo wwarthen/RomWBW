@@ -1502,7 +1502,7 @@ The currently defined audio device types are:
 AUDIO ID       | Value | Device     | Returned registers
 -------------- | ----- | ---------- | --------------------------------------------
 SND_SN76489    | 0x01  | SN76489    | E: Left channel port, L: Right channel port
-SND_SNAY38910  | 0x02  | AY-3-8910  | D: Address port, E: Data port
+SND_AY38910    | 0x02  | AY-3-8910  | D: Address port, E: Data port
 
 
 `\clearpage`{=latex}
