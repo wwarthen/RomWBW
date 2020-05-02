@@ -164,20 +164,19 @@ start1:
 	call	pstr			; do it
 	call	clrbuf			; zero fill the cmd buffer
 ;
+
+#ifdef BOOT_DEFAULT_FORCE
+	or	$FF			; auto cmd active value
+	ld	(acmd_act),a		; set flag
+	jp	autocmd
+#else
 #if (BOOT_TIMEOUT > 0)
 	; Initialize auto command timeout downcounter
 	or	$FF			; auto cmd active value
 	ld	(acmd_act),a		; set flag
 	ld	bc,BOOT_TIMEOUT * 100	; hundredths of seconds
 	ld	(acmd_to),bc		; save auto cmd timeout
-	;ld	a,b			; check for
-	;or	c			; ... zero
-	;jr	nz,prompt		; not zero, prompt w/ timeout
-	;call	nl2			; formatting
-	;ld	hl,str_boot		; command string prefix
-	;call	pstr			; show it
-	;call	autocmd			; else, handle w/o prompt
-	;jr	reprompt		; restart w/ autocmd disable
+#endif
 #endif
 ;
 prompt:
@@ -253,8 +252,10 @@ concmd:
 ;
 autocmd:
 	; Copy autocmd string to buffer and process it
+#ifndef BOOT_DEFAULT_FORCE
 	ld	hl,acmd			; auto cmd string
 	call	pstr			; display it
+#endif
 	ld	hl,acmd			; auto cmd string
 	ld	de,cmdbuf		; cmd buffer adr
 	ld	bc,acmd_len		; auto cmd length
