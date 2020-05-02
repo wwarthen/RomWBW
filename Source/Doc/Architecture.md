@@ -1374,7 +1374,7 @@ chip provides.
 | _Entry Parameters_
 |       B: 0x52
 |       C: Audio Device Unit ID
-|       HL: Period (0000=lowest note, FFFF=highest note)
+|       HL: Period
 
 |      _Returned Values_
 |           A: Status (0=OK, else error)
@@ -1383,7 +1383,9 @@ This function sets the sound chip period parameter.  The period will
 be applied when the next SNDPLAY function is invoked.
 
 The period value is a driver specific value.  To play standardized
-notes, use the SNDNOTE function.
+notes, use the SNDNOTE function.  A higher value will generate a lower
+note.  The maximum value that can be used is driver specific. If value
+supplied is beyond driver capabilities, register A will be set to $FF.
 
 ### Function 0x53 -- Sound Note (SNDNOTE)
 
