@@ -1404,7 +1404,7 @@ The value corresponds to standard musical notes.  The value allows
 for selection of a quarter of a semitone by giving a value between 0
 and up to the drivers maximum supported value. The lowest note is (0).
 
-For the SN76490 chip, 0 corresponds to note A1# and the value 249 is
+For the SN76489 chip, 0 corresponds to note A1# and the value 249 is
 the maximum supported value, and it corresponds to note C7.
 
 ### Function 0x54 -- Sound Play (SNDPLAY)
@@ -1412,7 +1412,7 @@ the maximum supported value, and it corresponds to note C7.
 | _Entry Parameters_
 |       B: 0x54
 |       C: Audio Device Unit ID
-|       E: Channel
+|       D: Channel
 
 |      _Returned Values_
 |           A: Status (0=OK, else error)
@@ -1433,7 +1433,7 @@ HBIOS B=54 C=00 D=01      ; Play note on Channel 1
 ### Function 0x55 -- Sound Query (SNDQUERY)
 
 | _Entry Parameters_
-|       B: 0x54
+|       B: 0x55
 |       C: Audio Device Unit ID
 |       E: Subfunction
 
@@ -1446,7 +1446,7 @@ key aspects of the specific Audio Device.
 #### SNDQUERY Subfunction 0x01 -- Get count of audio channels supported (SNDQ_CHCNT)
 
 |      _Entry Parameters_
-|           B: 0x54
+|           B: 0x55
 |           E: 0x01
 
 |      _Returned Values_
@@ -1454,10 +1454,10 @@ key aspects of the specific Audio Device.
 |           B: Count of standard tone channels
 |           C: Count of noise tone channels
 
-#### SNDQUERY Subfunction 0x01 -- Get current volume setting (SNDQ_VOL)
+#### SNDQUERY Subfunction 0x02		 -- Get current volume setting (SNDQ_VOL)
 
 |      _Entry Parameters_
-|           B: 0x54
+|           B: 0x55
 |           E: 0x02
 
 |      _Returned Values_
@@ -1468,7 +1468,7 @@ key aspects of the specific Audio Device.
 #### SNDQUERY Subfunction 0x03 -- Get current period setting (SNDQ_PERIOD)
 
 |      _Entry Parameters_
-|           B: 0x54
+|           B: 0x55
 |           E: 0x03
 
 |      _Returned Values_
@@ -1478,7 +1478,7 @@ key aspects of the specific Audio Device.
 #### SNDQUERY Subfunction 0x04 -- Get device details (SNDQ_DEV)
 
 |      _Entry Parameters_
-|           B: 0x54
+|           B: 0x55
 |           E: 0x04
 
 |      _Returned Values_
@@ -1502,7 +1502,7 @@ The currently defined audio device types are:
 AUDIO ID       | Value | Device     | Returned registers
 -------------- | ----- | ---------- | --------------------------------------------
 SND_SN76489    | 0x01  | SN76489    | E: Left channel port, L: Right channel port
-SND_SNAY38910  | 0x02  | AY-3-8910  | D: Address port, E: Data port
+SND_AY38910    | 0x02  | AY-3-8910  | D: Address port, E: Data port
 
 
 `\clearpage`{=latex}
