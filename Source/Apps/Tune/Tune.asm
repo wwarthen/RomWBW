@@ -63,7 +63,7 @@ TYPMYM		.EQU	3		; FILTYP value for MYM sound file
 ;
 ; HIGH SPEED CPU CONTROL
 ;
-SBCV2004	.EQU	1		; USE SBC-V2-004 HALF CLOCK DIVIDER
+SBCV2004	.EQU	0		; USE SBC-V2-004 HALF CLOCK DIVIDER
 CPUFAMZ180	.EQU	1		; USE Z180 WAIT STATE MANAGEMENT
 ;
 ;Conditional assembly - use  -D switch on TASM or uz80as assembler to control
