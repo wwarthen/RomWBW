@@ -82,11 +82,9 @@ C7		.EQU	SN7RATIO / AY_LAST_NOTE
        .ECHO ") to C7 (period: "
        .ECHO C7
        .ECHO ")\n"
-
-AUDIOTRACE	.SET	TRUE
-
+;
 #INCLUDE "audio.inc"
-
+;
 ;======================================================================
 ;
 ;	DRIVER INITIALIZATION (THERE IS NO PRE-INITIALIZATION)
