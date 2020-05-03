@@ -15,6 +15,9 @@ Version 3.1
 - DEN: Updated TMS to optionally trigger SYSTIMER interrupt (TMSTIMENABLE)
 - J?M: Updated KERMIT applications with VT100 terminal support
 - A?C: Added support for EPFDC
+- PMS: Added AY driver with new sound API support
+- DEN: Allow immediate autoboot startup
+- DEN: Support for floppy device count parameter
 
 Version 3.0.1
 -------------

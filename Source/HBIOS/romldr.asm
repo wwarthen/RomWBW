@@ -164,20 +164,22 @@ start1:
 	call	pstr			; do it
 	call	clrbuf			; zero fill the cmd buffer
 ;
-#if (BOOT_TIMEOUT > 0)
+#if (BOOT_TIMEOUT != -1)
 	; Initialize auto command timeout downcounter
 	or	$FF			; auto cmd active value
 	ld	(acmd_act),a		; set flag
 	ld	bc,BOOT_TIMEOUT * 100	; hundredths of seconds
 	ld	(acmd_to),bc		; save auto cmd timeout
-	;ld	a,b			; check for
-	;or	c			; ... zero
-	;jr	nz,prompt		; not zero, prompt w/ timeout
-	;call	nl2			; formatting
-	;ld	hl,str_boot		; command string prefix
-	;call	pstr			; show it
-	;call	autocmd			; else, handle w/o prompt
-	;jr	reprompt		; restart w/ autocmd disable
+;
+	; If timeout is zero, boot auto command immediately
+	ld	a,b			; check for
+	or	c			; ... zero
+	jr	nz,prompt		; not zero, prompt w/ timeout
+	call	nl2			; formatting
+	ld	hl,str_autoboot		; auto command prefix
+	call	pstr			; show it
+	call	autocmd			; handle w/o prompt
+	jr	reprompt		; restart w/ autocmd disable
 #endif
 ;
 prompt:
@@ -205,7 +207,7 @@ wtkey:
 	jp	nz,dskycmd		; if pending, do DSKY command
 #endif
 ;
-#if (BOOT_TIMEOUT > 0)
+#if (BOOT_TIMEOUT != -1)
 	; check for timeout and handle auto boot here
 	ld	a,(acmd_act)		; get auto cmd active flag
 	or	a			; set flags
@@ -1472,6 +1474,7 @@ acmd_to		.dw	BOOT_TIMEOUT	; auto cmd timeout
 ;=======================================================================
 ;
 str_banner	.db	PLATFORM_NAME," Boot Loader",0
+str_autoboot	.db	"AutoBoot: ",0
 str_prompt	.db	"Boot [H=Help]: ",0
 str_bs		.db	bs,' ',bs,0
 str_reboot	.db	"\r\n\r\nRestarting System...",0
