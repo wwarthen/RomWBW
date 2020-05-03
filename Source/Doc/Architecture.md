@@ -952,7 +952,7 @@ etc.) which is identified by a device type id from the table below.
 
 **Type ID** | **Disk Device Type**
 ----------- | --------------------
-0x00        | DS1322
+0x00        | DS1302
 0x10        | BQ4845P
 0x20        | SIMH
 0x30        | System Periodic Timer
