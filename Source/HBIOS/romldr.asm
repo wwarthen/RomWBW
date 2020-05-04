@@ -219,7 +219,7 @@ wtkey:
 	dec	bc			; decrement
 	ld	(acmd_to),bc		; resave it
 	ld	de,625			; 16us * 625 = 10ms
-	call	VDELAY			; 10ms delay
+	call	vdelay			; 10ms delay
 #endif
 ;
 	jr	wtkey			; loop

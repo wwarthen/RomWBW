@@ -747,6 +747,9 @@ err_api:
 	ld	hl,str_err_api
 	jr	err
 err:
+	ld	a,(@ermde)		; get error mode
+	cp	0FFh			; FFh means suppress
+	jr	z,err_ret		; if so, go to err return
 	push	hl
 	call	?pderr
 	pop	hl
@@ -755,9 +758,12 @@ err:
 	call	?pmsg
 	call	cin$echo
 	cp	'Y'
-	ret	nz
-	ld	hl,(retry$adr)
-	jp	(hl)
+	jr	nz,err_ret		; return error to caller
+	ld	hl,(retry$adr)		; get retry address
+	jp	(hl)			; and go there
+err_ret:
+	ld	a,1			; signal I/O error
+	ret				; and done
 
 str_err_retry	db	", Retry (Y/N) ? ",0
 str_err_nodisk	db	", No disk",0
