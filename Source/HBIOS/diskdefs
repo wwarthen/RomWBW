@@ -297,77 +297,6 @@ diskdef wbw_rom1024
   os 2.2
 end
 
-# UNA 512KB ROM (128KB reserved, 384KB ROM Disk)
-
-diskdef una_rom512
-  seclen 512
-  tracks 12
-  sectrk 64
-  blocksize 2048
-  maxdir 256
-  skew 0
-  boottrk 0
-  os 2.2
-end
-
-# UNA 512KB ROM (128KB reserved, 896KB ROM Disk)
-
-diskdef una_rom1024
-  seclen 512
-  tracks 28
-  sectrk 64
-  blocksize 2048
-  maxdir 256
-  skew 0
-  boottrk 0
-  os 2.2
-end
-
-# RomWBW 8MB Hard Disk, LU 0-3
-diskdef wbw_hd0
-  seclen 512
-  tracks 65
-  sectrk 256
-  blocksize 4096
-  maxdir 512
-  skew 0
-  boottrk 1
-  os 2.2
-end
-
-diskdef wbw_hd1
-  seclen 512
-  tracks 130
-  sectrk 256
-  blocksize 4096
-  maxdir 512
-  skew 0
-  boottrk 66
-  os 2.2
-end
-
-diskdef wbw_hd2
-  seclen 512
-  tracks 195
-  sectrk 256
-  blocksize 4096
-  maxdir 512
-  skew 0
-  boottrk 131
-  os 2.2
-end
-
-diskdef wbw_hd3
-  seclen 512
-  tracks 260
-  sectrk 256
-  blocksize 4096
-  maxdir 512
-  skew 0
-  boottrk 196
-  os 2.2
-end
-
 # RomWBW 720K floppy media
 diskdef wbw_fd720
   seclen 512
@@ -413,5 +342,113 @@ diskdef wbw_fd120
   maxdir 256
   skew 0
   boottrk 2
+  os 2.2
+end
+
+# RomWBW 8MB Hard Disk, first 4 slices
+# Legacy format, 512 dir entries, 8,320 sectors / slice
+diskdef wbw_hd0
+  seclen 512
+  tracks 1040
+  sectrk 16
+  blocksize 4096
+  maxdir 512
+  skew 0
+  boottrk 16
+  os 2.2
+end
+
+diskdef wbw_hd1
+  seclen 512
+  tracks 2080
+  sectrk 16
+  blocksize 4096
+  maxdir 512
+  skew 0
+  boottrk 1056
+  os 2.2
+end
+
+diskdef wbw_hd2
+  seclen 512
+  tracks 3120
+  sectrk 16
+  blocksize 4096
+  maxdir 512
+  skew 0
+  boottrk 2096
+  os 2.2
+end
+
+diskdef wbw_hd3
+  seclen 512
+  tracks 4160
+  sectrk 16
+  blocksize 4096
+  maxdir 512
+  skew 0
+  boottrk 3136
+  os 2.2
+end
+
+
+# RomWBW 8MB Hard Disk
+# New format, 1024 dir entries, 8,192 sectors / slice
+# Pure filesystem image, no prefix
+diskdef wbw_hd_new
+  seclen 512
+  tracks 1024
+  sectrk 16
+  blocksize 4096
+  maxdir 1024
+  skew 0
+  boottrk 2
+  os 2.2
+end
+
+# RomWBW 8MB Hard Disk, first 4 slices
+# New format, 1024 dir entries, 8,192 sectors / slice
+# Assumes 256 sector (16 track) hard disk prefix
+diskdef wbw_hd0_new
+  seclen 512
+  tracks 1040
+  sectrk 16
+  blocksize 4096
+  maxdir 1024
+  skew 0
+  boottrk 18
+  os 2.2
+end
+
+diskdef wbw_hd1_new
+  seclen 512
+  tracks 2064
+  sectrk 16
+  blocksize 4096
+  maxdir 1024
+  skew 0
+  boottrk 1042
+  os 2.2
+end
+
+diskdef wbw_hd2_new
+  seclen 512
+  tracks 3112
+  sectrk 16
+  blocksize 4096
+  maxdir 1024
+  skew 0
+  boottrk 2066
+  os 2.2
+end
+
+diskdef wbw_hd3_new
+  seclen 512
+  tracks 4136
+  sectrk 16
+  blocksize 4096
+  maxdir 1024
+  skew 0
+  boottrk 3114
   os 2.2
 end

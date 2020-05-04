@@ -106,7 +106,7 @@ bid_cur	.equ	-1	; used below to indicate current bank
 ;
 start:
 	ld	sp,bl_stack		; setup private stack
-	call	DELAY_INIT		; init delay functions
+	call	delay_init		; init delay functions
 ;
 ; Disable interrupts if IM1 is active because we are switching to page
 ; zero in user bank and it has not been prepared with IM1 vector yet.
@@ -456,7 +456,7 @@ setcon:
 	ld	hl,str_newcon		; new console msg
 	call	pstr			; print string on cur console
 	pop	af			; restore new console unit
-	call	PRTDECB			; print unit num
+	call	prtdecb			; print unit num
 ;
 	; Set console unit
 	ld	b,BF_SYSPOKE		; HBIOS func: POKE
@@ -479,7 +479,7 @@ setcon:
 reboot:
 	ld	hl,str_reboot		; point to message
 	call	pstr			; print it
-	call	LDELAY			; wait for message to display
+	call	ldelay			; wait for message to display
 ;
 #if (BIOS == BIOS_WBW)
 ;
@@ -618,11 +618,11 @@ diskboot:
 	ld	hl,str_boot1
 	call	pstr
 	ld	a,(bootunit)
-	call	PRTDECB
+	call	prtdecb
 	ld	hl,str_boot2
 	call	pstr
 	ld	a,(bootslice)
-	call	PRTDECB
+	call	prtdecb
 ;
 #if (DSKYENABLE)
 	ld	hl,msg_load		; point to load message
@@ -632,13 +632,21 @@ diskboot:
 #if (BIOS == BIOS_WBW)
 ;
 	; Check that drive actually exists
-	ld	c,a			; put in C for func call
+	;ld	c,a			; put in C for func call
 	ld	b,BF_SYSGET		; HBIOS func: sys get
 	ld	c,BF_SYSGET_DIOCNT	; HBIOS sub-func: disk count
 	rst	08			; do it, E=disk count
 	ld	a,(bootunit)		; get boot disk unit
 	cp	e			; compare to count
 	jp	nc,err_nodisk		; handle no disk err
+;
+	; Sense media
+	ld	a,(bootunit)		; get boot disk unit
+	ld	c,a			; put in C for func call
+	ld	b,BF_DIOMEDIA		; HBIOS func: media
+	ld	e,1			; enable media check/discovery
+	rst	08			; do it
+	jp	nz,err_diskio		; handle error
 ;
 	; If non-zero slice requested, confirm device can handle it
 	ld	a,(bootslice)		; get slice
@@ -651,40 +659,6 @@ diskboot:
 	ld	a,d			; device type to A
 	cp	DIODEV_IDE		; IDE is max slice device type
 	jp	c,err_noslice		; no such slice, handle err
-;
-diskboot1:
-	; Sense media
-	ld	a,(bootunit)		; get boot disk unit
-	ld	c,a			; put in C for func call
-	ld	b,BF_DIOMEDIA		; HBIOS func: media
-	ld	e,1			; enable media check/discovery
-	rst	08			; do it
-	jp	nz,err_diskio		; handle error
-	call	pdot			; show progress
-;
-	; Seek to boot info sector, third sector
-	ld	a,(bootslice)		; get boot slice
-	ld	e,a			; move to E for mult
-	ld	h,65			; 65 tracks per slice
-	call	MULT8			; hl := h * e
-	ld	de,$0002		; head 0, sector 2
-	ld	b,BF_DIOSEEK		; HBIOS func: seek
-	ld	a,(bootunit)		; get boot disk unit
-	ld	c,a			; put in C
-	rst	08			; do it
-	jp	nz,err_diskio		; handle error
-	call	pdot			; show progress
-;
-	; Read sector into local buffer
-	ld	b,BF_DIOREAD		; HBIOS func: disk read
-	ld	a,(bootunit)		; get boot disk unit
-	ld	c,a			; put in C for func call
-	ld	hl,bl_infosec		; read into info sec buffer
-	ld	d,BID_USR		; user bank
-	ld	e,1			; transfer one sector
-	rst	08			; do it
-	jp	nz,err_diskio		; handle error
-	call	pdot			; show progress
 ;
 #endif
 ;
@@ -712,12 +686,67 @@ diskboot1:
 	jr	z,diskboot1		; if so, OK
 	jp	err_noslice		; no such slice, handle err
 ;
+#endif
+;
 diskboot1:
+	; Initialize working LBA value
+	ld	hl,0			; zero HL
+	ld	(lba),hl		; init
+	ld	(lba+2),hl		; ... LBA
+;
+	; Set legacy sectors per slice
+	ld	hl,16640		; legacy sectors per slice
+	ld	(sps),hl		; save it
+;
+	; Attempt to read MBR
+	ld	de,0			; MBR is at
+	ld	hl,0			; ... first sector
+	ld	bc,bl_mbrsec		; read into MBR buffer
+	ld	(dma),bc		; save
+	ld	b,1			; one sector
+	ld	a,(bootunit)		; get bootunit
+	ld	c,a			; put in C
+	call	diskread		; do it
+	ret	nz			; abort on error
+;
+	; Check signature
+	ld	hl,(bl_mbrsec+$1FE)	; get signature
+	ld	a,l			; first byte
+	cp	$55			; should be $55
+	jr	nz,diskboot1c		; if not, no part table
+	ld	a,h			; second byte
+	cp	$AA			; should be $AA
+	jr	nz,diskboot1c		; if not, no part table
+;
+	; Try to find our entry in part table and capture lba offset
+	ld	b,4			; four entries in part table
+	ld	hl,bl_mbrsec+$1BE+4	; offset of first entry part type
+diskboot1a:
+	ld	a,(hl)			; get part type
+	cp	$52			; cp/m partition?
+	jr	z,diskboot1b		; cool, grab the lba offset
+	ld	de,16			; part table entry size
+	add	hl,de			; bump to next entry part type
+	djnz	diskboot1a		; loop thru table
+	jr	diskboot1c		; too bad, no cp/m partition
+;
+diskboot1b:
+	; Capture the starting LBA of the CP/M partition we found
+	ld	de,4			; LBA is 4 bytes after part type
+	add	hl,de			; point to it
+	ld	de,lba			; loc to store lba offset
+	ld	bc,4			; 4 bytes (32 bits)
+	ldir				; copy it
+	; If boot from partition, use new sectors per slice value
+	ld	hl,16384		; new sectors per slice
+	ld	(sps),hl		; save it
+;
+diskboot1c:
 	; Add slice offset
 	ld	a,(bootslice)		; get boot slice, A is loop cnt
-	ld	hl,0			; DE:HL is LBA
-	ld	de,0			; ... initialize to zero
-	ld	bc,16640		; sectors per slice
+	ld	hl,(lba)		; set DE:HL
+	ld	de,(lba+2)		; ... to starting LBA
+	ld	bc,(sps)		; sectors per slice
 diskboot2:
 	or	a			; set flags to check loop ctr
 	jr	z,diskboot4		; done if counter exhausted
@@ -729,30 +758,30 @@ diskboot3:
 	jr	diskboot2		; and loop
 ;
 diskboot4:
-	ld	(loadlba),hl		; save lba, low word
-	ld	(loadlba+2),de		; save lba, high word
+	ld	(lba),hl		; update lba, low word
+	ld	(lba+2),de		; update lba, high word
 ;
-	; Seek to boot info sector, third sector
+	push	hl			; save HL
+	ld	hl,str_ldsec		; display prefix
+	call	pstr			; do it
+	pop	hl			; restore HL
+	call	prthex32		; display starting sector
+	call	pdot			; show progress
+;
+	; Read boot info sector, third sector
 	ld	bc,2			; sector offset
 	add	hl,bc			; add to LBA value low word
 	jr	nc,diskboot5		; check for carry
 	inc	de			; if so, bump high word
 diskboot5:
-	ld	a,(bootunit)		; get disk unit to boot
-	ld	b,a			; put in B for func call
-	ld	c,$41			; UNA func: set lba
-	rst	08			; set lba
-	jp	nz,err_api		; handle error
+	ld	bc,bl_infosec		; read buffer
+	ld	(dma),bc		; save
+	ld	a,(bootunit)		; disk unit to read
+	ld	c,a			; put in C
+	ld	b,1			; one sector
+	call	diskread		; do it
+	ret	nz			; abort on error
 	call	pdot			; show progress
-;
-	; Read sector into local buffer
-	ld	c,$42			; UNA func: read sectors
-	ld	de,bl_infosec		; dest of cpm image
-	ld	l,1			; sectors to read
-	rst	08			; do read
-	jp	nz,err_diskio		; handle error
-;
-#endif
 ;
 	; Check signature
 	ld	de,(bb_sig)		; get signature read
@@ -762,6 +791,7 @@ diskboot5:
 	ld	a,$5A			; expected value of second byte
 	cp	e			; compare
 	jp	nz,err_sig		; handle error
+	call	pdot			; show progress
 ;
 	; Print disk boot info
 	; Volume "xxxxxxx" (0xXXXX-0xXXXX, entry @ 0xXXXX)
@@ -774,17 +804,17 @@ diskboot5:
 	call	pstr			; print
 	push	hl			; save string ptr
 	ld	bc,(bb_cpmloc)		; get load loc
-	call	PRTHEXWORD		; print it
+	call	prthexword		; print it
 	pop	hl			; restore string ptr
 	call	pstr			; print
 	push	hl			; save string ptr
 	ld	bc,(bb_cpmend)		; get load end
-	call	PRTHEXWORD		; print it
+	call	prthexword		; print it
 	pop	hl			; restore string ptr
 	call	pstr			; print
 	push	hl			; save string ptr
 	ld	bc,(bb_cpment)		; get load end
-	call	PRTHEXWORD		; print it
+	call	prthexword		; print it
 	pop	hl			; restore string ptr
 	call	pstr			; print
 ;
@@ -798,19 +828,25 @@ diskboot5:
 	ld	(loadcnt),a		; ... and save it
 	call	pdot			; show progress
 ;
-#if (BIOS == BIOS_WBW)
-;
-	; Load image into memory
-	ld	b,BF_DIOREAD		; HBIOS func: read sectors
+	; Start OS load at sector 3
+	ld	hl,(lba)		; low word of saved LBA
+	ld	de,(lba+2)		; high word of saved LBA
+	ld	bc,3			; offset for sector 3
+	add	hl,bc			; apply it
+	jr	nc,diskboot6		; check for carry
+	inc	de			; bump high word if so
+diskboot6:
+	ld	bc,(bb_cpmloc)		; load address
+	ld	(dma),bc		; and save it
+	ld	a,(loadcnt)		; get sectors to read
+	ld	b,a			; put in B
 	ld	a,(bootunit)		; get boot disk unit
 	ld	c,a			; put in C
-	ld	hl,(bb_cpmloc)		; load address
-	ld	d,BID_USR		; user bank
-	ld	a,(loadcnt)		; get sectors to read
-	ld	e,a			; number of sectors to load
-	rst	08			; do it
-	jp	nz,err_diskio		; handle errors
+	call	diskread		; read image
+	ret	nz			; abort on error
 	call	pdot			; show progress
+;
+#if (BIOS == BIOS_WBW)
 ;
 	; Record boot unit/slice
 	ld	b,BF_SYSSET		; hb func: set hbios parameter
@@ -823,36 +859,10 @@ diskboot5:
 	ld	e,a			; save in E
 	rst	08
 	jp	nz,err_api		; handle errors
-	call	pdot			; show progress
 ;
 #endif
 ;
 #if (BIOS == BIOS_UNA)
-;
-	; Start os load at sector 3
-	ld	hl,(loadlba)		; low word of saved LBA
-	ld	de,(loadlba+2)		; high word of saved LBA
-	ld	bc,3			; offset for sector 3
-	add	hl,bc			; apply it
-	jr	nc,diskboot6		; check for carry
-	inc	de			; bump high word if so
-diskboot6:
-	ld	c,$41			; UNA func: set lba
-	ld	a,(bootunit)		; get boot disk unit
-	ld	b,a			; move to B
-	rst	08			; set lba
-	jp	nz,err_api		; handle error
-;
-	; Read OS image into memory
-	ld	c,$42			; UNA func: read sectors
-	ld	a,(bootunit)		; get boot disk unit
-	ld	b,a			; move to B
-	ld	de,(bb_cpmloc)		; dest of cpm image
-	ld	a,(loadcnt)		; get sectors to read
-	ld	l,a			; sectors to read
-	rst	08			; do read
-	jp	nz,err_diskio		; handle error
-	call	pdot			; show progress
 ;
 	; Record boot unit/slice
 	; UNA provides only a single byte to record the boot unit
@@ -877,6 +887,8 @@ diskboot6:
 ;
 #endif
 ;
+	call	pdot			; show progress
+;
 #if (DSKYENABLE)
 	ld	hl,msg_go		; point to go message
 	call	DSKY_SHOWSEG		; display message
@@ -885,6 +897,55 @@ diskboot6:
 	; Jump to entry vector
 	ld	hl,(bb_cpment)		; get entry vector
 	jp	(hl)			; and go there
+;
+; Read disk sector(s)
+; DE:HL is LBA, B is sector count, C is disk unit
+;
+diskread:
+;
+#if (BIOS == BIOS_UNA)
+;
+	; Seek to requested sector in DE:HL
+	push	bc			; save unit and count
+	ld	b,c			; unit to read in B
+	ld	c,$41			; UNA func: set lba
+	rst	08			; set lba
+	pop	bc			; recover unit and count
+	jp	nz,err_api		; handle error
+;
+	; Read sector(s) into buffer
+	ld	l,b			; sectors to read
+	ld	b,c			; unit to read in B
+	ld	c,$42			; UNA func: read sectors
+	ld	de,(dma)		; dest for read
+	rst	08			; do read
+	jp	nz,err_diskio		; handle error
+	xor	a			; signal success
+	ret				; and done
+;
+#endif
+;
+#if (BIOS == BIOS_WBW)
+;
+	; Seek to requested sector in DE:HL
+	push	bc			; save unit & count
+	set	7,d			; set LBA access flag
+	ld	b,BF_DIOSEEK		; HBIOS func: seek
+	rst	08			; do it
+	pop	bc			; recover unit & count
+	jp	nz,err_diskio		; handle error
+;
+	; Read sector(s) into buffer
+	ld	e,b			; transfer count
+	ld	b,BF_DIOREAD		; HBIOS func: disk read
+	ld	hl,(dma)		; read into info sec buffer
+	ld	d,BID_USR		; user bank
+	rst	08			; do it
+	jp	nz,err_diskio		; handle error
+	xor	a			; signal success
+	ret				; and done
+;
+#endif
 ;
 ;=======================================================================
 ; Utility functions
@@ -1079,6 +1140,269 @@ isnum1:
 	or	$FF		; set NZ
 	ret			; and done
 ;
+; Delay 16us (cpu speed compensated) incuding call/ret invocation
+; Register A and flags destroyed
+; No compensation for z180 memory wait states
+; There is an overhead of 3ts per invocation
+;   Impact of overhead diminishes as cpu speed increases
+;
+; cpu scaler (cpuscl) = (cpuhmz - 2) for 16us + 3ts delay
+;   note: cpuscl must be >= 1!
+;
+; example: 8mhz cpu (delay goal is 16us)
+;   loop = ((6 * 16) - 5) = 91ts
+;   total cost = (91 + 40) = 131ts
+;   actual delay = (131 / 8) = 16.375us
+;
+	; --- total cost = (loop cost + 40) ts -----------------+
+delay:				; 17ts (from invoking call)	|
+	ld	a,(cpuscl)	; 13ts				|
+;								|
+delay1:				;				|
+	; --- loop = ((cpuscl * 16) - 5) ts ------------+	|
+	dec	a		; 4ts			|	|
+#if (BIOS == BIOS_WBW)	;			|	|
+  #if (CPUFAM == CPU_Z180)	;			|	|
+	or	a		; +4ts for z180		|	|
+  #endif			;			|	|
+#endif			;			|	|
+	jr	nz,delay1	; 12ts (nz) / 7ts (z)	|	|
+	; ----------------------------------------------+	|
+;								|
+	ret			; 10ts (return)			|
+	;-------------------------------------------------------+
+;
+; Delay 16us * DE (cpu speed compensated)
+; Register DE, A, and flags destroyed
+; No compensation for z180 memory wait states
+; There is a 27ts overhead for call/ret per invocation
+;   Impact of overhead diminishes as DE and/or cpu speed increases
+;
+; cpu scaler (cpuscl) = (cpuhmz - 2) for 16us outer loop cost
+;   note: cpuscl must be > 0!
+;
+; Example: 8MHz cpu, DE=6250 (delay goal is .1 sec or 100,000us)
+;   inner loop = ((16 * 6) - 5) = 91ts
+;   outer loop = ((91 + 37) * 6250) = 800,000ts
+;   actual delay = ((800,000 + 27) / 8) = 100,003us
+;
+	; --- total cost = (outer loop + 27) ts ------------------------+
+vdelay:				; 17ts (from invoking call)		|
+;									|
+	; --- outer loop = ((inner loop + 37) * de) ts ---------+	|
+	ld	a,(cpuscl)	; 13ts				|	|
+;								|	|
+vdelay1:			;				|	|
+	; --- inner loop = ((cpuscl * 16) - 5) ts ------+	|	|
+#if (BIOS == BIOS_WBW)		;			|	|	|
+  #if (CPUFAM == CPU_Z180)	;			|	|	|
+	or	a		; +4ts for z180		|	|	|
+  #endif			;			|	|	|
+#endif				;			|	|	|
+	dec	a		; 4ts			|	|	|
+	jr	nz,vdelay1	; 12ts (nz) / 7ts (z)	|	|	|
+	; ----------------------------------------------+	|	|
+;								|	|
+	dec	de		; 6ts				|	|
+#if (BIOS == BIOS_WBW)		;				|	|	|
+  #if (CPUFAM == CPU_Z180)	;				|	|
+	or	a		; +4ts for z180			|	|
+  #endif			;				|	|
+#endif				;				|	|
+	ld	a,d		; 4ts				|	|
+	or	e		; 4ts				|	|
+	jp	nz,vdelay	; 10ts				|	|
+	;-------------------------------------------------------+	|
+;									|
+	ret			; 10ts (final return)			|
+	;---------------------------------------------------------------+
+;
+; Delay about 0.5 seconds
+; 500000us / 16us = 31250
+;
+ldelay:
+	push	af
+	push	de
+	ld	de,31250
+	call	vdelay
+	pop	de
+	pop	af
+	ret
+;
+; Initialize delay scaler based on operating cpu speed
+; HBIOS *must* be installed and available via rst 8!!!
+; CPU scaler := max(1, (phimhz - 2))
+;
+delay_init:
+#if (BIOS == BIOS_UNA)
+	ld	c,$F8			; UNA bios get phi function
+	rst	08			; returns speed in hz in de:hl
+	ld	b,4			; divide mhz in de:hl by 100000h
+delay_init0:
+	srl	d			; ... to get approx cpu speed in
+	rr	e			; ...mhz.  throw away hl, and
+	djnz	delay_init0		; ...right shift de by 4.
+	inc	e			; fix up for value truncation
+	ld	a,e			; put in a
+#else
+	ld	b,BF_SYSGET		; HBIOS func=get sys info
+	ld	c,BF_SYSGET_CPUINFO	; HBIOS subfunc=get cpu info
+	rst	08			; call HBIOS, rst 08 not yet installed
+	ld	a,l			; put speed in mhz in accum
+#endif
+	cp	3			; test for <= 2 (special handling)
+	jr	c,delay_init1		; if <= 2, special processing
+	sub	2			; adjust as required by delay functions
+	jr	delay_init2		; and continue
+delay_init1:
+	ld	a,1			; use the min value of 1
+delay_init2:
+	ld	(cpuscl),a		; update cpu scaler value
+	ret
+
+#if (CPUMHZ < 3)
+cpuscl	.db	1			; cpu scaler must be > 0
+#else
+cpuscl	.db	CPUMHZ - 2		; otherwise 2 less than phi mhz
+#endif
+;
+; Print value of a in decimal with leading zero suppression
+;
+prtdecb:
+	push	hl
+	push	af
+	ld	l,a
+	ld	h,0
+	call	prtdec
+	pop	af
+	pop	hl
+	ret
+;
+; Print value of HL in decimal with leading zero suppression
+;
+prtdec:
+	push	bc
+	push	de
+	push	hl
+	ld	e,'0'
+	ld	bc,-10000
+	call	prtdec1
+	ld	bc,-1000
+	call	prtdec1
+	ld	bc,-100
+	call	prtdec1
+	ld	c,-10
+	call	prtdec1
+	ld	e,0
+	ld	c,-1
+	call	prtdec1
+	pop	hl
+	pop	de
+	pop	bc
+	ret
+prtdec1:
+	ld	a,'0' - 1
+prtdec2:
+	inc	a
+	add	hl,bc
+	jr	c,prtdec2
+	sbc	hl,bc
+	cp	e
+	jr	z,prtdec3
+	ld	e,0
+	call	cout
+prtdec3:
+	ret
+;
+; Short delay functions.  No clock speed compensation, so they
+; will run longer on slower systems.  The number indicates the
+; number of call/ret invocations.  A single call/ret is
+; 27 t-states on a z80, 25 t-states on a z180.
+;
+;			; z80	z180
+;			; ----	----
+dly64:	call	dly32	; 1728	1600
+dly32:	call	dly16	; 864	800
+dly16:	call	dly8	; 432	400
+dly8:	call	dly4	; 216	200
+dly4:	call	dly2	; 108	100
+dly2:	call	dly1	; 54	50
+dly1:	ret		; 27	25
+;
+; Add hl,a
+;
+;   A register is destroyed!
+;
+addhla:
+	add	a,l
+	ld	l,a
+	ret	nc
+	inc	h
+	ret
+;
+; Print the hex byte value in A
+;
+prthexbyte:
+	push	af
+	push	de
+	call	hexascii
+	ld	a,d
+	call	cout
+	ld	a,e
+	call	cout
+	pop	de
+	pop	af
+	ret
+;
+; Print the hex word value in BC
+;
+prthexword:
+	push	af
+	ld	a,b
+	call	prthexbyte
+	ld	a,c
+	call	prthexbyte
+	pop	af
+	ret
+;
+; Print the hex dword value in DE:HL
+;
+prthex32:
+	push	bc
+	push	de
+	pop	bc
+	call	prthexword
+	push	hl
+	pop	bc
+	call	prthexword
+	pop	bc
+	ret
+;
+; Convert binary value in A to ASCII hex characters in DE
+;
+hexascii:
+	ld	d,a
+	call	hexconv
+	ld	e,a
+	ld	a,d
+	rlca
+	rlca
+	rlca
+	rlca
+	call	hexconv
+	ld	d,a
+	ret
+;
+; Convert low nibble of A to ASCII hex
+;
+hexconv:
+	and	0Fh	     ; low nibble only
+	add	a,90h
+	daa
+	adc	a,40h
+	daa
+	ret
+;
 ;=======================================================================
 ; Console character I/O helper routines (registers preserved)
 ;=======================================================================
@@ -1241,7 +1565,7 @@ prtall1:
 	ld	hl,str_disk		; prefix string
 	call	pstr			; display it
 	ld	a,c			; index
-	call	PRTDECB			; print it
+	call	prtdecb			; print it
 	ld	hl,str_on		; separator string
 	call	pstr
 	push	bc			; save loop control
@@ -1268,7 +1592,7 @@ prtdrv:
 	and	$0F			; isolate device bits
 	add	a,a			; multiple by two for word table
 	ld	hl,devtbl		; point to start of table
-	call	ADDHLA			; add A to HL for table entry
+	call	addhla			; add A to HL for table entry
 	ld	a,(hl)			; deref HL for string adr
 	inc	hl			; ...
 	ld	h,(hl)			; ...
@@ -1277,7 +1601,7 @@ prtdrv:
 	pop	hl			; recover HL
 	pop	de			; recover DE
 	ld	a,e			; device number
-	call	PRTDECB			; print it
+	call	prtdecb			; print it
 	ld	a,':'			; suffix
 	call	cout			; print it
 	ret
@@ -1340,7 +1664,7 @@ prtdrv:
 	ld	hl,str_disk		; prefix string
 	call	pstr			; display it
 	ld	a,b			; index
-	call	PRTDECB			; print it
+	call	prtdecb			; print it
 	ld	a,' '			; formatting
 	call	cout			; do it
 	ld	a,'='			; formatting
@@ -1380,7 +1704,7 @@ prtdrv2:	; print device
 	pop	bc			; recover unit
 	call	pstr			; print device name
 	ld	a,b			; unit to a
-	call	PRTDECB			; print it
+	call	prtdecb			; print it
 	ld	a,':'			; device name suffix
 	call	cout			; print it
 	ret				; done
@@ -1452,10 +1776,12 @@ str_err_api	.db	"Unexpected hardware BIOS API failure",0
 ;=======================================================================
 ;
 #define USEDELAY
-#include "util.asm"
+; #include "util.asm"
 ;
 #if (DSKYENABLE)
 #define	DSKY_KBD
+VDELAY	.equ	vdelay
+DLY2	.equ	dly2
 #include "dsky.asm"
 #endif
 ;
@@ -1492,6 +1818,7 @@ str_binfo2	.db	$22," [0x",0
 str_binfo3	.db	"-0x",0
 str_binfo4	.db	", entry @ 0x",0
 str_binfo5	.db	"]",0
+str_ldsec	.db	", Sector 0x",0
 ;
 str_help	.db	"\r\n"
 		.db	"\r\n  L         - List ROM Applications"
@@ -1651,8 +1978,11 @@ bid_ldr		.ds	1		; bank at startup
 #endif
 #if (BIOS == BIOS_UNA)
 bid_ldr		.ds	2		; bank at startup
-loadlba		.ds	4		; lba for load, dword
 #endif
+;
+lba		.ds	4		; lba for load, dword
+dma		.ds	2		; address for load
+sps		.ds	2		; sectors per slice
 ;
 ra_tbl_loc	.ds	2		; points to active ra_tbl
 bootunit	.ds	1		; boot disk unit
@@ -1685,5 +2015,11 @@ bb_biloc	.ds	2		; loc to patch boot drive info
 bb_cpmloc	.ds	2		; final ram dest for cpm/cbios
 bb_cpmend	.ds	2		; end address for load
 bb_cpment	.ds	2		; CP/M entry point (cbios boot)
+;
+;
+; Master Boot Record sector is read into area below.
+;
+bl_mbrsec	.equ	$
+		.ds	512
 ;
 	.end

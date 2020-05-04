@@ -41,8 +41,11 @@ rmn	.equ	1		; intended CBIOS version - minor
 ;
 bf_sysver	.equ	$F1	; BIOS: VER function
 bf_sysget	.equ	$F8	; HBIOS: SYSGET function
+bf_sysset	.equ	$F9	; HBIOS: SYSGET function
 bf_sysgettimer	.equ	$D0	; TIMER subfunction
+bf_syssettimer	.equ	$D0	; TIMER subfunction
 bf_sysgetsecs	.equ	$D1	; SECONDS subfunction
+bf_syssetsecs	.equ	$D1	; SECONDS subfunction
 ;
 ;===============================================================================
 ; Code Section
@@ -106,6 +109,15 @@ process00:
 	jr	process00	; continue looking for options
 ;
 process0:
+;
+	; Test of API function to set seconds value
+	;ld	b,bf_sysset	; HBIOS SYSGET function
+	;ld	c,bf_syssetsecs	; SECONDS subfunction
+	;ld	de,0		; set seconds value
+	;ld	hl,1000		; ... to 1000
+	;rst	08		; call HBIOS, DE:HL := seconds value
+;
+	; get and print seconds value
 	call	crlf2		; formatting
 ;
 process1:
