@@ -646,6 +646,8 @@ diskboot:
 	ld	e,1			; enable media check/discovery
 	rst	08			; do it
 	jp	nz,err_diskio		; handle error
+	ld	a,e			; media id to A
+	ld	(mediaid),a		; save media id
 ;
 	; If non-zero slice requested, confirm device can handle it
 	ld	a,(bootslice)		; get slice
@@ -685,6 +687,9 @@ diskboot:
 	jr	z,diskboot1		; if so, OK
 	jp	err_noslice		; no such slice, handle err
 ;
+	ld	a,4			; assume legacy hard disk
+	ld	(mediaid),a		; save media id
+;
 #endif
 ;
 diskboot1:
@@ -696,6 +701,11 @@ diskboot1:
 	; Set legacy sectors per slice
 	ld	hl,16640		; legacy sectors per slice
 	ld	(sps),hl		; save it
+;
+	; Check for hard disk
+	ld	a,(mediaid)		; load media id
+	cp	4			; legacy hard disk?
+	jr	nz,diskboot8		; if not hd, no part table
 ;
 	; Attempt to read MBR
 	ld	de,0			; MBR is at
@@ -712,24 +722,24 @@ diskboot1:
 	ld	hl,(bl_mbrsec+$1FE)	; get signature
 	ld	a,l			; first byte
 	cp	$55			; should be $55
-	jr	nz,diskboot1c		; if not, no part table
+	jr	nz,diskboot4		; if not, no part table
 	ld	a,h			; second byte
 	cp	$AA			; should be $AA
-	jr	nz,diskboot1c		; if not, no part table
+	jr	nz,diskboot4		; if not, no part table
 ;
 	; Try to find our entry in part table and capture lba offset
 	ld	b,4			; four entries in part table
 	ld	hl,bl_mbrsec+$1BE+4	; offset of first entry part type
-diskboot1a:
+diskboot2:
 	ld	a,(hl)			; get part type
 	cp	$52			; cp/m partition?
-	jr	z,diskboot1b		; cool, grab the lba offset
+	jr	z,diskboot3		; cool, grab the lba offset
 	ld	de,16			; part table entry size
 	add	hl,de			; bump to next entry part type
-	djnz	diskboot1a		; loop thru table
-	jr	diskboot1c		; too bad, no cp/m partition
+	djnz	diskboot2		; loop thru table
+	jr	diskboot4		; too bad, no cp/m partition
 ;
-diskboot1b:
+diskboot3:
 	; Capture the starting LBA of the CP/M partition we found
 	ld	de,4			; LBA is 4 bytes after part type
 	add	hl,de			; point to it
@@ -740,39 +750,41 @@ diskboot1b:
 	ld	hl,16384		; new sectors per slice
 	ld	(sps),hl		; save it
 ;
-diskboot1c:
+diskboot4:
 	; Add slice offset
 	ld	a,(bootslice)		; get boot slice, A is loop cnt
 	ld	hl,(lba)		; set DE:HL
 	ld	de,(lba+2)		; ... to starting LBA
 	ld	bc,(sps)		; sectors per slice
-diskboot2:
+diskboot5:
 	or	a			; set flags to check loop ctr
-	jr	z,diskboot4		; done if counter exhausted
+	jr	z,diskboot7		; done if counter exhausted
 	add	hl,bc			; add one slice to low word
-	jr	nc,diskboot3		; check for carry
+	jr	nc,diskboot6		; check for carry
 	inc	de			; if so, bump high word
-diskboot3:
+diskboot6:
 	dec	a			; dec loop downcounter
-	jr	diskboot2		; and loop
+	jr	diskboot5		; and loop
 ;
-diskboot4:
+diskboot7:
 	ld	(lba),hl		; update lba, low word
 	ld	(lba+2),de		; update lba, high word
 ;
-	push	hl			; save HL
+diskboot8:
+	; Note that we could be coming from diskboot1!
 	ld	hl,str_ldsec		; display prefix
 	call	pstr			; do it
-	pop	hl			; restore HL
+	ld	hl,(lba)		; recover lba loword
+	ld	de,(lba+2)		; recover lba hiword
 	call	prthex32		; display starting sector
 	call	pdot			; show progress
 ;
 	; Read boot info sector, third sector
 	ld	bc,2			; sector offset
 	add	hl,bc			; add to LBA value low word
-	jr	nc,diskboot5		; check for carry
+	jr	nc,diskboot9		; check for carry
 	inc	de			; if so, bump high word
-diskboot5:
+diskboot9:
 	ld	bc,bl_infosec		; read buffer
 	ld	(dma),bc		; save
 	ld	a,(bootunit)		; disk unit to read
@@ -832,9 +844,9 @@ diskboot5:
 	ld	de,(lba+2)		; high word of saved LBA
 	ld	bc,3			; offset for sector 3
 	add	hl,bc			; apply it
-	jr	nc,diskboot6		; check for carry
+	jr	nc,diskboot10		; check for carry
 	inc	de			; bump high word if so
-diskboot6:
+diskboot10:
 	ld	bc,(bb_cpmloc)		; load address
 	ld	(dma),bc		; and save it
 	ld	a,(loadcnt)		; get sectors to read
@@ -882,7 +894,6 @@ diskboot6:
 	ld	bc,$01FC		; UNA func: set bootstrap hist
 	rst	08			; call UNA
 	jp	nz,err_api		; handle error
-	call	pdot			; show progress
 ;
 #endif
 ;
@@ -1982,6 +1993,7 @@ bid_ldr		.ds	2		; bank at startup
 lba		.ds	4		; lba for load, dword
 dma		.ds	2		; address for load
 sps		.ds	2		; sectors per slice
+mediaid		.ds	1		; media id
 ;
 ra_tbl_loc	.ds	2		; points to active ra_tbl
 bootunit	.ds	1		; boot disk unit
