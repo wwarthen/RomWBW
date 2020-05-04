@@ -51,7 +51,7 @@ bin2bcd1:
 	pop	bc
 	ret
 
-	if 0
+	if 1
 ;
 ; Print the hex word value in HL
 ;

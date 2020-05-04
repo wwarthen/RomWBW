@@ -1,3 +1,8 @@
+Version 3.1.1
+-------------
+- WBW: Version bumped due to pervasive changes
+- WBW: Preliminary support for hard disk partition support (backward compatible)
+
 Version 3.1
 -----------
 - WBW: Refactored ROM Loader

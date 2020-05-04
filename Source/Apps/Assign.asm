@@ -22,7 +22,8 @@
 ;   2016-04-08 [WBW] Determine key memory addresses dynamically
 ;   2019-08-07 [WBW] Fixed DPB selection error
 ;   2019-11-17 [WBW] Added preliminary CP/M 3 support
-;   2019-12-24 [WBW] Fixed location of BIOS save area
+;   2019-12-24 [WBW] Fixed location of BIOS save area\
+;   2020-04-29 [WBW] Updated for larger DPH (16 -> 20 bytes)
 ;_______________________________________________________________________________
 ;
 ; ToDo:
@@ -546,7 +547,8 @@ dph_init2:
 	ld	a,(hl)		; unit to A
 	push	bc		; save loop control
 	push	hl		; save drive map pointer
-	ld	hl,16		; size of a DPH structure
+	;ld	hl,16		; size of a DPH structure
+	ld	hl,20		; size of a DPH structure
 	call	alloc		; allocate space for dph
 	jp	c,instovf	; handle overflow error
 	push	hl		; save DPH location
@@ -1866,10 +1868,10 @@ stack	.equ	$		; stack top
 ; Messages
 ;
 indent	.db	"   ",0
-msgban1	.db	"ASSIGN v1.1a for RomWBW CP/M, 24-Dec-2019",0
+msgban1	.db	"ASSIGN v1.1b for RomWBW CP/M, 29-Apr-2020",0
 msghb	.db	" (HBIOS Mode)",0
 msgub	.db	" (UBIOS Mode)",0
-msgban2	.db	"Copyright 2019, Wayne Warthen, GNU GPL v3",0
+msgban2	.db	"Copyright 2020, Wayne Warthen, GNU GPL v3",0
 msguse	.db	"Usage: ASSIGN D:[=[{D:|<device>[<unitnum>]:[<slicenum>]}]][,...]",13,10
 	.db	"  ex. ASSIGN           (display all active assignments)",13,10
 	.db	"      ASSIGN /?        (display version and usage)",13,10
