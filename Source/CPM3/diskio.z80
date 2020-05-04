@@ -499,7 +499,7 @@ media4:
 
 media5:
 	; Adjust LBA offset based on target slice
-	ld	a,(slice)		; get boot slice, A is loop cnt
+	ld	a,(slice)		; get slice, A is loop cnt
 	ld	hl,(lba)		; set DE:HL
 	ld	de,(lba+2)		; ... to starting LBA
 	ld	bc,(sps)		; sectors per slice

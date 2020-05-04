@@ -632,7 +632,6 @@ diskboot:
 #if (BIOS == BIOS_WBW)
 ;
 	; Check that drive actually exists
-	;ld	c,a			; put in C for func call
 	ld	b,BF_SYSGET		; HBIOS func: sys get
 	ld	c,BF_SYSGET_DIOCNT	; HBIOS sub-func: disk count
 	rst	08			; do it, E=disk count
