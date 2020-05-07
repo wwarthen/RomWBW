@@ -1721,6 +1721,7 @@ available along with the registers/information returned.
 |      _Returned Values_
 |           A: Status (0=OK, else error)
 |           DE:HL: Current Timer Tick Count Value
+|           C: Tick frequency (typically 50 or 60)
 
 #### SYSGET Subfunction 0xD1 -- Get Seconds Count (SECONDS)
 
