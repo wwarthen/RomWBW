@@ -1806,15 +1806,6 @@ available along with the registers/information used as input.
 |      _Returned Values_
 |           A: Status (0=OK, else error)
 
-#### SYSSET Subfunction 0xD2 -- Inc Timer (TIMER)
-
-|      _Entry Parameters_
-|           BC: 0xF9D2
-
-|      _Returned Values_
-|           A: Status (0=OK, else error)
-
-
 #### SYSSET Subfunction 0xE0 -- Set Boot Information (BOOTINFO)
 
 |      _Entry Parameters_
