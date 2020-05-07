@@ -123,7 +123,7 @@ start:
 	rst	08			; do it
 	ld	a,c			; previous bank to A
 	ld	(bid_ldr),a		; save previous bank for later
-	cp	BID_IMG0		; starting from ROM?
+	bit	7,a			; starting from ROM?
 #endif
 ;
 #if (BIOS == BIOS_UNA)
@@ -131,8 +131,7 @@ start:
 	ld	de,BID_USR		; select user bank
 	rst	08			; do it
 	ld	(bid_ldr),de		; ... for later
-	ld	a,d			; starting from ROM?
-	or	e			; ... bank == 0?
+	bit	7,d			; starting from ROM?
 #endif
 ;
 	; For app mode startup, use alternate table
@@ -675,18 +674,23 @@ diskboot:
 	; If non-zero slice requested, confirm device can handle it
 	ld	a,(bootslice)		; get slice
 	or	a			; set flags
-	jr	z,diskboot1		; slice 0, skip slice check
+	jr	z,diskboot0		; slice 0, skip slice check
 	ld	a,d			; disk type to A
 	cp	$41			; IDE?
-	jr	z,diskboot1		; if so, OK
+	jr	z,diskboot0		; if so, OK
 	cp	$42			; PPIDE?
-	jr	z,diskboot1		; if so, OK
+	jr	z,diskboot0		; if so, OK
 	cp	$43			; SD?
-	jr	z,diskboot1		; if so, OK
+	jr	z,diskboot0		; if so, OK
 	cp	$44			; DSD?
-	jr	z,diskboot1		; if so, OK
+	jr	z,diskboot0		; if so, OK
 	jp	err_noslice		; no such slice, handle err
 ;
+diskboot0:
+	; Below is wrong.  It assumes we are booting from a hard
+	; disk, but it could also be a RAM/ROM disk.  However, it is
+	; not actually possible to boot from those, so not gonna
+	; worry about this.
 	ld	a,4			; assume legacy hard disk
 	ld	(mediaid),a		; save media id
 ;
@@ -732,7 +736,7 @@ diskboot1:
 	ld	hl,bl_mbrsec+$1BE+4	; offset of first entry part type
 diskboot2:
 	ld	a,(hl)			; get part type
-	cp	$52			; cp/m partition?
+	cp	$2E			; cp/m partition?
 	jr	z,diskboot3		; cool, grab the lba offset
 	ld	de,16			; part table entry size
 	add	hl,de			; bump to next entry part type

@@ -182,12 +182,12 @@ boot2:
 	cp	0AAh			; should be $AA
 	jr	nz,boot5		; if not, no part table
 
-	; Search part table for CP/M entry (type 0x52)
+	; Search part table for CP/M entry (type 0x2E)
 	ld	b,4			; four entries in part table
 	ld	hl,mbrsec+1BEh+4	; offset of first part type
 boot3:
 	ld	a,(hl)			; get part type
-	cp	52h			; CP/M partition?
+	cp	2Eh			; CP/M partition?
 	jr	z,boot4			; cool, grab the LBA offset
 	ld	de,16			; part table entry size
 	add	hl,de			; bump to next part type
