@@ -2006,84 +2006,69 @@ PLAYVIAHBIOS:
 ;
 ;	CHANNEL 0 (LEFT)
 ;
-	LD	B, BF_SNDVOL		; SET VOLUME
-	LD	C, 0			; DEVICE 0
-;	LD	H, 0
-	LD	A, (AYREGS + AmplA)	; GET 4-BIT 
-	AND	$0F			; VOLUME 0-15	
-	RLCA				; AND CONVERT
-	RLCA				; TO HBIOS	
-	RLCA				; RANGE 0-255
-	RLCA
-	LD	L, A
+	LD	BC, (BF_SNDVOL*256)+0	; SET VOLUME
+	LD	A, (AYREGS + AmplA)	; DEVICE 0
+	ADD	A,A			; GET 4-BIT 	
+	ADD	A,A			; VOLUME 0-15
+	ADD	A,A			; AND CONVERT
+	ADD	A,A			; TO HBIOS	
+	LD	L, A                    ; RANGE 0-255
 	RST	08
 ;
-	LD	B, BF_SNDPRD		; SET PERIOD
-	LD	C, 0			; DEVICE 0
-	LD	HL, (AYREGS+TonA)	; GET 12-BIT TONE PERIOD
-	ld	A, H			; MASK OFF HIGH
-	AND	$0F			; NIBBLE 
-	LD	H, A
+	LD	BC, (BF_SNDPRD*256)+0	; SET PERIOD
+	LD	HL, (AYREGS+TonA)	; DEVICE 0
+	ld	A, H       		; GET 12-BIT ONE PERIOD
+	AND	$0F			; MASK OFF HIGH
+	LD	H, A                    ; NIBBLE 
 	RST	08
 ;
-	LD	B, BF_SNDPLAY		; PLAY
-	LD	C, 0			; DEVICE 0
-	LD	D, 0			; CHANNEL 0
-	RST	08
+	LD	BC, (BF_SNDPLAY*256)+0	; PLAY
+	LD	D, 0			; DEVICE 0
+	RST	08			; CHANNEL 0
 ;
 ;	CHANNEL 1 (MIDDLE)
 ;
-	LD	B, BF_SNDVOL		; SET VOLUME
-	LD	C, 0			; DEVICE 0
-;	LD	H, 0
-	LD	A, (AYREGS + AmplB)	; GET 4-BIT 
-	AND	$0F                	; VOLUME 0-15	
-	RLCA                       	; AND CONVERT
-	RLCA                       	; TO HBIOS	
-	RLCA                       	; RANGE 0-255
-	RLCA
-	LD	L, A
+	LD	BC, (BF_SNDVOL*256)+0	; SET VOLUME
+	LD	A, (AYREGS + AmplB)	; DEVICE 0
+	ADD	A,A			; GET 4-BIT 	
+	ADD	A,A			; VOLUME 0-15
+	ADD	A,A			; AND CONVERT
+	ADD	A,A			; TO HBIOS	
+	LD	L, A                    ; RANGE 0-255
 	RST	08
 ;
-	LD	B, BF_SNDPRD		; SET PERIOD
-	LD	C, 0			; DEVICE 0
-	LD	HL, (AYREGS+TonB)       ; GET 12-BIT ONE PERIOD
-	ld	a, h                    ; MASK OFF HIGH
-	AND	$0F                     ; NIBBLE 
-	LD	H, A
+	LD	BC, (BF_SNDPRD*256)+0	; SET PERIOD
+	LD	HL, (AYREGS+TonB)	; DEVICE 0
+	ld	A, H       		; GET 12-BIT ONE PERIOD
+	AND	$0F			; MASK OFF HIGH
+	LD	H, A                    ; NIBBLE 
 	RST	08
 ;
-	LD	B, BF_SNDPLAY		; PLAY
-	LD	C, 0         		; DEVICE 0
-	LD	D, 1         		; CHANNEL 1
-	RST	08
+	LD	BC, (BF_SNDPLAY*256)+0	; PLAY
+	LD	D, 1			; DEVICE 0
+	RST	08			; CHANNEL 0
 ;
 ;	CHANNEL 2 (RIGHT)
 ;
-	LD	B, BF_SNDVOL		; SET VOLUME
-	LD	C, 0        		; DEVICE 0
-;	LD	H, 0
-	LD	A, (AYREGS + AmplC)	; GET 4-BIT 
-	AND	$0F                	; VOLUME 0-15	
-	RLCA                       	; AND CONVERT
-	RLCA                       	; TO HBIOS	
-	RLCA                       	; RANGE 0-255
-	RLCA
-	LD	L, A
+	LD	BC, (BF_SNDVOL*256)+0	; SET VOLUME
+	LD	A, (AYREGS + AmplC)	; DEVICE 0
+	ADD	A,A			; GET 4-BIT 	
+	ADD	A,A			; VOLUME 0-15
+	ADD	A,A			; AND CONVERT
+	ADD	A,A			; TO HBIOS	
+	LD	L, A                    ; RANGE 0-255
 	RST	08
 ;
-	LD	B, BF_SNDPRD		; SET PERIOD
-	LD	C, 0        		; DEVICE 0
-	LD	HL, (AYREGS+TonC)	; GET 12-BIT ONE PERIOD
-	ld	A, H       		; MASK OFF HIGH
-	AND	$0F         		; NIBBLE 
-	LD	H, A
+	LD	BC, (BF_SNDPRD*256)+0	; SET PERIOD
+	LD	HL, (AYREGS+TonC)	; DEVICE 0
+	ld	A, H       		; GET 12-BIT ONE PERIOD
+	AND	$0F			; MASK OFF HIGH
+	LD	H, A                    ; NIBBLE 
 	RST	08
 ;
-	LD	B, BF_SNDPLAY		; PLAY
-	LD	C, 0         		; DEVICE 0
-	LD	D, 2         		; CHANNEL 2
-	RST	08           		; HBIOS CALL
+	LD	BC, (BF_SNDPLAY*256)+0	; PLAY
+	LD	D, 2			; DEVICE 0
+	RST	08			; CHANNEL 0
 	
 	RET
 #ENDIF
