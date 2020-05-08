@@ -421,7 +421,7 @@ media:
 	ld	(retry$adr),hl
 	
 	; Sense media to determine media format
-	ld	a,(unit)		; Get disk unit
+	ld	a,(unit)		; get disk unit
 	ld	c,a			; put in C
 	ld	b,18h			; HBIOS Media function
 	ld	e,1			; Enable media check/discovery
@@ -435,7 +435,22 @@ media:
 	; Initialize slice start LBA & sectors per slice
 	ld	hl,0			; assume slice starts
 	ld	(lba),hl		; ... at LBA offset
-	ld	(lba+2),hl		; ... of zero
+	set	7,h			; ... of zero
+	ld	(lba+2),hl		; ... w/ LBA access
+
+	; Check device type
+	ld	a,(unit)		; get disk unit
+	ld	c,a			; put in C
+	ld	b,17h			; HBIOS func: report device info
+	call	0FFF0h			; get unit info, device type in D
+	ld	a,d			; device type -> A
+	and	0F0h			; isolate high bits
+	cp	10h			; floppy?
+	jr	nz,media1		; if not, do LBA I/O
+	ld	hl,lba+3		; point to high order byte
+	res	7,(hl)			; switch from LBA -> CHS
+
+media1:
 	ld	hl,16640		; assume legacy value for
 	ld	(sps),hl		; ... sectors per slice
 
@@ -472,7 +487,7 @@ media:
 media3:
 	ld	a,(hl)			; get part type
 	cp	2Eh			; CP/M partition?
-	jr	z,media4			; cool, grab the LBA offset
+	jr	z,media4		; cool, grab the LBA offset
 	ld	de,16			; part table entry size
 	add	hl,de			; bump to next part type
 	djnz	media3			; loop thru table
@@ -536,9 +551,10 @@ boot7:
 	dec	a			; dec loop downcounter
 	jr	boot6			; and loop
 boot8:
+	set	7,d			; set LBA access flag
 	ld	(lba),hl		; save new lba, low word
 	ld	(lba+2),de		; save new lba, high word
-	
+
 media9:
 	; Locate DPB corresponding to media id
 	ld	hl,dpb$start - dpb$sz
@@ -599,23 +615,31 @@ dsk$rw:
 	; Common disk read/write routine
 	; Assumes func is set to HBIOS read or write
 	
+	; Set retry address
+	ld	hl,dsk$rw$retry
+	ld	(retry$adr),hl
+	
 	; Save XDPH address
 	ld	(curdph),de		; save to curdph
 
-	; Set retry address
-	ld	hl,dsk$rw
-	ld	(retry$adr),hl
-	
-	; Check device type
-	ld	a,(@rdrv)		; get unit
-	ld	c,a			; BIOS Disk Unit in C
-	ld	b,17h			; HBIOS DEVICE function
-	call	0FFF0h			; do it, D=device type
-	ld	a,d			; put in accum
-	and	0F0h			; isolate high bits
-	cp	10h			; floppy?
-	jr	nz,dsk$rw2		; if not, do LBA i/o
-	
+dsk$rw$retry:
+	; Get LBA offset from DPH to DE:HL
+	ld	hl,(curdph)		; HL := DPH adr
+	ld	de,25			; LBA value adr
+	add	hl,de			; HL := LBA offset
+	ld	e,(hl)			; lobyte of loword
+	inc	hl			; bump
+	ld	d,(hl)			; hibyte of loword
+	inc	hl			; bump
+	push	de			; save loword
+	ld	e,(hl)			; lobyte of hiword
+	inc	hl			; bump
+	ld	d,(hl)			; hibyte of hiword
+	pop	hl			; recover loword
+
+	bit	7,d			; LBA access bit set?
+	jr	nz,dsk$rw2		; if so, go to LBA I/O
+
 	; Floppy I/O
 	ld	de,(@sect)		; sector -> de, head(d) becomes zero
 	ld	hl,(@trk)		; track -> hl (low bit has head)
@@ -625,20 +649,8 @@ dsk$rw:
 	jr	dsk$rw9			; do the disk I/O
 	
 dsk$rw2:
-	; LBA IO: Get LBA offset from DPH
-	ld	hl,(curdph)		; HL := DPH adr
-	ld	de,25+3			; LBA value + 3
-	add	hl,de			; HL := LBA offset (last byte!)
-	ld	b,(hl)			; hibyte of hiword
-	dec	hl			; bump
-	ld	c,(hl)			; lobyte of hiword
-	dec	hl			; bump
-	push	bc			; save hiword
-	ld	b,(hl)			; hibyte of loword
-	dec	hl			; bump
-	ld	c,(hl)			; lobyte of loword
-	dec	hl			; bump
-	push	bc			; save loword
+	push	de			; save hiword of LBA
+	push	hl			; save loword of LBA
 	
 	; Get track and shift into correct bits
 	ld	hl,(@trk)		; get track
@@ -658,7 +670,6 @@ dsk$rw2:
 	pop	bc			; lba offset hiword
 	adc	hl,bc			; add w/ carry to cur hiword
 	ex	de,hl			; swap back
-	set	7,d			; set lba access bit
 	
 dsk$rw9:
 	; DE:HL has sector address to read (LBA or CHS)
