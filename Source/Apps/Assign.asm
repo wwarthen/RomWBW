@@ -24,6 +24,7 @@
 ;   2019-11-17 [WBW] Added preliminary CP/M 3 support
 ;   2019-12-24 [WBW] Fixed location of BIOS save area\
 ;   2020-04-29 [WBW] Updated for larger DPH (16 -> 20 bytes)
+;   2020-05-06 [WBW] Add patch level to version compare
 ;_______________________________________________________________________________
 ;
 ; ToDo:
@@ -42,8 +43,7 @@ bdos	.equ	$0005		; BDOS invocation vector
 ;
 stamp	.equ	$40		; loc of RomWBW CBIOS zero page stamp
 ;
-rmj	.equ	3		; CBIOS version - major
-rmn	.equ	1		; CBIOS version - minor
+#include "../ver.inc"
 ;
 ;===============================================================================
 ; Code Section
@@ -119,10 +119,14 @@ init:
 	jp	nz,errinv	; abort with invalid config block
 	inc	hl		; next byte (major/minor version)
 	ld	a,(hl)		; load it
-	cp	rmj << 4 | rmn	; match?
+	cp	RMJ << 4 | RMN	; match?
 	jp	nz,errver	; abort with invalid os version
-	inc	hl		; bump past
-	inc	hl		; ... version info
+	inc	hl		; next byte (update/patch)
+	ld	a,(hl)		; load it
+	and	$F0		; eliminate patch num
+	cp	RUP << 4	; match?
+	jp	nz,errver	; abort with invalid os version
+	inc	hl		; bump past version info
 ;
 	; dereference HL to point to CBIOS extension data
 	ld	a,(hl)		; dereference HL
@@ -783,7 +787,7 @@ instc3:
 	push	hl		; save drvtbl entry adr
 	push	de		; save mapwrk entry adr
 	ld	hl,(dphadr)	; get cur dph address
-	ld	de,$23		; size of xdph
+	ld	de,$27		; size of xdph
 	add	hl,de		; bump to next dph
 	ld	(dphadr),hl	; save it
 	pop	de		; recover mapwrk entry adr
@@ -1868,7 +1872,7 @@ stack	.equ	$		; stack top
 ; Messages
 ;
 indent	.db	"   ",0
-msgban1	.db	"ASSIGN v1.1b for RomWBW CP/M, 29-Apr-2020",0
+msgban1	.db	"ASSIGN v1.2 for RomWBW CP/M, 7-May-2020",0
 msghb	.db	" (HBIOS Mode)",0
 msgub	.db	" (UBIOS Mode)",0
 msgban2	.db	"Copyright 2020, Wayne Warthen, GNU GPL v3",0

@@ -1,25 +1,46 @@
-Param($Disk, $Format="wbw_hd_new", $SysFile="")
+Param($Disk, $Format="", $SysFile="")
 
 $ErrorAction = 'Stop'
-
-if ($Format -like "*_new")
-{
-	# New hard disk format!!!
-	$MediaID = 10
-	$Size = 8 * 1MB
-	$ImgFile = "hd_${Disk}.bin"
-}
-else
-{
-	# Legacy hard disk format
-	$MediaID = 4	
-	$Size = 8320KB	
-	$ImgFile = "hd_${Disk}.img"
-}
 
 $CpmToolsPath = '../../Tools/cpmtools'
 
 $env:PATH = $CpmToolsPath + ';' + $env:PATH
+
+if ($Format.Length -eq 0)
+{
+	Write-Error "No disk format specified!" -ErrorAction Stop
+	return
+}
+
+switch ($Format)
+{
+	"wbw_fd144"
+	{
+		# 1.44MB Floppy Disk
+		$Desc = "1.44MB Floppy Disk"
+		$ImgFile = "fd144_${Disk}.img"
+		$MediaID = 6
+		$Size = 1440KB
+	}
+
+	"wbw_hd"
+	{
+		# Legacy Hard Disk Format
+		$Desc = "Hard Disk (legacy format)"
+		$ImgFile = "hd_${Disk}.img"
+		$MediaID = 4
+		$Size = 8MB + 128KB
+	}
+
+	"wbw_hdnew"
+	{
+		# New Hard Disk Format
+		$Desc = "Hard Disk (new format)"
+		$ImgFile = "hdnew_${Disk}.img"
+		$MediaID = 10
+		$Size = 8MB
+	}
+}
 
 if (-not (Test-Path("d_${Disk}/")))
 {
@@ -27,7 +48,7 @@ if (-not (Test-Path("d_${Disk}/")))
 	return
 }
 
-"Generating Hard Disk ${Disk}..."
+"Generating $Desc $Disk..."
 
 if ($SysFile.Length -gt 0) 
 	{ [byte[]]$SysImg = [System.IO.File]::ReadAllBytes($SysFile) }
@@ -36,10 +57,10 @@ else
 
 $Image = ($SysImg + ([byte[]](0xE5) * ($Size - $SysImg.length)))
 
-$Image[1410] = 0x4D
-$Image[1411] = 0x49
-$Image[1412] = 0x44
-$Image[1413] = $MediaID
+# $Image[1410] = 0x4D
+# $Image[1411] = 0x49
+# $Image[1412] = 0x44
+# $Image[1413] = $MediaID
 
 [System.IO.File]::WriteAllBytes($ImgFile, $Image)
 

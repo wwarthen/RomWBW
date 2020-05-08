@@ -345,8 +345,20 @@ diskdef wbw_fd120
   os 2.2
 end
 
-# RomWBW 8MB Hard Disk, first 4 slices
-# Legacy format, 512 dir entries, 8,320 sectors / slice
+# RomWBW 8320KB Hard Disk Slice
+# Legacy format, 512 dir entries, 16,630 sectors / slice
+diskdef wbw_hd
+  seclen 512
+  tracks 1040
+  sectrk 16
+  blocksize 4096
+  maxdir 512
+  skew 0
+  boottrk 16
+  os 2.2
+end
+
+# First 4 slices of wbw_hd
 diskdef wbw_hd0
   seclen 512
   tracks 1040
@@ -393,9 +405,9 @@ end
 
 
 # RomWBW 8MB Hard Disk
-# New format, 1024 dir entries, 8,192 sectors / slice
+# New format, 1024 dir entries, 16,384 sectors / slice
 # Pure filesystem image, no prefix
-diskdef wbw_hd_new
+diskdef wbw_hdnew
   seclen 512
   tracks 1024
   sectrk 16
@@ -406,10 +418,9 @@ diskdef wbw_hd_new
   os 2.2
 end
 
-# RomWBW 8MB Hard Disk, first 4 slices
-# New format, 1024 dir entries, 8,192 sectors / slice
-# Assumes 256 sector (16 track) hard disk prefix
-diskdef wbw_hd0_new
+# First 4 slices of wbw_hdnew
+# Assumes 128KB prefix (256 sectors)
+diskdef wbw_hdnew0
   seclen 512
   tracks 1040
   sectrk 16
@@ -420,7 +431,7 @@ diskdef wbw_hd0_new
   os 2.2
 end
 
-diskdef wbw_hd1_new
+diskdef wbw_hdnew1
   seclen 512
   tracks 2064
   sectrk 16
@@ -431,7 +442,7 @@ diskdef wbw_hd1_new
   os 2.2
 end
 
-diskdef wbw_hd2_new
+diskdef wbw_hdnew2
   seclen 512
   tracks 3112
   sectrk 16
@@ -442,7 +453,7 @@ diskdef wbw_hd2_new
   os 2.2
 end
 
-diskdef wbw_hd3_new
+diskdef wbw_hdnew3
   seclen 512
   tracks 4136
   sectrk 16
