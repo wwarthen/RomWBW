@@ -82,6 +82,7 @@ Tools/unix/zx/zx
 !Source/BPBIOS/Z34RCP11/cledsave.com
 !Source/Fonts
 !Source/Images/**/*.[Cc][Oo][Mm]
+!Source/Images/hdnew_prefix.bin
 !Source/RomDsk/**/*.[Cc][Oo][Mm]
 !Source/UBIOS/FSFAT.BIN
 !Source/UBIOS/UNA-BIOS.BIN
