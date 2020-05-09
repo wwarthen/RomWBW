@@ -1190,8 +1190,8 @@ these applications are no longer provided.
 driver.
 * Ed Brindley contributed some of the code that supports the RC2014
 platform.
-* Phil Summers contributed Forth and BASIC in ROM as well as a long
-list of general code enhancements.
+* Phil Summers contributed Forth and BASIC in ROM, the AY-3-8910 sound
+driver as well as a long list of general code enhancements.
 * Phillip Stevens contributed support for FreeRTOS.
 * Curt Mayer contributed the Linux / MacOS build process.
 * UNA BIOS and FDISK80 are the products of John Coffman.
