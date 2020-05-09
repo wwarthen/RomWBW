@@ -7,8 +7,8 @@
 ;	DRIVER FUNCTION TABLE AND INSTANCE DATA
 ;
 SP_FNTBL:
-	.DW	SP_RESET
-	.DW	SP_VOLUME
+	.DW	SP_STUB			; SP_RESET
+	.DW	SP_STUB			; SP_VOLUME
 	.DW	SP_PERIOD
 	.DW	SP_NOTE
 	.DW	SP_PLAY
@@ -50,7 +50,7 @@ SP_INIT:
 ;	SOUND DRIVER FUNCTION - RESET
 ;======================================================================
 ;
-SP_RESET:
+;SP_RESET:
 ;	XOR	A			; SUCCESSFULL RESET
 ;	RET
 ;
@@ -58,9 +58,9 @@ SP_RESET:
 ;	SOUND DRIVER FUNCTION - VOLUME
 ;======================================================================
 ;
-SP_VOLUME:
-	XOR	A			; SIGNAL SUCCESS
-	RET
+;SP_VOLUME:
+;	XOR	A			; SIGNAL SUCCESS
+;	RET
 ;
 ;======================================================================
 ;	SOUND DRIVER FUNCTION - PERIOD
@@ -68,6 +68,7 @@ SP_VOLUME:
 ;
 SP_PERIOD:
 	LD	(SP_PENDING_PERIOD), HL	; SAVE AND RETURN SUCCESSFUL
+SP_STUB:
 	XOR	A
 	RET
 ;
@@ -80,7 +81,7 @@ SP_NOTE:
 	PUSH	DE			; ON ENTRY L IS A NOTE INDEX
 	LD	H,0			; CONVERT THIS NOTE INDEX
 	ADD	HL,HL			; TO THE ASSOCIATED ENTRY
-	ADD	HL,HL			; IN THE TUNE ABLE.
+	ADD	HL,HL			; IN THE TUNE TABLE.
 	LD	DE,SP_TUNTBL		; SAVE THIS ADDRESS AS
 	ADD	HL,DE			; THE PERIOD
 	LD	(SP_PENDING_PERIOD),HL
@@ -137,7 +138,7 @@ SP_QUERY_DEV:
 SP_SETTBL:
 	LD	A,(CB_CPUMHZ)		; GET CPU SPEED. 
 	LD	C,A
-
+;
 	LD	B,SP_NOTCNT		; SET  NUMBER OF NOTES TO 
 	LD	HL,SP_TUNTBL+2		; ADJUST AND START POINT
 ;
@@ -191,9 +192,9 @@ SP_PLAY:
 	PUSH	BC			; SETUP ARG IN HL
 	POP	HL
 ;
-	CALL	SP_BEEPER		; PLAY 
+;	CALL	SP_BEEPER		; PLAY 
 ;
-	RET
+;	RET
 ;
 ;	The following SP_BEEPER routine is a modification of code from 
 ;	"The Complete SPECTRUM ROM DISSASSEMBLY" by Dr Ian Logan & Dr Frank O’Hara
@@ -376,5 +377,5 @@ SP_NOTE_C8:
 	.DW $1D22, $10 ;  A
 	.DW $1EDE, $F ; B8
 ;
-SP_NOTCNT	.EQU	($-SP_TUNTBL-1) / 4
+SP_NOTCNT	.EQU	($-SP_TUNTBL) / 4
 ;
