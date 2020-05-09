@@ -1,7 +1,6 @@
 all:
 	$(MAKE) --directory Tools/unix
 	$(MAKE) --directory Source
-	$(MAKE) --directory Source/Images
 
 clean:
 	$(MAKE) --directory Tools/unix clean
