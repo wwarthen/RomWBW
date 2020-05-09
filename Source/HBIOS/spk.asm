@@ -1,46 +1,161 @@
-;
-;======================================================================
-; I/O BIT DRIVER FOR CONSOLE BELL FOR SBC V2 USING BIT 0 OF RTC DRIVER
 ;======================================================================
 ;
-SPK_INIT:
-	CALL	NEWLINE			; FORMATTING
+;	BIT MODE SOUND DRIVER FOR SBC V2 USING BIT 0 OF RTC DRIVER
+;
+;======================================================================
+;
+;	DRIVER FUNCTION TABLE AND INSTANCE DATA
+;
+SP_FNTBL:
+	.DW	SP_RESET
+	.DW	SP_VOLUME
+	.DW	SP_PERIOD
+	.DW	SP_NOTE
+	.DW	SP_PLAY
+	.DW	SP_QUERY
+;
+#IF (($ - SP_FNTBL) != (SND_FNCNT * 2))
+	.ECHO	"*** INVALID SND FUNCTION TABLE ***\n"
+	!!!!!
+#ENDIF
+;
+SP_IDAT	.EQU	0			; NO INSTANCE DATA ASSOCIATED WITH THIS DEVICE
+;
+SP_TONECNT	.EQU	1		; COUNT NUMBER OF TONE CHANNELS
+SP_NOISECNT	.EQU	0		; COUNT NUMBER OF NOISE CHANNELS
+;
+SP_PENDING_PERIOD	.DW	SP_NOTE_C8	; PENDING PERIOD (16 BITS)
+SP_PENDING_VOLUME	.DB	$FF		; PENDING VOL (8 BITS)
+;
+;======================================================================
+;	DRIVER INITIALIZATION
+;======================================================================
+;
+SP_INIT:
+	LD	IY, SP_IDAT		; SETUP FUNCTION TABLE
+	LD	BC, SP_FNTBL		; POINTER TO INSTANCE DATA
+	LD	DE, SP_IDAT		; BC := FUNCTION TABLE ADDRESS
+	CALL	SND_ADDENT		; DE := INSTANCE DATA PTR
+;
+	CALL	NEWLINE			; ANNOUNCE DEVICE
 	PRTS("SPK: IO=0x$")
 	LD	A,RTCIO
 	CALL	PRTHEXBYTE
-	CALL	SPK_SETTBL
-	CALL	SPK_BEEP		; PLAY A NOTE
+	CALL	SP_SETTBL		; SETUP TONE TABLE
+	CALL	SP_PLAY			; PLAY DEFAULT NOTE
 	XOR	A
 	RET
 ;
-; SETUP THE SPEAKER NOTE TABLE ACCORDING TO THE CPU SPEED.
-; FREQUENCY ACCURACY DECREASES AS CLOCK SPEED MULITPLIER INCREASES.
-; 1MHZ ERROR MAY OCCUR IF CPU CLOCK IS UNDER. I.E 3.999 = 3MHZ 
-
-SPK_SETTBL:
+;======================================================================
+;	SOUND DRIVER FUNCTION - RESET
+;======================================================================
+;
+SP_RESET:
+;	XOR	A			; SUCCESSFULL RESET
+;	RET
+;
+;======================================================================
+;	SOUND DRIVER FUNCTION - VOLUME
+;======================================================================
+;
+SP_VOLUME:
+	XOR	A			; SIGNAL SUCCESS
+	RET
+;
+;======================================================================
+;	SOUND DRIVER FUNCTION - PERIOD
+;======================================================================
+;
+SP_PERIOD:
+	LD	(SP_PENDING_PERIOD), HL	; SAVE AND RETURN SUCCESSFUL
+	XOR	A
+	RET
+;
+;======================================================================
+;	SOUND DRIVER FUNCTION - NOTE
+;======================================================================
+;
+SP_NOTE:
+	PUSH	HL
+	PUSH	DE			; ON ENTRY L IS A NOTE INDEX
+	LD	H,0			; CONVERT THIS NOTE INDEX
+	ADD	HL,HL			; TO THE ASSOCIATED ENTRY
+	ADD	HL,HL			; IN THE TUNE ABLE.
+	LD	DE,SP_TUNTBL		; SAVE THIS ADDRESS AS
+	ADD	HL,DE			; THE PERIOD
+	LD	(SP_PENDING_PERIOD),HL
+	POP	DE
+	POP	HL
+	RET
+;
+;======================================================================
+;	SOUND DRIVER FUNCTION - QUERY AND SUBFUNCTIONS
+;======================================================================
+;
+SP_QUERY:
+	LD	A, E
+	CP	BF_SNDQ_CHCNT		; SUB FUNCTION 01
+	JR	Z, SP_QUERY_CHCNT
+;
+	CP	BF_SNDQ_VOLUME		; SUB FUNCTION 02
+	JR	Z, SP_QUERY_VOLUME
+;
+	CP	BF_SNDQ_PERIOD		; SUB FUNCTION 03
+	JR	Z, SP_QUERY_PERIOD
+;
+	CP	BF_SNDQ_DEV		; SUB FUNCTION 04
+	JR	Z, SP_QUERY_DEV
+;
+	OR	$FF			; SIGNAL FAILURE
+	RET
+;
+SP_QUERY_CHCNT:
+	LD	BC,(SP_TONECNT*256)+SP_NOISECNT		; RETURN NUMBER OF
+	XOR	A					; TONE AND NOISE
+	RET						; CHANNELS IN BC
+;
+SP_QUERY_PERIOD:
+	LD	HL, (SP_PENDING_PERIOD)	; RETURN 16-BIT PERIOD
+	XOR	A			; IN HL REGISTER
+	RET
+;
+SP_QUERY_VOLUME:
+	LD	L, 255			; RETURN 8-BIT VOLUME
+	XOR	A			; IN L REGISTER
+	RET
+;
+SP_QUERY_DEV:
+	LD	B, BF_SND_BITMODE	; RETURN DEVICE IDENTIFIER
+	LD	DE, 0			; AND ADDRESS AND DATA PORT
+	XOR	A
+	RET
+;
+;======================================================================
+;	INITIALIZE THE TONE TABLE
+;======================================================================
+;
+SP_SETTBL:
 	LD	A,(CB_CPUMHZ)		; GET CPU SPEED. 
 	LD	C,A
 
-	LD	B,SPK_NOTCNT		; SET  NUMBER OF NOTES TO 
-	LD	HL,SPK_TUNTBL+2		; ADJUST AND START POINT
-
-SPK_SETTBL2:
+	LD	B,SP_NOTCNT		; SET  NUMBER OF NOTES TO 
+	LD	HL,SP_TUNTBL+2		; ADJUST AND START POINT
+;
+SP_SETTBL2:
 	PUSH	HL
-	LD	A,(HL)			; READ
-	LD	E,A			; IN
-	INC	HL			; THE
-	LD	A,(HL)			; 1MHZ
-	LD	D,A			; NOTE
-
+	LD	E,(HL)			; READ IN
+	INC	HL			; THE 1MHZ 
+	LD	D,(HL)			; NOTE
+;
 	PUSH	BC
 	LD	B,C
 	LD	HL,0			; MULTIPLY
-SPK_SETTBL1:				; 1MHZ NOTE
+SP_SETTBL1:				; 1MHZ NOTE
 	ADD	HL,DE			; VALUE BY
-	DJNZ	SPK_SETTBL1		; SYSTEM MHZ
+	DJNZ	SP_SETTBL1		; SYSTEM MHZ
 	POP	BC
 ;
-	LD	DE,30			; ADD OVEREAD
+	LD	DE,30			; ADD OVERHEAD
 	ADD	HL,DE			; COMPENSATION
 ;
 	POP	DE			; RECALL NOTE
@@ -52,34 +167,35 @@ SPK_SETTBL1:				; 1MHZ NOTE
 	INC	HL			; NOTE
 	INC	HL			; AND MOVE
 	INC	HL			; TO NEXT
-
-	DJNZ	SPK_SETTBL2		; NEXT NOTE
+;
+	DJNZ	SP_SETTBL2		; NEXT NOTE
 	RET
-
-SPK_BEEP:
-	LD	HL,SPK_NOTE_C8		; SELECT NOTE
 ;
-	LD	A,(HL)			; LOAD 1ST ARG
+;======================================================================
+;	SOUND DRIVER FUNCTION - PLAY
+;======================================================================
+;
+SP_PLAY:
+	LD	HL,(SP_PENDING_PERIOD)	; SELECT NOTE
+;
+	LD	E,(HL)			; LOAD 1ST ARG
 	INC	HL			; IN DE
-	LD	E,A
-	LD	A,(HL)
+	LD	D,(HL)
 	INC	HL
-	LD	D,A
-;
-	LD	A,(HL)			; LOAD 2ND ARG
+
+	LD	C,(HL)			; LOAD 2ND ARG
 	INC	HL			; IN BC
-	LD	C,A
-	LD	A,(HL)	
+	LD	B,(HL)
 	INC	HL
-	LD	B,A
+;
 	PUSH	BC			; SETUP ARG IN HL
 	POP	HL
 ;
-	CALL	SPK_BEEPER		; PLAY 
+	CALL	SP_BEEPER		; PLAY 
 ;
 	RET
 ;
-;	The following SPK_BEEPER routine is a modification of code from 
+;	The following SP_BEEPER routine is a modification of code from 
 ;	"The Complete SPECTRUM ROM DISSASSEMBLY" by Dr Ian Logan & Dr Frank O’Hara
 ;
 ;	https://www.esocop.org/docs/CompleteSpectrumROMDisassemblyThe.pdf
@@ -87,7 +203,7 @@ SPK_BEEP:
 ;	DE 	Number of passes to make through the sound generation loop
 ;	HL 	Loop delay parameter
 ;
-SPK_BEEPER:
+SP_BEEPER:
 	PUSH	IX
 	DI 				; Disable the interrupt for the duration of a 'beep'.
 	LD	A,L 			; Save L temporarily.
@@ -146,13 +262,13 @@ BE_END:
 	POP	IX
 	RET
 ;
-;	STANDARD ONE SECOND TONE TABLES AT 1MHZ (UNCOMPENSATED). FOR SPK_BEEPER, FIRST WORD LOADED INTO DE, SECOND INTO HL
+;	STANDARD ONE SECOND TONE TABLES AT 1MHZ (UNCOMPENSATED). FOR SP_BEEPER, FIRST WORD LOADED INTO DE, SECOND INTO HL
 ;
 ;	EXCEL SPREADSHEET FOR CALCULATION CAN BE FOUND HERE:
 ;
 ;	https://www.retrobrewcomputers.org/lib/exe/fetch.php?media=boards:sbc:sbc_v2:sbc_v2-004:spk_beep_tuntbl.xlsx
 ;
-SPK_TUNTBL:
+SP_TUNTBL:
 	.DW $13, $191A ;  D
 	.DW $14, $17B3 ; E0
 	.DW $15, $165E ; F0
@@ -246,7 +362,7 @@ SPK_TUNTBL:
 	.DW $DC0, $23 ; A7
 	.DW $E91, $21 ;  A
 	.DW $F6F, $1F ; B7	
-SPK_NOTE_C8:
+SP_NOTE_C8:
 	.DW $105A, $1D ; C8
 	.DW $1152, $1C ;  C
 	.DW $125A, $1A ; D8
@@ -259,5 +375,6 @@ SPK_NOTE_C8:
 	.DW $1B80, $11 ; A8
 	.DW $1D22, $10 ;  A
 	.DW $1EDE, $F ; B8
-
-SPK_NOTCNT	.EQU	($-SPK_TUNTBL) / 4
+;
+SP_NOTCNT	.EQU	($-SP_TUNTBL-1) / 4
+;
