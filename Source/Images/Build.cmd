@@ -21,7 +21,7 @@ call BuildDisk.cmd cpm3 wbw_hd ..\cpm3\cpmldr.sys
 call BuildDisk.cmd zpm3 wbw_hd ..\cpm3\cpmldr.sys
 call BuildDisk.cmd ws4 wbw_hd
 
-if exist ..\BPBIOS\bpbio-ww.rel call BuildHD.cmd bp wbw_hd
+if exist ..\BPBIOS\bpbio-ww.rel call BuildDisk.cmd bp wbw_hd
 
 echo.
 echo Building Combo Disk (legacy format) Image...
@@ -37,9 +37,9 @@ call BuildDisk.cmd cpm3 wbw_hdnew ..\cpm3\cpmldr.sys
 call BuildDisk.cmd zpm3 wbw_hdnew ..\cpm3\cpmldr.sys
 call BuildDisk.cmd ws4 wbw_hdnew
 
-if exist ..\BPBIOS\bpbio-ww.rel call BuildHD.cmd bp wbw_hdnew
+if exist ..\BPBIOS\bpbio-ww.rel call BuildDisk.cmd bp wbw_hdnew
 
-copy hd_prefix.dat ..\..\Binary\
+copy hdnew_prefix.bin ..\..\Binary\
 
 echo.
 echo Building Combo Disk (new format) Image...
