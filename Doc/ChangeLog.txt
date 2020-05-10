@@ -2,6 +2,7 @@ Version 3.1.1
 -------------
 - WBW: Version bumped due to pervasive changes
 - WBW: Preliminary hard disk partition support (backward compatible)
+- WBW: Change Propeller VGA signal timings to 60Hz refresh
 
 Version 3.1
 -----------

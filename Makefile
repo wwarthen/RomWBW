@@ -14,5 +14,5 @@ clobber:
 	rm -f typescript
 
 diff:
-	$(MAKE) --directory diff
+	$(MAKE) --directory Source diff
 

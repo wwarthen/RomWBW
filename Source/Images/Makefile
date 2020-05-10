@@ -15,9 +15,13 @@ HDNEWIMGS = hdnew_cpm22.img hdnew_zsdos.img hdnew_nzcom.img \
 HDPREFIX =
 HDNEWPREFIX = hdnew_prefix.bin
 
-OBJECTS = $(FDIMGS) $(HDIMGS) hd_combo.img $(HDNEWIMGS) hdnew_combo.img
+OBJECTS = $(FDIMGS)
+OBJECTS += $(HDIMGS) hd_combo.img $(HDPREFIX)
+OBJECTS += $(HDNEWIMGS) hdnew_combo.img $(HDNEWPREFIX)
 
 OTHERS = blank144 blankhd blankhdnew
+
+NODELETE = $(HDPREFIX) $(HDNEWPREFIX)
 
 DEST=../../Binary
 
@@ -26,10 +30,10 @@ include $(TOOLS)/Makefile.inc
 
 DIFFPATH = $(DIFFTO)/Binary
 
-hd_combo.img:	$(HDPREFIX) $(HDIMGS)
+hd_combo.img: $(HDPREFIX) $(HDIMGS)
 	cat $^ > $@
 
-hdnew_combo.img:	$(HDNEWPREFIX) $(HDNEWIMGS)
+hdnew_combo.img: $(HDNEWPREFIX) $(HDNEWIMGS)
 	cat $^ > $@
 
 #
