@@ -60,7 +60,7 @@ bell	equ 7
 	dw	dsk$read
 	dw	dsk$login
 	dw	dsk$init
-	db	0,0		; HBIOS Disk Unit/Slice (filled in at boot)
+	db	0FFh,0FFh	; HBIOS Disk Unit/Slice (filled in at boot)
 dph0:	dph	0,dpb$max	; Real DPB filled in at disk login
 	dw	0, 0		; LBA Offset
 
@@ -68,7 +68,7 @@ dph0:	dph	0,dpb$max	; Real DPB filled in at disk login
 	dw	dsk$read
 	dw	dsk$login
 	dw	dsk$init
-	db	0,0		; HBIOS Disk Unit/Slice (filled in at boot)
+	db	0FFh,0FFh	; HBIOS Disk Unit/Slice (filled in at boot)
 dph1:	dph	0,dpb$max	; Real DPB filled in at disk login
 	dw	0, 0		; LBA Offset
 
@@ -76,7 +76,7 @@ dph1:	dph	0,dpb$max	; Real DPB filled in at disk login
 	dw	dsk$read
 	dw	dsk$login
 	dw	dsk$init
-	db	0,0		; HBIOS Disk Unit/Slice (filled in at boot)
+	db	0FFh,0FFh	; HBIOS Disk Unit/Slice (filled in at boot)
 dph2:	dph	0,dpb$max	; Real DPB filled in at disk login
 	dw	0, 0		; LBA Offset
 
@@ -84,7 +84,7 @@ dph2:	dph	0,dpb$max	; Real DPB filled in at disk login
 	dw	dsk$read
 	dw	dsk$login
 	dw	dsk$init
-	db	0,0		; HBIOS Disk Unit/Slice (filled in at boot)
+	db	0FFh,0FFh	; HBIOS Disk Unit/Slice (filled in at boot)
 dph3:	dph	0,dpb$max	; Real DPB filled in at disk login
 	dw	0, 0		; LBA Offset
 
@@ -92,7 +92,7 @@ dph3:	dph	0,dpb$max	; Real DPB filled in at disk login
 	dw	dsk$read
 	dw	dsk$login
 	dw	dsk$init
-	db	0,0		; HBIOS Disk Unit/Slice (filled in at boot)
+	db	0FFh,0FFh	; HBIOS Disk Unit/Slice (filled in at boot)
 dph4:	dph	0,dpb$max	; Real DPB filled in at disk login
 	dw	0, 0		; LBA Offset
 
@@ -100,7 +100,7 @@ dph4:	dph	0,dpb$max	; Real DPB filled in at disk login
 	dw	dsk$read
 	dw	dsk$login
 	dw	dsk$init
-	db	0,0		; HBIOS Disk Unit/Slice (filled in at boot)
+	db	0FFh,0FFh	; HBIOS Disk Unit/Slice (filled in at boot)
 dph5:	dph	0,dpb$max	; Real DPB filled in at disk login
 	dw	0, 0		; LBA Offset
 
@@ -108,7 +108,7 @@ dph5:	dph	0,dpb$max	; Real DPB filled in at disk login
 	dw	dsk$read
 	dw	dsk$login
 	dw	dsk$init
-	db	0,0		; HBIOS Disk Unit/Slice (filled in at boot)
+	db	0FFh,0FFh	; HBIOS Disk Unit/Slice (filled in at boot)
 dph6:	dph	0,dpb$max	; Real DPB filled in at disk login
 	dw	0, 0		; LBA Offset
 
@@ -116,7 +116,7 @@ dph6:	dph	0,dpb$max	; Real DPB filled in at disk login
 	dw	dsk$read
 	dw	dsk$login
 	dw	dsk$init
-	db	0,0		; HBIOS Disk Unit/Slice (filled in at boot)
+	db	0FFh,0FFh	; HBIOS Disk Unit/Slice (filled in at boot)
 dph7:	dph	0,dpb$max	; Real DPB filled in at disk login
 	dw	0, 0		; LBA Offset
 
@@ -124,7 +124,7 @@ dph7:	dph	0,dpb$max	; Real DPB filled in at disk login
 	dw	dsk$read
 	dw	dsk$login
 	dw	dsk$init
-	db	0,0		; HBIOS Disk Unit/Slice (filled in at boot)
+	db	0FFh,0FFh	; HBIOS Disk Unit/Slice (filled in at boot)
 dph8:	dph	0,dpb$max	; Real DPB filled in at disk login
 	dw	0, 0		; LBA Offset
 
@@ -132,7 +132,7 @@ dph8:	dph	0,dpb$max	; Real DPB filled in at disk login
 	dw	dsk$read
 	dw	dsk$login
 	dw	dsk$init
-	db	0,0		; HBIOS Disk Unit/Slice (filled in at boot)
+	db	0FFh,0FFh	; HBIOS Disk Unit/Slice (filled in at boot)
 dph9:	dph	0,dpb$max	; Real DPB filled in at disk login
 	dw	0, 0		; LBA Offset
 
@@ -140,7 +140,7 @@ dph9:	dph	0,dpb$max	; Real DPB filled in at disk login
 	dw	dsk$read
 	dw	dsk$login
 	dw	dsk$init
-	db	0,0		; HBIOS Disk Unit/Slice (filled in at boot)
+	db	0FFh,0FFh	; HBIOS Disk Unit/Slice (filled in at boot)
 dph10:	dph	0,dpb$max	; Real DPB filled in at disk login
 	dw	0, 0		; LBA Offset
 
@@ -148,7 +148,7 @@ dph10:	dph	0,dpb$max	; Real DPB filled in at disk login
 	dw	dsk$read
 	dw	dsk$login
 	dw	dsk$init
-	db	0,0		; HBIOS Disk Unit/Slice (filled in at boot)
+	db	0FFh,0FFh	; HBIOS Disk Unit/Slice (filled in at boot)
 dph11:	dph	0,dpb$max	; Real DPB filled in at disk login
 	dw	0, 0		; LBA Offset
 
@@ -156,7 +156,7 @@ dph11:	dph	0,dpb$max	; Real DPB filled in at disk login
 	dw	dsk$read
 	dw	dsk$login
 	dw	dsk$init
-	db	0,0		; HBIOS Disk Unit/Slice (filled in at boot)
+	db	0FFh,0FFh	; HBIOS Disk Unit/Slice (filled in at boot)
 dph12:	dph	0,dpb$max	; Real DPB filled in at disk login
 	dw	0, 0		; LBA Offset
 
@@ -164,7 +164,7 @@ dph12:	dph	0,dpb$max	; Real DPB filled in at disk login
 	dw	dsk$read
 	dw	dsk$login
 	dw	dsk$init
-	db	0,0		; HBIOS Disk Unit/Slice (filled in at boot)
+	db	0FFh,0FFh	; HBIOS Disk Unit/Slice (filled in at boot)
 dph13:	dph	0,dpb$max	; Real DPB filled in at disk login
 	dw	0, 0		; LBA Offset
 
@@ -172,7 +172,7 @@ dph13:	dph	0,dpb$max	; Real DPB filled in at disk login
 	dw	dsk$read
 	dw	dsk$login
 	dw	dsk$init
-	db	0,0		; HBIOS Disk Unit/Slice (filled in at boot)
+	db	0FFh,0FFh	; HBIOS Disk Unit/Slice (filled in at boot)
 dph14:	dph	0,dpb$max	; Real DPB filled in at disk login
 	dw	0, 0		; LBA Offset
 
@@ -180,7 +180,7 @@ dph14:	dph	0,dpb$max	; Real DPB filled in at disk login
 	dw	dsk$read
 	dw	dsk$login
 	dw	dsk$init
-	db	0,0		; HBIOS Disk Unit/Slice (filled in at boot)
+	db	0FFh,0FFh	; HBIOS Disk Unit/Slice (filled in at boot)
 dph15:	dph	0,dpb$max	; Real DPB filled in at disk login
 	dw	0, 0		; LBA Offset
 
@@ -409,11 +409,11 @@ dsk$login:
 	dec	hl			; point to disk unit
 	ld	a,(hl)			; get unit
 	ld	(unit),a		; save it
-	call	media			; update DPH for media
-	; Need to do something on error, but bioskrnl provides
-	; no way for us to return an error.
-	;jr	nz,???
-	ret
+	inc	a			; 0FFh -> 000h
+	jp	z,err_ret		; bail out on no disk mapped here
+	
+	;call	media			; update DPH for media
+	;ret
 
 media:
 	; Set retry address

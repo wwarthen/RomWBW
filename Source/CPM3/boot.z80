@@ -228,25 +228,26 @@ dinit6:
 	pop	de			; restore drive list ptr
 	inc	de			; increment active drive list ptr
 	djnz	dinit6			; loop as needed
+	ret
 
-	; zero out remaining dph table entries
-	ld	a,16			; dph table entries
-	sub	l			; subtract entries used
-	ret	z			; return if all entries used
-	ld	b,a			; save as loop counter
-	ld	a,l			; current dph to accum
-	rlca				; *2 for word entry
-	ld	hl,@dtbl		; start of dtbl
-	call	addhla			; hl now points to entry
-	
-dinit6a:
-	xor	a			; zero accum
-	ld	(hl),a			; zero lsb
-	inc	hl			; next byte
-	ld	(hl),a			; zero msb
-	inc	hl			; next byte
-	djnz	dinit6a
-	ret				; finished
+;	; zero out remaining dph table entries
+;	ld	a,16			; dph table entries
+;	sub	l			; subtract entries used
+;	ret	z			; return if all entries used
+;	ld	b,a			; save as loop counter
+;	ld	a,l			; current dph to accum
+;	rlca				; *2 for word entry
+;	ld	hl,@dtbl		; start of dtbl
+;	call	addhla			; hl now points to entry
+;	
+;dinit6a:
+;	xor	a			; zero accum
+;	ld	(hl),a			; zero lsb
+;	inc	hl			; next byte
+;	ld	(hl),a			; zero msb
+;	inc	hl			; next byte
+;	djnz	dinit6a
+;	ret				; finished
 
 dinit7:	; process a unit (all slices)
 	ld	e,0			; initialize slice index
