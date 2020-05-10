@@ -21,6 +21,8 @@ OBJECTS += $(HDNEWIMGS) hdnew_combo.img $(HDNEWPREFIX)
 
 OTHERS = blank144 blankhd blankhdnew
 
+NODELETE = $(HDPREFIX) $(HDNEWPREFIX)
+
 DEST=../../Binary
 
 TOOLS = ../../Tools
