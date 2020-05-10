@@ -206,7 +206,7 @@ SP_PLAY:
 ;
 SP_BEEPER:
 	PUSH	IX
-	DI 				; Disable the interrupt for the duration of a 'beep'.
+	HB_DI 				; Disable the interrupt for the duration of a 'beep'.
 	LD	A,L 			; Save L temporarily.
 	SRL	L 			; Each '1' in the L register is to count 4 T states, but take INT (L/4) and count 16 T states instead.
 	SRL	L
@@ -259,7 +259,7 @@ BE_AGAIN:
 	INC	C 			; Add 16 T states as this path is shorter.
 	JP	(IX)			; Jump back.
 BE_END:
-	EI
+	HB_EI
 	POP	IX
 	RET
 ;
