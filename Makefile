@@ -1,7 +1,6 @@
 all:
 	$(MAKE) --directory Tools/unix
 	$(MAKE) --directory Source
-	$(MAKE) --directory Source/Images
 
 clean:
 	$(MAKE) --directory Tools/unix clean
@@ -15,5 +14,5 @@ clobber:
 	rm -f typescript
 
 diff:
-	$(MAKE) --directory diff
+	$(MAKE) --directory Source diff
 
