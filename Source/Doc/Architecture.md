@@ -1392,20 +1392,38 @@ supplied is beyond driver capabilities, register A will be set to $FF.
 | _Entry Parameters_
 |       B: 0x53
 |       C: Audio Device Unit ID
-|       L: Note (0 to 255 quarter notes)
+|       HL: Value of note to play
 
 |      _Returned Values_
 |           A: Status (0=OK, else error)
 
-This function sets the sound chip period parameter according to
-standardized notes.
+This function sets the sound chip period parameter with steps of quarter
+of a semitone.  The value of 0 (lowest) corresponds to B♭/A♯ in octave 0.
 
-The value corresponds to standard musical notes.  The value allows
-for selection of a quarter of a semitone by giving a value between 0
-and up to the drivers maximum supported value. The lowest note is (0).
+Increase by steps of 4 to select the next corresponding note.
 
-For the SN76489 chip, 0 corresponds to note A1# and the value 249 is
-the maximum supported value, and it corresponds to note C7.
+Increase by steps of 48 to select the same note in next octave.
+
+If the driver is able to generate the requested note, a success (0) is
+returned, otherwise a non-zero error state will be returned.
+
+The following table shows the mapping of the input value in HL
+to the corresponding octave and note.
+
+| Note  | Octave 0 | Octave 1 | Octave 2 | Octave 3 | Octave 4 | Octave 5 | Octave 6 |
+|-------|----------|----------|----------|----------|----------|----------|----------|
+| B♭/A♯ | 0        | 48       | 96       | 144      | 192      | 240      | 288      |
+| B     | 4        | 52       | 100      | 148      | 196      | 244      | 292      |
+| C     | 8        | 56       | 104      | 152      | 200      | 248      | 296      |
+| C♯/D♭ | 12       | 60       | 108      | 156      | 204      | 252      | 300      |
+| D     | 16       | 64       | 112      | 160      | 208      | 256      | 304      |
+| E♭/D♯ | 20       | 68       | 116      | 164      | 212      | 260      | 308      |
+| E     | 24       | 72       | 120      | 168      | 216      | 264      | 312      |
+| F     | 28       | 76       | 124      | 172      | 220      | 268      | 316      |
+| F♯/G♭ | 32       | 80       | 128      | 176      | 224      | 272      | 320      |
+| G     | 36       | 84       | 132      | 180      | 228      | 276      | 324      |
+| A♭/G♯ | 40       | 88       | 136      | 184      | 232      | 280      | 328      |
+| A     | 44       | 92       | 140      | 188      | 236      | 284      | 332      |
 
 ### Function 0x54 -- Sound Play (SNDPLAY)
 
