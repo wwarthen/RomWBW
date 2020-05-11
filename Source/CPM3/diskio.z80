@@ -195,7 +195,8 @@ dpb$max:
 	dw  	1024 - 1	; drm: dir entries - 1
 	db  	11111111b	; al0: dir blk bit map, first byte
 	db  	00000000b	; al1: dir blk bit map, second byte
-	dw  	64		; cks: directory check vector size - 256 / 4
+	;dw  	64		; cks: directory check vector size - 256 / 4
+	dw  	256		; cks: directory check vector size - 1024 / 4
 	dw  	0		; off: reserved tracks = 16 trks * (16 trks * 16 heads * 16 secs * 512 bytes) = 128k
 	db	2		; psh: 2 for 512 byte sectors
 	db	3		; phm: (512 / 128) - 1
@@ -253,7 +254,7 @@ dpb$hd:		; 8MB Hard Disk Drive w/ 512 dir entries
 	dw  	512 - 1		; drm: dir entries - 1 = 512 - 1 = 511
 	db  	11110000b	; al0: dir blk bit map, first byte
 	db  	00000000b	; al1: dir blk bit map, second byte
-	dw  	8000h		; cks: directory check vector size - permanent storage = 8000H
+	dw  	8080h		; cks: directory check vector size - permanent storage = 8000H
 	dw  	16		; off: reserved tracks = 16 trks * (16 trks * 16 heads * 16 secs * 512 bytes) = 128k
 	db	2		; psh: 2 for 512 byte sectors
 	db	3		; phm: (512 / 128) - 1
@@ -337,7 +338,7 @@ dpb$hdnew:	; 8MB Hard Disk Drive (new format)
 	dw	1024 - 1	; drm: dir entries
 	db	11111111b	; al0: dir blk bit map, first byte
 	db	00000000b	; al1: dir blk bit map, second byte
-	dw	8000h		; cks: directory check vector size - permanent storage = 8000H
+	dw	8100h		; cks: directory check vector size - permanent storage = 8000H
 	dw	2		; off: reserved tracks
 	db	2		; psh: 2 for 512 byte sectors
 	db	3		; phm: (512 / 128) - 1

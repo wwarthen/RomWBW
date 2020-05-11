@@ -25,6 +25,7 @@
 ;   2019-12-24 [WBW] Fixed location of BIOS save area\
 ;   2020-04-29 [WBW] Updated for larger DPH (16 -> 20 bytes)
 ;   2020-05-06 [WBW] Add patch level to version compare
+;   2020-05-10 [WBW] Set media change flag in XDPH for CP/M 3
 ;_______________________________________________________________________________
 ;
 ; ToDo:
@@ -777,6 +778,10 @@ instc2:
 	inc	hl		; bump to slice field of DPH field
 	ld	a,(de)		; get slice from mapwrk
 	ld	(hl),a		; put slice into DPH field
+	ld	a,11		; media byte is 11 bytes ahead
+	call	addhl		; bump HL to media byte adr
+	or	$FF		; use $FF to signify media change
+	ld	(hl),a		; set media flag byte
 	inc	de		; bump to next mapwrk entry
 	inc	de		; ...
 	inc	de		; ...
@@ -800,6 +805,16 @@ instc3:
 	add	hl,de		; HL := SELMEM func
 	ld	a,1		; bank 1 is tpa bank
 	call	jphl
+;
+	; set SCB drive door open flag
+	ld	a,$54		; SCB drive door opened flag
+	ld	(scboff),a	; set offset parm
+	or	$FF		; SCB operation, $FF = set
+	ld	(scbop),a	; set operation parm
+	ld	(scbval),a	; set value parm to $FF
+	ld	c,$31		; get/set system control block
+	ld	de,scbpb	; scb parameter block adr
+	call	bdos
 ;
 	call	drvrst		; perform BDOS drive reset
 ;
@@ -1828,6 +1843,11 @@ heaplim	.dw	0		; heap limit address
 ;
 dirbuf	.dw	0		; directory buffer location
 ;
+scbpb:	; BDOS SCB get/set parm block
+scboff	.db	$54		; media open door flag
+scbop	.db	$FF		; set a byte
+scbval	.dw	$FF		; value to set
+;
 mapwrk	.fill	(4 * 16),$FF	; working copy of drive map
 ;
 devtbl:				; device table
@@ -1872,7 +1892,7 @@ stack	.equ	$		; stack top
 ; Messages
 ;
 indent	.db	"   ",0
-msgban1	.db	"ASSIGN v1.2 for RomWBW CP/M, 7-May-2020",0
+msgban1	.db	"ASSIGN v1.3 for RomWBW CP/M, 10-May-2020",0
 msghb	.db	" (HBIOS Mode)",0
 msgub	.db	" (UBIOS Mode)",0
 msgban2	.db	"Copyright 2020, Wayne Warthen, GNU GPL v3",0
