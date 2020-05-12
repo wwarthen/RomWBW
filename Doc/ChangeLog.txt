@@ -1,3 +1,9 @@
+Version 3.1.1
+-------------
+- WBW: Version bumped due to pervasive changes
+- WBW: Preliminary hard disk partition support (backward compatible)
+- WBW: Change Propeller VGA signal timings to 60Hz refresh
+
 Version 3.1
 -----------
 - WBW: Refactored ROM Loader
@@ -14,6 +20,10 @@ Version 3.1
 - M?O: RomWBW Disk Catalog document
 - DEN: Updated TMS to optionally trigger SYSTIMER interrupt (TMSTIMENABLE)
 - J?M: Updated KERMIT applications with VT100 terminal support
+- A?C: Added support for EPFDC
+- PMS: Added AY driver with new sound API support
+- DEN: Allow immediate autoboot startup
+- DEN: Support for floppy device count parameter
 
 Version 3.0.1
 -------------

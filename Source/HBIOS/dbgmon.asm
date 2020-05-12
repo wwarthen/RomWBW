@@ -104,6 +104,8 @@ SERIALCMDLOOP:
 	JP	Z,FILLMEM		; FILL MEMORY COMMAND
 	CP	'H'			; IS IT A "H" (Y/N)
 	JP	Z,HELP			; HELP COMMAND
+	CP	'X'			; IS IT A "X" (Y/N)
+	JP	Z,HALT			; HALT COMMAND
 	LD	HL,TXT_COMMAND		; POINT AT ERROR TEXT
 	CALL	PRTSTRH			; PRINT COMMAND LABEL
 
@@ -150,6 +152,16 @@ BOOT:
 	LD	HL,0			; ADDRESS ZERO
 	CALL	HB_BNKCALL		; DOES NOT RETURN
 #ENDIF
+;
+;__HALT_______________________________________________________________________
+;
+;	PERFORM HALT ACTION
+;_____________________________________________________________________________
+;
+HALT:
+	DI
+	HALT
+;
 ;__RUN________________________________________________________________________
 ;
 ;	TRANSFER OUT OF MONITOR, USER OPTION "R"
@@ -912,6 +924,7 @@ TXT_HELP	.TEXT	"\r\nMonitor Commands (all values in hex):"
 		.TEXT	"\r\nO xx yy          - Output to port xx value yy"
 		.TEXT	"\r\nP xxxx           - Program RAM at xxxx"
 		.TEXT	"\r\nR xxxx           - Run code at xxxx"
+		.TEXT	"\r\nX                - Halt system"
 		.TEXT	"$"
 ;
 #IF DSKYENABLE

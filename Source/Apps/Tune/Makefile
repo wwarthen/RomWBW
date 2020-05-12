@@ -7,13 +7,13 @@ include $(TOOLS)/Makefile.inc
 DEPS := Tune.asm $(shell find . -name '*.inc')
 
 Tune.com: $(DEPS)
-	$(TASM) -dWBW Tune.asm Tune.com
+	$(TASM) -dWBW Tune.asm Tune.com Tune.lst
 
 Tunezx.com: $(DEPS)
-	$(TASM) -dZX Tune.asm Tunezx.com
+	$(TASM) -dZX Tune.asm Tunezx.com Tunezx.lst
 
 Tunemsx.com: $(DEPS)
-	$(TASM) -dMSX Tune.asm Tunemsx.com
+	$(TASM) -dMSX Tune.asm Tunemsx.com Tunemsx.lst
 
 all::
 	mkdir -p $(DEST)/Tunes

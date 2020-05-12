@@ -69,7 +69,8 @@ xbnkmov:
 ; 1: TPA	BID_AUX		8Ch
 ; 2: BUFS	BID_AUX-1	8Bh
 ; 3: BUFS	BID_AUX-2	8Ah
-; ...
+; 4: BUFS	BID_AUX-3	89h
+; 5: BUFS	BID_AUX-4	88h
 ;
 ; N.B., Below BID_AUX is considered RAM disk bank.  Need to
 ; make sure RAM disk is kept small enough to stay below

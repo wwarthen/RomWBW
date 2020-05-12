@@ -40,6 +40,7 @@
 ;   2020-02-11 [WBW] Made hardware config & detection more flexible
 ;   2020-03-29 [WBW] Fix error in Z180 I/O W/S bracketing
 ;   2020-04-25 [DEN] Added support to use HBIOS Sound driver
+;   2020-05-02 [PMS] Add support for SBC-V2 slow-io hack
 ;_______________________________________________________________________________
 ;
 ; ToDo:
@@ -53,14 +54,18 @@
 #include	"hbios.inc"
 #include	"cpm.inc"
 #include	"tune.inc"
-
+;
 HEAPEND		.EQU	$C000		; End of heap storage
 ;
 TYPPT2		.EQU	1		; FILTYP value for PT2 sound file
 TYPPT3		.EQU	2		; FILTYP value for PT3 sound file
 TYPMYM		.EQU	3		; FILTYP value for MYM sound file
 ;
-
+; HIGH SPEED CPU CONTROL
+;
+SBCV2004	.EQU	0		; USE SBC-V2-004 HALF CLOCK DIVIDER
+CPUFAMZ180	.EQU	1		; USE Z180 WAIT STATE MANAGEMENT
+;
 ;Conditional assembly - use  -D switch on TASM or uz80as assembler to control
 _ZX		.EQU    0		; 1) Version of ROUT (ZX or MSX standards)
 _MSX		.EQU    0
@@ -401,43 +406,44 @@ IDBIO2:
 ;
 ;
 ;
-SLOWCPU:
-	LD A,(Z180)	; Z180 base I/O port
-	CP $FF		; Check for no value
-	RET Z		; Bail out if no value
-	ADD A,$1E	; Apply offset of CMR register
-	LD C,A		; And put it in C
-	LD B,0		; MSB for 16-bit I/O
-	IN A,(C)	; Get current value
-	LD (CMRSAV),A	; Save it to restore later
-	XOR A		; Go slow
-	OUT (C),A	; And update CMR
-	INC C		; Now point to CCR register
-	IN A,(C)	; Get current value
-	LD (CCRSAV),A	; Save it to restore later
-	XOR A		; Go slow
-	OUT (C),A	; And update CCR
-	RET
+;SLOWCPU:
+;	LD A,(Z180)	; Z180 base I/O port
+;	CP $FF		; Check for no value
+;	RET Z		; Bail out if no value
+;	ADD A,$1E	; Apply offset of CMR register
+;	LD C,A		; And put it in C
+;	LD B,0		; MSB for 16-bit I/O
+;	IN A,(C)	; Get current value
+;	LD (CMRSAV),A	; Save it to restore later
+;	XOR A		; Go slow
+;	OUT (C),A	; And update CMR
+;	INC C		; Now point to CCR register
+;	IN A,(C)	; Get current value
+;	LD (CCRSAV),A	; Save it to restore later
+;	XOR A		; Go slow
+;	OUT (C),A	; And update CCR
+;	RET
 ;
 ;
 ;
-NORMCPU:
-	LD A,(Z180)	; Z180 base I/O port
-	CP $FF		; Check for no value
-	RET Z		; Bail out if no value
-	ADD A,$1E	; Apply offset of CMR register
-	LD C,A		; And put it in C
-	LD B,0		; MSB for 16-bit I/O
-	LD A,(CMRSAV)	; Get original CMR value
-	OUT (C),A	; And update CMR
-	INC C		; Now point to CCR register
-	LD A,(CCRSAV)	; Get original CCR value
-	OUT (C),A	; And update CCR
-	RET
+;NORMCPU:
+;	LD A,(Z180)	; Z180 base I/O port
+;	CP $FF		; Check for no value
+;	RET Z		; Bail out if no value
+;	ADD A,$1E	; Apply offset of CMR register
+;	LD C,A		; And put it in C
+;	LD B,0		; MSB for 16-bit I/O
+;	LD A,(CMRSAV)	; Get original CMR value
+;	OUT (C),A	; And update CMR
+;	INC C		; Now point to CCR register
+;	LD A,(CCRSAV)	; Get original CCR value
+;	OUT (C),A	; And update CCR
+;	RET
 ;
-;
+;	SLOW DOWN I/O FOR FAST CPU'S
 ;
 SLOWIO:
+#IF (CPUFAMZ180)
 	LD A,(Z180)	; Z180 base I/O port
 	CP $FF		; Check for no value
 	RET Z		; Bail out if no value
@@ -448,11 +454,17 @@ SLOWIO:
 	LD (DCSAV),A	; Save it to restore later
 	OR %00110000	; Force slow operation (I/O W/S=3)
 	OUT (C),A	; And update DCNTL
+#ENDIF
+#IF (SBCV2004)
+	LD A,8		; sbc-v2-004 change to
+	OUT (112),A	; half clock speed
+#ENDIF
 	RET
 ;
-;
+;	RESTORE I/O SPEED FOR FAST CPU'S
 ;
 NORMIO:
+#IF (CPUFAMZ180)
 	LD A,(Z180)	; Z180 base I/O port
 	CP $FF		; Check for no value
 	RET Z		; Bail out if no value
@@ -461,8 +473,12 @@ NORMIO:
 	LD B,0		; MSB for 16-bit I/O
 	LD A,(DCSAV)	; Get saved DCNTL value
 	OUT (C),A	; And restore it
+#ENDIF
+#IF (SBCV2004)
+	LD A,0		; sbc-v2-004 change to
+	OUT (112),A	; normal clock speed
+#ENDIF
 	RET
-
 ;
 ERRBIO:	; Invalid BIOS or version
 	LD	DE,MSGBIO
@@ -717,7 +733,9 @@ CurPos	.DB 0 ;for visualization only (i.e. no need for playing)
 
 ;Identifier
 	.IF Id
-	.DB "=Uni PT2 and PT3 Player r.",Release,"="
+	.DB "=Uni PT2 and PT3 Player r."
+	.DB Release
+	.DB "="
 	.ENDIF
 
 	.IF LoopChecker
@@ -1980,87 +1998,78 @@ LOUT	OUT 	(C), A		; SELECT REGISTER
 	JP 	M, LOUT2	; IF BIT 7 SET, RETURN W/O WRITING VALUE
 	LD 	C, D		; SELECT DATA PORT
 	OUT 	(C), A		; WRITE VALUE TO REGISTER 13
-LOUT2
-	CALL 	NORMIO
+LOUT2	CALL 	NORMIO
 	EI
 	RET			; AND DONE
 
 PLAYVIAHBIOS:
-	LD	B, BF_SNDVOL
-	LD	C, 0
-	LD	H, 0
-	LD	A, (AYREGS + AmplA)
-	AND	$0F
-	rlca
-	rlca
-	rlca
-	rlca
-	LD	L, A
+;
+;	CHANNEL 0 (LEFT)
+;
+	LD	BC, (BF_SNDVOL*256)+0	; SET VOLUME
+	LD	A, (AYREGS + AmplA)	; DEVICE 0
+	ADD	A,A			; GET 4-BIT 	
+	ADD	A,A			; VOLUME 0-15
+	ADD	A,A			; AND CONVERT
+	ADD	A,A			; TO HBIOS	
+	LD	L, A                    ; RANGE 0-255
 	RST	08
-
-	LD	B, BF_SNDPRD
-	LD	C, 0
-	LD	HL, (AYREGS+TonA)
-	ld	a, h
-	AND	$0F
-	LD	H, A
+;
+	LD	BC, (BF_SNDPRD*256)+0	; SET PERIOD
+	LD	HL, (AYREGS+TonA)	; DEVICE 0
+	LD	A, H       		; GET 12-BIT ONE PERIOD
+	AND	$0F			; MASK OFF HIGH
+	LD	H, A                    ; NIBBLE 
 	RST	08
-
-	LD	B, BF_SNDPLAY
-	LD	C, 0
-	LD	D, 0
+;
+	LD	BC, (BF_SNDPLAY*256)+0	; PLAY
+	LD	D, 0			; DEVICE 0
+	RST	08			; CHANNEL 0
+;
+;	CHANNEL 1 (MIDDLE)
+;
+	LD	BC, (BF_SNDVOL*256)+0	; SET VOLUME
+	LD	A, (AYREGS + AmplB)	; DEVICE 0
+	ADD	A,A			; GET 4-BIT 	
+	ADD	A,A			; VOLUME 0-15
+	ADD	A,A			; AND CONVERT
+	ADD	A,A			; TO HBIOS	
+	LD	L, A                    ; RANGE 0-255
 	RST	08
-
-	LD	B, BF_SNDVOL
-	LD	C, 0
-	LD	H, 0
-	LD	A, (AYREGS + AmplB)
-	AND	$0F
-	rlca
-	rlca
-	rlca
-	rlca
-	LD	L, A
+;
+	LD	BC, (BF_SNDPRD*256)+0	; SET PERIOD
+	LD	HL, (AYREGS+TonB)	; DEVICE 0
+	ld	A, H       		; GET 12-BIT ONE PERIOD
+	AND	$0F			; MASK OFF HIGH
+	LD	H, A                    ; NIBBLE 
 	RST	08
-
-	LD	B, BF_SNDPRD
-	LD	C, 0
-	LD	HL, (AYREGS+TonB)
-	ld	a, h
-	AND	$0F
-	LD	H, A
+;
+	LD	BC, (BF_SNDPLAY*256)+0	; PLAY
+	LD	D, 1			; DEVICE 0
+	RST	08			; CHANNEL 0
+;
+;	CHANNEL 2 (RIGHT)
+;
+	LD	BC, (BF_SNDVOL*256)+0	; SET VOLUME
+	LD	A, (AYREGS + AmplC)	; DEVICE 0
+	ADD	A,A			; GET 4-BIT 	
+	ADD	A,A			; VOLUME 0-15
+	ADD	A,A			; AND CONVERT
+	ADD	A,A			; TO HBIOS	
+	LD	L, A                    ; RANGE 0-255
 	RST	08
-
-	LD	B, BF_SNDPLAY
-	LD	C, 0
-	LD	D, 1
+;
+	LD	BC, (BF_SNDPRD*256)+0	; SET PERIOD
+	LD	HL, (AYREGS+TonC)	; DEVICE 0
+	LD	A, H       		; GET 12-BIT ONE PERIOD
+	AND	$0F			; MASK OFF HIGH
+	LD	H, A                    ; NIBBLE 
 	RST	08
-
-	LD	B, BF_SNDVOL
-	LD	C, 0
-	LD	H, 0
-	LD	A, (AYREGS + AmplC)
-	AND	$0F
-	rlca
-	rlca
-	rlca
-	rlca
-	LD	L, A
-	RST	08
-
-	LD	B, BF_SNDPRD
-	LD	C, 0
-	LD	HL, (AYREGS+TonC)
-	ld	a, h
-	AND	$0F
-	LD	H, A
-	RST	08
-
-	LD	B, BF_SNDPLAY
-	LD	C, 0
-	LD	D, 2
-	RST	08
-
+;
+	LD	BC, (BF_SNDPLAY*256)+0	; PLAY
+	LD	D, 2			; DEVICE 0
+	RST	08			; CHANNEL 0
+	
 	RET
 #ENDIF
 
