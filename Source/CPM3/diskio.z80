@@ -191,7 +191,7 @@ dpb$max:
 	db  	5		; bsh: block shift factor
 	db  	31		; blm: block mask
 	db  	1		; exm: extent mask
-	dw  	2047		; dsm: total storage in blocks - 1 = (8mb / 4k bls) - 1 = 2047
+	dw  	2048 - 1	; dsm: total storage in blocks - 1 = (8mb / 4k bls) - 1 = 2047
 	dw  	1024 - 1	; drm: dir entries - 1
 	db  	11111111b	; al0: dir blk bit map, first byte
 	db  	00000000b	; al1: dir blk bit map, second byte
@@ -211,7 +211,7 @@ dpb$rom:	; 384K ROM Drive
 	dw  	256 - 1		; drm: dir entries - 1 = 256 - 1 = 255
 	db  	11110000b	; al0: dir blk bit map, first byte
 	db  	00000000b	; al1: dir blk bit map, second byte
-	dw  	8000h		; cks: directory check vector size - permanent storage = 8000H
+	dw  	8040h		; cks: directory check vector size - permanent storage = 8000H
 	dw  	0		; off: reserved tracks = 16 trks * (16 trks * 16 heads * 16 secs * 512 bytes) = 128k
 	db	2		; psh: 2 for 512 byte sectors
 	db	3		; phm: (512 / 128) - 1
@@ -226,7 +226,7 @@ dpb$ram:	; 256K RAM Drive
 	dw  	256 - 1		; drm: dir entries - 1 = 256 - 1 = 255
 	db  	11110000b	; al0: dir blk bit map, first byte
 	db  	00000000b	; al1: dir blk bit map, second byte
-	dw  	8000h		; cks: directory check vector size - permanent storage = 8000H
+	dw  	8040h		; cks: directory check vector size - permanent storage = 8000H
 	dw  	0		; off: reserved tracks = 16 trks * (16 trks * 16 heads * 16 secs * 512 bytes) = 128k
 	db	2		; psh: 2 for 512 byte sectors
 	db	3		; phm: (512 / 128) - 1
@@ -236,11 +236,11 @@ dpb$rf:		; 4MB RAM Floppy Drive
 	db  	4		; bsh: block shift factor
 	db  	15		; blm: block mask
 	db  	0		; exm: extent mask
-	dw  	2047		; dsm: total storage in blocks - 1 = (4mb / 2k bls) - 1 = 2047
-	dw  	255		; drm: dir entries - 1 = 256 - 1 = 255
+	dw  	2048 - 1	; dsm: total storage in blocks - 1 = (4mb / 2k bls) - 1 = 2047
+	dw  	256 - 1		; drm: dir entries - 1 = 256 - 1 = 255
 	db  	11110000b	; al0: dir blk bit map, first byte
 	db  	00000000b	; al1: dir blk bit map, second byte
-	dw  	8000h		; cks: directory check vector size - permanent storage = 8000H
+	dw  	8040h		; cks: directory check vector size - permanent storage = 8000H
 	dw  	0		; off: reserved tracks = 0 trks
 	db	2		; psh: 2 for 512 byte sectors
 	db	3		; phm: (512 / 128) - 1
@@ -250,7 +250,7 @@ dpb$hd:		; 8MB Hard Disk Drive w/ 512 dir entries
 	db  	5		; bsh: block shift factor
 	db  	31		; blm: block mask
 	db  	1		; exm: extent mask
-	dw  	2047		; dsm: total storage in blocks - 1 = (8mb / 4k bls) - 1 = 2047
+	dw  	2048 - 1	; dsm: total storage in blocks - 1 = (8mb / 4k bls) - 1 = 2047
 	dw  	512 - 1		; drm: dir entries - 1 = 512 - 1 = 511
 	db  	11110000b	; al0: dir blk bit map, first byte
 	db  	00000000b	; al1: dir blk bit map, second byte
@@ -264,8 +264,8 @@ dpb$fd720:	; 3.5" DS/DD Floppy Drive (720K)
 	db  	4		; bsh: block shift factor
 	db  	15		; blm: block mask
 	db  	0		; exm: extent mask
-	dw  	350		; dsm: total storage in blocks - 1 blk = ((720k - 18k off) / 2k bls) - 1 = 350
-	dw  	127		; drm: dir entries - 1 = 128 - 1 = 127
+	dw  	351 - 1		; dsm: total storage in blocks - 1 blk = ((720k - 18k off) / 2k bls) - 1 = 350
+	dw  	128 - 1		; drm: dir entries - 1 = 128 - 1 = 127
 	db  	11000000b	; al0: dir blk bit map, first byte
 	db  	00000000b	; al1: dir blk bit map, second byte
 	dw  	32		; cks: directory check vector size = 128 / 4
@@ -278,8 +278,8 @@ dpb_fd144:	; 3.5" DS/HD Floppy Drive (1.44M)
 	db  	4		; bsh: block shift factor
 	db  	15		; blm: block mask
 	db  	0		; exm: extent mask
-	dw  	710		; dsm: total storage in blocks - 1 blk = ((1,440k - 18k off) / 2k bls) - 1 = 710
-	dw  	255		; drm: dir entries - 1 = 256 - 1 = 255
+	dw  	711 - 1		; dsm: total storage in blocks - 1 blk = ((1,440k - 18k off) / 2k bls) - 1 = 710
+	dw  	256 - 1		; drm: dir entries - 1 = 256 - 1 = 255
 	db  	11110000b	; al0: dir blk bit map, first byte
 	db  	00000000b	; al1: dir blk bit map, second byte
 	dw  	64		; cks: directory check vector size = 256 / 4
@@ -292,8 +292,8 @@ dpb_fd360:	; 5.25" DS/DD Floppy Drive (360K)
 	db  	4		; bsh: block shift factor
 	db  	15		; blm: block mask
 	db  	1		; exm: extent mask
-	dw  	170		; dsm: total storage in blocks - 1 blk = ((360k - 18k off) / 2k bls) - 1 = 170
-	dw  	127		; drm: dir entries - 1 = 128 - 1 = 127
+	dw  	171 - 1		; dsm: total storage in blocks - 1 blk = ((360k - 18k off) / 2k bls) - 1 = 170
+	dw  	128 - 1		; drm: dir entries - 1 = 128 - 1 = 127
 	db  	11110000b	; al0: dir blk bit map, first byte
 	db  	00000000b	; al1: dir blk bit map, second byte
 	dw  	32		; cks: directory check vector size = 128 / 4
@@ -306,8 +306,8 @@ dpb_fd120:	; 5.25" DS/HD Floppy Drive (1.2M)
 	db  	4		; bsh: block shift factor
 	db  	15		; blm: block mask
 	db  	0		; exm: extent mask
-	dw  	591		; dsm: total storage in blocks - 1 blk = ((1,200k - 15k off) / 2k bls) - 1 = 591
-	dw  	255		; drm: dir entries - 1 = 256 - 1 = 255
+	dw  	592 - 1		; dsm: total storage in blocks - 1 blk = ((1,200k - 15k off) / 2k bls) - 1 = 591
+	dw  	256 - 1		; drm: dir entries - 1 = 256 - 1 = 255
 	db  	11110000b	; al0: dir blk bit map, first byte
 	db  	00000000b	; al1: dir blk bit map, second byte
 	dw  	64		; cks: directory check vector size = 256 / 4
@@ -320,8 +320,8 @@ dpb_fd111:	; 8" DS/DD Floppy Drive (1.11M)
 	db  	4		; bsh: block shift factor
 	db  	15		; blm: block mask
 	db  	0		; exm: extent mask
-	dw  	569		; dsm: total storage in blocks - 1 blk = ((1,155k - 15k off) / 2k bls) - 1 = 569
-	dw  	255		; drm: dir entries - 1 = 256 - 1 = 255
+	dw  	570 - 1		; dsm: total storage in blocks - 1 blk = ((1,155k - 15k off) / 2k bls) - 1 = 569
+	dw  	256 - 1		; drm: dir entries - 1 = 256 - 1 = 255
 	db  	11110000b	; al0: dir blk bit map, first byte
 	db  	00000000b	; al1: dir blk bit map, second byte
 	dw  	64		; cks: directory check vector size = 256 / 4
@@ -650,6 +650,7 @@ dsk$rw$retry:
 	jr	dsk$rw9			; do the disk I/O
 	
 dsk$rw2:
+	; LBA I/O
 	push	de			; save hiword of LBA
 	push	hl			; save loword of LBA
 	
