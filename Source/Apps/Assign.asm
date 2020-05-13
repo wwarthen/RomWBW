@@ -26,6 +26,7 @@
 ;   2020-04-29 [WBW] Updated for larger DPH (16 -> 20 bytes)
 ;   2020-05-06 [WBW] Add patch level to version compare
 ;   2020-05-10 [WBW] Set media change flag in XDPH for CP/M 3
+;   2020-05-12 [WBW] Back out media change flag
 ;_______________________________________________________________________________
 ;
 ; ToDo:
@@ -778,10 +779,10 @@ instc2:
 	inc	hl		; bump to slice field of DPH field
 	ld	a,(de)		; get slice from mapwrk
 	ld	(hl),a		; put slice into DPH field
-	ld	a,11		; media byte is 11 bytes ahead
-	call	addhl		; bump HL to media byte adr
-	or	$FF		; use $FF to signify media change
-	ld	(hl),a		; set media flag byte
+;	ld	a,11		; media byte is 11 bytes ahead
+;	call	addhl		; bump HL to media byte adr
+;	or	$FF		; use $FF to signify media change
+;	ld	(hl),a		; set media flag byte
 	inc	de		; bump to next mapwrk entry
 	inc	de		; ...
 	inc	de		; ...
@@ -1892,7 +1893,7 @@ stack	.equ	$		; stack top
 ; Messages
 ;
 indent	.db	"   ",0
-msgban1	.db	"ASSIGN v1.3 for RomWBW CP/M, 10-May-2020",0
+msgban1	.db	"ASSIGN v1.4 for RomWBW CP/M, 12-May-2020",0
 msghb	.db	" (HBIOS Mode)",0
 msgub	.db	" (UBIOS Mode)",0
 msgban2	.db	"Copyright 2020, Wayne Warthen, GNU GPL v3",0

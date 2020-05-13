@@ -95,6 +95,7 @@ Id		.EQU	1	; 5) Insert official identificator
 
 	CALL	CLI_ABRT_IF_OPT_FIRST
 	CALL	CLI_HAVE_HBIOS_SWITCH
+	CALL	CLI_OCTAVE_ADJST
 	JP	CONTINUE
 
 CONTINUE:
@@ -581,14 +582,14 @@ FILTYP		.DB	0	; Sound file type (TYPPT2, TYPPT3, TYPMYM)
 ;
 TMP		.DB	0	; work around use of undocumented Z80
 
-HBIOSOPT:	.DB	"--HBIOS", 0
 HBIOSMD		.DB	0	; NON-ZERO IF USING HBIOS SOUND DRIVER, ZERO OTHERWISE
+OCTAVEADJ	.DB	0	; AMOUNT TO ADJUST OCTAVE UP OR DOWN
 
 MSGBAN		.DB	"Tune Player for RomWBW v3.1, 25-Apr-2020",0
 MSGUSE		.DB	"Copyright (C) 2020, Wayne Warthen, GNU GPL v3",13,10
 		.DB	"PTxPlayer Copyright (C) 2004-2007 S.V.Bulba",13,10
 		.DB	"MYMPlay by Marq/Lieves!Tuore",13,10,13,10
-		.DB	"Usage: TUNE <filename>.[PT2|PT3|MYM] [--hbios]",0
+		.DB	"Usage: TUNE <filename>.[PT2|PT3|MYM] [--hbios] [+tn|-tn]",0
 MSGBIO		.DB	"Incompatible BIOS or version, "
 		.DB	"HBIOS v", '0' + RMJ, ".", '0' + RMN, " required",0
 MSGPLT		.DB	"Hardware error, system not supported!",0
@@ -2003,74 +2004,74 @@ LOUT2	CALL 	NORMIO
 	RET			; AND DONE
 
 PLAYVIAHBIOS:
+;	CHANNEL 0
+	LD	HL, AYREGS + AmplA
+	LD	DE, AYREGS + TonA
+	LD	B, 0
+	CALL	PLAYNOTE
 ;
-;	CHANNEL 0 (LEFT)
-;
-	LD	BC, (BF_SNDVOL*256)+0	; SET VOLUME
-	LD	A, (AYREGS + AmplA)	; DEVICE 0
-	ADD	A,A			; GET 4-BIT 	
+;	CHANNEL 1
+	LD	HL, AYREGS + AmplB
+	LD	DE, AYREGS + TonB
+	LD	B, 1
+	CALL	PLAYNOTE
+
+;	CHANNEL 2
+	LD	HL, AYREGS + AmplC
+	LD	DE, AYREGS + TonC
+	LD	B, 2
+	JP	PLAYNOTE
+
+PLAYNOTE:
+	PUSH	BC			; CHANNEL IN B
+	PUSH	DE			; PERIOD ADDR IN DE
+
+	LD	A, (HL)
+	ADD	A,A			; GET 4-BIT
 	ADD	A,A			; VOLUME 0-15
 	ADD	A,A			; AND CONVERT
-	ADD	A,A			; TO HBIOS	
+	ADD	A,A			; TO HBIOS
 	LD	L, A                    ; RANGE 0-255
+	LD	BC, (BF_SNDVOL*256)+0	; SET VOLUME
 	RST	08
 ;
-	LD	BC, (BF_SNDPRD*256)+0	; SET PERIOD
-	LD	HL, (AYREGS+TonA)	; DEVICE 0
+	POP	HL			; RESTORE PERIOD ADDR
+	LD	A, (HL)			; DEVICE 0
+	INC	HL
+	LD	H, (HL)
+	LD	L, A
 	LD	A, H       		; GET 12-BIT ONE PERIOD
 	AND	$0F			; MASK OFF HIGH
-	LD	H, A                    ; NIBBLE 
-	RST	08
-;
-	LD	BC, (BF_SNDPLAY*256)+0	; PLAY
-	LD	D, 0			; DEVICE 0
-	RST	08			; CHANNEL 0
-;
-;	CHANNEL 1 (MIDDLE)
-;
-	LD	BC, (BF_SNDVOL*256)+0	; SET VOLUME
-	LD	A, (AYREGS + AmplB)	; DEVICE 0
-	ADD	A,A			; GET 4-BIT 	
-	ADD	A,A			; VOLUME 0-15
-	ADD	A,A			; AND CONVERT
-	ADD	A,A			; TO HBIOS	
-	LD	L, A                    ; RANGE 0-255
-	RST	08
-;
+	LD	H, A                    ; NIBBLE
+
+	LD	A, (OCTAVEADJ)
+	OR	A
+	JR	Z, PLAYNOTE3		; NO OCTAVE ADJUSTMENT
+	BIT	7, A
+	JR	Z, PLAYNOTE2		; OCTAVE DOWN ADJUSTMENT
+
+PLAYNOTE1:
+	ADD	HL, HL			; MULTIPLE BY 2 FOR EACH OCTAVE
+	INC	A
+	JR	NZ, PLAYNOTE1
+	JR	PLAYNOTE3
+
+PLAYNOTE2:
+	SRL	H			; DIVIDE BY 2 FOR EACH OCTAVE
+	RR	L
+	DEC	A
+	JR	NZ, PLAYNOTE2
+
+PLAYNOTE3
 	LD	BC, (BF_SNDPRD*256)+0	; SET PERIOD
-	LD	HL, (AYREGS+TonB)	; DEVICE 0
-	ld	A, H       		; GET 12-BIT ONE PERIOD
-	AND	$0F			; MASK OFF HIGH
-	LD	H, A                    ; NIBBLE 
 	RST	08
 ;
+	POP	DE			; RESTORE CHANNEL IN D (FROM B)
 	LD	BC, (BF_SNDPLAY*256)+0	; PLAY
-	LD	D, 1			; DEVICE 0
-	RST	08			; CHANNEL 0
-;
-;	CHANNEL 2 (RIGHT)
-;
-	LD	BC, (BF_SNDVOL*256)+0	; SET VOLUME
-	LD	A, (AYREGS + AmplC)	; DEVICE 0
-	ADD	A,A			; GET 4-BIT 	
-	ADD	A,A			; VOLUME 0-15
-	ADD	A,A			; AND CONVERT
-	ADD	A,A			; TO HBIOS	
-	LD	L, A                    ; RANGE 0-255
 	RST	08
-;
-	LD	BC, (BF_SNDPRD*256)+0	; SET PERIOD
-	LD	HL, (AYREGS+TonC)	; DEVICE 0
-	LD	A, H       		; GET 12-BIT ONE PERIOD
-	AND	$0F			; MASK OFF HIGH
-	LD	H, A                    ; NIBBLE 
-	RST	08
-;
-	LD	BC, (BF_SNDPLAY*256)+0	; PLAY
-	LD	D, 2			; DEVICE 0
-	RST	08			; CHANNEL 0
-	
+
 	RET
+
 #ENDIF
 
 #IF ACBBAC
