@@ -19,7 +19,8 @@ copy ..\CPM3\zpmbios3.spr bnkbios3.spr
 copy ..\CPM3\gencpm.com .
 copy ..\CPM3\biosldrd.rel .
 copy ..\CPM3\biosldrc.rel .
-rem copy ..\CPM3\cpmldr.com .
+copy ..\CPM3\cpmldr.com .
+copy ..\CPM3\cpmldr.sys .
 
 rem ZPM Loader
 echo.
@@ -46,3 +47,22 @@ rem Loader
 tasm -t80 -g3 -fFF loader.asm loader.bin loader.lst
 
 copy /b loader.bin + zpmldr.bin zpmldr.sys
+
+rem Copy OS files to Binary directory
+
+copy zpmldr.com ..\..\Binary\ZPM3
+copy zpmldr.sys ..\..\Binary\ZPM3
+copy cpmldr.com ..\..\Binary\ZPM3
+copy cpmldr.sys ..\..\Binary\ZPM3
+copy autotog.com ..\..\Binary\ZPM3
+copy clrhist.com ..\..\Binary\ZPM3
+copy setz3.com ..\..\Binary\ZPM3
+copy cpm3.sys ..\..\Binary\ZPM3
+copy zccp.com ..\..\Binary\ZPM3
+copy zinstal.zpm ..\..\Binary\ZPM3
+copy startzpm.com ..\..\Binary\ZPM3
+copy makedos.com ..\..\Binary\ZPM3
+copy gencpm.dat ..\..\Binary\ZPM3
+copy bnkbios3.spr ..\..\Binary\ZPM3
+copy bnkbdos3.spr ..\..\Binary\ZPM3
+copy resbdos3.spr ..\..\Binary\ZPM3

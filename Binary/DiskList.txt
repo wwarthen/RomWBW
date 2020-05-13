@@ -17,6 +17,12 @@ a floppy or hard/CF/SD disk.  You can use your modern computer
 media.  The disk media will then be ready to use in your RomWBW
 System.
 
+WARNING: The hdnew_*.img disk images are part of a new disk
+format that is a work in progress.  Do not use these disk
+images without knowing exactly what you are doing!  The
+hd_*.img disk images continue to be the images you should
+be using under normal circumstances.
+
 A description of the disk images is provided later in this file.
 For more information on the creatioin of these images including
 instructions for customizing them or creating your own, refer to
