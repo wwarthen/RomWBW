@@ -1532,12 +1532,46 @@ System (SYS)
 
 | _Entry Parameters_
 |       B: 0xF0
+|       C: Subfunction (see below)
 
 | _Exit Results_
 |       A: Status (0=OK, else error)
 
+This function performs various forms of a system reset depending on
+the value of the subfucntion.  See subfunctions below.
+
+#### SYSRESET Subfunction 0x00 -- Internal HBIOS Reset (RESINT)
+
+|      _Entry Parameters_
+|           BC: 0xFD00
+
+|      _Returned Values_
+|           A: Status (0=OK, else error)
+
 Perform a soft reset of HBIOS. Releases all HBIOS memory allocated by
 current OS. Does not reinitialize physical devices.
+
+#### SYSRESET Subfunction 0x01 -- Warm Start System (RESWARM)
+
+|      _Entry Parameters_
+|           BC: 0xFD01
+
+|      _Returned Values_
+|           <none>
+
+Warm start the system returning to the boot loader prompt.  Does not
+reinitialize physical devices.
+
+#### SYSRESET Subfunction 0x02 -- Cold Start System (RESCOLD)
+
+|      _Entry Parameters_
+|           BC: 0xFD02
+
+|      _Returned Values_
+|           <none>
+
+Perform a system cold start (like a power on).  All devices are
+reinitialized.
 
 ### Function 0xF1 -- System Version (SYSVER)
 

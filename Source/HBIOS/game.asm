@@ -300,9 +300,14 @@ EXIT:
 ;           CALL    BDOS
 	    CALL    PRTSTRDE
 
-	    LD      A,00H
-	    LD      HL,0000H
-            JP    0FFF9H
+	    ;LD      A,00H
+	    ;LD      HL,0000H
+            ;JP    0FFF9H
+	    
+	    LD       B,0F0H
+	    LD       C,01H
+	    CALL     0FFF0H
+	    
 ;            RET
 
 ISOVER:
