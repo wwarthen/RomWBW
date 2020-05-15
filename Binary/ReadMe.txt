@@ -92,6 +92,12 @@ intended to be copied to the start of any type of hard disk media
 (typically a CF Card or SD Card). The resulting media will be usable 
 on any RomWBW-based system that accepts the corresponding media type.
 
+WARNING: The hdnew_*.img disk images are part of a new disk
+format that is a work in progress.  Do not use these disk
+images without knowing exactly what you are doing!  The
+hd_*.img disk images continue to be the images you should
+be using under normal circumstances.
+
 Documentation of the pre-built disk images is contained in the 
 DiskList.txt file in this directory.
 

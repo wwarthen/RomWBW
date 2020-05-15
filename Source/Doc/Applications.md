@@ -949,6 +949,24 @@ accurately pace the sound file output. If no system timer is
 available, a delay loop is calculated instead. The delay loop will not
 be as accurate as the system timer.
 
+There are two modes of operations.  A direct hardware interface for the
+AY-3-8910 or YM2149 chips, or a compatibility layer thru HBIOS supporting
+the SN76489 chip.
+
+By default the application will attempt to interface directly to the sound
+chip.  The optional argument `--hbios` supplied after the filename, will
+enable the application to use the HBIOS sound driver.
+
+The HBIOS mode also support other switch as desribed below.
+
+| Switch      | Description                                            |
+| ----------- | ------------------------------------------------------ |
+|  `--hbios`  | Utilise HBIOS' sound driver                            |
+| `+t1`       | Play tune an octave higher                             |
+| `+t2`       | Play tune two octaves higher                           |
+| `-t1`       | Play tune an octave lower                              |
+| `-t2`       | Play tune two octaves lower                            |
+
 All RomWBW operating system boot disks include a selection of sound
 files in user area 3.
 
