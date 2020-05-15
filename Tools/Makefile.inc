@@ -112,7 +112,7 @@ all:: $(OBJECTS)
 	@for dir in $(SUBDIRS) ; do \
 		( echo "building in `pwd`/$$dir" ; $(MAKE) --directory "$$dir" all ) ; \
 	done
-	@if [ "$(DEST)" ] ; then for file in $(OBJECTS) ; do \
+	@if [ "$(DEST)" ] ; then for file in $(filter-out $(NOCOPY),$(OBJECTS)) ; do \
 		mkdir -p $(DEST) ; \
 		echo copy $$file to $(DEST) ; \
 		cp $$($(CASEFN) $$file) $(DEST) ; \

@@ -1114,12 +1114,81 @@ your choice. This process is described below in the Disk Images
 section. If you wish to update existing disk media in your system, you
 need to perform the following steps.
 
-If the disk is bootable, you need to update the system tracks of the
-disk. This is done using a SYSCOPY command such as `SYSCOPY
-C:=B:ZSYS.SYS`. For a ZSDOS boot disk, use ZSYS.SYS. For a CP/M 2.2
-disk, use CPM.SYS. For a CP/M 3 or ZPM3 disk, use CPMLDR.SYS.
-CPMLDR.SYS is not provided on the ROM disk, so you will need to
-upload it from the distribution.
+If the disk is bootable, you need to update the system image on the
+disk using the procedure described below corresponsing to the
+operating system on your disk.
+
+* **CP/M 2.2**
+
+  Boot to CP/M 2.2 from ROM, then use `SYSCOPY` to update the system
+  image on **all** CP/M 2.2 boot disks/slices.  The CP/M 2.2 system image
+  is called CPM.SYS and is found on the ROM disk.  For example:
+  
+  `B>SYSCOPY C:=CPM.SYS`
+
+* **ZSDOS**
+
+  Boot to Z-System from ROM, then use `SYSCOPY` to update the system
+  image on **all** ZSDOS boot disks/slices.  The ZSDOS system image
+  is called ZSYS.SYS and is found on the ROM disk.  For example:
+  
+  `B>SYSCOPY C:=ZSYS.SYS`
+
+* **NZCOM**
+
+  NZCOM runs on top of either CP/M 2.2 or ZSDOS.  By default, the
+  RomWBW disk image for NZCOM uses ZSDOS.  Follow the corresponding
+  procedure above to update the system image on the NZCOM boot
+  disks/slices.
+
+* **CP/M 3**
+
+  CP/M 3 uses a multi-step boot process involving multiple files.
+  The CP/M 3 boot files are not included on the ROM disk due to
+  space constraints.  You will need to transfer the files to your
+  system from the RomWBW distribution directory Binary\\CPM3.
+  
+  After this is done, you will need to use `SYSCOPY` to place
+  the CP/M 3 loader image on the boot tracks of all CP/M 3
+  boot disks/slices.  The loader image is called `CPMLDR.SYS`.
+  You must then copy (at a minimum) `CPM3.SYS` and `CCP.COM`
+  onto the disk/slice.  Assuming you copied the CP/M 3 boot files
+  onto your RAM disk at A:, you would use:
+  
+  ```
+  A>B:SYSCOPY C:=CPMLDR.SYS
+  A>B:COPY CPM3.SYS C:
+  A>B:COPY CCP.COM C:
+  ```
+
+* **ZPM3**
+
+  ZPM3 uses a multi-step boot process involving multiple files.
+  The ZPM3 boot files are not included on the ROM disk due to
+  space constraints.  You will need to transfer the files to your
+  system from the RomWBW distribution directory Binary\\ZPM3.
+  
+  After this is done, you will need to use `SYSCOPY` to place
+  the ZPM3 loader image on the boot tracks of all ZPM3
+  boot disks/slices.  The loader image is called `CPMLDR.SYS`.
+  You must then copy (at a minimum) `CPM3.SYS`, `ZCCP.COM`,
+  `ZINSTAL.ZPM`, and `STARTZPM.COM` onto the disk/slice.
+  Assuming you copied the ZPM3 boot files onto your RAM disk
+  at A:, you would use:
+  
+  ```
+  A>B:SYSCOPY C:=CPMLDR.SYS
+  A>B:COPY CPM3.SYS C:
+  A>B:COPY ZCCP.COM C:
+  A>B:COPY ZINSTAL.ZPM C:
+  A>B:COPY STARTZPM.COM C:
+  ```
+  
+  You may be wondering if the references to `CPMLDR.SYS` and
+  `CPM3.SYS` are typos.  They are not.  ZPM3 uses the same loader
+  image as CPM3.  The ZPM3 main system code file is called `CPM3.SYS`
+  which is the same name as CP/M 3 uses, but the file contents are
+  not the same.
 
 Finally, if you have copies of any of the RomWBW custom applications
 on your hard disk, you need to update them with the latest copies. The
