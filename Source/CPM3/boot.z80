@@ -678,7 +678,7 @@ signon$msg	db	13,10,'ZPM3'
 	if banked
 		db	' [BANKED]'
 	endif
-		db	' on HBIOS v'
+		db	' for HBIOS v'
 		biosver
 		db	13,10,13,10,0
 		
@@ -697,7 +697,7 @@ signon$msg	db	13,10,'CP/M v3.0'
 	if banked
 		db	' [BANKED]'
 	endif
-		db	' on HBIOS v'
+		db	' for HBIOS v'
 		biosver
 		db	13,10,13,10,0
 		
