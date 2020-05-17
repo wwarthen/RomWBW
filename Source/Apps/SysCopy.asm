@@ -17,6 +17,7 @@
 ; Change Log:
 ;   2016-04-24 [WBW] Updated to preserve MBR partition table
 ;   2020-02-17 [WBW] Updated for CP/M 3
+;   2020-05-16 [WBW] Fixed SPT for CP/M 3
 ;_______________________________________________________________________________
 ;
 ; ToDo:
@@ -441,6 +442,16 @@ setdsk:
 	ld	c,(hl)
 	inc	hl
 	ld	b,(hl)		; BC := sectors per track
+	; handle CP/M 3 physical sector size
+	ld	a,(v3os)	; CP/M 3 or greater?
+	or	a		; set flags
+	jr	z,setdsk1	; if not, continue
+	; adjust SPT for CP/M 3 physical sector size
+	srl	b		; divide SPT by 4
+	rr	c
+	srl	b
+	rr	c
+setdsk1:
 	ld	(actspt),bc	; save it
 	; ensure there are system tracks (verify that offset field in DPB is not zero)
 	ld	de,12		; offset field is 12 bytes into DPB
@@ -952,7 +963,7 @@ bpb_hl	.dw	0		; reg HL
 ;
 ; Messages
 ;
-msgban1	.db	"SYSCOPY v2.0 for RomWBW CP/M, 17-Feb-2020$"
+msgban1	.db	"SYSCOPY v2.1 for RomWBW CP/M, 15-May-2020$"
 msgv2	.db	" (CP/M 2 Mode)$"
 msgv3	.db	" (CP/M 3 Mode)$"
 msgban2	.db	"Copyright 2020, Wayne Warthen, GNU GPL v3$"

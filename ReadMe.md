@@ -3,7 +3,7 @@
 ## Z80/Z180 System Software
 
 Version 3.1 Pre-release  
-Wednesday 13 May 2020
+Saturday 16 May 2020
 
 Wayne Warthen <wwarthen@gmail.com>
 
@@ -774,6 +774,10 @@ tracks. `CPMLDR.SYS` chain loads `CPM3.SYS`.
   - The `DATE` command cannot yet be used to **set** the RTC. The RTC is
     used to read the current date/time for file stamping, etc. You can
     use the `RTC` app to set the RTC clock.
+
+  - The `COPYSYS` command described in the DRI CP/M 3 documentatin is
+    not provided with RomWBW. The RomWBW `SYSCOPY` command is used
+    instead.
 
 ## Simeon Cran’s ZPM3
 

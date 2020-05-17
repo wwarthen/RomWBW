@@ -823,6 +823,9 @@ system tracks.  `CPMLDR.SYS` chain loads `CPM3.SYS`.
 used to read the current date/time for file stamping, etc.  You can
 use the `RTC` app to set the RTC clock.
 
+- The `COPYSYS` command described in the DRI CP/M 3 documentatin is
+not provided with RomWBW.  The RomWBW `SYSCOPY` command is used instead.
+
 ## Simeon Cran's ZPM3
 
 ZPM3 is an interesting combination of the features of both CP/M 3 and
