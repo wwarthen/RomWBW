@@ -101,3 +101,20 @@ Source/ZPM3/zpmldr.com
 Source/ZPM3/genbnk.dat
 
 Source/ZSDOS/zsdos.err
+
+Binary/CPM3/bdos3.spr
+Binary/CPM3/bios3.spr
+Binary/CPM3/bnkbdos3.spr
+Binary/CPM3/bnkbios3.spr
+Binary/CPM3/cpm3fix.pat
+Binary/CPM3/genbnk.dat
+Binary/CPM3/gencpm.dat
+Binary/CPM3/genres.dat
+Binary/CPM3/readme.1st
+Binary/CPM3/resbdos3.spr
+Binary/ZPM3/bnkbdos3.spr
+Binary/ZPM3/bnkbios3.spr
+Binary/ZPM3/gencpm.dat
+Binary/ZPM3/resbdos3.spr
+Binary/ZPM3/zinstal.zpm
+Source/ZPM3/cpmldr.com
