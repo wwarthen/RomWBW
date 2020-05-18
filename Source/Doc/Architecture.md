@@ -410,6 +410,28 @@ require double-buffering if the caller’s buffer is in the lower 32K of CPU
 address space. For optimal performance, such buffers should be placed in
 the upper 32K of CPU address space.
 
+Error Codes
+-----------
+
+The following error codes are defined generically for all HBIOS functions.
+Most function calls will return a result in register A.
+
+_Code_ | _Meaning_
+------ | ---------
+0      | function succeeded
+-1     | undefined error
+-2     | function not implemented
+-3     | invalid function
+-4     | invalid unit numberr
+-5     | out of memory
+-6     | parameter out of range
+-7     | media not present
+-8     | hardware not present
+-9     | I/O error
+-10    | write request to read-only media	
+-11    | device timeout
+-12    | invalid configuration
+
 `\clearpage`{=latex}
 
 Character Input/Output (CIO)
