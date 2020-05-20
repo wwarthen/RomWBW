@@ -360,7 +360,7 @@ message.
 
 ## Etymology
 
-The `SYSCOPY` command is an original product and the source code is
+The `MODE` command is an original product and the source code is
 provided in the RomWBW distribution.
 
 `\clearpage`{=latex}

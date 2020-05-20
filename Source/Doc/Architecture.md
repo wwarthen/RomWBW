@@ -428,7 +428,7 @@ _Code_ | _Meaning_
 -7     | media not present
 -8     | hardware not present
 -9     | I/O error
--10    | write request to read-only media
+-10    | write request to read-only media	
 -11    | device timeout
 -12    | invalid configuration
 
@@ -1565,7 +1565,7 @@ the value of the subfucntion.  See subfunctions below.
 #### SYSRESET Subfunction 0x00 -- Internal HBIOS Reset (RESINT)
 
 |      _Entry Parameters_
-|           BC: 0xF000
+|           BC: 0xFD00
 
 |      _Returned Values_
 |           A: Status (0=OK, else error)
@@ -1576,7 +1576,7 @@ current OS. Does not reinitialize physical devices.
 #### SYSRESET Subfunction 0x01 -- Warm Start System (RESWARM)
 
 |      _Entry Parameters_
-|           BC: 0xF001
+|           BC: 0xFD01
 
 |      _Returned Values_
 |           <none>
@@ -1587,7 +1587,7 @@ reinitialize physical devices.
 #### SYSRESET Subfunction 0x02 -- Cold Start System (RESCOLD)
 
 |      _Entry Parameters_
-|           BC: 0xF002
+|           BC: 0xFD02
 
 |      _Returned Values_
 |           <none>

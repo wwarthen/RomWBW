@@ -59,7 +59,7 @@ boot:
 	; this routine to avoid issues.
 	ld	(stksav),sp
 	ld	sp,stack
-
+	
 	; Do the real work
 	call	boot0
 
@@ -718,10 +718,20 @@ medid	ds	1	; media id
 lba	ds	4	; current lba
 sps	ds	2	; sectors per slice
 
-csvbuf	ds	128	; length (CSV) = ((DRM+1)/4)
-alvbuf	ds	512	; length (ALV) = ((DSM+1)/4)
-dirbuf	ds	512	; sector buffer
-dtabuf	ds	512	; sector buffer
+;csvbuf	ds	128	; length (CSV) = ((DRM+1)/4)
+;alvbuf	ds	512	; length (ALV) = ((DSM+1)/4)
+;dirbuf	ds	512	; sector buffer
+;dtabuf	ds	512	; sector buffer
+
+; Trying to save space.  The loader must fit underneath
+; the start of BNKBDOS3 and we have a big BNKBDOS because
+; of all the disk allocations.  Putting these buffers
+; in upper memory actually helps quite a bit.
+
+csvbuf	equ	8000h
+alvbuf	equ	csvbuf + 128
+dirbuf	equ	alvbuf + 512
+dtabuf	equ	dirbuf + 512
 
 	ds	64
 stack	equ	$
