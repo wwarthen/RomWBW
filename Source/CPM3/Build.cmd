@@ -17,15 +17,16 @@ echo.
 echo *** CPM Loader ***
 echo.
 zx RMAC -CPMLDR
+zx Z80ASM -UTIL/MF
 copy optdsk.lib ldropts.lib
 zx Z80ASM -BIOSLDR/MF
 move /Y biosldr.rel biosldrd.rel
-zx LINK -CPMLDRD[L100]=CPMLDR,BIOSLDRD
+zx LINK -CPMLDRD[L100]=CPMLDR,BIOSLDRD,UTIL
 move /Y cpmldrd.com cpmldr.bin
 copy optcmd.lib ldropts.lib
 zx Z80ASM -BIOSLDR/MF
 move /Y biosldr.rel biosldrc.rel
-zx LINK -CPMLDRC[L100]=CPMLDR,BIOSLDRC
+zx LINK -CPMLDRC[L100]=CPMLDR,BIOSLDRC,UTIL
 move /Y cpmldrc.com cpmldr.com
 rem pause
 

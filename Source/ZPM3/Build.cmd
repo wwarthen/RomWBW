@@ -17,6 +17,7 @@ copy ..\ZCCP\startzpm.com .
 copy ..\CPM3\genbnk.dat .
 copy ..\CPM3\zpmbios3.spr bnkbios3.spr
 copy ..\CPM3\gencpm.com .
+copy ..\CPM3\util.rel .
 copy ..\CPM3\biosldrd.rel .
 copy ..\CPM3\biosldrc.rel .
 copy ..\CPM3\cpmldr.com .
@@ -27,9 +28,9 @@ echo.
 echo.
 echo *** ZPM Loader ***
 echo.
-zx LINK -ZPMLDRD[L100]=ZPM3LDR,BIOSLDRD
+zx LINK -ZPMLDRD[L100]=ZPM3LDR,BIOSLDRD,UTIL
 move /Y zpmldrd.com zpmldr.bin
-zx LINK -ZPMLDRC[L100]=ZPM3LDR,BIOSLDRC
+zx LINK -ZPMLDRC[L100]=ZPM3LDR,BIOSLDRC,UTIL
 move /Y zpmldrc.com zpmldr.com
 rem pause
 

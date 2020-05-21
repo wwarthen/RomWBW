@@ -5,18 +5,18 @@ OBJECTS += setz3.com clrhist.com autotog.com
 NODELETE = setz3.com clrhist.com autotog.com makedos.com zinstal.zpm bnkbdos3.spr resbdos3.spr
 #endif
 OBJECTS += cpmldr.com cpmldr.sys zinstal.zpm makedos.com gencpm.dat bnkbios3.spr bnkbdos3.spr resbdos3.spr
-OTHERS = zpmldr.bin loader.bin biosldrd.rel biosldrc.rel gencpm.com
+OTHERS = zpmldr.bin loader.bin biosldrd.rel biosldrc.rel util.rel gencpm.com
 DEST = ../../Binary/ZPM3/
 TOOLS =../../Tools
 
 include $(TOOLS)/Makefile.inc
 
-zpmldr.bin: zpm3ldr.rel biosldrd.rel
-	$(ZXCC) $(CPM)/LINK -ZPMLDRD[L100]=ZPM3LDR,BIOSLDRD
+zpmldr.bin: zpm3ldr.rel biosldrd.rel util.rel
+	$(ZXCC) $(CPM)/LINK -ZPMLDRD[L100]=ZPM3LDR,BIOSLDRD,UTIL
 	mv zpmldrd.com zpmldr.bin
 
-zpmldr.com:	zpm3ldr.rel biosldrc.rel
-	$(ZXCC) $(CPM)/LINK -ZPMLDRC[L100]=ZPM3LDR,BIOSLDRC
+zpmldr.com:	zpm3ldr.rel biosldrc.rel util.rel
+	$(ZXCC) $(CPM)/LINK -ZPMLDRC[L100]=ZPM3LDR,BIOSLDRC,UTIL
 	mv zpmldrc.com zpmldr.com
 
 zpmldr.sys: zpmldr.bin loader.bin
@@ -38,6 +38,9 @@ biosldrc.rel: ../CPM3/biosldrc.rel
 	cp $< $@
 
 biosldrd.rel: ../CPM3/biosldrd.rel
+	cp $< $@
+
+util.rel: ../CPM3/util.rel
 	cp $< $@
 
 zccp.com: ../ZCCP/ccp.com

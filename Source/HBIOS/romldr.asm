@@ -878,6 +878,10 @@ diskboot9:
 	ld	de,(bb_cpmloc)		; de := start
 	or	a			; clear carry
 	sbc	hl,de			; hl := length to load
+	; If load length is not a multiple of sector size (512)
+	; we need to round up to get everything loaded!
+	ld	de,511			; 1 less than sector size
+	add	hl,de			; ... and roundup
 	ld	a,h			; determine 512 byte sector count
 	rra				; ... by dividing msb by two
 	ld	(loadcnt),a		; ... and save it
@@ -1886,7 +1890,7 @@ str_help	.db	"\r\n"
 		.db	"\r\n  R         - Reboot System"
 #if (BIOS == BIOS_WBW)
 		.db	"\r\n  I <u>     - Set Console Interface"
-		.db	"\r\n  V <n>     - Set HBIOS Diagnostic Verbosity"
+		.db	"\r\n  V [<n>]   - View/Set HBIOS Diagnostic Verbosity"
 #endif
 		.db	"\r\n  <u>[.<s>] - Boot Disk Unit/Slice"
 		.db	0
