@@ -163,6 +163,7 @@ RCZ80 (RCZ80_std.rom):
  - Support for Scott Baker SIO board may be enabled in config
  - Support for Scott Baker floppy controllers (SMC & WDC) may
    be enabled in config
+ - Support for J.B. Lang TMS9918 video card may be enabled in config
 
 RCZ80 w/ KIO (RCZ80_kio.rom):
  - Assumes CPU oscillator of 7.3728 MHz
@@ -174,6 +175,7 @@ RCZ80 w/ KIO (RCZ80_kio.rom):
  - Support for Scott Baker SIO board may be enabled in config
  - Support for Scott Baker floppy controllers (SMC & WDC) may
    be enabled in config
+ - Support for J.B. Lang TMS9918 video card may be enabled in config
 
 RCZ180 (RCZ180_nat.rom & RCZ180_ext.rom):
  - Assumes CPU oscillator of 18.432 MHz
@@ -183,6 +185,7 @@ RCZ180 (RCZ180_nat.rom & RCZ180_ext.rom):
  - Support for alternative serial modules may be enabled in config
  - Support for Scott Baker floppy controllers (SMC & WDC) may
    be enabled in config
+ - Support for J.B. Lang TMS9918 video card may be enabled in config
  - You must pick the _nat or _ext variant depending on which
    memory module you are using:
    - RCZ180_nat.rom uses the built-in Z180 memory manager
@@ -199,6 +202,7 @@ SCZ180 (SCZ180_126.rom, SCZ180_130.rom, SCZ180_131.rom):
  - Support for alternative serial modules may be enabled in config
  - Support for Scott Baker floppy controllers (SMC & WDC) may
    be enabled in config
+ - Support for J.B. Lang TMS9918 video card may be enabled in config
  - The 3 different variants of SCZ180 are provided to match the
    3 corresponding systems (SC126, SC130, and SC131) designed by
    Stephen Cousins.
