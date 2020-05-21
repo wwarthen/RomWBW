@@ -14,9 +14,12 @@
 	extrn	@date,@hour,@min,@sec
 	extrn	@srch1
 	extrn	@hbbio
-	extrn	addhla, bcd2bin, bin2bcd
-	extrn	cout, phex8, phex16, crlf, crlf2
-	
+	extrn	addhla
+	;extrn	phex16, phex8
+	;extrn	cin, cout
+	;extrn	crlf, crlf2
+	extrn	bcd2bin, bin2bcd
+
 	include	c:ver.lib
 	
 bdos	equ 5
@@ -381,18 +384,18 @@ fill:
 
 ?ldccp:
 	; Force CCP to use system boot drive as initial default
-	ld	a,(@sysdr)		; get system boot drive
-	ld	(@ccpdr),a		; set CCP current drive
+	;ld	a,(@sysdr)		; get system boot drive
+	;ld	(@ccpdr),a		; set CCP current drive
 
 	; First time, load the CCP.COM file into TPA
-	ld	a,(@sysdr)		; get system boot drive
-	;ld	(4),a			; save in page zero???
-	inc	a			; drive + 1 for FCB
-	ld	(ccp$fcb),a		; stuff into FCB
-	add	'A' - 1			; drive letter
-	ld	(ccp$msg$drv),a		; save for load msg
-	xor	a
-	ld	(ccp$fcb+15),a
+	;ld	a,(@sysdr)		; get system boot drive
+	;;ld	(4),a			; save in page zero???
+	;inc	a			; drive + 1 for FCB
+	;ld	(ccp$fcb),a		; stuff into FCB
+	;add	'A' - 1			; drive letter
+	;ld	(ccp$msg$drv),a		; save for load msg
+	;xor	a
+	;ld	(ccp$fcb+15),a
 	ld	hl,0
 	ld	(fcb$nr),hl
 	ld	de,ccp$fcb
@@ -678,16 +681,16 @@ signon$msg	db	13,10,'ZPM3'
 	if banked
 		db	' [BANKED]'
 	endif
-		db	' on HBIOS v'
+		db	' for HBIOS v'
 		biosver
 		db	13,10,13,10,0
 		
 ccp$msg		db	13,10,'BIOS Err on '
-ccp$msg$drv	db	'?'
+ccp$msg$drv	db	'A'
 		db	': No ZCCP.COM file',0
 
 
-ccp$fcb		db	0,'ZCCP    ','COM',0,0,0,0
+ccp$fcb		db	1,'ZCCP    ','COM',0,0,0,0
 		ds	16
 fcb$nr		db	0,0,0
 
@@ -697,16 +700,16 @@ signon$msg	db	13,10,'CP/M v3.0'
 	if banked
 		db	' [BANKED]'
 	endif
-		db	' on HBIOS v'
+		db	' for HBIOS v'
 		biosver
 		db	13,10,13,10,0
 		
 ccp$msg		db	13,10,'BIOS Err on '
-ccp$msg$drv	db	'?'
+ccp$msg$drv	db	'A'
 		db	': No CCP.COM file',0
 
 
-ccp$fcb		db	0,'CCP     ','COM',0,0,0,0
+ccp$fcb		db	1,'CCP     ','COM',0,0,0,0
 		ds	16
 fcb$nr		db	0,0,0
 

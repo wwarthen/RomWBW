@@ -3,7 +3,7 @@ RomWBW
 Z80/Z180 System Software
 
 Version 3.1 Pre-release
-Wednesday 13 May 2020
+Tuesday 19 May 2020
 
 Wayne Warthen wwarthen@gmail.com
 
@@ -737,6 +737,10 @@ most stable and you are less likely to encounter problems.
 
 Notes
 
+-   You can change media, but it must be done while at the OS command
+    prompt and you must warm start CP/M by pressing ctrl-c. This is a
+    CP/M 2.2 constraint and is well documented in the DRI manuals.
+
 -   The original versions of DDT, DDTZ, and ZSID used the RST 38 vector
     which conflicts with interrupt mode 1 use of this vector. The DDT,
     DDTZ, and ZSID applications in RomWBW have been modified to use RTS
@@ -763,6 +767,10 @@ Notes
     may not work as expected. The best example is PIP which is not aware
     of the ZSDOS paths and will fail in some scenarios (use COPY
     instead).
+
+-   Although ZSDOS can recognize a media change in some cases, it will
+    not always work. You should only change media at a command prompt
+    and be sure to warm start the OS with a ctrl-c.
 
 NZCOM Automatic Z-System
 
@@ -804,6 +812,15 @@ Notes
     to read the current date/time for file stamping, etc. You can use
     the RTC app to set the RTC clock.
 
+-   The COPYSYS command described in the DRI CP/M 3 documentation is not
+    provided with RomWBW. The RomWBW SYSCOPY command is used instead.
+
+-   Although CP/M 3 is generally able to run CP/M 2.2 programs, this is
+    not universally true. This is especially true of the utility
+    programs included with the operating system. For example, the SUBMIT
+    program of CP/M 3 is completely different from the SUBMIT program of
+    CP/M 2.2.
+
 Simeon Cran’s ZPM3
 
 ZPM3 is an interesting combination of the features of both CP/M 3 and
@@ -817,8 +834,9 @@ Notes
 -   ZPMLDR is included with ZPM3, but it is not working correctly.
 
 -   The ZPM operating system is contained in the file called CPM3.SYS
-    which is confusing, but it is the author’s intended way of using
-    ZPM3.
+    which is confusing, but this is as intended by the ZPM3
+    distribution. I believe it was done this way to make it easier for
+    users to transition from CP/M 3 to ZPM3.
 
 FreeRTOS
 

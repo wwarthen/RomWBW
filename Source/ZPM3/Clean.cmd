@@ -10,6 +10,7 @@ if exist system.epr del system.epr
 if exist system.evn del system.evn
 if exist system.odd del system.odd
 if exist biosldr.rel del biosldr.rel
+if exist util.rel del util.rel
 if exist *.sym del *.sym
 if exist zpmldr.com del zpmldr.com
 if exist cpmldr.com del cpmldr.com

@@ -410,6 +410,28 @@ require double-buffering if the caller’s buffer is in the lower 32K of CPU
 address space. For optimal performance, such buffers should be placed in
 the upper 32K of CPU address space.
 
+Error Codes
+-----------
+
+The following error codes are defined generically for all HBIOS functions.
+Most function calls will return a result in register A.
+
+_Code_ | _Meaning_
+------ | ---------
+0      | function succeeded
+-1     | undefined error
+-2     | function not implemented
+-3     | invalid function
+-4     | invalid unit numberr
+-5     | out of memory
+-6     | parameter out of range
+-7     | media not present
+-8     | hardware not present
+-9     | I/O error
+-10    | write request to read-only media	
+-11    | device timeout
+-12    | invalid configuration
+
 `\clearpage`{=latex}
 
 Character Input/Output (CIO)
@@ -1532,12 +1554,46 @@ System (SYS)
 
 | _Entry Parameters_
 |       B: 0xF0
+|       C: Subfunction (see below)
 
 | _Exit Results_
 |       A: Status (0=OK, else error)
 
+This function performs various forms of a system reset depending on
+the value of the subfucntion.  See subfunctions below.
+
+#### SYSRESET Subfunction 0x00 -- Internal HBIOS Reset (RESINT)
+
+|      _Entry Parameters_
+|           BC: 0xFD00
+
+|      _Returned Values_
+|           A: Status (0=OK, else error)
+
 Perform a soft reset of HBIOS. Releases all HBIOS memory allocated by
 current OS. Does not reinitialize physical devices.
+
+#### SYSRESET Subfunction 0x01 -- Warm Start System (RESWARM)
+
+|      _Entry Parameters_
+|           BC: 0xFD01
+
+|      _Returned Values_
+|           <none>
+
+Warm start the system returning to the boot loader prompt.  Does not
+reinitialize physical devices.
+
+#### SYSRESET Subfunction 0x02 -- Cold Start System (RESCOLD)
+
+|      _Entry Parameters_
+|           BC: 0xFD02
+
+|      _Returned Values_
+|           <none>
+
+Perform a system cold start (like a power on).  All devices are
+reinitialized.
 
 ### Function 0xF1 -- System Version (SYSVER)
 

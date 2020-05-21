@@ -60,12 +60,12 @@ zpmbios3:
 	cp optzpm.lib options.lib
 	make OBJECTS=zpmbios3.spr DEST=
 
-cpmldr.bin:	biosldrd.rel cpmldr.rel
-	$(ZXCC) $(TOOLS)/cpm/bin/LINK -CPMLDRD[L100]=CPMLDR,BIOSLDRD
+cpmldr.bin:	biosldrd.rel cpmldr.rel util.rel
+	$(ZXCC) $(TOOLS)/cpm/bin/LINK -CPMLDRD[L100]=CPMLDR,BIOSLDRD,UTIL
 	mv cpmldrd.com cpmldr.bin
 
-cpmldr.com: biosldrc.rel cpmldr.rel
-	$(ZXCC) $(TOOLS)/cpm/bin/LINK -CPMLDRC[L100]=CPMLDR,BIOSLDRC
+cpmldr.com: biosldrc.rel cpmldr.rel util.rel
+	$(ZXCC) $(TOOLS)/cpm/bin/LINK -CPMLDRC[L100]=CPMLDR,BIOSLDRC,UTIL
 	mv cpmldrc.com cpmldr.com
 
 biosldrc.rel: biosldr.z80 optcmd.lib

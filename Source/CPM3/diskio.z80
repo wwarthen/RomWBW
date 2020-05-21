@@ -431,7 +431,7 @@ media:
 	ld	a,e			; resultant media id to accum
 	ld	(medid),a		; save media id
 	or	a			; set flags, 0 is no media
-	jp	z,err_diskio		; handle no media error
+	jp	z,err_nodisk		; handle no media error
 	
 	; Initialize slice start LBA & sectors per slice
 	ld	hl,0			; assume slice starts
@@ -769,27 +769,21 @@ cin$echo1:
 
 err_nodisk:
 	ld	hl,str_err_nodisk
-	jr	err
+	jr	err_perm
 err_noslice:
 	ld	hl,str_err_noslice
-	jr	err
+	jr	err_perm
+err_perm:
+	call	prt_err
+	jr	err_ret
 err_diskio:
-	ld	hl,str_err_diskio
-	jr	err
-err_sig:
-	ld	hl,str_err_sig
-	jr	err
-err_api:
-	ld	hl,str_err_api
-	jr	err
-err:
+	cp	-10			; HBIOS read only error
+	jr	z,err_rdonly		; if so, handle special
 	ld	a,(@ermde)		; get error mode
 	cp	0FFh			; FFh means suppress
 	jr	z,err_ret		; if so, go to err return
-	push	hl
-	call	?pderr
-	pop	hl
-	call	?pmsg
+	ld	hl,str_err_diskio
+	call	prt_err
 	ld	hl,str_err_retry
 	call	?pmsg
 	call	cin$echo
@@ -797,16 +791,29 @@ err:
 	jr	nz,err_ret		; return error to caller
 	ld	hl,(retry$adr)		; get retry address
 	jp	(hl)			; and go there
+err_rdonly:
+	ld	hl,str_err_rdonly
+	call	prt_err
+	ld	a,2			; signal readonly media
+	ret
+prt_err:
+	ld	a,(@ermde)		; get error mode
+	cp	0FFh			; FFh means suppress
+	ret	z			; if so, go to err return
+	push	hl
+	call	?pderr
+	pop	hl
+	jp	?pmsg
 err_ret:
-	ld	a,1			; signal I/O error
+	ld	a,0FFh			; signal error
 	ret				; and done
 
-str_err_retry	db	", Retry (Y/N) ? ",0
+str_err_retry	db	", Retry (Y/N)?",0
 str_err_nodisk	db	", No disk",0
 str_err_noslice	db	", No slice",0
 str_err_diskio	db	", Disk I/O",0
-str_err_sig	db	", No system",0
-str_err_api	db	", API failure",0
+str_err_rdonly	db	", Read Only",0
+str_err_prefix	db	13,10,"BIOS Error: ",0
 
 retry$adr	dw	?wboot		; error retry address
 curdph		dw	0		; working dph value

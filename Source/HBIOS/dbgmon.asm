@@ -104,8 +104,10 @@ SERIALCMDLOOP:
 	JP	Z,FILLMEM		; FILL MEMORY COMMAND
 	CP	'H'			; IS IT A "H" (Y/N)
 	JP	Z,HELP			; HELP COMMAND
+	CP	'S'			; IS IT A "H" (Y/N)
+	JP	Z,STOP			; STOP COMMAND
 	CP	'X'			; IS IT A "X" (Y/N)
-	JP	Z,HALT			; HALT COMMAND
+	JP	Z,EXIT			; EXIT COMMAND
 	LD	HL,TXT_COMMAND		; POINT AT ERROR TEXT
 	CALL	PRTSTRH			; PRINT COMMAND LABEL
 
@@ -148,17 +150,34 @@ BOOT:
 	CALL	$FFFD			; DO IT (RST 08 NOT SAFE HERE)
 	JP	0			; JUMP TO RESTART ADDRESS
 #ELSE
-	LD	A,BID_BOOT		; BOOT BANK
-	LD	HL,0			; ADDRESS ZERO
-	CALL	HB_BNKCALL		; DOES NOT RETURN
+	;LD	A,BID_BOOT		; BOOT BANK
+	;LD	HL,0			; ADDRESS ZERO
+	;CALL	HB_BNKCALL		; DOES NOT RETURN
+	LD	B,BF_SYSRESET		; SYSTEM RESTART
+	LD	C,BF_SYSRES_COLD	; COLD START
+	CALL	$FFF0			; CALL HBIOS
 #ENDIF
 ;
-;__HALT_______________________________________________________________________
+;__EXIT_______________________________________________________________________
 ;
-;	PERFORM HALT ACTION
+;	PERFORM EXIT ACTION
 ;_____________________________________________________________________________
 ;
-HALT:
+EXIT:
+#IF (BIOS == BIOS_UNA)
+	JR	BOOT
+#ELSE
+	LD	B,BF_SYSRESET		; SYSTEM RESTART
+	LD	C,BF_SYSRES_WARM	; WARM START
+	CALL	$FFF0			; CALL HBIOS
+#ENDIF
+;
+;__STOP_______________________________________________________________________
+;
+;	PERFORM STOP ACTION (HALT SYSTEM)
+;_____________________________________________________________________________
+;
+STOP:
 	DI
 	HALT
 ;
@@ -924,7 +943,8 @@ TXT_HELP	.TEXT	"\r\nMonitor Commands (all values in hex):"
 		.TEXT	"\r\nO xx yy          - Output to port xx value yy"
 		.TEXT	"\r\nP xxxx           - Program RAM at xxxx"
 		.TEXT	"\r\nR xxxx           - Run code at xxxx"
-		.TEXT	"\r\nX                - Halt system"
+		.TEXT	"\r\nS                - Stop system (HALT)"
+		.TEXT	"\r\nX                - Exit monitor"
 		.TEXT	"$"
 ;
 #IF DSKYENABLE
@@ -1380,7 +1400,7 @@ DISPLAYBUF:	.FILL	8,0
 #ELSE
 ;
 DSKY_ENTRY:
-	CALL	PANIC
+	JP	EXIT
 ;
 #ENDIF
 ;
