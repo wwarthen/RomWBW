@@ -5,7 +5,7 @@
 ;======================================================================
 ;
 
-#include "cfg_state.inc"
+;#include "cfg_state.inc"
 
 
 AY_RCSND	.EQU	0		; 0 = EB MODULE, 1=MF MODULE
@@ -128,7 +128,7 @@ AY_FND:	LD	IY, AY_IDAT		; SETUP FUNCTION TABLE
 	CALL	AY_WRTPSG		; R03 = $00 = XXXX0000
 ;
 
-#IF SYSTIMEN
+#IF (SYSTIM != TM_NONE)
 	LD	A, TICKFREQ / 3		; SCHEDULE IN 1/3 SECOND TO TURN OFF SOUND
 	LD	(AY_TIMTIK), A
 
@@ -152,7 +152,8 @@ AY_FND:	LD	IY, AY_IDAT		; SETUP FUNCTION TABLE
 	XOR	A			; SUCCESSFULL INIT
 	RET
 
-#IF SYSTIMEN
+#IF (SYSTIM != TM_NONE)
+
 AY_TIMER:
 	LD	A, (AY_TIMTIK)
 	DEC	A
