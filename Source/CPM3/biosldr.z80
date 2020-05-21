@@ -4,6 +4,11 @@
 	maclib	cpm3.lib
 
 	cseg
+	
+	extrn	phex16, phex8
+	extrn	cin, cout
+	extrn	crlf, crlf2
+
 
 ; BIOS Jump vector.
 
@@ -59,7 +64,7 @@ boot:
 	; this routine to avoid issues.
 	ld	(stksav),sp
 	ld	sp,stack
-
+	
 	; Do the real work
 	call	boot0
 
@@ -100,7 +105,7 @@ boot1:
 	jr	c,selerr		; loop if below 0 entered
 	cp	10			; check for over 9
 	jr	nc,selerr		; loop if over 9
-	ld	de,crlf			; linefeed
+	ld	de,msgcrlf		; linefeed
 	call	writestr		; ... to console
 	jr	boot2			; boot w/ unit & slice
 
@@ -296,6 +301,12 @@ setsec:
 	ld	(sect),bc
 	ret
 setdma:
+	;push	hl
+	;push	bc
+	;pop	hl
+	;call	crlf
+	;call	phex16
+	;pop	hl
 	ld	(dma),bc
 	ret
 
@@ -318,32 +329,6 @@ read:
 	rl	d			; carry bit (head) into d
 	jr	read3			; do the disk i/o
 	
-;	; *** Simplify this to get rid of slice!!! ***
-;	ld	b,1			; assume it is floppy, 1 head bit
-;	ld	c,01h			; 1 bit head mask
-;	push	bc			; save bc
-;	ld	a,(slice)		; get slice
-;	ld	e,a			; slice to E
-;	ld	h,65			; number of tracks per slice
-;	call	mult8			; HL now has track offset for slice
-;	pop	bc			; recover bc
-;	push	hl			; save track offset for now
-;	ld	hl,(trk)		; get track value
-;	ld	a,l			; lsb of track to a
-;	and	c			; apply mask
-;	ld	d,a			; save in d
-;read1:	
-;	srl	h			; shift one bit out
-;	rr	l			; ... of hl
-;	djnz	read1			; do all bits
-;	ld	a,(sect)		; get sector
-;	ld	e,a			; stuff it in e
-;	ex	de,hl			; DE=track, HL=head/sect
-;	ex	(sp),hl			; save head/sect, HL = offset
-;	add	hl,de			; HL has final track value
-;	pop	de			; recover head/sect to de
-;	jr	read3
-
 	; LBA I/O
 read2:
 	ld	hl,(trk)		; get track
@@ -449,20 +434,20 @@ xmove:
 	ld	a,9DH
 	halt
 
-cin:
-	; Input character from console via HBIOS
-	ld	c,080H			; console unit to C
-	ld	b,00H			; HBIOS func: input char
-	call	0FFF0H			; HBIOS reads character
-	ld	a,e			; To A for return
-	ret				; done
+;cin:
+;	; Input character from console via HBIOS
+;	ld	c,080H			; console unit to C
+;	ld	b,00H			; HBIOS func: input char
+;	call	0FFF0H			; HBIOS reads character
+;	ld	a,e			; To A for return
+;	ret				; done
 
-cout:
-	; Output character to console via HBIOS
-	ld	e,a			; output char to E
-	ld	c,080H			; console unit to C
-	ld	b,01H			; HBIOS func: output char
-	jp	0FFF0H			; output & return
+;cout:
+;	; Output character to console via HBIOS
+;	ld	e,a			; output char to E
+;	ld	c,080H			; console unit to C
+;	ld	b,01H			; HBIOS func: output char
+;	jp	0FFF0H			; output & return
 
 writestr:
 	push	af
@@ -477,19 +462,6 @@ writestr1:
 	jp	writestr1
 writestr2:
 	pop	af
-	ret
-
-mult8:
-	; Multiply: H := H * E
-	ld	d,0
-	ld	l,d
-	ld	b,8
-mult8_loop:
-	add	hl,hl
-	jr	nc,mult8_noadd
-	add	hl,de
-mult8_noadd:
-	djnz	mult8_loop
 	ret
 
 rl32:
@@ -535,7 +507,7 @@ str_err_api	db	"HBIOS API failure","$"
 msgunit	db	13,10,13,10,'Boot CP/M 3 from Disk Unit: $'
 msgslc	db	'   Slice: $'
 msginv	db	13,10,13,10,'*** Invalid Selection ***$'
-crlf	db	13,10,'$'
+msgcrlf	db	13,10,'$'
 
 dpb$start:
 dpb$rom:	; 384K ROM Drive
@@ -718,13 +690,28 @@ medid	ds	1	; media id
 lba	ds	4	; current lba
 sps	ds	2	; sectors per slice
 
-csvbuf	ds	128	; length (CSV) = ((DRM+1)/4)
-alvbuf	ds	512	; length (ALV) = ((DSM+1)/4)
-dirbuf	ds	512	; sector buffer
-dtabuf	ds	512	; sector buffer
-
 	ds	64
 stack	equ	$
 stksav	ds	2
+
+csvbufs	equ	256
+alvbufs	equ	512
+dirbufs	equ	512
+dtabufs	equ	512
+
+;csvbuf	ds	256	; length (CSV) = ((DRM+1)/4)
+;alvbuf	ds	512	; length (ALV) = ((DSM+1)/4)
+;dirbuf	ds	512	; sector buffer
+;dtabuf	ds	512	; sector buffer
+
+; Trying to save space.  The loader must fit underneath
+; the start of BNKBDOS3 and we have a big BNKBDOS because
+; of all the disk allocations.  Putting these buffers
+; in upper memory actually helps quite a bit.
+
+csvbuf	equ	8000h
+alvbuf	equ	csvbuf + csvbufs
+dirbuf	equ	alvbuf + alvbufs
+dtabuf	equ	dirbuf + dirbufs
 
 	end

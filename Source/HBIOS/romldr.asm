@@ -285,6 +285,8 @@ runcmd:
 #if (BIOS == BIOS_WBW)
 	cp	'I'			; C = set console interface
 	jp	z,setcon		; if so, do it
+	cp	'V'			; V = diagnostic verbosity
+	jp	z,setdl			; is so, do it
 #endif
 ;
 	; Attempt ROM application launch
@@ -469,6 +471,44 @@ setcon:
 	ld	hl,str_banner		; display boot banner
 	call	pstr			; do it
 ;
+	ret				; done
+;
+#endif
+;
+; Set RomWBW HBIOS Diagnostic Level
+;
+#if (BIOS == BIOS_WBW)
+;
+setdl:
+	; On entry DE is expected to be pointing to start
+	; of command
+	call	findws			; skip command
+	call	skipws			; and skip it
+	or	a			; set flags to check for null
+	jr	z,showdl		; no parm, just display
+	call	isnum			; do we have a number?
+	jp	nz,err_invcmd		; if not, invalid
+	call	getnum			; parse number into A
+	jp	c,err_invcmd		; handle overflow error
+;
+	; Set diagnostic level
+	ld	b,BF_SYSPOKE		; HBIOS func: POKE
+	ld	d,BID_BIOS		; BIOS bank
+	ld	e,a			; diag level value
+	ld	hl,HCB_LOC + HCB_DIAGLVL	; offset into HCB
+	rst	08			; do it
+	; Fall thru to display new value
+;
+showdl:
+	; Display current diagnostic level
+	ld	hl,str_diaglvl		; diag level tag
+	call	pstr			; print it
+	ld	b,BF_SYSPEEK		; HBIOS func: PEEK
+	ld	d,BID_BIOS		; BIOS bank
+	ld	hl,HCB_LOC + HCB_DIAGLVL	; offset into HCB
+	rst	08			; do it, E := level value
+	ld	a,e			; put in accum
+	call	prtdecb			; print it
 	ret				; done
 ;
 #endif
@@ -838,6 +878,10 @@ diskboot9:
 	ld	de,(bb_cpmloc)		; de := start
 	or	a			; clear carry
 	sbc	hl,de			; hl := length to load
+	; If load length is not a multiple of sector size (512)
+	; we need to round up to get everything loaded!
+	ld	de,511			; 1 less than sector size
+	add	hl,de			; ... and roundup
 	ld	a,h			; determine 512 byte sector count
 	rra				; ... by dividing msb by two
 	ld	(loadcnt),a		; ... and save it
@@ -1079,6 +1123,8 @@ rdln_cr:
 ;
 findws:
 	ld	a,(de)			; get next char
+	or	a			; check for eol
+	ret	z			; done if so
 	cp	' '			; blank?
 	ret	z			; nope, done
 	inc	de			; bump buffer pointer
@@ -1089,6 +1135,8 @@ findws:
 ;
 skipws:
 	ld	a,(de)			; get next char
+	or	a			; check for eol
+	ret	z			; done if so
 	cp	' '			; blank?
 	ret	nz			; nope, done
 	inc	de			; bump buffer pointer
@@ -1740,6 +1788,7 @@ devunk		.db	"UNK",0
 err_invcmd:
 	ld	hl,str_err_invcmd
 	jr	err
+;
 err_nodisk:
 	ld	hl,str_err_nodisk
 	jr	err
@@ -1833,6 +1882,7 @@ str_binfo3	.db	"-0x",0
 str_binfo4	.db	", entry @ 0x",0
 str_binfo5	.db	"]",0
 str_ldsec	.db	", Sector 0x",0
+str_diaglvl	.db	"\r\n\r\nHBIOS Diagnostic Level: ",0
 ;
 str_help	.db	"\r\n"
 		.db	"\r\n  L         - List ROM Applications"
@@ -1840,6 +1890,7 @@ str_help	.db	"\r\n"
 		.db	"\r\n  R         - Reboot System"
 #if (BIOS == BIOS_WBW)
 		.db	"\r\n  I <u>     - Set Console Interface"
+		.db	"\r\n  V [<n>]   - View/Set HBIOS Diagnostic Verbosity"
 #endif
 		.db	"\r\n  <u>[.<s>] - Boot Disk Unit/Slice"
 		.db	0
