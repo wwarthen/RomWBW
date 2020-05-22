@@ -8,7 +8,8 @@
 	extrn	phex16, phex8
 	extrn	cin, cout
 	extrn	crlf, crlf2
-
+	
+	debug	equ	false
 
 ; BIOS Jump vector.
 
@@ -301,16 +302,44 @@ setsec:
 	ld	(sect),bc
 	ret
 setdma:
-	;push	hl
-	;push	bc
-	;pop	hl
-	;call	crlf
-	;call	phex16
-	;pop	hl
+
+	  if debug
+
+	push	hl
+	push	bc
+	pop	hl
+	call	crlf
+	call	phex16
+	pop	hl
+	
+	  endif
+
 	ld	(dma),bc
 	ret
 
 read:
+	  if debug
+
+	call	crlf
+	ld	a,(unit)
+	call	phex8
+	ld	a,' '
+	call	cout
+	ld	hl,(trk)
+	call	phex16
+	ld	a,' '
+	call	cout
+	ld	hl,(sect)
+	call	phex16
+	ld	a,' '
+	call	cout
+	ld	hl,(lba+2)
+	call	phex16
+	ld	hl,(lba+0)
+	call	phex16
+	
+	  endif
+
 	; Check device type
 	ld	a,(unit)		; get unit
 	ld	c,a			; BIOS Disk Unit in C
@@ -349,6 +378,18 @@ read2:
 	set	7,d			; set lba access bit
 
 read3:
+
+	  if debug
+
+	ld	a,' '
+	call	cout
+	ex	de,hl
+	call	phex16
+	ex	de,hl
+	call	phex16
+	
+	  endif
+
 	; DE:HL has sector address to read (LBA or CHS)
 	ld	a,(unit)		; get disk unit
 	ld	c,a			; put in C
