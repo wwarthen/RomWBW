@@ -13,6 +13,7 @@ else
 	OBJECTS += RCZ180_nat.rom RCZ180_nat.com
 	OBJECTS += RCZ80_kio.rom RCZ80_kio.com
 	OBJECTS += RCZ80_mt.rom RCZ80_mt.com
+	OBJECTS += RCZ80_duart.rom RCZ80_duart.com
 	OBJECTS += RCZ80_std.rom RCZ80_std.com
 	OBJECTS += SBC_simh.rom SBC_simh.com
 	OBJECTS += SBC_std.rom SBC_std.com
