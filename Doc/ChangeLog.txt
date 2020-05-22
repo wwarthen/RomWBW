@@ -4,6 +4,7 @@ Version 3.1.1
 - WBW: Preliminary hard disk partition support (backward compatible)
 - WBW: Change Propeller VGA signal timings to 60Hz refresh
 - WBW: Enhanced SYSTEM RESET function to allow a warm start back to boot loader
+- C?O: Add DUART driver
 
 Version 3.1
 -----------
