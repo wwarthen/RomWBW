@@ -81,7 +81,7 @@ CPM=$(TOOLS)/cpm/bin
 	$(ZXCC) $(CPM)/SLR180 -$(basename $<)/HF
 
 %.rel: %.azm
-	$(ZXCC) $(CPM)/ZSM =$<
+	$(ZXCC) $(CPM)/ZSM =$< -/L
 
 %.bin: %.rel
 	$(ZXCC) $(CPM)/LINK -$@=$<
