@@ -1429,23 +1429,32 @@ Increase by steps of 48 to select the same note in next octave.
 If the driver is able to generate the requested note, a success (0) is
 returned, otherwise a non-zero error state will be returned.
 
+The sound chip resolution and its oscillator limit the range and
+accuracy of the notes played. The typically range of the AY-3-8910
+is six octaves, Bb2/A#2-A7, where each value is a unique tone. Values
+above and below can still be played but each quarter tone step may not 
+result in a note change.
+
 The following table shows the mapping of the input value in HL
 to the corresponding octave and note.
 
-| Note  | Octave 0 | Octave 1 | Octave 2 | Octave 3 | Octave 4 | Octave 5 | Octave 6 |
-|-------|----------|----------|----------|----------|----------|----------|----------|
-| Bb/A# | 0        | 48       | 96       | 144      | 192      | 240      | 288      |
-| B     | 4        | 52       | 100      | 148      | 196      | 244      | 292      |
-| C     | 8        | 56       | 104      | 152      | 200      | 248      | 296      |
-| C#/Db | 12       | 60       | 108      | 156      | 204      | 252      | 300      |
-| D     | 16       | 64       | 112      | 160      | 208      | 256      | 304      |
-| Eb/D# | 20       | 68       | 116      | 164      | 212      | 260      | 308      |
-| E     | 24       | 72       | 120      | 168      | 216      | 264      | 312      |
-| F     | 28       | 76       | 124      | 172      | 220      | 268      | 316      |
-| F#/Gb | 32       | 80       | 128      | 176      | 224      | 272      | 320      |
-| G     | 36       | 84       | 132      | 180      | 228      | 276      | 324      |
-| Ab/G# | 40       | 88       | 136      | 184      | 232      | 280      | 328      |
-| A     | 44       | 92       | 140      | 188      | 236      | 284      | 332      |
++-------------------------------------------------------+
+|       |                    OCTAVE                     | 
+|  Note |-----------------------------------------------+
+|       |  0  |  1  |  2  |  3  |  4  |  5  |  6  |  7  |
+|-------|-----|-----|-----|-----|-----|-----|-----|-----+
+| Bb/A# | 0   | 48  | 96  | 144 | 192 | 240 | 288 | 336 |
+| B     | 4   | 52  | 100 | 148 | 196 | 244 | 292 | 340 |
+| C     | 8   | 56  | 104 | 152 | 200 | 248 | 296 | 344 |
+| C#/Db | 12  | 60  | 108 | 156 | 204 | 252 | 300 | 348 |
+| D     | 16  | 64  | 112 | 160 | 208 | 256 | 304 | 352 |
+| Eb/D# | 20  | 68  | 116 | 164 | 212 | 260 | 308 | 356 |
+| E     | 24  | 72  | 120 | 168 | 216 | 264 | 312 | 360 |
+| F     | 28  | 76  | 124 | 172 | 220 | 268 | 316 | 364 |
+| F#/Gb | 32  | 80  | 128 | 176 | 224 | 272 | 320 | 368 |
+| G     | 36  | 84  | 132 | 180 | 228 | 276 | 324 | 372 |
+| Ab/G# | 40  | 88  | 136 | 184 | 232 | 280 | 328 | 376 |
+| A     | 44  | 92  | 140 | 188 | 236 | 284 | 332 | 380 |
 
 ### Function 0x54 -- Sound Play (SNDPLAY)
 
@@ -1529,9 +1538,6 @@ key aspects of the specific Audio Device.
 
 Reports information about the audio device unit specified.
 
-At this stage, only one driver type is supported (SN76489), but is
-envisaged that more will be added in the future.
-
 Register B reports the audio device type (see below).
 
 Registers HL and DE contain relevant port addresses for the hardware
@@ -1543,7 +1549,7 @@ AUDIO ID       | Value | Device     | Returned registers
 -------------- | ----- | ---------- | --------------------------------------------
 SND_SN76489    | 0x01  | SN76489    | E: Left channel port, L: Right channel port
 SND_AY38910    | 0x02  | AY-3-8910  | D: Address port, E: Data port
-
+SND_BITMODE    | 0x03  | I/O PORT   | D: Address port, E: Bit mask
 
 `\clearpage`{=latex}
 
