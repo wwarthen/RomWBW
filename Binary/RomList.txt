@@ -34,7 +34,7 @@ image to use for each platform:
 	RC2014 w/ Z80	RCZ80_std.rom
 	RC2014 w/ Z180	RCZ180_nat.rom	(native Z180 memory addressing)
 	RC2014 w/ Z180	RCZ180_ext.rom	(external 512K RAM/ROM module)
-	SC-series	SC126, SC130
+	SC-series	SC126, SC130, SC131
 	Easy Z80	EZZ180_std.rom
 	Dyno		DYNO_std.rom
 
@@ -52,11 +52,6 @@ ROM on-the-fly.  It is an excellent way to test a ROM Image before
 actually burning it.  Similarly, the .img files can be loaded using
 the UNA FAT loader for testing.
 
-WARNING: In a few cases the .com file is too big to load.  If you get
-a message like "Full" or "BAD LOAD" when trying to load one of the
-.com files, it is too big.  In these cases, you will not be able to
-test the ROM prior to programming it.
-
 All of the standard ROM Images are configured for:
  - 512KB ROM Disk
  - 512KB RAM Disk
@@ -66,10 +61,10 @@ All of the standard ROM Images are configured for:
 * RC2014 and Stephen Cousins' kits run at 115,200Kbps baud
 
 All hard disk type devices (IDE, PPIDE, CF Card, SD Card) will be
-automatically assigned two drive letters per device.  The drive
-letters will refer to the first 2 slices of the device. The ASSIGN
-command can be used to display and reassign drives to disk devices
-and slices as desired.
+automatically assigned at least two drive letters per device.  The
+drive letters will refer to the first 2 slices of the device. The
+ASSIGN command can be used to display and reassign drives to disk
+devices and slices as desired.
 
 Standard ROM Image Notes
 ------------------------
@@ -153,36 +148,32 @@ MK4 (MK4_std.rom):
 RCZ80 (RCZ80_std.rom):
  - Assumes CPU oscillator of 7.3728 MHz
  - Requires 512K RAM/ROM module
- - Auto detects Serial I/O Module (ACIA) and Dual Serial
-   Module (SIO/2).  Either one may be used.
+ - Auto detects Serial I/O Module (ACIA), Dual Serial
+   Module (SIO/2), and EP Dual UART.
  - Console on whichever serial module is installed,
-   but will use the SIO/2 if both are installed.  Baud
-   rate is determined by hardware, but normally 115200.
- - Includes support for RC2014 Compact Flash Module
- - Support for RC2014 PPIDE Module may be enabled in config
+   order of priority is UART, SIO, then ACIA.
+ - Baud rate is determined by hardware, but normally 115200.
+ - Auto support for RC2014 Compact Flash Module
+ - Auto support for RC2014 PPIDE Module
  - Support for Scott Baker SIO board may be enabled in config
  - Support for Scott Baker floppy controllers (SMC & WDC) may
    be enabled in config
+ - Support for J.B. Lang TMS9918 video card may be enabled in config
 
 RCZ80 w/ KIO (RCZ80_kio.rom):
- - Assumes CPU oscillator of 7.3728 MHz
- - Requires 512K RAM/ROM module
+ - Save as RCZ80_std
  - Requires KIO module
- - Console on KIO primary serial port at 115200 baud
- - Includes support for RC2014 Compact Flash Module
- - Includes support for RC2014 PPIDE Module
- - Support for Scott Baker SIO board may be enabled in config
- - Support for Scott Baker floppy controllers (SMC & WDC) may
-   be enabled in config
+ - SIO ports provided by KIO
 
 RCZ180 (RCZ180_nat.rom & RCZ180_ext.rom):
  - Assumes CPU oscillator of 18.432 MHz
  - Console on Z180 onboard primary ASCI serial port at 115200 baud
- - Includes support for RC2014 Compact Flash Module
- - Includes support for RC2014 PPIDE Module
+ - Auto support for RC2014 Compact Flash Module
+ - Auto support for RC2014 PPIDE Module
  - Support for alternative serial modules may be enabled in config
  - Support for Scott Baker floppy controllers (SMC & WDC) may
    be enabled in config
+ - Support for J.B. Lang TMS9918 video card may be enabled in config
  - You must pick the _nat or _ext variant depending on which
    memory module you are using:
    - RCZ180_nat.rom uses the built-in Z180 memory manager
@@ -192,13 +183,8 @@ RCZ180 (RCZ180_nat.rom & RCZ180_ext.rom):
      memory, such as the 512K RAM/ROM module.
 
 SCZ180 (SCZ180_126.rom, SCZ180_130.rom, SCZ180_131.rom):
- - Assumes CPU oscillator of 18.432 MHz
- - Console on Z180 onboard primary ASCI serial port at 115200 baud
- - Includes support for RC2014 Compact Flash Module
- - Includes support for RC2014 PPIDE Module
- - Support for alternative serial modules may be enabled in config
- - Support for Scott Baker floppy controllers (SMC & WDC) may
-   be enabled in config
+ - Same as RCZ180
+ - Adds auto support for SPI SD Card
  - The 3 different variants of SCZ180 are provided to match the
    3 corresponding systems (SC126, SC130, and SC131) designed by
    Stephen Cousins.
@@ -207,8 +193,8 @@ EZZ80 (EZZ80_std.rom):
  - Assumes CPU oscillator of 10.000 MHz
  - Console on primary SIO serial port at 115200 baud
  - Includes support for on-board SIO
- - Includes support for RC2014 Compact Flash Module
- - Includes support for RC2014 PPIDE Module
+ - Auto support for RC2014 Compact Flash Module
+ - Auto support for RC2014 PPIDE Module
 
 DYNO (DYNO_std.rom):
  - Assumes CPU oscillator of 18.432 MHz
