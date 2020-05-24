@@ -2259,7 +2259,7 @@ RCVRPTB:CPI	SOH		; 'SOH' for a 128-byte block?
 RCVSERR:MVI	B,1		; Wait for 1 second
 	CALL	RECV		; After last char. received
 	JNC	RCVSERR		; Loop until sender done
-	LDA	FRSTIM		; Is it the first time?
+RCVSER1:LDA	FRSTIM		; Is it the first time?
 	ORA	A
 	MVI	A,NAK
 	JNZ	RCVSER2		; If not first time, send NAK
@@ -2320,7 +2320,9 @@ DELFILE:LXI	D,FCB		; Point to file
 ;
 ; Timed out on receive
 ;
-RCVSTOT:JMP	RCVSERR		; Bump error count, etc.
+;RCVSTOT:JMP	RCVSERR		; Bump error count, etc.
+; WBW: Bypass line flush if error is timeout
+RCVSTOT:JMP	RCVSER1		; Bump error count, etc.
 ;
 ; Got SOH or STX - get block number, block number complemented
 ;
@@ -5694,7 +5696,8 @@ OLINE:	DS	80		; Temporary buffer to store line
 	ORG	($+127)/128*128
 ;
 DBUF	EQU	$		; 16-record disk buffer
-STACK	EQU	DBUF-2		; Save original stack address
+;STACK	EQU	DBUF-2		; Save original stack address
+STACK	EQU	0B000H		; WBW
 LOGBUF	EQU	DBUF+128	; For use with LOGCAL
 ;
 ;-----------------------------------------------------------------------
