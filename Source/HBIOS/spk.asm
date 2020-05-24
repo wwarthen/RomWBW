@@ -4,6 +4,12 @@
 ;
 ;======================================================================
 ;
+;	LIMITATIONS -	CPU FREQUENCY ADJUSTMENT LIMITED TO 1MHZ RESOLUTION
+;			QUARTER TONES NOT SUPPORTED
+;			DURATION FIXED TO 1 SECOND.
+;			NO VOLUME ADJUSTMENT DUE TO HARDWARE LIMITATION
+;======================================================================
+;
 ;	DRIVER FUNCTION TABLE AND INSTANCE DATA
 ;
 SP_FNTBL:
@@ -13,6 +19,7 @@ SP_FNTBL:
 	.DW	SP_NOTE
 	.DW	SP_PLAY
 	.DW	SP_QUERY
+	.DW	SP_DURATION
 ;
 #IF (($ - SP_FNTBL) != (SND_FNCNT * 2))
 	.ECHO	"*** INVALID SND FUNCTION TABLE ***\n"
@@ -31,6 +38,7 @@ SP_RTCIOMSK	.EQU	00000100B
 ;
 SP_PENDING_PERIOD	.DW	SP_NOTE_C8	; PENDING PERIOD (16 BITS)
 SP_PENDING_VOLUME	.DB	$FF		; PENDING VOL (8 BITS)
+SP_PENDING_DURATION	.DW	0		; PENDING DURATION (16 BITS)
 ;
 ;======================================================================
 ;	DRIVER INITIALIZATION
@@ -303,8 +311,21 @@ BE_END:
 	POP	IX
 	RET				; ALWAYS EXITS WITH SUCCESS STATUS (A=0)
 ;
-;	STANDARD ONE SECOND TONE TABLES AT 1MHZ (UNCOMPENSATED).
+;======================================================================
+;	SOUND DRIVER FUNCTION - DURATION
+;======================================================================
+;
+SP_DURATION:
+	LD	(SP_PENDING_DURATION),HL; SET TONE PERIOD TO ZERO
+	XOR	A
+	RET
+;
+;======================================================================
+;
+;	STANDARD ONE SECOND TONE TABLES AT 1MHZ.
 ;	FOR SP_BEEPER ROUTINE, FIRST WORD LOADED INTO DE, SECOND INTO HL
+;
+;======================================================================
 ;
 #DEFINE	SP_TONESET(SP_FREQ) .DW SP_FREQ/100, 12500000/SP_FREQ
 ;

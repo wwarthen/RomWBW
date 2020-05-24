@@ -1438,25 +1438,25 @@ result in a note change.
 The following table shows the mapping of the input value in HL
 to the corresponding octave and note.
 
-+-------------------------------------------------------+
-|       |                    OCTAVE                     | 
-|  Note |-----------------------------------------------+
-|       |  0  |  1  |  2  |  3  |  4  |  5  |  6  |  7  |
-|-------|-----|-----|-----|-----|-----|-----|-----|-----+
-| Bb/A# | 0   | 48  | 96  | 144 | 192 | 240 | 288 | 336 |
-| B     | 4   | 52  | 100 | 148 | 196 | 244 | 292 | 340 |
-| C     | 8   | 56  | 104 | 152 | 200 | 248 | 296 | 344 |
-| C#/Db | 12  | 60  | 108 | 156 | 204 | 252 | 300 | 348 |
-| D     | 16  | 64  | 112 | 160 | 208 | 256 | 304 | 352 |
-| Eb/D# | 20  | 68  | 116 | 164 | 212 | 260 | 308 | 356 |
-| E     | 24  | 72  | 120 | 168 | 216 | 264 | 312 | 360 |
-| F     | 28  | 76  | 124 | 172 | 220 | 268 | 316 | 364 |
-| F#/Gb | 32  | 80  | 128 | 176 | 224 | 272 | 320 | 368 |
-| G     | 36  | 84  | 132 | 180 | 228 | 276 | 324 | 372 |
-| Ab/G# | 40  | 88  | 136 | 184 | 232 | 280 | 328 | 376 |
-| A     | 44  | 92  | 140 | 188 | 236 | 284 | 332 | 380 |
-
-### Function 0x54 -- Sound Play (SNDPLAY)
++-------+---------------------------------------------------------------+
+|       |                             OCTAVE                            | 
+|  Note +---------------------------------------------------------------+
+|       |    0  |    1  |   2   |   3   |   4   |   5   |   6   |   7   |
+|-------+-------|-------|-------|-------|-------|-------|-------|-------+
+| Bb/A# |   0   |   48  |  96   |  144  |  192  |  240  |  288  |  336  |
+| B     |   4   |   52  |  100  |  148  |  196  |  244  |  292  |  340  |
+| C     |   8   |   56  |  104  |  152  |  200  |  248  |  296  |  344  |
+| C#/Db |   12  |   60  |  108  |  156  |  204  |  252  |  300  |  348  |
+| D     |   16  |   64  |  112  |  160  |  208  |  256  |  304  |  352  |
+| Eb/D# |   20  |   68  |  116  |  164  |  212  |  260  |  308  |  356  |
+| E     |   24  |   72  |  120  |  168  |  216  |  264  |  312  |  360  |
+| F     |   28  |   76  |  124  |  172  |  220  |  268  |  316  |  364  |
+| F#/Gb |   32  |   80  |  128  |  176  |  224  |  272  |  320  |  368  |
+| G     |   36  |   84  |  132  |  180  |  228  |  276  |  324  |  372  |
+| Ab/G# |   40  |   88  |  136  |  184  |  232  |  280  |  328  |  376  |
+| A     |   44  |   92  |  140  |  188  |  236  |  284  |  332  |  380  |
+   
+### Function 0x54 -- Sound Play SNDPLAY)                    
 
 | _Entry Parameters_
 |       B: 0x54
@@ -1550,6 +1550,26 @@ AUDIO ID       | Value | Device     | Returned registers
 SND_SN76489    | 0x01  | SN76489    | E: Left channel port, L: Right channel port
 SND_AY38910    | 0x02  | AY-3-8910  | D: Address port, E: Data port
 SND_BITMODE    | 0x03  | I/O PORT   | D: Address port, E: Bit mask
+
+### Function 0x56 -- Sound Duration (SNDDUR)
+
+| _Entry Parameters_
+|       B: 0x56
+|       C: Audio Device Unit ID
+|       HL: Duration
+
+|      _Returned Values_
+|           A: Status (0=OK, else error)
+
+This function sets the duration of the note to be played in milliseconds.
+
+If the duration is set to zero, then the play function will operate in a non-blocking
+mode. i.e. a tone will start playing and the play function will return. The tone will
+continue to play until the next tone is played. I/O PORT are not compatible and will
+not play a note if the duration is zero.
+
+For other values, when a tone is played, it will play for the duration defined in HL 
+and then return.
 
 `\clearpage`{=latex}
 
