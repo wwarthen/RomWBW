@@ -67,15 +67,23 @@ MINIT:
 ;
 	; Neither UNA nor RomWBW
 	LD	DE,ERR_BIO	; BIOS error message
-	LD	C,9		; BDOS string display function
-	CALL	BDOS		; Do it
-	JP	0		; Bail out!
+	JP	FAIL		; Print msg and bail out
 ;
 MINIT_RET:
 	PUSH	HL		; Save HL (JP table adr)
 
-	; Display port notification string
+	; Display handler label
 	LD	C,9		; BDOS string display function
+	CALL	BDOS		; Do it
+;
+	; Display port (unit number)
+	LD	DE,COM_LBL	; Prefix
+	LD	C,9		; BDOS string display function
+	CALL	BDOS		; Do it
+	LD	A,(UNIT)	; Get unit number
+	ADD	A,'0'		; Make displayable
+	LD	E,A		; Put in E for display
+	LD	C,2		; BDOS console write char
 	CALL	BDOS		; Do it
 ;
 	; Declare experimental
@@ -112,7 +120,7 @@ HINIT:
 	LD	A,L		; Move it to A
 	LD	(CPUSPD),A	; Save it
 ;
-	JP	H_INIT		; Otherwise, use HBIOS I/O
+	JP	H_INIT		; HBIOS init
 ;
 UINIT:
 	; Display UNA notification string
@@ -137,9 +145,7 @@ UINIT1:
 HWERR:
 	; Failed to identify target comm hardware
 	LD	DE,ERR_HW	; Hardware error message
-	LD	C,9		; BDOS string display function
-	CALL	BDOS		; Do it
-	JP	0		; Bail out!
+	JP	FAIL		; Print message and bail out
 ;
 ; Identify active BIOS.	 RomWBW HBIOS=1, UNA UBIOS=2, else 0
 ;
@@ -178,6 +184,12 @@ IDBIO2:
 	XOR	A		; Setup return value of 0
 	RET			; and done
 ;
+FAIL:
+	; DE has error string address
+	LD	C,9		; BDOS string display function
+	CALL	BDOS		; Do it
+	JP	0		; Bail out!
+;
 ;-----------------------------------------------------------------------
 ;
 ; Uninitialize modem
@@ -193,7 +205,8 @@ UNINIT:
 H_UNINIT:
 	; HBIOS: Reset character device 0
 	LD	B,04H		; HBIOS CIOINIT function 0x04
-	LD	C,80H		; Unit = 80 (console)
+	LD	A,(UNIT)	; HBIOS serial unit number
+	LD	C,A		; Put in C for func call
 	LD	DE,-1		; Reset w/ current settings
 	RST	08		; Do it
 	RET			; not initialized, so no 'UN-INITIALIZE'
@@ -201,7 +214,8 @@ H_UNINIT:
 U_UNINIT:
 	; UBIOS: Reset character device 0
 	LD	C,10H		; UNA INIT function 0x10
-	LD	B,0		; Unit = 0
+	LD	A,(UNIT)	; UBIOS serial unit number
+	LD	B,A		; Put in B for func call
 	LD	DE,-1		; Reset w/ current settings
 	RST	08		; Do it
 	RET			; not initialized, so no 'UN-INITIALIZE'
@@ -226,10 +240,13 @@ EXTRA3:
 BIOID	DB	0		; BIOS ID, 1=HBIOS, 2=UBIOS
 CPUSPD	DB	10		; CPU speed in MHz
 RCVSCL	DW	6600		; RECV loop timeout scalar
+UNIT	DB	0		; HBIOS serial device unit number
 ;
 TAG	DB	"RomWBW, 23-May-2020$"
 ;
-COM_LBL	DB	", HBIOS FastPath on COM?:$"
+H_LBL	DB	", HBIOS FastPath$"
+U_LBL	DB	", UNA UBIOS$"
+COM_LBL	DB	" on COM$"
 EXP_LBL	DB	13, 10, 13, 10, "*** Experimental ***$"
 ;
 UBTAG	DB	" [UNA]$"
@@ -239,6 +256,7 @@ CRLF	DB	13, 10, "$"
 ;
 ERR_BIO	DB	13, 10, 13, 10, "++ Unknown BIOS ++", 13, 10, "$"
 ERR_HW	DB	13, 10, 13, 10, "++ Unknown Hardware ++", 13, 10, "$"
+ERR_API	DB	13, 10, 13, 10, "++ BIOS API Error ++", 13, 10, "$"
 ;
 ;=======================================================================
 ;=======================================================================
@@ -272,52 +290,63 @@ H_INIT:
 	; Get HBIOS bank id
 	LD	BC,0F8F2H	; HBIOS SYSGET, Bank Info
 	RST	08		; do it
+	JR	NZ,H_APIERR	; handle API error
 	LD	A,D		; BIOS bank id to A
 	LD	(H_BNKID),A	; save it
+;
+	; Lookup current console to use as default for transfer
+	LD	B,0FAH		; HBIOS PEEK
+	LD	A,(H_BNKID)	; get BIOS bank id
+	LD	D,A		; ... and put in D
+	LD	HL,100H + 12H	; HCB console unit address
+	RST	08		; E := value
+	LD	A,E		; put in A
+	LD	(UNIT),A	; save it
 ;
 	; Patch SENDR w/ FastPath addresses
 	LD	BC,0F801H	; Get CIO func/data adr
 	LD	D,01H		; Func=CIO OUT
-	LD	A,(H_UNIT)	; get desired char unit
+	LD	A,(UNIT)	; get desired char unit
 	LD	E,A		; and put in E
 	RST	08
-	; handle error?
-	LD	(H_SCDAT),DE	; Plug in data adr
+	JR	NZ,H_APIERR	; handle API error
+	LD	(H_UDAT),DE	; Plug in data adr
 	LD	(H_SCFN),HL	; Plug in func adr
 ;
 	; Patch GETCHR/MDIN w/ FastPath addresses
 	LD	BC,0F801H	; Get CIO func/data adr
 	LD	D,00H		; Func=CIO IN
-	LD	A,(H_UNIT)	; get desired char unit
+	LD	A,(UNIT)	; get desired char unit
 	LD	E,A		; and put in E
 	RST	08
-	; handle error?
-	LD	(H_GCDAT),DE	; Plug in data adr
+	JR	NZ,H_APIERR	; handle API error
 	LD	(H_GCFN),HL	; Plug in func adr
 ;
 	; Patch RCVRDY w/ FastPath addresses
 	LD	BC,0F801H	; Get CIO func/data adr
 	LD	D,02H		; Func=CIO IST
-	LD	A,(H_UNIT)	; get desired char unit
+	LD	A,(UNIT)	; get desired char unit
 	LD	E,A		; and put in E
 	RST	08
-	; handle error?
-	LD	(H_RRDAT),DE	; Plug in data adr
+	JR	NZ,H_APIERR	; handle API error
 	LD	(H_RRFN),HL	; Plug in func adr
 ;
 	; Patch SNDRDY w/ FastPath addresses
 	LD	BC,0F801H	; Get CIO func/data adr
 	LD	D,03H		; Func=CIO OST
-	LD	A,(H_UNIT)	; get desired char unit
+	LD	A,(UNIT)	; get desired char unit
 	LD	E,A		; and put in E
 	RST	08
-	; handle error?
-	LD	(H_SRDAT),DE	; Plug in data adr
+	JR	NZ,H_APIERR	; handle API error
 	LD	(H_SRFN),HL	; Plug in func adr
 ;
 	LD	HL,H_JPTBL
-	LD	DE,COM_LBL
+	LD	DE,H_LBL
 	JP	MINIT_RET
+;
+H_APIERR:
+	LD	DE,ERR_API
+	JP	FAIL
 ;
 ;-----------------------------------------------------------------------
 ;
@@ -329,10 +358,9 @@ H_SENDR:
 	PUSH	DE
 	PUSH	HL
 	LD	E,A		; character to E
-	LD	IY,0000H
-H_SCDAT	EQU	$-2
+	LD	IY,(H_UDAT)
 	LD	A,(H_BNKID)	; call into HBIOS bank
-	LD	HL,0000H
+	LD	IX,0000H
 H_SCFN	EQU	$-2
 	CALL	0FFF9H		; HBIOS bank call
 	POP	HL
@@ -362,10 +390,9 @@ H_MDIN:
 	PUSH	BC
 	PUSH	DE
 	PUSH	HL
-	LD	IY,0000H
-H_GCDAT	EQU	$-2
+	LD	IY,(H_UDAT)
 	LD	A,(H_BNKID)	; call into HBIOS bank
-	LD	HL,0000H
+	LD	IX,0000H
 H_GCFN	EQU	$-2
 	CALL	0FFF9H		; HBIOS bank call
 	LD	A,E		; byte received to A
@@ -384,10 +411,9 @@ H_RCVRDY:
 	PUSH	BC
 	PUSH	DE
 	PUSH	HL
-	LD	IY,0000H
-H_RRDAT	EQU	$-2
+	LD	IY,(H_UDAT)
 	LD	A,(H_BNKID)	; call into HBIOS bank
-	LD	HL,0000H
+	LD	IX,0000H
 H_RRFN	EQU	$-2
 	CALL	0FFF9H		; HBIOS bank call
 	SUB	1		; CF set IFF zero
@@ -407,10 +433,9 @@ H_SNDRDY:
 	PUSH	BC
 	PUSH	DE
 	PUSH	HL
-	LD	IY,0000H
-H_SRDAT	EQU	$-2
+	LD	IY,(H_UDAT)
 	LD	A,(H_BNKID)	; call into HBIOS bank
-	LD	HL,0000H
+	LD	IX,0000H
 H_SRFN	EQU	$-2
 	CALL	0FFF9H		; HBIOS bank call
 	SUB	1		; CF set IFF zero
@@ -431,8 +456,8 @@ H_SPEED:
 ;
 ;
 ;
-H_BNKID	DB	0		; HBIOS bank id
-H_UNIT	DB	80H		; HBIOS unit id
+H_BNKID	DB	00H		; HBIOS bank id
+H_UDAT	DW	0000H		; Unit data address
 ;
 ;
 ;=======================================================================
@@ -470,7 +495,7 @@ U_INIT:
 	LD	(RCVSCL),HL	; ... to compensate for BIOS overhead
 ;
 	LD	HL,U_JPTBL
-	LD	DE,COM_LBL
+	LD	DE,U_LBL
 	JP	MINIT_RET
 ;
 ;-----------------------------------------------------------------------

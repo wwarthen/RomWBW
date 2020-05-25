@@ -45,9 +45,19 @@ GET ($F8):
       BC=Function/Subfunction                   A=Result
                                                 E=Serial Unit Count
 
+    CIOFN ($01):
+      BC=Function/Subfunction                   A=Result
+                                                HL=Function Address
+                                                DE=Unit Data Address
+
     DIOCNT ($10):
       BC=Function/Subfunction                   A=Result
                                                 E=Disk Unit Count
+
+    DIOFN ($11):
+      BC=Function/Subfunction                   A=Result
+                                                HL=Function Address
+                                                DE=Unit Data Address
 
     RTCCNT ($20):
       BC=Function/Subfunction                   A=Result
@@ -56,6 +66,20 @@ GET ($F8):
     VDACNT ($40):
       BC=Function/Subfunction                   A=Result
                                                 E=Video Unit Count
+
+    VDAFN ($41):
+      BC=Function/Subfunction                   A=Result
+                                                HL=Function Address
+                                                DE=Unit Data Address
+
+    SNDCNT ($50):
+      BC=Function/Subfunction                   A=Result
+                                                E=Sound Unit Count
+
+    SNDFN ($51):
+      BC=Function/Subfunction                   A=Result
+                                                HL=Function Address
+                                                DE=Unit Data Address
 
     TIMER ($D0):
       BC=Function/Subfunction                   A=Result
