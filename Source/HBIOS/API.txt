@@ -267,6 +267,8 @@ DEVICE ($06):
                                         D=Device Type
                                         E=Device Number
 					C=Device Attributes
+					H=Device Mode
+					L=Base I/O Adr
 
   Serial Device Attributes Byte:
     7: 0=RS-232, 1=Terminal
@@ -331,6 +333,8 @@ DEVICE ($17)
                                         D=Device Type (MD, FD, IDE, etc.)
                                         E=Device Number (0..n)
 					C=Device Attributes
+					H=Device Mode
+					L=Base I/O Adr
 
   Report the Device Type (Floppy, IDE, SD, etc.) and Device Number.  Call
   does not perform any I/O and succeeds even if the device is in an error state.

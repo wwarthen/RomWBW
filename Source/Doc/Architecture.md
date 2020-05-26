@@ -558,6 +558,8 @@ unit. Register pair DE contains the line characteristics upon return.
 |       C: Serial Device Attributes
 |       D: Serial Device Type
 |       E: Serial Device Number
+|       H: Serial Device Unit Mode
+|       L: Serial Device Unit I/O Base Address
 
 Reports information about the character device unit specified. Register C
 indicates the device attributes: 0=RS-232 and 1=Terminal. Register D
@@ -954,7 +956,7 @@ Documentation required...
 
 Documentation required...
 
-### Function 0x28 -- RTC DEVICE (DIODEVICE)
+### Function 0x28 -- RTC DEVICE (RTCDEVICE)
 
 | _Entry Parameters_
 |       B: 0x28
