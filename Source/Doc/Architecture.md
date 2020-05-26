@@ -1774,6 +1774,31 @@ available along with the registers/information returned.
 |           A: Status (0=OK, else error)
 |           E: Count of Serial Device Units
 
+#### SYSGET Subfunction 0x01 -- Get Serial Unit Function (CIOFN)
+
+|      _Entry Parameters_
+|           BC: 0xF801
+|           D: CIO Function
+|           E: Unit
+
+|      _Returned Values_
+|           A: Status (0=OK, else error)
+|           HL: Driver Function Address
+|           DE: Unit Data Address
+
+This function will lookup the actual driver function address and
+unit data address inside the HBIOS driver.  On entry, place the
+CIO function number to lookup in D and the CIO unit number in E.
+On return, HL will contain the address of the requested function
+in the HBIOS driver (in the HBIOS bank).  DE will contain the
+associated unit data address (also in the HBIOS bank).
+
+This function can be used to speed up HBIOS calls by looking up the
+function and data address for a specific driver function.  After this,
+the caller can use interbank calls directly to the function in the
+driver which bypasses the overhead of the normal function invocation
+lookup.
+
 #### SYSGET Subfunction 0x10 -- Get Disk Device Unit Count (DIOCNT)
 
 |      _Entry Parameters_
@@ -1782,6 +1807,31 @@ available along with the registers/information returned.
 |      _Returned Values_
 |           A: Status (0=OK, else error)
 |           E: Count of Disk Device Units
+
+#### SYSGET Subfunction 0x11 -- Get Disk Unit Function (DIOFN)
+
+|      _Entry Parameters_
+|           BC: 0xF811
+|           D: DIO Function
+|           E: Unit
+
+|      _Returned Values_
+|           A: Status (0=OK, else error)
+|           HL: Driver Function Address
+|           DE: Unit Data Address
+
+This function will lookup the actual driver function address and
+unit data address inside the HBIOS driver.  On entry, place the
+DIO function number to lookup in D and the DIO unit number in E.
+On return, HL will contain the address of the requested function
+in the HBIOS driver (in the HBIOS bank).  DE will contain the
+associated unit data address (also in the HBIOS bank).
+
+This function can be used to speed up HBIOS calls by looking up the
+function and data address for a specific driver function.  After this,
+the caller can use interbank calls directly to the function in the
+driver which bypasses the overhead of the normal function invocation
+lookup.
 
 #### SYSGET Subfunction 0x20 -- Get Disk Device Unit Count (RTCCNT)
 
@@ -1801,6 +1851,31 @@ available along with the registers/information returned.
 |           A: Status (0=OK, else error)
 |           E: Count of Video Device Units
 
+#### SYSGET Subfunction 0x41 -- Get Video Unit Function (VDAFN)
+
+|      _Entry Parameters_
+|           BC: 0xF841
+|           D: VDA Function
+|           E: Unit
+
+|      _Returned Values_
+|           A: Status (0=OK, else error)
+|           HL: Driver Function Address
+|           DE: Unit Data Address
+
+This function will lookup the actual driver function address and
+unit data address inside the HBIOS driver.  On entry, place the
+VDA function number to lookup in D and the VDA unit number in E.
+On return, HL will contain the address of the requested function
+in the HBIOS driver (in the HBIOS bank).  DE will contain the
+associated unit data address (also in the HBIOS bank).
+
+This function can be used to speed up HBIOS calls by looking up the
+function and data address for a specific driver function.  After this,
+the caller can use interbank calls directly to the function in the
+driver which bypasses the overhead of the normal function invocation
+lookup.
+
 #### SYSGET Subfunction 0x50 -- Get Sound Device Unit Count (SNDCNT)
 
 |      _Entry Parameters_
@@ -1809,6 +1884,31 @@ available along with the registers/information returned.
 |      _Returned Values_
 |           A: Status (0=OK, else error)
 |           E: Count of Sound Device Units
+
+#### SYSGET Subfunction 0x51 -- Get Sound Unit Function (SNDFN)
+
+|      _Entry Parameters_
+|           BC: 0xF851
+|           D: SND Function
+|           E: Unit
+
+|      _Returned Values_
+|           A: Status (0=OK, else error)
+|           HL: Driver Function Address
+|           DE: Unit Data Address
+
+This function will lookup the actual driver function address and
+unit data address inside the HBIOS driver.  On entry, place the
+SND function number to lookup in D and the SND unit number in E.
+On return, HL will contain the address of the requested function
+in the HBIOS driver (in the HBIOS bank).  DE will contain the
+associated unit data address (also in the HBIOS bank).
+
+This function can be used to speed up HBIOS calls by looking up the
+function and data address for a specific driver function.  After this,
+the caller can use interbank calls directly to the function in the
+driver which bypasses the overhead of the normal function invocation
+lookup.
 
 #### SYSGET Subfunction 0xD0 -- Get Timer Tick Count (TIMER)
 

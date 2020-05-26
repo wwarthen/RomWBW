@@ -527,10 +527,14 @@ reboot:
 	call	DSKY_SHOWSEG		; display message
 #endif
 ;
-	; switch to rom bank 0 and jump to address 0
-	ld	a,BID_BOOT		; boot bank
-	ld	hl,0			; address zero
-	call	HB_BNKCALL		; does not return
+	;; switch to rom bank 0 and jump to address 0
+	;ld	a,BID_BOOT		; boot bank
+	;ld	ix,0			; address zero
+	;call	HB_BNKCALL		; does not return
+	; cold boot system
+	LD	B,BF_SYSRESET		; SYSTEM RESTART
+	LD	C,BF_SYSRES_COLD	; COLD START
+	rst	08			; do it, no return
 #endif
 ;
 #if (BIOS == BIOS_UNA)
