@@ -747,6 +747,8 @@ of memory.
 |       C: Attributes
 |       D: Device Type
 |       E: Device Number
+|       H: Disk Device Unit Mode
+|       L: Disk Device Unit I/O Base Address
 
 Reports information about the character device unit specified. Register D
 indicates the device type (driver) and register E indicates the physical
@@ -966,6 +968,8 @@ Documentation required...
 |       A: Status (0=OK, else error)
 |       D: Device Type
 |       E: Device Number
+|       H: RTC Device Unit Mode
+|       L: RTC Device Unit I/O Base Address
 
 Reports information about the RTC device unit specified. Register D
 indicates the device type (driver) and register E indicates the physical
@@ -1138,8 +1142,10 @@ Keyboard should be flushed.
 
 | _Exit Results_
 |       A: Status (0=OK, else error)
-|       D=Device Type
-|       E=Device Number
+|       D: Device Type
+|       E: Device Number
+|       H: VDA Device Unit Mode
+|       L: VDA Device Unit I/O Base Address
 
 Reports information about the video device unit specified.
 
@@ -1569,6 +1575,33 @@ not play a note if the duration is zero.
 
 For other values, when a tone is played, it will play for the duration defined in HL 
 and then return.
+
+### Function 0x57 -- Sound Device (SNDDEVICE)
+
+| _Entry Parameters_
+|       B: 0x57
+|       C: Sound Device Unit Number
+
+| _Exit Results_
+|       A: Status (0=OK, else error)
+|       D: Serial Device Type
+|       E: Serial Device Number
+|       H: Serial Device Unit Mode
+|       L: Serial Device Unit I/O Base Address
+
+Reports information about the sound device unit specified.  Register D
+indicates the device type (driver) and register E indicates the physical
+device number assigned by the driver.
+
+Each character device is handled by an appropriate driver (AY38910, SN76489,
+etc.). The driver can be identified by the Device Type. The assigned Device
+Types are listed below.
+
+_Id_ | _Device Type / Driver_
+---- | ----------------------
+0x00 | SN76489
+0x10 | AY38910
+0x20 | BITMODE
 
 `\clearpage`{=latex}
 
