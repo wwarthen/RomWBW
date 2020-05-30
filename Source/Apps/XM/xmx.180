@@ -52,6 +52,8 @@ CONOUT	EQU	0		; not used
 ; entries as appropriate.
 ;
 MINIT:
+	LD	(UNIT),A	; Save port specified
+
 	; Announce
 	LD	DE,TAG		; Tagline
 	LD	C,9		; BDOS string display function
@@ -89,6 +91,10 @@ MINIT_HB:
 	LD	A,D		; BIOS bank id to A
 	LD	(BIOSBID),A	; save it
 ;
+	LD	A,(UNIT)	; get current unit specified
+	CP	0FFH		; check for undefined
+	JR	NZ,MINIT_HB1	; if not undefined, go ahead
+;
 	; Lookup current console to use as default for transfer
 	LD	B,0FAH		; HBIOS PEEK
 	LD	A,(BIOSBID)	; get BIOS bank id
@@ -96,16 +102,18 @@ MINIT_HB:
 	LD	HL,100H + 12H	; HCB console unit address
 	RST	08		; E := value
 	LD	A,E		; put in A
-	LD	(UNIT),A	; save it
+	LD	(UNIT),A	; replace UNIT with console UNIT
 ;
-	; Get HBIOS character 0 device type
-	LD	B,006H		; HBIOS DEVICE function 0x06
-	LD	C,000H		; HBIOS char 0 device
+MINIT_HB1:
+	; Get HBIOS device type
+	LD	B,06H		; HBIOS DEVICE function 0x06
+	LD	A,(UNIT)	; Get xfer unit
+	LD	C,A		; Put in C
 	RST	08		; Do it, D=device type
 	LD	A,D		; Put result in A
-	CP	000H		; UART?
+	CP	00H		; UART?
 	JP	Z,UA_INIT	; If so, do UART H/W init
-	CP	080H		; USB-FIFO?
+	CP	80H		; USB-FIFO?
 	JP	Z,UF_INIT	; If so, do USB-FIFO H/W init
 	JP	HB_INIT		; Otherwise, use BIOS I/O
 ;
