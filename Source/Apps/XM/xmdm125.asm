@@ -3497,6 +3497,12 @@ RECVDG:	CALL	GETCHR
 	CALL	GETCHR
 ;
 RECV:	PUSH	D		; Save 'DE' regs.
+;
+; [WBW] BEGIN: Check immediately for char pending to avoid delay
+	CALL	RCVRDY		; Input from modem ready
+	JZ	MCHAR		; Got the character
+; [WBW] END
+;
 ; [WBW] BEGIN: Use dynamic CPU speed
 ;	MVI	E,MHZ		; Get the clock speed
 	LDA	CPUMHZ		; Get the clock speed

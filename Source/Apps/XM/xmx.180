@@ -281,7 +281,7 @@ RCVSCL	DW	6600		; RECV loop timeout scalar
 UNIT	DB	0		; BIOS serial device unit number
 BIOSBID	DB	00H		; BIOS bank id
 ;
-TAG	DB	"RomWBW, 23-May-2020$"
+TAG	DB	"RomWBW, 30-May-2020$"
 ;
 HB_LBL	DB	", HBIOS FastPath$"
 UB_LBL	DB	", UNA UBIOS$"
@@ -776,8 +776,8 @@ UF_JPTBL:
 ; USB-FIFO initialization
 ;
 UF_INIT:
-	LD	HL,12000	; Receive loop timeout scalar
-	LD	(RCVSCL),HL	; ... for UART RCVRDY timing
+	LD	DE,12000	; Receive loop timeout scalar
+	LD	(RCVSCL),DE	; ... for UART RCVRDY timing
 ;
 	LD	A,L		; Get base I/O port address (data port)
 	LD	(UF_SCDP),A	; Set data port in SENDR
