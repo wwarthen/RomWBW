@@ -582,10 +582,11 @@ UB_RCVRDY:
 	PUSH	DE
 	PUSH	HL
 	LD	BC,0013H	; unit 0, func 13h (input stat)
-	LD	A,E		; # chars waiting to A
-	SUB	1		; CF set IFF zero
-	RL	A		; CF to bit 0 of A
-	AND	01H		; set Z flag as needed
+	RST	08
+	XOR	A		; zero accum		; 4
+	CP	E		; CF means not zero	; 4
+	CCF			; CF means zero		; 4
+	RLA			; ZF means not zero	; 4
 	LD	A,0		; report no line errors
 	POP	HL
 	POP	DE
@@ -601,10 +602,11 @@ UB_SNDRDY:
 	PUSH	DE
 	PUSH	HL
 	LD	BC,0014H	; unit 0, func 14h (output stat)
-	LD	A,E		; # chars space in output buf
-	SUB	1		; CF set IFF zero
-	RL	A		; CF to bit 0 of A
-	AND	01H		; set Z flag as needed
+	RST	08
+	XOR	A		; zero accum		; 4
+	CP	E		; CF means not zero	; 4
+	CCF			; CF means zero		; 4
+	RLA			; ZF means not zero	; 4
 	POP	HL
 	POP	DE
 	POP	BC
@@ -655,15 +657,15 @@ UA_JPTBL:
 ; UART initialization
 ;
 UA_INIT:
-	LD	DE,13000	; Receive loop timeout scalar
+	LD	DE,13000	; receive loop timeout scalar
 	LD	(RCVSCL),DE	; ... for UART RCVRDY timing
 ;
-	LD	A,L		; Get base I/O port address
-	LD	(UA_SCP),A	; Set port value in SENDR
-	LD	(UA_GCP),A	; Set port value in GETCHR
+	LD	A,L		; get base I/O port address
+	LD	(UA_SCP),A	; set port value in SENDR
+	LD	(UA_GCP),A	; set port value in GETCHR
 	ADD	A,5		; UART control port is 5 higher
-	LD	(UA_RRP),A	; Set port value in RCVRDY
-	LD	(UA_SRP),A	; Set port value in SNDRDY
+	LD	(UA_RRP),A	; set port value in RCVRDY
+	LD	(UA_SRP),A	; set port value in SNDRDY
 ;
 	LD	HL,UA_JPTBL
 	LD	DE,UA_LBL
@@ -713,7 +715,7 @@ UA_GCP	EQU	$-1		; port value
 ;
 UA_RCVRDY:
 	IN	A,(0FFH)	; get modem status
-UA_RRP	EQU	$-1		; port value	
+UA_RRP	EQU	$-1		; port value
 	AND	UA_RCVB		; isolate ready bit
 	CP	UA_RCVR		; test it (set flags)
 	LD	A,0		; report no line errors
@@ -776,17 +778,17 @@ UF_JPTBL:
 ; USB-FIFO initialization
 ;
 UF_INIT:
-	LD	DE,12000	; Receive loop timeout scalar
+	LD	DE,12000	; receive loop timeout scalar
 	LD	(RCVSCL),DE	; ... for UART RCVRDY timing
 ;
-	LD	A,L		; Get base I/O port address (data port)
-	LD	(UF_SCDP),A	; Set data port in SENDR
-	LD	(UF_GCDP),A	; Set data port in GETCHR/MDIN
-	INC	A		; Bump to status port
-	LD	(UF_RRSP),A	; Set status port in RCVRDY
-	LD	(UF_SRSP),A	; Set status port in SNDRDY
-	INC	A		; Bump to send immediate port
-	LD	(UF_SCIP),A	; Set send immed port in SENDR
+	LD	A,L		; get base I/O port address (data port)
+	LD	(UF_SCDP),A	; set data port in SENDR
+	LD	(UF_GCDP),A	; set data port in GETCHR/MDIN
+	INC	A		; bump to status port
+	LD	(UF_RRSP),A	; set status port in RCVRDY
+	LD	(UF_SRSP),A	; set status port in SNDRDY
+	INC	A		; bump to send immediate port
+	LD	(UF_SCIP),A	; set send immed port in SENDR
 ;
 	LD	HL,UF_JPTBL
 	LD	DE,UF_LBL
@@ -820,8 +822,8 @@ UF_CAROK:
 ; GETCHR must not block
 ;
 UF_GETCHR:
-	CALL	UF_RCVRDY
-	RET	NZ
+	CALL	UF_RCVRDY	; check for char ready
+	RET	NZ		; return if not
 	; Fall thru if char ready
 ;
 ; MDIN can assume a character is ready
@@ -838,11 +840,11 @@ UF_GCDP	EQU	$-1		; data port
 ; *** Error code does not seem to be used ***
 ;
 UF_RCVRDY:
-	IN	A,(0FFH)	; b7=0 if char avail, =1 if no char.
+	IN	A,(0FFH)	; bit 7 = 0 if char avail, = 1 if no char.
 UF_RRSP	EQU	$-1		; status port
-	RLCA			; b0=0 if char avail, =1 if no char.
-	AND	00000001B	; a=0, zf=1 if no char, a=1, zf=0 if char avail.
-	LD	A,0
+	RLCA			; bit 0 = 0 if char avail, = 1 if no char.
+	AND	00000001B	; A = 0, ZF = 1 if no char, A = 1, ZF = 0 if char avail.
+	LD	A,0		; no errors
 	RET
 ;
 ;-----------------------------------------------------------------------
@@ -850,9 +852,9 @@ UF_RRSP	EQU	$-1		; status port
 ; Test for ready to send a character, Z = ready
 ;
 UF_SNDRDY:
-	IN	A,(0FFH)	; bit 0=0 if space avail, =1 IF FULL
+	IN	A,(0FFH)	; bit 0 = 0 if space avail, = 1 if full
 UF_SRSP	EQU	$-1		; status port
-	AND	00000001B	; A=0, ZF=1 if space avail, A=1, ZF=0 if full.
+	AND	00000001B	; A = 0, ZF = 1 if space avail, A = 1, ZF = 0 if full.
 	RET
 ;
 ;-----------------------------------------------------------------------
