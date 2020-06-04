@@ -428,7 +428,7 @@ _Code_ | _Meaning_
 -7     | media not present
 -8     | hardware not present
 -9     | I/O error
--10    | write request to read-only media	
+-10    | write request to read-only media
 -11    | device timeout
 -12    | invalid configuration
 
@@ -1440,7 +1440,7 @@ returned, otherwise a non-zero error state will be returned.
 The sound chip resolution and its oscillator limit the range and
 accuracy of the notes played. The typically range of the AY-3-8910
 is six octaves, Bb2/A#2-A7, where each value is a unique tone. Values
-above and below can still be played but each quarter tone step may not 
+above and below can still be played but each quarter tone step may not
 result in a note change.
 
 The following table shows the mapping of the input value in HL
@@ -1460,8 +1460,8 @@ to the corresponding octave and note.
 | G     |   36  |   84  |  132  |  180  |  228  |  276  |  324  |  372  |
 | Ab/G# |   40  |   88  |  136  |  184  |  232  |  280  |  328  |  376  |
 | A     |   44  |   92  |  140  |  188  |  236  |  284  |  332  |  380  |
-   
-### Function 0x54 -- Sound Play SNDPLAY)                    
+
+### Function 0x54 -- Sound Play SNDPLAY)
 
 | _Entry Parameters_
 |       B: 0x54
@@ -1573,7 +1573,7 @@ mode. i.e. a tone will start playing and the play function will return. The tone
 continue to play until the next tone is played. I/O PORT are not compatible and will
 not play a note if the duration is zero.
 
-For other values, when a tone is played, it will play for the duration defined in HL 
+For other values, when a tone is played, it will play for the duration defined in HL
 and then return.
 
 ### Function 0x57 -- Sound Device (SNDDEVICE)
@@ -1826,7 +1826,8 @@ unit data address inside the HBIOS driver.  On entry, place the
 CIO function number to lookup in D and the CIO unit number in E.
 On return, HL will contain the address of the requested function
 in the HBIOS driver (in the HBIOS bank).  DE will contain the
-associated unit data address (also in the HBIOS bank).
+associated unit data address (also in the HBIOS bank).  See
+Appendix A for details.
 
 This function can be used to speed up HBIOS calls by looking up the
 function and data address for a specific driver function.  After this,
@@ -1903,7 +1904,8 @@ unit data address inside the HBIOS driver.  On entry, place the
 VDA function number to lookup in D and the VDA unit number in E.
 On return, HL will contain the address of the requested function
 in the HBIOS driver (in the HBIOS bank).  DE will contain the
-associated unit data address (also in the HBIOS bank).
+associated unit data address (also in the HBIOS bank).  See
+Appendix A for details.
 
 This function can be used to speed up HBIOS calls by looking up the
 function and data address for a specific driver function.  After this,
@@ -1937,7 +1939,8 @@ unit data address inside the HBIOS driver.  On entry, place the
 SND function number to lookup in D and the SND unit number in E.
 On return, HL will contain the address of the requested function
 in the HBIOS driver (in the HBIOS bank).  DE will contain the
-associated unit data address (also in the HBIOS bank).
+associated unit data address (also in the HBIOS bank).  See
+Appendix A for details.
 
 This function can be used to speed up HBIOS calls by looking up the
 function and data address for a specific driver function.  After this,
@@ -2186,3 +2189,35 @@ On entry, register E must contain an index into the interrupt vector table
 and register HL must contain the address of the new interrupt vector to
 be inserted in the table at the index. On return, HL will contain the
 previous address in the table at the index.
+
+
+`\clearpage`{=latex}
+
+### Appendix A Driver Instance Data fields
+
+The following section outlines the read only data referenced by the
+`SYSGET`, subfunctions `xxxFN` for specific drivers.
+
+
+#### TMS9918 Driver:
+
+| Name   | Offset | Size (bytes)| Description |
+|--------|--------|-------------|-------------|
+| PPIA	 | 0      | 1	          | PPI PORT A  |
+| PPIB	 | 1      | 1           | PPI PORT B  |
+| PPIC	 | 2      | 1           | PPI PORT C  |
+| PPIX	 | 3      | 1           | PPI CONTROL PORT |
+| DATREG | 4      | 1           | IO PORT ADDRESS FOR MODE 0 |
+| CMDREG | 5      | 1           | IO PORT ADDRESS FOR MODE 1 |
+| The following are the register mirror values that HBIOS used for initialisation |
+|	REG. 0 | 6      | 1           | $00	       - NO EXTERNAL VID
+| REG. 1 | 7      | 1           |	$50 or $70 - SET MODE 1 and interrupt if enabled |
+| REG. 2 | 8      | 1           |	$00	       - PATTERN NAME TABLE := 0
+| REG. 3 | 9      | 1           |	$00	       - NO COLOR TABLE
+| REG. 4 | 10     | 1           |	$01	       - SET PATTERN GENERATOR TABLE TO $800
+| REG. 5 | 11     | 1           |	$00	       - SPRITE ATTRIBUTE IRRELEVANT
+| REG. 6 | 12     | 1           |	$00	       - NO SPRITE GENERATOR TABLE
+| REG. 7 | 13     | 1           |	$F0	       - WHITE ON BLACK
+| DCNTL* | 14     | 1           | Z180 DMA/WAIT CONTROL |
+
+* ONLY PRESENT FOR Z180 BUILDS
