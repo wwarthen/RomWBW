@@ -999,8 +999,6 @@ FRONTPANELLOOP1:
 	JP	Z,DOBOOT		; YES, JUMP
 
 	JR	FRONTPANELLOOP		; LOOP
-EXIT:
-	RET
 ;
 ;__DOBOOT_____________________________________________________________________
 ;
