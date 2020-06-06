@@ -1,4 +1,4 @@
-OBJECTS = xm.com xmx.com
+OBJECTS = xm.com xmold.com
 #OBJECTS += xmuf.com
 DEST = ../../../Binary/Apps
 TOOLS = ../../../Tools
@@ -12,5 +12,5 @@ xm.com: xmdm125.hex xmhb.hex
 xmuf.com: xmdm125.hex xmuf.hex
 	$(ZXCC) $(CPM)/MLOAD25 XMUF=xmdm125,xmuf
 
-xmx.com: xmdm125.hex xmx.hex
-	$(ZXCC) $(CPM)/MLOAD25 XMX=xmdm125,xmx
+xmold.com: xmdm125.hex xmhb_old.hex
+	$(ZXCC) $(CPM)/MLOAD25 XMOLD=xmdm125,xmhb_old

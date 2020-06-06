@@ -4,22 +4,15 @@
 ;
 ;   Wayne Warthen - wwarthen@gmail.com
 ;
-; 2018-06-06 WBW Added support for RC2014 w/ Z180
-; 2019-08-17 WBW Refactored and merged Phil's ECB-FIFO support
-; 2019-08-28 WBW Refactored ASCI support
+; 2020-05-23 WBW Rewrite for HBIOS FastPath(tm)
 ;
 ;=======================================================================
 ;
 	ASEG
 ;
-NO	EQU	0
-YES	EQU	NOT NO
+BASE	EQU	100H		; Start of CP/M normal program area
 ;
-ERRDET	EQU	NO		; detect parity/framing/overrun errs
-;
-BASE	EQU	100H		; start of cp/m normal program area
-;
-BDOS	EQU	00005H		; BDOS function dispatch vector
+BDOS	EQU	0005H		; BDOS function dispatch vector
 ;
 ;=======================================================================
 ;
@@ -59,8 +52,10 @@ CONOUT	EQU	0		; not used
 ; entries as appropriate.
 ;
 MINIT:
+	LD	(UNIT),A	; Save port specified
+
 	; Announce
-	LD	DE,RBC		; RetroBrew Computers
+	LD	DE,TAG		; Tagline
 	LD	C,9		; BDOS string display function
 	CALL	BDOS		; Do it
 ;
@@ -68,21 +63,95 @@ MINIT:
 	CALL	IDBIO		; 1=HBIOS, 2=UBIOS
 	LD	(BIOID),A	; Save it
 	DEC	A		; Test for HBIOS
-	JR	Z,HINIT		; Do HBIOS setup
+	JR	Z,MINIT_HB	; Do HBIOS setup
 	DEC	A		; Test for UBIOS
-	JR	Z,UINIT		; Do UBIOS setup
+	JR	Z,MINIT_UB	; Do UBIOS setup
 ;
 	; Neither UNA nor RomWBW
 	LD	DE,ERR_BIO	; BIOS error message
+	JP	FAIL		; Print msg and bail out
+;
+MINIT_HB:
+	; Display RomWBW notification string
+	LD	DE,HB_TAG	; BIOS notification string
 	LD	C,9		; BDOS string display function
 	CALL	BDOS		; Do it
-	JP	0		; Bail out!
+;
+	; Get CPU speed from RomWBW HBIOS and save it
+	LD	B,0F8H		; HBIOS SYSGET function 0xF8
+	LD	C,0F0H		; CPUINFO subfunction 0xF0
+	RST	08		; Do it, L := CPU speed in MHz
+	LD	A,L		; Move it to A
+	LD	(CPUSPD),A	; Save it
+;
+	; Get HBIOS bank id
+	LD	BC,0F8F2H	; HBIOS SYSGET, Bank Info
+	RST	08		; do it
+	JP	NZ,APIERR	; handle API error
+	LD	A,D		; BIOS bank id to A
+	LD	(BIOSBID),A	; save it
+;
+	LD	A,(UNIT)	; get current unit specified
+	CP	0FFH		; check for undefined
+	JR	NZ,MINIT_HB1	; if not undefined, go ahead
+;
+	; Lookup current console to use as default for transfer
+	LD	B,0FAH		; HBIOS PEEK
+	LD	A,(BIOSBID)	; get BIOS bank id
+	LD	D,A		; ... and put in D
+	LD	HL,100H + 12H	; HCB console unit address
+	RST	08		; E := value
+	LD	A,E		; put in A
+	LD	(UNIT),A	; replace UNIT with console UNIT
+;
+MINIT_HB1:
+	; Get HBIOS device type
+	LD	B,06H		; HBIOS DEVICE function 0x06
+	LD	A,(UNIT)	; Get xfer unit
+	LD	C,A		; Put in C
+	RST	08		; Do it, D=device type
+	LD	A,D		; Put result in A
+	CP	00H		; UART?
+	JP	Z,UA_INIT	; If so, do UART H/W init
+	CP	80H		; USB-FIFO?
+	JP	Z,UF_INIT	; If so, do USB-FIFO H/W init
+	JP	HB_INIT		; Otherwise, use BIOS I/O
+;
+MINIT_UB:
+	; Display UNA notification string
+	LD	DE,UB_TAG	; BIOS notification string
+	LD	C,9		; BDOS string display function
+	CALL	BDOS		; Do it
+;
+	; Get CPU speed from UNA and save it
+	LD	C,0F8H		; UNA BIOS Get PHI function
+	RST	08		; Returns speed in Hz in DE:HL
+	LD	B,4		; Divide MHz in DE:HL by 100000H
+MINIT_UB1:
+	SRL	D		; ... to get approx CPU speed in
+	RR	E		; ...MHz.  Throw away HL, and
+	DJNZ	MINIT_UB1	; ...right shift DE by 4.
+	INC	E		; Fix up for value truncation
+	LD	A,E		; Put in A
+	LD	(CPUSPD),A	; Save it
+;
+	JP	UB_INIT		; UNA BIOS init
 ;
 MINIT_RET:
 	PUSH	HL		; Save HL (JP table adr)
 
-	; Display port notification string
+	; Display handler label
 	LD	C,9		; BDOS string display function
+	CALL	BDOS		; Do it
+;
+	; Display port (unit number)
+	LD	DE,COM_LBL	; Prefix
+	LD	C,9		; BDOS string display function
+	CALL	BDOS		; Do it
+	LD	A,(UNIT)	; Get unit number
+	ADD	A,'0'		; Make displayable
+	LD	E,A		; Put in E for display
+	LD	C,2		; BDOS console write char
 	CALL	BDOS		; Do it
 ;
 	; Newline
@@ -101,63 +170,35 @@ MINIT_RET:
 	LD	HL,(RCVSCL)	; HL := receive scalar
 	RET			; and return
 ;
-HINIT:
-	; Display RomWBW notification string
-	LD	DE,HBTAG	; BIOS notification string
-	LD	C,9		; BDOS string display function
-	CALL	BDOS		; Do it
+;-----------------------------------------------------------------------
 ;
-	; Get CPU speed from RomWBW HBIOS and save it
-	LD	B,0F8H		; HBIOS SYSGET function 0xF8
-	LD	C,0F0H		; CPUINFO subfunction 0xF0
-	RST	08		; Do it, L := CPU speed in MHz
-	LD	A,L		; Move it to A
-	LD	(CPUSPD),A	; Save it
+; Uninitialize modem
 ;
-	; Get HBIOS character 0 device type
-	LD	B,006H		; HBIOS DEVICE function 0x06
-	LD	C,000H		; HBIOS char 0 device
-	RST	08		; Do it, D=device type
-	LD	A,D		; Put result in A
-	CP	000H		; UART?
-	JP	Z,U_INIT	; If so, do UART init
-	CP	010H		; ASCI?
-	JP	Z,A_INIT	; If so, do ASCI init
-	CP	080H		; USB-FIFO?
-	JP	Z,UF_INIT	; If so, do USB-FIFO init
-	JP	H_INIT		; Otherwise, use HBIOS I/O
+UNINIT:
+	LD	A,(BIOID)
+	CP	1		; Is HBIOS?
+	JR	Z,HUNINIT	; Handle HBIOS
+	CP	2		; Is UBIOS?
+	JR	Z,UUNINIT	; Handle UBIOS
+	RET			; Just return
 ;
-UINIT:
-	; Display UNA notification string
-	LD	DE,UBTAG	; BIOS notification string
-	LD	C,9		; BDOS string display function
-	CALL	BDOS		; Do it
+HUNINIT:
+	; HBIOS: Reset character device 0
+	LD	B,04H		; HBIOS CIOINIT function 0x04
+	LD	A,(UNIT)	; HBIOS serial unit number
+	LD	C,A		; Put in C for func call
+	LD	DE,-1		; Reset w/ current settings
+	RST	08		; Do it
+	RET			; not initialized, so no 'UN-INITIALIZE'
 ;
-	; Get CPU speed from UNA and save it
-	LD	C,0F8H		; UNA BIOS Get PHI function
-	RST	08		; Returns speed in Hz in DE:HL
-	LD	B,4		; Divide MHz in DE:HL by 100000H
-UINIT1:
-	SRL	D		; ... to get approx CPU speed in
-	RR	E		; ...MHz.  Throw away HL, and
-	DJNZ	UINIT1		; ...right shift DE by 4.
-	INC	E		; Fix up for value truncation
-	LD	A,E		; Put in A
-	LD	(CPUSPD),A	; Save it
-;
-	; Check CPU, Z80=UART, Z180=ASCI
-	LD	DE,00202H	; D := 2, E := 2
-	MLT	DE		; DE := D * E == 4
-	BIT	2,E		; Bit 2 wil be set if mlt happend
-	JP	Z,U_INIT	; UART initialization
-	JP	A_INIT		; otherwise, ASCI
-;
-HWERR:
-	; Failed to identify target comm hardware
-	LD	DE,ERR_HW	; Hardware error message
-	LD	C,9		; BDOS string display function
-	CALL	BDOS		; Do it
-	JP	0		; Bail out!
+UUNINIT:
+	; UBIOS: Reset character device 0
+	LD	C,10H		; UNA INIT function 0x10
+	LD	A,(UNIT)	; UBIOS serial unit number
+	LD	B,A		; Put in B for func call
+	LD	DE,-1		; Reset w/ current settings
+	RST	08		; Do it
+	RET			; not initialized, so no 'UN-INITIALIZE'
 ;
 ; Identify active BIOS.	 RomWBW HBIOS=1, UNA UBIOS=2, else 0
 ;
@@ -196,33 +237,21 @@ IDBIO2:
 	XOR	A		; Setup return value of 0
 	RET			; and done
 ;
-;-----------------------------------------------------------------------
+HWERR:
+	; Failed to identify target comm hardware
+	LD	DE,ERR_HW	; Hardware error message
+	JP	FAIL		; Print message and bail out
 ;
-; Uninitialize modem
+APIERR:
+	; API returned unepected failure
+	LD	DE,ERR_API	; API error message
+	JP	FAIL		; Pprint message and bail out
 ;
-UNINIT:
-	LD	A,(BIOID)
-	CP	1		; Is HBIOS?
-	JR	Z,H_UNINIT	; Handle HBIOS
-	CP	2		; Is UBIOS?
-	JR	Z,U_UNINIT	; Handle UBIOS
-	RET			; Just return
-;
-H_UNINIT:
-	; HBIOS: Reset character device 0
-	LD	B,04H		; HBIOS CIOINIT function 0x04
-	LD	C,0		; Unit = 0
-	LD	DE,-1		; Reset w/ current settings
-	RST	08		; Do it
-	RET			; not initialized, so no 'UN-INITIALIZE'
-;
-U_UNINIT:
-	; UBIOS: Reset character device 0
-	LD	C,10H		; UNA INIT function 0x10
-	LD	B,0		; Unit = 0
-	LD	DE,-1		; Reset w/ current settings
-	RST	08		; Do it
-	RET			; not initialized, so no 'UN-INITIALIZE'
+FAIL:
+	; DE has error string address
+	LD	C,9		; BDOS string display function
+	CALL	BDOS		; Do it
+	JP	0		; Bail out!
 ;
 ;-----------------------------------------------------------------------
 ;
@@ -244,448 +273,30 @@ EXTRA3:
 BIOID	DB	0		; BIOS ID, 1=HBIOS, 2=UBIOS
 CPUSPD	DB	10		; CPU speed in MHz
 RCVSCL	DW	6600		; RECV loop timeout scalar
+UNIT	DB	0		; BIOS serial device unit number
+BIOSBID	DB	00H		; BIOS bank id
 ;
-RBC	DB	"RBC, 28-Aug-2019$"
+TAG	DB	"RomWBW, 30-May-2020$"
 ;
-U_LBL	DB	", UART$"
-A_LBL	DB	", ASCI$"
-S_LBL	DB	", SIO$"
-H_LBL	DB	", COM$"
+HB_LBL	DB	", HBIOS FastPath$"
+UB_LBL	DB	", UNA UBIOS$"
+UA_LBL	DB	", UART$"
 UF_LBL	DB	", USB-FIFO$"
+COM_LBL	DB	" on COM$"
 ;
-UBTAG	DB	" [UNA]$"
-HBTAG	DB	" [WBW]$"
+UB_TAG	DB	" [UNA]$"
+HB_TAG	DB	" [WBW]$"
 ;
 CRLF	DB	13, 10, "$"
 ;
 ERR_BIO	DB	13, 10, 13, 10, "++ Unknown BIOS ++", 13, 10, "$"
 ERR_HW	DB	13, 10, 13, 10, "++ Unknown Hardware ++", 13, 10, "$"
+ERR_API	DB	13, 10, 13, 10, "++ BIOS API Error ++", 13, 10, "$"
 ;
 ;=======================================================================
 ;=======================================================================
 ;
-; 8250-like UART @ Port 68H
-;
-;=======================================================================
-;=======================================================================
-;
-; UART port constants
-;
-U_BASE	EQU	68H		; UART base port
-U_DATP	EQU	U_BASE + 0	; data in port
-U_DATO	EQU	U_BASE + 0	; data out port
-U_CTLP	EQU	U_BASE + 5	; control/status port
-U_SNDB	EQU	20H		; bit to test for send ready
-U_SNDR	EQU	20H		; value when ready to send
-U_RCVB	EQU	01H		; bit to test for receive ready
-U_RCVR	EQU	01H		; value when ready to receive
-U_PARE	EQU	04H		; bit for parity error
-U_OVRE	EQU	02H		; bit for overrun error
-U_FRME	EQU	08H		; bit for framing error
-U_ERRS	EQU	U_FRME | U_OVRE | U_PARE
-;
-; Following jump table is dynamically patched into real jump
-; table at program startup.  See MINIT above.  Note that only a
-; subset of the jump table is overlaid (SENDR to SPEED).
-;
-U_JPTBL:
-	JP	U_SENDR		; send character (via pop psw)
-	JP	U_CAROK		; test for carrier
-	JP	U_MDIN		; receive data byte
-	JP	U_GETCHR	; get character from modem
-	JP	U_RCVRDY	; check receive ready
-	JP	U_SNDRDY	; check send ready
-	JP	U_SPEED		; get speed value for file transfer time
-;
-;-----------------------------------------------------------------------
-;
-; UART initialization
-;
-U_INIT:
-	LD	HL,13000	; Receive loop timeout scalar
-	LD	(RCVSCL),HL	; ... for UART RCVRDY timing
-;
-	LD	HL,U_JPTBL
-	LD	DE,U_LBL
-	JP	MINIT_RET
-;
-;-----------------------------------------------------------------------
-;
-; Send character on top of stack
-;
-U_SENDR:
-	POP	AF		; get character to send from stack
-	OUT	(U_DATO),A	; send to port
-	RET
-;
-;-----------------------------------------------------------------------
-;
-; Test and report carrier status, Z set if carrier present
-;
-U_CAROK:
-	XOR	A		; not used, always indicate present
-	RET
-;
-;-----------------------------------------------------------------------
-;
-; Get a character (assume character ready has already been tested)
-;
-U_MDIN:
-U_GETCHR:
-	IN	A,(U_DATP)	; read character from port
-	RET
-;
-;-----------------------------------------------------------------------
-;
-; Test for character ready to receive, Z = ready
-; Error code returned in A register
-; *** Error code does not seem to be used ***
-;
-U_RCVRDY:
-	IN	A,(U_CTLP)	; get modem status
-;
-	 IF ERRDET
-;
-	; With error detection (slower)
-	PUSH	BC		; save scratch register
-	PUSH	AF		; save full status on stack
-	AND	U_ERRS		; isolate line err bits
-	LD	B,A		; save err status in B
-	POP	AF		; get full status back
-	AND	U_RCVB		; isolate ready bit
-	CP	U_RCVR		; test it (set flags)
-	LD	A,B		; get the error code back
-	POP	BC		; restore scratch register
-;
-	 ELSE
-;
-	; No error detection (faster)
-	AND	U_RCVB		; isolate ready bit
-	CP	U_RCVR		; test it (set flags)
-	LD	A,0		; report no line errors
-;
-	 ENDIF
-;
-	RET
-;
-;-----------------------------------------------------------------------
-;
-; Test for ready to send a character, Z = ready
-;
-U_SNDRDY:
-	IN	A,(U_CTLP)	; get status
-	AND	U_SNDB		; isolate transmit ready bit
-	CP	U_SNDR		; test for ready value
-	RET
-;
-;-----------------------------------------------------------------------
-;
-; Report baud rate (index into SPTBL returned in register A)
-;
-U_SPEED:
-	LD	A,8		; arbitrarily return 9600 baud
-	RET
-;
-;=======================================================================
-;=======================================================================
-;
-; Z180 Primary ASCI
-;
-; - Port is determined dynamically in A_INIT
-;
-;=======================================================================
-;=======================================================================
-;
-; ASCI port constants
-;
-A_DATP	EQU	08H		; Z180 TSR - ASCI receive data port
-A_DATO	EQU	06H		; Z180 TDR - ASCI transmit data port
-A_CTLP	EQU	04H		; Z180 STAT - ASCI status port
-A_CTL2	EQU	00H		; Z180 CNTLA - ASCI control port
-;                                 
-A_SNDB	EQU	02H		; Z180 STAT:TDRE - xmit data reg empty bit
-A_SNDR	EQU	02H		; Z180 STAT:TDRE - xmit data reg empty value
-A_RCVB	EQU	80H		; Z180 STAT:RDRF - rcv data reg full bit
-A_RCVR	EQU	80H		; Z180 STAT:RDRF - rcv data reg full value
-A_PARE	EQU	20H		; Z180 STAT:PE - parity error bit
-A_OVRE	EQU	40H		; Z180 STAT:OVRN - overrun error bit
-A_FRME	EQU	10H		; Z180 STAT:FE - framing error bit
-A_ERRS	EQU	A_FRME | A_OVRE | A_PARE
-;
-A_BASE	DB	00H		; internal IO base address for Z180
-;
-; Following jump table is dynamically patched over initial jump
-; table at program startup.  See MINIT above.  Note that only a
-; subset of the jump table is overlaid (SENDR to SPEED).
-;
-A_JPTBL:
-	JP	A_SENDR		; send character (via pop psw)
-	JP	A_CAROK		; test for carrier
-	JP	A_MDIN		; receive data byte
-	JP	A_GETCHR	; get character from modem
-	JP	A_RCVRDY	; check receive ready
-	JP	A_SNDRDY	; check send ready
-	JP	A_SPEED		; get speed value for file transfer time
-;
-;-----------------------------------------------------------------------
-;
-; ASCI initialization
-;
-A_INIT:
-	LD	HL,7500		; Receive loop timeout scalar
-	LD	(RCVSCL),HL	; ... for ASCI RCVRDY timing
-;
-	; Test for location of Z180 internal registers
-	; and use appropriate I/O address.
-	LD	B,0		; set MSB for 16 bit I/O
-	LD	C,040H|3FH	; internal registers @ 40H?
-	IN	A,(C)		; read
-	CP	040H|01FH	; same value except for bit 5?
-	JR	Z,A_INIT1	; do ASCI init (port in C)
-	LD	C,0C0H|3FH	; internal registers @ C0H?
-	IN	A,(C)		; read
-	CP	0C0H|1FH	; same value except for bit 5?
-	JR	Z,A_INIT1	; do ASCI init (port in C)
-	JP	HWERR		; unknown hardware error
-;
-A_INIT1:
-	LD	A,C		; test port value to A
-	AND	0C0H		; only top two bits relevant
-	LD	(A_BASE),A	; save it
-	ADD	A,A_CTLP	; status port offset
-	LD	C,A		; put in C for I/O
-	LD	B,0		; MSB for 16 bit I/O
-	XOR	A		; clear interrupt enable flags
-	OUT	(C),A		; do it
-;
-	LD	HL,A_JPTBL
-	LD	DE,A_LBL
-	JP	MINIT_RET
-;
-;-----------------------------------------------------------------------
-;
-; Send character on top of stack
-;
-A_SENDR:
-	EX	(SP),HL		; save HL, HL := char to send
-	PUSH	BC		; save scratch register
-	LD	A,(A_BASE)	; IO base address
-	ADD	A,A_DATO	; data out port offset
-	LD	C,A		; put in C for I/O
-	LD	B,0		; MSB for 16 bit I/O
-	OUT	(C),H		; send to port
-	POP	BC		; restore scratch reg
-	POP	HL		; restore HL
-	RET			; done
-;
-;-----------------------------------------------------------------------
-;
-; Test and report carrier status, Z set if carrier present
-;
-A_CAROK:
-	XOR	A		; not used, always indicate present
-	RET
-;
-;-----------------------------------------------------------------------
-;
-; Get a character (assume character ready has already been tested)
-;
-A_MDIN:
-A_GETCHR:
-	PUSH	BC		; save scratch register
-	LD	A,(A_BASE)	; IO base address
-	ADD	A,A_DATP	; data in port offset
-	LD	C,A		; put in C for I/O
-	LD	B,0		; MSB for 16 bit I/O
-	IN	A,(C)		; read character from port
-	POP	BC		; restore scratch reg
-	RET
-;
-;-----------------------------------------------------------------------
-;
-; Test for character ready to receive, Z = ready
-; Error code returned in A register
-; *** Error code does not seem to be used ***
-;
-A_RCVRDY:
-	PUSH	BC		; save scratch register
-	LD	A,(A_BASE)	; IO base address
-	ADD	A,A_CTLP	; status port offset
-	LD	C,A		; put in C for I/O
-	LD	B,0		; MSB for 16 bit I/O
-	IN	A,(C)		; get modem status
-	PUSH	AF		; save full status on stack
-	AND	A_ERRS		; isolate line err bits
-	LD	B,A		; save err status in B
-
-	; Z180 ASCI ports will stall if there are errors.
-	; Error bits are NOT cleared by merely reading
-	; the status register.	Below, bit 3 of ASCI
-	; control register is written with a zero to
-	; clear error(s) if needed.
-	JR	Z,A_RCVRDY2	; if no errs, continue
-	PUSH	BC		; save scratch reg
-	LD	A,(A_BASE)	; IO base address
-	ADD	A,A_CTL2	; status port offset
-	LD	C,A		; put in C for I/O
-	LD	B,0		; MSB for 16 bit I/O
-	IN	A,(C)		; get current control reg value
-	AND	0F7H		; force err reset bit to zero
-	OUT	(C),A		; write control register
-	POP	BC		; restore scratch reg
-;
-A_RCVRDY2:
-	POP	AF		; get full status back
-	AND	A_RCVB		; isolate ready bit
-	CP	A_RCVR		; test it (set flags)
-	LD	A,B		; get the error code back
-	POP	BC		; restore scratch register
-	RET
-;
-;-----------------------------------------------------------------------
-;
-; Test for ready to send a character, Z = ready
-;
-A_SNDRDY:
-	PUSH	BC		; save scratch register
-	LD	A,(A_BASE)	; IO base address
-	ADD	A,A_CTLP	; status port offset
-	LD	C,A		; put in C for I/O
-	LD	B,0		; MSB for 16 bit I/O
-	IN	A,(C)		; get modem status
-	AND	A_SNDB		; isolate transmit ready bit
-	CP	A_SNDR		; test for ready value
-	POP	BC		; restore scratch register
-	RET
-;
-;-----------------------------------------------------------------------
-;
-; Report baud rate (index into SPTBL returned in register A)
-;
-A_SPEED:
-	LD	A,8		; arbitrarily return 9600 baud
-	RET
-;
-;=======================================================================
-;=======================================================================
-;
-; Zilog SIO @ Port 80H
-;
-;=======================================================================
-;=======================================================================
-;
-; Currently assumes the port address and ordering conventions of the
-; official RC2014 SIO module.  Will not work with others such as EZZ80
-; or ZP.
-;
-; SIO port constants
-;
-S_BASE	EQU	80H		; SIO base port
-S_DATP	EQU	S_BASE + 1	; data in port
-S_DATO	EQU	S_BASE + 1	; data out port
-S_CTLP	EQU	S_BASE + 0	; control/status port
-S_SNDB	EQU	04H		; bit to test for send ready
-S_SNDR	EQU	04H		; value when ready to send
-S_RCVB	EQU	01H		; bit to test for receive ready
-S_RCVR	EQU	01H		; value when ready to receive
-;
-; Following jump table is dynamically patched into real jump
-; table at program startup.  See MINIT above.  Note that only a
-; subset of the jump table is overlaid (SENDR to SPEED).
-;
-S_JPTBL:
-	JP	S_SENDR		; send character (via pop psw)
-	JP	S_CAROK		; test for carrier
-	JP	S_MDIN		; receive data byte
-	JP	S_GETCHR	; get character from modem
-	JP	S_RCVRDY	; check receive ready
-	JP	S_SNDRDY	; check send ready
-	JP	S_SPEED		; get speed value for file transfer time
-;
-;-----------------------------------------------------------------------
-;
-; SIO initialization
-;
-S_INIT:
-	LD	HL,12000	; Receive loop timeout scalar
-	LD	(RCVSCL),HL	; ... for UART RCVRDY timing
-;
-	; Suppress interrupts
-	LD	A,01H		; WR1
-	OUT	(S_CTLP),A	; Select WR1
-	XOR	A		; No interrupts
-	OUT	(S_CTLP),A	; Do it
-;
-	LD	HL,S_JPTBL
-	LD	DE,S_LBL
-	JP	MINIT_RET
-;
-;-----------------------------------------------------------------------
-;
-; Send character on top of stack
-;
-S_SENDR:
-	POP	AF		; get character to send from stack
-	OUT	(S_DATO),A	; send to port
-	RET
-;
-;-----------------------------------------------------------------------
-;
-; Test and report carrier status, Z set if carrier present
-;
-S_CAROK:
-	XOR	A		; not used, always indicate present
-	RET
-;
-;-----------------------------------------------------------------------
-;
-; Get a character (assume character ready has already been tested)
-;
-S_MDIN:
-S_GETCHR:
-	IN	A,(S_DATP)	; read character from port
-	RET
-;
-;-----------------------------------------------------------------------
-;
-; Test for character ready to receive, Z = ready
-; Error code returned in A register
-; *** Error code does not seem to be used ***
-;
-S_RCVRDY:
-	;XOR	A
-	;OUT	(S_CTLP),A	; select WR0
-	IN	A,(S_CTLP)	; get status
-	AND	S_RCVB		; isolate ready bit
-	CP	S_RCVR		; test it (set flags)
-	LD	A,0		; report no line errors
-	RET
-;
-;-----------------------------------------------------------------------
-;
-; Test for ready to send a character, Z = ready
-;
-S_SNDRDY:
-	;XOR	A
-	;OUT	(S_CTLP),A	; select WR0
-	IN	A,(S_CTLP)	; get status
-	AND	S_SNDB		; isolate ready bit
-	CP	S_SNDR		; test it (set flags)
-	LD	A,0		; report no line errors
-	RET
-;
-;-----------------------------------------------------------------------
-;
-; Report baud rate (index into SPTBL returned in register A)
-;
-S_SPEED:
-	LD	A,8		; arbitrarily return 9600 baud
-	RET
-;
-;=======================================================================
-;=======================================================================
-;
-; HBIOS Console (COM0:)
+; RomWBW HBIOS Interface
 ;
 ;=======================================================================
 ;=======================================================================
@@ -694,40 +305,79 @@ S_SPEED:
 ; table at program startup.  See MINIT above.  Note that only a
 ; subset of the jump table is overlaid (SENDR to SPEED).
 ;
-H_JPTBL:
-	JP	H_SENDR		; send character (via pop psw)
-	JP	H_CAROK		; test for carrier
-	JP	H_MDIN		; receive data byte
-	JP	H_GETCHR	; get character from modem
-	JP	H_RCVRDY	; check receive ready
-	JP	H_SNDRDY	; check send ready
-	JP	H_SPEED		; get speed value for file transfer time
+HB_JPTBL:
+	JP	HB_SENDR	; send character (via pop psw)
+	JP	HB_CAROK	; test for carrier
+	JP	HB_MDIN		; receive data byte
+	JP	HB_GETCHR	; get character from modem
+	JP	HB_RCVRDY	; check receive ready
+	JP	HB_SNDRDY	; check send ready
+	JP	HB_SPEED		; get speed value for file transfer time
 ;
 ;-----------------------------------------------------------------------
 ;
 ; HBIOS initialization
 ;
-H_INIT:
-	LD	HL,1250		; Smaller receive loop timeout scalar
+HB_INIT:
+	LD	HL,2150		; Smaller receive loop timeout scalar
 	LD	(RCVSCL),HL	; ... to compensate for BIOS overhead
 ;
-	LD	HL,H_JPTBL
-	LD	DE,H_LBL
+	; Patch SENDR w/ FastPath addresses
+	LD	BC,0F801H	; Get CIO func/data adr
+	LD	D,01H		; Func=CIO OUT
+	LD	A,(UNIT)	; get desired char unit
+	LD	E,A		; and put in E
+	RST	08
+	JP	NZ,APIERR	; handle API error
+	LD	(HB_UDAT),DE	; Plug in data adr
+	LD	(HB_SCFN),HL	; Plug in func adr
+;
+	; Patch GETCHR/MDIN w/ FastPath addresses
+	LD	BC,0F801H	; Get CIO func/data adr
+	LD	D,00H		; Func=CIO IN
+	LD	A,(UNIT)	; get desired char unit
+	LD	E,A		; and put in E
+	RST	08
+	JP	NZ,APIERR	; handle API error
+	LD	(HB_GCFN),HL	; Plug in func adr
+;
+	; Patch RCVRDY w/ FastPath addresses
+	LD	BC,0F801H	; Get CIO func/data adr
+	LD	D,02H		; Func=CIO IST
+	LD	A,(UNIT)	; get desired char unit
+	LD	E,A		; and put in E
+	RST	08
+	JP	NZ,APIERR	; handle API error
+	LD	(HB_RRFN),HL	; Plug in func adr
+;
+	; Patch SNDRDY w/ FastPath addresses
+	LD	BC,0F801H	; Get CIO func/data adr
+	LD	D,03H		; Func=CIO OST
+	LD	A,(UNIT)	; get desired char unit
+	LD	E,A		; and put in E
+	RST	08
+	JP	NZ,APIERR	; handle API error
+	LD	(HB_SRFN),HL	; Plug in func adr
+;
+	LD	HL,HB_JPTBL
+	LD	DE,HB_LBL
 	JP	MINIT_RET
 ;
 ;-----------------------------------------------------------------------
 ;
 ; Send character on top of stack
 ;
-H_SENDR:
+HB_SENDR:
 	POP	AF		; get character to send from stack
 	PUSH	BC
 	PUSH	DE
 	PUSH	HL
-	LD	B,01H		; HBIOS OUT function
-	LD	C,0		; console is unit 0 by fiat
 	LD	E,A		; character to E
-	RST	08		; HBIOS call
+	LD	IY,(HB_UDAT)
+	LD	A,(BIOSBID)	; call into HBIOS bank
+	LD	IX,0000H
+HB_SCFN	EQU	$-2
+	CALL	0FFF9H		; HBIOS bank call
 	POP	HL
 	POP	DE
 	POP	BC
@@ -737,33 +387,33 @@ H_SENDR:
 ;
 ; Test and report carrier status, Z set if carrier present
 ;
-H_CAROK:
+HB_CAROK:
 	XOR	A		; not used, always indicate present
 	RET
 ;
 ;-----------------------------------------------------------------------
 ;
-; Get a character (assume character ready has already been tested)
+; Get a character
 ;
-; This routine must NOT block.
+; GETCHR must not block
 ;
-H_MDIN:
-H_GETCHR:
+HB_GETCHR:
+	CALL	HB_RCVRDY
+	RET	NZ
+	; Fall thru if char ready
+;
+; MDIN can assume a character is ready
+;
+HB_MDIN:
 	PUSH	BC
 	PUSH	DE
 	PUSH	HL
-	LD	B,02H		; HBIOS IST function
-	LD	C,0		; console is unit 0 by fiat
-	RST	08		; HBIOS call, A := bytes pending
-	JR	NZ,H_MDIN1	; If char(s) waiting, go get it
-	XOR	A		; otherwise, return null
-	JR	H_MDIN2	; and done
-H_MDIN1:
-	LD	B,00H		; HBIOS IN function
-	LD	C,0		; console is unit 0 by fiat
-	RST	08		; HBIOS call
+	LD	IY,(HB_UDAT)
+	LD	A,(BIOSBID)	; call into HBIOS bank
+	LD	IX,0000H
+HB_GCFN	EQU	$-2
+	CALL	0FFF9H		; HBIOS bank call
 	LD	A,E		; byte received to A
-H_MDIN2:
 	POP	HL
 	POP	DE
 	POP	BC
@@ -775,13 +425,15 @@ H_MDIN2:
 ; Error code returned in A register
 ; *** Error code does not seem to be used ***
 ;
-H_RCVRDY:
+HB_RCVRDY:
 	PUSH	BC
 	PUSH	DE
 	PUSH	HL
-	LD	B,02H		; HBIOS IST function
-	LD	C,0		; console is unit 0 by fiat
-	RST	08		; HBIOS call, A := bytes pending
+	LD	IY,(HB_UDAT)
+	LD	A,(BIOSBID)	; call into HBIOS bank
+	LD	IX,0000H
+HB_RRFN	EQU	$-2
+	CALL	0FFF9H		; HBIOS bank call
 	SUB	1		; CF set IFF zero
 	RL	A		; CF to bit 0 of A
 	AND	01H		; set Z flag as needed
@@ -795,13 +447,15 @@ H_RCVRDY:
 ;
 ; Test for ready to send a character, Z = ready
 ;
-H_SNDRDY:
+HB_SNDRDY:
 	PUSH	BC
 	PUSH	DE
 	PUSH	HL
-	LD	B,03H		; HBIOS OST function
-	LD	C,0		; console is unit 0 by fiat
-	RST	08		; HBIOS call, A := xmit buf bytes avail
+	LD	IY,(HB_UDAT)
+	LD	A,(BIOSBID)	; call into HBIOS bank
+	LD	IX,0000H
+HB_SRFN	EQU	$-2
+	CALL	0FFF9H		; HBIOS bank call
 	SUB	1		; CF set IFF zero
 	RL	A		; CF to bit 0 of A
 	AND	01H		; set Z flag as needed
@@ -814,9 +468,277 @@ H_SNDRDY:
 ;
 ; Report baud rate (index into SPTBL returned in register A)
 ;
-H_SPEED:
+HB_SPEED:
 	LD	A,8		; arbitrarily return 9600 baud
 	RET
+;
+;
+;
+HB_UDAT	DW	0000H		; Unit data address
+;
+;
+;=======================================================================
+;=======================================================================
+;
+; UNA UBIOS Interface
+;
+;=======================================================================
+;=======================================================================
+;
+; Following jump table is dynamically patched over initial jump
+; table at program startup.  See MINIT above.  Note that only a
+; subset of the jump table is overlaid (SENDR to SPEED).
+;
+UB_JPTBL:
+	JP	UB_SENDR	; send character (via pop psw)
+	JP	UB_CAROK	; test for carrier
+	JP	UB_MDIN		; receive data byte
+	JP	UB_GETCHR	; get character from modem
+	JP	UB_RCVRDY	; check receive ready
+	JP	UB_SNDRDY	; check send ready
+	JP	UB_SPEED	; get speed value for file transfer time
+;
+;-----------------------------------------------------------------------
+;
+; UBIOS initialization
+;
+UB_INIT:
+;
+; TODO:
+;   - TEST!!!
+;   - ADJUST RCVSCL?
+;
+	LD	HL,3000		; Smaller receive loop timeout scalar
+	LD	(RCVSCL),HL	; ... to compensate for BIOS overhead
+;
+	LD	HL,UB_JPTBL
+	LD	DE,UB_LBL
+	JP	MINIT_RET
+;
+;-----------------------------------------------------------------------
+;
+; Send character on top of stack
+;
+UB_SENDR:
+	POP	AF		; get character to send from stack
+	PUSH	BC
+	PUSH	DE
+	PUSH	HL
+	LD	BC,0012H	; unit 0, func 12h (write char)
+	LD	E,A		; character to E
+	RST	08
+	POP	HL
+	POP	DE
+	POP	BC
+	RET
+;
+;-----------------------------------------------------------------------
+;
+; Test and report carrier status, Z set if carrier present
+;
+UB_CAROK:
+	XOR	A		; not used, always indicate present
+	RET
+;
+;-----------------------------------------------------------------------
+;
+; Get a character
+;
+; GETCHR must not block
+;
+UB_GETCHR:
+	CALL	UB_RCVRDY
+	RET	NZ
+	; Fall thru if char ready
+;
+; MDIN can assume a character is ready
+;
+UB_MDIN:
+	PUSH	BC
+	PUSH	DE
+	PUSH	HL
+	LD	BC,0011H	; unit 0, func 12h (write char)
+	RST	08
+	LD	A,E		; byte received to A
+	POP	HL
+	POP	DE
+	POP	BC
+	RET
+;
+;-----------------------------------------------------------------------
+;
+; Test for character ready to receive, Z = ready
+; Error code returned in A register
+; *** Error code does not seem to be used ***
+;
+UB_RCVRDY:
+	PUSH	BC
+	PUSH	DE
+	PUSH	HL
+	LD	BC,0013H	; unit 0, func 13h (input stat)
+	RST	08
+	XOR	A		; zero accum		; 4
+	CP	E		; CF means not zero	; 4
+	CCF			; CF means zero		; 4
+	RLA			; ZF means not zero	; 4
+	LD	A,0		; report no line errors
+	POP	HL
+	POP	DE
+	POP	BC
+	RET
+;
+;-----------------------------------------------------------------------
+;
+; Test for ready to send a character, Z = ready
+;
+UB_SNDRDY:
+	PUSH	BC
+	PUSH	DE
+	PUSH	HL
+	LD	BC,0014H	; unit 0, func 14h (output stat)
+	RST	08
+	XOR	A		; zero accum		; 4
+	CP	E		; CF means not zero	; 4
+	CCF			; CF means zero		; 4
+	RLA			; ZF means not zero	; 4
+	POP	HL
+	POP	DE
+	POP	BC
+	RET
+;
+;-----------------------------------------------------------------------
+;
+; Report baud rate (index into SPTBL returned in register A)
+;
+UB_SPEED:
+	LD	A,8		; arbitrarily return 9600 baud
+	RET
+;
+;=======================================================================
+;=======================================================================
+;
+; 8250-like UART
+;
+;=======================================================================
+;=======================================================================
+;
+; UART constants
+;
+UA_SNDB	EQU	20H		; bit to test for send ready
+UA_SNDR	EQU	20H		; value when ready to send
+UA_RCVB	EQU	01H		; bit to test for receive ready
+UA_RCVR	EQU	01H		; value when ready to receive
+UA_PARE	EQU	04H		; bit for parity error
+UA_OVRE	EQU	02H		; bit for overrun error
+UA_FRME	EQU	08H		; bit for framing error
+UA_ERRS	EQU	UA_FRME | UA_OVRE | UA_PARE
+;
+; Following jump table is dynamically patched into real jump
+; table at program startup.  See MINIT above.  Note that only a
+; subset of the jump table is overlaid (SENDR to SPEED).
+;
+UA_JPTBL:
+	JP	UA_SENDR	; send character (via pop psw)
+	JP	UA_CAROK	; test for carrier
+	JP	UA_MDIN		; receive data byte
+	JP	UA_GETCHR	; get character from modem
+	JP	UA_RCVRDY	; check receive ready
+	JP	UA_SNDRDY	; check send ready
+	JP	UA_SPEED	; get speed value for file transfer time
+;
+;-----------------------------------------------------------------------
+;
+; UART initialization
+;
+UA_INIT:
+	LD	DE,13000	; receive loop timeout scalar
+	LD	(RCVSCL),DE	; ... for UART RCVRDY timing
+;
+	LD	A,L		; get base I/O port address
+	LD	(UA_SCP),A	; set port value in SENDR
+	LD	(UA_GCP),A	; set port value in GETCHR
+	ADD	A,5		; UART control port is 5 higher
+	LD	(UA_RRP),A	; set port value in RCVRDY
+	LD	(UA_SRP),A	; set port value in SNDRDY
+;
+	LD	HL,UA_JPTBL
+	LD	DE,UA_LBL
+	JP	MINIT_RET
+;
+;-----------------------------------------------------------------------
+;
+; Send character on top of stack
+;
+UA_SENDR:
+	POP	AF		; get character to send from stack
+	OUT	(0FFH),A	; send to port
+UA_SCP	EQU	$-1		; port value
+	RET
+;
+;-----------------------------------------------------------------------
+;
+; Test and report carrier status, Z set if carrier present
+;
+UA_CAROK:
+	XOR	A		; not used, always indicate present
+	RET
+;
+;-----------------------------------------------------------------------
+;
+; Get a character
+;
+; GETCHR must not block
+;
+UA_GETCHR:
+	CALL	UA_RCVRDY
+	RET	NZ
+	; Fall thru if char ready
+;
+; MDIN can assume a character is ready
+;
+UA_MDIN:
+	IN	A,(0FFH)	; read character from port
+UA_GCP	EQU	$-1		; port value
+	RET
+;
+;-----------------------------------------------------------------------
+;
+; Test for character ready to receive, Z = ready
+; Error code returned in A register
+; *** Error code does not seem to be used ***
+;
+UA_RCVRDY:
+	IN	A,(0FFH)	; get modem status
+UA_RRP	EQU	$-1		; port value
+	AND	UA_RCVB		; isolate ready bit
+	CP	UA_RCVR		; test it (set flags)
+	LD	A,0		; report no line errors
+;
+	RET
+;
+;-----------------------------------------------------------------------
+;
+; Test for ready to send a character, Z = ready
+;
+UA_SNDRDY:
+	IN	A,(0FFH)	; get status
+UA_SRP	EQU	$-1		; port value
+	AND	UA_SNDB		; isolate transmit ready bit
+	CP	UA_SNDR		; test for ready value
+	RET
+;
+;-----------------------------------------------------------------------
+;
+; Report baud rate (index into SPTBL returned in register A)
+;
+UA_SPEED:
+	LD	A,8		; arbitrarily return 9600 baud
+	RET
+;
+;
+;
+UA_BASE	DB	00H		; UART base port I/O address
+UA_CTLP	DB	00H		; UART control port I/O address
 ;
 ;
 ;=======================================================================
@@ -837,21 +759,30 @@ UF_SEND_IMM	EQU	(UF_BASE+2)
 ; subset of the jump table is overlaid (SENDR to SPEED).
 ;
 UF_JPTBL:
-	JP	UF_SENDR		; send character (via pop psw)
-	JP	UF_CAROK		; test for carrier
-	JP	UF_MDIN			; receive data byte
-	JP	UF_GETCHR		; get character from modem
-	JP	UF_RCVRDY		; check receive ready
-	JP	UF_SNDRDY		; check send ready
-	JP	UF_SPEED		; get speed value for file transfer time
+	JP	UF_SENDR	; send character (via pop psw)
+	JP	UF_CAROK	; test for carrier
+	JP	UF_MDIN		; receive data byte
+	JP	UF_GETCHR	; get character from modem
+	JP	UF_RCVRDY	; check receive ready
+	JP	UF_SNDRDY	; check send ready
+	JP	UF_SPEED	; get speed value for file transfer time
 ;
 ;-----------------------------------------------------------------------
 ;
 ; USB-FIFO initialization
 ;
 UF_INIT:
-	LD	HL,12000	; Receive loop timeout scalar
-	LD	(RCVSCL),HL	; ... for UART RCVRDY timing
+	LD	DE,12000	; receive loop timeout scalar
+	LD	(RCVSCL),DE	; ... for UART RCVRDY timing
+;
+	LD	A,L		; get base I/O port address (data port)
+	LD	(UF_SCDP),A	; set data port in SENDR
+	LD	(UF_GCDP),A	; set data port in GETCHR/MDIN
+	INC	A		; bump to status port
+	LD	(UF_RRSP),A	; set status port in RCVRDY
+	LD	(UF_SRSP),A	; set status port in SNDRDY
+	INC	A		; bump to send immediate port
+	LD	(UF_SCIP),A	; set send immed port in SENDR
 ;
 	LD	HL,UF_JPTBL
 	LD	DE,UF_LBL
@@ -863,9 +794,11 @@ UF_INIT:
 ;
 UF_SENDR:
 
-	POP	AF			; get character to send from stack
-	OUT	(UF_DATA),A		; WRITE TO FIFO
-	OUT	(UF_SEND_IMM),A	; SEND IMMEDIATE
+	POP	AF		; get character to send from stack
+	OUT	(0FFH),A	; write to fifo
+UF_SCDP	EQU	$-1		; data port
+	OUT	(0FFH),A	; send immediate
+UF_SCIP	EQU	$-1		; send immediate port
 	RET
 ;
 ;-----------------------------------------------------------------------
@@ -873,18 +806,25 @@ UF_SENDR:
 ; Test and report carrier status, Z set if carrier present
 ;
 UF_CAROK:
-	XOR	A			; not used, always indicate present
+	XOR	A		; not used, always indicate present
 	RET
 ;
 ;-----------------------------------------------------------------------
 ;
 ; Get a character (assume character ready has already been tested)
 ;
-; This routine must NOT block.
+; GETCHR must not block
+;
+UF_GETCHR:
+	CALL	UF_RCVRDY	; check for char ready
+	RET	NZ		; return if not
+	; Fall thru if char ready
+;
+; MDIN can assume a character is ready
 ;
 UF_MDIN:
-UF_GETCHR:
-	IN	A,(UF_DATA)		; GET CHAR
+	IN	A,(0FFH)	; get char
+UF_GCDP	EQU	$-1		; data port
 	RET
 ;
 ;-----------------------------------------------------------------------
@@ -894,10 +834,11 @@ UF_GETCHR:
 ; *** Error code does not seem to be used ***
 ;
 UF_RCVRDY:
-	IN	A,(UF_STATUS)		; B7=0 IF CHAR AVAIL, =1 IF NO CHAR.
-	RLCA				; B0=0 IF CHAR AVAIL, =1 IF NO CHAR.
-	AND	00000001B		; A=0, ZF=1 IF NO CHAR, A=1, ZF=0 IF CHAR AVAIL,
-	LD	A,0
+	IN	A,(0FFH)	; bit 7 = 0 if char avail, = 1 if no char.
+UF_RRSP	EQU	$-1		; status port
+	RLCA			; bit 0 = 0 if char avail, = 1 if no char.
+	AND	00000001B	; A = 0, ZF = 1 if no char, A = 1, ZF = 0 if char avail.
+	LD	A,0		; no errors
 	RET
 ;
 ;-----------------------------------------------------------------------
@@ -905,8 +846,9 @@ UF_RCVRDY:
 ; Test for ready to send a character, Z = ready
 ;
 UF_SNDRDY:
-	IN	A,(UF_STATUS)		; Bit 0=0 IF SPACE AVAIL, =1 IF FULL
-	AND	00000001B		; A=0, ZF=1 IF SPACE AVAIL, A=1, ZF=0 IF FULL.
+	IN	A,(0FFH)	; bit 0 = 0 if space avail, = 1 if full
+UF_SRSP	EQU	$-1		; status port
+	AND	00000001B	; A = 0, ZF = 1 if space avail, A = 1, ZF = 0 if full.
 	RET
 ;
 ;-----------------------------------------------------------------------
@@ -914,7 +856,7 @@ UF_SNDRDY:
 ; Report baud rate (index into SPTBL returned in register A)
 ;
 UF_SPEED:
-	LD	A,8			; arbitrarily return 9600 baud
+	LD	A,8		; arbitrarily return 9600 baud
 	RET
 ;
 	END
