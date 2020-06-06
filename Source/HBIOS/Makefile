@@ -11,6 +11,7 @@ else
 	OBJECTS += N8_std.rom N8_std.com
 	OBJECTS += RCZ180_ext.rom RCZ180_ext.com
 	OBJECTS += RCZ180_nat.rom RCZ180_nat.com
+	OBJECTS += RCZ280_ext.rom RCZ280_ext.com
 	OBJECTS += RCZ80_kio.rom RCZ80_kio.com
 	OBJECTS += RCZ80_mt.rom RCZ80_mt.com
 	OBJECTS += RCZ80_duart.rom RCZ80_duart.com
