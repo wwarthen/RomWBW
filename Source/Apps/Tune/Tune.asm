@@ -270,9 +270,9 @@ _LDX	LD	C,16			; CPM Close File function
 	CALL	BDOS			; Do it
 ;
 	; Play loop
-	CALL	CRLF2			; Formatting
-	LD	DE,MSGPLY		; Playing message
-	CALL	PRTSTR			; Print message
+;	CALL	CRLF2			; Formatting
+;	LD	DE,MSGPLY		; Playing message
+;	CALL	PRTSTR			; Print message
 	;CALL	CRLF2			; Formatting
 	;CALL	SLOWCPU
 	LD	A,(FILTYP)		; Get file type
@@ -314,7 +314,9 @@ GOPTX2	LD	A,(DE)
 	CALL	PRTCHR
 	INC	DE
 	DJNZ	GOPTX2
-	CALL	CRLF
+	CALL	CRLF2			; Formatting
+	LD	DE,MSGPLY		; Playing message
+	CALL	PRTSTR			; Print message
 	LD	HL,(QDLY)		; Get basic quark delay
 	OR	A			; Clear carry
 	SBC	HL,DE			; Adjust for file type
@@ -333,7 +335,11 @@ PTXLP	CALL	START+5			; Play one quark
 	CALL	WAITQ			; Wait one quark period
 	JR	PTXLP			; Loop for next quark
 ;
-gomym	ld	hl,(QDLY)		; Get basic quark delay
+gomym
+	CALL	CRLF2			; Formatting
+	LD	DE,MSGPLY		; Playing message
+	CALL	PRTSTR			; Print message
+	ld	hl,(QDLY)		; Get basic quark delay
 	or	a			; Clear carry
 	ld	de,125			; Avg TS / quark = ~5000, so 125 delay loops
 	sbc	hl,de			; Adjust for file type
@@ -628,7 +634,7 @@ HWSTR_N8	.DB	"N8 Onboard Sound",0
 HWSTR_RCEB	.DB	"RC2014 Sound Module (EB)",0
 HWSTR_RCMF	.DB	"RC2014 Sound Module (MF)",0
 
-MSGUNSUP	.db	"MYM FILES NOT SUPPORTED YET\r\n", 0
+MSGUNSUP	.db	"MYM files not supported yet!\r\n", 0
 
 MSGSONGNAME     .DB     "Song name: ", 0
 MSGARTIST       .DB     "by:        ", 0
