@@ -411,6 +411,20 @@ HBX_BNKSEL1:
 	OUT0	(Z180_BBR),A		; WRITE TO BANK BASE
 	RET				; DONE
 #ENDIF
+#IF (MEMMGR == MM_Z280)
+	; TBD
+	RET				; DONE
+#ENDIF
+#IF (MEMMGR == MM_ZRC)
+	BIT	7,A			; BIT 7 SET REQUESTS RAM PAGE
+	JR	Z,HBX_ROM		; NOT SET, SELECT ROM PAGE
+	RES	7,A			; RAM PAGE REQUESTED: CLEAR ROM BIT
+	ADD	A,$10			; ADD 16 x 32K - RAM STARTS FROM 512K
+;
+HBX_ROM:
+	OUT	($1F),A			; HCS WRITE TO THE BANK CONTROL REGISTER
+	RET				; DONE
+#ENDIF
 ;
 ;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ; Copy Data - Possibly between banks.  This resembles CP/M 3, but
