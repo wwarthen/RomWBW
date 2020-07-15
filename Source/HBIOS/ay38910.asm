@@ -36,6 +36,12 @@ AY_RDAT		.EQU	$60
 AY_RIN		.EQU	AY_RSEL+AY_RCSND
 #ENDIF
 ;
+#IF (AYMODE == AYMODE_RC_REV6)
+AY_RSEL		.EQU	$A0
+AY_RDAT		.EQU	$A1
+AY_RIN		.EQU	$A2
+#ENDIF
+;
 ;======================================================================
 ;
 ;	REGISTERS
