@@ -3,6 +3,7 @@ OBJECTS =
 ifeq (1,1)
 OBJECTS += DYNO_std.rom DYNO_std.com
 OBJECTS += EZZ80_std.rom EZZ80_std.com
+OBJECTS += EZZ80_tz80.rom EZZ80_tz80.com
 OBJECTS += MK4_std.rom MK4_std.com
 OBJECTS += N8_std.rom N8_std.com
 OBJECTS += RCZ180_ext.rom RCZ180_ext.com
