@@ -37,12 +37,10 @@ jobs:
           name: RomWBW_Linux-${{env.GITHUB_REF_SLUG}}-${{env.GITHUB_SHA_SHORT}}
           path: .
 
-  buildMacos:
+  buildMacOS:
     runs-on: macos-latest
 
     steps:
-      - uses: rlespinasse/github-slug-action@1.1.0
-        
       - uses: actions/checkout@v2
 
       - name: Build
@@ -59,5 +57,5 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v1
         with:
-          name: RomWBW_MacOS-${{env.GITHUB_REF_SLUG}}-${{env.GITHUB_SHA_SHORT}}
+          name: RomWBW_MacOS
           path: .
