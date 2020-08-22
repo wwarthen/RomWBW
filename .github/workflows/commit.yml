@@ -46,6 +46,7 @@ jobs:
       - name: Build
         run: |
           make
+          make clean
           rm -rf .git*
 
       - name: List Output

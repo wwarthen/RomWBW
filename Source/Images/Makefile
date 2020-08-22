@@ -49,18 +49,18 @@ FDSIZE := 1440
 
 blank144:
 	@echo Making Blank Floppy of size $(FDSIZE)k
-	@LC_CTYPE=en_US.US-ASCII tr '\000' '\345' </dev/zero | dd of=$@ bs=1024 count=$(FDSIZE) 2>/dev/null
+	@LC_ALL=en_US.US-ASCII tr '\000' '\345' </dev/zero | dd of=$@ bs=1024 count=$(FDSIZE) 2>/dev/null
 
 HDSIZE := 8320
 HDNEWSIZE := 8192
 
 blankhd:
 	@echo Making Blank Hd of size $(HDSIZE)k
-	@LC_CTYPE=en_US.US-ASCII tr '\000' '\345' </dev/zero | dd of=$@ bs=1024 count=$(HDSIZE) 2>/dev/null
+	@LC_ALL=en_US.US-ASCII tr '\000' '\345' </dev/zero | dd of=$@ bs=1024 count=$(HDSIZE) 2>/dev/null
 	
 blankhdnew:
 	@echo Making Blank HdNew of size $(HDNEWSIZE)k
-	@LC_CTYPE=en_US.US-ASCII tr '\000' '\345' </dev/zero | dd of=$@ bs=1024 count=$(HDNEWSIZE) 2>/dev/null
+	@LC_ALL=en_US.US-ASCII tr '\000' '\345' </dev/zero | dd of=$@ bs=1024 count=$(HDNEWSIZE) 2>/dev/null
 	
 %.img: $(SYSTEMS) blank144 blankhd blankhdnew Makefile
 	@sys= ; \
