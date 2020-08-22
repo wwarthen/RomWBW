@@ -9,7 +9,7 @@ on:
       - v*
 
 jobs:
-  build:
+  buildLinux:
 
     runs-on: ubuntu-latest
 
