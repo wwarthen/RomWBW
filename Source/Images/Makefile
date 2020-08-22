@@ -85,7 +85,6 @@ blankhdnew:
 		echo copying system $$sys to $@ ; \
 		$(BINDIR)/mkfs.cpm -f $$fmt -b $$sys $@ ; \
 	fi ; \
-	# LC_CTYPE=en_US.US-ASCII echo $$mid | dd bs=1 count=4 seek=1410 conv=notrunc of=$@ ; \
 	for u in $$(seq 0 15) ; do \
 		dir=d_$$d/u$$u ; \
 		if [ -d $$dir ] ; then \

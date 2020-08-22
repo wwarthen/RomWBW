@@ -34,7 +34,7 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v1
         with:
-          name: RomWBW-${{env.GITHUB_REF_SLUG}}-${{env.GITHUB_SHA_SHORT}}
+          name: RomWBW_Linux-${{env.GITHUB_REF_SLUG}}-${{env.GITHUB_SHA_SHORT}}
           path: .
 
   buildMacos:
@@ -42,10 +42,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-
-      - name: Get OS info
-        run: |
-          system_profiler SPSoftwareDataType
 
       - name: Build
         run: |
@@ -62,5 +58,5 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v1
         with:
-          name: RomWBW-macOS
+          name: RomWBW_MacOS-${{env.GITHUB_REF_SLUG}}-${{env.GITHUB_SHA_SHORT}}
           path: .
