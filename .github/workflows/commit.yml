@@ -41,12 +41,13 @@ jobs:
     runs-on: macos-latest
 
     steps:
+      - uses: rlespinasse/github-slug-action@1.1.0
+        
       - uses: actions/checkout@v2
 
       - name: Build
         run: |
           make
-          make clean
           rm -rf .git*
 
       - name: List Output
