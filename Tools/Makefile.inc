@@ -116,6 +116,7 @@ all:: $(OBJECTS)
 	@if [ "$(DEST)" ] ; then for file in $(filter-out $(NOCOPY),$(OBJECTS)) ; do \
 		mkdir -p $(DEST) ; \
 		echo copy $$file to $(DEST) ; \
+		rm -f /tmp/casefn.cache ; \
 		cp $$($(CASEFN) $$file) $(DEST) ; \
 	done ; fi
 	@if [ "$(DOCDEST)" ] ; then for file in $(DOCS) ; do \

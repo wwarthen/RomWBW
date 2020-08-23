@@ -50,9 +50,7 @@ startzpm.com: ../ZCCP/startzpm.com
 	cp $< $@
 
 cpmldr.com: ../CPM3/cpmldr.com
-	rm -f /tmp/casefn.cache
 	cp $< $@
 
 cpmldr.sys: ../CPM3/cpmldr.sys
-	rm -f /tmp/casefn.cache
 	cp $< $@
