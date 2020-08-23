@@ -66,6 +66,7 @@ CPM=$(TOOLS)/cpm/bin
 
 %.com: %.z80
 	$(ZXCC) $(CPM)/Z80ASM -$(basename $<)/F ; \
+	rm -f /tmp/casefn.cache ; \
 	mv $$($(CASEFN) $@) tmp.com ; mv tmp.com $@
 
 %.bin: %.asm

@@ -43,6 +43,11 @@ copy genbnk.dat gencpm.dat
 zx gencpm -auto -display
 rem pause
 
+rem ZPM3 Tools
+zx Z80ASM -clrhist/F
+zx Z80ASM -setz3/F
+zx Z80ASM -autotog/F
+
 rem Loader
 
 tasm -t80 -g3 -fFF loader.asm loader.bin loader.lst
