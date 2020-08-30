@@ -64,6 +64,10 @@ blankhd1024:
 	@echo Making Blank HD1024 of size $(HD1024SIZE)k
 	@LC_ALL=en_US.US-ASCII tr '\000' '\345' </dev/zero | dd of=$@ bs=1024 count=$(HD1024SIZE)
 	@hexdump $@
+
+$(HD512PREFIX):
+
+$(HD1024PREFIX):
 	
 %.img: $(SYSTEMS) blank144 blankhd512 blankhd1024 Makefile
 	@sys= ; \
