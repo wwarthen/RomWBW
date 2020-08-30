@@ -345,9 +345,9 @@ diskdef wbw_fd120
   os 2.2
 end
 
-# RomWBW 8320KB Hard Disk Slice
+# RomWBW 8320KB Hard Disk Slice (512 directory entry format)
 # Legacy format, 512 dir entries, 16,630 sectors / slice
-diskdef wbw_hd
+diskdef wbw_hd512
   seclen 512
   tracks 1040
   sectrk 16
@@ -358,8 +358,8 @@ diskdef wbw_hd
   os 2.2
 end
 
-# First 4 slices of wbw_hd
-diskdef wbw_hd0
+# First 4 slices of wbw_hd512
+diskdef wbw_hd512_0
   seclen 512
   tracks 1040
   sectrk 16
@@ -370,7 +370,7 @@ diskdef wbw_hd0
   os 2.2
 end
 
-diskdef wbw_hd1
+diskdef wbw_hd512_1
   seclen 512
   tracks 2080
   sectrk 16
@@ -381,7 +381,7 @@ diskdef wbw_hd1
   os 2.2
 end
 
-diskdef wbw_hd2
+diskdef wbw_hd512_2
   seclen 512
   tracks 3120
   sectrk 16
@@ -392,7 +392,7 @@ diskdef wbw_hd2
   os 2.2
 end
 
-diskdef wbw_hd3
+diskdef wbw_hd512_3
   seclen 512
   tracks 4160
   sectrk 16
@@ -404,10 +404,10 @@ diskdef wbw_hd3
 end
 
 
-# RomWBW 8MB Hard Disk
+# RomWBW 8MB Hard Disk (1024 directory entry format)
 # New format, 1024 dir entries, 16,384 sectors / slice
-# Pure filesystem image, no prefix
-diskdef wbw_hdnew
+# Pure filesystem image, no MBR prefix
+diskdef wbw_hd1024
   seclen 512
   tracks 1024
   sectrk 16
@@ -418,9 +418,9 @@ diskdef wbw_hdnew
   os 2.2
 end
 
-# First 4 slices of wbw_hdnew
+# First 4 slices of wbw_hd1024
 # Assumes 128KB prefix (256 sectors)
-diskdef wbw_hdnew0
+diskdef wbw_hd1024_0
   seclen 512
   tracks 1040
   sectrk 16
@@ -431,7 +431,7 @@ diskdef wbw_hdnew0
   os 2.2
 end
 
-diskdef wbw_hdnew1
+diskdef wbw_hd1024_1
   seclen 512
   tracks 2064
   sectrk 16
@@ -442,7 +442,7 @@ diskdef wbw_hdnew1
   os 2.2
 end
 
-diskdef wbw_hdnew2
+diskdef wbw_hd1024_2
   seclen 512
   tracks 3112
   sectrk 16
@@ -453,7 +453,7 @@ diskdef wbw_hdnew2
   os 2.2
 end
 
-diskdef wbw_hdnew3
+diskdef wbw_hd1024_3
   seclen 512
   tracks 4136
   sectrk 16

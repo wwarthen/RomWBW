@@ -23,20 +23,20 @@ switch ($Format)
 		$Size = 1440KB
 	}
 
-	"wbw_hd"
+	"wbw_hd512"
 	{
-		# Legacy Hard Disk Format
-		$Desc = "Hard Disk (legacy format)"
-		$ImgFile = "hd_${Disk}.img"
+		# 512 Directory Entry Hard Disk Format
+		$Desc = "Hard Disk (512 directory entry format)"
+		$ImgFile = "hd512_${Disk}.img"
 		$MediaID = 4
 		$Size = 8MB + 128KB
 	}
 
-	"wbw_hdnew"
+	"wbw_hd1024"
 	{
-		# New Hard Disk Format
-		$Desc = "Hard Disk (new format)"
-		$ImgFile = "hdnew_${Disk}.img"
+		# 1024 Directory Entry Hard Disk Format
+		$Desc = "Hard Disk (1024 directory entry format)"
+		$ImgFile = "hd1024_${Disk}.img"
 		$MediaID = 10
 		$Size = 8MB
 	}
@@ -48,7 +48,7 @@ if (-not (Test-Path("d_${Disk}/")))
 	return
 }
 
-"Generating $Desc $Disk..."
+"Generating $Disk $Desc..."
 
 if ($SysFile.Length -gt 0) 
 	{ [byte[]]$SysImg = [System.IO.File]::ReadAllBytes($SysFile) }
