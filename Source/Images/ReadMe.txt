@@ -76,7 +76,7 @@ in your RomWBW computer.  On Windows, you can use Win32DiskImager to
 do this (see Tools\Win32DiskImager).  On Linux/Mac, you can usee dd.
 
 WARNING: The hd1024 disk images must be prefixed by the 
-hd1024_prefix.bin file before being written to your target media.  
+hd1024_prefix.dat file before being written to your target media.  
 See the section below called Hard Disk Formats.
 
 Building the Images
@@ -182,19 +182,19 @@ all slices and will assume the slices are located in the defined
 partition.
 
 WARNNG: The hd1024_xxx.img files **must** be prefixed by a partition 
-table before being written to your disk media.  The hd1024_prefix.bin 
+table before being written to your disk media.  The hd1024_prefix.dat 
 file is provided for this.  For example, to make the hd1024_cpm22.img 
 file ready to write to your media, you would need to do something 
 like this:
 
-  | C:\RomWBW\Binary>copy /b hd1024_prefix.bin + hd1024_cpm22.img hd_cpm22.img
+  | C:\RomWBW\Binary>copy /b hd1024_prefix.dat + hd1024_cpm22.img hd_cpm22.img
   
 and then use the resulting hd_cpm22.img to write to the target media.
 
 Since the hd1024 format requires a partition table, you must prefix 
 the slices with a partition table.  You can simply include the file 
-hd1024_prefix.bin before the slice images to accomplish this.  The 
-hd1024_prefix.bin defines the required partition table.  Any number 
+hd1024_prefix.dat before the slice images to accomplish this.  The 
+hd1024_prefix.dat defines the required partition table.  Any number 
 of hd1024 slice images can be concatenated after the prefix.
 
 For example, if you wanted to create a 2 slice disk image using the 
@@ -202,7 +202,7 @@ hd1024 entry format that has ZSDOS in the first slice and Wordstar in
 the second slice, you could use the following command from a Windows 
 command prompt:
  
-  | C:\RomWBW\Binary>copy /b hd1024_prefix.bin + hd1024_zsdos.img + hd1024_ws4.img hd_multi.img
+  | C:\RomWBW\Binary>copy /b hd1024_prefix.dat + hd1024_zsdos.img + hd1024_ws4.img hd_multi.img
 
 In general, the hd1024 format is considered the better format to use. 
 It provides doubles the directory space and places all slices inside 
@@ -498,7 +498,7 @@ Moving image hd1024_ws4.img into output directory...
         1 file(s) copied.
 
 Building Combo Disk (1024 directory entry format) Image...
-hd1024_prefix.bin
+hd1024_prefix.dat
 ..\..\Binary\hd1024_cpm22.img
 ..\..\Binary\hd1024_zsdos.img
 ..\..\Binary\hd1024_nzcom.img

@@ -13,7 +13,7 @@ HD1024IMGS = hd1024_cpm22.img hd1024_zsdos.img hd1024_nzcom.img \
 # HD1024IMGS += hd1024_bp.img
 
 HD512PREFIX =
-HD1024PREFIX = hd1024_prefix.bin
+HD1024PREFIX = hd1024_prefix.dat
 
 OBJECTS = $(FDIMGS)
 OBJECTS += $(HD512IMGS) hd512_combo.img $(HD512PREFIX)
@@ -65,10 +65,6 @@ blankhd1024:
 	@LC_ALL=en_US.US-ASCII tr '\000' '\345' </dev/zero | dd of=$@ bs=1024 count=$(HD1024SIZE)
 	@hexdump $@
 
-$(HD512PREFIX):
-
-$(HD1024PREFIX):
-	
 %.img: $(SYSTEMS) blank144 blankhd512 blankhd1024 Makefile
 	@sys= ; \
 	case $@ in \
