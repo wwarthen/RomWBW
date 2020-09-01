@@ -40,6 +40,7 @@ call BuildDisk.cmd ws4 wbw_hd1024
 if exist ..\BPBIOS\bpbio-ww.rel call BuildDisk.cmd bp wbw_hd1024
 
 copy hd1024_prefix.dat ..\..\Binary\
+copy hd1024_zrc_prefix.dat ..\..\Binary\
 
 echo.
 echo Building Combo Disk (1024 directory entry format) Image...
