@@ -15,5 +15,7 @@ include $(TOOLS)/Makefile.inc
 
 DIFFPATH = $(DIFFTO)/Binary
 
+.SECONDARY:
+
 $(HD1024ZRCPREFIX):
 	cat zrc_cfldr.bin zrc_ptbl.bin zrc_fill_1.bin zrc_mon.bin zrc_fill_2.bin $(ZRCROM) zrc_fill_3.bin >$@
