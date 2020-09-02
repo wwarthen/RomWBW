@@ -90,6 +90,7 @@ Tools/unix/zx/zx
 !Source/ZCPR-DJ/*.[Cc][Oo][Mm]
 !Source/ZPM3/*.[Cc][Oo][Mm]
 !Source/ZSDOS/*.[Cc][Oo][Mm]
+!Source/ZRC/*.bin
 !Tools/cpm/bin
 !Tools/unix/zx
 !Tools/zx
