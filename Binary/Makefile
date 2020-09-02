@@ -5,4 +5,4 @@ SUBDIRS = Apps CPM3 ZPM3
 include $(TOOLS)/Makefile.inc
 
 clobber::
-	@rm -f *.bin *.com *.img *.rom *.pdf *.log *.eeprom
+	@rm -f *.bin *.com *.img *.rom *.pdf *.log *.eeprom *.dat

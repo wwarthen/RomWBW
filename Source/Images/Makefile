@@ -14,12 +14,10 @@ HD1024IMGS = hd1024_cpm22.img hd1024_zsdos.img hd1024_nzcom.img \
 
 HD512PREFIX =
 HD1024PREFIX = hd1024_prefix.dat
-HD1024ZRCPREFIX = hd1024_zrc_prefix.dat
 
 OBJECTS = $(FDIMGS)
 OBJECTS += $(HD512IMGS) hd512_combo.img $(HD512PREFIX)
 OBJECTS += $(HD1024IMGS) hd1024_combo.img $(HD1024PREFIX)
-OBJECTS += $(HD1024ZRCPREFIX)
 
 OTHERS = blank144 blankhd512 blankhd1024
 
