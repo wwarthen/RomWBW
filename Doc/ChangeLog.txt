@@ -8,6 +8,7 @@ Version 3.1.1
 - WBW: Early Z280 support (requires 512K RAM/ROM board)
 - HCS: ZRC memory manager support
 - S?K: Support for Tiny Z80 by Sergey
+- E?B: Support for v6 YM/AY sound card
 
 Version 3.1
 -----------
