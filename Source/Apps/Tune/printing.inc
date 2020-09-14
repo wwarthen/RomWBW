@@ -24,7 +24,7 @@ PRTDOT:
 ;
 PRTCR:
 ;
-	; shortcut to print a dot preserving all regs
+	; shortcut to print a carriage return preserving all regs
 	PUSH	AF		; save af
 	LD	A,13		; load CR value
 	CALL	PRTCHR		; print it

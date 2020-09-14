@@ -5,6 +5,10 @@ Version 3.1.1
 - WBW: Change Propeller VGA signal timings to 60Hz refresh
 - WBW: Enhanced SYSTEM RESET function to allow a warm start back to boot loader
 - C?O: Add DUART driver
+- WBW: Early Z280 support (requires 512K RAM/ROM board)
+- HCS: ZRC memory manager support
+- S?K: Support for Tiny Z80 by Sergey
+- E?B: Support for v6 YM/AY sound card
 
 Version 3.1
 -----------
@@ -119,7 +123,7 @@ Version 2.9.1
 - PMS: Added Forth, Nascom BASIC, and Tasty BASIC to ROM
 - PMS: Refactored ROM Loader to support more ROM images, now table driven
 - WBW: Refactored DSKY code
-- SK:  Initial support for Easy Z80
+- S?K:  Initial support for Easy Z80
 - PMS: Enhance VDU driver to support alternative screen dimensions
 - WBW: DDT and DDTZ modified to use RST 30 instead of RST 38 to avoid conflicts with IM 1 interrupts
 - WBW: Added timer interrupt support for CTC under Zeta 2 and Easy Z80

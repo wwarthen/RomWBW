@@ -1,9 +1,6 @@
 OBJECTS = zpmldr.com zpmldr.sys cpm3.sys startzpm.com zccp.com
-#ifdef REBUILD_ZPM_TOOLS
+NODELETE = makedos.com zinstal.zpm bnkbdos3.spr resbdos3.spr
 OBJECTS += setz3.com clrhist.com autotog.com
-#else
-NODELETE = setz3.com clrhist.com autotog.com makedos.com zinstal.zpm bnkbdos3.spr resbdos3.spr
-#endif
 OBJECTS += cpmldr.com cpmldr.sys zinstal.zpm makedos.com gencpm.dat bnkbios3.spr bnkbdos3.spr resbdos3.spr
 OTHERS = zpmldr.bin loader.bin biosldrd.rel biosldrc.rel util.rel gencpm.com
 DEST = ../../Binary/ZPM3/

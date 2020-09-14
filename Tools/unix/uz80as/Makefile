@@ -4,7 +4,7 @@
 
 DEST = ../../`uname`
 CC = gcc
-CFLAGS = -g
+CFLAGS = -g -fcommon
 
 OBJECTS = ngetopt.o main.o options.o \
 	utils.o err.o incl.o sym.o \

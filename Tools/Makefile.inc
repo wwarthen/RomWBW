@@ -66,6 +66,7 @@ CPM=$(TOOLS)/cpm/bin
 
 %.com: %.z80
 	$(ZXCC) $(CPM)/Z80ASM -$(basename $<)/F ; \
+	rm -f /tmp/casefn.cache ; \
 	mv $$($(CASEFN) $@) tmp.com ; mv tmp.com $@
 
 %.bin: %.asm
@@ -115,6 +116,7 @@ all:: $(OBJECTS)
 	@if [ "$(DEST)" ] ; then for file in $(filter-out $(NOCOPY),$(OBJECTS)) ; do \
 		mkdir -p $(DEST) ; \
 		echo copy $$file to $(DEST) ; \
+		rm -f /tmp/casefn.cache ; \
 		cp $$($(CASEFN) $$file) $(DEST) ; \
 	done ; fi
 	@if [ "$(DOCDEST)" ] ; then for file in $(DOCS) ; do \

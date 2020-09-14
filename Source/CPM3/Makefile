@@ -89,12 +89,10 @@ zpmbios3.spr: $(BIOSOBJS)
 
 cpm3.sys: cpm3$(DEFCPM3).sys
 	cp cpm3$(DEFCPM3).sys cpm3.sys
-	rm -f /tmp/casefn.cache
 
 gencpm.dat: gen$(DEFCPM3).dat
 	cp gen$(DEFCPM3).dat gencpm.dat
-	rm -f /tmp/casefn.cache
-	
+
 cpmldr.sys: loader.bin cpmldr.bin
 	cat loader.bin cpmldr.bin > $@
 

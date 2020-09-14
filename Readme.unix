@@ -1,13 +1,13 @@
 This tree now contains makefiles and tools to build on Linux and 
-MacosX Linux is rather more thoroughly tested compared to os-x.
+macOS. Linux is rather more thoroughly tested compared to macOS.
 
 To get here, TASM and the propeller generation tools needed to be 
 replaced, and since the unix filesystem is usually case-sensitive, 
 and CP/M and windows are not, the cpm tools were made case-insensitive.
 
 TASM was replaced with uz80as, which implements a subset of TASM and 
-fixes some bugs.  however, I needed to add some functionality to make 
-it build the sources as they exist in this tree.   in particular, one 
+fixes some bugs.  However, I needed to add some functionality to make 
+it build the sources as they exist in this tree.   In particular, one 
 thing to be very careful of is that TASM is not entirely consistent 
 with respect to the .DS directive. it's usually a bad idea to mix 
 .DS, .FILL, .DB with .ORG.
@@ -23,13 +23,19 @@ To build:
 	cd to the top directory and type "make".
 
 By default, this will generate all of the standard configurations of
-RomWBW for all platforms.  If you want to customize the process to
-only build one (or a subset) of the configurations, edit the "makefile"
-in the HBIOS directory.  If you create your own, custom configuration,
-you can add it there as well.
+RomWBW for all platforms.  If you just want to build the ROM for a
+specific platform and configuration you can use
 
-For MacOS users, you may encounter a failure reading or writing files.
-This is caused by protection features in MacOS (at least, in Catalina)
+	make ROM_PLATFORM=<platform> ROM_CONFIG=<config>
+
+where <platform> is one of the supported platforms such as SBC, RCZ80, 
+etc. and <config> is a configuration of that platform.  For example,
+to build the "126" configuration of the "SCZ180" platform:
+
+	make ROM_PLATFORM=SCZ180 ROM_CONFIG=126
+
+For macOS users, you may encounter a failure reading or writing files.
+This is caused by protection features in macOS (at least, in Catalina)
 that prevent programs built on your local system (unsigned) from
 running.  To disable this feature:
 
@@ -47,7 +53,7 @@ DISCLAIMER: You do this at your own risk.  I highly recommend that you
 return the settings back to normal immediately after doing a build.
 
 Heavy use is made of make's include facility and pattern rules. the 
-master rule set is in Tools/Makefile.inc.  changes here will affect 
+master rule set is in Tools/Makefile.inc.  Changes here will affect 
 almost every Makefile, and where exceptions are needed, the overrides 
 are applied in the lower Makefiles.
 
@@ -56,20 +62,26 @@ binaries are compared to a baseline windows build.
 
 Credit:
 
-	uz80as was written by Jorge Giner Cordero, jorge.giner@hotmail.com,
-	and the original source can be found at https://github.com/jorgicor/uz80as
+	uz80as was written by Jorge Giner Cordero, 
+	jorge.giner@hotmail.com, and the original source can be found 
+	at https://github.com/jorgicor/uz80as.
 
-	the propeller tools use bstc and openspin, parallax tools from
-	http://www.fnarfbargle.com/bst.html https://github.com/parallaxinc/OpenSpin
-	note that bst is not open source or even currently maintained, so I could
-	not generate a version for 64 bit osx.
+	The propeller tools use bstc and openspin, parallax tools from 
+	http://www.fnarfbargle.com/bst.html 
+	https://github.com/parallaxinc/OpenSpin Note that bst is not 
+	open source or even currently maintained, so I could not 
+	generate a version for 64 bit macOS.
 
-	cpmtools were the most current I could find, and it has been hacked to do
-	case-insensitivity. these are not marked, and are not extensive.
+	cpmtools were the most current I could find, and it has been 
+	hacked to do case-insensitivity. These are not marked, and are 
+	not extensive.
 
-	zx is from distributed version, and also has local hacks for case insensitivity.
-	both zx and cpmtools ship with an overly complicated makefile generation system
-	and this is ignored.
+	zx is from the distributed version, and also has local hacks 
+	for case insensitivity.
 
-	This whole linux build framework is the work of Curt Mayer, curt@zen-room.org.
-	use it for whatever you like; this is not my day job.
+	Both zx and cpmtools ship with an overly complicated makefile 
+	generation system and this is ignored.
+
+	This whole Linux build framework is the work of Curt Mayer, 
+	curt@zen-room.org. Use it for whatever you like; this is not 
+	my day job.

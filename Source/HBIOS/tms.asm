@@ -19,12 +19,10 @@ TMSCTRL1:       .EQU   1               ; CONTROL BITS
 TMSINTEN:       .EQU   5               ; INTERRUPT ENABLE BIT
 
 #IF TMSTIMENABLE
-	.ECHO	"TMS INTERRUPTS ENABLED"
+	.ECHO	"TMS INTERRUPTS ENABLED\n"
 #ENDIF
 
 #IF (TMSMODE == TMSMODE_RC)
-;TMS_DATREG	.EQU	$BE		; READ/WRITE DATA
-;TMS_CMDREG	.EQU	$BF		; READ STATUS / WRITE REG SEL
 TMS_DATREG	.EQU	$98		; READ/WRITE DATA
 TMS_CMDREG	.EQU	$99		; READ STATUS / WRITE REG SEL
 TMS_PPIA	.EQU	0		; PPI PORT A
@@ -817,6 +815,22 @@ TMS_INTHNDL:
 TMS_POS		.DW 	0	; CURRENT DISPLAY POSITION
 TMS_CURSAV	.DB	0	; SAVES ORIGINAL CHARACTER UNDER CURSOR
 TMS_BUF		.FILL	256,0	; COPY BUFFER
+
+;
+;==================================================================================================
+;   TMS DRIVER - INSTANCE DATA
+;==================================================================================================
+;
+
+TMS_IDAT:
+	.DB	TMS_PPIA
+	.DB	TMS_PPIB
+	.DB	TMS_PPIC
+	.DB	TMS_PPIX
+
+TMS_PORTS:
+	.DB	TMS_DATREG
+	.DB	TMS_CMDREG
 ;
 ;==================================================================================================
 ;   TMS DRIVER - TMS9918 REGISTER INITIALIZATION
@@ -873,16 +887,11 @@ TMS_INIT9918_REG_1:
 ;
 TMS_INIT9918LEN	.EQU	$ - TMS_INIT9918
 ;
+;
 #IF (CPUFAM == CPU_Z180)
 TMS_DCNTL	.DB	$00	; SAVE Z180 DCNTL AS NEEDED
 #ENDIF
-;
-;==================================================================================================
-;   TMS DRIVER - INSTANCE DATA
-;==================================================================================================
-;
-TMS_IDAT:
-	.DB	TMS_PPIA
-	.DB	TMS_PPIB
-	.DB	TMS_PPIC
-	.DB	TMS_PPIX
+
+	.ECHO	"TMS instance data occupies "
+	.ECHO	$ - TMS_IDAT
+	.ECHO	" bytes\n"

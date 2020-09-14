@@ -19,7 +19,7 @@ param([string]$Platform = "", [string]$Config = "", [string]$RomSize = "512", [s
 # setup mechanism so that multiple configuration are not needed.  When building for UNA, the pre-built
 # UNA BIOS is simply imbedded, it is not built here.
 #
-$PlatformListZ80 = "SBC", "ZETA", "ZETA2", "RCZ80", "EZZ80", "UNA"
+$PlatformListZ80 = "SBC", "ZETA", "ZETA2", "RCZ80", "RCZ280", "EZZ80", "UNA"
 $PlatformListZ180 = "N8", "MK4", "RCZ180", "SCZ180", "DYNO"
 
 #

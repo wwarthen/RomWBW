@@ -9,7 +9,7 @@ on:
       - v*
 
 jobs:
-  build:
+  buildLinux:
 
     runs-on: ubuntu-latest
 
@@ -24,9 +24,39 @@ jobs:
           make
           make clean
           rm -rf .git*
+      
+      - name: List Output
+        run: |
+          cd Binary
+          ls -l
+          find -type f -exec md5sum '{}' \;
+      
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: RomWBW_Linux-${{env.GITHUB_REF_SLUG}}-${{env.GITHUB_SHA_SHORT}}
+          path: .
+
+  buildMacOS:
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Build
+        run: |
+          make
+          make clean
+          rm -rf .git*
+
+      - name: List Output
+        run: |
+          cd Binary
+          ls -l
+          find . -type f -exec md5 -r -- '{}' +;
         
       - name: Upload Artifact
         uses: actions/upload-artifact@v1
         with:
-          name: RomWBW-${{env.GITHUB_REF_SLUG}}-${{env.GITHUB_SHA_SHORT}}
+          name: RomWBW_MacOS
           path: .

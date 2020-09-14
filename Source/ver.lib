@@ -3,5 +3,5 @@ rmn	equ	1
 rup	equ	1
 rtp	equ	0
 biosver	macro
-	db	"3.1.1-pre.18"
+	db	"3.1.1-pre.22"
 	endm

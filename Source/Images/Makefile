@@ -5,23 +5,23 @@ SYSTEMS = ../CPM22/cpm_wbw.sys ../ZSDOS/zsys_wbw.sys ../CPM3/cpmldr.sys
 
 FDIMGS = fd144_cpm22.img fd144_zsdos.img fd144_nzcom.img \
 	fd144_cpm3.img fd144_zpm3.img fd144_ws4.img
-HDIMGS = hd_cpm22.img hd_zsdos.img hd_nzcom.img \
-	hd_cpm3.img hd_zpm3.img hd_ws4.img
-# HDIMGS += hd_bp.img
-HDNEWIMGS = hdnew_cpm22.img hdnew_zsdos.img hdnew_nzcom.img \
-	hdnew_cpm3.img hdnew_zpm3.img hdnew_ws4.img
-# HDNEWIMGS += hdnew_bp.img
+HD512IMGS = hd512_cpm22.img hd512_zsdos.img hd512_nzcom.img \
+	hd512_cpm3.img hd512_zpm3.img hd512_ws4.img
+# HDIMGS += hd512_bp.img
+HD1024IMGS = hd1024_cpm22.img hd1024_zsdos.img hd1024_nzcom.img \
+	hd1024_cpm3.img hd1024_zpm3.img hd1024_ws4.img
+# HD1024IMGS += hd1024_bp.img
 
-HDPREFIX =
-HDNEWPREFIX = hdnew_prefix.bin
+HD512PREFIX =
+HD1024PREFIX = hd1024_prefix.dat
 
 OBJECTS = $(FDIMGS)
-OBJECTS += $(HDIMGS) hd_combo.img $(HDPREFIX)
-OBJECTS += $(HDNEWIMGS) hdnew_combo.img $(HDNEWPREFIX)
+OBJECTS += $(HD512IMGS) hd512_combo.img $(HD512PREFIX)
+OBJECTS += $(HD1024IMGS) hd1024_combo.img $(HD1024PREFIX)
 
-OTHERS = blank144 blankhd blankhdnew
+OTHERS = blank144 blankhd512 blankhd1024
 
-NODELETE = $(HDPREFIX) $(HDNEWPREFIX)
+NODELETE = $(HD512PREFIX) $(HD1024PREFIX)
 
 DEST=../../Binary
 
@@ -30,10 +30,10 @@ include $(TOOLS)/Makefile.inc
 
 DIFFPATH = $(DIFFTO)/Binary
 
-hd_combo.img: $(HDPREFIX) $(HDIMGS)
+hd512_combo.img: $(HD512PREFIX) $(HD512IMGS)
 	cat $^ > $@
 
-hdnew_combo.img: $(HDNEWPREFIX) $(HDNEWIMGS)
+hd1024_combo.img: $(HD1024PREFIX) $(HD1024IMGS)
 	cat $^ > $@
 
 #
@@ -49,20 +49,23 @@ FDSIZE := 1440
 
 blank144:
 	@echo Making Blank Floppy of size $(FDSIZE)k
-	@LC_CTYPE=en_US.US-ASCII tr '\000' '\345' </dev/zero | dd of=$@ bs=1024 count=$(FDSIZE) 2>/dev/null
+	@LC_ALL=en_US.US-ASCII tr '\000' '\345' </dev/zero | dd of=$@ bs=1024 count=$(FDSIZE)
+	@hexdump $@
 
-HDSIZE := 8320
-HDNEWSIZE := 8192
+HD512SIZE := 8320
+HD1024SIZE := 8192
 
-blankhd:
-	@echo Making Blank Hd of size $(HDSIZE)k
-	@LC_CTYPE=en_US.US-ASCII tr '\000' '\345' </dev/zero | dd of=$@ bs=1024 count=$(HDSIZE) 2>/dev/null
+blankhd512:
+	@echo Making Blank HD512 of size $(HD512SIZE)k
+	@LC_ALL=en_US.US-ASCII tr '\000' '\345' </dev/zero | dd of=$@ bs=1024 count=$(HD512SIZE)
+	@hexdump $@
 	
-blankhdnew:
-	@echo Making Blank HdNew of size $(HDNEWSIZE)k
-	@LC_CTYPE=en_US.US-ASCII tr '\000' '\345' </dev/zero | dd of=$@ bs=1024 count=$(HDNEWSIZE) 2>/dev/null
-	
-%.img: $(SYSTEMS) blank144 blankhd blankhdnew Makefile
+blankhd1024:
+	@echo Making Blank HD1024 of size $(HD1024SIZE)k
+	@LC_ALL=en_US.US-ASCII tr '\000' '\345' </dev/zero | dd of=$@ bs=1024 count=$(HD1024SIZE)
+	@hexdump $@
+
+%.img: $(SYSTEMS) blank144 blankhd512 blankhd1024 Makefile
 	@sys= ; \
 	case $@ in \
 		(*cpm22*) sys=../CPM22/cpm_wbw.sys;; \
@@ -72,11 +75,11 @@ blankhdnew:
 	if echo $@ | grep -q ^fd144_ ; then \
 		fmt=wbw_fd144 ; type=fd144_ ; proto=blank144 ; \
 	fi ; \
-	if echo $@ | grep -q ^hd_ ; then \
-		fmt=wbw_hd ; type=hd_ ; proto=blankhd ; \
+	if echo $@ | grep -q ^hd512_ ; then \
+		fmt=wbw_hd512 ; type=hd512_ ; proto=blankhd512 ; \
 	fi ; \
-	if echo $@ | grep -q ^hdnew_ ; then \
-		fmt=wbw_hdnew ; type=hdnew_ ; proto=blankhdnew ; \
+	if echo $@ | grep -q ^hd1024_ ; then \
+		fmt=wbw_hd1024 ; type=hd1024_ ; proto=blankhd1024 ; \
 	fi ; \
 	d=$$(echo $(basename $@) | sed s/$$type//) ; \
 	echo Generating $@ ; \
@@ -85,7 +88,6 @@ blankhdnew:
 		echo copying system $$sys to $@ ; \
 		$(BINDIR)/mkfs.cpm -f $$fmt -b $$sys $@ ; \
 	fi ; \
-	# LC_CTYPE=en_US.US-ASCII echo $$mid | dd bs=1 count=4 seek=1410 conv=notrunc of=$@ ; \
 	for u in $$(seq 0 15) ; do \
 		dir=d_$$d/u$$u ; \
 		if [ -d $$dir ] ; then \
@@ -115,16 +117,16 @@ clean::
 	@rm -f *.ls
 
 imgdiff:
-	@for i in $(FDIMGS) $(HDIMGS) $(HDNEWIMGS) ; do \
+	@for i in $(FDIMGS) $(HD512IMGS) $(HD1024IMGS) ; do \
 		echo $$i ; \
 		if echo $$i | grep -q ^fd144_ ; then \
 			fmt=wbw_fd144 ; \
 		fi ; \
-		if echo $$i | grep -q ^hd_ ; then \
-			fmt=wbw_hd ; \
+		if echo $$i | grep -q ^hd512_ ; then \
+			fmt=wbw_hd512 ; \
 		fi ; \
-		if echo $$i | grep -q ^hdnew_ ; then \
-			fmt=wbw_hdnew ; \
+		if echo $$i | grep -q ^hd1024_ ; then \
+			fmt=wbw_hd1024 ; \
 		fi ; \
 		$(BINDIR)/cpmls -i -f $$fmt $$i > $$i.ls ; \
 		$(BINDIR)/cpmls -i -f $$fmt $(DIFFPATH)/$$i > $$i.diff.ls ; \

@@ -7,14 +7,17 @@ ifdef ROM_PLATFORM
 else
 	OBJECTS += DYNO_std.rom DYNO_std.com
 	OBJECTS += EZZ80_std.rom EZZ80_std.com
+	OBJECTS += EZZ80_tz80.rom EZZ80_tz80.com
 	OBJECTS += MK4_std.rom MK4_std.com
 	OBJECTS += N8_std.rom N8_std.com
 	OBJECTS += RCZ180_ext.rom RCZ180_ext.com
 	OBJECTS += RCZ180_nat.rom RCZ180_nat.com
+	OBJECTS += RCZ280_ext.rom RCZ280_ext.com
 	OBJECTS += RCZ80_kio.rom RCZ80_kio.com
 	OBJECTS += RCZ80_mt.rom RCZ80_mt.com
 	OBJECTS += RCZ80_duart.rom RCZ80_duart.com
 	OBJECTS += RCZ80_std.rom RCZ80_std.com
+	OBJECTS += RCZ80_zrc.rom RCZ80_zrc.com
 	OBJECTS += SBC_simh.rom SBC_simh.com
 	OBJECTS += SBC_std.rom SBC_std.com
 	OBJECTS += SCZ180_126.rom SCZ180_126.com
