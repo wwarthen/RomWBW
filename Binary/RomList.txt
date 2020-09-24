@@ -159,9 +159,12 @@ RCZ80 (RCZ80_std.rom):
  - Support for Scott Baker floppy controllers (SMC & WDC) may
    be enabled in config
  - Support for J.B. Lang TMS9918 video card may be enabled in config
+ - Support for PropIO V2 may be enabled in config (PRPENABLE).  If
+   enabled, will auto-detect and install associated
+   video, keyboard and SD Card support if present.
 
 RCZ80 w/ KIO (RCZ80_kio.rom):
- - Save as RCZ80_std
+ - Same as RCZ80_std
  - Requires KIO module
  - SIO ports provided by KIO
 
@@ -181,6 +184,9 @@ RCZ180 (RCZ180_nat.rom & RCZ180_ext.rom):
      addressing of memory, such as the SC119
    - RCZ180_ext.rom uses external bank management to access
      memory, such as the 512K RAM/ROM module.
+ - Support for PropIO V2 may be enabled in config (PRPENABLE).  If
+   enabled, will auto-detect and install associated
+   video, keyboard and SD Card support if present.
 
 RCZ280 (RCZ280_ext.rom):
  *** Experimental ***
@@ -198,6 +204,9 @@ RCZ280 (RCZ280_ext.rom):
  - Support for Scott Baker floppy controllers (SMC & WDC) may
    be enabled in config
  - Support for J.B. Lang TMS9918 video card may be enabled in config
+ - Support for PropIO V2 may be enabled in config (PRPENABLE).  If
+   enabled, will auto-detect and install associated
+   video, keyboard and SD Card support if present.
 
 SCZ180 (SCZ180_126.rom, SCZ180_130.rom, SCZ180_131.rom):
  - Same as RCZ180
@@ -205,6 +214,9 @@ SCZ180 (SCZ180_126.rom, SCZ180_130.rom, SCZ180_131.rom):
  - The 3 different variants of SCZ180 are provided to match the
    3 corresponding systems (SC126, SC130, and SC131) designed by
    Stephen Cousins.
+ - Support for PropIO V2 may be enabled in config (PRPENABLE).  If
+   enabled, will auto-detect and install associated
+   video, keyboard and SD Card support if present.
 
 EZZ80 (EZZ80_std.rom):
  - Assumes CPU oscillator of 10.000 MHz
@@ -212,6 +224,9 @@ EZZ80 (EZZ80_std.rom):
  - Includes support for on-board SIO
  - Auto support for RC2014 Compact Flash Module
  - Auto support for RC2014 PPIDE Module
+ - Support for PropIO V2 may be enabled in config (PRPENABLE).  If
+   enabled, will auto-detect and install associated
+   video, keyboard and SD Card support if present.
 
 DYNO (DYNO_std.rom):
  - Assumes CPU oscillator of 18.432 MHz
