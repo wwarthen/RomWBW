@@ -1905,6 +1905,9 @@ HB_INITTBL:
 #IF (MDENABLE)
 	.DW	MD_INIT
 #ENDIF
+#IF (FFENABLE)
+	.DW	FF_INIT
+#ENDIF
 #IF (FDENABLE)
 	.DW	FD_INIT
 #ENDIF
@@ -3621,6 +3624,14 @@ ORG_MD		.EQU	$
 SIZ_MD		.EQU	$ - ORG_MD
 		.ECHO	"MD occupies "
 		.ECHO	SIZ_MD
+		.ECHO	" bytes.\n"
+#ENDIF
+#IF (FFENABLE)
+ORG_FF		.EQU	$
+  #INCLUDE "flashfs.asm"
+SIZ_FF		.EQU	$ - ORG_FF
+		.ECHO	"FF occupies "
+		.ECHO	SIZ_FF
 		.ECHO	" bytes.\n"
 #ENDIF
 ;
