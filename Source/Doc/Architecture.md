@@ -678,7 +678,7 @@ Read Block Count sectors to buffer address starting at current target
 sector. Current sector must be established by prior seek function; however,
 multiple read/write/verify function calls can be made after a seek
 function. Current sector is incremented after each sector successfully
-read. On error, current sector is sector is sector where error occurred.
+read. On error, current sector is sector where error occurred.
 Blocks read indicates number of sectors successfully read.
 
 Caller must ensure: 1) buffer address is large enough to contain data for
