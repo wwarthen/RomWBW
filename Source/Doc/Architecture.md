@@ -701,7 +701,7 @@ Write Block Count sectors to buffer address starting at current target
 sector. Current sector must be established by prior seek function; however,
 multiple read/write/verify function calls can be made after a seek
 function. Current sector is incremented after each sector successfully
-written. On error, current sector is sector is sector where error occurred.
+written. On error, current sector is sector where error occurred.
 Blocks written indicates number of sectors successfully written.
 
 Caller must ensure: 1) buffer address is large enough to contain data for
