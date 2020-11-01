@@ -675,4 +675,28 @@ FF_T_CNT	.EQU	17
 FF_T_SZ		.EQU	($-FF_TABLE) / FF_T_CNT
 FF_UNKNOWN	.DB	"UNKNOWN$"
 FF_STACK:	.DW	0
-
+;
+;======================================================================
+;
+; RELOCATABLE CODE SPACE REQUIREMENTS
+;
+;======================================================================
+;
+FF_CSIZE	.EQU	0
+;
+#IF (FF_W_SZ>FF_CSIZE)
+FF_CSIZE	.SET	FF_W_SZ
+#ENDIF
+#IF (FF_S_SZ>FF_CSIZE)
+FF_CSIZE	.SET	FF_S_SZ
+#ENDIF
+#IF (FF_E_SZ>FF_CSIZE)
+FF_CSIZE	.SET	FF_E_SZ
+#ENDIF
+#IF (FF_I_SZ>FF_CSIZE)
+FF_CSIZE	.SET	FF_I_SZ
+#ENDIF
+;
+		.ECHO	"FF requires "
+		.ECHO	FF_CSIZE
+		.ECHO	" bytes stack space.\n"
