@@ -4668,6 +4668,15 @@ SIZ_PPK		.EQU	$ - ORG_PPK
 		.ECHO	" bytes.\n"
 #ENDIF
 ;
+#IF (MSKENABLE)
+ORG_MSXKEYB		.EQU	$
+  #INCLUDE "msxkeyb.asm"
+SIZ_MSXKEYB		.EQU	$ - ORG_MSXKEYB
+		.ECHO	"MSXKEYB occupies "
+		.ECHO	SIZ_MSXKEYB
+		.ECHO	" bytes.\n"
+#ENDIF
+;
 #IF (PRPENABLE)
 ORG_PRP		.EQU	$
   #INCLUDE "prp.asm"

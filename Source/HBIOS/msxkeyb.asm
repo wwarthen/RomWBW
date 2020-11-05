@@ -1,0 +1,1168 @@
+;======================================================================
+;	MSX 8255 PPI KEYBOARD COMPATIBLE DRIVER
+;
+;	CREATED BY: DEAN NETHERTON
+;	KBD.ASM DRIVER USED AS TEMPLATE
+;
+;
+;======================================================================
+; USAGE:
+;  THIS DRIVER IS CAN BE ACTIVED WITHIN THE TMS VIDEO DRIVER
+;  ADD THE OPTION TO YOUR BUILD CONFIGURATION TO ACTIVATE THE KEYBOARD
+;  DRIVER:
+;	MSKENABLE	.SET	TRUE
+;
+;======================================================================
+;
+; TODO:
+;	IMPLEMENT MULTIBYTE SCAN CODES (ARROW KEYS, ETC)
+;
+;======================================================================
+; DRIVER - CONSTANTS
+;======================================================================
+;
+MKY_REGA		.EQU	$A8
+MKY_REGB		.EQU	$A9
+MKY_REGC		.EQU	$AA
+MKY_REGCMD		.EQU	$AB
+
+PPICMD_CLOW_IN		.EQU	1
+PPICMD_CLOW_OUT		.EQU	0
+PPICMD_B_IN		.EQU	2
+PPICMD_B_OUT		.EQU	0
+PPICMD_GB_MODE_0	.EQU	0
+PPICMD_GB_MODE_1	.EQU	4
+PPICMD_CHIGH_IN		.EQU	8
+PPICMD_CHIGH_OUT	.EQU	0
+PPICMD_A_IN		.EQU	16
+PPICMD_A_OUT		.EQU	0
+PPICMD_GA_MODE_0	.EQU	0
+PPICMD_GA_MODE_1	.EQU	32
+PPICMD_GA_MODE_2	.EQU	64
+PPICMD_COMMAND		.EQU	128
+
+; COUNT FOR PERIOD TO START REPEATING CHARACTERS
+KEY_REPEAT_INIT:	.EQU	20
+
+; COUNT FOR PERIOD BETWEEN AUTO REPEATING CHARACTERS
+KEY_REPEAT_PERIOD:	.EQU	5
+
+; COUNT FOR INTERRUPT HANDLER TO TRIGGER KEYBOARD SCANNER (EG: SCAN KEYBOARD ONLY EVERY 3RD INTERRUPT (3/60))
+SCAN_INT_PERIOD:	.EQU	3
+
+; NUMBER OF ROWS SUPPORTED BY THE KEYBOARD
+MATRIX_ROW_COUNT:	.EQU	9
+
+; ASSEMBLER SEEMS TO HAVE WEIRD PROBLEM WITH "'"
+SINGLE_QUOTE		.EQU	39
+
+; SPECIAL MADE UP VALUE TO MAP FOR CAPS LOCK
+CAPS_CODE:		.EQU	$D8
+
+; TIMING CONSTANTS
+;
+MKY_WAITTO	.EQU	0	; 0 IS MAX WAIT (256)
+;
+; STATUS BITS (FOR MKY_STATUS)
+;
+MKY_EXT		.EQU	01H	; BIT 0, EXTENDED SCANCODE ACTIVE
+MKY_BREAK	.EQU	02H	; BIT 1, THIS IS A KEY UP (BREAK) EVENT
+MKY_KEYRDY	.EQU	80H	; BIT 7, INDICATES A DECODED KEYCODE IS READY
+;
+; STATE BITS (FOR MKY_STATE, MKY_LSTATE, MKY_RSTATE)
+;
+MKY_SHIFT	.EQU	01H	; BIT 0, SHIFT ACTIVE (PRESSED)
+MKY_CTRL	.EQU	02H	; BIT 1, CONTROL ACTIVE (PRESSED)
+MKY_ALT		.EQU	04H	; BIT 2, ALT ACTIVE (PRESSED)
+MKY_WIN		.EQU	08H	; BIT 3, WIN ACTIVE (PRESSED)
+MKY_SCRLCK	.EQU	10H	; BIT 4, CAPS LOCK ACTIVE (TOGGLED ON)
+MKY_NUMLCK	.EQU	20H	; BIT 5, NUM LOCK ACTIVE (TOGGLED ON)
+MKY_CAPSLCK	.EQU	40H	; BIT 6, SCROLL LOCK ACTIVE (TOGGLED ON)
+MKY_NUMPAD	.EQU	80H	; BIT 7, NUM PAD KEY (KEY PRESSED IS ON NUM PAD)
+;
+MKY_DEFRPT	.EQU	$40		; DEFAULT REPEAT RATE (.5 SEC DELAY, 30CPS)
+MKY_DEFSTATE	.EQU	MKY_NUMLCK	; DEFAULT STATE (NUM LOCK ON)
+
+; --------------.-----------------------
+; SCAN CODE TABL.ES
+
+S_A		.EQU	$1C
+S_B		.EQU	$32
+S_C		.EQU	$21
+S_D		.EQU	$23
+S_E		.EQU	$24
+S_F		.EQU	$2B
+S_G		.EQU	$34
+S_H		.EQU	$33
+S_I		.EQU	$43
+S_J		.EQU	$3B
+S_K		.EQU	$42
+S_L		.EQU	$4B
+S_M		.EQU	$3A
+S_N		.EQU	$31
+S_O		.EQU	$44
+S_P		.EQU	$4D
+S_Q		.EQU	$15
+S_R		.EQU	$2D
+S_S		.EQU	$1B
+S_T		.EQU	$2C
+S_U		.EQU	$3C
+S_V		.EQU	$2A
+S_W		.EQU	$1D
+S_X		.EQU	$22
+S_Y		.EQU	$35
+S_Z		.EQU	$1A
+S_0		.EQU	$45
+S_1		.EQU	$16
+S_2		.EQU	$1E
+S_3		.EQU	$26
+S_4		.EQU	$25
+S_5		.EQU	$2E
+S_6		.EQU	$36
+S_7		.EQU	$3D
+S_8		.EQU	$3E
+S_9		.EQU	$46
+S_SEMICOLON	.EQU	$4C
+S_RBRACKET	.EQU	$5B
+S_LBRACKET	.EQU	$54
+S_BSLASH	.EQU	$5D
+S_EQUALS	.EQU	$55
+S_MINUS		.EQU	$4E
+S_SLASH		.EQU	$4A
+S_PERIOD	.EQU	$49
+S_COMMA		.EQU	$41
+S_TILDA		.EQU	$0E
+S_QUOTE		.EQU	$52
+S_SHIFT		.EQU	$12
+S_CTRL		.EQU	$14
+S_CAPSLOCK	.EQU	$58
+S_DEAD		.EQU	$00
+S_GRAPH		.EQU	$00
+S_CODE		.EQU	$00	; perhaps can be mapped to RIGHT ALT
+S_F1		.EQU	$05
+S_F2		.EQU	$06
+S_F3		.EQU	$04
+S_F4		.EQU	$0C
+S_F5		.EQU	$03
+S_ESC		.EQU	$76
+S_TAB		.EQU	$0D
+S_STOP		.EQU	$00	; MAKE -> E0 69, BREAK -> E0 F0 69
+S_BACKSPACE	.EQU	$66
+S_SELECT	.EQU	$00
+S_RETURN	.EQU	$5A
+
+S_RIGHT		.EQU	$00	; E0 74 --- E0 F0 74
+S_DOWN		.EQU	$00	; E0 72 --- E0 F0 72
+S_UP		.EQU	$00	; E0 75 --- E0 F0 75
+S_LEFT		.EQU	$00	; E0 6B --- E0 F0 6B
+S_DELETE	.EQU	$00	; E0 71 --- E0 F0 71
+S_INSERT	.EQU	$00	; E0 70 --- E0 F0 70
+S_HOME		.EQU	$00	; E0 6C --- E0 F0 6C
+S_SPACE		.EQU	$29
+
+SCANCODE_TBL:
+	.DB	S_7, 		S_6, 		S_5, 		S_4, 		S_3, 		S_2, 		S_1, 		S_0		; 00
+	.DB	S_SEMICOLON, 	S_RBRACKET, 	S_LBRACKET, 	S_BSLASH, 	S_EQUALS, 	S_MINUS, 	S_9, 		S_8		; 01
+	.DB	S_B, 		S_A, 		S_DEAD,		S_SLASH,	S_PERIOD,	S_COMMA,	S_TILDA,	S_QUOTE		; 02
+	.DB	S_J,		S_I,		S_H,		S_G,		S_F,		S_E,		S_D,		S_C		; 03
+	.DB	S_R,		S_Q,		S_P,		S_O,		S_N,		S_M,		S_L, 		S_K		; 04
+	.DB	S_Z,		S_Y,		S_X,		S_W,		S_V,		S_U,		S_T,		S_S		; 05
+	.DB	S_F3,		S_F2,		S_F1,		S_CODE,		S_CAPSLOCK, 	S_GRAPH,	S_CTRL,		S_SHIFT		; 06
+	.DB	S_RETURN,	S_SELECT,	S_BACKSPACE,	S_STOP,		S_TAB,		S_ESC,		S_F5,		S_F4		; 07
+	.DB	S_RIGHT,	S_DOWN,		S_UP,		S_LEFT,		S_DELETE,	S_INSERT,	S_HOME,		S_SPACE		; 08
+
+;__________________________________________________________________________________________________
+; KEYBOARD INITIALIZATION
+;__________________________________________________________________________________________________
+;
+
+MKY_INIT:
+	CALL	NEWLINE			; FORMATTING
+	PRTS("MSXKYB: IO=0x$")
+	LD	A, MKY_REGA
+	CALL	PRTHEXBYTE
+	CALL	PC_SPACE		; FORMATTING
+
+#IF (MKYKBLOUT == KBD_US)
+	PRTS("US LAYOUT$")
+#ELSE
+#IF (MKYKBLOUT == KBD_DE)
+	PRTS("GERMAN LAYOUT$")
+#ELSE
+	FAIL !!!
+	UKNOWN KEYBOARD TYPE
+#ENDIF
+#ENDIF
+
+	; CONFIGURE 8255 PPI PORTS
+	; A - INPUT (NOT USED)
+	; B - INPUT (COLUMN LINES)
+	; C - OUTPUT (ROW LINE SELECTION)
+
+	LD	A, PPICMD_COMMAND | PPICMD_GA_MODE_0 | PPICMD_GB_MODE_0 | PPICMD_A_IN | PPICMD_B_IN | PPICMD_CLOW_OUT | PPICMD_CHIGH_OUT
+	OUT	(MKY_REGCMD), A
+
+	LD	A, 64	; CAPS OFF
+	OUT	(MKY_REGC), A
+
+	RET
+;
+;__________________________________________________________________________________________________
+; KEYBOARD FLUSH
+;__________________________________________________________________________________________________
+;
+MKY_FLUSH:
+	XOR	A			; A = 0
+	LD	(MKY_STATUS),A		; CLEAR STATUS
+	RET
+;
+;__________________________________________________________________________________________________
+; KEYBOARD STATUS
+;__________________________________________________________________________________________________
+;
+MKY_STAT:
+	CALL	MKY_DECODE		; CHECK THE KEYBOARD
+	JP	Z,CIO_IDLE		; RET VIA IDLE PROCESSING IF NO KEY
+	RET
+;
+;__________________________________________________________________________________________________
+; KEYBOARD READ
+;
+;   RETURNS ASCII VALUE IN E.  SEE END OF FILE FOR VALUES RETURNED FOR SPECIAL KEYS
+;   LIKE PGUP, ARROWS, FUNCTION KEYS, ETC.
+;__________________________________________________________________________________________________
+;
+MKY_READ:
+	CALL	MKY_STAT		; KEY READY?
+;
+	JR	Z, MKY_READ		; NOT READY, KEEP TRYING
+	LD	A,(MKY_STATE)		; GET STATE
+	AND	$01			; ISOLATE EXTENDED SCANCODE BIT
+	RRCA				; ROTATE IT TO HIGH ORDER BIT
+	LD	E,A			; SAVE IT IN E FOR NOW
+	LD	A,(MKY_SCANCODE)	; GET SCANCODE
+	OR	E			; COMBINE WITH EXTENDED BIT
+	LD	C,A			; STORE IT IN C FOR RETURN
+	LD	A,(MKY_KEYCODE)		; GET KEYCODE
+	LD	E,A			; SAVE IT IN E
+	LD	A,(MKY_STATE)		; GET STATE FLAGS
+	LD	D,A			; SAVE THEM IN D
+	XOR	A			; SIGNAL SUCCESS
+	LD	(MKY_STATUS),A		; CLEAR STATUS TO INDICATE BYTE RECEIVED
+	RET
+;
+;__________________________________________________________________________________________________
+; RETRIEVE THE NEXT SCAN BYTES AVAILABLE
+;
+; RETURNS
+;	; SUCUESS/FAILURE IN A
+; 	; NUMBER OF BYTES RETURNED IN B (ZERO IF NO SCAN CODES AVAILABLE)
+; 	; SCAN CODE BYTES IN D, E, H, L, C
+;
+;__________________________________________________________________________________________________
+MKY_RDSCAN:
+	LD	A, (MKY_SCANBUFFLEN)
+	LD	B, A
+	LD	A, (MKY_SCANBUFF)
+	LD	D, A
+	LD	A, (MKY_SCANBUFF+1)
+	LD	E, A
+	LD	A, (MKY_SCANBUFF+2)
+	LD	H, A
+	LD	A, (MKY_SCANBUFF+3)
+	LD	L, A
+	LD	A, (MKY_SCANBUFF+4)
+	LD	C, A
+
+	XOR	A
+	LD	(MKY_SCANBUFFLEN), A
+	RET
+;
+;__________________________________________________________________________________________________
+; HARDWARE INTERFACE
+;
+;
+; KEYBOARD INPUT STATUS
+;   A=0, Z SET FOR NOTHING PENDING, OTHERWISE DATA PENDING
+;
+MKY_IST:
+	LD	A, (MKY_SCANBUFFLEN)
+	OR	A
+	RET
+;__________________________________________________________________________________________________
+;
+; GET A RAW DATA BYTE FROM KEYBOARD INTERFACE INTO A WITH TIMEOUT
+;
+MKY_GETDATA:
+	LD	B,MKY_WAITTO		; SETUP TO LOOP
+MKY_GETDATA0:
+	CALL	MKY_IST			; GET INPUT REGISTER STATUS
+	JR	NZ,MKY_GETDATA1		; BYTE PENDING, GO GET IT
+	CALL	DELAY			; WAIT A BIT
+	DJNZ	MKY_GETDATA0		; LOOP UNTIL COUNTER EXHAUSTED
+	XOR	A			; NO DATA, RETURN ZERO
+	RET
+MKY_GETDATA1:
+	CALL	MKY_READBYT
+	OR	A			; SET FLAGS
+	RET
+;__________________________________________________________________________________________________
+;
+; GET A RAW DATA BYTE FROM KEYBOARD INTERFACE INTO A WITH NOTIMEOUT
+;
+MKY_GETDATAX:
+	CALL	MKY_IST			; GET INPUT REGISTER STATUS
+	RET	Z			; NOTHING THERE, DONE
+	JR	MKY_GETDATA1		; GO GET IT
+
+;__________________________________________________________________________________________________
+; UPDATE KEYBOARD LEDS BASED ON CURRENT TOGGLE FLAGS
+;__________________________________________________________________________________________________
+;
+MKY_SETLEDS:
+	LD	A,(MKY_STATE)		; LOAD THE STATE FLAGS
+	AND	MKY_CAPSLCK		; CHECK CAPS LOCK
+	JP	Z, MKY_LEDCAPSOFF
+	JP	MKY_LEDCAPSON
+
+;__________________________________________________________________________________________________
+; DECODING ENGINE
+;__________________________________________________________________________________________________
+MKY_DECODE:
+;
+;  RUN THE DECODING ENGINE UNTIL EITHER: 1) NO MORE SCANCODES ARE AVAILABLE
+;  FROM THE KEYBOARD, OR 2) A DECODED KEY VALUE IS AVAILABLE
+;
+;  RETURNS A=0 AND Z SET IF NO KEYCODE READY, OTHERWISE A DECODED KEY VALUE IS AVAILABLE.
+;  THE DECODED KEY VALUE AND KEY STATE IS STORED IN MKY_KEYCODE AND MKY_STATE.
+;
+;  MKY_STATUS IS NOT CLEARED AT START. IT IS THE CALLER'S RESPONSIBILITY
+;  TO CLEAR MKY_STATUS WHEN IT HAS RETRIEVED A PENDING VALUE.  IF DECODE IS CALLED
+;  WITH A KEYCODE STILL PENDING, IT WILL JUST RETURN WITHOUT DOING ANYTHING.
+;
+; Step 0: Check keycode buffer
+;   if status[keyrdy]
+;     return
+;
+; Step 1: Get scancode
+;   if no scancode ready
+;     return
+;   read scancode
+;
+; Step 2: Detect and handle special keycodes
+;   if scancode == $AA
+;     *** handle hot insert somehow ***
+;
+; Step 3: Detect and handle scancode prefixes
+;   if scancode == $E0
+;     set status[extended]
+;     goto Step 1
+;
+;   if scancode == $E1
+;     *** handle pause key somehow ***
+;
+; Step 4: Detect and flag break event
+;   *** scancode set #1 variation ***
+;     set status[break] = high bit of scancode
+;     clear high order bit
+;     continue to Step 5
+;   *** scancode set #2 variation ***
+;     if scancode == $F0
+;       set status[break]
+;       goto Step 1
+;
+; Step 5: Map scancode to keycode
+;   if status[extended]
+;     apply extended-map[scancode] -> keycode
+;   else if state[shifted]
+;     apply shifted-map[scancode] -> keycode
+;   else
+;     apply normal-map[scancode] -> keycode
+;
+; Step 6: Handle modifier keys
+;   if keycode is modifier (shift, ctrl, alt, win)
+;     set (l/r)state[<modifier>] = not status[break]
+;     clear modifier bits in state
+;     set state = (lstate OR rstate OR state)
+;     goto New Key
+;
+; Step 7: Complete procesing of key break events
+;   if status[break]
+;     goto New Key
+;
+; Step 8: Handle toggle keys
+;   if keycode is toggle (capslock, numlock, scrolllock)
+;     invert (XOR) state[<toggle>]
+;     update keyboard LED's
+;     goto New Key
+;
+; Step 9: Adjust keycode for control modifier
+;   if state[ctrl]
+;     if keycode is 'a'-'z'
+;       subtract 20 (clear bit 5) from keycode
+;     if keycode is '@'-'_'
+;       subtract 40 (clear bit 6) from keycode
+;
+; Step 10: Adjust keycode for caps lock
+;   if state[capslock]
+;     if keycode is 'a'-'z' OR 'A'-'Z'
+;       toggle (XOR) bit 5 of keycode
+;
+; Step 11: Handle num pad keys
+;   clear state[numpad]
+;   if keycode is numpad
+;     set state[numpad]
+;     if state[numlock]
+;       toggle (XOR) bit 4 of keycode
+;     apply numpad-map[keycode] -> keycode
+;
+; Step 12: Detect unknown/invalid keycodes
+;   if keycode == $FF
+;     goto New Key
+;
+; Step 13: Done
+;   set status[keyrdy]
+;   return
+;
+; New Key:
+;   clear status
+;   goto Step 1
+;
+MKY_DEC0:	; CHECK KEYCODE BUFFER
+	LD	A,(MKY_STATUS)		; GET CURRENT STATUS
+	AND	MKY_KEYRDY		; ISOLATE KEY READY FLAG
+	RET	NZ			; ABORT IF KEY IS ALREADY PENDING
+
+MKY_DEC1:	; PROCESS NEXT SCANCODE
+	CALL	MKY_GETDATAX		; GET THE SCANCODE
+	RET	Z			; NO KEY READY, RETURN WITH A=0, Z SET
+	LD	(MKY_SCANCODE),A	; SAVE SCANCODE
+
+MKY_DEC2:	; DETECT AND HANDLE SPECIAL KEYCODES
+	LD	A,(MKY_SCANCODE)	; GET THE CURRENT SCANCODE
+	CP	$AA			; KEYBOARD INSERTION?
+	JR	NZ,MKY_DEC3		; NOPE, BYPASS
+	CALL	MKY_SETLEDS		; SET LEDS
+	JP	MKY_DECNEW		; RESTART THE ENGINE
+
+MKY_DEC3:	; DETECT AND HANDLE SCANCODE PREFIXES
+	LD	A,(MKY_SCANCODE)	; GET THE CURRENT SCANCODE
+
+MKY_DEC3A:	; HANDLE SCANCODE PREFIX $E0 (EXTENDED SCANCODE FOLLOWS)
+	CP	$E0			; EXTENDED KEY PREFIX $E0?
+	JR	NZ,MKY_DEC3B		; NOPE MOVE ON
+	LD	A,(MKY_STATUS)		; GET STATUS
+	OR	MKY_EXT			; SET EXTENDED BIT
+	LD	(MKY_STATUS),A		; SAVE STATUS
+	JR	MKY_DEC1		; LOOP TO DO NEXT SCANCODE
+
+MKY_DEC3B:	; HANDLE SCANCODE PREFIX $E1 (PAUSE KEY)
+	CP	$E1			; EXTENDED KEY PREFIX $E1
+	JR	NZ,MKY_DEC4		; NOPE MOVE ON
+	LD	A,$EE			; MAP TO KEYCODE $EE
+	LD	(MKY_KEYCODE),A		; SAVE IT
+		; SWALLOW NEXT 7 SCANCODES
+	LD	B,7			; LOOP 5 TIMES
+MKY_DEC3B1:
+	PUSH	BC
+	CALL	MKY_GETDATA		; RETRIEVE NEXT SCANCODE
+	POP	BC
+	DJNZ	MKY_DEC3B1		; LOOP AS NEEDED
+	JP	MKY_DEC6		; RESUME AFTER MAPPING
+
+MKY_DEC4:	; DETECT AND FLAG BREAK EVENT
+	CP	$F0			; BREAK (KEY UP) PREFIX?
+	JR	NZ,MKY_DEC5		; NOPE MOVE ON
+	LD	A,(MKY_STATUS)		; GET STATUS
+	OR	MKY_BREAK		; SET BREAK BIT
+	LD	(MKY_STATUS),A		; SAVE STATUS
+	JR	MKY_DEC1		; LOOP TO DO NEXT SCANCODE
+
+MKY_DEC5:	; MAP SCANCODE TO KEYCODE
+	LD	A,(MKY_STATUS)		; GET STATUS
+	AND	MKY_EXT			; EXTENDED BIT SET?
+	JR	Z,MKY_DEC5C		; NOPE, MOVE ON
+
+		; PERFORM EXTENDED KEY MAPPING
+	LD	A,(MKY_SCANCODE)	; GET SCANCODE
+	LD	E,A			; STASH IT IN E
+	LD	HL,MKY_MAPEXT		; POINT TO START OF EXT MAP TABLE
+MKY_DEC5A:
+	LD	A,(HL)			; GET FIRST BYTE OF PAIR
+	CP	$00			; END OF TABLE?
+	JP	Z,MKY_DECNEW		; UNKNOWN OR BOGUS, START OVER
+	INC	HL			; INC HL FOR FUTURE
+	CP	E			; DOES MATCH BYTE EQUAL SCANCODE?
+	JR	Z,MKY_DEC5B		; YES! JUMP OUT
+	INC	HL			; BUMP TO START OF NEXT PAIR
+	JR	MKY_DEC5A		; LOOP TO CHECK NEXT TABLE ENTRY
+MKY_DEC5B:
+	LD	A,(HL)			; GET THE KEYCODE VIA MAPPING TABLE
+	LD	(MKY_KEYCODE),A		; SAVE IT
+	JR	MKY_DEC6
+
+MKY_DEC5C:	; PERFORM REGULAR KEY (NOT EXTENDED) KEY MAPPING
+	LD	A,(MKY_SCANCODE)	; GET THE SCANCODE
+	CP	MKY_MAPSIZ		; COMPARE TO SIZE OF TABLE
+	JR	NC,MKY_DEC6		; PAST END, SKIP OVER LOOKUP
+
+		; SETUP POINTER TO MAPPING TABLE BASED ON SHIFTED OR UNSHIFTED STATE
+	LD	A,(MKY_STATE)		; GET STATE
+	AND	MKY_SHIFT		; SHIFT ACTIVE?
+	LD	HL,MKY_MAPSTD		; LOAD ADDRESS OF NON-SHIFTED MAPPING TABLE
+	JR	Z,MKY_DEC5D		; NON-SHIFTED, MOVE ON
+	LD	HL,MKY_MAPSHIFT		; LOAD ADDRESS OF SHIFTED MAPPING TABLE
+MKY_DEC5D:
+	LD	A,(MKY_SCANCODE)	; GET THE SCANCODE
+	LD	E,A			; SCANCODE TO E FOR TABLE OFFSET
+	LD	D,0			; D -> 0
+	ADD	HL,DE			; COMMIT THE TABLE OFFSET TO HL
+	LD	A,(HL)			; GET THE KEYCODE VIA MAPPING TABLE
+	LD	(MKY_KEYCODE),A		; SAVE IT
+
+MKY_DEC6:	; HANDLE MODIFIER KEYS
+	LD	A,(MKY_KEYCODE)		; MAKE SURE WE HAVE KEYCODE
+	CP	$B8			; END OF MODIFIER KEYS
+	JR	NC,MKY_DEC7		; BYPASS MODIFIER KEY CHECKING
+	CP	$B0			; START OF MODIFIER KEYS
+	JR	C,MKY_DEC7		; BYPASS MODIFIER KEY CHECKING
+
+	LD	B,4			; LOOP COUNTER TO LOOP THRU 4 MODIFIER BITS
+	LD	E,$80			; SETUP E TO ROATE THROUGH MODIFIER STATE BITS
+	SUB	$B0 - 1			; SETUP A TO DECREMENT THROUGH MODIFIER VALUES
+
+MKY_DEC6A:
+	RLC	E			; SHIFT TO NEXT MODIFIER STATE BIT
+	DEC	A			; L-MODIFIER?
+	JR	Z,MKY_DEC6B		; YES, HANDLE L-MODIFIER MAKE/BREAK
+	DEC	A			; R-MODIFIER?
+	JR	Z,MKY_DEC6C		; YES, HANDLE R-MODIFIER MAKE/BREAK
+	DJNZ	MKY_DEC6A		; LOOP THRU 4 MODIFIER BITS
+	JR	MKY_DEC7		; FAILSAFE, SHOULD NEVER GET HERE!
+
+MKY_DEC6B:	; LEFT STATE KEY MAKE/BREAK (STATE BIT TO SET/CLEAR IN E)
+	LD	HL,MKY_LSTATE		; POINT TO LEFT STATE BYTE
+	JR	MKY_DEC6D		; CONTINUE
+
+MKY_DEC6C:	; RIGHT STATE KEY MAKE/BREAK (STATE BIT TO SET/CLEAR IN E)
+	LD	HL,MKY_RSTATE		; POINT TO RIGHT STATE BYTE
+	JR	MKY_DEC6D		; CONTINUE
+
+MKY_DEC6D:	; BRANCH BASED ON WHETHER THIS IS A MAKE OR BREAK EVENT
+	LD	A,(MKY_STATUS)		; GET STATUS FLAGS
+	AND	MKY_BREAK		; BREAK EVENT?
+	JR	Z,MKY_DEC6E		; NO, HANDLE A MODIFIER KEY MAKE EVENT
+	JR	MKY_DEC6F		; YES, HANDLE A MODIFIER BREAK EVENT
+
+MKY_DEC6E:	; HANDLE STATE KEY MAKE EVENT
+	LD	A,E			; GET THE BIT TO SET
+	OR	(HL)			; OR IN THE CURRENT BITS
+	LD	(HL),A			; SAVE THE RESULT
+	JR	MKY_DEC6G		; CONTINUE
+
+MKY_DEC6F:	; HANDLE STATE KEY BREAK EVENT
+	LD	A,E			; GET THE BIT TO CLEAR
+	XOR	$FF			; FLIP ALL BITS TO SETUP FOR A CLEAR OPERATION
+	AND	(HL)			; AND IN THE FLIPPED BITS TO CLEAR DESIRED BIT
+	LD	(HL),A			; SAVE THE RESULT
+	JR	MKY_DEC6G		; CONTINUE
+
+MKY_DEC6G:	; COALESCE L/R STATE FLAGS
+	LD	A,(MKY_STATE)		; GET EXISTING STATE BITS
+	AND	$F0			; GET RID OF OLD MODIFIER BITS
+	LD	DE,(MKY_LSTATE)		; LOAD BOTH L/R STATE BYTES IN D/E
+	OR	E			; MERGE IN LEFT STATE BITS
+	OR	D			; MERGE IN RIGHT STATE BITS
+	LD	(MKY_STATE),A		; SAVE IT
+	JP	MKY_DECNEW		; DONE WITH CURRENT KEYSTROKE
+
+MKY_DEC7:	; COMPLETE PROCESSING OF EXTENDED AND KEY BREAK EVENTS
+	LD	A,(MKY_STATUS)		; GET CURRENT STATUS FLAGS
+	AND	MKY_BREAK		; IS THIS A KEY BREAK EVENT?
+	JP	NZ,MKY_DECNEW		; PROCESS NEXT KEY
+
+MKY_DEC8:	; HANDLE TOGGLE KEYS
+	LD	A,(MKY_KEYCODE)		; GET THE CURRENT KEYCODE INTO A
+	LD	E,MKY_CAPSLCK		; SETUP E WITH CAPS LOCK STATE BIT
+	CP	$BC			; IS THIS THE CAPS LOCK KEY?
+	JR	Z,MKY_DEC8A		; YES, GO TO BIT SET ROUTINE
+	LD	E,MKY_NUMLCK		; SETUP E WITH NUM LOCK STATE BIT
+	CP	$BD			; IS THIS THE NUM LOCK KEY?
+	JR	Z,MKY_DEC8A		; YES, GO TO BIT SET ROUTINE
+	LD	E,MKY_SCRLCK		; SETUP E WITH SCROLL LOCK STATE BIT
+	CP	$BE			; IS THIS THE SCROLL LOCK KEY?
+	JR	Z,MKY_DEC8A		; YES, GO TO BIT SET ROUTINE
+	JR	MKY_DEC9		; NOT A TOGGLE KEY, CONTINUE
+
+MKY_DEC8A:	; RECORD THE TOGGLE
+	LD	A,(MKY_STATE)		; GET THE CURRENT STATE FLAGS
+	XOR	E			; SET THE TOGGLE KEY BIT FROM ABOVE
+	LD	(MKY_STATE),A		; SAVE IT
+	CALL	MKY_SETLEDS		; UPDATE LED LIGHTS ON KBD
+	JP	MKY_DECNEW		; RESTART DECODER FOR A NEW KEY
+
+MKY_DEC9:	; ADJUST KEYCODE FOR CONTROL MODIFIER
+	LD	A,(MKY_STATE)		; GET THE CURRENT STATE BITS
+	AND	MKY_CTRL		; CHECK THE CONTROL BIT
+	JR	Z,MKY_DEC10		; CONTROL KEY NOT PRESSED, MOVE ON
+	LD	A,(MKY_KEYCODE)		; GET CURRENT KEYCODE IN A
+	CP	'a'			; COMPARE TO LOWERCASE A
+	JR	C,MKY_DEC9A		; BELOW IT, BYPASS
+	CP	'z' + 1			; COMPARE TO LOWERCASE Z
+	JR	NC,MKY_DEC9A		; ABOVE IT, BYPASS
+	RES	5,A			; KEYCODE IN LOWERCASE A-Z RANGE CLEAR BIT 5 TO MAKE IT UPPERCASE
+MKY_DEC9A:
+	CP	'@'			; COMPARE TO @
+	JR	C,MKY_DEC10		; BELOW IT, BYPASS
+	CP	'_' + 1			; COMPARE TO _
+	JR	NC,MKY_DEC10		; ABOVE IT, BYPASS
+	RES	6,A			; CONVERT TO CONTROL VALUE BY CLEARING BIT 6
+	LD	(MKY_KEYCODE),A		; UPDATE KEYCODE TO CONTROL VALUE
+
+MKY_DEC10:	; ADJUST KEYCODE FOR CAPS LOCK
+	LD	A,(MKY_STATE)		; LOAD THE STATE FLAGS
+	AND	MKY_CAPSLCK		; CHECK CAPS LOCK
+	JR	Z,MKY_DEC11		; CAPS LOCK NOT ACTIVE, MOVE ON
+	LD	A,(MKY_KEYCODE)		; GET THE CURRENT KEYCODE VALUE
+	CP	'a'			; COMPARE TO LOWERCASE A
+	JR	C,MKY_DEC10A		; BELOW IT, BYPASS
+	CP	'z' + 1			; COMPARE TO LOWERCASE Z
+	JR	NC,MKY_DEC10A		; ABOVE IT, BYPASS
+	JR	MKY_DEC10B		; IN RANGE LOWERCASE A-Z, GO TO CASE SWAPPING LOGIC
+MKY_DEC10A:
+	CP	'A'			; COMPARE TO UPPERCASE A
+	JR	C,MKY_DEC11		; BELOW IT, BYPASS
+	CP	'Z' + 1			; COMPARE TO UPPERCASE Z
+	JR	NC,MKY_DEC11		; ABOVE IT, BYPASS
+	JR	MKY_DEC10B		; IN RANGE UPPERCASE A-Z, GO TO CASE SWAPPING LOGIC
+MKY_DEC10B:
+	LD	A,(MKY_KEYCODE)		; GET THE CURRENT KEYCODE
+	XOR	$20			; FLIP BIT 5 TO SWAP UPPER/LOWER CASE
+	LD	(MKY_KEYCODE),A		; SAVE IT
+
+MKY_DEC11:	; HANDLE NUM PAD KEYS
+	LD	A,(MKY_STATE)		; GET THE CURRENT STATE FLAGS
+	AND	$7F;~MKY_NUMPAD		; ASSUME NOT A NUMPAD KEY, CLEAR THE NUMPAD BIT
+	LD	(MKY_STATE),A		; SAVE IT
+
+	LD	A,(MKY_KEYCODE)		; GET THE CURRENT KEYCODE
+	AND	11100000B		; ISOLATE TOP 3 BITS
+	CP	11000000B		; IS IN NUMPAD RANGE?
+	JR	NZ,MKY_DEC12		; NOPE, GET OUT
+
+	LD	A,(MKY_STATE)		; LOAD THE CURRENT STATE FLAGS
+	OR	MKY_NUMPAD		; TURN ON THE NUMPAD BIT
+	LD	(MKY_STATE),A		; SAVE IT
+
+	AND	MKY_NUMLCK		; IS NUM LOCK BIT SET?
+	JR	Z,MKY_DEC11A		; NO, SKIP NUMLOCK PROCESSING
+	LD	A,(MKY_KEYCODE)		; GET THE KEYCODE
+	XOR	$10			; FLIP VALUES FOR NUMLOCK
+	LD	(MKY_KEYCODE),A		; SAVE IT
+
+MKY_DEC11A:	; APPLY NUMPAD MAPPING
+	LD	A,(MKY_KEYCODE)		; GET THE CURRENT KEYCODE
+	LD	HL,MKY_MAPNUMPAD	; LOAD THE START OF THE MAPPING TABLE
+	SUB	$C0			; KEYCODES START AT $C0
+	LD	E,A			; INDEX TO E
+	LD	D,0			; D IS ZERO
+	ADD	HL,DE			; POINT TO RESULT OF MAPPING
+	LD	A,(HL)			; GET IT IN A
+	LD	(MKY_KEYCODE),A		; SAVE IT
+
+MKY_DEC12:	; DETECT UNKNOWN/INVALID KEYCODES
+	LD	A,(MKY_KEYCODE)		; GET THE FINAL KEYCODE
+	CP	$FF			; IS IT $FF (UNKNOWN/INVALID)
+	JP	Z,MKY_DECNEW		; IF SO, JUST RESTART THE ENGINE
+
+MKY_DEC13:	; DONE - RECORD RESULTS
+	LD	A,(MKY_STATUS)		; GET CURRENT STATUS
+	OR	MKY_KEYRDY		; SET KEY READY BIT
+	LD	(MKY_STATUS),A		; SAVE IT
+	XOR	A			; A=0
+	INC	A			; SIGNAL SUCCESS WITH A=1
+	RET
+
+MKY_DECNEW:	; START NEW KEYPRESS (CLEAR ALL STATUS BITS)
+	XOR	A			; A = 0
+	LD	(MKY_STATUS),A		; CLEAR STATUS
+	JP	MKY_DEC1		; RESTART THE ENGINE
+
+;
+;__________________________________________________________________________________________________
+; INTERRUPT HANDLER
+;
+; IF MKY_SCANBUFFF HAS CONTENT, DO NOTHING
+; OTHERWISE, SCAN KEYBOARD AND IF A KEY EVENT IS DETECTED
+; WRITE SCANCODES TO MKY_SCANBUFFF
+;
+; ALSO GENERATE KEY REPEAT EVENTS, IF KEY HELD DOWN
+;__________________________________________________________________________________________________
+;
+MKY_INT:
+	PUSH	BC
+	PUSH	DE
+	PUSH	IX
+
+	LD      A, (SCNCNT)			; SCAN THE KEYBOARD EVERY 'SCAN_INT_PERIOD' INTERRUPTS.
+	DEC     A
+	LD      (SCNCNT), A
+	JR	NZ, MKY_INT_END
+
+	LD      A, SCAN_INT_PERIOD
+	LD      (SCNCNT), A
+
+	LD	A, (MKY_SCANBUFFLEN)			; SKIP SCANNING UNTIL CODE BUFFER IS EMPTY
+	OR	A
+	JR	NZ, MKY_INT_END
+
+	CALL    MKY_SCAN
+	CALL	MKY_GENSCODE
+
+MKY_INT_END:
+	CALL	MKY_RPTGEN
+	POP	IX
+	POP	DE
+	POP	BC
+	RET
+;
+; SCAN KEYBOARD AND STORE ALL COLUMN RESULTS PER ROW AT NEWKEY
+;
+MKY_SCAN:
+	IN      A, (MKY_REGC)			; READ AND MASK THE CURRENT STATE OF PPI PORT C
+	AND     $F0
+	LD      C, A
+	LD      B, MATRIX_ROW_COUNT		; PREPARE TO LOOP THRU THE SCAN ROWS
+	LD      HL, NEWKEY
+
+MKY_SCAN_LP:
+	LD      A, C
+	OUT     (MKY_REGC), A			; SET ACTIVE ROW
+	IN      A, (MKY_REGB)			; READ ACTIVE COLUMN DATA
+	LD      (HL), A				; STORE COLUMN READ VALUE
+	INC     HL
+	INC     C
+	DJNZ    MKY_SCAN_LP			; LOOP UNTIL ALL ROWS READ
+	RET
+;
+;__________________________________________________________________________________________________
+; COMPARE OLDKEY TO NEWKEY
+; GENERATE SCAN CODES
+;
+; FOR EACH BIT IN OLDKEY AND NEWKEY
+; IF BOTH = 1, THEN NO KEY PRESS - NOTHING CHANGED
+; IF BOTH = 0, THEN KEY WAS AND IS STILL PRESSED - NOTHING CHANGED
+; IF OLD = 1 AND NEW = 0, KEY WAS PRESSED
+; IF OLD = 0 AND NEW = 1, KEY WAS RELEASED
+; STOP OF FIRST CHANGE - STORE IN BUFFER - THEN NOTHING HAPPENS,
+; UNTIL MKY_RDSCAN IS CALLED AND CLEARS THE SCAN BUFFER
+; ALSO RESET MKY_RPTACTIVE IS A KEY IS HELD DOWN
+MKY_GENSCODE:
+	XOR	A
+	LD	(MKY_RPTACTIVE), A		; CLEAR FLAG TO INDICATE A KEYHOLD STATE
+
+	LD      HL, OLDKEY
+	LD      DE, NEWKEY
+	LD	A, 0
+	EX	AF, AF'				; ROW COUNT IN A'
+
+MKY_GENSCODE_LPR:
+	LD	B, 8				; 8 COLUMN BITS
+	LD	C, (HL)
+	LD	A, (DE)
+
+MKY_GENSCODE_LPC:
+	RRCA					; ROTATE NEW COLUMN BIT INTO CARRY
+	JR	NC, MKY_NEWDWN			; IS KEY DOWN?
+
+						; KEY IS UP
+	RRC	C				; ROTATE OLD COLUMN BIT INTO CARRY
+	JR	C, MKY_GENSCODENXT		; BOTH KEYS DOWN?
+
+	; NEW KEY IS UP, OLD KEY WAS DOWN
+	JP	MKY_KEYUP			; STORE NEW KEY RELEASE IN BUFF (A' IF ROW, B IS COLUMN)
+	; JR	MKY_GENSCODENXT
+
+MKY_NEWDWN:
+	RRC	C				; ROTATE OLD COLUMN BIT INTO CARRY
+	JR	NC, MKY_KEYHOLD			; BOTH KEYS DOWN?
+
+	; NEW KEY IS DOWN, OLD KEY WAS UP
+	JP	MKY_KEYDOWN			; STORE NEW KEY PRESS IN BUFF (A' IF ROW, B IS COLUMN)
+
+MKY_GENSCODENXT:
+	DJNZ	MKY_GENSCODE_LPC
+
+	EX	AF, AF'
+	INC	A
+	CP	MATRIX_ROW_COUNT
+	RET	Z
+	EX	AF, AF'
+
+	INC	HL
+	INC	DE
+	JR	MKY_GENSCODE_LPR
+
+	RET
+
+	; KEY IS PRESSED - TEST FOR REPEAT
+MKY_KEYHOLD:
+	PUSH	AF
+
+	EX	AF, AF'			; GET ROW COUNT
+	CP	6
+	JR	NC, MKY_NORPT		; IF >=6 THEN WE DONT REPEAT
+
+	LD	(MKY_NRPTROW), A
+	EX	AF, AF'
+
+	LD	A, B
+	LD	(MKY_NRPTCOL), A
+
+	LD	A, $FF
+	LD	(MKY_RPTACTIVE), A
+
+	POP	AF
+	JR	MKY_GENSCODENXT
+
+MKY_NORPT:
+	EX	AF, AF'
+	POP	AF
+	JR	MKY_GENSCODENXT
+
+MKY_KEYDOWN:
+	CALL	MKY_RESOLDBIT
+	CALL	MKY_SCANADDR
+	LD	A, (HL)
+	OR	A			; IF NO SCANCODE - IGNORE IT
+	RET	Z
+	LD	(MKY_SCANBUFF), A
+	LD	A, 1
+	LD	(MKY_SCANBUFFLEN), A
+	RET
+
+MKY_KEYUP:
+	CALL	MKY_SETOLDBIT
+	CALL	MKY_SCANADDR
+
+	LD	A, (HL)
+	OR	A			; IF NO SCANCODE - IGNORE IT
+	RET	Z
+	LD	(MKY_SCANBUFF+1), A
+	LD	A, $F0
+	LD	(MKY_SCANBUFF), A
+	LD	A, 2
+	LD	(MKY_SCANBUFFLEN), A
+	RET
+
+MKY_RPTGEN:
+	LD	A, (MKY_SCANBUFFLEN)		; IF ALREADY A CODE IN BUFFER
+	OR	A			; THEN WE CANT GENERATE A REPEAT
+	JR	NZ, MKY_RPTCLR
+
+	LD	A, (MKY_RPTACTIVE)	; NO KEY IS HELD
+	OR	A
+	JR	Z, MKY_RPTCLR
+
+	LD	A, (MKY_RPTCNT)
+	DEC	A
+	JR	Z, MKY_RPTADD
+	LD	(MKY_RPTCNT), A
+	RET
+
+MKY_RPTADD:
+	LD	A, KEY_REPEAT_PERIOD
+	LD	(MKY_RPTCNT), A
+	LD	A, (MKY_NRPTCOL)
+	LD	B, A
+	LD	A, (MKY_NRPTROW)
+	EX	AF, AF'
+	JR	MKY_KEYDOWN
+
+MKY_RPTCLR:
+	LD	A, KEY_REPEAT_INIT
+	LD	(MKY_RPTCNT), A
+	XOR	A
+	LD	(MKY_NRPTCOL), A
+	LD	(MKY_NRPTROW), A
+	RET
+;
+;__________________________________________________________________________________________________
+;
+; RETRIEVE ADDRESS AND BIT MASK WITHIN OLDKEY ARRAY
+;
+; INPUT:
+;	B = 1 TO 8 - COLUMN COUNT
+; 	A' IS ROW COUNT - 0 TO MATRIX_ROW_COUNT
+; OUTPUT:
+;	HL = BYTE WITHIN OLDKEY ARRAY
+;	A = BIT MASK FOR COLUMN COUNT (EG: B = 3, A = 8)
+; PROTECTS:
+;	A' IS UNCHANGED
+;	B IS UNCHANGED
+MKY_GETKEYIDX:
+	LD	A, $80
+	LD	D, B				; SAVE B (COLUMN COUNT - 1 TO 8)
+MKY_SETOLDBIT_LP:
+	DEC	B
+	JR	Z, SKIP
+	RRCA
+	JR	MKY_SETOLDBIT_LP
+
+SKIP:
+	LD	HL, OLDKEY
+
+	EX	AF, AF'				; RETRIEVE ROW COUNT
+	LD	C, A
+	EX	AF, AF'
+	LD	B, 0
+	ADD	HL, BC
+	LD	B, D				; RETORE B (COLUMN COUNT)
+	RET
+;
+;__________________________________________________________________________________________________
+;
+; SET BIT WITHIN THE KEY MATRIX ARRAY
+; HL -> ADDRESS WITHIN OLDKEY OR NEWKEY ARRAY
+; C BIT MASK TO BE OR'ED
+;
+MKY_SETOLDBIT:
+	CALL	MKY_GETKEYIDX
+	LD	C, (HL)
+	OR	C
+	LD	(HL), A
+	RET
+;
+;__________________________________________________________________________________________________
+;
+; RESET BIT WITHIN THE KEY MATRIX ARRAY
+; HL -> ADDRESS WITHIN OLDKEY OR NEWKEY ARRAY
+; C CPL BIT MASK TO BE AND'ED
+;
+MKY_RESOLDBIT:
+	CALL	MKY_GETKEYIDX
+	LD	C, (HL)
+	CPL
+	AND	C
+	LD	(HL), A
+	RET
+;
+;__________________________________________________________________________________________________
+;
+; CALCULATE THE ADDRESS WITHIN THE SCANCODE_TABLE FOR A SPECIFIC KEY
+;
+MKY_SCANADDR:
+	; ASSUMING SINGLE BYTE CODE CODE
+	EX	AF, AF'				; RETRIVE ROW COUNT
+
+	; CODE ADDR = SCANCODE_TBL + (A * 8) + B - 1
+	LD	L, A
+	LD	H, 0
+	ADD	HL, HL
+	ADD	HL, HL
+	ADD	HL, HL
+	DEC	B
+	LD	C, B
+	LD	B, 0
+	ADD	HL, BC
+	LD	DE, SCANCODE_TBL
+	ADD	HL, DE
+	RET
+;
+;__________________________________________________________________________________________________
+; READ A SINGLE BYTE FROM THE SCANCODE BUFFER
+; RETURNED IN A
+;
+MKY_READBYT:
+	ld	a, (MKY_SCANBUFFLEN)
+	or	a
+	ret	z
+
+	LD	A, (MKY_SCANBUFF)
+	LD	DE, MKY_SCANBUFF
+	LD	HL, MKY_SCANBUFF + 1
+	LD	BC, 4
+	LDIR
+	LD	C, A
+	LD	A, (MKY_SCANBUFFLEN)
+	DEC	A
+	LD	(MKY_SCANBUFFLEN), A
+	LD	A, C
+	RET
+;
+;__________________________________________________________________________________________________
+;
+; TURN THE CAPS LED LIGHT ON
+;
+MKY_LEDCAPSON:
+	IN	A, (MKY_REGC)
+	RES	6, A
+ 	OUT	(MKY_REGC), A
+	RET
+;
+;__________________________________________________________________________________________________
+;
+; TURN THE CAPS LED LIGHT OFF
+;
+MKY_LEDCAPSOFF:
+	IN	A, (MKY_REGC)
+	SET	6, A
+ 	OUT	(MKY_REGC), A
+	RET
+
+; DYNAMIC DATA STORAGE:
+;
+; STORAGE OF KEYBOARD MATRIX, USED FOR DETECTING KEY REPETITION
+OLDKEY:			.FILL     MATRIX_ROW_COUNT, $FF
+;
+; CURRENT STATE OF THE KEYBOARD MATRIX
+NEWKEY:			.FILL     MATRIX_ROW_COUNT, $FF
+;
+; F3F6: VDP-INTERUPT COUNTER THAT COUNTS FROM SCAN_INT_PERIOD TO 0, WHEN IT REACHES ZERO, THE
+; KEYBOARD MATRIX IS SCANNED, AND THE COUNTERS IS RESET AT SCAN_INT_PERIOD
+SCNCNT:			.DB	SCAN_INT_PERIOD
+;
+MKY_NRPTCOL:		.DB	0
+MKY_NRPTROW:		.DB	0
+MKY_RPTCOL:		.DB	0
+MKY_RPTROW:		.DB	0
+MKY_RPTACTIVE:		.DB	0
+MKY_RPTCNT:		.DB	KEY_REPEAT_INIT
+
+MKY_SCANBUFF:		.FILL	5, 0
+MKY_SCANBUFFLEN:	.DB	0
+
+MKY_SCANCODE:		.DB	0	; RAW SCANCODE
+MKY_KEYCODE:		.DB	0	; RESULTANT KEYCODE AFTER DECODING
+MKY_STATE:		.DB	0	; STATE BITS (SEE ABOVE)
+MKY_LSTATE:		.DB	0	; STATE BITS FOR "LEFT" KEYS
+MKY_RSTATE:		.DB	0	; STATE BITS FOR "RIGHT" KEYS
+MKY_STATUS:		.DB	0	; CURRENT STATUS BITS (SEE ABOVE)
+MKY_REPEAT:		.DB	0	; CURRENT REPEAT RATE
+MKY_IDLE:		.DB	0	; IDLE COUNT
+
+#IF (MKYKBLOUT == KBD_US)
+;__________________________________________________________________________________________________
+;
+; MAPPING TABLES US/ENGLISH
+;__________________________________________________________________________________________________
+MKY_MAPSTD:	; SCANCODE IS INDEX INTO TABLE TO RESULTANT LOOKUP KEYCODE
+	.DB	$FF,$E8,$FF,$E4,$E2,$E0,$E1,$EB,$FF,$E9,$E7,$E5,$E3,$09,'`',$FF
+	.DB	$FF,$B4,$B0,$FF,$B2,'q','1',$FF,$FF,$FF,'z','s','a','w','2',$FF
+	.DB	$FF,'c','x','d','e','4','3',$FF,$FF,' ','v','f','t','r','5',$FF
+	.DB	$FF,'n','b','h','g','y','6',$FF,$FF,$FF,'m','j','u','7','8',$FF
+	.DB	$FF,',','k','i','o','0','9',$FF,$FF,'.','/','l',';','p','-',$FF
+	.DB	$FF,$FF,$27,$FF,'[','=',$FF,$FF,$BC,$B1,$0D,']',$FF,'\',$FF,$FF
+	.DB	$FF,$FF,$FF,$FF,$FF,$FF,$08,$FF,$FF,$C0,$FF,$C3,$C6,$FF,$FF,$FF
+	.DB	$C9,$CA,$C1,$C4,$C5,$C7,$1B,$BD,$FA,$CE,$C2,$CD,$CC,$C8,$BE,$FF
+	.DB	$FF,$FF,$FF,$E6,$EC
+;
+MKY_MAPSIZ	.EQU	($ - MKY_MAPSTD)
+;
+MKY_MAPSHIFT:	; SCANCODE IS INDEX INTO TABLE TO RESULTANT LOOKUP KEYCODE WHEN SHIFT ACTIVE
+	.DB	$FF,$E8,$FF,$E4,$E2,$E0,$E1,$EB,$FF,$E9,$E7,$E5,$E3,$09,'~',$FF
+	.DB	$FF,$B4,$B0,$FF,$B2,'Q','!',$FF,$FF,$FF,'Z','S','A','W','@',$FF
+	.DB	$FF,'C','X','D','E','$','#',$FF,$FF,' ','V','F','T','R','%',$FF
+	.DB	$FF,'N','B','H','G','Y','^',$FF,$FF,$FF,'M','J','U','&','*',$FF
+	.DB	$FF,'<','K','I','O',')','(',$FF,$FF,'>','?','L',':','P','_',$FF
+	.DB	$FF,$FF,$22,$FF,'{','+',$FF,$FF,$BC,$B1,$0D,'}',$FF,'|',$FF,$FF
+	.DB	$FF,$FF,$FF,$FF,$FF,$FF,$08,$FF,$FF,$D0,$FF,$D3,$D6,$FF,$FF,$FF
+	.DB	$D9,$DA,$D1,$D4,$D5,$D7,$1B,$BD,$FA,$DE,$D2,$DD,$DC,$D8,$BE,$FF
+	.DB	$FF,$FF,$FF,$E6,$EC
+;
+MKY_MAPEXT:	; PAIRS ARE [SCANCODE,KEYCODE] FOR EXTENDED SCANCODES
+	.DB	$11,$B5,	$14,$B3,	$1F,$B6,	$27,$B7
+	.DB	$2F,$EF,	$37,$FA,	$3F,$FB,	$4A,$CB
+	.DB	$5A,$CF,	$5E,$FC,	$69,$F3,	$6B,$F8
+	.DB	$6C,$F2,	$70,$F0,	$71,$F1,	$72,$F7
+	.DB	$74,$F9,	$75,$F6,	$7A,$F5,	$7C,$ED
+	.DB	$7D,$F4,	$7E,$FD,	$00,$00
+;
+MKY_MAPNUMPAD:	; KEYCODE TRANSLATION FROM NUMPAD RANGE TO STD ASCII/KEYCODES
+	.DB	$F3,$F7,$F5,$F8,$FF,$F9,$F2,$F6,$F4,$F0,$F1,$2F,$2A,$2D,$2B,$0D
+	.DB	$31,$32,$33,$34,$35,$36,$37,$38,$39,$30,$2E,$2F,$2A,$2D,$2B,$0D
+#ENDIF
+#IF (MKYKBLOUT == KBD_DE)
+;__________________________________________________________________________________________________
+;
+; MAPPING TABLES GERMAN
+;__________________________________________________________________________________________________
+;
+MKY_MAPSTD: ; SCANCODE IS INDEX INTO TABLE TO RESULTANT LOOKUP KEYCODE             ROW
+
+; Column 	0   1   2   3   4   5   6   7   8   9   A   B   C   D   E   F		;	Special adjustments listed below
+	.DB	$FF,$E8,$FF,$E4,$E2,$E0,$E1,$EB,$FF,$E9,$E7,$E5,$E3,$09,'^',$FF     ;0	for German keyboard keys that give
+	.DB	$FF,$B4,$B0,$FF,$B2,'q','1',$FF,$FF,$FF,'y','s','a','w','2',$FF     ;1	different characters than are printed
+	.DB	$FF,'c','x','d','e','4','3',$FF,$FF,' ','v','f','t','r','5',$FF     ;2	on the keys.
+	.DB	$FF,'n','b','h','g','z','6',$FF,$FF,$FF,'m','j','u','7','8',$FF     ;3	'german key' --> 'new occupied with'
+	.DB	$FF,',','k','i','o','0','9',$FF,$FF,'.','-','l','[','p',$5C,$FF     ;4 	Assembler ERROR: '\'-->$5C ; 'ö'-->'['
+	.DB	$FF,$FF,'@',$FF,']','|',$FF,$FF,$BC,$B1,$0D,'+',$FF,'#',$FF,$FF     ;5	'ä'-->'@' ; 'ü'-->']'
+	.DB	$FF,'<',$FF,$FF,$FF,$FF,$08,$FF,$FF,$C0,$FF,$C3,$C6,'<',$FF,$FF     ;6
+	.DB	$C9,$CA,$C1,$C4,$C5,$C7,$1B,$BD,$FA,$CE,$C2,$CD,$CC,$C8,$BE,$FF     ;7
+	.DB	$FF,$FF,$FF,$E6,$EC                                                 ;8
+
+MKY_MAPSIZ  .EQU  ($ - MKY_MAPSTD)
+;
+MKY_MAPSHIFT:     ; SCANCODE IS INDEX INTO TABLE TO RESULTANT LOOKUP KEYCODE WHEN SHIFT ACTIVE
+
+	.DB	$FF,$E8,$FF,$E4,$E2,$E0,$E1,$EB,$FF,$E9,$E7,$E5,$E3,$09,'~',$FF        ; '°' --> '~'
+	.DB	$FF,$B4,$B0,$FF,$B2,'Q','!',$FF,$FF,$FF,'Y','S','A','W',$22,$FF
+	.DB	$FF,'C','X','D','E','$',$20,$FF,$FF,' ','V','F','T','R','%',$FF        ; '§'-->$20; '§'=Paragraph not used in CP/M
+	.DB	$FF,'N','B','H','G','Z','&',$FF,$FF,$FF,'M','J','U','/','(',$FF
+	.DB	$FF,';','K','I','O','=',')',$FF,$FF,':','_','L','{','P','?',$FF        ; 'Ö'-->'{'
+	.DB	$FF,$FF,'@',$FF,'}','`',$FF,$FF,$BC,$B1,$0D,'*',$FF,$27,$FF,$FF        ; 'Ä'-->'@' ; 'Ü'-->'}'
+	.DB	$FF,'>',$FF,$FF,$FF,$FF,$08,$FF,$FF,$D0,$FF,$D3,$D6,'>',$FF,$FF
+	.DB	$D9,$DA,$D1,$D4,$D5,$D7,$1B,$BD,$FA,$DE,$D2,$DD,$DC,$D8,$BE,$FF
+	.DB	$FF,$FF,$FF,$E6,$EC
+
+MKY_MAPEXT: ; PAIRS ARE [SCANCODE,KEYCODE] FOR EXTENDED SCANCODES
+	.DB	$11,$B5,	$14,$B3,	$1F,$B6,	$27,$B7
+	.DB	$2F,$EF,	$37,$FA,	$3F,$FB,	$4A,$CB		; All keys listed below are customized for Wordstar.
+	.DB	$5A,$CF,	$5E,$FC,	$69,$06,	$6B,$13		; n.a , n.a , word right , n.a.
+	.DB	$6C,$01,	$70,$16,	$71,$07,	$72,$18		; Word left , Toggle Insert/Overwrite , Del Char , Cursor down
+	.DB	$74,$04,	$75,$05,	$7A,$1A,	$7C,$ED		; Cursor right , Cursor up , Page down
+	.DB	$7D,$17,	$7E,$FD,	$00,$00				; Page up , n.a. , END MKY_MAPEXT (Pairs end)
+;
+MKY_MAPNUMPAD:    ; KEYCODE TRANSLATION FROM NUMPAD RANGE TO STD ASCII/KEYCODES
+
+	.DB	$F3,$F7,$F5,$F8,$FF,$F9,$F2,$F6,$F4,$F0,$F1,$2F,$2A,$2D,$2B,$0D
+	.DB	$31,$32,$33,$34,$35,$36,$37,$38,$39,$30,$2E,$2F,$2A,$2D,$2B,$0D
+;
+#ENDIF
+;
+;__________________________________________________________________________________________________
+; KEYCODE VALUES RETURNED BY THE DECODER
+;__________________________________________________________________________________________________
+;
+; VALUES 0-127 ARE STANDARD ASCII, SPECIAL KEYS WILL HAVE THE FOLLOWING VALUES:
+;
+; F1		$E0
+; F2		$E1
+; F3		$E2
+; F4		$E3
+; F5		$E4
+; F6		$E5
+; F7		$E6
+; F8		$E7
+; F9		$E8
+; F10		$E9
+; F11		$EA
+; F12		$EB
+; SYSRQ		$EC
+; PRTSC		$ED
+; PAUSE		$EE
+; APP		$EF
+; INS		$F0
+; DEL		$F1
+; HOME		$F2
+; END		$F3
+; PGUP		$F4
+; PGDN		$F5
+; UP		$F6
+; DOWN		$F7
+; LEFT		$F8
+; RIGHT		$F9
+; POWER		$FA
+; SLEEP		$FB
+; WAKE		$FC
+; BREAK		$FD
