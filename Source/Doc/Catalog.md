@@ -771,7 +771,9 @@ on using the applications and files listed.
 | `FDISK80.COM`  |     --     |  |
 | `FLASH.COM`    |     --     |  |
 | `NULU.COM`     |     --     |  |
+| `TCVIEW.COM`   |     --     |  |
 | `UNARC.COM`    |     --     |  |
+| `Z3LOC.COM`    |     --     |  |
 | `ZAP.COM`      |     --     |  |
 | `ZDE.COM`      |     --     |  |
 | `ZDENST.COM`   |     --     |  |
