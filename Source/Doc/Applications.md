@@ -521,15 +521,20 @@ This application is provided by Will Sowerbutts.
 
 *`<filename>`* is the filename of the ROM image file
 
-Options: (access method is auto-detected by default)
+FLASH4 will auto-detect most parameters so additional options should not
+normally be required.
 
-| `/PARTIAL`: Allow flashing a large ROM from a smaller image file
+Options:
+
+| `/V`: Enable verbose output (one line per sector)
+| `/P` or `/PARTIAL`: Allow flashing a large ROM from a smaller image file
 | `/ROM`: Allow read-only use of unknown chip types
 | `/Z180DMA`: Force Z180 DMA engine
 | `/UNABIOS`: Force UNA BIOS bank switching
 | `/ROMWBW`: Force RomWBW (v2.6+) bank switching
 | `/ROMWBWOLD`: Force RomWBW (v2.5 and earlier) bank switching
 | `/P112`: Force P112 bank switching
+| `/N8VEMSBC`: Force N8VEM SBC (v1, v2), Zeta (v1) SBC bank switching
 
 ## Usage
 
