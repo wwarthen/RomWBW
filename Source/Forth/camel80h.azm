@@ -39,7 +39,7 @@
 
 ;Z tibsize  -- n         size of TIB
     head TIBSIZE,7,TIBSIZE,docon
-        dw 124          ; 2 chars safety zone
+        dw 512-2          ; 2 chars safety zone
 
 ;X tib     -- a-addr     Terminal Input Buffer
 ;  HEX 82 CONSTANT TIB   CP/M systems: 126 bytes
@@ -47,7 +47,7 @@
 ;    head TIB,3,TIB,docon
 ;       dw 82h
     head TIB,3,TIB,douser
-        dw -80h
+        dw -512
 		
 ;Z u0      -- a-addr       current user area adrs
 ;  0 USER U0
@@ -1010,6 +1010,75 @@ WDS1:   DW DUP,COUNT,TYPE,SPACE,NFATOLFA,FETCH
         DW SPFETCH,S0,LIT,2,MINUS,XDO
 DOTS1:  DW II,FETCH,UDOT,LIT,-2,XPLUSLOOP,DOTS1
 DOTS2:  DW EXIT
+
+;C D.    d --           display d signed
+    head DDOT,2,D.,docolon
+        DW LESSNUM,DUP,TOR,DABS,NUMS
+        DW RFROM,SIGN,NUMGREATER,TYPE,SPACE,EXIT
+
+;X D+               d1 d2 -- d1+d2              Add double numbers
+    head DPLUS,2,D+,docode
+        exx
+        pop bc          ; BC'=d2lo
+        exx
+        pop hl          ; HL=d1hi,BC=d2hi
+        exx
+        pop hl          ; HL'=d1lo
+        add hl,bc
+        push hl         ; 2OS=d1lo+d2lo
+        exx
+        adc hl,bc       ; HL=d1hi+d2hi+cy
+        ld b,h
+        ld c,l
+        next
+
+;C 2>R   d --           2 to R
+    head TWOTOR,3,2!>R,docolon
+        DW SWOP,RFROM,SWOP,TOR,SWOP,TOR,TOR,EXIT
+
+;C 2R>   d --           fetch 2 from R
+    head TWORFROM,3,2R!>,docolon
+        DW RFROM,RFROM,RFROM,SWOP,ROT,TOR,EXIT
+
+TNEGATE:
+        call docolon
+        DW TOR,TWODUP,OR,DUP,qbranch,TNEG1,DROP,DNEGATE,lit,1
+TNEG1:
+        DW RFROM,PLUS,NEGATE,EXIT
+
+qtneg:
+        call docolon
+        DW ZEROLESS,qbranch,qtneg1,TNEGATE
+qtneg1:
+        DW EXIT
+
+TSTAR:
+        call docolon
+        DW TWODUP,XOR,TOR
+        DW TOR,DABS,RFROM,ABS
+        DW TWOTOR
+        DW RFETCH,UMSTAR,lit,0
+        DW TWORFROM,UMSTAR
+        DW DPLUS
+        DW RFROM
+        DW qtneg
+        DW EXIT
+
+TDIV:
+        call docolon
+        DW OVER,TOR,TOR
+        DW DUP,qtneg
+        DW RFETCH,UMSLASHMOD
+        DW ROT,ROT
+        DW RFROM,UMSLASHMOD
+        DW NIP,SWOP
+        DW RFROM,ZEROLESS,qbranch,tdiv1,DNEGATE
+tdiv1:
+        DW EXIT
+
+;C M*/   d1 n2 u3 --  d=(d1*n2)/u3  double precision mult. div
+    head MSTARSLASH,3,M*/,docolon
+        DW TOR,TSTAR,RFROM,TDIV,EXIT
 
 ;Z COLD     --      cold start Forth system
 ;   UINIT U0 #INIT CMOVE      init user area
