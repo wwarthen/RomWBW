@@ -5,7 +5,6 @@ CIOIST			EQU 02h ; CHARACTER INPUT STATUS
 BID_BOOT		EQU	00h
 ;HB_BNKCALL		EQU 0fff9h
 BF_SYSRESET		EQU	0F0h		; RESTART SYSTEM
-	
 BF_SYSRES_INT		EQU	00h		; RESET HBIOS INTERNAL
 BF_SYSRES_WARM		EQU	01h		; WARM START (RESTART BOOT LOADER)
 BF_SYSRES_COLD		EQU	02h		; COLD START
@@ -72,6 +71,11 @@ FTH_LOC			EQU	0200h
 ;                   keywords are being passed in a
 ;                   macro.
 ;       b1ackmai1er difficultylevelhigh@gmail.com
+;   03-Dec 20 v1.02 Add James Bowmans double 
+;                   precision words as per RC2014
+;                   version. Increase terminal 
+;                   input buffer (TIB) size.
+;       b1ackmai1er difficultylevelhigh@gmail.com                   
 ; ===============================================
 ; Macros to define Forth headers
 ; HEAD  label,length,name,action
@@ -154,9 +158,11 @@ reset:  ld hl,0FDFFh ; HBIOS address, rounded down
         jp COLD      ; enter top-level Forth word
 
 ; Memory map:
-;               Terminal Input Buffer, 128 bytes
+
 ;   FTH_LOC     Forth kernel = starts after ROMLDR
 ;     ? h       Forth dictionary (user RAM)
+;   EM-400h     Terminal Input Buffer, 512 bytes
+;		Below user area
 ;   EM-200h     User area, 128 bytes
 ;   EM-180h     Parameter stack, 128B, grows down
 ;   EM-100h     HOLD area, 40 bytes, grows down
@@ -338,14 +344,9 @@ KEY2:   DW SAVEKEY,CFETCH,LIT,0,SAVEKEY,CSTORE
 
 ;X BYE     i*x --    return to CP/M
     head bye,3,bye,docode
-		;LD A,BID_BOOT				; BOOT BANK
-		;LD HL,0				 		; ADDRESS ZERO
-		;CALL HB_BNKCALL				; DOES NOT RETURN
 		LD	B,BF_SYSRESET		; SYSTEM RESTART
 		LD	C,BF_SYSRES_WARM	; WARM START
-		CALL	0FFF0h			; CALL HBIOS
-		
-		HALT
+		JP	0FFF0h			; CALL HBIOS
 
 ; STACK OPERATIONS ==============================
 

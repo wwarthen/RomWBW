@@ -1623,7 +1623,7 @@ the value of the subfucntion.  See subfunctions below.
 #### SYSRESET Subfunction 0x00 -- Internal HBIOS Reset (RESINT)
 
 |      _Entry Parameters_
-|           BC: 0xFD00
+|           BC: 0xF000
 
 |      _Returned Values_
 |           A: Status (0=OK, else error)
@@ -1634,7 +1634,7 @@ current OS. Does not reinitialize physical devices.
 #### SYSRESET Subfunction 0x01 -- Warm Start System (RESWARM)
 
 |      _Entry Parameters_
-|           BC: 0xFD01
+|           BC: 0xF001
 
 |      _Returned Values_
 |           <none>
@@ -1645,7 +1645,7 @@ reinitialize physical devices.
 #### SYSRESET Subfunction 0x02 -- Cold Start System (RESCOLD)
 
 |      _Entry Parameters_
-|           BC: 0xFD02
+|           BC: 0xF002
 
 |      _Returned Values_
 |           <none>
