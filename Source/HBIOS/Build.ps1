@@ -226,6 +226,9 @@ foreach ($App in $RomApps)
 cpmcp -f $RomFmt $RomDiskFile ..\cpm22\cpm_${Bios}.sys 0:cpm.sys
 cpmcp -f $RomFmt $RomDiskFile ..\zsdos\zsys_${Bios}.sys 0:zsys.sys
 
+# Set all the files in the ROM disk image to read only for extra protection under flash file system.
+cpmchattr -f $RomFmt $RomDiskFile r 0:*.*
+
 #
 # Finally, the individual binary components are concatenated together to produce
 # the final images.
