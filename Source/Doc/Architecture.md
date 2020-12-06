@@ -608,7 +608,6 @@ MID\_FD360   | 7         | 5.25" 360K Floppy
 MID\_FD120   | 8         | 5.25" 1.2M Floppy
 MID\_FD111   | 9         | 8" 1.11M Floppy
 MID\_HDNEW   | 10        | Hard Disk with 1024 Directory entries
-MID\_MDFSH   | 11        | FLASH Drive
 
 ### Function 0x10 -- Disk Status (DIOSTATUS)
 
