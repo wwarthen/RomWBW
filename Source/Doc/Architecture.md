@@ -607,6 +607,8 @@ MID\_FD144   | 6         | 3.5" 1.44M Floppy
 MID\_FD360   | 7         | 5.25" 360K Floppy
 MID\_FD120   | 8         | 5.25" 1.2M Floppy
 MID\_FD111   | 9         | 8" 1.11M Floppy
+MID\_HDNEW   | 10        | Hard Disk with 1024 Directory entries
+MID\_MDFSH   | 11        | FLASH Drive
 
 ### Function 0x10 -- Disk Status (DIOSTATUS)
 
@@ -765,9 +767,9 @@ Bit 7: 1=Floppy, 0=Hard Disk (or similar, e.g. CF, SD, RAM)
 |     Bits 1-0: Reserved
 
 | If Hard Disk:
-|     Bit 6: Removable\
+|     Bit 6: Removable
 |     Bits: 5-3: Type (0=Hard, 1=CF, 2=SD, 3=USB,
-|                      4=ROM, 5=RAM, 6=RAMF, 7=Reserved)
+|                      4=ROM, 5=RAM, 6=RAMF, 7=FLASH)
 |     Bits 2-0: Reserved
 
 Each disk device is handled by an appropriate driver (IDE, SD,
