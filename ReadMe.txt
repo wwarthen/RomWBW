@@ -3,7 +3,7 @@ RomWBW
 Z80/Z180 System Software
 
 Version 3.1 Pre-release
-Tuesday 18 August 2020
+Sunday 6 December 2020
 
 Wayne Warthen wwarthen@gmail.com
 
@@ -743,11 +743,11 @@ Notes
 
 -   The original versions of DDT, DDTZ, and ZSID used the RST 38 vector
     which conflicts with interrupt mode 1 use of this vector. The DDT,
-    DDTZ, and ZSID applications in RomWBW have been modified to use RTS
+    DDTZ, and ZSID applications in RomWBW have been modified to use RST
     30 to avoid this issue.
 
 -   Z-System applications will not run under CP/M 2.2. For example, the
-    LDDS date stamper with not run.
+    LDDS date stamper will not run.
 
 ZSDOS 1.1
 

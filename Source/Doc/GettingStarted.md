@@ -763,10 +763,10 @@ in the DRI manuals.
 - The original versions of DDT, DDTZ, and ZSID used the RST 38
 vector which conflicts with interrupt mode 1 use of this vector.
 The DDT, DDTZ, and ZSID applications in RomWBW have been modified
-to use RTS 30 to avoid this issue.
+to use RST 30 to avoid this issue.
 
 - Z-System applications will not run under CP/M 2.2.  For example,
-the `LDDS` date stamper with not run.
+the `LDDS` date stamper will not run.
 
 ## ZSDOS 1.1
 
