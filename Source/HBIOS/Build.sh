@@ -4,6 +4,7 @@
 set -e
 
 CPMCP=../../Tools/`uname`/cpmcp
+CPMCH=../../Tools/`uname`/cpmchattrib
 
 timestamp=$(date +%Y-%m-%d)
 #timestamp="2020-02-24"
@@ -143,6 +144,9 @@ done
 echo "copying systems to $romdiskfile"
 $CPMCP -f $romfmt $romdiskfile ../CPM22/cpm_$BIOS.sys 0:cpm.sys
 $CPMCP -f $romfmt $romdiskfile ../ZSDOS/zsys_$BIOS.sys 0:zsys.sys
+
+echo "setting files in the ROM disk image to read only"
+$CPMCH -f $romfmt $romdiskfile  r 0:*.*
 
 if [ $platform = UNA ] ; then
 	cp osimg.bin $outdir/UNA_WBW_SYS.bin
