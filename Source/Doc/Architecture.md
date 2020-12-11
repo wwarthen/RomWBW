@@ -587,7 +587,7 @@ _Id_ | _Device Type / Driver_
 Disk Input/Output (DIO)
 -----------------------
 
-Character input/output functions require that a character unit be specified
+Disk input/output functions require that a disk unit be specified
 in the C register. This is the logical disk unit number assigned during
 the boot process that identifies all disk i/o devices uniquely.
 
@@ -613,11 +613,12 @@ MID\_HDNEW   | 10        | Hard Disk with 1024 Directory entries
 
 | _Entry Parameters_
 |       B: 0x10
+|       C: Disk Device Unit ID
 
 | _Exit Results_
 |       A: Status (0=OK, else error)
 
-### Function 0x11 -- Disk Status (DIORESET)
+### Function 0x11 -- Disk Reset (DIORESET)
 
 | _Entry Parameters_
 |       B: 0x11
@@ -668,6 +669,7 @@ determine if the device supports LBA addressing.
 | _Entry Parameters_
 |       B: 0x13
 |       C: Disk Device Unit ID
+|	D: Bank ID
 |       E: Block Count
 |       HL: Buffer Address
 
@@ -683,14 +685,14 @@ read. On error, current sector is sector where error occurred.
 Blocks read indicates number of sectors successfully read.
 
 Caller must ensure: 1) buffer address is large enough to contain data for
-all sectors requested, and 2) entire buffer area resides in upper 32K of
-memory.
+all sectors requested, and 2) does not cross a 32k memory bank boundary.
 
 ### Function 0x14 -- Disk Write (DIOWRITE)
 
 | _Entry Parameters_
 |       B: 0x14
 |       C: Disk Device Unit ID
+|	D: Bank ID
 |       E: Block Count
 |       HL: Buffer Address
 
@@ -705,9 +707,7 @@ function. Current sector is incremented after each sector successfully
 written. On error, current sector is sector where error occurred.
 Blocks written indicates number of sectors successfully written.
 
-Caller must ensure: 1) buffer address is large enough to contain data for
-all sectors being written, and 2) entire buffer area resides in upper 32K
-of memory.
+Caller must ensure the source buffer does not cross a 32k memory bank boundary.
 
 ### Function 0x15 -- Disk Verify (DIOVERIFY)
 
