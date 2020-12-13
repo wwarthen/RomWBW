@@ -819,7 +819,6 @@ function will return an error status.
 | _Entry Parameters_
 |       B: 0x1A
 |       C: Disk Device Unit ID
-|       HL: Buffer Address
 
 | _Exit Results_
 |       A: Status (0=OK, else error)

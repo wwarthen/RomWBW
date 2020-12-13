@@ -10,7 +10,7 @@ Version 3.1.1
 - S?K: Support for Tiny Z80 by Sergey
 - E?B: Support for v6 YM/AY sound card
 - C?M: Support for RC2014 bus PropIO V2
-- W?S: Updated FLASH software to v1.3.3
+- W?S: Updated FLASH software to v1.3.4
 - PMS: Preliminary support for writing to FLASH ROMs
 
 Version 3.1
