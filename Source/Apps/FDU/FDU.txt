@@ -510,5 +510,11 @@ WW 9/5/2018: v5.3
     operation.
   - Added support for SmallZ80
 
-WW 5/1/2020: v5.4
+WW 1/5/2020: v5.4
   - Added support for Dyno (based on work by Steve Garcia)
+
+WW 4/29/2020: v5.5
+  - Added support for Etched Pixels FDC
+
+WW 12/12/2020: v5.6
+  - Updated SmallZ80 support for new I/O map
