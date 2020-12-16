@@ -733,6 +733,7 @@ FF_NXT2:
 ;======================================================================
 ;
 FF_FNCALL:				; USING HBX_BUF FOR CODE AREA
+	PUSH	BC
 	CALL	FF_CALCA		; GET BANK AND SECTOR DATA IN BC
 ;
 	POP	HL			; GET ROUTINE TO CALL
@@ -832,10 +833,7 @@ MD_FIDENT:
 	PUSH	HL
 	PUSH	DE
 ;
-	PUSH	HL			; SAVE ADDRESS INFO
-	LD	HL,MD_FIDENT_R		; PUT ROUTINE TO CALL
-	EX	(SP),HL			; ON THE STACK
-;
+	LD	BC,MD_FIDENT_R		; PUT ROUTINE TO CALL
 	JP	FF_FNCALL		; EXECUTE
 ;
 ;======================================================================
@@ -903,9 +901,7 @@ MD_FERAS:
 	PUSH	HL
 	PUSH	DE
 ;
-	PUSH	HL			; SAVE ADDRESS INFO
-	LD	HL,MD_FERAS_R		; PUT ROUTINE TO CALL
-	EX	(SP),HL			; ON THE STACK
+	LD	BC,MD_FERAS_R		; PUT ROUTINE TO CALL
 	JP	FF_FNCALL		; EXECUTE
 ;
 ;======================================================================
@@ -1007,9 +1003,7 @@ MD_FREAD:
 	AND	$F0			; BY MASKING OFF
 	LD	H,A			; LOWER 12 BITS
 ;
-	PUSH	HL			; SAVE ADDRESS INFO
-	LD	HL,MD_FREAD_R		; PUT ROUTINE TO CALL
-	EX	(SP),HL			; ON THE STACK
+	LD	BC,MD_FREAD_R		; PUT ROUTINE TO CALL
 	JP	FF_FNCALL		; EXECUTE
 ;
 	RET
@@ -1090,9 +1084,7 @@ MD_FWRIT:
 	AND	$F0			; BY MASKING OFF
 	LD	H,A			; LOWER 12 BITS
 ;
-	PUSH	HL			; SAVE ADDRESS INFO
-	LD	HL,MD_FWRIT_R		; PUT ROUTINE TO CALL
-	EX	(SP),HL			; ON THE STACK
+	LD	BC,MD_FWRIT_R		; PUT ROUTINE TO CALL
 	JP	FF_FNCALL		; EXECUTE
 ;
 ;======================================================================
