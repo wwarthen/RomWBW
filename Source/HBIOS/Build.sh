@@ -4,7 +4,7 @@
 set -e
 
 CPMCP=../../Tools/`uname`/cpmcp
-CPMCH=../../Tools/`uname`/cpmchattrib
+CPMCH=../../Tools/`uname`/cpmchattr
 
 timestamp=$(date +%Y-%m-%d)
 #timestamp="2020-02-24"
