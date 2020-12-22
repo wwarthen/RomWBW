@@ -92,22 +92,19 @@ $ErrorAction = 'Stop'
 # Directories of required build tools (TASM & cpmtools)
 $TasmPath = '..\..\tools\tasm32'
 $CpmToolsPath = '..\..\tools\cpmtools'
-$CmpToolsPath = "..\..\tools\lzsa"
 
 # Add tool directories to PATH and setup TASM's TABS directory path
 $env:TASMTABS = $TasmPath
-$env:PATH = $TasmPath + ';' + $CpmToolsPath + ';' + $CmpToolsPath + ';' + $env:PATH
+$env:PATH = $TasmPath + ';' + $CpmToolsPath + ';' + $env:PATH
 
 # Initialize working variables
 $OutDir = "../../Binary"		# Output directory for final image file
 $RomFmt = "wbw_rom${RomSize}"		# Location of files to imbed in ROM disk
 $BlankROM = "Blank${RomSize}KB.dat"	# An initial "empty" image for the ROM disk of propoer size
 $RomDiskFile = "RomDisk.tmp"		# Temporary filename used to create ROM disk image
-$SystemFile = "SysFile.tmp"
 $RomFile = "${OutDir}/${RomName}.rom"	# Final name of ROM image
 $ComFile = "${OutDir}/${RomName}.com"	# Final name of COM image (command line loadable HBIOS/CBIOS)
 $ImgFile = "${OutDir}/${RomName}.img"	# Final name of IMG image (memory loadable HBIOS/CBIOS image)
-$CmpRomFile = "${OutDir}/${RomName}.lza"# Final name of compresser ROM image
 
 # Select the proper CBIOS to include in the ROM.  UNA is special.
 if ($Platform -eq "UNA") {$Bios = 'una'} else {$Bios = 'wbw'}
@@ -245,12 +242,10 @@ if ($Platform -eq "UNA")
 }
 else 
 {
-	Concat 'hbios_rom.bin','osimg.bin','osimg1.bin','osimg.bin' $SystemFile
-	Concat $SystemFile,$RomDiskFile $RomFile
+	Concat 'hbios_rom.bin','osimg.bin','osimg1.bin','osimg.bin',$RomDiskFile $RomFile
 	Concat 'hbios_app.bin','osimg_small.bin' $ComFile
 	# Concat 'hbios_img.bin','osimg_small.bin' $ImgFile
 }
-lzsa -f2 $SystemFile $CmpRomFile
 
 # Remove the temporary working ROM disk file
-Remove-Item $SystemFile,$RomDiskFile
+Remove-Item $RomDiskFile
