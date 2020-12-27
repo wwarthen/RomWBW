@@ -100,7 +100,7 @@ $env:PATH = $TasmPath + ';' + $CpmToolsPath + ';' + $env:PATH
 # Initialize working variables
 $OutDir = "../../Binary"		# Output directory for final image file
 $RomFmt = "wbw_rom${RomSize}"		# Location of files to imbed in ROM disk
-$BlankROM = "Blank${RomSize}KB.dat"	# An initial "empty" image for the ROM disk of propoer size
+$BlankROM = "Blank${RomSize}KB.dat"	# An initial "empty" image for the ROM disk of proper size
 $RomDiskFile = "RomDisk.tmp"		# Temporary filename used to create ROM disk image
 $RomFile = "${OutDir}/${RomName}.rom"	# Final name of ROM image
 $ComFile = "${OutDir}/${RomName}.com"	# Final name of COM image (command line loadable HBIOS/CBIOS)
