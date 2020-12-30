@@ -92,10 +92,11 @@ $ErrorAction = 'Stop'
 # Directories of required build tools (TASM & cpmtools)
 $TasmPath = '..\..\tools\tasm32'
 $CpmToolsPath = '..\..\tools\cpmtools'
+$LzaToolsPath = '..\..\tools\lzsa'
 
 # Add tool directories to PATH and setup TASM's TABS directory path
 $env:TASMTABS = $TasmPath
-$env:PATH = $TasmPath + ';' + $CpmToolsPath + ';' + $env:PATH
+$env:PATH = $TasmPath + ';' + $CpmToolsPath + ';' + $LzaToolsPath + ';' + $env:PATH
 
 # Initialize working variables
 $OutDir = "../../Binary"		# Output directory for final image file
@@ -105,6 +106,7 @@ $RomDiskFile = "RomDisk.tmp"		# Temporary filename used to create ROM disk image
 $RomFile = "${OutDir}/${RomName}.rom"	# Final name of ROM image
 $ComFile = "${OutDir}/${RomName}.com"	# Final name of COM image (command line loadable HBIOS/CBIOS)
 $ImgFile = "${OutDir}/${RomName}.img"	# Final name of IMG image (memory loadable HBIOS/CBIOS image)
+$UpdFile = "${OutDir}/${RomName}.upd"	# Final name of System ROM image 
 
 # Select the proper CBIOS to include in the ROM.  UNA is special.
 if ($Platform -eq "UNA") {$Bios = 'una'} else {$Bios = 'wbw'}
@@ -233,19 +235,30 @@ cpmchattr -f $RomFmt $RomDiskFile r 0:*.*
 # Finally, the individual binary components are concatenated together to produce
 # the final images.
 #
+$SystemFileList = "hbios_rom.bin", "osimg.bin", "osimg1.bin", "osimg.bin"
 if ($Platform -eq "UNA")
 {
 	Copy-Item 'osimg.bin' ${OutDir}\UNA_WBW_SYS.bin
 	Copy-Item $RomDiskFile ${OutDir}\UNA_WBW_ROM${ROMSize}.bin
 
 	Concat '..\UBIOS\UNA-BIOS.BIN','osimg.bin','..\UBIOS\FSFAT.BIN',$RomDiskFile $RomFile
+	Remove-Item $RomDiskFile
 }
 else 
 {
 	Concat 'hbios_rom.bin','osimg.bin','osimg1.bin','osimg.bin',$RomDiskFile $RomFile
 	Concat 'hbios_app.bin','osimg_small.bin' $ComFile
 	# Concat 'hbios_img.bin','osimg_small.bin' $ImgFile
+	Remove-Item $RomDiskFile
+	Set-Content $UpdFile -Value $null
+	foreach ($InputFile in $SystemFileList)
+	{
+		Copy-Item $InputFile $RomDiskFile
+#		lzsa -f2 -r $InputFile $RomDiskFile
+		Add-Content $UpdFile -Value ([System.IO.File]::ReadAllBytes($RomDiskFile)) -Encoding byte
+		Remove-Item $RomDiskFile
+	}
 }
 
 # Remove the temporary working ROM disk file
-Remove-Item $RomDiskFile
+#Remove-Item $RomDiskFile

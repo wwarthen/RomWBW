@@ -1038,7 +1038,7 @@ system, you can use the FLASH application to update your ROM. The
 following is a typical example of transferring ROM image using XModem
 and flashing the chip in-situ.
 
-    E>xm r rom.img
+    E>xm r rom.rom
     
     XMODEM v12.5 - 07/13/86
     RBC, 28-Aug-2019 [WBW], ASCI
@@ -1050,7 +1050,7 @@ and flashing the chip in-situ.
     
     Thanks for the upload
     
-    E>flash write rom.img
+    E>flash write rom.rom
     FLASH4 by Will Sowerbutts <will@sowerbutts.com> version 1.2.3
     
     Using RomWBW (v2.6+) bank switching.
@@ -1178,6 +1178,30 @@ images.
 
   - FAT.COM
   - TUNE.COM
+
+# System Update
+
+If the system running ROMWBW utilizes the SST39SF040 Flash chip then it is possible to do a System Update in place of
+a System Upgrade in some cases.
+
+A System Update would involve only updating the BIOS, ROM applications and CP/M system.
+
+A System Update may be more favorable than a System Upgrade in cases such as:
+
+ - Overwriting of the ROM drive is not desired.
+ - Space is unavailable to hold a full ROMWBW ROM.
+ - To mimimize time taken to transfer and flash a full ROM.
+ - Configuration changes are only minor and do not impact disk applications.
+
+The ROMWBW build process generates a system upgrade file along with the normal ROM image and can be identified by the
+extension ".upd". It will be 128Kb in size. In comparison the normal ROM image will have the extension ".rom" and be
+512Kb or 1024Kb in size.
+
+Transferring and flashing the System Update is accomplished in the same manner as described above in *Upgrading* with
+the required difference being that the flash application needs to be directed to complete a partial flash using the
+/p command line switch.
+
+`E>flash write rom.upd /p`
 
 # RomWBW Distribution
 
