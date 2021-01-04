@@ -92,11 +92,10 @@ $ErrorAction = 'Stop'
 # Directories of required build tools (TASM & cpmtools)
 $TasmPath = '..\..\tools\tasm32'
 $CpmToolsPath = '..\..\tools\cpmtools'
-$LzaToolsPath = '..\..\tools\lzsa'
 
 # Add tool directories to PATH and setup TASM's TABS directory path
 $env:TASMTABS = $TasmPath
-$env:PATH = $TasmPath + ';' + $CpmToolsPath + ';' + $LzaToolsPath + ';' + $env:PATH
+$env:PATH = $TasmPath + ';' + $CpmToolsPath + ';' + $env:PATH
 
 # Initialize working variables
 $OutDir = "../../Binary"		# Output directory for final image file
@@ -254,7 +253,6 @@ else
 	foreach ($InputFile in $SystemFileList)
 	{
 		Copy-Item $InputFile $RomDiskFile
-#		lzsa -f2 -r $InputFile $RomDiskFile
 		Add-Content $UpdFile -Value ([System.IO.File]::ReadAllBytes($RomDiskFile)) -Encoding byte
 		Remove-Item $RomDiskFile
 	}
