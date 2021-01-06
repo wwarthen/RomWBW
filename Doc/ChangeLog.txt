@@ -12,6 +12,8 @@ Version 3.1.1
 - C?M: Support for RC2014 bus PropIO V2
 - W?S: Updated FLASH software to v1.3.4
 - PMS: Preliminary support for writing to FLASH ROMs
+- PMS: Creation of process to update ROM system area w/o updating ROM disk contents
+- PMS: Added "updater.asm" which allows uploading and updating ROM in one step
 
 Version 3.1
 -----------

@@ -42,6 +42,15 @@ MK4_custom.rom will be added to this directory.
 Documentation of the pre-built ROM Images is contained in the 
 RomList.txt file in this directory.
 
+ROM Firmware Update Images (<plt>_<cfg>.upd)
+-------------------------------------
+
+The files with a ".upd" extension are binary images identical to the
+.rom files, but they only have the first 128K bytes.  The first 128K
+is the system image without the ROM disk contents.  These files can be
+used to update the system image without modifyuing the ROM disk
+contents.  Refer to the Getting Started document for more information.
+
 ROM Executable Images (<plt>_<cfg>.com)
 ---------------------------------------
 
