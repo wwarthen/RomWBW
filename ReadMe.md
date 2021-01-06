@@ -707,7 +707,7 @@ most stable and you are less likely to encounter problems.
 ### Notes
 
   - You can change media, but it must be done while at the OS command
-    prompt and you **must** warm start CP/M by pressing ctrl-c. This is
+    prompt and you **must** warm start CP/M by pressing ctrl-c. This is
     a CP/M 2.2 constraint and is well documented in the DRI manuals.
 
   - The original versions of DDT, DDTZ, and ZSID used the RST 38 vector
