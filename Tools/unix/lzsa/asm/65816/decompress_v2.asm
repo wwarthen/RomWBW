@@ -3,26 +3,26 @@
 ; Create one with lzsa -r -f2 <original_file> <compressed_file>
 ;
 ; in:
-; * LZSA_SRC_LO and LZSA_SRC_HI contain the compressed raw block address
-; * LZSA_DST_LO and LZSA_DST_HI contain the destination buffer address
+; * LZSA_SRC_LO/LZSA_SRC_HI/LZSA_SRC_BANK contain the compressed raw block address
+; * LZSA_DST_LO/LZSA_DST_HI/LZSA_DST_BANK contain the destination buffer address
 ;
 ; out:
-; * LZSA_DST_LO and LZSA_DST_HI contain the last decompressed byte address, +1
+; * LZSA_DST_LO/LZSA_DST_HI/LZSA_DST_BANK contain the last decompressed byte address, +1
 ;
 ; -----------------------------------------------------------------------------
 ; Backward decompression is also supported, use lzsa -r -b -f2 <original_file> <compressed_file>
 ; To use it, also define BACKWARD_DECOMPRESS=1 before including this code!
 ;
 ; in:
-; * LZSA_SRC_LO/LZSA_SRC_HI must contain the address of the last byte of compressed data
-; * LZSA_DST_LO/LZSA_DST_HI must contain the address of the last byte of the destination buffer
+; * LZSA_SRC_LO/LZSA_SRC_HI/LZSA_SRC_BANK must contain the address of the last byte of compressed data
+; * LZSA_DST_LO/LZSA_DST_HI/LZSA_DST_BANK must contain the address of the last byte of the destination buffer
 ;
 ; out:
-; * LZSA_DST_LO/LZSA_DST_HI contain the last decompressed byte address, -1
+; * LZSA_DST_LO/LZSA_DST_HI/BANK contain the last decompressed byte address, -1
 ;
 ; -----------------------------------------------------------------------------
 ;
-;  Copyright (C) 2019 Emmanuel Marty, Peter Ferrie
+;  Copyright (C) 2019-2020 Emmanuel Marty, Peter Ferrie
 ;
 ;  This software is provided 'as-is', without any express or implied
 ;  warranty.  In no event will the authors be held liable for any damages
@@ -41,9 +41,13 @@
 ;  3. This notice may not be removed or altered from any source distribution.
 ; -----------------------------------------------------------------------------
 
+!cpu 65816
 NIBCOUNT = $FC                          ; zero-page location for temp offset
 
-DECOMPRESS_LZSA2_FAST
+DECOMPRESS_LZSA2
+   SEP #$30
+!as
+!rs
    LDY #$00
    STY NIBCOUNT
 
@@ -66,7 +70,7 @@ DECODE_TOKEN
                                         ; the carry is always set by the CMP above
                                         ; GETSRC doesn't change it
    SBC #$EE                             ; overflow?
-   JMP PREPARE_COPY_LITERALS_DIRECT
+   BRA PREPARE_COPY_LITERALS_DIRECT
 
 PREPARE_COPY_LITERALS_LARGE
                                         ; handle 16 bits literals count
@@ -114,9 +118,11 @@ NO_LITERALS
    BNE GOT_OFFSET_LO                    ; go store low byte of match offset and prepare match
    
 OFFSET_9_BIT                            ; 01Z: 9 bit offset
-   ROL                                  ; carry: Z bit; A: xxxxxxx1 (carry known set from BCS OFFSET_9_BIT)
-   ADC #$00                             ; if Z bit is set, add 1 to A (bit 0 of A is now 0), otherwise bit 0 is 1
-   ORA #$FE                             ; set offset bits 15-9 to 1. reversed Z is already in bit 0
+   ;;ASL                                  ; shift Z (offset bit 8) in place
+   ROL
+   ROL
+   AND #$01
+   EOR #$FF                             ; set offset bits 15-9 to 1
    BNE GOT_OFFSET_HI                    ; go store high byte, read low byte of match offset and prepare match
                                         ; (*same as JMP GOT_OFFSET_HI but shorter)
 
@@ -132,6 +138,7 @@ REPMATCH_OR_LARGE_OFFSET
                                         ; (*same as JMP GOT_OFFSET_HI but shorter)
 
 REPMATCH_OR_16_BIT                      ; rep-match or 16 bit offset
+   ;;ASL                                  ; XYZ=111?
    BMI REP_MATCH                        ; reuse previous offset if so (rep-match)
    
                                         ; 110: handle 16 bit offset
@@ -149,14 +156,15 @@ REP_MATCH
    ; Backward decompression - substract match offset
 
    SEC                                  ; add dest + match offset
-   LDA PUTDST+1                         ; low 8 bits
+   REP #$20
+!al
+   LDA PUTDST+1                         ; 16 bits
 OFFSLO = *+1
-   SBC #$AA
+OFFSHI = *+2
+   SBC #$AAAA
    STA COPY_MATCH_LOOP+1                ; store back reference address
-   LDA PUTDST+2
-OFFSHI = *+1
-   SBC #$AA                             ; high 8 bits
-   STA COPY_MATCH_LOOP+2                ; store high 8 bits of address
+   SEP #$20
+!as
    SEC
 
 } else {
@@ -164,16 +172,19 @@ OFFSHI = *+1
    ; Forward decompression - add match offset
 
    CLC                                  ; add dest + match offset
-   LDA PUTDST+1                         ; low 8 bits
+   REP #$20
+!al
+   LDA PUTDST+1                         ; 16 bits
 OFFSLO = *+1
-   ADC #$AA
+OFFSHI = *+2
+   ADC #$AAAA
    STA COPY_MATCH_LOOP+1                ; store back reference address
-OFFSHI = *+1
-   LDA #$AA                             ; high 8 bits
-   ADC PUTDST+2
-   STA COPY_MATCH_LOOP+2                ; store high 8 bits of address
-   
+   SEP #$20
+!as
 }
+
+   LDA PUTDST+3                         ; bank
+   STA COPY_MATCH_LOOP+3                ; store back reference address
    
    PLA                                  ; retrieve token from stack again
    AND #$07                             ; isolate match len (MMM)
@@ -207,16 +218,14 @@ PREPARE_COPY_MATCH_Y
    INY
 
 COPY_MATCH_LOOP
-   LDA $AAAA                            ; get one byte of backreference
+   LDA $AAAAAA                          ; get one byte of backreference
    JSR PUTDST                           ; copy to destination
 
+   REP #$20
 !ifdef BACKWARD_DECOMPRESS {
 
    ; Backward decompression -- put backreference bytes backward
 
-   LDA COPY_MATCH_LOOP+1
-   BEQ GETMATCH_ADJ_HI
-GETMATCH_DONE
    DEC COPY_MATCH_LOOP+1
 
 } else {
@@ -224,30 +233,15 @@ GETMATCH_DONE
    ; Forward decompression -- put backreference bytes forward
 
    INC COPY_MATCH_LOOP+1
-   BEQ GETMATCH_ADJ_HI
-GETMATCH_DONE
 
 }
+   SEP #$20
 
    DEX
    BNE COPY_MATCH_LOOP
    DEY
    BNE COPY_MATCH_LOOP
    JMP DECODE_TOKEN
-
-!ifdef BACKWARD_DECOMPRESS {
-
-GETMATCH_ADJ_HI
-   DEC COPY_MATCH_LOOP+2
-   JMP GETMATCH_DONE
-
-} else {
-
-GETMATCH_ADJ_HI
-   INC COPY_MATCH_LOOP+2
-   JMP GETMATCH_DONE
-
-}
 
 GETCOMBINEDBITS
    EOR #$80
@@ -256,6 +250,7 @@ GETCOMBINEDBITS
 
    JSR GETNIBBLE                        ; get nibble into bits 0-3 (for offset bits 1-4)
    PLP                                  ; merge Z bit as the carry bit (for offset bit 0)
+COMBINEDBITZ
    ROL                                  ; nibble -> bits 1-4; carry(!Z bit) -> bit 0 ; carry cleared
 DECOMPRESSION_DONE
    RTS
@@ -288,15 +283,11 @@ GETPUT
 PUTDST
 LZSA_DST_LO = *+1
 LZSA_DST_HI = *+2
-   STA $AAAA
-   LDA PUTDST+1
-   BEQ PUTDST_ADJ_HI
+LZSA_DST_BANK = *+3
+   STA $AAAAAA
+   REP #$20
    DEC PUTDST+1
-   RTS
-
-PUTDST_ADJ_HI
-   DEC PUTDST+2
-   DEC PUTDST+1
+   SEP #$20
    RTS
 
 GETLARGESRC
@@ -307,18 +298,11 @@ GETLARGESRC
 GETSRC
 LZSA_SRC_LO = *+1
 LZSA_SRC_HI = *+2
-   LDA $AAAA
-   PHA
-   LDA GETSRC+1
-   BEQ GETSRC_ADJ_HI
+LZSA_SRC_BANK = *+3
+   LDA $AAAAAA
+   REP #$20
    DEC GETSRC+1
-   PLA
-   RTS
-
-GETSRC_ADJ_HI
-   DEC GETSRC+2
-   DEC GETSRC+1
-   PLA
+   SEP #$20
    RTS
 
 } else {
@@ -330,13 +314,11 @@ GETPUT
 PUTDST
 LZSA_DST_LO = *+1
 LZSA_DST_HI = *+2
-   STA $AAAA
+LZSA_DST_BANK = *+3
+   STA $AAAAAA
+   REP #$20
    INC PUTDST+1
-   BEQ PUTDST_ADJ_HI
-   RTS
-
-PUTDST_ADJ_HI
-   INC PUTDST+2
+   SEP #$20
    RTS
 
 GETLARGESRC
@@ -347,13 +329,10 @@ GETLARGESRC
 GETSRC
 LZSA_SRC_LO = *+1
 LZSA_SRC_HI = *+2
-   LDA $AAAA
+LZSA_SRC_BANK = *+3
+   LDA $AAAAAA
+   REP #$20
    INC GETSRC+1
-   BEQ GETSRC_ADJ_HI
-   RTS
-
-GETSRC_ADJ_HI
-   INC GETSRC+2
+   SEP #$20
    RTS
 }
-

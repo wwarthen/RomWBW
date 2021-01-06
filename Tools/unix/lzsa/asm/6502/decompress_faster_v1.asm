@@ -30,15 +30,6 @@
 ;
 
                 ;
-                ; Save 6 bytes of code and 21 cycles by swapping the order
-                ; of bytes in the 16-bit length encoding?
-                ;
-                ; N.B. Setting this breaks compatibility with LZSA v1.2
-                ;
-
-LZSA_SWAP_LEN16 =       0
-
-                ;
                 ; Choose size over space (within sane limits)?
                 ;
 
@@ -81,28 +72,14 @@ LZSA_SHORT_LZ   =       0
                 }
 
                 ;
-                ; Assume that we're decompessing from a large multi-bank
-                ; compressed data file, and that the next bank may need to
-                ; paged in when a page-boundary is crossed.
-                ;
-
-LZSA_FROM_BANK  =       0
-
-                ;
                 ; Macro to increment the source pointer to the next page.
                 ;
                 ; This should call a subroutine to determine if a bank
                 ; has been crossed, and a new bank should be paged in.
                 ;
 
-                !if     LZSA_FROM_BANK {
-                        !macro  LZSA_INC_PAGE {
-                        jsr     lzsa1_next_page
-                        }
-                } else {
-                        !macro  LZSA_INC_PAGE {
+                !macro  LZSA_INC_PAGE {
                         inc     <lzsa_srcptr + 1
-                        }
                 }
 
                 ;
@@ -158,9 +135,6 @@ LZSA_DST_HI     =       $FF
 ; Args: lzsa_srcptr = ptr to compessed data
 ; Args: lzsa_dstptr = ptr to output buffer
 ; Uses: lots!
-;
-; If compiled with LZSA_FROM_BANK, then lzsa_srcptr should be within the bank
-; window range.
 ;
 
 DECOMPRESS_LZSA1_FAST:
@@ -355,14 +329,6 @@ lzsa1_unpack:   ldy     #0                      ; Initialize source index.
 .extra_byte:    inx
                 jmp     lzsa1_get_byte          ; So rare, this can be slow!
 
-                !if     LZSA_SWAP_LEN16 {
-
-.extra_word:    jsr     lzsa1_get_byte          ; So rare, this can be slow!
-                tax
-                beq     .finished               ; Length-hi == 0 at EOF.
-
-                } else {
-
 .extra_word:    jsr     lzsa1_get_byte          ; So rare, this can be slow!
                 pha
                 jsr     lzsa1_get_byte          ; So rare, this can be slow!
@@ -370,8 +336,6 @@ lzsa1_unpack:   ldy     #0                      ; Initialize source index.
                 beq     .finished               ; Length-hi == 0 at EOF.
                 pla                             ; Length-lo.
                 rts
-
-                }
 
 lzsa1_get_byte:
                 lda     (lzsa_srcptr),y         ; Subroutine version for when
@@ -381,9 +345,6 @@ lzsa1_get_byte:
 
 lzsa1_next_page:
                 inc     <lzsa_srcptr + 1        ; Inc & test for bank overflow.
-                !if     LZSA_FROM_BANK {
-                bmi     lzsa1_next_bank         ; Change for target hardware!
-                }
                 rts
 
 .finished:      pla                             ; Length-lo.
