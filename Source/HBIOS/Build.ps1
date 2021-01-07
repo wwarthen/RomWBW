@@ -234,29 +234,20 @@ cpmchattr -f $RomFmt $RomDiskFile r 0:*.*
 # Finally, the individual binary components are concatenated together to produce
 # the final images.
 #
-$SystemFileList = "hbios_rom.bin", "osimg.bin", "osimg1.bin", "osimg.bin"
 if ($Platform -eq "UNA")
 {
 	Copy-Item 'osimg.bin' ${OutDir}\UNA_WBW_SYS.bin
 	Copy-Item $RomDiskFile ${OutDir}\UNA_WBW_ROM${ROMSize}.bin
 
 	Concat '..\UBIOS\UNA-BIOS.BIN','osimg.bin','..\UBIOS\FSFAT.BIN',$RomDiskFile $RomFile
-	Remove-Item $RomDiskFile
 }
 else 
 {
 	Concat 'hbios_rom.bin','osimg.bin','osimg1.bin','osimg.bin',$RomDiskFile $RomFile
+	Concat 'hbios_rom.bin','osimg.bin','osimg1.bin','osimg.bin' $UpdFile
 	Concat 'hbios_app.bin','osimg_small.bin' $ComFile
 	# Concat 'hbios_img.bin','osimg_small.bin' $ImgFile
-	Remove-Item $RomDiskFile
-	Set-Content $UpdFile -Value $null
-	foreach ($InputFile in $SystemFileList)
-	{
-		Copy-Item $InputFile $RomDiskFile
-		Add-Content $UpdFile -Value ([System.IO.File]::ReadAllBytes($RomDiskFile)) -Encoding byte
-		Remove-Item $RomDiskFile
-	}
 }
 
 # Remove the temporary working ROM disk file
-#Remove-Item $RomDiskFile
+Remove-Item $RomDiskFile

@@ -2,26 +2,26 @@
 ; Decompress raw LZSA1 block. Create one with lzsa -r <original_file> <compressed_file>
 ;
 ; in:
-; * LZSA_SRC_LO and LZSA_SRC_HI contain the compressed raw block address
-; * LZSA_DST_LO and LZSA_DST_HI contain the destination buffer address
+; * LZSA_SRC_LO/LZSA_SRC_HI/LZSA_SRC_BANK contain the compressed raw block address
+; * LZSA_DST_LO/LZSA_DST_HI/LZSA_DST_BANK contain the destination buffer address
 ;
 ; out:
-; * LZSA_DST_LO and LZSA_DST_HI contain the last decompressed byte address, +1
+; * LZSA_DST_LO/LZSA_DST_HI/LZSA_DST_BANK contain the last decompressed byte address, +1
 ;
 ; -----------------------------------------------------------------------------
 ; Backward decompression is also supported, use lzsa -r -b <original_file> <compressed_file>
 ; To use it, also define BACKWARD_DECOMPRESS=1 before including this code!
 ;
 ; in:
-; * LZSA_SRC_LO/LZSA_SRC_HI must contain the address of the last byte of compressed data
-; * LZSA_DST_LO/LZSA_DST_HI must contain the address of the last byte of the destination buffer
+; * LZSA_SRC_LO/LZSA_SRC_HI/LZSA_SRC_BANK must contain the address of the last byte of compressed data
+; * LZSA_DST_LO/LZSA_DST_HI/LZSA_DST_BANK must contain the address of the last byte of the destination buffer
 ;
 ; out:
-; * LZSA_DST_LO/LZSA_DST_HI contain the last decompressed byte address, -1
+; * LZSA_DST_LO/LZSA_DST_HI/BANK contain the last decompressed byte address, -1
 ;
 ; -----------------------------------------------------------------------------
 ;
-;  Copyright (C) 2019 Emmanuel Marty, Peter Ferrie
+;  Copyright (C) 2019-2020 Emmanuel Marty, Peter Ferrie
 ;
 ;  This software is provided 'as-is', without any express or implied
 ;  warranty.  In no event will the authors be held liable for any damages
@@ -40,7 +40,11 @@
 ;  3. This notice may not be removed or altered from any source distribution.
 ; -----------------------------------------------------------------------------
 
-DECOMPRESS_LZSA1_FAST
+!cpu 65816
+DECOMPRESS_LZSA1
+   SEP #$30
+!as
+!rs
    LDY #$00
 
 DECODE_TOKEN
@@ -111,16 +115,14 @@ PREPARE_COPY_MATCH_Y
    INY
 
 COPY_MATCH_LOOP
-   LDA $AAAA                            ; get one byte of backreference
+   LDA $AAAAAA                          ; get one byte of backreference
    JSR PUTDST                           ; copy to destination
 
+   REP #$20
 !ifdef BACKWARD_DECOMPRESS {
 
    ; Backward decompression -- put backreference bytes backward
 
-   LDA COPY_MATCH_LOOP+1
-   BEQ GETMATCH_ADJ_HI
-GETMATCH_DONE
    DEC COPY_MATCH_LOOP+1
 
 } else {
@@ -128,30 +130,15 @@ GETMATCH_DONE
    ; Forward decompression -- put backreference bytes forward
 
    INC COPY_MATCH_LOOP+1
-   BEQ GETMATCH_ADJ_HI
-GETMATCH_DONE
 
 }
+   SEP #$20
 
    DEX
    BNE COPY_MATCH_LOOP
    DEY
    BNE COPY_MATCH_LOOP
    BEQ DECODE_TOKEN                     ; (*like JMP DECODE_TOKEN but shorter)
-
-!ifdef BACKWARD_DECOMPRESS {
-
-GETMATCH_ADJ_HI
-   DEC COPY_MATCH_LOOP+2
-   JMP GETMATCH_DONE
-
-} else {
-
-GETMATCH_ADJ_HI
-   INC COPY_MATCH_LOOP+2
-   JMP GETMATCH_DONE
-
-}
 
 GET_LONG_OFFSET                         ; handle 16 bit offset:
    JSR GETLARGESRC                      ; grab low 8 bits in X, high 8 bits in A
@@ -166,14 +153,15 @@ GOT_OFFSET
    STX OFFSLO
 
    SEC                                  ; substract dest - match offset
+   REP #$20
+!al
    LDA PUTDST+1
 OFFSLO = *+1
-   SBC #$AA                             ; low 8 bits
+OFFSHI = *+2
+   SBC #$AAAA                           ; 16 bits
    STA COPY_MATCH_LOOP+1                ; store back reference address
-   LDA PUTDST+2
-OFFSHI = *+1
-   SBC #$AA                             ; high 8 bits
-   STA COPY_MATCH_LOOP+2                ; store high 8 bits of address
+   SEP #$20
+!as
    SEC
 
 } else {
@@ -193,6 +181,9 @@ OFFSHI = *+1
    STA COPY_MATCH_LOOP+2                ; store high 8 bits of address
    
 }
+
+   LDA PUTDST+3                         ; bank
+   STA COPY_MATCH_LOOP+3                ; store back reference address
 
    PLA                                  ; retrieve token from stack again
    AND #$0F                             ; isolate match len (MMMM)
@@ -235,15 +226,11 @@ GETPUT
 PUTDST
 LZSA_DST_LO = *+1
 LZSA_DST_HI = *+2
-   STA $AAAA
-   LDA PUTDST+1
-   BEQ PUTDST_ADJ_HI
+LZSA_DST_BANK = *+3
+   STA $AAAAAA
+   REP #$20
    DEC PUTDST+1
-   RTS
-
-PUTDST_ADJ_HI
-   DEC PUTDST+2
-   DEC PUTDST+1
+   SEP #$20
    RTS
 
 GETLARGESRC
@@ -254,18 +241,11 @@ GETLARGESRC
 GETSRC
 LZSA_SRC_LO = *+1
 LZSA_SRC_HI = *+2
-   LDA $AAAA
-   PHA
-   LDA GETSRC+1
-   BEQ GETSRC_ADJ_HI
+LZSA_SRC_BANK = *+3
+   LDA $AAAAAA
+   REP #$20
    DEC GETSRC+1
-   PLA
-   RTS
-
-GETSRC_ADJ_HI
-   DEC GETSRC+2
-   DEC GETSRC+1
-   PLA
+   SEP #$20
    RTS
 
 } else {
@@ -277,13 +257,11 @@ GETPUT
 PUTDST
 LZSA_DST_LO = *+1
 LZSA_DST_HI = *+2
-   STA $AAAA
+LZSA_DST_BANK = *+3
+   STA $AAAAAA
+   REP #$20
    INC PUTDST+1
-   BEQ PUTDST_ADJ_HI
-   RTS
-
-PUTDST_ADJ_HI
-   INC PUTDST+2
+   SEP #$20
    RTS
 
 GETLARGESRC
@@ -294,12 +272,10 @@ GETLARGESRC
 GETSRC
 LZSA_SRC_LO = *+1
 LZSA_SRC_HI = *+2
-   LDA $AAAA
+LZSA_SRC_BANK = *+3
+   LDA $AAAAAA
+   REP #$20
    INC GETSRC+1
-   BEQ GETSRC_ADJ_HI
-   RTS
-
-GETSRC_ADJ_HI
-   INC GETSRC+2
+   SEP #$20
    RTS
 }
