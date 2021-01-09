@@ -3,7 +3,7 @@ ifndef ROM_CONFIG
 endif
 
 ifdef ROM_PLATFORM
-	OBJECTS = ${ROM_PLATFORM}_${ROM_CONFIG}.rom ${ROM_PLATFORM}_${ROM_CONFIG}.com
+	OBJECTS = ${ROM_PLATFORM}_${ROM_CONFIG}.rom ${ROM_PLATFORM}_${ROM_CONFIG}.com ${ROM_PLATFORM}_${ROM_CONFIG}.upd
 else
 	OBJECTS += DYNO_std.rom DYNO_std.com DYNO_std.upd
 	OBJECTS += EZZ80_std.rom EZZ80_std.com EZZ80_std.upd
