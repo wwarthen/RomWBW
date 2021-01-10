@@ -916,6 +916,9 @@ MD_FIDEN_R:				; THIS CODE GETS RELOCATED TO HIGH MEMORY
 ;	RET				
 ;
 MD_I_SZ	.EQU	$-MD_FIDEN_R		; SIZE OF RELOCATABLE CODE BUFFER REQUIRED
+	.ECHO	"MD_FIDEN_R occupies "
+	.ECHO	MD_I_SZ
+	.ECHO	" bytes.\n"
 ;
 ;======================================================================
 ; ERASE FLASH SECTOR. 
@@ -979,6 +982,9 @@ MD_WT6:	EX	AF,AF'			; RETURN TO ORIGINAL BANK
 ;	RET				
 ;
 MD_S_SZ	.EQU	$-MD_FERAS_R		; SIZE OF RELOCATABLE CODE BUFFER REQUIRED
+	.ECHO	"MD_FERAS_R occupies "
+	.ECHO	MD_S_SZ
+	.ECHO	" bytes.\n"
 ;
 ;======================================================================
 ; FLASH READ SECTOR. 
@@ -1003,14 +1009,16 @@ MD_FREAD_R:				; THIS CODE GETS RELOCATED TO HIGH MEMORY
 	LD	L,D			; ADDRESS
 ;
 	EX	AF,AF'			; PUT DESTINATION BANK IN AF'
-	LD	A,B			; PUT SOURCE BANK IN AF
 ;
 MD_FRD1:	
+	LD	A,B			; PUT SOURCE BANK IN AF
 	CALL	HBX_BNKSEL		; READ			; SWITCH TO SOURCE BANK
 	LD	C,(HL)			; BYTE
 ;	
 	EX	AF,AF'			; SELECT BANK 		; SWITCH DESTINATION BANK
+	PUSH	AF
 	CALL	HBX_BNKSEL		; TO WRITE
+	POP	AF
 	LD	(IX+0),C		; WRITE BYTE
 	EX	AF,AF'			;			; PUT SOURCE BANK IN AF
 ;
@@ -1024,6 +1032,9 @@ MD_FRD1:
 	RET				
 ;
 MD_R_SZ	.EQU	$-MD_FREAD_R		; SIZE OF RELOCATABLE CODE BUFFER REQUIRED
+	.ECHO	"MD_FREAD_R occupies "
+	.ECHO	MD_R_SZ
+	.ECHO	" bytes.\n"
 ;
 ;======================================================================
 ; FLASH VERIFY SECTOR. 
@@ -1054,7 +1065,9 @@ MD_FVE1:
 	LD	A,(HL)			; READ BYTE
 ;
 	EX	AF,AF'			; SELECT BANK			; SWITCH TO RAM BANK
+	PUSH	AF
 	CALL	HBX_BNKSEL		; TO VERIFY AGAINST
+	POP	AF
 	EX	AF,AF'
 ;
 	SUB	(IX+0)			; COMPARE BYTE
@@ -1074,6 +1087,9 @@ MD_FVE2:
 	RET				
 ;
 MD_V_SZ	.EQU	$-MD_FVERI_R		; SIZE OF RELOCATABLE CODE BUFFER REQUIRED
+	.ECHO	"MD_FVERI_R occupies "
+	.ECHO	MD_V_SZ
+	.ECHO	" bytes.\n"
 ;
 ;======================================================================
 ; FLASH WRITE SECTOR. 
@@ -1097,7 +1113,9 @@ MD_FWRIT_R:				; THIS CODE GETS RELOCATED TO HIGH MEMORY
 	LD	L,D			; ADDRESS
 ;
 MD_FWRI1:
+	PUSH	AF
 	CALL	HBX_BNKSEL		; SELECT BANK TO READ
+	POP	AF
 	EX	AF,AF'			; SAVE CURRENT BANK
 ;
 	LD	C,(IX+0)		; READ IN BYTE
@@ -1136,6 +1154,9 @@ MD_FW7:	LD	A,(HL)			; FROM THE SAME FLASH ADDRESS.
 ;	RET
 ;
 MD_W_SZ	.EQU	$-MD_FWRIT_R		; SIZE OF RELOCATABLE CODE BUFFER REQUIRED
+	.ECHO	"MD_FWRIT_R occupies "
+	.ECHO	MD_W_SZ
+	.ECHO	" bytes.\n"
 ;
 ;======================================================================
 ;
