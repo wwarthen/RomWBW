@@ -435,7 +435,7 @@ devlst:
 ;
 setcon:
 	; On entry DE is expected to be pointing to start
-	; of command
+	; of command. Get unit number.
 	call	findws			; skip command
 	call	skipws			; and skip it
 	call	isnum			; do we have a number?
@@ -444,19 +444,64 @@ setcon:
 	jp	c,err_nocon		; handle overflow error
 ;
 	; Check against max char unit
+	PUSH	DE
 	push	af			; save requested unit
 	ld	b,BF_SYSGET		; HBIOS func: SYS GET
 	ld	c,BF_SYSGET_CIOCNT	; HBIOS subfunc: CIO unit count
 	rst	08			; E := unit count
 	pop	af			; restore requested unit
 	cp	e			; compare
+	POP	DE
 	jp	nc,err_nocon		; handle invalid unit
+	ld	(newcon),a		; save validated console
+;
+	; Get baud rate
+	call	findws
+	call	skipws			; skip whitespace
+	call	isnum			; do we have a number?
+	jp	nz,docon		; if no we don't change baudrate
+	call	getnum			; parse a number
+	jp	c,err_invcmd		; handle overflow error
+;
+	cp	32			; handle invalid
+	jp	nc,err_invcmd		; baud rate
+	bit	0,a
+	jr	z,iseven		; convert sequential
+	inc	a			; baud rate code to
+	srl	a			; encoded baud rate
+	jr	setspd			; 13=9600
+iseven:	dec	a			; 15=19200
+	srl	a			; 17=38400
+	add	a,16			; 20=115200
+setspd:	ld	(newspeed),a		; save validated baud rate
+;
+	ld	hl,str_chspeed		; notify user 
+	call	pstr			; to change
+	call	cin			; speed
+;	
+	; Get the current settings for chosen console
+	ld	b,BF_CIOQUERY		; BIOS serial device query
+	ld	a,(newcon)		; get device unit num
+	ld	c,a			; ... and put in C
+	rst	08			; call H/UBIOS, DE := line characteristics
+	jp	nz,err_invcmd		; abort on error
+;
+	ld	a,d			; mask off current
+	and	$11100000		; baud rate 
+	ld	hl,newspeed		; and load in new
+	or	(hl)			; baud rate
+	ld	d,a
+;
+	ld	b,BF_CIOINIT		; BIOS serial init
+	ld	a,(newcon)		; get serial device unit
+	ld	c,a			; ... into C
+	rst	08			; call HBIOS
+	jp	nz,err_invcmd		; handle error
 ;
 	; Notify user, we're outta here....
-	push	af			; save new console unit
-	ld	hl,str_newcon		; new console msg
+docon:	ld	hl,str_newcon		; new console msg
 	call	pstr			; print string on cur console
-	pop	af			; restore new console unit
+	ld	a,(newcon)		; restore new console unit
 	call	prtdecb			; print unit num
 ;
 	; Set console unit
@@ -470,7 +515,6 @@ setcon:
 	call	nl2			; formatting
 	ld	hl,str_banner		; display boot banner
 	call	pstr			; do it
-;
 	ret				; done
 ;
 #endif
@@ -1103,7 +1147,7 @@ rdln_nxt:
 	jr	rdln_nxt		; loop till done
 ;
 rdln_bs:
-	ld	hl,cmdbuf			; start of buffer
+	ld	hl,cmdbuf		; start of buffer
 	or	a			; clear carry
 	sbc	hl,de			; subtract from cur buf ptr
 	jr	z,rdln_bel		; at buf start, just beep
@@ -1508,7 +1552,7 @@ cin:
 	; Input character from console via hbios
 	ld	c,CIO_CONSOLE		; console unit to c
 	ld	b,BF_CIOIN		; HBIOS func: input char
-	rst	08			; HBIOS reads charactdr
+	rst	08			; HBIOS reads character
 	ld	a,e			; move character to A for return
 ;
 	; Restore registers (AF is output)
@@ -1833,7 +1877,7 @@ str_err_prefix	.db	bel,"\r\n\r\n*** ",0
 str_err_invcmd	.db	"Invalid command",0
 str_err_nodisk	.db	"Disk unit not available",0
 str_err_noslice	.db	"Disk unit does not support slices",0
-str_err_nocon	.db	"Invalid character unit",0
+str_err_nocon	.db	"Invalid character unit specification",0
 str_err_diskio	.db	"Disk I/O failure",0
 str_err_sig	.db	"No system image on disk",0
 str_err_api	.db	"Unexpected hardware BIOS API failure",0
@@ -1872,6 +1916,7 @@ str_prompt	.db	"Boot [H=Help]: ",0
 str_bs		.db	bs,' ',bs,0
 str_reboot	.db	"\r\n\r\nRestarting System...",0
 str_newcon	.db	"\r\n\r\n  Console on Unit #",0
+str_chspeed	.db	"\r\n\r\n  Change speed now. Press a key to resume.",0
 str_applst	.db	"\r\n\r\nROM Applications:",0
 str_devlst	.db	"\r\n\r\nDisk Devices:",0
 str_invcmd	.db	"\r\n\r\n*** Invalid Command ***",bel,0
@@ -1889,14 +1934,14 @@ str_ldsec	.db	", Sector 0x",0
 str_diaglvl	.db	"\r\n\r\nHBIOS Diagnostic Level: ",0
 ;
 str_help	.db	"\r\n"
-		.db	"\r\n  L         - List ROM Applications"
-		.db	"\r\n  D         - Disk Device Inventory"
-		.db	"\r\n  R         - Reboot System"
+		.db	"\r\n  L           - List ROM Applications"
+		.db	"\r\n  D           - Disk Device Inventory"
+		.db	"\r\n  R           - Reboot System"
 #if (BIOS == BIOS_WBW)
-		.db	"\r\n  I <u>     - Set Console Interface"
-		.db	"\r\n  V [<n>]   - View/Set HBIOS Diagnostic Verbosity"
+		.db	"\r\n  I <u> [<c>] - Set Console Interface/Baud code"
+		.db	"\r\n  V [<n>]     - View/Set HBIOS Diagnostic Verbosity"
 #endif
-		.db	"\r\n  <u>[.<s>] - Boot Disk Unit/Slice"
+		.db	"\r\n  <u>[.<s>]   - Boot Disk Unit/Slice"
 		.db	0
 ;
 #if (DSKYENABLE)
@@ -2023,6 +2068,8 @@ str_tbas	.db	"Tasty BASIC",0
 str_play	.db	"Play a Game",0
 str_user	.db	"User App",0
 str_egg		.db	"",0
+newcon		.db	0
+newspeed	.db	0
 ;
 ;=======================================================================
 ; Pad remainder of ROM Loader
