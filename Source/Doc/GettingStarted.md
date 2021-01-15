@@ -67,7 +67,7 @@ General features include:
 * Disk drivers for RAM, ROM, Floppy, IDE, CF, and SD
 * Serial drivers including UART (16550-like), ASCI, ACIA, SIO
 * Video drivers including TMS9918, SY6545, MOS8563, HD6445
-* Real time clock drivers including DS1322, BQ4845
+* Real time clock drivers including DS1302, BQ4845
 * Multiple OS support including CP/M 2.2, ZSDOS, CP/M 3, ZPM3
 * Built-in VT-100 terminal emulation support
 
