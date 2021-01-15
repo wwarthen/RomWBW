@@ -444,14 +444,14 @@ setcon:
 	jp	c,err_nocon		; handle overflow error
 ;
 	; Check against max char unit
-	PUSH	DE
+	push	de
 	push	af			; save requested unit
 	ld	b,BF_SYSGET		; HBIOS func: SYS GET
 	ld	c,BF_SYSGET_CIOCNT	; HBIOS subfunc: CIO unit count
 	rst	08			; E := unit count
 	pop	af			; restore requested unit
 	cp	e			; compare
-	POP	DE
+	pop	de
 	jp	nc,err_nocon		; handle invalid unit
 	ld	(newcon),a		; save validated console
 ;
