@@ -836,8 +836,12 @@ FF_NXT2:
 ;
 MD_FNCALL:				; USING HBX_BUF FOR CODE AREA
 ;
+	LD	B,0			; RETREIVE THE
+	DEC	HL			; CODE SIZE TO
+	LD	C,(HL)			; BE COPIED
+	INC	HL			; MAXIMUM 64 BYTES
+;
 	LD	DE,HBX_BUF		; EXECUTE / START ADDRESS
-	LD	BC,MD_CSIZE		; CODE SIZE. MAXIMUM 64 BYTES
 	LDIR				; COPY OUR RELOCATABLE CODE TO THE BUFFER
 ;
 	LD	D,B			; PRESET DE TO ZERO TO REDUCE
@@ -921,57 +925,6 @@ MD_FFMSGENA	.DB	"ENABLED$"
 MD_F4KBUF	.FILL	4096,$FF
 MD_FFSEN	.DB	00h		; FLASH FILES SYSTEM ENABLE
 ;
-;======================================================================
-;
-; RELOCATABLE CODE SPACE REQUIREMENTS CHECK
-;
-;======================================================================
-;
-#IF (MD_FDBG==1)
-		.ECHO	"MD_FIDEN_R "
-		.ECHO	MD_I_SZ
-		.ECHO	"\n"
-;
-		.ECHO	"MD_FREAD_R "
-		.ECHO	MD_R_SZ
-		.ECHO	"\n"
-;
-		.ECHO	"MD_FVERI_R "
-		.ECHO	MD_V_SZ
-		.ECHO	"\n"
-;
-		.ECHO	"MD_FERAS_R "
-		.ECHO	MD_S_SZ
-		.ECHO	"\n"
-
-		.ECHO	"MD_FWRIT_R "
-		.ECHO	MD_W_SZ
-		.ECHO	"\n"
-#ENDIF
-;
-MD_CSIZE	.EQU	0
-;
-#IF (MD_W_SZ>MD_CSIZE)
-MD_CSIZE	.SET	MD_W_SZ
-#ENDIF
-#IF (MD_S_SZ>MD_CSIZE)
-MD_CSIZE	.SET	MD_S_SZ
-#ENDIF
-#IF (MD_I_SZ>MD_CSIZE)
-MD_CSIZE	.SET	MD_I_SZ
-#ENDIF
-#IF (MD_R_SZ>MD_CSIZE)
-MD_CSIZE	.SET	MD_R_SZ
-#ENDIF
-#IF (MD_V_SZ>MD_CSIZE)
-MD_CSIZE	.SET	MD_V_SZ
-#ENDIF
-;
-#IF (MD_CSIZE>HBX_BUFSIZ)
-		.ECHO	"Warning: Flash code exceeds available space by "
-		.ECHO	MD_CSIZE-HBX_BUFSIZ
-		.ECHO	" bytes.\n"
-#ENDIF
 #ENDIF
 ;
 MD_RWFNADR	.DW	0
