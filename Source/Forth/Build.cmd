@@ -12,6 +12,6 @@ set ZXLIBDIR=%TOOLS%/cpm/lib/
 set ZXINCDIR=%TOOLS%/cpm/include/
 
 zx zsm =camel80.azm -/l
-zx link -CAMEL80.BIN=CAMEL80
+zx link -CAMEL80.BIN[L200]=CAMEL80
 
 
