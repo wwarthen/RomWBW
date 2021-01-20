@@ -13,6 +13,7 @@ else
 	OBJECTS += RCZ180_ext.rom RCZ180_ext.com RCZ180_ext.upd
 	OBJECTS += RCZ180_nat.rom RCZ180_nat.com RCZ180_nat.upd
 	OBJECTS += RCZ280_ext.rom RCZ280_ext.com RCZ280_ext.upd
+	OBJECTS += RCZ280_nat.rom RCZ280_nat.com RCZ280_nat.upd
 	OBJECTS += RCZ80_kio.rom RCZ80_kio.com RCZ80_kio.upd
 	OBJECTS += RCZ80_mt.rom RCZ80_mt.com RCZ80_mt.upd
 	OBJECTS += RCZ80_duart.rom RCZ80_duart.com RCZ80_duart.upd
@@ -23,6 +24,7 @@ else
 	OBJECTS += SCZ180_126.rom SCZ180_126.com SCZ180_126.upd
 	OBJECTS += SCZ180_130.rom SCZ180_130.com SCZ180_130.upd
 	OBJECTS += SCZ180_131.rom SCZ180_131.com SCZ180_131.upd
+	OBJECTS += SCZ180_140.rom SCZ180_140.com SCZ180_140.upd
 	OBJECTS += UNA_std.rom
 	OBJECTS += ZETA_std.rom ZETA_std.com ZETA_std.upd
 	OBJECTS += ZETA2_std.rom ZETA2_std.com ZETA2_std.upd
