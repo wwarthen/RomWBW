@@ -11,6 +11,7 @@ BF_SYSRES_WARM		EQU	01h		; WARM START (RESTART BOOT LOADER)
 
 FTH_SIZ			EQU	1700h
 FTH_LOC			EQU	0200h
+HB_LOC			EQU	0FD80h
 
 ; Listing 2.
 ; ===============================================
@@ -71,7 +72,10 @@ FTH_LOC			EQU	0200h
 ;                   precision words as per RC2014
 ;                   version. Increase terminal 
 ;                   input buffer (TIB) size.
-;       b1ackmai1er difficultylevelhigh@gmail.com                   
+;       b1ackmai1er difficultylevelhigh@gmail.com  
+;   22-Jan 21 v1.02 Adjust for revised HBIOS
+;                   proxy size.
+;       b1ackmai1er difficultylevelhigh@gmail.com                  
 ; ===============================================
 ; Macros to define Forth headers
 ; HEAD  label,length,name,action
@@ -140,7 +144,7 @@ nexthl  MACRO
 	CSEG
 	.PHASE	FTH_LOC
 
-reset:  ld hl,0FDFFh ; HBIOS address, rounded down
+reset:  ld hl,HB_LOC ; HBIOS address, rounded down
         ld l,0       ;    = end of avail.mem (EM)
         dec h        ; EM-100h
         ld sp,hl     ;      = top of param stack
@@ -165,7 +169,7 @@ reset:  ld hl,0FDFFh ; HBIOS address, rounded down
 ;   EM-100h     HOLD area, 40 bytes, grows down
 ;   EM-0D8h     PAD buffer, 88 bytes
 ;   EM-80h      Return stack, 128 B, grows down
-;   EM          End of RAM = start of HBIOS
+;   EM=HB_LOC   End of RAM = start of HBIOS
 ; See also the definitions of U0, S0, and R0
 ; in the "system variables & constants" area.
 ; A task w/o terminal input requires 200h bytes.
