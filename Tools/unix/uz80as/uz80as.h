@@ -8,7 +8,7 @@
 #ifndef UZ80AS_H
 #define UZ80AS_H
 
-int verbose;
+static int verbose;
 
 /* matchtab.flags */
 enum {
