@@ -66,7 +66,6 @@
 ;
 ; TODO
 ; - Add remaining service routine stubs for IM3 (NMI, etc.)
-; - Review bank selection code (selectable user/sys bank?)
 ; - Fix app boot under Z280
 ;
 ; INCLUDE GENERIC STUFF
@@ -637,20 +636,6 @@ HBX_PPRET:
 HBX_PPSP	.EQU	$ - 2
 	RET
 ;
-; SYSCALL VECTOR ENTRY POINT.  TAKES STACK PARAMETER AS A BRANCH
-; ADDRESS AND CALLS IT.  ALLOWS ANY USER MODE CODE TO CALL INTO AN
-; ARBITRARY LOCATION OF SYSTEM MODE CODE.
-;
-#IF (MEMMGR == MM_Z280)
-Z280_SYSCALL:
-	EX	(SP),HL
-	LD	(Z280_SYSCALL_GO+1),HL
-	POP	HL
-Z280_SYSCALL_GO:
-	CALL	$FFFF			; PARM SET ABOVE
-	.DB	$ED,$55			; RETIL
-#ENDIF
-;
 ; PRIVATE STACK AT END OF HBIOS CODE
 ; OCCUPIES SPACE BEFORE IVT
 ;
@@ -977,7 +962,7 @@ HB_START:
 	; INITIALIZE ALL OF THE SYSTEM PAGE DESCRIPTORS WITH BLOCK MOVE
 	XOR	A			; FIRST USER PDR
 	OUT	(Z280_MMUPDRPTR),A	; SET THE PDR POINTER
-	LD	HL,Z280_PDRTBL		; START OF PDR VALUES TABLE
+	LD	HL,Z280_BOOTPDRTBL	; START OF PDR VALUES TABLE
 	LD	C,Z280_MMUBLKMOV	; PDR BLOCK MOVE PORT
 	LD	B,16			; PROGRAM 16 PDRS
 	.DB	$ED,$93			; OTIRW
@@ -985,7 +970,7 @@ HB_START:
 	; INITIALIZE ALL OF THE USER PAGE DESCRIPTORS WITH BLOCK MOVE
 	LD	A,$10			; FIRST SYSTEM PDR
 	OUT	(Z280_MMUPDRPTR),A	; SET THE PDR POINTER
-	LD	HL,Z280_PDRTBL		; START OF PDR VALUES TABLE
+	LD	HL,Z280_BOOTPDRTBL	; START OF PDR VALUES TABLE
 	LD	C,Z280_MMUBLKMOV	; PDR BLOCK MOVE PORT
 	LD	B,16			; PROGRAM 16 PDRS
 	.DB	$ED,$93			; OTIRW
@@ -1007,7 +992,12 @@ HB_START:
 ;
 	JP	Z280_INITZ		; JUMP TO CODE CONTINUATION
 ;
-Z280_PDRTBL:
+#IF (($ % 2) == 1)
+	; BYTE ALIGN THE TABLE
+	.DB	0
+#ENDIF
+;
+Z280_BOOTPDRTBL:
 	; LOWER 32 K (BANKED)
 	.DW	($000 << 4) | $A
 	.DW	($001 << 4) | $A
@@ -1186,10 +1176,15 @@ Z280_INITZ:
 ;
 ; TRANSITION TO HBIOS IN RAM BANK
 ;
+#IF (MEMMGR == MM_Z280)
+	LD	A,BID_BIOS
+	CALL	Z280_BNKSEL
+#ELSE
 	LD	A,BID_BIOS		; BIOS BANK ID
 	LD	IX,HB_START1		; EXECUTION RESUMES HERE
 	CALL	HBX_BNKCALL		; CONTINUE IN RAM BANK, DO NOT RETURN
 	HALT				; WE SHOULD NOT COME BACK HERE!
+#ENDIF
 ;
 HB_RAMFLAG	.DB	FALSE		; INITIALLY FALSE, SET TO TRUE BELOW AFTER RAM TRANSITION
 ;
@@ -1906,10 +1901,14 @@ INITSYS4:
 	
 	HB_DI				; NOT SURE THIS IS NEEDED
 
+	;; FIXUP BNKSEL TO WORK ON USER MODE PDRS
+	;XOR	A
+	;LD	(W_MMU0+1),A
+	;LD	(W_MMU1+1),A
+	
 	; FIXUP BNKSEL TO WORK ON USER MODE PDRS
 	XOR	A
-	LD	(W_MMU0+1),A
-	LD	(W_MMU1+1),A
+	LD	(Z280_BNKSEL2+1),A
 	
 	;CALL	NEWLINE
 	;LD	DE,$1050
@@ -3824,6 +3823,350 @@ Z280_IVT:
 ;
 #IF (MEMMGR == MM_Z280)
 ;
+; REG A HAS BANK ID
+;
+Z280_BNKSEL:
+	PUSH	BC
+	PUSH	HL
+;
+	; SELECT I/O PAGE FOR MMU
+	LD	L,$FF			; MMU AT I/O PAGE $FF
+	LD	C,Z280_IOPR		; I/O PAGE REGISTER TO C
+	.DB	$ED,$6E			; LDCTL (C),HL
+;
+	; POINT HL TO PORTION OF TABLE TO PROGRAM PDRS WITH
+	LD	HL,Z280_PDRTBL		; POINT TO PDR TABLE
+	SLA	A			; BANK ID TIMES TWO, RAM BIT TO C
+	JR	NC,Z280_BNKSEL1		; IF ROM, SKIP AHEAD
+	INC	H			; HANDLE RAM OFFSET
+Z280_BNKSEL1:
+	RLCA
+	RLCA
+	RLCA
+	ADD	A,L
+	LD	L,A
+	JR	NC,Z280_BNKSEL2		; NO CARRY, SKIP AHEAD
+	INC	H			; HANDLE CARRY
+;
+Z280_BNKSEL2:
+	; POINT TO FIRST PDR TO PROGRAM ($00=USER, $10=SYSTEM)
+	LD	A,$10			; FIRST SYSTEM PDR
+	OUT	(Z280_MMUPDRPTR),A	; SET THE PDR POINTER
+;
+	; PROGRAM 8 PDRS
+	LD	C,Z280_MMUBLKMOV	; PDR BLOCK MOVE PORT
+	LD	B,8			; PROGRAM 8 PDRS
+	.DB	$ED,$93			; OTIRW
+;	
+	; SELECT I/O PAGE FOR MMU
+	LD	L,$00			; NORMAL I/O PAGE $00
+	LD	C,Z280_IOPR		; I/O PAGE REGISTER TO C
+	.DB	$ED,$6E			; LDCTL (C),HL
+;	
+	POP	HL
+	POP	BC
+	RET
+;
+#IF (($ % 2) == 1)
+	; BYTE ALIGN THE TABLE
+	.DB	0
+#ENDIF
+;
+Z280_PDRTBL:
+	; BANK $00
+	.DW	($000 << 4) | $A
+	.DW	($001 << 4) | $A
+	.DW	($002 << 4) | $A
+	.DW	($003 << 4) | $A
+	.DW	($004 << 4) | $A
+	.DW	($005 << 4) | $A
+	.DW	($006 << 4) | $A
+	.DW	($007 << 4) | $A
+	; BANK $01
+	.DW	($008 << 4) | $A
+	.DW	($009 << 4) | $A
+	.DW	($00A << 4) | $A
+	.DW	($00B << 4) | $A
+	.DW	($00C << 4) | $A
+	.DW	($00D << 4) | $A
+	.DW	($00E << 4) | $A
+	.DW	($00F << 4) | $A
+	; BANK $02
+	.DW	($010 << 4) | $A
+	.DW	($011 << 4) | $A
+	.DW	($012 << 4) | $A
+	.DW	($013 << 4) | $A
+	.DW	($014 << 4) | $A
+	.DW	($015 << 4) | $A
+	.DW	($016 << 4) | $A
+	.DW	($017 << 4) | $A
+	; BANK $03
+	.DW	($018 << 4) | $A
+	.DW	($019 << 4) | $A
+	.DW	($01A << 4) | $A
+	.DW	($01B << 4) | $A
+	.DW	($01C << 4) | $A
+	.DW	($01D << 4) | $A
+	.DW	($01E << 4) | $A
+	.DW	($01F << 4) | $A
+	; BANK $04
+	.DW	($020 << 4) | $A
+	.DW	($021 << 4) | $A
+	.DW	($022 << 4) | $A
+	.DW	($023 << 4) | $A
+	.DW	($024 << 4) | $A
+	.DW	($025 << 4) | $A
+	.DW	($026 << 4) | $A
+	.DW	($027 << 4) | $A
+	; BANK $05
+	.DW	($028 << 4) | $A
+	.DW	($029 << 4) | $A
+	.DW	($02A << 4) | $A
+	.DW	($02B << 4) | $A
+	.DW	($02C << 4) | $A
+	.DW	($02D << 4) | $A
+	.DW	($02E << 4) | $A
+	.DW	($02F << 4) | $A
+	; BANK $06
+	.DW	($030 << 4) | $A
+	.DW	($031 << 4) | $A
+	.DW	($032 << 4) | $A
+	.DW	($033 << 4) | $A
+	.DW	($034 << 4) | $A
+	.DW	($035 << 4) | $A
+	.DW	($036 << 4) | $A
+	.DW	($037 << 4) | $A
+	; BANK $07
+	.DW	($038 << 4) | $A
+	.DW	($039 << 4) | $A
+	.DW	($03A << 4) | $A
+	.DW	($03B << 4) | $A
+	.DW	($03C << 4) | $A
+	.DW	($03D << 4) | $A
+	.DW	($03E << 4) | $A
+	.DW	($03F << 4) | $A
+	; BANK $08
+	.DW	($040 << 4) | $A
+	.DW	($041 << 4) | $A
+	.DW	($042 << 4) | $A
+	.DW	($043 << 4) | $A
+	.DW	($044 << 4) | $A
+	.DW	($045 << 4) | $A
+	.DW	($046 << 4) | $A
+	.DW	($047 << 4) | $A
+	; BANK $09
+	.DW	($048 << 4) | $A
+	.DW	($049 << 4) | $A
+	.DW	($04A << 4) | $A
+	.DW	($04B << 4) | $A
+	.DW	($04C << 4) | $A
+	.DW	($04D << 4) | $A
+	.DW	($04E << 4) | $A
+	.DW	($04F << 4) | $A
+	; BANK $0A
+	.DW	($050 << 4) | $A
+	.DW	($051 << 4) | $A
+	.DW	($052 << 4) | $A
+	.DW	($053 << 4) | $A
+	.DW	($054 << 4) | $A
+	.DW	($055 << 4) | $A
+	.DW	($056 << 4) | $A
+	.DW	($057 << 4) | $A
+	; BANK $0B
+	.DW	($058 << 4) | $A
+	.DW	($059 << 4) | $A
+	.DW	($05A << 4) | $A
+	.DW	($05B << 4) | $A
+	.DW	($05C << 4) | $A
+	.DW	($05D << 4) | $A
+	.DW	($05E << 4) | $A
+	.DW	($05F << 4) | $A
+	; BANK $0C
+	.DW	($060 << 4) | $A
+	.DW	($061 << 4) | $A
+	.DW	($062 << 4) | $A
+	.DW	($063 << 4) | $A
+	.DW	($064 << 4) | $A
+	.DW	($065 << 4) | $A
+	.DW	($066 << 4) | $A
+	.DW	($067 << 4) | $A
+	; BANK $0D
+	.DW	($068 << 4) | $A
+	.DW	($069 << 4) | $A
+	.DW	($06A << 4) | $A
+	.DW	($06B << 4) | $A
+	.DW	($06C << 4) | $A
+	.DW	($06D << 4) | $A
+	.DW	($06E << 4) | $A
+	.DW	($06F << 4) | $A
+	; BANK $0E
+	.DW	($070 << 4) | $A
+	.DW	($071 << 4) | $A
+	.DW	($072 << 4) | $A
+	.DW	($073 << 4) | $A
+	.DW	($074 << 4) | $A
+	.DW	($075 << 4) | $A
+	.DW	($076 << 4) | $A
+	.DW	($077 << 4) | $A
+	; BANK $0F
+	.DW	($078 << 4) | $A
+	.DW	($079 << 4) | $A
+	.DW	($07A << 4) | $A
+	.DW	($07B << 4) | $A
+	.DW	($07C << 4) | $A
+	.DW	($07D << 4) | $A
+	.DW	($07E << 4) | $A
+	.DW	($07F << 4) | $A
+
+	; BANK $10
+	.DW	($080 << 4) | $A
+	.DW	($081 << 4) | $A
+	.DW	($082 << 4) | $A
+	.DW	($083 << 4) | $A
+	.DW	($084 << 4) | $A
+	.DW	($085 << 4) | $A
+	.DW	($086 << 4) | $A
+	.DW	($087 << 4) | $A
+	; BANK $11
+	.DW	($088 << 4) | $A
+	.DW	($089 << 4) | $A
+	.DW	($08A << 4) | $A
+	.DW	($08B << 4) | $A
+	.DW	($08C << 4) | $A
+	.DW	($08D << 4) | $A
+	.DW	($08E << 4) | $A
+	.DW	($08F << 4) | $A
+	; BANK $12
+	.DW	($090 << 4) | $A
+	.DW	($091 << 4) | $A
+	.DW	($092 << 4) | $A
+	.DW	($093 << 4) | $A
+	.DW	($094 << 4) | $A
+	.DW	($095 << 4) | $A
+	.DW	($096 << 4) | $A
+	.DW	($097 << 4) | $A
+	; BANK $13
+	.DW	($098 << 4) | $A
+	.DW	($099 << 4) | $A
+	.DW	($09A << 4) | $A
+	.DW	($09B << 4) | $A
+	.DW	($09C << 4) | $A
+	.DW	($09D << 4) | $A
+	.DW	($09E << 4) | $A
+	.DW	($09F << 4) | $A
+	; BANK $14
+	.DW	($0A0 << 4) | $A
+	.DW	($0A1 << 4) | $A
+	.DW	($0A2 << 4) | $A
+	.DW	($0A3 << 4) | $A
+	.DW	($0A4 << 4) | $A
+	.DW	($0A5 << 4) | $A
+	.DW	($0A6 << 4) | $A
+	.DW	($0A7 << 4) | $A
+	; BANK $15
+	.DW	($0A8 << 4) | $A
+	.DW	($0A9 << 4) | $A
+	.DW	($0AA << 4) | $A
+	.DW	($0AB << 4) | $A
+	.DW	($0AC << 4) | $A
+	.DW	($0AD << 4) | $A
+	.DW	($0AE << 4) | $A
+	.DW	($0AF << 4) | $A
+	; BANK $16
+	.DW	($0B0 << 4) | $A
+	.DW	($0B1 << 4) | $A
+	.DW	($0B2 << 4) | $A
+	.DW	($0B3 << 4) | $A
+	.DW	($0B4 << 4) | $A
+	.DW	($0B5 << 4) | $A
+	.DW	($0B6 << 4) | $A
+	.DW	($0B7 << 4) | $A
+	; BANK $17
+	.DW	($0B8 << 4) | $A
+	.DW	($0B9 << 4) | $A
+	.DW	($0BA << 4) | $A
+	.DW	($0BB << 4) | $A
+	.DW	($0BC << 4) | $A
+	.DW	($0BD << 4) | $A
+	.DW	($0BE << 4) | $A
+	.DW	($0BF << 4) | $A
+	; BANK $18
+	.DW	($0C0 << 4) | $A
+	.DW	($0C1 << 4) | $A
+	.DW	($0C2 << 4) | $A
+	.DW	($0C3 << 4) | $A
+	.DW	($0C4 << 4) | $A
+	.DW	($0C5 << 4) | $A
+	.DW	($0C6 << 4) | $A
+	.DW	($0C7 << 4) | $A
+	; BANK $19
+	.DW	($0C8 << 4) | $A
+	.DW	($0C9 << 4) | $A
+	.DW	($0CA << 4) | $A
+	.DW	($0CB << 4) | $A
+	.DW	($0CC << 4) | $A
+	.DW	($0CD << 4) | $A
+	.DW	($0CE << 4) | $A
+	.DW	($0CF << 4) | $A
+	; BANK $1A
+	.DW	($0D0 << 4) | $A
+	.DW	($0D1 << 4) | $A
+	.DW	($0D2 << 4) | $A
+	.DW	($0D3 << 4) | $A
+	.DW	($0D4 << 4) | $A
+	.DW	($0D5 << 4) | $A
+	.DW	($0D6 << 4) | $A
+	.DW	($0D7 << 4) | $A
+	; BANK $1B
+	.DW	($0D8 << 4) | $A
+	.DW	($0D9 << 4) | $A
+	.DW	($0DA << 4) | $A
+	.DW	($0DB << 4) | $A
+	.DW	($0DC << 4) | $A
+	.DW	($0DD << 4) | $A
+	.DW	($0DE << 4) | $A
+	.DW	($0DF << 4) | $A
+	; BANK $1C
+	.DW	($0E0 << 4) | $A
+	.DW	($0E1 << 4) | $A
+	.DW	($0E2 << 4) | $A
+	.DW	($0E3 << 4) | $A
+	.DW	($0E4 << 4) | $A
+	.DW	($0E5 << 4) | $A
+	.DW	($0E6 << 4) | $A
+	.DW	($0E7 << 4) | $A
+	; BANK $1D
+	.DW	($0E8 << 4) | $A
+	.DW	($0E9 << 4) | $A
+	.DW	($0EA << 4) | $A
+	.DW	($0EB << 4) | $A
+	.DW	($0EC << 4) | $A
+	.DW	($0ED << 4) | $A
+	.DW	($0EE << 4) | $A
+	.DW	($0EF << 4) | $A
+	; BANK $1E
+	.DW	($0F0 << 4) | $A
+	.DW	($0F1 << 4) | $A
+	.DW	($0F2 << 4) | $A
+	.DW	($0F3 << 4) | $A
+	.DW	($0F4 << 4) | $A
+	.DW	($0F5 << 4) | $A
+	.DW	($0F6 << 4) | $A
+	.DW	($0F7 << 4) | $A
+	; BANK $1F
+	.DW	($0F8 << 4) | $A
+	.DW	($0F9 << 4) | $A
+	.DW	($0FA << 4) | $A
+	.DW	($0FB << 4) | $A
+	.DW	($0FC << 4) | $A
+	.DW	($0FD << 4) | $A
+	.DW	($0FE << 4) | $A
+	.DW	($0FF << 4) | $A
+;
+#ENDIF
+;
+#IF (MEMMGR == MM_Z280) & FALSE
+;
 Z280_BNKSEL:
 	PUSH	HL
 	PUSH	DE
@@ -4010,6 +4353,20 @@ Z2DMAADR1:
 	INC	C			; BUMP TO NEXT REG
 	
 	RET
+#ENDIF
+;
+; Z280 SYSCALL VECTOR ENTRY POINT.  TAKES STACK PARAMETER AS A BRANCH
+; ADDRESS AND CALLS IT.  ALLOWS ANY USER MODE CODE TO CALL INTO AN
+; ARBITRARY LOCATION OF SYSTEM MODE CODE.
+;
+#IF (MEMMGR == MM_Z280)
+Z280_SYSCALL:
+	EX	(SP),HL
+	LD	(Z280_SYSCALL_GO+1),HL
+	POP	HL
+Z280_SYSCALL_GO:
+	CALL	$FFFF			; PARM SET ABOVE
+	.DB	$ED,$55			; RETIL
 #ENDIF
 ;
 ;==================================================================================================
