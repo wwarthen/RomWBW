@@ -13,9 +13,12 @@ LF	.EQU    0AH
 
 	CALL	CIN		; DO STUFF
 ;
-	LD      A,00H		; RETURN TO ROM LOADER
-	LD      HL,0000H
-        JP	0FFF9H
+	;LD      A,00H		; RETURN TO ROM LOADER
+	;LD      HL,0000H
+        ;JP	0FFF9H
+	LD	B,BF_SYSRESET		; SYSTEM RESTART
+	LD	C,BF_SYSRES_WARM	; WARM START
+	CALL	$FFF0			; CALL HBIOS
 ;       RET
 ;
 ;
@@ -67,8 +70,9 @@ CIN:	PUSH	BC
 	POP	BC
 	RET
 ;
-BOOTMSG:.DB	"No User ROM Installed."
-	.DB	CR,LF
+BOOTMSG:.DB	CR,LF,CR,LF
+	.DB	"No User ROM Installed."
+	.DB	CR,LF,CR,LF
 	.DB	"Press a key to return to Boot Loader.$"
 ;				
 SLACK	.EQU	(USR_END - $)
