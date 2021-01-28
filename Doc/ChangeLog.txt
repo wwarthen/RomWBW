@@ -14,6 +14,8 @@ Version 3.1.1
 - PMS: Preliminary support for writing to FLASH ROMs
 - PMS: Creation of process to update ROM system area w/o updating ROM disk contents
 - PMS: Added "updater.asm" which allows uploading and updating ROM in one step
+- WBW: Support for Z280 w/ native memory and interrupt mode 3
+- WBW: Support for Z280 UART (only for interrupt mode 3)
 
 Version 3.1
 -----------
