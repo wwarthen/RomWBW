@@ -189,7 +189,6 @@ RCZ180 (RCZ180_nat.rom & RCZ180_ext.rom):
    video, keyboard and SD Card support if present.
 
 RCZ280 (RCZ280_ext.rom):
- *** Experimental ***
  - Assumes CPU oscillator of 24 MHz
  - Bus clock will be 6 MHz, so does not match RC2014 standard!!!
  - Requires 512K RAM/ROM module
@@ -208,12 +207,31 @@ RCZ280 (RCZ280_ext.rom):
    enabled, will auto-detect and install associated
    video, keyboard and SD Card support if present.
 
-SCZ180 (SCZ180_126.rom, SCZ180_130.rom, SCZ180_131.rom):
+RCZ280 (RCZ280_nat.rom):
+ - Assumes CPU oscillator of 24 MHz
+ - Bus clock will be 6 MHz, so does not match RC2014 standard!!!
+ - Requires native RAM/ROM module (linear memory)
+ - Interrupt Mode 3 only (no ACIA support possible)
+ - Auto detects Dual Serial Module (SIO/2), and EP Dual UART.
+ - Console on whichever serial module is installed,
+   order of priority is UART, then SIO.
+ - Baud rate is determined by hardware, but normally 115200.
+ - Auto support for RC2014 Compact Flash Module
+ - Auto support for RC2014 PPIDE Module
+ - Support for Scott Baker SIO board may be enabled in config
+ - Support for Scott Baker floppy controllers (SMC & WDC) may
+   be enabled in config
+ - Support for J.B. Lang TMS9918 video card may be enabled in config
+ - Support for PropIO V2 may be enabled in config (PRPENABLE).  If
+   enabled, will auto-detect and install associated
+   video, keyboard and SD Card support if present.
+
+SCZ180 (SCZ180_126.rom, SCZ180_130.rom, SCZ180_131.rom, SCZ140.rom):
  - Same as RCZ180
  - Adds auto support for SPI SD Card
  - The 3 different variants of SCZ180 are provided to match the
-   3 corresponding systems (SC126, SC130, and SC131) designed by
-   Stephen Cousins.
+   3 corresponding systems (SC126, SC130, SC131, and SC140)
+   designed by Stephen Cousins.
  - Support for PropIO V2 may be enabled in config (PRPENABLE).  If
    enabled, will auto-detect and install associated
    video, keyboard and SD Card support if present.
