@@ -20,6 +20,7 @@ jobs:
           
       - name: Build
         run: |
+          export TZ='America/Los_Angeles'
           sudo apt-get install libncurses-dev
           make
           make clean
@@ -45,6 +46,7 @@ jobs:
 
       - name: Build
         run: |
+          export TZ='America/Los_Angeles'
           make
           make clean
           rm -rf .git*
