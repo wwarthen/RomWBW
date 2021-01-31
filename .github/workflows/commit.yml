@@ -46,6 +46,7 @@ jobs:
 
       - name: Build
         run: |
+          export TZ='America/Los_Angeles'
           make
           make clean
           rm -rf .git*
