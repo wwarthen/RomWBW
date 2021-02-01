@@ -1,6 +1,6 @@
 ;
 ;==================================================================================================
-;   ROMWBW 2.X CONFIGURATION DEFAULTS FOR RC2014
+;   ROMWBW 2.X CONFIGURATION DEFAULTS FOR RC2014 Z180 CPU
 ;==================================================================================================
 ;
 ; THIS FILE CONTAINS THE FULL SET OF DEFAULT CONFIGURATION SETTINGS FOR THE PLATFORM
