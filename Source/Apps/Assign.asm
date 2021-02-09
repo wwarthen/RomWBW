@@ -22,7 +22,11 @@
 ;   2016-04-08 [WBW] Determine key memory addresses dynamically
 ;   2019-08-07 [WBW] Fixed DPB selection error
 ;   2019-11-17 [WBW] Added preliminary CP/M 3 support
-;   2019-12-24 [WBW] Fixed location of BIOS save area
+;   2019-12-24 [WBW] Fixed location of BIOS save area\
+;   2020-04-29 [WBW] Updated for larger DPH (16 -> 20 bytes)
+;   2020-05-06 [WBW] Add patch level to version compare
+;   2020-05-10 [WBW] Set media change flag in XDPH for CP/M 3
+;   2020-05-12 [WBW] Back out media change flag
 ;_______________________________________________________________________________
 ;
 ; ToDo:
@@ -41,8 +45,7 @@ bdos	.equ	$0005		; BDOS invocation vector
 ;
 stamp	.equ	$40		; loc of RomWBW CBIOS zero page stamp
 ;
-rmj	.equ	3		; CBIOS version - major
-rmn	.equ	1		; CBIOS version - minor
+#include "../ver.inc"
 ;
 ;===============================================================================
 ; Code Section
@@ -118,10 +121,14 @@ init:
 	jp	nz,errinv	; abort with invalid config block
 	inc	hl		; next byte (major/minor version)
 	ld	a,(hl)		; load it
-	cp	rmj << 4 | rmn	; match?
+	cp	RMJ << 4 | RMN	; match?
 	jp	nz,errver	; abort with invalid os version
-	inc	hl		; bump past
-	inc	hl		; ... version info
+	inc	hl		; next byte (update/patch)
+	ld	a,(hl)		; load it
+	and	$F0		; eliminate patch num
+	cp	RUP << 4	; match?
+	jp	nz,errver	; abort with invalid os version
+	inc	hl		; bump past version info
 ;
 	; dereference HL to point to CBIOS extension data
 	ld	a,(hl)		; dereference HL
@@ -546,7 +553,8 @@ dph_init2:
 	ld	a,(hl)		; unit to A
 	push	bc		; save loop control
 	push	hl		; save drive map pointer
-	ld	hl,16		; size of a DPH structure
+	;ld	hl,16		; size of a DPH structure
+	ld	hl,20		; size of a DPH structure
 	call	alloc		; allocate space for dph
 	jp	c,instovf	; handle overflow error
 	push	hl		; save DPH location
@@ -771,6 +779,10 @@ instc2:
 	inc	hl		; bump to slice field of DPH field
 	ld	a,(de)		; get slice from mapwrk
 	ld	(hl),a		; put slice into DPH field
+;	ld	a,11		; media byte is 11 bytes ahead
+;	call	addhl		; bump HL to media byte adr
+;	or	$FF		; use $FF to signify media change
+;	ld	(hl),a		; set media flag byte
 	inc	de		; bump to next mapwrk entry
 	inc	de		; ...
 	inc	de		; ...
@@ -781,7 +793,7 @@ instc3:
 	push	hl		; save drvtbl entry adr
 	push	de		; save mapwrk entry adr
 	ld	hl,(dphadr)	; get cur dph address
-	ld	de,$23		; size of xdph
+	ld	de,$27		; size of xdph
 	add	hl,de		; bump to next dph
 	ld	(dphadr),hl	; save it
 	pop	de		; recover mapwrk entry adr
@@ -794,6 +806,16 @@ instc3:
 	add	hl,de		; HL := SELMEM func
 	ld	a,1		; bank 1 is tpa bank
 	call	jphl
+;
+	; set SCB drive door open flag
+	ld	a,$54		; SCB drive door opened flag
+	ld	(scboff),a	; set offset parm
+	or	$FF		; SCB operation, $FF = set
+	ld	(scbop),a	; set operation parm
+	ld	(scbval),a	; set value parm to $FF
+	ld	c,$31		; get/set system control block
+	ld	de,scbpb	; scb parameter block adr
+	call	bdos
 ;
 	call	drvrst		; perform BDOS drive reset
 ;
@@ -1822,6 +1844,11 @@ heaplim	.dw	0		; heap limit address
 ;
 dirbuf	.dw	0		; directory buffer location
 ;
+scbpb:	; BDOS SCB get/set parm block
+scboff	.db	$54		; media open door flag
+scbop	.db	$FF		; set a byte
+scbval	.dw	$FF		; value to set
+;
 mapwrk	.fill	(4 * 16),$FF	; working copy of drive map
 ;
 devtbl:				; device table
@@ -1866,10 +1893,10 @@ stack	.equ	$		; stack top
 ; Messages
 ;
 indent	.db	"   ",0
-msgban1	.db	"ASSIGN v1.1a for RomWBW CP/M, 24-Dec-2019",0
+msgban1	.db	"ASSIGN v1.4 for RomWBW CP/M, 12-May-2020",0
 msghb	.db	" (HBIOS Mode)",0
 msgub	.db	" (UBIOS Mode)",0
-msgban2	.db	"Copyright 2019, Wayne Warthen, GNU GPL v3",0
+msgban2	.db	"Copyright 2020, Wayne Warthen, GNU GPL v3",0
 msguse	.db	"Usage: ASSIGN D:[=[{D:|<device>[<unitnum>]:[<slicenum>]}]][,...]",13,10
 	.db	"  ex. ASSIGN           (display all active assignments)",13,10
 	.db	"      ASSIGN /?        (display version and usage)",13,10

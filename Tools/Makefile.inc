@@ -57,7 +57,7 @@ CPM=$(TOOLS)/cpm/bin
 
 %.hex: %.asm
 	$(ZXCC) $(CPM)/MAC -$< -$$PO ; \
-	
+
 %.bin: %.ASM
 	$(ZXCC) $(CPM)/MAC -$< -$$PO
 	$(ZXCC) $(CPM)/MLOAD25 -tmp.bin=$*.hex
@@ -66,8 +66,9 @@ CPM=$(TOOLS)/cpm/bin
 
 %.com: %.z80
 	$(ZXCC) $(CPM)/Z80ASM -$(basename $<)/F ; \
+	rm -f /tmp/casefn.cache ; \
 	mv $$($(CASEFN) $@) tmp.com ; mv tmp.com $@
-	
+
 %.bin: %.asm
 	$(TASM) $< $@
 
@@ -77,11 +78,11 @@ CPM=$(TOOLS)/cpm/bin
 %.rel: %.z80
 	$(ZXCC) $(CPM)/Z80ASM -$(basename $<)/MF
 
-%.hex: %.180 
+%.hex: %.180
 	$(ZXCC) $(CPM)/SLR180 -$(basename $<)/HF
 
-%.rel: %.azm 
-	$(ZXCC) $(CPM)/ZSM =$<
+%.rel: %.azm
+	$(ZXCC) $(CPM)/ZSM =$< -/L
 
 %.bin: %.rel
 	$(ZXCC) $(CPM)/LINK -$@=$<
@@ -93,6 +94,8 @@ ifeq ($(UNAME), Linux)
 %.eeprom: %.spin
 	$(BSTC) -e -l $<
 endif
+
+.ONESHELL:
 
 #
 # darwin bstc won't run, since mac os does not do 32 bit binaries any more
@@ -108,11 +111,12 @@ endif
 #
 all:: $(OBJECTS)
 	@for dir in $(SUBDIRS) ; do \
-		( echo "building in `pwd`/$$dir" ; cd "$$dir" ; make all ) ; \
+		( echo "building in `pwd`/$$dir" ; $(MAKE) --directory "$$dir" all ) ; \
 	done
-	@if [ "$(DEST)" ] ; then for file in $(OBJECTS) ; do \
+	@if [ "$(DEST)" ] ; then for file in $(filter-out $(NOCOPY),$(OBJECTS)) ; do \
 		mkdir -p $(DEST) ; \
 		echo copy $$file to $(DEST) ; \
+		rm -f /tmp/casefn.cache ; \
 		cp $$($(CASEFN) $$file) $(DEST) ; \
 	done ; fi
 	@if [ "$(DOCDEST)" ] ; then for file in $(DOCS) ; do \

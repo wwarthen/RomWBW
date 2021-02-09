@@ -1,26 +1,33 @@
-OBJECTS =
+ifndef ROM_CONFIG
+	ROM_CONFIG=std
+endif
 
-ifeq (1,1)
-OBJECTS += DYNO_std.rom DYNO_std.com
-OBJECTS += EZZ80_std.rom EZZ80_std.com
-OBJECTS += EZZ80_tz80.rom EZZ80_tz80.com
-OBJECTS += MK4_std.rom MK4_std.com
-OBJECTS += N8_std.rom N8_std.com
-OBJECTS += RCZ180_ext.rom RCZ180_ext.com
-OBJECTS += RCZ180_nat.rom RCZ180_nat.com
-OBJECTS += RCZ80_kio.rom RCZ80_kio.com
-OBJECTS += RCZ80_mt.rom RCZ80_mt.com
-OBJECTS += RCZ80_std.rom RCZ80_std.com
-OBJECTS += SBC_simh.rom SBC_simh.com
-OBJECTS += SBC_std.rom SBC_std.com 
-OBJECTS += SCZ180_126.rom SCZ180_126.com
-OBJECTS += SCZ180_130.rom SCZ180_130.com
-OBJECTS += SCZ180_131.rom SCZ180_131.com
-OBJECTS += UNA_std.rom
-OBJECTS += ZETA_std.rom ZETA_std.com
-OBJECTS += ZETA2_std.rom ZETA2_std.com
+ifdef ROM_PLATFORM
+	OBJECTS = ${ROM_PLATFORM}_${ROM_CONFIG}.rom ${ROM_PLATFORM}_${ROM_CONFIG}.com ${ROM_PLATFORM}_${ROM_CONFIG}.upd
 else
-OBJECTS += ZETA2_std.rom ZETA2_std.com
+	OBJECTS += DYNO_std.rom DYNO_std.com DYNO_std.upd
+	OBJECTS += EZZ80_std.rom EZZ80_std.com EZZ80_std.upd
+	OBJECTS += EZZ80_tz80.rom EZZ80_tz80.com EZZ80_tz80.upd
+	OBJECTS += MK4_std.rom MK4_std.com MK4_std.upd
+	OBJECTS += N8_std.rom N8_std.com N8_std.upd
+	OBJECTS += RCZ180_ext.rom RCZ180_ext.com RCZ180_ext.upd
+	OBJECTS += RCZ180_nat.rom RCZ180_nat.com RCZ180_nat.upd
+	OBJECTS += RCZ280_ext.rom RCZ280_ext.com RCZ280_ext.upd
+	OBJECTS += RCZ280_nat.rom RCZ280_nat.com RCZ280_nat.upd
+	OBJECTS += RCZ80_kio.rom RCZ80_kio.com RCZ80_kio.upd
+	OBJECTS += RCZ80_mt.rom RCZ80_mt.com RCZ80_mt.upd
+	OBJECTS += RCZ80_duart.rom RCZ80_duart.com RCZ80_duart.upd
+	OBJECTS += RCZ80_std.rom RCZ80_std.com RCZ80_std.upd
+	OBJECTS += RCZ80_zrc.rom RCZ80_zrc.com RCZ80_zrc.upd
+	OBJECTS += SBC_simh.rom SBC_simh.com SBC_simh.upd
+	OBJECTS += SBC_std.rom SBC_std.com SBC_std.upd
+	OBJECTS += SCZ180_126.rom SCZ180_126.com SCZ180_126.upd
+	OBJECTS += SCZ180_130.rom SCZ180_130.com SCZ180_130.upd
+	OBJECTS += SCZ180_131.rom SCZ180_131.com SCZ180_131.upd
+	OBJECTS += SCZ180_140.rom SCZ180_140.com SCZ180_140.upd
+	OBJECTS += UNA_std.rom
+	OBJECTS += ZETA_std.rom ZETA_std.com ZETA_std.upd
+	OBJECTS += ZETA2_std.rom ZETA2_std.com ZETA2_std.upd
 endif
 
 MOREDIFF = camel80.bin game.bin hbios_rom.bin nascom.bin prefix.bin usrrom.bin \
@@ -28,7 +35,7 @@ MOREDIFF = camel80.bin game.bin hbios_rom.bin nascom.bin prefix.bin usrrom.bin \
 	eastaegg.bin hbios_img.bin imgpad.bin osimg.bin tastybasic.bin \
 	game.bin usrrom.bin
 
-SUBDIRS = 
+SUBDIRS =
 DEST = ../../Binary
 TOOLS =../../Tools
 OTHERS =  *.img *.rom *.com *.bin *.z80 cpm.sys zsys.sys Build.inc RomDisk.tmp font*.asm *.dat

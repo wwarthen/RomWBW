@@ -82,10 +82,12 @@
 		#DEFCONT \ lddr
 
 	#ENDIF
+	
+	.ECHO	"UNLZSA2 for "
 
 	#IFDEF	HD64180
 
-		.ECHO	"HD64180 "
+		.ECHO	"HD64180"
 
 		#DEFINE LD_IX_DE \
 		#DEFCONT \ ld ixl,e \ ld ixh,d
@@ -95,7 +97,7 @@
 
 	#ELSE
 
-		.ECHO	"Z80 "
+		.ECHO	"Z80"
 
 		#DEFINE LD_IX_DE \
 		#DEFCONT \ push de \ pop ix
@@ -104,6 +106,8 @@
 		#DEFCONT \ push ix \ pop de
 
 	#ENDIF
+	
+	.ECHO	".\n"
 
 DLZSA2:
 		xor a \ ld b,a \ ex af,af' \ jr ReadToken

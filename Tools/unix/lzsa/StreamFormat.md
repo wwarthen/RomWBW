@@ -17,7 +17,7 @@ The 3-bytes LZSA header contains a signature and a traits byte:
 
 Trait bits:
 
-* V: 3 bit code that indicates which block data encoding is used. 0 is LZSA1 and 2 is LZSA2.
+* V: 3 bit code that indicates which block data encoding is used. 0 is LZSA1 and 1 is LZSA2.
 * Z: these bits in the traits are set to 0 for LZSA1 and LZSA2.
 
 # Frame format

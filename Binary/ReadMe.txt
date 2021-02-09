@@ -42,6 +42,15 @@ MK4_custom.rom will be added to this directory.
 Documentation of the pre-built ROM Images is contained in the 
 RomList.txt file in this directory.
 
+ROM Firmware Update Images (<plt>_<cfg>.upd)
+-------------------------------------
+
+The files with a ".upd" extension are binary images identical to the
+.rom files, but they only have the first 128K bytes.  The first 128K
+is the system image without the ROM disk contents.  These files can be
+used to update the system image without modifying the ROM disk
+contents.  Refer to the Getting Started document for more information.
+
 ROM Executable Images (<plt>_<cfg>.com)
 ---------------------------------------
 
@@ -91,6 +100,12 @@ Likewise, the hd_*.img files are hard disk images.  Each file is
 intended to be copied to the start of any type of hard disk media 
 (typically a CF Card or SD Card). The resulting media will be usable 
 on any RomWBW-based system that accepts the corresponding media type.
+
+WARNING: The hdnew_*.img disk images are part of a new disk
+format that is a work in progress.  Do not use these disk
+images without knowing exactly what you are doing!  The
+hd_*.img disk images continue to be the images you should
+be using under normal circumstances.
 
 Documentation of the pre-built disk images is contained in the 
 DiskList.txt file in this directory.

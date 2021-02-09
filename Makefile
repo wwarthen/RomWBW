@@ -1,19 +1,18 @@
 all:
-	cd Tools/unix ; make
-	cd Source ; make
-	cd Source/Images ; make
+	$(MAKE) --directory Tools/unix
+	$(MAKE) --directory Source
 
 clean:
-	cd Tools/unix ; make clean
-	cd Source ; make clean
-	cd Binary ; make clean
+	$(MAKE) --directory Tools/unix clean
+	$(MAKE) --directory Source clean
+	$(MAKE) --directory Binary clean
 
 clobber:
-	cd Tools/unix ; make clobber
-	cd Source ; make clobber
-	cd Binary ; make clobber
+	$(MAKE) --directory Tools/unix clobber
+	$(MAKE) --directory Source  clobber
+	$(MAKE) --directory Binary clobber
 	rm -f typescript
 
 diff:
-	cd Source ; make diff
+	$(MAKE) --directory Source diff
 

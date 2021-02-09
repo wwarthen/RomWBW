@@ -1,0 +1,281 @@
+; -----------------------------------------------------------------------------
+; Decompress raw LZSA1 block. Create one with lzsa -r <original_file> <compressed_file>
+;
+; in:
+; * LZSA_SRC_LO/LZSA_SRC_HI/LZSA_SRC_BANK contain the compressed raw block address
+; * LZSA_DST_LO/LZSA_DST_HI/LZSA_DST_BANK contain the destination buffer address
+;
+; out:
+; * LZSA_DST_LO/LZSA_DST_HI/LZSA_DST_BANK contain the last decompressed byte address, +1
+;
+; -----------------------------------------------------------------------------
+; Backward decompression is also supported, use lzsa -r -b <original_file> <compressed_file>
+; To use it, also define BACKWARD_DECOMPRESS=1 before including this code!
+;
+; in:
+; * LZSA_SRC_LO/LZSA_SRC_HI/LZSA_SRC_BANK must contain the address of the last byte of compressed data
+; * LZSA_DST_LO/LZSA_DST_HI/LZSA_DST_BANK must contain the address of the last byte of the destination buffer
+;
+; out:
+; * LZSA_DST_LO/LZSA_DST_HI/BANK contain the last decompressed byte address, -1
+;
+; -----------------------------------------------------------------------------
+;
+;  Copyright (C) 2019-2020 Emmanuel Marty, Peter Ferrie
+;
+;  This software is provided 'as-is', without any express or implied
+;  warranty.  In no event will the authors be held liable for any damages
+;  arising from the use of this software.
+;
+;  Permission is granted to anyone to use this software for any purpose,
+;  including commercial applications, and to alter it and redistribute it
+;  freely, subject to the following restrictions:
+;
+;  1. The origin of this software must not be misrepresented; you must not
+;     claim that you wrote the original software. If you use this software
+;     in a product, an acknowledgment in the product documentation would be
+;     appreciated but is not required.
+;  2. Altered source versions must be plainly marked as such, and must not be
+;     misrepresented as being the original software.
+;  3. This notice may not be removed or altered from any source distribution.
+; -----------------------------------------------------------------------------
+
+!cpu 65816
+DECOMPRESS_LZSA1
+   SEP #$30
+!as
+!rs
+   LDY #$00
+
+DECODE_TOKEN
+   JSR GETSRC                           ; read token byte: O|LLL|MMMM
+   PHA                                  ; preserve token on stack
+
+   AND #$70                             ; isolate literals count
+   BEQ NO_LITERALS                      ; skip if no literals to copy
+   CMP #$70                             ; LITERALS_RUN_LEN?
+   BNE PREPARE_COPY_LITERALS            ; if not, count is directly embedded in token
+
+   JSR GETSRC                           ; get extra byte of variable literals count
+                                        ; the carry is always set by the CMP above
+                                        ; GETSRC doesn't change it
+   SBC #$F9                             ; (LITERALS_RUN_LEN)
+   BCC PREPARE_COPY_LITERALS_DIRECT
+   BEQ LARGE_VARLEN_LITERALS            ; if adding up to zero, go grab 16-bit count
+
+   JSR GETSRC                           ; get single extended byte of variable literals count
+   INY                                  ; add 256 to literals count
+   BCS PREPARE_COPY_LITERALS_DIRECT     ; (*like JMP PREPARE_COPY_LITERALS_DIRECT but shorter)
+
+LARGE_VARLEN_LITERALS                   ; handle 16 bits literals count
+                                        ; literals count = directly these 16 bits
+   JSR GETLARGESRC                      ; grab low 8 bits in X, high 8 bits in A
+   TAY                                  ; put high 8 bits in Y
+   TXA
+   BCS PREPARE_COPY_LARGE_LITERALS      ; (*like JMP PREPARE_COPY_LITERALS_DIRECT but shorter)
+
+PREPARE_COPY_LITERALS
+   TAX
+   LDA SHIFT_TABLE-1,X                  ; shift literals length into place
+                                        ; -1 because position 00 is reserved
+PREPARE_COPY_LITERALS_DIRECT
+   TAX
+
+PREPARE_COPY_LARGE_LITERALS
+   BEQ COPY_LITERALS
+   INY
+
+COPY_LITERALS
+   JSR GETPUT                           ; copy one byte of literals
+   DEX
+   BNE COPY_LITERALS
+   DEY
+   BNE COPY_LITERALS
+   
+NO_LITERALS
+   PLA                                  ; retrieve token from stack
+   PHA                                  ; preserve token again
+   BMI GET_LONG_OFFSET                  ; $80: 16 bit offset
+
+   JSR GETSRC                           ; get 8 bit offset from stream in A
+   TAX                                  ; save for later
+   LDA #$FF                             ; high 8 bits
+   BNE GOT_OFFSET                       ; go prepare match
+                                        ; (*like JMP GOT_OFFSET but shorter)
+
+SHORT_VARLEN_MATCHLEN
+   JSR GETSRC                           ; get single extended byte of variable match len
+   INY                                  ; add 256 to match length
+
+PREPARE_COPY_MATCH
+   TAX
+PREPARE_COPY_MATCH_Y
+   TXA
+   BEQ COPY_MATCH_LOOP
+   INY
+
+COPY_MATCH_LOOP
+   LDA $AAAAAA                          ; get one byte of backreference
+   JSR PUTDST                           ; copy to destination
+
+   REP #$20
+!ifdef BACKWARD_DECOMPRESS {
+
+   ; Backward decompression -- put backreference bytes backward
+
+   DEC COPY_MATCH_LOOP+1
+
+} else {
+
+   ; Forward decompression -- put backreference bytes forward
+
+   INC COPY_MATCH_LOOP+1
+
+}
+   SEP #$20
+
+   DEX
+   BNE COPY_MATCH_LOOP
+   DEY
+   BNE COPY_MATCH_LOOP
+   BEQ DECODE_TOKEN                     ; (*like JMP DECODE_TOKEN but shorter)
+
+GET_LONG_OFFSET                         ; handle 16 bit offset:
+   JSR GETLARGESRC                      ; grab low 8 bits in X, high 8 bits in A
+
+GOT_OFFSET
+
+!ifdef BACKWARD_DECOMPRESS {
+
+   ; Backward decompression - substract match offset
+
+   STA OFFSHI                           ; store high 8 bits of offset
+   STX OFFSLO
+
+   SEC                                  ; substract dest - match offset
+   REP #$20
+!al
+   LDA PUTDST+1
+OFFSLO = *+1
+OFFSHI = *+2
+   SBC #$AAAA                           ; 16 bits
+   STA COPY_MATCH_LOOP+1                ; store back reference address
+   SEP #$20
+!as
+   SEC
+
+} else {
+
+   ; Forward decompression - add match offset
+
+   STA OFFSHI                           ; store high 8 bits of offset
+   TXA
+
+   CLC                                  ; add dest + match offset
+   ADC PUTDST+1                         ; low 8 bits
+   STA COPY_MATCH_LOOP+1                ; store back reference address
+OFFSHI = *+1
+   LDA #$AA                             ; high 8 bits
+
+   ADC PUTDST+2
+   STA COPY_MATCH_LOOP+2                ; store high 8 bits of address
+   
+}
+
+   LDA PUTDST+3                         ; bank
+   STA COPY_MATCH_LOOP+3                ; store back reference address
+
+   PLA                                  ; retrieve token from stack again
+   AND #$0F                             ; isolate match len (MMMM)
+   ADC #$02                             ; plus carry which is always set by the high ADC
+   CMP #$12                             ; MATCH_RUN_LEN?
+   BCC PREPARE_COPY_MATCH               ; if not, count is directly embedded in token
+
+   JSR GETSRC                           ; get extra byte of variable match length
+                                        ; the carry is always set by the CMP above
+                                        ; GETSRC doesn't change it
+   SBC #$EE                             ; add MATCH_RUN_LEN and MIN_MATCH_SIZE to match length
+   BCC PREPARE_COPY_MATCH
+   BNE SHORT_VARLEN_MATCHLEN
+
+                                        ; Handle 16 bits match length
+   JSR GETLARGESRC                      ; grab low 8 bits in X, high 8 bits in A
+   TAY                                  ; put high 8 bits in Y
+                                        ; large match length with zero high byte?
+   BNE PREPARE_COPY_MATCH_Y             ; if not, continue
+
+DECOMPRESSION_DONE
+   RTS
+
+SHIFT_TABLE
+   !BYTE     $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+   !BYTE $01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01
+   !BYTE $02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02
+   !BYTE $03,$03,$03,$03,$03,$03,$03,$03,$03,$03,$03,$03,$03,$03,$03,$03
+   !BYTE $04,$04,$04,$04,$04,$04,$04,$04,$04,$04,$04,$04,$04,$04,$04,$04
+   !BYTE $05,$05,$05,$05,$05,$05,$05,$05,$05,$05,$05,$05,$05,$05,$05,$05
+   !BYTE $06,$06,$06,$06,$06,$06,$06,$06,$06,$06,$06,$06,$06,$06,$06,$06
+   !BYTE $07,$07,$07,$07,$07,$07,$07,$07,$07,$07,$07,$07,$07,$07,$07,$07
+
+!ifdef BACKWARD_DECOMPRESS {
+
+   ; Backward decompression -- get and put bytes backward
+
+GETPUT
+   JSR GETSRC
+PUTDST
+LZSA_DST_LO = *+1
+LZSA_DST_HI = *+2
+LZSA_DST_BANK = *+3
+   STA $AAAAAA
+   REP #$20
+   DEC PUTDST+1
+   SEP #$20
+   RTS
+
+GETLARGESRC
+   JSR GETSRC                           ; grab low 8 bits
+   TAX                                  ; move to X
+                                        ; fall through grab high 8 bits
+
+GETSRC
+LZSA_SRC_LO = *+1
+LZSA_SRC_HI = *+2
+LZSA_SRC_BANK = *+3
+   LDA $AAAAAA
+   REP #$20
+   DEC GETSRC+1
+   SEP #$20
+   RTS
+
+} else {
+
+   ; Forward decompression -- get and put bytes forward
+
+GETPUT
+   JSR GETSRC
+PUTDST
+LZSA_DST_LO = *+1
+LZSA_DST_HI = *+2
+LZSA_DST_BANK = *+3
+   STA $AAAAAA
+   REP #$20
+   INC PUTDST+1
+   SEP #$20
+   RTS
+
+GETLARGESRC
+   JSR GETSRC                           ; grab low 8 bits
+   TAX                                  ; move to X
+                                        ; fall through grab high 8 bits
+
+GETSRC
+LZSA_SRC_LO = *+1
+LZSA_SRC_HI = *+2
+LZSA_SRC_BANK = *+3
+   LDA $AAAAAA
+   REP #$20
+   INC GETSRC+1
+   SEP #$20
+   RTS
+}

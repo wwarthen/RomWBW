@@ -507,6 +507,11 @@ seldsk:
 	mov a,m ! inx h ! mov h,m ! mov l,a	; get address of LOGIN routine
 	call ipchl				; call LOGIN
 	pop h					; recover DPH pointer
+	; WBW Start
+	ora	a
+	rz					; successful return
+	lxi	h,0				; error occurred, clear HL
+	; WBW End
 not$first$select:
 	ret
 

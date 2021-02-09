@@ -4,6 +4,7 @@
 set -e
 
 CPMCP=../../Tools/`uname`/cpmcp
+CPMCH=../../Tools/`uname`/cpmchattr
 
 timestamp=$(date +%Y-%m-%d)
 #timestamp="2020-02-24"
@@ -13,9 +14,9 @@ if [ $1 == '-d' ] ; then
 	diffdir=$1
 	shift
 	if [ -f $diffdir/build.inc ] ; then
-		timestamp=$(grep TIMESTAMP $diffdir/build.inc | awk '{print $3}' | tr -d '\015"')	
+		timestamp=$(grep TIMESTAMP $diffdir/build.inc | awk '{print $3}' | tr -d '\015"')
 		echo diff build using $timestamp
-	fi	
+	fi
 fi
 
 # positional arguments
@@ -65,7 +66,10 @@ romfmt=wbw_rom${romsize}
 outdir=../../Binary
 
 echo "creating empty rom disk of size $romsize in $blankfile"
-LANG=en_US.US-ASCII tr '\000' '\345' </dev/zero | dd of=$blankfile bs=1024 count=`expr $romsize - 128`
+#LANG=en_US.US-ASCII tr '\000' '\345' </dev/zero | dd of=$blankfile bs=1024 count=`expr $romsize - 128` 2>/dev/null
+#LC_CTYPE=en_US.US-ASCII tr '\000' '\345' </dev/zero | dd of=$blankfile bs=1024 count=`expr $romsize - 128` 2>/dev/null
+LC_ALL=en_US.US-ASCII tr '\000' '\345' </dev/zero | dd of=$blankfile bs=1024 count=`expr $romsize - 128`
+hexdump $blankfile
 
 cat <<- EOF > build.inc
 ; RomWBW Configured for $platform $config $timestamp
@@ -141,12 +145,16 @@ echo "copying systems to $romdiskfile"
 $CPMCP -f $romfmt $romdiskfile ../CPM22/cpm_$BIOS.sys 0:cpm.sys
 $CPMCP -f $romfmt $romdiskfile ../ZSDOS/zsys_$BIOS.sys 0:zsys.sys
 
+echo "setting files in the ROM disk image to read only"
+$CPMCH -f $romfmt $romdiskfile  r 0:*.*
+
 if [ $platform = UNA ] ; then
 	cp osimg.bin $outdir/UNA_WBW_SYS.bin
 	cp $romdiskfile $outdir/UNA_WBW_ROM$romsize.bin
 	cat ../UBIOS/UNA-BIOS.BIN osimg.bin ../UBIOS/FSFAT.BIN $romdiskfile >$romname.rom
 else
 	cat hbios_rom.bin osimg.bin osimg1.bin osimg.bin $romdiskfile >$romname.rom
+	cat hbios_rom.bin osimg.bin osimg1.bin osimg.bin >$romname.upd
 	cat hbios_app.bin osimg_small.bin > $romname.com
 	# cat hbios_img.bin osimg_small.bin > $romname.img
 fi

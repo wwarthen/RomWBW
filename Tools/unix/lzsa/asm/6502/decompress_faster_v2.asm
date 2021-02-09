@@ -30,24 +30,6 @@
 ;
 
                 ;
-                ; Save 7 bytes of code, and 21 cycles every time that a
-                ; 16-bit length is decoded?
-                ;
-                ; N.B. Setting this breaks compatibility with LZSA v1.2
-                ;
-
-LZSA_SWAP_LEN16 =       0
-
-                ;
-                ; Save 3 bytes of code, and 4 or 8 cycles when decoding
-                ; an offset?
-                ;
-                ; N.B. Setting this breaks compatibility with LZSA v1.2
-                ;
-
-LZSA_SWAP_XZY   =       0
-
-                ;
                 ; Choose size over space (within sane limits)?
                 ;
 
@@ -78,14 +60,6 @@ LZSA_SHORT_CP   =       0
                 }
 
                 ;
-                ; Assume that we're decompressing from a large multi-bank
-                ; compressed data file, and that the next bank may need to
-                ; paged in when a page-boundary is crossed.
-                ;
-
-LZSA_FROM_BANK  =       0
-
-                ;
                 ; We will read from or write to $FFFF.  This prevents the
                 ; use of the "INC ptrhi / BNE" trick and reduces speed.
                 ;
@@ -96,14 +70,8 @@ LZSA_USE_FFFF  =        0
                 ; Macro to increment the source pointer to the next page.
                 ;
 
-                !if     LZSA_FROM_BANK {
-                        !macro  LZSA_INC_PAGE {
-                        jsr     lzsa2_next_page
-                        }
-                } else {
-                        !macro LZSA_INC_PAGE {
+                !macro LZSA_INC_PAGE {
                         inc     <lzsa_srcptr + 1
-                        }
                 }
 
                 ;
@@ -189,15 +157,12 @@ LZSA_DST_HI     =       $FF
 ; Args: lzsa_dstptr = ptr to output buffer
 ; Uses: lots!
 ;
-; If compiled with LZSA_FROM_BANK, then lzsa_srcptr should be within the bank
-; window range.
-;
 
 DECOMPRESS_LZSA2_FAST:
 lzsa2_unpack:   ldy     #0                      ; Initialize source index.
                 sty     <lzsa_nibflg            ; Initialize nibble buffer.
 
-                !if     (LZSA_FROM_BANK | LZSA_NO_INLINE | LZSA_USE_FFFF) = 0 {
+                !if     (LZSA_NO_INLINE | LZSA_USE_FFFF) = 0 {
 
                 beq     .cp_length              ; always taken
 .incsrc1:
@@ -223,7 +188,7 @@ lzsa2_unpack:   ldy     #0                      ; Initialize source index.
 
 .cp_length:     ldx     #$00                    ; Hi-byte of length or offset.
 
-                !if     (LZSA_FROM_BANK | LZSA_NO_INLINE | LZSA_USE_FFFF) {
+                !if     (LZSA_NO_INLINE | LZSA_USE_FFFF) {
 
                 +LZSA_GET_SRC
 
@@ -262,7 +227,7 @@ lzsa2_unpack:   ldy     #0                      ; Initialize source index.
                 sta     (lzsa_dstptr),y
                 inc     <lzsa_srcptr + 0
 
-                !if     (LZSA_FROM_BANK | LZSA_NO_INLINE | LZSA_USE_FFFF) {
+                !if     (LZSA_NO_INLINE | LZSA_USE_FFFF) {
 
                 bne     .skip1
                 inc     <lzsa_srcptr + 1
@@ -322,70 +287,13 @@ lzsa2_unpack:   ldy     #0                      ; Initialize source index.
 
                 }
 
-                !if     LZSA_SWAP_XZY {
-
-                ;
-                ; Shorter and faster path with NEW order of bits.
-                ;
-                ; STD  NEW
                 ; ================================
-                ; xyz  xzy
-                ; 00z  0z0  5-bit offset
-                ; 01z  0z1  9-bit offset
-                ; 10z  1z0  13-bit offset
-                ; 110  101  16-bit offset
-                ; 111  111  repeat offset
-                ;      NVZ  for a BIT instruction
-                ;
-                ; N.B. Saves 3 bytes in code length.
-                ;      get5 and get13 are 8 cycles faster.
-                ;      get9, get16, and rep are 4 cycles faster.
-                ;
-
-.lz_offset:     lda     #$20                    ; Y bit in lzsa_cmdbuf.
-                bit     <lzsa_cmdbuf
-                bmi     .get_13_16_rep
-                bne     .get_9_bits
-
-.get_5_bits:    dex                             ; X=$FF
-.get_13_bits:   +LZSA_GET_NIBL                  ; Always returns with CS.
-                bvc     .get_5_skip
-                clc
-.get_5_skip:    rol                             ; Shift into position, set C.
-                cpx     #$00                    ; X=$FF for a 5-bit offset.
-                bne     .set_offset
-                sbc     #2                      ; Subtract 512 because 13-bit
-                tax                             ; offset starts at $FE00.
-                bne     .get_low8               ; Always NZ from previous TAX.
-
-.get_9_bits:    dex                             ; X=$FF if VC, X=$FE if VS.
-                bvc     .get_low8
-                dex
-                bvs     .get_low8               ; Always VS from previous BIT.
-
-.get_13_16_rep: beq     .get_13_bits            ; Shares code with 5-bit path.
-
-.get_16_rep:    bvs     .lz_length              ; Repeat previous offset.
-
-                } else {
-
-                ;
-                ; Slower and longer path with STD order of bits.
-                ;
-                ; STD  NEW
-                ; ================================
-                ; xyz  xzy
-                ; 00z  0z0  5-bit offset
-                ; 01z  0z1  9-bit offset
-                ; 10z  1z0  13-bit offset
-                ; 110  101  16-bit offset
-                ; 111  111  repeat offset
-                ;      NVZ  for a BIT instruction
-                ;
-                ; N.B. Costs 3 bytes in code length.
-                ;      get5 and get13 are 8 cycles slower.
-                ;      get9, get16, and rep are 4 cycles slower.
-                ;
+                ; xyz  
+                ; 00z  5-bit offset
+                ; 01z  9-bit offset
+                ; 10z  13-bit offset
+                ; 110  16-bit offset
+                ; 111  repeat offset
 
 .lz_offset:     lda     <lzsa_cmdbuf
                 asl
@@ -417,8 +325,6 @@ lzsa2_unpack:   ldy     #0                      ; Initialize source index.
 
 .get_16_rep:    bmi     .lz_length              ; Repeat previous offset.
 
-                }
-
                 ;
                 ; Copy bytes from decompressed window.
                 ;
@@ -430,7 +336,7 @@ lzsa2_unpack:   ldy     #0                      ; Initialize source index.
 .get_low8x:     tax
 
 .get_low8:
-                !if     (LZSA_FROM_BANK | LZSA_NO_INLINE | LZSA_USE_FFFF) {
+                !if     (LZSA_NO_INLINE | LZSA_USE_FFFF) {
 
                 +LZSA_GET_SRC                   ; Get lo-byte of offset.
 
@@ -491,7 +397,7 @@ lzsa2_unpack:   ldy     #0                      ; Initialize source index.
 
                 jmp     .cp_length              ; Loop around to the beginning.
 
-                !if     (LZSA_FROM_BANK | LZSA_NO_INLINE | LZSA_USE_FFFF) = 0 {
+                !if     (LZSA_NO_INLINE | LZSA_USE_FFFF) = 0 {
 
 .incsrc3:
                 inc     <lzsa_srcptr + 1
@@ -526,21 +432,12 @@ lzsa2_unpack:   ldy     #0                      ; Initialize source index.
                 bcc     .got_length
                 beq     .finished
 
-                !if      LZSA_SWAP_LEN16 {
-
-.word_length:   jsr     lzsa2_get_byte          ; So rare, this can be slow!
-                tax
-
-                } else {
-
 .word_length:   jsr     lzsa2_get_byte          ; So rare, this can be slow!
                 pha
                 jsr     lzsa2_get_byte          ; So rare, this can be slow!
                 tax
                 pla
                 rts
-
-                }
 
 lzsa2_get_byte: 
                 lda     (lzsa_srcptr),y         ; Subroutine version for when
@@ -550,9 +447,6 @@ lzsa2_get_byte:
 
 lzsa2_next_page:
                 inc     <lzsa_srcptr + 1        ; Inc & test for bank overflow.
-                !if     LZSA_FROM_BANK {
-                bmi     lzsa2_next_bank         ; Change for target hardware!
-                }
                 rts
 
 .finished:      pla                             ; Decompression completed, pop
@@ -571,7 +465,7 @@ lzsa2_get_nibble:
                 bcs     .got_nibble
 
                 inc     <lzsa_nibflg            ; Reset the flag.
-                !if     (LZSA_FROM_BANK | LZSA_NO_INLINE | LZSA_USE_FFFF) {
+                !if     (LZSA_NO_INLINE | LZSA_USE_FFFF) {
 
                 +LZSA_GET_SRC
 
@@ -589,10 +483,6 @@ lzsa2_get_nibble:
                 lsr
                 lsr
                 lsr
-
-                !if     LZSA_SWAP_XZY {
-                sec                             ; Offset code relies on CS.
-                }
 
 .got_nibble:    ora     #$F0
                 rts
@@ -601,7 +491,7 @@ lzsa2_get_nibble:
 
 lzsa2_new_nibble:
                 inc     <lzsa_nibflg            ; Reset the flag.
-                !if     (LZSA_FROM_BANK | LZSA_NO_INLINE | LZSA_USE_FFFF) {
+                !if     (LZSA_NO_INLINE | LZSA_USE_FFFF) {
 
                 +LZSA_GET_SRC
 
@@ -619,16 +509,11 @@ lzsa2_new_nibble:
                 lsr
                 lsr
                 lsr
-
-                !if     LZSA_SWAP_XZY {
-                sec                             ; Offset code relies on CS.
-                }
-
                 rts
 
                 }
 
-                !if     (LZSA_FROM_BANK | LZSA_NO_INLINE | LZSA_USE_FFFF) = 0 {
+                !if     (LZSA_NO_INLINE | LZSA_USE_FFFF) = 0 {
 
 .incsrc4:
                 inc     <lzsa_srcptr + 1

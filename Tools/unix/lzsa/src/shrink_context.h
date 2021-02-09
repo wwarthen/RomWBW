@@ -49,10 +49,10 @@ extern "C" {
 #define VISITED_FLAG 0x80000000
 #define EXCL_VISITED_MASK  0x7fffffff
 
-#define NMATCHES_PER_ARRIVAL_V1 8
-#define NMATCHES_PER_ARRIVAL_V2_SMALL 9
-#define NMATCHES_PER_ARRIVAL_V2_BIG 32
-#define MATCHES_PER_ARRIVAL_SHIFT 5
+#define NARRIVALS_PER_POSITION_V1 8
+#define NARRIVALS_PER_POSITION_V2_SMALL 9
+#define NARRIVALS_PER_POSITION_V2_BIG 32
+#define ARRIVALS_PER_POSITION_SHIFT 5
 
 #define NMATCHES_PER_INDEX_V1 8
 #define MATCHES_PER_INDEX_SHIFT_V1 3
@@ -62,8 +62,6 @@ extern "C" {
 
 #define LEAVE_ALONE_MATCH_SIZE 300
 #define LEAVE_ALONE_MATCH_SIZE_SMALL 1000
-
-#define LAST_LITERALS 0
 
 #define MODESWITCH_PENALTY 3
 
@@ -81,12 +79,10 @@ typedef struct {
 
    int from_pos;
    unsigned short rep_len;
+   unsigned short match_len;
    int rep_pos;
    int num_literals;
    int score;
-
-   unsigned short match_offset;
-   unsigned short match_len;
 } lzsa_arrival;
 
 /** Compression statistics */
@@ -128,6 +124,10 @@ typedef struct _lzsa_compressor {
    lzsa_match *best_match;
    lzsa_match *improved_match;
    lzsa_arrival *arrival;
+   char *rep_slot_handled_mask;
+   char *rep_len_handled_mask;
+   int *first_offset_for_byte;
+   int *next_offset_for_pos;
    int min_match_size;
    int format_version;
    int flags;

@@ -25,6 +25,8 @@
 ;
 ;[2020/02/02] v1.5 PMS Basic command line support
 ;
+;[2020/05/15] v1.6 Added Warm Start option
+;
 ; Constants
 ;
 mask_data	.EQU	%10000000	; RTC data line
@@ -43,8 +45,14 @@ PORT_EZZ80	.EQU	$C0		; RTC port for EZZ80 (actually does not have one!!!)
 BDOS		.EQU	5		; BDOS invocation vector
 FCB		.EQU	05CH		; Start of command line
 
-BID_BOOT	.EQU	$00
-HB_BNKCALL	.EQU	$FFF9
+;BID_BOOT	.EQU	$00
+;HB_BNKCALL	.EQU	$FFF9
+
+BF_SYSRESET	.EQU	$F0		; RESTART SYSTEM
+
+BF_SYSRES_INT	.EQU	$00		; RESET HBIOS INTERNAL
+BF_SYSRES_WARM	.EQU	$01		; WARM START (RESTART BOOT LOADER)
+BF_SYSRES_COLD	.EQU	$02		; COLD START
 
 ;
 ; Program
@@ -1273,6 +1281,9 @@ RTC_UCL:
 	CP	'B'
 	JP	Z,RTC_TOP_LOOP_BOOT	
 
+	CP	'W'
+	JP	Z,RTC_TOP_LOOP_WARMSTART
+
 	CP	'C'
 	JP	Z,RTC_TOP_LOOP_CHARGE
 
@@ -1320,9 +1331,15 @@ DELAY_LOOP:				; LOOP IS 26TS
 	OR	L			; 4TS
 	JR	NZ,DELAY_LOOP		; 12TS
 	; RESTART SYSTEM FROM ROM BANK 0, ADDRESS $0000
-	LD	A,BID_BOOT		; BOOT BANK
-	LD	HL,0			; ADDRESS ZERO
-	CALL	HB_BNKCALL		; DOES NOT RETURN
+	LD	B,BF_SYSRESET		; SYSTEM RESTART
+	LD	C,BF_SYSRES_COLD	; COLD START
+	CALL	$FFF0			; CALL HBIOS
+	
+
+RTC_TOP_LOOP_WARMSTART:
+	LD	B,BF_SYSRESET		; SYSTEM RESTART
+	LD	C,BF_SYSRES_WARM	; WARM START
+	CALL	$FFF0			; CALL HBIOS
 
 RTC_TOP_LOOP_CHARGE:
 	LD	DE,RTC_TOP_LOOP1_CHARGE
@@ -1580,7 +1597,7 @@ RTC_HELP_MSG:
 	.DB	0Ah, 0Dh		; line feed and carriage return
 	.TEXT	"RTC: Version 1.5"
 	.DB	0Ah, 0Dh		; line feed and carriage return
-	.TEXT	"Commands: E)xit T)ime st(A)rt S)et R)aw L)oop C)harge N)ocharge D)elay I)nit G)et P)ut B)oot H)elp"
+	.TEXT	"Commands: E)xit T)ime st(A)rt S)et R)aw L)oop C)harge N)ocharge D)elay I)nit G)et P)ut B)oot W)arm-start H)elp"
 	.DB	0Ah, 0Dh		; line feed and carriage return
 	.DB	"$"			; Line terminator
 
