@@ -115,12 +115,12 @@ ACIA_INITUNIT:
         CALL    HB_ADDIM1               ; ADD TO IM1 CALL LIST
 #ENDIF
 ;
-	; IT IS EASY TO SPECIFY A SERIAL CONFIG THAT CANNOT BE IMPLEMENTED
-	; DUE TO THE CONSTRAINTS OF THE ACIA.  HERE WE FORCE A GENERIC
-	; FAILSAFE CONFIG ONTO THE CHANNEL.  IF THE SUBSEQUENT "REAL"
-	; CONFIG FAILS, AT LEAST THE CHIP WILL BE ABLE TO SPIT DATA OUT
-	; AT A RATIONAL BAUD/DATA/PARITY/STOP CONFIG.
-	CALL	ACIA_INITSAFE
+        ; IT IS EASY TO SPECIFY A SERIAL CONFIG THAT CANNOT BE IMPLEMENTED
+        ; DUE TO THE CONSTRAINTS OF THE ACIA.  HERE WE FORCE A GENERIC
+        ; FAILSAFE CONFIG ONTO THE CHANNEL.  IF THE SUBSEQUENT "REAL"
+        ; CONFIG FAILS, AT LEAST THE CHIP WILL BE ABLE TO SPIT DATA OUT
+        ; AT A RATIONAL BAUD/DATA/PARITY/STOP CONFIG.
+        CALL    ACIA_INITSAFE
 ;
         ; SET DEFAULT CONFIG
         LD      DE,-1                   ; LEAVE CONFIG ALONE
@@ -155,7 +155,7 @@ ACIA_INIT1:
 ;
 ACIA0_INT:
 ACIA1_INT:
-	CALL	PANIC			; NO RETURN
+        CALL    PANIC                   ; NO RETURN
 ;
 #ENDIF
 ;
@@ -393,7 +393,7 @@ ACIA_INITDEVX:
         LD      D,(IY+5)                ; HIGH BYTE        
 ;
 ACIA_INITDEV1:
-	LD	(ACIA_NEWCFG),DE	; SAVE NEW CONFIG
+        LD      (ACIA_NEWCFG),DE        ; SAVE NEW CONFIG
 ;
 #IF (ACIADEBUG)
         PUSH    DE
@@ -489,18 +489,18 @@ ACIA_WSTBL:
         .DB     %00011110               ; 7/E/2
 
 ACIA_INITWS2:
-	LD	A,B			; PUT FANAL VALUE IN A
-	DEC	A			; ZERO INDEX ADJUSTMENT
-	RLA				; MOVE BITS TO
-	RLA				; ... PROPER LOCATION
-	OR	C			; COMBINE WITH WORKING VALUE
+        LD      A,B                     ; PUT FANAL VALUE IN A
+        DEC     A                       ; ZERO INDEX ADJUSTMENT
+        RLA                             ; MOVE BITS TO
+        RLA                             ; ... PROPER LOCATION
+        OR      C                       ; COMBINE WITH WORKING VALUE
 ;
-	; SAVE CONFIG PERMANENTLY NOW
-	LD	DE,(ACIA_NEWCFG)		; GET NEW CONFIG BACK
-	LD	(IY+4),E		; SAVE LOW WORD
-	LD	(IY+5),D		; SAVE HI WORD
+        ; SAVE CONFIG PERMANENTLY NOW
+        LD      DE,(ACIA_NEWCFG)        ; GET NEW CONFIG BACK
+        LD      (IY+4),E                ; SAVE LOW WORD
+        LD      (IY+5),D                ; SAVE HI WORD
 ;
-	JR	ACIA_INITGO
+        JR      ACIA_INITGO
 ;
 ACIA_INITSAFE:
         LD      A,%00010110             ; DEFAULT CONFIG
@@ -508,7 +508,7 @@ ACIA_INITSAFE:
 ACIA_INITGO:
 ;
 #IF (INTMODE == 1)
-	OR	%10000000		; ENABLE RCV INT
+        OR      %10000000               ; ENABLE RCV INT
 #ENDIF
 ;
         LD      (ACIA_CMD),A            ; SAVE SHADOW REGISTER
@@ -568,16 +568,16 @@ ACIA_DEVICE:
         LD      D,CIODEV_ACIA           ; D := DEVICE TYPE
         LD      E,(IY)                  ; E := PHYSICAL UNIT
         LD      C,$00                   ; C := DEVICE TYPE, 0x00 IS RS-232
-	LD	H,0			; H := 0, DRIVER HAS NO MODES
-	LD	L,(IY+3)		; L := BASE I/O ADDRESS
+        LD      H,0                     ; H := 0, DRIVER HAS NO MODES
+        LD      L,(IY+3)                ; L := BASE I/O ADDRESS
         XOR     A                       ; SIGNAL SUCCESS
         RET
 ;
 ; ACIA DETECTION ROUTINE
 ;
 ACIA_DETECT:
-	LD	A,(IY+3)		; BASE PORT ADDRESS
-	LD	C,A			; PUT IN C FOR I/O
+        LD      A,(IY+3)                ; BASE PORT ADDRESS
+        LD      C,A                     ; PUT IN C FOR I/O
         CALL    ACIA_DETECT2            ; CHECK IT
         JR      Z,ACIA_DETECT1          ; FOUND IT, RECORD IT
         LD      A,ACIA_NONE             ; NOTHING FOUND
@@ -597,7 +597,7 @@ ACIA_DETECT2:
         RET     NZ                      ; RETURN IF NOT ZERO
         LD      A,$02                   ; CLEAR MASTER RESET
         OUT     (C),A                   ; DO IT
-	IN	A,(C)			; GET STATUS AGAIN
+        IN      A,(C)                   ; GET STATUS AGAIN
         ; CHECK FOR EXPECTED BITS:
         ;   TDRE=1, DCD & CTS = 0
         AND     %00001110               ; BIT MASK FOR "STABLE" BITS
@@ -652,8 +652,8 @@ ACIA_STR_ACIA   .DB     "ACIA$"
 ; WORKING VARIABLES
 ;
 ACIA_DEV        .DB     0               ; DEVICE NUM USED DURING INIT
-ACIA_CMD	.DB	0		; COMMAND PORT SHADOW REGISTER
-ACIA_NEWCFG	.DW	0		; TEMP STORE FOR NEW CFG
+ACIA_CMD        .DB     0               ; COMMAND PORT SHADOW REGISTER
+ACIA_NEWCFG     .DW     0               ; TEMP STORE FOR NEW CFG
 ;
 #IF (INTMODE != 1)
 ;
