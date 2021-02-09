@@ -153,6 +153,7 @@ the appropriate ROM image for your hardware.
 | RC Z180\*      | RCZ180_ext.rom           | 115200      | RC2014 w/ Z180 CPU & 512K banked RAM/ROM module  |
 | RC Z180\*      | RCZ180_nat.rom           | 115200      | RC2014 w/ Z180 CPU & 512K native RAM/ROM module  |
 | Easy Z80       | EZZ80_std.rom            | 115200      | Sergey Kiselev's Easy Z80                        |
+| Tiny Z80       | EZZ80_tz80.rom           | 115200      | Sergey Kiselev's Tiny Z80                        |
 | SC126          | SCZ180_126.rom           | 115200      | Stephen Cousin's SC126 Z180                      |
 | SC130          | SCZ180_130.rom           | 115200      | Stephen Cousin's SC130 Z180                      |
 | SC131          | SCZ180_131.rom           | 115200      | Stephen Cousin's SC131 Z180                      |

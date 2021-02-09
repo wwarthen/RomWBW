@@ -14,12 +14,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: rlespinasse/github-slug-action@1.1.0
+      - uses: rlespinasse/github-slug-action@v3.x
         
       - uses: actions/checkout@v2
           
       - name: Build
         run: |
+          export TZ='America/Los_Angeles'
           sudo apt-get install libncurses-dev
           make
           make clean
