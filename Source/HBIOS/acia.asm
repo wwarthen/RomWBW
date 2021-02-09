@@ -54,7 +54,7 @@ ACIA_BUFSZ      .EQU    32              ; RECEIVE RING BUFFER SIZE
 ACIA_NONE       .EQU    0
 ACIA_ACIA       .EQU    1
 ;
-ACIA_RTSON      .EQU    %00000000       ; BIT MASK TO ASSERT RTS
+ACIA_RTSON      .EQU    %10111111       ; BIT MASK TO ASSERT RTS
 ACIA_RTSOFF     .EQU    %01000000       ; BIT MASK TO DEASSERT RTS
 ;
 ;
@@ -199,7 +199,7 @@ ACIA_INTRCV1:
         CP      ACIA_BUFSZ / 2          ; BUFFER GETTING FULL?
         JR      NZ,ACIA_INTRCV2         ; IF NOT, BYPASS CLEARING RTS
         LD      A,(ACIA_CMD)            ; CONFIG BYTE W/O RTS BIT
-        OR      ACIA_RTSOFF             ; CLEAR RTS
+        OR      ACIA_RTSOFF             ; DEASSERT RTS
         OUT     (C),A                   ; DO IT
 ACIA_INTRCV2:
         INC     HL                      ; HL NOW HAS ADR OF HEAD PTR
@@ -279,7 +279,7 @@ ACIA_IN:
         JR      NZ,ACIA_IN1             ; IF NOT, BYPASS SETTING RTS
         LD      C,(IY+3)                ; C IS CMD/STATUS PORT ADR
         LD      A,(ACIA_CMD)            ; CONFIG BYTE W/O RTS BIT
-        OR      ACIA_RTSON              ; SET RTS
+        AND     ACIA_RTSON              ; ASSERT RTS
         OUT     (C),A                   ; DO IT
 ACIA_IN1:
         INC     HL
