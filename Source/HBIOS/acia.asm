@@ -522,7 +522,7 @@ ACIA_INITGO:
 ;
         ; PROGRAM THE ACIA CHIP
         LD      C,(IY+3)                ; COMMAND PORT
-        LD      A,$FF                   ; MASTER RESET
+        LD      A,$03                   ; MASTER RESET
         OUT     (C),A                   ; DO IT
         LD      A,(ACIA_CMD)            ; RESTORE CONFIG VALUE
         OUT     (C),A                   ; DO IT
