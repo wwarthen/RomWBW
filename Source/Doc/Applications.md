@@ -360,7 +360,7 @@ message.
 
 ## Etymology
 
-The `SYSCOPY` command is an original product and the source code is
+The `MODE` command is an original product and the source code is
 provided in the RomWBW distribution.
 
 `\clearpage`{=latex}
@@ -521,15 +521,20 @@ This application is provided by Will Sowerbutts.
 
 *`<filename>`* is the filename of the ROM image file
 
-Options: (access method is auto-detected by default)
+FLASH4 will auto-detect most parameters so additional options should not
+normally be required.
 
-| `/PARTIAL`: Allow flashing a large ROM from a smaller image file
+Options:
+
+| `/V`: Enable verbose output (one line per sector)
+| `/P` or `/PARTIAL`: Allow flashing a large ROM from a smaller image file
 | `/ROM`: Allow read-only use of unknown chip types
 | `/Z180DMA`: Force Z180 DMA engine
 | `/UNABIOS`: Force UNA BIOS bank switching
 | `/ROMWBW`: Force RomWBW (v2.6+) bank switching
 | `/ROMWBWOLD`: Force RomWBW (v2.5 and earlier) bank switching
 | `/P112`: Force P112 bank switching
+| `/N8VEMSBC`: Force N8VEM SBC (v1, v2), Zeta (v1) SBC bank switching
 
 ## Usage
 
@@ -948,6 +953,24 @@ The application probes for an active system timer and uses it to
 accurately pace the sound file output. If no system timer is
 available, a delay loop is calculated instead. The delay loop will not
 be as accurate as the system timer.
+
+There are two modes of operations.  A direct hardware interface for the
+AY-3-8910 or YM2149 chips, or a compatibility layer thru HBIOS supporting
+the SN76489 chip.
+
+By default the application will attempt to interface directly to the sound
+chip.  The optional argument `--hbios` supplied after the filename, will
+enable the application to use the HBIOS sound driver.
+
+The HBIOS mode also support other switch as desribed below.
+
+| Switch      | Description                                            |
+| ----------- | ------------------------------------------------------ |
+|  `--hbios`  | Utilise HBIOS' sound driver                            |
+| `+t1`       | Play tune an octave higher                             |
+| `+t2`       | Play tune two octaves higher                           |
+| `-t1`       | Play tune an octave lower                              |
+| `-t2`       | Play tune two octaves lower                            |
 
 All RomWBW operating system boot disks include a selection of sound
 files in user area 3.

@@ -45,13 +45,13 @@ ACPoff	equ	85h	; Offset in SCB base page of Auto Command Prompting bit
 HELPmsg:
 	db	' SYNTAX:'
 	db	10,13
-	db	'  AUTOTOG	Toggles the state of the Auto Command Prompting'
+	db	'  AUTOTOG      Toggles the state of the Auto Command Prompting'
 	db	10,13
-	db	'  AUTOTOG ON	Enables Auto Command Prompting'
+	db	'  AUTOTOG ON   Enables Auto Command Prompting'
 	db	10,13
-	db	'  AUTOTOG OFF	Disables Auto Command Prompting'
+	db	'  AUTOTOG OFF  Disables Auto Command Prompting'
 	db	10,13
-	db	'  AUTOTOG //	Displays a brief help message'
+	db	'  AUTOTOG //   Displays a brief help message'
 	db	'$'
 ONmsg:
 	db	'ZPM3 Auto Command Prompting is now enabled. Toggle with ^Q.'

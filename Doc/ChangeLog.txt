@@ -1,3 +1,22 @@
+Version 3.1.1
+-------------
+- WBW: Version bumped due to pervasive changes
+- WBW: Preliminary hard disk partition support (backward compatible)
+- WBW: Change Propeller VGA signal timings to 60Hz refresh
+- WBW: Enhanced SYSTEM RESET function to allow a warm start back to boot loader
+- C?O: Add DUART driver
+- WBW: Early Z280 support (requires 512K RAM/ROM board)
+- HCS: ZRC memory manager support
+- S?K: Support for Tiny Z80 by Sergey
+- E?B: Support for v6 YM/AY sound card
+- C?M: Support for RC2014 bus PropIO V2
+- W?S: Updated FLASH software to v1.3.4
+- PMS: Preliminary support for writing to FLASH ROMs
+- PMS: Creation of process to update ROM system area w/o updating ROM disk contents
+- PMS: Added "updater.asm" which allows uploading and updating ROM in one step
+- WBW: Support for Z280 w/ native memory and interrupt mode 3
+- WBW: Support for Z280 UART (interrupt driven only in interrupt mode 3)
+
 Version 3.1
 -----------
 - WBW: Refactored ROM Loader
@@ -6,6 +25,18 @@ Version 3.1
 - WBW: Added support dual 16C550 UART on RC2014 platform
 - WBW: Made .com images smaller (contain only Z-System now)
 - WBW: Support automatic clock hardware detection and fallback
+- WBW: Support use of CTC for SIO baud rate divisors
+- WBW: Updated IDE and PPIDE drivers to improve old CF Card compatibility
+- WBW: Support TIMER mode in CTC driver
+- DEN: Added sound driver support
+- DEN: Added SN76489 sound chip driver
+- M?O: RomWBW Disk Catalog document
+- DEN: Updated TMS to optionally trigger SYSTIMER interrupt (TMSTIMENABLE)
+- J?M: Updated KERMIT applications with VT100 terminal support
+- A?C: Added support for EPFDC
+- PMS: Added AY driver with new sound API support
+- DEN: Allow immediate autoboot startup
+- DEN: Support for floppy device count parameter
 
 Version 3.0.1
 -------------
@@ -99,7 +130,7 @@ Version 2.9.1
 - PMS: Added Forth, Nascom BASIC, and Tasty BASIC to ROM
 - PMS: Refactored ROM Loader to support more ROM images, now table driven
 - WBW: Refactored DSKY code
-- SK:  Initial support for Easy Z80
+- S?K:  Initial support for Easy Z80
 - PMS: Enhance VDU driver to support alternative screen dimensions
 - WBW: DDT and DDTZ modified to use RST 30 instead of RST 38 to avoid conflicts with IM 1 interrupts
 - WBW: Added timer interrupt support for CTC under Zeta 2 and Easy Z80
@@ -277,7 +308,7 @@ Version 2.0
 - DWG: Entire new suite of Apps written in Aztec C
 - DWG:   BANKER.COM - displays bank identification and version information
 - DWG:   CPMNAME.COM - displays CBIOS header data and SYSCFG data, names and vaues
-- DWG:   CHARS.COM - displays ascii map as reference 
+- DWG:   CHARS.COM - displays ascii map as reference
 - DWG:   CLS.COM - clears screen
 - DWG:   LABEL.COM - displays and changes drive labels for drives with reserved tracks
 - DWG:   MAP.COM - like old map command, displays drives and logical unit labels and changes LU values
@@ -309,7 +340,7 @@ Version 1.5.1
 - WBW: Added ZSDOS clock drivers (see Support\Clock)
 - WBW: Overhaul of ZSystem ROM Disk (see Doc\ZSystem.txt)
 - WBW: Update PropIO ANSI emulation for compatiblity with ASSIGN
-- DWG: Added version tags to all applications, and IDENT program to 
+- DWG: Added version tags to all applications, and IDENT program to
        check version of utilities.
 - DWG: Added MULTIFMT program which prepares new media for use by
        initializing the metadata and clearing the directory sectors of
@@ -319,8 +350,8 @@ Version 1.5.1
 - DWG: ANALYSE and HELLO programs removed from ROM due space concerns
 - DWG: Additional macro librarties added supporting program identification
        (IDENTITY.LIB/ASM) and access to drive metadata (METADATA.LIB/ASM),
-       and realtime selection of logical units from within new application 
-       programs (LOGICALS.LIB/ASM). 
+       and realtime selection of logical units from within new application
+       programs (LOGICALS.LIB/ASM).
 - DWG: Added TERM_VT52 for VDU compatbility, all apps now compliant
 - DGG: Contributed Linux build (see Doc\BuildLinux.txt)
 
@@ -348,7 +379,7 @@ Version 1.4
 - DWG: Add various .SUB files used for application maintenance
 - DWG: Enhanced utility building .SUB files to only contain libs utilitized
 - DWG: Add BUILD.SUB to build all applications and DEVFILES.LBR
-- DWG: Add/update RMAC macro libraries used in Apps - 
+- DWG: Add/update RMAC macro libraries used in Apps -
 - DWG:	 BIOSHDR, STDLIB, STRCPY, STRLEN, CPMBIOS, CPMBDOS, TERMINAL, HARDWARE,
 - DWG:   CPMAPPL, GLOBALS, ATOI, LUBIND, APPLVERS, MEMORY(memcpy,memset), PORTAB
 - DWG: Add/Repair BIOS support for Boot Drive login during CP/M Coldstart
@@ -367,7 +398,7 @@ Version 1.4
 - DWG: Add LABEL utility to insert label into drive/slice metadata
 - DWG: Add 16 char label field to metadata
 - DWG: ASSIGN utility displays and manipulates DPH/DPB & logical unit parameters
-- DWG/WBW: Collaborated on design of Logical Unit DPH enhancemnt 
+- DWG/WBW: Collaborated on design of Logical Unit DPH enhancemnt
 - WBW: Proposed MAP utility functionality
 - WBW: Implement slice selection API for DSK devices
 - WBW: Record boot drive in config memory at load time

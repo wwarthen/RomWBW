@@ -1,9 +1,10 @@
 	title	'Utility module for RomWBW'
 	
-	maclib	options.lib
-	
-	public addhla, bcd2bin, bin2bcd
-	public phex16, phex8, cout, crlf, crlf2
+	public	addhla
+	public	phex16, phex8
+	public	cin, cout
+	public	crlf, crlf2
+	public	bcd2bin, bin2bcd
 	
 	cseg
 
@@ -14,45 +15,6 @@ addhla:
 	inc	h
 	ret
 
-bcd2bin:
-	; convert A from packed bcd to binary
-	push	bc
-	ld	c,a
-	and	0F0h
-	srl	a
-	ld	b,a
-	srl	a
-	srl	a
-	add	a,b
-	ld	b,a
-	ld	a,c
-	and	0Fh
-	add	a,b
-	pop	bc
-	ret
-
-bin2bcd:
-	; convert A from binary to packed bcd
-	push	bc
-	ld	b,10
-	ld	c,-1
-bin2bcd1:
-	inc	c
-	sub	b
-	jr	nc,bin2bcd1
-	add	a,b
-	ld	b,a
-	ld	a,c
-	add	a,a
-	add	a,a
-	add	a,a
-	add	a,a
-	or	b
-	pop	bc
-	ret
-
-	if 0
-;
 ; Print the hex word value in HL
 ;
 phex16:
@@ -104,16 +66,29 @@ hexconv:
 	daa
 	ret
 ;
+; input character to A
+;
+cin:
+	push	bc
+	push	de
+	push	hl
+	ld	bc,0080h
+	rst	08
+	ld	a,e
+	pop	hl
+	pop	de
+	pop	bc
+	ret
+;
 ; output character from A
 ;
 cout:
-	; save all incoming registers
 	push	af
 	push	bc
 	push	de
 	push	hl
 	ld	e,a
-	ld	bc,0100h
+	ld	bc,0180h
 	rst	08
 	pop	hl
 	pop	de
@@ -134,16 +109,44 @@ crlf:
 	call	cout
 	pop	af
 	ret
-
-	else
-
-phex16:
-phex8:
-cout:
-crlf2:
-crlf:
-	halt
-	
-	endif
+;
+; Convert A from packed BCD to binary
+;
+bcd2bin:
+	push	bc
+	ld	c,a
+	and	0F0h
+	srl	a
+	ld	b,a
+	srl	a
+	srl	a
+	add	a,b
+	ld	b,a
+	ld	a,c
+	and	0Fh
+	add	a,b
+	pop	bc
+	ret
+;
+; Convert A from binary to packed BCD
+;
+bin2bcd:
+	push	bc
+	ld	b,10
+	ld	c,-1
+bin2bcd1:
+	inc	c
+	sub	b
+	jr	nc,bin2bcd1
+	add	a,b
+	ld	b,a
+	ld	a,c
+	add	a,a
+	add	a,a
+	add	a,a
+	add	a,a
+	or	b
+	pop	bc
+	ret
 
 	end

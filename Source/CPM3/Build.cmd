@@ -17,15 +17,16 @@ echo.
 echo *** CPM Loader ***
 echo.
 zx RMAC -CPMLDR
+zx Z80ASM -UTIL/MF
 copy optdsk.lib ldropts.lib
 zx Z80ASM -BIOSLDR/MF
 move /Y biosldr.rel biosldrd.rel
-zx LINK -CPMLDRD[L100]=CPMLDR,BIOSLDRD
+zx LINK -CPMLDRD[L100]=CPMLDR,BIOSLDRD,UTIL
 move /Y cpmldrd.com cpmldr.bin
 copy optcmd.lib ldropts.lib
 zx Z80ASM -BIOSLDR/MF
 move /Y biosldr.rel biosldrc.rel
-zx LINK -CPMLDRC[L100]=CPMLDR,BIOSLDRC
+zx LINK -CPMLDRC[L100]=CPMLDR,BIOSLDRC,UTIL
 move /Y cpmldrc.com cpmldr.com
 rem pause
 
@@ -101,3 +102,23 @@ rem Loader
 tasm -t80 -g3 -fFF loader.asm loader.bin loader.lst
 
 copy /b loader.bin + cpmldr.bin cpmldr.sys
+
+rem Copy OS files to Binary directory
+
+copy cpmldr.com ..\..\Binary\CPM3
+copy cpmldr.sys ..\..\Binary\CPM3
+copy ccp.com ..\..\Binary\CPM3
+copy gencpm.com ..\..\Binary\CPM3
+copy genres.dat ..\..\Binary\CPM3
+copy genbnk.dat ..\..\Binary\CPM3
+copy bios3.spr ..\..\Binary\CPM3
+copy bnkbios3.spr ..\..\Binary\CPM3
+copy bdos3.spr ..\..\Binary\CPM3
+copy bnkbdos3.spr ..\..\Binary\CPM3
+copy resbdos3.spr ..\..\Binary\CPM3
+copy cpm3res.sys ..\..\Binary\CPM3
+copy cpm3bnk.sys ..\..\Binary\CPM3
+copy gencpm.dat ..\..\Binary\CPM3
+copy cpm3.sys ..\..\Binary\CPM3
+copy readme.1st ..\..\Binary\CPM3
+copy cpm3fix.pat ..\..\Binary\CPM3

@@ -63,7 +63,7 @@ typedef enum _lzsa_status_t {
 
    /* Decompression-specific status codes */
    LZSA_ERROR_FORMAT,                     /**< Invalid input format or magic number when decompressing */
-   LZSA_ERROR_DECOMPRESSION,              /**< Internal decompression error */
+   LZSA_ERROR_DECOMPRESSION               /**< Internal decompression error */
 } lzsa_status_t;
 
 /* Compression flags */

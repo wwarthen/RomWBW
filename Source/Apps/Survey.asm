@@ -600,9 +600,11 @@ PORTLP:
 	mov	c,a			; port number to reg c
 	mvi	b,0			; for 16 bit  port addressing
 	db	0edh,078h		; z80: in a,(c)
-; inactive port could return 0xFF or 0x78
-	CPI	0FFH
-	JZ	NEXTPT
+; inactive port could return 0xFF or 0x78 or the port address
+	cmp	c
+	jz	nextpt
+	cpi	0FFh
+	jz	nextpt
 	cpi	078h
 	jz	nextpt
 ISPORT:

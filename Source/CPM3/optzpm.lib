@@ -1,5 +1,4 @@
-	; global assembler options for BANKED BIOS
-	; with Boot Drive swapped into Drive A
+	; global assembler options for ZPM BIOS
 	
 true	equ -1
 false	equ not true

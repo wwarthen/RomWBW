@@ -67,7 +67,7 @@ General features include:
 * Disk drivers for RAM, ROM, Floppy, IDE, CF, and SD
 * Serial drivers including UART (16550-like), ASCI, ACIA, SIO
 * Video drivers including TMS9918, SY6545, MOS8563, HD6445
-* Real time clock drivers including DS1322, BQ4845
+* Real time clock drivers including DS1302, BQ4845
 * Multiple OS support including CP/M 2.2, ZSDOS, CP/M 3, ZPM3
 * Built-in VT-100 terminal emulation support
 
@@ -347,7 +347,7 @@ the first 256 8MB chunks of space on a single media.
 Of course, the problem is that CP/M-like operating systems have only
 16 drive letters (A:-P:) available. Under the covers, RomWBW allows
 you to use any drive letter to refer to any slice of any media. The
-`ASSIGN` command is allows you to view or change the drive letter
+`ASSIGN` command allows you to view or change the drive letter
 mappings at any time. At startup, the operating system will
 automatically allocate a reasonable number of drive letters to the
 available storage devices. The allocation will depend on the number of
@@ -756,13 +756,18 @@ likely to encounter problems.
 
 ### Notes
 
+- You can change media, but it must be done while at the OS
+command prompt and you **must** warm start CP/M by pressing
+ctrl-c.  This is a CP/M 2.2 constraint and is well documented
+in the DRI manuals.
+
 - The original versions of DDT, DDTZ, and ZSID used the RST 38
 vector which conflicts with interrupt mode 1 use of this vector.
 The DDT, DDTZ, and ZSID applications in RomWBW have been modified
-to use RTS 30 to avoid this issue.
+to use RST 30 to avoid this issue.
 
 - Z-System applications will not run under CP/M 2.2.  For example,
-the `LDDS` date stamper with not run.
+the `LDDS` date stamper will not run.
 
 ## ZSDOS 1.1
 
@@ -783,6 +788,10 @@ Manual.pdf").
 - Although most CP/M 2.2 applications will run under Z-System, some
 may not work as expected.  The best example is PIP which is not aware
 of the ZSDOS paths and will fail in some scenarios (use `COPY` instead).
+
+- Although ZSDOS can recognize a media change in some cases, it will not
+always work.  You should only change media at a command prompt and be
+sure to warm start the OS with a ctrl-c.
 
 ## NZCOM Automatic Z-System
 
@@ -824,6 +833,14 @@ system tracks.  `CPMLDR.SYS` chain loads `CPM3.SYS`.
 used to read the current date/time for file stamping, etc.  You can
 use the `RTC` app to set the RTC clock.
 
+- The `COPYSYS` command described in the DRI CP/M 3 documentation is
+not provided with RomWBW.  The RomWBW `SYSCOPY` command is used instead.
+
+- Although CP/M 3 is generally able to run CP/M 2.2 programs, this is
+not universally true.  This is especially true of the utility programs
+included with the operating system.  For example, the `SUBMIT` program
+of CP/M 3 is completely different from the `SUBMIT` program of CP/M 2.2.
+
 ## Simeon Cran's ZPM3
 
 ZPM3 is an interesting combination of the features of both CP/M 3 and
@@ -838,7 +855,9 @@ tracks of the disk.
 - `ZPMLDR` is included with ZPM3, but it is not working correctly.
 
 - The ZPM operating system is contained in the file called CPM3.SYS
-which is confusing, but it is the author's intended way of using ZPM3.
+which is confusing, but this is as intended by the ZPM3 distribution.
+I believe it was done this way to make it easier for users to transition
+from CP/M 3 to ZPM3.
 
 ## FreeRTOS
 
@@ -1072,7 +1091,7 @@ update your ROM. The following is a typical example of transferring
 ROM image using XModem and flashing the chip in-situ.
 
 ```
-E>xm r rom.img
+E>xm r rom.rom
 
 XMODEM v12.5 - 07/13/86
 RBC, 28-Aug-2019 [WBW], ASCI
@@ -1084,7 +1103,7 @@ To cancel: Ctrl-X, pause, Ctrl-X
 
 Thanks for the upload
 
-E>flash write rom.img
+E>flash write rom.rom
 FLASH4 by Will Sowerbutts <will@sowerbutts.com> version 1.2.3
 
 Using RomWBW (v2.6+) bank switching.
@@ -1115,12 +1134,81 @@ your choice. This process is described below in the Disk Images
 section. If you wish to update existing disk media in your system, you
 need to perform the following steps.
 
-If the disk is bootable, you need to update the system tracks of the
-disk. This is done using a SYSCOPY command such as `SYSCOPY
-C:=B:ZSYS.SYS`. For a ZSDOS boot disk, use ZSYS.SYS. For a CP/M 2.2
-disk, use CPM.SYS. For a CP/M 3 or ZPM3 disk, use CPMLDR.SYS.
-CPMLDR.SYS is not provided on the ROM disk, so you will need to
-upload it from the distribution.
+If the disk is bootable, you need to update the system image on the
+disk using the procedure described below corresponsing to the
+operating system on your disk.
+
+* **CP/M 2.2**
+
+  Boot to CP/M 2.2 from ROM, then use `SYSCOPY` to update the system
+  image on **all** CP/M 2.2 boot disks/slices.  The CP/M 2.2 system image
+  is called CPM.SYS and is found on the ROM disk.  For example:
+  
+  `B>SYSCOPY C:=CPM.SYS`
+
+* **ZSDOS**
+
+  Boot to Z-System from ROM, then use `SYSCOPY` to update the system
+  image on **all** ZSDOS boot disks/slices.  The ZSDOS system image
+  is called ZSYS.SYS and is found on the ROM disk.  For example:
+  
+  `B>SYSCOPY C:=ZSYS.SYS`
+
+* **NZCOM**
+
+  NZCOM runs on top of either CP/M 2.2 or ZSDOS.  By default, the
+  RomWBW disk image for NZCOM uses ZSDOS.  Follow the corresponding
+  procedure above to update the system image on the NZCOM boot
+  disks/slices.
+
+* **CP/M 3**
+
+  CP/M 3 uses a multi-step boot process involving multiple files.
+  The CP/M 3 boot files are not included on the ROM disk due to
+  space constraints.  You will need to transfer the files to your
+  system from the RomWBW distribution directory Binary\\CPM3.
+  
+  After this is done, you will need to use `SYSCOPY` to place
+  the CP/M 3 loader image on the boot tracks of all CP/M 3
+  boot disks/slices.  The loader image is called `CPMLDR.SYS`.
+  You must then copy (at a minimum) `CPM3.SYS` and `CCP.COM`
+  onto the disk/slice.  Assuming you copied the CP/M 3 boot files
+  onto your RAM disk at A:, you would use:
+  
+  ```
+  A>B:SYSCOPY C:=CPMLDR.SYS
+  A>B:COPY CPM3.SYS C:
+  A>B:COPY CCP.COM C:
+  ```
+
+* **ZPM3**
+
+  ZPM3 uses a multi-step boot process involving multiple files.
+  The ZPM3 boot files are not included on the ROM disk due to
+  space constraints.  You will need to transfer the files to your
+  system from the RomWBW distribution directory Binary\\ZPM3.
+  
+  After this is done, you will need to use `SYSCOPY` to place
+  the ZPM3 loader image on the boot tracks of all ZPM3
+  boot disks/slices.  The loader image is called `CPMLDR.SYS`.
+  You must then copy (at a minimum) `CPM3.SYS`, `ZCCP.COM`,
+  `ZINSTAL.ZPM`, and `STARTZPM.COM` onto the disk/slice.
+  Assuming you copied the ZPM3 boot files onto your RAM disk
+  at A:, you would use:
+  
+  ```
+  A>B:SYSCOPY C:=CPMLDR.SYS
+  A>B:COPY CPM3.SYS C:
+  A>B:COPY ZCCP.COM C:
+  A>B:COPY ZINSTAL.ZPM C:
+  A>B:COPY STARTZPM.COM C:
+  ```
+  
+  You may be wondering if the references to `CPMLDR.SYS` and
+  `CPM3.SYS` are typos.  They are not.  ZPM3 uses the same loader
+  image as CPM3.  The ZPM3 main system code file is called `CPM3.SYS`
+  which is the same name as CP/M 3 uses, but the file contents are
+  not the same.
 
 Finally, if you have copies of any of the RomWBW custom applications
 on your hard disk, you need to update them with the latest copies. The
@@ -1150,6 +1238,30 @@ images.
 
 * FAT.COM
 * TUNE.COM
+
+# System Update
+
+If the system running ROMWBW utilizes the SST39SF040 Flash chip then it is possible to do a System Update in place of
+a System Upgrade in some cases.
+
+A System Update would involve only updating the BIOS, ROM applications and CP/M system.
+
+A System Update may be more favorable than a System Upgrade in cases such as:
+
+ - Overwriting of the ROM drive is not desired.
+ - Space is unavailable to hold a full ROMWBW ROM.
+ - To mimimize time taken to transfer and flash a full ROM.
+ - Configuration changes are only minor and do not impact disk applications.
+
+The ROMWBW build process generates a system upgrade file along with the normal ROM image and can be identified by the
+extension ".upd". It will be 128Kb in size. In comparison the normal ROM image will have the extension ".rom" and be
+512Kb or 1024Kb in size.
+
+Transferring and flashing the System Update is accomplished in the same manner as described above in *Upgrading* with
+the required difference being that the flash application needs to be directed to complete a partial flash using the
+/p command line switch.
+
+`E>flash write rom.upd /p`
 
 # RomWBW Distribution
 
@@ -1191,12 +1303,17 @@ these applications are no longer provided.
 driver.
 * Ed Brindley contributed some of the code that supports the RC2014
 platform.
-* Phil Summers contributed Forth and BASIC in ROM as well as a long
-list of general code enhancements.
+* Phil Summers contributed Forth and BASIC in ROM, the AY-3-8910 sound
+driver as well as a long list of general code enhancements.
 * Phillip Stevens contributed support for FreeRTOS.
 * Curt Mayer contributed the Linux / MacOS build process.
-* UNA BIOS and FDISK80 is a product of John Coffman.
+* UNA BIOS and FDISK80 are the products of John Coffman.
 * FLASH4 is a product of Will Sowerbutts.
+* CLRDIR is a product of Max Scane.
+* Tasty Basic is a product of Dimitri Theulings.
+* Dean Netherton contributed the sound driver interface and
+the SN76489 sound driver.
+* The RomWBW Disk Catalog document was produced by Mykl Orders.
 
 Contributions of all kinds to RomWBW are very welcome.
 
@@ -1209,6 +1326,7 @@ RetroBrew Computers projects is via the community forums:
 * [RC2014 Google Group](https://groups.google.com/forum/#!forum/rc2014-z80)
 * [retro-comp Google Group](https://groups.google.com/forum/#!forum/retro-comp)
 
-Submission of issues and bugs are welcome at the [RomWBW GitHub Repository](https://github.com/wwarthen/RomWBW).
+Submission of issues and bugs are welcome at the
+[RomWBW GitHub Repository](https://github.com/wwarthen/RomWBW).
 
 Also feel free to email !author at [!authmail](mailto:!authmail).
