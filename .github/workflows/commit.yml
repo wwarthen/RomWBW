@@ -17,7 +17,7 @@ jobs:
       - uses: rlespinasse/github-slug-action@v3.x
         
       - uses: actions/checkout@v2
-          
+
       - name: Build
         run: |
           export TZ='America/Los_Angeles'
@@ -25,13 +25,13 @@ jobs:
           make
           make clean
           rm -rf .git*
-      
+
       - name: List Output
         run: |
           cd Binary
           ls -l
           find -type f -exec md5sum '{}' \;
-      
+
       - name: Upload Artifact
         uses: actions/upload-artifact@v1
         with:
@@ -47,6 +47,7 @@ jobs:
       - name: Build
         run: |
           export TZ='America/Los_Angeles'
+          sudo apt-get install libncurses-dev
           make
           make clean
           rm -rf .git*
@@ -56,7 +57,7 @@ jobs:
           cd Binary
           ls -l
           find . -type f -exec md5 -r -- '{}' +;
-        
+
       - name: Upload Artifact
         uses: actions/upload-artifact@v1
         with:
