@@ -16,6 +16,7 @@ Version 3.1.1
 - PMS: Added "updater.asm" which allows uploading and updating ROM in one step
 - WBW: Support for Z280 w/ native memory and interrupt mode 3
 - WBW: Support for Z280 UART (interrupt driven only in interrupt mode 3)
+- WBW: Add support Z80-512K (watchdog and LED)
 
 Version 3.1
 -----------
