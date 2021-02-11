@@ -18,6 +18,7 @@ else
 	OBJECTS += RCZ80_mt.rom RCZ80_mt.com RCZ80_mt.upd
 	OBJECTS += RCZ80_duart.rom RCZ80_duart.com RCZ80_duart.upd
 	OBJECTS += RCZ80_std.rom RCZ80_std.com RCZ80_std.upd
+	OBJECTS += RCZ80_skz.rom RCZ80_skz.com RCZ80_skz.upd
 	OBJECTS += RCZ80_zrc.rom RCZ80_zrc.com RCZ80_zrc.upd
 	OBJECTS += SBC_simh.rom SBC_simh.com SBC_simh.upd
 	OBJECTS += SBC_std.rom SBC_std.com SBC_std.upd
