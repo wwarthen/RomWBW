@@ -177,25 +177,28 @@ RCZ180 (RCZ180_nat.rom & RCZ180_ext.rom):
  - Support for Scott Baker floppy controllers (SMC & WDC) may
    be enabled in config
  - Support for J.B. Lang TMS9918 video card may be enabled in config
- - You must pick the _nat or _ext variant depending on which
-   memory module you are using:
-   - RCZ180_nat.rom uses the built-in Z180 memory manager
-     for use with memory modules allow direct physical
-     addressing of memory, such as the SC119
+ - You must pick the variant (_ext or _nat) depending
+   on which memory module you are using:
    - RCZ180_ext.rom uses external bank management to access
      memory, such as the 512K RAM/ROM module.
+   - RCZ180_nat.rom uses the built-in Z180 memory manager
+     for use with memory modules using direct physical
+     addressing of memory, such as the SC119.
  - Support for PropIO V2 may be enabled in config (PRPENABLE).  If
    enabled, will auto-detect and install associated
    video, keyboard and SD Card support if present.
 
-RCZ280 (RCZ280_ext.rom):
+RCZ280 (RCZ280_ext.rom, RCZ280_nat.rom, RCZ280_nat_zz.rom):
  - Assumes CPU oscillator of 24 MHz
- - Bus clock will be 6 MHz, so does not match RC2014 standard!!!
- - Requires 512K RAM/ROM module
+ - Bus clock will be 6 MHz or 12 MHz, so does not match RC2014 standard!!!
+ - Requires 512K RAM/ROM module (unless using ZZ80MB)
  - Auto detects Serial I/O Module (ACIA), Dual Serial
-   Module (SIO/2), and EP Dual UART.
+   Module (SIO), EP Dual UART (DUART), and built-in Z280 UART (Z2U).
+ - ACIA module is only supported on _ext variant.
+ - Built-in Z280 UART (Z2U) is buffered and interrupt driven only
+   on _nat and _nat_zz variants.  It uses polling I/O on _ext.
  - Console on whichever serial module is installed,
-   order of priority is UART, SIO, then ACIA.
+   order of priority is UART, SIO, DUART, ACIA, Z2U
  - Baud rate is determined by hardware, but normally 115200.
  - Auto support for RC2014 Compact Flash Module
  - Auto support for RC2014 PPIDE Module
@@ -203,25 +206,15 @@ RCZ280 (RCZ280_ext.rom):
  - Support for Scott Baker floppy controllers (SMC & WDC) may
    be enabled in config
  - Support for J.B. Lang TMS9918 video card may be enabled in config
- - Support for PropIO V2 may be enabled in config (PRPENABLE).  If
-   enabled, will auto-detect and install associated
-   video, keyboard and SD Card support if present.
-
-RCZ280 (RCZ280_nat.rom):
- - Assumes CPU oscillator of 24 MHz
- - Bus clock will be 6 MHz, so does not match RC2014 standard!!!
- - Requires native RAM/ROM module (linear memory)
- - Interrupt Mode 3 only (no ACIA support possible)
- - Auto detects Dual Serial Module (SIO/2), and EP Dual UART.
- - Console on whichever serial module is installed,
-   order of priority is UART, then SIO.
- - Baud rate is determined by hardware, but normally 115200.
- - Auto support for RC2014 Compact Flash Module
- - Auto support for RC2014 PPIDE Module
- - Support for Scott Baker SIO board may be enabled in config
- - Support for Scott Baker floppy controllers (SMC & WDC) may
-   be enabled in config
- - Support for J.B. Lang TMS9918 video card may be enabled in config
+ - You must pick the variant (_ext, _nat, or _nat_zz) depending
+   on which platform or memory module you are using:
+   - RCZ280_ext.rom uses external bank management to access
+     memory, such as the 512K RAM/ROM module.
+   - RCZ280_nat.rom uses the built-in Z280 memory manager
+     for use with memory modules using direct physical
+     addressing of memory, such as the SC119.
+   - RCZ280_nat_zz.rom is specifically for the ZZ80MB platform
+     which has both CPU and memory onboard.
  - Support for PropIO V2 may be enabled in config (PRPENABLE).  If
    enabled, will auto-detect and install associated
    video, keyboard and SD Card support if present.
