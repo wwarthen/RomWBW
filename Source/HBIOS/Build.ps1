@@ -21,13 +21,14 @@ param([string]$Platform = "", [string]$Config = "", [string]$RomSize = "512", [s
 #
 $PlatformListZ80 = "SBC", "ZETA", "ZETA2", "RCZ80", "RCZ280", "EZZ80", "UNA"
 $PlatformListZ180 = "N8", "MK4", "RCZ180", "SCZ180", "DYNO"
+$PlatformListZ280 = "RCZ280"
 
 #
 # Establish the build platform.  It may have been passed in on the command line.  Validate
 # $Platform and loop requesting a new value as long as it is not valid.  The valid platform
 # names are just hard-coded for now.
 #
-$PlatformList = $PlatformListZ80 + $PlatformListZ180
+$PlatformList = $PlatformListZ80 + $PlatformListZ180 + $PlatformListZ280
 $Prompt = "Platform ["
 ForEach ($PlatformName in $PlatformList) {$Prompt += $PlatformName + "|"}
 $Prompt = $Prompt.Substring(0, $Prompt.Length - 1) + "]"
@@ -72,7 +73,9 @@ while ($true)
 # TASM should be invoked with the proper CPU type.  Below, the CPU type is inferred
 # from the platform.
 #
-if ($PlatformListZ180 -contains $Platform) {$CPUType = "180"} else {$CPUType = "80"}
+$CPUType = "80"
+if ($PlatformListZ180 -contains $Platform) {$CPUType = "180"}
+if ($PlatformListZ280 -contains $Platform) {$CPUType = "280"}
 
 #
 # The $RomName variable determines the name of the image created by the script.  By default,
