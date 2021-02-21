@@ -41,6 +41,7 @@ ADD  A,E     83   1 NOP 1
 ADD  A,H     84   1 NOP 1
 ADD  A,L     85   1 NOP 1
 ADD  A,*     C6   2 NOP 1
+ADD  HL,A    6DED 2 NOP 1	/* Z280 */
 ADD  HL,BC   09   1 NOP 1
 ADD  HL,DE   19   1 NOP 1
 ADD  HL,HL   29   1 NOP 1
@@ -397,6 +398,8 @@ OUT0 (*),L   29ED 3 NOP 2
 
 OUTD ""      ABED 2 NOP 1
 OUTI ""      A3ED 2 NOP 1
+
+OUTW (C),HL  BFED 2 NOP 1	/* Z280 */
 
 PCACHE ""    65ED 2 NOP 1	/* Z280 */
 

@@ -101,6 +101,7 @@ static const struct matchtab s_matchtab_z80[] = {
 	{ "CPIR", "ED.B1.", 3, 0 },
 	{ "CPD", "ED.A9.", 3, 0 },
 	{ "CPDR", "ED.B9.", 3, 0 },
+	{ "ADD HL,A", "ED.6D.", 2, 0 }, // Z280
 	{ "ADD HL,d", "09f0.", 3, 0 },
 	{ "ADD IX,i", "DD.09f0.", 3, 0 },
 	{ "ADD IY,j", "FD.09f0.", 3, 0 },
@@ -207,6 +208,7 @@ static const struct matchtab s_matchtab_z80[] = {
 	{ "LDCTL IY,(C)", "FD.ED.66.", 2, 0 },
 	{ "LDCTL (C),IY", "FD.ED.6E.", 2, 0 },
 	{ "MULTU A,a", "FD.ED.F9.d0.", 2, 0 },
+	{ "OUTW (C),HL", "ED.BF.", 2, 0 },
 	{ NULL, NULL },
 };
 
