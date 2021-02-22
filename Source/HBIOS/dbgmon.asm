@@ -120,9 +120,9 @@ SERIALCMDLOOP:
 ;_____________________________________________________________________________
 ;
 INITIALIZE:
-	LD	A,$C3		; JP OPCODE
-	LD	(0),A		; STORE AT $0000
-	LD	(1),HL		; STORE AT $0001
+	;LD	A,$C3		; JP OPCODE
+	;LD	(0),A		; STORE AT $0000
+	;LD	(1),HL		; STORE AT $0001
 
 #IF (BIOS == BIOS_UNA)
 	; INSTALL UNA INVOCATION VECTOR FOR RST 08
