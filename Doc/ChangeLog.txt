@@ -17,6 +17,8 @@ Version 3.1.1
 - WBW: Support for Z280 w/ native memory and interrupt mode 3
 - WBW: Support for Z280 UART (interrupt driven only in interrupt mode 3)
 - WBW: Add support Z80-512K (watchdog and LED)
+- WBW: Add support for ZZ80MB address map
+- PLS: Add support for Z180 invalid opcode trap
 
 Version 3.1
 -----------
