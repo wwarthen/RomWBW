@@ -172,7 +172,10 @@ boot$1:
 	;	Entry for system restarts.
 
 wboot:
-	lxi sp,boot$stack
+	pop h			; WBW: save PC for diagnosis
+	lxi sp,boot$stack	; reset stack
+	lxi b,0F003H		; WBW: HBIOS user reset func
+	rst 1			; WBW: do it
 	call set$jumps		; initialize page zero
 	call ?rlccp		; reload CCP
 	jmp ccp			; then reset jmp vectors and exit to ccp

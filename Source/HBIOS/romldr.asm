@@ -83,6 +83,20 @@ bid_cur	.equ	-1	; used below to indicate current bank
 #else
 	ret				; return w/ ints disabled
 #endif
+;
+#if (BIOS == BIOS_WBW)
+	.fill	($40 - $),$FF
+	; After initial bootup, it is conventional for a jp 0 to
+	; cause a warm start of the system.  If there is no OS running
+	; then this bit of code will suffice.  After bootup, the
+	; jp instruction at $0 is modified to point here.
+	pop	hl			; save PC in case needed for ...
+	ld	bc,$F003		; HBIOS user reset function
+	call	HB_INVOKE		; do it
+	ld	bc,$F001		; HBIOS warm start function
+	call	HB_INVOKE		; do it
+#endif
+;
 	.fill	($66 - $)
 	retn				; nmi
 ;
@@ -147,6 +161,8 @@ start1:
 	ld	de,0			; put it in user page zero
 	ld	bc,$100			; full page
 	ldir				; do it
+	ld	hl,$0040		; adr of user reset code
+	ld	(1),hl			; save at $0000
 ;
 ; Page zero in user bank is ready for interrupts now.
 ;

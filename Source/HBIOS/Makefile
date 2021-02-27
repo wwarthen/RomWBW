@@ -14,6 +14,7 @@ else
 	OBJECTS += RCZ180_nat.rom RCZ180_nat.com RCZ180_nat.upd
 	OBJECTS += RCZ280_ext.rom RCZ280_ext.com RCZ280_ext.upd
 	OBJECTS += RCZ280_nat.rom RCZ280_nat.com RCZ280_nat.upd
+	OBJECTS += RCZ280_nat_zz.rom RCZ280_nat_zz.com RCZ280_nat_zz.upd
 	OBJECTS += RCZ80_kio.rom RCZ80_kio.com RCZ80_kio.upd
 	OBJECTS += RCZ80_mt.rom RCZ80_mt.com RCZ80_mt.upd
 	OBJECTS += RCZ80_duart.rom RCZ80_duart.com RCZ80_duart.upd

@@ -64,8 +64,8 @@ TYPMYM		.EQU	3		; FILTYP value for MYM sound file
 ;
 ; HIGH SPEED CPU CONTROL
 ;
-SBCV2004	.EQU	0		; USE SBC-V2-004 HALF CLOCK DIVIDER
-CPUFAMZ180	.EQU	1		; USE Z180 WAIT STATE MANAGEMENT
+SBCV2004	.EQU	0		; ENABLE SBC-V2-004 HALF CLOCK DIVIDER
+CPUFAMZ180	.EQU	1		; ENABLE Z180 WAIT STATE MANAGEMENT
 ;
 ;Conditional assembly - use  -D switch on TASM or uz80as assembler to control
 _ZX		.EQU    0		; 1) Version of ROUT (ZX or MSX standards)
@@ -595,6 +595,15 @@ CFGTBL:	;	PLT	RSEL	RDAT	RIN	Z180	ACR
 	.DW	HWSTR_RCEB6
 ;
 	.DB	$0A,	$61,	$60,	$60,	$C0,	$FF	; SCZ180 W/ RC SOUND MODULE (MF)
+	.DW	HWSTR_RCMF
+;
+	.DB	$0B,	$D8,	$D0,	$D8,	$FF,	$FF	; RCZ280 W/ RC SOUND MODULE (EB)
+	.DW	HWSTR_RCEB
+;
+	.DB	$0B,	$A0,	$A1,	$A2,	$FF,	$FF	; RCZ280 W/ RC SOUND MODULE (EB Rev 6)
+	.DW	HWSTR_RCEB6
+;
+	.DB	$0B,	$D1,	$D0,	$D0,	$FF,	$FF	; RCZ280 W/ RC SOUND MODULE (MF)
 	.DW	HWSTR_RCMF
 ;
 	.DB	$FF					; END OF TABLE MARKER
@@ -2478,10 +2487,6 @@ upsg:
 	ERRWITHMSG(MSGERR)
 
 upsg0:
-	ld	a,(WMOD)	; if WMOD = 1, CPU is z180
-	or	a		; set flags
-	jr	z,upsg1		; skip z180 stuff
-
 	di
 	call	SLOWIO
 

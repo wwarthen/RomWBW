@@ -13,6 +13,7 @@
 ; 9.  EZZ80	Easy Z80, Z80 SBC w/ RC2014 bus and CTC
 ; 10. SCZ180	Steve Cousins Z180 based system
 ; 11. DYNO	Steve Garcia's Dyno Micro-ATX Motherboard
+; 12. RCZ280	Z280 CPU on RC2014 or ZZ80MB
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -48,11 +49,12 @@ PLT_ZETA2	.EQU	3		; ZETA Z80 V2 SBC
 PLT_N8		.EQU	4		; N8 (HOME COMPUTER) Z180 SBC
 PLT_MK4		.EQU	5		; MARK IV
 PLT_UNA		.EQU	6		; UNA BIOS
-PLT_RCZ80	.EQU	7		; RC2014 W Z80
+PLT_RCZ80	.EQU	7		; RC2014 W/ Z80
 PLT_RCZ180	.EQU	8		; RC2014 W/ Z180
 PLT_EZZ80	.EQU	9		; EASY Z80
 PLT_SCZ180	.EQU	10		; SCZ180
 PLT_DYNO	.EQU	11		; DYNO MICRO-ATX MOTHERBOARD
+PLT_RCZ280	.EQU	12		; RC2014 W/ Z280
 ;
 ;
 ; CPU TYPES

@@ -65,11 +65,13 @@ static const struct matchtab s_matchtab_z80[] = {
 	{ "LD R,A", "ED.4F.", 3, 0 },
 	{ "LD SP,HL", "F9.", 3, 0 },
 	{ "LD SP,e", "d0.F9.", 3, 0 },
+	{ "LD HL,(HL)", "ED.26.", 2, 0 }, // Z280
 	{ "LD HL,(a)", "2A.e0", 3, 0 },
 	{ "LD d,(a)", "ED.4Bf0.e1", 3, 0 },
 	{ "LD d,a", "01f0.e1", 3, 0 },
 	{ "LD e,(a)", "d0.2A.e1", 3, 0 },
 	{ "LD e,a", "d0.21.e1", 3, 0 },
+	{ "LD (HL),DE", "ED.1E.", 2, 0 }, // Z280
 	{ "LD (HL),b", "70c0.", 3, 0 },
 	{ "LD (HL),a", "36.d0.", 3, 0, "e8" },
 	{ "LD (BC),A", "02.", 3, 0 },
@@ -99,6 +101,7 @@ static const struct matchtab s_matchtab_z80[] = {
 	{ "CPIR", "ED.B1.", 3, 0 },
 	{ "CPD", "ED.A9.", 3, 0 },
 	{ "CPDR", "ED.B9.", 3, 0 },
+	{ "ADD HL,A", "ED.6D.", 2, 0 }, // Z280
 	{ "ADD HL,d", "09f0.", 3, 0 },
 	{ "ADD IX,i", "DD.09f0.", 3, 0 },
 	{ "ADD IY,j", "FD.09f0.", 3, 0 },
@@ -197,6 +200,15 @@ static const struct matchtab s_matchtab_z80[] = {
 	{ "TST (HL)", "ED.34.", 2, 0 },
 	{ "TST a", "ED.64.d0.", 2, 0, "e8" },
 	{ "TSTIO a", "ED.74.d0.", 2, 0, "e8" },
+	/* Z280 added instructions */
+	{ "PCACHE", "ED.65.", 2, 0 },
+	{ "LDCTL (C),HL", "ED.6E.", 2, 0 },
+	{ "LDCTL HL,(C)", "ED.66.", 2, 0 },
+	{ "LDCTL USP,HL", "ED.8F.", 2, 0 },
+	{ "LDCTL IY,(C)", "FD.ED.66.", 2, 0 },
+	{ "LDCTL (C),IY", "FD.ED.6E.", 2, 0 },
+	{ "MULTU A,a", "FD.ED.F9.d0.", 2, 0 },
+	{ "OUTW (C),HL", "ED.BF.", 2, 0 },
 	{ NULL, NULL },
 };
 
@@ -278,7 +290,7 @@ static int gen_z80(int *eb, char p, const int *vs, int i, int savepc)
 		  }
 		  b |= vs[i];
 		  break;
-	case 'k': if (s_pass > 0 && (vs[i] < 0 || vs[i] > 2)) {
+	case 'k': if (s_pass > 0 && (vs[i] < 0 || vs[i] > 3)) {
 			  eprint(_("invalid IM argument (%d)\n"),
 				vs[i]);
 			  eprcol(s_pline, s_pline_ep);
@@ -289,6 +301,8 @@ static int gen_z80(int *eb, char p, const int *vs, int i, int savepc)
 			  b = 0x56;
 		  else if (vs[i] == 2)
 			  b = 0x5E;
+		  else if (vs[i] == 3)
+			  b = 0x4E;
 		  break;
 	case 'm': if (s_pass == 0 && !s_extended_op) {
 			  if (vs[i] != 0 && vs[i] != 1 && vs[i] != 3) {
