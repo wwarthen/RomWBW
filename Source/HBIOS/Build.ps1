@@ -1,4 +1,4 @@
-param([string]$Platform = "", [string]$Config = "", [string]$RomSize = "512", [string]$RomName = "")
+param([string]$Platform = "", [string]$Config = "", [int]$RomSize = 512, [string]$RomName = "")
 
 #
 # This PowerShell script performs the heavy lifting in the build of RomWBW.  It handles the assembly
@@ -65,8 +65,8 @@ while ($true)
 #
 while ($true)
 {
-	if (($RomSize -eq "256") -or ($RomSize -eq "512") -or ($RomSize -eq "1024")) {break}
-	$RomSize = (Read-Host -prompt "ROM Size [256|512|1024]").Trim()
+	if (($RomSize -eq 128) -or ($RomSize -eq 256) -or ($RomSize -eq 512) -or ($RomSize -eq 1024)) {break}
+	$RomSize = (Read-Host -prompt "ROM Size [128|256|512|1024]").Trim()
 }
 
 #
@@ -114,7 +114,11 @@ $UpdFile = "${OutDir}/${RomName}.upd"	# Final name of System ROM image
 if ($Platform -eq "UNA") {$Bios = 'una'} else {$Bios = 'wbw'}
 
 # List of RomWBW proprietary apps to imbed in ROM disk.
-$RomApps = "assign","fdu","format","mode","rtc","survey","syscopy","sysgen","talk","timer","xm","inttest"
+$RomApps = "assign","mode","rtc","syscopy","xm"
+if ($RomSize -gt "256")
+{
+	$RomApps += "fdu","format","survey","sysgen","talk","timer","inttest"
+}
 
 ""
 "Building ${RomName} ${ROMSize}KB ROM configuration ${Config} for Z${CPUType}..."
@@ -211,31 +215,30 @@ if ($Platform -ne "UNA")
 # Create a blank ROM disk image to create a working ROM disk image
 Set-Content -Value ([byte[]](0xE5) * (([int]${RomSize} * 1KB) - 128KB)) -Encoding byte -Path $RomDiskFile
 
-# Copy all files from the appropriate directory to the working ROM disk image
-cpmcp -f $RomFmt $RomDiskFile ../RomDsk/ROM_${RomSize}KB/*.* 0:
-
-# Add any platform specific files to the working ROM disk image
-if (Test-Path "../RomDsk/${Platform}/*.*")
+if ($RomSize -gt 128)
 {
-	cpmcp -f $RomFmt $RomDiskFile ../RomDsk/${Platform}/*.* 0:
-}
+	# Copy all files from the appropriate directory to the working ROM disk image
+	cpmcp -f $RomFmt $RomDiskFile ../RomDsk/ROM_${RomSize}KB/*.* 0:
 
-# Add the proprietary RomWBW applications to the working ROM disk image
-foreach ($App in $RomApps)
-{
-	cpmcp -f $RomFmt $RomDiskFile ../../Binary/Apps/$App.com 0:
-}
+	# Add any platform specific files to the working ROM disk image
+	if (Test-Path "../RomDsk/${Platform}/*.*")
+	{
+		cpmcp -f $RomFmt $RomDiskFile ../RomDsk/${Platform}/*.* 0:
+	}
+	
+	# Add the proprietary RomWBW applications to the working ROM disk image
+	foreach ($App in $RomApps)
+	{
+		cpmcp -f $RomFmt $RomDiskFile ../../Binary/Apps/$App.com 0:
+	}
 
-# Add the CP/M and ZSystem system images to the ROM disk (used by SYSCOPY)
-if ($RomSize -ne "256")
-{
+	# Add the CP/M and ZSystem system images to the ROM disk (used by SYSCOPY)
 	cpmcp -f $RomFmt $RomDiskFile ..\cpm22\cpm_${Bios}.sys 0:cpm.sys
 	cpmcp -f $RomFmt $RomDiskFile ..\zsdos\zsys_${Bios}.sys 0:zsys.sys
+
+	# Set all the files in the ROM disk image to read only for extra protection under flash file system.
+	cpmchattr -f $RomFmt $RomDiskFile r 0:*.*
 }
-
-
-# Set all the files in the ROM disk image to read only for extra protection under flash file system.
-cpmchattr -f $RomFmt $RomDiskFile r 0:*.*
 
 #
 # Finally, the individual binary components are concatenated together to produce
