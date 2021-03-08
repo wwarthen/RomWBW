@@ -271,6 +271,19 @@ diskdef interak
   os 2.2
 end
 
+# RomWBW 256KB ROM (128KB reserved, 128KB ROM Disk)
+
+diskdef wbw_rom256
+  seclen 512
+  tracks 4
+  sectrk 64
+  blocksize 2048
+  maxdir 256
+  skew 0
+  boottrk 0
+  os 2.2
+end
+
 # RomWBW 512KB ROM (128KB reserved, 384KB ROM Disk)
 
 diskdef wbw_rom512

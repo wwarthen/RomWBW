@@ -65,8 +65,8 @@ while ($true)
 #
 while ($true)
 {
-	if (($RomSize -eq "512") -or ($RomSize -eq "1024")) {break}
-	$RomSize = (Read-Host -prompt "ROM Size [512|1024]").Trim()
+	if (($RomSize -eq "256") -or ($RomSize -eq "512") -or ($RomSize -eq "1024")) {break}
+	$RomSize = (Read-Host -prompt "ROM Size [256|512|1024]").Trim()
 }
 
 #
@@ -227,8 +227,12 @@ foreach ($App in $RomApps)
 }
 
 # Add the CP/M and ZSystem system images to the ROM disk (used by SYSCOPY)
-cpmcp -f $RomFmt $RomDiskFile ..\cpm22\cpm_${Bios}.sys 0:cpm.sys
-cpmcp -f $RomFmt $RomDiskFile ..\zsdos\zsys_${Bios}.sys 0:zsys.sys
+if ($RomSize -ne "256")
+{
+	cpmcp -f $RomFmt $RomDiskFile ..\cpm22\cpm_${Bios}.sys 0:cpm.sys
+	cpmcp -f $RomFmt $RomDiskFile ..\zsdos\zsys_${Bios}.sys 0:zsys.sys
+}
+
 
 # Set all the files in the ROM disk image to read only for extra protection under flash file system.
 cpmchattr -f $RomFmt $RomDiskFile r 0:*.*

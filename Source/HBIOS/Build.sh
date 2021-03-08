@@ -42,7 +42,7 @@ while ! echo ${configs[@]} | grep -s -w -q "$config" ; do
 done
 configfile=Config/${platform}_${config}.asm
 
-while [ ! '(' "$romsize" = 1024 -o "$romsize" = 512 ')' ] ; do
+while [ ! '(' "$romsize" = 1024 -o "$romsize" = 512 -o "$romsize" = 256 ')' ] ; do
 	echo -n "Romsize :"
 	read romsize
 done
@@ -142,8 +142,10 @@ for i in ${Apps[@]} ; do
 done
 
 echo "copying systems to $romdiskfile"
-$CPMCP -f $romfmt $romdiskfile ../CPM22/cpm_$BIOS.sys 0:cpm.sys
-$CPMCP -f $romfmt $romdiskfile ../ZSDOS/zsys_$BIOS.sys 0:zsys.sys
+if [ $romsize != 256 ] ; then
+	$CPMCP -f $romfmt $romdiskfile ../CPM22/cpm_$BIOS.sys 0:cpm.sys
+	$CPMCP -f $romfmt $romdiskfile ../ZSDOS/zsys_$BIOS.sys 0:zsys.sys
+fi
 
 echo "setting files in the ROM disk image to read only"
 $CPMCH -f $romfmt $romdiskfile  r 0:*.*
