@@ -250,25 +250,6 @@ dinit6:
 	djnz	dinit6			; loop as needed
 	ret
 
-;	; zero out remaining dph table entries
-;	ld	a,16			; dph table entries
-;	sub	l			; subtract entries used
-;	ret	z			; return if all entries used
-;	ld	b,a			; save as loop counter
-;	ld	a,l			; current dph to accum
-;	rlca				; *2 for word entry
-;	ld	hl,@dtbl		; start of dtbl
-;	call	addhla			; hl now points to entry
-;	
-;dinit6a:
-;	xor	a			; zero accum
-;	ld	(hl),a			; zero lsb
-;	inc	hl			; next byte
-;	ld	(hl),a			; zero msb
-;	inc	hl			; next byte
-;	djnz	dinit6a
-;	ret				; finished
-
 dinit7:	; process a unit (all slices)
 	ld	e,0			; initialize slice index
 	ld	b,1			; default loop counter
@@ -518,10 +499,6 @@ time$get:
 	rst	08		; do it
 	ret	nz		; bail out on error
 	
-	ld	a,(datehack)
-	or	a
-	jr	nz,time$get1
-	
 	; convert yymmss in time buffer -> cpm3 epoch date offset
 	call	date2cpm	; time buf (yr, mon, day) -> SCB (@date)
 
@@ -540,24 +517,8 @@ time$set:
 	; CPM date/time in SCB -> RTC
 	
 	; convert CPM3 epoch date offset in SCB -> yymmss in time buffer
-	;call	cpm2date	; SCB (@date) -> time buf (yr, mon, day)
+	call	cpm2date	; SCB (@date) -> time buf (yr, mon, day)
 
-	; this is a temporary hack!!!
-	; since we cannot actually set the date on the RTC, we
-	; just read the current RTC date and use that so that we
-	; don't clobber a potentially good date.
-	; read time from RTC
-	ld	b,020h		; HBIOS func: get time
-	ld	hl,tim$buf	; time buffer
-	rst	08		; do it
-	ret	nz		; bail out on error
-	;
-	; now we set a hack active flag so that future time$get
-	; calls do not update the date field in the SCB
-	;
-	ld	a,0FFh		; true value
-	ld	(datehack),a	; save it
-	
 	; copy CPM3 time values from SCB -> time buffer
 	ld	a,(@hour)	; get hour from SCB
 	ld	(tim$hr),a	; ... and put in tim$hr
@@ -565,7 +526,7 @@ time$set:
 	ld	(tim$min),a     ; ... and put in tim$min
 	ld	a,(@sec)	; get second from SCB
 	ld	(tim$sec),a     ; ... and put in tim$sec
-	
+
 	; send time to RTC
 	ld	b,021h		; HBIOS func: set time
 	ld	hl,tim$buf	; ... from time buffer
@@ -577,7 +538,7 @@ date2cpm:
 	; Convert YYMMSS from time buffer at HL
 	; into offset from CPM epoch and store
 	; result in SCB.
-	
+
 	ld	hl,0		; initialize day counter
 	; Add in days for elapsed years
 	ld	a,(tim$yr)	; get current year
@@ -638,12 +599,75 @@ cpm2date:
 	; Convert CPM epoch date offset in SCB
 	; into YYMMSS values and store result in
 	; time buffer at HL.
-	ld	a,019h
-	ld	(tim$yr),a
-	ld	a,001h
-	ld	(tim$mon),a
-	ld	a,001h
-	ld	(tim$day),a
+
+	; We start by subtracting years keeping a count
+	; of the number of years.  Every fourth year is a leap
+	; year, so we account for that as we go.
+	ld	hl,(@date)	; get the count of days since epoch
+	dec	hl		; because we want 1/1/78 to be offset 0
+	ld	c,78		; init the years value
+c2d1:
+	ld	de,365		; normal number of days per year
+	ld	a,c
+	ld	b,0		; init leap year flag
+	and	03h		; check for leap year
+	jr	nz,c2d2		; if not zero, no need to adjust
+	inc	de		; add a day for leap year
+	ld	b,1		; leap year flag for later
+c2d2:
+	or	a		; clear carry
+	sbc	hl,de		; subtract
+	jr	c,c2d3		; get out if we went too far
+	inc	c		; add a year to year value
+	ld	a,c		; to accum
+	cp	100		; century rollover?
+	jr	nz,c2d1		; nope, loop
+	ld	c,0		; reset for start of century
+	jr	c2d1		; loop
+c2d3:
+	ld	a,c		; years to accum
+	call	bin2bcd		; convert to bcd
+	ld	(tim$yr),a	; ... and save it
+;
+	; Now we use the days per month table to find the
+	; month.
+	add	hl,de		; restore days remaining
+	ld	c,0		; init month value (zero offset)
+c2d4:
+	ld	a,c		; get month value
+	rlca			; times 2 for entry size
+	push	hl		; save hl (days remaining)
+	ld	hl,daysmon	; point to start of table
+	call	addhla		; point to month entry
+	ld	e,(hl)		; get count
+	inc	hl		; recover hl (days remaining)
+	ld	d,(hl)		; de := cum days at end of month
+	pop	hl
+	ld	a,c		; month value to accum
+	cp	1		; possible leap month?
+	jr	nz,c2d5		; no, leave alone
+	ld	a,b		; get leap year flag (set above)
+	or	a		; leap year?
+	jr	z,c2d5		; if not, skip ahead
+	inc	de		; account for leap year
+c2d5:
+	or	a		; clear carry
+	sbc	hl,de		; subtract days for the month
+	jr	c,c2d6		; get out if we went too far
+	inc	c		; next month
+	jr	c2d4		; continue
+c2d6:
+	inc	c		; switch from 0 to 1 offset
+	ld	a,c		; move to accum
+	call	bin2bcd		; convert to bcd
+	ld	(tim$mon),a	; save it
+;
+	; Leftover days is day value
+	add	hl,de		; restore days remaining
+	ld	a,l		; only need lsb
+	inc	a		; switch from 0 to 1 offset
+	call	bin2bcd		; convert to bcd
+	ld	(tim$day),a	; save it
 	
 	ret
 
@@ -662,6 +686,22 @@ daystbl:
 	dw	304		; November
 	dw	334		; December
 
+daysmon:
+	; days per month (non-leap year)
+	dw	31		; January
+	dw	28		; February (non-leap)
+	dw	31		; March
+	dw	30		; April
+	dw	31		; May
+	dw	30		; June
+	dw	31		; July
+	dw	31		; August
+	dw	30		; September
+	dw	31		; October
+	dw	30		; November
+	dw	31		; December
+	
+
 		; RTC time buffer (all values packed bcd)
 tim$buf:
 tim$yr		db	80h
@@ -670,8 +710,6 @@ tim$day		db	10h
 tim$hr		db	01h
 tim$min		db	02h
 tim$sec		db	03h
-
-datehack	db	00h
 
 open:
 	ld	c,15
