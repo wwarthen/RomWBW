@@ -15,9 +15,9 @@
 	extrn	@srch1
 	extrn	@hbbio
 	extrn	addhla
-	;extrn	phex16, phex8
-	;extrn	cin, cout
-	;extrn	crlf, crlf2
+	extrn	phex16, phex8
+	extrn	cin, cout
+	extrn	crlf, crlf2
 	extrn	bcd2bin, bin2bcd
 
 	include	c:ver.lib
@@ -555,33 +555,31 @@ d2c1:
 d2c2:
 	add	hl,de		; add non-leap days
 	dec	c		; dec leap counter
-	jr	nz,d2c3		; if not leap, bypss leap inc
+	jr	nz,d2c3		; if not leap, bypass leap inc
 	inc	hl		; add leap day
 	ld	c,4		; reset leap year counter
 d2c3:
 	djnz	d2c2		; loop for all years
+
 d2c10:
 	; Add in days for elapsed months
-	ex	de,hl		; save HL in DE
-	ld	hl,daystbl	; point to table of cum days by month
+	ld	de,daysmon	; point to start of days per mon tbl
 	ld	a,(tim$mon)	; get current month
 	call	bcd2bin		; convert to binary
-	dec	a		; index from zero
-	rlca			; table entries are 2 bytes
-	call	addhla		; offset to desired month entry
-	ld	a,(hl)		; get the entry into HL
-	inc	hl		; ...
-	ld	h,(hl)		; ...
-	ld	l,a		; ...
-	ex	de,hl		; HL = day count, DE = months count
-	add	hl,de		; add months count into day count
-	; Add leap day for current year if appropriate
-	dec	c		; C still has leap counter
-	jr	nz,d2c20	; skip if not leap year
-	ld	a,(tim$mon)	; get cur mon
-	cp	3		; March?
-	jr	c,d2c20		; skip if mon less than March
-	inc	hl		; add leap day for cur year
+	dec	a		; don't include cur mon
+	jr	z,d2c20		; done if Jan
+	ld	b,a		; save as loop counter
+	cp	2		; Mar = 2
+	jr	c,d2c11		; bypass if < Mar (no leap month)
+	dec	c		; C still has leap year counter
+	jr	nz,d2c11	; skip if not leap year
+	inc	hl		; add in the leap day
+d2c11:
+	ld	a,(de)		; get days for cur mon
+	call	addhla		; add to running count
+	inc	de		; bump to next mon ptr
+	djnz	d2c11		; loop for # of months
+
 d2c20:
 	; Add in days elapsed within month
 	; Note that we don't adjust the date to be a zero
@@ -593,6 +591,8 @@ d2c20:
 	call	bcd2bin		; make binary
 	call	addhla		; add in days
 	ld	(@date),hl	; store in SCB
+	;call	phex16		; *debug*
+	;call	crlf		; *debug*
 	ret
 
 cpm2date:
@@ -628,23 +628,22 @@ c2d3:
 	ld	a,c		; years to accum
 	call	bin2bcd		; convert to bcd
 	ld	(tim$yr),a	; ... and save it
+	;call	phex8		; *debug*
 ;
 	; Now we use the days per month table to find the
 	; month.
 	add	hl,de		; restore days remaining
-	ld	c,0		; init month value (zero offset)
+	ld	c,0		; init month value (zero indexed)
 c2d4:
 	ld	a,c		; get month value
-	rlca			; times 2 for entry size
 	push	hl		; save hl (days remaining)
 	ld	hl,daysmon	; point to start of table
 	call	addhla		; point to month entry
-	ld	e,(hl)		; get count
-	inc	hl		; recover hl (days remaining)
-	ld	d,(hl)		; de := cum days at end of month
-	pop	hl
+	ld	e,(hl)		; get months day count to E
+	ld	d,0		; zero msb, DE is days in month
+	pop	hl		; recover hl (days remaining)
 	ld	a,c		; month value to accum
-	cp	1		; possible leap month?
+	cp	1		; leap month? check for Feb
 	jr	nz,c2d5		; no, leave alone
 	ld	a,b		; get leap year flag (set above)
 	or	a		; leap year?
@@ -661,6 +660,7 @@ c2d6:
 	ld	a,c		; move to accum
 	call	bin2bcd		; convert to bcd
 	ld	(tim$mon),a	; save it
+	;call	phex8		; *debug*
 ;
 	; Leftover days is day value
 	add	hl,de		; restore days remaining
@@ -668,41 +668,27 @@ c2d6:
 	inc	a		; switch from 0 to 1 offset
 	call	bin2bcd		; convert to bcd
 	ld	(tim$day),a	; save it
+	;call	phex8		; *debug*
 	
 	ret
 
-daystbl:
-	; cumulative days elapsed by month (non-leap year)
-	dw	0		; January
-	dw	31		; February (non-leap)
-	dw	59		; March
-	dw	90		; April
-	dw	120		; May
-	dw	151		; June
-	dw	181		; July
-	dw	212		; August
-	dw	243		; September
-	dw	273		; October
-	dw	304		; November
-	dw	334		; December
-
 daysmon:
-	; days per month (non-leap year)
-	dw	31		; January
-	dw	28		; February (non-leap)
-	dw	31		; March
-	dw	30		; April
-	dw	31		; May
-	dw	30		; June
-	dw	31		; July
-	dw	31		; August
-	dw	30		; September
-	dw	31		; October
-	dw	30		; November
-	dw	31		; December
-	
+	; days per month
+	db	31		; January
+	db	28		; February (non-leap)
+	db	31		; March
+	db	30		; April
+	db	31		; May
+	db	30		; June
+	db	31		; July
+	db	31		; August
+	db	30		; September
+	db	31		; October
+	db	30		; November
+	db	31		; December
 
-		; RTC time buffer (all values packed bcd)
+; RTC time buffer (all values packed bcd)
+
 tim$buf:
 tim$yr		db	80h
 tim$mon		db	05h
