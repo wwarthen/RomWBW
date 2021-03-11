@@ -19,6 +19,9 @@ Version 3.1.1
 - WBW: Add support Z80-512K (watchdog and LED)
 - WBW: Add support for ZZ80MB address map
 - PLS: Add support for Z180 invalid opcode trap
+- WBW: Add support for ZZRCC
+- WBW: Allow selection of RAM/ROM disk individually in build
+- WBW: Support 256KB ROM size
 
 Version 3.1
 -----------

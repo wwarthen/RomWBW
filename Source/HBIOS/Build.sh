@@ -42,7 +42,7 @@ while ! echo ${configs[@]} | grep -s -w -q "$config" ; do
 done
 configfile=Config/${platform}_${config}.asm
 
-while [ ! '(' "$romsize" = 1024 -o "$romsize" = 512 ')' ] ; do
+while [ ! '(' "$romsize" = 1024 -o "$romsize" = 512 -o "$romsize" = 256 -o "$romsize" = 128 ')' ] ; do
 	echo -n "Romsize :"
 	read romsize
 done
@@ -58,7 +58,10 @@ else
 	BIOS=wbw
 fi
 
-Apps=(assign fdu format mode rtc survey syscopy sysgen talk timer xm inttest)
+Apps=(assign mode rtc syscopy xm)
+if [ $romsize -gt 256 ] ; then
+	Apps+=(fdu format survey sysgen talk timer inttest)
+fi
 
 blankfile=Blank${romsize}KB.dat
 romdiskfile=RomDisk.tmp
@@ -113,40 +116,43 @@ fi
 echo "Building ${romsize}KB $romname ROM disk data file..."
 
 cp $blankfile $romdiskfile
+	
+if [ $romsize -gt 128 ] ; then
 
-echo placing files into $romdiskfile
-
-for file in $(ls -1 ../RomDsk/ROM_${romsize}KB/* | sort -V) ; do
-	echo " " $file
-	$CPMCP -f $romfmt $romdiskfile $file 0:
-done
-
-if [ -d ../RomDsk/$platform ] ; then
-	for file in ../RomDsk/$platform/* ; do
+	echo placing files into $romdiskfile
+	
+	for file in $(ls -1 ../RomDsk/ROM_${romsize}KB/* | sort -V) ; do
 		echo " " $file
 		$CPMCP -f $romfmt $romdiskfile $file 0:
 	done
-fi
-
-echo "adding apps to $romdiskfile"
-for i in ${Apps[@]} ; do
-	set +e
-	f=$(../../Tools/unix/casefn.sh ../../Binary/Apps/$i.com)
-	set -e
-	if [ -z "$f" ] ; then
-		echo " " $i "not found"
-	else
-		echo " " $f
-		$CPMCP -f $romfmt $romdiskfile $f 0:
+	
+	if [ -d ../RomDsk/$platform ] ; then
+		for file in ../RomDsk/$platform/* ; do
+			echo " " $file
+			$CPMCP -f $romfmt $romdiskfile $file 0:
+		done
 	fi
-done
-
-echo "copying systems to $romdiskfile"
-$CPMCP -f $romfmt $romdiskfile ../CPM22/cpm_$BIOS.sys 0:cpm.sys
-$CPMCP -f $romfmt $romdiskfile ../ZSDOS/zsys_$BIOS.sys 0:zsys.sys
-
-echo "setting files in the ROM disk image to read only"
-$CPMCH -f $romfmt $romdiskfile  r 0:*.*
+	
+	echo "adding apps to $romdiskfile"
+	for i in ${Apps[@]} ; do
+		set +e
+		f=$(../../Tools/unix/casefn.sh ../../Binary/Apps/$i.com)
+		set -e
+		if [ -z "$f" ] ; then
+			echo " " $i "not found"
+		else
+			echo " " $f
+			$CPMCP -f $romfmt $romdiskfile $f 0:
+		fi
+	done
+	
+	echo "copying systems to $romdiskfile"
+	$CPMCP -f $romfmt $romdiskfile ../CPM22/cpm_$BIOS.sys 0:cpm.sys
+	$CPMCP -f $romfmt $romdiskfile ../ZSDOS/zsys_$BIOS.sys 0:zsys.sys
+	
+	echo "setting files in the ROM disk image to read only"
+	$CPMCH -f $romfmt $romdiskfile  r 0:*.*
+fi
 
 if [ $platform = UNA ] ; then
 	cp osimg.bin $outdir/UNA_WBW_SYS.bin
