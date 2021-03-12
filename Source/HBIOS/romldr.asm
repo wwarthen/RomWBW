@@ -2084,6 +2084,30 @@ newcon		.db	0
 newspeed	.db	0
 ;
 ;=======================================================================
+; Working data storage
+;=======================================================================
+;
+		.fill	64,0		; 32 level stack
+bl_stack	.equ	$		; ... top is here
+;
+#if (BIOS == BIOS_WBW)
+bid_ldr		.db	0		; bank at startup
+#endif
+#if (BIOS == BIOS_UNA)
+bid_ldr		.dw	0		; bank at startup
+#endif
+;
+lba		.fill	4,0		; lba for load, dword
+dma		.dw	0		; address for load
+sps		.dw	0		; sectors per slice
+mediaid		.db	0		; media id
+;
+ra_tbl_loc	.dw	0		; points to active ra_tbl
+bootunit	.db	0		; boot disk unit
+bootslice	.db	0		; boot disk slice
+loadcnt		.db	0		; num disk sectors to load
+;
+;=======================================================================
 ; Pad remainder of ROM Loader
 ;=======================================================================
 ;
@@ -2094,29 +2118,16 @@ slack		.equ	($8000 + LDR_SIZ - $)
 		.echo	slack
 		.echo	" bytes.\n"
 ;
+;
 ;=======================================================================
-; Working data storage (uninitialized)
+; Disk buffers (uninitialized)
 ;=======================================================================
 ;
-		.ds	64		; 32 level stack
-bl_stack	.equ	$		; ... top is here
+; Master Boot Record sector is read into area below.
+; Note that this buffer is actually shared with bl_infosec
+; buffer below.
 ;
-#if (BIOS == BIOS_WBW)
-bid_ldr		.ds	1		; bank at startup
-#endif
-#if (BIOS == BIOS_UNA)
-bid_ldr		.ds	2		; bank at startup
-#endif
-;
-lba		.ds	4		; lba for load, dword
-dma		.ds	2		; address for load
-sps		.ds	2		; sectors per slice
-mediaid		.ds	1		; media id
-;
-ra_tbl_loc	.ds	2		; points to active ra_tbl
-bootunit	.ds	1		; boot disk unit
-bootslice	.ds	1		; boot disk slice
-loadcnt		.ds	1		; num disk sectors to load
+bl_mbrsec	.equ	$
 ;
 ; Boot info sector is read into area below.
 ; The third sector of a disk device is reserved for boot info.
@@ -2144,11 +2155,5 @@ bb_biloc	.ds	2		; loc to patch boot drive info
 bb_cpmloc	.ds	2		; final ram dest for cpm/cbios
 bb_cpmend	.ds	2		; end address for load
 bb_cpment	.ds	2		; CP/M entry point (cbios boot)
-;
-;
-; Master Boot Record sector is read into area below.
-;
-bl_mbrsec	.equ	$
-		.ds	512
 ;
 	.end
