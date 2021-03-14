@@ -12,5 +12,6 @@ SUBDIRS += ZPM3
 #SUBDIRS += BPBIOS
 SUBDIRS += Images
 SUBDIRS += ZRC
+SUBDIRS += ZZR
 TOOLS = ../Tools
 include $(TOOLS)/Makefile.inc
