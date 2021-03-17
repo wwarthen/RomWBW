@@ -317,8 +317,14 @@ clrram:
 	di				; no interrupts
 	ld	a,(0FFE0h)		; get current bank
 	push 	af			; save it
-	;ld	a,(bnkramd)		; first bank of ram disk
-	ld	a,080h			; first bank of ram disk
+	ld	b,0FAh			; HBIOS Peek Function
+	ld	a,(@hbbio)		; HBIOS bank id
+	ld	d,a			; ... goes in D
+	ld	hl,1DCh			; Offset 1DCh is ram disk bank 0
+	rst	08			; Call HBIOS, value in E
+	ld	a,e			; move to A for bank sel
+	cp	0FFh
+	jr	z,clrram3
 	;call	hb_bnksel		; select bank
 	call	0FFF3h			; select bank
 
@@ -348,7 +354,6 @@ clrram2:
 	or	0ffh			; flag value for cleared
 	ld	(clrflg),a		; save it
 clrram3:
-	;ld	a,(bnkuser)		; usr bank (tpa)
 	pop	af			; recover original bank
 	;call	hb_bnksel		; select bank
 	call	0FFF3h			; select bank
