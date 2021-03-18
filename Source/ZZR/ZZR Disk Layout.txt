@@ -9,6 +9,8 @@ Start   Length  Sector  Count   Description
 0x64000 0x9C000 0x320   0x4E0   Filler
 0x100000        0x800           Slices
 
+Must insert zzr_romldr.bin at 0x5000-x5FFF of ROM image.  This is also 0x29000-0x29FFF of CF image.
+
 Notes
 -----
 
