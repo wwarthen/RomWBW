@@ -92,6 +92,7 @@ Tools/unix/zx/zx
 !Source/ZSDOS/*.[Cc][Oo][Mm]
 !Source/ZRC/*.bin
 !Source/ZZR/*.bin
+!Source/ZZR/*.hex
 !Tools/cpm/bin
 !Tools/unix/zx
 !Tools/zx
