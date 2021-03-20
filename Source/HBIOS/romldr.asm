@@ -648,7 +648,7 @@ romload1:
 	; Record boot information
 	pop	af			; recover source bank
 	ld	l,a			; L := source bank
-	ld	de,$0100		; boot volume/slice
+	ld	de,$0000		; boot vol=0, slice=0
 	ld	b,BF_SYSSET		; HBIOS func: system set
 	ld	c,BF_SYSSET_BOOTINFO	; BBIOS subfunc: boot info
 	rst	08			; do it
