@@ -518,3 +518,6 @@ WW 4/29/2020: v5.5
 
 WW 12/12/2020: v5.6
   - Updated SmallZ80 support for new I/O map
+
+WW 3/24/2021: v5.7
+  - Added support for a few single-sided formats
