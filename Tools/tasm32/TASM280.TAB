@@ -438,6 +438,7 @@ RET  PE      E8   1 NOP 1
 RET  PO      E0   1 NOP 1
 RET  Z       C8   1 NOP 1
 RETI ""      4DED 2 NOP 1
+RETIL ""     55ED 2 NOP 1	/* Z280 */
 RETN ""      45ED 2 NOP 1
 
 RL   (HL)    16CB 2 NOP 1
