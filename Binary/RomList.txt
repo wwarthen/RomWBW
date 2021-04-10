@@ -198,7 +198,7 @@ RCZ280 (RCZ280_ext.rom, RCZ280_nat.rom, RCZ280_nat_zz.rom):
  - Built-in Z280 UART (Z2U) is buffered and interrupt driven only
    on _nat and _nat_zz variants.  It uses polling I/O on _ext.
  - Console on whichever serial module is installed,
-   order of priority is UART, SIO, DUART, ACIA, Z2U
+   order of priority is Z2U, UART, SIO, DUART, ACIA
  - Baud rate is determined by hardware, but normally 115200.
  - Auto support for RC2014 Compact Flash Module
  - Auto support for RC2014 PPIDE Module
@@ -221,9 +221,9 @@ RCZ280 (RCZ280_ext.rom, RCZ280_nat.rom, RCZ280_nat_zz.rom):
 
 SCZ180 (SCZ180_126.rom, SCZ180_130.rom, SCZ180_131.rom, SCZ140.rom):
  - Same as RCZ180
- - Adds auto support for SPI SD Card
- - The 3 different variants of SCZ180 are provided to match the
-   3 corresponding systems (SC126, SC130, SC131, and SC140)
+ - Adds auto support for onboard SPI SD Card
+ - The 4 different variants of SCZ180 are provided to match the
+   4 corresponding systems (SC126, SC130, SC131, and SC140)
    designed by Stephen Cousins.
  - Support for PropIO V2 may be enabled in config (PRPENABLE).  If
    enabled, will auto-detect and install associated

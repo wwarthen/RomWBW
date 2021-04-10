@@ -25,6 +25,8 @@ config=$2
 romsize=$3
 romname=$4
 
+export platform
+
 # prompt if no match
 platforms=($(find Config -name \*.asm -print | \
 	sed -e 's,Config/,,' -e 's/_.*$//' | sort -u))

@@ -15,6 +15,7 @@
 
 	public	@sysdr
 	extrn	@bootdu,@bootsl
+	extrn	@hbbio
 
     ; Variables containing parameters passed by BDOS
 
@@ -354,6 +355,54 @@ dpb$hdnew:	; 8MB Hard Disk Drive (new format)
 ;		called for first time initialization.
 
 dsk$init:
+	ld	b,0FAh			; HBIOS Peek Function
+	ld	a,(@hbbio)		; HBIOS bank id
+	ld	d,a			; ... goes in D
+	ld	hl,10Ch			; Offset 10Ch is ROM bank cnt
+	rst	08			; Call HBIOS, value in E
+	ld	a,e			; move count to accum
+	sub	4			; reduce by # reserved banks
+	ld	ix,dpb$rom		; address of DPB
+	call	dsk$init1		; fix it up
+	
+	ld	b,0FAh			; HBIOS Peek Function
+	ld	a,(@hbbio)		; HBIOS bank id
+	ld	d,a			; ... goes in D
+	ld	hl,10Bh			; Offset 10Bh is RAM bank cnt
+	rst	08			; Call HBIOS, value in E
+	ld	a,e			; move count to accum
+	sub	8			; reduce by # reserved banks
+	ld	ix,dpb$ram		; address of DPB
+	call	dsk$init1		; fix it up
+
+	ret				; done
+
+dsk$init1:
+	; Setup HL with bank count
+	ld	l,a			; lsb
+	ld	h,0			; msb is always zero
+
+	; Update EXM field
+	ld	a,l			; lsb of bank count
+	cp	16 + 1			; compare to EXM threshold
+	ld	a,1			; assume <= 16 banks, EXM := 0
+	jr	c,dsk$init2		; done if so
+	xor	a			; > 16 banks, EXM := 0
+dsk$init2:
+	ld	(ix + 4),a		; save new EXM value
+
+	; Update DSM field
+	ld	b,4			; prepare to mult by 16
+dsk$init3:
+	sla	l			; shift lsb
+	rl	h			; shift msb w/ carry
+	djnz	dsk$init3		; repeat as needed
+	dec	hl			; subtract 1 for proper DSM value
+	ld	(ix+5),l		; save updated
+	ld	(ix+6),h		; ... DSM value
+	
+	ret
+	
 	;ld	a,(@rdrv)		; unit being initialized
 	;ld	hl,@bootdu
 	;cp	(hl)			; compare to boot unit

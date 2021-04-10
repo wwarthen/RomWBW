@@ -44,12 +44,19 @@ TOOLS =../../Tools
 OTHERS =  *.img *.rom *.com *.bin *.z80 cpm.sys zsys.sys Build.inc RomDisk.tmp font*.asm *.dat
 include $(TOOLS)/Makefile.inc
 
+ifneq ($(findstring $(platform), N8 MK4 RCZ180 SCZ180 DYNO),)
+	TASM=$(BINDIR)/uz80as -t hd64180
+endif
+
+ifneq ($(findstring $(platform), RCZ280),)
+	TASM=$(BINDIR)/uz80as -t z280
+endif
+
 ifeq ($(DIFFMAKE),1)
 	DIFFBUILD := -d $(DIFFTO)/Source/HBIOS
 endif
 
 DIFFPATH = $(DIFFTO)/Binary
-
 
 ROMSIZE=512
 
