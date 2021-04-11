@@ -23,6 +23,8 @@ Version 3.1.1
 - WBW: Allow selection of RAM/ROM disk individually in build
 - WBW: Support 256KB ROM size
 - WBW: CP/M 3 RTC support is now complete (reads and writes RTC date/time)
+- WBW: Add config to allow swapping logical order of MT011 SPI ports
+- WBW: COPY.COM updated from v1.72 -> v1.73 throughout distribution
 
 Version 3.1
 -----------
