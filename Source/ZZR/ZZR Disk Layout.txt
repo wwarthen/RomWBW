@@ -16,9 +16,9 @@ Notes
 
 - At startup CPLD ROM is mapped to Z80 CPU address space 0x0000-0x003F, CPU begins execution at 0x0000
 - CPLD ROM (CF bootstrap mode) loads CF Boot Loader (256B) at 0xB000 and runs it
-- CF Boot Loader loads ZRC Monitor at 0xB400 and runs it
-- User loads ZZRCC RomWBW Loader hex file at 0x5000, then runs it using G5000
-- User loads RomWBW ROM hex file to contents of RAM, then runs it using G0000
+- CF Boot Loader loads ZZRCC Monitor at 0xB400 and runs it
+- Monitor (Boot RomWBW) loads ZZRCC RomWBW Loader hex file at 0x5000, then runs it
+- RomWBW Loader loads RomWBW ROM image to contents of RAM, then runs it
 
 
 ;;- ZZRCC Monitor reads 512KB (RomWBW) from sectors 0x120-0x51F of CF into first 512KB of RAM
