@@ -11,7 +11,7 @@ OBJECTS :=
 
 ifneq ($(wildcard $(ZZRROM)),)
 #	OBJECTS +=  $(ZZRROMHEX) $(ZZRLDRROM) $(HD1024ZZRPREFIX) $(HD1024ZZZROMBOIMG)
-	OBJECTS +=  $(HD1024ZZRPREFIX) $(HD1024ZZZROMBOIMG)
+	OBJECTS +=  $(ZZRROMHEX) $(HD1024ZZRPREFIX) $(HD1024ZZZROMBOIMG)
 endif
 
 DEST=../../Binary
@@ -30,7 +30,8 @@ $(HD1024ZZZROMBOIMG): $(HD1024ZZRPREFIX) $(HD1024IMGS)
 	cat $^ > $@
 
 $(ZZRROMHEX): $(ZZRROM)
-	srec_cat $(ZZRROM) -Binary -Exclude 0x5000 0x7000 zzr_romldr.hex -Intel -Output $(ZZRROMHEX) -Intel
+#	srec_cat $(ZZRROM) -Binary -Exclude 0x5000 0x7000 zzr_romldr.hex -Intel -Output $(ZZRROMHEX) -Intel
+	srec_cat $(ZZRROM) -Binary -Output $(ZZRROMHEX) -Intel
 
 $(ZZRLDRROM): $(ZZRROMHEX)
 	srec_cat $(ZZRROMHEX) -Intel -Output $(ZZRLDRROM) -Binary

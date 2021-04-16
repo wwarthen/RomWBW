@@ -5,6 +5,8 @@ if not exist ..\..\Binary\RCZ280_nat_zzr.rom goto :eof
 
 rem ..\..\Tools\srecord\srec_cat.exe ..\..\Binary\RCZ280_nat_zzr.rom -Binary -Exclude 0x5000 0x7000 zzr_romldr.hex -Intel -Output ..\..\Binary\RCZ280_nat_zzr.hex -Intel
 
+..\..\Tools\srecord\srec_cat.exe ..\..\Binary\RCZ280_nat_zzr.rom -Binary -Output ..\..\Binary\RCZ280_nat_zzr.hex -Intel
+
 rem ..\..\Tools\srecord\srec_cat.exe ..\..\Binary\RCZ280_nat_zzr.hex -Intel -Output ..\..\Binary\RCZ280_nat_zzr_ldr.rom -Binary
 
 rem copy /b zzr_cfldr.bin + zzr_ptbl.bin + zzr_fill_1.bin + zzr_mon.bin + zzr_fill_2.bin + ..\..\Binary\RCZ280_nat_zzr_ldr.rom + zzr_fill_3.bin ..\..\Binary\hd1024_zzr_prefix.dat
