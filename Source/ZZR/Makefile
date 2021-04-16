@@ -9,9 +9,9 @@ HD1024IMGS = ../../Binary/hd1024_cpm22.img ../../Binary/hd1024_zsdos.img ../../B
 
 OBJECTS :=
 
-
 ifneq ($(wildcard $(ZZRROM)),)
-	OBJECTS +=  $(ZZRROMHEX)  $(ZZRLDRROM) $(HD1024ZZRPREFIX) $(HD1024ZZZROMBOIMG)
+#	OBJECTS +=  $(ZZRROMHEX) $(ZZRLDRROM) $(HD1024ZZRPREFIX) $(HD1024ZZZROMBOIMG)
+	OBJECTS +=  $(HD1024ZZRPREFIX) $(HD1024ZZZROMBOIMG)
 endif
 
 DEST=../../Binary
@@ -23,7 +23,8 @@ include $(TOOLS)/Makefile.inc
 DIFFPATH = $(DIFFTO)/Binary
 
 $(HD1024ZZRPREFIX):
-	cat zzr_cfldr.bin zzr_ptbl.bin zzr_fill_1.bin zzr_mon.bin zzr_fill_2.bin $(ZZRLDRROM) zzr_fill_3.bin >$@
+#	cat zzr_cfldr.bin zzr_ptbl.bin zzr_fill_1.bin zzr_mon.bin zzr_fill_2.bin $(ZZRLDRROM) zzr_fill_3.bin >$@
+	cat zzr_cfldr.bin zzr_ptbl.bin zzr_fill_1.bin zzr_mon.bin zzr_fill_2.bin $(ZZRROM) zzr_fill_3.bin >$@
 
 $(HD1024ZZZROMBOIMG): $(HD1024ZZRPREFIX) $(HD1024IMGS)
 	cat $^ > $@
