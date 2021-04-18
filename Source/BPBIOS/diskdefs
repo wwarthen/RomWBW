@@ -416,7 +416,6 @@ diskdef wbw_hd512_3
   os 2.2
 end
 
-
 # RomWBW 8MB Hard Disk (1024 directory entry format)
 # New format, 1024 dir entries, 16,384 sectors / slice
 # Pure filesystem image, no MBR prefix
@@ -432,7 +431,7 @@ diskdef wbw_hd1024
 end
 
 # First 4 slices of wbw_hd1024
-# Assumes 128KB prefix (256 sectors)
+# Assumes 1MB prefix (2048 sectors)
 diskdef wbw_hd1024_0
   seclen 512
   tracks 1040
@@ -440,7 +439,7 @@ diskdef wbw_hd1024_0
   blocksize 4096
   maxdir 1024
   skew 0
-  boottrk 18
+  boottrk 130
   os 2.2
 end
 
@@ -451,7 +450,7 @@ diskdef wbw_hd1024_1
   blocksize 4096
   maxdir 1024
   skew 0
-  boottrk 1042
+  boottrk 1154
   os 2.2
 end
 
@@ -462,7 +461,7 @@ diskdef wbw_hd1024_2
   blocksize 4096
   maxdir 1024
   skew 0
-  boottrk 2066
+  boottrk 2178
   os 2.2
 end
 
@@ -473,6 +472,225 @@ diskdef wbw_hd1024_3
   blocksize 4096
   maxdir 1024
   skew 0
-  boottrk 3114
+  boottrk 3202
+  os 2.2
+end
+
+# SmallZ80 Hard Disk Image
+# 5 slices
+diskdef smz80_hd0
+  seclen 512
+  tracks 1034
+  sectrk 16
+  blocksize 4096
+  maxdir 1024
+  skew 0
+  boottrk 10
+  os 2.2
+end
+
+diskdef smz80_hd1
+  seclen 512
+  tracks 2058
+  sectrk 16
+  blocksize 4096
+  maxdir 1024
+  skew 0
+  boottrk 1034
+  os 2.2
+end
+
+diskdef smz80_hd2
+  seclen 512
+  tracks 1034
+  sectrk 16
+  blocksize 4096
+  maxdir 1024
+  skew 0
+  boottrk 2058
+  os 2.2
+end
+
+diskdef smz80_hd3
+  seclen 512
+  tracks 4106
+  sectrk 16
+  blocksize 4096
+  maxdir 1024
+  skew 0
+  boottrk 3082
+  os 2.2
+end
+
+diskdef smz80_hd4
+  seclen 512
+  tracks 5130
+  sectrk 16
+  blocksize 4096
+  maxdir 1024
+  skew 0
+  boottrk 4106
+  os 2.2
+end
+
+# RC2014 standard hard disk image
+# Slices A-P
+diskdef rc2014a
+  seclen 512
+  tracks 512
+  sectrk 32
+  blocksize 4096
+  maxdir 512
+  boottrk 1
+  os 2.2
+end
+
+diskdef rc2014b
+  seclen 512
+  tracks 1024
+  sectrk 32
+  blocksize 4096
+  maxdir 512
+  boottrk 512
+  os 2.2
+end
+
+diskdef rc2014c
+  seclen 512
+  tracks 1536
+  sectrk 32
+  blocksize 4096
+  maxdir 512
+  boottrk 1024
+  os 2.2
+end
+
+diskdef rc2014d
+  seclen 512
+  tracks 2048
+  sectrk 32
+  blocksize 4096
+  maxdir 512
+  boottrk 1536
+  os 2.2
+end
+
+diskdef rc2014e
+  seclen 512
+  tracks 2560
+  sectrk 32
+  blocksize 4096
+  maxdir 512
+  boottrk 2048
+  os 2.2
+end
+
+diskdef rc2014f
+  seclen 512
+  tracks 3072
+  sectrk 32
+  blocksize 4096
+  maxdir 512
+  boottrk 2560
+  os 2.2
+end
+
+diskdef rc2014g
+  seclen 512
+  tracks 3584
+  sectrk 32
+  blocksize 4096
+  maxdir 512
+  boottrk 3072
+  os 2.2
+end
+
+diskdef rc2014h
+  seclen 512
+  tracks 4096
+  sectrk 32
+  blocksize 4096
+  maxdir 512
+  boottrk 3584
+  os 2.2
+end
+
+diskdef rc2014i
+  seclen 512
+  tracks 4608
+  sectrk 32
+  blocksize 4096
+  maxdir 512
+  boottrk 4096
+  os 2.2
+end
+
+diskdef rc2014j
+  seclen 512
+  tracks 5120
+  sectrk 32
+  blocksize 4096
+  maxdir 512
+  boottrk 4608
+  os 2.2
+end
+
+diskdef rc2014k
+  seclen 512
+  tracks 5632
+  sectrk 32
+  blocksize 4096
+  maxdir 512
+  boottrk 5120
+  os 2.2
+end
+
+diskdef rc2014l
+  seclen 512
+  tracks 6144
+  sectrk 32
+  blocksize 4096
+  maxdir 512
+  boottrk 5632
+  os 2.2
+end
+
+diskdef rc2014m
+  seclen 512
+  tracks 6656
+  sectrk 32
+  blocksize 4096
+  maxdir 512
+  boottrk 6144
+  os 2.2
+end
+
+diskdef rc2014n
+  seclen 512
+  tracks 7168
+  sectrk 32
+  blocksize 4096
+  maxdir 512
+  boottrk 6656
+  os 2.2
+end
+
+diskdef rc2014o
+  seclen 512
+  tracks 7680
+  sectrk 32
+  blocksize 4096
+  maxdir 512
+  boottrk 7168
+  os 2.2
+end
+
+diskdef rc2014p
+  seclen 512
+  tracks 7808
+  sectrk 32
+  blocksize 4096
+  maxdir 512
+  boottrk 7680
   os 2.2
 end

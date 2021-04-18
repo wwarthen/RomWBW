@@ -34,8 +34,8 @@ else
 endif
 
 MOREDIFF = camel80.bin game.bin hbios_rom.bin nascom.bin prefix.bin usrrom.bin \
-	dbgmon.bin hbios_app.bin imgpad1.bin osimg1.bin osimg2.bin romldr.bin \
-	eastaegg.bin hbios_img.bin imgpad.bin osimg.bin tastybasic.bin \
+	dbgmon.bin hbios_app.bin imgpad1.bin imgpad2.bin osimg1.bin osimg2.bin romldr.bin \
+	eastaegg.bin hbios_img.bin osimg.bin tastybasic.bin \
 	game.bin usrrom.bin
 
 SUBDIRS =

@@ -99,10 +99,10 @@ done
 
 cp ../Forth/camel80.bin .
 
-make dbgmon.bin romldr.bin eastaegg.bin imgpad1.bin
+make dbgmon.bin romldr.bin eastaegg.bin imgpad1.bin imgpad2.bin
 
 if [ $platform != UNA ] ; then
-	make nascom.bin tastybasic.bin game.bin usrrom.bin imgpad1.bin
+	make nascom.bin tastybasic.bin game.bin usrrom.bin imgpad1.bin imgpad2.bin
 	make hbios_rom.bin hbios_app.bin hbios_img.bin
 fi
 
@@ -113,7 +113,7 @@ cat romldr.bin eastaegg.bin dbgmon.bin ../ZSDOS/zsys_$BIOS.bin >osimg_small.bin
 
 if [ $platform != UNA ] ; then
 	cat camel80.bin nascom.bin tastybasic.bin game.bin imgpad1.bin usrrom.bin >osimg1.bin
-	cat netboot.mod >osimg2.bin
+	cat netboot.mod imgpad2.bin >osimg2.bin
 fi
 
 echo "Building ${romsize}KB $romname ROM disk data file..."
