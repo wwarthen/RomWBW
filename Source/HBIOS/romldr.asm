@@ -2051,6 +2051,7 @@ ra_ent(str_bas,	  'B',	   KY_DE, BID_IMG1, $1700, BAS_LOC, BAS_SIZ, BAS_LOC)
 ra_ent(str_tbas,  'T',	   KY_EN, BID_IMG1, $3700, TBC_LOC, TBC_SIZ, TBC_LOC)
 ra_ent(str_play,  'P',	   $FF,	  BID_IMG1, $4000, GAM_LOC, GAM_SIZ, GAM_LOC)
 ra_ent(str_user,  'U',	   $FF,	  BID_IMG1, $7000, USR_LOC, USR_SIZ, USR_LOC)
+ra_ent(str_net,   'N',	   $FF,	  BID_IMG2, $0000, NET_LOC, NET_SIZ, NET_LOC)
 #endif
 #if (DSKYENABLE)
 ra_ent(str_dsky,  'Y'+$80, KY_GO, bid_cur,  $1000, MON_LOC, MON_SIZ, MON_DSKY)
@@ -2080,6 +2081,7 @@ str_tbas	.db	"Tasty BASIC",0
 str_play	.db	"Play a Game",0
 str_user	.db	"User App",0
 str_egg		.db	"",0
+str_net		.db	"Network Boot",0
 newcon		.db	0
 newspeed	.db	0
 ;

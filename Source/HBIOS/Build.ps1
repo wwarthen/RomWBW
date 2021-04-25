@@ -170,7 +170,7 @@ ROMSIZE		.EQU		${ROMSize}
 Copy-Item '..\Fonts\font*.asm' '.'
 
 # Assemble individual components.  Note in the case of UNA, there is less to build.
-$RomComponentList = "dbgmon", "romldr", "eastaegg", "imgpad"
+$RomComponentList = "dbgmon", "romldr", "eastaegg"
 ForEach ($RomComponentName in $RomComponentList) {Asm $RomComponentName}
 
 if ($Platform -ne "UNA")
@@ -183,7 +183,8 @@ if ($Platform -ne "UNA")
 	Asm 'tastybasic'
 	Asm 'game'
 	Asm 'usrrom'
-	Asm 'imgpad0'
+	Asm 'imgpad1'
+	Asm 'imgpad2'
 }
 
 #
@@ -198,10 +199,11 @@ Concat 'romldr.bin', 'eastaegg.bin','dbgmon.bin', "..\cpm22\cpm_${Bios}.bin", ".
 # Build 20K OS chunk containing the loader, debug monitor, and one OS image
 Concat 'romldr.bin', 'eastaegg.bin','dbgmon.bin', "..\zsdos\zsys_${Bios}.bin" osimg_small.bin
 
-# Build second 32K chunk containing supplemental ROM apps (not for UNA)
+# Build second and third 32K chunks containing supplemental ROM apps (not for UNA)
 if ($Platform -ne "UNA")
 {
-	Concat '..\Forth\camel80.bin', 'nascom.bin', 'tastybasic.bin', 'game.bin', 'imgpad0.bin', 'usrrom.bin' osimg1.bin
+	Concat '..\Forth\camel80.bin', 'nascom.bin', 'tastybasic.bin', 'game.bin', 'imgpad1.bin', 'usrrom.bin' osimg1.bin
+	Concat 'netboot.mod', 'imgpad2.bin' osimg2.bin
 }
 
 #
@@ -253,8 +255,8 @@ if ($Platform -eq "UNA")
 }
 else 
 {
-	Concat 'hbios_rom.bin','osimg.bin','osimg1.bin','osimg.bin',$RomDiskFile $RomFile
-	Concat 'hbios_rom.bin','osimg.bin','osimg1.bin','osimg.bin' $UpdFile
+	Concat 'hbios_rom.bin','osimg.bin','osimg1.bin','osimg2.bin',$RomDiskFile $RomFile
+	Concat 'hbios_rom.bin','osimg.bin','osimg1.bin','osimg2.bin' $UpdFile
 	Concat 'hbios_app.bin','osimg_small.bin' $ComFile
 	# Concat 'hbios_img.bin','osimg_small.bin' $ImgFile
 }
