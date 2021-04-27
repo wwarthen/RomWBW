@@ -441,6 +441,7 @@ PRI KeyboardStatus
 
   dbg.Hex(ByteVal, 2)
   dbg.Str(string(" <done>"))
+  dbg.NewLine
 
   ExecFunction(FUNC_PUTBYTE)
 

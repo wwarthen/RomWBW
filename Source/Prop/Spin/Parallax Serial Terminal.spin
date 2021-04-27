@@ -273,6 +273,7 @@ PUB NewLine
 {{Send cursor to new line (carriage return plus line feed).}}
   
   Char(NL)
+  Char(LF)
   
 PUB LineFeed
 {{Send cursor down to next line.}}
