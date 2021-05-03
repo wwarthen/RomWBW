@@ -26,6 +26,7 @@ Version 3.1.1
 - WBW: Add config to allow swapping logical order of MT011 SPI ports
 - WBW: COPY.COM updated from v1.72 -> v1.73 throughout distribution
 - D?M: CP/NET for CP/M 2.2 and CP/M 3 (requires MT011)
+- D?M: SD driver fixes for MT011
 
 Version 3.1
 -----------
