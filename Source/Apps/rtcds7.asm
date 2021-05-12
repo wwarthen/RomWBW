@@ -108,7 +108,7 @@ DS7_CTL		.EQU	(DS7_OUT | DS7_SQWE | DS7_RATE)
 ;
 ;
         CALL   DS7_RDC         ; READ CLOCK DATA INTO BUFFER  
-        CALL   DS7_DISP          ; DISPLAY TIME AND DATE FROM BUFFER 
+        CALL   DS7_DISP        ; DISPLAY TIME AND DATE FROM BUFFER 
 	RET
 ;
 ;-----------------------------------------------------------------------------
