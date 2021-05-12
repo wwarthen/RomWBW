@@ -1,6 +1,6 @@
 OBJECTS = SysGen.com Survey.com \
 	SysCopy.com Assign.com Format.com Talk.com Mode.com RTC.com \
-	Timer.com IntTest.com rtcds7.com
+	Timer.com IntTest.com rtcds7.com rtcds7.com
 OTHERS = *.hex *.com
 SUBDIRS = XM FDU FAT Tune
 DEST = ../../Binary/Apps
