@@ -984,6 +984,7 @@ etc.) which is identified by a device type id from the table below.
 0x10        | BQ4845P
 0x20        | SIMH
 0x30        | System Periodic Timer
+0x40        | DS1307 (I2C)
 
 `\clearpage`{=latex}
 
