@@ -83,6 +83,8 @@ SBC (SBC_std.rom):
  - Includes support for CVDU and VGA3 boards.  If detected at
    startup, support for video and keyboard is installed
    including VT-100/ANSI terminal emulation.
+ - Auto detects DiskIO v3 floppy disk controller and installs
+   support for two attached 3.5" floppy disks if found
  - Auto-detects PropIO or PropIO V2 and installs associated
    video, keyboard and SD Card support if present.
  - If PropIO, PropIO V2, CVDU, or VGA hardware is detected,
@@ -102,8 +104,10 @@ SBC (SBC_simh.rom):
 ZETA (ZETA_std.rom):
  - CPU speed is detected at startup
  - Console on onboard UART serial port at 38400 baud
- - Includes support for on-board floppy disk controller and
-   two attached floppy disks.
+ - Auto-detects FDC and installs 3.5" disk support
+   if found
+ - Auto detects on-board floppy disk controller and installs
+   support for one attached 3.5" floppy disk if found
  - Auto-detects ParPortProp and includes support for it if it
    is attached.
  - If ParPortProp is installed, initial console output is
@@ -114,8 +118,8 @@ ZETA (ZETA_std.rom):
 ZETA2 (ZETA2_std.rom):
  - CPU speed is detected at startup
  - Console on onboard UART serial port at 38400 baud
- - Includes support for on-board floppy disk controller and
-   two attached floppy disks.
+ - Auto detects on-board floppy disk controller and installs
+   support for one attached 3.5" floppy disk if found
  - Auto-detects ParPortProp and includes support for it if it
    is attached.
  - Uses CTC to generate periodic timer interrupts.
@@ -127,8 +131,8 @@ ZETA2 (ZETA2_std.rom):
 N8 (N8_std.rom):
  - CPU speed is detected at startup
  - Console on Z180 onboard primary ASCI serial port at 38400 baud
- - Includes support for on-board floppy disk controller and
-   two attached floppy disks.
+ - Auto detects onboard floppy disk controller and installs
+   support for two attached 3.5" floppy disks if found
  - Includes support for on-board TMS9918 video and keyboard
    including VT-100/ANSI terminal emulation.
  - Includes support for on-board SD Card as hard disk and
@@ -139,6 +143,8 @@ MK4 (MK4_std.rom):
  - Console on Z180 onboard primary ASCI serial port at 38400 baud
  - Includes support for on-board IDE port (CF Card via adapter).
  - Includes support for on-board SD Card port.
+ - Auto detects Dual IDE floppy disk controller and installs
+   support for two attached 3.5" floppy disks if found
  - Auto-detects PropIO or PropIO V2 and installs associated
    video, keyboard and SD Card support if present.
  - Includes support for CVDU and VGA3 boards.  If detected at
@@ -156,8 +162,9 @@ RCZ80 (RCZ80_std.rom):
  - Auto support for RC2014 Compact Flash Module
  - Auto support for RC2014 PPIDE Module
  - Support for Scott Baker SIO board may be enabled in config
- - Support for Scott Baker floppy controllers (SMC & WDC) may
-   be enabled in config
+ - Auto detects WDC floppy disk controller and installs
+   support for two attached 3.5" floppy disks if found
+ - Support for SMC floppy controller may be enabled in config
  - Support for J.B. Lang TMS9918 video card may be enabled in config
  - Support for PropIO V2 may be enabled in config (PRPENABLE).  If
    enabled, will auto-detect and install associated
@@ -174,8 +181,9 @@ RCZ180 (RCZ180_nat.rom & RCZ180_ext.rom):
  - Auto support for RC2014 Compact Flash Module
  - Auto support for RC2014 PPIDE Module
  - Support for alternative serial modules may be enabled in config
- - Support for Scott Baker floppy controllers (SMC & WDC) may
-   be enabled in config
+ - Auto detects WDC floppy disk controller and installs
+   support for two attached 3.5" floppy disks if found
+ - Support for SMC floppy controller may be enabled in config
  - Support for J.B. Lang TMS9918 video card may be enabled in config
  - You must pick the variant (_ext or _nat) depending
    on which memory module you are using:
@@ -203,8 +211,9 @@ RCZ280 (RCZ280_ext.rom, RCZ280_nat.rom, RCZ280_nat_zz.rom):
  - Auto support for RC2014 Compact Flash Module
  - Auto support for RC2014 PPIDE Module
  - Support for Scott Baker SIO board may be enabled in config
- - Support for Scott Baker floppy controllers (SMC & WDC) may
-   be enabled in config
+ - Auto detects WDC floppy disk controller and installs
+   support for two attached 3.5" floppy disks if found
+ - Support for SMC floppy controllers may be enabled in config
  - Support for J.B. Lang TMS9918 video card may be enabled in config
  - You must pick the variant (_ext, _nat, or _nat_zz) depending
    on which platform or memory module you are using:
@@ -235,6 +244,9 @@ EZZ80 (EZZ80_std.rom):
  - Includes support for on-board SIO
  - Auto support for RC2014 Compact Flash Module
  - Auto support for RC2014 PPIDE Module
+ - Auto detects WDC floppy disk controller and installs
+   support for two attached 3.5" floppy disks if found
+ - Support for SMC floppy controllers may be enabled in config
  - Support for PropIO V2 may be enabled in config (PRPENABLE).  If
    enabled, will auto-detect and install associated
    video, keyboard and SD Card support if present.
@@ -243,5 +255,6 @@ DYNO (DYNO_std.rom):
  - Assumes CPU oscillator of 18.432 MHz
  - Console on Z180 onboard serial ports at 38400 baud
  - Includes support for BQ4842 RTC
+ - Auto detects Dyno floppy disk controller and installs
+   support for two attached 3.5" floppy disks if found
  - Includes support for onboard PPIDE
- - Support for Dyno floppy controllers may be enabled in config
