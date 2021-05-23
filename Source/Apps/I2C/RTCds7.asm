@@ -6,9 +6,12 @@ PCF_BASE  	.EQU  0F0H
 PCF_ID   	.EQU  0AAH
 CPU_CLK	  	.EQU  12
 
+PCF_RS0     	.EQU  PCF_BASE
+PCF_RS1    	.EQU  PCF_RS0+1
+PCF_OWN	 	.EQU  (PCF_ID >> 1)        	; PCF'S ADDRESS IN SLAVE MODE
+
 REGS0     	.EQU  PCF_BASE
 REGS1    	.EQU  REGS0+1
-PCF_OWN	 	.EQU  (PCF_ID >> 1)        	; PCF'S ADDRESS IN SLAVE MODE
 ;
 ;T4LC512D	.EQU	10100000B		; DEVICE IDENTIFIER
 ;T4LC512A1	.EQU	00000000B		; DEVICE ADDRESS
@@ -104,11 +107,90 @@ DS7_WRITE 	.EQU    (DS7_DS1307 | DS7_W)	; WRITE
 ;
 DS7_CTL		.EQU	(DS7_OUT | DS7_SQWE | DS7_RATE)
 ;
+CLIARGS		.EQU	$81
+RESTART		.EQU	$0000		; CP/M restart vector
+BDOS		.EQU	$0005		; BDOS invocation vector
+FCB		.EQU	$5C		; Location of default FCB
+;
         .ORG  100H
 ;
+DS7_START:
+	CALL	DS7_PROBE		; PROBE FRO DEVICE
+	RET	Z			; EXIT IF DEVICE NOT FOUND
 ;
+	LD	A,(FCB+1)		; GET FIRST CHAR 
+	CP	' '			; COMPARE TO BLANK. IF SO NO
+	JR	Z,DS7_ST0		; ARGUMENTS SO DISLAY TIME AND DATE
+;
+	LD	A,(FCB+1)		; GET FIRST CHAR 
+	CP	'/'			; IS IT INDICATING AN ARGUMENT
+	JR	NZ,DS7_ST0		; 
+;
+	LD	A,(FCB+2)		; GET NEXT CHARACTER
+	CP	'D'			; 
+	JR	NZ,DS7_ST1		; 
+;
+;	/D SET DATE
+;
+	RET
+;
+DS7_ST1:
+	LD	A,(FCB+2)		; GET NEXT CHARACTER
+	CP	'T'			; 
+	JR	NZ,DS7_ST2		; 
+;
+;	/T SET TIME
+;
+	RET
+;
+DS7_ST2:
+	LD	A,(FCB+2)		; GET NEXT CHARACTER
+	CP	'S'			; 
+	JR	NZ,DS7_ST3		; 
+;
+;	/S SET TIME AND DATE
+;
+	RET
+;
+DS7_ST3:
+;
+;	UNREGOGNIZED ARGUMENT
+;
+	RET
+;
+DS7_ST0:
         CALL   DS7_RDC         ; READ CLOCK DATA INTO BUFFER  
         CALL   DS7_DISP        ; DISPLAY TIME AND DATE FROM BUFFER 
+	RET
+;
+;-----------------------------------------------------------------------------
+; RETURN 00/Z IF NOT FOUND
+;        NZ IF FOUND
+;
+;
+DS7_PROBE:
+	LD      A,PCF_PIN   	; SET PIN BIT
+	OUT     (PCF_RS1),A
+	NOP
+	IN      A,(PCF_RS1)    	; CHECK IF SET
+	AND	07FH
+	JR	NZ,DS7_PR0	; ERROR IF NOT SET
+
+	LD	A,'%'
+	CALL	COUT
+
+	OR	0FFH		; SUCCESS
+	RET
+
+DS7_PR0:
+       LD      A,PCF_OWN    	; LOAD OWN ADDRESS IN S0,     
+       OUT     (PCF_RS0),A    	; EFFECTIVE ADDRESS IS (OWN <<1)
+
+       LD      A,PCF_IDLE_
+       OUT     (PCF_RS1),A 
+
+	CALL	PCF_INIERR	; DISLAY ERROR
+	XOR	A		; SET ERROR
 	RET
 ;
 ;-----------------------------------------------------------------------------
@@ -572,7 +654,7 @@ PCF_BBFAIL	.DB	"BUS BUSY$"
 ;
 ;-----------------------------------------------------------------------------
 ;
-BDOS	.EQU 5		;ENTRY BDOS
+;BDOS	.EQU 5		;ENTRY BDOS
 BS	.EQU 8		;BACKSPACE
 TAB	.EQU 9		;TABULATOR
 LF	.EQU 0AH		;LINE-FEED
@@ -581,7 +663,7 @@ CR	.EQU 0DH		;CARRIAGE-RETURN
 ; OUTPUT TEXT AT HL
 ;
 PRTSTR:	LD	A,(HL)
-	OR	A
+	CP	'$'
 	RET	Z
 	CALL	PRINP
 	INC	HL

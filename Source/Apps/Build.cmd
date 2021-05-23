@@ -20,7 +20,6 @@ call :asm Mode || goto :eof
 call :asm RTC || goto :eof
 call :asm Timer || goto :eof
 call :asm180 IntTest || goto :eof
-call :asm rtcds7 || goto :eof
 call :asm rtchb || goto :eof
 
 zx Z80ASM -SYSGEN/F
@@ -32,6 +31,7 @@ setlocal & cd XM && call Build || exit /b 1 & endlocal
 setlocal & cd FDU && call Build || exit /b 1 & endlocal
 setlocal & cd Tune && call Build || exit /b 1 & endlocal
 setlocal & cd FAT && call Build || exit /b 1 & endlocal
+setlocal & cd I2C && call Build || exit /b 1 & endlocal
 
 copy *.com %APPBIN%\
 

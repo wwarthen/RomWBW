@@ -4,23 +4,103 @@
 ;
 ;	HBIOS FORMAT  = YYMMDDHHMMSS
 ;
+;-----------------------------------------------------------------------------
+; GENERIC CP/M STUFF
+;
+BS	.EQU 	8			; BACKSPACE
+TAB	.EQU 	9			; TABULATOR
+LF	.EQU 	0AH			; LINE-FEED
+CR	.EQU 	0DH			; CARRIAGE-RETURN
+CLIARGS	.EQU	$81
+RESTART	.EQU	$0000			; CP/M restart vector
+BDOS	.EQU	$0005			; BDOS invocation vector
+FCB	.EQU	$5C			; Location of default FCB
+;
+;-----------------------------------------------------------------------------
+;
         .ORG  100H
 ;
+HBC_START:
+	LD	A,(FCB+1)		; GET FIRST CHAR 
+	CP	' '			; COMPARE TO BLANK. IF SO NO
+	JR	Z,HBC_ST0		; ARGUMENTS SO DISLAY TIME AND DATE
 ;
-	LD	B,$20		; READ CLOCK DATA INTO BUFFER 
-	LD	HL,HBC_BUF	; DISPLAY TIME AND DATE FROM BUFFER
+	LD	A,(FCB+1)		; GET FIRST CHAR 
+	CP	'/'			; IS IT INDICATING AN ARGUMENT
+	JR	NZ,HBC_ST0		; 
+;
+	LD	A,(FCB+2)		; GET NEXT CHARACTER
+	CP	'D'			; 
+	JR	NZ,HBC_ST1		; 
+;
+;	/D SET DATE DDMMYY
+;
+	LD	B,$21			; WRITE CLOCK DATA INTO BUFFER 
+	LD	HL,HBC_BUF1
+	RST	08
+;
+	LD	HL,FCB+3
+;
+	LD	A,(HL)
+	CP	0
+;	JP	HBC_ST4			; EXIT IF END OF BUFFER
+	LD	B,6
+
+
+
+
+	JP	HBC_ST0
+;
+HBC_ST1:
+	LD	A,(FCB+2)		; GET NEXT CHARACTER
+	CP	'T'			; 
+	JR	NZ,HBC_ST2		; 
+;
+;	/T SET TIME HHMMSS
+;
+	LD	B,$21			; WRITE CLOCK DATA INTO BUFFER 
+	LD	HL,HBC_BUF1
+	RST	08
+	JP	HBC_ST0
+;
+HBC_ST2:
+	LD	A,(FCB+2)		; GET NEXT CHARACTER
+	CP	'S'			; 
+	JR	NZ,HBC_ST3		; 
+;
+;	/S SET TIME AND DATE
+;
+	JP	HBC_ST0
+;
+HBC_ST3:
+;
+;	UNREGOGNIZED ARGUMENT
+;
+	RET
+;
+HBC_ST0:
+	LD	B,$20			; READ CLOCK DATA INTO BUFFER 
+	LD	HL,HBC_BUF
 	RST	08
 ;
 #IF (0)
 	LD	A,6
-	LD	DE,HBC_BUF	; DISLAY DATA READ
+	LD	DE,HBC_BUF		; DISLAY DATA READ
 ;	CALL	PRTHEXBUF
 	CALL   	NEWLINE
 #ENDIF
 ;
         CALL   HBC_DISP         
 	RET
-
+;
+HBC_BUF1:
+	.DB	099H
+	.DB	011H
+	.DB	022H
+	.DB	008H
+	.DB	031H
+	.DB	000H
+;
 HBC_BUF	.FILL	6,0
 ;
 ;-----------------------------------------------------------------------------
@@ -86,12 +166,6 @@ HBC_FAIL	.DB	"ERROR$"
 ;
 ;-----------------------------------------------------------------------------
 ; GENERIC CP/M ROUTINES
-;
-BDOS	.EQU 5		;ENTRY BDOS
-BS	.EQU 8		;BACKSPACE
-TAB	.EQU 9		;TABULATOR
-LF	.EQU 0AH		;LINE-FEED
-CR	.EQU 0DH		;CARRIAGE-RETURN
 ;
 ; OUTPUT TEXT AT HL
 ;
