@@ -30,6 +30,9 @@ Version 3.1.1
 - J?C: Added FIND application from Jay Cotton
 - PMS: Preliminary support for I2C-based DS1307 clock
 - WBW: FD driver auto hardware detect (thanks Alan Cox)
+- D?N: Added support for TMS V9958 VDU
+- D?N: Added support for MSX keyboard
+- D?N: Added support for RP5C01 RTC
 
 Version 3.1
 -----------
