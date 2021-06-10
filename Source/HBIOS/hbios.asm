@@ -1588,8 +1588,7 @@ HB_CPU2:
 #ENDIF
 ;
 #IF (KIOENABLE)
-	LD	A,%11111001	; RESET ALL DEVICES, SET DAISYCHAIN
-	OUT	(KIOBASE+$0E),A	; DO IT
+	CALL	KIO_PREINIT
 #ENDIF
 ;
 #IF (CTCENABLE)
@@ -2239,6 +2238,9 @@ HB_PCINITTBLLEN	.EQU	(($ - HB_PCINITTBL) / 2)
 ;==================================================================================================
 ;
 HB_INITTBL:
+#IF (KIOENABLE)
+	.DW	KIO_INIT
+#ENDIF
 #IF (CTCENABLE)
 	.DW	CTC_INIT
 #ENDIF
@@ -4792,6 +4794,14 @@ ORG_UF	.EQU	$
 SIZ_UF	.EQU	$ - ORG_UF
 		.ECHO	"UF occupies "
 		.ECHO	SIZ_UF
+		.ECHO	" bytes.\n"
+#ENDIF
+#IF (KIOENABLE)
+ORG_KIO	.EQU	$
+  #INCLUDE "kio.asm"
+SIZ_KIO	.EQU	$ - ORG_KIO
+		.ECHO	"KIO occupies "
+		.ECHO	SIZ_KIO
 		.ECHO	" bytes.\n"
 #ENDIF
 #IF (CTCENABLE)
