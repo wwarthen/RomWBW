@@ -22,8 +22,9 @@ else
 	OBJECTS += RCZ80_std.rom RCZ80_std.com RCZ80_std.upd
 	OBJECTS += RCZ80_skz.rom RCZ80_skz.com RCZ80_skz.upd
 	OBJECTS += RCZ80_zrc.rom RCZ80_zrc.com RCZ80_zrc.upd
-	OBJECTS += SBC_simh.rom SBC_simh.com SBC_simh.upd
 	OBJECTS += SBC_std.rom SBC_std.com SBC_std.upd
+	OBJECTS += SBC_simh.rom SBC_simh.com SBC_simh.upd
+	OBJECTS += SBC_mbc.rom SBC_mbc.com SBC_mbc.upd
 	OBJECTS += SCZ180_126.rom SCZ180_126.com SCZ180_126.upd
 	OBJECTS += SCZ180_130.rom SCZ180_130.com SCZ180_130.upd
 	OBJECTS += SCZ180_131.rom SCZ180_131.com SCZ180_131.upd

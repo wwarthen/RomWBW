@@ -35,6 +35,7 @@ Version 3.1.1
 - D?N: Added support for RP5C01 RTC
 - L?N: Slightly enhanced ZCPRD&J w/ a couple bug fixes
 - L?N: UNZIPZ4 which handles most modern ZIP file compression algorithms
+- AJL: Preliminary support for MBC systems
 
 Version 3.1
 -----------

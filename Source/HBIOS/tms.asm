@@ -381,8 +381,8 @@ TMS_SET:
 ;
 ;----------------------------------------------------------------------
 ; SET TMS9918 READ/WRITE ADDRESS
-;   TMS_WR SETS TMS9918 TO BEGIN WRITING TO ADDRESS SPECIFIED IN HL
-;   TMS_RD SETS TMS9918 TO BEGIN READING TO ADDRESS SPECIFIED IN HL
+;   TMS_WR SETS TMS9918 TO BEGIN WRITING AT VDU ADDRESS SPECIFIED IN HL
+;   TMS_RD SETS TMS9918 TO BEGIN READING AT VDU ADDRESS SPECIFIED IN HL
 ;----------------------------------------------------------------------
 ;
 TMS_WR:
@@ -390,8 +390,10 @@ TMS_WR:
         ; CLEAR R#14 FOR V9958
         XOR     A
         OUT     (TMS_CMDREG), A
+	TMS_IODELAY
         LD      A, $80 | 14
         OUT     (TMS_CMDREG), A
+	TMS_IODELAY
 #ENDIF
 
 	PUSH	HL
