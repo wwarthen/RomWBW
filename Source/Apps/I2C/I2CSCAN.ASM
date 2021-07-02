@@ -1,24 +1,48 @@
-
-	.ECHO	"I2CSCAN"/N
-
-; I2C BUS SCANNER
 ;
-_io	.equ	0A0h
-_sda	.equ	0
-_scl	.equ	1
-_idle	.equ	00000011B
-
+	.ECHO	"i2cscan\n"
+;
+; I2C BUS SCANNER
+; MARCO MACCAFERRI, HTTPS://WWW.MACCASOFT.COM
+; HBIOS VERSION BY PHIL SUMMERS (B1ACKMAILER) DIFFICULTLEVELHIGH@GMAIL.COM
+;
+PCF	.EQU	1
+P8X180	.EQU	0
+SC126	.EQU	0
+SC137	.EQU	0
+;
+#IF (PCF)
+I2C_BASE 	.EQU  	0F0H
+PCF_ID   	.EQU  	0AAH
+CPU_CLK	 	.EQU  	12
+;
+PCF_RS0  	.EQU  	I2C_BASE
+PCF_RS1  	.EQU  	PCF_RS0+1
+PCF_OWN	 	.EQU  	(PCF_ID >> 1)        	; PCF'S ADDRESS IN SLAVE MODE
+#ENDIF
+;
+#IF (P8X180)
+I2C_BASE	.EQU	0A0h
+_sda		.EQU	0
+_scl		.EQU	1
+_idle		.EQU	00000011B
+#ENDIF
+;
+#IF (SC126)
+I2C_BASE	.EQU	0Ch
+_sda		.EQU	7
+_scl		.EQU	0
+_idle		.EQU	10001101B
+#ENDIF
+;
+#IF (SC137)
+I2C_BASE	.EQU	20h
+_sda		.EQU	7
+_scl		.EQU	0
+_idle		.EQU	10000001B
+#ENDIF
 ;
 ;-----------------------------------------------------------------------------
 ;
-PCF_BASE  	.EQU  0F0H
-PCF_ID   	.EQU  0AAH
-CPU_CLK	  	.EQU  12
-;
-PCF_RS0     	.EQU  PCF_BASE
-PCF_RS1    	.EQU  PCF_RS0+1
-PCF_OWN	 	.EQU  (PCF_ID >> 1)        	; PCF'S ADDRESS IN SLAVE MODE
-
 	.org	100h
 
 	ld	sp,stack
@@ -30,8 +54,6 @@ PCF_OWN	 	.EQU  (PCF_ID >> 1)        	; PCF'S ADDRESS IN SLAVE MODE
 	call	_cout
 	call	_cout
 	call	_cout
-
-
 
 ; display x axis header 00-0F
 
@@ -131,7 +153,16 @@ lp5f:	ld	a,(addr)	; next address
 	jp	0
 
 signon:	.db	"I2C Bus Scanner"
-	.db	13, 10, 13, 10, 0, "$"
+#IF (PCF)
+	.DB	" - PCF8584"
+#ENDIF
+#IF (SC126)
+	.DB	" - SC126"
+#ENDIF
+#IF (SC137)
+	.DB	" - SC137"
+#ENDIF
+	.db	13, 10, 13, 10, 0, "$"8
 
 _strout:
 st1:	ld	a,(hl)		; display
@@ -188,26 +219,27 @@ _cout:				; character
 	ret
 
 ;-----------------------------------------------------------------------------
+#IF (PCF)
 _i2c_start:
 PCF_START:
         LD     A,PCF_START_  
 	OUT    (PCF_RS1),A
 	RET
-;
+#ELSE
 ;_i2c_start:
 	ld	a,_idle		; issue 
-	out	(_io),a		; start
+	out	(I2C_BASE),a	; start
 				; command
 	res	_sda,a
-	out	(_io),a
+	out	(I2C_BASE),a
 	nop
 	nop
 	res	_scl,a
-	out	(_io),a
+	out	(I2C_BASE),a
 
 	ld	(oprval),a
 	ret
-
+#ENDIF
 ;
 ;-----------------------------------------------------------------------------
 ;
@@ -244,47 +276,8 @@ PCF_ACKTO	.EQU	65000
 PCF_BBTO	.EQU	65000
 PCF_LABDLY	.EQU	65000
 ;
-;-----------------------------------------------------------------------------
-;
-; RETURN A=00/Z  IF SUCCESSFULL
-; RETURN A=FF/NZ IF TIMEOUT
-; RETURN A=01/NZ IF LOST ARBITRATION
-; PCF_STATUS HOLDS LAST PCF STATUS
-;
-PCF_WAIT_FOR_PIN:
-	PUSH	HL
-        LD      HL,PCF_PINTO					; SET TIMEOUT VALUE
-
-PCF_WFP0: 
-	IN      A,(PCF_RS1)					; GET BUS
-	LD	(PCF_STATUS),A					; STATUS
-	LD	B,A
-
-	DEC	HL						; HAVE WE
-	LD	A,H						; TIMED OUT
-	OR	L
-	JR	Z,PCF_WFP1					; YES WE HAVE, GO ACTION IT
-
-	LD	A,B						; 		
-        AND     PCF_PIN						; IS TRANSMISSION COMPLETE?
-        JR	NZ,PCF_WFP0					; KEEP ASKING IF NOT OR
-	POP	HL						; YES COMPLETE (PIN=0) RETURN WITH ZERO
-	RET
-PCF_WFP1:
-	LD	A,B						; DID WE LOSE ARBITRATION?
-	AND	PCF_LAB						; IF A=0 THEN NO
-	CPL	
-	JR	NZ,PCF_WFP2					; NO 
-	CALL	PCF_HANDLE_LAB					; YES GO HANDLE IT
-	LD	(PCF_STATUS),A
-	XOR	A						; RETURN NZ, A=01H
-	INC	A
-PCF_WFP2:
-	POP	HL                				; RET NZ, A=FF IF TIMEOUT 
-	RET
-;
 PCF_STATUS	.DB	00H
-
+;
 ;--------------------------------------------------------------------------------
 ;
 ; RETURN NZ/FF IF TIMEOUT ERROR
@@ -341,24 +334,6 @@ PCF_WFBB0:
         JR     NZ,PCF_WFBB0	; REPEAT IF NOT TIMED OUT
         CPL                	; RET NZ IF TIMEOUT  
 	RET 
-;
-;-----------------------------------------------------------------------------
-PCF_HANDLE_LAB:
-;
-        LD     A,PCF_PIN  
-	OUT    (PCF_RS1),A        
-        LD     A,PCF_ES0  
-	OUT    (PCF_RS1),A
-;
-        LD     HL,PCF_LABDLY
-PCF_LABLP:
-	LD     A,H
-        OR     L
-        DEC    HL  
-        JR     NZ,PCF_LABLP
-;
-        IN     A,(PCF_RS1)
-        RET
 ;
 ;-----------------------------------------------------------------------------
 ; DISPLAY ERROR MESSAGES
@@ -429,7 +404,6 @@ PCF_PRTERR:
 	POP	HL	
 	RET
 ;
-;
 PCF_NOPCF	.DB	"NO DEVICE FOUND$"
 PCF_WRTFAIL	.DB     "SETTING DEVICE ID FAILED$"
 PCF_REGFAIL 	.DB     "CLOCK REGISTER SELECT ERROR$"
@@ -444,28 +418,29 @@ PCF_PINFAIL 	.DB	"PIN FAIL$"
 PCF_BBFAIL	.DB	"BUS BUSY$"
 ;
 ;-----------------------------------------------------------------------------
+#IF (PCF)
 _i2c_stop:  
 PCF_STOP: 
 	LD   	A,PCF_STOP_	; issue 
         OUT  	(PCF_RS1),A     ; stop
         RET                     ; command
-
+#ELSE
 ;_i2c_stop:			
 	ld	a,(oprval)	
 	res	_scl,a		
 	res	_sda,a
-	out	(_io),a
+	out	(I2C_BASE),a
 
 	set	_scl,a
-	out	(_io),a
+	out	(I2C_BASE),a
 	nop
 	nop
 	set	_sda,a
-	out	(_io),a
+	out	(I2C_BASE),a
 
 	ld	(oprval),a
 	ret
-
+;
 _i2c_write:			; write
 	ld	a,(oprval)	; to i2c
 				; bus
@@ -474,38 +449,37 @@ i2c1:	res	_sda,a
 	rl	c
 	jr	nc,i2c2
 	set	_sda,a
-i2c2:	out	(_io),a
+i2c2:	out	(I2C_BASE),a
 	set	_scl,a
-	out	(_io),a
+	out	(I2C_BASE),a
 
-;	COND SC126=0
-;	ld	d,a
-;i2c3:	in	a,(_io)
-;	bit	_scl,a
-;	jr	z,i2c3
-;	ld	a,d
-;	ENDC
-
+#IF	(SC126=0)
+	ld	d,a
+i2c3:	in	a,(I2C_BASE)
+	bit	_scl,a
+	jr	z,i2c3
+	ld	a,d
+#ENDIF
 	res	_scl,a
-	out	(_io),a
+	out	(I2C_BASE),a
 	djnz	i2c1
 
 	set	_sda,a
-	out	(_io),a
+	out	(I2C_BASE),a
 	set	_scl,a
-	out	(_io),a
+	out	(I2C_BASE),a
 
 	ld	d,a
-i2c4:	in	a,(_io)
-;	COND SC126=0
-;	bit	_scl,a
-;	jr	z,4b
-;	ENDC
+i2c4:	in	a,(I2C_BASE)
+#IF	(SC126=0)
+	bit	_scl,a
+	jr	z,4b
+#ENDIF
 	ld	c,a
 	ld	a,d
 
 	res	_scl,a
-	out	(_io),a
+	out	(I2C_BASE),a
 	ld	(oprval),a
 	
 	xor	a
@@ -514,8 +488,7 @@ i2c4:	in	a,(_io)
 	inc	a
 
 	ret
-
-
+#ENDIF
 oprval:	.db	0
 x:	.db	0
 y:	.db	0

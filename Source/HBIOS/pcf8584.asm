@@ -79,7 +79,7 @@ PCF_LABDLY	.EQU	65000
 ; DATA PORT REGISTERS
 ;
 #IF (CPU_CLK = 443)
-PCF_CLK .EQU PCF_CLK443
+PCF_CLK .EQU PCF_CLK4433
 #ELSE 
  #IF (CPU_CLK = 8)
 PCF_CLK .EQU PCF_CLK8
@@ -90,6 +90,19 @@ PCF_CLK .EQU PCF_CLK12
   #ENDIF
  #ENDIF	
 #ENDIF
+;
+; THE PCF8584 TARGETS A TOP I2C CLOCK SPEED OF 90KHZ AND SUPPORTS DIVIDERS FOR 
+; 3, 4.43, 6, 8 AND 12MHZ TO ACHEIVE THIS.
+;
+; +--------------------------------------------------------------------------------------------+
+; | div/clk |  2MHz |  4MHz  |  6MHz | 7.38Mhz |  10MHz | 12MHz |  16MHz | 18.432Mhz |  20MHz  |
+; +----------------------------------------------------------------------------------+---------+
+; |   3MHz  | 60Khz | 120Khz |       |         |        |       |        |           |         |
+; | 4.43MHz |       |  81Khz |       |         |        |       |        |           |         | 
+; |   6MHz  |       |        | 90Khz | 110Khz  |        |       |        |           |         |
+; |   8MHz  |       |        |       |  83Khz  | 112Khz |       |        |           |         |
+; |  12MHz  |       |        |       |         |        | 90Khz | 120Khz |   138Khz  |  150Khz |
+; +----------------------------------------------------------------------------------+---------+
 ;
 PCF8584_INIT:
 	CALL	NEWLINE				; Formatting
@@ -104,7 +117,7 @@ PCF8584_INIT:
 ;
 ;	I2C_INB		= IN A,(PCF_RS0)
 ;	I2C_OUTB	= LD A,* | OUT (PCF_RS0),A
-;	SET_PCF		= LD A,* | OUT (PCF_RS1),A
+;	SET_PCF		-= LD A,* | OUT (PCF_RS1),A
 ;	GET_PCF		= IN A,(PCF_RS1)
 ;	
 ;-----------------------------------------------------------------------------
@@ -446,14 +459,14 @@ PCF_PRTERR:
 ;-----------------------------------------------------------------------------
 ; DEBUG HELPER
 ;
-#IF (0)
-DS7_DBG:
+#IF (1)
+PCF_DBG:
 	PUSH	AF
         PUSH 	DE
         PUSH   	HL
 	LD	A,'['
 	CALL	COUT
-	LD	HL,DS7_DBGF
+	LD	HL,PCF_DBGF
 	LD	A,(HL)
 	ADD	A,'0'
 	INC	(HL)
@@ -464,7 +477,7 @@ DS7_DBG:
         POP  	DE
         POP  	AF
 	RET
-DS7_DBGF:	
+PCF_DBGF:	
 	.DB	0		; DEBUG STAGE COUNTER
 #ENDIF
 ;
