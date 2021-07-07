@@ -23,6 +23,7 @@ call :asm180 IntTest || goto :eof
 call :asm rtcds7 || goto :eof
 call :asm rtchb || goto :eof
 call :asm ppidetst || goto :eof
+call :asm tstdskng || goto :eof
 
 zx Z80ASM -SYSGEN/F
 
