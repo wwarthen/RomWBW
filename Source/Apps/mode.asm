@@ -984,8 +984,8 @@ err2:	; without the string
 ; Utility modules
 ;===============================================================================
 ;
-#include "Encode.asm"
-#include "Decode.asm"
+#include "encode.asm"
+#include "decode.asm"
 #include "bcd.asm"
 ;
 ;===============================================================================
