@@ -358,10 +358,6 @@ dskycmd:
 	call	clrled			; clear LEDs
 ;
 	call	DSKY_GETKEY		; get DSKY key
-	
-	call	prthexbyte
-	
-	
 	cp	$FF			; check for error
 	ret	z			; abort if so
 ;
