@@ -3,10 +3,13 @@
 ; DSKY ROUTINES
 ;==================================================================================================
 ;
-PPIA		.EQU 	PPIBASE + 0	; PORT A
-PPIB		.EQU 	PPIBASE + 1	; PORT B
-PPIC		.EQU 	PPIBASE + 2	; PORT C
-PPIX	 	.EQU 	PPIBASE + 3	; PPI CONTROL PORT
+; THE DSKY MAY COSESIDE ON THE SAME PPI BUS AS A PPISD.  IT MAY NOT
+; SHARE A PPI BUS WITH A PPIDE.
+;
+PPIA		.EQU 	DSKYPPIBASE + 0	; PORT A
+PPIB		.EQU 	DSKYPPIBASE + 1	; PORT B
+PPIC		.EQU 	DSKYPPIBASE + 2	; PORT C
+PPIX	 	.EQU 	DSKYPPIBASE + 3	; PPI CONTROL PORT
 ;
 ;		ICM7218A	KEYPAD		PPISD
 ;		--------	--------	--------
@@ -25,6 +28,15 @@ PPIX	 	.EQU 	PPIBASE + 3	; PPI CONTROL PORT
 ; DSKY SCAN CODES ARE ONE BYTE: CCRRRRRR
 ; BITS 7-6 IDENTFY THE COLUMN OF THE KEY PRESSED
 ; BITS 5-0 ARE A BITMAP, WITH A BIT ON TO INDICATE ROW OF KEY PRESSED
+;
+;
+; LED SEGMENTS (BIT VALUES)
+;
+;	+--40--+
+;	02    20
+;	+--04--+
+;	08    10
+;	+--01--+  80
 ;
 ;      ____PC0________PC1________PC2________PC3____
 ; PB5 |	 $20 [D]    $60 [E]    $A0 [F]	  $E0 [BO]
@@ -278,7 +290,12 @@ DSKY_SHOW:
 	LD	B,DSKY_BUFLEN		; NUMBER OF DIGITS
 	LD	C,PPIA
 DSKY_HEXOUT2:
-	OUTI
+	;OUTI
+	LD	A,(HL)
+	XOR	$80			; FIX DOT POLARITY
+	OUT	(C),A
+	INC	HL
+	DEC	B
 	JP	Z,DSKY_STROBE		; DO FINAL STROBE AND RETURN
 	CALL	DSKY_STROBE		; STROBE BYTE VALUE
 	JR	DSKY_HEXOUT2
@@ -301,22 +318,22 @@ DSKY_COFF:
 ; CLEAR HIGH BIT TO SHOW DECIMAL POINT
 ;
 DSKY_NUMS:
-	.DB	$FB	; 0
-	.DB	$B0	; 1
-	.DB	$ED	; 2
-	.DB	$F5	; 3
-	.DB	$B6	; 4
-	.DB	$D7	; 5
-	.DB	$DF	; 6
-	.DB	$F0	; 7
-	.DB	$FF	; 8
-	.DB	$F7	; 9
-	.DB	$FE	; A
-	.DB	$9F	; B
-	.DB	$CB	; C
-	.DB	$BD	; D
-	.DB	$CF	; E
-	.DB	$CE	; F
+	.DB	$7B	; 0
+	.DB	$30	; 1
+	.DB	$6D	; 2
+	.DB	$75	; 3
+	.DB	$36	; 4
+	.DB	$57	; 5
+	.DB	$5F	; 6
+	.DB	$70	; 7
+	.DB	$7F	; 8
+	.DB	$77	; 9
+	.DB	$7E	; A
+	.DB	$1F	; B
+	.DB	$4B	; C
+	.DB	$3D	; D
+	.DB	$4F	; E
+	.DB	$4E	; F
 ;
 ; SEG DISPLAY WORKING STORAGE
 ;

@@ -24,7 +24,7 @@ else
 	OBJECTS += RCZ80_zrc.rom RCZ80_zrc.com RCZ80_zrc.upd
 	OBJECTS += SBC_std.rom SBC_std.com SBC_std.upd
 	OBJECTS += SBC_simh.rom SBC_simh.com SBC_simh.upd
-	OBJECTS += SBC_mbc.rom SBC_mbc.com SBC_mbc.upd
+	OBJECTS += MBC_std.rom MBC_std.com MBC_std.upd
 	OBJECTS += SCZ180_126.rom SCZ180_126.com SCZ180_126.upd
 	OBJECTS += SCZ180_130.rom SCZ180_130.com SCZ180_130.upd
 	OBJECTS += SCZ180_131.rom SCZ180_131.com SCZ180_131.upd
@@ -35,7 +35,7 @@ else
 endif
 
 MOREDIFF = camel80.bin game.bin hbios_rom.bin nascom.bin prefix.bin usrrom.bin \
-	dbgmon.bin hbios_app.bin imgpad1.bin imgpad2.bin osimg1.bin osimg2.bin romldr.bin \
+	dbgmon.bin hbios_app.bin imgpad2.bin osimg1.bin osimg2.bin romldr.bin \
 	eastaegg.bin hbios_img.bin osimg.bin tastybasic.bin \
 	game.bin usrrom.bin
 

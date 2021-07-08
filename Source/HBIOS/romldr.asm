@@ -358,6 +358,10 @@ dskycmd:
 	call	clrled			; clear LEDs
 ;
 	call	DSKY_GETKEY		; get DSKY key
+	
+	call	prthexbyte
+	
+	
 	cp	$FF			; check for error
 	ret	z			; abort if so
 ;
@@ -1078,8 +1082,16 @@ clrled:
 	out	(DIAGPORT),a	; clear diag leds
   #endif
   #if (LEDENABLE)
-	or	$FF		; led is inverted
+    #if (LEDMODE == LEDMODE_STD)
+	ld	a,$FF		; led is inverted
 	out	(LEDPORT),a	; clear led
+    #endif
+    #if (LEDMODE == LEDMODE_RTC)
+	; Only bits 0 and 1 of the RTC latch are for the LEDs.  Here,
+	; we assume that it is OK to zero all bits of the RTC latch.
+	xor	a		; turn off
+	out	(LEDPORT),a	; clear led
+    #endif
   #endif
 #endif
 	ret
@@ -1903,9 +1915,14 @@ str_err_api	.db	"Unexpected hardware BIOS API failure",0
 ;
 #if (DSKYENABLE)
 #define	DSKY_KBD
+  #if (DSKYMODE == DSKYMODE_V1)
 VDELAY	.equ	vdelay
 DLY2	.equ	dly2
 #include "dsky.asm"
+  #endif
+  #if (DSKYMODE == DSKYMODE_NG)
+#include "dskyng.asm"
+  #endif
 #endif
 ;
 ;=======================================================================
@@ -1957,10 +1974,18 @@ str_help	.db	"\r\n"
 		.db	0
 ;
 #if (DSKYENABLE)
-msg_sel		.db	$ff,$9d,$9d,$8f,$ec,$80,$80,$80	; "boot?   "
-msg_boot	.db	$ff,$9d,$9d,$8f,$00,$00,$00,$80	; "boot... "
-msg_load	.db	$8b,$9d,$fd,$bd,$00,$00,$00,$80	; "load... "
-msg_go		.db	$db,$9d,$00,$00,$00,$80,$80,$80	; "go...   "
+  #if (DSKYMODE == DSKYMODE_V1)
+msg_sel		.db	$7f,$1d,$1d,$0f,$6c,$00,$00,$00	; "boot?   "
+msg_boot	.db	$7f,$1d,$1d,$0f,$80,$80,$80,$00	; "boot... "
+msg_load	.db	$0b,$1d,$7d,$3d,$80,$80,$80,$00	; "load... "
+msg_go		.db	$5b,$1d,$80,$80,$80,$00,$00,$00	; "go...   "
+  #endif
+  #if (DSKYMODE == DSKYMODE_NG)
+msg_sel		.db	$7f,$5c,$5c,$78,$53,$00,$00,$00	; "boot?   "
+msg_boot	.db	$7f,$5c,$5c,$78,$80,$80,$80,$00	; "boot... "
+msg_load	.db	$38,$5c,$5f,$5e,$80,$80,$80,$00	; "load... "
+msg_go		.db	$3d,$5c,$80,$80,$80,$00,$00,$00	; "go...   "
+  #endif
 #endif
 ;
 ;=======================================================================
@@ -2050,13 +2075,13 @@ ra_ent(str_fth,	  'F',	   KY_EX, BID_IMG1, $0000, FTH_LOC, FTH_SIZ, FTH_LOC)
 ra_ent(str_bas,	  'B',	   KY_DE, BID_IMG1, $1700, BAS_LOC, BAS_SIZ, BAS_LOC)
 ra_ent(str_tbas,  'T',	   KY_EN, BID_IMG1, $3700, TBC_LOC, TBC_SIZ, TBC_LOC)
 ra_ent(str_play,  'P',	   $FF,	  BID_IMG1, $4000, GAM_LOC, GAM_SIZ, GAM_LOC)
-ra_ent(str_user,  'U',	   $FF,	  BID_IMG1, $7000, USR_LOC, USR_SIZ, USR_LOC)
+ra_ent(str_egg,	  'E'+$80, $FF,   BID_IMG1, $4900, EGG_LOC, EGG_SIZ, EGG_LOC)
+ra_ent(str_user,  'U',	   $FF,	  BID_IMG1, $4B00, USR_LOC, USR_SIZ, USR_LOC)
 ra_ent(str_net,   'N',	   $FF,	  BID_IMG2, $0000, NET_LOC, NET_SIZ, NET_LOC)
 #endif
 #if (DSKYENABLE)
-ra_ent(str_dsky,  'Y'+$80, KY_GO, bid_cur,  $1000, MON_LOC, MON_SIZ, MON_DSKY)
+ra_ent(str_dsky,  'Y'+$80, KY_GO, BID_IMG0, $1000, MON_LOC, MON_SIZ, MON_DSKY)
 #endif
-ra_ent(str_egg,	  'E'+$80, $FF	, bid_cur,  $0E00, EGG_LOC, EGG_SIZ, EGG_LOC)
 		.dw	0		; table terminator
 ;
 ra_tbl_app:
@@ -2068,7 +2093,6 @@ ra_ent(str_zsys,  'Z',	   KY_FW, bid_cur,  $2000, CPM_LOC, CPM_SIZ, CPM_ENT)
 #if (DSKYENABLE)
 ra_ent(str_dsky,  'Y'+$80, KY_GO, bid_cur,  $1000, MON_LOC, MON_SIZ, MON_DSKY)
 #endif
-ra_ent(str_egg,	  'E'+$80, $FF	, bid_cur,  $0E00, EGG_LOC, EGG_SIZ, EGG_LOC)
 		.dw	0		; table terminator
 ;
 str_mon		.db	"Monitor",0

@@ -99,20 +99,20 @@ done
 
 cp ../Forth/camel80.bin .
 
-make dbgmon.bin romldr.bin eastaegg.bin imgpad1.bin imgpad2.bin
+make dbgmon.bin romldr.bin eastaegg.bin imgpad2.bin
 
 if [ $platform != UNA ] ; then
-	make nascom.bin tastybasic.bin game.bin usrrom.bin imgpad1.bin imgpad2.bin
+	make nascom.bin tastybasic.bin game.bin usrrom.bin imgpad2.bin
 	make hbios_rom.bin hbios_app.bin hbios_img.bin
 fi
 
 echo "Building $romname output files..."
 
-cat romldr.bin eastaegg.bin dbgmon.bin ../CPM22/cpm_$BIOS.bin ../ZSDOS/zsys_$BIOS.bin >osimg.bin
-cat romldr.bin eastaegg.bin dbgmon.bin ../ZSDOS/zsys_$BIOS.bin >osimg_small.bin
+cat romldr.bin dbgmon.bin ../CPM22/cpm_$BIOS.bin ../ZSDOS/zsys_$BIOS.bin >osimg.bin
+cat romldr.bin dbgmon.bin ../ZSDOS/zsys_$BIOS.bin >osimg_small.bin
 
 if [ $platform != UNA ] ; then
-	cat camel80.bin nascom.bin tastybasic.bin game.bin imgpad1.bin usrrom.bin >osimg1.bin
+	cat camel80.bin nascom.bin tastybasic.bin game.bin eastaegg.bin usrrom.bin >osimg1.bin
 	cat netboot.mod imgpad2.bin >osimg2.bin
 fi
 

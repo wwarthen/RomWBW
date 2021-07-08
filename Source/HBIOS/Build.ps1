@@ -19,7 +19,7 @@ param([string]$Platform = "", [string]$Config = "", [int]$RomSize = 512, [string
 # setup mechanism so that multiple configuration are not needed.  When building for UNA, the pre-built
 # UNA BIOS is simply imbedded, it is not built here.
 #
-$PlatformListZ80 = "SBC", "ZETA", "ZETA2", "RCZ80", "RCZ280", "EZZ80", "UNA"
+$PlatformListZ80 = "SBC", "MBC", "ZETA", "ZETA2", "RCZ80", "RCZ280", "EZZ80", "UNA"
 $PlatformListZ180 = "N8", "MK4", "RCZ180", "SCZ180", "DYNO"
 $PlatformListZ280 = "RCZ280"
 
@@ -183,7 +183,6 @@ if ($Platform -ne "UNA")
 	Asm 'tastybasic'
 	Asm 'game'
 	Asm 'usrrom'
-	Asm 'imgpad1'
 	Asm 'imgpad2'
 }
 
@@ -194,15 +193,15 @@ if ($Platform -ne "UNA")
 "Building ${RomName} output files..."
 
 # Build 32K OS chunk containing the loader, debug monitor, and two OS images
-Concat 'romldr.bin', 'eastaegg.bin','dbgmon.bin', "..\cpm22\cpm_${Bios}.bin", "..\zsdos\zsys_${Bios}.bin" osimg.bin
+Concat 'romldr.bin', 'dbgmon.bin', "..\cpm22\cpm_${Bios}.bin", "..\zsdos\zsys_${Bios}.bin" osimg.bin
 
 # Build 20K OS chunk containing the loader, debug monitor, and one OS image
-Concat 'romldr.bin', 'eastaegg.bin','dbgmon.bin', "..\zsdos\zsys_${Bios}.bin" osimg_small.bin
+Concat 'romldr.bin','dbgmon.bin', "..\zsdos\zsys_${Bios}.bin" osimg_small.bin
 
 # Build second and third 32K chunks containing supplemental ROM apps (not for UNA)
 if ($Platform -ne "UNA")
 {
-	Concat '..\Forth\camel80.bin', 'nascom.bin', 'tastybasic.bin', 'game.bin', 'imgpad1.bin', 'usrrom.bin' osimg1.bin
+	Concat '..\Forth\camel80.bin', 'nascom.bin', 'tastybasic.bin', 'game.bin', 'eastaegg.bin', 'usrrom.bin' osimg1.bin
 	Concat 'netboot.mod', 'imgpad2.bin' osimg2.bin
 }
 

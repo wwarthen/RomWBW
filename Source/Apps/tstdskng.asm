@@ -26,9 +26,9 @@ PPI_BASE:	.EQU	$60		; PPI BASE IO PORT
 ; LED SEGMENTS (BIT VALUES)
 ;
 ;	+--01--+
-;       20    02
+;	20    02
 ;	+--40--+
-;       10    04
+;	10    04
 ;	+--08--+  80
 ;
 ; KEY CODE MAP (KEY CODES) --CCCRRR 
