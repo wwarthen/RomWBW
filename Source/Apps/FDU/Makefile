@@ -1,5 +1,5 @@
-OBJECTS = FDU.com
-DOCS = FDU.txt
+OBJECTS = fdu.com
+DOCS = fdu.txt
 DEST = ../../../Binary/Apps
 DOCDEST = ../../../Doc
 TOOLS = ../../../Tools
