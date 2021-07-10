@@ -953,8 +953,13 @@ TXT_HELP	.TEXT	"\r\nMonitor Commands (all values in hex):"
 ;
 #IF DSKYENABLE
 ;
-#DEFINE DSKY_KBD
+#DEFINE	DSKY_KBD
+  #IF (DSKYMODE == DSKYMODE_V1)
 #INCLUDE "dsky.asm"
+  #ENDIF
+  #IF (DSKYMODE == DSKYMODE_NG)
+#INCLUDE "dskyng.asm"
+  #ENDIF
 ;
 KY_PR	.EQU	KY_FW		; USE [FW] FOR [PR] (PORT READ)
 KY_PW	.EQU	KY_BK		; USE [BW] FOR [PW] (PORT WRITE)
@@ -1352,7 +1357,7 @@ ENCBUF1:
 	INC	HL			; BUMP TO NEXT BYTE FOR NEXT PASS
 	PUSH	AF			; SAVE IT
 	AND	$80			; ISOLATE HI BIT (DP)
-	XOR	$80			; FLIP IT
+	;XOR	$80			; FLIP IT
 	LD	C,A			; SAVE IN C
 	POP	AF			; RECOVER ORIGINAL
 	AND	$7F			; REMOVE HI BIT (DP)
@@ -1373,8 +1378,10 @@ ENCBUF1:
 	POP	HL			; RESTORE HL
 	RET
 ;
-CPUUP	.DB 	$84,$CB,$EE,$BB,$80,$BB,$EE,$84	; "-CPU UP-" (RAW SEG)
-MSGBOOT	.DB	$FF,$9D,$9D,$8F,$20,$80,$80,$80 ; "Boot!   " (RAW SEG)
+#IF (DSKYMODE == DSKYMODE_V1)
+;
+CPUUP	.DB 	$04,$4B,$6E,$3B,$00,$3B,$6E,$04	; "-CPU UP-" (RAW SEG)
+MSGBOOT	.DB	$7F,$1D,$1D,$0F,$A0,$00,$00,$00 ; "Boot!   " (RAW SEG)
 ADDR	.DB	$17,$18,$19,$10,$00,$00,$00,$00	; "Adr 0000" (ENCODED)
 PORT	.DB	$13,$14,$15,$16,$10,$10,$00,$00	; "Port  00" (ENCODED)
 GOTO	.DB	$1A,$14,$10,$10,$00,$00,$00,$00	; "Go  0000" (ENCODED)
@@ -1385,6 +1392,7 @@ GOTO	.DB	$1A,$14,$10,$10,$00,$00,$00,$00	; "Go  0000" (ENCODED)
 ;_____________________________________________________________________________
 ;
 SEGDECODE:
+;
 	; POS	$00  $01  $02  $03  $04  $05  $06  $07
 	; GLYPH '0'  '1'  '2'  '3'  '4'  '5'  '6'  '7'
 	.DB	$7B, $30, $6D, $75, $36, $57, $5F, $70
@@ -1396,6 +1404,37 @@ SEGDECODE:
 	; POS	$10  $11  $12  $13  $14  $15  $16  $17  $18  $19  $1A
 	; GLYPH	' '  '-'  '.'  'P'  'o'  'r'  't'  'A'  'd'  'r'  'G'
 	.DB	$00, $04, $00, $6E, $1D, $0C, $0F, $7E, $3D, $0C, $5B
+;
+#ENDIF
+;
+#IF (DSKYMODE == DSKYMODE_NG)
+;
+CPUUP	.DB 	$40,$39,$73,$3E,$00,$3E,$73,$40	; "-CPU UP-" (RAW SEG)
+MSGBOOT	.DB	$7F,$5C,$5C,$78,$A0,$00,$00,$00 ; "Boot!   " (RAW SEG)
+ADDR	.DB	$17,$18,$19,$10,$00,$00,$00,$00	; "Adr 0000" (ENCODED)
+PORT	.DB	$13,$14,$15,$16,$10,$10,$00,$00	; "Port  00" (ENCODED)
+GOTO	.DB	$1A,$14,$10,$10,$00,$00,$00,$00	; "Go  0000" (ENCODED)
+;
+;_HEX_7_SEG_DECODE_TABLE______________________________________________________
+;
+; SET BIT 7 TO DISPLAY W/ DECIMAL POINT
+;_____________________________________________________________________________
+;
+SEGDECODE:
+;
+	; POS	$00  $01  $02  $03  $04  $05  $06  $07
+	; GLYPH '0'  '1'  '2'  '3'  '4'  '5'  '6'  '7'
+	.DB	$3F, $06, $58, $4F, $66, $6D, $7D, $07
+;
+	; POS	$08  $09  $0A  $0B  $0C  $0D  $0E  $0F
+	; GLYPH	'8'  '9'  'A'  'B'  'C'  'D'  'E'  'F'
+	.DB	$7F, $67, $77, $7C, $39, $5E, $79, $71
+;
+	; POS	$10  $11  $12  $13  $14  $15  $16  $17  $18  $19  $1A
+	; GLYPH	' '  '-'  '.'  'P'  'o'  'r'  't'  'A'  'd'  'r'  'G'
+	.DB	$00, $40, $00, $73, $5C, $50, $78, $77, $5E, $50, $3D
+;
+#ENDIF
 ;
 DISPLAYBUF:	.FILL	8,0
 ;

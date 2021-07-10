@@ -929,10 +929,10 @@ DEFPIO(PIO4BASE+12,M_Output,M_Output,M_BitAllOut,M_Output,INT_N,INT_N)
 DEFPIO(PIOZBASE+0,M_Input,M_Input,M_BitAllOut,M_BitAllOut,INT_N,INT_N)
 DEFPIO(PIOZBASE+4,M_Output,M_Output,M_BitAllOut,M_BitAllOut,INT_N,INT_N)
 #ENDIF
-; PPI_SBC & (PLATFORM == PLT_SBC) & (PPIDEMODE != PPIDEMODE_SBC))
+; PIO_SBC & (PLATFORM == PLT_SBC) & (PPIDEMODE != PPIDEMODE_SBC))
 
-#IF 	PPI_SBC
-DEFPPI(PPIBASE,M_Output,M_Output,M_Output,M_BitAllOut,M_BitAllOut,M_BitAllOut)
+#IF 	PIO_SBC
+DEFPPI(PIOSBASE,M_Output,M_Output,M_Output,M_BitAllOut,M_BitAllOut,M_BitAllOut)
 #ENDIF
 ;
 PIO_CNT	.EQU	($ - PIO_CFG) / CFG_SIZ 	

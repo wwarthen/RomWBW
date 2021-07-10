@@ -1,6 +1,6 @@
-OBJECTS = SysGen.com Survey.com \
-	SysCopy.com Assign.com Format.com Talk.com Mode.com RTC.com \
-	Timer.com IntTest.com RTCds7.com RTChb.com
+OBJECTS = sysgen.com survey.com \
+	syscopy.com assign.com format.com talk.com mode.com rtc.com \
+	timer.com inttest.com rtcds7.com rtchb.com ppidetst.com tstdskng.com
 OTHERS = *.hex *.com
 SUBDIRS = XM FDU FAT Tune I2C
 DEST = ../../Binary/Apps
@@ -10,5 +10,5 @@ include $(TOOLS)/Makefile.inc
 
 USETASM = 1
 
-Survey.com: USETASM=0
+survey.com: USETASM=0
 
