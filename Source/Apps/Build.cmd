@@ -12,15 +12,18 @@ set ZXBINDIR=%TOOLS%/cpm/bin/
 set ZXLIBDIR=%TOOLS%/cpm/lib/
 set ZXINCDIR=%TOOLS%/cpm/include/
 
-call :asm SysCopy || goto :eof
-call :asm Assign || goto :eof
-call :asm Format || goto :eof
-call :asm Talk || goto :eof
-call :asm Mode || goto :eof
-call :asm RTC || goto :eof
-call :asm Timer || goto :eof
-call :asm180 IntTest || goto :eof
+call :asm syscopy || goto :eof
+call :asm assign || goto :eof
+call :asm format || goto :eof
+call :asm talk || goto :eof
+call :asm mode || goto :eof
+call :asm rtc || goto :eof
+call :asm timer || goto :eof
+call :asm180 inttest || goto :eof
+call :asm rtcds7 || goto :eof
 call :asm rtchb || goto :eof
+call :asm ppidetst || goto :eof
+call :asm tstdskng || goto :eof
 
 zx Z80ASM -SYSGEN/F
 
@@ -31,7 +34,6 @@ setlocal & cd XM && call Build || exit /b 1 & endlocal
 setlocal & cd FDU && call Build || exit /b 1 & endlocal
 setlocal & cd Tune && call Build || exit /b 1 & endlocal
 setlocal & cd FAT && call Build || exit /b 1 & endlocal
-setlocal & cd I2C && call Build || exit /b 1 & endlocal
 
 copy *.com %APPBIN%\
 
