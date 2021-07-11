@@ -39,6 +39,8 @@ Version 3.1.1
 - WBW: Added preliminary support for DSKYng
 - WBW: Elevated MBC to a platform
 - WBW: Added support for MBC user LEDs
+- PMS: Early DMA support
+- W?S: Updated FLASH software to v1.3.5 (supports 128KB A29010B, 512KB A29040B)
 
 Version 3.1
 -----------

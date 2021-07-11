@@ -27,6 +27,8 @@
 ;
 ;[2020/05/15] v1.6 Added Warm Start option
 ;
+;[2021/07/10] v1.7 Support MBC (AJL)
+;
 ; Constants
 ;
 mask_data	.EQU	%10000000	; RTC data line
@@ -1047,9 +1049,9 @@ RTC_HELP
 RTC_INIT:
 	CALL	IDBIO		; Id BIOS, 1=HBIOS, 2=UBIOS
 	DEC	A		; Test for HBIOS
-	JR	Z,HINIT		; Do HBIOS setup
+	JP	Z,HINIT		; Do HBIOS setup
 	DEC	A		; Test for UBIOS
-	JR	Z,UINIT		; Do UBIOS setup
+	JP	Z,UINIT		; Do UBIOS setup
 ;
 	; Neither UNA nor RomWBW
 	LD	DE,BIOERR	; BIOS error message
@@ -1620,7 +1622,7 @@ TESTING_BIT_DELAY_OVER:
 
 RTC_HELP_MSG:
 	.DB	0Ah, 0Dh		; line feed and carriage return
-	.TEXT	"RTC: Version 1.5a"
+	.TEXT	"RTC: Version 1.7"
 	.DB	0Ah, 0Dh		; line feed and carriage return
 	.TEXT	"Commands: E)xit T)ime st(A)rt S)et R)aw L)oop C)harge N)ocharge D)elay I)nit G)et P)ut B)oot W)arm-start H)elp"
 	.DB	0Ah, 0Dh		; line feed and carriage return

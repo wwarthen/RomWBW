@@ -11,3 +11,4 @@ setlocal & cd XM && call Clean || exit /b 1 & endlocal
 setlocal & cd FDU && call Clean || exit /b 1 & endlocal
 setlocal & cd Tune && call Clean || exit /b 1 & endlocal
 setlocal & cd FAT && call Clean || exit /b 1 & endlocal
+setlocal & cd I2C && call Clean || exit /b 1 & endlocal
