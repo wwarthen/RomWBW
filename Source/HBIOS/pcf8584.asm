@@ -123,21 +123,21 @@ PCF8584_INIT:
 ;	
 ;-----------------------------------------------------------------------------
 PCF_START:
-	 LD	A,PCF_START_  
+	LD	A,PCF_START_  
 	OUT	(PCF_RS1),A
 	RET
 ;
 ;-----------------------------------------------------------------------------
 PCF_REPSTART:
-	 LD	A,PCF_REPSTART_  
+	LD	A,PCF_REPSTART_  
 	OUT	(PCF_RS1),A
 	RET
 ;
 ;-----------------------------------------------------------------------------
 PCF_STOP:   
 	LD   	A,PCF_STOP_
-	 OUT  	(PCF_RS1),A
-	 RET
+	OUT  	(PCF_RS1),A
+	RET
 ;
 ;-----------------------------------------------------------------------------
 ;
@@ -194,20 +194,20 @@ PCF_FAIL_FLAG:
 ;-----------------------------------------------------------------------------
 PCF_HANDLE_LAB:
 ;
-	 LD	A,PCF_PIN  
+	LD	A,PCF_PIN  
 	OUT	(PCF_RS1),A	 
-	 LD	A,PCF_ES0  
+	LD	A,PCF_ES0  
 	OUT	(PCF_RS1),A
 ;
-	 LD	HL,PCF_LABDLY
+	LD	HL,PCF_LABDLY
 PCF_LABLP:
 	LD	A,H
-	 OR	L
-	 DEC	HL  
-	 JR	NZ,PCF_LABLP
+	OR	L
+	DEC	HL  
+	JR	NZ,PCF_LABLP
 ;
-	 IN	A,(PCF_RS1)
-	 RET
+	IN	A,(PCF_RS1)
+	RET
 ;
 ;-----------------------------------------------------------------------------
 ;
@@ -218,7 +218,7 @@ PCF_LABLP:
 ;
 PCF_WAIT_FOR_PIN:
 	PUSH	HL
-	 LD	HL,PCF_PINTO					; SET TIMEOUT VALUE
+	LD	HL,PCF_PINTO					; SET TIMEOUT VALUE
 
 PCF_WFP0: 
 	IN	A,(PCF_RS1)					; GET BUS
@@ -231,8 +231,8 @@ PCF_WFP0:
 	JR	Z,PCF_WFP1					; YES WE HAVE, GO ACTION IT
 
 	LD	A,B						; 		
-	 AND	PCF_PIN						; IS TRANSMISSION COMPLETE?
-	 JR	NZ,PCF_WFP0					; KEEP ASKING IF NOT OR
+	AND	PCF_PIN						; IS TRANSMISSION COMPLETE?
+	JR	NZ,PCF_WFP0					; KEEP ASKING IF NOT OR
 	POP	HL						; YES COMPLETE (PIN=0) RETURN WITH ZERO
 	RET
 PCF_WFP1:
@@ -262,17 +262,17 @@ PCF_WAIT_FOR_ACK:
 ;
 PCF_WFA0:
 	IN	A,(PCF_RS1)	; READ PIN
-	 LD	(PCF_STATUS),A	; STATUS
-	 LD	B,A
+	LD	(PCF_STATUS),A	; STATUS
+	LD	B,A
 ;	 
-	 DEC	HL		; SEE IF WE HAVE TIMED
-	 LD	A,H		; OUT WAITING FOR PIN
-	 OR	L		; EXIT IF
-	 JR	Z,PCF_WFA1	; WE HAVE
+	DEC	HL		; SEE IF WE HAVE TIMED
+	LD	A,H		; OUT WAITING FOR PIN
+	OR	L		; EXIT IF
+	JR	Z,PCF_WFA1	; WE HAVE
 ;	 
-	 LD	A,B		; OTHERWISE KEEP LOOPING
-	 AND	PCF_PIN		; UNTIL WE GET PIN
-	 JR	NZ,PCF_WFA0	; OR TIMEOUT
+	LD	A,B		; OTHERWISE KEEP LOOPING
+	AND	PCF_PIN		; UNTIL WE GET PIN
+	JR	NZ,PCF_WFA0	; OR TIMEOUT
 ;
 	LD	A,B		; WE GOT PIN SO NOW
 	AND	PCF_LRB		; CHECK WE HAVE
@@ -389,13 +389,13 @@ PCF_WAIT_FOR_BB:
 	 LD	HL,PCF_BBTO
 PCF_WFBB0:
 	IN	A,(PCF_RS1)
-	 AND	PCF_BB
-	 RET	Z		; BUS IS FREE RETURN ZERO
-	 DEC	HL
-	 LD	A,H
-	 OR	L
-	 JR	NZ,PCF_WFBB0	; REPEAT IF NOT TIMED OUT
-	 CPL		  	; RET NZ IF TIMEOUT  
+	AND	PCF_BB
+	RET	Z		; BUS IS FREE RETURN ZERO
+	DEC	HL
+	LD	A,H
+	OR	L
+	JR	NZ,PCF_WFBB0	; REPEAT IF NOT TIMED OUT
+	CPL		  	; RET NZ IF TIMEOUT  
 	RET 
 ;
 ;-----------------------------------------------------------------------------
@@ -473,8 +473,8 @@ PCF_PRTERR:
 #IF (1)
 PCF_DBG:
 	PUSH	AF
-	 PUSH 	DE
-	 PUSH   	HL
+	PUSH 	DE
+	PUSH   	HL
 	LD	A,'['
 	CALL	COUT
 	LD	HL,PCF_DBGF
@@ -484,15 +484,15 @@ PCF_DBG:
 	CALL	COUT
 	LD	A,']'
 	CALL	COUT
-	 POP 	HL
-	 POP  	DE
-	 POP  	AF
+	POP 	HL
+	POP  	DE
+	POP  	AF
 	RET
 PCF_DBGF:	
 	.DB	0		; DEBUG STAGE COUNTER
 #ENDIF
 ;
-PCF_NOPCF	.DB	"NO DEVICE FOUND$"
+PCF_NOPCF	.DB	"NOT PRESENT$"
 PCF_WRTFAIL	.DB	"SETTING DEVICE ID FAILED$"
 PCF_REGFAIL 	.DB	"CLOCK REGISTER SELECT ERROR$"
 PCF_CLKFAIL 	.DB	"CLOCK SET FAIL$"
