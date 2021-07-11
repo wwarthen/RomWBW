@@ -43,6 +43,7 @@ PORT_EZZ80	.EQU	$C0		; RTC port for EZZ80 (actually does not have one!!!)
 PORT_SCZ180	.EQU	$0C		; RTC port for SCZ180
 PORT_DYNO	.EQU	$0C		; RTC port for DYNO
 PORT_RCZ280	.EQU	$C0		; RTC port for RCZ280
+PORT_MBC	.EQU	$70		; RTC port for MBC
 
 
 BDOS		.EQU	5		; BDOS invocation vector
@@ -1119,6 +1120,11 @@ HINIT:
 	CP	12		; RCZ280
 	JR	Z,RTC_INIT2
 ;
+	LD	C,PORT_MBC
+	LD	DE,PLT_MBC
+	CP	13		; MBC
+	JR	Z,RTC_INIT2
+;
 	; Unknown platform
 	LD	DE,PLTERR	; BIOS error message
 	LD	C,9		; BDOS string display function
@@ -1614,7 +1620,7 @@ TESTING_BIT_DELAY_OVER:
 
 RTC_HELP_MSG:
 	.DB	0Ah, 0Dh		; line feed and carriage return
-	.TEXT	"RTC: Version 1.5"
+	.TEXT	"RTC: Version 1.5a"
 	.DB	0Ah, 0Dh		; line feed and carriage return
 	.TEXT	"Commands: E)xit T)ime st(A)rt S)et R)aw L)oop C)harge N)ocharge D)elay I)nit G)et P)ut B)oot W)arm-start H)elp"
 	.DB	0Ah, 0Dh		; line feed and carriage return
@@ -1742,6 +1748,7 @@ PLT_EZZ80	.TEXT	", Easy Z80 RTC Module Latch Port 0xC0\r\n$"
 PLT_SCZ180	.TEXT	", SC Z180 RTC Module Latch Port 0x0C\r\n$"
 PLT_DYNO	.TEXT	", DYNO RTC Module Latch Port 0x0C\r\n$"
 PLT_RCZ280	.TEXT	", RC2014 Z280 RTC Module Latch Port 0xC0\r\n$"
+PLT_MBC		.TEXT	", MBC RTC Latch Port 0x70\r\n$"
 
 ;
 ; Generic FOR-NEXT loop algorithm
