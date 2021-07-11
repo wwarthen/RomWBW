@@ -20,7 +20,6 @@ call :asm mode || goto :eof
 call :asm rtc || goto :eof
 call :asm timer || goto :eof
 call :asm180 inttest || goto :eof
-call :asm rtcds7 || goto :eof
 call :asm rtchb || goto :eof
 call :asm ppidetst || goto :eof
 call :asm tstdskng || goto :eof
@@ -34,6 +33,7 @@ setlocal & cd XM && call Build || exit /b 1 & endlocal
 setlocal & cd FDU && call Build || exit /b 1 & endlocal
 setlocal & cd Tune && call Build || exit /b 1 & endlocal
 setlocal & cd FAT && call Build || exit /b 1 & endlocal
+setlocal & cd I2C && call Build || exit /b 1 & endlocal
 
 copy *.com %APPBIN%\
 

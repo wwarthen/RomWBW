@@ -36,7 +36,7 @@
 ;	Both port interrupt enable flip-flops are reset.
 ;	Both port output registers are reset.
 ;
-; Register addressing for ECB-ZP and ECB-4P assuming base address 90h and 88h respectively.
+; Register addressing example for ECB-ZP and ECB-4P assuming base address 90h and 88h respectively.
 ;
 ; PIO ----ZP---- ----4P----
 ;  0  DATA 0 90h DATA 0 B8h
@@ -762,7 +762,7 @@ PPI_OST:
 	RET
 ;
 ; PIO_INITDEV - Configure device.
-; If DE = FFFF then extract the configuratio information from the table of devices and program the device using those settings.
+; If DE = FFFF then extract the configuration information from the table of devices and program the device using those settings.
 ; Otherwise use the configuration information in DE to program those settings and save them in the device table
 
 PPI_INITDEV:

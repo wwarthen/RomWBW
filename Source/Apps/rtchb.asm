@@ -2,26 +2,39 @@
 ; GENERIC HBIOS DATE AND TIME
 ;==================================================================================================
 ;
+	.ECHO	"rtchb\n"
+;
 ;	HBIOS FORMAT  = YYMMDDHHMMSS
 ;
         .ORG  100H
 ;
+	LD	(HBC_STK),SP	; SETUP A 
+	LD	SP,HBC_LOC	; LOCAL STACK
 ;
 	LD	B,$20		; READ CLOCK DATA INTO BUFFER 
 	LD	HL,HBC_BUF	; DISPLAY TIME AND DATE FROM BUFFER
 	RST	08
 ;
+	OR	A		; EXIT IF NO
+	JR	NZ,HBC_ERR	; DRIVER OR HARDWARE
+;
 #IF (0)
+	PUSH	AF
 	LD	A,6
 	LD	DE,HBC_BUF	; DISLAY DATA READ
 ;	CALL	PRTHEXBUF
 	CALL   	NEWLINE
+	POP	AF
 #ENDIF
 ;
-        CALL   HBC_DISP         
-	RET
-
-HBC_BUF	.FILL	6,0
+        CALL   HBC_DISP
+;
+HBC_EXIT:
+	LD	SP,(HBC_STK)	; RESTORE STACK AND
+	RET			; RETURN TO CP/M
+;
+HBC_BUF	.FILL	6,0		; DATE AND TIME STORAGE
+HBC_STK	.DW	2		; SAVE STACK
 ;
 ;-----------------------------------------------------------------------------
 ; DISPLAY CLOCK INFORMATION FROM DATA STORED IN BUFFER
@@ -80,7 +93,7 @@ HBC_PRTERR:
 	CALL	PRTSTR
 	CALL	NEWLINE
 	POP	HL	
-	RET
+	JP	HBC_EXIT
 ;
 HBC_FAIL	.DB	"ERROR$"
 ;
@@ -96,9 +109,9 @@ CR	.EQU 0DH		;CARRIAGE-RETURN
 ; OUTPUT TEXT AT HL
 ;
 PRTSTR:	LD	A,(HL)
-	OR	A
+	CP	'$'
 	RET	Z
-	CALL	PRINP
+	CALL	COUT
 	INC	HL
 	JR	PRTSTR
 ;
@@ -215,4 +228,6 @@ BDO:	PUSH HL
 	POP HL
 	RET
 ;
+	.FILL	128,$FF
+HBC_LOC:
         .END

@@ -1,115 +1,73 @@
 ;==================================================================================================
-; PCF8584 I2C Clock Driver
+; PCF8584/DS1307 I2C DATE AND TIME UTILITY  
 ;==================================================================================================
 ;
-PCF_BASE  	.EQU  0F0H
-PCF_ID   	.EQU  0AAH
-CPU_CLK	  	.EQU  12
-
-REGS0     	.EQU  PCF_BASE
-REGS1    	.EQU  REGS0+1
-PCF_OWN	 	.EQU  (PCF_ID >> 1)        	; PCF'S ADDRESS IN SLAVE MODE
+	.ECHO	"rtcds7\n"
 ;
-;T4LC512D	.EQU	10100000B		; DEVICE IDENTIFIER
-;T4LC512A1	.EQU	00000000B		; DEVICE ADDRESS
-;T4LC512A2	.EQU	00001110B		; DEVICE ADDRESS
-;T4LC512A3	.EQU	00000010B		; DEVICE ADDRESS
-;T4LC512W	.EQU	00000000B		; DEVICE WRITE
-;T4LC512R	.EQU	00000001B		; DEVICE READ
+#INCLUDE "pcfi2c.inc"
 ;
-;I2CDEV1W  	.EQU	(T4LC512D+T4LC512A1+T4LC512W)
-;I2CDEV1R	.EQU	(T4LC512D+T4LC512A1+T4LC512R)
+	.ORG  100H
 ;
-;I2CDEV2W  	.EQU	(T4LC512D+T4LC512A2+T4LC512W)
-;I2CDEV2R	.EQU	(T4LC512D+T4LC512A2+T4LC512R)
+DS7_START:
+	LD	(DS7_STK),SP		; SETUP A 
+	LD	SP,DS7_LOC		; LOCAL STACK
 ;
-;I2CDEV3W  	.EQU	(T4LC512D+T4LC512A3+T4LC512W)
-;I2CDEV3R	.EQU	(T4LC512D+T4LC512A3+T4LC512R)
+	CALL	DS7_INIT		; INITIALIZE AND
+	JR	NZ,DS7_ERR		; RETURN WITH STATUS
 ;
-; CONTROL REGISTER BITS
+	LD	A,(FCB+1)		; GET FIRST COMMAND LINE CHAR 
+	CP	' '			; COMPARE TO BLANK. IF SO NO
+	JR	Z,DS7_ST0		; ARGUMENTS SO DISLAY TIME AND DATE
 ;
-PCF_PIN  	.EQU  10000000B
-PCF_ES0  	.EQU  01000000B
-PCF_ES1  	.EQU  00100000B
-PCF_ES2  	.EQU  00010000B
-PCF_EN1  	.EQU  00001000B
-PCF_STA  	.EQU  00000100B
-PCF_STO  	.EQU  00000010B
-PCF_ACK  	.EQU  00000001B
+	LD	A,(FCB+1)		; GET FIRST CHAR 
+	CP	'/'			; IS IT INDICATING AN ARGUMENT
+	JR	NZ,DS7_ST0		; 
 ;
-PCF_START_    	.EQU  (PCF_PIN | PCF_ES0 | PCF_STA | PCF_ACK)
-PCF_STOP_     	.EQU  (PCF_PIN | PCF_ES0 | PCF_STO | PCF_ACK)
-PCF_REPSTART_ 	.EQU  (          PCF_ES0 | PCF_STA | PCF_ACK)
-PCF_IDLE_     	.EQU  (PCF_PIN | PCF_ES0           | PCF_ACK)
+	LD	A,(FCB+2)		; GET NEXT CHARACTER
+	CP	'D'			; 
+	JR	NZ,DS7_ST1		; 
 ;
-; STATUS REGISTER BITS
+;	/D SET DATE
 ;
-;PCF_PIN  	.EQU  10000000B
-PCF_INI   	.EQU  01000000B   ; 1 if not initialized 
-PCF_STS   	.EQU  00100000B
-PCF_BER   	.EQU  00010000B
-PCF_AD0   	.EQU  00001000B
-PCF_LRB   	.EQU  00001000B
-PCF_AAS   	.EQU  00000100B
-PCF_LAB   	.EQU  00000010B
-PCF_BB    	.EQU  00000001B
+	JR	DS7_EXIT
 ;
-; CLOCK CHIP FREQUENCIES
+DS7_ST1:
+	LD	A,(FCB+2)		; GET NEXT CHARACTER
+	CP	'T'			; 
+	JR	NZ,DS7_ST2		; 
 ;
-PCF_CLK3   	.EQU	000H
-PCF_CLK443 	.EQU	010H
-PCF_CLK6   	.EQU	014H
-PCF_CLK8   	.EQU	018H
-PCF_CLK12  	.EQU	01cH
+;	/T SET TIME
 ;
-; TRANSMISSION FREQUENCIES
+	JR	DS7_EXIT
 ;
-PCF_TRNS90 	.EQU	000H	;  90 kHz */
-PCF_TRNS45 	.EQU	001H	;  45 kHz */
-PCF_TRNS11 	.EQU	002H	;  11 kHz */
-PCF_TRNS15 	.EQU	003H	; 1.5 kHz */
+DS7_ST2:
+	LD	A,(FCB+2)		; GET NEXT CHARACTER
+	CP	'S'			; 
+	JR	NZ,DS7_ST3		; 
 ;
-; TIMEOUT AND DELAY VALUES (ARBITRARY)
+;	/S SET TIME AND DATE
 ;
-PCF_PINTO	.EQU	65000
-PCF_ACKTO	.EQU	65000
-PCF_BBTO	.EQU	65000
-PCF_LABDLY	.EQU	65000
+	JR	DS7_EXIT
 ;
-; DATA PORT REGISTERS
+DS7_ST3:
 ;
-#IF (CPU_CLK = 443)
-PCF_CLK .EQU PCF_CLK443
-#ELSE 
- #IF (CPU_CLK = 8)
-PCF_CLK .EQU PCF_CLK8
- #ELSE 
-  #IF (CPU_CLK = 12)
-PCF_CLK .EQU PCF_CLK12
-  #ELSE ***ERROR
-  #ENDIF
- #ENDIF	
-#ENDIF
+;	UNREGOGNIZED ARGUMENT
 ;
-DS7_OUT		.EQU	10000000B		; SELECT SQUARE WAVE FUNCTION
-DS7_SQWE	.EQU	00010000B		; ENABLE SQUARE WAVE OUTPUT
-DS7_RATE	.EQU	00000000B		; SET 1HZ OUPUT
+	JR	DS7_EXIT
 ;
-DS7_DS1307    	.EQU  	11010000B   		; DEVICE IDENTIFIER
-DS7_W   	.EQU  	00000000B   		; DEVICE WRITE
-DS7_R   	.EQU  	00000001B   		; DEVICE READ
+DS7_ST0:
+	CALL   DS7_RDC			; READ CLOCK DATA INTO BUFFER  
+	CALL   DS7_DISP			; DISPLAY TIME AND DATE FROM BUFFER 
 ;
-DS7_READ   	.EQU    (DS7_DS1307 | DS7_R)	; READ
-DS7_WRITE 	.EQU    (DS7_DS1307 | DS7_W)	; WRITE
+DS7_EXIT:
+	LD	SP,(DS7_STK)		; RESTORE STACK
+	RET				; AND EXIT
 ;
-DS7_CTL		.EQU	(DS7_OUT | DS7_SQWE | DS7_RATE)
+DS7_ERR:
+	CALL	PCF_INIERR		; DISPLAY ERROR
+	JR	DS7_EXIT		; END EXIT
 ;
-        .ORG  100H
-;
-;
-        CALL   DS7_RDC         ; READ CLOCK DATA INTO BUFFER  
-        CALL   DS7_DISP        ; DISPLAY TIME AND DATE FROM BUFFER 
-	RET
+DS7_STK	.DW	2			; SAVE STACK
 ;
 ;-----------------------------------------------------------------------------
 ; RTC READ
@@ -123,25 +81,26 @@ DS7_CTL		.EQU	(DS7_OUT | DS7_SQWE | DS7_RATE)
 ; 7.	END READ WITH NON-ACKNOWLEDGE
 ; 8.	ISSUE STOP AND RELEASE BUS 
 ;
-DS7_RDC:LD	A,DS7_WRITE	; SET SLAVE ADDRESS
-        OUT	(REGS0),A
+DS7_RDC:
+	LD	A,DS7_WRITE	; SET SLAVE ADDRESS
+	OUT	(REGS0),A
 ;
 	CALL	PCF_WAIT_FOR_BB
 	JP	NZ,PCF_BBERR
 ;
-        CALL	PCF_START	; GENERATE START CONDITION
+	CALL	PCF_START	; GENERATE START CONDITION
 	CALL	PCF_WAIT_FOR_PIN; AND ISSUE THE SLAVE ADDRESS
 	CALL	NZ,PCF_PINERR
 ;
-        LD     	A,0
-        OUT    	(REGS0),A    	; PUT ADDRESS MSB ON BUS
+	LD     	A,0
+	OUT    	(REGS0),A    	; PUT ADDRESS MSB ON BUS
 	CALL	PCF_WAIT_FOR_PIN
 	CALL	NZ,PCF_PINERR
 ;
 	CALL	PCF_REPSTART    ; REPEAT START
 ;
-        LD	A,DS7_READ	; ISSUE CONTROL BYTE + READ
-        OUT	(REGS0),A
+	LD	A,DS7_READ	; ISSUE CONTROL BYTE + READ
+	OUT	(REGS0),A
 ;
 	CALL	PCF_READI2C	; DUMMY READ
 ;
@@ -171,7 +130,7 @@ DS7_WTPIN:
 	CALL   	PCF_STOP
 ;
 	IN    	A,(REGS0)
-        RET
+	RET
 
 ;
 ;-----------------------------------------------------------------------------
@@ -187,7 +146,7 @@ DS7_CLP:LD	C,(HL)
 	LD	A,(HL)
 	OR      A
 	RET	Z
-        CALL	COUT
+	CALL	COUT
 	INC	HL
 	JR	DS7_CLP
 	RET
@@ -202,10 +161,10 @@ DS7_CLKTBL:
 ;
 DS7_BCD:PUSH	HL
 	LD      HL,DS7_BUF     	; READ VALUE FROM
-	LD      B,0           	; BUFFER, INDEXED BY A 
+	LD      B,0	   	; BUFFER, INDEXED BY A 
 	ADD     HL,BC
 	LD      A,(HL)
-	AND     D             	; MASK OFF UNNEEDED
+	AND     D	     	; MASK OFF UNNEEDED
 	SRL     A
 	SRL     A
 	SRL     A
@@ -223,81 +182,82 @@ DS7_BUF:	.FILL	8,0	; BUFFER FOR TIME, DATE AND CONTROL
 
 ;-----------------------------------------------------------------------------
 PCF_START:
-        LD     A,PCF_START_  
+	LD     A,PCF_START_  
 	OUT    (REGS1),A
 	RET
 ;
 ;-----------------------------------------------------------------------------
 PCF_REPSTART:
-        LD     A,PCF_REPSTART_  
+	LD     A,PCF_REPSTART_  
 	OUT    (REGS1),A
 	RET
 ;
 ;-----------------------------------------------------------------------------
 PCF_STOP:   
 	LD   	A,PCF_STOP_
-        OUT  	(REGS1),A
-        RET
+	OUT  	(REGS1),A
+	RET
 ;
 ;-----------------------------------------------------------------------------
-;;
-PCF_INIT:
-       LD       A,PCF_PIN   	; S1=80H: S0 SELECTED, SERIAL 
-       OUT     (REGS1),A    	; INTERFACE OFF
-       NOP
-       IN      A,(REGS1)    	; CHECK TO SEE S1 NOW USED AS R/W
-       AND     07FH         	; CTRL. PCF8584 DOES THAT WHEN ESO
-       JP      NZ,PCF_INIERR    ; IS ZERO
 ;
-       LD      A,PCF_OWN    	; LOAD OWN ADDRESS IN S0,     
-       OUT     (REGS0),A    	; EFFECTIVE ADDRESS IS (OWN <<1)
-       NOP
-       IN      A,(REGS0)    	; CHECK IT IS REALLY WRITTEN
-       CP      PCF_OWN
-       JP      NZ,PCF_SETERR
+DS7_INIT:
+	LD	 A,PCF_PIN   	; S1=80H: S0 SELECTED, SERIAL 
+	OUT	(REGS1),A    	; INTERFACE OFF
+	NOP
+	IN	A,(REGS1)    	; CHECK TO SEE S1 NOW USED AS R/W CTRL.
+	AND	07FH	 	; PCF8584 DOES THAT WHEN ESO IS ZERO 
+	RET	NZ		; PCF_INIERR 
 ;
-       LD      A,+(PCF_PIN | PCF_ES1) ; S1=0A0H
-       OUT     (REGS1),A              ; NEXT BYTE IN S2
-       NOP
-       IN      A,(REGS1)
-       AND     07FH
-       CP      PCF_ES1
-       JP      NZ,PCF_REGERR
+	LD	A,PCF_OWN    	; LOAD OWN ADDRESS IN S0,     
+	OUT	(REGS0),A    	; EFFECTIVE ADDRESS IS (OWN <<1)
+	NOP
+	IN	A,(REGS0)    	; CHECK IT IS REALLY WRITTEN
+	CP	PCF_OWN
+	RET	NZ		; PCF_SETERR
 ;
-       LD      A,PCF_CLK    	; LOAD CLOCK REGISTER S2
-       OUT     (REGS0),A
-       NOP
-       IN      A,(REGS0)    	; CHECK IT'S REALLY WRITTEN, ONLY
-       AND     1FH          	; THE LOWER 5 BITS MATTER
-       CP      PCF_CLK
-       JP      NZ,PCF_CLKERR
+	LD	 A,+(PCF_PIN | PCF_ES1) ; S1=0A0H
+	OUT	(REGS1),A		; NEXT BYTE IN S2
+	NOP
+	IN	A,(REGS1)
+	AND	07FH
+	CP	PCF_ES1
+	RET	NZ		; PCF_REGERR
 ;
-       LD      A,PCF_IDLE_
-       OUT     (REGS1),A  
-       NOP
-       IN      A,(REGS1)  
-       CP      +(PCF_PIN | PCF_BB)
-       JP      NZ,PCF_IDLERR
+	LD	A,PCF_CLK    	; LOAD CLOCK REGISTER S2
+	OUT	(REGS0),A
+	NOP
+	IN	A,(REGS0)    	; CHECK IT'S REALLY WRITTEN, ONLY
+	AND	1FH	  	; THE LOWER 5 BITS MATTER
+	CP	PCF_CLK
+	RET	NZ		; PCF_CLKERR
 ;
-       RET
+	LD      A,PCF_IDLE_
+	OUT     (REGS1),A  
+	NOP
+	IN      A,(REGS1)  
+	CP      +(PCF_PIN | PCF_BB)
+	RET	NZ		; PCF_IDLERR
+;
+	XOR	A
+	RET
 ;
 ;-----------------------------------------------------------------------------
 PCF_HANDLE_LAB:
 ;
-        LD     A,PCF_PIN  
-	OUT    (REGS1),A        
-        LD     A,PCF_ES0  
+	LD     A,PCF_PIN  
+	OUT    (REGS1),A	
+	LD     A,PCF_ES0  
 	OUT    (REGS1),A
 ;
-        LD     HL,PCF_LABDLY
+	LD     HL,PCF_LABDLY
 PCF_LABLP:
 	LD     A,H
-        OR     L
-        DEC    HL  
-        JR     NZ,PCF_LABLP
+	OR     L
+	DEC    HL  
+	JR     NZ,PCF_LABLP
 ;
-        IN     A,(REGS1)
-        RET
+	IN     A,(REGS1)
+	RET
 ;
 ;-----------------------------------------------------------------------------
 ;
@@ -308,7 +268,7 @@ PCF_LABLP:
 ;
 PCF_WAIT_FOR_PIN:
 	PUSH	HL
-        LD      HL,PCF_PINTO					; SET TIMEOUT VALUE
+	LD      HL,PCF_PINTO					; SET TIMEOUT VALUE
 
 PCF_WFP0: 
 	IN      A,(REGS1)					; GET BUS
@@ -321,8 +281,8 @@ PCF_WFP0:
 	JR	Z,PCF_WFP1					; YES WE HAVE, GO ACTION IT
 
 	LD	A,B						; 		
-        AND     PCF_PIN						; IS TRANSMISSION COMPLETE?
-        JR	NZ,PCF_WFP0					; KEEP ASKING IF NOT OR
+	AND     PCF_PIN						; IS TRANSMISSION COMPLETE?
+	JR	NZ,PCF_WFP0					; KEEP ASKING IF NOT OR
 	POP	HL						; YES COMPLETE (PIN=0) RETURN WITH ZERO
 	RET
 PCF_WFP1:
@@ -335,7 +295,7 @@ PCF_WFP1:
 	XOR	A						; RETURN NZ, A=01H
 	INC	A
 PCF_WFP2:
-	POP	HL                				; RET NZ, A=FF IF TIMEOUT 
+	POP	HL						; RET NZ, A=FF IF TIMEOUT 
 	RET
 ;
 PCF_STATUS	.DB	00H
@@ -352,17 +312,17 @@ PCF_WAIT_FOR_ACK:
 ;
 PCF_WFA0:
 	IN      A,(REGS1)	; READ PIN
-        LD	(PCF_STATUS),A	; STATUS
-        LD	B,A
-;        
-        DEC	HL		; SEE IF WE HAVE TIMED
-        LD	A,H		; OUT WAITING FOR PIN
-        OR	L		; EXIT IF
-        JR	Z,PCF_WFA1	; WE HAVE
-;        
-        LD	A,B		; OTHERWISE KEEP LOOPING
-        AND     PCF_PIN		; UNTIL WE GET PIN
-        JR	NZ,PCF_WFA0	; OR TIMEOUT
+	LD	(PCF_STATUS),A	; STATUS
+	LD	B,A
+;	
+	DEC	HL		; SEE IF WE HAVE TIMED
+	LD	A,H		; OUT WAITING FOR PIN
+	OR	L		; EXIT IF
+	JR	Z,PCF_WFA1	; WE HAVE
+;	
+	LD	A,B		; OTHERWISE KEEP LOOPING
+	AND     PCF_PIN		; UNTIL WE GET PIN
+	JR	NZ,PCF_WFA0	; OR TIMEOUT
 ;
 	LD	A,B		; WE GOT PIN SO NOW
 	AND	PCF_LRB		; CHECK WE HAVE
@@ -476,16 +436,16 @@ PCF_READI2C:
 ; AFTER RESET THE BUS BUSY BIT WILL BE SET TO 1 I.E. NOT BUSY
 ;
 PCF_WAIT_FOR_BB:
-        LD     HL,PCF_BBTO
+	LD     HL,PCF_BBTO
 PCF_WFBB0:
 	IN     A,(REGS1)
-        AND    PCF_BB
-        RET    Z		; BUS IS FREE RETURN ZERO
-        DEC    HL
-        LD     A,H
-        OR     L
-        JR     NZ,PCF_WFBB0	; REPEAT IF NOT TIMED OUT
-        CPL                	; RET NZ IF TIMEOUT  
+	AND    PCF_BB
+	RET    Z		; BUS IS FREE RETURN ZERO
+	DEC    HL
+	LD     A,H
+	OR     L
+	JR     NZ,PCF_WFBB0	; REPEAT IF NOT TIMED OUT
+	CPL			; RET NZ IF TIMEOUT  
 	RET 
 ;
 ;-----------------------------------------------------------------------------
@@ -572,132 +532,9 @@ PCF_BBFAIL	.DB	"BUS BUSY$"
 ;
 ;-----------------------------------------------------------------------------
 ;
-BDOS	.EQU 5		;ENTRY BDOS
-BS	.EQU 8		;BACKSPACE
-TAB	.EQU 9		;TABULATOR
-LF	.EQU 0AH		;LINE-FEED
-CR	.EQU 0DH		;CARRIAGE-RETURN
+#INCLUDE "i2ccpm.inc"
 ;
-; OUTPUT TEXT AT HL
+	.FILL	128
+DS7_LOC:
 ;
-PRTSTR:	LD	A,(HL)
-	OR	A
-	RET	Z
-	CALL	PRINP
-	INC	HL
-	JR	PRTSTR
-;
-;Output WORD
-;***********
-;
-;PARAMETER: Entry WORD IN HL
-;*********
-;
-OUTW:	LD A,H
-	CALL OUTB
-	LD A,L
-	CALL OUTB
-	RET
-;
-;Output BYTE
-;***********
-;
-;PARAMETER: Entry BYTE IN A
-;*********
-;
-OUTB:	PUSH AF
-	RRCA
-	RRCA
-	RRCA
-	RRCA
-	AND 0FH
-	CALL HBTHE	;Change Half-BYTE
-	POP AF
-	AND 0FH
-	CALL HBTHE
-	RET
-;
-;Output HALF-BYTE
-;****************
-;
-;PARAMETER: Entry Half-BYTE IN A (BIT 0 - 3)
-;*********
-;
-HBTHE:	CP 0AH
-	JR C,HBTHE1
-	ADD A,7		;Character to Letter
-HBTHE1:	ADD A,30H
-	LD E,A
-	CALL PCHAR
-	RET
-;
-;
-;Output on Screen
-;****************
-;
-PRBS:	LD E,BS
-	CALL PCHAR
-	RET
-;
-;Output CR+LF on Screen
-;**********************
-;
-NEWLINE:
-CRLF:	LD E,CR
-	CALL PCHAR
-	LD E,LF
-	CALL PCHAR
-	RET
-;
-;Output ASCII-Character
-;**********************
-;
-COUT:
-PRINP:	PUSH AF
-        PUSH DE
-	LD E,A
-	CALL PCHAR
-        POP DE
-	POP AF
-	RET
-;
-;CALL BDOS with Register Save
-;****************************
-;
-INCHA:	LD C,1		;INPUT CHARACTER TO A
-	JR BDO
-PCHAR:	LD C,2		;PRINT CHARACTER IN E
-	JR BDO
-PSTRIN:	LD C,9		;PRINT STRING
-	JR BDO
-INBUFF:	LD C,10		;READ CONSOLE-BUFFER
-	JR BDO
-CSTS:	LD C,11		;CONSOLE-STATUS
-	JR BDO
-OPEN:	LD C,15		;OPEN FILE
-	JR BDO
-CLOSE:	LD C,16		;CLOSE FILE
-	JR BDO
-DELETE:	LD C,19		;DELETE FILE
-	JR BDO
-READS:	LD C,20		;READ SEEK
-	JR BDO
-WRITES:	LD C,21		;WRITE SEEK
-	JR BDO
-MAKE:	LD C,22		;MAKE FILE
-	JR BDO
-SETDMA:	LD C,26		;SET DMA-ADDRESS
-BDO:	PUSH HL
-	PUSH DE
-	PUSH BC
-	PUSH IX
-	PUSH IY
-	CALL BDOS
-	POP IY
-	POP IX
-	POP BC
-	POP DE
-	POP HL
-	RET
-;
-        .END
+	.END

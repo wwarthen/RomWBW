@@ -2367,6 +2367,9 @@ HB_INITTBL:
 ;#IF (DSKYENABLE)
 ;	.DW	DSKY_INIT
 ;#ENDIF
+#IF (DMAENABLE)
+	.DW	DMA_INIT
+#ENDIF
 #IF (MDENABLE)
 	.DW	MD_INIT
 #ENDIF
@@ -4671,6 +4674,15 @@ ORG_NEC	.EQU	$
 SIZ_NEC	.EQU	$ - ORG_NEC
 		.ECHO	"NEC occupies "
 		.ECHO	SIZ_NEC
+		.ECHO	" bytes.\n"
+#ENDIF
+;
+#IF (DMAENABLE)
+ORG_DMA	.EQU	$
+#INCLUDE "dma.asm"
+SIZ_DMA	.EQU	$ - ORG_DMA
+		.ECHO	"DMA occupies "
+		.ECHO	SIZ_DMA
 		.ECHO	" bytes.\n"
 #ENDIF
 ;
