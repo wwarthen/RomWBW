@@ -18,18 +18,6 @@ DS7_WRITE 	.EQU    (DS7_DS1307 | DS7_W)	; WRITE
 ;
 DS7_CTL		.EQU	(DS7_OUT | DS7_SQWE | DS7_RATE)
 ;
-
-; GENERIC CP/M STUFF
-;
-BS	.EQU 	8			; BACKSPACE
-TAB	.EQU 	9			; TABULATOR
-LF	.EQU 	0AH			; LINE-FEED
-CR	.EQU 	0DH			; CARRIAGE-RETURN
-CLIARGS	.EQU	$81
-RESTART	.EQU	$0000			; CP/M restart vector
-BDOS	.EQU	$0005			; BDOS invocation vector
-FCB	.EQU	$5C			; Location of default FCB
-;
 ;-----------------------------------------------------------------------------
 ; DS1307 INITIALIZATION
 ;
@@ -45,6 +33,10 @@ FCB	.EQU	$5C			; Location of default FCB
 DS7RTC_INIT:
 	PRTS("DS1307: $")		; ANNOUNCE DRIVER
 ;
+	LD	A,(PCF_FAIL_FLAG)	; CHECK IF THE
+	OR	A			; I2C DRIVER
+	JR	NZ,RTC_INIT_FAIL	; INITIALIZED
+
 	CALL	DS7_RDC			; READ CLOCK DATA
 	LD	HL,DS7_BUF		; IF NOT RUNNING OR
 	BIT	7,(HL)			; INVALID, RESTART
@@ -66,6 +58,16 @@ DS7_CSET:
 	XOR	A			; SIGNAL SUCCESS
 	RET
 ;
+RTC_INIT_FAIL:				; EXIT 
+	CALL	PRTSTRD			; WITH 
+	.DB	"NO I2C DRIVER$"	; ERROR
+	PUSH	AF			; MESSAGE
+RTC_INIT_ERR:				; EXIT
+	POP	AF			; WITH
+	LD	A,ERR_NOHW		; ERROR
+	OR	A			; STATUS
+	RET
+;
 ;-----------------------------------------------------------------------------
 ; DS1307 HBIOS DISPATCHER
 ;
@@ -73,6 +75,12 @@ DS7_CSET:
 ;   B: FUNCTION (IN)
 ;
 DS7_DISPATCH:
+	PUSH	AF				; CHECK IF WE
+	LD	A,(PCF_FAIL_FLAG)		; HAVE HARDWARE
+	OR	A				; AND ASSOCIATED
+	JR	NZ,RTC_INIT_ERR			; DRIVER
+	POP	AF
+;
 	LD	A, B				; GET REQUESTED FUNCTION
 	AND	$0F				; ISOLATE SUB-FUNCTION
 	JP	Z, DS7_GETTIM			; GET TIME
