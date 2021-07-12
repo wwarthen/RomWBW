@@ -44,7 +44,7 @@ SOURCES = \
 	mc6800.c
 
 all: uz80as $(DEST)
-	cp uz80as $(DEST)
+	cp -p uz80as $(DEST)
 
 $(DEST):
 	mkdir -p $(DEST)

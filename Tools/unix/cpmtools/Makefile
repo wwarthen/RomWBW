@@ -23,7 +23,7 @@ DEVICEOBJ =	device_posix.o
 OBJECTS = cpmls cpmrm cpmcp cpmchmod cpmchattr mkfs.cpm fsck.cpm fsed.cpm
 
 all: $(OBJECTS) $(DEST)
-	cp $(OBJECTS) $(DEST)
+	cp -p $(OBJECTS) $(DEST)
 
 cpmls:	cpmls.o cpmfs.o getopt.o getopt1.o $(DEVICEOBJ)
 	$(CC) $(LDFLAGS) -o $@ cpmls.o cpmfs.o getopt.o getopt1.o $(DEVICEOBJ)
