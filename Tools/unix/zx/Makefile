@@ -17,7 +17,7 @@ OBJECTS = zx.o cpmdrv.o cpmglob.o cpmparse.o cpmredir.o \
 UNUSED = dirent.o
 
 all: zx $(DEST)
-	cp bios.bin zx $(DEST)
+	cp -p bios.bin zx $(DEST)
 
 $(DEST):
 	mkdir -p $(DEST)

@@ -13,25 +13,25 @@
 ;	10    04
 ;	+--08--+  80
 ;
-; KEY CODE MAP (KEY CODES) --CCCRRR 
+; KEY CODE MAP (KEY CODES) --CCCRRR
 ;
-;	00	08	10	18
-;	01	09	11	19
-;	02	0A	12	1A
-;	03	0B	13	1B
-;	04	0C	14	1C
-;	05	0D	15	1D
+;	00	08	10	18	23
+;	01	09	11	19	22
+;	02	0A	12	1A	21
+;	03	0B	13	1B	20
+;	04	0C	14	1C	SHIFT
+;	05	0D	15	1D	CTRL
 ;
 ; LED BIT MAP (BIT VALUES)
 ;
-;	$08	$09	$0A	$0B
-;	---	---	---	---
-;	01	01	01	01
-;	02	02	02	02
-;	04      04      04      04
-;	08      08      08      08
-;	10      10      10      10
-;	20      20      20      20
+;	$08	$09	$0A	$0B	$0C
+;	---	---	---	---	---
+;	01	01	01	01	01
+;	02	02	02	02	02
+;	04      04      04      04	04
+;	08      08      08      08	08
+;	10      10      10      10	10
+;	20      20      20      20	10
 ;
 PPIA		.EQU 	DSKYPPIBASE + 0	; PORT A
 PPIB		.EQU 	DSKYPPIBASE + 1	; PORT B
@@ -44,12 +44,12 @@ DSKY_PPIX_WR:	.EQU	%10000010	; PPIX VALUE FOR WRITES
 ; PIO CHANNEL C:
 ;
 ;	7	6	5	4	3	2	1	0
-;	RES	/RD	/WR	CS	CS	0	0	A0
+;	RES	0	0	CS	CS	/RD	/WR	A0
 ;
 ; SETTING BITS 3 & 4 WILL ASSERT /CS ON 3279
-; CLEAR BITS 5 OR 6 TO ASSERT READ/WRITE
+; CLEAR BITS 1 OR 2 TO ASSERT READ/WRITE
 ;
-DSKY_PPI_IDLE:	.EQU	%01100000
+DSKY_PPI_IDLE:	.EQU	%00000110
 ;
 DSKY_CMD_CLR:	.EQU	%11011111	; CLEAR (ALL OFF)
 DSKY_CMD_CLRX:	.EQU	%11010011	; CLEAR (ALL ON)
@@ -87,8 +87,8 @@ DSKY_REINIT:
 	; SET CLOCK SCALER TO 20
 	LD	A,DSKY_CMD_CLK | DSKY_PRESCL
 	CALL	DSKY_CMD
-	LD	A,%00001000		; dan
-	CALL	DSKY_CMD
+;	LD	A,%00001000		; dan
+;	CALL	DSKY_CMD
 	; FALL THRU
 ;
 DSKY_RESET:
@@ -123,6 +123,10 @@ KY_DE	.EQU	$14	; DEPOSIT
 KY_EX	.EQU	$15	; EXAMINE
 KY_GO	.EQU	$16	; GO
 KY_BO	.EQU	$17	; BOOT
+KY_F4	.EQU	$18	; F4
+KY_F3	.EQU	$19	; F3
+KY_F2	.EQU	$20	; F2
+KY_F1	.EQU	$21	; F1
 ;
 ;__DSKY_STAT_________________________________________________________________________________________
 ;
@@ -145,7 +149,8 @@ DSKY_GETKEY:
 	LD	A,DSKY_CMD_FIFO
 	CALL	DSKY_CMD
 	CALL	DSKY_DIN
-	LD	B,24			; SIZE OF DECODE TABLE
+	AND	$3F			; STRIP OFF SHIFT AND CONTROL KEYS (FOR NOW)
+	LD	B,28			; SIZE OF DECODE TABLE
 	LD	C,0			; INDEX
 	LD	HL,DSKY_KEYMAP		; POINT TO BEGINNING OF TABLE
 DSKY_GETKEY1:
@@ -167,14 +172,19 @@ DSKY_KEYMAP:
 	; POS	$00  $01  $02  $03  $04  $05  $06  $07
 	; KEY   [0]  [1]  [2]  [3]  [4]  [5]  [6]  [7]
 	.DB	$0D, $04, $0C, $14, $03, $0B, $13, $02
-;                                                  
+;
 	; POS	$08  $09  $0A  $0B  $0C  $0D  $0E  $0F
 	; KEY   [8]  [9]  [A]  [B]  [C]  [D]  [E]  [F]
 	.DB	$0A, $12, $01, $09, $11, $00, $08, $10
-;                                                  
+;
 	; POS	$10  $11  $12  $13  $14  $15  $16  $17
 	; KEY   [FW] [BK] [CL] [EN] [DE] [EX] [GO] [BO]
 	.DB	$05, $15, $1D, $1C, $1B, $1A, $19, $18
+
+	; POS	$18  $19  $20  $21
+	; KEY   [F4] [F3] [F2] [F1]
+	.DB	$23, $22, $21, $20
+
 ;
 #ENDIF	; DSKY_KBD
 ;
@@ -279,10 +289,10 @@ DSKY_DOUT2:
 	OUT	(PPIA),A
 ;
 	; PULSE /WR
-	RES	5,B
+	RES	1,B
 	OUT	(C),B
 	NOP			; MAY NOT BE NEEDED
-	SET	5,B
+	SET	1,B
 	OUT	(C),B
 ;
 	; DEASSERT /CS
@@ -332,14 +342,14 @@ DSKY_DIN2:
 	LD	B,A
 ;
 	; ASSERT /RD
-	RES	6,B
+	RES	2,B
 	OUT	(C),B
 ;
 	; GET VALUE
 	IN	A,(PPIA)
 ;
 	; DEASSERT /RD
-	SET	6,B
+	SET	2,B
 	OUT	(C),B
 ;
 	; DEASSERT /CS
@@ -406,7 +416,7 @@ DSKY_PUTSTR:
 	ADD	A,DSKY_CMD_WDSP
 	CALL	DSKY_CMD
 	POP	BC
-;	
+;
 DSKY_PUTSTR1:
 	LD	A,(HL)
 	XOR	$FF
@@ -426,7 +436,7 @@ DSKY_GETSTR:
 	ADD	A,DSKY_CMD_RDSP
 	CALL	DSKY_CMD
 	POP	BC
-;	
+;
 DSKY_GETSTR1:
 	PUSH	BC
 	CALL	DSKY_DIN
@@ -471,7 +481,7 @@ DSKY_PPIWR:
 	LD	A,(DSKY_PPIX_VAL)
 	CP	DSKY_PPIX_WR
 	JR	Z,DSKY_PPIWR1
-;	
+;
 	; SET PPI TO WRITE MODE
 	LD	A,DSKY_PPIX_WR
 	OUT	(PPIX),A
@@ -505,7 +515,7 @@ DSKY_PPIRD:
 	LD	A,(DSKY_PPIX_VAL)
 	CP	DSKY_PPIX_RD
 	JR	Z,DSKY_PPIRD1
-;	
+;
 	; SET PPI TO READ MODE
 	LD	A,DSKY_PPIX_RD
 	OUT	(PPIX),A

@@ -8,7 +8,7 @@ SRC_FILES = $(wildcard *.c)
 OBJ_FILES = $(SRC_FILES:.c=.o)
 
 all: $(BINARY) $(DEST)
-	cp $(BINARY) $(DEST)
+	cp -p $(BINARY) $(DEST)
 
 $(DEST):
 	mkdir -p $(DEST)
