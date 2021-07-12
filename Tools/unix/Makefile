@@ -12,6 +12,7 @@ endif
 SUBDIRS= bst uz80as zx cpmtools bin2asm lzsa
 
 all:
+	chmod +x casefn.sh
 	@for i in $(SUBDIRS) ; do \
 		(cd $$i ; make all ) \
 	done

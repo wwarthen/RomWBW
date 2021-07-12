@@ -65,6 +65,7 @@ N8_std.rom: ROMSIZE=512
 RCZ280_nat_zzr.rom: ROMSIZE=256
 
 %.rom:
+	chmod +x Build.sh
 	bash Build.sh $(DIFFBUILD) $(shell echo $* | sed 's/_/ /') $(ROMSIZE)
 
 hbios_rom.bin:	hbios.asm build.inc
