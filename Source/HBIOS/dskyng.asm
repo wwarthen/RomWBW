@@ -24,14 +24,14 @@
 ;
 ; LED BIT MAP (BIT VALUES)
 ;
-;	$08	$09	$0A	$0B	$0C
-;	---	---	---	---	---
+;	$08	$09	$0A	$0B	$0C	$0D	$0E	$0F
+;	---	---	---	---	---	---	---	---
 ;	01	01	01	01	01
 ;	02	02	02	02	02
 ;	04      04      04      04	04
 ;	08      08      08      08	08
 ;	10      10      10      10	10
-;	20      20      20      20	10
+;	20      20      20      20	20	L1	L2 	BUZZ
 ;
 PPIA		.EQU 	DSKYPPIBASE + 0	; PORT A
 PPIB		.EQU 	DSKYPPIBASE + 1	; PORT B
@@ -87,8 +87,6 @@ DSKY_REINIT:
 	; SET CLOCK SCALER TO 20
 	LD	A,DSKY_CMD_CLK | DSKY_PRESCL
 	CALL	DSKY_CMD
-;	LD	A,%00001000		; dan
-;	CALL	DSKY_CMD
 	; FALL THRU
 ;
 DSKY_RESET:
@@ -470,6 +468,140 @@ DSKY_PUTENCSTR1:
 	POP	BC
 	DJNZ	DSKY_PUTENCSTR1
 	RET
+
+;
+;	This function is intended to update the LEDs.  It expects 8 bytes following the call, and
+;	updates the entire matrix.
+;
+;  EXAMPLE:
+;	CALL 	DSKY_PUTLED
+;	.DB 	$00,$00,$00,$00,$00,$00,$00,$00
+;
+;
+DSKY_PUTLED:
+        EX	(SP),HL
+	PUSH	AF
+	PUSH	BC
+	LD 	C,8
+DSKY_PUTLED_1:
+	LD 	A,(HL)
+	PUSH 	BC
+	CALL	DSKY_PUTBYTE
+	POP 	BC
+	INC 	C
+	INC	HL
+	LD 	A,C
+	CP	$10
+	JP 	NZ,DSKY_PUTLED_1
+	POP	BC
+        POP	AF
+	EX	(SP),HL
+	RET
+
+;
+;	This function is intended to beep the speaker on the DSKY
+;
+;
+DSKY_BEEP:
+	PUSH	AF
+	PUSH	BC
+
+	LD 	C,$0F
+	CALL	DSKY_GETBYTE
+	or 	$20
+	LD 	C,$0F
+	CALL	DSKY_PUTBYTE
+
+;;; 	timer . . .
+	PUSH	HL
+	ld 	hl,$8FFF
+DSKY_BEEP1:
+	dec 	hl
+	ld 	a,H
+	cp 	0
+	jp 	nz,DSKY_BEEP1
+	pop 	hl
+
+	LD 	C,$0F
+	CALL	DSKY_GETBYTE
+	and  	$DF
+	LD 	C,$0F
+	CALL	DSKY_PUTBYTE
+
+	POP	BC
+        POP	AF
+	RET
+
+;
+;	This function is intended to turn on DSKY L1
+;
+DSKY_L1ON:
+	PUSH	AF
+	PUSH	BC
+
+	LD 	C,$0D
+	CALL	DSKY_GETBYTE
+	or 	$20
+	LD 	C,$0D
+	CALL	DSKY_PUTBYTE
+
+	POP	BC
+        POP	AF
+	RET
+
+;
+;	This function is intended to turn on DSKY L2
+;
+DSKY_L2ON:
+	PUSH	AF
+	PUSH	BC
+
+	LD 	C,$0E
+	CALL	DSKY_GETBYTE
+	and 	$DF
+	LD 	C,$0E
+	CALL	DSKY_PUTBYTE
+
+	POP	BC
+        POP	AF
+	RET
+
+;
+;	This function is intended to turn off DSKY L1
+;
+DSKY_L1OFF:
+	PUSH	AF
+	PUSH	BC
+
+	LD 	C,$0D
+	CALL	DSKY_GETBYTE
+	and 	$DF
+	LD 	C,$0D
+	CALL	DSKY_PUTBYTE
+
+	POP	BC
+        POP	AF
+	RET
+
+;
+;	This function is intended to turn off DSKY L2
+;
+DSKY_L2OFF:
+	PUSH	AF
+	PUSH	BC
+
+	LD 	C,$0E
+	CALL	DSKY_GETBYTE
+	or 	$20
+	LD 	C,$0E
+	CALL	DSKY_PUTBYTE
+
+	POP	BC
+        POP	AF
+	RET
+
+
+
 ;
 ; SETUP PPI FOR WRITING: PUT PPI PORT A IN OUTPUT MODE
 ; AVOID REWRTING PPIX IF ALREADY IN OUTPUT MODE
