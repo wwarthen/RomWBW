@@ -34,7 +34,7 @@ jobs:
           find -type f -exec md5sum '{}' \;
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v2
         with:
           name: RomWBW_Linux-${{env.GITHUB_REF_SLUG}}-${{env.GITHUB_SHA_SHORT}}
           path: .
@@ -60,7 +60,7 @@ jobs:
           find . -type f -exec md5 -r -- '{}' +;
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v2
         with:
           name: RomWBW_MacOS
           path: .
