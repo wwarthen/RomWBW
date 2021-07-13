@@ -209,6 +209,14 @@ prompt:
 	call	DSKY_RESET		; clear DSKY
 	ld	hl,msg_sel		; boot select msg
 	call	DSKY_SHOWSEG		; show on DSKY
+
+ #IF (DSKYMODE == DSKYMODE_NG)
+	CALL 	DSKY_PUTLED
+	.DB 	$3f,$3f,$3f,$3f,$00,$00,$00,$00
+	call 	DSKY_BEEP
+	call 	DSKY_L2ON
+ #ENDIF
+
 #endif
 ;
 wtkey:
@@ -361,6 +369,13 @@ dskycmd:
 	cp	$FF			; check for error
 	ret	z			; abort if so
 ;
+
+ #IF (DSKYMODE == DSKYMODE_NG)
+	CALL 	DSKY_PUTLED
+	.DB 	$00,$00,$00,$00,$00,$00,$00,$00
+	call 	DSKY_L2OFF
+ #ENDIF
+
 	; Attempt built-in commands
 	cp	KY_BO			; reboot system
 	jp	z,reboot		; if so, do it
@@ -491,10 +506,10 @@ iseven:	dec	a			; 15=19200
 	add	a,16			; 20=115200
 setspd:	ld	(newspeed),a		; save validated baud rate
 ;
-	ld	hl,str_chspeed		; notify user 
+	ld	hl,str_chspeed		; notify user
 	call	pstr			; to change
 	call	cin			; speed
-;	
+;
 	; Get the current settings for chosen console
 	ld	b,BF_CIOQUERY		; BIOS serial device query
 	ld	a,(newcon)		; get device unit num
@@ -503,7 +518,7 @@ setspd:	ld	(newspeed),a		; save validated baud rate
 	jp	nz,err_invcmd		; abort on error
 ;
 	ld	a,d			; mask off current
-	and	$11100000		; baud rate 
+	and	$11100000		; baud rate
 	ld	hl,newspeed		; and load in new
 	or	(hl)			; baud rate
 	ld	d,a
