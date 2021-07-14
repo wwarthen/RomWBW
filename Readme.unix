@@ -17,7 +17,11 @@ with respect to the .DS directive. it's usually a bad idea to mix
 	      output point.  It works a lot more like M80, SLR* .PHASE
 
 It assumes that you have some standard system tools and libraries 
-installed specifically: gcc, gnu make, libncurses, srecord
+installed, specifically: gcc, gnu make, libncurses, and srecord.
+Typically, something like this will take care of adding all
+required packages:
+
+	sudo apt install build-essential libncurses-dev srecord
 
 To build:
 	cd to the top directory and type "make".

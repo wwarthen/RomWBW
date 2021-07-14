@@ -183,6 +183,7 @@ if ($Platform -ne "UNA")
 	Asm 'tastybasic'
 	Asm 'game'
 	Asm 'usrrom'
+	Asm 'updater'
 	Asm 'imgpad2'
 }
 
