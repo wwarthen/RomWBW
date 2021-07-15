@@ -99,21 +99,21 @@ done
 
 cp ../Forth/camel80.bin .
 
-make dbgmon.bin romldr.bin eastaegg.bin imgpad2.bin
+make dbgmon.bin romldr.bin imgpad2.bin
 
 if [ $platform != UNA ] ; then
-	make nascom.bin tastybasic.bin game.bin usrrom.bin imgpad2.bin
+	make nascom.bin tastybasic.bin game.bin eastaegg.bin updater.bin usrrom.bin imgpad2.bin
 	make hbios_rom.bin hbios_app.bin hbios_img.bin
 fi
 
 echo "Building $romname output files..."
 
-cat romldr.bin dbgmon.bin ../CPM22/cpm_$BIOS.bin ../ZSDOS/zsys_$BIOS.bin >osimg.bin
+cat romldr.bin dbgmon.bin ../ZSDOS/zsys_$BIOS.bin ../CPM22/cpm_$BIOS.bin >osimg.bin
 cat romldr.bin dbgmon.bin ../ZSDOS/zsys_$BIOS.bin >osimg_small.bin
 
 if [ $platform != UNA ] ; then
-	cat camel80.bin nascom.bin tastybasic.bin game.bin eastaegg.bin usrrom.bin >osimg1.bin
-	cat netboot.mod imgpad2.bin >osimg2.bin
+	cat camel80.bin nascom.bin tastybasic.bin game.bin eastaegg.bin netboot.mod updater.bin usrrom.bin >osimg1.bin
+	cat imgpad2.bin >osimg2.bin
 fi
 
 echo "Building ${romsize}KB $romname ROM disk data file..."
@@ -165,7 +165,4 @@ else
 	cat hbios_rom.bin osimg.bin osimg1.bin osimg2.bin $romdiskfile >$romname.rom
 	cat hbios_rom.bin osimg.bin osimg1.bin osimg2.bin >$romname.upd
 	cat hbios_app.bin osimg_small.bin > $romname.com
-	# cat hbios_img.bin osimg_small.bin > $romname.img
 fi
-
-#rm $romdiskfile
