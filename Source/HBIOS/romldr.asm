@@ -208,7 +208,7 @@ prompt:
 #if (DSKYENABLE)
 	call	DSKY_RESET		; clear DSKY
 	ld	hl,msg_sel		; boot select msg
-	call	DSKY_SHOWSEG		; show on DSKY
+	call	DSKY_SHOW		; show on DSKY
 
  #IF (DSKYMODE == DSKYMODE_NG)
 	call 	DSKY_PUTLED
@@ -606,7 +606,7 @@ reboot:
 ;
 #if (DSKYENABLE)
 	ld	hl,msg_boot		; point to boot message
-	call	DSKY_SHOWSEG		; display message
+	call	DSKY_SHOW		; display message
 #endif
 ;
 	; cold boot system
@@ -638,7 +638,7 @@ romload:
 ;
 #if (DSKYENABLE)
 	ld	hl,msg_load		; point to load message
-	call	DSKY_SHOWSEG		; display message
+	call	DSKY_SHOW		; display message
 #endif
 ;
 #if (BIOS == BIOS_WBW)
@@ -722,7 +722,7 @@ romload1:
 ;
 #if (DSKYENABLE)
 	ld	hl,msg_go		; point to go message
-	call	DSKY_SHOWSEG		; display message
+	call	DSKY_SHOW		; display message
 #endif
 ;
 	ld	l,(ix+ra_ent)		; HL := app entry address
@@ -747,7 +747,7 @@ diskboot:
 ;
 #if (DSKYENABLE)
 	ld	hl,msg_load		; point to load message
-	call	DSKY_SHOWSEG		; display message
+	call	DSKY_SHOW		; display message
 #endif
 ;
 #if (BIOS == BIOS_WBW)
@@ -1031,7 +1031,7 @@ diskboot10:
 ;
 #if (DSKYENABLE)
 	ld	hl,msg_go		; point to go message
-	call	DSKY_SHOWSEG		; display message
+	call	DSKY_SHOW		; display message
 #endif
 ;
 	; Jump to entry vector

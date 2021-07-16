@@ -4,6 +4,7 @@
 ;==================================================================================================
 ;
 ; A DSKYNG CAN SHARE A PPI BUS WITH EITHER A PPIDE OR PPISD.
+;   SEE PPI_BUS.TXT FOR MORE INFORMATION.
 ;
 ; LED SEGMENTS (BIT VALUES)
 ;
@@ -198,21 +199,25 @@ DSKY_KEYMAP:
 #ENDIF	; DSKY_KBD
 ;
 ;==================================================================================================
-; DSKY HEX DISPLAY
+; CONVERT 32 BIT BINARY TO 8 BYTE HEX SEGMENT DISPLAY
 ;==================================================================================================
 ;
-DSKY_HEXOUT:
-	LD	B,DSKY_HEXBUFLEN
-	LD	HL,DSKY_BUF
-	LD	DE,DSKY_HEXBUF
-DSKY_HEXOUT1:
+; HL: ADR OF 32 BIT BINARY
+; DE: ADR OF DEST LED SEGMENT DISPLAY BUFFER (8 BYTES)
+;
+DSKY_BIN2SEG:
+	PUSH	HL
+	PUSH	DE
+	LD	B,4			; 4 BYTES OF INPUT
+	EX	DE,HL
+DSKY_BIN2SEG1:
 	LD	A,(DE)			; FIRST NIBBLE
 	SRL	A
 	SRL	A
 	SRL	A
 	SRL	A
 	PUSH	HL
-	LD	HL,HEXMAP
+	LD	HL,DSKY_HEXMAP
 	CALL	DSKY_ADDHLA
 	LD	A,(HL)
 	POP	HL
@@ -221,49 +226,40 @@ DSKY_HEXOUT1:
 	LD	A,(DE)			; SECOND NIBBLE
 	AND	0FH
 	PUSH	HL
-	LD	HL,HEXMAP
+	LD	HL,DSKY_HEXMAP
 	CALL	DSKY_ADDHLA
 	LD	A,(HL)
 	POP	HL
 	LD	(HL),A
 	INC	HL
 	INC	DE			; NEXT BYTE
-	DJNZ	DSKY_HEXOUT1
-	LD	HL,DSKY_BUF
-	JR	DSKY_SHOW
+	DJNZ	DSKY_BIN2SEG1
+	POP	DE
+	POP	HL
+	RET
 ;
 ;==================================================================================================
 ; DSKY SHOW BUFFER
 ;   HL: ADDRESS OF BUFFER
-;   ENTER @ SHOWHEX FOR HEX DECODING
-;   ENTER @ SHOWSEG FOR SEGMENT DECODING
 ;==================================================================================================
 ;
-DSKY_SHOWHEX:
-	JR	DSKY_SHOW
-;
-DSKY_SHOWSEG:
-	JR	DSKY_SHOW
-;
 DSKY_SHOW:
-;	PUSH	HL
-;	CALL	DSKY_RESET
-;	POP	HL
 	LD	C,0			; STARTING DISPLAY POSITION
 	LD	B,DSKY_BUFLEN		; NUMBER OF CHARS
 	JP	DSKY_PUTSTR
 ;
+;==================================================================================================
+; DSKYNG OUTPUT ROUTINES
+;==================================================================================================
 ;
-;
-;
-; COMMAND IN A
+; SEND DSKY COMMAND BYTE IN REGISTER A
 ; TRASHES BC
 ;
 DSKY_CMD:
 	LD	B,$01
 	JR	DSKY_DOUT2
 ;
-; DATA VALUE IN A
+; SEND DSKY DATA BYTE IN REGISTER A
 ; TRASHES BC
 ;
 DSKY_DOUT:
@@ -317,21 +313,25 @@ DSKY_DOUT2:
 	CALL	DSKY_PPIIDLE
 	RET
 ;
-; STATUS VALUE IN A
+;==================================================================================================
+; DSKYNG OUTPUT ROUTINES
+;==================================================================================================
+;
+; RETURN DSKY STATUS VALUE IN A
 ; TRASHES BC
 ;
 DSKY_ST:
 	LD	B,$01
 	JR	DSKY_DIN2
 ;
-; DATA VALUE RETURNED IN A
+; RETURN NEXT DATA VALUE IN A
 ; TRASHES BC
 ;
 DSKY_DIN:
 	LD	B,$00
 ;
 DSKY_DIN2:
-	; SET PPI LINE CONFIG TO WRITE MODE
+	; SET PPI LINE CONFIG TO READ MODE
 	CALL	DSKY_PPIRD
 ;
 	; SETUP
@@ -374,7 +374,11 @@ DSKY_DIN2:
 	CALL	DSKY_PPIIDLE
 	RET
 ;
-; BLANK THE DISPLAY (WITHOUT USING CLEAR)
+;==================================================================================================
+; DSKYNG UTILITY ROUTINES
+;==================================================================================================
+;
+; BLANK DSKYNG DISPLAY  (WITHOUT USING CLEAR)
 ;
 DSKY_BLANK:
 	LD	A,DSKY_CMD_WDSP
@@ -456,38 +460,12 @@ DSKY_GETSTR1:
 	DJNZ	DSKY_GETSTR1
 	RET
 ;
-; HL IS ADR OF ENCODED STRING OF BYTES
-; B IS LEN OF STRING (BYTES)
-; C IS POSITION IN DISPLAY RAM TO WRITE
-;
-DSKY_PUTENCSTR:
-	PUSH	BC
-	LD	A,C
-	ADD	A,DSKY_CMD_WDSP
-	CALL	DSKY_CMD
-	POP	BC
-	EX	DE,HL
-DSKY_PUTENCSTR1:
-	LD	A,(DE)
-	INC	DE
-	LD	HL,HEXMAP
-	CALL	DSKY_ADDHLA
-	LD	A,(HL)
-	XOR	$FF
-	PUSH	BC
-	CALL	DSKY_DOUT
-	POP	BC
-	DJNZ	DSKY_PUTENCSTR1
-	RET
-
-;
-;	This function is intended to update the LEDs.  It expects 8 bytes following the call, and
-;	updates the entire matrix.
+;	This function is intended to update the LEDs.  It expects 8 bytes
+;	following the call, and	updates the entire matrix.
 ;
 ;  EXAMPLE:
 ;	CALL 	DSKY_PUTLED
 ;	.DB 	$00,$00,$00,$00,$00,$00,$00,$00
-;
 ;
 DSKY_PUTLED:
         EX	(SP),HL
@@ -508,10 +486,8 @@ DSKY_PUTLED_1:
         POP	AF
 	EX	(SP),HL
 	RET
-
 ;
 ;	This function is intended to beep the speaker on the DSKY
-;
 ;
 DSKY_BEEP:
 	PUSH	AF
@@ -519,30 +495,29 @@ DSKY_BEEP:
 
 	LD 	C,$0F
 	CALL	DSKY_GETBYTE
-	or 	$20
+	OR 	$20
 	LD 	C,$0F
 	CALL	DSKY_PUTBYTE
 
 ;;; 	timer . . .
 	PUSH	HL
-	ld 	hl,$8FFF
+	LD 	hl,$8FFF
 DSKY_BEEP1:
-	dec 	hl
-	ld 	a,H
-	cp 	0
-	jp 	nz,DSKY_BEEP1
-	pop 	hl
+	DEC 	HL
+	LD 	A,H
+	CP 	0
+	JP 	NZ,DSKY_BEEP1
+	POP 	HL
 
 	LD 	C,$0F
 	CALL	DSKY_GETBYTE
-	and  	$DF
+	AND  	$DF
 	LD 	C,$0F
 	CALL	DSKY_PUTBYTE
 
 	POP	BC
         POP	AF
 	RET
-
 ;
 ;	This function is intended to turn on DSKY L1
 ;
@@ -552,14 +527,13 @@ DSKY_L1ON:
 
 	LD 	C,$0D
 	CALL	DSKY_GETBYTE
-	or 	$20
+	OR 	$20
 	LD 	C,$0D
 	CALL	DSKY_PUTBYTE
 
 	POP	BC
         POP	AF
 	RET
-
 ;
 ;	This function is intended to turn on DSKY L2
 ;
@@ -569,14 +543,13 @@ DSKY_L2ON:
 
 	LD 	C,$0E
 	CALL	DSKY_GETBYTE
-	or 	$20
+	OR 	$20
 	LD 	C,$0E
 	CALL	DSKY_PUTBYTE
 
 	POP	BC
         POP	AF
 	RET
-
 ;
 ;	This function is intended to turn off DSKY L1
 ;
@@ -586,14 +559,13 @@ DSKY_L1OFF:
 
 	LD 	C,$0D
 	CALL	DSKY_GETBYTE
-	and 	$DF
+	AND 	$DF
 	LD 	C,$0D
 	CALL	DSKY_PUTBYTE
 
 	POP	BC
         POP	AF
 	RET
-
 ;
 ;	This function is intended to turn off DSKY L2
 ;
@@ -603,16 +575,17 @@ DSKY_L2OFF:
 
 	LD 	C,$0E
 	CALL	DSKY_GETBYTE
-	and 	$DF
+	AND 	$DF
 	LD 	C,$0E
 	CALL	DSKY_PUTBYTE
 
 	POP	BC
         POP	AF
 	RET
-
-
-
+;
+;==================================================================================================
+; DSKYNG LINE CONTROL ROUTINES
+;==================================================================================================
 ;
 ; SETUP PPI FOR WRITING: PUT PPI PORT A IN OUTPUT MODE
 ; AVOID REWRTING PPIX IF ALREADY IN OUTPUT MODE
@@ -639,15 +612,6 @@ DSKY_PPIWR1:
 	POP	AF
 	RET
 ;
-;
-;
-DSKY_ADDHLA:
-	ADD	A,L
-	LD	L,A
-	RET	NC
-	INC	H
-	RET
-;
 ; SETUP PPI FOR READING: PUT PPI PORT A IN INPUT MODE
 ; AVOID REWRTING PPIX IF ALREADY IN INPUT MODE
 ;
@@ -664,10 +628,6 @@ DSKY_PPIRD:
 	OUT	(PPIX),A
 	LD	(DSKY_PPIX_VAL),A
 ;
-;	; DIAGNOSTIC
-;	LD	A,'R'
-;	CALL	COUT
-;
 DSKY_PPIRD1:
 	POP	AF
 	RET
@@ -677,12 +637,26 @@ DSKY_PPIRD1:
 DSKY_PPIIDLE:
 	JR	DSKY_PPIRD		; SAME AS READ MODE
 ;
+;==================================================================================================
+; UTILTITY FUNCTIONS
+;==================================================================================================
+;
+DSKY_ADDHLA:
+	ADD	A,L
+	LD	L,A
+	RET	NC
+	INC	H
+	RET
+;
+;==================================================================================================
+; STORAGE
+;==================================================================================================
+;
 ; CODES FOR NUMERICS
 ; HIGH BIT ALWAYS CLEAR TO SUPPRESS DECIMAL POINT
 ; SET HIGH BIT TO SHOW DECIMAL POINT
 ;
-HEXMAP:
-DSKY_NUMS:
+DSKY_HEXMAP:
 	.DB	$3F	; 0
 	.DB	$06	; 1
 	.DB	$5B	; 2

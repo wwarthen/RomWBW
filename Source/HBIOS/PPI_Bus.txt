@@ -1,0 +1,39 @@
+
+PPI Signal	PPIDE		PPISD		DSKY		DSKYNG (PROTO)	DSKYNG (FINAL)
+----------	-----		-----		-----		-----		-----
+PA0		<>D0				>ID0		<>D0		<>D0
+PA1		<>D1                            >ID1		<>D1		<>D1
+PA2		<>D2                            >ID2		<>D2		<>D2
+PA3		<>D3                            >ID3		<>D3		<>D3
+PA4		<>D4                            >ID4 /SHUTDOWN	<>D4		<>D4
+PA5		<>D5                            >ID5 /DECODE	<>D5		<>D5
+PA6		<>D6                            >ID6 HEXA/CODEB	<>D6		<>D6
+PA7		<>D7                            >ID7 DAT_COMING	<>D7		<>D7
+
+PB0		<>D8				+<ROW5                          
+PB1             <>D9				+<ROW4                          
+PB2             <>D10				+<ROW3                          
+PB3             <>D11				+<ROW2                          
+PB4             <>D12                           +<ROW1                          
+PB5             <>D13                           +<ROW0                          
+PB6             <>D14				+                               
+PB7             <>D15		<MISO		+                               
+
+PC0		>DA0		>MOSI		>COL0		>A0		>A0
+PC1		>DA1		>CLK		>COL1           		>/WR                
+PC2		>DA2				>COL2           		>/RD                
+PC3		>CS0*				>COL3		>CS&*		>CS&*
+PC4		>CS1*		>/CS				>CS&*		>CS&*
+PC5		>DIOW*						>/WR
+PC6		>DIOR*				>/WR		>/RD
+PC7		>RESET*				>MODE		>RESET		>RESET
+
+* Inverted by adapter
++ Pullup
+& Both signals must be asserted
+
+Compatibility:
+
+- PPISD & DSKY
+- PPIDE & DSKYNG
+- PPISD & DSKYNG
