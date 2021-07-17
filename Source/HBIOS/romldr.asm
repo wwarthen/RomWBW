@@ -208,11 +208,11 @@ prompt:
 #if (DSKYENABLE)
 	call	DSKY_RESET		; clear DSKY
 	ld	hl,msg_sel		; boot select msg
-	call	DSKY_SHOWSEG		; show on DSKY
+	call	DSKY_SHOW		; show on DSKY
 
  #IF (DSKYMODE == DSKYMODE_NG)
-	CALL 	DSKY_PUTLED
-	.DB 	$3f,$3f,$3f,$3f,$00,$00,$00,$00
+	call 	DSKY_PUTLED
+	.db 	$3f,$3f,$3f,$3f,$00,$00,$00,$00
 	call 	DSKY_BEEP
 	call 	DSKY_L2ON
  #ENDIF
@@ -267,6 +267,14 @@ clrbuf1:
 ;
 concmd:
 	call	clrled			; clear LEDs
+;
+#if (DSKYENABLE)
+  #if (DSKYMODE == DSKYMODE_NG)
+	call 	DSKY_PUTLED
+	.db 	$00,$00,$00,$00,$00,$00,$00,$00
+	call 	DSKY_L2OFF
+  #endif
+#endif
 ;
 	; Get a command line from console and handle it
 	call	rdln			; get a line from the user
@@ -369,13 +377,12 @@ dskycmd:
 	cp	$FF			; check for error
 	ret	z			; abort if so
 ;
-
- #IF (DSKYMODE == DSKYMODE_NG)
-	CALL 	DSKY_PUTLED
-	.DB 	$00,$00,$00,$00,$00,$00,$00,$00
+  #if (DSKYMODE == DSKYMODE_NG)
+	call 	DSKY_PUTLED
+	.db 	$00,$00,$00,$00,$00,$00,$00,$00
 	call 	DSKY_L2OFF
- #ENDIF
-
+  #endif
+;
 	; Attempt built-in commands
 	cp	KY_BO			; reboot system
 	jp	z,reboot		; if so, do it
@@ -599,7 +606,7 @@ reboot:
 ;
 #if (DSKYENABLE)
 	ld	hl,msg_boot		; point to boot message
-	call	DSKY_SHOWSEG		; display message
+	call	DSKY_SHOW		; display message
 #endif
 ;
 	; cold boot system
@@ -631,7 +638,7 @@ romload:
 ;
 #if (DSKYENABLE)
 	ld	hl,msg_load		; point to load message
-	call	DSKY_SHOWSEG		; display message
+	call	DSKY_SHOW		; display message
 #endif
 ;
 #if (BIOS == BIOS_WBW)
@@ -715,7 +722,7 @@ romload1:
 ;
 #if (DSKYENABLE)
 	ld	hl,msg_go		; point to go message
-	call	DSKY_SHOWSEG		; display message
+	call	DSKY_SHOW		; display message
 #endif
 ;
 	ld	l,(ix+ra_ent)		; HL := app entry address
@@ -740,7 +747,7 @@ diskboot:
 ;
 #if (DSKYENABLE)
 	ld	hl,msg_load		; point to load message
-	call	DSKY_SHOWSEG		; display message
+	call	DSKY_SHOW		; display message
 #endif
 ;
 #if (BIOS == BIOS_WBW)
@@ -1024,7 +1031,7 @@ diskboot10:
 ;
 #if (DSKYENABLE)
 	ld	hl,msg_go		; point to go message
-	call	DSKY_SHOWSEG		; display message
+	call	DSKY_SHOW		; display message
 #endif
 ;
 	; Jump to entry vector
@@ -2075,34 +2082,35 @@ ra_ent		.equ	12
 ;
 ra_tbl:
 ;
-;      Name	  Key	   Dsky	  Bank	    Src	   Dest	    Size     Entry
-;      ---------  -------  -----  --------  -----  -------  -------  ----------
-ra_ent(str_mon,	  'M',	   KY_CL, BID_IMG0, $1000, MON_LOC, MON_SIZ, MON_SERIAL)
+;      Name	  Key	   Dsky	  Bank	    Src	         Dest	    Size     Entry
+;      ---------  -------  -----  --------  -----        -------  -------  ----------
+ra_ent(str_mon,	  'M',	   KY_CL, BID_IMG0, MON_IMGLOC,  MON_LOC, MON_SIZ, MON_SERIAL)
 ra_entsiz	.equ	$ - ra_tbl
-ra_ent(str_cpm22, 'C',	   KY_BK, BID_IMG0, $2000, CPM_LOC, CPM_SIZ, CPM_ENT)
-ra_ent(str_zsys,  'Z',	   KY_FW, BID_IMG0, $5000, CPM_LOC, CPM_SIZ, CPM_ENT)
+ra_ent(str_zsys,  'Z',	   KY_FW, BID_IMG0, ZSYS_IMGLOC, CPM_LOC, CPM_SIZ, CPM_ENT)
+ra_ent(str_cpm22, 'C',	   KY_BK, BID_IMG0, CPM_IMGLOC,  CPM_LOC, CPM_SIZ, CPM_ENT)
 #if (BIOS == BIOS_WBW)
-ra_ent(str_fth,	  'F',	   KY_EX, BID_IMG1, $0000, FTH_LOC, FTH_SIZ, FTH_LOC)
-ra_ent(str_bas,	  'B',	   KY_DE, BID_IMG1, $1700, BAS_LOC, BAS_SIZ, BAS_LOC)
-ra_ent(str_tbas,  'T',	   KY_EN, BID_IMG1, $3700, TBC_LOC, TBC_SIZ, TBC_LOC)
-ra_ent(str_play,  'P',	   $FF,	  BID_IMG1, $4000, GAM_LOC, GAM_SIZ, GAM_LOC)
-ra_ent(str_egg,	  'E'+$80, $FF,   BID_IMG1, $4900, EGG_LOC, EGG_SIZ, EGG_LOC)
-ra_ent(str_user,  'U',	   $FF,	  BID_IMG1, $4B00, USR_LOC, USR_SIZ, USR_LOC)
-ra_ent(str_net,   'N',	   $FF,	  BID_IMG2, $0000, NET_LOC, NET_SIZ, NET_LOC)
+ra_ent(str_fth,	  'F',	   KY_EX, BID_IMG1, FTH_IMGLOC,  FTH_LOC, FTH_SIZ, FTH_LOC)
+ra_ent(str_bas,	  'B',	   KY_DE, BID_IMG1, BAS_IMGLOC,  BAS_LOC, BAS_SIZ, BAS_LOC)
+ra_ent(str_tbas,  'T',	   KY_EN, BID_IMG1, TBC_IMGLOC,  TBC_LOC, TBC_SIZ, TBC_LOC)
+ra_ent(str_play,  'P',	   $FF,	  BID_IMG1, GAM_IMGLOC,  GAM_LOC, GAM_SIZ, GAM_LOC)
+ra_ent(str_egg,	  'E'+$80, $FF,   BID_IMG1, EGG_IMGLOC,  EGG_LOC, EGG_SIZ, EGG_LOC)
+ra_ent(str_net,   'N',	   $FF,	  BID_IMG1, NET_IMGLOC,  NET_LOC, NET_SIZ, NET_LOC)
+ra_ent(str_upd,   'O',	   $FF,	  BID_IMG1, UPD_IMGLOC,  UPD_LOC, UPD_SIZ, UPD_LOC)
+ra_ent(str_user,  'U',	   $FF,	  BID_IMG1, USR_IMGLOC,  USR_LOC, USR_SIZ, USR_LOC)
 #endif
 #if (DSKYENABLE)
-ra_ent(str_dsky,  'Y'+$80, KY_GO, BID_IMG0, $1000, MON_LOC, MON_SIZ, MON_DSKY)
+ra_ent(str_dsky,  'Y'+$80, KY_GO, BID_IMG0, MON_IMGLOC,  MON_LOC, MON_SIZ, MON_DSKY)
 #endif
 		.dw	0		; table terminator
 ;
 ra_tbl_app:
 ;
-;      Name	  Key	   Dsky	  Bank	    Src	   Dest	    Size     Entry
-;      ---------  -------  -----  --------  -----  -------  -------  ----------
-ra_ent(str_mon,	  'M',	   KY_CL, bid_cur,  $1000, MON_LOC, MON_SIZ, MON_SERIAL)
-ra_ent(str_zsys,  'Z',	   KY_FW, bid_cur,  $2000, CPM_LOC, CPM_SIZ, CPM_ENT)
+;      Name	  Key	   Dsky	  Bank	    Src	         Dest	    Size     Entry
+;      ---------  -------  -----  --------  -----       -------  -------  ----------
+ra_ent(str_mon,	  'M',	   KY_CL, bid_cur,  MON_IMGLOC,  MON_LOC, MON_SIZ, MON_SERIAL)
+ra_ent(str_zsys,  'Z',	   KY_FW, bid_cur,  ZSYS_IMGLOC,  CPM_LOC, CPM_SIZ, CPM_ENT)
 #if (DSKYENABLE)
-ra_ent(str_dsky,  'Y'+$80, KY_GO, bid_cur,  $1000, MON_LOC, MON_SIZ, MON_DSKY)
+ra_ent(str_dsky,  'Y'+$80, KY_GO, bid_cur,  MON_IMGLOC,  MON_LOC, MON_SIZ, MON_DSKY)
 #endif
 		.dw	0		; table terminator
 ;
@@ -2114,6 +2122,7 @@ str_fth		.db	"Forth",0
 str_bas		.db	"BASIC",0
 str_tbas	.db	"Tasty BASIC",0
 str_play	.db	"Play a Game",0
+str_upd		.db	"ROM Updater",0
 str_user	.db	"User App",0
 str_egg		.db	"",0
 str_net		.db	"Network Boot",0
