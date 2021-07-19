@@ -53,16 +53,19 @@ UART_ENTRY:
 ;
 ;__SERIAL_MONITOR_COMMANDS____________________________________________________
 ;
-; B - BOOT SYSTEM
-; D XXXX YYYY - DUMP MEMORY FROM XXXX TO YYYY
-; F XXXX YYYY ZZ - FILL MEMORY FROM XXXX TO YYYY WITH ZZ
-; I XX - SHOW VALUE AT PORT XX
-; K - ECHO KEYBOARD INPUT
-; L - LOAD INTEL HEX FORMAT DATA
-; M XXXX YYYY ZZZZ - MOVE MEMORY BLOCK XXXX-YYYY TO ZZZZ
-; O XX YY - WRITE VALUE YY TO PORT XX
-; P XXXX - PROGRAM RAM STARTING AT XXXX, PROMPT FOR VALUES
-; R XXXX - RUN A PROGRAM AT ADDRESS XXXX
+; B			- BOOT SYSTEM
+; D XXXX YYYY		- DUMP MEMORY IN RANGE XXXX-YYYY
+; F XXXX YYYY ZZ	- FILL MEMORY IN RANGE XXXX-YYYY WITH ZZ
+; H			- HALT SYSTEM
+; I XXXX		- SHOW VALUE AT PORT XXXX
+; K			- ECHO KEYBOARD INPUT
+; L			- LOAD INTEL HEX FORMAT DATA
+; M XXXX YYYY ZZZZ	- MOVE MEMORY BLOCK XXXX-YYYY TO ZZZZ
+; O XXXX YY		- OUTPUT VALUE YY TO PORT XX
+; P XXXX		- PROGRAM RAM STARTING AT XXXX, PROMPT FOR VALUES
+; R XXXX		- RUN A PROGRAM AT ADDRESS XXXX
+; S XX			- SET ACTIVE BANK TO XX
+; X			- EXIT MONITOR
 ;
 ;__COMMAND_PARSE______________________________________________________________
 ;
@@ -71,8 +74,14 @@ UART_ENTRY:
 ;
 SERIALCMDLOOP:
 	LD	SP,MON_STACK		; RESET STACK
-	LD	HL,TXT_PROMPT		;
-	CALL	PRTSTR			;
+	CALL	NEWLINE
+#IF (BIOS == BIOS_WBW)
+	LD	A,($FFE0)
+	CALL	PRTHEXBYTE
+#ENDIF
+	LD	A,'>'
+	CALL	COUT
+
 	LD	HL,KEYBUF		; SET POINTER TO KEYBUF AREA
 	CALL 	GETLN			; GET A LINE OF INPUT FROM THE USER
 	LD	HL,KEYBUF		; RESET POINTER TO START OF KEYBUF
@@ -102,10 +111,14 @@ SERIALCMDLOOP:
 	JP	Z,MOVEMEM		; MOVE MEMORY COMMAND
 	CP	'F'			; IS IT A "F" (Y/N)
 	JP	Z,FILLMEM		; FILL MEMORY COMMAND
-	CP	'H'			; IS IT A "H" (Y/N)
+	CP	'?'			; IS IT A "?" (Y/N)
 	JP	Z,HELP			; HELP COMMAND
-	CP	'S'			; IS IT A "H" (Y/N)
-	JP	Z,STOP			; STOP COMMAND
+	CP	'H'			; IS IT A "H" (Y/N)
+	JP	Z,HALT			; HALT COMMAND
+#IF (BIOS == BIOS_WBW)
+	CP	'S'			; IS IT A "S" (Y/N)
+	JP	Z,SETBNK		; SET BANK COMMAND
+#ENDIF
 	CP	'X'			; IS IT A "X" (Y/N)
 	JP	Z,EXIT			; EXIT COMMAND
 	LD	HL,TXT_COMMAND		; POINT AT ERROR TEXT
@@ -135,7 +148,7 @@ INITIALIZE:
 #IF DSKYENABLE
 	LD	B,BF_SYSGET		; HBIOS FUNC=GET SYS INFO
 	LD	C,BF_SYSGET_CPUINFO	; HBIOS SUBFUNC=GET CPU INFO
-	RST	08			; CALL HBIOS
+	CALL	$FFF0			; CALL HBIOS
 	LD	A,L			; PUT SPEED IN MHZ IN ACCUM
 	CALL	DELAY_INIT
 #ENDIF
@@ -176,14 +189,36 @@ EXIT:
 	CALL	$FFF0			; CALL HBIOS
 #ENDIF
 ;
-;__STOP_______________________________________________________________________
+;__HALT_______________________________________________________________________
 ;
-;	PERFORM STOP ACTION (HALT SYSTEM)
+;	PERFORM HALT ACTION
 ;_____________________________________________________________________________
 ;
-STOP:
+HALT:
 	DI
 	HALT
+;
+;__SETBNK_____________________________________________________________________
+;
+;	PERFORM SET BANK ACTION
+;_____________________________________________________________________________
+;
+#IF (BIOS == BIOS_WBW)
+;
+SETBNK:
+#IF (INTMODE == 1)
+	LD	HL,TXT_IMERR
+	CALL	PRTSTR
+#ELSE
+	CALL	BYTEPARM		; GET BANK NUMBER
+	JP	C,ERR			; HANDLE DATA ENTRY ERROR
+	LD	C,A			; PUT IN C FOR FOR FUNC CALL
+	LD	B,BF_SYSSETBNK		; SET BANK FUNCTION
+	CALL	$FFF0			; C HAS BANK, DO IT
+#ENDIF
+	JP	SERIALCMDLOOP		; NEXT COMMAND
+;
+#ENDIF
 ;
 ;__RUN________________________________________________________________________
 ;
@@ -788,7 +823,7 @@ COUT:
 	; OUTPUT CHARACTER TO CONSOLE VIA UBIOS
 	LD	E,A
 	LD	BC,$12
-	RST	08
+	CALL	$FFFD
 ;
 	; RESTORE ALL REGISTERS
 	POP	HL
@@ -810,7 +845,7 @@ CIN:
 ;
 	; INPUT CHARACTER FROM CONSOLE VIA UBIOS
 	LD	BC,$11
-	RST	08
+	CALL	$FFFD
 	LD	A,E
 ;
 	; RESTORE REGISTERS (AF IS OUTPUT)
@@ -832,7 +867,7 @@ CST:
 ;
 	; GET CONSOLE INPUT STATUS VIA UBIOS
 	LD	BC,$13
-	RST	08
+	CALL	$FFFD
 	LD	A,E
 ;
 	; RESTORE REGISTERS (AF IS OUTPUT)
@@ -859,7 +894,7 @@ COUT:
 	LD	E,A			; OUTPUT CHAR TO E
 	LD	C,CIO_CONSOLE		; CONSOLE UNIT TO C
 	LD	B,BF_CIOOUT		; HBIOS FUNC: OUTPUT CHAR
-	RST	08			; HBIOS OUTPUTS CHARACTER
+	CALL	$FFF0			; HBIOS OUTPUTS CHARACTER
 ;
 	; RESTORE ALL REGISTERS
 	POP	HL
@@ -882,7 +917,7 @@ CIN:
 	; INPUT CHARACTER FROM CONSOLE VIA HBIOS
 	LD	C,CIO_CONSOLE		; CONSOLE UNIT TO C
 	LD	B,BF_CIOIN		; HBIOS FUNC: INPUT CHAR
-	RST	08			; HBIOS READS CHARACTER
+	CALL	$FFF0			; HBIOS READS CHARACTER
 	LD	A,E			; MOVE CHARACTER TO A FOR RETURN
 ;
 	; RESTORE REGISTERS (AF IS OUTPUT)
@@ -905,7 +940,7 @@ CST:
 	; GET CONSOLE INPUT STATUS VIA HBIOS
 	LD	C,CIO_CONSOLE		; CONSOLE UNIT TO C
 	LD	B,BF_CIOIST		; HBIOS FUNC: INPUT STATUS
-	RST	08			; HBIOS RETURNS STATUS IN A
+	CALL	$FFF0			; HBIOS RETURNS STATUS IN A
 ;
 	; RESTORE REGISTERS (AF IS OUTPUT)
 	POP	HL
@@ -927,27 +962,29 @@ KEYBUF:  	.FILL	BUFLEN,0
 ;	SYSTEM TEXT STRINGS
 ;_____________________________________________________________________________
 ;
-TXT_PROMPT	.TEXT	"\r\n>$"
+;TXT_PROMPT	.TEXT	"\r\n>$"
 TXT_READY	.TEXT	"\r\n\r\nMonitor Ready$"
 TXT_COMMAND	.TEXT	"\r\nUnknown Command$"
 TXT_ERR		.TEXT	"\r\nSyntax Error$"
+TXT_IMERR	.TEXT	"\r\nCommand not available under interrupt mode 1$"
 TXT_CKSUMERR	.TEXT	"\r\nChecksum Error$"
 TXT_RECORDERR	.TEXT	"\r\nRecord Type Error$"
 TXT_LOADED	.TEXT	"\r\nLoaded$"
 TXT_BADNUM	.TEXT	" *Invalid Hex Byte Value*$"
-TXT_MINIHELP	.TEXT	" (H for Help)$"
+TXT_MINIHELP	.TEXT	" (? for Help)$"
 TXT_HELP	.TEXT	"\r\nMonitor Commands (all values in hex):"
 		.TEXT	"\r\nB                - Boot system"
 		.TEXT	"\r\nD xxxx yyyy      - Dump memory from xxxx to yyyy"
 		.TEXT	"\r\nF xxxx yyyy zz   - Fill memory from xxxx to yyyy with zz"
-		.TEXT	"\r\nI xx             - Input from port xx"
+		.TEXT	"\r\nH                - Halt system"
+		.TEXT	"\r\nI xxxx           - Input from port xxxx"
 		.TEXT	"\r\nK                - Keyboard echo"
 		.TEXT	"\r\nL                - Load Intel hex data"
 		.TEXT	"\r\nM xxxx yyyy zzzz - Move memory block xxxx-yyyy to zzzz"
-		.TEXT	"\r\nO xx yy          - Output to port xx value yy"
-		.TEXT	"\r\nP xxxx           - Program RAM at xxxx"
-		.TEXT	"\r\nR xxxx           - Run code at xxxx"
-		.TEXT	"\r\nS                - Stop system (HALT)"
+		.TEXT	"\r\nO xxxx yy        - Output value yy to port xxxx"
+		.TEXT	"\r\nP xxxx           - Program RAM at address xxxx"
+		.TEXT	"\r\nR xxxx           - Run code at address xxxx"
+		.TEXT	"\r\nS xx             - Set bank to xx"
 		.TEXT	"\r\nX                - Exit monitor"
 		.TEXT	"$"
 ;
@@ -1530,13 +1567,5 @@ MON_STACK	.EQU	$
 		.ECHO	"DBGMON space remaining: "
 		.ECHO	SLACK
 		.ECHO	" bytes.\n"
-;;;
-;;; DBGMON CURRENTLY OCCUPIES $F000 TO START OF HBX PROXY BECAUSE THE
-;;; HBIOS PROXY OCCUPIES THE TOP OF COMMON RAM.  HOWEVER THE DBGMON
-;;; IMAGE MUST OCCUPY A FULL $1000 BYTES IN THE ROM.
-;;; BELOW WE JUST PAD OUT THE IMAGE SO IT
-;;; OCCUPIES THE FULL $1000 BYTES IN ROM.
-;;;
-;;		.FILL	HBX_SIZ			; PAD FOR HBX SIZE
 ;
 		.END
