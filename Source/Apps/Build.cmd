@@ -34,6 +34,7 @@ setlocal & cd FDU && call Build || exit /b 1 & endlocal
 setlocal & cd Tune && call Build || exit /b 1 & endlocal
 setlocal & cd FAT && call Build || exit /b 1 & endlocal
 setlocal & cd I2C && call Build || exit /b 1 & endlocal
+setlocal & cd ramtest && call Build || exit /b 1 & endlocal
 
 copy *.com %APPBIN%\
 
