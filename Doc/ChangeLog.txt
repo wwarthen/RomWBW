@@ -43,6 +43,7 @@ Version 3.1.1
 - W?S: Updated FLASH software to v1.3.5 (supports 128KB A29010B, 512KB A29040B)
 - DDW: Support for DSKYng capabitlities
 - WBW: Added Phil Summers' ROM Updater into ROM Loader
+- AJL: Added ramtest app (requires SBC and MBC for now)
 
 Version 3.1
 -----------
