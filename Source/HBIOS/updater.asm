@@ -214,7 +214,7 @@ MENULP:	LD	DE,$0000		; ENSURE WE ARE STARTING
 	CP	'V'			; CHECK FOR
 	JP	Z,OPTIONV		; VERIFY TOGGLE
 ;
-	CP	'X'			; CHECK FOR
+	CP	'Q'			; CHECK FOR
 	JP	Z,FAILUX		; USER EXIT
 ;
 	CP	'R'			; CHECK FOR
@@ -235,10 +235,10 @@ MENULP:	LD	DE,$0000		; ENSURE WE ARE STARTING
 	CP	'2'			; CALCULATE
 	JP	Z,OPTION2		; CRC 1024K FLASH
 ;
-#IF	(XFUDBG)
 	CP	'3'			; CALCULATE
 	JP	Z,OPTION3		; CRC FLASH #2
 ;
+#IF	(XFUDBG)
 	CP	'T'			; TEST TIMEOUT
 	JP	Z,OPTIONT		; LOOP
 ;
@@ -572,20 +572,38 @@ PRTSTR0:LD	A,(HL)			; PRINT MESSAGE POINTED TOP HL UNTIL 0
 	INC	HL
 	JP	PRTSTR0
 ;
+PRTSTRD:LD	A,(HL)			; PRINT MESSAGE POINTED TOP HL UNTIL $
+	CP	'$'			; CHECK IF GOT IT?
+	RET	Z			; IF MATCH RETURN TO CALLER
+	LD 	C,A
+	CALL	CONOUT			; ELSE PRINT THE CHARACTER
+	INC	HL
+	JP	PRTSTRD
+;
 MENU:	CALL	COUTON	
 	LD	HL,msgConsole		; DISPLAY
 	CALL	PRTSTR0			; CONSOLE
 	LD	A,(CONDEV)		; DEVICE
+	PUSH	AF
 	ADD	A,'0'
 	LD	C,A
 	CALL	CONOUT
+	LD	C,' '
+	CALL	CONOUT
+	POP	AF
+	CALL	DISPBAUD
 ;
 	LD	HL,msgIODevice		; DISPLAY
 	CALL	PRTSTR0			; SERIAL
 	LD	A,(SERDEV)		; DEVICE
+	PUSH	AF
 	ADD	A,'0'
 	LD	C,A
 	CALL	CONOUT
+	LD	C,' '
+	CALL	CONOUT
+	POP	AF
+	CALL	DISPBAUD
 ;
 	LD	HL,msgWriteV		; DISPLAY
 	CALL	PRTSTR0			; VERIFY
@@ -598,6 +616,36 @@ MENU1:	CALL	PRTSTR0
 ;
 	LD	HL,msgBegin		; DISPLAY OTHER
 	CALL	PRTSTR0			; MENU OPTIONS
+	RET
+;
+DISPBAUD:
+	PUSH	AF
+	LD	C,A
+	LD	B,$06			; GET
+	RST	08			; DEVICE
+	LD	A,C			; TYPE
+	POP	BC
+	OR	A			; EXIT IF
+	RET	NZ			; NOT SERIAL
+;
+	LD	C,B			; GET
+	LD	B,$05			; DEVICE
+	RST	08			; INFO
+	LD	A,D
+;
+;	CALL	PRTHEXB
+	BIT	4,A			; CONVERT	; IF X > 15 X=(X-15)*2 
+	JR	Z,UNDER15		; DEVICE	; ELSE X=(X*2)-1 
+	AND	%00001111		; BAUD
+	INC	A			; CODE TO
+	ADD	A,A			; TABLE
+	JR	WASOVER			; INDEX
+UNDER15:AND	%00001111	
+	ADD	A,A
+	DEC	A
+WASOVER:;CALL	PRTHEXB
+	LD	DE,BAUDTBL		; DISPLAY
+	CALL	PRTIDXDEA		; BAUD RATE
 	RET
 ;
 OPTIOND:CALL	COUTON			; TURN ON OUTPUT
@@ -1028,8 +1076,37 @@ CLEAR:	DEC	B
 	JP	NZ,BYTELP
 	LD	(CRC),DE
 	LD	(CRC+2),HL
-
+;
 	RET
+;
+;======================================================================
+; PRINT THE nTH STRING IN A LIST OF STRINGS WHERE EACH IS TERMINATED BY $
+; A REGISTER DEFINES THE nTH STRING IN THE LIST TO PRINT AND DE POINTS
+; TO THE START OF THE STRING LIST.
+;======================================================================
+;
+PRTIDXDEA:
+	PUSH	BC
+	LD	C,A			; INDEX COUNT
+	OR	A
+	LD	A,0
+;	LD	(PRTIDXCNT),A		; RESET CHARACTER COUNT
+PRTIDXDEA1:
+	JR	Z,PRTIDXDEA3
+PRTIDXDEA2:
+	LD	A,(DE)			; LOOP UNIT
+	INC	DE			; WE REACH
+	CP	'$'			; END OF STRING
+	JR	NZ,PRTIDXDEA2
+	DEC	C			; AT STRING END. SO GO
+	JR	PRTIDXDEA1		; CHECK FOR INDEX MATCH
+PRTIDXDEA3:
+	POP	BC
+	EX	DE,HL
+	CALL	PRTSTRD			; FALL THROUGH TO WRITESTR
+;	RET
+;
+#INCLUDE "decode.asm"
 ;
 ;======================================================================
 ; CALCULATE BANK AND ADDRESS DATA FROM MEMORY ADDRESS
@@ -1151,17 +1228,18 @@ msgIODevice:	.DB	CR,LF,"(S) Set Serial Device   : ",0
 msgWriteV:	.DB	CR,LF,"(V) Toggle Write Verify : ",0
 msgBegin:	.DB	CR,LF,"(R) Reboot"
 		.DB	CR,LF,"(U) Begin Update"
-		.DB	CR,LF,"(X) Exit to Rom Loader"
+		.DB	CR,LF,"(Q) Quit to Rom Loader"
 		.DB	CR,LF,"(D) Duplicate Flash #1 to #2"
 		.DB	CR,LF,"(1) CRC 512K Flash"
 		.DB	CR,LF,"(2) CRC 1024K Flash"
+		.DB	CR,LF,"(3) CRC Flash chip #2"
 #IF	(XFUDBG)
 		.DB	CR,LF,"(H) Select half speed"
 		.DB	CR,LF,"(T) Test timeout"
 		.DB	CR,LF,"(F) Dump Debug Data"
 		.DB	CR,LF,"(E) Erase Flash chip #1"
 		.DB	CR,LF,"(Z) Erase Flash chip #2"
-		.DB	CR,LF,"(3) CRC Flash chip #2"
+
 #ENDIF
 		.DB	CR,LF,CR,LF,"Select : ",0
 msgSuccess:	.DB	CR,LF,CR,LF,"COMPLETED WITHOUT ERRORS ",CR,LF,0
@@ -1209,6 +1287,43 @@ DEVICES:
 	.DW	$37A4			; A29010B  6
 	.DW	$3786			; A29040B  7
 LSTDEV:	.EQU	$
+;
+;======================================================================
+; BOARD RATE TABLE
+;======================================================================
+;
+BAUDTBL:.DB	"75$"			; 0    0  
+	.DB	"150$"			; 1    1  
+	.DB	"225$"			; 2   16  
+	.DB	"300$"			; 3    2  
+	.DB	"450$"			; 4   17
+	.DB	"600$"			; 5    3  
+	.DB	"900$"			; 6   18  
+	.DB	"1200$"			; 7    4  
+	.DB	"1800$"			; 8   19
+	.DB	"2400$"			; 9    5  
+	.DB	"3600$"			; 10  20
+	.DB	"4800$"			; 11   6  
+	.DB	"7200$"			; 12  21
+	.DB	"9600$"			; 13   7  
+	.DB	"14400$"		; 14  22  
+	.DB	"19200$"		; 15   8  
+	.DB	"28800$"		; 16  23
+	.DB	"38400$"		; 17   9  
+	.DB	"57600$"		; 18  24
+	.DB	"76800$"		; 19  10  
+	.DB	"115200$"		; 20  25
+	.DB	"153600$"		; 21  11  
+	.DB	"230400$"		; 22  26
+	.DB	"307200$"		; 23  12  
+	.DB	"460800$"		; 24  27
+	.DB	"614400$"		; 25  13  
+	.DB	"921600$"		; 26  28
+	.DB	"1228800$"		; 27  14  
+	.DB	"1843200$"		; 28  29  
+	.DB	"2457600$"		; 29  15  
+	.DB	"3686400$"		; 30  30  
+	.DB	"7372800$"		; 31  16 
 ;
 sector4k:	.EQU	$		; 32 PACKETS GET ACCUMULATED HERE BEFORE FLASHING
 ;
