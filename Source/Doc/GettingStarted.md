@@ -214,13 +214,15 @@ unable to save files to disk devices.
 
 The following ROM applications are available at the boot loader prompt:
 
-| Application |                                                                |
-| ----------- | -------------------------------------------------------------- |
-| Monitor     | Z80 system debug monitor w/ Intel Hex loader                   |
-| Forth       | Brad Rodriguez's ANSI compatible Forth language                |
-| Basic       | Nascom 8K BASIC language                                       |
-| Tasty BASIC | Dimitri Theuling's Tiny BASIC implementation                   |
-| Play        | A simple video game (requires ANSI terminal emulation)         |
+| Application  |                                                                |
+| -----------  | -------------------------------------------------------------- |
+| Monitor      | Z80 system debug monitor w/ Intel Hex loader                   |
+| Forth        | Brad Rodriguez's ANSI compatible Forth language                |
+| Basic        | Nascom 8K BASIC language                                       |
+| Tasty BASIC  | Dimitri Theuling's Tiny BASIC implementation                   |
+| Play         | A simple video game (requires ANSI terminal emulation)         |
+| Network Boot | Boot through Wiznet MT011 device                               |
+| Flash Update | Upload and flash a new ROMWBW image using xmodem               | 
 
 In general, the command to exit these applications and restart the
 system is `BYE`. The exceptions are the Monitor which uses `B` and
