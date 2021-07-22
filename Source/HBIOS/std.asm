@@ -14,6 +14,7 @@
 ; 10. SCZ180	Steve Cousins Z180 based system
 ; 11. DYNO	Steve Garcia's Dyno Micro-ATX Motherboard
 ; 12. RCZ280	Z280 CPU on RC2014 or ZZ80MB
+; 13. MBC	Andrew Lynch's Multi Board Computer
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
