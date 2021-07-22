@@ -157,6 +157,7 @@ the appropriate ROM image for your hardware.
 | SC130          | SCZ180_130.rom           | 115200      | Stephen Cousin's SC130 Z180                      |
 | SC131          | SCZ180_131.rom           | 115200      | Stephen Cousin's SC131 Z180                      |
 | Dyno           | DYNO_std.rom             | 38400       | Steve Garcia's Z180 Dyno Computer                |
+| MBC            | MBC_std.rom              | 38400       | Andrew Lynch's Multi Board Computer              |
 
 \*The RC2014 Z180 requires a separate RAM/ROM memory module. There are
 two types of these modules and you must pick the ROM for your type of
