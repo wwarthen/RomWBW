@@ -110,9 +110,7 @@ endif
 # first target is default
 #
 all:: $(OBJECTS)
-	@for dir in $(SUBDIRS) ; do \
-		( echo "building in `pwd`/$$dir" ; $(MAKE) --directory "$$dir" all ) ; \
-	done
+	@$(foreach subdir,$(SUBDIRS),echo "*** Making directory $(subdir)"; $(MAKE) --directory $(subdir) all || exit 1;)
 	@if [ "$(DEST)" ] ; then for file in $(filter-out $(NOCOPY),$(OBJECTS)) ; do \
 		mkdir -p $(DEST) ; \
 		echo copy $$file to $(DEST) ; \
@@ -127,19 +125,14 @@ all:: $(OBJECTS)
 
 clean::
 	@-rm -f $$($(CASEFN) make.out *.sym *.lst *.prn *.diff *.dump $(OTHERS) $(filter-out $(NODELETE),$(OBJECTS)))
-	@for dir in $(SUBDIRS) ; do \
-		( echo "cleaning in `pwd`/$$dir" ; cd "$$dir" ; make clean ) ; \
-	done
+	@$(foreach subdir,$(SUBDIRS),echo "*** Cleaning directory $(subdir)"; $(MAKE) --directory $(subdir) clean || exit 1;)
 
 clobber:: clean
 	@if [ "$(DEST)" ] ; then for file in $(OBJECTS) ; do \
 		rm -f $$($(CASEFN) $(DEST)/$$file) ; \
 	done ; fi
 	@-rm -f $$($(CASEFN) $(filter-out $(NODELETE),$(OBJECTS)))
-	@for dir in $(SUBDIRS) ; do \
-		( echo "clobbering in `pwd`/$$dir" ; cd "$$dir" ; make clobber ) ; \
-	done
-
+	@$(foreach subdir,$(SUBDIRS),echo "*** Clobbering directory $(subdir)"; $(MAKE) --directory $(subdir) clobber || exit 1;)
 #
 # this is used to verify that the unix and windows tool chains are generating
 # the same objects
