@@ -44,6 +44,7 @@ Version 3.1.1
 - DDW: Support for DSKYng capabitlities
 - WBW: Added Phil Summers' ROM Updater into ROM Loader
 - AJL: Added ramtest app (requires SBC and MBC for now)
+- L?N: Provided SCOPY, XSUB01, and EX applications
 
 Version 3.1
 -----------
