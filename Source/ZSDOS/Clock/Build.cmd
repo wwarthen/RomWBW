@@ -11,4 +11,4 @@ set ZXBINDIR=%TOOLS%/cpm/bin/
 set ZXLIBDIR=%TOOLS%/cpm/lib/
 set ZXINCDIR=%TOOLS%/cpm/include/
 
-zx ZMAC -WBWCLK -/P
+zx ZMAC -WBWCLK -/P || exit /b

@@ -12,42 +12,42 @@ set ZXBINDIR=%TOOLS%/cpm/bin/
 set ZXLIBDIR=%TOOLS%/cpm/lib/
 set ZXINCDIR=%TOOLS%/cpm/include/
 
-call :asm syscopy || goto :eof
-call :asm assign || goto :eof
-call :asm format || goto :eof
-call :asm talk || goto :eof
-call :asm mode || goto :eof
-call :asm rtc || goto :eof
-call :asm timer || goto :eof
-call :asm180 inttest || goto :eof
-call :asm rtchb || goto :eof
-call :asm ppidetst || goto :eof
-call :asm tstdskng || goto :eof
+call :asm syscopy || exit /b
+call :asm assign || exit /b
+call :asm format || exit /b
+call :asm talk || exit /b
+call :asm mode || exit /b
+call :asm rtc || exit /b
+call :asm timer || exit /b
+call :asm180 inttest || exit /b
+call :asm rtchb || exit /b
+call :asm ppidetst || exit /b
+call :asm tstdskng || exit /b
 
-zx Z80ASM -SYSGEN/F
+zx Z80ASM -SYSGEN/F || exit /b
 
-zx MAC SURVEY.ASM -$PO
-zx MLOAD25 -SURVEY.COM=SURVEY.HEX
+zx MAC SURVEY.ASM -$PO || exit /b
+zx MLOAD25 -SURVEY.COM=SURVEY.HEX || exit /b
 
-setlocal & cd XM && call Build || exit /b 1 & endlocal
-setlocal & cd FDU && call Build || exit /b 1 & endlocal
-setlocal & cd Tune && call Build || exit /b 1 & endlocal
-setlocal & cd FAT && call Build || exit /b 1 & endlocal
-setlocal & cd I2C && call Build || exit /b 1 & endlocal
-setlocal & cd ramtest && call Build || exit /b 1 & endlocal
+pushd XM && call Build || exit /b & popd
+pushd FDU && call Build || exit /b & popd
+pushd Tune && call Build || exit /b & popd
+pushd FAT && call Build || exit /b & popd
+pushd I2C && call Build || exit /b & popd
+pushd ramtest && call Build || exit /b & popd
 
-copy *.com %APPBIN%\
+copy *.com %APPBIN%\ || exit /b
 
 goto :eof
 
 :asm
 echo.
 echo Building %1...
-tasm -t80 -g3 -fFF %1.asm %1.com %1.lst
+tasm -t80 -g3 -fFF %1.asm %1.com %1.lst || exit /b
 goto :eof
 
 :asm180
 echo.
 echo Building %1...
-tasm -t180 -g3 -fFF %1.asm %1.com %1.lst
+tasm -t180 -g3 -fFF %1.asm %1.com %1.lst || exit /b
 goto :eof

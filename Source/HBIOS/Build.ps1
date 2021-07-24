@@ -127,13 +127,22 @@ if ($RomSize -gt "256")
 # Current date/time is queried here to be subsequently imbedded in image
 $TimeStamp = '"' + (Get-Date -Format 'yyyy-MM-dd') + '"'
 
+# Function to run an arbitrary command line, check the result, and throw an exception if an error occurs
+Function RunCmd($Cmd)
+{
+  $Cmd | write-host
+  Invoke-Expression $Cmd | write-host
+  if ($LASTEXITCODE -gt 0) {throw "Application Error $LastExitCode"}
+}
+
+
 # Function to run TASM and throw an exception if an error occurs.
 Function Asm($Component, $Opt, $Architecture=$CPUType, $Output="${Component}.bin", $List="${Component}.lst")
 {
   $Cmd = "tasm -t${Architecture} -g3 -e ${Opt} ${Component}.asm ${Output} ${List}"
   $Cmd | write-host
   Invoke-Expression $Cmd | write-host
-  if ($LASTEXITCODE -gt 0) {throw "TASM returned exit code $LASTEXITCODE"}
+  if ($LASTEXITCODE -gt 0) {throw "TASM returned exit code $LastExitCode"}
 }
 
 # Function to concatenate two binary files.
@@ -220,26 +229,26 @@ Set-Content -Value ([byte[]](0xE5) * (([int]${RomSize} * 1KB) - 128KB)) -Encodin
 if ($RomSize -gt 128)
 {
 	# Copy all files from the appropriate directory to the working ROM disk image
-	cpmcp -f $RomFmt $RomDiskFile ../RomDsk/ROM_${RomSize}KB/*.* 0:
+	RunCmd "cpmcp -f $RomFmt $RomDiskFile ../RomDsk/ROM_${RomSize}KB/*.* 0:"
 
 	# Add any platform specific files to the working ROM disk image
 	if (Test-Path "../RomDsk/${Platform}/*.*")
 	{
-		cpmcp -f $RomFmt $RomDiskFile ../RomDsk/${Platform}/*.* 0:
+		RunCmd "cpmcp -f $RomFmt $RomDiskFile ../RomDsk/${Platform}/*.* 0:"
 	}
 	
 	# Add the proprietary RomWBW applications to the working ROM disk image
 	foreach ($App in $RomApps)
 	{
-		cpmcp -f $RomFmt $RomDiskFile ../../Binary/Apps/$App.com 0:
+		RunCmd "cpmcp -f $RomFmt $RomDiskFile ../../Binary/Apps/$App.com 0:"
 	}
 
 	# Add the CP/M and ZSystem system images to the ROM disk (used by SYSCOPY)
-	cpmcp -f $RomFmt $RomDiskFile ..\cpm22\cpm_${Bios}.sys 0:cpm.sys
-	cpmcp -f $RomFmt $RomDiskFile ..\zsdos\zsys_${Bios}.sys 0:zsys.sys
+	RunCmd "cpmcp -f $RomFmt $RomDiskFile ..\cpm22\cpm_${Bios}.sys 0:cpm.sys"
+	RunCmd "cpmcp -f $RomFmt $RomDiskFile ..\zsdos\zsys_${Bios}.sys 0:zsys.sys"
 
 	# Set all the files in the ROM disk image to read only for extra protection under flash file system.
-	cpmchattr -f $RomFmt $RomDiskFile r 0:*.*
+	RunCmd "cpmchattr -f $RomFmt $RomDiskFile r 0:*.*"
 }
 
 #

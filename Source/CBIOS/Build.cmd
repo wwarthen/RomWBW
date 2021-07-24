@@ -14,11 +14,11 @@ set ZXINCDIR=%TOOLS%/cpm/include/
 echo.
 echo Building CBIOS for RomWBW...
 echo.
-tasm -t80 -g3 -dPLTWBW cbios.asm cbios_wbw.bin cbios_wbw.lst
+tasm -t80 -g3 -dPLTWBW cbios.asm cbios_wbw.bin cbios_wbw.lst || exit /b
 if errorlevel 1 goto :eof
 
 echo.
 echo Building CBIOS for UNA...
 echo.
-tasm -t80 -g3 -dPLTUNA cbios.asm cbios_una.bin cbios_una.lst
+tasm -t80 -g3 -dPLTUNA cbios.asm cbios_una.bin cbios_una.lst || exit /b
 if errorlevel 1 goto :eof
