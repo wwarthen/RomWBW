@@ -5,11 +5,9 @@ set TOOLS=../../../Tools
 set PATH=%TOOLS%\tasm32;%PATH%
 set TASMTABS=%TOOLS%\tasm32
 
-tasm -t80 -b -fFF loader.asm loader.bin loader.lst
-tasm -t80 -b -fFF dbgmon.asm dbgmon.bin dbgmon.lst
+tasm -t80 -b -fFF loader.asm loader.bin loader.lst || exit /b
+tasm -t80 -b -fFF dbgmon.asm dbgmon.bin dbgmon.lst || exit /b
 
-copy /Y /b loader.bin+dbgmon.bin ramtest.com
+copy /Y /b loader.bin+dbgmon.bin ramtest.com || exit /b
 
-if errorlevel 1 goto :eof
-
-copy /Y ramtest.com ..\..\..\Binary\Apps\
+copy /Y ramtest.com ..\..\..\Binary\Apps\ || exit /b

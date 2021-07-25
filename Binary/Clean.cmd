@@ -11,6 +11,6 @@ if exist *.upd del *.upd
 if exist *.pdf del *.pdf
 if exist *.eeprom del *.eeprom
 
-setlocal & cd Apps && call Clean || exit /b 1 & endlocal
-setlocal & cd CPM3 && call Clean || exit /b 1 & endlocal
-setlocal & cd ZPM3 && call Clean || exit /b 1 & endlocal
+pushd Apps && call Clean || exit /b 1 & popd
+pushd CPM3 && call Clean || exit /b 1 & popd
+pushd ZPM3 && call Clean || exit /b 1 & popd

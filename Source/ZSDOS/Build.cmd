@@ -11,13 +11,13 @@ set ZXBINDIR=%TOOLS%/cpm/bin/
 set ZXLIBDIR=%TOOLS%/cpm/lib/
 set ZXINCDIR=%TOOLS%/cpm/include/
 
-zx ZMAC -ZSDOS -/P
-zx LINK -ZSDOS.BIN=ZSDOS[LD800]
+zx ZMAC -ZSDOS -/P || exit /b
+zx LINK -ZSDOS.BIN=ZSDOS[LD800] || exit /b
 
-tasm -t80 -g3 -fFF loader.asm loader.bin loader.lst
+tasm -t80 -g3 -fFF loader.asm loader.bin loader.lst || exit /b
 
-copy /b ..\zcpr-dj\zcpr.bin + zsdos.bin + ..\cbios\cbios_wbw.bin zsys_wbw.bin
-copy /b ..\zcpr-dj\zcpr.bin + zsdos.bin + ..\cbios\cbios_una.bin zsys_una.bin
+copy /b ..\zcpr-dj\zcpr.bin + zsdos.bin + ..\cbios\cbios_wbw.bin zsys_wbw.bin || exit /b
+copy /b ..\zcpr-dj\zcpr.bin + zsdos.bin + ..\cbios\cbios_una.bin zsys_una.bin || exit /b
 
-copy /b loader.bin + zsys_wbw.bin zsys_wbw.sys
-copy /b loader.bin + zsys_una.bin zsys_una.sys
+copy /b loader.bin + zsys_wbw.bin zsys_wbw.sys || exit /b
+copy /b loader.bin + zsys_una.bin zsys_una.sys || exit /b

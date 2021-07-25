@@ -7,9 +7,9 @@ if exist *.lst del *.lst
 if exist *.hex del *.hex
 if exist *.prn del *.prn
 
-setlocal & cd XM && call Clean || exit /b 1 & endlocal
-setlocal & cd FDU && call Clean || exit /b 1 & endlocal
-setlocal & cd Tune && call Clean || exit /b 1 & endlocal
-setlocal & cd FAT && call Clean || exit /b 1 & endlocal
-setlocal & cd I2C && call Clean || exit /b 1 & endlocal
-setlocal & cd ramtest && call Clean || exit /b 1 & endlocal
+pushd XM && call Clean || exit /b 1 & popd
+pushd FDU && call Clean || exit /b 1 & popd
+pushd Tune && call Clean || exit /b 1 & popd
+pushd FAT && call Clean || exit /b 1 & popd
+pushd I2C && call Clean || exit /b 1 & popd
+pushd ramtest && call Clean || exit /b 1 & popd

@@ -7,5 +7,5 @@ set ZXBINDIR=../../../tools/cpm/bin/
 set ZXLIBDIR=../../../tools/cpm/lib/
 set ZXINCDIR=../../../tools/cpm/include/
 
-rem zx Z80ASM -z34rcp11/MF
-zx ZMAC -z34rcp11.z80 -/P
+rem zx Z80ASM -z34rcp11/MF || exit /b
+zx ZMAC -z34rcp11.z80 -/P || exit /b

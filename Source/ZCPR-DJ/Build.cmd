@@ -11,5 +11,5 @@ set ZXBINDIR=%TOOLS%/cpm/bin/
 set ZXLIBDIR=%TOOLS%/cpm/lib/
 set ZXINCDIR=%TOOLS%/cpm/include/
 
-zx M80 -=zcpr/l
-zx L80 -zcpr,zcpr.bin/n/e
+zx M80 -=zcpr/l || exit /b
+zx L80 -zcpr,zcpr.bin/n/e || exit /b

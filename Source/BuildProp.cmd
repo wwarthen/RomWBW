@@ -1,4 +1,4 @@
 @echo off
 setlocal
 
-setlocal & cd Prop && call Build || exit /b 1 & endlocal
+pushd Prop && call Build || exit /b & popd
