@@ -74,10 +74,10 @@ supported:
  - Zeta 2
  - N8
  - Mark IV
- - RC2014 w/ SMC
- - RC2014 w/ WDC
+ - RC2014
  - SmallZ80
  - Dyno
+ - MBC
 
 You must be using either a RomWBW or UBA based OS version.
 
@@ -91,6 +91,9 @@ You must have one of the following floppy disk controllers:
  - N8 SBC onboard FDC
  - RC2014 Scott Baker SMC-based Floppy Module
  - RC2014 Scott Baker WDC-based Floppy Module
+ - SmallZ80 FDC
+ - Dyno FDC
+ - MBC FDC
  
 Finally, you will need a floppy drive connected via an 
 appropriate cable:
@@ -152,11 +155,17 @@ The RC2014 Scott Baker WDC-based floppy module should be jumpered
 for I/O base address 0x50 (SV1: 11-12), JP1 (/DACK): 1-2,
 JP2 (TC): 2-3.
 
+The RC2014 FDC by Alan Cox (Etched Pixels) needs to be strapped
+for base I/O address 0x48.
+
 SmallZ80 does not have any relevant jumper settings.  The 
 hardwired I/O ranges are assumed in the code.
 
 Dyno does not have any relevant jumper settings.  The 
 hardwired I/O ranges are assumed in the code.
+
+The MBC FDC is expected to be strapped to use neither INT nor NMI.  It
+is also not expected to use DMA.
 
 Modes of Operation
 ------------------
@@ -521,3 +530,6 @@ WW 12/12/2020: v5.6
 
 WW 3/24/2021: v5.7
   - Added support for a few single-sided formats
+
+WW 7/26/2021: v5.8
+  - Added support for MBC FDC
