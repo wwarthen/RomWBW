@@ -3,7 +3,7 @@
 ## Z80/Z180 System Software
 
 Version 3.1 Pre-release  
-Saturday 13 March 2021
+Thursday 22 July 2021
 
 Wayne Warthen <wwarthen@gmail.com>
 
@@ -126,6 +126,7 @@ the appropriate ROM image for your hardware.
 | SC130     | SCZ180\_130.rom | 115200 | Stephen Cousin’s SC130 Z180                     |
 | SC131     | SCZ180\_131.rom | 115200 | Stephen Cousin’s SC131 Z180                     |
 | Dyno      | DYNO\_std.rom   |  38400 | Steve Garcia’s Z180 Dyno Computer               |
+| MBC       | MBC\_std.rom    |  38400 | Andrew Lynch’s Multi Board Computer             |
 
 \*The RC2014 Z180 requires a separate RAM/ROM memory module. There are
 two types of these modules and you must pick the ROM for your type of
@@ -183,13 +184,15 @@ disk devices.
 
 The following ROM applications are available at the boot loader prompt:
 
-| Application |                                                        |
-| ----------- | ------------------------------------------------------ |
-| Monitor     | Z80 system debug monitor w/ Intel Hex loader           |
-| Forth       | Brad Rodriguez’s ANSI compatible Forth language        |
-| Basic       | Nascom 8K BASIC language                               |
-| Tasty BASIC | Dimitri Theuling’s Tiny BASIC implementation           |
-| Play        | A simple video game (requires ANSI terminal emulation) |
+| Application  |                                                        |
+| ------------ | ------------------------------------------------------ |
+| Monitor      | Z80 system debug monitor w/ Intel Hex loader           |
+| Forth        | Brad Rodriguez’s ANSI compatible Forth language        |
+| Basic        | Nascom 8K BASIC language                               |
+| Tasty BASIC  | Dimitri Theuling’s Tiny BASIC implementation           |
+| Play         | A simple video game (requires ANSI terminal emulation) |
+| Network Boot | Boot through Wiznet MT011 device                       |
+| Flash Update | Upload and flash a new ROMWBW image using xmodem       |
 
 In general, the command to exit these applications and restart the
 system is `BYE`. The exceptions are the Monitor which uses `B` and Play
