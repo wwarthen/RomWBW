@@ -23,7 +23,7 @@ $(DEST):
 	mkdir -p $(DEST)
 
 clean:
-	-rm -f $(OBJECTS) config.h
+	-rm -f $(OBJECTS) config.h zx
 
 clobber: clean
 	-rm -f $(DEST)/zx $(DEST)/bios.bin zx

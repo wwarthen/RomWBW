@@ -13,10 +13,11 @@ SUBDIRS = bst uz80as zx cpmtools bin2asm lzsa
 
 all:
 	@chmod +x casefn.sh
-	@$(foreach subdir,$(SUBDIRS),$(MAKE) --directory $(subdir) all || exit 1;)
+	@$(foreach subdir,$(SUBDIRS),$(MAKE) --directory $(subdir) all;)
 
 clobber:
-	@$(foreach subdir,$(SUBDIRS),$(MAKE) --directory $(subdir) clobber || exit 1;)
+	@$(foreach subdir,$(SUBDIRS),$(MAKE) --directory $(subdir) clobber;)
+	@rm -rf ../$(UNAME)
 
 clean:
-	@$(foreach subdir,$(SUBDIRS),$(MAKE) --directory $(subdir) clean || exit 1;)
+	@$(foreach subdir,$(SUBDIRS),$(MAKE) --directory $(subdir) clean;)

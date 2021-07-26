@@ -34,8 +34,12 @@ DIFFPATH := $(DIFFTO)/$(RELPATH)
 #
 CASEFN = $(TOOLS)/unix/casefn.sh
 
+#
+# compiler/assembler locations and flags
+#
 ZXCC=$(BINDIR)/zx
 TASM=$(BINDIR)/uz80as -t z80
+TASMFLAGS=
 OPENSPIN=$(BINDIR)/openspin
 BSTC=$(BINDIR)//bstc
 CPMCP=$(BINDIR)/cpmcp
@@ -45,32 +49,42 @@ CPMCP=$(BINDIR)/cpmcp
 #
 CPM=$(TOOLS)/cpm/bin
 
+#
+# .ONESHELL uses a single shell instance for all shell scripts.
+# .SHELLFLAGS is used to cause all shell scripts to echo ("e") and to
+#    exit if any command returns a non-zero result ("x").
+#
+.ONESHELL:
+.SHELLFLAGS = -cex
+
 %.com: %.asm
-	if [ "$(USETASM)" = 1 ] ; then \
-		$(TASM) $< $@ ; \
+	@if [ "$(USETASM)" = 1 ] ; then \
+		$(TASM) $(TASMFLAGS) $< $@ $*.lst ; \
 	else \
 		$(ZXCC) $(CPM)/MAC -$< -$$PO ; \
 		$(ZXCC) $(CPM)/MLOAD25 -tmp.bin=$*.hex ; \
 		mv tmp.bin $@ ; \
+		rm -f /tmp/casefn.cache ; \
 		rm -f $$($(CASEFN) $*.hex) ; \
 	fi
 
 %.hex: %.asm
-	$(ZXCC) $(CPM)/MAC -$< -$$PO ; \
+	$(ZXCC) $(CPM)/MAC -$< -$$PO
 
 %.bin: %.ASM
 	$(ZXCC) $(CPM)/MAC -$< -$$PO
 	$(ZXCC) $(CPM)/MLOAD25 -tmp.bin=$*.hex
 	mv tmp.bin $@
+	rm -f /tmp/casefn.cache
 	rm -f $$($(CASEFN) $*.hex)
 
 %.com: %.z80
-	$(ZXCC) $(CPM)/Z80ASM -$(basename $<)/F ; \
-	rm -f /tmp/casefn.cache ; \
+	$(ZXCC) $(CPM)/Z80ASM -$(basename $<)/F
+	rm -f /tmp/casefn.cache
 	mv $$($(CASEFN) $@) tmp.com ; mv tmp.com $@
 
 %.bin: %.asm
-	$(TASM) $< $@
+	$(TASM) $(TASMFLAGS) $< $@ $*.lst
 
 %.rel: %.asm
 	$(ZXCC) $(CPM)/RMAC -$<
@@ -95,8 +109,6 @@ ifeq ($(UNAME), Linux)
 	$(BSTC) -e -l $<
 endif
 
-.ONESHELL:
-
 #
 # darwin bstc won't run, since mac os does not do 32 bit binaries any more
 # openspin ought to work
@@ -110,29 +122,36 @@ endif
 # first target is default
 #
 all:: $(OBJECTS)
-	@$(foreach subdir,$(SUBDIRS),echo "*** Making directory $(subdir)"; $(MAKE) --directory $(subdir) all || exit 1;)
+	@for dir in $(SUBDIRS) ; do \
+		$(MAKE) --directory $$dir all ; \
+	done
 	@if [ "$(DEST)" ] ; then for file in $(filter-out $(NOCOPY),$(OBJECTS)) ; do \
 		mkdir -p $(DEST) ; \
-		echo copy $$file to $(DEST) ; \
+		echo Copying $$file to $(DEST) ; \
 		rm -f /tmp/casefn.cache ; \
 		cp $$($(CASEFN) $$file) $(DEST) ; \
 	done ; fi
 	@if [ "$(DOCDEST)" ] ; then for file in $(DOCS) ; do \
 		mkdir -p $(DOCDEST) ; \
-		echo copy $$file to $(DOCDEST) ; \
+		echo Copying $$file to $(DOCDEST) ; \
+		rm -f /tmp/casefn.cache ; \
 		cp $$($(CASEFN) $$file) $(DOCDEST) ; \
 	done ; fi
 
 clean::
 	@-rm -f $$($(CASEFN) make.out *.sym *.lst *.prn *.diff *.dump $(OTHERS) $(filter-out $(NODELETE),$(OBJECTS)))
-	@$(foreach subdir,$(SUBDIRS),echo "*** Cleaning directory $(subdir)"; $(MAKE) --directory $(subdir) clean || exit 1;)
+	@for dir in $(SUBDIRS) ; do \
+		$(MAKE) --directory $$dir clean ; \
+	done
 
 clobber:: clean
 	@if [ "$(DEST)" ] ; then for file in $(OBJECTS) ; do \
 		rm -f $$($(CASEFN) $(DEST)/$$file) ; \
 	done ; fi
 	@-rm -f $$($(CASEFN) $(filter-out $(NODELETE),$(OBJECTS)))
-	@$(foreach subdir,$(SUBDIRS),echo "*** Clobbering directory $(subdir)"; $(MAKE) --directory $(subdir) clobber || exit 1;)
+	@for dir in $(SUBDIRS) ; do \
+		$(MAKE) --directory $$dir clobber ; \
+	done
 #
 # this is used to verify that the unix and windows tool chains are generating
 # the same objects
@@ -165,4 +184,3 @@ endif
 
 vdiff:
 	make VERBOSEDIFF=2 diff
-

@@ -16,9 +16,9 @@ $(DEST):
 .PHONY: clean
 
 clean:
-	rm -f $(OBJ_FILES)
+	rm -f $(OBJ_FILES) $(BINARY)
 
-clobber:
+clobber: clean
 	rm -f $(DEST)/$(BINARY) $(BINARY)
 
 $(BINARY): $(OBJ_FILES)

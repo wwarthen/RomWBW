@@ -21,6 +21,9 @@ set ZXINCDIR=%TOOLS%/cpm/include/
 :: the final ROM size less 128K.
 ::
 
+copy NUL rom128_wbw.dat
+copy NUL rom128_una.dat
+
 :: MakeDisk <OutputFile> <ImageSize> <Format> <Directory> <Bios>
 
 set RomApps=assign mode rtc syscopy xm
@@ -47,13 +50,16 @@ set Bios=%5
 
 echo Making ROM Disk %Output%
 
+:: Create the empty disk image file
 srec_cat -Generate 0 %Size% --Constant 0xE5 -Output %Output%.dat -Binary || exit /b
 
+:: Populate the disk image via cpmtools
 cpmcp -f %Format% %Output%.dat %Content%/*.* 0: || exit /b
 for %%f in (%RomApps%) do cpmcp -f %Format% %Output%.dat ../../Binary/Apps/%%f.com 0: || exit /b
 cpmcp -f %Format% %Output%.dat ..\cpm22\cpm_%Bios%.sys 0:cpm.sys || exit /b
 cpmcp -f %Format% %Output%.dat ..\zsdos\zsys_%Bios%.sys 0:zsys.sys || exit /b
 
+:: Mark all disk files R/O for safety
 cpmchattr -f %Format% %Output%.dat r 0:*.* || exit /b
 
 goto :eof

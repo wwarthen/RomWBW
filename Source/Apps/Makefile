@@ -10,5 +10,5 @@ include $(TOOLS)/Makefile.inc
 
 USETASM = 1
 
-survey.com: USETASM=0
+survey.com: USETASM = 0
 

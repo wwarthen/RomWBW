@@ -53,7 +53,7 @@ clobber: clean
 	-rm -f uz80as $(DEST)/uz80as
 
 clean:
-	-rm -f $(OBJECTS)
+	-rm -f $(OBJECTS) uz80as
 
 uz80as: $(OBJECTS)
 	$(CC) $(CFLAGS) -o uz80as $(OBJECTS) 
