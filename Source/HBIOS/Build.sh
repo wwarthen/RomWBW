@@ -3,6 +3,9 @@
 # fail on any error
 set -e
 
+# overcome clock resolution issues
+sleep 2
+
 timestamp=$(date +%Y-%m-%d)
 #timestamp="2020-02-24"
 
