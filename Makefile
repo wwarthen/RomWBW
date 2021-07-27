@@ -1,5 +1,4 @@
 all:
-	echo SHELL=$(SHELL)
 	$(MAKE) --directory Tools/unix
 	$(MAKE) --directory Source
 

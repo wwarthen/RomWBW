@@ -59,6 +59,9 @@ fi
 
 outdir=../../Binary
 
+# Help make realize that build.inc has changed
+sleep 1
+
 cat <<- EOF > build.inc
 ; RomWBW Configured for $platform $config $timestamp
 ;
@@ -98,6 +101,3 @@ else
 	cat hbios_rom.bin osimg.bin osimg1.bin osimg2.bin >$romname.upd
 	cat hbios_app.bin osimg_small.bin > $romname.com
 fi
-
-# make sure everything is rebuilt on subsequent iterations
-rm -f hbios_*.bin
