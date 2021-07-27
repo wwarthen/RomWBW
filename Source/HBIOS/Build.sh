@@ -3,9 +3,6 @@
 # fail on any error
 set -e
 
-# overcome clock resolution issues
-sleep 2
-
 timestamp=$(date +%Y-%m-%d)
 #timestamp="2020-02-24"
 
@@ -101,3 +98,6 @@ else
 	cat hbios_rom.bin osimg.bin osimg1.bin osimg2.bin >$romname.upd
 	cat hbios_app.bin osimg_small.bin > $romname.com
 fi
+
+# make sure everything is rebuilt on subsequent iterations
+rm -f hbios_*.bin
