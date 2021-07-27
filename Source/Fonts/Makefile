@@ -4,7 +4,6 @@ OBJECTS = \
 
 OTHERS = font8x8c.bin font8x11c.bin font8x16c.bin
 
-DEST = ../HBIOS
 TOOLS = ../../Tools
 
 include $(TOOLS)/Makefile.inc

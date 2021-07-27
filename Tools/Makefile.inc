@@ -43,6 +43,7 @@ TASMFLAGS=
 OPENSPIN=$(BINDIR)/openspin
 BSTC=$(BINDIR)//bstc
 CPMCP=$(BINDIR)/cpmcp
+CPMCHATTR=$(BINDIR)/cpmchattr
 
 #
 # directory containing cpm binaries
@@ -84,7 +85,7 @@ CPM=$(TOOLS)/cpm/bin
 	mv $$($(CASEFN) $@) tmp.com ; mv tmp.com $@
 
 %.bin: %.asm
-	$(TASM) $(TASMFLAGS) $< $@ $*.lst
+	$(TASM) $(TASMFLAGS) $< $@ $(basename $<).lst
 
 %.rel: %.asm
 	$(ZXCC) $(CPM)/RMAC -$<

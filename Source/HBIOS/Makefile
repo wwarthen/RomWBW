@@ -42,8 +42,10 @@ MOREDIFF = camel80.bin game.bin hbios_rom.bin nascom.bin prefix.bin usrrom.bin \
 SUBDIRS =
 DEST = ../../Binary
 TOOLS =../../Tools
-OTHERS =  *.img *.rom *.com *.bin *.z80 cpm.sys zsys.sys Build.inc RomDisk.tmp font*.asm *.dat
+OTHERS =  *.img *.rom *.com *.bin *.z80 cpm.sys zsys.sys Build.inc font*.asm *.dat
 include $(TOOLS)/Makefile.inc
+
+FONTS := font8x11c.asm font8x11u.asm font8x16c.asm font8x16u.asm font8x8c.asm font8x8u.asm
 
 ifneq ($(findstring $(platform), N8 MK4 RCZ180 SCZ180 DYNO),)
 	TASM=$(BINDIR)/uz80as -t hd64180
@@ -64,10 +66,18 @@ ROMSIZE=512
 N8_std.rom: ROMSIZE=512
 RCZ280_nat_zzr.rom: ROMSIZE=256
 
-%.rom:
+%.rom %.upd %.com:
 	chmod +x Build.sh
 	bash Build.sh $(DIFFBUILD) $(shell echo $* | sed 's/_/ /') $(ROMSIZE)
+	
+prereq: $(FONTS) camel80.bin
 
+font%.asm:
+	cp ../Fonts/$@ .
+
+camel80.bin:
+	cp ../Forth/$@ .
+	
 hbios_rom.bin:	hbios.asm build.inc
 	$(TASM) -dROMBOOT hbios.asm hbios_rom.bin hbios_rom.lst
 
