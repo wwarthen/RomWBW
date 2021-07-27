@@ -1,4 +1,5 @@
 all:
+	echo SHELL=$(SHELL)
 	$(MAKE) --directory Tools/unix
 	$(MAKE) --directory Source
 
@@ -15,4 +16,3 @@ clobber:
 
 diff:
 	$(MAKE) --directory Source diff
-

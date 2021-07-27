@@ -123,6 +123,7 @@ endif
 # first target is default
 #
 all:: $(OBJECTS)
+	echo SHELL=$(SHELL)
 	@for dir in $(SUBDIRS) ; do \
 		$(MAKE) --directory $$dir all ; \
 	done
