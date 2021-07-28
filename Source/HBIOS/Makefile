@@ -1,38 +1,3 @@
-ifndef ROM_CONFIG
-	ROM_CONFIG=std
-endif
-
-ifdef ROM_PLATFORM
-	OBJECTS = ${ROM_PLATFORM}_${ROM_CONFIG}.rom ${ROM_PLATFORM}_${ROM_CONFIG}.com ${ROM_PLATFORM}_${ROM_CONFIG}.upd
-else
-	OBJECTS += DYNO_std.rom DYNO_std.com DYNO_std.upd
-	OBJECTS += EZZ80_std.rom EZZ80_std.com EZZ80_std.upd
-	OBJECTS += EZZ80_tz80.rom EZZ80_tz80.com EZZ80_tz80.upd
-	OBJECTS += MK4_std.rom MK4_std.com MK4_std.upd
-	OBJECTS += N8_std.rom N8_std.com N8_std.upd
-	OBJECTS += RCZ180_ext.rom RCZ180_ext.com RCZ180_ext.upd
-	OBJECTS += RCZ180_nat.rom RCZ180_nat.com RCZ180_nat.upd
-	OBJECTS += RCZ280_ext.rom RCZ280_ext.com RCZ280_ext.upd
-	OBJECTS += RCZ280_nat.rom RCZ280_nat.com RCZ280_nat.upd
-	OBJECTS += RCZ280_nat_zz.rom RCZ280_nat_zz.com RCZ280_nat_zz.upd
-	OBJECTS += RCZ280_nat_zzr.rom RCZ280_nat_zzr.com RCZ280_nat_zzr.upd
-	OBJECTS += RCZ80_kio.rom RCZ80_kio.com RCZ80_kio.upd
-	OBJECTS += RCZ80_mt.rom RCZ80_mt.com RCZ80_mt.upd
-	OBJECTS += RCZ80_duart.rom RCZ80_duart.com RCZ80_duart.upd
-	OBJECTS += RCZ80_std.rom RCZ80_std.com RCZ80_std.upd
-	OBJECTS += RCZ80_skz.rom RCZ80_skz.com RCZ80_skz.upd
-	OBJECTS += RCZ80_zrc.rom RCZ80_zrc.com RCZ80_zrc.upd
-	OBJECTS += SBC_std.rom SBC_std.com SBC_std.upd
-	OBJECTS += SBC_simh.rom SBC_simh.com SBC_simh.upd
-	OBJECTS += MBC_std.rom MBC_std.com MBC_std.upd
-	OBJECTS += SCZ180_126.rom SCZ180_126.com SCZ180_126.upd
-	OBJECTS += SCZ180_130.rom SCZ180_130.com SCZ180_130.upd
-	OBJECTS += SCZ180_131.rom SCZ180_131.com SCZ180_131.upd
-	OBJECTS += SCZ180_140.rom SCZ180_140.com SCZ180_140.upd
-	OBJECTS += UNA_std.rom
-	OBJECTS += ZETA_std.rom ZETA_std.com ZETA_std.upd
-	OBJECTS += ZETA2_std.rom ZETA2_std.com ZETA2_std.upd
-endif
 
 MOREDIFF = camel80.bin game.bin hbios_rom.bin nascom.bin prefix.bin usrrom.bin \
 	dbgmon.bin hbios_app.bin imgpad2.bin osimg1.bin osimg2.bin romldr.bin \
@@ -42,16 +7,16 @@ MOREDIFF = camel80.bin game.bin hbios_rom.bin nascom.bin prefix.bin usrrom.bin \
 SUBDIRS =
 DEST = ../../Binary
 TOOLS =../../Tools
-OTHERS =  *.img *.rom *.com *.bin *.z80 cpm.sys zsys.sys Build.inc font*.asm *.dat
+OTHERS =  *.img *.rom *.com *.upd *.bin *.z80 cpm.sys zsys.sys Build.inc font*.asm *.dat
 include $(TOOLS)/Makefile.inc
 
 FONTS := font8x11c.asm font8x11u.asm font8x16c.asm font8x16u.asm font8x8c.asm font8x8u.asm
 
-ifneq ($(findstring $(platform), N8 MK4 RCZ180 SCZ180 DYNO),)
+ifneq ($(findstring $(ROM_PLATFORM), N8 MK4 RCZ180 SCZ180 DYNO),)
 	TASM=$(BINDIR)/uz80as -t hd64180
 endif
 
-ifneq ($(findstring $(platform), RCZ280),)
+ifneq ($(findstring $(ROM_PLATFORM), RCZ280),)
 	TASM=$(BINDIR)/uz80as -t z280
 endif
 
@@ -61,15 +26,47 @@ endif
 
 DIFFPATH = $(DIFFTO)/Binary
 
-ROMSIZE=512
+DEPS=prereq dbgmon.bin romldr.bin nascom.bin tastybasic.bin game.bin eastaegg.bin updater.bin usrrom.bin imgpad2.bin
 
-N8_std.rom: ROMSIZE=512
-RCZ280_nat_zzr.rom: ROMSIZE=256
+ifeq ($(ROM_PLATFORM),UNA)
+	ROMDEPS=romldr.bin dbgmon.bin
+	BIOS=una
+else
+	ROMDEPS=hbios_rom.bin hbios_app.bin hbios_img.bin
+	BIOS=wbw
+endif
 
-%.rom %.upd %.com:
-	chmod +x Build.sh
-	bash Build.sh $(DIFFBUILD) $(shell echo $* | sed 's/_/ /') $(ROMSIZE)
-	
+ROMNAME=${ROM_PLATFORM}_${ROM_CONFIG}
+
+#$(info DEPS=$(DEPS))
+#$(info ROM_PLATFORM=$(ROM_PLATFORM))
+#$(info ROM_CONFIG=$(ROM_CONFIG))
+#$(info ROMSIZE=$(ROMSIZE))
+#$(info ROMNAME=$(ROMNAME))
+
+all::
+	if [ -z "$(OBJECTS)" ] ; then \
+		chmod +x Build.sh
+		bash Build.sh ; \
+	fi
+
+$(ROMNAME).rom $(ROMNAME).com $(ROMNAME).img &: $(ROMDEPS)
+	cat romldr.bin dbgmon.bin ../ZSDOS/zsys_$(BIOS).bin ../CPM22/cpm_$(BIOS).bin >osimg.bin
+	cat romldr.bin dbgmon.bin ../ZSDOS/zsys_$(BIOS).bin >osimg_small.bin
+	if [ $(ROM_PLATFORM) != UNA ] ; then \
+		cat camel80.bin nascom.bin tastybasic.bin game.bin eastaegg.bin netboot.mod updater.bin usrrom.bin >osimg1.bin ; \
+		cat imgpad2.bin >osimg2.bin ; \
+	fi
+	if [ $(ROM_PLATFORM) = UNA ] ; then \
+		cp osimg.bin $(DEST)/UNA_WBW_SYS.bin ; \
+		cp ../RomDsk/rom$(ROMSIZE)_una.dat $(DEST)/UNA_WBW_ROM$(ROMSIZE).bin ; \
+		cat ../UBIOS/UNA-BIOS.BIN osimg.bin ../UBIOS/FSFAT.BIN ../RomDsk/rom$(ROMSIZE)_una.dat >$(ROMNAME).rom ; \
+	else \
+		cat hbios_rom.bin osimg.bin osimg1.bin osimg2.bin ../RomDsk/rom$(ROMSIZE)_wbw.dat >$(ROMNAME).rom ; \
+		cat hbios_rom.bin osimg.bin osimg1.bin osimg2.bin >$(ROMNAME).upd ; \
+		cat hbios_app.bin osimg_small.bin > $(ROMNAME).com ; \
+	fi
+
 prereq: $(FONTS) camel80.bin
 
 font%.asm:
@@ -78,13 +75,13 @@ font%.asm:
 camel80.bin:
 	cp ../Forth/$@ .
 	
-hbios_rom.bin:	hbios.asm build.inc
+hbios_rom.bin:	hbios.asm build.inc  $(DEPS)
 	$(TASM) -dROMBOOT hbios.asm hbios_rom.bin hbios_rom.lst
 
-hbios_app.bin:	hbios.asm build.inc
+hbios_app.bin:	hbios.asm build.inc  $(DEPS)
 	$(TASM) -dAPPBOOT hbios.asm hbios_app.bin hbios_app.lst
 
-hbios_img.bin:	hbios.asm build.inc
+hbios_img.bin:	hbios.asm build.inc  $(DEPS)
 	$(TASM) -dIMGBOOT hbios.asm hbios_img.bin hbios_img.lst
 
 romldr.bin:	build.inc

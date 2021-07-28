@@ -1,6 +1,8 @@
 @echo off
 setlocal
 
+if %1 == dist goto :dist
+
 ::
 :: Build [<platform> [<config> [<romsize> [<romname>]]]]
 ::
@@ -158,3 +160,38 @@ tasm -t80 -g3 -fFF %1.asm %1.bin %1.lst || exit /b
 
 goto :eof
 
+::
+:: Build all of the official distribution ROMs
+::
+
+:dist
+
+call Build SBC std 512 || exit /b
+call Build SBC simh 512 || exit /b
+call Build MBC std 512 || exit /b
+call Build ZETA std 512 || exit /b
+call Build ZETA2 std 512 || exit /b
+call Build N8 std 512 || exit /b
+call Build MK4 std 512 || exit /b
+call Build RCZ80 std 512 || exit /b
+call Build RCZ80 skz 512 || exit /b
+call Build RCZ80 kio 512 || exit /b
+call Build RCZ80 mt 512 || exit /b
+call Build RCZ80 duart 512 || exit /b
+call Build RCZ80 zrc 512 || exit /b
+call Build RCZ180 ext 512 || exit /b
+call Build RCZ180 nat 512 || exit /b
+call Build RCZ280 ext 512 || exit /b
+call Build RCZ280 nat 512 || exit /b
+call Build RCZ280 nat_zz 512 || exit /b
+call Build RCZ280 nat_zzr 256 || exit /b
+call Build SCZ180 126 512 || exit /b
+call Build SCZ180 130 512 || exit /b
+call Build SCZ180 131 512 || exit /b
+call Build SCZ180 140 512 || exit /b
+call Build EZZ80 std 512 || exit /b
+call Build EZZ80 tz80 512 || exit /b
+call Build DYNO std 512 || exit /b
+call Build UNA std 512 || exit /b
+
+goto :eof

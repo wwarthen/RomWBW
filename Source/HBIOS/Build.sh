@@ -3,101 +3,102 @@
 # fail on any error
 set -e
 
-timestamp=$(date +%Y-%m-%d)
-#timestamp="2020-02-24"
+export ROM_PLATFORM
+export ROM_CONFIG
+export ROMSIZE
 
-if [ $1 == '-d' ] ; then
-	shift
-	diffdir=$1
-	shift
-	if [ -f $diffdir/build.inc ] ; then
-		timestamp=$(grep TIMESTAMP $diffdir/build.inc | awk '{print $3}' | tr -d '\015"')
-		echo diff build using $timestamp
-	fi
+if [ "${ROM_PLATFORM}" == "dist" ] ; then
+	echo "!!!DISTRIBUTION BUILD!!!"
+	ROM_PLATFORM="DYNO"; ROM_CONFIG="std"; ROMSIZE="512"; bash Build.sh
+	ROM_PLATFORM="EZZ80"; ROM_CONFIG="std"; ROMSIZE="512"; bash Build.sh
+	ROM_PLATFORM="EZZ80"; ROM_CONFIG="tz80"; ROMSIZE="512"; bash Build.sh
+	ROM_PLATFORM="MK4"; ROM_CONFIG="std"; ROMSIZE="512"; bash Build.sh
+	ROM_PLATFORM="N8"; ROM_CONFIG="std"; ROMSIZE="512"; bash Build.sh
+	ROM_PLATFORM="RCZ180"; ROM_CONFIG="ext"; ROMSIZE="512"; bash Build.sh
+	ROM_PLATFORM="RCZ180"; ROM_CONFIG="nat"; ROMSIZE="512"; bash Build.sh
+	ROM_PLATFORM="RCZ280"; ROM_CONFIG="ext"; ROMSIZE="512"; bash Build.sh
+	ROM_PLATFORM="RCZ280"; ROM_CONFIG="nat"; ROMSIZE="512"; bash Build.sh
+	ROM_PLATFORM="RCZ280"; ROM_CONFIG="nat_zz"; ROMSIZE="512"; bash Build.sh
+	ROM_PLATFORM="RCZ280"; ROM_CONFIG="nat_zzr"; ROMSIZE="256"; bash Build.sh
+	ROM_PLATFORM="RCZ80"; ROM_CONFIG="kio"; ROMSIZE="512"; bash Build.sh
+	ROM_PLATFORM="RCZ80"; ROM_CONFIG="mt"; ROMSIZE="512"; bash Build.sh
+	ROM_PLATFORM="RCZ80"; ROM_CONFIG="duart"; ROMSIZE="512"; bash Build.sh
+	ROM_PLATFORM="RCZ80"; ROM_CONFIG="std"; ROMSIZE="512"; bash Build.sh
+	ROM_PLATFORM="RCZ80"; ROM_CONFIG="skz"; ROMSIZE="512"; bash Build.sh
+	ROM_PLATFORM="RCZ80"; ROM_CONFIG="zrc"; ROMSIZE="512"; bash Build.sh
+	ROM_PLATFORM="SBC"; ROM_CONFIG="std"; ROMSIZE="512"; bash Build.sh
+	ROM_PLATFORM="SBC"; ROM_CONFIG="simh"; ROMSIZE="512"; bash Build.sh
+	ROM_PLATFORM="MBC"; ROM_CONFIG="std"; ROMSIZE="512"; bash Build.sh
+	ROM_PLATFORM="SCZ180"; ROM_CONFIG="126"; ROMSIZE="512"; bash Build.sh
+	ROM_PLATFORM="SCZ180"; ROM_CONFIG="130"; ROMSIZE="512"; bash Build.sh
+	ROM_PLATFORM="SCZ180"; ROM_CONFIG="131"; ROMSIZE="512"; bash Build.sh
+	ROM_PLATFORM="SCZ180"; ROM_CONFIG="140"; ROMSIZE="512"; bash Build.sh
+	ROM_PLATFORM="UNA"; ROM_CONFIG="std"; ROMSIZE="512"; bash Build.sh
+	ROM_PLATFORM="ZETA"; ROM_CONFIG="std"; ROMSIZE="512"; bash Build.sh
+	ROM_PLATFORM="ZETA2"; ROM_CONFIG="std"; ROMSIZE="512"; bash Build.sh
+	exit
 fi
 
-# positional arguments
-platform=$1
-config=$2
-romsize=$3
-romname=$4
-
-export platform
+###if [ $1 == '-d' ] ; then
+###	shift
+###	diffdir=$1
+###	shift
+###	if [ -f $diffdir/build.inc ] ; then
+###		timestamp=$(grep TIMESTAMP $diffdir/build.inc | awk '{print $3}' | tr -d '\015"')
+###		echo diff build using $timestamp
+###	fi
+###fi
 
 # prompt if no match
 platforms=($(find Config -name \*.asm -print | \
 	sed -e 's,Config/,,' -e 's/_.*$//' | sort -u))
 
-while ! echo ${platforms[@]} | grep -q -w -s "$platform" ; do
+while ! echo ${platforms[@]} | grep -q -w -s "${ROM_PLATFORM}" ; do
 	echo -n "Enter platform [" ${platforms[@]} "] :"
-	read platform
+	read ROM_PLATFORM
 done
 
-configs=$(find Config -name ${platform}_\* -print | \
-	sed -e 's,Config/,,' -e "s/${platform}_//" -e "s/.asm//")
-while ! echo ${configs[@]} | grep -s -w -q "$config" ; do
+configs=$(find Config -name ${ROM_PLATFORM}_\* -print | \
+	sed -e 's,Config/,,' -e "s/${ROM_PLATFORM}_//" -e "s/.asm//")
+while ! echo ${configs[@]} | grep -s -w -q "${ROM_CONFIG}" ; do
 	echo -n "Enter config for $platform [" ${configs[@]} "] :"
-	read config
+	read ROM_CONFIG
 done
-configfile=Config/${platform}_${config}.asm
 
-while [ ! '(' "$romsize" = 1024 -o "$romsize" = 512 -o "$romsize" = 256 -o "$romsize" = 128 ')' ] ; do
+CONFIGFILE=Config/${ROM_PLATFORM}_${ROM_CONFIG}.asm
+
+while [ ! '(' "${ROMSIZE}" = 1024 -o "${ROMSIZE}" = 512 -o "${ROMSIZE}" = 256 -o "${ROMSIZE}" = 128 ')' ] ; do
 	echo -n "Romsize :"
-	read romsize
+	read ROMSIZE
 done
 
-if [ -z "$romname" ] ; then
-	romname=${platform}_${config}
-fi
-echo Building for $romname for $platform $config $romsize
-
-if [ $platform == UNA ] ; then
-	BIOS=una
-else
-	BIOS=wbw
+if [ -z "${ROMNAME}" ] ; then
+	ROMNAME=${ROM_PLATFORM}_${ROM_CONFIG}
 fi
 
-outdir=../../Binary
+TIMESTAMP=$(date +%Y-%m-%d)
 
-# Help make realize that build.inc has changed
-sleep 1
+CONFIGFILE=Config/${ROM_PLATFORM}_${ROM_CONFIG}.asm
+
+echo Building $ROMNAME for $ROM_PLATFORM $ROM_CONFIG $ROMSIZE
 
 cat <<- EOF > build.inc
-; RomWBW Configured for $platform $config $timestamp
+; RomWBW Configured for ${ROM_PLATFORM} ${ROM_CONFIG} ${TIMESTAMP}
 ;
-#DEFINE	TIMESTAMP	"$timestamp"
+#DEFINE	TIMESTAMP	"${TIMESTAMP}"
 ;
-ROMSIZE		.EQU	$romsize
+ROMSIZE		.EQU	${ROMSIZE}
 ;
-#INCLUDE "$configfile"
+#INCLUDE "${CONFIGFILE}"
 ;
 EOF
 
-make prereq
-
-make dbgmon.bin romldr.bin
-
-if [ $platform != UNA ] ; then
-	make nascom.bin tastybasic.bin game.bin eastaegg.bin updater.bin usrrom.bin imgpad2.bin
-	make hbios_rom.bin hbios_app.bin hbios_img.bin
+export OBJECTS
+OBJECTS="${ROMNAME}.rom"
+if [ "${ROM_PLATFORM}" != "UNA" ] ; then
+	OBJECTS+=" ${ROMNAME}.com ${ROMNAME}.upd"
 fi
 
-echo "Building $romname output files..."
+#echo OBJECTS=${OBJECTS}
 
-cat romldr.bin dbgmon.bin ../ZSDOS/zsys_$BIOS.bin ../CPM22/cpm_$BIOS.bin >osimg.bin
-cat romldr.bin dbgmon.bin ../ZSDOS/zsys_$BIOS.bin >osimg_small.bin
-
-if [ $platform != UNA ] ; then
-	cat camel80.bin nascom.bin tastybasic.bin game.bin eastaegg.bin netboot.mod updater.bin usrrom.bin >osimg1.bin
-	cat imgpad2.bin >osimg2.bin
-fi
-
-if [ $platform = UNA ] ; then
-	cp osimg.bin $outdir/UNA_WBW_SYS.bin
-	cp ../RomDsk/rom${romsize}_una.dat $outdir/UNA_WBW_ROM$romsize.bin
-	cat ../UBIOS/UNA-BIOS.BIN osimg.bin ../UBIOS/FSFAT.BIN ../RomDsk/rom${romsize}_una.dat >$romname.rom
-else
-	cat hbios_rom.bin osimg.bin osimg1.bin osimg2.bin ../RomDsk/rom${romsize}_wbw.dat >$romname.rom
-	cat hbios_rom.bin osimg.bin osimg1.bin osimg2.bin >$romname.upd
-	cat hbios_app.bin osimg_small.bin > $romname.com
-fi
+make ROM_PLATFORM=${ROM_PLATFORM} ROM_CONFIG=${ROM_CONFIG} ROMSIZE=${ROMSIZE}

@@ -15,3 +15,6 @@ clobber:
 
 diff:
 	$(MAKE) --directory Source diff
+
+dist:
+	$(MAKE) ROM_PLATFORM=dist
