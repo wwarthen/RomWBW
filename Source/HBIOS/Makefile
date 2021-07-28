@@ -46,7 +46,7 @@ ROMNAME=${ROM_PLATFORM}_${ROM_CONFIG}
 
 all::
 	if [ -z "$(OBJECTS)" ] ; then \
-		chmod +x Build.sh
+		chmod +x Build.sh ; \
 		bash Build.sh ; \
 	fi
 
