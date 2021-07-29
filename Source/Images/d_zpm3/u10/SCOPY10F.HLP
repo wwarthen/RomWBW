@@ -1,0 +1,369 @@
+;
+=======  S C O P Y   H E L P  =======
+
+   1  Copy   Move   Delete   Rename   Kompare   Quick   Set
+
+   2  Jump   ReJump   Jump Tag   Jump Untag   Jump One   Jump Two
+
+   3  Tag   Untag   Retag   Wild Tag
+
+   4  View
+
+   5  GROUP   Arc   Copy   Del   Move   View   Kompare   Quick   Set
+
+   6  GROUP   Equate   New
+
+   7  Cursor
+
+   8  Options
+
+   9  Miscellaneous   Log   Relog   New   Switch   Execute Command
+:1
+
+C  Copy - Send file at pointer to  other directory.  An arrow  at 
+   the  top of the screen shows the copy direction.   Copying  is 
+   controlled by verification flags described below.  If there is 
+   inadequate  space  on the destination disk, the  copy  is  not 
+   attempted, and (for Group operations) the file remains tagged.
+
+D  Delete - Delete file at pointer.
+
+M  Move - Copy, then delete source file.
+
+R  Rename
+   Rename does not integrate too well with SCOPY's method of file    
+   display.   In fact, the display may become useless.  Therefore 
+   SCOPY requires a Relog before any copy operations are  allowed 
+   following a Rename.
+
+   If an Archived file is renamed, the archive attribute is reset.  
+   (Ditto the Public attribute.)
+
+     ...more
+
+
+Q  Quick Copy - Copy current file to  alternate directory.  Saves 
+   you the trouble of logging in the alternate  directory.  Quick 
+   Copy  bypasses any checks against the destination date   stamp 
+   or  disk  capacity.  It is fast, but you don't  get  the  full 
+   benefit of Login.
+
+
+K  Kompare  -  Do  a  byte for  byte  comparison  of  source  and 
+   destination files, report the result on the screen divider  as 
+   "="  or "~". For Group Kompare, you may then retag files which
+   tested either equal or unequal. 
+
+
+S  Set  Attributes - Set or clear F1, F3, F4, W/P, R/O, SYS,  and 
+   ARC attributes in any combination:
+     Set: 1,3,4,W,R,S,A  Clear: -1,-3,-4,-W,-R,-S,-A
+:2
+
+JUMP COMMANDS:
+
+J  Jump - Find the next match  to the mask entered.  The mask  is              
+   automatically wildcarded.
+
+^J, H ReJump - Use the same mask.  (^J will not work if your TCAP 
+   defines it as an arrow key.  Use H (Hop) instead.)
+
+1  Jump  One  -  Go to next file which  exists  only  in  current 
+   directory. 
+
+2  Jump Two - Go to next file which exists in both directories.
+
+`  Jump Tagged - Go to next tagged file.
+
+~  Jump Untagged - Go to next untagged file.
+:3
+
+T  Tag - Mark a file for a Group operation.  Group Tag tags all files 
+   from the pointer to the end of the list.
+
+U  Untag - Cancels a tag.  Group Untag untags all files from the 
+   pointer to the end of the list.
+
+Y  Retag - When a Group operation  runs through the  tagged  file 
+   list, the files are "soft" tagged.  This command retags them.
+
+GR Group Reverse - Reverses the tags on all files.
+
+
+     ...more
+
+WILD COMMAND
+
+   (W)ild Tag/ Untag/ New/ 1/ 2  MASK  DATESPEC
+
+   Select  a  fileset  for a Group  operation  by  comparing  the 
+   directory  to a Mask and/or Datespec, and:
+
+       1.  (T)ag all matches
+       2.  (U)ntag all matches
+       3.  (N)ew - Tag match only if the source version is Newer.
+       4.  (1) -Tag match if it exists in 1 directory only.
+       5.  (2) -Tag match if it exists in 2 directories. 
+       
+           "Newness"  is  determined by  comparing  the  two 
+           Modify dates if possible.  If there is no  Modify 
+           date  for  one of the files, its Create  date  is 
+           used.   If  neither  is valid, the  file  is  not 
+           tagged.   The command has no effect on  unstamped 
+           disks  or systems.  Note that one  file's  Modify 
+           date could be compared to the other file's Create 
+           date (if it has no Modify date.)
+
+
+   Wild   commands  ask  for  an  optional  Mask   (automatically 
+   wildcarded)  and  an  optional  Datespec.   The  datespec   is 
+   compared  to  the Modify  date or,  if there is  none, to  the 
+   Create date.  Access date is not used. 
+
+   The datespec format is:
+
+          [/C]<, >, or =date[ time]
+
+       Where:
+          /C     Forces comparison to Create date ONLY
+          < > =  Mandatory date signifier (how to use date)
+          date   dd.mm.yy  (any part omitted = the current date)
+          date   mm/dd/yy  (alternate format)
+          time   hh:mm     (any part omitted is ignored)
+
+       Wildcard characters "?" or "*" are allowed in date, time.
+
+       Examples:
+          <1.9        Selects all modified before 1 Sept this year
+          =           All modified today
+          >.. 13:00   All modified after 1pm today
+          /c=*        All created any day this month
+
+   European  style date format is the default if the date  parser 
+   is  unable to determine which one you are using. "xx" will  be 
+   taken to mean "dd". "xx/" means "mm".
+
+   Some mask and/or date spec must be given, or the Wild  command 
+   cancels.  You can use a single "." or "*" to test everything.
+
+       WILD Examples:
+
+       WN.
+       Tag  everything in the source dir newer than  an  existing 
+       file in the destination. 
+
+       W2=
+       Tag all files modified today in the source directory which 
+       also exist in the destination directory.
+   
+       WTs /c>.. 10
+       Tag all S*.* created after 10AM today.
+:4
+V - View
+
+   The  main viewer commands are shown highlighted on the  bottom 
+   screen  line.   All viewer functions are controlled  with  the 
+   left hand.  These are:
+
+       F - Next screen
+       A - Previous screen
+       T - Top screen
+       B - Bottom screen
+       R - Read more file if too big for available buffer
+       G - GoTo string up to 20 characters.  "?" is wild char.
+       H - Repeat GoTo on same string.  Same as G<cr>
+       X - Done with this file.  Group View goes on to next file.
+       S - Scroll continuously forward until a keypress
+       D - Reverse scroll.
+
+     ...more
+
+
+V - View
+
+   Commands NOT shown while viewing are:
+
+       <sp>  Next line
+          -  Previous line
+       <cr>  Next screen (synonym for Forward)
+       <tab> Hop forward 10 lines
+       ^C    Abort loop (Group View)
+:5
+GROUP COMMANDS:
+
+Group commands operate on tagged files, proceeding from file to 
+file.  To cancel a group operation, press ^C.
+
+
+GA Archive - Copy only tagged files which do NOT have the archive 
+   attribute set, then set the source archive attribute.
+
+GC Copy         Automates single file command.
+GD Delete
+GM Move
+GV View
+GK Kompare      May retag all equal or unequal files after comparison.
+GQ Quick
+GS Set Attributes
+:6
+
+GE - Group Equate
+
+Copy all tagged files which do not exist in the destination 
+directory, OR whose datestamp (including the time) is different 
+from the target file datestamp.  Group Equate is equivalent to 
+copying every tagged file from the source to the destination, but 
+it does not waste time copying files which are presumably the 
+same.  (The files may not actually BE the same in the case of a 
+copy  error, bad  disk sector, faulty clock, etc.  If you  
+suspect  you can't trust the datestamps, use GC - Group Copy.)
+
+Group Equate insists that both Create and Modify fields of the 
+datestamp be identical.  The dates are not  checked for validity, 
+however.  (A file does not _have_ to have a valid Modify date.) 
+If both files have null datestamps, GE will untag.
+
+     ...more
+
+
+GN - Group New
+
+Copy all tagged files which do not exist in the destination, OR 
+whose datestamp is newer than the target file datestamp.  This 
+command UPDATES the destination.
+
+If any dates aren't valid, then a file flunks this test and is 
+untagged.
+
+  Summary:
+
+       GROUP  EQUATE is intended for restoring a  directory  from 
+       older backup files.  GROUP NEW is for updating a directory 
+       with  newer  files.  WILD selects a file set by  name  and 
+       date criteria for the Group commands to act on.
+:7
+FILE POINTER MOVEMENTS:
+
+
+  SCREEN                         Arrow Keys and WS Diamond
+          ^R - Top                     Line Up ^E, Up 
+          ^C - Bottom                       ^              
+        +,^F - Next          ^S Prev File < + > Next File ^D
+        -,^A - Prev                         v              
+  FILE                                 Line Down ^X
+          ^T - Top
+          ^B - Bottom 
+       CR,SP - Next
+          BS - Prev
+
+Note that cursor commands are available to jump to the next  FILE 
+in  the current window (<SP>) or to the next LINE of the  display 
+(^X).  The directory displays are interleaved, so there could  be 
+many blank lines in one directory between files entries.
+
+See also Jump commands.
+:8
+O - Options Menu
+
+Datestamp Oriented Options:
+
+     A. replace by date      If Yes, D-F are ignored, else B-C ignored
+     B. older replace query
+     C. newer/equal replace query  If No query, copy is NOT made.
+
+   Use these options if A. is NO, or the file datestamp is invalid.
+     D. single replace query
+     E. group replace query
+     F. archive replace query
+
+A. Replace by Date - If Yes, the next two options are  operative.  
+   If No, they are ignored.  Quick Copy ignores Replace by Date.
+
+B. Older Replace - Ask before replacing an older file.
+
+C. Newer/ Equal Replace - Ask before replacing a newer file.  You 
+   usually  won't want to.  Therefore, if this option is  set  to 
+   NO, the copy does NOT occur.
+
+
+
+
+If the dates compared aren't valid, then date replace  queries 
+are  skipped and fall back on options D-F.  SCOPY  would  then 
+work like ZFILER for systems/disks without datestamps.
+
+********
+   HINT:   Set  up SCOPY's query options to allow you  to  safely 
+   play with the new date selection methods.  You will be able to 
+   see  on screen what SCOPY intends to do, but can bail  out  at 
+   the  prompt  before anything happens.  The easiest way  to  do 
+   this is to Ask For Verification.  A ^C at the Y/N prompt  will 
+   cancel the command.  Files will remain tagged.
+********
+
+     ...more
+
+G. Verify Query - Ask whether or not to do CRC verification.
+
+H. Verify Default - If not queried, do CRC verification?
+
+I. Supress SYS Files - Only takes effect when logging in.
+
+J. Set  Copied File Attributes - Destination file attributes  are 
+   cleared unless this option is Yes.
+
+K. Use Destination Attributes - IF previous option is Yes, use  
+   existing destination attributes on copy, else use source.
+
+L. Archive Destination - Used when copying files to a work  area, 
+   such  as  a  RAM disk.  The Group  Archive  command  can  then 
+   conveniently  move  any files you altered  back  to  permanent 
+   storage when you are done.
+
+M. Show  File  Attributes - SCOPY uses the extended  TCAP  SETATR 
+   function to underline filename characters to represent a  file 
+   attribute  set.  This is unobtrusive,  but doesn't  give  good
+   results on all terminals.  SCOPY can be configured to show set
+   attributes in upper case, or you can just turn the display off.
+:9
+L  Login  -  Relog SCOPY with new command line,  using  the  same 
+   syntax  as on initial callup.  As a convenience, the  ":"   is 
+   optional  following  a DIR reference.  Note that if you   name  
+   only   one directory, the current directory is assumed  to  be 
+   the   source,  and  it is the other directory  which  changes.  
+   Login does not preserve the old file mask.
+
+N  New DIR - Change the current directory only, same mask.
+
+<ESC>  Relog  - Logs the same directories with the same file mask 
+   You  may  want  to  Relog after  renaming  files,  after  file 
+   deletions  have  left  big holes in the file   list,  or  when 
+   changing floppy disks during a backup operation.
+
+TAB - Switch copy direction.
+
+Z - Command line.  Run a Z-System command, and reinvoke SCOPY when
+    done.  The command is run from the original DU: in which SCOPY
+    was invoked. (This function requires an XFCB and User Reg 21.)
+
+
+IMPORTANT NOTE:  SCOPY requires an extended TCAP 4D which includes
+   Insert/Delete line, and Clear to End of Screen.   If available,
+   it uses cursor on/off, line graphics, and character attributes.
+
+
+
+
+                       SCOPY, Version 1.0F
+
+      Copyright 1992 by Rob Friefeld.  All rights reserved.
+
+May not be sold, either alone or as part of a commercial product, 
+without  the  prior  written  consent  of  the  author.   May  be 
+distributed among users at nominal cost of media.
+
+Rob Friefeld
+4607 Colorado Street
+Long Beach, CA 90814
+(310) 434-7338  voice
+

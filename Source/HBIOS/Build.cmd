@@ -1,7 +1,7 @@
 @echo off
 setlocal
 
-if %1 == dist goto :dist
+if "%1" == "dist" goto :dist
 
 ::
 :: Build [<platform> [<config> [<romsize> [<romname>]]]]
@@ -87,6 +87,16 @@ copy /b ..\Forth\camel80.bin + nascom.bin + tastybasic.bin + game.bin + eastaegg
 copy /b imgpad2.bin osimg2.bin || exit /b
 
 copy /b romldr.bin + dbgmon.bin + ..\zsdos\zsys_wbw.bin osimg_small.bin || exit /b
+
+::
+:: Inject one byte checksum at the last byte of all 4 ROM bank image files.
+:: This means that computing a checksum over any of the 32K osimg banks
+:: should yield a result of zero.
+::
+
+for %%f in (hbios_rom.bin osimg.bin osimg1.bin osimg2.bin) do (
+  "%TOOLS%\srecord\srec_cat.exe" %%f -Binary -Crop 0 0x7FFF -checksum-neg-b-e 0x7FFF 1 1 -o %%f -Binary
+)
 
 ::
 :: Create final images (.rom, .upd, & .com)

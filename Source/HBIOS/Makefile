@@ -56,6 +56,9 @@ $(ROMNAME).rom $(ROMNAME).com $(ROMNAME).img &: $(ROMDEPS)
 	if [ $(ROM_PLATFORM) != UNA ] ; then \
 		cat camel80.bin nascom.bin tastybasic.bin game.bin eastaegg.bin netboot.mod updater.bin usrrom.bin >osimg1.bin ; \
 		cat imgpad2.bin >osimg2.bin ; \
+		for f in hbios_rom.bin osimg.bin osimg1.bin osimg2.bin ; do \
+			srec_cat $$f -Binary -Crop 0 0x7FFF -checksum-neg-b-e 0x7FFF 1 1 -o $$f -Binary ; \
+		done \
 	fi
 	if [ $(ROM_PLATFORM) = UNA ] ; then \
 		cp osimg.bin $(DEST)/UNA_WBW_SYS.bin ; \

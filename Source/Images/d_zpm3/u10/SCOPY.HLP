@@ -2,7 +2,7 @@
                                   SCOPY.COM                                   
 
              Size (recs) CRC   Version    Author/Latest Issue      Disk
-              17k (140)  62B8  1.0e       Lars Nelson 2/13
+              18k (141)  62B8  1.0f       Lars Nelson 7/21
               15k (120)  D6DB  0.8        Rob Friefeld 10/91       Z3COM19
 
   1- Syntax  2- SCOPY Commands  3- Notes                                      
@@ -38,7 +38,7 @@ master and which is the target directory.
    When re-logging from  within  SCOPY,  the  syntax has the same meaning, but
 remember that you will not  necessarily be  currently  logged  into  the  same
 directory as at startup.
-:2 :SCOPY10e
+:2 :SCOPY10F
 :3
  SCOPY Notes  
 
