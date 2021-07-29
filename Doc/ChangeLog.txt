@@ -46,6 +46,8 @@ Version 3.1.1
 - AJL: Added ramtest app (requires SBC and MBC for now)
 - L?N: Provided SCOPY, XSUB01, and EX applications
 - WBW: Added support for MBC FDC to FDU application
+- WBW: Added support for MBC FDC to HBIOS
+- WBW: Refactored make process
 
 Version 3.1
 -----------
