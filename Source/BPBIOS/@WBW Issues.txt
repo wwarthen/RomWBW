@@ -1,8 +1,33 @@
-Loader uses CBIOS Disk I/O prior to CBOOT/WBOOT being run. As a 
-result, DIOBUF is not properly initialized.  At present, it is 
-initialized to $7C00 which will work unless the location of the 
-physical disk buffer in HBIOS ever changes!
- 
+In general, the BPBIOS for RomWBW is incomplete.  This is
+mostly just a proof of concept that it can work.  As such,
+it is not built or included in the default builds of
+RomWBW.  You *must* review and adjust the file romwbw.lib
+before building BPBIOS.  To include BPBIOS in the build
+process, you need to uncomment the corresponding line
+in the Build.cmd file in the Source directory.
+
+For now, BPBIOS does not understand the dynamic disk assignment
+mechanism of RomWBW.  This means that you need to explicitly
+tell BPBIOS the console unit number and the disk unit number of
+the first hard disk device.  Floppy drives are basically not
+supported.  You should review and adjust the romwbw.lib file
+as needed.  The RomWBW ASSIGN command is not supported.  BPBIOS
+will boot from the first hard disk unit number you assign and
+always from the first slice.
+
+As documented in "@WBW Z3ENV.txt", there are two general
+configurations of BPBIOS for RomWBW.  I strongly recomment
+using the T configurations (external HBIOS proxy).  This is
+the long term direction for BPBIOS on RomWBW.  The N
+configurations (internal HBIOS proxy) will not work with
+interrrupts of any kind.  This means that to use the N
+configurations, you *must* use a RomWBW ROM built with
+interrupts disabled or chaos will ensue.
+
+BPBIOS does not yet understand the 1024 directory entry
+hard disk format.  You must use the 512 directory entry
+format images.
+
 The clock drivers supplied with BPBIOS (LDDS, LDP2D, and LDNZT) 
 load into ZSYS user memory.  If the user segment is not at the 
 same location as the original BPBIOS ($E900), then the clock 
@@ -11,5 +36,3 @@ is OK because it does not relocate the user segment, but the T
 config fails because it uses a user segment at $E700. Note that 
 this does not affect ZSDOS2 variants because they do not require 
 a loadable clock driver.
-
-BPBIOS needs to assign disk units dynamically via discovery of disk type

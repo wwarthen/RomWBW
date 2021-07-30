@@ -20,7 +20,7 @@ all: $(DEST)
 $(DEST):
 	mkdir $(DEST)
 
-clobber:
+clobber: clean
 	-for i in *.$(SUFFIX) ; do \
 		rm $(DEST)/$$(basename $$i .$(SUFFIX)) ; \
 	done

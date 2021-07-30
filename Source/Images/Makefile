@@ -28,6 +28,8 @@ DEST=../../Binary
 TOOLS = ../../Tools
 include $(TOOLS)/Makefile.inc
 
+.SHELLFLAGS = -ce
+
 DIFFPATH = $(DIFFTO)/Binary
 
 hd512_combo.img: $(HD512PREFIX) $(HD512IMGS)

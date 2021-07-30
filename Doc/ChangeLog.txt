@@ -45,6 +45,10 @@ Version 3.1.1
 - WBW: Added Phil Summers' ROM Updater into ROM Loader
 - AJL: Added ramtest app (requires SBC and MBC for now)
 - L?N: Provided SCOPY, XSUB01, and EX applications
+- WBW: Added support for MBC FDC to FDU application
+- WBW: Added support for MBC FDC to HBIOS
+- WBW: Refactored make process
+- WBW: Added ROM verification to boot process
 
 Version 3.1
 -----------

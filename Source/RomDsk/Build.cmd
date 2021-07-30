@@ -11,6 +11,9 @@ set ZXBINDIR=%TOOLS%/cpm/bin/
 set ZXLIBDIR=%TOOLS%/cpm/lib/
 set ZXINCDIR=%TOOLS%/cpm/include/
 
+set RomApps1=assign mode rtc syscopy xm
+set RomApps2=fdu format survey sysgen talk timer inttest
+
 ::
 :: Make all variants of the ROM Disk contents image.  Three sizes are
 :: created for each of the different ROM sizes possible (256K, 512K, 1024K).
@@ -21,39 +24,46 @@ set ZXINCDIR=%TOOLS%/cpm/include/
 :: the final ROM size less 128K.
 ::
 
+set RomApps=
+
+copy NUL rom128_wbw.dat
+copy NUL rom128_una.dat
+
 :: MakeDisk <OutputFile> <ImageSize> <Format> <Directory> <Bios>
 
-set RomApps=assign mode rtc syscopy xm
+set RomApps=%RomApps1%
 
-call :MakeDisk rom256_wbw 0x20000 wbw_rom256 ROM_256KB wbw
-call :MakeDisk rom256_una 0x20000 wbw_rom256 ROM_256KB una
+call :MakeDisk rom256_wbw 256 0x20000 wbw
+call :MakeDisk rom256_una 256 0x20000 una
 
-set RomApps=%RomApps% fdu format survey sysgen talk timer inttest
+set RomApps=%RomApps1% %RomApps2%
 
-call :MakeDisk rom512_wbw 0x60000 wbw_rom512 ROM_512KB wbw
-call :MakeDisk rom512_una 0x60000 wbw_rom512 ROM_512KB una
+call :MakeDisk rom512_wbw 512 0x60000 wbw
+call :MakeDisk rom512_una 512 0x60000 una
 
-call :MakeDisk rom1024_wbw 0xE0000 wbw_rom1024 ROM_1024KB wbw
-call :MakeDisk rom1024_una 0xE0000 wbw_rom1024 ROM_1024KB una
+call :MakeDisk rom1024_wbw 1024 0xE0000 wbw
+call :MakeDisk rom1024_una 1024 0xE0000 una
 
 goto :eof
 
 :MakeDisk
 set Output=%1
-set Size=%2
-set Format=%3
-set Content=%4
-set Bios=%5
+set RomSize=%2
+set ImgSize=%3
+set Bios=%4
 
 echo Making ROM Disk %Output%
 
-srec_cat -Generate 0 %Size% --Constant 0xE5 -Output %Output%.dat -Binary || exit /b
+:: Create the empty disk image file
+srec_cat -Generate 0 %ImgSize% --Constant 0xE5 -Output %Output%.dat -Binary || exit /b
 
-cpmcp -f %Format% %Output%.dat %Content%/*.* 0: || exit /b
-for %%f in (%RomApps%) do cpmcp -f %Format% %Output%.dat ../../Binary/Apps/%%f.com 0: || exit /b
-cpmcp -f %Format% %Output%.dat ..\cpm22\cpm_%Bios%.sys 0:cpm.sys || exit /b
-cpmcp -f %Format% %Output%.dat ..\zsdos\zsys_%Bios%.sys 0:zsys.sys || exit /b
+:: Populate the disk image via cpmtools
+cpmcp -f wbw_rom%RomSize% %Output%.dat ROM_%RomSize%KB/*.* 0: || exit /b
+for %%f in (%RomApps%) do cpmcp -f wbw_rom%RomSize% %Output%.dat ../../Binary/Apps/%%f.com 0: || exit /b
+cpmcp -f wbw_rom%RomSize% %Output%.dat ..\cpm22\cpm_%Bios%.sys 0:cpm.sys || exit /b
+cpmcp -f wbw_rom%RomSize% %Output%.dat ..\zsdos\zsys_%Bios%.sys 0:zsys.sys || exit /b
 
-cpmchattr -f %Format% %Output%.dat r 0:*.* || exit /b
+:: Mark all disk files R/O for safety
+cpmchattr -f wbw_rom%RomSize% %Output%.dat r 0:*.* || exit /b
 
 goto :eof

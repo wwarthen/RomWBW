@@ -23,7 +23,7 @@ jobs:
           export TZ='America/Los_Angeles'
           sudo apt-get install libncurses-dev
           sudo apt-get install srecord
-          make
+          make dist
           make clean
           rm -rf .git*
 
@@ -49,7 +49,7 @@ jobs:
         run: |
           export TZ='America/Los_Angeles'
           brew install srecord
-          make
+          make dist
           make clean
           rm -rf .git*
 

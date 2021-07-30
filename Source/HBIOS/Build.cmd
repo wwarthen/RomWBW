@@ -1,6 +1,8 @@
 @echo off
 setlocal
 
+if "%1" == "dist" goto :dist
+
 ::
 :: Build [<platform> [<config> [<romsize> [<romname>]]]]
 ::
@@ -15,19 +17,46 @@ set ZXBINDIR=%TOOLS%/cpm/bin/
 set ZXLIBDIR=%TOOLS%/cpm/lib/
 set ZXINCDIR=%TOOLS%/cpm/include/
 
+::
+:: This PowerShell script validates the build variables passed in.  If
+:: necessary, the user is prmopted to pick the variables.  It then creates
+:: an include file that is imbedded in the HBIOS assembly (build.inc).
+:: It also creates a batch command file that sets environment variables
+:: for use by the remainder of this batch file (build_env.cmd).
+::
+
 PowerShell -ExecutionPolicy Unrestricted .\Build.ps1 %* || exit /b
+
+::
+:: Below, we process the command file created by the PowerShell script.
+:: This sets the environment variables: Platform, Config, ROMName,
+:: ROMSize, & CPUType.
+::
 
 call build_env.cmd
 
+::
+:: Start of the actual build process for a given ROM.
+::
+
 echo Building %ROMSize%K ROM %ROMName% for Z%CPUType% CPU...
 
+::
+:: UNA is a special case, check for it and jump if needed.
+::
+
 if %Platform%==UNA goto :UNA
+
+::
+:: Bring the previously build font files into this directory
+::
 
 copy ..\Fonts\font*.asm . || exit /b
 
 ::
 :: Build HBIOS Core (all variants)
 ::
+
 tasm -t%CPUType% -g3 -dROMBOOT hbios.asm hbios_rom.bin hbios_rom.lst || exit /b
 tasm -t%CPUType% -g3 -dAPPBOOT hbios.asm hbios_app.bin hbios_app.lst || exit /b
 tasm -t%CPUType% -g3 -dIMGBOOT hbios.asm hbios_img.bin hbios_img.lst || exit /b
@@ -35,6 +64,7 @@ tasm -t%CPUType% -g3 -dIMGBOOT hbios.asm hbios_img.bin hbios_img.lst || exit /b
 ::
 :: Build ROM Components
 ::
+
 call :asm dbgmon
 call :asm romldr
 call :asm eastaegg
@@ -46,27 +76,50 @@ call :asm updater
 call :asm imgpad2
 
 ::
-:: Create ROM bank images by assembling components
+:: Create additional ROM bank images by assembling components into
+:: 32K chunks which can be concatenated later.  Note that
+:: osimg_small is a special case because it is 20K in size.  This
+:: image is subsequently used to generate the .com loadable file.
 ::
 
 copy /b romldr.bin + dbgmon.bin + ..\zsdos\zsys_wbw.bin + ..\cpm22\cpm_wbw.bin osimg.bin || exit /b
-copy /b romldr.bin + dbgmon.bin + ..\zsdos\zsys_wbw.bin osimg_small.bin || exit /b
 copy /b ..\Forth\camel80.bin + nascom.bin + tastybasic.bin + game.bin + eastaegg.bin + netboot.mod + updater.bin + usrrom.bin osimg1.bin || exit /b
 copy /b imgpad2.bin osimg2.bin || exit /b
 
+copy /b romldr.bin + dbgmon.bin + ..\zsdos\zsys_wbw.bin osimg_small.bin || exit /b
+
 ::
-:: Create final ROM images
+:: Inject one byte checksum at the last byte of all 4 ROM bank image files.
+:: This means that computing a checksum over any of the 32K osimg banks
+:: should yield a result of zero.
 ::
 
-set RomDiskDat=
-if %ROMSize% GTR 128 set RomDiskDat=..\RomDsk\rom%ROMSize%_wbw.dat
+for %%f in (hbios_rom.bin osimg.bin osimg1.bin osimg2.bin) do (
+  "%TOOLS%\srecord\srec_cat.exe" %%f -Binary -Crop 0 0x7FFF -checksum-neg-b-e 0x7FFF 1 1 -o %%f -Binary
+)
+
+::
+:: Create final images (.rom, .upd, & .com)
+:: The previously created bank images are concatenated as needed.
+::
+:: The .rom image is made up of 4 banks followed by the ROM Disk.  This
+:: is for programming onto a ROM.
+::
+:: The .upd image is the same as above, but without the the ROM Disk.
+:: This is so you can update just the code portion of your ROM without
+:: updating the ROM Disk contents.
+::
+:: The .com image is a scaled down version of the ROM that you can run
+:: as a standard application under an OS and it will replace your
+:: HBIOS on the fly for testing purposes.
+::
 
 copy /b hbios_rom.bin + osimg.bin + osimg1.bin + osimg2.bin + ..\RomDsk\rom%ROMSize%_wbw.dat %ROMName%.rom || exit /b
 copy /b hbios_rom.bin + osimg.bin + osimg1.bin + osimg2.bin %ROMName%.upd || exit /b
 copy /b hbios_app.bin + osimg_small.bin %ROMName%.com || exit /b
 
 ::
-:: Copy to output directory
+:: Copy results to output directory
 ::
 
 copy %ROMName%.rom ..\..\Binary || exit /b
@@ -81,23 +134,74 @@ goto :eof
 
 :UNA
 
+::
+:: This process is basically equivalent to the one above, but tailored
+:: for the UNA BIOS.
+::
+
+:: Build ROM components required by UNA
 call :asm dbgmon
 call :asm romldr
 
+:: Create the OS bank
 copy /b romldr.bin + dbgmon.bin + ..\zsdos\zsys_una.bin + ..\cpm22\cpm_una.bin osimg.bin || exit /b
 
+:: Copy OS Bank and ROM Disk image files to output
 copy /b osimg.bin ..\..\Binary\UNA_WBW_SYS.bin || exit /b
 copy /b ..\RomDsk\rom%ROMSize%_una.dat ..\..\Binary\UNA_WBW_ROM%ROMSize%.bin || exit /b
 
+:: Create the final ROM image
 copy /b ..\UBIOS\UNA-BIOS.BIN + osimg.bin + ..\UBIOS\FSFAT.BIN + ..\RomDsk\rom%ROMSize%_una.dat %ROMName%.rom || exit /b
 
+:: Copy to output
 copy %ROMName%.rom ..\..\Binary || exit /b
 
 goto :eof
 
+::
+:: Simple procedure to assemble a specified component via TASM.
+::
+
 :asm
+
 echo.
 echo Building %1...
 tasm -t80 -g3 -fFF %1.asm %1.bin %1.lst || exit /b
+
 goto :eof
 
+::
+:: Build all of the official distribution ROMs
+::
+
+:dist
+
+call Build SBC std 512 || exit /b
+call Build SBC simh 512 || exit /b
+call Build MBC std 512 || exit /b
+call Build ZETA std 512 || exit /b
+call Build ZETA2 std 512 || exit /b
+call Build N8 std 512 || exit /b
+call Build MK4 std 512 || exit /b
+call Build RCZ80 std 512 || exit /b
+call Build RCZ80 skz 512 || exit /b
+call Build RCZ80 kio 512 || exit /b
+call Build RCZ80 mt 512 || exit /b
+call Build RCZ80 duart 512 || exit /b
+call Build RCZ80 zrc 512 || exit /b
+call Build RCZ180 ext 512 || exit /b
+call Build RCZ180 nat 512 || exit /b
+call Build RCZ280 ext 512 || exit /b
+call Build RCZ280 nat 512 || exit /b
+call Build RCZ280 nat_zz 512 || exit /b
+call Build RCZ280 nat_zzr 256 || exit /b
+call Build SCZ180 126 512 || exit /b
+call Build SCZ180 130 512 || exit /b
+call Build SCZ180 131 512 || exit /b
+call Build SCZ180 140 512 || exit /b
+call Build EZZ80 std 512 || exit /b
+call Build EZZ80 tz80 512 || exit /b
+call Build DYNO std 512 || exit /b
+call Build UNA std 512 || exit /b
+
+goto :eof

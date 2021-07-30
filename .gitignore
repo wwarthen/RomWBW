@@ -93,9 +93,9 @@ Tools/unix/zx/zx
 !Source/ZRC/*.bin
 !Source/ZZR/*.bin
 !Source/ZZR/*.hex
-!Tools/cpm/bin
-!Tools/unix/zx
-!Tools/zx
+!Tools/cpm/bin/*
+!Tools/unix/zx/*
+!Tools/zx/*
 
 Source/ZPM3/gencpm.com
 Source/ZPM3/startzpm.com

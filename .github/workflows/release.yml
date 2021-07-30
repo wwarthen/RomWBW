@@ -26,7 +26,7 @@ jobs:
       - name: Build
         run: |
           sudo apt-get install libncurses-dev
-          make
+          make dist
           make clean
           rm -rf .git*
       

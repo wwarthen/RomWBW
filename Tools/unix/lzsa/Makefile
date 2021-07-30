@@ -36,11 +36,11 @@ all: $(APP)
 	cp -p $(APP) ../../$(UNAME)
 
 $(APP): $(OBJS)
-	@mkdir -p ../../bin/posix
+	#@mkdir -p ../../bin/posix
 	$(CC) $^ $(LDFLAGS) -o $(APP)
 
 clean:
 	@rm -rf $(APP) $(OBJDIR)
 
-clobber:
+clobber: clean
 	rm -f ../../$(UNAME)/$(APP)

@@ -6,5 +6,5 @@ OTHERS = loader.bin dbgmon.bin
 include $(TOOLS)/Makefile.inc
 
 ramtest.com: loader.bin dbgmon.bin
-	cat loader.bin dbgmon.bin >ramtest.com
+	cat $^ >$@
 
