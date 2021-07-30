@@ -28,7 +28,7 @@ HBCLK	EQU	YES			; HBIOS clock driver
 ;
 HB_IODEV	EQU	0		; Assume we want to use first HBIOS serial device
 ;
-; Set HB_HDDEV to appropriate hard disk driver
+; Set HB_HDDEV to the first (boot) hard disk device unit number
 ;
 HB_HDDEV	EQU	2		; Assumes disk device #2 is first hard disk device
 ;
