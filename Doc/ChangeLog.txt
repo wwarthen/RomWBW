@@ -49,6 +49,7 @@ Version 3.1.1
 - WBW: Added support for MBC FDC to HBIOS
 - WBW: Refactored make process
 - WBW: Added ROM verification to boot process
+- WBW: Added Z80 instruction test apps to user area 5 in CP/M & ZSDOS
 
 Version 3.1
 -----------
