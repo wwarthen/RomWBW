@@ -26,6 +26,8 @@ DMA_RESET			.equ	$c3
 ;DMA_ENABLE_AFTER_RETI		.equ	$b7
 ;DMA_REINIT_STATUS_BYTE		.equ	$8b
 ;
+DMA_FBACK			.equ	TRUE
+;
 ;==================================================================================================
 ; DMA INITIALIZATION CODE
 ;==================================================================================================
@@ -67,9 +69,18 @@ DMA_NOTFOUND:
 	push	af
 	call	PRTSTRD
 	.db	" NOT PRESENT$"
+
+#IF (DMA_FBACK)
+	call	PRTSTRD
+	.db	". USING SOFTWARE$"
+	LD	A,ERR_NOHW
+	LD	(DMA_FAIL_FLAG),A
+#ENDIF
 	pop	af
 	jr	DMA_EXIT
-
+;
+DMA_FAIL_FLAG:
+	.db	0	
 ;
 ;==================================================================================================
 ; DMA PROBE - WRITE TO ADDRESS REGISTER AND READ BACK
