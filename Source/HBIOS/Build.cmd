@@ -65,15 +65,16 @@ tasm -t%CPUType% -g3 -dIMGBOOT hbios.asm hbios_img.bin hbios_img.lst || exit /b
 :: Build ROM Components
 ::
 
-call :asm dbgmon
-call :asm romldr
-call :asm eastaegg
-call :asm nascom
-call :asm tastybasic
-call :asm game
-call :asm usrrom
-call :asm updater
-call :asm imgpad2
+call :asm dbgmon || exit /b
+call :asm romldr || exit /b
+
+call :asm eastaegg || exit /b
+call :asm nascom || exit /b
+call :asm tastybasic || exit /b
+call :asm game || exit /b
+call :asm usrrom || exit /b
+call :asm updater || exit /b
+call :asm imgpad2 || exit /b
 
 ::
 :: Create additional ROM bank images by assembling components into
@@ -140,8 +141,8 @@ goto :eof
 ::
 
 :: Build ROM components required by UNA
-call :asm dbgmon
-call :asm romldr
+call :asm dbgmon || exit /b
+call :asm romldr || exit /b
 
 :: Create the OS bank
 copy /b romldr.bin + dbgmon.bin + ..\zsdos\zsys_una.bin + ..\cpm22\cpm_una.bin osimg.bin || exit /b
