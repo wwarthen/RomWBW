@@ -1,6 +1,6 @@
-#
-# Add files from CPM3 build
-#
+# DRI Distribution
+CPM3DRI/*.* 0:
+# CPM3 Build Files
 ../CPM3/cpmldr.com 0:
 ../CPM3/cpmldr.sys 0:
 ../CPM3/ccp.com 0:
@@ -18,16 +18,14 @@
 ../CPM3/cpm3.sys 0:
 ../CPM3/readme.1st 0:
 ../CPM3/cpm3fix.pat 0:
-#
-# Add RomWBW utilities
-#
+# RomWBW utilities
 ../../Binary/Apps/*.com 0:
-#
-# Add Tune sample files
-#
+# Tune Sample Files
 ../../Binary/Apps/Tunes/*.pt? 3:
 ../../Binary/Apps/Tunes/*.mym 3:
-#
-# Add Common Applications
-#
-Common/*.* 0:
+# Standard Applications
+Std/*.* 0:
+Std3/*.* 15:
+ZDE/*.* 1:
+CpNet3/*.* 4:
+#Tests/*.* 5:
