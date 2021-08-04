@@ -1,17 +1,15 @@
-#
-# Add RomWBW utilities
-#
+# DRI Distribution
+CPM22DRI/*.* 0:
+# Add OS image
+../CPM22/cpm_wbw.sys 0:cpm.sys
+# RomWBW utilities
 ../../Binary/Apps/*.com 0:
-#
-# Add Tune sample files
-#
+# Tune Sample Files
 ../../Binary/Apps/Tunes/*.pt? 3:
 ../../Binary/Apps/Tunes/*.mym 3:
-#
-# Add OS image
-#
-../CPM22/cpm_wbw.sys 0:cpm.sys
-#
-# Add Common Applications
-#
-Common/*.* 0:
+# Standard Applications
+Std/*.* 0:
+Std22/*.* 15:
+ZDE/*.* 1:
+CPNet12/*.* 4:
+Tests/*.* 5:
