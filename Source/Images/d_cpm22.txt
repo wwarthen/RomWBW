@@ -11,5 +11,5 @@ CPM22DRI/*.* 0:
 Std/*.* 0:
 Std22/*.* 15:
 ZDE/*.* 1:
-CpNet12/*.* 4:
+CPNet12/*.* 4:
 Tests/*.* 5:

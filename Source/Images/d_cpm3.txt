@@ -27,5 +27,5 @@ CPM3DRI/*.* 0:
 Std/*.* 0:
 Std3/*.* 15:
 ZDE/*.* 1:
-CpNet3/*.* 4:
+CPNet3/*.* 4:
 #Tests/*.* 5:
