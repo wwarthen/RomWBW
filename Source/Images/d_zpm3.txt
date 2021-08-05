@@ -1,12 +1,10 @@
-# DRI Distribution
-CPM3DRI/*.COM 15:
-CPM3DRI/*.HLP 0:
-# ZPM3 Build Files
+#
+# Add files from ZPM3 build
+#
 ../ZPM3/zpmldr.com 0:
 ../ZPM3/zpmldr.sys 0:
 ../CPM3/cpmldr.com 0:
 ../CPM3/cpmldr.sys 0:
-../CPM3/gencpm.com 15:
 ../ZPM3/autotog.com 15:
 ../ZPM3/clrhist.com 15:
 ../ZPM3/setz3.com 15:
@@ -19,17 +17,16 @@ CPM3DRI/*.HLP 0:
 ../ZPM3/bnkbios3.spr 0:
 ../ZPM3/bnkbdos3.spr 0:
 ../ZPM3/resbdos3.spr 0:
-# RomWBW utilities
+#
+# Add RomWBW utilities
+#
 ../../Binary/Apps/*.com 15:
-# Tune Sample Files
+#
+# Add Tune sample files
+#
 ../../Binary/Apps/Tunes/*.pt? 3:
 ../../Binary/Apps/Tunes/*.mym 3:
-# Standard Applications
-Std/*.* 15:
-Std3/*.* 15:
-StdZ3/u10/*.* 10:
-StdZ3/u14/*.* 14:
-StdZ3/u15/*.* 15:
-#ZDE/*.* 1:
-#CPNet3/*.* 4:
-#Tests/*.* 5:
+#
+# Add Common Applications
+#
+Common/*.* 15:
