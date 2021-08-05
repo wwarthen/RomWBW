@@ -71,6 +71,7 @@ for ($Usr=0; $Usr -lt 16; $Usr++)
 		$Cmd = "cpmcp -f $Format $ImgFile d_${Disk}/u${Usr}/*.* ${Usr}:"
 		$Cmd
 		Invoke-Expression $Cmd
+		if ($LASTEXITCODE -gt 0) {throw "Command returned exit code $LASTEXITCODE"}
 	}
 }
 
@@ -84,6 +85,7 @@ if (Test-Path("d_${Disk}.txt"))
 			$Cmd = "cpmcp -f $Format $ImgFile ${Spec}"
 			$Cmd
 			Invoke-Expression $Cmd
+			if ($LASTEXITCODE -gt 0) {throw "Command returned exit code $LASTEXITCODE"}
 		}
 	}
 }
