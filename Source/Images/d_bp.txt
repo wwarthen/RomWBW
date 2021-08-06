@@ -1,13 +1,4 @@
 #
-# Add RomWBW utilities
-#
-../../Binary/Apps/*.com 15:
-#
-# Add Tune sample files
-#
-../../Binary/Apps/Tunes/*.pt? 3:
-../../Binary/Apps/Tunes/*.mym 3:
-#
 # Add ZSystem images
 #
 ../BPBIOS/*.img 0:
@@ -18,6 +9,46 @@
 ../BPBIOS/Z34RCP11/z34rcp11.rel 0:rcp.zrl
 ../BPBIOS/NZFCP13/nzfcp13.rel 0:fcp.zrl
 #
+# Add RomWBW utilities
+#
+#../../Binary/Apps/*.com 15:
+../../Binary/Apps/assign.com 15:
+../../Binary/Apps/fat.com 15:
+../../Binary/Apps/fdu.com 15:
+../../Binary/Apps/format.com 15:
+../../Binary/Apps/inttest.com 15:
+../../Binary/Apps/mode.com 15:
+../../Binary/Apps/rtc.com 15:
+../../Binary/Apps/survey.com 15:
+../../Binary/Apps/syscopy.com 15:
+../../Binary/Apps/sysgen.com 15:
+../../Binary/Apps/talk.com 15:
+../../Binary/Apps/timer.com 15:
+../../Binary/Apps/tune.com 15:
+../../Binary/Apps/xm.com 15:
+#
+../../Binary/Apps/i2clcd.com 2:
+../../Binary/Apps/i2cscan.com 2:
+../../Binary/Apps/rtcds7.com 2:
+../../Binary/Apps/rtchb.com 2:
+../../Binary/Apps/ppidetst.com 2:
+../../Binary/Apps/ramtest.com 2:
+../../Binary/Apps/tstdskng.com 2:
+#
+# Add Tune sample files
+#
+../../Binary/Apps/Tunes/*.pt? 3:
+../../Binary/Apps/Tunes/*.mym 3:
+#
+# Add CPNET client files
+#
+cpnet12/*.* 4:
+#
 # Add Common Applications
 #
-Common/*.* 0:
+Common/*.* 15:
+supp/cpm22/*.* 0:
+supp/z3/u10/*.* 10:
+supp/z3/u14/*.* 14:
+supp/z3/u15/*.* 15:
+
