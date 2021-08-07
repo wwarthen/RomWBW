@@ -96,7 +96,7 @@ copy /b romldr.bin + dbgmon.bin + ..\zsdos\zsys_wbw.bin osimg_small.bin || exit 
 ::
 
 for %%f in (hbios_rom.bin osimg.bin osimg1.bin osimg2.bin) do (
-  "%TOOLS%\srecord\srec_cat.exe" %%f -Binary -Crop 0 0x7FFF -checksum-neg-b-e 0x7FFF 1 1 -o %%f -Binary
+  "%TOOLS%\srecord\srec_cat.exe" %%f -Binary -Crop 0 0x7FFF -Checksum_Negative_Big_Endian 0x7FFF 1 1 -o %%f -Binary || exit /b
 )
 
 ::
