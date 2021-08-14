@@ -1,0 +1,74 @@
+                    UNZIPZ   vers 0.3
+                    Z-System UNZIPPER
+
+UNZIZ can extract all files from any zip file created by PKZIP on MSDOS.  
+As such it should prove useful on CP/M systems for extracting CP/M relevant 
+files from zip archives found on BBSs or the Web since UNZIPZ preserves date 
+stamps on CP/M systems with Date Stamping.
+
+To use UNZIPZ use the following Syntax:
+
+  UNZIP [dir:]ufn[.ZIP][dir:][afn ][/o]
+
+On ZCPR3x systems {dir} can be either in named directory or DU (Drive 
+Letter followed by User number) form otherwise, the DU form must be used. 
+If {afn} is not given, *.* is assumed.  If no option is specified, UNZIPZ 
+checks the CRCs of the files matching {dir:afn}.  The only option is E which 
+causes the extraction of files matching {dir:afn} unless the file already 
+exists.  In that case, the user is informed that it exists and the file is not 
+extracted.  To extract such files, they must be erased and then extraction 
+reattempted.
+
+For each file processed, the following information is displayed: Name,         
+Uncompressed Length, Stored Length, Compression Method, PKZIP Version, 
+File Date and Time, 32 bit CRC and Status.  Status consists of CRC OK, CRC 
+ERR or EXISTS.  Example ouput:
+
+UNZIPZ  Version 0.4-1 - SC
+
+ZIP archive  = H4:SOURCE.ZIP
+Output Drive = H4:
+Name         Length  Stored   Method   Ver  File Date & Time    CRC    STATUS
+============ ======= =======  ======== ===  =========  =====  ======== =======
+UDATZI  .Z80    3201    1320  Deflated  20  19 Oct 20  07:22  CC7E8454  CRC OK
+UNZIP   .Z80   18464    5419  Deflated  20  19 Oct 20  21:16  45E711B1  CRC OK
+UNZIP12 .Z80   17649    5042  Deflated  20  08 Jun 20  07:46  4C05E1AB  EXISTS
+  
+The current version is a significant revision of ver 0.2.  Main improvement 
+is the addition of the undeflate algorithm (thanks Martin).  In addition the 
+CRCs are only checked for extracted files which speeds things up 
+considerably.  Speedups to the undeflate algorithm by Russell Marks have 
+also been incorporated.  The ouput display has been improved substantialy 
+and is similar to UNARCZ10.
+
+Version 0.2 Notes by Simon Cran.
+
+The files in this archive are my Z-modified version of UNZIP 1.2.  They 
+consist of three files in order to make sure that the unitialised data ends 
+up at the end of all files linked.  Also, because the unitialised data file 
+(UDATZI.Z80) needed to share some equates with the main program, all 
+equates have been put in a separate .LIB file.
+
+The original program is fast and dirty.  This Z-modified version gets rid of 
+some of the dirty without sacrificing too much else.  Note however, it is 
+only in embryonic stages... It has not developed to the point of UNARCZ10 
+for example.
+
+That said though, it does work, and well enough to find a niche out there.  
+Its main advantage is speed when you wish to extract all the files in the 
+archive.  You can now specify particular files to extract, but it isn't much 
+quicker in that mode, as it still decodes each file in the archive and checks 
+its CRC. That will change in a future version.
+
+The display is now better, but it is very much in development mode!  The 
+idea is to have it approximately mimic UNARCZ10.  It kind of does that now, 
+but leaves out a lot of information... I'm working on it!
+
+Source code is included, but without comments.  If you'd like to know more, 
+contact me.
+
+Simeon!
+Z-Node 62
+Perth
+Western Australia.
+

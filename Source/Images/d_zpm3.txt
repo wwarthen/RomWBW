@@ -36,18 +36,18 @@
 ../../Binary/Apps/tune.com 15:
 ../../Binary/Apps/xm.com 15:
 #
-../../Binary/Apps/i2clcd.com 2:
-../../Binary/Apps/i2cscan.com 2:
-../../Binary/Apps/rtcds7.com 2:
-../../Binary/Apps/rtchb.com 2:
-../../Binary/Apps/ppidetst.com 2:
-../../Binary/Apps/ramtest.com 2:
-../../Binary/Apps/tstdskng.com 2:
-#
-# Add Tune sample files
-#
-../../Binary/Apps/Tunes/*.pt? 3:
-../../Binary/Apps/Tunes/*.mym 3:
+#../../Binary/Apps/i2clcd.com 2:
+#../../Binary/Apps/i2cscan.com 2:
+#../../Binary/Apps/rtcds7.com 2:
+#../../Binary/Apps/rtchb.com 2:
+#../../Binary/Apps/ppidetst.com 2:
+#../../Binary/Apps/ramtest.com 2:
+#../../Binary/Apps/tstdskng.com 2:
+##
+## Add Tune sample files
+##
+#../../Binary/Apps/Tunes/*.pt? 3:
+#../../Binary/Apps/Tunes/*.mym 3:
 ##
 ## Add CPNET client files
 ##
@@ -55,8 +55,11 @@
 #
 # Add Common Applications
 #
-Common/*.* 15:
-supp/cpm3/*.* 0:
-supp/z3/u10/*.* 10:
-supp/z3/u14/*.* 14:
-supp/z3/u15/*.* 15:
+Common/All/*.* 15:
+Common/CPM3/*.* 0:
+#Common/Z/u10/*.* 10:
+Common/Z/u14/*.* 14:
+Common/Z/u15/*.* 15:
+Common/Z3/u10/*.* 10:
+Common/Z3/u14/*.* 14:
+Common/Z3/u15/*.* 15:

@@ -24,11 +24,11 @@
 ../../Binary/Apps/ppidetst.com 2:
 ../../Binary/Apps/ramtest.com 2:
 ../../Binary/Apps/tstdskng.com 2:
-#
-# Add Tune sample files
-#
-../../Binary/Apps/Tunes/*.pt? 3:
-../../Binary/Apps/Tunes/*.mym 3:
+##
+## Add Tune sample files
+##
+#../../Binary/Apps/Tunes/*.pt? 3:
+#../../Binary/Apps/Tunes/*.mym 3:
 ##
 ## Add CPNET client files
 ##
@@ -40,8 +40,11 @@
 #
 # Add Common Applications
 #
-Common/*.* 0:
-supp/cpm22/*.* 0:
-supp/z3/u10/*.* 0:
-supp/z3/u14/*.* 0:
-supp/z3/u15/*.* 0:
+Common/All/*.* 0:
+Common/CPM22/*.* 0:
+#Common/Z/u10/*.* 0:
+Common/Z/u14/*.* 0:
+Common/Z/u15/*.* 0:
+Common/Z3/u10/*.* 0:
+Common/Z3/u14/*.* 0:
+Common/Z3/u15/*.* 0:

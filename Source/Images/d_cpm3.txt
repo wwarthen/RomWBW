@@ -56,5 +56,5 @@ cpnet3/*.* 4:
 #
 # Add Common Applications
 #
-Common/*.* 0:
-supp/cpm3/*.* 0:
+Common/All/*.* 0:
+Common/CPM3/*.* 0:
