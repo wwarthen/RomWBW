@@ -42,6 +42,7 @@
 ;   2020-04-25 [DEN] Added support to use HBIOS Sound driver
 ;   2020-05-02 [PMS] Add support for SBC-V2 slow-io hack
 ;   2020-09-03 [E?B] Add support for Ed Brindley YM/AY Sound Card v6
+;   2021-08-13 [WBW] Add support for LiNC Z50 Sound Card
 ;_______________________________________________________________________________
 ;
 ; ToDo:
@@ -570,6 +571,9 @@ CFGTBL:	;	PLT	RSEL	RDAT	RIN	Z180	ACR
 	.DB	$07,	$D1,	$D0,	$D0,	$FF,	$FF	; RCZ80 W/ RC SOUND MODULE (MF)
 	.DW	HWSTR_RCMF
 ;
+	.DB	$07,	$33,	$32,	$32,	$FF,	$FF	; RCZ80 W/ LINC SOUND MODULE
+	.DW	HWSTR_LINC
+;
 	.DB	$08,	$68,	$60,	$68,	$C0,	$FF	; RCZ180 W/ RC SOUND MODULE (EB)
 	.DW	HWSTR_RCEB
 ;
@@ -578,6 +582,9 @@ CFGTBL:	;	PLT	RSEL	RDAT	RIN	Z180	ACR
 ;
 	.DB	$08,	$61,	$60,	$60,	$C0,	$FF	; RCZ180 W/ RC SOUND MODULE (MF)
 	.DW	HWSTR_RCMF
+;
+	.DB	$08,	$33,	$32,	$32,	$C0,	$FF	; RCZ180 W/ LINC SOUND MODULE
+	.DW	HWSTR_LINC
 ;
 	.DB	$09,	$D8,	$D0,	$D8,	$FF,	$FF	; EZZ80 W/ RC SOUND MODULE (EB)
 	.DW	HWSTR_RCEB
@@ -588,6 +595,9 @@ CFGTBL:	;	PLT	RSEL	RDAT	RIN	Z180	ACR
 	.DB	$09,	$D1,	$D0,	$D0,	$FF,	$FF	; EZZ80 W/ RC SOUND MODULE (MF)
 	.DW	HWSTR_RCMF
 ;
+	.DB	$09,	$33,	$32,	$32,	$FF,	$FF	; EZZ80 W/ LINC SOUND MODULE
+	.DW	HWSTR_LINC
+;
 	.DB	$0A,	$68,	$60,	$68,	$C0,	$FF	; SCZ180 W/ RC SOUND MODULE (EB)
 	.DW	HWSTR_RCEB
 ;
@@ -597,6 +607,9 @@ CFGTBL:	;	PLT	RSEL	RDAT	RIN	Z180	ACR
 	.DB	$0A,	$61,	$60,	$60,	$C0,	$FF	; SCZ180 W/ RC SOUND MODULE (MF)
 	.DW	HWSTR_RCMF
 ;
+	.DB	$0A,	$33,	$32,	$32,	$C0,	$FF	; SCZ180 W/ LINC SOUND MODULE
+	.DW	HWSTR_LINC
+;
 	.DB	$0B,	$D8,	$D0,	$D8,	$FF,	$FF	; RCZ280 W/ RC SOUND MODULE (EB)
 	.DW	HWSTR_RCEB
 ;
@@ -605,6 +618,9 @@ CFGTBL:	;	PLT	RSEL	RDAT	RIN	Z180	ACR
 ;
 	.DB	$0B,	$D1,	$D0,	$D0,	$FF,	$FF	; RCZ280 W/ RC SOUND MODULE (MF)
 	.DW	HWSTR_RCMF
+;
+	.DB	$0B,	$33,	$32,	$32,	$FF,	$FF	; RCZ280 W/ LINC SOUND MODULE
+	.DW	HWSTR_LINC
 ;
 	.DB	$FF					; END OF TABLE MARKER
 ;
@@ -633,8 +649,8 @@ TMP		.DB	0	; work around use of undocumented Z80
 HBIOSMD		.DB	0	; NON-ZERO IF USING HBIOS SOUND DRIVER, ZERO OTHERWISE
 OCTAVEADJ	.DB	0	; AMOUNT TO ADJUST OCTAVE UP OR DOWN
 
-MSGBAN		.DB	"Tune Player for RomWBW v3.2, 03-Sep-2020",0
-MSGUSE		.DB	"Copyright (C) 2020, Wayne Warthen, GNU GPL v3",13,10
+MSGBAN		.DB	"Tune Player for RomWBW v3.3, 14-Aug-2021",0
+MSGUSE		.DB	"Copyright (C) 2021, Wayne Warthen, GNU GPL v3",13,10
 		.DB	"PTxPlayer Copyright (C) 2004-2007 S.V.Bulba",13,10
 		.DB	"MYMPlay by Marq/Lieves!Tuore",13,10,13,10
 		.DB	"Usage: TUNE <filename>.[PT2|PT3|MYM] [--hbios] [+tn|-tn]",0
@@ -656,6 +672,7 @@ HWSTR_N8	.DB	"N8 Onboard Sound",0
 HWSTR_RCEB	.DB	"RC2014 Sound Module (EB)",0
 HWSTR_RCEB6	.DB	"RC2014 Sound Module (EBv6)",0
 HWSTR_RCMF	.DB	"RC2014 Sound Module (MF)",0
+HWSTR_LINC	.DB	"Z50 LiNC Sound Module",0
 
 MSGUNSUP	.db	"MYM files not supported yet!\r\n", 0
 

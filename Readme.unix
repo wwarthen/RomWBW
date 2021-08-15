@@ -30,11 +30,13 @@ By default, this will generate all of the standard configurations of
 RomWBW for all platforms.  If you just want to build the ROM for a
 specific platform and configuration you can use
 
-	make ROM_PLATFORM=<platform> ROM_CONFIG=<config>
+	make ROM_PLATFORM=<platform> ROM_CONFIG=<config> [ROMSIZE=<size>]
 
 where <platform> is one of the supported platforms such as SBC, RCZ80, 
-etc. and <config> is a configuration of that platform.  For example,
-to build the "126" configuration of the "SCZ180" platform:
+etc. and <config> is a configuration of that platform.  A ROM size may
+optionally be specified and must be one of 128, 256, 512, or 1024.  It
+defaults to 512.  For example, to build the "126" configuration of
+the "SCZ180" platform:
 
 	make ROM_PLATFORM=SCZ180 ROM_CONFIG=126
 

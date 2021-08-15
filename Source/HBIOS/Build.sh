@@ -67,6 +67,10 @@ done
 
 CONFIGFILE=Config/${ROM_PLATFORM}_${ROM_CONFIG}.asm
 
+if [ -z "${ROMSIZE}" ] ; then
+	ROMSIZE="512"
+fi
+
 while [ ! '(' "${ROMSIZE}" = 1024 -o "${ROMSIZE}" = 512 -o "${ROMSIZE}" = 256 -o "${ROMSIZE}" = 128 ')' ] ; do
 	echo -n "Romsize :"
 	read ROMSIZE

@@ -1,0 +1,141 @@
+			SUPERSUB DOCUMENTATION	(revised 09/13/81)
+			----------------------
+
+						09/05/81
+						by Ron Fowler
+						Westland, Mich
+
+SUPERSUB is intended as a replacement program for SUBMIT.COM provided
+with CP/M by Digital Research Corporation.  This document assumes you
+are familiar with that utility and its use.
+
+			------------------
+
+Version 1.1 update:
+
+Control-character translation has been added.  This facility works
+similarly to CP/M's SUBMIT, where a desired control character is gen-
+erated in the text file by preceeding the character with a circumflex
+character.  For example, control-V is generated from "^V".  Thanks to
+Keith Petersen for pointing out this omission.
+
+A bug in line number reporting when errors are encountered has been
+repaired.  Line numbers reported should now correspond to the actual
+line number in the file.
+
+			------------------
+
+ SUPERSUB provides the following new capabilities:
+
+	1) Null input lines are properly interpreted; they cause
+	   the creation of a zero-length line in $$$.SUB.
+
+	2) SUBMIT jobs may be nested.
+
+	3) For small SUBMIT jobs, the command lines may be specified
+	   on the SUPERSUB command line, seperated by semicolons.
+
+	4) An interactive mode allows command lines to be entered
+	   directly into SUPERSUB without need of a text editor.
+
+	5) A built-in help function is provided.
+
+	6) The output drive and number of allowable parameters may
+	   by specified at assembly time.
+
+NESTING
+-------
+
+SUBMIT jobs may be nested under SUPERSUB. For example, suppose you
+have a submit file to compile a program:
+
+BASCOM =$1
+L80 $1,$1/N/E
+PIP B:=$1.COM
+ERA $1.REL
+ERA $1.COM
+
+named COMPILE.SUB.  You may then submit a job to compile several
+programs using COMPILE.SUB.  For example, you can create a file
+called COMPALL.SUB consisting of:
+
+SUPERSUB COMPILE MYPROG
+SUPERSUB COMPILE RBBS.ASC
+SUPERSUB COMPILE PRIMES.BAS.
+
+This is especially useful when using INTERACTIVE or SUMMARY modes.
+In combination with Ward Christensen's FMAP program (CPMUG), some
+very powerful command structures may be built.
+
+SUMMARY MODE
+------------
+
+Summary mode allows the entire SUBMIT job to be specified in the
+CP/M command line.  This mode is enabled by using the slash ("/")
+character as the first character of the command line. The indiv-
+idual submit lines must be seperated with a semicolon. For example,
+
+     A>SUPERSUB / CRCK *.* F;CRCK B:*.* F;COMPARE CRCKFILE.CRC B:				 ^
+		 |
+		  ----> (this space is optional)
+
+will create a file of CRC's of all files on A:, then create a similar
+file on B:, then compare the two.  (CRCK, by Keith Petersen, and
+COMPARE, by Ward Christensen, are available from the CP/M Users Group).
+
+INTERACTIVE MODE
+----------------
+
+You may enter the interactive entry mode by typing "SUPERSUB /<CR>"
+(ie, "SUPERSUB /" with no arguments).  Supersub will prompt for input
+with an asterisk, and you may then enter SUBMIT lines from the keyboard.
+You may enter more than one logical line on a physical line using
+semicolon seperation.  An empty line terminates the input.  Example:
+
+A>SUPERSUB /
+*CRCK *.* F
+*CRCK B:*.* F
+*COMPARE CRCKFILE.CRC B:
+*				<empty line here>
+A>CRCK *.* F			<submit file begins execution>
+
+has the same effect as the above SUMMARY mode example.
+
+HELP FUNCTION
+-------------
+
+Typing SUPERSUB with no arguments will print the built-in help file.
+
+
+
+
+
+NOTES
+-----
+
+1) Nested SUBMIT runs are only usable up to a maximum of 128 nested
+   commands at any one time.  This is a limitation of the CP/M Console
+   Command Processor.
+
+2) If you change the drive specification for the output file, you
+   may want to do the same thing with XSUB (Digital Research's function
+   nine extender).  Within XSUB, find the submit File Control Block
+   (search for "$$$     SUB" within XSUB.COM)  and change the first FCB
+   byte (ie, the byte before the first "$") to:
+		0 - use default drive
+		1 - use drive A:
+		2 - use drive B:
+   etc.
+
+3) In SUMMARY and INTERACTIVE modes, passed parameters have no meaning.
+   When these modes are used, the parameter flag, "$", will be passed
+   through literally to the output file.
+
+4) Zero-length output lines may be created in SUMMARY and INTERACTIVE
+   modes by using two consecutive semicolons.  This is, in effect, a
+   blank logical line.
+
+5) Interactive mode may be aborted by typing control-C as the first
+   character of a line.  Also, all normal CP/M editing characters are
+   available.
+
