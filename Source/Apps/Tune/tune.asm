@@ -43,6 +43,7 @@
 ;   2020-05-02 [PMS] Add support for SBC-V2 slow-io hack
 ;   2020-09-03 [E?B] Add support for Ed Brindley YM/AY Sound Card v6
 ;   2021-08-13 [WBW] Add support for LiNC Z50 Sound Card
+;   2021-08-17 [WBW] When playing via HBIOS, call BF_SNDRESET at end
 ;_______________________________________________________________________________
 ;
 ; ToDo:
@@ -649,7 +650,7 @@ TMP		.DB	0	; work around use of undocumented Z80
 HBIOSMD		.DB	0	; NON-ZERO IF USING HBIOS SOUND DRIVER, ZERO OTHERWISE
 OCTAVEADJ	.DB	0	; AMOUNT TO ADJUST OCTAVE UP OR DOWN
 
-MSGBAN		.DB	"Tune Player for RomWBW v3.3, 14-Aug-2021",0
+MSGBAN		.DB	"Tune Player for RomWBW v3.4, 17-Aug-2021",0
 MSGUSE		.DB	"Copyright (C) 2021, Wayne Warthen, GNU GPL v3",13,10
 		.DB	"PTxPlayer Copyright (C) 2004-2007 S.V.Bulba",13,10
 		.DB	"MYMPlay by Marq/Lieves!Tuore",13,10,13,10
@@ -674,7 +675,7 @@ HWSTR_RCEB6	.DB	"RC2014 Sound Module (EBv6)",0
 HWSTR_RCMF	.DB	"RC2014 Sound Module (MF)",0
 HWSTR_LINC	.DB	"Z50 LiNC Sound Module",0
 
-MSGUNSUP	.db	"MYM files not supported yet!\r\n", 0
+MSGUNSUP	.db	"MYM files not supported with HBIOS yet!\r\n", 0
 
 MSGSONGNAME     .DB     "Song name: ", 0
 MSGARTIST       .DB     "by:        ", 0
@@ -820,12 +821,21 @@ CHECKLP	LD HL,SETUP
 	INC (HL)
 	.ENDIF
 
-MUTE	XOR A
+MUTE	ISHBIOS
+	JR	NZ,MUTEVIAHBIOS
+
+	XOR A
 	LD H,A
 	LD L,A
 	LD (AYREGS+AmplA),A
 	LD (AYREGS+AmplB),HL
 	JP ROUT
+
+MUTEVIAHBIOS:
+	LD	B,BF_SNDRESET
+	LD	C,0
+	RST	08
+	RET
 
 INIT
 ;HL - AddressOfModule
