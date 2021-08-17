@@ -39,6 +39,20 @@ jobs:
           name: RomWBW_Linux-${{env.GITHUB_REF_SLUG}}-${{env.GITHUB_SHA_SHORT}}
           path: .
 
+      - name: Create Package Archive
+        run: |
+            zip -r RomWBW-SnapShot-Package.zip .
+ 
+      - name: Post SnapShot
+        uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "SnapShot"
+          prerelease: true
+          title: "Development SnapShot Build"
+          files: |
+            RomWBW-SnapShot-Package.zip
+
   buildMacOS:
     runs-on: macos-latest
 
