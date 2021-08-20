@@ -371,7 +371,7 @@ void cpmbdos(byte *a, byte *b, byte *c, byte *d, byte *e, byte *f,
 		break;
 
 		case 0x3C:	/* Communicate with RSX */
-		*h = *l = 0;
+		*h = 0; *l = 0xFF; /* return error */
 		break;
 
 		case 0x62:	/* Purge */

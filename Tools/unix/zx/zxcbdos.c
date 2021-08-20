@@ -1,7 +1,9 @@
 #include "zx.h"
 #include "zxbdos.h"
 #include "zxcbdos.h"
+#if !(defined(__MINGW32__) || defined(_MSC_BUILD)  || defined(__WATCOMC__))
 #include <sys/ioctl.h>
+#endif
 #ifdef WIN32
 #include <conio.h>
 #endif
@@ -12,12 +14,12 @@
 
 void bdos_rdline(word line, word *PC)
 {
-	char *buf;
+	unsigned char *buf;
 
 	if (!line) line = cpm_dma;
 	else RAM[line + 1] = 0;
 
-	buf = (char *)&RAM[line];
+	buf = (unsigned char *)&RAM[line];
 
 	if (cpm_bdos_10(buf)) *PC = 0;
 }
@@ -90,7 +92,7 @@ int cstat()
 		return 0xFF;
 }
 
-#else /* defined(__MINGW32__) || defined(_MSC_BUILD) */
+#else /* defined(__MINGW32__) || defined(_MSC_BUILD)  || defined(__WATCOMC__) */
 
 byte cin()
 {
