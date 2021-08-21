@@ -420,6 +420,7 @@ int zx_term(void)
 
 	//n = RAM[0x81]; /* Get the return code. This is Hi-Tech C */
 	//n = (n << 8) | RAM[0x80]; /* specific and fails with other COM files */
+	n = 0;
 
 	putchar('\n');
 
