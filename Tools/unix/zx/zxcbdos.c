@@ -28,13 +28,47 @@ void bdos_rdline(word line, word *PC)
 
 void bdos_rdline(word line, word *PC)
 {
+	unsigned char c;
+	unsigned char *p;
+	int n;
 	int maxlen;
 
 	if (!line) line = cpm_dma;
 	maxlen = RAM[line];
 
-	fgets((char *)(RAM + line + 2), maxlen, stdin);
-	RAM[line + 1] = strlen((char *)(RAM + line + 2)) - 1;	
+	// fgets causes extra linefeeds, so we invent our own
+	//fgets((char *)(RAM + line + 2), maxlen, stdin);
+
+	p = (RAM + line + 2);
+	n = 0;
+
+	while (1) {
+		c = cin();
+		if (c == '\r')
+			break;
+		if (c == '\b') {
+			if (n > 0) {
+				cout('\b');
+				cout(' ');
+				cout('\b');
+				n--;
+				p--;
+			}
+		}
+		else {
+			if (n < maxlen) {
+				cout(c);
+				*p++ = c;
+				n++;
+			}
+		}
+	}
+
+	cout('\r');
+	*p = '\0';
+
+	//RAM[line + 1] = strlen((char *)(RAM + line + 2)) - 1;	
+	RAM[line + 1] = (unsigned char)n;
 
 	Msg("Input: [%d] %-*.*s\n", RAM[line + 1], RAM[line + 1], RAM[line +1], (char *)(RAM+line+2));
 }

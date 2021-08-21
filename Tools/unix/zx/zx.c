@@ -39,10 +39,12 @@ char *parse_to_fcb(char *s, int afcb)
 	RAM[afcb] = 0;
 	memset(fcb, ' ', 11);
 
+	while (*s == ' ') ++s;
+
 	while (1)
 	{
-		if (s[0] == 0) break;	
-		if (s[0] == ' ') {++s; continue; }
+		if (s[0] == 0) break;
+		if (s[0] == ' ') break;
 		if (s[1] == ':')
 		{
 			RAM[afcb] = s[0] - '@';
@@ -58,7 +60,7 @@ char *parse_to_fcb(char *s, int afcb)
 		}
 		*fcb = *s;  if (islower(*fcb)) *fcb = toupper(*fcb);
 		++s;
-		++fcb;	
+		++fcb;
 		if (fcb >= &RAM[afcb+12]) break;
 	}
 	return s;
@@ -353,10 +355,9 @@ int main(int ac, char **av)
 	str = parse_to_fcb(pCmd, 0x5C);
 	parse_to_fcb(str, 0x6C);	
 
-/* This statement is very useful when creating a client like zxc or zxas
+	// This statement is very useful when creating a client like zxc or zxas
+	Msg("Command tail is \"%s\"\n", pCmd);
 
-	printf("Command tail is %s\n", pCmd);
-*/
 	load_bios();
 
 	memset(RAM + 0xFE9C, 0, 0x64);	/* Zap the SCB */
@@ -417,8 +418,8 @@ int zx_term(void)
 	word n;
 
 
-	n = RAM[0x81];		  /* Get the return code. This is Hi-Tech C */
-	n = (n << 8) | RAM[0x80]; /* specific and fails with other COM files */
+	//n = RAM[0x81]; /* Get the return code. This is Hi-Tech C */
+	//n = (n << 8) | RAM[0x80]; /* specific and fails with other COM files */
 
 	putchar('\n');
 
