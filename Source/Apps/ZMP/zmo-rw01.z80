@@ -457,7 +457,8 @@ init:
 	call	print
 	db	'CIO device initialized: ',0
 	ld	a,(port)
-	add	a,'0'-1
+	;add	a,'0'-1
+	add	a,'0'
 	call	cout
 	call	print
 	db	cr,lf,0
@@ -472,12 +473,16 @@ initerr:
 	call	print
 	db	'Unable to initialize CIO device: ',0
 	ld	a,(port)
-	add	a,'0'-1
+	;add	a,'0'-1
+	add	a,'0'
 	call	cout
 	call	print
 	db	cr,lf,0
 
-	ret
+	;ret
+	
+	call	show		; show cursor, then ...
+	jp	0		; bail out to avoid system hang!
 
 ;--------------------------------------------------------------------------
 stop:	dw	1		; stop bits
@@ -539,7 +544,8 @@ setport:
 	pop	hl
 
 	ld	a,l
-	add	a,'0'-1
+	;add	a,'0'-1
+	add	a,'0'
 	call	cout
 	call	print
 	db	cr,lf,0
@@ -550,7 +556,8 @@ seterr:
 	db	'Unable to set CIO device: ',0
 	pop	hl
 	ld	a,l
-	add	a,'0'-1
+	;add	a,'0'-1
+	add	a,'0'
 	call	cout
 	call	print
 	db	cr,lf,0
@@ -641,7 +648,7 @@ hide:
 ;Turn on cursor:
 show:
 	call	print
-	db	esc,'.3',0
+	db	esc,'[?25h',0
 	ret
 
 ;Save cursor position:

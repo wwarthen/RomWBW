@@ -35,6 +35,13 @@
 ../../Binary/Apps/timer.com 15:
 ../../Binary/Apps/tune.com 15:
 ../../Binary/Apps/xm.com 15:
+../../Binary/Apps/zmp.com 15:
+../../Binary/Apps/zmp.hlp 15:
+../../Binary/Apps/zmp.doc 15:
+../../Binary/Apps/zmxfer.ovr 15:
+../../Binary/Apps/zmterm.ovr 15:
+../../Binary/Apps/zminit.ovr 15:
+../../Binary/Apps/zmconfig.ovr 15:
 #
 #../../Binary/Apps/i2clcd.com 2:
 #../../Binary/Apps/i2cscan.com 2:

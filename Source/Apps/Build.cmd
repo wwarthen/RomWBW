@@ -35,7 +35,7 @@ pushd Tune && call Build || exit /b & popd
 pushd FAT && call Build || exit /b & popd
 pushd I2C && call Build || exit /b & popd
 pushd ramtest && call Build || exit /b & popd
-pushd zmodem && call Build || exit /b & popd
+pushd ZMP && call Build || exit /b & popd
 
 copy *.com %APPBIN%\ || exit /b
 

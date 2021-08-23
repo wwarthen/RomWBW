@@ -15,4 +15,4 @@ zx MLOAD25 -ZMP.COM=ZMPX.COM,ZMO-RW01 || exit /b
 copy /Y zmp.com ..\..\..\Binary\Apps\ || exit /b
 copy /Y *.ovr ..\..\..\Binary\Apps\ || exit /b
 copy /Y *.hlp ..\..\..\Binary\Apps\ || exit /b
-copy /Y zmp.doc ..\..\..\Doc\ || exit /b
+copy /Y zmp.doc ..\..\..\Binary\Apps\ || exit /b
