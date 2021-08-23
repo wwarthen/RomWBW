@@ -21,7 +21,6 @@
 */
 
 #include "cpmint.h"
-#include <dirent.h>
 
 /* In debug mode, lseek()s can be traced. */
 
@@ -117,7 +116,7 @@ swizzle(char *fullpath)
 		return;
 	}
 
-	slash = rindex(fullpath, '/');
+	slash = strrchr(fullpath, '/');
 	if (!slash) {
 		return;
 	}
