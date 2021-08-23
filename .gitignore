@@ -76,6 +76,7 @@ Tools/unix/zx/zx
 
 !Source/ver.lib
 !Source/Apps/FAT/FAT.COM
+!Source/Apps/ZMP/zmpx.com
 !Source/BPBIOS/bpbuild.com
 !Source/BPBIOS/movp112.com
 !Source/BPBIOS/Z34RCP11/cledinst.com
