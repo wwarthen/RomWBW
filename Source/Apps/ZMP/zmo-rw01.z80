@@ -98,10 +98,6 @@ debug	equ	false		; to allow debugging of overlay with Z8E etc.
 overdrive	equ	0	; Drive to find overlay files on ('A'-'P')
 overuser	equ	0	; User area to find files
 ;
-; Initial ROMWBW CIO device
-;
-initdev		equ	1	; Second CIO device on system
-;
 ; Initial baud rate code
 ;
 initbr		equ	10	; Refer to "baudtbl" table below - brate column
@@ -132,7 +128,7 @@ ctrlq	equ	11h
 cr	equ	0dh
 lf	equ	0ah
 bdos	equ	5
-
+fcb	equ	05ch+1		; Command line
 
 codebgn	equ	$
 
@@ -174,7 +170,12 @@ jump_tab:
 	jp	spare		; spare for later use
 	jp	spare		; spare for later use
 	jp	spare		; spare for later use
-
+;
+; Port 0 & 1 defaults. Can be overwritten by command line
+;
+hbport0	db	1		; default hbios CIO serial port 0
+hbport1	db	2		; alternate hbios CIO serial port 0
+port:	db	1		; current cio port.
 ;
 ; Main code starts here
 ;
@@ -197,9 +198,23 @@ spare:
 ;  millisv  (msv)
 
 userin:
-	ld	a,-1		; force re-init
-	ld	(mspeed),a
+	ld	a,-1		; force re-init		; forcing reinit will resend AT command to modem, reset
+	ld	(mspeed),a				; current line defaults and eat up buffered characters
 
+	ld	a,(fcb)		; first character
+	cp	' '		; of parsed filename
+	jr	z,defport0	; is port 0
+	sub	'0'
+	ld	(hbport0),a	; set CIO for port 0
+	ld	(port),a	; reconfigure default
+defport0:
+	ld	a,(fcb+1)	; second character
+	cp	' '		; of parsed filename
+	jr	z,defport1	; is port 1
+	sub	'0'
+	ld	(hbport1),a
+defport1:
+;
 	push	bc
 	ld	bc,0f8f0h	; get clock speed in l
 	rst	08
@@ -279,7 +294,7 @@ _loop1:
 
 ; User-defined exit routine: leave empty if not needed
 userout:
-
+	call	show
 	ret
 
 
@@ -417,7 +432,7 @@ init:
 				; <== Insert your own code here
 				; using values below
 	call	print
-	db	cr,lf,cr,lf,'Initializing CIO device ...',cr,lf,0
+	db	cr,lf,cr,lf,'CIO Init ...',cr,lf,0
 
 	ld	a,(port)	; get device type
 	ld	c,a
@@ -455,9 +470,8 @@ init:
 	jr	nz,initerr
 
 	call	print
-	db	'CIO device initialized: ',0
+	db	'Device: ',0
 	ld	a,(port)
-	;add	a,'0'-1
 	add	a,'0'
 	call	cout
 	call	print
@@ -471,9 +485,8 @@ init:
 	ret
 initerr:
 	call	print
-	db	'Unable to initialize CIO device: ',0
+	db	'Init failed, CIO device: ',0
 	ld	a,(port)
-	;add	a,'0'-1
 	add	a,'0'
 	call	cout
 	call	print
@@ -520,6 +533,8 @@ baudtbl:
 ; this routine returning with no changes made. Note that ZMP calls this
 ; routine with both values for the port on initialisation.
 ;
+; Only originl ZMP calls setport. Mecports
+;
 setport:
 	ld	hl,2		; get port number
 	add	hl,sp
@@ -528,23 +543,27 @@ setport:
 
 				; <== Insert your own code here
 
-	inc	l		; l = cio 1 or cio 2
+	ld	a,l		; point to which port
+	ld	hl,hbport0	; we want to set
+	or	a
+	jr	z,isport0
+	inc	hl
+isport0:
+	ld	c,(hl)		; get the associated CIO port
+
 	push	hl
 	ld	b,06h		; test if a valid cio
-	ld	c,l
 	rst	08
 	pop	hl
 	or	a
-	ld	a,l
-	ld	(port),a
+	ld	a,(hl)		; get the associated CIO port		
 	jr	nz,seterr
+	ld	(port),a	; save the valid port
 	push	hl
 	call	print
 	db	'Setting CIO device: ',0
 	pop	hl
 
-	ld	a,l
-	;add	a,'0'-1
 	add	a,'0'
 	call	cout
 	call	print
@@ -555,8 +574,7 @@ seterr:
 	call	print
 	db	'Unable to set CIO device: ',0
 	pop	hl
-	ld	a,l
-	;add	a,'0'-1
+	ld	a,(hl)		; get port we wanted to set
 	add	a,'0'
 	call	cout
 	call	print
@@ -564,7 +582,7 @@ seterr:
 				; <== End of your own code
 	ret
 
-port:	db	initdev		; zmp port 0 = cio 1, zmp port 1 = cio 2
+
 
 ;****************************************************************************
 ;Video terminal sequences: these are for VT-100: Modify as you wish
@@ -754,13 +772,9 @@ cout:
 	push	bc		; save regs
 	push	de
 	push	hl
-;	ld	e,a		; character to E
-;	ld	c,2
-;	call	bdos		; print it
-	ld	b,01h
-	ld	c,80h
-	ld	e,a
-	rst	08
+	ld	e,a		; character to E
+	ld	c,2
+	call	bdos		; print it
 	pop	hl
 	pop	de
 	pop	bc
