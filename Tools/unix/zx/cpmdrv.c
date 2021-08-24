@@ -139,6 +139,7 @@ cpm_word fcb_purge()
 #endif
 }
 
+/* Generic 8MB disk definition */
 
 static cpm_byte exdpb[0x11] = {
 	0x80, 0, 	/* 128 records/track */
@@ -154,61 +155,7 @@ static cpm_byte exdpb[0x11] = {
 
 cpm_word fcb_getdpb(cpm_byte *dpb)
 {
-#ifdef WIN32
-	DWORD spc, bps, fc, tc;
-	unsigned bsh, blm, psh, phm;
-	char *hostd = drive_to_hostdrive(redir_cpmdrive);
-
-        if (!hostd) return 0x01FF;  /* Can't select */
-
-	if (!GetDiskFreeSpace(hostd, &spc, &bps, &fc, &tc))
-		return 0x01FF;	/* Can't select */
-
-	/* Store total clusters */
-	//if (tc > 0x10000L) tc = 0x10000L;
-	if (tc > 0xFFFFL) tc = 0xFFFFL;
-
-	psh = 0; phm = 0;
-
-	while (bps > 128)	/* Get sector size */
-	{
-		bps /= 2;
-		psh++;
-		phm = (phm << 1) | 1;
-	}	
-	bsh = psh; blm = phm;
-	while (spc > 1)	/* Get cluster size */
-	{
-		spc /= 2;
-		bsh++;
-		blm = (blm << 1) | 1;
-	}	
-	
-
-	exdpb[2] = bsh;
-	exdpb[3] = blm;
-	exdpb[5] = tc & 0xFF;
-	exdpb[6] = tc >> 8;
-
-	exdpb[15] = psh;
-	exdpb[16] = phm;
-#else
-        struct statfs buf;
-	cpm_word nfiles;
-
-	/* Get DPB for redir_cpmdrive. Currently just returns a dummy. */
-        if (!statfs(redir_drive_prefix[redir_cpmdrive], &buf))
-	{
-		/* Store correct directory entry count */
-
-		if (buf.f_files >= 0x10000L) nfiles = 0xFFFF;
-		else                         nfiles = buf.f_files;
-
-		exdpb[7] = nfiles & 0xFF;
-		exdpb[8] = nfiles >> 8;
-	}
-#endif
-	
+	/* Return the example dpb */
 	memcpy(dpb, &exdpb, 0x11);
 	return 0x11;
 }
@@ -223,7 +170,7 @@ cpm_word fcb_getalv(cpm_byte *alv, cpm_word max)
 
 	memset(alv,             0xFF, max / 2);
 	memset(alv + (max / 2), 0,    max / 2);
-	
+
 	return max;
 }
 
@@ -231,45 +178,7 @@ cpm_word fcb_getalv(cpm_byte *alv, cpm_word max)
 
 cpm_word fcb_dfree (cpm_byte drive, cpm_byte *dma)
 {
-#ifdef WIN32
-	DWORD spc, bps, fc, tc;
-	DWORD freerec;
-	char *hostd = drive_to_hostdrive(drive);
-	
-	if (!hostd) return 0x01FF;
-        if (!hostd) return 0x01FF;  /* Can't select */
-
-	if (!GetDiskFreeSpace(hostd, &spc, &bps, &fc, &tc))
-		return 0x01FF;	/* Can't select */
-
-	freerec = fc;		/* Free clusters */
-	freerec *= spc;		/* Free sectors */
-	freerec *= (bps / 128);	/* Free CP/M records */
-
-	/* Limit to maximum CP/M drive size */
-	if (freerec > 4194303L) freerec = 4194303L;
-	redir_wr24(dma, freerec);
-		
-#else
-	struct statfs buf;
-	long dfree;
-
-	if (!redir_drive_prefix[drive]) return 0x01FF;	/* Can't select */
-	
-	if (statfs(redir_drive_prefix[drive], &buf)) return 0x01FF;
-
-	dfree = (buf.f_bavail * (buf.f_bsize / 128));
-
-	if (dfree < buf.f_bavail ||	/* Calculation has wrapped round */
-	    dfree > 4194303L)           /* Bigger than max CP/M drive size */
-	{
-		dfree = 4194303L;
-	}
-
-	redir_wr24(dma, dfree);
-#endif
+	/* Return half of disk capacity */
+	redir_wr24(dma, 0x8000L);	/* 8MB / 128 / 2 */
 	return 0;
 }
-
-
-

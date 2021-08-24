@@ -277,7 +277,11 @@ cpm_word redir_find(int n, cpm_byte *fcb, cpm_byte *dma)
 	while (n >= 0)
 	{
 		de = next_entry(hostdir, fcb, dma + 1, &st);
-		if (!de) return 0xFF;
+		if (!de) 
+		{
+			closedir(hostdir);
+			return 0xFF;
+		}
 		--n;
 	}
 	/* Valid entry found & statted. dma+1 holds filename. */
