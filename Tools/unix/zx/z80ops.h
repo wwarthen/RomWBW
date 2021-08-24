@@ -317,15 +317,43 @@ endinstr;
 
 instr(39,4);
    {
-      unsigned char incr=0, carry=cy;
-      if((f&0x10) || (a&0x0f)>9) incr=6;
-      if((f&1) || (a>>4)>9) incr|=0x60;
-      if(f&2)suba(incr,0);
-      else {
-         if(a>0x90 && (a&15)>9)incr|=0x60;
-         adda(incr,0);
-      }
-      f=((f|carry)&0xfb)|parity(a);
+   /* Frank D. Cringle's DAA implementation, converted from yaze 1.10 */
+   unsigned int acu,temp,cbits;
+   
+   acu=a;
+   temp=(acu&15);
+   cbits=(f&1);
+   if(f&2)	/* if N */
+     {
+     /* last operation was a subtract */
+     int hd=(cbits || (acu>0x99));
+     if((f&16) || (temp>9))
+       { /* adjust low digit */
+       if(temp>5) f&=~16;
+       acu-=6;
+       acu&=0xff;
+       }
+     /* adjust high digit */
+     if(hd)
+       acu-=0x160;
+     }
+   else
+     {
+     /* last operation was an add */
+     if((f&16) || (temp>9))
+       {
+       /* adjust low digit */
+       if(temp>9) f|=16; else f&=~16;
+       acu+=6;
+       }
+     /* adjust high digit */
+     if(cbits || ((acu&0x1f0)>0x90))
+       acu+=0x60;
+     }
+   cbits|=((acu>>8)&1);
+   acu&=0xff;
+   a=acu;
+   f=((acu&0xa8)|((acu==0)<<6)|(f&0x12)|parity(a)|cbits);
    }
 endinstr;
 
