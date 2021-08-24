@@ -174,7 +174,7 @@ jump_tab:
 ; Port 0 & 1 defaults. Can be overwritten by command line
 ;
 hbport0	db	1		; default hbios CIO serial port 0
-hbport1	db	2		; alternate hbios CIO serial port 0
+hbport1	db	2		; alternate hbios CIO serial port 1
 port:	db	1		; current cio port.
 ;
 ; Main code starts here
