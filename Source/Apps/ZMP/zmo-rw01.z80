@@ -203,7 +203,7 @@ userin:
 
 	ld	a,(fcb)		; first character
 	cp	' '		; of parsed filename
-	jr	z,defport0	; is port 0
+	jr	z,defport1	; is port 0
 	sub	'0'
 	ld	(hbport0),a	; set CIO for port 0
 	ld	(port),a	; reconfigure default
@@ -242,7 +242,6 @@ defport1:
 
 	call	mult_a_de
 	ld	(inv),hl
-
 ;
 ;	ld de,39 * clkspd
 ;
@@ -302,17 +301,14 @@ userout:
 mchin:
 	push	bc
 				; <== Insert your own code here
-	push	de
 	ld	b,00h
 	ld	hl,port
 	ld	c,(hl)
 	rst	08
-
-	ld	a,e
-	pop	de
+	ld	l,e
 				; <== End of your own code
 
-	ld	l,a		; put in HL
+;	ld	l,a		; put in HL
 ;	ld	h,0
 ;	or	a		; set/clear Z
 	pop	bc
@@ -322,9 +318,8 @@ mchin:
 mchout:
 	ld	hl,2		; get the character
 	add	hl,sp
-	ld	a,(hl)
+	ld	e,(hl)
 				; <== Insert your own code here
-	ld	e,a
 	ld	b,01h
 	ld	hl,port
 	ld	c,(hl)
@@ -343,33 +338,27 @@ mordy:
 	or	a
 	jr	z,modrdy1
 	ld	a,1
+	or	a
 modrdy1:
 	ld	l,a
 				; <== End of your own code
-
-	ld	a,l		; set/clear Z
-	or	a
 	ret
 
 ;Test for character at modem: return TRUE (1) in HL if so
 mirdy:
-				; <== Insert your own code here
 	push	bc
 	ld	b,02h
 	ld	hl,port
 	ld	c,(hl)
 	rst	08
+	ld	h,0
 	or	a
 	jr	z,mirdy1
 	ld	a,1
+	or	a
 mirdy1:
 	ld	l,a
-	ld	h,0
 	pop	bc
-
-				; <== End of your own code
-;	ld	a,l		; set/clear Z
-;	or	a
 	ret
 
 ;Send a break to the modem: leave empty if your system can't do it
@@ -432,7 +421,7 @@ init:
 				; <== Insert your own code here
 				; using values below
 	call	print
-	db	cr,lf,cr,lf,'CIO Init ...',cr,lf,0
+	db	cr,lf,cr,lf,'CIO Initialized ...',cr,lf,0
 
 	ld	a,(port)	; get device type
 	ld	c,a
@@ -471,11 +460,7 @@ init:
 
 	call	print
 	db	'Device: ',0
-	ld	a,(port)
-	add	a,'0'
-	call	cout
-	call	print
-	db	cr,lf,0
+	call	dispport
 
 	ld	a,(brate)
 	ld	(mspeed),a	; don't forget to load mspeed with the
@@ -485,17 +470,22 @@ init:
 	ret
 initerr:
 	call	print
-	db	'Init failed, CIO device: ',0
-	ld	a,(port)
-	add	a,'0'
-	call	cout
-	call	print
-	db	cr,lf,0
+	db	'Initization failed, CIO device: ',0
+	call	dispport
 
 	;ret
 	
 	call	show		; show cursor, then ...
 	jp	0		; bail out to avoid system hang!
+
+dispport:
+	ld	a,(port)	; Display port
+dispport1:
+	add	a,'0'
+	call	cout
+	call	print
+	db	cr,lf,0
+	ret
 
 ;--------------------------------------------------------------------------
 stop:	dw	1		; stop bits
@@ -533,7 +523,7 @@ baudtbl:
 ; this routine returning with no changes made. Note that ZMP calls this
 ; routine with both values for the port on initialisation.
 ;
-; Only originl ZMP calls setport. Mecports
+; Only originl ZMP calls setport. Mecports does not support setting ports
 ;
 setport:
 	ld	hl,2		; get port number
@@ -559,15 +549,9 @@ isport0:
 	ld	a,(hl)		; get the associated CIO port		
 	jr	nz,seterr
 	ld	(port),a	; save the valid port
-	push	hl
 	call	print
 	db	'Setting CIO device: ',0
-	pop	hl
-
-	add	a,'0'
-	call	cout
-	call	print
-	db	cr,lf,0
+	call	dispport
 	ret
 seterr:
 	push	hl
@@ -575,15 +559,10 @@ seterr:
 	db	'Unable to set CIO device: ',0
 	pop	hl
 	ld	a,(hl)		; get port we wanted to set
-	add	a,'0'
-	call	cout
-	call	print
-	db	cr,lf,0
+	call	dispport1
 				; <== End of your own code
 	ret
-
-
-
+;
 ;****************************************************************************
 ;Video terminal sequences: these are for VT-100: Modify as you wish
 ;Cursor addressing: 
@@ -694,39 +673,7 @@ invec:
 ;De-initialise interrupt vectors:
 dinvec:
 	ret			; ditto
-; Display A in hex
-prthexbyte:
-	push	af
-	push	de
-	call	hexascii
-	ld	a,d
-	call	cout
-	ld	a,e
-	call	cout
-	pop	de
-	pop	af
-	ret
 
-hexascii:
-	ld	d,a
-	call	hexconv
-	ld	e,a
-	ld	a,d
-	rlca
-	rlca
-	rlca
-	rlca
-	call	hexconv
-	ld	d,a
-	ret
-
-hexconv:
-	and	0fh
-	add	a,90h
-	daa
-	adc	a,40h
-	daa
-	ret
 
 ;****************** End of user-defined code ********************************
 ;		Do not change anything below here.
@@ -880,4 +827,3 @@ toobig:	jp	errval		; Overlay too large!
 	 endif
 
 	end
-
