@@ -643,9 +643,9 @@ Cards, as well as real spinning hard disks.
 | fd_cpm22.img    | hd_cpm22.img    | DRI CP/M 2.2 boot disk                 |
 | fd_zsdos.img    | hd_zsdos.img    | ZSDOS 1.1 boot disk                    |
 | fd_nzcom.img    | hd_nzcom.img    | NZCOM boot disk                        |
-| fd_cpm3         | hd_cpm3.img     | DRI CP/M 3 boot disk                   |
-| fd_zpm3         | hd_zpm3.img     | ZPM3 boot disk                         |
-| fd_ws4          | hd_ws4.img      | WordStar v4 application disk           |
+| fd_cpm3.img     | hd_cpm3.img     | DRI CP/M 3 boot disk                   |
+| fd_zpm3.img     | hd_zpm3.img     | ZPM3 boot disk                         |
+| fd_ws4.img      | hd_ws4.img      | WordStar v4 application disk           |
 
 In addition to the disk images above, there is also a special hard
 disk image called hd_combo.img. This image contains all of the images
@@ -1080,6 +1080,8 @@ through the normal startup process just like it was started from ROM.
 However, your ROM has not been updated and the next time you boot your
 system, it will revert to the system image contained in ROM.
 
+# Upgrading via Flash Utility
+
 If you do not have easy access to a ROM programmer, it is usually
 possible to reprogram your system ROM using the FLASH utility from
 Will Sowerbutts. This application, called FLASH.COM, can be found on the
@@ -1122,6 +1124,21 @@ To confirm your ROM chip has been successfully updated, restart your
 system and boot an operating system from ROM. Do not boot from a disk
 device yet. Review the boot messages to see if any issues have
 occurred.
+
+# Upgrading via XModem Flash Updater
+
+Similar to using the Flash utility, the system ROM can be updated
+or upgraded through the ROM based updater utility. This works by
+by reprogrammed the flash ROM as the file is being transfered.
+
+This has the advantage that secondary storage is not required to
+hold the new image.
+
+From the Boot Loader menu select X (Xmodem Flash Updater) and then
+U (Begin Update). Then initiate the Xmodem transfer of the .img or
+.upd file.
+
+# Post Update System Image and Application update process
 
 Once you are satisfied that the ROM is working well, you will need to
 update the system images and RomWBW custom applications on your disk
