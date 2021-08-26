@@ -32,6 +32,8 @@
 ; the desired executable image.
 ;
 #INCLUDE "std.asm"	; standard RomWBW constants
+
+#define ROMLDR
 ;
 #ifndef BOOT_DEFAULT
 #define BOOT_DEFAULT "H"
@@ -206,6 +208,7 @@ prompt:
 	call	clrbuf			; zero fill the cmd buffer
 ;
 #if (DSKYENABLE)
+	call	DSKY_PREINIT		; *** TEMPORARY ***
 	call	DSKY_RESET		; clear DSKY
 	ld	hl,msg_sel		; boot select msg
 	call	DSKY_SHOW		; show on DSKY
@@ -1105,10 +1108,11 @@ clrled:
 	out	(LEDPORT),a	; clear led
     #endif
     #if (LEDMODE == LEDMODE_RTC)
-	; Only bits 0 and 1 of the RTC latch are for the LEDs.  Here,
-	; we assume that it is OK to zero all bits of the RTC latch.
-	xor	a		; turn off
-	out	(LEDPORT),a	; clear led
+	; Bits 0 and 1 of the RTC latch are for the LEDs.
+	ld	a,(HB_RTCVAL)
+	and	~%00000011
+	out	(RTCIO),a	; clear led
+	ld	(HB_RTCVAL),a
     #endif
   #endif
 #endif
@@ -1927,9 +1931,6 @@ str_err_api	.db	"Unexpected hardware BIOS API failure",0
 ;=======================================================================
 ; Includes
 ;=======================================================================
-;
-#define USEDELAY
-; #include "util.asm"
 ;
 #if (DSKYENABLE)
 #define	DSKY_KBD
