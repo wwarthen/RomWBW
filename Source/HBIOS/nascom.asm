@@ -4855,7 +4855,7 @@ MULDLP:	DJNZ	MULSKP		; DIVIDE BY 8
 	LD	B,$00
 	LD	IX,SPK_DLYADJ 	; The base address of the timing loop.
 	ADD	IX,BC		; Alter the length of the timing loop. Use an earlier starting point for each '1' lost by taking INT (L/4).
-	LD	A,(RTCVAL)	; Fetch the present border colour from BORDCR and move it to bits 2, 1 and 0 of the A register.
+	LD	A,(HB_RTCVAL)	; Fetch the present border colour from BORDCR and move it to bits 2, 1 and 0 of the A register.
 ;
 ;	The HL register holds the 'length of the timing loop' with 16 T states being used for each '1' in the L register and 1024 T states for each '1' in the H register.
 ;
@@ -4897,8 +4897,8 @@ BE_END:	EI
 	POP	BC		; RECALL SYNTAX POINTER
 	POP	HL
 	RET
-;
-RTCVAL	.DB	0
+;;
+;RTCVAL	.DB	0
 ;
 ;	SETUP THE ONE SECOND TONE DURATION TABLE BASED ON PROCESSOR SPEED AND TONE FREQUENCY
 ;

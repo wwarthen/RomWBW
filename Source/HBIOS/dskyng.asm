@@ -66,7 +66,7 @@ DSKY_CMD_FIFO:	.EQU	%01000000	; READ FIFO
 ;
 DSKY_PRESCL:	.EQU	DSKYOSC/100000	; PRESCALER
 ;
-;__DSKY_INIT_________________________________________________________________________________________
+;__DSKY_PREINIT______________________________________________________________________________________
 ;
 ;  CONFIGURE PARALLEL PORT AND INITIALIZE 8279
 ;____________________________________________________________________________________________________
@@ -74,9 +74,11 @@ DSKY_PRESCL:	.EQU	DSKYOSC/100000	; PRESCALER
 ;
 ; HARDWARE RESET 8279 BY PULSING RESET LINE
 ;
-DSKY_INIT:
-;
-	; SETUP PPI
+DSKY_PREINIT:
+	; CHECK FOR PPI
+	CALL	DSKY_PPIDETECT		; TEST FOR PPI HARDWARE
+	RET	NZ			; BAIL OUT IF NOT THERE
+	; SETUP PPI TO DEFAULT MODE
 	CALL	DSKY_PPIRD
 	; INIT 8279 VALUES TO IDLE STATE
 	LD	A,DSKY_PPI_IDLE
@@ -86,7 +88,25 @@ DSKY_INIT:
 	OUT	(PPIC),A
 	RES	7,A
 	OUT	(PPIC),A
-	; DONE
+	; INITIALIZE 8279
+	CALL	DSKY_REINIT
+	; NOW SEE IF A DSKYNG IS REALLY THERE...
+	LD	A,$A5
+	LD	(DSKY_BUF),A
+	LD	HL,DSKY_BUF
+	LD	C,0
+	LD	B,1
+	CALL	DSKY_PUTSTR
+	LD	HL,DSKY_BUF
+	LD	C,0
+	LD	B,1
+	CALL	DSKY_GETSTR
+	LD	A,(DSKY_BUF)
+	CP	$A5
+	RET	NZ			; BAIL OUT IF MISCOMPARE
+	LD	A,$FF
+	LD	(DSKY_PRESENT),A
+	RET
 ;
 DSKY_REINIT:
 	CALL	DSKY_PPIIDLE
@@ -115,6 +135,53 @@ DSKY_RESET1:
 ;
 DSKY_RESET2:
 	RET
+;
+;__DSKY_INIT_________________________________________________________________________________________
+;
+;  DISPLAY DSKY INFO
+;____________________________________________________________________________________________________
+;
+#IFDEF HBIOS
+;
+DSKY_INIT:
+	CALL	NEWLINE			; FORMATTING
+	PRTS("DSKY:$")			; FORMATTING
+;
+	PRTS(" IO=0x$")			; FORMATTING
+	LD	A,DSKYPPIBASE		; GET BASE PORT
+	CALL	PRTHEXBYTE		; PRINT BASE PORT
+	PRTS(" MODE=$")			; FORMATTING
+	PRTS("NG$")			; PRINT DSKY TYPE
+;
+	LD	A,(DSKY_PRESENT)	; PRESENT?
+	OR	A			; SET FLAGS
+	RET	NZ			; YES, ALL DONE
+	PRTS(" NOT PRESENT$")		; NOT PRESENT
+	RET				; DONE
+;
+#ENDIF
+;
+;__DSKY_PPIDETECT____________________________________________________________________________________
+;
+;  PROBE FOR PPI HARDWARE
+;____________________________________________________________________________________________________
+;
+DSKY_PPIDETECT:
+;
+	; TEST FOR PPI EXISTENCE
+	; WE SETUP THE PPI TO WRITE, THEN WRITE A VALUE OF ZERO
+	; TO PORT A (DATALO), THEN READ IT BACK.  IF THE PPI IS THERE
+	; THEN THE BUS HOLD CIRCUITRY WILL READ BACK THE ZERO. SINCE
+	; WE ARE IN WRITE MODE, AN IDE CONTROLLER WILL NOT BE ABLE TO
+	; INTERFERE WITH THE VALUE BEING READ.
+	CALL	DSKY_PPIWR
+;
+	LD	C,PPIA			; PPI PORT A
+	XOR	A			; VALUE ZERO
+	OUT	(C),A			; PUSH VALUE TO PORT
+	IN	A,(C)			; GET PORT VALUE
+	OR	A			; SET FLAGS
+	RET				; AND RETURN
 ;
 #IFDEF DSKY_KBD
 ;
@@ -153,6 +220,9 @@ KY_F1	.EQU	$21	; F1
 ;____________________________________________________________________________________________________
 ;
 DSKY_STAT:
+	LD	A,(DSKY_PRESENT)	; DOES IT EXIST?
+	OR	A			; SET FLAGS
+	RET	Z			; ABORT WITH A=0 IF NOT THERE
 	CALL	DSKY_ST
 	AND	$0F			; ISOLATE THE CUR FIFO LEN
 	RET
@@ -163,6 +233,9 @@ DSKY_STAT:
 ;____________________________________________________________________________________________________
 ;
 DSKY_GETKEY:
+	LD	A,(DSKY_PRESENT)	; DOES IT EXIST?
+	OR	A			; SET FLAGS
+	JR	Z,DSKY_GETKEY1A		; ABORT IF NOT PRESENT
 	CALL	DSKY_STAT
 	JR	Z,DSKY_GETKEY		; LOOP IF NOTHING THERE
 	LD	A,DSKY_CMD_FIFO
@@ -181,6 +254,7 @@ DSKY_GETKEY1:
 	INC	C			; BUMP INDEX
 	DJNZ	DSKY_GETKEY1		; LOOP UNTIL EOT
 	POP	AF			; FIX STACK
+DSKY_GETKEY1A:
 	LD	A,$FF			; NOT FOUND ERR, RETURN $FF
 	RET
 DSKY_GETKEY2:
@@ -483,7 +557,7 @@ DSKY_GETSTR1:
 ;	.DB 	$00,$00,$00,$00,$00,$00,$00,$00
 ;
 DSKY_PUTLED:
-        EX	(SP),HL
+	EX	(SP),HL
 	PUSH	AF
 	PUSH	BC
 	LD 	C,8
@@ -690,6 +764,7 @@ DSKY_HEXMAP:
 	.DB	$71	; F
 ;
 DSKY_PPIX_VAL:	.DB	0
+DSKY_PRESENT:	.DB	0
 ;
 ; SEG DISPLAY WORKING STORAGE
 ;

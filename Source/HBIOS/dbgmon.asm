@@ -1017,7 +1017,7 @@ DSKY_ENTRY:
 ;	START UP THE SYSTEM WITH THE FRONT PANEL INTERFACE
 ;_____________________________________________________________________________
 ;
-	CALL    DSKY_INIT		; INIT 8255
+	CALL	DSKY_PREINIT		; INITIALIZE DSKY
 
   #IF (DSKYMODE == DSKYMODE_NG)
 	CALL 	DSKY_BEEP
@@ -1501,7 +1501,7 @@ SEGDECODE:
 #IF (DSKYMODE == DSKYMODE_NG)
 ;
 CPUUP	.DB 	$40,$39,$73,$3E,$00,$3E,$73,$40	; "-CPU UP-" (RAW SEG)
-MSGBOOT	.DB	$7F,$5C,$5C,$78,$A0,$00,$00,$00 ; "Boot!   " (RAW SEG)
+MSGBOOT	.DB	$7F,$5C,$5C,$78,$82,$00,$00,$00 ; "Boot!   " (RAW SEG)
 ADDR	.DB	$17,$18,$19,$10,$00,$00,$00,$00	; "Adr 0000" (ENCODED)
 PORT	.DB	$13,$14,$15,$16,$10,$10,$00,$00	; "Port  00" (ENCODED)
 GOTO	.DB	$1A,$14,$10,$10,$00,$00,$00,$00	; "Go  0000" (ENCODED)

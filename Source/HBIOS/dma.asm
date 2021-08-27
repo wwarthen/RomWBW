@@ -41,7 +41,7 @@ DMA_INIT:
 	xor	a
 	out	(DMABASE+1),a		; force ready off
 ;
-	ld	a,(RTCVAL)
+	ld	a,(HB_RTCVAL)
 	or	%00001000		; half
 	out	(RTCIO),a		; clock
 ;
@@ -59,7 +59,7 @@ DMA_INIT:
 ;
 DMA_EXIT:
 	push	af
-	ld	a,(RTCVAL)
+	ld	a,(HB_RTCVAL)
 	and	%11110111		; full
 	out	(RTCIO),a		; clock
 	pop	af
@@ -151,7 +151,7 @@ DMALDIR:
 	ld	b,DMACopy_Len		; dma command
 	ld	c,DMABASE		; block
 ;
-	ld	a,(RTCVAL)
+	ld	a,(HB_RTCVAL)
 	or	%00001000		; half
 	out	(RTCIO),a		; clock
 	di
@@ -165,7 +165,7 @@ DMALDIR:
 	sub	%00011011
 
 	push	af
-	ld	a,(RTCVAL)
+	ld	a,(HB_RTCVAL)
 	and	%11110111		; full
 	out	(RTCIO),a		; clock
 	pop	af
@@ -201,7 +201,7 @@ DMAOTIR:
 	ld	b,DMAOut_Len		; dma command
 	ld	c,DMABASE		; block
 ;
-	ld	a,(RTCVAL)
+	ld	a,(HB_RTCVAL)
 	or	%00001000		; half
 	out	(RTCIO),a		; clock
 	di
@@ -215,7 +215,7 @@ DMAOTIR:
 	sub	%00011011
 ;
 	push	af
-	ld	a,(RTCVAL)
+	ld	a,(HB_RTCVAL)
 	and	%11110111		; full
 	out	(RTCIO),a		; clock
 	pop	af
@@ -256,7 +256,7 @@ DMAINIR:
 	ld	b,DMAIn_Len		; dma command
 	ld	c,DMABASE		; block
 ;
-	ld	a,(RTCVAL)
+	ld	a,(HB_RTCVAL)
 	or	%00001000		; half
 	out	(RTCIO),a		; clock
 	di
@@ -270,7 +270,7 @@ DMAINIR:
 	sub	%00011011
 ;
 	push	af
-	ld	a,(RTCVAL)
+	ld	a,(HB_RTCVAL)
 	and	%11110111		; full
 	out	(RTCIO),a		; clock
 	pop	af
