@@ -141,7 +141,7 @@ DSKY_RESET2:
 ;  DISPLAY DSKY INFO
 ;____________________________________________________________________________________________________
 ;
-#IFNDEF ROMLDR
+#IFDEF HBIOS
 ;
 DSKY_INIT:
 	CALL	NEWLINE			; FORMATTING

@@ -32,8 +32,6 @@
 ; the desired executable image.
 ;
 #INCLUDE "std.asm"	; standard RomWBW constants
-
-#define ROMLDR
 ;
 #ifndef BOOT_DEFAULT
 #define BOOT_DEFAULT "H"
