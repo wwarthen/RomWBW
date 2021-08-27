@@ -1,5 +1,6 @@
 !include(Common.inc)
 !def(document)(ROM Applications)
+!def(author)(Phillip Summers)
 ---
 title: !product !document
 author: !author (mailto:!authmail)
@@ -37,7 +38,7 @@ programming languages.
 
 `\clearpage`{=latex}
 
-#ROMWBW Monitor
+# ROMWBW Monitor
 
 The Monitor program is a low level utility that can be used 
 for testing and programming. It allows programs to be entered,
@@ -48,30 +49,32 @@ It's key advantage is that is available at boot up.
 
 A quick guide to using the Monitor program follows:
 
-##? - Displays a summary of available commands.
+## ? - Displays a summary of available commands.
 
-`Monitor Commands (all values in hex):`
-`B                - Boot system`
-`D xxxx yyyy      - Dump memory from xxxx to yyyy`
-`F xxxx yyyy zz   - Fill memory from xxxx to yyyy with zz`
-`H                - Halt system`
-`I xxxx           - Input from port xxxx`
-`K                - Keyboard echo`
-`L                - Load Intel hex data`
-`M xxxx yyyy zzzz - Move memory block xxxx-yyyy to zzzz`
-`O xxxx yy        - Output value yy to port xxxx`
-`P xxxx           - Program RAM at address xxxx`
-`R xxxx           - Run code at address xxxx`
-`S xx             - Set bank to xx`
-`X                - Exit monitor`
+```
+Monitor Commands (all values in hex):`
+B                - Boot system`
+D xxxx yyyy      - Dump memory from xxxx to yyyy`
+F xxxx yyyy zz   - Fill memory from xxxx to yyyy with zz`
+H                - Halt system`
+I xxxx           - Input from port xxxx`
+K                - Keyboard echo`
+L                - Load Intel hex data`
+M xxxx yyyy zzzz - Move memory block xxxx-yyyy to zzzz`
+O xxxx yy        - Output value yy to port xxxx`
+P xxxx           - Program RAM at address xxxx`
+R xxxx           - Run code at address xxxx`
+S xx             - Set bank to xx`
+X                - Exit monitor`
+```
 
-##Cold Boot
+## Cold Boot
 
 B - Performs a cold boot of the ROMWBW system. A complete
 reinitialization of the system is performed and the system
 returns to the Boot Loader prompt.
 
-##Dump Memory
+## Dump Memory
 
 D xxxx yyyy - Dump memory from hex location xxxx to yyyy
 on the screen as lines of 16 hexadecimal bytes with their
@@ -80,8 +83,9 @@ printed). A good tool to see where code is located, check
 for version id, obtain details for chip configurations and
 execution paths.
 
-Examples: D 100 1FF
+Examples: `D 100 1FF`
 
+```
 0100: 10 0B 01 5A 33 45 4E 56 01 00 00 2A 06 00 F9 11  ...Z3ENV...*..ù.
 0110: DE 38 37 ED 52 4D 44 0B 6B 62 13 36 00 ED B0 21  Þ87íRMD.kb.6.í°!
 0120: 7D 32 E5 21 80 00 4E 23 06 00 09 36 00 21 81 00  }2å!..N#...6.!..
@@ -98,8 +102,9 @@ Examples: D 100 1FF
 01D0: C9 3E FF 32 3C 00 3A 5D 00 FE 20 28 14 D6 30 32  É>ÿ2<.:].þ (.Ö02
 01E0: AB 01 32 AD 01 3A 5E 00 FE 20 28 05 D6 30 32 AC  «.2­.:^.þ (.Ö02¬
 01F0: 01 C5 01 F0 F8 CF E5 26 00 0E 0A CD 39 02 7D 3C  .Å.ðøÏå&...Í9.}<
+```
 
-##Fill Memory
+## Fill Memory
 
 F xxxx yyyy zz - Fill memory from hex xxxx to yyyy with
 a single value of zz over the full range. The Dump command
@@ -159,7 +164,7 @@ allow you to program a hexidecimal into memory starting
 at location xxxx. Press 'Enter' on a blank line to
 return to the Monitor prompt.
 
-##NOTES:
+## NOTES:
 
 The Monitor allows access to all memory locations. ROM and
 Flash memory cannot be written to. Memory outside the normal
@@ -172,14 +177,14 @@ to manipulate the Real Time Clock non-volatile Memory.
 Use the C or Z option from the Boot Loader to load CP/M 
 and then run RTC to see the options list.
 
-#FORTH
+# FORTH
 
-#BASIC
+# BASIC
 
-#TastyBASIC
+# TastyBASIC
 
-#Play a Game
+# Play a Game
 
-#Network Boot
+# Network Boot
 
-#ZModem Flash Update
+# ZModem Flash Update
