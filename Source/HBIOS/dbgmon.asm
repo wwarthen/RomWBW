@@ -5,7 +5,7 @@
 ;  MODIFIED BY : 	DAN WERNER 03 09.2009
 ;
 ;__REFERENCES_________________________________________________________________
-; THOMAS SCHERRER BASIC HAR.DWARE TEST ASSEMBLER SOURCES FROM THE Z80 INFO PAGE
+; THOMAS SCHERRER BASIC HARDWARE TEST ASSEMBLER SOURCES FROM THE Z80 INFO PAGE
 ; INCLUDING ORIGINAL SCHEMATIC CONCEPT
 ; HTTP://Z80.INFO/Z80SOURC.TXT
 ; CODE SAMPLES FROM BRUCE JONES PUBLIC DOMAIN ROM MONITOR FOR THE SBC-200C
@@ -76,8 +76,8 @@ SERIALCMDLOOP:
 	LD	SP,MON_STACK		; RESET STACK
 	CALL	NEWLINE
 #IF (BIOS == BIOS_WBW)
-	LD	A,($FFE0)
-	CALL	PRTHEXBYTE
+	LD	A,($FFE0)		; DISPLAY CURRENTLY ACTIVE
+	CALL	PRTHEXBYTE		; BANK IN LOW MEMORY
 #ENDIF
 	LD	A,'>'
 	CALL	COUT
@@ -223,18 +223,43 @@ SETBNK:
 ;__RUN________________________________________________________________________
 ;
 ;	TRANSFER OUT OF MONITOR, USER OPTION "R"
-;	SYNTAX: R <ADDR>
+;	SYNTAX: R <ADDR> [<A-VALUE> [<BC-VALUE>]]
 ;_____________________________________________________________________________
 ;
 RUN:
 	CALL	WORDPARM		; GET START ADDRESS
 	JP	C,ERR			; HANDLE ERRORS
 	PUSH	DE			; SAVE VALUE
+	CALL	BYTEPARM		; GET OPTIONAL
+	PUSH	AF			; A REGISTER VALUE
+	CALL	WORDPARM		; GET OPTIONAL
+	PUSH	DE			; BC REGISTER VALUE
 	CALL	NONBLANK		; LOOK FOR EXTRANEOUS PARAMETERS
 	CP	0			; TEST FOR TERMINATING NULL
 	JP	NZ,ERR			; ERROR IF NOT TERMINATING NULL
+	POP	BC			; RECOVER BC REGISTER VALUE TO PASS
+	POP	AF			; RECOVER A REGISTER VALUE TO PASS
 	POP	HL			; RECOVER START ADDRESS
+;
+	LD	DE,PREG1		; SETUP A RETURN
+	PUSH	DE			; ADDRESS
+;
 	JP	(HL)			; GO
+;
+PREG1:	PUSH	BC			; SAVE
+	PUSH	DE			; REGISTERS
+	PUSH	HL			; FOR DISPLAY
+;
+	CALL	NEWLINE
+	CALL	PRTHEXBYTE		; DISPLAY A
+	CALL	PC_SPACE		; REGISTER
+;
+	LD	B,3
+PREG2:	POP	HL			; DISPLAY
+	CALL	PHL			; HL DE BC
+	CALL	PC_SPACE		; REGISTER
+	DJNZ	PREG2
+	JP	SERIALCMDLOOP
 ;
 ;__PROGRM_____________________________________________________________________
 ;
@@ -253,11 +278,16 @@ PROGRM1:
 	POP	HL
 	PUSH	HL
 	CALL	PHL
-	CALL	PC_COLON
+	CALL	PC_COLON		; DISPLAY
+	CALL	PC_SPACE		; CURRENT
+	POP	HL			; VALUE
+	PUSH	HL
+	LD	A,(HL)
+	CALL	PRTHEXBYTE
 	CALL	PC_SPACE
-	LD	HL,KEYBUF
-	CALL	GETLN
-	LD	HL,KEYBUF
+	LD	HL,KEYBUF		; GET AND
+	CALL	GETLN			; SAVE NEW
+	LD	HL,KEYBUF		; VALUE
 	CALL	NONBLANK
 	CP	0
 	JP	Z,SERIALCMDLOOP
@@ -983,7 +1013,8 @@ TXT_HELP	.TEXT	"\r\nMonitor Commands (all values in hex):"
 		.TEXT	"\r\nM xxxx yyyy zzzz - Move memory block xxxx-yyyy to zzzz"
 		.TEXT	"\r\nO xxxx yy        - Output value yy to port xxxx"
 		.TEXT	"\r\nP xxxx           - Program RAM at address xxxx"
-		.TEXT	"\r\nR xxxx           - Run code at address xxxx"
+		.TEXT	"\r\nR xxxx [[yy] [zzzz]]  - Run code at address xxxx"
+		.TEXT	"\r\n                        Pass yy and zzzz to register A and BC"
 		.TEXT	"\r\nS xx             - Set bank to xx"
 		.TEXT	"\r\nX                - Exit monitor"
 		.TEXT	"$"
