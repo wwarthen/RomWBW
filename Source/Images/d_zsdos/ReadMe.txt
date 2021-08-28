@@ -6,7 +6,7 @@ The disk is bootable as is (the operating system image is already
 embedded in the system tracks) and can be launched from the RomWBW
 Loader prompt.
 
-The remainder of this document describes the contents and usage of
+The remainder of this document describes the usage and contents of
 this disk.  It is highly recommended that you review the "RomWBW
 Getting Started.pdf" document found in the Doc directory of the
 RomWBW Distribution.
@@ -52,47 +52,7 @@ is doing). Ultimately, I may go back and try to rebuild everything in
 the distribution to bring it all up to v1.2. That is for the future 
 though.
 
-== Construction Notes ==
-
-As I worked through the files in the distribution, it became clear that
-there were problems with the distribution. For example, the .CFG files
-for some apps (like FILEDATE.COM) are not acceptable to ZCNFG.
-Additionally, the STAMPS.DAT file contains code that simply does not
-work. In all of these cases, I found updated or fixed versions of the
-files. However, the point is that I concluded I would need to go
-through the distribution file-by-file and validate everything,
-replacing anything that was not working as it should. See the notes below
-for what I did.
-
-The following list details the changes I made as I went along. In all
-cases, my goal was to keep the result as close to the original
-distribution as possible.
-
-  - CLOCKS.DAT has been updated to include the RomWBW clock driver,
-    WBWCLK. I have also added the SIMHCLOK clock driver.
-  - STAMPS.DAT has been replaced with an updated version. The update
-    was called STAMPS11.DAT and was found on the Walnut Creek CP/M CDROM.
-    The original version has a bug that causes RSX (resident system
-    extension) mode to fail to load properly.
-  - The original LDTIMD.COM and LDTIMP.COM have been replaced with
-    LDDS.COM (DateStamper) and LDP2D.COM (P2DOS) respectively.  They are
-    equivalent but configured to use the RomWBW clock driver.  They were
-    built exactly the same as the originals: Relative Clock driver w/ RSX
-    mode loading.
-  - A driver for NZT format time stamping has been added.  It is called
-    LDNZT.COM.
-  - Updated FILEDATE.COM and FILEDATE.CFG from original v1.7 to v2.1.
-    The FILEDATE.CFG originally supplied was invalid.
-  - Updated FILEATTR to v1.6A. Original FILEATTR.CFG was invalid.
-    FILEATTR.CFG was replaced with FA16.CFG. Added associated files
-    FA16.DOC, FA16A.FOR, FA16CFG.TXT.
-  - Updated COPY.COM to v1.73.  Also updated COPY.CFG to the one
-    distributed with COPY.COM v1.73. The original COPY.CFG was invalid
-    and appeared to be for a much older version of COPY.
-  - Configured DATSWEEP.COM and DSCONFIG to use ANSI Standard terminal
-    definition using SETTERM.
-
-== Usage Notes ==
+== Usage ==
 
   - All installation steps needed to run ZSDOS have already been
     performed.  It is not necessary to perform any of the steps in
@@ -136,6 +96,47 @@ distribution as possible.
     the ZSDOS Manual for information on implementing BackGrounder II if
     desired.
 
+== Date Stamping Quick Start ==
+
+== Notes ==
+
+As I worked through the files in the distribution, it became clear that
+there were problems with the distribution. For example, the .CFG files
+for some apps (like FILEDATE.COM) are not acceptable to ZCNFG.
+Additionally, the STAMPS.DAT file contains code that simply does not
+work. In all of these cases, I found updated or fixed versions of the
+files. However, the point is that I concluded I would need to go
+through the distribution file-by-file and validate everything,
+replacing anything that was not working as it should. See the notes below
+for what I did.
+
+The following list details the changes I made as I went along. In all
+cases, my goal was to keep the result as close to the original
+distribution as possible.
+
+  - CLOCKS.DAT has been updated to include the RomWBW clock driver,
+    WBWCLK. I have also added the SIMHCLOK clock driver.
+  - STAMPS.DAT has been replaced with an updated version. The update
+    was called STAMPS11.DAT and was found on the Walnut Creek CP/M CDROM.
+    The original version has a bug that causes RSX (resident system
+    extension) mode to fail to load properly.
+  - The original LDTIMD.COM and LDTIMP.COM have been replaced with
+    LDDS.COM (DateStamper) and LDP2D.COM (P2DOS) respectively.  They are
+    equivalent but configured to use the RomWBW clock driver.  They were
+    built exactly the same as the originals: Relative Clock driver w/ RSX
+    mode loading.
+  - A driver for NZT format time stamping has been added.  It is called
+    LDNZT.COM.
+  - Updated FILEDATE.COM and FILEDATE.CFG from original v1.7 to v2.1.
+    The FILEDATE.CFG originally supplied was invalid.
+  - Updated FILEATTR to v1.6A. Original FILEATTR.CFG was invalid.
+    FILEATTR.CFG was replaced with FA16.CFG. Added associated files
+    FA16.DOC, FA16A.FOR, FA16CFG.TXT.
+  - Updated COPY.COM to v1.73.  Also updated COPY.CFG to the one
+    distributed with COPY.COM v1.73. The original COPY.CFG was invalid
+    and appeared to be for a much older version of COPY.
+  - Configured DATSWEEP.COM and DSCONFIG to use ANSI Standard terminal
+    definition using SETTERM.
 
 == ZSDOS 1.1 Files ==
 
@@ -180,13 +181,6 @@ TESTCLOK.COM - Test a selected clock driver
 ZCAL.COM - Display a small one-month calendar to the screen
 ZCNFG.COM - Configuration tool for programs with .CFG files
 ZCNFG24.CFG - ZCNFG configuration file for ZCNFG
-ZMP.COM - ZModem communications program (requires dedicated comm port)
-ZMP.DOC - Documentation for ZMP
-ZMP.HLP - Help file for ZMP
-ZMXFER.OVR - Overlay file for ZMP
-ZMTERM.OVR - Overlay file for ZMP
-ZMINIT.OVR - Overlay file for ZMP
-ZMCONFIG.OVR - Overlay file for ZMP
 ZPATH.COM - Set or display ZSDOS and ZCPR search paths
 ZSCONFIG.COM - Dynamically configure features of ZSDOS operating system
 ZSVSTAMP.COM - Preserves file date/time stamp across modifications
@@ -232,6 +226,13 @@ TALK.COM - Route console I/O to & from specified serial port
 TIMER.COM - Test and display system timer ticks
 TUNE.COM - Play .PT2, .PT3, and .MYM audio files on supported hardware
 XM.COM - XModem file transfer application
+ZMP.COM - ZModem communications program (requires dedicated comm port)
+ZMP.DOC - Documentation for ZMP
+ZMP.HLP - Help file for ZMP
+ZMXFER.OVR - Overlay file for ZMP
+ZMTERM.OVR - Overlay file for ZMP
+ZMINIT.OVR - Overlay file for ZMP
+ZMCONFIG.OVR - Overlay file for ZMP
 
 == General Purpose Applications ==
 
@@ -272,10 +273,10 @@ ZDENST.COM - Installation/configuration tool for ZDE
 KERCPM22.COM - Kermit file transfer application
 LBREXT.COM - Extract file from .LBR libraries
 LBREXT36.CFG - ZCNFG configuration file for LBREXT
-ZXD.COM - Enhanced directory lister w/ date/time stamping support
+ZXD.COM - Enhanced directory lister w/ date/time stamp support
 ZXD.CFG - ZCNFG configuration file for ZXD
 
-== Testing Applications ==
+== Testing Applications (User Area 2) ==
 
 User area 2 contains a variety of hardware testing applications.
 These are generally user contributed and have no documentation.
@@ -284,15 +285,18 @@ hardware.  They are included here as a convenience.  If applicable,
 your hardware documentation should refer to them and provide usage
 instructions.
 
-== Sample Tune Files ==
+== Sample Tune Files (User Area 3) ==
 
 User area 3 contains sample audio files that can be played using
 the TUNE application.
 
-== CP/NET 1.2 ==
+== CP/NET 1.2 (User Area 4) ==
 
 User area 4 contains a full implementation of the CP/NET 1.2
 client provided by Doug Miller.  Please read the README.TXT file
 in this user area for more information.
 
--- WBW 5:46 PM 8/19/2021
+N.B., at a minimum, some of the files in this user area must be copied
+to user area 0 for CP/NET to work properly.
+
+-- WBW 3:20 PM 8/27/2021

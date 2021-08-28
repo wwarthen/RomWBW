@@ -3,8 +3,8 @@
 #
 SYSTEMS = ../CPM22/cpm_wbw.sys ../ZSDOS/zsys_wbw.sys ../CPM3/cpmldr.sys
 
-FDIMGS = fd144_cpm22.img fd144_zsdos.img fd144_nzcom.img \
-	fd144_cpm3.img fd144_zpm3.img fd144_ws4.img
+FDIMGS = fd144_cpm22.img fd144_zsdos.img \
+	fd144_cpm3.img fd144_ws4.img
 HD512IMGS = hd512_cpm22.img hd512_zsdos.img hd512_nzcom.img \
 	hd512_cpm3.img hd512_zpm3.img hd512_ws4.img
 # HDIMGS += hd512_bp.img

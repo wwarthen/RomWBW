@@ -45,54 +45,33 @@ for testing and programming. It allows programs to be entered,
 memory to be examined, and input/output devices to be read or
 written to.
 
-It's key advantage is that is available at boot up. 
-
-Its key disadvantages are that code cannot be entered in assembly language 
-and there is no ability to save to memory devices.
-
-The available memory are for programming is `0200-EDFFh`.  The following areas are reserved:
-
-Memory Area | Function
-------------|-----------------------------------
-`0000-00FFh`| Jump and restart (RST) vectors
-`0100-01FFh`| HBIOS configuration block
-`FE00-FFFFh`| HBIOS proxy
-
-Commands can be entered at the command prompt `>` 
-Automatic case conversion takes place on command entry and all arguments are expected to be in hex format.
-
-The current memory bank in low memory is displayed before the prompt i.e.:
-
-`8E>`
-
-Refer to the RomWBW Architecture manual for details memory banking.
+It's key advantage is that is available at boot up.
 
 A quick guide to using the Monitor program follows:
 
 ## ? - Displays a summary of available commands.
 
 ```
-Monitor Commands (all values in hex):
-B                    - Boot system
-D xxxx yyyy          - Dump memory from xxxx to yyyy
-F xxxx yyyy zz       - Fill memory from xxxx to yyyy with zz
-H                    - Halt system
-I xxxx               - Input from port xxxx
-K                    - Keyboard echo
-L                    - Load Intel hex data
-M xxxx yyyy zzzz     - Move memory block xxxx-yyyy to zzzz
-O xxxx yy            - Output value yy to port xxxx
-P xxxx               - Program RAM at address xxxx
-R xxxx [[yy] [zzzz]] - Run code at address xxxx
-                       Pass yy and zzzz to register A and BC
-S xx                 - Set bank to xx
-X                    - Exit monitor
+Monitor Commands (all values in hex):`
+B                - Boot system`
+D xxxx yyyy      - Dump memory from xxxx to yyyy`
+F xxxx yyyy zz   - Fill memory from xxxx to yyyy with zz`
+H                - Halt system`
+I xxxx           - Input from port xxxx`
+K                - Keyboard echo`
+L                - Load Intel hex data`
+M xxxx yyyy zzzz - Move memory block xxxx-yyyy to zzzz`
+O xxxx yy        - Output value yy to port xxxx`
+P xxxx           - Program RAM at address xxxx`
+R xxxx           - Run code at address xxxx`
+S xx             - Set bank to xx`
+X                - Exit monitor`
 ```
 
 ## Cold Boot
 
 B - Performs a cold boot of the ROMWBW system. A complete
-re-initialization of the system is performed and the system
+reinitialization of the system is performed and the system
 returns to the Boot Loader prompt.
 
 ## Dump Memory
@@ -181,18 +160,9 @@ Use clip leaded LEDs to confirm the data written.
 ## Program memory location
 
 P xxxx - Program memory location xxxx. This routine will
-allow you to program a hexadecimal into memory starting
+allow you to program a hexidecimal into memory starting
 at location xxxx. Press 'Enter' on a blank line to
 return to the Monitor prompt.
-
-## Run program
-
-R xxxx [[yy] [zzzz]] - Run program at location xxxx. if optional
-arguments yy and zzzz are entered they are loaded into the
-A and BC register respectively. The return address of the
-Monitor is saved on the stack so the program can return
-to the monitor. On return to the monitor, the contents of
-the A, HL, DE and BC registers are displayed.
 
 ## NOTES:
 

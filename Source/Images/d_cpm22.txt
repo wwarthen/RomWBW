@@ -1,4 +1,8 @@
 #
+# Add the ReadMe document
+#
+d_cpm22/ReadMe.txt 0:
+#
 # Add RomWBW utilities
 #
 #../../Binary/Apps/*.com 0:
@@ -31,6 +35,7 @@
 ../../Binary/Apps/ppidetst.com 2:
 ../../Binary/Apps/ramtest.com 2:
 ../../Binary/Apps/tstdskng.com 2:
+Test/*.* 2:
 #
 # Add Tune sample files
 #
