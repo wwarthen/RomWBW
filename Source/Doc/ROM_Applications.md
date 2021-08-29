@@ -45,33 +45,62 @@ for testing and programming. It allows programs to be entered,
 memory to be examined, and input/output devices to be read or
 written to.
 
-It's key advantage is that is available at boot up.
+It's key advantage is that is available at boot up. 
+
+Its key disadvantages are that code cannot be entered in assembly 
+language and there is no ability to save to memory devices.
+
+The available memory area for programming is `0200-EDFFh`.
+The following areas are reserved:
+
+Memory Area | Function
+------------|-----------------------------------
+`0000-00FFh`| Jump and restart (RST) vectors
+`0100-01FFh`| HBIOS configuration block
+`FE00-FFFFh`| HBIOS proxy
+
+Commands can be entered at the command prompt `>` 
+Automatic case conversion takes place on command entry and all 
+arguments are expected to be in hex format.
+
+The current memory bank in low memory is displayed before the prompt i.e.:
+
+`8E>`
+
+The Monitor allows access to all memory locations but ROM and
+Flash memory cannot be written to. Memory outside the normal
+address range can be accessed using the B command. The first
+256 bytes `0000-01FF` is critical for the HBIOS operation.
+Changing banks may make this information inaccessible.
+
+Refer to the RomWBW Architecture manual for details memory banking.
 
 A quick guide to using the Monitor program follows:
 
 ## ? - Displays a summary of available commands.
 
 ```
-Monitor Commands (all values in hex):`
-B                - Boot system`
-D xxxx yyyy      - Dump memory from xxxx to yyyy`
-F xxxx yyyy zz   - Fill memory from xxxx to yyyy with zz`
-H                - Halt system`
-I xxxx           - Input from port xxxx`
-K                - Keyboard echo`
-L                - Load Intel hex data`
-M xxxx yyyy zzzz - Move memory block xxxx-yyyy to zzzz`
-O xxxx yy        - Output value yy to port xxxx`
-P xxxx           - Program RAM at address xxxx`
-R xxxx           - Run code at address xxxx`
-S xx             - Set bank to xx`
-X                - Exit monitor`
+Monitor Commands (all values in hex):
+B                    - Boot system
+D xxxx yyyy          - Dump memory from xxxx to yyyy
+F xxxx yyyy zz       - Fill memory from xxxx to yyyy with zz
+H                    - Halt system
+I xxxx               - Input from port xxxx
+K                    - Keyboard echo
+L                    - Load Intel hex data
+M xxxx yyyy zzzz     - Move memory block xxxx-yyyy to zzzz
+O xxxx yy            - Output value yy to port xxxx
+P xxxx               - Program RAM at address xxxx
+R xxxx [[yy] [zzzz]] - Run code at address xxxx
+                       Pass yy and zzzz to register A and BC
+S xx                 - Set bank to xx
+X                    - Exit monitor
 ```
 
 ## Cold Boot
 
 B - Performs a cold boot of the ROMWBW system. A complete
-reinitialization of the system is performed and the system
+re-initialization of the system is performed and the system
 returns to the Boot Loader prompt.
 
 ## Dump Memory
@@ -160,17 +189,20 @@ Use clip leaded LEDs to confirm the data written.
 ## Program memory location
 
 P xxxx - Program memory location xxxx. This routine will
-allow you to program a hexidecimal into memory starting
+allow you to program a hexadecimal value into memory starting
 at location xxxx. Press 'Enter' on a blank line to
 return to the Monitor prompt.
 
-## NOTES:
+## Run program
 
-The Monitor allows access to all memory locations. ROM and
-Flash memory cannot be written to. Memory outside the normal
-address range can be accessed using the B command. Page 0 
-(first 256 bytes) is critical for the HBIOS operation.
-Changing banks may make this inforrmation inaccessible.
+R xxxx [[yy] [zzzz]] - Run program at location xxxx. If optional
+arguments yy and zzzz are entered they are loaded into the
+A and BC register respectively. The return address of the
+Monitor is saved on the stack so the program can return
+to the monitor. On return to the monitor, the contents of
+the A, HL, DE and BC registers are displayed.
+
+## NOTES:
 
 The RTC utility on the CP/M ROM disk provides facilities
 to manipulate the Real Time Clock non-volatile Memory. 
@@ -184,6 +216,77 @@ and then run RTC to see the options list.
 # TastyBASIC
 
 # Play a Game
+
+## 2048
+
+2048 is a puzzle game that can be both mindless and challenging. It
+appears deceptively simple but failure can creep up on you suddenly.
+
+It requires an ANSI/VT-100 compatible colour terminal to play.
+
+2048 is like a sliding puzzle game except the puzzle tiles are 
+numbers instead of pictures. Instead of moving a single tile all 
+tiles are moved simultaneously in the same direction. Where two 
+tiles of the same number collide, they are reduced to one tile with
+the combined value. After every move a new tile is added with
+a starting value of 2. 
+
+The goal is to create a tile of 2048 before all tile locations are
+occupied. Reaching the highest points score, which is the sum of all
+the tiles is a secondary goal. The game will automatically end when 
+there are no more possible moves.
+
+Play consists of entering a direction to move. Directions can be entered
+using any of three different keyboard direction sets.
+
+```
+Direction | Keys
+----------|----------
+Up        | w ^E 8
+Down      | s ^X 2
+Left      | a ^S 4
+Right     | d ^D 6
+```
+The puzzle board is a 4x4 grid. At start, the grid will be populated
+with two 2 tiles. An example game sequence is shown below with new
+tiles to the game shown in brackets.
+
+```
+Start             Move 1 - Up       Move 2 - Left     Move 3 - Left
++---+---+---+---+ +---+---+---+---+ +---+---+---+---+ +---+---+---+---+
+|   |   |   |(2)| |   |   |   | 4 | | 4 |   |   |   | | 4 |   |   |   |
++---+---+---+---+ +---+---+---+---+ +---+---+---+---+ +---+---+---+---+
+|   |   |   |   | |   |   |   |   | |   |   |   |(4)| | 4 |   |   |   |
++---+---+---+---+ +---+---+---+---+ +---+---+---+---+ +---+---+---+---+
+|   |   |   |(2)| |   |   |   |   | |   |   |   |   | |   |   |   |   |
++---+---+---+---+ +---+---+---+---+ +---+---+---+---+ +---+---+---+---+
+|   |   |   |   | |   |   |(2)|   | | 2 |   |   |   | | 2 |   |(2)|   |
++---+---+---+---+ +---+---+---+---+ +---+---+---+---+ +---+---+---+---+
+
+Move 4 - Left     Move 5 - Up       Move 6 - Right    Move 7 - Up
++---+---+---+---+ +---+---+---+---+ +---+---+---+---+ +---+---+---+---+
+| 4 |   |   |   | | 8 |   |   | 4 | |   |   | 8 | 4 | |   |   | 8 | 8 |
++---+---+---+---+ +---+---+---+---+ +---+---+---+---+ +---+---+---+---+
+| 4 |   |   |(4)| | 4 |   |   |   | |   |   |   | 4 | |   |   |   | 2 |
++---+---+---+---+ +---+---+---+---+ +---+---+---+---+ +---+---+---+---+
+|   |   |   |   | |   |   |   |   | |   |   |   |   | |   |   |   |   |
++---+---+---+---+ +---+---+---+---+ +---+---+---+---+ +---+---+---+---+
+| 4 |   |   |   | |(2)|   |   |   | |(2)|   |   | 2 | |(2)|   |   |   |
++---+---+---+---+ +---+---+---+---+ +---+---+---+---+ +---+---+---+---+
+```
+This is how I lost this game:
+```
++---+---+---+---+
+| 4 | 2 | 16| 4 |
++---+---+---+---+
+| 32| 64| 8 | 2 |
++---+---+---+---+
+| 4 | 8 |128| 32|
++---+---+---+---+
+|(2)| 16| 8 | 4 |
++---+---+---+---+
+```
+Press Q at any time to bring up the option to Quit or Restart the game.
 
 # Network Boot
 
