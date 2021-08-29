@@ -1,4 +1,25 @@
 #
+# Add the ReadMe document
+#
+d_nzcom/ReadMe.txt 0:
+#
+# Include selected CP/M 2.2 files
+#
+d_cpm22/u0/ASM.COM 0:
+d_cpm22/u0/LIB.COM 0:
+d_cpm22/u0/LINK.COM 0:
+d_cpm22/u0/LOAD.COM 0:
+d_cpm22/u0/MAC.COM 0:
+#d_cpm22/u0/PIP.COM 0: ???
+d_cpm22/u0/RMAC.COM 0:
+d_cpm22/u0/STAT.COM 0:
+d_cpm22/u0/SUBMIT.COM 0:
+d_cpm22/u0/XSUB.COM 0:
+#
+# Include ZSDOS files
+#
+d_zsdos/u0/*.* 0:
+#
 # Add RomWBW utilities
 #
 #../../Binary/Apps/*.com 0:
@@ -31,15 +52,16 @@
 ../../Binary/Apps/ppidetst.com 2:
 ../../Binary/Apps/ramtest.com 2:
 ../../Binary/Apps/tstdskng.com 2:
-##
-## Add Tune sample files
-##
-#../../Binary/Apps/Tunes/*.pt? 3:
-#../../Binary/Apps/Tunes/*.mym 3:
-##
-## Add CPNET client files
-##
-#cpnet12/*.* 4:
+Test/*.* 2:
+#
+# Add Tune sample files
+#
+../../Binary/Apps/Tunes/*.pt? 3:
+../../Binary/Apps/Tunes/*.mym 3:
+#
+# Add CPNET client files
+#
+cpnet12/*.* 4:
 #
 # Add OS images
 #
@@ -55,3 +77,7 @@ Common/Z/u15/*.* 0:
 Common/Z3/u10/*.* 0:
 Common/Z3/u14/*.* 0:
 Common/Z3/u15/*.* 0:
+#
+# Temporary!!!
+#
+SIMH/*.* 15:

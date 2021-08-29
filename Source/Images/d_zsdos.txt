@@ -1,4 +1,8 @@
 #
+# Add the ReadMe document
+#
+d_zsdos/ReadMe.txt 0:
+#
 # Include selected CP/M 2.2 files
 #
 d_cpm22/u0/ASM.COM 0:
@@ -6,6 +10,7 @@ d_cpm22/u0/LIB.COM 0:
 d_cpm22/u0/LINK.COM 0:
 d_cpm22/u0/LOAD.COM 0:
 d_cpm22/u0/MAC.COM 0:
+#d_cpm22/u0/PIP.COM 0: ???
 d_cpm22/u0/RMAC.COM 0:
 d_cpm22/u0/STAT.COM 0:
 d_cpm22/u0/SUBMIT.COM 0:
@@ -43,6 +48,7 @@ d_cpm22/u0/XSUB.COM 0:
 ../../Binary/Apps/ppidetst.com 2:
 ../../Binary/Apps/ramtest.com 2:
 ../../Binary/Apps/tstdskng.com 2:
+Test/*.* 2:
 #
 # Add Tune sample files
 #
