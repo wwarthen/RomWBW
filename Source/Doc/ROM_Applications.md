@@ -1,3 +1,4 @@
+
 !include(Common.inc)
 !def(document)(ROM Applications)
 !def(author)(Phillip Summers)
@@ -137,7 +138,7 @@ Examples: `D 100 1FF`
 
 F xxxx yyyy zz - Fill memory from hex xxxx to yyyy with
 a single value of zz over the full range. The Dump command
-can be used to confirm that the Fill completed as expected. A
+can be used to confirm that the fill completed as expected. A
 good way to zero out memory areas before writing machine data
 for debug purposes.
 
@@ -165,12 +166,16 @@ loads will be echoed as well while this facility is ‘on’.
 ## Load Hex format file into memory
 
 L - Load a Intel Hex format file via the terminal program.
+The load address is defined in the hex file of the
+assembled code.
+
 The terminal emulator program should be configured to
 give a delay at the end of each line to allow the monitor
 enough time to parse the line and move the data to memory.
+
 Keep in mind that this will be a transient unless the
-system support backed memory. Saving to memory drive is
-not supported.
+system support battery backed memory. Saving to memory drive 
+is not supported.
 
 ## Move memory
 
@@ -189,9 +194,17 @@ Use clip leaded LEDs to confirm the data written.
 ## Program memory location
 
 P xxxx - Program memory location xxxx. This routine will
-allow you to program a hexadecimal value into memory starting
+allow you to program a hexadecimal value 'into memory starting
 at location xxxx. Press 'Enter' on a blank line to
 return to the Monitor prompt.
+
+The limitation around programming memory is that it must be 
+entered in hexadecimal. An alternative is to use the L command
+to load a program that has been assembled to a hex file on the
+remote computer.
+
+An excellent online resource for looking up opcodes for entry
+can be found here: (https://clrhome.org/table)
 
 ## Run program
 
@@ -290,4 +303,171 @@ Press Q at any time to bring up the option to Quit or Restart the game.
 
 # Network Boot
 
-# ZModem Flash Update
+# Xmodem Flash Updater
+
+The ROMWBW Xmodem flash updater provides the capability to update ROMWBW from the boot loader using  an x-modem file transfer. It offers similar capabilities to Will Sowerbutts FLASH4 utility except that the flashing process occurs during the file transfer. 
+
+These are the key differences between the two methods are:
+
+Xmodem Flash Updater            | FLASH4
+--------------------------------|-----------------
+Available from the boot loader   | Well proven and tested
+Xmodem transfer is integrated    | Wider range of supported chips and hardware
+Integrated checksum utilities    | Wider range of supported platforms
+Capability to copy a ROM image   | Only reprograms sectors that have changed
+More convenient one step process | Ability save and verify ROM images
+No intermediate storage required | Progress display while flashing
+.                                | Displays chip identification information
+.                                | Faster file transfer
+                                 
+The major disadvantages of the Updater is that it is new and relatively untested. There is the risk that a failed transfer will result in a partially flashed and unbootable ROM. There are some limitations on serial transfer speeds.
+ 
+The updater utility was initially intended to support the Retrobrew SBC-V2-005 platform using Atmel 39SF040 flash chips but has now been extended to be more generic in operation.
+
+Supported flash chips are 
+39SF040, 29F040,  AT49F040, AT29C040, M29F040 , MX29F040,  A29010B, A29040B
+
+The Atmel 39SF040 chip is recommended as it can erase and write 4Kb sectors. Other chips require the whole chip to be erased.
+
+## Usage
+
+In most cases, completing a ROM update is a simple as:
+1. Booting to the boot loader prompt
+2. Selecting option X - Xmodem Flash Updater
+3. Selecting option U - Update
+4. Initiating an X-modem transfer of your ROM image on your console device
+5. Selecting option R - Reboot
+
+If your console device is not able to transfer a ROM image i.e. your console is a VDU then you will have to use the console options to identify which character-input/output device is to be used as the serial device for transfer.
+
+When your console is the serial device used for the transfer, no progress information is displayed as this would disrupt the x-modem file transfer. If you use an alternate character-input/output devices as the serial device for the transfer then progress information will be displayed on the console device.
+
+Due to different platform processor speeds,  serials speeds and flow control capabilities the default console or serial device speed may need to be reduced for a successful transfer and flash to occur. The **Set Console Interface/Baud code** option at the Boot Loader can be used to change the speed if required. Additionally, the Updater has options to set to and revert from a recommended speed. 
+
+ ## Console Options
+Option ( C ) - Set Console Device
+Option ( S ) - Set Serial Device
+
+By default the updater assumes that the current console is a serial device and that the ROM file to be flashed will also be transferred across this device, so the Console and Serial device are both the same.
+
+Either device can be can be change to another character-input/output device but the updater will always expect to receive the x-modem transfer on the **Serial Device**
+
+The advantage of transferring on a different device to the console is that progress information can be displayed during the transfer.
+
+Option ( > ) - Set Recommended Baud Rate
+Option ( < ) - Revert t Original Baud Rate
+
+## Programming options
+
+Option ( U ) - Begin Update
+The will begin the update process. The updater will expect to start receiving
+an x-modem file on the serial device unit.
+
+X-modem sends the file in packets of 128 bytes. The updater will cache 32
+packets which is 1 flash sector and then write that sector to the
+flash device.
+
+If using separate console, bank and sector progress information will shown
+
+```
+BANK 00 s00 s01 s02 s03 s04 s05 s06 s06 s07
+BANK 01 s00 s01 s02 s03 s04 s05 s06 s06 s07
+BANK 02 s00 s01 s02 s03 s04 s05 s06 s06 s07 etc
+```
+
+The x-modem file transfer protocol does not provide any filename or size
+information for the transfer so the updater does not perform any checks
+on the file suitability.
+
+The updater expects the file size to be a multiple of 4 kilobytes and
+will write all data received to the flash device. A system update
+file (128kb .img) or complete ROM can be received and written (512kb or
+1024kb .rom)
+
+If the update fails it is recommended that you retry before rebooting or
+exiting to the Boot loader as your machine may not be bootable.
+
+Option ( D ) - Duplicate flash #1 to flash #2 
+This option will make a copy of flash #1 ont flash #2. The purpose of this is to enable
+ making a backup copy of the current flash. Intended for systems using 2x512Kb Flash devices.
+
+Option ( V ) - Toggle Write Verify
+
+By default each flash sector will be verified after being written. Slight
+performance improvements can be gained if turned off and could be used if
+you are experiencing reliable transfers and flashing.
+
+## Exit options
+
+Option ( R ) - Reboot
+Execute a cold reboot. This should be done after a successful update. If
+you perform a cold reboot after a failed update then it is likely that
+your system will be unusable and removing and reprogramming the flash
+will be required.
+
+Option (Q) - Quit to boot loader. The SBC Boot Loader is reloaded from ROM and
+executed. After a successful update a Reboot should be performed. However,
+in the case of a failed update this option could be used to attempt to
+load CP/M and perform the normal x-modem / flash process to recover.
+
+## CRC Utility options
+
+Option (1) and (2) - Calculate and display CRC32 of 1st or 2nd 512k ROM.
+Option (3) - Calculate and display CRC32 of a 1024k (2x512Kb) ROM.
+
+Can be used to verify if a ROM image has been transferred and flashed correctly. Refer  to the Teraterm section below for details on configuring the automatic display of a files CRC after it has been transferred.
+
+In Windows, right clicking on a file should also give you a contect menu option CRC SHA which will allow you to select a CRC32 calculation to be done on the selected file.
+
+## Teraterm macro configuration 
+
+Macros are a useful tool for automatic common tasks. There are a number of instances where using macros to facilitate the update process could be worthwhile if you are:
+* Following the ROMWBW development builds.
+* Doing lots of configuration changes.
+* Doing development on ROMWBW drivers
+
+Macros can be used to automate sending ROM updates or images and for my own purposed I have set up a separate macro for transferring each of the standard build ROM, my own custom configuration ROM and update ROM.
+
+An example macro file to send an *.upd file, using checksum mode and display the crc32 value of the transmitted file:
+
+```
+Xmodem send, checksum, display crc32
+xmodemsend '\\desktop\users\phillip\documents\github\romwbw\binary\sbc_std_cust.upd' 1
+crc32file crc '\\desktop\users\phillip\documents\github\romwbw\binary\sbc_std_cust.rom'
+sprintf '0x%08x' crc
+messagebox inputstr 'crc32'
+```
+## Serial speed guidelines
+
+As identified in the introduction, there are limitations on serial speed depending on processor speed and flow control settings. Listed below are some of the results identified during testing.
+
+Platform / Configuration       | Processor Speed | Maximum Serial Speed
+-------------------------------|-----------------|---------------------
+Sbc-v2  uart no flow control   | 2mhz            | 9600
+sbc-v2  uart no flow control   | 4mhz            | 19200
+sbc-v2  uart no flow control   | 5mhz            | 19200
+sbc-v2  uart no flow control   | 8mhz            | 38400
+sbc-v2  uart no flow control   | 10mhz           | 38400
+sbc-v2  usb-fifo 2mhz+         |                 | n/a
+sbc-mk4 asci no flow control   | 18.432mhz       | 9600
+sbc-mk4 asci with flow control | 18.432mhz       | 38400
+
+The **Set Recommend Baud Rate** option in the Updater menu follows the following guidelines.
+
+Processor Speed | Baud Rate
+----------------|----------
+1Mhz            | 4800
+2-3Mhz          | 9600
+4-7Mhz          | 19200
+8-20Mhz         | 38400
+
+These can be customized in the updater.asm source code in the CLKTBL table  if desired.
+Feedback to the ROMWBW developers on these guidelines would be appreciated.
+
+## Notes:
+All testing was done with Teraterm x-modem, Forcing checksum mode using macros was found to give  the most reliable transfer.
+Partial writes can be completed with 39SF040 chips. Other chips require entire flash to be erased before before being written.
+An SBC V2-005 MegaFlash or Z80 MBC required for 1mb flash support. The Updater assumes both chips are same type
+Failure handling has not been tested.
+Timing broadly calibrated on a Z80 SBC-v2
+Unabios not supported
