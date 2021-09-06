@@ -224,6 +224,48 @@ and then run RTC to see the options list.
 
 # FORTH
 
+CamelForth is the version of Forth included as part of the boot
+ROM in ROMWBW. It has been converted from the Z80 CP/M version
+published here (www.camelforth.com/page.php?5). The author is Brad
+Rodriguez who is a prolific Forth enthusiast, whose work can be
+found here: (www.bradrodriguez/papers/index.html)
+
+For those are who are not familiar with Forth, I recommend the
+wikipedia article (en.wikipedia.org/wiki/Forth_(programming_language))
+and the Forth Interest Group website [www.forth.org](www.forth.org)
+
+Important things to know:
+
+Forth is case sensitive.
+
+To exit back to the boot loader type ***bye***
+
+To get a list of available words type ***WORDS***
+
+To reset Forth to its initial state type ***COLD***
+
+Most code you will find on the internet will not run without modification.
+
+A glossary of available words is listed in the \Source\Forth\glosshi.txt glosslo.txt file.
+
+This implementation does not support loading or saving of programs. All programs
+need to be typed in. Additionally, screen editing and code blocks are not supported.
+
+Extensions and changes to this implementation compared to the original distribution are:
+
+Source code has been converted from Z80mr assembler to Hector Peraza's zsm.
+
+James Bowman's Double precision words have been added from his RC2014 version:
+(https://github.com/jamesbowman/camelforth-z80)
+
+Word    | Syntax                     | Description
+--------|----------------------------|---------------------------------
+D+	| d1 d2 -- d1+d2             | Add double numbers
+2>R	| d --                       | 2 to R
+2R>	| d --                       | fetch 2 from R
+M*/	| d1 n2 u3 --  d=(d1*n2)/u3  | double precision mult. div
+
+
 # BASIC
 
 # TastyBASIC
@@ -332,6 +374,7 @@ The Atmel 39SF040 chip is recommended as it can erase and write 4Kb sectors. Oth
 ## Usage
 
 In most cases, completing a ROM update is a simple as:
+
 1. Booting to the boot loader prompt
 2. Selecting option X - Xmodem Flash Updater
 3. Selecting option U - Update
@@ -346,6 +389,7 @@ Due to different platform processor speeds,  serials speeds and flow control cap
 
  ## Console Options
 Option ( C ) - Set Console Device
+
 Option ( S ) - Set Serial Device
 
 By default the updater assumes that the current console is a serial device and that the ROM file to be flashed will also be transferred across this device, so the Console and Serial device are both the same.
@@ -355,11 +399,13 @@ Either device can be can be change to another character-input/output device but 
 The advantage of transferring on a different device to the console is that progress information can be displayed during the transfer.
 
 Option ( > ) - Set Recommended Baud Rate
-Option ( < ) - Revert t Original Baud Rate
+
+Option ( < ) - Revert to Original Baud Rate
 
 ## Programming options
 
 Option ( U ) - Begin Update
+
 The will begin the update process. The updater will expect to start receiving
 an x-modem file on the serial device unit.
 
@@ -387,7 +433,8 @@ file (128kb .img) or complete ROM can be received and written (512kb or
 If the update fails it is recommended that you retry before rebooting or
 exiting to the Boot loader as your machine may not be bootable.
 
-Option ( D ) - Duplicate flash #1 to flash #2 
+Option ( D ) - Duplicate flash #1 to flash #2
+ 
 This option will make a copy of flash #1 ont flash #2. The purpose of this is to enable
  making a backup copy of the current flash. Intended for systems using 2x512Kb Flash devices.
 
@@ -400,20 +447,23 @@ you are experiencing reliable transfers and flashing.
 ## Exit options
 
 Option ( R ) - Reboot
+
 Execute a cold reboot. This should be done after a successful update. If
 you perform a cold reboot after a failed update then it is likely that
 your system will be unusable and removing and reprogramming the flash
 will be required.
 
-Option (Q) - Quit to boot loader. The SBC Boot Loader is reloaded from ROM and
+Option ( Q ) - Quit to boot loader. 
+
+The SBC Boot Loader is reloaded from ROM and
 executed. After a successful update a Reboot should be performed. However,
 in the case of a failed update this option could be used to attempt to
 load CP/M and perform the normal x-modem / flash process to recover.
 
 ## CRC Utility options
 
-Option (1) and (2) - Calculate and display CRC32 of 1st or 2nd 512k ROM.
-Option (3) - Calculate and display CRC32 of a 1024k (2x512Kb) ROM.
+Option ( 1 ) and ( 2 ) - Calculate and display CRC32 of 1st or 2nd 512k ROM.
+Option ( 3 ) - Calculate and display CRC32 of a 1024k (2x512Kb) ROM.
 
 Can be used to verify if a ROM image has been transferred and flashed correctly. Refer  to the Teraterm section below for details on configuring the automatic display of a files CRC after it has been transferred.
 
@@ -422,6 +472,7 @@ In Windows, right clicking on a file should also give you a contect menu option 
 ## Teraterm macro configuration 
 
 Macros are a useful tool for automatic common tasks. There are a number of instances where using macros to facilitate the update process could be worthwhile if you are:
+
 * Following the ROMWBW development builds.
 * Doing lots of configuration changes.
 * Doing development on ROMWBW drivers
