@@ -63,7 +63,7 @@ cpnet3/*.* 4:
 # Add Common Applications
 #
 Common/All/*.* 15:
-Common/CPM3/*.* 0:
+Common/CPM3/*.* 15:
 #Common/Z/u10/*.* 10:
 Common/Z/u14/*.* 14:
 Common/Z/u15/*.* 15:
