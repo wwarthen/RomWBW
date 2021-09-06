@@ -1203,7 +1203,7 @@ CLEAR:	DEC	B
 	LD	(CRC+2),HL
 	RET
 ;
-; multiply DE:HL by 10, exit wit C set if overflow
+; multiply DE:HL by 10, exit with C set if overflow
 ;
 multb10:call	multb2		; x2
 	ret	c
