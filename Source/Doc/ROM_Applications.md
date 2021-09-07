@@ -234,7 +234,7 @@ For those are who are not familiar with Forth, I recommend the
 wikipedia article (en.wikipedia.org/wiki/Forth_(programming_language))
 and the Forth Interest Group website [www.forth.org](www.forth.org)
 
-Important things to know:
+## Important things to know
 
 Forth is case sensitive.
 
@@ -244,18 +244,35 @@ To get a list of available words type ***WORDS***
 
 To reset Forth to its initial state type ***COLD***
 
-Most code you will find on the internet will not run without modification.
-
-A glossary of available words is listed in the \Source\Forth\glosshi.txt glosslo.txt file.
+Most of the code you find on the internet will not run unless modified or additional Forth
+words are added to the dictionary.
 
 This implementation does not support loading or saving of programs. All programs
 need to be typed in. Additionally, screen editing and code blocks are not supported.
 
+## Structure of Forth source files
+
+File          | Description
+--------------|-----------------------------
+camel80.azm   | Code Primitives
+ camel80d.azm | CPU Dependencies
+ camel80h.azm | High Level words
+ camel80r.azm | ROMWBW additions
+glosshi.txt   | Glossary of high level words
+glosslo.txt   | Glossary of low level words
+
+## ROMWBW Additions
+
 Extensions and changes to this implementation compared to the original distribution are:
 
-Source code has been converted from Z80mr assembler to Hector Peraza's zsm.
+The source code has been converted from Z80mr assembler to Hector Peraza's zsm.
 
-James Bowman's Double precision words have been added from his RC2014 version:
+An additional file camel80r.azm has been added for including additional words to 
+the dictionary at build time. However, as currently configured there is very little space
+allocated for addition words. Exceeding the allocated ROM space will generate an error
+message when building.
+
+James Bowman's double precision words have been added from his RC2014 version:
 (https://github.com/jamesbowman/camelforth-z80)
 
 Word    | Syntax                     | Description

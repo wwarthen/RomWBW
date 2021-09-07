@@ -18,7 +18,7 @@
 ; ===============================================
 
 ;Z ><   u1 -- u2    swap the bytes of TOS
-    head SWAB,2,><,docode
+    head SWAB,2,!>!<,docode
         ld a,b
         ld b,c
         ld c,a
@@ -45,7 +45,7 @@
         next
 
 ;Z >HEX  c1 -- c2    convert nybble to hex char
-    head TOHEX,4,>HEX,docode
+    head TOHEX,4,!>HEX,docode
         ld a,c
         sub 0ah
         jr c,numeric
