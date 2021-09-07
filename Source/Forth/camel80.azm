@@ -1071,15 +1071,21 @@ snext:  next
 
 INCLUDE camel80d.azm   ; CPU Dependencies
 INCLUDE camel80h.azm   ; High Level words
-;INCLUDE camel80r.azm   ; ROMWBW additions
+INCLUDE camel80r.azm   ; ROMWBW additions
 ;INCLUDE cameltst.azm   ; Test Functions
 lastword EQU link   ; nfa of last word in dict.
 enddict EQU $       ; user's code starts here
 
 		; force padding to page boundary
 
-		ds (FTH_SIZ-(enddict-reset)-1)
-		nop
+IF ((enddict-reset) GT FTH_SIZ)
+ IF2
+	FORTH SIZE ERROR
+ ENDIF
+ELSE
+	ds (FTH_SIZ-(enddict-reset)-1)
+	nop
+ENDIF
 	.DEPHASE
 		
         END
