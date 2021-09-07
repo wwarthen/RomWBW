@@ -246,7 +246,6 @@ To reset Forth to its initial state type ***COLD***
 
 Most code you will find on the internet will not run without modification.
 
-A glossary of available words is listed in the \Source\Forth\glosshi.txt glosslo.txt file.
 
 This implementation does not support loading or saving of programs. All programs
 need to be typed in. Additionally, screen editing and code blocks are not supported.
@@ -254,6 +253,19 @@ need to be typed in. Additionally, screen editing and code blocks are not suppor
 Extensions and changes to this implementation compared to the original distribution are:
 
 Source code has been converted from Z80mr assembler to Hector Peraza's zsm.
+
+## Structure of Forth source files
+
+File          | Description
+--------------|-----------------------------
+camel80.azm   | Code Primitives
+ camel80d.azm | CPU Dependencies
+ camel80h.azm | High Level words
+ camel80r.asm | ROMWBW additions
+glosshi.txt   | Glossary of high level words
+glosslo.txt   | Glossary of low level words
+
+## ROMWBW Additons
 
 James Bowman's Double precision words have been added from his RC2014 version:
 (https://github.com/jamesbowman/camelforth-z80)

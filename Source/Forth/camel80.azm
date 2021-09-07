@@ -75,7 +75,8 @@ HB_LOC			EQU	0FD80h
 ;       b1ackmai1er difficultylevelhigh@gmail.com  
 ;   22-Jan 21 v1.02 Adjust for revised HBIOS
 ;                   proxy size.
-;       b1ackmai1er difficultylevelhigh@gmail.com                  
+;       b1ackmai1er difficultylevelhigh@gmail.com
+;   07-Sep 21 v1.02 Separate additions.                  
 ; ===============================================
 ; Macros to define Forth headers
 ; HEAD  label,length,name,action
@@ -1070,6 +1071,8 @@ snext:  next
 
 INCLUDE camel80d.azm   ; CPU Dependencies
 INCLUDE camel80h.azm   ; High Level words
+;INCLUDE camel80r.azm   ; ROMWBW additions
+;INCLUDE cameltst.azm   ; Test Functions
 lastword EQU link   ; nfa of last word in dict.
 enddict EQU $       ; user's code starts here
 
