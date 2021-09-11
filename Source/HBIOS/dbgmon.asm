@@ -33,6 +33,9 @@ BUFLEN	.EQU	40			; INPUT LINE LENGTH
 ;
 #IF DSKYENABLE
   #DEFINE USEDELAY
+ENA_XM	.SET	FALSE			; NO ROOM FOR BOTH DSKY+XMODEM
+#ELSE
+ENA_XM	.EQU	TRUE			; INCLUDE XMODEM IF SPACE AVAILABLE
 #ENDIF
 ;
 #INCLUDE "util.asm"
@@ -100,8 +103,10 @@ SERIALCMDLOOP:
 	JP	Z,PROGRM		; IF YES GO PROGRAM ROUTINE
 	CP	'O'			; IS IT AN "O" (Y/N)
 	JP	Z,POUT			; PORT OUTPUT
+#IF (ENA_XM)
 	CP	'T'			; IS IT A "T" (Y/N)
 	JP	Z,XMLOAD		; XMODEM TRANSFER
+#ENDIF
 	CP	'L'			; IS IT A "L" (Y/N)
 	JP	Z,HXLOAD		; INTEL HEX FORMAT LOAD DATA
 	CP	'I'			; IS IT AN "I" (Y/N)
@@ -319,7 +324,7 @@ KLOP1:
 	JP	Z,SERIALCMDLOOP		; IF SO, ALL DONE
 	CALL	COUT			; OUTPUT KEY TO SCREEN
 	JR	KLOP1			; LOOP
-
+#IF (ENA_XM)
 ;
 ;__XMLOAD_____________________________________________________________________
 ;
@@ -498,6 +503,7 @@ TXT_PKNUMERR	.TEXT	"\r\nPacket Number Error$"
 TXT_TMOUTERR	.TEXT	"\r\nTimeout Error$"
 TXT_RETRYERR	.TEXT	"\r\nRetry Error$"
 TXT_CANCLERR	.TEXT	"\r\nTransfer Cancelled$"
+#ENDIF
 ;
 ;__HXLOAD_____________________________________________________________________
 ;
@@ -608,7 +614,8 @@ PIN:
 ;__DUMPMEM____________________________________________________________________
 ;
 ;	PRINT A MEMORY DUMP, USER OPTION "D"
-;	SYNTAX: D <START ADR> <END ADR>
+;	SYNTAX: D <START ADR> [END ADR]
+;	IF NO END ADDRESS, DUMP 100H BYTES
 ;_____________________________________________________________________________
 ;
 DUMPMEM:
@@ -616,12 +623,14 @@ DUMPMEM:
 	JP	C,ERR			; HANDLE ERRORS
 	PUSH	DE			; SAVE IT
 	CALL	WORDPARM		; GET END ADDRESS
-	JP	C,ERR			; HANDLE ERRORS
-	PUSH	DE			; SAVE IT
-
-	POP	DE			; DE := END ADDRESS
-	POP	HL			; HL := START ADDRESS
-
+	POP	HL			; RECOVER START
+	JR	NC,GDATA		; 
+;
+	LD	D,H			; DEFAULT TO 100H
+	LD	E,L			; BYTES IF NO
+	INC	D			; END ADDRESS
+	DEC	DE			; IS GIVEN
+;
 GDATA:
 	INC	DE			; BUMP DE FOR LATER COMPARE
 	CALL	NEWLINE			;
@@ -1188,7 +1197,7 @@ TXT_BADNUM	.TEXT	" *Invalid Hex Byte Value*$"
 TXT_MINIHELP	.TEXT	" (? for Help)$"
 TXT_HELP	.TEXT	"\r\nMonitor Commands (all values in hex):"
 		.TEXT	"\r\nB                - Boot system"
-		.TEXT	"\r\nD xxxx yyyy      - Dump memory from xxxx to yyyy"
+		.TEXT	"\r\nD xxxx [yyyy]    - Dump memory from xxxx to yyyy"
 		.TEXT	"\r\nF xxxx yyyy zz   - Fill memory from xxxx to yyyy with zz"
 		.TEXT	"\r\nH                - Halt system"
 		.TEXT	"\r\nI xxxx           - Input from port xxxx"
@@ -1200,7 +1209,9 @@ TXT_HELP	.TEXT	"\r\nMonitor Commands (all values in hex):"
 		.TEXT	"\r\nR xxxx [[yy] [zzzz]]  - Run code at address xxxx"
 		.TEXT	"\r\n                        Pass yy and zzzz to register A and BC"
 		.TEXT	"\r\nS xx             - Set bank to xx"
+#IF (ENA_XM)
 		.TEXT	"\r\nT xxxx           - X-modem transfer to memory location xxxx"
+#ENDIF
 		.TEXT	"\r\nX                - Exit monitor"
 		.TEXT	"$"
 ;
