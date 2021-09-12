@@ -51,6 +51,8 @@ Version 3.1.1
 - WBW: Added ROM verification to boot process
 - WBW: Added Z80 instruction test apps to user area 5 in CP/M & ZSDOS
 - WBW: Add support for LINC sound card
+- WBW: Add interrupt receive support to UART driver
+- PMS: Add XModem transfer within Debug Monitor
 
 Version 3.1
 -----------

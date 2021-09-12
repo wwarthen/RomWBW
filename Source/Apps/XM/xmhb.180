@@ -112,10 +112,21 @@ MINIT_HB1:
 	RST	08		; Do it, D=device type
 	LD	A,D		; Put result in A
 	CP	00H		; UART?
-	JP	Z,UA_INIT	; If so, do UART H/W init
+	JP	Z,MINIT_HB2	; If so, do UART H/W init
 	CP	80H		; USB-FIFO?
 	JP	Z,UF_INIT	; If so, do USB-FIFO H/W init
 	JP	HB_INIT		; Otherwise, use BIOS I/O
+;
+MINIT_HB2:
+	; Handle UART driver special.  If receive interrupts active,
+	; we must use BIOS I/O.  Otherwise, direct UART I/O is best
+	LD	B,06H		; Serial device function
+	LD	A,(UNIT)	; Get xfer unit
+	LD	C,A		; Put in C
+	RST	08		; Do it, H = UART TYPE
+	BIT	7,H		; Check for interrupt driven receive
+	JP	Z,UA_INIT	; If not, do direct UART I/O
+	JP	HB_INIT		; else use BIOS I/O
 ;
 MINIT_UB:
 	; Display UNA notification string
