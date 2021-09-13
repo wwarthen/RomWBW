@@ -1,6 +1,6 @@
 ;
 ;==================================================================================================
-; DSKY NEXT GEN ROUTINES
+; DSKYNG (DISPLAY AND KEYBOARD NEXT GENERATION) ROUTINES
 ;==================================================================================================
 ;
 ; A DSKYNG CAN SHARE A PPI BUS WITH EITHER A PPIDE OR PPISD.
