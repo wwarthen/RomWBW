@@ -58,6 +58,7 @@ Memory Area | Function
 ------------|-----------------------------------
 `0000-00FFh`| Jump and restart (RST) vectors
 `0100-01FFh`| HBIOS configuration block
+`EF00-FDFFh`| MONITOR
 `FE00-FFFFh`| HBIOS proxy
 
 Commands can be entered at the command prompt `>` 
@@ -94,6 +95,7 @@ O xxxx yy            - Output value yy to port xxxx
 P xxxx               - Program RAM at address xxxx
 R xxxx [[yy] [zzzz]] - Run code at address xxxx
                        Pass yy and zzzz to register A and BC
+T xxxx	             - X-modem transfer to memory location xxxx
 S xx                 - Set bank to xx
 X                    - Exit monitor
 ```
@@ -215,12 +217,60 @@ Monitor is saved on the stack so the program can return
 to the monitor. On return to the monitor, the contents of
 the A, HL, DE and BC registers are displayed.
 
+## Set bank
+
+S xx - Change the bank in memory to xx. Memory addresses
+0000-7FFF (i.e. bottom 32k) are affected. Because the
+interrupt vectors are stored in the bottom page of this
+range, this function is disable when interrupt mode 1 is
+being used (IM1). Interrupt mode 2 is not affected as the
+associated jump vectors are stored in high memory. 
+
+Changing the bank also impacts the restart vectors (RST),
+so executing code that call the HBIOS using the RST 08
+assembly code will not work.
+
+The monitor stack resides in high memory and is not affected
+but any code that changes the stack to low memory will be
+affected.
+
+### Bank codes and descriptions
+
+TYPE | DESCRIPTION        |BANK| DETAILS
+-----|--------------------|----|-----------
+RAM  | COMMON BANK        | 8E |
+RAM  | USER BANK          | 8D |
+RAM  | BIOS BANK          | 8C |
+RAM  | AUX BANK           | 8B |
+RAM  | RAM DRIVE END	  | 8A | LAST BANK
+RAM  | RAM DRIVE START    | ?? | 512K SYSTEM
+RAM  | RAM DRIVE START    | ?? | 1024K SYSTEM
+ROM  | BOOT BANK          | 00 |
+ROM  | LOADER & IMAGES    | 01 | MONITOR, FORTH
+ROM  | ROM IMAGES CONTD.  | 02 | BASIC, ETC
+ROM  | FAT FILESYSTEM     | 03 |
+ROM  | NETWORK BOOT       | 04 |
+ROM  | ROM DRIVE START    | 05 |
+ROM  | ROM DRIVE END      | 0F | 512K
+ROM  | ROM DRIVE END      | 1F | 1024K
+
 ## NOTES:
 
 The RTC utility on the CP/M ROM disk provides facilities
 to manipulate the Real Time Clock non-volatile Memory. 
 Use the C or Z option from the Boot Loader to load CP/M 
 and then run RTC to see the options list.
+
+# X-modem transfer
+
+T xxxx - Receive an X-modem file transfer and load it into
+memory starting at location xxxx. 
+
+128 byte blocks and checksum mode is the only supported 
+protocol.
+
+If the monitor is assembled with the DSKY functionality,
+this feature will be exclude due to space limitions.
 
 # FORTH
 
