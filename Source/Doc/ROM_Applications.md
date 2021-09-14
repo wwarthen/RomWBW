@@ -84,7 +84,7 @@ A quick guide to using the Monitor program follows:
 ```
 Monitor Commands (all values in hex):
 B                    - Boot system
-D xxxx yyyy          - Dump memory from xxxx to yyyy
+D xxxx [yyyy]        - Dump memory from xxxx to yyyy
 F xxxx yyyy zz       - Fill memory from xxxx to yyyy with zz
 H                    - Halt system
 I xxxx               - Input from port xxxx
@@ -108,10 +108,13 @@ returns to the Boot Loader prompt.
 
 ## Dump Memory
 
-D xxxx yyyy - Dump memory from hex location xxxx to yyyy
+D xxxx [yyyy] - Dump memory from hex location xxxx to yyyy
 on the screen as lines of 16 hexadecimal bytes with their
 ASCII equivalents (if within a set range, else a '.' is
-printed). A good tool to see where code is located, check
+printed). If the end address is omitted then 256 bytes is
+displayed. 
+
+A good tool to see where code is located, check
 for version id, obtain details for chip configurations and
 execution paths.
 
@@ -206,7 +209,7 @@ to load a program that has been assembled to a hex file on the
 remote computer.
 
 An excellent online resource for looking up opcodes for entry
-can be found here: (https://clrhome.org/table)
+can be found here: [https://clrhome.org/table](https://clrhome.org/table)
 
 ## Run program
 
@@ -263,14 +266,7 @@ ROM  | ROM DRIVE START    | 04 |
 ROM  | ROM DRIVE END      | 0F | 512K ROM SYSTEM
 ROM  | ROM DRIVE END      | 1F | 1024K ROM SYSTEM
 
-## NOTES:
-
-The RTC utility on the CP/M ROM disk provides facilities
-to manipulate the Real Time Clock non-volatile Memory. 
-Use the C or Z option from the Boot Loader to load CP/M 
-and then run RTC to see the options list.
-
-# X-modem transfer
+## X-modem transfer
 
 T xxxx - Receive an X-modem file transfer and load it into
 memory starting at location xxxx. 
@@ -281,16 +277,24 @@ protocol.
 If the monitor is assembled with the DSKY functionality,
 this feature will be exclude due to space limitions.
 
+
+## NOTES:
+
+The RTC utility on the CP/M ROM disk provides facilities
+to manipulate the Real Time Clock non-volatile Memory. 
+Use the C or Z option from the Boot Loader to load CP/M 
+and then run RTC to see the options list.
+
 # FORTH
 
 CamelForth is the version of Forth included as part of the boot
 ROM in ROMWBW. It has been converted from the Z80 CP/M version
-published here (www.camelforth.com/page.php?5). The author is Brad
+published here [www.camelforth.com/page.php?5](www.camelforth.com/page.php?5). The author is Brad
 Rodriguez who is a prolific Forth enthusiast, whose work can be
-found here: (www.bradrodriguez/papers/index.html)
+found here: [www.bradrodriguez/papers/index.html](www.bradrodriguez/papers/index.html)
 
 For those are who are not familiar with Forth, I recommend the
-wikipedia article (en.wikipedia.org/wiki/Forth_(programming_language))
+wikipedia article [en.wikipedia.org/wiki/Forth_(programming_language](en.wikipedia.org/wiki/Forth_(programming_language))
 and the Forth Interest Group website [www.forth.org](www.forth.org)
 
 ## Important things to know
@@ -332,7 +336,7 @@ allocated for addition words. Exceeding the allocated ROM space will generate an
 message when building.
 
 James Bowman's double precision words have been added from his RC2014 version:
-(https://github.com/jamesbowman/camelforth-z80)
+[https://github.com/jamesbowman/camelforth-z80](https://github.com/jamesbowman/camelforth-z80)
 
 Word    | Syntax                     | Description
 --------|----------------------------|---------------------------------
@@ -344,7 +348,67 @@ M*/	| d1 n2 u3 --  d=(d1*n2)/u3  | double precision mult. div
 
 # BASIC
 
+For those who are not familiar with BASIC, it stands for Beginners All purpose Symbolic
+Instruction Code. 
+
+ROMWBW contains two versions of ROM BASIC, a full implementation and a "tiny" BASIC.
+
+The full implementation is a version of Microsoft BASIC from the NASCOM Computer.
+
+A comprehensive instruction manual is available in the Doc\Contrib directory.
+
+## ROMWBW specific features
+
+- Sound
+- Graphics
+- Terminal Support
+
+## ROMWBW unsupported features
+
+-  Cassette loading
+-  Cassette saving
+
 # TastyBASIC
+
+Integer arithmetic only
+
+## Direct Commands
+
+- `LIST`
+- `RUN`
+- `NEW`
+- `CLEAR`
+- `BYE`
+
+## Statements
+
+- `LET`
+- `IF`
+- `GOTO`
+- `GOSUB RETURN`
+- `REM`
+- `FOR TO NEXT STEP`
+- `INPUT`
+- `PRINT`
+- `POKE`
+- `END`
+
+## Functions
+
+- `PEEK`
+- `RND`
+- `ABS`
+- `USR`
+- `SIZE`
+
+## Operators
+
+- `>=`
+- `#`
+- `>`
+- `=`
+- `<=`
+- `<`
 
 # Play a Game
 
@@ -511,7 +575,7 @@ exiting to the Boot loader as your machine may not be bootable.
 
 Option ( D ) - Duplicate flash #1 to flash #2
  
-This option will make a copy of flash #1 ont flash #2. The purpose of this is to enable
+This option will make a copy of flash #1 onto flash #2. The purpose of this is to enable
  making a backup copy of the current flash. Intended for systems using 2x512Kb Flash devices.
 
 Option ( V ) - Toggle Write Verify
