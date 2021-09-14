@@ -58,7 +58,7 @@ Memory Area | Function
 ------------|-----------------------------------
 `0000-00FFh`| Jump and restart (RST) vectors
 `0100-01FFh`| HBIOS configuration block
-`EF00-FDFFh`| MONITOR
+`EE00-FDFFh`| MONITOR
 `FE00-FFFFh`| HBIOS proxy
 
 Commands can be entered at the command prompt `>` 
@@ -237,22 +237,31 @@ affected.
 ### Bank codes and descriptions
 
 TYPE | DESCRIPTION        |BANK| DETAILS
------|--------------------|----|-----------
-RAM  | COMMON BANK        | 8E |
-RAM  | USER BANK          | 8D |
-RAM  | BIOS BANK          | 8C |
-RAM  | AUX BANK           | 8B |
-RAM  | RAM DRIVE END	  | 8A | LAST BANK
-RAM  | RAM DRIVE START    | ?? | 512K SYSTEM
-RAM  | RAM DRIVE START    | ?? | 1024K SYSTEM
-ROM  | BOOT BANK          | 00 |
+-----|--------------------|----|---------------------
+RAM  | COMMON BANK        | 9F | 1024K RAM SYSTEM
+RAM  | USER BANK          | 9E | 1024K RAM SYSTEM
+RAM  | BIOS BANK          | 9D | 1024K RAM SYSTEM
+RAM  | AUX BANK           | 9C | 1024K RAM SYSTEM
+RAM  | OS BUFFERS END     | 9B | 1024K RAM SYSTEM
+RAM  | OS BUFFERS START   | 98 | 1024K RAM SYSTEM
+RAM  | RAM DRIVE END	  | 97 | 1024K RAM SYSTEM
+RAM  | COMMON BANK        | 8F | 512K RAM SYSTEM
+RAM  | USER BANK          | 8E | 512K RAM SYSTEM
+RAM  | BIOS BANK          | 8D | 512K RAM SYSTEM
+RAM  | AUX BANK           | 8C | 512K RAM SYSTEM
+RAM  | OS BUFFERS         | 8B | 512K RAM SYSTEM
+RAM  | OS BUFFERS         | 8A | 512K RAM SYSTEM
+RAM  | OS BUFFERS         | 89 | 512K RAM SYSTEM
+RAM  | OS BUFFERS         | 88 | 512K RAM SYSTEM
+RAM  | RAM DRIVE END	  | 87 | 512K RAM SYSTEM
+RAM  | RAM DRIVE START    | 80 |
+ROM  | BOOT BANK          | 00 | COLD START & HBIOS
 ROM  | LOADER & IMAGES    | 01 | MONITOR, FORTH
 ROM  | ROM IMAGES CONTD.  | 02 | BASIC, ETC
-ROM  | FAT FILESYSTEM     | 03 |
-ROM  | NETWORK BOOT       | 04 |
-ROM  | ROM DRIVE START    | 05 |
-ROM  | ROM DRIVE END      | 0F | 512K
-ROM  | ROM DRIVE END      | 1F | 1024K
+ROM  | FAT FILESYSTEM     | 03 | UNA ONLY, ELSE UNUSED
+ROM  | ROM DRIVE START    | 04 |
+ROM  | ROM DRIVE END      | 0F | 512K ROM SYSTEM
+ROM  | ROM DRIVE END      | 1F | 1024K ROM SYSTEM
 
 ## NOTES:
 
