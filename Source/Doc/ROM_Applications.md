@@ -370,45 +370,35 @@ A comprehensive instruction manual is available in the Doc\Contrib directory.
 
 # TastyBASIC
 
-Integer arithmetic only
+TastyBASIC offers a minimal implementation of BASIC that is only 2304 bytes in size. 
+It originates from Li-Chen Wangs Palo Alto Tiny BASIC from around 1976. It's small size suited the
+tiny memory capacities of the time. This impementation is by Dimitri Theulings and his
+original souce can be found here [https://github.com/dimitrit/tastybasic](https://github.com/dimitrit/tastybasic)
+
+## Features / Limitations
+
+ Integer arithmetic, numbers -32787 to 32767
+ Singles letter variables A-Z
+ 1-dimensional array support
+ Strings are not supported  
 
 ## Direct Commands
 
-- `LIST`
-- `RUN`
-- `NEW`
-- `CLEAR`
-- `BYE`
+- `LIST`,`RUN`, `NEW`, `CLEAR`, `BYE`
 
 ## Statements
 
-- `LET`
-- `IF`
-- `GOTO`
-- `GOSUB RETURN`
-- `REM`
-- `FOR TO NEXT STEP`
-- `INPUT`
-- `PRINT`
-- `POKE`
-- `END`
+- `LET`, `IF`, `GOTO`, `GOSUB RETURN`, `REM`, `FOR TO NEXT STEP`, `INPUT`, `PRINT`, `POKE`, `END`
 
 ## Functions
 
-- `PEEK`
-- `RND`
-- `ABS`
-- `USR`
-- `SIZE`
+- `PEEK`, `RND`, `ABS`, `USR`, `SIZE`
 
 ## Operators
 
-- `>=`
-- `#`
-- `>`
-- `=`
-- `<=`
-- `<`
+- `>=`, `#`, `>`, `=`, `<=`, `<`
+
+- Operator precedence is supported.
 
 # Play a Game
 
@@ -607,7 +597,7 @@ Option ( 3 ) - Calculate and display CRC32 of a 1024k (2x512Kb) ROM.
 
 Can be used to verify if a ROM image has been transferred and flashed correctly. Refer  to the Teraterm section below for details on configuring the automatic display of a files CRC after it has been transferred.
 
-In Windows, right clicking on a file should also give you a contect menu option CRC SHA which will allow you to select a CRC32 calculation to be done on the selected file.
+In Windows, right clicking on a file should also give you a context menu option CRC SHA which will allow you to select a CRC32 calculation to be done on the selected file.
 
 ## Teraterm macro configuration 
 
