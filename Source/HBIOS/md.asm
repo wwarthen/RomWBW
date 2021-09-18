@@ -774,7 +774,7 @@ MD_TGTDEV	.EQU	0B7BFH		; TARGET CHIP FOR R/W FILESYSTEM 39SF040
 ;======================================================================
 ;
 MD_FINIT:
-	CALL	MD_CALCU			; DISPLAY
+	CALL	MD_CALCU		; DISPLAY
 ;
 #IF (MD_FVBS==1)
 	CALL	NEWLINE			; OF UNITS 
