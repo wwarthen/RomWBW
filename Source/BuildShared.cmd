@@ -1,6 +1,7 @@
 @echo off
 setlocal
 
+pushd HDIAG && call Build || exit /b & popd
 pushd CBIOS && call Build || exit /b & popd
 pushd CPM22 && call Build || exit /b & popd
 pushd ZCPR && call Build || exit /b & popd
