@@ -1476,7 +1476,7 @@ This function applies the previously specified volume and period by
 programming the sound chip with the appropriate values.  The values
 are applied to the specified channel of the chip.
 
-For example, to play a specific note on Audio Device UNit 0,
+For example, to play a specific note on Audio Device Unit 0,
 the following HBIOS calls would need to be made:
 
 ```
