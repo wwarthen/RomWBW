@@ -69,6 +69,9 @@ CPM=$(TOOLS)/cpm/bin
 		rm -f $$($(CASEFN) $*.hex) ; \
 	fi
 
+%.rom: %.asm
+	$(TASM) $(TASMFLAGS) $< $@ $*.lst
+
 %.hex: %.asm
 	$(ZXCC) $(CPM)/MAC -$< -$$PO
 

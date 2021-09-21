@@ -355,7 +355,7 @@ ROMWBW contains two versions of ROM BASIC, a full implementation and a "tiny" BA
 
 The full implementation is a version of Microsoft BASIC from the NASCOM Computer.
 
-A comprehensive instruction manual is available in the Doc\Contrib directory.
+A comprehensive instruction manual is available in the Doc\\Contrib directory.
 
 ## ROMWBW specific features
 
