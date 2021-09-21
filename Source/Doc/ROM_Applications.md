@@ -376,7 +376,7 @@ original source can be found here [https://github.com/dimitrit/tastybasic](https
 
 ## Features / Limitations
 
- Integer arithmetic, numbers -32787 to 32767
+ Integer arithmetic, numbers -32767 to 32767
  Singles letter variables A-Z
  1-dimensional array support
  Strings are not supported  
