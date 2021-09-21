@@ -843,10 +843,10 @@ MD_PR1:	CALL	WRITESTR
 MD_CALCU:
 ;	LD	A,+(ROMSIZE/512)	; DISPLAY NUMBER
 	LD	A,(HCB + HCB_ROMBANKS)	; GET NUMBER OF BANKS
-	SRL	A			; X2 CALCULATE
-	SRL	A			; X4 NUMBER OF 512KB
-	SRL	A			; X8 CHIPS THAT IS
-	SRL	A
+	SRL	A			; /2 CALCULATE
+	SRL	A			; /4 NUMBER OF 512KB
+	SRL	A			; /8 CHIPS THAT IS
+	SRL	A			; /16
 	RET
 ;
 ;======================================================================
