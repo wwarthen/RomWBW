@@ -1,7 +1,8 @@
 #
 # order is actually important, because of build dependencies
 #
-SUBDIRS = Prop
+SUBDIRS = HDIAG
+SUBDIRS += Prop
 SUBDIRS += Apps
 SUBDIRS += CBIOS
 SUBDIRS += Forth
