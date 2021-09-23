@@ -1462,7 +1462,7 @@ to the corresponding octave and note.
 | Ab/G# |   40  |   88  |  136  |  184  |  232  |  280  |  328  |  376  |
 | A     |   44  |   92  |  140  |  188  |  236  |  284  |  332  |  380  |
 
-### Function 0x54 -- Sound Play SNDPLAY)
+### Function 0x54 -- Sound Play (SNDPLAY)
 
 | _Entry Parameters_
 |       B: 0x54
@@ -1476,7 +1476,7 @@ This function applies the previously specified volume and period by
 programming the sound chip with the appropriate values.  The values
 are applied to the specified channel of the chip.
 
-For example, to play a specific note on Audio Device UNit 0,
+For example, to play a specific note on Audio Device Unit 0,
 the following HBIOS calls would need to be made:
 
 ```
@@ -1509,7 +1509,7 @@ key aspects of the specific Audio Device.
 |           B: Count of standard tone channels
 |           C: Count of noise tone channels
 
-#### SNDQUERY Subfunction 0x02		 -- Get current volume setting (SNDQ_VOL)
+#### SNDQUERY Subfunction 0x02 -- Get current volume setting (SNDQ_VOL)
 
 |      _Entry Parameters_
 |           B: 0x55
@@ -1619,7 +1619,7 @@ System (SYS)
 |       A: Status (0=OK, else error)
 
 This function performs various forms of a system reset depending on
-the value of the subfucntion.  See subfunctions below.
+the value of the subfunction.  See subfunctions below.
 
 #### SYSRESET Subfunction 0x00 -- Internal HBIOS Reset (RESINT)
 

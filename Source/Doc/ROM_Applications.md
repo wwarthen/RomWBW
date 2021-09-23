@@ -371,13 +371,12 @@ A comprehensive instruction manual is available in the Doc\\Contrib directory.
 # TastyBASIC
 
 TastyBASIC offers a minimal implementation of BASIC that is only 2304 bytes in size. 
-It originates from Li-Chen Wangs Palo Alto Tiny BASIC from around 1976. It's small size suited the
-tiny memory capacities of the time. This impementation is by Dimitri Theulings and his
-original souce can be found here [https://github.com/dimitrit/tastybasic](https://github.com/dimitrit/tastybasic)
+It originates from Li-Chen Wang's Palo Alto Tiny BASIC from around 1976. It's small size suited the tiny memory capacities of the time. This implementation is by Dimitri Theulings and his
+original source can be found here [https://github.com/dimitrit/tastybasic](https://github.com/dimitrit/tastybasic)
 
 ## Features / Limitations
 
- Integer arithmetic, numbers -32787 to 32767
+ Integer arithmetic, numbers -32767 to 32767
  Singles letter variables A-Z
  1-dimensional array support
  Strings are not supported  
@@ -399,6 +398,8 @@ original souce can be found here [https://github.com/dimitrit/tastybasic](https:
 - `>=`, `#`, `>`, `=`, `<=`, `<`
 
 - Operator precedence is supported.
+
+Type ***BYE*** to return to the monitor.
 
 # Play a Game
 
