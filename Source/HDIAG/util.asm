@@ -14,6 +14,24 @@ prtstr:
 	call	cout			; display character
 	jr	prtstr			; loop till done
 ;
+; Print a string from a lookup table pointed to by HL, entry A
+; with a prefix string at DE.  HL, DE, and A are trashed.
+;
+prtstrtbl:
+	push	af
+	ex	de,hl
+	call	prtstr
+	ex	de,hl
+	pop	af
+	rlca
+	call	addhla
+	ld	a,(hl)
+	inc	hl
+	ld	h,(hl)
+	ld	l,a
+	call	prtstr
+	ret
+;
 ; Print the hex byte value in A
 ;
 prthex8:
