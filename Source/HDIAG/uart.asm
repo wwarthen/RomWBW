@@ -38,22 +38,22 @@ uart_jptbl:
 ;
 uart_cinit:
 	; Test for existence
-	xor	a			; zero accum
-	out	(uart_ier),a		; ier := 0
-	ld	a,$80			; dlab bit on
-	out	(uart_lcr),a		; output to lcr (dlab regs now active)
-	ld	a,$5A			; load test value
-	out	(uart_dlm),a		; output to dlm
-	in	a,(uart_dlm)		; read it back
-	cp	$5A			; check for test value
-	ret	nz			; nope, unknown uart or not present
-	xor	a			; dlab bit off
-	out	(uart_lcr),a		; output to lcr (dlab regs now inactive)
-	in	a,(uart_ier)		; read ier
-	cp	$5A			; check for test value
-	jr	nz,uart_cinit1		; if *not* $5A, good to go
-	or	$FF			; signal error
-	ret				; done
+	;;;xor	a			; zero accum
+	;;;out	(uart_ier),a		; ier := 0
+	;;;ld	a,$80			; dlab bit on
+	;;;out	(uart_lcr),a		; output to lcr (dlab regs now active)
+	;;;ld	a,$5A			; load test value
+	;;;out	(uart_dlm),a		; output to dlm
+	;;;in	a,(uart_dlm)		; read it back
+	;;;cp	$5A			; check for test value
+	;;;ret	nz			; nope, unknown uart or not present
+	;;;xor	a			; dlab bit off
+	;;;out	(uart_lcr),a		; output to lcr (dlab regs now inactive)
+	;;;in	a,(uart_ier)		; read ier
+	;;;cp	$5A			; check for test value
+	;;;jr	nz,uart_cinit1		; if *not* $5A, good to go
+	;;;or	$FF			; signal error
+	;;;ret				; done
 ;
 uart_cinit1:
 	ld	a,$80			; lcr := dlab on

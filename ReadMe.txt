@@ -3,7 +3,7 @@ RomWBW
 Z80/Z180 System Software
 
 Version 3.1 Pre-release
-Thursday 26 August 2021
+Thursday 23 September 2021
 
 Wayne Warthen wwarthen@gmail.com
 
@@ -179,7 +179,7 @@ applications. This provides a simple environment for learning to use
 your system. Be aware that files saved to the RAM disk (A:) will
 disappear at the next power on (RAM is generally not persistent). Also
 note that attempts to save files to the ROM disk (B:) will fail because
-ROM is not writable.
+ROM is not writable under normal circumstances.
 
 General Usage
 
@@ -277,6 +277,34 @@ If your system has an RTC/NVRAM device, it will not be listed in the
 unit summary table. Since only a single RTC/NVRAM device can exist in
 one system, unit numbers are not required nor used for this type of
 device.
+
+Changing Console and Console speed
+
+Your system can support a number of devices for the console. They may be
+VDU type devices or serial devices. If you want to change which device
+is the console, the I menu option can be used to choose the unit and
+it’s speed.
+
+The command format is I <u> [<c>]
+
+where u is unit to select and c is the optional baud rate code as listed
+below.
+
+     Code |   Rate   | Code |   Rate   | Code |   Rate   | Code |   Rate   |
+    ------|----------|------|----------|------|----------|------|----------|
+       0  |      75  |   8  |    1800  |  16  |   28880  |  24  |  460800  |
+       1  |     150  |   9  |    2400  |  17  |   38400  |  25  |  614400  |
+       2  |     225  |  10  |    3600  |  18  |   57600  |  26  |  921600  |
+       3  |     300  |  11  |    4800  |  19  |   76800  |  27  | 1228822  |
+       4  |     450  |  12  |    7200  |  20  |  115200  |  28  | 1843200  |
+       5  |     600  |  13  |    9600  |  21  |  153600  |  29  | 2457600  |
+       6  |     900  |  14  |   14400  |  22  |  230400  |  30  | 3686400  |
+       7  |    1200  |  15  |   19200  |  23  |  307200  |  31  | 7372800  |
+    ------------------------------------------------------------------------
+
+Example: To change current console to 9600 baud
+
+    I 0 13
 
 Drive Letter Assignment
 
@@ -1107,6 +1135,8 @@ the new image.
 From the Boot Loader menu select X (Xmodem Flash Updater) and then U
 (Begin Update). Then initiate the Xmodem transfer of the .img or .upd
 file.
+
+More information can be found in the ROM Applications document.
 
 Post Update System Image and Application update process
 

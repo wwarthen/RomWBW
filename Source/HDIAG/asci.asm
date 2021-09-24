@@ -12,20 +12,20 @@
 ;
 ;
 asci_jptbl:
-	jp	asci_cinit		; Initialize serial port
-	jp	asci_cin		; Read byte
-	jp	asci_cout		; Write byte
-	jp	asci_cist		; Input status
-	jp	asci_cost		; Output Status
+	jp	asci_cinit			; Initialize serial port
+	jp	asci_cin			; Read byte
+	jp	asci_cout			; Write byte
+	jp	asci_cist			; Input status
+	jp	asci_cost			; Output Status
 ;
 ;
 ;
 asci_cinit:
 	; Detect ASCI
 	ld	a,(hd_cpu)		; get cpu type
-	cp	1
+	cp	hd_cpu_z180
 	jr	c, asci_cinit1		; less than Z180, abort
-	cp	4
+	cp	hd_cpu_z280
 	jr	nc, asci_cinit1		; greater than Z180, abort
 ;	
 	; Initialize ASCI
