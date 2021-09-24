@@ -14,7 +14,7 @@ prtstr:
 	call	cout			; display character
 	jr	prtstr			; loop till done
 ;
-; Print a string from a lookup table pointed to by HL, entry A
+; Print a string from a lookup table pointed to by HL, index A
 ; with a prefix string at DE.  HL, DE, and A are trashed.
 ;
 prtstrtbl:
