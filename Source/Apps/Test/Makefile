@@ -1,5 +1,5 @@
 OBJECTS = 
-SUBDIRS = DMAMon I2C inttest ppidetst ramtest tstdskng
+SUBDIRS = DMAmon I2C inttest ppidetst ramtest tstdskng
 DEST = ../../../Binary/Apps/Test
 TOOLS =../../../Tools
 
