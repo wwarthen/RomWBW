@@ -19,10 +19,7 @@ call :asm talk || exit /b
 call :asm mode || exit /b
 call :asm rtc || exit /b
 call :asm timer || exit /b
-call :asm180 inttest || exit /b
 call :asm rtchb || exit /b
-call :asm ppidetst || exit /b
-call :asm tstdskng || exit /b
 
 zx Z80ASM -SYSGEN/F || exit /b
 
@@ -34,7 +31,7 @@ pushd FDU && call Build || exit /b & popd
 pushd Tune && call Build || exit /b & popd
 pushd FAT && call Build || exit /b & popd
 pushd I2C && call Build || exit /b & popd
-pushd ramtest && call Build || exit /b & popd
+pushd TEST && call Build || exit /b & popd
 pushd ZMP && call Build || exit /b & popd
 
 copy *.com %APPBIN%\ || exit /b
