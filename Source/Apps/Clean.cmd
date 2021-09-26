@@ -12,5 +12,5 @@ pushd FDU && call Clean || exit /b 1 & popd
 pushd Tune && call Clean || exit /b 1 & popd
 pushd FAT && call Clean || exit /b 1 & popd
 pushd I2C && call Clean || exit /b 1 & popd
-pushd ramtest && call Clean || exit /b 1 & popd
+pushd TEST && call Clean || exit /b 1 & popd
 pushd ZMP && call Clean || exit /b 1 & popd
