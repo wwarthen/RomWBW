@@ -10,4 +10,4 @@ tasm -t80 -b -fFF dbgmon.asm dbgmon.bin dbgmon.lst || exit /b
 
 copy /Y /b loader.bin+dbgmon.bin ramtest.com || exit /b
 
-copy /Y ramtest.com ..\..\..\..\Binary\Apps\ || exit /b
+copy /Y ramtest.com ..\..\..\..\Binary\Apps\Test\ || exit /b

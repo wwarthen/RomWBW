@@ -13,10 +13,11 @@ set ZXLIBDIR=%TOOLS%/cpm/lib/
 set ZXINCDIR=%TOOLS%/cpm/include/
 
 pushd DMAmon && call Build || exit /b & popd
-pushd dskyng && call Build || exit /b & popd
-pushd inttst && call Build || exit /b & popd
+pushd tstdskng && call Build || exit /b & popd
+pushd inttest && call Build || exit /b & popd
 pushd ppidetst && call Build || exit /b & popd
 pushd ramtest && call Build || exit /b & popd
+pushd I2C && call Build || exit /b & popd
 
 goto :eof
 

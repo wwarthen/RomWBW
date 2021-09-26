@@ -30,8 +30,7 @@ pushd XM && call Build || exit /b & popd
 pushd FDU && call Build || exit /b & popd
 pushd Tune && call Build || exit /b & popd
 pushd FAT && call Build || exit /b & popd
-pushd I2C && call Build || exit /b & popd
-pushd TEST && call Build || exit /b & popd
+pushd Test && call Build || exit /b & popd
 pushd ZMP && call Build || exit /b & popd
 
 copy *.com %APPBIN%\ || exit /b

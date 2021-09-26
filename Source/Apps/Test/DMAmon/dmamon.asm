@@ -95,7 +95,7 @@ DMATST_D:
 ;
 DMATST_Y:
 	call	PRTSTRD
-	.db	"\n\r\Y READY\n\r$"
+	.db	"\n\rY READY\n\r$"
 ;	CALL	
 	JP	MENULP
 ;
