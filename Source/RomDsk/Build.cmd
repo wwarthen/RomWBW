@@ -12,7 +12,7 @@ set ZXLIBDIR=%TOOLS%/cpm/lib/
 set ZXINCDIR=%TOOLS%/cpm/include/
 
 set RomApps1=assign mode rtc syscopy xm
-set RomApps2=fdu format survey sysgen talk timer inttest
+set RomApps2=fdu format survey sysgen talk timer
 
 ::
 :: Make all variants of the ROM Disk contents image.  Three sizes are

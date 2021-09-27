@@ -27,7 +27,6 @@ d_zsdos/u0/*.* 0:
 ../../Binary/Apps/fat.com 0:
 ../../Binary/Apps/fdu.com 0:
 ../../Binary/Apps/format.com 0:
-../../Binary/Apps/inttest.com 0:
 ../../Binary/Apps/mode.com 0:
 ../../Binary/Apps/rtc.com 0:
 ../../Binary/Apps/survey.com 0:
@@ -45,13 +44,14 @@ d_zsdos/u0/*.* 0:
 ../../Binary/Apps/zminit.ovr 0:
 ../../Binary/Apps/zmconfig.ovr 0:
 #
-../../Binary/Apps/i2clcd.com 2:
-../../Binary/Apps/i2cscan.com 2:
-../../Binary/Apps/rtcds7.com 2:
-../../Binary/Apps/rtchb.com 2:
-../../Binary/Apps/ppidetst.com 2:
-../../Binary/Apps/ramtest.com 2:
-../../Binary/Apps/tstdskng.com 2:
+#../../Binary/Apps/i2clcd.com 2:
+#../../Binary/Apps/i2cscan.com 2:
+#../../Binary/Apps/rtcds7.com 2:
+#../../Binary/Apps/rtchb.com 2:
+#../../Binary/Apps/ppidetst.com 2:
+#../../Binary/Apps/ramtest.com 2:
+#../../Binary/Apps/tstdskng.com 2:
+../../Binary/Apps/Test/*.com 2:
 Test/*.* 2:
 #
 # Add Tune sample files

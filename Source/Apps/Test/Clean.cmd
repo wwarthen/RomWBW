@@ -8,7 +8,8 @@ if exist *.hex del *.hex
 if exist *.prn del *.prn
 
 pushd DMAmon && call Clean || exit /b 1 & popd
-pushd dskyng && call Clean || exit /b 1 & popd
-pushd inttst && call Clean || exit /b 1 & popd
+pushd tstdskng && call Clean || exit /b 1 & popd
+pushd inttest && call Clean || exit /b 1 & popd
 pushd ppidetst && call Clean || exit /b 1 & popd
 pushd ramtest && call Clean || exit /b 1 & popd
+pushd I2C && call Clean || exit /b 1 & popd

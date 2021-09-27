@@ -1,5 +1,6 @@
 TOOLS = ../../Tools
-MOREDIFF := $(shell $(TOOLS)/unix/casefn.sh *.com Tunes/*)
+MOREDIFF := $(shell $(TOOLS)/unix/casefn.sh *.com)
+SUBDIRS = Test
 
 include $(TOOLS)/Makefile.inc
 
