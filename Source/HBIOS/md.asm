@@ -990,13 +990,10 @@ MD_SAVSTK	.DW	0
 ;
 ;======================================================================
 ;
-#DEFINE	FF_CHIP(FFROMID,FFROMNM)	        \
-#DEFCONT ;				        \
-
-#DEFCONT	.DB	(FFROMID >> 8) & $FF	\
-#DEFCONT	.DB	(FFROMID & $FF)         \
-#DEFCONT	.DB	FFROMNM		        \
-#DEFCONT ;
+#DEFINE	FF_CHIP(FFROMID,FFROMNM)
+#DEFCONT \	.DB	(FFROMID >> 8) & $FF
+#DEFCONT \	.DB	(FFROMID & $FF)
+#DEFCONT \	.DB	FFROMNM
 ;
 MD_TABLE:
 FF_CHIP(00120H,"29F010$    ")
