@@ -990,7 +990,7 @@ MD_SAVSTK	.DW	0
 ;
 ;======================================================================
 ;
-#DEFINE	FF_CHIP(FFROMID,FFROMNM)
+#DEFINE	FF_CHIP(FFROMID,FFROMNM) \
 #DEFCONT \	.DB	(FFROMID >> 8) & $FF
 #DEFCONT \	.DB	(FFROMID & $FF)
 #DEFCONT \	.DB	FFROMNM
