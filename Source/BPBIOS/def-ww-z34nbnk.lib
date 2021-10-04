@@ -1,8 +1,13 @@
 ;:::::::::::::::::::::::::::::::::::::::::::::::**********************
 ;  B/P BIOS Configuration and Equate File.	** System Dependant **
-;  - D-X Designs Pty Ltd P112 CPU Board -	**********************
-;	  Tailor your system here.
+;  - Retro-Brew boards /w RomWBW HBIOS -	**********************
+;	  Setup for banked bios & internal HBIOS proxy System
+;	  Custom tailor your system here.
 ;
+; 02 May 18 - changes made to conform with HBIOS v 2.9.1p2	WW+LN
+; 04 Sep 16 - Mods for RomWBW V 2.8	                        WW+LN
+; 30 Apr 15 - changes made to conform with v 2.7.2 of RomWBW	WW+LN
+; 17 Jan 14 - Initial N8VEM release				WW+LN
 ; 30 Aug 01 - Cleaned up for GPL release.			HFB
 ; 11 May 97 - Added GIDE and adjusted HD equates.		HFB
 ;  5 Jan 97 - Reformatted to Standard.				HFB
@@ -11,16 +16,15 @@
 ; BIOS Configuration Equates and Macros
 
 DATE	  MACRO
-	DEFB	'17 Jan 14'	; Date of this version
+	DEFB	'02 Aug 21'	; Date of this version
 	  ENDM
-
 AUTOCL	  MACRO
-	DEFB	8,'ZEX Z34 ',0	; Autostart command line
+	DEFB	8,'ZEX ZSTN',0	; Autostart command line
 	  ENDM
 
 ;--- Basic System and Z-System Section ---
 
-MOVCPM	EQU	no		; Integrate into MOVCPM "type" loader?
+MOVCPM	EQU	NO		; Integrate into MOVCPM "type" loader?
 	  IF  MOVCPM
 VERS	EQU	13H		; Version number in BCD (Hex) (Major/Minor)
 	  ELSE
@@ -34,32 +38,30 @@ FASTWB	EQU	YES		; Yes if restoring CPR from banked RAM
 				; ..No if restoring from Drive A
 Z3	EQU	YES		; Include ZCPR init code?
 HAVIOP	EQU	NO		; Include IOP code into Jump table?
-INTPXY	EQU	YES		; Internal HBIOS Mini Proxy
-CONF_T	EQU	NO		; Set for Segment Configuration T
-CONF_N	EQU	YES		; Set for Segment Configuration N
+INTPXY	EQU	YES		; YES to use internal HBIOS Mini proxy
+				;   and load Proxy as part of BPBIOS.
+				; NO to use HBIOS Proxy in high RAM 
+				;   (already loaded) 
+	  IF  INTPXY
+				; YES load Proxy as part of BPBIOS.
+MEMTOP	EQU	0FFE0H - 1	; Reserve memory above this for HBIOS
+				; interface (32 bytes)
+	   ELSE
+				; NO use HBIOS Proxy in high RAM 
+				;   (already loaded) 
+HBLOC	EQU	0FE00H		; Location of HBIOS proxy (if used)
+MEMTOP	EQU	HBLOC - 1	; Reserve memory above this for HBIOS
+	  ENDIF
 
 ;--- Memory configuration Section --- (Expansion Memory configured here)
 
 IBMOVS	EQU	NO		; Yes = Inter-bank Moves allowed (Z180/64180)
 				;  No = Include Common RAM transfer buffer
-				
+
 ;--- Character Device Section ---
 
 MORDEV	EQU	NO		; YES = Include any extra Char Device Drivers
 				;  NO = Only use the 4 defined Char Devices
-ESCC_B	EQU	no		; Include ESCC Channel B Driver?
-		; The following two devices result in non-standard data rates
-		; with the standard 16.00 MHz crystal in the P112.  If a more
-		; "standard" crystal is used (12.288, 18.432, 24.576 MHz etc)
-		; is used, the ports become usable.
-		;   Driver code for ASCI0 and ASCI1 includes an option for
-		; assembling Polled or Interrupt-driven buffered input.
-		; Select the desired option for ASCI0 with the BUFFA0 flag,
-		; and BUFFA1 for ASCI1.
-ASCI_0	EQU	false		; Include ASCI0 Driver?
-BUFFA0	EQU	false		;   Use buffered ASCI0 Input Driver?
-ASCI_1	EQU	false		; Include ASCI1 Driver?
-BUFFA1	EQU	false		;   Use buffered ASCI1 Input Driver?
 
 QSIZE	EQU	32		; size of interrupt typeahead buffers (if used)
 				; ..must be 2^n with n<8
@@ -69,12 +71,11 @@ XONOFF	EQU	no		; Include Xon/Xoff handshaking in Serial lines?
 ;--- Clock and Time Section ---
 
 CLOCK	EQU	YES		; Include ZSDOS Clock Driver Code?
-DS1202	EQU	YES		; Use Dallas DS-1202 instead of Interrupt RTC?
-CLKSET	EQU	YES		; Allow DS-1202 Clock Sets? (Error if No)
-TICTOC	EQU	NO		;== NOT USED IN P112 ("heartbeat" count)
+CLKSET	EQU	YES		; Allow Clock Sets? (Error if No)
 
 ;--- Floppy Diskette Section ---
 
+FLPYDSK	EQU	NO		; YES = Make Floppy-Disk Code, NO = No code made
 BIOERM	EQU	yes		; Print BIOS error messages?
 CALCSK	EQU	YES		; Calculate skew table?
 AUTOSL	EQU	YES		; Auto select floppy formats?
@@ -84,17 +85,14 @@ FLOPYH	EQU	no		; Include "Hi-Density" Floppy Formats?
 FLOPY8	EQU	no		; Include 8" Floppy Formats?
 MORDPB	EQU	NO		; Include additional Floppy DPB Formats?
 
-;--- RAM Disk Section ---
-
-RAMDSK	EQU	YES		; YES = Make RAM-Disk Code, NO = No code made
+;;--- RAM Disk Section ---
+;
+;RAMDSK	EQU	YES		; YES = Make RAM-Disk Code, NO = No code made
 
 ;--- Hard Disk Section ---
 
 HARDDSK	EQU	YES		; YES = Add Hard-disk Code, NO = Floppy Only
 				;  (Pick 1 of 3 options below)
-SCSI	EQU	NO		; YES = Use SCSI Driver
-IDE	EQU	NO		; YES = Use IDE Driver
-SIMHDSK	EQU	NO		; YES = Use SIMH HDSK Driver
 HBDSK	EQU	YES		; YES = Use HBIOS Disk Driver
 HDDMA	EQU	NO		; Use DMA-Controlled Hard Disk Data Transfers?
 				;  (DMA not implemented for GIDE)
@@ -103,25 +101,33 @@ UNIT_1	EQU	YES		; Hard Disk Physical Unit 2
 UNIT_2	EQU	YES		; Hard Disk Physical Unit 3
 
 ;--- Logical Drive Section ---
+;
+; Set each of these equates for the drive and partition complement of
+; your system.  Set equates to no if drive exists or is wanted.
 
-DRV_A	EQU	no		; Set each of these equates for the drive and
-DRV_B	EQU	no		; partition complement of your system.  Assume
-DRV_C	EQU	no		; that A-D are Floppies.
-DRV_D	EQU	no
-DRV_E	EQU	yes		; Assume that E-L and N-P are Hard Disk
-DRV_F	EQU	yes		;  Partitions
-DRV_G	EQU	yes
+DRV_A	EQU	yes		; A is always RAMDSK on HBIOS Device 0.
+DRV_B	EQU	yes		; B is always ROMDSK on HBIOS Device 1.  
+DRV_C	EQU	yes
+DRV_D	EQU	yes
+DRV_E	EQU	yes		; Default is C-J are Hard Disk Slices
+DRV_F	EQU	yes		; on the first hard drive (room for
+DRV_G	EQU	yes		; up to 8 Slices provided) e.g. CF card.
 DRV_H	EQU	yes
 DRV_I	EQU	yes
 DRV_J	EQU	yes
-DRV_K	EQU	yes
-DRV_L	EQU	yes
-DRV_M	EQU	RAMDSK		; This is Yes for RAM drive
+DRV_K	EQU	yes		; Default is K-N are Hard Disk Slices 
+DRV_L	EQU	yes		; on a second hard drive (room for up to 
+DRV_M	EQU	yes		; 4 Slices provided) e.g. SD card
 DRV_N	EQU	yes
-DRV_O	EQU	~RAMDSK		; Use HBIOS RAM disk if BPBIOS RAM disk is not enabled
+	  if	FLPYDSK
+DRV_O	EQU	yes		; O & P are floppies
+DRV_P	EQU	yes
+	  else
+DRV_O	EQU	no		; O & P are floppies
 DRV_P	EQU	no
+	  endif
 
-;========== Configuration Unique Equates  (P112) ===========
+;========== Configuration Unique Equates  ===========
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>> W A R N I N G <<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 ;>>>	 Do NOT Alter these unless you KNOW what you're doing	     <<<
 ;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -133,8 +139,9 @@ NOWAIT	EQU	NO		; Set to NO to use configured Wait States in
 
 ;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ;   For Z-180/HD64180 systems, The Bank numbers should reflect Physical
-; memory in 32k increments.  In P112, the ROM occupies the first 32k
-; increment and is ambiguously addressed occupying 0-1FFFFH.  The upper
+; memory in 32k increments.  In SBC V1&2, Zeta and Simh, RAM occupies the 
+; first 512k (16 32k banks).  The upper 32k bank is fixed as the last 32k 
+; of 512k.  HBIOS occupies bank 1.  The upper
 ; memory bounds (BNKU, BNK3 and BNKM) should be set for your configuration.
 
 BNK0	EQU	BID_USR		; First TPA Bank (switched in/out)	40000H
@@ -147,6 +154,8 @@ BNKM	EQU	BID_RAMM	; Maximum Bank #			F8000H
 				;  With both on-board RAMs only (MEM1 or MEM2),
 				;  the maximum Bank number is 11 (0BH).
 
+	  IF  NO	; REMOVE CODE - NOT NEEDED WITH HBIOS makes a
+       			; nice resource for Z180 programing in general
 ;=========== CPU-dependent Equates, Zilog Z-180/Hitachi HD64180 ==========
 
 CNTLA0	EQU	00H		; Control Port ASCI 0
@@ -371,4 +380,4 @@ CMDPWQ	EQU	0E5H		; Power Status Query Command
 CMDID	EQU	0ECH		; Read Drive Ident Data Command
 	  ENDIF		;ide
 ;=================== End Unique Equates =======================
-
+	  ENDIF     ; REMOVE CODE

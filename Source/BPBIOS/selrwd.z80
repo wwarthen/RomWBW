@@ -18,7 +18,7 @@ SELDSK:
 	JP	SELDKV
 	COMMON	/BANK2/
 SELDKV:
-	  ENDIF
+	  ENDIF		; BANKED
 	LD	A,C		; Set disk to seek
 	LD	(SEKDSK),A
 	PUSH	DE		; Save new mount flag
@@ -33,7 +33,8 @@ SELDKV:
 	DEC	HL
 	LD	A,(HL)
 	LD	(SEKPDN),A	; Save physical drive number
-	DEC	HL		;  advance to Driver Type (Hard/Floppy/RAM)
+	DEC	HL		;  advance to Driver Type (1=Floppy,
+				;  2=Hard drive & 3=Memory drive)
 	LD	A,(HL)		;   and Get it
 	DEC	HL		; Now advance to Drive Type Byte
 	CP	1		; Is this a Floppy Drive?
@@ -114,17 +115,17 @@ DVRVCT:	DEFW	SELERR		; Driver 0 Select
 	DEFW	HDREAD		; Driver 2 Read
 	DEFW	HDWRIT		; Driver 2 Write
 	  ENDIF		; harddsk
-	  IF  [RAMDSK AND NOT HARDDSK]
-	DEFW	SELERR		; Driver 2 Select (Dummy if No Hard Drive)
-	DEFW	ISTRUE		; Driver 2 Read
-	DEFW	ISTRUE		; Driver 2 Write
-	  ENDIF		;ramdsk & not harddsk
+;	  IF  [RAMDSK AND NOT HARDDSK]
+;	DEFW	SELERR		; Driver 2 Select (Dummy if No Hard Drive)
+;	DEFW	ISTRUE		; Driver 2 Read
+;	DEFW	ISTRUE		; Driver 2 Write
+;	  ENDIF		;ramdsk & not harddsk
 
-	  IF  RAMDSK
-	DEFW	SELRAM		; Driver 3 Select (RAM Drive)
-	DEFW	RAMRD		; Driver 3 Read
-	DEFW	RAMWR		; Driver 3 Write
-	  ENDIF		;ramdsk
+;	  IF  RAMDSK
+;	DEFW	SELHD		; Driver 3 Select (RAM Drive)
+;	DEFW	HDREAD		; Driver 3 Read
+;	DEFW	HDWRIT		; Driver 3 Write
+;	  ENDIF		;ramdsk
 
 SELERR:	LD	HL,0		; Send null DPH pointer back to caller
 	RET
@@ -236,4 +237,4 @@ SEKPDN:	DEFS	1		; Physical drive number to use
 SEKDVT:	DEFS	1		; Drive type byte for selected drive
 
 ;============================= End of SELRWD ==============================
-
+

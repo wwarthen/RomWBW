@@ -11,5 +11,3 @@ if exist *.bak del *.bak
 if exist def-ww.lib del def-ww.lib
 
 pushd ZCPR33 && call Clean.cmd & popd
-pushd Z34RCP11 && call Clean.cmd & popd
-pushd NZFCP13 && call Clean.cmd & popd

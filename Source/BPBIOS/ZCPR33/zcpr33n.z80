@@ -78,6 +78,9 @@
 ; which are used to customize ZCPR33 for the user's working environment.
 ; NOTE -- TRUE & FALSE are defined in Z3BASE.
 
+memtop	equ	0FFE0H - 1	; Reserve memory above this for HBIOS
+base	equ	0
+
 	maclib	z3basen.lib
 	maclib	z33hdr.lib
 

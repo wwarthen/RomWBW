@@ -1,5 +1,5 @@
 ;:::::::::::::::::::::::::::::::::::::::*****************************
-;   UTIL - N8VEM Utility Routines  	***** Hardware-Specific *****
+;   UTIL - Retro-Brew Utility Routines  ***** Hardware-Specific *****
 ;	                        	*****************************
 ;
 ;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -333,3 +333,4 @@ STR_EMPTY	DEFB	"<EMPTY>$"
 ;	DSEG			; Put the following areas in Data Segment (uninitialized REAM)
 ;
 ;======================= End of UTIL ==============================
+

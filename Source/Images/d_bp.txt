@@ -5,9 +5,10 @@
 ../BPBIOS/*.rel 0:
 ../BPBIOS/*.zrl 0:
 ../BPBIOS/*.zex 0:
-../BPBIOS/myterm.z3t 0:
-../BPBIOS/Z34RCP11/z34rcp11.rel 0:rcp.zrl
-../BPBIOS/NZFCP13/nzfcp13.rel 0:fcp.zrl
+../BPBIOS/bpbuild.com 0:
+#../BPBIOS/myterm.z3t 0:
+#../BPBIOS/Z34RCP11/z34rcp11.rel 0:rcp.zrl
+#../BPBIOS/NZFCP13/nzfcp13.rel 0:fcp.zrl
 #
 # Add RomWBW utilities
 #
@@ -41,7 +42,7 @@
 #../../Binary/Apps/ramtest.com 2:
 #../../Binary/Apps/tstdskng.com 2:
 ../../Binary/Apps/Test/*.com 2:
-Test/*.* 2:
+##Test/*.* 2:
 #
 # Add Tune sample files
 #
@@ -50,7 +51,7 @@ Test/*.* 2:
 #
 # Add CPNET client files
 #
-cpnet12/*.* 4:
+##cpnet12/*.* 4:
 #
 # Add Common Applications
 #
@@ -62,4 +63,3 @@ Common/Z/u15/*.* 15:
 Common/Z3/u10/*.* 10:
 Common/Z3/u14/*.* 14:
 Common/Z3/u15/*.* 15:
-

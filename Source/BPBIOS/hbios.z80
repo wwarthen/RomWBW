@@ -1,7 +1,7 @@
 ;:::::::::::::::::::::::::::::::::::::::*****************************
 ;   HBIOS - HBios Interface Routines	***** Hardware-Specific *****
 ;					*****************************
-;
+;	- Retro Brew -
 ;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;
 HB_DEFBNK	EQU	BID_USR		; Default bank number
@@ -11,16 +11,20 @@ HB_DEFBNK	EQU	BID_USR		; Default bank number
 HB_DISPATCH	EQU	403H
 HB_STACK	EQU	500H
 ;
+; HBIOS Functions
+;
+H_ALLOC		EQU	0F6H		; HBIOS Func: ALLOCATE Heap Memory
+;
 ; PLATFORM SPECIFIC CONSTANTS
 ;
-	IF N8VEM OR ZETA OR ZETA2
+	IF SBC OR ZETA OR ZETA2
 SBC_BASE	EQU	60H
-	ENDIF
+	ENDIF		;SBC OR ZETA OR ZETA2
 
-	IF N8VEM OR ZETA
+	IF SBC OR ZETA
 MPCL_RAM	EQU 	SBC_BASE + 18H	; BASE IO ADDRESS OF RAM MEMORY PAGER CONFIGURATION LATCH
 MPCL_ROM	EQU 	SBC_BASE + 1CH	; BASE IO ADDRESS OF ROM MEMORY PAGER CONFIGURATION LATCH
-	ENDIF
+	ENDIF		;SBC OR ZETA
 
 	IF ZETA2
 MPGSEL_0	EQU	SBC_BASE + 18H
@@ -28,18 +32,18 @@ MPGSEL_1	EQU	SBC_BASE + 19H
 MPGSEL_2	EQU	SBC_BASE + 1AH
 MPGSEL_3	EQU	SBC_BASE + 1BH
 MPGENA		EQU	SBC_BASE + 1CH
-	ENDIF
+	ENDIF		;ZETA2
 
 	IF N8
 N8_BASE		EQU	80H		; BASE I/O ADDRESS BOARD PERIPHERALS (NON-CPU)
 ACR		EQU	N8_BASE + 14H	; AUXILLARY CONTROL REGISTER
 DEFACR		EQU	1BH		; DEFAULT VALUE FOR ACR
 CPU_BBR		EQU	40H + 39H
-	ENDIF
+	ENDIF		;N8
 
 	IF MK4
 CPU_BBR		EQU	40H + 39H
-	ENDIF
+	ENDIF		;MK4
 
 	CSEG
 
@@ -51,20 +55,20 @@ HB_XFC		EQU	0FFE0H
 HB_XFCIMG	EQU	$
 
 	.PHASE	HB_XFC 
-HB_CURBNK	DB	0
-HB_INVBNK	DB	0
-HB_SRCADR	DW	0
-HB_SRCBNK	DB	0
-HB_DSTADR	DW	0
-HB_DSTBNK	DB	0
-HB_CPYLEN	DW	0
+HB_CURBNK:	DB	0
+HB_INVBNK:	DB	0
+HB_SRCADR:	DW	0
+HB_SRCBNK:	DB	0
+HB_DSTADR:	DW	0
+HB_DSTBNK:	DB	0
+HB_CPYLEN:	DW	0
 		DB	0,0,0,0,0,0
-HB_INVOKE	JP	HBX_INVOKE
-HB_BNKSEL	JP	HBX_BNKSEL
-HB_BNKCPY	JP	HBX_BNKCPY
-HB_BNKCALL	JP	0 		; HBX_BNKCALL (NOT IMPLEMENTED)
+HB_INVOKE:	JP	HBX_INVOKE
+HB_BNKSEL:	JP	HBX_BNKSEL
+HB_BNKCPY:	JP	HBX_BNKCPY
+HB_BNKCALL:	JP	0 		; HBX_BNKCALL (NOT IMPLEMENTED)
 		DB	0,0		; RESERVED
-HB_IDENT	DW	0 		; HBX_IDENT
+HB_IDENT:	DW	0 		; HBX_IDENT
 	.DEPHASE
 
 HB_XFCSIZ	EQU	$ - HB_XFCIMG
@@ -84,7 +88,7 @@ HB_DSTADR	EQU	0FFE5H
 HB_DSTBNK	EQU	0FFE7H
 HB_CPYLEN	EQU	0FFE8H
 
-	ENDIF
+	ENDIF		;INTPXY
 
 ;
 ;==================================================================================================
@@ -107,7 +111,7 @@ HBX_INIT:
 	LD	HL,HBX_INVOKE
 	LD	(09H),HL
 
-	ENDIF
+	ENDIF		;INTPXY
 	
 	; Init HB data fields
 	LD	A,BID_USR
@@ -115,7 +119,7 @@ HBX_INIT:
 	LD	(HB_SRCBNK),A
 	LD	(HB_DSTBNK),A
 	
-	IF BANKED
+	IF  BANKED
 
 	; Copy vectors from TPA page zero to SYS page zero
 	LD	BC,(TPABNK)	; C := TPABNK, B := SYSBNK
@@ -126,19 +130,12 @@ HBX_INIT:
 	CALL	MOVE		; Do it
 	LD	A,(TPABNK)	; Set all Bank regs to TPA
 
-	ENDIF
-
-;	CSEG
-;ORG_CSEG	EQU	$
-;	DSEG
-;ORG_DSEG	EQU	$
-	IF BANKED
 	COMMON	/BANK2/
 ORG_BANK2	EQU	$
 	COMMON	/B2RAM/
 ORG_B2RAM	EQU	$
-	ENDIF
-
+	ENDIF		;BANKED
+; begin debug
 	CSEG
 	
 	CALL 	NEWLINE2
@@ -149,7 +146,7 @@ ORG_B2RAM	EQU	$
 	LD	DE,HB_STR_INTPXY
 	ELSE
 	LD	DE,HB_STR_EXTPXY
-	ENDIF
+	ENDIF		;INTPXY
 	CALL	WRITESTR
 	
 	CALL	NEWLINE
@@ -175,21 +172,21 @@ ORG_B2RAM	EQU	$
 	CALL	WRITESTR
 	LD	BC,ALV$50
 	CALL	PRTHEXWORD
-	ENDIF
+	ENDIF		;BANKED
 	
 	CALL	NEWLINE
 	
 	RET
 	
-HB_STR_TAG	DB	"HBIOS: $"
-HB_STR_INTPXY	DB	"Internal Proxy$"
-HB_STR_EXTPXY	DB	"External Proxy$"
-HB_STR_CSEG	DB	"CSEG=$"
-HB_STR_DSEG	DB	", DSEG=$"
-HB_STR_BANK2	DB	", BANK2=$"
-HB_STR_B2RAM	DB	", B2RAM=$"
-HB_STR_RESVD	DB	", RESVD=$"
-
+HB_STR_TAG:	DB	"HBIOS: $"
+HB_STR_INTPXY:	DB	"Internal Proxy$"
+HB_STR_EXTPXY:	DB	"External Proxy$"
+HB_STR_CSEG:	DB	"CSEG=$"
+HB_STR_DSEG:	DB	", DSEG=$"
+HB_STR_BANK2:	DB	", BANK2=$"
+HB_STR_B2RAM:	DB	", B2RAM=$"
+HB_STR_RESVD:	DB	", RESVD=$"
+; end debug
 HBX_XCOPY:
 	LD	A,C
 	LD	(HB_SRCBNK),A
@@ -209,13 +206,13 @@ HBX_COPY:
 HBX_BNKSEL:
 	LD	(HB_CURBNK),A
 
-	IF N8VEM OR ZETA
+	  IF SBC OR ZETA
 	OUT	(MPCL_ROM),A
 	OUT	(MPCL_RAM),A
 	RET
-	ENDIF
+	  ENDIF		;SBC OR ZETA
 	
-	IF ZETA2
+	  IF ZETA2
 	BIT	7,A			; BIT 7 SET REQUESTS RAM PAGE
 	JR	Z,HBX_ROM		; NOT SET, SELECT ROM PAGE
 	RES	7,A			; RAM PAGE REQUESTED: CLEAR ROM BIT
@@ -227,9 +224,9 @@ HBX_ROM:
 	INC	A			;
 	OUT	(MPGSEL_1),A		; BANK_1: 16K - 32K
 	RET
-	ENDIF
+	  ENDIF		;ZETA2
 
-	IF N8
+	  IF N8
 	BIT	7,A
 	JR	Z,HBX_ROM
 ;
@@ -250,9 +247,9 @@ HBX_ROM:
 	LD	A,DEFACR
 	OUT0	(ACR),A
 	RET
-	ENDIF
+	  ENDIF	; N8
 
-	IF MK4
+	  IF MK4
 	RLCA
 	JR	NC,HBX_BNKSEL1
 	XOR	00100001B
@@ -262,7 +259,7 @@ HBX_BNKSEL1:
 	OUT0	(CPU_BBR),A
 	RET
 
-	ENDIF
+	  ENDIF		; MK4
 
 ;==================================================================================================
 ; INTERBANK MEMORY COPY
@@ -351,7 +348,7 @@ HBX_INVSP	EQU	$ - 2
 
 	RET			; RETURN TO CALLER
 	
-	ENDIF
+	ENDIF		;INTPXY
 
 ;==================================================================================================
 ;	LD	A,(C:HL)
@@ -449,15 +446,16 @@ HBX_FRPUTW:
 
 	DSEG
 
-HB_DSKBUF	DEFW	0	; Address of physical disk buffer in HBIOS bank
-HBX_BNKSAV	DEFB	0	; Saved bank id during HBIOS calls
-HBX_STKSAV	DEFW	0	; Saved stack pointer during HBIOS calls
+HB_DSKBUF:	DEFW	0	; Address of physical disk buffer in HBIOS bank
+HBX_BNKSAV:	DEFB	0	; Saved bank id during HBIOS calls
+HBX_STKSAV:	DEFW	0	; Saved stack pointer during HBIOS calls
 		DEFS	32	; Private stack for HBIOS
 HBX_TMPSTK	EQU	$	; Top of private stack
 
 	IF INTPXY
 
 HBX_BUFSIZ	EQU	40H
-HBX_BUF		DEFS	HBX_BUFSIZ	; Interbank copy buffer
+HBX_BUF:	DEFS	HBX_BUFSIZ	; Interbank copy buffer
 
-	ENDIF
+	ENDIF		;INTPXY
+
