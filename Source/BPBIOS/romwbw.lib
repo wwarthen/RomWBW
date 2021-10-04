@@ -1,6 +1,6 @@
 ;:::::::::::::::::::::::::::::::::::::::::::::::**********************
 ;  B/P BIOS Configuration and Equate File.	** System Dependant **
-;  - D-X Designs Pty Ltd P112 CPU Board -	**********************
+;  - Retro-Brew Processors W/ RomWBW HBIOS -	**********************
 ;	  HBIOS specific customizations
 ;:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ; BIOS Configuration Equates and Macros
@@ -13,28 +13,42 @@ HBLOC	EQU	0FE00H			; Location of HBIOS proxy (used if not INTPXY)
 ;
 ; Set exactly one of the following to YES to specify platform
 ;
-N8VEM	EQU	YES
+SBC	EQU	YES
 ZETA	EQU	NO
 ZETA2	EQU	NO
 N8	EQU	NO
 MK4	EQU	NO
 ;
-; Set either the following to YES (or both to NO for no clock code)
+; SIMH SUPPORT - only used with SBC
+	  IF	SBC 
+SIMH	EQU	YES			; Set yes if running on SimH
+	  ELSE
+SIMH	EQU	NO
+	  ENDIF
 ;
-SIMHCLK	EQU	NO			; Direct SIMH clock access
+; Set to YES FOR BIOS clock support else NO If no clock
+;
 HBCLK	EQU	YES			; HBIOS clock driver
 ;
 ; Set HB_IODEV to appropriate console device
 ;
 HB_IODEV	EQU	0		; Assume we want to use first HBIOS serial device
+					; Change if using PROPIO etc.
 ;
-; Set HB_HDDEV to the first (boot) hard disk device unit number
+; Set HB_HDDEV to appropriate hard disk driver
 ;
 HB_HDDEV	EQU	2		; Assumes disk device #2 is first hard disk device
 ;
 ; Set HB_MDDEV to appropriate memory disk driver
 ;
 HB_MDDEV	EQU	0		; Assumes disk device #0 is ROM disk device
+;
+; Floppy disk support
+;
+	  IF MK4 or SIMH
+DRV_O		SET	NO		; YES if system has flopy drives
+DRV_P		SET	NO		; YES if system has flopy drives
+	  ENDIF	;MK4 or SIMH
 ;
 ; RAM/ROM disk sizes expressed as count of 2K blocks
 ;
@@ -44,7 +58,7 @@ HB_ROMBLKS	EQU	192		; 512K - 128K reserved / 2K per block
 ;
 ; Layout of RAM banks
 ;
-	IF N8VEM OR ZETA OR ZETA2 OR MK4
+	IF SBC OR ZETA OR ZETA2 OR MK4
 BID_RAMD	EQU	80H
 BID_RAMM	EQU	8BH
 BID_SYS		EQU	8CH
@@ -80,3 +94,4 @@ HB_DI	MACRO
 	DI
 	ENDM
 	ENDIF
+

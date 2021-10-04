@@ -1,4 +1,4 @@
-;========= Additional Disk Parameter Blocks if MORDPB is True ==========
+;========= Additional Disk Parameter Blocks if MORDPB is True =========
 ; See DPB.LIB for descriptions of Format Type Byte bit assignments.
 ;.....
 ; Teletek 8" DS/DD - STOCK
@@ -255,4 +255,4 @@ DPB15:	DEFW	0		; Sectors per track
 ;		25 26				; Logical Sector
 	DEFB	00,00			; Physical sector
 	  ENDIF
-;---------------------- End of DPB2.LIB ------------------------------
+;---------------------- End of DPB2.LIB ------------------------------

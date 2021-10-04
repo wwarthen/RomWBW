@@ -1,14 +1,26 @@
 ;::::::::::::::::::::::::::::::::::::::::::::******************************
 ;	  Floppy Disk Routines		     ***** Hardware Dependent *****
-;     - D-X Designs Pty Ltd P112 -	     ******************************
+;   - Retro-Brew Hardware with HBIOS -	     ******************************
 ;
+; 1.4 - 27 Mar 14 - Initial N8VEM test release 			      WW+LN
 ; 1.3 - 26 Aug 01 - Cleaned up for GPL Release.				HFB
 ; 1.2c- 12 May 97 - Cleaned up source, modified STSIZE Code (again).	HFB
 ; 1.2b- 22 Apr 97 - Changed 5.25" Hi/Lo Speed controls.			HFB
 ; 1.0a- 23 Mar 97 - (test) fixes.					HFB
 ; 1.0 - 13 Aug 96 - Initial Release for P112 from YASMIO.		HFB
 ;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-;
+; Floppy Units are accessed on Retro-Brew systems using HBIOS function
+; calls.  These functions include read, write, status and media type.
+; For 3.5" drive there are two media types.  For 5.25" drive two media
+; types are supported, while for 8" drives one type is supported. 
+; Only high density is supported on 3.5" drives either single or double
+; sided.  For 5.25" drive either double or high density is supported on
+; double sided disks.  Only double density double sided 8" disks are 
+; supported.  Many BPBIOS floppy routines are stubbed such as DMA support
+; and motor control since all these details are handled behind the scene by
+; HBIOS.  Currently HBIOS handles the head given the track and sector so 
+; the interface treats all floppies as single sided.
+
 	  IF  BANKED
 	COMMON	/BANK2/
 	  ELSE
@@ -248,7 +260,7 @@ FDRst:	CALL	PANIC
 	RET
 
 ;========================================================================
-; Motor Off routine.  Called from TIM-DX and SELFLP2 which forces
+; Motor Off routine.  Called from SELFLP2 which forces
 ; Motors/Timer to be Off state so spinup delay is forced on next selection.
 
 MOTOFF:	CALL	PANIC
@@ -302,4 +314,5 @@ TSBSCF:	DEFS	1		; 0=Hd always 0 (TSBSC)		(** Global **)
 TTRK:	DEFS	1		; Storage for Track		(** Global **)
 ;TRKARY:	DEFS	4		; Track storage locations for four drives
 
-;=========================== End of FDC-DX ==============================
+;=========================== End of FDC-WW ==============================
+

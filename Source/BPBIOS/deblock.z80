@@ -1,6 +1,7 @@
 ;**************************************************************************
 ; DEBLOCK - Disk Deblocking Buffer Routines.  (Based on CP/M Example code)
 ;
+; 1.1 - 14 Jun 16 - eliminated unnecessary disk accessess		WW
 ; 1.0 -  3 Jul 92 - First General Release.				HFB
 ; 0.0 -  8 Jul 91 - Initial Test Release.				HFB
 ;**************************************************************************
@@ -303,13 +304,13 @@ RWMOVE:	CALL	HBX_COPY	; Handle possible inter-bank move
 
 	  ELSE	; HBIOS
 	  IF  BANKED
-	  IF  INROM
+	    IF  INROM
 	LD	A,(TPABNK)	; If bank in ROM, HSTBUF is in TPA
 	LD	C,A
-	  ELSE
+	    ELSE
 	LD	A,(SYSBNK)	; If bank in RAM, HSTBUF is in System Bank
 	LD	C,A
-	  ENDIF
+	    ENDIF	;INROM
 	LD	A,(DMABNK)	; Set Read Destination Bank
 	LD	B,A
 	LD	A,(READOP)	; Direction?
@@ -319,7 +320,7 @@ RWMOVE:	CALL	HBX_COPY	; Handle possible inter-bank move
 	LD	B,C
 	LD	C,A
 OKBNKS:	CALL	XMOVE		; Set source & destination banks
-	  ENDIF
+	  ENDIF		;BANKED
 	LD	DE,HSTBUF	; Host buffer address
 	ADD	HL,DE		; Point to the sector
 	LD	DE,(DMAADR)	; User's buffer
@@ -413,4 +414,4 @@ UNASEC:	 DEFS	1		; Current record
 UNACNT:	 DEFS	1		; Unallocated record count
 
 ;========================= End of DEBLOCK =================================
-
+

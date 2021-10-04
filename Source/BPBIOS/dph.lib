@@ -5,104 +5,117 @@
 ; All access to DPH's are done through this table.  A Zero in this table
 ; indicates the logical drive does Not exist.  The table is indexed by logical
 ; drive (e.g. A-P).  To swap logical drives, exchange entries in this table.
+; Default drive ordering is RAM (A), ROM (B), 8 logical drives from 1st 
+; Hard drive (C-J), 4 logical drives from the second Hard drive (M-P) and
+; two Floppy drives (O&P),.  BPCNFG can be used to rearrange drive order 
+; to suit the user.
 ;
 ; 1.0 - 31 Aug 92 - General Release.					HFB
 ; 0.1 -  3 Jan 92 - Initial Release.					HFB
 ;:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 	CSEG
-	
-; Table has been reordered so that hard disk entries come before
-; floppy entries.  This means that "DRV_A" appears as I: and "DRV_E"
-; appears as A:.  The point is to allow booting from the first
-; hard drive which pretty much needs to be A:
+
+; Note: ROMWBW boots from any disk on demand so order of table not
+; important with regards to booting from disks rather than ROM.
 
 DPHTBL:
-	  IF  DRV_E AND HARDDSK
-	DEFW	DPH$50		; Dph for Hard drive Partition E
-	  ELSE
-	DEFW	00
-	  ENDIF
-	  IF  DRV_F AND HARDDSK
-	DEFW	DPH$51		; Dph for Hard drive Partition F
-	  ELSE
-	DEFW	00
-	  ENDIF
-	  IF  DRV_G AND HARDDSK
-	DEFW	DPH$52		; Dph for Hard drive Partition G
-	  ELSE
-	DEFW	00
-	  ENDIF
-	  IF  DRV_H AND HARDDSK
-	DEFW	DPH$53		; Dph for Hard drive Partition H
-	  ELSE
-	DEFW	00
-	  ENDIF
-
-	  IF  DRV_I AND HARDDSK
-	DEFW	DPH$54		; Dph for Hard drive Partition I
-	  ELSE
-	DEFW	00
-	  ENDIF
-	  IF  DRV_J AND HARDDSK
-	DEFW	DPH$55		; Dph for Hard drive Partition J
-	  ELSE
-	DEFW	00
-	  ENDIF
-	  IF  DRV_K AND HARDDSK
-	DEFW	DPH$56		; Dph for Hard drive Partition K
-	  ELSE
-	DEFW	00
-	  ENDIF
-	  IF  DRV_L AND HARDDSK
-	DEFW	DPH$57		; Dph for Hard drive Partition L
-	  ELSE
-	DEFW	00
-	  ENDIF
-
 	  IF  DRV_A
-	DEFW	DPH$00		; Dph for drive A (Floppy)
+	DEFW	DPH$90		; Dph for drive A (RAM)
 	  ELSE
 	DEFW	00
-	  ENDIF
+	  ENDIF	;DRV_A
+;
 	  IF  DRV_B
-	DEFW	DPH$01		; Dph for drive B (Floppy)
+	DEFW	DPH$91		; Dph for drive B (ROM)
 	  ELSE
 	DEFW	00
-	  ENDIF
-	  IF  DRV_C
-	DEFW	DPH$02		; Dph for drive C (Floppy)
+	  ENDIF	;DRV_B
+;
+	  IF  DRV_C AND HARDDSK
+	DEFW	DPH$50		; Dph for Hard drive Partition C
+	  ELSE
+	DEFW	0
+	  ENDIF	;DRV_C AND HARDDSK
+;
+	  IF  DRV_D AND HARDDSK
+	DEFW	DPH$51		; Dph for Hard drive Partition D
+	  ELSE
+	DEFW	0
+	  ENDIF	;DRV_D AND HARDDSK
+;
+	  IF  DRV_E AND HARDDSK
+	DEFW	DPH$52		; Dph for Hard drive Partition E
 	  ELSE
 	DEFW	00
-	  ENDIF
-	  IF  DRV_D
-	DEFW	DPH$03		; Dph for drive D (Floppy)
+	  ENDIF	;DRV_E AND HARDDSK
+;
+	  IF  DRV_F AND HARDDSK
+	DEFW	DPH$53		; Dph for Hard drive Partition F
 	  ELSE
-	DEFW	0		; Dph for drive D
-	  ENDIF
-
-	  IF  DRV_M AND RAMDSK
-	DEFW	DPH$90		; Dph for RAM Drive M in DPHM-xx.Z80
+	DEFW	0
+	  ENDIF	;DRV_F AND HARDDSK
+;
+	  IF  DRV_G AND HARDDSK
+	DEFW	DPH$54		; Dph for Hard drive Partition G
 	  ELSE
-	DEFW	00		; Dph for drive M
-	  ENDIF		;ramdsk
-
+	DEFW	0
+	  ENDIF	;DRV_G AND HARDDSK
+;
+	  IF  DRV_H AND HARDDSK
+	DEFW	DPH$55		; Dph for Hard drive Partition H
+	  ELSE
+	DEFW	0
+	  ENDIF	;DRV_H AND HARDDSK
+;
+	  IF  DRV_I AND HARDDSK
+	DEFW	DPH$56		; Dph for Hard drive Partition I
+	  ELSE
+	DEFW	0
+	  ENDIF	;DRV_I AND HARDDSK
+;
+	  IF  DRV_J AND HARDDSK
+	DEFW	DPH$57		; Dph for Hard drive Partition J
+	  ELSE
+	DEFW	00
+	  ENDIF	;DRV_J AND HARDDSK
+;
+	  IF  DRV_K AND HARDDSK
+	DEFW	DPH$58		; Dph for Hard drive Partition K
+	  ELSE
+	DEFW	00
+	  ENDIF	;DRV_K AND HARDDSK
+;
+	  IF  DRV_L AND HARDDSK
+	DEFW	DPH$59		; Dph for Hard drive Partition L
+	  ELSE
+	DEFW	00
+	  ENDIF	;DRV_L AND HARDDSK
+;
+	  IF  DRV_M AND HARDDSK
+	DEFW	DPH$60		; Dph for Hard drive Partition M
+	  ELSE
+	DEFW	00
+	  ENDIF	;DRV_M AND HARDDSK
+;
 	  IF  DRV_N AND HARDDSK
-	DEFW	DPH$58		; Dph for Hard drive Partition N
+	DEFW	DPH$61		; Dph for Hard drive Partition N
 	  ELSE
 	DEFW	00
-	  ENDIF
-	  IF  DRV_O AND HARDDSK
-	DEFW	DPH$59		; Dph for Hard drive Partition O
+	  ENDIF	;DRV_N AND HARDDSK
+;
+	  IF  DRV_O AND FLPYDSK
+	DEFW	DPH$00		; Dph for drive O (First Floppy)
 	  ELSE
 	DEFW	00
-	  ENDIF
-	  IF  DRV_P AND HARDDSK
-	DEFW	DPH$60		; Dph for Hard drive Partition P
+	  ENDIF	;DRV_O
+;
+	  IF  DRV_P AND FLPYDSK
+	DEFW	DPH$01		; Dph for drive P (Second Floppy)
 	  ELSE
 	DEFW	00
-	  ENDIF
-
+	  ENDIF	;DRV_P
+;
 ;:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ; Disk Parameter Headers (DPH) for Drives	MUST be in Common Memory
 ;
@@ -140,8 +153,8 @@ DBLSTP	EQU	00010000B
 NODBLS	EQU	00000000B
 
 	CSEG
-
-	  IF  DRV_A
+; Floppy Headers
+	  IF  DRV_O AND FLPYDSK
 XDPH00:	DB	LOCKF		; Format lock flag
 	DB	DSK5+DS+DD+DVSPDL+MTR ; Disk drive type
 	DB	1		; Driver id
@@ -159,8 +172,9 @@ DPH$00:	DW	0		; Skew table pointer
 
 XDPHSZ	EQU	$-XDPH00	; Calc for xdph size
 XDPHOF	EQU	DPH$00-XDPH00	; Offset from xdph to dph
-	  ENDIF		;Drv_a
-	  IF  DRV_B
+	  ENDIF		;Drv_O
+;
+	  IF  DRV_P AND FLPYDSK
 XDPH01:	DB	LOCKF		; Format lock flag
 	DB	DSK5+DS+DD+DVSPDL+MTR ; Disk drive type
 	DB	1		; Driver id
@@ -172,42 +186,44 @@ DPH$01:	DW	0		; Skew table pointer
 	DEFW	DPB$01+DPHDSZ	; Ram space for DPB #1
 	  ELSE
 	DW	DPBRB		; Pointer to current DPB for Drive 1
-	  ENDIF
+	  ENDIF	;AUTOSL
 	DW	CHK$01		; Wacd for drive 01
 	DW	ALV$01		; Alloc vector for 01
-	  ENDIF		;Drv_b
-	  IF  DRV_C
-XDPH02:	DB	LOCKF		; Format lock flag
-	DB	DSK5+DS+DD+DVSPDL+MTR ; Disk drive type
-	DB	1		; Driver id
-	DB	2		; Physical drive number
-DPH$02:	DW	0		; Skew table pointer
-	DW	0,0,0		; Scratch area
-	DW	DIRBUF		; Directory buffer pointer
-	  IF  AUTOSL
-	DEFW	DPB$02+DPHDSZ	; Ram space for DPB #2
-	  ELSE
-	DW	DPBRA		; Pointer to current DPB for Drive #2
-	  ENDIF
-	DW	CHK$02		; Wacd for drive 02
-	DW	ALV$02		; Alloc vector for 02
-	  ENDIF
-	  IF  DRV_D
-XDPH03:	DB	LOCKF		; Format lock flag
-	DB	DSK3+sS+DD+DVSPDl+MTR ; Disk drive type
-	DB	1		; Driver id
-	DB	3		; Physical drive number
-DPH$03:	DW	0		; Skew table pointer
-	DW	0,0,0		; Scratch area
-	DW	DIRBUF		; Directory buffer pointer
-	  IF  AUTOSL
-	DEFW	DPB$03+DPHDSZ	; Ram space for DPB #3
-	  ELSE
-	DW	DPBRA		; Pointer to current DPB for Drive #3
-	  ENDIF
-	DW	CHK$03		; Wacd for drive 03
-	DW	ALV$03		; Alloc vector for 03
-	  ENDIF		;Drv_d
+	  ENDIF		;Drv_P
+;
+; Third and fourth floppy drives removed
+;	  IF  DRV_E
+;XDPH02:	DB	LOCKF		; Format lock flag
+;	DB	DSK5+DS+DD+DVSPDL+MTR ; Disk drive type
+;	DB	1		; Driver id
+;	DB	2		; Physical drive number
+;DPH$02:	DW	0		; Skew table pointer
+;	DW	0,0,0		; Scratch area
+;	DW	DIRBUF		; Directory buffer pointer
+;	  IF  AUTOSL
+;	DEFW	DPB$02+DPHDSZ	; Ram space for DPB #2
+;	  ELSE
+;	DW	DPBRA		; Pointer to current DPB for Drive #2
+;	  ENDIF
+;	DW	CHK$02		; Wacd for drive 02
+;	DW	ALV$02		; Alloc vector for 02
+;	  ENDIF
+;	  IF  DRV_F
+;XDPH03:	DB	LOCKF		; Format lock flag
+;	DB	DSK3+sS+DD+DVSPDl+MTR ; Disk drive type
+;	DB	1		; Driver id
+;	DB	3		; Physical drive number
+;DPH$03:	DW	0		; Skew table pointer
+;	DW	0,0,0		; Scratch area
+;	DW	DIRBUF		; Directory buffer pointer
+;	  IF  AUTOSL
+;	DEFW	DPB$03+DPHDSZ	; Ram space for DPB #3
+;	  ELSE
+;	DW	DPBRA		; Pointer to current DPB for Drive #3
+;	  ENDIF
+;	DW	CHK$03		; Wacd for drive 03
+;	DW	ALV$03		; Alloc vector for 03
+;	  ENDIF		;Drv_F
 
 ; Directory Buffer Allocation.	Only One Directory Buffer is required.  Since
 ; we want it to be the first item in DSEG, it must be placed here.
@@ -218,7 +234,7 @@ DPH$03:	DW	0		; Skew table pointer
 DIRBUF	EQU	CBOOT	; Resident Init code in here
 	  ELSE
 DIRBUF	EQU	$
-	  ENDIF
+	  ENDIF	;BANKED
 	ORG	DIRBUF+128	; Directory buffer
 
 ; If we are using autoselection of drives, we copy the XDPB/DPB structure
@@ -226,58 +242,64 @@ DIRBUF	EQU	$
 ; installing data for the desired format and locking the DPH.  For Non-auto-
 ; select, we simply point to the read-only structure defined in DPB.LIB.
 
-	  IF  AUTOSL
-	   IF  DRV_A
+	  IF  AUTOSL AND FLPYDSK
+	   IF  DRV_O
 DPB$00:	DEFS	DPBSIZ		; Size of XDPB+DPB
-	   ENDIF
-	   IF  DRV_B
+	   ENDIF	;DRV_O
+;
+	   IF  DRV_P
 DPB$01:	DEFS	DPBSIZ
-	   ENDIF
-	   IF  DRV_C
-DPB$02:	DEFS	DPBSIZ
-	   ENDIF
-	   IF  DRV_D
-DPB$03:	DEFS	DPBSIZ
-	   ENDIF
+	   ENDIF	;DRV_P
+;
+; Third and fourth floppy drives removed
+;	   IF  DRV_E
+;DPB$02:	DEFS	DPBSIZ
+;	   ENDIF
+;	   IF  DRV_F
+;DPB$03:	DEFS	DPBSIZ
+;	   ENDIF
 	  ENDIF		;autosel
 
 	  IF  [BANKED AND ZSDOS2]
 	COMMON  /B2RAM/
 	  ELSE
 	DSEG
-	  ENDIF
+	  ENDIF   ; [BANKED AND ZSDOS2]
 
 ; Directory Check Buffers.  Each Buffer MUST be NDE/4 Bytes long at minimum.
 ;  Each Logical Drive with removable media MUST have its own check buffer.
 
-	  IF  DRV_A
+	  IF  DRV_O AND FLPYDSK
 CHK$00:	DEFS	[MXFDIR/4]+1	; Enough for 256 dir entries
 	  ENDIF
-	  IF  DRV_B
+;
+	  IF  DRV_P AND FLPYDSK
 CHK$01:	DEFS	[MXFDIR/4]+1	; Enough for 256 dir entries
 	  ENDIF
-	  IF  DRV_C
-CHK$02:	DEFS	[MXFDIR/4]+1	; Enough for 256 dir entries
-	  ENDIF
-	  IF  DRV_D
-CHK$03:	DEFS	[MXFDIR/4]+1	; Enough for 256 dir entries
-	  ENDIF
+;
+;	  IF  DRV_E
+;CHK$02:	DEFS	[MXFDIR/4]+1	; Enough for 256 dir entries
+;	  ENDIF
+;	  IF  DRV_F
+;CHK$03:	DEFS	[MXFDIR/4]+1	; Enough for 256 dir entries
+;	  ENDIF
 
 ; Allocation BitMap Buffers.  Each MUST be NAB/8 Bytes at Minimum.
 ;  Each Logical Floppy Drive MUST have an Allocation BitMap Buffer.
-
-	  IF  DRV_A
+;
+	  IF  DRV_O AND FLPYDSK
 ALV$00:	DEFS	[MXFALC/8]+1	; Enough for 800 KB or 1.44 MB drives
 	  ENDIF
-	  IF  DRV_B
+;
+	  IF  DRV_P AND FLPYDSK
 ALV$01:	DEFS	[MXFALC/8]+1	; Enough for 800 KB or 1.44 MB drives
 	  ENDIF
-	  IF  DRV_C
-ALV$02:	DEFS	[MXFALC/8]+1	; Enough for 800 KB or 1.44 MB drives
-	  ENDIF
-	  IF  DRV_D
-ALV$03:	DEFS	[MXFALC/8]+1	; Enough for 800 KB or 1.44 MB drives
-	  ENDIF
+;	  IF  DRV_E
+;ALV$02:	DEFS	[MXFALC/8]+1	; Enough for 800 KB or 1.44 MB drives
+;	  ENDIF
+;	  IF  DRV_F
+;ALV$03:	DEFS	[MXFALC/8]+1	; Enough for 800 KB or 1.44 MB drives
+;	  ENDIF
 
 ;======================= End of DPH.LIB =======================
-
+

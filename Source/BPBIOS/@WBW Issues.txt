@@ -16,7 +16,7 @@ will boot from the first hard disk unit number you assign and
 always from the first slice.
 
 As documented in "@WBW Z3ENV.txt", there are two general
-configurations of BPBIOS for RomWBW.  I strongly recomment
+configurations of BPBIOS for RomWBW.  I strongly recommend
 using the T configurations (external HBIOS proxy).  This is
 the long term direction for BPBIOS on RomWBW.  The N
 configurations (internal HBIOS proxy) will not work with
@@ -28,11 +28,4 @@ BPBIOS does not yet understand the 1024 directory entry
 hard disk format.  You must use the 512 directory entry
 format images.
 
-The clock drivers supplied with BPBIOS (LDDS, LDP2D, and LDNZT) 
-load into ZSYS user memory.  If the user segment is not at the 
-same location as the original BPBIOS ($E900), then the clock 
-driver will just overlay other code.  At present, the N config 
-is OK because it does not relocate the user segment, but the T 
-config fails because it uses a user segment at $E700. Note that 
-this does not affect ZSDOS2 variants because they do not require 
-a loadable clock driver.
+--WBW 7:32 PM 10/3/2021

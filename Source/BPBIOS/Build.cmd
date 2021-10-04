@@ -3,8 +3,6 @@
 setlocal
 
 setlocal & cd ZCPR33 && call Build || exit /b & endlocal
-setlocal & cd Z34RCP11 && call Build || exit /b & endlocal
-setlocal & cd NZFCP13 && call Build || exit /b & endlocal
 
 set PATH=%PATH%;..\..\Tools\zx;..\..\Tools\cpmtools;
 
