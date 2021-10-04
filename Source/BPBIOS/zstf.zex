@@ -4,10 +4,6 @@ C15:ZPATH $$$$ A0 B0 C15 C0 /D=$$$$ C15 C0
 zscfg2 cb +a-
 ;; load Zsystem segments
 jetldr BPBIO.NDR,nzdec23d.z3t,fcp-4t.zrl
-;;;; disable the wheel byte since BPBUILD doesn't
-;;poke fc2a fb   ;;correct wheel addr in Z3ENV
-;;poke fbff ff   ;;set the wheel
-poke FC32 19   ;;change CRT length to 25 lines
 ;; initialize the RAM disk if needed and copy some useful file there
 if ~EX A0:-ram.000
 putds -d=A:
@@ -17,5 +13,4 @@ RCOPY RAMFILES.TXT A0: /Q
 fi
 ;; load the command history shell and editor
 LSH
-
 

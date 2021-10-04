@@ -1,8 +1,7 @@
 @echo off
-
 setlocal
 
-setlocal & cd ZCPR33 && call Build || exit /b & endlocal
+pushd ZCPR33 && call Build || exit /b & popd
 
 set PATH=%PATH%;..\..\Tools\zx;..\..\Tools\cpmtools;
 
@@ -57,6 +56,7 @@ rem if exist bpbio-ww.rel del bpbio-ww.rel || exit /b
 zx ZMAC -BPBIO-WW -/P || exit /b
 if exist bp%VER%.prn del bp%VER%.prn || exit /b
 ren bpbio-ww.prn bp%VER%.prn || exit /b
+if exist bp%VER%.err del bp%VER%.err || exit /b
 ren bpbio-ww.err bp%VER%.err || exit /b
 copy bpbio-ww.rel bp%VER%.rel || exit /b
 
