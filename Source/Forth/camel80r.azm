@@ -30,9 +30,9 @@
 ;   Forth Core word set.  Names in lower case are
 ;   "internal" implementation words & extensions.
 ; ===============================================
-
+;
 ; DOUBLE PRECISION WORDS       ==================
-
+;
 ;C D.    d --           display d signed
     head DDOT,2,D.,docolon
         DW LESSNUM,DUP,TOR,DABS,NUMS
@@ -101,4 +101,44 @@ tdiv1:
 ;C M*/   d1 n2 u3 --  d=(d1*n2)/u3  double precision mult. div
     head MSTARSLASH,3,M*/,docolon
         DW TOR,TSTAR,RFROM,TDIV,EXIT
+;
+; ROMWBW APPLICATION INTERFACE ==================
+;
+;C SVC ( hl de bc n -- hl de bc af )
+;execute ROMWBW API Call)
+    head API,3,API,docode
+        LD      A,C
+        EXX
+        POP     BC
+        POP     DE
+        POP     HL
+        RST     08
+        PUSH    HL
+        PUSH    DE
+        PUSH    BC
+        EXX
+        PUSH    AF
+        POP     BC
+        next
+;
+; BYTE INPUT/OUTPUT            ==================
+;
+;C  P!  ( n p -- ) write byte n to i/o port p
+
+    head PSTORE,2,P!!,docode
+;;        LD      A,C     ;save portnum in reg A
+;;        POP     BC      ;get datum
+;;        LD      B,C     ;  xfer datum to reg B
+;;        LD      C,A     ;xfer portnum to reg C
+;;        OUT     (C),B   ;write byte to I/O port.
+        POP     HL
+        OUT     (C),L
+        POP     BC      ; get new TOS
+        next
+
+;C P@   ( p -- n )  read byte n from i/o port p
+
+    head PFETCH,2,P@,docode
+        IN C,(C)        ;simple stuff...
+        next
 
