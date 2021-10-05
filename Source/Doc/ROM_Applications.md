@@ -323,6 +323,7 @@ camel80.azm   | Code Primitives
  camel80r.azm | ROMWBW additions
 glosshi.txt   | Glossary of high level words
 glosslo.txt   | Glossary of low level words
+glossr.txt    | Glossary of ROMWBW additions
 
 ## ROMWBW Additions
 

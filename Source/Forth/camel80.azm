@@ -76,7 +76,10 @@ HB_LOC			EQU	0FD80h
 ;   22-Jan 21 v1.02 Adjust for revised HBIOS
 ;                   proxy size.
 ;       b1ackmai1er difficultylevelhigh@gmail.com
-;   07-Sep 21 v1.02 Separate additions.                  
+;   07-Sep 21 v1.02 Separate additions.  
+;   05-Oct 21 v1.02 Add Douglas Beattie Jr.'s
+;                   API call and port read and
+;                   write words.                
 ; ===============================================
 ; Macros to define Forth headers
 ; HEAD  label,length,name,action

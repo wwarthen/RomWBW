@@ -1,0 +1,12 @@
+                 ROMWBW Extensions
+
+D.     d --                      display d signed
+D+     d1 d2 -- d1+d2          Add double numbers
+2>R    d --                                2 to R
+2R>    d --                        fetch 2 from R
+M*/    d1 n2 u3 --  d=(d1*n2)/u3  
+                       double precision mult. div
+API    hl de bc n -- hl de bc af 
+                          execute ROMWBW API Call
+P!     n p --          write byte n to i/o port p
+P@     p -- n         read byte n from i/o port p
