@@ -2,7 +2,6 @@
 setlocal
 
 if exist *.com del *.com
-
 if exist *.ovr del *.ovr
 if exist *.doc del *.doc
 if exist *.hlp del *.hlp

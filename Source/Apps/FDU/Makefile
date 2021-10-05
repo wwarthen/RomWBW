@@ -1,7 +1,7 @@
 OBJECTS = fdu.com
-DOCS = fdu.txt
+DOCS = fdu.doc
 DEST = ../../../Binary/Apps
-DOCDEST = ../../../Doc
+DOCDEST = ../../../Binary/Apps
 TOOLS = ../../../Tools
 include $(TOOLS)/Makefile.inc
 

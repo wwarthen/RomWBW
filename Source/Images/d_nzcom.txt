@@ -26,6 +26,7 @@ d_zsdos/u0/*.* 0:
 ../../Binary/Apps/assign.com 0:
 ../../Binary/Apps/fat.com 0:
 ../../Binary/Apps/fdu.com 0:
+../../Binary/Apps/fdu.doc 0:
 ../../Binary/Apps/format.com 0:
 ../../Binary/Apps/mode.com 0:
 ../../Binary/Apps/rtc.com 0:

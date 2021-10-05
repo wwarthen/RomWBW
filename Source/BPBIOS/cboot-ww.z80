@@ -475,7 +475,7 @@ ENV1:				; ZCPR3 enviornment descriptor ...
 	DEFB	0		; Crt selection			()
 	DEFB	0		; Printer selection		()
 	DEFB	80		; Crt 0: width
-	DEFB	24		; # of lines
+	DEFB	25		; # of lines
 	DEFB	22		; # of text lines
 
 ; In Extended ENV, CRT 1 is replaced by System Info
