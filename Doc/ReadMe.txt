@@ -67,6 +67,12 @@ RomWBW Architecture ("RomWBW Architecture.pdf")
 Document describing the architecture of the RomWBW HBIOS.  It 
 includes reference information for the HBIOS calls.
 
+ROM Applications ("ROM Applications.pdf")
+-----------------------------------------
+
+Breif instructions for the ROM based applications included in
+in the boot ROM.
+
 
 Z180 ASCI Baud Rate Options ("Z180 ASCI Baud Rate Options.pdf")
 ---------------------------------------------------------------
