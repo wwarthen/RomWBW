@@ -1,15 +1,6 @@
 C15:ZPATH $$$$ A0 B0 C15 C0 /D=$$$$ C15 C0
 jetldr RCP-16H.ZRL,FCP-4T.ZRL,BPBIO.NDR,nzdec23d.z3t
 ldtimec
-;;disable the wheel byte since BPBUILD doesn't
-;;;;correct wheel addr in Z3ENV
-;;poke fc2a fb   
-;;;;set the wheel
-;;poke fbff ff
-;;change CRT length to 25 lines<
-poke FC32 19
-;; change "D  " to "DIR" so we can use D.COM
-poke EF0D 49 52
 ;; initialize ram drive if needed
 IF ~EX A0:-RAM.000
 putds -d=A:
