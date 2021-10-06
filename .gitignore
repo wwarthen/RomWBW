@@ -79,6 +79,7 @@ Tools/unix/zx/zx
 !Source/Apps/ZMP/zmpx.com
 !Source/BPBIOS/bpbuild.com
 !Source/BPBIOS/movp112.com
+!Source/BPBIOS/*.lib
 !Source/BPBIOS/Z34RCP11/cledinst.com
 !Source/BPBIOS/Z34RCP11/cledsave.com
 !Source/Fonts

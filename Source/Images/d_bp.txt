@@ -13,6 +13,7 @@
 ../../Binary/Apps/assign.com 15:
 ../../Binary/Apps/fat.com 15:
 ../../Binary/Apps/fdu.com 15:
+../../Binary/Apps/fdu.doc 15:
 ../../Binary/Apps/format.com 15:
 ../../Binary/Apps/mode.com 15:
 ../../Binary/Apps/rtc.com 15:
