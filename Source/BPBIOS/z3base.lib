@@ -1,8 +1,13 @@
-; B/P Bios System Z3 Definition File.
+; z3base.fp -- B/P Bios System Z3 Definition File for not or partially
+;		banked system with 512 byte external HBIOS proxy (no
+;		internal proxy).
 
 ; This file is adapted from the basic Z3BASE.LIB configuration file used for
 ; most ZCPR33 systems.  It has added the new definitions for the Resident
-; User Space defined in B/P Bios descriptions.
+; User Space defined in B/P Bios descriptions and modified for an HBIOS
+; implementation with a full external HBIOS proxy (i.e. proxy not internal
+; to BPBIOS).
+;
 ;=========================================================================
 ;==   NOTE: The Starting Address of the User Space marks the lower	==
 ;==   base of memory and MUST be entered.  B/P Bios Utilities use	==
@@ -14,29 +19,30 @@
 ; alternative, just leave this file alone and configure everything with
 ; the utilities provided.
 
-;  FFD0 - FFFF	 48 Bytes	ZCPR3 External Stack
-;  FF00 - FFCF	208 Bytes	Multiple Command Line Buffer
-;  FE00 - FEFF	256 Bytes	Environment Descriptor
+;  FE00 - FFFF  512 Bytes	HBIOS proxy AREA in the top of ram
+;  FD00 - FDFF	256 Bytes	Multiple Command Line Buffer
+;  FC00 - FCFF	256 Bytes	Environment Descriptor
 ;				Bytes 00H-7FH:  Z3 Parameters
 ;				Bytes 80H-FFH:  Z3 TCAP
-;  FDFF		  1 Byte	Wheel byte
-;  FDF4 - FDFE	 11 Bytes	Path (5 elements)
-;  FDD0 - FDF3	 36 Bytes	ZCPR3 External FCB
-;  FD80 - FDCF	 80 Bytes	ZCPR3 Message Buffers
-;  FD00 - FD7F	128 Bytes	ZCPR3 Shell Stack
-;  FC00 - FCFF	256 Bytes	Named Directory Buffer
-;  FA00 - FBFF	512 Bytes	Flow Command Package
-;  F200 - F9FF	2.0 KBytes	Resident Command Package
-;  EC00 - F1FF	1.5 KBytes	IO Package
-;  E900 - EBFF	.75 KBytes	Resident User Space
+;  FBFF		  1 Byte	Wheel byte
+;  FBF4 - FBFE	 11 Bytes	Path (5 elements)
+;  FBD0 - FBF3	 36 Bytes	ZCPR3 External FCB
+;  FB80 - FBCF	 80 Bytes	ZCPR3 Message Buffers
+;  FB00 - FB7F	128 Bytes	ZCPR3 Shell Stack (4x32)
+;  FAD0 - FAFF	 48 Bytes	ZCPR3 External Stack (must be 48 bytes)
+;  F900 - FACF	464 Bytes	Named Directory Buffer (25 entries)
+;  F700 - F9FF	512 Bytes	Flow Command Package
+;  EF00 - F6FF	2.0 KBytes	Resident Command Package
+;  EF00 - EF00	  0 KBytes	IO Package - no IOP
+;  EC00 - EEFF	768 Bytes	Resident User Space (room for clock driver)
 
 ; The remainder is for the Operating System.  Exact sizes vary depending
-; primarily on the Number and sizes of Hard Drive Partitions, but may be:
+; primarily on the Number and sizes of Hard Drive Partitions, typically:
 
-;  D100 - EBFF	5.0 KBytes	B/P BIOS (unbanked version)
-;  C300 - D0FF	3.5 KBytes	ZSDOS 1.0 BDOS
-;  BB00 - C2FF	  2 KBytes	ZCPR 3.3 Command Processor
-;  0100 - BAFF	~46 KBytes	Transient Program Area
+;  E100 - EBFF	4.5 KBytes	B/P BIOS (banked version)
+;  D300 - E0FF	3.5 KBytes	ZSDOS 1.0 BDOS
+;  CB00 - D2FF	  2 KBytes	ZCPR 3.4 Command Processor
+;  0100 - C5FF	~50 KBytes	Transient Program Area
 ;  0000 - 00FF	256 Bytes	Standard CP/M Buffers
 ;========================================================================
 
@@ -46,80 +52,98 @@ TRUE	EQU	NOT FALSE
 YES	EQU	TRUE
 NO	EQU	FALSE
 
-; The External Stack is placed in the very top position in memory.  It is
-; mandatory for B/P Bios and ZCPR 3.3.
-
-EXTSTK	EQU	0FFD0H		; ZCPR3 External Stack
-EXTSTKS	EQU	YES
-
-; The Multiple Command Line Buffer is placed in the Top Page of Memory to
-; place it above the Environment.  It is mandatory for ZCPR 3.3.
-
-Z3CL	EQU	0FF00H		; ZCPR3 Command Line Buffer
-Z3CLS	EQU	208-5		; Size of Command Line Buffer-5
+; The Multiple Command Line Buffer is mandatory for ZCPR 3.3. 3.4 & 4.1.
+;  FD00 - FDCF   208 Bytes
+;Z3CL	EQU	0FB00H		; ZCPR3 Command Line Buffer
+Z3CLS	EQU	256-5		; Size of Command Line Buffer-5
+Z3CL	EQU	MEMTOP+1-Z3CLS-5 ; ZCPR3 Command Line Buffer
 
 ; The ZCPR3 External Environment Descriptor is mandatory B/P Bios & ZCPR 3.3.
 ; The Environment Descriptor MUST begin on an even Page Boundary (xx00H).
-
-Z3ENV	EQU	0FE00H		; Environment Descriptors
+;  FC00 - FCFF   256 Bytes	Environment Descriptor
 Z3ENVS	EQU	2		; Size of Env Descriptor in 128-Byte Blks
+Z3ENV	EQU	(Z3CL-Z3ENVS*128) and 0FF00H
 
 ; The ZCPR3 Wheel Byte is mandatory for ZCPR 3.3.
 
-Z3WHL	EQU	0FDFFH		; Wheel Byte Address
+;  FBFF		  1 Byte	Wheel byte
 Z3WHLS	EQU	YES
+Z3WHL	EQU	Z3ENV-1		; Wheel Byte Address
 
 ; The Path is mandatory for ZCPR 3.3.
 
-EXPATH	EQU	0FDF4H		; External Path starting Address
+;  FBF4 - FBFE	 11 Bytes	Path (5 elements)
 EXPATHS	EQU	5		; (Path Size = EXPATHS*2 + 1 = 11 bytes)
 				; This defines 5  2-byte Path Elements
+EXPATH	EQU	Z3WHL-EXPATHS*2-1	; External Path starting Address
 
 ; The ZCPR3 External FCB is mandatory for ZCPR 3.3.
 
-EXTFCB	EQU	0FDD0H		; 36-Byte ZCPR3 External FCB
+;  FBD0 - FBF3	 36 Bytes	ZCPR3 External FCB
 EXTFCBS	EQU	YES
+EXFCBSZ	EQU	36
+EXTFCB	EQU	EXPATH-EXFCBSZ	; 36-Byte ZCPR3 External FCB
 
 ; The ZCPR3 Message Buffers are mandatory for ZCPR 3.3.
 
-Z3MSG	EQU	0FD80H		; 80-Byte ZCPR3 Message Buffer
+;  FB80 - FBCF	 80 Bytes	ZCPR3 Message Buffers
 Z3MSGS	EQU	YES
+Z3MSGSZ	EQU	80		; size of buffer
+Z3MSG	EQU	EXTFCB-Z3MSGSZ	; 80-Byte ZCPR3 Message Buffer
 
 ; Shell Stack definition.  Set SHSTKS to 0 to eliminate Shell Stack
 
-SHSTK	EQU	0FD00H		; Shell Stack Starting Address
+;  FB00 - FB7F	128 Bytes	ZCPR3 Shell Stack
 SHSTKS	EQU	4		; Number of SHSIZE-Byte Shell Stack entries
 SHSIZE	EQU	32		; (Stack Size = SHSTKS * SHSIZE = 128 Bytes)
+SHSTK	EQU	Z3MSG-SHSTKS*SHSIZE	; Shell Stack Starting Address
+
+; The External Stack is mandatory for B/P Bios and ZCPR 3.3, 3.4 & 4.1
+;  FAD0 - FAFF	 48 Bytes	; ZCPR3 External Stack (must be 48 bytes)
+;EXTSTK	EQU	0FAD0H		; ZCPR3 External Stack
+EXTSTK	EQU	SHSTK-48	; ZCPR3 External Stack
+EXTSTKS	EQU	YES
 
 ; ZCPR3 Named Directory Buffer definition.  Set Z3NDIRS to 0 to eliminate
 ; the named directory buffer.
-
-Z3NDIR	EQU	0FC00H		; Start of Named Directory Buffer
-Z3NDIRS	EQU	14		; Number of Named Directory Elements
-				; (NDIR Size = Z3NDIRS * 18 + 1 = 253 Bytes)
+;  F900 - FACF	464 Bytes	; Named Directory Buffer - 25 NAMES
+Z3NDIRS	EQU	25		; Number of Named Directory Elements
+NDIRSZ	EQU	Z3NDIRS * 18 + 1
+				; (NDIR Size = Z3NDIRS * 18 + 1 = 451 Bytes)
+Z3NDIR	EQU	SHSTK-(NDIRSZ/256+1)*256	; Start of Named Directory Buffer
 
 ; Flow Command Package definition.  Set FCPS to 0 to eliminate FCP
 
-FCP	EQU	0FA00H		; Start of Flow Command Package
+;  F700 - F8FF	512 Bytes	Flow Command Package
 FCPS	EQU	4		; (FCP Size = 128 * FCPS = 512 Bytes)
+;FCPS	EQU	0		; (FCP Size = 128 * FCPS = 0 Bytes)
+FCP	EQU	Z3NDIR-FCPS*128	; Start of Flow Command Package
 
 ; Resident Command Processor Definition.  Set RCPS to 0 to eliminate RCP
 
-RCP	EQU	0F200H		; Start of Resident Command Processor
+;  EF00 - F6FF	2.0 KBytes	Resident Command Package
 RCPS	EQU	16		; (RCP Size = 128 * RCPS = 2 kBytes)
+;RCPS	EQU	0		; (RCP Size = 128 * RCPS = 0 kBytes)
+RCP	EQU	FCP-RCPS*128	; Start of Resident Command Processor
 
-; IO Package definition.  Set IOPS to 0 to eliminate IOP
+; IO Package definition.  Set IOPS to 0 which eliminates IOP
 
-IOP	EQU	0EC00H		; Start of IO Package
-IOPS	DEFL	12		; (IOP Size = 128 * IOPS = 1.5 kBytes)
+;IOP	EQU	0EC00H		; Start of IO Package
+;  EF00 - EF00	  0 KBytes	IO Package
+IOPS	DEFL	0		; (IOP Size = 128 * IOPS = 0 kBytes)
+;IOPS	DEFL	12		; (IOP Size = 128 * IOPS = 1.5 kBytes)
+;IOPS	DEFL	10		; (IOP Size = 128 * IOPS = 1.25 kBytes)
+IOP	EQU	RCP-IOPS*128	; Start of IO Package
 
 ;=========================================================================
 ; Resident User Space Definition.  Set USPCS to 0 to eliminate USPC.
 ; The USPC Value marks the Lower Limit of Reserved Common High Memory and
 ;   MUST BE PRESENT!
 
-USPC	EQU	0E900H		; Start of Resident User Space (MANDATORY)
+;USPCS	EQU	0		; (USPC Size = 128 * USPCS = 0 kBytes)
 USPCS	EQU	6		; (USPC Size = 128 * USPCS = 0.75 kBytes)
+;  EC00 - EEFF	  0.75 KBytes	Resident User Space
+USPC	EQU	IOP-USPCS*128	; Start of Resident User Space (MANDATORY)
 
 ;--- End of Z3BASE.LIB ---
-
+

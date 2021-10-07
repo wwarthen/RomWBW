@@ -15,17 +15,8 @@ as needed.  The RomWBW ASSIGN command is not supported.  BPBIOS
 will boot from the first hard disk unit number you assign and
 always from the first slice.
 
-As documented in "@WBW Z3ENV.txt", there are two general
-configurations of BPBIOS for RomWBW.  I strongly recommend
-using the T configurations (external HBIOS proxy).  This is
-the long term direction for BPBIOS on RomWBW.  The N
-configurations (internal HBIOS proxy) will not work with
-interrrupts of any kind.  This means that to use the N
-configurations, you *must* use a RomWBW ROM built with
-interrupts disabled or chaos will ensue.
-
 BPBIOS does not yet understand the 1024 directory entry
 hard disk format.  You must use the 512 directory entry
 format images.
 
---WBW 7:32 PM 10/3/2021
+--WBW 1:25 PM 10/7/2021

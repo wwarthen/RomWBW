@@ -174,7 +174,7 @@ CNTRLR:	DEFB	80H	; Controller Types recognized are:
 				; 90H = HBIOS Disk IO
 ; First drive (Generic HBIOS drive configuration)
 
-BITS	DEFL	HB_HDDEV	; First HBIOS Hard Disk Drive
+BITS	DEFL	HB_HDDEV0	; First HBIOS Hard Disk Drive
 
 BITS	DEFL	BITS+[UNIT_0 AND 10H]	; If active, set Bit 4
 
@@ -188,7 +188,7 @@ HDRV0:		; used to convert logical to physical sector addressing
 
 ; Second drive (Generic HBIOS drive configuration)
 
-BITS	DEFL	HB_HDDEV + 1	; Second HBIOS Hard Disk Drive
+BITS	DEFL	HB_HDDEV1	; Second HBIOS Hard Disk Drive
 
 BITS	DEFL	BITS+[UNIT_1 AND 10H]	; If active, set Bit 4
 
@@ -201,7 +201,7 @@ HDRV1:	DEFB	BITS		; Set Device, Unit, and Active bits
 
 ; Third drive (Generic HBIOS drive configuration)
 
-BITS	DEFL	HB_HDDEV + 2	; Third HBIOS Hard Disk Drive
+BITS	DEFL	HB_HDDEV2	; Third HBIOS Hard Disk Drive
 
 BITS	DEFL	BITS+[UNIT_2 AND 10H]	; If active, set Bit 4
 

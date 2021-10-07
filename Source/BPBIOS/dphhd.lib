@@ -22,7 +22,7 @@
 XDPH90:	DEFB	TRUE		; Format lock flag (Lock RAM Drive)
 	DEFB	FIXDSK		; Disk Drive Type
 	DEFB	2		; Driver ID = Treat as Hard Drive
-	DEFB	HB_MDDEV	; Physical Drive Number
+	DEFB	HB_MDRAM	; Physical Drive Number
 DPH$90:	DEFW	0		; Skew Table pointer
 	DEFW	0,0,0		; Scratch area
 	DEFW	DIRBUF		; Directory buffer pointer
@@ -35,7 +35,7 @@ DPH$90:	DEFW	0		; Skew Table pointer
 XDPH91:	DEFB	TRUE		; Format lock flag (Lock ROM Drive)
 	DEFB	FIXDSK		; Disk Drive Type
 	DEFB	2		; Driver ID = Treat as Hard Drive
-	DEFB	HB_MDDEV + 1	; Physical Drive Number
+	DEFB	HB_MDROM	; Physical Drive Number
 DPH$91:	DEFW	0		; Skew Table pointer
 	DEFW	0,0,0		; Scratch area
 	DEFW	DIRBUF		; Directory buffer pointer
@@ -48,7 +48,7 @@ DPH$91:	DEFW	0		; Skew Table pointer
 XDPH50:	DEFB	TRUE		; Format lock flag (Lock First Hard Drive)
 	DEFB	FIXDSK		; Disk drive type
 	DEFB	2		; Driver ID - 2=hard drive
-	DEFB	HB_HDDEV + 0	; Physical drive [0..6] for this Partition
+	DEFB	HB_HDDEV0	; Physical drive [0..6] for this Partition
 DPH$50:	DEFW	0		; Skew table pointer
 	DEFW	0,0,0		; Scratch area
 	DEFW	DIRBUF		; Directory buffer pointer
@@ -61,7 +61,7 @@ DPH$50:	DEFW	0		; Skew table pointer
 XDPH51:	DEFB	TRUE		; --- Second Hard Drive/Partition
 	DEFB	FIXDSK		; Disk drive type
 	DEFB	2		; Driver ID - 2=hard drive
-	DEFB	HB_HDDEV + 0	; Physical drive [0..6] for this Partition
+	DEFB	HB_HDDEV0	; Physical drive [0..6] for this Partition
 DPH$51:	DEFW	0
 	DEFW	0,0,0
 	DEFW	DIRBUF
@@ -74,7 +74,7 @@ DPH$51:	DEFW	0
 XDPH52:	DEFB	TRUE		; --- Third Hard Drive/Partition
 	DEFB	FIXDSK		; Disk drive type
 	DEFB	2		; Driver ID - 2=hard drive
-	DEFB	HB_HDDEV + 0	; Physical drive [0..2] for this Partition
+	DEFB	HB_HDDEV0	; Physical drive [0..2] for this Partition
 DPH$52:	DEFW	0
 	DEFW	0,0,0
 	DEFW	DIRBUF
@@ -87,7 +87,7 @@ DPH$52:	DEFW	0
 XDPH53:	DEFB	TRUE		; --- Fourth Hard Drive/Partition
 	DEFB	FIXDSK		; Disk drive type
 	DEFB	2		; Driver ID - 2=hard drive
-	DEFB	HB_HDDEV + 0	; Physical drive [0..6] for this Partition
+	DEFB	HB_HDDEV0	; Physical drive [0..6] for this Partition
 DPH$53:	DEFW	0
 	DEFW	0,0,0
 	DEFW	DIRBUF
@@ -100,7 +100,7 @@ DPH$53:	DEFW	0
 XDPH54:	DEFB	TRUE		; --- Fifth Hard Drive/Partition
 	DEFB	FIXDSK		; Disk drive type
 	DEFB	2		; Driver ID - 2=hard drive
-	DEFB	HB_HDDEV + 0	; Physical drive [0..6] for this Partition
+	DEFB	HB_HDDEV0	; Physical drive [0..6] for this Partition
 DPH$54:	DEFW	0
 	DEFW	0,0,0
 	DEFW	DIRBUF
@@ -113,7 +113,7 @@ DPH$54:	DEFW	0
 XDPH55:	DEFB	TRUE		; --- Sixth Hard Drive/Partition
 	DEFB	FIXDSK		; Disk drive type
 	DEFB	2		; Driver ID - 2=hard drive
-	DEFB	HB_HDDEV + 0	; Physical drive [0..6] for this Partition
+	DEFB	HB_HDDEV0	; Physical drive [0..6] for this Partition
 DPH$55:	DEFW	0
 	DEFW	0,0,0
 	DEFW	DIRBUF
@@ -126,7 +126,7 @@ DPH$55:	DEFW	0
 XDPH56:	DEFB	TRUE		; --- Seventh Hard Drive/Partition
 	DEFB	FIXDSK		; Disk drive type
 	DEFB	2		; Driver ID - 2=hard drive
-	DEFB	HB_HDDEV + 0	; Physical drive [0..6] for this Partition
+	DEFB	HB_HDDEV0	; Physical drive [0..6] for this Partition
 DPH$56:	DEFW	0
 	DEFW	0,0,0
 	DEFW	DIRBUF
@@ -139,7 +139,7 @@ DPH$56:	DEFW	0
 XDPH57:	DEFB	TRUE		; --- Eighth Hard Drive/Partition
 	DEFB	FIXDSK		; Disk drive type
 	DEFB	2		; Driver ID - 2=hard drive
-	DEFB	HB_HDDEV + 0	; Physical drive [0..6] for this Partition
+	DEFB	HB_HDDEV0	; Physical drive [0..6] for this Partition
 DPH$57:	DEFW	0
 	DEFW	0,0,0
 	DEFW	DIRBUF
@@ -152,11 +152,7 @@ DPH$57:	DEFW	0
 XDPH58:	DEFB	TRUE		; --- Ninth Hard Drive/Partition
 	DEFB	FIXDSK		; Disk drive type
 	DEFB	2		; Driver ID - 2=hard drive
-	  IF  MK4
-	DEFB	HB_HDDEV + 2	; SD card on MK4
-	  ELSE
-	DEFB	HB_HDDEV + 1	; SLAVE IDE or 2nd simh HDSK
-	  ENDIF
+	DEFB	HB_HDDEV1	; Physical drive [0..6] for this Partition
 DPH$58:	DEFW	0
 	DEFW	0,0,0
 	DEFW	DIRBUF
@@ -169,11 +165,7 @@ DPH$58:	DEFW	0
 XDPH59:	DEFB	TRUE		; --- Tenth Hard Drive/Partition
 	DEFB	FIXDSK		; Disk drive type
 	DEFB	2		; Driver ID - 2=hard drive
-	  IF  MK4
-	DEFB	HB_HDDEV + 2	; SD card on MK4
-	  ELSE
-	DEFB	HB_HDDEV + 1	; SLAVE IDE or 2nd simh HDSK
-	  ENDIF
+	DEFB	HB_HDDEV1	; Physical drive [0..6] for this Partition
 DPH$59:	DEFW	0
 	DEFW	0,0,0
 	DEFW	DIRBUF
@@ -186,11 +178,7 @@ DPH$59:	DEFW	0
 XDPH60:	DEFB	TRUE		; --- Eleventh Hard Drive/Partition
 	DEFB	FIXDSK		; Disk drive type
 	DEFB	2		; Driver ID - 2=hard drive
-	  IF  MK4
-	DEFB	HB_HDDEV + 2	; SD card on MK4
-	  ELSE
-	DEFB	HB_HDDEV + 1	; SLAVE IDE or 2nd simh HDSK
-	  ENDIF
+	DEFB	HB_HDDEV1	; Physical drive [0..6] for this Partition
 DPH$60:	DEFW	0
 	DEFW	0,0,0
 	DEFW	DIRBUF
@@ -203,11 +191,7 @@ DPH$60:	DEFW	0
 XDPH61:	DEFB	TRUE		; --- Twelveth Hard Drive/Partition
 	DEFB	FIXDSK		; Disk drive type
 	DEFB	2		; Driver ID - 2=hard drive
-	  IF  MK4
-	DEFB	HB_HDDEV + 2	; SD card on MK4
-	  ELSE
-	DEFB	HB_HDDEV + 1	; SLAVE IDE or 2nd simh HDSK
-	  ENDIF
+	DEFB	HB_HDDEV1	; Physical drive [0..6] for this Partition
 DPH$61:	DEFW	0
 	DEFW	0,0,0
 	DEFW	DIRBUF

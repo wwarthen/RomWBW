@@ -28,11 +28,13 @@
 
 CBOOT:
 	DI			; Disable interrupt system
+
 	  IF  BANKED
 	LD	SP,USP		; Set to User Stack in High memory
 	  ELSE
 	LD	SP,80H		; Set stack in Low memory
 	  ENDIF		; BANKED
+
 	CALL	HBX_INIT
 
 	LD	HL,(IOBYT)	; Get IOBYTE, Default Drive & User
@@ -275,7 +277,7 @@ BLKMV:	POP	BC		; And number of bytes to move
 
 	; Allocate disk buffer in HBIOS bank and
 	; save it for use later in disk access.
-	LD	B,H_ALLOC	; HBIOS Func: ALLOCATE Heap Memory
+	LD	B,HBF_ALLOC	; HBIOS Func: ALLOCATE Heap Memory
 	LD	HL,512		; 1 Sector, 512 Bytes
 	CALL	HBX_INVOKE	; Do it
 	CALL	NZ,PANIC	; Handle error
@@ -313,21 +315,21 @@ MEMOK:
 	DEFB	CR,LF,'RetroB'	;  Save all bytes possible
 	  ELSE			;   Otherwise sign on with complete name
 	DEFB	CR,LF,'Retro-Brew '
-	    IF  SBC
-	DEFB	' SBC V1/2 '
-	    ENDIF	;SBC
-	    IF  SIMH
-	DEFB	'ON SimH '
-	    ENDIF	;SIMH
-	    IF  ZETA
-	DEFB	' ZETA '
-	    ENDIF	;ZETA
-	    IF  N8
-	DEFB	' N8 '
-	    ENDIF	;N8
-	    IF  MK4
-	DEFB	' Mark IV '
-	    ENDIF	;MK4
+;	    IF  SBC
+;	DEFB	' SBC V1/2 '
+;	    ENDIF	;SBC
+;	    IF  SIMH
+;	DEFB	'ON SimH '
+;	    ENDIF	;SIMH
+;	    IF  ZETA
+;	DEFB	' ZETA '
+;	    ENDIF	;ZETA
+;	    IF  N8
+;	DEFB	' N8 '
+;	    ENDIF	;N8
+;	    IF  MK4
+;	DEFB	' Mark IV '
+;	    ENDIF	;MK4
 	  ENDIF		; MOVCPM
 	DEFB	'B/P 50.00k Bios'	;**** Do NOT alter this string ****
 

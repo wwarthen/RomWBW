@@ -78,6 +78,9 @@
 ; which are used to customize ZCPR33 for the user's working environment.
 ; NOTE -- TRUE & FALSE are defined in Z3BASE.
 
+memtop	equ	0FE00H - 1	; Reserve memory above this for HBIOS
+base	equ	0
+	
 	maclib	z3base.lib
 	maclib	z33hdr.lib
 
@@ -137,7 +140,7 @@ tfcb	equ	base+005ch	; Default FCB buffer
 tfcb2	equ	tfcb+16		; 2nd FCB
 tbuff	equ	base+0080h	; Default disk I/O buffer
 tpa	equ	base+0100h	; Base of TPA
-bios	equ	ccp+0800h+0e00h	; BIOS location
+;bios	equ	ccp+0800h+0e00h	; BIOS location
 
 
 ; ----------   Error codes
@@ -262,6 +265,10 @@ curdr		equ	z3msg+2fh	; Currently logged drive
 
 	 if	not rel		; If generating absolute code
 	org	ccp
+	 else
+	common /_BIOS_/
+bios	equ	$
+	cseg
 	 endif	;not rel
 
 

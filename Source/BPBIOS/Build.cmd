@@ -9,19 +9,11 @@ set ZXBINDIR=../../tools/cpm/bin/
 set ZXLIBDIR=../../tools/cpm/lib/
 set ZXINCDIR=../../tools/cpm/include/
 
-call :makebp 33t
-
-call :makebp 33tbnk
-call :makebp 33n
-call :makebp 33nbnk
-
-call :makebp 34t
-call :makebp 34tbnk
-call :makebp 34n
-call :makebp 34nbnk
-
-call :makebp 41tbnk
-call :makebp 41nbnk
+call :makebp 33
+call :makebp 33bnk
+call :makebp 34
+call :makebp 34bnk
+call :makebp 41bnk
 
 rem pause
 

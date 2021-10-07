@@ -268,7 +268,8 @@ MATCH:	LD	A,(SECMSK)	; Get the sector mask
 ;
 ; Modified to use HBIOS host buffer
 ;
-	LD	A,BID_HB	; HSTBUF is in HBIOS
+	;LD	A,BID_HB	; HSTBUF is in HBIOS
+	LD	A,(HBX_BNKBIOS)	; HSTBUF is in HBIOS
 	LD	C,A
 	  IF  BANKED
 	LD	A,(DMABNK)	; Set Read Destination Bank
