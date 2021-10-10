@@ -1,0 +1,3 @@
+[submodule "Source/TastyBasic"]
+	path = Source/TastyBasic
+	url = git@github.com:dimitrit/tastybasic.git
