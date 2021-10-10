@@ -1,14 +1,14 @@
 ;; Set the ZCPR and ZSDOS paths
 C15:ZPATH $$$$ A0 B0 C15 C0 /D=$$$$ C15 C0
-;; Enable clock and turn off last access stamping
-zscfg2 cb +a-
 ;; Load ZCPR segments
-jetldr FCP-4T.ZRL,BPBIO.NDR,NZDEC23D.Z3T
+jetldr RCP-16H.ZRL,FCP-4T.ZRL,BPBIO.NDR,NZDEC23D.Z3T
+;; Load date/time extension
+ldtimec
 ;; Initialize the RAM disk if needed and copy some useful file there
 if ~EX A0:-RAM.000
 putds -d=A:
 fileattr a0:*.dat /nd
-save 0 a0:-ram.000
+save 0 a:-ram.000
 rcopy ramfiles.txt A0: /Q
 fi
 ;; Load the command history shell and editor

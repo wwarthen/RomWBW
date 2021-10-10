@@ -164,18 +164,8 @@ DPBRAM:	DEFW	64		; Records/Track (16 sectors*4 records/sector)
 	DEFW	MSIZR-1		; Disk Size-1      128 kB    256 kB   512 kB
 				; Dir Max    -or-    64       128       256
 				; Alloc 0, 1        80H,0    0C0H,0    0F0H,0
-	  IF MSIZR<65
-	DEFW	63		; Dir Max-1	1 block
-	DEFB	80H,0		; Alloc 0,1
-	  ELSE
-	   IF  MSIZR<129
-	DEFW	128 - 1		; Dir Max-1	2 blocks
-	DEFB	0C0H, 00	; Alloc 0,1
-	   ELSE
 	DEFW	255		; Dir Max-1	4 blocks
 	DEFB	0F0H,0		; Alloc 0,1
-	   ENDIF
-	  ENDIF
 	DEFW	0000		; Check Size
 	DEFW	0000		; Trk Offset from beginning of Ram Bank base
 ;
@@ -200,7 +190,6 @@ MSIZO	EQU	HB_ROMBLKS	; # of blocks in Drive (by Memory/Block size)
 				;  1x512k = 192 (384k) - 176 (352k) w/User Bank
 				;  2x512k = 448 (896k) - 432 (864k) w/User Bank
 
-;DPBROM:	DEFW	32		; Sectors/Track
 DPBROM:	DEFW	64		; Sectors/Track
 	DEFB	4		; Block Shift Factor (2k per block)
 	DEFB	0FH		; Block Mask
@@ -212,18 +201,8 @@ DPBROM:	DEFW	64		; Sectors/Track
 	DEFW	MSIZO-1		; Disk Size-1      128 kB    256 kB   512 kB
 				; Dir Max    -or-    64       128       256
 				; Alloc 0, 1        80H,0    0C0H,0    0F0H,0
-	  IF MSIZO<65
-	DEFW	63		; Dir Max-1	1 block
-	DEFB	80H,0		; Alloc 0,1
-	  ELSE
-	   IF  MSIZO<129
-	DEFW	128 - 1		; Dir Max-1	2 blocks
-	DEFB	0C0H, 00	; Alloc 0,1
-	   ELSE
 	DEFW	255		; Dir Max-1	4 blocks
 	DEFB	0F0H,0		; Alloc 0,1
-	   ENDIF
-	  ENDIF
 	DEFW	0000		; Check Size
 	DEFW	0000		; Trk Offset from beginning of Ram Bank base
 ;

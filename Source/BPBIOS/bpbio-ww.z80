@@ -80,14 +80,15 @@ FALSE	EQU	0
 TRUE	EQU	NOT FALSE
 NO	EQU	FALSE
 YES	EQU	TRUE
-				; << ******  SYSTEM SPECIFIC  ****** >>
-				; <<  Insert DEF-xxxx.LIB definition >>
-	INCLUDE	DEF-WW.LIB	; <<   file for your configuration.  >>
 
 				; << ******  SYSTEM SPECIFIC  ****** >>
 				; << Insert ROMWBW definitions here  >>
 	INCLUDE ROMWBW.LIB	; <<   for version # in ROM          >>
 				
+				; << ******  SYSTEM SPECIFIC  ****** >>
+				; <<  Insert DEF-xxxx.LIB definition >>
+	INCLUDE	DEF-WW.LIB	; <<   file for your configuration.  >>
+
 	CSEG
 ;.....
 ; Ascii Character Equates
@@ -109,18 +110,10 @@ LOCKF	EQU	LOW [NOT AUTOSL] ;Lock flag for format default
 ALONE	EQU	FALSE		; Boot code equate
 	; Include ENV definitions
 	  IF  Z3
-	    IF INTPXY
-	      IF ZSDOS2
-	MACLIB	Z3BASEFN.LIB
-	      ELSE
-	MACLIB	Z3BASEN.LIB
-	      ENDIF
+	    IF ZSDOS2
+	MACLIB	Z3BASEF.LIB
 	    ELSE
-	      IF ZSDOS2
-	MACLIB	Z3BASEFT.LIB
-	      ELSE
-	MACLIB	Z3BASET.LIB
-	      ENDIF
+	MACLIB	Z3BASE.LIB
 	    ENDIF
 	  ENDIF
 	PAGE

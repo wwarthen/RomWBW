@@ -54,7 +54,7 @@ cpnet12/*.* 4:
 # Add Common Applications
 #
 Common/All/*.* 15:
-Common/CPM22/*.* 0:
+Common/CPM22/*.* 15:
 #Common/Z/u10/*.* 10:
 Common/Z/u14/*.* 14:
 Common/Z/u15/*.* 15:

@@ -16,15 +16,15 @@
 ; BIOS Configuration Equates and Macros
 
 DATE	  MACRO
-	DEFB	'02 AUG 21'	; Date of this version
+	DEFB	'07 Oct 21'	; Date of this version
 	  ENDM
 AUTOCL	  MACRO
-	DEFB	8,'ZEX ZSTT',0	; Autostart command line
+	DEFB	8,'ZEX ZST ',0	; Autostart command line
 	  ENDM
 
 ;--- Basic System and Z-System Section ---
 
-MOVCPM	EQU	no		; Integrate into MOVCPM "type" loader?
+MOVCPM	EQU	NO		; Integrate into MOVCPM "type" loader?
 	  IF  MOVCPM
 VERS	EQU	13H		; Version number in BCD (Hex) (Major/Minor)
 	  ELSE
@@ -38,20 +38,6 @@ FASTWB	EQU	YES		; Yes if restoring CPR from banked RAM
 				; ..No if restoring from Drive A
 Z3	EQU	YES		; Include ZCPR init code?
 HAVIOP	EQU	NO		; Include IOP code into Jump table?
-INTPXY	EQU	NO		; YES to use internal HBIOS Mini proxy
-				;   and load Proxy as part of BPBIOS.
-				; NO to use HBIOS Proxy in high RAM 
-				;   (already loaded) 
-	  IF  INTPXY
-				; Use internal Proxy as part of BPBIOS.
-MEMTOP	EQU	0FFE0H - 1	; Reserve memory above this for HBIOS
-				; mini-proxy (32 bytes)
-	   ELSE
-				; Use external HBIOS Proxy in high RAM 
-				;   (already loaded) 
-HBLOC	EQU	0FE00H		; Location of HBIOS proxy
-MEMTOP	EQU	HBLOC - 1	; Reserve memory above this for HBIOS
-	  ENDIF
 
 ;--- Memory configuration Section --- (Expansion Memory configured here)
 
@@ -139,21 +125,16 @@ NOWAIT	EQU	NO		; Set to NO to use configured Wait States in
 				;  Hard Disk Driver.  Yes to eliminate Waits.
 
 ;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-;   For Z-180/HD64180 systems, The Bank numbers should reflect Physical
-; memory in 32k increments.  In SBC V1&2, Zeta and Simh, RAM occupies the 
-; first 512k (16 32k banks).  The upper 32k bank is fixed as the last 32k 
-; of 512k.  HBIOS occupies bank 1.  The upper
-; memory bounds (BNKU, BNK3 and BNKM) should be set for your configuration.
-
+;
+; RomWBW HBIOS sets these values at runtime during startup.
+;
 BNK0	EQU	BID_USR		; First TPA Bank (switched in/out)	40000H
-BNK1	EQU	BID_HB		;   Second TPA Bank (Common Bank)	48000H
+BNK1	EQU	BID_COM		;   Second TPA Bank (Common Bank)	48000H
 BNK2	EQU	BID_SYS		; System Bank (BIOS, DOS, CPR)		50000H
 BNKU	EQU	00H		; User Area Bank			58000H
 				; (set to 0 to disable)
 BNK3	EQU	BID_RAMD	; First Bank for RAM disk		60000H
 BNKM	EQU	BID_RAMM	; Maximum Bank #			F8000H
-				;  With both on-board RAMs only (MEM1 or MEM2),
-				;  the maximum Bank number is 11 (0BH).
 
 	  IF  NO	; REMOVE CODE - NOT NEEDED WITH HBIOS makes a
        			; nice resource for Z180 programing in general
