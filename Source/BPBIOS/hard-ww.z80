@@ -139,24 +139,10 @@ HDREAD:
 	  ENDIF
 ;
 ;==================================================================================================
-;   HDSK DISK DRIVER
+;   HBIOS Disk Driver Interface
 ;==================================================================================================
-;;
-;; HBIOS HDSK equates
-;;
-;HDSK_IO		EQU	0FDH
-;;
-;HDSK_CMDNONE	EQU	0
-;HDSK_CMDRESET	EQU	1
-;HDSK_CMDREAD	EQU	2
-;HDSK_CMDWRITE	EQU	3
-;HDSK_CMDPARAM	EQU	4
-;;
-;; STATUS
-;;
-;HDSKRC_OK	EQU	0
-;;
-;HBIOS disk commands
+;
+; HBIOS disk commands
 ;
 HB_DSKRD	EQU	13H
 HB_DSKWR	EQU	14H
@@ -198,7 +184,7 @@ HDSK_RW1:
 	RET	NZ              ; ABORT IF SEEK RETURNED AN ERROR W/ ERROR IN A
 	LD	HL,(HB_DSKBUF)  ; GET BUFFER ADDRESS
 	;LD	D,BID_HB	; BUFFER IN HBIOS BANK
-	LD	A,(HBX_BNKBIOS)	; BUFFER IN HBIOS BANK
+	LD	A,(HB_BNKBIOS)	; BUFFER IN HBIOS BANK
 	LD	D,A		; PUT IN D
 	LD	E,1		; ONE SECTOR
 	CALL	HBX_INVOKE	; DO IT

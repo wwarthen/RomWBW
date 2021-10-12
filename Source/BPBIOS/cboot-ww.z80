@@ -13,6 +13,44 @@
 ; 1.0 - 13 Aug 96 - Initial Release for P112.				HFB
 ;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
+	  IF HB_DEBUG
+
+	CSEG
+XORG	DEFL	$
+	ORG	0
+ORG_CSEG	EQU	$
+	ORG	XORG
+
+	DSEG
+XORG	DEFL	$
+	ORG	0
+ORG_DSEG	EQU	$
+	ORG	XORG
+
+	    IF BANKED
+
+	COMMON	/BANK2/
+XORG	DEFL	$
+	ORG	0
+ORG_BANK2	EQU	$
+	ORG	XORG
+
+	COMMON	/B2RAM/
+XORG	DEFL	$
+	ORG	0
+ORG_B2RAM	EQU	$
+	ORG	XORG
+
+	COMMON	/RESVD/
+XORG	DEFL	$
+	ORG	0
+ORG_RESVD	EQU	$
+	ORG	XORG
+
+	    ENDIF ; BANKED
+
+	  ENDIF ; HB_DEBUG
+	
 	DSEG
 ;.....
 ; Cold boot entry.  This code is executed only once and so may be
@@ -35,10 +73,22 @@ CBOOT:
 	LD	SP,80H		; Set stack in Low memory
 	  ENDIF		; BANKED
 
-	CALL	HBX_INIT
+	CALL	HB_INIT
 
 	LD	HL,(IOBYT)	; Get IOBYTE, Default Drive & User
 	LD	(3),HL		;   Set values in TPA bank
+
+	  IF  BANKED
+	; Copy vectors from TPA page zero to SYS page zero
+	; This is done very early to ensure interrupt mode 1
+	; vector is available.
+	LD	BC,(TPABNK)	; C := TPABNK, B := SYSBNK
+	CALL	XMOVE		; Set source/dest banks for copy
+	LD	HL,0		; Source address is zero
+	LD	DE,0		; Destination address is zero
+	LD	BC,40H		; Copy 40H bytes
+	CALL	MOVE		; Do it
+	  ENDIF		; BANKED
 
 	  IF  BANKED
 	CALL	GOSYSB		; Turn on the System bank
@@ -61,16 +111,19 @@ CBOOT:
 	; Grab a copy of command processor from TPA and
 	; cache it in (SYSBNK):100H.  We assume that the
 	; original copy of command processor is in high memory.
+	;
+	; It is critical that we use the HB variants of MOVE and XMOVE
+	; because we are moving between banks even in a non-banked
+	; system!
 	LD	A,(TPABNK)	; Source bank is TPABNK
 	LD	C,A		; Put it in C
 	LD	A,(SYSBNK)	; Destination bank is SYSBNK
 	LD	B,A		; Put it in B
-	CALL	HBX_XCOPY	; Set banks for extended copy
+	CALL	HB_XMOVE	; Set banks for extended copy
 	LD	HL,(CPADR)	; Copy from start of command processor
 	LD	DE,100H		; .. to $100 in system bank
 	LD	BC,(CPLEN)	; Length of command processor
-	CALL	HBX_COPY	; Do it
-	
+	CALL	HB_MOVE		; Do it
 
 	JP	WBOOTV		;   move it and commence execution
 	  ELSE
@@ -378,7 +431,7 @@ MEMOK:
 	  ENDIF		;BIOERM
 	DEFB	CR,LF+80H
 
-;WW	EI		; Turn Interrupts back on
+	EI		; Turn Interrupts back on
 	RET		; ..and return
 ;.....
 ; Offset to and get ENV Address and respective element size
