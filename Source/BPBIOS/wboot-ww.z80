@@ -16,20 +16,27 @@ WBOOT:
 	  ELSE
 	LD	SP,80H		; Use space below default buffer
 	  ENDIF
+	  
+	;CALL	PRTSTRD		; DEBUG
+	;DEFB	'[WBOOT]$'	; DEBUG
 
 	  IF  FASTWB
 	; Restore command processor from
 	; cache in (SYSBNK):100H.  We assume that the
 	; command processor lives in high memory.
+	;
+	; It is critical that we use the HB variants of MOVE and XMOVE
+	; because we are moving between banks even in a non-banked
+	; system!
 	LD	A,(SYSBNK)	; Source bank is SYSBNK
 	LD	C,A		; Put it in C
 	LD	A,(TPABNK)	; Destination bank is TPABNK
 	LD	B,A		; Put it in B
-	CALL	HBX_XCOPY	; Set banks for extended copy
+	CALL	HB_XMOVE		; Set banks for extended copy
 	LD	HL,100H		; Copy from start of cache in SYS
 	LD	DE,(CPADR)	; .. to location of command processor in TPA
 	LD	BC,(CPLEN)	; Length of command processor
-	CALL	HBX_COPY	; Do it
+	CALL	HB_MOVE		; Do it
 ;	call	PRTSTRD		; DEBUG
 ;	defb	CR,LF		; DEBUG
 ;	defb	'WB - copied C'	; DEBUG

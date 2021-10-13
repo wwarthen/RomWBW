@@ -157,7 +157,8 @@ BIOSJT:	JP	CBOOT		; 00 Cold Boot
 	  ELSE
 	JP	ISTRUE		; 26..return 0FFH (No Clock) if No code
 	  ENDIF		;clock
-	JP	SELMEM		; 27 Select Alternate Memory Bank
+	;JP	SELMEM		; 27 Select Alternate Memory Bank
+	JP	HB_SELMEM	; 27 Select Alternate Memory Bank
 	JP	SETBNK		; 28 Select DMA Memory bank
 	JP	XMOVE		; 29 Set Source/Destination Banks for Move
 
@@ -223,6 +224,10 @@ JBSTRN:	JP	BSTRN		; BIOS Sectran
 				; << ***** Hardware Specific ***** >>
 				; << Insert the Cold boot routines >>
 	INCLUDE	CBOOT-WW.Z80	; <<     in file CBOOT-xx.Z80      >>
+
+				; << ****** Hardware Specific ****** >>
+				; <<   HBIOS interface routines in   >>
+	INCLUDE	HBIOS.Z80	; <<          HBIOS.Z80              >>
 
 ; Deblocking Buffer Allocation
 
@@ -338,6 +343,21 @@ FRPUTW:	LD	(HL),E
 	RET
 
 	  ENDIF		;(not) banked
+
+	  IF HB_DEBUG
+				; << ****** Hardware Specific ****** >>
+				; <<  HBIOS Diagnostic Support       >>
+	INCLUDE	UTIL.Z80	; <<     Routines                    >>
+	
+	  ELSE			; If Not Debug, Use these hooks
+	
+	CSEG
+	  
+PANIC:	DI
+	HALT
+
+	  ENDIF ; HB_DEBUG
+
 	PAGE
 ;* * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 ;	Core   BIOS   Code
@@ -357,8 +377,6 @@ RETBIO:	LD	BC,BIOSJT	; Get address of bios base
 ;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;	Return  DPH  Table  Address
 ;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-	INCLUDE UTIL.Z80
 
 DRVTBL:	LD	HL,DPHTBL	; Point to DPH table
 	RET
@@ -398,9 +416,6 @@ DRVTBL:	LD	HL,DPHTBL	; Point to DPH table
 				; <<   Enter Warm Boot routines in   >>
 	INCLUDE	WBOOT-WW.Z80	; <<          WBOOT-xx.Z80           >>
 
-				; << ****** Hardware Specific ****** >>
-				; <<   HBIOS interface routines in   >>
-	INCLUDE	HBIOS.Z80	; <<          HBIOS.Z80              >>
 ;.....
 ; Status bytes of general use placed at end of Data area
 
