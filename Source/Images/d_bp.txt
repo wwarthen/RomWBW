@@ -31,7 +31,7 @@
 ../../Binary/Apps/zmterm.ovr 15:
 ../../Binary/Apps/zminit.ovr 15:
 ../../Binary/Apps/zmconfig.ovr 15:
-../../Binary/Apps/zmd.com 15:
+#../../Binary/Apps/zmd.com 15:
 
 #
 #../../Binary/Apps/i2clcd.com 2:

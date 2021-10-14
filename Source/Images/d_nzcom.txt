@@ -44,7 +44,7 @@ d_zsdos/u0/*.* 0:
 ../../Binary/Apps/zmterm.ovr 0:
 ../../Binary/Apps/zminit.ovr 0:
 ../../Binary/Apps/zmconfig.ovr 0:
-../../Binary/Apps/zmd.com 0:
+#../../Binary/Apps/zmd.com 0:
 #
 #../../Binary/Apps/i2clcd.com 2:
 #../../Binary/Apps/i2cscan.com 2:
