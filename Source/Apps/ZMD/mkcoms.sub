@@ -1,0 +1,44 @@
+;
+;
+; MKCOMS.SUB - 09/29/88 - Assemble/Link ZMD and utilities
+;
+; To use this file with M80, you'll have to edit all 'z80asm '
+; to 'm80 ='.  Older versions of M80 which truncate labels to 6
+; bytes will not assemble the programs properly.
+;
+; --> MICROSOFT MACRO-80 v3.43 has been tested and proven to
+;     assemble them without error. 
+;
+;
+z80asm zmd/m
+l80 zmd,zmd/n/e
+era zmd.rel
+;
+z80asm zmap/m
+l80 zmap,zmap/n/e
+era zmap.rel
+;
+z80asm znews/m
+l80 znews,znews/n/e
+era znews.rel
+;
+z80asm znewp/m
+l80 znewp,znewp/n/e
+era znewp.rel
+;
+z80asm zfors/m
+l80 zfors,zfors/n/e
+era zfors.rel
+;
+z80asm zforp/m
+l80 zforp,zforp/n/e
+era zforp.rel
+;
+z80asm zmdel/m
+l80 zmdel,zmdel/n/e
+era zmdel.rel
+;
+;
+; Done...
+;
+

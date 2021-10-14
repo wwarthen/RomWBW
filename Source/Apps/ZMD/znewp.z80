@@ -1,0 +1,517 @@
+;
+
+	TITLE ZNEWP.Z80 - 09/29/88 - ZMD Public Transfer Log Utility
+;				     Copyrighted (c) 1987, 1988
+;				     Robert W. Kramer III
+
+;-									 -;
+;                         Update History                                  ;
+;                                                                         ;
+;    Date	Release			     Comments                     ;
+;  --------	-------	  ----------------------------------------------  ;
+;									  ;
+;  09/29/88	v1.50	- No change(s) made to this file		  ;
+;  03/18/88	v1.49	- No change(s) made to this file		  ;
+;  03/13/88	v1.48	- Redefined buffer table at end of programs. STACK;
+;			  and filename buffers now EQUated with offsets	  ;
+;			  from the last switch/toggle in program instead  ;
+;			  of with DS directive.				  ;
+;			- Some systems which do NOT have an interrupt	  ;
+;			  driven keyboard may have noticed problems when  ;
+;			  an invalid key was entered in the ZNEWP, ZFORP  ;
+;			  and ZMDEL programs.  In ZNEWP and ZFORP, if a   ;
+;			  CR was entered to pause the output, output was  ;
+;			  limited to one line at a time per key pressed.  ;
+;			  If an invalid key was hit, output would have	  ;
+;			  remained in a paused state until one of the	  ;
+;			  abort keys were pressed.  This was difficult to ;
+;			  find since my keyboard is interrupt driven and  ;
+;			  I could not duplicate the problem on my own	  ;
+;			  system.					  ;
+;  02/25/88	v1.47	- Fixed to determine if CLOCK is enabled before	  ;
+;			  inserting spaces after 8 'date' positions.	  ;
+;			  (Keeps caller name from being split with an	  ;
+;			  extra space at column 52).			  ;
+;  01/27/88	v1.46	- Now uses BDOS call 35 to calculate virtual size ;
+;			  of log file (in records) which is returned in   ;
+;			  bytes 33 and 34 of log FCB.  It then uses BDOS  ;
+;			  call 33 to compute the extent of the specified  ;
+;			  record number (bytes 33 and 34 of log FCB),	  ;
+;			  decrements the record number for next random 	  ;
+;			  read and displays current record.  This method  ;
+;			  of reading the log file allows for files up to  ;
+;			  8,388,480 bytes in size to be displayed at an	  ;
+;			  instant.					  ;
+;  01/17/88	v1.45	- First public release				  ;
+;  11/01/87	v1.00	- Initial version				  ;
+;-                                                                       -;
+
+;-------------------------------------------------------------------------;
+; EXTERNAL Declarations:						  |
+;-------------------------------------------------------------------------;
+
+
+	EXTRN	CKABRT,CLEARIT,DBUF,ERXIT,EXIT,ILPRTB,LINCNT,MODE
+	EXTRN	NOFILE,NOLOG,OLDDRV,OLDUSR,PRINTV,PRIVATE,RECAR1
+	EXTRN	RECDR1,RENFCB,RSDMA,SHONM4,STACK,TYPE,WHLCHK
+
+;
+;-------------------------------------------------------------------------;
+; Program Starts Here							  |
+;-------------------------------------------------------------------------;
+
+
+       .Z80
+	ASEG
+	ORG	100H		; Program starts 
+	JP	BEGIN		; Jump around configuration table
+	INCLUDE	ZMDHDR.Z80	; Include the ZMD header overlay
+       .REQUEST ZMDSUBS		; Include the ZMD subroutines
+
+;
+;
+; Save CP/M stack, initialize new one for this program
+;
+BEGIN:	LD	(STACK),SP	; Save return address to CCP
+	LD	SP,STACK	; Initialize new one for this program
+
+;
+; Get current drive/user
+;
+	LD	A,255		; Get current user
+	CALL	RECAR1
+	LD	(OLDUSR),A	; Store it
+	LD	C,CURDRV	; Get current drive
+	CALL	BDOS
+	LD	(OLDDRV),A	; Store it
+
+;
+; Tell em who we are
+;
+	LD	A,255		; Need this so discrepency check will
+	LD	(MODE),A	; Leave clock settings alone in case local
+	LD	HL,PUBNEW	; Point to this filename
+	CALL	PRINTV		; Display it
+
+	LD	A,(LOGCAL)	; See if log file enabled
+	OR	A
+	JP	Z,NOLOG		; Don't run program if not
+
+	CALL	ILPRTB
+	DB	'(S to Pause - C K or X Abort)'
+	DB	CR,LF,LF
+	DB	0
+
+	LD	A,9		; Leave program name on first screen
+	LD	(LINCNT),A
+
+;
+; If WHEEL byte set, check to see if 'A' specified in command tail.  If
+; it is, set switch to display entire transfer log
+;
+	CALL	WHLCHK		; WHEEL byte set?
+	JP	Z,BEGIN2	; No don't look for options
+	LD	A,(FCB+1)	; Get possible option
+	CP	'A'		; Want to show all of file?
+	JP	NZ,BEGIN2	; No
+	LD	A,1
+	LD	(SHOWALL),A	; Set to show all entries
+	LD	A,8
+	LD	(LINCNT),A
+
+;
+; See if user wants file displayed 'nonstop' ($N)
+;
+BEGIN2:	LD	HL,FCB+1	; Get first character on command line
+	LD	A,(HL)		; Into A
+	CP	'$'		; Must specify '$' first
+	JP	NZ,OPNLOG	; Nope, continue normal
+	INC	HL		; Point to next byte
+	LD	A,(HL)		; Into A for comparison
+	CP	'N'		; 'N' for nonstop display?
+	JP	NZ,OPNLOG	; No
+	LD	A,0
+	LD	(PAGLEN),A	; Else disable page pauses
+
+;
+; Set drive/user to the log file area and open ZMD.LOG
+;
+OPNLOG:	LD	A,(LOGUSR)	; Set user area to ZMD.LOG area
+	CALL	RECAR1
+	LD	A,(LOGDRV)	; Set drive to ZMD.LOG area
+	CALL	RECDR1
+
+	LD	HL,FILE		; Destination is internal FCB
+	LD	DE,LOGNAM	; For log filename
+	CALL	RENFCB		; Initialize and rename
+
+	LD	DE,FILE
+	LD	C,OPEN		; Open log file
+	CALL	BDOS
+	INC	A		; Check for no open
+	LD	HL,FILE+1
+	JP	Z,NOFILE	; No file, exit
+
+;
+; See if special sysop access was allowed/requested.  Display enabled
+; message if so.
+;
+	LD	A,(SHOWALL)	; Showing entire transfer log?
+	OR	A
+	JP	Z,SHOHDR	; No, display header as usual
+	CALL	ILPRTB
+	DB	CR
+	DB	'-- Sysop access enabled --',0
+	JP	CALCSIZ
+
+;
+; Display all applicable field titles
+;
+SHOHDR:	CALL	ILPRTB
+	DB	CR
+	DB	'D/u    Filename    Size   Speed    ',0
+
+	LD	A,(CLOCK)
+	OR	A
+	JP	Z,SHOHDR1
+	CALL	ILPRTB
+	DB	'  Date    Time    ',0
+
+SHOHDR1:CALL	ILPRTB
+	DB	' Uploaded by'
+	DB	CR,LF,0
+
+;
+; Get number of records in log file
+;
+CALCSIZ:LD	DE,FILE		; Point to log FCB
+	LD	C,FILSIZ	; Compute file size function
+	CALL	BDOS
+	LD	DE,DBUF+81	; Point to beggining of write buffer
+	LD	A,CR
+	LD	(DE),A		; Force first CR
+	DEC	E
+
+;
+; Decrement number of records left.  If any left, read on into write
+; buffer, otherwise close file and exit
+;
+NXTRCD:	PUSH	DE		; Save write buffer address
+	LD	HL,FILE+33	; Get current record counter
+	LD	E,(HL)		; LSB record count
+	INC	HL
+	LD	D,(HL)		; MSB record count
+	DEC	DE		; Decrement it
+	LD	(HL),D		; Put it back
+	DEC	HL
+	LD	(HL),E
+	LD	A,E
+	CP	0FFH		; Any more records?
+	JP	NZ,RDRCD	; Yes, go read it
+	LD	A,D		; Maybe not, check MSB
+	CP	0FFH		; Any more?
+	JP	Z,TDONE		; No, all done
+
+;
+; Read a record from source file
+;
+RDRCD:	CALL	RSDMA		; Reset DMA to 80H
+	LD	DE,FILE
+	LD	C,RRDM		; Random read
+	CALL	BDOS
+	POP	DE		; Get write buffer address back
+	OR	A		; Read ok?
+	JP	NZ,RDERR	; Yes
+	LD	HL,TBUF+127	; End address of read buffer
+	LD	B,128		; Buffer is filled backwards
+
+;
+; Write record from disk to memory (in reverse order)
+;
+WRTBYT:	LD	A,(HL)		; Get byte from read buffer
+	AND	7FH		; Strip parity bit
+	CP	LF		; End of line?
+	JP	Z,DSPLIN	; Yes, show it if supposed to
+	CP	7FH		; Del (rubout)?
+	JP	Z,NXTBYT	; Yes, ignore it
+	CP	EOF		; End of file marker?
+	JP	Z,NXTBYT	; Yes, ignore it
+	LD	(DE),A
+	DEC	E		; Decrement write buffer pointer
+
+NXTBYT:	DEC	L		; Decrement read buffer pointer
+	DJNZ	WRTBYT		; And character count, get next if any left
+	JP	NXTRCD		; Else read another record
+
+;
+; Found end (CR) of current entry.  Display it.
+;
+DSPLIN:	DEC	B		; Decrement character counter
+	PUSH	AF		; Save flags
+	DEC	L		; Decrement write buffer pointer
+	PUSH	HL		; Save write address
+	PUSH	BC		; Save character count
+	EX	DE,HL		; HL now contains current buffer read address
+	LD	(HL),A		; Store the LF
+
+	LD	A,(SHOWALL)	; Show entire file?
+	OR	A
+	JP	NZ,NEXT		; Yes
+
+	INC	L		; Else next character is transfer mode
+	LD	A,(HL)		; Get it
+	DEC	L		; Restore read pointer
+	CP	'R'		; Uploaded entry?
+	JP	NZ,SENDLF1	; No, ignore it and reset pointers
+
+;
+; Get next character from read buffer.  If end of line, go display CR,LF.
+;
+NEXT:	INC	L		; Increment next read byte
+	LD	A,(HL)		; Get character
+	LD	B,A		; Into B
+	CP	CR		; End of line?
+	JP	Z,SENDLF	; Yes, send a CR,LF and reset pointers
+
+	LD	A,(COLUMN)	; Get column count
+	CP	79		; End of line?
+	JP	Z,DSPLP2	; Yes, start new line
+	OR	A		; At beginning of line?
+	JP	NZ,DSPLP3	; No, continue
+	INC	A
+	LD	(COLUMN),A	; We aren't anymore
+
+	LD	A,B		; Get the character back
+	LD	(STORE),A	; Store it for later comparison
+
+	CP	'P'		; This entry private upload?
+	JP	NZ,DSPLP1	; No, check for regular upload
+	LD	A,(SHOWALL)	; Yes, were we supposed to show entire file?
+	OR	A
+	JP	Z,DSPLP2	; No, so ignore it
+	LD	(PRIVATE),A	; Set private flag
+	JP	DSPLP4		; Go show it
+
+DSPLP1:	CP	'R'		; Regular upload?
+	JP	Z,DSPLP4	; Yes, keep the flag set
+
+	LD	A,(SHOWALL)
+	OR	A
+	JP	NZ,DSPLP4
+
+	XOR	A
+	LD	(STORE),A 
+	LD	(COLUMN),A	; Start in column 0
+	JP	NEXT
+
+DSPLP2:	XOR	A
+	LD	(STORE),A	; Otherwise reset flag to zero
+
+DSPLP3:	LD	A,(STORE)	; Storing into memory?
+	OR	A
+	JP	Z,NEXT		; If not, exit
+
+DSPLP4:	LD	A,(COLUMN)	; Increment the column counter
+	INC	A
+	LD	(COLUMN),A
+
+	CP	3		; User's modem speed is in column 2
+	JP	NZ,DSPLP5	; If not column 2, continue
+	LD	A,B		; Otherwise get the character
+	LD	(STORE),A	; Store it for conversion to baud rate
+	JP	NEXT		; Do not print the "MSPEED" number
+
+DSPLP5:	CP	11
+	JP	C,NEXT		; Skip everything through column 10
+
+;
+; Display drive and user of file
+;
+	CP	14
+	JP	C,SEND		; Print everything through column 13
+	JP	NZ,DSPFN
+
+;
+; If a private file, make a special note of it
+;
+	LD	A,(PRIVATE)	; Private entry?
+	OR	A
+	JP	Z,DSPDU		; No
+
+	XOR	A		; Reset flag for next time
+	LD	(PRIVATE),A
+	LD	A,'*'		; Displays entry is private
+	CALL	TYPE
+	LD	B,' '		; Keep our distance from next field
+	JP	SEND
+
+DSPDU:	LD	A,':'		; Stick in a colon after column 12
+	CALL	TYPE
+	LD	B,' '		; Send a space
+	JP	SEND
+
+;
+; Display filename and extent
+;
+DSPFN:	CP	22		; Print through column 20
+	JP	C,SEND
+	JP	NZ,DSPFT
+	LD	A,B
+	CALL	TYPE		; Send character in colum 21
+	LD	B,'.'		; Add a period after the file name
+	JP	SEND
+
+DSPFT:	CP	27
+	JP	C,SEND		; Print file type and some spaces
+	CALL	Z,PRTSPC
+	CP	39
+	JP	C,NEXT		; Ignore the "big gap"
+	CP	43
+	JP	C,SEND		; Print the file size
+	JP	Z,DSPBD
+	JP	DSPDAT
+
+;
+; Display the baud rate (300-19200 bps)
+;
+DSPBD:	PUSH	HL
+	LD	A,(STORE)
+	CP	'1'
+	JP	Z,B300
+	CP	'5'
+	JP	Z,B1200
+	CP	'6'
+	JP	Z,B2400
+	CP	'7'
+	JP	Z,B4800
+	CP	'8'
+	JP	Z,B9600
+	CP	'9'
+	JP	Z,B19200
+	CALL	ILPRTB
+	DB	'           ',0
+	POP	HL
+	JP	NEXT		; Go get next byte from read buffer
+
+B300:	CALL	ILPRTB
+	DB	'   3',0
+	JP	BFINISH
+
+B1200:	CALL	ILPRTB
+	DB	'  12',0
+	JP	BFINISH
+
+B2400:	CALL	ILPRTB
+	DB	'  24',0
+	JP	BFINISH
+
+B4800:	CALL	ILPRTB
+	DB	'  48',0
+	JP	BFINISH
+
+B9600:	CALL	ILPRTB
+	DB	'  96',0
+	JP	BFINISH
+
+B19200:	CALL	ILPRTB
+	DB	' 192',0
+
+BFINISH:CALL	ILPRTB
+	DB	'00 bps  ',0
+	POP	HL
+	JP	NEXT
+
+;
+; Display time and date
+;
+DSPDAT:	LD	A,(CLOCK)	; Clock enabled?
+	OR	A
+	LD	A,(COLUMN)
+	JP	Z,SEND		; No, leave caller's name alone
+	CP	52
+	JP	C,SEND		; Print the date
+	JP	NZ,DSPTIM
+	CALL	PRTSPC		; Keep our distance from next field
+	JP	SEND
+
+DSPTIM:	CP	58
+	JP	C,SEND		; Print the time
+	JP	NZ,SEND
+	CALL	PRTSPC		; Keep our distance from next field
+
+;
+; Display character in B
+;
+SEND:	LD	A,B		; Get the character back
+	CALL	TYPE		; Display it
+	JP	NEXT
+
+;
+; Reached end of entry.  Send CR,LF and reset pointers
+;
+SENDLF:	LD	A,CR		; Output CR
+	CALL	TYPE
+	LD	A,LF		; And LF for next line
+	CALL	TYPE
+	XOR	A		; Enable page pauses for output
+	JP	$+5
+
+SENDLF1:LD	A,1
+	CALL	CKABRT		; Check for aborts/pauses
+	XOR	A		; Start new line
+	LD	(COLUMN),A	; And indicate column 0
+	LD	DE,DBUF+80	; Beginning of write buffer again
+	POP	BC		; Number of characters left in buffer
+	POP	HL		; Current read buffer address
+	POP	AF		; Were there any characters left?
+	JP	Z,NXTRCD	; No, get next record
+	JP	WRTBYT		; Else get next character
+
+;
+; S u b r o u t i n e s
+;-----------------------
+;
+; Routine to display a space - saves character in A on entry
+;
+PRTSPC:	PUSH	AF
+	LD	A,' '
+	CALL	TYPE
+	POP	AF
+	RET
+
+;
+; Transfer is done - close destination file
+;
+TDONE:	LD	C,CLOSE
+	LD	DE,FILE
+	CALL	BDOS
+	CALL	ERXIT
+	DB	CR,LF
+	DB	'-- End of listing','$'
+
+;
+RDERR:	CALL	ILPRTB
+	DB	CR,LF
+	DB	'-- Read Error: ',0
+	LD	HL,FILE+1
+	CALL	SHONM4
+	JP	EXIT
+
+;
+;
+; These next are just to satisfy ZMDSUBS external requests.  Leave alone.
+;
+DONE::	JP	EXIT
+TIME::	RET
+;
+;
+; Initialized storage area
+;--------------------------
+;
+COLUMN:	DB	0		; Column of ZMD.LOG line
+STORE:	DB	0
+SHOWALL:DB	0		; 1=all transfers, 0=uploads only
+
+
+	END
+
