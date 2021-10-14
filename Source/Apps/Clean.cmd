@@ -13,3 +13,4 @@ pushd Tune && call Clean || exit /b 1 & popd
 pushd FAT && call Clean || exit /b 1 & popd
 pushd Test && call Clean || exit /b 1 & popd
 pushd ZMP && call Clean || exit /b 1 & popd
+pushd ZMD && call Clean || exit /b 1 & popd

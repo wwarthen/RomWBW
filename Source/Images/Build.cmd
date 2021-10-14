@@ -1,13 +1,16 @@
 @echo off
 setlocal
 
+::call BuildDisk.cmd bp wbw_hd512 || exit /b
+::goto :eof
+
 echo.
 echo Building Floppy Disk Images...
 echo.
 call BuildDisk.cmd cpm22 wbw_fd144 ..\cpm22\cpm_wbw.sys || exit /b
 call BuildDisk.cmd zsdos wbw_fd144 ..\zsdos\zsys_wbw.sys || exit /b
 ::call BuildDisk.cmd nzcom wbw_fd144 ..\zsdos\zsys_wbw.sys || exit /b
-call BuildDisk.cmd cpm3 wbw_fd144 ..\cpm3\cpmldr.sys || exit /b
+::call BuildDisk.cmd cpm3 wbw_fd144 ..\cpm3\cpmldr.sys || exit /b
 ::call BuildDisk.cmd zpm3 wbw_fd144 ..\cpm3\cpmldr.sys || exit /b
 call BuildDisk.cmd ws4 wbw_fd144 || exit /b
 

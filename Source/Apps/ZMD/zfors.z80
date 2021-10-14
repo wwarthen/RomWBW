@@ -1,0 +1,233 @@
+;
+
+	TITLE ZFORS.Z80	- 09/29/88 - ZMD Sysop Description Utility
+;				     Copyrighted (c) 1987, 1988
+;				     Robert W. Kramer III
+
+	PAGE
+;-									 -;
+;                         Update History                                  ;
+;                                                                         ;
+;    Date	Release			     Comments                     ;
+;  --------	-------	  ----------------------------------------------  ;
+;                                                                         ;
+;  09/29/88	v1.50	- Added trivial routines to display the user's	  ;
+;			  prompt selections to screen.			  ;
+;  03/13/88	v1.49	- No changes made to this file			  ;
+;  03/13/88	v1.48	- Had a small problem with TPA fix which has been ;
+;			  corrected.  CHKTPA was calculating the total	  ;
+;			  number of bytes available for DBUF, but wasn't  ;
+;			  clearing register L (forcing an even amount of  ;
+;			  sectors before initializing OUTSIZ buffer limit ;
+;			  comparison word).  This may have introduced	  ;
+;			  minimal garbage to your FOR file if your FOR	  ;
+;			  file is large enough to fill available TPA with ;
+;			  ZMD, ZFORS or to the log file if running ZMDEL. ;
+;			- Rewrote OUTCHR routine in ZMDSUBS.		  ;
+;			- Redefined buffer table at end of programs. STACK;
+;			  and filename buffers now EQUated with offsets	  ;
+;			  from the last switch/toggle in program instead  ;
+;			  of with DS directive.				  ;
+;			- Some systems which do NOT have an interrupt	  ;
+;			  driven keyboard may have noticed problems when  ;
+;			  an invalid key was entered in the ZNEWP, ZFORP  ;
+;			  and ZMDEL programs.  In ZNEWP and ZFORP, if a   ;
+;			  CR was entered to pause the output, output was  ;
+;			  limited to one line at a time per key pressed.  ;
+;			  If an invalid key was hit, output would have	  ;
+;			  remained in a paused state until one of the	  ;
+;			  abort keys were pressed.  This was difficult to ;
+;			  find since my keyboard is interrupt driven and  ;
+;			  I could not duplicate the problem on my own	  ;
+;			  system.					  ;
+;  02/25/88	v1.47	- No change(s) made to this file
+;  01/27/88	v1.46	- Set MODE to 255 so ZMDSUBS knows we might be	  ;
+;			  running in local mode and not to worry if BYE	  ;
+;			  is running or not when CHKENV checks to see	  ;
+;			  which clock features are valid.		  ;
+;  01/17/88	v1.45	- First public release				  ;
+;  12/06/87	v1.02	- Fixed numerous trivial bugs.			  ;
+;-                                                                       -;
+
+;-------------------------------------------------------------------------;
+; EXTERNAL Declarations:						  |
+;-------------------------------------------------------------------------;
+
+
+	EXTRN	CLRLIN,DECOUT,DSCFLG,ERXIT,EXIT,FILCNT,GETDAT
+	EXTRN	GETDSC,GETFN,GETKIND,ILPRTB,INPUT,NEWNAM,OLDDRV
+	EXTRN	OLDUSR,OPNFOR,PRINTV,RECAR1,SHOCAT,STACK,TYPE
+	EXTRN	UCASE,NOFOR,MODE
+
+;
+;-------------------------------------------------------------------------;
+; Program Starts Here							  |
+;-------------------------------------------------------------------------;
+
+
+       .Z80
+	ASEG
+	ORG	100H		; Program starts 
+	JP	BEGIN		; Jump around configuration table
+	INCLUDE	ZMDHDR.Z80	; Include the ZMD header overlay
+       .REQUEST ZMDSUBS		; Include the ZMD subroutines
+
+;
+;
+; Save CP/M stack, initialize new one for this program
+;
+BEGIN:	LD	(STACK),SP	; Save return address to CCP
+	LD	SP,STACK	; Initialize new one for this program
+
+;
+; Save current drive/user
+;
+	LD	A,255		; Get current user
+	CALL	RECAR1
+	LD	(OLDUSR),A	; Store it
+	LD	C,CURDRV	; Get current drive
+	CALL	BDOS
+	LD	(OLDDRV),A	; Store it
+
+;
+; Disable sleepy caller timeout and set description routines for up to
+; 50 new entries
+;
+	XOR	A
+	LD	(DESWAIT),A	; Disable sleepy caller timer
+	LD	A,50
+	LD	(FILCNT),A	; Allow up to 50 descriptions
+
+	LD	A,255
+	LD	(MODE),A	; Tell ZMDSUBS we're a sysop utility
+
+;
+; Display program name and version 
+;
+BEGIN1:	LD	HL,SYSFOR	; Point to name of this program
+	CALL	PRINTV		; Display it
+
+	LD	A,(DESCRIB)	; Regular FOR descriptions?
+	OR	A
+	JP	NZ,MAKDESC	; Yes, skip next
+
+	LD	A,(MSGDESC)	; BBS message base descriptions?
+	OR	A
+	JP	Z,NOFOR		; No, descriptions disabled
+	LD	A,1
+	LD	(DSCFLG),A	; Set flag to show message base descriptions
+	LD	A,(PRUSR)	; Get the private user
+	LD	(USER),A	; FOR destination
+	LD	A,(PRDRV)	; Get the private drive
+	LD	(DRIVE),A	; FOR destination
+	JP	MAKFN		; Skip date stuff
+
+;
+; Get the date of the upload if suppose to.
+;
+MAKDESC:LD	A,(DSTAMP)	; Datestamping description header?
+	OR	A
+	JP	Z,MAKFN		; No, go get filename
+	CALL	ILPRTB
+	DB	'Date of upload: ',0
+	CALL	GETDAT		; Get the date
+
+;
+; Get the filename (no spaces with '.' filename seperator)
+;
+MAKFN:	CALL	ILPRTB
+	DB	CR,LF
+	DB	'  Name of file: ',0
+	CALL	GETFN		; Get filename
+	CALL	CLRLIN		; Clear current line
+	LD	A,B		; Get filename bytes remaining count in A
+	CP	11		; Anything entered?
+	JP	NZ,GOTNM1	; Yes, skip this
+
+;
+; No filename was entered, check for save or abort, else continue
+;
+	CALL	ILPRTB
+	DB	'Save, Continue, Abort: ',0
+	CALL	INPUT		; Get character
+	CALL	UCASE		; Convert to uppercase
+	CP	'S'		; Save changes?
+	JP	Z,OPNFOR	; Yes, write current buffer to FOR file
+
+	CP	'A'		; Abort program?
+	JP	NZ,BEGIN1	; No, get next character
+	CALL	ILPRTB
+	DB	CR
+	DB	'Abort with NO changes? ',0
+	CALL	INPUT
+	CALL	UCASE
+	CP	'Y'
+	JP	NZ,BEGIN1
+	JP	EXIT		; Then abort
+
+;
+; Display file descriptor/upload areas and get choice
+;
+GOTNM1:	CALL	GETKIND		; Get file category for description header
+
+;
+; Show the drive/user
+;
+	LD	A,(MSGDESC)	; Using BBS message base for descriptions?
+	OR	A
+	JP	NZ,SHOWDU	; Yes, show drive/user of uploaded file
+	LD	A,(INCLDU)	; Include du in description header?
+	OR	A
+	JP	Z,SHOWFN	; No, then skip this stuff
+
+SHOWDU:	LD	A,(DRV)		; Get upload drive
+	CALL	TYPE		; Output to console
+	LD	A,(USR)		; Get upload user area
+	LD	H,0
+	LD	L,A		; In A
+	CALL	DECOUT		; Decimal output routine
+	LD	A,':'		; Output colon
+	CALL	TYPE
+
+;
+; Show the filename
+;
+SHOWFN:	LD	HL,NEWNAM
+
+SHONM1:	LD	A,(HL)
+	CP	LF
+	JP	Z,SHOWCT
+	CALL	TYPE
+	INC	HL
+	JP	SHONM1
+
+;
+; Show the file descriptor/upload area
+;
+SHOWCT:	LD	A,(ASKIND)	; Supposed to be showing file descriptor?
+	OR	A
+	JP	Z,MKENTRY	; No, get the description
+	CALL	ILPRTB
+	DB	' - ',0
+	CALL	SHOCAT		; If so, show it
+
+;
+; Get up to 7 lines for description
+;
+MKENTRY:CALL	GETDSC		; Get up to 7 lines for description
+	JP	NZ,BEGIN1	; If none entered, or incorrect, skip next
+
+	LD	IY,FILCNT	; Else point to maximum entries left
+	DEC	(IY)		; One less to go
+	JP	BEGIN1		; Get next one
+
+;
+; These next are dummy routines to satisfy ZMDSUBS external requests.
+; They do nothing, but leave them alone.
+;
+DONE::	JP	EXIT		; Exit routine can take care of us
+TIME::	RET
+
+
+	END
+

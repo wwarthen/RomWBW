@@ -1,0 +1,298 @@
+;
+
+      TITLE  ZNEWS.Z80 - 09/29/88 - ZMD Sysop Transfer Log Utility
+;				    Copyrighted (c) 1987, 1988
+;				    Robert W. Kramer III
+
+	PAGE
+;-									 -;
+;                         Update History                                  ;
+;                                                                         ;
+;    Date	Release			     Comments                     ;
+;  --------	-------	  ----------------------------------------------  ;
+;									  ;
+;  09/29/88	v1.50	- Fixed problem that caused a 'ZMD     .L$$' file ;
+;			  to not be deleted from directory after aborted  ;
+;			  sessions.					  ;
+;			- Also, was moving 9 filename bytes intead of 8,  ;
+;			  this is what caused the mysterious filename of  ;
+;			  '.L$$' as mentioned above.  The filename left	  ;
+;			  in the directory should have been '.$$$'.	  ;
+;			- Some minor cosmetic changes.			  ;
+;  03/18/88	v1.49	- No change(s) made to this file		  ;
+;  03/13/88	v1.48	- Redefined buffer table at end of programs. STACK;
+;			  and filename buffers now EQUated with offsets	  ;
+;			  from the last switch/toggle in program instead  ;
+;			  of with DS directive.				  ;
+;  02/25/88	v1.47	- No change(s) made to this file
+;  01/27/88	v1.46	- Some changes were made to ZMDSUBS file that are ;
+;			  not directly related to this file		  ;
+;  01/17/88	v1.45	- First public release				  ;
+;  11/19/87	v1.00	- Initial version				  ;
+;-                                                                       -;
+
+;
+;-------------------------------------------------------------------------;
+; EXTERNAL Declarations:						  |
+;-------------------------------------------------------------------------;
+
+
+	EXTRN	CASEFLG,CKABRT,CLEARIT,CMDBUF,DESC,DSTOR,DSTOR1,ERXIT
+	EXTRN	EXIT,ILPRTB,INPUT,LNLNGTH,NOFILE,NOLOG,NOROOM,OLDDRV
+	EXTRN	OLDUSR,OLINE,PRINTV,RECAR1,RECDR1,RENFCB,RERROR,RSDMA
+	EXTRN	SHONM4,STACK,TDONE,UCASE
+
+;
+;-------------------------------------------------------------------------;
+; Program Starts Here							  |
+;-------------------------------------------------------------------------;
+
+
+       .Z80
+	ASEG
+	ORG	100H		; Program starts 
+	JP	BEGIN		; Jump around configuration table
+	INCLUDE	ZMDHDR.Z80	; Include the ZMD header overlay
+       .REQUEST ZMDSUBS		; Include the ZMD subroutines
+
+;
+;
+; Save CP/M stack, initialize new one for this program
+;
+BEGIN:	LD	(STACK),SP	; Save current CCP stack address
+	LD	SP,STACK	; Initialize new one for this program
+
+;
+; Get current drive/user area and store for later
+;
+	LD	A,255		; Get current user area
+	CALL	RECAR1
+	LD	(OLDUSR),A	; Save it
+	LD	C,CURDRV	; Get current drive 
+	CALL	BDOS
+	LD	(OLDDRV),A	; Save it
+
+;
+; Display program name, version, and copyright notice
+;
+BEGIN1:	LD	HL,SYSNEW
+	CALL	PRINTV
+
+	LD	A,(LOGCAL)	; Log file enabled?
+	OR	A
+	JP	Z,NOLOG		; No, then don't run program
+
+	LD	A,(GOTLAST)	; Already located last entry?
+	OR	A
+	JP	NZ,GTNEW	; Yes, then just show it
+	LD	(DESWAIT),A	; Disable sleepy caller time out
+
+	CALL	ILPRTB
+	DB	'Working.',0
+
+;
+; Log into log file drive/user
+;
+	LD	A,(LOGUSR)	; User area to find ZMD.LOG
+	CALL	RECAR1
+	LD	A,(LOGDRV)	; Drive to find ZMD.LOG
+	CALL	RECDR1
+
+;
+; Open 'ZMD     .LOG' file
+;
+	LD	DE,LOGNAM	; Current log filename
+	LD	HL,FILE		; Internal FCB
+	CALL	RENFCB		; Initialize
+
+	LD	DE,FILE
+	LD	C,OPEN		; Open log file
+	CALL	BDOS
+	INC	A		; ZMD.LOG file exist?
+	LD	HL,LOGNAM
+	JP	Z,NOFILE	; No, inform user and exit to CP/M
+
+;
+; Open 'ZMD     .$$$' file
+;
+	LD	DE,TEMPFIL	; Current '$$$' filename
+	LD	HL,DEST		; Internal FCB
+	CALL	RENFCB		; Initialize
+
+	LD	HL,FILE+1	; Point to log filename
+	LD	DE,DEST+1	; And temporary filename
+	LD	BC,8		; Set to move filename bytes only
+	LDIR
+
+	LD	C,OPEN		; Open new log file
+	LD	DE,DEST
+	CALL	BDOS
+	INC	A		; Did file already exist?
+
+	LD	C,DELETE	; Prepare for delete
+	LD	DE,DEST
+	CALL	NZ,BDOS		; Yes, delete existing file
+
+	LD	C,MAKE		; Make new temporary file
+	LD	DE,DEST
+	CALL	BDOS
+	INC	A
+	LD	HL,DEST+1
+	JP	Z,NOROOM	; Exit if no more disk space
+
+;
+; Read record from ZMD.LOG file
+;
+	LD	DE,CMDBUF	; Point to last log entry buffer
+
+RDRECD:	PUSH	DE		; Save current buffer position
+	CALL	RSDMA		; Reset DMA
+	LD	DE,FILE
+	LD	C,READ
+	CALL	BDOS
+	POP	DE		; Last entry buffer address
+	OR	A		; Read ok?
+	JP	NZ,RERROR	; No
+
+;
+; Now look for the end of the file overwriting OLINE with each entry found
+; (from LF to LF).  Upon ^Z (EOF) display last entry and get prompt for new
+; one
+;
+	LD	HL,TBUF
+
+WRDLP:	LD	A,(HL)		; Get a character
+	AND	7FH
+	CP	7FH		; Delete character?
+	JP	Z,NEXT		; Yes, don't store this character
+
+	CP	EOF		; End of file?
+	JP	Z,GTNEW		; Yes, display last entry and get new one
+
+	LD	(DE),A		; Else store character in last entry buffer
+	INC	DE		; Next positition in last entry buffer
+	CP	LF		; Was it a line feed?
+	JP	NZ,NEXT		; No, get next character
+
+;
+; Check periodically (every LF) for user abort
+;
+	LD	A,1		; Disable page pausing
+	CALL	CKABRT		; Check for user requests
+	LD	A,'$'		; Terminator for BDOS print function
+	LD	(DE),A		; At end of last entry string
+
+	PUSH	HL
+	LD	HL,CMDBUF
+	CALL	DSTOR1
+	POP	HL
+	LD	DE,CMDBUF
+
+NEXT:	INC	L
+	JP	Z,RDRECD
+	JP	WRDLP
+
+;
+; Get new entry to ZMD.LOG.  First display the last entry added to the file
+; for use as a typing guide.
+;
+GTNEW:	CALL	ILPRTB
+	DB	CR
+	DB	'Current format of ',0
+
+	LD	HL,LOGNAM	; Point to log filename
+	CALL	SHONM4
+
+	CALL	SHWLAST		; Show last entry in log file
+	LD	A,1
+	LD	(GOTLAST),A	; Show we've found/displayed last entry
+
+;
+; Get the new entry.  Process input - CR terminates entry.
+;
+	LD	A,79
+	LD	(LNLNGTH+1),A	; Set for up to 79 character string
+	LD	(WRAP),A	; Disable word wrap
+	LD	(CASEFLG),A	; Convert all input to uppercase
+	CALL	DESC		; Go get string
+	LD	A,0
+	LD	(CASEFLG),A	; Disable uppercase lock
+	JP	Z,NOCHANG	; Z=CR entered on blank line
+	LD	(HL),'$'	; Place a '$' for BDOS print function
+
+;
+; Done with entry, ask for verification before writing to disk
+;
+	CALL	ILPRTB
+	DB	CR,LF
+	DB	'   Repeating to verify:',0
+
+	CALL	SHWLAST		; Show last entry
+	LD	DE,OLINE	; Point to new entry buffer
+	LD	C,PRINT		; BDOS print function
+	CALL	BDOS
+
+	CALL	ILPRTB
+	DB	CR,LF
+	DB	'Correct? (Y/N): ',0
+
+GETOK1:	CALL	INPUT		; Get repsonse
+	CALL	UCASE		; Convert to uppercase
+	CP	'N'		; No?
+	JP	NZ,GETOK2	; Yes, all done
+
+	CALL	ILPRTB
+	DB	'No.'
+	DB	CR,LF,0
+	JP	BEGIN1
+
+GETOK2:	CP	'Y'		; Yes?
+	JP	NZ,GETOK1	; Loop until we get a yes or no
+
+	CALL	ILPRTB
+	DB	CR
+	DB	'Writing log entry to ',0
+	LD	HL,LOGNAM
+	CALL	SHONM4	
+	CALL	ILPRTB
+	DB	'...',0
+	CALL	DSTOR		; Go store it in disk buffer
+	JP	TDONE		; Transfer to disk
+;
+;
+;-------------------
+; UTILITIES SECTION
+;-------------------
+;
+NOCHANG:CALL	ILPRTB		; Else nothing typed, abort
+	DB	CR,LF
+	DB	'-- Log entry aborted... ',0
+
+	LD	C,DELETE
+	LD	DE,DEST
+	CALL	BDOS		; Clean up (Erase 'ZMD     .$$$' file)
+
+	JP	EXIT
+
+;
+; Show last entry in ZMD.LOG file
+;
+SHWLAST:CALL	ILPRTB
+	DB	CR,LF,LF,0
+	LD	DE,CMDBUF	; Point to last entry buffer
+	LD	C,PRINT		; BDOS print function
+	JP	BDOS
+
+;
+; These next are just dummy routines to satisfy external ZMDSUBS requests.
+; They do nothing but leave alone.
+;
+DONE::	JP	EXIT
+TIME::	RET
+
+
+GOTLAST:DB	0
+
+
+	END
+

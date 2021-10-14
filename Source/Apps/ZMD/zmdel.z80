@@ -1,0 +1,264 @@
+;
+
+      TITLE  ZMDEL.Z80 - 09/29/88 - ZMD Sysop Transfer Log Purge Utility
+;				    Copyrighted (c) 1987, 1988
+;				    Robert W. Kramer III
+
+	PAGE
+;-									 -;
+;                         Update History                                  ;
+;                                                                         ;
+;    Date	Release			     Comments                     ;
+;  --------	-------	  ----------------------------------------------  ;
+;									  ;
+;  09/29/88	v1.50	- No change(s) made to this file		  ;
+;  03/18/88	v1.49	- No change(s) made to this file		  ;
+;  03/13/88	v1.48	- Had a small problem with TPA fix which has been ;
+;			  corrected.  CHKTPA was calculating the total	  ;
+;			  number of bytes available for DBUF, but wasn't  ;
+;			  clearing register L (forcing an even amount of  ;
+;			  sectors before initializing OUTSIZ buffer limit ;
+;			  comparison word).  This may have introduced	  ;
+;			  minimal garbage to your FOR file if your FOR	  ;
+;			  file is large enough to fill available TPA with ;
+;			  ZMD, ZFORS or to the log file if running ZMDEL. ;
+;			- Rewrote OUTCHR routine in ZMDSUBS.		  ;
+;			- Redefined buffer table at end of programs. STACK;
+;			  and filename buffers now EQUated with offsets	  ;
+;			  from the last switch/toggle in program instead  ;
+;			  of with DS directive.				  ;
+;			- Some systems which do NOT have an interrupt	  ;
+;			  driven keyboard may have noticed problems when  ;
+;			  an invalid key was entered in the ZNEWP, ZFORP  ;
+;			  and ZMDEL programs.  In ZNEWP and ZFORP, if a   ;
+;			  CR was entered to pause the output, output was  ;
+;			  limited to one line at a time per key pressed.  ;
+;			  If an invalid key was hit, output would have	  ;
+;			  remained in a paused state until one of the	  ;
+;			  abort keys were pressed.  This was difficult to ;
+;			  find since my keyboard is interrupt driven and  ;
+;			  I could not duplicate the problem on my own	  ;
+;			  system.					  ;
+;  02/25/88	v1.47	- Fixed line count display routine.  Number of	  ;
+;			  lines read was being improperly decremented	  ;
+;			  before displaying.  Same fix included removing  ;
+;			  code that added an extra CR,LF to the beginning ;
+;			  of the file.  Count is now right.		  ;
+;  01/27/88	v1.46	- Some changes were made to the ZMDSUBS file that ;
+;			  are not directly related to this file		  ;
+;  01/17/88	v1.45	- First public release				  ;
+;  11/20/87	v1.00	- Initial version				  ;
+;-                                                                       -;
+
+;-------------------------------------------------------------------------;
+; EXTERNAL Declarations:						  |
+;-------------------------------------------------------------------------;
+
+
+	EXTRN	CKABRT,CLEARIT,CLRLIN,DBUF,DECOUT,ERXIT,EXIT,ILPRTB
+	EXTRN	INPUT,NOFILE,NOLOG,NOROOM,OLDDRV,OLDUSR,OUTCHR,PRINTV
+	EXTRN	RECAR1,RECDR1,RENFCB,RERROR,RSDMA,SHONM4,STACK,STDMA
+	EXTRN	TDONE,TYPE,UCASE
+
+;
+;-------------------------------------------------------------------------;
+; Program Starts Here					  		  |
+;-------------------------------------------------------------------------;
+
+
+       .Z80
+	ASEG
+	ORG	100H		; Program starts 
+	JP	BEGIN		; Jump around configuration table
+	INCLUDE	ZMDHDR.Z80	; Include the ZMD header overlay
+       .REQUEST ZMDSUBS		; Include the ZMD subroutines
+
+;
+;
+; Save CP/M stack, initialize new one for this program
+;
+BEGIN:	LD	(STACK),SP	; Save return address to CCP
+	LD	SP,STACK
+
+;
+; Save current drive/user
+;
+	LD	A,255		; Get user function
+	CALL	RECAR1
+	LD	(OLDUSR),A	; Save user area for later
+	LD	C,CURDRV	; Get current drive function
+	CALL	BDOS
+	LD	(OLDDRV),A	; Save drive for later
+
+;
+; Tell em who we are and ask if they want to continue
+;
+	LD	HL,PRGUTL
+	CALL	PRINTV
+
+	LD	A,(LOGCAL)	; Log file enabled?
+	OR	A
+	JP	Z,NOLOG		; No, then don't run program
+
+	CALL	ILPRTB
+	DB	'Purge all except "R" entries from log? ',0
+	LD	A,0
+	LD	(DESWAIT),A	; Disable sleepy caller timout
+	CALL	INPUT
+	CALL	UCASE
+	CP	'Y'		; Continue?
+	JP	NZ,EXIT		; No, exit to CP/M
+	CALL	CLRLIN
+
+;
+; Now log into drive/user area of ZMD.LOG
+;
+	LD	A,(LOGUSR)	; Get user area to find ZMD.LOG file
+	CALL	RECAR1
+	LD	A,(LOGDRV)	; Get drive to find ZMD.LOG file
+	CALL	RECDR1
+
+;
+; Open the 'ZMD     .LOG' file
+;
+	LD	DE,LOGNAM	; Point to LOG filename
+	LD	HL,FILE		; Destination is internal FCB1
+	CALL	RENFCB		; Initialize FCB
+
+	LD	DE,FILE		; Point to ZMD.LOG FCB
+	LD	C,OPEN		; Open file
+	CALL	BDOS
+	INC	A		; Does file exist?
+	LD	HL,LOGNAM	; Point to log filename
+	JP	Z,NOFILE	; No, inform user and abort to CP/M
+
+;
+; Open the '        .$$$' file
+;
+	LD	DE,TEMPFIL	; Point to temporary filename
+	LD	HL,DEST		; Destination is internal FCB2
+	CALL	RENFCB		; Initialize FCB
+
+	LD	HL,FILE		; Point to default FCB
+	LD	DE,DEST		; 
+	LD	BC,9		; Move drive and filename bytes
+	LDIR
+
+	LD	C,DELETE	; Delete possible '$$$' temporary file
+	LD	DE,DEST
+	CALL	BDOS
+
+	LD	C,MAKE		; And make new one for this session
+	LD	DE,DEST
+	CALL	BDOS
+	INC	A		; Successful create?
+	JP	Z,NOROOM	; No, inform user and exit to CP/M
+
+	CALL	ILPRTB		; Warn them of the wait
+	DB	CR
+	DB	'Cleaning ',0
+	LD	HL,LOGNAM
+	CALL	SHONM4
+
+RDRECD:	CALL	RSDMA		; Reset DMA
+	LD	DE,FILE		; Read a record from ZMD.LOG
+	LD	C,READ
+	CALL	BDOS
+	OR	A		; Read ok?
+	JP	NZ,RERROR	; No, inform user and exit
+	LD	HL,TBUF		; Point to first character in read buffer
+
+GETBYT:	LD	A,(HL)		; Get a byte from read buffer
+	AND	7FH		; Strip parity bit
+	CP	7FH		; Del (Rubout)
+	JP	Z,NEXT		; Yes, ignore it
+	CP	EOF		; End of file marker
+	JP	Z,TDONE		; Transfer done.  Close and exit
+	LD	B,A		; Save character
+	CP	LF		; Was it a line feed?
+	JP	Z,NEWLIN	; Yes toggle line counters, start new line
+
+;
+; LOGMODE is set to 0 everytime a line feed is encountered.  If LOGMODE is
+; is 0 at this point, the current byte is anylized as this log entry's
+; mode of transfer.  Only entries made in the 'R' receive mode are written
+; to the new ZMD.$$$ file.  Encountering an 'R' when LOGMODE is 0 causes
+; KEEPER to be set non zero 
+;
+	LD	A,(LOGMODE)	; Start of new line?
+	OR	A 
+	JP	NZ,NXTBYT	; No, then we don't care what this byte is
+	INC	A
+	LD	(LOGMODE),A	; Else show we are not on LOGMODE byte anymore
+	LD	A,B		; Get the character back
+	CP	'R'		; Is this an upload entry?
+	LD	(KEEPER),A	; Indicate saving byte just in case
+	JP	Z,NXTBYT	; Yes, leave KEEPER non-zero so it's written
+	XOR	A
+	LD	(KEEPER),A	; Else 0 keep flag (0=don't keep this entry)
+
+NXTBYT:	LD	A,(KEEPER)	; Keeping this log entry?
+	OR	A
+	JP	Z,NEXT		; No, get next byte
+
+;
+; Place current byte in buffer and write to disk if buffer full
+;
+WRTBYT:	LD	A,B
+	CALL	OUTCHR
+
+NEXT:	INC	L		; Done with sector?
+	JP	Z,RDRECD	; Yes, get another sector
+	JP	GETBYT		; Else get another byte
+
+NEWLIN:	XOR	A		; Zero accumulator
+	LD	(LOGMODE),A	; Show current byte is log mode byte
+	LD	IY,(LNSREAD)	; Get lines read counter
+	INC	IY		; Add one more
+	LD	(LNSREAD),IY
+	LD	A,1		; Disable page pauses
+	CALL	CKABRT		; User abort?
+	LD	A,(KEEPER)	; Are we keeping this entry?
+	OR	A
+	JP	Z,NEXT		; No, read another byte
+	LD	IY,(LNSWROT)	; Get lines written count
+	INC	IY		; Add one more
+	LD	(LNSWROT),IY
+	JP	WRTBYT
+
+;
+DONE::	CALL	CLRLIN
+	CALL	ILPRTB
+	DB	CR,'Finished.'
+	DB	CR,LF
+	DB	'           ',0
+
+	LD	HL,(LNSREAD)
+	CALL	DECOUT
+	CALL	ILPRTB
+	DB	TAB
+	DB	'original lines',CR,LF
+	DB	'           ',0
+
+	LD	HL,(LNSWROT)
+	CALL	DECOUT
+	CALL	ILPRTB
+	DB	TAB
+	DB	'retained lines ',0
+	JP	EXIT
+
+;
+; These next are dummy routines to satisfy external ZMDSUBS requests.
+; They do nothing, but leave alone.
+;
+TIME::	RET
+
+
+KEEPER:	DB	0
+LOGMODE:DB	0
+LNSREAD:DW	0
+LNSWROT:DW	0
+
+
+	END
+
