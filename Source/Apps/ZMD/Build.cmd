@@ -31,7 +31,7 @@ zx z80asm -zmdel/fm
 zx l80 -zmdel,zmdel/n/e
 
 zx z80asm -zmdhb/fh
-zx mload25 zmd=zmd.com,zmdhb
+zx mload25 -zmd=zmd.com,zmdhb
 
 copy /Y zmd.com ..\..\..\Binary\Apps\ || exit /b
 
