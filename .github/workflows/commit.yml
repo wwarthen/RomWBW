@@ -16,9 +16,12 @@ jobs:
     steps:
       - uses: rlespinasse/github-slug-action@v3.x
         
-      - uses: actions/checkout@v2
-        with:
-          submodules: recursive
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      
+      - name: Checkout submodules
+        run: | 
+          git submodule update --init --recursive
 
       - name: Build
         run: |
@@ -59,9 +62,12 @@ jobs:
     runs-on: macos-latest
 
     steps:
-      - uses: actions/checkout@v2
-        with:
-          submodules: recursive
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      
+      - name: Checkout submodules
+        run: | 
+          git submodule update --init --recursive
 
       - name: Build
         run: |
