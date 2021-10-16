@@ -25,15 +25,32 @@ DMA_RESET			.equ	$c3
 DMA_FBACK			.equ	TRUE	; ALLOW FALLBACK TO SOFTWARE
 DMA_USEHS			.equ	TRUE	; USE CLOCK DIVIDER
 ;
-#IF (DMAMODE=DMAMODE_MBC)
-DMA_RDY				.EQU	%00000000
-DMA_FORCE			.EQU	1
-;DMA_USEHS			.SET	FALSE
-#ENDIF
-#IF (DMAMODE=DMAMODE_ECB)
 DMA_RDY				.EQU	%00001000
 DMA_FORCE			.EQU	0
-DMA_USEHS			.SET	TRUE
+
+#IF (DMA_USEHS & (DMAMODE=DMAMODE_MBC))
+#IF (CPUSPDDEF=SPD_HIGH)
+#DEFINE DMAIOSLO LD A,(HB_RTCVAL) \ AND %11110111 \ OUT (RTCIO),A 
+#DEFINE DMAIONOR PUSH AF \ LD A,(HB_RTCVAL) \ OR %00001000 \ OUT (RTCIO),A \ POP AF
+#ELSE
+#DEFINE DMAIOSLO \;
+#DEFINE DMAIONOR \;
+#ENDIF
+#ENDIF
+;
+#IF (DMA_USEHS & (DMAMODE=DMAMODE_ECB))
+#IF (CPUSPDDEF=SPD_HIGH)
+#DEFINE DMAIOSLO LD A,(HB_RTCVAL) \ OR  %00001000 \ OUT (RTCIO),A 
+#DEFINE DMAIONOR PUSH AF \ LD A,(HB_RTCVAL) \ AND %11110111 \ OUT (RTCIO),A \ POP AF
+#ELSE
+#DEFINE DMAIOSLO \;
+#DEFINE DMAIONOR \;
+#ENDIF
+#ENDIF
+
+#IF (!DMA_USEHS)
+#DEFINE DMAIOSLO \;
+#DEFINE DMAIONOR \;
 #ENDIF
 ;
 ;==================================================================================================
@@ -49,11 +66,7 @@ DMA_INIT:
 	LD	A,DMA_FORCE
 	out	(DMABASE+1),a		; force ready off
 ;
-#IF (DMA_USEHS)
-	ld	a,(HB_RTCVAL)
-	or	%00001000		; half
-	out	(RTCIO),a		; clock
-#ENDIF
+	DMAIOSLO
 ;
 	call	DMAProbe		; do we have a dma?
 	jr	nz,DMA_NOTFOUND
@@ -68,13 +81,8 @@ DMA_INIT:
 	xor	a			; set status
 ;
 DMA_EXIT:
-#IF (DMA_USEHS)
-	push	af
-	ld	a,(HB_RTCVAL)
-	and	%11110111		; full
-	out	(RTCIO),a		; clock
-	pop	af
-#ENDIF
+	DMAIONOR
+
 	ret
 ;
 DMA_NOTFOUND:
@@ -163,11 +171,8 @@ DMALDIR:
 	ld	b,DMACopy_Len		; dma command
 	ld	c,DMABASE		; block
 ;
-#IF (DMA_USEHS)
-	ld	a,(HB_RTCVAL)
-	or	%00001000		; half
-	out	(RTCIO),a		; clock
-#ENDIF
+	DMAIOSLO
+;
 	di
 	otir				; load and execute dma
 	ei
@@ -177,13 +182,9 @@ DMALDIR:
 	in	a,(DMABASE)		; set non-zero
 	and	%00111011		; if failed
 	sub	%00011011
-#IF (DMA_USEHS)
-	push	af
-	ld	a,(HB_RTCVAL)
-	and	%11110111		; full
-	out	(RTCIO),a		; clock
-	pop	af
-#ENDIF
+
+	DMAIONOR
+
 	ret
 ;
 DMACopy 	;.db	DMA_DISABLE	; R6-Command Disable DMA
@@ -216,11 +217,8 @@ DMAOTIR:
 	ld	b,DMAOut_Len		; dma command
 	ld	c,DMABASE		; block
 ;
-#IF (DMA_USEHS)
-	ld	a,(HB_RTCVAL)
-	or	%00001000		; half
-	out	(RTCIO),a		; clock
-#ENDIF
+	DMAIOSLO
+
 	di
 	otir				; load and execute dma
 	ei
@@ -231,13 +229,8 @@ DMAOTIR:
 	and	%00111011		; if failed
 	sub	%00011011
 ;
-#IF (DMA_USEHS)
-	push	af
-	ld	a,(HB_RTCVAL)
-	and	%11110111		; full
-	out	(RTCIO),a		; clock
-	pop	af
-#ENDIF
+	DMAIONOR
+
 	ret
 ;
 DMAOutCode  	;.db	DMA_DISABLE	; R6-Command Disable DMA
@@ -275,11 +268,8 @@ DMAINIR:
 	ld	b,DMAIn_Len		; dma command
 	ld	c,DMABASE		; block
 ;
-#IF (DMA_USEHS)
-	ld	a,(HB_RTCVAL)
-	or	%00001000		; half
-	out	(RTCIO),a		; clock
-#ENDIF
+	DMAIOSLO
+;
 	di
 	otir				; load and execute dma
 	ei
@@ -290,13 +280,8 @@ DMAINIR:
 	and	%00111011		; if failed
 	sub	%00011011
 ;
-#IF (DMA_USEHS)
-	push	af
-	ld	a,(HB_RTCVAL)
-	and	%11110111		; full
-	out	(RTCIO),a		; clock
-	pop	af
-#ENDIF
+	DMAIONOR
+;
 	ret
 ;
 DMAInCode 	;.db	DMA_DISABLE	; R6-Command Disable DMA
