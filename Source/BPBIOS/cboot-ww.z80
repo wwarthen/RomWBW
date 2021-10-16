@@ -35,20 +35,32 @@ CBOOT:
 	LD	SP,80H		; Set stack in Low memory
 	  ENDIF		; BANKED
 
-	CALL	HBX_INIT
-
 	LD	HL,(IOBYT)	; Get IOBYTE, Default Drive & User
 	LD	(3),HL		;   Set values in TPA bank
+
+	  IF  BANKED
+	; Copy vectors from TPA page zero to SYS page zero
+	; This is done very early to ensure interrupt mode 1
+	; vector is available.
+	LD	BC,(TPABNK)	; C := TPABNK, B := SYSBNK
+	CALL	XMOVE		; Set source/dest banks for copy
+	LD	HL,0		; Source address is zero
+	LD	DE,0		; Destination address is zero
+	LD	BC,40H		; Copy 40H bytes
+	CALL	MOVE		; Do it
+	  ENDIF		; BANKED
 
 	  IF  BANKED
 	CALL	GOSYSB		; Turn on the System bank
 	XOR	A
 	LD	(BIOSTK),A	; Init bank switcher
 	LD	(3),HL		; Set IOBYTE and Default DU in System bank
+	CALL	HB_INIT		; Do HBIOS initialization
 	CALL	CBOOT0		; Execute main part of Cold Setup
 	LD	A,(TPABNK)
 	CALL	SELBNK		; Insure TPA is in context
 	  ELSE
+	CALL	HB_INIT		; Do HBIOS initialization
 	CALL	CBOOT0		; Execute main part of Cold Setup
 	  ENDIF		; Banked
 
@@ -61,16 +73,19 @@ CBOOT:
 	; Grab a copy of command processor from TPA and
 	; cache it in (SYSBNK):100H.  We assume that the
 	; original copy of command processor is in high memory.
+	;
+	; It is critical that we use the HB variants of MOVE and XMOVE
+	; because we are moving between banks even in a non-banked
+	; system!
 	LD	A,(TPABNK)	; Source bank is TPABNK
 	LD	C,A		; Put it in C
 	LD	A,(SYSBNK)	; Destination bank is SYSBNK
 	LD	B,A		; Put it in B
-	CALL	HBX_XCOPY	; Set banks for extended copy
+	CALL	HB_XMOVE	; Set banks for extended copy
 	LD	HL,(CPADR)	; Copy from start of command processor
 	LD	DE,100H		; .. to $100 in system bank
 	LD	BC,(CPLEN)	; Length of command processor
-	CALL	HBX_COPY	; Do it
-	
+	CALL	HB_MOVE		; Do it
 
 	JP	WBOOTV		;   move it and commence execution
 	  ELSE
@@ -378,7 +393,7 @@ MEMOK:
 	  ENDIF		;BIOERM
 	DEFB	CR,LF+80H
 
-;WW	EI		; Turn Interrupts back on
+	EI		; Turn Interrupts back on
 	RET		; ..and return
 ;.....
 ; Offset to and get ENV Address and respective element size
@@ -392,6 +407,112 @@ CALCOF:	ADD	HL,DE		; Add offset to Base ENV Addr
 	LD	H,(HL)		;   and grab
 	LD	L,C		; Ptr to Segment now in HL
 	RET			;   return to caller
+	
+;.....
+; HBIOS Initialization
+
+HB_INIT:
+	  IF HB_DEBUG AND FALSE
+	CALL	PRTSTRD
+	DEFB	'[HB_INIT]',CR,LF,'$'
+	  ENDIF
+
+	;; Setup RST 08 vector
+	;LD	A,0C3H			; $C3 = JP
+	;LD	(08H),A
+	;LD	HL,HBX_INVOKE
+	;LD	(09H),HL
+	
+	;IF  BANKED
+	;
+	;; Copy vectors from TPA page zero to SYS page zero
+	;LD	BC,(TPABNK)	; C := TPABNK, B := SYSBNK
+	;CALL	XMOVE		; Set source/dest banks for copy
+	;LD	HL,0		; Source address is zero
+	;LD	DE,0		; Destination address is zero
+	;LD	BC,40H		; Copy 40H bytes
+	;CALL	MOVE		; Do it
+	;
+	;ENDIF		;BANKED
+
+	  IF HB_DEBUG
+
+	CALL 	NEWLINE2
+	LD	DE,HB_STR_TAG
+	CALL	WRITESTR
+
+	LD	DE,HB_STR_CSEG
+	CALL	WRITESTR
+	LD	BC,ORG_CSEG
+	CALL	PRTHEXWORD
+	LD	DE,HB_STR_DSEG
+	CALL	WRITESTR
+	LD	BC,ORG_DSEG
+	CALL	PRTHEXWORD
+	
+	    IF BANKED
+	LD	DE,HB_STR_BANK2
+	CALL	WRITESTR
+	LD	BC,ORG_BANK2
+	CALL	PRTHEXWORD
+	LD	DE,HB_STR_B2RAM
+	CALL	WRITESTR
+	LD	BC,ORG_B2RAM
+	CALL	PRTHEXWORD
+	LD	DE,HB_STR_RESVD
+	CALL	WRITESTR
+	LD	BC,ORG_RESVD
+	CALL	PRTHEXWORD
+	    ENDIF		;BANKED
+	
+	CALL	NEWLINE
+	
+	  ENDIF ; [HB_DEBUG]
+
+	; Update RAM and ROM DPB for true RAM/ROM sizes
+	LD	BC,HBF_MEMINFO	; HBIOS Memory Information
+	CALL	HBX_INVOKE	; Do it, D=ROM Banks, E=RAM Banks
+	PUSH	DE		; Save results
+	LD	HL,DPBROM+4	; EXM byte of ROM DPB
+	LD	A,D		; ROM bank count to accum
+	SUB	HB_ROMRESV	; Less reserved ROM banks
+	CALL	HB_FIXDPB	; Adjust ROM DPB
+	POP	DE		; Recover memory info
+	LD	HL,DPBRAM+4	; EXM byte of RAM DPB
+	LD	A,E		; ROM bank count to accum
+	SUB	HB_RAMRESV	; Less reserved RAM banks
+	CALL	HB_FIXDPB	; Adjust RAM DPB
+	RET
+
+HB_FIXDPB:
+	CP	16		; 16 banks = 256 blocks
+	LD	E,0		; Init EXM value to zero
+	RL	E		; Put CF in E
+	LD	(HL),E		; Save EXM
+	LD	D,0		; Init blk cnt to bank cnt
+	LD	E,A		; "
+	LD	B,4		; Multiply by 4
+HB_FIXDPB1:
+	SLA	E		; ... to convert to
+	RL	D		; ... 2K block cnt
+	DJNZ	HB_FIXDPB1	; Loop
+	DEC	DE		; Convert to blk cnt - 1
+	INC	HL		; Point to LSB of DSM
+	LD	(HL),E		; Save LSB
+	INC	HL		; Point to MSB of DSM
+	LD	(HL),D		; Save it
+	RET
+
+	IF HB_DEBUG
+
+HB_STR_TAG:	DB	"HBIOS: $"
+HB_STR_CSEG:	DB	"CSEG=$"
+HB_STR_DSEG:	DB	", DSEG=$"
+HB_STR_BANK2:	DB	", BANK2=$"
+HB_STR_B2RAM:	DB	", B2RAM=$"
+HB_STR_RESVD:	DB	", RESVD=$"
+
+	ENDIF ; HB_DEBUG
 
 ; Block Move Parameters
 
@@ -667,4 +788,4 @@ BTTBL:	DEFS	8		; Initial WB DMA Block
 	  ENDIF
 ;======================== End of CBOOT =============================
 
-
+

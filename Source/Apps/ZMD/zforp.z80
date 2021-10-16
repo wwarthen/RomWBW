@@ -1,0 +1,420 @@
+;
+
+      TITLE  ZFORP.Z80 - 09/29/88 - ZMD Public Description Utility
+;				    Copyrighted (c) 1987, 1988
+;				    Robert W. Kramer III
+
+	PAGE
+;-									 -;
+;                         Update History                                  ;
+;                                                                         ;
+;    Date	Release			     Comments                     ;
+;  --------	-------	  ----------------------------------------------  ;
+;									  ;
+;  09/29/88	v1.50	- No change(s) made to this file.		  ;
+;  03/18/88	v1.49	- No change(s) made to this file		  ;
+;  03/13/88	v1.48	- Redefined buffer table at end of programs. STACK;
+;			  and filename buffers now EQUated with offsets	  ;
+;			  from the last switch/toggle in program instead  ;
+;			  of with DS directive.				  ;
+;			- Some systems which do NOT have an interrupt	  ;
+;			  driven keyboard may have noticed problems when  ;
+;			  an invalid key was entered in the ZNEWP, ZFORP  ;
+;			  and ZMDEL programs.  In ZNEWP and ZFORP, if a   ;
+;			  CR was entered to pause the output, output was  ;
+;			  limited to one line at a time per key pressed.  ;
+;			  If an invalid key was hit, output would have	  ;
+;			  remained in a paused state until one of the	  ;
+;			  abort keys were pressed.  This was difficult to ;
+;			  find since my keyboard is interrupt driven and  ;
+;			  I could not duplicate the problem on my own	  ;
+;			  system.					  ;
+;  02/25/88	v1.47	- No change(s) made to this file		  ;
+;  01/27/88	v1.46	- Some changes were made to ZMDSUBS that are not  ;
+;			  directly related to this file			  ;
+;			- Fixed typo in help guide reflecting '/' as the  ;
+;			  flag to force LF in search routine		  ;
+;  01/17/88	v1.45	- First public release				  ;
+;  12/24/87	v1.01	- Some trivial bugs fixed			  ;
+;  11/10/87	v1.00	- Initial version				  ;
+;-                                                                       -;
+
+;-------------------------------------------------------------------------;
+; EXTERNAL Declarations:						  |
+;-------------------------------------------------------------------------;
+
+
+	EXTRN	CKABRT,CMDBUF,DBUF,ERXIT,EXIT,ILPRTB,LINCNT,NOFILE
+	EXTRN	NOFOR,OLDDRV,OLDUSR,PRINTV,RECAR1,RECDR1,RENFCB
+	EXTRN	RSDMA,SHONM4,STACK,TYPE,UCASE,NOFOR
+
+;
+;-------------------------------------------------------------------------;
+; Program Starts Here					  		  |
+;-------------------------------------------------------------------------;
+
+
+       .Z80
+	ASEG
+	ORG	100H		; Program starts 
+	JP	BEGIN		; Jump around configuration table
+	INCLUDE	ZMDHDR.Z80	; Include the ZMD header overlay
+       .REQUEST ZMDSUBS		; Include the ZMD subroutines
+
+;
+;
+; Save CP/M stack, initialize new one for this program
+;
+BEGIN:	LD	(STACK),SP	; Save return address to CCP
+	LD	SP,STACK	; Initialize new one for this program
+
+;
+; Get current drive/user and save for later
+;
+	LD	A,255
+	CALL	RECAR1
+	LD	(OLDUSR),A	; Save current user area
+	LD	C,CURDRV
+	CALL	BDOS
+	LD	(OLDDRV),A	; Save current drive
+
+;
+; Tell em who we are
+;
+	LD	HL,PUBFOR
+	CALL	PRINTV
+
+;
+; See if descriptions enabled
+;
+	LD	A,(DESCRIB)
+	OR	A
+	JP	NZ,BEGIN1
+	LD	A,(MSGDESC)
+	OR	A
+	JP	Z,NOFOR
+
+BEGIN1:	CALL	ILPRTB
+	DB	'(S to Pause - C K or X Abort - ? for Help)'
+	DB	CR,LF,LF,0
+	LD	A,8
+	LD	(LINCNT),A
+
+;
+; See if user wants file displayed 'nonstop' ($N)
+;
+	LD	A,(TBUF)	; Number of bytes in command tail
+	OR	A		; Were there any?
+	LD	(SHOWALL),A	; Tell rest of program
+	JP	Z,OPNFIL	; Just go display the file if not
+
+	LD	A,(FCB+1)	; Get first character on command line
+	CP	'$'		; Must specify '$' first for pause disabling
+	JP	NZ,CKHLP	; Nope, continue normal
+
+	LD	A,(FCB+2)	; Get second character on command line
+	CP	'N'		; 'N' for nonstop display?
+	JP	NZ,CKHLP	; No
+
+	XOR	A
+	LD	(SHOWALL),A	; Disable string search
+	LD	(PAGLEN),A	; Else disable page pauses
+	JP	OPNFIL
+
+;
+; See if requesting help
+;
+CKHLP:	LD	A,(TBUF+2)	; Get character after space
+	CP	'?'		; ??
+	JP	NZ,SAVTAIL	; No, save command tail for comparison
+
+	LD	A,(TBUF+3)	; Any more chracters?
+	OR	A
+	JP	Z,HELP		; No, so must want HELP
+
+;
+; Move command line buffer to internal buffer
+;
+SAVTAIL:LD	HL,TBUF		; Point to command line buffer
+	LD	B,(HL)		; Character count is first byte into 'B'
+	LD	DE,CMDBUF	; Destination is internal buffer
+	INC	HL		; Increment to ' ', next INC gets first chr
+	LD	A,(HL)		; Get this character
+	CP	' '		; Is it a space?
+	JR	Z,SVTAIL1	; Yes, leave things alone
+	DEC	HL		; No, decrement pointer
+
+SVTAIL1:INC	HL		; Increment to next character
+	LD	A,(HL)		; Into A
+	LD	(DE),A		; Store in internal buffer
+	INC	DE		; Increment pointer
+	DJNZ	SVTAIL1		; One less character on command line
+
+;
+; Open FOR file
+;
+OPNFIL:	LD	A,(USER)	; Get user area to find FOR file
+	CALL	RECAR1		; Log into it
+	LD	A,(DRIVE)	; Get drive to find FOR file
+	CALL	RECDR1		; Log into it
+
+	LD	HL,FILE		; Initialize internal FCB1
+	LD	DE,FORNAM	; With FOR filename
+	CALL	RENFCB
+
+	LD	DE,FILE		; Internal FCB1 contains filename
+	LD	C,OPEN		; Now attempt open
+	CALL	BDOS
+	INC	A		; Open successful?
+	LD	HL,FORNAM	; Point to FOR filename for 'not found'
+	JP	Z,NOFILE	; No, inform user and abort
+
+;
+; Read a 128 byte record into DBUF at end of program
+;
+	XOR	A
+	LD	(FILE+12),A	; Start with first extent
+	LD	(FILE+32),A	; And first record
+	LD	DE,DBUF		; Destination buffer
+
+;
+RDRECD:	PUSH	DE		; Save current data buffer address
+	CALL	RSDMA		; Reset DMA
+
+ 	LD	C,READ		; Read next record
+	LD	DE,FILE		; From FOR file
+	CALL	BDOS
+	POP	DE		; Get current DBUF address back
+	OR	A		; Read successful?
+	JP	NZ,RERROR	; No, go check EOF
+	LD	HL,TBUF		; 128 byte buffer in page 0
+
+WRDLP:	LD	A,(LINEND)	; At end of line?
+	OR	A
+	JP	Z,WDLP1		; No
+
+	XOR	A
+	LD	(LINEND),A	; Else we aren't anymore
+
+	LD	A,(HL)		; Get the character
+	AND	7FH		; Strip parity
+	CP	'-'		; Start of next description?
+	JP	NZ,WDLP1	; No
+
+	LD	A,3
+	LD	(DE),A		; Stuff a break for beginning of last descrip
+	JP	SEARCH
+
+WDLP1:	LD	A,(HL)		; Get character
+	AND	7FH		; Strip high bit
+	CP	DEL		; Rubout?
+	JP	Z,NEXT		; Yes, ignore and get next character
+	CP	EOF		; EOF - End of file marker?
+	JP	Z,ENDFIL	; Yes, all done
+	LD	B,A		; Save character for now
+	LD	A,(SHOWALL)	; Looking for specified string?
+	OR	A
+	LD	A,B		; Get our character back now
+	JP	NZ,WDLP2	; Yes, just write to memory
+	CALL	TYPE		; Output to console
+	EX	AF,AF'		; Save flags (NZ=displaying to console)
+	LD	A,0		; A=0 disables pausing while checking abort
+	EX	AF,AF'		; Save it for now, get character back
+	JP	WDLP3		; And see if at end of line
+
+WDLP2:	LD	(DE),A		; Else writing to memory
+	INC	DE		; Next buffer position
+	EX	AF,AF'		; Save flags (Z=writing to memory)
+	LD	A,1		; A=1 enables puasing while checking abort
+	EX	AF,AF'		; Save it for now, get character back
+
+WDLP3:	CP	LF		; Are we at end of line?
+	JP	NZ,NEXT		; No get next character
+
+	LD	A,(SHOWALL)	; Get string search toggle
+	LD	(LINEND),A	; If set, at end of line, and writng to memory
+	EX	AF,AF'		; AF'=1 enable pauses, disable if 0
+	CALL	CKABRT		; Check for user abort (and pauses if A=1)
+
+NEXT:	INC	L		; One more byte
+	JP	Z,RDRECD	; If no more get next record
+	JP	WRDLP		; Else get next character
+
+;
+; Search for a match with search string
+;
+SEARCH:	PUSH	HL		; Save HL
+	LD	HL,CMDBUF	; Point to buffer containing command tail
+
+SEARC1:	LD	(CMDPTR),HL	; Save command tail buffer pointer
+	LD	HL,DBUF		; Disk buffer with FOR text
+
+SEARC2:	LD	DE,(CMDPTR)	; Get command tail buffer pointer again
+	PUSH	HL		; Save it (command tail pointer still in DE)
+
+SEARC3:	LD	A,(DE)		; Get a character
+	CP	'\'		; Force LF?
+	JP	NZ,SEARC4	; No
+	LD	A,LF		; Else LF value in A for comparison
+
+SEARC4:	INC	DE		; Increment to next command tail character
+	OR	A		; Anything there?
+	JP	Z,SEARC8	; No
+	CP	'|'		; String seperator?
+	JP	Z,SEARC8	; Yes
+	LD	B,A		; Save character for compare
+	LD	A,(HL)		; Get a FOR text character in A
+	CALL	UCASE		; Convert it to uppercase
+
+SEARC5:	LD	C,A		; Put FOR text character in C for now
+	INC	HL		; And increment to next one
+	LD	A,B		; Get comparison character back (from CMDBUF)
+	CP	'?'		; Accept any character?
+	JP	Z,SEARC3	; Yes, call it a match
+	CP	C		; Else are they the same?
+	JP	Z,SEARC3	; Yes, call it a match
+	POP	HL		; Else get FOR buffer address back
+	INC	HL		; Increment to next character
+	LD	B,0		; Initialize count to 0
+	LD	A,(HL)		; Get next character from FOR buffer
+	CP	CTRLC		; Beginning of description entry?
+	JP	Z,SEARC6	; Yes
+	CP	4		; End of file?
+	JP	NZ,SEARC2	; No
+	INC	B		; Else, show we hit end of buffer
+
+SEARC6:	LD	HL,(CMDPTR)	; Get command tail pointer back
+
+SEARC7:	LD	A,(HL)		; Get character from saved command tail
+	INC	HL		; Point to next one
+	CP	'|'		; Searching for multiple strings?
+	JP	Z,SEARC1	; Yes, go search next one
+	OR	A		; Else are we all done?
+	JP	NZ,SEARC7	; No, keep looking
+	LD	A,B		; Else see if at end of buffer
+	OR	A
+	JP	NZ,ENDFL1	; Yes
+	LD	DE,DBUF+1
+	POP	HL		; Get record count back
+	JP	NEXT		; Go get next
+
+SEARC8:	POP	HL
+	LD	A,CR
+	CALL	TYPE		; Output CR for end of line
+	LD	HL,DBUF
+
+SEARC9:	LD	A,(HL)		; Get character
+	CP	CTRLC		; Start of description?
+	JP	Z,SEARC10	; Yes, go get next character
+	CP	4		; End of file?
+	JP	Z,ENDFL1	; Yes 
+	CALL	TYPE		; Output character to console
+	CP	LF		; At end of line?
+	LD	A,0		; Disable page pauses
+	CALL	Z,CKABRT	; Check for aborts
+	INC	HL		; Next character
+	JP	SEARC9		; Loop until a ^C or ^D
+
+SEARC10:POP	HL
+	LD	DE,DBUF+1
+	JP	NEXT		; Go get next byte
+
+;
+; The following routine displays the help guide to the user
+;
+HELP:	CALL	PRTABT
+	DB	CR,LF
+	DB	'Usage examples:'
+	DB	CR,LF
+	DB	CR,LF,' FOR          Show entire file'
+	DB	CR,LF,' FOR $N       Show entire file without paging'
+	DB	CR,LF,' FOR ZMD      All descriptions containing string ''ZMD'''
+	DB	CR,LF,' FOR ZMD|LU   ''|'' seperates multiple strings to search'
+	DB	CR,LF,' FOR \ZMD     ''\'' forces line feed and looks at filenames'
+	DB	CR,LF,' FOR ZM?      ''?'' matches any character in this position'
+	DB	CR,LF,0
+
+	LD	A,(INCLDU)
+	OR	A
+	JP	Z,HELP1
+	CALL	PRTABT
+	DB	' FOR (B0:)    Descriptions for files received on B0:',0
+
+HELP1:	CALL	PRTABT
+	DB	CR,LF,0
+	LD	A,(DSTAMP)
+	OR	A
+	JP	Z,HELP4
+	LD	A,(EDATE)
+	OR	A
+	JP	Z,HELP2
+	CALL	PRTABT
+	DB	' FOR ??/12',0
+	JP	HELP3
+
+HELP2:	CALL	PRTABT
+	DB	' FOR 12/??',0
+
+HELP3:	CALL	PRTABT
+	DB	'    Show files received in month of December',0
+
+HELP4:	CALL	ERXIT
+	DB	CR,LF,LF,LF,LF,'$'
+
+;
+; Inline print routine checks for user abort on each line feed
+;
+PRTABT:	POP	HL		; Get address following CALL
+
+AM1:	LD	A,(HL)		; Character in A
+	OR	A		; Null terminator?
+	JP	Z,AM2		; Yes, all done
+	CALL	TYPE		; Else output to console
+	CP	LF		; Was it a LF?
+	LD	A,0		; Enable page pauses
+	CALL	Z,CKABRT	; Check for user abort, or pause request
+	INC	HL		; Point to next character
+	JP	AM1		; Loop until a null
+
+AM2:	PUSH	HL		; Current address in HL=return address
+	RET
+	
+;
+;
+RERROR:	CP	1
+	JP	Z,ENDFIL
+	CALL	ERXIT
+	DB	'-- Source file read error$'
+;
+ENDFIL:	LD	A,(SHOWALL)
+	OR	A
+	JP	Z,ENDFL1
+	LD	A,4
+	LD	(DE),A
+	JP	SEARCH
+
+ENDFL1:	LD	C,CLOSE
+	LD	DE,FILE
+	CALL	BDOS
+	CALL	ERXIT
+	DB	CR
+	DB	'-----'
+	DB	CR,LF
+	DB	'-- End of file --$'
+
+
+;
+; These next are dummy routines to satisfy external ZMDSUBS requests.
+; They do nothing, but leave alone
+;
+DONE::	JP	EXIT
+TIME::	RET
+
+
+LINEND:	DB	0
+SHOWALL:DB	0
+CMDPTR:	DW	0
+
+
+	END
+

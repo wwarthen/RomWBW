@@ -1,0 +1,637 @@
+;
+
+      TITLE ZMDHDR.Z80 - 09/29/88 - ZMD Configuration Header
+;				    Copyrighted (c) 1987, 1988
+;				    Robert W. Kramer III
+
+	PAGE
+;-									 -;
+;                         Update History                                  ;
+;                                                                         ;
+;    Date	Release			     Comments                     ;
+;  --------	-------	  ----------------------------------------------  ;
+;                                                                         ;
+;  09/29/88	v1.50	- Changed file descriptor table.  (Sorry, but as  ;
+;			  many times as I am required to reassemble the	  ;
+;			  ZMD system, it saves alot of time for me).	  ;
+;  03/18/88	v1.49	- No change(s) were made to this file		  ;
+;  03/13/88	v1.48	- Added STDBUF switch to enable/disable automatic ;
+;			  calculation of memory available for DBUF.  If	  ;
+;			  enabled, CHKTPA will set OUTSIZ with an even	  ;
+;			  paged maximum memory comparison word according  ;
+;			  to the address contained at location 6 and 7.	  ;
+;			  The value set as end of program during assembly ;
+;			  is subtracted from it.  If BYE is NOT running,  ;
+;			  an additional 806H is subtracted.  The LSB of	  ;
+;			  the result is discarded and the new even paged  ;
+;			  value is stored for later comparison as maximum ;
+;			  Read/Write memory available for disk buffer	  ;
+;			  operations.					  ;
+;									  ;
+;  * * SPECIAL NOTE * *   MOST ALL systems will benefit by enabling this  ;
+;			  feature. Some special CP/M systems which place  ;
+;			  buffers below location (6 and 7), may need to	  ;
+;			  disable this feature in which case DBUF size	  ;
+;			  will be set to 16k.  This fix consumed 1 more	  ;
+;			  byte in the switch/value table below.  Previous ;
+;			  configuration headers are incompatible with this;
+;			  release.  Additional program code is 9 bytes.	  ;
+;			  (See explaination at STDBUF:)			  ;
+;									  ;
+;  02/25/88	v1.47	- No change(s) made to configuration file	  ;
+;  01/27/88	v1.46	- No change(s) made to configuration file	  ;
+;  01/17/88	v1.45	- First public release				  ;
+;  11/19/87	v1.00	- Initial version				  ;
+;-                                                                       -;
+
+;-------------------------------------------------------------------------;
+; Introduction								  |
+;-------------------------------------------------------------------------;
+;
+; This document is a detailed listing of all the program option toggles
+; and their functions within the ZMD environment which when used in
+; conjunction with the source listings, install program and reference
+; manual, provide all the necessary documentation to support program
+; maintenance.
+
+;
+;-------------------------------------------------------------------------;
+; EQUates Header							  |
+;-------------------------------------------------------------------------;
+
+
+	INCLUDE	EQUATES.INS	; Include system constant definitions
+
+;
+;-------------------------------------------------------------------------;
+; PUBLIC Declarations:							  |
+;-------------------------------------------------------------------------;
+
+
+	PUBLIC	ACCMAP,ASKAREA,ASKIND,CLRSCRN,CLRSTR,DESWAIT,DRV
+	PUBLIC	LOCOFF,MHZ,MINKSPD,MSPEED,PAGLEN,PRDRV,PRUSR,USR,WHEEL
+	PUBLIC	WRAP,WRTLOC,CONOUT,MDINST,MDINP,MDOUTST,MDCARCK,MDOUTP
+	PUBLIC	KNDTBL,TYPTBL,MAXTYP,DESCRIB,FORNAM,MSGDESC,DSTAMP
+	PUBLIC	INCLDU,UNINIT,DRIVE,USER,LOGNAM,SETAREA,CLOCK,RTC
+	PUBLIC	TIMEON,CREDIT,EDATE,DSPTOS,STDBUF
+
+;
+;-------------------------------------------------------------------------;
+; EXTERNAL Declarations:						  |
+;-------------------------------------------------------------------------;
+
+
+	EXTRN	MONTH,DAY,YEAR,HOUR,MINUTE,DEST,FILE,ZMDNAM,INSNAM
+	EXTRN	MAPNAM,PRGUTL,PUBFOR,PUBNEW,SYSFOR,PUBFOR,INSNAM
+	EXTRN	SYSNEW,FCBCLR,FCBLOG,TEMPFIL,BCDBIN,TIMBUF,DUD,DUU
+
+;
+;-------------------------------------------------------------------------;
+; Program configuration starts here					  |
+;-------------------------------------------------------------------------;
+;
+; Options that are most often changed are marked with ';*' at the start of
+; the comment line for that option.  Simple systems not using time clocks,
+; user logs, etc. will keep most of those 'NO'.  RCPM systems running the
+; usual bulletin board systems, etc., will change most of those to 'YES'.
+;
+MHZ:	DB	10	; Microprocessor speed - use integer 1,4,5, etc.
+;MSPEED:	DW	003CH	; Location of modem speed indicator byte
+MSPEED:	DW	0600H	; Location of modem speed indicator byte
+			; [WBW] placed in I/O overlay
+
+WRTLOC:	DB	NO	; Set/reset WRTLOC so BYE won't hang up.  Check
+LOCOFF:	DB	12	; your BBS documentation - many modern systems
+			; don't need WRTLOC. If unsure, set WRTLOC to NO.
+			; Code to set and reset WRTLOC assumes the WRTLOC
+			; byte to be located "LOCOFF" bytes from the JP
+			; COLDBOOT instruction at the beginning of the BYE
+			; BIOS jump table.  (YES for MBBS and PBBS).
+
+STDBUF:	DB	NO	; If the size of your TPA cannot be calculated by
+			; using one of the two following methods, disable
+			; this by setting to NO.  ZMD will Automatically
+			; calculate the maximum disk buffer size allowed. If
+			; enabled,  CHKTPA will determine whether or not
+			; BYE is running, if so uses (0006)-1.  Else
+			; subtracts 806H from (0006).  If disabled, DBUF
+			; setting will be used as default (Normally set to
+			; 16k).  Either way, if descriptions are allowed,
+			; the total number of uploads allowed is set based
+			; on the value of OUTSIZ divided by maximum bytes
+			; per description entry.
+
+DESWAIT:DB	2	; This is the number of minutes of inactivity during
+			; an upload description or Help Guide prompt before
+			; logging aborting the input routine.  If the
+			; caller was entering a description, the current
+			; description buffer is written to disk before
+			; resetting your BYE program's disk write lock flag
+			; (WRTLOC),  if enabled.
+
+MINKSPD:DB	1	; Minimum speed acceptable for 1k packet file
+			; transfers.  If you are on a network such as PC
+			; Pursuit,  and are able to RECEIVE incoming calls,
+			; set this byte to 1. The delays these networks
+			; use to send data back and forth make 1k packets
+			; advantageous to even 300 bps users.  If you are
+			; not on a network such as PC Pursuit, it's simply
+			; a matter of preference, but why not let the 300
+			; bps callers experience the 1k packet transfers?
+			; (1 = 300, 5 = 1200, 6 = 2400, ..., 9 = 19,200)
+
+BUFSIZ:	DB	16	; Normal disk systems can transfer 16k from
+			; computer to disk in 2-3-4 seconds and less. Some
+			; very slow 5-1/4" floppy systems (such as North
+			; Star) may take up to 20-30 seconds to transfer
+			; 16k.  This would cause several timeouts at 10
+			; seconds each.  If you experience any timeouts,
+			; try changing BUFSIZ to something smaller, perhaps
+			; 8k or even 4k.
+
+CLRSCRN:DB	NO	; Yes,  you want ZMD to clear your screen locally
+CLRSTR:	DB	1AH,00H	; during display of batch file transfers and all
+	DB	00H,00H	; the help menus.  If you set CLRSCRN to YES, enter
+	DB	00H,00H	; your clear screen sequence in the 6 bytes aside.
+	DB	'$'	; (If your terminal uses ^Z, leave as is, 1AH = ^Z)
+
+PAGLEN:	DB	24	; This is the number of lines to display in between
+			; [more] pauses.  (Set to 0 to disable pauses).
+
+;
+;-------------------------------------------------------------------------;
+; Timekeeping Considerations						  |
+;-------------------------------------------------------------------------;
+;
+; If you have a clock installed (either in your BYE program or internal),
+; set the following switches to your liking.  If running ZMD without a
+; clock, set these all NO.
+;
+CLOCK:	DB	NO	; Clock/date reader code installed in BYE program
+RTC:	DB	NO	; Clock/date reader code installed at RTCTIM:
+
+TIMEON:	DB	NO	; Restrict downloads to maximum time allowed
+MAXMIN:	DB	60	; Total minutes allowed for downloads. This should
+			; be set if TIMEON is YES and CLOCK is NO.
+DSPTOS:	DB	NO	; Yes to display 'Online nn minutes' messages
+LHOUR:	DW	0000H	; Logon hour address (If RTC).  LHOUR+2 = logon
+			; minute address.
+
+;
+;-------------------------------------------------------------------------;
+; Bit Map Layout							  |
+;-------------------------------------------------------------------------;
+;
+; The following byte contains information corresponding to the filename
+; bytes of the file being considered for transfer.  Enabling any of the
+; options causes ZMD to look at the high bit of the byte position
+; indicated below (F1=filename byte 1, T2=file type byte 2, etc).  These
+; restrictions are always bypassed when using ZCPR and the WHEEL is set.
+;
+;	Bit:	76543210	; Correspond to definitions below
+;		||||||||
+ACCMAP:	DB	11111101B	; Set any bits of this byte according
+;     __________\______/	; to your own preference.
+;    /
+;
+;  7  |   F1   |  File not for distribution.  If file is a ARK/ARC/LBR
+;     |	       |  file, individual members may be downloaded (no Batch)
+;  6  |   F3   |  File can be downloaded regardless of user's access
+;  5  |	  T2   |  $SYS files not sent or reported
+;  4  |	  T3   |  .??# files with labels not sent
+;  3  | T1/2/3 |  .COM files not sent or reported
+;  2  | T1/2/3 |  Rename .COM to .OBJ and .PRL to .OBP on receive
+;  1  |   --   |  RESERVED FOR FUTURE USE
+;  0  | T1/2/3 |  .SYS, .NDR, .RCP, file extents not accepted.  (ZCPR)
+
+;
+;-------------------------------------------------------------------------;
+; ZCMD/ZCPR							  	  |
+;-------------------------------------------------------------------------;
+;
+; If using ZCPR low memory bytes to keep track of maximum drive and user,
+; set USEMAX to yes.  ZMD will use the values at locations DRIVMAX and
+; USRMAX for maximum drive/user.  If USEMAX is NO, hardcode MAXDRV and
+; MAXUSR to your own requirements.
+;
+WHEEL:	DW	3EH	; Location of ZCPR wheel byte
+USEMAX:	DB	NO	;*Use values at DRIVMAX and USRMAX for maximum
+			; (Else use MAXDRV and MAXUSR values)
+DRIVMAX:DW	3DH	; ZCPR maximum drive memory byte
+USRMAX:	DW	3FH	; ZCPR maximum user memory byte
+MAXDRV:	DB	16	; Maximum download drive allowed
+MAXUSR:	DB	16	; Maximum download user allowed
+
+;
+;-------------------------------------------------------------------------;
+; Access Restrictions							  |
+;-------------------------------------------------------------------------;
+;
+; If ACCESS is YES,  ZMD will inspect AFBYTE (located ACBOFF bytes from JP
+; COLDBOOT) for the following flag data:
+;
+;
+;		Bit:    7 6 5 4 3 2 1 0
+;			| | | | | | | |
+;    Privileged user ---* | | | | | | |
+;	      Upload -----* | | | | | |
+;	    Download -------* | | | | |   * Of these bits, only 3, 5, 6
+;	        CP/M ---------+ | | | |     and 7 are used by ZMD.  Bit
+;	       Write -----------* | | |     numbers are powers of 2, with
+;		Read -------------+ | |     bit 0 being least significant
+;		 BBS ---------------+ |	    bit of byte.
+;	      System -----------------+
+;
+;
+ACCESS:	DB	NO	;*Yes, your system sets BYE's bit-mapped flag
+			; register to restrict user's ability to upload,
+			; download, use the 'RM' option to upload message
+			; files to your BBS's message base, or to use the
+			; 'RW' option for 'privileged user' upload without
+			; being required to give upload descriptions.
+
+ACBOFF:	DB	21	; If you set ACCESS to YES,  you 'might' need to
+			; set this to reflect the number of bytes from JP
+			; COLDBOOT to ACCESS byte.  In most cases, leave
+			; alone.
+
+;
+;-------------------------------------------------------------------------;
+; Upload Configurations							  |
+;-------------------------------------------------------------------------;
+;
+MSGFIL:	DB	NO	; Some BBS's allow callers to upload preformatted
+			; text files which are appended to the message
+			; base. (MBBS and PBBS are examples of this).  If
+			; you're running MBBS or PBBS and wish to support
+			; this, simply set MSGFIL to YES.  Message file
+			; uploads go to PRDRV and PRUSR.
+
+HIDEIT:	DB	NO	; Yes, make all normal uploads $SYS files.  This
+			; way,  new uploads will not appear in a DIRectory
+			; listing and cannot be viewed or even downloaded
+			; until they are cleared by SYSOP. (New uploads
+			; will show up when the WHEEL byte is ON and a $S
+			; option is used to show SYSTEM files.  Use the $O
+			; option to list ONLY $SYS files.  Reference will
+			; be made to these files in the in the NEW and FOR
+			; listings if those features are enabled). Private
+			; uploads, and uploads made with the WHEEL byte
+			; set are NOT made $SYS.  You can use POWER or
+			; NSWEEP to set to $DIR.
+
+;
+;-------------------------------------------------------------------------;
+; Upload Routing Options						  |
+;-------------------------------------------------------------------------;
+;
+; The following equates determine what drive/user area uploads will be sent
+; to.  If you prefer to enable upload routing (ASKAREA set YES), you will
+; have to set MAXTYP to the letter of the highest category you wish to
+; support, and configure TYPTBL: and KNDTBL: tables below for your own
+; system.  Do NOT set ASKAREA and SETAREA both to YES.
+;
+ASKAREA:DB	NO	;*Yes, you want upload routing to multiple drive
+			; and user areas.  The caller will be asked what
+			; the file (or files) he is uploading are for and
+			; his uploads will then be forwarded to the
+			; appropriate area. You will need to set up the
+			; categories at KNDTBL: for your own system and
+			; set the drive/user area each category belongs on
+			; at label TYPTBL:. There can be up to 26 different
+			; drive/user and category combinations. This applies
+			; for both private and normal uploads.  Upload
+			; routing is disabled when the WHEEL byte is set,
+			; in which case,  normal uploads will go to the
+			; current drive/user area and private uploads will
+			; go to the drive/user equated at PRDRV and PRUSR.
+
+SETAREA:DB	NO	;*Yes, you wish to have all regular uploads sent
+DRV:	DB	'B'	; to the drive/user equated at DRV and USR to left.
+USR:	DB	0	; If WHEEL byte is set,  regular uploads will go to
+			; the current or specified drive/user.  Unless you
+			; ASKAREA is YES,  all private files uploaded with
+			; the 'RP' option will be sent to PRDRV and PRUSR
+			; regardless of WHEEL status.
+
+PRDRV:	DB	'H'	;*This is the drive/user area where ALL files sent
+PRUSR:	DB	15	;*to the sysop with the 'RP' option will go (unless
+			; ASKAREA below is YES).  This permits experimental
+			; files, replacement and/or proprietary programs to
+			; be sent to an area only accessible by the sysop.
+			; This is also the drive and user area where message
+			; files are uploaded, if MSGFIL is set YES.  (If
+			; ASKAREA is YES,  this is the drive/user where
+			; uploads will go when 'RP' is specified, and WHEEL
+			; is set).  (If MSGDESC is YES, this is the drive
+			; and user area the FOR text file will be placed
+			; before appending it to the BBS system's message
+			; base).
+
+CREDIT:	DB	NO	;*Yes, callers are given credit for the amount of
+			; time they spend uploading non-private files. A
+			; caller who spends 30 minutes sending an upload
+			; gets 30 minutes added to his TLOS.  (You must
+			; set either CLOCK or TIMEON to YES to use this
+			; feature).
+
+;
+;-------------------------------------------------------------------------;
+; Upload Description Options						  |
+;-------------------------------------------------------------------------;
+;
+; This section has to do with upload descriptions.  If you do not intend
+; on implementing upload descriptions, set DESCRIB and MSGDESC to NO. The
+; rest of these values are then ignored.  If using descriptions, set ONLY
+; one of these to YES, not both.
+;
+MSGDESC:DB	NO	; Yes, your BBS system supports message uploads,
+			; and you prefer upload descriptions to be placed
+			; in your BBS message system (set DESCRIB NO).
+			; MBBS users need to install MFMSG.COM with the
+			; MBBSINIT program.  Then set your BYE program to
+			; know about message file uploads by setting the
+			; MSGFIL option in BYE/MBYE to YES.  If set YES,
+			; ZMD will produce a FOR text file when writing
+			; upload descriptions. This FOR file will go to
+			; the drive and user area equated at PRDRV and
+			; PRUSR just before being appended to your BBS
+			; system's message base.
+
+DESCRIB:DB	NO	;*Yes, requiring users to provide descriptions for
+			; any files they upload.  These descriptions will
+			; be added to the current FOR file where they can
+			; be viewed by callers with the ZFORP utility.
+			; Sysop can add new descriptions with the ZFORS
+			; utility (See ZMD.WS for more information on ZMD
+			; support files).  Uploads sent to the SYSOP private
+			; upload area will not be require descriptions, nor
+			; will files uploaded with the 'RW' option - user
+			; must be a privileged user (bit 7 in ACCESS byte
+			; set) or have WHEEL access and PUPOPT must be set
+			; YES to use the 'RW' option.
+
+FORNAM:	DB	'FOR        '	; Description text file  (Must be 11 bytes)
+DRIVE:	DB	'A'	;*If using with DESCRIB set YES, you must indicate
+USER:	DB	14	;*what drive/user you want the 'FOR' file to be
+			; placed.
+
+;
+; If DESCRIB above is set to YES, you'll have to tell ZMD what information
+; you want included in the first line of each description.  Code is included
+; in ZMD to place all (any) information in the upload description header in
+; in the same column position no matter what the filename or file category
+; length is.  The following illustrates a full implementation of DESCRIB.
+;
+; Example upload description header:
+;
+;    -----
+;    ZMD150.LBR - Communications            (C3:)       Rcvd: 09/21/88
+;		      /			     /			 /
+;      	      _______/		      ______/	         _______/
+;      ASKIND 		       INCLDU 		  DSTAMP
+;
+;
+ASKIND:	DB	NO	;*Yes, ask for the category of uploads and write it
+			; into the upload description header.  If you set
+			; this to YES, make sure you set MAXTYP below to
+			; the highest letter choice you wish to support and
+			; edit the text at KNDTBL: up to and including your
+			; MAXTYP setting. (Used only with DESCRIB).
+
+INCLDU:	DB	YES	;*Yes, include the drive/user area of the uploaded
+			; file into the upload description header.
+			; (Used only with DESCRIB).
+
+DSTAMP:	DB	YES	;*Yes, include the date the upload was received into
+			; the upload description header.  (NO if no clock)
+			; (Used only with DESCRIB).
+
+PUPOPT:	DB	YES	;*Yes, description request of file upload will be
+			; skipped when "RW" is used in the ZMD command line
+			; (i.e. ZMD RW FILE.EXT).  This command may only be
+			; used by those considered "priviledged" users on
+			; your system or WHEEL users.  Uploads of this type
+			; will be tagged in the ZMD.LOG file as private, so
+			; as not to display with the NEW command.  (See
+			; ACCESS equate description above for information
+			; on 'priviledged' users).
+
+WRAP:	DB	64	; Column position where word wrap will occur.  If
+			; you are using MSGDESC and have problems with an
+			; 'Invalid format' error from MFMSG.COM, try setting
+			; WRAP to something smaller,  like 62 or 63.  (Word
+			; wrap can be disabled by the user with ^W during
+			; description entry.  Enter 72 here to disable
+			; completely).
+
+;
+;-------------------------------------------------------------------------;
+; Special Sysop Downloads  	  					  |
+;-------------------------------------------------------------------------;
+;
+SPLDRV:	DB	'H'	;*Drive/user area for downloading private files
+SPLUSR:	DB	14	;*from sysop.  This permits him to put a special
+			; file in this area,  then leave a private note
+			; to that person mentioning the name of the file
+			; and how to download it (ZMD SP filename.ext).
+			; Although anybody 'could' download that program,
+			; they don't know what (if any) files are there.
+			; A high degree of security exists,  while the
+			; SYSOP still has the ability to make special
+			; files available. Thus any person can be a
+			; temporary 'privileged user'.
+
+;
+;-------------------------------------------------------------------------;
+; File Transfer Log						  	  |
+;-------------------------------------------------------------------------;
+;
+LOGCAL:	DB	NO	;*ZMD.LOG is produced if LOGCAL is set YES.  All
+			; file transfers are logged.  You can then use
+			; ZNEWP.COM to show listings of recent uploads.
+EDATE:	DB	NO	; Yes, show date in ZMD.LOG in dd/mm/yy format
+			; instead of mm/dd/yy format.
+
+LOGNAM:	DB	'ZMD     LOG'	; File transfer log  (Must be 11 bytes)
+LOGDRV:	DB	'A'	;*Drive to find ZMD.LOG on.
+LOGUSR:	DB	14	;*User area to find ZMD.LOG on.
+
+LSTCLR:	DB	'LASTCALR???'	; Last caller file  (Must be 11 bytes)
+LASTDRV:DB	'A'	;*Drive to find LASTCALR??? file on.
+LASTUSR:DB	14	;*User area to find LASTCALR??? file on.
+LCNAME:	DB	0	;*Position of last caller's name in the LASTCALR???
+			; file. (MBBS is 11, PBBS is 0).
+
+LOGLDS:	DB	NO	;*Count number of up/down loads since login.  Your
+UPLDS:	DW	0054H	; BBS program can check UPLDS and DNLDS when a user
+DNLDS:	DW	0055H	; logs out and update either the user's file or a
+			; file for this purpose.  You can either modify
+			; your BBS entry program to check the LASTCALR file
+			; before updating and then update (risky), or make
+			; a separate program that BYE calls when logging off
+			; a user (preferred).  (YES for PBBS).  Clear UPLDS
+			; and DNLDS to 0 from your BBS program when somebody
+			; logs in.  NOTE: Clear ONLY when a user logs in,
+			; not when he re-enters the BBS program from CP/M.
+
+;
+;-------------------------------------------------------------------------;
+; File Descriptors							  |
+;-------------------------------------------------------------------------;
+;
+; This table defines the text to be included in upload description headers
+; (DESCRIB and ASKIND) and/or defines categories for uploading to multiple
+; drive/user areas (If ASKAREA and NOT SETAREA).  Change as desired, if
+; this list is not suitable.  Do NOT remove any of the text at KNDTBL:.
+; Simply edit the text below up to/and including your MAXTYP setting.
+; MAXTYP below must be set to whatever letter your maximum choice will be.
+; Make sure you leave all the following categories EXACTLY 31 bytes long
+; (29 bytes of text plus the CR,LF equals 31) or you will be CERTAIN to
+; have problems with the double column formatting later on in the program.
+;
+MAXTYP:	DB	'W'	; Letter of highest category you will support.
+ 
+KNDTBL:	DB	'  A) - BBS Lists, PC Pursuit ',CR,LF
+	DB	'  B) - CP/M Modem Program    ',CR,LF
+	DB	'  C) - CP/M Utility          ',CR,LF
+	DB	'  D) - CP/M Lbr, Ark, Catalog',CR,LF
+	DB	'  E) - CP/M Plus Specific    ',CR,LF
+	DB	'  F) - CP/M Games & Humor    ',CR,LF
+	DB	'  G) - CP/M Wordprocessing   ',CR,LF
+	DB	'  H) - CP/M Printer Utility  ',CR,LF
+	DB	'  I) - CP/M OS Enhancement   ',CR,LF
+	DB	'  J) - CP/M BBS Software     ',CR,LF
+	DB	'  K) - CP/M Assemb/Disassemb ',CR,LF
+	DB	'  L) - CP/M Language (Other) ',CR,LF
+	DB	'  M) - Turbo Pascal          ',CR,LF
+	DB	'  N) - dBase & Database      ',CR,LF
+	DB	'  O) - "C"                   ',CR,LF
+	DB	'  P) - Text & Information    ',CR,LF
+	DB	'  Q) - DOS Modem Program     ',CR,LF
+	DB	'  R) - DOS BBS Software      ',CR,LF
+	DB	'  S) - DOS Language          ',CR,LF
+	DB	'  T) - DOS Assemb/Disassemb  ',CR,LF
+	DB	'  U) - DOS Lbr, Arc, Catalog ',CR,LF
+	DB	'  V) - DOS Wordprocessing    ',CR,LF
+	DB	'  W) - DOS Printer Utility   ',CR,LF
+	DB	'  X) - DOS Games & Humor     ',CR,LF
+	DB	'  Y) - DOS Application       ',CR,LF
+	DB	'  Z) - DOS Utility           ',CR,LF
+	DB	0		; leave the table terminator alone.
+
+;
+;-------------------------------------------------------------------------;
+; Upload Routing Table							  |
+;-------------------------------------------------------------------------;
+;
+; If ASKAREA is set YES, then set these areas up to match the message text
+; in KNDTBL: above.  Note that PRIVATE uploads may be sent to a different
+; drive as well as a different user area.  Each entry is expressed as
+; 'drive letter',user area.  Simply set MAXTYP above to the highest
+; letter choice supported.  (Do NOT comment out any of the following
+; storage bytes).
+;
+;                 _________
+;   NOTE:        /    A    \	<--- 'A' Corresponds to category 'A' above
+;		'A',1,'B',15,
+;                 \ /   \ /
+;  Normal upload --+     |
+;  Private upload -------+
+;
+
+TYPTBL:
+;		  _________     _________     _________     _________
+;		 /    A    \   /    B    \   /    C    \   /    D    \
+	DB	'B',1,'F',15, 'B',0,'F',15, 'B',2,'F',15, 'B',4,'F',15
+;		  _________     _________     _________     _________
+;		 /    E    \   /    F    \   /    G    \   /    H    \
+	DB	'B',5,'F',15, 'B',6,'F',15, 'C',0,'F',15, 'C',1,'F',15
+;		  _________     _________     _________     _________
+;		 /    I    \   /    J    \   /    K    \   /    L    \
+	DB	'C',2,'F',15, 'C',3,'F',15, 'A',1,'F',15, 'A',5,'F',15
+;		  _________     _________     _________     _________
+;		 /    M    \   /    N    \   /    O    \   /    P    \
+	DB	'A',2,'F',15, 'A',3,'F',15, 'A',4,'F',15, 'A',6,'F',15
+;		  _________     _________     _________     _________
+;		 /    Q    \   /    R    \   /    S    \   /    T    \
+	DB	'E',0,'F',15, 'E',1,'F',15, 'E',2,'F',15, 'E',3,'F',15
+;		  _________     _________     _________     _________
+;		 /    U    \   /    V    \   /    W    \   /    X    \
+	DB	'F',0,'F',15, 'F',1,'F',15, 'F',2,'F',15, 'F',3,'F',15
+;		  _________     _________
+;		 /    Y    \   /    Z    \
+	DB	'G',0,'F',15, 'H',0,'F',15
+
+;
+;=========================================================================;
+;>>>>>>>>>>>>>>  DO NOT CHANGE ANYTHING BEYOND THIS POINT  <<<<<<<<<<<<<<<|
+;=========================================================================;
+;-------------------------------------------------------------------------;
+; Version Identification						  |
+;-------------------------------------------------------------------------;
+;
+; If/when INSTALL is first ran, it checks these next 3 bytes to make sure
+; it is installing the proper version of ZMD.COM.  If these bytes do not
+; match,  the INSTALL procedure will abort.  (Don't change this one)
+;
+INSVERS:DB	'150'	; Don't change this one
+
+;
+;-------------------------------------------------------------------------;
+; User Definable Storage Bytes						  |
+;-------------------------------------------------------------------------;
+;
+; If you make changes to the configuration table, make them here.  You
+; are allowed 2 bytes for switches, or storage for an address, etc.  Any
+; changes before this point and ZINSTL will not run.
+;
+SPARE1:	DB	0	; User definable storage
+SPARE2:	DB	0
+
+;
+;-------------------------------------------------------------------------;
+; Clock/Date Reader Code						  |
+;-------------------------------------------------------------------------;
+;
+; Install your clock/date reader code here. RTCTIM gets called to retrieve
+; the current date and time.  All values must be stored in binary form.
+; A 6 byte clock buffer called TIMBUF can be used as a work area.  Call
+; BCDBIN to convert your BCD (Binary Coded Decimal) value in A to binary
+; value in A.  Delete all ';<=' lines; after installing your custom
+; routine.
+;
+	ORG	4FEH		; Allow 130 bytes for RTC insert
+;
+RTCTIM::LD	A,0		;<= Delete lines if reader code installed
+	LD	(MONTH),A	;<= Current month  (1-12)
+	LD	(DAY),A		;<= Current date   (1-31)
+	LD	(YEAR),A	;<= Current year   (0-99)
+	LD	(MINUTE),A	;<= Current minute (0-59)
+	LD	(HOUR),A	;<= Current hour   (0-23)
+	RET
+
+;
+;-------------------------------------------------------------------------;
+; Input/Output Patch Area						  |
+;-------------------------------------------------------------------------;
+
+	ORG	580H	; Modem routine starts here
+
+CONOUT:	JP	0000H	; BIOS local console output routine address
+MINIT:	JP	0000H	; Startup initialization routine
+UNINIT:	JP	0000H	; Exit uninitialize routine
+MDOUTP:	JP	0000H	; Send character out modem
+MDCARCK:JP	0000H	; Test for carrier
+MDINP:	JP	0000H	; Get character from modem
+MDINST:	JP	0000H	; Check receive ready
+MDOUTST:JP	0000H	; Check send ready
+
+	;ORG	600H	; Allow 128 bytes for I/O overlay
+	ORG	1000H	; Allow for large I/O overlay
+	
+
+;
+; Overlay ends here
+;
+

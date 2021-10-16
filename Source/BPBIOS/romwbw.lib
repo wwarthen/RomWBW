@@ -12,46 +12,64 @@ HBIOS	EQU	YES			; Use HBIOS functions
 HBLOC	EQU	0FE00H			; Location of HBIOS proxy
 MEMTOP	EQU	HBLOC - 1		; Last usable address
 ;
+HB_DEBUG	EQU	FALSE		; See hbios.z80 file
+;
+; TODO: Query system via HBIOS API to determine actual size of
+; RAM and ROM, then adjust BPBIOS operation accordingly.
+;
 HB_RAMBANKS	EQU	16		; For systems with 512K of RAM
 ;HB_RAMBANKS	EQU	32		; For systems with 1MB of RAM
 HB_ROMBANKS	EQU	16		; For systems with 512K of ROM
 ;HB_ROMBANKS	EQU	32		; For systems with 1MB of ROM
 ;
-; Set HB_IODEV to appropriate console device
+; Set HB_IODEV to desired HBIOS character device unit number
 ;
-HB_IODEV	EQU	0		; Assume we want to use first HBIOS serial device
+; TODO: Query system via HBIOS API to determine number of serial
+; devices available and assign up to 3 of them to the 3 serial
+; device slots in BPBIOS at boot.
 ;
-; Set HB_MDDEV to appropriate memory disk driver
+HB_IODEV	EQU	80H		; 0x80 is current HBIOS console
 ;
-HB_MDRAM	EQU	0		; HBIOS Disk Device #0 is normally RAM Disk
-HB_MDROM	EQU	1		; HBIOS Disk Device #1 is normally ROM Disk
+; Set HB_MDRAM/ROM to desired HBIOS disk device numbers
 ;
-; Set HB_HDDEV to appropriate hard disk driver
+HB_MDRAM	EQU	0		; HBIOS Disk Unit #0 is usually the RAM Disk
+HB_MDROM	EQU	1		; HBIOS Disk Unit #1 is usually the ROM Disk
 ;
-HB_HDDEV0	EQU	2		; First hard disk is HBIOS Disk Device #2
+; Set HB_HDDEVN to appropriate HBIOS disk device numbers
+;
+; If the RomWBW system has no floppy drives, then the hard disk units
+; will start right after the memory disk units.  So, the first hard disk
+; will be unit #2.  Refer to the DPH entries to see how the HBIOS
+; units are mapped to drive letters.
+;
+HB_HDDEV0	EQU	2		; If no floppy drives in system, first HBIOS hard disk is unit #2
 HB_HDDEV1	EQU	3		; Second hard disk is HBIOS Disk Device #3
 HB_HDDEV2	EQU	4		; Third hard disk is HBIOS Disk Device #4
 ;
 ; Floppy disk support
 ;
-; TODO: Query HBIOS to see if system has floppy drive(s)
+; TODO: Query HBIOS to see if system has floppy drive(s).  For now
+; we do not really support floppy drives.
 ;
 DRV_O		SET	NO		; YES if system has flopy drives
 DRV_P		SET	NO		; YES if system has flopy drives
 ;
-; RAM/ROM disk sizes expressed as count of 2K blocks
+; RAM/ROM Bank Reserve
 ;
-HB_RAMBLKS	EQU	(HB_RAMBANKS - 8) * 16
-HB_ROMBLKS	EQU	(HB_ROMBANKS - 4) * 16
+HB_RAMRESV	EQU	8		; RAM reserve is 8 banks
+HB_ROMRESV	EQU	4		; ROM reserve is 4 banks
 ;
 ; Layout of RAM banks
 ;
-BID_RAMD	EQU	80H
-BID_RAMM	EQU	80H + HB_RAMBANKS - 9
-BID_SYS		EQU	80H + HB_RAMBANKS - 4
-BID_HB		EQU	80H + HB_RAMBANKS - 3
-BID_USR		EQU	80H + HB_RAMBANKS - 2
-BID_COM		EQU	80H + HB_RAMBANKS - 1
+; TODO: Query system via HBIOS API to determine the actual bank
+; assignments, then adjust BPBIOS operation accordingly.
+;
+BID_RAMD	EQU	-16	; 90h - 16 = 80h
+BID_RAMM	EQU	-9	; 90h - 9 = 87h
+BID_SYS		EQU	-4	; 90h - 4 = 8Ch
+BID_HB		EQU	-3	; 90h - 3 = 8Dh
+BID_USR		EQU	-2	; 90h - 2 = 8Eh
+BID_COM		EQU	-1	; 90h - 1 = 8Fh
 ;
 HB_EI	MACRO
 	EI
@@ -59,4 +77,4 @@ HB_EI	MACRO
 HB_DI	MACRO
 	DI
 	ENDM
-
+

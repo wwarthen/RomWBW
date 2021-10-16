@@ -1,0 +1,268 @@
+;
+
+	TITLE  ZMAP.Z80 - 09/29/88 - ZMD System MAP Utility
+;				     Copyrighted (c) 1988
+;				     Robert W. Kramer III
+
+	PAGE
+;-									 -;
+;                         Update History                                  ;
+;                                                                         ;
+;    Date	Release			     Comments                     ;
+;  --------	-------	  ----------------------------------------------  ;
+;                                                                         ;
+;  09/29/88	v1.50	- Initial release				  ;
+;-                                                                       -;
+
+;-------------------------------------------------------------------------;
+; EXTERNAL Declarations:						  |
+;-------------------------------------------------------------------------;
+
+
+	EXTRN	EXIT,ILPRTB,OLDDRV,OLDUSR,PRINTV,RECAR1,STACK,TYPE
+	EXTRN	KIND,CATADR,SHONM4,WHLCHK,DECOUT
+
+;
+;-------------------------------------------------------------------------;
+; Program Starts Here							  |
+;-------------------------------------------------------------------------;
+
+
+       .Z80
+	ASEG
+	ORG	100H		; Program starts 
+	JP	BEGIN		; Jump around configuration table
+	INCLUDE	ZMDHDR.Z80	; Include the ZMD header overlay
+       .REQUEST ZMDSUBS		; Include the ZMD subroutines
+
+;
+;
+; Save CP/M stack, initialize new one for this program
+;
+BEGIN:	LD	(STACK),SP	; Save return address to CCP
+	LD	SP,STACK	; Initialize new one for this program
+
+;
+; Save current drive/user
+;
+	LD	A,255		; Get current user
+	CALL	RECAR1
+	LD	(OLDUSR),A	; Store it
+	LD	C,CURDRV	; Get current drive
+	CALL	BDOS
+	LD	(OLDDRV),A	; Store it
+
+;
+;
+; Display program name and version 
+;
+BEGIN1:	LD	HL,MAPNAM	; Point to name of this program
+	CALL	PRINTV		; Display it
+
+	LD	A,(ASKAREA)
+	OR	A
+	JP	Z,NOTDEF	; Upload areas not enabled, Abort
+
+	CALL	WHLCHK
+	JP	Z,BEGIN2
+	LD	A,1
+	LD	(SPECIAL),A
+
+BEGIN2:	CALL	HBORD
+
+	LD	A,'A'
+	LD	(KIND),A
+
+	LD	A,(MAXTYP)
+	RRA
+	PUSH	AF
+
+	LD	A,(MAXTYP)
+	SUB	A,'A'
+	RRA
+	LD	C,A
+
+	POP	AF
+	JP	NC,NOTODD
+	LD	A,1
+	LD	(ISODD),A
+
+NOTODD:	INC	C
+	LD	A,'A'
+	ADD	A,C
+	LD	C,A		; C contains letter of 2nd column descriptors
+
+	LD	A,(MAXTYP)
+	SUB	A,'@'
+	LD	B,A		; B contains binary number of descriptors
+
+	LD	DE,DESTBL	; DE contains address to 26 byte table
+	LD	A,C
+	EX	AF,AF'
+	LD	A,'A'		; Initialize first entry
+
+SETLP:	LD	(DE),A
+	INC	DE
+	INC	A
+	EX	AF,AF'
+	DJNZ	SETLP
+	LD	A,0
+	LD	(DE),A		; Stuff terminator for display routines
+
+;
+; Main program loop
+;
+LOOP:	LD	A,(COLM)
+	OR	A
+	JP	NZ,DOCOL2
+
+	CALL	ILPRTB
+	DB	'  | ',0
+	JP	ATEND
+
+DOCOL2:	CALL	ILPRTB
+	DB	' || ',0
+
+ATEND:	CALL	SHOWFD
+	CALL	SHOWDU
+	LD	A,(COLM)
+	OR	A
+	JP	Z,ATEND1
+	CALL	ILPRTB
+	DB	' |'
+	DB	CR,LF,0
+	XOR	A
+	JP	ATEND2
+
+ATEND1:	LD	A,1
+	
+ATEND2:	LD	(COLM),A
+
+	LD	HL,(TBLSAV)
+	INC	HL
+	LD	(TBLSAV),HL
+	LD	A,(HL)
+	LD	(KIND),A
+	OR	A
+	JP	NZ,LOOP
+
+	LD	A,(ISODD)
+	OR	A
+	JP	Z,ISDN1
+
+ISDONE:	CALL	ILPRTB
+	DB	' ||                             ',0
+	LD	A,(SPECIAL)
+	OR	A
+	JP	Z,IS1
+	CALL	ILPRTB
+	DB	'     ',0
+
+IS1:	CALL	ILPRTB
+	DB	' |',CR,LF,0
+
+ISDN1:	CALL	HBORD
+	CALL	ILPRTB
+	DB	CR,LF
+	DB	'  Use FOR/NEW to view recent upload description/log listings.'
+	DB	0
+	JP	EXIT
+;
+;
+SHOWDU:	LD	A,(KIND)
+	SUB	'A'
+	RLA
+	RLA
+	LD	D,0
+	LD	E,A
+	LD	IY,TYPTBL
+	ADD	IY,DE
+	LD	A,(IY)
+	CALL	TYPE
+
+	LD	A,(IY+1)
+	CALL	SHODU1
+
+	CALL	ILPRTB
+	DB	' ',0
+
+	LD	A,(SPECIAL)
+	OR	A
+	RET	Z
+
+	LD	A,(IY+2)
+	CALL	TYPE
+
+	LD	A,(IY+3)
+
+SHODU1:	CP	10
+	PUSH	AF	
+
+	LD	H,0
+	LD	L,A
+	CALL	DECOUT
+	CALL	ILPRTB
+	DB	':',0
+
+	POP	AF
+	RET	C
+
+	CALL	ILPRTB
+	DB	' ',0
+	RET
+
+;
+;
+SHOWFD:	CALL	CATADR
+	INC	DE
+	INC	DE
+	LD	B,23
+
+SHOFD1:	LD	A,(DE)
+	CALL	TYPE
+	INC	DE
+	DJNZ	SHOFD1
+	CALL	ILPRTB
+	DB	' ',0
+	RET
+
+;
+; Show horizontal border for top and bottom
+;
+HBORD:	CALL	ILPRTB
+	DB	'  ================================================================',0
+	LD	A,(SPECIAL)
+	OR	A
+	JP	Z,HBORD1
+	CALL	ILPRTB
+	DB	'==========',0
+
+HBORD1:	CALL	ILPRTB
+	DB	CR,LF,0
+	RET
+
+NOTDEF:	CALL	ILPRTB
+	DB	CR,LF
+	DB	'ZMD Upload Routing feature not enabled, ',0
+	LD	HL,MAPNAM
+	CALL	SHONM4
+	CALL	ILPRTB
+	DB	'aborting...',0
+	JP	EXIT
+;
+; These next are dummy routines to satisfy ZMDSUBS external requests.
+; They do nothing, but leave them alone.
+;
+DONE::	JP	EXIT		; Exit routine can take care of us
+TIME::	RET
+
+TBLSAV:	DW	DESTBL
+DESTBL:	DB	'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+ISODD:	DB	0
+COUNT:	DB	0
+COLM:	DB	0
+SPECIAL:DB	0
+
+
+	END
+
