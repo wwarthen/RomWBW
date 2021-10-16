@@ -3,7 +3,8 @@ DEST = ../../../Binary/Apps
 TOOLS = ../../../Tools
 OTHERS = *.hex
 NODELETE = *.ovr *.doc *.hlp
+include $(TOOLS)/Makefile.inc
 
 %.com: USETASM=1
 
-include $(TOOLS)/Makefile.inc
+
