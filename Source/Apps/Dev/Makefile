@@ -5,6 +5,6 @@ DOCDEST = ../../../Binary/Apps
 TOOLS = ../../../Tools
 include $(TOOLS)/Makefile.inc
 
-%.com: USETASM=1
+Dev.com: USETASM=1
 
 
