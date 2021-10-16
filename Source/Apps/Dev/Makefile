@@ -4,6 +4,6 @@ TOOLS = ../../../Tools
 OTHERS = *.hex
 NODELETE = *.ovr *.doc *.hlp
 
-USETASM=1
+%.com: USETASM=1
 
 include $(TOOLS)/Makefile.inc
