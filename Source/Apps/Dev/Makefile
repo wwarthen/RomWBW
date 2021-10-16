@@ -1,10 +1,10 @@
-OBJECTS = Dev.com
-DOCS = Dev.doc
+OBJECTS = dev.com
+DOCS = dev.doc
 DEST = ../../../Binary/Apps
 DOCDEST = ../../../Binary/Apps
 TOOLS = ../../../Tools
 include $(TOOLS)/Makefile.inc
 
-Dev.com: USETASM=1
+dev.com: USETASM=1
 
 
