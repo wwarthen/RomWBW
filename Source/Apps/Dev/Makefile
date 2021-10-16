@@ -1,8 +1,8 @@
-OBJECTS = Dev.com *.ovr *.hlp Dev.doc
+OBJECTS = Dev.com
+DOCS = Dev.doc
 DEST = ../../../Binary/Apps
+DOCDEST = ../../../Binary/Apps
 TOOLS = ../../../Tools
-OTHERS = *.hex
-NODELETE = *.ovr *.doc *.hlp
 include $(TOOLS)/Makefile.inc
 
 %.com: USETASM=1
