@@ -100,6 +100,16 @@ RETMEM:	LD	A,(CURBNK)
 SELMEM:	LD	(USRBNK),A	; Update user bank
 			;..fall thru to set specified bank..
 
+	  IF HB_DEBUG AND FALSE
+
+	CALL	PRTSTRD
+	DEFB	'[SELMEM: $'
+	CALL	PRTHEXBYTE
+	CALL	PRTSTRD
+	DEFB	']$'
+
+	  ENDIF
+
 ;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ; SELBNK - Switch Memory Bank to Bank in A and show as current.
 ;  Must preserve all Registers including Flags.

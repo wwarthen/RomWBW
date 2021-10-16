@@ -9,6 +9,7 @@
 HBF_ALLOC	EQU	0F6H		; HBIOS Func: ALLOCATE Heap Memory
 HBF_PEEK	EQU	0FAH		; HBIOS Func: Peek Byte
 HBF_POKE	EQU	0FBH		; HBIOS Func: Poke Byte
+HBF_MEMINFO	EQU	0F8F1H		; HBIOS Func: Get Memory Info
 HBF_BNKINFO	EQU	0F8F2H		; HBIOS Func: Get Bank Info
 ;
 ; HBIOS Proxy Addresses
@@ -57,6 +58,14 @@ HB_SELMEM:
 	PUSH	BC
 	PUSH	DE
 	PUSH	HL
+	
+	  IF HB_DEBUG AND FALSE
+	CALL	PRTSTRD
+	DEFB	'[HB_SELMEM: $'
+	CALL	PRTHEXBYTE
+	CALL	PRTSTRD
+	DEFB	']',CR,LF,'$'
+	  ENDIF
 	
 	LD	BC,HBF_BNKINFO	; HBIOS BNKINFO function
 	CALL	HBX_INVOKE	; DO IT, D=BID_BIOS, E=BID_USER
@@ -111,6 +120,14 @@ HB_MOVE:
 ;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 HB_XMOVE:
+	  IF HB_DEBUG AND FALSE
+	CALL	PRTSTRD
+	DEFB	'[HB_XMOVE: $'
+	CALL	PRTHEXWORD
+	CALL	PRTSTRD
+	DEFB	']',CR,LF,'$'
+	  ENDIF
+
 	LD	(HB_SRCBNK),BC
 	RET
 
@@ -119,106 +136,6 @@ HB_XMOVE:
 ;   HBIOS INITIALIZATION
 ;==================================================================================================
 ;
-HB_INIT:
-	;; Setup RST 08 vector
-	;LD	A,0C3H			; $C3 = JP
-	;LD	(08H),A
-	;LD	HL,HBX_INVOKE
-	;LD	(09H),HL
-	
-	;IF  BANKED
-	;
-	;; Copy vectors from TPA page zero to SYS page zero
-	;LD	BC,(TPABNK)	; C := TPABNK, B := SYSBNK
-	;CALL	XMOVE		; Set source/dest banks for copy
-	;LD	HL,0		; Source address is zero
-	;LD	DE,0		; Destination address is zero
-	;LD	BC,40H		; Copy 40H bytes
-	;CALL	MOVE		; Do it
-	;
-	;ENDIF		;BANKED
-
-	  IF HB_DEBUG
-
-	CSEG
-XORG	DEFL	$
-	ORG	0
-ORG_CSEG	EQU	$
-	ORG	XORG
-
-	DSEG
-XORG	DEFL	$
-	ORG	0
-ORG_DSEG	EQU	$
-	ORG	XORG
-
-	    IF BANKED
-
-	COMMON	/BANK2/
-XORG	DEFL	$
-	ORG	0
-ORG_BANK2	EQU	$
-	ORG	XORG
-
-	COMMON	/B2RAM/
-XORG	DEFL	$
-	ORG	0
-ORG_B2RAM	EQU	$
-	ORG	XORG
-
-	COMMON	/RESVD/
-XORG	DEFL	$
-	ORG	0
-ORG_RESVD	EQU	$
-	ORG	XORG
-
-	    ENDIF
-	
-	CALL 	NEWLINE2
-	LD	DE,HB_STR_TAG
-	CALL	WRITESTR
-
-	LD	DE,HB_STR_CSEG
-	CALL	WRITESTR
-	LD	BC,ORG_CSEG
-	CALL	PRTHEXWORD
-	LD	DE,HB_STR_DSEG
-	CALL	WRITESTR
-	LD	BC,ORG_DSEG
-	CALL	PRTHEXWORD
-	
-	    IF BANKED
-	LD	DE,HB_STR_BANK2
-	CALL	WRITESTR
-	LD	BC,ORG_BANK2
-	CALL	PRTHEXWORD
-	LD	DE,HB_STR_B2RAM
-	CALL	WRITESTR
-	LD	BC,ORG_B2RAM
-	CALL	PRTHEXWORD
-	LD	DE,HB_STR_RESVD
-	CALL	WRITESTR
-	LD	BC,ORG_RESVD
-	CALL	PRTHEXWORD
-	    ENDIF		;BANKED
-	
-	CALL	NEWLINE
-	
-	RET
-	
-HB_STR_TAG:	DB	"HBIOS: $"
-HB_STR_CSEG:	DB	"CSEG=$"
-HB_STR_DSEG:	DB	", DSEG=$"
-HB_STR_BANK2:	DB	", BANK2=$"
-HB_STR_B2RAM:	DB	", B2RAM=$"
-HB_STR_RESVD:	DB	", RESVD=$"
-
-	  ELSE	; [HB_DEBUG]
-	  
-	RET
-
-	  ENDIF ; [HB_DEBUG]
-
 	CSEG
 
 HB_SRCBNK:	DEFS	1	; Move Source Bank #

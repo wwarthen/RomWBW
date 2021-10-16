@@ -54,12 +54,10 @@ HB_HDDEV2	EQU	4		; Third hard disk is HBIOS Disk Device #4
 DRV_O		SET	NO		; YES if system has flopy drives
 DRV_P		SET	NO		; YES if system has flopy drives
 ;
-; RAM/ROM disk sizes expressed as count of 2K blocks.  These values
-; are simply derived from values set previously and should.  These
-; lines should not need to be changed.
+; RAM/ROM Bank Reserve
 ;
-HB_RAMBLKS	EQU	(HB_RAMBANKS - 8) * 16
-HB_ROMBLKS	EQU	(HB_ROMBANKS - 4) * 16
+HB_RAMRESV	EQU	8		; RAM reserve is 8 banks
+HB_ROMRESV	EQU	4		; ROM reserve is 4 banks
 ;
 ; Layout of RAM banks
 ;

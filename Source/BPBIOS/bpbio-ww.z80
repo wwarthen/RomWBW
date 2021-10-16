@@ -310,12 +310,22 @@ NRDPB	EQU	[$-DPB]/DPBSIZ	; Calc number of DPB's
 	INCLUDE	IBMV-WW.Z80	; <<    routines in IBMV-xxx.Z80     >>
 
 	  ELSE			; If Not Banked, Use these hooks
+	  
+	CSEG
 
 MOVE:	LDIR
 	RET
 
-SETBNK:
 SELMEM:
+	  IF HB_DEBUG AND FALSE
+	CALL	PRTSTRD
+	DEFB	'[SELMEM (STUB): $'
+	CALL	PRTHEXBYTE
+	CALL	PRTSTRD
+	DEFB	']',CR,LF,'$'
+	  ENDIF
+
+SETBNK:
 RETMEM:
 XMOVE:
 GOSYSB:
@@ -459,6 +469,44 @@ NSECTS	EQU	($+INITCS-BIOSJT)/128+1
 	  IF  INROM
 	INCLUDE	BOOTRAM.Z80
 	  ENDIF		;INROM
-	END
 
-
+	  IF HB_DEBUG
+
+	CSEG
+XORG	DEFL	$
+	ORG	0
+ORG_CSEG	EQU	$
+	ORG	XORG
+
+	DSEG
+XORG	DEFL	$
+	ORG	0
+ORG_DSEG	EQU	$
+	ORG	XORG
+
+	    IF BANKED
+
+	COMMON	/BANK2/
+XORG	DEFL	$
+	ORG	0
+ORG_BANK2	EQU	$
+	ORG	XORG
+
+	COMMON	/B2RAM/
+XORG	DEFL	$
+	ORG	0
+ORG_B2RAM	EQU	$
+	ORG	XORG
+
+	COMMON	/RESVD/
+XORG	DEFL	$
+	ORG	0
+ORG_RESVD	EQU	$
+	ORG	XORG
+
+	    ENDIF ; BANKED
+	
+	  ENDIF ; HB_DEBUG
+
+	END
+
