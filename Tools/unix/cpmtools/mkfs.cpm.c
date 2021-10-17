@@ -220,6 +220,7 @@ int main(int argc, char *argv[]) /*{{{*/
 #if 0
     fprintf(stderr,"%d %04x %s\n",c,used+0x800,boot[c]);
 #endif
+    memset(bootTracks+used+size, 0xe5, bootTrackSize-used-size);
     if (size%drive.secLength) size=(size|(drive.secLength-1))+1;
     used+=size;
     close(fd);

@@ -227,6 +227,8 @@ void load_comfile(void)
         }
 	fclose(fp);
 	
+	memset(RAM + 0x0100 + com_len, 0, 0xFD00 - com_len);
+	
 	Msg("Loaded %d bytes from %s\n", com_len, fname);
 }
 

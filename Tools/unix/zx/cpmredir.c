@@ -287,6 +287,8 @@ cpm_word fcb_read(cpm_byte *fcb, cpm_byte *dma)
         redir_Msg("        (from %lx)\n", zxlseek(handle, 0, SEEK_CUR));
 
 	/* Read in the required amount */
+	
+	memset(dma, 0x00, redir_rec_len);
 
 #ifdef WIN32
 	{
@@ -299,6 +301,12 @@ cpm_word fcb_read(cpm_byte *fcb, cpm_byte *dma)
 #else
 	rv = read(handle, dma, redir_rec_len);
 #endif
+
+	if (rv == -1)
+		memset(dma, 0x00, redir_rec_len);
+
+	if ((rv >= 0) && (rv < redir_rec_len))
+		memset(dma + rv, 0x00, redir_rec_len - rv);
 
 	/* rd_len = length supposedly read, bytes. Round to nearest 128 bytes.
          */
@@ -493,6 +501,9 @@ cpm_word fcb_randrd(cpm_byte *fcb, cpm_byte *dma)
         if ((handle = redir_verify_fcb(fcb)) < 0) return 9;	/* Invalid FCB */
 
         if (zxlseek(handle, offs, SEEK_SET) < 0) return 6; /* bad record no. */
+	
+	memset(dma, 0x00, redir_rec_len);
+	
 #ifdef WIN32
 	{
 		BOOL b;
@@ -504,6 +515,13 @@ cpm_word fcb_randrd(cpm_byte *fcb, cpm_byte *dma)
 #else
         rv = read(handle, dma, redir_rec_len);
 #endif
+
+	if (rv == -1)
+		memset(dma, 0x00, redir_rec_len);
+
+	if ((rv >= 0) && (rv < redir_rec_len))
+		memset(dma + rv, 0x00, redir_rec_len - rv);
+
 	zxlseek(handle, offs, SEEK_SET);
 
 	redir_put_fcb_pos(fcb, offs);
@@ -579,6 +597,8 @@ cpm_word fcb_randwz(cpm_byte *fcb, cpm_byte *dma)
 
 	while (len < offs) 
 	{
+		memset(zerorec, 0, sizeof(zerorec));
+
 		rl = sizeof(zerorec);
 		if ((offs - len) < sizeof(zerorec)) rl = offs - len;
 #ifdef WIN32
