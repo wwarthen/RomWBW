@@ -265,6 +265,10 @@ VDU_VDASCR1:
 ;----------------------------------------------------------------------
 ;
 VDU_VDARDC:
+	LD	HL,(VDU_OFFSET)	; SET BUFFER READ POSITION
+	LD	DE,(VDU_POS)
+	ADD	HL,DE
+
 	LD	C,18		; SET SOURCE ADDRESS IN VDU (HL)
 	CALL	VDU_WRREGX	; DO IT
 
