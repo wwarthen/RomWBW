@@ -1368,6 +1368,25 @@ codes as described at the start of this section.
 
 `\clearpage`{=latex}
 
+### Function 0x4F -- Read a character at current video position (VDARDC)
+
+| _Entry Parameters_
+|       B: 0x4F
+|       C: Video Device Unit ID
+
+| _Exit Results_
+|       A: Status (0=OK, else error)
+|       E: Character
+|       B: Character Color Code
+|       C: Character Attribute Code
+
+Read a character from the current cursor position including it's colour
+and attributes. If the display does not support colours or attributes
+then return colour white on black and no attributes. If the device does
+not support the ability to read a character, return error status
+
+`\clearpage`{=latex}
+
 Sound (SND)
 ------------
 

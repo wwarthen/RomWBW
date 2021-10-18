@@ -148,11 +148,12 @@ VDU_FNTBL:
 	.DW	PPK_STAT
 	.DW	PPK_FLUSH
 	.DW	PPK_READ
+	.DW	VDU_VDARDC
 #IF (($ - VDU_FNTBL) != (VDA_FNCNT * 2))
 	.ECHO	"*** INVALID VDU FUNCTION TABLE ***\n"
 	!!!!!
 #ENDIF
-
+;
 VDU_VDAINI:
 	; RESET VDA
 	; CURRENTLY IGNORES VIDEO MODE AND BITMAP DATA
@@ -257,6 +258,32 @@ VDU_VDASCR1:
 	POP	DE		; RECOVER E
 	INC	E		; INCREMENT IT
 	JR	VDU_VDASCR	; LOOP
+;
+;----------------------------------------------------------------------
+; READ VALUE AT CURRENT VDU BUFFER POSITION
+; RETURN E = CHARACTER, B = COLOUR, C = ATTRIBUTES
+;----------------------------------------------------------------------
+;
+VDU_VDARDC:
+	LD	HL,(VDU_OFFSET)	; SET BUFFER READ POSITION
+	LD	DE,(VDU_POS)
+	ADD	HL,DE
+
+	LD	C,18		; SET SOURCE ADDRESS IN VDU (HL)
+	CALL	VDU_WRREGX	; DO IT
+
+   	LD 	A,31		; PREP VDU FOR DATA R/W
+    	OUT 	(VDU_REG),A	; DO IT
+
+	CALL	VDU_WAITRDY	; WAIT FOR VDU TO BE READY
+
+	LD	C,VDU_RAMRD	; LOAD C WITH VDU READ REGISTER
+	IN	E,(C)
+
+	LD	B,$F0		; WHITE FG. BLACK BG
+	LD	C,$00		; NO ATTRIBUTES
+	XOR	A
+	RET
 ;
 ;======================================================================
 ; VDU DRIVER - PRIVATE DRIVER FUNCTIONS
