@@ -94,6 +94,7 @@ CVDU_FNTBL:
 	.DW	KBD_STAT
 	.DW	KBD_FLUSH
 	.DW	KBD_READ
+	.DW	CVDU_VDARDC
 #IF (($ - CVDU_FNTBL) != (VDA_FNCNT * 2))
 	.ECHO	"*** INVALID CVDU FUNCTION TABLE ***\n"
 	!!!!!
@@ -219,6 +220,15 @@ CVDU_VDASCR1:
 	POP	DE		; RECOVER E
 	INC	E		; INCREMENT IT
 	JR	CVDU_VDASCR	; LOOP
+
+;----------------------------------------------------------------------
+; READ VALUE AT CURRENT VDU BUFFER POSITION
+; RETURN E = CHARACTER, B = COLOUR, C = ATTRIBUTES
+;----------------------------------------------------------------------
+
+CVDU_VDARDC:
+	OR	$FF		; UNSUPPORTED FUNCTION
+	RET
 ;
 ;======================================================================
 ; CVDU DRIVER - PRIVATE DRIVER FUNCTIONS
