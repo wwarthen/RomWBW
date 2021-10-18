@@ -13,3 +13,4 @@ pushd Apps && call Build || exit /b & popd
 pushd Forth && call Build || exit /b & popd
 pushd Fonts && call Build || exit /b & popd
 pushd RomDsk && call Build || exit /b & popd
+pushd TastyBasic && call Build || exit /b & popd
