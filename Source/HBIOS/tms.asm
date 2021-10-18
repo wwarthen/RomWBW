@@ -209,6 +209,7 @@ TMS_FNTBL:
 	.DW	TMS_READ
 #ENDIF
 #ENDIF
+	.DW	TMS_VDARDC
 #IF (($ - TMS_FNTBL) != (VDA_FNCNT * 2))
 	.ECHO	"*** INVALID TMS FUNCTION TABLE ***\n"
 	!!!!!
@@ -343,6 +344,15 @@ TMS_VDASCR1:
 TMS_VDASCR2:
 	CALL	TMS_SETCUR
 	XOR	A
+	RET
+
+;----------------------------------------------------------------------
+; READ VALUE AT CURRENT VDU BUFFER POSITION
+; RETURN E = CHARACTER, B = COLOUR, C = ATTRIBUTES
+;----------------------------------------------------------------------
+
+TMS_VDARDC:
+	OR	$FF		; UNSUPPORTED FUNCTION
 	RET
 
 ; DUMMY FUNCTIONS BELOW BECAUSE SCG BOARD HAS NO

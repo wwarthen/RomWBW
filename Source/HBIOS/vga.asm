@@ -161,6 +161,7 @@ VGA_FNTBL:
 	.DW	KBD_STAT
 	.DW	KBD_FLUSH
 	.DW	KBD_READ
+	.DW	VGA_VDARDC
 #IF (($ - VGA_FNTBL) != (VDA_FNCNT * 2))
 	.ECHO	"*** INVALID VGA FUNCTION TABLE ***\n"
 	!!!!!
@@ -313,6 +314,15 @@ VGA_VDASCR1:
 	POP	DE		; RECOVER E
 	INC	E		; INCREMENT IT
 	JR	VGA_VDASCR	; LOOP
+
+;----------------------------------------------------------------------
+; READ VALUE AT CURRENT VDU BUFFER POSITION
+; RETURN E = CHARACTER, B = COLOUR, C = ATTRIBUTES
+;----------------------------------------------------------------------
+
+VGA_VDARDC:
+	OR	$FF		; UNSUPPORTED FUNCTION
+	RET
 ;
 ;======================================================================
 ; VGA DRIVER - PRIVATE DRIVER FUNCTIONS

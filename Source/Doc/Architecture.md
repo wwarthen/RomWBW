@@ -34,6 +34,7 @@ header-includes:
   \usepackage{fancyhdr}
   \usepackage{xcolor}
   \usepackage{xhfill}
+  \usepackage{graphicx}
   \renewcommand*{\familydefault}{\sfdefault}
   \renewcommand{\maketitle}{
     \begin{titlepage}
@@ -194,7 +195,7 @@ simpler and more memory efficient to keep everything in RAM. At startup
 Runtime Memory Layout
 =====================
 
-![Banked Switched Memory Layout](Graphics/Bank Switched Memory){ width=80% }
+![Banked Switched Memory Layout](Graphics/BankSwitchedMemory){ width=80% }
 
 System Boot Process
 ===================
@@ -344,7 +345,7 @@ functions (such as cursor positioning, scrolling, etc.).
 Figure 7.1 depicts the relationship between these components
 of HBIOS video processing:
 
-![Character / Emulation / Video Services](Graphics/Character Emulation Video Services){ width=100% }
+![Character / Emulation / Video Services](Graphics/CharacterEmulationVideoServices){ width=100% }
 
 Normally, the operating system will simply utilize the CIOXXX functions
 to send and receive character data. The Character I/O Services will
@@ -1365,6 +1366,25 @@ Bit | Keystate Indication
 Keycodes are generally returned as appropriate ASCII values, if
 possible. Special keys, like function keys, are returned as reserved
 codes as described at the start of this section.
+
+`\clearpage`{=latex}
+
+### Function 0x4F -- Read a character at current video position (VDARDC)
+
+| _Entry Parameters_
+|       B: 0x4F
+|       C: Video Device Unit ID
+
+| _Exit Results_
+|       A: Status (0=OK, else error)
+|       E: Character
+|       B: Character Color Code
+|       C: Character Attribute Code
+
+Read a character from the current cursor position including it's colour
+and attributes. If the display does not support colours or attributes
+then return colour white on black and no attributes. If the device does
+not support the ability to read a character, return error status
 
 `\clearpage`{=latex}
 
