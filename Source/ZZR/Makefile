@@ -31,7 +31,7 @@ $(HD1024ZZZROMBOIMG): $(HD1024ZZRPREFIX) $(HD1024IMGS)
 
 $(ZZRROMHEX): $(ZZRROM)
 #	srec_cat $(ZZRROM) -Binary -Exclude 0x5000 0x7000 zzr_romldr.hex -Intel -Output $(ZZRROMHEX) -Intel
-	srec_cat $(ZZRROM) -Binary -Output $(ZZRROMHEX) -Intel
+	srec_cat $(ZZRROM) -Binary -Output $(ZZRROMHEX) -Intel -CRLF
 
 $(ZZRLDRROM): $(ZZRROMHEX)
 	srec_cat $(ZZRROMHEX) -Intel -Output $(ZZRLDRROM) -Binary
