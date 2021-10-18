@@ -33,6 +33,7 @@ pushd FAT && call Build || exit /b & popd
 pushd Test && call Build || exit /b & popd
 pushd ZMP && call Build || exit /b & popd
 pushd ZMD && call Build || exit /b & popd
+pushd Dev && call Build || exit /b & popd
 
 copy *.com %APPBIN%\ || exit /b
 

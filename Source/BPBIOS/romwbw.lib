@@ -14,14 +14,6 @@ MEMTOP	EQU	HBLOC - 1		; Last usable address
 ;
 HB_DEBUG	EQU	FALSE		; See hbios.z80 file
 ;
-; TODO: Query system via HBIOS API to determine actual size of
-; RAM and ROM, then adjust BPBIOS operation accordingly.
-;
-HB_RAMBANKS	EQU	16		; For systems with 512K of RAM
-;HB_RAMBANKS	EQU	32		; For systems with 1MB of RAM
-HB_ROMBANKS	EQU	16		; For systems with 512K of ROM
-;HB_ROMBANKS	EQU	32		; For systems with 1MB of ROM
-;
 ; Set HB_IODEV to desired HBIOS character device unit number
 ;
 ; TODO: Query system via HBIOS API to determine number of serial
