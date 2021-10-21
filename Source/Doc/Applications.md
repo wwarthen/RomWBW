@@ -1,10 +1,13 @@
-!include(Common.inc)
-!def(document)(Applications)
+include(`Common.m4')
+define({{doc_title}},{{Applications}})
 ---
-title: !product !document
-author: !author (mailto:!authmail)
-date: !date
-institution: !orgname
+title: |
+   | doc_product doc_title
+   |
+   | Version doc_ver
+author: doc_author (mailto:doc_authmail)
+date: doc_date
+institution: doc_orgname
 documentclass: article
 toc: true
 toc-depth: 1

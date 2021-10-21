@@ -14,5 +14,6 @@ SUBDIRS += HBIOS
 SUBDIRS += Images
 SUBDIRS += ZRC
 SUBDIRS += ZZR
+#SUBDIRS += Doc
 TOOLS = ../Tools
 include $(TOOLS)/Makefile.inc

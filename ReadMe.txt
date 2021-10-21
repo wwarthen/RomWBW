@@ -3,7 +3,7 @@ RomWBW
 Z80/Z180 System Software
 
 Version 3.1 Pre-release
-Thursday 23 September 2021
+Thu 10/21/2021
 
 Wayne Warthen wwarthen@gmail.com
 

@@ -1,13 +1,13 @@
-!include(Common.inc)
-!def(document)(Architecture)
+include(`Common.m4')
+define({{doc_title}},{{Architecture}})
 ---
 title: |
-   | !product
+   | doc_product doc_title
    |
-   | !document
-author: !author (mailto:!authmail)
-date: !date
-institution: !orgname
+   | Version doc_ver
+author: doc_author (mailto:doc_authmail)
+date: doc_date
+institution: doc_orgname
 documentclass: book
 classoption:
 - oneside
@@ -44,14 +44,14 @@ header-includes:
       \includegraphics[width=\paperwidth]{Graphics/Logo.pdf} \par
       \vfill
       \raggedleft
-      {\scshape \bfseries \fontsize{48pt}{56pt} \selectfont !product \par}
-      {\bfseries \fontsize{32pt}{36pt} \selectfont !document \par}
+      {\scshape \bfseries \fontsize{48pt}{56pt} \selectfont doc_product \par}
+      {\bfseries \fontsize{32pt}{36pt} \selectfont doc_title \par}
       \vspace{24pt}
-      {\huge Version !ver \\ !date \par}
+      {\huge Version doc_ver \\ doc_date \par}
       \vspace{24pt}
-      {\large \itshape !orgname \\ \href{http://!orgurl}{!orgurl} \par}
+      {\large \itshape doc_orgname \\ \href{http://doc_orgurl}{doc_orgurl} \par}
       \vspace{12pt}
-      {\large \itshape !author \\ \href{mailto:authmail}{!authmail} \par}
+      {\large \itshape doc_author \\ \href{mailto:doc_authmail}{doc_authmail} \par}
     \end{titlepage}
   }
   \pagestyle{empty}
@@ -70,7 +70,7 @@ include-before:
 ```{=latex}
 \clearpage
 \pagenumbering{arabic}
-\lhead{\fancyplain{}{\nouppercase{\footnotesize \bfseries \leftmark \hfill !product  !document}}}
+\lhead{\fancyplain{}{\nouppercase{\footnotesize \bfseries \leftmark \hfill doc_product  doc_title}}}
 ```
 
 Overview
