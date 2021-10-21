@@ -165,6 +165,7 @@ DMACode_Len 	.equ	$-DMACode
 DMALDIR:
 	ld	(DMASource),hl		; populate the dma
 	ld	(DMADest),de		; register template
+	dec	bc
 	ld	(DMALength),bc
 ;
 	ld	hl,DMACopy		; program the
@@ -211,6 +212,7 @@ DMACopy_Len 	.equ	$-DMACopy
 DMAOTIR:
 	ld	(DMAOutSource),hl	; populate the dma
 	ld	(DMAOutDest),a		; register template
+	dec	bc
 	ld	(DMAOutLength),bc	
 ;
 	ld	hl,DMAOutCode		; program the
@@ -262,6 +264,7 @@ DMAOut_Len 	.equ	$-DMAOutCode
 DMAINIR:
 	ld	(DMAInDest),hl		; populate the dma
 	ld	(DMAInSource),a		; register template
+	dec	bc
 	ld	(DMAInLength),bc	
 ;
 	ld	hl,DMAInCode		; program the
