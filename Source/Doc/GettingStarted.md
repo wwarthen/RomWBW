@@ -1,13 +1,14 @@
-!include(Common.inc)
-!def(document)(Getting Started)
+\include{"Common.h"}
+\define{doc_title}{Getting Started}
+
 ---
 title: |
-   | !product
+   | \doc_product \doc_title
    |
-   | !document
-author: !author (mailto:!authmail)
-date: !date
-institution: !orgname
+   | Version \doc_ver
+author: \doc_author (mailto:\doc_authmail)
+date: \doc_date
+institution: \doc_orgname
 documentclass: article
 classoption:
  - oneside
@@ -37,10 +38,10 @@ header-includes:
 
 ## Z80/Z180 System Software
 
-| Version !ver
-| !date
+| Version \doc_ver
+| \doc_date
 
-!author() [!authmail](mailto:!authmail)
+\doc_author [\doc_authmail](mailto:\doc_authmail)
 
 ### Download
 
@@ -1141,7 +1142,7 @@ To cancel: Ctrl-X, pause, Ctrl-X
 Thanks for the upload
 
 E>flash write rom.rom
-FLASH4 by Will Sowerbutts <will@sowerbutts.com> version 1.2.3
+FLASH4 by Will Sowerbutts <will@@sowerbutts.com> version 1.2.3
 
 Using RomWBW (v2.6+) bank switching.
 Flash memory chip ID is 0xBFB7: 39F040
@@ -1383,4 +1384,4 @@ RetroBrew Computers projects is via the community forums:
 Submission of issues and bugs are welcome at the
 [RomWBW GitHub Repository](https://github.com/wwarthen/RomWBW).
 
-Also feel free to email !author at [!authmail](mailto:!authmail).
+Also feel free to email \doc_author at [\doc_authmail](mailto:\doc_authmail).

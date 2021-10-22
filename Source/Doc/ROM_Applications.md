@@ -1,12 +1,15 @@
+\include{"Common.h"}
+\define{doc_title}{ROM Applications}
+\define{doc_title}{Phillip Summers}
 
-!include(Common.inc)
-!def(document)(ROM Applications)
-!def(author)(Phillip Summers)
 ---
-title: !product !document
-author: !author (mailto:!authmail)
-date: !date
-institution: !orgname
+title: |
+   | \doc_product \doc_title
+   |
+   | Version \doc_ver
+author: \doc_author
+date: \doc_date
+institution: \doc_orgname
 documentclass: article
 toc: true
 toc-depth: 1
@@ -127,7 +130,7 @@ Examples: `D 100 1FF`
 0130: E5 CD 6C 1F C1 C1 E5 2A C9 8C E5 CD 45 05 E5 CD  åÍl.ÁÁå*É.åÍE.åÍ
 0140: 59 1F C3 00 00 C3 AE 01 C3 51 04 C3 4C 02 C3 57  Y.Ã..î.ÃQ.ÃL.ÃW
 0150: 02 C3 64 02 C3 75 02 C3 88 02 C3 B2 03 C3 0D 04  .Ãd.Ãu.Ã..ò.Ã..
-0160: C3 19 04 C3 22 04 C3 2A 04 C3 35 04 C3 40 04 C3  Ã..Ã".Ã*.Ã5.Ã@.Ã
+0160: C3 19 04 C3 22 04 C3 2A 04 C3 35 04 C3 40 04 C3  Ã..Ã".Ã*.Ã5.Ã@@.Ã
 0170: 48 04 C3 50 04 C3 50 04 C3 50 04 C3 8F 02 C3 93  H.ÃP.ÃP.ÃP.Ã..Ã.
 0180: 02 C3 94 02 C3 95 02 C3 85 04 C3 C7 04 C3 D1 01  .Ã..Ã..Ã..ÃÇ.ÃÑ.
 0190: C3 48 02 C3 E7 04 C3 56 03 C3 D0 01 C3 D0 01 C3  ÃH.Ãç.ÃV.ÃÐ.ÃÐ.Ã

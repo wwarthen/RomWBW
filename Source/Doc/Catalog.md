@@ -1,15 +1,15 @@
-!include(Common.inc)
-!def(document)(Disk Catalog)
-!def(author)(Mykl Orders)
+\include{"Common.h"}
+\define{doc_title}{Disk Catalog}
+\define{doc_author}{Mykl Orders}
+
 ---
 title: |
-   | !product
-   | Version !ver
+   | \doc_product \doc_title
    |
-   | !document
-author: !author (mailto:!authmail)
-date: !date
-institution: !orgname
+   | Version \doc_ver
+author: \doc_author
+date: \doc_date
+institution: \doc_orgname
 documentclass: article
 classoption:
  - oneside
@@ -40,7 +40,7 @@ header-includes:
 \pagestyle{fancyplain}
 \fancyhf{}
 \pagenumbering{arabic}
-\lhead{\fancyplain{}{\nouppercase{\footnotesize \bfseries \leftmark \hfill !product  !document}}}
+\lhead{\fancyplain{}{\nouppercase{\footnotesize \bfseries \leftmark \hfill \doc_product  \doc_title}}}
 \lfoot{\small RetroBrew Computing Group ~~ {\xrfill[3pt]{1pt}[cyan]} ~~ \thepage}
 ```
 

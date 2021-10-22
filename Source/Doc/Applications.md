@@ -1,10 +1,14 @@
-!include(Common.inc)
-!def(document)(Applications)
+\include{"Common.h"}
+\define{doc_title}{Applications}
+
 ---
-title: !product !document
-author: !author (mailto:!authmail)
-date: !date
-institution: !orgname
+title: |
+   | \doc_product \doc_title
+   |
+   | Version \doc_ver
+author: \doc_author (mailto:\doc_authmail)
+date: \doc_date
+institution: \doc_orgname
 documentclass: article
 toc: true
 toc-depth: 1
@@ -57,8 +61,8 @@ on the media.
 
 Most of the applications are included as source code in the RomWBW
 distribution and are built in the normal build process. The source
-code is found in the Source\\Apps directory of the distribution. The
-binary executable applications are found in the Binary\\Apps directory.
+code is found in the Source\\\\Apps directory of the distribution. The
+binary executable applications are found in the Binary\\\\Apps directory.
 
 The following table clarifies where each of the applications can be
 found:
@@ -552,7 +556,7 @@ manually perform a verification function with the `FLASH VERIFY` form
 of the command.
 
 The author's documentation for the application is found in the RomWBW
-distribution in the Doc\\Contrib directory.
+distribution in the Doc\\\\Contrib directory.
 
 ## Notes
 
@@ -981,6 +985,6 @@ The `TUNE` application was custom written for RomWBW. All of the
 hardware interface code is specific to RomWBW. The sound file decoding
 software was adapted and embedded from pre-existing sources. The YM
 player code is from MYMPLAY 0.4 by Lieves!Tuore and the PT player code
-is (c)2004-2007 S.V.Bulba <vorobey@mail.khstu.ru>.
+is (c)2004-2007 S.V.Bulba <vorobey@@mail.khstu.ru>.
 
 The source code is provided in the RomWBW distribution.
