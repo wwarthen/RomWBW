@@ -985,6 +985,6 @@ The `TUNE` application was custom written for RomWBW. All of the
 hardware interface code is specific to RomWBW. The sound file decoding
 software was adapted and embedded from pre-existing sources. The YM
 player code is from MYMPLAY 0.4 by Lieves!Tuore and the PT player code
-is (c)2004-2007 S.V.Bulba <vorobey@@mail.khstu.ru>.
+is (c)2004-2007 S.V.Bulba <vorobey@mail.khstu.ru>.
 
 The source code is provided in the RomWBW distribution.
