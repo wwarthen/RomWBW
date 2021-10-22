@@ -1,9 +1,45 @@
 ;==================================================================================================
-; Z80 DMA DRIVER
+; Z80 DMA TEST UTILITY
 ;==================================================================================================
 ;
-#INCLUDE "std.asm"
+FALSE		.EQU	0
+TRUE		.EQU	~FALSE
 ;
+; HELPER MACROS
+;
+#DEFINE	PRTC(C)	CALL PRTCH \ .DB C	; PRINT CHARACTER C TO CONSOLE - PRTC('X')
+#DEFINE	PRTS(S)	CALL PRTSTRD \ .TEXT S	; PRINT STRING S TO CONSOLE - PRTD("HELLO")
+#DEFINE	PRTX(X) CALL PRTSTRI \ .DW X	; PRINT STRING AT ADDRESS X TO CONSOLE - PRTI(STR_HELLO)
+;
+; SYSTEM SPEED CAPABILITIES
+;
+SPD_FIXED	.EQU	0		; PLATFORM SPEED FIXED AND CANNOT CHANGE SPEEDS
+SPD_HILO	.EQU	1		; PLATFORM CAN CHANGE BETWEEN TWO SPEEDS
+;
+; SYSTEM SPEED CHARACTERISTICS
+;
+SPD_UNSUP	.EQU	0		; PLATFORM CAN CHANGE SPEEDS BUT IS UNSUPPORTED
+SPD_HIGH	.EQU	1		; PLATFORM CAN CHANGE SPEED, STARTS HIGH
+SPD_LOW		.EQU	2		; PLATFORM CAN CHANGE SPEED, STARTS LOW
+;
+; DMA MODE SELECTIONS
+;
+DMAMODE_NONE	.EQU	0
+DMAMODE_ECB	.EQU	1		; ECB-DMA WOLFGANG KABATZKE'S Z80 DMA ECB BOARD
+DMAMODE_Z180	.EQU	2		; Z180 INTEGRATED DMA
+DMAMODE_Z280	.EQU	3		; Z280 INTEGRATED DMA
+DMAMODE_RC	.EQU	4		; RC2014 Z80 DMA
+DMAMODE_MBC	.EQU	5		; MBC
+;
+DMABASE		.EQU	$E0		; DMA: DMA BASE ADDRESS
+RTCIO		.EQU	$70		; RTC / SPEED PORT
+HB_RTCVAL	.EQU	$FFEE		; HB_RTCVAL
+;
+CPUSPDCAP	.EQU	SPD_HILO	; CPU SPEED CHANGE CAPABILITY SPD_FIXED|SPD_HILO
+CPUSPDDEF	.EQU	SPD_HIGH	; SPD_UNSUP|SPD_HIGH|SPD_LOW
+;
+DMAMODE		.EQU	DMAMODE_MBC
+DMA_USEHS	.EQU	TRUE		; USE CLOCK DIVIDER
 ;
 DMA_CONTINUOUS			.equ 	%10111101	; + Pulse
 DMA_BYTE			.equ 	%10011101	; + Pulse
@@ -25,27 +61,39 @@ DMA_RESET			.equ	$c3
 ;DMA_ENABLE_AFTER_RETI		.equ	$b7
 ;DMA_REINIT_STATUS_BYTE		.equ	$8b
 ;
-DMA_FBACK			.equ	TRUE	; ALLOW FALLBACK TO SOFTWARE
-DMA_USEHS			.equ	TRUE	; USE CLOCK DIVIDER
-;
-;DMAMODE				.SET	DMAMODE_ECB
-;
-#IF (DMAMODE=DMAMODE_MBC)
-DMA_RDY				.EQU	%00000000
-DMA_FORCE			.EQU	1
-DMA_USEHS			.SET	FALSE
-#ENDIF
-#IF (DMAMODE=DMAMODE_ECB)
 DMA_RDY				.EQU	%00001000
 DMA_FORCE			.EQU	0
-DMA_USEHS			.SET	TRUE
+
+#IF (DMA_USEHS & (DMAMODE=DMAMODE_MBC))
+#IF (CPUSPDDEF=SPD_HIGH)
+#DEFINE DMAIOSLO LD A,(HB_RTCVAL) \ AND %11110111 \ OUT (RTCIO),A 
+#DEFINE DMAIONOR PUSH AF \ LD A,(HB_RTCVAL) \ OR %00001000 \ OUT (RTCIO),A \ POP AF
+#ELSE
+#DEFINE DMAIOSLO \;
+#DEFINE DMAIONOR \;
+#ENDIF
+#ENDIF
+;
+#IF (DMA_USEHS & (DMAMODE=DMAMODE_ECB))
+#IF (CPUSPDDEF=SPD_HIGH)
+#DEFINE DMAIOSLO LD A,(HB_RTCVAL) \ OR  %00001000 \ OUT (RTCIO),A 
+#DEFINE DMAIONOR PUSH AF \ LD A,(HB_RTCVAL) \ AND %11110111 \ OUT (RTCIO),A \ POP AF
+#ELSE
+#DEFINE DMAIOSLO \;
+#DEFINE DMAIONOR \;
+#ENDIF
+#ENDIF
+
+#IF (!DMA_USEHS)
+#DEFINE DMAIOSLO \;
+#DEFINE DMAIONOR \;
 #ENDIF
 ;
 ;==================================================================================================
 ; MAIN DMA MONITOR ROUTINE
 ;==================================================================================================
 ;
-	.ORG		$0100
+	.ORG	$0100
 ;
 MAIN:
 	LD	(SAVSTK),SP		; SETUP LOCAL
@@ -58,17 +106,21 @@ MENULP:	CALL	DISPM			; DISPLAY MENU
 	CALL	CIN			; GET SELECTION
 ;
 	CP	'D'
-	JP	Z,DMATST_D
+	JP	Z,DMATST_D		; DUMP REGISTERS
 	CP	'I'
-	JP	Z,DMATST_I
+	JP	Z,DMATST_I		; INITIALIZE
 	CP	'M'
-	JP	Z,DMATST_M
+	JP	Z,DMATST_M		; MEMORY MOVE
+	CP	'0'
+	JP	Z,DMATST_01
+	CP	'1'
+	JR	Z,DMATST_01
 	CP	'R'
-	JP	Z,DMATST_R
+	JP	Z,DMATST_R		; TOGGLE RESET
 	CP	'Y'
-	JP	Z,DMATST_Y
+	JP	Z,DMATST_Y		; TOGGLE READY
 	CP	'X'
-	JR	Z,DMABYE
+	JR	Z,DMABYE		; EXIT
 ;
 	JR	MENULP
 ;
@@ -87,6 +139,12 @@ DMATST_M:
 	CALL	DMAMemMove
 	JP	MENULP
 ;
+DMATST_01:
+	call	PRTSTRD
+	.db	"\n\TOGGLE PORT\n\r$"
+	CALL	DMA_Port01
+	JP	MENULP
+;
 DMATST_D:
 	call	PRTSTRD
 	.db	"\n\rSTART DMARegDump\n\r$"
@@ -95,8 +153,8 @@ DMATST_D:
 ;
 DMATST_Y:
 	call	PRTSTRD
-	.db	"\n\rY READY\n\r$"
-;	CALL	
+	.db	"\n\rTEST READY\n\r$"
+	CALL	DMA_ReadyT
 	JP	MENULP
 ;
 DMATST_R:
@@ -104,12 +162,14 @@ DMATST_R:
 	.db	"R RESET\n\r$"
 ;	CALL	
 	JP	MENULP
-
+;==================================================================================================
+; DISPLAY MENU
+;==================================================================================================
 ;
 DISPM:	call	PRTSTRD
 	.db	"\n\rDMA DEVICE: $"
-	LD	C,DMAMODE_MBC		; DISPLAY
-	LD	A,00000011B		; TARGET
+	LD	C,DMAMODE		; DISPLAY
+	LD	A,00000111B		; TARGET
 	LD	DE,DMA_DEV_STR		; DEVICE
 	CALL	PRTIDXMSK
 	CALL	NEWLINE
@@ -140,11 +200,7 @@ DMA_INIT:
 	LD	A,DMA_FORCE
 	out	(DMABASE+1),a		; force ready off
 ;
-#IF (DMA_USEHS)
-	ld	a,(HB_RTCVAL)
-	or	%00001000		; half
-	out	(RTCIO),a		; clock
-#ENDIF
+	DMAIOSLO
 ;
 	call	DMAProbe		; do we have a dma?
 	jr	nz,DMA_NOTFOUND
@@ -162,26 +218,13 @@ DMA_INIT:
 	xor	a			; set status
 ;
 DMA_EXIT:
-#IF (DMA_USEHS)
-	push	af
-	ld	a,(HB_RTCVAL)
-	and	%11110111		; full
-	out	(RTCIO),a		; clock
-	pop	af
-#ENDIF
+	DMAIONOR
 	ret
 ;
 DMA_NOTFOUND:
 	push	af
 	call	PRTSTRD
 	.db	" NOT PRESENT$"
-
-#IF (DMA_FBACK)
-	call	PRTSTRD
-	.db	". USING SOFTWARE$"
-	LD	A,ERR_NOHW
-	LD	(DMA_FAIL_FLAG),A
-#ENDIF
 	pop	af
 	jr	DMA_EXIT
 ;
@@ -191,20 +234,80 @@ DMA_FAIL_FLAG:
 DMA_DEV_STR:
 	.TEXT	"NONE$"
 	.TEXT	"ECB$"
-	.TEXT	"Z180"
+	.TEXT	"Z180$"
 	.TEXT	"Z280$"
+	.TEXT	"RC2014$"
 	.TEXT	"MBC$"
 ;
 MENU_OPT:
 	.TEXT	"\n\r"
 	.TEXT	"I) Initialize DMA\n\r"
 	.TEXT	"M) Memory to Memory test\n\r"
-	.TEXT	"P) Port select test\n\r"
-	.TEXT	"R) Reset bit test\n\r"
+	.TEXT	"0) DMA Port select test\n\r"
+	.TEXT	"1) DMA Latch Port select test\n\r"
 	.TEXT	"Y) Ready bit test\n\r"
 	.TEXT	"X) Exit\n\r"
 
 	.TEXT	">$"
+;
+;==================================================================================================
+; TOGGLE A PORT ON AND OFF
+;==================================================================================================
+;
+DMA_Port01:
+	sub	'0'			; Calculate
+	add	a,DMABASE		; Port to
+	ld	c,a			; toggle
+	ld	b,0
+portlp:	push	bc
+	call	PRTSTRD
+	.db	"\n\rON ...$"
+	call	PRTHEXWORD
+	push	bc
+	ld	b,0
+	ld	a,0
+portlp1:out	(c),a
+	djnz	portlp1
+	pop	bc
+	call	PRTSTRD
+	.db	" OFF$"
+	call	delay	
+	pop	bc
+	djnz	portlp
+	JP	MENULP
+;
+delay:	push	bc
+	ld	bc,0
+dlylp:	dec	bc
+	ld	a,b
+	or	c
+	jr	nz,dlylp
+	pop	bc
+	ret
+;
+;==================================================================================================
+; TOGGLE READY BIT
+;==================================================================================================
+;
+DMA_ReadyT:
+	ld	c,DMABASE+1		; toggle
+	ld	b,0
+portlp2:push	bc
+	call	PRTSTRD
+	.db	"\n\rON ...$"
+	call	PRTHEXWORD
+	ld	a,$FF
+	ld	c,DMABASE+1
+	out	(c),a
+	call	PRTSTRD
+	.db	" OFF$"
+	call	delay
+	ld	c,DMABASE+1
+	ld	a,0
+	out	(c),a
+	pop	bc
+	djnz	portlp2
+	ret
 ;
 ;==================================================================================================
 ; DMA MEMORY MOVE
@@ -321,11 +424,7 @@ DMALDIR:
 	ld	b,DMACopy_Len		; dma command
 	ld	c,DMABASE		; block
 ;
-#IF (DMA_USEHS)
-	ld	a,(HB_RTCVAL)
-	or	%00001000		; half
-	out	(RTCIO),a		; clock
-#ENDIF
+	DMAIOSLO
 	di
 	otir				; load and execute dma
 	ei
@@ -335,13 +434,7 @@ DMALDIR:
 	in	a,(DMABASE)		; set non-zero
 	and	%00111011		; if failed
 	sub	%00011011
-#IF (DMA_USEHS)
-	push	af
-	ld	a,(HB_RTCVAL)
-	and	%11110111		; full
-	out	(RTCIO),a		; clock
-	pop	af
-#ENDIF
+	DMAIONOR
 	ret
 ;
 DMACopy 	;.db	DMA_DISABLE	; R6-Command Disable DMA
@@ -374,11 +467,7 @@ DMAOTIR:
 	ld	b,DMAOut_Len		; dma command
 	ld	c,DMABASE		; block
 ;
-#IF (DMA_USEHS)
-	ld	a,(HB_RTCVAL)
-	or	%00001000		; half
-	out	(RTCIO),a		; clock
-#ENDIF
+	DMAIOSLO
 	di
 	otir				; load and execute dma
 	ei
@@ -389,13 +478,7 @@ DMAOTIR:
 	and	%00111011		; if failed
 	sub	%00011011
 ;
-#IF (DMA_USEHS)
-	push	af
-	ld	a,(HB_RTCVAL)
-	and	%11110111		; full
-	out	(RTCIO),a		; clock
-	pop	af
-#ENDIF
+	DMAIONOR
 	ret
 ;
 DMAOutCode  	;.db	DMA_DISABLE	; R6-Command Disable DMA
@@ -433,11 +516,7 @@ DMAINIR:
 	ld	b,DMAIn_Len		; dma command
 	ld	c,DMABASE		; block
 ;
-#IF (DMA_USEHS)
-	ld	a,(HB_RTCVAL)
-	or	%00001000		; half
-	out	(RTCIO),a		; clock
-#ENDIF
+	DMAIOSLO
 	di
 	otir				; load and execute dma
 	ei
@@ -448,13 +527,7 @@ DMAINIR:
 	and	%00111011		; if failed
 	sub	%00011011
 ;
-#IF (DMA_USEHS)
-	push	af
-	ld	a,(HB_RTCVAL)
-	and	%11110111		; full
-	out	(RTCIO),a		; clock
-	pop	af
-#ENDIF
+	DMAIONOR
 	ret
 ;
 DMAInCode 	;.db	DMA_DISABLE	; R6-Command Disable DMA
@@ -514,8 +587,11 @@ DMARegDump:
 	call	NEWLINE
 	ret
 ;#ENDIF
-
-
+;
+CIO_CONSOLE	.EQU	$80	; CONSOLE UNIT TO C
+BF_CIOOUT	.EQU	$01	; HBIOS FUNC: OUTPUT CHAR
+BF_CIOIN	.EQU	$00	; HBIOS FUNC: INPUT CHAR
+BF_CIOIST	.EQU	$02	; HBIOS FUNC: INPUT CHAR STATUS
 ;
 ;__COUT_______________________________________________________________________
 ;
@@ -592,4 +668,4 @@ SAVSTK:	.DW	2
 STACK:	.EQU	$
 PROEND:	.EQU	$
 ;
-	.end
+	.END
