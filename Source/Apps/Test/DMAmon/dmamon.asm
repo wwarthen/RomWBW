@@ -141,7 +141,7 @@ DMATST_M:
 ;
 DMATST_01:
 	call	PRTSTRD
-	.db	"\n\TOGGLE PORT\n\r$"
+	.db	"\n\rTOGGLE PORT\n\r$"
 	CALL	DMA_Port01
 	JP	MENULP
 ;
@@ -159,7 +159,7 @@ DMATST_Y:
 ;
 DMATST_R:
 	call	PRTSTRD
-	.db	"R RESET\n\r$"
+	.db	"\n\rRESET\n\r$"
 ;	CALL	
 	JP	MENULP
 ;==================================================================================================
