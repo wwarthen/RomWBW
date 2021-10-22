@@ -1,7 +1,7 @@
 #
-# NOTE: Pandoc, Latex (MiKTeX or TexLive), and M4  must be installed
+# NOTE: Pandoc, Latex (MiKTeX or TexLive), and gpp must be installed
 # and available on commandline for this build to work!!!
-# Typically "sudo apt install pandoc, texlive-latex-extra, M4"
+# Typically "sudo apt install pandoc, texlive-latex-extra, gpp"
 #
 OBJECTS = GettingStarted.pdf GettingStarted.gfm GettingStarted.txt Applications.pdf Architecture.pdf Catalog.pdf ROM_Applications.pdf 
 # DEST = ../../Doc
@@ -13,7 +13,7 @@ include $(TOOLS)/Makefile.inc
 all :: deploy
 
 %.tmp : %.md
-	m4 -D doc_date="`date +"%d %b %Y"`" $< >$@
+	gpp -T $< >$@
 
 %.pdf : %.tmp
 	pandoc $< -f markdown -t latex -s -o $@ --default-image-extension=pdf

@@ -7,7 +7,7 @@ setlocal
 ::
 
 set TOOLS=..\..\Tools
-set PATH=%TOOLS%\m4;%PATH%
+set PATH=%TOOLS%\m4;%TOOLS%\gpp;%PATH%
 
 if not "%1"=="" (call :GenDoc %1 & goto :eof)
 
@@ -37,9 +37,9 @@ echo.
 
 echo Processing document %1.md...
 
-m4 -D doc_date="%date%" %1.md >%1.tmp
+gpp -T <%1.md >%1.tmp
 
-pandoc %1.tmp -f markdown -t latex -s -o %1.pdf --default-image-extension=pdf || exit /b
+pandoc %1.tmp -f markdown -t pdf -s -o %1.pdf --default-image-extension=pdf || exit /b
 pandoc %1.tmp -f markdown -t html -o %1.html --default-image-extension=png || exit /b
 pandoc %1.tmp -f markdown -t dokuwiki -o %1.dw --default-image-extension=png || exit /b
 pandoc %1.tmp -f markdown -t gfm -o %1.gfm --default-image-extension=png || exit /b

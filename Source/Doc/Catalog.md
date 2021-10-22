@@ -1,14 +1,15 @@
-include(`Common.m4')
-define({{doc_title}},{{Disk Catalog}})
-define({{doc_author}},{{Mykl Orders}})
+\include{"Common.h"}
+\define{doc_title}{Disk Catalog}
+\define{doc_author}{Mykl Orders}
+
 ---
 title: |
-   | doc_product doc_title
+   | \doc_product \doc_title
    |
-   | Version doc_ver
-author: doc_author
-date: doc_date
-institution: doc_orgname
+   | Version \doc_ver
+author: \doc_author
+date: \doc_date
+institution: \doc_orgname
 documentclass: article
 classoption:
  - oneside
@@ -39,7 +40,7 @@ header-includes:
 \pagestyle{fancyplain}
 \fancyhf{}
 \pagenumbering{arabic}
-\lhead{\fancyplain{}{\nouppercase{\footnotesize \bfseries \leftmark \hfill doc_product  doc_title}}}
+\lhead{\fancyplain{}{\nouppercase{\footnotesize \bfseries \leftmark \hfill \doc_product  \doc_title}}}
 \lfoot{\small RetroBrew Computing Group ~~ {\xrfill[3pt]{1pt}[cyan]} ~~ \thepage}
 ```
 
