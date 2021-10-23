@@ -37,7 +37,13 @@ echo.
 
 echo Processing document %1.md...
 
-gpp -T <%1.md >%1.tmp
+gpp -o %1.tmp -U "\\" "" "{" "}{" "}" "{" "}" "#" "" %1.md
+
+:: pandoc %1.tmp -f markdown -s -o %1.tex --default-image-extension=pdf || exit /b
+:: pause
+:: rem texify --pdf --clean %1.ltx || exit /b
+:: texify --pdf %1.tex || exit /b
+:: goto :eof
 
 pandoc %1.tmp -f markdown -t pdf -s -o %1.pdf --default-image-extension=pdf || exit /b
 pandoc %1.tmp -f markdown -t html -o %1.html --default-image-extension=png || exit /b

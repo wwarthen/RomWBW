@@ -3,7 +3,7 @@
 ## Z80/Z180 System Software
 
 Version 3.1 Pre-release  
-Thu 10/21/2021
+22 Oct 2021
 
 Wayne Warthen <wwarthen@gmail.com>
 

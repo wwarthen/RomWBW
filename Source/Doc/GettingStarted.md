@@ -1142,7 +1142,7 @@ To cancel: Ctrl-X, pause, Ctrl-X
 Thanks for the upload
 
 E>flash write rom.rom
-FLASH4 by Will Sowerbutts <will@@sowerbutts.com> version 1.2.3
+FLASH4 by Will Sowerbutts <will@sowerbutts.com> version 1.2.3
 
 Using RomWBW (v2.6+) bank switching.
 Flash memory chip ID is 0xBFB7: 39F040

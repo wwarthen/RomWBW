@@ -196,7 +196,7 @@ simpler and more memory efficient to keep everything in RAM. At startup
 Runtime Memory Layout
 =====================
 
-![Banked Switched Memory Layout](Graphics/BankSwitchedMemory){ width=80% }
+![Bank Switched Memory Layout](Graphics/BankSwitchedMemory){ width=80% }
 
 System Boot Process
 ===================
