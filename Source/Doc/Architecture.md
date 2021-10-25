@@ -1,78 +1,5 @@
-\include{"Common.h"}
 \define{doc_title}{Architecture}
-
----
-title: |
-   | \doc_product \doc_title
-   |
-   | Version \doc_ver
-author: \doc_author (mailto:\doc_authmail)
-date: \doc_date
-institution: \doc_orgname
-documentclass: book
-classoption:
-- oneside
-toc: true
-toc-depth: 1
-numbersections: true
-secnumdepth: 1
-papersize: letter
-geometry:
-- top=1.5in
-- bottom=1.5in
-- left=1.5in
-- right=1.5in
-# - showframe
-# - pass
-linestretch: 1.25
-colorlinks: true
-fontfamily: helvet
-fontsize: 12pt
-header-includes:
-- \setlength{\headheight}{15pt}
-- |
-  ```{=latex}
-  \usepackage{fancyhdr}
-  \usepackage{xcolor}
-  \usepackage{xhfill}
-  \usepackage{graphicx}
-  \renewcommand*{\familydefault}{\sfdefault}
-  \renewcommand{\maketitle}{
-    \begin{titlepage}
-      \centering
-      \par
-      \vspace*{0pt}
-      \includegraphics[width=\paperwidth]{Graphics/Logo.pdf} \par
-      \vfill
-      \raggedleft
-      {\scshape \bfseries \fontsize{48pt}{56pt} \selectfont \doc_product \par}
-      {\bfseries \fontsize{32pt}{36pt} \selectfont \doc_title \par}
-      \vspace{24pt}
-      {\huge Version \doc_ver \\ \doc_date \par}
-      \vspace{24pt}
-      {\large \itshape \doc_orgname \\ \href{http://\doc_orgurl}{\doc_orgurl} \par}
-      \vspace{12pt}
-      {\large \itshape \doc_author \\ \href{mailto:\doc_authmail}{\doc_authmail} \par}
-    \end{titlepage}
-  }
-  \pagestyle{empty}
-  ```
-include-before:
-- \renewcommand{\chaptername}{Section}
-- |
-  ```{=latex}
-  \pagestyle{fancyplain}
-  \fancyhf{}
-  \lfoot{\small RetroBrew Computing Group ~~ {\xrfill[3pt]{1pt}[cyan]} ~~ \thepage}
-  \pagenumbering{roman}
-  ```
----
-
-```{=latex}
-\clearpage
-\pagenumbering{arabic}
-\lhead{\fancyplain{}{\nouppercase{\footnotesize \bfseries \leftmark \hfill \doc_product  \doc_title}}}
-```
+\include{"Common.h"}
 
 Overview
 ========
@@ -196,7 +123,7 @@ simpler and more memory efficient to keep everything in RAM. At startup
 Runtime Memory Layout
 =====================
 
-![Bank Switched Memory Layout](Graphics/BankSwitchedMemory){ width=80% }
+![Bank Switched Memory Layout](Graphics/BankSwitchedMemory){ width=100% }
 
 System Boot Process
 ===================

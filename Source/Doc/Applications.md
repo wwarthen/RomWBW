@@ -1,38 +1,5 @@
-\include{"Common.h"}
 \define{doc_title}{Applications}
-
----
-title: |
-   | \doc_product \doc_title
-   |
-   | Version \doc_ver
-author: \doc_author (mailto:\doc_authmail)
-date: \doc_date
-institution: \doc_orgname
-documentclass: article
-toc: true
-toc-depth: 1
-classoption:
- - oneside
-papersize: letter
-geometry:
- - top=1.5in
- - bottom=1.5in
- - left=1.5in
- - right=1.5in
-# - showframe
-linestretch: 1.25
-colorlinks: true
-fontfamily: helvet
-fontsize: 12pt
-header-includes:
- - |
-   ```{=latex}
-   \renewcommand*{\familydefault}{\sfdefault}
-   ```
----
-
-`\clearpage  % new page after TOC`{=latex}
+\include{"Common.h"}
 
 # Summary
 

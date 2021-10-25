@@ -13,3 +13,4 @@ pushd inttest && call Clean || exit /b 1 & popd
 pushd ppidetst && call Clean || exit /b 1 & popd
 pushd ramtest && call Clean || exit /b 1 & popd
 pushd I2C && call Clean || exit /b 1 & popd
+pushd rzsz && call Clean || exit /b 1 & popd
