@@ -32,15 +32,15 @@ S_SYSVAR	.equ	49
 
 		.org	100h
 
-start:		ld	sp, 1808h
+start:		ld	sp, nstack	; Setup local stack
 		ld	c, S_BDOSVER
-		call	bdos		; Return version number
-		cp	30h
-		jp	c, loc_0_1C2
-		ld	de, text1D5h
-		ld	c, C_WRITESTR
-		call	bdos		; Output string
-		call	sub_0_195
+		call	bdos		; Return CP/M version #
+		cp	'0'		; Get CP/M vers. #
+		jp	c, err_vern	; CP/M 2 or less?
+		ld	de, str_welc
+		ld	c, C_WRITESTR   ;yes
+		call	bdos		;"RZ for ..."; Output string
+		call	sub_0_195       ;print string
 		ld	hl, (word_0_179E)
 		xor	a
 		ld	b, 14h
@@ -53,7 +53,7 @@ start:		ld	sp, 1808h
 		ex	de, hl
 		ld	a, 0FFh
 		call	sub_0_172E
-		jp	nz, loc_0_1CA
+		jp	nz, err_exit
 		ld	hl, (word_0_179E)
 		inc	hl
 		ld	a, (hl)
@@ -97,7 +97,7 @@ loc_0_164:				; CODE XREF: start+5Ej
 
 loc_0_174:				; CODE XREF: start+25j	start+3Bj
 					; ...
-		ld	de, text1FDh
+		ld	de, str_sxfr
 		ld	c, C_WRITESTR
 		call	bdos		; Output string
 		call	sub_0_3EF
@@ -157,26 +157,20 @@ sub_0_1B0:				; CODE XREF: start+6Ep	start+8Fp
 
 ;----------------------------------------------------------------------------
 
-loc_0_1C2:				; CODE XREF: start+Aj
-		ld	de, text22Ch
-		ld	c, C_WRITESTR
-		call	bdos		; Output string
+err_vern:	ld	de, str_cpm3	; Display version
+		ld	c, C_WRITESTR	; error and exit
+		call	bdos
 
-loc_0_1CA:				; CODE XREF: start+32j
-		ld	de, text241h
-		ld	c, C_WRITESTR
-		call	bdos		; Output string
+err_exit:	ld	de, str_info	; Display usage
+		ld	c, C_WRITESTR	; and exit to
+		call	bdos		; CP/M
 		jp	0
 ;----------------------------------------------------------------------------
-text1D5h:
-		.text	"RZ for CP/M 3   V 1.04\r\n"
+str_welc:	.text	"RZ for CP/M 3   V 1.04\r\n"
 		.text	"(C) 92 wshbg\r\n\n$"
-text1FDh:		
-		.text	"start your local X/Y/ZModem sending program\r\n\n$"
-text22Ch:
-		.text	"sorry, CP/M 3 Tool\r\n$"
-text241h:
-		.text	"usage: rz [-?pbcrxyz] [du:fn]\r\n\n"
+str_sxfr:	.text	"start your local X/Y/ZModem sending program\r\n\n$"
+str_cpm3:	.text	"sorry, CP/M 3 Tool\r\n$"
+str_info:	.text	"usage: rz [-?pbcrxyz] [du:fn]\r\n\n"
 		.text	" options for ZModem:\r\n"
 		.text	"            ?     this help\r\n"
 		.text	"            p     protect File\r\n"
@@ -200,7 +194,7 @@ loc_0_39C:				; CODE XREF: sub_0_39A+12j
 		ld	a, (de)
 		or	a
 		jr	z, loc_0_3AE
-		ld	hl, 3B1h
+		ld	hl,loc_0_3B1
 		ld	bc, 8
 		cpir	
 		call	z, sub_0_67F
@@ -214,7 +208,7 @@ loc_0_3AE:				; CODE XREF: sub_0_39A+5j
 ; End of function sub_0_39A
 
 ;----------------------------------------------------------------------------
-		.text	"?PBCXYZR"
+loc_0_3B1:	.text	"?PBCXYZR"
 
 		.dw sub_0_3E9
 		.dw sub_0_3D1
@@ -223,7 +217,7 @@ loc_0_3AE:				; CODE XREF: sub_0_39A+5j
 		.dw sub_0_3E3
 		.dw sub_0_3DD
 		.dw sub_0_3D7 
-		.dw loc_0_1CA
+		.dw err_exit
 
 ;----------------------------------------------------------------------------
 
@@ -493,63 +487,38 @@ text51Eh:
 		.db    0 ;  
 		.db    0 ;  
 		.db    0 ;  
-		.db  21h ; !
-		.db  44h ; D
-		.db    5 ;  
-		.db  3Eh ; >
-		.db    0 ;  
-		.db  3Ch ; <
-		.db 0E6h ; æ
-		.db    3 ;  
-		.db  32h ; 2
-		.db  2Dh ; -
-		.db    5 ;  
-		.db  5Fh ; _
-		.db  16h ;  
-		.db    0 ;  
-		.db  19h ;  
-		.db  7Eh ; ~
-		.db  32h ; 2
-		.db  49h ; I
-		.db    5 ;  
-		.db  11h ;  
-		.db  48h ; H
-		.db    5 ;  
-		.db  0Eh ;  
-		.db    9 ;  
-		.db 0C3h ; Ã
-		.db    5 ;  
-		.db    0 ;  
-		.db  7Ch ; |
-		.db  2Fh ; /
-		.db  2Dh ; -
-		.db  5Ch ; \
-		.db  20h ;  
-		.db  7Ch ; |
-		.db    8 ;  
-		.db    8 ;  
-		.db  24h ; $
-		.db  11h ;  
-		.db  69h ; i
-		.db    5 ;  
-		.db  18h ;  
-		.db    3 ;  
+
+		ld	hl,str_busy
+		ld	a,0
+		inc	a
+		and	3
+		ld	(052Dh),a
+		ld	e,a
+		ld	d,0
+		add	hl,de
+		ld	a,(hl)
+		ld	(0549h),a
+		ld	de,0548h
+		ld	c,9
+		jp	bdos
+  
+str_busy:	.text	"|/-\\ |\b\b$"	
+
+		ld	de,0569h
+		jr	sub_0_555
 
 ;----------------------------------------------------------------------------
 
 ;		S u b r	o u t i	n e
 
-sub_0_552:				; CODE XREF: seg000:0A2Ep
-		ld	de, text55Ah
-		ld	c, C_WRITESTR
-		jp	5		; Output string
-; End of function sub_0_552
+sub_0_552:	ld	de, text55Ah
+sub_0_555:	ld	c, C_WRITESTR
+		jp	bdos		; Output string
 
 ;----------------------------------------------------------------------------
-text55Ah:
 
-		.text	"File skipped\r\n$"
- 		.text	"can't open any file\r\n$"
+text55Ah:	.text	"File skipped\r\n$"
+text569h:	.text	"can't open any file\r\n$"
 
 ;----------------------------------------------------------------------------
 
@@ -1908,7 +1877,7 @@ loc_0_BE9:				; CODE XREF: sub_0_BD3+Ej
 		ld	a, 9
 		call	sub_0_13BA
 		call	sub_0_FD1
-		ld	hl, 0CE4h
+		ld	hl, loc_0_CE4
 		ld	bc, 7
 		cpir	
 		jp	z, sub_0_67F
@@ -2117,8 +2086,9 @@ loc_0_BE9:				; CODE XREF: sub_0_BD3+Ej
 		.db  13h ;  
 		.db 0C3h ; Ã
 		.db  0Ah ;  
-		.db  0Ch ;  
-		.db    6 ;  
+		.db  0Ch ; 
+ 
+loc_0_CE4:	.db    6 ;  
 		.db 0FEh ; þ
 		.db    4 ;  
 		.db  0Bh ;  
@@ -4607,12 +4577,11 @@ sub_0_16E7:				; CODE XREF: sub_0_482+6p sub_0_4A4+1Fp
 		push	bc
 		ld	b, 0
 		jp	loc_0_16F0
-;----------------------------------------------------------------------------
-		.db 0C5h ; Å
-		.db    6 ;  
-		.db 0FFh ; ÿ
-;----------------------------------------------------------------------------
 
+;----------------------------------------------------------------------------
+sub_0_16ED:
+		PUSH	BC		; unref. ?
+		LD	B,0FFH
 loc_0_16F0:				; CODE XREF: sub_0_16E7+3j
 		push	hl
 		push	af
@@ -4845,97 +4814,6 @@ byte_0_17A0:	.db 0			; DATA XREF: sub_0_195+Aw sub_0_195+14r
 					; ...
 byte_0_17A1:	.db 0			; DATA XREF: start+60r	sub_0_195+11w
 word_0_17A2:	.dw 0			; DATA XREF: start+88w	sub_0_961+7Fw
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-
-		.end	; start
+		.fill	$1800-$,0
+		.ds	8
+nstack:		.end	; start
