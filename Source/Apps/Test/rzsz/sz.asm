@@ -54,12 +54,12 @@ loc_0_10B:				; CODE XREF: startj
 		ld	hl, (word_0_109)
 		call	sub_0_17C5
 		ld	c, 0Ch
-		call	5
+		call	bdos
 		cp	30h
 		jp	c, loc_0_21E
 		ld	de, 231h
 		ld	c, 9
-		call	5
+		call	bdos
 		call	sub_0_1F1
 		ld	a, (80h)
 		or	a
@@ -130,7 +130,7 @@ loc_0_196:				; CODE XREF: start+59j
 		call	sub_0_1E49
 		ld	de, 36Ch
 		ld	c, 9
-		call	5
+		call	bdos
 		pop	hl
 		pop	de
 		pop	bc
@@ -157,7 +157,7 @@ loc_0_196:				; CODE XREF: start+59j
 		ld	(26F5h), hl
 		ld	de, 385h
 		ld	c, 9
-		call	5
+		call	bdos
 		call	sub_0_408
 		call	sub_0_854
 		call	sub_0_46A
@@ -206,7 +206,7 @@ sub_0_20C:				; CODE XREF: start+7Ap	start+EBp
 		ld	a, (de)
 		ld	e, a
 		ld	c, 20h
-		call	5
+		call	bdos
 		pop	af
 		dec	a
 		ld	e, a
@@ -219,12 +219,12 @@ sub_0_20C:				; CODE XREF: start+7Ap	start+EBp
 loc_0_21E:				; CODE XREF: start+1Bj
 		ld	de, 259h
 		ld	c, 9
-		call	5
+		call	bdos
 
 loc_0_226:				; CODE XREF: start+2Dj	start+44j
 		ld	de, 26Eh
 		ld	c, 9
-		call	5
+		call	bdos
 		jp	0
 ;----------------------------------------------------------------------------
 		.db  53h ; S
@@ -714,7 +714,7 @@ sub_0_408:				; CODE XREF: start+D8p
 		ld	(byte_0_47D), a
 		ld	c, 31h
 		ld	de, 478h
-		call	5
+		call	bdos
 		ld	a, h
 		cpl	
 		ld	h, a
@@ -724,7 +724,7 @@ sub_0_408:				; CODE XREF: start+D8p
 		ld	(word_0_488), hl
 		ld	c, 31h
 		ld	de, 47Ch
-		call	5
+		call	bdos
 		ld	(word_0_484), hl
 		ld	de, (word_0_488)
 		ld	a, h
@@ -736,7 +736,7 @@ sub_0_408:				; CODE XREF: start+D8p
 		ld	(word_0_47E), hl
 		ld	c, 31h
 		ld	de, 480h
-		call	5
+		call	bdos
 		ld	(word_0_486), hl
 		ld	de, (word_0_488)
 		ld	a, h
@@ -752,7 +752,7 @@ loc_0_450:				; CODE XREF: sub_0_46A+Cj
 		ld	(byte_0_47D), a
 		ld	de, 47Ch
 		ld	c, 31h
-		call	5
+		call	bdos
 		ld	a, 0FEh
 		ld	(byte_0_481), a
 		ld	de, 480h
@@ -1013,11 +1013,11 @@ sub_0_561:				; CODE XREF: sub_0_561+1Fj
 		sbc	hl, de
 		jr	z, loc_0_582
 		ld	c, 7
-		call	5
+		call	bdos
 		or	a
 		jr	z, loc_0_582
 		ld	c, 3
-		call	5
+		call	bdos
 		ld	c, a
 		ld	hl, 2067h
 		call	sub_0_5F5
@@ -1067,7 +1067,7 @@ sub_0_58D:				; CODE XREF: sub_0_5AD+12p
 
 sub_0_5A6:				; CODE XREF: seg000:12ACp
 		ld	c, 8
-		call	5
+		call	bdos
 		or	a
 		ret	
 ; End of function sub_0_5A6
@@ -5573,7 +5573,7 @@ sub_0_185C:				; CODE XREF: sub_0_17C9+7p
 		ld	(273Bh), hl
 		ld	de, 80h
 		ld	c, 1Ah
-		call	5
+		call	bdos
 		ld	c, 11h
 		jr	loc_0_1892
 ;----------------------------------------------------------------------------
@@ -5585,7 +5585,7 @@ loc_0_188B:				; CODE XREF: sub_0_185C+3Ej
 
 loc_0_1892:				; CODE XREF: sub_0_185C+2Dj
 		ld	de, 2714h
-		call	5
+		call	bdos
 		cp	0FFh
 		jr	nz, loc_0_188B
 		or	0FFh
@@ -5814,7 +5814,7 @@ sub_0_19A1:				; CODE XREF: sub_0_1979+3p
 		push	hl
 		push	af
 		ld	c, 1Fh
-		call	5
+		call	bdos
 		inc	hl
 		inc	hl
 		ld	de, 274Bh
@@ -6963,7 +6963,7 @@ sub_0_1E11:				; CODE XREF: sub_0_1D8C+5p
 					; sub_0_1D8C+Dp
 		push	de
 		push	bc
-		call	5
+		call	bdos
 		pop	bc
 		pop	de
 		or	a
@@ -6981,7 +6981,7 @@ sub_0_1E1A:				; CODE XREF: sub_0_1DA3+15p
 		push	de
 		push	bc
 		ld	c, a
-		call	5
+		call	bdos
 		or	a
 		pop	bc
 		pop	de
