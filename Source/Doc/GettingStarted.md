@@ -1,38 +1,5 @@
+\define{doc_title}{GettingStarted}
 \include{"Common.h"}
-\define{doc_title}{Getting Started}
-
----
-title: |
-   | \doc_product \doc_title
-   |
-   | Version \doc_ver
-author: \doc_author (mailto:\doc_authmail)
-date: \doc_date
-institution: \doc_orgname
-documentclass: article
-classoption:
- - oneside
-toc: true
-papersize: letter
-geometry:
- - top=1.5in
- - bottom=1.5in
- - left=1.5in
- - right=1.5in
-# - showframe
-linestretch: 1.25
-colorlinks: true
-fontfamily: helvet
-fontsize: 12pt
-header-includes:
- - |
-   ```{=latex}
-   \renewcommand*{\familydefault}{\sfdefault}
-   \setstretch{1.25} % for TOC
-   ```
----
-
-`\clearpage  % new page after TOC`{=latex}
 
 # RomWBW
 

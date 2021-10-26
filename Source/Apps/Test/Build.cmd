@@ -18,6 +18,7 @@ pushd inttest && call Build || exit /b & popd
 pushd ppidetst && call Build || exit /b & popd
 pushd ramtest && call Build || exit /b & popd
 pushd I2C && call Build || exit /b & popd
+pushd rzsz && call Build || exit /b & popd
 
 goto :eof
 
