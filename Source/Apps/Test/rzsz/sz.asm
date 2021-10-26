@@ -22,9 +22,14 @@ bdos		.equ	0005h
 
 A_READ		.equ	3
 A_STATIN	.equ	7
+A_STATOUT	.equ	8
 C_WRITESTR	.equ	9
 S_BDOSVER	.equ	12
 DRV_SET		.equ	14
+F_SFIRST	.equ	17
+DRV_GET		.equ	25
+F_DMAOFF	.equ	26
+DRV_DPB		.equ	31
 F_USERNUM	.equ	32
 S_SYSVAR	.equ	49
 
