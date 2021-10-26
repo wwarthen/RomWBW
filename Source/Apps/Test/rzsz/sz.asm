@@ -58,8 +58,8 @@ loc_0_10B:				; CODE XREF: startj
 		cp	30h
 		jp	c, loc_0_21E
 		ld	de, 231h
-		ld	c, 9
-		call	bdos
+		ld	c, C_WRITESTR
+		call	5
 		call	sub_0_1F1
 		ld	a, (80h)
 		or	a
@@ -129,7 +129,7 @@ loc_0_196:				; CODE XREF: start+59j
 		ld	de, 36Ch
 		call	sub_0_1E49
 		ld	de, 36Ch
-		ld	c, 9
+		ld	c, C_WRITESTR
 		call	bdos
 		pop	hl
 		pop	de
@@ -156,7 +156,7 @@ loc_0_196:				; CODE XREF: start+59j
 		ld	(26F1h), hl
 		ld	(26F5h), hl
 		ld	de, 385h
-		ld	c, 9
+		ld	c, C_WRITESTR
 		call	bdos
 		call	sub_0_408
 		call	sub_0_854
@@ -218,13 +218,13 @@ sub_0_20C:				; CODE XREF: start+7Ap	start+EBp
 
 loc_0_21E:				; CODE XREF: start+1Bj
 		ld	de, 259h
-		ld	c, 9
-		call	bdos
+		ld	c, C_WRITESTR
+		call	5
 
 loc_0_226:				; CODE XREF: start+2Dj	start+44j
 		ld	de, 26Eh
-		ld	c, 9
-		call	bdos
+		ld	c, C_WRITESTR
+		call	5
 		jp	0
 ;----------------------------------------------------------------------------
 		.db  53h ; S
@@ -1012,11 +1012,11 @@ sub_0_561:				; CODE XREF: sub_0_561+1Fj
 		ld	de, 200h
 		sbc	hl, de
 		jr	z, loc_0_582
-		ld	c, 7
+		ld	c, A_STATIN
 		call	bdos
 		or	a
 		jr	z, loc_0_582
-		ld	c, 3
+		ld	c, A_READ
 		call	bdos
 		ld	c, a
 		ld	hl, 2067h
