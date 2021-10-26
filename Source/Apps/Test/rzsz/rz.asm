@@ -4607,12 +4607,11 @@ sub_0_16E7:				; CODE XREF: sub_0_482+6p sub_0_4A4+1Fp
 		push	bc
 		ld	b, 0
 		jp	loc_0_16F0
-;----------------------------------------------------------------------------
-		.db 0C5h ; Å
-		.db    6 ;  
-		.db 0FFh ; ÿ
-;----------------------------------------------------------------------------
 
+;----------------------------------------------------------------------------
+sub_0_16ED:
+		PUSH	BC		; unref. ?
+		LD	B,0FFH
 loc_0_16F0:				; CODE XREF: sub_0_16E7+3j
 		push	hl
 		push	af
@@ -4845,97 +4844,6 @@ byte_0_17A0:	.db 0			; DATA XREF: sub_0_195+Aw sub_0_195+14r
 					; ...
 byte_0_17A1:	.db 0			; DATA XREF: start+60r	sub_0_195+11w
 word_0_17A2:	.dw 0			; DATA XREF: start+88w	sub_0_961+7Fw
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-
-		.end	; start
+		.fill	$1800-$,0
+		.ds	8
+nstack:		.end	; start
