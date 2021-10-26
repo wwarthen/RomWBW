@@ -53,13 +53,13 @@ loc_0_10B:				; CODE XREF: startj
 		ld	sp, 2067h
 		ld	hl, (word_0_109)
 		call	sub_0_17C5
-		ld	c, 0Ch
+		ld	c, S_BDOSVER
 		call	bdos
 		cp	30h
 		jp	c, loc_0_21E
 		ld	de, 231h
 		ld	c, C_WRITESTR
-		call	5
+		call	bdos
 		call	sub_0_1F1
 		ld	a, (80h)
 		or	a
@@ -205,13 +205,13 @@ sub_0_20C:				; CODE XREF: start+7Ap	start+EBp
 		dec	de
 		ld	a, (de)
 		ld	e, a
-		ld	c, 20h
+		ld	c, F_USERNUM
 		call	bdos
 		pop	af
 		dec	a
 		ld	e, a
-		ld	c, 0Eh
-		jp	5
+		ld	c, DRV_SET
+		jp	bdos
 ; End of function sub_0_20C
 
 ;----------------------------------------------------------------------------
@@ -219,12 +219,12 @@ sub_0_20C:				; CODE XREF: start+7Ap	start+EBp
 loc_0_21E:				; CODE XREF: start+1Bj
 		ld	de, 259h
 		ld	c, C_WRITESTR
-		call	5
+		call	bdos
 
 loc_0_226:				; CODE XREF: start+2Dj	start+44j
 		ld	de, 26Eh
 		ld	c, C_WRITESTR
-		call	5
+		call	bdos
 		jp	0
 ;----------------------------------------------------------------------------
 		.db  53h ; S
@@ -722,7 +722,7 @@ sub_0_408:				; CODE XREF: start+D8p
 		cpl	
 		ld	l, a
 		ld	(word_0_488), hl
-		ld	c, 31h
+		ld	c, S_SYSVAR
 		ld	de, 47Ch
 		call	bdos
 		ld	(word_0_484), hl
@@ -751,13 +751,13 @@ loc_0_450:				; CODE XREF: sub_0_46A+Cj
 		ld	a, 0FEh
 		ld	(byte_0_47D), a
 		ld	de, 47Ch
-		ld	c, 31h
+		ld	c, S_SYSVAR
 		call	bdos
 		ld	a, 0FEh
 		ld	(byte_0_481), a
 		ld	de, 480h
-		ld	c, 31h
-		jp	5
+		ld	c, S_SYSVAR
+		jp	bdos
 ; End of function sub_0_408
 
 
@@ -858,8 +858,8 @@ sub_0_4AC:				; CODE XREF: sub_0_922+39p
 		inc	hl
 		ld	(hl), 24h
 		ld	de, 4E7h
-		ld	c, 9
-		jp	5
+		ld	c, C_WRITESTR
+		jp	bdos
 ; End of function sub_0_4AC
 
 ;----------------------------------------------------------------------------
@@ -907,8 +907,8 @@ sub_0_508:				; CODE XREF: seg000:0AFAp
 		call	loc_0_71E
 		ld	(hl), 24h
 		ld	de, 51Bh
-		ld	c, 9
-		jp	5
+		ld	c, C_WRITESTR
+		jp	bdos
 ; End of function sub_0_508
 
 ;----------------------------------------------------------------------------
@@ -942,8 +942,8 @@ sub_0_52B:				; CODE XREF: sub_0_8C1+21p
 		ld	de, 533h
 
 loc_0_52E:				; CODE XREF: sub_0_526+3j
-		ld	c, 9
-		jp	5
+		ld	c, C_WRITESTR
+		jp	bdos
 ; End of function sub_0_52B
 
 ;----------------------------------------------------------------------------
@@ -1066,7 +1066,7 @@ sub_0_58D:				; CODE XREF: sub_0_5AD+12p
 ;		S u b r	o u t i	n e
 
 sub_0_5A6:				; CODE XREF: seg000:12ACp
-		ld	c, 8
+		ld	c, A_STATOUT
 		call	bdos
 		or	a
 		ret	
@@ -5572,7 +5572,7 @@ sub_0_185C:				; CODE XREF: sub_0_17C9+7p
 		ld	hl, 0
 		ld	(273Bh), hl
 		ld	de, 80h
-		ld	c, 1Ah
+		ld	c, F_DMAOFF
 		call	bdos
 		ld	c, 11h
 		jr	loc_0_1892
@@ -5889,7 +5889,8 @@ loc_0_1A00:				; CODE XREF: sub_0_19CB+1Bj
 		ld	bc, 10h
 		add	hl, bc
 		jr	loc_0_19D3
-;ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+;----------------------------------------------------------------------------
+
 
 loc_0_1A06:				; CODE XREF: sub_0_19CB+Bj
 		pop	af
