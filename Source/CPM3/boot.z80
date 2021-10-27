@@ -328,6 +328,17 @@ clrram:
 	;call	hb_bnksel		; select bank
 	call	0FFF3h			; select bank
 
+	; Check the first sector (512 bytes) for all zeroes.  If so,
+	; it implies the RAM is uninitialized.
+	ld	hl,0			; start at begining of ram disk
+	ld	bc,512			; compare 512 bytes
+	xor	a			; compare to zero
+clrram000:
+	cpi				; a - (hl), hl++, bc--
+	jr	nz,clrram00		; if not zero, go to next test
+	jp	pe,clrram000		; loop thru all bytes
+	jr	clrram2			; all zeroes, jump to init
+clrram00:
 	; Check first 32 directory entries.  If any start with an invalid
 	; value, init the ram disk.  Valid entries are e5 (empty entry) or
 	; 0-15 (user number).
