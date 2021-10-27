@@ -13,7 +13,7 @@ include $(TOOLS)/Makefile.inc
 all :: deploy
 
 %.tmp : %.md
-	gpp -o $@ -U "\\" "" "{" "}{" "}" "{" "}" "#" "" $<
+	gpp -o $@ -U "$" "$" "{" "}{" "}$" "{" "}" "@@@" "" -M "$" "$" "{" "}{" "}$" "{" "}" $<
 
 %.pdf : %.tmp
 	pandoc $< -f markdown -t latex -s -o $@ --default-image-extension=pdf

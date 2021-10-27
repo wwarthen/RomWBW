@@ -1,7 +1,7 @@
-\define{doc_title}{Disk Catalog}
-\define{doc_author}{Mykl Orders}
-\define{doc_authmail}{}
-\include{"Common.h"}
+$define{doc_title}{Disk Catalog}$
+$define{doc_author}{Mykl Orders}$
+$define{doc_authmail}{}$
+$include{"Common.h"}$
 
 # RomWBW Distribution File Catalog
 

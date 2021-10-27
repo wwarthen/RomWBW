@@ -1,9 +1,50 @@
+---
+author: "Wayne Warthen (mailto:wwarthen@gmail.com)"
+classoption:
+- oneside
+colorlinks: true
+date: 27 Oct 2021
+documentclass: book
+fontfamily: helvet
+fontsize: 12pt
+geometry:
+- top=1.5in
+- bottom=1.5in
+- left=1.5in
+- right=1.5in
+graphics: true
+header-includes:
+- 
+- 
+include-before:
+- 
+- 
+institution: RetroBrew Computers Group
+linestretch: 1.25
+numbersections: true
+papersize: letter
+secnumdepth: 1
+title: RomWBW Getting Started
+toc: true
+toc-depth: 1
+---
+
+
+
+
+
+
+
+
+
+
+
 # RomWBW
 
 ## Z80/Z180 System Software
 
 Version 3.1 Pre-release  
-22 Oct 2021
+27 Oct 2021
 
 Wayne Warthen <wwarthen@gmail.com>
 

@@ -1,14 +1,14 @@
-\define{doc_title}{GettingStarted}
-\include{"Common.h"}
+$define{doc_title}{Getting Started}$
+$include{"Common.h"}$
 
 # RomWBW
 
 ## Z80/Z180 System Software
 
-| Version \doc_ver
-| \doc_date
+| Version $doc_ver$
+| $doc_date$
 
-\doc_author [\doc_authmail](mailto:\doc_authmail)
+$doc_author$ [$doc_authmail$](mailto:$doc_authmail$)
 
 ### Download
 
@@ -1351,4 +1351,4 @@ RetroBrew Computers projects is via the community forums:
 Submission of issues and bugs are welcome at the
 [RomWBW GitHub Repository](https://github.com/wwarthen/RomWBW).
 
-Also feel free to email \doc_author at [\doc_authmail](mailto:\doc_authmail).
+Also feel free to email $doc_author$ at [$doc_authmail$](mailto:$doc_authmail$).
