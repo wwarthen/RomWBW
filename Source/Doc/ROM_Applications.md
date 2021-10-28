@@ -1,7 +1,7 @@
-\define{doc_title}{ROM Applications}
-\define{doc_author}{Phillip Summers}
-\define{doc_authmail}{}
-\include{"Common.h"}
+$define{doc_title}{ROM Applications}$
+$define{doc_author}{Phillip Summers}$
+$define{doc_authmail}{}$
+$include{"Common.h"}$
 
 # Summary
 

@@ -19,7 +19,7 @@ DATE	  MACRO
 	DEFB	'07 Oct 21'	; Date of this version
 	  ENDM
 AUTOCL	  MACRO
-	DEFB	8,'ZEX ZST ',0	; Autostart command line
+	DEFB	8,'ZEX Z33 ',0	; Autostart command line
 	  ENDM
 
 ;--- Basic System and Z-System Section ---

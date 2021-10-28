@@ -1,5 +1,5 @@
-\define{doc_title}{Applications}
-\include{"Common.h"}
+$define{doc_title}{Applications}$
+$include{"Common.h"}$
 
 # Summary
 
@@ -28,8 +28,8 @@ on the media.
 
 Most of the applications are included as source code in the RomWBW
 distribution and are built in the normal build process. The source
-code is found in the Source\\\\Apps directory of the distribution. The
-binary executable applications are found in the Binary\\\\Apps directory.
+code is found in the Source\\Apps directory of the distribution. The
+binary executable applications are found in the Binary\\Apps directory.
 
 The following table clarifies where each of the applications can be
 found:
@@ -523,7 +523,7 @@ manually perform a verification function with the `FLASH VERIFY` form
 of the command.
 
 The author's documentation for the application is found in the RomWBW
-distribution in the Doc\\\\Contrib directory.
+distribution in the Doc\\Contrib directory.
 
 ## Notes
 
