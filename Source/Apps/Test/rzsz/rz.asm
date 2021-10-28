@@ -974,26 +974,23 @@ loc_0_702:				; CODE XREF: sub_0_6FA+11j
 ; End of function sub_0_6FA
 
 ;----------------------------------------------------------------------------
-		.db 0C5h ; Å
-		.db 0E5h ; å
-		.db  3Eh ; >
-		.db    1 ;  
-		.db  86h ; ?
-		.db  77h ; w
-		.db  30h ; 0
-		.db    9 ;  
-		.db    6 ;  
-		.db    3 ;  
-		.db  23h ; #
-		.db  3Eh ; >
-		.db    0 ;  
-		.db  8Eh ; ?
-		.db  77h ; w
-		.db  10h ;  
-		.db 0F9h ; ù
-		.db 0E1h ; á
-		.db 0C1h ; Á
-		.db 0C9h ; É
+
+loc_0_712:	PUSH	BC		
+		PUSH	HL		
+		LD	A,1		
+		ADD	A,(HL)		
+		LD	(HL),A		
+		JR	NC,loc_0_723		
+		LD	B,3		
+loc_0_71C:	INC	HL		
+		LD	A,0		
+		ADC	A,(HL)		
+		LD	(HL),A		
+		DJNZ	loc_0_71C		
+loc_0_723:		POP	HL		
+		POP	BC		
+		RET	                
+
 ;----------------------------------------------------------------------------
 
 loc_0_726:				; CODE XREF: sub_0_8A0+Cj
@@ -1023,27 +1020,27 @@ loc_0_731:				; CODE XREF: sub_0_729+Dj
 ; End of function sub_0_729
 
 ;----------------------------------------------------------------------------
-		.db 0C5h ; Å
-		.db 0D5h ; Õ
-		.db 0E5h ; å
-		.db 0EBh ; ë
-		.db  3Eh ; >
-		.db    4 ;  
-		.db 0F5h ; õ
-		.db  1Ah ;  
-		.db 0A6h ; ¦
-		.db    2 ;  
-		.db    3 ;  
-		.db  13h ;  
-		.db  23h ; #
-		.db 0F1h ; ñ
-		.db  3Dh ; =
-		.db  20h ;  
-		.db 0F5h ; õ
-		.db 0E1h ; á
-		.db 0D1h ; Ñ
-		.db 0C1h ; Á
-		.db 0C9h ; É
+
+loc_0_73B:	PUSH	BC		
+		PUSH	DE		
+		PUSH	HL		
+		EX	DE,HL		
+		LD	A,004H		
+loc_0_741:	PUSH	AF		
+		LD	A,(DE)		
+		AND	(HL)		
+		LD	(BC),A		
+		INC	BC		
+		INC	DE		
+		INC	HL		
+		POP	AF		
+		DEC	A		
+		JR	NZ,loc_0_741	
+		POP	HL		
+		POP	DE		
+		POP	BC		
+		RET			
+
 		.db    0 ;  
 		.db 0CAh ; Ê
 		.db  9Ah ; ?
@@ -1300,36 +1297,27 @@ loc_0_860:				; CODE XREF: sub_0_825+25j
 
 ;----------------------------------------------------------------------------
 
-loc_0_885:				; CODE XREF: sub_0_13BA+Fp
+				; CODE XREF: sub_0_13BA+Fp
 					; sub_0_13BA+1Ep
-		push	af
-;----------------------------------------------------------------------------
-		.db  21h ; !
-word_0_887:	.dw 0			; DATA XREF: sub_0_8A0+6w sub_0_13BA+2Er
-					; ...
-		.db  11h ;  
-		.db  21h ; !
-		.db  10h ;  
-		.db 0ACh ; ¬
-		.db  67h ; g
-		.db    6 ;  
-		.db    8 ;  
-		.db  29h ; )
-		.db  30h ; 0
-		.db    6 ;  
-		.db  7Ch ; |
-		.db 0AAh ; ª
-		.db  67h ; g
-		.db  7Dh ; }
-		.db 0ABh ; «
-		.db  6Fh ; o
-		.db  10h ;  
-		.db 0F5h ; õ
-		.db  22h ; "
-		.db  87h ; ?
-		.db    8 ;  
-		.db 0F1h ; ñ
-		.db 0C9h ; É
+loc_0_885:	PUSH	AF
+word_0_887	.equ	$+1		; self modifying
+		LD	HL,0
+		LD	DE,1021H
+		XOR	H
+		LD	H,A
+		LD	B,8
+		ADD	HL,HL
+		JR	NC,899H
+		LD	A,H
+		XOR	D
+		LD	H,A
+		LD	A,L
+		XOR	E
+		LD	L,A
+		DJNZ	890H
+		LD	(887H),HL
+		POP	AF
+		RET
 
 ;----------------------------------------------------------------------------
 
@@ -1887,206 +1875,100 @@ loc_0_BE9:				; CODE XREF: sub_0_BD3+Ej
 ; End of function sub_0_BD3
 
 ;----------------------------------------------------------------------------
-		.db  21h ; !
-		.db    4 ;  
-		.db  2Dh ; -
-		.db  34h ; 4
-		.db 0CDh ; Í
-		.db  82h ; ?
-		.db    4 ;  
-		.db  21h ; !
-		.db    4 ;  
-		.db  2Dh ; -
-		.db  3Eh ; >
-		.db  0Ah ;  
-		.db 0BEh ; ¾
-		.db 0C2h ; Â
-		.db 0F0h ; ð
-		.db  0Bh ;  
-		.db  3Eh ; >
-		.db 0FFh ; ÿ
-		.db  37h ; 7
-		.db 0C9h ; É
-		.db 0CDh ; Í
-		.db 0C7h ; Ç
-		.db  0Eh ;  
-		.db 0C3h ; Ã
-		.db 0F0h ; ð
-		.db  0Bh ;  
-		.db  11h ;  
-		.db 0A7h ; §
-		.db  2Ch ; ,
-		.db  21h ; !
-		.db 0ABh ; «
-		.db  2Ch ; ,
-		.db 0CDh ; Í
-		.db 0D3h ; Ó
-		.db    6 ;  
-		.db 0C2h ; Â
-		.db 0F0h ; ð
-		.db  0Bh ;  
-		.db 0CDh ; Í
-		.db  0Eh ;  
-		.db  0Dh ;  
-		.db  28h ; (
-		.db    9 ;  
-		.db  3Eh ; >
-		.db  0Ch ;  
-		.db  32h ; 2
-		.db  0Ah ;  
-		.db  0Bh ;  
-		.db  3Eh ; >
-		.db 0FFh ; ÿ
-		.db  37h ; 7
-		.db 0C9h ; É
-		.db 0CDh ; Í
-		.db  43h ; C
-		.db    6 ;  
-		.db  3Eh ; >
-		.db  0Bh ;  
-		.db 0B7h ; ·
-		.db 0C9h ; É
-		.db  21h ; !
-		.db    4 ;  
-		.db  2Dh ; -
-		.db  34h ; 4
-		.db 0CDh ; Í
-		.db  82h ; ?
-		.db    4 ;  
-		.db  21h ; !
-		.db    4 ;  
-		.db  2Dh ; -
-		.db  3Eh ; >
-		.db  0Ah ;  
-		.db 0BEh ; ¾
-		.db  20h ;  
-		.db    4 ;  
-		.db  3Eh ; >
-		.db 0FFh ; ÿ
-		.db  37h ; 7
-		.db 0C9h ; É
-		.db  21h ; !
-		.db 0AFh ; ¯
-		.db  2Ch ; ,
-		.db 0CDh ; Í
-		.db 0DCh ; Ü
-		.db  0Dh ;  
-		.db 0C3h ; Ã
-		.db 0F0h ; ð
-		.db  0Bh ;  
-		.db  11h ;  
-		.db 0A7h ; §
-		.db  2Ch ; ,
-		.db  21h ; !
-		.db 0ABh ; «
-		.db  2Ch ; ,
-		.db 0CDh ; Í
-		.db 0D3h ; Ó
-		.db    6 ;  
-		.db 0C2h ; Â
-		.db  57h ; W
-		.db  0Ch ;  
-		.db 0CDh ; Í
-		.db  29h ; )
-		.db    5 ;  
-		.db 0CDh ; Í
-		.db 0C7h ; Ç
-		.db  0Eh ;  
-		.db  21h ; !
-		.db 0F9h ; ù
-		.db  0Ch ;  
-		.db    1 ;  
-		.db    7 ;  
-		.db    0 ;  
-		.db 0EDh ; í
-		.db 0B1h ; ±
-		.db 0CAh ; Ê
-		.db  7Fh ; 
-		.db    6 ;  
-		.db 0C3h ; Ã
-		.db  1Ch ;  
-		.db  0Ch ;  
-		.db  3Eh ; >
-		.db 0FFh ; ÿ
-		.db  37h ; 7
-		.db 0C9h ; É
-		.db 0AFh ; ¯
-		.db  32h ; 2
-		.db    4 ;  
-		.db  2Dh ; -
-		.db  11h ;  
-		.db 0F9h ; ù
-		.db  2Ch ; ,
-		.db  21h ; !
-		.db 0ABh ; «
-		.db  2Ch ; ,
-		.db    1 ;  
-		.db 0ABh ; «
-		.db  2Ch ; ,
-		.db 0CDh ; Í
-		.db 0E4h ; ä
-		.db    6 ;  
-		.db 0C3h ; Ã
-		.db 0BAh ; º
-		.db  0Fh ;  
-		.db 0CDh ; Í
-		.db  97h ; ?
-		.db  0Ch ;  
-		.db 0C3h ; Ã
-		.db  0Ah ;  
-		.db  0Ch ;  
-		.db 0CDh ; Í
-		.db  97h ; ?
-		.db  0Ch ;  
-		.db 0C3h ; Ã
-		.db  7Fh ; 
-		.db  0Ch ;  
-		.db 0CDh ; Í
-		.db  97h ; ?
-		.db  0Ch ;  
-		.db  21h ; !
-		.db 0ABh ; «
-		.db  2Ch ; ,
-		.db  11h ;  
-		.db 0E0h ; à
-		.db  2Ch ; ,
-		.db 0CDh ; Í
-		.db  92h ; ?
-		.db    6 ;  
-		.db  3Eh ; >
-		.db    3 ;  
-		.db 0CDh ; Í
-		.db 0BAh ; º
-		.db  13h ;  
-		.db 0C3h ; Ã
-		.db  7Fh ; 
-		.db  0Ch ;  
-		.db 0CDh ; Í
-		.db  97h ; ?
-		.db  0Ch ;  
-		.db 0CDh ; Í
-		.db  30h ; 0
-		.db  0Dh ;  
-		.db 0DAh ; Ú
-		.db  47h ; G
-		.db  0Ch ;  
-		.db  21h ; !
-		.db 0ABh ; «
-		.db  2Ch ; ,
-		.db  11h ;  
-		.db 0E0h ; à
-		.db  2Ch ; ,
-		.db 0CDh ; Í
-		.db  92h ; ?
-		.db    6 ;  
-		.db  3Eh ; >
-		.db    3 ;  
-		.db 0CDh ; Í
-		.db 0BAh ; º
-		.db  13h ;  
-		.db 0C3h ; Ã
-		.db  0Ah ;  
-		.db  0Ch ; 
+
+loc_0_C1C:	LD	HL,2D04H
+		INC	(HL)
+		CALL	482H
+		LD	HL,2D04H
+		LD	A,0AH
+		CP	(HL)
+		JP	NZ,0BF0H
+		LD	A,0FFH
+		SCF
+		RET
+
+		CALL	0EC7H
+		JP	0BF0H
+
+		LD	DE,2CA7H
+		LD	HL,2CABH
+		CALL	6D3H
+		JP	NZ,0BF0H
+		CALL	0D0EH
+		JR	Z,0C50H
+		LD	A,0CH
+		LD	(0B0AH),A
+		LD	A,0FFH
+		SCF
+		RET
+
+		CALL	643H
+		LD	A,0BH
+		OR	A
+		RET
+
+loc_0_C57:	LD	HL,2D04H
+		INC	(HL)
+		CALL	482H
+		LD	HL,2D04H
+		LD	A,0AH
+		CP	(HL)
+		JR	NZ,0C6AH
+		LD	A,0FFH
+		SCF
+		RET
+
+loc_0_C6A:	LD	HL,2CAFH
+		CALL	0DDCH
+		JP	0BF0H
+
+loc_0_C73:	LD	DE,2CA7H
+		LD	HL,2CABH
+		CALL	6D3H
+		JP	NZ,0C57H
+		CALL	529H
+		CALL	0EC7H
+		LD	HL,0CF9H
+		LD	BC,7
+		CPIR
+		JP	Z,67FH
+		JP	0C1CH
+ 
+loc_0_C93:	LD	A,0FFH
+		SCF
+		RET
+
+loc_0_C97:	XOR	A
+		LD	(2D04H),A
+		LD	DE,2CF9H
+		LD	HL,2CABH
+		LD	BC,2CABH
+		CALL	6E4H
+		JP	0FBAH
+  
+loc_0_CAA:	CALL	0C97H
+		JP	0C0AH
+
+loc_0_CB0:	CALL	0C97H
+		JP	0C7FH
+
+loc_0_CB6:	CALL	0C97H
+		LD	HL,2CABH
+		LD	DE,2CE0H
+		CALL	692H
+		LD	A,3
+		CALL	13BAH
+		JP	0C7FH
+
+loc_0_CCA:	CALL	0C97H
+		CALL	0D30H
+		JP	C,0C47H
+		LD	HL,2CABH
+		LD	DE,2CE0H
+		CALL	692H
+		LD	A,3
+		CALL	13BAH
+		JP	0C0AH 
  
 loc_0_CE4:	.db    6 ;  
 		.db 0FEh ; þ
@@ -2115,21 +1997,15 @@ loc_0_CE4:	.db    6 ;
 		.db 0E8h ; è
 		.db 0FFh ; ÿ
 		.db 0FEh ; þ
-		.db  10h ;  
-		.db  93h ; ?
-		.db  0Ch ;  
-		.db  1Ch ;  
-		.db  0Ch ;  
-		.db  57h ; W
-		.db  0Ch ;  
-		.db 0AAh ; ª
-		.db  0Ch ;  
-		.db 0B0h ; °
-		.db  0Ch ;  
-		.db 0B6h ; ¶
-		.db  0Ch ;  
-		.db 0CAh ; Ê
-		.db  0Ch ;  
+		.db  10h ;
+
+		.dw	loc_0_C93
+ 		.dw	loc_0_C1C
+		.dw	loc_0_C57
+		.dw	loc_0_CAA
+		.dw	loc_0_CB0
+		.dw	loc_0_CB6
+		.dw	loc_0_CCA
 
 ;----------------------------------------------------------------------------
 
