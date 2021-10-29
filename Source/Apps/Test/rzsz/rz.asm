@@ -79,7 +79,7 @@ loc_0_152:				; CODE XREF: start+46j
 		ld	hl, 17A3h
 		ex	de, hl
 		call	sub_0_1492
-		ld	hl, 17A3h
+		ld	hl, byte_0_17A3
 		xor	a
 		or	(hl)
 		jr	nz, loc_0_164
@@ -431,9 +431,7 @@ sub_0_4A4:				; CODE XREF: sub_0_961+82p
 ; End of function sub_0_4A4
 
 ;----------------------------------------------------------------------------
-text4F2h:
-		.db  0Dh ;  
-		.db  0Ah ;  
+text4F2h:	.text	"\r\n"
 byte_0_4F4:	.db 0			; DATA XREF: sub_0_4A4+17w
 		.db    0 ;  
 		.db    0 ;  
@@ -454,10 +452,7 @@ byte_0_4F4:	.db 0			; DATA XREF: sub_0_4A4+17w
 		.db    0 ;  
 		.db  20h ;  
 byte_0_507:	.db 0			; DATA XREF: sub_0_4A4+24w
-text508h:
-		.db  0Dh ;  
-		.db  0Ah ;  
-		.db  24h ; $
+text508h:	.text	"\r\n$"
 
 ;----------------------------------------------------------------------------
 
@@ -525,7 +520,7 @@ text569h:	.text	"can't open any file\r\n$"
 ;		S u b r	o u t i	n e
 
 sub_0_57F:				; CODE XREF: sub_0_DE7+Dp
-		ld	hl, 586h
+		ld	hl,byte_0_586
 		ld	(hl), a
 		inc	hl
 		ld	(hl), c
@@ -533,8 +528,8 @@ sub_0_57F:				; CODE XREF: sub_0_DE7+Dp
 ; End of function sub_0_57F
 
 ;----------------------------------------------------------------------------
-		.db    0 ;  
-byte_0_587:	.db 0			; DATA XREF: sub_0_5B4r
+byte_0_586:	.db	0		;  
+byte_0_587:	.db	0			; DATA XREF: sub_0_5B4r
 
 ;----------------------------------------------------------------------------
 
@@ -543,7 +538,7 @@ byte_0_587:	.db 0			; DATA XREF: sub_0_5B4r
 sub_0_588:				; CODE XREF: sub_0_588+1Fj
 					; sub_0_5D4+4p	...
 		or	a
-		ld	hl, (1808h)
+		ld	hl, (word_0_1808)
 		ld	de, 1000h
 		sbc	hl, de
 		jr	z, loc_0_5A9
@@ -1112,56 +1107,40 @@ loc_0_792:				; CODE XREF: seg000:07B1j
 		pop	de
 		djnz	loc_0_792
 ;----------------------------------------------------------------------------
-unk_0_7B3:	.db  3Eh ; >		; CODE XREF: seg000:079Dj
-byte_0_7B4:	.db 30h			; DATA XREF: seg000:0789w seg000:07A0r
-					; ...
-		.db 0FEh ; þ
-		.db  30h ; 0
-		.db  20h ;  
-		.db    5 ;  
-		.db  3Eh ; >
-byte_0_7BA:	.db 0			; DATA XREF: seg000:0784w
-		.db 0B7h ; ·
-		.db  28h ; (
-		.db  0Dh ;  
-		.db  21h ; !
-word_0_7BF:	.dw 0			; DATA XREF: seg000:0774w
-		.db  77h ; w
-		.db  23h ; #
-		.db  22h ; "
-		.db 0BFh ; ¿
-		.db    7 ;  
-		.db  3Eh ; >
-		.db  30h ; 0
-		.db  32h ; 2
-		.db 0BAh ; º
-		.db    7 ;  
-		.db  0Dh ;  
-		.db  20h ;  
-		.db 0B9h ; ¹
-		.db  3Ah ; :
-		.db  91h ; ?
-		.db  28h ; (
-		.db 0E6h ; æ
-		.db  0Fh ;  
-		.db 0C6h ; Æ
-		.db  30h ; 0
-		.db  2Ah ; *
-		.db 0BFh ; ¿
-		.db    7 ;  
-		.db  77h ; w
-		.db  23h ; #
-		.db  36h ; 6
-		.db    0 ;  
-		.db 0C9h ; É
-		.db 0F5h ; õ
-		.db 0C6h ; Æ
-byte_0_7DF:	.db 0			; DATA XREF: sub_0_8A0+3w
-		.db  32h ; 2
-		.db 0DFh ; ß
-		.db    7 ;  
-		.db 0F1h ; ñ
-		.db 0C9h ; É
+byte_0_7B4:	.EQU	$+1
+unk_0_7B3:	LD	A,30H		; self modifying
+		CP	30H
+		JR	NZ,7BEH
+byte_0_7BA:	.EQU	$+1
+		LD	A,0
+		OR	A
+		JR	Z,7CBH
+word_0_7BF:	.EQU	$+1
+		LD	HL,0
+		LD	(HL),A
+		INC	HL
+		LD	(7BFH),HL
+		LD	A,30H
+		LD	(7BAH),A
+		DEC	C
+		JR	NZ,787H
+		LD	A,(2891H)
+		AND	0FH
+		ADD	A,30H
+		LD	HL,(7BFH)
+		LD	(HL),A
+		INC	HL
+		LD	(HL),0
+		RET
+
+		PUSH	AF
+byte_0_7DF:	.EQU	$+1
+		ADD	A,0
+		LD	(7DFH),A
+		POP	AF
+		RET
+
+
 		.db  20h ;  
 		.db  83h ; ?
 		.db 0B8h ; ¸
@@ -1170,62 +1149,32 @@ byte_0_7DF:	.db 0			; DATA XREF: sub_0_8A0+3w
 		.db  20h ;  
 		.db 0BBh ; »
 		.db 0DEh ; Þ
-		.db 0F5h ; õ
-		.db 0FDh ; ý
-		.db  21h ; !
-word_0_7F0:	.dw 289Dh		; DATA XREF: sub_0_825+2r
-		.db 0DDh ; Ý
-		.db  21h ; !
-		.db  99h ; ?
-		.db  28h ; (
-		.db 0DDh ; Ý
-		.db 0AEh ; ®
-		.db    0 ;  
-		.db  26h ; &
-		.db    0 ;  
-		.db  6Fh ; o
-		.db  29h ; )
-		.db  29h ; )
-		.db  44h ; D
-		.db  4Dh ; M
-		.db 0FDh ; ý
-		.db    9 ;  
-		.db 0FDh ; ý
-		.db  7Eh ; ~
-		.db    0 ;  
-		.db 0DDh ; Ý
-		.db 0AEh ; ®
-		.db    1 ;  
-		.db 0DDh ; Ý
-		.db  77h ; w
-		.db    0 ;  
-		.db 0FDh ; ý
-		.db  7Eh ; ~
-		.db    1 ;  
-		.db 0DDh ; Ý
-		.db 0AEh ; ®
-		.db    2 ;  
-		.db 0DDh ; Ý
-		.db  77h ; w
-		.db    1 ;  
-		.db 0FDh ; ý
-		.db  7Eh ; ~
-		.db    2 ;  
-		.db 0DDh ; Ý
-		.db 0AEh ; ®
-		.db    3 ;  
-		.db 0DDh ; Ý
-		.db  77h ; w
-		.db    2 ;  
-		.db 0FDh ; ý
-		.db  7Eh ; ~
-		.db    3 ;  
-		.db 0DDh ; Ý
-		.db  77h ; w
-		.db    3 ;  
-		.db 0F1h ; ñ
-		.db 0C9h ; É
 
+loc_0_7ED:	PUSH	AF
+word_0_7F0:	.EQU	$+2
+		LD	IY,289DH
+		LD	IX,2899H
+		XOR	(IX)	
+		LD	H,0	
+		LD	L,A	
+		ADD	HL,HL	
+		ADD	HL,HL	
+		LD	B,H	
+		LD	C,L	
+		ADD	IY,BC	
+		LD	A,(IY)	
+		XOR	(IX+1)	
+		LD	(IX),A	
+		LD	A,(IY+1)
+		XOR	(IX+2)	
+		LD	(IX+1),A
+		LD	A,(IY+2)
+		XOR	(IX+3)	
+		LD	(IX+2),A
+		LD	A,(IY+3)
+		LD	(IX+3),A
+		POP	AF	
+		RET		
 ;----------------------------------------------------------------------------
 
 ;		S u b r	o u t i	n e
@@ -4276,7 +4225,7 @@ sub_0_1662:				; CODE XREF: sub_0_15A5p
 
 loc_0_1669:				; CODE XREF: sub_0_164A+5j
 					; sub_0_1652+5j ...
-		ld	hl, (2D0Fh)
+		ld	hl, (word_0_2D0F)
 		ld	a, h
 		or	l
 		jr	z, loc_0_1671
@@ -4291,7 +4240,7 @@ loc_0_1671:				; CODE XREF: sub_0_1662+Cj
 ;----------------------------------------------------------------------------
 
 loc_0_1676:				; CODE XREF: sub_0_1662+4j
-		ld	hl, (2D0Fh)
+		ld	hl, (word_0_2D0F)
 		add	hl, de
 		ld	e, (hl)
 		inc	hl
@@ -4305,10 +4254,8 @@ loc_0_1676:				; CODE XREF: sub_0_1662+4j
 ; End of function sub_0_1662
 
 ;----------------------------------------------------------------------------
-		.db  22h ; "
-		.db  0Fh ;  
-		.db  2Dh ; -
-		.db 0C9h ; É
+		ld	(word_0_2D0F),hl
+		ret
 
 ;----------------------------------------------------------------------------
 
@@ -4455,8 +4402,7 @@ sub_0_16E7:				; CODE XREF: sub_0_482+6p sub_0_4A4+1Fp
 		jp	loc_0_16F0
 
 ;----------------------------------------------------------------------------
-sub_0_16ED:
-		PUSH	BC		; unref. ?
+sub_0_16ED:	PUSH	BC		; unref. ?
 		LD	B,0FFH
 loc_0_16F0:				; CODE XREF: sub_0_16E7+3j
 		push	hl
@@ -4523,23 +4469,17 @@ loc_0_171A:				; CODE XREF: sub_0_1703+11j
 sub_0_171E:				; CODE XREF: sub_0_1492+4p
 		push	af
 		push	hl
-
-loc_0_1720:				; CODE XREF: sub_0_171E+Bj
-		ld	a, (hl)
+loc_0_1720:	ld	a, (hl)
 		or	a
 		jr	z, loc_0_172B
 		call	sub_0_1793
 		ld	(hl), a
 		inc	hl
 		jr	loc_0_1720
-;----------------------------------------------------------------------------
-
-loc_0_172B:				; CODE XREF: sub_0_171E+4j
-		pop	hl
+loc_0_172B:	pop	hl
 		pop	af
 		ret	
 ; End of function sub_0_171E
-
 
 ;----------------------------------------------------------------------------
 
@@ -4685,11 +4625,14 @@ sub_0_1793:				; CODE XREF: sub_0_171E+6p
 
 ;----------------------------------------------------------------------------
 word_0_179E:	.dw 2D11h		; DATA XREF: start+18r	start+35r
-					; ...
-byte_0_17A0:	.db 0			; DATA XREF: sub_0_195+Aw sub_0_195+14r
-					; ...
-byte_0_17A1:	.db 0			; DATA XREF: start+60r	sub_0_195+11w
-word_0_17A2:	.dw 0			; DATA XREF: start+88w	sub_0_961+7Fw
+byte_0_17A0:	.db	0		; DATA XREF: sub_0_195+Aw sub_0_195+14r
+byte_0_17A1:	.db	0		; DATA XREF: start+60r	sub_0_195+11w
+word_0_17A2:	.db	0		; DATA XREF: start+88w	sub_0_961+7Fw
+byte_0_17A3:	.db	0
 		.fill	$1800-$,0
 		.ds	8
-nstack:		.end	; start
+nstack:		
+word_0_1808:	.ds	2
+		.ds	1505h
+word_0_2D0F:	.ds	2
+		.end	; start
