@@ -70,13 +70,16 @@ $(ROMNAME).rom $(ROMNAME).com $(ROMNAME).img &: $(ROMDEPS)
 		cat hbios_app.bin osimg_small.bin > $(ROMNAME).com ; \
 	fi
 
-prereq: $(FONTS) camel80.bin
+prereq: $(FONTS) camel80.bin tastybasic.bin
 
 font%.asm:
 	cp ../Fonts/$@ .
 
 camel80.bin:
 	cp ../Forth/$@ .
+
+tastybasic.bin:
+	cp ../TastyBasic/src/$@ .
 	
 hbios_rom.bin:	hbios.asm build.inc  $(DEPS)
 	$(TASM) -dROMBOOT hbios.asm hbios_rom.bin hbios_rom.lst
