@@ -900,19 +900,16 @@ loc_0_6E0:	POP	HL
 		RET
 
 ;----------------------------------------------------------------------------
-
 ;		S u b r	o u t i	n e
 
-sub_0_6E4:				; CODE XREF: sub_0_11FA+4Bp
-		push	bc
+sub_0_6E4:	push	bc		; CODE XREF: sub_0_11FA+4Bp
 		push	de
 		push	hl
 		or	a
 		ex	af, af'
 		ld	a, 4
 
-loc_0_6EB:				; CODE XREF: sub_0_6E4+10j
-		ex	af, af'
+loc_0_6EB:	ex	af, af'		; CODE XREF: sub_0_6E4+10j
 		ld	a, (de)
 		adc	a, (hl)
 		ld	(bc), a
@@ -926,15 +923,11 @@ loc_0_6EB:				; CODE XREF: sub_0_6E4+10j
 		pop	de
 		pop	bc
 		ret	
-; End of function sub_0_6E4
-
 
 ;----------------------------------------------------------------------------
-
 ;		S u b r	o u t i	n e
 
-sub_0_6FA:				; CODE XREF: seg000:0799p
-		push	bc
+sub_0_6FA:	push	bc		; CODE XREF: seg000:0799p
 		push	de
 		push	hl
 		ex	de, hl
@@ -956,7 +949,6 @@ loc_0_702:	ex	af, af'				; CODE XREF: sub_0_6FA+11j
 		pop	de
 		pop	bc
 		ret	
-; End of function sub_0_6FA
 
 ;----------------------------------------------------------------------------
 
@@ -972,29 +964,20 @@ loc_0_71C:	INC	HL
 		ADC	A,(HL)		
 		LD	(HL),A		
 		DJNZ	loc_0_71C		
-loc_0_723:		POP	HL		
+loc_0_723:	POP	HL		
 		POP	BC		
 		RET	                
 
 ;----------------------------------------------------------------------------
 
-loc_0_726:				; CODE XREF: sub_0_8A0+Cj
-		call	sub_0_688
-
-;----------------------------------------------------------------------------
-
-;		S u b r	o u t i	n e
-
-sub_0_729:				; CODE XREF: seg000:0A77p
-		push	bc
+loc_0_726:	call	sub_0_688	; CODE XREF: sub_0_8A0+Cj
+sub_0_729:	push	bc		; CODE XREF: seg000:0A77p
 		push	hl
 		ld	a, (hl)
 		sub	1
 		ld	(hl), a
 		ld	b, 3
-
-loc_0_731:				; CODE XREF: sub_0_729+Dj
-		inc	hl
+loc_0_731:	inc	hl		; CODE XREF: sub_0_729+Dj
 		ld	a, (hl)
 		sbc	a, 0
 		ld	(hl), a
@@ -1002,7 +985,6 @@ loc_0_731:				; CODE XREF: sub_0_729+Dj
 		pop	hl
 		pop	bc
 		ret	
-; End of function sub_0_729
 
 ;----------------------------------------------------------------------------
 
@@ -3437,11 +3419,11 @@ sub_0_1492:				; CODE XREF: start+56p	sub_0_961+79p
 sub_0_14A7:				; CODE XREF: sub_0_1492+Ep
 		xor	a
 		ld	(de), a
-		ld	(2D0Dh), a
+		ld	(byte_0_2D0D), a
 		ld	(2D0Ch), a
 		call	sub_0_1687
 		ld	a, c
-		ld	(2D0Eh), a
+		ld	(byte_0_2D0E), a
 		push	de
 		ld	a, (hl)
 		cp	3Ah
@@ -3473,7 +3455,7 @@ loc_0_14D7:				; CODE XREF: sub_0_14A7+29j
 
 loc_0_14E5:				; CODE XREF: sub_0_14A7+2Ej
 					; sub_0_14A7+33j ...
-		ld	a, (2D0Dh)
+		ld	a, (byte_0_2D0D)
 		ld	(de), a
 		push	de
 		inc	de
@@ -3507,7 +3489,7 @@ loc_0_1513:				; CODE XREF: sub_0_14A7+64j
 		ld	bc, 5
 		add	hl, bc
 		ex	de, hl
-		ld	a, (2D0Eh)
+		ld	a, (byte_0_2D0E)
 		ld	(de), a
 
 loc_0_151D:				; CODE XREF: sub_0_1492+13j
@@ -3598,7 +3580,7 @@ sub_0_1552:				; CODE XREF: sub_0_154A+2p
 		sub	40h
 		cp	b
 		jr	nc, loc_0_15CA
-		ld	(2D0Dh), a
+		ld	(byte_0_2D0D), a
 		inc	hl
 		ld	a, (hl)
 		cp	20h
@@ -3630,7 +3612,7 @@ loc_0_1589:				; CODE XREF: sub_0_1552+28j
 		call	sub_0_15FA
 		cp	c
 		jr	nc, loc_0_15CA
-		ld	(2D0Eh), a
+		ld	(byte_0_2D0E), a
 		xor	a
 		ret	
 ;----------------------------------------------------------------------------
@@ -3704,10 +3686,10 @@ loc_0_15CA:				; CODE XREF: sub_0_1552+3j
 loc_0_15CD:				; CODE XREF: sub_0_15A5+1Bj
 		dec	de
 		ld	a, (de)
-		ld	(2D0Eh), a
+		ld	(byte_0_2D0E), a
 		dec	de
 		ld	a, (de)
-		ld	(2D0Dh), a
+		ld	(byte_0_2D0D), a
 		xor	a
 		ret	
 ; End of function sub_0_15A5
@@ -4308,11 +4290,15 @@ byte_0_17A3:	.db	0
 		.ds	8	
 nstack:		
 word_0_1808:	.ds	2
-		.ds	14F6h
+		.ds	1087h
+byte_0_2891:	.ds	1
+		.ds	46Eh
 byte_0_2D00:	.ds	1
 		.ds	2
 byte_0_2D03:	.ds	1
 byte_0_2D04:	.ds	1
-		.ds	10
+		.ds	8
+byte_0_2D0D:	.ds	1
+byte_0_2D0E:	.ds	1
 word_0_2D0F:	.ds	2
 		.end	; start
