@@ -96,7 +96,7 @@ loc_0_164:				; CODE XREF: start+5Ej
 		call	sub_0_3C9
 
 loc_0_174:				; CODE XREF: start+25j	start+3Bj
-					; ...
+
 		ld	de, str_sxfr
 		ld	c, C_WRITESTR
 		call	bdos		; Output string
@@ -114,7 +114,6 @@ loc_0_185:				; DATA XREF: sub_0_195+17w
 
 
 ;----------------------------------------------------------------------------
-
 ;		S u b r	o u t i	n e
 
 sub_0_195:				; CODE XREF: start+15p
@@ -182,7 +181,6 @@ str_info:	.text	"usage: rz [-?pbcrxyz] [du:fn]\r\n\n"
 		.text	"these values override options from sender\r\n$"
 
 ;----------------------------------------------------------------------------
-
 ;		S u b r	o u t i	n e
 
 sub_0_39A:				; CODE XREF: start+48p
@@ -349,7 +347,6 @@ sub_0_471:				; CODE XREF: sub_0_961+92p
 
 
 ;----------------------------------------------------------------------------
-
 ;		S u b r	o u t i	n e
 
 sub_0_476:				; CODE XREF: sub_0_4A4+37p
@@ -459,7 +456,7 @@ text508h:	.text	"\r\n$"
 ;		S u b r	o u t i	n e
 
 sub_0_50B:				; CODE XREF: sub_0_D0Ep sub_0_D30+30p
-					; ...
+
 		ld	hl, 2CABh
 		ld	de, 51Fh
 		call	loc_0_774
@@ -804,7 +801,7 @@ sub_0_669:	LD	A,80H
 ;		S u b r	o u t i	n e
 
 sub_0_67F:				; CODE XREF: sub_0_39A+Fp sub_0_BD3+42j
-					; ...
+
 		add	hl, bc
 		sla	c
 		add	hl, bc
@@ -820,7 +817,7 @@ sub_0_67F:				; CODE XREF: sub_0_39A+Fp sub_0_BD3+42j
 ;		S u b r	o u t i	n e
 
 sub_0_688:				; CODE XREF: seg000:0726p sub_0_BD3+13p
-					; ...
+
 		xor	a
 		push	bc
 		push	de
@@ -837,7 +834,7 @@ sub_0_688:				; CODE XREF: seg000:0726p sub_0_BD3+13p
 ;		S u b r	o u t i	n e
 
 sub_0_692:				; CODE XREF: seg000:077Bp seg000:07ADp
-					; ...
+
 		push	bc
 		push	de
 		push	hl
@@ -1244,7 +1241,7 @@ sub_0_8A0:				; CODE XREF: sub_0_13BA+9p
 
 ;----------------------------------------------------------------------------
 byte_0_8AF:	.db 4			; DATA XREF: sub_0_3C9+Aw sub_0_8D1+34r
-					; ...
+
 byte_0_8B0:	.db 0			; DATA XREF: sub_0_8D1+23r
 byte_0_8B1:	.db 0			; DATA XREF: sub_0_961r
 byte_0_8B2:	.db 0			; DATA XREF: sub_0_961+14r
@@ -1795,10 +1792,10 @@ loc_0_C1C:	LD	HL,byte_0_2D04
 		SCF
 		RET
 
-		CALL	0EC7H
+loc_0_C30:	CALL	0EC7H
 		JP	0BF0H
 
-		LD	DE,2CA7H
+loc_0_C36:	LD	DE,2CA7H
 		LD	HL,2CABH
 		CALL	6D3H
 		JP	NZ,0BF0H
@@ -1878,34 +1875,29 @@ loc_0_CCA:	CALL	0C97H
 		CALL	sub_0_13BA
 		JP	0C0AH 
  
-loc_0_CE4:	.db    6 ;  
-		.db 0FEh ; þ
-		.db    4 ;  
-		.db  0Bh ;  
-		.db 0FFh ; ÿ
-		.db  0Ah ;  
-		.db 0FCh ; ü
-		.db  1Ch ;  
-		.db  0Ch ;  
-		.db  73h ; s
-		.db  0Ch ;  
-		.db  57h ; W
-		.db  0Ch ;  
-		.db  36h ; 6
-		.db  0Ch ;  
-		.db  30h ; 0
-		.db  0Ch ;  
-		.db  1Ch ;  
-		.db  0Ch ;  
-		.db  1Ch ;  
-		.db  0Ch ;  
-		.db 0EBh ; ë
-		.db 0EAh ; ê
-		.db 0E9h ; é
-		.db 0E8h ; è
-		.db 0FFh ; ÿ
-		.db 0FEh ; þ
-		.db  10h ;
+loc_0_CE4:	.db	6
+       		.db	0FEh
+       		.db	4
+       		.db	0Bh
+       		.db	0FFh
+       		.db	0Ah
+       		.db	0FCh
+       
+       		.dw	loc_0_C1C
+       		.dw	loc_0_C73
+       		.dw	loc_0_C57
+       		.dw	loc_0_C36
+       		.dw	loc_0_C30
+       		.dw	loc_0_C1C
+       		.dw	loc_0_C1C
+       
+       		.db	0EBh
+       		.db	0EAh
+       		.db	0E9h
+       		.db	0E8h
+       		.db	0FFh
+       		.db	0FEh
+       		.db	010h
 
 		.dw	loc_0_C93
  		.dw	loc_0_C1C
@@ -1941,7 +1933,6 @@ loc_0_D15:	ld	a, 1Ah		; CODE XREF: sub_0_D0E+13j
 
 
 ;----------------------------------------------------------------------------
-
 ;		S u b r	o u t i	n e
 
 sub_0_D30:				; CODE XREF: sub_0_BD3+20p
@@ -1967,9 +1958,7 @@ loc_0_D41:
 		call	loc_0_D68
 		ret	c
 
-loc_0_D52:				; CODE XREF: sub_0_D30+Fj sub_0_D30+15j
-					; ...
-		ld	a, (hl)
+loc_0_D52:	ld	a, (hl)		; CODE XREF: sub_0_D30+Fj sub_0_D30+15j	
 		ld	(loc_0_D41+1), a
 		inc	hl
 		dec	bc
@@ -1982,104 +1971,58 @@ loc_0_D52:				; CODE XREF: sub_0_D30+Fj sub_0_D30+15j
 		call	sub_0_FAA
 		xor	a
 		ret	
-; End of function sub_0_D30
 
 ;----------------------------------------------------------------------------
 
-loc_0_D68:				; CODE XREF: sub_0_D0E+9p sub_0_D30+1Ep
-					; ...
-		ld	(byte_0_D6F), a
+loc_0_D68:	ld	(byte_0_D6F), a	; CODE XREF: sub_0_D0E+9p sub_0_D30+1Ep
 		push	bc
 		push	de
 		push	hl
-;----------------------------------------------------------------------------
-		.db  0Eh ;  
-byte_0_D6F:	.db 0			; DATA XREF: seg000:0D68w
-		.db  21h ; !
-		.db  0Eh ;  
-		.db  28h ; (
-		.db 0CDh ; Í
-		.db  69h ; i
-		.db    6 ;  
-		.db  20h ;  
-		.db  1Fh ;  
-		.db  21h ; !
-		.db  0Eh ;  
-		.db  28h ; (
-		.db 0CDh ; Í
-		.db  4Ah ; J
-		.db    6 ;  
-		.db  0Eh ;  
-		.db  1Ah ;  
-		.db  11h ;  
-		.db  11h ;  
-		.db  28h ; (
-		.db 0CDh ; Í
-		.db    5 ;  
-		.db    0 ;  
-		.db  0Eh ;  
-		.db  2Ch ; ,
-		.db  1Eh ;  
-		.db    1 ;  
-		.db 0CDh ; Í
-		.db    5 ;  
-		.db    0 ;  
-		.db  0Eh ;  
-		.db  15h ;  
-		.db  11h ;  
-		.db 0A3h ; £
-		.db  17h ;  
-		.db 0CDh ; Í
-		.db  71h ; q
-		.db    4 ;  
-		.db  30h ; 0
-		.db 0D7h ; ×
-		.db 0E1h ; á
-		.db 0D1h ; Ñ
-		.db 0C1h ; Á
-		.db 0C9h ; É
-		.db  21h ; !
-		.db 0E0h ; à
-		.db  2Ch ; ,
-		.db 0CDh ; Í
-		.db  88h ; ?
-		.db    6 ;  
-		.db    6 ;  
-		.db    4 ;  
-		.db 0C5h ; Å
-		.db  3Eh ; >
-		.db    8 ;  
-		.db 0CDh ; Í
-		.db 0BAh ; º
-		.db  13h ;  
-		.db    6 ;  
-		.db  64h ; d
-		.db 0CDh ; Í
-		.db 0E7h ; ç
-		.db  0Dh ;  
-		.db  38h ; 8
-		.db    8 ;  
-		.db 0FEh ; þ
-		.db  4Fh ; O
-		.db  28h ; (
-		.db    8 ;  
-		.db 0FEh ; þ
-		.db 0FDh ; ý
-		.db  28h ; (
-		.db    4 ;  
-		.db 0C1h ; Á
-		.db  10h ;  
-		.db 0E8h ; è
-		.db 0C5h ; Å
-		.db 0C1h ; Á
-		.db    6 ;  
-		.db    1 ;  
-		.db 0CDh ; Í
-		.db 0E7h ; ç
-		.db  0Dh ;  
-		.db 0AFh ; ¯
-		.db 0C9h ; É
-		.db  18h ;  
+byte_0_D6F:	.equ	$+1
+loc_0_D6E: 	LD	C,0				    
+    		LD	HL,280EH                            
+    		CALL	sub_0_669                           
+    		JR	NZ,loc_0_0D97                       
+    		LD	HL,280EH                            
+    		CALL	sub_0_64A                           
+    		LD	C,1AH		;set dma            
+    		LD	DE,2811H                            
+    		CALL	bdos                                
+    		LD	C,2CH		;???                
+    		LD	E,1                                 
+    		CALL	bdos                                
+    		LD	C,15H		;wr. seq.           
+    		LD	DE,17A3H                            
+    		CALL	sub_0_471                           
+    		JR	NC,loc_0_D6E                        
+loc_0_0D97:	POP	HL                                  
+    		POP	DE                                  
+    		POP	BC                                  
+    		RET                                         
+
+sub_0_D9B:	LD	HL,2CE0H                             
+    		CALL	sub_0_688                            
+    		LD	B,4                                  
+loc_0_0DA3:	PUSH	BC                                   
+    		LD	A,8                                  
+    		CALL	13BAH                                
+    		LD	B,64H                                
+    		CALL	sub_0_DE7                            
+    		JR	C,loc_0_DB8                          
+    		CP	4FH                                  
+    		JR	Z,loc_0_DBC                          
+    		CP	0FDH                                 
+    		JR	Z,loc_0_DBC                          
+loc_0_DB8:	POP	BC                                   
+    		DJNZ	loc_0_0DA3                           
+    		PUSH	BC                                   
+loc_0_DBC:	POP	BC                                   
+    		LD	B,1                                  
+    		CALL	sub_0_DE7                            
+    		XOR	A                                    
+    		RET                                          
+
+stab_0_DC4:	.db  18h ;  
 		.db  18h ;  
 		.db  18h ;  
 		.db  18h ;  
@@ -2102,20 +2045,10 @@ byte_0_D6F:	.db 0			; DATA XREF: seg000:0D68w
 		.db    0 ;  
 
 ;----------------------------------------------------------------------------
-
 ;		S u b r	o u t i	n e
 
-sub_0_DD9:				; CODE XREF: sub_0_8D1+83p
-		ld	hl, 0DC4h
-; End of function sub_0_DD9
-
-
-;----------------------------------------------------------------------------
-
-;		S u b r	o u t i	n e
-
-sub_0_DDC:				; CODE XREF: sub_0_DDC+9j sub_0_13BA+6p
-		ld	a, (hl)
+sub_0_DD9:	ld	hl,stab_0_DC4	; CODE XREF: sub_0_8D1+83p
+sub_0_DDC:	ld	a, (hl)		; CODE XREF: sub_0_DDC+9j sub_0_13BA+6p
 		inc	hl
 		or	a
 		ret	z
@@ -2123,37 +2056,27 @@ sub_0_DDC:				; CODE XREF: sub_0_DDC+9j sub_0_13BA+6p
 		call	loc_0_145C
 		pop	hl
 		jr	sub_0_DDC
-; End of function sub_0_DDC
-
 
 ;----------------------------------------------------------------------------
-
 ;		S u b r	o u t i	n e
 
-sub_0_DE7:				; CODE XREF: sub_0_FD1+11p
-					; sub_0_11C1+2Dp ...
-		push	bc
-		call	sub_0_16AA
+sub_0_DE7:	push	bc		; CODE XREF: sub_0_FD1+11p
+		call	sub_0_16AA	; sub_0_11C1+2Dp ...
 		call	nz, sub_0_16A5
 		cp	1Bh
 		ld	a, 18h
 		ld	c, 0Ah
 		call	z, sub_0_57F
 		pop	bc
-
-loc_0_DF8:				; CODE XREF: sub_0_DE7+16j
-		call	sub_0_5D4
+loc_0_DF8:	call	sub_0_5D4	; CODE XREF: sub_0_DE7+16j
 		jr	nz, loc_0_E03
 		djnz	loc_0_DF8
 		ld	a, 0FEh
 		scf	
-		ret	
-;----------------------------------------------------------------------------
+		ret
 
-loc_0_E03:				; CODE XREF: sub_0_DE7+14j
-		or	a
+loc_0_E03:	or	a		; CODE XREF: sub_0_DE7+14j
 		ret	
-; End of function sub_0_DE7
 
 ;----------------------------------------------------------------------------
 loc_0_E05:	LD	B,64H
@@ -2219,7 +2142,7 @@ loc_0_E50:	LD	B,64H		  ; 0e50   06 64
 		LD	B,64H	          ; 0e6e   06 64         
 		CALL	sub_0_DE7         ; 0e70   cd e7 0d      
 		RET	C                 ; 0e73   d8            
-loc_0_0E74:	LD	HL,0EA6H          ; 0e74   21 a6 0e      
+loc_0_0E74:	LD	HL,loc_0_EA6      ; 0e74   21 a6 0e      
 		LD	BC,0BH            ; 0e77   01 0b 00      
 		CPIR                      ; 0e7a   ed b1         
 		JP	Z,67FH            ; 0e7c   ca 7f 06      
@@ -2238,23 +2161,23 @@ loc_0_E8B:	LD	A,L               ; 0e8b   7d
 		XOR	40H               ; 0e93   ee 40         
 		RET                       ; 0e95   c9            
 
-		LD	A,7FH		   ;0e96   3e 7f         
-		RET                        ;0e98   c9            
+loc_0_E96:	LD	A,7FH		          
+		RET                               
        
-		LD	A,0FFH             ;0e99   3e ff         
-		RET                        ;0e9b   c9            
+loc_0_E99:	LD	A,0FFH                    
+		RET                               
        
-loc_0_E9C:	LD	A,0FFH             ;0e9c   3e ff         
-		OR	80H                ;0e9e   f6 80         
-		SCF                        ;0ea0   37            
-		RET                        ;0ea1   c9            
+loc_0_E9C:	LD	A,0FFH                    
+loc_0_E9E:	OR	80H                       
+		SCF                               
+		RET                               
 
 
 		.db  11h ;  
 		.db  91h ; ?
 		.db  13h ;  
 		.db  93h ; ?
-		.db  11h ;  
+loc_0_EA6:	.db  11h ;  
 		.db  91h ; ?
 		.db  13h ;  
 		.db  93h ; ?
@@ -2265,28 +2188,19 @@ loc_0_E9C:	LD	A,0FFH             ;0e9c   3e ff
 		.db  6Bh ; k
 		.db  6Ch ; l
 		.db  6Dh ; m
-		.db  99h ; ?
-		.db  0Eh ;  
-		.db  96h ; ?
-		.db  0Eh ;  
-		.db  9Eh ; ?
-		.db  0Eh ;  
-		.db  9Eh ; ?
-		.db  0Eh ;  
-		.db  9Eh ; ?
-		.db  0Eh ;  
-		.db  9Eh ; ?
-		.db  0Eh ;  
-		.db  9Eh ; ?
-		.db  0Eh ;  
-		.db  50h ; P
-		.db  0Eh ;  
-		.db  50h ; P
-		.db  0Eh ;  
-		.db  50h ; P
-		.db  0Eh ;  
-		.db  50h ; P
-		.db  0Eh ;  
+
+		.dw	loc_0_E99
+		.dw	loc_0_E96
+		.dw	loc_0_E9E
+		.dw	loc_0_E9E
+		.dw	loc_0_E9E
+		.dw	loc_0_E9E
+		.dw	loc_0_E9E
+		.dw	loc_0_E50
+		.dw	loc_0_E50
+		.dw	loc_0_E50
+		.dw	loc_0_E50
+
 		.db 0B7h ; ·
 		.db  2Ah ; *
 		.db 0EBh ; ë
@@ -2520,18 +2434,15 @@ loc_0_E9C:	LD	A,0FFH             ;0e9c   3e ff
 ;		S u b r	o u t i	n e
 
 sub_0_FAA:				; CODE XREF: seg000:0AE5p sub_0_BD3+1Ap
-					; ...
+
 		ld	hl, 2CE9h
 		ld	de, 2CEDh
 		ldi	
 		ldi	
 		ld	hl, 0
 		ld	(2CEFh), hl
-; End of function sub_0_FAA
-
 
 ;----------------------------------------------------------------------------
-
 ;		S u b r	o u t i	n e
 
 sub_0_FBA:				; CODE XREF: sub_0_11FA+4Ep
@@ -3850,7 +3761,7 @@ loc_0_15CD:				; CODE XREF: sub_0_15A5+1Bj
 ;		S u b r	o u t i	n e
 
 sub_0_15D9:				; CODE XREF: sub_0_1522p sub_0_1522+1Ap
-					; ...
+
 		ld	a, (hl)
 		cp	21h
 		jr	c, loc_0_15F8
@@ -4392,7 +4303,7 @@ sub_0_1779:				; CODE XREF: sub_0_172E+16p
 ;		S u b r	o u t i	n e
 
 sub_0_1786:				; CODE XREF: start+1Ep	sub_0_4A4+Cp
-					; ...
+
 		push	hl
 		call	sub_0_178C
 		pop	hl
