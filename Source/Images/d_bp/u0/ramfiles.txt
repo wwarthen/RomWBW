@@ -3,7 +3,7 @@ BIN:D.COM
 BIN:ZXD.COM
 BIN:IF.COM
 BIN:QL.COM
-bin:SD.COM
+BIN:SD.COM
 BIN:CL.COM
 BIN:LU.COM
-
+

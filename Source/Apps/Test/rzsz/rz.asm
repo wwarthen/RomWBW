@@ -1154,7 +1154,7 @@ loc_0_7ED:	PUSH	AF
 word_0_7F0:	.EQU	$+2
 		LD	IY,289DH
 		LD	IX,2899H
-		XOR	(IX)	
+		XOR	(IX+0)	
 		LD	H,0	
 		LD	L,A	
 		ADD	HL,HL	
