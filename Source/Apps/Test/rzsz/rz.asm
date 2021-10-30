@@ -592,13 +592,11 @@ loc_0_5C7:	LD	C,4		; punch out
 
 ;		S u b r	o u t i	n e
 
-sub_0_5CD:				; CODE XREF: seg000:1462p
-		ld	c, 8
+sub_0_5CD:	ld	c, 8		; CODE XREF: seg000:1462p
 		call	bdos		; BDOS function 8 (A_STATOUT) - Auxiliary Output status
 		or	a
 		ret	
 ; End of function sub_0_5CD
-
 
 ;----------------------------------------------------------------------------
 
@@ -946,9 +944,7 @@ sub_0_6FA:				; CODE XREF: seg000:0799p
 		or	a
 		ex	af, af'
 		ld	a, 4
-
-loc_0_702:				; CODE XREF: sub_0_6FA+11j
-		ex	af, af'
+loc_0_702:	ex	af, af'				; CODE XREF: sub_0_6FA+11j
 		ld	a, (de)
 		sbc	a, (hl)
 		ld	(bc), a
@@ -1031,52 +1027,25 @@ loc_0_741:	PUSH	AF
 		POP	HL		
 		POP	DE		
 		POP	BC		
-		RET			
+		RET	
 
-		.db    0 ;  
-		.db 0CAh ; Ê
-		.db  9Ah ; ?
-		.db  3Bh ; ;
-		.db    0 ;  
-		.db 0E1h ; á
-		.db 0F5h ; õ
-		.db    5 ;  
-		.db  80h ; ?
-		.db  96h ; ?
-		.db  98h ; ?
-		.db    0 ;  
-		.db  40h ; @
-		.db  42h ; B
-		.db  0Fh ;  
-		.db    0 ;  
-		.db 0A0h ;  
-		.db  86h ; ?
-		.db    1 ;  
-		.db    0 ;  
-		.db  10h ;  
-		.db  27h ; '
-		.db    0 ;  
-		.db    0 ;  
-		.db 0E8h ; è
-		.db    3 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db  64h ; d
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db  0Ah ;  
-		.db    0 ;  
-		.db    0 ;  
-		.db    0 ;  
 ;----------------------------------------------------------------------------
+		
+loc_0_750:	.db    0, 0CAh, 9Ah, 3Bh 
+		.db    0, 0E1h, 0F5h,  5 
+		.db  80h,  96h,  98h,  0 
+		.db  40h,  42h,  0Fh,  0 
+		.db 0A0h,  86h,    1,  0 
+		.db  10h,  27h,    0,  0
+		.db 0E8h,    3,    0,  0 
+		.db  64h,    0,    0,  0 
+		.db  0Ah,    0,    0,  0 
 
-loc_0_774:				; CODE XREF: sub_0_50B+6p
-		ld	(smod_w_7BF), de
+loc_0_774:	ld	(smod_w_7BF), de; CODE XREF: sub_0_50B+6p
 		ld	de, 2891h
 		call	sub_0_692
-		ld	c, 9
-		ld	de, 74Ch
+		ld	c,+(loc_0_774-loc_0_750)/4
+		ld	de,loc_0_750-4
 		xor	a
 		ld	(smod_b_7BA), a
 		ld	a, 30h
@@ -1086,14 +1055,12 @@ loc_0_774:				; CODE XREF: sub_0_50B+6p
 		inc	de
 		inc	de
 		ld	b, 0Ah
-
-loc_0_792:				; CODE XREF: seg000:07B1j
-		push	bc
+loc_0_792:	push	bc		; CODE XREF: seg000:07B1j
 		ld	hl, 2891h
 		ld	bc, 2895h
 		call	sub_0_6FA
 		pop	bc
-		jr	c, unk_0_7B3
+		jr	c, loc_0_7B3
 		push	de
 		ld	a, (smod_b_7B4)
 		inc	a
@@ -1105,7 +1072,7 @@ loc_0_792:				; CODE XREF: seg000:07B1j
 		djnz	loc_0_792
 ;----------------------------------------------------------------------------
 smod_b_7B4:	.EQU	$+1
-unk_0_7B3:	LD	A,30H		; self modifying
+loc_0_7B3:	LD	A,30H		; self modifying
 		CP	30H
 		JR	NZ,7BEH
 smod_b_7BA:	.EQU	$+1
@@ -3525,62 +3492,55 @@ sub_0_1418:				; CODE XREF: sub_0_13BA+12p
 ; End of function sub_0_1418
 
 ;----------------------------------------------------------------------------
-      		LD	(145BH),A	   ;1438   32 5b 14
-      		LD	BC,9		   ;143b   01 09 00
-      		LD	HL,smod_0_1477	   ;143e   21 77 14
-      		CPIR			   ;1441   ed b1   
-      		JP	Z,67FH		   ;1443   ca 7f 06
-      		AND	60H		   ;1446   e6 60   
-      		JR	NZ,145AH	   ;1448   20 10   
-      		LD	A,(2C9DH)	   ;144a   3a 9d 2c
-      		OR	A		   ;144d   b7      
-      		JR	Z,145AH		   ;144e   28 0a   
-      		LD	HL,145BH           ;1450   21 5b 14
-      		SET	6,(HL)             ;1453   cb f6   
-      		LD	A,18H              ;1455   3e 18   
-      		CALL	loc_0_145C         ;1457   cd 5c 14
-		LD	A,0
-loc_0_145C:	LD	(smod_0_1468),A
+      		LD	(smod_b_145B),A
+      		LD	BC,+(loc_0_1480-stab_0_7B3)
+      		LD	HL,stab_0_7B3	   
+      		CPIR			   
+      		JP	Z,sub_0_67F		   
+      		AND	60H		   
+      		JR	NZ,loc_0_145A	   
+      		LD	A,(2C9DH)	   
+      		OR	A		   
+      		JR	Z,loc_0_145A	   
+loc_0_1450:     LD	HL,smod_b_145B          
+      		SET	6,(HL)             
+      		LD	A,18H              
+      		CALL	loc_0_145C         
+smod_b_145B:	.equ	$+1
+loc_0_145A:	LD	A,0
+loc_0_145C:	LD	(smod_b_1468),A
 loc_0_145F:	CALL	sub_0_588
 		CALL	sub_0_5CD
 		JR	Z,loc_0_145F
-smod_0_1468:	.equ	$+1
-		LD	A,0                ;1467   3e 00  
-      		JP	loc_0_5C7          ;1469   c3 c7 05
+smod_b_1468:	.equ	$+1
+		LD	A,0                
+      		JP	loc_0_5C7          
 
-		LD	A,(smod_0_1468)	   ;146c   3a 68 14      
-		AND	7FH                ;146f   e6 7f         
-		CP	40H                ;1471   fe 40         
-		JR	NZ,145AH           ;1473   20 e5         
-		JR	1450H              ;1475   18 d9         
+loc_0_146C:	LD	A,(smod_b_1468)	         
+		AND	7FH                      
+		CP	40H                      
+		JR	NZ,loc_0_145A            
+		JR	loc_0_1450               
 
-smod_0_1477:	.db  18h ;  
-		.db  0Dh ;  
-		.db  8Dh ; 
-		.db  10h ;  
-		.db  90h ; 
-		.db  11h ;  
-		.db  91h ; ?
-		.db  13h ;  
-		.db  93h ; ?
-		.db  50h ; P
-		.db  14h ;  
-		.db  50h ; P
-		.db  14h ;  
-		.db  50h ; P
-		.db  14h ;  
-		.db  50h ; P
-		.db  14h ;  
-		.db  50h ; P
-		.db  14h ;  
-		.db  50h ; P
-		.db  14h ;  
-		.db  6Ch ; l
-		.db  14h ;  
-		.db  6Ch ; l
-		.db  14h ;  
-		.db  50h ; P
-		.db  14h ;  
+stab_0_7B3:	.db	18h
+		.db	0Dh
+		.db	8Dh
+		.db	10h
+		.db	90h
+		.db	11h
+		.db	91h
+		.db	13h
+		.db	93h
+                        
+loc_0_1480:	.dw	loc_0_1450
+		.dw	loc_0_1450
+		.dw	loc_0_1450
+		.dw	loc_0_1450
+		.dw	loc_0_1450
+		.dw	loc_0_1450
+		.dw	loc_0_146C
+		.dw	loc_0_146C
+		.dw	loc_0_1450  
 
 ;----------------------------------------------------------------------------
 
