@@ -1111,7 +1111,7 @@ loc_0_7E5:	.db  20h ;
 		.db 0BBh ; »
 		.db 0DEh ; Þ
 
-loc_0_7ED:	PUSH	AF
+sub_0_7ED:	PUSH	AF
 smod_w_7F0:	.EQU	$+2
 		LD	IY,289DH
 		LD	IX,2899H
@@ -2105,7 +2105,7 @@ loc_0_E2A:	.db	11h	; dc1
 		.db	0ah	; lf
 		.db	18h	; can
 
-loc_0_E2F:	ld	b,64H
+sub_0_E2F:	ld	b,64H
 		CALL	sub_0_DE7		
 		RET	C		
 		LD	E,A		
@@ -2120,46 +2120,46 @@ loc_0_E36:	AND	60H
 		JR	Z,0E2FH		
 		LD	A,(2C9DH)	
 		OR	A		
-		JR	NZ,loc_0_E2F	
+		JR	NZ,sub_0_E2F	
 		LD	A,E		
 		RET			
 
-loc_0_E50:	LD	B,64H		  ; 0e50   06 64         
-		CALL	sub_0_DE7         ; 0e52   cd e7 0d      
-		RET	C                 ; 0e55   d8            
-		CP	18H               ; 0e56   fe 18         
-		JR	NZ,loc_0_0E74     ; 0e58   20 1a         
-		LD	B,64h             ; 0e5a   06 64         
-		CALL	sub_0_DE7         ; 0e5c   cd e7 0d      
-		RET	C                 ; 0e5f   d8            
-		CP	18H               ; 0e60   fe 18         
-		JR	NZ,loc_0_0E74     ; 0e62   20 10         
-		LD	B,64H             ; 0e64   06 64         
-		CALL	sub_0_DE7         ; 0e66   cd e7 0d      
-		RET	C                 ; 0e69   d8            
-		CP	18H               ; 0e6a   fe 18         
-		JR	NZ,loc_0_0E74     ; 0e6c   20 06         
-		LD	B,64H	          ; 0e6e   06 64         
-		CALL	sub_0_DE7         ; 0e70   cd e7 0d      
-		RET	C                 ; 0e73   d8            
-loc_0_0E74:	LD	HL,loc_0_EA6      ; 0e74   21 a6 0e      
-		LD	BC,0BH            ; 0e77   01 0b 00      
-		CPIR                      ; 0e7a   ed b1         
-		JP	Z,67FH            ; 0e7c   ca 7f 06      
-		LD	L,A               ; 0e7f   6f            
-		LD	A,(2C9DH)         ; 0e80   3a 9d 2c      
-		OR	A                 ; 0e83   b7            
-		JR	Z,loc_0_E8B       ; 0e84   28 05         
-		LD	A,L               ; 0e86   7d            
-		AND	60H               ; 0e87   e6 60         
-		JR	Z,loc_0_E50       ; 0e89   28 c5         
-loc_0_E8B:	LD	A,L               ; 0e8b   7d            
-		AND	60H               ; 0e8c   e6 60         
-		CP	40H               ; 0e8e   fe 40         
-		JR	NZ,loc_0_E9C      ; 0e90   20 0a         
-		LD	A,L               ; 0e92   7d            
-		XOR	40H               ; 0e93   ee 40         
-		RET                       ; 0e95   c9            
+loc_0_E50:	LD	B,64H		      
+		CALL	sub_0_DE7             
+		RET	C                     
+		CP	18H                   
+		JR	NZ,loc_0_0E74         
+		LD	B,64h                 
+		CALL	sub_0_DE7             
+		RET	C                     
+		CP	18H                   
+		JR	NZ,loc_0_0E74         
+		LD	B,64H                 
+		CALL	sub_0_DE7             
+		RET	C                     
+		CP	18H                   
+		JR	NZ,loc_0_0E74         
+		LD	B,64H	              
+		CALL	sub_0_DE7             
+		RET	C                     
+loc_0_0E74:	LD	HL,loc_0_EA6          
+		LD	BC,0BH                
+		CPIR                          
+		JP	Z,sub_0_67F           
+		LD	L,A                   
+		LD	A,(2C9DH)             
+		OR	A                     
+		JR	Z,loc_0_E8B           
+		LD	A,L                   
+		AND	60H                   
+		JR	Z,loc_0_E50           
+loc_0_E8B:	LD	A,L                   
+		AND	60H                   
+		CP	40H                   
+		JR	NZ,loc_0_E9C          
+		LD	A,L                   
+		XOR	40H                   
+		RET                           
 
 loc_0_E96:	LD	A,7FH		          
 		RET                               
@@ -2171,7 +2171,6 @@ loc_0_E9C:	LD	A,0FFH
 loc_0_E9E:	OR	80H                       
 		SCF                               
 		RET                               
-
 
 		.db  11h ;  
 		.db  91h ; ?
@@ -2201,77 +2200,34 @@ loc_0_EA6:	.db  11h ;
 		.dw	loc_0_E50
 		.dw	loc_0_E50
 
-		.db 0B7h ; ·
-		.db  2Ah ; *
-		.db 0EBh ; ë
-		.db  2Ch ; ,
-		.db 0EDh ; í
-		.db  5Bh ; [
-		.db 0EFh ; ï
-		.db  2Ch ; ,
-		.db 0EDh ; í
-		.db  52h ; R
-		.db 0DAh ; Ú
-		.db  4Eh ; N
-		.db  0Fh ;  
-		.db 0CDh ; Í
-		.db 0A0h ;  
-		.db    8 ;  
-		.db  21h ; !
-		.db    0 ;  
-		.db    0 ;  
-		.db  22h ; "
-		.db 0F9h ; ù
-		.db  2Ch ; ,
-		.db 0CDh ; Í
-		.db  2Fh ; /
-		.db  0Eh ;  
-		.db 0DAh ; Ú
-		.db  38h ; 8
-		.db  0Fh ;  
-		.db 0CDh ; Í
-		.db 0A2h ; ¢
-		.db  0Fh ;  
-		.db 0CCh ; Ì
-		.db 0EDh ; í
-		.db    7 ;  
-		.db 0C4h ; Ä
-		.db  85h ; ?
-		.db    8 ;  
-		.db  2Ah ; *
-		.db 0EBh ; ë
-		.db  2Ch ; ,
-		.db 0EDh ; í
-		.db  4Bh ; K
-		.db 0EFh ; ï
-		.db  2Ch ; ,
-		.db 0EDh ; í
-		.db  42h ; B
-		.db 0CAh ; Ê
-		.db  4Eh ; N
-		.db  0Fh ;  
-		.db    3 ;  
-		.db 0EDh ; í
-		.db  43h ; C
-		.db 0EFh ; ï
-		.db  2Ch ; ,
-		.db  2Ah ; *
-		.db 0F9h ; ù
-		.db  2Ch ; ,
-		.db  23h ; #
-		.db  22h ; "
-		.db 0F9h ; ù
-		.db  2Ch ; ,
-		.db  2Ah ; *
-		.db 0EDh ; í
-		.db  2Ch ; ,
-		.db  77h ; w
-		.db  23h ; #
-		.db  22h ; "
-		.db 0EDh ; í
-		.db  2Ch ; ,
-		.db  18h ;  
-		.db 0CFh ; Ï
+ 		OR	A			  ;0ec7   b7            
+ 		LD	HL,(2CEBH)                ;0ec8   2a eb 2c      
+ 		LD	DE,(2CEFH)                ;0ecb   ed 5b ef 2c   
+ 		SBC	HL,DE                     ;0ecf   ed 52         
+ 		JP	C,0F4EH                   ;0ed1   da 4e 0f      
+ 		CALL	sub_0_8A0                      ;0ed4   cd a0 08      
+ 		LD	HL,0                      ;0ed7   21 00 00      
+ 		LD	(2CF9H),HL                ;0eda   22 f9 2c      
+loc_0_EDD:	CALL	sub_0_E2F                     ;0edd   cd 2f 0e      
+ 		JP	C,0F38H                   ;0ee0   da 38 0f      
+ 		CALL	sub_0_FA2                     ;0ee3   cd a2 0f      
+ 		CALL	Z,sub_0_7ED                    ;0ee6   cc ed 07      
+ 		CALL	NZ,loc_0_885                   ;0ee9   c4 85 08      
+ 		LD	HL,(2CEBH)                ;0eec   2a eb 2c      
+ 		LD	BC,(2CEFH)                ;0eef   ed 4b ef 2c   
+ 		SBC	HL,BC                     ;0ef3   ed 42         
+ 		JP	Z,0F4EH                   ;0ef5   ca 4e 0f      
+ 		INC	BC                        ;0ef8   03            
+ 		LD	(2CEFH),BC                ;0ef9   ed 43 ef 2c   
+ 		LD	HL,(2CF9H)                ;0efd   2a f9 2c      
+ 		INC	HL                        ;0f00   23            
+ 		LD	(2CF9H),HL                ;0f01   22 f9 2c      
+ 		LD	HL,(2CEDH)                ;0f04   2a ed 2c      
+ 		LD	(HL),A                    ;0f07   77            
+ 		INC	HL                        ;0f08   23            
+ 		LD	(2CEDH),HL                ;0f09   22 ed 2c      
+ 		JR	loc_0_EDD                 ;0f0c   18 cf        
+
 		.db 0E8h ; è
 		.db 0E9h ; é
 		.db 0EAh ; ê
@@ -2420,7 +2376,8 @@ loc_0_EA6:	.db  11h ;
 		.db 0C3h ; Ã
 		.db  73h ; s
 		.db  0Fh ;  
-		.db  5Fh ; _
+
+sub_0_FA2:	.db  5Fh ; _
 		.db  3Ah ; :
 		.db  9Eh ; ?
 		.db  2Ch ; ,
