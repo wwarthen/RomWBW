@@ -503,7 +503,7 @@ sub_588:	or	a
 
 ;----------------------------------------------------------------------------
 
-loc_5A9:	ld	hl,587h
+loc_5A9:	ld	hl,byte_587
 		or	(hl)
 		ret	nz
 		ld	hl,(word_1808)
@@ -1343,9 +1343,9 @@ loc_A43:	ld	de,loc_2811
 		ld	c,23h
 		call	sub_471
 		ret	c
-		ld	hl,17C7h
+		ld	hl,byte_17C7
 		ld	(hl),0
-		ld	hl,17C4h
+		ld	hl,loc_17C4
 		call	sub_729
 		ld	de,loc_2CAB
 		call	sub_692
@@ -1402,7 +1402,7 @@ loc_AC8:	ld	(byte_280E),a
 loc_ACF:	xor	a
 		ld	(byte_2D04),a
 		ld	a,4
-		ld	hl,8AFh
+		ld	hl,byte_8AF
 		cp	(hl)
 		ld	a,0
 		ret	nz
@@ -1419,11 +1419,11 @@ loc_ACF:	xor	a
 
 loc_AF3:	push	bc
 		ld	ix,loc_2CE0
-		ld	(ix+3),	20h
-		ld	(ix+2),	0
+		ld	(ix+3),20h
+		ld	(ix+2),0
 		ld	hl,(word_2CEB)
-		ld	(ix+0),	l
-		ld	(ix+1),	h
+		ld	(ix+0),l
+		ld	(ix+1),h
 smod_b_B0A:	.equ	$+1
 		ld	a,1		; self modifying value
 		CALL	sub_13BA
@@ -1791,7 +1791,7 @@ sub_D9B:	LD	HL,loc_2CE0
     		LD	B,4
 loc_0DA3:	PUSH	BC
     		LD	A,8
-    		CALL	13BAH
+    		CALL	sub_13BA
     		LD	B,64H
     		CALL	sub_DE7
     		JR	C,loc_DB8
@@ -2576,10 +2576,10 @@ loc_12AE:	.db    2 ;
 		.dw	loc_12BA
 
 loc_12BA:	LD	HL,400H
-		JR	12C2H
+		JR	loc_12C2
 
 loc_12BF:	LD	HL,80H
-		LD	(word_2D05),HL
+loc_12C2:	LD	(word_2D05),HL
 		ld	b,0ah
 		call	sub_DE7
 		ld	(smod_b_12D9),A
@@ -3074,7 +3074,7 @@ loc_15F8:	xor	a
 ;		S u b r	o u t i	n e
 
 sub_15FA:	push	bc
-		ld	bc,1100h
+		ld	bc,1100h		; ?
 loc_15FE:	ld	a,(hl)
 		call	sub_15D9
 		jr	z,loc_161E
@@ -3196,6 +3196,7 @@ loc_1676:	ld	hl,(word_2D0F)
 		ret
 
 ;----------------------------------------------------------------------------
+
 loc_1683:	ld	(word_2D0F),hl
 		ret
 
@@ -3468,6 +3469,11 @@ byte_17A0:	.db	0
 byte_17A1:	.db	0
 word_17A2:	.db	0
 byte_17A3:	.db	0
+		.fill	$20,0		
+loc_17C4:	.db	0
+		.db	0
+		.db	0
+byte_17C7:	.db	0
 		.fill	$1800-$,0
 		.ds	8
 nstack:
