@@ -74,7 +74,7 @@ start:		ld	sp, nstack	; Setup local stack
 		ld	a,d
 		or	e
 		jr	z,loc_174
-loc_152:	ld	hl,byte_17A3	
+loc_152:	ld	hl,byte_17A3
 		ex	de,hl
 		call	sub_1492
 		ld	hl,byte_17A3
@@ -83,21 +83,21 @@ loc_152:	ld	hl,byte_17A3
 		jr	nz,loc_164
 		ld	a,(byte_17A1)
 		ld	(hl),a
-loc_164:	ld	bc,0Dh		
+loc_164:	ld	bc,0Dh
 		add	hl,bc
 		dec	de
 		ldi
 		ld	de,byte_17A3
 		call	sub_1B0
 		call	sub_3C9
-loc_174:	ld	de,str_sxfr	
+loc_174:	ld	de,str_sxfr
 		ld	c,C_WRITESTR
-		call	bdos		
+		call	bdos
 		call	sub_3EF
 		call	sub_8D1
 		call	sub_451
 smod_b_186:	.equ	$+1
-loc_185:	ld	bc,0		
+loc_185:	ld	bc,0
 		ld	(word_17A2),bc
 		ld	de,byte_17A3
 		call	sub_1B0
@@ -107,7 +107,7 @@ loc_185:	ld	bc,0
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_195:	ld	a,(4)		
+sub_195:	ld	a,(4)
 		ld	b,a
 		rlca
 		rlca
@@ -126,7 +126,7 @@ sub_195:	ld	a,(4)
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_1B0:	ld	a,(de)		
+sub_1B0:	ld	a,(de)
 		push	af
 		dec	de
 		ld	a,(de)
@@ -170,9 +170,9 @@ str_info:	.text	"usage: rz [-?pbcrxyz] [du:fn]\r\n\n"
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_39A:	push	hl		
+sub_39A:	push	hl
 		push	de
-loc_39C:	inc	de		
+loc_39C:	inc	de
 		ld	a,(de)
 		or	a
 		jr	z,loc_3AE
@@ -182,7 +182,7 @@ loc_39C:	inc	de
 		call	z,sub_67F
 		jr	loc_39C
 
-loc_3AE:	pop	de		
+loc_3AE:	pop	de
 		pop	hl
 		ret
 
@@ -202,7 +202,7 @@ stab_3B1:	.text	"?PBCXYZR"
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_3C9:	ld	a,1		
+sub_3C9:	ld	a,1
 		jr	loc_3D3
 sub_3CD:	ld	a,3
 		jr	loc_3D3
@@ -228,7 +228,7 @@ sub_3E9:	ld	a,$ff
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_3EF:	xor	a		
+sub_3EF:	xor	a
 		ld	(byte_460),a
 		ld	(byte_464),a
 		ld	c,S_SYSVAR
@@ -265,7 +265,7 @@ sub_3EF:	xor	a
 		and	e
 		ld	l, a
 		ld	(word_469),hl
-loc_437:	ld	a,0FEh		
+loc_437:	ld	a,0FEh
 		ld	(byte_464),a
 		ld	de,byte_463
 		ld	c,S_SYSVAR
@@ -279,7 +279,7 @@ loc_437:	ld	a,0FEh
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_451:	ld	hl,(word_46B)	
+sub_451:	ld	hl,(word_46B)
 		ld	(word_465),hl
 		ld	hl,(word_46D)
 		ld	(word_469),hl
@@ -287,34 +287,34 @@ sub_451:	ld	hl,(word_46B)
 
 ;----------------------------------------------------------------------------'
 
-byte_45F:	.db	28h 
-byte_460:	.db	0			
-		.db	0 
-		.db	0 
+byte_45F:	.db	28h
+byte_460:	.db	0
+		.db	0
+		.db	0
 byte_463:	.db	24h
-byte_464:	.db	0			
-word_465:	.dw	0			
-byte_467:	.db	22h 
-byte_468:	.db	0			
-word_469:	.dw	0			
-word_46B:	.dw	0			
-word_46D:	.dw	0			
-word_46F:	.dw	0			
+byte_464:	.db	0
+word_465:	.dw	0
+byte_467:	.db	22h
+byte_468:	.db	0
+word_469:	.dw	0
+word_46B:	.dw	0
+word_46D:	.dw	0
+word_46F:	.dw	0
 
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_471:	call	bdos		
-		or	a		
+sub_471:	call	bdos
+		or	a
 		ret
 
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_476:	push	af		
-loc_477:	push	bc		
-		xor	a               
-		ld	b,a             
+sub_476:	push	af
+loc_477:	push	bc
+		xor	a
+		ld	b,a
 		ld	c,a
 		cpir
 		pop	bc
@@ -325,7 +325,7 @@ loc_477:	push	bc
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_482:	ld	a,(byte_2D04)	
+sub_482:	ld	a,(byte_2D04)
 		ld	de,text495h	; Update error string with errors
 		call	sub_16E7
 		ld	de,text493h
@@ -406,7 +406,7 @@ text508h:	.text	"\r\n$"
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_50B:	ld	hl,loc_2CAB	
+sub_50B:	ld	hl,loc_2CAB
 		ld	de,loc_51F
 		call	loc_774
 		ld	(hl),24h
@@ -479,8 +479,8 @@ sub_57F:	ld	hl,byte_586
 
 ;----------------------------------------------------------------------------
 
-byte_586:	.db	0		
-byte_587:	.db	0		
+byte_586:	.db	0
+byte_587:	.db	0
 
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
@@ -535,7 +535,7 @@ loc_5C7:	LD	C,4		; punch out
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_5CD:	ld	c,8		
+sub_5CD:	ld	c,8
 		call	bdos		; BDOS function 8 (A_STATOUT) - Auxiliary Output status
 		or	a
 		ret
@@ -544,7 +544,7 @@ sub_5CD:	ld	c,8
 
 ;		S u b r	o u t i	n e
 
-sub_5D4:				
+sub_5D4:
 		push	bc
 		ld	b,5Fh
 loc_5D7:	push	bc
@@ -735,11 +735,11 @@ sub_688:	xor	a
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_692:	push	bc		
+sub_692:	push	bc
 		push	de
 		push	hl
 		ldi
-loc_697:	ldi			
+loc_697:	ldi
 		ldi
 		ldi
 		pop	hl
@@ -749,39 +749,39 @@ loc_697:	ldi
 
 ;----------------------------------------------------------------------------
 
-loc_6A1:	PUSH	HL		
-		POP	IX		
-		PUSH	DE		
-		POP	IY		
-		LD	A,(IX+3)	
-		XOR	(IY+3)		
-		JP	P,loc_6B6	
-		XOR	(IX+3)		
-loc_6B3:	RET	M		
-		CCF			
-		RET			
+loc_6A1:	PUSH	HL
+		POP	IX
+		PUSH	DE
+		POP	IY
+		LD	A,(IX+3)
+		XOR	(IY+3)
+		JP	P,loc_6B6
+		XOR	(IX+3)
+loc_6B3:	RET	M
+		CCF
+		RET
 
-loc_6B6:	XOR	(IX+3)		
-		JP	P,loc_6C2	
-		CALL	loc_6C2	
-		SCF			
-		JR	loc_6B3	
+loc_6B6:	XOR	(IX+3)
+		JP	P,loc_6C2
+		CALL	loc_6C2
+		SCF
+		JR	loc_6B3
 
 loc_6C2:	PUSH	BC
-		PUSH	DE	
-		PUSH	HL	
-		EX	DE,HL	
-		OR	A	
-		LD	B,4	
-loc_6C9:	LD	A,(DE)	
-		SBC	A,(HL)	
-		INC	DE	
-		INC	HL	
-		DJNZ	loc_6C9	
-		POP	HL	
-		POP	DE	
-		POP	BC	
-		RET		
+		PUSH	DE
+		PUSH	HL
+		EX	DE,HL
+		OR	A
+		LD	B,4
+loc_6C9:	LD	A,(DE)
+		SBC	A,(HL)
+		INC	DE
+		INC	HL
+		DJNZ	loc_6C9
+		POP	HL
+		POP	DE
+		POP	BC
+		RET
 
 sub_6D3:	PUSH	BC
 		PUSH	DE
@@ -801,13 +801,13 @@ loc_6E0:	POP	HL
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_6E4:	push	bc	
+sub_6E4:	push	bc
 		push	de
 		push	hl
 		or	a
 		ex	af, af'
 		ld	a,4
-loc_6EB:	ex	af, af'		
+loc_6EB:	ex	af, af'
 		ld	a,(de)
 		adc	a,(hl)
 		ld	(bc),a
@@ -825,14 +825,14 @@ loc_6EB:	ex	af, af'
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_6FA:	push	bc		
+sub_6FA:	push	bc
 		push	de
 		push	hl
 		ex	de,hl
 		or	a
 		ex	af, af'
 		ld	a,4
-loc_702:	ex	af, af'				
+loc_702:	ex	af, af'
 		ld	a,(de)
 		sbc	a,(hl)
 		ld	(bc),a
@@ -868,14 +868,14 @@ loc_723:	POP	HL
 
 ;----------------------------------------------------------------------------
 
-loc_726:	call	sub_688	
-sub_729:	push	bc	
+loc_726:	call	sub_688
+sub_729:	push	bc
 		push	hl
 		ld	a,(hl)
 		sub	1
 		ld	(hl),a
 		ld	b,3
-loc_731:	inc	hl	
+loc_731:	inc	hl
 		ld	a,(hl)
 		sbc	a,0
 		ld	(hl),a
@@ -932,7 +932,7 @@ loc_787:	ld	a,30h
 		inc	de
 		inc	de
 		ld	b,0Ah
-loc_792:	push	bc		
+loc_792:	push	bc
 		ld	hl,byte_2891
 		ld	bc,loc_2895
 		call	sub_6FA
@@ -980,15 +980,15 @@ smod_b_7DF:	.EQU	$+1
 		POP	AF
 		RET
 
-loc_7E5:	.db	20h 
-		.db	83h 
-		.db	0B8h 
-		.db	0EDh 
+loc_7E5:	.db	20h
+		.db	83h
+		.db	0B8h
+		.db	0EDh
 
-loc_7E9:	.db	0E3h 
-		.db	20h 
-		.db	0BBh 
-		.db	0DEh 
+loc_7E9:	.db	0E3h
+		.db	20h
+		.db	0BBh
+		.db	0DEh
 
 sub_7ED:	PUSH	AF
 smod_w_7F0:	.EQU	$+2
@@ -1019,7 +1019,7 @@ smod_w_7F0:	.EQU	$+2
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_825:	push	de		
+sub_825:	push	de
 		push	hl
 		ld	hl,(smod_w_7F0)
 		ld	bc,3FFh
@@ -1028,13 +1028,13 @@ sub_825:	push	de
 		pop	iy
 		ld	ix, loc_7E5
 		xor	a
-loc_836:	push	af		
+loc_836:	push	af
 		ld	hl,0FFFFh
 		ld	de,0FFFFh
 		xor	e
 		ld	e, a
 		ld	b,8
-loc_841:	scf			
+loc_841:	scf
 		rr	h
 		rr	l
 		rr	d
@@ -1052,7 +1052,7 @@ loc_841:	scf
 		ld	a,h
 		xor	(ix+3)
 		ld	h,a
-loc_860:	djnz	loc_841		
+loc_860:	djnz	loc_841
 		ld	a,h
 		cpl
 		ld	(iy+0),	a
@@ -1078,8 +1078,8 @@ loc_860:	djnz	loc_841
 
 ;----------------------------------------------------------------------------
 
-sub_885:	PUSH	AF		
-smod_w_887:	.equ	$+1		
+sub_885:	PUSH	AF
+smod_w_887:	.equ	$+1
 		LD	HL,0
 		LD	DE,1021H	; ?
 		XOR	H
@@ -1101,7 +1101,7 @@ loc_899:	DJNZ	loc_890
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_8A0:	xor	a		
+sub_8A0:	xor	a
 		ld	h,a
 		ld	l, a
 		ld	(smod_b_7DF),a
@@ -1111,26 +1111,26 @@ sub_8A0:	xor	a
 
 ;----------------------------------------------------------------------------
 
-byte_8AF:	.db 	4		
-byte_8B0:	.db 	0		
-byte_8B1:	.db 	0		
-byte_8B2:	.db 	0		
-byte_8B3:	.db 	0		
-word_8B4:	.dw 	0		
+byte_8AF:	.db 	4
+byte_8B0:	.db 	0
+byte_8B1:	.db 	0
+byte_8B2:	.db 	0
+byte_8B3:	.db 	0
+word_8B4:	.dw 	0
 
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_8B6:	xor	a		
+sub_8B6:	xor	a
 		ld	c,a
 		ld	b,8
 		ld	a,h
-loc_8BB:	rlca			
+loc_8BB:	rlca
 		set	7,c
 		jr	c,loc_8C4
 		rr	c
 		djnz	loc_8BB
-loc_8C4:	ld	a,h		
+loc_8C4:	ld	a,h
 		and	c
 		ld	h,a
 		ld	l,0
@@ -1142,7 +1142,7 @@ loc_8C4:	ld	a,h
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_8D1:	xor	a	
+sub_8D1:	xor	a
 		ld	hl,byte_2C9D
 		ld	b,61h
 		call	sub_1786
@@ -1160,7 +1160,7 @@ sub_8D1:	xor	a
 		cp	0
 		jr	z,loc_8FD
 		ld	a,7
-loc_8FD:	ld	(byte_2CA4),a	
+loc_8FD:	ld	(byte_2CA4),a
 		ld	a,10h
 		ld	(byte_2C9E),a
 		ld	a,(byte_8AF)
@@ -1178,14 +1178,14 @@ loc_8FD:	ld	(byte_2CA4),a
 		jr	nz,loc_924
 		jr	locret_953
 
-loc_924:	call	sub_BB4		
-		jr	c,loc_954	
+loc_924:	call	sub_BB4
+		jr	c,loc_954
 		jr	locret_953
 
 ;----------------------------------------------------------------------------
 
-loc_92B:	ld	a,3	
-		ld	(byte_8AF),a	
+loc_92B:	ld	a,3
+		ld	(byte_8AF),a
 		xor	a
 		ld	(byte_2D04),a
 		call	sub_11C1
@@ -1199,17 +1199,17 @@ loc_92B:	ld	a,3
 
 ;----------------------------------------------------------------------------
 
-loc_947:	call	sub_961		
+loc_947:	call	sub_961
 		jr	c,loc_954
 		jr	z,locret_953	; ret z ?
 		call	sub_11FA
 		jr	c,loc_954
-locret_953:	ret			
+locret_953:	ret
 
 ;----------------------------------------------------------------------------
 
-loc_954:	call	sub_DD9		
-		ld	a,(byte_2CA5)	
+loc_954:	call	sub_DD9
+		ld	a,(byte_2CA5)
 		cp	0FFh
 		call	z,sub_D0E
 		jr	locret_953	; ret ?
@@ -1275,8 +1275,8 @@ loc_9AE:	ld	a,(byte_8AF)
 		call	sub_1492
 		ld	hl,(byte_17A0)
 		ld	(word_17A2),hl
-loc_9E3:	call	sub_4A4	
-		ld	de,byte_17A3	
+loc_9E3:	call	sub_4A4
+		ld	de,byte_17A3
 		call	sub_169E
 		jr	nz,loc_A11
 		ld	de,byte_17A3
@@ -1290,14 +1290,14 @@ loc_9E3:	call	sub_4A4
 		ld	a,(byte_2CD1)
 		cp	2
 		jr	c,loc_A0D
-sub_A09:	ld	de,(byte_2CD4)	
-loc_A0D:	ld	a,1		
+sub_A09:	ld	de,(byte_2CD4)
+loc_A0D:	ld	a,1
 		or	a
 		ret
 
 ;----------------------------------------------------------------------------
 
-loc_A11:	call	sub_A09	
+loc_A11:	call	sub_A09
 		ld	a,(byte_8AF)
 		cp	4
 		jr	nz,loc_A24
@@ -1418,13 +1418,13 @@ loc_ACF:	xor	a
 		ld	b,0Ah
 
 loc_AF3:	push	bc
-		ld	ix,loc_2CE0	
+		ld	ix,loc_2CE0
 		ld	(ix+3),	20h
 		ld	(ix+2),	0
 		ld	hl,(word_2CEB)
 		ld	(ix+0),	l
 		ld	(ix+1),	h
-smod_b_B0A:	.equ	$+1		
+smod_b_B0A:	.equ	$+1
 		ld	a,1		; self modifying value
 		CALL	sub_13BA
 		LD	A,(smod_b_B0A)
@@ -1498,12 +1498,12 @@ loc_B96:	.db	0
 		.db	0Bh
 		.db	0FEh
 		.db	4
-		.db	2 
-		.db	11h 
-		.db	12h 
-		.db	0Fh 
-		.db	8 
-		.db	10h 
+		.db	2
+		.db	11h
+		.db	12h
+		.db	0Fh
+		.db	8
+		.db	10h
 
 loc_BA0:	.dw	loc_B34
 		.dw	loc_B39
@@ -1519,8 +1519,8 @@ loc_BA0:	.dw	loc_B34
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_BB4:	call	sub_BD3		
-		ret	c		
+sub_BB4:	call	sub_BD3
+		ret	c
 		cp	0Bh
 		jr	z,loc_BC2
 		cp	5
@@ -1530,7 +1530,7 @@ sub_BB4:	call	sub_BD3
 
 ;----------------------------------------------------------------------------
 
-loc_BC2:	call	loc_ACF		
+loc_BC2:	call	loc_ACF
 		ret	c
 		cp	4
 		jr	z,sub_BB4
@@ -1544,18 +1544,18 @@ loc_BC2:	call	loc_ACF
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_BD3:	call	sub_961		
+sub_BD3:	call	sub_961
 		jr	nc,loc_BDF
 		ld	a,5
 		ld	(smod_b_B0A),a
 		or	a
 		ret
 
-loc_BDF:	cp	9		
+loc_BDF:	cp	9
 		jr	z,loc_BE9
 		ld	hl,loc_2CAB
 		call	sub_688
-loc_BE9:	xor	a		
+loc_BE9:	xor	a
 		ld	(byte_2D04),a
 		call	sub_FAA
 loc_BF0:	call	sub_FC9
@@ -1707,10 +1707,10 @@ stab_CF9:	.db	0EBh
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_D0E:	call	sub_50B		
-		call	sub_D30		
+sub_D0E:	call	sub_50B
+		call	sub_D30
 		ret	c
-loc_D15:	ld	a,1Ah		
+loc_D15:	ld	a,1Ah
 		call	loc_D68
 		ret	c
 		ld	hl,byte_280E
@@ -1726,16 +1726,16 @@ loc_D15:	ld	a,1Ah
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_D30:	ld	bc,(word_2CF5)	
-		ld	a,b		
+sub_D30:	ld	bc,(word_2CF5)
+		ld	a,b
 		or	c
 		ret	z
 		ld	hl,(word_2CE9)
-loc_D3A:	ld	a,(byte_2CA3)	
+loc_D3A:	ld	a,(byte_2CA3)
 		cp	0FFh
 		jr	z,loc_D52
 smod_b_D41:	.equ	$+1
-loc_D41:	ld	a,0		
+loc_D41:	ld	a,0
 		cp	0Dh
 		jr	z,loc_D52
 		ld	a,(hl)
@@ -1744,7 +1744,7 @@ loc_D41:	ld	a,0
 		ld	a,0Dh
 		call	loc_D68
 		ret	c
-loc_D52:	ld	a,(hl)		
+loc_D52:	ld	a,(hl)
 		ld	(smod_b_D41),a
 		inc	hl
 		dec	bc
@@ -1760,7 +1760,7 @@ loc_D52:	ld	a,(hl)
 
 ;----------------------------------------------------------------------------
 
-loc_D68:	ld	(byte_D6F),a	
+loc_D68:	ld	(byte_D6F),a
 		push	bc
 		push	de
 		push	hl
@@ -1833,8 +1833,8 @@ stab_DC4:	.db  18h ;
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_DD9:	ld	hl,stab_DC4	
-sub_DDC:	ld	a,(hl)		
+sub_DD9:	ld	hl,stab_DC4
+sub_DDC:	ld	a,(hl)
 		inc	hl
 		or	a
 		ret	z
@@ -1846,22 +1846,22 @@ sub_DDC:	ld	a,(hl)
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_DE7:	push	bc		
-		call	sub_16AA	
+sub_DE7:	push	bc
+		call	sub_16AA
 		call	nz,sub_16A5
 		cp	1Bh
 		ld	a,18h
 		ld	c,0Ah
 		call	z,sub_57F
 		pop	bc
-loc_DF8:	call	sub_5D4	
+loc_DF8:	call	sub_5D4
 		jr	nz,loc_E03
 		djnz	loc_DF8
 		ld	a,0FEh
 		scf
 		ret
 
-loc_E03:	or	a		
+loc_E03:	or	a
 		ret
 
 ;----------------------------------------------------------------------------
@@ -2111,15 +2111,15 @@ sub_FA2:  	LD	E,A
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_FAA:	ld	hl,word_2CE9	
+sub_FAA:	ld	hl,word_2CE9
 		ld	de,word_2CED
 		ldi
 		ldi
 		ld	hl,0
 		ld	(word_2CEF),hl
-sub_FBA:	ld	hl,word_2CED	
+sub_FBA:	ld	hl,word_2CED
 		ld	de,loc_2CF3
-loc_FC0:	ldi			
+loc_FC0:	ldi
 		ldi
 		ldi
 		ldi
@@ -2128,18 +2128,18 @@ loc_FC0:	ldi
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_FC9:	ld	hl,loc_2CF3	
-		ld	de,word_2CED	
+sub_FC9:	ld	hl,loc_2CF3
+		ld	de,word_2CED
 		jr	loc_FC0
 
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_FD1:	xor	a		
+sub_FD1:	xor	a
 		ld	(byte_2D01),a
 		ld	hl,400h
 		ld	(word_2CFE),hl
-loc_FDB:	ld	a,5		
+loc_FDB:	ld	a,5
 		ld	(byte_2D00),a
 loc_FE0:	ld	b,64h
 		call	sub_DE7
@@ -2172,13 +2172,13 @@ loc_FE0:	ld	b,64h
 		JR	loc_FE0
 
 		LD	B,0AH
-		CALL	sub_DE7         
-		JR	C,loc_1035      
-loc_1024:	ld	hl,(word_2CFE)	
-		dec	hl              
-		ld	(word_2CFE),hl  
-		ld	a,h             
-		or	l               
+		CALL	sub_DE7
+		JR	C,loc_1035
+loc_1024:	ld	hl,(word_2CFE)
+		dec	hl
+		ld	(word_2CFE),hl
+		ld	a,h
+		or	l
 		ld	a,0FCh
 		jp	z,loc_108A
 		jp	loc_FDB
@@ -2224,17 +2224,17 @@ loc_107F:	PUSH	AF
 		LD	DE,loc_2CE4
 		CALL	sub_692
 		POP	AF
-loc_108A:	ld	hl,stab_10BF	
-		ld	bc,6		
+loc_108A:	ld	hl,stab_10BF
+		ld	bc,6
 		cpir
 		jr	nz,loc_109C
 		cp	98h
 		jr	nz,loc_109A
 		ld	a,10h
-loc_109A:	scf			
+loc_109A:	scf
 		ret
 
-loc_109C:	or	a		
+loc_109C:	or	a
 		ret
 
 ;----------------------------------------------------------------------------
@@ -2435,19 +2435,19 @@ loc_11BC:	LD	L,A
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_11C1:	ld	a,0FFh		
-		ld	(byte_2D02),a	
-		call	sub_FAA         
-		ld	a,(byte_2C9E)   
-		cp	10h             
-		ld	a,43h           
-		jr	z,loc_11D4      
-		ld	a,15h           
-					
-loc_11D4:	call	loc_145C	
-		ld	b,64h           
-		call	sub_1289        
-		or	a               
+sub_11C1:	ld	a,0FFh
+		ld	(byte_2D02),a
+		call	sub_FAA
+		ld	a,(byte_2C9E)
+		cp	10h
+		ld	a,43h
+		jr	z,loc_11D4
+		ld	a,15h
+
+loc_11D4:	call	loc_145C
+		ld	b,64h
+		call	sub_1289
+		or	a
 		jr	z,loc_11F3
 		cp	0F6h
 		jr	z,loc_11E7
@@ -2456,7 +2456,7 @@ loc_11D4:	call	loc_145C
 		ret
 ;----------------------------------------------------------------------------
 
-loc_11E7:	ld	a,6		
+loc_11E7:	ld	a,6
 		call	loc_145C
 		ld	b,0Ah
 		call	sub_DE7
@@ -2464,7 +2464,7 @@ loc_11E7:	ld	a,6
 
 ;----------------------------------------------------------------------------
 
-loc_11F3:	ld	a,6		
+loc_11F3:	ld	a,6
 		call	loc_145C
 		xor	a
 		ret
@@ -2472,8 +2472,8 @@ loc_11F3:	ld	a,6
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_11FA:	ld	a,0FFh		
-		ld	(byte_2D02),a	
+sub_11FA:	ld	a,0FFh
+		ld	(byte_2D02),a
 		ld	(byte_2CA3),a
 		xor	a
 		ld	(byte_2D07),a
@@ -2485,13 +2485,13 @@ sub_11FA:	ld	a,0FFh
 		ld	a,43h
 		jr	z,loc_121A
 		ld	a,15h
-loc_121A:	call	loc_145C	
-loc_121D:	ld	a,(byte_2D07)	
+loc_121A:	call	loc_145C
+loc_121D:	ld	a,(byte_2D07)
 		or	a
 		ld	b,82h
 		jr	z,loc_1227
 		ld	b,32h
-loc_1227:	call	sub_1289	
+loc_1227:	call	sub_1289
 		jr	c,loc_125A
 		push	af
 		call	sub_50B
@@ -2511,12 +2511,12 @@ loc_1227:	call	sub_1289
 		call	sub_D30
 		jr	c,loc_1285
 
-loc_1250:	call	sub_FC9		
+loc_1250:	call	sub_FC9
 		ld	a,6
 		call	loc_145C
 		jr	loc_121D
 
-loc_125A:	cp	0F6h		
+loc_125A:	cp	0F6h
 		jr	nz,loc_126D
 		call	sub_D0E
 		jr	c,loc_1285
@@ -2528,8 +2528,8 @@ loc_125A:	cp	0F6h
 
 ;----------------------------------------------------------------------------
 
-loc_126D:	cp	0FFh		
-		jr	nz,loc_1285	
+loc_126D:	cp	0FFh
+		jr	nz,loc_1285
 		ld	a,(byte_2D02)
 		cp	0FFh
 		jr	nz,loc_1285
@@ -2540,20 +2540,20 @@ loc_126D:	cp	0FFh
 		ld	(byte_2C9E),a
 		jp	sub_11FA
 
-loc_1285:	ld	a,0FFh		
-		scf			
+loc_1285:	ld	a,0FFh
+		scf
 		ret
 
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_1289:	ld	a,b		
-		ld	(byte_2D03),a	
+sub_1289:	ld	a,b
+		ld	(byte_2D03),a
 		xor	a
 		ld	(byte_2D04),a
 		ld	a,0
 		ld	(byte_2D09),a
-loc_1296:	ld	a,(byte_2D03)	
+loc_1296:	ld	a,(byte_2D03)
 		ld	b,a
 		call	sub_DE7
 		ld	(byte_2D08),a
@@ -2594,48 +2594,48 @@ smod_b_12D9:	.equ	$+1
 		call	sub_8A0
 		ld	ix,(word_2CED)
 loc_12E6:	LD	B,0AH
-		PUSH	IX                
-		CALL	sub_DE7           
-		POP	IX                
-		LD	(byte_2D08),A       
-		JP	C,loc_137A         
-		LD	(IX),A            
-		INC	IX                
-		CALL	sub_7DD            
-		CALL	sub_885           
-		LD	BC,(word_2CEF)      
-		INC	BC                
-		LD	(word_2CEF),BC      
-		LD	DE,(word_2D05)      
-		DEC	DE                
-		LD	(word_2D05),DE      
-		LD	A,D               
-		OR	E                 
-		JR	NZ,loc_12E6       
-		LD	(word_2CED),IX      
-		LD	B,0AH             
-		CALL	sub_DE7          
-		LD	(byte_2D08),A    
-		JP	C,loc_137A       
-		LD	A,(byte_2C9E)    
-		CP	10H              
-		JR	NZ,loc_1352      
-		LD	A,(byte_2D08)    
-		CALL	sub_885          
-		LD	B,0AH            
-		CALL	sub_DE7          
-		LD	(byte_2D08),A    
-		JP	C,loc_137A       
-		CALL	sub_885          
-		LD	A,H              
-		OR	L                
-		JP	NZ,loc_137A      
-loc_1345:	XOR	A                
-		LD	(byte_2D04),A    
-		LD	A,0              
-		LD	(byte_2D02),A       
-		LD	A,(smod_b_12D9)       
-		RET                      
+		PUSH	IX
+		CALL	sub_DE7
+		POP	IX
+		LD	(byte_2D08),A
+		JP	C,loc_137A
+		LD	(IX),A
+		INC	IX
+		CALL	sub_7DD
+		CALL	sub_885
+		LD	BC,(word_2CEF)
+		INC	BC
+		LD	(word_2CEF),BC
+		LD	DE,(word_2D05)
+		DEC	DE
+		LD	(word_2D05),DE
+		LD	A,D
+		OR	E
+		JR	NZ,loc_12E6
+		LD	(word_2CED),IX
+		LD	B,0AH
+		CALL	sub_DE7
+		LD	(byte_2D08),A
+		JP	C,loc_137A
+		LD	A,(byte_2C9E)
+		CP	10H
+		JR	NZ,loc_1352
+		LD	A,(byte_2D08)
+		CALL	sub_885
+		LD	B,0AH
+		CALL	sub_DE7
+		LD	(byte_2D08),A
+		JP	C,loc_137A
+		CALL	sub_885
+		LD	A,H
+		OR	L
+		JP	NZ,loc_137A
+loc_1345:	XOR	A
+		LD	(byte_2D04),A
+		LD	A,0
+		LD	(byte_2D02),A
+		LD	A,(smod_b_12D9)
+		RET
 
 loc_1352:	ld	a,(byte_2D08)
 		ld	l,a
@@ -2663,9 +2663,9 @@ loc_1376:	ld	(hl),a
 
 ;----------------------------------------------------------------------------
 
-loc_137A:	ld	a,0		
+loc_137A:	ld	a,0
 		ld	(byte_2D09),a
-loc_137F:	ld	b,0Ah		
+loc_137F:	ld	b,0Ah
 		call	sub_DE7
 		jr	nc,loc_137F
 		ld	a,(byte_2D02)
@@ -2678,11 +2678,11 @@ loc_137F:	ld	b,0Ah
 		ld	a,15h
 		jr	loc_13A1
 
-loc_139A:	ld	a,28h		
+loc_139A:	ld	a,28h
 		ld	(byte_2D03),a
 		ld	a,15h
-loc_13A1:	call	loc_145C	
-loc_13A4:	call	sub_FC9		
+loc_13A1:	call	loc_145C
+loc_13A4:	call	sub_FC9
 		ld	hl,byte_2D04
 		inc	(hl)
 		call	sub_482
@@ -2696,7 +2696,7 @@ loc_13A4:	call	sub_FC9
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_13BA:	ld	(byte_2CE8),a	
+sub_13BA:	ld	(byte_2CE8),a
 		ld	hl,loc_1403
 		call	sub_DDC
 		call	sub_8A0
@@ -2705,7 +2705,7 @@ sub_13BA:	ld	(byte_2CE8),a
 		call	sub_1418
 		ld	hl,loc_2CE0
 		ld	b,4
-loc_13D4:	push	bc		
+loc_13D4:	push	bc
 		ld	a,(hl)
 		inc	hl
 		push	hl
@@ -2741,8 +2741,8 @@ loc_1408:	.text	"0123456789abcdef"
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_1418:	push	af		
-		ld	hl,loc_1408	
+sub_1418:	push	af
+		ld	hl,loc_1408
 		ld	b,0
 		rra
 		rra
@@ -2817,7 +2817,7 @@ loc_1480:	.dw	loc_1450
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_1492:	push	bc		
+sub_1492:	push	bc
 		ld	(byte_2D0A),a
 		call	sub_171E
 		push	de
@@ -2833,7 +2833,7 @@ sub_1492:	push	bc
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_14A7:	xor	a		
+sub_14A7:	xor	a
 		ld	(de),a
 		ld	(byte_2D0D),a
 		ld	(byte_2D0C),a
@@ -2845,7 +2845,7 @@ sub_14A7:	xor	a
 		cp	3Ah
 		jr	nz,loc_14BD
 		inc	hl
-loc_14BD:	ld	b,8		
+loc_14BD:	ld	b,8
 		call	sub_1522
 		pop	de
 		ld	a,(hl)
@@ -2858,14 +2858,14 @@ loc_14BD:	ld	b,8
 		jr	z,loc_14D7
 		call	sub_154A
 		jr	z,loc_14E5
-loc_14D7:	call	sub_159D	
+loc_14D7:	call	sub_159D
 		jr	z,loc_14E5
 		ld	a,(byte_2D0A)
 		or	a
 		jr	nz,loc_14E5
 		call	sub_154A
 loc_14E5:	ld	a,(byte_2D0D)
-		ld	(de),a		
+		ld	(de),a
 		push	de
 		inc	de
 		call	sub_1632
@@ -2878,7 +2878,7 @@ loc_14E5:	ld	a,(byte_2D0D)
 		pop	de
 		ld	a,(hl)
 		ld	(byte_2D0B),a
-loc_14FE:	ld	a,(byte_2D0B)	
+loc_14FE:	ld	a,(byte_2D0B)
 		ex	de,hl
 		ld	bc,8
 		add	hl,bc
@@ -2890,21 +2890,21 @@ loc_14FE:	ld	a,(byte_2D0B)
 		push	de
 		call	sub_1522
 		pop	de
-loc_1513:	ex	de,hl		
+loc_1513:	ex	de,hl
 		ld	bc,5
 		add	hl,bc
 		ex	de,hl
 		ld	a,(byte_2D0E)
 		ld	(de),a
-loc_151D:	ld	a,(byte_2D0C)	
+loc_151D:	ld	a,(byte_2D0C)
 		or	a
 		ret
 
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_1522:	call	sub_15D9	
-		ret	z		
+sub_1522:	call	sub_15D9
+		ret	z
 		inc	de
 		cp	2Ah
 		jr	nz,loc_1533
@@ -2912,12 +2912,12 @@ sub_1522:	call	sub_15D9
 		ld	(de),a
 		call	sub_1543
 		jr	loc_153A
-loc_1533:	ld	(de),a		
+loc_1533:	ld	(de),a
 		inc	hl
 		cp	3Fh
 		call	z,sub_1543
-loc_153A:	djnz	sub_1522	
-loc_153C:	call	sub_15D9	
+loc_153A:	djnz	sub_1522
+loc_153C:	call	sub_15D9
 		ret	z
 		inc	hl
 		jr	loc_153C
@@ -2925,8 +2925,8 @@ loc_153C:	call	sub_15D9
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_1543:	push	hl		
-		ld	hl,byte_2D0C	
+sub_1543:	push	hl
+		ld	hl,byte_2D0C
 		inc	(hl)
 		pop	hl
 		ret
@@ -2934,8 +2934,8 @@ sub_1543:	push	hl
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_154A:	push	hl		
-		push	de		
+sub_154A:	push	hl
+		push	de
 		call	sub_1552
 		pop	de
 		pop	hl
@@ -2944,7 +2944,7 @@ sub_154A:	push	hl
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_1552:	call	sub_164A	
+sub_1552:	call	sub_164A
 		jr	z,loc_15CA
 		ex	de,hl
 		inc	hl
@@ -2964,9 +2964,9 @@ sub_1552:	call	sub_164A
 		ret	z
 		call	sub_1625
 		ret	c
-loc_1574:	push	hl		
+loc_1574:	push	hl
 		ld	b,2
-loc_1577:	ld	a,(hl)		
+loc_1577:	ld	a,(hl)
 		cp	20h
 		jr	z,loc_1589
 		call	sub_1625
@@ -2976,7 +2976,7 @@ loc_1577:	ld	a,(hl)
 		ld	a,(hl)
 		cp	20h
 		jr	nz,loc_159A
-loc_1589:	pop	hl		
+loc_1589:	pop	hl
 		call	sub_165A
 		ld	c,a
 		inc	c
@@ -2987,13 +2987,13 @@ loc_1589:	pop	hl
 		xor	a
 		ret
 
-loc_159A:	pop	hl		
-		jr	loc_15CA	
+loc_159A:	pop	hl
+		jr	loc_15CA
 
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_159D:	push	hl		
+sub_159D:	push	hl
 		push	de
 		call	sub_15A5
 		pop	de
@@ -3003,11 +3003,11 @@ sub_159D:	push	hl
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_15A5:	call	sub_1662	
+sub_15A5:	call	sub_1662
 		jr	z,loc_15CA
 		ex	de,hl
 		inc	hl
-loc_15AC:	ld	a,(de)		
+loc_15AC:	ld	a,(de)
 		or	a
 		jr	z,loc_15CA
 		inc	de
@@ -3015,13 +3015,13 @@ loc_15AC:	ld	a,(de)
 		push	hl
 		push	de
 		ld	b,8
-loc_15B6:	ld	a,(de)		
+loc_15B6:	ld	a,(de)
 		cp	(hl)
 		jr	nz,loc_15BE
 		inc	hl
 		inc	de
 		djnz	loc_15B6
-loc_15BE:	pop	de		
+loc_15BE:	pop	de
 		pop	hl
 		jr	z,loc_15CD
 		ex	de,hl
@@ -3030,10 +3030,10 @@ loc_15BE:	pop	de
 		ex	de,hl
 		jr	loc_15AC
 
-loc_15CA:	or	0FFh		
-		ret			
+loc_15CA:	or	0FFh
+		ret
 
-loc_15CD:	dec	de		
+loc_15CD:	dec	de
 		ld	a,(de)
 		ld	(byte_2D0E),a
 		dec	de
@@ -3045,7 +3045,7 @@ loc_15CD:	dec	de
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_15D9:	ld	a,(hl)		
+sub_15D9:	ld	a,(hl)
 		cp	21h
 		jr	c,loc_15F8
 		cp	3Dh
@@ -3067,15 +3067,15 @@ sub_15D9:	ld	a,(hl)
 		cp	3Bh
 		ret
 
-loc_15F8:	xor	a		
+loc_15F8:	xor	a
 		ret
 
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_15FA:	push	bc		
+sub_15FA:	push	bc
 		ld	bc,1100h
-loc_15FE:	ld	a,(hl)		
+loc_15FE:	ld	a,(hl)
 		call	sub_15D9
 		jr	z,loc_161E
 		inc	hl
@@ -3095,20 +3095,20 @@ loc_15FE:	ld	a,(hl)
 		jr	c,loc_1622
 		ld	c,a
 		djnz	loc_15FE
-loc_161E:	ld	a,c		
+loc_161E:	ld	a,c
 		pop	bc
 		or	a
 		ret
 ;
-loc_1622:	pop	bc		
-		scf			
+loc_1622:	pop	bc
+		scf
 		ret
 
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_1625:	sub	30h		
-		ret	c		
+sub_1625:	sub	30h
+		ret	c
 		cp	0Ah
 		ccf
 		ret
@@ -3116,11 +3116,11 @@ sub_1625:	sub	30h
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_162C:	xor	a		
+sub_162C:	xor	a
 		ld	(de),a
 		inc	de
 		call	sub_1632
-sub_1632:	ld	b,0Bh		
+sub_1632:	ld	b,0Bh
 		ld	a,20h
 		call	sub_1645
 		xor	a
@@ -3132,15 +3132,15 @@ sub_1632:	ld	b,0Bh
 		inc	de
 		ld	b,3
 		xor	a
-sub_1645:	ld	(de),a		
-		inc	de		
+sub_1645:	ld	(de),a
+		inc	de
 		djnz	sub_1645
 		ret
 
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_164A:	push	hl		
+sub_164A:	push	hl
 		push	de
 		ld	de,2Eh
 		jp	loc_1669
@@ -3148,7 +3148,7 @@ sub_164A:	push	hl
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_1652:	push	hl		
+sub_1652:	push	hl
 		push	de
 		ld	de,2Ch
 		jp	loc_1669
@@ -3156,7 +3156,7 @@ sub_1652:	push	hl
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_165A:	push	hl		
+sub_165A:	push	hl
 		push	de
 		ld	de,2Dh
 		jp	loc_1669
@@ -3164,18 +3164,18 @@ sub_165A:	push	hl
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_1662:	push	de		
+sub_1662:	push	de
 		ld	de,15h
 		jp	loc_1676
 
 ;----------------------------------------------------------------------------
 
-loc_1669:	ld	hl,(word_2D0F)	
-		ld	a,h		
+loc_1669:	ld	hl,(word_2D0F)
+		ld	a,h
 		or	l
 		jr	z,loc_1671
 		add	hl,de
-loc_1671:	ld	a,(hl)		
+loc_1671:	ld	a,(hl)
 		pop	de
 		pop	hl
 		or	a
@@ -3183,7 +3183,7 @@ loc_1671:	ld	a,(hl)
 
 ;----------------------------------------------------------------------------
 
-loc_1676:	ld	hl,(word_2D0F)	
+loc_1676:	ld	hl,(word_2D0F)
 		add	hl,de
 		ld	e,(hl)
 		inc	hl
@@ -3202,8 +3202,8 @@ loc_1683:	ld	(word_2D0F),hl
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_1687:	push	af		
-		push	de		
+sub_1687:	push	af
+		push	de
 		push	hl
 		ld	c,19h
 		call	sub_16AF
@@ -3222,7 +3222,7 @@ sub_1687:	push	af
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_169E:	ld	a,11h		
+sub_169E:	ld	a,11h
 		call	sub_16B8
 		inc	a
 		ret
@@ -3230,20 +3230,20 @@ sub_169E:	ld	a,11h
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_16A5:	ld	a,1		
+sub_16A5:	ld	a,1
 		jp	sub_16B8
 
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_16AA:	ld	a,0Bh		
+sub_16AA:	ld	a,0Bh
 		jp	sub_16B8
 
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_16AF:	push	de		
-		push	bc		
+sub_16AF:	push	de
+		push	bc
 		call	bdos
 		pop	bc
 		pop	de
@@ -3253,8 +3253,8 @@ sub_16AF:	push	de
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_16B8:	push	hl		
-		push	de		
+sub_16B8:	push	hl
+		push	de
 		push	bc
 		ld	c,a
 		call	bdos
@@ -3267,7 +3267,7 @@ sub_16B8:	push	hl
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_16C4:	push	bc		
+sub_16C4:	push	bc
 		push	hl
 		push	de
 		push	af
@@ -3286,25 +3286,25 @@ sub_16C4:	push	bc
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_16DA:	ld	a,(de)		
-		and	7Fh		
+sub_16DA:	ld	a,(de)
+		and	7Fh
 		cp	20h
 		jr	z,loc_16E3
 		ld	(hl),a
 		inc	hl
-loc_16E3:	inc	de		
+loc_16E3:	inc	de
 		djnz	sub_16DA
 		ret
 
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_16E7:	push	bc		
+sub_16E7:	push	bc
 		ld	b,0
 		jp	loc_16F0
 sub_16ED:	PUSH	BC
 		LD	B,0FFH
-loc_16F0:	push	hl		
+loc_16F0:	push	hl
 		push	af
 		ld	h,64h
 		call	sub_1703
@@ -3319,8 +3319,8 @@ loc_16F0:	push	hl
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_1703:	ld	l, 0FFh		
-loc_1705:	sub	h		
+sub_1703:	ld	l, 0FFh
+loc_1705:	sub	h
 		inc	l
 		jr	nc,loc_1705
 		add	a,h
@@ -3334,9 +3334,9 @@ loc_1705:	sub	h
 		ld	a,20h
 		jr	z,loc_171A
 		xor	a
-sub_1717:	add	a,30h		
+sub_1717:	add	a,30h
 		ld	b,a
-loc_171A:	ld	(de),a		
+loc_171A:	ld	(de),a
 		inc	de
 		ld	a,h
 		ret
@@ -3344,7 +3344,7 @@ loc_171A:	ld	(de),a
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_171E:	push	af		
+sub_171E:	push	af
 		push	hl
 loc_1720:	ld	a,(hl)
 		or	a
@@ -3360,7 +3360,7 @@ loc_172B:	pop	hl
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_172E:	push	bc		
+sub_172E:	push	bc
 		push	de
 		push	hl
 		ld	c,a
@@ -3369,7 +3369,7 @@ sub_172E:	push	bc
 		push	hl
 		inc	hl
 		inc	hl
-loc_1737:	call	sub_176B	
+loc_1737:	call	sub_176B
 		or	a
 		jr	z,loc_1760
 		ld	(hl),e
@@ -3387,16 +3387,16 @@ loc_1737:	call	sub_176B
 		xor	a
 		ld	(de),a
 		inc	de
-loc_1751:	ld	a,b		
+loc_1751:	ld	a,b
 		or	a
 		jr	nz,loc_1737
-loc_1755:	call	sub_1779	
+loc_1755:	call	sub_1779
 		call	sub_176B
 		or	a
 		jr	z,loc_1760
 		or	0FFh
-loc_1760:	pop	hl		
-		push	af		
+loc_1760:	pop	hl
+		push	af
 		ld	a,(hl)
 		sub	b
 		inc	hl
@@ -3410,8 +3410,8 @@ loc_1760:	pop	hl
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_176B:	ld	a,(de)		
-		and	7Fh		
+sub_176B:	ld	a,(de)
+		and	7Fh
 		inc	de
 		cp	20h
 		jr	z,sub_176B
@@ -3423,8 +3423,8 @@ sub_176B:	ld	a,(de)
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_1779:	ld	a,(de)		
-		and	7Fh		
+sub_1779:	ld	a,(de)
+		and	7Fh
 		ret	z
 		cp	20h
 		ret	z
@@ -3436,7 +3436,7 @@ sub_1779:	ld	a,(de)
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_1786:	push	hl		
+sub_1786:	push	hl
 		call	sub_178C
 		pop	hl
 		ret
@@ -3444,8 +3444,8 @@ sub_1786:	push	hl
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_178C:	push	bc		
-loc_178D:	ld	(hl),a		
+sub_178C:	push	bc
+loc_178D:	ld	(hl),a
 		inc	hl
 		djnz	loc_178D
 		pop	bc
@@ -3454,7 +3454,7 @@ loc_178D:	ld	(hl),a
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_1793:	and	7Fh		
+sub_1793:	and	7Fh
 		cp	61h
 		ret	c
 		cp	7Bh
@@ -3463,10 +3463,10 @@ sub_1793:	and	7Fh
 		ret
 
 ;----------------------------------------------------------------------------
-word_179E:	.dw	loc_end	
-byte_17A0:	.db	0	
-byte_17A1:	.db	0	
-word_17A2:	.db	0	
+word_179E:	.dw	loc_end
+byte_17A0:	.db	0
+byte_17A1:	.db	0
+word_17A2:	.db	0
 byte_17A3:	.db	0
 		.fill	$1800-$,0
 		.ds	8
