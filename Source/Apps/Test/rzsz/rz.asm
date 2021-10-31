@@ -2367,93 +2367,71 @@ sub_0_FA2:	.db  5Fh ; _
 		.db 0C9h ; É
 
 ;----------------------------------------------------------------------------
-
 ;		S u b r	o u t i	n e
 
-sub_0_FAA:				; CODE XREF: seg000:0AE5p sub_0_BD3+1Ap
-
-		ld	hl, 2CE9h
+sub_0_FAA:	ld	hl, 2CE9h	; CODE XREF: seg000:0AE5p sub_0_BD3+1Ap
 		ld	de, 2CEDh
 		ldi	
 		ldi	
 		ld	hl, 0
 		ld	(2CEFh), hl
-
-;----------------------------------------------------------------------------
-;		S u b r	o u t i	n e
-
-sub_0_FBA:				; CODE XREF: sub_0_11FA+4Ep
-		ld	hl, 2CEDh
+sub_0_FBA:	ld	hl, 2CEDh	; CODE XREF: sub_0_11FA+4Ep
 		ld	de, 2CF3h
-
-loc_0_FC0:				; CODE XREF: sub_0_FC9+6j
-		ldi	
+loc_0_FC0:	ldi			; CODE XREF: sub_0_FC9+6j	
 		ldi	
 		ldi	
 		ldi	
 		ret	
-; End of function sub_0_FBA
-
 
 ;----------------------------------------------------------------------------
-
 ;		S u b r	o u t i	n e
 
-sub_0_FC9:				; CODE XREF: sub_0_BD3+1Dp
-					; sub_0_11FA+56p ...
-		ld	hl, 2CF3h
-		ld	de, 2CEDh
+sub_0_FC9:	ld	hl, 2CF3h	; CODE XREF: sub_0_BD3+1Dp
+		ld	de, 2CEDh	; sub_0_11FA+56p ...
 		jr	loc_0_FC0
-; End of function sub_0_FC9
-
 
 ;----------------------------------------------------------------------------
-
 ;		S u b r	o u t i	n e
 
-sub_0_FD1:				; CODE XREF: sub_0_BD3+37p
-		xor	a
+sub_0_FD1:	xor	a		; CODE XREF: sub_0_BD3+37p
 		ld	(byte_0_2D01), a
 		ld	hl, 400h
 		ld	(2CFEh), hl
-
-loc_0_FDB:				; CODE XREF: sub_0_FD1+61j
-		ld	a, 5
+loc_0_FDB:	ld	a, 5		; CODE XREF: sub_0_FD1+61j
 		ld	(byte_0_2D00), a
-		ld	b, 64h
+loc_0_FE0:	ld	b, 64h
 		call	sub_0_DE7
 		jp	c, loc_0_108A
-		ld	hl, 109Eh
+		ld	hl, stab_0_109E
 		ld	bc, 3
 		cpir	
 		jp	z, sub_0_67F
 		jr	loc_0_1024
+
 ;----------------------------------------------------------------------------
 
 		LD	HL,byte_0_2D00
 		DEC	(HL)
 		LD	A,10H
-		JP	Z,108AH
+		JP	Z,loc_0_108A
 		LD	B,0AH
 		CALL	sub_0_DE7
-		JR	C,0FE0H
-		LD	HL,10A7H
+		JR	C,loc_0_FE0
+		LD	HL,stab_0_10A7
 		LD	BC,2
 		CPIR
 		JP	Z,67FH
-		JR	1024H
+		JR	loc_0_1024
 	
 		LD	HL,byte_0_2D00
 		DEC	(HL)
 		LD	A,10H
-		JP	Z,108AH
-		JR	0FE0H
+		JP	Z,loc_0_108A
+		JR	loc_0_FE0
 	
 		LD	B,0AH
-		CALL	0DE7H
-		JR	C,1035H
-;----------------------------------------------------------------------------
-
+		CALL	sub_0_DE7
+		JR	C,loc_0_1035
 loc_0_1024:	ld	hl, (2CFEh)	; CODE XREF: sub_0_FD1+22j
 		dec	hl
 		ld	(2CFEh), hl
@@ -2462,116 +2440,66 @@ loc_0_1024:	ld	hl, (2CFEh)	; CODE XREF: sub_0_FD1+22j
 		ld	a, 0FCh
 		jp	z, loc_0_108A
 		jp	loc_0_FDB
-;----------------------------------------------------------------------------
-		.db  3Eh ; >
-		.db 0FFh ; ÿ
-		.db 0C3h ; Ã
-		.db  8Ah ; ?
-		.db  10h ;  
-		.db  3Eh ; >
-		.db    5 ;  
-		.db  32h ; 2
-		.db    0 ;  
-		.db  2Dh ; -
-		.db 0CDh ; Í
-		.db    5 ;  
-		.db  0Eh ;  
-		.db  38h ; 8
-		.db  46h ; F
-		.db  21h ; !
-		.db 0ADh ; ­
-		.db  10h ;  
-		.db    1 ;  
-		.db    2 ;  
-		.db    0 ;  
-		.db 0EDh ; í
-		.db 0B1h ; ±
-		.db 0CAh ; Ê
-		.db  7Fh ; 
-		.db    6 ;  
-		.db  18h ;  
-		.db 0D3h ; Ó
-		.db 0CDh ; Í
-		.db    5 ;  
-		.db  0Eh ;  
-		.db  38h ; 8
-		.db  34h ; 4
-		.db  21h ; !
-		.db 0B3h ; ³
-		.db  10h ;  
-		.db    1 ;  
-		.db    4 ;  
-		.db    0 ;  
-		.db 0EDh ; í
-		.db 0B1h ; ±
-		.db 0CAh ; Ê
-		.db  7Fh ; 
-		.db    6 ;  
-		.db  18h ;  
-		.db 0C1h ; Á
-		.db  3Eh ; >
-		.db  10h ;  
-		.db  32h ; 2
-		.db  9Eh ; ?
-		.db  2Ch ; ,
-		.db 0CDh ; Í
-		.db  3Fh ; ?
-		.db  11h ;  
-		.db  18h ;  
-		.db  12h ;  
-		.db  3Eh ; >
-		.db  10h ;  
-		.db  32h ; 2
-		.db  9Eh ; ?
-		.db  2Ch ; ,
-		.db 0CDh ; Í
-		.db    0 ;  
-		.db  11h ;  
-		.db  18h ;  
-		.db    8 ;  
-		.db  3Eh ; >
-		.db  20h ;  
-		.db  32h ; 2
-		.db  9Eh ; ?
-		.db  2Ch ; ,
-		.db 0CDh ; Í
-		.db 0C5h ; Å
-		.db  10h ;  
-		.db 0F5h ; õ
-		.db  21h ; !
-		.db 0A7h ; §
-		.db  2Ch ; ,
-		.db  11h ;  
-		.db 0E4h ; ä
-		.db  2Ch ; ,
-		.db 0CDh ; Í
-		.db  92h ; ?
-		.db    6 ;  
-		.db 0F1h ; ñ
-;----------------------------------------------------------------------------
 
-loc_0_108A:				; CODE XREF: sub_0_FD1+14j
-					; sub_0_FD1+5Ej
-		ld	hl, 10BFh
-		ld	bc, 6
+;----------------------------------------------------------------------------
+loc_0_1035:
+		LD	A,0FFH			   ;1035   3e ff         
+		JP	loc_0_108A                 ;1037   c3 8a 10      
+                                                                        
+		LD	A,5                        ;103a   3e 05         
+		LD	(2D00H),A                  ;103c   32 00 2d      
+		CALL	0E05H                      ;103f   cd 05 0e      
+		JR	C,108AH                    ;1042   38 46         
+		LD	HL,10ADH                   ;1044   21 ad 10      
+		LD	BC,2                       ;1047   01 02 00      
+		CPIR                               ;104a   ed b1         
+		JP	Z,67FH                     ;104c   ca 7f 06      
+		JR	loc_0_1024                 ;104f   18 d3         
+                                                                        
+		CALL	0E05H                      ;1051   cd 05 0e      
+		JR	C,loc_0_108A               ;1054   38 34         
+		LD	HL,10B3H                   ;1056   21 b3 10      
+		LD	BC,4                       ;1059   01 04 00      
+		CPIR                               ;105c   ed b1         
+		JP	Z,067FH                    ;105e   ca 7f 06      
+		JR	loc_0_1024                 ;1061   18 c1         
+                                                                        
+		LD	A,10H                      ;1063   3e 10         
+		LD	(2C9EH),A                  ;1065   32 9e 2c      
+		CALL	113FH                      ;1068   cd 3f 11      
+		JR	107FH                      ;106b   18 12         
+                                                   ;                     
+		LD	A,10H                      ;106d   3e 10         
+		LD	(2C9EH),A                  ;106f   32 9e 2c      
+		CALL	1100H                      ;1072   cd 00 11      
+		JR	107FH                      ;1075   18 08         
+                                                                        
+		LD	A,20H                      ;1077   3e 20         
+		LD	(2C9EH),A                  ;1079   32 9e 2c      
+		CALL	10C5H                      ;107c   cd c5 10      
+		PUSH	AF                         ;107f   f5            
+		LD	HL,2CA7H                   ;1080   21 a7 2c      
+		LD	DE,2CE4H                   ;1083   11 e4 2c      
+		CALL	692H                       ;1086   cd 92 06      
+		POP	AF                         ;1089   f1            
+loc_0_108A:	ld	hl, 10BFh	; CODE XREF: sub_0_FD1+14j
+		ld	bc, 6		; sub_0_FD1+5Ej
 		cpir	
 		jr	nz, loc_0_109C
 		cp	98h
 		jr	nz, loc_0_109A
 		ld	a, 10h
-
-loc_0_109A:				; CODE XREF: sub_0_FD1+C5j
-		scf	
+loc_0_109A:	scf			; CODE XREF: sub_0_FD1+C5j	
 		ret	
+
 ;----------------------------------------------------------------------------
 
-loc_0_109C:				; CODE XREF: sub_0_FD1+C1j
-		or	a
+loc_0_109C:	or	a		; CODE XREF: sub_0_FD1+C1j
 		ret	
-; End of function sub_0_FD1
 
 ;----------------------------------------------------------------------------
-		.db  18h ;  
+
+stab_0_109E:	.db  18h ;  
 		.db 0AAh ; ª
 		.db  2Ah ; *
 		.db  3Ah ; :
@@ -2579,8 +2507,9 @@ loc_0_109C:				; CODE XREF: sub_0_FD1+C1j
 		.db  3Ah ; :
 		.db  10h ;  
 		.db 0F5h ; õ
-		.db  0Fh ;  
-		.db  6Bh ; k
+		.db  0Fh ; 
+
+stab_0_10A7: 	.db  6Bh ; k
 		.db  18h ;  
 		.db  12h ;  
 		.db  10h ;  
