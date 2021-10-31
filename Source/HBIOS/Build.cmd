@@ -70,7 +70,7 @@ call :asm romldr || exit /b
 
 call :asm eastaegg || exit /b
 call :asm nascom || exit /b
-call :asm tastybasic || exit /b
+:: call :asm tastybasic || exit /b
 call :asm game || exit /b
 call :asm usrrom || exit /b
 call :asm updater || exit /b
@@ -84,7 +84,7 @@ call :asm imgpad2 || exit /b
 ::
 
 copy /b romldr.bin + dbgmon.bin + ..\zsdos\zsys_wbw.bin + ..\cpm22\cpm_wbw.bin osimg.bin || exit /b
-copy /b ..\Forth\camel80.bin + nascom.bin + tastybasic.bin + game.bin + eastaegg.bin + netboot.mod + updater.bin + usrrom.bin osimg1.bin || exit /b
+copy /b ..\Forth\camel80.bin + nascom.bin + ..\tastybasic\src\tastybasic.bin + game.bin + eastaegg.bin + netboot.mod + updater.bin + usrrom.bin osimg1.bin || exit /b
 copy /b imgpad2.bin osimg2.bin || exit /b
 
 copy /b romldr.bin + dbgmon.bin + ..\zsdos\zsys_wbw.bin osimg_small.bin || exit /b
