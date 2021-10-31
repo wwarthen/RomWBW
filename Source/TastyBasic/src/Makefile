@@ -1,36 +1,16 @@
-UNAME := $(shell uname)
-# VER := $(shell git describe --tags --abbrev=0)
-APPDIR := $(wildcard ../../../Binary/Apps)
-BINDIR := ../../../Tools/$(UNAME)
+OBJECTS = tastybasic.bin tbasic.com
+TOOLS = ../../../Tools
+OTHERS = *.com
+APPDIR=../../../Binary/Apps
 
-ROMIMAGE := tastybasic.bin
-ROMDEPS := tastybasic.asm romwbwio.asm
-CPMCMD := tastybasic.com
-CPMDEPS := tastybasic.asm cpmio.asm
-CPMAPP := $(APPDIR)/tbasic.com
-CPMIMAGE := tastybasic.img
+include $(TOOLS)/Makefile.inc
 
-export PATH := $(BINDIR):${PATH}
+USETASM=1
 
-all: $(ROMIMAGE) $(CPMCMD) | $(APPDIR)
+tastybasic.bin: TASMFLAGS=-dROMWBW
 
-clean:
-	@rm -f *.lst *.img *.com *.bin
+tastybasic.com: TASMFLAGS=-dCPM
 
-clobber: clean
-	@rm -f $(CPMAPP)
-
-$(ROMIMAGE): $(ROMDEPS)
-	@uz80as -dROMWBW tastybasic.asm tastybasic.bin tastybasic.bin.lst
-
-$(CPMIMAGE): $(CPMCMD)
-	@mkfs.cpm -f wbw_fd144 tastybasic.img
-	@cpmcp -f wbw_fd144 tastybasic.img tastybasic.com 0:tbasic.com
-
-$(CPMCMD): $(CPMDEPS)
-	@uz80as -dCPM tastybasic.asm tastybasic.com tastybasic.com.lst
-
-$(APPDIR): $(CPMCMD)
-	@cat $(CPMCMD) > $(CPMAPP)
-
-.PHONY: clean clobber $(APPDIR)
+tbasic.com : tastybasic.com
+	cp $< $@
+	cp $$($(CASEFN) $@) $(APPDIR)
