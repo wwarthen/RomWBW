@@ -7,5 +7,4 @@ if exist *.prn del *.prn
 if exist *.hex del *.hex
 if exist *.rel del *.rel
 if exist *.sym del *.sym
-
-if exist ..\..\..\Binary\Apps\tbasic.com del ..\..\..\Binary\Apps\tbasic.com
+if exist *.com del *.com

@@ -7,7 +7,7 @@ set PATH=%TOOLS%\tasm32;%PATH%
 
 set TASMTABS=%TOOLS%\tasm32
 
-tasm -80 -dROMWBW tastybasic.asm tastybasic.bin tastybasic.bin.lst
-tasm -80 -dCPM tastybasic.asm tastybasic.com tastybasic.com.lst
+tasm -80 -g3 -fFF -dROMWBW tastybasic.asm tastybasic.bin tastybasic.bin.lst
+tasm -80 -g3 -fFF -dCPM tastybasic.asm tastybasic.com tastybasic.com.lst
 
 copy /b /v tastybasic.com ..\..\..\Binary\Apps\tbasic.com
