@@ -34,6 +34,7 @@ d_zsdos/u0/*.* 0:
 ../../Binary/Apps/syscopy.com 0:
 ../../Binary/Apps/sysgen.com 0:
 ../../Binary/Apps/talk.com 0:
+../../Binary/Apps/tbasic.com 0:
 ../../Binary/Apps/timer.com 0:
 ../../Binary/Apps/tune.com 0:
 ../../Binary/Apps/xm.com 0:
