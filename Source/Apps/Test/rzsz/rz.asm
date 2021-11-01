@@ -18,36 +18,41 @@
 ; Processor:	    z80
 ; Target assembler: Table Driven Assembler (TASM) by Speech Technology Inc.
 
+iobyte		.equ	0004h
 bdos		.equ	0005h
 
 A_READ		.equ	3
 A_STATIN	.equ	7
+A_STAT_OUT	.equ	8
 C_WRITESTR	.equ	9
 S_BDOSVER	.equ	12
 DRV_SET		.equ	14
 F_USERNUM	.equ	32
 S_SYSVAR	.equ	49
 
+buf_len:	.equ	80h
+
 ;----------------------------------------------------------------------------
 
 		.org	100h
 
 start:		ld	sp, nstack	; Setup local stack
-		ld	c,S_BDOSVER
-		call	bdos		; Return CP/M version #
-		cp	'0'		; Get CP/M vers. #
-		jp	c,err_vern	; CP/M 2 or less?
+		ld	c,S_BDOSVER	; Get CP/M version #
+		call	bdos
+		cp	30h		; Exit if less than
+		jp	c,err_vern	; CP/M 3
 		ld	de,str_welc
-		ld	c,C_WRITESTR	; yes
-		call	bdos		; "RZ for ..."; Output string
-		call	sub_195       	; print string
-		ld	hl,(word_179E)
-		xor	a
-		ld	b,14h
+		ld	c,C_WRITESTR	; display version
+		call	bdos		; welcome message
+		call	sub_195
+		ld	hl,(word_179E)	; zero first 20
+		xor	a		; bytes of
+		ld	b,20		; free memory
 		call	sub_1786
-		ld	a,(80h)
-		or	a
-		jr	z,loc_174
+		ld	a,(buf_len)	; if there is nothing in
+		or	a		; the command line buffer
+		jr	z,skip_cl	; go wait for transfer
+
 		ld	(hl),2
 		ld	de,82h
 		ex	de,hl
@@ -58,14 +63,14 @@ start:		ld	sp, nstack	; Setup local stack
 		inc	hl
 		ld	a,(hl)
 		or	a
-		jp	z,loc_174
+		jp	z,skip_cl
 		inc	hl
 		ld	e,(hl)
 		inc	hl
 		ld	d,(hl)
 		inc	hl
 		ld	a,(de)
-		cp	2Dh
+		cp	'-'
 		jr	nz,loc_152
 		call	sub_39A
 		ld	e,(hl)
@@ -73,7 +78,7 @@ start:		ld	sp, nstack	; Setup local stack
 		ld	d,(hl)
 		ld	a,d
 		or	e
-		jr	z,loc_174
+		jr	z,skip_cl
 loc_152:	ld	hl,byte_17A3
 		ex	de,hl
 		call	sub_1492
@@ -89,9 +94,9 @@ loc_164:	ld	bc,0Dh
 		ldi
 		ld	de,byte_17A3
 		call	sub_1B0
-		call	sub_3C9
-loc_174:	ld	de,str_sxfr
-		ld	c,C_WRITESTR
+		call	clo_c
+skip_cl:	ld	de,str_sxfr	; display start
+		ld	c,C_WRITESTR	; tranfer message
 		call	bdos
 		call	sub_3EF
 		call	sub_8D1
@@ -107,7 +112,7 @@ loc_185:	ld	bc,0
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_195:	ld	a,(4)
+sub_195:	ld	a,(iobyte)
 		ld	b,a
 		rlca
 		rlca
@@ -168,61 +173,58 @@ str_info:	.text	"usage: rz [-?pbcrxyz] [du:fn]\r\n\n"
 		.text	"these values override options from sender\r\n$"
 
 ;----------------------------------------------------------------------------
-;		S u b r	o u t i	n e
+;		Search list of command line options
 
 sub_39A:	push	hl
 		push	de
-loc_39C:	inc	de
-		ld	a,(de)
-		or	a
-		jr	z,loc_3AE
-		ld	hl,stab_3B1
-		ld	bc,8
-		cpir
-		call	z,sub_67F
-		jr	loc_39C
+loc_39C:	inc	de		; get next character
+		ld	a,(de)		; to check
+		or	a		
+		jr	z,loc_3AE	; exit if not found
+		ld	hl,stab_clo	; table to seach
+		ld	bc,stab_clo_s	; no. of table entries
+		cpir			; check match
+		call	z,stab_jmp	; if yes get table entry and jump
+		jr	loc_39C		; else continue search
 
 loc_3AE:	pop	de
 		pop	hl
 		ret
 
-;----------------------------------------------------------------------------
+stab_clo:	.text	"?PBCXYZR"
+stab_clo_s:	.equ	$-stab_clo
 
-stab_3B1:	.text	"?PBCXYZR"
-
-		.dw sub_3E9
-		.dw sub_3D1
-		.dw sub_3CD
-		.dw sub_3C9
-		.dw sub_3E3
-		.dw sub_3DD
-		.dw sub_3D7
-		.dw err_exit
-
-;----------------------------------------------------------------------------
-;		S u b r	o u t i	n e
-
-sub_3C9:	ld	a,1
-		jr	loc_3D3
-sub_3CD:	ld	a,3
-		jr	loc_3D3
-sub_3D1:	ld	a,4
-loc_3D3:	ld	(byte_8AF),a
-		ret
+		.dw	clo_help	; ?
+		.dw	clo_p		; P
+		.dw	clo_b		; B
+		.dw	clo_c		; C
+		.dw	clo_x		; X
+		.dw	clo_y		; Y
+		.dw	clo_z		; Z
+		.dw	err_exit	; R
 
 ;----------------------------------------------------------------------------
+;		Set flags and options from command line
 
-sub_3D7:	ld	a,$ff
-		ld	(byte_8B0),a
+clo_c:		ld	a,1
+		jr	set_opt
+clo_b:		ld	a,3
+		jr	set_opt
+clo_p:		ld	a,4
+set_opt:	ld	(byte_8AF),a
 		ret
-sub_3DD:	ld	a,$ff
-		ld	(byte_8B2),a
+
+clo_z:		ld	a,$ff
+		ld	(flg_zmdm),a
 		ret
-sub_3E3:	ld	a,$ff
-		ld	(byte_8B1),a
+clo_y:		ld	a,$ff
+		ld	(flg_ymdm),a
 		ret
-sub_3E9:	ld	a,$ff
-		ld	(byte_8B3),a
+clo_x:		ld	a,$ff
+		ld	(flg_xmdm),a
+		ret
+clo_help:	ld	a,$ff
+		ld	(flg_help),a
 		ret
 
 ;----------------------------------------------------------------------------
@@ -302,9 +304,9 @@ word_46D:	.dw	0
 word_46F:	.dw	0
 
 ;----------------------------------------------------------------------------
-;		S u b r	o u t i	n e
+;		Call BDOS and set status flag
 
-sub_471:	call	bdos
+bdos_s:		call	bdos
 		or	a
 		ret
 
@@ -381,26 +383,26 @@ sub_4A4:	ld	de,byte_17A3
 ;----------------------------------------------------------------------------
 
 text4F2h:	.text	"\r\n"
-byte_4F4:	.db 0			; DATA XREF: sub_4A4+17w
-byte_4F5:	.db    0 ;
-		.db    0 ;
-		.db    0 ;
-byte_4F8:	.db    0 ;
-		.db    0 ;
-		.db    0 ;
-		.db    0 ;
-		.db    0 ;
-		.db    0 ;
-		.db    0 ;
-		.db    0 ;
-		.db    0 ;
-		.db    0 ;
-		.db    0 ;
-		.db    0 ;
-		.db    0 ;
-		.db    0 ;
-		.db  20h ;
-byte_507:	.db 0			; DATA XREF: sub_4A4+24w
+byte_4F4:	.db	0			
+byte_4F5:	.db	0 ;
+		.db	0 ;
+		.db	0 ;
+byte_4F8:	.db	0 ;
+		.db	0 ;
+		.db	0 ;
+		.db	0 ;
+		.db	0 ;
+		.db	0 ;
+		.db	0 ;
+		.db	0 ;
+		.db	0 ;
+		.db	0 ;
+		.db	0 ;
+		.db	0 ;
+		.db	0 ;
+		.db	0 ;
+		.db	20h ;
+byte_507:	.db	0			
 text508h:	.text	"\r\n$"
 
 ;----------------------------------------------------------------------------
@@ -428,7 +430,7 @@ loc_51F:	.db    0 ;
 		.db    0 ;
 		.db    0 ;
 
-loc_529:	ld	hl,str_busy
+disp_bsy:	ld	hl,str_busy
 smod_52D:	.equ	$+1		; self modifying
 		ld	a,0
 		inc	a
@@ -533,9 +535,11 @@ loc_5C7:	LD	C,4		; punch out
 		JP	bdos
 
 ;----------------------------------------------------------------------------
-;		S u b r	o u t i	n e
+;	Set I/O byte
+;	E=I/O byte
+;	S u b r	o u t i	n e
 
-sub_5CD:	ld	c,8
+sub_5CD:	ld	c,A_STAT_OUT
 		call	bdos		; BDOS function 8 (A_STATOUT) - Auxiliary Output status
 		or	a
 		ret
@@ -708,9 +712,9 @@ sub_669:	LD	A,80H
 		RET
 
 ;----------------------------------------------------------------------------
-;		S u b r	o u t i	n e
+;		Jump to table address entry
 
-sub_67F:	add	hl,bc
+stab_jmp:	add	hl,bc
 		sla	c
 		add	hl,bc
 		ld	c,(hl)
@@ -1112,10 +1116,10 @@ sub_8A0:	xor	a
 ;----------------------------------------------------------------------------
 
 byte_8AF:	.db 	4
-byte_8B0:	.db 	0
-byte_8B1:	.db 	0
-byte_8B2:	.db 	0
-byte_8B3:	.db 	0
+flg_zmdm:	.db 	0
+flg_xmdm:	.db 	0
+flg_ymdm:	.db 	0
+flg_help:	.db 	0
 word_8B4:	.dw 	0
 
 ;----------------------------------------------------------------------------
@@ -1156,7 +1160,7 @@ sub_8D1:	xor	a
 		or	a
 		sbc	hl,de
 		call	sub_8B6
-		ld	a,(byte_8B0)
+		ld	a,(flg_zmdm)
 		cp	0
 		jr	z,loc_8FD
 		ld	a,7
@@ -1217,16 +1221,16 @@ loc_954:	call	sub_DD9
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_961:	ld	a,(byte_8B1)
+sub_961:	ld	a,(flg_xmdm)
 		cpl
-		ld	hl,byte_8B2
+		ld	hl,flg_ymdm
 		or	(hl)
 		ld	(byte_2CA3),a
 		ld	a,(byte_2CA4)
 		or	a
 		jr	z,loc_975
 		ld	(byte_2CA1),a
-loc_975:	ld	a,(byte_8B2)
+loc_975:	ld	a,(flg_ymdm)
 		cp	0FFh
 		jr	z,loc_988
 		ld	a,(byte_2CA2)
@@ -1281,7 +1285,7 @@ loc_9E3:	call	sub_4A4
 		jr	nz,loc_A11
 		ld	de,byte_17A3
 		ld	c,16h
-		call	sub_471
+		call	bdos_s
 		ret	c
 		ld	a,0FFh
 		ld	(byte_2CA5),a
@@ -1310,7 +1314,7 @@ loc_A11:	call	sub_A09
 
 loc_A24:	ld	de,byte_17A3
 		ld	c,13h
-		call	sub_471
+		call	bdos_s
 		jr	nc,loc_9E3
 loc_A2E:	call	sub_552
 		ld	a,5
@@ -1322,7 +1326,7 @@ loc_A2E:	call	sub_552
 loc_A35:	ld	a,(byte_2CA1)
 		cp	3
 		jr	z,loc_A43
-		ld	a,(byte_8B3)
+		ld	a,(flg_help)
 		cp	0FFh
 		jr	nz,loc_A24
 loc_A43:	ld	de,loc_2811
@@ -1333,7 +1337,7 @@ loc_A43:	ld	de,loc_2811
 		call	bdos		; BDOS function 44 (F_MULTISEC) - Set number of records to read/write at once
 		ld	de,byte_17A3
 		ld	c,0Fh
-		call	sub_471
+		call	bdos_s
 		ret	c
 		ld	a,0FFh
 		ld	(byte_2CA5),a
@@ -1341,7 +1345,7 @@ loc_A43:	ld	de,loc_2811
 		call	sub_64A
 		ld	de,byte_17A3
 		ld	c,23h
-		call	sub_471
+		call	bdos_s
 		ret	c
 		ld	hl,byte_17C7
 		ld	(hl),0
@@ -1363,7 +1367,7 @@ loc_A83:	push	hl
 		djnz	loc_A83
 		ld	de,byte_17A3
 		ld	c,21h
-		call	sub_471
+		call	bdos_s
 		ret	c
 		ld	a,(byte_2CA1)
 		cp	3
@@ -1436,7 +1440,7 @@ loc_B1A:	CALL	sub_FD1
 		LD	HL,loc_B96
 		LD	BC,0AH
 		CPIR
-		JP	Z,sub_67F
+		JP	Z,stab_jmp
 loc_B28:	LD	HL,byte_2D04
 		INC	(HL)
 		CALL	sub_482
@@ -1571,7 +1575,7 @@ loc_C0A:	call	sub_FD1
 		ld	hl,stab_CE4
 		ld	bc,7
 		cpir
-		jp	z,sub_67F
+		jp	z,stab_jmp
 		ld	a,0FFh
 		scf
 		ret
@@ -1628,12 +1632,12 @@ loc_C73:	LD	DE,loc_2CA7
 		LD	HL,loc_2CAB
 		CALL	sub_6D3
 		JP	NZ,0C57H
-loc_C7F:	CALL	loc_529
+loc_C7F:	CALL	disp_bsy
 		CALL	loc_EC7
 		LD	HL,stab_CF9
 		LD	BC,7
 		CPIR
-		JP	Z,sub_67F
+		JP	Z,stab_jmp
 		JP	loc_C1C
 
 loc_C93:	LD	A,0FFH
@@ -1721,7 +1725,7 @@ loc_D15:	ld	a,1Ah
 		ld	(byte_2CA5),a
 		ld	c,10h
 		ld	de,byte_17A3
-		jp	sub_471
+		jp	bdos_s
 
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
@@ -1779,7 +1783,7 @@ loc_D6E: 	LD	C,0
     		CALL	bdos
     		LD	C,15H		; wr. seq.
     		LD	DE,byte_17A3
-    		CALL	sub_471
+    		CALL	bdos_s
     		JR	NC,loc_D6E
 loc_0D97:	POP	HL
     		POP	DE
@@ -1931,7 +1935,7 @@ loc_E50:	LD	B,64H
 loc_0E74:	LD	HL,loc_EA6
 		LD	BC,0BH
 		CPIR
-		JP	Z,sub_67F
+		JP	Z,stab_jmp
 		LD	L,A
 		LD	A,(byte_2C9D)
 		OR	A
@@ -2053,7 +2057,7 @@ loc_F38: 	LD	HL,stab_F23
 		LD	HL,sub_F0E
 		LD	BC,7
 loc_F49:	CPIR
-		JP	Z,sub_67F
+		JP	Z,stab_jmp
 sub_F4E:	LD	A,0FFH
 		SCF
 		RET
@@ -2147,7 +2151,7 @@ loc_FE0:	ld	b,64h
 		ld	hl,stab_109E
 		ld	bc,3
 		cpir
-		jp	z,sub_67F
+		jp	z,stab_jmp
 		jr	loc_1024
 
 ;----------------------------------------------------------------------------
@@ -2162,7 +2166,7 @@ loc_FE0:	ld	b,64h
 		LD	HL,stab_10A7
 		LD	BC,2
 		CPIR
-		JP	Z,sub_67F
+		JP	Z,stab_jmp
 		JR	loc_1024
 
 		LD	HL,byte_2D00
@@ -2195,7 +2199,7 @@ loc_1035:	LD	A,0FFH
 		LD	HL,stab_10AD
 		LD	BC,2
 		CPIR
-		JP	Z,sub_67F
+		JP	Z,stab_jmp
 		JR	loc_1024
 
 		CALL	loc_E05
@@ -2203,7 +2207,7 @@ loc_1035:	LD	A,0FFH
 		LD	HL,stab_10B3
 		LD	BC,4
 		CPIR
-		JP	Z,sub_67F
+		JP	Z,stab_jmp
 		JR	loc_1024
 
 		LD	A,10H
@@ -2560,7 +2564,7 @@ loc_1296:	ld	a,(byte_2D03)
 		ld	hl,loc_12AE
 		ld	bc,4
 		cpir
-		jp	z,sub_67F
+		jp	z,stab_jmp
 		jp	loc_137A
 
 ;----------------------------------------------------------------------------
@@ -2768,7 +2772,7 @@ loc_1438:	LD	(smod_b_145B),A
       		LD	BC,+(loc_1480-stab_7B3)
       		LD	HL,stab_7B3
       		CPIR
-      		JP	Z,sub_67F
+      		JP	Z,stab_jmp
 		AND	60H
       		JR	NZ,loc_145A
       		LD	A,(byte_2C9D)
