@@ -22,12 +22,22 @@ iobyte		.equ	0004h
 bdos		.equ	0005h
 
 A_READ		.equ	3
+A_WRITE		.equ	4
 A_STATIN	.equ	7
 A_STAT_OUT	.equ	8
 C_WRITESTR	.equ	9
 S_BDOSVER	.equ	12
 DRV_SET		.equ	14
+F_OPEN		.equ	15
+F_CLOSE		.equ	16
+F_DELETE	.equ	19
+F_WRITE		.equ	21
+F_MAKE		.equ	22
+F_DMAOFF	.equ	26
 F_USERNUM	.equ	32
+DRV_DPB		.equ	33
+F_SIZE		.equ	35
+F_MULTISEC	.EQU	44
 S_SYSVAR	.equ	49
 
 buf_len:	.equ	80h
@@ -442,7 +452,7 @@ smod_52D:	.equ	$+1		; self modifying
 		ld	a,(hl)
 		ld	(str_sav),a
 		ld	de,str_rev
-		ld	c,9
+		ld	c,C_WRITESTR
 		jp	bdos
 
 str_busy:	.db	7ch		; |
@@ -530,7 +540,7 @@ sub_5B4:	ld	a,(byte_587)
 
 ;----------------------------------------------------------------------------
 
-loc_5C7:	LD	C,4		; punch out
+loc_5C7:	LD	C,A_WRITE	; punch out
 		LD	E,A
 		JP	bdos
 
@@ -545,7 +555,6 @@ sub_5CD:	ld	c,A_STAT_OUT
 		ret
 
 ;----------------------------------------------------------------------------
-
 ;		S u b r	o u t i	n e
 
 sub_5D4:
@@ -610,7 +619,6 @@ loc_5F7:	ld	e,(hl)
 		ret
 
 ;----------------------------------------------------------------------------
-
 ;		S u b r	o u t i	n e
 
 sub_61C:	or	a
@@ -1082,10 +1090,10 @@ loc_860:	djnz	loc_841
 
 ;----------------------------------------------------------------------------
 
-sub_885:	PUSH	AF
-smod_w_887:	.equ	$+1
+crc16:		PUSH	AF
+crc_seed:	.equ	$+1
 		LD	HL,0
-		LD	DE,1021H	; ?
+		LD	DE,1021H	; crc16-ccitt polynomial
 		XOR	H
 		LD	H,A
 		LD	B,8
@@ -1098,7 +1106,7 @@ loc_890:	ADD	HL,HL
 		XOR	E
 		LD	L,A
 loc_899:	DJNZ	loc_890
-		LD	(smod_w_887),HL
+		LD	(crc_seed),HL
 		POP	AF
 		RET
 
@@ -1109,7 +1117,7 @@ sub_8A0:	xor	a
 		ld	h,a
 		ld	l, a
 		ld	(smod_b_7DF),a
-		ld	(smod_w_887),hl
+		ld	(crc_seed),hl
 		ld	hl,loc_2899
 		jp	loc_726
 
@@ -1284,7 +1292,7 @@ loc_9E3:	call	sub_4A4
 		call	sub_169E
 		jr	nz,loc_A11
 		ld	de,byte_17A3
-		ld	c,16h
+		ld	c,F_MAKE
 		call	bdos_s
 		ret	c
 		ld	a,0FFh
@@ -1313,7 +1321,7 @@ loc_A11:	call	sub_A09
 ;----------------------------------------------------------------------------
 
 loc_A24:	ld	de,byte_17A3
-		ld	c,13h
+		ld	c,F_DELETE
 		call	bdos_s
 		jr	nc,loc_9E3
 loc_A2E:	call	sub_552
@@ -1330,13 +1338,13 @@ loc_A35:	ld	a,(byte_2CA1)
 		cp	0FFh
 		jr	nz,loc_A24
 loc_A43:	ld	de,loc_2811
-		ld	c,1Ah
+		ld	c,F_DMAOFF
 		call	bdos		; BDOS function 26 (F_DMAOFF) - Set DMA address
 		ld	e, 1
-		ld	c,2Ch
+		ld	c,F_MULTISEC
 		call	bdos		; BDOS function 44 (F_MULTISEC) - Set number of records to read/write at once
 		ld	de,byte_17A3
-		ld	c,0Fh
+		ld	c,F_OPEN
 		call	bdos_s
 		ret	c
 		ld	a,0FFh
@@ -1344,7 +1352,7 @@ loc_A43:	ld	de,loc_2811
 		ld	hl,byte_280E
 		call	sub_64A
 		ld	de,byte_17A3
-		ld	c,23h
+		ld	c,F_SIZE
 		call	bdos_s
 		ret	c
 		ld	hl,byte_17C7
@@ -1366,7 +1374,7 @@ loc_A83:	push	hl
 		pop	hl
 		djnz	loc_A83
 		ld	de,byte_17A3
-		ld	c,21h
+		ld	c,DRV_DPB
 		call	bdos_s
 		ret	c
 		ld	a,(byte_2CA1)
@@ -1723,7 +1731,7 @@ loc_D15:	ld	a,1Ah
 		jr	nz,loc_D15
 		ld	a,0
 		ld	(byte_2CA5),a
-		ld	c,10h
+		ld	c,F_CLOSE
 		ld	de,byte_17A3
 		jp	bdos_s
 
@@ -1775,13 +1783,13 @@ loc_D6E: 	LD	C,0
     		JR	NZ,loc_0D97
     		LD	HL,byte_280E
     		CALL	sub_64A
-    		LD	C,1AH		; set dma
+    		LD	C,F_DMAOFF	; set dma
     		LD	DE,loc_2811
     		CALL	bdos
-    		LD	C,2CH
+    		LD	C,F_MULTISEC
     		LD	E,1
     		CALL	bdos
-    		LD	C,15H		; wr. seq.
+    		LD	C,F_WRITE	; wr. seq.
     		LD	DE,byte_17A3
     		CALL	bdos_s
     		JR	NC,loc_D6E
@@ -2002,7 +2010,7 @@ loc_EDD:	CALL	sub_E2F
  		JP	C,loc_F38
  		CALL	sub_FA2
  		CALL	Z,sub_7ED
- 		CALL	NZ,sub_885
+ 		CALL	NZ,crc16
  		LD	HL,(word_2CEB)
  		LD	BC,(word_2CEF)
  		SBC	HL,BC
@@ -2071,11 +2079,11 @@ sub_F54:	LD	A,10H
 
 sub_F58:	LD	(byte_2CFD),A
 		AND	7FH
-		CALL	sub_885
+		CALL	crc16
 		LD	B,2
 loc_F62:	PUSH	BC
 		CALL	sub_E2F
-		CALL	sub_885
+		CALL	crc16
 		POP	BC
 		JP	C,loc_F38
 		DJNZ	loc_F62
@@ -2322,13 +2330,13 @@ sub_1100:	CALL	sub_8A0
   		CALL	sub_E2F
   		RET	C
   		LD	(byte_2D01),A
-  		CALL	sub_885
+  		CALL	crc16
   		LD	HL,loc_2CA7
   		LD	B,4
 loc_1112:	PUSH	BC
   		PUSH	HL
   		CALL	sub_E2F
-  		CALL	sub_885
+  		CALL	crc16
   		POP	HL
   		POP	BC
   		LD	(HL),A
@@ -2338,7 +2346,7 @@ loc_1112:	PUSH	BC
   		LD	B,2
 loc_1123:	PUSH	BC
   		CALL	sub_E2F
-  		CALL	sub_885
+  		CALL	crc16
   		POP	BC
   		RET	C
   		DJNZ	loc_1123
@@ -2358,7 +2366,7 @@ sub_113F:	CALL	sub_8A0
   		CALL	sub_1194
   		RET	C
   		LD	(byte_2D01),A
-  		CALL	sub_885
+  		CALL	crc16
   		LD	HL,loc_2CA7
   		LD	B,4
 loc_1151:	PUSH	BC
@@ -2369,7 +2377,7 @@ loc_1151:	PUSH	BC
   		POP	BC
   		RET
 
-loc_115B:	CALL	sub_885
+loc_115B:	CALL	crc16
   		POP	HL
   		POP	BC
   		LD	(HL),A
@@ -2382,7 +2390,7 @@ loc_1166:	PUSH	BC
   		POP	BC
   		RET
 
-loc_116E:	CALL	sub_885
+loc_116E:	CALL	crc16
   		POP	BC
   		DJNZ	loc_1166
   		LD	A,H
@@ -2606,7 +2614,7 @@ loc_12E6:	LD	B,0AH
 		LD	(IX),A
 		INC	IX
 		CALL	sub_7DD
-		CALL	sub_885
+		CALL	crc16
 		LD	BC,(word_2CEF)
 		INC	BC
 		LD	(word_2CEF),BC
@@ -2625,12 +2633,12 @@ loc_12E6:	LD	B,0AH
 		CP	10H
 		JR	NZ,loc_1352
 		LD	A,(byte_2D08)
-		CALL	sub_885
+		CALL	crc16
 		LD	B,0AH
 		CALL	sub_DE7
 		LD	(byte_2D08),A
 		JP	C,loc_137A
-		CALL	sub_885
+		CALL	crc16
 		LD	A,H
 		OR	L
 		JP	NZ,loc_137A
@@ -2705,7 +2713,7 @@ sub_13BA:	ld	(byte_2CE8),a
 		call	sub_DDC
 		call	sub_8A0
 		ld	a,(byte_2CE8)
-		call	sub_885
+		call	crc16
 		call	sub_1418
 		ld	hl,loc_2CE0
 		ld	b,4
@@ -2713,14 +2721,14 @@ loc_13D4:	push	bc
 		ld	a,(hl)
 		inc	hl
 		push	hl
-		call	sub_885
+		call	crc16
 		call	sub_1418
 		pop	hl
 		pop	bc
 		djnz	loc_13D4
-		ld	a,(smod_w_887+1)
+		ld	a,(crc_seed+1)
 		call	sub_1418
-		ld	a,(smod_w_887)
+		ld	a,(crc_seed)
 		call	sub_1418
 		ld	a,0Dh
 		call	loc_145C
