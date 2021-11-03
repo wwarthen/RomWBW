@@ -41,6 +41,7 @@ F_MULTISEC	.EQU	44
 S_SYSVAR	.equ	49
 
 buf_len:	.equ	80h
+rbuf_size	.equ	1000h
 
 ;----------------------------------------------------------------------------
 
@@ -421,7 +422,7 @@ text508h:	.text	"\r\n$"
 sub_50B:	ld	hl,loc_2CAB
 		ld	de,loc_51F
 		call	loc_774
-		ld	(hl),24h
+		ld	(hl),'$'
 		ld	de,text51Eh
 		ld	c,C_WRITESTR
 		jp	5		; Output string
@@ -497,19 +498,19 @@ byte_587:	.db	0
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_588:	or	a
-		ld	hl,(word_1808)
-		ld	de,1000h
+sub_588:	or	a		; is the receive
+		ld	hl,(rbuf_bfree)	; buffer full?
+		ld	de,rbuf_size
 		sbc	hl,de
+		jr	z,loc_5A9	
+		ld	c,A_STATIN	; if it isn't see
+		call	bdos		; if there is a character
+		or	a		; available
 		jr	z,loc_5A9
-		ld	c,A_STATIN
-		call	bdos		; Auxiliary Input status
-		or	a
-		jr	z,loc_5A9
-		ld	c,A_READ
-		call	bdos		; Auxiliary (Reader) input
+		ld	c,A_READ	; get the character
+		call	bdos
 		ld	c,a
-		ld	hl,word_1808
+		ld	hl,rbuf_bfree
 		call	sub_61C
 		jr	sub_588
 
@@ -518,7 +519,7 @@ sub_588:	or	a
 loc_5A9:	ld	hl,byte_587
 		or	(hl)
 		ret	nz
-		ld	hl,(word_1808)
+		ld	hl,(rbuf_bfree)
 		ld	a,h
 		or	l
 		ret
@@ -528,7 +529,7 @@ loc_5A9:	ld	hl,byte_587
 
 sub_5B4:	ld	a,(byte_587)
 		or	a
-		ld	hl,word_1808
+		ld	hl,rbuf_bfree
 		jp	z,loc_5F7
 		push	af
 		ld	hl,byte_587
@@ -555,16 +556,15 @@ sub_5CD:	ld	c,A_STAT_OUT
 		ret
 
 ;----------------------------------------------------------------------------
-;		S u b r	o u t i	n e
+;		S u b r	o u t i	n e	; Receive a byte into the receive buffer?
 
-sub_5D4:
-		push	bc
-		ld	b,5Fh
+sub_5D4:	push	bc
+		ld	b,5Fh		; retries?
 loc_5D7:	push	bc
 		call	sub_588
 		pop	bc
 		jr	nz,loc_5E6
-		call	sub_5EB
+		call	delay
 		djnz	loc_5D7
 		call	sub_588
 loc_5E6:	call	nz,sub_5B4
@@ -574,7 +574,7 @@ loc_5E6:	call	nz,sub_5B4
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_5EB:	push	bc		; Delay
+delay:		push	bc
 		ld	a,4
 		ld	b,0
 loc_5F0:	djnz	loc_5F0
@@ -626,7 +626,7 @@ sub_61C:	or	a
 		ld	e,(hl)
 		inc	hl
 		ld	d,(hl)
-		ld	hl,1000h
+		ld	hl,rbuf_size
 		sbc	hl,de
 		pop	hl
 		ret	z
@@ -1158,7 +1158,7 @@ sub_8D1:	xor	a
 		ld	hl,byte_2C9D
 		ld	b,61h
 		call	sub_1786
-		ld	hl,word_1808
+		ld	hl,rbuf_bfree
 		call	sub_64E
 		call	sub_825
 		ld	hl,(word_179E)
@@ -1575,7 +1575,7 @@ loc_BF0:	call	sub_FC9
 		ld	hl,loc_2CAB
 		ld	de,loc_2CE0
 		call	sub_692
-		ld	hl,word_1808
+		ld	hl,rbuf_bfree
 		call	sub_64E
 		ld	a,9
 		call	sub_13BA
@@ -3489,8 +3489,8 @@ byte_17C7:	.db	0
 		.fill	$1800-$,0
 		.ds	8
 nstack:
-word_1808:	.ds	2
-		.ds	1004h
+rbuf_bfree:	.ds	2
+		.ds	rbuf_size+4
 byte_280E:	.ds	1
 byte_280F:	.ds	1
 byte_2810:	.ds	1
