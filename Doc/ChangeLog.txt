@@ -54,7 +54,10 @@ Version 3.1.1
 - WBW: Add interrupt receive support to UART driver
 - PMS: Add XModem transfer within Debug Monitor
 - PMS & AJL: Add DMAMON test application
+- PMS: Add ZMP adaptation
 - LWN: Substantial BPBIOS cleanup
+- AJL: Add ZMD adaptation
+- D?T: Substantial update to TastyBasic incuding a .COM executable
 
 Version 3.1
 -----------
