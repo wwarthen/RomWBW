@@ -18,21 +18,26 @@
 ; Processor:	    z80
 ; Target assembler: Table Driven Assembler (TASM) by Speech Technology Inc.
 
+cpm		.equ	0000h
 iobyte		.equ	0004h
 bdos		.equ	0005h
 
+C_READ		.equ	1
 A_READ		.equ	3
 A_WRITE		.equ	4
 A_STATIN	.equ	7
 A_STAT_OUT	.equ	8
 C_WRITESTR	.equ	9
+C_STAT		.equ	11
 S_BDOSVER	.equ	12
 DRV_SET		.equ	14
 F_OPEN		.equ	15
 F_CLOSE		.equ	16
+F_SFIRST	.equ	17
 F_DELETE	.equ	19
 F_WRITE		.equ	21
 F_MAKE		.equ	22
+DRV_GET		.equ	25
 F_DMAOFF	.equ	26
 F_USERNUM	.equ	32
 DRV_DPB		.equ	33
@@ -59,7 +64,7 @@ start:		ld	sp, nstack	; Setup local stack
 		ld	hl,(word_179E)	; zero first 20
 		xor	a		; bytes of
 		ld	b,20		; free memory
-		call	sub_1786
+		call	fill_bhla
 		ld	a,(buf_len)	; if there is nothing in
 		or	a		; the command line buffer
 		jr	z,skip_cl	; go wait for transfer
@@ -90,10 +95,10 @@ start:		ld	sp, nstack	; Setup local stack
 		ld	a,d
 		or	e
 		jr	z,skip_cl
-loc_152:	ld	hl,byte_17A3
+loc_152:	ld	hl,file_fcb
 		ex	de,hl
 		call	sub_1492
-		ld	hl,byte_17A3
+		ld	hl,file_fcb
 		xor	a
 		or	(hl)
 		jr	nz,loc_164
@@ -103,7 +108,7 @@ loc_164:	ld	bc,0Dh
 		add	hl,bc
 		dec	de
 		ldi
-		ld	de,byte_17A3
+		ld	de,file_fcb
 		call	sub_1B0
 		call	clo_c
 skip_cl:	ld	de,str_sxfr	; display start
@@ -115,9 +120,9 @@ skip_cl:	ld	de,str_sxfr	; display start
 smod_b_186:	.equ	$+1
 loc_185:	ld	bc,0
 		ld	(word_17A2),bc
-		ld	de,byte_17A3
+		ld	de,file_fcb
 		call	sub_1B0
-		jp	0
+		jp	cpm
 
 
 ;----------------------------------------------------------------------------
@@ -153,7 +158,7 @@ sub_1B0:	ld	a,(de)
 		dec	a
 		ld	e, a
 		ld	c,DRV_SET
-		jp	5		; Select disc
+		jp	bdos		; Select disc
 
 ;----------------------------------------------------------------------------
 
@@ -164,7 +169,7 @@ err_vern:	ld	de,str_cpm3	; Display version
 err_exit:	ld	de,str_info	; Display usage
 		ld	c,C_WRITESTR	; and exit to
 		call	bdos		; CP/M
-		jp	0
+		jp	cpm
 
 ;----------------------------------------------------------------------------
 
@@ -287,7 +292,7 @@ loc_437:	ld	a,0FEh
 		ld	(byte_468),a
 		ld	de,byte_467
 		ld	c,S_SYSVAR
-		jp	5		; Access the System Control Block
+		jp	bdos		; Access the System Control Block
 
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
@@ -343,7 +348,7 @@ sub_482:	ld	a,(byte_2D04)
 		call	sub_16E7
 		ld	de,text493h
 		ld	c,C_WRITESTR
-		jp	5		; Output string
+		jp	bdos		; Output string
 
 ;----------------------------------------------------------------------------
 
@@ -354,13 +359,13 @@ text495h:	.db	0,0,0
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_4A4:	ld	de,byte_17A3
+sub_4A4:	ld	de,file_fcb
 		ld	hl,byte_4F8
 		ld	(hl),3Ah
 		inc	hl
 		xor	a
 		ld	b,0Dh
-		call	sub_1786
+		call	fill_bhla
 		inc	de
 		call	sub_16C4
 		dec	de
@@ -389,7 +394,7 @@ sub_4A4:	ld	de,byte_17A3
 		call	bdos		; Output string
 		ld	de,text508h
 		ld	c,C_WRITESTR
-		jp	5		; Output string
+		jp	bdos		; Output string
 
 ;----------------------------------------------------------------------------
 
@@ -425,7 +430,7 @@ sub_50B:	ld	hl,loc_2CAB
 		ld	(hl),'$'
 		ld	de,text51Eh
 		ld	c,C_WRITESTR
-		jp	5		; Output string
+		jp	bdos		; Output string
 
 ;----------------------------------------------------------------------------
 text51Eh:
@@ -674,7 +679,7 @@ sub_64A:	ld	b,3
 
 sub_64E:	ld	b,6
 loc_650:	xor	a
-		jp	sub_1786
+		jp	fill_bhla
 
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
@@ -1157,7 +1162,7 @@ loc_8C4:	ld	a,h
 sub_8D1:	xor	a
 		ld	hl,byte_2C9D
 		ld	b,61h
-		call	sub_1786
+		call	fill_bhla
 		ld	hl,rbuf_bfree
 		call	sub_64E
 		call	sub_825
@@ -1283,15 +1288,15 @@ loc_9AE:	ld	a,(byte_8AF)
 		ld	a,0FFh
 		call	sub_172E
 		ld	hl,(word_2CD2)
-		ld	de,byte_17A3
+		ld	de,file_fcb
 		call	sub_1492
 		ld	hl,(byte_17A0)
 		ld	(word_17A2),hl
 loc_9E3:	call	sub_4A4
-		ld	de,byte_17A3
+		ld	de,file_fcb
 		call	sub_169E
 		jr	nz,loc_A11
-		ld	de,byte_17A3
+		ld	de,file_fcb
 		ld	c,F_MAKE
 		call	bdos_s
 		ret	c
@@ -1320,7 +1325,7 @@ loc_A11:	call	sub_A09
 
 ;----------------------------------------------------------------------------
 
-loc_A24:	ld	de,byte_17A3
+loc_A24:	ld	de,file_fcb
 		ld	c,F_DELETE
 		call	bdos_s
 		jr	nc,loc_9E3
@@ -1343,7 +1348,7 @@ loc_A43:	ld	de,loc_2811
 		ld	e, 1
 		ld	c,F_MULTISEC
 		call	bdos		; BDOS function 44 (F_MULTISEC) - Set number of records to read/write at once
-		ld	de,byte_17A3
+		ld	de,file_fcb
 		ld	c,F_OPEN
 		call	bdos_s
 		ret	c
@@ -1351,7 +1356,7 @@ loc_A43:	ld	de,loc_2811
 		ld	(byte_2CA5),a
 		ld	hl,byte_280E
 		call	sub_64A
-		ld	de,byte_17A3
+		ld	de,file_fcb
 		ld	c,F_SIZE
 		call	bdos_s
 		ret	c
@@ -1373,7 +1378,7 @@ loc_A83:	push	hl
 		rl	(hl)
 		pop	hl
 		djnz	loc_A83
-		ld	de,byte_17A3
+		ld	de,file_fcb
 		ld	c,DRV_DPB
 		call	bdos_s
 		ret	c
@@ -1421,7 +1426,7 @@ loc_ACF:	xor	a
 		ld	hl,word_2CED
 		ld	b,11h
 		xor	a
-		call	sub_1786
+		call	fill_bhla
 		call	sub_FAA
 		ld	a,(byte_2CA6)
 		cp	0FFh
@@ -1732,7 +1737,7 @@ loc_D15:	ld	a,1Ah
 		ld	a,0
 		ld	(byte_2CA5),a
 		ld	c,F_CLOSE
-		ld	de,byte_17A3
+		ld	de,file_fcb
 		jp	bdos_s
 
 ;----------------------------------------------------------------------------
@@ -1790,7 +1795,7 @@ loc_D6E: 	LD	C,0
     		LD	E,1
     		CALL	bdos
     		LD	C,F_WRITE	; wr. seq.
-    		LD	DE,byte_17A3
+    		LD	DE,file_fcb
     		CALL	bdos_s
     		JR	NC,loc_D6E
 loc_0D97:	POP	HL
@@ -2915,7 +2920,7 @@ loc_151D:	ld	a,(byte_2D0C)
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_1522:	call	sub_15D9
+sub_1522:	call	valid_fnc
 		ret	z
 		inc	de
 		cp	2Ah
@@ -2929,7 +2934,7 @@ loc_1533:	ld	(de),a
 		cp	3Fh
 		call	z,sub_1543
 loc_153A:	djnz	sub_1522
-loc_153C:	call	sub_15D9
+loc_153C:	call	valid_fnc
 		ret	z
 		inc	hl
 		jr	loc_153C
@@ -3055,28 +3060,28 @@ loc_15CD:	dec	de
 		ret
 
 ;----------------------------------------------------------------------------
-;		S u b r	o u t i	n e
+;		Validate character at hl is a valid filename character
 
-sub_15D9:	ld	a,(hl)
-		cp	21h
+valid_fnc:	ld	a,(hl)
+		cp	'!'		; below !
 		jr	c,loc_15F8
-		cp	3Dh
+		cp	'='
 		ret	z
-		cp	5Fh
+		cp	'_'
 		ret	z
-		cp	2Eh
+		cp	'.'
 		ret	z
-		cp	3Ah
+		cp	':'
 		ret	z
-		cp	2Ch
+		cp	','
 		ret	z
-		cp	3Ch
+		cp	'<'
 		ret	z
-		cp	3Eh
+		cp	'>'
 		ret	z
-		or	a
+		or	a		; null
 		ret	z
-		cp	3Bh
+		cp	3bh		; ';'
 		ret
 
 loc_15F8:	xor	a
@@ -3087,8 +3092,8 @@ loc_15F8:	xor	a
 
 sub_15FA:	push	bc
 		ld	bc,1100h		; ?
-loc_15FE:	ld	a,(hl)
-		call	sub_15D9
+loc_15FE:	ld	a,(hl)			; duplicious ?
+		call	valid_fnc
 		jr	z,loc_161E
 		inc	hl
 		call	sub_1625
@@ -3218,12 +3223,12 @@ loc_1683:	ld	(word_2D0F),hl
 sub_1687:	push	af
 		push	de
 		push	hl
-		ld	c,19h
-		call	sub_16AF
+		ld	c,DRV_GET
+		call	bdos_s2
 		push	af
 		ld	e, 0FFh
 		ld	c,F_USERNUM
-		call	sub_16AF
+		call	bdos_s2
 		ld	c,a
 		pop	af
 		ld	b,a
@@ -3235,27 +3240,27 @@ sub_1687:	push	af
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_169E:	ld	a,11h
-		call	sub_16B8
+sub_169E:	ld	a,F_SFIRST
+		call	bdos_cs3
 		inc	a
 		ret
 
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_16A5:	ld	a,1
-		jp	sub_16B8
+sub_16A5:	ld	a,C_READ
+		jp	bdos_cs3
 
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_16AA:	ld	a,0Bh
-		jp	sub_16B8
+sub_16AA:	ld	a,C_STAT
+		jp	bdos_cs3
 
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_16AF:	push	de
+bdos_s2:	push	de
 		push	bc
 		call	bdos
 		pop	bc
@@ -3266,7 +3271,7 @@ sub_16AF:	push	de
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
 
-sub_16B8:	push	hl
+bdos_cs3:	push	hl
 		push	de
 		push	bc
 		ld	c,a
@@ -3447,17 +3452,17 @@ sub_1779:	ld	a,(de)
 		jr	sub_1779
 
 ;----------------------------------------------------------------------------
-;		S u b r	o u t i	n e
+;		Fill b locations starting at hl with value a
 
-sub_1786:	push	hl
-		call	sub_178C
+fill_bhla:	push	hl
+		call	fill_1
 		pop	hl
 		ret
 
 ;----------------------------------------------------------------------------
-;		S u b r	o u t i	n e
+;		Fill b locations starting at hl with value a
 
-sub_178C:	push	bc
+fill_1:		push	bc
 loc_178D:	ld	(hl),a
 		inc	hl
 		djnz	loc_178D
@@ -3480,7 +3485,7 @@ word_179E:	.dw	loc_end
 byte_17A0:	.db	0
 byte_17A1:	.db	0
 word_17A2:	.db	0
-byte_17A3:	.db	0
+file_fcb:	.db	0
 		.fill	$20,0		
 loc_17C4:	.db	0
 		.db	0
