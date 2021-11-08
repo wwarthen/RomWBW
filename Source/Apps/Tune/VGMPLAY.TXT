@@ -1,0 +1,43 @@
+VGM Player for Z80
+==================
+
+Simple player for VGM (Video Game Music) files.
+
+Usage:
+
+  VGMPLAY MUSIC.VGM
+
+Default Ports:
+
+  D8H-D0H - First AY-3-8910 (RSEL/RDAT)
+  A0H-A1H - Second AY-3-8910
+  FFH     - First SN76489
+  FBH     - Second SN76489
+  C6H-C7H - YM2612/YM3484
+
+If your system uses different ports you need to recompile the source.
+
+Note: The player should be compatible with VGM files up to version 1.51
+but there are very few controls (if any) in the code, be sure to have
+a good VGM file that doesn't contain much extra data. These files can be
+very big, the player is limited to the available TPA space which is
+typically around 54-55k, bigger files will overwrite the CP/M code and/or
+wrap around the 64k limit. 
+
+The played is designed to run on a standard RC2014 with a 7.3728 MHz clock, 
+if your system uses a different clock you need to adjust the frame delay accordingly.
+
+
+Example Music Files
+===================
+
+LEMMIN01.VGM - SN76489        - Lemmings: Title Screen
+PENGUI03.VGM - AY-3-8910      - Penguin Adventure: Forest Path
+PITFAL02.VGM - 2xSN76489      - Pitfall II: Scene 1
+TIGER02.VGM  - 2xAY-3-8910    - Tiger Hely: First Mission
+WONDER01.VGM - 2xSN76489      - Wonder Boy in Monster Land
+FILTHY01.VGM - YM3484         - Columns : Filthy
+ITSGAMOV.VGM - YM3484+SN76489 - Puyo Puyo Tsuu : It's Game Over!
+
+Original Source by J.B Langston, Marco Maccaferri
+ROMWBW + YM2612/YM3484 version by Phil Summers
