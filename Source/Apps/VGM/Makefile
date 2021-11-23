@@ -1,6 +1,7 @@
 OBJECTS = VGMPLAY.COM
 DEST = ../../../Binary/Apps
 TOOLS = ../../../Tools
+OTHERS = *.LST
 
 include $(TOOLS)/Makefile.inc
 
