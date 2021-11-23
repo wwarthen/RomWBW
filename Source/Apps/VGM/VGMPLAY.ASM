@@ -5,7 +5,7 @@
 ;
 ; Enhanced with multi-chip support by Marco Maccaferri
 ;
-; YM2162/YM3484, GD3 support added by Phil Summers
+; YM2162/YM3484, GD3 support, VGM Chip identification added by Phil Summers
 ;
 ; Compile with:
 ;
@@ -242,6 +242,43 @@ EXIT
 #IFDEF SBCV2004
 		CALL	FASTIO
 #ENDIF
+
+		LD	DE,MSG_PO
+		CALL	PRTSTR
+
+		LD	A,(IX+0)
+		PUSH	AF
+		AND	%00000011
+		srl	a
+		ADC	A,'0'
+		CALL	PRTCHR
+		LD	DE,MSG_SN
+		CALL	PRTSTR
+
+		POP	AF
+		srl	a
+		srl	a
+		PUSH	AF
+
+		AND	%00000011
+		srl	a
+		ADC	A,'0'
+		CALL	PRTCHR
+		LD	DE,MSG_AY
+		CALL	PRTSTR
+
+		POP	AF
+		srl	a
+		srl	a
+		PUSH	AF
+
+		AND	%00000011
+		srl	a
+		ADC	A,'0'
+		CALL	PRTCHR
+		LD	DE,MSG_YM
+		CALL	PRTSTR
+
                 LD      A, 9FH              	; Mute all channels on psg
                 OUT     (PSGREG), A
                 OUT     (PSG2REG), A
@@ -308,6 +345,7 @@ PLAY
 #IFDEF SBCV2004
 		CALL	SLOWIO
 #ENDIF
+		LD	IX,DEV_FLAG
                 LD      HL, (VGMPOS)		; Start processing VGM commands
 NEXT            LD      A, (HL)
                 INC     HL
@@ -333,6 +371,8 @@ PSG             CP      VGM_PSG_W		; Write byte to SN76489.
                 LD      A, (HL)
 		INC	HL
                 OUT     (PSGREG), A
+		LD	IX,DEV_FLAG
+		SET	0,(IX+0)
                 JR      NEXT
 
 PSG2            CP      30H			; Write byte to second SN76489.
@@ -340,6 +380,8 @@ PSG2            CP      30H			; Write byte to second SN76489.
                 LD      A, (HL)
                 INC     HL
                 OUT     (PSG2REG), A
+		LD	IX,DEV_FLAG
+		SET	1,(IX+0)
                 JR      NEXT
 
 ;	AY SECTION
@@ -355,11 +397,15 @@ AY              CP      0A0H
                 LD      A, (HL)
                 INC     HL
                 OUT     (RDAT2), A
+		LD	IX,DEV_FLAG
+		SET	2,(IX+0)
                 JR      NEXT
 AY1		OUT     (RSEL), A
                 LD      A, (HL)
                 INC     HL
                 OUT     (RDAT), A
+		LD	IX,DEV_FLAG
+		SET	3,(IX+0)
                 JR      NEXT
 
 ;	YM SECTION
@@ -373,7 +419,9 @@ YM:		CP      052H
 		LD	A,(HL)
 		OUT	(YMDAT),A
 		INC	HL
-		JR	NEXT
+		LD	IX,DEV_FLAG
+		SET	4,(IX+0)
+		JP	NEXT
 
 YM2:		CP      053H
                 JR      NZ, PCM
@@ -384,6 +432,8 @@ YM2:		CP      053H
 		LD	A,(HL)
 		OUT	(YM2DAT),A
 		INC	HL
+		LD	IX,DEV_FLAG
+		SET	4,(IX+0)
 		JP	NEXT
 
 PCM:	
@@ -451,6 +501,10 @@ MSG_WELC:	.DB	"VGM Player for RomWBW v0.1, 8-Nov-2021",CR,LF
 ;		.DB	"J.B. Langston/Marco Maccaferri/Phil Summers",CR,LF
 		.DB	0
 MSG_BADF:	.DB	"Not a VGM file",CR,LF,0
+MSG_PO		.DB	"Played on : ",0
+MSG_YM:		.DB	"xYM-2612 ",0
+MSG_SN:		.DB	"xSN76489 ",0
+MSG_AY:		.DB	"xAY-3-8910 ",0
 
 ;------------------------------------------------------------------------------
 ; Variables
@@ -459,9 +513,10 @@ MSG_BADF:	.DB	"Not a VGM file",CR,LF,0
 VGMPOS          .DW     0
 VGMDLY          .DW     0
 
-OLDSTACK        .DW     0                   ; original stack pointer
-                .DS     40H                 ; space for stack
-STACK                                       ; top of stack
+DEV_FLAG	.DB	%00000000	; 000YAASS
+OLDSTACK        .DW     0		; original stack pointer
+                .DS     40H		; space for stack
+STACK					; top of stack
 
 ;------------------------------------------------------------------------------
 ; VGM data
