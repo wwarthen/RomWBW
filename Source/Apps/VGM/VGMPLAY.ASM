@@ -273,11 +273,13 @@ EXIT
 		AND	%00000011
 		srl	a
 		ADC	A,'0'
+		CP	'0'
+		JR	Z,NOSN
 		CALL	PRTCHR
 		LD	DE,MSG_SN
 		CALL	PRTSTR
 
-		POP	AF
+NOSN:		POP	AF
 		srl	a
 		srl	a
 		PUSH	AF
@@ -285,11 +287,13 @@ EXIT
 		AND	%00000011
 		srl	a
 		ADC	A,'0'
+		CP	'0'
+		JR	Z,NOAY
 		CALL	PRTCHR
 		LD	DE,MSG_AY
 		CALL	PRTSTR
 
-		POP	AF
+NOAY:		POP	AF
 		srl	a
 		srl	a
 		PUSH	AF
@@ -297,11 +301,13 @@ EXIT
 		AND	%00000011
 		srl	a
 		ADC	A,'0'
+		CP	'0'
+		JR	Z,NOYM
 		CALL	PRTCHR
 		LD	DE,MSG_YM
 		CALL	PRTSTR
 
-                LD      A, 9FH              	; Mute all channels on psg
+NOYM:           LD      A, 9FH              	; Mute all channels on psg
                 OUT     (PSGREG), A
                 OUT     (PSG2REG), A
                 LD      A, 0BFH
@@ -520,7 +526,7 @@ FASTIO:
 
 #INCLUDE "printing.inc"
 
-MSG_WELC:	.DB	"VGM Player for RomWBW v0.1, 8-Nov-2021",CR,LF
+MSG_WELC:	.DB	"VGM Player for RomWBW v0.2, 27-Nov-2021",CR,LF
 ;		.DB	"J.B. Langston/Marco Maccaferri/Phil Summers",CR,LF
 		.DB	0
 MSG_BADF:	.DB	"Not a VGM file",CR,LF,0
