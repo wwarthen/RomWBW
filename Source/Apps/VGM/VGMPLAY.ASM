@@ -5,7 +5,8 @@
 ;
 ; Enhanced with multi-chip support by Marco Maccaferri
 ;
-; YM2162/YM3484, GD3 support, VGM Chip identification added by Phil Summers
+; YM2162/YM3484, GD3 support, VGM Chip identification, 
+; default file type, basic file size checking added by Phil Summers
 ;
 ; Compile with:
 ;
@@ -79,6 +80,7 @@ BDOS            .EQU    0005H              	; bdos entry point
 FCB             .EQU    005CH              	; file control block
 FCBCR           .EQU    FCB + 20H          	; fcb current record
 BUFF            .EQU    0080H              	; DMA buffer
+TOPM		.EQU	0002H			; Top of memory
 	
 PRINTF          .EQU    9                  	; BDOS print string function
 OPENF           .EQU    15                 	; BDOS open file function
@@ -97,17 +99,37 @@ EOS             .EQU    '$'                	; end of string marker
 		LD	DE,MSG_WELC		; Welcome Message
 		CALL	PRTSTR
 
-                LD      C,OPENF
+		LD	A,(FCB+1)		; Get first char of filename
+		CP	' '			; Compare to blank
+		JP	Z,ERR			; If so, missing filename
+		LD	A,(FCB+9)		; If the filetype
+		CP	' '			; is blanks
+		JR	NZ,HASEXT		; then assume
+		LD	A,'V'			; type VGM.
+		LD	(FCB+9),A
+		LD	A,'G'			; Fill in
+		LD	(FCB+10),A		; the file
+		LD	A,'M'			; extension
+		LD	(FCB+11),A
+
+HASEXT:         LD      C,OPENF			; Open File
                 LD      DE,FCB
                 CALL    BDOS
                 INC     A
-                JP      Z, ERR
+                JP      Z,ERR
 
                 XOR     A			; Read VGM file into memory
                 LD      (FCBCR), A
                 LD      DE, VGMDATA
                 LD      (VGMPOS), DE
-RLOOP           LD      C, READF
+RLOOP 
+;		LD	A,(TOPM)		; CBIOS start
+;		SUB	10h			; Less BDOS = Top Memory Page
+		LD	A,$D6			; Hardcoded top of memory
+		CP	D		
+		LD	DE,MSG_MEM
+		JP	Z,EXIT_ERR		; Exit top of memory reached
+		LD      C, READF
                 LD      DE, FCB
                 CALL    BDOS
                 OR      A
@@ -335,7 +357,8 @@ ERR             LD      C, PRINTF
                 CALL    BDOS
                 RST     00H
 
-NOFILE          .DB    "File not found", CR, LF, EOS
+NOFILE          .DB	"File not found", CR, LF, EOS
+MSG_MEM		.DB	"File to big", CR, LF, EOS
 MSG_EXIT	.DB	"FINISHED.",CR,LF,0
 
 ;------------------------------------------------------------------------------
