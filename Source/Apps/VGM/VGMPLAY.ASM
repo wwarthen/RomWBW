@@ -317,7 +317,7 @@ PLAY
 #IFDEF SBCV2004
 		CALL	SLOWIO
 #ENDIF
-		LD	IX,DEV_FLAG
+		LD	IX,VGM_DEV
                 LD      HL, (VGMPOS)		; Start processing VGM commands
 NEXT            LD      A, (HL)
                 INC     HL
@@ -335,6 +335,8 @@ NEXT            LD      A, (HL)
 
 NEXT1           CP      VGM_GG_W		; Game Gear SN76489 stereo. Ignored
                 JR      NZ, PSG
+		LD	IX,VGM_DEV
+		SET	6,(IX+0)
                 INC     HL
                 JR      NEXT
 
@@ -343,7 +345,7 @@ PSG             CP      VGM_PSG_W		; Write byte to SN76489.
                 LD      A, (HL)
 		INC	HL
                 OUT     (PSGREG), A
-		LD	IX,DEV_FLAG
+		LD	IX,VGM_DEV
 		SET	0,(IX+0)
                 JR      NEXT
 
@@ -352,7 +354,7 @@ PSG2            CP      30H			; Write byte to second SN76489.
                 LD      A, (HL)
                 INC     HL
                 OUT     (PSG2REG), A
-		LD	IX,DEV_FLAG
+		LD	IX,VGM_DEV
 		SET	1,(IX+0)
                 JR      NEXT
 
@@ -369,14 +371,14 @@ AY              CP      0A0H
                 LD      A, (HL)
                 INC     HL
                 OUT     (RDAT2), A
-		LD	IX,DEV_FLAG
+		LD	IX,VGM_DEV
 		SET	2,(IX+0)
                 JR      NEXT
 AY1		OUT     (RSEL), A
                 LD      A, (HL)
                 INC     HL
                 OUT     (RDAT), A
-		LD	IX,DEV_FLAG
+		LD	IX,VGM_DEV
 		SET	3,(IX+0)
                 JR      NEXT
 
@@ -391,12 +393,12 @@ YM:		CP      052H
 		LD	A,(HL)
 		OUT	(YMDAT),A
 		INC	HL
-		LD	IX,DEV_FLAG
+		LD	IX,VGM_DEV
 		SET	4,(IX+0)
 		JP	NEXT
-
+;
 YM2:		CP      053H
-                JR      NZ, PCM
+                JR      NZ,WAITNN
 
 		LD	A,(HL)
 		OUT	(YM2SEL),A
@@ -404,12 +406,11 @@ YM2:		CP      053H
 		LD	A,(HL)
 		OUT	(YM2DAT),A
 		INC	HL
-		LD	IX,DEV_FLAG
+		LD	IX,VGM_DEV
 		SET	4,(IX+0)
 		JP	NEXT
-
-PCM:	
-WAITNN          CP      61H			; Wait nn samples
+;	
+WAITNN:         CP      61H			; Wait nn samples
                 JR      NZ, WAIT60
                 LD      A, (HL)
                 INC     HL
@@ -420,21 +421,21 @@ WAITNN          CP      61H			; Wait nn samples
                 LD      H, D
                 LD      (VGMDLY), HL
                 RET
-
+;
 WAIT60          CP      VGM_W735		; Wait 735 samples (60Hz)
                 JR      NZ, WAIT50
                 LD      (VGMPOS), HL
                 LD      HL, D50
                 LD      (VGMDLY), HL
                 RET
-
+;
 WAIT50          CP      VGM_W882		; Wait 882 samples (50Hz)
                 JR      NZ, WAIT1
                 LD      (VGMPOS), HL
                 LD      HL, D60
                 LD      (VGMDLY), HL
                 RET
-
+;
 WAIT1           CP      70H			; WAIT 0-15 SAMPLES
                 JR      C, UNK			; CODES 70-7FH
                 CP      80H
@@ -444,22 +445,23 @@ WAIT1           CP      70H			; WAIT 0-15 SAMPLES
                 LD      H, 0
                 LD      (VGMDLY), HL
                 RET
-
-UNK:		CALL	PRTDOT
-		CALL	PRTHEX
+;
+UNK:		LD	IX,VGM_DEV		; Set flag for
+		SET	6,(IX+0)		; unknown device
+		INC	HL			; Try and skip
 		JP	NEXT
 ;
 ;------------------------------------------------------------------------------
 ; Display VGM Devices detected during playback.
 ;------------------------------------------------------------------------------
 ;
-VGMDEVICES:	LD	DE,MSG_PO
+VGMDEVICES:	LD	DE,MSG_PO		; Played on ...
 		CALL	PRTSTR
 ;
 		LD	A,(IX+0)
 		PUSH	AF
-
-		LD	DE,MSG_SN
+;
+		LD	DE,MSG_SN		; SN76489 Devices
 		CALL	CHKDEV
 ;
 		POP	AF
@@ -467,22 +469,31 @@ VGMDEVICES:	LD	DE,MSG_PO
 		SRL	A
 		PUSH	AF
 ;
-		LD	DE,MSG_AY
+		LD	DE,MSG_AY		; AY-3-8910 Devices
+		CALL	CHKDEV
+;
+		POP	AF
+		SRL	A
+		SRL	A
+		PUSH	AF
+;
+		LD	DE,MSG_YM		; YM-2612 Devices
 		CALL	CHKDEV
 ;
 		POP	AF
 		SRL	A
 		SRL	A
 ;		PUSH	AF
-
-		LD	DE,MSG_YM
 ;
-CHKDEV:		AND	%00000011
-		SRL	A
-		ADC	A,'0'
+		LD	DE,MSG_UNK		; Unknown Device Code detected
+;		CALL	CHKDEV
+;
+CHKDEV:		AND	%00000011		; Display 
+		SRL	A			; number of
+		ADC	A,'0'			; devices
 		CP	'0'
-		RET	Z
-		CALL	PRTCHR
+		RET	Z			; Skip if not
+		CALL	PRTCHR			; used.
 		CALL	PRTSTR
 		RET
 ;
@@ -558,9 +569,17 @@ FASTIO:
 	OUT	(RTCIO),A		; NORMAL CLOCK SPEED
 #ENDIF
 		RET
-
+;
+;------------------------------------------------------------------------------
+; External routines.
+;------------------------------------------------------------------------------
+;
 #INCLUDE "printing.inc"
-
+;
+;------------------------------------------------------------------------------
+; Strings and constants.
+;------------------------------------------------------------------------------
+;
 MSG_WELC:	.DB	"VGM Player for RomWBW v0.2, 27-Nov-2021",CR,LF
 ;		.DB	"J.B. Langston/Marco Maccaferri/Phil Summers",CR,LF
 		.DB	0
@@ -569,6 +588,7 @@ MSG_PO		.DB	"Played on : ",0
 MSG_YM:		.DB	"xYM-2612 ",0
 MSG_SN:		.DB	"xSN76489 ",0
 MSG_AY:		.DB	"xAY-3-8910 ",0
+MSG_UNK		.DB	"xUnsupported device encountered", CR, LF, 0
 MSG_EXIT:	.DB	"FINISHED.",CR,LF,0
 MSG_NOFILE:     .DB	"File not found", CR, LF, 0
 MSG_MEM:	.DB	"File to big", CR, LF, 0
@@ -579,8 +599,9 @@ MSG_MEM:	.DB	"File to big", CR, LF, 0
 ;
 VGMPOS          .DW     0
 VGMDLY          .DW     0
+VGMUNK_F	.DB	0		; Flag for unknown device
+VGM_DEV		.DB	%00000000	; 000YAASS
 
-DEV_FLAG	.DB	%00000000	; 000YAASS
 OLDSTACK        .DW     0		; original stack pointer
                 .DS     40H		; space for stack
 STACK					; top of stack
