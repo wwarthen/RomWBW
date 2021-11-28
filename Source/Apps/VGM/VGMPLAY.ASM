@@ -10,6 +10,8 @@
 ; YM2162/YM3484, GD3 support, VGM Chip identification, 
 ; default file type, basic file size checking added by Phil Summers
 ;
+; Bugs: YM2612 Mute not working.
+;
 ; Assemble with:
 ;
 ;   TASM -80 -b VGMPLAY.ASM VGMPLAY.COM
@@ -69,6 +71,18 @@ RTCIO		.EQU	070H
 #DEFCONT \	nop
 #DEFCONT \	ld	a,val 
 #DEFCONT \	out	(YMDAT),a 
+#DEFCONT \	nop
+#DEFCONT \	nop
+
+#DEFINE	setreg2(reg,val) \
+#DEFCONT \	ld	a,reg 
+#DEFCONT \	out	(YM2SEL),a 
+#DEFCONT \	nop
+#DEFCONT \	nop
+#DEFCONT \	ld	a,val 
+#DEFCONT \	out	(YM2DAT),a 
+#DEFCONT \	nop
+#DEFCONT \	nop
 
 D50		.EQU	500			; 900			;735
 D60		.EQU	600			; 1000			;882
@@ -103,7 +117,6 @@ READF           .EQU    20                 	; BDOS sequential read function
 	
 CR              .EQU    0DH                	; carriage return
 LF              .EQU    0AH                	; line feed
-EOS             .EQU    '$'                	; end of string marker
 
 ;------------------------------------------------------------------------------
 ; Program Start
@@ -386,7 +399,6 @@ AY1		OUT     (RSEL), A
 
 YM:		CP      052H
                 JR      NZ, YM2
-
 		LD	A,(HL)
 		OUT	(YMSEL),A
 		INC	HL
@@ -501,7 +513,11 @@ CHKDEV:		AND	%00000011		; Display
 ; Mute Devices.
 ;------------------------------------------------------------------------------
 ;
-VGMMUTE:	LD      A, 9FH              	; Mute all channels on psg
+VGMMUTE:	LD	A,(IX+0)		; Only mute devices used.
+		AND	%00000011
+		JR	Z,SKIP1
+
+		LD      A, 9FH              	; Mute all channels on psg
                 OUT     (PSGREG), A
                 OUT     (PSG2REG), A
                 LD      A, 0BFH
@@ -514,7 +530,11 @@ VGMMUTE:	LD      A, 9FH              	; Mute all channels on psg
                 OUT     (PSGREG), A
                 OUT     (PSG2REG), A
 
-                LD      A, 8                	; Mute all channels on ay
+SKIP1:		LD	A,(IX+0)
+		AND	%00001100
+		JR	Z,SKIP2
+
+		LD      A, 8                	; Mute all channels on ay
                 OUT     (RSEL), A
                 OUT     (RSEL2), A
                 XOR     A
@@ -534,19 +554,28 @@ VGMMUTE:	LD      A, 9FH              	; Mute all channels on psg
                 OUT     (RDAT2), A
 		CALL	FASTIO
 
+SKIP2:		LD	A,(IX+0)
+		AND	%00110000
+		JP	Z,SKIP3
+
 		setreg($22,$00)			; lfo off
-		setreg($27,$00)			; note off ch 0
-		setreg($28,$01)			; note off ch 1
-		setreg($28,$02)			; note off ch 2
-		setreg($28,$03)			; note off ch 3
+		setreg($27,$00)			; Disable independant Channel 3
+		setreg($28,$00)			; note off ch 1
+		setreg($28,$01)			; note off ch 2
+		setreg($28,$02)			; note off ch 3
 		setreg($28,$04)			; note off ch 4
 		setreg($28,$05)			; note off ch 5
 		setreg($28,$06)			; note off ch 6
-		setreg($28,$01)			; note off ch 1
 		setreg($2b,$00)			; dac off
-		setreg($28,$00)			; key off
-;
-		RET
+
+		setreg($b4,$00)			; sound off ch 1-3
+		setreg($b5,$00)
+		setreg($b6,$00)
+		setreg2($b4,$00)		; sound off ch 4-6
+		setreg2($b5,$00)
+		setreg2($b6,$00)		
+		
+SKIP3:		RET
 ;
 ;------------------------------------------------------------------------------
 ; Hardware specific routines.
@@ -600,7 +629,7 @@ MSG_MEM:	.DB	"File to big", CR, LF, 0
 VGMPOS          .DW     0
 VGMDLY          .DW     0
 VGMUNK_F	.DB	0		; Flag for unknown device
-VGM_DEV		.DB	%00000000	; 000YAASS
+VGM_DEV		.DB	%00000000	; UUYYAASS
 
 OLDSTACK        .DW     0		; original stack pointer
                 .DS     40H		; space for stack
