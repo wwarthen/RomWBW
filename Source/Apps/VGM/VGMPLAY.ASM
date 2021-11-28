@@ -458,43 +458,33 @@ VGMDEVICES:	LD	DE,MSG_PO
 ;
 		LD	A,(IX+0)
 		PUSH	AF
-		AND	%00000011
-		SRL	A
-		ADC	A,'0'
-		CP	'0'
-		JR	Z,NOSN
-		CALL	PRTCHR
+
 		LD	DE,MSG_SN
-		CALL	PRTSTR
+		CALL	CHKDEV
 ;
-NOSN:		POP	AF
+		POP	AF
 		SRL	A
 		SRL	A
 		PUSH	AF
 ;
-		AND	%00000011
-		SRL	A
-		ADC	A,'0'
-		CP	'0'
-		JR	Z,NOAY
-		CALL	PRTCHR
 		LD	DE,MSG_AY
-		CALL	PRTSTR
+		CALL	CHKDEV
 ;
-NOAY:		POP	AF
+		POP	AF
 		SRL	A
 		SRL	A
 ;		PUSH	AF
+
+		LD	DE,MSG_YM
 ;
-		AND	%00000011
+CHKDEV:		AND	%00000011
 		SRL	A
 		ADC	A,'0'
 		CP	'0'
-		JR	Z,NOYM
+		RET	Z
 		CALL	PRTCHR
-		LD	DE,MSG_YM
 		CALL	PRTSTR
-NOYM:		RET
+		RET
 ;
 ;------------------------------------------------------------------------------
 ; Mute Devices.
