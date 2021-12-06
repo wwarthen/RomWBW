@@ -27,6 +27,7 @@
 ;   2020-05-06 [WBW] Add patch level to version compare
 ;   2020-05-10 [WBW] Set media change flag in XDPH for CP/M 3
 ;   2020-05-12 [WBW] Back out media change flag
+;   2021-12-06 [WBW] Fix inverted ROM/RAM DPB mapping in buffer alloc
 ;_______________________________________________________________________________
 ;
 ; ToDo:
@@ -639,7 +640,7 @@ makdphwbw:	; determine appropriate dpb (WBW mode, unit number in A)
 	jr	nz,makdph00	; if not, skip ahead to other types
 	ld	a,e		; physical unit number to A
 	ld	e,1		; assume rom
-	cp	$00		; rom?
+	cp	$01		; rom?
 	jr	z,makdph0	; yes, jump ahead
 	ld	e,2		; otherwise ram
 	jr	makdph0		; jump ahead
@@ -1567,6 +1568,23 @@ prtdec2:
 	call	prtchr
 	ret
 ;
+; Print a byte buffer in hex pointed to by DE
+; Register A has size of buffer
+;
+prthexbuf:
+	or	a
+	ret	z		; empty buffer
+;
+	ld	b,a
+prthexbuf1:
+	ld	a,' '
+	call	prtchr
+	ld	a,(de)
+	call	prthex
+	inc	de
+	djnz	prthexbuf1
+	ret
+;
 ; Start a new line
 ;
 crlf2:
@@ -1893,10 +1911,10 @@ stack	.equ	$		; stack top
 ; Messages
 ;
 indent	.db	"   ",0
-msgban1	.db	"ASSIGN v1.4 for RomWBW CP/M, 12-May-2020",0
+msgban1	.db	"ASSIGN v1.4a for RomWBW CP/M, 6-Dec-2021",0
 msghb	.db	" (HBIOS Mode)",0
 msgub	.db	" (UBIOS Mode)",0
-msgban2	.db	"Copyright 2020, Wayne Warthen, GNU GPL v3",0
+msgban2	.db	"Copyright 2021, Wayne Warthen, GNU GPL v3",0
 msguse	.db	"Usage: ASSIGN D:[=[{D:|<device>[<unitnum>]:[<slicenum>]}]][,...]",13,10
 	.db	"  ex. ASSIGN           (display all active assignments)",13,10
 	.db	"      ASSIGN /?        (display version and usage)",13,10
