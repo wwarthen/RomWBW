@@ -58,6 +58,8 @@ Version 3.1.1
 - LWN: Substantial BPBIOS cleanup
 - AJL: Add ZMD adaptation
 - D?T: Substantial update to TastyBasic incuding a .COM executable
+- PMS: Added VGM audio file player
+- WBW: ZPMLDR and ZPM3 fixes, credit to Lars Nelson for finding ZPM3 source!
 
 Version 3.1
 -----------

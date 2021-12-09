@@ -1,7 +1,7 @@
 #
 # this makefile subsumes all the work done in Build.cmd, BuildDisk.cmd, BuildDisk.ps1
 #
-SYSTEMS = ../CPM22/cpm_wbw.sys ../ZSDOS/zsys_wbw.sys ../CPM3/cpmldr.sys
+SYSTEMS = ../CPM22/cpm_wbw.sys ../ZSDOS/zsys_wbw.sys ../CPM3/cpmldr.sys ../ZPM3/zpmldr.sys
 
 FDIMGS = fd144_cpm22.img fd144_zsdos.img fd144_ws4.img
 HD512IMGS = hd512_cpm22.img hd512_zsdos.img hd512_nzcom.img \
@@ -71,7 +71,8 @@ blankhd1024:
 	case $@ in \
 		(*cpm22*) sys=../CPM22/cpm_wbw.sys;; \
 		(*zsdos* | *nzcom*) sys=../ZSDOS/zsys_wbw.sys;; \
-		(*cpm3* | *zpm3*) sys=../CPM3/cpmldr.sys;; \
+		(*cpm3*) sys=../CPM3/cpmldr.sys;; \
+		(*zpm3*) sys=../ZPM3/zpmldr.sys;; \
 	esac ; \
 	if echo $@ | grep -q ^fd144_ ; then \
 		fmt=wbw_fd144 ; type=fd144_ ; proto=blank144 ; \

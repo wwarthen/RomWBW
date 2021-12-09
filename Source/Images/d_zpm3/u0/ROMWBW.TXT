@@ -6,9 +6,10 @@ boot directly into ZPM3 by choosing the ZPM3 disk from the RomWBW
 loader prompt.  The ZPM3 disk must be bootable in this case.
 
 You may notice that there is a ZPMLDR application on the hard disk
-image.  This application is equivalent to CPMLDR, but it has some
-issues with the number of drives that RomWBW supports.  So, as
-indicated above, use CPMLDR to launch ZPM3.
+image.  This application is equivalent to CPMLDR.  It originally
+had some issues that prevented it from booting RomWBW properly,
+but those issues are now resolved (I think).  Either ZPMLDR or CPMLDR
+can be used to launch ZPM3.
 
 I have not found a way to make ZPM3 start up with any drive other
 than A: as the system drive.  So, during the load process, the boot

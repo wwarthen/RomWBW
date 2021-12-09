@@ -1,6 +1,6 @@
 RomWBW Getting Started
 Wayne Warthen (mailto:wwarthen@gmail.com)
-27 Oct 2021
+08 Dec 2021
 
 
 
@@ -17,7 +17,7 @@ RomWBW
 Z80/Z180 System Software
 
 Version 3.1 Pre-release
-27 Oct 2021
+08 Dec 2021
 
 Wayne Warthen wwarthen@gmail.com
 
@@ -872,12 +872,14 @@ Simeon Cran’s ZPM3
 ZPM3 is an interesting combination of the features of both CP/M 3 and
 ZCPR 3. Essentially, it has the features of and compatibility with both.
 
-Like CP/M 3, to make ZPM3 boot disk, you put CPMLDR.SYS on the system
+Like CP/M 3, to make ZPM3 boot disk, you put ZPMLDR.SYS on the system
 tracks of the disk.
 
 Notes
 
--   ZPMLDR is included with ZPM3, but it is not working correctly.
+-   ZPMLDR is equivalent to CPMLDR. Both are included. Previously,
+    ZPMLDR had issues that prevented it from properly booting RomWBW
+    ZPM3. However, those issues have been resolved.
 
 -   The ZPM operating system is contained in the file called CPM3.SYS
     which is confusing, but this is as intended by the ZPM3

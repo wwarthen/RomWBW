@@ -21,7 +21,7 @@ call BuildDisk.cmd cpm22 wbw_hd512 ..\cpm22\cpm_wbw.sys || exit /b
 call BuildDisk.cmd zsdos wbw_hd512 ..\zsdos\zsys_wbw.sys || exit /b
 call BuildDisk.cmd nzcom wbw_hd512 ..\zsdos\zsys_wbw.sys || exit /b
 call BuildDisk.cmd cpm3 wbw_hd512 ..\cpm3\cpmldr.sys || exit /b
-call BuildDisk.cmd zpm3 wbw_hd512 ..\cpm3\cpmldr.sys || exit /b
+call BuildDisk.cmd zpm3 wbw_hd512 ..\zpm3\zpmldr.sys || exit /b
 call BuildDisk.cmd ws4 wbw_hd512 || exit /b
 
 if exist ..\BPBIOS\bpbio-ww.rel call BuildDisk.cmd bp wbw_hd512 || exit /b
@@ -37,7 +37,7 @@ call BuildDisk.cmd cpm22 wbw_hd1024 ..\cpm22\cpm_wbw.sys || exit /b
 call BuildDisk.cmd zsdos wbw_hd1024 ..\zsdos\zsys_wbw.sys || exit /b
 call BuildDisk.cmd nzcom wbw_hd1024 ..\zsdos\zsys_wbw.sys || exit /b
 call BuildDisk.cmd cpm3 wbw_hd1024 ..\cpm3\cpmldr.sys || exit /b
-call BuildDisk.cmd zpm3 wbw_hd1024 ..\cpm3\cpmldr.sys || exit /b
+call BuildDisk.cmd zpm3 wbw_hd1024 ..\zpm3\zpmldr.sys || exit /b
 call BuildDisk.cmd ws4 wbw_hd1024 || exit /b
 
 if exist ..\BPBIOS\bpbio-ww.rel call BuildDisk.cmd bp wbw_hd1024 || exit /b
