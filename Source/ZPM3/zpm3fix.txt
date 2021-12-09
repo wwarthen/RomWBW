@@ -1,0 +1,187 @@
+PATCHES TO SIMEON CRAN'S ZPM3
+=============================
+
+ZPM3 is a CP/M 3 workalike written by Simeon Cran.  It is readily available in
+binary form; just look for archives like zpm3n10.arc and similar.
+
+This patch contains updated BNKBDOS3.SPR and RESBDOS3.SPR files although it
+is only the banked portion which has been modified.
+
+Three changes have been implemented.
+
+1. BDOS function 152 (Parse file name) password bug
+===================================================
+
+The first change was to fix a bug identified by Tilmann Reh in the file name
+parser invoked by BDOS function 152.  Unlike the parser in standard CP/M 3,
+Simeon's version can deal with a user number.  The FCB which is filled in by
+the parser has the following structure where the field names are those shown
+in the CP/M 3 Programmer's Reference Manual:
+
+
+  Offset   Field   Length
+  ------   -----   ------
+     0       DR       1     Drive code (0 = current, 1 = A, ... 16 = P
+     1      NAME      8     File name
+     9      TYPE      3     File type (extension)
+    12       PM       1     Password mode
+    13       S1       1     Reserved
+    14       S2       1     Reserved
+    15       RC       1     Reserved (Result code)
+    16    PASSWORD    8     Password (encrypted)
+    24    RESERVED    8     Used by CP/M 3
+
+Now the RC field gets set to FFh if an error occurs during the parse but S1
+and S2 are not used at all by CP/M 3.  Simeon's parser uses those fields to
+store the user number (S1) and a copy of the DR field (S2) thus rendering the
+parser far more useful in that it can now handle names like
+
+	K12:TESSER.CAT
+
+and deliver a sensible result to a user program.
+
+None of this is useful to other CP/M 3 implementations and so most programs do
+their own parsing but the basic idea is commendable.  However Tilmann noticed
+that if a password is attached to a file then Simeon's parser puts it in the
+wrong place, overwriting the four fields PM through RC.
+
+It is probably not a critical issue; after all, how many CP/M 3 users bother
+to password-protect files?  Nevertheless it is clearly wrong and is fixed in
+this version of BNKBDOS3.SPR.
+
+2. BDOS function 152 (Parse file name) user/drive prefix
+========================================================
+
+A limitation of Simeon's parser is that it cannot handle the UD: (user, drive)
+prefix, only the DU: form.  That was annoying to me since I am just as likely
+to type 7g:tesser.cat as g7:tesser.cat.  My second patch was to fix ZPM3 to
+handle both the UD: and DU: prefix forms.
+
+I also put the drive number in the S2 field even when no drive was specified
+in the input string.  Assuming that the current drive is E and the current
+user number is 8 then the following results are obtained with the inputs
+shown:
+
+	Input string		DR    S1    S2
+	------------		--    --    --
+	FILE.EXT		 0     8     5
+	E:FILE.EXT		 5     8     5     
+	12:FILE.EXT		 0    12     5
+	G:FILE.EXT		 7     8     7
+	G12:FILE.EXT		 7    12     7
+	12G:FILE.EXT		 7    12     7
+
+The interesting cases shown above are the first and third.  Setting DR to zero
+is consistent with the way standard CP/M works and the setting of S2 is just
+extra information which may be of use to the calling program but which can
+be ignored.  Unfortunately it is not possible to do the same thing with the
+user number because standard CP/M does not have a field for that.
+
+3. BDOS function 152 (Parse file name) Clear target FCB
+=======================================================
+
+On 2013-09-05 a contributor to comp.os.cpm known only as "Ed" pointed out that
+there is yet another bug in BDOS 152 in that it does not clear the record
+number fields in the last four bytes of the FCB populated by the function.
+A program which uses the FCB for a read or write operation without first
+explicitly setting the fields will have the I/O operation start at some
+unexpected position in the file.
+
+This problem has also been fixed.
+
+4. Command line editing keys
+============================
+
+A couple of years ago I added code to yaze-ag (a Z80 emulator) to make it
+possible to use the cursor and function keys on a modern PC keyboard to do
+sensible things in CP/M.  The keyboard translations are specified in external
+text files and can be loaded dynamically from within CP/M.
+
+By far the most useful translate table maps the arrow keys to WordStar
+controls.  For example, pressing the up arrow key generates a ^E, pressing
+PgUp generates ^R and so on.  This works really well in most cases but there
+is one piece of software which gives problems, namely CP/M itself.
+
+Yaze-ag uses Simeon Cran's ZPM3 as a replacement for the CP/M 3 BDOS.  It was
+a good choice because ZPM3 offers more features than standard CP/M 3 and in
+particular, it provides a rich command history facility with decent recall and
+edit capabilities.
+
+As originally implemented, ZPM3 viewed the history as an upward-growing
+stack, i.e. with new lines being added at the top.  For example assume
+that lines comprising the single words "one", "two", "three", "four" and
+"five" are entered in sequence.  The history looks like this:
+
+	->			(current line, blank)
+		five		(newest)
+		four
+		three
+		two
+		one		(oldest)
+
+According to this view, the NEXT line in the history is the last one
+entered.  After ^W ^W ^W ^W (NEXT, NEXT, NEXT, NEXT) the view is like this:
+
+		two		(line ready for editing)
+		five		(newest)
+		four
+		three
+	->	two
+		one		(oldest)
+
+After ^E ^E (PREVIOUS, PREVIOUS) the view is:
+
+		four		(line ready for editing)
+		five		(newest)
+	->	four
+		three
+		two
+		one		(oldest)
+
+This is all very consistent.  The problem is that it is utterly counter-
+intuitive and the complete reverse of any recall and edit scheme in any
+other operating system.  For example, linux and Windows both view shell
+command history as a stack, but one which grows downwards.  The most
+recently entered command is the one conceptually ABOVE the current line.
+This view of the command history also corresponds to the way that we
+compose text, where new lines are added below the most recently added
+lines.
+
+Using the same five-line example as above, the initial view would be:
+
+		one		(oldest)
+		two
+		three
+		four
+		five		(newest)
+	->			(current line, blank)
+
+After UP, UP, UP, UP the view is:
+
+		one		(oldest)
+	->	two
+		three
+		four
+		five		(newest)
+		two		(line ready for editing)
+
+then DOWN, DOWN yields:
+
+		one		(oldest)
+		two
+		three
+	->	four
+		five		(newest)
+		four		(line ready for editing)
+
+Tilman Reh recognised this as a bug when he disassembled this ZPM3.
+It was fixed by cross-renaming the two routines NextLine and PreviousLine
+and for WordStar compatability the NextLine routine was moved to ^W.
+That meant the previous occupant of the ^W position, DeleteToLeft had to
+be moved also.  For no particularly good reason I chose to use the just-
+vacated ^X slot.
+
+Although I cannot imagine why one would want to do so, the original ZPM3
+behaviour can be recovered by setting the assembly-time switch "HistoryBug"
+to some odd number, e.g. 0FFFFh.
+
