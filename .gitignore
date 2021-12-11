@@ -83,7 +83,7 @@ Tools/unix/zx/zx
 !Source/BPBIOS/*.lib
 !Source/BPBIOS/Z34RCP11/cledinst.com
 !Source/BPBIOS/Z34RCP11/cledsave.com
-!Source/Fonts
+!Source/Fonts/*
 !Source/Images/**
 !Source/RomDsk/**
 !Source/UBIOS/FSFAT.BIN
