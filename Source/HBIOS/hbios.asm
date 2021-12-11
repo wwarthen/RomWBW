@@ -5023,6 +5023,16 @@ FONT8X16:
 	.ECHO	" 8X16"
 #ENDIF
 ;
+#IFDEF USEFONTCGA
+FONTCGA:
+  #IF USELZSA2
+    #INCLUDE "fontcgac.asm"
+  #ELSE
+    #INCLUDE "fontcgau.asm"
+  #ENDIF
+	.ECHO	" CGA"
+#ENDIF
+;
 SIZ_FONTS	.EQU	$ - ORG_FONTS
 		.ECHO	" occupy "
 		.ECHO	SIZ_FONTS

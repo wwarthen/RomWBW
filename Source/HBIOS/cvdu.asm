@@ -18,17 +18,34 @@
 ;
 CVDU_BASE	.EQU	$E0
 ;
+#IF (CVDUMODE == CVDUMODE_ECB)
 CVDU_KBDDATA	.EQU	CVDU_BASE + $02	; KBD CTLR DATA PORT
 CVDU_KBDST	.EQU	CVDU_BASE + $0A	; KBD CTLR STATUS/CMD PORT
 CVDU_STAT	.EQU	CVDU_BASE + $04	; READ M8563 STATUS
 CVDU_REG	.EQU	CVDU_BASE + $04	; SELECT M8563 REGISTER
 CVDU_DATA	.EQU	CVDU_BASE + $0C	; READ/WRITE M8563 DATA
+#ENDIF
+;
+#IF (CVDUMODE == CVDUMODE_MBC)
+CVDU_KBDDATA	.EQU	CVDU_BASE + $02	; KBD CTLR DATA PORT
+CVDU_KBDST	.EQU	CVDU_BASE + $03	; KBD CTLR STATUS/CMD PORT
+CVDU_STAT	.EQU	CVDU_BASE + $04	; READ M8563 STATUS
+CVDU_REG	.EQU	CVDU_BASE + $04	; SELECT M8563 REGISTER
+CVDU_DATA	.EQU	CVDU_BASE + $05	; READ/WRITE M8563 DATA
+#ENDIF
 ;
 CVDU_ROWS	.EQU	25
 CVDU_COLS	.EQU	80
 ;
-#DEFINE USEFONT8X16
-#DEFINE	CVDU_FONT FONT8X16
+#IF (CVDUMON == CVDUMON_CGA)
+  #DEFINE	USEFONTCGA
+  #DEFINE	CVDU_FONT FONTCGA
+#ENDIF
+;
+#IF (CVDUMON == CVDUMON_EGA)
+  #DEFINE	USEFONT8X16
+  #DEFINE	CVDU_FONT FONT8X16
+#ENDIF
 ;
 TERMENABLE	.SET	TRUE		; INCLUDE TERMINAL PSEUDODEVICE DRIVER
 ;
@@ -775,47 +792,12 @@ CVDU_POS		.DW 	0	; CURRENT DISPLAY POSITION
 ;
 ;
 CVDU_INIT8563:
-#IF 1
-; EGA 720X368  9-BIT CHARACTERS
-;   - requires 16.257Mhz oscillator frequency
-	.DB	$61		; 0: hor. total - 1
-	.DB	$50		; 1: hor. displayed
-	.DB	$5A		; 2: hor. sync position 85
-	.DB	$14		; 3: vert/hor sync width 		or 0x4F -- MDA
-	.DB	$1A		; 4: vert total
-	.DB	$02		; 5: vert total adjust
-	.DB	$19		; 6: vert. displayed
-	.DB	$1A		; 7: vert. sync postition
-	.DB	$00		; 8: interlace mode
-	.DB	$0D		; 9: char height - 1
-	.DB	$4C		; 10: cursor mode, start line
-	.DB	$0D		; 11: cursor end line
-	.DB	$00		; 12: display start addr hi
-	.DB	$00		; 13: display start addr lo
-	.DB	$00		; 14: cursor position hi
-	.DB	$00		; 15: cursor position lo
-	.DB	$00		; 16: light pen vertical
-	.DB	$00		; 17: light pen horizontal
-	.DB	$00		; 18: update address hi
-	.DB	$00		; 19: update address lo
-	.DB	$08		; 20: attribute start addr hi
-	.DB	$00		; 21: attribute start addr lo
-	.DB	$89		; 22: char hor size cntrl 		0x78
-	.DB	$0D		; 23: vert char pixel space - 1, increase to 13 with new font
-	.DB	$00		; 24: copy/fill, reverse, blink rate; vertical scroll
-	.DB	$48		; 25: gr/txt, color/mono, pxl-rpt, dbl-wide; horiz. scroll
-	.DB	$E0		; 26: fg/bg colors (monochr)
-	.DB	$00		; 27: row addr display incr
-	.DB	$30		; 28: char set addr; RAM size (64/16)
-	.DB	$0D		; 29: underline position
-	.DB	$00		; 30: word count - 1
-	.DB	$00		; 31: data
-	.DB	$00		; 32: block copy src hi
-	.DB	$00		; 33: block copy src lo
-	.DB	$06		; 34: display enable begin
-	.DB	$56		; 35: display enable end
-	.DB	$00		; 36: refresh rate
-#ELSE
+;
+#IF (CVDUMON == CVDUMON_CGA)
+;
+; CGA 640x200  8-BIT CHARACTERS
+;   - requires 16.000Mhz oscillator frequency
+;
 	.DB	$7E		; 0: hor. total - 1
 	.DB	$50		; 1: hor. displayed
 	.DB	$66		; 2: hor. sync position 85
@@ -853,6 +835,50 @@ CVDU_INIT8563:
 	.DB	$7D		; 34: display enable begin
 	.DB	$64		; 35: display enable end
 	.DB	$F5		; 36: refresh rate
+#ENDIF
+;
+#IF (CVDUMON == CVDUMON_EGA)
+;
+; EGA 720X350  9-BIT CHARACTERS
+;   - requires 16.257Mhz oscillator frequency
+;
+	.DB	$61		; 0: hor. total - 1
+	.DB	$50		; 1: hor. displayed
+	.DB	$5A		; 2: hor. sync position 85
+	.DB	$14		; 3: vert/hor sync width 		or 0x4F -- MDA
+	.DB	$1A		; 4: vert total
+	.DB	$02		; 5: vert total adjust
+	.DB	$19		; 6: vert. displayed
+	.DB	$1A		; 7: vert. sync postition
+	.DB	$00		; 8: interlace mode
+	.DB	$0D		; 9: char height - 1
+	.DB	$4C		; 10: cursor mode, start line
+	.DB	$0D		; 11: cursor end line
+	.DB	$00		; 12: display start addr hi
+	.DB	$00		; 13: display start addr lo
+	.DB	$00		; 14: cursor position hi
+	.DB	$00		; 15: cursor position lo
+	.DB	$00		; 16: light pen vertical
+	.DB	$00		; 17: light pen horizontal
+	.DB	$00		; 18: update address hi
+	.DB	$00		; 19: update address lo
+	.DB	$08		; 20: attribute start addr hi
+	.DB	$00		; 21: attribute start addr lo
+	.DB	$89		; 22: char hor size cntrl 		0x78
+	.DB	$0D		; 23: vert char pixel space - 1, increase to 13 with new font
+	.DB	$00		; 24: copy/fill, reverse, blink rate; vertical scroll
+	.DB	$48		; 25: gr/txt, color/mono, pxl-rpt, dbl-wide; horiz. scroll
+	.DB	$E0		; 26: fg/bg colors (monochr)
+	.DB	$00		; 27: row addr display incr
+	.DB	$30		; 28: char set addr; RAM size (64/16)
+	.DB	$0D		; 29: underline position
+	.DB	$00		; 30: word count - 1
+	.DB	$00		; 31: data
+	.DB	$00		; 32: block copy src hi
+	.DB	$00		; 33: block copy src lo
+	.DB	$06		; 34: display enable begin
+	.DB	$56		; 35: display enable end
+	.DB	$00		; 36: refresh rate
 #ENDIF
 ;
 ;==================================================================================================

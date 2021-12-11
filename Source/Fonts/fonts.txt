@@ -6,7 +6,8 @@ Name            Format      Size    Board & Display Mode
 ------------------------------------------------------------------------------------
 font8x8u.bin    8x8         2048    ECB-SCG, ECB-VGA3 (80x60)     
 font8x11u.bin   8x11        2816    ECB-VGA3 (80x43)
-font8x16u.bin   8x16        4096    ECB-CVDU (80x25), ECB-VGA3 (80x24, 80x25, 80x30)
+font8x16u.bin   8x16        4096    ECB-CVDU (80x25), ECB-VGA3 (80x24, 80x25, 80x30), MBC-VDC
+fontcgau.bin	8x8         4096    ECB-CVDU (80x25), MBC-VDC
 
 For inclusion in HBIOS the .bin format files must be convert to assembler .asm format.
 This is acheived using the fonttool utility and is completed automatically as part of the build process.

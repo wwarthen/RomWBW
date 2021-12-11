@@ -10,7 +10,7 @@ TOOLS =../../Tools
 OTHERS =  *.img *.rom *.com *.upd *.bin *.z80 cpm.sys zsys.sys Build.inc font*.asm *.dat
 include $(TOOLS)/Makefile.inc
 
-FONTS := font8x11c.asm font8x11u.asm font8x16c.asm font8x16u.asm font8x8c.asm font8x8u.asm
+FONTS := font8x11c.asm font8x11u.asm font8x16c.asm font8x16u.asm font8x8c.asm font8x8u.asm fontcgac.asm fontcgau.asm
 
 ifneq ($(findstring $(ROM_PLATFORM), N8 MK4 RCZ180 SCZ180 DYNO),)
 	TASM=$(BINDIR)/uz80as -t hd64180
