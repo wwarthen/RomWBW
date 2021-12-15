@@ -33,26 +33,11 @@
 ../../Binary/Apps/zminit.ovr 15:
 ../../Binary/Apps/zmconfig.ovr 15:
 ../../Binary/Apps/zmd.com 15:
-
-#
-#../../Binary/Apps/i2clcd.com 2:
-#../../Binary/Apps/i2cscan.com 2:
-#../../Binary/Apps/rtcds7.com 2:
-#../../Binary/Apps/rtchb.com 2:
-#../../Binary/Apps/ppidetst.com 2:
-#../../Binary/Apps/ramtest.com 2:
-#../../Binary/Apps/tstdskng.com 2:
-../../Binary/Apps/Test/*.com 2:
-Test/*.* 2:
 #
 # Add Tune sample files
 #
 ../../Binary/Apps/Tunes/*.pt? 3:
 ../../Binary/Apps/Tunes/*.mym 3:
-#
-# Add CPNET client files
-#
-cpnet12/*.* 4:
 #
 # Add Common Applications
 #

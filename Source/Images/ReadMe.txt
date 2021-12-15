@@ -98,11 +98,12 @@ command prompt and navigate to the Images directory.  Use the command
 "Build" to build both the floppy and hard disk images in one run.
 You can build a single disk image by running BuildDisk.cmd:
 
-    BuildDisk <disk> <format> [<system>]
+    BuildDisk <disk> <type> <format> [<system>]
 
 where:
 
     <disk> specifies the disk contents (e.g., "cpm22")
+    <type> specifies disk type ("fd" for floppy, or "hd" for hard disk)
     <format> specifies the disk format which must be one of:
         - "fd144": 1.44M floppy disk
 	- "hd512": hard disk with 512 directory entries
@@ -112,7 +113,7 @@ where:
 
 For example:
 
-  | BuildDisk.cmd cpm22 wbw_hd512 ..\cpm22\cpm_wbw.sys
+  | BuildDisk.cmd cpm22 hd wbw_hd512 ..\cpm22\cpm_wbw.sys
 
 will create a hard disk image (512 directory entry format) with the
 CP/M 2.2 files from the d_cpm22 directory tree and will place the
