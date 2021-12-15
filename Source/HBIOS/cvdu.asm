@@ -823,8 +823,10 @@ CVDU_INIT8563:
 	.DB	$1D		; 7: vert. sync postition
 	.DB	$FC		; 8: interlace mode
 	.DB	$E7		; 9: char height - 1
-	.DB	$A0		; 10: cursor mode, start line
-	.DB	$E7		; 11: cursor end line
+;	.DB	$A0		; 10: cursor mode, start line
+	.DB	$47		; 10: cursor mode, start line
+;	.DB	$E7		; 11: cursor end line
+	.DB	$07		; 11: cursor end line
 	.DB	$00		; 12: display start addr hi
 	.DB	$00		; 13: display start addr lo
 	.DB	$07		; 14: cursor position hi
@@ -834,7 +836,8 @@ CVDU_INIT8563:
 	.DB	$0F		; 18: update address hi
 	.DB	$D0		; 19: update address lo
 	.DB	$08		; 20: attribute start addr hi
-	.DB	$20		; 21: attribute start addr lo
+;	.DB	$20		; 21: attribute start addr lo
+	.DB	$00		; 21: attribute start addr lo
 	.DB	$78		; 22: char hor size cntrl 		0x78
 	.DB	$E8		; 23: vert char pixel space - 1, increase to 13 with new font
 	.DB	$20		; 24: copy/fill, reverse, blink rate; vertical scroll
