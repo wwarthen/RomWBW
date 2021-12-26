@@ -1,10 +1,16 @@
-Param($Disk, $Format="", $SysFile="")
+Param($Disk, $Type="", $Format="", $SysFile="")
 
 $ErrorAction = 'Stop'
 
 $CpmToolsPath = '../../Tools/cpmtools'
 
 $env:PATH = $CpmToolsPath + ';' + $env:PATH
+
+if ($Type.Length -eq 0)
+{
+	Write-Error "No disk type specified!" -ErrorAction Stop
+	return
+}
 
 if ($Format.Length -eq 0)
 {
@@ -75,9 +81,9 @@ for ($Usr=0; $Usr -lt 16; $Usr++)
 	}
 }
 
-if (Test-Path("d_${Disk}.txt"))
+if (Test-Path("${Type}_${Disk}.txt"))
 {
-	foreach($Line in Get-Content "d_${Disk}.txt")
+	foreach($Line in Get-Content "${Type}_${Disk}.txt")
 	{
 		$Spec = $Line.Trim()
 		if (($Spec.Length -gt 0) -and ($Spec.Substring(0,1) -ne "#"))

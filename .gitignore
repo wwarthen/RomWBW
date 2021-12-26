@@ -78,6 +78,7 @@ Tools/unix/zx/zx
 !Source/Apps/FAT/FAT.COM
 !Source/Apps/ZMP/zmpx.com
 !Source/Apps/ZMD/zmdsubs.rel
+!Source/Apps/Test/vdctest/font.asm
 !Source/BPBIOS/bpbuild.com
 !Source/BPBIOS/movp112.com
 !Source/BPBIOS/*.lib

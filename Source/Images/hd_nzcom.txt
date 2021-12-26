@@ -1,7 +1,7 @@
 #
 # Add the ReadMe document
 #
-d_zsdos/ReadMe.txt 0:
+d_nzcom/ReadMe.txt 0:
 #
 # Include selected CP/M 2.2 files
 #
@@ -15,6 +15,10 @@ d_cpm22/u0/RMAC.COM 0:
 d_cpm22/u0/STAT.COM 0:
 d_cpm22/u0/SUBMIT.COM 0:
 d_cpm22/u0/XSUB.COM 0:
+#
+# Include ZSDOS files
+#
+d_zsdos/u0/*.* 0:
 #
 # Add RomWBW utilities
 #
@@ -43,13 +47,6 @@ d_cpm22/u0/XSUB.COM 0:
 ../../Binary/Apps/zmconfig.ovr 0:
 ../../Binary/Apps/zmd.com 0:
 #
-#../../Binary/Apps/i2clcd.com 2:
-#../../Binary/Apps/i2cscan.com 2:
-#../../Binary/Apps/rtcds7.com 2:
-#../../Binary/Apps/rtchb.com 2:
-#../../Binary/Apps/ppidetst.com 2:
-#../../Binary/Apps/ramtest.com 2:
-#../../Binary/Apps/tstdskng.com 2:
 ../../Binary/Apps/Test/*.com 2:
 Test/*.* 2:
 #
@@ -62,7 +59,7 @@ Test/*.* 2:
 #
 cpnet12/*.* 4:
 #
-# Add OS image
+# Add OS images
 #
 ../ZSDOS/zsys_wbw.sys 0:zsys.sys
 #
@@ -73,3 +70,10 @@ Common/CPM22/*.* 0:
 #Common/Z/u10/*.* 0:
 Common/Z/u14/*.* 0:
 Common/Z/u15/*.* 0:
+Common/Z3/u10/*.* 0:
+Common/Z3/u14/*.* 0:
+Common/Z3/u15/*.* 0:
+#
+# Temporary!!!
+#
+SIMH/*.* 15:

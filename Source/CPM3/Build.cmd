@@ -21,11 +21,13 @@ zx Z80ASM -UTIL/MF || exit /b
 copy optdsk.lib ldropts.lib || exit /b
 zx Z80ASM -BIOSLDR/MF || exit /b
 move /Y biosldr.rel biosldrd.rel || exit /b
+move /Y biosldr.lst biosldrd.lst || exit /b
 zx LINK -CPMLDRD[L100]=CPMLDR,BIOSLDRD,UTIL || exit /b
 move /Y cpmldrd.com cpmldr.bin || exit /b
 copy optcmd.lib ldropts.lib || exit /b
 zx Z80ASM -BIOSLDR/MF || exit /b
 move /Y biosldr.rel biosldrc.rel || exit /b
+move /Y biosldr.lst biosldrd.lst || exit /b
 zx LINK -CPMLDRC[L100]=CPMLDR,BIOSLDRC,UTIL || exit /b
 move /Y cpmldrc.com cpmldr.com || exit /b
 rem pause
