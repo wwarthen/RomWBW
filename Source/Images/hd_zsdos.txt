@@ -42,6 +42,7 @@ d_cpm22/u0/XSUB.COM 0:
 ../../Binary/Apps/zminit.ovr 0:
 ../../Binary/Apps/zmconfig.ovr 0:
 ../../Binary/Apps/zmd.com 0:
+../../Binary/Apps/vgmplay.com 0:
 #
 ../../Binary/Apps/Test/*.com 2:
 Test/*.* 2:
@@ -50,6 +51,7 @@ Test/*.* 2:
 #
 ../../Binary/Apps/Tunes/*.pt? 3:
 ../../Binary/Apps/Tunes/*.mym 3:
+../../Binary/Apps/Tunes/*.vgm 3:
 #
 # Add CPNET client files
 #

@@ -1,14 +1,14 @@
-OBJECTS = VGMPLAY.COM
+OBJECTS = vgmplay.com
 DEST = ../../../Binary/Apps
 TOOLS = ../../../Tools
 OTHERS = *.LST
 
 include $(TOOLS)/Makefile.inc
 
-DEPS := VGMPLAY.ASM $(shell find . -name '*.inc')
+DEPS := vgmplay.asm $(shell find . -name '*.inc')
 
-VGMPLAY.COM: $(DEPS)
-	$(TASM) -dWBW VGMPLAY.ASM VGMPLAY.COM VGMPLAY.LST
+vgmplay.com: $(DEPS)
+	$(TASM) -dWBW vgmplay.asm vgmplay.com vgmplay.lst
 
 all::
 	mkdir -p $(DEST)/Tunes
