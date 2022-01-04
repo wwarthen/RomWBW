@@ -253,22 +253,31 @@ print2:
 	ret
 
 ;---------------------------------------------------------------------------------------------------
+; Black: ESC,[30m
+; Red: ESC,[31m
+; Green: ESC,[32m
+; Yellow: ESC,[33m
+; Blue: ESC,[34m
+; Magenta: ESC,[35m
+; Cyan: ESC,[36m
+; White: ESC,[37m
+; Reset: ESC,[0m
 
 SIGNON:
 		.DB	CR,LF,LF
-		.DB	"Test VT82C42 PC Keyboard & Mouse controller chip on Z80 KBDMSE Board."
+		.DB	ESC,"[33m","Test VT82C42 PC Keyboard & Mouse controller chip on Z80 KBDMSE Board."	; Yellow
 		.DB	CR,LF,"$"
 INIT_ERR_STR:
 		.DB	CR,LF,BELL
-		.DB	"Error:  The 0xAA Test of Controller did nor return 0x55. Program Halted."
+		.DB	ESC,"[31m","Error:  The 0xAA Test of Controller did nor return 0x55. Program Halted."	; Red
 		.DB	CR,LF,"$"
 INIT_OK:
 		.DB	CR,LF
-		.DB	"The 0xAA Test of Controller returned 0x55. Now enter keyboard keys."
+		.DB	ESC,"[32m","The 0xAA Test of Controller returned 0x55. Now enter keyboard keys."	; Green
 		.DB	CR,LF,LF,"$"
 
 SCAN_MSG:
-		.DB	"Scancode = $"
+		.DB	ESC,"[34m","Scancode = $"								; Blue
 UPKEY_MSG:
 		.DB	"(Up Keystroke)$"
 CAPS_MSG:
@@ -280,9 +289,9 @@ CTRL_MSG:
 NUM_MSG:
 		.DB	"(NUM Key)$"
 IBM1_MSG:
-		.DB	"Table 1 lookup -> $"
+		.DB	ESC,"[36m","Table 1 lookup -> $"							; Cyan
 IBM2_MSG:
-		.DB	"    Table 2 lookup -> $"
+		.DB	ESC,"[37m","    Table 2 lookup -> $"							; White
 
 
 IBM1TBL:			;The "Normal" table
