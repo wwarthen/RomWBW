@@ -1,6 +1,6 @@
 RomWBW Getting Started
 Wayne Warthen (mailto:wwarthen@gmail.com)
-08 Dec 2021
+03 Jan 2022
 
 
 
@@ -17,7 +17,7 @@ RomWBW
 Z80/Z180 System Software
 
 Version 3.1 Pre-release
-08 Dec 2021
+03 Jan 2022
 
 Wayne Warthen wwarthen@gmail.com
 
@@ -1359,6 +1359,48 @@ applications are no longer provided.
 -   The RomWBW Disk Catalog document was produced by Mykl Orders.
 
 Contributions of all kinds to RomWBW are very welcome.
+
+Licensing
+
+RomWBW is free software: you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free
+Software Foundation, either version 3 of the License, or (at your
+option) any later version.
+
+RomWBW is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+more details.
+
+You should have received a copy of the GNU General Public License along
+with RomWBW. If not, see https://www.gnu.org/licenses/.
+
+Portions of RomWBW were created by, contributed by, or derived from the
+work of others. It is believed that these works are being used in
+accordance with the intentions and/or licensing of their creators.
+
+If anyone feels their work is being used outside of it’s intended
+licensing, please notify:
+
+    Wayne Warthen
+    wwarthen@gmail.com
+
+RomWBW is an aggregate work. It is composed of many individual,
+standalone programs that are distributed as a whole to function as a
+cohesive system. Each program may have it’s own licensing which may be
+different from other programs within the aggregate.
+
+In some cases, a single program (e.g., CP/M Operating System) is
+composed of multiple components with different licenses. It is believed
+that in all such cases the licenses are compatible with GPL version 3.
+
+RomWBW encourages code contributions from others. Contributors may
+assert their own copyright in their contributions by annotating the
+contributed source code appropriately. Contributors are further
+encouraged to submit their contributions via the RomWBW source code
+control system to ensure their contributions are clearly documented.
+
+All contributions to RomWBW are subject to this license.
 
 Getting Assistance
 

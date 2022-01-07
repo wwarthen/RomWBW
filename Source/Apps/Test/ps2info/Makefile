@@ -1,4 +1,4 @@
-OBJECTS = kbdinfo.com
+OBJECTS = ps2info.com
 DEST = ../../../../Binary/Apps/Test
 TOOLS =../../../../Tools
 

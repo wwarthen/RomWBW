@@ -47,7 +47,7 @@ d_cpm22/u0/XSUB.COM 0:
 # Add Tune sample files
 #
 ../../Binary/Apps/Tunes/*.pt? 3:
-../../Binary/Apps/Tunes/*.mym 3:
+#../../Binary/Apps/Tunes/*.mym 3:
 ../../Binary/Apps/Tunes/*.vgm 3:
 #
 # Add OS image
