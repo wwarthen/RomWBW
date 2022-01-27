@@ -10,8 +10,6 @@
 ;
 #include "../../../HBIOS/hbios.inc"
 ;
-cpumhz		.equ	8		; for time delay calculations (not critical)
-;
 ; General operational equates (should not requre adjustment)
 ;
 stksiz		.equ	$40		; Working stack size
@@ -20,23 +18,6 @@ rtc_port	.equ	$70		; RTC latch port adr
 ;
 restart		.equ	$0000		; CP/M restart vector
 bdos		.equ	$0005		; BDOS invocation vector
-;
-; primary hardware platforms
-;
-plt_sbc		.equ	1		; SBC ECB Z80 SBC
-plt_zeta	.equ	2		; ZETA Z80 SBC
-plt_zeta2	.equ	3		; ZETA Z80 V2 SBC
-plt_n8		.equ	4		; N8 (HOME COMPUTER) Z180 SBC
-plt_mk4		.equ	5		; MARK IV
-plt_una		.equ	6		; UNA BIOS
-plt_rcz80	.equ	7		; RC2014 W/ Z80
-plt_rcz180	.equ	8		; RC2014 W/ Z180
-plt_ezz80	.equ	9		; EASY Z80
-plt_scz180	.equ	10		; SCZ180
-plt_dyno	.equ	11		; DYNO MICRO-ATX MOTHERBOARD
-plt_rcz280	.equ	12		; RC2014 W/ Z280
-plt_mbc		.equ	13		; MULTI BOARD COMPUTER
-
 ;
 ;=======================================================================
 ;
@@ -68,63 +49,84 @@ main:
 ;
 ; Get HBIOS platform ID
 ;
-;
-	; Get platform id from RomWBW HBIOS
-	ld	b,BF_SYSVER	; HBIOS VER function 0xF1
-	ld	c,0		; Required reserved value
-	rst	08		; Do it, L := Platform ID
-	ld	a,l		; Move to A
-;
-	cp	plt_sbc
-	jr	set_spd
-	cp	plt_mbc
-	jr	set_spd
-	jp	err_not_sup	; Platform not supported
-;
-set_spd:
 	; Use first char of FCB for speed selection
 	ld	a,($5D)
 	cp	' '
 	jr	z,show_spd
 	and	$5F		; make upper case
-	cp	'F'		; fast
-	jr	z,set_fast
-	cp	'H'		; high
-	jr	z,set_fast
-	cp	'S'		; slow
-	jr	z,set_slow
-	cp	'L'		; low
-	jr	z,set_slow
+	cp	'D'		; double
+	jr	z,set_dbl
+	cp	'F'		; full
+	jr	z,set_full
+	cp	'H'		; half
+	jr	z,set_half
 	jr	usage
 ;
-set_slow:
-	ld	a,(HB_RTCVAL)
-	and	~%00001000
+set_half:
+	ld	l,0
 	jr	new_spd
 ;
-set_fast:
-	ld	a,(HB_RTCVAL)
-	or	%00001000
+set_full:
+	ld	l,1
+	jr	new_spd
+;
+set_dbl:
+	ld	l,2
 	jr	new_spd
 ;
 new_spd:
-	ld	(HB_RTCVAL),a
-	out	(rtc_port),a
+	ld	b,BF_SYSSET
+	ld	c,BF_SYSSET_CPUSPD
+	rst	08
+	jp	nz,err_not_sup
 	call	show_spd
 	xor	a
 	ret
 ;
 show_spd:
-	ld	a,(HB_RTCVAL)
-	and	%00001000
-	jr	z,show_spd1
-	ld	de,str_fast
-	jr	show_spd2
-show_spd1:
+	ld	b,BF_SYSGET
+	ld	c,BF_SYSGET_CPUSPD
+	rst	08
+	jp	nz,err_not_sup
+	push	de
+	ld	a,l
 	ld	de,str_slow
-show_spd2:
+	cp	0
+	jr	z,show_spd1
+	ld	de,str_full
+	cp	1
+	jr	z,show_spd1
+	ld	de,str_dbl
+	cp	2
+	jr	z,show_spd1
+	jp	err_invalid
+show_spd1:
 	call	crlf2
 	call	prtstr
+	pop	hl
+;
+	ld	a,h			; memory wait states
+	cp	$FF
+	jr	z,show_spd2
+	call	crlf
+	ld	de,str_spacer
+	call	prtstr
+	call	prtdecb
+	ld	de,str_memws
+	call	prtstr
+;
+show_spd2:
+	ld	a,l
+	cp	$FF
+	jr	z,show_spd3
+	call	crlf
+	ld	de,str_spacer
+	call	prtstr
+	call	prtdecb
+	ld	de,str_iows
+	call	prtstr
+;
+show_spd3:
 	ret
 ;
 usage:
@@ -138,6 +140,9 @@ usage:
 ;
 err_not_sup:
 	ld	de,str_err_not_sup
+	jr	err_ret
+err_invalid:
+	ld	de,str_err_invalid
 	jr	err_ret
 ;
 err_ret:
@@ -346,36 +351,21 @@ addhla:
 	inc	h
 	ret
 ;
-; Delay ~10ms
-;
-delay:
-	push	af
-	push	de
-	ld	de,625			; 10000us/16us
-delay0:
-	ld	a,(cpuscl)
-delay1:
-	dec	a
-	jr	nz,delay1
-	dec	de
-	ld	a,d
-	or	e
-	jp	nz,delay0
-	pop	de
-	pop	af
-	ret
-;
-;
 ;
 ;=======================================================================
 ; Constants
 ;=======================================================================
 ;
-str_banner		.db	"RomWBW CPU Speed Selector v0.1, 25-Jan-2022",0
-str_slow		.db	"  CPU speed is SLOW",0
-str_fast		.db	"  CPU speed is FAST",0
-str_err_not_sup		.db	"  ERROR: Platform not supported!",0
-str_usage		.db	"  Usage: CPUSPD [F|S]",0
+str_banner		.db	"RomWBW CPU Speed Selector v0.2, 26-Jan-2022",0
+str_spacer		.db	"  ",0
+str_slow		.db	"  CPU speed is HALF",0
+str_full		.db	"  CPU speed is FULL",0
+str_dbl			.db	"  CPU speed is DOUBLE",0
+str_memws		.db	" Memory Wait State(s)",0
+str_iows		.db	" I/O Wait State(s)",0
+str_err_not_sup		.db	"  ERROR: Platform or configuration not supported!",0
+str_err_invalid		.db	"  ERROR: Invalid configuration!",0
+str_usage		.db	"  Usage: CPUSPD [Half|Full|Double]",0
 ;
 ;=======================================================================
 ; Working data
@@ -384,8 +374,6 @@ str_usage		.db	"  Usage: CPUSPD [F|S]",0
 stksav		.dw	0		; stack pointer saved at start
 		.fill	stksiz,0	; stack
 stack		.equ	$		; stack top
-;
-cpuscl		.db	cpumhz - 2
 ;
 ;=======================================================================
 ;

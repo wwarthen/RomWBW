@@ -1959,6 +1959,23 @@ lookup.
 |           D: BIOS Bank ID
 |           E: User Bank ID
 
+#### SYSGET Subfunction 0xF3 -- Get CPU Speed (CPUSPD)
+
+|      _Entry Parameters_
+|           BC: 0xF8F3
+
+|      _Returned Values_
+|           A: Status (0=OK, else error)
+|           L: Clock Mult (0:Half, 1:Full, 2: Double)
+|           D: Memory Wait States
+|           E: I/O Wait States
+
+This function will return the running CPU speed attributes of a system.
+Note that it is frequently impossible to tell if a system is capable
+of dynamic speed changes.  This function returns it's best guess.
+If either of the wait state settings is unknown, the function will
+return 0xFF.
+
 ### Function 0xF9 -- System Set (SYSSET)
 
 |      _Entry Parameters_
@@ -2001,6 +2018,26 @@ available along with the registers/information used as input.
 
 |      _Returned Values_
 |           A: Status (0=OK, else error)
+
+#### SYSSET Subfunction 0xF3 -- Set CPU Speed (CPUSPD)
+
+|      _Entry Parameters_
+|           BC: 0xF9F3
+|           L: Clock Mult (0:Half, 1:Full, 2: Double)
+|           D: Memory Wait States
+|           E: I/O Wait States
+
+|      _Returned Values_
+|           A: Status (0=OK, else error)
+
+This function will modify the running CPU speed attributes of a system.
+Note that it is frequently impossible to tell if a system is capable
+of dynamic speed changes.  This function makes the changes blindly.
+You can specify 0xFF for either of the wait state settings to have them
+left alone.
+
+In the case of the Z180, the SIO port buad rate is derived from the CPU
+speed.  So, when the speed is changed the baud rate will change.
 
 ### Function 0xFA -- System Peek (SYSPEEK)
 

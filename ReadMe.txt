@@ -1,6 +1,6 @@
 RomWBW Getting Started
 Wayne Warthen (mailto:wwarthen@gmail.com)
-03 Jan 2022
+26 Jan 2022
 
 
 
@@ -17,7 +17,7 @@ RomWBW
 Z80/Z180 System Software
 
 Version 3.1 Pre-release
-03 Jan 2022
+26 Jan 2022
 
 Wayne Warthen wwarthen@gmail.com
 
@@ -1154,7 +1154,7 @@ file.
 
 More information can be found in the ROM Applications document.
 
-Post Update System Image and Application update process
+Post Upgrade System Image and Application Update Process
 
 Once you are satisfied that the ROM is working well, you will need to
 update the system images and RomWBW custom applications on your disk
@@ -1222,21 +1222,20 @@ system on your disk.
 
     After this is done, you will need to use SYSCOPY to place the ZPM3
     loader image on the boot tracks of all ZPM3 boot disks/slices. The
-    loader image is called CPMLDR.SYS. You must then copy (at a minimum)
+    loader image is called ZPMLDR.SYS. You must then copy (at a minimum)
     CPM3.SYS, ZCCP.COM, ZINSTAL.ZPM, and STARTZPM.COM onto the
     disk/slice. Assuming you copied the ZPM3 boot files onto your RAM
     disk at A:, you would use:
 
-        A>B:SYSCOPY C:=CPMLDR.SYS
+        A>B:SYSCOPY C:=ZPMLDR.SYS
         A>B:COPY CPM3.SYS C:
         A>B:COPY ZCCP.COM C:
         A>B:COPY ZINSTAL.ZPM C:
         A>B:COPY STARTZPM.COM C:
 
-    You may be wondering if the references to CPMLDR.SYS and CPM3.SYS
-    are typos. They are not. ZPM3 uses the same loader image as CPM3.
-    The ZPM3 main system code file is called CPM3.SYS which is the same
-    name as CP/M 3 uses, but the file contents are not the same.
+    You may be wondering if the reference to CPM3.SYS is a typo. It is
+    not. The ZPM3 main system code file is called CPM3.SYS which is the
+    same name as CP/M 3 uses, but the file contents are not the same.
 
 Finally, if you have copies of any of the RomWBW custom applications on
 your hard disk, you need to update them with the latest copies. The
@@ -1292,9 +1291,9 @@ extension “.rom” and be 512Kb or 1024Kb in size.
 Transferring and flashing the System Update is accomplished in the same
 manner as described above in Upgrading with the required difference
 being that the flash application needs to be directed to complete a
-partial flash using the /p command line switch.
+partial flash using the /P command line switch.
 
-E>flash write rom.upd /p
+E>FLASH WRITE ROM.UPD /P
 
 RomWBW Distribution
 
@@ -1314,8 +1313,8 @@ are:
   Application   Description
   ------------- ------------------------------------------------------------
   Binary        The final output files of the build process are placed here.
-                Most importantly, are the ROM images with the file names
-                ending in “.rom”.
+                Most importantly, the ROM images with the file names ending
+                in “.rom”.
 
   Doc           Contains various detailed documentation including the
                 operating systems, RomWBW architecture, etc.
@@ -1346,10 +1345,11 @@ applications are no longer provided.
     driver.
 -   Ed Brindley contributed some of the code that supports the RC2014
     platform.
--   Phil Summers contributed Forth and BASIC in ROM, the AY-3-8910 sound
-    driver as well as a long list of general code enhancements.
+-   Phil Summers contributed the Forth and BASIC adaptations in ROM, the
+    AY-3-8910 sound driver as well as a long list of general code
+    enhancements.
 -   Phillip Stevens contributed support for FreeRTOS.
--   Curt Mayer contributed the Linux / MacOS build process.
+-   Curt Mayer contributed the original Linux / MacOS build process.
 -   UNA BIOS and FDISK80 are the products of John Coffman.
 -   FLASH4 is a product of Will Sowerbutts.
 -   CLRDIR is a product of Max Scane.
@@ -1382,8 +1382,8 @@ accordance with the intentions and/or licensing of their creators.
 If anyone feels their work is being used outside of it’s intended
 licensing, please notify:
 
-    Wayne Warthen
-    wwarthen@gmail.com
+  Wayne Warthen
+  wwarthen@gmail.com
 
 RomWBW is an aggregate work. It is composed of many individual,
 standalone programs that are distributed as a whole to function as a
