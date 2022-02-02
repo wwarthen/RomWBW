@@ -7,7 +7,7 @@ include $(TOOLS)/Makefile.inc
 .SHELLFLAGS = -ce
 
 ROMAPPS1 := assign mode rtc syscopy xm
-ROMAPPS2 := fdu format survey sysgen talk timer
+ROMAPPS2 := fdu format survey sysgen talk timer cpuspd
 
 rom256_%.dat: ROMSIZ=256
 rom512_%.dat: ROMSIZ=512

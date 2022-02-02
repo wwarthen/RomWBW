@@ -2034,10 +2034,18 @@ This function will modify the running CPU speed attributes of a system.
 Note that it is frequently impossible to tell if a system is capable
 of dynamic speed changes.  This function makes the changes blindly.
 You can specify 0xFF for either of the wait state settings to have them
-left alone.
+left alone.  If an attempt is made to change the speed of a system
+that is definitely incapable of doing so, then an error result is
+returned.
 
-In the case of the Z180, the SIO port buad rate is derived from the CPU
-speed.  So, when the speed is changed the baud rate will change.
+Some peripherals are dependant on the CPU speed.  For example, the Z180
+ASCI baud rate and system timer are derived from the CPU speed.  The
+Set CPU Speed function will attempt to adjust these peripherals for
+correct operation after modifying the CPU speed.  However, in some
+cases this may not be possible.  The baud rate of ASCI ports have a
+limited set of divisors.  If there is no satisfactory divisor to
+retain the existing baud rate under the new CPU speed, then the baud
+rate of the ASCI port(s) will be affected.
 
 ### Function 0xFA -- System Peek (SYSPEEK)
 

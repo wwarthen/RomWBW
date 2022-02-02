@@ -1,5 +1,5 @@
 OBJECTS = 
-SUBDIRS = DMAmon I2C inttest ppidetst ramtest tstdskng rzsz vdctest kbdtest ps2info cpuspd
+SUBDIRS = DMAmon I2C inttest ppidetst ramtest tstdskng rzsz vdctest kbdtest ps2info
 DEST = ../../../Binary/Apps/Test
 TOOLS =../../../Tools
 

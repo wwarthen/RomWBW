@@ -1,6 +1,6 @@
 OBJECTS = cpuspd.com
-DEST = ../../../../Binary/Apps/Test
-TOOLS =../../../../Tools
+DEST = ../../../Binary/Apps
+TOOLS =../../../Tools
 
 USETASM=1
 

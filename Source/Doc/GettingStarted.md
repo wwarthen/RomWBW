@@ -424,7 +424,7 @@ therefore, globally available.
 | TALK        | Direct console I/O to a specified character device.                                                  |
 | RTC         | Manage and test the Real Time Clock hardware.                                                        |
 | TIMER       | Display value of running periodic system timer.                                                      |
-| INTTEST     | Test interrupt vector hooking.                                                                       |
+| CPUSPD      | Change the running CPU speed and wait states of the system.    |
 
 Some custom applications do not fit on the ROM disk. They are found on the
 disk image files or the individual files can be found in the Binary\\Apps
@@ -434,6 +434,7 @@ directory of the distribution.
 | ----------- | -------------------------------------------------------------- |
 | TUNE        | Play .PT2, .PT3, .MYM audio files.                             |
 | FAT         | Access MS-DOS FAT filesystems from RomWBW (based on FatFs).    |
+| INTTEST     | Test interrupt vector hooking.                                                                       |
 
 Additional documentation on all of these applications can be found in
 "RomWBW Applications.pdf" in the Doc directory of the distribution.

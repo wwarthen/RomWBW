@@ -1,6 +1,6 @@
 RomWBW Getting Started
 Wayne Warthen (mailto:wwarthen@gmail.com)
-26 Jan 2022
+01 Feb 2022
 
 
 
@@ -17,7 +17,7 @@ RomWBW
 Z80/Z180 System Software
 
 Version 3.1 Pre-release
-26 Jan 2022
+01 Feb 2022
 
 Wayne Warthen wwarthen@gmail.com
 

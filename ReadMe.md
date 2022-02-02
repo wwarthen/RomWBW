@@ -3,7 +3,7 @@ author: "Wayne Warthen (mailto:wwarthen@gmail.com)"
 classoption:
 - oneside
 colorlinks: true
-date: 26 Jan 2022
+date: 01 Feb 2022
 documentclass: book
 fontfamily: helvet
 fontsize: 12pt
@@ -44,7 +44,7 @@ toc-depth: 1
 ## Z80/Z180 System Software
 
 Version 3.1 Pre-release  
-26 Jan 2022
+01 Feb 2022
 
 Wayne Warthen <wwarthen@gmail.com>
 

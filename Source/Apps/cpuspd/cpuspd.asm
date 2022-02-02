@@ -8,11 +8,13 @@
 ;
 ;=======================================================================
 ;
-#include "../../../HBIOS/hbios.inc"
+#include "../../HBIOS/hbios.inc"
 ;
 ; General operational equates (should not requre adjustment)
 ;
 stksiz		.equ	$40		; Working stack size
+;
+cpumhz		.equ	30		; for time delay calculations (not critical)
 ;
 rtc_port	.equ	$70		; RTC latch port adr
 ;
@@ -46,21 +48,64 @@ exit:
 ;=======================================================================
 ;
 main:
+	; skip to start of first parm
+	ld	ix,$81		; point to start of parm area (past len byte)
+	call	nonblank	; skip to next non-blank char
+	jp	z,show_spd	; no parms, show current settings
 ;
-; Get HBIOS platform ID
+main1:
+	; process options (if any)
+	cp	'/'		; option prefix?
+	jr	nz,main2	; not an option, continue
+	call	option		; process option
+	ret	nz		; some options mean we are done (e.g., "/?")
+	inc	ix		; skip option character
+	call 	nonblank	; skip whitespace
+	jr	main1		; continue option checking
 ;
-	; Use first char of FCB for speed selection
-	ld	a,($5D)
-	cp	' '
-	jr	z,show_spd
-	and	$5F		; make upper case
-	cp	'D'		; double
-	jr	z,set_dbl
-	cp	'F'		; full
-	jr	z,set_full
-	cp	'H'		; half
+main2:
+	; parse speed string (half, full, double)
+	call	getalpha	; extract speed ("HALF", "FULL", "DOUBLE")
+;
+	call	nonblank	; skip whitespace
+	jp	z,set_spd	; if nothing else, set new speed
+	cp	','		; parm separator
+	jp	nz,err_parm	; invalid format, show usage and abort
+	inc	ix		; pass separator
+	call	nonblank	; skip whitespace
+	jp	z,set_spd	; if nothing else, set new speed
+	call	isnum		; start of parm?
+	jr	c,main3		; nope, try skipping this parm
+	call	getnum		; get memory wait states
+	jp	c,err_parm	; if overflow, show usage and abort
+	ld	(ws_mem),a	; save memory wait states
+;
+main3:
+	call	nonblank	; skip whitespace
+	jp	z,set_spd	; if nothing else, set new speed
+	cp	','		; parm separator
+	jp	nz,err_parm	; invalid format, show usage and abort
+	inc	ix		; pass separator
+	call	nonblank	; skip whitespace
+	jp	z,set_spd	; if nothing else, set new speed
+	call	getnum		; get I/O wait states
+	jp	c,err_parm	; if overflow, show usage and abort
+	ld	(ws_io),a	; save memory wait states
+;
+	call	nonblank	; skip whitespace
+	jp	nz,err_parm	; invalid format, show usage and abort
+	;
+;
+set_spd:
+	ld	a,(tmpstr)
+	cp	'H'
 	jr	z,set_half
-	jr	usage
+	cp	'F'
+	jr	z,set_full
+	cp	'D'
+	jr	z,set_dbl
+	jp	err_parm
+	ret
 ;
 set_half:
 	ld	l,0
@@ -75,8 +120,13 @@ set_dbl:
 	jr	new_spd
 ;
 new_spd:
+	call	delay
 	ld	b,BF_SYSSET
 	ld	c,BF_SYSSET_CPUSPD
+	ld	a,(ws_mem)
+	ld	d,a
+	ld	a,(ws_io)
+	ld	e,a
 	rst	08
 	jp	nz,err_not_sup
 	call	show_spd
@@ -129,6 +179,16 @@ show_spd2:
 show_spd3:
 	ret
 ;
+; Handle special options
+;
+option:
+;
+	inc	ix		; next char
+	ld	a,(ix)		; get it
+	cp	'?'		; is it a '?' as expected?
+	jp	z,usage		; yes, display usage
+	jp	err_parm	; anything else is an error
+
 usage:
 	call	crlf2
 	ld	de,str_usage
@@ -138,6 +198,9 @@ usage:
 ;
 ; Error Handlers
 ;
+err_parm:
+	ld	de,str_err_parm
+	jr	err_ret
 err_not_sup:
 	ld	de,str_err_not_sup
 	jr	err_ret
@@ -327,6 +390,99 @@ prtdec2:
 	call	prtchr
 	ret
 ;
+; Get the next non-blank character from (HL).
+;
+nonblank:
+	ld	a,(ix)		; load next character
+	or	a		; string ends with a null
+	ret	z		; if null, return pointing to null
+	cp	' '		; check for blank
+	ret	nz		; return if not blank
+	inc	ix		; if blank, increment character pointer
+	jr	nonblank	; and loop
+;
+; Get alpha chars and save in tmpstr
+; Length of string returned in A
+;
+getalpha:
+;
+	ld	hl,tmpstr	; location to save chars
+	ld	b,8		; length counter (tmpstr max chars)
+	ld	c,0		; init character counter
+;
+getalpha1:
+	ld	a,(ix)		; get active char
+	call	ucase		; lower case -> uppper case, if needed
+	cp	'A'		; check for start of alpha range
+	jr	c,getalpha2	; not alpha, get out
+	cp	'Z' + 1		; check for end of alpha range
+	jr	nc,getalpha2	; not alpha, get out
+	; handle alpha char
+	ld	(hl),a		; save it
+	inc	c		; bump char count
+	inc	hl		; inc string pointer
+	inc	ix		; increment buffer ptr
+	djnz	getalpha1	; if space, loop for more chars
+;
+getalpha2:	; non-alpha, clean up and return
+	ld	(hl),0		; terminate string
+	ld	a,c		; string length to A
+	or	a		; set flags
+	ret			; and return
+;
+; Determine if byte in A is a numeric '0'-'9'
+; Return with CF clear if it is numeric
+;
+isnum:
+	cp	'0'
+	jr	c,isnum1	; too low
+	cp	'9' + 1
+	jr	nc,isnum1	; too high
+	or	a		; clear CF
+	ret
+isnum1:
+	or	a		; clear CF
+	ccf			; set CF
+	ret
+	
+;
+; Get numeric chars and convert to number returned in A
+; Carry flag set on overflow
+;
+getnum:
+	ld	c,0		; C is working register
+getnum1:
+	ld	a,(ix)		; get the active char
+	cp	'0'		; compare to ascii '0'
+	jr	c,getnum2	; abort if below
+	cp	'9' + 1		; compare to ascii '9'
+	jr	nc,getnum2	; abort if above
+;
+	; valid digit, add new digit to C
+	ld	a,c		; get working value to A
+	rlca			; multiply by 10
+	ret	c		; overflow, return with carry set
+	rlca			; ...
+	ret	c		; overflow, return with carry set
+	add	a,c		; ...
+	ret	c		; overflow, return with carry set
+	rlca			; ...
+	ret	c		; overflow, return with carry set
+	ld	c,a		; back to C
+	ld	a,(ix)		; get new digit
+	sub	'0'		; make binary
+	add	a,c		; add in working value
+	ret	c		; overflow, return with carry set
+	ld	c,a		; back to C
+;
+	inc	ix		; bump to next char
+	jr	getnum1		; loop
+;
+getnum2:	; return result
+	ld	a,c		; return result in A
+	or	a		; with flags set, CF is cleared
+	ret
+;
 ; Start a new line
 ;
 crlf2:
@@ -340,6 +496,16 @@ crlf:
 	pop	af		; restore AF
 	ret
 ;
+; Convert character in A to uppercase
+;
+ucase:
+	cp	'a'		; if below 'a'
+	ret	c		; ... do nothing and return
+	cp	'z' + 1		; if above 'z'
+	ret	nc		; ... do nothing and return
+	res	5,a		; clear bit 5 to make lower case -> upper case
+	ret			; and return
+;
 ; Add hl,a
 ;
 ;   A register is destroyed!
@@ -351,21 +517,41 @@ addhla:
 	inc	h
 	ret
 ;
+; Delay ~10ms
+;
+delay:
+	push	af
+	push	de
+	ld	de,625			; 10000us/16us
+delay0:
+	ld	a,cpumhz - 2
+delay1:
+	dec	a
+	jr	nz,delay1
+	dec	de
+	ld	a,d
+	or	e
+	jp	nz,delay0
+	pop	de
+	pop	af
+	ret
+;
 ;
 ;=======================================================================
 ; Constants
 ;=======================================================================
 ;
-str_banner		.db	"RomWBW CPU Speed Selector v0.2, 26-Jan-2022",0
+str_banner		.db	"RomWBW CPU Speed Selector v0.4, 31-Jan-2022",0
 str_spacer		.db	"  ",0
 str_slow		.db	"  CPU speed is HALF",0
 str_full		.db	"  CPU speed is FULL",0
 str_dbl			.db	"  CPU speed is DOUBLE",0
 str_memws		.db	" Memory Wait State(s)",0
 str_iows		.db	" I/O Wait State(s)",0
+str_err_parm		.db	"  Parameter error (CPUSPD /? for usage)",0
 str_err_not_sup		.db	"  ERROR: Platform or configuration not supported!",0
 str_err_invalid		.db	"  ERROR: Invalid configuration!",0
-str_usage		.db	"  Usage: CPUSPD [Half|Full|Double]",0
+str_usage		.db	"  Usage: CPUSPD [(Half|Full|Double)[,<Memory Waits>[,<I/O Waits>]]]",0
 ;
 ;=======================================================================
 ; Working data
@@ -374,6 +560,13 @@ str_usage		.db	"  Usage: CPUSPD [Half|Full|Double]",0
 stksav		.dw	0		; stack pointer saved at start
 		.fill	stksiz,0	; stack
 stack		.equ	$		; stack top
+;
+;
+tmpstr		.fill	9,0		; temp string (8 chars, 0 term)
+ws_mem		.db	$FF		; memory wait states
+ws_io		.db	$FF		; I/O wait states
+
+
 ;
 ;=======================================================================
 ;
