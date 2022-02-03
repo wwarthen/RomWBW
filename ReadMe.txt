@@ -1,6 +1,6 @@
 RomWBW Getting Started
 Wayne Warthen (mailto:wwarthen@gmail.com)
-01 Feb 2022
+02 Feb 2022
 
 
 
@@ -17,7 +17,7 @@ RomWBW
 Z80/Z180 System Software
 
 Version 3.1 Pre-release
-01 Feb 2022
+02 Feb 2022
 
 Wayne Warthen wwarthen@gmail.com
 
@@ -460,7 +460,7 @@ therefore, globally available.
 
   TIMER         Display value of running periodic system timer.
 
-  INTTEST       Test interrupt vector hooking.
+  CPUSPD        Change the running CPU speed and wait states of the system.
   -----------------------------------------------------------------------------
 
 Some custom applications do not fit on the ROM disk. They are found on
@@ -471,6 +471,7 @@ Binary\Apps directory of the distribution.
   ------------- -------------------------------------------------------------
   TUNE          Play .PT2, .PT3, .MYM audio files.
   FAT           Access MS-DOS FAT filesystems from RomWBW (based on FatFs).
+  INTTEST       Test interrupt vector hooking.
 
 Additional documentation on all of these applications can be found in
 “RomWBW Applications.pdf” in the Doc directory of the distribution.

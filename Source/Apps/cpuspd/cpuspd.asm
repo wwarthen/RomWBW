@@ -21,6 +21,11 @@ rtc_port	.equ	$70		; RTC latch port adr
 restart		.equ	$0000		; CP/M restart vector
 bdos		.equ	$0005		; BDOS invocation vector
 ;
+ident		.equ	$FFFE		; loc of RomWBW HBIOS ident ptr
+;
+rmj		.equ	3		; intended CBIOS version - major
+rmn		.equ	1		; intended CBIOS version - minor
+;
 ;=======================================================================
 ;
 	.org	$100	; standard CP/M executable
@@ -34,6 +39,10 @@ bdos		.equ	$0005		; BDOS invocation vector
 	ld	de,str_banner		; banner
 	call	prtstr
 ;
+	; initialization
+	call	init			; initialize
+	jr	nz,exit			; abort if init fails
+;
 	call	main			; do the real work
 ;
 exit:
@@ -46,6 +55,46 @@ exit:
 ;=======================================================================
 ; Main Program
 ;=======================================================================
+;
+;
+; Initialization
+;
+init:
+	; check for UNA (UBIOS)
+	ld	a,($FFFD)	; fixed location of UNA API vector
+	cp	$C3		; jp instruction?
+	jr	nz,initwbw	; if not, not UNA
+	ld	hl,($FFFE)	; get jp address
+	ld	a,(hl)		; get byte at target address
+	cp	$FD		; first byte of UNA push ix instruction
+	jr	nz,initwbw	; if not, not UNA
+	inc	hl		; point to next byte
+	ld	a,(hl)		; get next byte
+	cp	$E5		; second byte of UNA push ix instruction
+	jr	nz,initwbw	; if not, not UNA
+	jp	err_una		; UNA not supported
+;
+initwbw:
+	; get location of config data and verify integrity
+	ld	hl,(ident)	; HL := adr or RomWBW HBIOS ident
+	ld	a,(hl)		; get first byte of RomWBW marker
+	cp	'W'		; match?
+	jp	nz,err_inv	; abort with invalid config block
+	inc	hl		; next byte (marker byte 2)
+	ld	a,(hl)		; load it
+	cp	~'W'		; match?
+	jp	nz,err_inv	; abort with invalid config block
+	inc	hl		; next byte (major/minor version)
+	ld	a,(hl)		; load it
+	cp	rmj << 4 | rmn	; match?
+	jp	nz,err_ver	; abort with invalid os version
+;
+initz:
+	; initialization complete
+	xor	a		; signal success
+	ret			; return
+;
+;
 ;
 main:
 	; skip to start of first parm
@@ -64,13 +113,19 @@ main1:
 	jr	main1		; continue option checking
 ;
 main2:
+	ret	z		; if end, nothing to do
+	cp	','		; no new speed?
+	jr	z,main2a	; go to wait states
 	; parse speed string (half, full, double)
 	call	getalpha	; extract speed ("HALF", "FULL", "DOUBLE")
-;
+	call	parse_spd	; parse to numeric
+	jp	c,err_parm	; if invalid, abort
+	ld	(new_cpu_spd),a	; save it
 	call	nonblank	; skip whitespace
 	jp	z,set_spd	; if nothing else, set new speed
 	cp	','		; parm separator
 	jp	nz,err_parm	; invalid format, show usage and abort
+main2a:
 	inc	ix		; pass separator
 	call	nonblank	; skip whitespace
 	jp	z,set_spd	; if nothing else, set new speed
@@ -78,7 +133,7 @@ main2:
 	jr	c,main3		; nope, try skipping this parm
 	call	getnum		; get memory wait states
 	jp	c,err_parm	; if overflow, show usage and abort
-	ld	(ws_mem),a	; save memory wait states
+	ld	(new_ws_mem),a	; save memory wait states
 ;
 main3:
 	call	nonblank	; skip whitespace
@@ -90,42 +145,40 @@ main3:
 	jp	z,set_spd	; if nothing else, set new speed
 	call	getnum		; get I/O wait states
 	jp	c,err_parm	; if overflow, show usage and abort
-	ld	(ws_io),a	; save memory wait states
+	ld	(new_ws_io),a	; save memory wait states
 ;
 	call	nonblank	; skip whitespace
 	jp	nz,err_parm	; invalid format, show usage and abort
-	;
+	jp	set_spd		; set new speed and return
 ;
-set_spd:
-	ld	a,(tmpstr)
-	cp	'H'
-	jr	z,set_half
-	cp	'F'
-	jr	z,set_full
-	cp	'D'
-	jr	z,set_dbl
-	jp	err_parm
+parse_spd:
+	ld	a,(tmpstr)		; first byte of string
+	ld	c,0			; assume half speed
+	cp	'H'			; check it
+	jr	z,parse_spd1		; if equal, done
+	ld	c,1			; assume full speed
+	cp	'F'			; check it
+	jr	z,parse_spd1		; if equal, done
+	ld	c,2			; assume double speed
+	cp	'D'			; check it
+	jr	z,parse_spd1		; if equal, done
+	or	a			; clear CF
+	ccf				; set CF to indicate error
+	ret
+parse_spd1:
+	ld	a,c			; result to a
+	or	a			; clear CF
 	ret
 ;
-set_half:
-	ld	l,0
-	jr	new_spd
-;
-set_full:
-	ld	l,1
-	jr	new_spd
-;
-set_dbl:
-	ld	l,2
-	jr	new_spd
-;
-new_spd:
+set_spd:
 	call	delay
 	ld	b,BF_SYSSET
 	ld	c,BF_SYSSET_CPUSPD
-	ld	a,(ws_mem)
+	ld	a,(new_cpu_spd)
+	ld	l,a
+	ld	a,(new_ws_mem)
 	ld	d,a
-	ld	a,(ws_io)
+	ld	a,(new_ws_io)
 	ld	e,a
 	rst	08
 	jp	nz,err_not_sup
@@ -134,6 +187,19 @@ new_spd:
 	ret
 ;
 show_spd:
+	ld	b,BF_SYSGET
+	ld	c,BF_SYSGET_CPUINFO
+	rst	08
+	jp	nz,err_not_sup
+	call	crlf2
+	push	de			; save CPU speed for now
+	push	bc			; Oscillator speed to HL
+	pop	hl
+	ld	de,str_spacer
+	call	prtstr
+	call	prtd3m			; print it
+	ld	de,str_oscspd
+	call	prtstr
 	ld	b,BF_SYSGET
 	ld	c,BF_SYSGET_CPUSPD
 	rst	08
@@ -151,10 +217,15 @@ show_spd:
 	jr	z,show_spd1
 	jp	err_invalid
 show_spd1:
-	call	crlf2
+	call	crlf
+	call	prtstr
+	pop	bc			; recover wait states
+	pop	hl			; recover CPU speed
+	push	bc			; resave wait states
+	call	prtd3m
+	ld	de,str_cpuspd
 	call	prtstr
 	pop	hl
-;
 	ld	a,h			; memory wait states
 	cp	$FF
 	jr	z,show_spd2
@@ -198,6 +269,15 @@ usage:
 ;
 ; Error Handlers
 ;
+err_una:
+	ld	de,str_err_una
+	jr	err_ret
+err_inv:
+	ld	de,str_err_inv
+	jr	err_ret
+err_ver:
+	ld	de,str_err_ver
+	jr	err_ret
 err_parm:
 	ld	de,str_err_parm
 	jr	err_ret
@@ -235,8 +315,9 @@ prtchr:
 	pop	af
 	ret
 ;
-prtdot:
+; Print a dot character without destroying any registers
 ;
+prtdot:
 	; shortcut to print a dot preserving all regs
 	push	af		; save af
 	ld	a,'.'		; load dot char
@@ -390,6 +471,46 @@ prtdec2:
 	call	prtchr
 	ret
 ;
+; Print value of HL as thousandths, ie. 0.000
+;
+prtd3m:
+	push	bc
+	push	de
+	push	hl
+	ld	e,'0'
+	ld	bc,-10000
+	call	prtd3m1
+	ld	e,0
+	ld	bc,-1000
+	call	prtd3m1
+	call	prtdot
+	ld	bc,-100
+	call	prtd3m1
+	ld	c,-10
+	call	prtd3m1
+	ld	c,-1
+	call	prtd3m1
+	pop	hl
+	pop	de
+	pop	bc
+	ret
+prtd3m1:
+	ld	a,'0' - 1
+prtd3m2:
+	inc	a
+	add	hl,bc
+	jr	c,prtd3m2
+	sbc	hl,bc
+	cp	e
+	jr	z,prtd3m3
+	ld	e,0
+	call	prtchr
+prtd3m3:
+	ret
+
+
+
+;
 ; Get the next non-blank character from (HL).
 ;
 nonblank:
@@ -541,17 +662,29 @@ delay1:
 ; Constants
 ;=======================================================================
 ;
-str_banner		.db	"RomWBW CPU Speed Selector v0.4, 31-Jan-2022",0
+str_banner		.db	"RomWBW CPU Speed Selector v0.5, 2-Feb-2022",0
 str_spacer		.db	"  ",0
-str_slow		.db	"  CPU speed is HALF",0
-str_full		.db	"  CPU speed is FULL",0
-str_dbl			.db	"  CPU speed is DOUBLE",0
+str_oscspd		.db	" MHz Oscillator",0
+str_slow		.db	"  CPU speed is HALF (",0
+str_full		.db	"  CPU speed is FULL (",0
+str_dbl			.db	"  CPU speed is DOUBLE (",0
+str_cpuspd		.db	" MHz)",0
 str_memws		.db	" Memory Wait State(s)",0
 str_iows		.db	" I/O Wait State(s)",0
-str_err_parm		.db	"  Parameter error (CPUSPD /? for usage)",0
+str_err_una		.db	"  ERROR: UNA not supported by application",0
+str_err_inv		.db	"  ERROR: Invalid BIOS (signature missing)",0
+str_err_ver		.db	"  ERROR: Unexpected HBIOS version",0
+str_err_parm		.db	"  ERROR: Parameter error (CPUSPD /? for usage)",0
 str_err_not_sup		.db	"  ERROR: Platform or configuration not supported!",0
 str_err_invalid		.db	"  ERROR: Invalid configuration!",0
-str_usage		.db	"  Usage: CPUSPD [(Half|Full|Double)[,<Memory Waits>[,<I/O Waits>]]]",0
+str_usage		.db	"  Usage: CPUSPD <cpuspd>,<memws>,<iows>\r\n"
+			.db	"\r\n"
+			.db	"         <cpuspd>: \"Half\", \"Full\", or \"Double\"\r\n"
+			.db	"         <memws>:  Memory wait states\r\n"
+			.db	"         <iows>:   I/O wait states\r\n"
+			.db	"\r\n"
+			.db	"         Any parameter may be omitted\r\n"
+			.db	"         Ability to set values varies by system\r\n",0
 ;
 ;=======================================================================
 ; Working data
@@ -563,8 +696,9 @@ stack		.equ	$		; stack top
 ;
 ;
 tmpstr		.fill	9,0		; temp string (8 chars, 0 term)
-ws_mem		.db	$FF		; memory wait states
-ws_io		.db	$FF		; I/O wait states
+new_cpu_spd	.db	$FF		; new CPU speed
+new_ws_mem	.db	$FF		; new memory wait states
+new_ws_io	.db	$FF		; new I/O wait states
 
 
 ;

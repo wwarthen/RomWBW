@@ -1938,6 +1938,7 @@ lookup.
 |           H: Z80 CPU Variant
 |           L: CPU Speed in MHz
 |           DE: CPU Speed in KHz
+|           BC: Oscillator Speed in KHz
 
 #### SYSGET Subfunction 0xF1 -- Get Memory Information (MEMINFO)
 

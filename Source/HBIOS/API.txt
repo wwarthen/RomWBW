@@ -100,6 +100,7 @@ GET ($F8):
                                                 H=Z80 CPU Variant
                                                 L=CPU Speed in MHz
                                                 DE=CPU Speed in KHz
+						BC=Oscillator Freq in KHz
 
     MEMINFO ($F1):
       BC=FuSnction/Subfunction                   A=Result
