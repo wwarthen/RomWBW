@@ -1,7 +1,7 @@
 @echo off
 setlocal
 
-set TOOLS=../../../../Tools
+set TOOLS=../../../Tools
 set PATH=%TOOLS%\tasm32;%PATH%
 set TASMTABS=%TOOLS%\tasm32
 
