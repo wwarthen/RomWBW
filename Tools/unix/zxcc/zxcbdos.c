@@ -2,6 +2,10 @@
 #include "zxbdos.h"
 #include "zxcbdos.h"
 
+#ifndef _WIN32
+#include <sys/ioctl.h>
+#endif
+
 #ifdef _WIN32
 #include <conio.h>
 #endif
