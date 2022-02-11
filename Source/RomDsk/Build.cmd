@@ -3,13 +3,11 @@ setlocal
 
 set TOOLS=../../Tools
 
-set PATH=%TOOLS%\tasm32;%TOOLS%\zx;%TOOLS%\srecord;%TOOLS%\cpmtools;%PATH%
+set PATH=%TOOLS%\tasm32;%TOOLS%\zxcc;%TOOLS%\srecord;%TOOLS%\cpmtools;%PATH%
 
 set TASMTABS=%TOOLS%\tasm32
 
-set ZXBINDIR=%TOOLS%/cpm/bin/
-set ZXLIBDIR=%TOOLS%/cpm/lib/
-set ZXINCDIR=%TOOLS%/cpm/include/
+set CPMDIR80=%TOOLS%/cpm/
 
 set RomApps1=assign mode rtc syscopy xm
 set RomApps2=fdu format survey sysgen talk timer cpuspd

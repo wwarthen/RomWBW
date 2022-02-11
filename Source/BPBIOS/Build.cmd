@@ -3,11 +3,9 @@ setlocal
 
 pushd ZCPR33 && call Build || exit /b & popd
 
-set PATH=%PATH%;..\..\Tools\zx;..\..\Tools\cpmtools;
+set PATH=%PATH%;..\..\Tools\zxcc;..\..\Tools\cpmtools;
 
-set ZXBINDIR=../../tools/cpm/bin/
-set ZXLIBDIR=../../tools/cpm/lib/
-set ZXINCDIR=../../tools/cpm/include/
+set CPMDIR80=%TOOLS%/cpm/
 
 call :makebp 33
 call :makebp 33bnk
@@ -45,7 +43,7 @@ echo.
 
 copy def-ww-z%VER%.lib def-ww.lib || exit /b
 rem if exist bpbio-ww.rel del bpbio-ww.rel || exit /b
-zx ZMAC -BPBIO-WW -/P || exit /b
+zxcc ZMAC -BPBIO-WW -/P || exit /b
 if exist bp%VER%.prn del bp%VER%.prn || exit /b
 ren bpbio-ww.prn bp%VER%.prn || exit /b
 if exist bp%VER%.err del bp%VER%.err || exit /b
@@ -56,18 +54,18 @@ rem pause
 
 rem BPBUILD attempts to rename bpsys.img -> bpsys.bak
 rem while is is still open.  Real CP/M does not care,
-rem but zx fails due to host OS.  Below, a temp file
+rem but zxcc fails due to host OS.  Below, a temp file
 rem is used to avoid the problematic rename.
 
 if exist bpsys.img del bpsys.img || exit /b
 if exist bpsys.tmp del bpsys.tmp || exit /b
 copy bp%VER%.dat bpsys.tmp || exit /b
 rem bpsys.tmp -> bpsys.img
-zx bpbuild -bpsys.tmp <bpbld1.rsp || exit /b
+zxcc bpbuild -bpsys.tmp <bpbld1.rsp || exit /b
 if exist bpsys.tmp del bpsys.tmp || exit /b
 copy bpsys.img bpsys.tmp || exit /b
 rem bpsys.tmp -> bpsys.img
-zx bpbuild -bpsys.tmp <bpbld2.rsp || exit /b
+zxcc bpbuild -bpsys.tmp <bpbld2.rsp || exit /b
 if exist bp%VER%.img del bp%VER%.img || exit /b
 if exist bpsys.img ren bpsys.img bp%VER%.img || exit /b
 

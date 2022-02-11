@@ -9,11 +9,11 @@ TOOLS =../../Tools
 include $(TOOLS)/Makefile.inc
 
 zpmldr.bin: zpm3ldr.rel biosldrd.rel util.rel
-	$(ZXCC) $(CPM)/LINK -ZPMLDRD[L100]=ZPM3LDR,BIOSLDRD,UTIL
+	$(ZXCC) LINK -ZPMLDRD[L100]=ZPM3LDR,BIOSLDRD,UTIL
 	mv zpmldrd.com zpmldr.bin
 
 zpmldr.com:	zpm3ldr.rel biosldrc.rel util.rel
-	$(ZXCC) $(CPM)/LINK -ZPMLDRC[L100]=ZPM3LDR,BIOSLDRC,UTIL
+	$(ZXCC) LINK -ZPMLDRC[L100]=ZPM3LDR,BIOSLDRC,UTIL
 	mv zpmldrc.com zpmldr.com
 
 zpmldr.sys: zpmldr.bin loader.bin

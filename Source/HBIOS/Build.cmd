@@ -9,13 +9,11 @@ if "%1" == "dist" goto :dist
 
 set TOOLS=../../Tools
 
-set PATH=%TOOLS%\tasm32;%TOOLS%\zx;%PATH%
+set PATH=%TOOLS%\tasm32;%TOOLS%\zxcc;%PATH%
 
 set TASMTABS=%TOOLS%\tasm32
 
-set ZXBINDIR=%TOOLS%/cpm/bin/
-set ZXLIBDIR=%TOOLS%/cpm/lib/
-set ZXINCDIR=%TOOLS%/cpm/include/
+set CPMDIR80=%TOOLS%/cpm/
 
 ::
 :: This PowerShell script validates the build variables passed in.  If

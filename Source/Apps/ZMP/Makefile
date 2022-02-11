@@ -7,4 +7,4 @@ NODELETE = *.ovr zmp.doc *.hlp
 include $(TOOLS)/Makefile.inc
 
 zmp.com: zmo-rw01.hex
-	$(ZXCC) $(CPM)/MLOAD25 -ZMP.COM=ZMPX.COM,ZMO-RW01
+	$(ZXCC) MLOAD25 -ZMP.COM=ZMPX.COM,ZMO-RW01

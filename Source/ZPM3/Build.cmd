@@ -3,13 +3,11 @@ setlocal
 
 set TOOLS=../../Tools
 
-set PATH=%TOOLS%\tasm32;%TOOLS%\zx;%TOOLS%\cpmtools;%PATH%
+set PATH=%TOOLS%\tasm32;%TOOLS%\zxcc;%TOOLS%\cpmtools;%PATH%
 
 set TASMTABS=%TOOLS%\tasm32
 
-set ZXBINDIR=%TOOLS%/cpm/bin/
-set ZXLIBDIR=%TOOLS%/cpm/lib/
-set ZXINCDIR=%TOOLS%/cpm/include/
+set CPMDIR80=%TOOLS%/cpm/
 
 copy ..\ZCCP\ccp.com zccp.com || exit /b
 copy ..\ZCCP\zinstal.zpm . || exit /b
@@ -28,11 +26,11 @@ echo.
 echo.
 echo *** ZPM Loader ***
 echo.
-zx LINK -ZPMLDRD[L100]=ZPM3LDR,BIOSLDRD,UTIL || exit /b
-:: zx SLRNK -ZPM3LDR,BIOSLDRD,UTIL,ZPMLDRD/N/E
+zxcc LINK -ZPMLDRD[L100]=ZPM3LDR,BIOSLDRD,UTIL || exit /b
+:: zxcc SLRNK -ZPM3LDR,BIOSLDRD,UTIL,ZPMLDRD/N/E
 move /Y zpmldrd.com zpmldr.bin || exit /b
-zx LINK -ZPMLDRC[L100]=ZPM3LDR,BIOSLDRC,UTIL || exit /b
-:: zx SLRNK -ZPM3LDR,BIOSLDRC,UTIL,ZPMLDRC/N/E
+zxcc LINK -ZPMLDRC[L100]=ZPM3LDR,BIOSLDRC,UTIL || exit /b
+:: zxcc SLRNK -ZPM3LDR,BIOSLDRC,UTIL,ZPMLDRC/N/E
 move /Y zpmldrc.com zpmldr.com || exit /b
 rem pause
 
@@ -42,13 +40,13 @@ echo.
 echo *** Banked ZPM3 ***
 echo.
 copy genbnk.dat gencpm.dat || exit /b
-zx gencpm -auto -display || exit /b
+zxcc gencpm -auto -display || exit /b
 rem pause
 
 rem ZPM3 Tools
-zx Z80ASM -clrhist/F || exit /b
-zx Z80ASM -setz3/F || exit /b
-zx Z80ASM -autotog/F || exit /b
+zxcc Z80ASM -clrhist/F || exit /b
+zxcc Z80ASM -setz3/F || exit /b
+zxcc Z80ASM -autotog/F || exit /b
 
 rem Loader
 

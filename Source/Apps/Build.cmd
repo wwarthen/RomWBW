@@ -4,13 +4,11 @@ setlocal
 set TOOLS=../../Tools
 set APPBIN=..\..\Binary\Apps
 
-set PATH=%TOOLS%\tasm32;%TOOLS%\zx;%PATH%
+set PATH=%TOOLS%\tasm32;%TOOLS%\zxcc;%PATH%
 
 set TASMTABS=%TOOLS%\tasm32
 
-set ZXBINDIR=%TOOLS%/cpm/bin/
-set ZXLIBDIR=%TOOLS%/cpm/lib/
-set ZXINCDIR=%TOOLS%/cpm/include/
+set CPMDIR80=%TOOLS%/cpm/
 
 call :asm syscopy || exit /b
 call :asm assign || exit /b
@@ -21,10 +19,10 @@ call :asm rtc || exit /b
 call :asm timer || exit /b
 call :asm rtchb || exit /b
 
-zx Z80ASM -SYSGEN/F || exit /b
+zxcc Z80ASM -SYSGEN/F || exit /b
 
-zx MAC SURVEY.ASM -$PO || exit /b
-zx MLOAD25 -SURVEY.COM=SURVEY.HEX || exit /b
+zxcc MAC SURVEY.ASM -$PO || exit /b
+zxcc MLOAD25 -SURVEY.COM=SURVEY.HEX || exit /b
 
 pushd XM && call Build || exit /b & popd
 pushd FDU && call Build || exit /b & popd

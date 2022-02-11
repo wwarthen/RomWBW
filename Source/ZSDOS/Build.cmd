@@ -3,16 +3,14 @@ setlocal
 
 set TOOLS=../../Tools
 
-set PATH=%TOOLS%\tasm32;%TOOLS%\zx;%PATH%
+set PATH=%TOOLS%\tasm32;%TOOLS%\zxcc;%PATH%
 
 set TASMTABS=%TOOLS%\tasm32
 
-set ZXBINDIR=%TOOLS%/cpm/bin/
-set ZXLIBDIR=%TOOLS%/cpm/lib/
-set ZXINCDIR=%TOOLS%/cpm/include/
+set CPMDIR80=%TOOLS%/cpm/
 
-zx ZMAC -ZSDOS -/P || exit /b
-zx LINK -ZSDOS.BIN=ZSDOS[LD800] || exit /b
+zxcc ZMAC -ZSDOS -/P || exit /b
+zxcc LINK -ZSDOS.BIN=ZSDOS[LD800] || exit /b
 
 tasm -t80 -g3 -fFF loader.asm loader.bin loader.lst || exit /b
 

@@ -37,7 +37,7 @@ clobber::
 	$(eval VER := $(subst .img,,$(subst bp,,$@)))
 	cp def-ww-z$(VER).lib def-ww.lib
 	rm -f bpbio-ww.rel
-	$(ZXCC) $(CPM)/ZMAC -BPBIO-WW -/P
+	$(ZXCC) ZMAC -BPBIO-WW -/P
 	mv bpbio-ww.prn bp$(VER).prn
 	cp bp$(VER).dat bpsys.dat
 	$(ZXCC) ./bpbuild.com -bpsys.dat 0 < bpbld1.rsp

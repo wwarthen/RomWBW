@@ -3,34 +3,32 @@ setlocal
 
 set TOOLS=../../Tools
 
-set PATH=%TOOLS%\tasm32;%TOOLS%\zx;%PATH%
+set PATH=%TOOLS%\tasm32;%TOOLS%\zxcc;%PATH%
 
 set TASMTABS=%TOOLS%\tasm32
 
-set ZXBINDIR=%TOOLS%/cpm/bin/
-set ZXLIBDIR=%TOOLS%/cpm/lib/
-set ZXINCDIR=%TOOLS%/cpm/include/
+set CPMDIR80=%TOOLS%/cpm/
 
 call :asm ccpb03 || goto :eof
 call :asm bdosb01 || goto :eof
 
-zx MAC -CCP.ASM -$PO || exit /b
-zx MLOAD25 -CCP.BIN=CCP.HEX || exit /b
+zxcc MAC -CCP.ASM -$PO || exit /b
+zxcc MLOAD25 -CCP.BIN=CCP.HEX || exit /b
 
-zx MAC -BDOS.ASM -$PO || exit /b
-zx MLOAD25 -BDOS.BIN=BDOS.HEX || exit /b
+zxcc MAC -BDOS.ASM -$PO || exit /b
+zxcc MLOAD25 -BDOS.BIN=BDOS.HEX || exit /b
 
-zx MAC -CCP22.ASM -$PO || exit /b
-zx MLOAD25 -CCP22.BIN=CCP22.HEX || exit /b
+zxcc MAC -CCP22.ASM -$PO || exit /b
+zxcc MLOAD25 -CCP22.BIN=CCP22.HEX || exit /b
 
-zx MAC -BDOS22.ASM -$PO || exit /b
-zx MLOAD25 -BDOS22.BIN=BDOS22.HEX || exit /b
+zxcc MAC -BDOS22.ASM -$PO || exit /b
+zxcc MLOAD25 -BDOS22.BIN=BDOS22.HEX || exit /b
 
-zx MAC -OS2CCP.ASM -$PO || exit /b
-zx MLOAD25 -OS2CCP.BIN=OS2CCP.HEX || exit /b
+zxcc MAC -OS2CCP.ASM -$PO || exit /b
+zxcc MLOAD25 -OS2CCP.BIN=OS2CCP.HEX || exit /b
 
-zx MAC -OS3BDOS.ASM -$PO || exit /b
-zx MLOAD25 -OS3BDOS.BIN=OS3BDOS.HEX || exit /b
+zxcc MAC -OS3BDOS.ASM -$PO || exit /b
+zxcc MLOAD25 -OS3BDOS.BIN=OS3BDOS.HEX || exit /b
 
 tasm -t80 -g3 -fFF loader.asm loader.bin loader.lst || exit /b
 
