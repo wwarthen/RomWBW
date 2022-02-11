@@ -19,9 +19,13 @@ with respect to the .DS directive. it's usually a bad idea to mix
 It assumes that you have some standard system tools and libraries 
 installed, specifically: gcc, gnu make, libncurses, and srecord.
 Typically, something like this will take care of adding all
-required packages:
+required packages in Linux:
 
 	sudo apt install build-essential libncurses-dev srecord
+
+For MacOS, you will need:
+
+	brew install srecord
 
 To build:
 	cd to the top directory and type "make".
@@ -40,8 +44,7 @@ the "SCZ180" platform:
 
 	make ROM_PLATFORM=SCZ180 ROM_CONFIG=126
 
-Please be aware that the make-based build does have a couple of
-deficiencies.
+Please be aware that the make-based build does have a few deficiencies.
 
 First and most important, the Makefiles do not handle reruns very well.
 To ensure a full buld, use "make clobber" from the top level directory
