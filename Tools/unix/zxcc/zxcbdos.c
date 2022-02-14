@@ -2,36 +2,27 @@
 #include "zxbdos.h"
 #include "zxcbdos.h"
 
-#ifndef _WIN32
-#include <sys/ioctl.h>
-#endif
-
-#ifdef _WIN32
-#include <conio.h>
-#endif
-
 /* Line input */
 #ifdef USE_CPMIO
 
-
-void bdos_rdline(word line, word *PC)
+void bdos_rdline(word line, word* PC)
 {
-	unsigned char *buf;
+	unsigned char* buf;
 
 	if (!line) line = cpm_dma;
 	else RAM[line + 1] = 0;
 
-	buf = (unsigned char *)&RAM[line];
+	buf = (unsigned char*)&RAM[line];
 
 	if (cpm_bdos_10(buf)) *PC = 0;
 }
 
 #else /* def USE_CPMIO */
 
-void bdos_rdline(word line, word *PC)
+void bdos_rdline(word line, word* PC)
 {
 	unsigned char c;
-	unsigned char *p;
+	unsigned char* p;
 	int n;
 	int maxlen;
 
@@ -39,7 +30,7 @@ void bdos_rdline(word line, word *PC)
 	maxlen = RAM[line];
 
 	// fgets causes extra linefeeds, so we invent our own
-	//fgets((char *)(RAM + line + 2), maxlen, stdin);
+	// fgets((char *)(RAM + line + 2), maxlen, stdin);
 
 	p = (RAM + line + 2);
 	n = 0;
@@ -72,7 +63,7 @@ void bdos_rdline(word line, word *PC)
 	//RAM[line + 1] = strlen((char *)(RAM + line + 2)) - 1;	
 	RAM[line + 1] = (unsigned char)n;
 
-	Msg("Input: [%d] %-*.*s\n", RAM[line + 1], RAM[line + 1], RAM[line +1], (char *)(RAM+line+2));
+	DBGMSGV("Input: [%d] %-*.*s\n", RAM[line + 1], RAM[line + 1], RAM[line + 1], (char*)(RAM + line + 2));
 }
 #endif /* ndef USE_CPMIO */
 
@@ -82,7 +73,7 @@ int cpm_bdos_6(byte e)
 {
 	int c;
 
-	switch(e) {
+	switch (e) {
 	case 0xFF:
 		if (cstat()) return cin();
 		return 0;

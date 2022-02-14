@@ -1,42 +1,42 @@
 /*
 
-    CPMREDIR: CP/M filesystem redirector
-    Copyright (C) 1998,2003 John Elliott <jce@seasip.demon.co.uk>
+	CPMREDIR: CP/M filesystem redirector
+	Copyright (C) 1998,2003 John Elliott <jce@seasip.demon.co.uk>
 
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Library General Public
-    License as published by the Free Software Foundation; either
-    version 2 of the License, or (at your option) any later version.
+	This library is free software; you can redistribute it and/or
+	modify it under the terms of the GNU Library General Public
+	License as published by the Free Software Foundation; either
+	version 2 of the License, or (at your option) any later version.
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Library General Public License for more details.
+	This library is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+	Library General Public License for more details.
 
-    You should have received a copy of the GNU Library General Public
-    License along with this library; if not, write to the Free
-    Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+	You should have received a copy of the GNU Library General Public
+	License along with this library; if not, write to the Free
+	Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This file deals with drive-based functions.
+	This file deals with drive-based functions.
 */
 
 #include "cpmint.h"
 
 #ifdef _WIN32
-static char *drive_to_hostdrive(int cpm_drive)
+static char* drive_to_hostdrive(int cpm_drive)
 {
 	static char prefix[CPM_MAXPATH];
-	char *lpfp;
-    dword dw;
+	char* lpfp;
+	dword dw;
 
 	if (!redir_drive_prefix[cpm_drive]) return NULL;
 	dw = GetFullPathName(redir_drive_prefix[cpm_drive], sizeof(prefix),
-				prefix, &lpfp);
-		
+		prefix, &lpfp);
+
 	if (!dw) return NULL;
 	if (prefix[1] == ':')	/* If path starts with a drive, limit it */
 	{			/* to just that drive */
-        prefix[2] = '\\';   /* GetDiskFreeSpace should have trailing backslash */
+		prefix[2] = '\\';   /* GetDiskFreeSpace should have trailing backslash */
 		prefix[3] = 0;
 	}
 	return prefix;
@@ -50,17 +50,17 @@ cpm_byte fcb_reset(void)
 	bdos(0x0D, 0, 0);
 #endif
 
-	redir_l_drives  = 0;
-	redir_cpmdrive  = 0;	/* A reset forces current drive to A: */
+	redir_l_drives = 0;
+	redir_cpmdrive = 0;	/* A reset forces current drive to A: */
 /*	redir_ro_drives = 0; Software write protect not revoked by func 0Dh.
- * 
+ *
  * This does not follow true CP/M, but does match many 3rd-party replacements.
  */
 	return 0;
 }
 
 
-cpm_word fcb_drive (cpm_byte drv)
+cpm_word fcb_drive(cpm_byte drv)
 {
 	if (redir_drive_prefix[drv][0])
 	{
@@ -77,11 +77,11 @@ cpm_byte fcb_getdrv(void)
 }
 
 
-cpm_byte fcb_user  (cpm_byte usr)
+cpm_byte fcb_user(cpm_byte usr)
 {
 	if (usr != 0xFF) redir_cpmuser = usr % 16;
 
-	redir_Msg("User: parameter %d returns %d\r\n", usr, redir_cpmuser);
+	DBGMSGV("User: parameter %d returns %d\n", usr, redir_cpmuser);
 
 	return redir_cpmuser;
 }
@@ -152,35 +152,31 @@ static cpm_byte exdpb[0x11] = {
 	0x02, 0x03	/* 512-byte sectors */
 };
 
-cpm_word fcb_getdpb(cpm_byte *dpb)
+cpm_word fcb_getdpb(cpm_byte* dpb)
 {
 	/* Return the example dpb */
 	memcpy(dpb, &exdpb, 0x11);
 	return 0x11;
 }
 
-
 /* Create an entirely bogus ALV
  * TODO: Make it a bit better */
 
-cpm_word fcb_getalv(cpm_byte *alv, cpm_word max)
+cpm_word fcb_getalv(cpm_byte* alv, cpm_word max)
 {
 	if (max > 1024) max = 1024;
 
-	memset(alv,             0xFF, max / 2);
-	memset(alv + (max / 2), 0,    max / 2);
+	memset(alv, 0xFF, max / 2);
+	memset(alv + (max / 2), 0, max / 2);
 
 	return max;
 }
 
 /* Get disk free space */
 
-cpm_word fcb_dfree (cpm_byte drive, cpm_byte *dma)
+cpm_word fcb_dfree(cpm_byte drive, cpm_byte* dma)
 {
 	/* Return half of disk capacity */
 	redir_wr24(dma, 0x8000L);	/* 8MB / 128 / 2 */
 	return 0;
 }
-
-
-

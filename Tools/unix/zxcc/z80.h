@@ -15,16 +15,16 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-/* [John Elliott, 15 July 2001] 
- * Copied this file into ZXCC, a CP/M emulator.
- * Since ZXCC's memory is a flat 64k space and will never be bank-switched,
- * the bank-switching code is removed.
- * Since ZXCC has no memory-mapped screen, all the screen management code
- * goes as well.
- * Since ZXCC doesn't need its speed regulated, all the speed regulation
- * code goes as well.
- * Since ZXCC doesn't save or load snapshots... OK, you get the idea.
- */
+ /* [John Elliott, 15 July 2001]
+  * Copied this file into ZXCC, a CP/M emulator.
+  * Since ZXCC's memory is a flat 64k space and will never be bank-switched,
+  * the bank-switching code is removed.
+  * Since ZXCC has no memory-mapped screen, all the screen management code
+  * goes as well.
+  * Since ZXCC doesn't need its speed regulated, all the speed regulation
+  * code goes as well.
+  * Since ZXCC doesn't save or load snapshots... OK, you get the idea.
+  */
 
 #ifdef HAVE_SYS_PARAM_H
 #include<sys/param.h>
@@ -61,21 +61,21 @@ void drawborder();
 
 #define store(x,y) do { RAM[(x)] = (y); } while(0)
 
-#define store2b(x,hi,lo) do {\
-          RAM[(x)]=(lo); \
-	  RAM[((x+1) & 0xFFFF)]=(hi); } while(0)
+#define store2b(x,hi,lo) do { \
+	RAM[(x)]=(lo); \
+	RAM[((x+1) & 0xFFFF)]=(hi); } while(0)
 
 #define store2(x,y) store2b(x,(y)>>8,y)
 
 #ifdef __GNUC__
-static void inline storefunc(unsigned short ad,unsigned char b){
-   store(ad,b);
+static void inline storefunc(unsigned short ad, unsigned char b) {
+	store(ad, b);
 }
 #undef store
 #define store(x,y) storefunc(x,y)
 
-static void inline store2func(unsigned short ad,unsigned char b1,unsigned char b2){
-   store2b(ad,b1,b2);
+static void inline store2func(unsigned short ad, unsigned char b1, unsigned char b2) {
+	store2b(ad, b1, b2);
 }
 #undef store2b
 #define store2b(x,hi,lo) store2func(x,hi,lo)

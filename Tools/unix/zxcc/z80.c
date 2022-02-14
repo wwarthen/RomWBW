@@ -123,7 +123,7 @@ void mainloop(word spc, word ssp){
 //		if (pc == 0x1177) tr = 1;
  //               if (pc == 0x1185) tr = 0;
 	if (tr >= 1) ++id;
-        if (tr >= 1) printf("%d: PC=%04x %02x AF=%02x:%02x BC=%04x DE=%04x HL=%04x IX=%04x IY=%04x\r\n",
+        if (tr >= 1) printf("%d: PC=%04x %02x AF=%02x:%02x BC=%04x DE=%04x HL=%04x IX=%04x IY=%04x\n",
                         id, pc, fetch(pc), a,f, bc, de, hl, ix, iy);
 }
 */

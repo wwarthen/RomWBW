@@ -1,32 +1,26 @@
 /*
 
-    CPMREDIR: CP/M filesystem redirector
-    Copyright (C) 1998, John Elliott <jce@seasip.demon.co.uk>
+	CPMREDIR: CP/M filesystem redirector
+	Copyright (C) 1998, John Elliott <jce@seasip.demon.co.uk>
 
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Library General Public
-    License as published by the Free Software Foundation; either
-    version 2 of the License, or (at your option) any later version.
+	This library is free software; you can redistribute it and/or
+	modify it under the terms of the GNU Library General Public
+	License as published by the Free Software Foundation; either
+	version 2 of the License, or (at your option) any later version.
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Library General Public License for more details.
+	This library is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+	Library General Public License for more details.
 
-    You should have received a copy of the GNU Library General Public
-    License along with this library; if not, write to the Free
-    Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+	You should have received a copy of the GNU Library General Public
+	License along with this library; if not, write to the Free
+	Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This file holds internal declarations for the library.
+	This file holds internal declarations for the library.
 */
 
-#ifndef _WIN32
- #include "config.h"
- #define DIRSEP  "/"
-#else
-  #include "config.h"
-  #define DIRSEP "/\\:"
-#endif
+#include "config.h"
 #include <stdio.h>
 #ifdef HAVE_STDLIB_H
   #include <stdlib.h>
@@ -47,16 +41,12 @@
 #include <errno.h>
 #ifdef HAVE_DIRENT_H
   #include <dirent.h>
-  #ifdef HAVE_DIRECT_H
-    #include <direct.h>
-  #endif
-#else
-  #ifdef __WATCOMC__
-    #include <io.h>
-    #include <direct.h>
-  #else
-    #include "dirent.h"
-  #endif
+#endif
+#ifdef HAVE_DIRECT_H
+  #include <direct.h>
+#endif
+#ifdef HAVE_IO_H
+  #include <io.h>
 #endif
 #ifdef HAVE_NDIR_H
   #include <ndir.h>
@@ -88,25 +78,37 @@
 #ifndef _WIN32
   #include <sys/param.h>
   #include <sys/mount.h>
-  #define	_S_IFDIR S_IFDIR
+  #define _S_IFDIR S_IFDIR
 #endif
 
 /* MSDOS includes removed */
 
 #ifdef _WIN32
+  #define DIRSEP  "/"
   #define mkdir(dir, mode)    _mkdir(dir)
   #define strcasecmp _stricmp
-  int truncate(const char* path, off_t length); /* see util.c */
   #define ftruncate _chsize
-  /* note Windows build assumes Windows is configured as a non case sensitive filesystem */
+/* note Windows build assumes Windows is configured as a non case sensitive filesystem */
+  #ifndef STDIN_FILENO
+	#define STDIN_FILENO _fileno(stdin) 
+	#define STDOUT_FILENO _fileno(stdout) 
+	#define STDERR_FILENO _fileno(stderr)
+  #endif
 #else
+  #define DIRSEP "/\\:"
   #define CASE_SENSITIVE_FILESYSTEM 1
 #endif
 
-#include "cpmredir.h"
+#ifdef _WIN32
+int truncate(const char* path, off_t length); /* see util.c */
+#endif
 
+typedef unsigned char byte;	/* Must be exactly 8 bits */
+typedef unsigned short word;	/* Must be exactly 16 bits */
 typedef unsigned long dword;	/* Must be at least 32 bits, and
-                                   >= sizeof(int) */
+								   >= sizeof(int) */
+
+#include "cpmredir.h"
 
 #ifdef CPMDEF
   #define EXT
@@ -118,7 +120,7 @@ typedef unsigned long dword;	/* Must be at least 32 bits, and
 
 /* The 16 directories to which the 16 CP/M drives are mapped */
 
-EXT char redir_drive_prefix[16][CPM_MAXPATH]; 
+EXT char redir_drive_prefix[16][CPM_MAXPATH];
 
 /* Current drive and user */
 
@@ -146,16 +148,14 @@ EXT cpm_word redir_ro_drives INIT(0);
 #undef EXT
 #undef INIT
 
-
-
 /* Convert FCB to a Unix filename, returning 1 if it's ambiguous */
-int redir_fcb2unix(cpm_byte *fcb, char *fname);
+int redir_fcb2unix(cpm_byte* fcb, char* fname);
 
 /* Open FCB, set file attributes */
-int redir_ofile(cpm_byte * fcb, char *s);
+int redir_ofile(cpm_byte* fcb, char* s);
 
 /* Check that the FCB we have is valid */
-int redir_verify_fcb(cpm_byte *fcb);
+int redir_verify_fcb(cpm_byte* fcb);
 
 #ifndef O_BINARY	/* Necessary in DOS, not present in Linux */
 #define O_BINARY 0
@@ -163,43 +163,67 @@ int redir_verify_fcb(cpm_byte *fcb);
 
 /* Facilities for debug tracing */
 
-
 long zxlseek(int fd, long offset, int wh);
 
-#ifdef DEBUG
-	// long zxlseek(int fd, long offset, int wh);
-	void redir_Msg(char *s, ...);
-	void redir_showfcb(cpm_byte *fcb);
-#else
-	// #define zxlseek lseek
-	/* Warning: This is a GCC extension */
-	#define redir_Msg(x, ...)
-	#define redir_showfcb(x)
+#ifdef _WIN32
+char* GetErrorStr(DWORD);
 #endif
 
+#ifdef DEBUG
+// long zxlseek(int fd, long offset, int wh);
+// void redir_Msg(char *s, ...);
+void DbgMsg(const char* file, int line, const char* func, char* s, ...);
+void redir_showfcb(cpm_byte* fcb);
+#else
+// #define zxlseek lseek
+/* Warning: This is a GCC extension */
+// #define redir_Msg(x, ...)
+#define redir_showfcb(x)
+#endif
 
+#ifdef DEBUG
+#define FCBENT(fcb)											\
+	{															\
+		char fname[CPM_MAXPATH] = "";							\
+		redir_fcb2unix(fcb, fname);								\
+		DBGMSGV("entry w/ FCB @ 0x%04X, filename:'%s'\n", fcb-RAM, fname);	\
+	}
+
+#define FCBRET(rc)									\
+	{													\
+		DBGMSGV("returning 0x%04X\n", rc);	\
+		return rc;										\
+	}
+
+#define DBGMSGV(s, ...) DbgMsg(__FILE__, __LINE__, __func__, s, __VA_ARGS__)
+#define DBGMSG(s) DbgMsg(__FILE__, __LINE__, __func__, s)
+#else
+#define FCBENT(fcb)
+#define FCBRET(rc) return rc;
+#define DBGMSGV(s, ...)
+#define DBGMSG(s)
+#endif
 
 /* Get the "sequential access" file pointer out of an FCB */
 
-long redir_get_fcb_pos(cpm_byte *fcb);
+long redir_get_fcb_pos(cpm_byte* fcb);
 
 /* Write "sequential access" pointer to FCB */
 
-void redir_put_fcb_pos(cpm_byte *fcb, long npos);
+void redir_put_fcb_pos(cpm_byte* fcb, long npos);
 
 /* Convert time_t to CP/M day count/hours/minutes */
 dword redir_cpmtime(time_t t);
 /* And back */
-time_t redir_unixtime(cpm_byte *c);
-
+time_t redir_unixtime(cpm_byte* c);
 
 /* Functions to access 24-bit & 32-bit words in memory. These are always
   little-endian. */
 
-void  redir_wr24(cpm_byte *addr, dword v);
-void  redir_wr32(cpm_byte *addr, dword v);
-dword redir_rd24(cpm_byte *addr);
-dword redir_rd32(cpm_byte *addr);
+void  redir_wr24(cpm_byte* addr, dword v);
+void  redir_wr32(cpm_byte* addr, dword v);
+dword redir_rd24(cpm_byte* addr);
+dword redir_rd32(cpm_byte* addr);
 
 /* If you have 64-bit file handles, you'll need to write separate wrhandle()
   and rdhandle() routines */
@@ -209,22 +233,21 @@ dword redir_rd32(cpm_byte *addr);
 /* Mark a drive as logged in */
 
 void redir_log_drv(cpm_byte drv);
-void redir_log_fcb(cpm_byte *fcb);
+void redir_log_fcb(cpm_byte* fcb);
 
 /* Check if a drive is software read-only */
 
 int  redir_ro_drv(cpm_byte drv);
-int  redir_ro_fcb(cpm_byte *fcb);
+int  redir_ro_fcb(cpm_byte* fcb);
 
 /* Translate errno to a CP/M error */
 
 cpm_word redir_xlt_err(void);
 
 /* Get disc label */
-cpm_word redir_get_label(cpm_byte drv, char *pattern);
+cpm_word redir_get_label(cpm_byte drv, char* pattern);
 
-
-/* DRDOS set/get access rights - no-ops under MSDOS and Unix: 
+/* DRDOS set/get access rights - no-ops under MSDOS and Unix:
  *
  * CP/M password mode -> DRDOS password mode */
 cpm_word redir_drdos_pwmode(cpm_byte b);
@@ -233,17 +256,19 @@ cpm_word redir_drdos_pwmode(cpm_byte b);
 cpm_byte redir_cpm_pwmode(cpm_word w);
 
 /* Get DRDOS access rights for a file */
-cpm_word redir_drdos_get_rights(char *path);
+cpm_word redir_drdos_get_rights(char* path);
 
 /* Set DRDOS access rights and/or password */
-cpm_word redir_drdos_put_rights(char *path, cpm_byte *dma, cpm_word rights);
+cpm_word redir_drdos_put_rights(char* path, cpm_byte* dma, cpm_word rights);
 
 /* Was the last error caused by invalid password? */
 cpm_word redir_password_error(void);
 
 /* Append password to filename (FILE.TYP -> FILE.TYP;PASSWORD) */
-void redir_password_append(char *s, cpm_byte *dma);
+void redir_password_append(char* s, cpm_byte* dma);
 
-void releaseFile(char *fname);
-int trackFile(char *fname, void *fcb, int fd);
+void releaseFile(char* fname);
+int trackFile(char* fname, void* fcb, int fd);
 #define releaseFCB(fcb)  trackFile(NULL, fcb, -1)
+
+extern byte RAM[65536]; /* The Z80's address space */

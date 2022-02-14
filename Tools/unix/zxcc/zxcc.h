@@ -15,16 +15,22 @@
 
 #ifndef CPMDIR80
   #ifdef _WIN32
-    #define CPMDIR80    "d:/local/lib/cpm/"
+	#define CPMDIR80    "d:/local/lib/cpm/"
   #else
-    #define CPMDIR80    "/usr/local/lib/cpm/"
+	#define CPMDIR80    "/usr/local/lib/cpm/"
   #endif
 #endif
 
 /* the default sub directories trailing / is required */
-#define BIN80   "bin80/"
-#define LIB80   "lib80/"
-#define INC80   "include80/"
+#ifdef _WIN32
+  #define BIN80   "bin80\\"
+  #define LIB80   "lib80\\"
+  #define INC80   "include80\\"
+#else
+  #define BIN80   "bin80/"
+  #define LIB80   "lib80/"
+  #define INC80   "include80/"
+#endif
 
 #ifndef BINDIR80
   #define BINDIR80 CPMDIR80 BIN80
@@ -58,11 +64,12 @@ extern char incdir80[];
 #ifdef _WIN32
   #include <windows.h>
   #include <io.h>
+  #include <conio.h>
   #define strcasecmp _stricmp
   #ifndef STDIN_FILENO
-    #define STDIN_FILENO _fileno(stdin) 
-    #define STDOUT_FILENO _fileno(stdout) 
-    #define STDERR_FILENO _fileno(stderr)
+	#define STDIN_FILENO _fileno(stdin) 
+	#define STDOUT_FILENO _fileno(stdout) 
+	#define STDERR_FILENO _fileno(stderr)
   #endif
 #else
   #include <termios.h>
@@ -77,7 +84,7 @@ extern char incdir80[];
 #ifndef _WIN32
   #include <sys/param.h>
   #include <sys/mount.h>
-  #define	_S_IFDIR S_IFDIR
+  #define _S_IFDIR S_IFDIR
 #endif
 
 /* Library includes */
@@ -90,28 +97,37 @@ extern char incdir80[];
   #include "cpmgsx.h"
 #endif
 
-#include "cpmredir.h"	/* BDOS disc simulation */
-
 typedef unsigned char byte;	/* Must be exactly 8 bits */
 typedef unsigned short word;	/* Must be exactly 16 bits */
+
+#include "cpmredir.h"	/* BDOS disc simulation */
 
 /* Prototypes */
 
 void ed_fe  (byte *a, byte *b, byte *c, byte *d, byte *e, byte *f,
-             byte *h, byte *l, word *pc, word *ix, word *iy);
+			 byte *h, byte *l, word *pc, word *ix, word *iy);
 void cpmbdos(byte *a, byte *b, byte *c, byte *d, byte *e, byte *f, 
-             byte *h, byte *l, word *pc, word *ix, word *iy);
+			 byte *h, byte *l, word *pc, word *ix, word *iy);
 void cpmbios(byte *a, byte *b, byte *c, byte *d, byte *e, byte *f, 
-             byte *h, byte *l, word *pc, word *ix, word *iy);
+			 byte *h, byte *l, word *pc, word *ix, word *iy);
 void dump_regs(FILE *fp, byte a, byte b, byte c, byte d, byte e, byte f, 
-             byte h, byte l, word pc, word ix, word iy);
+			   byte h, byte l, word pc, word ix, word iy);
 void Msg(char *s, ...);
+void DbgMsg(const char *file, int line, const char *func, char *s, ...);
 int zxcc_term(void);
 void zxcc_exit(int code);
 
-byte cin(void);
-void cout(byte);
-int cstat(void);
+void term_init(void);
+void term_reset(void);
+
+#ifdef DEBUG
+  #define DBGMSGV(s, ...) DbgMsg(__FILE__, __LINE__, __func__, s, __VA_ARGS__)
+  #define DBGMSG(s) DbgMsg(__FILE__, __LINE__, __func__, s)
+
+#else
+  #define DBGMSGV(s, ...)
+  #define DBGMSG(s)
+#endif
 
 /* Global variables */
 
@@ -123,4 +139,3 @@ extern byte RAM[65536]; /* The Z80's address space */
 /* Z80 CPU emulation */
 
 #include "z80.h"
-
