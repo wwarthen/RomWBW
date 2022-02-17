@@ -210,6 +210,13 @@ static const struct matchtab s_matchtab_z80[] = {
 	{ "MULTU A,a", "FD.ED.F9.d0.", 4, 0 },
 	{ "OUTW (C),HL", "ED.BF.", 4, 0 },
 	{ "RETIL", "ED.55.", 4, 0 },
+	{ "EI a", "ED.7F.d0.", 4, 0 },
+	{ "SC a", "ED.71.e0", 4, 0 },
+	{ "OTIRW", "ED.93.", 4, 0 },
+	{ "LDUD A,(HL)", "ED.86.", 4, 0 },
+	{ "LDUP A,(HL)", "ED.96.", 4, 0 },
+	{ "ADD HL,A", "ED.6D.", 4, 0 },
+	{ "INW HL,(C)", "ED.B7.", 4, 0 },
 	{ NULL, NULL },
 };
 
