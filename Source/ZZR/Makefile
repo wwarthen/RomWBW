@@ -21,8 +21,8 @@ include $(TOOLS)/Makefile.inc
 DIFFPATH = $(DIFFTO)/Binary
 
 zzrromchk:
-	[ `stat -c%s $(ZZRROM)` = $(ZZRROMSIZE) ]
-
+	[ `wc -c $(ZZRROM) | awk '{print $$1}'` = $(ZZRROMSIZE) ]
+	
 $(HD1024ZZRPREFIX): zzrromchk
 	cat zzr_cfldr.bin zzr_ptbl.bin zzr_fill_1.bin zzr_mon.bin zzr_fill_2.bin $(ZZRROM) zzr_fill_3.bin >$@
 
