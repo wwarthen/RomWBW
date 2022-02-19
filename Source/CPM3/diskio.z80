@@ -355,6 +355,13 @@ dpb$hdnew:	; 8MB Hard Disk Drive (new format)
 ;		called for first time initialization.
 
 dsk$init:
+	; TODO: Handle disabled RAM/ROM disk better.
+	; If RAM or ROM disk are disabled, below will still
+	; try to adjust the DPB based on RAM bank calculations.
+	; It should not matter because the DPB should never be
+	; used.  It would be better to get RAMD0/ROMD0 and
+	; RAMDN/ROMDN from the HCB and use those to calc the
+	; DPB adjustment.  If DN-D0=0, bypass adjustment.
 	ld	b,0FAh			; HBIOS Peek Function
 	ld	a,(@hbbio)		; HBIOS bank id
 	ld	d,a			; ... goes in D
