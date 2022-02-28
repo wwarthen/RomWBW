@@ -16,7 +16,7 @@ HD512PREFIX =
 HD1024PREFIX = hd1024_prefix.dat
 
 OBJECTS = $(FDIMGS)
-OBJECTS += $(HD512IMGS) hd512_combo.img $(HD512PREFIX)
+OBJECTS += $(HD512IMGS) hd512_dos65.img hd512_combo.img $(HD512PREFIX)
 OBJECTS += $(HD1024IMGS) hd1024_combo.img $(HD1024PREFIX)
 
 OTHERS = blank144 blankhd512 blankhd1024
@@ -71,7 +71,7 @@ blankhd1024:
 	@sys= ; \
 	case $@ in \
 		(*cpm22*) sys=../CPM22/cpm_wbw.sys;; \
-		(*zsdos* | *nzcom*) sys=../ZSDOS/zsys_wbw.sys;; \
+		(*zsdos* | *nzcom* | *dos65*) sys=../ZSDOS/zsys_wbw.sys;; \
 		(*cpm3*) sys=../CPM3/cpmldr.sys;; \
 		(*zpm3*) sys=../ZPM3/zpmldr.sys;; \
 	esac ; \
