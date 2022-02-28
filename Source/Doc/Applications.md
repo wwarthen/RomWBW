@@ -168,6 +168,11 @@ This command is particularly sensitive to being matched to the
 appropriate version of the RomWBW ROM you are using. Be very careful
 to keep all copies of `ASSIGN.COM` up to date with your ROM.
 
+Additionally, the `ASSIGN` command must be able to adjust to CP/M 2.2
+vs. CP/M 3.  If you utilize an RSX that modifies the BDOS version
+returned, you are likely to have serious problems.  In this case, be
+sure to use `ASSIGN` prior to loading the RSX or after it is unloaded.
+
 ## Etymology
 
 The `ASSIGN` command is an original product and the source code is

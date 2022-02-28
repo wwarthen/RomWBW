@@ -112,6 +112,9 @@ CPM=$(TOOLS)/cpm/bin80/
 %.rel: %.mac
 	$(ZXCC) $(CPM)/M80 -=$(basename $<)
 
+%.com: %.rel
+	$(ZXCC) $(CPM)/L80 -$(basename $<),$(basename $<).com/n/e
+
 ifeq ($(UNAME), Linux)
 %.eeprom: %.spin
 	$(BSTC) -e -l $<

@@ -22,12 +22,14 @@
 ;   2016-04-08 [WBW] Determine key memory addresses dynamically
 ;   2019-08-07 [WBW] Fixed DPB selection error
 ;   2019-11-17 [WBW] Added preliminary CP/M 3 support
-;   2019-12-24 [WBW] Fixed location of BIOS save area\
+;   2019-12-24 [WBW] Fixed location of BIOS save area
 ;   2020-04-29 [WBW] Updated for larger DPH (16 -> 20 bytes)
 ;   2020-05-06 [WBW] Add patch level to version compare
 ;   2020-05-10 [WBW] Set media change flag in XDPH for CP/M 3
 ;   2020-05-12 [WBW] Back out media change flag
 ;   2021-12-06 [WBW] Fix inverted ROM/RAM DPB mapping in buffer alloc
+;   2022-02-28 [WBW] Use HBIOS to swap banks under CP/M 3
+;                    Use CPM3 BDOS direct BIOS call to get DRVTBL adr
 ;_______________________________________________________________________________
 ;
 ; ToDo:
@@ -43,6 +45,7 @@ stksiz	.equ	$40		; Working stack size
 ;
 restart	.equ	$0000		; CP/M restart vector
 bdos	.equ	$0005		; BDOS invocation vector
+bnksel	.equ	$FFF3		; HBIOS bank select vector
 ;
 stamp	.equ	$40		; loc of RomWBW CBIOS zero page stamp
 ;
@@ -108,8 +111,11 @@ init:
 	ld	c,$0C		; function number
 	call	bdos		; do it, HL := version
 	ld	(cpmver),hl	; save it
-	ld	a,l		; low byte
-	cp	$30		; CP/M 3.0?
+	;push	hl		; *debug*
+	;pop	bc		; *debug*
+	;call	prthexword	; *debug*
+	;ld	a,l		; low byte
+	;cp	$30		; CP/M 3.0?
 ;
 	; get location of config data and verify integrity
 	ld	hl,stamp	; HL := adr or RomWBW zero page stamp
@@ -231,18 +237,24 @@ initx:
 ; CP/M 3 initialization
 ;
 initcpm3:
-	ld	hl,(bioloc)
-	ld	de,22*3		; offset of DRVTBL func
-	add	hl,de		; HL := DRVTBL func
-	call	jphl		; do it, HL := DRVTBL adr
-	ld	(drvtbl),hl	; save it
+	ld	a,22		; XBIOS DRVTBL function
+	call	xbios		; Invoke XBIOS
+	ld	(drvtbl),hl	; save DRVTBL address
+;
+; The CP/M 3 drvtbl is in common memory, but the XDPHs are not.
+; So, here we temporarily swap the bank to the CP/M 3 system
+; bank.  We cannot use the CP/M Direct BIOS call because it
+; explicitly blocks use of SELMEM, so we are foreced to use
+; HBIOS call.  The CP/M 3 system bank is always the HBIOS
+; user bank.
 ;
 	; switch to sysbnk
-	ld	hl,(bioloc)
-	ld	de,27*3		; offset of SELMEM func
-	add	hl,de		; HL := SELMEM func
-	ld	a,0		; bank 0 is system bank
-	call	jphl
+	ld	a,($FFE0)	; get current bank
+	push	af		; save it
+	ld	bc,$F8F2	; HBIOS Get Bank Info
+	rst	08		; call HBIOS, E=User Bank
+	ld	a,e		; HBIOS User Bank
+	call	bnksel		; HBIOS BNKSEL
 ;
 	; copy CP/M 3 drvtbl to drvmap working copy
 	ld	hl,(drvtbl)	; get drive table in HL
@@ -278,11 +290,8 @@ initc4:
 	djnz	initc2
 ;
 	; switch back to tpabnk
-	ld	hl,(bioloc)
-	ld	de,27*3		; offset of SELMEM func
-	add	hl,de		; HL := SELMEM func
-	ld	a,1		; bank 1 is tpa bank
-	call	jphl
+	pop	af		; recover prev bank
+	call	bnksel		; HBIOS BNKSEL
 ;
  	; return success
 	xor	a		; signal success
@@ -397,6 +406,15 @@ usage:
 	call	crlf		; formatting
 	ld	de,msgban1	; point to version message part 1
 	call	prtstr		; print it
+	ld	de,msg22	; assume CP/M 2.2
+	ld	a,(cpmver)	; low byte of ver
+	cp	$30		; CP/M 3.0?
+	jp	c,usage1	; if not, jump ahead
+	ld	de,msg3		; CP/M 3
+usage1:
+	call	prtstr
+	ld	de,msbban2	; next portion of banner
+	call	prtstr
 	ld	a,(unamod)	; get UNA flag
 	or	a		; set flags
 	ld	de,msghb	; point to HBIOS mode message
@@ -404,7 +422,7 @@ usage:
 	ld	de,msgub	; point to UBIOS mode message
 	call	nz,prtstr	; if UNA, say so
 	call	crlf		; formatting
-	ld	de,msgban2	; point to version message part 2
+	ld	de,msgban3	; point to version message part 2
 	call	prtstr		; print it
 	call	crlf2		; blank line
 	ld	de,msguse	; point to usage message
@@ -728,13 +746,13 @@ makdph3:
 ;
 ;
 instcpm3:
-;
-	; switch to sysbnk
-	ld	hl,(bioloc)
-	ld	de,27*3		; offset of SELMEM func
-	add	hl,de		; HL := SELMEM func
-	ld	a,0		; bank 0 is system bank
-	call	jphl
+	; swicth to sysbnk
+	ld	a,($FFE0)	; get current bank
+	push	af		; save it
+	ld	bc,$F8F2	; HBIOS Get Bank Info
+	rst	08		; call HBIOS, E=User Bank
+	ld	a,e		; HBIOS User Bank
+	call	$FFF3		; HBIOS BNKSEL
 ;
 	; copy drvmap working copy to CP/M 3 drvtbl
 	ld	hl,(drvtbl)	; get drvtbl address
@@ -802,11 +820,8 @@ instc3:
 	djnz	instc1
 ;
 	; switch back to tpabnk
-	ld	hl,(bioloc)
-	ld	de,27*3		; offset of SELMEM func
-	add	hl,de		; HL := SELMEM func
-	ld	a,1		; bank 1 is tpa bank
-	call	jphl
+	pop	af		; recover prev bank
+	call	$FFF3		; HBIOS BNKSEL
 ;
 	; set SCB drive door open flag
 	ld	a,$54		; SCB drive door opened flag
@@ -1733,6 +1748,23 @@ cbios:
 	call	addhl		; determine specific function address
 	jp	(hl)		; invoke CBIOS
 ;
+; Routine to call CPM3 BIOS routines via BDOS
+; function 50.
+;
+xbios:
+	ld	(biofnc),a	; set BIOS function
+	ld	c,50		; direct BIOS call function
+	ld	(dereg),de	; set DE parm
+	ld	de,biospb	; BIOS parameter block
+	jp	bdos		; invoke BDOS
+;
+biospb:
+biofnc	.db	0		; BIOS function
+areg	.db	0		; A register
+bcreg	.dw	0		; BC register
+dereg	.dw	0		; DE register
+hlreg	.dw	0		; HL register
+;
 ; Add the value in A to HL (HL := HL + A)
 ;
 addhl:
@@ -1911,10 +1943,13 @@ stack	.equ	$		; stack top
 ; Messages
 ;
 indent	.db	"   ",0
-msgban1	.db	"ASSIGN v1.4a for RomWBW CP/M, 6-Dec-2021",0
+msgban1	.db	"ASSIGN v1.5 for RomWBW CP/M ",0
+msg22	.db	"2.2",0
+msg3	.db	"3",0
+msbban2	.db	", 28-Feb-2022",0
 msghb	.db	" (HBIOS Mode)",0
 msgub	.db	" (UBIOS Mode)",0
-msgban2	.db	"Copyright 2021, Wayne Warthen, GNU GPL v3",0
+msgban3	.db	"Copyright 2021, Wayne Warthen, GNU GPL v3",0
 msguse	.db	"Usage: ASSIGN D:[=[{D:|<device>[<unitnum>]:[<slicenum>]}]][,...]",13,10
 	.db	"  ex. ASSIGN           (display all active assignments)",13,10
 	.db	"      ASSIGN /?        (display version and usage)",13,10

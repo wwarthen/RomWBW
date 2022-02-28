@@ -20,6 +20,7 @@ pushd rzsz && call Build || exit /b & popd
 pushd vdctest && call Build || exit /b & popd
 pushd kbdtest && call Build || exit /b & popd
 pushd ps2info && call Build || exit /b & popd
+pushd 2piotst && call Build || exit /b & popd
 
 goto :eof
 
