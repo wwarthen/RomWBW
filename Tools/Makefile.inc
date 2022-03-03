@@ -97,10 +97,10 @@ CPM=$(TOOLS)/cpm/bin80/
 %.rel: %.z80
 	$(ZXCC) $(CPM)/Z80ASM -$(basename $<)/MF
 
-%.hex: %.z80
-	$(ZXCC) $(CPM)/Z80ASM -$(basename $<)/HF
+#%.hex: %.z80
+#	$(ZXCC) $(CPM)/Z80ASM -$(basename $<)/HF
 
-%.hex: %.180
+%.hex: %.z80
 	$(ZXCC) $(CPM)/SLR180 -$(basename $<)/HF
 
 %.rel: %.azm
