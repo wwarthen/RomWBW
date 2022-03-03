@@ -97,6 +97,8 @@
 
 #ifdef FILETRACKER
 
+#include "cpmint.h"
+
 typedef struct _track {
 	struct _track* next;
 	int handle;
@@ -115,10 +117,21 @@ static track_t* rmHandle(track_t* s) {
 
 void releaseFile(char* fname) {
 	track_t* s = (track_t*)&openFiles;
+	DBGMSGV("releaseFile: \"%s\"\n", fname);
 	while (s->next)
 		if (strcmp(s->next->fname, fname) == 0) {
-			close(s->next->handle);
-			Msg("releaseFile closed file \"%s\"\n", s->next->fname);
+			DBGMSGV("  closing file #%i: \"%s\"\n", s->next->handle, s->next->fname);
+#ifdef _WIN32
+			{
+				BOOL b;
+				b = CloseHandle((HANDLE)s->next->handle);
+				if (!b)
+					DBGMSGV("  failed to close file #%i (Error=%lu): %s\n", s->next->handle, GetLastError(), GetErrorStr(GetLastError()));
+			}
+#else
+			if (close(s->next->handle))
+				DBGMSGV("  failed to close file #%i (errno=%lu): %s\n", s->next->handle, errno, strerror(errno));
+#endif
 			s->next = rmHandle(s->next);
 		}
 		else
@@ -127,14 +140,24 @@ void releaseFile(char* fname) {
 
 int trackFile(char* fname, void* fcb, int fd) {
 	track_t* s = (track_t*)&openFiles;
-	Msg("trackFile: \"%s\", FCB=0x%X, Handle=%i\n", fname, (byte*)fcb - RAM, fd);
+	DBGMSGV("trackFile: \"%s\", FCB=0x%X, Handle=%i\n", fname, (byte*)fcb - RAM, fd);
 	while (s->next) {	/* find any existing fcb or fd */
 		if (s->next->fcb == fcb || s->next->handle == fd) {
 			if (s->next->handle != fd) {
-				close(s->next->handle);
-				Msg("  closed file \"%s\", Handle=%i\n", s->next->fname, s->next->handle);
+				DBGMSGV("  closing file #%i: \"%s\"\n", s->next->handle, s->next->fname);
+#ifdef _WIN32
+				{
+					BOOL b;
+					b = CloseHandle((HANDLE)s->next->handle);
+					if (!b)
+						DBGMSGV("  failed to close file #%i (Error=%lu): %s\n", s->next->handle, GetLastError(), GetErrorStr(GetLastError()));
+				}
+#else
+				if (close(s->next->handle))
+					DBGMSGV("  failed to close file #%i (errno=%lu): %s\n", s->next->handle, errno, strerror(errno));
+#endif
 			}
-			Msg("  released file \"%s\", Handle=%i\n", s->next->fname, s->next->handle);
+			DBGMSGV("  released file \"%s\", Handle=%i\n", s->next->fname, s->next->handle);
 			s->next = rmHandle(s->next);	/* release the tracker */
 		}
 		else

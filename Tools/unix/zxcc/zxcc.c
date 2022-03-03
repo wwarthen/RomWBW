@@ -306,6 +306,12 @@ int main(int ac, char** av)
 		fprintf(stderr, "Could not initialise CPMREDIR library\n");
 		zxcc_exit(1);
 	}
+	
+#ifdef FILETRACKER
+	DBGMSG("File tracking is ENABLED\n");
+#else
+	DBGMSG("File tracking is DISABLED\n");
+#endif
 
 	/* allow environment variables to override default locations */
 	/* two options are supported, explicit overrides for each directory

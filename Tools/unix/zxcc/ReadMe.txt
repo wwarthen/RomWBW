@@ -84,3 +84,10 @@ January 9, 2022
 
 --WBW 9:34 AM 2/10/2022
 
+- Added a call to trackFile in fcb_close.  I think it was always
+  supposed to be there.  Was not causing any real problems other
+  than superfluous attempts by releaseFile to close files that
+  were already closed.
+  
+--WBW 3:58 PM 3/2/2022
+

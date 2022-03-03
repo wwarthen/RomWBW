@@ -204,6 +204,8 @@ cpm_word fcb_close(cpm_byte* fcb)
 	}
 #endif
 
+	trackFile(NULL, fcb, handle);
+
 	FCBRET(0);
 }
 
