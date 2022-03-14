@@ -16,6 +16,14 @@ TRUE		.EQU	~FALSE
 SPD_FIXED	.EQU	0		; PLATFORM SPEED FIXED AND CANNOT CHANGE SPEEDS
 SPD_HILO	.EQU	1		; PLATFORM CAN CHANGE BETWEEN TWO SPEEDS
 ;
+; INTERRUPT TESTING CONFIGURATION
+; N.B., INTERRUPT TESTING REQUIRES ROMWBW!!!
+; ASSUMES SYSTEM IS ALREADY CONFIGURED FOR IM2 OPERATION
+; INTIDX MUST BE SET TO AN UNUSED INTERRUPT SLOT
+;		
+INTENABLE	.EQU	TRUE		; ENABLE INT TESTING
+INTIDX		.EQU	1		; INT VECTOR INDEX
+;
 ; SYSTEM SPEED CHARACTERISTICS
 ;
 SPD_UNSUP	.EQU	0		; PLATFORM CAN CHANGE SPEEDS BUT IS UNSUPPORTED
@@ -56,14 +64,20 @@ DMA_RESET			.equ	$c3
 ;DMA_RESET_PORT_B_TIMING	.equ	$cb
 ;DMA_CONTINUE			.equ	$d3
 ;DMA_DISABLE_INTERUPTS		.equ	$af
-;DMA_ENABLE_INTERUPTS		.equ	$ab
+DMA_ENABLE_INTERUPTS		.equ	$ab
 ;DMA_RESET_DISABLE_INTERUPTS	.equ 	$a3
 ;DMA_ENABLE_AFTER_RETI		.equ	$b7
-;DMA_REINIT_STATUS_BYTE		.equ	$8b
+DMA_REINIT_STATUS_BYTE		.equ	$8b
 ;
 DMA_RDY				.EQU	%00001000
 DMA_FORCE			.EQU	0
-
+;
+bf_sysint			.equ	$FC	; INT function
+;		
+bf_sysintinfo			.equ	$00	; INT INFO subfunction
+bf_sysintget			.equ	$10	; INT GET subfunction
+bf_sysintset			.equ	$20	; INT SET subfunction
+;
 #IF (DMA_USEHS & (DMAMODE=DMAMODE_MBC))
 #IF (CPUSPDDEF=SPD_HIGH)
 #DEFINE DMAIOSLO LD A,(HB_RTCVAL) \ AND %11110111 \ OUT (RTCIO),A 
@@ -100,66 +114,128 @@ MAIN:
 	LD	SP,STACK		; STACK
 ;
 	call	PRTSTRD			; WELCOME
-	.db	"DMA MONITOR\n\r$"
+	.db	"\n\rDMA Monitor V2\n\r$"
+;
+#IF (INTENABLE)
+;
+	; Install interrupt handler in upper mem
+	ld	hl,reladr
+	ld	de,$A000
+	ld	bc,hsiz
+	ldir
+;
+	; Install interrupt vector (RomWBW specific!!!)
+	ld	hl,int		; pointer to my interrupt handler
+	ld	b,bf_sysint
+	ld	c,bf_sysintset	; set new vector
+	ld	e,INTIDX	; vector idx
+	di
+	rst	08		; do it
+	ld	(orgvec),hl	; save the original vector
+	ei			; interrupts back on
+;
+#ENDIF
 ;
 MENULP:	CALL	DISPM			; DISPLAY MENU
 	CALL	CIN			; GET SELECTION
+	; Force upper case
+	CP	'a'			; < 'a'
+	JR	C,MENULP1		; IF SO, JUST CONTINUE
+	CP	'z'+1			; > 'z'
+	JR	NC,MENULP1		; IS SO, JUST CONTINUE
+	SUB	'a'-'A'			; CONVERT TO UPPER
 ;
+MENULP1:
+	CALL	NEWLINE
 	CP	'D'
 	JP	Z,DMATST_D		; DUMP REGISTERS
 	CP	'I'
 	JP	Z,DMATST_I		; INITIALIZE
+#IF (INTENABLE)
+	CP	'T'
+	JP	Z,DMATST_T		; TOGGLE INT USAGE
+#ENDIF
 	CP	'M'
-	JP	Z,DMATST_M		; MEMORY MOVE
+	JP	Z,DMATST_M		; MEMORY COPY
+	CP	'N'
+	JP	Z,DMATST_N		; MEMORY COPY ITER
 	CP	'0'
 	JP	Z,DMATST_01
 	CP	'1'
-	JR	Z,DMATST_01
+	JP	Z,DMATST_01
 	CP	'R'
 	JP	Z,DMATST_R		; TOGGLE RESET
 	CP	'Y'
 	JP	Z,DMATST_Y		; TOGGLE READY
 	CP	'X'
-	JR	Z,DMABYE		; EXIT
+	JP	Z,DMABYE		; EXIT
 ;
 	JR	MENULP
 ;
-DMABYE:	LD	SP,(SAVSTK)		; RESTORE CP/M STACK
+DMABYE:
+#IF (INTENABLE)
+	; Deinstall interrupt vector
+	ld	hl,(orgvec)	; original vector
+	ld	b,bf_sysint
+	ld	c,bf_sysintset	; set new vector
+	ld	e,INTIDX	; vector idx
+	di
+	rst	08		; do it
+	ei			; interrupts back on
+#ENDIF
+;
+	LD	SP,(SAVSTK)		; RESTORE CP/M STACK
 	RET
 ;
 DMATST_I:
 	call	PRTSTRD
-	.db	"\n\rSTART DMA_INIT\n\r$"
+	.db	"\n\rStart Initialization\n\r$"
 	CALL	DMA_INIT
 	JP	MENULP
 ;
+#IF (INTENABLE)
+;
+DMATST_T:
+	LD	A,(USEINT)
+	XOR	$FF
+	LD	(USEINT),A
+	JP	MENULP
+;
+#ENDIF
+;
 DMATST_M:
 	call	PRTSTRD
-	.db	"\n\rSTART DMAMemMove\n\r$"
-	CALL	DMAMemMove
+	.db	"\n\rPerforming Memory-Memory Copy Test\n\r$"
+	CALL	DMAMemTest
+	JP	MENULP
+;
+DMATST_N:
+	call	PRTSTRD
+	.db	"\n\rPerforming Iterative Memory-Memory Copy Test\n\r$"
+	CALL	DMAMemTestIter
 	JP	MENULP
 ;
 DMATST_01:
 	call	PRTSTRD
-	.db	"\n\rTOGGLE PORT\n\r$"
+	.db	"\n\rPerforming Port Selection Test\n\r$"
 	CALL	DMA_Port01
 	JP	MENULP
 ;
 DMATST_D:
 	call	PRTSTRD
-	.db	"\n\rSTART DMARegDump\n\r$"
+	.db	"\n\rDump Registers\n\r$"
 	CALL	DMARegDump
 	JP	MENULP
 ;
 DMATST_Y:
 	call	PRTSTRD
-	.db	"\n\rTEST READY\n\r$"
+	.db	"\n\rPerforming Ready Bit Test\n\r$"
 	CALL	DMA_ReadyT
 	JP	MENULP
 ;
 DMATST_R:
 	call	PRTSTRD
-	.db	"\n\rRESET\n\r$"
+	.db	"\n\rPerforming Reset\n\r$"
 ;	CALL	
 	JP	MENULP
 ;==================================================================================================
@@ -167,19 +243,39 @@ DMATST_R:
 ;==================================================================================================
 ;
 DISPM:	call	PRTSTRD
-	.db	"\n\rDMA DEVICE: $"
+	.db	"\n\rDMA Device: $"
 	LD	C,DMAMODE		; DISPLAY
 	LD	A,00000111B		; TARGET
 	LD	DE,DMA_DEV_STR		; DEVICE
 	CALL	PRTIDXMSK
-	CALL	NEWLINE
 ;
 	call	PRTSTRD
-	.db	"DMA PORT: $"
+	.db	", Port=0x$"
 	LD	A,DMABASE		; DISPLAY
 	CALL	PRTHEXBYTE		; DMA PORT
-	CALL	NEWLINE
 ;
+#IF (INTENABLE)
+;
+	call	PRTSTRD
+	.db	"\n\rInterrupts=$"
+	LD	A,(USEINT)
+	OR	A
+	LD	A,'Y'
+	JR	NZ,DISPM_INT
+	LD	A,'N'
+	JR	DISPM_INT
+;
+DISPM_INT:
+	CALL	COUT
+;
+	call	PRTSTRD
+	.db	", Interrupt Count=$"
+	ld	hl,(counter)
+	call	PRTDEC
+;
+#ENDIF
+;
+	call	NEWLINE
 	LD	HL,MENU_OPT		; DISPLAY
 	CALL	PRTSTR			; MENU OPTIONS
 ;
@@ -206,7 +302,7 @@ DMA_INIT:
 	jr	nz,DMA_NOTFOUND
 ;
 	call	PRTSTRD
-	.db	" DMA FOUND\n\r$"
+	.db	" DMA Found\n\r$"
 ;
 	ld	hl,DMACode		; program the
 	ld	b,DMACode_Len		; dma command
@@ -224,7 +320,7 @@ DMA_EXIT:
 DMA_NOTFOUND:
 	push	af
 	call	PRTSTRD
-	.db	" NOT PRESENT$"
+	.db	" NOT Present$"
 	pop	af
 	jr	DMA_EXIT
 ;
@@ -242,38 +338,41 @@ DMA_DEV_STR:
 MENU_OPT:
 	.TEXT	"\n\r"
 	.TEXT	"I) Initialize DMA\n\r"
-	.TEXT	"M) Memory to Memory test\n\r"
-	.TEXT	"0) DMA Port select test\n\r"
-	.TEXT	"1) DMA Latch Port select test\n\r"
-	.TEXT	"Y) Ready bit test\n\r"
+	.TEXT	"T) Toggle Interrupt Usage\n\r"
+	.TEXT	"M) Test Memory-Memory Copy\n\r"
+	.TEXT	"N) Test Memory-Memory Copy Iteratively\n\r"
+	.TEXT	"0) Test DMA Port Selection\n\r"
+	.TEXT	"1) Test DMA Latch Port Selection\n\r"
+	.TEXT	"Y) Test Ready Bit\n\r"
 	.TEXT	"X) Exit\n\r"
 
 	.TEXT	">$"
 ;
 ;==================================================================================================
-; TOGGLE A PORT ON AND OFF
+; PULSE PORT
 ;==================================================================================================
 ;
 DMA_Port01:
+	call	PRTSTRD
+	.db	"\r\nPulsing port 0x$"
 	sub	'0'			; Calculate
 	add	a,DMABASE		; Port to
+	call	PRTHEXBYTE
+	call	NEWLINE
 	ld	c,a			; toggle
-	ld	b,0
+	ld	b,$20			; loop counter
 portlp:	push	bc
-	call	PRTSTRD
-	.db	"\n\rON ...$"
-	call	PRTHEXWORD
+	call	PC_PERIOD
 	push	bc
 	ld	b,0
 	ld	a,0
 portlp1:out	(c),a
 	djnz	portlp1
 	pop	bc
-	call	PRTSTRD
-	.db	" OFF$"
 	call	delay	
 	pop	bc
 	djnz	portlp
+	call	NEWLINE
 	JP	MENULP
 ;
 delay:	push	bc
@@ -290,18 +389,23 @@ dlylp:	dec	bc
 ;==================================================================================================
 ;
 DMA_ReadyT:
+	call	NEWLINE
 	ld	c,DMABASE+1		; toggle
-	ld	b,0
+	ld	b,$20			; loop counter
 portlp2:push	bc
+	ld	a,b
+	call	PRTDECB
 	call	PRTSTRD
-	.db	"\n\rON ...$"
-	call	PRTHEXWORD
+	.db	": ON$"
+	call	delay
 	ld	a,$FF
 	ld	c,DMABASE+1
 	out	(c),a
 	call	PRTSTRD
-	.db	" OFF$"
+	.db	" -> OFF$"
 	call	delay
+	call	PRTSTRD
+	.db	"\r               \r$"
 	ld	c,DMABASE+1
 	ld	a,0
 	out	(c),a
@@ -332,8 +436,16 @@ DMAMemMove:
 	LD	HL,PROEND	; DMA COPY
 	LD	DE,$8000
 	LD	BC,4096-1
-	CALL	DMALDIR
-
+	LD	A,(USEINT)	; USE INTS?
+	OR	A		; TEST VALUE
+	JR	NZ,DMAMemMove1	; IF SO, DO SO
+	CALL	DMALDIR		; ELSE NORMAL DMA
+	JR	DMAMemMove2
+;
+DMAMemMove1:
+	CALL	DMALDIRINT	; DMA W/ INTERRUPTS
+;
+DMAMemMove2:
 ;
 ;	LD	HL,$8400	; PLANT
 ;	LD	A,$00		; BAD
@@ -345,15 +457,57 @@ DMAMemMove:
 NXTCMP:	CPI
 	JP	PO,CMPOK
 	JR	Z,NXTCMP
-
-	call	PRTHEXWORD
+	RET			; RET W/ ZF CLEAR
+;
+CMPOK:
+	RET			; RET W/ ZF SET
+;
+;==================================================================================================
+; DMA MEMORY TEST
+;==================================================================================================
+;
+DMAMemTest:
+	call	DMAMemMove	; do a single memory copy
+	jr	z,DMAMemTestOK
+	jr	DMAMemTestFail
+;
+DMAMemTestOK:
 	call	PRTSTRD
-	.db	" TEST MEMORY MOVE FAILED\n\r$"
-	RET
-
-CMPOK:	call	PRTSTRD
-	.db	"TEST MEMORY MOVE SUCCEEDED\n\r$"
-	RET
+	.db	"\n\rMemory-Memory Test Passed\n\r$"
+	ret
+;
+DMAMemTestFail:
+	call	PRTSTRD
+	.db	"\n\rMemory-Memory Test Failed\n\r$"
+	ret
+;
+;==================================================================================================
+; DMA MEMORY MOVE ITERATIVE
+;==================================================================================================
+;
+DMAMemTestIter:
+	ld	b,$20		; loop counter
+	call	PRTSTRD
+	.db	"\n\rPerforming $"
+	ld	a,b
+	call	PRTDECB
+	call	PRTSTRD
+	.db	" iterations, '.'=OK, '*'=Fail\n\r$"
+DMAMemTestIterLoop:
+	push	bc		; save loop control
+	call	DMAMemMove	; do an iteration
+	jr	z,DMAMemTestIterOK
+	call	PC_ASTERISK	; signal failure
+	jr	DMAMemTestIterCont	; continue
+;
+DMAMemTestIterOK:
+	call	PC_PERIOD	; signal pass
+;
+DMAMemTestIterCont:
+	pop	bc
+	djnz	DMAMemTestIterLoop
+	call	NEWLINE
+	ret
 ;
 ;==================================================================================================
 ; DMA PROBE - WRITE TO ADDRESS REGISTER AND READ BACK
@@ -455,6 +609,62 @@ DMADest		.dw	0 		; R4-Port B, Destination address
 DMACopy_Len 	.equ	$-DMACopy
 ;
 ;==================================================================================================
+; DMA COPY BLOCK CODE -  ASSUMES DMA PREINITIALIZED
+; INTERRUPT VERSION!
+;==================================================================================================
+;
+DMALDIRINT:
+;
+#IF (INTENABLE)
+;
+	ld	(DMASourceInt),hl	; populate the dma
+	ld	(DMADestInt),de		; register template
+	ld	(DMALengthInt),bc
+;
+	ld	hl,DMACopyInt		; program the
+	ld	b,DMACopyInt_Len	; dma command
+	ld	c,DMABASE		; block
+;
+	DMAIOSLO
+	di
+	otir				; load and execute dma
+	ei
+;
+	ld	a,DMA_READ_STATUS_BYTE	; check status
+	out	(DMABASE),a		; of transfer
+	in	a,(DMABASE)		; set non-zero
+	and	%00111011		; if failed
+	sub	%00011011
+	DMAIONOR
+;
+#ENDIF
+;
+	ret
+;
+#IF (INTENABLE)
+;
+DMACopyInt 	;.db	DMA_DISABLE	; R6-Command Disable DMA
+		.db	%01111101 	; R0-Transfer mode, A -> B, start address, block length follow
+DMASourceInt	.dw	0 		; R0-Port A, Start address
+DMALengthInt	.dw	0 		; R0-Block length
+		.db	%00010100	; R1-No timing bytes follow, address increments, is memory
+		.db	%00010000 	; R2-No timing bytes follow, address increments, is memory
+		.db	%10100000 	; R3-DMA, interrupt, stop on match disabled
+		.db	DMA_CONTINUOUS	; R4-Continuous mode, destination address, interrupt and control byte follow
+DMADestInt	.dw	0 		; R4-Port B, Destination address
+		.db	%00011110	; R4-Interrupt control byte: Pulse byte follows, Pulse generated
+		.db	0		; R4-Pulse control byte
+		.db	INTIDX*2	; R4-Interrupt vector
+;		.db	%10010010+DMA_RDY;R5-Stop on end of block, ce/wait multiplexed, READY active config
+		.db	%10011010
+		.db	DMA_LOAD 	; R6-Command Load
+		.db	DMA_FORCE_READY	; R6-Command Force ready
+		.db	DMA_ENABLE 	; R6-Command Enable DMA
+DMACopyInt_Len 	.equ	$-DMACopyInt
+;
+#ENDIF
+;
+;==================================================================================================
 ; DMA I/O OUT BLOCK CODE - ADDRESS TO I/O PORT
 ;==================================================================================================
 ;
@@ -552,8 +762,6 @@ DMAIn_Len 	.equ	$-DMAInCode
 ; DEBUG - READ START, DESTINATION AND COUNT REGISTERS
 ;==================================================================================================
 ;
-;#IF (0)
-;
 DMARegDump:
 	ld	a,DMA_READ_MASK_FOLLOWS
 	out	(DMABASE),a
@@ -586,7 +794,6 @@ DMARegDump:
 ;
 	call	NEWLINE
 	ret
-;#ENDIF
 ;
 CIO_CONSOLE	.EQU	$80	; CONSOLE UNIT TO C
 BF_CIOOUT	.EQU	$01	; HBIOS FUNC: OUTPUT CHAR
@@ -662,10 +869,52 @@ CST:
 	POP	DE
 	POP	BC
 	RET
-
+;
+USEINT	.DB	FALSE		; USE INTERRUPTS FLAG
+;
 SAVSTK:	.DW	2
 	.FILL	64
 STACK:	.EQU	$
+;
+orgvec	.dw	0		; saved interrupt vector
+;
+;===============================================================================
+; Interrupt Handler
+;===============================================================================
+;
+reladr	.equ	$		; relocation start adr
+;
+	.org	$A000		; code will run here
+;
+int:
+	; According to the DMA doc, you must issue
+	; a DMA_DISABLE command prior to a
+	; DMA_REINIT_STATUS_BYTE command to avoid a
+	; potential race condition.
+	ld	a,DMA_DISABLE
+	out	(DMABASE),a
+;	
+	; The doc confuses me, but apparently it is
+	; necessary to reinitialize the status byte
+	; when an end-of-block interrupt occurs.  Otherwise,
+	; the end-of-block condition remains set and
+	; causes the interrupt to fire continuously.
+	ld	a,DMA_REINIT_STATUS_BYTE
+	out	(DMABASE),a
+;
+	ld	hl,(counter)
+	inc	hl
+	ld	(counter),hl
+;
+	or	$ff		; signal int handled
+	ret
+;
+counter	.dw	0
+;
+hsiz	.equ	$ - $A000	; size of handler to relocate
+;
+	.org	reladr + hsiz
+;
 PROEND:	.EQU	$
 ;
 	.END
