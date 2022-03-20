@@ -623,6 +623,9 @@ CFGTBL:	;	PLT	RSEL	RDAT	RIN	Z180	ACR
 	.DB	$0B,	$33,	$32,	$32,	$FF,	$FF	; RCZ280 W/ LINC SOUND MODULE
 	.DW	HWSTR_LINC
 ;
+	.DB	13,	$A0,	$A1,	$A0,	$FF,	$A2	; MBC
+	.DW	HWSTR_MBC
+;
 	.DB	$FF					; END OF TABLE MARKER
 ;
 CFG:		; ACTIVE CONFIG VALUES (FROM SELECTED CFGTBL ENTRY)
@@ -674,6 +677,7 @@ HWSTR_RCEB	.DB	"RC2014 Sound Module (EB)",0
 HWSTR_RCEB6	.DB	"RC2014 Sound Module (EBv6)",0
 HWSTR_RCMF	.DB	"RC2014 Sound Module (MF)",0
 HWSTR_LINC	.DB	"Z50 LiNC Sound Module",0
+HWSTR_MBC	.DB	"NHYODYNE Sound Module",0
 
 MSGUNSUP	.db	"MYM files not supported with HBIOS yet!\r\n", 0
 
@@ -2649,4 +2653,3 @@ data:
 ;
 ;===============================================================================
 	.END
-
