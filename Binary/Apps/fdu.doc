@@ -1,0 +1,535 @@
+================================================================
+Floppy Disk Utility (FDU) v5.3 for RetroBrew Computers 
+Disk IO / Zeta / Dual-IDE / N8 / RC2014 / SmallZ80 / Dyno
+================================================================
+
+Updated January 5, 2020
+by Wayne Warthen (wwarthen@gmail.com)
+
+Application to test the hardware functionality of the Floppy 
+Disk Controller (FDC) on the ECB DISK I/O, DISK I/O V3, ZETA 
+SBC, Dual IDE w/ Floppy, or N8 board.
+ 
+The intent is to provide a testbed that allows direct testing 
+of all possible media types and modes of access.  The 
+application supports read, write, and format by sector, track, 
+and disk as well as a random read/write test.
+
+The application supports access modes of polling, interrupt, 
+INT/WAIT, and DRQ/WAIT.  At present, it supports 3.5" media at 
+DD (720KB) and HD (1.44MB) capacities.  It also now supports 
+5.25" media (720KB and 1.2MB) and 8" media (1.11MB) as well.   
+Additional media will be added when I have time and access to 
+required hardware.  Not all modes are supported on all 
+platforms and some modes are experimental in all cases.
+
+In many ways this application is merely reinventing the wheel 
+and performs functionality similar to existing applications, 
+but I have not seen any other applications for RetroBrew 
+Computers hardware that provide this range of functionality.
+
+While the application is now almost entirely new code, I would 
+like to acknowledge that much was derived from the previous 
+work of Andrew Lynch and Dan Werner.  I also want to credit 
+Sergio Gimenez with testing the 5.25" drive support and Jim 
+Harre with testing the 8" drive support.  Support for Zeta 2 
+comes from Segey Kiselev.  Thanks!
+
+General Usage
+-------------
+
+In general, usage is self explanatory.  At invocation, you 
+must select the floppy disk controller (FDC) that you are 
+using.  Subsequently, the main menu allows you to set the 
+unit, media, and mode to test.  These settings MUST match your 
+situation.  Read, write, format, and verify functions are 
+provided.  A sub-menu will allow you to choose sector, track, 
+disk, or random tests.
+
+The verify function requires a little explanation.  It will 
+take the contents of the current in-memory disk buffer, save 
+it, and compare it to the selected sectors.  So, you must 
+ensure that the sectors to be verified already have been 
+written with the same pattern as the buffer contains.  I 
+typically init the buffer to a pattern, write the pattern to 
+the entire disk, then verify the entire disk.
+
+Another submenu is provided for FDC commands.  This sub-menu 
+allows you to send low-level commands directly to FDC.  You 
+*must* know what you are doing to use this sub-menu.  For 
+example, in order to read a sector using this sub-menu, you 
+will need to perform specify, seek, sense int, and read 
+commands specifying correct values (nothing is value checked 
+in this menu).
+
+Required Hardware/BIOS
+----------------------
+
+Of course, the starting point is to have a supported hardware 
+configuration. The following Z80 / Z180 based CPU boards are 
+supported:
+
+ - SBC V1/2
+ - Zeta
+ - Zeta 2
+ - N8
+ - Mark IV
+ - RC2014
+ - SmallZ80
+ - Dyno
+ - MBC
+
+You must be using either a RomWBW or UBA based OS version.
+
+You must have one of the following floppy disk controllers:
+
+ - Disk IO ECB Board FDC
+ - Disk IO 3 ECB Board FDC
+ - Dual-IDE ECB Board FDC
+ - Zeta SBC onboard FDC
+ - Zeta 2 SBC onboard FDC
+ - N8 SBC onboard FDC
+ - RC2014 Scott Baker SMC-based Floppy Module
+ - RC2014 Scott Baker WDC-based Floppy Module
+ - SmallZ80 FDC
+ - Dyno FDC
+ - MBC FDC
+ 
+Finally, you will need a floppy drive connected via an 
+appropriate cable:
+
+Disk IO - no twist in cable, drive unit 0/1 must be selected by jumper on drive
+DISK IO 3, Zeta, Zeta 2, RC2014, Dyno - cable with twist, unit 0 after twist, unit 1 before twist
+DIDE, N8, Mark IV, SmallZ80 - cable with twist, unit 0 before twist, unit 1 after twist
+
+Note that FDU does not utilize your systems ROM or OS to 
+access the floppy system.  FDU interacts directly with 
+hardware.  Upon exit, you may need to reset your OS to get the 
+floppy system back into a state that is expected.
+
+The Disk I/O should be jumpered as follows:
+
+J1: depends on use of interrupt modes (see interrupt modes below)
+J2: pins 1-2, & 3-4 jumpered
+J3: hardware dependent timing for DMA mode (see DMA modes below)
+J4: pins 2-3 jumpered
+J5: off
+J6: pins 2-3 jumpered
+J7: pins 2-3 jumpered
+J8: off
+J9: off
+J10: off
+J11: off
+J12: off
+
+Note that J1 can be left on even when not using interrupt 
+modes.  As long as the BIOS is OK with it, that is fine.  Note 
+also that J3 is only relevant for DMA modes, but also can be 
+left in place when using other modes.
+
+The Disk I/O 3 board should be jumpered at the default settings:
+
+JP2: 3-4
+JP3: 1-2 for int mode support, otherwise no jumper
+JP4: 1-2, 3-4
+JP5: 1-2
+JP6: 1-2
+JP7: 1-2, 3-4
+
+Zeta & Zeta 2 do not have any relevant jumper settings.  The 
+hardwired I/O ranges are assumed in the code.
+
+The Dual-IDE board should be jumpered as follows:
+
+K3 (DT/R or /RD): /RD
+P5 (bd ID): 1-2, 3-4 (for $20-$3F port range)
+
+There are no specific N8 jumper settings, but the default
+I/O range starting at $80 is assumed in the published code.
+
+The RC2014 Scott Baker SMC-based floppy module should be jumpered
+for I/O base address 0x50 (SV1: 11-12), JP1 (TS) shorted,
+JP2 (/FAULT) shorted, JP3 (MINI): 2-3, JP4 (/DC/RDY): 2-3.
+
+The RC2014 Scott Baker WDC-based floppy module should be jumpered
+for I/O base address 0x50 (SV1: 11-12), JP1 (/DACK): 1-2,
+JP2 (TC): 2-3.
+
+The RC2014 FDC by Alan Cox (Etched Pixels) needs to be strapped
+for base I/O address 0x48.
+
+SmallZ80 does not have any relevant jumper settings.  The 
+hardwired I/O ranges are assumed in the code.
+
+Dyno does not have any relevant jumper settings.  The 
+hardwired I/O ranges are assumed in the code.
+
+The MBC FDC is expected to be strapped to use neither INT nor NMI.  It
+is also not expected to use DMA.
+
+Modes of Operation
+------------------
+
+You can select the following test modes.  Please refer to the 
+chart that follows to determine which modes should work with 
+combinations of Z80 CPU speed and media format.
+
+WARNING: In general, only the polling mode is considered fully 
+reliable.  The other modes are basically experimental and 
+should only be used if you know exactly what you are doing.
+
+Polling: Traditional polled input/output.  Works well and very 
+reliable with robust timeouts and good error recovery.  Also, 
+the slowest performance which precludes it from being used 
+with 1.44MB floppy on a 4MHz Z80. This is definitely the mode 
+you want to get working before any others. It does not require 
+J1 (interrupt enable) on DISK I/O and does not care about the 
+setting of J3.
+
+Interrupt: Relies on FDC interrupts to determine when a byte 
+is ready to be read/written.  It does *not* implement a 
+timeout during disk operations.  For example, if there is no 
+disk in the drive, this mode will just hang until a disk is 
+inserted. This mode *requires* that the host has interrupts 
+active using interrupt mode 1 (IM1) and interrupts attached to 
+the FDC controller.  The BIOS must be configured to handle 
+these interrupts safely.
+
+Fast Interrupt: Same as above, but sacrifices additional 
+reliability for faster operation.  This mode will allow a 
+1.44MB floppy to work with a 4MHz Z80 CPU.  However, if any 
+errors occur (even a transient read error which is not 
+unusual), this mode will hang.  The same FDC interrupt 
+requirements as above are required.
+
+INT/WAIT: Same as Fast Interrupt, but uses CPU wait instead of 
+actual interrupt.  This mode is exclusive to the original Disk 
+IO board.  It is subject to all the same issues as Fast 
+Interrupt, but does not need J1 shorted.  J3 is irrelevant.
+
+DRQ/WAIT: Uses pseudo DMA to handle input/output.  Does not 
+require that interrupts (J1) be enabled on the DISK I/O.  
+However, it is subject to all of the same reliability issues 
+as "Fast Interrupt".  This mode is exclusive to the original 
+Disk IO board.  At present, the mode is *not* implemented!
+
+The chart below attempts to describe the combinations that 
+work for me.  By far, the most reliable mode is Polling, but 
+it requires 8MHz CPU for HD disks.
+
+DRQ/WAIT --------------------------------+
+INT/WAIT -----------------------------+  |
+Fast Interrupt --------------------+  |  |
+Interrupt ----------------------+  |  |  |
+Polling ---------------------+  |  |  |  |
+                             |  |  |  |  |
+CPU Speed --------------+    |  |  |  |  |
+                        |    |  |  |  |  |
+                        |    |  |  |  |  |
+
+3.5" DD (720K) ------  4MHz  Y  Y  Y  Y  X
+                       8MHz+ Y  Y  Y  Y  X
+
+3.5" HD (1.44M) -----  4MHz  N  N  Y  Y  X
+                       8MHz+ Y  Y  Y  Y  X
+					   
+5.25" DD (360K) -----  4MHz  Y  Y  Y  Y  X
+                       8MHz+ Y  Y  Y  Y  X
+
+5.25" HD (1.2M) -----  4MHz  N  N  Y  Y  X
+                       8MHz+ Y  Y  Y  Y  X
+					   
+8" DD (1.11M) -------  4MHz  N  N  Y  Y  X
+                       8MHz+ Y  Y  Y  Y  X
+					   
+Y = Yes, works
+N = No, does not work
+X = Experimental, probably won't work
+
+Tracing
+-------
+
+Command/result activity to/from the FDC will be written out if 
+the trace setting is changed from '00' to '01' in setup. 
+Additionally, if a command failure is detected on any command, 
+that specific comand and results are written regardless of the 
+trace setting.
+
+The format of the line written is:
+<OPERATION>: <COMMAND BYTES> --> <RESULT BYTES> [<RESULT>]
+
+For example, this is the output of a normal read operation:
+READ: 46 01 00 00 01 02 09 1B FF --> 01 00 00 00 00 02 02 [OK]
+
+Please refer to the i8272 data sheet for information on the 
+command and result bytes.
+
+Note that the sense interrupt command can return a non-OK 
+result.  This is completely normal in some cases.  It is 
+necessary to "poll" the drive for seek status using sense 
+interrupt.  If there is nothing to report, then the result 
+will be INVALID COMMAND.  Additionally, during a recalibrate 
+operation, it may be necessary to issue the command twice 
+because the command will only step the drive 77 times looking 
+for track 0, but the head may be up to 80 tracks away.  In 
+this case, the first recalibrate fails, but the second should 
+succeed.  Here is what this would look like if trace is turned 
+on:
+
+RECALIBRATE: 07 01 --> <EMPTY> [OK]
+SENSE INTERRUPT: 08 --> 80 [INVALID COMMAND]
+	...
+	...
+	...
+SENSE INTERRUPT: 08 --> 80 [INVALID COMMAND]
+SENSE INTERRUPT: 08 --> 71 00 [ABNORMAL TERMINATION]
+RECALIBRATE: 07 01 --> <EMPTY> [OK]
+SENSE INTERRUPT: 08 --> 21 00 [OK]
+
+Another example is when the FDC has just been reset.  In this 
+case, you will see up to 4 disk change errors.  Again these 
+are not a real problem and to be expected.
+
+When tracing is turned off, the application tries to be 
+intelligent about error reporting.  The specific errors from 
+sense interrupt documented above will be suppressed because 
+they are not a real problem.  All other errors will be 
+displayed.
+
+Error Handling
+--------------
+
+There is no automated error retry logic.  This is very 
+intentional since the point is to expose the controller and 
+drive activity.  Any error detected will result in a prompt to 
+abort, retry, or continue.  Note that some number of errors is 
+considered normal for this technology.  An occasional error 
+would not necessarily be considered a problem.
+
+CPU Speed
+---------
+
+Starting with v5.0, the application adjusts it's timing loops 
+to the actual system CPU speed by querying the BIOS for the 
+current CPU speed.
+
+Interleave
+----------
+
+The format command now allows the specification of a sector 
+interleave.  It is almost always the case that the optimal 
+interleave will be 2 (meaning 2:1).
+
+360K Media
+----------
+
+The 360K media definition should work well for true 360K 
+drives.  However, it will generally not work with 1.2M 
+drives.  This is because these drives spin at 360RPM instead 
+of the 300RPM speed of true 360K drives.  Additionally, 1.2M 
+drives are 80 tracks and 360K drives are 40 tracks and, so 
+far, there is no mechanism in FD to "double step" as a way to 
+use 40 track media in 80 track drives.
+
+With this said, it is possible to configure some 1.2M 5.25" 
+drives to automatically spin down to 300RPM based on a density 
+select signal (DENSEL).  This signal is asserted by FD for 
+360K media, so IF you have configured your drive to react to 
+this signal correctly, you will be able to use the 360K media 
+defintion. Most 1.2M 5.25" drives are NOT configured this way 
+by default. TEAC drives are generally easy to modify and have 
+been tested by the author and do work in this manner.  Note 
+that this does not address the issue of double stepping above; 
+you will just be using the first 40 of 80 tracks.
+
+Support
+-------
+
+I am happy to answer questions as fast and well as I am able. 
+Best contact is wwarthen@gmail.com or post something on the 
+RetroBrew Computers Forum 
+https://www.retrobrewcomputers.org/forum/.
+
+Changes
+-------
+
+WW 8/12/2011
+
+Removed call to pulse TC in the FDC initialization after 
+determining that it periodically caused the FDC to write bad 
+sectors.  I am mystified by this, but definitely found it to 
+be true.  Will revisit at some point -- probably a timing 
+issue between puslsing TC and whatever happens next.
+
+Non-DMA mode was being set incorrectly for FAST-DMA mode. It 
+was set for non-DMA even though we were doing DMA.  It is 
+interesting that it worked fine anyway.  Fixed it anyway.
+
+DIO_SETMEDIA was not clearing DCD_DSKRDY as it should.  Fixed.
+
+WW 8/26/2011: v1.1
+
+Added support for Zeta.  Note that INT/WAIT and DRQ/WAIT are 
+not available on Zeta.  Note that Zeta provides the ability to 
+perform a reset of the FDC independent of a full CPU reset.  
+This is VERY useful and the FDC is reset anytime a drive reset 
+is required.
+
+Added INT/WAIT support.
+
+WW 8/28/2011: V1.2
+
+All changes in this version are Zeta specific.  Fixed FDC 
+reset logic and motor status display for Zeta (code from 
+Sergey).
+
+Modified Zeta disk change display to include it in the command 
+output line.  This makes more sense because a command must be 
+issued to select the desired drive first.  You can use the 
+SENSE INT command id you want to check the disk change value 
+at any time.  It will also be displayed with any other command 
+output display.
+
+WW 9/1/2011: V1.3
+
+Added CPUFREQ configuration setting to tune delays based on 
+cpu speed.  The build app is set for 8MHz which also seems to 
+work well for 4MHz CPU's.  Faster CPU speeds will probably 
+require tuning this setting.
+
+WW 9/5/2011: V1.4
+
+Changed the polling execution routines to utilize CPUFREQ 
+variable to optimize timeout counter.  Most importantly, this 
+should allow the use of faster CPUs (like 20MHz).
+
+WW 9/19/2011: V1.5
+
+Zeta changes only.  Added a call to FDC RESET after any 
+command failure.  This solves an issue where the drive remains 
+selected if a command error occurs.  Also added FDC RESET to 
+FDC CONTROL menu.
+
+WW 10/7/2011: V2.0
+
+Added support for DIDE.  Only supports polling IO and it does 
+not appear any other modes are possible given the hardware 
+constraints.
+
+WW 10/13/2011: V2.1
+
+Modified to support N8.  N8 is essentially identical to Dual 
+IDE. The only real change is the IO addresses.  In theory, I 
+should be able to support true DMA on N8 and will work on that.
+
+WW 10/20/2011: v2.2
+
+I had some problems with the results being read were sometimes 
+missing a byte.  Fixed this by taking a more strict approach 
+to watching the MSR for the exact bits that are expected.
+
+WW 10/22/2011: V2.3
+
+After spending a few days trying to track down an intermittent 
+data corruption issue with my Dual IDE board, I added a verify 
+function.  This helped me isolate the problem very nicely 
+(turned out to be interference from the bus monitor).
+
+WW 11/25/2011: V2.4
+
+Preliminary support for DISKIO V3.  Basically just assumed 
+that it operates just like the Zeta.  Needs to be verified 
+with real hardware as soon as I can.
+
+WW 1/9/2012: V2.5
+
+Modified program termination to use CP/M reset call so that a 
+warm start is done and all drives are logged out.  This is 
+important because media may have been formatted during the 
+program execution.
+
+WW 2/6/2012: v2.6
+
+Added support for 5.25" drives as tested by Sergio.
+
+WW 4/5/2012: v2.7
+
+Added support for 8" drives as tested by Jim Harre.
+
+WW 4/6/2012: v2.7a
+
+Fixed issue with media selection menu to remove duplicate 
+entries.
+
+WW 4/8/2012: v2.7b
+
+Corrected the handling of the density select signal.
+
+WW 5/22/2012: v2.8
+
+Added new media definitions (5.25", 320K).
+
+WW 6/1/2012: v2.9
+
+Added interleave capability on format.
+
+WW 6/5/2012: v3.0
+
+Documentation cleanup.
+
+WW 7/1/2012: v3.1
+
+Modified head load time (HLT) for 8" media based on YD-180 
+spec.  Now set to 50ms.
+
+WW 6/17/2013: v3.2
+
+Cleaned up SRT, HLT, and HUT values.
+
+SK 2/10/2015: v3.3
+
+Added Zeta SBC v2 support (Sergey Kiselev)
+
+WW 3/25/2015: v4.0
+
+Renamed from FDTST --> FD
+
+WW 9/2/2017: v5.0
+
+Renamed from FD to FDU.
+Added runtime selection of FDC hardware.
+Added runtime timing adjustment.
+
+WW 12/16/2017: v5.1
+
+Improved polling version of read/write to fix occasional overrun errors.
+
+WW 1/8/2018: v5.2
+
+Added support for RC2014 hardware:
+  - Scott Baker SMC 9266 FDC module
+  - Scott Baker WDC 37C65 FDC module
+
+WW 9/5/2018: v5.3
+  - Removed use of pulsing TC to end R/W operations after one sector and
+    instead set EOT = R (sector number) so that after desired sector is
+    read, R/W stops with end of cylinder error which is a documented
+    method for controling number of sectors R/W.  This specific termination
+    condition is no longer considered an error, but a successful end of
+    operation.
+  - Added support for SmallZ80
+
+WW 1/5/2020: v5.4
+  - Added support for Dyno (based on work by Steve Garcia)
+
+WW 4/29/2020: v5.5
+  - Added support for Etched Pixels FDC
+
+WW 12/12/2020: v5.6
+  - Updated SmallZ80 support for new I/O map
+
+WW 3/24/2021: v5.7
+  - Added support for a few single-sided formats
+
+WW 7/26/2021: v5.8
+  - Added support for MBC FDC
