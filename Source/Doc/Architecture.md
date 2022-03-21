@@ -223,6 +223,18 @@ initialization routine. At this point, the prior HBIOS code has been
 discarded and overwritten. Finally, the Boot Loader is invoked just like
 a ROM Boot.
 
+ROM-less Boot
+-------------
+
+Some hardware supported by RomWBW has a special mechanism for loading
+the initial code.  These systems have no ROM chips.  However, they
+have a small hardware bootstrap that loads a chunk of code from a
+disk device directlly into RAM at system startup.
+
+The startup then proceeds very much like the Application Boot
+process described above.  HBIOS is installed in it's operating bank
+and control is passed to the loader.
+
 Notes
 -----
 
