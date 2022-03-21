@@ -56,18 +56,26 @@ $(ROMNAME).rom $(ROMNAME).com $(ROMNAME).img &: $(ROMDEPS)
 	if [ $(ROM_PLATFORM) != UNA ] ; then \
 		cat camel80.bin nascom.bin tastybasic.bin game.bin eastaegg.bin netboot.mod updater.bin usrrom.bin >osimg1.bin ; \
 		cat imgpad2.bin >osimg2.bin ; \
-		for f in hbios_rom.bin osimg.bin osimg1.bin osimg2.bin ; do \
-			srec_cat $$f -Binary -Crop 0 0x7FFF -Checksum_Negative_Big_Endian 0x7FFF 1 1 -o $$f -Binary ; \
-		done \
+		if [ $(ROMSIZE) -gt 0 ] ; then \
+			for f in hbios_rom.bin osimg.bin osimg1.bin osimg2.bin ; do \
+				srec_cat $$f -Binary -Crop 0 0x7FFF -Checksum_Negative_Big_Endian 0x7FFF 1 1 -o $$f -Binary ; \
+			done \
+		fi \
 	fi
 	if [ $(ROM_PLATFORM) = UNA ] ; then \
 		cp osimg.bin $(DEST)/UNA_WBW_SYS.bin ; \
 		cp ../RomDsk/rom$(ROMSIZE)_una.dat $(DEST)/UNA_WBW_ROM$(ROMSIZE).bin ; \
 		cat ../UBIOS/UNA-BIOS.BIN osimg.bin ../UBIOS/FSFAT.BIN ../RomDsk/rom$(ROMSIZE)_una.dat >$(ROMNAME).rom ; \
 	else \
-		cat hbios_rom.bin osimg.bin osimg1.bin osimg2.bin ../RomDsk/rom$(ROMSIZE)_wbw.dat >$(ROMNAME).rom ; \
-		cat hbios_rom.bin osimg.bin osimg1.bin osimg2.bin >$(ROMNAME).upd ; \
-		cat hbios_app.bin osimg_small.bin > $(ROMNAME).com ; \
+		if [ $(ROMSIZE) -gt 0 ] ; then \
+			cat hbios_rom.bin osimg.bin osimg1.bin osimg2.bin ../RomDsk/rom$(ROMSIZE)_wbw.dat >$(ROMNAME).rom ; \
+			cat hbios_rom.bin osimg.bin osimg1.bin osimg2.bin >$(ROMNAME).upd ; \
+			cat hbios_app.bin osimg_small.bin > $(ROMNAME).com ; \
+		else \
+			cat hbios_rom.bin osimg_small.bin > $(ROMNAME).rom ; \
+			cat hbios_rom.bin osimg_small.bin > $(ROMNAME).upd ; \
+			cat hbios_app.bin osimg_small.bin > $(ROMNAME).com ; \
+		fi \
 	fi
 
 prereq: $(FONTS) camel80.bin tastybasic.bin

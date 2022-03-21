@@ -93,8 +93,10 @@ copy /b romldr.bin + dbgmon.bin + ..\zsdos\zsys_wbw.bin osimg_small.bin || exit 
 :: should yield a result of zero.
 ::
 
-for %%f in (hbios_rom.bin osimg.bin osimg1.bin osimg2.bin) do (
-  "%TOOLS%\srecord\srec_cat.exe" %%f -Binary -Crop 0 0x7FFF -Checksum_Negative_Big_Endian 0x7FFF 1 1 -o %%f -Binary || exit /b
+if %ROMSize% gtr 0 (
+    for %%f in (hbios_rom.bin osimg.bin osimg1.bin osimg2.bin) do (
+      "%TOOLS%\srecord\srec_cat.exe" %%f -Binary -Crop 0 0x7FFF -Checksum_Negative_Big_Endian 0x7FFF 1 1 -o %%f -Binary || exit /b
+    )
 )
 
 ::
@@ -113,17 +115,23 @@ for %%f in (hbios_rom.bin osimg.bin osimg1.bin osimg2.bin) do (
 :: HBIOS on the fly for testing purposes.
 ::
 
-copy /b hbios_rom.bin + osimg.bin + osimg1.bin + osimg2.bin + ..\RomDsk\rom%ROMSize%_wbw.dat %ROMName%.rom || exit /b
-copy /b hbios_rom.bin + osimg.bin + osimg1.bin + osimg2.bin %ROMName%.upd || exit /b
-copy /b hbios_app.bin + osimg_small.bin %ROMName%.com || exit /b
+if %ROMSize% gtr 0 (
+    copy /b hbios_rom.bin + osimg.bin + osimg1.bin + osimg2.bin + ..\RomDsk\rom%ROMSize%_wbw.dat %ROMName%.rom || exit /b
+    copy /b hbios_rom.bin + osimg.bin + osimg1.bin + osimg2.bin %ROMName%.upd || exit /b
+    copy /b hbios_app.bin + osimg_small.bin %ROMName%.com || exit /b
+) else (
+    copy /b hbios_rom.bin + osimg_small.bin %ROMName%.rom || exit /b
+    copy /b hbios_rom.bin + osimg_small.bin %ROMName%.upd || exit /b
+    copy /b hbios_app.bin + osimg_small.bin %ROMName%.com || exit /b
+)
 
 ::
 :: Copy results to output directory
 ::
 
-copy %ROMName%.rom ..\..\Binary || exit /b
-copy %ROMName%.upd ..\..\Binary || exit /b
-copy %ROMName%.com ..\..\Binary || exit /b
+if exist %ROMName%.rom copy %ROMName%.rom ..\..\Binary || exit /b
+if exist %ROMName%.upd copy %ROMName%.upd ..\..\Binary || exit /b
+if exist %ROMName%.com copy %ROMName%.com ..\..\Binary || exit /b
 
 goto :eof
 
@@ -188,6 +196,7 @@ call Build RCZ80 kio 512 || exit /b
 call Build RCZ80 mt 512 || exit /b
 call Build RCZ80 duart 512 || exit /b
 call Build RCZ80 zrc 512 || exit /b
+call Build RCZ80 zrc_ram 0 || exit /b
 call Build RCZ180 ext 512 || exit /b
 call Build RCZ180 nat 512 || exit /b
 call Build RCZ280 ext 512 || exit /b
