@@ -16,4 +16,6 @@ pushd I2C && call Clean || exit /b 1 & popd
 pushd rzsz && call Clean || exit /b 1 & popd
 pushd vdctest && call Clean || exit /b 1 & popd
 pushd kbdtest && call Clean || exit /b 1 & popd
-pushd kbdinfo && call Clean || exit /b 1 & popd
+pushd ps2info && call Clean || exit /b 1 & popd
+pushd 2piotst && call Clean || exit /b 1 & popd
+pushd piomon && call Clean || exit /b 1 & popd

@@ -223,6 +223,18 @@ initialization routine. At this point, the prior HBIOS code has been
 discarded and overwritten. Finally, the Boot Loader is invoked just like
 a ROM Boot.
 
+ROM-less Boot
+-------------
+
+Some hardware supported by RomWBW has a special mechanism for loading
+the initial code.  These systems have no ROM chips.  However, they
+have a small hardware bootstrap that loads a chunk of code from a
+disk device directlly into RAM at system startup.
+
+The startup then proceeds very much like the Application Boot
+process described above.  HBIOS is installed in it's operating bank
+and control is passed to the loader.
+
 Notes
 -----
 
@@ -1938,6 +1950,7 @@ lookup.
 |           H: Z80 CPU Variant
 |           L: CPU Speed in MHz
 |           DE: CPU Speed in KHz
+|           BC: Oscillator Speed in KHz
 
 #### SYSGET Subfunction 0xF1 -- Get Memory Information (MEMINFO)
 
@@ -1958,6 +1971,23 @@ lookup.
 |           A: Status (0=OK, else error)
 |           D: BIOS Bank ID
 |           E: User Bank ID
+
+#### SYSGET Subfunction 0xF3 -- Get CPU Speed (CPUSPD)
+
+|      _Entry Parameters_
+|           BC: 0xF8F3
+
+|      _Returned Values_
+|           A: Status (0=OK, else error)
+|           L: Clock Mult (0:Half, 1:Full, 2: Double)
+|           D: Memory Wait States
+|           E: I/O Wait States
+
+This function will return the running CPU speed attributes of a system.
+Note that it is frequently impossible to tell if a system is capable
+of dynamic speed changes.  This function returns it's best guess.
+If either of the wait state settings is unknown, the function will
+return 0xFF.
 
 ### Function 0xF9 -- System Set (SYSSET)
 
@@ -2001,6 +2031,34 @@ available along with the registers/information used as input.
 
 |      _Returned Values_
 |           A: Status (0=OK, else error)
+
+#### SYSSET Subfunction 0xF3 -- Set CPU Speed (CPUSPD)
+
+|      _Entry Parameters_
+|           BC: 0xF9F3
+|           L: Clock Mult (0:Half, 1:Full, 2: Double)
+|           D: Memory Wait States
+|           E: I/O Wait States
+
+|      _Returned Values_
+|           A: Status (0=OK, else error)
+
+This function will modify the running CPU speed attributes of a system.
+Note that it is frequently impossible to tell if a system is capable
+of dynamic speed changes.  This function makes the changes blindly.
+You can specify 0xFF for either of the wait state settings to have them
+left alone.  If an attempt is made to change the speed of a system
+that is definitely incapable of doing so, then an error result is
+returned.
+
+Some peripherals are dependant on the CPU speed.  For example, the Z180
+ASCI baud rate and system timer are derived from the CPU speed.  The
+Set CPU Speed function will attempt to adjust these peripherals for
+correct operation after modifying the CPU speed.  However, in some
+cases this may not be possible.  The baud rate of ASCI ports have a
+limited set of divisors.  If there is no satisfactory divisor to
+retain the existing baud rate under the new CPU speed, then the baud
+rate of the ASCI port(s) will be affected.
 
 ### Function 0xFA -- System Peek (SYSPEEK)
 

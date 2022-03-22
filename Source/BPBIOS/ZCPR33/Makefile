@@ -9,10 +9,10 @@ DIFFPATH = $(DIFFTO)/Source/BPBIOS
 
 zcpr33t.rel: ../z3baset.lib
 	cp ../z3baset.lib z3baset.lib
-	$(ZXCC) $(CPM)/ZMAC -zcpr33t.z80 -/P
+	$(ZXCC) ZMAC -zcpr33t.z80 -/P
 	rm z3baset.lib
 
 zcpr33n.rel: ../z3basen.lib
 	cp ../z3basen.lib z3basen.lib
-	$(ZXCC) $(CPM)/ZMAC -zcpr33n.z80 -/P
+	$(ZXCC) ZMAC -zcpr33n.z80 -/P
 	rm z3basen.lib

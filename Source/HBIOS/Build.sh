@@ -26,6 +26,7 @@ if [ "${ROM_PLATFORM}" == "dist" ] ; then
 	ROM_PLATFORM="RCZ80"; ROM_CONFIG="std"; ROMSIZE="512"; bash Build.sh
 	ROM_PLATFORM="RCZ80"; ROM_CONFIG="skz"; ROMSIZE="512"; bash Build.sh
 	ROM_PLATFORM="RCZ80"; ROM_CONFIG="zrc"; ROMSIZE="512"; bash Build.sh
+	ROM_PLATFORM="RCZ80"; ROM_CONFIG="zrc_ram"; ROMSIZE="0"; bash Build.sh
 	ROM_PLATFORM="SBC"; ROM_CONFIG="std"; ROMSIZE="512"; bash Build.sh
 	ROM_PLATFORM="SBC"; ROM_CONFIG="simh"; ROMSIZE="512"; bash Build.sh
 	ROM_PLATFORM="MBC"; ROM_CONFIG="std"; ROMSIZE="512"; bash Build.sh
@@ -71,7 +72,7 @@ if [ -z "${ROMSIZE}" ] ; then
 	ROMSIZE="512"
 fi
 
-while [ ! '(' "${ROMSIZE}" = 1024 -o "${ROMSIZE}" = 512 -o "${ROMSIZE}" = 256 -o "${ROMSIZE}" = 128 ')' ] ; do
+while [ ! '(' "${ROMSIZE}" = 1024 -o "${ROMSIZE}" = 512 -o "${ROMSIZE}" = 256 -o "${ROMSIZE}" = 128 -o "${ROMSIZE}" = 0 ')' ] ; do
 	echo -n "Romsize :"
 	read ROMSIZE
 done

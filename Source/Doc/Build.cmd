@@ -51,7 +51,7 @@ gpp -o %1.tmp -U "$" "$" "{" "}{" "}$" "{" "}" "@@@" "" -M "$" "$" "{" "}{" "}$"
 pandoc %1.tmp -f markdown -t pdf -s -o %1.pdf --default-image-extension=pdf || exit /b
 pandoc %1.tmp -f markdown -t html -s -o %1.html --default-image-extension=png || exit /b
 pandoc %1.tmp -f markdown -t dokuwiki -s -o %1.dw --default-image-extension=png || exit /b
-pandoc %1.tmp -f markdown -t gfm -s -o %1.gfm --default-image-extension=png || exit /b
+pandoc %1.tmp -f markdown -t gfm -o %1.gfm --default-image-extension=png || exit /b
 pandoc %1.tmp -f markdown -t plain -s -o %1.txt --default-image-extension=png || exit /b
 
 goto :eof

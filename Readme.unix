@@ -19,9 +19,13 @@ with respect to the .DS directive. it's usually a bad idea to mix
 It assumes that you have some standard system tools and libraries 
 installed, specifically: gcc, gnu make, libncurses, and srecord.
 Typically, something like this will take care of adding all
-required packages:
+required packages in Linux:
 
 	sudo apt install build-essential libncurses-dev srecord
+
+For MacOS, you will need:
+
+	brew install srecord
 
 To build:
 	cd to the top directory and type "make".
@@ -40,16 +44,20 @@ the "SCZ180" platform:
 
 	make ROM_PLATFORM=SCZ180 ROM_CONFIG=126
 
-Please be aware that the make-based build does have a couple of
-deficiencies.
+Please be aware that the make-based build does have a few deficiencies.
 
-First, there are some build failures that will not stop the make 
-process.  Some of this is because real CP/M 2.2 tools are used in 
+First and most important, the Makefiles do not handle reruns very well.
+To ensure a full buld, use "make clobber" from the top level directory
+before running the actual build.  For those used to using "make clean",
+you can do that but it is not as thorough as "make clobber".
+
+Second, there are some build failures that will not stop the make 
+process.  Most of this is because real CP/M 2.2 tools are used in 
 places and CP/M 2.2 does not allow programs to return a result code.
 
-Second, not all dependencies are properly handled.  So, changes to some
+Third, not all dependencies are properly handled.  So, changes to some
 files will not cause things to rebuild as appropriate.  In general, I
-recommend doing a "make clean" before running "make" to ensure that
+recommend doing a "make clobber" before running "make" to ensure that
 everything is fully rebuilt.
 
 For macOS users, you may encounter a failure reading or writing files.

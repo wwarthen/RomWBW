@@ -1,50 +1,9 @@
----
-author: "Wayne Warthen (mailto:wwarthen@gmail.com)"
-classoption:
-- oneside
-colorlinks: true
-date: 08 Dec 2021
-documentclass: book
-fontfamily: helvet
-fontsize: 12pt
-geometry:
-- top=1.5in
-- bottom=1.5in
-- left=1.5in
-- right=1.5in
-graphics: true
-header-includes:
-- 
-- 
-include-before:
-- 
-- 
-institution: RetroBrew Computers Group
-linestretch: 1.25
-numbersections: true
-papersize: letter
-secnumdepth: 1
-title: RomWBW Getting Started
-toc: true
-toc-depth: 1
----
-
-
-
-
-
-
-
-
-
-
-
 # RomWBW
 
 ## Z80/Z180 System Software
 
 Version 3.1 Pre-release  
-08 Dec 2021
+21 Mar 2022
 
 Wayne Warthen <wwarthen@gmail.com>
 
@@ -455,7 +414,7 @@ therefore, globally available.
 | TALK        | Direct console I/O to a specified character device.                                                  |
 | RTC         | Manage and test the Real Time Clock hardware.                                                        |
 | TIMER       | Display value of running periodic system timer.                                                      |
-| INTTEST     | Test interrupt vector hooking.                                                                       |
+| CPUSPD      | Change the running CPU speed and wait states of the system.                                          |
 
 Some custom applications do not fit on the ROM disk. They are found on
 the disk image files or the individual files can be found in the
@@ -465,6 +424,7 @@ Binary\\Apps directory of the distribution.
 |-------------|-------------------------------------------------------------|
 | TUNE        | Play .PT2, .PT3, .MYM audio files.                          |
 | FAT         | Access MS-DOS FAT filesystems from RomWBW (based on FatFs). |
+| INTTEST     | Test interrupt vector hooking.                              |
 
 Additional documentation on all of these applications can be found in
 “RomWBW Applications.pdf” in the Doc directory of the distribution.
@@ -1100,7 +1060,7 @@ through the normal startup process just like it was started from ROM.
 However, your ROM has not been updated and the next time you boot your
 system, it will revert to the system image contained in ROM.
 
-# Upgrading via Flash Utility
+## Upgrading via Flash Utility
 
 If you do not have easy access to a ROM programmer, it is usually
 possible to reprogram your system ROM using the FLASH utility from Will
@@ -1142,7 +1102,7 @@ To confirm your ROM chip has been successfully updated, restart your
 system and boot an operating system from ROM. Do not boot from a disk
 device yet. Review the boot messages to see if any issues have occurred.
 
-# Upgrading via XModem Flash Updater
+## Upgrading via XModem Flash Updater
 
 Similar to using the Flash utility, the system ROM can be updated or
 upgraded through the ROM based updater utility. This works by by
@@ -1157,7 +1117,7 @@ file.
 
 More information can be found in the ROM Applications document.
 
-# Post Update System Image and Application update process
+## Post Upgrade System Image and Application Update Process
 
 Once you are satisfied that the ROM is working well, you will need to
 update the system images and RomWBW custom applications on your disk
@@ -1226,21 +1186,20 @@ system on your disk.
 
     After this is done, you will need to use `SYSCOPY` to place the ZPM3
     loader image on the boot tracks of all ZPM3 boot disks/slices. The
-    loader image is called `CPMLDR.SYS`. You must then copy (at a
+    loader image is called `ZPMLDR.SYS`. You must then copy (at a
     minimum) `CPM3.SYS`, `ZCCP.COM`, `ZINSTAL.ZPM`, and `STARTZPM.COM`
     onto the disk/slice. Assuming you copied the ZPM3 boot files onto
     your RAM disk at A:, you would use:
 
-        A>B:SYSCOPY C:=CPMLDR.SYS
+        A>B:SYSCOPY C:=ZPMLDR.SYS
         A>B:COPY CPM3.SYS C:
         A>B:COPY ZCCP.COM C:
         A>B:COPY ZINSTAL.ZPM C:
         A>B:COPY STARTZPM.COM C:
 
-    You may be wondering if the references to `CPMLDR.SYS` and
-    `CPM3.SYS` are typos. They are not. ZPM3 uses the same loader image
-    as CPM3. The ZPM3 main system code file is called `CPM3.SYS` which
-    is the same name as CP/M 3 uses, but the file contents are not the
+    You may be wondering if the reference to `CPM3.SYS` is a typo. It is
+    not. The ZPM3 main system code file is called `CPM3.SYS` which is
+    the same name as CP/M 3 uses, but the file contents are not the
     same.
 
 Finally, if you have copies of any of the RomWBW custom applications on
@@ -1272,7 +1231,7 @@ images.
 -   FAT.COM
 -   TUNE.COM
 
-# System Update
+## System Update
 
 If the system running ROMWBW utilizes the SST39SF040 Flash chip then it
 is possible to do a System Update in place of a System Upgrade in some
@@ -1298,9 +1257,9 @@ extension “.rom” and be 512Kb or 1024Kb in size.
 Transferring and flashing the System Update is accomplished in the same
 manner as described above in *Upgrading* with the required difference
 being that the flash application needs to be directed to complete a
-partial flash using the /p command line switch.
+partial flash using the /P command line switch.
 
-`E>flash write rom.upd /p`
+`E>FLASH WRITE ROM.UPD /P`
 
 # RomWBW Distribution
 
@@ -1317,12 +1276,12 @@ set of directories. Each of these directories has it’s own ReadMe.txt
 file describing the contents in detail. In summary, these directories
 are:
 
-| Application | Description                                                                                                                             |
-|-------------|-----------------------------------------------------------------------------------------------------------------------------------------|
-| Binary      | The final output files of the build process are placed here. Most importantly, are the ROM images with the file names ending in “.rom”. |
-| Doc         | Contains various detailed documentation including the operating systems, RomWBW architecture, etc.                                      |
-| Source      | Contains the source code files used to build the software and ROM images.                                                               |
-| Tools       | Contains the MS Windows programs that are used by the build process or that may be useful in setting up your system.                    |
+| Application | Description                                                                                                                         |
+|-------------|-------------------------------------------------------------------------------------------------------------------------------------|
+| Binary      | The final output files of the build process are placed here. Most importantly, the ROM images with the file names ending in “.rom”. |
+| Doc         | Contains various detailed documentation including the operating systems, RomWBW architecture, etc.                                  |
+| Source      | Contains the source code files used to build the software and ROM images.                                                           |
+| Tools       | Contains the MS Windows programs that are used by the build process or that may be useful in setting up your system.                |
 
 # Acknowledgments
 
@@ -1343,10 +1302,11 @@ applications are no longer provided.
     driver.
 -   Ed Brindley contributed some of the code that supports the RC2014
     platform.
--   Phil Summers contributed Forth and BASIC in ROM, the AY-3-8910 sound
-    driver as well as a long list of general code enhancements.
+-   Phil Summers contributed the Forth and BASIC adaptations in ROM, the
+    AY-3-8910 sound driver as well as a long list of general code
+    enhancements.
 -   Phillip Stevens contributed support for FreeRTOS.
--   Curt Mayer contributed the Linux / MacOS build process.
+-   Curt Mayer contributed the original Linux / MacOS build process.
 -   UNA BIOS and FDISK80 are the products of John Coffman.
 -   FLASH4 is a product of Will Sowerbutts.
 -   CLRDIR is a product of Max Scane.
@@ -1356,6 +1316,48 @@ applications are no longer provided.
 -   The RomWBW Disk Catalog document was produced by Mykl Orders.
 
 Contributions of all kinds to RomWBW are very welcome.
+
+# Licensing
+
+RomWBW is free software: you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free
+Software Foundation, either version 3 of the License, or (at your
+option) any later version.
+
+RomWBW is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+more details.
+
+You should have received a copy of the GNU General Public License along
+with RomWBW. If not, see <https://www.gnu.org/licenses/>.
+
+Portions of RomWBW were created by, contributed by, or derived from the
+work of others. It is believed that these works are being used in
+accordance with the intentions and/or licensing of their creators.
+
+If anyone feels their work is being used outside of it’s intended
+licensing, please notify:
+
+> Wayne Warthen  
+> wwarthen@gmail.com
+
+RomWBW is an aggregate work. It is composed of many individual,
+standalone programs that are distributed as a whole to function as a
+cohesive system. Each program may have it’s own licensing which may be
+different from other programs within the aggregate.
+
+In some cases, a single program (e.g., CP/M Operating System) is
+composed of multiple components with different licenses. It is believed
+that in all such cases the licenses are compatible with GPL version 3.
+
+RomWBW encourages code contributions from others. Contributors may
+assert their own copyright in their contributions by annotating the
+contributed source code appropriately. Contributors are further
+encouraged to submit their contributions via the RomWBW source code
+control system to ensure their contributions are clearly documented.
+
+All contributions to RomWBW are subject to this license.
 
 # Getting Assistance
 

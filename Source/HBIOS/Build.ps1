@@ -76,8 +76,8 @@ while ($true)
 
 while ($true)
 {
-	if (($RomSize -eq 128) -or ($RomSize -eq 256) -or ($RomSize -eq 512) -or ($RomSize -eq 1024)) {break}
-	$RomSize = (Read-Host -prompt "ROM Size [128|256|512|1024]").Trim()
+	if (($RomSize -eq 0) -or ($RomSize -eq 128) -or ($RomSize -eq 256) -or ($RomSize -eq 512) -or ($RomSize -eq 1024)) {break}
+	$RomSize = (Read-Host -prompt "ROM Size [0|128|256|512|1024]").Trim()
 }
 
 #

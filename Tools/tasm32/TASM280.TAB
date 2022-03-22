@@ -127,8 +127,8 @@ DEC  L       2D   1 NOP 1
 DEC  SP      3B   1 NOP 1
 DI   ""      F3   1 NOP 1
 DJNZ *       10   2 R1  1
-
 EI   ""      FB   1 NOP 1
+EI   *       7FED 3 NOP 1	/* Z280 */
 EX   (SP),HL E3   1 NOP 1
 EX   (SP),IX E3DD 2 NOP 1
 EX   (SP),IY E3FD 2 NOP 1
@@ -157,6 +157,8 @@ IN   H,(C)   60ED 2 NOP 1
 IN   L,(C)   68ED 2 NOP 1
 
 IN   A,(*)   DB   2 NOP 1
+
+INW  HL,(C)  B7ED 2 NOP 1	/* Z280 */
 
 IN0   A,(*)  38ED 3 NOP 2
 IN0   B,(*)  00ED 3 NOP 2
@@ -342,6 +344,8 @@ LD   SP,HL   F9   1 NOP 1
 LD   SP,IX   F9DD 2 NOP 1
 LD   SP,IY   F9FD 2 NOP 1
 LD   SP,*    31   3 NOP 1
+LDUD  A,(HL) 86ED 2 NOP 1	/* Z280 */
+LDUP  A,(HL) 96ED 2 NOP 1	/* Z280 */
 LDCTL (C),HL 6EED 2 NOP 1	/* Z280 */
 LDCTL HL,(C) 66ED 2 NOP 1	/* Z280 */
 LDCTL USP,HL 8FED 2 NOP 1	/* Z280 */
@@ -378,6 +382,7 @@ OTDR ""      BBED 2 NOP 1
 OTIM ""      83ED 2 NOP 2
 OTIMR ""     93ED 2 NOP 2
 OTIR ""      B3ED 2 NOP 1
+OTIRW ""     93ED 2 NOP 1	/* Z280 */
 
 OUT  (C),A   79ED 2 NOP 1
 OUT  (C),B   41ED 2 NOP 1
@@ -524,6 +529,9 @@ SBC  HL,DE   52ED 2 NOP 1
 SBC  HL,HL   62ED 2 NOP 1
 SBC  HL,SP   72ED 2 NOP 1
 SBC  A,*     DE   2 NOP 1
+
+SC   *       71ED 4 NOP 1	/* Z280 */
+
 SCF  ""      37   1 NOP 1
 
 SET  *,(HL)  C6CB 2 ZBIT 1

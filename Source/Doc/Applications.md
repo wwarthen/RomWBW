@@ -47,7 +47,8 @@ found:
 | TALK        | Yes      | Yes        | Yes      |
 | RTC         | Yes      | Yes        | Yes      |
 | TIMER       | Yes      | Yes        | Yes      |
-| INTTEST     | Yes      | Yes        | Yes      |
+| CPUSPD      | Yes      | Yes        | Yes      |
+| INTTEST     | No       | Yes        | Yes      |
 | FAT         | No       | Yes        | Yes      |
 | TUNE        | No       | Yes        | Yes      |
 
@@ -166,6 +167,11 @@ system to fail and force you to reboot.
 This command is particularly sensitive to being matched to the
 appropriate version of the RomWBW ROM you are using. Be very careful
 to keep all copies of `ASSIGN.COM` up to date with your ROM.
+
+Additionally, the `ASSIGN` command must be able to adjust to CP/M 2.2
+vs. CP/M 3.  If you utilize an RSX that modifies the BDOS version
+returned, you are likely to have serious problems.  In this case, be
+sure to use `ASSIGN` prior to loading the RSX or after it is unloaded.
 
 ## Etymology
 
@@ -953,5 +959,72 @@ hardware interface code is specific to RomWBW. The sound file decoding
 software was adapted and embedded from pre-existing sources. The YM
 player code is from MYMPLAY 0.4 by Lieves!Tuore and the PT player code
 is (c)2004-2007 S.V.Bulba <vorobey@mail.khstu.ru>.
+
+The source code is provided in the RomWBW distribution.
+
+# CPUSPD
+
+The `CPUSPD` application is used to change the running speed and wait
+states of a RomWBW system.
+
+  The functionality is highly dependent on
+the capabilities of your system.
+
+At present, all Z180 systems can change their CPU speed and their
+wait states.  SBC and MBC systems may be able to change their CPU
+speed if the hardware supports it and it is enabled in the HBIOS
+configuration.
+
+## Syntax
+
+| `CPUSPD [`*`<speed>`*`[,[`*`<memws>`*`][,[`*`<iows>`*`]]]`
+
+*`<speed>`* is one of HALF, FULL, or DOUBLE.  
+*`<memws>`* is a number specifying the desired memory wait states.  
+*`<iows>`* is a number specifying the desired I/O wait states.
+
+## Usage
+
+Entering `CPUSPD` with no parameters will display the current CPU speed
+and wait state information of the running system.  Wait state
+information is not available for all systems.
+
+To modify the running speed of a system, you can specify the
+`*`<speed>`*` parameter.  To modify either or both of the wait
+states, you can enter the desired number.  Either or both of the wait
+state parameters may be omitted and the current wait state settings
+will remain in effect.
+
+## Notes
+
+The ability to modify the running speed and wait states of a system
+varies widely depending on the hardware capabilities and the HBIOS
+configuration settings.
+
+Note that it is frequently impossible to tell if a system is capable
+of dynamic speed changes.  This function makes the changes blindly.
+If an attempt is made to change the speed of a system
+that is definitely incapable of doing so, then an error result is
+returned.
+
+The `CPUSPD` command makes no attempt to ensure that the new CPU
+speed will actually work on the current hardware.  Setting a CPU
+speed that exceeds the capabilities of the system will result in
+unstable operation or a system stall.
+
+Some peripherals are dependant on the CPU speed.  For example, the Z180
+ASCI baud rate and system timer are derived from the CPU speed.  The
+CPUSPD applicastion will attempt to adjust these peripherals for
+correct operation after modifying the CPU speed.  However, in some
+cases this may not be possible.  The baud rate of ASCI ports have a
+limited set of divisors.  If there is no satisfactory divisor to
+retain the existing baud rate under the new CPU speed, then the baud
+rate of the ASCI port(s) will be affected.
+
+## Etymology
+
+The `CPUSPD` application was custom written for RomWBW. All of the
+hardware interface code is specific to RomWBW and the application will
+not operate correctly on non-RomWBW systems.
 
 The source code is provided in the RomWBW distribution.

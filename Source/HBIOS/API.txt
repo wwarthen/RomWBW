@@ -100,9 +100,10 @@ GET ($F8):
                                                 H=Z80 CPU Variant
                                                 L=CPU Speed in MHz
                                                 DE=CPU Speed in KHz
+						BC=Oscillator Freq in KHz
 
     MEMINFO ($F1):
-      BC=Function/Subfunction                   A=Result
+      BC=FuSnction/Subfunction                   A=Result
                                                 D=# ROM Banks
                                                 E=# RAM Banks
 
@@ -110,6 +111,13 @@ GET ($F8):
       BC=Function/Subfunction                   A=Result
                                                 D=BIOS Bank Id
                                                 E=User Bank Id
+
+    CPUSPD ($F3):
+      BC=Function/Subfunction			A=Result
+						L=Clock Mult (0:Half, 1:Full, 2: Double)
+						D=Memory Wait States
+						E=I/O Wait States
+						
 
 SET ($F9):
   BC=Function/Subfunction                       A=Result
@@ -126,6 +134,13 @@ SET ($F9):
       BC=Function/Subfunction                   A=Result
       DE=Boot Volume (Disk Unit/Slice)
       L=Boot Bank Id
+
+    CPUSPD ($F3):
+      BC=Function/Subfunction			A=Result
+						L=Clock Mult (0:Half, 1:Full, 2: Double)
+						D=Memory Wait States
+						E=I/O Wait States
+						
 
 PEEK ($FA):
   B=Function                       		A=Result

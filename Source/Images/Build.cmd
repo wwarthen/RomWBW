@@ -23,6 +23,7 @@ call BuildDisk.cmd nzcom hd wbw_hd512 ..\zsdos\zsys_wbw.sys || exit /b
 call BuildDisk.cmd cpm3 hd wbw_hd512 ..\cpm3\cpmldr.sys || exit /b
 call BuildDisk.cmd zpm3 hd wbw_hd512 ..\zpm3\zpmldr.sys || exit /b
 call BuildDisk.cmd ws4 hd wbw_hd512 || exit /b
+call BuildDisk.cmd dos65 hd wbw_hd512 ..\zsdos\zsys_wbw.sys || exit /b
 
 if exist ..\BPBIOS\bpbio-ww.rel call BuildDisk.cmd bp hd wbw_hd512 || exit /b
 

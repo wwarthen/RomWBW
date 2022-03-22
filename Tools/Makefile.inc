@@ -37,7 +37,8 @@ CASEFN = $(TOOLS)/unix/casefn.sh
 #
 # compiler/assembler locations and flags
 #
-ZXCC=$(BINDIR)/zx
+ZXCC=$(BINDIR)/zxcc
+export CPMDIR80=$(TOOLS)/cpm/
 TASM=$(BINDIR)/uz80as -t z80
 TASMFLAGS=
 OPENSPIN=$(BINDIR)/openspin
@@ -48,7 +49,7 @@ CPMCHATTR=$(BINDIR)/cpmchattr
 #
 # directory containing cpm binaries
 #
-CPM=$(TOOLS)/cpm/bin
+CPM=$(TOOLS)/cpm/bin80/
 
 #
 # .ONESHELL uses a single shell instance for all shell scripts.
@@ -96,10 +97,10 @@ CPM=$(TOOLS)/cpm/bin
 %.rel: %.z80
 	$(ZXCC) $(CPM)/Z80ASM -$(basename $<)/MF
 
-%.hex: %.z80
-	$(ZXCC) $(CPM)/Z80ASM -$(basename $<)/HF
+#%.hex: %.z80
+#	$(ZXCC) $(CPM)/Z80ASM -$(basename $<)/HF
 
-%.hex: %.180
+%.hex: %.z80
 	$(ZXCC) $(CPM)/SLR180 -$(basename $<)/HF
 
 %.rel: %.azm
@@ -110,6 +111,9 @@ CPM=$(TOOLS)/cpm/bin
 
 %.rel: %.mac
 	$(ZXCC) $(CPM)/M80 -=$(basename $<)
+
+%.com: %.rel
+	$(ZXCC) $(CPM)/L80 -$(basename $<),$(basename $<).com/n/e
 
 ifeq ($(UNAME), Linux)
 %.eeprom: %.spin

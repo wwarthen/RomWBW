@@ -8,4 +8,4 @@ all::
 	mkdir -p Tunes
 
 clobber::
-	@rm -f *.bin *.com *.img *.rom *.pdf *.log *.eeprom *.ovr *.hlp *.doc *.COM *.BIN Tunes/*.mym Tunes/*.pt?
+	@rm -f *.bin *.com *.img *.rom *.pdf *.log *.eeprom *.ovr *.hlp *.doc *.COM *.BIN Tunes/*.mym Tunes/*.pt? Tunes/*.vgm

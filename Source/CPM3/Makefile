@@ -19,7 +19,7 @@ TOOLS = ../../Tools
 
 include $(TOOLS)/Makefile.inc
 
-export ZXINCDIR = ../
+export INCDIR80 = ../
 
 BIOSOBJS = bioskrnl.rel scb.rel boot.rel chario.rel 
 BIOSOBJS += move.rel drvtbl.rel diskio.rel util.rel
@@ -61,31 +61,31 @@ zpmbios3:
 	make OBJECTS=zpmbios3.spr DEST=
 
 cpmldr.bin:	biosldrd.rel cpmldr.rel util.rel
-	$(ZXCC) $(TOOLS)/cpm/bin/LINK -CPMLDRD[L100]=CPMLDR,BIOSLDRD,UTIL
+	$(ZXCC) LINK -CPMLDRD[L100]=CPMLDR,BIOSLDRD,UTIL
 	mv cpmldrd.com cpmldr.bin
 
 cpmldr.com: biosldrc.rel cpmldr.rel util.rel
-	$(ZXCC) $(TOOLS)/cpm/bin/LINK -CPMLDRC[L100]=CPMLDR,BIOSLDRC,UTIL
+	$(ZXCC) LINK -CPMLDRC[L100]=CPMLDR,BIOSLDRC,UTIL
 	mv cpmldrc.com cpmldr.com
 
 biosldrc.rel: biosldr.z80 optcmd.lib
 	cp optcmd.lib ldropts.lib	
-	$(ZXCC) $(TOOLS)/cpm/bin/Z80ASM -BIOSLDR/MF
+	$(ZXCC) Z80ASM -BIOSLDR/MF
 	mv biosldr.rel biosldrc.rel
 
 biosldrd.rel: biosldr.z80 optdsk.lib
 	cp optdsk.lib ldropts.lib	
-	$(ZXCC) $(TOOLS)/cpm/bin/Z80ASM -BIOSLDR/MF
+	$(ZXCC) Z80ASM -BIOSLDR/MF
 	mv biosldr.rel biosldrd.rel
  
 bios3.spr: $(BIOSOBJS)
-	$(ZXCC) $(CPM)/LINK -bios3[OS]=$(BIOSNAMES)
+	$(ZXCC) LINK -bios3[OS]=$(BIOSNAMES)
 
 bnkbios3.spr: $(BIOSOBJS)
-	$(ZXCC) $(CPM)/LINK -bnkbios3[B]=$(BIOSNAMES)
+	$(ZXCC) LINK -bnkbios3[B]=$(BIOSNAMES)
 
 zpmbios3.spr: $(BIOSOBJS)
-	$(ZXCC) $(TOOLS)/cpm/bin/LINK -zpmbios3[B]=$(BIOSNAMES)
+	$(ZXCC) LINK -zpmbios3[B]=$(BIOSNAMES)
 
 cpm3.sys: cpm3$(DEFCPM3).sys
 	cp cpm3$(DEFCPM3).sys cpm3.sys

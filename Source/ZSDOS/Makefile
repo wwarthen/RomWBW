@@ -8,10 +8,10 @@ CCP = ../ZCPR-DJ/zcpr.bin
 include $(TOOLS)/Makefile.inc
 
 zsdos.rel: zsdos.z80
-	$(ZXCC) $(CPM)/ZMAC -$< -/P
+	$(ZXCC) ZMAC -$< -/P
 
 zsdos.bin: zsdos.rel
-	$(ZXCC) $(CPM)/LINK -$@=$<[LD800]
+	$(ZXCC) LINK -$@=$<[LD800]
 
 %.sys:	%.bin loader.bin
 	cat loader.bin $*.bin > $@
