@@ -96,7 +96,7 @@ Tools/unix/zx/zx
 !Source/ZRC/*.bin
 !Source/ZZR/*.bin
 !Source/ZZR/*.hex
-!Tools/cpm/bin/*
+!Tools/cpm/**
 !Tools/unix/zx/*
 !Tools/zx/*
 

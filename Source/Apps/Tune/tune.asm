@@ -44,6 +44,7 @@
 ;   2020-09-03 [E?B] Add support for Ed Brindley YM/AY Sound Card v6
 ;   2021-08-13 [WBW] Add support for LiNC Z50 Sound Card
 ;   2021-08-17 [WBW] When playing via HBIOS, call BF_SNDRESET at end
+;   2022-03-20 [DDW] Add support for MBC PSG module
 ;_______________________________________________________________________________
 ;
 ; ToDo:
@@ -653,7 +654,7 @@ TMP		.DB	0	; work around use of undocumented Z80
 HBIOSMD		.DB	0	; NON-ZERO IF USING HBIOS SOUND DRIVER, ZERO OTHERWISE
 OCTAVEADJ	.DB	0	; AMOUNT TO ADJUST OCTAVE UP OR DOWN
 
-MSGBAN		.DB	"Tune Player for RomWBW v3.4, 17-Aug-2021",0
+MSGBAN		.DB	"Tune Player for RomWBW v3.5, 20-Mar-2022",0
 MSGUSE		.DB	"Copyright (C) 2021, Wayne Warthen, GNU GPL v3",13,10
 		.DB	"PTxPlayer Copyright (C) 2004-2007 S.V.Bulba",13,10
 		.DB	"MYMPlay by Marq/Lieves!Tuore",13,10,13,10
