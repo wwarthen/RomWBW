@@ -29,6 +29,8 @@
 ;
 ;[2021/07/10] v1.7 Support MBC (AJL)
 ;
+;[2022/03/27] v1.8 Support RHYOPHYRE
+;
 ; Constants
 ;
 mask_data	.EQU	%10000000	; RTC data line
@@ -46,6 +48,7 @@ PORT_SCZ180	.EQU	$0C		; RTC port for SCZ180
 PORT_DYNO	.EQU	$0C		; RTC port for DYNO
 PORT_RCZ280	.EQU	$C0		; RTC port for RCZ280
 PORT_MBC	.EQU	$70		; RTC port for MBC
+PORT_RPH	.EQU	$84		; RTC port for RHYOPHYRE
 
 
 BDOS		.EQU	5		; BDOS invocation vector
@@ -1127,6 +1130,11 @@ HINIT:
 	CP	13		; MBC
 	JR	Z,RTC_INIT2
 ;
+	LD	C,PORT_RPH
+	LD	DE,PLT_RPH
+	CP	14		; RHYOPHYRE
+	JR	Z,RTC_INIT2
+;
 	; Unknown platform
 	LD	DE,PLTERR	; BIOS error message
 	LD	C,9		; BDOS string display function
@@ -1622,7 +1630,7 @@ TESTING_BIT_DELAY_OVER:
 
 RTC_HELP_MSG:
 	.DB	0Ah, 0Dh		; line feed and carriage return
-	.TEXT	"RTC: Version 1.7"
+	.TEXT	"RTC: Version 1.8"
 	.DB	0Ah, 0Dh		; line feed and carriage return
 	.TEXT	"Commands: E)xit T)ime st(A)rt S)et R)aw L)oop C)harge N)ocharge D)elay I)nit G)et P)ut B)oot W)arm-start H)elp"
 	.DB	0Ah, 0Dh		; line feed and carriage return
@@ -1751,6 +1759,7 @@ PLT_SCZ180	.TEXT	", SC Z180 RTC Module Latch Port 0x0C\r\n$"
 PLT_DYNO	.TEXT	", DYNO RTC Module Latch Port 0x0C\r\n$"
 PLT_RCZ280	.TEXT	", RC2014 Z280 RTC Module Latch Port 0xC0\r\n$"
 PLT_MBC		.TEXT	", MBC RTC Latch Port 0x70\r\n$"
+PLT_RPH		.TEXT	", RHYOPHYRE RTC Latch Port 0x84\r\n$"
 
 ;
 ; Generic FOR-NEXT loop algorithm
