@@ -6,12 +6,19 @@
 ; Simple utility that performs simple tests of an 8242 PS/2 controller,
 ; keyboard, and mouse.
 ;
+; WBW 2022-03-28: Add menu driven port selection
+;                 Add support for RHYOPHYRE
+;
 ;=======================================================================
 ;
 ; PS/2 Keyboard/Mouse controller port addresses (adjust as needed)
 ;
-iocmd	.equ	$E3	; PS/2 controller command port address
-iodat	.equ	$E2	; PS/2 controller data port address
+; MBC:
+iocmd_mbc	.equ	$E3	; PS/2 controller command port address
+iodat_mbc	.equ	$E2	; PS/2 controller data port address
+; RPH:
+iocmd_rph	.equ	$8D	; PS/2 controller command port address
+iodat_rph	.equ	$8C	; PS/2 controller data port address
 ;
 cpumhz	.equ	8	; for time delay calculations (not critical)
 ;
@@ -60,14 +67,53 @@ main:
 ; Display active controller port addresses
 ;
 	call	crlf2
+	ld	de,str_menu
+	call	prtstr
+main000:
+	ld	c,$06			; BDOS direct console I/O
+	ld	e,$FF			; Subfunction = read
+	call	bdos
+	cp	0
+	jr	z,main000
+	cp	'1'
+	jr	z,setup_mbc
+	cp	'2'
+	jr	z,setup_rph
+	cp	'x'
+	ret	z
+	cp	'X'
+	ret	z
+	jr	main
+;
+setup_mbc:
+	ld	a,iocmd_mbc
+	ld	(iocmd),a
+	ld	a,iodat_mbc
+	ld	(iodat),a
+	ld	de,str_mbc
+	jr	main00
+;
+setup_rph:
+	ld	a,iocmd_rph
+	ld	(iocmd),a
+	ld	a,iodat_rph
+	ld	(iodat),a
+	ld	de,str_rph
+	jr	main00
+;
+main00:
+	call	prtstr
+	call	crlf2
 	ld	de,str_cmdport
 	call	prtstr
-	ld	a,iocmd
+	;ld	a,iocmd
+	ld	a,(iocmd)
 	call	prthex
 	call	crlf
 	ld	de,str_dataport
 	call	prtstr
-	ld	a,iodat
+	;ld	a,iodat
+	ld	a,(iodat)
 	call	prthex
 ;
 	call	test_ctlr
@@ -782,7 +828,9 @@ wait_write:
 	ld	a,(timeout)		; setup timeout constant
 	ld	b,a
 wait_write1:
-	in	a,(iocmd)		; get status
+	ld	a,(iocmd)		; cmd port
+	ld	c,a			; ... to C
+	in	a,(c)			; get status
 	ld	c,a			; save status
 	and	$02			; isolate input buf status bit
 	ret	z			; 0 means ready, all done
@@ -804,7 +852,9 @@ wait_read:
 	ld	a,(timeout)		; setup timeout constant
 	ld	b,a
 wait_read1:
-	in	a,(iocmd)		; get status
+	ld	a,(iocmd)		; cmd port
+	ld	c,a			; ... to C
+	in	a,(c)			; get status
 	ld	c,a			; save status
 	and	$01			; isolate input buf status bit
 	xor	$01			; invert so 0 means ready
@@ -824,7 +874,9 @@ check_read:
 ; Check for data ready to read
 ;   A=0 indicates data available (ZF set)
 ;
-	in	a,(iocmd)		; get status
+	ld	a,(iocmd)		; cmd port
+	ld	c,a			; ... to C
+	in	a,(c)			; get status
 	and	$01			; isolate input buf status bit
 	xor	$01			; invert so 0 means ready
 	ret
@@ -834,7 +886,9 @@ check_read_kbd:
 ; Check for keyboard data ready to read
 ;   A=0 indicates data available (ZF set)
 ;
-	in	a,(iocmd)		; get status
+	ld	a,(iocmd)		; cmd port
+	ld	c,a			; ... to C
+	in	a,(c)			; get status
 	and	%00100001		; isolate input buf status bit
 	cp	%00000001		; data ready, not mouse
 	ret
@@ -844,7 +898,9 @@ check_read_mse:
 ; Check for mouse data ready to read
 ;   A=0 indicates data available (ZF set)
 ;
-	in	a,(iocmd)		; get status
+	ld	a,(iocmd)		; cmd port
+	ld	c,a			; ... to C
+	in	a,(c)			; get status
 	and	%00100001		; isolate input buf status bit
 	cp	%00100001		; data ready, is mouse
 	ret
@@ -860,8 +916,10 @@ put_cmd:
 	scf				; else, signal timeout error
 	ret				; and bail out
 put_cmd1:
+	ld	a,(iocmd)		; cmd port
+	ld	c,a			; ... to C
 	ld	a,e			; recover value to write
-	out	(iocmd),a		; write it
+	out	(c),a			; write it
 	or	a			; clear CF for success
 	ret
 ;
@@ -889,8 +947,10 @@ put_data:
 	scf				; else, signal timeout error
 	ret				; and bail out
 put_data1:
+	ld	a,(iodat)		; data port
+	ld	c,a			; ... to C
 	ld	a,e			; recover value to write
-	out	(iodat),a		; write it
+	out	(c),a			; write it
 	or	a			; clear CF for success
 	ret
 ;
@@ -947,7 +1007,9 @@ get_data:
 	scf				; else signal timeout error
 	ret				; and bail out
 get_data1:
-	in	a,(iodat)		; get data byte
+	ld	a,(iodat)		; data port
+	ld	c,a			; ... to C
+	in	a,(c)			; get data byte
 	or	a			; clear CF for success
 	ret
 ;
@@ -1239,7 +1301,14 @@ delay1:
 ; Constants
 ;=======================================================================
 ;
-str_banner		.db	"PS/2 Keyboard/Mouse Information v0.4, 7-Jan-2022",0
+str_banner		.db	"PS/2 Keyboard/Mouse Information v0.5, 28-Mar-2022",0
+str_menu		.db	"PS/2 Controller Port Options:\r\n\r\n"
+			.db	"  1 - MBC\r\n"
+			.db	"  2 - RHYOPHYRE\r\n"
+			.db	"  X - Exit Application\r\n"
+			.db	"\r\nSelection? ",0
+str_mbc			.db	"MBC",0
+str_rph			.db	"RHYOPHYRE",0
 str_exit		.db	"Done, Thank you for using PS/2 Keyboard/Mouse Information!",0
 str_cmdport		.db	"Controller Command Port: ",0
 str_dataport		.db	"Controller Data Port: ",0
@@ -1320,6 +1389,9 @@ str_mse_failed		.db	"***** MOUSE HARDWARE ERROR *****",13,10,13,10
 stksav		.dw	0		; stack pointer saved at start
 		.fill	stksiz,0	; stack
 stack		.equ	$		; stack top
+;
+iocmd		.db	0
+iodat		.db	0
 ;
 workbuf		.fill	8
 workbuf_len	.db	0

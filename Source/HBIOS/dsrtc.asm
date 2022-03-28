@@ -66,28 +66,28 @@
 ; RTC LATCH WRITE
 ; ---------------
 ;
-; BIT	SBC	SBC-004	MFPIC	N8	N8-CSIO	MK4	SC130	SC131	SC126		MBC
-; -----	-------	-------	-------	-------	-------	-------	-------	-------	---------------	-------
-; D7	RTC_OUT RTC_OUT	--	RTC_OUT RTC_OUT	RTC_OUT	--	--	RTC_OUT,I2C_SDA	RTC_OUT
-; D6	RTC_CLK RTC_CLK	--	RTC_CLK RTC_CLK	RTC_CLK	--	--	RTC_CLK		RTC_CLK
-; D5	/RTC_WE /RTC_WE	--	/RTC_WE /RTC_WE	/RTC_WE	--	--	/RTC_WE		/RTC_WE
-; D4	RTC_CE	RTC_CE	--	RTC_CE  RTC_CE	RTC_CE	--	--	RTC_CE		RTC_CE
-; D3	NC	CLKSEL	/RTC_CE	NC	NC	NC	--	--	/SPI_CS2	CLKSEL
-; D2	NC	SPK	RTC_CLK	SPI_CS	SPI_CS	NC	/SPI_CS1/SPI_CS1/SPI_CS1	SPK
-; D1	--	--	RTC_WE	SPI_CLK	NC	NC	--	--	FS		LED1
-; D0	--	--	RTC_OUT	SPI_DI	NC	NC	--	--	I2C_SCL		LED0
+; BIT	SBC	SBC-004	MFPIC	N8	N8-CSIO	MK4	SC130	SC131	SC126		MBC	RPH	
+; -----	-------	-------	-------	-------	-------	-------	-------	-------	---------------	------- -------	
+; D7	RTC_OUT RTC_OUT	--	RTC_OUT RTC_OUT	RTC_OUT	--	--	RTC_OUT,I2C_SDA	RTC_OUT RTC_OUT 
+; D6	RTC_CLK RTC_CLK	--	RTC_CLK RTC_CLK	RTC_CLK	--	--	RTC_CLK		RTC_CLK RTC_CLK 
+; D5	/RTC_WE /RTC_WE	--	/RTC_WE /RTC_WE	/RTC_WE	--	--	/RTC_WE		/RTC_WE /RTC_WE 
+; D4	RTC_CE	RTC_CE	--	RTC_CE  RTC_CE	RTC_CE	--	--	RTC_CE		RTC_CE  RTC_CE	
+; D3	NC	CLKSEL	/RTC_CE	NC	NC	NC	--	--	/SPI_CS2	CLKSEL  NC	
+; D2	NC	SPK	RTC_CLK	SPI_CS	SPI_CS	NC	/SPI_CS1/SPI_CS1/SPI_CS1	SPK     NC	
+; D1	--	--	RTC_WE	SPI_CLK	NC	NC	--	--	FS		LED1    NC	
+; D0	--	--	RTC_OUT	SPI_DI	NC	NC	--	--	I2C_SCL		LED0    NC	
 ;
 ; RTC LATCH READ
 ; --------------
 ;
-; D7	--	--	--	--	--	--	--	--	I2C_SDA		--
-; D6	CFG	CFG	--	SPI_DO	CFG	--	--	--	--		CFG
-; D5	--	--	--	--	--	--	--	--	--		--
-; D4	--	--	--	--	--	--	--	--	--		--
-; D3	--	--	--	--	--	--	--	--	--		--
-; D2	--	--	--	--	--	--	--	--	--		--
-; D1	----	--	--	--	--	--	--	--	--		CLKSEL
-; D0	RTC_IN	RTC_IN	RTC_IN	RTC_IN	RTC_IN	RTC_IN	--	--	RTC_IN		RTC_IN
+; D7	--	--	--	--	--	--	--	--	I2C_SDA		--	--
+; D6	CFG	CFG	--	SPI_DO	CFG	--	--	--	--		CFG	--
+; D5	--	--	--	--	--	--	--	--	--		--	--
+; D4	--	--	--	--	--	--	--	--	--		--	--
+; D3	--	--	--	--	--	--	--	--	--		--	--
+; D2	--	--	--	--	--	--	--	--	--		--	--
+; D1	----	--	--	--	--	--	--	--	--		CLKSEL	--
+; D0	RTC_IN	RTC_IN	RTC_IN	RTC_IN	RTC_IN	RTC_IN	--	--	RTC_IN		RTC_IN	RTC_IN
 ;
 #IF (DSRTCMODE == DSRTCMODE_STD)
 ;
