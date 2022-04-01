@@ -8,6 +8,7 @@
 ;
 ; WBW 2022-03-28: Add menu driven port selection
 ;                 Add support for RHYOPHYRE
+; WBW 2022-04-01: Add menu for test functions
 ;
 ;=======================================================================
 ;
@@ -45,6 +46,8 @@ bdos	.equ	$0005			; BDOS invocation vector
 	ld	de,str_banner		; banner
 	call	prtstr
 ;
+	call	setup
+;
 	call	main			; do the real work
 ;
 exit:
@@ -57,33 +60,29 @@ exit:
 	ld	sp,(stksav)		; restore stack
 	jp	restart			; return to CP/M via restart
 ;
-;
 ;=======================================================================
-; Main Program
+; Select and setup for hardware
 ;=======================================================================
 ;
-main:
-;
-; Display active controller port addresses
-;
+setup:
 	call	crlf2
-	ld	de,str_menu
+	ld	de,str_hwmenu
 	call	prtstr
-main000:
+setup1:
 	ld	c,$06			; BDOS direct console I/O
 	ld	e,$FF			; Subfunction = read
 	call	bdos
 	cp	0
-	jr	z,main000
-	cp	'1'
+	jr	z,setup1
+	call	upcase
+	call	prtchr
+	cp	'1'			; MBC
 	jr	z,setup_mbc
-	cp	'2'
+	cp	'2'			; RHYOPHYRE
 	jr	z,setup_rph
-	cp	'x'
-	ret	z
 	cp	'X'
-	ret	z
-	jr	main
+	jr	z,exit
+	jr	setup
 ;
 setup_mbc:
 	ld	a,iocmd_mbc
@@ -91,7 +90,7 @@ setup_mbc:
 	ld	a,iodat_mbc
 	ld	(iodat),a
 	ld	de,str_mbc
-	jr	main00
+	jr	setup2
 ;
 setup_rph:
 	ld	a,iocmd_rph
@@ -99,9 +98,9 @@ setup_rph:
 	ld	a,iodat_rph
 	ld	(iodat),a
 	ld	de,str_rph
-	jr	main00
+	jr	setup2
 ;
-main00:
+setup2:
 	call	prtstr
 	call	crlf2
 	ld	de,str_cmdport
@@ -116,32 +115,40 @@ main00:
 	ld	a,(iodat)
 	call	prthex
 ;
-	call	test_ctlr
-	jr	z,main0			; continue if ctlr OK
-	ld	de,str_kbd_failed
-	call	crlf2
-	call	prtstr
-	jr	mainz			; bail out if ctlr fails
+	xor	a
+	ret
 ;
-main0:
-	call	test_kbd
-	jr	z,main1			; completed all tests, continue
-	ld	de,str_kbd_failed
-	call	crlf2
-	call	prtstr
+;=======================================================================
+; Main Program
+;=======================================================================
 ;
+main:
+	call	crlf2
+	ld	de,str_menu
+	call	prtstr
 main1:
-	call	test_mse
-	jr	z,main2			; completed all tests, continue
-	ld	de,str_mse_failed
-	call	crlf2
-	call	prtstr
+	ld	c,$06			; BDOS direct console I/O
+	ld	e,$FF			; Subfunction = read
+	call	bdos
+	cp	0
+	jr	z,main1
+	call	upcase
+	call	prtchr
+	cp	'X'
+	jp	z,exit
+	call	main2
+	jr	main
 ;
 main2:
-	call	test_kbdmse
-;
-mainz:
-	xor	a
+	; Dispatch to test functions
+	cp	'C'			; Test Controller
+	jp	z,test_ctlr
+	cp	'K'			; Test Keyboard
+	jp	z,test_kbd
+	cp	'M'			; Test Mouse
+	jp	z,test_mse
+	cp	'B'			; Test Both
+	jp	z,test_kbdmse
 	ret
 ;
 ; Test 8242 PS/2 Controller
@@ -155,10 +162,8 @@ test_ctlr:
 	ret	nz
 ;
 	call	ctlr_test_p1
-	;ret	nz
 ;
 	call	ctlr_test_p2
-	;ret	nz
 ;
 	ret
 ;
@@ -169,13 +174,15 @@ test_kbd:
 ; First, we attempt to contact the controller and keyboard, then
 ; print the keyboard identity and scan codes supported
 ;
-	; Run test series with translation off
 	call	crlf2
 	ld	de,str_basic
 	call	prtstr
 ;
+	call	ctlr_test
+	jr	nz,test_kbd_fail
+;
 	call	test_kbd_basic
-	ret	nz
+	jr	nz,test_kbd_fail
 ;
 ; We make two passes through the test series with different controller
 ; setup values.  The first time is with scan code translation off and
@@ -201,6 +208,12 @@ test_kbd:
 ;
 	ret
 ;
+test_kbd_fail:
+	ld	de,str_kbd_failed
+	call	crlf2
+	call	prtstr
+	ret
+;
 ; Test Mouse
 ;
 test_mse:
@@ -208,22 +221,31 @@ test_mse:
 	ld	de,str_basic_mse
 	call	prtstr
 ;
+	call	ctlr_test
+	jr	nz,test_mse_fail
+;
 	ld	a,$10			; kbd disabled, mse enabled, no ints
 	call	ctlr_setup
-	ret	nz
+	jr	nz,test_mse_fail
 ;
 	call	mse_reset
-	ret	nz
+	jr	nz,test_mse_fail
 ;
 	call	mse_ident
-	ret	nz
+	jr	nz,test_mse_fail
 ;
 	call	mse_stream
-	ret	nz
+	jr	nz,test_mse_fail
 ;
 	call	mse_echo
 ;	
 	xor	a			; signal success
+	ret
+;
+test_mse_fail:
+	ld	de,str_mse_failed
+	call	crlf2
+	call	prtstr
 	ret
 ;
 ; Test Everything
@@ -233,25 +255,34 @@ test_kbdmse:
 	ld	de,str_kbdmse
 	call	prtstr
 ;
+	call	ctlr_test
+	jr	nz,test_kbdmse_fail
+;
 	ld	a,$00			; kbd enabled, mse enabled, no ints
 	call	ctlr_setup
-	ret	nz
+	jr	nz,test_kbdmse_fail
 ;
 	call	kbd_reset
-	ret	nz
+	jr	nz,test_kbdmse_fail
 ;
 	ld	a,2
 	call	kbd_setsc
 ;
 	call	mse_reset
-	ret	nz
+	jr	nz,test_kbdmse_fail
 ;
 	call	mse_stream
-	ret	nz
+	jr	nz,test_kbdmse_fail
 ;
 	call	kbdmse_echo
 ;	
 	xor	a			; signal success
+	ret
+;
+test_kbdmse_fail:
+	ld	de,str_kbdmse_failed
+	call	crlf2
+	call	prtstr
 	ret
 ;
 ; Perform basic keyboard tests, display keyboard identity, and
@@ -1082,7 +1113,6 @@ err_ret:
 ; Utility Routines
 ;=======================================================================
 ;
-;
 ; Print character in A without destroying any registers
 ;
 prtchr:
@@ -1105,6 +1135,16 @@ prtdot:
 	call	prtchr		; print it
 	pop	af		; restore af
 	ret			; done
+;
+; Uppercase character in A
+;
+upcase:
+	cp	'a'			; below 'a'?
+	ret	c			; if so, nothing to do
+	cp	'z'+1			; above 'z'?
+	ret	nc			; if so, nothing to do
+	and	~$20			; convert character to lower
+	ret				; done
 ;
 ; Print a zero terminated string at (de) without destroying any registers
 ;
@@ -1301,14 +1341,21 @@ delay1:
 ; Constants
 ;=======================================================================
 ;
-str_banner		.db	"PS/2 Keyboard/Mouse Information v0.5, 28-Mar-2022",0
-str_menu		.db	"PS/2 Controller Port Options:\r\n\r\n"
+str_banner		.db	"PS/2 Keyboard/Mouse Information v0.6, 1-Apr-2022",0
+str_hwmenu		.db	"PS/2 Controller Port Options:\r\n\r\n"
 			.db	"  1 - MBC\r\n"
 			.db	"  2 - RHYOPHYRE\r\n"
 			.db	"  X - Exit Application\r\n"
 			.db	"\r\nSelection? ",0
 str_mbc			.db	"MBC",0
 str_rph			.db	"RHYOPHYRE",0
+str_menu		.db	"PS/2 Testing Options:\r\n\r\n"
+			.db	"  C - Test PS/2 Controller\r\n"
+			.db	"  K - Test PS/2 Keyboard\r\n"
+			.db	"  M - Test PS/2 Mouse\r\n"
+			.db	"  B - Test Both PS/2 Keyboard and Mouse Together\r\n"
+			.db	"  X - Exit Application\r\n"
+			.db	"\r\nSelection? ",0
 str_exit		.db	"Done, Thank you for using PS/2 Keyboard/Mouse Information!",0
 str_cmdport		.db	"Controller Command Port: ",0
 str_dataport		.db	"Controller Data Port: ",0
@@ -1379,6 +1426,11 @@ str_kbd_failed		.db	"***** KEYBOARD HARDWARE ERROR *****",13,10,13,10
 str_mse_failed		.db	"***** MOUSE HARDWARE ERROR *****",13,10,13,10
 			.db	"A basic hardware or configuration issue prevented",13,10
 			.db	"the completion of the full set of mouse tests.",13,10
+			.db	"Check your hardware and verify the port",13,10
+			.db	"addresses being used for the controller",0
+str_kbdmse_failed	.db	"***** KEYBOARD/MOUSE HARDWARE ERROR *****",13,10,13,10
+			.db	"A basic hardware or configuration issue prevented",13,10
+			.db	"the completion of the full set of keyboard/mouse tests.",13,10
 			.db	"Check your hardware and verify the port",13,10
 			.db	"addresses being used for the controller",0
 ;
