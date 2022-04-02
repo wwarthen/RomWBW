@@ -9,6 +9,7 @@
 ; WBW 2022-03-28: Add menu driven port selection
 ;                 Add support for RHYOPHYRE
 ; WBW 2022-04-01: Add menu for test functions
+; WBW 2022-04-02: Fix prtchr register saving/recovery
 ;
 ;=======================================================================
 ;
@@ -1116,7 +1117,8 @@ err_ret:
 ; Print character in A without destroying any registers
 ;
 prtchr:
-	push	bc		; save registers
+	push	af		; save registers
+	push	bc
 	push	de
 	push	hl
 	ld	e,a		; character to print in E
@@ -1125,6 +1127,7 @@ prtchr:
 	pop	hl		; restore registers
 	pop	de
 	pop	bc
+	pop	af
 	ret
 ;
 prtdot:
@@ -1341,7 +1344,7 @@ delay1:
 ; Constants
 ;=======================================================================
 ;
-str_banner		.db	"PS/2 Keyboard/Mouse Information v0.6, 1-Apr-2022",0
+str_banner		.db	"PS/2 Keyboard/Mouse Information v0.6a, 2-Apr-2022",0
 str_hwmenu		.db	"PS/2 Controller Port Options:\r\n\r\n"
 			.db	"  1 - MBC\r\n"
 			.db	"  2 - RHYOPHYRE\r\n"
