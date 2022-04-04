@@ -12,7 +12,7 @@ include $(TOOLS)/Makefile.inc
 
 FONTS := font8x11c.asm font8x11u.asm font8x16c.asm font8x16u.asm font8x8c.asm font8x8u.asm fontcgac.asm fontcgau.asm
 
-ifneq ($(findstring $(ROM_PLATFORM), N8 MK4 RCZ180 SCZ180 DYNO),)
+ifneq ($(findstring $(ROM_PLATFORM), N8 MK4 RCZ180 SCZ180 DYNO RPH),)
 	TASM=$(BINDIR)/uz80as -t hd64180
 endif
 

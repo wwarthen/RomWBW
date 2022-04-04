@@ -6,12 +6,20 @@
 ; Simple utility that performs simple tests of an 8242 PS/2 controller,
 ; keyboard, and mouse.
 ;
+; WBW 2022-03-28: Add menu driven port selection
+;                 Add support for RHYOPHYRE
+; WBW 2022-04-01: Add menu for test functions
+;
 ;=======================================================================
 ;
 ; PS/2 Keyboard/Mouse controller port addresses (adjust as needed)
 ;
-iocmd	.equ	$E3	; PS/2 controller command port address
-iodat	.equ	$E2	; PS/2 controller data port address
+; MBC:
+iocmd_mbc	.equ	$E3	; PS/2 controller command port address
+iodat_mbc	.equ	$E2	; PS/2 controller data port address
+; RPH:
+iocmd_rph	.equ	$8D	; PS/2 controller command port address
+iodat_rph	.equ	$8C	; PS/2 controller data port address
 ;
 cpumhz	.equ	8	; for time delay calculations (not critical)
 ;
@@ -38,6 +46,8 @@ bdos	.equ	$0005			; BDOS invocation vector
 	ld	de,str_banner		; banner
 	call	prtstr
 ;
+	call	setup
+;
 	call	main			; do the real work
 ;
 exit:
@@ -50,52 +60,95 @@ exit:
 	ld	sp,(stksav)		; restore stack
 	jp	restart			; return to CP/M via restart
 ;
+;=======================================================================
+; Select and setup for hardware
+;=======================================================================
+;
+setup:
+	call	crlf2
+	ld	de,str_hwmenu
+	call	prtstr
+setup1:
+	ld	c,$06			; BDOS direct console I/O
+	ld	e,$FF			; Subfunction = read
+	call	bdos
+	cp	0
+	jr	z,setup1
+	call	upcase
+	call	prtchr
+	cp	'1'			; MBC
+	jr	z,setup_mbc
+	cp	'2'			; RHYOPHYRE
+	jr	z,setup_rph
+	cp	'X'
+	jr	z,exit
+	jr	setup
+;
+setup_mbc:
+	ld	a,iocmd_mbc
+	ld	(iocmd),a
+	ld	a,iodat_mbc
+	ld	(iodat),a
+	ld	de,str_mbc
+	jr	setup2
+;
+setup_rph:
+	ld	a,iocmd_rph
+	ld	(iocmd),a
+	ld	a,iodat_rph
+	ld	(iodat),a
+	ld	de,str_rph
+	jr	setup2
+;
+setup2:
+	call	prtstr
+	call	crlf2
+	ld	de,str_cmdport
+	call	prtstr
+	;ld	a,iocmd
+	ld	a,(iocmd)
+	call	prthex
+	call	crlf
+	ld	de,str_dataport
+	call	prtstr
+	;ld	a,iodat
+	ld	a,(iodat)
+	call	prthex
+;
+	xor	a
+	ret
 ;
 ;=======================================================================
 ; Main Program
 ;=======================================================================
 ;
 main:
-;
-; Display active controller port addresses
-;
 	call	crlf2
-	ld	de,str_cmdport
+	ld	de,str_menu
 	call	prtstr
-	ld	a,iocmd
-	call	prthex
-	call	crlf
-	ld	de,str_dataport
-	call	prtstr
-	ld	a,iodat
-	call	prthex
-;
-	call	test_ctlr
-	jr	z,main0			; continue if ctlr OK
-	ld	de,str_kbd_failed
-	call	crlf2
-	call	prtstr
-	jr	mainz			; bail out if ctlr fails
-;
-main0:
-	call	test_kbd
-	jr	z,main1			; completed all tests, continue
-	ld	de,str_kbd_failed
-	call	crlf2
-	call	prtstr
-;
 main1:
-	call	test_mse
-	jr	z,main2			; completed all tests, continue
-	ld	de,str_mse_failed
-	call	crlf2
-	call	prtstr
+	ld	c,$06			; BDOS direct console I/O
+	ld	e,$FF			; Subfunction = read
+	call	bdos
+	cp	0
+	jr	z,main1
+	call	upcase
+	call	prtchr
+	cp	'X'
+	jp	z,exit
+	call	main2
+	jr	main
 ;
 main2:
-	call	test_kbdmse
-;
-mainz:
-	xor	a
+	; Dispatch to test functions
+	cp	'C'			; Test Controller
+	jp	z,test_ctlr
+	cp	'K'			; Test Keyboard
+	jp	z,test_kbd
+	cp	'M'			; Test Mouse
+	jp	z,test_mse
+	cp	'B'			; Test Both
+	jp	z,test_kbdmse
 	ret
 ;
 ; Test 8242 PS/2 Controller
@@ -109,10 +162,8 @@ test_ctlr:
 	ret	nz
 ;
 	call	ctlr_test_p1
-	;ret	nz
 ;
 	call	ctlr_test_p2
-	;ret	nz
 ;
 	ret
 ;
@@ -123,13 +174,15 @@ test_kbd:
 ; First, we attempt to contact the controller and keyboard, then
 ; print the keyboard identity and scan codes supported
 ;
-	; Run test series with translation off
 	call	crlf2
 	ld	de,str_basic
 	call	prtstr
 ;
+	call	ctlr_test
+	jr	nz,test_kbd_fail
+;
 	call	test_kbd_basic
-	ret	nz
+	jr	nz,test_kbd_fail
 ;
 ; We make two passes through the test series with different controller
 ; setup values.  The first time is with scan code translation off and
@@ -155,6 +208,12 @@ test_kbd:
 ;
 	ret
 ;
+test_kbd_fail:
+	ld	de,str_kbd_failed
+	call	crlf2
+	call	prtstr
+	ret
+;
 ; Test Mouse
 ;
 test_mse:
@@ -162,22 +221,31 @@ test_mse:
 	ld	de,str_basic_mse
 	call	prtstr
 ;
+	call	ctlr_test
+	jr	nz,test_mse_fail
+;
 	ld	a,$10			; kbd disabled, mse enabled, no ints
 	call	ctlr_setup
-	ret	nz
+	jr	nz,test_mse_fail
 ;
 	call	mse_reset
-	ret	nz
+	jr	nz,test_mse_fail
 ;
 	call	mse_ident
-	ret	nz
+	jr	nz,test_mse_fail
 ;
 	call	mse_stream
-	ret	nz
+	jr	nz,test_mse_fail
 ;
 	call	mse_echo
 ;	
 	xor	a			; signal success
+	ret
+;
+test_mse_fail:
+	ld	de,str_mse_failed
+	call	crlf2
+	call	prtstr
 	ret
 ;
 ; Test Everything
@@ -187,25 +255,34 @@ test_kbdmse:
 	ld	de,str_kbdmse
 	call	prtstr
 ;
+	call	ctlr_test
+	jr	nz,test_kbdmse_fail
+;
 	ld	a,$00			; kbd enabled, mse enabled, no ints
 	call	ctlr_setup
-	ret	nz
+	jr	nz,test_kbdmse_fail
 ;
 	call	kbd_reset
-	ret	nz
+	jr	nz,test_kbdmse_fail
 ;
 	ld	a,2
 	call	kbd_setsc
 ;
 	call	mse_reset
-	ret	nz
+	jr	nz,test_kbdmse_fail
 ;
 	call	mse_stream
-	ret	nz
+	jr	nz,test_kbdmse_fail
 ;
 	call	kbdmse_echo
 ;	
 	xor	a			; signal success
+	ret
+;
+test_kbdmse_fail:
+	ld	de,str_kbdmse_failed
+	call	crlf2
+	call	prtstr
 	ret
 ;
 ; Perform basic keyboard tests, display keyboard identity, and
@@ -782,7 +859,9 @@ wait_write:
 	ld	a,(timeout)		; setup timeout constant
 	ld	b,a
 wait_write1:
-	in	a,(iocmd)		; get status
+	ld	a,(iocmd)		; cmd port
+	ld	c,a			; ... to C
+	in	a,(c)			; get status
 	ld	c,a			; save status
 	and	$02			; isolate input buf status bit
 	ret	z			; 0 means ready, all done
@@ -804,7 +883,9 @@ wait_read:
 	ld	a,(timeout)		; setup timeout constant
 	ld	b,a
 wait_read1:
-	in	a,(iocmd)		; get status
+	ld	a,(iocmd)		; cmd port
+	ld	c,a			; ... to C
+	in	a,(c)			; get status
 	ld	c,a			; save status
 	and	$01			; isolate input buf status bit
 	xor	$01			; invert so 0 means ready
@@ -824,7 +905,9 @@ check_read:
 ; Check for data ready to read
 ;   A=0 indicates data available (ZF set)
 ;
-	in	a,(iocmd)		; get status
+	ld	a,(iocmd)		; cmd port
+	ld	c,a			; ... to C
+	in	a,(c)			; get status
 	and	$01			; isolate input buf status bit
 	xor	$01			; invert so 0 means ready
 	ret
@@ -834,7 +917,9 @@ check_read_kbd:
 ; Check for keyboard data ready to read
 ;   A=0 indicates data available (ZF set)
 ;
-	in	a,(iocmd)		; get status
+	ld	a,(iocmd)		; cmd port
+	ld	c,a			; ... to C
+	in	a,(c)			; get status
 	and	%00100001		; isolate input buf status bit
 	cp	%00000001		; data ready, not mouse
 	ret
@@ -844,7 +929,9 @@ check_read_mse:
 ; Check for mouse data ready to read
 ;   A=0 indicates data available (ZF set)
 ;
-	in	a,(iocmd)		; get status
+	ld	a,(iocmd)		; cmd port
+	ld	c,a			; ... to C
+	in	a,(c)			; get status
 	and	%00100001		; isolate input buf status bit
 	cp	%00100001		; data ready, is mouse
 	ret
@@ -860,8 +947,10 @@ put_cmd:
 	scf				; else, signal timeout error
 	ret				; and bail out
 put_cmd1:
+	ld	a,(iocmd)		; cmd port
+	ld	c,a			; ... to C
 	ld	a,e			; recover value to write
-	out	(iocmd),a		; write it
+	out	(c),a			; write it
 	or	a			; clear CF for success
 	ret
 ;
@@ -889,8 +978,10 @@ put_data:
 	scf				; else, signal timeout error
 	ret				; and bail out
 put_data1:
+	ld	a,(iodat)		; data port
+	ld	c,a			; ... to C
 	ld	a,e			; recover value to write
-	out	(iodat),a		; write it
+	out	(c),a			; write it
 	or	a			; clear CF for success
 	ret
 ;
@@ -947,7 +1038,9 @@ get_data:
 	scf				; else signal timeout error
 	ret				; and bail out
 get_data1:
-	in	a,(iodat)		; get data byte
+	ld	a,(iodat)		; data port
+	ld	c,a			; ... to C
+	in	a,(c)			; get data byte
 	or	a			; clear CF for success
 	ret
 ;
@@ -1020,7 +1113,6 @@ err_ret:
 ; Utility Routines
 ;=======================================================================
 ;
-;
 ; Print character in A without destroying any registers
 ;
 prtchr:
@@ -1043,6 +1135,16 @@ prtdot:
 	call	prtchr		; print it
 	pop	af		; restore af
 	ret			; done
+;
+; Uppercase character in A
+;
+upcase:
+	cp	'a'			; below 'a'?
+	ret	c			; if so, nothing to do
+	cp	'z'+1			; above 'z'?
+	ret	nc			; if so, nothing to do
+	and	~$20			; convert character to lower
+	ret				; done
 ;
 ; Print a zero terminated string at (de) without destroying any registers
 ;
@@ -1239,7 +1341,21 @@ delay1:
 ; Constants
 ;=======================================================================
 ;
-str_banner		.db	"PS/2 Keyboard/Mouse Information v0.4, 7-Jan-2022",0
+str_banner		.db	"PS/2 Keyboard/Mouse Information v0.6, 1-Apr-2022",0
+str_hwmenu		.db	"PS/2 Controller Port Options:\r\n\r\n"
+			.db	"  1 - MBC\r\n"
+			.db	"  2 - RHYOPHYRE\r\n"
+			.db	"  X - Exit Application\r\n"
+			.db	"\r\nSelection? ",0
+str_mbc			.db	"MBC",0
+str_rph			.db	"RHYOPHYRE",0
+str_menu		.db	"PS/2 Testing Options:\r\n\r\n"
+			.db	"  C - Test PS/2 Controller\r\n"
+			.db	"  K - Test PS/2 Keyboard\r\n"
+			.db	"  M - Test PS/2 Mouse\r\n"
+			.db	"  B - Test Both PS/2 Keyboard and Mouse Together\r\n"
+			.db	"  X - Exit Application\r\n"
+			.db	"\r\nSelection? ",0
 str_exit		.db	"Done, Thank you for using PS/2 Keyboard/Mouse Information!",0
 str_cmdport		.db	"Controller Command Port: ",0
 str_dataport		.db	"Controller Data Port: ",0
@@ -1312,6 +1428,11 @@ str_mse_failed		.db	"***** MOUSE HARDWARE ERROR *****",13,10,13,10
 			.db	"the completion of the full set of mouse tests.",13,10
 			.db	"Check your hardware and verify the port",13,10
 			.db	"addresses being used for the controller",0
+str_kbdmse_failed	.db	"***** KEYBOARD/MOUSE HARDWARE ERROR *****",13,10,13,10
+			.db	"A basic hardware or configuration issue prevented",13,10
+			.db	"the completion of the full set of keyboard/mouse tests.",13,10
+			.db	"Check your hardware and verify the port",13,10
+			.db	"addresses being used for the controller",0
 ;
 ;=======================================================================
 ; Working data
@@ -1320,6 +1441,9 @@ str_mse_failed		.db	"***** MOUSE HARDWARE ERROR *****",13,10,13,10
 stksav		.dw	0		; stack pointer saved at start
 		.fill	stksiz,0	; stack
 stack		.equ	$		; stack top
+;
+iocmd		.db	0
+iodat		.db	0
 ;
 workbuf		.fill	8
 workbuf_len	.db	0
