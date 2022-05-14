@@ -1,6 +1,6 @@
 ;
 ;==================================================================================================
-;   RHYOPHYRE STANDARD CONFIGURATION
+;   RPH STANDARD CONFIGURATION
 ;==================================================================================================
 ;
 ; THE COMPLETE SET OF DEFAULT CONFIGURATION SETTINGS FOR THIS PLATFORM ARE FOUND IN THE
@@ -33,8 +33,6 @@ INTMODE		.SET	0		; INTERRUPTS: 0=NONE, 1=MODE 1, 2=MODE 2, 3=MODE 3 (Z280)
 Z180_CLKDIV	.SET	1		; Z180: CHK DIV: 0=OSC/2, 1=OSC, 2=OSC*2
 Z180_MEMWAIT	.SET	0		; Z180: MEMORY WAIT STATES (0-3)
 Z180_IOWAIT	.SET	1		; Z180: I/O WAIT STATES TO ADD ABOVE 1 W/S BUILT-IN (0-3)
-;
-RAMSIZE		.SET	512		; SIZE OF RAM IN KB (MUST MATCH YOUR HARDWARE!!!)
 ;
 CRTACT		.SET	FALSE		; ACTIVATE CRT (VDU,CVDU,PROPIO,ETC) AT STARTUP
 ;
