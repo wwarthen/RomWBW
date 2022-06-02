@@ -144,6 +144,43 @@ CBXSIZ	.EQU	$ - CBX
 	.ECHO	" bytes.\n"
 ;
 ;==================================================================================================
+; TIMDAT ROUTINE FOR QP/M
+;==================================================================================================
+;
+#IFDEF PLTWBW
+  #IF QPMTIMDAT
+;
+TIMDAT:
+	; GET CURRENT DATE/TIME FROM RTC INTO BUFFER
+	LD	B,BF_RTCGETTIM		; HBIOS GET TIME FUNCTION
+	LD	HL,CLKDAT		; POINTER TO BUFFER
+	RST	08			; DO IT
+;
+	; CONVERT ALL BYTES FROM BCD TO BINARY
+	LD	HL,CLKDAT		; BUFFER
+	LD	B,7			; DO 7 BYTES
+TIMDAT1:
+	LD	A,(HL)
+	CALL	BCD2BYTE
+	LD	(HL),A
+	INC	HL
+	DJNZ	TIMDAT1
+;
+	; SWAP BYTES 0 & 2 TO MAKE BUFFER INTO QP/M ORDER
+	LD	A,(CLKDAT+0)
+	PUSH	AF
+	LD	A,(CLKDAT+2)
+	LD	(CLKDAT+0),A
+	POP	AF
+	LD	(CLKDAT+2),A
+;
+	LD	HL,CLKDAT		; RETURN BUFFER ADDRESS
+	RET
+;
+  #ENDIF
+#ENDIF
+;
+;==================================================================================================
 ; CHARACTER DEVICE MAPPING
 ;==================================================================================================
 ;
@@ -346,11 +383,13 @@ BOOT:
 #ENDIF
 	CALL	RESCPM		; RESET CPM
 ;
-#IF DEBUG
+#IF AUTOSUBMIT
+  #IF DEBUG
 	CALL	PRTSTRD
 	.DB	"\r\nPerforming Auto Submit...$"
-#ENDIF
+  #ENDIF
 	CALL	AUTOSUB		; PREP AUTO SUBMIT, IF APPROPRIATE
+#ENDIF
 ;
 #IF DEBUG
 	CALL	PRTSTRD
@@ -1719,6 +1758,12 @@ SPS		.DW	0		; SECTORS PER SLICE
 STKSAV		.DW	0		; TEMP SAVED STACK POINTER
 ;
 #IFDEF PLTWBW
+  #IF QPMTIMDAT
+CLKDAT		.FILL	7,0		; RTC CLOCK DATA BUFFER
+  #ENDIF
+#ENDIF
+;
+#IFDEF PLTWBW
 BNKBIOS		.DB	0		; BIOS BANK ID
 BNKUSER		.DB	0		; USER BANK ID
 #ENDIF
@@ -2318,6 +2363,17 @@ INIT3:
 	CALL	WRITESTR
 	CALL	NEWLINE			; FORMATTING
 ;
+; SETUP QP/M TIMDAT ROUTINE VECTOR IN ZERO PAGE AT 0x0010
+;
+#IFDEF PLTWBW
+  #IF QPMTIMDAT
+	LD	A,$C3			; JP INSTRUCTION
+	LD	($0010),A		; STORE AT 0x0008
+	LD	HL,TIMDAT		; ROUTINE ADDRESS
+	LD	($0011),HL		; SET VECTOR
+  #ENDIF
+#ENDIF
+;
 	RET				; DONE
 ;
 ERR_BIOMEM:
@@ -2328,6 +2384,9 @@ ERR_BIOMEM:
 ;
 ;
 ;__________________________________________________________________________________________________
+;
+#IF AUTOSUBMIT
+;
 AUTOSUB:
 ;
 	; SETUP AUTO SUBMIT COMMAND (IF REQUIRED FILES EXIST)
@@ -2358,6 +2417,8 @@ AUTOSUB:
 	LD	BC,CMDLEN		; LENGTH OF AUTOSTART COMMAND
 	LDIR				; PATCH COMMAND LINE INTO CCP
 	RET				; DONE
+;
+#ENDIF
 ;
 ;
 ;__________________________________________________________________________________________________

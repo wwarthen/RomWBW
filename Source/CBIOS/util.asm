@@ -460,7 +460,52 @@ HEXCONV:
 	DAA	
 	ADC	A,40H
 	DAA	
-	RET	
+	RET
+;
+;****************************
+;	A(BCD) => A(BIN)
+;	[00H..99H] -> [0..99]
+;****************************
+;
+BCD2BYTE:
+	PUSH	BC
+	LD	C,A
+	AND	0F0H
+	SRL	A
+	LD	B,A
+	SRL	A
+	SRL	A
+	ADD	A,B
+	LD	B,A
+	LD	A,C
+	AND	0FH
+	ADD	A,B
+	POP	BC
+	RET
+;
+;*****************************
+;	 A(BIN) =>  A(BCD)
+;	[0..99] => [00H..99H]
+;*****************************
+;
+BYTE2BCD:
+	PUSH	BC
+	LD	B,10
+	LD	C,-1
+BYTE2BCD1:
+	INC	C
+	SUB	B
+	JR	NC,BYTE2BCD1
+	ADD	A,B
+	LD	B,A
+	LD	A,C
+	ADD	A,A
+	ADD	A,A
+	ADD	A,A
+	ADD	A,A
+	OR	B
+	POP	BC
+	RET
 ;
 ; PRINT A BYTE BUFFER IN HEX POINTED TO BY DE
 ; REGISTER A HAS SIZE OF BUFFER
