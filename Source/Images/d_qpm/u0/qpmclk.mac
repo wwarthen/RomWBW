@@ -1,0 +1,107 @@
+	.z80
+;
+;	Clock for supplementing normal MYZ80 bios
+;
+;
+;==========================================================================
+;
+;
+false	equ	0
+true	equ	not false
+
+size	equ	6275	;size in 0.01 k (e.g. 60k = 6000,
+					; 59.5k = 5950,  48.25k = 4825)
+
+ioval	equ	80H		;IOBYTE value on cold boot (see documentation)
+;
+;	Lower memory stuff
+;
+IOBYTE	EQU	3		;IOBYTE location
+DSKUSR	EQU	4		;Disk/user location
+ENTRY	EQU	5
+WARMB	EQU	0
+;
+;	QP/M locations
+;
+QPMBIOS	EQU	size/25*256
+QDOS	EQU	QPMBIOS-(0EA00H-0DC06H)
+QCP	EQU	QDOS-806H
+;
+;	MYZ80 API locations used
+;
+CONST	EQU	0FFE1H		;Console status
+CONIN	EQU	0FFE2H		;Console input
+CRTOUT	EQU	0FFE3H		;Send char to console
+LIST	EQU	0FFE4H		;List character
+PUNCH	EQU	0FFE5H		;Punch character (auxout)
+READER	EQU	0FFE6H		;Reader character (auxin)
+HOME	EQU	0FFE7H		;Home disk
+SELDSK	EQU	0FFE8H		;Select disk in C-reg.
+SETTRK	EQU	0FFE9H		;Seek track in C-reg.
+SETSEC	EQU	0FFEAH		;Seek sector
+SETDMA	EQU	0FFEBH		;Set disk i/o address
+READ	EQU	0FFECH		;Read sector 
+WRITE	EQU	0FFEDH		;Write sector
+PRSTAT	EQU	0FFEEH		;List status
+SECTRAN	EQU	0FFEFH		;Sector xlation
+CONOUTS	EQU	0FFF0H		;Console output status
+XBIOS	EQU	0FFFDH		;Extended MYZ80 functions
+;
+;	High (MONITOR) area data locations
+;
+;	Printer locations in high memory
+;
+HISTACK	EQU	0FF14H		;temp
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+	ASEG
+	ORG		100H
+	.phase	0fec0h
+;
+qpmclk::
+	LD	A,42
+	LD	HL,CLKBUF
+	PUSH	HL
+	CALL	XBIOS	; BCD hr/min/sec/century/yr/mon/day
+	; convert from BCD to normal -- and fix things up
+	POP		HL
+	LD	B,7
+	DEC	HL
+Q0:	INC	HL
+	XOR	A
+	RRD				; rotate low nibble of A through nibbles of (HL)
+	LD	D,A			; save low nibble
+	LD	A,(HL)		; get high nibble
+	ADD	A,A			; * 2
+	LD	C,A			; save
+	ADD	A,A			; * 4
+	ADD	A,A			; * 8
+	ADD	A,C			; * 10
+	ADD	A,D			; + low digit
+	LD	(HL),A		; set non-BCD version
+	DJNZ	Q0
+	; now realign values from system call
+	LD	C,A			; day
+	DEC	HL
+	LD	B,(HL)		; mon
+	DEC	HL	
+	LD	E,(HL)		; yr
+	DEC	HL
+	DEC	HL			; skip century
+	PUSH	BC
+	LD	B,(HL)		; sec
+	DEC	HL
+	LD	C,(HL)		; min
+	DEC	HL
+	LD	D,(HL)		; hr
+	LD	(CLKBUF+2),DE	; yrE/hrD
+	LD	(CLKBUF+4),BC	; minC/secB
+	POP	BC
+	LD	(CLKBUF),BC	; dayC/monB
+	; did the adjustments -- return ptr to day/mon/yr/hr/min/sec
+	ret
+CLKBUF:	DB	0,0,0,0,0,0,0
+	.dephase
+	end
+

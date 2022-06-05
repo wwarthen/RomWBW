@@ -4,7 +4,7 @@
 SYSTEMS = ../CPM22/cpm_wbw.sys ../ZSDOS/zsys_wbw.sys ../CPM3/cpmldr.sys ../ZPM3/zpmldr.sys
 
 FDIMGS = fd144_cpm22.img fd144_zsdos.img fd144_nzcom.img \
-	fd144_cpm3.img fd144_zpm3.img fd144_ws4.img
+	fd144_cpm3.img fd144_zpm3.img fd144_ws4.img fd144_qpm.img
 HD512IMGS = hd512_cpm22.img hd512_zsdos.img hd512_nzcom.img \
 	hd512_cpm3.img hd512_zpm3.img hd512_ws4.img
 # HDIMGS += hd512_bp.img
@@ -16,8 +16,8 @@ HD512PREFIX =
 HD1024PREFIX = hd1024_prefix.dat
 
 OBJECTS = $(FDIMGS)
-OBJECTS += $(HD512IMGS) hd512_dos65.img hd512_combo.img $(HD512PREFIX)
-OBJECTS += $(HD1024IMGS) hd1024_combo.img $(HD1024PREFIX)
+OBJECTS += $(HD512IMGS) hd512_combo.img  hd512_dos65.img hd512_qpm.img$(HD512PREFIX)
+OBJECTS += $(HD1024IMGS) hd1024_combo.img hd1024_qpm.img $(HD1024PREFIX)
 
 OTHERS = blank144 blankhd512 blankhd1024
 
@@ -70,7 +70,7 @@ blankhd1024:
 %.img: $(SYSTEMS) blank144 blankhd512 blankhd1024 Makefile
 	@sys= ; \
 	case $@ in \
-		(*cpm22*) sys=../CPM22/cpm_wbw.sys;; \
+		(*cpm22* | *qpm*) sys=../CPM22/cpm_wbw.sys;; \
 		(*zsdos* | *nzcom* | *dos65*) sys=../ZSDOS/zsys_wbw.sys;; \
 		(*cpm3*) sys=../CPM3/cpmldr.sys;; \
 		(*zpm3*) sys=../ZPM3/zpmldr.sys;; \
