@@ -1,0 +1,19 @@
+
+        G2QPM Utility ProgramsG0
+        G2====================G0
+QP/M comes loaded with all utility programs for emulator use:
+afn=wildcard filename(s); ufn=filename; []=optional
+
+G2D [afn] [options]G0   - Directory listing with numerous options
+G2DHORIZ [afn] [...]G0  - Same with horizontal directory listing
+G2QBACKUPG0             - Backup entire disk or selected files
+G2QPATCHG0              - Modify settings of D.COM
+G2QPIPG0                - Copy files, peripheral interchange, etc.
+G2QSTAMP(V|X)G0         - Time/date stamp disk (QSTAMPV recommended)
+G2QSTATG0               - Display/change file status
+G2QSUBG0                - Powerful batch processing, nesting supported
+G2QSWEEPG0              - Powerful interactive file manipulation
+G2TDCNFGG0              - Configure real-time clock (NOT NEEDED)
+
+We recommend G2LinkZG0 and G2DebugZG0; get from G2http://www.microcodeconsulting.comG0.
+

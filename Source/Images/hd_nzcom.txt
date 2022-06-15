@@ -76,7 +76,4 @@ Common/Z/u15/*.* 0:
 Common/Z3/u10/*.* 0:
 Common/Z3/u14/*.* 0:
 Common/Z3/u15/*.* 0:
-#
-# Temporary!!!
-#
-SIMH/*.* 15:
+Common/SIMH/*.* 13:
