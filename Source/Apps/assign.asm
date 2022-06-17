@@ -244,7 +244,7 @@ initcpm3:
 ; The CP/M 3 drvtbl is in common memory, but the XDPHs are not.
 ; So, here we temporarily swap the bank to the CP/M 3 system
 ; bank.  We cannot use the CP/M Direct BIOS call because it
-; explicitly blocks use of SELMEM, so we are foreced to use
+; explicitly blocks use of SELMEM, so we are forced to use
 ; HBIOS call.  The CP/M 3 system bank is always the HBIOS
 ; user bank.
 ;

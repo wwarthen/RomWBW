@@ -38,6 +38,8 @@ ENA_XM	.EQU	FALSE			; NO ROOM FOR BOTH DSKY+XMODEM
 ENA_XM	.EQU	TRUE			; INCLUDE XMODEM IF SPACE AVAILABLE
 #ENDIF
 ;
+ENA_MBC6502	.EQU	FALSE		; ENABLE OR DISABLE MBC6502 OPTION
+;
 #INCLUDE "util.asm"
 ;
 ;__UART_ENTRY_________________________________________________________________
@@ -69,6 +71,8 @@ UART_ENTRY:
 ; R XXXX		- RUN A PROGRAM AT ADDRESS XXXX
 ; S XX			- SET ACTIVE BANK TO XX
 ; T XXXX 		- X-MODEM TRANSFER TO MEMORY LOCATION XXXX
+; U 			- SET BANK TO PREVIOUS BANK
+; 6 XX                  - TRANSFER CONTROL TO MBC6502 UNIT XX
 ; X			- EXIT MONITOR
 ;
 ;__COMMAND_PARSE______________________________________________________________
@@ -126,6 +130,12 @@ SERIALCMDLOOP:
 #IF (BIOS == BIOS_WBW)
 	CP	'S'			; IS IT A "S" (Y/N)
 	JP	Z,SETBNK		; SET BANK COMMAND
+	CP	'U'			; IS IT A "U" (Y/N)
+	JP	Z,UNSETBNK		; UNSET (REVERT) BANK COMMAND		
+#ENDIF
+#IF ((PLATFORM = PLT_MBC) & ENA_MBC6502)
+	CP	'6'			; IS IT A "6" (Y/N)
+	JP	Z,MBC6502		; TRANSFER TO MBC6502 COMMAND
 #ENDIF
 	CP	'X'			; IS IT A "X" (Y/N)
 	JP	Z,EXIT			; EXIT COMMAND
@@ -218,6 +228,8 @@ SETBNK:
 	LD	HL,TXT_IMERR
 	CALL	PRTSTR
 #ELSE
+	LD	A,($FFE0)		; GET AND SAVE
+	LD	(BNKSAV),A		; CURRENT BANK
 	CALL	BYTEPARM		; GET BANK NUMBER
 	JP	C,ERR			; HANDLE DATA ENTRY ERROR
 	LD	C,A			; PUT IN C FOR FOR FUNC CALL
@@ -225,6 +237,25 @@ SETBNK:
 	CALL	$FFF0			; C HAS BANK, DO IT
 #ENDIF
 	JP	SERIALCMDLOOP		; NEXT COMMAND
+;
+;__UNSETBNK___________________________________________________________________
+;
+;	PERFORM UNSET BANK ACTION - REVERT TO BANK BEFORE PREVIOUS SET
+;_____________________________________________________________________________
+;
+UNSETBNK:
+#IF (INTMODE == 1)
+	LD	HL,TXT_IMERR
+	CALL	PRTSTR
+#ELSE
+	LD	A,(BNKSAV)
+	LD	C,A			; PUT IN C FOR FOR FUNC CALL
+	LD	B,BF_SYSSETBNK		; SET BANK FUNCTION
+	CALL	$FFF0			; C HAS BANK, DO IT
+#ENDIF
+	JP	SERIALCMDLOOP		; NEXT COMMAND
+;
+BNKSAV	.DB	00H			; OLD BANK FROM BEFORE SET
 ;
 #ENDIF
 ;
@@ -358,7 +389,8 @@ XMLOAD:	CALL	WORDPARM		; GET STARTING LOCATION
 	CALL	NEWLINE
 ;
 	LD	BC,$F8F0		; GET CPU SPEED
-	RST	08			; AND MULTIPLY
+	CALL	$FFF0			; CALL HBIOS
+;	RST	08			; AND MULTIPLY
 	LD	A,L			; BY 4
 	PUSH	AF
 	ADD	A,A			; TO CREATE
@@ -768,6 +800,28 @@ HELP:
 	LD	HL,TXT_HELP		; POINT AT SYNTAX HELP TEXT
 	CALL	PRTSTR			; DISPLAY IT
 	JP	SERIALCMDLOOP		; AND BACK TO COMMAND LOOP
+;
+;__MBC6502____________________________________________________________________
+;
+;	TRANSFER CONTROL TO MBC6502
+;_____________________________________________________________________________
+;
+;
+#IF ((PLATFORM = PLT_MBC) & ENA_MBC6502)
+MBC6502:
+	CALL	BYTEPARM		; GET BYTE VALUE (FILL VALUE) INTO A
+	CPL				; UNIT 0 = FFH, 1 = FEH ETC
+	LD	C,A
+;
+	IN	A,(C)			; EXECUTE
+	NOP				; TRANSFER
+;
+	LD	A,($FFE0)		; GET PREVIOUS BANK
+	OUT	(MPCL_RAM),A		; SET RAM PAGE SELECTOR
+	OUT	(MPCL_ROM),A		; SET ROM PAGE SELECTOR
+;
+	JP	SERIALCMDLOOP		; AND BACK TO COMMAND LOOP
+#ENDIF
 ;
 ;__ERR________________________________________________________________________
 ;
@@ -1205,9 +1259,15 @@ TXT_HELP	.TEXT	"\r\nMonitor Commands (all values in hex):"
 		.TEXT	"\r\nP xxxx           - Program RAM at address xxxx"
 		.TEXT	"\r\nR xxxx [[yy] [zzzz]]  - Run code at address xxxx"
 		.TEXT	"\r\n                        Pass yy and zzzz to register A and BC"
+#IF (BIOS == BIOS_WBW)
 		.TEXT	"\r\nS xx             - Set bank to xx"
+		.TEXT	"\r\nU                - Set bank to previous bank"
+#ENDIF
 #IF (ENA_XM)
 		.TEXT	"\r\nT xxxx           - X-modem transfer to memory location xxxx"
+#ENDIF
+#IF ((PLATFORM == PLT_MBC) & ENA_MBC6502)
+		.TEXT	"\r\n6 xx             - Transfer control to MBC6502 unit xx"
 #ENDIF
 		.TEXT	"\r\nX                - Exit monitor"
 		.TEXT	"$"
