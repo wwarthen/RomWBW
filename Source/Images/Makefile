@@ -70,7 +70,8 @@ blankhd1024:
 %.img: $(SYSTEMS) blank144 blankhd512 blankhd1024 Makefile
 	@sys= ; \
 	case $@ in \
-		(*cpm22* | *qpm*) sys=../CPM22/cpm_wbw.sys;; \
+		(*cpm22*) sys=../CPM22/cpm_wbw.sys;; \
+		(*qpm*) sys=d_qpm/u0/qpm.sys;; \
 		(*zsdos* | *nzcom* | *dos65*) sys=../ZSDOS/zsys_wbw.sys;; \
 		(*cpm3*) sys=../CPM3/cpmldr.sys;; \
 		(*zpm3*) sys=../ZPM3/zpmldr.sys;; \
