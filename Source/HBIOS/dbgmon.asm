@@ -38,6 +38,8 @@ ENA_XM	.EQU	FALSE			; NO ROOM FOR BOTH DSKY+XMODEM
 ENA_XM	.EQU	TRUE			; INCLUDE XMODEM IF SPACE AVAILABLE
 #ENDIF
 ;
+ENA_MBC6502	.EQU	FALSE		; ENABLE OR DISABLE MBC6502 OPTION
+;
 #INCLUDE "util.asm"
 ;
 ;__UART_ENTRY_________________________________________________________________
@@ -69,6 +71,7 @@ UART_ENTRY:
 ; R XXXX		- RUN A PROGRAM AT ADDRESS XXXX
 ; S XX			- SET ACTIVE BANK TO XX
 ; T XXXX 		- X-MODEM TRANSFER TO MEMORY LOCATION XXXX
+; 6 XX                  - TRANSFER CONTROL TO MBC6502 UNIT XX
 ; X			- EXIT MONITOR
 ;
 ;__COMMAND_PARSE______________________________________________________________
@@ -126,6 +129,10 @@ SERIALCMDLOOP:
 #IF (BIOS == BIOS_WBW)
 	CP	'S'			; IS IT A "S" (Y/N)
 	JP	Z,SETBNK		; SET BANK COMMAND
+#ENDIF
+#IF ((PLATFORM = PLT_MBC) & ENA_MBC6502)
+	CP	'6'			; IS IT A "6" (Y/N)
+	JP	Z,MBC6502		; TRANSFER TO MBC6502 COMMAND
 #ENDIF
 	CP	'X'			; IS IT A "X" (Y/N)
 	JP	Z,EXIT			; EXIT COMMAND
@@ -769,6 +776,28 @@ HELP:
 	CALL	PRTSTR			; DISPLAY IT
 	JP	SERIALCMDLOOP		; AND BACK TO COMMAND LOOP
 ;
+;__MBC6502____________________________________________________________________
+;
+;	TRANSFER CONTROL TO MBC6502
+;_____________________________________________________________________________
+;
+;
+#IF ((PLATFORM = PLT_MBC) & ENA_MBC6502)
+MBC6502:
+	CALL	BYTEPARM		; GET BYTE VALUE (FILL VALUE) INTO A
+	CPL				; UNIT 0 = FFH, 1 = FEH ETC
+	LD	C,A
+;
+	IN	A,(C)			; EXECUTE
+	NOP				; TRANSFER
+;
+	LD	A,($FFE0)		; GET PREVIOUS BANK
+	OUT	(MPCL_RAM),A		; SET RAM PAGE SELECTOR
+	OUT	(MPCL_ROM),A		; SET ROM PAGE SELECTOR
+;
+	JP	SERIALCMDLOOP		; AND BACK TO COMMAND LOOP
+#ENDIF
+;
 ;__ERR________________________________________________________________________
 ;
 ;	SYNTAX ERROR
@@ -1208,6 +1237,9 @@ TXT_HELP	.TEXT	"\r\nMonitor Commands (all values in hex):"
 		.TEXT	"\r\nS xx             - Set bank to xx"
 #IF (ENA_XM)
 		.TEXT	"\r\nT xxxx           - X-modem transfer to memory location xxxx"
+#ENDIF
+#IF ((PLATFORM == PLT_MBC) & ENA_MBC6502)
+		.TEXT	"\r\n6 xx             - Transfer control to MBC6502 unit xx"
 #ENDIF
 		.TEXT	"\r\nX                - Exit monitor"
 		.TEXT	"$"
