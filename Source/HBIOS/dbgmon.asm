@@ -132,10 +132,10 @@ SERIALCMDLOOP:
 	JP	Z,SETBNK		; SET BANK COMMAND
 	CP	'U'			; IS IT A "U" (Y/N)
 	JP	Z,UNSETBNK		; UNSET (REVERT) BANK COMMAND		
-#ENDIF
-#IF ((PLATFORM = PLT_MBC) & ENA_MBC6502)
+  #IF ((PLATFORM = PLT_MBC) & ENA_MBC6502)
 	CP	'6'			; IS IT A "6" (Y/N)
 	JP	Z,MBC6502		; TRANSFER TO MBC6502 COMMAND
+  #ENDIF
 #ENDIF
 	CP	'X'			; IS IT A "X" (Y/N)
 	JP	Z,EXIT			; EXIT COMMAND
@@ -807,7 +807,8 @@ HELP:
 ;_____________________________________________________________________________
 ;
 ;
-#IF ((PLATFORM = PLT_MBC) & ENA_MBC6502)
+#IF (BIOS == BIOS_WBW)
+  #IF ((PLATFORM = PLT_MBC) & ENA_MBC6502)
 MBC6502:
 	CALL	BYTEPARM		; GET BYTE VALUE (FILL VALUE) INTO A
 	CPL				; UNIT 0 = FFH, 1 = FEH ETC
@@ -821,6 +822,7 @@ MBC6502:
 	OUT	(MPCL_ROM),A		; SET ROM PAGE SELECTOR
 ;
 	JP	SERIALCMDLOOP		; AND BACK TO COMMAND LOOP
+  #ENDIF
 #ENDIF
 ;
 ;__ERR________________________________________________________________________
@@ -1266,8 +1268,10 @@ TXT_HELP	.TEXT	"\r\nMonitor Commands (all values in hex):"
 #IF (ENA_XM)
 		.TEXT	"\r\nT xxxx           - X-modem transfer to memory location xxxx"
 #ENDIF
-#IF ((PLATFORM == PLT_MBC) & ENA_MBC6502)
+#IF (BIOS == BIOS_WBW)
+  #IF ((PLATFORM == PLT_MBC) & ENA_MBC6502)
 		.TEXT	"\r\n6 xx             - Transfer control to MBC6502 unit xx"
+  #ENDIF
 #ENDIF
 		.TEXT	"\r\nX                - Exit monitor"
 		.TEXT	"$"
