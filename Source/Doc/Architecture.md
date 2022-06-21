@@ -1399,7 +1399,7 @@ If the driver is able to generate the requested note, a success (0) is
 returned, otherwise a non-zero error state will be returned.
 
 The sound chip resolution and its oscillator limit the range and
-accuracy of the notes played. The typically range of the AY-3-8910
+accuracy of the notes played. The typical range of the AY-3-8910
 is six octaves, Bb2/A#2-A7, where each value is a unique tone. Values
 above and below can still be played but each quarter tone step may not
 result in a note change.
@@ -1409,18 +1409,18 @@ to the corresponding octave and note.
 
 | Note  | Oct 0 | Oct 1 | Oct 2 | Oct 3 | Oct 4 | Oct 5 | Oct 6 | Oct 7 |
 |:----- | -----:| -----:| -----:| -----:| -----:| -----:| -----:| -----:|
-| Bb/A# |   0   |   48  |  96   |  144  |  192  |  240  |  288  |  336  |
+| C     |   X   |   8   |   56  |  104  |  152  |  200  |  248  |  296  |
+| C#/Db |   X   |   12  |   60  |  108  |  156  |  204  |  252  |  300  |
+| D     |   X   |   16  |   64  |  112  |  160  |  208  |  256  |  304  |
+| D#/Eb |   X   |   20  |   68  |  116  |  164  |  212  |  260  |  308  |
+| E     |   X   |   24  |   72  |  120  |  168  |  216  |  264  |  312  |
+| F     |   X   |   28  |   76  |  124  |  172  |  220  |  268  |  316  |
+| F#/Gb |   X   |   32  |   80  |  128  |  176  |  224  |  272  |  320  |
+| G     |   X   |   36  |   84  |  132  |  180  |  228  |  276  |  324  |
+| G#/Ab |   X   |   40  |   88  |  136  |  184  |  232  |  280  |  328  |
+| A     |   X   |   44  |   92  |  140  |  188  |  236  |  284  |  332  |
+| A#/Bb |   0   |   48  |   96  |  144  |  192  |  240  |  288  |  336  |
 | B     |   4   |   52  |  100  |  148  |  196  |  244  |  292  |  340  |
-| C     |   8   |   56  |  104  |  152  |  200  |  248  |  296  |  344  |
-| C#/Db |   12  |   60  |  108  |  156  |  204  |  252  |  300  |  348  |
-| D     |   16  |   64  |  112  |  160  |  208  |  256  |  304  |  352  |
-| Eb/D# |   20  |   68  |  116  |  164  |  212  |  260  |  308  |  356  |
-| E     |   24  |   72  |  120  |  168  |  216  |  264  |  312  |  360  |
-| F     |   28  |   76  |  124  |  172  |  220  |  268  |  316  |  364  |
-| F#/Gb |   32  |   80  |  128  |  176  |  224  |  272  |  320  |  368  |
-| G     |   36  |   84  |  132  |  180  |  228  |  276  |  324  |  372  |
-| Ab/G# |   40  |   88  |  136  |  184  |  232  |  280  |  328  |  376  |
-| A     |   44  |   92  |  140  |  188  |  236  |  284  |  332  |  380  |
 
 ### Function 0x54 -- Sound Play (SNDPLAY)
 
