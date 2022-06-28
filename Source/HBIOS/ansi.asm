@@ -280,6 +280,8 @@ ANSI_STSTR:	; STATE == STRING DATA
 ;==================================================================================================
 ;
 ANSI_C0DISP:
+	CP	$07		; BEL
+	JP	Z,ANSI_BEL
 	CP	$08		; BS: BACKSPACE
 	JP	Z,ANSI_BS
 	CP	$09		; HT: TAB
@@ -614,6 +616,9 @@ ANSI_FF:
 	LD	B,BF_VDAFIL	; SET FUNCTION TO FILL
 	CALL	ANSI_VDADISP	; PERFORM FILL
 	JP	ANSI_XY		; HOME CURSOR AND RETURN
+;
+ANSI_BEL:
+	JP	SND_BEEP	; BEEP THE SPEAKER
 ;
 ANSI_BS:
 	LD	A,(ANSI_COL)	; GET CURRENT COLUMN
