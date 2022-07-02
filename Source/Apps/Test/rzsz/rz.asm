@@ -327,9 +327,9 @@ bdos_s:		call	bdos
 		ret
 
 ;----------------------------------------------------------------------------
-;		S u b r	o u t i	n e
+;		Search for 0 terminated string starting at HL
 
-sub_476:	push	af
+Search0:	push	af
 loc_477:	push	bc
 		xor	a
 		ld	b,a
@@ -361,7 +361,7 @@ text495h:	.db	0,0,0
 
 sub_4A4:	ld	de,file_fcb
 		ld	hl,byte_4F8
-		ld	(hl),3Ah
+		ld	(hl),':'
 		inc	hl
 		xor	a
 		ld	b,0Dh
@@ -370,14 +370,14 @@ sub_4A4:	ld	de,file_fcb
 		call	sub_16C4
 		dec	de
 		ld	a,(de)
-		add	a,40h
+		add	a,'A'-1
 		ld	(byte_4F4),a
 		dec	de
 		ld	a,(de)
 		ld	de,byte_4F5
 		call	sub_16E7
-		ld	a,24h
-		ld	(byte_507),a
+		ld	a,'$'
+		ld	(term_fn),a
 		ld	de,text4F2h
 		ld	c,C_WRITESTR
 		call	bdos		; Output string
@@ -386,13 +386,13 @@ sub_4A4:	ld	de,file_fcb
 		or	l
 		ret	z
 		ld	b,1
-		call	sub_476
+		call	Search0
 		dec	hl
-		ld	(hl),24h
+		ld	(hl),'$'
 		ld	de,(byte_2CD4)
 		ld	c,C_WRITESTR
 		call	bdos		; Output string
-		ld	de,text508h
+		ld	de,newline
 		ld	c,C_WRITESTR
 		jp	bdos		; Output string
 
@@ -418,8 +418,8 @@ byte_4F8:	.db	0 ;
 		.db	0 ;
 		.db	0 ;
 		.db	20h ;
-byte_507:	.db	0			
-text508h:	.text	"\r\n$"
+term_fn:	.db	0			
+newline:	.text	"\r\n$"
 
 ;----------------------------------------------------------------------------
 ;		S u b r	o u t i	n e
@@ -1278,7 +1278,7 @@ loc_9AE:	ld	a,(byte_8AF)
 		ret	z
 		push	hl
 		ld	b,1
-		call	sub_476
+		call	Search0
 		dec	hl
 		ld	(hl),20h
 		pop	hl
