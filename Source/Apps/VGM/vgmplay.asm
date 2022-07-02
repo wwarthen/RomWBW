@@ -94,8 +94,8 @@ FRAME_DLY       .EQU    10  			; Frame delay (~ 1/44100)
 ; Your customer overrides can go in here i.e. ports 
 ;------------------------------------------------------------------------------
 ;
-RSEL            .SET    09AH			; Primary AY-3-8910 Register selection
-RDAT            .SET    09BH			; Primary AY-3-8910 Register data
+;RSEL            .SET    09AH			; Primary AY-3-8910 Register selection
+;RDAT            .SET    09BH			; Primary AY-3-8910 Register data
 ;
 ;------------------------------------------------------------------------------
 ; Frame delay overide values for different processor speeds. 
