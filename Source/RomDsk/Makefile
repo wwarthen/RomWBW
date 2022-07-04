@@ -23,8 +23,8 @@ rom512_%.dat rom1024_%.dat: ROMAPPS=$(ROMAPPS1) $(ROMAPPS2)
 rom%_wbw.dat: BIOS=wbw
 rom%_una.dat: BIOS=una
 
-rom128%.dat:
-	>$@
+rom128_%.dat:
+	touch $@
 
 %.dat:
 	### Making ROM Disk $@
