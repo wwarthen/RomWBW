@@ -24,7 +24,6 @@ jobs:
           sudo apt-get install libncurses-dev
           sudo apt-get install srecord
           make dist
-          make clean
           rm -rf .git*
 
       - name: List Output
@@ -64,7 +63,6 @@ jobs:
           export TZ='America/Los_Angeles'
           brew install srecord
           make dist
-          make clean
           rm -rf .git*
 
       - name: List Output

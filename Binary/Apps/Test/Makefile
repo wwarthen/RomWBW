@@ -3,5 +3,5 @@ MOREDIFF := $(shell $(TOOLS)/unix/casefn.sh *.com)
 
 include $(TOOLS)/Makefile.inc
 
-clobber::
+clean::
 	@rm -f *.com

@@ -25,9 +25,6 @@ $(DEST):
 clean:
 	-rm -f $(OBJECTS) config.h zxcc bios.bin
 
-clobber: clean
-	-rm -f $(DEST)/zxcc $(DEST)/bios.bin zxcc
-
 $(OBJECTS): config.h bios.bin
 
 zxcc:	 $(OBJECTS)

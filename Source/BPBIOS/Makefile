@@ -30,7 +30,7 @@ zcpr33n.rel zcpr33t.rel:
 
 all:: $(HD0IMG)
 
-clobber::
+clean::
 	@rm -f $(HD0IMG)
 
 %.img: zcpr33n.rel zcpr33t.rel

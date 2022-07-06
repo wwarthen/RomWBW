@@ -54,8 +54,3 @@ $(DEST):
 
 clean:
 	-rm -f *.o $(OBJECTS)
-
-clobber: clean
-	-for i in $(OBJECTS) ; do \
-		rm -f $(DEST)/$$i ; \
-	done

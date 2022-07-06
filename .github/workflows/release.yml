@@ -27,7 +27,6 @@ jobs:
         run: |
           sudo apt-get install libncurses-dev
           make dist
-          make clean
           rm -rf .git*
       
       - name: Upload Artifact

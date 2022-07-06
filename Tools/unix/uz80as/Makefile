@@ -49,9 +49,6 @@ all: uz80as $(DEST)
 $(DEST):
 	mkdir -p $(DEST)
 
-clobber: clean
-	-rm -f uz80as $(DEST)/uz80as
-
 clean:
 	-rm -f $(OBJECTS) uz80as
 

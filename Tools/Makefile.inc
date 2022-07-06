@@ -156,13 +156,7 @@ clean::
 	done
 
 clobber:: clean
-	@if [ "$(DEST)" ] ; then for file in $(OBJECTS) ; do \
-		rm -f $$($(CASEFN) $(DEST)/$$file) ; \
-	done ; fi
-	@-rm -f $$($(CASEFN) $(filter-out $(NODELETE),$(OBJECTS)))
-	@for dir in $(SUBDIRS) ; do \
-		$(MAKE) --directory $$dir clobber ; \
-	done
+
 #
 # this is used to verify that the unix and windows tool chains are generating
 # the same objects
