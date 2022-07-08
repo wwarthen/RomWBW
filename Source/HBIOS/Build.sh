@@ -41,16 +41,6 @@ if [ "${ROM_PLATFORM}" == "dist" ] ; then
 	exit
 fi
 
-###if [ $1 == '-d' ] ; then
-###	shift
-###	diffdir=$1
-###	shift
-###	if [ -f $diffdir/build.inc ] ; then
-###		timestamp=$(grep TIMESTAMP $diffdir/build.inc | awk '{print $3}' | tr -d '\015"')
-###		echo diff build using $timestamp
-###	fi
-###fi
-
 # prompt if no match
 platforms=($(find Config -name \*.asm -print | \
 	sed -e 's,Config/,,' -e 's/_.*$//' | sort -u))
@@ -83,6 +73,16 @@ if [ -z "${ROMNAME}" ] ; then
 fi
 
 TIMESTAMP=$(date +%Y-%m-%d)
+
+if [ "$1" = "-d" ] ; then
+	shift
+	diffdir=$1
+	shift
+	if [ -f $diffdir/build.inc ] ; then
+		timestamp=$(grep TIMESTAMP $diffdir/build.inc | awk '{print $3}' | tr -d '\015"')
+		echo diff build using $timestamp
+	fi
+fi
 
 CONFIGFILE=Config/${ROM_PLATFORM}_${ROM_CONFIG}.asm
 

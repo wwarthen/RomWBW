@@ -1,8 +1,7 @@
 
-MOREDIFF = camel80.bin game.bin hbios_rom.bin nascom.bin prefix.bin usrrom.bin \
+MOREDIFF = game.bin hbios_rom.bin nascom.bin usrrom.bin \
 	dbgmon.bin hbios_app.bin imgpad2.bin osimg1.bin osimg2.bin romldr.bin \
-	eastaegg.bin hbios_img.bin osimg.bin tastybasic.bin \
-	game.bin updater.bin usrrom.bin
+	eastaegg.bin hbios_img.bin osimg.bin game.bin updater.bin usrrom.bin
 
 SUBDIRS =
 DEST = ../../Binary
@@ -20,11 +19,13 @@ ifneq ($(findstring $(ROM_PLATFORM), RCZ280),)
 	TASM=$(BINDIR)/uz80as -t z280
 endif
 
+# DIFFMAKE = 1
+
 ifeq ($(DIFFMAKE),1)
 	DIFFBUILD := -d $(DIFFTO)/Source/HBIOS
 endif
 
-DIFFPATH = $(DIFFTO)/Binary
+# DIFFPATH = $(DIFFTO)/Binary
 
 DEPS=prereq dbgmon.bin romldr.bin nascom.bin tastybasic.bin game.bin eastaegg.bin updater.bin usrrom.bin imgpad2.bin
 
@@ -47,10 +48,10 @@ ROMNAME=${ROM_PLATFORM}_${ROM_CONFIG}
 all::
 	if [ -z "$(OBJECTS)" ] ; then \
 		chmod +x Build.sh ; \
-		bash Build.sh ; \
+		bash Build.sh $(DIFFBUILD) ; \
 	fi
 
-$(ROMNAME).rom $(ROMNAME).com $(ROMNAME).img &: $(ROMDEPS)
+$(ROMNAME).rom $(ROMNAME).com $(ROMNAME).img : $(ROMDEPS)
 	cat romldr.bin dbgmon.bin ../ZSDOS/zsys_$(BIOS).bin ../CPM22/cpm_$(BIOS).bin >osimg.bin
 	cat romldr.bin dbgmon.bin ../ZSDOS/zsys_$(BIOS).bin >osimg_small.bin
 	if [ $(ROM_PLATFORM) != UNA ] ; then \

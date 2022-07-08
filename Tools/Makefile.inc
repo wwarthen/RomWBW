@@ -166,7 +166,7 @@ ifneq ($(DIFFTO),)
 	@for dir in $(SUBDIRS) ; do \
 		( echo "diff in $(HERE)/$$dir" ; cd "$$dir" ; make diff ) ; \
 	done
-	@for i in $(OBJECTS) $(MOREDIFF) ; do \
+	@for i in $(filter-out $(NODIFF),$(OBJECTS) $(MOREDIFF)) ; do \
         sf=$$($(CASEFN) $$i) ; \
 		df=$$($(CASEFN) $(DIFFPATH)/$$i) ; \
         if [ -f "$$df" -a -f "$$sf" ] ; then \
@@ -186,6 +186,7 @@ ifneq ($(DIFFTO),)
 		fi ; \
     done
 endif
+
 
 vdiff:
 	make VERBOSEDIFF=2 diff
