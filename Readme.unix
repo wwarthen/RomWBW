@@ -34,13 +34,11 @@ By default, this will generate all of the standard configurations of
 RomWBW for all platforms.  If you just want to build the ROM for a
 specific platform and configuration you can use
 
-	make ROM_PLATFORM=<platform> ROM_CONFIG=<config> [ROMSIZE=<size>]
+	make ROM_PLATFORM=<platform> ROM_CONFIG=<config>
 
 where <platform> is one of the supported platforms such as SBC, RCZ80, 
-etc. and <config> is a configuration of that platform.  A ROM size may
-optionally be specified and must be one of 128, 256, 512, or 1024.  It
-defaults to 512.  For example, to build the "126" configuration of
-the "SCZ180" platform:
+etc. and <config> is a configuration of that platform.  For example,
+to build the "126" configuration of the "SCZ180" platform:
 
 	make ROM_PLATFORM=SCZ180 ROM_CONFIG=126
 
@@ -77,7 +75,7 @@ running.  To disable this feature:
 DISCLAIMER: You do this at your own risk.  I highly recommend that you
 return the settings back to normal immediately after doing a build.
 
-Heavy use is made of make's include facility and pattern rules. the 
+Heavy use is made of make's include facility and pattern rules. The 
 master rule set is in Tools/Makefile.inc.  Changes here will affect 
 almost every Makefile, and where exceptions are needed, the overrides 
 are applied in the lower Makefiles.
@@ -101,10 +99,10 @@ Credit:
 	hacked to do case-insensitivity. These are not marked, and are 
 	not extensive.
 
-	zx is from the distributed version, and also has local hacks 
+	zxcc is from the distributed version, and also has local hacks 
 	for case insensitivity.
 
-	Both zx and cpmtools ship with an overly complicated makefile 
+	Both zxcc and cpmtools ship with an overly complicated makefile 
 	generation system and this is ignored.
 
 	This whole Linux build framework is the work of Curt Mayer, 

@@ -1,6 +1,6 @@
 RomWBW Getting Started
 Wayne Warthen (mailto:wwarthen@gmail.com)
-21 Mar 2022
+09 Jul 2022
 
 
 
@@ -17,7 +17,7 @@ RomWBW
 Z80/Z180 System Software
 
 Version 3.1 Pre-release
-21 Mar 2022
+09 Jul 2022
 
 Wayne Warthen wwarthen@gmail.com
 
@@ -213,15 +213,23 @@ disk devices.
 
 The following ROM applications are available at the boot loader prompt:
 
-  Application    
-  -------------- --------------------------------------------------------
-  Monitor        Z80 system debug monitor w/ Intel Hex loader
-  Forth          Brad Rodriguez’s ANSI compatible Forth language
-  Basic          Nascom 8K BASIC language
-  Tasty BASIC    Dimitri Theuling’s Tiny BASIC implementation
-  Play           A simple video game (requires ANSI terminal emulation)
-  Network Boot   Boot through Wiznet MT011 device
-  Flash Update   Upload and flash a new ROMWBW image using xmodem
+  --------------------------------------------------------------------------
+  Application   
+  ------------- ------------------------------------------------------------
+  Monitor       Z80 system debug monitor w/ Intel Hex loader
+
+  Forth         Brad Rodriguez’s ANSI compatible Forth language
+
+  Basic         Nascom 8K BASIC language
+
+  Tasty BASIC   Dimitri Theuling’s Tiny BASIC implementation
+
+  Play          A simple video game (requires ANSI terminal emulation)
+
+  Network Boot  Boot through Wiznet MT011 device
+
+  Flash Update  Upload and flash a new ROMWBW image using xmodem
+  --------------------------------------------------------------------------
 
 In general, the command to exit these applications and restart the
 system is BYE. The exceptions are the Monitor which uses B and Play
@@ -467,11 +475,15 @@ Some custom applications do not fit on the ROM disk. They are found on
 the disk image files or the individual files can be found in the
 Binary\Apps directory of the distribution.
 
+  --------------------------------------------------------------------------
   Application   Description
-  ------------- -------------------------------------------------------------
+  ------------- ------------------------------------------------------------
   TUNE          Play .PT2, .PT3, .MYM audio files.
+
   FAT           Access MS-DOS FAT filesystems from RomWBW (based on FatFs).
+
   INTTEST       Test interrupt vector hooking.
+  --------------------------------------------------------------------------
 
 Additional documentation on all of these applications can be found in
 “RomWBW Applications.pdf” in the Doc directory of the distribution.
@@ -667,14 +679,21 @@ The following table shows the disk image files available. Note that the
 images in the “Hard” column are fine for use on CF Cards, SD Cards, as
 well as real spinning hard disks.
 
-  Floppy         Hard           Description
-  -------------- -------------- ------------------------------
-  fd_cpm22.img   hd_cpm22.img   DRI CP/M 2.2 boot disk
-  fd_zsdos.img   hd_zsdos.img   ZSDOS 1.1 boot disk
-  fd_nzcom.img   hd_nzcom.img   NZCOM boot disk
-  fd_cpm3.img    hd_cpm3.img    DRI CP/M 3 boot disk
-  fd_zpm3.img    hd_zpm3.img    ZPM3 boot disk
-  fd_ws4.img     hd_ws4.img     WordStar v4 application disk
+  -----------------------------------------------------------------------
+  Floppy          Hard            Description
+  --------------- --------------- ---------------------------------------
+  fd_cpm22.img    hd_cpm22.img    DRI CP/M 2.2 boot disk
+
+  fd_zsdos.img    hd_zsdos.img    ZSDOS 1.1 boot disk
+
+  fd_nzcom.img    hd_nzcom.img    NZCOM boot disk
+
+  fd_cpm3.img     hd_cpm3.img     DRI CP/M 3 boot disk
+
+  fd_zpm3.img     hd_zpm3.img     ZPM3 boot disk
+
+  fd_ws4.img      hd_ws4.img      WordStar v4 application disk
+  -----------------------------------------------------------------------
 
 In addition to the disk images above, there is also a special hard disk
 image called hd_combo.img. This image contains all of the images above,
@@ -685,14 +704,21 @@ system options.
 
 This is the layout of the hd_combo disk image:
 
-  Slice     Description
-  --------- ------------------------------
-  Slice 0   DRI CP/M 2.2 boot disk
-  Slice 1   ZSDOS 1.1 boot disk
-  Slice 2   NZCOM boot disk
-  Slice 3   DRI CP/M 3 boot disk
-  Slice 4   ZPM3 boot disk
-  Slice 5   WordStar v4 application disk
+  ------------------------------------------------------------------------
+  Slice   Description
+  ------- ----------------------------------------------------------------
+  Slice 0 DRI CP/M 2.2 boot disk
+
+  Slice 1 ZSDOS 1.1 boot disk
+
+  Slice 2 NZCOM boot disk
+
+  Slice 3 DRI CP/M 3 boot disk
+
+  Slice 4 ZPM3 boot disk
+
+  Slice 5 WordStar v4 application disk
+  ------------------------------------------------------------------------
 
 Note that unlike the ROM firmware, you do not need to choose a disk
 image specific to your hardware. Because the RomWBW firmware provides a
