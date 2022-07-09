@@ -6,7 +6,7 @@ MOREDIFF = game.bin hbios_rom.bin nascom.bin usrrom.bin \
 SUBDIRS =
 DEST = ../../Binary
 TOOLS =../../Tools
-OTHERS =  *.img *.rom *.com *.upd *.bin *.z80 cpm.sys zsys.sys Build.inc font*.asm *.dat
+OTHERS =  *.img *.rom *.com *.upd *.bin *.z80 cpm.sys zsys.sys Build.inc font*.asm *.dat hbios_env.sh
 include $(TOOLS)/Makefile.inc
 
 FONTS := font8x11c.asm font8x11u.asm font8x16c.asm font8x16u.asm font8x8c.asm font8x8u.asm fontcgac.asm fontcgau.asm
@@ -39,11 +39,11 @@ endif
 
 ROMNAME=${ROM_PLATFORM}_${ROM_CONFIG}
 
-#$(info DEPS=$(DEPS))
-#$(info ROM_PLATFORM=$(ROM_PLATFORM))
-#$(info ROM_CONFIG=$(ROM_CONFIG))
-#$(info ROMSIZE=$(ROMSIZE))
-#$(info ROMNAME=$(ROMNAME))
+$(info DEPS=$(DEPS))
+$(info ROM_PLATFORM=$(ROM_PLATFORM))
+$(info ROM_CONFIG=$(ROM_CONFIG))
+$(info ROMSIZE=$(ROMSIZE))
+$(info ROMNAME=$(ROMNAME))
 
 all::
 	if [ -z "$(OBJECTS)" ] ; then \
@@ -98,6 +98,12 @@ hbios_app.bin:	hbios.asm build.inc  $(DEPS)
 
 hbios_img.bin:	hbios.asm build.inc  $(DEPS)
 	$(TASM) -dIMGBOOT hbios.asm hbios_img.bin hbios_img.lst
+
+hbios_env.com:	hbios_env.asm build.inc
+	$(TASM) -dBASH hbios_env.asm hbios_env.com hbios_env.lst
+	
+hbios_env.sh: hbios_env.com
+	$(ZXCC) hbios_env.com >hbios_env.sh
 
 romldr.bin:	build.inc
 dbgmon.bin:	build.inc

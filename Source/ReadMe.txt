@@ -296,13 +296,10 @@ For example:
 In this case, you will not be prompted.  This is useful if you wish 
 to automate your build process.
 
-There is a third parameter that you can specify to the BuildROM 
-command via a command line.  If you want to build a 1024K (1MB) ROM, 
-you can add "1024" to the end of the line, like this:
-
-    C:\RomWBW\Source> BuildROM MK4 cust 1024
-
-You must ensure that your system actually supports a 1024K ROM.
+In the past, the size of the ROM could be specified as the third
+parameter of the command.  This parameter is now deprecated and
+the size of the ROM is specified in your configuration file
+using the ROMSIZE variable.
 
 Special Build Commands
 ----------------------
