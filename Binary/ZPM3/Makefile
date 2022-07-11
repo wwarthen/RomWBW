@@ -3,5 +3,5 @@ MOREDIFF := $(shell $(TOOLS)/unix/casefn.sh *.spr)
 
 include $(TOOLS)/Makefile.inc
 
-clobber::
-	@rm -f *.spr
+clean::
+	@rm -f *.spr *.com *.sys *.dat *.zpm

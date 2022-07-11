@@ -34,22 +34,19 @@ By default, this will generate all of the standard configurations of
 RomWBW for all platforms.  If you just want to build the ROM for a
 specific platform and configuration you can use
 
-	make ROM_PLATFORM=<platform> ROM_CONFIG=<config> [ROMSIZE=<size>]
+	make ROM_PLATFORM=<platform> ROM_CONFIG=<config>
 
 where <platform> is one of the supported platforms such as SBC, RCZ80, 
-etc. and <config> is a configuration of that platform.  A ROM size may
-optionally be specified and must be one of 128, 256, 512, or 1024.  It
-defaults to 512.  For example, to build the "126" configuration of
-the "SCZ180" platform:
+etc. and <config> is a configuration of that platform.  For example,
+to build the "126" configuration of the "SCZ180" platform:
 
 	make ROM_PLATFORM=SCZ180 ROM_CONFIG=126
 
 Please be aware that the make-based build does have a few deficiencies.
 
 First and most important, the Makefiles do not handle reruns very well.
-To ensure a full buld, use "make clobber" from the top level directory
-before running the actual build.  For those used to using "make clean",
-you can do that but it is not as thorough as "make clobber".
+To ensure a full buld, use "make clean" from the top level directory
+before running the actual build.
 
 Second, there are some build failures that will not stop the make 
 process.  Most of this is because real CP/M 2.2 tools are used in 
@@ -57,7 +54,7 @@ places and CP/M 2.2 does not allow programs to return a result code.
 
 Third, not all dependencies are properly handled.  So, changes to some
 files will not cause things to rebuild as appropriate.  In general, I
-recommend doing a "make clobber" before running "make" to ensure that
+recommend doing a "make clean" before running "make" to ensure that
 everything is fully rebuilt.
 
 For macOS users, you may encounter a failure reading or writing files.
@@ -78,7 +75,7 @@ running.  To disable this feature:
 DISCLAIMER: You do this at your own risk.  I highly recommend that you
 return the settings back to normal immediately after doing a build.
 
-Heavy use is made of make's include facility and pattern rules. the 
+Heavy use is made of make's include facility and pattern rules. The 
 master rule set is in Tools/Makefile.inc.  Changes here will affect 
 almost every Makefile, and where exceptions are needed, the overrides 
 are applied in the lower Makefiles.
@@ -102,10 +99,10 @@ Credit:
 	hacked to do case-insensitivity. These are not marked, and are 
 	not extensive.
 
-	zx is from the distributed version, and also has local hacks 
+	zxcc is from the distributed version, and also has local hacks 
 	for case insensitivity.
 
-	Both zx and cpmtools ship with an overly complicated makefile 
+	Both zxcc and cpmtools ship with an overly complicated makefile 
 	generation system and this is ignored.
 
 	This whole Linux build framework is the work of Curt Mayer, 

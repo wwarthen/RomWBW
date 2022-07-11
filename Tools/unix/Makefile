@@ -15,9 +15,5 @@ all:
 	@chmod +x casefn.sh
 	@$(foreach subdir,$(SUBDIRS),$(MAKE) --directory $(subdir) all;)
 
-clobber:
-	@$(foreach subdir,$(SUBDIRS),$(MAKE) --directory $(subdir) clobber;)
-	@rm -rf ../$(UNAME)
-
 clean:
 	@$(foreach subdir,$(SUBDIRS),$(MAKE) --directory $(subdir) clean;)

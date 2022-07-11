@@ -156,13 +156,7 @@ clean::
 	done
 
 clobber:: clean
-	@if [ "$(DEST)" ] ; then for file in $(OBJECTS) ; do \
-		rm -f $$($(CASEFN) $(DEST)/$$file) ; \
-	done ; fi
-	@-rm -f $$($(CASEFN) $(filter-out $(NODELETE),$(OBJECTS)))
-	@for dir in $(SUBDIRS) ; do \
-		$(MAKE) --directory $$dir clobber ; \
-	done
+
 #
 # this is used to verify that the unix and windows tool chains are generating
 # the same objects
@@ -172,7 +166,7 @@ ifneq ($(DIFFTO),)
 	@for dir in $(SUBDIRS) ; do \
 		( echo "diff in $(HERE)/$$dir" ; cd "$$dir" ; make diff ) ; \
 	done
-	@for i in $(OBJECTS) $(MOREDIFF) ; do \
+	@for i in $(filter-out $(NODIFF),$(OBJECTS) $(MOREDIFF)) ; do \
         sf=$$($(CASEFN) $$i) ; \
 		df=$$($(CASEFN) $(DIFFPATH)/$$i) ; \
         if [ -f "$$df" -a -f "$$sf" ] ; then \
@@ -192,6 +186,7 @@ ifneq ($(DIFFTO),)
 		fi ; \
     done
 endif
+
 
 vdiff:
 	make VERBOSEDIFF=2 diff

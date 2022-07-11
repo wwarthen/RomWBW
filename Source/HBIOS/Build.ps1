@@ -1,4 +1,4 @@
-param([string]$Platform = "", [string]$Config = "", [int]$RomSize = 512, [string]$ROMName = "")
+param([string]$Platform = "", [string]$Config = "", [string]$ROMName = "")
 
 # If a PowerShell exception occurs, just stop the script immediately.
 $ErrorAction = 'Stop'
@@ -68,19 +68,6 @@ while ($true)
 }
 
 #
-# Establish the ROM size (in KB).  It may have been passed in on the command line.  Validate
-# $RomSize and loop requesting a new value as long as it is not valid.  The valid ROM sizes
-# are just hard-coded for now.  The ROM size does nothing more than determine the size of the
-# ROM disk portion of the ROM image.
-#
-
-while ($true)
-{
-	if (($RomSize -eq 0) -or ($RomSize -eq 128) -or ($RomSize -eq 256) -or ($RomSize -eq 512) -or ($RomSize -eq 1024)) {break}
-	$RomSize = (Read-Host -prompt "ROM Size [0|128|256|512|1024]").Trim()
-}
-
-#
 # TASM should be invoked with the proper CPU type.  Below, the CPU type is inferred
 # from the platform.
 #
@@ -117,8 +104,6 @@ $TimeStamp = '"' + (Get-Date -Format 'yyyy-MM-dd') + '"'
 ;
 #DEFINE		TIMESTAMP	${TimeStamp}
 ;
-ROMSIZE		.EQU		${ROMSize}
-;
 #INCLUDE "${ConfigFile}"
 ;
 "@ | Out-File "build.inc" -Encoding ASCII
@@ -134,6 +119,5 @@ ROMSIZE		.EQU		${ROMSize}
 set Platform=${Platform}
 set Config=${Config}
 set ROMName=${ROMName}
-set ROMSize=${ROMSize}
 set CPUType=${CPUType}
 "@ | Out-File "build_env.cmd" -Encoding ASCII

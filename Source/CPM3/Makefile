@@ -13,6 +13,7 @@ OTHERS = cpmldr.rel biosldr.rel cpm3res.sys cpm3bnk.sys loader.bin cpmldr.bin
 OTHERS += biosldrc.rel biosldrd.rel
 NODELETE = ccp.com gencpm.com genres.dat genbnk.dat bdos3.spr bnkbdos3.spr resbdos3.spr
 NODELETE += readme.1st cpm3fix.pat
+NODIFF = zpmbios3
 
 DEST = ../../Binary/CPM3
 TOOLS = ../../Tools

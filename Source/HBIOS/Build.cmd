@@ -4,7 +4,7 @@ setlocal
 if "%1" == "dist" goto :dist
 
 ::
-:: Build [<platform> [<config> [<romsize> [<romname>]]]]
+:: Build [<platform> [<config> [<romname>]]]
 ::
 
 set TOOLS=../../Tools
@@ -28,10 +28,20 @@ PowerShell -ExecutionPolicy Unrestricted .\Build.ps1 %* || exit /b
 ::
 :: Below, we process the command file created by the PowerShell script.
 :: This sets the environment variables: Platform, Config, ROMName,
-:: ROMSize, & CPUType.
+:: & CPUType.
 ::
 
 call build_env.cmd
+
+::
+:: Create a small app that is used to export key build variables of the build.
+:: Then run the app to output a file with the variables.  Finally, read the
+:: variables into variables usable in this batch file.
+::
+
+tasm -t80 -g3 -dCMD hbios_env.asm hbios_env.com hbios_env.lst || exit /b
+zxcc hbios_env >hbios_env.cmd
+call hbios_env.cmd
 
 ::
 :: Start of the actual build process for a given ROM.
@@ -183,34 +193,34 @@ goto :eof
 
 :dist
 
-call Build SBC std 512 || exit /b
-call Build SBC simh 512 || exit /b
-call Build MBC std 512 || exit /b
-call Build ZETA std 512 || exit /b
-call Build ZETA2 std 512 || exit /b
-call Build N8 std 512 || exit /b
-call Build MK4 std 512 || exit /b
-call Build RCZ80 std 512 || exit /b
-call Build RCZ80 skz 512 || exit /b
-call Build RCZ80 kio 512 || exit /b
-call Build RCZ80 mt 512 || exit /b
-call Build RCZ80 duart 512 || exit /b
-call Build RCZ80 zrc 512 || exit /b
-call Build RCZ80 zrc_ram 0 || exit /b
-call Build RCZ180 ext 512 || exit /b
-call Build RCZ180 nat 512 || exit /b
-call Build RCZ280 ext 512 || exit /b
-call Build RCZ280 nat 512 || exit /b
-call Build RCZ280 nat_zz 512 || exit /b
-call Build RCZ280 nat_zzr 256 || exit /b
-call Build SCZ180 126 512 || exit /b
-call Build SCZ180 130 512 || exit /b
-call Build SCZ180 131 512 || exit /b
-call Build SCZ180 140 512 || exit /b
-call Build EZZ80 std 512 || exit /b
-call Build EZZ80 tz80 512 || exit /b
-call Build DYNO std 512 || exit /b
-call Build UNA std 512 || exit /b
-call Build RPH std 512 || exit /b
+call Build SBC std || exit /b
+call Build SBC simh || exit /b
+call Build MBC std || exit /b
+call Build ZETA std || exit /b
+call Build ZETA2 std || exit /b
+call Build N8 std || exit /b
+call Build MK4 std || exit /b
+call Build RCZ80 std || exit /b
+call Build RCZ80 skz || exit /b
+call Build RCZ80 kio || exit /b
+call Build RCZ80 mt || exit /b
+call Build RCZ80 duart || exit /b
+call Build RCZ80 zrc || exit /b
+call Build RCZ80 zrc_ram || exit /b
+call Build RCZ180 ext || exit /b
+call Build RCZ180 nat || exit /b
+call Build RCZ280 ext || exit /b
+call Build RCZ280 nat || exit /b
+call Build RCZ280 nat_zz || exit /b
+call Build RCZ280 nat_zzr || exit /b
+call Build SCZ180 126 || exit /b
+call Build SCZ180 130 || exit /b
+call Build SCZ180 131 || exit /b
+call Build SCZ180 140 || exit /b
+call Build EZZ80 std || exit /b
+call Build EZZ80 tz80 || exit /b
+call Build DYNO std || exit /b
+call Build UNA std || exit /b
+call Build RPH std || exit /b
 
 goto :eof

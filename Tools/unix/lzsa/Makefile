@@ -41,6 +41,3 @@ $(APP): $(OBJS)
 
 clean:
 	@rm -rf $(APP) $(OBJDIR)
-
-clobber: clean
-	rm -f ../../$(UNAME)/$(APP)

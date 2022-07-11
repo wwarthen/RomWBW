@@ -3,7 +3,7 @@
 ## Z80/Z180 System Software
 
 Version 3.1 Pre-release  
-21 Mar 2022
+09 Jul 2022
 
 Wayne Warthen <wwarthen@gmail.com>
 
@@ -418,7 +418,7 @@ therefore, globally available.
 
 Some custom applications do not fit on the ROM disk. They are found on
 the disk image files or the individual files can be found in the
-Binary\\Apps directory of the distribution.
+Binary\Apps directory of the distribution.
 
 | Application | Description                                                 |
 |-------------|-------------------------------------------------------------|
@@ -924,7 +924,7 @@ documents.
 Note that the build scripts for RomWBW create the default disk images
 supplied with RomWBW. It is relatively easy to customize the contents of
 the disk images that are part of RomWBW. This is described in more
-detail in the Source\\Images directory of the distribution.
+detail in the Source\Images directory of the distribution.
 
 ## FAT Filesystem Transfers
 
@@ -945,7 +945,7 @@ however. Longer filenames will show up as a truncated version.
 
 The `FAT` application is not on your ROM disk because it is too large to
 fit. You will find it on all of the pre-built disk images as well as in
-the Binary\\Apps directory of the distribution.
+the Binary\Apps directory of the distribution.
 
 For advanced users, it is possible to create a hybrid disk that contains
 CP/M slices at the beginning and a FAT filesystem after. Such a hybrid
@@ -953,7 +953,7 @@ disk can be used to boot an operating system and still have access to
 FAT files on the FAT portion of the disk. David Reese has prepared a
 document describing how to do this. It is called
 “SC126_How-To_No_2\_Preparing_an_SD_Card_for_Use_with_SC126_Rev_1-5.pdf”
-and can be found in the Doc\\Contrib directory of the distribution.
+and can be found in the Doc\Contrib directory of the distribution.
 
 # Startup Command Processing
 
@@ -1164,7 +1164,7 @@ system on your disk.
     CP/M 3 uses a multi-step boot process involving multiple files. The
     CP/M 3 boot files are not included on the ROM disk due to space
     constraints. You will need to transfer the files to your system from
-    the RomWBW distribution directory Binary\\CPM3.
+    the RomWBW distribution directory Binary\CPM3.
 
     After this is done, you will need to use `SYSCOPY` to place the CP/M
     3 loader image on the boot tracks of all CP/M 3 boot disks/slices.
@@ -1182,7 +1182,7 @@ system on your disk.
     ZPM3 uses a multi-step boot process involving multiple files. The
     ZPM3 boot files are not included on the ROM disk due to space
     constraints. You will need to transfer the files to your system from
-    the RomWBW distribution directory Binary\\ZPM3.
+    the RomWBW distribution directory Binary\ZPM3.
 
     After this is done, you will need to use `SYSCOPY` to place the ZPM3
     loader image on the boot tracks of all ZPM3 boot disks/slices. The
@@ -1225,8 +1225,7 @@ For example: `B>COPY ASSIGN.COM C:`
 Some RomWBW custom applications are too large to fit on the ROM disk. If
 you are using any of these you will need to transfer them to your system
 and then update all copies. These applications are found in the
-Binary\\Apps directory of the distribution and in all of the disk
-images.
+Binary\Apps directory of the distribution and in all of the disk images.
 
 -   FAT.COM
 -   TUNE.COM

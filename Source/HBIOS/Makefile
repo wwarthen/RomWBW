@@ -1,13 +1,12 @@
 
-MOREDIFF = camel80.bin game.bin hbios_rom.bin nascom.bin prefix.bin usrrom.bin \
+MOREDIFF = game.bin hbios_rom.bin nascom.bin usrrom.bin \
 	dbgmon.bin hbios_app.bin imgpad2.bin osimg1.bin osimg2.bin romldr.bin \
-	eastaegg.bin hbios_img.bin osimg.bin tastybasic.bin \
-	game.bin updater.bin usrrom.bin
+	eastaegg.bin hbios_img.bin osimg.bin game.bin updater.bin usrrom.bin
 
 SUBDIRS =
 DEST = ../../Binary
 TOOLS =../../Tools
-OTHERS =  *.img *.rom *.com *.upd *.bin *.z80 cpm.sys zsys.sys Build.inc font*.asm *.dat
+OTHERS =  *.img *.rom *.com *.upd *.bin *.z80 cpm.sys zsys.sys Build.inc font*.asm *.dat hbios_env.sh
 include $(TOOLS)/Makefile.inc
 
 FONTS := font8x11c.asm font8x11u.asm font8x16c.asm font8x16u.asm font8x8c.asm font8x8u.asm fontcgac.asm fontcgau.asm
@@ -20,11 +19,13 @@ ifneq ($(findstring $(ROM_PLATFORM), RCZ280),)
 	TASM=$(BINDIR)/uz80as -t z280
 endif
 
+# DIFFMAKE = 1
+
 ifeq ($(DIFFMAKE),1)
 	DIFFBUILD := -d $(DIFFTO)/Source/HBIOS
 endif
 
-DIFFPATH = $(DIFFTO)/Binary
+# DIFFPATH = $(DIFFTO)/Binary
 
 DEPS=prereq dbgmon.bin romldr.bin nascom.bin tastybasic.bin game.bin eastaegg.bin updater.bin usrrom.bin imgpad2.bin
 
@@ -38,19 +39,19 @@ endif
 
 ROMNAME=${ROM_PLATFORM}_${ROM_CONFIG}
 
-#$(info DEPS=$(DEPS))
-#$(info ROM_PLATFORM=$(ROM_PLATFORM))
-#$(info ROM_CONFIG=$(ROM_CONFIG))
-#$(info ROMSIZE=$(ROMSIZE))
-#$(info ROMNAME=$(ROMNAME))
+$(info DEPS=$(DEPS))
+$(info ROM_PLATFORM=$(ROM_PLATFORM))
+$(info ROM_CONFIG=$(ROM_CONFIG))
+$(info ROMSIZE=$(ROMSIZE))
+$(info ROMNAME=$(ROMNAME))
 
 all::
 	if [ -z "$(OBJECTS)" ] ; then \
 		chmod +x Build.sh ; \
-		bash Build.sh ; \
+		bash Build.sh $(DIFFBUILD) ; \
 	fi
 
-$(ROMNAME).rom $(ROMNAME).com $(ROMNAME).img &: $(ROMDEPS)
+$(ROMNAME).rom $(ROMNAME).com $(ROMNAME).img : $(ROMDEPS)
 	cat romldr.bin dbgmon.bin ../ZSDOS/zsys_$(BIOS).bin ../CPM22/cpm_$(BIOS).bin >osimg.bin
 	cat romldr.bin dbgmon.bin ../ZSDOS/zsys_$(BIOS).bin >osimg_small.bin
 	if [ $(ROM_PLATFORM) != UNA ] ; then \
@@ -97,6 +98,12 @@ hbios_app.bin:	hbios.asm build.inc  $(DEPS)
 
 hbios_img.bin:	hbios.asm build.inc  $(DEPS)
 	$(TASM) -dIMGBOOT hbios.asm hbios_img.bin hbios_img.lst
+
+hbios_env.com:	hbios_env.asm build.inc
+	$(TASM) -dBASH hbios_env.asm hbios_env.com hbios_env.lst
+	
+hbios_env.sh: hbios_env.com
+	$(ZXCC) hbios_env.com >hbios_env.sh
 
 romldr.bin:	build.inc
 dbgmon.bin:	build.inc

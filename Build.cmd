@@ -3,4 +3,4 @@ setlocal
 
 pushd Source && call Build %* || exit /b & popd
 
-pause
+if "%*" == "" pause
