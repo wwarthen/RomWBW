@@ -83,6 +83,7 @@ cat <<- EOF > build.inc
 ; RomWBW Configured for ${ROM_PLATFORM} ${ROM_CONFIG} ${TIMESTAMP}
 ;
 #DEFINE	TIMESTAMP	"${TIMESTAMP}"
+#DEFINE CONFIG		"${ROM_PLATFORM}_${ROM_CONFIG}"
 ;
 #INCLUDE "${CONFIGFILE}"
 ;
@@ -90,8 +91,6 @@ EOF
 
 make hbios_env.sh
 source hbios_env.sh
-
-cat hbios_env.sh
 
 export OBJECTS
 OBJECTS="${ROMNAME}.rom"
