@@ -36,7 +36,7 @@ call build_env.cmd
 ::
 :: Create a small app that is used to export key build variables of the build.
 :: Then run the app to output a file with the variables.  Finally, read the
-:: variables into variables usable in this batch file.
+:: file into variables usable in this batch file.
 ::
 
 tasm -t80 -g3 -dCMD hbios_env.asm hbios_env.com hbios_env.lst || exit /b

@@ -90,7 +90,7 @@ while ($ROMName -eq "")
 }
 
 # Current date/time is queried here to be subsequently imbedded in image
-$TimeStamp = '"' + (Get-Date -Format 'yyyy-MM-dd') + '"'
+$TimeStamp = (Get-Date -Format 'yyyy-MM-dd')
 
 #
 # Since TASM has no mechanism to include files dynamically based on variables, a file
@@ -102,7 +102,8 @@ $TimeStamp = '"' + (Get-Date -Format 'yyyy-MM-dd') + '"'
 @"
 ; RomWBW Configured for ${Platform} ${Config}, $(Get-Date -Format "s")
 ;
-#DEFINE		TIMESTAMP	${TimeStamp}
+#DEFINE		TIMESTAMP	"${TimeStamp}"
+#DEFINE		CONFIG		"${Platform}_${Config}"
 ;
 #INCLUDE "${ConfigFile}"
 ;
