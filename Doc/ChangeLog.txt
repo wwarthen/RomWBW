@@ -63,6 +63,7 @@ Version 3.1.1
 - DDW: Add support for MBC sound card
 - WBW: Add support for "romless" booting
 - L?N: Fixes for ZCPR-D&J (buffer overflow, default drive/user)
+- J?P: Add support for DS1501 RTC
 
 Version 3.1
 -----------
