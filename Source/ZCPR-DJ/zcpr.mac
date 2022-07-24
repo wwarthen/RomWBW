@@ -1,4 +1,4 @@
-;   DATE 05/17/21 08:34:00
+;   DATE 06/02/21 08:08:00
 ;
 ;	TITLE	ZCPR Console Command Processor - Version D&J
 ;	SUBTTL	Last Modified: 10 August 1997
@@ -396,12 +396,15 @@ CIBUFF:	DB	'             '	;DEFAULT (COLD BOOT) COMMAND 	 13
 	db	0,0,0,0,0,0,0,0	;77
 	db	0,0,0,0,0,0,0,0	;85
 	db	0,0,0,0,0,0,0,0	;93
-	db	0,0,0,0,0,0,0,0	;101
-	db	0,0,0,0,0,0,0,0	;109
+	db	0,0,0		;96
+;	DEFB	0,0,0,0,0,0,0,0	;101
+;	DEFB	0,0,0	;104
+;	DEFB	0,0,0,0,0,0,0,0	;109
+;	DEFB	0,0,0,0,0,0,0,0 ;118
 BUFEND	EQU	$
 ;	DEFW	0		;SENTINEL FOR STACK END
 	db	0,0
-;	DEFS	24		;STACK AREA
+	DEFS	24,0		;STACK AREA
 STACK	EQU	$		;TOP OF STACK
 ;
 ; SUBMIT FILE CONTROL BLOCK
@@ -427,7 +430,7 @@ FCBS2:	db	0		;S2
 FCBRC:	db	0		;RECORD COUNT
 FCBDM:	db	0,0,0,0,0,0,0,0	;DISK GROUP MAP
 	db	0,0,0,0,0,0,0,0
-FCBCR:	DEFS	1		;CURRENT RECORD NUMBER
+FCBCR:	db	0		;CURRENT RECORD NUMBER
 ;
 ; Type and List Variables
 ;
@@ -466,7 +469,7 @@ CMDTBL:
 	DEFW	RING
 	DC	'CLS'
 	DEFW	CLS
-	DC	'WAIT'	; was 'SAK' ("strike any key")
+	DC	'SAK'	; "Strike Any Key"
 	DEFW	SAK
 	DC	'GO'
 	DEFW	GO
