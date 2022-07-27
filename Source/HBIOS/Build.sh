@@ -6,6 +6,7 @@ set -e
 export ROM_PLATFORM
 export ROM_CONFIG
 export ROMSIZE
+export CPUFAM
 
 if [ "${ROM_PLATFORM}" == "dist" ] ; then
 	echo "!!!DISTRIBUTION BUILD!!!"
@@ -63,6 +64,8 @@ if [ -z "${ROMNAME}" ] ; then
 	ROMNAME=${ROM_PLATFORM}_${ROM_CONFIG}
 fi
 
+echo -e "\n\nBuilding $ROM_PLATFORM $ROM_CONFIG\n\n"
+
 TIMESTAMP=$(date +%Y-%m-%d)
 
 if [ "$1" = "-d" ] ; then
@@ -77,8 +80,6 @@ fi
 
 CONFIGFILE=Config/${ROM_PLATFORM}_${ROM_CONFIG}.asm
 
-echo Building $ROMNAME for $ROM_PLATFORM $ROM_CONFIG $ROMSIZE
-
 cat <<- EOF > build.inc
 ; RomWBW Configured for ${ROM_PLATFORM} ${ROM_CONFIG} ${TIMESTAMP}
 ;
@@ -91,6 +92,8 @@ EOF
 
 make hbios_env.sh
 source hbios_env.sh
+
+echo Creating ${ROMSIZE}K ROM named ${ROMNAME}.rom
 
 export OBJECTS
 OBJECTS="${ROMNAME}.rom"

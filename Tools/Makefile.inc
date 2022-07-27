@@ -134,7 +134,7 @@ endif
 #
 all:: $(OBJECTS)
 	@for dir in $(SUBDIRS) ; do \
-		$(MAKE) --directory $$dir all ; \
+		$(MAKE) --directory $$dir ; \
 	done
 	@if [ "$(DEST)" ] && [ "$(OBJECTS)" ] ; then for file in $(filter-out $(NOCOPY),$(OBJECTS)) ; do \
 		mkdir -p $(DEST) ; \

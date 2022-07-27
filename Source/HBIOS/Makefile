@@ -7,25 +7,30 @@ SUBDIRS =
 DEST = ../../Binary
 TOOLS =../../Tools
 OTHERS =  *.img *.rom *.com *.upd *.bin *.z80 cpm.sys zsys.sys Build.inc font*.asm *.dat hbios_env.sh
-include $(TOOLS)/Makefile.inc
-
-FONTS := font8x11c.asm font8x11u.asm font8x16c.asm font8x16u.asm font8x8c.asm font8x8u.asm fontcgac.asm fontcgau.asm
-
-ifneq ($(findstring $(ROM_PLATFORM), N8 MK4 RCZ180 SCZ180 DYNO RPH),)
-	TASM=$(BINDIR)/uz80as -t hd64180
-endif
-
-ifneq ($(findstring $(ROM_PLATFORM), RCZ280),)
-	TASM=$(BINDIR)/uz80as -t z280
-endif
 
 # DIFFMAKE = 1
+
+# DIFFPATH = $(DIFFTO)/Binary
 
 ifeq ($(DIFFMAKE),1)
 	DIFFBUILD := -d $(DIFFTO)/Source/HBIOS
 endif
 
-# DIFFPATH = $(DIFFTO)/Binary
+ifeq ($(OBJECTS),)
+start:
+	chmod +x Build.sh
+	bash Build.sh $(DIFFBUILD)
+endif
+
+include $(TOOLS)/Makefile.inc
+
+FONTS := font8x11c.asm font8x11u.asm font8x16c.asm font8x16u.asm font8x8c.asm font8x8u.asm fontcgac.asm fontcgau.asm
+
+ifeq ($(CPUFAM),2)
+	TASM=$(BINDIR)/uz80as -t hd64180
+else ifeq ($(CPUFAM),3)
+	TASM=$(BINDIR)/uz80as -t z280
+endif
 
 DEPS=prereq dbgmon.bin romldr.bin nascom.bin tastybasic.bin game.bin eastaegg.bin updater.bin usrrom.bin imgpad2.bin
 
@@ -39,19 +44,15 @@ endif
 
 ROMNAME=${ROM_PLATFORM}_${ROM_CONFIG}
 
-$(info DEPS=$(DEPS))
-$(info ROM_PLATFORM=$(ROM_PLATFORM))
-$(info ROM_CONFIG=$(ROM_CONFIG))
-$(info ROMSIZE=$(ROMSIZE))
-$(info ROMNAME=$(ROMNAME))
+# $(info DEPS=$(DEPS))
+# $(info ROM_PLATFORM=$(ROM_PLATFORM))
+# $(info ROM_CONFIG=$(ROM_CONFIG))
+# $(info ROMSIZE=$(ROMSIZE))
+# $(info ROMNAME=$(ROMNAME))
+# $(info CPUFAM=$(CPUFAM))
+# $(info TASM=$(TASM))
 
-all::
-	if [ -z "$(OBJECTS)" ] ; then \
-		chmod +x Build.sh ; \
-		bash Build.sh $(DIFFBUILD) ; \
-	fi
-
-$(ROMNAME).rom $(ROMNAME).com $(ROMNAME).img : $(ROMDEPS)
+$(OBJECTS) : $(ROMDEPS)
 	cat romldr.bin dbgmon.bin ../ZSDOS/zsys_$(BIOS).bin ../CPM22/cpm_$(BIOS).bin >osimg.bin
 	cat romldr.bin dbgmon.bin ../ZSDOS/zsys_$(BIOS).bin >osimg_small.bin
 	if [ $(ROM_PLATFORM) != UNA ] ; then \

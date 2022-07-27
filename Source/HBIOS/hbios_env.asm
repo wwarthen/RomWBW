@@ -1,31 +1,52 @@
 ;
 ;==================================================================================================
-;   HBIOS ENVIRONMENT EXPORT
+;   HBIOS ENVIRONMENT CONFIG VALUE EXPORT TOOL
 ;==================================================================================================
 ;
 ; Do we need a private stack???
-; Use a macro do dump each variable?
 ;
 #include "std.asm"
 ;
+; Macro to make it simple to print a config value
+;
+#define	prtval(tag,val) \
+#defcont \	call	PREFIX
+#defcont \	call	PRTSTRD
+#defcont \	.text	tag
+#defcont \	call	PRTEQ
+#defcont \	ld	hl,val
+#defcont \	call	PRTDEC
+#defcont \	call	EOL
+;
+; Program starts here
+;
 	.org	$100			; Normal CP/M start address
 ;
-	; Dump ROMSIZE
-	call	PRTSTRD
-#ifdef CMD
-	.text	"set ROMSize=$"
-#endif
-#ifdef BASH
-	.text	"ROMSIZE=$"
-#endif
-	ld	hl,ROMSIZE
-	call	PRTDEC
-	call	EOL
+; Print all desired config values...
 ;
-	ret				; Return
+	prtval("ROMSIZE$", ROMSIZE)
+	prtval("CPUFAM$", CPUFAM)
+;
+	ret
+;
+; Output correct prefix for command/shell
+;
+PREFIX:
+#ifdef CMD
+	call	PRTSTRD
+	.text	"set $"
+#endif
+	ret
+;
+; Output an equal sign
+;
+PRTEQ:
+	ld	a,'='
+	call	COUT
+	ret
 ;
 ; Output end-of-line.  Handles differences between
-; Windows CMD file and Bash.
+; DOS/Windows and Unix.
 ;
 EOL:
 #ifdef CMD
