@@ -316,7 +316,9 @@ D+	| d1 d2 -- d1+d2             | Add double numbers
 2>R	| d --                       | 2 to R
 2R>	| d --                       | fetch 2 from R
 M*/	| d1 n2 u3 --  d=(d1*n2)/u3  | double precision mult. div
-
+SVC	| hl de bc n -- hl de bc af  | Execute a ROMWBW function
+P!	| n p --                     | Write a byte to a I/O port
+P@      | p -- n                     | Read a byte from and I/O port
 
 # BASIC
 
