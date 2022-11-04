@@ -411,20 +411,20 @@ functional on all of the OS variants included with RomWBW.
 The following custom applications are found on the ROM disk and are,
 therefore, globally available.
 
-| Application | Description                                                                                          |
-| ----------- | ---------------------------------------------------------------------------------------------------- |
-| ASSIGN      | Add, change, and delete drive letter assignments. Use ASSIGN /? for usage instructions.              |
-| SYSCOPY     | Copy system image to a device to make it bootable. Use SYSCOPY with no parms for usage instructions. |
-| MODE        | Reconfigures serial ports dynamically.                                                               |
-| FDU         | Format and test floppy disks. Menu driven interface.                                                 |
-| FORMAT      | Will someday be a command line tool to format floppy disks. Currently does nothing!                  |
-| XM          | XModem file transfer program adapted to hardware. Automatically uses primary serial port on system.  |
-| FLASH       | Will Sowerbutts' in-situ ROM programming utility.                                                    |
-| FDISK80     | John Coffman's Z80 hard disk partitioning tool.  See documentation in Doc directory.                 |
-| TALK        | Direct console I/O to a specified character device.                                                  |
-| RTC         | Manage and test the Real Time Clock hardware.                                                        |
-| TIMER       | Display value of running periodic system timer.                                                      |
-| CPUSPD      | Change the running CPU speed and wait states of the system.    |
+| Application   | Description                                                                                          |
+| ------------- | ---------------------------------------------------------------------------------------------------- |
+| ASSIGN        | Add, change, and delete drive letter assignments. Use ASSIGN /? for usage instructions.              |
+| SYSCOPY       | Copy system image to a device to make it bootable. Use SYSCOPY with no parms for usage instructions. |
+| MODE          | Reconfigures serial ports dynamically.                                                               |
+| FDU           | Format and test floppy disks. Menu driven interface.                                                 |
+| FORMAT        | Will someday be a command line tool to format floppy disks. Currently does nothing!                  |
+| XM            | XModem file transfer program adapted to hardware. Automatically uses primary serial port on system.  |
+| FLASH         | Will Sowerbutts' in-situ ROM programming utility.                                                    |
+| FDISK80       | John Coffman's Z80 hard disk partitioning tool.  See documentation in Doc directory.                 |
+| TALK          | Direct console I/O to a specified character device.                                                  |
+| RTC           | Manage and test the Real Time Clock hardware.                                                        |
+| TIMER         | Display value of running periodic system timer.                                                      |
+| CPUSPD        | Change the running CPU speed and wait states of the system.                                          |
 
 Some custom applications do not fit on the ROM disk. They are found on the
 disk image files or the individual files can be found in the Binary\\Apps
@@ -434,7 +434,7 @@ directory of the distribution.
 | ----------- | -------------------------------------------------------------- |
 | TUNE        | Play .PT2, .PT3, .MYM audio files.                             |
 | FAT         | Access MS-DOS FAT filesystems from RomWBW (based on FatFs).    |
-| INTTEST     | Test interrupt vector hooking.                                                                       |
+| INTTEST     | Test interrupt vector hooking.                                 |
 
 Additional documentation on all of these applications can be found in
 "RomWBW Applications.pdf" in the Doc directory of the distribution.
