@@ -30,6 +30,8 @@ RomWBW firmware includes:
 * HBIOS (Hardware BIOS) providing support for the vast majority of
 RetroBrew Computers I/O components
 
+* Diagnostics and customizable debugging information.
+
 * A complete operating system (either CP/M 2.2 or ZSDOS 1.1)
 
 * A built-in CP/M filesystem containing the basic applications and
@@ -2200,6 +2202,97 @@ previous address in the table at the index.
 
 `\clearpage`{=latex}
 
+
+Errors and diagnostics
+========
+
+ROMWBW tries to provide useful information when a run time or build time
+error occurs. Many sections of the code also have code blocks that can be 
+enable to aid in debugging and in some cases the level of reporting detail
+can be customized.
+
+Run time errors
+--------
+
+### PANIC
+
+A panic error indicates a non-recoverable error. The processor status is displayed on the console
+and interrupts are disabled and execution is halted. A cold boot or reset is required to restart.
+
+Example error message: 
+
+\>>> PANIC: @06C4[DFA3:DFC3:0100:F103:04FC:0000:2B5E] 
+
+\*** System Halted ***
+
+The format of the information provided is 
+
+@XXXX [-AF-:-BC-:-DE-:-HL-:-SP-:-IX-:-IY-]
+
+Where @XXXX is the address the panic was called from. The other information
+is the CPU register contents.
+
+Possible reasons a PANIC may occur are:
+
+- RAM Bank range error when attempting a read or write to a RAM disk.
+- Sector read function has not been setup but a read was attempted.
+- There was an attempt to add more devices than the device table had room for.
+- An illegal SD card command was encountered.
+
+The @XXXX memory address can be cross referenced with the build source code to identify
+which section of the software or hardware caused the fault.
+
+### SYSCHK 
+
+A syschk error is reported when an internal error is detected. The key differance 
+to the PANIC error is that execution may be continued. In which case an error 
+code is returned to the calling routine. The error code is not displayed at the console.
+
+Example error message:
+
+\>>> SYSCHK: @06C4[DFA3:DFC3:0100:F103:04FC:0000:2B5E] Continue (Y/N)
+
+The format of the information provided is the same as with the PANIC report.
+
+@XXXX [-AF-:-BC-:-DE-:-HL-:-SP-:-IX-:-IY-]
+
+Syschk error codes are returned in the A register.
+
+| Error                               | Code     |
+| ----------------------------------- | -------- |
+| Success                             |   0x00   | 
+| Undefined Error                     |   0xFF   | 
+| Function Not Implemented            |   0xFE   | 
+| Invalid Function                    |   0xFD   | 
+| Invalid Unit Number                 |   0xFC   | 
+| Out Of Memory                       |   0xFB   | 
+| Parameter Out Of Range              |   0xFA   | 
+| Media Not Present                   |   0xF9   | 
+| Hardware Not Present                |   0xF8   | 
+| I/O Error                           |   0xF7   | 
+| Write Request To Read-Only Media    |   0xF6   | 
+| Device Timeout                      |   0xF5   | 
+| Invalid Configuration               |   0xF4   | 
+| Internal Error                      |   0xF3   | 
+
+### Error Level reporting
+
+placeholder
+
+Build time errors
+--------
+
+### Build chain tool errors
+
+place holder
+
+### Assembly time check errors
+
+placeholder
+
+
+`\clearpage`{=latex}
+
 ### Appendix A Driver Instance Data fields
 
 The following section outlines the read only data referenced by the
@@ -2229,3 +2322,5 @@ The following section outlines the read only data referenced by the
 | DCNTL* | 14 | 1  | Z180 DMA/WAIT CONTROL |
 
 * ONLY PRESENT FOR Z180 BUILDS
+
+
