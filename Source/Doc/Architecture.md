@@ -2290,6 +2290,72 @@ place holder
 
 placeholder
 
+Diagnostics
+--------
+
+### DIAG
+
+Progress through the boot and initialization process can be difficult to monitor 
+due to the lack of console or video output. Access to these output devices does
+not become available until late the in the boot process. If these output devices 
+are also involved with the issue trying to be resolved then trouble shooting is 
+even more difficult.
+
+ROMWBW can be configured to display boot progress with the assistance of additional 
+hardware. This take the form of an LED breakout debugging board connected to an
+8-bit output port. As the boot code executes, the LED output display is updated.
+
+To us an LED breakout board, it must be connected the computers data, reset and port
+select lines.
+
+To enable the DIAG option the following settings must be made in the systems .ini
+configuration file, where 0xnn is the port address.
+
+DIAGENABLE .SET TRUE
+DIAGPORT   .SET 0xnn
+
+The following table shows the ROMWBW process steps in relation to the LED display.
+
+|   LED    | ROMWBW Processes                               |
+| -------- |:---------------------------------------------- |
+| `........` | Initial boot                                 |
+|          | Jump to start address                          |
+|          | Disable interrupts                             |
+|          | Set interrupt mode 1                           |
+|          | Initialize critical ports and initial speed    |
+| `.......O` |  Setup initial stack                         |
+|          | Memory manager and CPU configuration           |
+|          | Set top bank to be RAM                         |
+| `......OO` |  Get and save battery condition              |
+|          | Install HBIOS proxy in upper memory            |
+|          | If platform is MBC reconfigure memory manager  |
+|          | Setup "ROMLESS" HBIOS image or ...             |
+|          | Copy HBIOS from ROM to RAM if RAM flag not set |
+|          | Jump to HBIOS in RAM                           |
+|          | Set running in RAM flag                        |
+|  `.....OOO` | Finalize configuration for running in RAM   |
+|          | Check battery condition                        |
+|          | Check for recovery mode boot                   |
+| `....OOOO` | Identify CPU type                            |
+| `...OOOOO` | Set cpu oscillator speed                     |
+|          | Setup counter-timers                           |
+|          | Setup heap                                     |
+| `..OOOOOO` | Preconsole initialization                    |
+| `.OOOOOOO` | Boot delay                                   |
+|          | Set boot console device                        |
+|          | Bios announcement                              |
+| `OOOOOOOO` | Display platform information                 |
+|          | Display memory configuration                   |
+|          | Display CPU family                             |
+|          | Verify ROM checksum                            |
+|          | Report battery condition                       |
+|          | Perform device driver initialization           |
+|          | Report watchdog status                         |
+|          | Mark HBIOS heap so it is preserved             |
+|          | Switch from boot console to CRT if active      |
+|          | Display device summary                         |
+|          | Execute boot loader                            |
+
 
 `\clearpage`{=latex}
 
