@@ -3,7 +3,7 @@
 ## Z80/Z180 System Software
 
 Version 3.1 Pre-release  
-09 Jul 2022
+05 Nov 2022
 
 Wayne Warthen <wwarthen@gmail.com>
 
@@ -451,6 +451,15 @@ CP/M 2.2 or ZSDOS. Since ZSDOS is CP/M 2.2 compatible, this works fairly
 well. However, you will find some files on the ROM disk that will work
 with ZSDOS, but will not work on CP/M 2.2. For example, `LDDS`, which
 loads the ZSDOS date/time stamper will only run on ZSDOS.
+
+## Flash ROM Disks
+
+The limitation of ROM disks being read only can be overcome on some
+platforms with the appropriate selection of Flash ROM chip and system
+configuration. In this case the flash-file system can be enabled which
+will allow the ROM disk to be read and written to. Flash devices have a
+limited write lifespan and continual usage will eventually wear out the
+device. It is not suited for high usage applications.
 
 ## Disk Devices
 
