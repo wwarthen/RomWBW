@@ -1,6 +1,6 @@
 RomWBW Getting Started
 Wayne Warthen (mailto:wwarthen@gmail.com)
-09 Jul 2022
+05 Nov 2022
 
 
 
@@ -17,7 +17,7 @@ RomWBW
 Z80/Z180 System Software
 
 Version 3.1 Pre-release
-09 Jul 2022
+05 Nov 2022
 
 Wayne Warthen wwarthen@gmail.com
 
@@ -438,11 +438,11 @@ the OS variants included with RomWBW.
 The following custom applications are found on the ROM disk and are,
 therefore, globally available.
 
-  -----------------------------------------------------------------------------
+  ----------------------------------------------------------------------------
   Application   Description
-  ------------- ---------------------------------------------------------------
-  ASSIGN        Add, change, and delete drive letter assignments. Use ASSIGN /?
-                for usage instructions.
+  ------------- --------------------------------------------------------------
+  ASSIGN        Add, change, and delete drive letter assignments. Use ASSIGN
+                /? for usage instructions.
 
   SYSCOPY       Copy system image to a device to make it bootable. Use SYSCOPY
                 with no parms for usage instructions.
@@ -454,8 +454,8 @@ therefore, globally available.
   FORMAT        Will someday be a command line tool to format floppy disks.
                 Currently does nothing!
 
-  XM            XModem file transfer program adapted to hardware. Automatically
-                uses primary serial port on system.
+  XM            XModem file transfer program adapted to hardware.
+                Automatically uses primary serial port on system.
 
   FLASH         Will Sowerbutts’ in-situ ROM programming utility.
 
@@ -469,7 +469,7 @@ therefore, globally available.
   TIMER         Display value of running periodic system timer.
 
   CPUSPD        Change the running CPU speed and wait states of the system.
-  -----------------------------------------------------------------------------
+  ----------------------------------------------------------------------------
 
 Some custom applications do not fit on the ROM disk. They are found on
 the disk image files or the individual files can be found in the
@@ -510,6 +510,15 @@ CP/M 2.2 or ZSDOS. Since ZSDOS is CP/M 2.2 compatible, this works fairly
 well. However, you will find some files on the ROM disk that will work
 with ZSDOS, but will not work on CP/M 2.2. For example, LDDS, which
 loads the ZSDOS date/time stamper will only run on ZSDOS.
+
+Flash ROM Disks
+
+The limitation of ROM disks being read only can be overcome on some
+platforms with the appropriate selection of Flash ROM chip and system
+configuration. In this case the flash-file system can be enabled which
+will allow the ROM disk to be read and written to. Flash devices have a
+limited write lifespan and continual usage will eventually wear out the
+device. It is not suited for high usage applications.
 
 Disk Devices
 
