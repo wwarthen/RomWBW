@@ -463,6 +463,16 @@ will find some files on the ROM disk that will work with ZSDOS, but
 will not work on CP/M 2.2. For example, `LDDS`, which loads the
 ZSDOS date/time stamper will only run on ZSDOS.
 
+## Flash ROM Disks
+
+The limitation of ROM disks being read only can be overcome on some
+platforms with the appropriate selection of Flash ROM chip and 
+system configuration. In this case the flash-file system can be
+enabled which will allow the ROM disk to be read and written to.
+Flash devices have a limited write lifespan and continual usage will
+eventually wear out the device. It is not suited for high usage
+applications. 
+
 ## Disk Devices
 
 While the RAM/ROM disks provide a functional system, they are not
