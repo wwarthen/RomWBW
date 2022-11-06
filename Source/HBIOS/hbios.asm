@@ -53,6 +53,8 @@
 ;    - build.inc
 ;      - config/<plt>_<cfg>.asm
 ;        - cfg_<plt>.asm
+;      - [z180.inc|z280.inc]
+;      - [eipc.inc]
 ;  - <drivers>.asm
 ;  - <fonts>.asm
 ;  - util.asm
@@ -61,7 +63,7 @@
 ;  - decode.asm
 ;  - encode.asm
 ;  - [xio|mio].asm
-;  - dsky.asm
+;  - [dsky.asm|dskyng.asm]
 ;  - unlzsa2s.asm
 ;
 ; INCLUDE GENERIC STUFF
