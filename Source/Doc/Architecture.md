@@ -2250,7 +2250,7 @@ occurs an error code is returned to the calling program in the A register.
 A non-zero result indicates an error.
 
 Syschk errors may be reported to the console. Whether this occurs depends on 
-the value of the diagnosis level equate CB_DIAGLVL. By default syschk errors
+the value of the diagnosis level equate DIAGLVL. By default syschk errors
 are not reported to the console.
 
 If the diagnosis level is set to display the diagnosis information, then
