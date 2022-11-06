@@ -2168,7 +2168,7 @@ IM1, the size of the table is the number of vectors chained together.
 For IM2, the size of the table is the number of slots in the vector
 table.
 
-#### SYSINT Subfunction 0x10) -- Get Interrupt (INTGET)
+#### SYSINT Subfunction 0x10 -- Get Interrupt (INTGET)
 
 |      _Entry Parameters_
 |           BC: 0xFC10
@@ -2182,7 +2182,7 @@ On entry, register E must contain an index into the interrupt vector
 table. On return, HL will contain the address of the current interrupt
 vector at the specified index.
 
-#### SYSINT Subfunction 0x20) -- Set Interrupt (INTSET)
+#### SYSINT Subfunction 0x20 -- Set Interrupt (INTSET)
 
 |      _Entry Parameters_
 |           BC: 0xFC20
