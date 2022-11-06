@@ -2236,6 +2236,7 @@ Possible reasons a PANIC may occur are:
 
 - RAM Bank range error when attempting a read or write to a RAM disk.
 - Sector read function has not been setup but a read was attempted.
+- An interrupt vector has not been set up when an interrupt was received.
 - There was an attempt to add more devices than the device table had room for.
 - An illegal SD card command was encountered.
 
@@ -2244,21 +2245,30 @@ which section of the software or hardware caused the fault.
 
 ### SYSCHK 
 
-A syschk error is reported when an internal error is detected. The key differance 
-to the PANIC error is that execution may be continued. In which case an error 
-code is returned to the calling routine. The error code is not displayed at the console.
+A syschk error is identified when an internal error is detected. When this 
+occurs an error code is returned to the calling program in the A register.
+A non-zero result indicates an error.
+
+Syschk errors may be reported to the console. Whether this occurs depends on 
+the value of the diagnosis level equate CB_DIAGLVL. By default syschk errors
+are not reported to the console.
+
+If the diagnosis level is set to display the diagnosis information, then
+memory address, register dump and error code is displayed.
+A key differance with the PANIC error is that execution may be continued. 
 
 Example error message:
 
-\>>> SYSCHK: @06C4[DFA3:DFC3:0100:F103:04FC:0000:2B5E] Continue (Y/N)
+\>>> SYSCHK: @06C4[DFA3:DFC3:0100:F103:04FC:0000:2B5E] FD
+Continue (Y/N)
 
-The format of the information provided is the same as with the PANIC report.
+The format of the information provided is similar the PANIC report.
 
-@XXXX [-AF-:-BC-:-DE-:-HL-:-SP-:-IX-:-IY-]
+@XXXX [-AF-:-BC-:-DE-:-HL-:-SP-:-IX-:-IY-] YY
 
-Syschk error codes are returned in the A register.
+The syschk error codes YY is returned in the A register.
 
-| Error                               | Code     |
+| Error                               | Code YY  |
 | ----------------------------------- | -------- |
 | Success                             |   0x00   | 
 | Undefined Error                     |   0xFF   | 
@@ -2305,7 +2315,7 @@ ROMWBW can be configured to display boot progress with the assistance of additio
 hardware. This take the form of an LED breakout debugging board connected to an
 8-bit output port. As the boot code executes, the LED output display is updated.
 
-To us an LED breakout board, it must be connected the computers data, reset and port
+To use a LED breakout board, it must be connected the computers data, reset and port
 select lines.
 
 To enable the DIAG option the following settings must be made in the systems .ini
