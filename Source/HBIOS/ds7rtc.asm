@@ -100,9 +100,7 @@ DS7_DISPATCH:
 	JP	Z, DS7_SETALM			; SET ALARM
 	DEC	A
 	JP	Z, DS7_DEVICE			; REPORT RTC DEVICE INFO
-	CALL	SYSCHK
-	LD	A,ERR_NOFUNC
-	OR	A
+	SYSCHKERR(ERR_NOFUNC)
 	RET
 ;
 ;-----------------------------------------------------------------------------
@@ -269,9 +267,7 @@ DS7_GETBLK:
 DS7_SETBLK:
 DS7_SETALM
 DS7_GETALM
-	CALL	SYSCHK
-	LD	A,ERR_NOTIMPL
-	OR	A
+	SYSCHKERR(ERR_NOTIMPL)
 	RET
 ;-----------------------------------------------------------------------------
 ; REPORT RTC DEVICE INFO
