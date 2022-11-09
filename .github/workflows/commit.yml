@@ -14,9 +14,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: rlespinasse/github-slug-action@v3.x
+      - uses: rlespinasse/github-slug-action@v4.4.0
         
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3.1.0
 
       - name: Build
         run: |
@@ -33,7 +33,7 @@ jobs:
           find -type f -exec md5sum '{}' \;
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3.1.1
         with:
           name: RomWBW_Linux-${{env.GITHUB_REF_SLUG}}-${{env.GITHUB_SHA_SHORT}}
           path: .
@@ -43,7 +43,7 @@ jobs:
             zip -r RomWBW-SnapShot-Package.zip .
  
       - name: Post SnapShot
-        uses: "marvinpinto/action-automatic-releases@latest"
+        uses: marvinpinto/action-automatic-releases@latest
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           automatic_release_tag: "SnapShot"
@@ -56,7 +56,7 @@ jobs:
     runs-on: macos-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3.1.0
 
       - name: Build
         run: |
@@ -72,7 +72,7 @@ jobs:
           find . -type f -exec md5 -r -- '{}' +;
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3.1.1
         with:
           name: RomWBW_MacOS
           path: .
