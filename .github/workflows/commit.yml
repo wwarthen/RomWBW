@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: rlespinasse/github-slug-action@latest
         
-      - uses: actions/checkout@latest
+      - uses: actions/checkout@v3.1.0
 
       - name: Build
         run: |
@@ -56,7 +56,7 @@ jobs:
     runs-on: macos-latest
 
     steps:
-      - uses: actions/checkout@latest
+      - uses: actions/checkout@v3.1.0
 
       - name: Build
         run: |
