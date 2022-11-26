@@ -21,23 +21,22 @@ YM2DAT		.EQU	VGMBASE+03H		; Secondary YM2162 11000011 a1=1 a0=1
 ; YM2162 Mute
 ;------------------------------------------------------------------------------
 ;
-YM2612_INIT:
-		ld	hl,s1			; Start of register list to write
+YM2612_INIT:	ld	hl,s1			; Start of register list to write
 
 		ld	b,s2-s1
 pt1:		call	set1			; [1]
 		djnz	pt1
 
-pt2:		ld	b,s3-s2
-		call	set2			; [2]
+		ld	b,s3-s2
+pt2:		call	set2			; [2]
 		djnz	pt2
 
-pt3:		ld	b,s4-s3
-		call	set1			; [1]
+		ld	b,s4-s3
+pt3:		call	set1			; [1]
 		djnz	pt3
 
-pt4:		ld	b,s5-s4
-		call	set2			; [2]
+		ld	b,s5-s4
+pt4:		call	set2			; [2]
 		djnz	pt4
 
 		ret
