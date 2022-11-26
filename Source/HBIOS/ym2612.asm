@@ -23,19 +23,19 @@ YM2DAT		.EQU	VGMBASE+03H		; Secondary YM2162 11000011 a1=1 a0=1
 ;
 YM2612_INIT:	ld	hl,s1			; Start of register list to write
 
-		ld	b,s2-s1
+		ld	b,+(s2-s1)/2
 pt1:		call	set1			; [1]
 		djnz	pt1
 
-		ld	b,s3-s2
+		ld	b,+(s3-s2)/2
 pt2:		call	set2			; [2]
 		djnz	pt2
 
-		ld	b,s4-s3
+		ld	b,+(s4-s3)/2
 pt3:		call	set1			; [1]
 		djnz	pt3
 
-		ld	b,s5-s4
+		ld	b,+(s5-s4)/2
 pt4:		call	set2			; [2]
 		djnz	pt4
 
