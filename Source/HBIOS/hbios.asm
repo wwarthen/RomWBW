@@ -2979,6 +2979,9 @@ HB_INITTBL:
 #IF (SN76489ENABLE)
 	.DW	SN76489_INIT
 #ENDIF
+#IF (YM2612ENABLE)
+	.DW	YM2612_INIT
+#ENDIF
 #IF (SPKENABLE)
 	.DW	SP_INIT			; AUDIBLE INDICATOR OF BOOT START
 #ENDIF
@@ -5752,217 +5755,113 @@ Z280_SYSCALL_GO:
 ;   DEVICE DRIVERS
 ;==================================================================================================
 ;
+DRV_ORG		.EQU	$
+DRV_SIZ		.EQU	0
+;
+#DEFINE	LOAD_DRV(driver) \
+#DEFCONT \DRV_ORG .SET $
+#DEFCONT \#INCLUDE "driver.asm"
+#DEFCONT \#IF (1) 
+#DEFCONT \DRV_SIZ .SET ($-DRV_ORG)
+#DEFCONT \.ECHO "driver occupies "
+#DEFCONT \.ECHO DRV_SIZ
+#DEFCONT \.ECHO " bytes.\n" 
+#DEFCONT \#ENDIF
+
 #IF (DSRTCENABLE)
-ORG_DSRTC	.EQU	$
-  #INCLUDE "dsrtc.asm"
-SIZ_DSRTC	.EQU	$ - ORG_DSRTC
-		.ECHO	"DSRTC occupies "
-		.ECHO	SIZ_DSRTC
-		.ECHO	" bytes.\n"
+LOAD_DRV(dsrtc)
 #ENDIF
 ;
 #IF (DS1501RTCENABLE)
-ORG_DS1501RTC	.EQU	$
-  #INCLUDE "ds1501rtc.asm"
-SIZ_DS1501RTC	.EQU	$ - ORG_DS1501RTC
-		.ECHO	"DS1501RTC occupies "
-		.ECHO	SIZ_DS1501RTC
-		.ECHO	" bytes.\n"
+LOAD_DRV(ds1501rtc)
 #ENDIF
 ;
 #IF (BQRTCENABLE)
-ORG_BQRTC	.EQU	$
-  #INCLUDE "bqrtc.asm"
-SIZ_BQRTC	.EQU	$ - ORG_BQRTC
-		.ECHO	"BQRTC occupies "
-		.ECHO	SIZ_BQRTC
-		.ECHO	" bytes.\n"
+LOAD_DRV(bqrtc)
 #ENDIF
+;
 #IF (SIMRTCENABLE)
-ORG_SIMRTC	.EQU	$
-  #INCLUDE "simrtc.asm"
-SIZ_SIMRTC	.EQU	$ - ORG_SIMRTC
-		.ECHO	"SIMRTC occupies "
-		.ECHO	SIZ_SIMRTC
-		.ECHO	" bytes.\n"
+LOAD_DRV(simrtc)
 #ENDIF
+
 #IF (DS7RTCENABLE & (DS7RTCMODE=DS7RTCMODE_PCF))
-ORG_PCF8584	.EQU	$
-  #INCLUDE "pcf8584.asm"
-SIZ_PCF8584	.EQU	$ - ORG_PCF8584
-		.ECHO	"PCF8584 occupies "
-		.ECHO	SIZ_PCF8584
-		.ECHO	" bytes.\n"
+LOAD_DRV(pcf8584)
 #ENDIF
 
 #IF (DS7RTCENABLE)
-ORG_DS7RTC	.EQU	$
-  #INCLUDE "ds7rtc.asm"
-SIZ_DS7RTC	.EQU	$ - ORG_DS7RTC
-		.ECHO	"DS7RTC occupies "
-		.ECHO	SIZ_DS7RTC
-		.ECHO	" bytes.\n"
+LOAD_DRV(ds7rtc)
 #ENDIF
 ;
 #IF (INTRTCENABLE)
-ORG_INTRTC	.EQU	$
-  #INCLUDE "intrtc.asm"
-SIZ_INTRTC	.EQU	$ - ORG_INTRTC
-		.ECHO	"INTRTC occupies "
-		.ECHO	SIZ_INTRTC
-		.ECHO	" bytes.\n"
+LOAD_DRV(intrtc)
 #ENDIF
 ;
 #IF (RP5RTCENABLE)
-ORG_RP5RTC	.EQU	$
-  #INCLUDE "rp5rtc.asm"
-SIZ_RP5RTC	.EQU	$ - ORG_RP5RTC
-		.ECHO	"RP5RTC occupies "
-		.ECHO	SIZ_RP5RTC
-		.ECHO	" bytes.\n"
+LOAD_DRV(rp5rtc)
 #ENDIF
+;
 #IF (ASCIENABLE)
-ORG_ASCI	.EQU	$
-  #INCLUDE "asci.asm"
-SIZ_ASCI	.EQU	$ - ORG_ASCI
-		.ECHO	"ASCI occupies "
-		.ECHO	SIZ_ASCI
-		.ECHO	" bytes.\n"
+LOAD_DRV(asci)
 #ENDIF
 ;
 #IF (Z2UENABLE)
-ORG_Z2U	.EQU	$
-  #INCLUDE "z2u.asm"
-SIZ_Z2U	.EQU	$ - ORG_Z2U
-		.ECHO	"Z2U occupies "
-		.ECHO	SIZ_Z2U
-		.ECHO	" bytes.\n"
+LOAD_DRV(z2u)
 #ENDIF
 ;
 #IF (UARTENABLE)
-ORG_UART	.EQU	$
-  #INCLUDE "uart.asm"
-SIZ_UART	.EQU	$ - ORG_UART
-		.ECHO	"UART occupies "
-		.ECHO	SIZ_UART
-		.ECHO	" bytes.\n"
+LOAD_DRV(uart)
 #ENDIF
 ;
 #IF (DUARTENABLE)
-ORG_DUART	.EQU	$
-  #INCLUDE "duart.asm"
-SIZ_DUART	.EQU	$ - ORG_DUART
-		.ECHO	"DUART occupies "
-		.ECHO	SIZ_DUART
-		.ECHO	" bytes.\n"
+LOAD_DRV(duart)
 #ENDIF
 ;
 #IF (SIOENABLE)
-ORG_SIO		.EQU	$
-  #INCLUDE "sio.asm"
-SIZ_SIO		.EQU	$ - ORG_SIO
-		.ECHO	"SIO occupies "
-		.ECHO	SIZ_SIO
-		.ECHO	" bytes.\n"
+LOAD_DRV(sio)
 #ENDIF
 ;
 #IF (ACIAENABLE)
-ORG_ACIA	.EQU	$
-  #INCLUDE "acia.asm"
-SIZ_ACIA	.EQU	$ - ORG_ACIA
-		.ECHO	"ACIA occupies "
-		.ECHO	SIZ_ACIA
-		.ECHO	" bytes.\n"
+LOAD_DRV(acia)
 #ENDIF
 ;
 #IF (PIOENABLE)
-ORG_PIO		.EQU	$
-  #INCLUDE "pio.asm"
-SIZ_PIO		.EQU	$ - ORG_PIO
-		.ECHO	"PIO occupies "
-		.ECHO	SIZ_PIO
-		.ECHO	" bytes.\n"
+LOAD_DRV(pio)
 #ENDIF
 ;
 #IF (LPTENABLE)
-ORG_LPT		.EQU	$
-  #INCLUDE "lpt.asm"
-SIZ_LPT		.EQU	$ - ORG_LPT
-		.ECHO	"LPT occupies "
-		.ECHO	SIZ_LPT
-		.ECHO	" bytes.\n"
+LOAD_DRV(lpt)
 #ENDIF
 ;
 #IF (PIO_4P | PIO_ZP | PIO_SBC)
-ORG_PIO		.EQU	$
-  #INCLUDE "pio.asm"
-SIZ_PIO		.EQU	$ - ORG_PIO
-		.ECHO	"PIO occupies "
-		.ECHO	SIZ_PIO
-		.ECHO	" bytes.\n"
+LOAD_DRV(pio)
 #ENDIF
 ;
 #IF (UFENABLE)
-ORG_UF	.EQU	$
-  #INCLUDE "uf.asm"
-SIZ_UF	.EQU	$ - ORG_UF
-		.ECHO	"UF occupies "
-		.ECHO	SIZ_UF
-		.ECHO	" bytes.\n"
+LOAD_DRV(uf)
 #ENDIF
 ;
 #IF (VGAENABLE)
-ORG_VGA	.EQU	$
-  #INCLUDE "vga.asm"
-SIZ_VGA	.EQU	$ - ORG_VGA
-		.ECHO	"VGA occupies "
-		.ECHO	SIZ_VGA
-		.ECHO	" bytes.\n"
+LOAD_DRV(vga)
 #ENDIF
 ;
 #IF (CVDUENABLE)
-ORG_CVDU	.EQU	$
-  #INCLUDE "cvdu.asm"
-SIZ_CVDU	.EQU	$ - ORG_CVDU
-		.ECHO	"CVDU occupies "
-		.ECHO	SIZ_CVDU
-		.ECHO	" bytes.\n"
+LOAD_DRV(cvdu)
 #ENDIF
 ;
 #IF (VDUENABLE)
-ORG_VDU		.EQU	$
-  #INCLUDE "vdu.asm"
-SIZ_VDU		.EQU	$ - ORG_VDU
-		.ECHO	"VDU occupies "
-		.ECHO	SIZ_VDU
-		.ECHO	" bytes.\n"
+LOAD_DRV(vdu)
 #ENDIF
 ;
 #IF (TMSENABLE)
-ORG_TMS		.EQU	$
-  #INCLUDE "tms.asm"
-SIZ_TMS		.EQU	$ - ORG_TMS
-		.ECHO	"TMS occupies "
-		.ECHO	SIZ_TMS
-		.ECHO	" bytes.\n"
+LOAD_DRV(tms)
 #ENDIF
 ;
 #IF (GDCENABLE)
-ORG_GDC	.EQU	$
-  #INCLUDE "gdc.asm"
-SIZ_GDC	.EQU	$ - ORG_GDC
-		.ECHO	"GDC occupies "
-		.ECHO	SIZ_GDC
-		.ECHO	" bytes.\n"
+LOAD_DRV(gdc)
 #ENDIF
 ;
 #IF (DMAENABLE)
-ORG_DMA	.EQU	$
-#INCLUDE "dma.asm"
-SIZ_DMA	.EQU	$ - ORG_DMA
-		.ECHO	"DMA occupies "
-		.ECHO	SIZ_DMA
-		.ECHO	" bytes.\n"
+LOAD_DRV(dma)
 #ENDIF
 ;
 ; FONTS AREA
@@ -6017,162 +5916,79 @@ SIZ_FONTS	.EQU	$ - ORG_FONTS
 		.ECHO	" bytes.\n"
 ;
 #IF (CVDUENABLE | VGAENABLE) | GDCENABLE | (TMSENABLE & ((TMSMODE == TMSMODE_RCKBD) | (TMSMODE == TMSMODE_MBC)))
-ORG_KBD		.EQU	$
-  #INCLUDE "kbd.asm"
-SIZ_KBD		.EQU	$ - ORG_KBD
-		.ECHO	"KBD occupies "
-		.ECHO	SIZ_KBD
-		.ECHO	" bytes.\n"
+LOAD_DRV(kbd)
 #ENDIF
 ;
 #IF (VDUENABLE | (TMSENABLE & (TMSMODE == TMSMODE_N8)))
-ORG_PPK		.EQU	$
-  #INCLUDE "ppk.asm"
-SIZ_PPK		.EQU	$ - ORG_PPK
-		.ECHO	"PPK occupies "
-		.ECHO	SIZ_PPK
-		.ECHO	" bytes.\n"
+LOAD_DRV(ppk)
 #ENDIF
 ;
 #IF (MKYENABLE)
-ORG_MKY		.EQU	$
-  #INCLUDE "mky.asm"
-SIZ_MKY		.EQU	$ - ORG_MKY
-		.ECHO	"MKY occupies "
-		.ECHO	SIZ_MKY
-		.ECHO	" bytes.\n"
+LOAD_DRV(mky)
 #ENDIF
 ;
 #IF (PRPENABLE)
-ORG_PRP		.EQU	$
-  #INCLUDE "prp.asm"
-SIZ_PRP		.EQU	$ - ORG_PRP
-		.ECHO	"PRP occupies "
-		.ECHO	SIZ_PRP
-		.ECHO	" bytes.\n"
+LOAD_DRV(prp)
 #ENDIF
 ;
 #IF (PPPENABLE)
-ORG_PPP		.EQU	$
-  #INCLUDE "ppp.asm"
-SIZ_PPP		.EQU	$ - ORG_PPP
-		.ECHO	"PPP occupies "
-		.ECHO	SIZ_PPP
-		.ECHO	" bytes.\n"
+LOAD_DRV(ppp)
 #ENDIF
 ;
 #IF (MDENABLE)
-ORG_MD		.EQU	$
-  #INCLUDE "md.asm"
-SIZ_MD		.EQU	$ - ORG_MD
-		.ECHO	"MD occupies "
-		.ECHO	SIZ_MD
-		.ECHO	" bytes.\n"
+LOAD_DRV(md)
 #ENDIF
 ;
 #IF (FDENABLE)
-ORG_FD		.EQU	$
-  #INCLUDE "fd.asm"
-SIZ_FD		.EQU	$ - ORG_FD
-		.ECHO	"FD occupies "
-		.ECHO	SIZ_FD
-		.ECHO	" bytes.\n"
+LOAD_DRV(fd)
 #ENDIF
 ;
 #IF (RFENABLE)
-ORG_RF	.EQU	$
-  #INCLUDE "rf.asm"
-SIZ_RF	.EQU	$ - ORG_RF
-		.ECHO	"RF occupies "
-		.ECHO	SIZ_RF
-		.ECHO	" bytes.\n"
+LOAD_DRV(rf)
 #ENDIF
 ;
 #IF (IDEENABLE)
-ORG_IDE		.EQU	$
-  #INCLUDE "ide.asm"
-SIZ_IDE		.EQU	$ - ORG_IDE
-		.ECHO	"IDE occupies "
-		.ECHO	SIZ_IDE
-		.ECHO	" bytes.\n"
+LOAD_DRV(ide)
 #ENDIF
 ;
 #IF (PPIDEENABLE)
-ORG_PPIDE	.EQU	$
-  #INCLUDE "ppide.asm"
-SIZ_PPIDE	.EQU	$ - ORG_PPIDE
-		.ECHO	"PPIDE occupies "
-		.ECHO	SIZ_PPIDE
-		.ECHO	" bytes.\n"
+LOAD_DRV(ppide)
 #ENDIF
 ;
 #IF (SDENABLE)
-ORG_SD		.EQU	$
-  #INCLUDE "sd.asm"
-SIZ_SD		.EQU	$ - ORG_SD
-		.ECHO	"SD occupies "
-		.ECHO	SIZ_SD
-		.ECHO	" bytes.\n"
+LOAD_DRV(sd)
 #ENDIF
 ;
 #IF (HDSKENABLE)
-ORG_HDSK	.EQU	$
-  #INCLUDE "hdsk.asm"
-SIZ_HDSK	.EQU	$ - ORG_HDSK
-		.ECHO	"HDSK occupies "
-		.ECHO	SIZ_HDSK
-		.ECHO	" bytes.\n"
+LOAD_DRV(hdsk)
 #ENDIF
 ;
 #IF (TERMENABLE)
-ORG_TERM	.EQU	$
-  #INCLUDE "term.asm"
-SIZ_TERM	.EQU	$ - ORG_TERM
-		.ECHO	"TERM occupies "
-		.ECHO	SIZ_TERM
-		.ECHO	" bytes.\n"
+LOAD_DRV(term)
 #ENDIF
 ;
-;#IF (SPKENABLE & DSRTCENABLE)
 #IF (SPKENABLE)
-ORG_SPK	.EQU	$
-  #INCLUDE "spk.asm"
-SIZ_SPK	.EQU	$ - ORG_SPK
-		.ECHO	"SPK occupies "
-		.ECHO	SIZ_SPK
-		.ECHO	" bytes.\n"
+LOAD_DRV(spk)
 #ENDIF
+;
 #IF (KIOENABLE)
-ORG_KIO	.EQU	$
-  #INCLUDE "kio.asm"
-SIZ_KIO	.EQU	$ - ORG_KIO
-		.ECHO	"KIO occupies "
-		.ECHO	SIZ_KIO
-		.ECHO	" bytes.\n"
+LOAD_DRV(kio)
 #ENDIF
+;
 #IF (CTCENABLE)
-ORG_CTC	.EQU	$
-  #INCLUDE "ctc.asm"
-SIZ_CTC	.EQU	$ - ORG_CTC
-		.ECHO	"CTC occupies "
-		.ECHO	SIZ_CTC
-		.ECHO	" bytes.\n"
+LOAD_DRV(ctc)
 #ENDIF
+;
 #IF (SN76489ENABLE)
-ORG_SN76489	.EQU	$
-  #INCLUDE "sn76489.asm"
-SIZ_SN76489	.EQU	$ - ORG_SN76489
-		.ECHO	"SN76489 occupies "
-		.ECHO	SIZ_SN76489
-		.ECHO	" bytes.\n"
+LOAD_DRV(sn76489)
 #ENDIF
+;
 #IF (AY38910ENABLE)
-ORG_AY38910	.EQU	$
-  #INCLUDE "ay38910.asm"
-SIZ_AY38910	.EQU	$ - ORG_AY38910
-		.ECHO	"AY38910 occupies "
-		.ECHO	SIZ_AY38910
-		.ECHO	" bytes.\n"
+LOAD_DRV(ay38910)
+#ENDIF
+;
+#IF (YM2612ENABLE)
+LOAD_DRV(ym2612)
 #ENDIF
 ;
 		.ECHO	"RTCDEF="
@@ -7031,6 +6847,7 @@ PS_SDSND	.TEXT	"SND$"
 PS_SDSN76489	.TEXT	"SN76489$"
 PS_SDAY38910	.TEXT	"AY-3-8910$"
 PS_SDBITMODE	.TEXT	"I/O PORT$"
+PS_SDAY2612	.TEXT	"YM2612$"
 ;
 ;			 0	   1	     2	       3	 4	   5	     6	       7
 ;			 01234567890123456789012345678901234567890123456789012345678901234567890123456789
