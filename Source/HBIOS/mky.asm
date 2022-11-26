@@ -27,6 +27,8 @@
 ; DRIVER - CONSTANTS
 ;======================================================================
 ;
+THIS_DRV		.SET	DRV_ID_MKY
+;
 MKY_REGA		.EQU	$A8
 MKY_REGB		.EQU	$A9
 MKY_REGC		.EQU	$AA

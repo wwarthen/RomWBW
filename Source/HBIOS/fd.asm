@@ -5,6 +5,7 @@
 ;
 ; TODO:
 ;
+THIS_DRV	.SET	DRV_ID_FD
 ;
 ; PORTS
 ;

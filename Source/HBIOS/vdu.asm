@@ -21,6 +21,8 @@
 ; VDU DRIVER - CONSTANTS
 ;======================================================================
 ;
+THIS_DRV	.SET	DRV_ID_VDU
+;
 VDU_BASE	.EQU	$F0
 ;
 VDU_RAMRD	.EQU	VDU_BASE + $00	; READ VDU

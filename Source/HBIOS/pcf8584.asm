@@ -2,6 +2,8 @@
 ; PCF8584 I2C CLOCK DRIVER
 ;==================================================================================================
 ;
+THIS_DRV	.SET	DRV_ID_PCF8584
+;
 PCF_BASE  	.EQU  0F0H
 PCF_ID   	.EQU  0AAH
 CPU_CLK	  	.EQU  12
@@ -470,7 +472,7 @@ PCF_PRTERR:
 ;-----------------------------------------------------------------------------
 ; DEBUG HELPER
 ;
-#IF (1)
+#IF (DEBUG_DRV==THIS_DRV)
 PCF_DBG:
 	PUSH	AF
 	PUSH 	DE

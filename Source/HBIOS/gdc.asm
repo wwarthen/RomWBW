@@ -6,6 +6,8 @@
 ; GDC DRIVER - CONSTANTS
 ;======================================================================
 ;
+THIS_DRV	.SET	DRV_ID_GDC
+;
 #IF (GDCMODE == GDCMODE_ECB)
 GDC_BASE	.EQU	$??		; GDC BASE I/O PORT
 GDC_DAC_BASE	.EQU	$??		; RAMDAC BASE I/O PORT

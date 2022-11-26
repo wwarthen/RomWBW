@@ -18,7 +18,7 @@
 ;              -- MCR --                        -- LCR --
 ;
 ;
-UART_DEBUG		.EQU	FALSE
+THIS_DRV		.SET	DRV_ID_UART
 ;
 UART_BUFSZ		.EQU	32	; RECEIVE RING BUFFER SIZE
 ;
@@ -640,7 +640,7 @@ UART_INITDEV5:
 #ENDIF
 ;
 ;
-#IF (UART_DEBUG)
+#IF (DEBUG_DRV==THIS_DRV)
 	PRTS(" [$")
 	
 	; DEBUG: DUMP UART TYPE

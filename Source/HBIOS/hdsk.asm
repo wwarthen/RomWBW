@@ -3,6 +3,8 @@
 ;   HDSK DISK DRIVER
 ;==================================================================================================
 ;
+THIS_DRV		.SET	DRV_ID_HDSK
+;
 ; IO PORT ADDRESSES
 ;
 HDSK_IO		.EQU	$FD

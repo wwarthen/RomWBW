@@ -49,6 +49,8 @@
 ;               1 0 - DIVIDE BY 64
 ;               1 1 - MASTER RESET
 ;
+THIS_DRV	.SET	DRV_ID_ACIA
+;
 ACIA_BUFSZ      .EQU    32              ; RECEIVE RING BUFFER SIZE
 ;
 ACIA_NONE       .EQU    0
@@ -373,7 +375,7 @@ ACIA_INITDEV:
 ;
 ACIA_INITDEVX:
 ;
-#IF (ACIADEBUG)
+#IF (DEBUG_DRV==THIS_DRV)
         CALL    NEWLINE
         PRTS("ACIA$")
         LD      A,(IY+2)
@@ -395,7 +397,7 @@ ACIA_INITDEVX:
 ACIA_INITDEV1:
         LD      (ACIA_NEWCFG),DE        ; SAVE NEW CONFIG
 ;
-#IF (ACIADEBUG)
+#IF (DEBUG_DRV==THIS_DRV)
         PUSH    DE
         POP     BC
         PRTS(" CFG=$")
@@ -409,7 +411,7 @@ ACIA_INITDEV1:
         LD      A,D                     ; GET CONFIG MSB
         AND     $1F                     ; ISOLATE ENCODED BAUD RATE
 ;
-#IF (ACIADEBUG)
+#IF (DEBUG_DRV==THIS_DRV)
         PRTS(" ENC=$")
         CALL    PRTHEXBYTE
 #ENDIF
@@ -457,7 +459,7 @@ ACIA_INITDEV1:
 ;
 ACIA_INITFAIL:
 ;
-#IF (ACIADEBUG)
+#IF (DEBUG_DRV==THIS_DRV)
         PRTS(" BAD CFG$")        
 #ENDIF
 ;
@@ -513,7 +515,7 @@ ACIA_INITGO:
 ;
         LD      (ACIA_CMD),A            ; SAVE SHADOW REGISTER
 ;
-#IF (ACIADEBUG)
+#IF (DEBUG_DRV==THIS_DRV)
         PRTS(" CMD=$")
         CALL    PRTHEXBYTE
         LD      DE,65

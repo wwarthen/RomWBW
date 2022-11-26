@@ -60,7 +60,9 @@
 ;  Day-Of-Week coded as Sunday = 1 through Saturday = 7.
 
 ; Constants
-
+;
+THIS_DRV		.SET	DRV_ID_DS1501RTC
+;
 ;By defining 2 bases, this allows some flexibility for address decoding
 DS1501NVM_BASE      .EQU    DS1501RTC_BASE + $10
 

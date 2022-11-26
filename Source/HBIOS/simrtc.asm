@@ -3,6 +3,8 @@
 ; SIMH RTC DRIVER
 ;==================================================================================================
 ;
+THIS_DRV		.SET	DRV_ID_SIMRTC
+;
 SIMRTC_IO	.EQU	$FE	; SIMH IO PORT
 SIMRTC_CLKREAD	.EQU	7	; READ CLOCK COMMAND
 SIMRTC_CLKWRITE	.EQU	8	; WRITE CLOCK COMMAND

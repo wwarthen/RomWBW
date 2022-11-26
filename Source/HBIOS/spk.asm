@@ -10,6 +10,8 @@
 ;			NO VOLUME ADJUSTMENT DUE TO HARDWARE LIMITATION
 ;======================================================================
 ;
+THIS_DRV		.SET	DRV_ID_SPK
+;
 ;	DRIVER FUNCTION TABLE AND INSTANCE DATA
 ;
 SP_FNTBL:

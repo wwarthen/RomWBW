@@ -10,6 +10,8 @@
 ; VGA DRIVER - CONSTANTS
 ;======================================================================
 ;
+THIS_DRV	.SET	DRV_ID_VGA
+;
 VGA_BASE	.EQU	$E0
 ;
 VGA_KBDDATA	.EQU	VGA_BASE + $00	; KBD CTLR DATA PORT
