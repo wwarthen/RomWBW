@@ -54,9 +54,7 @@
 ;  Day-Of-Week coded as Sunday = 1 through Saturday = 7.
 ;  BVF = 1 for valid battery.
 ;  STOP = 1 turns the RTC on; STOP = 0 stops the RTC in back-up mode.
-;
-THIS_DRV	.SET	DRV_ID_BQRTC
-;
+
 ; Constants
 
 BQRTC_SEC	.EQU	BQRTC_BASE + $00
