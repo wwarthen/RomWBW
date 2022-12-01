@@ -2,7 +2,6 @@
 ; Z80 DMA DRIVER
 ;==================================================================================================
 ;
-THIS_DRV			.set	DRV_ID_DMA
 DMA_CONTINUOUS			.equ 	%10111101	; + Pulse
 DMA_BYTE			.equ 	%10011101	; + Pulse
 DMA_BURST 			.equ	%11011101	; + Pulse
@@ -315,7 +314,7 @@ DMAIn_Len 	.equ	$-DMAInCode
 ; DEBUG - READ START, DESTINATION AND COUNT REGISTERS
 ;==================================================================================================
 ;
-#IF (DEBUG_DRV==THIS_DRV)
+#IF (0)
 ;
 DMARegDump:
 	ld	a,DMA_READ_MASK_FOLLOWS

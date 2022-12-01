@@ -16,8 +16,6 @@
 ; CVDU DRIVER - CONSTANTS
 ;======================================================================
 ;
-THIS_DRV	.SET	DRV_ID_CVDU
-;
 CVDU_BASE	.EQU	$E0
 ;
 #IF (CVDUMODE == CVDUMODE_ECB)

@@ -3,8 +3,6 @@
 ; RP5C01 CLOCK DRIVER
 ;==================================================================================================
 ;
-THIS_DRV		.SET	DRV_ID_RP5RTC
-;
 RP5RTC_BUFSIZ	.EQU	6	; SIX BYTE BUFFER (YYMMDDHHMMSS)
 ;
 ; RTC DEVICE INITIALIZATION ENTRY

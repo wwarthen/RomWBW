@@ -3,7 +3,7 @@
 ; DSKY (DISPLAY AND KEYBOARD) ROUTINES 
 ;==================================================================================================
 ;
-; THE DSKY MAY COINSIDE ON THE SAME PPI BUS AS A PPISD.  IT MAY NOT
+; THE DSKY MAY COINCIDE ON THE SAME PPI BUS AS A PPISD.  IT MAY NOT
 ; SHARE A PPI BUS WITH A PPIDE.  SEE PPI_BUS.TXT FOR MORE INFORMATION.
 ;
 ; LED SEGMENTS (BIT VALUES)
@@ -26,8 +26,6 @@
 ; PB1 |	 $02 [1]    $42 [2]    $82 [3]	  $C2 [EN]
 ; PB0 |	 $01 [FW]   $41 [0]    $81 [BK]	  $C1 [CL]
 ;
-;
-THIS_DRV	.SET	DRV_ID_DSKY
 ;
 PPIA		.EQU 	DSKYPPIBASE + 0	; PORT A
 PPIB		.EQU 	DSKYPPIBASE + 1	; PORT B

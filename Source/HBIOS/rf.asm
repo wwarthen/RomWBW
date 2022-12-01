@@ -3,7 +3,7 @@
 ;   RAM FLOPPY DISK DRIVER
 ;==================================================================================================
 ;
-THIS_DRV	.SET	DRV_ID_RF
+;
 ;
 RF_U0IO		.EQU	$A0		; BASED ADDRESS OF RAMFLOPPY 1
 RF_U1IO		.EQU	$A4		; BASED ADDRESS OF RAMFLOPPY 2

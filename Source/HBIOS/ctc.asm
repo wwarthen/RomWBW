@@ -5,8 +5,6 @@
 ;   DISPLAY CONFIGURATION DETAILS
 ;______________________________________________________________________________________________________________________
 ;
-THIS_DRV	.SET	DRV_ID_CTC
-;
 CTC_DEFCFG	.EQU	%01010011	; CTC DEFAULT CONFIG
 CTC_CTRCFG	.EQU	%01010111	; CTC COUNTER MODE CONFIG
 CTC_TIM16CFG	.EQU	%00010111	; CTC TIMER/16 MODE CONFIG
@@ -175,7 +173,7 @@ CTC_PRTCFG1:
 	PRTS("TIM256$")
   #ENDIF
 ;
-  #IF (DEBUG_DRV==THIS_DRV)
+  #IF (CTCDEBUG)
 	PRTS(" DIVHI=$")
 	LD	A,CTC_DIVHI & $FF
 	CALL	PRTHEXBYTE

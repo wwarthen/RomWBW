@@ -5,7 +5,7 @@
 ;   DISPLAY CONFIGURATION DETAILS
 ;______________________________________________________________________________________________________________________
 ;
-THIS_DRV	.SET	DRV_ID_KIO
+;
 ;
 KIO_PIOADAT	.EQU	KIOBASE + $00
 KIO_PIOACMD	.EQU	KIOBASE + $01

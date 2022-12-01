@@ -30,8 +30,6 @@
 ;     | STAT1 | STAT0 | ENBL  | PINT  | SEL   | RES   | LF    | STB   |
 ;     +-------+-------+-------+-------+-------+-------+-------+-------+
 ;
-THIS_DRV	.SET	DRV_ID_LPT
-;
 LPT_NONE	.EQU	0		; NOT PRESENT
 LPT_IBM		.EQU	1		; IBM PC STYLE INTERFACE
 ;

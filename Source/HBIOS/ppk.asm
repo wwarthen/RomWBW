@@ -12,8 +12,6 @@
 ; DATA CONSTANTS
 ;__________________________________________________________________________________________________
 ;
-THIS_DRV	.SET	DRV_ID_PPK
-;
 ; DRIVER DATA OFFSETS (FROM IY)
 ;
 PPK_PPIA	.EQU	0	; PPI PORT A

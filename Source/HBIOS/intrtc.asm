@@ -3,8 +3,6 @@
 ; SYSTEM TIMER BASED CLOCK DRIVER
 ;==================================================================================================
 ;
-THIS_DRV		.SET	DRV_ID_INTRTC
-;
 INTRTC_BUFSIZ	.EQU	6	; SIX BYTE BUFFER (YYMMDDHHMMSS)
 ;
 ; RTC DEVICE INITIALIZATION ENTRY

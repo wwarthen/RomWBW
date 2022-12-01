@@ -81,8 +81,6 @@
 ;
 ;------------------------------------------------------------------------------
 ;
-THIS_DRV	.SET	DRV_ID_SD
-;
 ; *** HACK FOR MISSING PULLUP RESISTORS ***
 ;
 ; THERE IS A RECENT TREND FOR SD ADAPTER BOARDS (SUCH AS THOSE USED TO ATTACH AN

@@ -15,8 +15,7 @@
 ; TMS DRIVER - CONSTANTS
 ;======================================================================
 ;
-THIS_DRV	.SET	DRV_ID_TMS
-;
+
 TMSCTRL1:       .EQU   1               ; CONTROL BITS
 TMSINTEN:       .EQU   5               ; INTERRUPT ENABLE BIT
 
