@@ -10,8 +10,6 @@
 ; 
 ;======================================================================
 ;
-THIS_DRV	.SET	DRV_ID_YM2612
-;
 YMSEL		.EQU	VGMBASE+00H		; Primary YM2162 11000000 a1=0 a0=0
 YMDAT		.EQU	VGMBASE+01H		; Primary YM2162 11000001 a1=0 a0=1
 YM2SEL		.EQU	VGMBASE+02H		; Secondary YM2162 11000010 a1=1 a0=0

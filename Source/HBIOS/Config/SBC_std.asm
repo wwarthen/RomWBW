@@ -43,3 +43,52 @@ SDENABLE	.SET	FALSE		; SD: ENABLE SD CARD DISK DRIVER (SD.ASM)
 SDMODE		.SET	SDMODE_PPI	; SD: DRIVER MODE: SDMODE_[JUHA|N8|CSIO|PPI|UART|DSD|MK4|SC]
 ;
 PRPENABLE	.SET	TRUE		; PRP: ENABLE ECB PROPELLER IO BOARD DRIVER (PRP.ASM)
+;
+;==================================================================================================
+;   ENABLE DRIVER DEBUGGING - REMOVE ; TO ENABLE
+;==================================================================================================
+;
+;#DEFINE acia acia	
+;#DEFINE asci asci
+;#DEFINE ay38910 ay38910
+;#DEFINE bqrtc bqrtc
+;#DEFINE ctc ctc
+;#DEFINE cvdu cvdu
+;;#DEFINE dma dma			; Not working
+;#DEFINE ds7rtc ds7rtc
+;#DEFINE ds1501rt ds1501rtc
+;#DEFINE dsky dsky
+;#DEFINE dskyng dskyng
+;#DEFINE dsrtc dsrtc
+;#DEFINE duart duart
+;#DEFINE fd fd
+;#DEFINE gdc gdc
+;#DEFINE hdsk hdsk
+;#DEFINE ide ide
+;#DEFINE intrtc intrtc
+;#DEFINE kbd kbd
+;#DEFINE kio kio
+;#DEFINE lpt lpt
+;#DEFINE md md
+;#DEFINE mky mky
+;#DEFINE pcf8584 pcf8584
+;#DEFINE pio pio
+;#DEFINE ppide ppide
+;#DEFINE ppk ppk
+;#DEFINE ppp ppp
+;#DEFINE prp prp
+;#DEFINE rf rf
+;#DEFINE rp5rtc rp5rtc
+;#DEFINE sd sd
+;#DEFINE simrtc simrtc
+;#DEFINE sio sio
+;#DEFINE sn76489 sn76489
+;#DEFINE spk spk
+;#DEFINE tms tms
+;#DEFINE uart uart
+;#DEFINE uf uf
+;#DEFINE vdu vdu
+;#DEFINE vga vga
+;#DEFINE ym2612 ym2612
+;#DEFINE z2u z2u
+;
