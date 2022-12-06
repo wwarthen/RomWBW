@@ -921,7 +921,7 @@ device number assigned by the driver.
 Each RTC device is handled by an appropriate driver (DSRTC, BQRTC,
 etc.) which is identified by a device type id from the table below.
 
-**Type ID** | **Disk Device Type**
+**Type ID** | **RTC Device Type**
 ----------- | --------------------
 0x00        | DS1302
 0x10        | BQ4845P
