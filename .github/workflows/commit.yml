@@ -43,7 +43,7 @@ jobs:
             zip -r RomWBW-SnapShot-Package.zip .
  
       - name: Post SnapShot
-        uses: wwarthen/automatic-releases@latest
+        uses: wwarthen/actions/packages/automatic-releases@built-packages
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           automatic_release_tag: "SnapShot"
