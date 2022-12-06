@@ -15,6 +15,8 @@ YMDAT		.EQU	VGMBASE+01H		; Primary YM2162 11000001 a1=0 a0=1
 YM2SEL		.EQU	VGMBASE+02H		; Secondary YM2162 11000010 a1=1 a0=0
 YM2DAT		.EQU	VGMBASE+03H		; Secondary YM2162 11000011 a1=1 a0=1
 ;
+YM_CLR		.EQU	FALSE			; Set to clear all registers
+;
 ;------------------------------------------------------------------------------
 ; YM2162 Mute
 ;------------------------------------------------------------------------------
@@ -45,20 +47,30 @@ set1:		ld	a,(hl)			; YM2162 Register write
 		ld	a,(hl)
 		inc	hl
 		out	(YMDAT),a
-set1a:		in	a,(YMSEL)
-		rlca
-		jp	c,set1a
+		push	bc
+		ld	b,0			; check
+set1a:		in	a,(YMSEL)       	; device
+		rlca                    	; ready
+		jp	nc,set1b        	; with
+		djnz	set1a           	; timeout
+		; timed out
+set1b:		pop	bc
 		ret
-
+;
 set2:		ld	a,(hl)			; YM2162 Register write
 		inc	hl			; Register Bank [2]
 		out	(YM2SEL),a
 		ld	a,(hl)
 		inc	hl
 		out	(YM2DAT),a
-set2a:		in	a,(YM2SEL)
-		rlca
-		jp	c,set2a
+		push	bc			; check
+		ld	b,0			; device
+set2a:		in	a,(YM2SEL)		; ready
+		rlca				; with
+		jp	nc,set2b		; timeout
+		djnz	set2a
+		; timed out
+set2b:		pop	bc
 		ret
 
 s1:		.db	$22,$00			; [1] lfo off
@@ -106,7 +118,7 @@ s4:
 		.db	$4d,$7f			; [2]
 		.db	$4e,$7f			; [2]
 s5:
-#IF (0)
+#IF (YM_CLR)
 		.db	$2a,$00			; [1]	; dac value
  
 		.db	$24,$00			; [1]	; timer A frequency
