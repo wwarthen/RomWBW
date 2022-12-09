@@ -43,7 +43,7 @@ jobs:
             zip -r RomWBW-SnapShot-Package.zip .
  
       - name: Post SnapShot
-        uses: unl0ck/action-automatic-releases@latest
+        uses: wwarthen/actions/packages/automatic-releases@built-packages
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           automatic_release_tag: "SnapShot"
@@ -53,7 +53,7 @@ jobs:
             RomWBW-SnapShot-Package.zip
 
   buildMacOS:
-    runs-on: macos-latest
+    runs-on: macOS-12
 
     steps:
       - uses: actions/checkout@v3.1.0
