@@ -26,7 +26,7 @@ ctcbase	.equ	$cc
 #DEFCONT \	rlca
 #DEFCONT \	jp	c,$-3
  
-init:	call	ctc_config
+init:	;call	ctc_config
 
 	setreg($22,$00)	; lfo off		YM2612 initialization
 	setreg($27,$00) ; note off ch 0
