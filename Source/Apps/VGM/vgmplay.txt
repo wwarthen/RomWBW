@@ -28,28 +28,29 @@ Note: The player should be compatible with VGM files up to version 1.51
 but there are very few controls (if any) in the code, be sure to have
 a good VGM file that doesn't contain much extra data. These files can be
 very big, the player is limited to the available TPA space which is
-typically around 54-55k.
+typically around 52k.
 
 Example Music Files
 ===================
 
-ENDING.VGM   - AY-3-8910           - Puyo Puyo: Ending (Unused)                                   : 24K
+ENDING.VGM   - AY-3-8910           * Puyo Puyo: Ending (Unused)                                   : 24K
 QIX.VGM      - AY-3-8910           - Super Qix: Main BGM 2                                        : 28K
 AGGRESS.VGM  - AY-3-8910           - Rastan Saga: Aggressive World                                : 32K
 PENGUI03.VGM - AY-3-8910           - Penguin Adventure: Forest Path                               : 44K
-FOREST.VGM   - AY-3-8910           - Penguin Adventure: Forest Path                               : 40K
 TIGER02.VGM  - 2xAY-3-8910         - Tiger Hely: First Mission                                    : 28K
-BGM.VGM      - 2xAY-3-8910         - SHM: BGM                                                     : 8K
+BGM.VGM      - 2xAY-3-8910         * SHM: BGM                                                     : 8K
 LEMMIN01.VGM - SN76489             - Lemmings: Title Screen                                       : 44K
 TEDDY.VGM    - 2xSN76489           - TeddyBoy Blues: Title ~ Main Theme                           : 52K
 PITFAL02.VGM - 2xSN76489           - Pitfall II: Scene 1                                          : 16K
-WONDER01.VGM - 2xSN76489           - Wonder Boy in Monster Land: Monster Land                     : 40K
+WONDER01.VGM - 2xSN76489           * Wonder Boy in Monster Land: Monster Land                     : 40K
 DESCENT.VGM  - SN76489+YM2612      - Flashback: The Quest for Identity: Descent into the Tunnels  : 40K
-SHIRAKAW.VGM - SN76489+YM2612      - Jantei Monogatari: St. Shirakawa University                  : 32K
+SHIRAKAW.VGM - SN76489+YM2612      * Jantei Monogatari: St. Shirakawa University                  : 32K
 ANNA.VGM     - SN76489+YM2612      - Jantei Monogatari: Anna                                      : 32K
 FIELDMAP.VGM - SN76489+YM2612      - Taikou Risshiden: Field Map: Summer                          : 8K
 ITSGAMOV.VGM - SN76489+YM2612      - Puyo Puyo Tsuu: It's Game Over!                              : 16K
-STARTDEM.VGN - 2xSN76489+AY-3-8910 - Exed Exes / Savage Bees: Start Demo ~Main BGM                : 32K
-INCHINA.VGM  - YM2612              - Double Dragon 3: The Rosetta Stone: In China                 : 44K
+STARTDEM.VGN - 2xSN76489+AY-3-8910 * Exed Exes / Savage Bees: Start Demo ~Main BGM                : 32K
+INCHINA.VGM  - YM2612              * Double Dragon 3: The Rosetta Stone: In China                 : 44K
+
+* Included in disk images
 
 Original Source by J.B Langston, Marco Maccaferri, Ed Brindley. ROMWBW version by Phil Summers.
