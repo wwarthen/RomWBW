@@ -38,9 +38,9 @@ sbcecb		.equ	3
 MBC		.equ	4
 ;
 plt_romwbw	.equ	1			; Build for ROMWBW?
-plt_type	.equ	custom			; Select build configuration
-debug		.equ	1			; Debugging output
-;
+plt_type	.equ	sbcecb			; Select build configuration
+debug		.equ	0
+
 #IF (plt_type=custom)
 RSEL            .equ    0D8H			; Primary AY-3-8910 Register selection
 RDAT            .equ    0D0H			; Primary AY-3-8910 Register data
@@ -114,8 +114,8 @@ YMSEL		.equ	VGMBASE+00H		; Primary YM2162 11000000 a1=0 a0=0
 YMDAT		.equ	VGMBASE+01H		; Primary YM2162 11000001 a1=0 a0=1
 YM2SEL		.equ	VGMBASE+02H		; Secondary YM2162 11000010 a1=1 a0=0
 YM2DAT		.equ	VGMBASE+03H		; Secondary YM2162 11000011 a1=1 a0=1
-PSG1REG         .equ    VGMBASE+08H		; Primary SN76489
-PSG2REG         .equ    VGMBASE+09H		; Secondary SN76489
+PSG1REG         .equ    VGMBASE+06H		; Primary SN76489
+PSG2REG         .equ    VGMBASE+07H		; Secondary SN76489
 ctcbase		.equ	VGMBASE+0CH		; CTC base address
 YM2151_SEL1	.equ	0FEH			; Primary YM2151 register selection
 YM2151_DAT1	.equ	0FFH			; Primary YM2151 register data
@@ -153,8 +153,8 @@ cpu_loop:	.equ	0
 ctc_poll:	.equ	1
 ctc_int:	.equ	2			; not implemented
 ;
-delay_type:	.equ	ctc_poll		; cpu timed loop or utilize ctc
-delay_wait	.equ	0			; funny wait mode
+delay_type:	.equ	cpu_loop		; cpu timed loop or utilize ctc
+delay_wait	.equ	0			; funny wait mode for ctc
 ;
 D60		.equ	735			; 735x60=44100 Frame delay values for ntsc
 D50		.equ	882			; 882x50=44100 Frame delay values for pal
