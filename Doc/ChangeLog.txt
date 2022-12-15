@@ -65,6 +65,8 @@ Version 3.1.1
 - L?N: Fixes for ZCPR-D&J (buffer overflow, default drive/user)
 - J?P: Add support for DS1501 RTC
 - LLS: Added a user defined mode for SD Card interfaces (not complete)
+- L?N: Updated ZDE to v1.8 including time stamp preservation fixes
+- D?M: Minor update to CP/NET client files, fix to CPNBOOT
 
 Version 3.1
 -----------
