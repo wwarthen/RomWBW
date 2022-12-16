@@ -1,76 +1,57 @@
+;
+;------------------------------------------------------------------------------
+; Simple Z80 FM Music Driver.
 ; Adapted from https://github.com/michaelcmartin/bumbershoot/genesis/fm_mus.asm
+;------------------------------------------------------------------------------
+;
+; A song in this system is a series of records, where each record
+; begins with a byte for the number of frames this record lasts,
+; followed by a byte for the number of register writes to the first
+; block of FM registers, followed by that many pairs of (register,
+; value) bytes.
+; When a zero byte is reached for a record length, the playback
+; loops back to the "segno" label.
+;
+; Song data is created from a Music Macro Language score (mml)
+; by the makebach.py script
+;
+;------------------------------------------------------------------------------
+; Device and system specific definitions
+;------------------------------------------------------------------------------
+;
+custom		.equ	0           	        ; System configurations
+sbcecb		.equ	1		
+MBC		.equ	2
+;
+plt_romwbw	.equ	1			; Build for ROMWBW?
+plt_type	.equ	sbcecb			; Select build configuration
+debug		.equ	0
 
-        ;; Simple Z80 FM Music Driver.
-        ;; A song in this system is a series of records, where each record
-        ;; begins with a byte for the number of frames this record lasts,
-        ;; followed by a byte for the number of register writes to the first
-        ;; block of FM registers, followed by that many pairs of (register,
-        ;; value) bytes.
-        ;; When a zero byte is reached for a record length, the playback
-        ;; loops back to the "segno" label.
+ctc_delay	.equ	0
 ;
         .org    100H
-
+;
 BDOS	.equ	0005h
 ;
-r1	.equ	$c0
-r2	.equ	$c1
+YMSEL	.equ	$c0
+YMDAT	.equ	$c1
 ctcbase	.equ	$cc
-
-#DEFINE	setreg(reg,val) \
-#DEFCONT \	ld	a,reg 
-#DEFCONT \	out	(r1),a 
-#DEFCONT \	ld	a,val 
-#DEFCONT \	out	(r2),a 
-#DEFCONT \	in	a,(r1)
-#DEFCONT \	rlca
-#DEFCONT \	jp	c,$-3
- 
-init:	;call	ctc_config
-
-	setreg($22,$00)	; lfo off		YM2612 initialization
-	setreg($27,$00) ; note off ch 0
-	setreg($28,$01) ; note off ch 1
-	setreg($28,$02) ; note off ch 2
-	setreg($28,$03) ; note off ch 3
-	setreg($28,$04) ; note off ch 4
-	setreg($28,$05) ; note off ch 5
-	setreg($28,$06) ; note off ch 6
-	setreg($28,$01) ; note off ch 1
-	setreg($2b,$00) ; dac off
-	setreg($30,$71) 
-	setreg($34,$0d)
-	setreg($38,$33)
-	setreg($3c,$01) ; dt1/mul
-	setreg($40,$23)
-	setreg($44,$2d)
-	setreg($48,$26)
-	setreg($4c,$00) ; total level
-	setreg($50,$5f)
-	setreg($54,$99)
-	setreg($58,$5f)
-	setreg($5c,$94) ; rs/ar
-	setreg($60,$05)
-	setreg($64,$05)
-	setreg($68,$05)
-	setreg($6c,$07) ; am/dir
-	setreg($70,$02)
-	setreg($74,$02)
-	setreg($78,$02)
-	setreg($7c,$02) ; d2r
-	setreg($80,$11)
-	setreg($84,$11)
-	setreg($88,$11)
-	setreg($8c,$a6) ; d1l/rr
-	setreg($90,$00)
-	setreg($94,$00)
-	setreg($98,$00)
-	setreg($9c,$00) ; proprietary
-	setreg($b0,$32) ; feedback/algorithm
-	setreg($b4,$c0) ; both speakers on
-	setreg($28,$00) ; key off
-	setreg($a4,$22)
-	setreg($a0,$69) ; set frequency
+;
+;------------------------------------------------------------------------------
+; Initialize sound chip and ctc etc
+;------------------------------------------------------------------------------
+;
+init:	
+#IF	(debug)
+	call	ym_init
+#ENDIF
+#IF	(ctc_delay)
+	call	ctc_config
+#ENDIF
+;
+;------------------------------------------------------------------------------
+; Main loop
+;------------------------------------------------------------------------------
 ;
 mloop:	LD      C, 6		; check for keypress
         LD      E, 0FFH
@@ -88,6 +69,10 @@ dlp:	dec	hl
 	jr	nz,dlp
 ;
 	jr	mloop
+;
+;------------------------------------------------------------------------------
+; Play loop
+;------------------------------------------------------------------------------
 ;
 ploop:	ld      hl, wait	; HAVE WE REACHED THE 
         dec     (hl)		; LAST FRAME
@@ -116,7 +101,7 @@ nolp:   ld      (wait), a	; AND SAVE IT
 	 call	PRTDOT
 
 rlp:    ld      a, (hl)		; SELECT REGISTER
-	out	(r1),a
+	out	(YMSEL),a
 	call	PRTHEX
 
 	inc     hl		; GET VALUE
@@ -125,7 +110,7 @@ rlp:    ld      a, (hl)		; SELECT REGISTER
 
         inc     hl
 
-	out	(r2),a		; WRITE THE VALUE
+	out	(YMDAT),a		; WRITE THE VALUE
 
 	djnz    rlp		; DO ALL THE PAIRS IN THIS SEGMENT
 
@@ -133,7 +118,11 @@ rlp:    ld      a, (hl)		; SELECT REGISTER
 	call	CRLF
 
 	ret
-
+;
+;------------------------------------------------------------------------------
+; CTC initialization
+;------------------------------------------------------------------------------
+;
 ctc_config:
 ;	ld	b,4			; 4 channels
 ;	ld	c,ctcbase		; first channel port
@@ -196,12 +185,78 @@ ctcdiv3		.equ	29
 ptr:    .dw    song
 wait:   .db    $01
 ;
+;------------------------------------------------------------------------------
+; YM2612 initialization - not required if included in song data
+;------------------------------------------------------------------------------
+;
+#DEFINE	setreg(reg,val) \
+#DEFCONT \	ld	a,reg 
+#DEFCONT \	out	(YMSEL),a 
+#DEFCONT \	ld	a,val 
+#DEFCONT \	out	(YMDAT),a 
+#DEFCONT \	ld	b,0
+#DEFCONT \	in	a,(YMSEL)
+#DEFCONT \	rlca
+#DEFCONT \	jp	nc,$+5
+#DEFCONT \	djnz	$-6
+;
+ym_init:
+	setreg($22,$00)	; lfo off		
+	setreg($27,$00) ; note off ch 0
+	setreg($28,$01) ; note off ch 1
+	setreg($28,$02) ; note off ch 2
+	setreg($28,$03) ; note off ch 3
+	setreg($28,$04) ; note off ch 4
+	setreg($28,$05) ; note off ch 5
+	setreg($28,$06) ; note off ch 6
+	setreg($28,$01) ; note off ch 1
+	setreg($2b,$00) ; dac off
+	setreg($30,$71) 
+	setreg($34,$0d)
+	setreg($38,$33)
+	setreg($3c,$01) ; dt1/mul
+	setreg($40,$23)
+	setreg($44,$2d)
+	setreg($48,$26)
+	setreg($4c,$00) ; total level
+	setreg($50,$5f)
+	setreg($54,$99)
+	setreg($58,$5f)
+	setreg($5c,$94) ; rs/ar
+	setreg($60,$05)
+	setreg($64,$05)
+	setreg($68,$05)
+	setreg($6c,$07) ; am/dir
+	setreg($70,$02)
+	setreg($74,$02)
+	setreg($78,$02)
+	setreg($7c,$02) ; d2r
+	setreg($80,$11)
+	setreg($84,$11)
+	setreg($88,$11)
+	setreg($8c,$a6) ; d1l/rr
+	setreg($90,$00)
+	setreg($94,$00)
+	setreg($98,$00)
+	setreg($9c,$00) ; proprietary
+	setreg($b0,$32) ; feedback/algorithm
+	setreg($b4,$c0) ; both speakers on
+	setreg($28,$00) ; key off
+	setreg($a4,$22)
+	setreg($a0,$69) ; set frequency
+;
+	ret
+;
+;------------------------------------------------------------------------------
+; Example breakdown of first section, which is initialization
+;------------------------------------------------------------------------------
+;
 ;	BYTE	NUMBER OF FRAMES
 ;	BYTE	NUMBER OF REGISTER WRITES
 ;	BYTE	REGISTER
 ;	BYTE	VALUE
 ;
-;	EG	$0D	13 frames
+;	CNT	$0D	13 frames
 ;		$42	66 register writes (132 BYTES)
 ;	2	$30,$71	dac
 ;	4	$34,$0D	dac
@@ -250,88 +305,70 @@ wait:   .db    $01
 ;	90	$69,$05
 ;	92	$6D,$07
 ;	94	$71,$02
-;	96	$35,$0D
-;	98	$39,$33
-;	100	$3D,$01
-;	102	$41,$23
-;	104	$45,$2D
-;	106	$49,$26
-;	108	$4D,$00
-;	110	$51,$5F
-;	112	$55,$99
-;	114	$59,$5F
-;	116	$5D,$94
-;	118	$61,$05
-;	120	$65,$05
-;	122	$69,$05
-;	124	$6D,$07
-;	126	$71,$02
-;	128	$75,$02	
-;	130	$79,$02
-;	132	$7D,$02
-;	134	$81,$11
-;	136	$85,$11
-;	138	$89,$11
-;	140	$8D,$A6
-;	142	$91,$00
-;	144	$95,$00
-;	146	$99,$00
-;	148	$9D,$00
-;	150	$B0,$32
-;	152	$B4,$C0
-
-;	154	$A4,$17
-;	156	$A0,$89
-;	1	$28,$F0
-
-
+;	96	$75,$02
+;	98	$79,$02
+;	100	$7D,$02
+;	102	$81,$11
+;	104	$85,$11
+;	106	$89,$11
+;	108	$8D,$A6
+;	110	$91,$00
+;	112	$95,$00
+;	114	$99,$00
+;	116	$9D,$00
+;	118	$B0,$32
+;	120	$B4,$C0
+;	122	$A4,$17
+;	124	$A0,$89
+;	126	$28,$F0
+;	128	$A5,$0F	
+;	130	$A1,$89
+;	132	$28,$F1
+;
+;------------------------------------------------------------------------------
+; Song data created from Music Macro Language (mml) by makebach
+;------------------------------------------------------------------------------
+;
 song:
-segno:  
-        .db    $0D,$42,
-
-	.db	$30,$71,$34,$0D,$38,$33,$3C,$01,$40,$23,$44,$2D,$48,$26,$4C,$00
-	.db	$50,$5F,$54,$99,$58,$5F,$5C,$94,$60,$05,$64,$05,$68,$05,$6C,$07
-	.db	$70,$02,$74,$02,$78,$02,$7C,$02,$80,$11,$84,$11,$88,$11,$8C,$A6
-	.db	$90,$00,$94,$00,$98,$00,$9C,$00,$B0,$32,$B4,$C0
-
-	.db	$31,$71,$35,$0D,$39,$33,$3D,$01,$41,$23,$45,$2D,$49,$26,$4D,$00
-	.db	$51,$5F,$55,$99,$59,$5F,$5D,$94,$61,$05,$65,$05,$69,$05,$6D,$07
-	.db	$71,$02,$75,$02,$79,$02,$7D,$02,$81,$11,$85,$11,$89,$11,$8D,$A6
-	.db	$91,$00,$95,$00,$99,$00,$9D,$00,$B0,$32,$B4,$C0
-
-	.db	$A4,$17,$A0,$89,$28,$F0,$A5,$0F,$A1,$89,$28,$F1,$02,$01,$28,$00
-
-	.db	$0D,$03,$A4,$1C,$A0,$BF,$28,$F0,$02,$01,$28,$00
-	.db	$0D,$03,$A4,$1D,$A0,$A5,$28,$F0,$02,$01,$28,$00
-	.db	$07,$03,$A4,$1F,$A0,$89,$28,$F0,$06,$01,$28,$01,$02,$01,$28,$00
-	.db	$0D,$06,$A4,$1C,$A0,$3B,$28,$F0,$A5,$0D,$A1,$A5,$28,$F1,$02,$01,$28,$00
-	.db	$0B,$03,$A4,$1F,$A0,$1D,$28,$F0,$02,$01,$28,$01,$02,$01,$28,$00
-	.db	$0D,$06,$A4,$1F,$A0,$89,$28,$F0,$A5,$07,$A1,$89,$28,$F1,$02,$01,$28,$01
-	.db	$0B,$03,$A5,$0C,$A1,$BF,$28,$F1,$02,$01,$28,$00,$02,$01,$28,$01
-	.db	$0D,$06,$A4,$17,$A0,$89,$28,$F0,$A5,$0D,$A1,$A5,$28,$F1,$02,$01,$28,$01,$0B,$03,$A5,$0F,$A1,$89,$28,$F1
-        .db	$02,$01,$28,$00,$02,$01,$28,$01
-	.db	$0D,$06,$A4,$17,$A0,$89,$28,$F0,$A5,$0D,$A1,$A5,$28,$F1,$02,$01,$28,$01,$0B,$03,$A5,$0C,$A1,$BF
-        .db    $28,$F1,$02,$01,$28,$00,$02,$01,$28,$01
-	.db	$0D,$06,$A4,$17,$A0,$89,$28,$F0,$A5,$07,$A1,$89,$28,$F1,$02,$01,$28,$00
-	.db	$0D,$03,$A4,$1C
-        .db    $A0,$BF,$28,$F0,$02,$01,$28,$00,$0D,$03,$A4,$1D,$A0,$A5,$28,$F0
-        .db    $02,$01,$28,$00,$07,$03,$A4,$1F,$A0,$89,$28,$F0,$06,$01,$28,$01
-        .db    $02,$01,$28,$00,$0D,$06,$A4,$1C,$A0,$3B,$28,$F0,$A5,$0D,$A1,$A5
-        .db    $28,$F1,$02,$01,$28,$00,$0B,$03,$A4,$1F,$A0,$1D,$28,$F0,$02,$01
-        .db    $28,$01,$02,$01,$28,$00,$0D,$06,$A4,$1F,$A0,$89,$28,$F0,$A5,$07
-        .db    $A1,$89,$28,$F1,$02,$01,$28,$01,$0B,$03,$A5,$0C,$A1,$BF,$28,$F1
-        .db    $02,$01,$28,$00,$02,$01,$28,$01,$0D,$06,$A4,$17,$A0,$89,$28,$F0
-        .db    $A5,$0D,$A1,$A5,$28,$F1,$02,$01,$28,$01,$0B,$03,$A5,$0F,$A1,$89
-        .db    $28,$F1,$02,$01,$28,$00,$02,$01,$28,$01,$0D,$06,$A4,$17,$A0,$89
-        .db    $28,$F0,$A5,$0D,$A1,$A5,$28,$F1,$02,$01,$28,$01,$0B,$03,$A5,$0C
-        .db    $A1,$BF,$28,$F1,$02,$01,$28,$00,$02,$01,$28,$01,$1A,$06,$A4,$1E
-        .db    $A0,$56,$28,$F0,$A5,$0D,$A1,$08,$28,$F1,$04,$02,$28,$00,$28,$01
-        .db    $1A,$06,$A4,$1E,$A0,$56,$28,$F0,$A5,$0F,$A1,$89,$28,$F1,$04,$02
-        .db    $28,$00,$28,$01,$0D,$06,$A4,$1E,$A0,$56,$28,$F0,$A5,$0D,$A1,$08
-        .db    $28,$F1,$02,$01,$28,$00,$0B,$03,$A4,$1F,$A0,$89,$28,$F0,$02,$01
-        .db    $28,$01,$02,$01,$28,$00,$1A,$06,$A4,$1D,$A0,$A5,$28,$F0,$A5,$0C
-        .db    $A1,$BF,$28,$F1,$04,$02,$28,$00,$28,$01,$1A,$06,$A4,$1D,$A0,$A5
-        .db    $28,$F0,$A5,$0F,$A1,$89,$28,$F1,$04,$02,$28,$00,$28,$01,$0D,$06
+segno:  .db	$0D,$42,$30,$71,$34,$0D,$38,$33,$3C,$01,$40,$23,$44,$2D,$48,$26
+	.db	$4C,$00,$50,$5F,$54,$99,$58,$5F,$5C,$94,$60,$05,$64,$05,$68,$05
+	.db	$6C,$07,$70,$02,$74,$02,$78,$02,$7C,$02,$80,$11,$84,$11,$88,$11
+	.db	$8C,$A6,$90,$00,$94,$00,$98,$00,$9C,$00,$B0,$32,$B4,$C0,$31,$71
+	.db	$35,$0D,$39,$33,$3D,$01,$41,$23,$45,$2D,$49,$26,$4D,$00,$51,$5F
+	.db	$55,$99,$59,$5F,$5D,$94,$61,$05,$65,$05,$69,$05,$6D,$07,$71,$02
+	.db	$75,$02,$79,$02,$7D,$02,$81,$11,$85,$11,$89,$11,$8D,$A6,$91,$00
+	.db	$95,$00,$99,$00,$9D,$00,$B0,$32,$B4,$C0,$A4,$17,$A0,$89,$28,$F0
+	.db	$A5,$0F,$A1,$89,$28,$F1,$02,$01,$28,$00,$0D,$03,$A4,$1C,$A0,$BF
+	.db	$28,$F0,$02,$01,$28,$00,$0D,$03,$A4,$1D,$A0,$A5,$28,$F0,$02,$01
+	.db	$28,$00,$07,$03,$A4,$1F,$A0,$89,$28,$F0,$06,$01,$28,$01,$02,$01
+	.db	$28,$00,$0D,$06,$A4,$1C,$A0,$3B,$28,$F0,$A5,$0D,$A1,$A5,$28,$F1
+	.db	$02,$01,$28,$00,$0B,$03,$A4,$1F,$A0,$1D,$28,$F0,$02,$01,$28,$01
+	.db	$02,$01,$28,$00,$0D,$06,$A4,$1F,$A0,$89,$28,$F0,$A5,$07,$A1,$89
+	.db	$28,$F1,$02,$01,$28,$01,$0B,$03,$A5,$0C,$A1,$BF,$28,$F1,$02,$01
+	.db	$28,$00,$02,$01,$28,$01,$0D,$06,$A4,$17,$A0,$89,$28,$F0,$A5,$0D
+	.db	$A1,$A5,$28,$F1,$02,$01,$28,$01,$0B,$03,$A5,$0F,$A1,$89,$28,$F1
+        .db	$02,$01,$28,$00,$02,$01,$28,$01,$0D,$06,$A4,$17,$A0,$89,$28,$F0
+	.db	$A5,$0D,$A1,$A5,$28,$F1,$02,$01,$28,$01,$0B,$03,$A5,$0C,$A1,$BF
+        .db	$28,$F1,$02,$01,$28,$00,$02,$01,$28,$01,$0D,$06,$A4,$17,$A0,$89
+	.db	$28,$F0,$A5,$07,$A1,$89,$28,$F1,$02,$01,$28,$00,$0D,$03,$A4,$1C
+        .db	$A0,$BF,$28,$F0,$02,$01,$28,$00,$0D,$03,$A4,$1D,$A0,$A5,$28,$F0
+        .db	$02,$01,$28,$00,$07,$03,$A4,$1F,$A0,$89,$28,$F0,$06,$01,$28,$01
+        .db	$02,$01,$28,$00,$0D,$06,$A4,$1C,$A0,$3B,$28,$F0,$A5,$0D,$A1,$A5
+        .db	$28,$F1,$02,$01,$28,$00,$0B,$03,$A4,$1F,$A0,$1D,$28,$F0,$02,$01
+        .db	$28,$01,$02,$01,$28,$00,$0D,$06,$A4,$1F,$A0,$89,$28,$F0,$A5,$07
+        .db	$A1,$89,$28,$F1,$02,$01,$28,$01,$0B,$03,$A5,$0C,$A1,$BF,$28,$F1
+        .db	$02,$01,$28,$00,$02,$01,$28,$01,$0D,$06,$A4,$17,$A0,$89,$28,$F0
+        .db	$A5,$0D,$A1,$A5,$28,$F1,$02,$01,$28,$01,$0B,$03,$A5,$0F,$A1,$89
+        .db	$28,$F1,$02,$01,$28,$00,$02,$01,$28,$01,$0D,$06,$A4,$17,$A0,$89
+        .db	$28,$F0,$A5,$0D,$A1,$A5,$28,$F1,$02,$01,$28,$01,$0B,$03,$A5,$0C
+        .db	$A1,$BF,$28,$F1,$02,$01,$28,$00,$02,$01,$28,$01,$1A,$06,$A4,$1E
+        .db	$A0,$56,$28,$F0,$A5,$0D,$A1,$08,$28,$F1,$04,$02,$28,$00,$28,$01
+        .db	$1A,$06,$A4,$1E,$A0,$56,$28,$F0,$A5,$0F,$A1,$89,$28,$F1,$04,$02
+        .db	$28,$00,$28,$01,$0D,$06,$A4,$1E,$A0,$56,$28,$F0,$A5,$0D,$A1,$08
+        .db	$28,$F1,$02,$01,$28,$00,$0B,$03,$A4,$1F,$A0,$89,$28,$F0,$02,$01
+        .db	$28,$01,$02,$01,$28,$00,$1A,$06,$A4,$1D,$A0,$A5,$28,$F0,$A5,$0C
+        .db	$A1,$BF,$28,$F1,$04,$02,$28,$00,$28,$01,$1A,$06,$A4,$1D,$A0,$A5
+        .db	$28,$F0,$A5,$0F,$A1,$89,$28,$F1,$04,$02,$28,$00,$28,$01,$0D,$06
         .db    $A4,$1D,$A0,$A5,$28,$F0,$A5,$0C,$A1,$BF,$28,$F1,$02,$01,$28,$00
         .db    $0B,$03,$A4,$1F,$A0,$89,$28,$F0,$02,$01,$28,$01,$02,$01,$28,$00
         .db    $1A,$06,$A4,$1D,$A0,$08,$28,$F0,$A5,$0C,$A1,$3B,$28,$F1,$04,$02
