@@ -239,20 +239,20 @@ YM_PERIOD:	LD	A, H			; IF ZERO - ERROR
 ;
 		LD	A, H			; MAXIMUM TONE PERIOD IS 11-BITS
 		AND	11000000B		; ALLOWED RANGE IS 0001-07FF (2047)
-		JR	NZ, YM_PERIOD1		; AND 3 BITS FOR OCTAVE (7)
-		LD	(AY_PENDING_PERIOD), HL	; RETURN NZ IF NUMBER TOO LARGE
+		JR	NZ,YM_PERIOD1		; AND 3 BITS FOR OCTAVE (7)
+		LD	(YM_PENDING_PERIOD),HL	; RETURN NZ IF NUMBER TOO LARGE
 		RET				; SAVE AND RETURN SUCCESSFUL
 ;
 YM_PERIOD1:	LD	A, $FF			; REQUESTED PERIOD IS LARGER
-		LD	(AY_PENDING_PERIOD), A	; THAN THE DEVICE CAN SUPPORT
-		LD	(AY_PENDING_PERIOD+1), A; SO SET PERIOD TO FFFF
+		LD	(YM_PENDING_PERIOD),A	; THAN THE DEVICE CAN SUPPORT
+		LD	(YM_PENDING_PERIOD+1),A	; SO SET PERIOD TO FFFF
 		RET				; AND RETURN FAILURE
 ;
 ;------------------------------------------------------------------------------
-;	SOUND DRIVER FUNCTION - DURATION
+; Sound driver function - DURATION
 ;------------------------------------------------------------------------------
 ;
-YM_DURATION:	LD	(YM_PENDING_DURATION),HL	; SET TONE DURATION
+YM_DURATION:	LD	(YM_PENDING_DURATION),HL ; SET TONE DURATION
 		XOR	A
 		RET
 ;
@@ -265,7 +265,7 @@ YM_PLAY:	LD	A,(YM_RDY_RST)		; IF STILL IN RESET
 		OR	A			; STATE GO SETUP FOR
 		CALL	Z,YM_MAKE_RDY		; PLAYING
 ;
-		ld	hl,(AY_PENDING_PERIOD)	; GET THE PREVIOUSLY SETUP
+		ld	hl,(YM_PENDING_PERIOD)	; GET THE PREVIOUSLY SETUP
 		ld 	de,ym_playnote+5	; TONE DATA AND
 		ld	a,h
 		ld	(de),a			; PATCH IT INTO THE
@@ -273,6 +273,13 @@ YM_PLAY:	LD	A,(YM_RDY_RST)		; IF STILL IN RESET
 		inc	de
 		ld	a,l
 		ld	(de),a
+		inc	de
+		inc	de
+		ld	A,(YM_PENDING_VOLUME)	; GET VOLUME
+		srl	a
+		cpl
+		and	%01111111		; PATCH IT INTO THE
+		ld	(de),a   		; YM2612 PLAY COMMAND
 ;
 		ld	hl,ym_playnote		; NOW PLAY IT
 		jp	ym_prog
@@ -290,10 +297,11 @@ YM_MAKE_RDY:	CPL
 ; Command sequence to play a note
 ;------------------------------------------------------------------------------
 ;
-ym_playnote:	.db	part0, 8/2
+ym_playnote:	.db	part0, 10/2
 		.db	$28, $00		; [0] KEY OFF
-		.db	$A4, $3F		; [0] Frequency MSB
-		.db	$A0, $FF		; [0] Frequency LSB
+		.db	$A4, $3F		; [0] Frequency MSB ; patch +5
+		.db	$A0, $FF		; [0] Frequency LSB ; patch +7
+		.db	$4C, $00		; [0] Volume	    ; patch +9
 		.db	$28, $F0		; [0] KEY ON
 		.db	$00			; End flag
 ;
