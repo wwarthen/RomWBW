@@ -51,9 +51,6 @@ YM_FNTBL:	.DW	YM_RESET
 ;
 YM_IDAT	.EQU	0				; NO INSTANCE DATA FOR THIS DEVICE
 ;
-YM_DURATION
-		ret
-
 ;------------------------------------------------------------------------------
 ; YM2162 Initialization
 ;	Announce device on console. 
@@ -250,6 +247,14 @@ YM_PERIOD1:	LD	A, $FF			; REQUESTED PERIOD IS LARGER
 		LD	(AY_PENDING_PERIOD), A	; THAN THE DEVICE CAN SUPPORT
 		LD	(AY_PENDING_PERIOD+1), A; SO SET PERIOD TO FFFF
 		RET				; AND RETURN FAILURE
+;
+;------------------------------------------------------------------------------
+;	SOUND DRIVER FUNCTION - DURATION
+;------------------------------------------------------------------------------
+;
+YM_DURATION:	LD	(YM_PENDING_DURATION),HL	; SET TONE DURATION
+		XOR	A
+		RET
 ;
 ;------------------------------------------------------------------------------
 ; Sound driver function - PLAY
