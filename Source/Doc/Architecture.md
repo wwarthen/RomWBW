@@ -1398,7 +1398,7 @@ Increase by steps of 4 to select the next corresponding note.
 Increase by steps of 48 to select the same note in next octave.
 
 If the driver is able to generate the requested note, a success (0) is
-returned, otherwise a non-zero error state will be returned.
+returned, otherwise a non-zero error value will be returned.
 
 The sound chip resolution and its oscillator limit the range and
 accuracy of the notes played. The typical range of the AY-3-8910
@@ -1443,7 +1443,7 @@ the following HBIOS calls would need to be made:
 
 ```
 HBIOS B=51 C=00 L=80      ; Set volume to half level
-HBIOS B=53 C=00 L=69      ; Select Middle C (C4) assuming SN76489
+HBIOS B=53 C=00 HL=152    ; Select Middle C (C4)
 HBIOS B=54 C=00 D=01      ; Play note on Channel 1
 ```
 
@@ -1518,6 +1518,8 @@ AUDIO ID       | Value | Device     | Returned registers
 SND_SN76489    | 0x01  | SN76489    | E: Left channel port, L: Right channel port
 SND_AY38910    | 0x02  | AY-3-8910  | D: Address port, E: Data port
 SND_BITMODE    | 0x03  | I/O PORT   | D: Address port, E: Bit mask
+SND_YM2612     | 0x04  | YM2612     | D: Part 0 Address port, E: Part 0 Data port
+               |       |            | H: Part 1 Address port, L: Part 1 Data port
 
 ### Function 0x56 -- Sound Duration (SNDDUR)
 
@@ -1547,10 +1549,10 @@ and then return.
 
 | _Exit Results_
 |       A: Status (0=OK, else error)
-|       D: Serial Device Type
-|       E: Serial Device Number
-|       H: Serial Device Unit Mode
-|       L: Serial Device Unit I/O Base Address
+|       D: Sound Device Type
+|       E: Sound Device Number
+|       H: Sound Device Unit Mode
+|       L: Sound Device Unit I/O Base Address
 
 Reports information about the sound device unit specified.  Register D
 indicates the device type (driver) and register E indicates the physical
@@ -1565,6 +1567,7 @@ _Id_ | _Device Type / Driver_
 0x00 | SN76489
 0x10 | AY38910
 0x20 | BITMODE
+0x30 | YM2612
 
 `\clearpage`{=latex}
 
