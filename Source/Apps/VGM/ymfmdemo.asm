@@ -25,6 +25,7 @@ MBC		.equ	2
 ;
 plt_romwbw	.equ	1			; Build for ROMWBW?
 plt_type	.equ	sbcecb			; Select build configuration
+plt_cpuspd	.equ	6			; Non ROMWBW cpu speed default
 debug		.equ	0
 
 ctc_delay	.equ	0
