@@ -34,6 +34,7 @@ PRTCR:
 ; Print a zero terminated string at (DE) without destroying any registers
 ;
 PRTSTR:
+	PUSH	AF
 	PUSH	DE
 ;
 PRTSTR1:
@@ -46,6 +47,7 @@ PRTSTR1:
 ;
 PRTSTR2:
 	POP	DE		; restore registers
+	POP	AF
 	RET
 ;
 ; Print the value in A in hex without destroying any registers
