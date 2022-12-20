@@ -418,7 +418,7 @@ ym_cfg:		.db	part0,  24/2
 ; Register configuration data for play
 ;------------------------------------------------------------------------------
 ;
-ym_cfg_ready:	.db	part0, 20/2
+;ym_cfg_ready:	.db	part0, 20/2
 		.db	$22, $00		; [0] Global: LFO disable
 		.db	$B0, $30		; [0] Algorithm, Feedback <- pure sine wave
 		.db	$3C, $01		; [0] Operator 4.MUL = 1
@@ -435,7 +435,102 @@ ym_cfg_ready:	.db	part0, 20/2
 ;		.db	$28, $F0		; [0] KEY ON
 ;
 		.db	$00			; End flag
-
+;
+ym_cfg_ready:	.db	part0, 2/2
+		.db	$22, $00		; Global: LFO disable
+;
+		.db	part0, 6/2
+		.db	$B0,$30			; Channel 1-3
+		.db	$b1,$30			; Algorithm 0 S1>S2>S3>S4
+		.db	$b2,$30			; Feedback pure sine wave
+;
+		.db	part1, 6/2
+		.db	$B0,$30			; Channel 4-6
+		.db	$b1,$30			; Algorithm 0 S1>S2>S3>S4
+		.db	$b2,$30			; Feedback pure sine wave
+;
+		.db	part0, 6/2
+		.db	$3c, $01		; Channel 1-3
+		.db	$3d, $01		; Operator 4.MUL = 1
+		.db	$3e, $01
+;
+		.db	part1, 6/2
+		.db	$3c, $01		; Channel 4-6
+		.db	$3d, $01		; Operator 4.MUL = 1
+		.db	$3e, $01
+;
+		.db	part0, 6/2
+		.db	$b4,%10000000		; Channel 1-3
+		.db	$b5,%10000000		; Left Channel
+		.db	$b6,%10000000
+;
+		.db	part1, 6/2
+		.db	$b4,%01000000		; Channel 4-6
+		.db	$b5,%01000000		; Right Channel
+		.db	$b6,%01000000
+;
+		.db	part0, 6/2
+		.db	$44, $7F		; Channel 1-3
+		.db	$45, $7F		; Mute operator 3 <- pure sine wave
+		.db	$46, $7F
+;
+		.db	part1, 6/2
+		.db	$44, $7F		; Channel 4-6
+		.db	$45, $7F		; Mute operator 3 <- pure sine wave
+		.db	$46, $7F
+;
+		.db	part0, 6/2
+		.db	$4C, $00		; Channel 1-3
+		.db	$4d, $00		; Max volume for operator 4
+		.db	$4e, $00
+;
+		.db	part1, 6/2
+		.db	$4C, $00		; Channel 4-6
+		.db	$4d, $00		; Max volume for operator 4
+		.db	$4e, $00
+;
+		.db	part0, 6/2
+		.db	$5C, $1F		; Channel 1-3
+		.db	$5d, $1F		; Operator 4.AR = shortest
+		.db	$5e, $1F
+;
+		.db	part1, 6/2
+		.db	$5C, $1F		; Channel 4-6
+		.db	$5d, $1F		; Operator 4.AR = shortest
+		.db	$5e, $1F
+;
+		.db	part0, 6/2
+		.db	$6C, $06		; Channel 1-3
+		.db	$6d, $06		; Operator 4.D1R= 6
+		.db	$6e, $06
+;
+		.db	part1, 6/2
+		.db	$6C, $06		; Channel 4-6
+		.db	$6d, $06		; Operator 4.D1R= 6
+		.db	$6e, $06
+;
+		.db	part0, 6/2
+		.db	$7C, $1F		; Channel 1-3
+		.db	$7d, $1F		; Operator 4.D2R= 31
+		.db	$7e, $1F
+;
+		.db	part1, 6/2
+		.db	$7C, $1F		; Channel 4-6
+		.db	$7d, $1F		; Operator 4.D2R= 31
+		.db	$7e, $1F
+;
+		.db	part0, 6/2
+		.db	$8C, $FF		; Channel 1-3
+		.db	$8d, $FF		; Operator 4.SL = 15 / Operator4. RR=15
+		.db	$8e, $FF
+;
+		.db	part1, 6/2
+		.db	$8C, $FF		; Channel 4-6
+		.db	$8d, $FF		; Operator 4.SL = 15 / Operator4. RR=15
+		.db	$8e, $FF
+;
+		.db	$00			; End flag
+;
 ;------------------------------------------------------------------------------
 ; Register configuration data for hard reset
 ;------------------------------------------------------------------------------
