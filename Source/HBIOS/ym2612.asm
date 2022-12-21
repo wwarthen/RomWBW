@@ -261,7 +261,34 @@ YM_DURATION:	LD	(YM_PENDING_DURATION),HL ; SET TONE DURATION
 ;	D = CHANNEL
 ;------------------------------------------------------------------------------
 ;
-YM_PLAY:	LD	A,(YM_RDY_RST)		; IF STILL IN RESET
+YM_PLAY:	ld	hl,ym_playnote+0
+		ld	a,d			; 000 > 000 011 > 100
+		cp	3			; 001 > 001 100 > 101
+		ld	e,part1			; 010 > 010 101 > 110
+		jr	c,ch012
+		sub	3
+		ld	d,a			; d = 0..2
+		add	a,4
+		jr	ch345			; a = 4..6
+ch012:		ld	e,part0
+ch345:		ld	(hl),e		
+		ld	hl,ym_playnote+3	; setup keyon channel
+		ld	(hl),a
+		ld	hl,ym_playnote+11	; setup keyoff channel
+		or	%11110000
+		ld	(hl),a
+
+		ld	a,$a4			; setup frequency channel
+		add	a,d			; msb
+		ld	hl,ym_playnote+4
+		ld	(hl),a
+
+		ld	a,$a0			; setup frequency channel
+		add	a,d			; lsb
+		ld	hl,ym_playnote+6
+		ld	(hl),a
+
+		LD	A,(YM_RDY_RST)		; IF STILL IN RESET
 		OR	A			; STATE GO SETUP FOR
 		CALL	Z,YM_MAKE_RDY		; PLAYING
 ;
@@ -298,11 +325,11 @@ YM_MAKE_RDY:	CPL
 ;------------------------------------------------------------------------------
 ;
 ym_playnote:	.db	part0, 10/2
-		.db	$28, $00		; [0] KEY OFF
-		.db	$A4, $3F		; [0] Frequency MSB ; patch +5
-		.db	$A0, $FF		; [0] Frequency LSB ; patch +7
-		.db	$4C, $00		; [0] Volume	    ; patch +9
-		.db	$28, $F0		; [0] KEY ON
+		.db	$28, $00		; [0] KEY OFF			; 00000111
+		.db	$A4, $3F		; [0] Frequency MSB ; patch +5	; A4+channel-1
+		.db	$A0, $FF		; [0] Frequency LSB ; patch +7	; A4+channel-1
+		.db	$4C, $00		; [0] Volume	    ; patch +9	; 4C+channel-1
+		.db	$28, $F0		; [0] KEY ON			; 00000111
 		.db	$00			; End flag
 ;
 ;------------------------------------------------------------------------------
