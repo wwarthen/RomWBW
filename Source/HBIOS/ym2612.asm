@@ -30,13 +30,15 @@ YM_PENDING_DURATION	.DW	0	; PENDING DURATION (16 BITS)
 YM_READY		.DB	0	; BIT 0 -> NZ DRIVER IS READY TO RECEIVE PLAY COMMAND
 					; BIT 1 -> NZ EXECUTING WITHIN TIMER HANDLER = DO NOT DIS/ENABLE INT
 YM_RDY_RST		.DB	0	; FLAG INDICATES IF DEVICE IS IN READY (NZ) OR RESET STATE (Z)
+YM_DEBUG		.EQU	0	; CHANGE TO 1 TO ENABLE DEBUGGING
+YM_RSTCFG		.EQU	0	; SET TO 1 FOR FULL REGISTER CLEAR
 ;
 ;------------------------------------------------------------------------------
 ; Driver function table and instance data
 ;------------------------------------------------------------------------------
 ;
 YM_FNTBL:	.DW	YM_RESET
-		.DW	YM_VOLUME
+		.DW	ym_volume
 		.DW	YM_PERIOD
 		.DW	YM_NOTE
 		.DW	YM_PLAY
@@ -84,14 +86,31 @@ ym_prog:	ld	c,(hl)			; get port address
 		ld	d,(hl)			; count of pairs
 		inc	hl
 ;
+#IF (YM_DEBUG)		
+	push	af
+	ld	a,c				; port
+	call PRTHEXBYTE
+	pop	af
+#ENDIF
+;
 t_loop:		ld	a,(hl)			; get register to write
-		out	(c),a
-;	call PRTHEXBYTE
+		out	(c),a			; write reg to RSEL port
+;
+#IF (YM_DEBUG)
+	call PRTHEXBYTE				; register
+#ENDIF
+;
 		inc	hl
-		inc	c
+		inc	c			; point to RDAT port
 		ld	a,(hl)			; get value to write
-		out	(c),a
-;	call PRTHEXBYTE
+		out	(c),a			; write value to RDAT port
+;
+#IF (YM_DEBUG)
+	call PRTHEXBYTE
+	call PC_SPACE
+#ENDIF
+;
+		dec	c			; point back to RSEL port
 		ld	b,0			; check device 
 nready1:	in	a,(c)           	; ready with timeout
 		rlca                    	; 
@@ -100,10 +119,13 @@ nready1:	in	a,(c)           	; ready with timeout
 ;
 ;		timed out
 ;
-ready1:		inc	hl 
-		dec	c 
-		dec	d
+ready1:		inc	hl			;
+		dec	d			; decrease # left to do
 		jr	nz,t_loop
+;
+#IF (YM_DEBUG)
+	call NEWLINE
+#ENDIF
 ;
 		ld	a,(hl)			; end flag?
 		or	a
@@ -188,7 +210,7 @@ YM_RESET:	;CALL	AY_CHKREDY		; RETURNS TO OUR CALLER IF NOT READY
 ; Sound driver function - VOLUME
 ;------------------------------------------------------------------------------
 ;
-YM_VOLUME:	LD	A,L			; SAVE VOLUME
+ym_volume:	LD	A,L			; SAVE VOLUME
 		LD	(YM_PENDING_VOLUME),A
 		XOR	A			; SIGNAL SUCCESS
 		RET
@@ -261,31 +283,54 @@ YM_DURATION:	LD	(YM_PENDING_DURATION),HL ; SET TONE DURATION
 ;	D = CHANNEL
 ;------------------------------------------------------------------------------
 ;
-YM_PLAY:	ld	hl,ym_playnote+0
-		ld	a,d			; 000 > 000 011 > 100
-		cp	3			; 001 > 001 100 > 101
-		ld	e,part1			; 010 > 010 101 > 110
-		jr	c,ch012
+YM_PLAY:	ld	a,d
+		cp	YM_TONECNT		; error if bad channel
+		ret	nc
+						
+		cp	3			; 000 > 000, 011 > 100
+		ld	e,part1			; 001 > 001, 100 > 101
+		jr	c,ch012                 ; 010 > 010, 101 > 110
 		sub	3
 		ld	d,a			; d = 0..2
-		add	a,4
-		jr	ch345			; a = 4..6
+		add	a,4			; a = 4..6
+		jr	ch345
 ch012:		ld	e,part0
-ch345:		ld	(hl),e		
-		ld	hl,ym_playnote+3	; setup keyon channel
+ch345:
+;
+#IF (YM_DEBUG)		
+		call	PC_COLON
+		call	PRTHEXBYTE		; a = 0..2 4..6
+		push	af
+		ld	a,d
+		call	PRTHEXBYTE		; d = 00..05
+		ld	a,e
+		call	PRTHEXBYTE		; e = part0/part1 (c0/c2) 
+		pop	af
+		call	NEWLINE
+#ENDIF
+;
+		ld	hl,ym_playcmd01
+		ld	(hl),e			; set the part
+;		
+		ld	hl,ym_playcmd00		; setup keyoff channel
 		ld	(hl),a
-		ld	hl,ym_playnote+11	; setup keyoff channel
-		or	%11110000
+		ld	hl,ym_playcmd09		; setup keyon channel
+		or	%10000000		; operator 4 only
 		ld	(hl),a
 
-		ld	a,$a4			; setup frequency channel
-		add	a,d			; msb
-		ld	hl,ym_playnote+4
+		ld	a,$a4			; setup frequency register msb
+		add	a,d			; $a4-$a6
+		ld	hl,ym_playcmd02
 		ld	(hl),a
 
-		ld	a,$a0			; setup frequency channel
-		add	a,d			; lsb
-		ld	hl,ym_playnote+6
+		ld	a,$a0			; setup frequency register lsb
+		add	a,d			; $a0-$a2
+		ld	hl,ym_playcmd04
+		ld	(hl),a
+
+		ld	a,$4c			; setup volume register
+		add	a,d			; $4c-$4e
+		ld	hl,ym_playcmd06
 		ld	(hl),a
 
 		LD	A,(YM_RDY_RST)		; IF STILL IN RESET
@@ -293,21 +338,30 @@ ch345:		ld	(hl),e
 		CALL	Z,YM_MAKE_RDY		; PLAYING
 ;
 		ld	hl,(YM_PENDING_PERIOD)	; GET THE PREVIOUSLY SETUP
-		ld 	de,ym_playnote+5	; TONE DATA AND
+		ld 	de,ym_playcmd03		; TONE DATA AND
 		ld	a,h
 		ld	(de),a			; PATCH IT INTO THE
-		inc	de			; YM2612 PLAY COMMAND
-		inc	de
+		ld 	de,ym_playcmd05		; YM2612 PLAY COMMAND
 		ld	a,l
 		ld	(de),a
-		inc	de
-		inc	de
+;
+		ld	de,ym_playcmd07
 		ld	A,(YM_PENDING_VOLUME)	; GET VOLUME
 		srl	a
 		cpl
 		and	%01111111		; PATCH IT INTO THE
 		ld	(de),a   		; YM2612 PLAY COMMAND
-;
+#IF (YM_DEBUG)	
+		ld	b,16			; debug
+		call	NEWLINE			; dump
+		ld	de,ym_playnote		; the 
+ym_dbgcmd:	ld	a,(de)			; command
+		call	PRTHEXBYTE		; stream
+		call	PC_SPACE
+		inc	de
+		djnz	ym_dbgcmd
+		call	NEWLINE
+#ENDIF
 		ld	hl,ym_playnote		; NOW PLAY IT
 		jp	ym_prog
 ;
@@ -324,12 +378,22 @@ YM_MAKE_RDY:	CPL
 ; Command sequence to play a note
 ;------------------------------------------------------------------------------
 ;
-ym_playnote:	.db	part0, 10/2
-		.db	$28, $00		; [0] KEY OFF			; 00000111
-		.db	$A4, $3F		; [0] Frequency MSB ; patch +5	; A4+channel-1
-		.db	$A0, $FF		; [0] Frequency LSB ; patch +7	; A4+channel-1
-		.db	$4C, $00		; [0] Volume	    ; patch +9	; 4C+channel-1
-		.db	$28, $F0		; [0] KEY ON			; 00000111
+ym_playnote:	.db	part0, 2/2
+		.db	$28
+ym_playcmd00:	.db	$00			; [0] KEY OFF		
+;
+ym_playcmd01:	.db	part0,6/2
+ym_playcmd02:	.db	$A4
+ym_playcmd03:	.db	$3F			; [X] Frequency MSB	
+ym_playcmd04:	.db	$A0
+ym_playcmd05:	.db	$FF			; [X] Frequency LSB	
+ym_playcmd06:	.db	$4C
+ym_playcmd07:	.db	$00			; [X] Volume	       
+;
+		.db	part0, 2/2
+ym_playcmd08:	.db	$28
+ym_playcmd09:	.db	$F0			; [0] KEY ON		
+
 		.db	$00			; End flag
 ;
 ;------------------------------------------------------------------------------
@@ -386,12 +450,113 @@ ym_notetable:	.dw	644			; C	; 152
 		.dw	1268			;  approx
 ;
 ;------------------------------------------------------------------------------
-; Register configuration data for reset state
+; Register configuration data for play
+;------------------------------------------------------------------------------
+;
+ym_cfg_ready:	.db	part0, 2/2
+		.db	$22, $00		; Global: LFO disable
+;
+		.db	part0, 6/2
+		.db	$B0,$30			; Channel 1-3
+		.db	$b1,$30			; Algorithm 0 S1>S2>S3>S4
+		.db	$b2,$30			; Feedback pure sine wave
+;
+		.db	part1, 6/2
+		.db	$B0,$30			; Channel 4-6
+		.db	$b1,$30			; Algorithm 0 S1>S2>S3>S4
+		.db	$b2,$30			; Feedback pure sine wave
+;
+		.db	part0, 6/2
+		.db	$3c, $01		; Channel 1-3
+		.db	$3d, $01		; Operator 4.MUL = 1
+		.db	$3e, $01
+;
+		.db	part1, 6/2
+		.db	$3c, $01		; Channel 4-6
+		.db	$3d, $01		; Operator 4.MUL = 1
+		.db	$3e, $01
+;
+		.db	part0, 6/2
+		.db	$b4,%01000000		; Channel 1-3
+		.db	$b5,%01000000		; Left Channel
+		.db	$b6,%01000000
+;
+		.db	part1, 6/2
+		.db	$b4,%10000000		; Channel 4-6
+		.db	$b5,%10000000		; Right Channel
+		.db	$b6,%10000000
+;
+		.db	part0, 6/2
+		.db	$44, $7F		; Channel 1-3
+		.db	$45, $7F		; Mute operator 3 <- pure sine wave
+		.db	$46, $7F
+;
+		.db	part1, 6/2
+		.db	$44, $7F		; Channel 4-6
+		.db	$45, $7F		; Mute operator 3 <- pure sine wave
+		.db	$46, $7F
+;
+		.db	part0, 6/2
+		.db	$4C, $7f ;$00		; Channel 1-3
+		.db	$4d, $7f ;$00		; Max volume for operator 4
+		.db	$4e, $7f ;$00
+;
+		.db	part1, 6/2
+		.db	$4C, $7f ;$00		; Channel 4-6
+		.db	$4d, $7f ;$00		; Max volume for operator 4
+		.db	$4e, $7f ;$00
+;
+		.db	part0, 6/2
+		.db	$5C, $1F		; Channel 1-3
+		.db	$5d, $1F		; Operator 4.AR = shortest
+		.db	$5e, $1F
+;
+		.db	part1, 6/2
+		.db	$5C, $1F		; Channel 4-6
+		.db	$5d, $1F		; Operator 4.AR = shortest
+		.db	$5e, $1F
+;
+		.db	part0, 6/2
+		.db	$6C, $06		; Channel 1-3
+		.db	$6d, $06		; Operator 4.D1R= 6
+		.db	$6e, $06
+;
+		.db	part1, 6/2
+		.db	$6C, $06		; Channel 4-6
+		.db	$6d, $06		; Operator 4.D1R= 6
+		.db	$6e, $06
+;
+		.db	part0, 6/2
+		.db	$7C, $1F		; Channel 1-3
+		.db	$7d, $1F		; Operator 4.D2R= 31
+		.db	$7e, $1F
+;
+		.db	part1, 6/2
+		.db	$7C, $1F		; Channel 4-6
+		.db	$7d, $1F		; Operator 4.D2R= 31
+		.db	$7e, $1F
+;
+		.db	part0, 6/2
+		.db	$8C, $FF		; Channel 1-3
+		.db	$8d, $FF		; Operator 4.SL = 15 / Operator4. RR=15
+		.db	$8e, $FF
+;
+		.db	part1, 6/2
+		.db	$8C, $FF		; Channel 4-6
+		.db	$8d, $FF		; Operator 4.SL = 15 / Operator4. RR=15
+		.db	$8e, $FF
+;
+		.db	$00			; End flag
+;
+;
+;------------------------------------------------------------------------------
+; Register configuration data for soft reset state
 ;------------------------------------------------------------------------------
 ;	
 part0:		.equ	YMSEL
 part1:		.equ	YM2SEL
 ;
+#IF (YM_RSTCFG==0)
 ym_cfg:		.db	part0,  24/2
 		.db	$22,$00			; [0] lfo off
 		.db	$27,$00			; [0] Disable independant Channel 3
@@ -442,128 +607,12 @@ ym_cfg:		.db	part0,  24/2
 		.db	$00			; End flag
 ;
 ;------------------------------------------------------------------------------
-; Register configuration data for play
+; Register configuration data for hard reset state
 ;------------------------------------------------------------------------------
 ;
-;ym_cfg_ready:	.db	part0, 20/2
-		.db	$22, $00		; [0] Global: LFO disable
-		.db	$B0, $30		; [0] Algorithm, Feedback <- pure sine wave
-		.db	$3C, $01		; [0] Operator 4.MUL = 1
-		.db	$B4, $C0		; [0] Stereo output
-		.db	$44, $7F		; [0] Mute operator 3  <- pure sine wave
-		.db	$4C, $00		; [0] Max volume for operator 4
-		.db	$5C, $1F		; [0] Operator 4.AR = shortest
-		.db	$6C, $06		; [0] Operator 4.D1R= 6
-		.db	$7C, $1F		; [0] Operator 4.D2R= 31
-		.db	$8C, $FF		; [0] Operator 4.SL = 15 / Operator4. RR=15
-;		.db	$A4, $3F		; [0] Frequency MSB
-;		.db	$A0, 84;$FF		; [0] Frequency LSB
-;		.db	$28, $00		; [0] KEY OFF
-;		.db	$28, $F0		; [0] KEY ON
-;
-		.db	$00			; End flag
-;
-ym_cfg_ready:	.db	part0, 2/2
-		.db	$22, $00		; Global: LFO disable
-;
-		.db	part0, 6/2
-		.db	$B0,$30			; Channel 1-3
-		.db	$b1,$30			; Algorithm 0 S1>S2>S3>S4
-		.db	$b2,$30			; Feedback pure sine wave
-;
-		.db	part1, 6/2
-		.db	$B0,$30			; Channel 4-6
-		.db	$b1,$30			; Algorithm 0 S1>S2>S3>S4
-		.db	$b2,$30			; Feedback pure sine wave
-;
-		.db	part0, 6/2
-		.db	$3c, $01		; Channel 1-3
-		.db	$3d, $01		; Operator 4.MUL = 1
-		.db	$3e, $01
-;
-		.db	part1, 6/2
-		.db	$3c, $01		; Channel 4-6
-		.db	$3d, $01		; Operator 4.MUL = 1
-		.db	$3e, $01
-;
-		.db	part0, 6/2
-		.db	$b4,%10000000		; Channel 1-3
-		.db	$b5,%10000000		; Left Channel
-		.db	$b6,%10000000
-;
-		.db	part1, 6/2
-		.db	$b4,%01000000		; Channel 4-6
-		.db	$b5,%01000000		; Right Channel
-		.db	$b6,%01000000
-;
-		.db	part0, 6/2
-		.db	$44, $7F		; Channel 1-3
-		.db	$45, $7F		; Mute operator 3 <- pure sine wave
-		.db	$46, $7F
-;
-		.db	part1, 6/2
-		.db	$44, $7F		; Channel 4-6
-		.db	$45, $7F		; Mute operator 3 <- pure sine wave
-		.db	$46, $7F
-;
-		.db	part0, 6/2
-		.db	$4C, $00		; Channel 1-3
-		.db	$4d, $00		; Max volume for operator 4
-		.db	$4e, $00
-;
-		.db	part1, 6/2
-		.db	$4C, $00		; Channel 4-6
-		.db	$4d, $00		; Max volume for operator 4
-		.db	$4e, $00
-;
-		.db	part0, 6/2
-		.db	$5C, $1F		; Channel 1-3
-		.db	$5d, $1F		; Operator 4.AR = shortest
-		.db	$5e, $1F
-;
-		.db	part1, 6/2
-		.db	$5C, $1F		; Channel 4-6
-		.db	$5d, $1F		; Operator 4.AR = shortest
-		.db	$5e, $1F
-;
-		.db	part0, 6/2
-		.db	$6C, $06		; Channel 1-3
-		.db	$6d, $06		; Operator 4.D1R= 6
-		.db	$6e, $06
-;
-		.db	part1, 6/2
-		.db	$6C, $06		; Channel 4-6
-		.db	$6d, $06		; Operator 4.D1R= 6
-		.db	$6e, $06
-;
-		.db	part0, 6/2
-		.db	$7C, $1F		; Channel 1-3
-		.db	$7d, $1F		; Operator 4.D2R= 31
-		.db	$7e, $1F
-;
-		.db	part1, 6/2
-		.db	$7C, $1F		; Channel 4-6
-		.db	$7d, $1F		; Operator 4.D2R= 31
-		.db	$7e, $1F
-;
-		.db	part0, 6/2
-		.db	$8C, $FF		; Channel 1-3
-		.db	$8d, $FF		; Operator 4.SL = 15 / Operator4. RR=15
-		.db	$8e, $FF
-;
-		.db	part1, 6/2
-		.db	$8C, $FF		; Channel 4-6
-		.db	$8d, $FF		; Operator 4.SL = 15 / Operator4. RR=15
-		.db	$8e, $FF
-;
-		.db	$00			; End flag
-;
-;------------------------------------------------------------------------------
-; Register configuration data for hard reset
-;------------------------------------------------------------------------------
-;
-#IF (0)
-ym_cfg_full:	.db	$22,$00			; [0] lfo off
+#ELSE
+ym_cfg:		.db	part0, 24/2
+		.db	$22,$00			; [0] lfo off
 		.db	$27,$00			; [0] Disable independant Channel 3
 		.db	$28,$00			; [0] note off ch 1
 		.db	$28,$01			; [0] note off ch 2
@@ -576,11 +625,13 @@ ym_cfg_full:	.db	$22,$00			; [0] lfo off
 		.db	$b5,$00			; [0] 
 		.db	$b6,$00			; [0] 
 
-s2:		.db	$b4,$00			; [1] sound off ch 4-6
+		.db	part1, 6/2
+		.db	$b4,$00			; [1] sound off ch 4-6
 		.db	$b5,$00			; [1] 
 		.db	$b6,$00			; [1] 
 
-s3:		.db	$40,$7f			; [0] ch 1-3 total level minimum
+		.db	part0, 24/2
+		.db	$40,$7f			; [0] ch 1-3 total level minimum
 		.db	$41,$7f			; [0] 
 		.db	$42,$7f			; [0] 
 		.db	$44,$7f			; [0] 
@@ -592,7 +643,8 @@ s3:		.db	$40,$7f			; [0] ch 1-3 total level minimum
 		.db	$4c,$7f			; [0] 
 		.db	$4d,$7f			; [0] 
 		.db	$4e,$7f			; [0] 
-s4:
+
+		.db	part1, 24/2
 		.db	$40,$7f			; [1] ch 4-6 total level minimum
 		.db	$41,$7f			; [1]
 		.db	$42,$7f			; [1]
@@ -605,7 +657,8 @@ s4:
 		.db	$4c,$7f			; [1]
 		.db	$4d,$7f			; [1]
 		.db	$4e,$7f			; [1]
-s5:
+
+		.db	part0, 32/2
 		.db	$2a,$00			; [0]	; dac value
  		.db	$24,$00			; [0]	; timer A frequency
 		.db	$25,$00			; [0]	; timer A frequency
@@ -622,7 +675,8 @@ s5:
 		.db	$3c,$00	                ; [0]
 		.db	$3d,$00	                ; [0]
 		.db	$3e,$00	                ; [0]
-s6:
+
+		.db	part1, 24/2
 		.db	$30,$00			; [1] ch 4-6 multiply & detune
 		.db	$31,$00			; [1]
 		.db	$32,$00			; [1]
@@ -635,7 +689,8 @@ s6:
 		.db	$3c,$00			; [1]
 		.db	$3d,$00			; [1]
 		.db	$3e,$00			; [1]
-s7:                             			
+                             			
+		.db	part0, 24/2
 		.db	$50,$00	                ; [0] ch 1-3 attack rate and scaling
 		.db	$51,$00	                ; [0]
 		.db	$52,$00	                ; [0]
@@ -648,7 +703,8 @@ s7:
 		.db	$5c,$00	                ; [0]
 		.db	$5d,$00	                ; [0]
 		.db	$5e,$00	                ; [0]
-s8:
+
+		.db	part1, 24/2
 		.db	$50,$00			; [1] ch 4-6 attack rate and scaling
 		.db	$51,$00			; [1]
 		.db	$52,$00			; [1]
@@ -661,7 +717,8 @@ s8:
 		.db	$5c,$00			; [1]
 		.db	$5d,$00			; [1]
 		.db	$5e,$00			; [1]
-s9:
+
+		.db	part0, 24/2
 		.db	$60,$00	                ; [0] ch 1-3 decay rate and am enable
 		.db	$61,$00	                ; [0]
 		.db	$62,$00	                ; [0]
@@ -674,7 +731,8 @@ s9:
 		.db	$6c,$00	                ; [0]
 		.db	$6d,$00	                ; [0]
 		.db	$6e,$00	                ; [0]
-s10:
+
+		.db	part1, 24/2
 		.db	$60,$00			; [1] ch 4-6 decay rate and am enable
 		.db	$61,$00			; [1]
 		.db	$62,$00			; [1]
@@ -687,7 +745,8 @@ s10:
 		.db	$6c,$00			; [1]
 		.db	$6d,$00			; [1]
 		.db	$6e,$00			; [1]
-s11:
+
+		.db	part0, 24/2
 		.db	$70,$00	                ; [0] ch 1-3 sustain rate
 		.db	$71,$00	                ; [0]
 		.db	$72,$00	                ; [0]
@@ -700,7 +759,8 @@ s11:
 		.db	$7c,$00	                ; [0]
 		.db	$7d,$00	                ; [0]
 		.db	$7e,$00	                ; [0]
-s12:
+
+		.db	part1, 24/2
 		.db	$70,$00			; [1] ch 4-6 sustain rate
 		.db	$71,$00			; [1]
 		.db	$72,$00			; [1]
@@ -713,7 +773,8 @@ s12:
 		.db	$7c,$00			; [1]
 		.db	$7d,$00			; [1]
 		.db	$7e,$00			; [1]
-s13:
+
+		.db	part0, 24/2
 		.db	$80,$00	                ; [0] ch 1-3 release rate and sustain level
 		.db	$81,$00	                ; [0]
 		.db	$82,$00	                ; [0]
@@ -726,7 +787,8 @@ s13:
 		.db	$8c,$00	                ; [0]
 		.db	$8d,$00	                ; [0]
 		.db	$8e,$00	                ; [0]
-s14:
+
+		.db	part1, 24/2
 		.db	$80,$00			; [1] ch 4-6 release rate and sustain level
 		.db	$81,$00			; [1]
 		.db	$82,$00			; [1]
@@ -739,7 +801,8 @@ s14:
 		.db	$8c,$00			; [1]
 		.db	$8d,$00			; [1]
 		.db	$8e,$00			; [1]
-s15:
+
+		.db	part0, 24/2
 		.db	$90,$00	                ; [0] ch 1-3 ssg-eg
 		.db	$91,$00	                ; [0]
 		.db	$92,$00	                ; [0]
@@ -752,7 +815,8 @@ s15:
 		.db	$9c,$00	                ; [0]
 		.db	$9d,$00	                ; [0]
 		.db	$9e,$00	                ; [0]
-s16:
+
+		.db	part1, 24/2
 		.db	$90,$00			; [1] ch 4-6 ssg-eg
 		.db	$91,$00			; [1]
 		.db	$92,$00			; [1]
@@ -765,7 +829,8 @@ s16:
 		.db	$9c,$00			; [1]
 		.db	$9d,$00			; [1]
 		.db	$9e,$00			; [1]
-s17:
+
+		.db	part0, 12/2
 		.db	$a0,$00	                ; [0] ch 1-3 frequency
 		.db	$a1,$00	                ; [0]
 		.db	$a2,$00	                ; [0]
@@ -778,7 +843,8 @@ s17:
 ;		.db	$ac,$00	                ; [0]
 ;		.db	$ad,$00	                ; [0]
 ;		.db	$ae,$00	                ; [0]
-s18:
+
+		.db	part1, 12/2
 		.db	$a0,$00			; [1] ch 4-6 frequency
 		.db	$a1,$00			; [1]
 		.db	$a2,$00			; [1]
@@ -791,15 +857,16 @@ s18:
 ;		.db	$ac,$00			; [1]
 ;		.db	$ad,$00			; [1]
 ;		.db	$ae,$00			; [1]
-s19:
+
+		.db	part0, 6/2
 		.db	$b0,$00	                ; [0] ch 1-3 algorith + feedback
 		.db	$b1,$00	                ; [0]
 		.db	$b2,$00	                ; [0]
-s20:
+
+		.db	part1, 6/2
 		.db	$b0,$00			; [1] ch 4-6 algorith + feedback
 		.db	$b1,$00			; [1]
 		.db	$b2,$00			; [1]
 ;
 		.db	$00			; End flag
-s21:
 #ENDIF
