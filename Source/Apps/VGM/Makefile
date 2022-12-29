@@ -11,8 +11,8 @@ vgmplay.com: $(DEPS)
 	$(TASM) -dWBW vgmplay.asm vgmplay.com vgmplay.lst
 
 ym2612.com: 
-	$(TASM) -dWBW ym2612.asm ym2612.com ym2612.lst
+	$(TASM) -dWBW ymfmdemo.asm ymfmdemo.com ymfmdemo.lst
 
 all::
 	mkdir -p $(DEST)/Tunes
-	cp Tunes/* $(DEST)/Tunes
+	cp Tunes/*.vgm $(DEST)/Tunes
