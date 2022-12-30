@@ -493,7 +493,138 @@ setcon:
 	pop	de
 	jp	nc,err_nocon		; handle invalid unit
 	ld	(newcon),a		; save validated console
+#if (1)
+;---------------------------------------; text board rate
+	; Get baud rate
+	call	findws
+	call	skipws			; skip whitespace
+	call	isnum			; do we have a number?
+	jp	nz,docon		; if no we don't change baudrate
+
+	call	getbnum
+
+	ex	de,hl
+	call	prthex32
+	call	prthexword
+
+	ld	a,17
+
+setspd:	ld	(newspeed),a		; save validated baud rate
 ;
+	ld	hl,str_chspeed		; notify user
+	call	pstr			; to change
+	call	cin			; speed
+;
+	; Get the current settings for chosen console
+	ld	b,BF_CIOQUERY		; BIOS serial device query
+	ld	a,(newcon)		; get device unit num
+	ld	c,a			; ... and put in C
+	rst	08			; call H/UBIOS, DE := line characteristics
+	jp	nz,err_invcmd		; abort on error
+;
+	ld	a,d			; mask off current
+	and	$11100000		; baud rate
+	ld	hl,newspeed		; and load in new
+	or	(hl)			; baud rate
+	ld	d,a
+;
+	ld	b,BF_CIOINIT		; BIOS serial init
+	ld	a,(newcon)		; get serial device unit
+	ld	c,a			; ... into C
+	rst	08			; call HBIOS
+	jp	nz,err_invcmd		; handle error
+;
+	; Notify user, we're outta here....
+docon:	ld	hl,str_newcon		; new console msg
+	call	pstr			; print string on cur console
+	ld	a,(newcon)		; restore new console unit
+	call	prtdecb			; print unit num
+;
+	; Set console unit
+	ld	b,BF_SYSPOKE		; HBIOS func: POKE
+	ld	d,BID_BIOS		; BIOS bank
+	ld	e,a			; Char unit value
+	ld	hl,HCB_LOC + HCB_CONDEV	; Con unit num in HCB
+	rst	08			; do it
+;
+	; Display loader prompt on new console
+	call	nl2			; formatting
+	ld	hl,str_banner		; display boot banner
+	call	pstr			; do it
+	ret
+
+; get big number in c:de:hl
+;
+; Get numeric chars at DE and convert to number returned in  HL:DE:BC
+; Carry flag set on overflow
+;
+
+tmpbcd:	.db	0
+
+getbnum:push	de		; cmd posn	
+	ld	bc,0		; lsb
+	ld	de,0
+	ld	hl,0		; msb
+getbnum1:
+	ex	(sp),hl
+	ld	a,(hl)		; get the active char
+	ex	(sp),hl
+
+	cp	'0'		; compare to ascii '0'
+	jr	c,getbnum2	; abort if below
+	cp	'9' + 1		; compare to ascii '9'
+	jr	nc,getbnum2	; abort if above
+;
+	sub	'0'		; convert '0'-'9' to 0-9
+
+	push	hl		; save hl bcd
+
+	ld	hl,tmpbcd
+
+	ld	(hl),c
+	rld
+	ld	c,(hl)
+
+	ld	(hl),b
+	rld
+	ld	b,(hl)
+
+	ld	(hl),e
+	rld
+	ld	e,(hl)
+
+	ld	(hl),d
+	rld
+	ld	d,(hl)
+
+	ex	de,hl		; hl= de bcd, de=tmpbcd
+	ex	(sp),hl		; hl= hl bcd, stack = de bcd
+	ex	de,hl		; hl= tmpbcd, de=hl bcd
+
+	ld	(hl),e
+	rld
+	ld	e,(hl)
+
+	ld	(hl),d
+	rld
+	ld	d,(hl)
+
+	ex	de,hl		; hl= hl bcd
+	pop	de		; de= de bcd
+
+	ex	(sp),hl
+	inc	hl		; bump to next char
+	ex	(sp),hl
+
+	jr	getbnum1	; loop
+
+getbnum2:
+	pop	af		; dump char posn
+	or	a		; with flags set, CF is cleared
+	ret
+
+#else
+;---------------------------------------; code baud rate
 	; Get baud rate
 	call	findws
 	call	skipws			; skip whitespace
@@ -554,7 +685,93 @@ docon:	ld	hl,str_newcon		; new console msg
 	call	nl2			; formatting
 	ld	hl,str_banner		; display boot banner
 	call	pstr			; do it
-	ret				; done
+	ret	
+			; done
+#endif
+
+#DEFINE LW(a,b,c,d,e,f,g) \
+#DEFCONT \ 	.db	(16*('0'-'0'))+(a-'0'))
+#DEFCONT \ 	.db	(16*(b-'0'))+(c-'0'))
+#DEFCONT \ 	.db	(16*(d-'0'))+(e-'0'))
+#DEFCONT \ 	.db	(16*(f-'0'))+(g-'0'))	
+
+
+	LW('0','0','0','0','0','7','5')
+	LW('0','0','0','0','1','5','0')
+	LW('0','0','0','0','2','2','5')
+	LW('0','0','0','0','3','0','0')
+	LW('0','0','0','0','6','0','0')
+	LW('0','0','0','1','2','0','0')
+	LW('0','0','0','1','8','0','0')
+	LW('0','0','0','2','4','0','0')
+	LW('0','0','0','3','6','0','0')
+	LW('0','0','0','4','8','0','0')
+	LW('0','0','0','7','2','0','0')
+	LW('0','0','0','9','6','0','0')
+
+	LW('0','0','1','4','4','0','0')
+	LW('0','0','1','9','2','0','0')
+	LW('0','0','2','8','8','0','0')
+	LW('0','0','3','8','4','0','0')
+	LW('0','0','5','7','6','0','0')
+	LW('0','0','7','6','8','0','0')
+
+	LW('0','1','1','5','2','0','0')
+	LW('0','1','5','3','6','0','0')
+	LW('0','2','3','0','4','0','0')
+	LW('0','3','0','7','2','0','0')
+	LW('0','4','6','0','8','0','0')
+	LW('0','6','1','4','4','0','0')
+	LW('0','9','2','1','6','0','0')
+	LW('1','2','2','8','8','0','0')
+	LW('1','8','4','3','2','0','0')
+	LW('2','4','5','7','6','0','0')
+	LW('3','6','8','6','4','0','0')
+	LW('7','3','7','2','8','0','0')
+
+	.db	"7","5"+80h
+	.db	"15","0"+80h
+	.db	"22","5"+80h
+	.db	"30","0"+80h
+	.db	"60","0"+80h
+	.db	"90","0"+80h
+	.db	"120","0"+80h
+	.db	"180","0"+80h
+	.db	"240","0"+80h
+	.db	"360","0"+80h
+	.db	"480","0"+80h
+	.db	"720","0"+80h
+	.db	"960","0"+80h
+	.db	"1440","0"+80h
+	.db	"1920","0"+80h
+	.db	"2880","0"+80h
+	.db	"3840","0"+80h
+	.db	"5760","0"+80h
+	.db	"7680","0"+80h
+	.db	"11520","0"+80h
+	.db	"15360","0"+80h
+	.db	"23040","0"+80h
+	.db	"30720","0"+80h
+	.db	"46080","0"+80h
+	.db	"61440","0"+80h
+	.db	"92160","0"+80h
+	.db	"122800","0"+80h
+	.db	"184320","0"+80h
+	.db	"245760","0"+80h
+	.db	"368640","0"+80h
+	.db	"737280","0"+80h
+
+;------|----------|------|----------|------|----------|------|----------|
+;   0  |      75  |   8  |    1800  |  16  |   28800  |  24  |  460800  |
+;   1  |     150  |   9  |    2400  |  17  |   38400  |  25  |  614400  |
+;   2  |     225  |  10  |    3600  |  18  |   57600  |  26  |  921600  |
+;   3  |     300  |  11  |    4800  |  19  |   76800  |  27  | 1228800  |
+;   4  |     450  |  12  |    7200  |  20  |  115200  |  28  | 1843200  |
+;   5  |     600  |  13  |    9600  |  21  |  153600  |  29  | 2457600  |
+;   6  |     900  |  14  |   14400  |  22  |  230400  |  30  | 3686400  |
+;   7  |    1200  |  15  |   19200  |  23  |  307200  |  31  | 7372800  |
+;------------------------------------------------------------------------
+
 ;
 #endif
 ;
