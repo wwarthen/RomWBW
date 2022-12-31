@@ -4,10 +4,15 @@
 ;
 ;------------------------------------------------------------------------------
 ; References:
+;	https://hiddenpalace.org/News/Sega_of_Japan_Sound_Documents_and_Source_Code
 ;	https://www.smspower.org/maxim/Documents/YM2612
 ;	https://plutiedev.com/blog/20200103
 ;	https://www.plutiedev.com/ym2612-registers
+;	https://www.plutiedev.com/ym2612-operations
 ;	https://en.wikipedia.org/wiki/Scientific_pitch_notation
+;	https://gendev.spritesmind.net/forum/viewtopic.php?t=2915 (1)
+;	http://nemesis.hacking-cult.org/MegaDrive/Documentation/YM2608J.PDF
+;
 ;------------------------------------------------------------------------------
 ; Octave range is A#0-B7+3/4 HBIOS note 0..343
 ;------------------------------------------------------------------------------
@@ -24,14 +29,15 @@ YM2DAT		.EQU	VGMBASE+03H		; Secondary YM2162 11000011 a1=1 a0=1
 YM_TONECNT	.EQU	6			; Count number of tone channels
 YM_NOISECNT	.EQU	0			; Count number of noise channels
 ;
-YM_PENDING_PERIOD	.DW	0	; PENDING PERIOD (12 BITS)	; ORDER
-YM_PENDING_VOLUME	.DB	0	; PENDING VOL (8 BITS)		; SIGNIFICANT
+YM_PENDING_PERIOD	.DW	0	; PENDING PERIOD (12 BITS)
+YM_PENDING_VOLUME	.DB	0	; PENDING VOL (8 BITS)	
 YM_PENDING_DURATION	.DW	0	; PENDING DURATION (16 BITS)
 YM_READY		.DB	0	; BIT 0 -> NZ DRIVER IS READY TO RECEIVE PLAY COMMAND
 					; BIT 1 -> NZ EXECUTING WITHIN TIMER HANDLER = DO NOT DIS/ENABLE INT
 YM_RDY_RST		.DB	0	; FLAG INDICATES IF DEVICE IS IN READY (NZ) OR RESET STATE (Z)
 YM_DEBUG		.EQU	0	; CHANGE TO 1 TO ENABLE DEBUGGING
 YM_RSTCFG		.EQU	0	; SET TO 1 FOR FULL REGISTER CLEAR
+YM_FAST3438		.EQU	0	; FAST CPU'S WITH A YM3438 MAY REQUIRE A DELAY
 ;
 ;------------------------------------------------------------------------------
 ; Driver function table and instance data
@@ -111,10 +117,12 @@ t_loop:		ld	a,(hl)			; get register to write
 #ENDIF
 ;
 		dec	c			; point back to RSEL port
-		ld	b,0			; check device 
-nready1:	in	a,(c)           	; ready with timeout
-		rlca                    	; 
-		jr	nc,ready1       	; bits 7 = busy
+		ld	b,0			; 
+nready1:	
+#IF YM_FAST3438==1) \ cp (ix) \ #ENDIF	\	; ym3438 delay (1)
+		in	a,(c)           	; check device 
+		rlca                    	; ready with timeout
+		jr	nc,ready1       		; bits 7 = busy
 		djnz	nready1
 ;
 ;		timed out
@@ -397,7 +405,7 @@ ym_playcmd09:	.db	$F0			; [0] KEY ON
 		.db	$00			; End flag
 ;
 ;------------------------------------------------------------------------------
-; Quarter semitone values
+; Quarter semitone F-Number values for frequency 
 ;------------------------------------------------------------------------------
 ;
 ym_notetable:	.dw	644			; C	; 152
@@ -497,14 +505,14 @@ ym_cfg_ready:	.db	part0, 2/2
 		.db	$46, $7F
 ;
 		.db	part0, 6/2
-		.db	$4C, $7f ;$00		; Channel 1-3
-		.db	$4d, $7f ;$00		; Max volume for operator 4
-		.db	$4e, $7f ;$00
+		.db	$4C, $00		; Channel 1-3
+		.db	$4d, $00		; Max volume for operator 4
+		.db	$4e, $00
 ;
 		.db	part1, 6/2
-		.db	$4C, $7f ;$00		; Channel 4-6
-		.db	$4d, $7f ;$00		; Max volume for operator 4
-		.db	$4e, $7f ;$00
+		.db	$4C, $00		; Channel 4-6
+		.db	$4d, $00		; Max volume for operator 4
+		.db	$4e, $00
 ;
 		.db	part0, 6/2
 		.db	$5C, $1F		; Channel 1-3

@@ -5,30 +5,30 @@ Simple player for VGM (Video Game Music) files.
 
 Usage:
 
-  VGMPLAY MUSIC[.VGM]
+VGMPLAY MUSIC[.VGM]
 
-Supported devices:
+Press a key to exit the program. 
 
-	SN76489
-	AY-3-89810
-	YM2612/YM3484
-	YM2151
+Supported devices
+=================
 
-Default Ports:
+SN76489
+AY-3-89810
+YM2612/YM3484
+YM2151
 
-  D8H-D0H - First AY-3-8910 (RSEL/RDAT)
-  A0H-A1H - Second AY-3-8910
-  FFH     - First SN76489
-  FBH     - Second SN76489
-  C6H-C7H - YM2612/YM3484
+Supported platforms
+===================
 
-If your system uses different ports you need to recompile the source.
+VGM Player is currently being developed on the ROMWBW platform using the Retrobrew computers
+EBC-SBC-V2 (Z80), ECB-SCG (AY-3-8910) and ECB-VGM (YM2612 and 2xSN76489) board. 
+It can be configured to run with other hardware such as RC2014, P8X180 and nhyodyne MBC.
 
-Note: The player should be compatible with VGM files up to version 1.51
-but there are very few controls (if any) in the code, be sure to have
-a good VGM file that doesn't contain much extra data. These files can be
-very big, the player is limited to the available TPA space which is
-typically around 52k.
+VGM files can be very big and are limited in size by the available TPA space, which is typically 52k.
+
+Processor speed affects the playback speed. Under ROMWBW the player will detect the cpu speed configuration
+and adjust timing loops. For other platforms, default speeds are configured but may need to be changed
+to suit your hardware. Counter/Timer hardware may be supported in future.
 
 Example Music Files
 ===================
@@ -53,4 +53,22 @@ INCHINA.VGM  - YM2612              * Double Dragon 3: The Rosetta Stone: In Chin
 
 * Included in disk images
 
-Original Source by J.B Langston, Marco Maccaferri, Ed Brindley. ROMWBW version by Phil Summers.
+VGM sources
+===========
+https://www.smspower.org/forums/15359-VGMPacksGameGearMegaCollection
+https://vgmrips.net/packs/chip/ym2612
+https://project2612.org/
+
+VGM Tools
+=========
+https://vgmrips.net/wiki/VGMTool
+https://github.com/vgmrips/vgmtools
+
+References
+==========
+http://www.primrosebank.net/computers/mtx/tools/PD/vgmplayer.zip - Paul Daniels MTX SN76489 interrupt version with embedded VGM tune.
+https://github.com/jblang/SN76489/blob/master/examples/vgmplayer.asm - J.B. Langston RC2014 polled version with file loading.
+https://groups.google.com/g/rc2014-z80/c/9nHnETJzGKU - Marco Maccaferri P8X180 & AY-3-8910 support
+https://github.com/electrified/rc2014-ym2151/tree/main/software/vgmplay - Ed Brindly RC2014 & YM2151 support
+
+ROMWBW version by Phil Summers. VGM Player is still in development. The ECB-VGM is also still under development.
