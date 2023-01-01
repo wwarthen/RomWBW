@@ -39,13 +39,11 @@ MBC		.equ	4
 ;
 plt_romwbw	.equ	1			; Build for ROMWBW?
 plt_type	.equ	sbcecb			; Select build configuration
-debug		.equ	0
-
+debug		.equ	0			; Display port, register, config info
+;
 #IF (plt_type=custom)
-RSEL            .equ    0D8H			; Primary AY-3-8910 Register selection
-RDAT            .equ    0D0H			; Primary AY-3-8910 Register data
-RSEL            .SET    09AH			; Primary AY-3-8910 Register selection
-RDAT            .SET    09BH			; Primary AY-3-8910 Register data
+RSEL            .equ    09AH			; Primary AY-3-8910 Register selection
+RDAT            .equ    09BH			; Primary AY-3-8910 Register data
 RSEL2           .equ    88H			; Secondary AY-3-8910 Register selection
 RDAT2           .equ    89H			; Secondary AY-3-8910 Register data
 VGMBASE		.equ	$C0
@@ -105,8 +103,8 @@ plt_cpuspd	.equ	7			; Non ROMWBW cpu speed default
 #ENDIF
 ;
 #IF (plt_type=sbcecb)
-RSEL            .equ    0D8H			; Primary AY-3-8910 Register selection
-RDAT            .equ    0D0H			; Primary AY-3-8910 Register data
+RSEL            .equ    09AH			; Primary AY-3-8910 Register selection
+RDAT            .equ	09BH			; Primary AY-3-8910 Register data
 RSEL2           .equ    0A0H			; Secondary AY-3-8910 Register selection
 RDAT2           .equ    0A1H			; Secondary AY-3-8910 Register data
 VGMBASE		.equ	$C0
@@ -134,7 +132,7 @@ YMSEL		.equ	0C0H			; 11000000 a1=0 a0=0
 YMDAT		.equ	0C1H			; 11000001 a1=0 a0=1
 YM2SEL		.equ	0C2H			; 11000010 a1=1 a0=0
 YM2DAT		.equ	0C3H			; 11000011 a1=1 a0=1
-PSG1REG          .equ    0C6H			; Primary SN76489
+PSG1REG         .equ    0C6H			; Primary SN76489
 PSG2REG         .equ    0C7H			; Secondary SN76489
 ctcbase		.equ	000H			; CTC base address
 YM2151_SEL1	.equ	0FEH			; Primary YM2151 register selection
@@ -203,7 +201,7 @@ RTCIO		.equ	070H
 #DEFCONT \	djnz	$-6
 
 ;------------------------------------------------------------------------------
-; VGM Codes
+; VGM Codes - see vgmrips.net/wiki/VGM_specification
 ;------------------------------------------------------------------------------
 
 VGM_GG_W	.equ	04FH			; GAME GEAR PSG STEREO. WRITE DD TO PORT 0X06
@@ -280,32 +278,41 @@ _S1             LD      DE, VGMDATA + 34H
                 LD      (VGMPOS), HL
 
                 LD      HL,D60             	; VGM delay (60hz)
-                LD      (VGMDLY), HL
-
+		LD      (vdelay), HL
+;
+		LD	IX,VGM_DEV		; IX points to device mask
+;
+;------------------------------------------------------------------------------
+; Play loop
+;------------------------------------------------------------------------------
+;
 MAINLOOP	CALL    PLAY                	; Play one frame
 ;
 		LD	HL,KEYCHK		; Check for keypress
 		DEC	(HL)
 		JR	NZ,NO_CHK
+;
                 LD      C,6			; Every 256 commands
-                LD      E,0FFH
-                CALL    BDOS
+                LD      E,0FFH			; because HBIOS calls
+                CALL    BDOS			; take a long time
                 OR      A
                 JR      NZ,EXIT
 NO_CHK:
 #IF (delay_type==cpu_loop)
-	LD      HL,(VGMDLY)        	; Frame delay
-fdelay:	.equ	$+1
-lp1:	LD      B,FRAME_DLY		; 44100 one frame = 0.0000226757 seconds
-	DJNZ    $
-	DEC     HL
-        LD      A,H
-        OR      L
-        JR      NZ,lp1
+vdelay:		.equ	$+1
+		ld	hl,vdelay
+fdelay:		.equ	$+1
+lp1:		LD      B,FRAME_DLY		; 44100 one frame = 0.0000226757 seconds
+		DJNZ    $
+		DEC     HL
+		LD      A,H
+		OR      L
+		JP      NZ,lp1			; Normally NZ so jp is faster
 #ENDIF
-
+;
 #IF (delay_type==ctc_poll)
-		LD      HL,(VGMDLY)        	; Frame delay
+vdelay:		.equ	$+1
+		ld	hl,vdelay        	; Frame delay
 lp1:		in	a,(ctcch3)		; wait for counter to reach zero
 		dec	a
 		jr	nz,lp1
@@ -321,13 +328,13 @@ lp3:		in	a,(ctcch3)		; wait for counter to reach zero
 		DEC     HL
 		LD      A,H
 		OR      L
-		JR      NZ,lp1
+		JP      NZ,lp1			; Normally NZ so jp is faster
 #ENDIF
 ;
 #IF (delay_type==ctc_int)
 #ENDIF
 ;
-                JR      MAINLOOP
+                JP      MAINLOOP
 ;
 ;------------------------------------------------------------------------------
 ; Program Exit
@@ -687,7 +694,6 @@ PLAY
 #IFDEF SBCV2004
 		CALL	SLOWIO
 #ENDIF
-		LD	IX,VGM_DEV
                 LD      HL, (VGMPOS)		; Start processing VGM commands
 NEXT            LD      A, (HL)
                 INC     HL
@@ -704,13 +710,7 @@ NEXT            LD      A, (HL)
                 JR      NEXT
 
 NEXT1:
-;		CP      VGM_GG_W		; Game Gear SN76489 stereo. Ignored
-;               JR      NZ, PSG
-;		LD	IX,VGM_DEV
-;		SET	0,(IX+1)
-;		INC     HL
-;		JR      NEXT
-
+;
 ;	SN76489 SECTION
 
 PSG             CP      VGM_PSG1_W		; Write byte to SN76489.
@@ -750,9 +750,9 @@ AY1		OUT     (RSEL), A
                 OUT     (RDAT), A
 		SET	3,(IX+0)
                 JR      NEXT
-
+;
 ;	YM2612 SECTION
-
+;
 YM2162_1	CP      VGM_YM26121_W
                 JR      NZ, YM2162_2
 		LD	A,(HL)
@@ -774,9 +774,9 @@ YM2162_2	CP      VGM_YM26122_W
 		INC	HL
 		SET	4,(IX+0)		; 2nd channel 
 		JP	NEXT
-
+;
 ;	YM2151 SECTION
-
+;
 YM2151_1	CP      VGM_YM21511_W
                 JR      NZ,YM2151_2
 		LD	A,(HL)
@@ -789,7 +789,7 @@ YM2151_1	CP      VGM_YM21511_W
 		JP	NEXT
 ;
 YM2151_2	CP      VGM_YM21512_W
-                JR      NZ,WAITNN
+                JR      NZ,GG
 		LD	A,(HL)
 		OUT	(YM2151_SEL2),A
 		INC	HL
@@ -798,6 +798,14 @@ YM2151_2	CP      VGM_YM21512_W
 		INC	HL
 		SET	7,(IX+0)
 		JP	NEXT
+;
+;	GAME GEAR SN76489 STEREO SECTION
+;
+GG:		CP      VGM_GG_W		; Stereo steering port value
+		JR      NZ, WAITNN
+;		SET	0,(IX+1)
+		INC     HL
+		JP      NEXT
 ;	
 WAITNN		CP      VGM_WNS			; Wait nn samples
                 JR      NZ, WAIT60
@@ -808,35 +816,43 @@ WAITNN		CP      VGM_WNS			; Wait nn samples
                 LD      (VGMPOS), HL
                 LD      L, A
                 LD      H, D
-                LD      (VGMDLY), HL
+                LD      (vdelay), HL
                 RET
 ;
 WAIT60          CP      VGM_W735		; Wait 735 samples (60Hz)
                 JR      NZ, WAIT50
                 LD      (VGMPOS), HL
                 LD      HL, D60
-                LD      (VGMDLY), HL
+                LD      (vdelay), HL
                 RET
 ;
-WAIT50          CP      VGM_W882		; Wait 882 samples (50Hz)
-                JR      NZ, WAIT1
-                LD      (VGMPOS), HL
-                LD      HL, D50
-                LD      (VGMDLY), HL
+WAIT50:		CP      VGM_W882		; Wait 882 samples (50Hz)
+		JR      NZ, WAIT1
+		LD      (VGMPOS), HL
+		LD      HL, D50
+                LD      (vdelay), HL
                 RET
 ;
-WAIT1           CP      70H			; WAIT 0-15 SAMPLES
+WAIT1:          CP      70H			; WAIT 0-15 SAMPLES
                 JR      C, UNK			; CODES 70-7FH
                 CP      80H
                 JP      NC, UNK
                 SUB     6FH
                 LD      L, A
                 LD      H, 0
-                LD      (VGMDLY), HL
+                LD      (vdelay), HL
                 RET
 ;
 UNK:		SET	0,(IX+1)		; unknown device
 		INC	HL			; Try and skip
+#IF (debug)
+		ld	a,'u'			; Display unknow command
+		call	PRTCHR
+		call	PRTDOT
+		call	PRTHEX
+		ld	a,' '
+		call	PRTCHR
+#ENDIF
 		JP	NEXT
 ;
 ;------------------------------------------------------------------------------
@@ -1277,7 +1293,7 @@ MSG_MBC		.DB	" [mbc] ",0
 ;------------------------------------------------------------------------------
 ;
 VGMPOS          .DW     0
-VGMDLY          .DW     0
+;VGMDLY          .DW     0		; Saves number of frames to delay
 KEYCHK		.DB	0		; Counter for keypress checks
 ;
 VGM_DEV		.DB	%00000000	; IX+0 Flags for devices

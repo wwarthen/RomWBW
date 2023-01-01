@@ -499,10 +499,50 @@ setcon:
 	call	skipws			; skip whitespace
 	call	isnum			; do we have a number?
 	jp	nz,docon		; if no we don't change baudrate
-	call	getnum			; parse a number
-	jp	c,err_invcmd		; handle overflow error
+	call	getbnum			; return in HL:BC
 ;
-	cp	32			; handle invalid
+	ld	e,32			; search baud rate table
+	push	de			; for a matching entry
+	ld	de,tbl_baud
+nextbaud:
+	ex	de,hl			; hl = tbl_baud, de = msw
+	ld	a,d			; check all four bytes
+	cp	(hl)			; against HL:BC
+	inc	hl			; exit to next table
+	jr	nz,mm1			; entry on mismatch
+	ld	a,e
+	cp	(hl)
+	inc	hl
+	jr	nz,mm2
+	ld	a,b
+	cp	(hl)
+	inc	hl
+	jr	nz,mm3
+	ld	a,c
+	cp	(hl)
+	inc	hl
+	jr	nz,mm4
+;
+	; we have a match
+	pop	de			; get our count value
+	ld	a,32
+	sub	e
+	jr	s_exit
+;
+mm1:	inc	hl
+mm2:	inc	hl
+mm3:	inc	hl
+mm4:	ex	(sp),hl			; hl = count value, stack = tbl_baud, de = msw
+	dec	l
+	ex	(sp),hl			; hl = tbl_baud, stack= count
+	ex	de,hl			; hl = msw, de = tbl_baud
+	jr	nz,nextbaud
+;
+	; Failed to match
+	pop	de
+	jp	err_invcmd
+;
+s_exit:	cp	32			; handle invalid
 	jp	nc,err_invcmd		; baud rate
 	bit	0,a
 	jr	z,iseven		; convert sequential
@@ -512,6 +552,7 @@ setcon:
 iseven:	dec	a			; 15=19200
 	srl	a			; 17=38400
 	add	a,16			; 20=115200
+;
 setspd:	ld	(newspeed),a		; save validated baud rate
 ;
 	ld	hl,str_chspeed		; notify user
@@ -554,7 +595,92 @@ docon:	ld	hl,str_newcon		; new console msg
 	call	nl2			; formatting
 	ld	hl,str_banner		; display boot banner
 	call	pstr			; do it
-	ret				; done
+	ret
+;
+;=======================================================================
+; Get numeric chars at DE and convert to BCD number returned in HL:BC
+;=======================================================================
+;
+getbnum:ld	bc,0		; lsw
+	ld	hl,0		; msw
+getbnum1:
+	ld	a,(de)		; get the active char
+	cp	'0'		; compare to ascii '0'
+	jr	c,getbnum2	; abort if below
+	cp	'9' + 1		; compare to ascii '9'
+	jr	nc,getbnum2	; abort if above
+;
+	sub	'0'		; convert '0'-'9' to 0-9
+;
+	push	de		; save char posn
+	push	hl		; save hl bcd
+;
+	ld	hl,tmpbcd	; rotate 1 nyble in A
+	ld	(hl),c		; through HL:BC
+	rld
+	ld	c,(hl)
+	ld	(hl),b
+	rld
+	ld	b,(hl)
+	pop	de		; get hl bcd
+	ld	(hl),e
+	rld
+	ld	e,(hl)
+	ld	(hl),d
+	rld
+	ld	d,(hl)
+	ld	h,d
+	ld	l,e
+;
+	pop	de		; get char posn
+	inc	de		; bump to next char
+	jr	getbnum1	; loop
+;
+getbnum2:
+	or	a		; with flags set, CF is cleared
+	ret
+;
+tmpbcd:	.db	0		
+;
+#DEFINE PACK(a,b,c,d,e,f,g) \
+#DEFCONT \ 	.db	(16*('0'-'0'))+(a-'0'))
+#DEFCONT \ 	.db	(16*(b-'0'))+(c-'0'))
+#DEFCONT \ 	.db	(16*(d-'0'))+(e-'0'))
+#DEFCONT \ 	.db	(16*(f-'0'))+(g-'0'))	
+;
+tbl_baud:
+	PACK('0','0','0','0','0','7','5') ;      75  0 >  0
+	PACK('0','0','0','0','1','5','0') ;     150  1 >  1
+	PACK('0','0','0','0','2','2','5') ;     225  2 > 16
+	PACK('0','0','0','0','3','0','0') ;     300  3 >  2
+	PACK('0','0','0','0','4','5','0') ;     450  4 > 17
+	PACK('0','0','0','0','6','0','0') ;     600  5 >  3
+	PACK('0','0','0','0','9','0','0') ;     900  6 > 18
+	PACK('0','0','0','1','2','0','0') ;    1200  7 >  4
+	PACK('0','0','0','1','8','0','0') ;    1800  8 > 19
+	PACK('0','0','0','2','4','0','0') ;    2400  9 >  5
+	PACK('0','0','0','3','6','0','0') ;    3600 10 > 20
+	PACK('0','0','0','4','8','0','0') ;    4800 11 >  6
+	PACK('0','0','0','7','2','0','0') ;    7200 12 > 21
+	PACK('0','0','0','9','6','0','0') ;    9600 13 >  7
+	PACK('0','0','1','4','4','0','0') ;   14400 14 > 22
+	PACK('0','0','1','9','2','0','0') ;   19200 15 >  8
+	PACK('0','0','2','8','8','0','0') ;   28800 16 > 23
+	PACK('0','0','3','8','4','0','0') ;   38400 17 >  9
+	PACK('0','0','5','7','6','0','0') ;   57600 18 > 24
+	PACK('0','0','7','6','8','0','0') ;   76800 19 > 10
+	PACK('0','1','1','5','2','0','0') ;  115200 20 > 25
+	PACK('0','1','5','3','6','0','0') ;  153600 21 > 11
+	PACK('0','2','3','0','4','0','0') ;  230400 22 > 26
+	PACK('0','3','0','7','2','0','0') ;  307200 23 > 12
+	PACK('0','4','6','0','8','0','0') ;  460800 24 > 27
+	PACK('0','6','1','4','4','0','0') ;  614400 25 > 13
+	PACK('0','9','2','1','6','0','0') ;  921600 26 > 28
+	PACK('1','2','2','8','8','0','0') ; 1228800 27 > 14
+	PACK('1','8','4','3','2','0','0') ; 1843200 28 > 29
+	PACK('2','4','5','7','6','0','0') ; 2457600 29 > 15
+	PACK('3','6','8','6','4','0','0') ; 3686400 30 > 30
+	PACK('7','3','7','2','8','0','0') ; 7372800 31 > 31
 ;
 #endif
 ;
