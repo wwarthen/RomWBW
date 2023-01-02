@@ -1,6 +1,6 @@
 RomWBW Getting Started
 Wayne Warthen (mailto:wwarthen@gmail.com)
-29 Dec 2022
+01 Jan 2023
 
 
 
@@ -17,7 +17,7 @@ RomWBW
 Z80/Z180 System Software
 
 Version 3.1 Pre-release
-29 Dec 2022
+01 Jan 2023
 
 Wayne Warthen wwarthen@gmail.com
 
@@ -307,26 +307,20 @@ VDU type devices or serial devices. If you want to change which device
 is the console, the I menu option can be used to choose the unit and
 it’s speed.
 
-The command format is I <u> [<c>]
+The command format is I <u> [<b>]
 
-where u is unit to select and c is the optional baud rate code as listed
-below.
+where u is unit to select and b is the optional baud rate.
 
-     Code |   Rate   | Code |   Rate   | Code |   Rate   | Code |   Rate   |
-    ------|----------|------|----------|------|----------|------|----------|
-       0  |      75  |   8  |    1800  |  16  |   28880  |  24  |  460800  |
-       1  |     150  |   9  |    2400  |  17  |   38400  |  25  |  614400  |
-       2  |     225  |  10  |    3600  |  18  |   57600  |  26  |  921600  |
-       3  |     300  |  11  |    4800  |  19  |   76800  |  27  | 1228822  |
-       4  |     450  |  12  |    7200  |  20  |  115200  |  28  | 1843200  |
-       5  |     600  |  13  |    9600  |  21  |  153600  |  29  | 2457600  |
-       6  |     900  |  14  |   14400  |  22  |  230400  |  30  | 3686400  |
-       7  |    1200  |  15  |   19200  |  23  |  307200  |  31  | 7372800  |
-    ------------------------------------------------------------------------
+Supported baud rates are:
+
+     75   450  1800   7200  38400  115200   460800  1843200
+    150   600  2400   9600  28800  153600   614400  2457600
+    225   900  3600  14400  57600  230400   921600  3686400
+    300  1200  4800  19200  76800  307200  1228800  7372800
 
 Example: To change current console to 9600 baud
 
-    I 0 13
+    I 0 9600
 
 Drive Letter Assignment
 
