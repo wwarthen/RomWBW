@@ -87,7 +87,7 @@
 DLZSA2:
 		; in many places we assume that B = 0
 		; flag P in A' signals the need to re-load the nibble store
-		xor a : ld b,a : exa : jr .ReadToken
+		xor a \ ld b,a \ ex af,af' \ jr ReadToken
 
 CASE00x:		; token "00Z" stands for 5-bit offsets
 			; (read a nibble for offset bits 1-4 and use the inverted bit Z
@@ -113,7 +113,7 @@ SaveOffset:		ld (PrevOffset),bc \ ld b,0
 SaveOffset:		push bc \ pop ix \ ld b,0
 	#ENDIF
 
-MatchLen:		and %00000111 \ add 2 \ cp 9
+MatchLen:		and %00000111 \ add a,2 \ cp 9
 			call z,ExtendedCode
 
 CopyMatch:		ld c,a
@@ -158,16 +158,16 @@ CASE10x:		; token "10Z" stands for 13-bit offsets
 
 
 ExtendedCode:	call ReadNibble \ inc a \ jr z,ExtraByte
-		sub #F0+1 \ add c \ ret
-ExtraByte	ld a,15 \ add c \ add (hl) \ NEXT_HL \ ret nc
+		sub $F0+1 \ add a,c \ ret
+ExtraByte	ld a,15 \ add a,c \ add a,(hl) \ NEXT_HL \ ret nc
 		ld a,(hl) \ NEXT_HL
 		ld b,(hl) \ NEXT_HL \ ret nz
 		pop bc								; RET is not needed, because RET from ReadNibble is sufficient
 
 
 ReadNibble:	ld c,a
-skipLDCA	xor a \ exa \ ret m
-		ld a,(hl) \ or #F0 \ exa
-		ld a,(hl) \ NEXT_HL \ or #0F
+skipLDCA	xor a \ ex af,af' \ ret m
+		ld a,(hl) \ or $F0 \ ex af,af'
+		ld a,(hl) \ NEXT_HL \ or $0F
 		rrca \ rrca \ rrca \ rrca \ ret
 
