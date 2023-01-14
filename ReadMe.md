@@ -3,7 +3,7 @@
 ## Z80/Z180 System Software
 
 Version 3.1 Pre-release  
-01 Jan 2023
+13 Jan 2023
 
 Wayne Warthen <wwarthen@gmail.com>
 
@@ -664,6 +664,11 @@ boot from disk as is. You do not need to run `SYSCOPY` on them to make
 them bootable. However, if you upgrade your ROM, you should use
 `SYSCOPY` to update the system tracks.
 
+A full implementation of the UCSD p-System for Z80 under RomWBW is also
+provided. This is a completely separate and standalone disk image called
+psys.img. It contains 6 p-System filesystem slices, but these are not
+interoperable with the CP/M slices described above.
+
 ## Booting Disks
 
 When starting your system, following the hardware initialization, you
@@ -844,6 +849,69 @@ tracks of the disk.
   which is confusing, but this is as intended by the ZPM3 distribution.
   I believe it was done this way to make it easier for users to
   transition from CP/M 3 to ZPM3.
+
+## QPM
+
+QPM is another OS providing compatibility with and enhancements to CP/M
+2.2. It is provided as bootable disk images for RomWBW.
+
+The following documentation files from the original QPM distribution are
+included in the RomWBW Doc directory:
+
+- QP/M 2.7 Features and Facilities (qcp27.pdf)
+- QP/M 2.7 Interface Guide (qdos27.pdf)
+- QP/M 2.7 Installation Guide and Supplements (qpm27.pdf)
+
+Refer to the ReadMe.txt file in Source/Images/d_qpm for more details
+regarding the RomWBW adaptation and customizations.
+
+### Notes
+
+- QPM is not available as source. This implementation was based on the
+  QPM binary distribution and has been minimally customized for RomWBW.
+
+- QINSTALL is used to customize QPM. It is included on the disk image.
+  You should review the notes in the ReadMe.txt file in
+  Source/Image/d_qpm before making changes.
+
+## UCSD p-System
+
+This is a full implementation of the UCSD p-System IV.0 for Z80 running
+under RomWBW. Unlike the OSes above, p-System uses it’s own unique
+filesystem and is not interoperable with other OSes.
+
+It was derived from the p-System Adaptable Z80 System. Unlike some other
+distributions, this implements a native p-System Z80 BIOS, it does not
+rely on a CP/M BIOS layer.
+
+The p-System is provided on a hard disk image file called psys.img. This
+must be copied to it’s own dedicated hard disk media (CF Card, SD Card,
+etc.). It is booted by selecting slices 0 of the corresponding hard disk
+unit at the RomWBW Boot Loader prompt.
+
+The p-System Users Manual is included in the Doc directory of the
+distribution as “UCSD p-System Users Manual.pdf”.
+
+Refer to the ReadMe.txt file in Source/pSys for more details.
+
+### Notes
+
+- There is no floppy support at this time.
+
+- The hard disk image contains 6 p-System slices which are assigned to
+  p-System unit numbers 4, 5, 9, 10, 11 which is standard for p-System.
+  Slices 0-5 are assigned sequentially to these p-System unit numbers
+  and it is not possible to reassign them.
+
+- p-System relies heavily on the use of a full screen terminal. This
+  implementation has been setup to expect an ANSI or DEC VT-100 terminal
+  or emulator. The screen output will be garbled if no such terminal or
+  emulator is used for console output.
+
+- There is no straightforward mechanism to move files in and out of
+  p-System. However, the .vol files in Source/pSys can be read and
+  modified by CiderPress. CiderPress is able to add and remove
+  individual files.
 
 ## FreeRTOS
 
