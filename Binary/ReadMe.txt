@@ -75,8 +75,8 @@ The VDU video board requires a dedicated onboard ROM containing the
 font data.  The "vdu.rom" file contains the binary data to program 
 onto that chip.
 
-Disk Images (fd_*.img, hd_*.img)
-------------------------------
+Disk Images (fd_*.img, hd_*.img, psys.img)
+------------------------------------------
 
 RomWBW includes a mechanism for generating floppy disk and hard disk 
 binary images that are ready to copy directly to a floppy, hard disk, 
@@ -96,16 +96,18 @@ RawWriteWin (as long as you have access to a floppy drive on your
 Windows computer).  The resulting floppy disks will be usable on any 
 RomWBW-based system with floppy drive(s).
 
-Likewise, the hd_*.img files are hard disk images.  Each file is 
-intended to be copied to the start of any type of hard disk media 
-(typically a CF Card or SD Card). The resulting media will be usable 
-on any RomWBW-based system that accepts the corresponding media type.
+Likewise, the hd512_*.img and hd1024_*.img files are hard disk images.  
+Each file is intended to be copied to the start of any type of hard 
+disk media (typically a CF Card or SD Card). The resulting media will 
+be usable on any RomWBW-based system that accepts the corresponding 
+media type.
 
-WARNING: The hdnew_*.img disk images are part of a new disk
-format that is a work in progress.  Do not use these disk
-images without knowing exactly what you are doing!  The
-hd_*.img disk images continue to be the images you should
-be using under normal circumstances.
+NOTE: The hd512_*.img files are equivalent to the hd_*.img
+files in previous distributions.  The hd1024_*.img files
+contained a revised file system format that increases the
+maximum number of CP/M directory entries from 512 to 1024.
+Refer to the ReadMe.txt in the Source/Images directory
+for details.
 
 Documentation of the pre-built disk images is contained in the 
 DiskList.txt file in this directory.
@@ -114,6 +116,12 @@ The contents of the floppy/hard disk images are created by
 the BuildImages.cmd script in the Source directory.  Additional 
 information on how to generate custom disk images is found in the 
 Source\Images ReadMe.txt file.
+
+The psys.img file contains a full implementation of the UCSD p-System 
+for the Z80 running under RomWBW.  This image file must be placed on 
+disk media by itself (not appended or concatenated with hd*.img files.  
+Refer to the Source/pSys/ReadMe.txt file for more information on the 
+p-System implementation.
 
 Propeller ROM Images (*.eeprom)
 -------------------------------

@@ -10,6 +10,7 @@ pushd ZSDOS && call Clean.cmd & popd
 pushd CBIOS && call Clean.cmd & popd
 pushd CPM3 && call Clean.cmd & popd
 pushd ZPM3 && call Clean.cmd & popd
+pushd pSys && call Clean.cmd & popd
 pushd Forth && call Clean.cmd & popd
 pushd TastyBasic && call Clean & popd
 pushd Fonts && call Clean.cmd & popd
