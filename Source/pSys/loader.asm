@@ -170,7 +170,6 @@ skew		.equ	0		; track-to-track skew
 	call	pstr			; print it
 	ld	bc,boot_loc		; bootstrap location adr
 	call	prthexword		; print it
-	call	nl2			; spacing
 ;
 ; Push key values onto the stack
 ;
@@ -198,9 +197,9 @@ skew		.equ	0		; track-to-track skew
 	push	hl                
 	ld	hl,interp_base	; starting address of the interpreter
 	push	hl
-#if testbios
-	;ld	hl,disks-1	; maximum (highest) disk drive number
-	;push	hl
+#ifdef TESTBIOS
+	ld	hl,disks-1	; maximum (highest) disk drive number
+	push	hl
 #endif
 ;
 	jp	boot_loc	; jump to bootloader

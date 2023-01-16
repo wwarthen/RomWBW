@@ -1,52 +1,56 @@
 ;
-;-----------------------------------------------------------------------
+;=======================================================================
 ;   p-System BIOS for RomWBW HBIOS
-;
-;-----------------------------------------------------------------------
+;=======================================================================
 ;
 ; 3:46 PM 1/13/2023 - WBW - Initial release
+; 5:29 PM 1/15/2023 - WBW - Implemeted extended BIOS functions
+; 10:34 AM 1/16/2023 - WBW - Moved slices into partition
 ;
 ; TODO:
 ;
-; - Assign the HBIOS console device to the p-System console instead
-;   of just using a hard-coded reference to Serial Unit 0.
+; NOTES:
+; - The partition type ID used is the same as the CP/M partition
+;   type ID.  Might make sense to create a new partition ID which
+;   could allow p-System to co-exist with CP/M on a disk image.  This
+;   would require changes to the RomWBW boot loader as well.
 ;
-; - Implement Extended BIOS.
+; - MBR is borrowed from RomWBW CP/M layout, so the partition size
+;   is 64 8MB slices.  p-System only uses 6 slices.  Might be better
+;   to create a custom MBR with an appropriate size for p-System
+;   partition.
 ;
+; - The sysinit routine does a lot of work that just sets up a few
+;   variables for later use.  This work could be moved into the
+;   p-System loader to reduce the size of this BIOS.  Since the BIOS
+;   is only 768 bytes at this point, I have not bothered with it.
+;  
 
 #include "../ver.inc"
-;
+
 #include "psys.inc"
-;
+
+#include "psys_ior.inc"
+
 #include "../HBIOS/hbios.inc"
-;
-; IORESULT values
-;
-ior_ok		.equ	0		; No error
-ior_badblk	.equ	1		; Bad block, CRC error (parity)
-ior_baddev	.equ	2		; Bad device number
-ior_badio	.equ	3		; Illegal I/O request
-ior_timout	.equ	4		; Data-com timeout
-ior_offlin	.equ	5		; Volume is no longer on-line
-ior_nofile	.equ	6		; File is no longer in directory
-ior_filnamerr	.equ	7		; Illegal file name
-ior_full	.equ	8		; No room; insufficient space on disk
-ior_novol	.equ	9		; No such volume on-line
-ior_notfnd	.equ	10		; No such file name in directory
-ior_dupfil	.equ	11		; Duplicate file
-ior_notclos	.equ	12		; Not closed: attempt to open an open file
-ior_notopen	.equ	13		; Not open: attempt to access a closed file
-ior_badfmt	.equ	14		; Bad format: error reading real or integer
-ior_bufovr	.equ	15		; Ring buffer overflow
-ior_diskwp	.equ	16		; Write attempt to protected disk
-ior_blknumerr	.equ	17		; Illegal block number
-ior_bufadrerr	.equ	18		; Illegal buffer address
-ior_badsiz	.equ	19		; Bad text file size
-;
-;
-;
+
+;-----------------------------------------------------------------------
+; Local constants
+;-----------------------------------------------------------------------
+
+; We need to read and buffer a single sector (MBR) at initialization.
+; It looks like the area just above the loader is the safest place.
+
+dskbuf	.equ	loader_loc + loader_size
+
+
+
+;-----------------------------------------------------------------------
+; BIOS Jump Table
+;-----------------------------------------------------------------------
+
 	.org	bios_loc
-;
+
 	; Simple BIOS vectors
 	jp	sysinit		; 0: Initialize machine
 	jp	syshalt		; 1: Exit UCSD Pascal
@@ -63,309 +67,511 @@ ior_badsiz	.equ	19		; Bad text file size
 	jp	dskinit		; 12: Reset disk
 	jp	dskstrt		; 13: Activate disk
 	jp	dskstop		; 14: De-activate disk
-;
+
 	; Extended BIOS vectors
-	jp	panic		; 15: Extended BIOS vector
-	jp	panic		; 16: Extended BIOS vector
-	jp	panic		; 17: Extended BIOS vector
-	jp	panic		; 18: Extended BIOS vector
-	jp	panic		; 19: Extended BIOS vector
-	jp	panic		; 20: Extended BIOS vector
-	jp	panic		; 21: Extended BIOS vector
-	jp	panic		; 22: Extended BIOS vector
-	jp	panic		; 23: Extended BIOS vector
-	jp	panic		; 24: Extended BIOS vector
-	jp	panic		; 25: Extended BIOS vector
-	jp	panic		; 26: Extended BIOS vector
-	jp	panic		; 27: Extended BIOS vector
-;
-;
-;
-sysinit:
-	;ld	a,0
-	;jp	panic
+	jp	prninit		; 15: Printer initialize
+	jp	prnstat		; 16: Printer status
+	jp	prnread		; 17: Printer read
+	jp	prnwrit		; 18: Printer write
+	jp	reminit		; 19: Remote initialize
+	jp	remstat		; 20: Remote status
+	jp	remread		; 21: Remote read
+	jp	remwrit		; 22: Remote write
+	jp	usrinit		; 23: User devices initialize
+	jp	usrstat		; 24: User devices status
+	jp	usrread		; 25: User devices read
+	jp	usrwrit		; 26: User devices write
+	jp	clkread		; 27: System clock read
+
+;-----------------------------------------------------------------------
+; Simple BIOS routines
+;-----------------------------------------------------------------------
+
+
+sysinit:	; 0: Initialize machine
+	; Get critical HBIOS bank ids for use later
+	ld	b,BF_SYSGET		; HBIOS SysGet function
+	ld	c,BF_SYSGET_BNKINFO	; BankInfo sub-function
+	rst	08			; do it, D=BIOS, E=USER
+	ld	(hb_bnks),de		; save bank info
 	
-	ld	hl,str_banner
-	call	prtstr
-	call	conread
-	
+	; Get boot disk to use for all subsequent disk I/O
 	ld	b,BF_SYSGET		; HBIOS SysGet function
 	ld	c,BF_SYSGET_BOOTINFO	; BootInfo sub-function
 	rst	08			; do it, boot disk device unit in 
 	ld	a,d			; boot unit id returned in D
 	ld	(hb_dev),a		; save for disk I/O
+
+	; Get the count of serial (CIO) HBIOS devices in system
+	ld	b,BF_SYSGET		; HBIOS SysGet function
+	ld	c,BF_SYSGET_CIOCNT	; CIO Count sub-function
+	rst	08			; do it, count in E
+	push	de			; save it
+
+	; Get current HBIOS console unit and assign to pSys console
+	ld	b,BF_SYSPEEK		; HBIOS Peek Function
+	ld	a,(hb_bios)		; HBIOS bank id
+	ld	d,a			; ... goes in D
+	ld	hl,$112			; offset $112 is current console device
+	rst	08			; call HBIOS, value returned in E
+	ld	a,e			; move to A
+	ld	hl,hb_con		; use HL to point to hb_con
+	ld	(hl),a			; save as console device
+
+	; Assign additional HBIOS serial devices as pSys remote and printer
+	pop	bc			; recover CIO count, now in C
+	ld	a,0			; assume remote on HB unit 0
+	cp	(hl)			; conflict?
+	jr	nz,sysinit1		; if no conflict, continue
+	inc	a			; else increment to next unit
+sysinit1:
+	cp	c			; check for over max serial count
+	jr	nc,sysinit3		; if exceeded, we are done
+	ld	(hb_rem),a		; assign remote device
+	inc	a			; bump to next dev for printer
+	cp	(hl)			; conflict?
+	jr	nz,sysinit2		; if no conflict, continue
+	inc	a			; else increment to next unit
+sysinit2:
+	cp	c			; check for over max serial count
+	jr	nc,sysinit3		; if exceeded, we are done
+	ld	(hb_prn),a		; assign printer device
+sysinit3:
+
+	; Announce BIOS
+	ld	hl,str_banner		; load version banner
+	call	prtstr			; and display it
+	;call	conread			; wait for user
+
+	; The p-System slices live within a disk partition.  So, now we
+	; read the MBR, look for our partition ID, extract the
+	; corresponding LBA offset and save it for subsequent disk I/O.
+
+	; Read MBR.  The MBR lives in the first sector of the hard
+	; disk.  At this point paroff, curdisk, curtrak, and cursect
+	; are all zero.  So, we just set the disk buffer and make a
+	; disk I/O call which results in reading the first (MBR)
+	; sector.
+	ld	bc,dskbuf		; load disk buf adr
+	ld	(curbufr),bc		; save it
+	call	dskread			; read first sector of phy disk
+	jp	nz,parterr		; abort on error
+
+	; Check signature
+	ld	hl,(dskbuf+$1FE)	; get signature
+	ld	a,l			; first byte
+	cp	$55			; should be $55
+	jp	nz,parterr		; if not, no part table
+	ld	a,h			; second byte
+	cp	$AA			; should be $AA
+	jp	nz,parterr		; if not, no part table
+
+	; Search part table for entry (type 0x2E)
+	ld	b,4			; four entries in part table
+	ld	hl,dskbuf+$1BE+4	; offset of first part type
+sysinit4:
+	ld	a,(hl)			; get part type
+	cp	$2E			; CP/M partition?
+	jr	z,sysinit5		; cool, grab the LBA offset
+	ld	de,16			; part table entry size
+	add	hl,de			; bump to next part type
+	djnz	sysinit4		; loop thru table
+	jp	parterr			; too bad, no CP/M partition
+sysinit5:
+	; Capture the starting LBA of the partition we found
+	ld	de,4			; LBA is 4 bytes after part type
+	add	hl,de			; point to it
+	ld	de,paroff		; loc to store lba offset
+	ld	bc,4			; 4 bytes (32 bits)
+	ldir				; copy it
+
+sysinit6:
 	
-	; sysinit is being called twice during startup.  Once from
-	; the bootstrap and then from the interpreter.  So, we
+	; Vector sysinit is being called twice during startup.  Once
+	; from the bootstrap and then from the interpreter.  So, we
 	; remap the vector here to avoid doing the above stuff
 	; multiple times.
-	ld	hl,sysinit1		; re-vector to sysinit1
+	ld	hl,sysinitz		; re-vector to sysinitz
 	ld	(bios_loc+1),hl		; update the jump table
 
-sysinit1:
-	xor	a		; signal success
-	ret			; done
+sysinitz:
+	ret				; done
+	xor	a			; signal success
 
-syshalt:
-	;ld	a,1
-	;jp	panic
-
+syshalt:	; 1: Exit UCSD Pascal
 	; The syshalt vector does not seem be to invoked when
 	; selecting the Halt option from the p-System menu.
 	; I have no idea why.
-	ld	b,BF_SYSRESET	; HBIOS reset function
+	ld	b,BF_SYSRESET		; HBIOS reset function
 	ld	c,BF_SYSRES_WARM	; warm reset is fine
-	rst	08		; do it
+	rst	08			; do it
 	
-	; we should never get here
-	di			; interrupts off
-	halt			; ... and die
+	; We should never get here.
+	di				; interrupts off
+	halt				; ... and die
 	
 
-coninit:
-	;ld	a,2
-	;jp	panic
+coninit:	; 2: Console initialize
+	ld	a,(hb_con)		; initialize console unit
+	jp	serinit			; do it
 
-	xor	a		; signal success
-	ret			; done
-
-constat:
-	;ld	a,3
-	;jp	panic
-
-	ld	b,BF_CIOIST	; serial port status function
-	ld	c,0		; port 0
-	rst	08		; call HBIOS
-	ld	c,0		; assume no chars pendin
-	jr	z,constat1	; if zero, no chars waiting
-	ld	c,$FF		; signal char(s) pending
-constat1:
-	xor	a		; signal success
-	ret			; done
-
-conread:
-	;ld	a,4
-	;jp	panic
-
-	ld	b,BF_CIOIN	; serial port read function
-	ld	c,0		; port 0
-	rst	08		; call HBIOS
-	ld	c,e		; char to C
-	xor	a		; signal success
-	ret			; done
-
-conwrit:
-	;ld	a,5
-	;jp	panic
+constat:	; 3: Console status
+	ld	a,(hb_con)		; status of console unit
+	jp	serstat			; do it
 	
-	ld	a,c
-	cp	27		; escape?
-	jr	nz,conwrit1	; if not, handle normally
-	call	conwrit1	; else, send escape
-	ld	c,'['		; ... followed by '[' for ANSI
-conwrit1:
-	ld	e,c		; char to write to E
-	ld	b,BF_CIOOUT	; serial port write function
-	ld	c,0		; port 0
-	rst	08		; call HBIOS
-	xor	a		; signal success
-	ret			; done
-
-setdisk:
-	;ld	a,6
-	;jp	panic
-
-	ld	a,c		; disk number to A
-	ld	(curdisk),a	; save for later
-	xor	a		; signal success
-	ret			; done
-
-settrak:
-	;ld	a,7
-	;jp	panic
-
-	ld	a,c		; track number to A
-	ld	(curtrak),a	; save for later
-	xor	a		; signal success
-	ret			; done
-
-setsect:
-	;ld	a,8
-	;jp	panic
+conread:	; 4: Console input	
+	ld	a,(hb_con)		; read from console unit
+	jp	serread			; do it
 	
-	ld	a,c		; sector number to A
-	dec	a		; from 1 indexed to 0 indexed
-	ld	(cursect),a	; save for later
-	xor	a		; signal success
+conwrit:	; 5: Console output	
+	ld	a,c	
+	cp	27			; escape?
+	ld	a,(hb_con)		; write to console unit
+	jp	nz,serwrit		; if not, handle normally
+	call	serwrit			; else, send escape
+	ld	c,'['			; ... followed by '[' for ANSI
+	ld	a,(hb_con)		; write to console unit
+	jp	serwrit			; do it
+	
+setdisk:	; 6: Set disk number	
+	ld	a,c			; disk number to A
+	ld	(curdisk),a		; save for later
+
+	; Each p-System disk lives in a slice.  Additionally,
+	; the start of the slices is determined by the hard
+	; disk partition table.  To avoid computing the p-System
+	; disk offset on every I/O call, below we pre-compute
+	; the physical HBIOS disk LBA offset for the slice of the
+	; p-System disk being selected here.
+	ld	hl,(paroff)		; initialize DE:HL
+	ld	de,(paroff+2)		; ... to start of partition
+	or	a			; use A as loop ctr, check for zero
+	jr	z,setdisk2		; if 0, no slice offset needed
+setdisk1:	
+	ld	bc,(sps)		; get low word of sps
+	add	hl,bc			; add low words
+	ex	de,hl			; swap high word into HL
+	ld	bc,(sps+2)		; get high word of sps
+	adc	hl,bc			; add high words (w/ carry)
+	ex	de,hl			; swap back to get DE:HL
+	dec	a			; dec loop ctr
+	jr	nz,setdisk1		; rinse and repeat
+setdisk2:	
+	ld	(curoff),hl		; save low word
+	ld	(curoff+2),de		; save high word
+	
+	xor	a			; signal success
+	ret				; done
+	
+settrak:	; 7: Set track number	
+	ld	a,c			; track number to A
+	ld	(curtrak),a		; save for later
+	xor	a			; signal success
+	ret				; done
+	
+setsect:	; 8: Set sector number	
+	ld	a,c			; sector number to A
+	dec	a			; from 1 indexed to 0 indexed
+	ld	(cursect),a		; save for later
+	xor	a			; signal success
+	ret	
+	
+setbufr:	; 9: Set buffer address	
+	ld	(curbufr),bc		; save buf adr for later
+	xor	a			; signal success
+	ret				; done
+
+dskread:	; 10: Read sector from disk
+	call	chkdisk
+	ret	nz
+
+	call	seek
+	ret	nz
+
+	ld	b,BF_DIOREAD		; HBIOS disk read function
+	ld	a,(hb_dev)		; HBIOS disk unit
+	ld	c,a			; ... goes in C
+	ld	a,(HB_CURBNK)		; get current memory bank
+	ld	d,a			; use as target bank for transfer
+	ld	e,1			; read 1 sector
+	ld	hl,(curbufr)		; disk read buffer adr
+	rst	08			; do it
+	ret	z			; return if good read
+	ld	a,ior_badblk		; else i/o error
+	ret				; done
+		
+dskwrit:	; 11: Write sector to disk	
+	call	chkdisk	
+	ret	nz	
+	
+	call	seek	
+	ret	nz
+	
+	ld	b,BF_DIOWRITE		; HBIOS disk read function
+	ld	a,(hb_dev)		; HBIOS disk unit
+	ld	c,a			; ... goes in C
+	ld	a,(HB_CURBNK)		; get current memory bank
+	ld	d,a			; use as target bank for transfer
+	ld	e,1			; read 1 sector
+	ld	hl,(curbufr)		; disk read buffer adr
+	rst	08			; do it
+	ret	z			; return if good read
+	ld	a,ior_badblk		; else i/o error
+	ret				; done
+	
+dskinit:	; 12: Reset disk	
+	call	chkdisk	
+	ret	nz	
+	
+	xor	a			; signal success
+	ret				; done
+	
+dskstrt:	; 13: Activate disk	
+	xor	a			; signal success
+	ret				; done
+	
+dskstop:	; 14: De-activate disk	
+	xor	a			; signal success
+	ret				; done
+
+;-----------------------------------------------------------------------
+; Extended BIOS routines
+;-----------------------------------------------------------------------
+
+prninit:	; 15: Printer initialize
+	ld	a,(hb_prn)		; initialize printer unit
+	jp	serinit			; do it
+
+prnstat:	; 16: Printer status
+	ld	a,(hb_prn)		; status of printer unit
+	jp	serstat			; do it
+
+prnread:	; 17: Printer read
+	ld	a,(hb_prn)		; read from printer unit
+	jp	serread			; do it
+
+prnwrit:	; 18: Printer write
+	ld	a,(hb_prn)		; write to printer unit
+	jp	serwrit			; do it
+
+reminit:	; 19: Remote initialize
+	ld	a,(hb_rem)		; initialize remote unit
+	jp	serinit			; do it
+
+remstat:	; 20: Remote status
+	ld	a,(hb_rem)		; status of remote unit
+	jp	serstat			; do it
+
+remread:	; 21: Remote read
+	ld	a,(hb_rem)		; read from remote unit
+	jp	serread			; do it
+
+remwrit:	; 22: Remote write
+	ld	a,(hb_rem)		; write to remote unit
+	jp	serwrit			; do it
+
+usrinit:	; 23: User devices initialize
+	ld	a,9			; offline status
 	ret
 
-setbufr:
-	;ld	a,9
-	;jp	panic
+usrstat:	; 24: User devices status
+	pop	hl			; return address
+	pop	de			; discard input/output toggle
+	pop	de			; discard ptr to status rec
+	pop	de			; discard device number
+	ld	a,9			; offline status
+	jp	(hl)			; return
+
+usrread:	; 25: User devices read
+usrwrit:	; 26: User devices write
+	pop	hl			; return address
+	pop	de			; extra parameter 2
+	pop	de			; extra parameter 1
+	pop	de			; pointer to buffer
+	pop	de			; device number
+	pop	de			; extra parameter 5
+	ld	a,9			; offline status
+	jp	(hl)			; return
+
+clkread:	; 27: System clock read
+	ld	b,BF_SYSGET		; HBIOS SysGet function
+	ld	c,BF_SYSGET_TIMER	; Timer sub-function
+	rst	08			; do it, ticks ret in DE:HL
+	ex	de,hl			; swap for pSys
+	xor	a			; signal success
+	ret				; done
+
+
+
+;-----------------------------------------------------------------------
+; Support routines
+;-----------------------------------------------------------------------
+
+serinit:
+	; Initialize HBIOS serial port identified in reg A
+	cp	$FF			; do we have desired port?
+	jr	z,nodev			; handle it if so
+	xor	a			; signal success
+	ret				; done
 	
-	ld	(curbufr),bc	; save buf adr for later
-	xor	a		; signal success
-	ret			; done
+serstat:
+	; Check status of HBIOS serial port identified in reg A
+	cp	$FF			; do we have desired port?
+	jr	z,nodev			; handle it if so
+	ld	b,BF_CIOIST		; serial port status function
+	ld	c,a			; HBIOS serial port
+	rst	08			; call HBIOS
+	ld	c,0			; assume no chars pendin
+	jr	z,serstat1		; if zero, no chars waiting
+	ld	c,$FF			; signal char(s) pending
+serstat1:	
+	xor	a			; signal success
+	ret				; done
 
-dskread:
-	;ld	a,10
-	;jp	panic
+serread:
+	; Read one byte from HBIOS serial port identified in reg A
+	cp	$FF			; do we have desired port?
+	jr	z,nodev			; handle it if so
+	ld	b,BF_CIOIN		; serial port read function
+	ld	c,a			; HBIOS serial port
+	rst	08			; call HBIOS
+	ld	c,e			; char to C
+	xor	a			; signal success
+	ret				; done
 
-	;ld	a,(curdisk)
-	;cp	0
-	;jr	nz,dskinit1
+serwrit:
+	; Write one byte to HBIOS serial port identified in reg A
+	cp	$FF			; do we have desired port?
+	jr	z,nodev			; handle it if so
+	ld	e,c			; char to write to E
+	ld	b,BF_CIOOUT		; serial port write function
+	ld	c,a			; HBIOS serial port
+	rst	08			; call HBIOS
+	xor	a			; signal success
+	ret				; done
 	
-	call	chkdisk
-	ret	nz
-
-	call	seek
-	ret	nz
-
-	ld	b,BF_DIOREAD	; HBIOS disk read function
-	ld	a,(hb_dev)	; HBIOS disk unit
-	ld	c,a		; ... goes in C
-	ld	a,(HB_CURBNK)	; get current memory bank
-	ld	d,a		; use as target bank for transfer
-	ld	e,1		; read 1 sector
-	ld	hl,(curbufr)	; disk read buffer adr
-	rst	08		; do it
-	ret	z		; return if good read
-	ld	a,ior_badblk	; else i/o error
-	ret			; done
-	
-dskwrit:
-	;ld	a,11
-	;jp	panic
-
-	call	chkdisk
-	ret	nz
-
-	call	seek
-	ret	nz
-
-	ld	b,BF_DIOWRITE	; HBIOS disk read function
-	ld	a,(hb_dev)	; HBIOS disk unit
-	ld	c,a		; ... goes in C
-	ld	a,(HB_CURBNK)	; get current memory bank
-	ld	d,a		; use as target bank for transfer
-	ld	e,1		; read 1 sector
-	ld	hl,(curbufr)	; disk read buffer adr
-	rst	08		; do it
-	ret	z		; return if good read
-	ld	a,ior_badblk	; else i/o error
-	ret			; done
-
-dskinit:
-	;ld	a,12
-	;jp	panic
-	
-	call	chkdisk
-	ret	nz
-
-	xor	a		; signal success
-	ret			; done
-
-dskstrt:
-	;ld	a,13
-	;jp	panic
-
-	xor	a		; signal success
-	ret			; done
-
-dskstop:
-	;ld	a,14
-	;jp	panic
-
-	xor	a		; signal success
-	ret			; done
+nodev:	
+	ld	a,9			; signal volume offline
+	ret				; and done
 
 chkdisk:
 	; Validate that curdisk is <= max supported
-	ld	a,(curdisk)	; get current disk
-	cp	disks		; compare to disk count
-	jr	nc,chkdisk1	; if too high, go to err
-	xor	a		; signal success
-	ret			; done
-chkdisk1:
-	ld	a,ior_novol	; signal not online
-	or	a
-	ret
+	ld	a,(curdisk)		; get current disk
+	cp	disks			; compare to disk count
+	jr	nc,chkdisk1		; if too high, go to err
+	xor	a			; signal success
+	ret				; done
+chkdisk1:	
+	ld	a,ior_novol		; signal not online
+	or	a			; set flags
+	ret				; done
 
 seek:
-	; A single physical HBIOS disk device will contain p-System
-	; volume slices.  Each slice will be 8MB.  Start by computing
-	; a track offset using the p-System disk number as an
-	; index.  <Track Offset> = 8MB * <Disk Number>
-	; A track contains 0x20000 bytes:
-	;     512 (bytes per sec) * 16 (sec per trk) * 16 (hds per cyl)
-	; So, 8MB / 0x20000 = 0x40 tracks
-	ld	hl,0		; starting unit track offset
-	ld	de,$0040	; per disk track offset
-	ld	a,(curdisk)	; get current disk
-	or	a		; set flags
-	jr	z,seek2		; disk 0 needs no offset
-	ld	b,a		; into B for loop counter
-seek1:
-	add	hl,de		; add another offset
-	djnz	seek1		; and loop as needed
-seek2:
-	push	hl		; save total track offset
-	ld	a,(curtrak)	; get current track value
-	push	af		; save track value
-	and	$0F		; head is low 4 bits of track
-	ld	d,a		; save in D for head
-	pop	af		; recover original track value
-	rra			; rotate to remove head bits
-	rra
-	rra
-	rra
-	and	$0F		; mask off other bits
-	ld	l,a		; save in low byte of HL
-	ld	h,0		; zero out high byte of HL
-	ld	a,(cursect)	; get sector
-	ld	e,a		; put in E
-	pop	bc
-	add	hl,bc		; add track offset
-	ld	b,BF_DIOSEEK	; HBIOS seek function
-	ld	a,(hb_dev)	; HBIOS disk unit
-	ld	c,a		; ... goes in C
-	rst	08		; do it
-	ret	z		; if no error, done
-	ld	a,ior_badblk	; signal I/O error
-	ret			; done
+	; We use LBA addressing for disk access.  So, we need to
+	; translate the track/sector value from p-System into an
+	; lba offset.  Since we are using 16 sectors per track, we
+	; can cheat (avoid multiplication) by using the low 4 bits
+	; for sector and the high bits for track which allows us to 
+	; just "or" the values together.  We are only using word values
+	; here since that will handle up to a 32MB p-System file system
+	; (slice) which is more than enough.
+	
+	ld	a,(curtrak)		; cur track in accum
+	ld	l,a			; move to low byte of HL
+	ld	h,0			; zero out high byte of HL
+	add	hl,hl			; * 2
+	add	hl,hl			; * 4
+	add	hl,hl			; * 8
+	add	hl,hl			; * 16 (sectors per track)
+	ld	a,(cursect)		; cur sec to accum
+	or	l			; combine with low byte of HL
+	ld	l,a			; back to low byte of HL
+	
+	; HL now has LBA offset of desired sector.  Next
+	; we need to add in the offset of the current disk.
+	; At this point, we need to start using dword values
+	; using DE:HL to accommodate large disk drives.
+	ld	de,0			; extend LBA to DE:HL
+	ld	bc,(curoff)		; get low word of offset
+	add	hl,bc			; add low words together
+	ex	de,hl			; swap high word of LBA into HL
+	ld	bc,(curoff+2)		; get high word of offset
+	adc	hl,bc			; add high words together (w/ carry)
+	ex	de,hl			; swap back to get DE:HL
+	
+	; Now we have final LBA in DE:HL.  We just set the
+	; LBA flag bit and do the disk seek.
+	set	7,d			; high order bit designates LBA I/O
+	ld	b,BF_DIOSEEK		; HBIOS seek function
+	ld	a,(hb_dev)		; HBIOS disk unit
+	ld	c,a			; ... goes in C
+	rst	08			; do it
+	ret	z			; if no error, done
+	ld	a,ior_badblk		; signal I/O error
+	ret				; done
 
 prtstr:
-	ld	a,(hl)
-	or	a
-	ret	z
-	push	hl
-	ld	c,a
-	call	conwrit
-	pop	hl
-	inc	hl
-	jr	prtstr
+	; Print a null terminated string on the p-System console
+	ld	a,(hl)			; get next char
+	or	a			; set flags
+	ret	z			; done if null
+	push	hl			; save buffer pointer
+	ld	c,a			; char to C
+	call	conwrit			; write it out to pSys console
+	pop	hl			; recover buffer pointer
+	inc	hl			; increment to next char
+	jr	prtstr			; loop as needed
 
+parterr:
+	ld	hl,str_parterr		; partition error string
+	call	prtstr			; display it
+	jp	syshalt			; back to boot loader
 
 panic:
-	di
-	halt
+	; Hard stop
+	di				; no interrupts
+	halt				; ... and halt
 
 
-hb_dev	.db	3		; HBIOS disk device unit
-;
-curdisk	.db	0		; Current disk number
-curtrak	.db	0		; Current track number
-cursect	.db	0		; Current sector number
-curbufr	.dw	0		; Current disk buffer address
-;
-str_banner	.db	13,10,"RomWBW p-System BIOS v"
-		.db	BIOSVER
-		.db	13,10,13,10
-		.db	"Press any key...",0
-;
-;
-;
+
+;-----------------------------------------------------------------------
+; Local storage
+;-----------------------------------------------------------------------
+
+hb_bnks:
+hb_usr	.db	0		; HBIOS User bank id
+hb_bios	.db	0		; HBIOS BIOS bank id
+
+hb_dev	.db	0		; HBIOS device for pSys disk
+hb_con	.db	$FF		; HBIOS device for pSys console unit
+hb_rem	.db	$FF		; HBIOS device for pSys remote unit
+hb_prn	.db	$FF		; HBIOS device for pSys printer unit
+
+curdisk	.db	0		; Current pSys disk number
+curtrak	.db	0		; Current pSys track number
+cursect	.db	0		; Current pSys sector number
+curbufr	.dw	0		; Current pSys disk buffer address
+curoff	.dw	0,0		; Current sector offset (dword LBA)
+
+paroff	.dw	0,0		; Partition offset (dword LBA)
+sps	.dw	16384,0		; Sectors per slice (8MB / 512) = 16384
+
+str_banner	.db	13,10,13,10,"RomWBW p-System Extended BIOS v"
+		.db	BIOSVER,0
+str_parterr	.db	13,10,"*** Disk partition table error!",0
+
+
+
+#if	($ >= bios_end)
+	.echo	"*** ERROR: Out of space in pSystem BIOS!!!\n"
+	!!!	; force an assembly error
+#endif
+
+slack		.equ	bios_end - $
+		.echo	"pSystem BIOS space remaining: "
+		.echo	slack
+		.echo	" bytes.\n"
+
 	.fill	bios_end - $
-	
-;
+
 	.end
