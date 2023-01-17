@@ -907,7 +907,7 @@ own unique filesystem and is not interoperable with other OSes.
 
 It was derived from the p-System Adaptable Z80 System.  Unlike
 some other distributions, this implements a native p-System
-Z80 BIOS, it does not rely on a CP/M BIOS layer.
+Z80 Extended BIOS, it does not rely on a CP/M BIOS layer.
 
 The p-System is provided on a hard disk image file called
 psys.img.  This must be copied to it's own dedicated hard

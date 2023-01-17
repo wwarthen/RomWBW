@@ -1,4 +1,3 @@
-testbios	.equ	0
 ;
 ; p-System Loader
 ;
@@ -8,14 +7,14 @@ loader_end	.equ	loader_loc + loader_size
 ;
 ; p-System BIOS
 ;
-bios_size	.equ	$200
+bios_size	.equ	$300
 bios_loc	.equ	$FE00 - bios_size
 bios_end	.equ	bios_loc + bios_size
 ;
 ; p-System Bootstrap
 ;
-#if testbios
-boot_size	.equ	$300
+#ifdef TESTBIOS
+boot_size	.equ	$400
 boot_loc	.equ	$8000
 boot_end	.equ	boot_loc + boot_size
 #else
