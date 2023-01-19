@@ -16,12 +16,12 @@ fill.asm       used to complete the track 0 build (see below)
 
 Notes:
 
-This adatation runs on a single RomWBWW HBIOS hard disk type device (CF 
-Cart, SD Card, IDE drive, etc.).  The image built (psys.img) should be 
-copied to your disk media start at the first sector.  You can then boot 
-by selecting the corresponding disk device unit number from the RomWBW 
-boot loader prompt.  The p-System disk image (psys.img) is entirely 
-different from the RomWBW CP/M-style disk images.
+This adaptation runs on a single RomWBW HBIOS hard disk type device (CF 
+Card, SD Card, IDE drive, etc.).  The image built (psys.img) should be 
+copied to your disk media starting at the first sector.  You can then 
+boot by selecting the corresponding disk device unit number from the 
+RomWBW boot loader prompt.  The p-System disk image (psys.img) is 
+entirely different from the RomWBW CP/M-style disk images.
 
 The boot device hard disk is broken up into 6 logical p-System 
 volumes.  These are referred to as p-System slices.  A single RomWBW 
@@ -92,3 +92,50 @@ Wayne Warthen
 wwarthen@gmail.com
 
 5:42 PM Sunday, January 15, 2023
+
+So, it turns out that the serial line support in p-System is seriously 
+deficient.  It insists on polling all of the serial input devices 
+(console, remote, and printer) when the sytem is idle with the idea 
+that it will queue up any characters received.  I guess the idea is 
+that this will help in scenarios where characters are coming in too 
+fast to be processed. However, the basic/default interpreter does not 
+support the queues! Strangely, it still polls the the devices and 
+literally discards anything received.  This completely undermines the 
+ability of the underlying hardware which is doing it's own robust
+interrupt or hardware based buffering and flow control.
+
+I have relinked the interpreter (SYSTEM.INTERP) so that it now uses
+the BIOS version that supports the queues (BIOS.CRP).  This mostly
+resolves the situation, but needlessly increases the size of the
+interpreter.  Additionally, I believe that if the p-System queue gets
+full, it will still poll and discard any new characters received.  I
+have not seen any documentation indicating the size of the queues.
+
+Seriously, what were they thinking.
+
+One last thing in case anyone actually reads this.  As indicated
+above, this is an adaptation of p-System IV.0.  It is well documented
+that SofTech produced a IV.1 with some nice enhancements (like
+subsidiary volumes and decent support for ANSI/VT-100 terminals).  I
+have been unable to track down the IV.1 distribution media despite
+trying very hard.  If anyone knows of a source for the media of the
+Adapable p-System for Z80, I would love to get hold of it.
+
+3:58 PM Tuesday, January 17, 2023
+
+I forgot to discuss the terminal handling.
+
+The p-System has a setup program (SETUP.CODE) that is used to define
+terminal handling escape sequences.  However, it is limited to a
+single character to introduce the escape sequences.  Since ANSI
+and VT-100 escape sequences start with 2 characters, this is
+problematic.  The BIOS for RomWBW borrows a hack used by Udo Monk.
+Specifically, whenever an outbound <esc> is seen, a '[' is added
+in flight.
+
+Likewise, it is problematic to define a way to interpret the
+arrow keys transmitted by an ANSI/VT-100 terminal.  In this case,
+the setup program was used to define up/down/left/right like
+WordStar does: ^E,^X,^S,^D.
+
+5:48 PM Tuesday, January 17, 2023
