@@ -96,14 +96,14 @@ RawWriteWin (as long as you have access to a floppy drive on your
 Windows computer).  The resulting floppy disks will be usable on any 
 RomWBW-based system with floppy drive(s).
 
-Likewise, the hd512_*.img and hd1024_*.img files are hard disk images.  
+Likewise, the hd512_*.img and hd1k_*.img files are hard disk images.  
 Each file is intended to be copied to the start of any type of hard 
 disk media (typically a CF Card or SD Card). The resulting media will 
 be usable on any RomWBW-based system that accepts the corresponding 
 media type.
 
 NOTE: The hd512_*.img files are equivalent to the hd_*.img
-files in previous distributions.  The hd1024_*.img files
+files in previous distributions.  The hd1k_*.img files
 contained a revised file system format that increases the
 maximum number of CP/M directory entries from 512 to 1024.
 Refer to the ReadMe.txt in the Source/Images directory

@@ -8,20 +8,20 @@ FDIMGS = fd144_cpm22.img fd144_zsdos.img fd144_nzcom.img \
 HD512IMGS = hd512_cpm22.img hd512_zsdos.img hd512_nzcom.img \
 	hd512_cpm3.img hd512_zpm3.img hd512_ws4.img
 # HDIMGS += hd512_bp.img
-HD1024IMGS = hd1024_cpm22.img hd1024_zsdos.img hd1024_nzcom.img \
-	hd1024_cpm3.img hd1024_zpm3.img hd1024_ws4.img
-# HD1024IMGS += hd1024_bp.img
+HD1KIMGS = hd1k_cpm22.img hd1k_zsdos.img hd1k_nzcom.img \
+	hd1k_cpm3.img hd1k_zpm3.img hd1k_ws4.img
+# HD1KIMGS += hd1k_bp.img
 
 HD512PREFIX =
-HD1024PREFIX = hd1024_prefix.dat
+HD1KPREFIX = hd1k_prefix.dat
 
 OBJECTS = $(FDIMGS)
 OBJECTS += $(HD512IMGS) hd512_combo.img  hd512_dos65.img hd512_qpm.img$(HD512PREFIX)
-OBJECTS += $(HD1024IMGS) hd1024_combo.img hd1024_qpm.img $(HD1024PREFIX)
+OBJECTS += $(HD1KIMGS) hd1k_combo.img hd1k_qpm.img $(HD1KPREFIX)
 
-OTHERS = blank144 blankhd512 blankhd1024
+OTHERS = blank144 blankhd512 blankhd1k
 
-NODELETE = $(HD512PREFIX) $(HD1024PREFIX)
+NODELETE = $(HD512PREFIX) $(HD1KPREFIX)
 
 DEST=../../Binary
 
@@ -35,7 +35,7 @@ DIFFPATH = $(DIFFTO)/Binary
 hd512_combo.img: $(HD512PREFIX) $(HD512IMGS)
 	cat $^ > $@
 
-hd1024_combo.img: $(HD1024PREFIX) $(HD1024IMGS)
+hd1k_combo.img: $(HD1KPREFIX) $(HD1KIMGS)
 	cat $^ > $@
 
 #
@@ -55,19 +55,19 @@ blank144:
 	@hexdump $@
 
 HD512SIZE := 8320
-HD1024SIZE := 8192
+HD1KSIZE := 8192
 
 blankhd512:
 	@echo Making Blank HD512 of size $(HD512SIZE)k
 	@LC_ALL=en_US.US-ASCII tr '\000' '\345' </dev/zero | dd of=$@ bs=1024 count=$(HD512SIZE)
 	@hexdump $@
 	
-blankhd1024:
-	@echo Making Blank HD1024 of size $(HD1024SIZE)k
-	@LC_ALL=en_US.US-ASCII tr '\000' '\345' </dev/zero | dd of=$@ bs=1024 count=$(HD1024SIZE)
+blankhd1k:
+	@echo Making Blank HD1K of size $(HD1KSIZE)k
+	@LC_ALL=en_US.US-ASCII tr '\000' '\345' </dev/zero | dd of=$@ bs=1024 count=$(HD1KSIZE)
 	@hexdump $@
 
-%.img: $(SYSTEMS) blank144 blankhd512 blankhd1024 Makefile
+%.img: $(SYSTEMS) blank144 blankhd512 blankhd1k Makefile
 	@sys= ; \
 	case $@ in \
 		(*cpm22*) sys=../CPM22/cpm_wbw.sys;; \
@@ -82,8 +82,8 @@ blankhd1024:
 	if echo $@ | grep -q ^hd512_ ; then \
 		fmt=wbw_hd512 ; dtype=hd ; type=hd512_ ; proto=blankhd512 ; \
 	fi ; \
-	if echo $@ | grep -q ^hd1024_ ; then \
-		fmt=wbw_hd1024 ; dtype=hd ; type=hd1024_ ; proto=blankhd1024 ; \
+	if echo $@ | grep -q ^hd1k_ ; then \
+		fmt=wbw_hd1k ; dtype=hd ; type=hd1k_ ; proto=blankhd1k ; \
 	fi ; \
 	d=$$(echo $(basename $@) | sed s/$$type//) ; \
 	echo Generating $@ ; \
@@ -122,7 +122,7 @@ clean::
 	@rm -f *.ls
 
 imgdiff:
-	@for i in $(FDIMGS) $(HD512IMGS) $(HD1024IMGS) ; do \
+	@for i in $(FDIMGS) $(HD512IMGS) $(HD1KIMGS) ; do \
 		echo $$i ; \
 		if echo $$i | grep -q ^fd144_ ; then \
 			fmt=wbw_fd144 ; \
@@ -130,8 +130,8 @@ imgdiff:
 		if echo $$i | grep -q ^hd512_ ; then \
 			fmt=wbw_hd512 ; \
 		fi ; \
-		if echo $$i | grep -q ^hd1024_ ; then \
-			fmt=wbw_hd1024 ; \
+		if echo $$i | grep -q ^hd1k_ ; then \
+			fmt=wbw_hd1k ; \
 		fi ; \
 		$(BINDIR)/cpmls -i -f $$fmt $$i > $$i.ls ; \
 		$(BINDIR)/cpmls -i -f $$fmt $(DIFFPATH)/$$i > $$i.diff.ls ; \

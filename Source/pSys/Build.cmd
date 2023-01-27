@@ -40,7 +40,7 @@ if errorlevel 1 goto :eof
 echo.
 echo Creating p-System BIOS Tester boot image
 echo.
-copy /b ..\Images\hd1024_prefix.dat + testldr.bin + bios.bin + biostest.dat + testfill.bin psystest.img || exit /b
+copy /b ..\Images\hd1k_prefix.dat + testldr.bin + bios.bin + biostest.dat + testfill.bin psystest.img || exit /b
 
 echo.
 echo Generating p-System Boot Track...
@@ -50,6 +50,6 @@ copy /b loader.bin + bios.bin + boot.dat + fill.bin trk0.bin  || exit /b
 echo.
 echo Generating p-System Disk Image...
 echo.
-copy /b ..\Images\hd1024_prefix.dat + trk0.bin + psys.vol + trk0.bin + blank.vol psys.img || exit /b
+copy /b ..\Images\hd1k_prefix.dat + trk0.bin + psys.vol + trk0.bin + blank.vol psys.img || exit /b
 
 copy psys.img ..\..\Binary  || exit /b

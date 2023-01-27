@@ -75,8 +75,8 @@ a disk using your Windows/Linux/Mac computer and will then be usable
 in your RomWBW computer.  On Windows, you can use Win32DiskImager to
 do this (see Tools\Win32DiskImager).  On Linux/Mac, you can usee dd.
 
-WARNING: The hd1024 disk images must be prefixed by the 
-hd1024_prefix.dat file before being written to your target media.  
+WARNING: The hd1k disk images must be prefixed by the 
+hd1k_prefix.dat file before being written to your target media.  
 See the Hard Disk Formats section below for more information.
 
 Building the Images
@@ -107,7 +107,7 @@ where:
     <format> specifies the disk format which must be one of:
         - "fd144": 1.44M floppy disk
 	- "hd512": hard disk with 512 directory entries
-	- "hd1024": hard disk with 1024 directory entries
+	- "hd1k": hard disk with 1024 directory entries
     <system> optionally specifies a boot system image to place in the
         system tracks of the disk (e.g., "..\cpm22\cpm_wbw.sys"
 
@@ -121,7 +121,7 @@ CP/M 2.2 system image in the boot system tracks.
 
 After completion of the script, the resultant image files are placed 
 in the Binary directory with names such as fd144_xxx.img, hd512_xxx.img,
-and hd1024_xxx.img.
+and hd1k_xxx.img.
 
 Sample output from running Build.cmd is provided at the end of
 this file.
@@ -165,8 +165,8 @@ Hard Disk Formats
 RomWBW supports two hard disk formats: the original format used by 
 RomWBW with 512 directory entries per slice and a new format with 
 1024 directory entries per slice.  These formats are referred to as
-hd512 and hd1024 respectively.  You will note that filenames start 
-with either hd512_ or hd1024_ to indicate the hard disk format.
+hd512 and hd1k respectively.  You will note that filenames start 
+with either hd512_ or hd1k_ to indicate the hard disk format.
 
 WARNING: You **can not** mix the two hard disk formats on one hard 
 disk device.  You can use different formats on different hard disk 
@@ -183,30 +183,30 @@ all slices and will assume the slices are located in the defined
 partition.  You cannot mix the hard disk formats on a single disk
 device.
 
-WARNNG: The hd1024_xxx.img files **must** be prefixed by a partition 
-table before being written to your disk media.  The hd1024_prefix.dat 
-file is provided for this.  The hd1024_prefix.dat defines the required 
-partition table.  Any number of hd1024 slice images can be 
+WARNNG: The hd1k_xxx.img files **must** be prefixed by a partition 
+table before being written to your disk media.  The hd1k_prefix.dat 
+file is provided for this.  The hd1k_prefix.dat defines the required 
+partition table.  Any number of hd1k slice images can be 
 concatenated after the prefix.  For example, to make the 
-hd1024_cpm22.img file ready to write to your media, you would need to 
+hd1k_cpm22.img file ready to write to your media, you would need to 
 do something like this:
 
-  | C:\RomWBW\Binary>copy /b hd1024_prefix.dat + hd1024_cpm22.img hd_cpm22.img
+  | C:\RomWBW\Binary>copy /b hd1k_prefix.dat + hd1k_cpm22.img hd_cpm22.img
   
 and then use the resulting hd_cpm22.img to write to the target media.
 
 For example, if you wanted to create a 2 slice disk image using the 
-hd1024 entry format that has ZSDOS in the first slice and Wordstar in 
+hd1k entry format that has ZSDOS in the first slice and Wordstar in 
 the second slice, you could use the following command from a Windows 
 command prompt:
  
-  | C:\RomWBW\Binary>copy /b hd1024_prefix.dat + hd1024_zsdos.img + hd1024_ws4.img hd_multi.img
+  | C:\RomWBW\Binary>copy /b hd1k_prefix.dat + hd1k_zsdos.img + hd1k_ws4.img hd_multi.img
 
 Since the hd512 format does not utilize a partition, you do not
 prefix the hd512_xxx.img files with anything.  They are ready to write
 to your media as is.
 
-In general, the hd1024 format is considered the better format to use. 
+In general, the hd1k format is considered the better format to use. 
 It provides double the directory space and places all slices inside 
 of a hard disk partition that DOS/Windows should respect as "used" 
 space.
@@ -219,7 +219,7 @@ in this directory.  The resultant images are placed in the Binary
 directory and are ready to copy to your media.
 
 Additionally, a "combo" disk image is created in both the hd512 and
-hd1024 formats that contains a multi-slice image that is handy to
+hd1k formats that contains a multi-slice image that is handy to
 use for initial testing.  The combo disk image contains the following
 slices:
 
@@ -233,8 +233,8 @@ slices:
 A description of the specific image files is found in the file
 called DiskList.txt in the Binary directory of the distribution.
 
-NOTE: The hd1024_combo.img file is already prefixed with 
-hd1024_prefix.dat, so you do not need to add the prefix file.  It is 
+NOTE: The hd1k_combo.img file is already prefixed with 
+hd1k_prefix.dat, so you do not need to add the prefix file.  It is 
 ready to write to your media.
 
 Sample Run
@@ -422,93 +422,93 @@ C:\Users\Wayne\Projects\RBC\Build\RomWBW\Source\Images>Build.cmd
   | Building Hard Disk Images (1024 directory entry format)...
   | 
   | Generating cpm22 Hard Disk (1024 directory entry format)...
-  | cpmcp -f wbw_hd1024 hd1024_cpm22.img d_cpm22/u0/*.* 0:
-  | cpmcp -f wbw_hd1024 hd1024_cpm22.img d_cpm22/u1/*.* 1:
-  | cpmcp -f wbw_hd1024 hd1024_cpm22.img ../../Binary/Apps/*.com 0:
-  | cpmcp -f wbw_hd1024 hd1024_cpm22.img ../../Binary/Apps/Tunes/*.pt? 3:
-  | cpmcp -f wbw_hd1024 hd1024_cpm22.img ../../Binary/Apps/Tunes/*.mym 3:
-  | cpmcp -f wbw_hd1024 hd1024_cpm22.img ../CPM22/cpm_wbw.sys 0:cpm.sys
-  | cpmcp -f wbw_hd1024 hd1024_cpm22.img Common/*.* 0:
-  | Moving image hd1024_cpm22.img into output directory...
+  | cpmcp -f wbw_hd1k hd1k_cpm22.img d_cpm22/u0/*.* 0:
+  | cpmcp -f wbw_hd1k hd1k_cpm22.img d_cpm22/u1/*.* 1:
+  | cpmcp -f wbw_hd1k hd1k_cpm22.img ../../Binary/Apps/*.com 0:
+  | cpmcp -f wbw_hd1k hd1k_cpm22.img ../../Binary/Apps/Tunes/*.pt? 3:
+  | cpmcp -f wbw_hd1k hd1k_cpm22.img ../../Binary/Apps/Tunes/*.mym 3:
+  | cpmcp -f wbw_hd1k hd1k_cpm22.img ../CPM22/cpm_wbw.sys 0:cpm.sys
+  | cpmcp -f wbw_hd1k hd1k_cpm22.img Common/*.* 0:
+  | Moving image hd1k_cpm22.img into output directory...
   | Generating zsdos Hard Disk (1024 directory entry format)...
-  | cpmcp -f wbw_hd1024 hd1024_zsdos.img d_zsdos/u0/*.* 0:
-  | cpmcp -f wbw_hd1024 hd1024_zsdos.img d_zsdos/u1/*.* 1:
-  | cpmcp -f wbw_hd1024 hd1024_zsdos.img ../../Binary/Apps/*.com 0:
-  | cpmcp -f wbw_hd1024 hd1024_zsdos.img ../../Binary/Apps/Tunes/*.pt? 3:
-  | cpmcp -f wbw_hd1024 hd1024_zsdos.img ../../Binary/Apps/Tunes/*.mym 3:
-  | cpmcp -f wbw_hd1024 hd1024_zsdos.img ../ZSDOS/zsys_wbw.sys 0:zsys.sys
-  | cpmcp -f wbw_hd1024 hd1024_zsdos.img Common/*.* 0:
-  | Moving image hd1024_zsdos.img into output directory...
+  | cpmcp -f wbw_hd1k hd1k_zsdos.img d_zsdos/u0/*.* 0:
+  | cpmcp -f wbw_hd1k hd1k_zsdos.img d_zsdos/u1/*.* 1:
+  | cpmcp -f wbw_hd1k hd1k_zsdos.img ../../Binary/Apps/*.com 0:
+  | cpmcp -f wbw_hd1k hd1k_zsdos.img ../../Binary/Apps/Tunes/*.pt? 3:
+  | cpmcp -f wbw_hd1k hd1k_zsdos.img ../../Binary/Apps/Tunes/*.mym 3:
+  | cpmcp -f wbw_hd1k hd1k_zsdos.img ../ZSDOS/zsys_wbw.sys 0:zsys.sys
+  | cpmcp -f wbw_hd1k hd1k_zsdos.img Common/*.* 0:
+  | Moving image hd1k_zsdos.img into output directory...
   | Generating nzcom Hard Disk (1024 directory entry format)...
-  | cpmcp -f wbw_hd1024 hd1024_nzcom.img d_nzcom/u0/*.* 0:
-  | cpmcp -f wbw_hd1024 hd1024_nzcom.img ../../Binary/Apps/*.com 0:
-  | cpmcp -f wbw_hd1024 hd1024_nzcom.img ../../Binary/Apps/Tunes/*.pt? 3:
-  | cpmcp -f wbw_hd1024 hd1024_nzcom.img ../../Binary/Apps/Tunes/*.mym 3:
-  | cpmcp -f wbw_hd1024 hd1024_nzcom.img ../CPM22/cpm_wbw.sys 0:cpm.sys
-  | cpmcp -f wbw_hd1024 hd1024_nzcom.img ../ZSDOS/zsys_wbw.sys 0:zsys.sys
-  | cpmcp -f wbw_hd1024 hd1024_nzcom.img Common/*.* 0:
-  | Moving image hd1024_nzcom.img into output directory...
+  | cpmcp -f wbw_hd1k hd1k_nzcom.img d_nzcom/u0/*.* 0:
+  | cpmcp -f wbw_hd1k hd1k_nzcom.img ../../Binary/Apps/*.com 0:
+  | cpmcp -f wbw_hd1k hd1k_nzcom.img ../../Binary/Apps/Tunes/*.pt? 3:
+  | cpmcp -f wbw_hd1k hd1k_nzcom.img ../../Binary/Apps/Tunes/*.mym 3:
+  | cpmcp -f wbw_hd1k hd1k_nzcom.img ../CPM22/cpm_wbw.sys 0:cpm.sys
+  | cpmcp -f wbw_hd1k hd1k_nzcom.img ../ZSDOS/zsys_wbw.sys 0:zsys.sys
+  | cpmcp -f wbw_hd1k hd1k_nzcom.img Common/*.* 0:
+  | Moving image hd1k_nzcom.img into output directory...
   | Generating cpm3 Hard Disk (1024 directory entry format)...
-  | cpmcp -f wbw_hd1024 hd1024_cpm3.img d_cpm3/u0/*.* 0:
-  | cpmcp -f wbw_hd1024 hd1024_cpm3.img ../CPM3/cpmldr.com 0:
-  | cpmcp -f wbw_hd1024 hd1024_cpm3.img ../CPM3/cpmldr.sys 0:
-  | cpmcp -f wbw_hd1024 hd1024_cpm3.img ../CPM3/ccp.com 0:
-  | cpmcp -f wbw_hd1024 hd1024_cpm3.img ../CPM3/gencpm.com 0:
-  | cpmcp -f wbw_hd1024 hd1024_cpm3.img ../CPM3/genres.dat 0:
-  | cpmcp -f wbw_hd1024 hd1024_cpm3.img ../CPM3/genbnk.dat 0:
-  | cpmcp -f wbw_hd1024 hd1024_cpm3.img ../CPM3/bios3.spr 0:
-  | cpmcp -f wbw_hd1024 hd1024_cpm3.img ../CPM3/bnkbios3.spr 0:
-  | cpmcp -f wbw_hd1024 hd1024_cpm3.img ../CPM3/bdos3.spr 0:
-  | cpmcp -f wbw_hd1024 hd1024_cpm3.img ../CPM3/bnkbdos3.spr 0:
-  | cpmcp -f wbw_hd1024 hd1024_cpm3.img ../CPM3/resbdos3.spr 0:
-  | cpmcp -f wbw_hd1024 hd1024_cpm3.img ../CPM3/cpm3res.sys 0:
-  | cpmcp -f wbw_hd1024 hd1024_cpm3.img ../CPM3/cpm3bnk.sys 0:
-  | cpmcp -f wbw_hd1024 hd1024_cpm3.img ../CPM3/gencpm.dat 0:
-  | cpmcp -f wbw_hd1024 hd1024_cpm3.img ../CPM3/cpm3.sys 0:
-  | cpmcp -f wbw_hd1024 hd1024_cpm3.img ../CPM3/readme.1st 0:
-  | cpmcp -f wbw_hd1024 hd1024_cpm3.img ../CPM3/cpm3fix.pat 0:
-  | cpmcp -f wbw_hd1024 hd1024_cpm3.img ../../Binary/Apps/*.com 0:
-  | cpmcp -f wbw_hd1024 hd1024_cpm3.img ../../Binary/Apps/Tunes/*.pt? 3:
-  | cpmcp -f wbw_hd1024 hd1024_cpm3.img ../../Binary/Apps/Tunes/*.mym 3:
-  | cpmcp -f wbw_hd1024 hd1024_cpm3.img Common/*.* 0:
-  | Moving image hd1024_cpm3.img into output directory...
+  | cpmcp -f wbw_hd1k hd1k_cpm3.img d_cpm3/u0/*.* 0:
+  | cpmcp -f wbw_hd1k hd1k_cpm3.img ../CPM3/cpmldr.com 0:
+  | cpmcp -f wbw_hd1k hd1k_cpm3.img ../CPM3/cpmldr.sys 0:
+  | cpmcp -f wbw_hd1k hd1k_cpm3.img ../CPM3/ccp.com 0:
+  | cpmcp -f wbw_hd1k hd1k_cpm3.img ../CPM3/gencpm.com 0:
+  | cpmcp -f wbw_hd1k hd1k_cpm3.img ../CPM3/genres.dat 0:
+  | cpmcp -f wbw_hd1k hd1k_cpm3.img ../CPM3/genbnk.dat 0:
+  | cpmcp -f wbw_hd1k hd1k_cpm3.img ../CPM3/bios3.spr 0:
+  | cpmcp -f wbw_hd1k hd1k_cpm3.img ../CPM3/bnkbios3.spr 0:
+  | cpmcp -f wbw_hd1k hd1k_cpm3.img ../CPM3/bdos3.spr 0:
+  | cpmcp -f wbw_hd1k hd1k_cpm3.img ../CPM3/bnkbdos3.spr 0:
+  | cpmcp -f wbw_hd1k hd1k_cpm3.img ../CPM3/resbdos3.spr 0:
+  | cpmcp -f wbw_hd1k hd1k_cpm3.img ../CPM3/cpm3res.sys 0:
+  | cpmcp -f wbw_hd1k hd1k_cpm3.img ../CPM3/cpm3bnk.sys 0:
+  | cpmcp -f wbw_hd1k hd1k_cpm3.img ../CPM3/gencpm.dat 0:
+  | cpmcp -f wbw_hd1k hd1k_cpm3.img ../CPM3/cpm3.sys 0:
+  | cpmcp -f wbw_hd1k hd1k_cpm3.img ../CPM3/readme.1st 0:
+  | cpmcp -f wbw_hd1k hd1k_cpm3.img ../CPM3/cpm3fix.pat 0:
+  | cpmcp -f wbw_hd1k hd1k_cpm3.img ../../Binary/Apps/*.com 0:
+  | cpmcp -f wbw_hd1k hd1k_cpm3.img ../../Binary/Apps/Tunes/*.pt? 3:
+  | cpmcp -f wbw_hd1k hd1k_cpm3.img ../../Binary/Apps/Tunes/*.mym 3:
+  | cpmcp -f wbw_hd1k hd1k_cpm3.img Common/*.* 0:
+  | Moving image hd1k_cpm3.img into output directory...
   | Generating zpm3 Hard Disk (1024 directory entry format)...
-  | cpmcp -f wbw_hd1024 hd1024_zpm3.img d_zpm3/u0/*.* 0:
-  | cpmcp -f wbw_hd1024 hd1024_zpm3.img d_zpm3/u10/*.* 10:
-  | cpmcp -f wbw_hd1024 hd1024_zpm3.img d_zpm3/u14/*.* 14:
-  | cpmcp -f wbw_hd1024 hd1024_zpm3.img d_zpm3/u15/*.* 15:
-  | cpmcp -f wbw_hd1024 hd1024_zpm3.img ../ZPM3/zpmldr.com 0:
-  | cpmcp -f wbw_hd1024 hd1024_zpm3.img ../ZPM3/zpmldr.sys 0:
-  | cpmcp -f wbw_hd1024 hd1024_zpm3.img ../CPM3/cpmldr.com 0:
-  | cpmcp -f wbw_hd1024 hd1024_zpm3.img ../CPM3/cpmldr.sys 0:
-  | cpmcp -f wbw_hd1024 hd1024_zpm3.img ../ZPM3/autotog.com 15:
-  | cpmcp -f wbw_hd1024 hd1024_zpm3.img ../ZPM3/clrhist.com 15:
-  | cpmcp -f wbw_hd1024 hd1024_zpm3.img ../ZPM3/setz3.com 15:
-  | cpmcp -f wbw_hd1024 hd1024_zpm3.img ../ZPM3/cpm3.sys 0:
-  | cpmcp -f wbw_hd1024 hd1024_zpm3.img ../ZPM3/zccp.com 0:
-  | cpmcp -f wbw_hd1024 hd1024_zpm3.img ../ZPM3/zinstal.zpm 0:
-  | cpmcp -f wbw_hd1024 hd1024_zpm3.img ../ZPM3/startzpm.com 0:
-  | cpmcp -f wbw_hd1024 hd1024_zpm3.img ../ZPM3/makedos.com 0:
-  | cpmcp -f wbw_hd1024 hd1024_zpm3.img ../ZPM3/gencpm.dat 0:
-  | cpmcp -f wbw_hd1024 hd1024_zpm3.img ../ZPM3/bnkbios3.spr 0:
-  | cpmcp -f wbw_hd1024 hd1024_zpm3.img ../ZPM3/bnkbdos3.spr 0:
-  | cpmcp -f wbw_hd1024 hd1024_zpm3.img ../ZPM3/resbdos3.spr 0:
-  | cpmcp -f wbw_hd1024 hd1024_zpm3.img ../../Binary/Apps/*.com 15:
-  | cpmcp -f wbw_hd1024 hd1024_zpm3.img ../../Binary/Apps/Tunes/*.pt? 3:
-  | cpmcp -f wbw_hd1024 hd1024_zpm3.img ../../Binary/Apps/Tunes/*.mym 3:
-  | cpmcp -f wbw_hd1024 hd1024_zpm3.img Common/*.* 15:
-  | Moving image hd1024_zpm3.img into output directory...
+  | cpmcp -f wbw_hd1k hd1k_zpm3.img d_zpm3/u0/*.* 0:
+  | cpmcp -f wbw_hd1k hd1k_zpm3.img d_zpm3/u10/*.* 10:
+  | cpmcp -f wbw_hd1k hd1k_zpm3.img d_zpm3/u14/*.* 14:
+  | cpmcp -f wbw_hd1k hd1k_zpm3.img d_zpm3/u15/*.* 15:
+  | cpmcp -f wbw_hd1k hd1k_zpm3.img ../ZPM3/zpmldr.com 0:
+  | cpmcp -f wbw_hd1k hd1k_zpm3.img ../ZPM3/zpmldr.sys 0:
+  | cpmcp -f wbw_hd1k hd1k_zpm3.img ../CPM3/cpmldr.com 0:
+  | cpmcp -f wbw_hd1k hd1k_zpm3.img ../CPM3/cpmldr.sys 0:
+  | cpmcp -f wbw_hd1k hd1k_zpm3.img ../ZPM3/autotog.com 15:
+  | cpmcp -f wbw_hd1k hd1k_zpm3.img ../ZPM3/clrhist.com 15:
+  | cpmcp -f wbw_hd1k hd1k_zpm3.img ../ZPM3/setz3.com 15:
+  | cpmcp -f wbw_hd1k hd1k_zpm3.img ../ZPM3/cpm3.sys 0:
+  | cpmcp -f wbw_hd1k hd1k_zpm3.img ../ZPM3/zccp.com 0:
+  | cpmcp -f wbw_hd1k hd1k_zpm3.img ../ZPM3/zinstal.zpm 0:
+  | cpmcp -f wbw_hd1k hd1k_zpm3.img ../ZPM3/startzpm.com 0:
+  | cpmcp -f wbw_hd1k hd1k_zpm3.img ../ZPM3/makedos.com 0:
+  | cpmcp -f wbw_hd1k hd1k_zpm3.img ../ZPM3/gencpm.dat 0:
+  | cpmcp -f wbw_hd1k hd1k_zpm3.img ../ZPM3/bnkbios3.spr 0:
+  | cpmcp -f wbw_hd1k hd1k_zpm3.img ../ZPM3/bnkbdos3.spr 0:
+  | cpmcp -f wbw_hd1k hd1k_zpm3.img ../ZPM3/resbdos3.spr 0:
+  | cpmcp -f wbw_hd1k hd1k_zpm3.img ../../Binary/Apps/*.com 15:
+  | cpmcp -f wbw_hd1k hd1k_zpm3.img ../../Binary/Apps/Tunes/*.pt? 3:
+  | cpmcp -f wbw_hd1k hd1k_zpm3.img ../../Binary/Apps/Tunes/*.mym 3:
+  | cpmcp -f wbw_hd1k hd1k_zpm3.img Common/*.* 15:
+  | Moving image hd1k_zpm3.img into output directory...
   | Generating ws4 Hard Disk (1024 directory entry format)...
-  | cpmcp -f wbw_hd1024 hd1024_ws4.img d_ws4/u0/*.* 0:
-  | Moving image hd1024_ws4.img into output directory...
+  | cpmcp -f wbw_hd1k hd1k_ws4.img d_ws4/u0/*.* 0:
+  | Moving image hd1k_ws4.img into output directory...
   |         1 file(s) copied.
   | 
   | Building Combo Disk (1024 directory entry format) Image...
-  | hd1024_prefix.dat
-  | ..\..\Binary\hd1024_cpm22.img
-  | ..\..\Binary\hd1024_zsdos.img
-  | ..\..\Binary\hd1024_nzcom.img
-  | ..\..\Binary\hd1024_cpm3.img
-  | ..\..\Binary\hd1024_zpm3.img
-  | ..\..\Binary\hd1024_ws4.img
+  | hd1k_prefix.dat
+  | ..\..\Binary\hd1k_cpm22.img
+  | ..\..\Binary\hd1k_zsdos.img
+  | ..\..\Binary\hd1k_nzcom.img
+  | ..\..\Binary\hd1k_cpm3.img
+  | ..\..\Binary\hd1k_zpm3.img
+  | ..\..\Binary\hd1k_ws4.img
   |         1 file(s) copied.
