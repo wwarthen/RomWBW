@@ -38,11 +38,11 @@ switch ($Format)
 		$Size = 8MB + 128KB
 	}
 
-	"wbw_hd1024"
+	"wbw_hd1k"
 	{
 		# 1024 Directory Entry Hard Disk Format
 		$Desc = "Hard Disk (1024 directory entry format)"
-		$ImgFile = "hd1024_${Disk}.img"
+		$ImgFile = "hd1k_${Disk}.img"
 		$MediaID = 10
 		$Size = 8MB
 	}

@@ -1,4 +1,4 @@
-$define{doc_title}{Architecture}$
+$define{doc_title}{System Guide}$
 $include{"Common.h"}$
 
 Overview

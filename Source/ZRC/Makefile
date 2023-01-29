@@ -1,20 +1,20 @@
-HD1024ZRCPREFIX = hd1024_zrc_prefix.dat
-HD1024ZRCCOMBOIMG = hd1024_zrc_combo.img
-HD1024ZRCRAMPREFIX = hd1024_zrc_ram_prefix.dat
-HD1024ZRCRAMCOMBOIMG = hd1024_zrc_ram_combo.img
+HD1KZRCPREFIX = hd1k_zrc_prefix.dat
+HD1KZRCCOMBOIMG = hd1k_zrc_combo.img
+HD1KZRCRAMPREFIX = hd1k_zrc_ram_prefix.dat
+HD1KZRCRAMCOMBOIMG = hd1k_zrc_ram_combo.img
 ZRCROM = ../../Binary/RCZ80_zrc.rom
 ZRCRAMROM = ../../Binary/RCZ80_zrc_ram.rom
-HD1024IMGS = ../../Binary/hd1024_cpm22.img ../../Binary/hd1024_zsdos.img ../../Binary/hd1024_nzcom.img \
-	../../Binary/hd1024_cpm3.img ../../Binary/hd1024_zpm3.img ../../Binary/hd1024_ws4.img
+HD1KIMGS = ../../Binary/hd1k_cpm22.img ../../Binary/hd1k_zsdos.img ../../Binary/hd1k_nzcom.img \
+	../../Binary/hd1k_cpm3.img ../../Binary/hd1k_zpm3.img ../../Binary/hd1k_ws4.img
 
 OBJECTS :=
 
 ifneq ($(wildcard $(ZRCROM)),)
-	OBJECTS += $(HD1024ZRCPREFIX) $(HD1024ZRCCOMBOIMG)
+	OBJECTS += $(HD1KZRCPREFIX) $(HD1KZRCCOMBOIMG)
 endif
 
 ifneq ($(wildcard $(ZRCRAMROM)),)
-	OBJECTS += $(HD1024ZRCRAMPREFIX) $(HD1024ZRCRAMCOMBOIMG)
+	OBJECTS += $(HD1KZRCRAMPREFIX) $(HD1KZRCRAMCOMBOIMG)
 endif
 
 DEST=../../Binary
@@ -25,7 +25,7 @@ include $(TOOLS)/Makefile.inc
 
 DIFFPATH = $(DIFFTO)/Binary
 
-$(HD1024ZRCPREFIX):
+$(HD1KZRCPREFIX):
 	srec_cat -generate 0x0 0x100000 --constant 0x00 -o temp.dat -binary
 	srec_cat temp.dat -binary -exclude 0x0 0x100 zrc_cfldr.bin -binary -o temp.dat -binary
 	srec_cat temp.dat -binary -exclude 0x100 0x200 zrc_ptbl.bin -binary -offset 0x100 -o temp.dat -binary
@@ -33,7 +33,7 @@ $(HD1024ZRCPREFIX):
 	srec_cat temp.dat -binary -exclude 0x24000 0xA4000 $(ZRCROM) -binary -offset 0x24000 -o temp.dat -binary
 	mv temp.dat $@
 
-$(HD1024ZRCRAMPREFIX):
+$(HD1KZRCRAMPREFIX):
 	srec_cat -generate 0x0 0x100000 --constant 0x00 -o temp.dat -binary
 	srec_cat temp.dat -binary -exclude 0x0 0x100 zrc_cfldr.bin -binary -o temp.dat -binary
 	srec_cat temp.dat -binary -exclude 0x100 0x200 zrc_ptbl.bin -binary -offset 0x100 -o temp.dat -binary
@@ -41,8 +41,8 @@ $(HD1024ZRCRAMPREFIX):
 	srec_cat temp.dat -binary -exclude 0x24000 0xA4000 $(ZRCRAMROM) -binary -offset 0x24000 -o temp.dat -binary
 	mv temp.dat $@
 
-$(HD1024ZRCCOMBOIMG): $(HD1024ZRCPREFIX) $(HD1024IMGS)
+$(HD1KZRCCOMBOIMG): $(HD1KZRCPREFIX) $(HD1KIMGS)
 	cat $^ > $@
 
-$(HD1024ZRCRAMCOMBOIMG): $(HD1024ZRCRAMPREFIX) $(HD1024IMGS)
+$(HD1KZRCRAMCOMBOIMG): $(HD1KZRCRAMPREFIX) $(HD1KIMGS)
 	cat $^ > $@

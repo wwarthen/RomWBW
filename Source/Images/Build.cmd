@@ -36,18 +36,18 @@ copy /b ..\..\Binary\hd512_cpm22.img + ..\..\Binary\hd512_zsdos.img + ..\..\Bina
 echo.
 echo Building Hard Disk Images (1024 directory entry format)...
 echo.
-call BuildDisk.cmd cpm22 hd wbw_hd1024 ..\cpm22\cpm_wbw.sys || exit /b
-call BuildDisk.cmd zsdos hd wbw_hd1024 ..\zsdos\zsys_wbw.sys || exit /b
-call BuildDisk.cmd nzcom hd wbw_hd1024 ..\zsdos\zsys_wbw.sys || exit /b
-call BuildDisk.cmd cpm3 hd wbw_hd1024 ..\cpm3\cpmldr.sys || exit /b
-call BuildDisk.cmd zpm3 hd wbw_hd1024 ..\zpm3\zpmldr.sys || exit /b
-call BuildDisk.cmd ws4 hd wbw_hd1024 || exit /b
-call BuildDisk.cmd qpm hd wbw_hd1024 d_qpm\u0\qpm.sys || exit /b
+call BuildDisk.cmd cpm22 hd wbw_hd1k ..\cpm22\cpm_wbw.sys || exit /b
+call BuildDisk.cmd zsdos hd wbw_hd1k ..\zsdos\zsys_wbw.sys || exit /b
+call BuildDisk.cmd nzcom hd wbw_hd1k ..\zsdos\zsys_wbw.sys || exit /b
+call BuildDisk.cmd cpm3 hd wbw_hd1k ..\cpm3\cpmldr.sys || exit /b
+call BuildDisk.cmd zpm3 hd wbw_hd1k ..\zpm3\zpmldr.sys || exit /b
+call BuildDisk.cmd ws4 hd wbw_hd1k || exit /b
+call BuildDisk.cmd qpm hd wbw_hd1k d_qpm\u0\qpm.sys || exit /b
 
-if exist ..\BPBIOS\bpbio-ww.rel call BuildDisk.cmd bp hd wbw_hd1024 || exit /b
+if exist ..\BPBIOS\bpbio-ww.rel call BuildDisk.cmd bp hd wbw_hd1k || exit /b
 
-copy hd1024_prefix.dat ..\..\Binary\ || exit /b
+copy hd1k_prefix.dat ..\..\Binary\ || exit /b
 
 echo.
 echo Building Combo Disk (1024 directory entry format) Image...
-copy /b hd1024_prefix.dat + ..\..\Binary\hd1024_cpm22.img + ..\..\Binary\hd1024_zsdos.img + ..\..\Binary\hd1024_nzcom.img + ..\..\Binary\hd1024_cpm3.img + ..\..\Binary\hd1024_zpm3.img + ..\..\Binary\hd1024_ws4.img ..\..\Binary\hd1024_combo.img || exit /b
+copy /b hd1k_prefix.dat + ..\..\Binary\hd1k_cpm22.img + ..\..\Binary\hd1k_zsdos.img + ..\..\Binary\hd1k_nzcom.img + ..\..\Binary\hd1k_cpm3.img + ..\..\Binary\hd1k_zpm3.img + ..\..\Binary\hd1k_ws4.img ..\..\Binary\hd1k_combo.img || exit /b

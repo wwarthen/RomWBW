@@ -3,7 +3,7 @@
 # and available on commandline for this build to work!!!
 # Typically "sudo apt install pandoc, texlive-latex-extra, gpp"
 #
-OBJECTS = GettingStarted.pdf GettingStarted.gfm GettingStarted.txt Applications.pdf Architecture.pdf Catalog.pdf ROM_Applications.pdf 
+OBJECTS = ReadMe.gfm Readme.txt UserGuide.pdf SystemGuide.pdf Applications.pdf ROM_Applications.pdf Catalog.pdf Errata.pdf
 # DEST = ../../Doc
 TOOLS = ../../Tools
 OTHERS = *.tmp
@@ -31,10 +31,11 @@ all :: deploy
 	pandoc $< -f markdown -t plain -s -o $@ --default-image-extension=pdf
 
 deploy :
-	cp GettingStarted.pdf   "../../Doc/RomWBW Getting Started.pdf"
-	cp GettingStarted.gfm   "../../ReadMe.md"
-	cp GettingStarted.txt   "../../ReadMe.txt"
-	cp Applications.pdf     "../../Doc/RomWBW Applications.pdf"
-	cp Architecture.pdf     "../../Doc/RomWBW Architecture.pdf"
-	cp Catalog.pdf          "../../Doc/RomWBW Disk Catalog.pdf"
-	cp ROM_Applications.pdf "../../Doc/ROM Applications.pdf"
+	cp ReadMe.gfm            "../../ReadMe.md"
+	cp ReadMe.txt            "../../ReadMe.txt"
+	cp UserGuide.pdf         "../../Doc/RomWBW User Guide.pdf"
+	cp SystemGuide.pdf       "../../Doc/RomWBW System Guide.pdf"
+	cp Applications.pdf      "../../Doc/RomWBW Applications.pdf"
+	cp ROM_Applications.pdf  "../../Doc/RomWBW ROM Applications.pdf"
+	cp Catalog.pdf           "../../Doc/RomWBW Disk Catalog.pdf"
+	cp Erratapdf             "../../Doc/RomWBW Errata.pdf"

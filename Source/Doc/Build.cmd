@@ -11,22 +11,22 @@ set PATH=%TOOLS%\m4;%TOOLS%\gpp;%PATH%
 
 if not "%1"=="" (call :GenDoc %1 & goto :eof)
 
-call :GenDoc GettingStarted
-:: call :GenDoc UserGuide
+call :GenDoc ReadMe
+call :GenDoc UserGuide
+call :GenDoc SystemGuide
 call :GenDoc Applications
-:: call :GenDoc Errata
-:: call :GenDoc ZSystem
-call :GenDoc Architecture
-call :GenDoc Catalog
 call :GenDoc ROM_Applications
+call :GenDoc Catalog
+call :GenDoc Errata
 
-if exist GettingStarted.pdf copy GettingStarted.pdf "..\..\Doc\RomWBW Getting Started.pdf" || exit /b
-if exist GettingStarted.gfm copy GettingStarted.gfm ..\..\ReadMe.md || exit /b
-if exist GettingStarted.txt copy GettingStarted.txt ..\..\ReadMe.txt || exit /b
+if exist ReadMe.gfm copy Readme.gfm ..\..\ReadMe.md || exit /b
+if exist ReadMe.txt copy ReadMe.txt ..\..\ReadMe.txt || exit /b
+if exist UserGuide.pdf copy UserGuide.pdf "..\..\Doc\RomWBW User Guide.pdf" || exit /b
+if exist SystemGuide.pdf copy SystemGuide.pdf "..\..\Doc\RomWBW System Guide.pdf" || exit /b
 if exist Applications.pdf copy Applications.pdf "..\..\Doc\RomWBW Applications.pdf" || exit /b
-if exist Architecture.pdf copy Architecture.pdf "..\..\Doc\RomWBW Architecture.pdf" || exit /b
+if exist ROM_Applications.pdf copy ROM_Applications.pdf "..\..\Doc\RomWBW ROM Applications.pdf" || exit /b
 if exist Catalog.pdf copy Catalog.pdf "..\..\Doc\RomWBW Disk Catalog.pdf" || exit /b
-if exist ROM_Applications.pdf copy ROM_Applications.pdf "..\..\Doc\ROM Applications.pdf" || exit /b
+if exist Errata.pdf copy Errata.pdf "..\..\Doc\RomWBW Errata.pdf" || exit /b
 
 echo.
 goto :eof

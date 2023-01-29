@@ -1,0 +1,204 @@
+$define{doc_title}{ReadMe}$
+$include{"Common.h"}$
+$define{doc_user}{[RomWBW User Guide]($doc_root$/RomWBW User Guide.pdf)}$
+$define{doc_sys}{[RomWBW System Guide]($doc_root$/RomWBW System Guide.pdf)}$
+$define{doc_apps}{[RomWBW Applications]($doc_root$/RomWBW Applications.pdf)}$
+$define{doc_romapps}{[RomWBW ROM Applications]($doc_root$/RomWBW ROM Applications.pdf)}$
+$define{doc_catalog}{[RomWBW Disk Catalog]($doc_root$/RomWBW Disk Catalog.pdf)}$
+$define{doc_errata}{[RomWBW Errata]($doc_root$/RomWBW Errata.pdf)}$
+
+# Overview
+
+RomWBW provides a complete software system for a wide variety of
+hobbyist Z80/Z180/Z280 CPU-based systems produced by these developer
+communities:
+
+* [RetroBrew Computers](https://www.retrobrewcomputers.org)
+* [RC2014](https://rc2014.co.uk)
+* [retro-comp](https://groups.google.com/forum/#!forum/retro-comp)
+
+General features include:
+
+* Banked memory services for several banking designs
+* Disk drivers for RAM, ROM, Floppy, IDE, CF, and SD
+* Serial drivers including UART (16550-like), ASCI, ACIA, SIO
+* Video drivers including TMS9918, SY6545, MOS8563, HD6445
+* Keyboard (PS/2) drivers via VT8242 or PPI interfaces
+* Real time clock drivers including DS1302, BQ4845
+* Multiple OS support including CP/M 2.2, ZSDOS, CP/M 3, ZPM3, QPM, & p-System
+* Built-in VT-100 terminal emulation support
+
+RomWBW is distributed as both source code and pre-built ROM and disk
+images. Some of the provided software can be launched directly from the
+ROM firmware itself:
+
+* System Monitor
+* Operating Systems (CP/M 2.2, ZSDOS)
+* ROM BASIC (Nascom BASIC and Tasty BASIC)
+* ROM Forth
+
+A dynamic disk drive letter assignment mechanism allows mapping
+operating system drive letters to any available disk media.
+Additionally, mass media devices (IDE Disk, CF Card, SD Card) support
+the use of multiple slices (up to 256 per device). Each slice contains
+a complete CP/M filesystem and can be mapped independently to any
+drive letter. This overcomes the inherent size limitations in legacy
+OSes and allows up to 2GB of accessible storage on a single device.
+
+The pre-built ROM firmware images are generally suitable for most
+users. However, it is also very easy to modify and build custom ROM
+images that fully tailor the firmware to your specific preferences.
+All tools required to build custom ROM firmware under Windows are
+included -- no need to install assemblers, etc.  The firmware can also
+be built using Linux or MacOS after confirming a few standard tools
+have been installed.
+
+Multiple disk images are provided in the distribution. Most disk
+images contain a complete, bootable, ready-to-run implementation of a
+specific operating system. A "combo" disk image contains multiple
+slices, each with a full operating system implementation. If you use
+this disk image, you can easily pick whichever operating system you
+want to boot without changing media.
+
+By design, RomWBW isolates all of the hardware specific fucntions in
+the ROM chip itself.  The ROM provides a hardware abstraction layer
+such that all of the operating systems and applications on a disk
+will run on any RomWBW-based system.  To put it simply, you can take
+a disk (or CF/SD Card) and move it between systems transparently.
+
+A tool is provided that allows you to access a FAT-12/16/32 filesystem.
+The FAT filesystem may coreside on the same disk media as RomWBW slices
+or on stand-alone media.  This makes exchanging files with modern OSes
+such as Windows, MacOS, and Linux very easy.
+
+# Acquiring RomWBW
+
+The [RomWBW Repository](https://github.com/wwarthen/RomWBW) on GitHub is
+the official distribution location for all project source and 
+documentation.  The fully-built distribution releases are available on 
+the [RomWBW Releases Page](https://github.com/wwarthen/RomWBW/releases) 
+of the repository.  On this page, you will normally see a Development 
+Snapshot as well as recent stable releases. Unless you have a specific 
+reason, I suggest you stick to the most recent stable release. Expand 
+the "Assets" drop-down for the release you want to download, then select
+the asset named RomWBW-vX.X.X-Package.zip. The Package asset includes 
+all pre-built ROM and Disk images as well as full source code. The other
+assets contain only source code and do not have the pre-built ROM or 
+disk images.
+
+All source code and distributions are maintained on GitHub. Code
+contributions are very welcome.
+
+# Installation & Operation
+
+In general, installation of RomWBW on your platform is very simple. You 
+just need to program your ROM with the correct ROM image from the RomWBW
+distribution.  Subsequently, you can write disk images on your disk 
+drives (IDE disk, CF Card, SD Card, etc.) which then provides even more 
+functionality.
+
+Complete instructions for installation and operation of RomWBW are
+found in the $doc_user$.
+
+## Documentation
+
+This document is part of a set of documentation for $doc_product$ that
+also includes:
+
+* $doc_user$
+* $doc_sys$
+* $doc_apps$
+* $doc_romapps$
+* $doc_errata$
+
+# Acknowledgments
+
+While I have heavily modified much of the code, I want to acknowledge
+that much of the work is derived from the work of others in the
+RetroBrew Computers Community including Andrew Lynch, Dan Werner, Max
+Scane, David Giles, John Coffman, and probably many others I am not
+clearly aware of (let me know if I omitted someone!).
+
+I especially want to credit Douglas Goodall for contributing code,
+time, testing, and advice. He created an entire suite of application
+programs to enhance the use of RomWBW. However, he is looking for
+someone to continue the maintenance of these applications and they
+have become unusable due to changes within RomWBW. As of RomWBW 2.6,
+these applications are no longer provided.
+
+* David Giles contributed support for the CSIO support in the SD Card
+driver.
+* Ed Brindley contributed some of the code that supports the RC2014
+platform.
+* Phil Summers contributed the Forth and BASIC adaptations in ROM, the
+AY-3-8910 sound driver as well as a long list of general code
+enhancements.
+* Phillip Stevens contributed support for FreeRTOS.
+* Curt Mayer contributed the original Linux / MacOS build process.
+* UNA BIOS and FDISK80 are the products of John Coffman.
+* FLASH4 is a product of Will Sowerbutts.
+* CLRDIR is a product of Max Scane.
+* Tasty Basic is a product of Dimitri Theulings.
+* Dean Netherton contributed the sound driver interface and
+the SN76489 sound driver.
+* The RomWBW Disk Catalog document was produced by Mykl Orders.
+
+Contributions of all kinds to RomWBW are very welcome.
+
+# Licensing
+
+RomWBW is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+RomWBW is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with RomWBW.  If not, see <https://www.gnu.org/licenses/>.
+
+Portions of RomWBW were created by, contributed by, or derived from
+the work of others.  It is believed that these works are being used
+in accordance with the intentions and/or licensing of their creators.
+
+If anyone feels their work is being used outside of it's intended
+licensing, please notify:
+
+> Wayne Warthen
+> wwarthen@gmail.com
+
+RomWBW is an aggregate work.  It is composed of many individual,
+standalone programs that are distributed as a whole to function as
+a cohesive system.  Each program may have it's own licensing which
+may be different from other programs within the aggregate.
+
+In some cases, a single program (e.g., CP/M Operating System) is
+composed of multiple components with different licenses.  It is
+believed that in all such cases the licenses are compatible with
+GPL version 3.
+
+RomWBW encourages code contributions from others.  Contributors
+may assert their own copyright in their contributions by
+annotating the contributed source code appropriately.  Contributors
+are further encouraged to submit their contributions via the RomWBW
+source code control system to ensure their contributions are clearly
+documented.
+
+All contributions to RomWBW are subject to this license.
+
+# Getting Assistance
+
+The best way to get assistance with RomWBW or any aspect of the
+RetroBrew Computers projects is via one of the community forums:
+
+* [RetroBrew Computers Forum](https://www.retrobrewcomputers.org/forum/)
+* [RC2014 Google Group](https://groups.google.com/forum/#!forum/rc2014-z80)
+* [retro-comp Google Group](https://groups.google.com/forum/#!forum/retro-comp)
+
+Submission of issues and bugs are welcome at the
+[RomWBW GitHub Repository](https://github.com/wwarthen/RomWBW).
+
+Also feel free to email $doc_author$ at [$doc_authmail$](mailto:$doc_authmail$).
