@@ -7,7 +7,7 @@ setlocal
 ::
 
 set TOOLS=..\..\Tools
-set PATH=%TOOLS%\m4;%TOOLS%\gpp;%PATH%
+set PATH=%TOOLS%\gpp;%PATH%
 
 if not "%1"=="" (call :GenDoc %1 & goto :eof)
 
@@ -40,7 +40,7 @@ echo Processing document %1.md...
 ::gpp -o %1.tmp %1.md
 ::gpp -o %1.tmp -U "\\" "" "{" "}{" "}" "{" "}" "#" "" %1.md
 ::gpp -o %1.tmp -U "" "" "(" "," ")" "(" ")" "#" "" -M "#" "\n" " " " " "\n" "(" ")" %1.md
-gpp -o %1.tmp -U "$" "$" "{" "}{" "}$" "{" "}" "@@@" "" -M "$" "$" "{" "}{" "}$" "{" "}" %1.md
+gpp -o %1.tmp -U "$" "$" "{" "}{" "}$" "{" "}" "@@@" "" -M "$" "$" "{" "}{" "}$" "{" "}" %1.md || exit /b
 
 :: pandoc %1.tmp -f markdown -s -o %1.tex --default-image-extension=pdf || exit /b
 :: pause

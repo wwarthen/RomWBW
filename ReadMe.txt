@@ -1,6 +1,6 @@
 RomWBW ReadMe
 Wayne Warthen (mailto:wwarthen@gmail.com)
-27 Jan 2023
+29 Jan 2023
 
 
 
@@ -47,7 +47,7 @@ A dynamic disk drive letter assignment mechanism allows mapping
 operating system drive letters to any available disk media.
 Additionally, mass media devices (IDE Disk, CF Card, SD Card) support
 the use of multiple slices (up to 256 per device). Each slice contains a
-complete CP/M filesystem and can be mapped independently to any drive
+complete CP/M file system and can be mapped independently to any drive
 letter. This overcomes the inherent size limitations in legacy OSes and
 allows up to 2GB of accessible storage on a single device.
 
@@ -66,16 +66,16 @@ with a full operating system implementation. If you use this disk image,
 you can easily pick whichever operating system you want to boot without
 changing media.
 
-By design, RomWBW isolates all of the hardware specific fucntions in the
+By design, RomWBW isolates all of the hardware specific functions in the
 ROM chip itself. The ROM provides a hardware abstraction layer such that
 all of the operating systems and applications on a disk will run on any
 RomWBW-based system. To put it simply, you can take a disk (or CF/SD
 Card) and move it between systems transparently.
 
-A tool is provided that allows you to access a FAT-12/16/32 filesystem.
-The FAT filesystem may coreside on the same disk media as RomWBW slices
-or on stand-alone media. This makes exchanging files with modern OSes
-such as Windows, MacOS, and Linux very easy.
+A tool is provided that allows you to access a FAT-12/16/32 file system.
+The FAT file system may be coresident on the same disk media as RomWBW
+slices or on stand-alone media. This makes exchanging files with modern
+OSes such as Windows, MacOS, and Linux very easy.
 
 Acquiring RomWBW
 
@@ -117,34 +117,51 @@ includes:
 
 Acknowledgments
 
-While I have heavily modified much of the code, I want to acknowledge
-that much of the work is derived from the work of others in the
-RetroBrew Computers Community including Andrew Lynch, Dan Werner, Max
-Scane, David Giles, John Coffman, and probably many others I am not
-clearly aware of (let me know if I omitted someone!).
+I want to acknowledge that a great deal of the code and inspiration for
+RomWBW has been provided by or derived from the work of others in the
+RetroBrew Computers Community. I sincerely appreciate all of their
+contributions. The list below is probably missing many names – please
+let me know if I missed you!
 
-I especially want to credit Douglas Goodall for contributing code, time,
-testing, and advice. He created an entire suite of application programs
-to enhance the use of RomWBW. However, he is looking for someone to
-continue the maintenance of these applications and they have become
-unusable due to changes within RomWBW. As of RomWBW 2.6, these
-applications are no longer provided.
+-   Andrew Lynch started it all when he created the N8VEM Z80 SBC which
+    became the first platform RomWBW supported. Some of his code can
+    still be found in RomWBW.
 
--   David Giles contributed support for the CSIO support in the SD Card
-    driver.
+-   Dan Werner wrote much of the code from which RomWBW was originally
+    derived and he has always been a great source of knowledge and
+    advice.
+
+-   Douglas Goodall contributed code, time, testing, and advice in “the
+    early days”. He created an entire suite of application programs to
+    enhance the use of RomWBW. Unfortunately, they have become unusable
+    due to internal changes within RomWBW. As of RomWBW 2.6, these
+    applications are no longer provided.
+
+-   David Giles created support for the Z180 CSIO which is now included
+    SD Card driver.
+
 -   Ed Brindley contributed some of the code that supports the RC2014
     platform.
+
 -   Phil Summers contributed the Forth and BASIC adaptations in ROM, the
     AY-3-8910 sound driver as well as a long list of general code
     enhancements.
+
 -   Phillip Stevens contributed support for FreeRTOS.
+
 -   Curt Mayer contributed the original Linux / MacOS build process.
+
 -   UNA BIOS and FDISK80 are the products of John Coffman.
+
 -   FLASH4 is a product of Will Sowerbutts.
+
 -   CLRDIR is a product of Max Scane.
+
 -   Tasty Basic is a product of Dimitri Theulings.
+
 -   Dean Netherton contributed the sound driver interface and the
     SN76489 sound driver.
+
 -   The RomWBW Disk Catalog document was produced by Mykl Orders.
 
 Contributions of all kinds to RomWBW are very welcome.
