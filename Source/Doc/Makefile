@@ -3,7 +3,7 @@
 # and available on commandline for this build to work!!!
 # Typically "sudo apt install pandoc, texlive-latex-extra, gpp"
 #
-OBJECTS = ReadMe.gfm Readme.txt UserGuide.pdf SystemGuide.pdf Applications.pdf ROM_Applications.pdf Catalog.pdf Errata.pdf
+OBJECTS = ReadMe.gfm ReadMe.txt UserGuide.pdf SystemGuide.pdf Applications.pdf ROM_Applications.pdf Catalog.pdf Errata.pdf
 # DEST = ../../Doc
 TOOLS = ../../Tools
 OTHERS = *.tmp
@@ -13,7 +13,7 @@ include $(TOOLS)/Makefile.inc
 all :: deploy
 
 %.tmp : %.md
-	gpp -o $@ -U "$" "$" "{" "}{" "}$" "{" "}" "@@@" "" -M "$" "$" "{" "}{" "}$" "{" "}" $<
+	gpp -o $@ -U "$$" "$$" "{" "}{" "}$$" "{" "}" "@@@" "" -M "$$" "$$" "{" "}{" "}$$" "{" "}" $<
 
 %.pdf : %.tmp
 	pandoc $< -f markdown -t latex -s -o $@ --default-image-extension=pdf
@@ -38,4 +38,4 @@ deploy :
 	cp Applications.pdf      "../../Doc/RomWBW Applications.pdf"
 	cp ROM_Applications.pdf  "../../Doc/RomWBW ROM Applications.pdf"
 	cp Catalog.pdf           "../../Doc/RomWBW Disk Catalog.pdf"
-	cp Erratapdf             "../../Doc/RomWBW Errata.pdf"
+	cp Errata.pdf             "../../Doc/RomWBW Errata.pdf"
