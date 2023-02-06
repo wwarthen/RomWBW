@@ -35,23 +35,22 @@ goto :eof
 
 echo.
 
-echo Processing document %1.md...
+echo Processing document %1...
 
 ::gpp -o %1.tmp %1.md
 ::gpp -o %1.tmp -U "\\" "" "{" "}{" "}" "{" "}" "#" "" %1.md
 ::gpp -o %1.tmp -U "" "" "(" "," ")" "(" ")" "#" "" -M "#" "\n" " " " " "\n" "(" ")" %1.md
 gpp -o %1.tmp -U "$" "$" "{" "}{" "}$" "{" "}" "@@@" "" -M "$" "$" "{" "}{" "}$" "{" "}" %1.md || exit /b
 
-:: pandoc %1.tmp -f markdown -s -o %1.tex --default-image-extension=pdf || exit /b
-:: pause
-:: rem texify --pdf --clean %1.ltx || exit /b
-:: texify --pdf %1.tex || exit /b
-:: goto :eof
+::pandoc %1.tmp -f markdown -s -o %1.tex --default-image-extension=pdf || exit /b
+::::rem texify --pdf --clean %1.ltx || exit /b
+::texify --pdf --clean --engine=luatex --verbose %1.tex || exit /b
+::goto :eof
 
-pandoc %1.tmp -f markdown -t pdf -s -o %1.pdf --default-image-extension=pdf || exit /b
+pandoc %1.tmp -f markdown -t pdf -s -o %1.pdf --default-image-extension=pdf --pdf-engine=lualatex || exit /b
 pandoc %1.tmp -f markdown -t html -s -o %1.html --default-image-extension=png || exit /b
 pandoc %1.tmp -f markdown -t dokuwiki -s -o %1.dw --default-image-extension=png || exit /b
 pandoc %1.tmp -f markdown -t gfm -o %1.gfm --default-image-extension=png || exit /b
-pandoc %1.tmp -f markdown -t plain -s -o %1.txt --default-image-extension=png || exit /b
+pandoc %1.tmp -f markdown -t gfm-yaml_metadata_block -s -o %1.txt --markdown-headings=setext --default-image-extension=png || exit /b
 
 goto :eof

@@ -1,12 +1,9 @@
 $define{doc_title}{User Guide}$
-$include{"Common.h"}$
-$define{doc_sys}{[RomWBW System Guide]($doc_root$/RomWBW System Guide.pdf)}$
-$define{doc_apps}{[RomWBW Applications]($doc_root$/RomWBW Applications.pdf)}$
-$define{doc_romapps}{[RomWBW ROM Applications]($doc_root$/RomWBW ROM Applications.pdf)}$
-$define{doc_catalog}{[RomWBW Disk Catalog]($doc_root$/RomWBW Disk Catalog.pdf)}$
-$define{doc_errata}{[RomWBW Errata]($doc_root$/RomWBW Errata.pdf)}$
+$include{"Book.h"}$
 
-This document is a general usage guide for the RomWBW software and is 
+#### Preface
+
+This document is a general usage guide for the RomWBW software and is
 generally the best place to start with RomWBW.  There are several
 companion documents you should refer to as appropriate:
 
@@ -16,7 +13,7 @@ companion documents you should refer to as appropriate:
 
 * $doc_apps$ is a reference for the OS-hosted proprietary command
   line applications that were created to enhance RomWBW.
-  
+
 * $doc_romapps$ is a reference for the ROM-hosted applications provided
   with RomWBW including the monitor, programming languages, etc.
 
@@ -26,33 +23,38 @@ companion documents you should refer to as appropriate:
 * $doc_errata$ is updated as needed to document issues or anomalies
   discovered in the current software distribution.
 
-Since RomWBW is purely a software product for many different platforms, 
-the documentation does **not** cover hardware construction, 
-configuration, or troubleshooting -- please see your hardware provider 
+Since RomWBW is purely a software product for many different platforms,
+the documentation does **not** cover hardware construction,
+configuration, or troubleshooting -- please see your hardware provider
 for this information.
 
-RomWBW exists primarily to host preexisting operating systems and 
-applications. As such, the documentation of these is not repeated here.
-Please refer to the Doc directory of the RomWBW distribution where you
-will find specific documents covering these components.
-
-Each of the operating systems and ROM applications included with RomWBW 
-are sophisticated tools in their own right. It is not reasonable to 
+Each of the operating systems and ROM applications included with RomWBW
+are sophisticated tools in their own right. It is not reasonable to
 fully document their usage here. However, you will find complete manuals
-in PDF format in the Doc directory of the distribution.  The intention 
-of this document is to describe the operation of RomWBW and the ways in 
-which it enhances the operation of the included applications and 
+in PDF format in the Doc directory of the distribution.  The intention
+of this document is to describe the operation of RomWBW and the ways in
+which it enhances the operation of the included applications and
 operating systems.
+
+On a personal note, I found this document very difficult to write.
+Members of the retro-computing community have dramatically different
+experiences, skill levels, and desires.  I realize some readers will
+find this document far too basic.  Others will find it lacking in many
+areas.  I am doing my best and encourage you to provide constructive
+feedback.
 
 # Overview
 
-RomWBW provides a complete software system for a wide variety of
-hobbyist Z80/Z180/Z280 CPU-based systems produced by these developer
-communities:
+RomWBW software provides a complete, commercial quality 
+implementation of CP/M (and workalike) operating systems and 
+applications for modern Z80/180/280 retro-computing hardware systems.
+A wide variety of platforms are supported including those
+produced by these developer communities:
 
 * [RetroBrew Computers](https://www.retrobrewcomputers.org)
 * [RC2014](https://rc2014.co.uk)
 * [retro-comp](https://groups.google.com/forum/#!forum/retro-comp)
+* [Small Computer Central](https://smallcomputercentral.com/)
 
 General features include:
 
@@ -62,7 +64,7 @@ General features include:
 * Video drivers including TMS9918, SY6545, MOS8563, HD6445
 * Keyboard (PS/2) drivers via VT8242 or PPI interfaces
 * Real time clock drivers including DS1302, BQ4845
-* Multiple OS support including CP/M 2.2, ZSDOS, CP/M 3, ZPM3, QPM, & p-System
+* OS Adaptations of CP/M 2.2, ZSDOS, CP/M 3, NZ-COM, ZPM3, QPM, p-System, and FreeRTOS
 * Built-in VT-100 terminal emulation support
 
 RomWBW is distributed as both source code and pre-built ROM and disk
@@ -113,22 +115,22 @@ such as Windows, MacOS, and Linux very easy.
 ## Acquiring RomWBW
 
 The [RomWBW Repository](https://github.com/wwarthen/RomWBW) on GitHub is
-the official distribution location for all project source and 
-documentation.  The fully-built distribution releases are available on 
-the [RomWBW Releases Page](https://github.com/wwarthen/RomWBW/releases) 
-of the repository.  On this page, you will normally see a Development 
-Snapshot as well as recent stable releases. Unless you have a specific 
-reason, I suggest you stick to the most recent stable release. Expand 
+the official distribution location for all project source and
+documentation.  The fully-built distribution releases are available on
+the [RomWBW Releases Page](https://github.com/wwarthen/RomWBW/releases)
+of the repository.  On this page, you will normally see a Development
+Snapshot as well as recent stable releases. Unless you have a specific
+reason, I suggest you stick to the most recent stable release. Expand
 the "Assets" drop-down for the release you want to download, then select
-the asset named RomWBW-vX.X.X-Package.zip. The Package asset includes 
+the asset named RomWBW-vX.X.X-Package.zip. The Package asset includes
 all pre-built ROM and Disk images as well as full source code. The other
-assets contain only source code and do not have the pre-built ROM or 
+assets contain only source code and do not have the pre-built ROM or
 disk images.
 
 All source code and distributions are maintained on GitHub. Code
 contributions are very welcome.
 
-### Distribution Directory Layout
+#### Distribution Directory Layout
 
 The RomWBW distribution is a compressed zip archive file organized in
 a set of directories. Each of these directories has it's own
@@ -144,89 +146,93 @@ directories are:
 
 ## Installation
 
-In general, installation of RomWBW on your platform is very simple. You 
+In general, installation of RomWBW on your platform is very simple. You
 just need to program your ROM with the correct ROM image from the RomWBW
-distribution.  Subsequently, you can write disk images on your disk 
-drives (IDE disk, CF Card, SD Card, etc.) which then provides even more 
+distribution.  Subsequently, you can write disk images on your disk
+drives (IDE disk, CF Card, SD Card, etc.) which then provides even more
 functionality.
 
-The pre-built ROM images will automatically detect and support typical 
-devices for their corresponding platform including serial ports, video 
-adapters, on-board disk interfaces, and PropIO/ParPortProp boards 
+The pre-built ROM images will automatically detect and support typical
+devices for their corresponding platform including serial ports, video
+adapters, on-board disk interfaces, and PropIO/ParPortProp boards
 without building a custom ROM. The distribution is a .zip archive. After
-downloading it to a working directory on your modern computer 
-(Windows/Linux/Mac) use any zip tool to extract the contents of the 
+downloading it to a working directory on your modern computer
+(Windows/Linux/Mac) use any zip tool to extract the contents of the
 archive.
 
-Depending on how you got your hardware, you may have already been 
-provided with a pre-programmed ROM chip. If so, use that initially. 
-Otherwise, you will need to use a ROM programmer to initially program 
+Depending on how you got your hardware, you may have already been
+provided with a pre-programmed ROM chip. If so, use that initially.
+Otherwise, you will need to use a ROM programmer to initially program
 your ROM chip. Please refer to the documentation that came with your ROM
 programmer for more information. Once you have a running RomWBW system,
-you can generally update your ROM to a newer version in-situ with the 
-included ROM Flashing tool (Will Sowerbutts' FLASH application) as 
+you can generally update your ROM to a newer version in-situ with the
+included ROM Flashing tool (Will Sowerbutts' FLASH application) as
 described in the Upgrading section of this document.
 
-The Binary directory of the distribution contains the pre-built ROM and 
-disk images. The ROM image files all end in ".rom". Based on the table 
+The Binary directory of the distribution contains the pre-built ROM and
+disk images. The ROM image files all end in ".rom". Based on the table
 below, **carefully** pick the appropriate ROM image for your hardware.
 
-| Platform            | ROM Image File           | Baud        | Description                                      |
-| ------------------- | ------------------------ | ----------: | ------------------------------------------------ |
-| SBC                 | SBC_std.rom              | 38400       | RetroBrew SBC v1 or v2 ECB Z80                   |
-| Zeta&nbsp;V1        | ZETA_std.rom             | 38400       | RetroBrew Zeta V1 Z80, ParPortProp (optional)    |
-| Zeta&nbsp;V2        | ZETA2_std.rom            | 38400       | RetroBrew Zeta V2 Z80, ParPortProp (optional)    |
-| N8                  | N8_std.rom               | 38400       | RetroBrew N8 Z180, date code >= 2312             |
-| Mark&nbsp;IV        | MK4_std.rom              | 38400       | RetroBrew Mark IV ECB Z180                       |
-| RC2014&nbsp;Z80     | RCZ80_std.rom            | 115200      | RC2014 w/ Z80 CPU, requires 512K RAM/ROM module  |
-| RC2014&nbsp;Z80     | RCZ80_duart.rom          | 115200      | RC2014 w/ Z80 CPU w/ DUART serial module         |
-| RC2014&nbsp;Z80     | RCZ80_mt.rom             | 115200      | RC2014 w/ Z80 CPU w/ MT011 network/SPI module    |
-| RC2014&nbsp;Z80     | RCZ80_kio.rom            | 115200      | RC2014 w/ Z80 CPU, requires 512K RAM/ROM module  |
-| RC2014&nbsp;Z180\*  | RCZ180_ext.rom           | 115200      | RC2014 w/ Z180 CPU & 512K banked RAM/ROM module  |
-| RC2014&nbsp;Z180\*  | RCZ180_nat.rom           | 115200      | RC2014 w/ Z180 CPU & 512K native RAM/ROM module  |
-| RC2014&nbsp;Z280\*  | RCZ180_ext.rom           | 115200      | RC2014 w/ Z280 CPU & 512K banked RAM/ROM module  |
-| RC2014&nbsp;Z280\*  | RCZ180_nat.rom           | 115200      | RC2014 w/ Z280 CPU & 512K native RAM/ROM module  |
-| Easy&nbsp;Z80       | EZZ80_std.rom            | 115200      | Sergey Kiselev's Easy Z80                        |
-| Tiny&nbsp;Z80       | EZZ80_tz80.rom           | 115200      | Sergey Kiselev's Tiny Z80                        |
-| Z80-512K            | EZZ80_skz.rom            | 115200      | Sergey Kiselev's Z80+RAM+ROM+CPLD module         |
-| SC126               | SCZ180_126.rom           | 115200      | Stephen Cousin's SC126 Z180                      |
-| SC130               | SCZ180_130.rom           | 115200      | Stephen Cousin's SC130 Z180                      |
-| SC131               | SCZ180_131.rom           | 115200      | Stephen Cousin's SC131 Z180                      |
-| SC140               | SCZ180_140.rom           | 115200      | Stephen Cousin's SC140 Z180                      |
-| Dyno                | DYNO_std.rom             | 38400       | Steve Garcia's Z180 Dyno Computer                |
-| MBC                 | MBC_std.rom              | 38400       | Andrew Lynch's Nhyodyne Multi Board Computer     |
-| RPH                 | RPH_std.rom              | 38400       | Andrew Lynch's Rhyophyre Single Board Computer   |
-| ZRC                 | RCZ80_zrc.rom            | 115200      | Bill Shen's Z80 CPU w/ CPLD for RC2014 bus       |
-| ZZRC                | RCZ280_nat_zzr.rom       | 115200      | Bill Shen's Z280 CPU w/ CPLD for RC2014 bus      |
-| ZZ80MB              | RCZ280_nat_zz.rom        | 115200      | Bill Shen's Z280 CPU Motherboard w/ RC2014 slots |
+| **Description**                                  | **ROM Image File**    | **Baud Rate** |
+| ------------------------------------------------ | --------------------- | ------------: |
+| RetroBrew Z80 SBC for ECB Bus                    | SBC_std.rom           | 38400         |
+| RetroBrew Zeta V1 Z80, ParPortProp               | ZETA_std.rom          | 38400         |
+| RetroBrew Zeta V2 Z80, ParPortProp               | ZETA2_std.rom         | 38400         |
+| RetroBrew N8 Z180 (date code >= 2312)            | N8_std.rom            | 38400         |
+| RetroBrew Mark IV Z180 for ECB Bus               | MK4_std.rom           | 38400         |
+| RC/BP80 Bus Z80, 512K RAM/ROM                    | RCZ80_std.rom         | 115200        |
+| RC/BP80 Bus Z80, 512K RAM/ROM, DUART             | RCZ80_duart.rom       | 115200        |
+| RC/BP80 Bus Z80, 512K RAM/ROM, MT011             | RCZ80_mt.rom          | 115200        |
+| RC/BP80 Bus Z80, 512K RAM/ROM, KIO               | RCZ80_kio.rom         | 115200        |
+| RC/BP80 Bus Z180 w/ external banking             | RCZ180_ext.rom        | 115200        |
+| RC/BP80 Bus Z180 w/ native banking               | RCZ180_nat.rom        | 115200        |
+| RC/BP80 Bus Z280 w/ external banking             | RCZ180_ext.rom        | 115200        |
+| RC/BP80 Bus Z280 w/ native banking               | RCZ180_nat.rom        | 115200        |
+| Sergey Kiselev's Easy Z80 SBC w/ RC Bus          | EZZ80_std.rom         | 115200        |
+| Sergey Kiselev's Tiny EIPC Z80 SBC w/ RC Bus     | EZZ80_tz80.rom        | 115200        |
+| Sergey Kiselev's Z80-512K Module for RC Bus      | EZZ80_skz.rom         | 115200        |
+| Stephen Cousin's SC126 Z180 SBC w/ BP80 Bus      | SCZ180_126.rom        | 115200        |
+| Stephen Cousin's SC130 Z180 SBC w/ RC Bus        | SCZ180_130.rom        | 115200        |
+| Stephen Cousin's SC131 Z180 Pocket Computer      | SCZ180_131.rom        | 115200        |
+| Stephen Cousin's SC140 Z180 for Z50Bus           | SCZ180_140.rom        | 115200        |
+| Steve Garcia's Z180 Dyno SBC w/ Dyno Bus         | DYNO_std.rom          | 38400         |
+| Andrew Lynch's Nhyodyne Z80 MBC                  | MBC_std.rom           | 38400         |
+| Andrew Lynch's Rhyophyre Z180 SBC                | RPH_std.rom           | 38400         |
+| Bill Shen's Z80 ZRC for RC Bus                   | RCZ80_zrc.rom         | 115200        |
+| Bill Shen's Z280 ZZRCC for RC Bus                | RCZ280_nat_zzr.rom    | 115200        |
+| Bill Shen's Z280 ZZ80MB SBC w/ RC Bus            | RCZ280_nat_zz.rom     | 115200        |
 
-\*The RC2014 Z180 & Z280 requires a separate RAM/ROM memory module. 
-There are two types of these modules and you must pick the ROM for your 
-type of memory module.  The first type of RAM module includes bank
-switching logic -- this is called external ("ext") because the bank
-switching is performed externally from the CPU.  The second type of
-RAM module has no bank switching logic -- this is called native ("nat")
-because the CPU itself provides the bank switching logic.  Only Z180
-and Z280 CPUs have the ability to do bank switching in the CPU, so the
-ext/nat selection only applies to them.  Z80 CPUs have no bank switching
-logic, so they are always configured for external bank switching.
+RC Bus refers to Spencer Owen's RC2014 bus specification.  BP80 Bus is 
+an enhanced 80-pin version of the RC2014 bus.
 
-All pre-built ROM images are pure binary files (they are not "hex" 
-files).  They are intended to be programmed starting at the very start 
-of the ROM chip (address 0).  All of the pre-built images are exactly 
-512KB in size.  If your system utilizes a larger ROM, you can just 
+The RC Bus Z180 & Z280 require a separate RAM/ROM memory module. There 
+are two types of these modules and you must pick the correct ROM for 
+your type of memory module.  The first option is the same as the 512K 
+RAM/ROM module for RC/BP80 Bus.  This is called external ("ext") because
+the bank switching is performed externally from the CPU.  The second 
+type of RAM/ROM module has no bank switching logic -- this is called 
+native ("nat") because the CPU itself provides the bank switching logic.
+Only Z180 and Z280 CPUs have the ability to do bank switching in the 
+CPU, so the ext/nat selection only applies to them.  Z80 CPUs have no 
+built-in bank switching logic, so they are always configured for 
+external bank switching.
+
+All pre-built ROM images are pure binary files (they are not "hex"
+files).  They are intended to be programmed starting at the very start
+of the ROM chip (address 0).  Most of the pre-built images are
+512KB in size.  If your system utilizes a larger ROM, you can just
 program the image into the first 512KB of the ROM for now.
 
-Initially, don't worry about trying to write a disk image to any
-disk (or CF/SD) devices you have.  This will be covered later.  You will be
+Initially, don't worry about trying to write a disk image to any disk 
+(or CF/SD) devices you have.  This will be covered later.  You will be 
 able to boot and check out your system with just the ROM.
 
-Connect a serial terminal or computer with terminal emulation software
-to the primary serial port of your CPU board. You may need to refer
-to your hardware provider's documentation for details. A null-modem
-connection may be required. Set the baud rate as indicated in the
-table above. Set the line characteristics to 8 data bits, 1 stop bit,
-no parity, and no flow control. If possible, select VT-100 terminal
+Connect a serial terminal or computer with terminal emulation software 
+to the primary serial port of your CPU board. You may need to refer to 
+your hardware provider's documentation for details. A null-modem 
+connection may be required. Set the baud rate as indicated in the table 
+above. Set the line characteristics to 8 data bits, 1 stop bit, no 
+parity, and no flow control. If possible, select ANSI or VT-100 terminal
 emulation.
 
 RomWBW will automatically attempt to detect and support typical add-on
@@ -244,7 +250,7 @@ choose a ROM-based operating system, system monitor, application, or boot
 from a disk device.
 
 Here is an example of a fairly typical startup.  Your system will have
-different devices and configuraion, but the startup should look
+different devices and configuration, but the startup should look
 similar.
 
 ```
@@ -298,7 +304,7 @@ you choose which operating system or application you want RomWBW to
 execute.
 
 The Boot Loader is explained in detail in the next section.  For now,
-you can try a few simply commands to confirm that you can interact
+you can try a few simple commands to confirm that you can interact
 with the system.
 
 At the Boot Loader prompt, you can type `H <enter>` for help.  You
@@ -306,46 +312,13 @@ can type `L <enter>` to list the available built-in ROM applications.
 If your terminal supports ANSI escape sequences, you can try the
 'G' command to play a simple on-screen game.
 
-If all of this seems fine, your ROM has been successfully programmed
-and you can continue below to learn how to use more of the RomWBW
-features.
+If all of this seems fine, your ROM has been successfully programmed.
+See the [Boot Loader Operation] section of this document for further
+instructions on use of the Boot Loader.
 
-## Devices and Units
+## Core System Information
 
-During the startup process, RomWBW displays a summary of all hardware
-along with a summary of the system configuration.  Understanding how
-RomWBW deals with your hardware.
-
-In order to support a wide variety of hardware, RomWBW HBIOS uses a
-modular approach to implementing device drivers and presenting devices
-to an operating system. In general, all devices are classified as
-one of the following:
-
-* Disk (RAM/ROM Disk, Floppy Disk, Hard Disk, CF Card, SD Card, etc.)
-* Character (Serial Ports, Parallel Ports, etc.)
-* Video (Video Display/Keyboard Interfaces)
-* RTC/NVRAM (Real Time Clock, Non-volatile RAM)
-
-HBIOS uses the concept of unit numbers to present a complex set of
-hardware devices to the operating system. As an example, a typical
-system might have a ROM Disk, RAM Disk, Floppy Drives, and Disk
-Drives. All of these are considered disk devices and are presented
-to the operating system as generic block devices. This means that
-each operating system does not need to imbed code to interact directly
-with all of the different hardware devices -- RomWBW takes care of that.
-
-There are 3 basic groups of information displayed during the startup
-process.
-
- * Core System Information
- * Hardware Discovery Log
- * Device Unit Assignments & Configuration
-
-Each of these is described below.
- 
-### Core System Information
-
-The first few lines of startup information displayed provide the
+During startup, the first few lines of information displayed provide the
 most basic information on your system.  In the example above, these
 lines are the Core System Information:
 
@@ -360,14 +333,23 @@ ROM VERIFY: 00 00 00 00 PASS
 
 The first line is a version identification banner for RomWBW.  After
 that you see a group of 4 lines describing the basic system.  In this
-example, the platform is the RC2014 running configuration RCZ80_kio
-at 7.372 MHz CPU clock speed.  There are 0 memory wait states and
-1 I/O wait state.  Z80 interrupt mode 2 is active and the bank memory
-manager is the "Z2" which is standard for RC2014.  There is 512KB
-of ROM total and 512KB of RAM total.  Finally, a verification of the
-checksum of the critical ROM banks is shown (all 4 should be 00).
+example, the platform is the RC2014 running a configuration named
+"RCZ80_kio".  The CPU is a Z80 with a current clock speed of 7.372 MHz.
+There are 0 memory wait states and 1 I/O wait state.  Z80 interrupt mode
+2 is active and the bank memory manager is type "Z2" which is standard
+for RC2014.  The system has 512KB of ROM total and 512KB of RAM total.
+Finally, a verification of the checksum of the critical ROM banks is
+shown (all 4 should be 00).
 
-### Hardware Discovery Log
+RomWBW attempts to detect the running configuration of the
+system at startup.  Depending on your hardware, there may be
+inaccuracies in this section.  For example, in some cases the CPU clock
+speed is assumed rather than actually measured.  This does not generally
+affect the operation of your system.  If you want to correct any of the
+information displayed, you can create a custom ROM which is described
+later.
+
+## Hardware Discovery
 
 The next set of messages during boot show the hardware devices as
 they are probed and initially configured.  In the example above, these
@@ -390,11 +372,11 @@ PPIDE0: LBA BLOCKS=0x00773800 SIZE=3815MB
 PPIDE1: NO MEDIA
 ```
 
-What you see will depend on your specific system and ROM, but should 
-match the hardware present in your system.  Each device has a tag that 
+What you see will depend on your specific system and ROM, but should
+match the hardware present in your system.  Each device has a tag that
 precedes the colon.  This tag identifies the driver and instance of each
- device.  For example, the tag "SIO0:" refers to the SIO serial port 
-driver and specifically the first channel.  The "SIO1:" tag refers to 
+device.  For example, the tag "SIO0:" refers to the SIO serial port
+driver and specifically the first channel.  The "SIO1:" tag refers to
 the second channel.
 
 In many cases you will see IO=0xNN in the data following the tag.  This
@@ -410,17 +392,36 @@ Finally, be aware that all ROMs are configured to identify specific
 hardware devices at specific port addresses.  If you add hardware
 to your system that is not automatically identified, you may need
 to build a custom ROM to add support for it.  Building a custom ROM
-is cover later.
+is covered later.
 
-### Device Unit Assignments & Configuration
+[Appendix A - Device Summary] contains a list of the RomWBW hardware devices which may
+help you identify the hardware discovered in your system.
 
-In the final group of startup messages, you will see the device
-unit summary table.
+## Device Unit Assignments
 
-As RomWBW boots, it assigns a unit number to each device. This unit
-number is used by the operating system to refer to the device. It is,
-therefore, important to know the unit number assigned to each device.
-Here is an example:
+In order to support a wide variety of hardware, RomWBW HBIOS uses a
+modular approach to implementing device drivers and presenting devices
+to an operating system. In general, all devices are classified as
+one of the following:
+
+* Disk (RAM/ROM Disk, Floppy Disk, Hard Disk, CF Card, SD Card, etc.)
+* Character (Serial Ports, Parallel Ports, etc.)
+* Video (Video Display/Keyboard Interfaces)
+* Sound (Audio Playback Devices)
+* RTC/NVRAM (Real Time Clock, Non-volatile RAM)
+* System (Internal Services, e.g. Timer, DMA, etc.)
+
+HBIOS uses the concept of unit numbers to present a generic set of
+hardware devices to the operating system. As an example, a typical
+system might have a ROM Disk, RAM Disk, Floppy Drives, and Disk
+Drives. All of these are considered disk devices and are presented
+to the operating system as generic block devices. This means that
+each operating system does not need to embed code to interact directly
+with all of the different hardware devices -- RomWBW takes care of that.
+
+In the final group of startup messages, a device unit summary table is
+displayed so that you can see how the actual hardware devices have
+been mapped to unit numbers during startup.
 
 ```
 Unit        Device      Type              Capacity/Mode
@@ -456,7 +457,8 @@ Note that Character Unit 0 is normally the initial system console.
 If your system has an RTC/NVRAM device, it will not be listed in the
 unit summary table. Since only a single RTC/NVRAM device can exist in
 one system, unit numbers are not required nor used for this type of
-device.
+device.  Also, System devices are not listed because they are entirely
+internal to RomWBW.
 
 # Boot Loader Operation
 
@@ -512,7 +514,7 @@ ROM Applications:
   U: User App
 ```
 
-## Launching from ROM
+## Starting Applications from ROM
 
 To start a ROM application you just enter the corresponding letter at
 the Boot Loader prompt.  In the following example, we launch the
@@ -536,8 +538,6 @@ Mark IV [MK4_wbw] Boot Loader
 Boot [H=Help]:
 ```
 
-### ROM Hosted Applications & OSes
-
 The following ROM applications and OSes are available at the boot loader
 prompt:
 
@@ -558,35 +558,40 @@ manual in the Doc directory of the distribution.  The OSes included
 in the ROM (CP/M 2.2 & Z-System) are described in the Operating Systems
 section of this document.
 
-In general, the command to exit any of these applications and restart 
-the system is `BYE`. The exceptions are the Monitor which uses `B` and 
+In general, the command to exit any of these applications and restart
+the system is `BYE`. The exceptions are the Monitor which uses `B` and
 Play which uses `Q`.
 
 Two of the ROM Applications are, in fact, complete operating systems.
 Specifically, "CP/M 2.2" and "Z-System" are provided so that you can
-actually start either operating system directly from your ROM without
-having any disk drives attached to your system.  This is a great way
-to experiment with an operating system before you have disk drives
-attached and initialized with content.
+actually start either operating system directly from your ROM.  This
+technique is useful when:
 
-## Launching from Disk
+* You don't yet have any real disk drives in your system
+* You want to setup real disk drives for the first time
+* You are upgrading your system and need to upgrade your real disk drives
+
+The RAM disk and ROM disk drives will be available even if you have
+no physical disk devices attached to your system.
+
+## Starting Operating Systems from Disk
 
 In order to make use of the more sophisticated operating systems
 available with RomWBW, you will need to boot an operating system
 from a disk.  Setting up disks is described in detail later.  For now,
 we will just go over the command line for performing this type of boot.
 
-From the Boot Loader prompt, you can enter a number (***\<diskunit\>***) 
-and optionally a dot followed by a second number (***\<slice\>***).  The 
-***\<disk unit\>*** unit number refers to a disk unit that was displayed 
-when the system was booted -- essentially it specifies the specific 
-physical disk drive you want to boot.  The ***\<slice\>*** numbers refers 
-to a portion of the disk unit to boot.  If no slice is specified, then 
-it is equivalent to booting from the first slice (slice 0).  Disk units 
+From the Boot Loader prompt, you can enter a number (***\<diskunit\>***)
+and optionally a dot followed by a second number (***\<slice\>***).  The
+***\<disk unit\>*** unit number refers to a disk unit that was displayed
+when the system was booted -- essentially it specifies the specific
+physical disk drive you want to boot.  The ***\<slice\>*** numbers refers
+to a portion of the disk unit to boot.  If no slice is specified, then
+it is equivalent to booting from the first slice (slice 0).  Disk units
 and slices are described in more detail later.
 
 Following this, you should see the operating system startup
-messages. Your operating system prompt will be `A>` and
+messages. Your operating system prompt will typically be `A>` and
 when you look at the drive letter assignments, you should see that A:
 has been assigned to the disk and slice you selected to boot.
 
@@ -632,6 +637,10 @@ CP/M-80 v2.2, 54.0K TPA
 A>
 ```
 
+Notice that a list of drive letters and their assignments to RomWBW
+devices and slices is displayed during the initialization of the
+operating system.
+
 Here is another example where we are booting disk unit 4, slice 3
 which is the CP/M 3 operating system on this disk:
 
@@ -657,12 +666,16 @@ CP/M v3.0 [BANKED] for HBIOS v3.1.1-pre.194
 A>
 ```
 
-Note that the Boot Loader simply launches whatever is in the disk
-unit/slice you have specified.  It does not know what operating system
-is at that location.  The layout of operating systems on disk media
-is described in the Using Disks section of this document.
+Some operating systems (such as CP/M 3 shown above) do not list the
+drive assignments during initialization.  In this case, you can use the
+`ASSIGN` command to display the current assignments.
 
-## System Configuration
+The Boot Loader simply launches whatever is in the disk unit/slice you
+have specified.  It does not know what operating system is at that
+location.  The layout of operating systems on disk media is described in
+the Using Disks section of this document.
+
+## System Management
 
 ### Listing Disk Device Inventory
 
@@ -757,7 +770,7 @@ The use of diagnostic levels above 4 are really intended only for
 software developers.  I do not recommend changing this under
 normal circumstances.
 
-# Disk Devices
+# Disk Management
 
 The systems supported by RomWBW all have the ability to use persistent
 disk media. A wide variety of disk devices are supported including
@@ -772,13 +785,13 @@ in more detail later.
 * Floppy Disk
 * Hard Disk (includes CF Cards and SD Cards)
 
-We will start by discussing each of these types of storage devices and 
-how to prepare them so files can be stored on them.  Subsequently, we 
-will describe how to install the pre-built disk images with bootable 
+We will start by discussing each of these types of storage devices and
+how to prepare them so files can be stored on them.  Subsequently, we
+will describe how to install the pre-built disk images with bootable
 operating systems and ready-to-run content.
 
-Some systems have disk interfaces built-in, while others will require 
-add-in cards. You will need to refer to the documentation for your 
+Some systems have disk interfaces built-in, while others will require
+add-in cards. You will need to refer to the documentation for your
 system for your specific options.
 
 In the RomWBW boot messages, you will see hardware discovery messages.
@@ -803,9 +816,9 @@ Once your your system has working disk devices, they will be accessible
 from any operating system you choose to run.  Disk storage is available
 whether you boot your OS from ROM or from the disk media itself.
 
-Refering back to the Boot Loader section on "Launching from ROM", you 
-could start CP/M 2.2 using the 'C' command.  As the operating system 
-starts up, you should see a list of drive letters assigned to the disk 
+Refering back to the Boot Loader section on "Launching from ROM", you
+could start CP/M 2.2 using the 'C' command.  As the operating system
+starts up, you should see a list of drive letters assigned to the disk
 media you have installed. Here is an example of this:
 
 ```
@@ -930,16 +943,16 @@ will find some files on the ROM disk that will work with ZSDOS, but
 will not work on CP/M 2.2. For example, `LDDS`, which loads the
 ZSDOS date/time stamper will only run under ZSDOS.
 
-Unlike other types of disk devices, ROM and RAM Disks do not contain an 
-actual operating system and are not "bootable".  However, they are 
-accessible to any operating system (whether the operating system is 
+Unlike other types of disk devices, ROM and RAM Disks do not contain an
+actual operating system and are not "bootable".  However, they are
+accessible to any operating system (whether the operating system is
 loaded from ROM or a different disk device).
 
 Neither RAM not ROM disks require explicit formatting or initialization.
 ROM disks are pre-formatted and RAM disks are formatted automatically
 with an empty directory when first used.
 
-### Flash ROM Disks
+#### Flash ROM Disks
 
 The limitation of ROM disks being read only can be overcome on some
 platforms with the appropriate selection of Flash ROM chip and
@@ -953,7 +966,7 @@ custom ROM.
 ## Floppy Disks
 
 If your system has the appropriate hardware, RomWBW will support the use
-of floppy disks.  The supported floppy disk formats are generally 
+of floppy disks.  The supported floppy disk formats are generally
 derived from the IBM PC floppy disk formats:
 
 * 5.25" 360K Double-sided, Double-density
@@ -1076,23 +1089,23 @@ media can be a real spinning hard disk, a CompactFlash Card, a
 SD Card, etc.  In this document, the term hard disk will apply
 equally to all of these.
 
-RomWBW uses Logical Block Addressing (LBA) to interact with all hard 
-disks.  The RomWBW operating systems use older Cylinder/Head/Sector 
+RomWBW uses Logical Block Addressing (LBA) to interact with all hard
+disks.  The RomWBW operating systems use older Cylinder/Head/Sector
 (CHS) addressing.  To accommodate the operating systems, RomWBW emulates
-CHS addressing.  Specifically, it makes all hard disks look like they 
+CHS addressing.  Specifically, it makes all hard disks look like they
 have 16 sectors and 16 heads.  The number of tracks varies with the size
 of the physical hard disk.
 
-It is recommended that hard disk media used with RomWBW be 1GB or 
-greater in capacity.  The reasons for this are discussed later, but it 
-allows you to use the recommended disk layout for RomWBW that 
+It is recommended that hard disk media used with RomWBW be 1GB or
+greater in capacity.  The reasons for this are discussed later, but it
+allows you to use the recommended disk layout for RomWBW that
 accommodates 64 CP/M filesystem slices and a 384KB FAT filesystem.
 
->>> Although we have not yet discussed how to get content on your disk 
->>> units, it is necessary to have a basic understanding of how RomWBW 
->>> handles disk devices as background.  The following sections explain how 
->>> disk units are managed within the operating systems.  We will 
->>> subsequently discuss how to actually setup disk devices with usable 
+>>> Although we have not yet discussed how to get content on your disk
+>>> units, it is necessary to have a basic understanding of how RomWBW
+>>> handles disk devices as background.  The following sections explain how
+>>> disk units are managed within the operating systems.  We will
+>>> subsequently discuss how to actually setup disk devices with usable
 >>> content.
 
 ## Slices
@@ -1159,21 +1172,21 @@ disks, floppy disks, etc.  All of these are considered to have a single
 slice and any attempt to ASSIGN a drive letter to a slice beyond that
 will result in an error message.
 
-It is very important to understand that RomWBW slices are not 
-individually created or allocated on your hard disk.  RomWBW uses a 
-single, large chunk of space on your hard disk to contain the slices.  
+It is very important to understand that RomWBW slices are not
+individually created or allocated on your hard disk.  RomWBW uses a
+single, large chunk of space on your hard disk to contain the slices.
 You should think of slices as just an index into a sequential set of 8MB
-areas that exist in this large chunk of space.  The next section will 
+areas that exist in this large chunk of space.  The next section will
 go into more detail on how slices are located on your hard disk.
 
 Although you do not need to allocate slices individually, you do need to
-initialize each slice for CP/M to use it.  This is somewhat analogous 
-to doing a FORMAT operation on other systems.  With RomWBW you use the 
-`CLRDIR` command to do this. This command is merely "clearing out" the 
-directory space of the slice referred to by a drive letter and setting 
+initialize each slice for CP/M to use it.  This is somewhat analogous
+to doing a FORMAT operation on other systems.  With RomWBW you use the
+`CLRDIR` command to do this. This command is merely "clearing out" the
+directory space of the slice referred to by a drive letter and setting
 up the new empty directory.  Since `CLRDIR` works on drive letters, make
-absolutely sure you know what media and slice are assigned to that 
-drive letter before using `CLRDIR` because CLRDIR will wipe out any 
+absolutely sure you know what media and slice are assigned to that
+drive letter before using `CLRDIR` because CLRDIR will wipe out any
 pre-existing contents of the slice.
 
 Here is an example of using `CLRDIR`.  In this example, the `ASSIGN`
@@ -1202,7 +1215,7 @@ Directory cleared.
 B>
 ```
 
-## Hard Disk Layout
+## Hard Disk Layouts
 
 As previously discussed, when RomWBW uses a hard disk, it utilizes a
 chunk of space for a sequential series of slices that contain the
@@ -1216,14 +1229,14 @@ to the size of the disk media -- if you attempted to read/write to a
 slice that would exceed the disk size, you would see I/O errors.  This
 is considered the "legacy" disk layout for RomWBW.
 
-RomWBW has subsequently been enhanced to support the concept of 
+RomWBW has subsequently been enhanced to support the concept of
 partitioning.  The partition mechanism is entirely compliant with Master
- Boot Record (MBR) Partition Tables introduced by IBM for the PC.  The 
+ Boot Record (MBR) Partition Tables introduced by IBM for the PC.  The
 Wikipedia article on the
 [Master Boot Record](https://en.wikipedia.org/wiki/Master_boot_record)
-is excellent if you are not familiar with them.  This is considered the 
-"modern" disk layout for RomWBW.  RomWBW uses the partition type id 
-0x2E.  RomWBW does not support extended partitions -- only a single 
+is excellent if you are not familiar with them.  This is considered the
+"modern" disk layout for RomWBW.  RomWBW uses the partition type id
+0x2E.  RomWBW does not support extended partitions -- only a single
 primary partition can be used.
 
 Both the legacy and modern disk layouts continue to be fully supported
@@ -1257,158 +1270,417 @@ recommended for the following reasons:
 * Simplifies creation of coresident FAT filesystem
 * Reduces chances of data corruption
 
-# Disk Initialization
+### Checking Hard Disk Layout
 
-With some understanding of how RomWBW presents disk space to the 
+If you are not sure which hard disk layout was used for your existing
+media, you can use the CP/M `STAT` command to determine this.  This
+command displays the number of directory entries on a filesystem.  If
+it indicates 512, your disk layout is legacy (hd512).  If it indicates
+1024, your disk layout is modern (hd1k).
+
+Here is an example of checking the disk layout.  We want to check the
+CompactFlash Card inserted in IDE interface 0.  We start the system
+and boot to Z-System in ROM by using the 'Z' command at the Boot Loader.
+As Z-System starts, we see the following disk assignments:
+
+```
+Boot [H=Help]: z
+
+Loading Z-System...
+
+CBIOS v3.1.1-pre.194 [WBW]
+
+Configuring Drives...
+
+        A:=MD0:0
+        B:=MD1:0
+        C:=FD0:0
+        D:=FD1:0
+        E:=IDE0:0
+        F:=IDE0:1
+        G:=IDE0:2
+        H:=IDE0:3
+        I:=PRPSD0:0
+        J:=PRPSD0:1
+        K:=PRPSD0:2
+        L:=PRPSD0:3
+
+        1081 Disk Buffer Bytes Free
+
+ZSDOS v1.1, 54.0K TPA
+```
+
+You can see that the IDE0 interface (which contains the CF Card) has
+been assigned to drive letters E: to H:.  We can use the STAT command
+on any of these drive letters.  So, for example:
+
+```
+B>stat e:dsk:
+
+    E: Drive Characteristics
+65408: 128 Byte Record Capacity
+ 8176: Kilobyte Drive  Capacity
+ 1024: 32  Byte Directory Entries
+    0: Checked  Directory Entries
+  256: Records/ Extent
+   32: Records/ Block
+   64: Sectors/ Track
+    2: Reserved Tracks
+```
+
+It is critical that you include "dsk:" after the drive letter in the
+`STAT` command line.  The important line to look at is labeled "32 Byte
+Directory Entries".  In this case, the value is 1024 which implies that
+this drive is located on a modern (hd1k) disk layout.  If the value
+was 512, it would indicate a legacy (hd512) disk layout.
+
+# Disk Content Preparation
+
+With some understanding of how RomWBW presents disk space to the
 operating systems, we need to go over the options for actually setting
 up your disk(s) with content.
 
 Since it would be quite a bit of work to transfer over all the files you
 might want initially to your disk(s), RomWBW provides a much easier way
-to get initial contents on your disks.  You can use your modern 
-Windows, Linux, or Mac computer to copy a disk image onto the disk 
-media, then just move the media over to your RomWBW computer. RomWBW 
-comes with a variety of disk images that are ready to use and have a 
+to get initial contents on your disks.  You can use your modern
+Windows, Linux, or Mac computer to copy a disk image onto the disk
+media, then just move the media over to your RomWBW computer. RomWBW
+comes with a variety of disk images that are ready to use and have a
 much more complete set of files than you will find on the ROM disk. This
-process is covered below under Disk Images.
+process is covered below under [Disk Images].
 
-If you do not want to start with pre-built disk images, you can 
-alternatively initialize the media in-place using your RomWBW system.   
-Essentially, this means you are creating a set of blank directories on  
-your disk so that files can be saved there.  This process is described 
-below under Disk Initialization. In this scenario, you will need to 
-subsequently copy any files you want to use onto the newly initialized 
+If you do not want to start with pre-built disk images, you can
+alternatively initialize the media in-place using your RomWBW system.
+Essentially, this means you are creating a set of blank directories on
+your disk so that files can be saved there.  This process is described
+below under Disk Initialization. In this scenario, you will need to
+subsequently copy any files you want to use onto the newly initialized
 disk (see Transferring Files).
 
-## Using Disk Images
-
-As mentioned previously, RomWBW includes a variety of disk images
-that contain a full set of applications for the operating systems
-supported. It is generally easier to use these disk images instead
-of copying all the files over using XModem. You use your modern
-computer (Windows, Linux, MacOS) to place the disk image onto the
-disk media, then just move the media over to your system. In this
-scenario you **do not** run `CLRDIR` or `SYSCOPY` on the slices
-that contain the data.  When using this method, the disk will be
-partitioned and setup with 1 or more slices containing ready-to-run
-bootable operating systems.
-
-To copy the disk image files onto your actual media (floppy disk, CF
-Card, SD Card, etc.), you need to use an image writing utility on
-your modern computer. Your modern computer will need to have an
-appropriate interface or slot that accepts the media. To actually
-copy the image, you can use the `dd` command on Linux or MacOS. On
-Windows, in the "Tools" directory of the distribution there are two
-tools you can use. For floppy media, you can use RawWriteWin and for
-hard disk media, you can use Win32DiskImager. In all cases, the image
-file should be written to the media starting at the very first block
-or sector of the media. This will **destroy** any other data on the
-media.
-
-The disk image files are found in the Binary directory of the
-distribution. Floppy disk images are prefixed with "fd_" and hard
-disk images are prefixed with "hd_". The floppy images are
-specifically for 1.44M floppy media only. Each disk image has the
-complete set of normal applications and tools distributed with the
-associated operating system or application suite.
-
-The following table shows the disk image files available. Note that
-the images in the "Hard" column are fine for use on CF Cards, SD
-Cards, as well as real spinning hard disks.
-
-| Floppy          | Hard            | Description                            |
-| --------------- | --------------- | -------------------------------------- |
-| fd_cpm22.img    | hd_cpm22.img    | DRI CP/M 2.2 boot disk                 |
-| fd_zsdos.img    | hd_zsdos.img    | ZSDOS 1.1 boot disk                    |
-| fd_nzcom.img    | hd_nzcom.img    | NZCOM boot disk                        |
-| fd_cpm3.img     | hd_cpm3.img     | DRI CP/M 3 boot disk                   |
-| fd_zpm3.img     | hd_zpm3.img     | ZPM3 boot disk                         |
-| fd_ws4.img      | hd_ws4.img      | WordStar v4 application disk           |
-
-In addition to the disk images above, there is also a special hard
-disk image called hd_combo.img. This image contains all of the images
-above, but in a single image with 6 slices. At the boot loader
-prompt, you can choose a disk with the combo image, then select the
-specific slice you want. This allows a single disk to have all of the
-possible operating system options.
-
-This is the layout of the hd_combo disk image:
-
-| Slice   | Description                                                      |
-| ------- | ---------------------------------------------------------------- |
-| Slice 0 | DRI CP/M 2.2 boot disk                                           |
-| Slice 1 | ZSDOS 1.1 boot disk                                              |
-| Slice 2 | NZCOM boot disk                                                  |
-| Slice 3 | DRI CP/M 3 boot disk                                             |
-| Slice 4 | ZPM3 boot disk                                                   |
-| Slice 5 | WordStar v4 application disk                                     |
-
-Note that unlike the ROM firmware, you do **not** need to choose a disk 
-image specific to your hardware. Because the RomWBW firmware provides a 
-hardware abstraction layer, all hard disk images will work on all 
-hardware variations. Yes, this means you can remove an SD Card from one 
-RomWBW system and put it in a different RomWBW system. The only 
+You will notice that in the following instructions there is no mention
+of specific hardware.  Because the RomWBW firmware provides a 
+hardware abstraction layer, all disk images will work on all 
+hardware variations. Yes, this means you can remove an CF/SD Card from 
+one RomWBW system and put it in a different RomWBW system. The only 
 constraint is that the applications on the disk media must be up to date
 with the firmware on the system being used.
 
-All of the disk images that indicate they are bootable (boot disk) will
-boot from disk as is. You do not need to run `SYSCOPY` on them to make
-them bootable. However, if you upgrade your ROM, you should use `SYSCOPY`
-to update the system tracks.
+## Disk Images
 
-A full implementation of the UCSD p-System for Z80 under RomWBW is also
-provided.  This is a completely separate and standalone disk image
-called psys.img.  It contains 6 p-System filesystem slices, but these
-are not interoperable with the CP/M slices described above.
+As mentioned previously, RomWBW includes a variety of disk images
+that contain a full set of applications for the operating systems
+supported. It is generally easier to use these disk images than
+transferring your files over individually. You use your modern
+computer (Windows, Linux, MacOS) to write the disk image onto the
+disk media, then just move the media over to your system.
 
-## Raw Disk Initialization
+The disk image files are found in the Binary directory of the
+distribution. Floppy disk images are prefixed with "fd_" and hard
+disk images are prefixed with either "hd512_" or "hd1k_" depending on the
+hard disk layout they are for.
 
-To use a disk device, you will need to initialize the individual 
-directories of each slice you want to use.  On RomWBW, slice 
-initialization is done using the CLRDIR application. For example if your
- C: drive has been assigned to a slice on a storage device, you would 
-use `CLRDIR C:` to initialize C: and prepare it hold files. Note that 
-CLRDIR will prompt you for confirmation and you must respond with a 
-**capital** 'Y' to confirm. Once `CLDIR` has completed, you can copy 
-files onto the drive, for example `COPY *.* C:`. Be very careful to pay 
-attention to your drive letter assignments prior to running `CLRDIR` to 
-avoid accidentally wiping out a filesystem that has data on it.
+Each disk image has the complete set of normal applications and tools 
+distributed with the associated operating system or application suite.
+The following table shows the disk images available.
 
-Running `CLRDIR` on a disk slice is roughly equivalent to running
-FORMAT on MS-DOS. Note that unlike MS-DOS you do **not** partition
-your mass storage device. CP/M knows nothing about disk partitions.
-You may notice a partitioning application on your ROM disk (FDISK80),
-but this is strictly for an advanced technique of managing the
-RomWBW slices container or MS-DOS FAT filesystem on your media. Do not
-use FDISK80 unless you are specifically attempting to change the
-existing partitions (not slices).
+| Disk Image      | Description                            | Bootable |
+| --------------- | -------------------------------------- | -------- |
+| xxx_cpm22.img   | DRI CP/M 2.2 Operating System          | Yes      |
+| xxx_zsdos.img   | ZCPR-DJ & ZSDOS 1.1 Operating System   | Yes      |
+| xxx_nzcom.img   | NZCOM ZCPR 3.4 Operating System        | Yes      |
+| xxx_cpm3.img    | DRI CP/M 3 Operating System            | Yes      |
+| xxx_zpm3.img    | ZPM3 Operating System                  | Yes      |
+| xxx_qpm.img     | QPM Operating System                   | Yes      |
+| xxx_ws4.img     | WordStar v4 & ZDE Applications         | No       |
 
-If you are using a floppy drive, you will need to physically format
-your floppy disk prior to use. This is only required for floppy
-disks, not hard disk, CF Cards, or SD Cards, etc. To format a floppy
-drive, you can use the interactive application `FDU`. FDU is not
-terribly user friendly, but is generally documented in the file
-"FDU.txt" found in the Doc directory of the distribution. It is not
-necessary to run `CLRDIR` on a floppy disk after physically
-formatting it -- the directory is cleared as part of the formatting.
+You will find 3 sets of these .img files in the distribution.  The
+"xxx" portion of the filename will be "fd_" for a floppy image,
+"hd512" for a legacy layout hard disk image, and "hd1K" for a modern
+layout hard disk image.
 
-Once you have initialized a disk device and copied your desired files
-onto it, you may want to make the disk bootable. On CP/M filesystems,
-you must perform one additional step to make a disk bootable.
-Specifically, you need to place a copy of the operating system on the
-system tracks of the disk. This is done using the `SYSCOPY` command.
-Let's say you have prepared drive C: by initializing it with `CLRDIR`
-and copied some files onto it. You can now make C: bootable by
-running the following command:
+There is also an image file called "psys.img" which contains a bootable 
+p-System hard disk image.  It contains 6 p-System filesystem slices, but
+ these are not interoperable with the CP/M slices described above.  This
+ file is discussed separately under p-System in the Operating Systems 
+section.
 
-`B>SYSCOPY C:=B:ZSYS.SYS`
+### Floppy Disk Images
 
-This command means: copy the Z-System operating system onto the
-system tracks of drive C:. In this example, it is assumed that you
-have booted from ROM, so B: is the ROM disk drive. Additionally, this
-example assumes you want the Z-System operating system to be booted
-from C:. If you want CP/M 2.2 instead, you would replace `B:ZSYS.SYS`
-with `B:CPM.SYS`. Here is a full example of this process.
+The floppy disk images are all intended to be used with 3.5" high-density,
+double-sided 1.44 MB floppy disk media.  This is ideal for the default
+floppy drive support included in RomWBW standard ROMs.
+
+For floppy disks, the .img file is written directly to the floppy media 
+as is.  The floppy .img files are 1.44 MB which is the exact size of a 
+single 3.5" high density floppy disk.  You will need a floppy disk
+drive of the same type connected to your modern computer to write this
+image.  Although modern computers do not come equipped with a floppy
+drive, you can still find USB floppy drives that work well for this.
+
+The floppy disk must be physically formatted **before** writing the
+image onto it.  You can do this with RomWBW using FDU as described
+in the [Floppy Disks] section of this document.  You can also format
+the floppy using your modern computer, but using FDU on RomWBW is
+preferable because it will allow you to use optimal physical sector
+interleaving.
+
+RomWBW includes a Windows application called RawWriteWin in the Tools 
+directory of the distribution.  This simple application will let you 
+choose a file and write it to an attached floppy drive. For Linux/MacOS,
+I think you can use the dd command (but I have not actually tried 
+this).  It is probably obvious, but writing an image to a floppy disk 
+will overwrite and destroy all previous contents.
+
+Once the image has been written to the floppy disk, you can insert
+the floppy disk in your RomWBW floppy disk and read/write files
+on it according to the specific operating system instructions.  If the
+image is bootable, then you will be able to boot from it by entering
+the floppy drive's corresponding unit number at the RomWBW Boot Loader
+command prompt.
+
+### Hard Disk Images
+
+Keeping in mind that a RomWBW hard disk (including CF /SD Cards)
+allows you to have multiple slices (CP/M filesystems), there are a
+couple ways to image hard disk media.  The easiest approach is to 
+use the "combo" disk image.  This image is already prepared
+with 6 slices containing 5 ready-to-run OSes and a slice with
+the WordStar application.  Alternatively, you can create your own
+hard disk image with the specific slice contents you choose.
+
+#### Combo Hard Disk Image
+
+The combo disk image is essentially just a single image that has several
+ of the individual filesystem images already concatenated together. The 
+combo disk image contains the following 6 slices in the positions 
+indicated:
+
+| Slice   | Description                                                      |
+| ------- | ---------------------------------------------------------------- |
+| Slice 0 | DRI CP/M 2.2 Operating System                                    |
+| Slice 1 | ZCPR-DJ & ZSDOS 1.1 Operating System                             |
+| Slice 2 | NZCOM ZCPR 3.4 Operating System                                  |
+| Slice 3 | DRI CP/M 3 Operating System                                      |
+| Slice 4 | ZPM3 Operating System                                            |
+| Slice 5 | WordStar v4 & ZDE Applications                                   |
+
+You will notice that there are actually 2 combo disk images in the 
+distribution.  One for an hd512 disk layout (hd512_combo.img) and one 
+for an hd1k disk layout (hd1k_combo.img). Simply use the image file that
+corresponds to your desired hard disk layout.
+
+#### Custom Hard Disk Image
+
+If you want to use specific slices in a specific order, you can easily
+generate a custom hard disk image file.
+
+For hard disks, each .img file represents a single slice (CP/M 
+filesystem).  Since a hard disk can contain many slices, you can just 
+concatenate the slices (.img files) together to create your desired hard
+disk image.  For example, if you want to create a hard disk image that 
+has slices for CP/M 2.2, CP/M 3, and WordStar in the hd512 format, you would use 
+the command line of your modern computer to create the final image:
+
+Windows:
+
+`COPY /B hd512_cpm22.img + hd512_cpm3.img + hd512_ws hd.img`
+
+Linux/MacOS:
+
+`cat hd512_cpm22.img hd512_cpm3.img hd512_ws >hd.img`
+
+**NOTE:** For the hd1k disk layout, you **must** prepend the 
+prefix file called hd1k_prefix.dat which contains the required
+partition table.  So, for an hd1k layout you would use the following:
+
+Windows:
+
+`COPY /B hd1k_prefix.dat + hd1k_cpm22.img + hd1k_cpm3.img + hd1k_ws hd.img`
+
+Linux/MacOS:
+
+`cat hd1k_prefix.dat hd1k_cpm22.img hd1k_cpm3.img hd1k_ws >hd.img`
+
+In all of the examples above, the resulting file (hd.img) would now be 
+written to your hard disk media and would be ready to use in a RomWBW 
+system.
+
+#### Writing Hard Disk Images
+
+Once you have chosen a combo hard disk image file or prepared your own 
+custom hard disk image file, it will need to be written to the media 
+using your modern computer.  Note that you **do not** run `CLRDIR` or 
+`SYSCOPY` on the slices that contain the data.  When using this method, 
+the disk will be partitioned and setup with 1 or more slices containing 
+ready-to-run bootable operating systems.
+
+To write a hard disk image file onto your actual media (actual hard 
+disk or CF/SD Card), you need to use an image writing utility on your 
+modern computer. Your modern computer will need to have an appropriate 
+interface or slot that accepts the media. To actually copy the image, 
+you can use the `dd` command on Linux or MacOS. On Windows, in the 
+"Tools" directory of the distribution, there is an application called 
+Win32DiskImager. In all cases, the image file should be written to the 
+media starting at the very first block or sector of the media.
+
+You are not limited to the number of slices that are contained in the 
+image that you write to your hard disk media.  You can use additional 
+slices as long your media has room for them.  However, writing the disk 
+image will not initialize the additional slices.  If these additional 
+slices were previously initialized, they will not be corrupted when you 
+write the new image and will still contain their prvious contents.  If 
+the additional slices were not previously initialized, you can use 
+`CLRDIR` to do so and optionally `SYSCOPY` if you want them to be 
+bootable.
+
+To be entirely clear, writing a disk image file to your hard disk media
+will overwrite an pre-existing partition table and the number of slices
+that your image file contains.  It will not overwrite or corrupt slices
+beyond those in the image file.  As a result, you can use additional
+slices as a place to maintain your personal data because these slices
+will survive re-imaging of the media.  If you setup a FAT partition
+on your media, it will also survive the imaging process.
+
+**WARNING**: In order for your additional slices and/or FAT partition to
+survive re-imaging, you **must** follow these rules:
+
+* Do not modify the partition table of the media using FDISK80 or any
+  other partition management tools.
+* Ensure that your hard disk image file uses the same disk layout
+  approach (hd512 or hd1k) as previously used on the media.
+
+Once you have copied the image onto the hard disk media, you can
+move the media over to your RomWBW system.  You can then boot to the
+operating system slices by specify "<unitnum>.<slicenum>" at the
+RomWBW Boot Loader command prompt.
+
+## In-situ Disk Preparation
+
+If you do not wish to use the pre-built disk images, it is entirely
+possible to setup your disks manually and transfer contents to them.
+
+In this scenario, you will initialize the disk media entirely from
+your RomWBW system.  So, you need to start by inserting the disk
+media, booting RomWBW, and confirming that the media is being
+recognized.  If RomWBW recognizes the media, it will indicate this
+in the boot messages even though the media has not yet been prepared
+for use.
+
+The following instructions are one way to proceed.  This does not mean
+to imply it is the only possible way.  Also, note that RAM/ROM disk
+media is prepared automatically.  ROM disks are part of the ROM image
+and RAM disks are initialized when an operating system is started.
+
+Start by booting RomWBW and launching either CP/M 2.2 or Z-System
+from ROM using the Boot Loader 'C' or 'Z' commands respectively.  You
+can now use the tools on the ROM disk to prepare your disks.  Note
+that you will see the operating system assign disks/slices to
+drives even though the disks/slices are not yet initialized.  This is
+normal and does not mean the disks/slices are ready to use.
+
+Preparation of floppy disk media is very simple.  The floppy disk must 
+be physically formatted as discussed in [Floppy Disks] previously using 
+`FDU`. If a floppy is already physically formatted, you can wipe out 
+it's contents (make it empty again) by running `CLRDIR` on it.  You can 
+confirm a floppy disk is ready for content by simply running a `DIR` 
+command on it.  The `DIR` command should complete without error and 
+should list no files.  At this point, you can  proceed to copy files to 
+the floppy disk and (optionally) make the floppy bootable using 
+`SYSCOPY`.
+
+The rest of this section will cover preparation of hard disk media.  To
+start, it is critical that you decide which disk layout approach to use
+(either hd512 or hd1k).  Review the [Hard Disk Layouts] section if you
+are not sure.
+
+#### Partition Setup
+
+Since the disk layout is determined by the existence (or lack) of
+a RomWBW partition, you must start by running `FDISK80`.  When FDISK80
+starts, enter the disk unit number of the new media.  At this point,
+use the 'I' command to initialize (reset) the partition table to an
+empty state.  If you are going to use the hd512 layout, then use 'W' to
+write the empty table to the disk and exit.  Remember that the lack of a
+partition for RomWBW implies the legacy (hd512) layout.
+
+If you are going to use an hd1k layout, then you must create a partition
+for the RomWBW CP/M slices.  The partition can be placed anywhere you 
+want and can be any size >= 8MB.  Keeping the size of the partition to 
+increments of 8MB makes sense.  The partition type **must** be set to 
+'2e'.  The typical location for the RomWBW partition is at 1MB with a 
+size of 512MB (64 slices).  Below is an example of creating a RomWBW 
+partition following these guidelines.
+
+```
+FDISK80 for RomWBW, UNA, Mini-M68k, KISS-68030, SBC-188  ----
+       Version 1.1-22 created 7-May-2020
+                 (Running under RomWBW HBIOS)
+
+HBIOS unit number [0..11]: 4
+Capacity of disk 4:  (  4G)  7813120      Geom 77381010
+Nr  ---Type- A --      Start         End   LBA start  LBA count  Size
+ 1             00       *** empty ***
+ 2             00       *** empty ***
+ 3             00       *** empty ***
+ 4             00       *** empty ***
+>>i
+>>n
+New partition number: 1
+Starting Cylinder (default 0): 1Mb
+Ending Cylinder (or Size= "+nnn"): +512Mb
+>>t
+Change type of partition number: 1
+New type (in hex), "L" lists types: 2e
+>>p
+Nr  ---Type- A --      Start         End   LBA start  LBA count  Size
+ 1    RomWBW   2e      8:0:1  1023:15:16        2048    1048576  512M
+ 2             00       *** empty ***
+ 3             00       *** empty ***
+ 4             00       *** empty ***
+>>w
+Do you really want to write to disk? [N/y]: y
+Okay
+FDISK exit.
+```
+
+At this point, it is best to restart your system to make sure that
+the operating system is aware of the partition table updates.  Start
+CP/M 2.2 or Z-System from ROM again.
+
+You are now ready to initialize the individual slices of your hard disk 
+media.  On RomWBW, slice initialization is done using the CLRDIR 
+application.  Since the CLRDIR application works on OS drive letters, 
+you must pay attention to how the OS drive letters are mapped to your 
+disk devices which is listed when the OS starts.  Let's assume that C: 
+has been assigned to slice 0 of the disk you are initializing.  You 
+would use `CLRDIR C:` to initialize C: and prepare it hold files. Note 
+that CLRDIR will prompt you for confirmation and you must respond with a
+**capital** 'Y' to confirm.
+
+After CLRDIR completes, the slice should be ready to use by the operating
+system via the drive letter assigned.  Start by using the `DIR` command
+on the drive (`DIR C:`).  This should return without error, but list
+no files.  Next, use the `STAT` command to confirm that the disk is
+using the layout you intended.  For example, use `STAT C:DSK:` and
+look at the number of "32  Byte Directory Entries".  It should say
+512 for a legacy (hd512) disk layout and 1024 for a modern (hd1024)
+disk layout.
+
+Assuming you want to use additional slices, you should initialize them
+using the same process.  You may need to reassign OS drive letters to
+access some slices that are beyond the ones automatically assigned.
+You can use the `ASSIGN` command to handle this.
+
+Once you have your slice(s) initialized, you can begin transferring 
+files to the associated drive letters.  Refer to the [Transferring 
+Files] section for options to do this.  If you want to make a slice
+bootable, you will need to use `SYSCOPY` to setup the system track(s)
+of the slice.  The use of `SYSCOPY` depends on the operating system
+and is described in the [Operating Systems] section of this document.
+
+As an example, let's assume you want to setup C: as a bootable
+Z-System disk and add to it all the files from the ROM disk.  To
+setup the system track you would use:
 
 ```
 B>SYSCOPY C:=B:ZSYS.SYS
@@ -1420,9 +1692,26 @@ Transfer system image from B:ZSYS.SYS to C: (Y/N)? Y
 Reading image... Writing image... Done
 ```
 
+Then, to copy all of the files from the ROM disk to C:, you could use
+the `COPY` command as shown below.  In this example, the list of files
+being copied has been truncated.
+
+```
+B>copy *.* m:
+COPY  Version 1.73 (for ZSDOS)   2 Jul 2001
+Copying B0:????????.??? to M0:
+ -> ASM     .COM..Ok  Verify..Ok
+ -> ASSIGN  .COM..Ok  Verify..Ok
+ -> CLRDIR  .COM..Ok  Verify..Ok
+ -> COMPARE .COM..Ok  Verify..Ok
+ -> COPY    .COM..Ok  Verify..Ok
+ -> CPM     .SYS..Ok  Verify..Ok
+ 0 Errors
+```
+
 Once this process succeeds, you will be able to boot directly to the
-disk from the boot loader prompt. See the instructions in Booting
-Disks for details on this.
+disk slice from the boot loader prompt. See the instructions in
+[Starting Operating Systems from Disk] for details on this.
 
 # Operating Systems
 
@@ -1446,52 +1735,132 @@ currently available.
 ## Digital Research CP/M 2.2
 
 This is the most widely used variant of the Digital Research
-operating system. It has the most basic feature set, but is
+operating systems. It has the most basic feature set, but is
 essentially the compatibility metric for all other CP/M-like
-operating systems including all of those listed below. The Doc
-directory contains a manual for CP/M usage ("CPM Manual.pdf"). If you
-are new to the CP/M world, I would recommend using this CP/M variant
-to start with simply because it is the most stable and you are less
-likely to encounter problems.
+operating systems including those listed below.
 
-### Notes
+If you are new to the CP/M world, I would recommend using this CP/M 
+variant to start with simply because it is the most stable and you are 
+less likely to encounter problems.
 
-- You can change media, but it must be done while at the OS
-command prompt and you **must** warm start CP/M by pressing
-ctrl-c.  This is a CP/M 2.2 constraint and is well documented
-in the DRI manuals.
+The RomWBW CP/M 2.2 CBIOS has been enhanced to allow automatic
+execution of a `PROFILE.SUB` submit file at startup.  The CP/M 2.2
+code components from DRI were not changed -- this was implemented in
+the machine specific CBIOS.
 
-- The original versions of DDT, DDTZ, and ZSID used the RST 38
-vector which conflicts with interrupt mode 1 use of this vector.
-The DDT, DDTZ, and ZSID applications in RomWBW have been modified
-to use RST 30 to avoid this issue.
+#### Documentation
 
-- Z-System applications will not run under CP/M 2.2.  For example,
-the `LDDS` date stamper will not run.
+* [CPM Manual]($doc_root$/CPM Manual.pdf)
 
-## ZSDOS 1.1
+#### Boot Disk
 
-ZSDOS is the most popular non-DRI CP/M "clone" which is generally
+To make make a bootable CP/M disk, use the RomWBW `SYSCOPY` tool
+to place a copy of the operating system on the boot track of
+the disk.  The RomWBW ROM disk has a copy of the boot track
+call "CPM.SYS".  For example:
+
+`SYSCOPY C:=B:CPM.SYS`
+
+#### Notes
+
+* You can change media, but it must be done while at the OS
+  command prompt and you **must** warm start CP/M by pressing
+  ctrl-C.  This is a CP/M 2.2 constraint and is well documented
+  in the DRI manual.
+
+* The original versions of DDT, DDTZ, and ZSID used the RST 38
+  vector which conflicts with interrupt mode 1 use of this vector.
+  The DDT, DDTZ, and ZSID applications in RomWBW have been modified
+  to use RST 30 to avoid this issue.
+
+* Z-System applications will not run under CP/M 2.2.  For example,
+  the `LDDS` date stamper will not work.
+
+## Z-System
+
+Z-System is the most popular non-DRI CP/M workalike "clone" which is generally
 referred to as Z-System. Z-System is intended to be an enhanced
 version of CP/M and should run all CP/M 2.2 applications. It is
 optimized for the Z80 CPU (as opposed to 8080 for CP/M) and has some
-significant improvements such as date/time stamping of files. For
-further information on the RomWBW implementation of Z-System, see the
-wiki page
-[Z-System Notes](https://www.retrobrewcomputers.org/doku.php?id=software:firmwareos:romwbw:zsystem).
-Additionally, the official documentation for Z-System is included in
-the RomWBW distribution Doc directory ("ZSDOS Manual.pdf" and "ZCPR
-Manual.pdf").
+significant improvements such as date/time stamping of files.
 
-### Notes
+Z-System is a somewhat ambiguous term because there are multiple
+generations of this software.  RomWBW uses ZCPR-DJ and ZSDOS 1.1
+when referring to Z-System.  The latest version of Z-System (ZCPR 3.4)
+is also provided with RomWBW via NZ-COM (see below).
 
-- Although most CP/M 2.2 applications will run under Z-System, some
-may not work as expected.  The best example is PIP which is not aware
-of the ZSDOS paths and will fail in some scenarios (use `COPY` instead).
+Like CP/M 2.2, RomWBW includes the ability to autorun a `PROFILE.SUB`
+submit file at startup.
 
-- Although ZSDOS can recognize a media change in some cases, it will not
-always work.  You should only change media at a command prompt and be
-sure to warm start the OS with a ctrl-c.
+#### Documentation
+
+* [ZCPR Manual]($doc_root$/ZCPR Manual.pdf)
+* [ZSDOS Manual]($doc_root$/ZSDOS Manual.pdf)
+
+#### Boot Disk
+
+To make make a bootable Z-System disk, use the RomWBW `SYSCOPY` tool
+to place a copy of the operating system on the boot track of
+the disk.  The RomWBW ROM disk has a copy of the boot track
+call "ZSYS.SYS".  For example:
+
+`SYSCOPY C:=B:ZSYS.SYS`
+
+#### Notes
+
+* Although most CP/M 2.2 applications will run under Z-System, some
+  may not work as expected.  The best example is PIP which is not aware
+  of the ZSDOS paths and will fail in some scenarios (use `COPY` instead).
+
+* Although ZSDOS can recognize a media change in some cases, it will not
+  always work.  You should only change media at a command prompt and be
+  sure to warm start the OS with a ctrl-C.
+
+* ZSDOS has a concept of fast relog of drives. This means that after a 
+  warm start, it avoids the overhead of relogging all the disk drives. 
+  There are times when this causes issues. After using tools like CLRDIR 
+  or MAP, you may need to run “RELOG” to get the drive properly 
+  recognized by ZSDOS.
+
+* RomWBW fully supports both DateStamper and P2DOS file date/time
+  stamping.  You must load the desired stamping module (`LDDS` for
+  DateStamper or `LDP2D` for P2DOS).  This could be automated using
+  a `PROFILE.SUB` file.  Follow the ZSDOS documentation to initialize
+  a disk for stamping.
+
+* ZSVSTAMP expects to be running under the ZCPR 3.X command processor. 
+  By default, RomWBW uses ZCPR 1.0 (intentionally, to reduce space usage) 
+  and ZSVSTAMP will just abort in this case. It will work fine if you 
+  implement NZCOM. ZSVSTAMP is included solely to facilitate usage 
+  if/when you install NZCOM.
+
+* FILEDATE only works with DateStamper style date stamping. If you run 
+  it on a drive that is not initialized for DateStamper, it will complain 
+  `FILEDATE, !!!TIME&.DAT missing`. This is normal and just means that 
+  you have not initialized that drive for DateStamper (using PUTDS).
+
+* ZXD will handle either DateStamper or P2DOS type date stamping. 
+  However, it **must** be configured appropriately. As distributed, it will 
+  look for P2DOS date stamps. Use ZCNFG to reconfigure it for P2DOS if 
+  that is what you are using.
+
+* Many of the tools can be configured (using either ZCNFG or DSCONFIG). 
+  The configuration process modifies the actual application file itself. 
+  This will fail if you try to modify one that is on the ROM disk because 
+  it will not be able to update the image.
+
+* DATSWEEP can be configured using DSCONFIG. However, DSCONFIG itself 
+  needs to be configured first for proper terminal emulation by using 
+  SETTERM. So, run SETTERM on DSCONFIG before using DSCONFIG to configure 
+  DATSWEEP!
+
+* After using PUTDS to initialize a directory for ZDS date stamping, I 
+  am finding that it is necessary to run RELOG before the stamping 
+  routines will actually start working.
+
+* Generic CP/M PIP and ZSDOS path searching do not mix well if you use 
+  PIP to copy to or from a directory in the ZSDOS search path. Best to 
+  use COPY from the ZSDOS distribution.
 
 ## NZCOM Automatic Z-System
 
@@ -1500,46 +1869,90 @@ was sold as an enhancement for existing users of CP/M 2.2 or ZSDOS.
 For this reason, (by design) NZCOM does not provide a way to boot
 directly from disk. Rather, it is loaded after the system boots into
 a host OS. On the RomWBW NZCOM disk images, the boot OS is ZSDOS 1.1.
-After you configure NZCOM, you can add a `PROFILE.SUB` file to
-automatically launch NZCOM at boot.
+A `PROFILE.SUB` file is included which automatically launches NZCOM
+as soon as ZSDOS loads.
 
-NZCOM is not pre-configured.  You must run through a simple
-configuration process before loading it.  Run MKZCM to do this.
+NZCOM is highly configurable.  The RomWBW distribution has been
+configured in the most basic way possible.  You should refer to the
+documentation and use `MKZCM` as desired to customize your system.
 
 NZCOM has substantially more functionality than CP/M or basic
 Z-System.  It is important to read the the "NZCOM Users
-Manual.pdf" file in the RomWBW Doc directory.
+Manual.pdf" document in order to use this operating system effectively.
 
-### Notes
+#### Documentation
 
-- There is no `DIR` command, you must use `SDZ` instead.  If you don't
-like this, look into the ALIAS facility.
+* [NZCOM Users Manual]($doc_root$/NZCOM Users Manual.pdf)
+
+#### Boot Disk
+
+Since NZ-COM boots via Z-System, you can make a bootable
+NZ-COM disk using `ZSYS.SYS` as described in [Z-System] above.  You
+will need to add a `PROFILE.SUB` file to auto-start NZ-COM itself.
+
+#### Notes
+
+* All of the notes for [Z-System] above generally apply to NZCOM.
+
+* There is no `DIR` command, you must use `SDZ` instead.  If you don't
+  like this, look into the `ALIAS` facility.
 
 ## Digital Research CP/M 3
 
-This is the Digital Research follow-up product to their very popular
-CP/M 2.2 operating system. While highly compatible with CP/M 2.2, it
-features many enhancements. It makes direct use of banked memory to
-increase the user program space (TPA). It also has a new suite of
-support tools and help system.
+This is the Digital Research follow-up product to their very popular 
+CP/M 2.2 operating system. While highly compatible with CP/M 2.2, it 
+features many enhancements and is not 100% compatible. It makes direct 
+use of banked memory to increase the user program space (TPA). It also 
+has a new suite of support tools and help system.
 
-Note that to make a CP/M 3 boot disk, you actually place CPMLDR.SYS
+#### Documentation
+
+* [CPM3 Users Guide]($doc_root$/CPM3 Users Guide.pdf)
+* [CPM3 Command Summary]($doc_root$/CPM3 Command Summary.pdf)
+* [CPM3 Programmers Guide]($doc_root$/CPM3 Programmers Guide.pdf)
+* [CPM3 System Guide]($doc_root$/CPM3 System Guide.pdf)
+
+#### Boot Disk
+
+To make a CP/M 3 boot disk, you actually place CPMLDR.SYS
 on the system tracks of the disk. You do not place CPM3.SYS on the
-system tracks.  `CPMLDR.SYS` chain loads `CPM3.SYS`.
+system tracks.  `CPMLDR.SYS` chain loads `CPM3.SYS` which must
+exist as a file on the disk.
+  
+CP/M 3 uses a multi-step boot process involving multiple files.
+The CP/M 3 boot files are not included on the ROM disk due to
+space constraints.  You will need to transfer the files to your
+system from the RomWBW distribution directory Binary\\CPM3.
 
-### Notes
+After this is done, you will need to use `SYSCOPY` to place
+the CP/M 3 loader image on the boot tracks of all CP/M 3
+boot disks/slices.  The loader image is called `CPMLDR.SYS`.
+You must then copy (at a minimum) `CPM3.SYS` and `CCP.COM`
+onto the disk/slice.  Assuming you copied the CP/M 3 boot files
+onto your RAM disk at A:, you would use:
 
-- The `DATE` command cannot yet be used to **set** the RTC.  The RTC is
-used to read the current date/time for file stamping, etc.  You can
-use the `RTC` app to set the RTC clock.
+```
+SYSCOPY C:=CPMLDR.SYS
+PIP C:=CPM3.SYS
+PIP C:=CCP.COM
+```
+
+#### Notes
 
 - The `COPYSYS` command described in the DRI CP/M 3 documentation is
-not provided with RomWBW.  The RomWBW `SYSCOPY` command is used instead.
+  not provided with RomWBW.  The RomWBW `SYSCOPY` command is used
+  instead.
 
 - Although CP/M 3 is generally able to run CP/M 2.2 programs, this is
-not universally true.  This is especially true of the utility programs
-included with the operating system.  For example, the `SUBMIT` program
-of CP/M 3 is completely different from the `SUBMIT` program of CP/M 2.2.
+  not universally true.  This is especially true of the utility programs
+  included with the operating system.  For example, the `SUBMIT`
+  program   of CP/M 3 is completely different/incompatible from the
+  `SUBMIT` program of CP/M 2.2.
+
+* RomWBW fully suppoerts CP/M 3 file date/time stamping, but this 
+  requires that the disk be properly initialized for it.  This process 
+  has not been performed on the CP/M 3 disk image.  Follow the 
+  CP/M 3 documentation to complete this process.
 
 ## Simeon Cran's ZPM3
 
@@ -1547,44 +1960,68 @@ ZPM3 is an interesting combination of the features of both CP/M 3 and
 ZCPR 3. Essentially, it has the features of and compatibility with
 both.
 
-Like CP/M 3, to make ZPM3 boot disk, you put ZPMLDR.SYS on the system
-tracks of the disk.
+#### Documentation
 
-### Notes
+ZPM3 has no real documentation.  You are expected to understand both
+CP/M 3 and ZCPR 3.
 
-- `ZPMLDR` is equivalent to CPMLDR.  Both are included.  Previously,
-ZPMLDR had issues that prevented it from properly booting RomWBW ZPM3.
-However, those issues have been resolved.
+#### Boot Disk
 
-- The ZPM operating system is contained in the file called CPM3.SYS
-which is confusing, but this is as intended by the ZPM3 distribution.
-I believe it was done this way to make it easier for users to transition
-from CP/M 3 to ZPM3.
+ZPM3 uses a multi-step boot process involving multiple files. The ZPM3 
+boot files are not included on the ROM disk due to space constraints.  
+You will need to transfer the files to your system from the RomWBW 
+distribution directory Binary\\ZPM3.
 
-## QPM
+After this is done, you will need to use `SYSCOPY` to place the ZPM3 
+loader image on the boot tracks of the disk. The loader image is called 
+`ZPMLDR.SYS`. You must then copy (at a minimum) `CPM3.SYS`, `ZCCP.COM`, 
+`ZINSTAL.ZPM`, and `STARTZPM.COM` onto the disk/slice. Assuming you 
+copied the ZPM3 boot files onto your RAM disk at A:, you would use:
 
-QPM is another OS providing compatibility with and enhancements
-to CP/M 2.2.  It is provided as bootable disk images for RomWBW.
+```
+A>B:SYSCOPY C:=ZPMLDR.SYS
+A>B:COPY CPM3.SYS C:
+A>B:COPY ZCCP.COM C:
+A>B:COPY ZINSTAL.ZPM C:
+A>B:COPY STARTZPM.COM C:
+```
 
-The following documentation files from the original QPM distribution
-are included in the RomWBW Doc directory:
+#### Notes
 
- - QP/M 2.7 Features and Facilities (qcp27.pdf)
- - QP/M 2.7 Interface Guide (qdos27.pdf)
- - QP/M 2.7 Installation Guide and Supplements (qpm27.pdf)
+* The ZPM operating system is contained in the file called CPM3.SYS
+  which is confusing, but this is as intended by the ZPM3 distribution.
+  I believe it was done this way to make it easier for users to transition
+  from CP/M 3 to ZPM3.
+
+## QP/M
+
+QP/M is another OS providing compatibility with and enhancements
+to CP/M 2.2.  It is provided as a bootable disk image for RomWBW.
 
 Refer to the ReadMe.txt file in Source/Images/d_qpm for more details
 regarding the RomWBW adaptation and customizations.
 
-### Notes
+#### Documentation
 
-- QPM is not available as source.  This implementation was based
-on the QPM binary distribution and has been minimally customized
-for RomWBW.
+* [QP/M 2.7 Installation Guide and Supplements]($doc_root$/qpm27.pdf)
+* [QP/M 2.7 Interface Guide]($doc_root$/qdos27.pdf)
+* [QP/M 2.7 Features and Facilities]($doc_root$/qcp27.pdf)
 
-- QINSTALL is used to customize QPM.  It is included on the
-disk image.  You should review the notes in the ReadMe.txt
-file in Source/Image/d_qpm before making changes.
+#### Boot Disk
+
+There is no RomWBW-specific boot disk creation procedure.  QP/M
+comes with a QINSTALL tool for this purpose.  You can use the
+tool if you want to perform a fresh installation.
+
+#### Notes
+
+* QPM is not available as source.  This implementation was based
+  on the QPM binary distribution and has been minimally customized
+  for RomWBW.
+ 
+* QINSTALL is used to customize QPM.  It is included on the
+  disk image.  You should review the notes in the ReadMe.txt
+  file in Source/Image/d_qpm before making changes.
 
 ## UCSD p-System
 
@@ -1599,34 +2036,47 @@ Z80 Extended BIOS, it does not rely on a CP/M BIOS layer.
 The p-System is provided on a hard disk image file called
 psys.img.  This must be copied to it's own dedicated hard
 disk media (CF Card, SD Card, etc.).  It is booted by
-selecting slices 0 of the corresponding hard disk unit at
-the RomWBW Boot Loader prompt.
-
-The p-System Users Manual is included in the Doc directory
-of the distribution as "UCSD p-System Users Manual.pdf".
+selecting slice 0 of the corresponding hard disk unit at
+the RomWBW Boot Loader prompt.  Do not attempt to use
+CP/M slices on the same disk.
 
 Refer to the ReadMe.txt file in Source/pSys for more details.
 
-### Notes
+#### Documentation
 
-- There is no floppy support at this time.
+* [UCSD p-System Users Manual]($doc_root$/UCSD p-System Users Manual.pdf)
 
-- The hard disk image contains 6 p-System slices which are
-assigned to p-System unit numbers 4, 5, 9, 10, 11 which
-is standard for p-System.  Slices 0-5 are assigned
-sequentially to these p-System unit numbers and it is
-not possible to reassign them.
+#### Boot Disk
 
-- p-System relies heavily on the use of a full screen
-terminal.  This implementation has been setup to expect
-an ANSI or DEC VT-100 terminal or emulator.  The screen
-output will be garbled if no such terminal or emulator
-is used for console output.
+There is no mechanism provided to create a p-System boot disk from
+scratch under RomWBW.  This has already been done as part of the
+porting process.  You must use the provided p-System hard disk image
+file which is bootable.
 
-- There is no straightforward mechanism to move files in
-and out of p-System.  However, the .vol files in Source/pSys
-can be read and modified by CiderPress.  CiderPress is able
-to add and remove individual files.
+#### Notes
+
+* There is no floppy support at this time.
+
+* The hard disk image contains 6 p-System slices which are
+  assigned to p-System unit numbers 4, 5, 9, 10, 11, and 12 which
+  is standard for p-System.  Slices 0-5 are assigned
+  sequentially to these p-System unit numbers and it is
+  not possible to reassign them.  Unit #4 (slice 0) is
+  bootable and contains all of the p-System distribution
+  files.  Unit #5 (slice 1) is just a blank p-System filesystem.
+  The other units (9-12) have not been initialized, but this
+  can be done from Filer using the Zero command.
+
+* p-System relies heavily on the use of a full screen
+  terminal.  This implementation has been setup to expect
+  an ANSI or DEC VT-100 terminal or emulator.  The screen
+  output will be garbled if no such terminal or emulator
+  is used for console output.
+
+* There is no straightforward mechanism to move files in
+  and out of p-System.  However, the .vol files in Source/pSys
+  can be read and modified by CiderPress.  CiderPress is able
+  to add and remove individual files.
 
 ## FreeRTOS
 
@@ -1644,8 +2094,8 @@ implementation of FreeRTOS for RomWBW.
 # RomWBW Custom Applications
 
 The operation of the RomWBW hosted operating systems is enhanced through
-several custom applications. You have already read about one of these -- 
-the `ASSIGN` command.  These applications are functional on all of the 
+several custom applications. You have already read about one of these --
+the `ASSIGN` command.  These applications are functional on all of the
 OS variants included with RomWBW.
 
 The applications discussed here are **not** the same as the built-in
@@ -1799,14 +2249,14 @@ and can be found in the Doc\\Contrib directory of the distribution.
 ## Startup Command Processing
 
 Most of the operating systems supported by RomWBW provide a mechanism to
- run commands at boot. This is similar to the AUTOEXEC.BAT files from 
+run commands at boot. This is similar to the AUTOEXEC.BAT files from
 MS-DOS.
 
 With the exception of ZPM3 and p-System, all operating systems will look
-for a file called `PROFILE.SUB` on the system drive at boot. If it is 
+for a file called `PROFILE.SUB` on the system drive at boot. If it is
 found, it will be processed as a standard CP/M submit file. You can read
-about the use of the SUBMIT facility in the CP/M manuals included in 
-the RomWBW distribution. Note that the boot disk must also have a copy 
+about the use of the SUBMIT facility in the CP/M manuals included in
+the RomWBW distribution. Note that the boot disk must also have a copy
 of `SUBMIT.EXE`.
 
 Note that the automatic startup processing generally requires booting
@@ -1840,8 +2290,8 @@ users. All required build tools (compilers, assemblers, etc.) are
 included in the distribution, so it is not necessary to setup a build
 environment on your computer.
 
-RomWBW can be built on modern Windows, Linux, or MacOS computers.  The 
-process for building a custom ROM is documented in the ReadMe.txt file 
+RomWBW can be built on modern Windows, Linux, or MacOS computers.  The
+process for building a custom ROM is documented in the ReadMe.txt file
 in the Source directory of the distribution.
 
 For those who are interested in more than basic system customization,
@@ -1895,16 +2345,16 @@ existing, working ROM chip and program a new one with the new
 firmware. If the new one fails to boot, you can easily return to the
 known working ROM.
 
-Prior to attempting to reprogram your actual ROM chip, you may wish to 
+Prior to attempting to reprogram your actual ROM chip, you may wish to
 "try" the update to ensure it will work on your system. With RomWBW, you
- can upload a new ROM image executable and load it from the command 
-line. For each ROM image file (.rom) in the Binary directory, you will 
-find a corresponding application file (.com). For example, for 
-SBC_std.rom, there is also an SBC_std.com file. You can upload the .com 
-file to your system using XModem, then simply run the .com file. You 
-will see your system go through the normal startup process just like it 
-was started from ROM. However, your ROM has not been updated and the 
-next time you boot your system, it will revert to the system image 
+can upload a new ROM image executable and load it from the command
+line. For each ROM image file (.rom) in the Binary directory, you will
+find a corresponding application file (.com). For example, for
+SBC_std.rom, there is also an SBC_std.com file. You can upload the .com
+file to your system using XModem, then simply run the .com file. You
+will see your system go through the normal startup process just like it
+was started from ROM. However, your ROM has not been updated and the
+next time you boot your system, it will revert to the system image
 contained in ROM.
 
 ## Upgrading via Flash Utility
@@ -1983,79 +2433,8 @@ section. If you wish to update existing disk media in your system, you
 need to perform the following steps.
 
 If the disk is bootable, you need to update the system image on the
-disk using the procedure described below corresponsing to the
-operating system on your disk.
-
-* **CP/M 2.2**
-
-  Boot to CP/M 2.2 from ROM, then use `SYSCOPY` to update the system
-  image on **all** CP/M 2.2 boot disks/slices.  The CP/M 2.2 system image
-  is called CPM.SYS and is found on the ROM disk.  For example:
-
-  `B>SYSCOPY C:=CPM.SYS`
-
-* **ZSDOS**
-
-  Boot to Z-System from ROM, then use `SYSCOPY` to update the system
-  image on **all** ZSDOS boot disks/slices.  The ZSDOS system image
-  is called ZSYS.SYS and is found on the ROM disk.  For example:
-
-  `B>SYSCOPY C:=ZSYS.SYS`
-
-* **NZCOM**
-
-  NZCOM runs on top of either CP/M 2.2 or ZSDOS.  By default, the
-  RomWBW disk image for NZCOM uses ZSDOS.  Follow the corresponding
-  procedure above to update the system image on the NZCOM boot
-  disks/slices.
-
-* **CP/M 3**
-
-  CP/M 3 uses a multi-step boot process involving multiple files.
-  The CP/M 3 boot files are not included on the ROM disk due to
-  space constraints.  You will need to transfer the files to your
-  system from the RomWBW distribution directory Binary\\CPM3.
-
-  After this is done, you will need to use `SYSCOPY` to place
-  the CP/M 3 loader image on the boot tracks of all CP/M 3
-  boot disks/slices.  The loader image is called `CPMLDR.SYS`.
-  You must then copy (at a minimum) `CPM3.SYS` and `CCP.COM`
-  onto the disk/slice.  Assuming you copied the CP/M 3 boot files
-  onto your RAM disk at A:, you would use:
-
-  ```
-  A>B:SYSCOPY C:=CPMLDR.SYS
-  A>B:COPY CPM3.SYS C:
-  A>B:COPY CCP.COM C:
-  ```
-
-* **ZPM3**
-
-  ZPM3 uses a multi-step boot process involving multiple files.
-  The ZPM3 boot files are not included on the ROM disk due to
-  space constraints.  You will need to transfer the files to your
-  system from the RomWBW distribution directory Binary\\ZPM3.
-
-  After this is done, you will need to use `SYSCOPY` to place
-  the ZPM3 loader image on the boot tracks of all ZPM3
-  boot disks/slices.  The loader image is called `ZPMLDR.SYS`.
-  You must then copy (at a minimum) `CPM3.SYS`, `ZCCP.COM`,
-  `ZINSTAL.ZPM`, and `STARTZPM.COM` onto the disk/slice.
-  Assuming you copied the ZPM3 boot files onto your RAM disk
-  at A:, you would use:
-
-  ```
-  A>B:SYSCOPY C:=ZPMLDR.SYS
-  A>B:COPY CPM3.SYS C:
-  A>B:COPY ZCCP.COM C:
-  A>B:COPY ZINSTAL.ZPM C:
-  A>B:COPY STARTZPM.COM C:
-  ```
-
-  You may be wondering if the reference to `CPM3.SYS` is a typo.
-  It is not.  The ZPM3 main system code file is called `CPM3.SYS`
-  which is the same name as CP/M 3 uses, but the file contents are
-  not the same.
+disk using the procedure described in the [Operating Systems] section
+of this document.
 
 Finally, if you have copies of any of the RomWBW custom applications
 on your hard disk, you need to update them with the latest copies. The
@@ -2131,10 +2510,10 @@ please let me know if I missed you!
   derived and he has always been a great source of knowledge and
   advice.
 
-* Douglas Goodall contributed code, time, testing, and advice in  "the 
-  early days". He created an entire suite of application programs to   
+* Douglas Goodall contributed code, time, testing, and advice in  "the
+  early days". He created an entire suite of application programs to
   enhance the use of RomWBW. Unfortunately, they have become unusable
-  due  to internal changes within RomWBW. As of RomWBW 2.6, these 
+  due  to internal changes within RomWBW. As of RomWBW 2.6, these
   applications are no longer provided.
 
 * David Giles created support for the Z180 CSIO which is now included
@@ -2146,6 +2525,13 @@ please let me know if I missed you!
 * Phil Summers contributed the Forth and BASIC adaptations in ROM, the
   AY-3-8910 sound driver as well as a long list of general code
   enhancements.
+
+* Spencer Owen created the RC2014 series of hobbyist kit computers
+  which has exponentially increased RomWBW usage.
+
+* Stephen Cousins has likewise created a series of hobbyist kit
+  computers at Small Computer Central and is distributing RomWBW
+  with many of them.
 
 * Phillip Stevens contributed support for FreeRTOS.
 
@@ -2223,3 +2609,55 @@ Submission of issues and bugs are welcome at the
 [RomWBW GitHub Repository](https://github.com/wwarthen/RomWBW).
 
 Also feel free to email $doc_author$ at [$doc_authmail$](mailto:$doc_authmail$).
+
+# Appendix A - Device Summary
+
+The table below briefly describes each of the possible devices that
+may be discovered by RomWBW in your system.
+
+| ID        | Unit Type  | Description                                  |
+|---------- | ---------- | -------------------------------------------- |
+| ACIA | Character | ? Serial Interface |
+| ASCI | Character | Z180 built-in serial ports|
+| AY | Audio | |
+| BQRTC | RTC | |
+| CTC | System | |
+| CVDU | Video | |
+| DMA | System | |
+| DS1307 | RTC | |
+| DS1501RTC | RTC | |
+| DSKY | System | |
+| DSRTC | RTC | |
+| DUART | Character | |
+| FD | Disk | |
+| GDC | Video | |
+| HDSK | Disk | |
+| IDE | Disk | |
+| INTRTC | RTC | |
+| KBD | Keyboard | |
+| KIO | System | |
+| LPT | Character | |
+| MD | Disk | |
+| MSXKYB | Keyboard | |
+| I2C | System | |
+| PIO | Character | |
+| PPIDE | Disk | |
+| PPK | Keyboard | |
+| PPPSD | Disk | |
+| PPPCON | Serial | |
+| PRPSD | Disk | |
+| PRPCON | Serial | |
+| RF | Disk | |
+| RP5C01 | RTC | |
+| SD | Disk | |
+| SIMRTC | |
+| SIO | Character | |
+| SN76489 | Sound | |
+| SPK | Sound | |
+| TMS | Video | |
+| UART | Character | |
+| USB-FIFO | Character | |
+| VDU | Video | |
+| VGA | Video | |
+| YM | Audio | |
+| Z2U | Character | |

@@ -1,21 +1,23 @@
 $define{doc_title}{ReadMe}$
-$include{"Common.h"}$
-$define{doc_user}{[RomWBW User Guide]($doc_root$/RomWBW User Guide.pdf)}$
-$define{doc_sys}{[RomWBW System Guide]($doc_root$/RomWBW System Guide.pdf)}$
-$define{doc_apps}{[RomWBW Applications]($doc_root$/RomWBW Applications.pdf)}$
-$define{doc_romapps}{[RomWBW ROM Applications]($doc_root$/RomWBW ROM Applications.pdf)}$
-$define{doc_catalog}{[RomWBW Disk Catalog]($doc_root$/RomWBW Disk Catalog.pdf)}$
-$define{doc_errata}{[RomWBW Errata]($doc_root$/RomWBW Errata.pdf)}$
+$include{"Basic.h"}$
+
+| $doc_product$ $doc_title$
+| $doc_ver$
+| $doc_author$  ([$doc_authmail$](mailto:$doc_authmail$))
+| $doc_date$
 
 # Overview
 
-RomWBW provides a complete software system for a wide variety of
-hobbyist Z80/Z180/Z280 CPU-based systems produced by these developer
-communities:
+RomWBW software provides a complete, commercial quality 
+implementation of CP/M (and workalike) operating systems and 
+applications for modern Z80/180/280 retro-computing hardware systems.
+A wide variety of platforms are supported including those
+produced by these developer communities:
 
 * [RetroBrew Computers](https://www.retrobrewcomputers.org)
 * [RC2014](https://rc2014.co.uk)
 * [retro-comp](https://groups.google.com/forum/#!forum/retro-comp)
+* [Small Computer Central](https://smallcomputercentral.com/)
 
 General features include:
 
@@ -25,7 +27,7 @@ General features include:
 * Video drivers including TMS9918, SY6545, MOS8563, HD6445
 * Keyboard (PS/2) drivers via VT8242 or PPI interfaces
 * Real time clock drivers including DS1302, BQ4845
-* Multiple OS support including CP/M 2.2, ZSDOS, CP/M 3, ZPM3, QPM, & p-System
+* OS Adaptations of CP/M 2.2, ZSDOS, CP/M 3, NZ-COM, ZPM3, QPM, p-System, and FreeRTOS
 * Built-in VT-100 terminal emulation support
 
 RomWBW is distributed as both source code and pre-built ROM and disk
@@ -37,12 +39,11 @@ ROM firmware itself:
 * ROM BASIC (Nascom BASIC and Tasty BASIC)
 * ROM Forth
 
-
 A dynamic disk drive letter assignment mechanism allows mapping
 operating system drive letters to any available disk media.
 Additionally, mass media devices (IDE Disk, CF Card, SD Card) support
 the use of multiple slices (up to 256 per device). Each slice contains
-a complete CP/M file system and can be mapped independently to any
+a complete CP/M filesystem and can be mapped independently to any
 drive letter. This overcomes the inherent size limitations in legacy
 OSes and allows up to 2GB of accessible storage on a single device.
 
@@ -67,24 +68,26 @@ such that all of the operating systems and applications on a disk
 will run on any RomWBW-based system.  To put it simply, you can take
 a disk (or CF/SD Card) and move it between systems transparently.
 
-A tool is provided that allows you to access a FAT-12/16/32 file system.
- The FAT file system may be coresident on the same disk media as RomWBW 
-slices or on stand-alone media.  This makes exchanging files with modern
- OSes such as Windows, MacOS, and Linux very easy.
+A tool is provided that allows you to access a FAT-12/16/32 filesystem.
+The FAT filesystem may be coresident on the same disk media as RomWBW slices
+or on stand-alone media.  This makes exchanging files with modern OSes
+such as Windows, MacOS, and Linux very easy.
+
+# Getting Started
 
 # Acquiring RomWBW
 
 The [RomWBW Repository](https://github.com/wwarthen/RomWBW) on GitHub is
-the official distribution location for all project source and 
-documentation.  The fully-built distribution releases are available on 
-the [RomWBW Releases Page](https://github.com/wwarthen/RomWBW/releases) 
-of the repository.  On this page, you will normally see a Development 
-Snapshot as well as recent stable releases. Unless you have a specific 
-reason, I suggest you stick to the most recent stable release. Expand 
+the official distribution location for all project source and
+documentation.  The fully-built distribution releases are available on
+the [RomWBW Releases Page](https://github.com/wwarthen/RomWBW/releases)
+of the repository.  On this page, you will normally see a Development
+Snapshot as well as recent stable releases. Unless you have a specific
+reason, I suggest you stick to the most recent stable release. Expand
 the "Assets" drop-down for the release you want to download, then select
-the asset named RomWBW-vX.X.X-Package.zip. The Package asset includes 
+the asset named RomWBW-vX.X.X-Package.zip. The Package asset includes
 all pre-built ROM and Disk images as well as full source code. The other
-assets contain only source code and do not have the pre-built ROM or 
+assets contain only source code and do not have the pre-built ROM or
 disk images.
 
 All source code and distributions are maintained on GitHub. Code
@@ -92,10 +95,10 @@ contributions are very welcome.
 
 # Installation & Operation
 
-In general, installation of RomWBW on your platform is very simple. You 
+In general, installation of RomWBW on your platform is very simple. You
 just need to program your ROM with the correct ROM image from the RomWBW
-distribution.  Subsequently, you can write disk images on your disk 
-drives (IDE disk, CF Card, SD Card, etc.) which then provides even more 
+distribution.  Subsequently, you can write disk images on your disk
+drives (IDE disk, CF Card, SD Card, etc.) which then provides even more
 functionality.
 
 Complete instructions for installation and operation of RomWBW are
@@ -128,10 +131,10 @@ please let me know if I missed you!
   derived and he has always been a great source of knowledge and
   advice.
 
-* Douglas Goodall contributed code, time, testing, and advice in  "the 
-  early days". He created an entire suite of application programs to   
+* Douglas Goodall contributed code, time, testing, and advice in  "the
+  early days". He created an entire suite of application programs to
   enhance the use of RomWBW. Unfortunately, they have become unusable
-  due  to internal changes within RomWBW. As of RomWBW 2.6, these 
+  due  to internal changes within RomWBW. As of RomWBW 2.6, these
   applications are no longer provided.
 
 * David Giles created support for the Z180 CSIO which is now included
@@ -143,6 +146,13 @@ please let me know if I missed you!
 * Phil Summers contributed the Forth and BASIC adaptations in ROM, the
   AY-3-8910 sound driver as well as a long list of general code
   enhancements.
+
+* Spencer Owen created the RC2014 series of hobbyist kit computers
+  which has exponentially increased RomWBW usage.
+
+* Stephen Cousins has likewise created a series of hobbyist kit
+  computers at Small Computer Central and is distributing RomWBW
+  with many of them.
 
 * Phillip Stevens contributed support for FreeRTOS.
 

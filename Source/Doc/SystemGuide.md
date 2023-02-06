@@ -1,5 +1,5 @@
 $define{doc_title}{System Guide}$
-$include{"Common.h"}$
+$include{"Book.h"}$
 
 Overview
 ========
@@ -405,6 +405,16 @@ The 5-bit baud rate value (V) is encoded as V = 75 * 2^X * 3^Y. The
 bits are defined as YXXXX.
 
 ### Function 0x00 -- Character Input (CIOIN)
+
+| **Inputs**                             | **Outputs**                            |
+|----------------------------------------|----------------------------------------|
+| B: 0x00 | A: Status (0-OK, else error) |
+| C: Serial Device Unit Number | E: Character Received |
+| C: Serial Device Unit Number | E: Character Received |
+| C: Serial Device Unit Number | E: Character Received |
+
+
+
 
 | _Entry Parameters_
 |       B: 0x00
