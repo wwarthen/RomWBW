@@ -1,39 +1,15 @@
-$define{doc_ver}{3.1 Pre-release}$
-$define{doc_product}{RomWBW}$
-$define{doc_root}{https://github.com/wwarthen/RomWBW/raw/dev/Doc}$
-$ifndef{doc_title}$ $define{doc_title}{Document Title}$ $endif$
-$ifndef{doc_author}$ $define{doc_author}{Wayne Warthen}$ $endif$
-$define{doc_date}{$date{%d %b %Y}$}$
-$ifndef{doc_authmail}$ $define{doc_authmail}{wwarthen@gmail.com}$ $endif$
-$define{doc_orgname}{RetroBrew Computers Group}$
-$define{doc_orgurl}{www.retrobrewcomputers.org}$
+$include{"Basic.h"}$
 
 ---
 # Force pandoc to enable graphics for Logo in title page!
 graphics: true
-title: $doc_product$ $doc_title$
-author: $doc_author$ (mailto:$doc_authmail$)
-date: $doc_date$
-institution: $doc_orgname$
 documentclass: book
 classoption:
 - oneside
 toc: true
-toc-depth: 1
+toc-depth: 2
 numbersections: true
-secnumdepth: 1
-papersize: letter
-geometry:
-- top=1.5in
-- bottom=1.5in
-- left=1.5in
-- right=1.5in
-# - showframe
-# - pass
-linestretch: 1.25
-colorlinks: true
-fontfamily: helvet
-fontsize: 12pt
+secnumdepth: 2
 header-includes:
 - \setlength{\headheight}{15pt}
 - |
@@ -53,7 +29,7 @@ header-includes:
       {\scshape \bfseries \fontsize{48pt}{56pt} \selectfont $doc_product$ \par}
       {\bfseries \fontsize{32pt}{36pt} \selectfont $doc_title$ \par}
       \vspace{24pt}
-      {\huge Version $doc_ver$ \\ $doc_date$ \par}
+      {\huge $doc_ver$ \\ $doc_date$ \par}
       \vspace{24pt}
       {\large \itshape $doc_orgname$ \\ \href{http://$doc_orgurl$}{$doc_orgurl$} \par}
       \vspace{12pt}
@@ -63,7 +39,7 @@ header-includes:
   \pagestyle{empty}
   ```
 include-before:
-- \renewcommand{\chaptername}{Section}
+# - \renewcommand{\chaptername}{Section}
 - |
   ```{=latex}
   \pagestyle{fancyplain}
@@ -76,5 +52,5 @@ include-before:
 ```{=latex}
 \clearpage
 \pagenumbering{arabic}
-\lhead{\fancyplain{}{\nouppercase{\footnotesize \bfseries \leftmark \hfill $doc_product$  $doc_title$}}}
+\lhead{\fancyplain{}{\nouppercase{\bfseries \leftmark \hfill $doc_product$  $doc_title$}}}
 ```

@@ -1,12 +1,20 @@
+RomWBW ReadMe  
+Version 3.1 Pre-release  
+Wayne Warthen (<wwarthen@gmail.com>)  
+05 Feb 2023
+
 # Overview
 
-RomWBW provides a complete software system for a wide variety of
-hobbyist Z80/Z180/Z280 CPU-based systems produced by these developer
+RomWBW software provides a complete, commercial quality implementation
+of CP/M (and workalike) operating systems and applications for modern
+Z80/180/280 retro-computing hardware systems. A wide variety of
+platforms are supported including those produced by these developer
 communities:
 
 - [RetroBrew Computers](https://www.retrobrewcomputers.org)
 - [RC2014](https://rc2014.co.uk)
 - [retro-comp](https://groups.google.com/forum/#!forum/retro-comp)
+- [Small Computer Central](https://smallcomputercentral.com/)
 
 General features include:
 
@@ -16,8 +24,8 @@ General features include:
 - Video drivers including TMS9918, SY6545, MOS8563, HD6445
 - Keyboard (PS/2) drivers via VT8242 or PPI interfaces
 - Real time clock drivers including DS1302, BQ4845
-- Multiple OS support including CP/M 2.2, ZSDOS, CP/M 3, ZPM3, QPM, &
-  p-System
+- OS Adaptations of CP/M 2.2, ZSDOS, CP/M 3, NZ-COM, ZPM3, QPM,
+  p-System, and FreeRTOS
 - Built-in VT-100 terminal emulation support
 
 RomWBW is distributed as both source code and pre-built ROM and disk
@@ -33,7 +41,7 @@ A dynamic disk drive letter assignment mechanism allows mapping
 operating system drive letters to any available disk media.
 Additionally, mass media devices (IDE Disk, CF Card, SD Card) support
 the use of multiple slices (up to 256 per device). Each slice contains a
-complete CP/M file system and can be mapped independently to any drive
+complete CP/M filesystem and can be mapped independently to any drive
 letter. This overcomes the inherent size limitations in legacy OSes and
 allows up to 2GB of accessible storage on a single device.
 
@@ -58,10 +66,12 @@ all of the operating systems and applications on a disk will run on any
 RomWBW-based system. To put it simply, you can take a disk (or CF/SD
 Card) and move it between systems transparently.
 
-A tool is provided that allows you to access a FAT-12/16/32 file system.
-The FAT file system may be coresident on the same disk media as RomWBW
+A tool is provided that allows you to access a FAT-12/16/32 filesystem.
+The FAT filesystem may be coresident on the same disk media as RomWBW
 slices or on stand-alone media. This makes exchanging files with modern
 OSes such as Windows, MacOS, and Linux very easy.
+
+# Getting Started
 
 # Acquiring RomWBW
 
@@ -125,7 +135,7 @@ let me know if I missed you!
   derived and he has always been a great source of knowledge and advice.
 
 - Douglas Goodall contributed code, time, testing, and advice in “the
-  early days”. He created an entire suite of application programs to  
+  early days”. He created an entire suite of application programs to
   enhance the use of RomWBW. Unfortunately, they have become unusable
   due to internal changes within RomWBW. As of RomWBW 2.6, these
   applications are no longer provided.
@@ -139,6 +149,13 @@ let me know if I missed you!
 - Phil Summers contributed the Forth and BASIC adaptations in ROM, the
   AY-3-8910 sound driver as well as a long list of general code
   enhancements.
+
+- Spencer Owen created the RC2014 series of hobbyist kit computers which
+  has exponentially increased RomWBW usage.
+
+- Stephen Cousins has likewise created a series of hobbyist kit
+  computers at Small Computer Central and is distributing RomWBW with
+  many of them.
 
 - Phillip Stevens contributed support for FreeRTOS.
 
