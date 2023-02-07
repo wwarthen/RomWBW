@@ -15,8 +15,8 @@ A wide variety of platforms are supported including those
 produced by these developer communities:
 
 * [RetroBrew Computers](https://www.retrobrewcomputers.org)
-* [RC2014](https://rc2014.co.uk)
-* [retro-comp](https://groups.google.com/forum/#!forum/retro-comp)
+* [RC2014](https://rc2014.co.uk), [RC2014-Z80](https://groups.google.com/g/rc2014-z80)
+* [retro-comp](https://groups.google.com/g/retro-comp)
 * [Small Computer Central](https://smallcomputercentral.com/)
 
 General features include:
@@ -72,8 +72,6 @@ A tool is provided that allows you to access a FAT-12/16/32 filesystem.
 The FAT filesystem may be coresident on the same disk media as RomWBW slices
 or on stand-alone media.  This makes exchanging files with modern OSes
 such as Windows, MacOS, and Linux very easy.
-
-# Getting Started
 
 # Acquiring RomWBW
 
@@ -153,6 +151,8 @@ please let me know if I missed you!
 * Stephen Cousins has likewise created a series of hobbyist kit
   computers at Small Computer Central and is distributing RomWBW
   with many of them.
+
+* The CP/NET client files were developed by Douglas Miller.
 
 * Phillip Stevens contributed support for FreeRTOS.
 
