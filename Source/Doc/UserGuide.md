@@ -191,10 +191,10 @@ below, **carefully** pick the appropriate ROM image for your hardware.
 | Sergey Kiselev's Easy Z80 SBC w/ RCBus           | EZZ80_std.rom         | 115200        |
 | Sergey Kiselev's Tiny EIPC Z80 SBC w/ RCBus      | EZZ80_tz80.rom        | 115200        |
 | Sergey Kiselev's Z80-512K Module for RCBus       | EZZ80_skz.rom         | 115200        |
-| Stephen Cousin's SC126 Z180 SBC w/ BP80 Bus      | SCZ180_126.rom        | 115200        |
-| Stephen Cousin's SC130 Z180 SBC w/ RCBus         | SCZ180_130.rom        | 115200        |
-| Stephen Cousin's SC131 Z180 Pocket Computer      | SCZ180_131.rom        | 115200        |
-| Stephen Cousin's SC140 Z180 for Z50Bus           | SCZ180_140.rom        | 115200        |
+| Stephen Cousins' SC126 Z180 SBC w/ BP80 Bus      | SCZ180_126.rom        | 115200        |
+| Stephen Cousins' SC130 Z180 SBC w/ RCBus         | SCZ180_130.rom        | 115200        |
+| Stephen Cousins' SC131 Z180 Pocket Computer      | SCZ180_131.rom        | 115200        |
+| Stephen Cousins' SC140 Z180 for Z50Bus           | SCZ180_140.rom        | 115200        |
 | Steve Garcia's Z180 Dyno SBC w/ Dyno Bus         | DYNO_std.rom          | 38400         |
 | Andrew Lynch's Nhyodyne Z80 MBC                  | MBC_std.rom           | 38400         |
 | Andrew Lynch's Rhyophyre Z180 SBC                | RPH_std.rom           | 38400         |
