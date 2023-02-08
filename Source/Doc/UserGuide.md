@@ -3112,9 +3112,7 @@ Also feel free to email $doc_author$ at [$doc_authmail$](mailto:$doc_authmail$).
 
 # Appendixes
 
-```{=latex}
-\newpage
-```
+`\newpage`{=latex}
 
 ## Appendix A - Device Summary
 

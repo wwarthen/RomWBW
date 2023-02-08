@@ -48,9 +48,10 @@ gpp -o %1.tmp -U "$" "$" "{" "}{" "}$" "{" "}" "@@@" "" -M "$" "$" "{" "}{" "}$"
 ::goto :eof
 
 pandoc %1.tmp -f markdown -t pdf -s -o %1.pdf --default-image-extension=pdf --pdf-engine=lualatex || exit /b
-pandoc %1.tmp -f markdown -t html -s -o %1.html --default-image-extension=png || exit /b
+pandoc %1.tmp -f markdown -t html -s -o %1.html --default-image-extension=png --css pandoc.css --embed-resources || exit /b
 pandoc %1.tmp -f markdown -t dokuwiki -s -o %1.dw --default-image-extension=png || exit /b
-pandoc %1.tmp -f markdown -t gfm -o %1.gfm --default-image-extension=png || exit /b
-pandoc %1.tmp -f markdown -t gfm-yaml_metadata_block -s -o %1.txt --markdown-headings=setext --default-image-extension=png || exit /b
+pandoc %1.tmp -f markdown -t gfm-yaml_metadata_block -s -o %1.gfm --default-image-extension=png || exit /b
+::pandoc %1.tmp -f markdown -t gfm-yaml_metadata_block -s -o %1.txt --markdown-headings=setext --default-image-extension=png || exit /b
+pandoc %1.tmp -f markdown -t plain+gutenberg -s -o %1.txt || exit /b
 
 goto :eof
