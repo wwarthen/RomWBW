@@ -183,13 +183,13 @@ all slices and will assume the slices are located in the defined
 partition.  You cannot mix the hard disk formats on a single disk
 device.
 
-WARNNG: The hd1k_xxx.img files **must** be prefixed by a partition 
-table before being written to your disk media.  The hd1k_prefix.dat 
-file is provided for this.  The hd1k_prefix.dat defines the required 
-partition table.  Any number of hd1k slice images can be 
-concatenated after the prefix.  For example, to make the 
-hd1k_cpm22.img file ready to write to your media, you would need to 
-do something like this:
+WARNNG: The hd1k_xxx.img files (not hd1k_combo.img) **must** be 
+prefixed by a partition table before being written to your disk media.  
+The hd1k_prefix.dat file is provided for this.  The hd1k_prefix.dat 
+defines the required partition table.  Any number of hd1k slice images 
+can be concatenated after the prefix.  For example, to make the 
+hd1k_cpm22.img file ready to write to your media, you would need to do 
+something like this:
 
   | C:\RomWBW\Binary>copy /b hd1k_prefix.dat + hd1k_cpm22.img hd_cpm22.img
   

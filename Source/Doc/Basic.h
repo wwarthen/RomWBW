@@ -45,3 +45,19 @@ header-includes:
   \renewcommand*{\familydefault}{\sfdefault}
   ```
 ---
+
+```{=gfm}
+**$doc_product$ $doc_title$** \
+$doc_ver$ \
+$doc_author$  ([$doc_authmail$](mailto:$doc_authmail$)) \
+$doc_date$
+
+```
+
+```{=dokuwiki}
+**$doc_product$ $doc_title$**\\
+$doc_ver$\\
+$doc_author$  <$doc_authmail$>\\
+$doc_date$\\
+
+```

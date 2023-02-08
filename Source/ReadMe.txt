@@ -6,7 +6,7 @@
 ***                                                                 ***
 ***********************************************************************
 
-This directory is the root directory for the source tree for RomWBW.
+This directory is the root directory of the source tree for RomWBW.
 
 This document describes the process to build a customized version 
 of the RomWBW firmware.  RomWBW was explicitly organized in a way 
@@ -20,23 +20,21 @@ customize your firmware to:
       the DiskIO, Dual-IDE, etc.
     - Modify operational parameters such as serial port
       speed or wait state insertion.
-    - Add or remove programs or files contained on the ROM disk.
+    - Add or remove programs or files contained on the disk images.
     
-Thought not necessary, advanced users can easily modify any of
-the software including the operating systems.
+Virtually all source code is provided including the operating
+systems themselves, so advanced users can easily modify any of
+the software.
 
 A cross-platform approach is used to build the RomWBW firmware. 
 The software is built using a modern Windows, Linux, or Mac
 computer, then the resulting firmware image is programmed into
 the ROM of your RetroBrew Computer CPU board.
 
-Build System Requirements
--------------------------
+Windows Build System Requirements
+---------------------------------
 
-For Linux/Mac computers, refer to the ReadMe.unix file in the
-top directory of the distribution.
-
-For Microsoft Windows computers, All that is required to build the
+For Microsoft Windows computers, all that is required to build the
 firmware is the RomWBW distribution zip archive file.  The zip
 archive package includes all of the required source code 
 (including the operating systems) and the programs required to run 
@@ -44,24 +42,65 @@ the build.
 
 The build process is run via some simple scripts that automate the 
 process.  These scripts utilize both batch command files as well as 
-Windows PowerShell.  All versions of Microsoft Windows starting with 
-Vista include PowerShell and will run the build process with no 
-addtional programs required.  Either 32 or 64 bit versions of 
-Microsoft Windows are fine.
+Windows PowerShell.  Windows 7 or greater is recommended.  If you want 
+to use Windows Vista or XP, you will need to first install PowerShell 
+which available for free from Microsoft.  Either 32 or 64 bit versions 
+of Microsoft Windows are fine.No additional programs need to be 
+installed to run the build.
+
+Linux Build System Requirements
+-------------------------------
+
+You must have some standard system tools and libraries 
+installed, specifically: gcc, gnu make, libncurses, and srecord.
+Typically, something like this will take care of adding all
+required packages in Linux:
+
+	sudo apt install build-essential libncurses-dev srecord
+
+Since there are many variants and releases of Linux, it is difficult
+to ensure the build will work in all cases.  The current stable
+release of Ubuntu is used to verify the build runs.
+
+MacOS Build System Requirements
+-------------------------------
+
+You will need to install the srecord package to complete the
+build process:
+
+	brew install srecord
+
+You may encounter a failure reading or writing files. This is caused by 
+protection features in MacOS (at least, in Catalina) that prevent 
+programs built on your local system (unsigned) from running.  To 
+disable this feature:
+
+1) Make sure you exit System Preferences.
+2) Open a terminal session and type the following.  You will need to
+   authenticate with an admin account: sudo spctl --master-disable
+3) Exit terminal
+4) Go into System Preferences and choose Security and Privacy
+5) Select the General tab if it isn't already selected
+6) You should now see a third selection under
+   "Allow apps downloaded from:" of Anywhere - select this.
+7) Now you can run the build successfully.
+
+DISCLAIMER: You do this at your own risk.  I highly recommend that you
+return the settings back to normal immediately after doing a build.
 
 Process Overview
 ----------------
 
 The basic steps to create a custom ROM are:
 
-  1) Create/update configuration file
+  1) Create/update configuration file (optional).
 
-  2) Update/Add/Delete any files you want incorporated in the
-     ROM Disk
+  2) Update/Add/Delete any files as desired to customize the disk
+     images (optional).
 
   3) Run the build scripts and confirm there are no errors.
 
-  4) Program the resultant ROM image and try it.
+  4) Program the resultant ROM image and/or write thedisk images.
 
 Note that steps 1 and 2 are performed to customize your ROM as 
 desired.  If you want to simply build a standard configuration, it is 
@@ -81,136 +120,176 @@ file that is included in the build process.  In order to customize
 your settings, it is easiest to make a copy of an existing 
 configuration file and make your changes there.
 
-Configuration files are found in the Source\HBIOS\Config 
-directory.  If you look in the this directory, you will see a 
-series of files named <plt>_<cfg>.asm where <plt> refers to the 
-CPU board in your system and <cfg> is used to name the specific 
-configuration so you can maintain multiple configurations.
-
-You will notice that there is generally one configuration file for 
-each CPU platform with a name of "std".  For example, you there is 
-a file called MK4_std.asm.  This is the standard ("std") 
-configuration for a Mark IV CPU board.
+RomWBW uses the concept of a "platform" and "configuration" to
+define the settings for a build.  Platform refers to one of the core
+systems supported.  Configuration refers to the settings that
+customize the build.  The configuration is modifies the platform
+defaults as desired.
 
 The platform names are predefined.  Refer to the following table 
 to determine the <plt> component of the configuration filename:
 
-	SBC V1/V2	SBC_std.rom
-	SBC SimH	SBC_simh.rom
-	MBC		MBC_std.asm
-	Zeta V1		ZETA_std.rom
-	Zeta V2		ZETA2_std.rom
-	N8		N8_std.rom
-	Mark IV		MK4_std.rom
-	RC2014 w/ Z80	RCZ80_std.rom
-	RC2014 w/ Z180	RCZ180_nat.rom	(native Z180 memory addressing)
-	RC2014 w/ Z180	RCZ180_ext.rom	(external 512K RAM/ROM module)
-	SCZ180		SC126, SC130, SC131
-	Easy Z80	EZZ180_std.rom
-	Dyno		DYNO_std.rom
+	SBC		Retrocomputing ECB Z80 SBC V1/V2
+	N8		RetroComputing N8 SBC
+	MK4		RetroComputing Mark IV Z180
+	ZETA		Sergey Kiselev's Zeta Z80
+	ZETA2		Sergey Kiselev's Zeta V2 Z80
+	RCZ80		RCBus Z80
+	RCZ180		RCBus Z180
+	SCZ180		Stephen Cousins' Z180 Systems
+	RCZ280		RCBus Z280
+	EZZ80		Sergey Kiselev's Easy/Tiny Z80
+	DYNO		Dyno Z180 Single Board Computer
+	MBC		Andrew Lynch's Nhyodyne Z80 MBC
+	RPH		Andrew Lynch's Rhyophyre Z180 SBC
+	UNA		John Coffman's UNA System
 
-You can use any name you choose for the <cfg> component of the 
-configuration filename.  So, let's say you want to create a custom 
-ROM for the Mark IV.  You would simply copy "MK4_std.asm" to 
-something like "MK4_cust.asm".  Now, just edit the new file 
-("MK4_cust.asm" in this example) as desired.
+Configuration files are found in the Source\HBIOS\Config 
+directory.  If you look in the this directory, you will see a 
+series of files named <plt>_<cfg>.asm.  By convention, all
+configuration files start with the platform identifier followed
+by an underscore.  You will see later that the build process does
+require this naming convention and it allows you to easily see which
+configuration files apply to each of the platforms supported.
 
-You will see that the file already has lines for all of the common 
-options and there is a comment after each option indicating the 
-possible values.
+Each of the possible platforms has at least one configuration file.  In 
+many cases, there will be a standard ("std") configuration for the 
+platform.  For example, there is a file called MK4_std.asm.  This is 
+the standard ("std") configuration for a Mark IV CPU board.
 
-In our example, let's say you have added a Dual-IDE board to your 
+The <cfg> portion of the filename can be anything desired.  To create
+your own custom configuration, you can modify an existing configuration
+file or (preferably), you could copy an existing configuration file
+to a new name of your choosing and make your changes there.  For
+example, you could copy "MK4_std.asm" to something like "MK4_cust.asm".
+Now, you can make changes to your private copy of the configuration
+and easily revert back to the original if you have problems.
+
+It is important to understand how configuration files are processed.
+They start by inheriting all of the default settings for the
+platform.  This is accomplished via the "#include" directive near
+the top of the file.  For the "MK4_std.asm" configuration file,
+this line reads:
+
+#include "cfg_mk4.asm"
+
+When the configuration file (MK4_std.asm) is processed, it will first
+read in all the default platform settings from "cfg_mk4.asm".  All of
+the platform default configuration files are found in the parent
+directory (the HBIOS directory).  You will see a "cfg_<plt>.asm" for
+each platform in the parent directory.
+
+If you look at the platform configuration file, you will see that it
+has many more settings than you found in the build configuration file.
+The platform configuration file contains *all* possible settings for
+the platform and defines their default value.  The settings in the
+build configuration file just override the platform default settings.
+
+Note that the settings in the platform configuration file are all
+defined using ".EQU" whereas the build configuration file uses ".SET".
+This is because ".EQU" defines the initial value for a variable and
+".SET" modifies a pre-existing value.  You *must* use ".EQU" and ".SET"
+correctly or the assembler will complain very loudly.
+
+In our example, let's say you have added a DiskIO V3 board to your 
 Mark IV system and want to include floppy support. You will see a 
 couple lines similar to these in the config file:
 
-FDENABLE  .SET	FALSE		; TRUE FOR FLOPPY DEVICE SUPPORT
-FDMODE    .SET	FDMODE_DIDE	; FDMODE_DIO, FDMODE_DIDE, FDMODE_DIO3
+FDENABLE	.SET	TRUE		; FD: ENABLE FLOPPY DISK DRIVER (FD.ASM)
+FDMODE		.SET	FDMODE_DIDE	; FD: DRIVER MODE: FDMODE_[DIO|ZETA|ZETA2|DIDE|N8|DIO3|RCSMC|RCWDC|DYNO|EPWDC]
 
-To enable floppy support, you would just change FDENABLE to TRUE:
+FDENABLE is already set to TRUE, so that is fine.  However, FDMODE
+is not correct because it specifies a different board.  To fix this,
+just modify the line to read:
 
-FDENABLE  .SET	TRUE		; TRUE FOR FLOPPY DEVICE SUPPORT
+FDMODE		.SET	FDMODE_DIO3	; FD: DRIVER MODE: FDMODE_[DIO|ZETA|ZETA2|DIDE|N8|DIO3|RCSMC|RCWDC|DYNO|EPWDC]
 
-Since FDMODE is already set to FDMODE_DIDE, it is correct as is.  
-If instead, you had added a DiskIO V3 board and wanted to use it 
-for floppy support, you would also change FDMODE to 
-FDMODE_FDMODE_DIO3:
+You are now probably wondering where to find detailed instructions for 
+each of the configuration settings.  Sadly, this is an area where 
+RomWBW is very deficient.  The changes to hardware support happen so 
+fast that is have been virtually impossible to create such a document. 
+If it is not obvious what you need to do when looking at the build 
+configuration file, I recommend that you look at the platform 
+configuration file in the parent directory.  It will contain all of the 
+possible settings and their default values as well as a brief comment.  
+In many cases this is enough information to figure out what to do.  If 
+not, you will need to either look at the HBIOS source code or request 
+help in any of the RomWBW support communities (people are typically 
+very helpful).  You can also post questions or issues on the GitHub 
+repository.
 
-FDMODE    .SET	FDMODE_DIO3	; FDMODE_DIO, FDMODE_DIDE, FDMODE_DIO3
+2. Update/Add/Delete Disk Files
+-------------------------------
 
-2. Update/Add/Delete ROM Disk Files
------------------------------------
+A major part of the RomWBW build process is the creation of the
+ROM disk contents and the floppy/hard disk image files.
 
 The files that are included on the ROM Disk of your ROM are copied 
 from a set of directories during the build process.  This allows 
 you to have complete flexibility over the files you want included 
 in your ROM.
 
-These directories are already populated in the distribution.  You do 
+The ROM disk process starts in the Source/RomDsk directory.  Within
+that directory, there are subdirectories for each of the different
+possible ROM sizes that can be created.  The vast majority of all
+ROMs are 512KB, so you will probably be interested primarily in the
+ROM_512KB subdirectory.
+
+These subdirectories are already populated in the distribution.  You do 
 not need to do anything unless you want to change the files that are 
-included in the ROM Disk.
+included on your ROM Disk.
 
 In summary, the ROM Disk embedded in the ROM firmware you build, 
 will include the files from the ROM_512KB directory (or the 
-ROM_1024KB directory if building a 1024KB firmware).  
-Additionally, files will be added from the directory associated 
-with the platform specified in the ROM Build.
+ROM_1024KB directory if building a 1024KB firmware, etc.).  
 
 There is a ReadMe.txt document in the \Source\RomDsk directory 
 with a more detailed description of this process.
 
-Note that the standard 512K ROM disk is absolutely full.  So, if
+Note that the standard 512K ROM disk is almost full.  So, if
 you want to add files to it, you will need to delete other files
 to free up some space.
+
+Creation of the floppy/hard disk images is similar, but these
+images are much larger and have many more files.  Additionally, the
+process pulls in files from multiple places and creates multiple
+formats.  The Source/Images directory of the distribution handles
+the creations of these disk images.  There is a ReadMe.txt file there
+that describes the process and how to customize your disk images.
 
 3. Run the Build Process
 ------------------------
 
-This section describes the build process for Microsoft Windows
-computers.  The build process for Linux/Mac computers is described
-in the ReadMe.unix file in the top level directory of the
-distribution.
+Regardless of whether you are using Windows, Linux, or MacOS to perform
+the build, you will initiate the build at a command prompt.  So, you
+start by starting a command window/terminal.  Make sure your
+command prompt has the root "RomWBW" directory as the default.
 
-The build involves running commands at the command prompt.  Open a 
-command prompt window for the Source directory.  If you unzipped 
-the distribution to "C:\", then your command prompt should look 
-like this:
+For a Windows computer, the build is initiated by simply running the
+command "Build".  To delete all files created during a build process,
+use the "Clean" command.  I recommend doing this before each build.  It
+will operate recursively on all directories.
 
-    C:\RomWBW\Source>
+For Linux or MacOS, you will use the command "make".  To delete all
+files created during a prior build run, use the command "make clean".
+I strongly recommend doing this before each build.
 
-Now run the first of two commands, the BuildShared command:
+This will launch the build process for a complete RomWBW build including
+ROM and disk images.  Some of the output may be confusing, so a sample
+normal build run is included at the end of this document.
 
-    C:\RomWBW\Source> BuildShared
-
-This command will run a series of commands that generate the 
-software which is "shared" by all ROM builds.  It is normal to 
-have some lines indicating a warning like the following.  This is 
-normal and expected.
-
-    ++ Warning: program origin NOT at 100H ++
-    
-A sample run of the BuildShared command is provided later in this 
-document.
-
-Now run the second command, the BuildROM command:
-
-    C:\RomWBW\Source> BuildROM
-
-This command will prompt you twice as it runs.  These prompts 
-determine the platform and configuration to be built.  The first 
-prompt is for the platform, as shown below:
+At a point in the middle of the build, you will be prompted to choose
+the specific platform and configuration for your ROM.  For platform, be
+sure to enter the platform identifier that corresponds to the ROM you
+are creating.  The prompt will look something like this:
 
     Platform [SBC|MBC|ZETA|ZETA2|RCZ80|EZZ80|UNA|N8|MK4|RCZ180|SCZ180|DYNO|RCZ280]:
 
-Enter the option corresponding to the platform of the ROM firmware 
-you are building.  If you enter something other than one of the 
-possible options, the prompt will be repeated until you provide an 
-acceptable response.
-
-Next, you will be prompted for the specific configuration of the 
-platform to be built.  The options presented will be based on the 
-configuration files in the Config directory.  So, if you have made 
-a copy of the MK4_std.asm config and called it MK4_cust.asm, you 
-would see a prompt like this:
+You will subsequently be prompted for the specific configuration that
+you want to build.  It will display the available possibilities based
+on the platform you previously chose.  Notice that you are choosing
+the portion of the configuration filename that follows the platform
+id:
 
     Configurations available:
      > std
@@ -220,14 +299,11 @@ would see a prompt like this:
 Enter one of the configuration options to build a ROM with the 
 associated config file.
 
-At this point, the build should run and you will see output 
+At this point, the build should continue and you will see output 
 related to the assembler runs and some utility invocations.  Just 
 review the output for any obvioius errors.  Normally, all errors 
 will cause the build to stop immediately and display an error 
 message in red.
-
-A sample run of the BuildROM command is provided later in this 
-document.
 
 You will see some lines in the output indicating the amount of 
 space various components have taken.  You should check these to 
@@ -246,39 +322,44 @@ used:
     SD occupies 2191 bytes.
     HBIOS space remaining: 21434 bytes.
 
-Optionally, you can run one more command that will create the
-RomWBW disk images that can be subsequently written to actual
-disk media.
+At the completion of the build process, you will find the resultant
+ROM and disk image files in the Binary directory.  
 
-    C:\RomWBW\Source> BuildImages
-
-After running this command, you will find the resultant
-disk image file in the Binary directory with names in the
-format fd_xxx.img for floppy media or hd_xxx.img for
-hard disk media.  Refer to the DiskList.txt file in the
-Binary directory for more information on using the disk
-image files.
+There will be many disk image (".img") files created.  These are 
+described in the RomWBW User Guide document.  Since RomWBW
+encapsulates all hardware interface code in the ROM itself, the
+disk image files are generic for all ROMs.  The only reason they
+are built is to accommodate any disk content changes you may have
+made.
 
 4. Deploy the ROM
 -----------------
 
 Upon completion of a successful build, you should find the 
-resulting firmware in the Binary directory.  These output files 
-will have names that match the config filename, but with different 
-extensions.
+resulting firmware in the Binary directory.  The ROM file
+will be called <plt>_<cfg>.rom matching the platform identifier
+and configuration you chose.
 
-Three output files will be created for a single BuildROM run:
+Three output files will be created for a single build:
 
-     <plt>_<cfg>.rom - binary ROM image to burn to EEPROM
-     <plt>_<cfg>.com - executable version of the system image
-                       that can be copied via X-Modem to a
-		       running system to test the build.
+     <plt>_<cfg>.rom -	binary ROM image to burn to EEPROM
+     <plt>_<cfg>.com -	executable version of the system image
+			that can be copied via X-Modem to a
+			running system to test the build
+     <plt>_<cfg>.upd -	partial ROM image containing just the
+			first 128KB which can be used to update
+			only the "code" portion of your ROM
+			and not modify the ROM disk
 
-The actual ROM image is the file ending in .rom.  It should be 
-exactly 512KB.  Simply burn the .rom image to your ROM and install 
+The actual ROM image is the file ending in .rom.  It will normally be 
+512KB.  Simply burn the .rom image to your ROM and install 
 it in your hardware.  The process for programming your ROM depends 
 on your hardware, but the .rom file is in a pure binary format (it 
 is not hex encoded).
+
+You can alternatively reprogram your ROM in-situ (most hardware
+supports this) using the FLASH application included with RomWBW.  This
+is described in the "Upgrading" section of the RomWBW User Guide.
 
 Refer to the document ReadMe.txt in the Binary directory for more 
 information on the other two file extensions created.
@@ -286,12 +367,18 @@ information on the other two file extensions created.
 Specifying Build Options on Command Line
 ----------------------------------------
 
-If you don't want to be prompted for the options to the "BuildROM" 
-command, you can specify the options right on the command line.
+If you are repeatedly running the build process, you may prefer to
+specify the platform and configuration on the command line to avoid
+being prompted each time.
 
-For example:
+Under Windows, you can specify the platform and configuration
+like this:
 
-    C:\RomWBW\Source> BuildROM MK4 cust
+    Build MK4 cust
+
+Under Linux or MacOS, you can do the same thing like this:
+
+    make ROM_PLATFORM=MK4 ROM_CONFIG=cust
 
 In this case, you will not be prompted.  This is useful if you wish 
 to automate your build process.
@@ -301,36 +388,56 @@ parameter of the command.  This parameter is now deprecated and
 the size of the ROM is specified in your configuration file
 using the ROMSIZE variable.
 
-Special Build Commands
-----------------------
 
-You may notice there are a few additional Build*.cmd files in the 
-Source directory.  They are not used or required for building ROM 
-firmware.  Their purpose is described below:
 
-BuildProp: Some RetroBrew Computer peripheral boards are based
-           on the Parallax Propeller.  The Propeller requires
-           custom onboard EEPROM firmware to operate.  This
-           command file builds the firmware images for each
-           of the Propeller-based boards.
 
-BuildImages: RomWBW has the ability to create floppy disk and hard
-             disk images for use on systems running the RomWBW
-	     firmware.  This script allows you to place the files
-	     you want on a CP/M floppy or hard disk in a directory
-	     and will turn them into a writable disk image.  Refer
-	     to the ReadMe.txt document in the Source\Images
-	     directory for a detailed description of this process.
-	     N.B., BuildShared must be run prior to BuildImages.
+Example Build Run (Windows)
+---------------------------
 
-BuildBP: This command builds another OS variant called BPBIOS.  It
-         is a work in progress and should not be used at this time
-	 without contacting Wayne Warthen.
+C:\Users\Wayne\Projects\RomWBW>build
 
-Example BuildShared Run
------------------------
+Building PropIO...
+Brads Spin Tool Compiler v0.15.3 - Copyright 2008,2009 All rights reserved
+Compiled for i386 Win32 at 08:17:48 on 2009/07/20
+Loading Object PropIO
+Loading Object AnsiTerm
+Loading Object vgacolour
+Loading Object E555_SPKEngine
+Loading Object Keyboard
+Loading Object safe_spi
+Loading Object Parallax Serial Terminal Null
+Program size is 13416 longs
+Compiled 2227 Lines of Code in 0.054 Seconds
+        1 file(s) moved.
 
-C:\RomWBW\Source>BuildShared
+Building PropIO2...
+Brads Spin Tool Compiler v0.15.3 - Copyright 2008,2009 All rights reserved
+Compiled for i386 Win32 at 08:17:48 on 2009/07/20
+Loading Object PropIO2
+Loading Object AnsiTerm
+Loading Object vgacolour
+Loading Object E555_SPKEngine
+Loading Object Keyboard
+Loading Object safe_spi
+Loading Object Parallax Serial Terminal Null
+Program size is 13420 longs
+Compiled 2227 Lines of Code in 0.053 Seconds
+        1 file(s) moved.
+
+Building ParPortProp...
+Brads Spin Tool Compiler v0.15.3 - Copyright 2008,2009 All rights reserved
+Compiled for i386 Win32 at 08:17:48 on 2009/07/20
+Loading Object ParPortProp
+Loading Object AnsiTerm
+Loading Object vgacolour
+Loading Object E555_SPKEngine
+Loading Object Keyboard
+Loading Object safe_spi
+Loading Object Parallax Serial Terminal Null
+Loading Object FullDuplexSerial
+Program size is 15484 longs
+Compiled 2631 Lines of Code in 0.065 Seconds
+        1 file(s) moved.
 TASM Z180 Assembler.       Version 3.2 September, 2001.
  Copyright (C) 2001 Squak Valley Software
 tasm: pass 1 complete.
@@ -350,9 +457,9 @@ TASM Z80 Assembler.       Version 3.2 September, 2001.
  Copyright (C) 2001 Squak Valley Software
 tasm: pass 1 complete.
 CBIOS extension info occupies 6 bytes.
-UTIL occupies 497 bytes.
-INIT code slack space: 2282 bytes.
-HEAP space: 4106 bytes.
+UTIL occupies 525 bytes.
+INIT code slack space: 2184 bytes.
+HEAP space: 4034 bytes.
 CBIOS total space used: 6144 bytes.
 tasm: pass 2 complete.
 tasm: Number of errors = 0
@@ -363,9 +470,9 @@ TASM Z80 Assembler.       Version 3.2 September, 2001.
  Copyright (C) 2001 Squak Valley Software
 tasm: pass 1 complete.
 CBIOS extension info occupies 6 bytes.
-UTIL occupies 497 bytes.
-INIT code slack space: 2073 bytes.
-HEAP space: 3920 bytes.
+UTIL occupies 525 bytes.
+INIT code slack space: 2025 bytes.
+HEAP space: 3887 bytes.
 CBIOS total space used: 6400 bytes.
 tasm: pass 2 complete.
 tasm: Number of errors = 0
@@ -436,6 +543,7 @@ Saved image size: 3584 bytes (0E00H, - 28 records)
 ++ Warning: program origin NOT at 100H ++
 
 CP/M MACRO ASSEM 2.0
+
 D7F2
 00BH USE FACTOR
 END OF ASSEMBLY
@@ -510,10 +618,21 @@ No Fatal error(s)
 
 Link-80  3.44  09-Dec-81  Copyright (c) 1981 Microsoft
 
-Data    0100    08F5    < 2037>
+Data    0100    08FF    < 2047>
 
-51781 Bytes Free
-[0000   08F5        8]
+51771 Bytes Free
+[0000   08FF        8]
+
+
+No Fatal error(s)
+
+
+Link-80  3.44  09-Dec-81  Copyright (c) 1981 Microsoft
+
+Data    0100    091A    < 2074>
+
+51744 Bytes Free
+[0000   091A        9]
 
 
 
@@ -599,6 +718,7 @@ End of file Pass 2
 
 
         1 file(s) moved.
+        1 file(s) moved.
 LINK 1.31
 
 COUT     0FAB   ADDHLA   0F67   BCD2BIN  0FC9   BIN2BCD  0FDC
@@ -623,6 +743,7 @@ End of file Pass 2
  145 Symbols Detected.
 
 
+        1 file(s) moved.
         1 file(s) moved.
 LINK 1.31
 
@@ -659,8 +780,8 @@ Z80ASM Copyright (C) 1983-86 by SLR Systems Rel. 1.32 #AB1234
  BOOT/MF
 End of file Pass 1
 End of file Pass 2
- 0 Error(s) Detected. 639 Program Bytes. 324 Data Bytes.
- 123 Symbols Detected.
+ 0 Error(s) Detected. 655 Program Bytes. 324 Data Bytes.
+ 125 Symbols Detected.
 
 
 
@@ -715,27 +836,27 @@ End of file Pass 2
 
 LINK 1.31
 
-@ADRV    07E7   @RDRV    07E8   @TRK     07E9   @SECT    07EB
-@DMA     07ED   @DBNK    07F0   @CNT     07EF   @CBNK    023D
+@ADRV    07F7   @RDRV    07F8   @TRK     07F9   @SECT    07FB
+@DMA     07FD   @DBNK    0800   @CNT     07FF   @CBNK    023D
 @COVEC   FE24   @CIVEC   FE22   @AOVEC   FE28   @AIVEC   FE26
-@LOVEC   FE2A   @MXTPA   FE62   @BNKBF   FE35   @CTBL    04DC
-@DTBL    0591   @CRDMA   FE3C   @CRDSK   FE3E   @VINFO   FE3F
+@LOVEC   FE2A   @MXTPA   FE62   @BNKBF   FE35   @CTBL    04EC
+@DTBL    05A1   @CRDMA   FE3C   @CRDSK   FE3E   @VINFO   FE3F
 @RESEL   FE41   @FX      FE43   @USRCD   FE44   @MLTIO   FE4A
 @ERMDE   FE4B   @ERDSK   FE51   @MEDIA   FE54   @BFLGS   FE57
 @DATE    FE58   @HOUR    FE5A   @MIN     FE5B   @SEC     FE5C
 @CCPDR   FE13   @SRCH1   FE4C   @SRCH2   FE4D   @SRCH3   FE4E
-@SRCH4   FE4F   @BOOTDU  0493   @BOOTSL  0494   @HBBIO   0589
-ADDHLA   066D   BCD2BIN  06CF   BIN2BCD  06E2   DPH0     093F
-@HBUSR   058C   DPH1     0966   DPH10    0AC5   DPH11    0AEC
-DPH12    0B13   DPH13    0B3A   DPH14    0B61   DPH15    0B88
-DPH2     098D   DPH3     09B4   DPH4     09DB   DPH5     0A02
-DPH6     0A29   DPH7     0A50   DPH8     0A77   DPH9     0A9E
-@SYSDR   066C   CIN      06A5   COUT     06B1   CRLF     06C2
-CRLF2    06BF   PHEX16   0672   PHEX8    067D
+@SRCH4   FE4F   @BOOTDU  04A3   @BOOTSL  04A4   @HBBIO   0599
+ADDHLA   067D   BCD2BIN  06DF   BIN2BCD  06F2   DPH0     094F
+@HBUSR   059C   DPH1     0976   DPH10    0AD5   DPH11    0AFC
+DPH12    0B23   DPH13    0B4A   DPH14    0B71   DPH15    0B98
+DPH2     099D   DPH3     09C4   DPH4     09EB   DPH5     0A12
+DPH6     0A39   DPH7     0A60   DPH8     0A87   DPH9     0AAE
+@SYSDR   067C   CIN      06B5   COUT     06C1   CRLF     06D2
+CRLF2    06CF   PHEX16   0682   PHEX8    068D
 
 ABSOLUTE     0000
-CODE SIZE    06F5 (0000-06F4)
-DATA SIZE    096B (06F5-105F)
+CODE SIZE    0705 (0000-0704)
+DATA SIZE    096B (0705-106F)
 COMMON SIZE  0000
 USE FACTOR     21
 
@@ -1047,8 +1168,8 @@ Z80ASM Copyright (C) 1983-86 by SLR Systems Rel. 1.32 #AB1234
  BOOT/MF
 End of file Pass 1
 End of file Pass 2
- 0 Error(s) Detected. 707 Program Bytes. 347 Data Bytes.
- 126 Symbols Detected.
+ 0 Error(s) Detected. 723 Program Bytes. 347 Data Bytes.
+ 128 Symbols Detected.
 
 
 
@@ -1106,23 +1227,23 @@ LINK 1.31
 @ADRV    08F2   @RDRV    08F3   @TRK     08F4   @SECT    08F6
 @DMA     08F8   @DBNK    08FB   @CNT     08FA   @CBNK    0242
 @COVEC   FE24   @CIVEC   FE22   @AOVEC   FE28   @AIVEC   FE26
-@LOVEC   FE2A   @MXTPA   FE62   @BNKBF   FE35   @CTBL    0525
-@DTBL    05DA   @CRDMA   FE3C   @CRDSK   FE3E   @VINFO   FE3F
+@LOVEC   FE2A   @MXTPA   FE62   @BNKBF   FE35   @CTBL    0535
+@DTBL    05EA   @CRDMA   FE3C   @CRDSK   FE3E   @VINFO   FE3F
 @RESEL   FE41   @FX      FE43   @USRCD   FE44   @MLTIO   FE4A
 @ERMDE   FE4B   @ERDSK   FE51   @MEDIA   FE54   @BFLGS   FE57
 @DATE    FE58   @HOUR    FE5A   @MIN     FE5B   @SEC     FE5C
 @CCPDR   FE13   @SRCH1   FE4C   @SRCH2   FE4D   @SRCH3   FE4E
-@SRCH4   FE4F   @BOOTDU  04DC   @BOOTSL  04DD   @HBBIO   05D2
-ADDHLA   06B6   BCD2BIN  0718   BIN2BCD  072B   DPH0     0A61
-@HBUSR   05D5   DPH1     0A88   DPH10    0BE7   DPH11    0C0E
+@SRCH4   FE4F   @BOOTDU  04EC   @BOOTSL  04ED   @HBBIO   05E2
+ADDHLA   06C6   BCD2BIN  0728   BIN2BCD  073B   DPH0     0A61
+@HBUSR   05E5   DPH1     0A88   DPH10    0BE7   DPH11    0C0E
 DPH12    0C35   DPH13    0C5C   DPH14    0C83   DPH15    0CAA
 DPH2     0AAF   DPH3     0AD6   DPH4     0AFD   DPH5     0B24
 DPH6     0B4B   DPH7     0B72   DPH8     0B99   DPH9     0BC0
-@SYSDR   06B5   CIN      06EE   COUT     06FA   CRLF     070B
-CRLF2    0708   PHEX16   06BB   PHEX8    06C6
+@SYSDR   06C5   CIN      06FE   COUT     070A   CRLF     071B
+CRLF2    0718   PHEX16   06CB   PHEX8    06D6
 
 ABSOLUTE     0000
-CODE SIZE    073E (0000-073D)
+CODE SIZE    074E (0000-074D)
 DATA SIZE    0985 (0800-1184)
 COMMON SIZE  0000
 USE FACTOR     22
@@ -1461,8 +1582,8 @@ Z80ASM Copyright (C) 1983-86 by SLR Systems Rel. 1.32 #AB1234
  BOOT/MF
 End of file Pass 1
 End of file Pass 2
- 0 Error(s) Detected. 703 Program Bytes. 347 Data Bytes.
- 126 Symbols Detected.
+ 0 Error(s) Detected. 719 Program Bytes. 347 Data Bytes.
+ 128 Symbols Detected.
 
 
 
@@ -1520,23 +1641,23 @@ LINK 1.31
 @ADRV    08F2   @RDRV    08F3   @TRK     08F4   @SECT    08F6
 @DMA     08F8   @DBNK    08FB   @CNT     08FA   @CBNK    0242
 @COVEC   FE24   @CIVEC   FE22   @AOVEC   FE28   @AIVEC   FE26
-@LOVEC   FE2A   @MXTPA   FE62   @BNKBF   FE35   @CTBL    0521
-@DTBL    05D6   @CRDMA   FE3C   @CRDSK   FE3E   @VINFO   FE3F
+@LOVEC   FE2A   @MXTPA   FE62   @BNKBF   FE35   @CTBL    0531
+@DTBL    05E6   @CRDMA   FE3C   @CRDSK   FE3E   @VINFO   FE3F
 @RESEL   FE41   @FX      FE43   @USRCD   FE44   @MLTIO   FE4A
 @ERMDE   FE4B   @ERDSK   FE51   @MEDIA   FE54   @BFLGS   FE57
 @DATE    FE58   @HOUR    FE5A   @MIN     FE5B   @SEC     FE5C
 @CCPDR   FE13   @SRCH1   FE4C   @SRCH2   FE4D   @SRCH3   FE4E
-@SRCH4   FE4F   @BOOTDU  04D8   @BOOTSL  04D9   @HBBIO   05CE
-ADDHLA   06B2   BCD2BIN  0714   BIN2BCD  0727   DPH0     0A61
-@HBUSR   05D1   DPH1     0A88   DPH10    0BE7   DPH11    0C0E
+@SRCH4   FE4F   @BOOTDU  04E8   @BOOTSL  04E9   @HBBIO   05DE
+ADDHLA   06C2   BCD2BIN  0724   BIN2BCD  0737   DPH0     0A61
+@HBUSR   05E1   DPH1     0A88   DPH10    0BE7   DPH11    0C0E
 DPH12    0C35   DPH13    0C5C   DPH14    0C83   DPH15    0CAA
 DPH2     0AAF   DPH3     0AD6   DPH4     0AFD   DPH5     0B24
 DPH6     0B4B   DPH7     0B72   DPH8     0B99   DPH9     0BC0
-@SYSDR   06B1   CIN      06EA   COUT     06F6   CRLF     0707
-CRLF2    0704   PHEX16   06B7   PHEX8    06C2
+@SYSDR   06C1   CIN      06FA   COUT     0706   CRLF     0717
+CRLF2    0714   PHEX16   06C7   PHEX8    06D2
 
 ABSOLUTE     0000
-CODE SIZE    073A (0000-0739)
+CODE SIZE    074A (0000-0749)
 DATA SIZE    0985 (0800-1184)
 COMMON SIZE  0000
 USE FACTOR     22
@@ -1980,6 +2101,74 @@ zpmldr.bin
         1 file(s) copied.
         1 file(s) copied.
 
+Building p-System BIOS Tester Loader for RomWBW...
+
+TASM Z80 Assembler.       Version 3.2 September, 2001.
+ Copyright (C) 2001 Squak Valley Software
+tasm: pass 1 complete.
+tasm: pass 2 complete.
+tasm: Number of errors = 0
+
+Building p-System BIOS for RomWBW...
+
+TASM Z80 Assembler.       Version 3.2 September, 2001.
+ Copyright (C) 2001 Squak Valley Software
+tasm: pass 1 complete.
+pSystem BIOS space remaining: 71 bytes.
+tasm: pass 2 complete.
+tasm: Number of errors = 0
+
+Building p-System Loader for RomWBW...
+
+TASM Z80 Assembler.       Version 3.2 September, 2001.
+ Copyright (C) 2001 Squak Valley Software
+tasm: pass 1 complete.
+tasm: pass 2 complete.
+tasm: Number of errors = 0
+
+Generating p-System BIOS Tester filler...
+
+TASM Z80 Assembler.       Version 3.2 September, 2001.
+ Copyright (C) 2001 Squak Valley Software
+tasm: pass 1 complete.
+tasm: pass 2 complete.
+tasm: Number of errors = 0
+
+Generating p-System Boot Track filler...
+
+TASM Z80 Assembler.       Version 3.2 September, 2001.
+ Copyright (C) 2001 Squak Valley Software
+tasm: pass 1 complete.
+tasm: pass 2 complete.
+tasm: Number of errors = 0
+
+Creating p-System BIOS Tester boot image
+
+..\Images\hd1k_prefix.dat
+testldr.bin
+bios.bin
+biostest.dat
+testfill.bin
+        1 file(s) copied.
+
+Generating p-System Boot Track...
+
+loader.bin
+bios.bin
+boot.dat
+fill.bin
+        1 file(s) copied.
+
+Generating p-System Disk Image...
+
+..\Images\hd1k_prefix.dat
+trk0.bin
+psys.vol
+trk0.bin
+blank.vol
+        1 file(s) copied.
+        1 file(s) copied.
+
 Building syscopy...
 TASM Z80 Assembler.       Version 3.2 September, 2001.
  Copyright (C) 2001 Squak Valley Software
@@ -2043,7 +2232,7 @@ Z80ASM Copyright (C) 1983-86 by SLR Systems Rel. 1.32 #AB1234
 End of file Pass 1
 End of file Pass 2
  0 Error(s) Detected.
- 1132 Absolute Bytes. 80 Symbols Detected.
+ 1164 Absolute Bytes. 80 Symbols Detected.
 
 
 CP/M MACRO ASSEM 2.0
@@ -2063,7 +2252,7 @@ CP/M MACRO ASSEM 2.0
 END OF ASSEMBLY
 
 
-SLR180 Copyright (C) 1985-86 by SLR Systems Rel. 1.31 #AB1234
+SLR180 Copyright (C) 1985-86 by SLR Systems Rel. 1.32 #NL0029
 
  xmhb/HF
 End of file Pass 1
@@ -2079,7 +2268,7 @@ Start address: 0100H  Ending address: 1B07H  Bias: 0000H
 Saved image size: 6784 bytes (1A80H, - 53 records)
 
 
-SLR180 Copyright (C) 1985-86 by SLR Systems Rel. 1.31 #AB1234
+SLR180 Copyright (C) 1985-86 by SLR Systems Rel. 1.32 #NL0029
 
  xmhb_old/HF
 End of file Pass 1
@@ -2148,7 +2337,6 @@ Tunes\Yeovil.pt3
 TASM Z180 Assembler.       Version 3.2 September, 2001.
  Copyright (C) 2001 Squak Valley Software
 tasm: pass 1 complete.
-SYSTEM TIMER: NONE
 tasm: pass 2 complete.
 tasm: Number of errors = 0
         1 file(s) copied.
@@ -2207,6 +2395,75 @@ i2cscan.com
         2 file(s) copied.
 rtcds7.com
         1 file(s) copied.
+TASM Z80 Assembler.       Version 3.2 September, 2001.
+ Copyright (C) 2001 Squak Valley Software
+tasm: pass 1 complete.
+tasm: pass 2 complete.
+tasm: Number of errors = 0
+TASM Z80 Assembler.       Version 3.2 September, 2001.
+ Copyright (C) 2001 Squak Valley Software
+tasm: pass 1 complete.
+tasm: pass 2 complete.
+tasm: Number of errors = 0
+Comparing files rz.com and RZ.COM.ORIG
+FC: no differences encountered
+
+Comparing files sz.com and SZ.COM.ORIG
+FC: no differences encountered
+
+        1 file(s) copied.
+        1 file(s) copied.
+TASM Z180 Assembler.       Version 3.2 September, 2001.
+ Copyright (C) 2001 Squak Valley Software
+tasm: pass 1 complete.
+tasm: pass 2 complete.
+tasm: Number of errors = 0
+TASM Z180 Assembler.       Version 3.2 September, 2001.
+ Copyright (C) 2001 Squak Valley Software
+tasm: pass 1 complete.
+tasm: pass 2 complete.
+tasm: Number of errors = 0
+        1 file(s) copied.
+        1 file(s) copied.
+TASM Z180 Assembler.       Version 3.2 September, 2001.
+ Copyright (C) 2001 Squak Valley Software
+tasm: pass 1 complete.
+tasm: pass 2 complete.
+tasm: Number of errors = 0
+        1 file(s) copied.
+TASM Z180 Assembler.       Version 3.2 September, 2001.
+ Copyright (C) 2001 Squak Valley Software
+tasm: pass 1 complete.
+tasm: pass 2 complete.
+tasm: Number of errors = 0
+        1 file(s) copied.
+'Pass 1 complete'
+'Pass 2 complete'
+'Assembly complete'
+
+No Fatal error(s)
+
+
+Link-80  3.44  09-Dec-81  Copyright (c) 1981 Microsoft
+
+Data    0100    056F    < 1135>
+
+52683 Bytes Free
+[0000   056F        5]
+
+        1 file(s) copied.
+TASM Z180 Assembler.       Version 3.2 September, 2001.
+ Copyright (C) 2001 Squak Valley Software
+tasm: pass 1 complete.
+tasm: pass 2 complete.
+tasm: Number of errors = 0
+        1 file(s) copied.
+TASM Z80 Assembler.       Version 3.2 September, 2001.
+ Copyright (C) 2001 Squak Valley Software
+tasm: pass 1 complete.
+tasm: pass 2 complete.
+tasm: Number of errors = 0
+        1 file(s) copied.
 
 Z80ASM Copyright (C) 1983-86 by SLR Systems Rel. 1.32 #AB1234
 
@@ -2232,6 +2489,181 @@ zmxfer.ovr
 zmp.hlp
         1 file(s) copied.
         1 file(s) copied.
+
+Z80ASM Copyright (C) 1983-86 by SLR Systems Rel. 1.32 #AB1234
+
+ zmd/fm
+End of file Pass 1
+End of file Pass 2
+ 0 Error(s) Detected.
+ 14893 Absolute Bytes. 687 Symbols Detected.
+
+
+
+Link-80  3.44  09-Dec-81  Copyright (c) 1981 Microsoft
+
+Data    0100    5253    <20819>
+
+30660 Bytes Free
+[0000   5253       82]
+
+
+Z80ASM Copyright (C) 1983-86 by SLR Systems Rel. 1.32 #AB1234
+
+ zmap/fm
+End of file Pass 1
+End of file Pass 2
+ 0 Error(s) Detected.
+ 4447 Absolute Bytes. 201 Symbols Detected.
+
+
+
+Link-80  3.44  09-Dec-81  Copyright (c) 1981 Microsoft
+
+Data    0100    18B0    < 6064>
+
+46412 Bytes Free
+[0000   18B0       24]
+
+
+Z80ASM Copyright (C) 1983-86 by SLR Systems Rel. 1.32 #AB1234
+
+ znews/fm
+End of file Pass 1
+End of file Pass 2
+ 0 Error(s) Detected.
+ 4312 Absolute Bytes. 201 Symbols Detected.
+
+
+
+Link-80  3.44  09-Dec-81  Copyright (c) 1981 Microsoft
+
+Data    0100    1B9C    < 6812>
+
+45440 Bytes Free
+[0000   1B9C       27]
+
+
+Z80ASM Copyright (C) 1983-86 by SLR Systems Rel. 1.32 #AB1234
+
+ znewp/fm
+End of file Pass 1
+End of file Pass 2
+ 0 Error(s) Detected.
+ 4706 Absolute Bytes. 223 Symbols Detected.
+
+
+
+Link-80  3.44  09-Dec-81  Copyright (c) 1981 Microsoft
+
+Data    0100    1C8A    < 7050>
+
+45274 Bytes Free
+[0000   1C8A       28]
+
+
+Z80ASM Copyright (C) 1983-86 by SLR Systems Rel. 1.32 #AB1234
+
+ zfors/fm
+End of file Pass 1
+End of file Pass 2
+ 0 Error(s) Detected.
+ 4156 Absolute Bytes. 196 Symbols Detected.
+
+
+
+Link-80  3.44  09-Dec-81  Copyright (c) 1981 Microsoft
+
+Data    0100    221F    < 8479>
+
+43629 Bytes Free
+[0000   221F       34]
+
+
+Z80ASM Copyright (C) 1983-86 by SLR Systems Rel. 1.32 #AB1234
+
+ zforp/fm
+End of file Pass 1
+End of file Pass 2
+ 0 Error(s) Detected.
+ 4910 Absolute Bytes. 219 Symbols Detected.
+
+
+
+Link-80  3.44  09-Dec-81  Copyright (c) 1981 Microsoft
+
+Data    0100    1D58    < 7256>
+
+45073 Bytes Free
+[0000   1D58       29]
+
+
+Z80ASM Copyright (C) 1983-86 by SLR Systems Rel. 1.32 #AB1234
+
+ zmdel/fm
+End of file Pass 1
+End of file Pass 2
+ 0 Error(s) Detected.
+ 4256 Absolute Bytes. 200 Symbols Detected.
+
+
+
+Link-80  3.44  09-Dec-81  Copyright (c) 1981 Microsoft
+
+Data    0100    1AE0    < 6624>
+
+45716 Bytes Free
+[0000   1AE0       26]
+
+
+Z80ASM Copyright (C) 1983-86 by SLR Systems Rel. 1.32 #AB1234
+
+ zmdhb/fh
+End of file Pass 1
+End of file Pass 2
+ 0 Error(s) Detected.
+ 1109 Absolute Bytes. 116 Symbols Detected.
+
+
+MLOAD v25  Copyright (c) 1983, 1984, 1985, 1988
+by NightOwl Software, Inc.
+Loaded 1017 bytes (03F9H) to file P0:ZMD.COM
+Over a 20864 byte binary file
+Start address: 0100H  Ending address: 5280H  Bias: 0000H
+Saved image size: 20864 bytes (5180H, - 163 records)
+
+        1 file(s) copied.
+Building Dev...
+TASM Z80 Assembler.       Version 3.2 September, 2001.
+ Copyright (C) 2001 Squak Valley Software
+tasm: pass 1 complete.
+tasm: pass 2 complete.
+tasm: Number of errors = 0
+        1 file(s) copied.
+TASM Z180 Assembler.       Version 3.2 September, 2001.
+ Copyright (C) 2001 Squak Valley Software
+tasm: pass 1 complete.
+tasm: pass 2 complete.
+tasm: Number of errors = 0
+TASM Z180 Assembler.       Version 3.2 September, 2001.
+ Copyright (C) 2001 Squak Valley Software
+tasm: pass 1 complete.
+tasm: pass 2 complete.
+tasm: Number of errors = 0
+        1 file(s) copied.
+Tunes\bgm.vgm
+Tunes\ending.vgm
+Tunes\inchina.vgm
+Tunes\shirakaw.vgm
+Tunes\startdem.vgm
+Tunes\wonder01.vgm
+        6 file(s) copied.
+TASM Z180 Assembler.       Version 3.2 September, 2001.
+ Copyright (C) 2001 Squak Valley Software
+tasm: pass 1 complete.
+tasm: pass 2 complete.
+tasm: Number of errors = 0
+        1 file(s) copied.
 assign.com
 format.com
 mode.com
@@ -2256,6 +2688,21 @@ DATA SIZE    0000
 COMMON SIZE  0000
 USE FACTOR     00
 
+TASM Z80 Assembler.       Version 3.2 September, 2001.
+ Copyright (C) 2001 Squak Valley Software
+tasm: pass 1 complete.
+TASTYBASIC ROM padding: 66 bytes.
+TASTYBASIC space remaining: 68 bytes.
+tasm: pass 2 complete.
+tasm: Number of errors = 0
+TASM Z80 Assembler.       Version 3.2 September, 2001.
+ Copyright (C) 2001 Squak Valley Software
+tasm: pass 1 complete.
+TASTYBASIC ROM padding: 107 bytes.
+tasm: pass 2 complete.
+tasm: Number of errors = 0
+        1 file(s) copied.
+        1 file(s) copied.
 
 Preparing compressed font files...
         1 file(s) copied.
@@ -2267,95 +2714,959 @@ Making ROM Disk rom512_una
 Making ROM Disk rom1024_wbw
 Making ROM Disk rom1024_una
 
-C:\RomWBW\Source>
+Building Floppy Disk Images...
 
-Example BuildROM Run
------------------------
+Generating cpm22 1.44MB Floppy Disk...
+cpmcp -f wbw_fd144 fd144_cpm22.img d_cpm22/u0/*.* 0:
+cpmcp -f wbw_fd144 fd144_cpm22.img d_cpm22/ReadMe.txt 0:
+cpmcp -f wbw_fd144 fd144_cpm22.img ../../Binary/Apps/assign.com 0:
+cpmcp -f wbw_fd144 fd144_cpm22.img ../../Binary/Apps/cpuspd.com 0:
+cpmcp -f wbw_fd144 fd144_cpm22.img ../../Binary/Apps/fat.com 0:
+cpmcp -f wbw_fd144 fd144_cpm22.img ../../Binary/Apps/fdu.com 0:
+cpmcp -f wbw_fd144 fd144_cpm22.img ../../Binary/Apps/fdu.doc 0:
+cpmcp -f wbw_fd144 fd144_cpm22.img ../../Binary/Apps/format.com 0:
+cpmcp -f wbw_fd144 fd144_cpm22.img ../../Binary/Apps/mode.com 0:
+cpmcp -f wbw_fd144 fd144_cpm22.img ../../Binary/Apps/rtc.com 0:
+cpmcp -f wbw_fd144 fd144_cpm22.img ../../Binary/Apps/survey.com 0:
+cpmcp -f wbw_fd144 fd144_cpm22.img ../../Binary/Apps/syscopy.com 0:
+cpmcp -f wbw_fd144 fd144_cpm22.img ../../Binary/Apps/sysgen.com 0:
+cpmcp -f wbw_fd144 fd144_cpm22.img ../../Binary/Apps/talk.com 0:
+cpmcp -f wbw_fd144 fd144_cpm22.img ../../Binary/Apps/tbasic.com 0:
+cpmcp -f wbw_fd144 fd144_cpm22.img ../../Binary/Apps/timer.com 0:
+cpmcp -f wbw_fd144 fd144_cpm22.img ../../Binary/Apps/tune.com 0:
+cpmcp -f wbw_fd144 fd144_cpm22.img ../../Binary/Apps/xm.com 0:
+cpmcp -f wbw_fd144 fd144_cpm22.img ../../Binary/Apps/zmp.com 0:
+cpmcp -f wbw_fd144 fd144_cpm22.img ../../Binary/Apps/zmp.hlp 0:
+cpmcp -f wbw_fd144 fd144_cpm22.img ../../Binary/Apps/zmp.doc 0:
+cpmcp -f wbw_fd144 fd144_cpm22.img ../../Binary/Apps/zmxfer.ovr 0:
+cpmcp -f wbw_fd144 fd144_cpm22.img ../../Binary/Apps/zmterm.ovr 0:
+cpmcp -f wbw_fd144 fd144_cpm22.img ../../Binary/Apps/zminit.ovr 0:
+cpmcp -f wbw_fd144 fd144_cpm22.img ../../Binary/Apps/zmconfig.ovr 0:
+cpmcp -f wbw_fd144 fd144_cpm22.img ../../Binary/Apps/zmd.com 0:
+cpmcp -f wbw_fd144 fd144_cpm22.img ../../Binary/Apps/vgmplay.com 0:
+cpmcp -f wbw_fd144 fd144_cpm22.img ../../Binary/Apps/Tunes/*.pt? 3:
+cpmcp -f wbw_fd144 fd144_cpm22.img ../../Binary/Apps/Tunes/*.mym 3:
+cpmcp -f wbw_fd144 fd144_cpm22.img ../../Binary/Apps/Tunes/*.vgm 3:
+cpmcp -f wbw_fd144 fd144_cpm22.img ../CPM22/cpm_wbw.sys 0:cpm.sys
+cpmcp -f wbw_fd144 fd144_cpm22.img Common/All/*.* 0:
+cpmcp -f wbw_fd144 fd144_cpm22.img Common/CPM22/*.* 0:
+Moving image fd144_cpm22.img into output directory...
+Generating zsdos 1.44MB Floppy Disk...
+cpmcp -f wbw_fd144 fd144_zsdos.img d_zsdos/u0/*.* 0:
+cpmcp -f wbw_fd144 fd144_zsdos.img d_zsdos/ReadMe.txt 0:
+cpmcp -f wbw_fd144 fd144_zsdos.img d_cpm22/u0/ASM.COM 0:
+cpmcp -f wbw_fd144 fd144_zsdos.img d_cpm22/u0/LIB.COM 0:
+cpmcp -f wbw_fd144 fd144_zsdos.img d_cpm22/u0/LINK.COM 0:
+cpmcp -f wbw_fd144 fd144_zsdos.img d_cpm22/u0/LOAD.COM 0:
+cpmcp -f wbw_fd144 fd144_zsdos.img d_cpm22/u0/MAC.COM 0:
+cpmcp -f wbw_fd144 fd144_zsdos.img d_cpm22/u0/RMAC.COM 0:
+cpmcp -f wbw_fd144 fd144_zsdos.img d_cpm22/u0/STAT.COM 0:
+cpmcp -f wbw_fd144 fd144_zsdos.img d_cpm22/u0/SUBMIT.COM 0:
+cpmcp -f wbw_fd144 fd144_zsdos.img d_cpm22/u0/XSUB.COM 0:
+cpmcp -f wbw_fd144 fd144_zsdos.img ../../Binary/Apps/assign.com 0:
+cpmcp -f wbw_fd144 fd144_zsdos.img ../../Binary/Apps/cpuspd.com 0:
+cpmcp -f wbw_fd144 fd144_zsdos.img ../../Binary/Apps/fat.com 0:
+cpmcp -f wbw_fd144 fd144_zsdos.img ../../Binary/Apps/fdu.com 0:
+cpmcp -f wbw_fd144 fd144_zsdos.img ../../Binary/Apps/fdu.doc 0:
+cpmcp -f wbw_fd144 fd144_zsdos.img ../../Binary/Apps/format.com 0:
+cpmcp -f wbw_fd144 fd144_zsdos.img ../../Binary/Apps/mode.com 0:
+cpmcp -f wbw_fd144 fd144_zsdos.img ../../Binary/Apps/rtc.com 0:
+cpmcp -f wbw_fd144 fd144_zsdos.img ../../Binary/Apps/survey.com 0:
+cpmcp -f wbw_fd144 fd144_zsdos.img ../../Binary/Apps/syscopy.com 0:
+cpmcp -f wbw_fd144 fd144_zsdos.img ../../Binary/Apps/sysgen.com 0:
+cpmcp -f wbw_fd144 fd144_zsdos.img ../../Binary/Apps/talk.com 0:
+cpmcp -f wbw_fd144 fd144_zsdos.img ../../Binary/Apps/tbasic.com 0:
+cpmcp -f wbw_fd144 fd144_zsdos.img ../../Binary/Apps/timer.com 0:
+cpmcp -f wbw_fd144 fd144_zsdos.img ../../Binary/Apps/tune.com 0:
+cpmcp -f wbw_fd144 fd144_zsdos.img ../../Binary/Apps/xm.com 0:
+cpmcp -f wbw_fd144 fd144_zsdos.img ../../Binary/Apps/zmp.com 0:
+cpmcp -f wbw_fd144 fd144_zsdos.img ../../Binary/Apps/zmp.hlp 0:
+cpmcp -f wbw_fd144 fd144_zsdos.img ../../Binary/Apps/zmp.doc 0:
+cpmcp -f wbw_fd144 fd144_zsdos.img ../../Binary/Apps/zmxfer.ovr 0:
+cpmcp -f wbw_fd144 fd144_zsdos.img ../../Binary/Apps/zmterm.ovr 0:
+cpmcp -f wbw_fd144 fd144_zsdos.img ../../Binary/Apps/zminit.ovr 0:
+cpmcp -f wbw_fd144 fd144_zsdos.img ../../Binary/Apps/zmconfig.ovr 0:
+cpmcp -f wbw_fd144 fd144_zsdos.img ../../Binary/Apps/zmd.com 0:
+cpmcp -f wbw_fd144 fd144_zsdos.img ../../Binary/Apps/vgmplay.com 0:
+cpmcp -f wbw_fd144 fd144_zsdos.img ../../Binary/Apps/Tunes/*.pt? 3:
+cpmcp -f wbw_fd144 fd144_zsdos.img ../../Binary/Apps/Tunes/*.vgm 3:
+cpmcp -f wbw_fd144 fd144_zsdos.img ../ZSDOS/zsys_wbw.sys 0:zsys.sys
+cpmcp -f wbw_fd144 fd144_zsdos.img Common/All/*.* 0:
+cpmcp -f wbw_fd144 fd144_zsdos.img Common/CPM22/*.* 0:
+cpmcp -f wbw_fd144 fd144_zsdos.img Common/Z/u14/*.* 0:
+cpmcp -f wbw_fd144 fd144_zsdos.img Common/Z/u15/*.* 0:
+Moving image fd144_zsdos.img into output directory...
+Generating nzcom 1.44MB Floppy Disk...
+cpmcp -f wbw_fd144 fd144_nzcom.img d_nzcom/u0/*.* 0:
+cpmcp -f wbw_fd144 fd144_nzcom.img d_nzcom/ReadMe.txt 0:
+cpmcp -f wbw_fd144 fd144_nzcom.img ../../Binary/Apps/assign.com 0:
+cpmcp -f wbw_fd144 fd144_nzcom.img ../../Binary/Apps/cpuspd.com 0:
+cpmcp -f wbw_fd144 fd144_nzcom.img ../../Binary/Apps/fat.com 0:
+cpmcp -f wbw_fd144 fd144_nzcom.img ../../Binary/Apps/fdu.com 0:
+cpmcp -f wbw_fd144 fd144_nzcom.img ../../Binary/Apps/rtc.com 0:
+cpmcp -f wbw_fd144 fd144_nzcom.img ../../Binary/Apps/syscopy.com 0:
+cpmcp -f wbw_fd144 fd144_nzcom.img ../../Binary/Apps/talk.com 0:
+cpmcp -f wbw_fd144 fd144_nzcom.img ../../Binary/Apps/timer.com 0:
+cpmcp -f wbw_fd144 fd144_nzcom.img ../../Binary/Apps/xm.com 0:
+cpmcp -f wbw_fd144 fd144_nzcom.img ../ZSDOS/zsys_wbw.sys 0:zsys.sys
+cpmcp -f wbw_fd144 fd144_nzcom.img Common/All/*.* 0:
+cpmcp -f wbw_fd144 fd144_nzcom.img Common/CPM22/*.* 0:
+cpmcp -f wbw_fd144 fd144_nzcom.img Common/Z/u14/*.* 0:
+cpmcp -f wbw_fd144 fd144_nzcom.img Common/Z/u15/*.* 0:
+cpmcp -f wbw_fd144 fd144_nzcom.img Common/Z3/u10/*.* 0:
+cpmcp -f wbw_fd144 fd144_nzcom.img Common/Z3/u14/*.* 0:
+cpmcp -f wbw_fd144 fd144_nzcom.img Common/Z3/u15/*.* 0:
+Moving image fd144_nzcom.img into output directory...
+Generating cpm3 1.44MB Floppy Disk...
+cpmcp -f wbw_fd144 fd144_cpm3.img d_cpm3/u0/*.* 0:
+cpmcp -f wbw_fd144 fd144_cpm3.img ../CPM3/cpmldr.com 0:
+cpmcp -f wbw_fd144 fd144_cpm3.img ../CPM3/cpmldr.sys 0:
+cpmcp -f wbw_fd144 fd144_cpm3.img ../CPM3/ccp.com 0:
+cpmcp -f wbw_fd144 fd144_cpm3.img ../CPM3/gencpm.com 0:
+cpmcp -f wbw_fd144 fd144_cpm3.img ../CPM3/genres.dat 0:
+cpmcp -f wbw_fd144 fd144_cpm3.img ../CPM3/genbnk.dat 0:
+cpmcp -f wbw_fd144 fd144_cpm3.img ../CPM3/bios3.spr 0:
+cpmcp -f wbw_fd144 fd144_cpm3.img ../CPM3/bnkbios3.spr 0:
+cpmcp -f wbw_fd144 fd144_cpm3.img ../CPM3/bdos3.spr 0:
+cpmcp -f wbw_fd144 fd144_cpm3.img ../CPM3/bnkbdos3.spr 0:
+cpmcp -f wbw_fd144 fd144_cpm3.img ../CPM3/resbdos3.spr 0:
+cpmcp -f wbw_fd144 fd144_cpm3.img ../CPM3/cpm3res.sys 0:
+cpmcp -f wbw_fd144 fd144_cpm3.img ../CPM3/cpm3bnk.sys 0:
+cpmcp -f wbw_fd144 fd144_cpm3.img ../CPM3/gencpm.dat 0:
+cpmcp -f wbw_fd144 fd144_cpm3.img ../CPM3/cpm3.sys 0:
+cpmcp -f wbw_fd144 fd144_cpm3.img ../CPM3/readme.1st 0:
+cpmcp -f wbw_fd144 fd144_cpm3.img ../CPM3/cpm3fix.pat 0:
+cpmcp -f wbw_fd144 fd144_cpm3.img ../../Binary/Apps/assign.com 0:
+cpmcp -f wbw_fd144 fd144_cpm3.img ../../Binary/Apps/cpuspd.com 0:
+cpmcp -f wbw_fd144 fd144_cpm3.img ../../Binary/Apps/fat.com 0:
+cpmcp -f wbw_fd144 fd144_cpm3.img ../../Binary/Apps/fdu.com 0:
+cpmcp -f wbw_fd144 fd144_cpm3.img ../../Binary/Apps/fdu.doc 0:
+cpmcp -f wbw_fd144 fd144_cpm3.img ../../Binary/Apps/format.com 0:
+cpmcp -f wbw_fd144 fd144_cpm3.img ../../Binary/Apps/mode.com 0:
+cpmcp -f wbw_fd144 fd144_cpm3.img ../../Binary/Apps/rtc.com 0:
+cpmcp -f wbw_fd144 fd144_cpm3.img ../../Binary/Apps/survey.com 0:
+cpmcp -f wbw_fd144 fd144_cpm3.img ../../Binary/Apps/syscopy.com 0:
+cpmcp -f wbw_fd144 fd144_cpm3.img ../../Binary/Apps/tbasic.com 0:
+cpmcp -f wbw_fd144 fd144_cpm3.img ../../Binary/Apps/timer.com 0:
+cpmcp -f wbw_fd144 fd144_cpm3.img ../../Binary/Apps/tune.com 0:
+cpmcp -f wbw_fd144 fd144_cpm3.img ../../Binary/Apps/xm.com 0:
+cpmcp -f wbw_fd144 fd144_cpm3.img ../../Binary/Apps/zmp.com 0:
+cpmcp -f wbw_fd144 fd144_cpm3.img ../../Binary/Apps/zmp.hlp 0:
+cpmcp -f wbw_fd144 fd144_cpm3.img ../../Binary/Apps/zmp.doc 0:
+cpmcp -f wbw_fd144 fd144_cpm3.img ../../Binary/Apps/zmxfer.ovr 0:
+cpmcp -f wbw_fd144 fd144_cpm3.img ../../Binary/Apps/zmterm.ovr 0:
+cpmcp -f wbw_fd144 fd144_cpm3.img ../../Binary/Apps/zminit.ovr 0:
+cpmcp -f wbw_fd144 fd144_cpm3.img ../../Binary/Apps/zmconfig.ovr 0:
+cpmcp -f wbw_fd144 fd144_cpm3.img ../../Binary/Apps/zmd.com 0:
+cpmcp -f wbw_fd144 fd144_cpm3.img ../../Binary/Apps/vgmplay.com 0:
+cpmcp -f wbw_fd144 fd144_cpm3.img Common/All/*.* 0:
+cpmcp -f wbw_fd144 fd144_cpm3.img Common/CPM3/*.* 0:
+Moving image fd144_cpm3.img into output directory...
+Generating zpm3 1.44MB Floppy Disk...
+cpmcp -f wbw_fd144 fd144_zpm3.img d_zpm3/u0/*.* 0:
+cpmcp -f wbw_fd144 fd144_zpm3.img d_zpm3/u10/*.* 10:
+cpmcp -f wbw_fd144 fd144_zpm3.img d_zpm3/u14/*.* 14:
+cpmcp -f wbw_fd144 fd144_zpm3.img d_zpm3/u15/*.* 15:
+cpmcp -f wbw_fd144 fd144_zpm3.img ../ZPM3/zpmldr.com 0:
+cpmcp -f wbw_fd144 fd144_zpm3.img ../ZPM3/zpmldr.sys 0:
+cpmcp -f wbw_fd144 fd144_zpm3.img ../CPM3/cpmldr.com 0:
+cpmcp -f wbw_fd144 fd144_zpm3.img ../CPM3/cpmldr.sys 0:
+cpmcp -f wbw_fd144 fd144_zpm3.img ../ZPM3/autotog.com 15:
+cpmcp -f wbw_fd144 fd144_zpm3.img ../ZPM3/clrhist.com 15:
+cpmcp -f wbw_fd144 fd144_zpm3.img ../ZPM3/setz3.com 15:
+cpmcp -f wbw_fd144 fd144_zpm3.img ../ZPM3/cpm3.sys 0:
+cpmcp -f wbw_fd144 fd144_zpm3.img ../ZPM3/zccp.com 0:
+cpmcp -f wbw_fd144 fd144_zpm3.img ../ZPM3/zinstal.zpm 0:
+cpmcp -f wbw_fd144 fd144_zpm3.img ../ZPM3/startzpm.com 0:
+cpmcp -f wbw_fd144 fd144_zpm3.img ../ZPM3/makedos.com 0:
+cpmcp -f wbw_fd144 fd144_zpm3.img ../ZPM3/gencpm.dat 0:
+cpmcp -f wbw_fd144 fd144_zpm3.img ../ZPM3/bnkbios3.spr 0:
+cpmcp -f wbw_fd144 fd144_zpm3.img ../ZPM3/bnkbdos3.spr 0:
+cpmcp -f wbw_fd144 fd144_zpm3.img ../ZPM3/resbdos3.spr 0:
+cpmcp -f wbw_fd144 fd144_zpm3.img ../../Binary/Apps/assign.com 15:
+cpmcp -f wbw_fd144 fd144_zpm3.img ../../Binary/Apps/cpuspd.com 15:
+cpmcp -f wbw_fd144 fd144_zpm3.img ../../Binary/Apps/fat.com 15:
+cpmcp -f wbw_fd144 fd144_zpm3.img ../../Binary/Apps/fdu.com 15:
+cpmcp -f wbw_fd144 fd144_zpm3.img ../../Binary/Apps/fdu.doc 15:
+cpmcp -f wbw_fd144 fd144_zpm3.img ../../Binary/Apps/mode.com 15:
+cpmcp -f wbw_fd144 fd144_zpm3.img ../../Binary/Apps/rtc.com 15:
+cpmcp -f wbw_fd144 fd144_zpm3.img ../../Binary/Apps/survey.com 15:
+cpmcp -f wbw_fd144 fd144_zpm3.img ../../Binary/Apps/syscopy.com 15:
+cpmcp -f wbw_fd144 fd144_zpm3.img ../../Binary/Apps/sysgen.com 15:
+cpmcp -f wbw_fd144 fd144_zpm3.img ../../Binary/Apps/talk.com 15:
+cpmcp -f wbw_fd144 fd144_zpm3.img ../../Binary/Apps/tbasic.com 15:
+cpmcp -f wbw_fd144 fd144_zpm3.img ../../Binary/Apps/timer.com 15:
+cpmcp -f wbw_fd144 fd144_zpm3.img ../../Binary/Apps/tune.com 15:
+cpmcp -f wbw_fd144 fd144_zpm3.img ../../Binary/Apps/xm.com 15:
+cpmcp -f wbw_fd144 fd144_zpm3.img Common/All/*.* 15:
+cpmcp -f wbw_fd144 fd144_zpm3.img Common/CPM3/*.* 15:
+cpmcp -f wbw_fd144 fd144_zpm3.img Common/Z/u14/*.* 14:
+cpmcp -f wbw_fd144 fd144_zpm3.img Common/Z/u15/*.* 15:
+cpmcp -f wbw_fd144 fd144_zpm3.img Common/Z3/u10/*.* 10:
+cpmcp -f wbw_fd144 fd144_zpm3.img Common/Z3/u14/*.* 14:
+cpmcp -f wbw_fd144 fd144_zpm3.img Common/Z3/u15/*.* 15:
+Moving image fd144_zpm3.img into output directory...
+Generating ws4 1.44MB Floppy Disk...
+cpmcp -f wbw_fd144 fd144_ws4.img d_ws4/u0/*.* 0:
+cpmcp -f wbw_fd144 fd144_ws4.img d_ws4/u1/*.* 1:
+Moving image fd144_ws4.img into output directory...
+Generating qpm 1.44MB Floppy Disk...
+cpmcp -f wbw_fd144 fd144_qpm.img d_qpm/u0/*.* 0:
+cpmcp -f wbw_fd144 fd144_qpm.img d_qpm/ReadMe.txt 0:
+cpmcp -f wbw_fd144 fd144_qpm.img d_cpm22/u0/*.* 0:
+cpmcp -f wbw_fd144 fd144_qpm.img ../../Binary/Apps/assign.com 0:
+cpmcp -f wbw_fd144 fd144_qpm.img ../../Binary/Apps/cpuspd.com 0:
+cpmcp -f wbw_fd144 fd144_qpm.img ../../Binary/Apps/fat.com 0:
+cpmcp -f wbw_fd144 fd144_qpm.img ../../Binary/Apps/fdu.com 0:
+cpmcp -f wbw_fd144 fd144_qpm.img ../../Binary/Apps/fdu.doc 0:
+cpmcp -f wbw_fd144 fd144_qpm.img ../../Binary/Apps/format.com 0:
+cpmcp -f wbw_fd144 fd144_qpm.img ../../Binary/Apps/mode.com 0:
+cpmcp -f wbw_fd144 fd144_qpm.img ../../Binary/Apps/rtc.com 0:
+cpmcp -f wbw_fd144 fd144_qpm.img ../../Binary/Apps/survey.com 0:
+cpmcp -f wbw_fd144 fd144_qpm.img ../../Binary/Apps/syscopy.com 0:
+cpmcp -f wbw_fd144 fd144_qpm.img ../../Binary/Apps/sysgen.com 0:
+cpmcp -f wbw_fd144 fd144_qpm.img ../../Binary/Apps/talk.com 0:
+cpmcp -f wbw_fd144 fd144_qpm.img ../../Binary/Apps/tbasic.com 0:
+cpmcp -f wbw_fd144 fd144_qpm.img ../../Binary/Apps/timer.com 0:
+cpmcp -f wbw_fd144 fd144_qpm.img ../../Binary/Apps/tune.com 0:
+cpmcp -f wbw_fd144 fd144_qpm.img ../../Binary/Apps/xm.com 0:
+cpmcp -f wbw_fd144 fd144_qpm.img ../../Binary/Apps/zmp.com 0:
+cpmcp -f wbw_fd144 fd144_qpm.img ../../Binary/Apps/zmp.hlp 0:
+cpmcp -f wbw_fd144 fd144_qpm.img ../../Binary/Apps/zmp.doc 0:
+cpmcp -f wbw_fd144 fd144_qpm.img ../../Binary/Apps/zmxfer.ovr 0:
+cpmcp -f wbw_fd144 fd144_qpm.img ../../Binary/Apps/zmterm.ovr 0:
+cpmcp -f wbw_fd144 fd144_qpm.img ../../Binary/Apps/zminit.ovr 0:
+cpmcp -f wbw_fd144 fd144_qpm.img ../../Binary/Apps/zmconfig.ovr 0:
+cpmcp -f wbw_fd144 fd144_qpm.img ../../Binary/Apps/zmd.com 0:
+cpmcp -f wbw_fd144 fd144_qpm.img ../../Binary/Apps/vgmplay.com 0:
+cpmcp -f wbw_fd144 fd144_qpm.img ../../Binary/Apps/Tunes/*.pt? 3:
+cpmcp -f wbw_fd144 fd144_qpm.img ../../Binary/Apps/Tunes/*.mym 3:
+cpmcp -f wbw_fd144 fd144_qpm.img ../../Binary/Apps/Tunes/*.vgm 3:
+cpmcp -f wbw_fd144 fd144_qpm.img ../CPM22/cpm_wbw.sys 0:cpm.sys
+cpmcp -f wbw_fd144 fd144_qpm.img Common/All/*.* 0:
+cpmcp -f wbw_fd144 fd144_qpm.img Common/CPM22/*.* 0:
+Moving image fd144_qpm.img into output directory...
 
-C:\RomWBW\Source>BuildROM
-Platform [SBC|MBC|ZETA|ZETA2|RCZ80|EZZ80|UNA|N8|MK4|RCZ180|SCZ180|DYNO|RCZ280]: MK4
+Building Hard Disk Images (512 directory entry format)...
+
+Generating cpm22 Hard Disk (512 directory entry format)...
+cpmcp -f wbw_hd512 hd512_cpm22.img d_cpm22/u0/*.* 0:
+cpmcp -f wbw_hd512 hd512_cpm22.img d_cpm22/ReadMe.txt 0:
+cpmcp -f wbw_hd512 hd512_cpm22.img ../../Binary/Apps/assign.com 0:
+cpmcp -f wbw_hd512 hd512_cpm22.img ../../Binary/Apps/cpuspd.com 0:
+cpmcp -f wbw_hd512 hd512_cpm22.img ../../Binary/Apps/fat.com 0:
+cpmcp -f wbw_hd512 hd512_cpm22.img ../../Binary/Apps/fdu.com 0:
+cpmcp -f wbw_hd512 hd512_cpm22.img ../../Binary/Apps/fdu.doc 0:
+cpmcp -f wbw_hd512 hd512_cpm22.img ../../Binary/Apps/format.com 0:
+cpmcp -f wbw_hd512 hd512_cpm22.img ../../Binary/Apps/mode.com 0:
+cpmcp -f wbw_hd512 hd512_cpm22.img ../../Binary/Apps/rtc.com 0:
+cpmcp -f wbw_hd512 hd512_cpm22.img ../../Binary/Apps/survey.com 0:
+cpmcp -f wbw_hd512 hd512_cpm22.img ../../Binary/Apps/syscopy.com 0:
+cpmcp -f wbw_hd512 hd512_cpm22.img ../../Binary/Apps/sysgen.com 0:
+cpmcp -f wbw_hd512 hd512_cpm22.img ../../Binary/Apps/talk.com 0:
+cpmcp -f wbw_hd512 hd512_cpm22.img ../../Binary/Apps/tbasic.com 0:
+cpmcp -f wbw_hd512 hd512_cpm22.img ../../Binary/Apps/timer.com 0:
+cpmcp -f wbw_hd512 hd512_cpm22.img ../../Binary/Apps/tune.com 0:
+cpmcp -f wbw_hd512 hd512_cpm22.img ../../Binary/Apps/xm.com 0:
+cpmcp -f wbw_hd512 hd512_cpm22.img ../../Binary/Apps/zmp.com 0:
+cpmcp -f wbw_hd512 hd512_cpm22.img ../../Binary/Apps/zmp.hlp 0:
+cpmcp -f wbw_hd512 hd512_cpm22.img ../../Binary/Apps/zmp.doc 0:
+cpmcp -f wbw_hd512 hd512_cpm22.img ../../Binary/Apps/zmxfer.ovr 0:
+cpmcp -f wbw_hd512 hd512_cpm22.img ../../Binary/Apps/zmterm.ovr 0:
+cpmcp -f wbw_hd512 hd512_cpm22.img ../../Binary/Apps/zminit.ovr 0:
+cpmcp -f wbw_hd512 hd512_cpm22.img ../../Binary/Apps/zmconfig.ovr 0:
+cpmcp -f wbw_hd512 hd512_cpm22.img ../../Binary/Apps/zmd.com 0:
+cpmcp -f wbw_hd512 hd512_cpm22.img ../../Binary/Apps/vgmplay.com 0:
+cpmcp -f wbw_hd512 hd512_cpm22.img ../../Binary/Apps/Test/*.com 2:
+cpmcp -f wbw_hd512 hd512_cpm22.img Test/*.* 2:
+cpmcp -f wbw_hd512 hd512_cpm22.img ../../Binary/Apps/Tunes/*.pt? 3:
+cpmcp -f wbw_hd512 hd512_cpm22.img ../../Binary/Apps/Tunes/*.mym 3:
+cpmcp -f wbw_hd512 hd512_cpm22.img ../../Binary/Apps/Tunes/*.vgm 3:
+cpmcp -f wbw_hd512 hd512_cpm22.img cpnet12/*.* 4:
+cpmcp -f wbw_hd512 hd512_cpm22.img ../CPM22/cpm_wbw.sys 0:cpm.sys
+cpmcp -f wbw_hd512 hd512_cpm22.img Common/All/*.* 0:
+cpmcp -f wbw_hd512 hd512_cpm22.img Common/CPM22/*.* 0:
+cpmcp -f wbw_hd512 hd512_cpm22.img Common/SIMH/*.* 13:
+Moving image hd512_cpm22.img into output directory...
+Generating zsdos Hard Disk (512 directory entry format)...
+cpmcp -f wbw_hd512 hd512_zsdos.img d_zsdos/u0/*.* 0:
+cpmcp -f wbw_hd512 hd512_zsdos.img d_zsdos/ReadMe.txt 0:
+cpmcp -f wbw_hd512 hd512_zsdos.img d_cpm22/u0/ASM.COM 0:
+cpmcp -f wbw_hd512 hd512_zsdos.img d_cpm22/u0/LIB.COM 0:
+cpmcp -f wbw_hd512 hd512_zsdos.img d_cpm22/u0/LINK.COM 0:
+cpmcp -f wbw_hd512 hd512_zsdos.img d_cpm22/u0/LOAD.COM 0:
+cpmcp -f wbw_hd512 hd512_zsdos.img d_cpm22/u0/MAC.COM 0:
+cpmcp -f wbw_hd512 hd512_zsdos.img d_cpm22/u0/RMAC.COM 0:
+cpmcp -f wbw_hd512 hd512_zsdos.img d_cpm22/u0/STAT.COM 0:
+cpmcp -f wbw_hd512 hd512_zsdos.img d_cpm22/u0/SUBMIT.COM 0:
+cpmcp -f wbw_hd512 hd512_zsdos.img d_cpm22/u0/XSUB.COM 0:
+cpmcp -f wbw_hd512 hd512_zsdos.img ../../Binary/Apps/assign.com 0:
+cpmcp -f wbw_hd512 hd512_zsdos.img ../../Binary/Apps/cpuspd.com 0:
+cpmcp -f wbw_hd512 hd512_zsdos.img ../../Binary/Apps/fat.com 0:
+cpmcp -f wbw_hd512 hd512_zsdos.img ../../Binary/Apps/fdu.com 0:
+cpmcp -f wbw_hd512 hd512_zsdos.img ../../Binary/Apps/fdu.doc 0:
+cpmcp -f wbw_hd512 hd512_zsdos.img ../../Binary/Apps/format.com 0:
+cpmcp -f wbw_hd512 hd512_zsdos.img ../../Binary/Apps/mode.com 0:
+cpmcp -f wbw_hd512 hd512_zsdos.img ../../Binary/Apps/rtc.com 0:
+cpmcp -f wbw_hd512 hd512_zsdos.img ../../Binary/Apps/survey.com 0:
+cpmcp -f wbw_hd512 hd512_zsdos.img ../../Binary/Apps/syscopy.com 0:
+cpmcp -f wbw_hd512 hd512_zsdos.img ../../Binary/Apps/sysgen.com 0:
+cpmcp -f wbw_hd512 hd512_zsdos.img ../../Binary/Apps/talk.com 0:
+cpmcp -f wbw_hd512 hd512_zsdos.img ../../Binary/Apps/tbasic.com 0:
+cpmcp -f wbw_hd512 hd512_zsdos.img ../../Binary/Apps/timer.com 0:
+cpmcp -f wbw_hd512 hd512_zsdos.img ../../Binary/Apps/tune.com 0:
+cpmcp -f wbw_hd512 hd512_zsdos.img ../../Binary/Apps/xm.com 0:
+cpmcp -f wbw_hd512 hd512_zsdos.img ../../Binary/Apps/zmp.com 0:
+cpmcp -f wbw_hd512 hd512_zsdos.img ../../Binary/Apps/zmp.hlp 0:
+cpmcp -f wbw_hd512 hd512_zsdos.img ../../Binary/Apps/zmp.doc 0:
+cpmcp -f wbw_hd512 hd512_zsdos.img ../../Binary/Apps/zmxfer.ovr 0:
+cpmcp -f wbw_hd512 hd512_zsdos.img ../../Binary/Apps/zmterm.ovr 0:
+cpmcp -f wbw_hd512 hd512_zsdos.img ../../Binary/Apps/zminit.ovr 0:
+cpmcp -f wbw_hd512 hd512_zsdos.img ../../Binary/Apps/zmconfig.ovr 0:
+cpmcp -f wbw_hd512 hd512_zsdos.img ../../Binary/Apps/zmd.com 0:
+cpmcp -f wbw_hd512 hd512_zsdos.img ../../Binary/Apps/vgmplay.com 0:
+cpmcp -f wbw_hd512 hd512_zsdos.img ../../Binary/Apps/Test/*.com 2:
+cpmcp -f wbw_hd512 hd512_zsdos.img Test/*.* 2:
+cpmcp -f wbw_hd512 hd512_zsdos.img ../../Binary/Apps/Tunes/*.pt? 3:
+cpmcp -f wbw_hd512 hd512_zsdos.img ../../Binary/Apps/Tunes/*.mym 3:
+cpmcp -f wbw_hd512 hd512_zsdos.img ../../Binary/Apps/Tunes/*.vgm 3:
+cpmcp -f wbw_hd512 hd512_zsdos.img cpnet12/*.* 4:
+cpmcp -f wbw_hd512 hd512_zsdos.img ../ZSDOS/zsys_wbw.sys 0:zsys.sys
+cpmcp -f wbw_hd512 hd512_zsdos.img Common/All/*.* 0:
+cpmcp -f wbw_hd512 hd512_zsdos.img Common/CPM22/*.* 0:
+cpmcp -f wbw_hd512 hd512_zsdos.img Common/Z/u14/*.* 0:
+cpmcp -f wbw_hd512 hd512_zsdos.img Common/Z/u15/*.* 0:
+cpmcp -f wbw_hd512 hd512_zsdos.img Common/SIMH/*.* 13:
+Moving image hd512_zsdos.img into output directory...
+Generating nzcom Hard Disk (512 directory entry format)...
+cpmcp -f wbw_hd512 hd512_nzcom.img d_nzcom/u0/*.* 0:
+cpmcp -f wbw_hd512 hd512_nzcom.img d_nzcom/ReadMe.txt 0:
+cpmcp -f wbw_hd512 hd512_nzcom.img d_cpm22/u0/ASM.COM 0:
+cpmcp -f wbw_hd512 hd512_nzcom.img d_cpm22/u0/LIB.COM 0:
+cpmcp -f wbw_hd512 hd512_nzcom.img d_cpm22/u0/LINK.COM 0:
+cpmcp -f wbw_hd512 hd512_nzcom.img d_cpm22/u0/LOAD.COM 0:
+cpmcp -f wbw_hd512 hd512_nzcom.img d_cpm22/u0/MAC.COM 0:
+cpmcp -f wbw_hd512 hd512_nzcom.img d_cpm22/u0/RMAC.COM 0:
+cpmcp -f wbw_hd512 hd512_nzcom.img d_cpm22/u0/STAT.COM 0:
+cpmcp -f wbw_hd512 hd512_nzcom.img d_cpm22/u0/SUBMIT.COM 0:
+cpmcp -f wbw_hd512 hd512_nzcom.img d_cpm22/u0/XSUB.COM 0:
+cpmcp -f wbw_hd512 hd512_nzcom.img d_zsdos/u0/*.* 0:
+cpmcp -f wbw_hd512 hd512_nzcom.img ../../Binary/Apps/assign.com 0:
+cpmcp -f wbw_hd512 hd512_nzcom.img ../../Binary/Apps/cpuspd.com 0:
+cpmcp -f wbw_hd512 hd512_nzcom.img ../../Binary/Apps/fat.com 0:
+cpmcp -f wbw_hd512 hd512_nzcom.img ../../Binary/Apps/fdu.com 0:
+cpmcp -f wbw_hd512 hd512_nzcom.img ../../Binary/Apps/fdu.doc 0:
+cpmcp -f wbw_hd512 hd512_nzcom.img ../../Binary/Apps/format.com 0:
+cpmcp -f wbw_hd512 hd512_nzcom.img ../../Binary/Apps/mode.com 0:
+cpmcp -f wbw_hd512 hd512_nzcom.img ../../Binary/Apps/rtc.com 0:
+cpmcp -f wbw_hd512 hd512_nzcom.img ../../Binary/Apps/survey.com 0:
+cpmcp -f wbw_hd512 hd512_nzcom.img ../../Binary/Apps/syscopy.com 0:
+cpmcp -f wbw_hd512 hd512_nzcom.img ../../Binary/Apps/sysgen.com 0:
+cpmcp -f wbw_hd512 hd512_nzcom.img ../../Binary/Apps/talk.com 0:
+cpmcp -f wbw_hd512 hd512_nzcom.img ../../Binary/Apps/tbasic.com 0:
+cpmcp -f wbw_hd512 hd512_nzcom.img ../../Binary/Apps/timer.com 0:
+cpmcp -f wbw_hd512 hd512_nzcom.img ../../Binary/Apps/tune.com 0:
+cpmcp -f wbw_hd512 hd512_nzcom.img ../../Binary/Apps/xm.com 0:
+cpmcp -f wbw_hd512 hd512_nzcom.img ../../Binary/Apps/zmp.com 0:
+cpmcp -f wbw_hd512 hd512_nzcom.img ../../Binary/Apps/zmp.hlp 0:
+cpmcp -f wbw_hd512 hd512_nzcom.img ../../Binary/Apps/zmp.doc 0:
+cpmcp -f wbw_hd512 hd512_nzcom.img ../../Binary/Apps/zmxfer.ovr 0:
+cpmcp -f wbw_hd512 hd512_nzcom.img ../../Binary/Apps/zmterm.ovr 0:
+cpmcp -f wbw_hd512 hd512_nzcom.img ../../Binary/Apps/zminit.ovr 0:
+cpmcp -f wbw_hd512 hd512_nzcom.img ../../Binary/Apps/zmconfig.ovr 0:
+cpmcp -f wbw_hd512 hd512_nzcom.img ../../Binary/Apps/zmd.com 0:
+cpmcp -f wbw_hd512 hd512_nzcom.img ../../Binary/Apps/vgmplay.com 0:
+cpmcp -f wbw_hd512 hd512_nzcom.img ../../Binary/Apps/Test/*.com 2:
+cpmcp -f wbw_hd512 hd512_nzcom.img Test/*.* 2:
+cpmcp -f wbw_hd512 hd512_nzcom.img ../../Binary/Apps/Tunes/*.pt? 3:
+cpmcp -f wbw_hd512 hd512_nzcom.img ../../Binary/Apps/Tunes/*.mym 3:
+cpmcp -f wbw_hd512 hd512_nzcom.img ../../Binary/Apps/Tunes/*.vgm 3:
+cpmcp -f wbw_hd512 hd512_nzcom.img cpnet12/*.* 4:
+cpmcp -f wbw_hd512 hd512_nzcom.img ../ZSDOS/zsys_wbw.sys 0:zsys.sys
+cpmcp -f wbw_hd512 hd512_nzcom.img Common/All/*.* 0:
+cpmcp -f wbw_hd512 hd512_nzcom.img Common/CPM22/*.* 0:
+cpmcp -f wbw_hd512 hd512_nzcom.img Common/Z/u14/*.* 0:
+cpmcp -f wbw_hd512 hd512_nzcom.img Common/Z/u15/*.* 0:
+cpmcp -f wbw_hd512 hd512_nzcom.img Common/Z3/u10/*.* 0:
+cpmcp -f wbw_hd512 hd512_nzcom.img Common/Z3/u14/*.* 0:
+cpmcp -f wbw_hd512 hd512_nzcom.img Common/Z3/u15/*.* 0:
+cpmcp -f wbw_hd512 hd512_nzcom.img Common/SIMH/*.* 13:
+Moving image hd512_nzcom.img into output directory...
+Generating cpm3 Hard Disk (512 directory entry format)...
+cpmcp -f wbw_hd512 hd512_cpm3.img d_cpm3/u0/*.* 0:
+cpmcp -f wbw_hd512 hd512_cpm3.img ../CPM3/cpmldr.com 0:
+cpmcp -f wbw_hd512 hd512_cpm3.img ../CPM3/cpmldr.sys 0:
+cpmcp -f wbw_hd512 hd512_cpm3.img ../CPM3/ccp.com 0:
+cpmcp -f wbw_hd512 hd512_cpm3.img ../CPM3/gencpm.com 0:
+cpmcp -f wbw_hd512 hd512_cpm3.img ../CPM3/genres.dat 0:
+cpmcp -f wbw_hd512 hd512_cpm3.img ../CPM3/genbnk.dat 0:
+cpmcp -f wbw_hd512 hd512_cpm3.img ../CPM3/bios3.spr 0:
+cpmcp -f wbw_hd512 hd512_cpm3.img ../CPM3/bnkbios3.spr 0:
+cpmcp -f wbw_hd512 hd512_cpm3.img ../CPM3/bdos3.spr 0:
+cpmcp -f wbw_hd512 hd512_cpm3.img ../CPM3/bnkbdos3.spr 0:
+cpmcp -f wbw_hd512 hd512_cpm3.img ../CPM3/resbdos3.spr 0:
+cpmcp -f wbw_hd512 hd512_cpm3.img ../CPM3/cpm3res.sys 0:
+cpmcp -f wbw_hd512 hd512_cpm3.img ../CPM3/cpm3bnk.sys 0:
+cpmcp -f wbw_hd512 hd512_cpm3.img ../CPM3/gencpm.dat 0:
+cpmcp -f wbw_hd512 hd512_cpm3.img ../CPM3/cpm3.sys 0:
+cpmcp -f wbw_hd512 hd512_cpm3.img ../CPM3/readme.1st 0:
+cpmcp -f wbw_hd512 hd512_cpm3.img ../CPM3/cpm3fix.pat 0:
+cpmcp -f wbw_hd512 hd512_cpm3.img ../../Binary/Apps/assign.com 0:
+cpmcp -f wbw_hd512 hd512_cpm3.img ../../Binary/Apps/cpuspd.com 0:
+cpmcp -f wbw_hd512 hd512_cpm3.img ../../Binary/Apps/fat.com 0:
+cpmcp -f wbw_hd512 hd512_cpm3.img ../../Binary/Apps/fdu.com 0:
+cpmcp -f wbw_hd512 hd512_cpm3.img ../../Binary/Apps/fdu.doc 0:
+cpmcp -f wbw_hd512 hd512_cpm3.img ../../Binary/Apps/format.com 0:
+cpmcp -f wbw_hd512 hd512_cpm3.img ../../Binary/Apps/mode.com 0:
+cpmcp -f wbw_hd512 hd512_cpm3.img ../../Binary/Apps/rtc.com 0:
+cpmcp -f wbw_hd512 hd512_cpm3.img ../../Binary/Apps/survey.com 0:
+cpmcp -f wbw_hd512 hd512_cpm3.img ../../Binary/Apps/syscopy.com 0:
+cpmcp -f wbw_hd512 hd512_cpm3.img ../../Binary/Apps/tbasic.com 0:
+cpmcp -f wbw_hd512 hd512_cpm3.img ../../Binary/Apps/timer.com 0:
+cpmcp -f wbw_hd512 hd512_cpm3.img ../../Binary/Apps/tune.com 0:
+cpmcp -f wbw_hd512 hd512_cpm3.img ../../Binary/Apps/xm.com 0:
+cpmcp -f wbw_hd512 hd512_cpm3.img ../../Binary/Apps/zmp.com 0:
+cpmcp -f wbw_hd512 hd512_cpm3.img ../../Binary/Apps/zmp.hlp 0:
+cpmcp -f wbw_hd512 hd512_cpm3.img ../../Binary/Apps/zmp.doc 0:
+cpmcp -f wbw_hd512 hd512_cpm3.img ../../Binary/Apps/zmxfer.ovr 0:
+cpmcp -f wbw_hd512 hd512_cpm3.img ../../Binary/Apps/zmterm.ovr 0:
+cpmcp -f wbw_hd512 hd512_cpm3.img ../../Binary/Apps/zminit.ovr 0:
+cpmcp -f wbw_hd512 hd512_cpm3.img ../../Binary/Apps/zmconfig.ovr 0:
+cpmcp -f wbw_hd512 hd512_cpm3.img ../../Binary/Apps/zmd.com 0:
+cpmcp -f wbw_hd512 hd512_cpm3.img ../../Binary/Apps/vgmplay.com 0:
+cpmcp -f wbw_hd512 hd512_cpm3.img ../../Binary/Apps/Test/*.com 2:
+cpmcp -f wbw_hd512 hd512_cpm3.img Test/*.* 2:
+cpmcp -f wbw_hd512 hd512_cpm3.img ../../Binary/Apps/Tunes/*.pt? 3:
+cpmcp -f wbw_hd512 hd512_cpm3.img ../../Binary/Apps/Tunes/*.mym 3:
+cpmcp -f wbw_hd512 hd512_cpm3.img ../../Binary/Apps/Tunes/*.vgm 3:
+cpmcp -f wbw_hd512 hd512_cpm3.img cpnet3/*.* 4:
+cpmcp -f wbw_hd512 hd512_cpm3.img Common/All/*.* 0:
+cpmcp -f wbw_hd512 hd512_cpm3.img Common/CPM3/*.* 0:
+cpmcp -f wbw_hd512 hd512_cpm3.img Common/SIMH/*.* 13:
+Moving image hd512_cpm3.img into output directory...
+Generating zpm3 Hard Disk (512 directory entry format)...
+cpmcp -f wbw_hd512 hd512_zpm3.img d_zpm3/u0/*.* 0:
+cpmcp -f wbw_hd512 hd512_zpm3.img d_zpm3/u10/*.* 10:
+cpmcp -f wbw_hd512 hd512_zpm3.img d_zpm3/u14/*.* 14:
+cpmcp -f wbw_hd512 hd512_zpm3.img d_zpm3/u15/*.* 15:
+cpmcp -f wbw_hd512 hd512_zpm3.img ../ZPM3/zpmldr.com 0:
+cpmcp -f wbw_hd512 hd512_zpm3.img ../ZPM3/zpmldr.sys 0:
+cpmcp -f wbw_hd512 hd512_zpm3.img ../CPM3/cpmldr.com 0:
+cpmcp -f wbw_hd512 hd512_zpm3.img ../CPM3/cpmldr.sys 0:
+cpmcp -f wbw_hd512 hd512_zpm3.img ../ZPM3/autotog.com 15:
+cpmcp -f wbw_hd512 hd512_zpm3.img ../ZPM3/clrhist.com 15:
+cpmcp -f wbw_hd512 hd512_zpm3.img ../ZPM3/setz3.com 15:
+cpmcp -f wbw_hd512 hd512_zpm3.img ../ZPM3/cpm3.sys 0:
+cpmcp -f wbw_hd512 hd512_zpm3.img ../ZPM3/zccp.com 0:
+cpmcp -f wbw_hd512 hd512_zpm3.img ../ZPM3/zinstal.zpm 0:
+cpmcp -f wbw_hd512 hd512_zpm3.img ../ZPM3/startzpm.com 0:
+cpmcp -f wbw_hd512 hd512_zpm3.img ../ZPM3/makedos.com 0:
+cpmcp -f wbw_hd512 hd512_zpm3.img ../ZPM3/gencpm.dat 0:
+cpmcp -f wbw_hd512 hd512_zpm3.img ../ZPM3/bnkbios3.spr 0:
+cpmcp -f wbw_hd512 hd512_zpm3.img ../ZPM3/bnkbdos3.spr 0:
+cpmcp -f wbw_hd512 hd512_zpm3.img ../ZPM3/resbdos3.spr 0:
+cpmcp -f wbw_hd512 hd512_zpm3.img ../../Binary/Apps/assign.com 15:
+cpmcp -f wbw_hd512 hd512_zpm3.img ../../Binary/Apps/cpuspd.com 15:
+cpmcp -f wbw_hd512 hd512_zpm3.img ../../Binary/Apps/fat.com 15:
+cpmcp -f wbw_hd512 hd512_zpm3.img ../../Binary/Apps/fdu.com 15:
+cpmcp -f wbw_hd512 hd512_zpm3.img ../../Binary/Apps/fdu.doc 15:
+cpmcp -f wbw_hd512 hd512_zpm3.img ../../Binary/Apps/format.com 15:
+cpmcp -f wbw_hd512 hd512_zpm3.img ../../Binary/Apps/mode.com 15:
+cpmcp -f wbw_hd512 hd512_zpm3.img ../../Binary/Apps/rtc.com 15:
+cpmcp -f wbw_hd512 hd512_zpm3.img ../../Binary/Apps/survey.com 15:
+cpmcp -f wbw_hd512 hd512_zpm3.img ../../Binary/Apps/syscopy.com 15:
+cpmcp -f wbw_hd512 hd512_zpm3.img ../../Binary/Apps/sysgen.com 15:
+cpmcp -f wbw_hd512 hd512_zpm3.img ../../Binary/Apps/talk.com 15:
+cpmcp -f wbw_hd512 hd512_zpm3.img ../../Binary/Apps/tbasic.com 15:
+cpmcp -f wbw_hd512 hd512_zpm3.img ../../Binary/Apps/timer.com 15:
+cpmcp -f wbw_hd512 hd512_zpm3.img ../../Binary/Apps/tune.com 15:
+cpmcp -f wbw_hd512 hd512_zpm3.img ../../Binary/Apps/xm.com 15:
+cpmcp -f wbw_hd512 hd512_zpm3.img ../../Binary/Apps/zmp.com 15:
+cpmcp -f wbw_hd512 hd512_zpm3.img ../../Binary/Apps/zmp.hlp 15:
+cpmcp -f wbw_hd512 hd512_zpm3.img ../../Binary/Apps/zmp.doc 15:
+cpmcp -f wbw_hd512 hd512_zpm3.img ../../Binary/Apps/zmxfer.ovr 15:
+cpmcp -f wbw_hd512 hd512_zpm3.img ../../Binary/Apps/zmterm.ovr 15:
+cpmcp -f wbw_hd512 hd512_zpm3.img ../../Binary/Apps/zminit.ovr 15:
+cpmcp -f wbw_hd512 hd512_zpm3.img ../../Binary/Apps/zmconfig.ovr 15:
+cpmcp -f wbw_hd512 hd512_zpm3.img ../../Binary/Apps/zmd.com 15:
+cpmcp -f wbw_hd512 hd512_zpm3.img ../../Binary/Apps/vgmplay.com 15:
+cpmcp -f wbw_hd512 hd512_zpm3.img ../../Binary/Apps/Test/*.com 2:
+cpmcp -f wbw_hd512 hd512_zpm3.img Test/*.* 2:
+cpmcp -f wbw_hd512 hd512_zpm3.img ../../Binary/Apps/Tunes/*.pt? 3:
+cpmcp -f wbw_hd512 hd512_zpm3.img ../../Binary/Apps/Tunes/*.mym 3:
+cpmcp -f wbw_hd512 hd512_zpm3.img ../../Binary/Apps/Tunes/*.vgm 3:
+cpmcp -f wbw_hd512 hd512_zpm3.img cpnet3/*.* 4:
+cpmcp -f wbw_hd512 hd512_zpm3.img Common/All/*.* 15:
+cpmcp -f wbw_hd512 hd512_zpm3.img Common/CPM3/*.* 15:
+cpmcp -f wbw_hd512 hd512_zpm3.img Common/Z/u14/*.* 14:
+cpmcp -f wbw_hd512 hd512_zpm3.img Common/Z/u15/*.* 15:
+cpmcp -f wbw_hd512 hd512_zpm3.img Common/Z3/u10/*.* 10:
+cpmcp -f wbw_hd512 hd512_zpm3.img Common/Z3/u14/*.* 14:
+cpmcp -f wbw_hd512 hd512_zpm3.img Common/Z3/u15/*.* 15:
+cpmcp -f wbw_hd512 hd512_zpm3.img Common/SIMH/*.* 13:
+Moving image hd512_zpm3.img into output directory...
+Generating ws4 Hard Disk (512 directory entry format)...
+cpmcp -f wbw_hd512 hd512_ws4.img d_ws4/u0/*.* 0:
+cpmcp -f wbw_hd512 hd512_ws4.img d_ws4/u1/*.* 1:
+Moving image hd512_ws4.img into output directory...
+Generating dos65 Hard Disk (512 directory entry format)...
+cpmcp -f wbw_hd512 hd512_dos65.img d_dos65/u0/*.* 0:
+Moving image hd512_dos65.img into output directory...
+Generating qpm Hard Disk (512 directory entry format)...
+cpmcp -f wbw_hd512 hd512_qpm.img d_qpm/u0/*.* 0:
+cpmcp -f wbw_hd512 hd512_qpm.img d_qpm/ReadMe.txt 0:
+cpmcp -f wbw_hd512 hd512_qpm.img d_cpm22/u0/*.* 0:
+cpmcp -f wbw_hd512 hd512_qpm.img ../../Binary/Apps/assign.com 0:
+cpmcp -f wbw_hd512 hd512_qpm.img ../../Binary/Apps/cpuspd.com 0:
+cpmcp -f wbw_hd512 hd512_qpm.img ../../Binary/Apps/fat.com 0:
+cpmcp -f wbw_hd512 hd512_qpm.img ../../Binary/Apps/fdu.com 0:
+cpmcp -f wbw_hd512 hd512_qpm.img ../../Binary/Apps/fdu.doc 0:
+cpmcp -f wbw_hd512 hd512_qpm.img ../../Binary/Apps/format.com 0:
+cpmcp -f wbw_hd512 hd512_qpm.img ../../Binary/Apps/mode.com 0:
+cpmcp -f wbw_hd512 hd512_qpm.img ../../Binary/Apps/rtc.com 0:
+cpmcp -f wbw_hd512 hd512_qpm.img ../../Binary/Apps/survey.com 0:
+cpmcp -f wbw_hd512 hd512_qpm.img ../../Binary/Apps/syscopy.com 0:
+cpmcp -f wbw_hd512 hd512_qpm.img ../../Binary/Apps/sysgen.com 0:
+cpmcp -f wbw_hd512 hd512_qpm.img ../../Binary/Apps/talk.com 0:
+cpmcp -f wbw_hd512 hd512_qpm.img ../../Binary/Apps/tbasic.com 0:
+cpmcp -f wbw_hd512 hd512_qpm.img ../../Binary/Apps/timer.com 0:
+cpmcp -f wbw_hd512 hd512_qpm.img ../../Binary/Apps/tune.com 0:
+cpmcp -f wbw_hd512 hd512_qpm.img ../../Binary/Apps/xm.com 0:
+cpmcp -f wbw_hd512 hd512_qpm.img ../../Binary/Apps/zmp.com 0:
+cpmcp -f wbw_hd512 hd512_qpm.img ../../Binary/Apps/zmp.hlp 0:
+cpmcp -f wbw_hd512 hd512_qpm.img ../../Binary/Apps/zmp.doc 0:
+cpmcp -f wbw_hd512 hd512_qpm.img ../../Binary/Apps/zmxfer.ovr 0:
+cpmcp -f wbw_hd512 hd512_qpm.img ../../Binary/Apps/zmterm.ovr 0:
+cpmcp -f wbw_hd512 hd512_qpm.img ../../Binary/Apps/zminit.ovr 0:
+cpmcp -f wbw_hd512 hd512_qpm.img ../../Binary/Apps/zmconfig.ovr 0:
+cpmcp -f wbw_hd512 hd512_qpm.img ../../Binary/Apps/zmd.com 0:
+cpmcp -f wbw_hd512 hd512_qpm.img ../../Binary/Apps/vgmplay.com 0:
+cpmcp -f wbw_hd512 hd512_qpm.img ../../Binary/Apps/Test/*.com 2:
+cpmcp -f wbw_hd512 hd512_qpm.img Test/*.* 2:
+cpmcp -f wbw_hd512 hd512_qpm.img ../../Binary/Apps/Tunes/*.pt? 3:
+cpmcp -f wbw_hd512 hd512_qpm.img ../../Binary/Apps/Tunes/*.mym 3:
+cpmcp -f wbw_hd512 hd512_qpm.img ../../Binary/Apps/Tunes/*.vgm 3:
+cpmcp -f wbw_hd512 hd512_qpm.img cpnet12/*.* 4:
+cpmcp -f wbw_hd512 hd512_qpm.img ../CPM22/cpm_wbw.sys 0:cpm.sys
+cpmcp -f wbw_hd512 hd512_qpm.img Common/All/*.* 0:
+cpmcp -f wbw_hd512 hd512_qpm.img Common/CPM22/*.* 0:
+cpmcp -f wbw_hd512 hd512_qpm.img Common/SIMH/*.* 13:
+Moving image hd512_qpm.img into output directory...
+
+Building Combo Disk (512 directory entry format) Image...
+..\..\Binary\hd512_cpm22.img
+..\..\Binary\hd512_zsdos.img
+..\..\Binary\hd512_nzcom.img
+..\..\Binary\hd512_cpm3.img
+..\..\Binary\hd512_zpm3.img
+..\..\Binary\hd512_ws4.img
+        1 file(s) copied.
+
+Building Hard Disk Images (1024 directory entry format)...
+
+Generating cpm22 Hard Disk (1024 directory entry format)...
+cpmcp -f wbw_hd1k hd1k_cpm22.img d_cpm22/u0/*.* 0:
+cpmcp -f wbw_hd1k hd1k_cpm22.img d_cpm22/ReadMe.txt 0:
+cpmcp -f wbw_hd1k hd1k_cpm22.img ../../Binary/Apps/assign.com 0:
+cpmcp -f wbw_hd1k hd1k_cpm22.img ../../Binary/Apps/cpuspd.com 0:
+cpmcp -f wbw_hd1k hd1k_cpm22.img ../../Binary/Apps/fat.com 0:
+cpmcp -f wbw_hd1k hd1k_cpm22.img ../../Binary/Apps/fdu.com 0:
+cpmcp -f wbw_hd1k hd1k_cpm22.img ../../Binary/Apps/fdu.doc 0:
+cpmcp -f wbw_hd1k hd1k_cpm22.img ../../Binary/Apps/format.com 0:
+cpmcp -f wbw_hd1k hd1k_cpm22.img ../../Binary/Apps/mode.com 0:
+cpmcp -f wbw_hd1k hd1k_cpm22.img ../../Binary/Apps/rtc.com 0:
+cpmcp -f wbw_hd1k hd1k_cpm22.img ../../Binary/Apps/survey.com 0:
+cpmcp -f wbw_hd1k hd1k_cpm22.img ../../Binary/Apps/syscopy.com 0:
+cpmcp -f wbw_hd1k hd1k_cpm22.img ../../Binary/Apps/sysgen.com 0:
+cpmcp -f wbw_hd1k hd1k_cpm22.img ../../Binary/Apps/talk.com 0:
+cpmcp -f wbw_hd1k hd1k_cpm22.img ../../Binary/Apps/tbasic.com 0:
+cpmcp -f wbw_hd1k hd1k_cpm22.img ../../Binary/Apps/timer.com 0:
+cpmcp -f wbw_hd1k hd1k_cpm22.img ../../Binary/Apps/tune.com 0:
+cpmcp -f wbw_hd1k hd1k_cpm22.img ../../Binary/Apps/xm.com 0:
+cpmcp -f wbw_hd1k hd1k_cpm22.img ../../Binary/Apps/zmp.com 0:
+cpmcp -f wbw_hd1k hd1k_cpm22.img ../../Binary/Apps/zmp.hlp 0:
+cpmcp -f wbw_hd1k hd1k_cpm22.img ../../Binary/Apps/zmp.doc 0:
+cpmcp -f wbw_hd1k hd1k_cpm22.img ../../Binary/Apps/zmxfer.ovr 0:
+cpmcp -f wbw_hd1k hd1k_cpm22.img ../../Binary/Apps/zmterm.ovr 0:
+cpmcp -f wbw_hd1k hd1k_cpm22.img ../../Binary/Apps/zminit.ovr 0:
+cpmcp -f wbw_hd1k hd1k_cpm22.img ../../Binary/Apps/zmconfig.ovr 0:
+cpmcp -f wbw_hd1k hd1k_cpm22.img ../../Binary/Apps/zmd.com 0:
+cpmcp -f wbw_hd1k hd1k_cpm22.img ../../Binary/Apps/vgmplay.com 0:
+cpmcp -f wbw_hd1k hd1k_cpm22.img ../../Binary/Apps/Test/*.com 2:
+cpmcp -f wbw_hd1k hd1k_cpm22.img Test/*.* 2:
+cpmcp -f wbw_hd1k hd1k_cpm22.img ../../Binary/Apps/Tunes/*.pt? 3:
+cpmcp -f wbw_hd1k hd1k_cpm22.img ../../Binary/Apps/Tunes/*.mym 3:
+cpmcp -f wbw_hd1k hd1k_cpm22.img ../../Binary/Apps/Tunes/*.vgm 3:
+cpmcp -f wbw_hd1k hd1k_cpm22.img cpnet12/*.* 4:
+cpmcp -f wbw_hd1k hd1k_cpm22.img ../CPM22/cpm_wbw.sys 0:cpm.sys
+cpmcp -f wbw_hd1k hd1k_cpm22.img Common/All/*.* 0:
+cpmcp -f wbw_hd1k hd1k_cpm22.img Common/CPM22/*.* 0:
+cpmcp -f wbw_hd1k hd1k_cpm22.img Common/SIMH/*.* 13:
+Moving image hd1k_cpm22.img into output directory...
+Generating zsdos Hard Disk (1024 directory entry format)...
+cpmcp -f wbw_hd1k hd1k_zsdos.img d_zsdos/u0/*.* 0:
+cpmcp -f wbw_hd1k hd1k_zsdos.img d_zsdos/ReadMe.txt 0:
+cpmcp -f wbw_hd1k hd1k_zsdos.img d_cpm22/u0/ASM.COM 0:
+cpmcp -f wbw_hd1k hd1k_zsdos.img d_cpm22/u0/LIB.COM 0:
+cpmcp -f wbw_hd1k hd1k_zsdos.img d_cpm22/u0/LINK.COM 0:
+cpmcp -f wbw_hd1k hd1k_zsdos.img d_cpm22/u0/LOAD.COM 0:
+cpmcp -f wbw_hd1k hd1k_zsdos.img d_cpm22/u0/MAC.COM 0:
+cpmcp -f wbw_hd1k hd1k_zsdos.img d_cpm22/u0/RMAC.COM 0:
+cpmcp -f wbw_hd1k hd1k_zsdos.img d_cpm22/u0/STAT.COM 0:
+cpmcp -f wbw_hd1k hd1k_zsdos.img d_cpm22/u0/SUBMIT.COM 0:
+cpmcp -f wbw_hd1k hd1k_zsdos.img d_cpm22/u0/XSUB.COM 0:
+cpmcp -f wbw_hd1k hd1k_zsdos.img ../../Binary/Apps/assign.com 0:
+cpmcp -f wbw_hd1k hd1k_zsdos.img ../../Binary/Apps/cpuspd.com 0:
+cpmcp -f wbw_hd1k hd1k_zsdos.img ../../Binary/Apps/fat.com 0:
+cpmcp -f wbw_hd1k hd1k_zsdos.img ../../Binary/Apps/fdu.com 0:
+cpmcp -f wbw_hd1k hd1k_zsdos.img ../../Binary/Apps/fdu.doc 0:
+cpmcp -f wbw_hd1k hd1k_zsdos.img ../../Binary/Apps/format.com 0:
+cpmcp -f wbw_hd1k hd1k_zsdos.img ../../Binary/Apps/mode.com 0:
+cpmcp -f wbw_hd1k hd1k_zsdos.img ../../Binary/Apps/rtc.com 0:
+cpmcp -f wbw_hd1k hd1k_zsdos.img ../../Binary/Apps/survey.com 0:
+cpmcp -f wbw_hd1k hd1k_zsdos.img ../../Binary/Apps/syscopy.com 0:
+cpmcp -f wbw_hd1k hd1k_zsdos.img ../../Binary/Apps/sysgen.com 0:
+cpmcp -f wbw_hd1k hd1k_zsdos.img ../../Binary/Apps/talk.com 0:
+cpmcp -f wbw_hd1k hd1k_zsdos.img ../../Binary/Apps/tbasic.com 0:
+cpmcp -f wbw_hd1k hd1k_zsdos.img ../../Binary/Apps/timer.com 0:
+cpmcp -f wbw_hd1k hd1k_zsdos.img ../../Binary/Apps/tune.com 0:
+cpmcp -f wbw_hd1k hd1k_zsdos.img ../../Binary/Apps/xm.com 0:
+cpmcp -f wbw_hd1k hd1k_zsdos.img ../../Binary/Apps/zmp.com 0:
+cpmcp -f wbw_hd1k hd1k_zsdos.img ../../Binary/Apps/zmp.hlp 0:
+cpmcp -f wbw_hd1k hd1k_zsdos.img ../../Binary/Apps/zmp.doc 0:
+cpmcp -f wbw_hd1k hd1k_zsdos.img ../../Binary/Apps/zmxfer.ovr 0:
+cpmcp -f wbw_hd1k hd1k_zsdos.img ../../Binary/Apps/zmterm.ovr 0:
+cpmcp -f wbw_hd1k hd1k_zsdos.img ../../Binary/Apps/zminit.ovr 0:
+cpmcp -f wbw_hd1k hd1k_zsdos.img ../../Binary/Apps/zmconfig.ovr 0:
+cpmcp -f wbw_hd1k hd1k_zsdos.img ../../Binary/Apps/zmd.com 0:
+cpmcp -f wbw_hd1k hd1k_zsdos.img ../../Binary/Apps/vgmplay.com 0:
+cpmcp -f wbw_hd1k hd1k_zsdos.img ../../Binary/Apps/Test/*.com 2:
+cpmcp -f wbw_hd1k hd1k_zsdos.img Test/*.* 2:
+cpmcp -f wbw_hd1k hd1k_zsdos.img ../../Binary/Apps/Tunes/*.pt? 3:
+cpmcp -f wbw_hd1k hd1k_zsdos.img ../../Binary/Apps/Tunes/*.mym 3:
+cpmcp -f wbw_hd1k hd1k_zsdos.img ../../Binary/Apps/Tunes/*.vgm 3:
+cpmcp -f wbw_hd1k hd1k_zsdos.img cpnet12/*.* 4:
+cpmcp -f wbw_hd1k hd1k_zsdos.img ../ZSDOS/zsys_wbw.sys 0:zsys.sys
+cpmcp -f wbw_hd1k hd1k_zsdos.img Common/All/*.* 0:
+cpmcp -f wbw_hd1k hd1k_zsdos.img Common/CPM22/*.* 0:
+cpmcp -f wbw_hd1k hd1k_zsdos.img Common/Z/u14/*.* 0:
+cpmcp -f wbw_hd1k hd1k_zsdos.img Common/Z/u15/*.* 0:
+cpmcp -f wbw_hd1k hd1k_zsdos.img Common/SIMH/*.* 13:
+Moving image hd1k_zsdos.img into output directory...
+Generating nzcom Hard Disk (1024 directory entry format)...
+cpmcp -f wbw_hd1k hd1k_nzcom.img d_nzcom/u0/*.* 0:
+cpmcp -f wbw_hd1k hd1k_nzcom.img d_nzcom/ReadMe.txt 0:
+cpmcp -f wbw_hd1k hd1k_nzcom.img d_cpm22/u0/ASM.COM 0:
+cpmcp -f wbw_hd1k hd1k_nzcom.img d_cpm22/u0/LIB.COM 0:
+cpmcp -f wbw_hd1k hd1k_nzcom.img d_cpm22/u0/LINK.COM 0:
+cpmcp -f wbw_hd1k hd1k_nzcom.img d_cpm22/u0/LOAD.COM 0:
+cpmcp -f wbw_hd1k hd1k_nzcom.img d_cpm22/u0/MAC.COM 0:
+cpmcp -f wbw_hd1k hd1k_nzcom.img d_cpm22/u0/RMAC.COM 0:
+cpmcp -f wbw_hd1k hd1k_nzcom.img d_cpm22/u0/STAT.COM 0:
+cpmcp -f wbw_hd1k hd1k_nzcom.img d_cpm22/u0/SUBMIT.COM 0:
+cpmcp -f wbw_hd1k hd1k_nzcom.img d_cpm22/u0/XSUB.COM 0:
+cpmcp -f wbw_hd1k hd1k_nzcom.img d_zsdos/u0/*.* 0:
+cpmcp -f wbw_hd1k hd1k_nzcom.img ../../Binary/Apps/assign.com 0:
+cpmcp -f wbw_hd1k hd1k_nzcom.img ../../Binary/Apps/cpuspd.com 0:
+cpmcp -f wbw_hd1k hd1k_nzcom.img ../../Binary/Apps/fat.com 0:
+cpmcp -f wbw_hd1k hd1k_nzcom.img ../../Binary/Apps/fdu.com 0:
+cpmcp -f wbw_hd1k hd1k_nzcom.img ../../Binary/Apps/fdu.doc 0:
+cpmcp -f wbw_hd1k hd1k_nzcom.img ../../Binary/Apps/format.com 0:
+cpmcp -f wbw_hd1k hd1k_nzcom.img ../../Binary/Apps/mode.com 0:
+cpmcp -f wbw_hd1k hd1k_nzcom.img ../../Binary/Apps/rtc.com 0:
+cpmcp -f wbw_hd1k hd1k_nzcom.img ../../Binary/Apps/survey.com 0:
+cpmcp -f wbw_hd1k hd1k_nzcom.img ../../Binary/Apps/syscopy.com 0:
+cpmcp -f wbw_hd1k hd1k_nzcom.img ../../Binary/Apps/sysgen.com 0:
+cpmcp -f wbw_hd1k hd1k_nzcom.img ../../Binary/Apps/talk.com 0:
+cpmcp -f wbw_hd1k hd1k_nzcom.img ../../Binary/Apps/tbasic.com 0:
+cpmcp -f wbw_hd1k hd1k_nzcom.img ../../Binary/Apps/timer.com 0:
+cpmcp -f wbw_hd1k hd1k_nzcom.img ../../Binary/Apps/tune.com 0:
+cpmcp -f wbw_hd1k hd1k_nzcom.img ../../Binary/Apps/xm.com 0:
+cpmcp -f wbw_hd1k hd1k_nzcom.img ../../Binary/Apps/zmp.com 0:
+cpmcp -f wbw_hd1k hd1k_nzcom.img ../../Binary/Apps/zmp.hlp 0:
+cpmcp -f wbw_hd1k hd1k_nzcom.img ../../Binary/Apps/zmp.doc 0:
+cpmcp -f wbw_hd1k hd1k_nzcom.img ../../Binary/Apps/zmxfer.ovr 0:
+cpmcp -f wbw_hd1k hd1k_nzcom.img ../../Binary/Apps/zmterm.ovr 0:
+cpmcp -f wbw_hd1k hd1k_nzcom.img ../../Binary/Apps/zminit.ovr 0:
+cpmcp -f wbw_hd1k hd1k_nzcom.img ../../Binary/Apps/zmconfig.ovr 0:
+cpmcp -f wbw_hd1k hd1k_nzcom.img ../../Binary/Apps/zmd.com 0:
+cpmcp -f wbw_hd1k hd1k_nzcom.img ../../Binary/Apps/vgmplay.com 0:
+cpmcp -f wbw_hd1k hd1k_nzcom.img ../../Binary/Apps/Test/*.com 2:
+cpmcp -f wbw_hd1k hd1k_nzcom.img Test/*.* 2:
+cpmcp -f wbw_hd1k hd1k_nzcom.img ../../Binary/Apps/Tunes/*.pt? 3:
+cpmcp -f wbw_hd1k hd1k_nzcom.img ../../Binary/Apps/Tunes/*.mym 3:
+cpmcp -f wbw_hd1k hd1k_nzcom.img ../../Binary/Apps/Tunes/*.vgm 3:
+cpmcp -f wbw_hd1k hd1k_nzcom.img cpnet12/*.* 4:
+cpmcp -f wbw_hd1k hd1k_nzcom.img ../ZSDOS/zsys_wbw.sys 0:zsys.sys
+cpmcp -f wbw_hd1k hd1k_nzcom.img Common/All/*.* 0:
+cpmcp -f wbw_hd1k hd1k_nzcom.img Common/CPM22/*.* 0:
+cpmcp -f wbw_hd1k hd1k_nzcom.img Common/Z/u14/*.* 0:
+cpmcp -f wbw_hd1k hd1k_nzcom.img Common/Z/u15/*.* 0:
+cpmcp -f wbw_hd1k hd1k_nzcom.img Common/Z3/u10/*.* 0:
+cpmcp -f wbw_hd1k hd1k_nzcom.img Common/Z3/u14/*.* 0:
+cpmcp -f wbw_hd1k hd1k_nzcom.img Common/Z3/u15/*.* 0:
+cpmcp -f wbw_hd1k hd1k_nzcom.img Common/SIMH/*.* 13:
+Moving image hd1k_nzcom.img into output directory...
+Generating cpm3 Hard Disk (1024 directory entry format)...
+cpmcp -f wbw_hd1k hd1k_cpm3.img d_cpm3/u0/*.* 0:
+cpmcp -f wbw_hd1k hd1k_cpm3.img ../CPM3/cpmldr.com 0:
+cpmcp -f wbw_hd1k hd1k_cpm3.img ../CPM3/cpmldr.sys 0:
+cpmcp -f wbw_hd1k hd1k_cpm3.img ../CPM3/ccp.com 0:
+cpmcp -f wbw_hd1k hd1k_cpm3.img ../CPM3/gencpm.com 0:
+cpmcp -f wbw_hd1k hd1k_cpm3.img ../CPM3/genres.dat 0:
+cpmcp -f wbw_hd1k hd1k_cpm3.img ../CPM3/genbnk.dat 0:
+cpmcp -f wbw_hd1k hd1k_cpm3.img ../CPM3/bios3.spr 0:
+cpmcp -f wbw_hd1k hd1k_cpm3.img ../CPM3/bnkbios3.spr 0:
+cpmcp -f wbw_hd1k hd1k_cpm3.img ../CPM3/bdos3.spr 0:
+cpmcp -f wbw_hd1k hd1k_cpm3.img ../CPM3/bnkbdos3.spr 0:
+cpmcp -f wbw_hd1k hd1k_cpm3.img ../CPM3/resbdos3.spr 0:
+cpmcp -f wbw_hd1k hd1k_cpm3.img ../CPM3/cpm3res.sys 0:
+cpmcp -f wbw_hd1k hd1k_cpm3.img ../CPM3/cpm3bnk.sys 0:
+cpmcp -f wbw_hd1k hd1k_cpm3.img ../CPM3/gencpm.dat 0:
+cpmcp -f wbw_hd1k hd1k_cpm3.img ../CPM3/cpm3.sys 0:
+cpmcp -f wbw_hd1k hd1k_cpm3.img ../CPM3/readme.1st 0:
+cpmcp -f wbw_hd1k hd1k_cpm3.img ../CPM3/cpm3fix.pat 0:
+cpmcp -f wbw_hd1k hd1k_cpm3.img ../../Binary/Apps/assign.com 0:
+cpmcp -f wbw_hd1k hd1k_cpm3.img ../../Binary/Apps/cpuspd.com 0:
+cpmcp -f wbw_hd1k hd1k_cpm3.img ../../Binary/Apps/fat.com 0:
+cpmcp -f wbw_hd1k hd1k_cpm3.img ../../Binary/Apps/fdu.com 0:
+cpmcp -f wbw_hd1k hd1k_cpm3.img ../../Binary/Apps/fdu.doc 0:
+cpmcp -f wbw_hd1k hd1k_cpm3.img ../../Binary/Apps/format.com 0:
+cpmcp -f wbw_hd1k hd1k_cpm3.img ../../Binary/Apps/mode.com 0:
+cpmcp -f wbw_hd1k hd1k_cpm3.img ../../Binary/Apps/rtc.com 0:
+cpmcp -f wbw_hd1k hd1k_cpm3.img ../../Binary/Apps/survey.com 0:
+cpmcp -f wbw_hd1k hd1k_cpm3.img ../../Binary/Apps/syscopy.com 0:
+cpmcp -f wbw_hd1k hd1k_cpm3.img ../../Binary/Apps/tbasic.com 0:
+cpmcp -f wbw_hd1k hd1k_cpm3.img ../../Binary/Apps/timer.com 0:
+cpmcp -f wbw_hd1k hd1k_cpm3.img ../../Binary/Apps/tune.com 0:
+cpmcp -f wbw_hd1k hd1k_cpm3.img ../../Binary/Apps/xm.com 0:
+cpmcp -f wbw_hd1k hd1k_cpm3.img ../../Binary/Apps/zmp.com 0:
+cpmcp -f wbw_hd1k hd1k_cpm3.img ../../Binary/Apps/zmp.hlp 0:
+cpmcp -f wbw_hd1k hd1k_cpm3.img ../../Binary/Apps/zmp.doc 0:
+cpmcp -f wbw_hd1k hd1k_cpm3.img ../../Binary/Apps/zmxfer.ovr 0:
+cpmcp -f wbw_hd1k hd1k_cpm3.img ../../Binary/Apps/zmterm.ovr 0:
+cpmcp -f wbw_hd1k hd1k_cpm3.img ../../Binary/Apps/zminit.ovr 0:
+cpmcp -f wbw_hd1k hd1k_cpm3.img ../../Binary/Apps/zmconfig.ovr 0:
+cpmcp -f wbw_hd1k hd1k_cpm3.img ../../Binary/Apps/zmd.com 0:
+cpmcp -f wbw_hd1k hd1k_cpm3.img ../../Binary/Apps/vgmplay.com 0:
+cpmcp -f wbw_hd1k hd1k_cpm3.img ../../Binary/Apps/Test/*.com 2:
+cpmcp -f wbw_hd1k hd1k_cpm3.img Test/*.* 2:
+cpmcp -f wbw_hd1k hd1k_cpm3.img ../../Binary/Apps/Tunes/*.pt? 3:
+cpmcp -f wbw_hd1k hd1k_cpm3.img ../../Binary/Apps/Tunes/*.mym 3:
+cpmcp -f wbw_hd1k hd1k_cpm3.img ../../Binary/Apps/Tunes/*.vgm 3:
+cpmcp -f wbw_hd1k hd1k_cpm3.img cpnet3/*.* 4:
+cpmcp -f wbw_hd1k hd1k_cpm3.img Common/All/*.* 0:
+cpmcp -f wbw_hd1k hd1k_cpm3.img Common/CPM3/*.* 0:
+cpmcp -f wbw_hd1k hd1k_cpm3.img Common/SIMH/*.* 13:
+Moving image hd1k_cpm3.img into output directory...
+Generating zpm3 Hard Disk (1024 directory entry format)...
+cpmcp -f wbw_hd1k hd1k_zpm3.img d_zpm3/u0/*.* 0:
+cpmcp -f wbw_hd1k hd1k_zpm3.img d_zpm3/u10/*.* 10:
+cpmcp -f wbw_hd1k hd1k_zpm3.img d_zpm3/u14/*.* 14:
+cpmcp -f wbw_hd1k hd1k_zpm3.img d_zpm3/u15/*.* 15:
+cpmcp -f wbw_hd1k hd1k_zpm3.img ../ZPM3/zpmldr.com 0:
+cpmcp -f wbw_hd1k hd1k_zpm3.img ../ZPM3/zpmldr.sys 0:
+cpmcp -f wbw_hd1k hd1k_zpm3.img ../CPM3/cpmldr.com 0:
+cpmcp -f wbw_hd1k hd1k_zpm3.img ../CPM3/cpmldr.sys 0:
+cpmcp -f wbw_hd1k hd1k_zpm3.img ../ZPM3/autotog.com 15:
+cpmcp -f wbw_hd1k hd1k_zpm3.img ../ZPM3/clrhist.com 15:
+cpmcp -f wbw_hd1k hd1k_zpm3.img ../ZPM3/setz3.com 15:
+cpmcp -f wbw_hd1k hd1k_zpm3.img ../ZPM3/cpm3.sys 0:
+cpmcp -f wbw_hd1k hd1k_zpm3.img ../ZPM3/zccp.com 0:
+cpmcp -f wbw_hd1k hd1k_zpm3.img ../ZPM3/zinstal.zpm 0:
+cpmcp -f wbw_hd1k hd1k_zpm3.img ../ZPM3/startzpm.com 0:
+cpmcp -f wbw_hd1k hd1k_zpm3.img ../ZPM3/makedos.com 0:
+cpmcp -f wbw_hd1k hd1k_zpm3.img ../ZPM3/gencpm.dat 0:
+cpmcp -f wbw_hd1k hd1k_zpm3.img ../ZPM3/bnkbios3.spr 0:
+cpmcp -f wbw_hd1k hd1k_zpm3.img ../ZPM3/bnkbdos3.spr 0:
+cpmcp -f wbw_hd1k hd1k_zpm3.img ../ZPM3/resbdos3.spr 0:
+cpmcp -f wbw_hd1k hd1k_zpm3.img ../../Binary/Apps/assign.com 15:
+cpmcp -f wbw_hd1k hd1k_zpm3.img ../../Binary/Apps/cpuspd.com 15:
+cpmcp -f wbw_hd1k hd1k_zpm3.img ../../Binary/Apps/fat.com 15:
+cpmcp -f wbw_hd1k hd1k_zpm3.img ../../Binary/Apps/fdu.com 15:
+cpmcp -f wbw_hd1k hd1k_zpm3.img ../../Binary/Apps/fdu.doc 15:
+cpmcp -f wbw_hd1k hd1k_zpm3.img ../../Binary/Apps/format.com 15:
+cpmcp -f wbw_hd1k hd1k_zpm3.img ../../Binary/Apps/mode.com 15:
+cpmcp -f wbw_hd1k hd1k_zpm3.img ../../Binary/Apps/rtc.com 15:
+cpmcp -f wbw_hd1k hd1k_zpm3.img ../../Binary/Apps/survey.com 15:
+cpmcp -f wbw_hd1k hd1k_zpm3.img ../../Binary/Apps/syscopy.com 15:
+cpmcp -f wbw_hd1k hd1k_zpm3.img ../../Binary/Apps/sysgen.com 15:
+cpmcp -f wbw_hd1k hd1k_zpm3.img ../../Binary/Apps/talk.com 15:
+cpmcp -f wbw_hd1k hd1k_zpm3.img ../../Binary/Apps/tbasic.com 15:
+cpmcp -f wbw_hd1k hd1k_zpm3.img ../../Binary/Apps/timer.com 15:
+cpmcp -f wbw_hd1k hd1k_zpm3.img ../../Binary/Apps/tune.com 15:
+cpmcp -f wbw_hd1k hd1k_zpm3.img ../../Binary/Apps/xm.com 15:
+cpmcp -f wbw_hd1k hd1k_zpm3.img ../../Binary/Apps/zmp.com 15:
+cpmcp -f wbw_hd1k hd1k_zpm3.img ../../Binary/Apps/zmp.hlp 15:
+cpmcp -f wbw_hd1k hd1k_zpm3.img ../../Binary/Apps/zmp.doc 15:
+cpmcp -f wbw_hd1k hd1k_zpm3.img ../../Binary/Apps/zmxfer.ovr 15:
+cpmcp -f wbw_hd1k hd1k_zpm3.img ../../Binary/Apps/zmterm.ovr 15:
+cpmcp -f wbw_hd1k hd1k_zpm3.img ../../Binary/Apps/zminit.ovr 15:
+cpmcp -f wbw_hd1k hd1k_zpm3.img ../../Binary/Apps/zmconfig.ovr 15:
+cpmcp -f wbw_hd1k hd1k_zpm3.img ../../Binary/Apps/zmd.com 15:
+cpmcp -f wbw_hd1k hd1k_zpm3.img ../../Binary/Apps/vgmplay.com 15:
+cpmcp -f wbw_hd1k hd1k_zpm3.img ../../Binary/Apps/Test/*.com 2:
+cpmcp -f wbw_hd1k hd1k_zpm3.img Test/*.* 2:
+cpmcp -f wbw_hd1k hd1k_zpm3.img ../../Binary/Apps/Tunes/*.pt? 3:
+cpmcp -f wbw_hd1k hd1k_zpm3.img ../../Binary/Apps/Tunes/*.mym 3:
+cpmcp -f wbw_hd1k hd1k_zpm3.img ../../Binary/Apps/Tunes/*.vgm 3:
+cpmcp -f wbw_hd1k hd1k_zpm3.img cpnet3/*.* 4:
+cpmcp -f wbw_hd1k hd1k_zpm3.img Common/All/*.* 15:
+cpmcp -f wbw_hd1k hd1k_zpm3.img Common/CPM3/*.* 15:
+cpmcp -f wbw_hd1k hd1k_zpm3.img Common/Z/u14/*.* 14:
+cpmcp -f wbw_hd1k hd1k_zpm3.img Common/Z/u15/*.* 15:
+cpmcp -f wbw_hd1k hd1k_zpm3.img Common/Z3/u10/*.* 10:
+cpmcp -f wbw_hd1k hd1k_zpm3.img Common/Z3/u14/*.* 14:
+cpmcp -f wbw_hd1k hd1k_zpm3.img Common/Z3/u15/*.* 15:
+cpmcp -f wbw_hd1k hd1k_zpm3.img Common/SIMH/*.* 13:
+Moving image hd1k_zpm3.img into output directory...
+Generating ws4 Hard Disk (1024 directory entry format)...
+cpmcp -f wbw_hd1k hd1k_ws4.img d_ws4/u0/*.* 0:
+cpmcp -f wbw_hd1k hd1k_ws4.img d_ws4/u1/*.* 1:
+Moving image hd1k_ws4.img into output directory...
+Generating qpm Hard Disk (1024 directory entry format)...
+cpmcp -f wbw_hd1k hd1k_qpm.img d_qpm/u0/*.* 0:
+cpmcp -f wbw_hd1k hd1k_qpm.img d_qpm/ReadMe.txt 0:
+cpmcp -f wbw_hd1k hd1k_qpm.img d_cpm22/u0/*.* 0:
+cpmcp -f wbw_hd1k hd1k_qpm.img ../../Binary/Apps/assign.com 0:
+cpmcp -f wbw_hd1k hd1k_qpm.img ../../Binary/Apps/cpuspd.com 0:
+cpmcp -f wbw_hd1k hd1k_qpm.img ../../Binary/Apps/fat.com 0:
+cpmcp -f wbw_hd1k hd1k_qpm.img ../../Binary/Apps/fdu.com 0:
+cpmcp -f wbw_hd1k hd1k_qpm.img ../../Binary/Apps/fdu.doc 0:
+cpmcp -f wbw_hd1k hd1k_qpm.img ../../Binary/Apps/format.com 0:
+cpmcp -f wbw_hd1k hd1k_qpm.img ../../Binary/Apps/mode.com 0:
+cpmcp -f wbw_hd1k hd1k_qpm.img ../../Binary/Apps/rtc.com 0:
+cpmcp -f wbw_hd1k hd1k_qpm.img ../../Binary/Apps/survey.com 0:
+cpmcp -f wbw_hd1k hd1k_qpm.img ../../Binary/Apps/syscopy.com 0:
+cpmcp -f wbw_hd1k hd1k_qpm.img ../../Binary/Apps/sysgen.com 0:
+cpmcp -f wbw_hd1k hd1k_qpm.img ../../Binary/Apps/talk.com 0:
+cpmcp -f wbw_hd1k hd1k_qpm.img ../../Binary/Apps/tbasic.com 0:
+cpmcp -f wbw_hd1k hd1k_qpm.img ../../Binary/Apps/timer.com 0:
+cpmcp -f wbw_hd1k hd1k_qpm.img ../../Binary/Apps/tune.com 0:
+cpmcp -f wbw_hd1k hd1k_qpm.img ../../Binary/Apps/xm.com 0:
+cpmcp -f wbw_hd1k hd1k_qpm.img ../../Binary/Apps/zmp.com 0:
+cpmcp -f wbw_hd1k hd1k_qpm.img ../../Binary/Apps/zmp.hlp 0:
+cpmcp -f wbw_hd1k hd1k_qpm.img ../../Binary/Apps/zmp.doc 0:
+cpmcp -f wbw_hd1k hd1k_qpm.img ../../Binary/Apps/zmxfer.ovr 0:
+cpmcp -f wbw_hd1k hd1k_qpm.img ../../Binary/Apps/zmterm.ovr 0:
+cpmcp -f wbw_hd1k hd1k_qpm.img ../../Binary/Apps/zminit.ovr 0:
+cpmcp -f wbw_hd1k hd1k_qpm.img ../../Binary/Apps/zmconfig.ovr 0:
+cpmcp -f wbw_hd1k hd1k_qpm.img ../../Binary/Apps/zmd.com 0:
+cpmcp -f wbw_hd1k hd1k_qpm.img ../../Binary/Apps/vgmplay.com 0:
+cpmcp -f wbw_hd1k hd1k_qpm.img ../../Binary/Apps/Test/*.com 2:
+cpmcp -f wbw_hd1k hd1k_qpm.img Test/*.* 2:
+cpmcp -f wbw_hd1k hd1k_qpm.img ../../Binary/Apps/Tunes/*.pt? 3:
+cpmcp -f wbw_hd1k hd1k_qpm.img ../../Binary/Apps/Tunes/*.mym 3:
+cpmcp -f wbw_hd1k hd1k_qpm.img ../../Binary/Apps/Tunes/*.vgm 3:
+cpmcp -f wbw_hd1k hd1k_qpm.img cpnet12/*.* 4:
+cpmcp -f wbw_hd1k hd1k_qpm.img ../CPM22/cpm_wbw.sys 0:cpm.sys
+cpmcp -f wbw_hd1k hd1k_qpm.img Common/All/*.* 0:
+cpmcp -f wbw_hd1k hd1k_qpm.img Common/CPM22/*.* 0:
+cpmcp -f wbw_hd1k hd1k_qpm.img Common/SIMH/*.* 13:
+Moving image hd1k_qpm.img into output directory...
+        1 file(s) copied.
+
+Building Combo Disk (1024 directory entry format) Image...
+hd1k_prefix.dat
+..\..\Binary\hd1k_cpm22.img
+..\..\Binary\hd1k_zsdos.img
+..\..\Binary\hd1k_nzcom.img
+..\..\Binary\hd1k_cpm3.img
+..\..\Binary\hd1k_zpm3.img
+..\..\Binary\hd1k_ws4.img
+        1 file(s) copied.
+Platform [SBC|MBC|ZETA|ZETA2|RCZ80|EZZ80|UNA|N8|MK4|RCZ180|SCZ180|DYNO|RPH|RCZ280]: MK4
 Configurations available:
- > cust
+ > dbg
  > std
-Configuration: cust
-Building 512K ROM MK4_cust for Z180 CPU...
+ > wbw
+Configuration: std
+TASM Z80 Assembler.       Version 3.2 September, 2001.
+ Copyright (C) 2001 Squak Valley Software
+tasm: pass 1 complete.
+SYSTEM TIMER: Z180
+tasm: pass 2 complete.
+tasm: Number of errors = 0
+Building 512K ROM MK4_std for Z180 CPU...
 ..\Fonts\font8x11c.asm
 ..\Fonts\font8x11u.asm
 ..\Fonts\font8x16c.asm
 ..\Fonts\font8x16u.asm
 ..\Fonts\font8x8c.asm
 ..\Fonts\font8x8u.asm
-        6 file(s) copied.
+..\Fonts\fontcgac.asm
+..\Fonts\fontcgau.asm
+        8 file(s) copied.
 TASM Z180 Assembler.       Version 3.2 September, 2001.
  Copyright (C) 2001 Squak Valley Software
 tasm: pass 1 complete.
 SYSTEM TIMER: Z180
-HBIOS INT STACK space: 48 bytes.
+HBIOS INT STACK space: 46 bytes.
 HBIOS TEMP STACK space: 20 bytes.
 DSRTC occupies 697 bytes.
 ASCI occupies 839 bytes.
-UART occupies 807 bytes.
-VGA occupies 1046 bytes.
-CVDU occupies 874 bytes.
+UART occupies 802 bytes.
+VGA occupies 1051 bytes.
+CVDU occupies 904 bytes.
 FONTS 8X16 occupy 1466 bytes.
-KBD occupies 1043 bytes.
+KBD occupies 1064 bytes.
 PRP occupies 1397 bytes.
 MD occupies 449 bytes.
 FD occupies 2397 bytes.
-IDE occupies 1591 bytes.
-SD occupies 2259 bytes.
-TERM occupies 2078 bytes.
+IDE occupies 1606 bytes.
+SD occupies 2254 bytes.
+TERM occupies 2091 bytes.
 RTCDEF=32
 UNLZSA2 for Z80.
-HBIOS space remaining: 8370 bytes.
+HBIOS space remaining: 7689 bytes.
 tasm: pass 2 complete.
 tasm: Number of errors = 0
 TASM Z180 Assembler.       Version 3.2 September, 2001.
  Copyright (C) 2001 Squak Valley Software
 tasm: pass 1 complete.
 SYSTEM TIMER: Z180
-HBIOS INT STACK space: 48 bytes.
+HBIOS INT STACK space: 46 bytes.
 HBIOS TEMP STACK space: 20 bytes.
 DSRTC occupies 697 bytes.
 ASCI occupies 839 bytes.
-UART occupies 807 bytes.
-VGA occupies 1046 bytes.
-CVDU occupies 874 bytes.
+UART occupies 802 bytes.
+VGA occupies 1051 bytes.
+CVDU occupies 904 bytes.
 FONTS 8X16 occupy 1466 bytes.
-KBD occupies 1043 bytes.
+KBD occupies 1064 bytes.
 PRP occupies 1397 bytes.
 MD occupies 449 bytes.
 FD occupies 2397 bytes.
-IDE occupies 1591 bytes.
-SD occupies 2259 bytes.
-TERM occupies 2078 bytes.
+IDE occupies 1606 bytes.
+SD occupies 2254 bytes.
+TERM occupies 2091 bytes.
 RTCDEF=32
 UNLZSA2 for Z80.
-HBIOS space remaining: 8414 bytes.
+HBIOS space remaining: 7744 bytes.
 tasm: pass 2 complete.
 tasm: Number of errors = 0
 TASM Z180 Assembler.       Version 3.2 September, 2001.
  Copyright (C) 2001 Squak Valley Software
 tasm: pass 1 complete.
 SYSTEM TIMER: Z180
-HBIOS INT STACK space: 48 bytes.
+HBIOS INT STACK space: 46 bytes.
 HBIOS TEMP STACK space: 20 bytes.
 DSRTC occupies 697 bytes.
 ASCI occupies 839 bytes.
-UART occupies 807 bytes.
-VGA occupies 1046 bytes.
-CVDU occupies 874 bytes.
+UART occupies 802 bytes.
+VGA occupies 1051 bytes.
+CVDU occupies 904 bytes.
 FONTS 8X16 occupy 1466 bytes.
-KBD occupies 1043 bytes.
+KBD occupies 1064 bytes.
 PRP occupies 1397 bytes.
 MD occupies 449 bytes.
 FD occupies 2397 bytes.
-IDE occupies 1591 bytes.
-SD occupies 2259 bytes.
-TERM occupies 2078 bytes.
+IDE occupies 1606 bytes.
+SD occupies 2254 bytes.
+TERM occupies 2091 bytes.
 RTCDEF=32
 UNLZSA2 for Z80.
-HBIOS space remaining: 8451 bytes.
+HBIOS space remaining: 7770 bytes.
 tasm: pass 2 complete.
 tasm: Number of errors = 0
 
@@ -2364,7 +3675,7 @@ TASM Z80 Assembler.       Version 3.2 September, 2001.
  Copyright (C) 2001 Squak Valley Software
 tasm: pass 1 complete.
 SYSTEM TIMER: Z180
-DBGMON space remaining: 1032 bytes.
+DBGMON space remaining: 793 bytes.
 tasm: pass 2 complete.
 tasm: Number of errors = 0
 
@@ -2373,7 +3684,7 @@ TASM Z80 Assembler.       Version 3.2 September, 2001.
  Copyright (C) 2001 Squak Valley Software
 tasm: pass 1 complete.
 SYSTEM TIMER: Z180
-LOADER space remaining: 932 bytes.
+LOADER space remaining: 703 bytes.
 tasm: pass 2 complete.
 tasm: Number of errors = 0
 
@@ -2395,15 +3706,6 @@ BASIC space remaining: 247 bytes.
 tasm: pass 2 complete.
 tasm: Number of errors = 0
 
-Building tastybasic...
-TASM Z80 Assembler.       Version 3.2 September, 2001.
- Copyright (C) 2001 Squak Valley Software
-tasm: pass 1 complete.
-SYSTEM TIMER: Z180
-TASTYBASIC space remaining: 56 bytes.
-tasm: pass 2 complete.
-tasm: Number of errors = 0
-
 Building game...
 TASM Z80 Assembler.       Version 3.2 September, 2001.
  Copyright (C) 2001 Squak Valley Software
@@ -2418,7 +3720,7 @@ TASM Z80 Assembler.       Version 3.2 September, 2001.
  Copyright (C) 2001 Squak Valley Software
 tasm: pass 1 complete.
 SYSTEM TIMER: Z180
-User ROM space remaining: 6019 bytes.
+User ROM space remaining: 5763 bytes.
 tasm: pass 2 complete.
 tasm: Number of errors = 0
 
@@ -2446,7 +3748,7 @@ dbgmon.bin
         1 file(s) copied.
 ..\Forth\camel80.bin
 nascom.bin
-tastybasic.bin
+..\tastybasic\src\tastybasic.bin
 game.bin
 eastaegg.bin
 netboot.mod
@@ -2475,4 +3777,5 @@ osimg_small.bin
         1 file(s) copied.
         1 file(s) copied.
         1 file(s) copied.
-C:\RomWBW\Source>
+
+C:\Users\Wayne\Projects\RomWBW>

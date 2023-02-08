@@ -18,7 +18,7 @@ companion documents you should refer to as appropriate:
   with RomWBW including the monitor, programming languages, etc.
 
 * $doc_catalog$ is a reference for the contents of the disk images
-  provided with RomWBW.  It is not entirely up-to-date.
+  provided with RomWBW.  It is somewhat out of date at this time.
 
 * $doc_errata$ is updated as needed to document issues or anomalies
   discovered in the current software distribution.
@@ -52,7 +52,7 @@ A wide variety of platforms are supported including those
 produced by these developer communities:
 
 * [RetroBrew Computers](https://www.retrobrewcomputers.org)
-* [RC2014](https://rc2014.co.uk)
+* [RC2014](https://rc2014.co.uk), [RC2014-Z80](https://groups.google.com/g/rc2014-z80)
 * [retro-comp](https://groups.google.com/forum/#!forum/retro-comp)
 * [Small Computer Central](https://smallcomputercentral.com/)
 
@@ -64,7 +64,7 @@ General features include:
 * Video drivers including TMS9918, SY6545, MOS8563, HD6445
 * Keyboard (PS/2) drivers via VT8242 or PPI interfaces
 * Real time clock drivers including DS1302, BQ4845
-* OS Adaptations of CP/M 2.2, ZSDOS, CP/M 3, NZ-COM, ZPM3, QPM, p-System, and FreeRTOS
+* OSes: CP/M 2.2, ZSDOS, CP/M 3, NZ-COM, ZPM3, QPM, p-System, and FreeRTOS
 * Built-in VT-100 terminal emulation support
 
 RomWBW is distributed as both source code and pre-built ROM and disk
@@ -78,7 +78,7 @@ ROM firmware itself:
 
 A dynamic disk drive letter assignment mechanism allows mapping
 operating system drive letters to any available disk media.
-Additionally, mass media devices (IDE Disk, CF Card, SD Card) support
+Additionally, mass storage devices (IDE Disk, CF Card, SD Card) support
 the use of multiple slices (up to 256 per device). Each slice contains
 a complete CP/M filesystem and can be mapped independently to any
 drive letter. This overcomes the inherent size limitations in legacy
@@ -105,10 +105,10 @@ such that all of the operating systems and applications on a disk
 will run on any RomWBW-based system.  To put it simply, you can take
 a disk (or CF/SD Card) and move it between systems transparently.
 
-A tool is provided that allows you to access a FAT-12/16/32 filesystem.
-The FAT filesystem may be coresident on the same disk media as RomWBW slices
-or on stand-alone media.  This makes exchanging files with modern OSes
-such as Windows, MacOS, and Linux very easy.
+A tool is provided that allows you to access a FAT-12/16/32 filesystem. 
+The FAT filesystem may be coresident on the same disk media as RomWBW 
+slices or on stand-alone media.  This makes exchanging files with modern
+OSes such as Windows, MacOS, and Linux very easy.
 
 # Getting Started
 
@@ -188,24 +188,24 @@ below, **carefully** pick the appropriate ROM image for your hardware.
 | RC/BP80 Bus Z180 w/ native banking               | RCZ180_nat.rom        | 115200        |
 | RC/BP80 Bus Z280 w/ external banking             | RCZ180_ext.rom        | 115200        |
 | RC/BP80 Bus Z280 w/ native banking               | RCZ180_nat.rom        | 115200        |
-| Sergey Kiselev's Easy Z80 SBC w/ RC Bus          | EZZ80_std.rom         | 115200        |
-| Sergey Kiselev's Tiny EIPC Z80 SBC w/ RC Bus     | EZZ80_tz80.rom        | 115200        |
-| Sergey Kiselev's Z80-512K Module for RC Bus      | EZZ80_skz.rom         | 115200        |
-| Stephen Cousin's SC126 Z180 SBC w/ BP80 Bus      | SCZ180_126.rom        | 115200        |
-| Stephen Cousin's SC130 Z180 SBC w/ RC Bus        | SCZ180_130.rom        | 115200        |
-| Stephen Cousin's SC131 Z180 Pocket Computer      | SCZ180_131.rom        | 115200        |
-| Stephen Cousin's SC140 Z180 for Z50Bus           | SCZ180_140.rom        | 115200        |
+| Sergey Kiselev's Easy Z80 SBC w/ RCBus           | EZZ80_std.rom         | 115200        |
+| Sergey Kiselev's Tiny EIPC Z80 SBC w/ RCBus      | EZZ80_tz80.rom        | 115200        |
+| Sergey Kiselev's Z80-512K Module for RCBus       | EZZ80_skz.rom         | 115200        |
+| Stephen Cousins' SC126 Z180 SBC w/ BP80 Bus      | SCZ180_126.rom        | 115200        |
+| Stephen Cousins' SC130 Z180 SBC w/ RCBus         | SCZ180_130.rom        | 115200        |
+| Stephen Cousins' SC131 Z180 Pocket Computer      | SCZ180_131.rom        | 115200        |
+| Stephen Cousins' SC140 Z180 for Z50Bus           | SCZ180_140.rom        | 115200        |
 | Steve Garcia's Z180 Dyno SBC w/ Dyno Bus         | DYNO_std.rom          | 38400         |
 | Andrew Lynch's Nhyodyne Z80 MBC                  | MBC_std.rom           | 38400         |
 | Andrew Lynch's Rhyophyre Z180 SBC                | RPH_std.rom           | 38400         |
-| Bill Shen's Z80 ZRC for RC Bus                   | RCZ80_zrc.rom         | 115200        |
-| Bill Shen's Z280 ZZRCC for RC Bus                | RCZ280_nat_zzr.rom    | 115200        |
-| Bill Shen's Z280 ZZ80MB SBC w/ RC Bus            | RCZ280_nat_zz.rom     | 115200        |
+| Bill Shen's Z80 ZRC for RCBus                    | RCZ80_zrc.rom         | 115200        |
+| Bill Shen's Z280 ZZRCC for RCBus                 | RCZ280_nat_zzr.rom    | 115200        |
+| Bill Shen's Z280 ZZ80MB SBC w/ RCBus             | RCZ280_nat_zz.rom     | 115200        |
 
-RC Bus refers to Spencer Owen's RC2014 bus specification.  BP80 Bus is 
+RCBus refers to Spencer Owen's RC2014 bus specification.  BP80 Bus is 
 an enhanced 80-pin version of the RC2014 bus.
 
-The RC Bus Z180 & Z280 require a separate RAM/ROM memory module. There 
+The RCBus Z180 & Z280 require a separate RAM/ROM memory module. There 
 are two types of these modules and you must pick the correct ROM for 
 your type of memory module.  The first option is the same as the 512K 
 RAM/ROM module for RC/BP80 Bus.  This is called external ("ext") because
@@ -1717,20 +1717,30 @@ disk slice from the boot loader prompt. See the instructions in
 
 One of the primary goals of RomWBW is to expose a set of generic
 hardware functions that make it easy to adapt operating systems to
-any hardware supported by RomWBW. As a result, there are now 5
+any hardware supported by RomWBW. As a result, there are now 8
 operating systems that have been adapted to run under RomWBW. The
 adaptations are identical for all hardware supported by RomWBW
 because RomWBW hides all hardware specifics from the operating system.
 
-Note that all of the operating systems included with RomWBW support
-the same basic filesystem format. As a result, a formatted filesystem
-will be accessible to any operating system. The only possible issue
-is that if you turn on date/time stamping using the newer OSes, the
-older OSes will not understand this. Files will not be corrupted, but
-the date/time stamps will not be maintained.
+By design, the operating systems provided with RomWBW are original and 
+unmodified from their original distribution.  Patches published by the 
+authors are generally included or applied.  The various enhancements 
+RomWBW provides (such as hard disk slices) are implemented entirely 
+within the system adaptation component of each operating system (e.g.,
+CP/M CBIOS).  As a result, each operating system should function
+exactly as documented by the authors and retain maximum compatibility
+with original applications.
+
+Note that all of the operating systems included with RomWBW support the 
+same basic filesystem format from DRI CP/M 2.2 (except for p-System). As
+a result, a formatted filesystem will be accessible to any operating 
+system. The only possible issue is that if you turn on date/time 
+stamping using the newer OSes, the older OSes will not understand this. 
+Files will not be corrupted, but the date/time stamps will not be 
+maintained.
 
 The following sections briefly describe the operating system options
-currently available.
+currently available and brief operating notes.
 
 ## Digital Research CP/M 2.2
 
@@ -1741,12 +1751,7 @@ operating systems including those listed below.
 
 If you are new to the CP/M world, I would recommend using this CP/M 
 variant to start with simply because it is the most stable and you are 
-less likely to encounter problems.
-
-The RomWBW CP/M 2.2 CBIOS has been enhanced to allow automatic
-execution of a `PROFILE.SUB` submit file at startup.  The CP/M 2.2
-code components from DRI were not changed -- this was implemented in
-the machine specific CBIOS.
+less likely to encounter compatibility issues.
 
 #### Documentation
 
@@ -1768,6 +1773,10 @@ call "CPM.SYS".  For example:
   ctrl-C.  This is a CP/M 2.2 constraint and is well documented
   in the DRI manual.
 
+* `SUBMIT.COM` has been patched per DRI to always place submit
+  files on A:.  This ensures the submitted file will always be
+  properlly executed.
+
 * The original versions of DDT, DDTZ, and ZSID used the RST 38
   vector which conflicts with interrupt mode 1 use of this vector.
   The DDT, DDTZ, and ZSID applications in RomWBW have been modified
@@ -1784,17 +1793,16 @@ version of CP/M and should run all CP/M 2.2 applications. It is
 optimized for the Z80 CPU (as opposed to 8080 for CP/M) and has some
 significant improvements such as date/time stamping of files.
 
-Z-System is a somewhat ambiguous term because there are multiple
-generations of this software.  RomWBW uses ZCPR-DJ and ZSDOS 1.1
-when referring to Z-System.  The latest version of Z-System (ZCPR 3.4)
-is also provided with RomWBW via NZ-COM (see below).
-
-Like CP/M 2.2, RomWBW includes the ability to autorun a `PROFILE.SUB`
-submit file at startup.
+Z-System is a somewhat ambiguous term because there are multiple 
+generations of this software.  RomWBW Z-System is a combination of both 
+ZCPR-DJ (the CCP) and ZSDOS 1.1 (the BDOS) when referring to Z-System.  
+The latest version of Z-System (ZCPR 3.4) is also provided with RomWBW 
+via the NZ-COM adaptation (see below).
 
 #### Documentation
 
 * [ZCPR Manual]($doc_root$/ZCPR Manual.pdf)
+* [ZCPR-DJ]($doc_root$/ZCPR-DJ.doc)
 * [ZSDOS Manual]($doc_root$/ZSDOS Manual.pdf)
 
 #### Boot Disk
@@ -2026,7 +2034,7 @@ tool if you want to perform a fresh installation.
 ## UCSD p-System
 
 This is a full implementation of the UCSD p-System IV.0 for Z80
-running under RomWBW.  Unlike the OSes above, p-System uses it's
+running under RomWBW.  Unlike the OSes above, p-System uses its
 own unique filesystem and is not interoperable with other OSes.
 
 It was derived from the p-System Adaptable Z80 System.  Unlike
@@ -2091,7 +2099,7 @@ You can also contact Phillip for detailed information on the Z180
 implementation of FreeRTOS for RomWBW.
 [feilipu](https://github.com/feilipu)
 
-# RomWBW Custom Applications
+# Custom Applications
 
 The operation of the RomWBW hosted operating systems is enhanced through
 several custom applications. You have already read about one of these --
@@ -2142,6 +2150,494 @@ directory of the distribution.
 | TUNE        | Play .PT2, .PT3, .MYM audio files.                             |
 | FAT         | Access MS-DOS FAT filesystems from RomWBW (based on FatFs).    |
 | INTTEST     | Test interrupt vector hooking.                                 |
+
+# FAT Filesystem
+
+The FAT filesystem format that originated with MS-DOS has been almost
+ubiquitous across modern computers.  Virtually all operating systems
+now support reading and writing files to a FAT filesystem.  For this
+reason, RomWBW now has the ability to read and write files on FAT
+filesystems.
+
+This is accomplished by running a RomWBW custom application called `FAT`.
+This application understands both FAT filesystems as well as CP/M filesystems.
+
+* Files can be copied between a FAT filesystem and a CP/M filesystem,
+  but you cannot execute files directly from a FAT filesystem.
+* FAT12, FAT16, and FAT32 formats are supported.
+* Long filenames are not supported.  Files with long filenames will
+  show up with their names truncated into the older 8.3 convention.
+* A FAT filesystem can be located on floppy or hard disk media.  For
+  hard disk media, the FAT filesystem must be located within a valid
+  FAT partition.
+  
+## FAT Filesystem Preparation
+
+In general, you can create media formatted with a FAT filesystem on
+your RomWBW computer or on your modern computer.  We will only be
+discussing the RomWBW-based approach here.
+
+In the case of a floppy disk, you can use the `FAT` application to
+format the floppy disk.  For example, if your floppy disk is on RomWBW
+disk unit 2, you could use `FAT FORMAT 2:`.  This will overwrite the
+floppy with a FAT filesystem and all previous contents will be lost.
+Once formatted this way, the floppy disk can be used in a floppy drive
+attached to a modern computer or it can be used on RomWBW using the
+other `FAT` tool commands.
+
+In the case of hard disk media, it is necessary to have a FAT
+partition.  If you prepared your RomWBW hard disk media using the
+disk image process, then this partition will already be present and
+you do not need to recreate it.  This default FAT partition is located
+at approximately 512MB from the start of your disk and it is 384MB in
+size.  So, your hard disk media must be 1GB or greater to use this
+default FAT partition.
+
+You can confirm the existence of the FAT partition with `FDISK80` by 
+using the 'P' command to show the current partition table.  Here is an 
+example of a partition table listing from `FDISK80` that includes the 
+FAT partition (labeled "FAT16"):
+
+```
+Capacity of disk 4:  (  4G)  7813120      Geom 77381010
+Nr  ---Type- A --      Start         End   LBA start  LBA count  Size
+ 1    RomWBW   2e      8:0:1  1023:15:16        2048    1048576  512M
+ 2     FAT16   06   1023:0:1  1023:15:16     1050624     786432  384M
+ 3             00       *** empty ***
+ 4             00       *** empty ***
+```
+
+If your hard disk media does not have a FAT partition already defined,
+you will need to define one using FDISK80 by using the 'N' command.
+Ensure that the location and size of the FAT partition does not
+overlap any of the CP/M slice area and that it fits within the szie
+of your media.
+
+Once the partition is defined, you will still need to format it.  Just
+as with a floppy disk, you use the `FAT` tool to do this.  If your
+hard disk media is on RomWBW disk unit 4, you would use `FAT FORMAT 4:`.
+This will look something like this:
+
+```
+E>fat format 4:
+
+About to format FAT Filesystem on Disk Unit #4.
+All existing FAT partition data will be destroyed!!!
+
+Continue (y/n)?
+
+Formatting... Done
+```
+
+Your FAT filesystem is now ready to use.
+
+If your RomWBW system has multiple disk drives/slots, you can also just 
+create a disk with your modern computer that is a dedicated FAT 
+filesystem disk.  You can use your modern computer to format the disk 
+(floppy, CF Card, SD Card, etc.), then insert the disk in your RomWBW 
+computer and access if using `FAT` based on it's RomWBW unit number.
+
+## FAT Application Usage
+
+Complete instructions for the `FAT` application are found in $doc_apps$.
+Here, we will just provide a couple of simple examples.  Note that the 
+FAT application is not on the ROM disk because it is too large to 
+include there.
+
+The most important thing to understand about the `FAT` application is
+how it refers to FAT filesystems vs. CP/M filesystems.  It infers this
+based on the file specification provided.  If you use a specification
+like `C:SAMPLE.TXT`, it will use the C: drive of your CP/M operating
+system.  If you use a specification like `4:SAMPLE.TXT`, it will use
+the FAT filesystem on the disk in RomWBW disk unit 4.  Basically, if
+you start your file or directory specification with a number followed
+by a colon, it means FAT filesystem.  Anything else will mean CP/M
+filesystem.
+
+Here are a few examples.  This first example shows how to get a FAT
+directory listing from RomWBW disk unit 4:
+
+```
+E>fat dir 4:
+
+Directory of 4:
+
+
+E>
+```
+
+As you can see, there are currently no files there.  Now let's copy
+a file from CP/M to the FAT directory:
+
+```
+E>fat copy sample.txt 4:
+
+Copying...
+
+SAMPLE.TXT ==> 4:/SAMPLE.TXT ... [OK]
+
+    1 File(s) Copied
+```
+
+If we list the FAT directory again, you will see the file:
+
+```
+E>fat dir 4:
+
+Directory of 4:
+
+01/30/2023  17:50:14         29952  ---A  SAMPLE.TXT
+
+```
+
+Now let's copy the file from the FAT filesystem back to CP/M.  This
+time we will get a warning about overwriting the file.  For this
+example, we don't want to do that, so we abort and reissue the
+command specifying a new filename to use:
+
+```
+E>fat copy 4:sample.txt e:
+
+Copying...
+
+4:/SAMPLE.TXT ==> E:SAMPLE.TXT Overwrite? (Y/N) [Skipped]
+
+    0 File(s) Copied
+
+E>fat copy 4:sample.txt e:sample2.txt
+
+Copying...
+
+4:/SAMPLE.TXT ==> E:SAMPLE2.TXT ... [OK]
+
+    1 File(s) Copied
+```
+
+Finally, let's try using wildcards:
+
+```
+E>fat copy sample*.* 4:
+
+Copying...
+
+SAMPLE.TXT ==> 4:/SAMPLE.TXT Overwrite? (Y/N) ... [OK]
+SAMPLE2.TXT ==> 4:/SAMPLE2.TXT ... [OK]
+
+    2 File(s) Copiedd
+```
+
+# CP/NET Networking
+
+Digital Research created a simple network file sharing system called 
+CP/NET.  This allowed a network server running CP/NOS to host files 
+available to network attached CP/M computers.  Essentially, the host
+becomes a simple file sharing server.
+
+RomWBW disk images include an adaptation of the DRI CP/NET client 
+software provided by Douglas Miller.  RomWBW does not support operation 
+as a network server itself.  However, Douglas has also developed a 
+Java-based implementation of the DRI network server that can be used to 
+provide host services from a modern computer.
+
+Both CP/NET 1.2 and 3.0 clients are provided.  Version 1.2 is for use 
+with CP/M 2.2 and compatible OSes.  Version 3.0 is for use with CP/M 3 
+and compatible OSes.
+
+The CP/NET client software provided with RomWBW is specifically for the 
+MT011 Module developed by Mark T for the RCBus.  The client software 
+interacts directly with this hardware.  In a future version of RomWBW, I
+hope to add a generic networking API that will allow a greater range of
+network hardware to be used.
+
+To use CP/NET effectively, you will want to review the documentation 
+provided by Douglas on his
+[cpnet-z80 GitHub Project](https://github.com/durgadas311/cpnet-z80). 
+Additionally, you should consult the DRI documentation which is not 
+included with RomWBW, but is available on the
+[cpnet-z80](https://github.com/durgadas311/cpnet-z80) site.
+
+Below, I will provide the general steps involved in setting up a
+network using MT011 with RomWBW.  The examples are all based on
+Z-System.
+
+## CP/NET Client Setup
+
+The CP/NET client files are included on the RomWBW disk images, but
+they are found in user area 4.  They are placed there to avoid
+confusing anyone that is not specifically trying to run a network
+client.
+
+First, you need to merge the files from user area 4 into user area 0.
+After booting into Z-System (disk boot), you can copy the files
+using the following command:
+
+`COPY 4:*.* 0:`
+
+You will be asked if you want to overwrite `README.TXT`.  It doesn't
+really matter, but I suggest you do not overwrite it.
+
+The MT011 Module uses a WizNet network module.  At this point, you will 
+need to configure it for your local network.  The definitive guide to 
+the use of `WIZCFG` is on the
+[cpnet-z80](https://github.com/durgadas311/cpnet-z80) site in the 
+document called "CPNET-WIZ850io.pdf". Here is an example of the commands
+needed to configure the WizNet:
+
+|                                    |                                        |
+|------------------------------------|----------------------------------------|
+| `wizcfg w n F0`                    | set CP/NET node id                     |
+| `wizcfg w i 192.168.1.201`         | set WizNet IP address                  |
+| `wizcfg w g 192.168.1.1`           | set local network gateway IP address   |
+| `wizcfg w s 255.255.255.0`         | set WizNet subnet mask                 |
+| `wizcfg w 0 00 192.168.1.3 31100`  | set server node ID, IP address, & port |
+
+You will need to use values appropriate for your local network.  You can
+use the command `wiznet w` to display the current values which is 
+useful to confirm they have been set as intended.
+
+```
+A>wizcfg w
+Node ID:  F0H
+IP Addr:  192.168.1.201
+Gateway:  192.168.1.1
+Subnet:   255.255.255.0
+MAC:      98:76:B6:11:00:C4
+Socket 0: 00H 192.168.1.3 31100 0
+```
+
+You will need to reapply these commands every time you power cycle
+your RomWBW computer, so I recommend putting them into a `SUBMIT` file.
+
+After applying these commands, you should be able ping the WizNet from
+another computer on the local network.  If this works, then the 
+client-side is ready.
+
+## CP/NET Sever Setup
+
+These instructions will assume you are using Douglas' CpnetSocketServer
+as the server on your network.  The definitive guide to this software
+is also on the [cpnet-z80](https://github.com/durgadas311/cpnet-z80)
+site and is called "CpnetSocketServer.pdf".
+
+The software is a Java application, so it can generally run anywhere
+there is a Java runtime environment available.  I have normally used
+it on a Linux system and have had good results with that.
+
+You will need to download the application called "CpnetSocketServer.jar"
+from the [cpnet-z80](https://github.com/durgadas311/cpnet-z80) site. The
+application uses a configuration file.  My configuration file is called
+"cpnet00.rc" and has these contents:
+
+```
+cpnetserver_host = 192.168.1.3
+cpnetserver_port = 31100
+cpnetserver_temp = P
+cpnetserver_sid = 00
+cpnetserver_max = 16
+cpnetserver_root_dir = /home/wayne/cpnet/root
+```
+
+You will also need to setup a directory structure with the drive
+letters per the documentation.
+
+To start the server, you would use a command like this:
+
+`java -jar CpnetSocketServer.jar conf=cpnet00.rc`
+
+At this point, the server should start and you should see the following:
+
+```
+CpnetSocketServer v1.3
+Using config in cpnet00.rc
+Server 00 Listening on 192.168.1.3 port 31100 debug false
+```
+
+Your CP/NET server should now be ready to accept client connections.
+
+## CP/NET Usage
+
+With both the client and server configured, you are ready to load and
+use CP/NET on your RomWBW system.  CP/NET documentation is available
+on the [cpnet-z80](https://github.com/durgadas311/cpnet-z80) site.
+The document is called "dri-cpnet.pdf".
+
+After booting your computer, you will always need to start CP/NET using 
+the `CPNETLDR` command.  If that works, you can map network drives as 
+local drives using the `NETWORK` command.  The `CPNETSTS` command is 
+useful for displaying the current status.  Here is a sample session:
+
+```
+A>cpnetldr
+
+
+CP/NET 1.2 Loader
+=================
+
+BIOS         E600H  1A00H
+BDOS         D800H  0E00H
+SNIOS   SPR  D400H  0400H
+NDOS    SPR  C800H  0C00H
+TPA          0000H  C800H
+
+CP/NET 1.2 loading complete.
+
+A>network k:=c:[0]
+
+A>dir k:
+K: TELNET   COM : ZDENST   COM : CLRDIR   COM : RTC      COM
+K: DDTZ     COM : MBASIC   COM : XSUBNET  COM : NETWORK  COM
+K: WGET     COM : UNCR     COM : FLASH    COM : PIP      COM
+K: TIMEZONE COM : COMPARE  COM : ZAP      COM
+
+A>cpnetsts
+
+CP/NET 1.2 Status
+=================
+Requester ID = F0H
+Network Status Byte = 10H
+Disk device status:
+  Drive A: = LOCAL
+  Drive B: = LOCAL
+  Drive C: = LOCAL
+  Drive D: = LOCAL
+  Drive E: = LOCAL
+  Drive F: = LOCAL
+  Drive G: = LOCAL
+  Drive H: = LOCAL
+  Drive I: = LOCAL
+  Drive J: = LOCAL
+  Drive K: = Drive C: on Network Server ID = 00H
+  Drive L: = LOCAL
+  Drive M: = LOCAL
+  Drive N: = LOCAL
+  Drive O: = LOCAL
+  Drive P: = LOCAL
+Console Device = LOCAL
+List Device = LOCAL
+```
+
+You will see some additional messages on your server when clients
+connect.  Here are the messages issued by the server in the above
+example:
+
+```
+Connection from 192.168.1.201 (31100)
+Remote 192.168.1.201 is f0
+Creating HostFileBdos 00 device with root dir /home/wayne/cpnet/root
+```
+
+At this point CP/NET is ready for general use.
+
+## Network Boot
+
+It is possible to boot your MT011 equipped RomWBW system directly
+from a network server.  This means that the operating system will be
+loaded directly from the network server and all of your drive letters
+will be provided by the network server.
+
+It is important to understand that the operating system that is loaded
+in this case is **not** a RomWBW enhanced operating system.  Some
+commands (such as the `ASSIGN` command) will not be possible.  Also,
+you will only have access to drives provided by the network server --
+no local disk drives will be available.
+
+In order to do this, your MT011 Module must be enhanced with an NVRAM 
+SPI FRAM mini-board.  The NVRAM is used to store your WizNet 
+configuration values so they do not need to be re-entered every time you
+cold boot your system.
+
+Using the same values from the previous example, you would
+issue the WizNet commands:
+
+```
+wizcfg n F0
+wizcfg i 192.168.1.201
+wizcfg g 192.168.1.1
+wizcfg s 255.255.255.0
+wizcfg 0 00 192.168.1.3 31100
+```
+
+Note that the 'w' parameter is now omitted which causes these values to
+be written to NVRAM.
+
+As before, your network server will need to be running 
+CpnetSocketServer. However, you will need to setup a directory that 
+contains some files that will be sent to your RomWBW system when the 
+Network boot is performed.  By default the directory will be
+`~/NetBoot`.  In this directory you need to place the following files:
+
+* `cpnos-wbw.sys` found in the Binary directory of RomWBW
+* `ndos.spr` found in the Source/Images/cpnet12 directory of RomWBW
+* `snios.spr` found in the Source/Images/cpnet12 directory of RomWBW
+
+You also need to make sure CpnetSocketServer is configured with an 'A' 
+drive and that drive must contain (at an absolute minimum) the following
+file:
+
+* `ccp.spr` found in the Source/Images/cpnet12 directory of RomWBW
+
+Finally, you need to add the following line to your CpnetSocketServer 
+configuration file:
+
+`netboot_default = cpnos-wbw.sys`
+
+To perform the network boot, you start your RomWBW system normally which
+should leave you at the Boot Loader prompt.  The 'N' command will
+initiate the network boot.  Here is an example of what this looks like:
+
+```
+RC2014 [RCZ180_nat_wbw] Boot Loader
+
+Boot [H=Help]: n
+
+Loading Network Boot...
+MT011 WizNET Network Boot
+
+WBWBIOS  SPR  FD00 0100
+COBDOS   SPR  FA00 0300
+SNIOS    SPR  F600 0400
+NDOS     SPR  EA00 0C00
+
+58K TPA
+
+A>
+```
+
+The CP/M operating system and the CP/NET components have been loaded 
+directly from the network server.  All of your drive letters are 
+automatically mapped directly to the drive letters configured with 
+CpnetSocketServer.
+
+```
+A>cpnetsts
+
+CP/NET 1.2 Status
+=================
+Requester ID = F0H
+Network Status Byte = 10H
+Disk device status:
+  Drive A: = Drive A: on Network Server ID = 00H
+  Drive B: = Drive B: on Network Server ID = 00H
+  Drive C: = Drive C: on Network Server ID = 00H
+  Drive D: = Drive D: on Network Server ID = 00H
+  Drive E: = Drive E: on Network Server ID = 00H
+  Drive F: = Drive F: on Network Server ID = 00H
+  Drive G: = Drive G: on Network Server ID = 00H
+  Drive H: = Drive H: on Network Server ID = 00H
+  Drive I: = Drive I: on Network Server ID = 00H
+  Drive J: = Drive J: on Network Server ID = 00H
+  Drive K: = Drive K: on Network Server ID = 00H
+  Drive L: = Drive L: on Network Server ID = 00H
+  Drive M: = Drive M: on Network Server ID = 00H
+  Drive N: = Drive N: on Network Server ID = 00H
+  Drive O: = Drive O: on Network Server ID = 00H
+  Drive P: = Drive P: on Network Server ID = 00H
+Console Device = LOCAL
+List Device = LOCAL
+```
+
+At this point you can use CP/M and CP/NET normally, but all disk
+access will be to/from the network drives.
 
 # Transferring Files
 
@@ -2216,33 +2712,35 @@ detail in the Source\\Images directory of the distribution.
 
 ## FAT Filesystem Transfers
 
-RomWBW provides a mechanism that allows it to read and write files on
-a FAT formatted disk. This means that you can generally use your
-modern computer to make an SD Card or CF Card with a standard FAT32
-filesystem on it, then place that media in your RomWBW computer and
+The ability to interact with FAT filesystems was covered in [FAT 
+Filesystem].  This capability means that you can generally use your 
+modern computer to make an SD Card or CF Card with a standard FAT32 
+filesystem on it, then place that media in your RomWBW computer and 
 access the files.
 
-When formatting the media on your modern computer, be sure to pick
-the FAT filesystem. NTFS and other filesystems will not work.
+When formatting the media on your modern computer, be sure to pick the 
+FAT filesystem. NTFS and other filesystems will not work.  As previously
+mentioned, the `FAT` application does not understand long filenames, 
+only the traditional 8.3 filenames.  If you have files on your modern 
+computer with long filenames, it is usually easiest to rename them on 
+the modern computer.
 
-On your RomWBW computer you can use the `FAT` application to access
-the FAT media. The `FAT` application allows you to read files, write
-files, list a directory, and erase files on the FAT media. It can
-handle subdirectories as well. It will only see 8.3 character
-filenames however. Longer filenames will show up as a truncated
-version.
+To copy files from your modern computer to your RomWBW computer, start 
+by putting the disk media with the FAT filesystem in your modern 
+computer.  The modern computer should recognize it. Then copy the files 
+you want to get to your RomWBW computer onto this media.  Once done, 
+remove the media from your modern computer and insert it in the RomWBW 
+computer.  Finally, use the `FAT` tool to copy the files onto a CP/M 
+drive.
 
-The `FAT` application is not on your ROM disk because it is too large
-to fit. You will find it on all of the pre-built disk images as well
-as in the Binary\\Apps directory of the distribution.
+This process works just fine in reverse if you want to copy files from a
+CP/M filesystem to your modern computer.
 
-For advanced users, it is possible to create a hybrid disk that
-contains CP/M slices at the beginning and a FAT filesystem after.
-Such a hybrid disk can be used to boot an operating system and still
-have access to FAT files on the FAT portion of the disk. David Reese
-has prepared a document describing how to do this. It is called
-"SC126_How-To_No_2_Preparing_an_SD_Card_for_Use_with_SC126_Rev_1-5.pdf"
-and can be found in the Doc\\Contrib directory of the distribution.
+**WARNING**: If you are using media that contains both a FAT partition 
+and a RomWBW partition, your modern computer may be confused by the 
+RomWBW partition.  In some cases, it will prompt you to format the 
+RomWBW partition because it doesn't know what it is. You will be 
+prompted before it does this -- just be careful not to allow it.
 
 # Customizing RomWBW
 
@@ -2533,6 +3031,8 @@ please let me know if I missed you!
   computers at Small Computer Central and is distributing RomWBW
   with many of them.
 
+* The CP/NET client files were developed by Douglas Miller.
+
 * Phillip Stevens contributed support for FreeRTOS.
 
 * Curt Mayer contributed the original Linux / MacOS build process.
@@ -2610,54 +3110,58 @@ Submission of issues and bugs are welcome at the
 
 Also feel free to email $doc_author$ at [$doc_authmail$](mailto:$doc_authmail$).
 
-# Appendix A - Device Summary
+# Appendixes
+
+`\newpage`{=latex}
+
+## Appendix A - Device Summary
 
 The table below briefly describes each of the possible devices that
 may be discovered by RomWBW in your system.
 
-| ID        | Unit Type  | Description                                  |
-|---------- | ---------- | -------------------------------------------- |
-| ACIA | Character | ? Serial Interface |
-| ASCI | Character | Z180 built-in serial ports|
-| AY | Audio | |
-| BQRTC | RTC | |
-| CTC | System | |
-| CVDU | Video | |
-| DMA | System | |
-| DS1307 | RTC | |
-| DS1501RTC | RTC | |
-| DSKY | System | |
-| DSRTC | RTC | |
-| DUART | Character | |
-| FD | Disk | |
-| GDC | Video | |
-| HDSK | Disk | |
-| IDE | Disk | |
-| INTRTC | RTC | |
-| KBD | Keyboard | |
-| KIO | System | |
-| LPT | Character | |
-| MD | Disk | |
-| MSXKYB | Keyboard | |
-| I2C | System | |
-| PIO | Character | |
-| PPIDE | Disk | |
-| PPK | Keyboard | |
-| PPPSD | Disk | |
-| PPPCON | Serial | |
-| PRPSD | Disk | |
-| PRPCON | Serial | |
-| RF | Disk | |
-| RP5C01 | RTC | |
-| SD | Disk | |
-| SIMRTC | |
-| SIO | Character | |
-| SN76489 | Sound | |
-| SPK | Sound | |
-| TMS | Video | |
-| UART | Character | |
-| USB-FIFO | Character | |
-| VDU | Video | |
-| VGA | Video | |
-| YM | Audio | |
-| Z2U | Character | |
+| ID        | Type    | Description                                            |
+|---------- | ------- | ------------------------------------------------------ |
+| ACIA      | Char    | MC68B50 Asynchronous Communications Interface Adapter  |
+| ASCI      | Char    | Z180 Built-in Serial Ports                             |
+| AY        | Audio   | AY-3-8910/YM2149 Programmable Sound Generator          |
+| BQRTC     | RTC     | BQ4845P Real Time Clock                                |
+| CTC       | System  | Zilog Clock/Timer                                      |
+| CVDU      | Video   | MC8563-based Video Display Controller                  |
+| DMA       | System  | Zilog DMA Controller                                   |
+| DS1307    | RTC     | Maxim DS1307 PCF I2C Real-Time Clock w/ NVRAM          |
+| DS1501RTC | RTC     | Maxim DS1501/DS1511 Watchdog Real-Time Clock           |
+| DSKY      | System  | Keypad & Display                                       |
+| DSRTC     | RTC     | Maxim DS1302 Real-Time Clock w/ NVRAM                  |
+| DUART     | Char    | SCC2681 or compatible Dual UART                        |
+| FD        | Disk    | 8272 of compatible Floppy Disk Controller              |
+| GDC       | Video   | uPD7220 Video Display Controller                       |
+| HDSK      | Disk    | SIMH Simulator Hard Disk                               |
+| IDE       | Disk    | IDE/ATA Hard Disk Interface                            |
+| INTRTC    | RTC     | Interrupt-based Real Time Clock                        |
+| KBD       | Kbd     | 8242 PS/2 Keyboard Controller                          |
+| KIO       | System  | Zilog Serial/ Parallel Counter/Timer                   |
+| LPT       | Char    | Parallel I/O Controller                                |
+| MD        | Disk    | ROM/RAM Disk                                           |
+| MSXKYB    | Kbd     | MSX Compliant Matrix Keyboard                          |
+| I2C       | System  | I2C Interface                                          |
+| PIO       | Char    | Zilog Parallel Interface Controller                    |
+| PPIDE     | Disk    | 8255 IDE/ATA Hard Disk Interface                       |
+| PPK       | Kbd     | Matrix Keyboard                                        |
+| PPPSD     | Disk    | ParPortProp SD Card Interface                          |
+| PPPCON    | Serial  | ParPortProp Serial Console Interface                   |
+| PRPSD     | Disk    | PropIO SD Card Interface                               |
+| PRPCON    | Serial  | PropIO Serial Console Interface                        |
+| RF        | Disk    | RAM Floppy Disk Interface                              |
+| RP5C01    | RTC     | Ricoh RPC01A Real-Time Clock w/ NVRAM                  |
+| SD        | Disk    | SD Card Interface                                      |
+| SIMRTC    | RTC     | SIMH Simulator Real-Time Clock                         |
+| SIO       | Char    | Zilog Serial Port Interface                            |
+| SN76489   | Sound   | SN76489 Programmable Sound Generator                   |
+| SPK       | Sound   | Bit-bang Speaker                                       |
+| TMS       | Video   | TMS9918/38/58 Video Display Controller                 |
+| UART      | Char    | 16C550 Family Serial Interface                         |
+| USB-FIFO  | Char    | FT232H-based ECB USB FIFO                              |
+| VDU       | Video   | MC6845 Family Video Display Controller                 |
+| VGA       | Video   | HD6445CP4-based Video Display Controller               |
+| YM        | Audio   | YM2612 Programmable Sound Generator                    |
+| Z2U       | Char    | Zilog Z280 Built-in Serial Ports                       |

@@ -1,7 +1,9 @@
-RomWBW ReadMe  
-Version 3.1 Pre-release  
-Wayne Warthen (<wwarthen@gmail.com>)  
-05 Feb 2023
+
+
+**RomWBW ReadMe** \
+Version 3.1 Pre-release \
+Wayne Warthen  ([wwarthen@gmail.com](mailto:wwarthen@gmail.com)) \
+07 Feb 2023
 
 # Overview
 
@@ -12,7 +14,8 @@ platforms are supported including those produced by these developer
 communities:
 
 - [RetroBrew Computers](https://www.retrobrewcomputers.org)
-- [RC2014](https://rc2014.co.uk)
+- [RC2014](https://rc2014.co.uk),
+  [RC2014-Z80](https://groups.google.com/g/rc2014-z80)
 - [retro-comp](https://groups.google.com/forum/#!forum/retro-comp)
 - [Small Computer Central](https://smallcomputercentral.com/)
 
@@ -24,8 +27,8 @@ General features include:
 - Video drivers including TMS9918, SY6545, MOS8563, HD6445
 - Keyboard (PS/2) drivers via VT8242 or PPI interfaces
 - Real time clock drivers including DS1302, BQ4845
-- OS Adaptations of CP/M 2.2, ZSDOS, CP/M 3, NZ-COM, ZPM3, QPM,
-  p-System, and FreeRTOS
+- OSes: CP/M 2.2, ZSDOS, CP/M 3, NZ-COM, ZPM3, QPM, p-System, and
+  FreeRTOS
 - Built-in VT-100 terminal emulation support
 
 RomWBW is distributed as both source code and pre-built ROM and disk
@@ -39,7 +42,7 @@ ROM firmware itself:
 
 A dynamic disk drive letter assignment mechanism allows mapping
 operating system drive letters to any available disk media.
-Additionally, mass media devices (IDE Disk, CF Card, SD Card) support
+Additionally, mass storage devices (IDE Disk, CF Card, SD Card) support
 the use of multiple slices (up to 256 per device). Each slice contains a
 complete CP/M filesystem and can be mapped independently to any drive
 letter. This overcomes the inherent size limitations in legacy OSes and
@@ -70,8 +73,6 @@ A tool is provided that allows you to access a FAT-12/16/32 filesystem.
 The FAT filesystem may be coresident on the same disk media as RomWBW
 slices or on stand-alone media. This makes exchanging files with modern
 OSes such as Windows, MacOS, and Linux very easy.
-
-# Getting Started
 
 # Acquiring RomWBW
 
@@ -105,8 +106,7 @@ Guide](https://github.com/wwarthen/RomWBW/raw/dev/Doc/RomWBW%20User%20Guide.pdf)
 
 ## Documentation
 
-This document is part of a set of documentation for RomWBW that also
-includes:
+Documentation for RomWBW includes:
 
 - [RomWBW User
   Guide](https://github.com/wwarthen/RomWBW/raw/dev/Doc/RomWBW%20User%20Guide.pdf)
@@ -156,6 +156,8 @@ let me know if I missed you!
 - Stephen Cousins has likewise created a series of hobbyist kit
   computers at Small Computer Central and is distributing RomWBW with
   many of them.
+
+- The CP/NET client files were developed by Douglas Miller.
 
 - Phillip Stevens contributed support for FreeRTOS.
 
