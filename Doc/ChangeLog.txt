@@ -68,6 +68,7 @@ Version 3.1.1
 - L?N: Updated ZDE to v1.8 including time stamp preservation fixes
 - D?M: Minor update to CP/NET client files, fix to CPNBOOT
 - WBW: Added p-System IV.0 Z80 implementation
+- WBW: Hacked SURVEY to work around bank switching crash
 
 Version 3.1
 -----------
