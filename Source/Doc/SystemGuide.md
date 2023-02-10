@@ -318,484 +318,552 @@ HBIOS Reference
 Invocation
 ----------
 
-HBIOS functions are invoked by placing the required parameters in CPU
-registers and executing an RST 08 instruction. Note that HBIOS does not
-preserve register values that are unused. However, it will not modify the
-Z80 alternate registers or IX/IY (these registers may be used within HBIOS,
-but will be saved and restored internally).
+HBIOS functions are invoked by placing the required parameters in CPU 
+registers and executing an RST 08 instruction. Note that HBIOS does not 
+preserve register values that are unused. However, the values of the Z80
+alternate registers and IX/IY will be preserved (these registers may be
+used within HBIOS, but will be saved and restored internally).
 
-Normally, applications will not call HBIOS functions directly. It is
-intended that the operating system makes all HBIOS function calls.
-Applications that are considered system utilities may use HBIOS, but must
-be careful not to modify the operating environment in any way that the
-operating system does not expect.
+An alternate method of invoking HBIOS functions is to use `CALL 0xFFF0`.
+Since the RST 08 vector exists in page zero of the CPU address space,
+it may be paged out when alternate memory banks are selected.  If this
+may be true when you are invoking a function, you should use the `CALL`
+method.
 
-In general, the desired function is placed in the B register. Register C is
-frequently used to specify a subfunction or a target device unit number.
-Additional registers are used as defined by the specific function. Register
-A should be used to return function result information. A=0 should
-indicate success, other values are function specific.
+Normally, applications will not call HBIOS functions directly. It is 
+intended that the operating system makes all HBIOS function calls. 
+Applications that are considered system utilities may use HBIOS, but 
+must be careful not to modify the operating environment in any way that 
+the operating system does not expect.
 
-The character, disk, and video device functions all refer to target devices
-using a logical device unit number that is passed in the C register. Keep
-in mind that these unit numbers are assigned dynamically at HBIOS
-initialization during the device discovery process. The assigned unit
-numbers are displayed on the consoled at the conclusion of device
-initialization. The unit assignments will never change after HBIOS
-initialization. However, they can change at the next boot if there have
-been hardware or BIOS customization changes. Code using HBIOS functions
-should not assume fixed unit assignments.
+In general, the desired function is placed in the B register. Register C
+is frequently used to specify a subfunction or a target device unit 
+number. Additional registers are used as defined by the specific 
+function. Register A should be used to return function result 
+information.  See below for result code definitions.
 
-Some functions utilize pointers to memory buffers. Unless otherwise stated,
-such buffers can be located anywhere in the Z80 CPU 64K address space.
-However, performance sensitive buffers (primarily disk I/O buffers) will
-require double-buffering if the caller’s buffer is in the lower 32K of CPU
-address space. For optimal performance, such buffers should be placed in
-the upper 32K of CPU address space.
+The character, disk, and video device functions all refer to target 
+devices using a logical device unit number that is passed in the C 
+register. Keep in mind that these unit numbers are assigned dynamically 
+at HBIOS initialization during the device discovery process. The 
+assigned unit numbers are displayed on the console at the conclusion of 
+device initialization. The unit assignments will never change after 
+HBIOS initialization. However, they can change at the next boot if there
+have been hardware or BIOS customization changes. Code using HBIOS 
+functions should not assume fixed unit assignments.
 
-Error Codes
------------
+Some functions utilize pointers to memory buffers. Unless otherwise 
+stated, such buffers can be located anywhere in the Z80 CPU 64K address 
+space. However, performance sensitive buffers (primarily disk I/O 
+buffers) will require double-buffering if the caller’s buffer is in the 
+lower 32K of CPU address space. For optimal performance, such buffers 
+should be placed in the upper 32K of CPU address space.
 
-The following error codes are defined generically for all HBIOS functions.
-Most function calls will return a result in register A.
+Result Codes
+-------------
 
-_Code_ | _Meaning_
------- | ---------
-0      | function succeeded
--1     | undefined error
--2     | function not implemented
--3     | invalid function
--4     | invalid unit numberr
--5     | out of memory
--6     | parameter out of range
--7     | media not present
--8     | hardware not present
--9     | I/O error
--10    | write request to read-only media
--11    | device timeout
--12    | invalid configuration
+The following function result codes are defined generically for all 
+HBIOS functions. Most function calls will return a result in register A.
+
+| **Code** | **Definition**                         |
+|---------:|----------------------------------------|
+| 0        | function succeeded                     |
+| -1       | undefined error                        |
+| -2       | function not implemented               |
+| -3       | invalid function                       |
+| -4       | invalid unit numberr                   |
+| -5       | out of memory                          |
+| -6       | parameter out of range                 |
+| -7       | media not present                      |
+| -8       | hardware not present                   |
+| -9       | I/O error                              |
+| -10      | write request to read-only media       |
+| -11      | device timeout                         |
+| -12      | invalid configuration                  |
 
 `\clearpage`{=latex}
 
 Character Input/Output (CIO)
 ----------------------------
 
-Character input/output functions require that a Character Unit be specified
-in the C register. This is the logical device unit number assigned during
-the boot process that identifies all character I/O devices uniquely. A
-special value of 0x80 can be used for Unit to refer to the current console
-device.
+Character Input/Output functions require that a Character Unit number be
+specified in register C. This is the logical device unit number 
+assigned during the boot process that identifies all character 
+devices uniquely. A special value of 0x80 can be used for the Character 
+Unit to refer to the current console device.
+
+All character units are assigned a Device Type ID which indicates
+the specific hardware device driver that handles the unit.  The table
+below enumerates these values.
+
+| **Device Type** | **ID** | **Description**                          | **Driver** |
+|-----------------|-------:|------------------------------------------|------------|
+| CIODEV_UART     | 0x00   | 16C550 Family Serial Interface           | uart.asm   |
+| CIODEV_ASCI     | 0x10   | Z180 Built-in Serial Ports               | asci.asm   |
+| CIODEV_TERM     | 0x20   | Terminal                                 | ansi.asm   |
+| CIODEV_PRPCON   | 0x30   | PropIO Serial Console Interface          | prp.asm    |
+| CIODEV_PPPCON   | 0x40   | ParPortProp Serial Console Interface     | ppp.asm    |
+| CIODEV_SIO      | 0x50   | Zilog Serial Port Interface              | sio.asm    |
+| CIODEV_ACIA     | 0x60   | MC68B50 Asynchronous Interface           | acia.asm   |
+| CIODEV_PIO      | 0x70   | Zilog Parallel Interface Controller      | pio.asm    |
+| CIODEV_UF       | 0x80   | FT232H-based ECB USB FIFO                | uf.asm     |
+| CIODEV_DUART    | 0x90   | SCC2681 Family Dual UART                 | duart.asm  |
+| CIODEV_Z2U      | 0xA0   | Zilog Z280 Built-in Serial Ports         | z2u.asm    |
+| CIODEV_LPT      | 0xB0   | Parallel I/O Controller                  | lpt.asm    |
 
 Character devices can usually be configured with line characteristics
 such as speed, framing, etc. A word value (16 bit) is used to describe
 the line characteristics as indicated below:
 
-_Bits_ | _Function_
------- | ----------
-15-14  | Reserved (set to 0)
-13     | RTS
-12-8   | Baud Rate (see below)
-7      | DTR
-6      | XON/XOFF Flow Control
-5-3    | Parity (???)
-2      | Stop Bits (???)
-1-0    | Data Bits (???)
+| **Bits** | **Characteristic**                     |
+|---------:|----------------------------------------|
+| 15-14    | Reserved (set to 0)                    |
+| 13       | RTS                                    |
+| 12-8     | Baud Rate (see below)                  |
+| 7        | DTR                                    |
+| 6        | XON/XOFF Flow Control                  |
+| 5        | Stick Parity (set for true)            |
+| 4        | Even Parity (set for true)             |
+| 3        | Parity Enable (set for true)           |
+| 2        | Stop Bits (set for true)               |
+| 1-0      | Data Bits (5-8 encoded as 0-3)         |
 
-The 5-bit baud rate value (V) is encoded as V = 75 * 2^X * 3^Y. The
+The 5-bit Baud Rate value (V) is encoded as V = 75 * 2^X * 3^Y. The
 bits are defined as YXXXX.
+
+Actual character values are a single byte (8 bits).  The Character I/O
+functions do not modify or interpret the values being sent/received
+so they can be used to pass 8-bit binary data without corruption.  Note
+that some OSes will modify character data (truncate to 7 bits, etc.).
 
 ### Function 0x00 -- Character Input (CIOIN)
 
-| **Inputs**                             | **Outputs**                            |
+| **Entry Parameters**                   | **Returned Values**                    |
 |----------------------------------------|----------------------------------------|
-| B: 0x00 | A: Status (0-OK, else error) |
-| C: Serial Device Unit Number | E: Character Received |
-| C: Serial Device Unit Number | E: Character Received |
-| C: Serial Device Unit Number | E: Character Received |
+| B: 0x00                                | A: Status                              |
+| C: Character Unit                      | E: Character                           |
 
-
-
-
-| _Entry Parameters_
-|       B: 0x00
-|       C: Serial Device Unit Number
-
-| _Exit Results_
-|       A: Status (0=OK, else error)
-|       E: Character Received
-
-Read a character from the device unit specified in register C and return
-the character value in E. If no character(s) are available, this function
-will wait indefinitely.
+Read and return a Character (E) from the specified Character Unit 
+(C).  If no character(s) are available in the unit's input buffer, this 
+function will wait indefinitely.  The returned Status (A) is a standard 
+HBIOS result code.
 
 ### Function 0x01 -- Character Output (CIOOUT)
 
-| _Entry Parameters_
-|       B: 0x01
-|       C: Serial Device Unit Number
-|       E: Character to Send
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x01                                | A: Status (0-OK, else error)           |
+| C: Character Unit                      |                                        |
+| E: Character                           |                                        |
 
-| _Exit Results_
-|       A: Status (0=OK, else error)
-
-Send character value in register E to device specified in register C. If
-device is not ready to send, function will wait indefinitely.
+Send a Character (E) via the specified Character Unit (C).  If 
+there is no space available in the unit's output buffer, the function 
+will wait indefinitely.  The returned Status (A) is a standard HBIOS result code.
 
 ### Function 0x02 -- Character Input Status (CIOIST)
 
-| _Entry Parameters_
-|       B: 0x02
-|       C: Serial Device Unit Number
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x02                                | A: Status / Characters Pending         |
+| C: Character Unit                      |                                        |
 
-| _Exit Results_
-|       A: Bytes Pending
+Return the count of Characters Pending (A) in the input buffer of the 
+specified Character Unit (C).  If the unit has no input buffer or the 
+buffer utilization is not available, the function may return simply 0 or
+1 where 0 means there is no character available and 1 means there is at
+least one character available.
 
-Return the number of characters available to read in the input buffer of
-the unit specified. If the device has no input buffer, it is acceptable to
-return simply 0 or 1 where 0 means there is no character available to read
-and 1 means there is at least one character available to read.
+The value returned in register A is used as both a Status (A) code and 
+the return value. Negative values (bit 7 set) indicate a standard HBIOS 
+result (error) code.  Otherwise, the return value represents the number 
+of characters in the input buffer.
 
 ### Function 0x03 -- Character Output Status (CIOOST)
 
-| _Entry Parameters_
-|       B: 0x03
-|       C: Serial Device Unit Number
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x03                                | A: Status / Space Free                 |
+| C: Character Unit                      |                                        |
 
-| _Exit Results_
-|       A: Output Buffer Bytes Available
+Return the count of buffer Space Free (A) for the specified 
+Character Unit (C). For example, if a 16 byte output buffer contains 6 
+characters waiting to be sent out the unit's serial interface, this 
+function would return 10; the number of positions available in the 
+output buffer. If the port has no output buffer or the buffer 
+utilization is not available, the function may return simply 0 or 1 
+where 0 means there is no buffer space available and 1 means there is 
+space in the output buffer for at least one character.
 
-Return the space available in the output buffer expressed as a character
-count. If a 16 byte output buffer contained 6 characters waiting to be
-sent, this function would return 10, the number of positions available in
-the output buffer. If the port has no output buffer, it is acceptable to
-return simply 0 or 1 where 0 means the port is busy and 1 means the port is
-ready to output a character.
+The return value in register A is used as both a status code and the 
+return value. Negative values (bit 7 set) indicate a standard HBIOS 
+result (error) code.  Otherwise, the return value represents the buffer 
+space available.
 
-### Function 0x04 -- Character IO Initialization (CIOINIT)
+### Function 0x04 -- Character I/O Initialization (CIOINIT)
 
-| _Entry Parameters_
-|       B: 0x04
-|       C: Serial Device Unit Number
-|       DE: Line Characteristics
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x04                                | A: Status                              |
+| C: Character Unit                      |                                        |
+| DE: Line Characteristics               |                                        |
 
-| _Exit Results_
-|       A: Status (0=OK, else error)
+Condition the interface of the specified Character Unit (C) according to
+the specified Line Characteristics (DE).  The definition of the line 
+characteristics value is described above.  If DE contains -1 (0xFFFF), 
+then the device will be reinitialized with the previous line 
+characteristics used (a reset) and any buffer contents will be flushed.
+The Status (A) is a standard HBIOS result code.
 
-Setup line characteristics (baudrate, framing, etc.) of the specified unit.
-Register pair DE specifies line characteristics. If DE contains -1
-(0xFFFF), then the device will be reinitialized with the last line
-characteristics used. Result of function is returned in A with zero
-indicating success.
+Not all line characteristics are supported by all character interfaces.
+It is up to the driver of the character unit to decide how to deal
+with characteristics that are not available.  For example, many
+character drivers do not allow flow control settings (RTS/CTS, XON/XOFF)
+to be modified dynamically.  In most cases, these settings are ignored
+by the driver in this function call.
 
-### Function 0x05 -- Character IO Query (CIOQUERY)
+### Function 0x05 -- Character I/O Query (CIOQUERY)
 
-| _Entry Parameters_
-|       B: 0x05
-|       C: Serial Device Unit Number
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x05                                | A: Status                              |
+| C: Character Unit                      | DE: Line Characteristics               |
 
-| _Exit Results_
-|       A: Status (0=OK, else error)
-|       DE: Line Characteristics
+Returns the current Line Characteristics (DE) of the specified Character
+ Unit (C). The definition of the line characteristics value is described
+ above. The returned status (A) is a standard HBIOS result code.
 
-Reports the line characteristics (baudrate, framing, etc.) of the specified
-unit. Register pair DE contains the line characteristics upon return.
+### Function 0x06 -- Character I/O Device (CIODEVICE)
 
-### Function 0x06 -- Character IO Device (CIODEVICE)
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x06                                | A: Status                              |
+| C: Character Unit                      | C: Device Attributes                   |
+|                                        | D: Device Type                         |
+|                                        | E: Device Number                       |
+|                                        | H: Device Mode                         |
+|                                        | L: Device I/O Base Address             |
 
-| _Entry Parameters_
-|       B: 0x06
-|       C: Serial Device Unit Number
+Returns device information for the specified Character Unit (C).  The 
+status (A) is a standard HBIOS result code.
 
-| _Exit Results_
-|       A: Status (0=OK, else error)
-|       C: Serial Device Attributes
-|       D: Serial Device Type
-|       E: Serial Device Number
-|       H: Serial Device Unit Mode
-|       L: Serial Device Unit I/O Base Address
+Device Attribute (C) values are: 0 = RS/232, 1 = Terminal, 2 = Parallel.
 
-Reports information about the character device unit specified. Register C
-indicates the device attributes: 0=RS-232 and 1=Terminal. Register D
-indicates the device type (driver) and register E indicates the physical
-device number assigned by the driver.
+Device Type (D) indicates the specific hardware driver that handles the 
+specified Character Unit.  Values are listed at the start of this 
+section. Device Number (E) indicates the physical device number assigned
+per driver.  For example, a Device Type of 0x50 with a Device Number 
+of 2 refers to the third port being handled by the SIO driver.
 
-Each character device is handled by an appropriate driver (UART, ASCI,
-etc.). The driver can be identified by the Device Type. The assigned Device
-Types are listed below.
-
-_Id_ | _Device Type / Driver_
----- | ----------------------
-0x00 | UART
-0x10 | ASCI
-0x20 | Terminal
-0x30 | PropIO VGA
-0x40 | ParPortProp VGA
-0x50 | SIO
-0x60 | ACIA
-0x70 | PIO
-0x80 | UF
+Device Mode (H) is used to indicate the variant of the chip or
+circuit that is used by the specified unit.  For example, for a UART,
+the value indicates the chip variant.  The Device I/O Base Address (L)
+indicates the starting port address of the hardware interface that is
+servicing the specified unit.  Both of these values are considered
+driver specific.  Refer to the associated hardware driver for the
+values used.
 
 `\clearpage`{=latex}
 
 Disk Input/Output (DIO)
 -----------------------
 
-Disk input/output functions require that a disk unit be specified
-in the C register. This is the logical disk unit number assigned during
-the boot process that identifies all disk i/o devices uniquely.
+Disk Input/Output functions require that a Disk Unit number be specified
+in register C. This is the logical device unit number assigned 
+during the boot process that identifies all disk devices uniquely.
 
-A fixed set of media types are defined. The currently defined media types
-are listed below. Each driver will support a subset of the defined media
-types.
+All character units are assigned a Device Type ID which indicates
+the specific hardware device driver that handles the unit.  The table
+below enumerates there values.
 
-**Media ID** | **Value** | **Format**
------------- | --------- | ----------
-MID_NONE     | 0         | No media installed
-MID_MDROM    | 1         | ROM Drive
-MID_MDRAM    | 2         | RAM Drive
-MID_RF       | 3         | RAM Floppy (LBA)
-MID_HD       | 4         | Hard Disk (LBA)
-MID_FD720    | 5         | 3.5" 720K Floppy
-MID_FD144    | 6         | 3.5" 1.44M Floppy
-MID_FD360    | 7         | 5.25" 360K Floppy
-MID_FD120    | 8         | 5.25" 1.2M Floppy
-MID_FD111    | 9         | 8" 1.11M Floppy
-MID_HDNEW    | 10        | Hard Disk with 1024 Directory entries
+| **Device Type** | **ID** | **Description**                          | **Driver** |
+|-----------------|-------:|------------------------------------------|------------|
+| DIODEV_MD       | 0x00   | Memory Disk                              | md.asm     |
+| DIODEV_FD       | 0x10   | Floppy Disk                              | fd.asm     |
+| DIODEV_RF       | 0x20   | RAM Floppy                               | rf.asm     |
+| DIODEV_IDE      | 0x30   | IDE Disk                                 | ide.asm    |
+| DIODEV_ATAPI    | 0x40   | ATAPI Disk (not implemented)             |            |
+| DIODEV_PPIDE    | 0x50   | PPIDE Disk                               | ppide.asm  |
+| DIODEV_SD       | 0x60   | SD Card                                  | sd.asm     |
+| DIODEV_PRPSD    | 0x70   | PropIO SD Card                           | prp.asm    |
+| DIODEV_PPPSD    | 0x80   | ParPortProp SD Card                      | ppp.asm    |
+| DIODEV_HDSK     | 0x90   | SIMH HDSK Disk                           | hdsk.asm   |
+
+A fixed set of media types are defined. The currently defined media 
+types identifiers are listed below. Each driver will support one or
+more of the defined media types.
+
+| **Media**     | **ID** | **Format**                                 |
+|---------------|-------:|--------------------------------------------|
+| MID_NONE      | 0      | No media installed                         |
+| MID_MDROM     | 1      | ROM Drive                                  |
+| MID_MDRAM     | 2      | RAM Drive                                  |
+| MID_RF        | 3      | RAM Floppy (LBA)                           |
+| MID_HD512     | 4      | Hard Disk (LBA) w/ 512 directory entries   |
+| MID_FD720     | 5      | 3.5" 720K Floppy                           |
+| MID_FD144     | 6      | 3.5" 1.44M Floppy                          |
+| MID_FD360     | 7      | 5.25" 360K Floppy                          |
+| MID_FD120     | 8      | 5.25" 1.2M Floppy                          |
+| MID_FD111     | 9      | 8" 1.11M Floppy                            |
+| MID_HD1K      | 10     | Hard Disk (LBA) w/ 1024 directory entries  |
+
+HBIOS supports both Cylinder/Head/Sector (CHS) and Logical Block 
+Addresses (CHS) when locating a sector for I/O (see DIOSEEK function). 
+For devices that are natively CHS (e.g., floppy disk), the HBIOS driver 
+can convert LBA values to CHS values according to the geometry of the 
+current media.  For devices that are natively LBA (e.g., hard disk), the
+ HBIOS driver simulates CHS using a fictitious geometry provided by the 
+driver (typically 16 sectors per track and 16 heads per cylinder).
 
 ### Function 0x10 -- Disk Status (DIOSTATUS)
 
-| _Entry Parameters_
-|       B: 0x10
-|       C: Disk Device Unit ID
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x10                                | A: Status                              |
+| C: Disk Unit                           |                                        |
 
-| _Exit Results_
-|       A: Status (0=OK, else error)
+Returns the driver specific Status (A) of the specified disk device unit
+(C) based on the last operation performed.
+
+The return value in register A is used as both a device status and a 
+standard HBIOS result code. Negative values (bit 7 set) indicate a 
+standard HBIOS result (error) code.  Otherwise, the return value 
+represents a driver-specific device status.  In call cases, the value 0 
+means OK.
 
 ### Function 0x11 -- Disk Reset (DIORESET)
 
-| _Entry Parameters_
-|       B: 0x11
-|       C: Disk Device Unit ID
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x11                                | A: Status                              |
+| C: Disk Unit                           |                                        |
 
-| _Exit Results_
-|       A: Status (0=OK, else error)
+This function performs a device dependent reset operation on the Disk 
+Unit specified (C).  The driver will clear any error status on the disk 
+unit, attempt to reset the interface, and flag the disk unit for 
+initialization on the next I/O function call. Any prior media 
+identification will be cleared.  The returned Status (A) is a standard 
+HBIOS result code.
 
-Reset the physical interface associated with the specified unit. Flag
-all units associated with the interface for unit initialization at next
-I/O call. Clear media identified unless locked. Reset result code of all
-associated units of the physical interface.
+If the specified disk unit (C) is one of multiple units on a single 
+hardware bus, then all units on that bus will be reset.  For example, 
+if the master disk on an IDE bus is reset, then the slave disk will 
+also be reset.
 
 ### Function 0x12 -- Disk Seek (DIOSEEK)
 
-| _Entry Parameters_
-|       B: 0x12
-|       C: Disk Device Unit ID
-|       D7: Address Type (0=CHS, 1=LBA)
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x12                                | A: Status                              |
+| C: Disk Unit                           |                                        |
+| DEHL: Sector Address                   |                                        |
 
-|       if CHS:
-|           D6-0: Head
-|           E: Sector
-|           HL: Track
+This function will set the desired sector to be used for the next I/O 
+operation on the specified Disk Unit (C).  The returned Status (A) is a 
+standard HBIOS result code.
 
-|       if LBA:
-|           DE:HL: Block Address
+An actual seek operation is generally not performed on the disk hardware
+by this function.  The function typically just records the sector 
+address for subsequent I/O function calls.
 
-| _Exit Results_
-|       A: Status (0=OK, else error)
+The double-word Sector Address (DEHL) can represent either a Logical 
+Block Address (LBA) or a Cylinder/Head/Sector (CHS).  If the high bit of
+register D is set, then an LBA value is specified.  Otherwise, the 
+value is CHS.
 
-Update target CHS or LBA for next I/O request on designated unit. Physical
-seek is typically deferred until subsequent I/O operation.
+For LBA mode operation, the high bit is cleared and the entire 
+double-word is then treated as the logical sector address.
 
-Bit 7 of D indicates whether the disk seek address is specified as
-cylinder/head/sector (CHS) or Logical Block Address (LBA). If D:7=1, then
-the remaining bits of of the 32 bit register set DE:HL specify a linear,
-zero offset, block number. If D:7=0, then the remaining bits of D specify
-the head, E specifies sector, and HL specifies track.
+For CHS mode operation, the Sector Address (DEHL) registers are 
+interpreted as: D=Head, E=Sector, and HL=Track.  All values (including 
+sector) are 0 relative.
 
-Note that not all devices will accept both types of addresses.
-Specifically, floppy disk devices must have CHS addresses. All other
-devices will accept either CHS or LBA. The DIOGEOM function can be used to
-determine if the device supports LBA addressing.
+Prior versions of the floppy driver did not accept LBA mode addresses.
+However, this restriction has been removed as of HBIOS v3.1.  At this
+point, all disk drivers support both LBA and CHS addressing.
 
 ### Function 0x13 -- Disk Read (DIOREAD)
 
-| _Entry Parameters_
-|       B: 0x13
-|       C: Disk Device Unit ID
-|	D: Bank ID
-|       E: Block Count
-|       HL: Buffer Address
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x13                                | A: Status                              |
+| C: Disk Unit                           | E: Sectors Read                        |
+| D: Buffer Bank ID                      |                                        |
+| E: Sector Count                        |                                        |
+| HL: Buffer Address                     |                                        |
 
-| _Exit Results_
-|       A: Status (0=OK, else error)
-|       E: Blocks Read
+Read Sector Count (E) sectors into the buffer located in Buffer Bank ID (D) 
+at Buffer Address (HL) starting at the Current Sector.  The returned 
+Status (A) is a standard HBIOS result code.
 
-Read Block Count sectors to buffer address starting at current target
-sector. Current sector must be established by prior seek function; however,
-multiple read/write/verify function calls can be made after a seek
-function. Current sector is incremented after each sector successfully
-read. On error, current sector is sector where error occurred.
-Blocks read indicates number of sectors successfully read.
+The Current Sector is established by a prior DIOSEEK function call;
+however, multiple read/write/verify function calls can be made after a 
+seek function. The Current Sector is incremented after each sector 
+successfully read. On error, the Current Sector will be the sector where 
+the error occurred. Sectors Read (E) indicates the number of sectors 
+successfully read.
 
-Caller must ensure: 1) buffer address is large enough to contain data for
-all sectors requested, and 2) does not cross a 32k memory bank boundary.
+The caller must ensure that the Buffer Address is large enough to
+contain all sectors requested.  Disk data transfers will be faster if
+the buffer resides in the top 32K of memory because it avoids a
+double buffer copy.
 
 ### Function 0x14 -- Disk Write (DIOWRITE)
 
-| _Entry Parameters_
-|       B: 0x14
-|       C: Disk Device Unit ID
-|	D: Bank ID
-|       E: Block Count
-|       HL: Buffer Address
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x14                                | A: Status                              |
+| C: Disk Unit                           | E: Sectors Written                     |
+| D: Buffer Bank ID                      |                                        |
+| E: Sector Count                        |                                        |
+| HL: Buffer Address                     |                                        |
 
-| _Exit Results_
-|       A: Status (0=OK, else error)
-|       E: Blocks Written
+Write Sector Count (E) sectors from the buffer located in Buffer Bank ID (D)
+at Buffer Address (HL) starting at the Current Sector.  The returned 
+Status (A) is a standard HBIOS result code.
 
-Write Block Count sectors to buffer address starting at current target
-sector. Current sector must be established by prior seek function; however,
-multiple read/write/verify function calls can be made after a seek
-function. Current sector is incremented after each sector successfully
-written. On error, current sector is sector where error occurred.
-Blocks written indicates number of sectors successfully written.
+The Current Sector is established by a prior DIOSEEK function call; 
+however, multiple read/write/verify function calls can be made after a 
+seek function. The Current Sector is incremented after each sector 
+successfully written. On error, the Current Sector will be the sector 
+where the error occurred. Sectors Written (E) indicates the number of 
+sectors successfully written.
 
-Caller must ensure the source buffer does not cross a 32k memory bank boundary.
+Disk data transfers will be faster if the buffer resides in the top 32K 
+of memory because it avoids a double copy.
 
 ### Function 0x15 -- Disk Verify (DIOVERIFY)
 
-| _Entry Parameters_
-|       B: 0x15
-|       C: Disk Device Unit ID
-|       HL: Buffer Address
-|       E: Block Count
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x15                                | A: Status                              |
+| C: Disk Unit                           | E: Sectors Verified                    |
+| E: Sector Count                        |                                        |
 
-| _Exit Results_
-|       A: Status (0=OK, else error)
-|       E: Blocks Verified
-
-\*\*\*Not Implemented\*\*\*
+**\*\*\* Function Not Implemented \*\*\***
 
 ### Function 0x16 -- Disk Format (DIOFORMAT)
 
-| _Entry Parameters_
-|       B: 0x16
-|       C: Disk Device Unit ID
-|       D: Head
-|       E: Fill Byte
-|       HL: Cylinder
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x16                                | A: Status                              |
+| C: Disk Unit                           |                                        |
+| D: Head                                |                                        |
+| E: Fill Byte                           |                                        |
+| HL: Cylinder                           |                                        |
 
-| _Exit Results_
-|       A: Status (0=OK, else error)
+**\*\*\* Function Not Implemented \*\*\***
 
-\*\*\*Not Implemented\*\*\*
+### Function 0x17 -- Disk Device (DIODEVICE)
 
-### Function 0x17 -- Disk DEVICE (DIODEVICE)
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x17                                | A: Status                              |
+| C: Disk Unit                           | C: Device Attributes                   |
+|                                        | D: Device Type                         |
+|                                        | E: Device Number                       |
+|                                        | H: Device Unit Mode                    |
+|                                        | L: Device I/O Base Address             |
 
-| _Entry Parameters_
-|       B: 0x17
-|       C: Disk Device Unit ID
+Reports device information about the specified Disk Unit (C).  The 
+Status (A) is a standard HBIOS result code.
 
-| _Exit Results_
-|       A: Status (0=OK, else error)
-|       C: Attributes
-|       D: Device Type
-|       E: Device Number
-|       H: Disk Device Unit Mode
-|       L: Disk Device Unit I/O Base Address
+Bit 7 of the Device Attribute (C) value returned indicates whether the 
+device is a floppy disk.  If it is a floppy disk, the Device Attribute 
+(C) value is encoded as follows:
 
-Reports information about the character device unit specified. Register D
-indicates the device type (driver) and register E indicates the physical
-device number assigned by the driver.
+| **Bits** | **Definition**                                   |
+|---------:|--------------------------------------------------|
+| 7        | = 1 (Floppy Disk)                                |
+| 6-5      | Form Factor: 0=8", 1=5.25", 2=3.5", 3=Other      |
+| 4        | Sides: 0=SS, 1=DS                                |
+| 3-2      | Density: 0=SD, 1=DD, 2=HD, 3=ED                  |
+| 1-0      | Reserved                                         |
 
-Register C reports the following device attributes:
+If the Disk Unit (C) specified is a not floppy disk, then the Device 
+Attribute (C) encoding is as follows:
 
-Bit 7: 1=Floppy, 0=Hard Disk (or similar, e.g. CF, SD, RAM)
+| **Bits** | **Definition**                                   |
+|---------:|--------------------------------------------------|
+| 7        | = 0 (not Floppy Disk)                            |
+| 6        | Removable                                        |
+| 5-3      | Type: 0=Hard, 1=CF, 2=SD, 3=USB,                 |
+|          | 4=ROM, 5=RAM, 6=RAMF, 7=FLASH                    |
+| 2-0      | Reserved                                         |
 
-| If Floppy:
-|     Bits 6-5: Form Factor (0=8", 1=5.25", 2=3.5", 3=Other)
-|     Bit 4: Sides (0=SS, 1=DS)
-|     Bits 3-2: Density (0=SD, 1=DD, 2=HD, 3=ED)
-|     Bits 1-0: Reserved
+Device Type (D) indicates the specific hardware driver that handles the 
+specified Disk Unit (C).  Values are listed at the start of this 
+section. Device Number (E) indicates the physical device number assigned
+per driver.  For example, a Device Type of 0x30 with a Device Number 
+of 1 refers to the second disk being handled by the IDE driver.
 
-| If Hard Disk:
-|     Bit 6: Removable
-|     Bits: 5-3: Type (0=Hard, 1=CF, 2=SD, 3=USB,
-|                      4=ROM, 5=RAM, 6=RAMF, 7=FLASH)
-|     Bits 2-0: Reserved
-
-Each disk device is handled by an appropriate driver (IDE, SD,
-etc.) which is identified by a device type id from the table below.
-
-**Type ID** | **Disk Device Type**
------------ | --------------------
-0x00        | Memory Disk
-0x10        | Floppy Disk
-0x20        | RAM Floppy
-0x30        | IDE Disk
-0x40        | ATAPI Disk (not implemented)
-0x50        | PPIDE Disk
-0x60        | SD Card
-0x70        | PropIO SD Card
-0x80        | ParPortProp SD Card
-0x90        | SIMH HDSK Disk
+Device Mode (H) is used to indicate the variant of the chip or circuit 
+that is used by the specified unit.  For example, for an IDE unit, the 
+value indicates the IDE circuit variant.  The Device I/O Base Address 
+(L) indicates the starting port address of the hardware interface that 
+is servicing the specified unit.  Both of these values are considered 
+driver specific.  Refer to the associated hardware driver for the values
+used.
 
 ### Function 0x18 -- Disk Media (DIOMEDIA)
 
-| _Entry Parameters_
-|       B: 0x18
-|       C: Disk Device Unit ID
-|       E0: Enable Media Discovery
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x18                                | A: Status                              |
+| C: Disk Unit                           | E: Media ID                            |
+| E: Flags                               |                                        |
 
-| _Exit Results_
-|       A: Status (0=OK, else error)
-|       E: Media ID
-
-Report the media definition for media in specified unit. If bit 0 of E is
-set, then perform media discovery or verification. If no media in device,
-function will return an error status.
+Report the Media ID (E) for the for media in the specified Disk Unit 
+(C). If bit 0 of Flags (E) is set, then media discovery or verification 
+will be performed.  The Status (A) is a standard HBIOS result code. If 
+there is no media in device, function will return an error status.
 
 ### Function 0x19 -- Disk Define Media (DIODEFMED)
 
-| _Entry Parameters_
-|       B: 0x19
-|       C: Disk Device Unit ID
-|       E: Media ID
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x19                                | A: Status                              |
+| C: Disk Unit                           |                                        |
+| E: Media ID                            |                                        |
 
-| _Exit Results_
-|       A: Status (0=OK, else error)
-
-\*\*\* Not implemented \*\*\*
+**\*\*\* Function Not Implemented \*\*\***
 
 ### Function 0x1A -- Disk Capacity (DIOCAPACITY)
 
-| _Entry Parameters_
-|       B: 0x1A
-|       C: Disk Device Unit ID
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x1A                                | A: Status                              |
+| C: Disk Unit                           | DEHL: Sector Count                     |
+|                                        | BC: Block Size                         |
 
-| _Exit Results_
-|       A: Status (0=OK, else error)
-|       DE:HL: Blocks on Device
-|       BC: Block Size
+Report the current media capacity information for the specified Disk Unit (C). 
+The Sector Count (DEHL) is a double-word number representing the 
+total number of blocks on the device. Block Size (BC) contains the block
+size in bytes. The Status (A) is a standard HBIOS result code. If the 
+media is unknown, an error will be returned.
 
-Report current media capacity information. DE:HL is a 32 bit number
-representing the total number of blocks on the device. BC contains the
-block size. If media is unknown, an error will be returned.
+This function will not attempt to discover or verify the media loaded in
+the unit specified.  You can use precede this function with the 
+DIOMEDIA function to force this if desired.
 
 ### Function 0x1B -- Disk Geometry (DIOGEOMETRY)
 
-| _Entry Parameters_
-|       B: 0x1B
-|       C: Disk Device Unit ID
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x1B                                | A: Status                              |
+| C: Disk Unit                           | D: Heads                               |
+|                                        | E: Sectors                             |
+|                                        | HL: Cylinder Count                     |
+|                                        | BC: Block Size                         |
 
-| _Exit Results_
-|       A: Status (0=OK, else error)
-|       HL: Cylinders
-|       D7: LBA Capability
-|       BC: Block Size
+Report the geometry for the media in the specified Disk Unit (C). If a 
+device uses LBA mode addressing natively, then the drivers simulated 
+geometry will be returned. The Status (A) is a standard HBIOS result 
+code.  If the media is unknown, an error will be returned.
 
-Report current media geometry information. If media is unknown, return
-error (no media).
+Heads (D) refers to the number of heads per cylinder.  Sectors (E)
+refers to the number of sectors per track.  Cylinder Count (HL) is the
+total number of cylinders addressable for the media.  Block Size (BC)
+is the number of bytes in one sector.
 
 `\clearpage`{=latex}
 
@@ -805,139 +873,142 @@ Real Time Clock (RTC)
 The Real Time Clock functions provide read/write access to the clock and
 related Non-Volatile RAM.
 
-The time functions (RTCGTM and RTCSTM) require a 6 byte date/time buffer
-of the following format. Each byte is BCD encoded.
+HBIOS only supports a single RTC device since there is no reason to have
+more than one at a time.  The RTC unit is assigned a Device Type ID 
+which indicates the specific hardware device driver that handles the 
+unit.  The table below enumerates these values.
 
-**Offset** | **Contents**
----------- | ------------
-0          | Year (00-99)
-1          | Month (01-12)
-2          | Date (01-31)
-3          | Hours (00-24)
-4          | Minutes (00-59)
-5          | Seconds (00-59)
+| **Device Type** | **ID** | **Description**                          | **Driver** |
+|-----------------|-------:|------------------------------------------|------------|
+| RTCDEV_DS       | 0x00   | Maxim DS1302 Real-Time Clock w/ NVRAM    | dsrtc.asm  |
+| RTCDEV_BQ       | 0x10   | BQ4845P Real Time Clock                  | bqrtc.asm  |
+| RTCDEV_SIMH     | 0x20   | SIMH Simulator Real-Time Clock           | simrtc.asm |
+| RTCDEV_INT      | 0x30   | Interrupt-based Real Time Clock          | intrtc.asm |
+| RTCDEV_DS7      | 0x40   | Maxim DS1307 PCF I2C RTC w/ NVRAM        | ds7rtc.asm |
+| RTCDEV_RP5      | 0x50   | Ricoh RPC01A Real-Time Clock w/ NVRAM    | rp5rtc.asm |
+
+The time functions to get and set the time (RTCGTM and RTCSTM) require a
+6 byte date/time buffer in the following format. Each byte is BCD 
+encoded.
+
+| **Offset** | **Contents**                            |
+|-----------:| ----------------------------------------|
+| 0          | Year (00-99)                            |
+| 1          | Month (01-12)                           |
+| 2          | Date (01-31)                            |
+| 3          | Hours (00-24)                           |
+| 4          | Minutes (00-59)                         |
+| 5          | Seconds (00-59)                         |
 
 ### Function 0x20 -- RTC Get Time (RTCGETTIM)
 
-| _Entry Parameters_
-|       B: 0x20
-|       HL: Time Buffer Address
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x20                                | A: Status                              |
+| HL: Date/Time Buffer Address           |                                        |
 
-| _Exit Results_
-|       A: Status (0=OK, else error)
-
-Read the current value of the clock and store the date/time in the
-buffer pointed to by HL.
+Read the current value of the real-time clock and store the date/time in
+the Date/Time Buffer pointed to by HL.  The Status (A) is a standard 
+HBIOS result code.
 
 ### Function 0x21 -- RTC Set Time (RTCSETTIM)
 
-| _Entry Parameters_
-|       B: 0x21
-|       HL: Time Buffer Address
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x21                                | A: Status                              |
+| HL: Date/Time Buffer Address           |                                        |
 
-| _Exit Results_
-|       A: Status (0=OK, else error)
-
-Set the current value of the clock based on the date/time in the buffer
-pointed to by HL.
+Set the current value of the real-time clock based on the Date/Time 
+Buffer pointed to by HL.  The Status (A) is a standard HBIOS result 
+code.
 
 ### Function 0x22 -- RTC Get NVRAM Byte (RTCGETBYT)
 
-| _Entry Parameters_
-|       B: 0x22
-|       C: Index
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x22                                | A: Status                              |
+| C: Index                               | E: Value                               |
 
-| _Exit Results_
-|       A: Status (0=OK, else error)
-|       E: Value
-
-Read a single byte value from the Non-Volatile RAM at the index specified
-by C. The value is returned in register E.
+Read a single byte Value (E) from the Non-Volatile RAM of the RTC at the
+byte offset Index (C).  The Status (A) is a standard HBIOS result code.
 
 ### Function 0x23 -- RTC Set NVRAM Byte (RTCSETBYT)
 
-| _Entry Parameters_
-|       B: 0x23
-|       C: Index
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x23                                | A: Status                              |
+| C: Index                               |                                        |
+| E: Value                               |                                        |
 
-| _Exit Results_
-|       A: Status (0=OK, else error)
-|       E: Value
-
-Write a single byte value into the Non-Volatile RAM at the index specified
-by C. The value to be written is specified in E.
+Set a single byte Value (E) of the Non-Volatile RAM of the RTC at the 
+byte offset Index (C).  The Status (A) is a standard HBIOS result code.
 
 ### Function 0x24 -- RTC Get NVRAM Block (RTCGETBLK)
 
-| _Entry Parameters_
-|       B: 0x24
-|       HL: Buffer
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x24                                | A: Status                              |
+| HL: Buffer Address                     |                                        |
 
-| _Exit Results_
-|       A: Status (0=OK, else error)
-
-Read the entire contents of the Non-Volatile RAM into the buffer pointed
-to by HL. HL must point to a location in the top 32K of CPU address space.
+Read the entire contents of the Non-Volatile RAM into to a buffer 
+pointed to by Buffer Address (HL).  The Status (A) is a standard HBIOS
+result code.
 
 ### Function 0x25 -- RTC Set NVRAM Block (RTCSETBLK)
 
-| _Entry Parameters_
-|       B: 0x25
-|       HL: Buffer
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x25                                | A: Status                              |
+| HL: Buffer Address                     |                                        |
 
-| _Exit Results_
-|       A: Status (0=OK, else error)
-
-Write the entire contents of the Non-Volatile RAM from the buffer pointed
-to by HL. HL must point to a location in the top 32K of CPU address space.
+Write the entire contents of the Non-Volatile RAM from the buffer 
+pointed to by Buffer Address (HL).  The Status (A) is a standard HBIOS 
+result code.
 
 ### Function 0x26 -- RTC Get Alarm (RTCGETALM)
 
-| _Entry Parameters_
-|       B: 0x26
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x26                                | A: Status                              |
+| HL: Date/Time Buffer Address           |                                        |
 
-| _Exit Results_
-|       A: Status (0=OK, else error)
-
-Documentation required...
+Work in progress, documentation required...
 
 ### Function 0x27 -- RTC Set Alarm (RTCSETALM)
 
-| _Entry Parameters_
-|       B: 0x27
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x27                                | A: Status                              |
+| HL: Date/Time Buffer Address           |                                        |
 
-| _Exit Results_
-|       A: Status (0=OK, else error)
-
-Documentation required...
+Work in progress, documentation required...
 
 ### Function 0x28 -- RTC DEVICE (RTCDEVICE)
 
-| _Entry Parameters_
-|       B: 0x28
-|       C: RTC Device Unit ID
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x28                                | A: Status                              |
+|                                        | C: Device Attributes                   |
+|                                        | D: Device Type                         |
+|                                        | E: Device Number                       |
+|                                        | H: Device Unit Mode                    |
+|                                        | L: Device I/O Base Address             |
 
-| _Exit Results_
-|       A: Status (0=OK, else error)
-|       D: Device Type
-|       E: Device Number
-|       H: RTC Device Unit Mode
-|       L: RTC Device Unit I/O Base Address
+Returns device information for the RTC unit.  The Status (A) is a 
+standard HBIOS result code.
 
-Reports information about the RTC device unit specified. Register D
-indicates the device type (driver) and register E indicates the physical
-device number assigned by the driver.
+Device Attribute (C) values are not yet defined.  Device Type (D) 
+indicates the specific hardware driver that handles the specified 
+character unit.  Values are listed at the start of this section. Device 
+Number (E) indicates the physical device number assigned per driver 
+which is always 0 for RTC.
 
-Each RTC device is handled by an appropriate driver (DSRTC, BQRTC,
-etc.) which is identified by a device type id from the table below.
-
-**Type ID** | **RTC Device Type**
------------ | --------------------
-0x00        | DS1302
-0x10        | BQ4845P
-0x20        | SIMH
-0x30        | System Periodic Timer
-0x40        | DS1307 (I2C)
+Device Mode (H) is used to indicate the variant of the chip or circuit 
+that is used by the specified unit.  The Device I/O Base Address (L) 
+indicates the starting port address of the hardware interface that is 
+servicing the specified unit.  Both of these values are considered 
+driver specific.  Refer to the associated hardware driver for the values
+used.
 
 `\clearpage`{=latex}
 
@@ -947,6 +1018,18 @@ Video Display Adapter (VDA)
 The VDA functions are provided as a common interface to Video Display
 Adapters. Not all VDAs will include keyboard hardware. In this case, the
 keyboard functions should return a failure status.
+
+All video units are assigned a Device Type ID which indicates
+the specific hardware device driver that handles the unit.  The table
+below enumerates there values.
+
+| **Device Type** | **ID** | **Description**                          | **Driver** |
+|-----------------|-------:|------------------------------------------|------------|
+| VDADEV_VDU      | 0x00   | MC6845 Family Video Display Controller   | vdu.asm    |
+| VDADEV_CVDU     | 0x10   | MC8563-based Video Display Controller    | cvdu.asm   |
+| VDADEV_GDC      | 0x20   | uPD7220 Video Display Controller         | gdc.asm    |
+| VDADEV_TMS      | 0x30   | TMS9918/38/58 Video Display Controller   | tms.asm    |
+| VDADEV_VGA      | 0x40   | HD6445CP4-based Video Display Controller | vga.asm    |
 
 Depending on the capabilities of the hardware, the use of colors and
 attributes may or may not be supported. If the hardware does not support
@@ -958,351 +1041,355 @@ the background color and the low four bits determine the foreground color.
 This results in 16 unique color values for both foreground and background.
 The following table illustrates the color byte value construction:
 
-&nbsp;     | **Bit** | **Color**
----------- | ------- | ---------
-Background | 7       | Intensity
-&nbsp;     | 6       | Blue
-&nbsp;     | 5       | Green
-&nbsp;     | 4       | Red
-Foreground | 3       | Intensity
-&nbsp;     | 2       | Blue
-&nbsp;     | 1       | Green
-&nbsp;     | 0       | Red
+| &nbsp;     | **Bit** | **Color** |
+|------------|--------:|-----------|
+| Background | 7       | Intensity |
+| &nbsp;     | 6       | Blue      |
+| &nbsp;     | 5       | Green     |
+| &nbsp;     | 4       | Red       |
+| Foreground | 3       | Intensity |
+| &nbsp;     | 2       | Blue      |
+| &nbsp;     | 1       | Green     |
+| &nbsp;     | 0       | Red       |
 
 The following table illustrates the resultant color for each of the
 possible 16 values for foreground or background:
 
-**Foreground**     | **Background**     | **Color**
------------------- | ------------------ | ----------------
-n0   nnnn0000      | 0n   0000nnnn      | Black
-n1   nnnn0001      | 1n   0001nnnn      | Red
-n2   nnnn0010      | 2n   0010nnnn      | Green
-n3   nnnn0011      | 3n   0011nnnn      | Brown
-n4   nnnn0100      | 4n   0100nnnn      | Blue
-n5   nnnn0101      | 5n   0101nnnn      | Magenta
-n6   nnnn0110      | 6n   0110nnnn      | Cyan
-n7   nnnn0111      | 7n   0111nnnn      | White
-n8   nnnn1000      | 8n   1000nnnn      | Gray
-n9   nnnn1001      | 9n   1001nnnn      | Light Red
-nA   nnnn1010      | An   1010nnnn      | Light Green
-nB   nnnn1011      | Bn   1011nnnn      | Yellow
-nC   nnnn1100      | Cn   1100nnnn      | Light Blue
-nD   nnnn1101      | Dn   1101nnnn      | Light Magenta
-nE   nnnn1110      | En   1110nnnn      | Light Cyan
-nF   nnnn1111      | Fn   1111nnnn      | Bright White
+| **Foreground**     | **Background**     | **Color**       |
+|--------------------|--------------------| ----------------|
+| n0   nnnn0000      | 0n   0000nnnn      | Black           |
+| n1   nnnn0001      | 1n   0001nnnn      | Red             |
+| n2   nnnn0010      | 2n   0010nnnn      | Green           |
+| n3   nnnn0011      | 3n   0011nnnn      | Brown           |
+| n4   nnnn0100      | 4n   0100nnnn      | Blue            |
+| n5   nnnn0101      | 5n   0101nnnn      | Magenta         |
+| n6   nnnn0110      | 6n   0110nnnn      | Cyan            |
+| n7   nnnn0111      | 7n   0111nnnn      | White           |
+| n8   nnnn1000      | 8n   1000nnnn      | Gray            |
+| n9   nnnn1001      | 9n   1001nnnn      | Light Red       |
+| nA   nnnn1010      | An   1010nnnn      | Light Green     |
+| nB   nnnn1011      | Bn   1011nnnn      | Yellow          |
+| nC   nnnn1100      | Cn   1100nnnn      | Light Blue      |
+| nD   nnnn1101      | Dn   1101nnnn      | Light Magenta   |
+| nE   nnnn1110      | En   1110nnnn      | Light Cyan      |
+| nF   nnnn1111      | Fn   1111nnnn      | Bright White    |
 
 Attribute byte values are constructed using the following bit encoding:
 
-**Bit** | **Effect**
-------- | ----------
-7       | n/a (0)
-6       | n/a (0)
-5       | n/a (0)
-4       | n/a (0)
-3       | n/a (0)
-2       | Reverse
-1       | Underline
-0       | Blink
+| **Bit** | **Effect** |
+|--------:|------------|
+| 7       | n/a (0)    |
+| 6       | n/a (0)    |
+| 5       | n/a (0)    |
+| 4       | n/a (0)    |
+| 3       | n/a (0)    |
+| 2       | Reverse    |
+| 1       | Underline  |
+| 0       | Blink      |
 
 The following codes are returned by a keyboard read to signify non-ASCII
 keystrokes:
 
-**Value** | **Keystroke** | **Value** | **Keystroke**
---------- | ------------- | --------- | -------------
-0xE0      | F1            | 0xF0      | Insert
-0xE1      | F2            | 0xF1      | Delete
-0xE2      | F3            | 0xF2      | Home
-0xE3      | F4            | 0xF3      | End
-0xE4      | F5            | 0xF4      | PageUp
-0xE5      | F6            | 0xF5      | PadeDown
-0xE6      | F7            | 0xF6      | UpArrow
-0xE7      | F8            | 0xF7      | DownArrow
-0xE8      | F9            | 0xF8      | LeftArrow
-0xE9      | F10           | 0xF9      | RightArrow
-0xEA      | F11           | 0xFA      | Power
-0xEB      | F12           | 0xFB      | Sleep
-0xEC      | SysReq        | 0xFC      | Wake
-0xED      | PrintScreen   | 0xFD      | Break
-0xEE      | Pause         | 0xFE      |
-0xEF      | App           | 0xFF      |
+| **Value** | **Keystroke** | **Value** | **Keystroke** |
+|----------:|---------------|----------:|---------------|
+| 0xE0      | F1            | 0xF0      | Insert        |
+| 0xE1      | F2            | 0xF1      | Delete        |
+| 0xE2      | F3            | 0xF2      | Home          |
+| 0xE3      | F4            | 0xF3      | End           |
+| 0xE4      | F5            | 0xF4      | PageUp        |
+| 0xE5      | F6            | 0xF5      | PadeDown      |
+| 0xE6      | F7            | 0xF6      | UpArrow       |
+| 0xE7      | F8            | 0xF7      | DownArrow     |
+| 0xE8      | F9            | 0xF8      | LeftArrow     |
+| 0xE9      | F10           | 0xF9      | RightArrow    |
+| 0xEA      | F11           | 0xFA      | Power         |
+| 0xEB      | F12           | 0xFB      | Sleep         |
+| 0xEC      | SysReq        | 0xFC      | Wake          |
+| 0xED      | PrintScreen   | 0xFD      | Break         |
+| 0xEE      | Pause         | 0xFE      |               |
+| 0xEF      | App           | 0xFF      |               |
 
 ### Function 0x40 -- Video Initialize (VDAINI)
 
-| _Entry Parameters_
-|       B: 0x40
-|       C: Video Device Unit ID
-|       E: Video Mode (device specific)
-|       HL: Font Bitmap Buffer Address (optional)
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x40                                | A: Status                              |
+| C: Video Unit                          |                                        |
+| E: Video Mode                          |                                        |
+| HL: Font Bitmap                        |                                        |
 
-| _Exit Results_
-|       A: Status (0=OK, else error)
+Performs a full (re)initialization of the specified Video Unit (C). The 
+screen is cleared and the keyboard buffer is flushed. If the specified 
+Video Unit (C) supports multiple video modes, a Video Mode (E) can be 
+specified (set to 0 for default/not specified). Video Mode (E) values 
+are specific to each VDA.  The returned Status (A) is a standard HBIOS 
+result code.
 
-Performs a full (re)initialization of the specified video device. The
-screen is cleared and the keyboard buffer is flushed. If the specified
-VDA supports multiple video modes, the requested mode can be specified
-in E (set to 0 for default/not specified). Mode values are specific to
-each VDA.
-
-HL may point to a location in memory with the character bitmap to be
-loaded into the VDA video processor. The location MUST be in the top 32K
-of the CPU memory space. HL must be set to zero if no character bitmap
-is specified (the VDA video processor will utilize a default character
+If the hardware and driver support it, you can specify a Font Bitmap 
+(HL) buffer address containing the character bitmap data to be loaded 
+into the video processor.  The buffer **must** be located entirely in the 
+top 32K of the CPU memory space. HL must be set to zero if no character 
+bitmap is specified (the driver will utilize a default character 
 bitmap).
 
 ### Function 0x41 -- Video Query (VDAQRY)
 
-| _Entry Parameters_
-|       B: 0x41
-|       C: Video Device Unit ID
-|       HL: Font Bitmap Buffer Address (optional)
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x41                                | A: Status                              |
+| C: Video Unit                          | C: Video Mode                          |
+| HL: Font Bitmap                        | D: Rows                                |
+|                                        | E: Columns                             |
+|                                        | HL: Font Bitmap                        |
 
-| _Exit Results_
-|       A: Status (0=OK, else error)
-|       C: Video Mode
-|       D: Row Count
-|       E: Column Count
-|       HL: Font Bitmap Buffer Address (0 if N/A)
+Return information about the specified Video Unit (C). Video Mode (C) 
+will be set to the current video mode. Rows (D) and Columns (E) will 
+return the dimensions of the video display as measured in rows and 
+columns. Note that this is the **count** of rows and columns, not the 
+**last** row/column number.  The returned Status (A) is a standard HBIOS
+result code.
 
-Return information about the specified video device. C will be set to
-the current video mode. DE will return the dimensions of the video
-display as measured in rows and columns. Note that this is the **count**
-of rows and columns, not the **last** row/column number.
+If the hardware and driver support it, you can specify a Font Bitmap (HL)
+buffer address that will be filled with the current
+character bitmap data.  The buffer **must** be located entirely in the 
+top 32K of the CPU memory space.  Font Bitmap (HL) **must** be set to
+zero if it does not point to a proper buffer area or memory corruption
+will result.
 
 If HL is not zero, it must point to a suitably sized memory buffer in
 the upper 32K of CPU address space that will be filled with the current
 character bitmap data. It is critical that HL be set to zero if it does
-not point to a proper buffer area or memory corruption will result. The
-video device driver may not have the ability to provide character bitmap
-data. In this case, on return, HL will be set to zero.
+not point to a proper buffer area or memory corruption will result. If
+the video device driver does not have the ability to provide character bitmap
+data, then Font Bitmap (HL) will be set to zero on return.
 
 ### Function 0x42 -- Video Reset (VDARES)
 
-| _Entry Parameters_
-|       B: 0x42
-|       C: Video Device Unit ID
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x42                                | A: Status                              |
+| C: Video Unit                          |                                        |
 
-| _Exit Results_
-|       A: Status (0=OK, else error)
-
-Performs a soft reset of the Video Display Adapter. Should clear the
-screen, home the cursor, restore active attribute and color to defaults.
-Keyboard should be flushed.
+Performs a soft reset of the specified Video Unit (C). Will clear the 
+screen, home the cursor, and restore active attribute/color to defaults.
+Keyboard will be flushed.  The current video mode will not be changed. 
+The returned Status (A) is a standard HBIOS result code.
 
 ### Function 0x43 -- Video Device (VDADEV)
 
-| _Entry Parameters_
-|       B: 0x43
-|       C: Video Device Unit ID
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x43                                | A: Status                              |
+| C: Video Unit                          | C: Device Attributes                   |
+|                                        | D: Device Type                         |
+|                                        | E: Device Number                       |
+|                                        | H: Device Unit Mode                    |
+|                                        | L: Device I/O Base Address             |
 
-| _Exit Results_
-|       A: Status (0=OK, else error)
-|       D: Device Type
-|       E: Device Number
-|       H: VDA Device Unit Mode
-|       L: VDA Device Unit I/O Base Address
+Reports device information about the specified Video Unit (C).  The 
+Status (A) is a standard HBIOS result code.
 
-Reports information about the video device unit specified.
+Device Attribute (C) values are not yet defined.  
 
-Register D reports the video device type (see below).
+Device Type (D) indicates the specific hardware driver that handles the 
+specified Video Unit (C).  Values are listed at the start of this 
+section. Device Number (E) indicates the physical device number assigned
+per driver.
 
-Register E reports the driver relative physical device number.
-
-The currently defined video device types are:
-
-VDA ID     | Value | Device
----------- | ----- | ------
-VDA_NONE   | 0x00  | No VDA
-VDA_VDU    | 0x10  | ECB VDU board
-VDA_CVDU   | 0x20  | ECB Color VDU board
-VDA_7220   | 0x30  | ECB uPD7220 video display board
-VDA_N8     | 0x40  | TMS9918 video display built-in to N8
-VDA_VGA    | 0x50  | ECB VGA board
+Device Mode (H) is used to indicate the variant of the chip or circuit 
+that is used by the specified unit.  For example, for an TMS video unit, the 
+value indicates the TMS circuit variant.  The Device I/O Base Address 
+(L) indicates the starting port address of the hardware interface that 
+is servicing the specified unit.  Both of these values are considered 
+driver specific.  Refer to the associated hardware driver for the values
+used.
 
 ### Function 0x44 -- Video Set Cursor Style (VDASCS)
 
-| _Entry Parameters_
-|       B: 0x44
-|       C: Video Device Unit ID
-|       D: Start/End Pixel Row
-|       E: Style
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x44                                | A: Status                              |
+| C: Video Unit                          |                                        |
+| D: Start/End                           |                                        |
+| E: Style                               |                                        |
 
-| _Exit Results_
-|       A: Status (0=OK, else error)
+If supported by the specified Video Unit (C), adjust the format of the 
+cursor such that the cursor starts at the pixel specified in the top 
+nibble of Start/End (D) and ends at the pixel specified in the bottom 
+nibble of Start/End (D). So, if D=0x08, a block cursor would be used 
+that starts at the top pixel of the character cell and ends at the ninth
+pixel of the character cell.  The Status (A) is a standard HBIOS result
+code.
 
-If supported by the video hardware, adjust the format of the cursor such
-that the cursor starts at the pixel specified in the top nibble of D and
-end at the pixel specified in the bottom nibble of D. So, if D=$08, a
-block cursor would be used that starts at the top pixel of the character
-cell and ends at the ninth pixel of the character cell.
-
-Register E is reserved to control the style of the cursor (blink,
+Style (E) is reserved to control the style of the cursor (blink, 
 visibility, etc.), but is not yet implemented.
 
 Adjustments to the cursor style may or may not be possible for any given
-video hardware.
+video hardware and may be dependent on the active video mode.
 
 ### Function 0x45 -- Video Set Cursor Position (VDASCP)
 
-| _Entry Parameters_
-|       B: 0x45
-|       C: Video Device Unit ID
-|       D: Row (0 indexed)
-|       E: Column (0 indexed)
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x45                                | A: Status                              |
+| C: Video Unit                          |                                        |
+| D: Row                                 |                                        |
+| E: Column                              |                                        |
 
-| _Exit Results_
-|       A: Status (0=OK, else error)
-
-Reposition the cursor to the specified row and column. Specifying a
-row/column that exceeds the boundaries of the display results in
-undefined behavior. Cursor coordinates are 0 based (0,0 is the upper
-left corner of the display).
+Reposition the cursor of the specified Video Unit (C) to the specified 
+Row (D) and Column (E). Specifying a row/column that exceeds the 
+boundaries of the display results in undefined behavior. Cursor 
+coordinates are 0 based (0,0 is the upper left corner of the display).
+The Status (A) is a standard HBIOS result code.
 
 ### Function 0x46 -- Video Set Character Attribute (VDASAT)
 
-| _Entry Parameters_
-|       B: 0x46
-|       C: Video Device Unit ID
-|       E: Character Attribute Code
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x46                                | A: Status                              |
+| C: Video Unit                          |                                        |
+| E: Attribute                           |                                        |
 
-| _Exit Results_
-|       A: Status (0=OK, else error)
-
-Assign the specified character attribute code to be used for all
-subsequent character writes/fills. This attribute is used to fill new
-lines generated by scroll operations. Refer to the character attribute
-for a list of the available attribute codes. Note that a given video
-display may or may not support any/all attributes.
+Assign the specified character Attribute (E) code to be used for all 
+subsequent character writes/fills on the specified Video Unit (C). This 
+attribute is used to fill new lines generated by scroll operations. The 
+character attributes values are listed abovev. Note that a given video 
+display may or may not support any/all attributes.  The Status (A) is a 
+standard HBIOS result code.
 
 ### Function 0x47 -- Video Set Character Color (VDASCO)
 
-| _Entry Parameters_
-|       B: 0x47
-|       C: Video Device Unit ID
-|       E: Character Color Code
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x47                                | A: Status                              |
+| C: Video Unit                          |                                        |
+| E: Color                               |                                        |
 
-| _Exit Results_
-|       A: Status (0=OK, else error)
+Assign the specified Color (E) code to be used for all subsequent 
+character writes/fills. This color is also used to fill new lines 
+generated by scroll operations. Refer to the color code table above for 
+a list of the available color codes. Note that a given video display may
+or may not support any/all colors.  The Status (A) is a standard HBIOS 
+result code.
 
-Assign the specified color code to be used for all subsequent character
-writes/fills. This color is also used to fill new lines generated by
-scroll operations. Refer to color code table for a list of the available
-color codes. Note that a given video display may or may not support
-any/all colors.
+### Function 0x48 -- Video Write Character (VDAWRC)
 
-### Function 0x48 -- Video Set Write Character (VDAWRC)
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x48                                | A: Status                              |
+| C: Video Unit                          |                                        |
+| E: Character                           |                                        |
 
-| _Entry Parameters_
-|       B: 0x48
-|       C: Video Device Unit ID
-|       E: Character
-
-| _Exit Results_
-|       A: Status (0=OK, else error)
-
-Write the character specified in E. The character is written starting at
-the current cursor position and the cursor is advanced. If the end of
-the line is encountered, the cursor will be advanced to the start of the
-next line. The display will **not** scroll if the end of the screen is
-exceeded.
+Write the Character (E) value to the display of the specified Video Unit
+(C). The character is written starting at the current cursor position 
+and the cursor is advanced. If the end of the line is encountered, the 
+cursor will be advanced to the start of the next line. The display will 
+**not** scroll if the end of the screen is exceeded.  The Status (A) is 
+a standard HBIOS result code.
 
 ### Function 0x49 -- Video Fill (VDAFIL)
 
-| _Entry Parameters_
-|       B: 0x49
-|       C: Video Device Unit ID
-|       E: Character
-|       HL: Count
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x49                                | A: Status                              |
+| C: Video Unit                          |                                        |
+| E: Character                           |                                        |
+| HL: Count                              |                                        |
 
-| _Exit Results_
-|       A: Status (0=OK, else error)
-
-Write the character specified in E to the display the number of times
-specified in HL. Characters are written starting at the current cursor
-position and the cursor is advanced by the number of characters written.
-If the end of the line is encountered, the characters will continue to
-be written starting at the next line as needed. The display will **not**
-scroll if the end of the screen is exceeded.
+Write the Character (E) value to the Video Unit (C) display the number 
+of times specified by Count (HL). Characters are written starting at the
+current cursor position and the cursor is advanced by the number of 
+characters written. If the end of the line is encountered, the 
+characters will continue to be written starting at the next line as 
+needed. The display will **not** scroll if the end of the screen is 
+exceeded.  Writing characters beyond the end of the screen results in 
+undefined behavior.  The Status (A) is a standard HBIOS result code.
 
 ### Function 0x4A -- Video Copy (VDACPY)
 
-| _Entry Parameters_
-|       B: 0x4A
-|       C: Video Device Unit ID
-|       D: Source Row
-|       E: Source Column
-|       L: Count
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x4A                                | A: Status                              |
+| C: Video Unit                          |                                        |
+| D: Source Row                          |                                        |
+| E: Source Column                       |                                        |
+| L: Count                               |                                        |
 
-| _Exit Results_
-|       A: Status (0=OK, else error)
-
-Copy count (L) bytes from the source row/column (DE) to current cursor
-position. The cursor position is not updated. The maximum count is 255.
-Copying to/from overlapping areas is not supported and will have an
-undefined behavior. The display will **not** scroll if the end of the
-screen is exceeded. Copying beyond the active screen buffer area is not
-supported and results in undefined behavior.
+Copy Count (L) bytes from the specified Video Unit (C) display Source 
+Row (D) and Source Column (E) to the current cursor position. The cursor
+position is not updated. The maximum Count (L) value is 255. Copying 
+to/from overlapping areas is not supported and will have an undefined 
+behavior. The display will **not** scroll if the end of the screen is 
+exceeded. Copying beyond the active screen buffer area is not supported 
+and results in undefined behavior.  The Status (A) is a standard HBIOS 
+result code.
 
 ### Function 0x4B -- Video Scroll (VDASCR)
 
-| _Entry Parameters_
-|       B: 0x4B
-|       C: Video Device Unit ID
-|       E: Scroll Distance (Line Count)
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x4B                                | A: Status                              |
+| C: Video Unit                          |                                        |
+| E: Lines                               |                                        |
 
-| _Exit Results_
-|       A: Status (0=OK, else error)
-
-Scroll the video display by the number of lines specified in E. If E
-contains a negative number, then reverse scroll should be performed.
+Scroll the video display of the specified Video Unit (C) forward or 
+backwards by number of Lines (E) specified.  If Lines (E) is positive, 
+then a forward scroll is performed.  If Lines (E) contains a negative 
+number, then a reverse scroll will be performed.  This function will 
+scroll the entire screen contents.  New lines revealed during the scroll
+ operation will be filled with space characters (0x20) using the active 
+character attribute and color.  The cursor position will **not** be 
+updated.  The Status (A) is a standard HBIOS result code.
 
 ### Function 0x4C -- Video Keyboard Status (VDAKST)
 
-| _Entry Parameters_
-|       B: 0x4C
-|       C: Video Device Unit ID
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x4C                                | A: Status / Codes Pending              |
+| C: Video Unit                          |                                        |
 
-| _Exit Results_
-|       A:Count of Key Codes in Keyboard Buffer
+Return a count of the number of key Codes Pending (A) in the keyboard 
+buffer for the specified Video Unit (C). If it is not possible to 
+determine the actual number in the buffer, it is acceptable to return 1 
+to indicate there are key codes available to read and 0 if there are 
+none available.
 
-Return a count of the number of key codes in the keyboard buffer. If it
-is not possible to determine the actual number in the buffer, it is
-acceptable to return 1 to indicate there are key codes available to read
-and 0 if there are none available.
+The value returned in register A is used as both a Status (A) code and 
+the return value. Negative values (bit 7 set) indicate a standard HBIOS 
+result (error) code.  Otherwise, the return value represents the number 
+of key codes pending.
 
 ### Function 0x4D -- Video Keyboard Flush (VDAKFL)
 
-| _Entry Parameters_
-|       B: 0x4D
-|       C: Video Device Unit ID
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x4D                                | A: Status                              |
+| C: Video Unit                          |                                        |
 
-| _Exit Results_
-|       A: Status (0=OK, else error)
-
-If a keyboard buffer is in use, it should be purged and all contents
-discarded.
+If a keyboard buffer is in use on the Video Unit (C) specified, it 
+should be purged and all contents discarded.  The Status (A) is a 
+standard HBIOS result code.
 
 ### Function 0x4E -- Video Keyboard Read (VDAKRD)
 
-| _Entry Parameters_
-|       B: 0x4E
-|       C: Video Device Unit ID
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x4E                                | A: Status                              |
+| C: Video Unit                          | C: Scancode                            |
+|                                        | D: Keystate                            |
+|                                        | E: Keycode                             |
 
-| _Exit Results_
-|       A: Status (0=OK, else error)
-|       C: Scancode
-|       D: Keystate
-|       E: Keycode
+Read the next key data from keyboard of the specified Video Unit (C). If
+ a keyboard buffer is used, return the next key code in the buffer. If 
+no key data is available, this function will wait indefinitely for a 
+keypress.  The Status (A) is a standard HBIOS result code.
 
-Read next key code from keyboard. If a keyboard buffer is used, return
-the next key code in the buffer. If no key codes are available, wait for
-a keypress and return the keycode.
+The Scancode (C) value is the raw scancode from the keyboard for the 
+keypress. Scancodes are from the PS/2 scancode set 2 standard.
 
-The scancode value is the raw scancode from the keyboard for the
-keypress. Scancodes are from scancode set 2 standard.
-
-The keystate is a bitmap representing the value of all modifier keys and
-shift states as they existed at the time of the keystroke. The bitmap is
-defined as:
+The Keystate (D) is a bitmap representing the value of all modifier keys
+ and shift states as they existed at the time of the keystroke. The 
+bitmap is defined as:
 
 Bit | Keystate Indication
 --- | --------------------------------
@@ -1315,58 +1402,89 @@ Bit | Keystate Indication
 1   | Control key was held down
 0   | Shift key was held down
 
-Keycodes are generally returned as appropriate ASCII values, if
-possible. Special keys, like function keys, are returned as reserved
-codes as described at the start of this section.
+The Keycode (E) is generally returned as appropriate ASCII values, if 
+possible. Special keys, like function keys and arrows, are returned as 
+reserved codes as described at the start of this section.
 
 `\clearpage`{=latex}
 
 ### Function 0x4F -- Read a character at current video position (VDARDC)
 
-| _Entry Parameters_
-|       B: 0x4F
-|       C: Video Device Unit ID
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x4F                                | A: Status                              |
+| C: Video Unit                          | E: Character                           |
+|                                        | B: Color                               |
+|                                        | E: Attribute                           |
 
-| _Exit Results_
-|       A: Status (0=OK, else error)
-|       E: Character
-|       B: Character Color Code
-|       C: Character Attribute Code
-
-Read a character from the current cursor position including it's colour
-and attributes. If the display does not support colours or attributes
-then return colour white on black and no attributes. If the device does
-not support the ability to read a character, return error status
+This function will return the character data from the current cursor 
+position of the display of the specified Video Unit (C).  The data 
+returned includes the Character (E) value, the Color (B), and the 
+Attribute (E) corresponding to the current cursor position. If the 
+display does not support colors or attributes then this function will 
+return color white on black with no attributes.  The ability to perform 
+this function may not be available for all video devices. The Status (A)
+is a standard HBIOS result code.
 
 `\clearpage`{=latex}
 
 Sound (SND)
 ------------
 
+Sound functions require that a Sound Unit number be specified in 
+register C. This is the logical device unit number assigned during the 
+boot process that identifies all sound devices uniquely.
+
+All sound units are assigned a Device Type ID which indicates
+the specific hardware device driver that handles the unit.  The table
+below enumerates these values.
+
+| **Device Type** | **ID** | **Description**                              | **Driver**  |
+|-----------------|-------:|----------------------------------------------|-------------|
+| SNDDEV_SN76489  | $00    | SN76489 Programmable Sound Generator         | sn76489.asm |
+| SNDDEV_AY38910  | $10    | AY-3-8910/YM2149 Programmable Sound Generator| ay38910.asm |
+| SNDDEV_BITMODE  | $20    | Bit-bang Speaker                             | spk.asm     |
+| SNDDEV_YM2612   | $30    | YM2612 Programmable Sound Generator          | ym2612.asm  |
+
+The Sound functions defer the actual programming of the sound chip
+until the SNDPLAY function is called.  You will call the volume
+and period/note functions to preset the desired sound output, then
+call SNDPLAY when you want the sound to change.
+
+The Sound functions do not manage the duration of the sound
+played.  A sound will play
+indefinitely -- the caller must implement an appropriate timing
+mechanism to manage the playing of a series of sounds.
+
+```
+HBIOS B=51 C=00 L=80      ; Set volume to half level
+HBIOS B=53 C=00 HL=152    ; Select Middle C (C4)
+HBIOS B=54 C=00 D=01      ; Play note on Channel 1
+```
+
 ### Function 0x50 -- Sound Reset (SNDRESET)
 
-| _Entry Parameters_
-|       B: 0x50
-|       C: Audio Device Unit ID
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x50                                | A: Status                              |
+| C: Sound Unit                          |                                        |
 
-| _Exit Results_
-|       A: Status (0=OK, else error)
-
-Reset the sound chip.  Turn off all sounds and set volume on all
-channels to silence.
+Reset the sound chip of specified Sound Unit (C).  Turn off all sounds 
+and set volume on all channels to silence.  The returned Status (A) is a
+standard HBIOS result code.
 
 ### Function 0x51 -- Sound Volume (SNDVOL)
 
-| _Entry Parameters_
-|       B: 0x51
-|       C: Audio Device Unit ID
-|       L: Volume (00=Silence, FF=Maximum)
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x51                                | A: Status                              |
+| C: Sound Unit                          |                                        |
+| L: Volume                              |                                        |
 
-| _Exit Results_
-|       A: Status (0=OK, else error)
-
-This function sets the sound chip volume parameter.  The volume will
-be applied when the next SNDPLAY function is invoked.
+This function sets the sound chip Volume (L) for the specified Sound 
+Unit (C).  Volume (L) is a binary value ranging from 0 (silence) to 255 
+(maximum).  The volume will be applied when the next SNDPLAY function is
+invoked.  The returned Status (A) is a standard HBIOS result code.
 
 Note that not all sounds chips implement 256 volume levels.  The
 driver will scale the volume to the closest possible level the
@@ -1374,50 +1492,48 @@ chip provides.
 
 ### Function 0x52 -- Sound Period (SNDPRD)
 
-| _Entry Parameters_
-|       B: 0x52
-|       C: Audio Device Unit ID
-|       HL: Period
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x52                                | A: Status                              |
+| C: Sound Unit                          |                                        |
+| HL: Period                             |                                        |
 
-|      _Returned Values_
-|           A: Status (0=OK, else error)
+This function sets the sound chip Period (HL) for the specified Sound 
+Unit (C).  The period will be applied when the next SNDPLAY function is 
+invoked.  The returned Status (A) is a standard HBIOS result code.
 
-This function sets the sound chip period parameter.  The period will
-be applied when the next SNDPLAY function is invoked.
-
-The period value is a driver specific value.  To play standardized
-notes, use the SNDNOTE function.  A higher value will generate a lower
-note.  The maximum value that can be used is driver specific. If value
-supplied is beyond driver capabilities, register A will be set to $FF.
+The Period (HL) value is **not** a standardized value.  The value is 
+programmed directly into the period or frequency register of the sound 
+chip.  It is therefore a hardware dependent value.  To play standardized
+notes, use the SNDNOTE function.
 
 ### Function 0x53 -- Sound Note (SNDNOTE)
 
-| _Entry Parameters_
-|       B: 0x53
-|       C: Audio Device Unit ID
-|       HL: Value of note to play
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x53                                | A: Status                              |
+| C: Sound Unit                          |                                        |
+| HL: Note                               |                                        |
 
-|      _Returned Values_
-|           A: Status (0=OK, else error)
+This function sets the frequency generated by the sound of the specified
+Sound Unit (C).  The frequency is standardized and is specified by 
+using values that correspond to musical notes.  The frequency will be 
+applied when the next SNDPLAY function is invoked.  The returned Status 
+(A) is a standard HBIOS result code.
 
-This function sets the sound chip period parameter with steps of quarter
-of a semitone.  The value of 0 (lowest) corresponds to Bb/A# in octave 0.
+The Note (HL) values correspond to quarter notes.  Increasing/decreasing
+the value by 4 results in a full note increment/decrement.  
+Increasing/decreasing the value by 48 results in a full octave 
+increment/decrement.  The value 0 corresponds to Bb/A# in octave 0.
 
-Increase by steps of 4 to select the next corresponding note.
+The sound chip resolution and its oscillator limit the range and 
+accuracy of the notes played. The typical range of the AY-3-8910 is six 
+octaves: Bb2/A#2 to A7, where each value is a unique tone.  Values above
+ and below can still be played but each quarter tone step may not result
+ in a note change.
 
-Increase by steps of 48 to select the same note in next octave.
-
-If the driver is able to generate the requested note, a success (0) is
-returned, otherwise a non-zero error value will be returned.
-
-The sound chip resolution and its oscillator limit the range and
-accuracy of the notes played. The typical range of the AY-3-8910
-is six octaves, Bb2/A#2-A7, where each value is a unique tone. Values
-above and below can still be played but each quarter tone step may not
-result in a note change.
-
-The following table shows the mapping of the input value in HL
-to the corresponding octave and note.
+The following table shows the mapping of the Note (HL) value to the 
+corresponding octave and note.
 
 | Note  | Oct 0 | Oct 1 | Oct 2 | Oct 3 | Oct 4 | Oct 5 | Oct 6 | Oct 7 |
 |:----- | -----:| -----:| -----:| -----:| -----:| -----:| -----:| -----:|
@@ -1436,148 +1552,136 @@ to the corresponding octave and note.
 
 ### Function 0x54 -- Sound Play (SNDPLAY)
 
-| _Entry Parameters_
-|       B: 0x54
-|       C: Audio Device Unit ID
-|       D: Channel
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x54                                | A: Status                              |
+| C: Sound Unit                          |                                        |
+| D: Channel                             |                                        |
 
-|      _Returned Values_
-|           A: Status (0=OK, else error)
+This function applies the previously specified volume and frequency of 
+the specified Sound Unit (C) by programming the sound chip with the 
+appropriate values.  The values are applied to the specified Channel (D)
+of the chip.  The returned Status (A) is a standard HBIOS result code.
 
-This function applies the previously specified volume and period by
-programming the sound chip with the appropriate values.  The values
-are applied to the specified channel of the chip.
+Note that there is no duration for the sound output -- the programmed 
+sound will be played indefinitely.  It is up to the user to wait the 
+desired amount of time, then change or silence the sound output as 
+desired.
 
-For example, to play a specific note on Audio Device Unit 0,
-the following HBIOS calls would need to be made:
-
-```
-HBIOS B=51 C=00 L=80      ; Set volume to half level
-HBIOS B=53 C=00 HL=152    ; Select Middle C (C4)
-HBIOS B=54 C=00 D=01      ; Play note on Channel 1
-```
+The number of channels available on a sound chip varies.  It is up to 
+the caller to ensure that the appropriate number of channels are being 
+programmed.
 
 ### Function 0x55 -- Sound Query (SNDQUERY)
 
-| _Entry Parameters_
-|       B: 0x55
-|       C: Audio Device Unit ID
-|       E: Subfunction
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x55                                | A: Status                              |
+| C: Sound Unit                          |                                        |
+| E: Subfunction                         |                                        |
 
-|      _Returned Values_
-|           A: Status (0=OK, else error)
-
-This function will return the status of the current pending command or
-key aspects of the specific Audio Device.
+This function will return a variety of information for a specified Sound
+Unit (C) according to the Subfunction (E) specified.  The returned 
+Status (A) is a standard HBIOS result code.
 
 #### SNDQUERY Subfunction 0x01 -- Get count of audio channels supported (SNDQ_CHCNT)
 
-|      _Entry Parameters_
-|           B: 0x55
-|           E: 0x01
-
-|      _Returned Values_
-|           A: Status (0=OK, else error)
-|           B: Count of standard tone channels
-|           C: Count of noise tone channels
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x55                                | A: Status                              |
+| C: Sound Unit                          | B: Tone Channels                       |
+| E: 0x01                                | C: Noise Channels                      |
 
 #### SNDQUERY Subfunction 0x02 -- Get current volume setting (SNDQ_VOL)
 
-|      _Entry Parameters_
-|           B: 0x55
-|           E: 0x02
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x55                                | A: Status                              |
+| C: Sound Unit                          | L: Volume                              |
+| E: 0x02                                |                                        |
 
-|      _Returned Values_
-|           A: Status (0=OK, else error)
-|           H: 0
-|           L: Current volume setting
+#### SNDQdERY Subfunction 0x03 -- Get current period setting (SNDQ_PERIOD)
 
-#### SNDQUERY Subfunction 0x03 -- Get current period setting (SNDQ_PERIOD)
-
-|      _Entry Parameters_
-|           B: 0x55
-|           E: 0x03
-
-|      _Returned Values_
-|           A: Status (0=OK, else error)
-|           HL: Current period setting
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x55                                | A: Status                              |
+| C: Sound Unit                          | HL: Period                             |
+| E: 0x03                                |                                        |
 
 #### SNDQUERY Subfunction 0x04 -- Get device details (SNDQ_DEV)
 
-|      _Entry Parameters_
-|           B: 0x55
-|           E: 0x04
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x55                                | A: Status                              |
+| C: Sound Unit                          | B: Driver Identity                     |
+| E: 0x04                                | HL: Ports                              |
+|                                        | DE: Ports                              |
 
-|      _Returned Values_
-|           A: Status (0=OK, else error)
-|           B: Driver identity
-|           HL: Driver specific port settings
-|           DE: Driver specific port settings
+This subfunction reports detailed device informatoin for the specified 
+Sound Unit (C).
 
-Reports information about the audio device unit specified.
+Driver Identity (B) reports the audio device type.  Ports (HL & DE) 
+return relevant port addresses for the hardware specific to each device 
+type.
 
-Register B reports the audio device type (see below).
+The following table defines the specific port information per device 
+type:
 
-Registers HL and DE contain relevant port addresses for the hardware
-specific to each device type.
-
-The currently defined audio device types are:
-
-AUDIO ID       | Value | Device     | Returned registers
--------------- | ----- | ---------- | --------------------------------------------
-SND_SN76489    | 0x01  | SN76489    | E: Left channel port, L: Right channel port
-SND_AY38910    | 0x02  | AY-3-8910  | D: Address port, E: Data port
-SND_BITMODE    | 0x03  | I/O PORT   | D: Address port, E: Bit mask
-SND_YM2612     | 0x04  | YM2612     | D: Part 0 Address port, E: Part 0 Data port
-               |       |            | H: Part 1 Address port, L: Part 1 Data port
+| *Audio ID*     | *Value* | *Device*   | *Returned Registers*                        |
+|----------------| -------:|------------|---------------------------------------------|
+| SND_SN76489    | 0x01    | SN76489    | E=Left channel port, L=Right channel port   |
+| SND_AY38910    | 0x02    | AY-3-8910  | D=Address port, E=Data port                 |
+| SND_BITMODE    | 0x03    | I/O PORT   | D=Address port, E=Bit mask                  |
+| SND_YM2612     | 0x04    | YM2612     | Part 0: D=Address port, E=Data port         |
+|                |         |            | Part 1: D=Address port, L=Part 1 Data port  |
 
 ### Function 0x56 -- Sound Duration (SNDDUR)
 
-| _Entry Parameters_
-|       B: 0x56
-|       C: Audio Device Unit ID
-|       HL: Duration
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x56                                | A: Status                              |
+| C: Sound Unit                          |                                        |
+| HL: Duration                           |                                        |
 
-|      _Returned Values_
-|           A: Status (0=OK, else error)
+This function sets the Duration (HL) of the note to be played in 
+milliseconds for the specified Sound Unit (C).  This function just sets 
+the duration, the actual duration is applied in the SNDPLAY function.
 
-This function sets the duration of the note to be played in milliseconds.
+If the Duration (HL) is set to zero, then the SNDPLAY function will 
+operate in a non-blocking mode. i.e. a tone will start playing and the 
+play function will return. The tone will continue to play until the next
+ tone is played.  If the Duration (HL) is greater than zero, the the 
+sound will play for the duration defined in HL and then return.
 
-If the duration is set to zero, then the play function will operate in a non-blocking
-mode. i.e. a tone will start playing and the play function will return. The tone will
-continue to play until the next tone is played. I/O PORT are not compatible and will
-not play a note if the duration is zero.
-
-For other values, when a tone is played, it will play for the duration defined in HL
-and then return.
+**\*\*\* Function Not Implemented \*\*\**
 
 ### Function 0x57 -- Sound Device (SNDDEVICE)
 
-| _Entry Parameters_
-|       B: 0x57
-|       C: Sound Device Unit Number
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x57                                | A: Status                              |
+| C: Disk Unit                           | C: Device Attributes                   |
+|                                        | D: Device Type                         |
+|                                        | E: Device Number                       |
+|                                        | H: Device Unit Mode                    |
+|                                        | L: Device I/O Base Address             |
 
-| _Exit Results_
-|       A: Status (0=OK, else error)
-|       D: Sound Device Type
-|       E: Sound Device Number
-|       H: Sound Device Unit Mode
-|       L: Sound Device Unit I/O Base Address
+Reports device information about the specified Sound Unit (C).  The 
+Status (A) is a standard HBIOS result code.
 
-Reports information about the sound device unit specified.  Register D
-indicates the device type (driver) and register E indicates the physical
-device number assigned by the driver.
+The Device Attributes (C) value is not yet defined.
 
-Each character device is handled by an appropriate driver (AY38910, SN76489,
-etc.). The driver can be identified by the Device Type. The assigned Device
-Types are listed below.
+Device Type (D) indicates the specific hardware driver that handles the 
+specified Sound Unit (C).  Values are listed at the start of this 
+section. Device Number (E) indicates the physical device number assigned
+per driver.
 
-_Id_ | _Device Type / Driver_
----- | ----------------------
-0x00 | SN76489
-0x10 | AY38910
-0x20 | BITMODE
-0x30 | YM2612
+Device Mode (H) is used to indicate the variant of the chip or circuit 
+that is used by the specified unit.  The Device I/O Base Address 
+(L) indicates the starting port address of the hardware interface that 
+is servicing the specified unit.  Both of these values are considered 
+driver specific.  Refer to the associated hardware driver for the values
+used.
 
 `\clearpage`{=latex}
 
@@ -1586,216 +1690,201 @@ System (SYS)
 
 ### Function 0xF0 -- System Reset (SYSRESET)
 
-| _Entry Parameters_
-|       B: 0xF0
-|       C: Subfunction (see below)
-
-| _Exit Results_
-|       A: Status (0=OK, else error)
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0xF0                                | A: Status                              |
+| C: Subfunction                         |                                        |
 
 This function performs various forms of a system reset depending on
-the value of the subfunction.  See subfunctions below.
+the value of Subfunction (C):
 
-#### SYSRESET Subfunction 0x00 -- Internal HBIOS Reset (RESINT)
+Soft Reset (0x00):
 
-|      _Entry Parameters_
-|           BC: 0xF000
+  : Perform a soft reset of HBIOS. Releases all HBIOS memory allocated 
+    by current OS. Does not reinitialize physical devices.
 
-|      _Returned Values_
-|           A: Status (0=OK, else error)
+Warm Start (0x01):
 
-Perform a soft reset of HBIOS. Releases all HBIOS memory allocated by
-current OS. Does not reinitialize physical devices.
+  : Warm start the system returning to the boot loader prompt.  Does not
+    reinitialize physical devices.
+  
+Cold Start (0x02):
 
-#### SYSRESET Subfunction 0x01 -- Warm Start System (RESWARM)
+  : Perform a system cold start (like a power on).  All devices are
+    reinitialized.
 
-|      _Entry Parameters_
-|           BC: 0xF001
-
-|      _Returned Values_
-|           <none>
-
-Warm start the system returning to the boot loader prompt.  Does not
-reinitialize physical devices.
-
-#### SYSRESET Subfunction 0x02 -- Cold Start System (RESCOLD)
-
-|      _Entry Parameters_
-|           BC: 0xF002
-
-|      _Returned Values_
-|           <none>
-
-Perform a system cold start (like a power on).  All devices are
-reinitialized.
+The Status (A) is a standard HBIOS result code.
 
 ### Function 0xF1 -- System Version (SYSVER)
 
-| _Entry Parameters_
-|       B: 0xF1
-|       C: Reserved (set to 0)
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0xF1                                | A: Status                              |
+| C: Reserved                            | DE: Version                            |
+|                                        | L: Platform                            |
 
-| _Exit Results_
-|       A: Status (0=OK, else error)
-|       DE: Version (Maj/Min/Upd/Pat)
-|       L: Platform ID
+This function will return the HBIOS Version (DE) number and Platform (L)
+identifier. The Status (A) is a standard HBIOS result code.
 
-This function will return the HBIOS version number. The version number
-is returned in DE. High nibble of D is the major version, low nibble of
-D is the minor version, high nibble of E is the patch number, and low
-nibble of E is the build number.
+The Version (DE)number is encoded as BCD where the 4 digits are:
 
-The hardware platform is identified in L:
+  [Major Version][Minor Version][Patch Level][Build Number]
 
-Id | Platform
--- | ---------------------------------------------------
-1  | SBC V1 or V2
-2  | Zeta
-3  | Zeta V2
-4  | N8
-5  | Mark IV
-6  | UNA
-7  | RC2014 w/ Z80
-8  | RC2014 w/ Z180 & banked memory module
-9  | RC2014 w/ Z180 & linear memory module
-10 | SCZ180 (SC126, SC130, SC131)
-11 | Dyno
+So, for example, a Version (L) number of 0x3102 would indicate
+version 3.1.0, build 2.
+
+The hardware Platform (L) is identified as follows:
+
+| **Name**      | **Id** | **Platform **                           |
+|---------------|-------:|-----------------------------------------|
+| PLT_SBC       |1       | ECB Z80 SBC                             |
+| PLT_ZETA      |2       | ZETA Z80 SBC                            |
+| PLT_ZETA2     |3       | ZETA Z80 V2 SBC                         |
+| PLT_N8        |4       | N8 (HOME COMPUTER) Z180 SBC             |
+| PLT_MK4       |5       | MARK IV                                 |
+| PLT_UNA       |6       | UNA BIOS                                |
+| PLT_RCZ80     |7       | RCBUS W/ Z80                            |
+| PLT_RCZ180    |8       | RCBUS W/ Z180                           |
+| PLT_EZZ80     |9       | EASY/TINY Z80                           |
+| PLT_SCZ180    |10      | RCBUS SC126, SC130, SC131, SC140        |
+| PLT_DYNO      |11      | DYNO MICRO-ATX MOTHERBOARD              |
+| PLT_RCZ280    |12      | RCBUS W/ Z280                           |
+| PLT_MBC       |13      | NHYODYNE MULTI-BOARD COMPUTER           |
+| PLT_RPH       |14      | RHYOPHYRE GRAPHICS SBC                  |
 
 ### Function 0xF2 -- System Set Bank (SYSSETBNK)
 
-| _Entry Parameters_
-|       B: 0xF2
-|       C: Bank ID
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0xF2                                | A: Status                              |
+| C: Bank ID                             | C: Prior Bank ID                       |
 
-| _Exit Results_
-|       A: Status (0=OK, else error)
-|       C: Previously Active Bank ID
-
-Activates the Bank ID specified in C and returns the previously active
-Bank ID in C. The caller MUST be invoked from code located in the upper
-32K and the stack **must** be in the upper 32K.
+Activates the specified memory Bank ID (C) and returns the Prior Bank ID
+ (C). The function **must** be invoked from code located in the upper 
+32K and the stack **must** be in the upper 32K.  The Status (A) is a 
+standard HBIOS result code.
 
 ### Function 0xF3 -- System Get Bank (SYSGETBNK)
 
-| _Entry Parameters_
-|       B: 0xF3
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0xF3                                | A: Status                              |
+|                                        | C: Bank ID                             |
 
-| _Exit Results_
-|       A: Status (0=OK, else error)
-|       C: Active Bank ID
-
-Returns the currently active Bank ID in C.
+Returns the currently active Bank ID (C).  The Status (A) is a standard 
+HBIOS result code.
 
 ### Function 0xF4 -- System Set Copy (SYSSETCPY)
 
-| _Entry Parameters_
-|       B: 0xF4
-|       D: Destination Bank ID
-|       E: Source Bank ID
-|       HL: Count of Bytes to Copy
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0xF4                                | A: Status                              |
+| D: Destination Bank ID                 |                                        |
+| E: Source Bank ID                      |                                        |
+| HL: Byte Count                         |                                        |
 
-| _Exit Results_
-|       A: Status (0=OK, else error)
+Prepare for a subsequent interbank memory copy (SYSBNKCPY) function call
+by setting the Source Bank ID (E), Destination Bank ID (D), and Byte Count 
+(HL) to be copied. The bank ID's are not range checked and must
+be valid for the system in use.  The Status (A) is a standard 
+HBIOS result code.
 
-Prepare for a subsequent interbank memory copy (SYSBNKCPY) function by
-setting the source bank, destination bank, and byte count for the copy.
-The bank id's are not range checked and must be valid for the system in
-use.
-
-No bytes are copied by this function. The SYSBNKCPY must be called to
-actually perform the copy. The values setup by this function will remain
-unchanged until another call is make to this function. So, after calling
-SYSSETCPY, you may make multiple calls to SYSBNKCPY as long as you want
-to continue to copy between the already established Source/Destination
-Banks and the same size copy if being performed.
+No bytes are copied by this function. The SYSBNKCPY function must be 
+called to actually perform the copy. The values setup by this function 
+will remain unchanged until another call is make to this function. So, 
+after calling SYSSETCPY, you may make multiple calls to SYSBNKCPY as 
+long as you want to continue to copy between the already established 
+Source/Destination Banks and the same size copy is being performed.
 
 ### Function 0xF5 -- System Bank Copy (SYSBNKCPY)
 
-| _Entry Parameters_
-|       B: 0xF5
-|       DE: Destination Address
-|       HL: Source Address
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0xF5                                | A: Status                              |
+| DE: Destination Address                | DE: New Destination Address            |
+| HL: Source Address                     | HL: New Source Address                 |
 
-| _Exit Results_
-|       A: Status (0=OK, else error)
-
-Copy memory between banks. The source bank, destination bank, and byte
-count to copy MUST be established with a prior call to SYSSETCPY.
+Copy a block of memory between banks. The Source Bank, Destination Bank, and Byte
+Count to copy **must** be established with a prior call to SYSSETCPY.
 However, it is not necessary to call SYSSETCPY prior to subsequent calls
 to SYSBNKCPY if the source/destination banks and copy length do not
 change.
 
+On return, the New Destination Address (DE) will be value of the 
+original Destination Address (DE) incremented by the count of bytes 
+copied.  Likewise for the New Source Address (HL).  This allows 
+iterative invocations of this function to continue copying where the 
+prior invocation left off.
+
+The Status (A) is a standard HBIOS result code.
+
 WARNINGS:
 
 * This function is inherently dangerous and does not prevent you from
-corrupting critical areas of memory. Use with **extreme** caution.
+  corrupting critical areas of memory. Use with **extreme** caution.
 
 * Overlapping source and destination memory ranges are not supported and
-will result in undetermined behavior.
+  will result in undetermined behavior.
 
 * Copying of byte ranges that cross bank boundaries is undefined.
 
 ### Function 0xF6 -- System Alloc (SYSALLOC)
 
-| _Entry Parameters_
-|       B: 0xF6
-|       HL: Size in Bytes
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0xF6                                | A: Status                              |
+| HL: Block Size                         | HL: Block Address                      |
 
-| _Exit Results_
-|       A: Status (0=OK, else error)
-|       HL: Address of Allocated Memory
-
-This function will attempt to allocate a block of memory of HL bytes
-from the internal HBIOS heap. The HBIOS heap resides in the HBIOS bank
-in the area of memory left unused by HBIOS. If the allocation is
-successful, the address of the allocated memory block is returned in HL.
-You will typically want to use the SYSBNKCPY function to read/write the
-allocated memory.
+This function will attempt to allocate a Block Size (HL) bytes block of 
+memory from the internal HBIOS heap. The HBIOS heap resides in the HBIOS
+bank in the area of memory left unused by HBIOS. If the allocation is 
+successful, the Block Address (HL) of the allocated memory block is 
+returned in HL. You will typically need to use the SYSBNKCPY function to
+read/write the allocated memory.  The Status (A) is a standard HBIOS 
+result code.
 
 ### Function 0xF7 -- System Free (SYSFREE)
 
-|      _Entry Parameters_
-|           B: 0xF7
-|           HL: Address of Memory Block to Free
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0xF7                                | A: Status                              |
+| HL: Block Address                      |                                        |
 
-|      _Returned Values_
-|           A: Status (0=OK, else error)
+**\*\*\* Function Not Implemented \*\*\***
 
-\*\*\* This function is not yet implemented \*\*\*
+Note that all allocated memory can be freed by calling the SYSRESET
+function with a subfunction code of 0x00 (Soft Reset).
 
 ### Function 0xF8 -- System Get (SYSGET)
 
-|      _Entry Parameters_
-|           B: 0xF8
-|           C: Subfunction (see below)
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0xF8                                | A: Status                              |
+| C: Subfunction                         |                                        |
 
-|      _Returned Values_
-|           A: Status (0=OK, else error)
+This function will report various system information based on the 
+sub-function value. The following lists the subfunctions available along
+with the registers/information utilized.  The Status (A) is a standard 
+HBIOS result code.
 
-This function will report various system information based on the
-sub-function value. The following lists the subfunctions
-available along with the registers/information returned.
+#### SYSGET Subfunction 0x00 -- Get Character Device Unit Count (CIOCNT)
 
-#### SYSGET Subfunction 0x00 -- Get Serial Device Unit Count (CIOCNT)
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0xF8                                | A: Status                              |
+| C: 0x00                                | E: Count                               |
 
-|      _Entry Parameters_
-|           BC: 0xF800
-
-|      _Returned Values_
-|           A: Status (0=OK, else error)
-|           E: Count of Serial Device Units
+Return the Count (E) of character device units.  The Status (A) is a 
+standard HBIOS result code.
 
 #### SYSGET Subfunction 0x01 -- Get Serial Unit Function (CIOFN)
 
-|      _Entry Parameters_
-|           BC: 0xF801
-|           D: CIO Function
-|           E: Unit
-
-|      _Returned Values_
-|           A: Status (0=OK, else error)
-|           HL: Driver Function Address
-|           DE: Unit Data Address
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0xF8                                | A: Status                              |
+| C: 0x01                                | HL: Function Address                   |
+| D: Function                            | DE: Unit Data Address                  |
+| E: Unit                                |                                        |
 
 This function will lookup the actual driver function address and
 unit data address inside the HBIOS driver.  On entry, place the
@@ -1803,7 +1892,8 @@ CIO function number to lookup in D and the CIO unit number in E.
 On return, HL will contain the address of the requested function
 in the HBIOS driver (in the HBIOS bank).  DE will contain the
 associated unit data address (also in the HBIOS bank).  See
-Appendix A for details.
+Appendix A for details.  The returned Status (A) is a standard HBIOS 
+result code.
 
 This function can be used to speed up HBIOS calls by looking up the
 function and data address for a specific driver function.  After this,
@@ -1813,31 +1903,31 @@ lookup.
 
 #### SYSGET Subfunction 0x10 -- Get Disk Device Unit Count (DIOCNT)
 
-|      _Entry Parameters_
-|           BC: 0xF810
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0xF8                                | A: Status                              |
+| C: 0x10                                | E: Count                               |
 
-|      _Returned Values_
-|           A: Status (0=OK, else error)
-|           E: Count of Disk Device Units
+Return the Count (E) of disk device units.  The Status (A) is a 
+standard HBIOS result code.
 
 #### SYSGET Subfunction 0x11 -- Get Disk Unit Function (DIOFN)
 
-|      _Entry Parameters_
-|           BC: 0xF811
-|           D: DIO Function
-|           E: Unit
-
-|      _Returned Values_
-|           A: Status (0=OK, else error)
-|           HL: Driver Function Address
-|           DE: Unit Data Address
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0xF8                                | A: Status                              |
+| C: 0x11                                | HL: Function Address                   |
+| D: Function                            | DE: Unit Data Address                  |
+| E: Unit                                |                                        |
 
 This function will lookup the actual driver function address and
 unit data address inside the HBIOS driver.  On entry, place the
 DIO function number to lookup in D and the DIO unit number in E.
 On return, HL will contain the address of the requested function
 in the HBIOS driver (in the HBIOS bank).  DE will contain the
-associated unit data address (also in the HBIOS bank).
+associated unit data address (also in the HBIOS bank).  See
+Appendix A for details.  The returned Status (A) is a standard HBIOS 
+result code.
 
 This function can be used to speed up HBIOS calls by looking up the
 function and data address for a specific driver function.  After this,
@@ -1845,35 +1935,34 @@ the caller can use interbank calls directly to the function in the
 driver which bypasses the overhead of the normal function invocation
 lookup.
 
-#### SYSGET Subfunction 0x20 -- Get Disk Device Unit Count (RTCCNT)
+#### SYSGET Subfunction 0x20 -- Get RTC Device Unit Count (RTCCNT)
 
-|      _Entry Parameters_
-|           BC: 0xF820
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0xF8                                | A: Status                              |
+| C: 0x20                                | E: Count                               |
 
-|      _Returned Values_
-|           A: Status (0=OK, else error)
-|           E: Count of RTC Device Units
+Return the Count (E) of RTC device units.  The Status (A) is a 
+standard HBIOS result code.
 
 #### SYSGET Subfunction 0x40 -- Get Video Device Unit Count (VDACNT)
 
-|      _Entry Parameters_
-|           BC: 0xF840
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0xF8                                | A: Status                              |
+| C: 0x40                                | E: Count                               |
 
-|      _Returned Values_
-|           A: Status (0=OK, else error)
-|           E: Count of Video Device Units
+Return the Count (E) of video device units.  The Status (A) is a 
+standard HBIOS result code.
 
 #### SYSGET Subfunction 0x41 -- Get Video Unit Function (VDAFN)
 
-|      _Entry Parameters_
-|           BC: 0xF841
-|           D: VDA Function
-|           E: Unit
-
-|      _Returned Values_
-|           A: Status (0=OK, else error)
-|           HL: Driver Function Address
-|           DE: Unit Data Address
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0xF8                                | A: Status                              |
+| C: 0x41                                | HL: Function Address                   |
+| D: Function                            | DE: Unit Data Address                  |
+| E: Unit                                |                                        |
 
 This function will lookup the actual driver function address and
 unit data address inside the HBIOS driver.  On entry, place the
@@ -1881,7 +1970,8 @@ VDA function number to lookup in D and the VDA unit number in E.
 On return, HL will contain the address of the requested function
 in the HBIOS driver (in the HBIOS bank).  DE will contain the
 associated unit data address (also in the HBIOS bank).  See
-Appendix A for details.
+Appendix A for details.  The returned Status (A) is a standard HBIOS 
+result code.
 
 This function can be used to speed up HBIOS calls by looking up the
 function and data address for a specific driver function.  After this,
@@ -1891,24 +1981,22 @@ lookup.
 
 #### SYSGET Subfunction 0x50 -- Get Sound Device Unit Count (SNDCNT)
 
-|      _Entry Parameters_
-|           BC: 0xF850
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0xF8                                | A: Status                              |
+| C: 0x50                                | E: Count                               |
 
-|      _Returned Values_
-|           A: Status (0=OK, else error)
-|           E: Count of Sound Device Units
+Return the Count (E) of sound device units.  The Status (A) is a 
+standard HBIOS result code.
 
 #### SYSGET Subfunction 0x51 -- Get Sound Unit Function (SNDFN)
 
-|      _Entry Parameters_
-|           BC: 0xF851
-|           D: SND Function
-|           E: Unit
-
-|      _Returned Values_
-|           A: Status (0=OK, else error)
-|           HL: Driver Function Address
-|           DE: Unit Data Address
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0xF8                                | A: Status                              |
+| C: 0x51                                | HL: Function Address                   |
+| D: Function                            | DE: Unit Data Address                  |
+| E: Unit                                |                                        |
 
 This function will lookup the actual driver function address and
 unit data address inside the HBIOS driver.  On entry, place the
@@ -1916,7 +2004,8 @@ SND function number to lookup in D and the SND unit number in E.
 On return, HL will contain the address of the requested function
 in the HBIOS driver (in the HBIOS bank).  DE will contain the
 associated unit data address (also in the HBIOS bank).  See
-Appendix A for details.
+Appendix A for details.  The returned Status (A) is a standard HBIOS 
+result code.
 
 This function can be used to speed up HBIOS calls by looking up the
 function and data address for a specific driver function.  After this,
@@ -1926,137 +2015,172 @@ lookup.
 
 #### SYSGET Subfunction 0xD0 -- Get Timer Tick Count (TIMER)
 
-|      _Entry Parameters_
-|           BC: 0xF8D0
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0xF8                                | A: Status                              |
+| C: 0xD0                                | DEHL: Tick Count                       |
+|                                        | C: Frequency                           |
 
-|      _Returned Values_
-|           A: Status (0=OK, else error)
-|           DE:HL: Current Timer Tick Count Value
-|           C: Tick frequency (typically 50 or 60)
+Return the value of the global system timer Tick Count (DEHL).  This is 
+a double-word binary value.  The frequency of the system timer in Hertz 
+is returned in Frequncy (C). The returned Status (A) is a standard HBIOS
+result code.
+
+Note that not all hardware configuration have a system timer.  You
+can determine if a timer exists by calling this function repeatedly
+to see if it is incrementing.
 
 #### SYSGET Subfunction 0xD1 -- Get Seconds Count (SECONDS)
 
-|      _Entry Parameters_
-|           BC: 0xF8D1
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0xF8                                | A: Status                              |
+| C: 0xD1                                | DEHL: Seconds Count                    |
+|                                        | C: Ticks per Second                    |
 
-|      _Returned Values_
-|           A: Status (0=OK, else error)
-|           DE:HL: Current Seconds Count Value
-|           C: Ticks within Second Value
+Return the a Seconds Count (DEHL) with the number of seconds that have 
+elapsed since the system was started.  This is a double-word binary 
+value.  Additionally, the number of Ticks per Second (C) is returned.  
+The returned Status (A) is a standard HBIOS result code.
+
+This availability of the Seconds Count (DEHL) is dependent on having a 
+system timer active.  If the hardware configuration has no system timer,
+then Seconds Count (DEHL) will not increment.
 
 #### SYSGET Subfunction 0xE0 -- Get Boot Information (BOOTINFO)
 
-|      _Entry Parameters_
-|           BC: 0xF8E0
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0xF8                                | A: Status                              |
+| C: 0xE0                                | L: Boot Bank ID                        |
+|                                        | D: Boot Disk Unit                      |
+|                                        | E: Boot Disk Slice                     |
 
-|      _Returned Values_
-|           A: Status (0=OK, else error)
-|           L: Boot Bank ID
-|           D: Boot Disk Device Unit ID
-|           E: Boot Disk Slice
+This function returns information about the most recent boot operation 
+performed.  It includes the Boot Bank ID (L), the Boot Disk Unit (D), 
+and the Boot Disk Slice (E).  The returned Status (A) is a standard 
+HBIOS result code.
 
 #### SYSGET Subfunction 0xF0 -- Get CPU Information (CPUINFO)
 
-|      _Entry Parameters_
-|           BC: 0xF8F0
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0xF8                                | A: Status                              |
+| C: 0xF0                                | H: Z80 CPU Variant                     |
+|                                        | L: CPU Speed MHz                       |
+|                                        | DE: CPU Speed KHz                      |
+|                                        | BC: Oscillator Speed KHz               |
 
-|      _Returned Values_
-|           A: Status (0=OK, else error)
-|           H: Z80 CPU Variant
-|           L: CPU Speed in MHz
-|           DE: CPU Speed in KHz
-|           BC: Oscillator Speed in KHz
+This function returns information about the active CPU environment. The 
+Z80 CPU Variant (H) will be one of: 0=Z80, 1=Z180, 2=Z180-K, 3=Z180-N, 
+4=Z280.  The current CPU speed is provided as both CPU Speed MHz (L) and
+CPU Speed KHz (DE).  The raw oscillator speed is provided as Oscillator
+Speed KHz (BC).  The returned Status (A) is a standard HBIOS result 
+code.
 
 #### SYSGET Subfunction 0xF1 -- Get Memory Information (MEMINFO)
 
-|      _Entry Parameters_
-|           BC: 0xF8F1
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0xF8                                | A: Status                              |
+| C: 0xF1                                | D: ROM Bank Count                      |
+|                                        | E: RAM Bank Count                      |
 
-|      _Returned Values_
-|           A: Status (0=OK, else error)
-|           D: Count of 32K ROM Banks
-|           E: Count of 32K RAM Banks
+This function returns the systems ROM Bank Count (D) and RAM Bank Count 
+(E).  Each bank is 32KB by definition.  The returned Status (A) is a 
+standard HBIOS result code.
 
 #### SYSGET Subfunction 0xF2 -- Get Bank Information (BNKINFO)
 
-|      _Entry Parameters_
-|           BC: 0xF8F2
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0xF8                                | A: Status                              |
+| C: 0xF2                                | D: BIOS Bank ID                        |
+|                                        | E: User Bank ID                        |
 
-|      _Returned Values_
-|           A: Status (0=OK, else error)
-|           D: BIOS Bank ID
-|           E: User Bank ID
+Certain memory banks within a RomWBW system are special.  The exact bank
+id for each of these varies depending on the configuration of the 
+system.  This function can be used to determine the BIOS Bank ID (D) and
+the User Bank ID (E).  The returned Status (A) is a standard HBIOS 
+result code.
 
 #### SYSGET Subfunction 0xF3 -- Get CPU Speed (CPUSPD)
 
-|      _Entry Parameters_
-|           BC: 0xF8F3
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0xF8                                | A: Status                              |
+| C: 0xF3                                | L: Clock Mult                          |
+|                                        | D: Memory Wait States                  |
+|                                        | E: I/O Wait States                     |
 
-|      _Returned Values_
-|           A: Status (0=OK, else error)
-|           L: Clock Mult (0:Half, 1:Full, 2: Double)
-|           D: Memory Wait States
-|           E: I/O Wait States
-
-This function will return the running CPU speed attributes of a system.
-Note that it is frequently impossible to tell if a system is capable
-of dynamic speed changes.  This function returns it's best guess.
-If either of the wait state settings is unknown, the function will
-return 0xFF.
+This function will return the running CPU speed attributes of a system. 
+The Clock Mult (L) returned indicates the frequency multiple being 
+applied to the raw oscillator clock.  If is defined as: 0=Half, 2=Full, 
+and 3=Double.  The wait states for the system are also provided as 
+Memory Wait States (D) and I/O Wait States (E).  The value of Memory
+Wait States (D) is the actual number of wait states, not the number
+of wait states added.  The returned Status (A) is a standard HBIOS 
+result code.
 
 ### Function 0xF9 -- System Set (SYSSET)
 
-|      _Entry Parameters_
-|           B: 0xF9
-|           C: Subfunction (see below)
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0xF9                                | A: Status                              |
+| C: Subfunction                         |                                        |
 
-|      _Returned Values_
-|           A: Status (0=OK, else error)
-
-This function will set various system parameters based on the
-sub-function value. The following lists the subfunctions
-available along with the registers/information used as input.
+This function will set various system parameters based on the 
+sub-function value. The following lists the subfunctions available along
+with the registers/information utilized.  The Status (A) is a standard 
+HBIOS result code.
 
 #### SYSSET Subfunction 0xD0 -- Set Timer Tick Count (TIMER)
 
-|      _Entry Parameters_
-|           BC: 0xF9D0
-|           DE:HL: Timer Tick Count Value
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0xF9                                | A: Status                              |
+| C: 0xD0                                | DEHL: Timer Tick Count                 |
 
-|      _Returned Values_
-|           A: Status (0=OK, else error)
-
+This function will explicitly set the system Timer Tick Count (DEHL) 
+value.  DEHL is a double-word binary value.  The Status (A) is a 
+standard HBIOS result code.
 
 #### SYSSET Subfunction 0xD1 -- Set Seconds Count (SECONDS)
 
-|      _Entry Parameters_
-|           BC: 0xF9D1
-|           DE:HL: Seconds Count Value
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0xF9                                | A: Status                              |
+| C: 0xD1                                |                                        |
+| DEHL: Seconds Count                    |                                        |
 
-|      _Returned Values_
-|           A: Status (0=OK, else error)
+This function will explicitly set the system Seconds Count (DEHL) value.
+DEHL is a double-word binary value.  The Status (A) is a standard 
+HBIOS result code.
 
 #### SYSSET Subfunction 0xE0 -- Set Boot Information (BOOTINFO)
 
-|      _Entry Parameters_
-|           BC: 0xF9E0
-|           L: Boot Bank ID
-|           D: Boot Disk Device Unit ID
-|           E: Boot Disk Slice
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0xF9                                | A: Status                              |
+| C: 0xE0                                |                                        |
+| L: Boot Bank ID                        |                                        |
+| D: Boot Disk Unit                      |                                        |
+| E: Boot Disk Slice                     |                                        |
 
-|      _Returned Values_
-|           A: Status (0=OK, else error)
+This function sets information about the most recent boot operation 
+performed.  It includes the Boot Bank ID (L), the Boot Disk Unit (D), 
+and the Boot Disk Slice (E).  The returned Status (A) is a standard 
+HBIOS result code.
 
 #### SYSSET Subfunction 0xF3 -- Set CPU Speed (CPUSPD)
 
-|      _Entry Parameters_
-|           BC: 0xF9F3
-|           L: Clock Mult (0:Half, 1:Full, 2: Double)
-|           D: Memory Wait States
-|           E: I/O Wait States
-
-|      _Returned Values_
-|           A: Status (0=OK, else error)
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0xF9                                | A: Status                              |
+| C: 0xF3                                |                                        |
+| L: Clock Mult                          |                                        |
+| D: Memory Wait States                  |                                        |
+| E: I/O Wait States                     |                                        |
 
 This function will modify the running CPU speed attributes of a system.
 Note that it is frequently impossible to tell if a system is capable
@@ -2064,7 +2188,13 @@ of dynamic speed changes.  This function makes the changes blindly.
 You can specify 0xFF for either of the wait state settings to have them
 left alone.  If an attempt is made to change the speed of a system
 that is definitely incapable of doing so, then an error result is
-returned.
+returned.  The returned Status (A) is a standard HBIOS result code.
+
+The function will attempt to set the CPU speed based on the Clock Mult 
+(L) value: 0=Half, 1=Full, 2=Double.  Memory Wait States (D) and I/O 
+Wait States (E) will be set if possible.  The value of Memory Wait 
+States (D) is the actual number of wait states, not the number of wait 
+states added.
 
 Some peripherals are dependant on the CPU speed.  For example, the Z180
 ASCI baud rate and system timer are derived from the CPU speed.  The
@@ -2077,59 +2207,55 @@ rate of the ASCI port(s) will be affected.
 
 ### Function 0xFA -- System Peek (SYSPEEK)
 
-|      _Entry Parameters_
-|           B: 0xFA
-|           D: Bank ID
-|           HL: Memory Address
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0xFA                                | A: Status                              |
+| D: Bank ID                             | E: Byte Value                          |
+| HL: Memory Address                     |                                        |
 
-|      _Returned Values_
-|           A: Status (0=OK, else error)
-|           E: Byte Value
-
-This function gets a single byte value at the specified bank/address.
-The bank specified is not range checked.
+This function retrieves and returns the Byte Value from the specified 
+Bank ID (D) and Memory Address (HL).  The bank specified is not range 
+checked.  The Status (A) is a standard HBIOS result code.
 
 ### Function 0xFB -- System Poke (SYSPOKE)
 
-|      _Entry Parameters_
-|           B: 0xFB
-|           D: Bank ID
-|           E: Value
-|           HL: Memory Address
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0xFB                                | A: Status                              |
+| D: Bank ID                             |                                        |
+| HL: Memory Address                     |                                        |
+| E: Byte Value                          |                                        |
 
-|      _Returned Values_
-|           A: Status (0=OK, else error)
-
-This function sets a single byte value at the specified bank/address.
-The bank specified is not range checked.
+This function sets the Byte Value (E) in the specified Bank ID (D) and 
+Memory Address (HL).  The bank specified is not range checked.  The 
+Status (A) is a standard HBIOS result code.
 
 ### Function 0xFC -- System Interrupt Management (SYSINT)
 
-|      _Entry Parameters_
-|           B: 0xFC
-|           C: Subfunction (see below)
-
-|      _Returned Values_
-|           A: Status (0=OK, else error)
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0xFC                                | A: Status                              |
+| C: Subfunction                         |                                        |
 
 This function allows the caller to query information about the interrupt
-configuration of the running system and allows adding or hooking interrupt
-handlers dynamically. Register C is used to specify a subfunction.
-Additional input and output registers may be used as defined by the
-sub-function.
+ configuration of the running system and allows adding or hooking 
+interrupt handlers dynamically. Register C is used to specify a 
+subfunction. Additional input and output registers may be used as 
+defined by the sub-function.  The Status (A) is a standard 
+HBIOS result code.
 
-Note that during interrupt processing, the lower 32K of CPU address space
-will contain the RomWBW HBIOS code bank, not the lower 32K of application
-TPA. As such, a dynamically installed interrupt handler does not have
-access to the lower 32K of TPA and must be careful to avoid modifying the
-contents of the lower 32K of memory. Invoking RomWBW HBIOS functions
-within an interrupt handler is not supported.
+Note that during interrupt processing, the lower 32K of CPU address 
+space will contain the RomWBW HBIOS code bank, not the lower 32K of 
+application TPA. As such, a dynamically installed interrupt handler does
+not have access to the lower 32K of TPA and must be careful to avoid 
+modifying the contents of the lower 32K of memory. Invoking RomWBW HBIOS
+functions within an interrupt handler is not supported.
 
-Interrupt handlers are different for IM1 or IM2.
+Interrupt handlers are different under IM1 and IM2.
 
-For IM1:
+Interrupt Mode 1:
 
-> The new interrupt handler is responsible for chaining (JP) to the
+: The new interrupt handler is responsible for chaining (JP) to the
 previous vector if the interrupt is not handled. If the interrupt is
 handled, the new handler may simply return (RET). When chaining to the
 previous interrupt handler, ZF must be set if interrupt is handled and
@@ -2137,16 +2263,16 @@ ZF cleared if not handled. The interrupt management framework takes care
 of saving and restoring AF, BC, DE, HL, and IY. Any other registers
 modified must be saved and restored by the interrupt handler.
 
-For IM2:
+Interrupt Mode 2:
 
-> The new interrupt handler may either replace or hook the previous
+: The new interrupt handler may either replace or hook the previous
 interrupt handler. To replace the previous interrupt handler, the new
 handler just returns (RET) when done. To hook the previous handler, the
 new handler can chain (JP) to the previous vector. Note that initially
 all IM2 interrupt vectors are set to be handled as “BAD” meaning that the
 interrupt is unexpected. In most cases, you do not want to chain to the
-previous vector because it will cause the interrupt to display a “BAD
-INT” system panic message.
+previous vector because it will cause the interrupt to display a "BAD
+INT" system panic message.
 
 The interrupt framework will take care of issuing an EI and RETI
 instruction. Do not put these instructions in your new handler.
@@ -2168,34 +2294,40 @@ with the handler prior to uninstalling it.
 
 #### SYSINT Subfunction 0x00 -- Interrupt Info (INTINF)
 
-|      _Entry Parameters_
-|           BC: 0xFC00
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0xFC                                | A: Status                              |
+| C: 0x00                                | D: Interrupt Mode                      |
+|                                        | E: IVT Size                            |
 
-|      _Returned Values_
-|           A: Status (0=OK, else error)
-|           D: Interrupt Mode
-|           E: Size (# entries) of Interrupt Vector Table
-
-Return interrupt mode in D and size of interrupt vector table in E. For
+Return current Interrupt Mode (D) of the system.  Also return the
+number of Interrupt Vector Table (IVT) entries in IVT Size (E).
+interrupt mode in D and size of interrupt vector table in E. For
 IM1, the size of the table is the number of vectors chained together.
 For IM2, the size of the table is the number of slots in the vector
-table.
+table.  The Status (A) is a standard 
+HBIOS result code.
 
 #### SYSINT Subfunction 0x10 -- Get Interrupt (INTGET)
 
-|      _Entry Parameters_
-|           BC: 0xFC10
-|           E: Interrupt Vector Table Index
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0xFC                                | A: Status                              |
+| C: 0x10                                | HL: IVT Address                        |
+| E: IVT Index                           |                                        |
 
-|      _Returned Values_
-|           A: Status (0=OK, else error)
-|           HL: Current Interrupt Vector Address
-
-On entry, register E must contain an index into the interrupt vector
-table. On return, HL will contain the address of the current interrupt
-vector at the specified index.
+This function will return the IVT Address (HL) of the current interrupt
+vector for the specified IVT Index (C).  The Status (A) is a standard 
+HBIOS result code.
 
 #### SYSINT Subfunction 0x20 -- Set Interrupt (INTSET)
+
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0xFC                                | A: Status                              |
+| C: 0x20                                | HL: Previous Interrupt Address         |
+| E: IVT Index                           |                                        |
+| HL: Interrupt Address                  |                                        |
 
 |      _Entry Parameters_
 |           BC: 0xFC20
@@ -2207,11 +2339,9 @@ vector at the specified index.
 |           HL: Previous Interrupt Vector Address
 |           DE: Interrupt Routing Engine Address (IM2)
 
-On entry, register E must contain an index into the interrupt vector table
-and register HL must contain the address of the new interrupt vector to
-be inserted in the table at the index. On return, HL will contain the
-previous address in the table at the index.
-
+This function will set a new Interrupt Address (HL) at the IVT Index (E)
+specified.  On return, the Previous Interrupt Address (HL) will be
+provided.
 
 `\clearpage`{=latex}
 
