@@ -20,6 +20,7 @@
 
 Binary/**/*.mym
 Binary/**/*.pt3
+!Binary/cpnos-wbw.sys
 
 Source/**/eeprom
 Source/Apps/Assign.com

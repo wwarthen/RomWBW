@@ -13,4 +13,4 @@ set CPMDIR80=%TOOLS%/cpm/
 zxcc M80 -,=survey/L/R
 zxcc L80 -survey,survey/N/E
 
-:: copy /Y survey.com ..\..\..\Binary\Apps\ || exit /b
+copy /Y survey.com ..\..\..\Binary\Apps\ || exit /b
