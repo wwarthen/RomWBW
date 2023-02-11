@@ -137,12 +137,12 @@ a set of directories. Each of these directories has it's own
 ReadMe.txt file describing the contents in detail. In summary, these
 directories are:
 
-| Directory       | Description                                                    |
-| --------------- | -------------------------------------------------------------- |
+| **Directory**   | **Description**                                                                                                                                                    |
+|-----------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | **Binary**      | The final output files of the build process are placed here. Most importantly, the ROM images with the file names ending in ".rom" and disk images ending in .img. |
-| **Doc**         | Contains various detailed documentation, both RomWBW specifically as well as the operating systems and applications. |
-| **Source**      | Contains the source code files used to build the software and ROM images. |
-| **Tools**       | Contains the programs that are used by the build process or that may be useful in setting up your system. |
+| **Doc**         | Contains various detailed documentation, both RomWBW specifically as well as the operating systems and applications.                                               |
+| **Source**      | Contains the source code files used to build the software and ROM images.                                                                                          |
+| **Tools**       | Contains the programs that are used by the build process or that may be useful in setting up your system.                                                          |
 
 ## Installation
 
@@ -173,37 +173,45 @@ The Binary directory of the distribution contains the pre-built ROM and
 disk images. The ROM image files all end in ".rom". Based on the table
 below, **carefully** pick the appropriate ROM image for your hardware.
 
-| **Description**                                  | **ROM Image File**    | **Baud Rate** |
-| ------------------------------------------------ | --------------------- | ------------: |
-| RetroBrew Z80 SBC for ECB Bus                    | SBC_std.rom           | 38400         |
-| RetroBrew Zeta V1 Z80, ParPortProp               | ZETA_std.rom          | 38400         |
-| RetroBrew Zeta V2 Z80, ParPortProp               | ZETA2_std.rom         | 38400         |
-| RetroBrew N8 Z180 (date code >= 2312)            | N8_std.rom            | 38400         |
-| RetroBrew Mark IV Z180 for ECB Bus               | MK4_std.rom           | 38400         |
-| RC/BP80 Bus Z80, 512K RAM/ROM                    | RCZ80_std.rom         | 115200        |
-| RC/BP80 Bus Z80, 512K RAM/ROM, DUART             | RCZ80_duart.rom       | 115200        |
-| RC/BP80 Bus Z80, 512K RAM/ROM, MT011             | RCZ80_mt.rom          | 115200        |
-| RC/BP80 Bus Z80, 512K RAM/ROM, KIO               | RCZ80_kio.rom         | 115200        |
-| RC/BP80 Bus Z180 w/ external banking             | RCZ180_ext.rom        | 115200        |
-| RC/BP80 Bus Z180 w/ native banking               | RCZ180_nat.rom        | 115200        |
-| RC/BP80 Bus Z280 w/ external banking             | RCZ180_ext.rom        | 115200        |
-| RC/BP80 Bus Z280 w/ native banking               | RCZ180_nat.rom        | 115200        |
-| Sergey Kiselev's Easy Z80 SBC w/ RCBus           | EZZ80_std.rom         | 115200        |
-| Sergey Kiselev's Tiny EIPC Z80 SBC w/ RCBus      | EZZ80_tz80.rom        | 115200        |
-| Sergey Kiselev's Z80-512K Module for RCBus       | EZZ80_skz.rom         | 115200        |
-| Stephen Cousins' SC126 Z180 SBC w/ BP80 Bus      | SCZ180_126.rom        | 115200        |
-| Stephen Cousins' SC130 Z180 SBC w/ RCBus         | SCZ180_130.rom        | 115200        |
-| Stephen Cousins' SC131 Z180 Pocket Computer      | SCZ180_131.rom        | 115200        |
-| Stephen Cousins' SC140 Z180 for Z50Bus           | SCZ180_140.rom        | 115200        |
-| Steve Garcia's Z180 Dyno SBC w/ Dyno Bus         | DYNO_std.rom          | 38400         |
-| Andrew Lynch's Nhyodyne Z80 MBC                  | MBC_std.rom           | 38400         |
-| Andrew Lynch's Rhyophyre Z180 SBC                | RPH_std.rom           | 38400         |
-| Bill Shen's Z80 ZRC for RCBus                    | RCZ80_zrc.rom         | 115200        |
-| Bill Shen's Z280 ZZRCC for RCBus                 | RCZ280_nat_zzr.rom    | 115200        |
-| Bill Shen's Z280 ZZ80MB SBC w/ RCBus             | RCZ280_nat_zz.rom     | 115200        |
+| **Description**                                     | **ROM Image File** | **Baud Rate** |
+|--------------------------------------------------   |--------------------|--------------:|
+| RetroBrew Z80 SBC^1^ for ECB Bus                    | SBC_std.rom        | 38400         |
+| RetroBrew Zeta V1 Z80 SBC^2^, ParPortProp           | ZETA_std.rom       | 38400         |
+| RetroBrew Zeta V2 Z80 SBC^2^, ParPortProp           | ZETA2_std.rom      | 38400         |
+| RetroBrew N8 Z180^1^ (date code >= 2312)            | N8_std.rom         | 38400         |
+| RetroBrew Mark IV^3^ Z180 for ECB Bus               | MK4_std.rom        | 38400         |
+| RCBus Z80 CPU Module^4^, 512K RAM/ROM               | RCZ80_std.rom      | 115200        |
+| RCBus Z80 CPU Module^4^, 512K RAM/ROM, DUART        | RCZ80_duart.rom    | 115200        |
+| RCBus Z80 CPU Module^4^, 512K RAM/ROM, MT011        | RCZ80_mt.rom       | 115200        |
+| RCBus Z80 CPU Module^4^, 512K RAM/ROM, KIO          | RCZ80_kio.rom      | 115200        |
+| RCBus Z180 CPU Module^4^ w/ external banking        | RCZ180_ext.rom     | 115200        |
+| RCBus Z180 CPU Module^4^ w/ native banking          | RCZ180_nat.rom     | 115200        |
+| RCBus Z280 CPU Module^4^ w/ external banking        | RCZ180_ext.rom     | 115200        |
+| RCBus Z280 CPU Module^4^ w/ native banking          | RCZ180_nat.rom     | 115200        |
+| Easy Z80 SBC^2^ w/ RCBus                            | EZZ80_std.rom      | 115200        |
+| Tiny EIPC Z80 SBC^2^ w/ RCBus                       | EZZ80_tz80.rom     | 115200        |
+| Z80-512K CPU/RAM/ROM Module^2^ for RCBus            | EZZ80_skz.rom      | 115200        |
+| SC126 Z180 SBC^5^ w/ BP80 Bus                       | SCZ180_126.rom     | 115200        |
+| SC130 Z180 SBC^5^ w/ RCBus                          | SCZ180_130.rom     | 115200        |
+| SC131 Z180 Pocket Computer^5^                       | SCZ180_131.rom     | 115200        |
+| SC140 Z180 CPU Module^5^ for Z50Bus                 | SCZ180_140.rom     | 115200        |
+| Dyno Z180 SBC^6^ w/ Dyno Bus                        | DYNO_std.rom       | 38400         |
+| Nhyodyne Z80 MBC^1^                                 | MBC_std.rom        | 38400         |
+| Rhyophyre Z180 SBC^1^                               | RPH_std.rom        | 38400         |
+| Z80 ZRC^7^ for RCBus                                | RCZ80_zrc.rom      | 115200        |
+| Z280 ZZRCC^7^ for RCBus                             | RCZ280_nat_zzr.rom | 115200        |
+| Z280 ZZ80MB SBC^7^ w/ RCBus                         | RCZ280_nat_zz.rom  | 115200        |
 
-RCBus refers to Spencer Owen's RC2014 bus specification.  BP80 Bus is 
-an enhanced 80-pin version of the RC2014 bus.
+| ^1^Designed by Andrew Lynch
+| ^2^Designed by Sergey Kiselev
+| ^3^Designed by John Coffman
+| ^4^RCBus compliant (multiple products/designers)
+| ^5^Designed by Stephen Cousins
+| ^6^Designed by Steve Garcia
+| ^7^Designed by Bill Shen
+
+RCBus refers to Spencer Owen's RC2014 bus specification and derivatives
+including RC26, RC40, RC80, and BP80.
 
 The RCBus Z180 & Z280 require a separate RAM/ROM memory module. There 
 are two types of these modules and you must pick the correct ROM for 
@@ -541,8 +549,8 @@ Boot [H=Help]:
 The following ROM applications and OSes are available at the boot loader
 prompt:
 
-| Application       | Description                                                    |
-| ----------------- | -------------------------------------------------------------- |
+| **Application**   | **Description**                                                |
+|-------------------|----------------------------------------------------------------|
 | Monitor           | Z80 system debug monitor w/ Intel Hex loader                   |
 | CP/M 2.2          | Digital Research CP/M 2.2 OS                                   |
 | Z-System          | ZSDOS 1.1 w/ ZCPR 1 (Enhanced CP/M compatible OS)              |
@@ -1148,7 +1156,7 @@ boot messages meaning the first IDE device. To refer to the fourth
 slice of IDE0, you would type "IDE0:3". Here are some examples:
 
 |          |                              |
-| -------- | ---------------------------- |
+|----------|------------------------------|
 | `IDE0:0` | First slice of disk in IDE0  |
 | `IDE0:`  | First slice of disk in IDE0  |
 | `IDE0:3` | Fourth slice of disk in IDE0 |
@@ -1383,8 +1391,8 @@ Each disk image has the complete set of normal applications and tools
 distributed with the associated operating system or application suite.
 The following table shows the disk images available.
 
-| Disk Image      | Description                            | Bootable |
-| --------------- | -------------------------------------- | -------- |
+| **Disk Image**  | **Description**                        | **Boot** |
+|-----------------|----------------------------------------|----------|
 | xxx_cpm22.img   | DRI CP/M 2.2 Operating System          | Yes      |
 | xxx_zsdos.img   | ZCPR-DJ & ZSDOS 1.1 Operating System   | Yes      |
 | xxx_nzcom.img   | NZCOM ZCPR 3.4 Operating System        | Yes      |
@@ -1455,14 +1463,14 @@ The combo disk image is essentially just a single image that has several
 combo disk image contains the following 6 slices in the positions 
 indicated:
 
-| Slice   | Description                                                      |
-| ------- | ---------------------------------------------------------------- |
-| Slice 0 | DRI CP/M 2.2 Operating System                                    |
-| Slice 1 | ZCPR-DJ & ZSDOS 1.1 Operating System                             |
-| Slice 2 | NZCOM ZCPR 3.4 Operating System                                  |
-| Slice 3 | DRI CP/M 3 Operating System                                      |
-| Slice 4 | ZPM3 Operating System                                            |
-| Slice 5 | WordStar v4 & ZDE Applications                                   |
+| **Slice** | **Description**                                                  |
+|-----------|------------------------------------------------------------------|
+| Slice 0   | DRI CP/M 2.2 Operating System                                    |
+| Slice 1   | ZCPR-DJ & ZSDOS 1.1 Operating System                             |
+| Slice 2   | NZCOM ZCPR 3.4 Operating System                                  |
+| Slice 3   | DRI CP/M 3 Operating System                                      |
+| Slice 4   | ZPM3 Operating System                                            |
+| Slice 5   | WordStar v4 & ZDE Applications                                   |
 
 You will notice that there are actually 2 combo disk images in the 
 distribution.  One for an hd512 disk layout (hd512_combo.img) and one 
@@ -2126,30 +2134,30 @@ directory of the distribution.
 The following custom applications are found on the ROM disk and are,
 therefore, globally available.
 
-| Application | Description                                                    |
-| ----------- | -------------------------------------------------------------- |
-| ASSIGN        | Add, change, and delete drive letter assignments. Use ASSIGN /? for usage instructions.              |
-| SYSCOPY       | Copy system image to a device to make it bootable. Use SYSCOPY with no parms for usage instructions. |
-| MODE          | Reconfigures serial ports dynamically.                                                               |
-| FDU           | Format and test floppy disks. Menu driven interface.                                                 |
-| FORMAT        | Will someday be a command line tool to format floppy disks. Currently does nothing!                  |
-| XM            | XModem file transfer program adapted to hardware. Automatically uses primary serial port on system.  |
-| FLASH         | Will Sowerbutts' in-situ ROM programming utility.                                                    |
-| FDISK80       | John Coffman's Z80 hard disk partitioning tool.  See documentation in Doc directory.                 |
-| TALK          | Direct console I/O to a specified character device.                                                  |
-| RTC           | Manage and test the Real Time Clock hardware.                                                        |
-| TIMER         | Display value of running periodic system timer.                                                      |
-| CPUSPD        | Change the running CPU speed and wait states of the system.                                          |
+| **Application** | **Description                                                                                        |
+|-----------------|------------------------------------------------------------------------------------------------------|
+| ASSIGN          | Add, change, and delete drive letter assignments. Use ASSIGN /? for usage instructions.              |
+| SYSCOPY         | Copy system image to a device to make it bootable. Use SYSCOPY with no parms for usage instructions. |
+| MODE            | Reconfigures serial ports dynamically.                                                               |
+| FDU             | Format and test floppy disks. Menu driven interface.                                                 |
+| FORMAT          | Will someday be a command line tool to format floppy disks. Currently does nothing!                  |
+| XM              | XModem file transfer program adapted to hardware. Automatically uses primary serial port on system.  |
+| FLASH           | Will Sowerbutts' in-situ ROM programming utility.                                                    |
+| FDISK80         | John Coffman's Z80 hard disk partitioning tool.  See documentation in Doc directory.                 |
+| TALK            | Direct console I/O to a specified character device.                                                  |
+| RTC             | Manage and test the Real Time Clock hardware.                                                        |
+| TIMER           | Display value of running periodic system timer.                                                      |
+| CPUSPD          | Change the running CPU speed and wait states of the system.                                          |
 
 Some custom applications do not fit on the ROM disk. They are found on the
 disk image files or the individual files can be found in the Binary\\Apps
 directory of the distribution.
 
-| Application | Description                                                    |
-| ----------- | -------------------------------------------------------------- |
-| TUNE        | Play .PT2, .PT3, .MYM audio files.                             |
-| FAT         | Access MS-DOS FAT filesystems from RomWBW (based on FatFs).    |
-| INTTEST     | Test interrupt vector hooking.                                 |
+| **Application** | **Description**                                                    |
+|-----------------|--------------------------------------------------------------------|
+| TUNE            | Play .PT2, .PT3, .MYM audio files.                                 |
+| FAT             | Access MS-DOS FAT filesystems from RomWBW (based on FatFs).        |
+| INTTEST         | Test interrupt vector hooking.                                     |
 
 # FAT Filesystem
 
@@ -3114,54 +3122,261 @@ Also feel free to email $doc_author$ at [$doc_authmail$](mailto:$doc_authmail$).
 
 `\clearpage`{=latex}
 
-## Appendix A - Device Summary
+## Appendix A - Pre-built ROM Images
+
+The standard ROM images will detect and install support for certain
+devices and peripherals that are on-board or frequently used with
+each platform as documented below.  If the device or peripheral is
+not detected at boot, the ROM will simply bypass support
+appropriately.
+
+#### SBC (SBC_std.rom)
+
+ - CPU speed is detected at startup
+ - Console on onboard UART serial port at 38400 baud
+ - Includes support for PPIDE/CF Card(s) connected to on-board
+   parallel port.
+ - Includes support for CVDU and VGA3 boards.  If detected at
+   startup, support for video and keyboard is installed
+   including VT-100/ANSI terminal emulation.
+ - Auto detects DiskIO v3 floppy disk controller and installs
+   support for two attached 3.5" floppy disks if found
+ - Auto-detects PropIO or PropIO V2 and installs associated
+   video, keyboard and SD Card support if present.
+ - If PropIO, PropIO V2, CVDU, or VGA hardware is detected,
+   initial console output is determined by JP2.  If JP2 is
+   shorted, console will go to on-board serial port, if JP2
+   is open, console will go to the detected video and keyboard
+   ports.
+ - SBC V1 has a known race condition in the bank switching
+   circuit which is likely to cause system instability.  SBC
+   V2 does not have this issue.
+
+#### SBC (SBC_simh.rom)
+
+ - SBC variant customized to run under SimH
+ - Implments two emulated SimH hard disk images
+ - Uses SimH RTC
+
+#### ZETA (ZETA_std.rom)
+
+ - CPU speed is detected at startup
+ - Console on onboard UART serial port at 38400 baud
+ - Auto-detects FDC and installs 3.5" disk support
+   if found
+ - Auto detects on-board floppy disk controller and installs
+   support for one attached 3.5" floppy disk if found
+ - Auto-detects ParPortProp and includes support for it if it
+   is attached.
+ - If ParPortProp is installed, initial console output is
+   determined by JP1.  If JP1 is shorted, console will go to
+   on-board serial port, if JP1 is open, console will go to
+   ParPortProp video and keyboard ports.
+
+#### ZETA2 (ZETA2_std.rom)
+
+ - CPU speed is detected at startup
+ - Console on onboard UART serial port at 38400 baud
+ - Auto detects on-board floppy disk controller and installs
+   support for one attached 3.5" floppy disk if found
+ - Auto-detects ParPortProp and includes support for it if it
+   is attached.
+ - Uses CTC to generate periodic timer interrupts.
+ - If ParPortProp is installed, initial console output is
+   determined by JP1.  If JP1 is shorted, console will go to
+   on-board serial port, if JP1 is open, console will go to
+   ParPortProp video and keyboard ports.
+
+#### N8 (N8_std.rom)
+
+ - CPU speed is detected at startup
+ - Console on Z180 onboard primary ASCI serial port at 38400 baud
+ - Auto detects onboard floppy disk controller and installs
+   support for two attached 3.5" floppy disks if found
+ - Includes support for on-board TMS9918 video and keyboard
+   including VT-100/ANSI terminal emulation.
+ - Includes support for on-board SD Card as hard disk and
+   assumes a production level N8 board (date code >= 2312).
+
+#### MK4 (MK4_std.rom)
+
+ - CPU speed is detected at startup
+ - Console on Z180 onboard primary ASCI serial port at 38400 baud
+ - Includes support for on-board IDE port (CF Card via adapter).
+ - Includes support for on-board SD Card port.
+ - Auto detects Dual IDE floppy disk controller and installs
+   support for two attached 3.5" floppy disks if found
+ - Auto-detects PropIO or PropIO V2 and installs associated
+   video, keyboard and SD Card support if present.
+ - Includes support for CVDU and VGA3 boards.  If detected at
+   startup, support for video and keyboard is installed
+   including VT-100/ANSI terminal emulation.
+
+#### RCZ80 (RCZ80_std.rom)
+
+ - Assumes CPU oscillator of 7.3728 MHz
+ - Requires 512K RAM/ROM module
+ - Auto detects Serial I/O Module (ACIA), Dual Serial
+   Module (SIO/2), and EP Dual UART.
+ - Console on whichever serial module is installed,
+   order of priority is UART, SIO, then ACIA.
+ - Baud rate is determined by hardware, but normally 115200.
+ - Auto support for RC2014 Compact Flash Module
+ - Auto support for RC2014 PPIDE Module
+ - Support for Scott Baker SIO board may be enabled in config
+ - Auto detects WDC floppy disk controller and installs
+   support for two attached 3.5" floppy disks if found
+ - Support for SMC floppy controller may be enabled in config
+ - Support for J.B. Lang TMS9918 video card may be enabled in config
+ - Support for PropIO V2 may be enabled in config (PRPENABLE).  If
+   enabled, will auto-detect and install associated
+   video, keyboard and SD Card support if present.
+
+#### RCZ80 w/ KIO (RCZ80_kio.rom)
+
+ - Same as RCZ80_std
+ - Requires KIO module
+ - SIO ports provided by KIO
+
+#### RCZ180 (RCZ180_nat.rom & RCZ180_ext.rom)
+
+ - Assumes CPU oscillator of 18.432 MHz
+ - Console on Z180 onboard primary ASCI serial port at 115200 baud
+ - Auto support for RC2014 Compact Flash Module
+ - Auto support for RC2014 PPIDE Module
+ - Support for alternative serial modules may be enabled in config
+ - Auto detects WDC floppy disk controller and installs
+   support for two attached 3.5" floppy disks if found
+ - Support for SMC floppy controller may be enabled in config
+ - Support for J.B. Lang TMS9918 video card may be enabled in config
+ - You must pick the variant (_ext or _nat) depending
+   on which memory module you are using:
+   - RCZ180_ext.rom uses external bank management to access
+     memory, such as the 512K RAM/ROM module.
+   - RCZ180_nat.rom uses the built-in Z180 memory manager
+     for use with memory modules using direct physical
+     addressing of memory, such as the SC119.
+ - Support for PropIO V2 may be enabled in config (PRPENABLE).  If
+   enabled, will auto-detect and install associated
+   video, keyboard and SD Card support if present.
+
+#### RCZ280 (RCZ280_ext.rom, RCZ280_nat.rom, RCZ280_nat_zz.rom)
+
+ - Assumes CPU oscillator of 24 MHz
+ - Bus clock will be 6 MHz or 12 MHz, so does not match RC2014 standard!!!
+ - Requires 512K RAM/ROM module (unless using ZZ80MB)
+ - Auto detects Serial I/O Module (ACIA), Dual Serial
+   Module (SIO), EP Dual UART (DUART), and built-in Z280 UART (Z2U).
+ - ACIA module is only supported on _ext variant.
+ - Built-in Z280 UART (Z2U) is buffered and interrupt driven only
+   on _nat and _nat_zz variants.  It uses polling I/O on _ext.
+ - Console on whichever serial module is installed,
+   order of priority is Z2U, UART, SIO, DUART, ACIA
+ - Baud rate is determined by hardware, but normally 115200.
+ - Auto support for RC2014 Compact Flash Module
+ - Auto support for RC2014 PPIDE Module
+ - Support for Scott Baker SIO board may be enabled in config
+ - Auto detects WDC floppy disk controller and installs
+   support for two attached 3.5" floppy disks if found
+ - Support for SMC floppy controllers may be enabled in config
+ - Support for J.B. Lang TMS9918 video card may be enabled in config
+ - You must pick the variant (_ext, _nat, or _nat_zz) depending
+   on which platform or memory module you are using
+   - RCZ280_ext.rom uses external bank management to access
+     memory, such as the 512K RAM/ROM module.
+   - RCZ280_nat.rom uses the built-in Z280 memory manager
+     for use with memory modules using direct physical
+     addressing of memory, such as the SC119.
+   - RCZ280_nat_zz.rom is specifically for the ZZ80MB platform
+     which has both CPU and memory onboard.
+ - Support for PropIO V2 may be enabled in config (PRPENABLE).  If
+   enabled, will auto-detect and install associated
+   video, keyboard and SD Card support if present.
+
+#### SCZ180 (SCZ180_126.rom, SCZ180_130.rom, SCZ180_131.rom, SCZ140.rom)
+
+ - Same as RCZ180
+ - Adds auto support for onboard SPI SD Card
+ - The 4 different variants of SCZ180 are provided to match the
+   4 corresponding systems (SC126, SC130, SC131, and SC140)
+   designed by Stephen Cousins.
+ - Support for PropIO V2 may be enabled in config (PRPENABLE).  If
+   enabled, will auto-detect and install associated
+   video, keyboard and SD Card support if present.
+
+#### EZZ80 (EZZ80_std.rom)
+
+ - Assumes CPU oscillator of 10.000 MHz
+ - Console on primary SIO serial port at 115200 baud
+ - Includes support for on-board SIO
+ - Auto support for RC2014 Compact Flash Module
+ - Auto support for RC2014 PPIDE Module
+ - Auto detects WDC floppy disk controller and installs
+   support for two attached 3.5" floppy disks if found
+ - Support for SMC floppy controllers may be enabled in config
+ - Support for PropIO V2 may be enabled in config (PRPENABLE).  If
+   enabled, will auto-detect and install associated
+   video, keyboard and SD Card support if present.
+
+#### DYNO (DYNO_std.rom)
+
+ - Assumes CPU oscillator of 18.432 MHz
+ - Console on Z180 onboard serial ports at 38400 baud
+ - Includes support for BQ4842 RTC
+ - Auto detects Dyno floppy disk controller and installs
+   support for two attached 3.5" floppy disks if found
+ - Includes support for onboard PPIDE
+
+`\clearpage`{=latex}
+
+## Appendix B - Device Summary
 
 The table below briefly describes each of the possible devices that
 may be discovered by RomWBW in your system.
 
-| ID        | Type    | Description                                            |
-|---------- | ------- | ------------------------------------------------------ |
-| ACIA      | Char    | MC68B50 Asynchronous Communications Interface Adapter  |
-| ASCI      | Char    | Z180 Built-in Serial Ports                             |
-| AY        | Audio   | AY-3-8910/YM2149 Programmable Sound Generator          |
-| BQRTC     | RTC     | BQ4845P Real Time Clock                                |
-| CTC       | System  | Zilog Clock/Timer                                      |
-| CVDU      | Video   | MC8563-based Video Display Controller                  |
-| DMA       | System  | Zilog DMA Controller                                   |
-| DS1307    | RTC     | Maxim DS1307 PCF I2C Real-Time Clock w/ NVRAM          |
-| DS1501RTC | RTC     | Maxim DS1501/DS1511 Watchdog Real-Time Clock           |
-| DSKY      | System  | Keypad & Display                                       |
-| DSRTC     | RTC     | Maxim DS1302 Real-Time Clock w/ NVRAM                  |
-| DUART     | Char    | SCC2681 or compatible Dual UART                        |
-| FD        | Disk    | 8272 of compatible Floppy Disk Controller              |
-| GDC       | Video   | uPD7220 Video Display Controller                       |
-| HDSK      | Disk    | SIMH Simulator Hard Disk                               |
-| IDE       | Disk    | IDE/ATA Hard Disk Interface                            |
-| INTRTC    | RTC     | Interrupt-based Real Time Clock                        |
-| KBD       | Kbd     | 8242 PS/2 Keyboard Controller                          |
-| KIO       | System  | Zilog Serial/ Parallel Counter/Timer                   |
-| LPT       | Char    | Parallel I/O Controller                                |
-| MD        | Disk    | ROM/RAM Disk                                           |
-| MSXKYB    | Kbd     | MSX Compliant Matrix Keyboard                          |
-| I2C       | System  | I2C Interface                                          |
-| PIO       | Char    | Zilog Parallel Interface Controller                    |
-| PPIDE     | Disk    | 8255 IDE/ATA Hard Disk Interface                       |
-| PPK       | Kbd     | Matrix Keyboard                                        |
-| PPPSD     | Disk    | ParPortProp SD Card Interface                          |
-| PPPCON    | Serial  | ParPortProp Serial Console Interface                   |
-| PRPSD     | Disk    | PropIO SD Card Interface                               |
-| PRPCON    | Serial  | PropIO Serial Console Interface                        |
-| RF        | Disk    | RAM Floppy Disk Interface                              |
-| RP5C01    | RTC     | Ricoh RPC01A Real-Time Clock w/ NVRAM                  |
-| SD        | Disk    | SD Card Interface                                      |
-| SIMRTC    | RTC     | SIMH Simulator Real-Time Clock                         |
-| SIO       | Char    | Zilog Serial Port Interface                            |
-| SN76489   | Sound   | SN76489 Programmable Sound Generator                   |
-| SPK       | Sound   | Bit-bang Speaker                                       |
-| TMS       | Video   | TMS9918/38/58 Video Display Controller                 |
-| UART      | Char    | 16C550 Family Serial Interface                         |
-| USB-FIFO  | Char    | FT232H-based ECB USB FIFO                              |
-| VDU       | Video   | MC6845 Family Video Display Controller                 |
-| VGA       | Video   | HD6445CP4-based Video Display Controller               |
-| YM        | Audio   | YM2612 Programmable Sound Generator                    |
-| Z2U       | Char    | Zilog Z280 Built-in Serial Ports                       |
+| **ID**    | **Type** | **Description**                                        |
+|-----------|----------|--------------------------------------------------------|
+| ACIA      | Char     | MC68B50 Asynchronous Communications Interface Adapter  |
+| ASCI      | Char     | Z180 Built-in Serial Ports                             |
+| AY        | Audio    | AY-3-8910/YM2149 Programmable Sound Generator          |
+| BQRTC     | RTC      | BQ4845P Real Time Clock                                |
+| CTC       | System   | Zilog Clock/Timer                                      |
+| CVDU      | Video    | MC8563-based Video Display Controller                  |
+| DMA       | System   | Zilog DMA Controller                                   |
+| DS1307    | RTC      | Maxim DS1307 PCF I2C Real-Time Clock w/ NVRAM          |
+| DS1501RTC | RTC      | Maxim DS1501/DS1511 Watchdog Real-Time Clock           |
+| DSKY      | System   | Keypad & Display                                       |
+| DSRTC     | RTC      | Maxim DS1302 Real-Time Clock w/ NVRAM                  |
+| DUART     | Char     | SCC2681 or compatible Dual UART                        |
+| FD        | Disk     | 8272 of compatible Floppy Disk Controller              |
+| GDC       | Video    | uPD7220 Video Display Controller                       |
+| HDSK      | Disk     | SIMH Simulator Hard Disk                               |
+| IDE       | Disk     | IDE/ATA Hard Disk Interface                            |
+| INTRTC    | RTC      | Interrupt-based Real Time Clock                        |
+| KBD       | Kbd      | 8242 PS/2 Keyboard Controller                          |
+| KIO       | System   | Zilog Serial/ Parallel Counter/Timer                   |
+| LPT       | Char     | Parallel I/O Controller                                |
+| MD        | Disk     | ROM/RAM Disk                                           |
+| MSXKYB    | Kbd      | MSX Compliant Matrix Keyboard                          |
+| I2C       | System   | I2C Interface                                          |
+| PIO       | Char     | Zilog Parallel Interface Controller                    |
+| PPIDE     | Disk     | 8255 IDE/ATA Hard Disk Interface                       |
+| PPK       | Kbd      | Matrix Keyboard                                        |
+| PPPSD     | Disk     | ParPortProp SD Card Interface                          |
+| PPPCON    | Serial   | ParPortProp Serial Console Interface                   |
+| PRPSD     | Disk     | PropIO SD Card Interface                               |
+| PRPCON    | Serial   | PropIO Serial Console Interface                        |
+| RF        | Disk     | RAM Floppy Disk Interface                              |
+| RP5C01    | RTC      | Ricoh RPC01A Real-Time Clock w/ NVRAM                  |
+| SD        | Disk     | SD Card Interface                                      |
+| SIMRTC    | RTC      | SIMH Simulator Real-Time Clock                         |
+| SIO       | Char     | Zilog Serial Port Interface                            |
+| SN76489   | Sound    | SN76489 Programmable Sound Generator                   |
+| SPK       | Sound    | Bit-bang Speaker                                       |
+| TMS       | Video    | TMS9918/38/58 Video Display Controller                 |
+| UART      | Char     | 16C550 Family Serial Interface                         |
+| USB-FIFO  | Char     | FT232H-based ECB USB FIFO                              |
+| VDU       | Video    | MC6845 Family Video Display Controller                 |
+| VGA       | Video    | HD6445CP4-based Video Display Controller               |
+| YM        | Audio    | YM2612 Programmable Sound Generator                    |
+| Z2U       | Char     | Zilog Z280 Built-in Serial Ports                       |

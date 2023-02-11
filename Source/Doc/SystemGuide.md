@@ -1,41 +1,44 @@
 $define{doc_title}{System Guide}$
 $include{"Book.h"}$
 
-Overview
-========
+# Overview
 
-RomWBW provides a complete firmware package for all of the Z80 and Z180
-based systems that are available in the RetroBrew Computers Community
-(see
-[http://www.retrobrewcomputers.org](http://www.retrobrewcomputers.org/))
-as well as support for the RC2014 platform. Each of these systems
-provides for a fairly large ROM memory (typically, 512KB or more).
-RomWBW allows you to configure and build appropriate contents for such a
-ROM.
+The objective of RomWBW is to provide firmware, operating systems,
+and applications targeting the Z80 family of CPUs.  The firmware,
+in the form of a ROM module, acts as the hardware interface layer
+with a well-defined API (the HBIOS).  The associated operating
+systems and applications are adapted to the HBIOS API, not specific
+hardware.
 
-Typically, a computer will contain a small ROM that contains the BIOS
-(Basic Input/Output System) functions as well as code to start the
-system by booting an operating system from a disk. Since the RetroBrew
-Computers Projects provide a large ROM space, RomWBW provides a much
-more comprehensive software package. In fact, it is entirely possible to
-run a fully functioning RetroBrew Computers System with nothing but the
-ROM.
+The HBIOS is modular and configurable.  New hardware interfaces can
+be added in the form of straightforward driver modules.  Within certain
+constraints, new hardware platforms can be supported by simply
+adjusting values in a build configuration file.
 
-RomWBW firmware includes:
+RomWBW is geared toward hardware being developed in modern
+retro-computing hobbyist communities, not as a replacement for
+legacy hardware.  As a result, RomWBW requires at least 128KB
+of bank switched RAM.
 
-* System startup code (bootstrap)
+The CP/M family of operating systems has been adapted to run under
+RomWBW including CP/M 2.2, Z-System, CP/M 3, and several other
+variants.
+
+RomWBW firmware (ROM) includes:
+
+* System startup code (bootstrap) and bootloader
 
 * A basic system/debug monitor
 
-* HBIOS (Hardware BIOS) providing support for the vast majority of
-RetroBrew Computers I/O components
+* HBIOS (Hardware BIOS) with support for most typical hardware
+  components used in Z80 family computers
 
 * Diagnostics and customizable debugging information.
 
-* A complete operating system (either CP/M 2.2 or ZSDOS 1.1)
+* ROM-hosted operating systems (both CP/M 2.2 and Z-System)
 
-* A built-in CP/M filesystem containing the basic applications and
-utilities for the operating system and hardware being used
+* A ROM disk containing the standard OS applications and a
+  RAM disk for working storage.
 
 It is appropriate to note that much of the code and components that make
 up a complete RomWBW package are derived from pre-existing work. Most
@@ -43,44 +46,40 @@ notably, the embedded operating system is simply a ROM-based copy of
 generic CP/M or ZSDOS. Much of the hardware support code was originally
 produced by other members of the RetroBrew Computers Community.
 
-The remainder of this document will focus on the HBIOS portion of the
-ROM. HBIOS contains the vast majority of the custom-developed code for
-the RetroBrew Computers hardware platforms. It provides a formal,
-structured interface that allows the operating system to be hosted with
-relative ease.
+The remainder of this document focuses on HBIOS which is the
+fundamental basis of RomWBW.
 
-Background
-==========
+# Background
 
 The Z80 CPU architecture has a limited, 64K address range. In general,
 this address space must accommodate a running application, disk
 operating system, and hardware support code.
 
-All RetroBrew Computers Z80 CPU platforms provide a physical address
-space that is much larger than the CPU address space (typically 512K or
-1MB physical RAM). This additional memory can be made available to the
-CPU using a technique called bank switching. To achieve this, the
-physical memory is divided up into chunks (banks) of 32K each. A
+Modern retro-computing Z80 CPU platforms provide a physical address 
+space that is much larger than the CPU address space (typically 512K or 
+1MB of physical RAM). This additional memory can be made available to 
+the CPU using a technique called bank switching. To achieve this, the 
+physical memory is divided up into chunks (banks) of 32K each. A 
 designated area of the CPU's 64K address space is then reserved to "map"
-any of the physical memory chunks. You can think of this as a window
-that can be adjusted to view portions of the physical memory in 32K
-blocks. In the case of RetroBrew Computers platforms, the lower 32K of
-the CPU address space is used for this purpose (the window). The upper
-32K of CPU address space is assigned a fixed 32K area of physical memory
-that never changes. The lower 32K can be "mapped" on the fly to any of
-the 32K banks of physical memory at a time. The only constraint is that
-the CPU cannot be executing code in the lower 32K of CPU address space
-at the time that a bank switch is performed.
+ any of the physical memory chunks. You can think of this as a window 
+that can be adjusted to view portions of the physical memory in 32K 
+blocks. In the case of RomWBW, the lower 32K of the CPU address space is
+ used for this purpose (the window). The upper 32K of CPU address space 
+is assigned a fixed 32K area of physical memory that never changes. The 
+lower 32K can be "mapped" on the fly to any of the 32K banks of physical
+ memory at a time. The only constraint is that the CPU cannot be 
+executing code in the lower 32K of CPU address space at the time that a 
+bank switch is performed.
 
-By cleverly utilizing the pages of physical RAM for specific purposes
-and swapping in the correct page when needed, it is possible to utilize
-substantially more than 64K of RAM. Because the RetroBrew Computers
-Project has now produced a very large variety of hardware, it has become
-extremely important to implement a bank switched solution to accommodate
-the maximum range of hardware devices and desired functionality.
+By utilizing the pages of physical RAM for specific purposes and 
+swapping in the correct page when needed, it is possible to utilize 
+substantially more than 64K of RAM. Because the retro-computing 
+community has now produced a very large variety of hardware, it has 
+become extremely important to implement a bank switched solution to 
+accommodate the maximum range of hardware devices and desired 
+functionality.
 
-General Design Strategy
-=======================
+# General Design Strategy
 
 The design goal is to locate as much of the hardware dependent code as
 possible out of normal 64KB CP/M address space and into a bank switched
@@ -99,7 +98,7 @@ functions. Since the HBIOS proxy occupies only 512 bytes at the top of
 memory, the vast majority of the CPU memory is available to the
 operating system and the running application. As far as the operating
 system is concerned, all of the hardware driver code has been magically
-implemented inside of a small 512 byte area at the top of the CPU
+implemented inside of the small 512 byte area at the top of the CPU
 address space.
 
 Unlike some other Z80 bank switching schemes, there is no attempt to
@@ -116,43 +115,67 @@ it is necessary that the customization of these operating systems take
 into account the banks of memory used by HBIOS and not attempt to use
 those specific banks.
 
-Note that all code and data are located in RAM memory during normal
-execution. While it is possible to use ROM memory to run code, it would
-require that more upper memory be reserved for data storage. It is
-simpler and more memory efficient to keep everything in RAM. At startup
-(boot) all required code is copied to RAM for subsequent execution.
+Note that all code and data are located in RAM memory during normal 
+execution. While it is possible to use ROM memory to run code, it would 
+require that more upper memory be reserved for data storage. It is 
+simpler and more memory efficient to keep everything in RAM. At startup 
+(boot) all required code is copied to RAM (shadowed) for subsequent 
+execution.
 
-Runtime Memory Layout
-=====================
+# Runtime Memory Layout
 
 ![Bank Switched Memory Layout](Graphics/BankSwitchedMemory){ width=100% }
 
-System Boot Process
-===================
+# System Boot Process
 
 A multi-phase boot strategy is employed. This is necessary because at
 cold start, the CPU is executing code from ROM in lower memory which is
 the same area that is bank switched.
 
-Boot Phase 1 copies the phase 2 code to upper memory and jumps to it to
-continue the boot process. This is required because the CPU starts at
-address $0000 in low memory. However, low memory is used as the area
-for switching ROM/RAM banks in and out. Therefore, it is necessary to
-relocate execution to high memory in order to initialize the RAM memory
-banks.
+RomWBW supports multiple boot techniques as described below.  The
+most common of these is the ROM boot.
 
-Boot Phase 2 manages the setup of the RAM page banks for HBIOS
-operation, performs hardware initialization, and then executes the boot
-loader.
+## ROM Boot
 
-Boot Phase 3 is the loading of the selecting operating system (or debug
-monitor) by the Boot Loader. The Boot Loader is responsible for
-prompting the user to select a target operating system to load, loading
-it into RAM, then transferring control to it. The Boot Loader is capable
-of loading a target operating system from a variety of locations
-including disk drives and ROM.
+The ROM boot process normally begins with a system cold start (power on 
+or hardware reset).  The hardware is responsible for ensuring that the 
+lower 32K of CPU memory (bank window) is mapped to the initial 32K of 
+the ROM.  The Z80 CPU begins execution at address zero which will be 
+address zero of the ROM.
 
-Note that the entire boot process is entirely operating system agnostic.
+The following steps occur during the ROM boot process:
+
+#. The ROM code performs basic hardware initialization and ensures
+   that the top 32K of CPU memory is mapped to the proper RAM bank.
+
+#. The ROM code installs the HBIOS proxy code into the top 512
+   bytes of the CPU memory (0xFE00-0xFFFF).
+
+#. Using the proxy code services, the full HBIOS code is copied
+   from the ROM bank to the RAM bank that it will use for normal
+   processing.
+
+#. Again using the proxy code services, the RAM copy of HBIOS is
+   activated in the bank window and execution transitions to the
+   RAM copy of HBIOS.
+
+#. The HBIOS initializes the system console so that output can now
+   be displayed to the user.
+
+#. The HBIOS now performs the full hardware discovery and initialization
+   process while displaying it's progress.
+
+#. The HBIOS displays a final summary of the hardware device unit
+   assignments and various configuration information.
+
+#. The HBIOS loads the RomWBW Boot Loader from ROM into RAM and
+   jumps to it.
+
+At this point, the user would normally use Boot Loader commands
+to select and launch an operating system or applications from either
+ROM or disk.
+
+Note that the boot process is entirely operating system agnostic.
 It is unaware of the operating system being loaded. The Boot Loader
 prompts the user for the location of the binary image to load, but does
 not know anything about what is being loaded (the image is usually an
@@ -162,49 +185,17 @@ control to it. Assuming the typical situation where the image was an
 operating system, the loaded operating system will then perform it's own
 initialization and begin normal operation.
 
-There are actually two ways to perform a system boot. The first, and
-most commonly used, method is a "ROM Boot". This refers to booting the
-system directly from the startup code contained on the physical ROM
-chip. A ROM Boot is always performed upon power up or when a hardware
-reset is performed.
+## Application Boot
 
-Once the system is running (operating system loaded), it is possible to
-reboot the system from a system image contained on the file system. This
-is referred to as an "Application Boot". This mechanism allows a
-temporary copy of the system to be uploaded and stored on the file
-system of an already running system and then used to boot the system.
-This boot technique is useful to: 1) test a new build of a system image
-before programming it to the ROM; or 2) easily switch between system
-images on the fly.
+Once the system is running (operating system loaded), it is possible to 
+reboot the system from a system image (file) contained on the OS file 
+system. This is referred to as an "Application Boot".  The process is 
+similar to a ROM boot, but the HBIOS code is loaded from an image file 
+instead of ROM.  This boot technique is useful to: 1) test a new build 
+of a system image before programming it to the ROM; or 2) easily switch 
+between system images on the fly.
 
-A more detailed explanation of these two boot processes is presented
-below.
-
-ROM Boot
---------
-
-At power on (or hardware reset), ROM page 0 is automatically mapped to
-lower memory by hardware level system initialization. Page Zero (first
-256 bytes of the CPU address space) is reserved to contain dispatching
-instructions for interrupt instructions. Address $0000 performs a jump
-to the start of the phase 1 code so that this first page can be
-reserved.
-
-The phase 1 code now copies the phase 2 code from lower memory to upper
-memory and jumps to it. The phase 2 code now initializes the HBIOS by
-copying the ROM resident HBIOS from ROM to RAM. It subsequently calls
-the HBIOS initialization routine. Finally, it starts the Boot Loader
-which prompts the user for the location of the target system image to
-execute.
-
-Once the boot loader transfers control to the target system image, all
-of the Phase 1, Phase 2, and Boot Loader code is abandoned and the space
-it occupied is normally overwritten by the operating system.
-
-Application Boot
-----------------
-
-When a new system image is built, one of the output files produced is an
+During the RomWBW build process, one of the output files produced is an
 actual CP/M application (an executable .COM program file). Once you have
 a running CP/M (or compatible) system, you can upload/copy this
 application file to the filesystem. By executing this file, you will
@@ -212,43 +203,35 @@ initiate an Application Boot using the system image contained in the
 application file itself.
 
 Upon execution, the Application Boot program is loaded into memory by
-the previously running operating system starting at $0100. Note that
-program image contains a copy of the HBIOS to be installed and run. Once
+the previously running operating system starting at $0100. Note that the
+program image contains a full copy of the HBIOS to be installed and run. Once
 the Application Boot program is loaded by the previous operating system,
 control is passed to it and it performs a system initialization similar
-to the ROM Boot, but using the image loaded in RAM.
+to the ROM Boot, but using the image loaded in RAM.  Once te new
+HBIOS completes it's initialization, it will launch the Boot Loader
+just like a ROM boot.
 
-Specifically, the code at $0100 (in low memory) copies phase 2 boot
-code to upper memory and transfers control to it. The phase 2 boot code
-copies the HBIOS image from application RAM to RAM, then calls the HBIOS
-initialization routine. At this point, the prior HBIOS code has been
-discarded and overwritten. Finally, the Boot Loader is invoked just like
-a ROM Boot.
+The Application Boot program actually contains two other components
+beyond the new HBIOS.  It has a copy of the Boot Loader and a copy of
+the Z-System OS.  This is done in case the new HBIOS requires updated
+versions of the Boot Loader or OS to run.  The Boot Loader is aware
+of this boot mode and automatically adapts it's menu appropriately.
 
-ROM-less Boot
--------------
+If you restart your system, then it will revert to a ROM Boot from
+the currently installed ROM.
 
-Some hardware supported by RomWBW has a special mechanism for loading
-the initial code.  These systems have no ROM chips.  However, they
-have a small hardware bootstrap that loads a chunk of code from a
-disk device directlly into RAM at system startup.
+## RAM Boot
+
+Some hardware supported by RomWBW has a special mechanism for loading 
+the boot and HBIOS code.  These systems have no ROM chips.  However, 
+they have a small hardware bootstrap that loads a chunk of code from a 
+disk device directly into RAM at system startup.
 
 The startup then proceeds very much like the Application Boot
 process described above.  HBIOS is installed in it's operating bank
-and control is passed to the loader.
+and control is passed to the Boot Loader.
 
-Notes
------
-
-1. Size of ROM disk and RAM disk will be decreased as needed to
-accommodate RAM and ROM memory bank usage for the banked BIOS.
-
-2. There is no support for interrupt driven drivers at this time. Such
-support should be possible in a variety of ways, but none are yet
-implemented.
-
-Driver Model
-============
+# Driver Model
 
 The framework code for bank switching also allows hardware drivers to be
 implemented mostly without concern for memory management. Drivers are
@@ -259,19 +242,31 @@ requested function based on parameters passed in registers. Upon return,
 the bank switching framework takes care of restoring the original memory
 layout expected by the operating system and application.
 
-However, the one constraint of hardware drivers is that any data buffers
-that are to be returned to the operating system or applications must be
-allocated in high memory. Buffers inside of the driver's memory bank
-will be swapped out of the CPU address space when control is returned to
-the operating system.
+Drivers do need to be aware of the bank switching if a buffer address
+is being used in the function call.
 
-If the driver code must make calls to other code, drivers, or utilities
-in the driver bank, it must make those calls directly (it must not use
-RST 08). This is to avoid a nested bank switch which is not supported at
+* If the buffer address is in the lower 32K of RAM, then the memroy
+  it points to will be from the User Bank, not the HBIOS bank which
+  is now active.  In this case, the driver must use an inter-bank
+  copy to access the data.
+
+* If the buffer address is in the top 32K of RAM, then the driver will
+  have access to it directly even after a bank switch, so no special
+  steps are required.
+  
+For some functions, the location of the buffer is required to be
+in the top 32K of RAM to simplify the operation of the driver.
+
+It is usually better if the OS or application calling a buffered
+function places the buffer in the top 32K because this may avoid
+a double-copy operation.
+
+If driver code must make calls to other code, drivers, or utilities in 
+the HBIOS bank, it must make those calls directly (it must not use RST 
+08). This is to avoid a nested bank switch which is not supported at 
 this time.
 
-Character / Emulation / Video Services
-======================================
+# Character / Emulation / Video Services
 
 In addition to a generic set of routines to handle typical character
 input/output, HBIOS also includes functionality for managing built-in
@@ -312,11 +307,9 @@ desired emulation and specific physical VDA device to target. Likewise,
 the VDA Services may need to be initialized to put the specific video
 hardware into the proper mode, etc.
 
-HBIOS Reference
-===============
+# HBIOS Reference
 
-Invocation
-----------
+## Invocation
 
 HBIOS functions are invoked by placing the required parameters in CPU 
 registers and executing an RST 08 instruction. Note that HBIOS does not 
@@ -359,8 +352,7 @@ buffers) will require double-buffering if the caller’s buffer is in the
 lower 32K of CPU address space. For optimal performance, such buffers 
 should be placed in the upper 32K of CPU address space.
 
-Result Codes
--------------
+## Result Codes
 
 The following function result codes are defined generically for all 
 HBIOS functions. Most function calls will return a result in register A.
@@ -383,8 +375,7 @@ HBIOS functions. Most function calls will return a result in register A.
 
 `\clearpage`{=latex}
 
-Character Input/Output (CIO)
-----------------------------
+## Character Input/Output (CIO)
 
 Character Input/Output functions require that a Character Unit number be
 specified in register C. This is the logical device unit number 
@@ -564,8 +555,7 @@ values used.
 
 `\clearpage`{=latex}
 
-Disk Input/Output (DIO)
------------------------
+## Disk Input/Output (DIO)
 
 Disk Input/Output functions require that a Disk Unit number be specified
 in register C. This is the logical device unit number assigned 
@@ -867,8 +857,7 @@ is the number of bytes in one sector.
 
 `\clearpage`{=latex}
 
-Real Time Clock (RTC)
----------------------
+## Real Time Clock (RTC)
 
 The Real Time Clock functions provide read/write access to the clock and
 related Non-Volatile RAM.
@@ -892,7 +881,7 @@ The time functions to get and set the time (RTCGTM and RTCSTM) require a
 encoded.
 
 | **Offset** | **Contents**                            |
-|-----------:| ----------------------------------------|
+|-----------:|-----------------------------------------|
 | 0          | Year (00-99)                            |
 | 1          | Month (01-12)                           |
 | 2          | Date (01-31)                            |
@@ -1012,8 +1001,7 @@ used.
 
 `\clearpage`{=latex}
 
-Video Display Adapter (VDA)
----------------------------
+## Video Display Adapter (VDA)
 
 The VDA functions are provided as a common interface to Video Display
 Adapters. Not all VDAs will include keyboard hardware. In this case, the
@@ -1391,16 +1379,16 @@ The Keystate (D) is a bitmap representing the value of all modifier keys
  and shift states as they existed at the time of the keystroke. The 
 bitmap is defined as:
 
-Bit | Keystate Indication
---- | --------------------------------
-7   | Key pressed was from the num pad
-6   | Caps Lock was active
-5   | Num Lock was active
-4   | Scroll Lock was active
-3   | Windows key was held down
-2   | Alt key was held down
-1   | Control key was held down
-0   | Shift key was held down
+| **Bit** | **Keystate Indication**          |
+|---------|----------------------------------|
+| 7       | Key pressed was from the num pad |
+| 6       | Caps Lock was active             |
+| 5       | Num Lock was active              |
+| 4       | Scroll Lock was active           |
+| 3       | Windows key was held down        |
+| 2       | Alt key was held down            |
+| 1       | Control key was held down        |
+| 0       | Shift key was held down          |
 
 The Keycode (E) is generally returned as appropriate ASCII values, if 
 possible. Special keys, like function keys and arrows, are returned as 
@@ -1428,8 +1416,7 @@ is a standard HBIOS result code.
 
 `\clearpage`{=latex}
 
-Sound (SND)
-------------
+## Sound (SND)
 
 Sound functions require that a Sound Unit number be specified in 
 register C. This is the logical device unit number assigned during the 
@@ -1529,26 +1516,41 @@ increment/decrement.  The value 0 corresponds to Bb/A# in octave 0.
 The sound chip resolution and its oscillator limit the range and 
 accuracy of the notes played. The typical range of the AY-3-8910 is six 
 octaves: Bb2/A#2 to A7, where each value is a unique tone.  Values above
- and below can still be played but each quarter tone step may not result
- in a note change.
+and below can still be played but each quarter tone step may not result
+in a note change.
 
 The following table shows the mapping of the Note (HL) value to the 
 corresponding octave and note.
 
-| Note  | Oct 0 | Oct 1 | Oct 2 | Oct 3 | Oct 4 | Oct 5 | Oct 6 | Oct 7 |
-|:----- | -----:| -----:| -----:| -----:| -----:| -----:| -----:| -----:|
-| C     |   X   |   8   |   56  |  104  |  152  |  200  |  248  |  296  |
-| C#/Db |   X   |   12  |   60  |  108  |  156  |  204  |  252  |  300  |
-| D     |   X   |   16  |   64  |  112  |  160  |  208  |  256  |  304  |
-| D#/Eb |   X   |   20  |   68  |  116  |  164  |  212  |  260  |  308  |
-| E     |   X   |   24  |   72  |  120  |  168  |  216  |  264  |  312  |
-| F     |   X   |   28  |   76  |  124  |  172  |  220  |  268  |  316  |
-| F#/Gb |   X   |   32  |   80  |  128  |  176  |  224  |  272  |  320  |
-| G     |   X   |   36  |   84  |  132  |  180  |  228  |  276  |  324  |
-| G#/Ab |   X   |   40  |   88  |  136  |  184  |  232  |  280  |  328  |
-| A     |   X   |   44  |   92  |  140  |  188  |  236  |  284  |  332  |
-| A#/Bb |   0   |   48  |   96  |  144  |  192  |  240  |  288  |  336  |
-| B     |   4   |   52  |  100  |  148  |  196  |  244  |  292  |  340  |
++------------+-------+-------+-------+-------+-------+-------+-------+-------+
+|            | **Octave**                                                    |
+|            +-------+-------+-------+-------+-------+-------+-------+-------+
+| **Note**   | **0** | **1** | **2** | **3** | **4** | **5** | **6** | **7** |
++============+=======+=======+=======+=======+=======+=======+=======+=======+
+| **C**      | \-    | 8     | 56    | 104   | 152   | 200   | 248   | 296   |
++------------+-------+-------+-------+-------+-------+-------+-------+-------+
+| **C#/Db**  | \-    | 12    | 60    | 108   | 156   | 204   | 252   | 300   |
++------------+-------+-------+-------+-------+-------+-------+-------+-------+
+| **D**      | \-    | 16    | 64    | 112   | 160   | 208   | 256   | 304   |
++------------+-------+-------+-------+-------+-------+-------+-------+-------+
+| **D#/Eb**  | \-    | 20    | 68    | 116   | 164   | 212   | 260   | 308   |
++------------+-------+-------+-------+-------+-------+-------+-------+-------+
+| **E**      | \-    | 24    | 72    | 120   | 168   | 216   | 264   | 312   |
++------------+-------+-------+-------+-------+-------+-------+-------+-------+
+| **F**      | \-    | 28    | 76    | 124   | 172   | 220   | 268   | 316   |
++------------+-------+-------+-------+-------+-------+-------+-------+-------+
+| **F#/Gb**  | \-    | 32    | 80    | 128   | 176   | 224   | 272   | 320   |
++------------+-------+-------+-------+-------+-------+-------+-------+-------+
+| **G**      | \-    | 36    | 84    | 132   | 180   | 228   | 276   | 324   |
++------------+-------+-------+-------+-------+-------+-------+-------+-------+
+| **G#/Ab**  | \-    | 40    | 88    | 136   | 184   | 232   | 280   | 328   |
++------------+-------+-------+-------+-------+-------+-------+-------+-------+
+| **A**      | \-    | 44    | 92    | 140   | 188   | 236   | 284   | 332   |
++------------+-------+-------+-------+-------+-------+-------+-------+-------+
+| **A#/Bb**  | 0     | 48    | 96    | 144   | 192   | 240   | 288   | 336   |
++------------+-------+-------+-------+-------+-------+-------+-------+-------+
+| **B**      | 4     | 52    | 100   | 148   | 196   | 244   | 292   | 340   |
++------------+-------+-------+-------+-------+-------+-------+-------+-------+
 
 ### Function 0x54 -- Sound Play (SNDPLAY)
 
@@ -1685,8 +1687,7 @@ used.
 
 `\clearpage`{=latex}
 
-System (SYS)
-------------
+## System (SYS)
 
 ### Function 0xF0 -- System Reset (SYSRESET)
 
@@ -2329,16 +2330,6 @@ HBIOS result code.
 | E: IVT Index                           |                                        |
 | HL: Interrupt Address                  |                                        |
 
-|      _Entry Parameters_
-|           BC: 0xFC20
-|           E: Interrupt Vector Table Index
-|           HL: Interrupt Address to be Assigned
-
-|      _Returned Values_
-|           A: Status (0=OK, else error)
-|           HL: Previous Interrupt Vector Address
-|           DE: Interrupt Routing Engine Address (IM2)
-
 This function will set a new Interrupt Address (HL) at the IVT Index (E)
 specified.  On return, the Previous Interrupt Address (HL) will be
 provided.
@@ -2346,16 +2337,14 @@ provided.
 `\clearpage`{=latex}
 
 
-Errors and diagnostics
-========
+# Errors and diagnostics
 
 ROMWBW tries to provide useful information when a run time or build time
 error occurs. Many sections of the code also have code blocks that can be 
 enable to aid in debugging and in some cases the level of reporting detail
 can be customized.
 
-Run time errors
---------
+## Run Time Errors
 
 ### PANIC
 
@@ -2364,15 +2353,17 @@ and interrupts are disabled and execution is halted. A cold boot or reset is req
 
 Example error message: 
 
-\>>> PANIC: @06C4[DFA3:DFC3:0100:F103:04FC:0000:2B5E] 
+```
+>>> PANIC: @06C4[DFA3:DFC3:0100:F103:04FC:0000:2B5E] 
 
-\*** System Halted ***
+*** System Halted ***
+```
 
 The format of the information provided is 
 
-@XXXX [-AF-:-BC-:-DE-:-HL-:-SP-:-IX-:-IY-]
+`@XXXX [-AF-:-BC-:-DE-:-HL-:-SP-:-IX-:-IY-]`
 
-Where @XXXX is the address the panic was called from. The other information
+Where `@XXXX` is the address the panic was called from. The other information
 is the CPU register contents.
 
 Possible reasons a PANIC may occur are:
@@ -2383,7 +2374,7 @@ Possible reasons a PANIC may occur are:
 - There was an attempt to add more devices than the device table had room for.
 - An illegal SD card command was encountered.
 
-The @XXXX memory address can be cross referenced with the build source code to identify
+The `@XXXX` memory address can be cross referenced with the build source code to identify
 which section of the software or hardware caused the fault.
 
 ### SYSCHK 
@@ -2432,8 +2423,7 @@ The syschk error codes YY is returned in the A register.
 
 placeholder
 
-Build time errors
---------
+## Build time errors
 
 ### Build chain tool errors
 
@@ -2443,10 +2433,9 @@ place holder
 
 placeholder
 
-Diagnostics
---------
+## Diagnostics
 
-### DIAG
+### Diagnostic LEDs
 
 Progress through the boot and initialization process can be difficult to monitor 
 due to the lack of console or video output. Access to these output devices does
@@ -2469,50 +2458,51 @@ DIAGPORT   .SET 0xnn
 
 The following table shows the ROMWBW process steps in relation to the LED display.
 
-|   LED    | ROMWBW Processes                               |
-| -------- |:---------------------------------------------- |
-| `........` | Initial boot                                 |
-|          | Jump to start address                          |
-|          | Disable interrupts                             |
-|          | Set interrupt mode 1                           |
-|          | Initialize critical ports and initial speed    |
-| `.......O` |  Setup initial stack                         |
-|          | Memory manager and CPU configuration           |
-|          | Set top bank to be RAM                         |
-| `......OO` |  Get and save battery condition              |
-|          | Install HBIOS proxy in upper memory            |
-|          | If platform is MBC reconfigure memory manager  |
-|          | Setup "ROMLESS" HBIOS image or ...             |
-|          | Copy HBIOS from ROM to RAM if RAM flag not set |
-|          | Jump to HBIOS in RAM                           |
-|          | Set running in RAM flag                        |
-|  `.....OOO` | Finalize configuration for running in RAM   |
-|          | Check battery condition                        |
-|          | Check for recovery mode boot                   |
-| `....OOOO` | Identify CPU type                            |
-| `...OOOOO` | Set cpu oscillator speed                     |
-|          | Setup counter-timers                           |
-|          | Setup heap                                     |
-| `..OOOOOO` | Preconsole initialization                    |
-| `.OOOOOOO` | Boot delay                                   |
-|          | Set boot console device                        |
-|          | Bios announcement                              |
-| `OOOOOOOO` | Display platform information                 |
-|          | Display memory configuration                   |
-|          | Display CPU family                             |
-|          | Verify ROM checksum                            |
-|          | Report battery condition                       |
-|          | Perform device driver initialization           |
-|          | Report watchdog status                         |
-|          | Mark HBIOS heap so it is preserved             |
-|          | Switch from boot console to CRT if active      |
-|          | Display device summary                         |
-|          | Execute boot loader                            |
-
+| **LED**    | **RomWBW Processes**                           |
+|------------|------------------------------------------------|
+| `........` | Initial boot                                   |
+|            | Jump to start address                          |
+|            | Disable interrupts                             |
+|            | Set interrupt mode                             |
+|            | Initialize critical ports and baud rate        |
+| `.......O` | Setup initial stack                            |
+|            | Memory manager and CPU configuration           |
+|            | Set top bank to be RAM                         |
+| `......OO` | Get and save battery condition                 |
+|            | Install HBIOS proxy in upper memory            |
+|            | If platform is MBC reconfigure memory manager  |
+|            | Setup "ROMLESS" HBIOS image or ...             |
+|            | Copy HBIOS from ROM to RAM if RAM flag not set |
+|            | Jump to HBIOS in RAM                           |
+|            | Set running in RAM flag                        |
+| `.....OOO` | Finalize configuration for running in RAM      |
+|            | Check battery condition                        |
+|            | Check for recovery mode boot                   |
+| `....OOOO` | Identify CPU type                              |
+| `...OOOOO` | Set cpu oscillator speed                       |
+|            | Setup counter-timers                           |
+|            | Setup heap                                     |
+| `..OOOOOO` | Preconsole initialization                      |
+| `.OOOOOOO` | Boot delay                                     |
+|            | Set boot console device                        |
+|            | Bios announcement                              |
+| `OOOOOOOO` | Display platform information                   |
+|            | Display memory configuration                   |
+|            | Display CPU family                             |
+|            | Verify ROM checksum                            |
+|            | Report battery condition                       |
+|            | Perform device driver initialization           |
+|            | Report watchdog status                         |
+|            | Mark HBIOS heap so it is preserved             |
+|            | Switch from boot console to CRT if active      |
+|            | Display device summary                         |
+|            | Execute boot loader                            |
 
 `\clearpage`{=latex}
 
 ### Appendix A Driver Instance Data fields
+
+**This section is a work in progress...**
 
 The following section outlines the read only data referenced by the
 `SYSGET`, subfunctions `xxxFN` for specific drivers.
