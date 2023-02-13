@@ -11,8 +11,6 @@ export CPUFAM
 if [ "${ROM_PLATFORM}" == "dist" ] ; then
 	echo "!!!DISTRIBUTION BUILD!!!"
 	ROM_PLATFORM="DYNO"; ROM_CONFIG="std"; bash Build.sh
-	ROM_PLATFORM="EZZ80"; ROM_CONFIG="std"; bash Build.sh
-	ROM_PLATFORM="EZZ80"; ROM_CONFIG="tz80"; bash Build.sh
 	ROM_PLATFORM="MK4"; ROM_CONFIG="std"; bash Build.sh
 	ROM_PLATFORM="N8"; ROM_CONFIG="std"; bash Build.sh
 	ROM_PLATFORM="RCZ180"; ROM_CONFIG="ext"; bash Build.sh
@@ -21,10 +19,12 @@ if [ "${ROM_PLATFORM}" == "dist" ] ; then
 	ROM_PLATFORM="RCZ280"; ROM_CONFIG="nat"; bash Build.sh
 	ROM_PLATFORM="RCZ280"; ROM_CONFIG="nat_zz"; bash Build.sh
 	ROM_PLATFORM="RCZ280"; ROM_CONFIG="nat_zzr"; bash Build.sh
-	ROM_PLATFORM="RCZ80"; ROM_CONFIG="kio"; bash Build.sh
-	ROM_PLATFORM="RCZ80"; ROM_CONFIG="mt"; bash Build.sh
-	ROM_PLATFORM="RCZ80"; ROM_CONFIG="duart"; bash Build.sh
+#	ROM_PLATFORM="RCZ80"; ROM_CONFIG="mt"; bash Build.sh
+#	ROM_PLATFORM="RCZ80"; ROM_CONFIG="duart"; bash Build.sh
 	ROM_PLATFORM="RCZ80"; ROM_CONFIG="std"; bash Build.sh
+	ROM_PLATFORM="RCZ80"; ROM_CONFIG="kio"; bash Build.sh
+	ROM_PLATFORM="RCZ80"; ROM_CONFIG="easy"; bash Build.sh
+	ROM_PLATFORM="RCZ80"; ROM_CONFIG="tiny"; bash Build.sh
 	ROM_PLATFORM="RCZ80"; ROM_CONFIG="skz"; bash Build.sh
 	ROM_PLATFORM="RCZ80"; ROM_CONFIG="zrc"; bash Build.sh
 	ROM_PLATFORM="RCZ80"; ROM_CONFIG="zrc_ram"; bash Build.sh
