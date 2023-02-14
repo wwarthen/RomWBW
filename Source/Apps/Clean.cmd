@@ -17,3 +17,4 @@ pushd ZMD && call Clean || exit /b 1 & popd
 pushd Dev && call Clean || exit /b 1 & popd
 pushd VGM && call Clean || exit /b 1 & popd
 pushd cpuspd && call Clean || exit /b 1 & popd
+pushd Survey && call Clean || exit /b 1 & popd

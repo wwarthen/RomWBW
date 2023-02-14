@@ -34,10 +34,12 @@ colorlinks: true
 # sansfont: helvetic
 sansfont: roboto
 # sansfont: bera
+# sansfont: DejaVuSans
 # sansfont: arial
 monofont: roboto-mono
 # monofont: bera
 # monofont: inconsolata
+# monofont: DejaVuSansMono
 monofontoptions: 'Scale=0.75'
 header-includes:
 - |

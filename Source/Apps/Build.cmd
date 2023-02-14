@@ -21,9 +21,6 @@ call :asm rtchb || exit /b
 
 zxcc Z80ASM -SYSGEN/F || exit /b
 
-zxcc MAC SURVEY.ASM -$PO || exit /b
-zxcc MLOAD25 -SURVEY.COM=SURVEY.HEX || exit /b
-
 pushd XM && call Build || exit /b & popd
 pushd FDU && call Build || exit /b & popd
 pushd Tune && call Build || exit /b & popd
@@ -34,6 +31,7 @@ pushd ZMD && call Build || exit /b & popd
 pushd Dev && call Build || exit /b & popd
 pushd VGM && call Build || exit /b & popd
 pushd cpuspd && call Build || exit /b & popd
+pushd Survey && call Build || exit /b & popd
 
 copy *.com %APPBIN%\ || exit /b
 

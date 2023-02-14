@@ -42,7 +42,7 @@ echo Processing document %1...
 ::gpp -o %1.tmp -U "" "" "(" "," ")" "(" ")" "#" "" -M "#" "\n" " " " " "\n" "(" ")" %1.md
 gpp -o %1.tmp -U "$" "$" "{" "}{" "}$" "{" "}" "@@@" "" -M "$" "$" "{" "}{" "}$" "{" "}" %1.md || exit /b
 
-::pandoc %1.tmp -f markdown -s -o %1.tex --default-image-extension=pdf || exit /b
+::pandoc %1.tmp -f markdown -t latex -s -o %1.tex --default-image-extension=pdf || exit /b
 ::::rem texify --pdf --clean %1.ltx || exit /b
 ::texify --pdf --clean --engine=luatex --verbose %1.tex || exit /b
 ::goto :eof

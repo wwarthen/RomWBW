@@ -20,3 +20,5 @@ pushd Images && call Clean & popd
 pushd Prop && call Clean & popd
 pushd RomDsk && call Clean & popd
 pushd Doc && call Clean & popd
+pushd ZRC && call Clean & popd
+pushd ZZRC && call Clean & popd

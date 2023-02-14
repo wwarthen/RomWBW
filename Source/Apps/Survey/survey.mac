@@ -15,6 +15,10 @@
 ;
 ;VERSION LIST - Most recent version first.
 ;
+;10/Feb/23 - Total hack to avoid crash on ECB SBC
+;            RomWBW now required by this version
+;            Wayne Warthen
+;
 ;16/Dec/17 - Handle 16-bit port addressing using
 ;            Z80 IN A,(C) instruction.     Wayne Warthen
 ;
@@ -234,7 +238,21 @@ TABS	EQU	9		; Tab columns
 ;	MAIN PROGRAM	;
 ;***********************;
 ;
-	ORG	100H
+	;ORG	100H
+;
+;
+;
+	.Z80
+	LD	HL,IMGORG
+	LD	DE,START
+	LD	BC,IMGEND-IMGORG
+	LDIR
+	JP	START
+	.8080
+;
+IMGORG:
+;
+	.PHASE	8000H
 ;
 START:
 	LXI	H,0			; Save stack pointer
@@ -242,7 +260,8 @@ START:
 	SHLD	OLDSP
 	LXI	SP,FINIS+64
 	CALL	TYPE			; Type initial CRLF
-	DB	TAB,TAB,'*** System Survey (December 17) ***'
+	DW	CRLF,CRLF
+	DB	TAB,'*** RomWBW System Survey (Feb 2023) ***'
 	DW	CRLF,CRLFE
 
 ;DISK SURVEY
@@ -586,6 +605,13 @@ PDLY:
 	MOV	A,H			; ON CONSOLE STATUS PORT
 	ORA	L
 	JNZ	PDLY
+;
+	.Z80
+	; RECORD THE ACTIVE BANK
+	LD	A,(0FFE0H)		; GET CURRENT HBIOS BANK ID
+	LD	(BANK),A		; AND SAVE IT
+	.8080
+;
 	LXI	H,0			; Init active port counter
 	mvi	d,0			; Init port counter
 	mvi	e,0ffh			; init port group variable
@@ -596,11 +622,23 @@ PORTLP:
 	CPI	SKIPORT
 	JZ	ISPORT			; Print mask port
 	ENDIF
-
+;
 	mov	c,a			; port number to reg c
 	mvi	b,0			; for 16 bit  port addressing
-	db	0edh,078h		; z80: in a,(c)
+	.Z80
+	in	a,(c)
+	.8080
+;
+	.Z80
+	; MAKE SURE CORRECT BANK IS STILL SELECTED!
+	push	af
+	ld	a,(BANK)
+	call	0FFF3H
+	pop	af
+	.8080
+;
 ; inactive port could return 0xFF or 0x78 or the port address
+;
 	cmp	c
 	jz	nextpt
 	cpi	0FFh
@@ -708,7 +746,6 @@ BITSHF:
 	JNZ	BITSHF
 	RET
 
-
 ;***********************;
 ;	DATA STORAGE	;
 ;***********************;
@@ -722,6 +759,12 @@ RAMF:	DS	1			; RAM good flag
 EMPF:	DS	1			; Empty so far flag
 BLKSHF:	DS	1			; block shift factor
 MAXALL:	DS	2			; maximum block number
+BANK:	DS	1			; saved HBIOS bank id
 FINIS	EQU	$			; End of program
+;
+	.DEPHASE
+;
+IMGEND:
+;
 	END
 

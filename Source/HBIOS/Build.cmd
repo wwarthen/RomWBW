@@ -201,24 +201,24 @@ call Build ZETA2 std || exit /b
 call Build N8 std || exit /b
 call Build MK4 std || exit /b
 call Build RCZ80 std || exit /b
-call Build RCZ80 skz || exit /b
 call Build RCZ80 kio || exit /b
-call Build RCZ80 mt || exit /b
-call Build RCZ80 duart || exit /b
+call Build RCZ80 easy || exit /b
+call Build RCZ80 tiny || exit /b
+call Build RCZ80 skz || exit /b
+:: call Build RCZ80 mt || exit /b
+:: call Build RCZ80 duart || exit /b
 call Build RCZ80 zrc || exit /b
 call Build RCZ80 zrc_ram || exit /b
 call Build RCZ180 ext || exit /b
 call Build RCZ180 nat || exit /b
 call Build RCZ280 ext || exit /b
 call Build RCZ280 nat || exit /b
-call Build RCZ280 nat_zz || exit /b
-call Build RCZ280 nat_zzr || exit /b
-call Build SCZ180 126 || exit /b
-call Build SCZ180 130 || exit /b
-call Build SCZ180 131 || exit /b
-call Build SCZ180 140 || exit /b
-call Build EZZ80 std || exit /b
-call Build EZZ80 tz80 || exit /b
+call Build RCZ280 zz80mb || exit /b
+call Build RCZ280 zzrc || exit /b
+call Build RCZ180 126 || exit /b
+call Build RCZ180 130 || exit /b
+call Build RCZ180 131 || exit /b
+call Build RCZ180 140 || exit /b
 call Build DYNO std || exit /b
 call Build UNA std || exit /b
 call Build RPH std || exit /b
