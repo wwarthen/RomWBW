@@ -17,8 +17,8 @@ if [ "${ROM_PLATFORM}" == "dist" ] ; then
 	ROM_PLATFORM="RCZ180"; ROM_CONFIG="nat"; bash Build.sh
 	ROM_PLATFORM="RCZ280"; ROM_CONFIG="ext"; bash Build.sh
 	ROM_PLATFORM="RCZ280"; ROM_CONFIG="nat"; bash Build.sh
-	ROM_PLATFORM="RCZ280"; ROM_CONFIG="nat_zz"; bash Build.sh
-	ROM_PLATFORM="RCZ280"; ROM_CONFIG="nat_zzr"; bash Build.sh
+	ROM_PLATFORM="RCZ280"; ROM_CONFIG="zz80mb"; bash Build.sh
+	ROM_PLATFORM="RCZ280"; ROM_CONFIG="zzrc"; bash Build.sh
 #	ROM_PLATFORM="RCZ80"; ROM_CONFIG="mt"; bash Build.sh
 #	ROM_PLATFORM="RCZ80"; ROM_CONFIG="duart"; bash Build.sh
 	ROM_PLATFORM="RCZ80"; ROM_CONFIG="std"; bash Build.sh
@@ -32,10 +32,10 @@ if [ "${ROM_PLATFORM}" == "dist" ] ; then
 	ROM_PLATFORM="SBC"; ROM_CONFIG="std"; bash Build.sh
 	ROM_PLATFORM="SBC"; ROM_CONFIG="simh"; bash Build.sh
 	ROM_PLATFORM="MBC"; ROM_CONFIG="std"; bash Build.sh
-	ROM_PLATFORM="SCZ180"; ROM_CONFIG="126"; bash Build.sh
-	ROM_PLATFORM="SCZ180"; ROM_CONFIG="130"; bash Build.sh
-	ROM_PLATFORM="SCZ180"; ROM_CONFIG="131"; bash Build.sh
-	ROM_PLATFORM="SCZ180"; ROM_CONFIG="140"; bash Build.sh
+	ROM_PLATFORM="RCZ180"; ROM_CONFIG="126"; bash Build.sh
+	ROM_PLATFORM="RCZ180"; ROM_CONFIG="130"; bash Build.sh
+	ROM_PLATFORM="RCZ180"; ROM_CONFIG="131"; bash Build.sh
+	ROM_PLATFORM="RCZ180"; ROM_CONFIG="140"; bash Build.sh
 	ROM_PLATFORM="UNA"; ROM_CONFIG="std"; bash Build.sh
 	ROM_PLATFORM="ZETA"; ROM_CONFIG="std"; bash Build.sh
 	ROM_PLATFORM="ZETA2"; ROM_CONFIG="std"; bash Build.sh
