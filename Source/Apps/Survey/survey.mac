@@ -607,9 +607,20 @@ PDLY:
 	JNZ	PDLY
 ;
 	.Z80
-	; RECORD THE ACTIVE BANK
-	LD	A,(0FFE0H)		; GET CURRENT HBIOS BANK ID
-	LD	(BANK),A		; AND SAVE IT
+	; record the active bank
+	ld	a,(0ffe0h)		; get current hbios bank id
+	ld	(BANK),a		; and save it
+	; Check for Z180 CPU
+	xor	a			; assume Z80
+	ld	(IS180),a		; save it
+	ld	de,0506H		; 5 x 6
+	db	0EDH,05CH		; MLT DE: de = 30 if z180
+	ld	a,e			; result to A
+	cp	30			; check if multiply happened
+	jr	nz,z80			; if invalid, then Z80
+	or	0ffH			; flag value for Z180
+	ld	(IS180),a		; save it
+z80:
 	.8080
 ;
 	LXI	H,0			; Init active port counter
@@ -623,28 +634,57 @@ PORTLP:
 	JZ	ISPORT			; Print mask port
 	ENDIF
 ;
-	mov	c,a			; port number to reg c
-	mvi	b,0			; for 16 bit  port addressing
 	.Z80
-	in	a,(c)
-	.8080
+	di				; interrupts off
+	ld	a,(IS180)		; Z180?
+	or	a
+	jr	nz,rd180
 ;
-	.Z80
-	; MAKE SURE CORRECT BANK IS STILL SELECTED!
+	; Z80 port read
+	ld	a,d
+	ld	c,a
+	ld	(pnum),a		; dynamic update
+	in	a,(c)
+	push	af
+	ld	b,0
+	in	a,(0FFH)
+pnum	equ	$-1
+	push	af
+	jr	rdz
+;
+rd180:
+	; Z180 port read
+	ld	a,d
+	ld	c,a
+	ld	(pnum1),a		; dynamic update
+	in	a,(c)
+	push	af
+	ld	b,0
+	db	0EDH,038H,0FFH		; IN0
+pnum1	equ	$-1
+	push	af
+;
+rdz:
+	; Make sure correct bank is still selected!
 	push	af
 	ld	a,(BANK)
 	call	0FFF3H
 	pop	af
+;
+	ei				; interrupts back on now
+;
+; port is considered inactive if values read from different port
+; read mechanisms differ or if the value $FF is read consistently
+;
+	pop	af
+	ld	c,a
+	pop	af
+	cp	c
+	jr	nz,NEXTPT
+	cp	0FFH
+	jr	z,NEXTPT
+;
 	.8080
-;
-; inactive port could return 0xFF or 0x78 or the port address
-;
-	cmp	c
-	jz	nextpt
-	cpi	0FFh
-	jz	nextpt
-	cpi	078h
-	jz	nextpt
 ISPORT:
 	mov	a,d			; got a live one, probably
 	ani	0f0h			; is port in same group as last ?
@@ -760,6 +800,7 @@ EMPF:	DS	1			; Empty so far flag
 BLKSHF:	DS	1			; block shift factor
 MAXALL:	DS	2			; maximum block number
 BANK:	DS	1			; saved HBIOS bank id
+IS180:	DS	1			; non-zero for Z180 CPU
 FINIS	EQU	$			; End of program
 ;
 	.DEPHASE

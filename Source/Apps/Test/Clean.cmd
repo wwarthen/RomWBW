@@ -20,3 +20,4 @@ pushd ps2info && call Clean || exit /b 1 & popd
 pushd 2piotst && call Clean || exit /b 1 & popd
 pushd piomon && call Clean || exit /b 1 & popd
 pushd banktest && call Clean || exit /b 1 & popd
+pushd portswp && call Clean || exit /b 1 & popd
