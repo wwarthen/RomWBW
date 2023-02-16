@@ -641,27 +641,41 @@ PORTLP:
 	jr	nz,rd180
 ;
 	; Z80 port read
+	; Read port using IN A,(C), push result
 	ld	a,d
 	ld	c,a
-	ld	(pnum),a		; dynamic update
+	ld	(pnum0a),a		; dynamic update
+	ld	(pnum0b),a		; dynamic update
+	ld	b,0
 	in	a,(c)
 	push	af
-	ld	b,0
-	in	a,(0FFH)
-pnum	equ	$-1
+	; Read port using IN A,(port), push result
+	in	a,(0ffh)		; IN0
+pnum0a	equ	$-1
+	push	af
+	; Read port using IN A,(port), push result
+	in	a,(0ffh)		; IN0
+pnum0b	equ	$-1
 	push	af
 	jr	rdz
 ;
 rd180:
 	; Z180 port read
+	; Read port using IN A,(C), push result
 	ld	a,d
 	ld	c,a
-	ld	(pnum1),a		; dynamic update
+	ld	(pnum1a),a		; dynamic update
+	ld	(pnum1b),a		; dynamic update
+	ld	b,0
 	in	a,(c)
 	push	af
-	ld	b,0
+	; Read port using IN0 A,(port), push result
 	db	0EDH,038H,0FFH		; IN0
-pnum1	equ	$-1
+pnum1a	equ	$-1
+	push	af
+	; Read port using IN0 A,(port), push result
+	db	0EDH,038H,0FFH		; IN0
+pnum1b	equ	$-1
 	push	af
 ;
 rdz:
@@ -674,15 +688,20 @@ rdz:
 	ei				; interrupts back on now
 ;
 ; port is considered inactive if values read from different port
-; read mechanisms differ or if the value $FF is read consistently
+; read mechanisms differ or if the value $FF is read consistently,
+; or if the value read is equal to the port number itself
 ;
-	pop	af
-	ld	c,a
-	pop	af
-	cp	c
-	jr	nz,NEXTPT
-	cp	0FFH
-	jr	z,NEXTPT
+	pop	bc			; second IN0 (port) value
+	pop	af			; first IN0 (port) valule
+	cp	b			; same?
+	pop	bc			; IN (C) value
+	jr	nz,ISPORT		; if no, active running ctr port
+	cp	b			; same?
+	jr	nz,NEXTPT		; if not, inactive port
+	cp	0FFh			; pullup value???
+	jr	z,NEXTPT		; if so, consider not active
+	cp	d			; value same as port num???
+	jr	z,NEXTPT		; if so, consider not active
 ;
 	.8080
 ISPORT:
