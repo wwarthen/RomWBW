@@ -1,4 +1,4 @@
-OBJECTS = portswp.com
+OBJECTS = portscan.com
 DEST = ../../../../Binary/Apps/Test
 TOOLS =../../../../Tools
 

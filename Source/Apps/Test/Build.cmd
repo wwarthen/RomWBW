@@ -23,7 +23,7 @@ pushd ps2info && call Build || exit /b & popd
 pushd 2piotst && call Build || exit /b & popd
 pushd piomon && call Build || exit /b & popd
 pushd banktest && call Build || exit /b & popd
-pushd portswp && call Build || exit /b & popd
+pushd portscan && call Build || exit /b & popd
 
 goto :eof
 

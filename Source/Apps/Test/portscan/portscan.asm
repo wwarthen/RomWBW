@@ -1,5 +1,5 @@
 ;===============================================================================
-; PORTSWP - Sweep Ports
+; PORTSCAN - Sweep Ports
 ;
 ;===============================================================================
 ;
@@ -7,7 +7,7 @@
 ;_______________________________________________________________________________
 ;
 ; Usage:
-;   PORTSWP
+;   PORTSCAN
 ;
 ; Operation:
 ;   Reads all ports (multiple ways) and displays values read
@@ -173,32 +173,25 @@ portread:
 portread_z80:	; use traditional "IN"
 	; read port using IN <portnum>
 	ld	a,(curport)	; get current port
-	ld	(port),a	; modify IN instruction
+	ld	(pnum0),a	; modify IN instruction
 	nop			; defeat Z280 pipeline
 	nop
 	in	a,($FF)		; read the port
-port	.equ	$-1
+pnum0	.equ	$-1
 	ld	(hl),a		; save it
 	inc	hl		; bump value list pointer
-;
-	; read port using IN (C)
-	ld	a,(curport)	; get current port
-	ld	b,0		; in case 16 bits decoded
-	ld	c,a		; move to reg C
-	in	a,(c)		; read the port
-	ld	(hl),a		; save it
-	inc	hl		; bump value list pointer
-	ret
+	jr	portread1
 ;
 portread_z180:	; use "IN0"
 	; read port using IN <portnum>
 	ld	a,(curport)	; get current port
-	ld	(port1),a	; modify IN instruction
+	ld	(pnum1),a	; modify IN instruction
 	in0	a,($FF)		; read the port
-port1	.equ	$-1
+pnum1	.equ	$-1
 	ld	(hl),a		; save it
 	inc	hl		; bump value list pointer
 ;
+portread1:
 	; read port using IN (C)
 	ld	a,(curport)	; get current port
 	ld	b,0		; in case 16 bits decoded
@@ -588,10 +581,10 @@ stack	.equ	$		; stack top
 ;
 ; Messages
 ;
-msgban	.db	"PORTSWP v1.0, 14-Feb-2023",13,10
+msgban	.db	"PORTSCAN v1.0, 16-Feb-2023",13,10
 	.db	"Copyright (C) 2023, Wayne Warthen, GNU GPL v3",0
-msguse	.db	"Usage: PORTSWP",13,10
-msgprm	.db	"Parameter error (PORTSWP /? for usage)",0
+msguse	.db	"Usage: PORTSCAN",13,10
+msgprm	.db	"Parameter error (PORTSCAN /? for usage)",0
 msgbio	.db	"Incompatible BIOS or version, "
 	.db	"HBIOS v", '0' + rmj, ".", '0' + rmn, " required",0
 str_sep	.db	": ",0
