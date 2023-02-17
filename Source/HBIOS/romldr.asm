@@ -464,8 +464,6 @@ applst2:
 ; Device list
 ;
 devlst:
-	ld	hl,str_devlst		; device list header string
-	call	pstr			; display it
 	jp	prtall			; do it
 ;
 ; Set console interface unit
@@ -1814,99 +1812,26 @@ CST	.equ	cst
 ; Device inventory display
 ;=======================================================================
 ;
-; Print list of all drives (WBW)
-;
 #if (BIOS == BIOS_WBW)
 ;
+; Print list of all drives (WBW)
+;
+; Just invoke the existing HBIOS routine...
+;
 prtall:
-	call	nl			; formatting
-	ld	b,BF_SYSGET
-	ld	c,BF_SYSGET_DIOCNT
-	rst	08			; E := disk unit count
-	ld	b,e			; count to B
-	ld	a,b			; count to A
-	or	a			; set flags
-	ret	z			; bail out if zero
-	ld	c,0			; init device index
-;
-prtall1:
-	ld	hl,str_disk		; prefix string
-	call	pstr			; display it
-	ld	a,c			; index
-	call	prtdecb			; print it
-	ld	hl,str_on		; separator string
-	call	pstr
-	push	bc			; save loop control
-	ld	b,BF_DIODEVICE		; HBIOS func: report device info
-	rst	08			; call HBIOS
-	call	prtdrv			; print it
-	pop	bc			; restore loop control
-	inc	c			; bump index
-	djnz	prtall1			; loop as needed
-	ret				; done
-;
-; Print the device info
-; On input D has device type, E has device number
-; Destroy no registers other than A
-;
-prtdrv:
-	push	de			; preserve de
-	push	hl			; preserve HL
-	ld	a,d			; load device/unit
-	rrca				; rotate device
-	rrca				; ... bits
-	rrca				; ... into
-	rrca				; ... lowest 4 bits
-	and	$0F			; isolate device bits
-	add	a,a			; multiple by two for word table
-	ld	hl,devtbl		; point to start of table
-	call	addhla			; add A to HL for table entry
-	ld	a,(hl)			; deref HL for string adr
-	inc	hl			; ...
-	ld	h,(hl)			; ...
-	ld	l,a			; ...
-	call	pstr			; print the device nmemonic
-	pop	hl			; recover HL
-	pop	de			; recover DE
-	ld	a,e			; device number
-	call	prtdecb			; print it
-	ld	a,':'			; suffix
-	call	cout			; print it
-	ret
-;
-devtbl:	; device table
-	.dw	dev00, dev01, dev02, dev03
-	.dw	dev04, dev05, dev06, dev07
-	.dw	dev08, dev09, dev10, dev11
-	.dw	dev12, dev13, dev14, dev15
-;
-devunk	.db	"???",0
-dev00	.db	"MD",0
-dev01	.db	"FD",0
-dev02	.db	"RAMF",0
-dev03	.db	"IDE",0
-dev04	.db	"ATAPI",0
-dev05	.db	"PPIDE",0
-dev06	.db	"SD",0
-dev07	.db	"PRPSD",0
-dev08	.db	"PPPSD",0
-dev09	.db	"HDSK",0
-dev10	.equ	devunk
-dev11	.equ	devunk
-dev12	.equ	devunk
-dev13	.equ	devunk
-dev14	.equ	devunk
-dev15	.equ	devunk
+	ld	a,BID_BIOS		; BIOS Bank please
+	ld	ix,$0406		; HBIOS PRTSUM vector
+	jp	HB_BNKCALL		; do it
 ;
 #endif
-;
-;
 ;
 #if (BIOS == BIOS_UNA)
 ;
 ; Print list of all drives (UNA)
 ;
 prtall:
+	ld	hl,str_devlst		; device list header string
+	call	pstr			; display it
 	call	nl			; formatting
 	ld	b,0			; start with unit 0
 ;
@@ -1984,6 +1909,8 @@ devppide	.db	"PPIDE",0
 devsd		.db	"SD",0
 devdsd		.db	"DSD",0
 devunk		.db	"UNK",0
+;
+str_devlst	.db	"\r\n\r\nDisk Devices:",0
 ;
 #endif
 ;
@@ -2078,7 +2005,6 @@ str_reboot	.db	"\r\n\r\nRestarting System...",0
 str_newcon	.db	"\r\n\r\n  Console on Unit #",0
 str_chspeed	.db	"\r\n\r\n  Change speed now. Press a key to resume.",0
 str_applst	.db	"\r\n\r\nROM Applications:",0
-str_devlst	.db	"\r\n\r\nDisk Devices:",0
 str_invcmd	.db	"\r\n\r\n*** Invalid Command ***",bel,0
 str_load	.db	"\r\n\r\nLoading ",0
 str_disk	.db	"\r\n  Disk Unit ",0
