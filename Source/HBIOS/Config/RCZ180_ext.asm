@@ -1,6 +1,6 @@
 ;
 ;==================================================================================================
-;   RC2014 Z180 STANDARD CONFIGURATION (EXTERNAL MMU ON 512K RAM/ROM BANKED MEMORY MODULE)
+;   RCBUS Z180 STANDARD CONFIGURATION (EXTERNAL MMU ON 512K RAM/ROM BANKED MEMORY MODULE)
 ;==================================================================================================
 ;
 ; THE COMPLETE SET OF DEFAULT CONFIGURATION SETTINGS FOR THIS PLATFORM ARE FOUND IN THE

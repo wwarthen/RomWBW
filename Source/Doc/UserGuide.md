@@ -177,10 +177,10 @@ below, **carefully** pick the appropriate ROM image for your hardware.
 |----------------------------------------------------------------|---------|--------------------|--------------:|
 | [RetroBrew Z80 SBC]^1^                                         | ECB     | SBC_std.rom        | 38400         |
 | [RetroBrew Z80 SimH]^1^                                        | -       | SBC_simh.rom       | 38400         |
-| [RetroBrew Zeta Z80 SBC]^2^, ParPortProp                       | -       | ZETA_std.rom       | 38400         |
-| [RetroBrew Zeta V2 Z80 SBC]^2^, ParPortProp                    | -       | ZETA2_std.rom      | 38400         |
 | [RetroBrew N8 Z180 SBC]^1^ (date code >= 2312)                 | ECB     | N8_std.rom         | 38400         |
-| [RetroBrew Mark IV Z180 SBC]^3^                                | ECB     | MK4_std.rom        | 38400         |
+| [Zeta Z80 SBC]^2^, ParPortProp                                 | -       | ZETA_std.rom       | 38400         |
+| [Zeta V2 Z80 SBC]^2^, ParPortProp                              | -       | ZETA2_std.rom      | 38400         |
+| [Mark IV Z180 SBC]^3^                                          | ECB     | MK4_std.rom        | 38400         |
 | [RCBus Z80 CPU Module]^4^, 512K RAM/ROM                        | RCBus   | RCZ80_std.rom      | 115200        |
 | [RCBus Z80 CPU Module]^4^, 512K RAM/ROM, KIO                   | RCBus   | RCZ80_kio.rom      | 115200        |
 | [RCBus Z180 CPU Module]^4^ w/ external banking                 | RCBus   | RCZ180_ext.rom     | 115200        |
@@ -190,10 +190,11 @@ below, **carefully** pick the appropriate ROM image for your hardware.
 | [Easy Z80 SBC]^2^                                              | RCBus   | RCZ80_easy.rom     | 115200        |
 | [Tiny Z80 SBC]^2^                                              | RCBus   | RCZ80_tiny.rom     | 115200        |
 | [Z80-512K CPU/RAM/ROM Module]^2^                               | RCBus   | RCZ80_skz.rom      | 115200        |
-| [SC126 Z180 SBC]^5^                                            | BP80    | RCZ180_126.rom     | 115200        |
-| [SC130 Z180 SBC]^5^                                            | RCBus   | RCZ180_130.rom     | 115200        |
-| [SC131 Z180 Pocket Computer]^5^                                | -       | RCZ180_131.rom     | 115200        |
-| [SC140 Z180 CPU Module]^5^                                     | Z50     | RCZ180_140.rom     | 115200        |
+| [Small Computer SC126 Z180 SBC]^5^                             | BP80    | SCZ180_sc126.rom   | 115200        |
+| [Small Computer SC130 Z180 SBC]^5^                             | RCBus   | SCZ180_sc130.rom   | 115200        |
+| [Small Computer SC131 Z180 Pocket Computer]^5^                 | -       | SCZ180_sc131.rom   | 115200        |
+| [Small Computer SC140 Z180 CPU Module]^5^                      | Z50     | SCZ180_sc140.rom   | 115200        |
+| [Small Computer SC503 Z180 CPU Module]^5^                      | Z50     | SCZ180_sc503.rom   | 115200        |
 | [Dyno Z180 SBC]^6^                                             | Dyno    | DYNO_std.rom       | 38400         |
 | [Nhyodyne Z80 MBC]^1^                                          | MBC     | MBC_std.rom        | 38400         |
 | [Rhyophyre Z180 SBC]^1^                                        | -       | RPH_std.rom        | 38400         |
@@ -266,7 +267,7 @@ similar.
 ```
 RomWBW HBIOS v3.1.1-pre.183, 2022-10-04
 
-RC2014 [RCZ80_kio] Z80 @ 7.372MHz
+RCBus [RCZ80_kio] Z80 @ 7.372MHz
 0 MEM W/S, 1 I/O W/S, INT MODE 2, Z2 MMU
 512KB ROM, 512KB RAM
 ROM VERIFY: 00 00 00 00 PASS
@@ -302,7 +303,7 @@ If your system completes the ROM-based boot process successfully, you
 should see the RomWBW Boot Loader prompt.  For example:
 
 ```
-RC2014 [RCZ80_kio] Boot Loader
+RCBus [RCZ80_kio] Boot Loader
 
 Boot [H=Help]:
 ```
@@ -335,7 +336,7 @@ lines are the Core System Information:
 ```
 RomWBW HBIOS v3.1.1-pre.183, 2022-10-04
 
-RC2014 [RCZ80_kio] Z80 @ 7.372MHz
+RCBus [RCZ80_kio] Z80 @ 7.372MHz
 0 MEM W/S, 1 I/O W/S, INT MODE 2, Z2 MMU
 512KB ROM, 512KB RAM
 ROM VERIFY: 00 00 00 00 PASS
@@ -343,11 +344,11 @@ ROM VERIFY: 00 00 00 00 PASS
 
 The first line is a version identification banner for RomWBW.  After
 that you see a group of 4 lines describing the basic system.  In this
-example, the platform is the RC2014 running a configuration named
+example, the platform is the RCBus running a configuration named
 "RCZ80_kio".  The CPU is a Z80 with a current clock speed of 7.372 MHz.
 There are 0 memory wait states and 1 I/O wait state.  Z80 interrupt mode
 2 is active and the bank memory manager is type "Z2" which is standard
-for RC2014.  The system has 512KB of ROM total and 512KB of RAM total.
+for RCBus.  The system has 512KB of ROM total and 512KB of RAM total.
 Finally, a verification of the checksum of the critical ROM banks is
 shown (all 4 should be 00).
 
@@ -1013,11 +1014,11 @@ SELECT FLOPPY DISK CONTROLLER:
   (D) Zeta 2 SBC Onboard FDC
   (E) Dual IDE ECB Board
   (F) N8 Onboard FDC
-  (G) RC2014 SMC (SMB)
-  (H) RC2014 WDC (SMB)
+  (G) RCBus SMC (SMB)
+  (H) RCBus WDC (SMB)
   (I) SmallZ80 Expansion
   (J) Dyno-Card FDC, D1030
-  (K) RC2014 EPFDC
+  (K) RCBus EPFDC
   (L) Multi-Board Computer FDC
   (X) Exit
 === OPTION ===> D-IDE
@@ -2596,7 +2597,7 @@ should leave you at the Boot Loader prompt.  The 'N' command will
 initiate the network boot.  Here is an example of what this looks like:
 
 ```
-RC2014 [RCZ180_nat_wbw] Boot Loader
+RCBus [RCZ180_nat_wbw] Boot Loader
 
 Boot [H=Help]: n
 
@@ -2833,7 +2834,7 @@ few things that UNA does not support:
 
 * Floppy Drives
 * Terminal Emulation
-* Zeta 1, N8, RC2014, Easy Z80, and Dyno Systems
+* Zeta 1, N8, RCBus, Easy Z80, and Dyno Systems
 * Some older support boards
 
 The UNA version embedded in RomWBW is the latest production release
@@ -3027,7 +3028,7 @@ please let me know if I missed you!
 * David Giles created support for the Z180 CSIO which is now included
   SD Card driver.
 
-* Ed Brindley contributed some of the code that supports the RC2014
+* Ed Brindley contributed some of the code that supports the RCBus
   platform.
 
 * Phil Summers contributed the Forth and BASIC adaptations in ROM, the
@@ -3194,7 +3195,29 @@ the RomWBW HBIOS configuration.
    
 `\clearpage`{=latex}
 
-### RetroBrew Zeta Z80 SBC
+### RetroBrew N8 Z180 SBC
+
+|                   |               |
+|-------------------|---------------|
+| ROM Image File    | N8_std.rom    |
+| Console Baud Rate | 38400         |
+| Interrupts        | Mode 2        |
+
+ - CPU speed is detected at startup if DS1302 RTC is active
+   - Otherwise 18.432 MHz assumed
+ - System timer is generated by Z180 CPU
+ - Hardware auto-detected:
+   - Onboard DS1302 RTC
+   - Onboard Z180 ASCI Serial Ports
+   - Onboard Floppy Disk Controller w/ 3.5" HD Drives
+   - Onboard TMS9918 Video Controller
+   - Onboard PS/2 Keyboard Controller
+   - Onboard SD Card Interface via CSIO
+ - Assumes N8 with date code >= 2312 for CSIO interface to SD Card
+
+`\clearpage`{=latex}
+
+### Zeta Z80 SBC
 
 |                   |               |
 |-------------------|---------------|
@@ -3216,12 +3239,13 @@ the RomWBW HBIOS configuration.
 
 `\clearpage`{=latex}
 
-### RetroBrew Zeta V2 Z80 SBC
+### Zeta V2 Z80 SBC
 
 |                   |               |
 |-------------------|---------------|
 | ROM Image File    | ZETA2_std.rom |
 | Console Baud Rate | 38400         |
+| Interrupts        | Mode 2        |
 
  - CPU speed is detected at startup if DS1302 RTC is active
    - Otherwise 20.000 MHz assumed
@@ -3239,28 +3263,7 @@ the RomWBW HBIOS configuration.
 
 `\clearpage`{=latex}
 
-### RetroBrew N8 Z180 SBC
-
-|                   |               |
-|-------------------|---------------|
-| ROM Image File    | N8_std.rom    |
-| Console Baud Rate | 38400         |
-
- - CPU speed is detected at startup if DS1302 RTC is active
-   - Otherwise 18.432 MHz assumed
- - System timer is generated by Z180 CPU
- - Hardware auto-detected:
-   - Onboard DS1302 RTC
-   - Onboard Z180 ASCI Serial Ports
-   - Onboard Floppy Disk Controller w/ 3.5" HD Drives
-   - Onboard TMS9918 Video Controller
-   - Onboard PS/2 Keyboard Controller
-   - Onboard SD Card Interface via CSIO
- - Assumes N8 with date code >= 2312 for CSIO interface to SD Card
-
-`\clearpage`{=latex}
-
-### RetroBrew Mark IV Z180 SBC
+### Mark IV Z180 SBC
 
 |                   |               |
 |-------------------|---------------|
@@ -3386,7 +3389,7 @@ the RomWBW HBIOS configuration.
 |-------------------|----------------|
 | ROM Image File    | RCZ80_easy.rom |
 | Console Baud Rate | 115200         |
-| Interrupt Mode    | 2              |
+| Interrupts        | Mode 2         |
 
  - CPU speed is detected at startup if DS1302 RTC is active
    - Otherwise 10.000 MHz assumed
@@ -3408,7 +3411,7 @@ the RomWBW HBIOS configuration.
 |-------------------|----------------|
 | ROM Image File    | RCZ80_tiny.rom |
 | Console Baud Rate | 115200         |
-| Interrupt Mode    | 2              |
+| Interrupts        | Mode 2         |
 
  - CPU speed is detected at startup if DS1302 RTC is active
    - Otherwise 16.000 MHz assumed
@@ -3430,7 +3433,7 @@ the RomWBW HBIOS configuration.
 |-------------------|----------------|
 | ROM Image File    | RCZ80_skz.rom  |
 | Console Baud Rate | 115200         |
-| Interrupt Mode    | 1              |
+| Interrupts        | Mode 1         |
 
 
  - CPU speed is detected at startup if DS1302 RTC is active
@@ -3448,38 +3451,13 @@ the RomWBW HBIOS configuration.
 
 `\clearpage`{=latex}
 
-### SC126 Z180 SBC
+### Small Computer SC126 Z180 SBC
 
-|                   |                |
-|-------------------|----------------|
-| ROM Image Files   | RCZ180_126.rom |
-| Console Baud Rate | 115200         |
-| Interrupts        | Mode 2         |
-
- - CPU speed is detected at startup if DS1302 RTC is active
-   - Otherwise 18.432 MHz assumed
- - System timer is generated by Z180 CPU
- - Hardware auto-detected:
-   - DS1302 RTC
-   - Z180 ASCI Serial Ports
-   - SIO Serial Interface Module
-   - EP Dual UART Serial Interface Module
-   - WDC Floppy Disk Controller w/ 3.5" HD Drives
-   - IDE Hard Disk Interface Module
-   - PPIDE Hard Disk Interface Module
-   - Onboard SD Card Interface
- - Use of Interrupt Mode 2 requires proper IEI/IEO configuration
-   for all peripherals generating interrupts
-
-`\clearpage`{=latex}
-
-### SC130 Z180 SBC
-
-|                   |                |
-|-------------------|----------------|
-| ROM Image Files   | RCZ180_130.rom |
-| Console Baud Rate | 115200         |
-| Interrupts        | Mode 2         |
+|                   |                  |
+|-------------------|------------------|
+| ROM Image Files   | SCZ180_sc126.rom |
+| Console Baud Rate | 115200           |
+| Interrupts        | Mode 2           |
 
  - CPU speed is detected at startup if DS1302 RTC is active
    - Otherwise 18.432 MHz assumed
@@ -3498,13 +3476,38 @@ the RomWBW HBIOS configuration.
 
 `\clearpage`{=latex}
 
-### SC131 Z180 Pocket Computer
+### Small Computer SC130 Z180 SBC
 
-|                   |                |
-|-------------------|----------------|
-| ROM Image Files   | RCZ180_131.rom |
-| Console Baud Rate | 115200         |
-| Interrupts        | Mode 2         |
+|                   |                  |
+|-------------------|------------------|
+| ROM Image Files   | SCZ180_sc130.rom |
+| Console Baud Rate | 115200           |
+| Interrupts        | Mode 2           |
+
+ - CPU speed is detected at startup if DS1302 RTC is active
+   - Otherwise 18.432 MHz assumed
+ - System timer is generated by Z180 CPU
+ - Hardware auto-detected:
+   - DS1302 RTC
+   - Z180 ASCI Serial Ports
+   - SIO Serial Interface Module
+   - EP Dual UART Serial Interface Module
+   - WDC Floppy Disk Controller w/ 3.5" HD Drives
+   - IDE Hard Disk Interface Module
+   - PPIDE Hard Disk Interface Module
+   - Onboard SD Card Interface
+ - Use of Interrupt Mode 2 requires proper IEI/IEO configuration
+   for all peripherals generating interrupts
+
+`\clearpage`{=latex}
+
+### Small Computer SC131 Z180 Pocket Computer
+
+|                   |                  |
+|-------------------|------------------|
+| ROM Image Files   | SCZ180_sc131.rom |
+| Console Baud Rate | 115200           |
+| Interrupts        | Mode 2           |
 
  - CPU speed assumed to be 18.432 MHz
  - System timer is generated by Z180 CPU
@@ -3515,13 +3518,38 @@ the RomWBW HBIOS configuration.
 
 `\clearpage`{=latex}
 
-### SC140 Z180 CPU Module
+### Small Computer SC140 Z180 CPU Module
 
-|                   |                |
-|-------------------|----------------|
-| ROM Image Files   | RCZ180_140.rom |
-| Console Baud Rate | 115200         |
-| Interrupts        | Mode 2         |
+|                   |                  |
+|-------------------|------------------|
+| ROM Image Files   | SCZ180_sc140.rom |
+| Console Baud Rate | 115200           |
+| Interrupts        | Mode 2           |
+
+ - CPU speed is detected at startup if DS1302 RTC is active
+   - Otherwise 18.432 MHz assumed
+ - System timer is generated by Z180 CPU
+ - Hardware auto-detected:
+   - DS1302 RTC
+   - Z180 ASCI Serial Ports
+   - SIO Serial Interface Module
+   - EP Dual UART Serial Interface Module
+   - WDC Floppy Disk Controller w/ 3.5" HD Drives
+   - IDE Hard Disk Interface Module
+   - PPIDE Hard Disk Interface Module
+   - Onboard SD Card Interface
+ - Use of Interrupt Mode 2 requires proper IEI/IEO configuration
+   for all peripherals generating interrupts
+
+`\clearpage`{=latex}
+
+### Small Computer SC503 Z180 CPU Module
+
+|                   |                  |
+|-------------------|------------------|
+| ROM Image Files   | SCZ180_sc503.rom |
+| Console Baud Rate | 115200           |
+| Interrupts        | Mode 2           |
 
  - CPU speed is detected at startup if DS1302 RTC is active
    - Otherwise 18.432 MHz assumed

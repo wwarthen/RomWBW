@@ -1,6 +1,6 @@
 RomWBW ReadMe
 Wayne Warthen (wwarthen@gmail.com)
-16 Feb 2023
+17 Feb 2023
 
 
 
@@ -145,7 +145,7 @@ let me know if I missed you!
 -   David Giles created support for the Z180 CSIO which is now included
     SD Card driver.
 
--   Ed Brindley contributed some of the code that supports the RC2014
+-   Ed Brindley contributed some of the code that supports the RCBus
     platform.
 
 -   Phil Summers contributed the Forth and BASIC adaptations in ROM, the

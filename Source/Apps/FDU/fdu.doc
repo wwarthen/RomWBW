@@ -1,6 +1,6 @@
 ================================================================
 Floppy Disk Utility (FDU) v5.3 for RetroBrew Computers 
-Disk IO / Zeta / Dual-IDE / N8 / RC2014 / SmallZ80 / Dyno
+Disk IO / Zeta / Dual-IDE / N8 / RCBus / SmallZ80 / Dyno
 ================================================================
 
 Updated January 5, 2020
@@ -74,7 +74,7 @@ supported:
  - Zeta 2
  - N8
  - Mark IV
- - RC2014
+ - RCBus
  - SmallZ80
  - Dyno
  - MBC
@@ -89,8 +89,8 @@ You must have one of the following floppy disk controllers:
  - Zeta SBC onboard FDC
  - Zeta 2 SBC onboard FDC
  - N8 SBC onboard FDC
- - RC2014 Scott Baker SMC-based Floppy Module
- - RC2014 Scott Baker WDC-based Floppy Module
+ - RCBus Scott Baker SMC-based Floppy Module
+ - RCBus Scott Baker WDC-based Floppy Module
  - SmallZ80 FDC
  - Dyno FDC
  - MBC FDC
@@ -99,7 +99,7 @@ Finally, you will need a floppy drive connected via an
 appropriate cable:
 
 Disk IO - no twist in cable, drive unit 0/1 must be selected by jumper on drive
-DISK IO 3, Zeta, Zeta 2, RC2014, Dyno - cable with twist, unit 0 after twist, unit 1 before twist
+DISK IO 3, Zeta, Zeta 2, RCBus, Dyno - cable with twist, unit 0 after twist, unit 1 before twist
 DIDE, N8, Mark IV, SmallZ80 - cable with twist, unit 0 before twist, unit 1 after twist
 
 Note that FDU does not utilize your systems ROM or OS to 
@@ -147,15 +147,15 @@ P5 (bd ID): 1-2, 3-4 (for $20-$3F port range)
 There are no specific N8 jumper settings, but the default
 I/O range starting at $80 is assumed in the published code.
 
-The RC2014 Scott Baker SMC-based floppy module should be jumpered
+The RCBus Scott Baker SMC-based floppy module should be jumpered
 for I/O base address 0x50 (SV1: 11-12), JP1 (TS) shorted,
 JP2 (/FAULT) shorted, JP3 (MINI): 2-3, JP4 (/DC/RDY): 2-3.
 
-The RC2014 Scott Baker WDC-based floppy module should be jumpered
+The RCBus Scott Baker WDC-based floppy module should be jumpered
 for I/O base address 0x50 (SV1: 11-12), JP1 (/DACK): 1-2,
 JP2 (TC): 2-3.
 
-The RC2014 FDC by Alan Cox (Etched Pixels) needs to be strapped
+The RCBus FDC by Alan Cox (Etched Pixels) needs to be strapped
 for base I/O address 0x48.
 
 SmallZ80 does not have any relevant jumper settings.  The 
@@ -506,7 +506,7 @@ Improved polling version of read/write to fix occasional overrun errors.
 
 WW 1/8/2018: v5.2
 
-Added support for RC2014 hardware:
+Added support for RCBus hardware:
   - Scott Baker SMC 9266 FDC module
   - Scott Baker WDC 37C65 FDC module
 

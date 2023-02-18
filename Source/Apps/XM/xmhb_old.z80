@@ -4,7 +4,7 @@
 ;
 ;   Wayne Warthen - wwarthen@gmail.com
 ;
-; 2018-06-06 WBW Added support for RC2014 w/ Z180
+; 2018-06-06 WBW Added support for RCBus w/ Z180
 ; 2019-08-17 WBW Refactored and merged Phil's ECB-FIFO support
 ; 2019-08-28 WBW Refactored ASCI support
 ;
@@ -575,7 +575,7 @@ A_SPEED:
 ;=======================================================================
 ;
 ; Currently assumes the port address and ordering conventions of the
-; official RC2014 SIO module.  Will not work with others such as EZZ80
+; official RCBus SIO module.  Will not work with others such as EZZ80
 ; or ZP.
 ;
 ; SIO port constants

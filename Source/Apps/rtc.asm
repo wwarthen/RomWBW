@@ -19,7 +19,7 @@
 ;
 ;[2018/11/8] v1.2 PMS Add boot option. Code optimization.
 ;
-;[2019/06/21] v1.3 Finalized RC2014 Z180 support.
+;[2019/06/21] v1.3 Finalized RCBus Z180 support.
 ;
 ;[2019/08/11] v1.4 Support SCZ180 platform.
 ;
@@ -41,8 +41,8 @@ mask_rst	.EQU	%00010000	; De-activate RTC reset line
 PORT_SBC	.EQU	$70		; RTC port for SBC/ZETA
 PORT_N8		.EQU	$88		; RTC port for N8
 PORT_MK4	.EQU	$8A		; RTC port for MK4
-PORT_RCZ80	.EQU	$C0		; RTC port for RC2014
-PORT_RCZ180	.EQU	$0C		; RTC port for RC2014
+PORT_RCZ80	.EQU	$C0		; RTC port for RCBus
+PORT_RCZ180	.EQU	$0C		; RTC port for RCBus
 PORT_EZZ80	.EQU	$C0		; RTC port for EZZ80 (actually does not have one!!!)
 PORT_SCZ180	.EQU	$0C		; RTC port for SCZ180
 PORT_DYNO	.EQU	$0C		; RTC port for DYNO
@@ -1097,12 +1097,12 @@ HINIT:
 ;
 	LD	C,PORT_RCZ80
 	LD	DE,PLT_RCZ80
-	CP	$07		; RC2014 w/ Z80
+	CP	$07		; RCBus w/ Z80
 	JR	Z,RTC_INIT2
 ;
 	LD	C,PORT_RCZ180
 	LD	DE,PLT_RCZ180
-	CP	$08		; RC2014 w/ Z180
+	CP	$08		; RCBus w/ Z180
 	JR	Z,RTC_INIT2
 ;
 	LD	C,PORT_EZZ80
@@ -1752,12 +1752,12 @@ BOOTMSG		.TEXT	"\r\n\r\nRebooting...$"
 PLT_SBC		.TEXT	", SBC/Zeta RTC Latch Port 0x70\r\n$"
 PLT_N8		.TEXT	", N8 RTC Latch Port 0x88\r\n$"
 PLT_MK4		.TEXT	", Mark 4 RTC Latch Port 0x8A\r\n$"
-PLT_RCZ80	.TEXT	", RC2014 Z80 RTC Module Latch Port 0xC0\r\n$"
-PLT_RCZ180	.TEXT	", RC2014 Z180 RTC Module Latch Port 0x0C\r\n$"
+PLT_RCZ80	.TEXT	", RCBus Z80 RTC Module Latch Port 0xC0\r\n$"
+PLT_RCZ180	.TEXT	", RCBus Z180 RTC Module Latch Port 0x0C\r\n$"
 PLT_EZZ80	.TEXT	", Easy Z80 RTC Module Latch Port 0xC0\r\n$"
 PLT_SCZ180	.TEXT	", SC Z180 RTC Module Latch Port 0x0C\r\n$"
 PLT_DYNO	.TEXT	", DYNO RTC Module Latch Port 0x0C\r\n$"
-PLT_RCZ280	.TEXT	", RC2014 Z280 RTC Module Latch Port 0xC0\r\n$"
+PLT_RCZ280	.TEXT	", RCBus Z280 RTC Module Latch Port 0xC0\r\n$"
 PLT_MBC		.TEXT	", MBC RTC Latch Port 0x70\r\n$"
 PLT_RPH		.TEXT	", RHYOPHYRE RTC Latch Port 0x84\r\n$"
 

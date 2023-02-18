@@ -22,7 +22,7 @@ Supported platforms
 
 VGM Player is currently being developed on the ROMWBW platform using the Retrobrew computers
 EBC-SBC-V2 (Z80), ECB-SCG (AY-3-8910) and ECB-VGM (YM2612 and 2xSN76489) board. 
-It can be configured to run with other hardware such as RC2014, P8X180 and nhyodyne MBC.
+It can be configured to run with other hardware such as RCBus, P8X180 and nhyodyne MBC.
 
 VGM files can be very big and are limited in size by the available TPA space, which is typically 52k.
 
@@ -67,8 +67,8 @@ https://github.com/vgmrips/vgmtools
 References
 ==========
 http://www.primrosebank.net/computers/mtx/tools/PD/vgmplayer.zip - Paul Daniels MTX SN76489 interrupt version with embedded VGM tune.
-https://github.com/jblang/SN76489/blob/master/examples/vgmplayer.asm - J.B. Langston RC2014 polled version with file loading.
+https://github.com/jblang/SN76489/blob/master/examples/vgmplayer.asm - J.B. Langston RCBus polled version with file loading.
 https://groups.google.com/g/rc2014-z80/c/9nHnETJzGKU - Marco Maccaferri P8X180 & AY-3-8910 support
-https://github.com/electrified/rc2014-ym2151/tree/main/software/vgmplay - Ed Brindly RC2014 & YM2151 support
+https://github.com/electrified/rc2014-ym2151/tree/main/software/vgmplay - Ed Brindly RCBus & YM2151 support
 
 ROMWBW version by Phil Summers. VGM Player is still in development. The ECB-VGM is also still under development.

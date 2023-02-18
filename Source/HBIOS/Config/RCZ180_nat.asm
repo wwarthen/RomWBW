@@ -1,6 +1,6 @@
 ;
 ;==================================================================================================
-;   RC2014 Z180 STANDARD CONFIGURATION (NATIVE Z180 MMU W/ LINEAR MEMORY MODULE)
+;   RCBUS Z180 STANDARD CONFIGURATION (NATIVE Z180 MMU W/ LINEAR MEMORY MODULE)
 ;==================================================================================================
 ;
 ; THE COMPLETE SET OF DEFAULT CONFIGURATION SETTINGS FOR THIS PLATFORM ARE FOUND IN THE

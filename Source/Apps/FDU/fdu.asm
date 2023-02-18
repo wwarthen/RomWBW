@@ -38,7 +38,7 @@
 ;			DYNAMIC FDC SELECTION AT STARTUP
 ;			DYNAMIC CPU SPEED ADJUSTMENT
 ;   2017-12-16: V5.1	IMPROVED POLLING READ/WRITE PERFORMANCE
-;   2018-01-08: V5.2	ADDED RC2014 SUPPORT FOR:
+;   2018-01-08: V5.2	ADDED RCBUS SUPPORT FOR:
 ;			- SCOTT BAKER (SMB) SMC 9266 FDC
 ;			- SCOTT BAKER (SMB) WDC 37C65 FDC
 ;   2018-09-05: v5.3	ADDED SUPPORT FOR SMALLZ80
@@ -91,7 +91,7 @@ FDC_MBC		.EQU		11
 _DIO		.EQU		$01	; CUSTOM FOR DIO BOARD
 _DIO3		.EQU		$02	; CUSTOM FOR DIO3 BOARD
 _ZETA		.EQU		$04	; CUSTOM FOR ZETA
-_RCSMC		.EQU		$08	; CUSTOM FOR RC2014 SMB SMC MODULE
+_RCSMC		.EQU		$08	; CUSTOM FOR RCBUS SMB SMC MODULE
 _PCAT		.EQU		$10	; PC/AT MODE IN NEWER CONTROLLERS
 ;
 ;===============================================================================
@@ -465,11 +465,11 @@ FSS_MENU:
 	.TEXT	"  (D) Zeta 2 SBC Onboard FDC\r\n"
 	.TEXT	"  (E) Dual IDE ECB Board\r\n"
 	.TEXT	"  (F) N8 Onboard FDC\r\n"
-	.TEXT	"  (G) RC2014 SMC (SMB)\r\n"
-	.TEXT	"  (H) RC2014 WDC (SMB)\r\n"
+	.TEXT	"  (G) RCBus SMC (SMB)\r\n"
+	.TEXT	"  (H) RCBus WDC (SMB)\r\n"
 	.TEXT	"  (I) SmallZ80 Expansion\r\n"
 	.TEXT	"  (J) Dyno-Card FDC, D1030\r\n"
-	.TEXT	"  (K) RC2014 EPFDC\r\n"
+	.TEXT	"  (K) RCBus EPFDC\r\n"
 	.TEXT	"  (L) Multi-Board Computer FDC\r\n"
 	.TEXT	"  (X) Exit\r\n"
 	.TEXT	"=== OPTION ===> $\r\n"

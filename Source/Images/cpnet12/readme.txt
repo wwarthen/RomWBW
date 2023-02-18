@@ -7,7 +7,7 @@
 ***********************************************************************
 
 This directory contains the CP/M 2.2 client tools for CP/NET.  These
-tools work only with the MT011 RC2014 module.
+tools work only with the MT011 RCBus module.
 
 All of these files come from Douglas Miller.  Please refer to
 https://github.com/durgadas311/cpnet-z80 for more information and

@@ -1,6 +1,6 @@
 ;
 ;==================================================================================================
-;   RC2014 Z280 STANDARD CONFIGURATION (EXTERNAL MMU ON 512K RAM/ROM BANKED MEMORY MODULE)
+;   RCBUS Z280 STANDARD CONFIGURATION (EXTERNAL MMU ON 512K RAM/ROM BANKED MEMORY MODULE)
 ;==================================================================================================
 ;
 ; THE COMPLETE SET OF DEFAULT CONFIGURATION SETTINGS FOR THIS PLATFORM ARE FOUND IN THE
