@@ -38,13 +38,9 @@ sbcecb		.equ	3
 MBC		.equ	4
 ;
 plt_romwbw	.equ	1			; Build for ROMWBW?
-plt_type	.equ	custom			; Select build configuration
-debug		.equ	1			; Display port, register, config info
+plt_type	.equ	sbcecb			; Select build configuration
+debug		.equ	0			; Display port, register, config info
 ;
-;------------------------------------------------------------------------------
-; Platform specific definitions. If building for ROMWBW, these may be overridden
-;------------------------------------------------------------------------------
-
 #IF (plt_type=custom)
 RSEL            .equ    09AH			; Primary AY-3-8910 Register selection
 RDAT            .equ    09BH			; Primary AY-3-8910 Register data
@@ -62,9 +58,8 @@ YM2151_SEL1	.equ	0FEH			; Primary YM2151 register selection
 YM2151_DAT1	.equ	0FFH			; Primary YM2151 register data
 YM2151_SEL2	.equ	0FEH			; Secondary YM2151 register selection
 YM2151_DAT2	.equ	0FFH			; Secondary YM2151 register data
-plt_cpuspd	.equ	6;000000		; Non ROMWBW cpu speed default
 FRAME_DLY       .equ    10  			; Frame delay (~ 1/44100)
-
+plt_cpuspd	.equ	6			; Non ROMWBW cpu speed default
 #ENDIF
 ;
 #IF (plt_type=P8X180)
@@ -88,65 +83,64 @@ plt_cpuspd	.equ	20			; Non ROMWBW cpu speed default
 #ENDIF
 ;
 #IF (plt_type=RCBUS)
-RSEL            .equ    0D8H		; AYMODE_RCZ80	; Primary AY-3-8910 Register selection
-RDAT            .equ    0D0H		; AYMODE_RCZ80	; Primary AY-3-8910 Register data
-RSEL2           .equ    000H		; UNDEFINED	; Secondary AY-3-8910 Register selection
-RDAT2           .equ    000H		; UNDEFINED	; Secondary AY-3-8910 Register data
-PSG1REG         .equ    0FFH		; SNMODE_RC   !	; Primary SN76489
-PSG2REG         .equ    0FBH		; SNMODE_RC	; Secondary SN76489
-YM2151_SEL1	.equ	0FEH		; ED BRINDLEY	; Primary YM2151 register selection
-YM2151_DAT1	.equ	0FFH		; ED BRINDLEY !	; Primary YM2151 register data
-YM2151_SEL2	.equ	000H		; UNDEFINED	; Secondary YM2151 register selection
-YM2151_DAT2	.equ	000H		; UNDEFINED	; Secondary YM2151 register data
-ctcbase		.equ	000H		; UNDEFINED	; CTC base address
-YMSEL		.equ	000H		; UNDEFINED	; Primary YM2162 11000000 a1=0 a0=0
-YMDAT		.equ	000H		; UNDEFINED	; Primary YM2162 11000001 a1=0 a0=1
-YM2SEL		.equ	000H		; UNDEFINED	; Secondary YM2162 11000010 a1=1 a0=0
-YM2DAT		.equ	000H		; UNDEFINED	; Secondary YM2162 11000011 a1=1 a0=1
-plt_cpuspd	.equ	7;372800	; CPUOSC		; Non ROMWBW cpu speed default
-FRAME_DLY       .equ    12				; Frame delay (~ 1/44100)
+RSEL            .equ    0D8H			; Primary AY-3-8910 Register selection
+RDAT            .equ    0D0H			; Primary AY-3-8910 Register data
+RSEL2           .equ    0A0H			; Secondary AY-3-8910 Register selection
+RDAT2           .equ    0A1H			; Secondary AY-3-8910 Register data
+PSG1REG         .equ    0FFH			; Primary SN76489
+PSG2REG         .equ    0FBH			; Secondary SN76489
+YM2151_SEL1	.equ	0FEH			; Primary YM2151 register selection
+YM2151_DAT1	.equ	0FFH			; Primary YM2151 register data
+YM2151_SEL2	.equ	0D0H			; Secondary YM2151 register selection
+YM2151_DAT2	.equ	0D1H			; Secondary YM2151 register data
+ctcbase		.equ	000H			; CTC base address
+YMSEL		.equ	000H			; Primary YM2162 11000000 a1=0 a0=0
+YMDAT		.equ	000H			; Primary YM2162 11000001 a1=0 a0=1
+YM2SEL		.equ	000H			; Secondary YM2162 11000010 a1=1 a0=0
+YM2DAT		.equ	000H			; Secondary YM2162 11000011 a1=1 a0=1
+FRAME_DLY       .equ    12			; Frame delay (~ 1/44100)
+plt_cpuspd	.equ	7			; Non ROMWBW cpu speed default
 #ENDIF
 ;
 #IF (plt_type=sbcecb)
-RSEL            .equ    09AH		; AYMODE_SCG	; Primary AY-3-8910 Register selection
-RDAT            .equ	09BH		; AYMODE_SCG	; Primary AY-3-8910 Register data
-RSEL2           .equ    000H		; UNDEFINED	; Secondary AY-3-8910 Register selection
-RDAT2           .equ    000H		; UNDEFINED	; Secondary AY-3-8910 Register data
-VGMBASE		.equ	$C0				; ECB-VGM V2 base address
-YMSEL		.equ	VGMBASE+00H			; Primary YM2162 11000000 a1=0 a0=0
-YMDAT		.equ	VGMBASE+01H			; Primary YM2162 11000001 a1=0 a0=1
-YM2SEL		.equ	VGMBASE+02H			; Secondary YM2162 11000010 a1=1 a0=0
-YM2DAT		.equ	VGMBASE+03H			; Secondary YM2162 11000011 a1=1 a0=1
-PSG1REG         .equ    VGMBASE+06H	; SNMODE_VGM	; Primary SN76489
-PSG2REG         .equ    VGMBASE+07H	; SNMODE_VGM	; Secondary SN76489
-ctcbase		.equ	VGMBASE+0CH			; CTC base address
-YM2151_SEL1	.equ	000H		; UNDEFINED	; Primary YM2151 register selection
-YM2151_DAT1	.equ	000H		; UNDEFINED	; Primary YM2151 register data
-YM2151_SEL2	.equ	000H		; UNDEFINED	; Secondary YM2151 register selection
-YM2151_DAT2	.equ	000H		; UNDEFINED	; Secondary YM2151 register data
-plt_cpuspd	.equ	8;000000	; CPUOSC	; Non ROMWBW cpu speed default
-FRAME_DLY       .equ    13  				; Frame delay (~ 1/44100)
+RSEL            .equ    09AH			; Primary AY-3-8910 Register selection
+RDAT            .equ	09BH			; Primary AY-3-8910 Register data
+RSEL2           .equ    0A0H			; Secondary AY-3-8910 Register selection
+RDAT2           .equ    0A1H			; Secondary AY-3-8910 Register data
+VGMBASE		.equ	$C0
+YMSEL		.equ	VGMBASE+00H		; Primary YM2162 11000000 a1=0 a0=0
+YMDAT		.equ	VGMBASE+01H		; Primary YM2162 11000001 a1=0 a0=1
+YM2SEL		.equ	VGMBASE+02H		; Secondary YM2162 11000010 a1=1 a0=0
+YM2DAT		.equ	VGMBASE+03H		; Secondary YM2162 11000011 a1=1 a0=1
+PSG1REG         .equ    VGMBASE+06H		; Primary SN76489
+PSG2REG         .equ    VGMBASE+07H		; Secondary SN76489
+ctcbase		.equ	VGMBASE+0CH		; CTC base address
+YM2151_SEL1	.equ	0FEH			; Primary YM2151 register selection
+YM2151_DAT1	.equ	0FFH			; Primary YM2151 register data
+YM2151_SEL2	.equ	0FEH			; Secondary YM2151 register selection
+YM2151_DAT2	.equ	0FFH			; Secondary YM2151 register data
+FRAME_DLY       .equ    13  			; Frame delay (~ 1/44100)
+plt_cpuspd	.equ	8			; Non ROMWBW cpu speed default
 #ENDIF
 ;
 #IF (plt_type=MBC)
-RSEL            .equ    0A0H		; AYMODE_MBC	; Primary AY-3-8910 Register selection
-RDAT            .equ    0A1H		; AYMODE_MBC	; Primary AY-3-8910 Register data
-RSEL2           .equ    000H		; UNDEFINED	; Secondary AY-3-8910 Register selection
-RDAT2           .equ    000H		; UNDEFINED	; Secondary AY-3-8910 Register data
-YMSEL		.equ	000H		; UNDEFINED	; Primary YM2162 11000000 a1=0 a0=0
-YMDAT		.equ	000H		; UNDEFINED	; Primary YM2162 11000001 a1=0 a0=1
-YM2SEL		.equ	000H		; UNDEFINED	; Secondary YM2162 11000010 a1=1 a0=0
-YM2DAT		.equ	000H		; UNDEFINED	; Secondary YM2162 11000011 a1=1 a0=1
-PSG1REG         .equ    000H		; UNDEFINED	; Primary SN76489
-PSG2REG         .equ    000H		; UNDEFINED	; Secondary SN76489
-ctcbase		.equ	000H		; UNDEFINED	; CTC base address
-YM2151_SEL1	.equ	000H		; UNDEFINED	; Primary YM2151 register selection
-YM2151_DAT1	.equ	000H		; UNDEFINED	; Primary YM2151 register data
-YM2151_SEL2	.equ	000H		; UNDEFINED	; Secondary YM2151 register selection
-YM2151_DAT2	.equ	000H		; UNDEFINED	; Secondary YM2151 register data
-plt_cpuspd	.equ	8;000000	; CPUOSC	; Non ROMWBW cpu speed default
-FRAME_DLY       .equ    13  		; UNDEFINED	; Frame delay (~ 1/44100)
-
+RSEL            .equ    0A0H			; Primary AY-3-8910 Register selection
+RDAT            .equ    0A1H			; Primary AY-3-8910 Register data
+RSEL2           .equ    0D8H			; Secondary AY-3-8910 Register selection
+RDAT2           .equ    0D0H			; Secondary AY-3-8910 Register data
+YMSEL		.equ	0C0H			; 11000000 a1=0 a0=0
+YMDAT		.equ	0C1H			; 11000001 a1=0 a0=1
+YM2SEL		.equ	0C2H			; 11000010 a1=1 a0=0
+YM2DAT		.equ	0C3H			; 11000011 a1=1 a0=1
+PSG1REG         .equ    0C6H			; Primary SN76489
+PSG2REG         .equ    0C7H			; Secondary SN76489
+ctcbase		.equ	000H			; CTC base address
+YM2151_SEL1	.equ	0FEH			; Primary YM2151 register selection
+YM2151_DAT1	.equ	0FFH			; Primary YM2151 register data
+YM2151_SEL2	.equ	0FEH			; Secondary YM2151 register selection
+YM2151_DAT2	.equ	0FFH			; Secondary YM2151 register data
+FRAME_DLY       .equ    13  			; Frame delay (~ 1/44100)
+plt_cpuspd	.equ	8			; Non ROMWBW cpu speed default
 #ENDIF
 ;
 ;------------------------------------------------------------------------------
@@ -246,13 +240,47 @@ LF              .equ    0AH                	; line feed
 ;------------------------------------------------------------------------------
 
                 .ORG    100H
-;
+
                 LD      (OLDSTACK),SP		; save old stack pointer
                 LD      SP,STACK		; set new stack pointer
 ;
-		CALL	vgmsetup		; Device setup
+#IF (delay_type==cpu_loop)
+		call	setfdelay		; Setup the frame delay based on cpu speed
+#ENDIF
+;
+#IF (delay_type==ctc_poll)
+		call	cfgctc_poll		; If building for polled ctc, initialize it
+#ENDIF
+;
+#IF (delay_type==ctc_int)			; If building for interrupt driven ctc, initialize it
+		call	cfgctc_int
+#ENDIF
+;
+#IF (debug)
+;		LD	A,0			; tone to validate presence
+;TST:		LD	C,PSG1REG
+;		OUT	(C),A
+;		LD	C,PSG2REG
+;		OUT	(C),A
+;		JR	TST
+#ENDIF
 		call	welcome			; Welcome message and build debug info
-		call	vgmreadr		; read in the vgm file
+		CALL	READVGM			; Read in the VGM file
+		CALL	VGMINFO			; Check and display VGM Information
+
+		LD      HL, (VGMDATA + 34H) 	; Determine start of VGM
+                LD      A, H			; data.
+                OR      L
+                JR      NZ, _S1
+                LD      HL, 000CH          	; Default location (40H - 34H)
+_S1             LD      DE, VGMDATA + 34H
+                ADD     HL, DE
+                LD      (VGMPOS), HL
+
+                LD      HL,D60             	; VGM delay (60hz)
+		LD      (vdelay), HL
+;
+		LD	IX,VGM_DEV		; IX points to device mask
 ;
 ;------------------------------------------------------------------------------
 ; Play loop
@@ -321,30 +349,195 @@ EXIT:		CALL	VGMDEVICES		; Display devices used
 		LD	DE,MSG_EXIT		
 EXIT_ERR:	CALL	PRTSTR			; Generic message or error
                 LD      SP, (OLDSTACK)		; Exit to CP/M
-                JP	BOOT
+                RST     00H
+		DI
+		HALT
 ;
 ;------------------------------------------------------------------------------
-; Read VGM file
+; Welcome
 ;------------------------------------------------------------------------------
 ;
-vgmreadr:
-		CALL	READVGM			; Read in the VGM file
-		CALL	VGMINFO			; Check and display VGM Information
+welcome:	LD	DE,MSG_WELC		; Welcome Message
+		CALL	PRTSTR
 ;
-		LD      HL, (VGMDATA + 34H) 	; Determine start of VGM
-                LD      A, H			; data.
-                OR      L
-                JR      NZ, _S1
-                LD      HL, 000CH          	; Default location (40H - 34H)
-_S1             LD      DE, VGMDATA + 34H
-                ADD     HL, DE
-                LD      (VGMPOS), HL
+#IF (plt_romwbw)
+		LD	DE,MSG_ROMWBW		; display system type
+		CALL	PRTSTR
+#ENDIF
 ;
-                LD      HL,D60             	; VGM delay (60hz)
-		LD      (vdelay), HL
+		LD	A,delay_type		; display build type
+		LD	DE,MSG_CPU
+		CALL	PRTIDXDEA
 ;
-		LD	IX,VGM_DEV		; IX points to device mask
+		LD	A,plt_type		; display system type
+		LD	DE,MSG_CUSTOM
+		CALL	PRTIDXDEA
+		call	CRLF
+;
+#IF (debug)
+#IF (delay_type==cpu_loop)
+		ld	a,'f'			; Display frame rate delay
+		call	PRTCHR
+		call	PRTDOT
+		ld	a,(fdelay)
+		call	PRTDECB
+		LD	A,' '
+#ENDIF
+		CALL	PRTCHR
+		ld	a,'c'
+		call	PRTCHR
+		call	PRTDOT
+		ld	a,ctcdiv0		; Display ctc divider values
+		call	PRTDECB
+		CALL	PRTDOT
+		ld	a,ctcdiv1
+		call	PRTDECB
+		CALL	PRTDOT
+		ld	a,ctcdiv2
+		call	PRTDECB
+		CALL	PRTDOT
+		ld	a,ctcdiv3
+		call	PRTDECB
+;
+#IF (delay_wait)
+		ld	a,' '
+		CALL	PRTCHR
+		LD	A,'w'			; Display if using double wait
+		CALL	PRTCHR
+#ENDIF
+#ENDIF
+		CALL	CRLF
 		ret
+;
+;------------------------------------------------------------------------------
+; Setup frame delay value - Loop count for DJNZ $ loop
+;------------------------------------------------------------------------------
+;
+setfdelay:
+#IF (delay_type==cpu_loop)
+#IF (plt_romwbw)
+	LD	BC,$F8F0		; GET CPU SPEED
+	RST	08			; FROM HBIOS
+	LD	A,L			; 
+#ELSE
+	ld	a,plt_cpuspd		; USE STANDALONE CPU SPEED
+#ENDIF
+	LD	HL,CLKTBL-1		; CPU SPEED
+	ADD	A,L			; INDEXES 
+	LD	L,A			; INTO
+	ADC	A,H			; TABLE
+	SUB	L			
+	LD	H,A                     ; LOOK IT UP IN THE
+	LD	A,(HL)                  ; CLOCK TABLE
+
+	LD	(fdelay),A		; SAVE LOOP COUNTER FOR CPU SPEED
+	RET
+
+;------------------------------------------------------------------------------
+; Frame delay values for different processor speeds. 
+;------------------------------------------------------------------------------
+;
+;	    1/44100hz  = 22676ns
+;		16Mhz  = 62.5ns  : DJNZ $	= 1 frame delay= 22676ns/13*62.5ns  = 27.91
+;		12Mhz  = 83.3ns  : DJNZ $	= 1 frame delay= 22676ns/13*83.3ns  = 20.94
+;		10Mhz  = 100ns   : DJNZ $	= 1 frame delay= 22676ns/13*100ns   = 17.44
+;		 8Mhz  = 125ns   : DJNZ $	= 1 frame delay= 22676ns/13*125ns   = 13.95
+;	    7.3728Mhz  = 135.6ns : DJNZ $	= 1 frame delay= 22676ns/13*135.6ns = 12.86
+;		 6Mhz  = 166.6s  : DJNZ $	= 1 frame delay= 22676ns/13*166.6ns = 10.47
+;		 4Mhz  = 250ns   : DJNZ $	= 1 frame delay= 22676ns/13*250ns   =  6.98
+;		 2Mhz  = 500ns   : DJNZ $	= 1 frame delay= 22676ns/13*500ns   =  3.49
+;		 1Mhz  = 1000ns  : DJNZ $	= 1 frame delay= 22676ns/13*1000ns  =  1.74
+;
+CLKTBL:		.DB	1  		; 1Mhz		; none of these 
+		.DB	3  		; 2Mhz		; have been
+		.DB	0		; 3Mhz		; validated
+		.DB	6  		; 4Mhz
+		.DB	0		; 5Mhz
+		.DB	10 		; 6Mhz
+		.DB	12 		; 7Mhz 7.3728Mhz
+		.DB	13 		; 8Mhz
+		.DB	0		; 9Mhz
+		.DB	17 		; 10Mhz
+		.DB	0		; 11Mhz
+		.DB	20 		; 12Mhz
+		.DB	0		; 13Mhz
+		.DB	0		; 14Mhz
+		.DB	0		; 15Mhz
+		.DB	27 		; 16Mhz
+		.DB	0		; 17Mhz
+		.DB	0		; 18Mhz
+		.DB	0		; 19Mhz
+		.DB	0		; 20Mhz
+#ENDIF
+;
+;------------------------------------------------------------------------------
+; Initialize CTC
+;------------------------------------------------------------------------------
+;
+; %01010011	; CTC DEFAULT CONFIG
+; %01010111	; CTC COUNTER MODE CONFIG
+; %11010111	; CTC COUNTER INTERRUPT MODE CONFIG
+;  |||||||+-- CONTROL WORD FLAG
+;  ||||||+--- SOFTWARE RESET
+;  |||||+---- TIME CONSTANT FOLLOWS
+;  ||||+----- AUTO TRIGGER WHEN TIME CONST LOADED
+;  |||+------ RISING EDGE TRIGGER
+;  ||+------- TIMER MODE PRESCALER (0=16, 1=256)
+;  |+-------- COUNTER MODE
+;  +--------- INTERRUPT ENABLE
+;
+cfgctc_poll:
+;
+ctcch0		.equ	ctcbase
+ctcch1		.equ	ctcbase+1
+ctcch2		.equ	ctcbase+2
+ctcch3		.equ	ctcbase+3
+;
+ctccfg0		.equ	%01010011
+ctccfg1		.equ	%01010111
+ctccfg2		.equ	%01010111
+ctccfg3		.equ	%01010111
+;
+	ld	a,ctccfg0 & $7f	; 	; Channel 0
+	out	(ctcch0),a
+;	
+	ld	a,ctccfg1 & $7f		; Channel 1
+	out	(ctcch1),a		; 
+	ld	a,ctcdiv1 & $ff		; 
+	out	(ctcch1),a		; 
+;
+	ld	a,ctccfg2 & $7f		; Channel 2
+	out	(ctcch2),a		; 
+	ld	a,ctcdiv2 & $ff		; 
+	out	(ctcch2),a		; 
+;
+	ld	a,ctccfg3 & $7f		; Channel 3
+	out	(ctcch3),a		; 
+	ld	a,ctcdiv3 & $ff		; 
+	out	(ctcch3),a		; 
+;
+	ret
+;
+#IF (debug)	
+ctctest:
+	ld	b,0
+
+ctclp1:	in	a,(ctcch3)		; wait for counter to reach zero
+	dec	a
+	jr	nz,ctclp1
+
+ctclp2:	in	a,(ctcch3)		; wait for counter to pass zero
+	dec	a
+	jr	z,ctclp2
+
+	call	PRTDOT
+;
+	djnz	ctclp1
+#ENDIF
+	ret
+;
+cfgctc_int:
+	ret
 ;
 ;------------------------------------------------------------------------------
 ; Read VGM file into memory
@@ -398,6 +591,101 @@ RDONE           LD      C, CLOSEF		; Close the file
                 LD      DE, FCB
                 CALL    BDOS
 		RET
+;
+;------------------------------------------------------------------------------
+; Display VGM information.
+;------------------------------------------------------------------------------
+;
+VGMINFO:	LD	DE,MSG_BADF		; Check valid file
+		LD	HL,VGMDATA
+		LD	A,(HL)
+		CP	'V'
+		JP	NZ,EXIT_ERR
+		INC	HL
+		LD	A,(HL)
+		CP	'g'
+		JP	NZ,EXIT_ERR
+		INC	HL
+		LD	A,(HL)
+		CP	'm'
+		JP	NZ,EXIT_ERR
+		INC	HL
+		LD	A,(HL)
+		CP	' '
+		JP	NZ,EXIT_ERR
+
+		LD	HL,VGMDATA+08H		; Get version in DE:HL
+		LD	E,(HL)
+		INC	HL
+		LD	D,(HL)
+		INC	HL
+		LD	B,(HL)
+		INC	HL
+		LD	C,(HL)
+		EX	DE,HL
+		PUSH	BC
+		POP	DE
+;		CALL	PRTHEX32		; Debug
+
+		LD	HL,(VGMDATA+16H)	; Is GD3 in range?
+		LD	A,H
+		OR	L
+		JR	NZ,SKIP_GD3
+
+		LD	HL,(VGMDATA+14H)	; Is there a GD3 header
+		LD	DE,VGMDATA+14H
+		ADD	HL,DE
+		LD	A,(HL)
+		CP	'G'
+		JR	NZ,SKIP_GD3
+		INC	HL
+		LD	A,(HL)
+		CP	'd'
+		JR	NZ,SKIP_GD3
+		INC	HL
+		LD	A,(HL)
+		CP	'3'
+		JR	NZ,SKIP_GD3
+		INC	HL
+		LD	A,(HL)
+		CP	' '
+		JR	NZ,SKIP_GD3
+
+		LD	DE,0009H		; Skip version and size
+		ADD	HL,DE
+
+		CALL	CRLF
+		LD	DE,MSG_TRACK
+		CALL	PRTSTR
+
+GD3_NXT:	LD	A,(HL)			; Print English Track
+		OR	A
+		INC	HL
+		INC	HL
+		JR	Z,GD3_NXT1
+		CALL	PRTCHR
+		JR	GD3_NXT
+
+GD3_NXT1:	LD	A,(HL)			; Skip Japanese Track
+		OR	A
+		INC	HL
+		INC	HL
+		JR	NZ,GD3_NXT1
+;		JR	GD3_NXT1
+
+		LD 	DE,MSG_TITLE
+		CALL	PRTSTR
+
+GD3_NXT2:	LD	A,(HL)			; Print English Title
+		OR	A
+		INC	HL
+		INC	HL
+		JR	Z,GD3_NXT3
+		CALL	PRTCHR
+		JR	GD3_NXT2
+
+GD3_NXT3:	CALL	CRLF
+SKIP_GD3:	RET
 ;
 ;------------------------------------------------------------------------------
 ; VGM Player.
@@ -620,101 +908,6 @@ CHKDEV:		AND	%00000011		; Display
 		CALL	PRTCHR			; Skip if not
 		CALL	PRTSTR			; used.
 		RET
-;
-;------------------------------------------------------------------------------
-; Display VGM information.
-;------------------------------------------------------------------------------
-;
-VGMINFO:	LD	DE,MSG_BADF		; Check valid file
-		LD	HL,VGMDATA
-		LD	A,(HL)
-		CP	'V'
-		JP	NZ,EXIT_ERR
-		INC	HL
-		LD	A,(HL)
-		CP	'g'
-		JP	NZ,EXIT_ERR
-		INC	HL
-		LD	A,(HL)
-		CP	'm'
-		JP	NZ,EXIT_ERR
-		INC	HL
-		LD	A,(HL)
-		CP	' '
-		JP	NZ,EXIT_ERR
-
-		LD	HL,VGMDATA+08H		; Get version in DE:HL
-		LD	E,(HL)
-		INC	HL
-		LD	D,(HL)
-		INC	HL
-		LD	B,(HL)
-		INC	HL
-		LD	C,(HL)
-		EX	DE,HL
-		PUSH	BC
-		POP	DE
-;		CALL	PRTHEX32		; Debug
-
-		LD	HL,(VGMDATA+16H)	; Is GD3 in range?
-		LD	A,H
-		OR	L
-		JR	NZ,SKIP_GD3
-
-		LD	HL,(VGMDATA+14H)	; Is there a GD3 header
-		LD	DE,VGMDATA+14H
-		ADD	HL,DE
-		LD	A,(HL)
-		CP	'G'
-		JR	NZ,SKIP_GD3
-		INC	HL
-		LD	A,(HL)
-		CP	'd'
-		JR	NZ,SKIP_GD3
-		INC	HL
-		LD	A,(HL)
-		CP	'3'
-		JR	NZ,SKIP_GD3
-		INC	HL
-		LD	A,(HL)
-		CP	' '
-		JR	NZ,SKIP_GD3
-
-		LD	DE,0009H		; Skip version and size
-		ADD	HL,DE
-
-		CALL	CRLF
-		LD	DE,MSG_TRACK
-		CALL	PRTSTR
-
-GD3_NXT:	LD	A,(HL)			; Print English Track
-		OR	A
-		INC	HL
-		INC	HL
-		JR	Z,GD3_NXT1
-		CALL	PRTCHR
-		JR	GD3_NXT
-
-GD3_NXT1:	LD	A,(HL)			; Skip Japanese Track
-		OR	A
-		INC	HL
-		INC	HL
-		JR	NZ,GD3_NXT1
-;		JR	GD3_NXT1
-
-		LD 	DE,MSG_TITLE
-		CALL	PRTSTR
-
-GD3_NXT2:	LD	A,(HL)			; Print English Title
-		OR	A
-		INC	HL
-		INC	HL
-		JR	Z,GD3_NXT3
-		CALL	PRTCHR
-		JR	GD3_NXT2
-
-GD3_NXT3:	CALL	CRLF
-SKIP_GD3:	RET
 ;
 ;------------------------------------------------------------------------------
 ; Mute Devices.
@@ -1091,7 +1284,7 @@ MSG_CTCINT	.DB	"[ctc interrupts]",0
 MSG_ROMWBW	.DB	" [romwbw] ",0
 MSG_CUSTOM	.DB	" [custom] ",0
 MSG_P8X180	.DB	" [p8x180] ",0
-MSG_RC2014	.DB	" [RCBus] ",0
+MSG_RCBUS	.DB	" [RCBus] ",0
 MSG_SBCECB	.DB	" [sbc] ",0
 MSG_MBC		.DB	" [mbc] ",0
 ;
@@ -1100,6 +1293,7 @@ MSG_MBC		.DB	" [mbc] ",0
 ;------------------------------------------------------------------------------
 ;
 VGMPOS          .DW     0
+;VGMDLY          .DW     0		; Saves number of frames to delay
 KEYCHK		.DB	0		; Counter for keypress checks
 ;
 VGM_DEV		.DB	%00000000	; IX+0 Flags for devices
@@ -1112,237 +1306,12 @@ VGM_DEV		.DB	%00000000	; IX+0 Flags for devices
 		.DB	%00000000	; IX+1 Unimplemented device flags & future devices
 ;
 OLDSTACK        .DW     0		; original stack pointer
-                .FILL	40H		; space for stack
-STACK		.DW	0		; top of stack
+                .DS     40H		; space for stack
+STACK					; top of stack
 
 ;------------------------------------------------------------------------------
-; VGM data gets loaded into TPA here
+; VGM data
 ;------------------------------------------------------------------------------
-;
-VGMDATA:
-;
-;******************************************************************************
-;*********** Initialization code that gets overwritten by VGMDATA *************
-;******************************************************************************
-;
-vgmsetup:
-#IF (plt_romwbw==1)
-		CALL	cfgports		; Get and setup ports from HBIOS
-#ENDIF
-;
-#IF (delay_type==cpu_loop)
-		call	setfdelay		; Setup the frame delay based on cpu speed
-#ENDIF
-;
-#IF (delay_type==ctc_poll)
-		call	cfgctc_poll		; If building for polled ctc, initialize it
-#ENDIF
-;
-#IF (delay_type==ctc_int)			; If building for interrupt driven ctc, initialize it
-		call	cfgctc_int
-#ENDIF
-;
-#IF (debug)
-;		LD	A,0			; tone to validate presence
-;TST:		LD	C,PSG1REG
-;		OUT	(C),A
-;		LD	C,PSG2REG
-;		OUT	(C),A
-;		JR	TST
-#ENDIF
-		ret
-;
-;------------------------------------------------------------------------------
-; Welcome
-;------------------------------------------------------------------------------
-;
-welcome:	LD	DE,MSG_WELC		; Welcome Message
-		CALL	PRTSTR
-;
-#IF (plt_romwbw)
-		LD	DE,MSG_ROMWBW		; display system type
-		CALL	PRTSTR
-#ENDIF
-;
-		LD	A,delay_type		; display build type
-		LD	DE,MSG_CPU
-		CALL	PRTIDXDEA
-;
-		LD	A,plt_type		; display system type
-		LD	DE,MSG_CUSTOM
-		CALL	PRTIDXDEA
-		call	CRLF
-;
-#IF (debug)
-#IF (delay_type==cpu_loop)
-		ld	a,'f'			; Display frame rate delay
-		call	PRTCHR
-		call	PRTDOT
-		ld	a,(fdelay)
-		call	PRTDECB
-		LD	A,' '
-#ENDIF
-		CALL	PRTCHR
-		ld	a,'c'
-		call	PRTCHR
-		call	PRTDOT
-		ld	a,ctcdiv0		; Display ctc divider values
-		call	PRTDECB
-		CALL	PRTDOT
-		ld	a,ctcdiv1
-		call	PRTDECB
-		CALL	PRTDOT
-		ld	a,ctcdiv2
-		call	PRTDECB
-		CALL	PRTDOT
-		ld	a,ctcdiv3
-		call	PRTDECB
-;
-#IF (delay_wait)
-		ld	a,' '
-		CALL	PRTCHR
-		LD	A,'w'			; Display if using double wait
-		CALL	PRTCHR
-#ENDIF
-#ENDIF
-		CALL	CRLF
-		ret
-;
-;------------------------------------------------------------------------------
-; Probe HBIOS for devices and patch in I/O ports for devices
-;------------------------------------------------------------------------------
-;
-cfgports:	ret
-;
-;------------------------------------------------------------------------------
-; Setup frame delay value - Loop count for DJNZ $ loop
-;------------------------------------------------------------------------------
-;
-setfdelay:
-#IF (delay_type==cpu_loop)
-#IF (plt_romwbw)
-		LD	BC,$F8F0		; GET CPU SPEED
-		RST	08			; FROM HBIOS
-		LD	A,L			; 
-#ELSE
-		ld	a,plt_cpuspd		; USE STANDALONE CPU SPEED
-#ENDIF
-		LD	HL,CLKTBL-1		; CPU SPEED
-		ADD	A,L			; INDEXES 
-		LD	L,A			; INTO
-		ADC	A,H			; TABLE
-		SUB	L			
-		LD	H,A                     ; LOOK IT UP IN THE
-		LD	A,(HL)                  ; CLOCK TABLE
-;
-		LD	(fdelay),A		; SAVE LOOP COUNTER FOR CPU SPEED
-		RET
-;
-;------------------------------------------------------------------------------
-; Frame delay values for different processor speeds. 
-;------------------------------------------------------------------------------
-;
-;	    1/44100hz  = 22676ns
-;		16Mhz  = 62.5ns  : DJNZ $	= 1 frame delay= 22676ns/13*62.5ns  = 27.91
-;		12Mhz  = 83.3ns  : DJNZ $	= 1 frame delay= 22676ns/13*83.3ns  = 20.94
-;		10Mhz  = 100ns   : DJNZ $	= 1 frame delay= 22676ns/13*100ns   = 17.44
-;		 8Mhz  = 125ns   : DJNZ $	= 1 frame delay= 22676ns/13*125ns   = 13.95
-;	    7.3728Mhz  = 135.6ns : DJNZ $	= 1 frame delay= 22676ns/13*135.6ns = 12.86
-;		 6Mhz  = 166.6s  : DJNZ $	= 1 frame delay= 22676ns/13*166.6ns = 10.47
-;		 4Mhz  = 250ns   : DJNZ $	= 1 frame delay= 22676ns/13*250ns   =  6.98
-;		 2Mhz  = 500ns   : DJNZ $	= 1 frame delay= 22676ns/13*500ns   =  3.49
-;		 1Mhz  = 1000ns  : DJNZ $	= 1 frame delay= 22676ns/13*1000ns  =  1.74
-;
-CLKTBL:		.DB	1  		; 1Mhz		; none of these 
-		.DB	3  		; 2Mhz		; have been
-		.DB	0		; 3Mhz		; validated
-		.DB	6  		; 4Mhz
-		.DB	0		; 5Mhz
-		.DB	10 		; 6Mhz
-		.DB	12 		; 7Mhz 7.3728Mhz
-		.DB	13 		; 8Mhz
-		.DB	0		; 9Mhz
-		.DB	17 		; 10Mhz
-		.DB	0		; 11Mhz
-		.DB	20 		; 12Mhz
-		.DB	0		; 13Mhz
-		.DB	0		; 14Mhz
-		.DB	0		; 15Mhz
-		.DB	27 		; 16Mhz
-		.DB	0		; 17Mhz
-		.DB	0		; 18Mhz
-		.DB	0		; 19Mhz
-		.DB	0		; 20Mhz
-#ENDIF
-;
-;
-;------------------------------------------------------------------------------
-; Initialize CTC
-;------------------------------------------------------------------------------
-;
-; %01010011	; CTC DEFAULT CONFIG
-; %01010111	; CTC COUNTER MODE CONFIG
-; %11010111	; CTC COUNTER INTERRUPT MODE CONFIG
-;  |||||||+-- CONTROL WORD FLAG
-;  ||||||+--- SOFTWARE RESET
-;  |||||+---- TIME CONSTANT FOLLOWS
-;  ||||+----- AUTO TRIGGER WHEN TIME CONST LOADED
-;  |||+------ RISING EDGE TRIGGER
-;  ||+------- TIMER MODE PRESCALER (0=16, 1=256)
-;  |+-------- COUNTER MODE
-;  +--------- INTERRUPT ENABLE
-;
-cfgctc_poll:
-;
-ctcch0		.equ	ctcbase
-ctcch1		.equ	ctcbase+1
-ctcch2		.equ	ctcbase+2
-ctcch3		.equ	ctcbase+3
-;
-ctccfg0		.equ	%01010011
-ctccfg1		.equ	%01010111
-ctccfg2		.equ	%01010111
-ctccfg3		.equ	%01010111
-;
-		ld	a,ctccfg0 & $7f	; 	; Channel 0
-		out	(ctcch0),a
-;	
-		ld	a,ctccfg1 & $7f		; Channel 1
-		out	(ctcch1),a		; 
-		ld	a,ctcdiv1 & $ff		; 
-		out	(ctcch1),a		; 
-;
-		ld	a,ctccfg2 & $7f		; Channel 2
-		out	(ctcch2),a		; 
-		ld	a,ctcdiv2 & $ff		; 
-		out	(ctcch2),a		; 
-;
-		ld	a,ctccfg3 & $7f		; Channel 3
-		out	(ctcch3),a		; 
-		ld	a,ctcdiv3 & $ff		; 
-		out	(ctcch3),a		; 
-;
-		ret
-;
-#IF (debug)	
-ctctest:
-		ld	b,0
 
-ctclp1:		in	a,(ctcch3)		; wait for counter to reach zero
-		dec	a
-		jr	nz,ctclp1
-
-ctclp2:		in	a,(ctcch3)		; wait for counter to pass zero
-		dec	a
-		jr	z,ctclp2
-
-		call	PRTDOT
-;
-		djnz	ctclp1
-#ENDIF
-		ret
-;
-cfgctc_int:
-		ret
-
+VGMDATA
                 .END
