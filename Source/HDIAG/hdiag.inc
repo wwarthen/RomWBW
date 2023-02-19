@@ -38,7 +38,7 @@ hd_cpu_z280	.equ	5		; Zilog Z280
 ;
 hd_mm_none	.equ	0		; unknown memory manager
 hd_mm_sbc	.equ	1		; SBC/MBC/Zeta 1
-hd_mm_z2        .equ	2		; Zeta 2/RC2014
+hd_mm_z2        .equ	2		; Zeta 2/RCBUS
 hd_mm_z180      .equ	3		; Z180 native
 hd_mm_n8        .equ	4		; Z180 on N8
 hd_mm_z280      .equ	5		; Z280 native

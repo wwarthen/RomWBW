@@ -674,9 +674,9 @@ MSGERR		.DB	"App Error", 0
 ;
 HWSTR_SCG	.DB	"SCG ECB Board",0
 HWSTR_N8	.DB	"N8 Onboard Sound",0
-HWSTR_RCEB	.DB	"RC2014 Sound Module (EB)",0
-HWSTR_RCEB6	.DB	"RC2014 Sound Module (EBv6)",0
-HWSTR_RCMF	.DB	"RC2014 Sound Module (MF)",0
+HWSTR_RCEB	.DB	"RCBus Sound Module (EB)",0
+HWSTR_RCEB6	.DB	"RCBus Sound Module (EBv6)",0
+HWSTR_RCMF	.DB	"RCBus Sound Module (MF)",0
 HWSTR_LINC	.DB	"Z50 LiNC Sound Module",0
 HWSTR_MBC	.DB	"NHYODYNE Sound Module",0
 

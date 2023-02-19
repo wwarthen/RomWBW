@@ -3,7 +3,7 @@
 ; HDIAG SIO Driver
 ;=======================================================================
 ;
-; Assumes the UART port conventions for RC2014.  Command/status port
+; Assumes the UART port conventions for RCBus.  Command/status port
 ; at $80 and read/write data port at $81.
 ; Assuming a UART clock frequency of 1.8432 MHz, the baud rate
 ; will be 38400.
@@ -94,7 +94,7 @@ sio_cost:
 ;
 ; Table for chip register initialization.  Simple setup for clock
 ; divided by 64.  Assuming a system clock of 7.3728 MHz, this will
-; result in a baud rate of 115200 which is standard for RC2014.
+; result in a baud rate of 115200 which is standard for RCBus.
 ;
 sio_initregs:
 	.db	$00, $18		; wr0: channel reset cmd

@@ -23,7 +23,7 @@ Zeta 2 (X)
 - Test FD driver
 - Test FDU app
 
-RC2014 (X)
+RCBus (X)
 ------
 - Test SIO driver (Serial Module)
 - Test ACIA driver (Dual Serial Module)

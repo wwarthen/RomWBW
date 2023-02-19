@@ -1,6 +1,6 @@
 ;
 ;==================================================================================================
-;   RC2014 Z80 STANDARD CONFIGURATION W/ SERGEY KISELEV Z80 + 512K CPU
+;   RCBUS Z80 STANDARD CONFIGURATION W/ SERGEY KISELEV Z80 + 512K CPU
 ;==================================================================================================
 ;
 ; THE COMPLETE SET OF DEFAULT CONFIGURATION SETTINGS FOR THIS PLATFORM ARE FOUND IN THE

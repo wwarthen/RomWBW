@@ -1,6 +1,6 @@
 ;
 ;==================================================================================================
-;   RC2014 Z280 STANDARD CONFIGURATION (NATIVE Z280 MMU W/ LINEAR MEMORY)
+;   RCBUS Z280 STANDARD CONFIGURATION (NATIVE Z280 MMU W/ LINEAR MEMORY)
 ;==================================================================================================
 ;
 ; THE COMPLETE SET OF DEFAULT CONFIGURATION SETTINGS FOR THIS PLATFORM ARE FOUND IN THE

@@ -1,6 +1,6 @@
 ;
 ;==================================================================================================
-;   ROMWBW 2.X CONFIGURATION DEFAULTS FOR RC2014 Z280 CPU
+;   ROMWBW 2.X CONFIGURATION DEFAULTS FOR RCBUS Z280 CPU
 ;==================================================================================================
 ;
 ; THIS FILE CONTAINS THE FULL SET OF DEFAULT CONFIGURATION SETTINGS FOR THE PLATFORM
@@ -11,7 +11,7 @@
 ; THIS FILE CAN BE CONSIDERED A REFERENCE THAT LISTS ALL POSSIBLE CONFIGURATION SETTINGS
 ; FOR THE PLATFORM.
 ;
-#DEFINE PLATFORM_NAME "RC2014", " [", CONFIG, "]"
+#DEFINE PLATFORM_NAME "RCBus", " [", CONFIG, "]"
 ;
 #INCLUDE "hbios.inc"
 ;

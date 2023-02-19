@@ -492,7 +492,7 @@ _str_mm:
 	.dw	_str_mmz280
 ;
 _str_mmsbc	.db	"SBC/MBC",0
-_str_mmz2	.db	"Zeta2/RC2014",0
+_str_mmz2	.db	"Zeta2/RCBUS",0
 _str_mmz180	.db	"Z180 Native",0
 _str_mmn8	.db	"Z180 Native (N8)",0
 _str_mmz280	.db	"Z280 Native",0

@@ -1,6 +1,6 @@
 ;
 ;==================================================================================================
-;   RC2014 Z80 STANDARD CONFIGURATION
+;   RCBUS Z80 STANDARD CONFIGURATION
 ;==================================================================================================
 ;
 ; THE COMPLETE SET OF DEFAULT CONFIGURATION SETTINGS FOR THIS PLATFORM ARE FOUND IN THE
