@@ -33,7 +33,7 @@
 ;
 custom		.equ	0           	        ; System configurations
 P8X180          .equ    1
-RC2014          .equ    2
+RCBUS           .equ    2
 sbcecb		.equ	3			
 MBC		.equ	4
 ;
@@ -87,7 +87,7 @@ FRAME_DLY       .equ    48			; Frame delay (~ 1/44100)
 plt_cpuspd	.equ	20			; Non ROMWBW cpu speed default
 #ENDIF
 ;
-#IF (plt_type=RC2014)
+#IF (plt_type=RCBUS)
 RSEL            .equ    0D8H		; AYMODE_RCZ80	; Primary AY-3-8910 Register selection
 RDAT            .equ    0D0H		; AYMODE_RCZ80	; Primary AY-3-8910 Register data
 RSEL2           .equ    000H		; UNDEFINED	; Secondary AY-3-8910 Register selection
@@ -1091,7 +1091,7 @@ MSG_CTCINT	.DB	"[ctc interrupts]",0
 MSG_ROMWBW	.DB	" [romwbw] ",0
 MSG_CUSTOM	.DB	" [custom] ",0
 MSG_P8X180	.DB	" [p8x180] ",0
-MSG_RC2014	.DB	" [rc2014] ",0
+MSG_RC2014	.DB	" [RCBus] ",0
 MSG_SBCECB	.DB	" [sbc] ",0
 MSG_MBC		.DB	" [mbc] ",0
 ;
