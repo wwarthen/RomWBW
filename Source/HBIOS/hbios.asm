@@ -7305,6 +7305,16 @@ SLACK		.EQU	BNKTOP - $
 		.ECHO	"HBIOS space remaining: "
 		.ECHO	SLACK
 		.ECHO	" bytes.\n"
+
+#IF (SLACK<0)
+		.ECHO	"*** ERROR: HBIOS too big.\n"
+		!!!	; FORCE AN ASSEMBLY ERROR
+#ENDIF
+;
+#IF (CCP_SIZ > SLACK)
+		.ECHO	"*** ERROR: Insufficient space for CBIOS Cache.\n"
+		!!!	; FORCE AN ASSEMBLY ERROR
+#ENDIF
 ;
 #IFDEF ROMBOOT
   #IF (ROMSIZE > 0)
