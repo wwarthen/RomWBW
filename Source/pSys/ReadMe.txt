@@ -99,7 +99,7 @@ deficient.  It insists on polling all of the serial input devices
 that it will queue up any characters received.  I guess the idea is 
 that this will help in scenarios where characters are coming in too 
 fast to be processed. However, the basic/default interpreter does not 
-support the queues! Strangely, it still polls the the devices and 
+support the queues! Strangely, it still polls the devices and 
 literally discards anything received.  This completely undermines the 
 ability of the underlying hardware which is doing it's own robust
 interrupt or hardware based buffering and flow control.

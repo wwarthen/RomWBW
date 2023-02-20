@@ -492,6 +492,8 @@ When your console is the serial device used for the transfer, no progress inform
 
 Due to different platform processor speeds,  serials speeds and flow control capabilities the default console or serial device speed may need to be reduced for a successful transfer and flash to occur. The **Set Console Interface/Baud code** option at the Boot Loader can be used to change the speed if required. Additionally, the Updater has options to set to and revert from a recommended speed. 
 
+See the ROMWBW Applications guide for additional information on performing upgrades.
+
  ## Console Options
 Option ( C ) - Set Console Device
 
