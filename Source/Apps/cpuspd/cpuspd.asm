@@ -10,6 +10,8 @@
 ;
 #include "../../HBIOS/hbios.inc"
 ;
+#include "../../ver.inc"
+;
 ; General operational equates (should not requre adjustment)
 ;
 stksiz		.equ	$40		; Working stack size
@@ -22,9 +24,6 @@ restart		.equ	$0000		; CP/M restart vector
 bdos		.equ	$0005		; BDOS invocation vector
 ;
 ident		.equ	$FFFE		; loc of RomWBW HBIOS ident ptr
-;
-rmj		.equ	3		; intended CBIOS version - major
-rmn		.equ	1		; intended CBIOS version - minor
 ;
 ;=======================================================================
 ;
@@ -192,7 +191,7 @@ show_spd:
 	rst	08
 	jp	nz,err_not_sup
 	call	crlf2
-	push	de			; save CPU speed for now
+	ld	(cpu_spd),de		; save CPU speed for now
 	push	bc			; Oscillator speed to HL
 	pop	hl
 	ld	de,str_spacer
@@ -204,7 +203,7 @@ show_spd:
 	ld	c,BF_SYSGET_CPUSPD
 	rst	08
 	jp	nz,err_not_sup
-	push	de
+	push	de			; save wait states for now
 	ld	a,l
 	ld	de,str_slow
 	cp	0
@@ -219,9 +218,7 @@ show_spd:
 show_spd1:
 	call	crlf
 	call	prtstr
-	pop	bc			; recover wait states
-	pop	hl			; recover CPU speed
-	push	bc			; resave wait states
+	ld	hl,(cpu_spd)		; recover CPU speed
 	call	prtd3m
 	ld	de,str_cpuspd
 	call	prtstr
@@ -696,6 +693,7 @@ stack		.equ	$		; stack top
 ;
 ;
 tmpstr		.fill	9,0		; temp string (8 chars, 0 term)
+cpu_spd		.dw	0		; current cpu speed
 new_cpu_spd	.db	$FF		; new CPU speed
 new_ws_mem	.db	$FF		; new memory wait states
 new_ws_io	.db	$FF		; new I/O wait states
