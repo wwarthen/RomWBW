@@ -55,6 +55,7 @@
 ; Main program
 ;===============================================================================
 ;
+#include	"../../ver.inc"
 #include	"hbios.inc"
 #include	"cpm.inc"
 #include	"tune.inc"

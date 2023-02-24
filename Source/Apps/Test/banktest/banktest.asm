@@ -27,10 +27,9 @@
 runloc	.equ	$C000		; Running location (upper memory required)
 stksiz	.equ	$40		; Working stack size
 ;
-rmj	.equ	3		; intended HBIOS version - major
-rmn	.equ	1		; intended HBIOS version - minor
-;
 restart	.equ	$0000		; CP/M restart vector
+;
+#include "../../../ver.inc"
 ;
 #include "../../../HBIOS/hbios.inc"
 ;
