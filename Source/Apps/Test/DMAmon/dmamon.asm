@@ -1,36 +1,10 @@
 ;==================================================================================================
-; Z80 DMA TEST UTILITY
+; Z80 DMA TEST UTILITY - ROMWBW SPECIFIC
 ;==================================================================================================
 ;
-FALSE		.EQU	0
-TRUE		.EQU	~FALSE
-;
-; HELPER MACROS
-;
-#DEFINE	PRTC(C)	CALL PRTCH \ .DB C	; PRINT CHARACTER C TO CONSOLE - PRTC('X')
-#DEFINE	PRTS(S)	CALL PRTSTRD \ .TEXT S	; PRINT STRING S TO CONSOLE - PRTD("HELLO")
-#DEFINE	PRTX(X) CALL PRTSTRI \ .DW X	; PRINT STRING AT ADDRESS X TO CONSOLE - PRTI(STR_HELLO)
-;
-; SYSTEM SPEED CAPABILITIES
-;
-SPD_FIXED	.EQU	0		; PLATFORM SPEED FIXED AND CANNOT CHANGE SPEEDS
-SPD_HILO	.EQU	1		; PLATFORM CAN CHANGE BETWEEN TWO SPEEDS
-;
-; INTERRUPT TESTING CONFIGURATION
-; N.B., INTERRUPT TESTING REQUIRES ROMWBW!!!
-; ASSUMES SYSTEM IS ALREADY CONFIGURED FOR IM2 OPERATION
-; INTIDX MUST BE SET TO AN UNUSED INTERRUPT SLOT
-;		
-INTENABLE	.EQU	TRUE		; ENABLE INT TESTING
-INTIDX		.EQU	1		; INT VECTOR INDEX
-;
-; SYSTEM SPEED CHARACTERISTICS
-;
-SPD_UNSUP	.EQU	0		; PLATFORM CAN CHANGE SPEEDS BUT IS UNSUPPORTED
-SPD_HIGH	.EQU	1		; PLATFORM CAN CHANGE SPEED, STARTS HIGH
-SPD_LOW		.EQU	2		; PLATFORM CAN CHANGE SPEED, STARTS LOW
-;
-; DMA MODE SELECTIONS
+;==================================================================================================
+; PLATFORM CONFIGURATION
+;==================================================================================================
 ;
 DMAMODE_NONE	.EQU	0
 DMAMODE_ECB	.EQU	1		; ECB-DMA WOLFGANG KABATZKE'S Z80 DMA ECB BOARD
@@ -38,16 +12,34 @@ DMAMODE_Z180	.EQU	2		; Z180 INTEGRATED DMA
 DMAMODE_Z280	.EQU	3		; Z280 INTEGRATED DMA
 DMAMODE_RC	.EQU	4		; RCBUS Z80 DMA
 DMAMODE_MBC	.EQU	5		; MBC
+DMAMODE_DG	.EQU	6		; VELESOFT DATAGEAR
 ;
 DMABASE		.EQU	$E0		; DMA: DMA BASE ADDRESS
-RTCIO		.EQU	$70		; RTC / SPEED PORT
-HB_RTCVAL	.EQU	$FFEE		; HB_RTCVAL
+DMAMODE		.EQU	DMAMODE_MBC	; SELECT DMA DEVICE FOR TESTING
 ;
-CPUSPDCAP	.EQU	SPD_HILO	; CPU SPEED CHANGE CAPABILITY SPD_FIXED|SPD_HILO
-CPUSPDDEF	.EQU	SPD_HIGH	; SPD_UNSUP|SPD_HIGH|SPD_LOW
+;==================================================================================================
+; HELPER MACROS AND EQUATES
+;==================================================================================================
 ;
-DMAMODE		.EQU	DMAMODE_MBC
-DMA_USEHS	.EQU	TRUE		; USE CLOCK DIVIDER
+FALSE		.EQU	0
+TRUE		.EQU	~FALSE
+;
+#DEFINE	PRTC(C)	CALL PRTCH \ .DB C	; PRINT CHARACTER C TO CONSOLE - PRTC('X')
+#DEFINE	PRTS(S)	CALL PRTSTRD \ .TEXT S	; PRINT STRING S TO CONSOLE - PRTD("HELLO")
+#DEFINE	PRTX(X) CALL PRTSTRI \ .DW X	; PRINT STRING AT ADDRESS X TO CONSOLE - PRTI(STR_HELLO)
+;
+;==================================================================================================
+; INTERRUPT TESTING CONFIGURATION
+; ASSUMES SYSTEM IS ALREADY CONFIGURED FOR IM2 OPERATION
+; INTIDX MUST BE SET TO AN UNUSED INTERRUPT SLOT
+;==================================================================================================
+;		
+INTENABLE	.EQU	TRUE		; ENABLE INT TESTING
+INTIDX		.EQU	1		; INT VECTOR INDEX
+;
+;==================================================================================================
+; DMA MODE BYTES
+;==================================================================================================
 ;
 DMA_CONTINUOUS			.equ 	%10111101	; + Pulse
 DMA_BYTE			.equ 	%10011101	; + Pulse
@@ -72,36 +64,17 @@ DMA_REINIT_STATUS_BYTE		.equ	$8b
 DMA_RDY				.EQU	%00001000
 DMA_FORCE			.EQU	0
 ;
+;==================================================================================================
+; ROMWBW HBIOS DEFINITIONS
+;==================================================================================================
+;
 bf_sysint			.equ	$FC	; INT function
+bf_sysget			.equ	$F8	; GET function
 ;		
 bf_sysintinfo			.equ	$00	; INT INFO subfunction
 bf_sysintget			.equ	$10	; INT GET subfunction
 bf_sysintset			.equ	$20	; INT SET subfunction
-;
-#IF (DMA_USEHS & (DMAMODE=DMAMODE_MBC))
-#IF (CPUSPDDEF=SPD_HIGH)
-#DEFINE DMAIOSLO LD A,(HB_RTCVAL) \ AND %11110111 \ OUT (RTCIO),A 
-#DEFINE DMAIONOR PUSH AF \ LD A,(HB_RTCVAL) \ OR %00001000 \ OUT (RTCIO),A \ POP AF
-#ELSE
-#DEFINE DMAIOSLO \;
-#DEFINE DMAIONOR \;
-#ENDIF
-#ENDIF
-;
-#IF (DMA_USEHS & (DMAMODE=DMAMODE_ECB))
-#IF (CPUSPDDEF=SPD_HIGH)
-#DEFINE DMAIOSLO LD A,(HB_RTCVAL) \ OR  %00001000 \ OUT (RTCIO),A 
-#DEFINE DMAIONOR PUSH AF \ LD A,(HB_RTCVAL) \ AND %11110111 \ OUT (RTCIO),A \ POP AF
-#ELSE
-#DEFINE DMAIOSLO \;
-#DEFINE DMAIONOR \;
-#ENDIF
-#ENDIF
-
-#IF (!DMA_USEHS)
-#DEFINE DMAIOSLO \;
-#DEFINE DMAIONOR \;
-#ENDIF
+bf_sysgetcpuspd			.equ	$F3	; GET CPUSPD subfunction
 ;
 ;==================================================================================================
 ; MAIN DMA MONITOR ROUTINE
@@ -161,12 +134,14 @@ MENULP1:
 	JP	Z,DMATST_N		; MEMORY COPY ITER
 	CP	'0'
 	JP	Z,DMATST_01
+#IF !(DMAMODE==DMAMODE_DG)
 	CP	'1'
 	JP	Z,DMATST_01
 	CP	'R'
 	JP	Z,DMATST_R		; TOGGLE RESET
 	CP	'Y'
 	JP	Z,DMATST_Y		; TOGGLE READY
+#ENDIF
 	CP	'X'
 	JP	Z,DMABYE		; EXIT
 ;
@@ -223,7 +198,7 @@ DMATST_01:
 ;
 DMATST_D:
 	call	PRTSTRD
-	.db	"\n\rDump Registers\n\r$"
+	.db	"\n\rRegister dump:\n\r$"
 	CALL	DMARegDump
 	JP	MENULP
 ;
@@ -238,6 +213,7 @@ DMATST_R:
 	.db	"\n\rPerforming Reset\n\r$"
 ;	CALL	
 	JP	MENULP
+;
 ;==================================================================================================
 ; DISPLAY MENU
 ;==================================================================================================
@@ -275,10 +251,27 @@ DISPM_INT:
 ;
 #ENDIF
 ;
-	call	NEWLINE
+#IF (DMAMODE==DMAMODE_DG)
+	call	PRTSTRD
+	.db	"\n\rReset\\Ready Latch unsupported.$"
+#ENDIF
+	call	PRTSTRD			; DISPLAY SPEED
+	.db	"\n\rCPU at $"
+
+	LD	B,bf_sysget
+	LD	C,bf_sysgetcpuspd	; GET CURRENT 
+	RST	08			; SPEED SETTING
+	OR	A
+	LD	A,L
+	JR	Z,SPDDISP
+	LD	A,3
+;
+SPDDISP:LD	DE,DMA_SPD_STR
+	CALL	PRTIDXDEA
+	CALL	NEWLINE
+;
 	LD	HL,MENU_OPT		; DISPLAY
 	CALL	PRTSTR			; MENU OPTIONS
-;
 	RET
 ;
 #INCLUDE "util.asm"
@@ -293,10 +286,11 @@ DMA_INIT:
 	LD	A, DMABASE
 	CALL	PRTHEXBYTE
 ;
+#IF !(DMAMODE==DMAMODE_DG)
 	LD	A,DMA_FORCE
 	out	(DMABASE+1),a		; force ready off
+#ENDIF
 ;
-	DMAIOSLO
 ;
 	call	DMAProbe		; do we have a dma?
 	jr	nz,DMA_NOTFOUND
@@ -314,7 +308,6 @@ DMA_INIT:
 	xor	a			; set status
 ;
 DMA_EXIT:
-	DMAIONOR
 	ret
 ;
 DMA_NOTFOUND:
@@ -334,22 +327,32 @@ DMA_DEV_STR:
 	.TEXT	"Z280$"
 	.TEXT	"RCBUS$"
 	.TEXT	"MBC$"
+	.TEXT	"DATAGEAR$"
+;
+DMA_SPD_STR:
+	.TEXT	"half speed.$"
+	.TEXT	"full speed.$"
+	.TEXT	"double speed.$"
+	.TEXT	"unknown speed.$"
 ;
 MENU_OPT:
 	.TEXT	"\n\r"
+	.TEXT	"D) Dump DMA registers\n\r"
 	.TEXT	"I) Initialize DMA\n\r"
 	.TEXT	"T) Toggle Interrupt Usage\n\r"
 	.TEXT	"M) Test Memory-Memory Copy\n\r"
 	.TEXT	"N) Test Memory-Memory Copy Iteratively\n\r"
 	.TEXT	"0) Test DMA Port Selection\n\r"
+#IF !(DMAMODE==DMAMODE_DG)
 	.TEXT	"1) Test DMA Latch Port Selection\n\r"
 	.TEXT	"Y) Test Ready Bit\n\r"
+#ENDIF
 	.TEXT	"X) Exit\n\r"
 
 	.TEXT	">$"
 ;
 ;==================================================================================================
-; PULSE PORT
+; PULSE PORT (COMMON ROUTINE WITH A CONTAINING ASCII PORT OFFSET)
 ;==================================================================================================
 ;
 DMA_Port01:
@@ -390,6 +393,9 @@ dlylp:	dec	bc
 ;
 DMA_ReadyT:
 	call	NEWLINE
+#IF !(DMAMODE==DMAMODE_DG)
+
+#ENDIF
 	ld	c,DMABASE+1		; toggle
 	ld	b,$20			; loop counter
 portlp2:push	bc
@@ -578,7 +584,6 @@ DMALDIR:
 	ld	b,DMACopy_Len		; dma command
 	ld	c,DMABASE		; block
 ;
-	DMAIOSLO
 	di
 	otir				; load and execute dma
 	ei
@@ -588,7 +593,6 @@ DMALDIR:
 	in	a,(DMABASE)		; set non-zero
 	and	%00111011		; if failed
 	sub	%00011011
-	DMAIONOR
 	ret
 ;
 DMACopy 	;.db	DMA_DISABLE	; R6-Command Disable DMA
@@ -625,7 +629,6 @@ DMALDIRINT:
 	ld	b,DMACopyInt_Len	; dma command
 	ld	c,DMABASE		; block
 ;
-	DMAIOSLO
 	di
 	otir				; load and execute dma
 	ei
@@ -635,7 +638,6 @@ DMALDIRINT:
 	in	a,(DMABASE)		; set non-zero
 	and	%00111011		; if failed
 	sub	%00011011
-	DMAIONOR
 ;
 #ENDIF
 ;
@@ -677,7 +679,6 @@ DMAOTIR:
 	ld	b,DMAOut_Len		; dma command
 	ld	c,DMABASE		; block
 ;
-	DMAIOSLO
 	di
 	otir				; load and execute dma
 	ei
@@ -688,7 +689,6 @@ DMAOTIR:
 	and	%00111011		; if failed
 	sub	%00011011
 ;
-	DMAIONOR
 	ret
 ;
 DMAOutCode  	;.db	DMA_DISABLE	; R6-Command Disable DMA
@@ -726,7 +726,6 @@ DMAINIR:
 	ld	b,DMAIn_Len		; dma command
 	ld	c,DMABASE		; block
 ;
-	DMAIOSLO
 	di
 	otir				; load and execute dma
 	ei
@@ -737,7 +736,6 @@ DMAINIR:
 	and	%00111011		; if failed
 	sub	%00011011
 ;
-	DMAIONOR
 	ret
 ;
 DMAInCode 	;.db	DMA_DISABLE	; R6-Command Disable DMA
