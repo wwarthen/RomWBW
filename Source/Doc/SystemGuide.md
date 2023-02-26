@@ -2116,8 +2116,8 @@ result code.
 
 This function will return the running CPU speed attributes of a system. 
 The Clock Mult (L) returned indicates the frequency multiple being 
-applied to the raw oscillator clock.  If is defined as: 0=Half, 2=Full, 
-and 3=Double.  The wait states for the system are also provided as 
+applied to the raw oscillator clock.  If is defined as: 0=Half, 1=Full, 
+and 2=Double.  The wait states for the system are also provided as 
 Memory Wait States (D) and I/O Wait States (E).  The value of Memory
 Wait States (D) is the actual number of wait states, not the number
 of wait states added.  The returned Status (A) is a standard HBIOS 
