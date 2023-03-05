@@ -12,10 +12,11 @@ DMAMODE_Z180	.EQU	2		; Z180 INTEGRATED DMA
 DMAMODE_Z280	.EQU	3		; Z280 INTEGRATED DMA
 DMAMODE_RC	.EQU	4		; RCBUS Z80 DMA
 DMAMODE_MBC	.EQU	5		; MBC
-DMAMODE_DG	.EQU	6		; VELESOFT DATAGEAR
+DMAMODE_VDG	.EQU	6		; VELESOFT DATAGEAR
 ;
 DMABASE		.EQU	$E0		; DMA: DMA BASE ADDRESS
 DMAMODE		.EQU	DMAMODE_MBC	; SELECT DMA DEVICE FOR TESTING
+DMAIOTST	.EQU	$68		; AN OUTPUT PORT FOR TESTING - 16C450 SERIAL OUT
 ;
 ;==================================================================================================
 ; HELPER MACROS AND EQUATES
@@ -134,7 +135,9 @@ MENULP1:
 	JP	Z,DMATST_N		; MEMORY COPY ITER
 	CP	'0'
 	JP	Z,DMATST_01
-#IF !(DMAMODE==DMAMODE_DG)
+	CP	'O'
+	JP	Z,DMATST_O
+#IF !(DMAMODE==DMAMODE_VDG)
 	CP	'1'
 	JP	Z,DMATST_01
 	CP	'R'
@@ -196,6 +199,12 @@ DMATST_01:
 	CALL	DMA_Port01
 	JP	MENULP
 ;
+DMATST_O:
+	call	PRTSTRD
+	.db	"\n\rTest output to I\O device\n\r$"
+	CALL	DMA_ReadyO
+	JP	MENULP
+;
 DMATST_D:
 	call	PRTSTRD
 	.db	"\n\rRegister dump:\n\r$"
@@ -251,7 +260,7 @@ DISPM_INT:
 ;
 #ENDIF
 ;
-#IF (DMAMODE==DMAMODE_DG)
+#IF (DMAMODE==DMAMODE_VDG)
 	call	PRTSTRD
 	.db	"\n\rReset\\Ready Latch unsupported.$"
 #ENDIF
@@ -286,7 +295,7 @@ DMA_INIT:
 	LD	A, DMABASE
 	CALL	PRTHEXBYTE
 ;
-#IF !(DMAMODE==DMAMODE_DG)
+#IF !(DMAMODE==DMAMODE_VDG)
 	LD	A,DMA_FORCE
 	out	(DMABASE+1),a		; force ready off
 #ENDIF
@@ -342,14 +351,47 @@ MENU_OPT:
 	.TEXT	"T) Toggle Interrupt Usage\n\r"
 	.TEXT	"M) Test Memory-Memory Copy\n\r"
 	.TEXT	"N) Test Memory-Memory Copy Iteratively\n\r"
+	.TEXT	"O) Memory to I/O Test\n\r"
 	.TEXT	"0) Test DMA Port Selection\n\r"
-#IF !(DMAMODE==DMAMODE_DG)
+#IF !(DMAMODE==DMAMODE_VDG)
 	.TEXT	"1) Test DMA Latch Port Selection\n\r"
 	.TEXT	"Y) Test Ready Bit\n\r"
 #ENDIF
 	.TEXT	"X) Exit\n\r"
 
 	.TEXT	">$"
+;
+;==================================================================================================
+; OUTPUT A BUFFER OF TEXT TO AN IOPORT
+;==================================================================================================
+;
+DMABUF	.TEXT	"0123456789abcdef"
+;
+DMA_ReadyO:
+	call	PRTSTRD
+	.db	"\r\nOutputing string to port 0x$"
+	ld	a,DMAIOTST
+	call	PRTHEXBYTE
+	call	NEWLINE
+;
+	ld	b,16
+IOLoop:	push	bc
+	call	NEWLINE
+	ld	hl,DMABUF
+	ld	a,DMAIOTST
+	ld	bc,16
+;
+	call	DMAOTIR
+;
+	call	PRTSTRD
+	.db	" Return Status: $"
+	call	PRTHEXBYTE
+;
+	pop	bc
+	djnz	IOLoop
+	call	NEWLINE
+
+	ret
 ;
 ;==================================================================================================
 ; PULSE PORT (COMMON ROUTINE WITH A CONTAINING ASCII PORT OFFSET)
@@ -393,7 +435,7 @@ dlylp:	dec	bc
 ;
 DMA_ReadyT:
 	call	NEWLINE
-#IF !(DMAMODE==DMAMODE_DG)
+#IF !(DMAMODE==DMAMODE_VDG)
 
 #ENDIF
 	ld	c,DMABASE+1		; toggle
@@ -457,6 +499,10 @@ DMAMemMove2:
 ;	LD	A,$00		; BAD
 ;	LD	(HL),A		; SEED
 ;
+	call	PRTSTRD
+	.db	"Return Status: $"
+	call	PRTHEXBYTE
+
 	LD	A,$AA		; CHECK COPY SUCCESSFULL
 	LD	HL,$8000
 	LD	BC,4096
@@ -492,22 +538,22 @@ DMAMemTestFail:
 ;==================================================================================================
 ;
 DMAMemTestIter:
-	ld	b,$20		; loop counter
-	call	PRTSTRD
-	.db	"\n\rPerforming $"
+	ld	b,$20			; loop counter
 	ld	a,b
 	call	PRTDECB
 	call	PRTSTRD
-	.db	" iterations, '.'=OK, '*'=Fail\n\r$"
+	.db	" iterations:\n\r$"
 DMAMemTestIterLoop:
-	push	bc		; save loop control
-	call	DMAMemMove	; do an iteration
+	push	bc			; save loop control
+	call	DMAMemMove		; do an iteration
 	jr	z,DMAMemTestIterOK
-	call	PC_ASTERISK	; signal failure
+	call	PRTSTRD
+	.db	" Mismatch\n\r$"
 	jr	DMAMemTestIterCont	; continue
 ;
 DMAMemTestIterOK:
-	call	PC_PERIOD	; signal pass
+	call	PRTSTRD
+	.db	" Match\n\r$"
 ;
 DMAMemTestIterCont:
 	pop	bc
@@ -591,8 +637,8 @@ DMALDIR:
 	ld	a,DMA_READ_STATUS_BYTE	; check status
 	out	(DMABASE),a		; of transfer
 	in	a,(DMABASE)		; set non-zero
-	and	%00111011		; if failed
-	sub	%00011011
+;	and	%00111011		; if failed
+;	sub	%00011011
 	ret
 ;
 DMACopy 	;.db	DMA_DISABLE	; R6-Command Disable DMA
@@ -635,9 +681,14 @@ DMALDIRINT:
 ;
 	ld	a,DMA_READ_STATUS_BYTE	; check status
 	out	(DMABASE),a		; of transfer
-	in	a,(DMABASE)		; set non-zero
-	and	%00111011		; if failed
-	sub	%00011011
+	in	a,(DMABASE)	
+
+	call	PRTSTRD
+	.db	"Return Status: $"
+	call	PRTHEXBYTE
+
+;	and	%00111011		; set non-zero
+;	sub	%00011011		; if failed
 ;
 #ENDIF
 ;
@@ -686,8 +737,10 @@ DMAOTIR:
 	ld	a,DMA_READ_STATUS_BYTE	; check status
 	out	(DMABASE),a		; of transfer
 	in	a,(DMABASE)		; set non-zero
-	and	%00111011		; if failed
-	sub	%00011011
+
+
+;	and	%00111011		; if failed
+;	sub	%00011011
 ;
 	ret
 ;
