@@ -2021,7 +2021,7 @@ str_diaglvl	.db	"\r\n\r\nHBIOS Diagnostic Level: ",0
 ;
 str_help	.db	"\r\n"
 		.db	"\r\n  L           - List ROM Applications"
-		.db	"\r\n  D           - Disk Device Inventory"
+		.db	"\r\n  D           - Device Inventory"
 		.db	"\r\n  R           - Reboot System"
 #if (BIOS == BIOS_WBW)
 		.db	"\r\n  I <u> [<c>] - Set Console Interface/Baud code"
