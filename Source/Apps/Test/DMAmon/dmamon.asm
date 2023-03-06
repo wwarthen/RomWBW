@@ -920,7 +920,6 @@ HEXIN1:	CALL	CINU		; GET 1 CHAR INPUT
 	call	COUT		; and display it
 ;
 	ld	a,c
-	CALL	PRTHEXBYTE
 	RET
 	
 ;	CF SET MEANS CHARACTER 0-9,A-F
