@@ -88,7 +88,7 @@ MAIN:
 	LD	SP,STACK		; STACK
 ;
 	call	PRTSTRD			; WELCOME
-	.db	"\n\rDMA Monitor V2\n\r$"
+	.db	"\n\rDMA Monitor V3\n\r$"
 ;
 #IF (INTENABLE)
 ;
@@ -111,13 +111,8 @@ MAIN:
 #ENDIF
 ;
 MENULP:	CALL	DISPM			; DISPLAY MENU
-	CALL	CIN			; GET SELECTION
-	; Force upper case
-	CP	'a'			; < 'a'
-	JR	C,MENULP1		; IF SO, JUST CONTINUE
-	CP	'z'+1			; > 'z'
-	JR	NC,MENULP1		; IS SO, JUST CONTINUE
-	SUB	'a'-'A'			; CONVERT TO UPPER
+	CALL	CINU			; GET SELECTION
+	CALL	COUT
 ;
 MENULP1:
 	CALL	NEWLINE
@@ -145,10 +140,23 @@ MENULP1:
 	CP	'Y'
 	JP	Z,DMATST_Y		; TOGGLE READY
 #ENDIF
+	cp	'S'
+	call	z,DMACFG_S		; SET PORT
 	CP	'X'
 	JP	Z,DMABYE		; EXIT
 ;
 	JR	MENULP
+;
+DMACFG_S:
+	call	PRTSTRD
+	.db	"\n\rSet port address\n\rPort:$"
+	call	HEXIN
+	ld	hl,dmaport
+	ld	(hl),a
+	inc	hl
+	inc	a
+	ld	(hl),a
+	jp	MENULP
 ;
 DMABYE:
 #IF (INTENABLE)
@@ -236,7 +244,7 @@ DISPM:	call	PRTSTRD
 ;
 	call	PRTSTRD
 	.db	", Port=0x$"
-	LD	A,DMABASE		; DISPLAY
+	LD	A,(dmaport)		; DISPLAY
 	CALL	PRTHEXBYTE		; DMA PORT
 ;
 #IF (INTENABLE)
@@ -292,12 +300,14 @@ SPDDISP:LD	DE,DMA_SPD_STR
 DMA_INIT:
 	CALL	NEWLINE
 	PRTS("DMA: IO=0x$")		; announce
-	LD	A, DMABASE
+	LD	A,(dmaport)
 	CALL	PRTHEXBYTE
 ;
 #IF !(DMAMODE==DMAMODE_VDG)
+	ld	a,(dmautil)
+	ld	c,a
 	LD	A,DMA_FORCE
-	out	(DMABASE+1),a		; force ready off
+	out	(c),a			; force ready off
 #ENDIF
 ;
 ;
@@ -357,6 +367,7 @@ MENU_OPT:
 	.TEXT	"1) Test DMA Latch Port Selection\n\r"
 	.TEXT	"Y) Test Ready Bit\n\r"
 #ENDIF
+	.TEXT	"S) Set DMA port\n\r"
 	.TEXT	"X) Exit\n\r"
 
 	.TEXT	">$"
@@ -401,7 +412,9 @@ DMA_Port01:
 	call	PRTSTRD
 	.db	"\r\nPulsing port 0x$"
 	sub	'0'			; Calculate
-	add	a,DMABASE		; Port to
+	ld	c,a
+	ld	a,(dmaport)		; Port to
+	add	a,c
 	call	PRTHEXBYTE
 	call	NEWLINE
 	ld	c,a			; toggle
@@ -438,7 +451,8 @@ DMA_ReadyT:
 #IF !(DMAMODE==DMAMODE_VDG)
 
 #ENDIF
-	ld	c,DMABASE+1		; toggle
+	ld	a,(dmautil)
+	ld	c,a			; toggle
 	ld	b,$20			; loop counter
 portlp2:push	bc
 	ld	a,b
@@ -447,14 +461,14 @@ portlp2:push	bc
 	.db	": ON$"
 	call	delay
 	ld	a,$FF
-	ld	c,DMABASE+1
+;	ld	c,DMABASE+1
 	out	(c),a
 	call	PRTSTRD
 	.db	" -> OFF$"
 	call	delay
 	call	PRTSTRD
 	.db	"\r               \r$"
-	ld	c,DMABASE+1
+;	ld	c,DMABASE+1
 	ld	a,0
 	out	(c),a
 	pop	bc
@@ -566,36 +580,38 @@ DMAMemTestIterCont:
 ;==================================================================================================
 ;
 DMAProbe:
+	ld	a,(dmaport)
+	ld	c,a
 	ld	a,DMA_RESET	
-	out	(DMABASE),a
+	out	(c),a
 	ld	a,%01111101 		; R0-Transfer mode, A -> B, start address follows
-	out	(DMABASE),a
+	out	(c),a
 	ld	a,$cc
-	out	(DMABASE),a
+	out	(c),a
 	ld	a,$dd
-	out	(DMABASE),a
+	out	(c),a
 	ld	a,$e5
-	out	(DMABASE),a
+	out	(c),a
 	ld	a,$1a
-	out	(DMABASE),a
+	out	(c),a
 	ld	a,DMA_LOAD
-	out	(DMABASE),a
+	out	(c),a
 ;
 	ld	a,DMA_READ_MASK_FOLLOWS	; set up
-	out	(DMABASE),a		; for 
+	out	(c),a			; for 
 	ld	a,%00011000		; register
-	out	(DMABASE),a		; read
+	out	(c),a			; read
 	ld	a,DMA_START_READ_SEQUENCE
-	out	(DMABASE),a
+	out	(c),a
 ;
-	in	a,(DMABASE)		; read in 
-	ld	c,a			; address
-	in	a,(DMABASE)
-	ld	b,a
+	in	a,(c)			; read in 
+	ld	e,a			; address
+	in	a,(c)
+	ld	d,a
 ;
 	xor	a			; is it
 	ld	hl,$ddcc		; a match
-	sbc	hl,bc			; return with
+	sbc	hl,de			; return with
 	ret	z			; status
 	cpl
 	ret
@@ -628,15 +644,16 @@ DMALDIR:
 ;
 	ld	hl,DMACopy		; program the
 	ld	b,DMACopy_Len		; dma command
-	ld	c,DMABASE		; block
+	ld	a,(dmaport)		; block
+	ld	c,a
 ;
 	di
 	otir				; load and execute dma
 	ei
 ;
 	ld	a,DMA_READ_STATUS_BYTE	; check status
-	out	(DMABASE),a		; of transfer
-	in	a,(DMABASE)		; set non-zero
+	out	(c),a			; of transfer
+	in	a,(c)			; set non-zero
 ;	and	%00111011		; if failed
 ;	sub	%00011011
 	ret
@@ -673,15 +690,16 @@ DMALDIRINT:
 ;
 	ld	hl,DMACopyInt		; program the
 	ld	b,DMACopyInt_Len	; dma command
-	ld	c,DMABASE		; block
+	ld	a,(dmaport)		; block
+	ld	c,a
 ;
 	di
 	otir				; load and execute dma
 	ei
 ;
 	ld	a,DMA_READ_STATUS_BYTE	; check status
-	out	(DMABASE),a		; of transfer
-	in	a,(DMABASE)	
+	out	(c),a		; of transfer
+	in	a,(c)	
 
 	call	PRTSTRD
 	.db	"Return Status: $"
@@ -728,15 +746,16 @@ DMAOTIR:
 ;
 	ld	hl,DMAOutCode		; program the
 	ld	b,DMAOut_Len		; dma command
-	ld	c,DMABASE		; block
+	ld	a,(dmaport)		; block
+	ld	c,a
 ;
 	di
 	otir				; load and execute dma
 	ei
 ;
 	ld	a,DMA_READ_STATUS_BYTE	; check status
-	out	(DMABASE),a		; of transfer
-	in	a,(DMABASE)		; set non-zero
+	out	(c),a			; of transfer
+	in	a,(c)			; set non-zero
 
 
 ;	and	%00111011		; if failed
@@ -777,17 +796,19 @@ DMAINIR:
 ;
 	ld	hl,DMAInCode		; program the
 	ld	b,DMAIn_Len		; dma command
-	ld	c,DMABASE		; block
+	ld	a,(dmaport)		; block
+	ld	c,a
 ;
 	di
 	otir				; load and execute dma
 	ei
 ;
 	ld	a,DMA_READ_STATUS_BYTE	; check status
-	out	(DMABASE),a		; of transfer
-	in	a,(DMABASE)		; set non-zero
-	and	%00111011		; if failed
-	sub	%00011011
+	out	(c),a			; of transfer
+	in	a,(c)			; set non-zero
+
+;	and	%00111011		; if failed
+;	sub	%00011011
 ;
 	ret
 ;
@@ -814,42 +835,109 @@ DMAIn_Len 	.equ	$-DMAInCode
 ;==================================================================================================
 ;
 DMARegDump:
+	ld	a,(dmaport)
+	ld	c,a
 	ld	a,DMA_READ_MASK_FOLLOWS
-	out	(DMABASE),a
+	out	(c),a
 	ld	a,%01111110
-	out	(DMABASE),a
+	out	(c),a
 	ld	a,DMA_START_READ_SEQUENCE
-	out	(DMABASE),a
+	out	(c),a
 ;
-	in	a,(DMABASE)
-	ld	c,a
-	in	a,(DMABASE)
-	ld	b,a
-	call	PRTHEXWORD
+	in	a,(c)
+	ld	l,a
+	in	a,(c)
+	ld	h,a
+	call	PRTHEXWORDHL
 	ld	a,':'
 	call	COUT
 ;
-	in	a,(DMABASE)
-	ld	c,a
-	in	a,(DMABASE)
-	ld	b,a
-	call	PRTHEXWORD
+	in	a,(c)
+	ld	l,a
+	in	a,(c)
+	ld	h,a
+	call	PRTHEXWORDHL
 	ld	a,':'
 	call	COUT
 ;
-	in	a,(DMABASE)
-	ld	c,a
-	in	a,(DMABASE)
-	ld	b,a
-	call	PRTHEXWORD
+	in	a,(c)
+	ld	l,a
+	in	a,(c)
+	ld	h,a
+	call	PRTHEXWORDHL
 ;
 	call	NEWLINE
 	ret
 ;
-CIO_CONSOLE	.EQU	$80	; CONSOLE UNIT TO C
+;==================================================================================================
+; CONSOLE I/O ROUTINES
+;==================================================================================================
+;
+CIO_CONSOLE	.EQU	$80	; HBIOS DEFAULT CONSOLE
 BF_CIOOUT	.EQU	$01	; HBIOS FUNC: OUTPUT CHAR
 BF_CIOIN	.EQU	$00	; HBIOS FUNC: INPUT CHAR
 BF_CIOIST	.EQU	$02	; HBIOS FUNC: INPUT CHAR STATUS
+;
+;__CINU_______________________________________________________________________
+;
+;	INPUT AN UPPERCASE CHARACTER
+;_____________________________________________________________________________
+;
+CINU:	CALL	CIN
+	; Force upper case
+	CP	'a'			; < 'a'
+	RET	C			; IF SO, JUST CONTINUE
+	CP	'z'+1			; > 'z'
+	RET	NC			; IS SO, JUST CONTINUE
+	SUB	'a'-'A'			; CONVERT TO UPPER
+	RET
+;
+;__HEXIN_______________________________________________________________________
+;
+;	INPUT A HEX BYTE, RETURN VALUE IN A
+;_____________________________________________________________________________
+;
+HEXIN:	CALL	CINU		; GET 1 CHAR INPUT
+	push	af
+	CALL	ISHEX		; CHECK FOR VALID CHARACTER
+	JR	C,HEXIN
+	ADD	A,A
+	ADD	A,A	
+	ADD	A,A
+	ADD	A,A
+	LD	C,A		; Save top nibble
+	pop	af		; Retreive letter
+	call	COUT		; and display it
+;
+HEXIN1:	CALL	CINU		; GET 1 CHAR INPUT
+	push	af
+	CALL	ISHEX		; CHECK FOR VALID CHARACTER
+	JR	C,HEXIN1
+;
+	or	c
+	ld	c,a
+	pop	af		; Retreive letter
+	call	COUT		; and display it
+;
+	ld	a,c
+	RET
+	
+;	CF SET MEANS CHARACTER 0-9,A-F
+
+ISHEX:	CP	'0'			; < '0'?
+	JR	C,ISHEX1		; YES, NOT 0-9, CHECK A-F
+	CP	'9' + 1			; > '9'
+	jr	nc,ISHEX1
+	sub	'0'			; MUST BE 0-9, RETURN
+	ret
+ISHEX1:	CP	'A'			; < 'A'?
+	ret	c			; YES, NOT A-F, FAIL
+	cp	'F' + 1			; > 'F'
+	jr	nc,ISHEX2
+	sub	'A' - 10
+	RET				; MUST BE A-F, RETURN
+ISHEX2: SCF
+	RET	
 ;
 ;__COUT_______________________________________________________________________
 ;
@@ -942,8 +1030,10 @@ int:
 	; a DMA_DISABLE command prior to a
 	; DMA_REINIT_STATUS_BYTE command to avoid a
 	; potential race condition.
+	ld	a,(dmaport)
+	ld	c,a
 	ld	a,DMA_DISABLE
-	out	(DMABASE),a
+	out	(c),a
 ;	
 	; The doc confuses me, but apparently it is
 	; necessary to reinitialize the status byte
@@ -951,7 +1041,7 @@ int:
 	; the end-of-block condition remains set and
 	; causes the interrupt to fire continuously.
 	ld	a,DMA_REINIT_STATUS_BYTE
-	out	(DMABASE),a
+	out	(c),a
 ;
 	ld	hl,(counter)
 	inc	hl
@@ -960,7 +1050,9 @@ int:
 	or	$ff		; signal int handled
 	ret
 ;
-counter	.dw	0
+counter	.dw	0	
+dmaport	.db	DMABASE
+dmautil	.db	DMABASE+1
 ;
 hsiz	.equ	$ - $A000	; size of handler to relocate
 ;

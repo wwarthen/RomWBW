@@ -23,42 +23,28 @@ DMA_RESET			.equ	$c3
 ;DMA_REINIT_STATUS_BYTE		.equ	$8b
 ;
 DMA_FBACK			.equ	TRUE	; ALLOW FALLBACK TO SOFTWARE
-DMA_USEHS			.equ	TRUE	; USE CLOCK DIVIDER
-;
 DMA_RDY				.EQU	%00001000
 DMA_FORCE			.EQU	0
-
-#IF (DMA_USEHS & (DMAMODE=DMAMODE_MBC))
-;;;#IF (CPUSPDDEF=SPD_HIGH)
-;;;#DEFINE DMAIOSLO LD A,(HB_RTCVAL) \ AND %11110111 \ OUT (RTCIO),A 
-;;;#DEFINE DMAIONOR PUSH AF \ LD A,(HB_RTCVAL) \ OR %00001000 \ OUT (RTCIO),A \ POP AF
-;;;#ELSE
-;;;#DEFINE DMAIOSLO \;
-;;;#DEFINE DMAIONOR \;
-;;;#ENDIF
-
-#DEFINE DMAIOSLO LD A,(HB_RTCVAL) \ AND ~%00001000 \ OUT (RTCIO),A
-#DEFINE DMAIONOR PUSH AF \ LD A,(HB_RTCVAL) \ OUT (RTCIO),A \ POP AF
-
+;
+;==================================================================================================
+; DMA CLOCK SPEED CONTROL - OPTION TO SWITCH TO HALF CLOCK SPEED. MOST SYSTEMS NEED THIS.
+;==================================================================================================
+;
+DMA_USEHALF			.equ	TRUE	; USE CLOCK DIVIDER
+;
+#IF (DMA_USEHALF & (DMAMODE=DMAMODE_MBC))
+#DEFINE DMAIOHALF LD A,(HB_RTCVAL) \ AND ~%00001000 \ OUT (RTCIO),A
+#DEFINE DMAIOFULL PUSH AF \ LD A,(HB_RTCVAL) \ OUT (RTCIO),A \ POP AF
 #ENDIF
 ;
-#IF (DMA_USEHS & (DMAMODE=DMAMODE_ECB))
-;;;#IF (CPUSPDDEF=SPD_HIGH)
-;;;#DEFINE DMAIOSLO LD A,(HB_RTCVAL) \ OR  %00001000 \ OUT (RTCIO),A 
-;;;#DEFINE DMAIONOR PUSH AF \ LD A,(HB_RTCVAL) \ AND %11110111 \ OUT (RTCIO),A \ POP AF
-;;;#ELSE
-;;;#DEFINE DMAIOSLO \;
-;;;#DEFINE DMAIONOR \;
-;;;#ENDIF
-
-#DEFINE DMAIOSLO LD A,(HB_RTCVAL) \ OR %00001000 \ OUT (RTCIO),A 
-#DEFINE DMAIONOR PUSH AF \ LD A,(HB_RTCVAL) \ OUT (RTCIO),A \ POP AF
-
+#IF (DMA_USEHALF & (DMAMODE=DMAMODE_ECB))
+#DEFINE DMAIOHALF LD A,(HB_RTCVAL) \ OR %00001000 \ OUT (RTCIO),A 
+#DEFINE DMAIOFULL PUSH AF \ LD A,(HB_RTCVAL) \ OUT (RTCIO),A \ POP AF
 #ENDIF
-
-#IF (!DMA_USEHS)
-#DEFINE DMAIOSLO \;
-#DEFINE DMAIONOR \;
+;
+#IF (!DMA_USEHALF)
+#DEFINE DMAIOHALF \;
+#DEFINE DMAIOFULL \;
 #ENDIF
 ;
 ;==================================================================================================
@@ -74,7 +60,7 @@ DMA_INIT:
 	LD	A,DMA_FORCE
 	out	(DMABASE+1),a		; force ready off
 ;
-	DMAIOSLO
+	DMAIOHALF
 ;
 	call	DMAProbe		; do we have a dma?
 	jr	nz,DMA_NOTFOUND
@@ -89,7 +75,7 @@ DMA_INIT:
 	xor	a			; set status
 ;
 DMA_EXIT:
-	DMAIONOR
+	DMAIOFULL
 
 	ret
 ;
@@ -179,7 +165,7 @@ DMALDIR:
 	ld	b,DMACopy_Len		; dma command
 	ld	c,DMABASE		; block
 ;
-	DMAIOSLO
+	DMAIOHALF
 ;
 	di
 	otir				; load and execute dma
@@ -191,7 +177,7 @@ DMALDIR:
 	and	%00111011		; if failed
 	sub	%00011011
 
-	DMAIONOR
+	DMAIOFULL
 
 	ret
 ;
@@ -225,7 +211,7 @@ DMAOTIR:
 	ld	b,DMAOut_Len		; dma command
 	ld	c,DMABASE		; block
 ;
-	DMAIOSLO
+	DMAIOHALF
 
 	di
 	otir				; load and execute dma
@@ -237,7 +223,7 @@ DMAOTIR:
 	and	%00111011		; if failed
 	sub	%00011011
 ;
-	DMAIONOR
+	DMAIOFULL
 
 	ret
 ;
@@ -276,7 +262,7 @@ DMAINIR:
 	ld	b,DMAIn_Len		; dma command
 	ld	c,DMABASE		; block
 ;
-	DMAIOSLO
+	DMAIOHALF
 ;
 	di
 	otir				; load and execute dma
@@ -288,7 +274,7 @@ DMAINIR:
 	and	%00111011		; if failed
 	sub	%00011011
 ;
-	DMAIONOR
+	DMAIOFULL
 ;
 	ret
 ;
