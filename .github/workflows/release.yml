@@ -10,12 +10,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3.3.0
       
       - name: Create Package Label
         run: |
           LABEL=`echo "$GITHUB_REF" | sed "s|^refs/tags/||"`
-          echo "::set-env name=PKGLBL::$LABEL"
+          echo "PKGLBL=$LABEL" >> $GITHUB_ENV
          
       - name: Display Diagnostics
         run: |
@@ -25,12 +25,14 @@ jobs:
           
       - name: Build
         run: |
+          export TZ='America/Los_Angeles'
           sudo apt-get install libncurses-dev
+          sudo apt-get install srecord
           make dist
           rm -rf .git*
       
       - name: Upload Artifact
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v3.1.1
         with:
           name: RomWBW-${{env.PKGLBL}}-Package
           path: .
@@ -39,12 +41,9 @@ jobs:
         run: |
             zip -r Package.zip .
           
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      - name: Upload Release Package
+        uses: svenstaro/upload-release-action@2.5.0
         with:
-          upload_url: ${{github.event.release.upload_url}}
-          asset_path: Package.zip
-          asset_name: RomWBW-${{env.PKGLBL}}-Package.zip
-          asset_content_type: application/zip
+          file: Package.zip
+          asset_name: RomWBW-$tag-Package.zip
+          overwrite: true
