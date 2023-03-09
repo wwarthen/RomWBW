@@ -11,18 +11,18 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3.3.0
-      
+
       - name: Create Package Label
         run: |
           LABEL=`echo "$GITHUB_REF" | sed "s|^refs/tags/||"`
           echo "PKGLBL=$LABEL" >> $GITHUB_ENV
-         
+
       - name: Display Diagnostics
         run: |
           echo PKGLBL: "$PKGLBL"
           echo Upload URL: "${{github.event.release.upload_url}}"
           echo GITHUB_TOKEN: "${{secrets.GITHUB_TOKEN}}"
-          
+
       - name: Build
         run: |
           export TZ='America/Los_Angeles'
@@ -30,20 +30,20 @@ jobs:
           sudo apt-get install srecord
           make dist
           rm -rf .git*
-      
+
       - name: Upload Artifact
         uses: actions/upload-artifact@v3.1.1
         with:
           name: RomWBW-${{env.PKGLBL}}-Package
           path: .
-      
+
       - name: Create Package Archive
         run: |
-            zip -r Package.zip .
-          
-      - name: Upload Release Package
-        uses: svenstaro/upload-release-action@2.5.0
+            zip -r RomWBW-${{env.PKGLBL}}-Package.zip .
+
+      - name: Upload Package Archive
+        uses: AButler/upload-release-assets@v2.0.2
         with:
-          file: Package.zip
-          asset_name: RomWBW-$tag-Package.zip
-          overwrite: true
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          files: |
+            RomWBW-${{env.PKGLBL}}-Package.zip
