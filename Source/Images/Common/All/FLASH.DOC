@@ -155,27 +155,29 @@ prevent accidental reprogramming of sectors.
 The following chips are fully supported and will be programmed sector by
 sector:
 
-  AT29F010
-  AT29F040
-  M29F010
-  M29F040
-  MX29F040
+  AMIC A29010B
+  AMIC A29040B
+  Atmel AT29C010
+  Atmel AT29C020
+  Atmel AT29C040
+  Atmel AT29C512
+  Atmel AT29F010
+  Atmel AT29F040
+  Macronix MX29F040
   SST 39F010
   SST 39F020
   SST 39F040
-  AT29C512
-  AT29C040
-  AT29C010
-  AT29C020
+  SST M29F010
+  SST M29F040
 
 The following chips are supported, but have unequal sector sizes, so FLASH4
 will only erase and reprogram the entire chip at once:
 
-  AT49F001N
-  AT49F001NT
-  AT49F002N
-  AT49F002NT
-  AT49F040
+  Atmel AT49F001N
+  Atmel AT49F001NT
+  Atmel AT49F002N
+  Atmel AT49F002NT
+  Atmel AT49F040
 
 
 = Compiling =
