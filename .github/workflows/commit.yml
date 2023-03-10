@@ -3,10 +3,9 @@ name: Commit Build
 on:
   push:
     branches: 
-      - master
-      - dev
+      - '**'
     tags-ignore:
-      - v*
+      - '**'
 
 jobs:
   buildLinux:
@@ -14,9 +13,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: rlespinasse/github-slug-action@v4.4.0
-        
-      - uses: actions/checkout@v3.1.0
+      - name: Diag
+        run: |
+          echo GITHUB_REF: "$GITHUB_REF"
+          env
+    
+      - uses: rlespinasse/github-slug-action@v4.4.1
+
+      - uses: actions/checkout@v3.3.0
 
       - name: Build
         run: |
@@ -35,28 +39,16 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v3.1.1
         with:
-          name: RomWBW_Linux-${{env.GITHUB_REF_SLUG}}-${{env.GITHUB_SHA_SHORT}}
+          name: RomWBW-${{env.GITHUB_SHA_SHORT}}-Linux
           path: .
 
-      - name: Create Package Archive
-        run: |
-            zip -r RomWBW-SnapShot-Package.zip .
- 
-      - name: Post SnapShot
-        uses: wwarthen/actions/packages/automatic-releases@built-packages
-        with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "SnapShot"
-          prerelease: true
-          title: "RomWBW Development SnapShot Build"
-          files: |
-            RomWBW-SnapShot-Package.zip
-
   buildMacOS:
-    runs-on: macOS-12
+    runs-on: macOS-latest
 
     steps:
-      - uses: actions/checkout@v3.1.0
+      - uses: rlespinasse/github-slug-action@v4.4.1
+
+      - uses: actions/checkout@v3.3.0
 
       - name: Build
         run: |
@@ -74,5 +66,5 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v3.1.1
         with:
-          name: RomWBW_MacOS
+          name: RomWBW-${{env.GITHUB_SHA_SHORT}}-MacOS
           path: .
