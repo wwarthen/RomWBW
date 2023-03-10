@@ -13,14 +13,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Diag
-        run: |
-          echo GITHUB_REF: "$GITHUB_REF"
-          env
-    
-      - uses: rlespinasse/github-slug-action@v4.4.1
+      - name: Make Slugs
+        uses: rlespinasse/github-slug-action@v4.4.1
 
-      - uses: actions/checkout@v3.3.0
+      - name: Checkout
+        uses: actions/checkout@v3.3.0
 
       - name: Build
         run: |
@@ -46,9 +43,11 @@ jobs:
     runs-on: macOS-latest
 
     steps:
-      - uses: rlespinasse/github-slug-action@v4.4.1
+      - name: Make Slugs
+        uses: rlespinasse/github-slug-action@v4.4.1
 
-      - uses: actions/checkout@v3.3.0
+      - name: Checkout
+        uses: actions/checkout@v3.3.0
 
       - name: Build
         run: |
