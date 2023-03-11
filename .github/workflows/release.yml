@@ -39,6 +39,7 @@ jobs:
         uses: wwarthen/actions/packages/automatic-releases@built-packages
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          draft: true
           prerelease: true
           title: "RomWBW Development SnapShot ${{env.PKGLBL}}"
           files: |
