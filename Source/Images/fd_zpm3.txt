@@ -25,16 +25,16 @@
 ../../Binary/Apps/cpuspd.com 15:
 ../../Binary/Apps/fat.com 15:
 ../../Binary/Apps/fdu.com 15:
-../../Binary/Apps/fdu.doc 15:
+#../../Binary/Apps/fdu.doc 15:
 ../../Binary/Apps/mode.com 15:
 ../../Binary/Apps/rtc.com 15:
 ../../Binary/Apps/survey.com 15:
 ../../Binary/Apps/syscopy.com 15:
 ../../Binary/Apps/sysgen.com 15:
 ../../Binary/Apps/talk.com 15:
-../../Binary/Apps/tbasic.com 15:
+#../../Binary/Apps/tbasic.com 15:
 ../../Binary/Apps/timer.com 15:
-../../Binary/Apps/tune.com 15:
+#../../Binary/Apps/tune.com 15:
 ../../Binary/Apps/xm.com 15:
 #
 # Add Common Applications
