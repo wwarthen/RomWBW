@@ -242,7 +242,7 @@ DMATST_01:
 ;
 DMATST_O:
 	call	PRTSTRD
-	.db	"\n\rTest output to I\O device\n\r$"
+	.db	"\n\rTest output to I/O device\n\r$"
 	CALL	DMA_ReadyO
 	JP	MENULP
 ;

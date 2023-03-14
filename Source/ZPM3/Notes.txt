@@ -28,3 +28,13 @@ sync the rdSeq procedure back to the DIR CPMLDR version.
 This seems to allow ZPMLDR to work with RomWBW now.
 
 --WBW  4:22 PM 12/8/2021
+
+Jose Luis reported that attempting to change to a different
+DU by using a named directory was not working correctly.
+It was working with the original ZPM3 distribution, but not
+with the Jon Saxton patches.  Refer to the RomWBW Issue
+https://github.com/wwarthen/RomWBW/issues/324.  I was able
+to track down the issue and have applied an additional
+patch to correct the Jon Saxton variant.
+
+--WBW 8:46 PM 3/12/2023
