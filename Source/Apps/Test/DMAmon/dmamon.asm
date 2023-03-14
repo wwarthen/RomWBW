@@ -39,12 +39,36 @@ INTENABLE	.EQU	TRUE		; ENABLE INT TESTING
 INTIDX		.EQU	1		; INT VECTOR INDEX
 ;
 ;==================================================================================================
-; DMA MODE BYTES
+; DMA MODE BYTES - I/O ROUTINES CLEAR b3 AND ONLY PROGRAM LOW ADDRESS
 ;==================================================================================================
 ;
-DMA_CONTINUOUS			.equ 	%10111101	; + Pulse
-DMA_BYTE			.equ 	%10011101	; + Pulse
-DMA_BURST 			.equ	%11011101	; + Pulse
+DMA_BYTE			.equ 	%10011101	; b7b1b0 = Register		= 1xxxxx01	= Program R4
+							; b6b5	 = Transfer Mode	= x00xxxxx	= Byte transfer mode
+							; b2	 = start address (low)	= xxxxx1xx	= low address follows (1 byte)
+							; b3	 = start address (high) = xxxx1xxx	= high address follows (1 byte)
+							; b4	 = int control byte	= xxx1xxxx	= interrupt, pulse or vector byte follow
+;
+DMA_CONTINUOUS			.equ 	%10111101	; b7b1b0 = Register		= 1xxxxx01	= Program R4
+							; b6b5	 = Transfer Mode	= x01xxxxx	= Continuous transfer mode (default)
+							; b2	 = start address (low)	= xxxxx1xx	= low address follows (1 byte)
+							; b3	 = start address (high) = xxxx1xxx	= high address follows (1 byte)
+							; b4	 = int control byte	= xxx1xxxx	= interrupt, pulse or vector byte follow
+;
+DMA_BURST 			.equ	%11011101	; b7b1b0 = Register		= 1xxxxx01	= Program R4
+							; b6b5	 = Transfer Mode	= x10xxxxx	= Burst transfer mode
+							; b2	 = start address (low)	= xxxxx1xx	= low address follows (1 byte)
+							; b3	 = start address (high) = xxxx1xxx	= high address follows (1 byte)
+							; b4	 = int control byte	= xxx1xxxx	= interrupt, pulse or vector byte follow
+;
+DMA_ICBYTE			.equ	%00001100	; b7	 = Interrupt Cont. Byte	= 0xxxxxxx	= Interrupt Control Byte identifier
+							; b6	 = Interrupt on RDY	= x0xxxxxx	= Do not interrupt on RDY
+							; b5	 = Status affects vector= xx0xxxxx	= Status does not affect vector
+							; b4	 = Interrupt vector byte= xxx0xxxx	= No interrupt vector byte will follow
+							; b3	 = Pulse control byte	= xxxx1xxx	= A pulse control byte will follow
+							; b2	 = Pulse generation	= xxxxx100	= A pulse will be generated
+							; b1	 = Interrupt @ block end= xxxxxx0x	= No interrupt at block end
+							; b0	 = Interrupt on match	= xxxxxxx0	= No interrupt on match
+;
 DMA_LOAD			.equ	$cf 		; %11001111
 DMA_ENABLE			.equ	$87		; %10000111
 DMA_FORCE_READY 		.equ 	$b3
@@ -64,6 +88,7 @@ DMA_REINIT_STATUS_BYTE		.equ	$8b
 ;
 DMA_RDY				.EQU	%00001000
 DMA_FORCE			.EQU	0
+DMA_XMODE			.equ	1		; Byte = 0, Continuous = 1, Burst = 2
 ;
 ;==================================================================================================
 ; ROMWBW HBIOS DEFINITIONS
@@ -116,6 +141,8 @@ MENULP:	CALL	DISPM			; DISPLAY MENU
 ;
 MENULP1:
 	CALL	NEWLINE
+	CP	'C'
+	JP	Z,DMACFG_C		; CONFIGURE XFER MODE
 	CP	'D'
 	JP	Z,DMATST_D		; DUMP REGISTERS
 	CP	'I'
@@ -141,11 +168,32 @@ MENULP1:
 	JP	Z,DMATST_Y		; TOGGLE READY
 #ENDIF
 	cp	'S'
-	call	z,DMACFG_S		; SET PORT
+	jp	z,DMACFG_S		; SET PORT
+	cp	'V'
+	jp	z,DMACFG_V		; TOGGLE VERBOSE
 	CP	'X'
 	JP	Z,DMABYE		; EXIT
 ;
 	JR	MENULP
+;
+DMABYE:
+#IF (INTENABLE)
+	; Deinstall interrupt vector
+	ld	hl,(orgvec)		; original vector
+	ld	b,bf_sysint
+	ld	c,bf_sysintset		; set new vector
+	ld	e,INTIDX		; vector idx
+	di
+	rst	08			; do it
+	ei				; interrupts back on
+#ENDIF
+;
+	LD	SP,(SAVSTK)		; RESTORE CP/M STACK
+	RET
+;
+;==================================================================================================
+; CONFIGURE PORT
+;==================================================================================================
 ;
 DMACFG_S:
 	call	PRTSTRD
@@ -157,21 +205,6 @@ DMACFG_S:
 	inc	a
 	ld	(hl),a
 	jp	MENULP
-;
-DMABYE:
-#IF (INTENABLE)
-	; Deinstall interrupt vector
-	ld	hl,(orgvec)	; original vector
-	ld	b,bf_sysint
-	ld	c,bf_sysintset	; set new vector
-	ld	e,INTIDX	; vector idx
-	di
-	rst	08		; do it
-	ei			; interrupts back on
-#ENDIF
-;
-	LD	SP,(SAVSTK)		; RESTORE CP/M STACK
-	RET
 ;
 DMATST_I:
 	call	PRTSTRD
@@ -230,6 +263,16 @@ DMATST_R:
 	.db	"\n\rPerforming Reset\n\r$"
 ;	CALL	
 	JP	MENULP
+
+DMACFG_C:
+	CALL	DMA_XferM
+	call	PRTSTRD
+	.db	"\n\rTransfer mode change to: $"
+	LD	a,(dmaxfer)
+	LD	DE,DMA_XFRMODE
+	CALL	PRTIDXDEA
+	CALL	NEWLINE
+	JP	MENULP
 ;
 ;==================================================================================================
 ; DISPLAY MENU
@@ -274,7 +317,6 @@ DISPM_INT:
 #ENDIF
 	call	PRTSTRD			; DISPLAY SPEED
 	.db	"\n\rCPU at $"
-
 	LD	B,bf_sysget
 	LD	C,bf_sysgetcpuspd	; GET CURRENT 
 	RST	08			; SPEED SETTING
@@ -282,8 +324,13 @@ DISPM_INT:
 	LD	A,L
 	JR	Z,SPDDISP
 	LD	A,3
-;
 SPDDISP:LD	DE,DMA_SPD_STR
+	CALL	PRTIDXDEA
+;
+	call	PRTSTRD
+	.db	"\n\rTransfer Mode: $"	; DIPLAY TRANSFER
+	LD	a,(dmaxfer)		; MODE
+	LD	DE,DMA_XFRMODE
 	CALL	PRTIDXDEA
 	CALL	NEWLINE
 ;
@@ -310,12 +357,15 @@ DMA_INIT:
 	out	(c),a			; force ready off
 #ENDIF
 ;
-;
 	call	DMAProbe		; do we have a dma?
 	jr	nz,DMA_NOTFOUND
 ;
 	call	PRTSTRD
 	.db	" DMA Found\n\r$"
+;
+	ld	hl,DMAInitMode		; setup the 
+	call	SETXFER			; transfer mode
+	set	3,(hl)			; upper and lower address
 ;
 	ld	hl,DMACode		; program the
 	ld	b,DMACode_Len		; dma command
@@ -338,6 +388,27 @@ DMA_NOTFOUND:
 ;
 DMA_FAIL_FLAG:
 	.db	0
+;
+DMACode		;.db	DMA_DISABLE	; R6-Command Disable DMA
+		.db	%01111101 	; R0-Transfer mode, A -> B, start address, block length follow
+		.dw	0		; R0-Port A, Start address
+		.dw	0 		; R0-Block length
+		.db	%00010100	; R1-No timing bytes follow, address increments, is memory
+		.db	%00010000 	; R2-No timing bytes follow, address increments, is memory
+		.db	%10000000 	; R3-DMA, interrupt, stop on match disabled
+DMAInitMode:	.db	DMA_CONTINUOUS	; R4-Transfer mode, destination address, interrupt and control byte follow
+		.dw	0 		; R4-Port B, Destination address
+		.db	DMA_ICBYTE	; R4-Pulse byte follows, Pulse generated
+		.db	0		; R4-Pulse offset
+		.db	%10010010+DMA_RDY; R5-Stop on end of block, ce/wait multiplexed, READY active config
+		.db	DMA_LOAD 	; R6-Command Load
+;		.db	DMA_FORCE_READY	; R6-Command Force ready
+;		.db	DMA_ENABLE 	; R6-Command Enable DMA
+DMACode_Len 	.equ	$-DMACode
+;
+;==================================================================================================
+; STRINGS
+;==================================================================================================
 ;	
 DMA_DEV_STR:
 	.TEXT	"NONE$"
@@ -354,8 +425,14 @@ DMA_SPD_STR:
 	.TEXT	"double speed.$"
 	.TEXT	"unknown speed.$"
 ;
+DMA_XFRMODE:
+	.TEXT	"Byte.$"
+	.TEXT	"Continuous.$"
+	.TEXT	"Burst.$"
+;
 MENU_OPT:
 	.TEXT	"\n\r"
+	.TEXT	"C) Change transfer mode\n\r"
 	.TEXT	"D) Dump DMA registers\n\r"
 	.TEXT	"I) Initialize DMA\n\r"
 	.TEXT	"T) Toggle Interrupt Usage\n\r"
@@ -368,9 +445,34 @@ MENU_OPT:
 	.TEXT	"Y) Test Ready Bit\n\r"
 #ENDIF
 	.TEXT	"S) Set DMA port\n\r"
+	.TEXT	"L) Set Latch port\n\r"
+	.TEXT	"V) Verbose status toggle\n\r"
 	.TEXT	"X) Exit\n\r"
 
 	.TEXT	">$"
+;
+;==================================================================================================
+; TOGGLE TRANSFER MODE
+;==================================================================================================
+;
+DMA_XferM:				; Set next transfer mode
+	ld	a,(dmaxfer)
+	inc	a
+	cp	3
+	jr	nz,NextX
+	ld	a,0
+NextX:	ld	(dmaxfer),a
+	ret
+;
+;==================================================================================================
+; TOGGLE VERBOSE MODE
+;==================================================================================================
+;
+DMACFG_V:
+	ld	a,(dmavbs)
+	cpl
+	ld	(dmavbs),a
+	jp	MENULP
 ;
 ;==================================================================================================
 ; OUTPUT A BUFFER OF TEXT TO AN IOPORT
@@ -394,18 +496,13 @@ IOLoop:	push	bc
 ;
 	call	DMAOTIR
 ;
-	call	PRTSTRD
-	.db	" Return Status: $"
-	call	PRTHEXBYTE
-;
 	pop	bc
 	djnz	IOLoop
 	call	NEWLINE
-
 	ret
 ;
 ;==================================================================================================
-; PULSE PORT (COMMON ROUTINE WITH A CONTAINING ASCII PORT OFFSET)
+; PULSE PORT (COMMON ROUTINE WHERE A CONTAINS THE ASCII PORT OFFSET)
 ;==================================================================================================
 ;
 DMA_Port01:
@@ -480,7 +577,6 @@ portlp2:push	bc
 ;==================================================================================================
 ;
 DMAMemMove:
-;
 	LD	HL,$8000	; PREFILL DESTINATION WITH $55
 	LD	A,$55
 	LD	(HL),A
@@ -513,10 +609,6 @@ DMAMemMove2:
 ;	LD	A,$00		; BAD
 ;	LD	(HL),A		; SEED
 ;
-	call	PRTSTRD
-	.db	"Return Status: $"
-	call	PRTHEXBYTE
-
 	LD	A,$AA		; CHECK COPY SUCCESSFULL
 	LD	HL,$8000
 	LD	BC,4096
@@ -616,23 +708,6 @@ DMAProbe:
 	cpl
 	ret
 ;
-DMACode		;.db	DMA_DISABLE	; R6-Command Disable DMA
-		.db	%01111101 	; R0-Transfer mode, A -> B, start address, block length follow
-		.dw	0		; R0-Port A, Start address
-		.dw	0 		; R0-Block length
-		.db	%00010100	; R1-No timing bytes follow, address increments, is memory
-		.db	%00010000 	; R2-No timing bytes follow, address increments, is memory
-		.db	%10000000 	; R3-DMA, interrupt, stop on match disabled
-		.db	DMA_CONTINUOUS	; R4-Continuous mode, destination address, interrupt and control byte follow
-		.dw	0 		; R4-Port B, Destination address
-		.db	%00001100	; R4-Pulse byte follows, Pulse generated
-		.db	0		; R4-Pulse offset
-		.db	%10010010+DMA_RDY; R5-Stop on end of block, ce/wait multiplexed, READY active config
-		.db	DMA_LOAD 	; R6-Command Load
-;		.db	DMA_FORCE_READY	; R6-Command Force ready
-;		.db	DMA_ENABLE 	; R6-Command Enable DMA
-DMACode_Len 	.equ	$-DMACode
-;
 ;==================================================================================================
 ; DMA COPY BLOCK CODE -  ASSUMES DMA PREINITIALIZED
 ;==================================================================================================
@@ -641,6 +716,10 @@ DMALDIR:
 	ld	(DMASource),hl		; populate the dma
 	ld	(DMADest),de		; register template
 	ld	(DMALength),bc
+;
+	ld	hl,DMACopyMode
+	call	SETXFER
+	set	3,(hl)			; upper and lower address
 ;
 	ld	hl,DMACopy		; program the
 	ld	b,DMACopy_Len		; dma command
@@ -651,11 +730,7 @@ DMALDIR:
 	otir				; load and execute dma
 	ei
 ;
-	ld	a,DMA_READ_STATUS_BYTE	; check status
-	out	(c),a			; of transfer
-	in	a,(c)			; set non-zero
-;	and	%00111011		; if failed
-;	sub	%00011011
+	call	DMASTATUS
 	ret
 ;
 DMACopy 	;.db	DMA_DISABLE	; R6-Command Disable DMA
@@ -665,9 +740,9 @@ DMALength	.dw	0 		; R0-Block length
 		.db	%00010100	; R1-No timing bytes follow, address increments, is memory
 		.db	%00010000 	; R2-No timing bytes follow, address increments, is memory
 		.db	%10000000 	; R3-DMA, interrupt, stop on match disabled
-		.db	DMA_CONTINUOUS	; R4-Continuous mode, destination address, interrupt and control byte follow
+DMACopyMode:	.db	DMA_CONTINUOUS	; R4-Transfer mode. Destination address, interrupt and control byte follow
 DMADest		.dw	0 		; R4-Port B, Destination address
-		.db	%00001100	; R4-Pulse byte follows, Pulse generated
+		.db	DMA_ICBYTE	; R4-Pulse byte follows, Pulse generated
 		.db	0		; R4-Pulse offset
 ;		.db	%10010010+DMA_RDY;R5-Stop on end of block, ce/wait multiplexed, READY active config
 		.db	DMA_LOAD 	; R6-Command Load
@@ -688,6 +763,10 @@ DMALDIRINT:
 	ld	(DMADestInt),de		; register template
 	ld	(DMALengthInt),bc
 ;
+	ld	hl,DMAICopyMode
+	call	SETXFER
+	set	3,(hl)			; upper and lower address
+;
 	ld	hl,DMACopyInt		; program the
 	ld	b,DMACopyInt_Len	; dma command
 	ld	a,(dmaport)		; block
@@ -697,17 +776,7 @@ DMALDIRINT:
 	otir				; load and execute dma
 	ei
 ;
-	ld	a,DMA_READ_STATUS_BYTE	; check status
-	out	(c),a		; of transfer
-	in	a,(c)	
-
-	call	PRTSTRD
-	.db	"Return Status: $"
-	call	PRTHEXBYTE
-
-;	and	%00111011		; set non-zero
-;	sub	%00011011		; if failed
-;
+	call	DMASTATUS
 #ENDIF
 ;
 	ret
@@ -721,7 +790,7 @@ DMALengthInt	.dw	0 		; R0-Block length
 		.db	%00010100	; R1-No timing bytes follow, address increments, is memory
 		.db	%00010000 	; R2-No timing bytes follow, address increments, is memory
 		.db	%10100000 	; R3-DMA, interrupt, stop on match disabled
-		.db	DMA_CONTINUOUS	; R4-Continuous mode, destination address, interrupt and control byte follow
+DMAICopyMode:	.db	DMA_CONTINUOUS	; R4-Transfer mode, destination address, interrupt and control byte follow
 DMADestInt	.dw	0 		; R4-Port B, Destination address
 		.db	%00011110	; R4-Interrupt control byte: Pulse byte follows, Pulse generated
 		.db	0		; R4-Pulse control byte
@@ -744,6 +813,10 @@ DMAOTIR:
 	ld	(DMAOutDest),a		; register template
 	ld	(DMAOutLength),bc	
 ;
+	ld	hl,DMAOutMode
+	call	SETXFER
+	res	3,(hl)			; no upper address
+;
 	ld	hl,DMAOutCode		; program the
 	ld	b,DMAOut_Len		; dma command
 	ld	a,(dmaport)		; block
@@ -753,14 +826,7 @@ DMAOTIR:
 	otir				; load and execute dma
 	ei
 ;
-	ld	a,DMA_READ_STATUS_BYTE	; check status
-	out	(c),a			; of transfer
-	in	a,(c)			; set non-zero
-
-
-;	and	%00111011		; if failed
-;	sub	%00011011
-;
+	call	DMASTATUS
 	ret
 ;
 DMAOutCode  	;.db	DMA_DISABLE	; R6-Command Disable DMA
@@ -772,10 +838,10 @@ DMAOutLength	.dw	0 		; R0-Block length
 		.db	%00101000 	; R2-No timing bytes follow, address static, is i/o			
 		.db	%10000000 	; R3-DMA, interrupt, stop on match disabled
 
-		.db	%10100101	; R4-Continuous mode, destination port, interrupt and control byte follow
+DMAOutMode:	.db	DMA_CONTINUOUS	; R4-Transfer Mode, destination port, interrupt and control byte follow
 DMAOutDest	.db	0 		; R4-Port B, Destination port
-;		.db	%00001100	; R4-Pulse byte follows, Pulse generated
-;		.db	0		; R4-Pulse offset
+		.db	DMA_ICBYTE	; R4-Pulse byte follows, Pulse generated
+		.db	0		; R4-Pulse offset
 
 		.db	%10010010+DMA_RDY;R5-Stop on end of block, ce/wait multiplexed, READY active config	
 		.db	DMA_LOAD 	; R6-Command Load							
@@ -794,6 +860,10 @@ DMAINIR:
 	ld	(DMAInSource),a		; register template
 	ld	(DMAInLength),bc	
 ;
+	ld	hl,DMAOutMode
+	call	SETXFER
+	res	3,(hl)			; no upper address
+
 	ld	hl,DMAInCode		; program the
 	ld	b,DMAIn_Len		; dma command
 	ld	a,(dmaport)		; block
@@ -803,13 +873,7 @@ DMAINIR:
 	otir				; load and execute dma
 	ei
 ;
-	ld	a,DMA_READ_STATUS_BYTE	; check status
-	out	(c),a			; of transfer
-	in	a,(c)			; set non-zero
-
-;	and	%00111011		; if failed
-;	sub	%00011011
-;
+	call	DMASTATUS
 	ret
 ;
 DMAInCode 	;.db	DMA_DISABLE	; R6-Command Disable DMA
@@ -819,16 +883,109 @@ DMAInLength	.dw	0 		; R0-Block length
 		.db	%00010100	; R1-No timing bytes follow, address increments, is memory		
 		.db	%00111000 	; R2-No timing bytes follow, address static, is i/o			
 		.db	%10000000 	; R3-DMA, interrupt, stop on match disabled
-		.db	%10100101	; R4-Continuous mode, destination port, no interrupt, control byte.	
+DMAInMode:	.db	DMA_CONTINUOUS	; R4-Transfer mode, destination port, no interrupt, control byte.	
 DMAInSource	.db	0 		; R4-Port B, Destination port
-;		.db	%00001100	; R4-Pulse byte follows, Pulse generated
-;		.db	0		; R4-Pulse offset
+		.db	DMA_ICBYTE	; R4-Pulse byte follows, Pulse generated
+		.db	0		; R4-Pulse offset
 		.db	%10010010+DMA_RDY;R5-Stop on end of block, ce/wait multiplexed, READY active config	
 		.db	DMA_LOAD 	; R6-Command Load							
 		.db	DMA_FORCE_READY	; R6-Command Force ready						
 		.db	DMA_ENABLE 	; R6-Command Enable DMA							
 
 DMAIn_Len 	.equ	$-DMAInCode
+;
+;==================================================================================================
+; SET TRANSFER MODE
+;==================================================================================================
+;
+SETXFER:
+	ld	a,(dmaxfer)		; setup the 
+	cp	0			; transfer mode
+	jr	nz,DMAX1
+	ld	a,DMA_BYTE
+	jr	DMAX3
+DMAX1:	cp	1
+	jr	nz,DMAX2
+	ld	a,DMA_CONTINUOUS
+	jr	DMAX3
+DMAX2:	cp	2
+	ret	nz
+	ld	a,DMA_BURST
+DMAX3:	ld	(hl),a
+	ret
+;
+;==================================================================================================
+; GET STATUS
+;==================================================================================================
+;
+DMASTATUS:
+	ld	a,(dmaxfer)		; if byte mode
+	cp	0			; give some time to finish
+	jr	nz,DMASTS1
+
+;	ld	b,1
+;DMASTS2:call	delay
+;	djnz	DMASTS2
+;
+DMASTS1:ld	a,DMA_READ_STATUS_BYTE	; check status
+	out	(c),a			; of transfer
+	in	a,(c)
+	and	%00111011
+;
+;	push	af
+;	ld	a,DMA_REINIT_STATUS_BYTE
+;	out	(c),a
+;	pop	af
+;
+	call	PRTSTRD
+	.db	"\n\rReturn Status: $"
+	call	PRTHEXBYTE
+	call	NEWLINE
+;
+	ld	c,a
+	ld	a,(dmavbs)
+	or	a
+	jr	z,DMSSTS2
+	ld	a,c
+;
+	ld	a,%00000001
+	ld	de,DMASTSBIT0
+	call	PRTIDXMSK
+;
+	ld	a,%00000010
+	ld	de,DMASTSBIT1
+	call	PRTIDXMSK
+;
+	ld	a,%00001000
+	ld	de,DMASTSBIT3
+	call	PRTIDXMSK
+;
+	ld	a,%00010000
+	ld	de,DMASTSBIT4
+	call	PRTIDXMSK
+;
+	ld	a,%00100000
+	ld	de,DMASTSBIT5
+	call	PRTIDXMSK
+;
+DMSSTS2:ld	a,c
+	ret
+
+DMASTSBIT0:
+	.TEXT	"DMA Bus request did not occur after LOAD command\n\r$"
+	.TEXT	"DMA Bus request occurred after the LOAD command\n\r$"
+DMASTSBIT1:
+	.TEXT	"Ready line inactive\n\r$"
+	.TEXT	"Ready line active\n\r$"
+DMASTSBIT3:
+	.TEXT	"Interrupt pending\n\r$"
+	.TEXT	"No interrupt pending\n\r$"
+DMASTSBIT4:
+	.TEXT	"Match found\n\r$"
+	.TEXT	"No match found\n\r$"
+DMASTSBIT5:
+	.TEXT	"End of block reached\n\r$"
+	.TEXT	"End of block not reached\n\r$"
 ;
 ;==================================================================================================
 ; DEBUG - READ START, DESTINATION AND COUNT REGISTERS
@@ -1010,7 +1167,11 @@ CST:
 	RET
 ;
 USEINT	.DB	FALSE		; USE INTERRUPTS FLAG
-;
+counter	.dw	0	
+dmaport	.db	DMABASE
+dmautil	.db	DMABASE+1
+dmaxfer	.db	DMA_XMODE
+dmavbs	.db	0
 SAVSTK:	.DW	2
 	.FILL	64
 STACK:	.EQU	$
@@ -1049,10 +1210,6 @@ int:
 ;
 	or	$ff		; signal int handled
 	ret
-;
-counter	.dw	0	
-dmaport	.db	DMABASE
-dmautil	.db	DMABASE+1
 ;
 hsiz	.equ	$ - $A000	; size of handler to relocate
 ;
