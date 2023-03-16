@@ -12,7 +12,7 @@ information on how NZ-COM is loaded.
 
 The remainder of this document describes the usage and contents of
 this disk.  It is highly recommended that you review the "RomWBW
-Getting Started.pdf" document found in the Doc directory of the
+User Guide.pdf" document found in the Doc directory of the
 RomWBW Distribution.
 
 The primary documentation for NZ-COM is the "NZCOM Users Manual.pdf" 

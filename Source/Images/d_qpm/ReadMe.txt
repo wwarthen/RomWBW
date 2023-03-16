@@ -42,7 +42,7 @@ format disks.  It creates an invalid directory entry for the
 date/time stamp data file.  This is definitely a QP/M issue.  The
 directory entry can be manually corrected.
 
-== ZSDOS 1.1 Files ==
+== QPM 2.7 Files ==
 
 The following files came from the official QP/M distribution.  Actually,
 they came from 3 Microcode Consulting files (qpm27.zip, debugz.zip,
