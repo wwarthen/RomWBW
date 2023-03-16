@@ -529,14 +529,14 @@ manually perform a verification function with the `FLASH VERIFY` form
 of the command.
 
 The author's documentation for the application is found in the RomWBW
-distribution in the Doc\\Contrib directory.
+distribution in the Doc/Contrib directory.
 
 ## Notes
 
 The application supports a significant number of EEPROM parts. It
 should automatically detect your part. If it does not recognize your
 chip, make sure that you do not have a write protect jumper set --
-this jumper will cause the ROM chip type to be unrecognized.
+this jumper can prevent the ROM chip from being recognized.
 
 Reprogramming a ROM chip in-place is inherently dangerous. If anything
 goes wrong, you will be left with a non-functional system and no
@@ -557,12 +557,17 @@ GitHub repository](https://github.com/willsowerbutts/flash4).
 
 # FDISK80
 
-RomWBW supports disk media with MS-DOS FAT filesystems (see FAT
-application). If you wish to put a FAT filesystem on your media, the
-FDISK80 application can be used to partition your media which is
-required in order to add a FAT filesystem.
+`FDISK80` allows you to create and manage traditional partitions on
+your hard disk media.  Depending on the hard disk format and features
+you are using, RomWBW may need hard disk partitions defined.
 
-This application is provided by John Coffman.
+Please refer to the $doc_user$ for more information on the use of
+partitions within RomWBW.  It is very important to understand that
+RomWBW slices are completely different from disk partitions.
+
+This application is provided by John Coffman.  The primary
+documentation is in the file "FDisk Manual.pdf" found in the
+Doc directory of the RomWBW distribution.
 
 ## Usage
 
@@ -577,20 +582,15 @@ applications. Please refer to the file called "FDisk Manual.pdf" in
 the Doc directory of the RomWBW distribution for further instructions.
 
 There is also more information on using FAT partitions with RomWBW in
-the "RomWBW Getting Started.pdf" document in the Doc directory of the
-distribution.
+the $doc_user$ document in the Doc directory of the distribution.
 
 ## Notes
 
-Partitioning of RomWBW media is **only** required if you want to add a
-FAT filesystem to your media. Do not partition your media if you are
-simply using it for RomWBW. To be clear, RomWBW slices do not require
-partitioning.
-
-As described in "RomWBW Getting Started.pdf", you should be careful
-when adding a FAT partition to your media that the partition does not
-overlap with the area of the media being used for RomWBW slices. The
-"(R)eserve" function in `FDISK80` can help prevent this.
+Hard disk partition tables allow a maximum of 1024 cylinders when
+defining partitions.  However, RomWBW uses exclusively Logical Block
+Addressing (LBA) which does not have this limitation.  When defining
+partitions is usually best to define the start and size of of the
+partition using bytes or sectors.
 
 ## Etymology
 

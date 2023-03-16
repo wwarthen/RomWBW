@@ -1,3 +1,7 @@
+Version 3.2
+-----------
+- WBW: Version bump for release
+
 Version 3.1.1
 -------------
 - WBW: Version bumped due to pervasive changes
