@@ -1968,7 +1968,7 @@ PIP C:=CCP.COM
   program   of CP/M 3 is completely different/incompatible from the
   `SUBMIT` program of CP/M 2.2.
 
-* RomWBW fully supports CP/M 3 file date/time stamping, but this 
+- RomWBW fully supports CP/M 3 file date/time stamping, but this 
   requires that the disk be properly initialized for it.  This process 
   has not been performed on the CP/M 3 disk image.  Follow the 
   CP/M 3 documentation to complete this process.
