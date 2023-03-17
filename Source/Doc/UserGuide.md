@@ -133,7 +133,7 @@ contributions are very welcome.
 #### Distribution Directory Layout
 
 The RomWBW distribution is a compressed zip archive file organized in
-a set of directories. Each of these directories has it's own
+a set of directories. Each of these directories has its own
 ReadMe.txt file describing the contents in detail. In summary, these
 directories are:
 
@@ -529,7 +529,7 @@ ROM Applications:
 
 To start a ROM application you just enter the corresponding letter at
 the Boot Loader prompt.  In the following example, we launch the
-built-in Micrsosoft BASIC interpreter.  From within BASIC, we use the
+built-in Microsoft BASIC interpreter.  From within BASIC, we use the
 `BYE` command to return to the Boot Loader:
 
 ```
@@ -620,7 +620,7 @@ Boot [H=Help]: 4
 
 Booting Disk Unit 4, Slice 0, Sector 0x00000800...
 
-Volume "Unlabeled" [0xD000-0xFE00, entry @ 0xE600]...
+Volume "Unlabelled" [0xD000-0xFE00, entry @ 0xE600]...
 
 CBIOS v3.1.1-pre.194 [WBW]
 
@@ -660,7 +660,7 @@ Boot [H=Help]: 4.3
 
 Booting Disk Unit 4, Slice 3, Sector 0x0000C800...
 
-Volume "Unlabeled" [0x0100-0x1000, entry @ 0x0100]...
+Volume "Unlabelled" [0x0100-0x1000, entry @ 0x0100]...
 
 CP/M V3.0 Loader
 Copyright (C) 1998, Caldera Inc.
@@ -720,7 +720,7 @@ The 'R' command within the Boot Loader performs a software reset of
 the system.  It is the software equivalent of pressing the reset
 button.
 
-There is generallhy no need to do this, but it can be convenient when
+There is generally no need to do this, but it can be convenient when
 you want to see the boot messages again or ensure your system is in
 a clean state.
 
@@ -735,7 +735,7 @@ Restarting System...
 Your system can support a number of devices for the console. They may
 be VDU type devices or serial devices. If you want to change which
 device is the console, the ***I*** menu option can be used to choose
-the unit and it's speed.
+the unit and its speed.
 
 The command format is ```I <unit> [<baudrate>]```
 
@@ -823,11 +823,11 @@ The messages you see will vary depending on your hardware and the
 media you have installed. But, they will all have the same general
 format as the example above.
 
-Once your your system has working disk devices, they will be accessible
+Once your system has working disk devices, they will be accessible
 from any operating system you choose to run.  Disk storage is available
 whether you boot your OS from ROM or from the disk media itself.
 
-Refering back to the Boot Loader section on "Launching from ROM", you
+Referring back to the Boot Loader section on "Launching from ROM", you
 could start CP/M 2.2 using the 'C' command.  As the operating system
 starts up, you should see a list of drive letters assigned to the disk
 media you have installed. Here is an example of this:
@@ -1071,7 +1071,7 @@ PROGRESS: TRACK=4F HEAD=01 SECTOR=01
 ```
 
 Since the physical format of floppy media is the same as that used
-in a standard MS-DOS/Windows computer, you can also physicall format
+in a standard MS-DOS/Windows computer, you can also physical format
 floppy media in a modern computer.  However, the directory format
 itself will not be compatible with CP/M OSes.  In this case, you
 can use the `CLRDIR` application supplied with RomWBW to reformat
@@ -1091,7 +1091,7 @@ after inserting a new floppy disk.
 
 Under RomWBW, a hard disk is similar to a floppy disk in that it is
 considered a disk unit.  However, RomWBW has multiple features that
-allow it's legacy operating systems to take advantage of modern
+allow its legacy operating systems to take advantage of modern
 mass storage media.
 
 To start with, the concept of a hard disk in RomWBW applies to any
@@ -1340,7 +1340,7 @@ B>stat e:dsk:
 ```
 
 It is critical that you include "dsk:" after the drive letter in the
-`STAT` command line.  The important line to look at is labeled "32 Byte
+`STAT` command line.  The important line to look at is labelled "32 Byte
 Directory Entries".  In this case, the value is 1024 which implies that
 this drive is located on a modern (hd1k) disk layout.  If the value
 was 512, it would indicate a legacy (hd512) disk layout.
@@ -1539,7 +1539,7 @@ image that you write to your hard disk media.  You can use additional
 slices as long your media has room for them.  However, writing the disk 
 image will not initialize the additional slices.  If these additional 
 slices were previously initialized, they will not be corrupted when you 
-write the new image and will still contain their prvious contents.  If 
+write the new image and will still contain their previous contents.  If 
 the additional slices were not previously initialized, you can use 
 `CLRDIR` to do so and optionally `SYSCOPY` if you want them to be 
 bootable.
@@ -1770,7 +1770,7 @@ less likely to encounter compatibility issues.
 
 #### Boot Disk
 
-To make make a bootable CP/M disk, use the RomWBW `SYSCOPY` tool
+To make a bootable CP/M disk, use the RomWBW `SYSCOPY` tool
 to place a copy of the operating system on the boot track of
 the disk.  The RomWBW ROM disk has a copy of the boot track
 call "CPM.SYS".  For example:
@@ -1786,7 +1786,7 @@ call "CPM.SYS".  For example:
 
 * `SUBMIT.COM` has been patched per DRI to always place submit
   files on A:.  This ensures the submitted file will always be
-  properlly executed.
+  properly executed.
 
 * The original versions of DDT, DDTZ, and ZSID used the RST 38
   vector which conflicts with interrupt mode 1 use of this vector.
@@ -1818,7 +1818,7 @@ via the NZ-COM adaptation (see below).
 
 #### Boot Disk
 
-To make make a bootable Z-System disk, use the RomWBW `SYSCOPY` tool
+To make a bootable Z-System disk, use the RomWBW `SYSCOPY` tool
 to place a copy of the operating system on the boot track of
 the disk.  The RomWBW ROM disk has a copy of the boot track
 call "ZSYS.SYS".  For example:
@@ -1896,7 +1896,7 @@ configured in the most basic way possible.  You should refer to the
 documentation and use `MKZCM` as desired to customize your system.
 
 NZCOM has substantially more functionality than CP/M or basic
-Z-System.  It is important to read the the "NZCOM Users
+Z-System.  It is important to read the "NZCOM Users
 Manual.pdf" document in order to use this operating system effectively.
 
 #### Documentation
@@ -1968,7 +1968,7 @@ PIP C:=CCP.COM
   program   of CP/M 3 is completely different/incompatible from the
   `SUBMIT` program of CP/M 2.2.
 
-* RomWBW fully suppoerts CP/M 3 file date/time stamping, but this 
+* RomWBW fully supports CP/M 3 file date/time stamping, but this 
   requires that the disk be properly initialized for it.  This process 
   has not been performed on the CP/M 3 disk image.  Follow the 
   CP/M 3 documentation to complete this process.
@@ -2053,7 +2053,7 @@ some other distributions, this implements a native p-System
 Z80 Extended BIOS, it does not rely on a CP/M BIOS layer.
 
 The p-System is provided on a hard disk image file called
-psys.img.  This must be copied to it's own dedicated hard
+psys.img.  This must be copied to its own dedicated hard
 disk media (CF Card, SD Card, etc.).  It is booted by
 selecting slice 0 of the corresponding hard disk unit at
 the RomWBW Boot Loader prompt.  Do not attempt to use
@@ -2207,7 +2207,7 @@ default FAT partition.
 You can confirm the existence of the FAT partition with `FDISK80` by 
 using the 'P' command to show the current partition table.  Here is an 
 example of a partition table listing from `FDISK80` that includes the 
-FAT partition (labeled "FAT16"):
+FAT partition (labelled "FAT16"):
 
 ```
 Capacity of disk 4:  (  4G)  7813120      Geom 77381010
@@ -2221,7 +2221,7 @@ Nr  ---Type- A --      Start         End   LBA start  LBA count  Size
 If your hard disk media does not have a FAT partition already defined,
 you will need to define one using FDISK80 by using the 'N' command.
 Ensure that the location and size of the FAT partition does not
-overlap any of the CP/M slice area and that it fits within the szie
+overlap any of the CP/M slice area and that it fits within the size
 of your media.
 
 Once the partition is defined, you will still need to format it.  Just
@@ -2246,7 +2246,7 @@ If your RomWBW system has multiple disk drives/slots, you can also just
 create a disk with your modern computer that is a dedicated FAT 
 filesystem disk.  You can use your modern computer to format the disk 
 (floppy, CF Card, SD Card, etc.), then insert the disk in your RomWBW 
-computer and access if using `FAT` based on it's RomWBW unit number.
+computer and access if using `FAT` based on its RomWBW unit number.
 
 ## FAT Application Usage
 
@@ -2334,7 +2334,7 @@ Copying...
 SAMPLE.TXT ==> 4:/SAMPLE.TXT Overwrite? (Y/N) ... [OK]
 SAMPLE2.TXT ==> 4:/SAMPLE2.TXT ... [OK]
 
-    2 File(s) Copiedd
+    2 File(s) Copied
 ```
 
 # CP/NET Networking
@@ -2779,7 +2779,7 @@ boot. To customize this file, you use the ZCPR ALIAS facility. You
 will need to refer to ZCPR documentation for more information on the
 ALIAS facility.
 
-p-System has it's own startup command processing mechanism that is
+p-System has its own startup command processing mechanism that is
 covered in the p-System documentation.
 
 ## ROM Customization
@@ -2815,7 +2815,7 @@ built into the ROM.
 # UNA Hardware BIOS
 
 John Coffman has produced a new generation of hardware BIOS called
-UNA. The standard RomWBW distribution includes it's own hardware
+UNA. The standard RomWBW distribution includes its own hardware
 BIOS. However, RomWBW can alternatively be constructed with UNA as
 the hardware BIOS portion of the ROM. If you wish to use the UNA
 variant of RomWBW, then just program your ROM with the ROM image
@@ -2915,7 +2915,7 @@ occurred.
 
 Similar to using the Flash utility, the system ROM can be updated
 or upgraded through the ROM based updater utility. This works by
-by reprogrammed the flash ROM as the file is being transfered.
+by reprogrammed the flash ROM as the file is being transferred.
 
 This has the advantage that secondary storage is not required to
 hold the new image.
@@ -2988,7 +2988,7 @@ such as:
 
  - Overwriting of the ROM drive is not desired.
  - Space is unavailable to hold a full ROMWBW ROM.
- - To mimimize time taken to transfer and flash a full ROM.
+ - To minimize time taken to transfer and flash a full ROM.
  - Configuration changes are only minor and do not impact disk applications.
 
 The ROMWBW build process generates a system upgrade file along with
@@ -3082,7 +3082,7 @@ Portions of RomWBW were created by, contributed by, or derived from
 the work of others.  It is believed that these works are being used
 in accordance with the intentions and/or licensing of their creators.
 
-If anyone feels their work is being used outside of it's intended
+If anyone feels their work is being used outside of its intended
 licensing, please notify:
 
 > Wayne Warthen
@@ -3090,7 +3090,7 @@ licensing, please notify:
 
 RomWBW is an aggregate work.  It is composed of many individual,
 standalone programs that are distributed as a whole to function as
-a cohesive system.  Each program may have it's own licensing which
+a cohesive system.  Each program may have its own licensing which
 may be different from other programs within the aggregate.
 
 In some cases, a single program (e.g., CP/M Operating System) is
