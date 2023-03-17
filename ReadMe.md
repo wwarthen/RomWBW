@@ -3,7 +3,7 @@
 **RomWBW ReadMe** \
 Version 3.2 \
 Wayne Warthen  ([wwarthen@gmail.com](mailto:wwarthen@gmail.com)) \
-16 Mar 2023
+17 Mar 2023
 
 # Overview
 
@@ -201,7 +201,7 @@ Portions of RomWBW were created by, contributed by, or derived from the
 work of others. It is believed that these works are being used in
 accordance with the intentions and/or licensing of their creators.
 
-If anyone feels their work is being used outside of it’s intended
+If anyone feels their work is being used outside of its intended
 licensing, please notify:
 
 > Wayne Warthen  
@@ -209,7 +209,7 @@ licensing, please notify:
 
 RomWBW is an aggregate work. It is composed of many individual,
 standalone programs that are distributed as a whole to function as a
-cohesive system. Each program may have it’s own licensing which may be
+cohesive system. Each program may have its own licensing which may be
 different from other programs within the aggregate.
 
 In some cases, a single program (e.g., CP/M Operating System) is
