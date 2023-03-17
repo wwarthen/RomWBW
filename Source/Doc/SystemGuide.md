@@ -182,7 +182,7 @@ not know anything about what is being loaded (the image is usually an
 operating system, but could be any executable code image). Once the Boot
 Loader has loaded the image at the selected location, it will transfer
 control to it. Assuming the typical situation where the image was an
-operating system, the loaded operating system will then perform it's own
+operating system, the loaded operating system will then perform its own
 initialization and begin normal operation.
 
 ## Application Boot
@@ -207,8 +207,8 @@ the previously running operating system starting at $0100. Note that the
 program image contains a full copy of the HBIOS to be installed and run. Once
 the Application Boot program is loaded by the previous operating system,
 control is passed to it and it performs a system initialization similar
-to the ROM Boot, but using the image loaded in RAM.  Once te new
-HBIOS completes it's initialization, it will launch the Boot Loader
+to the ROM Boot, but using the image loaded in RAM.  Once the new
+HBIOS completes its initialization, it will launch the Boot Loader
 just like a ROM boot.
 
 The Application Boot program actually contains two other components
@@ -228,7 +228,7 @@ they have a small hardware bootstrap that loads a chunk of code from a
 disk device directly into RAM at system startup.
 
 The startup then proceeds very much like the Application Boot
-process described above.  HBIOS is installed in it's operating bank
+process described above.  HBIOS is installed in its operating bank
 and control is passed to the Boot Loader.
 
 # Driver Model
@@ -245,7 +245,7 @@ layout expected by the operating system and application.
 Drivers do need to be aware of the bank switching if a buffer address
 is being used in the function call.
 
-* If the buffer address is in the lower 32K of RAM, then the memroy
+* If the buffer address is in the lower 32K of RAM, then the memory
   it points to will be from the User Bank, not the HBIOS bank which
   is now active.  In this case, the driver must use an inter-bank
   copy to access the data.
@@ -363,7 +363,7 @@ HBIOS functions. Most function calls will return a result in register A.
 | -1       | undefined error                        |
 | -2       | function not implemented               |
 | -3       | invalid function                       |
-| -4       | invalid unit numberr                   |
+| -4       | invalid unit number                    |
 | -5       | out of memory                          |
 | -6       | parameter out of range                 |
 | -7       | media not present                      |
@@ -617,7 +617,7 @@ Returns the driver specific Status (A) of the specified disk device unit
 The return value in register A is used as both a device status and a 
 standard HBIOS result code. Negative values (bit 7 set) indicate a 
 standard HBIOS result (error) code.  Otherwise, the return value 
-represents a driver-specific device status.  In call cases, the value 0 
+represents a driver-specific device status.  In all cases, the value 0 
 means OK.
 
 ### Function 0x11 -- Disk Reset (DIORESET)
@@ -1619,7 +1619,7 @@ Status (A) is a standard HBIOS result code.
 | E: 0x04                                | HL: Ports                              |
 |                                        | DE: Ports                              |
 
-This subfunction reports detailed device informatoin for the specified 
+This subfunction reports detailed device informationn for the specified 
 Sound Unit (C).
 
 Driver Identity (B) reports the audio device type.  Ports (HL & DE) 
@@ -1652,7 +1652,7 @@ the duration, the actual duration is applied in the SNDPLAY function.
 If the Duration (HL) is set to zero, then the SNDPLAY function will 
 operate in a non-blocking mode. i.e. a tone will start playing and the 
 play function will return. The tone will continue to play until the next
- tone is played.  If the Duration (HL) is greater than zero, the the 
+ tone is played.  If the Duration (HL) is greater than zero, the 
 sound will play for the duration defined in HL and then return.
 
 **\*\*\* Function Not Implemented \*\*\**
@@ -2024,7 +2024,7 @@ lookup.
 
 Return the value of the global system timer Tick Count (DEHL).  This is 
 a double-word binary value.  The frequency of the system timer in Hertz 
-is returned in Frequncy (C). The returned Status (A) is a standard HBIOS
+is returned in Frequency (C). The returned Status (A) is a standard HBIOS
 result code.
 
 Note that not all hardware configuration have a system timer.  You
@@ -2197,7 +2197,7 @@ Wait States (E) will be set if possible.  The value of Memory Wait
 States (D) is the actual number of wait states, not the number of wait 
 states added.
 
-Some peripherals are dependant on the CPU speed.  For example, the Z180
+Some peripherals are dependent on the CPU speed.  For example, the Z180
 ASCI baud rate and system timer are derived from the CPU speed.  The
 Set CPU Speed function will attempt to adjust these peripherals for
 correct operation after modifying the CPU speed.  However, in some
@@ -2389,7 +2389,7 @@ are not reported to the console.
 
 If the diagnosis level is set to display the diagnosis information, then
 memory address, register dump and error code is displayed.
-A key differance with the PANIC error is that execution may be continued. 
+A key difference with the PANIC error is that execution may be continued. 
 
 Example error message:
 
