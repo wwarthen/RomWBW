@@ -72,7 +72,9 @@ DMA_INIT:
 	di
 	otir				; load dma
 	ei
+
 	xor	a			; set status
+	ld	(DMA_FAIL_FLAG),a	; ok to use dma
 ;
 DMA_EXIT:
 	DMAIOFULL
@@ -94,7 +96,7 @@ DMA_NOTFOUND:
 	jr	DMA_EXIT
 ;
 DMA_FAIL_FLAG:
-	.db	0	
+	.db	DMA_FAIL_FLAG	
 ;
 ;==================================================================================================
 ; DMA PROBE - WRITE TO ADDRESS REGISTER AND READ BACK
