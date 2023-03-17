@@ -143,6 +143,9 @@ please let me know if I missed you!
   which has exponentially increased RomWBW usage.  Some of his kits
   include RomWBW.
 
+* Sergey Kiselev created several hardware platforms for RomWBW
+  including the very popular Zeta.
+
 * Stephen Cousins has likewise created a series of hobbyist kit
   computers at Small Computer Central and is distributing RomWBW
   with many of them.

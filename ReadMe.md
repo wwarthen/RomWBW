@@ -147,11 +147,15 @@ let me know if I missed you!
   platform.
 
 - Phil Summers contributed the Forth and BASIC adaptations in ROM, the
-  AY-3-8910 sound driver as well as a long list of general code
+  AY-3-8910 sound driver, DMA support, and a long list of general code
   enhancements.
 
 - Spencer Owen created the RC2014 series of hobbyist kit computers which
-  has exponentially increased RomWBW usage.
+  has exponentially increased RomWBW usage. Some of his kits include
+  RomWBW.
+
+- Sergey Kiselev created several hardware platforms for RomWBW including
+  the very popular Zeta.
 
 - Stephen Cousins has likewise created a series of hobbyist kit
   computers at Small Computer Central and is distributing RomWBW with
@@ -200,7 +204,8 @@ accordance with the intentions and/or licensing of their creators.
 If anyone feels their work is being used outside of it’s intended
 licensing, please notify:
 
-> Wayne Warthen wwarthen@gmail.com
+> Wayne Warthen  
+> <wwarthen@gmail.com>
 
 RomWBW is an aggregate work. It is composed of many individual,
 standalone programs that are distributed as a whole to function as a
