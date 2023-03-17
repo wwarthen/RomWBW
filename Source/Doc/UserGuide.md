@@ -2986,10 +2986,11 @@ and CP/M system.
 A System Update may be more favorable than a System Upgrade in cases
 such as:
 
- - Overwriting of the ROM drive is not desired.
- - Space is unavailable to hold a full ROMWBW ROM.
- - To minimize time taken to transfer and flash a full ROM.
- - Configuration changes are only minor and do not impact disk applications.
+ - Overwriting of the ROM drive contents is not desired.
+ - Temporary disk space is unavailable to hold a full ROM image.
+ - To reduce the time taken to transfer and flash a full ROM.
+ - Configuration changes are only minor and do not impact disk
+   applications.
 
 The ROMWBW build process generates a system upgrade file along with
 the normal ROM image and can be identified by the extension ".upd". It
