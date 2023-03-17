@@ -104,7 +104,7 @@ The `ASSIGN` command supports "stacking" of instructions. For example,
 two slices of IDE 0 and will unassign E:.
 
 When the command runs it will echo the resultant assignments to the
-console to confirm it's actions. It will also display the remaining
+console to confirm its actions. It will also display the remaining
 space available in disk buffers.
 
 ## Notes
@@ -158,7 +158,7 @@ should only be specified for hard disk devices (SD, IDE, PPIDE).
 Only one drive letter may be assigned to a specific device/unit/slice
 at a time. Attempts to assign a duplicate drive letter will fail and
 display an error. If you wish to assign a different drive letter to a
-device/unit/slice, unassign the the existing drive letter first.
+device/unit/slice, unassign the existing drive letter first.
 
 Be aware that this command will allow you to reassign or remove the
 assignment of your system drive letter. This can cause your operating
@@ -235,8 +235,8 @@ confusing that ZPM3 is in the file called CPM3.SYS, but it is normal
 for ZPM3.
 
 For the purposes of booting an operating system, each disk slice is
-considered it's own operating system. Each slice can be made bootable
-with it's own system tracks.
+considered its own operating system. Each slice can be made bootable
+with its own system tracks.
 
 `SYSCOPY` uses drive letters to specify where to read/write the system
 boot images. However, at startup, the boot loaded will require you to
@@ -246,7 +246,7 @@ to a drive letter so you will know what to enter at the boot loader
 prompt. By way of explanation, the boot loader does not know about
 drive letters because the operating system is not loaded yet.
 
-If you want to put a a boot system image on a device and slice that is
+If you want to put a boot system image on a device and slice that is
 not currently assigned to a drive letter, you will need to assign a
 drive letter first.
 
@@ -466,7 +466,7 @@ control is fully functional (end to end).
 The `XM` application provided in RomWBW is an adaptation of a
 pre-existing XModem application. Based on the source code comments, it
 was originally adapted from Ward Christensen's MODEM2 by Keith
-Petersen and is labeled version 12.5.
+Petersen and is labelled version 12.5.
 
 The original source of the application was found in the Walnut Creek
 CD-ROM and is called XMDM125.ARK dated 7/15/86.
@@ -661,7 +661,7 @@ After startup, the application provides the following options:
 | `R)aw`      | will read the minute/second of the RTC clock iteratively every time the space key is pressed.  Press enter to end. |
 | `L)oop`     | will read the full date/time of the RTC clock iteratively every time the space key is pressed.  Press enter to end. |
 | `C)harge`   | will enable the battery charging function of the RTC.  |
-| `N)ocharge` | will disable the battery charging functino of the RTC. |
+| `N)ocharge` | will disable the battery charging function of the RTC. |
 | `D)elay`    | allows you to test the built-in timing delay in the program.  It is not unusual for it to be wrong. |
 | `I)nit`     | allows you to enter a date/time value for subsequent programming of the RTC using the S)et option. |
 | `G)et`      | allows you to read the value of a non-volatile register in the RTC. |
@@ -683,7 +683,7 @@ bypassing HBIOS.
 
 ## Etymology
 
-The `RTC` application was originally written by Andrew Lync as part of
+The `RTC` application was originally written by Andrew Lynch as part of
 the original ECB SBC board development.  It has since been modified to
 support most of the hardware variations included with RomWBW.
 
@@ -922,7 +922,7 @@ for the hardware found. If no hardware is detected, it will abort with
 an error message.
 
 On Z180 systems, I/O wait states are added when writing to the sound
-chip to avoid exceeding it's speed limitations. On Z80 systems, you
+chip to avoid exceeding its speed limitations. On Z80 systems, you
 will need to ensure that the CPU clock speed of your system does not
 exceed the timing limitations of your sound chip.
 
@@ -939,7 +939,7 @@ By default the application will attempt to interface directly to the sound
 chip.  The optional argument `--hbios` supplied after the filename, will
 enable the application to use the HBIOS sound driver.
 
-The HBIOS mode also support other switch as desribed below.
+The HBIOS mode also support other switch as described below.
 
 | Switch      | Description                                            |
 | ----------- | ------------------------------------------------------ |
@@ -1012,9 +1012,9 @@ speed will actually work on the current hardware.  Setting a CPU
 speed that exceeds the capabilities of the system will result in
 unstable operation or a system stall.
 
-Some peripherals are dependant on the CPU speed.  For example, the Z180
+Some peripherals are dependent on the CPU speed.  For example, the Z180
 ASCI baud rate and system timer are derived from the CPU speed.  The
-CPUSPD applicastion will attempt to adjust these peripherals for
+CPUSPD application will attempt to adjust these peripherals for
 correct operation after modifying the CPU speed.  However, in some
 cases this may not be possible.  The baud rate of ASCI ports have a
 limited set of divisors.  If there is no satisfactory divisor to
