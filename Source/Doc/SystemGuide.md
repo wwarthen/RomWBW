@@ -1619,7 +1619,7 @@ Status (A) is a standard HBIOS result code.
 | E: 0x04                                | HL: Ports                              |
 |                                        | DE: Ports                              |
 
-This subfunction reports detailed device informationn for the specified 
+This subfunction reports detailed device information for the specified 
 Sound Unit (C).
 
 Driver Identity (B) reports the audio device type.  Ports (HL & DE) 
