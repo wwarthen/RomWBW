@@ -246,7 +246,7 @@ memory starting at location xxxx.
 protocol.
 
 If the monitor is assembled with the DSKY functionality,
-this feature will be exclude due to space limitions.
+this feature will be exclude due to space limitations.
 
 
 ## NOTES:
@@ -624,7 +624,7 @@ Feedback to the ROMWBW developers on these guidelines would be appreciated.
 
 ## Notes:
 All testing was done with Teraterm x-modem, Forcing checksum mode using macros was found to give  the most reliable transfer.
-Partial writes can be completed with 39SF040 chips. Other chips require entire flash to be erased before before being written.
+Partial writes can be completed with 39SF040 chips. Other chips require entire flash to be erased before being written.
 An SBC V2-005 MegaFlash or Z80 MBC required for 1mb flash support. The Updater assumes both chips are same type
 Failure handling has not been tested.
 Timing broadly calibrated on a Z80 SBC-v2
