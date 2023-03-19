@@ -3,5 +3,5 @@ rmn	equ	2
 rup	equ	0
 rtp	equ	0
 biosver	macro
-	db	"3.2.0-rc.8"
+	db	"3.2.0"
 	endm
