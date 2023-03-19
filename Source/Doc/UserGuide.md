@@ -405,8 +405,9 @@ to your system that is not automatically identified, you may need
 to build a custom ROM to add support for it.  Building a custom ROM
 is covered later.
 
-[Appendix A - Device Summary] contains a list of the RomWBW hardware devices which may
-help you identify the hardware discovered in your system.
+[Appendix B - Device Summary] contains a list of the RomWBW hardware
+devices which may help you identify the hardware discovered in your
+system.
 
 ## Device Unit Assignments
 
@@ -2914,6 +2915,31 @@ Please refer to the
 [UNA BIOS Firmware Page](https://www.retrobrewcomputers.org/doku.php?id=software:firmwareos:una:start)
 for more information on UNA.
 
+## UNA Usage Notes
+
+- At startup, UNA will display a prompt similar to this:
+
+  `Boot UNA unit number or ROM? [R,X,0..3] (R):`
+
+  You generally want to choose 'R' which will then launch the RomWBW
+  loader.  Attempting to boot from a disk using a number at the UNA
+  prompt will only work for the legacy (hd512) disk format.  However,
+  if you go to the RomWBW loader, you will be able to perform a disk
+  boot on either disk format.
+
+- The disk images created and distributed with RomWBW do not have the
+  correct system track code for UNA.  In order to boot to disk under
+  UNA, you must first use SYSCOPY to update the system track of the
+  target disk.  The UNA ROM disk has the correct system track files
+  for UNA: `CPM.SYS` and `ZSYS.SYS`.  So, you can boot a ROM OS and
+  then use one of these files to update the system track.
+
+- Only Z-System and CP/M 2 are available OSes under UNA at this time.
+  Since NZ-COM launches from CP/M 2, it is usable.  p-System is not
+  usable under UNA.
+
+- Some of the RomWBW-specific applications are not UNA compatible.
+
 # Upgrading
 
 Upgrading to a newer release of RomWBW is essentially just a matter of
@@ -3085,7 +3111,7 @@ please let me know if I missed you!
 
 * Andrew Lynch started it all when he created the N8VEM Z80 SBC
   which became the first platform RomWBW supported.  Some of his
-  code can still be found in RomWBW.
+  original code can still be found in RomWBW.
 
 * Dan Werner wrote much of the code from which RomWBW was originally
   derived and he has always been a great source of knowledge and
@@ -3097,26 +3123,29 @@ please let me know if I missed you!
   due  to internal changes within RomWBW. As of RomWBW 2.6, these
   applications are no longer provided.
 
+* Sergey Kiselev created several hardware platforms for RomWBW
+  including the very popular Zeta.
+
 * David Giles created support for the Z180 CSIO which is now included
   SD Card driver.
 
-* Ed Brindley contributed some of the code that supports the RCBus
-  platform.
-
 * Phil Summers contributed the Forth and BASIC adaptations in ROM, the
   AY-3-8910 sound driver, DMA support, and a long list of general code
-  enhancements.
+  and documentation enhancements.
+
+* Ed Brindley contributed some of the code that supports the RCBus
+  platform.
 
 * Spencer Owen created the RC2014 series of hobbyist kit computers
   which has exponentially increased RomWBW usage.  Some of his kits
   include RomWBW.
 
-* Sergey Kiselev created several hardware platforms for RomWBW
-  including the very popular Zeta.
-
 * Stephen Cousins has likewise created a series of hobbyist kit
   computers at Small Computer Central and is distributing RomWBW
   with many of them.
+
+* Alan Cox has contributed some driver code and has provided a great
+  deal of advice.
 
 * The CP/NET client files were developed by Douglas Miller.
 
