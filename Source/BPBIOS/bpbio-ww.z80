@@ -32,35 +32,45 @@
 ;
 ; XX:	00=COM1    01=COM2    10=PIO	11=NULL
 ;
-;+++++++++++++++++ D-X Designs Pty Ltd P112 Version ++++++++++++++++++
+;+++++++++++++++++ Retro-Brew HBIOS Version ++++++++++++++++++
 ;
-; This configuration of the B/P Bios is for Dave Brooks' Project 112 Single
-; board computer.  Multifunction chips on the board provide the services
-; needed by a CP/M BIOS.  The primary chips and the functions provided are:
+; This configuration of the B/P Bios is for  Retro-Brew (formerly
+; called N8VEM) Single board computers with HBIOS.  Multifunction
+; chips on the board provide the services needed by a CP/M BIOS. 
+; This version of BPBios was derived from the P-112 version.
+; The primary chips and the functions provided are:
 ;
+; For Mark IV or N8
 ;   Zilog Z80182	Z180 Core CPU, MMU, DMA
-;	ESCC #1		COM1 Serial Port w/handshake signals, RS-232
-;	ESCC #2		 (available on header, coded as expansion)
 ;	ASCI0, ASCI1	 (Serial async, available on header, expansion)
 ;	CTC1		Optional 'heartbeat' clock, GP timer
-;
-;   SMC FDC37C665	Enhanced 765-derivative Floppy Disk Controller
-;			COM2 - 16550-compatible Serial, RS-232
-;			PAR1 - Centronics Parallel port (Printer)
 ;
 ;   Dallas DS-1202	Primary Realtime clock
 ;			Non-volatile battery-backed RAM (config data)
 ;
-;   28F256 Flash ROM	Boot code, device initialization
-;			 (onboard programmable)
-;   32/128/512 KB Static RAM
+;   28F512 Flash ROM	Boot code, device initialization
+;			 and ROM disk
+;   512 KB Static RAM   On board RAM
+;
+; For SBC V1/2, ZETA or SIMH
+;   Zilog Z80		Z80 core at 4 Mhz
+;	UART		16650 compatible UART
+;   Dallas DS-1202	Primary Real time clock
+;   28F512 Flash ROM	Boot code, device initializtion, monitor and
+;			 ROM disk
+;   512k Static RAM	On board RAM  		
 ;
 ; Ver     Date        Revision Description
-; ---   ---------   ------------------------
+; ---   ---------   -----------------------
+; 1.8   04 Apr 21 - Update for ROMWBW version 3.0.1			LN
+; 1.7   01 Jul 17 - Updated for HBIOS version 2.8.1			WW+LN
+; 1.6	04 Sep 16 - Updated for HBIOS version 2.8 pre 5                 WW+LN
+; 1.5   15 May 15 - Updated for new versin of HBIOS			WW+LN
+; 1.4   24 Mar 14 - Initial HBIOS test Release				WW+LN
 ; 1.3   28 Aug 01 - Scrubbed for GPL Release.				HFB
-; 1.2 - 30 Aug 97 - Expanded SCSI CDB length to 12 bytes for CDROM.	HFB
-; 1.1 - 11 May 97 - Added IDE Hard Drive instead of Normal SCSI, updated
-;		files to latest version.				HFB
+; 1.2 - 30 Aug 97 - Expanded HD CDB length to 12 bytes for CDROM.	HFB
+; 1.1 - 11 May 97 - Added IDE Hard Drive, updated files to latest 
+;			version.					HFB
 ; 1.0 - 13 Aug 96 - Initial Release for P112 from YASBEC release.	HFB
 ;*****************************************************************************
 
@@ -70,13 +80,14 @@ FALSE	EQU	0
 TRUE	EQU	NOT FALSE
 NO	EQU	FALSE
 YES	EQU	TRUE
+
+				; << ******  SYSTEM SPECIFIC  ****** >>
+				; << Insert ROMWBW definitions here  >>
+	INCLUDE ROMWBW.LIB	; <<   for version # in ROM          >>
+				
 				; << ******  SYSTEM SPECIFIC  ****** >>
 				; <<  Insert DEF-xxxx.LIB definition >>
 	INCLUDE	DEF-WW.LIB	; <<   file for your configuration.  >>
-
-				; << ******  SYSTEM SPECIFIC  ****** >>
-				; <<  Insert DEF-xxxx.LIB definition >>
-	INCLUDE	ROMWBW.LIB	; <<   file for your configuration.  >>
 
 	CSEG
 ;.....
@@ -97,13 +108,12 @@ WRUAL	EQU	2		; DOS code for unallocated write
 
 LOCKF	EQU	LOW [NOT AUTOSL] ;Lock flag for format default
 ALONE	EQU	FALSE		; Boot code equate
+	; Include ENV definitions
 	  IF  Z3
-;	MACLIB	Z3BASE.LIB	; Include ENV definitions
-	    IF CONF_T
-	MACLIB	Z3BASET.LIB
-	    ENDIF
-	    IF CONF_N
-	MACLIB	Z3BASEN.LIB
+	    IF ZSDOS2
+	MACLIB	Z3BASEF.LIB
+	    ELSE
+	MACLIB	Z3BASE.LIB
 	    ENDIF
 	  ENDIF
 	PAGE
@@ -147,14 +157,15 @@ BIOSJT:	JP	CBOOT		; 00 Cold Boot
 	  ELSE
 	JP	ISTRUE		; 26..return 0FFH (No Clock) if No code
 	  ENDIF		;clock
-	JP	SELMEM		; 27 Select Alternate Memory Bank
+	;JP	SELMEM		; 27 Select Alternate Memory Bank
+	JP	HB_SELMEM	; 27 Select Alternate Memory Bank
 	JP	SETBNK		; 28 Select DMA Memory bank
 	JP	XMOVE		; 29 Set Source/Destination Banks for Move
 
 ; --- <<< End of CP/M 3 Vectors >>>
 
 	JP	RETBIO		; 30 Return BIOS Addresses
-	JP	DIRDIO		; 31 Direct Disk I/O
+	JP	ISTRUE		; 31 Direct Disk I/O - Not implemented
 	JP	STFARC		; 32 Set Bank for FRJP and FRCALL
 	JP	FRJP		; 33 Jump to (HL) in Alternate Bank
 	JP	FRCLR		; 34 Clear Stack switcher from Alt Bank Jumps
@@ -177,21 +188,21 @@ DOS	EQU	BIOSJT-0E00H
 	  IF  BANKED
 	COMMON	/BANK2/
 ROMJT:
-	   IF  INROM
+	    IF  INROM
 	JP	INSYNC
 INSYNC:	JP	BOOTER		; Cold start loader
-	   ELSE
+	    ELSE
 	JP	0		; Reserved
 	JP	0
-	   ENDIF		; Inrom
-JDIRIO:	JP	DIRIO		; Low Level HDC/FDC Functions
-JHDCIO:	JP	DIRIO		; Low Level HDC Functions (combined w/FDCIO)
+	    ENDIF	; Inrom
+JDIRIO:	JP	ISTRUE		; Low Level HDC/FDC Functions
+JHDCIO:	JP	ISTRUE		; Low Level HDC Functions (combined w/FDCIO)
 JBREAD:	JP	BREAD		; BIOS Read
 JBWRT:	JP	BWRT		; BIOS Write
 JBSTRN:	JP	BSTRN		; BIOS Sectran
-	   IF  INROM
+	    IF  INROM
 	INCLUDE	BOOTROM.Z80	; Boot Routines
-	   ENDIF		; Inrom
+	    ENDIF		; Inrom
 	  ENDIF			; Banked
 	PAGE
 ;* * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -214,19 +225,23 @@ JBSTRN:	JP	BSTRN		; BIOS Sectran
 				; << Insert the Cold boot routines >>
 	INCLUDE	CBOOT-WW.Z80	; <<     in file CBOOT-xx.Z80      >>
 
+				; << ****** Hardware Specific ****** >>
+				; <<   HBIOS interface routines in   >>
+	INCLUDE	HBIOS.Z80	; <<          HBIOS.Z80              >>
+
 ; Deblocking Buffer Allocation
 
 	  IF  [BANKED OR INROM]
 	COMMON	/B2RAM/
-	   IF  INROM
+	    IF  INROM
 HSTBUF:	DEFS	INITCS		; Use a 1k buffer w/below
-	   ELSE
+	    ELSE
 HSTBUF	EQU	CBOOT0		; Use CBOOT0 code for part of buffer w/below
-	   ENDIF	;inrom
+	    ENDIF	;INROM
 	  ELSE
 	DSEG
 HSTBUF	EQU	CBOOT
-	  ENDIF		;not banked
+	  ENDIF		;[BANKED OR INROM]
 	DEFS	1024-(INITCS)	; Use a 1 k buffer
 
 HSTSIZ	EQU	HSTBUF+1024	; Added label for Hard Drive ext. interface
@@ -249,19 +264,19 @@ DPB:				; Marker for DPB start
 	;.XLIST			; Don't print these due to size
 	  IF  AUTOSL
 	INCLUDE DPB.LIB		; Default selection of common DD formats
-	   IF  FLOPYH
+	    IF  FLOPYH
 	INCLUDE	DPB-H.LIB	; If "High-Density" Disk formats desired,
-	   ENDIF
-	   IF  FLOPY8
+	    ENDIF	; FLOPYH
+	    IF  FLOPY8
 	INCLUDE	DPB-8.LIB	; If 8" or HD Floppy Disks can be handled,
-	   ENDIF		;  add default Autoselect DPB's
-	   IF  MORDPB
+	    ENDIF	;FLOPY8	;  add default Autoselect DPB's
+	    IF  MORDPB
 	INCLUDE	DPB2.LIB	; Additional assignable DPB's (4+4 unused)
-	   ENDIF	;mordpb
+	    ENDIF	;mordpb
 
 	  ELSE		;Not autosl
 	INCLUDE	DPBRAM.LIB	; RAM-based DPB's, 1 per physical Format
-	  ENDIF
+	  ENDIF		; AUTOSL
 
 NRDPB	EQU	[$-DPB]/DPBSIZ	; Calc number of DPB's
 
@@ -271,132 +286,17 @@ NRDPB	EQU	[$-DPB]/DPBSIZ	; Calc number of DPB's
 				; << ****** Hardware Specific ****** >>
 				; <<  Insert DPB Info for Hard Disk  >>
 	INCLUDE	DPBHD-WW.LIB	; <<     Drives as DPBHD-xx.LIB      >>
-	  ENDIF
+	  ENDIF		; HARDDSK
 	;.list
-	  IF  RAMDSK
-				; << ****** Hardware Specific ****** >>
-				; <<  Insert DPB Info for RAM Disk   >>
-	INCLUDE	DPBM-WW.LIB	; <<     in file DPBM-xxx.LIB        >>
-	  ENDIF
 	PAGE
 	INCLUDE	DPH.LIB		; Disk parameter headers
 	;.xlist
 	  IF  HARDDSK
 	INCLUDE	DPHHD.LIB	; Insert DPH Info for Hard Disk Partitions
-	  ENDIF
+	  ENDIF		;HARDDSK
 	;.list
-	  IF  RAMDSK
-	INCLUDE	DPHM.LIB	; Insert DPH Info for RAM Disk
-	  ENDIF
 	.LIST
-	PAGE
-;* * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-;     Disk   Driver   Low - Level   Function   Links
-;* * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-; Direct  Disk  I / O
-;  Call with: Function Number in C, Driver number in B,
-;	      Args in A, DE, HL
-;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-	CSEG
-DIRDIO:
-;	CALL	PRTSTRD
-;	DEFB	'[DIRDIO',']$'
 
-	  IF  BANKED
-	CALL	BIOSTK
-	CALL	GOSYSB		; Bank in the system bank
-	JP	JDIRIO		; And jump to Banked-BIOS function
-
-	COMMON	/BANK2/
-	  ENDIF
-
-DIRIO:	PUSH	HL		; Save user's HL
-	PUSH	AF		; ..and A reg for range checks
-	LD	A,B
-	CP	MAXDDA		; Legal Driver #?
-	JR	NC,DIRIOX	; ..jump Error Exit if Not
-	PUSH	BC
-	LD	HL,DDIOTB
-	LD	C,B		; Driver number
-	LD	B,0
-	ADD	HL,BC
-	ADD	HL,BC		; Index into table
-	ADD	HL,BC
-	LD	A,(HL)		; Max call number
-	INC	HL
-	LD	C,(HL)
-	INC	HL
-	LD	H,(HL)
-	LD	L,C		; Service vector table address in HL
-	POP	BC		; Requested call
-	DEC	A		; Correct Max Call # for Testing
-	JP	M,DIRIOX	; ..jump Error exit if 0 --> FF (No Calls)
-	CP	C		; Greater than Maximum Function?
-	JR	C,DIRIOX	; ..jump Error exit if so
-	PUSH	BC		; Else Save BC
-	LD	B,0
-	ADD	HL,BC
-	ADD	HL,BC		; Add twice for Word index
-	LD	B,(HL)
-	INC	HL
-	LD	H,(HL)
-	LD	L,B		; Put vector in HL
-	POP	BC		; Restore User's BC register
-	POP	AF		; .Restore A and Flags
-	EX	(SP),HL		; ..restore HL, Vector to TOS
-	RET			; Jump to Routine
-
-DIRIOX:	POP	AF		; Clear stack
-	POP	HL
-	OR	0FFH		; Set Error return
-	RET			; ..and quit
-
-; Direct Disk Access Table Pointer Table
-
-DDIOTB:	DEFB	0
-	DEFW	00		; No Driver 0
-	DEFB	MAXFFN
-	DEFW	FDFUNC		; 1 is Primary Floppy Driver
-	  IF  HARDDSK
-	DEFB	MAXHFN
-	DEFW	HDFUNC		; 2 is Primary Hard Disk Driver
-	  ENDIF		;harddsk
-	  IF  [RAMDSK AND NOT HARDDSK]
-	DEFB	0
-	DEFW	00		; (Dummy 2 if not installed)
-	  ENDIF		;ramdsk and not harddsk
-	  IF  RAMDSK
-	DEFB	0
-	DEFW	00		; 3 is Primary RAM Disk Driver (No Functions)
-	  ENDIF		;ramdsk
-
-MAXDDA	EQU	($-DDIOTB)/3	; Number of entries in pointer table
-
-; Floppy Drive Function Table and Numbers
-
-FDFUNC:	DEFW	STMODE		; 00 set mode
-	DEFW	STSIZE		; 01 set drive size
-	DEFW	STHDRV		; 02 set head and drive
-	DEFW	STSECT		; 03 set sector #, size and eot
-	DEFW	SPEC		; 04 specify srt, hlt, hut
-	DEFW	RECAL		; 05 home the floppy
-	DEFW	SEEK		; 06 seek track
-	DEFW	SREAD		; 07 read
-	DEFW	SWRITE		; 08 write
-	DEFW	READID		; 09 read id
-	DEFW	RETDST		; 10 return drive status & result ptr
-	DEFW	FMTTRK		; 11 format a track
-MAXFFN	EQU	[$-FDFUNC]/2
-
-; Hard Disk Function Table and Numbers
-
-	  IF  HARDDSK
-HDFUNC:	DEFW	HDVALS		; 00 Set Xfer Address, Return Interface Parms
-	DEFW	HDSLCT		; 01 Select Device (& Logical Unit w/SCSI)
-	DEFW	HD_RW		; 02 Direct Hard Disk Driver
-MAXHFN	EQU	[$-HDFUNC]/2
-	  ENDIF		;harddsk
 	PAGE
 ;* * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 ;	Banked   Memory   Support   Routines
@@ -409,13 +309,23 @@ MAXHFN	EQU	[$-HDFUNC]/2
 				; <<  Enter the Inter-Bank Movement  >>
 	INCLUDE	IBMV-WW.Z80	; <<    routines in IBMV-xxx.Z80     >>
 
-	ELSE			; If Not Banked, Use these hooks
+	  ELSE			; If Not Banked, Use these hooks
+	  
+	CSEG
 
 MOVE:	LDIR
 	RET
 
-SETBNK:
 SELMEM:
+	  IF HB_DEBUG AND FALSE
+	CALL	PRTSTRD
+	DEFB	'[SELMEM (STUB): $'
+	CALL	PRTHEXBYTE
+	CALL	PRTSTRD
+	DEFB	']',CR,LF,'$'
+	  ENDIF
+
+SETBNK:
 RETMEM:
 XMOVE:
 GOSYSB:
@@ -443,6 +353,21 @@ FRPUTW:	LD	(HL),E
 	RET
 
 	  ENDIF		;(not) banked
+
+	  IF HB_DEBUG
+				; << ****** Hardware Specific ****** >>
+				; <<  HBIOS Diagnostic Support       >>
+	INCLUDE	UTIL.Z80	; <<     Routines                    >>
+	
+	  ELSE			; If Not Debug, Use these hooks
+	
+	CSEG
+	  
+PANIC:	DI
+	HALT
+
+	  ENDIF ; HB_DEBUG
+
 	PAGE
 ;* * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 ;	Core   BIOS   Code
@@ -463,8 +388,6 @@ RETBIO:	LD	BC,BIOSJT	; Get address of bios base
 ;	Return  DPH  Table  Address
 ;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-	INCLUDE UTIL.Z80
-
 DRVTBL:	LD	HL,DPHTBL	; Point to DPH table
 	RET
 
@@ -481,47 +404,28 @@ DRVTBL:	LD	HL,DPHTBL	; Point to DPH table
 	INCLUDE	SELFLP2.Z80	; Floppy disk select
 	  ELSE
 	INCLUDE	SELFLP1.Z80
-	  ENDIF
+	  ENDIF		;AUTOSL
 	PAGE
 	INCLUDE	FLOPPY.Z80	; Hardware independent floppy routines
 	PAGE
 				; << ****** Hardware Specific ****** >>
-				; << This Driver is for the Standard >>
-	INCLUDE	FDC-WW.Z80	; <<  MicroSystems (SMC) FDC37C665   >>
+	INCLUDE	FDC-WW.Z80	; << This Driver is for HBIOS >>
 	PAGE
 			 	; << ****** Hardware Specific ****** >>
-				; <<  Enter routines for your timer  >>
-	INCLUDE	TIM-WW.Z80	; <<    and clock in TIM-xxxx.Z80    >>
+	INCLUDE	TIM-WW.Z80	; << This Driver is for HBIOS >>
 	PAGE
 
 	  IF  HARDDSK		; << ****** Hardware Specific ****** >>
-	   IF  SCSI		; << Enter driver routines for your  >>
-	INCLUDE	HARD-WW.Z80     ; <<    Hard Disk in HARD-xxx.Z80    >>
-	   ENDIF
-	   IF  IDE
-	INCLUDE	HARDIDE.Z80
-	   ENDIF
-	   IF  SIMHDSK
-	INCLUDE	HARDSIM.Z80
-	   ENDIF
-	   IF  HBDSK
-	INCLUDE	HARDHB.Z80
-	   ENDIF
-	PAGE
-	  ENDIF
+	INCLUDE	HARD-WW.Z80	; << This Driver is for HBIOS >>
 
-	  IF  RAMDSK		; << ****** Hardware Specific ****** >>
-	INCLUDE	RAMD-WW.Z80	; <<  Enter driver routines for RAM  >>
-	PAGE			; <<      Disk in RAMD-xxx.Z80       >>
-	  ENDIF
+	PAGE
+	  ENDIF		;HARDDSK
+
 
 				; << ****** Hardware Specific ****** >>
 				; <<   Enter Warm Boot routines in   >>
 	INCLUDE	WBOOT-WW.Z80	; <<          WBOOT-xx.Z80           >>
 
-				; << ****** Hardware Specific ****** >>
-				; <<   HBIOS interface routines in   >>
-	INCLUDE	HBIOS.Z80	; <<          HBIOS.Z80              >>
 ;.....
 ; Status bytes of general use placed at end of Data area
 
@@ -530,44 +434,9 @@ DRVTBL:	LD	HL,DPHTBL	; Point to DPH table
 HDONE:	DEFS	1		; HDC Flag 0=Ready, 1=Busy, 0FFH=Done
 ERFLAG:	DEFS	1		; Disk Operation Error Code
 	DEFS	3		; Reserved
-
-; Add Character IO buffers here to insure they are at end of DSEG
-
-	  IF  BUFFA0 AND MORDEV AND NOT MOVCPM
-COM4Q:	DEFS	1		; Char count in Queue
-	DEFS	QSIZE		; 1 to 255 character type-ahead buffer
-	  ENDIF
-
-	  IF  BUFFA1 AND MORDEV AND NOT MOVCPM
-COM5Q:	DEFS	1		; Char count in Queue
-	DEFS	QSIZE		; 1 to 255 character type-ahead buffer
-	  ENDIF
-
-	  IF  (BUFFA0 OR BUFFA1) AND MORDEV AND NOT MOVCPM
-	DEFS	12		; Stack for Buffered char IO routines
-INTSP:	DEFS	2		;  Storage for entry Stack Ptr
-	  ENDIF
-
-; Flags Bytes for Com1/Com2 Flow Control
-	  IF  XONOFF
-COM1WT:	DEFS	1		; B7=0 - Output Ok, B7=1 - Output Stopped
-COM2WT:	DEFS	1		;   B0=0 - Input Ok, B0=1 - Input Halted
-	   IF  ESCC_B AND MORDEV AND NOT MOVCPM
-COM3WT:	DEFS	1		; Flags for Expansion devices
-	   ENDIF
-	   IF  ASCI_0 AND MORDEV AND NOT MOVCPM
-COM4WT:	DEFS	1
-	   ENDIF
-	   IF  ASCI_1 AND MORDEV AND NOT MOVCPM
-COM5WT:	DEFS	1
-	   ENDIF
-	  ENDIF		;XonOff
-
-PAOR:	DEFS	1		; Parallel Output Ready Flag
-
 	  IF  [BANKED AND ZSDOS2]
 	COMMON	/B2RAM/			; Put this label in Banked Memory
-	  ENDIF				; ..else in Dseg
+	  ENDIF	;[BANKED AND ZSDOS2]	; ..else in Dseg
 BRAME:	DEFS	2		; Use as dynamic sizing label for Hard Drive
 				; ALV buffers, and storage area for sizing.
 				; ALV Buffers build up from here in memory
@@ -588,17 +457,56 @@ LIMIT	EQU	$-BIOSJT+INITCS
 	PRINTX	%LIMIT
 	.printx
 	  ELSE
-	   IF  MOVCPM AND LIMIT > 4352
+	    IF  MOVCPM AND LIMIT > 4352
 	.printx
 	.printx ++++ BIOS exceeds (>4352) 2-Sector Boot Record ++++
 	PRINTX	%LIMIT
 	.printx
-	   ENDIF
-	  ENDIF
+	    ENDIF	;IF  MOVCPM AND LIMIT > 4352
+	  ENDIF		;MOVCPM AND LIMIT > 4480
 
 NSECTS	EQU	($+INITCS-BIOSJT)/128+1
 	  IF  INROM
 	INCLUDE	BOOTRAM.Z80
-	  ENDIF
+	  ENDIF		;INROM
+
+	  IF HB_DEBUG
+
+	CSEG
+XORG	DEFL	$
+	ORG	0
+ORG_CSEG	EQU	$
+	ORG	XORG
+
+	DSEG
+XORG	DEFL	$
+	ORG	0
+ORG_DSEG	EQU	$
+	ORG	XORG
+
+	    IF BANKED
+
+	COMMON	/BANK2/
+XORG	DEFL	$
+	ORG	0
+ORG_BANK2	EQU	$
+	ORG	XORG
+
+	COMMON	/B2RAM/
+XORG	DEFL	$
+	ORG	0
+ORG_B2RAM	EQU	$
+	ORG	XORG
+
+	COMMON	/RESVD/
+XORG	DEFL	$
+	ORG	0
+ORG_RESVD	EQU	$
+	ORG	XORG
+
+	    ENDIF ; BANKED
+	
+	  ENDIF ; HB_DEBUG
+
 	END
-
+

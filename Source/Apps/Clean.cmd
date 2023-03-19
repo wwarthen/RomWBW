@@ -7,7 +7,14 @@ if exist *.lst del *.lst
 if exist *.hex del *.hex
 if exist *.prn del *.prn
 
-setlocal & cd XM && call Clean || exit /b 1 & endlocal
-setlocal & cd FDU && call Clean || exit /b 1 & endlocal
-setlocal & cd Tune && call Clean || exit /b 1 & endlocal
-setlocal & cd FAT && call Clean || exit /b 1 & endlocal
+pushd XM && call Clean || exit /b 1 & popd
+pushd FDU && call Clean || exit /b 1 & popd
+pushd Tune && call Clean || exit /b 1 & popd
+pushd FAT && call Clean || exit /b 1 & popd
+pushd Test && call Clean || exit /b 1 & popd
+pushd ZMP && call Clean || exit /b 1 & popd
+pushd ZMD && call Clean || exit /b 1 & popd
+pushd Dev && call Clean || exit /b 1 & popd
+pushd VGM && call Clean || exit /b 1 & popd
+pushd cpuspd && call Clean || exit /b 1 & popd
+pushd Survey && call Clean || exit /b 1 & popd

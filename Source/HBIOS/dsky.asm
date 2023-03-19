@@ -1,26 +1,18 @@
 ;
 ;==================================================================================================
-; DSKY ROUTINES
+; DSKY (DISPLAY AND KEYBOARD) ROUTINES 
 ;==================================================================================================
 ;
-PPIA		.EQU 	PPIBASE + 0	; PORT A
-PPIB		.EQU 	PPIBASE + 1	; PORT B
-PPIC		.EQU 	PPIBASE + 2	; PORT C
-PPIX	 	.EQU 	PPIBASE + 3	; PPI CONTROL PORT
+; THE DSKY MAY COINCIDE ON THE SAME PPI BUS AS A PPISD.  IT MAY NOT
+; SHARE A PPI BUS WITH A PPIDE.  SEE PPI_BUS.TXT FOR MORE INFORMATION.
 ;
-;		ICM7218A	KEYPAD		PPISD
-;		--------	--------	--------
-; PA0-7		IO0-7
-; PB0-5				COLS 0-5
-; PB6
-; PB7						DO (<SD)
-; PC0				ROW 0		DI (>SD)
-; PC1				ROW 1		CLK (>SD)
-; PC2-3				ROWS 2-3
-; PC4						/CS (PRI)
-; PC5						/CS (SEC)
-; PC6		/WR
-; PC7		MODE
+; LED SEGMENTS (BIT VALUES)
+;
+;	+--40--+
+;	02    20
+;	+--04--+
+;	08    10
+;	+--01--+  80
 ;
 ; DSKY SCAN CODES ARE ONE BYTE: CCRRRRRR
 ; BITS 7-6 IDENTFY THE COLUMN OF THE KEY PRESSED
@@ -34,16 +26,22 @@ PPIX	 	.EQU 	PPIBASE + 3	; PPI CONTROL PORT
 ; PB1 |	 $02 [1]    $42 [2]    $82 [3]	  $C2 [EN]
 ; PB0 |	 $01 [FW]   $41 [0]    $81 [BK]	  $C1 [CL]
 ;
+;
+PPIA		.EQU 	DSKYPPIBASE + 0	; PORT A
+PPIB		.EQU 	DSKYPPIBASE + 1	; PORT B
+PPIC		.EQU 	DSKYPPIBASE + 2	; PORT C
+PPIX	 	.EQU 	DSKYPPIBASE + 3	; PPI CONTROL PORT
+;
 ;__DSKY_INIT_________________________________________________________________________________________
 ;
 ;  CONFIGURE PARALLEL PORT AND CLEAR KEYPAD BUFFER
 ;____________________________________________________________________________________________________
 ;
-DSKY_INIT:
+DSKY_PREINIT:
 	OR	$FF			; SIGNAL TO WAIT FOR KEY RELEASE
 	LD	(DSKY_KEYBUF),A		; SET IT
-	
-	; PPI PORT B IS NORMALLY SET TO INPUT, BUT DURING HERE WE
+;
+	; PPI PORT B IS NORMALLY SET TO INPUT, BUT HERE WE
 	; TEMPORARILY SET IT TO OUTPUT.  WHILE IN OUTPUT MODE, WE
 	; WRITE A VALUE OF $FF WHICH WILL BE PERSISTED BY THE PPI
 	; CHIP BUS HOLD CIRCUIT IF THERE IS NO DSKY PRESENT.  SO,
@@ -55,21 +53,46 @@ DSKY_INIT:
 	OUT	(PPIX),A
 	LD	A,$FF			; SET PPIB=$FF, BUS HOLD
 	OUT	(PPIB),A
-	
+;
 	LD	A,$82			; PA OUT, PB IN, PC OUT
 	OUT 	(PPIX),A
-
+;
 	;IN	A,(PPIB)		; *DEBUG*
 	;CALL	PRTHEXBYTE		; *DEBUG*
-	
+;
+	IN	A,(PPIB)		; READ PPIB
+	XOR	$FF			; INVERT RESULT
+	LD	(DSKY_PRESENT),A	; SAVE AS PRESENT FLAG
+;
 DSKY_RESET:
 	PUSH	AF
-
+;
 	LD	A,$70			; PPISD AND 7218 INACTIVE
 	OUT	(PPIC),A
-	
+;
 	POP	AF
 	RET
+;
+#IFDEF HBIOS
+;
+DSKY_INIT:
+	CALL	NEWLINE			; FORMATTING
+	PRTS("DSKY:$")			; FORMATTING
+;
+	PRTS(" IO=0x$")			; FORMATTING
+	LD	A,DSKYPPIBASE		; GET BASE PORT
+	CALL	PRTHEXBYTE		; PRINT BASE PORT
+	PRTS(" MODE=$")			; FORMATTING
+	PRTS("V1$")			; PRINT DSKY TYPE
+;
+	LD	A,(DSKY_PRESENT)	; PRESENT?
+	OR	A			; SET FLAGS
+	RET	NZ			; YES, ALL DONE
+	PRTS(" NOT PRESENT$")		; NOT PRESENT
+;
+	RET
+;
+#ENDIF
 ;
 #IFDEF DSKY_KBD
 ;
@@ -104,6 +127,10 @@ KY_BO	.EQU	$17	; BOOT
 ;____________________________________________________________________________________________________
 ;
 DSKY_GETKEY:
+	LD	A,(DSKY_PRESENT)	; DOES IT EXIST?
+	OR	A			; SET FLAGS
+	JR	Z,DSKY_GETKEY1A		; ABORT IF NOT PRESENT
+;
 	CALL	DSKY_STAT		; CHECK STATUS
 	JR	Z,DSKY_GETKEY		; LOOP IF NOTHING READY
 	LD	A,(DSKY_KEYBUF)
@@ -116,6 +143,7 @@ DSKY_GETKEY1:
 	INC	HL
 	INC	C			; BUMP INDEX
 	DJNZ	DSKY_GETKEY1		; LOOP UNTIL EOT
+DSKY_GETKEY1A:
 	LD	A,$FF			; NOT FOUND ERR, RETURN $FF
 	RET
 DSKY_GETKEY2:
@@ -131,6 +159,10 @@ DSKY_GETKEY2:
 ;____________________________________________________________________________________________________
 ;
 DSKY_STAT:
+	LD	A,(DSKY_PRESENT)	; DOES IT EXIST?
+	OR	A			; SET FLAGS
+	RET	Z			; ABORT WITH A=0 IF NOT THERE
+;
 	LD	A,(DSKY_KEYBUF)		; GET CURRENT BUF VAL
 	CP	$FF			; $FF MEANS WE ARE WAITING FOR PREV KEY TO BE RELEASED
 	JR	Z,DSKY_STAT1		; CHECK FOR PREV KEY RELEASE
@@ -199,7 +231,7 @@ DSKY_SCAN1:
 	INC	E			; BUMP COL ID
 	DJNZ	DSKY_SCAN1		; LOOP THROUGH ALL COLS
 	XOR	A			; NOTHING FOUND, RETURN ZERO
-	JR	DSKY_RESET		; RETURN VIA RESET
+	JP	DSKY_RESET		; RETURN VIA RESET
 DSKY_SCAN2:
 	RRC	E			; MOVE COL ID
 	RRC	E			; ... TO HIGH BITS 6 & 7
@@ -228,57 +260,68 @@ DSKY_KEYBUF	.DB	0
 #ENDIF	; DSKY_KBD
 ;
 ;==================================================================================================
-; DSKY HEX DISPLAY
+; CONVERT 32 BIT BINARY TO 8 BYTE HEX SEGMENT DISPLAY
 ;==================================================================================================
 ;
-DSKY_HEXOUT:
-	LD	B,DSKY_HEXBUFLEN
-	LD	HL,DSKY_BUF
-	LD	DE,DSKY_HEXBUF
-DSKY_HEXOUT1:
+; HL: ADR OF 32 BIT BINARY
+; DE: ADR OF DEST LED SEGMENT DISPLAY BUFFER (8 BYTES)
+;
+DSKY_BIN2SEG:
+	PUSH	HL
+	PUSH	DE
+	LD	B,4			; 4 BYTES OF INPUT
+	EX	DE,HL
+DSKY_BIN2SEG1:
 	LD	A,(DE)			; FIRST NIBBLE
 	SRL	A
 	SRL	A
 	SRL	A
 	SRL	A
+	PUSH	HL
+	LD	HL,DSKY_HEXMAP
+	CALL	DSKY_ADDHLA
+	LD	A,(HL)
+	POP	HL
 	LD	(HL),A
 	INC	HL
 	LD	A,(DE)			; SECOND NIBBLE
 	AND	0FH
+	PUSH	HL
+	LD	HL,DSKY_HEXMAP
+	CALL	DSKY_ADDHLA
+	LD	A,(HL)
+	POP	HL
 	LD	(HL),A
 	INC	HL
 	INC	DE			; NEXT BYTE
-	DJNZ	DSKY_HEXOUT1
-	LD	HL,DSKY_BUF
-	JR	DSKY_SHOWHEX
+	DJNZ	DSKY_BIN2SEG1
+	POP	DE
+	POP	HL
+	RET
 ;
 ;==================================================================================================
 ; DSKY SHOW BUFFER
 ;   HL: ADDRESS OF BUFFER
-;   ENTER @ SHOWHEX FOR HEX DECODING
-;   ENTER @ SHOWSEG FOR SEGMENT DECODING
 ;==================================================================================================
 ;
-DSKY_SHOWHEX:
-	LD	A,$D0			; 7218 -> (DATA COMING, HEXA DECODE)
-	JR	DSKY_SHOW
-;
-DSKY_SHOWSEG:
-	LD	A,$F0			; 7218 -> (DATA COMING, NO DECODE)
-	JR	DSKY_SHOW
-;
 DSKY_SHOW:
-	PUSH	AF			; SAVE 7218 CONTROL BITS
+	;;PUSH	AF			; SAVE 7218 CONTROL BITS
 	LD	A,82H			; SETUP PPI
 	OUT	(PPIX),A
 	CALL	DSKY_COFF
-	POP	AF
+	;;POP	AF
+	LD	A,$F0			; 7218 -> (DATA COMING, NO DECODE)
 	OUT	(PPIA),A
 	CALL	DSKY_STROBEC		; STROBE COMMAND
 	LD	B,DSKY_BUFLEN		; NUMBER OF DIGITS
 	LD	C,PPIA
 DSKY_HEXOUT2:
-	OUTI
+	;OUTI
+	LD	A,(HL)
+	XOR	$80			; FIX DOT POLARITY
+	OUT	(C),A
+	INC	HL
+	DEC	B
 	JP	Z,DSKY_STROBE		; DO FINAL STROBE AND RETURN
 	CALL	DSKY_STROBE		; STROBE BYTE VALUE
 	JR	DSKY_HEXOUT2
@@ -296,29 +339,46 @@ DSKY_COFF:
 ;	CALL	DSKY_DELAY		; WAIT
 	RET
 ;
-; CODES FOR NUMERICS
-; HIGH BIT ALWAYS SET TO SUPPRESS DECIMAL POINT
-; CLEAR HIGH BIT TO SHOW DECIMAL POINT
+;==================================================================================================
+; UTILTITY FUNCTIONS
+;==================================================================================================
 ;
-DSKY_NUMS:
-	.DB	$FB	; 0
-	.DB	$B0	; 1
-	.DB	$ED	; 2
-	.DB	$F5	; 3
-	.DB	$B6	; 4
-	.DB	$D7	; 5
-	.DB	$DF	; 6
-	.DB	$F0	; 7
-	.DB	$FF	; 8
-	.DB	$F7	; 9
-	.DB	$FE	; A
-	.DB	$9F	; B
-	.DB	$CB	; C
-	.DB	$BD	; D
-	.DB	$CF	; E
-	.DB	$CE	; F
+DSKY_ADDHLA:
+	ADD	A,L
+	LD	L,A
+	RET	NC
+	INC	H
+	RET
+;
+;==================================================================================================
+; STORAGE
+;==================================================================================================
+;
+; CODES FOR NUMERICS
+; HIGH BIT ALWAYS CLEAR TO SUPPRESS DECIMAL POINT
+; SET HIGH BIT TO SHOW DECIMAL POINT
+;
+DSKY_HEXMAP:
+	.DB	$7B	; 0
+	.DB	$30	; 1
+	.DB	$6D	; 2
+	.DB	$75	; 3
+	.DB	$36	; 4
+	.DB	$57	; 5
+	.DB	$5F	; 6
+	.DB	$70	; 7
+	.DB	$7F	; 8
+	.DB	$77	; 9
+	.DB	$7E	; A
+	.DB	$1F	; B
+	.DB	$4B	; C
+	.DB	$3D	; D
+	.DB	$4F	; E
+	.DB	$4E	; F
 ;
 ; SEG DISPLAY WORKING STORAGE
+;
+DSKY_PRESENT	.DB	0
 ;
 DSKY_BUF	.FILL	8,0
 DSKY_BUFLEN	.EQU	$ - DSKY_BUF

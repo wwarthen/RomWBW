@@ -1,7 +1,9 @@
 ;::::::::::::::::::::::::::::::::::::::::::********************************
 ;	I/O  Configuration  Area	   ******  Hardware Specific ******
-;     - D-X Designs Pty Ltd P112 -	   ********************************
+;   - Retro-Brew Computers w/ HBIOS-	   ********************************
 ;
+; 1.4 - 29 Nov 16 - Updated for HBIOS version 2.8			WW
+; 1.3 - 17 Jan 14 - N8VEM Initial Test release				WW+LN
 ; 1.2 - 22 Aug 01 - Cleaned up for GPL release.				HFB
 ; 1.1 - 18 Apr 97 - Modified to Add GIDE Definitions.			HFB
 ; 1.0 - 27 Jan 97 - Initial Release for P112.				HFB
@@ -26,8 +28,9 @@ OPT1	DEFL	OPT1+[BANKED AND ZSDOS2 AND 8]  ; Bit 3 = ALV/CSV in Banked RAM
 	DEFB	'B/P-WW'	; Six-char string for Text ID Matching
 
 CONFIG:
-IOBYT:	DEFB	10010100B	; LST:=PIO, AUX:=COM2, CON:=COM1
-SYSDRV:	DEFB	0		; System drive (a=0, b=1...)
+;IOBYT:	DEFB	10010100B	; LST:=PIO, AUX:=COM2, CON:=COM1
+IOBYT:	DEFB	11111100B	; LST:=Null, AUX:=Null, CON:=COM1
+SYSDRV:	DEFB	2		; System drive (a=0, b=1...)
 OPTF1:	DEFB	OPT1		; Option flags
 
 UABNK:	DEFB	BNKU		; Beginning of User Bank(s) if Banked System
@@ -57,6 +60,7 @@ DPBADR:
 	  ENDIF
 
 AUTOCMD: AUTOCL			; Startup command for Z3
+;AUTOCMD: DEFB	8,'startupf',0	; Startup command for Z3
 
 ENVADR:	DEFW	Z3ENV		; Pointer to the Environment Descriptor
 
@@ -104,51 +108,79 @@ RELOD0:	DEFW	2560*MHZ	; 16-bit constant for counter/timer refresh
 ;  4 - Head Unload Time (16 to 240 in increments of 16) in milliseconds
 ;  5 - Number of Physical Tracks on Drive
 
-FDCSPEC: DEFB	6BH,3, 4,240,80	 ; #1 (3"DSHD,3 mS Step,4mS HLT,255 mS HUT,80t)
-	 DEFB	2AH,6,24,240,40	 ; #2 (5"DS,6 mS Step,24mS HLT,255 mS HUT,40t)
-	 DEFB	2AH,4,24,240,80	 ; #3 (5"DS,4 mS Step,24mS HLT,255 mS HUT,80t)
-	 DEFB	6AH,3, 4,240,80	 ; #4 (5"DS,3 mS Step, 4mS HLT,255 mS HUT,80t)
+FDCSPEC: DEFB	6BH,4,24,240,80	 ; #1 (3"DSHD,4 mS Step,24mS HLT,240 mS HUT,80t)
+	 DEFB	2AH,4,24,240,40	 ; #2 (5"DS,4 mS Step,24mS HLT,240 mS HUT,40t)
+	 DEFB	2AH,4,24,240,80	 ; #3 (5"DS,4 mS Step,24mS HLT,240 mS HUT,80t)
+	 DEFB	6AH,4,24,240,80	 ; #4 (3"DS,4 mS Step, 24mS HLT,240 mS HUT,80t)
 
 MONTIM:	 DEFB	100		; Motor On Time (1 to 255) in tenths-of-seconds
 SPINUP:	 DEFB	8		; Spinup delay (1 to 255) in tenths-of-seconds
 MXRTRY:	 DEFB	4		; Maximum Number of retries on Floppy Opns
 
+;IVCT:	DEFW	INTTBL		; Pointer to interrupt vectors - WW
 IVCT:	DEFW	0		; Pointer to interrupt vectors
 
 ;-------- Physical Hard Drive Configuration Information ----------
 ; Hard Disk data begins w/Controller Type, followed by data for 3 drives.
-; The first byte for each drive consists of a byte containing bit codes
-; for SCSI Device, Logical Unit, and a bit indicating whether or not the
-; drive is physically connected to the system.  The configuration should
-; match that contained in DPHHD-xx.LIB for Hard Drive partitions.
-;	   Bit	7 6 5 4 3 2 1 0
+; BPCNFG only supports 3 devices.  Originally BPBIOS systems used a SCSI
+; interface that could support up to 7 physical drives.  Thus the hard disk
+; data begins w/ controller type (read SCSI type).  Later the GIDE adapter
+; became available.  It supported only two drives.  IDE drives usually have
+; much larger capacity and so more drives were never needed with the IDE.
+; In the extended DPH the drive associated with each logical CPM drive is
+; specified.  In ver 2.8 of HBIOS, disk devices are discovered dynamically, 
+; in the order RAM, ROM, IDE then SD and assigned at that time a
+; device number.  So the ROM drive is usually device 1, the IDE or HDSK0 is 
+; device 2 and the SD or HDSK1 is device 3. In this situation, the hard
+; disk data below seems redundant.  To maintain compatibility it will be
+; retained but mostly not used.  Controller type will be set GIDE and the 
+; rest of the data will be set to describe a generic 8 mB drive. The data
+; for each drive consists of a byte containing bit codes for Device and a
+; bit indicating whether or not the drive is physically connected to the 
+; system.  The configuration should match that contained in DPHHD-xx.LIB 
+; for Hard Drive partitions, i.e. the unit specified in DPHHD-NH will be
+; used in the hard disk driver.  The byte for Hard Drive partitions
+; contains the following bit fields
+;.
+;	Bit	7 6 5 4 3 2 1 0
 ;		| | | | | | | |
 ;		| | | | | +-+-+-- Physical Device Number (0..6, 7 = Host)
 ;		| | | | +-------- (reserved)
 ;		| | | +---------- 1 = Drive Active, 0 = No Drive
-;		+-+-+------------ Logical Unit Number (usually 0 or 1)
-
+;		+-+-+------------ Logical Unit Number (usually 0 or 1
+;                                 i.e. master or slave for IDE)
 ;.....
 ; The Controller Type Byte contains information needed to dictate the specific
-; bytes to be used to communicate to a SASI/SCSI-connected Hard Drive.
+; bytes to be used to communicate to a BPBIOS-connected Hard Drive.
 ; Additional bytes will be defined as needed, so please coordinate any
-; extensions with the Authors to insure the generality of tools.
+; extensions with the Authors to insure the generality of tools.  Note that
+; this byte is not used since HBIOS presents a unified interface to BPBIOS.
+; Also note that BPCNFG only knows about the first ten controller types,
+; Second IDE and HBIOS are "Unknown" devices to BPCNFG but it will accept
+; these types if input.
 
 CNTRLR:	DEFB	80H	; Controller Types recognized are:
-			; 0- Owl			   5- Conner SCSI
-			; 1- Adaptec ACB-4000A		   6- Quantum SCSI
-			; 2- Xebec 1410A/Shugart 1610-3	   7- Maxtor SCSI
-			; 3- Seagate SCSI		   8- Syquest SCSI
-			; 4- Shugart 1610-4 Minimal SCSI   80H- GIDE (IDE/ATA)
-
+				;  0 = Owl
+				;  1 = Adaptec ACB4000a
+				;  2 = Xebec 1410A, Shugart 1610-3
+				;  3 = Seagate SCSI
+				;  4 = Shugart 1610-4 (Minimal SCSI)
+				;  5 = Conner SCSI
+				;  6 = Quantum SCSI
+				;  7 = Maxtor SCSI
+				;  8 = Syquest SCSI
+				; 80H = First IDE 
+				; 81H = Second IDE
+				; 90H = HBIOS Disk IO
 ; First drive (Generic HBIOS drive configuration)
 
-BITS	DEFL	00000000B	; First HBIOS Hard Disk Drive
+BITS	DEFL	HB_HDDEV0	; First HBIOS Hard Disk Drive
 
 BITS	DEFL	BITS+[UNIT_0 AND 10H]	; If active, set Bit 4
 
-HDRV0:	DEFB	BITS		; Set Device, Unit, and Active bits
-	DEFW	520		; Number of Cylinders
+HDRV0:		; used to convert logical to physical sector addressing
+	DEFB	BITS		; Set Device, Unit, and Active bits
+	DEFW	520		; # Cylinders - nuf for 8 8mB partitions
 	DEFB	16		; Number of Heads
 	DEFW	16		; IDE - Number of Sectors Per Track
 	DEFW	0000		; Cylinder # to start precompensation
@@ -156,7 +188,7 @@ HDRV0:	DEFB	BITS		; Set Device, Unit, and Active bits
 
 ; Second drive (Generic HBIOS drive configuration)
 
-BITS	DEFL	00000001B	; Second HBIOS Hard Disk Drive
+BITS	DEFL	HB_HDDEV1	; Second HBIOS Hard Disk Drive
 
 BITS	DEFL	BITS+[UNIT_1 AND 10H]	; If active, set Bit 4
 
@@ -169,7 +201,7 @@ HDRV1:	DEFB	BITS		; Set Device, Unit, and Active bits
 
 ; Third drive (Generic HBIOS drive configuration)
 
-BITS	DEFL	00000010B	; Third HBIOS Hard Disk Drive
+BITS	DEFL	HB_HDDEV2	; Third HBIOS Hard Disk Drive
 
 BITS	DEFL	BITS+[UNIT_2 AND 10H]	; If active, set Bit 4
 
@@ -183,4 +215,4 @@ HDRV2:	DEFB	BITS		; Set Device, Unit, and Active bits
 	DEFB	0,0,0,0,0	; (Reserved)
 
 ;======= End of Fixed Config ======== Device Config follows ========
-
+

@@ -125,7 +125,7 @@ PRTSTR:
 ; PRINT A STRING DIRECT: REFERENCED BY POINTER AT TOP OF STACK
 ; STRING MUST BE TERMINATED BY '$'
 ; USAGE:
-;   CALL PRTSTR
+;   CALL PRTSTRD
 ;   .DB  "HELLO$"
 ;   ...
 ;
@@ -140,8 +140,9 @@ PRTSTRD:
 ; PRINT A STRING INDIRECT: REFERENCED BY INDIRECT POINTER AT TOP OF STACK
 ; STRING MUST BE TERMINATED BY '$'
 ; USAGE:
-;   CALL PRTSTRI(MYSTRING)
 ;   MYSTRING	.DB	"HELLO$"
+;   CALL PRTSTRI(MYSTRING)
+;		.DW	MYSTRING
 ;
 PRTSTRI:
 	EX	(SP),HL
@@ -179,6 +180,17 @@ PRTHEXWORD:
 	LD	A,B
 	CALL	PRTHEXBYTE
 	LD	A,C
+	CALL	PRTHEXBYTE
+	POP	AF
+	RET
+;
+; PRINT THE HEX WORD VALUE IN HL
+;
+PRTHEXWORDHL:
+	PUSH	AF
+	LD	A,H
+	CALL	PRTHEXBYTE
+	LD	A,L
 	CALL	PRTHEXBYTE
 	POP	AF
 	RET
@@ -295,7 +307,7 @@ DB_CONTD:
 	JP	DB_BLKRD		;
 
 DB_END:
-	RET	
+	RET
 ;
 ; PRINT THE nTH STRING IN A LIST OF STRINGS WHERE EACH IS TERMINATED BY $
 ; C REGISTER CONTAINS THE INDEX TO THE STRING TO BE DISPLAYED.
@@ -322,7 +334,7 @@ PRTIDXMSK1:
 	POP	BC
 ;
 ; PRINT THE nTH STRING IN A LIST OF STRINGS WHERE EACH IS TERMINATED BY $
-; A REGISTER DEFINES THE nTH STRING IN THE LIST TO PRINT AND DE POINTS 
+; A REGISTER DEFINES THE nTH STRING IN THE LIST TO PRINT AND DE POINTS
 ; TO THE START OF THE STRING LIST.
 ;
 ; SLOW BUT IMPROVES CODE SIZE, READABILITY AND ELIMINATES THE NEED HAVE
@@ -332,6 +344,8 @@ PRTIDXDEA:
 	PUSH	BC
 	LD	C,A			; INDEX COUNT
 	OR	A
+	LD	A,0
+	LD	(PRTIDXCNT),A		; RESET CHARACTER COUNT
 PRTIDXDEA1:
 	JR	Z,PRTIDXDEA3
 PRTIDXDEA2:
@@ -353,13 +367,19 @@ WRITESTR:
 WRITESTR1:
 	LD	A,(DE)
 	CP	'$'			; TEST FOR STRING TERMINATOR
-	JP	Z,WRITESTR2
+	JR	Z,WRITESTR2
 	CALL	COUT
+	LD	A,(PRTIDXCNT)
+	INC	A
+	LD	(PRTIDXCNT),A
 	INC	DE
-	JP	WRITESTR1
+	JR	WRITESTR1
 WRITESTR2:
 	POP	AF
 	RET
+;
+PRTIDXCNT:
+	.DB	0			; CHARACTER COUNT
 ;
 ;
 ;
@@ -369,17 +389,6 @@ TSTPT:
 	CALL	WRITESTR
 	POP	DE
 	JR	REGDMP			; DUMP REGISTERS AND RETURN
-;
-; PANIC: TRY TO DUMP MACHINE STATE
-;
-PANIC:
-	PUSH	DE
-	LD	DE,STR_PANIC
-	CALL	WRITESTR
-	POP	DE
-	CALL	XREGDMP			; DUMP REGISTERS
-	CALL	CONTINUE		; CHECK W/ USER
-	RET
 ;
 ;
 ;
@@ -410,7 +419,7 @@ XREGDMP:
 	LD	A,'@'
 	CALL	COUT
 	POP	AF
-	
+
 	PUSH	BC
 	LD	BC,(REGDMP_PC)
 	CALL	PRTHEXWORD		; PC
@@ -434,7 +443,7 @@ XREGDMP:
 	CALL	PC_COLON
 	LD	BC,(REGDMP_SP)
 	CALL	PRTHEXWORD		; SP
-	
+
 	CALL	PC_COLON
 	PUSH	IX
 	POP	BC
@@ -454,7 +463,7 @@ XREGDMP:
 	POP	AF
 
 	;LD	SP,(RD_STKSAV)		; BACK TO ORIGINAL STACK FRAME
-	
+
 	JP	$FFFF			; RETURN, $FFFF IS DYNAMICALLY UPDATED
 REGDMP_RET	.EQU	$-2		; RETURN ADDRESS GOES HERE
 ;
@@ -467,34 +476,10 @@ REGDMP_SP	.DW	0
 ;
 ;
 ;
-CONTINUE:
-	PUSH	AF
-	PUSH	DE
-	LD	DE,STR_CONTINUE
-	CALL	WRITESTR
-	POP	DE
-CONTINUE1:
-	CALL	CIN
-	CP	'Y'
-	JR	Z,CONTINUE3
-	CP	'y'
-	JR	Z,CONTINUE3
-	CP	'N'
-	JR	Z,CONTINUE2
-	CP	'n'
-	JR	Z,CONTINUE2
-	JR	CONTINUE1
-CONTINUE2:
-	HALT
-CONTINUE3:
-	POP	AF
-	RET
 ;
 ;
-;
-STR_PANIC	.DB	"\r\n\r\n>>> PANIC: $"
+STR_HALT	.TEXT	"\r\n\r\n*** System Halted ***$"
 STR_TSTPT	.TEXT	"\r\n+++ TSTPT: $"
-STR_CONTINUE	.TEXT	" Continue? (Y/N): $"
 ;STR_AF		.DB	" AF=$"
 ;STR_BC		.DB	" BC=$"
 ;STR_DE		.DB	" DE=$"
@@ -502,13 +487,15 @@ STR_CONTINUE	.TEXT	" Continue? (Y/N): $"
 ;STR_PC		.DB	" PC=$"
 ;STR_SP		.DB	" SP=$"
 ;
-; INDIRECT JUMP TO ADDRESS IN HL
+; INDIRECT JUMP TO ADDRESS IN HL,IX, OR IY
 ;
 ;   MOSTLY USEFUL TO PERFORM AN INDIRECT CALL LIKE:
 ;     LD	HL,xxxx
 ;     CALL	JPHL
 ;
 JPHL:	JP	(HL)
+JPIX:	JP	(IX)
+JPIY:	JP	(IY)
 ;
 ; ADD HL,A
 ;
@@ -566,8 +553,6 @@ BYTE2BCD1:
 	POP	BC
 	RET
 
-#IF (BIOS == BIOS_WBW)
-
 #IFDEF USEDELAY
 
 ;
@@ -592,9 +577,11 @@ DELAY:				; 17TS (FROM INVOKING CALL)	|
 DELAY1:				;				|
 	; --- LOOP = ((CPUSCL * 16) - 5) TS ------------+	|
 	DEC	A		; 4TS			|	|
-#IF (CPUFAM == CPU_Z180)	;			|	|
+  #IF (BIOS == BIOS_WBW)	;			|	|
+    #IF (CPUFAM == CPU_Z180)	;			|	|
 	OR	A		; +4TS FOR Z180		|	|
-#ENDIF				;			|	|
+    #ENDIF			;			|	|
+  #ENDIF			;			|	|
 	JR	NZ,DELAY1	; 12TS (NZ) / 7TS (Z)	|	|
 	; ----------------------------------------------+	|
 ;								|
@@ -623,17 +610,21 @@ VDELAY:				; 17TS (FROM INVOKING CALL)		|
 ;								|	|
 VDELAY1:			;				|	|
 	; --- INNER LOOP = ((CPUSCL * 16) - 5) TS ------+	|	|
-#IF (CPUFAM == CPU_Z180)	;			|	|	|
+  #IF (BIOS == BIOS_WBW)	;			|	|	|
+    #IF (CPUFAM == CPU_Z180)	;			|	|	|
 	OR	A		; +4TS FOR Z180		|	|	|
-#ENDIF				;			|	|	|
+    #ENDIF			;			|	|	|
+  #ENDIF			;			|	|	|
 	DEC	A		; 4TS			|	|	|
 	JR	NZ,VDELAY1	; 12TS (NZ) / 7TS (Z)	|	|	|
 	; ----------------------------------------------+	|	|
 ;								|	|
 	DEC	DE		; 6TS				|	|
-#IF (CPUFAM == CPU_Z180)	;				|	|
+  #IF (BIOS == BIOS_WBW)	;			|	|	|
+    #IF (CPUFAM == CPU_Z180)	;				|	|
 	OR	A		; +4TS FOR Z180			|	|
-#ENDIF				;				|	|
+    #ENDIF			;				|	|
+  #ENDIF			;				|	|
 	LD	A,D		; 4TS				|	|
 	OR	E		; 4TS				|	|
 	JP	NZ,VDELAY	; 10TS				|	|
@@ -655,26 +646,9 @@ LDELAY:
 	RET
 ;
 ; INITIALIZE DELAY SCALER BASED ON OPERATING CPU SPEED
-; HBIOS *MUST* BE INSTALLED AND AVAILABLE VIA RST 8!!!
-; CPU SCALER := MAX(1, (PHIMHZ - 2))
+; ENTER WITH A = CPU SPEED IN MHZ
 ;
 DELAY_INIT:
-#IF (BIOS == BIOS_UNA)
-	LD	C,$F8			; UNA BIOS GET PHI FUNCTION
-	RST	08			; RETURNS SPEED IN HZ IN DE:HL
-	LD	B,4			; DIVIDE MHZ IN DE:HL BY 100000H 
-DELAY_INIT0:	
-	SRL	D			; ... TO GET APPROX CPU SPEED IN
-	RR	E			; ...MHZ.  THROW AWAY HL, AND
-	DJNZ	DELAY_INIT0		; ...RIGHT SHIFT DE BY 4.
-	INC	E			; FIX UP FOR VALUE TRUNCATION
-	LD	A,E			; PUT IN A
-#ELSE
-	LD	B,BF_SYSGET		; HBIOS FUNC=GET SYS INFO
-	LD	C,BF_SYSGET_CPUINFO	; HBIOS SUBFUNC=GET CPU INFO
-	RST	08			; CALL HBIOS, RST 08 NOT YET INSTALLED
-	LD	A,L			; PUT SPEED IN MHZ IN ACCUM
-#ENDIF
 	CP	3			; TEST FOR <= 2 (SPECIAL HANDLING)
 	JR	C,DELAY_INIT1		; IF <= 2, SPECIAL PROCESSING
 	SUB	2			; ADJUST AS REQUIRED BY DELAY FUNCTIONS
@@ -685,13 +659,11 @@ DELAY_INIT2:
 	LD	(CPUSCL),A		; UPDATE CPU SCALER VALUE
 	RET
 
-#IF (CPUMHZ < 3)
+  #IF (CPUMHZ < 3)
 CPUSCL	.DB	1			; CPU SCALER MUST BE > 0
-#ELSE
+  #ELSE
 CPUSCL	.DB	CPUMHZ - 2		; OTHERWISE 2 LESS THAN PHI MHZ
-#ENDIF
-;
-#ENDIF
+  #ENDIF
 ;
 #ENDIF
 ;
@@ -700,13 +672,15 @@ CPUSCL	.DB	CPUMHZ - 2		; OTHERWISE 2 LESS THAN PHI MHZ
 ; NUMBER OF CALL/RET INVOCATIONS.  A SINGLE CALL/RET IS
 ; 27 T-STATES ON A Z80, 25 T-STATES ON A Z180
 ;
-DLY64:	CALL	DLY32
-DLY32:	CALL	DLY16
-DLY16:	CALL	DLY8
-DLY8:	CALL	DLY4
-DLY4:	CALL	DLY2
-DLY2:	CALL	DLY1
-DLY1:	RET
+;			; Z80	Z180
+;			; ----	----
+DLY64:	CALL	DLY32	; 1728	1600
+DLY32:	CALL	DLY16	; 864	800
+DLY16:	CALL	DLY8	; 432	400
+DLY8:	CALL	DLY4	; 216	200
+DLY4:	CALL	DLY2	; 108	100
+DLY2:	CALL	DLY1	; 54	50
+DLY1:	RET		; 27	25
 ;
 ; MULTIPLY 8-BIT VALUES
 ; IN:  MULTIPLY H BY E
@@ -768,13 +742,13 @@ DIV16:
 DIV16A:
 	SCF
 	RL	C
-	RLA	
-	ADC	HL,HL	
-	SBC	HL,DE	
-	JR	NC,DIV16B	
-	ADD	HL,DE	
-	DEC	C	
-DIV16B:	
+	RLA
+	ADC	HL,HL
+	SBC	HL,DE
+	JR	NC,DIV16B
+	ADD	HL,DE
+	DEC	C
+DIV16B:
 	DJNZ	DIV16A			; LOOP AS NEEDED
 	LD	B,A			; AC -> BC
 	LD	A,H			; SET ZF
@@ -858,53 +832,154 @@ BITLOC1:
 	DJNZ	BITLOC1		; LOOP AS NEEDED
 	RET			; DONE
 ;
-; PRINT VALUE OF A IN DECIMAL WITH LEADING ZERO SUPPRESSION
+; DECIMAL NUMBER PRINTING ROUTINES
 ;
-PRTDECB:
-	PUSH	HL
-	PUSH	AF
-	LD	L,A
-	LD	H,0
-	CALL	PRTDEC
-	POP	AF
-	POP	HL
+PRTDEC8:	; PRINT VALUE OF A REGISTER IN DECIMAL
+	PUSH	IY
+	LD	IY,B2D8
+	CALL	PRTDECSTR
+	POP	IY
 	RET
 ;
-; PRINT VALUE OF HL IN DECIMAL WITH LEADING ZERO SUPPRESSION
+PRTDEC16:	; PRINT VALUE OF HL REGISTER IN DECIMAL
+	PUSH	IY
+	LD	IY,B2D16
+	CALL	PRTDECSTR
+	POP	IY
+	RET
 ;
-PRTDEC:
+PRTDEC32:	; PRINT VALUE OF DE:HL REGISTERS IN DECIMAL
+	PUSH	IY
+	LD	IY,B2D32
+	CALL	PRTDECSTR
+	POP	IY
+	RET
+;
+PRTDECSTR:
+	PUSH	AF
 	PUSH	BC
 	PUSH	DE
 	PUSH	HL
-	LD	E,'0'
-	LD	BC,-10000
-	CALL	PRTDEC1
-	LD	BC,-1000
-	CALL	PRTDEC1
-	LD	BC,-100
-	CALL	PRTDEC1
-	LD	C,-10
-	CALL	PRTDEC1
-	LD	E,0
-	LD	C,-1
-	CALL	PRTDEC1
+	PUSH	IX
+	CALL	JPIY			; CALL (IY)
+	EX	DE,HL
+	LD	A,'$'
+	LD	(B2DEND),A
+	CALL	WRITESTR
+	POP	IX
 	POP	HL
 	POP	DE
 	POP	BC
+	POP	AF
 	RET
-PRTDEC1:
-	LD	A,'0' - 1
-PRTDEC2:
-	INC	A
-	ADD	HL,BC
-	JR	C,PRTDEC2
+;
+; Combined routine for conversion of different sized binary numbers into
+; directly printable ASCII(Z)-string
+; Input value in registers, number size and -related to that- registers to fill
+; is selected by calling the correct entry:
+;
+;  entry  inputregister(s)  decimal value 0 to:
+;   B2D8             A                    255  (3 digits)
+;   B2D16           HL                  65535   5   "
+;   B2D24         E:HL               16777215   8   "
+;   B2D32        DE:HL             4294967295  10   "
+;   B2D48     BC:DE:HL        281474976710655  15   "
+;   B2D64  IX:BC:DE:HL   18446744073709551615  20   "
+;
+; The resulting string is placed into a small buffer attached to this routine,
+; this buffer needs no initialization and can be modified as desired.
+; The number is aligned to the right, and leading 0's are replaced with spaces.
+; On exit HL points to the first digit, (B)C = number of decimals
+; This way any re-alignment / postprocessing is made easy.
+; Changes: AF,BC,DE,HL,IX
+; P.S. some examples below
+;
+; by Alwin Henseler
+;
+B2D8:	LD	H,0
+	LD	L,A
+B2D16:	LD	E,0
+B2D24:	LD	D,0
+B2D32:	LD	BC,0
+B2D48:	LD	IX,0			; zero all non-used bits
+B2D64:	LD	(B2DINV),HL
+	LD	(B2DINV+2),DE
+	LD	(B2DINV+4),BC
+	LD	(B2DINV+6),IX		; place full 64-bit input value in buffer
+	LD	HL,B2DBUF
+	LD	DE,B2DBUF+1
+	LD	(HL),' '
+B2DFILC	.EQU	$-1			; address of fill-character
+	LD	BC,18
+	LDIR				; fill 1st 19 bytes of buffer with spaces
+	LD	(B2DEND-1),BC		;set BCD value to "0" & place terminating 0
+	LD	E,1			; no. of bytes in BCD value
+	LD	HL,B2DINV+8		; (address MSB input)+1
+	LD	BC,$0909
+	XOR	A
+B2DSKP0:DEC	B
+	JR	Z,B2DSIZ		; all 0: continue with postprocessing
+	DEC	HL
+	OR	(HL)			; find first byte <>0
+	JR	Z,B2DSKP0
+B2DFND1:DEC	C
+	RLA
+	JR	NC,B2DFND1		; determine no. of most significant 1-bit
+	RRA
+	LD	D,A			; byte from binary input value
+B2DLUS2:PUSH	HL
+	PUSH	BC
+B2DLUS1:LD	HL,B2DEND-1		; address LSB of BCD value
+	LD	B,E			; current length of BCD value in bytes
+	RL	D			; highest bit from input value -> carry
+B2DLUS0:LD	A,(HL)
+	ADC	A,A
+	DAA
+	LD	(HL),A			; double 1 BCD byte from intermediate result
+	DEC	HL
+	DJNZ	B2DLUS0			; and go on to double entire BCD value (+carry!)
+	JR	NC,B2DNXT
+	INC	E			; carry at MSB -> BCD value grew 1 byte larger
+	LD	(HL),1			; initialize new MSB of BCD value
+B2DNXT:	DEC	C
+	JR	NZ,B2DLUS1		; repeat for remaining bits from 1 input byte
+	POP	BC			; no. of remaining bytes in input value
+	LD	C,8			; reset bit-counter
+	POP	HL			; pointer to byte from input value
+	DEC	HL
+	LD	D,(HL)			; get next group of 8 bits
+	DJNZ	B2DLUS2			; and repeat until last byte from input value
+B2DSIZ:	LD	HL,B2DEND		; address of terminating 0
+	LD	C,E			; size of BCD value in bytes
+	OR	A
+	SBC	HL,BC			; calculate address of MSB BCD
+	LD	D,H
+	LD	E,L
 	SBC	HL,BC
-	CP	E
-	JR	Z,PRTDEC3
-	LD	E,0
-	CALL	COUT
-PRTDEC3:
+	EX	DE,HL			; HL=address BCD value, DE=start of decimal value
+	LD	B,C			; no. of bytes BCD
+	SLA	C			; no. of bytes decimal (possibly 1 too high)
+	LD	A,'0'
+	RLD				; shift bits 4-7 of (HL) into bit 0-3 of A
+	CP	'0'			; (HL) was > 9h?
+	JR	NZ,B2DEXPH		; if yes, start with recording high digit
+	DEC	C			; correct number of decimals
+	INC	DE			; correct start address
+	JR	B2DEXPL			; continue with converting low digit
+B2DEXP:	RLD				; shift high digit (HL) into low digit of A
+B2DEXPH:LD	(DE),A			; record resulting ASCII-code
+	INC	DE
+B2DEXPL:RLD
+	LD	(DE),A
+	INC	DE
+	INC	HL			; next BCD-byte
+	DJNZ	B2DEXP			; and go on to convert each BCD-byte into 2 ASCII
+	SBC	HL,BC			; return with HL pointing to 1st decimal
 	RET
+;
+B2DINV	.FILL	8			; space for 64-bit input value (LSB first)
+B2DBUF	.FILL	20			; space for 20 decimal digits
+B2DEND	.DB 	1			; space for terminating 0
 ;
 ; SHIFT HL:DE BY B BITS
 ;
@@ -925,6 +1000,57 @@ SLA32:
 	RL	D
 	DJNZ	SLA32
 	RET
+;
+; PRINT VALUE OF A IN DECIMAL WITH LEADING ZERO SUPPRESSION
+; BELOW ARE NOW OBSOLETE AND MAPPED TO NEW ROUTINES
+;
+PRTDECB	.EQU	PRTDEC8
+;;;PRTDECB:
+;;;	PUSH	HL
+;;;	PUSH	AF
+;;;	LD	L,A
+;;;	LD	H,0
+;;;	CALL	PRTDEC
+;;;	POP	AF
+;;;	POP	HL
+;;;	RET
+;
+; PRINT VALUE OF HL IN DECIMAL WITH LEADING ZERO SUPPRESSION
+;
+PRTDEC	.EQU	PRTDEC16
+;;;PRTDEC:
+;;;	PUSH	BC
+;;;	PUSH	DE
+;;;	PUSH	HL
+;;;	LD	E,'0'
+;;;	LD	BC,-10000
+;;;	CALL	PRTDEC1
+;;;	LD	BC,-1000
+;;;	CALL	PRTDEC1
+;;;	LD	BC,-100
+;;;	CALL	PRTDEC1
+;;;	LD	C,-10
+;;;	CALL	PRTDEC1
+;;;	LD	E,0
+;;;	LD	C,-1
+;;;	CALL	PRTDEC1
+;;;	POP	HL
+;;;	POP	DE
+;;;	POP	BC
+;;;	RET
+;;;PRTDEC1:
+;;;	LD	A,'0' - 1
+;;;PRTDEC2:
+;;;	INC	A
+;;;	ADD	HL,BC
+;;;	JR	C,PRTDEC2
+;;;	SBC	HL,BC
+;;;	CP	E
+;;;	JR	Z,PRTDEC3
+;;;	LD	E,0
+;;;	CALL	COUT
+;;;PRTDEC3:
+;;;	RET
 ;
 ; LOAD OR STORE DE:HL
 ;
@@ -981,7 +1107,7 @@ SUB32:
 	RET
 ;
 ; INC32 (HL)
-; INCREMENT 32 BIT BINARY AT ADDRESS 
+; INCREMENT 32 BIT BINARY AT ADDRESS
 ;
 INC32HL:
 	INC	(HL)

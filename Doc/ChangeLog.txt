@@ -1,3 +1,100 @@
+Version 3.2
+-----------
+- WBW: Version bump for release
+
+Version 3.1.1
+-------------
+- WBW: Version bumped due to pervasive changes
+- WBW: Preliminary hard disk partition support (backward compatible)
+- WBW: Change Propeller VGA signal timings to 60Hz refresh
+- WBW: Enhanced SYSTEM RESET function to allow a warm start back to boot loader
+- C?O: Add DUART driver
+- WBW: Early Z280 support (requires 512K RAM/ROM board)
+- HCS: ZRC memory manager support
+- S?K: Support for Tiny Z80 by Sergey
+- E?B: Support for v6 YM/AY sound card
+- C?M: Support for RCBus bus PropIO V2
+- W?S: Updated FLASH software to v1.3.4
+- PMS: Preliminary support for writing to FLASH ROMs
+- PMS: Creation of process to update ROM system area w/o updating ROM disk contents
+- PMS: Added "updater.asm" which allows uploading and updating ROM in one step
+- WBW: Support for Z280 w/ native memory and interrupt mode 3
+- WBW: Support for Z280 UART (interrupt driven only in interrupt mode 3)
+- WBW: Add support Z80-512K (watchdog and LED)
+- WBW: Add support for ZZ80MB address map
+- PLS: Add support for Z180 invalid opcode trap
+- WBW: Add support for ZZRCC
+- WBW: Allow selection of RAM/ROM disk individually in build
+- WBW: Support 256KB ROM size
+- WBW: CP/M 3 RTC support is now complete (reads and writes RTC date/time)
+- WBW: Add config to allow swapping logical order of MT011 SPI ports
+- WBW: COPY.COM updated from v1.72 -> v1.73 throughout distribution
+- D?M: CP/NET for CP/M 2.2 and CP/M 3 (requires MT011)
+- D?M: SD driver fixes for MT011
+- J?C: Added FIND application from Jay Cotton
+- PMS: Preliminary support for I2C-based DS1307 clock
+- WBW: FD driver auto hardware detect (thanks Alan Cox)
+- D?N: Added support for TMS V9958 VDU
+- D?N: Added support for MSX keyboard
+- D?N: Added support for RP5C01 RTC
+- L?N: Slightly enhanced ZCPRD&J w/ a couple bug fixes
+- L?N: UNZIPZ4 which handles most modern ZIP file compression algorithms
+- AJL: Preliminary support for MBC systems
+- WBW: Added preliminary support for DSKYng
+- WBW: Elevated MBC to a platform
+- WBW: Added support for MBC user LEDs
+- PMS: Early DMA support
+- W?S: Updated FLASH software to v1.3.5 (supports 128KB A29010B, 512KB A29040B)
+- DDW: Support for DSKYng capabitlities
+- WBW: Added Phil Summers' ROM Updater into ROM Loader
+- AJL: Added ramtest app (requires SBC and MBC for now)
+- L?N: Provided SCOPY, XSUB01, and EX applications
+- WBW: Added support for MBC FDC to FDU application
+- WBW: Added support for MBC FDC to HBIOS
+- WBW: Refactored make process
+- WBW: Added ROM verification to boot process
+- WBW: Added Z80 instruction test apps to user area 5 in CP/M & ZSDOS
+- WBW: Add support for LINC sound card
+- WBW: Add interrupt receive support to UART driver
+- PMS: Add XModem transfer within Debug Monitor
+- PMS & AJL: Add DMAMON test application
+- PMS: Add ZMP adaptation
+- LWN: Substantial BPBIOS cleanup
+- AJL: Add ZMD adaptation
+- D?T: Substantial update to TastyBasic incuding a .COM executable
+- PMS: Added VGM audio file player
+- WBW: ZPMLDR and ZPM3 fixes, credit to Lars Nelson for finding ZPM3 source!
+- DDW: Add support for MBC sound card
+- WBW: Add support for "romless" booting
+- L?N: Fixes for ZCPR-D&J (buffer overflow, default drive/user)
+- J?P: Add support for DS1501 RTC
+- LLS: Added a user defined mode for SD Card interfaces (not complete)
+- L?N: Updated ZDE to v1.8 including time stamp preservation fixes
+- D?M: Minor update to CP/NET client files, fix to CPNBOOT
+- WBW: Added p-System IV.0 Z80 implementation
+- WBW: Hacked SURVEY to work around bank switching crash
+
+Version 3.1
+-----------
+- WBW: Refactored ROM Loader
+- WBW: INTRTC periodic timer based clock
+- WBW: FDISK80 updated to allow reserving up to 256 slices
+- WBW: Added support dual 16C550 UART on RCBus platform
+- WBW: Made .com images smaller (contain only Z-System now)
+- WBW: Support automatic clock hardware detection and fallback
+- WBW: Support use of CTC for SIO baud rate divisors
+- WBW: Updated IDE and PPIDE drivers to improve old CF Card compatibility
+- WBW: Support TIMER mode in CTC driver
+- DEN: Added sound driver support
+- DEN: Added SN76489 sound chip driver
+- M?O: RomWBW Disk Catalog document
+- DEN: Updated TMS to optionally trigger SYSTIMER interrupt (TMSTIMENABLE)
+- J?M: Updated KERMIT applications with VT100 terminal support
+- A?C: Added support for EPFDC
+- PMS: Added AY driver with new sound API support
+- DEN: Allow immediate autoboot startup
+- DEN: Support for floppy device count parameter
+
 Version 3.0.1
 -------------
 - WBW: Increase XModem timeout waiting for host to start sending
@@ -20,8 +117,8 @@ Version 2.9.2
 - WBW: Support two SIO modules w/ auto-detection
 - PMS: Support ECB USB-FIFO board
 - WBW: Fixed ASSIGN issue with incorrect DPB selection
-- WBW: Add RC2014 Z180 AY sound support to TUNE app
-- WBW: Add RC2014 AY sound support to AY driver
+- WBW: Add RCBus Z180 AY sound support to TUNE app
+- WBW: Add RCBus AY sound support to AY driver
 - WBW: Add SC126 platform
 - WBW: Config files cleanup
 - WBW: Add interrupt support to ASCI driver
@@ -40,7 +137,7 @@ Version 2.9.2
 - PMS: Add sound support to NASCOM BASIC
 - WBW: Updated FAT to add MD and FORMAT commands
 - WBW: Add CP/M 3 (experimental)
-- M?T: Support Shift register SPI WIZNET for RC2014
+- M?T: Support Shift register SPI WIZNET for RCBus
 - PLS: Added seconds register in HBIOS
 - WBW: More flexible table-driven config in TUNE.COM
 - PMS: Added timer support for Zilog Peripherals ECB Board
@@ -68,7 +165,7 @@ Version 2.9.2
 
 Version 2.9.1
 -------------
-- E?B: Added support for RC2014 RTC
+- E?B: Added support for RCBus RTC
 - WBW: Converted PTXPLAY to TUNE (now plays PT2/PT3/MYM sounds files)
 - WBW: Updated Win32DiskImager to v1.0
 - WBW: Implemented character attributes on Propeller based consoles
@@ -78,7 +175,7 @@ Version 2.9.1
 - WBW: Update default IOBYTE so that LST:=LPT: by default
 - WBW: Fixed missing drive/head setup for writes in PPIDE
 - WBW: Fixed XModem HBIOS console driver for file send operations
-- WBW: Preliminary support for RC180 platform (Z180 module in RC2014)
+- WBW: Preliminary support for RC180 platform (Z180 module in RCBus)
 - WBW: Added NZCOM distribution files to third slice of hard disk image
 - WBW: Fixed getnum32 bug in MODE command (found by Phil Summers)
 - PMS: Added serial support for Zilog Peripherals Baord
@@ -90,32 +187,32 @@ Version 2.9.1
 - PMS: Added Forth, Nascom BASIC, and Tasty BASIC to ROM
 - PMS: Refactored ROM Loader to support more ROM images, now table driven
 - WBW: Refactored DSKY code
-- SK:  Initial support for Easy Z80
+- S?K:  Initial support for Easy Z80
 - PMS: Enhance VDU driver to support alternative screen dimensions
 - WBW: DDT and DDTZ modified to use RST 30 instead of RST 38 to avoid conflicts with IM 1 interrupts
 - WBW: Added timer interrupt support for CTC under Zeta 2 and Easy Z80
 - WBW: Support LBA style access in floppy driver
 - WBW: Added beta version of FAT filesystem utility (copy, dir, del, ren)
-- SCC: Added support for native memory addressing on Z180-based RC2014
+- SCC: Added support for native memory addressing on Z180-based RCBus
 - PMS: Dynamically discover and display processor type at boot
 - J?L: Added German keyboard support to PPK and KBD drivers
 
 Version 2.9.0
 -------------
 - WBW: Implemented multi-sector I/O in all disk drivers
-- WBW: Added support for RC2014 SMB Floppy controller modules (SMC and WDC)
+- WBW: Added support for RCBus SMB Floppy controller modules (SMC and WDC)
 - WBW: New function dispatching for character/disk/video drivers
-- WBW: Updated FDU app to support RC2014 floppy controllers
+- WBW: Updated FDU app to support RCBus floppy controllers
 - WBW: Added TIMER app to display system timer value
 - WBW: Refactored interrupt management code
 - WBW: Added PTXPLAY application and sample tunes
 
 Version 2.8.6
 -------------
-- WBW: Added support for RC2014 (SIO and ACIA drivers primarily)
+- WBW: Added support for RCBus (SIO and ACIA drivers primarily)
 - WBW: Automatically detect and run PROFILE.SUB on boot drive if it exists
 - WBW: Fixed Dual SD Board detection
-- WBW: Added console support to XModem (for RC2014 primarily)
+- WBW: Added console support to XModem (for RCBus primarily)
 - E?B: Fixed IDE/PPIDE when used with non-CF drives
 - WBW: Patched SUBMIT.COM so that it always puts temp file on A: for immediate execution
 - WBW: Accommodate spin up time for true IDE hard disks (IDE or PPIDE)
@@ -268,7 +365,7 @@ Version 2.0
 - DWG: Entire new suite of Apps written in Aztec C
 - DWG:   BANKER.COM - displays bank identification and version information
 - DWG:   CPMNAME.COM - displays CBIOS header data and SYSCFG data, names and vaues
-- DWG:   CHARS.COM - displays ascii map as reference 
+- DWG:   CHARS.COM - displays ascii map as reference
 - DWG:   CLS.COM - clears screen
 - DWG:   LABEL.COM - displays and changes drive labels for drives with reserved tracks
 - DWG:   MAP.COM - like old map command, displays drives and logical unit labels and changes LU values
@@ -300,7 +397,7 @@ Version 1.5.1
 - WBW: Added ZSDOS clock drivers (see Support\Clock)
 - WBW: Overhaul of ZSystem ROM Disk (see Doc\ZSystem.txt)
 - WBW: Update PropIO ANSI emulation for compatiblity with ASSIGN
-- DWG: Added version tags to all applications, and IDENT program to 
+- DWG: Added version tags to all applications, and IDENT program to
        check version of utilities.
 - DWG: Added MULTIFMT program which prepares new media for use by
        initializing the metadata and clearing the directory sectors of
@@ -310,8 +407,8 @@ Version 1.5.1
 - DWG: ANALYSE and HELLO programs removed from ROM due space concerns
 - DWG: Additional macro librarties added supporting program identification
        (IDENTITY.LIB/ASM) and access to drive metadata (METADATA.LIB/ASM),
-       and realtime selection of logical units from within new application 
-       programs (LOGICALS.LIB/ASM). 
+       and realtime selection of logical units from within new application
+       programs (LOGICALS.LIB/ASM).
 - DWG: Added TERM_VT52 for VDU compatbility, all apps now compliant
 - DGG: Contributed Linux build (see Doc\BuildLinux.txt)
 
@@ -339,7 +436,7 @@ Version 1.4
 - DWG: Add various .SUB files used for application maintenance
 - DWG: Enhanced utility building .SUB files to only contain libs utilitized
 - DWG: Add BUILD.SUB to build all applications and DEVFILES.LBR
-- DWG: Add/update RMAC macro libraries used in Apps - 
+- DWG: Add/update RMAC macro libraries used in Apps -
 - DWG:	 BIOSHDR, STDLIB, STRCPY, STRLEN, CPMBIOS, CPMBDOS, TERMINAL, HARDWARE,
 - DWG:   CPMAPPL, GLOBALS, ATOI, LUBIND, APPLVERS, MEMORY(memcpy,memset), PORTAB
 - DWG: Add/Repair BIOS support for Boot Drive login during CP/M Coldstart
@@ -358,7 +455,7 @@ Version 1.4
 - DWG: Add LABEL utility to insert label into drive/slice metadata
 - DWG: Add 16 char label field to metadata
 - DWG: ASSIGN utility displays and manipulates DPH/DPB & logical unit parameters
-- DWG/WBW: Collaborated on design of Logical Unit DPH enhancemnt 
+- DWG/WBW: Collaborated on design of Logical Unit DPH enhancemnt
 - WBW: Proposed MAP utility functionality
 - WBW: Implement slice selection API for DSK devices
 - WBW: Record boot drive in config memory at load time

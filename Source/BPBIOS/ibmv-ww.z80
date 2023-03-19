@@ -1,6 +1,6 @@
 ;:::::::::::::::::::::::::::::::::::::::*****************************
 ;   IBMOVE - Inter-Bank Move Routines	***** Hardware-Specific *****
-;	for RomWBW HBIOS		*****************************
+;	using RomWBW HBIOS		*****************************
 ;
 ;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
@@ -16,8 +16,7 @@
 ; Uses : AF,BC,DE,HL
 ;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-MOVE:
-	JP	HBX_COPY
+MOVE	EQU	HB_MOVE		; Defer to HBIOS (see HBIOS.Z80)
 
 ;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;  Routine to Switch to Local Stack for Banked Operations
@@ -34,7 +33,8 @@ BIOSTK:	DEFB	0		; NOP if not currently in bank,
 	LD	(USP),SP	; Save User's Stack Pointer
 	LD	SP,USP-1	; ..and point locally, saving 1 byte for Bank
 	PUSH	AF		; Save entry A and Flags
-	LD	A,(HB_CURBNK)	; Get current bank
+	;LD	A,(HB_CURBNK)	; Get current bank
+	LD	A,(CURBNK)	; Get current bank
 	LD	(USP-1),A	; ..and save for exitting
 	LD	A,0C9H		; Disable other calls here
 	LD	(BIOSTK),A	; ..by poking a RETurn at entry
@@ -50,7 +50,7 @@ BIOSTK:	DEFB	0		; NOP if not currently in bank,
 
 USRSTK:	PUSH	AF
 	LD	A,(USP-1)	; Get bank control byte from entry
-	CALL	HBX_BNKSEL
+	CALL	SELBNK
 	XOR	A
 	LD	(BIOSTK),A	; Patch NOP back in at start of code
 	POP	AF
@@ -63,7 +63,7 @@ USRSTK:	PUSH	AF
 
 FRCLR:	PUSH	AF		; Save any entry in AF
 	LD	A,(USP-1)	; Get bank control byte
-	CALL	HBX_BNKSEL
+	CALL	SELBNK
 	XOR	A
 	LD	(BIOSTK),A	; Patch NOP to enable stack switcher
 	POP	AF
@@ -88,8 +88,9 @@ ABORT:	LD	SP,USP		; Insure stack is in Common Memory
 ; Uses : AF
 ;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-RETMEM:	LD	A,(HB_CURBNK)
+RETMEM:	LD	A,(CURBNK)
 	RET
+
 
 ;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;	Set Bank into context.  Save all Registers.
@@ -99,6 +100,16 @@ RETMEM:	LD	A,(HB_CURBNK)
 SELMEM:	LD	(USRBNK),A	; Update user bank
 			;..fall thru to set specified bank..
 
+	  IF HB_DEBUG AND FALSE
+
+	CALL	PRTSTRD
+	DEFB	'[SELMEM: $'
+	CALL	PRTHEXBYTE
+	CALL	PRTSTRD
+	DEFB	']$'
+
+	  ENDIF
+
 ;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ; SELBNK - Switch Memory Bank to Bank in A and show as current.
 ;  Must preserve all Registers including Flags.
@@ -106,7 +117,9 @@ SELMEM:	LD	(USRBNK),A	; Update user bank
 ;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 SELBNK:	PUSH	AF		; Save regs
-SELBN0:	CALL	HBX_BNKSEL
+SELBN0:	LD	(CURBNK),A	; Save as current bank #
+BNKADJ:	ADD	A,90H		; Adjust for HBIOS bank ids
+	CALL	HBX_BNKSEL
 	POP	AF		; restore regs
 	RET
 
@@ -123,8 +136,7 @@ SETBNK:	LD	(DMABNK),A
 ;  B = Destination Bank, C = Source Bank
 ;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-XMOVE:
-	JP	HBX_XCOPY
+XMOVE:	EQU	HB_XMOVE	; Defer to HBIOS (see HBIOS.Z80)
 
 ;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;	Select  System  Bank
@@ -157,36 +169,75 @@ FRJP:	CALL	BIOSTK		; Insure we are in a common stack
 ;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 FRGETB:
-	JP	HBX_FRGETB
+	PUSH	BC		; Save BC
+	PUSH	DE		; Save DE
+	LD	B,0FAH		; HBIOS Peek function
+	LD	D,C		; Bank in D
+	CALL	HBX_INVOKE	; Do it
+	LD	A,E		; Value to A
+	POP	DE		; Restore DE
+	POP	BC		; Restore BC
+	RET
 
 ;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;	Load  DE,(HL)  from  Alternate  Bank
 ;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 FRGETW:
-	JP	HBX_FRGETW
+	PUSH	AF		; Save AF
+	CALL	FRGETB		; Get LSB
+	LD	E,A		; ... into E
+	INC	HL		; Next address
+	CALL	FRGETB		; Get MSB
+	LD	D,A		; ... into D
+	DEC	HL		; Restore HL
+	POP	AF		; Restore AF
+	RET
 
 ;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;	Load  (HL),A  to  Alternate  Bank  (in Reg C)
 ;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 FRPUTB:
-	JP	HBX_FRPUTB
+	PUSH	AF		; Save AF
+	PUSH	BC		; Save BC
+	PUSH	DE		; Save DE
+	LD	B,0FBH		; HBIOS Poke function
+	LD	D,C		; Bank in D
+	LD	E,A		; Value in E
+	CALL	HBX_INVOKE	; Do it
+	POP	DE		; Restore DE
+	POP	BC		; Restore BC
+	POP	AF		; Restore AF
+	RET
 
 ;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;	Load  (HL),DE  to  Alternate  Bank
 ;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 FRPUTW:
-	JP	HBX_FRPUTW
+	PUSH	AF		; Save AF
+	LD	A,E		; LSB to A
+	CALL	FRPUTB		; Put LSB
+	LD	A,D		; MSB to A
+	INC	HL		; Next address
+	CALL	FRPUTB		; Put MSB
+	DEC	HL		; Restore HL
+	POP	AF		; Restore AF
+	RET
 
 ;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 	DSEG
 
 JPBNK:	DEFS	1		; Bank # for Far Jump or Call
 USRBNK:	DEFS	1		; User's selected bank #
+CURBNK:	DEFS	1		; Current bank #
+SRCBNK:	EQU	HB_SRCBNK	; Move Source Bank #
+DSTBNK:	EQU	HB_DSTBNK	; Move Destination Bank #
 DMABNK:	DEFS	1		; Target bank # for disk xfers
 	DEFS	64		; 32 level stack
 USP:	DEFS	2		; User stack pointer
 
-;======================= End of IBMV-DX ===========================
+
+;======================= End of IBMV-WW ===========================
+

@@ -1,5 +1,227 @@
 @echo off
+setlocal
+
+if "%1" == "dist" goto :dist
+
+::
+:: Build [<platform> [<config> [<romname>]]]
+::
 
 set TOOLS=../../Tools
 
-PowerShell .\Build.ps1 %*
+set PATH=%TOOLS%\tasm32;%TOOLS%\zxcc;%PATH%
+
+set TASMTABS=%TOOLS%\tasm32
+
+set CPMDIR80=%TOOLS%/cpm/
+
+::
+:: This PowerShell script validates the build variables passed in.  If
+:: necessary, the user is prmopted to pick the variables.  It then creates
+:: an include file that is imbedded in the HBIOS assembly (build.inc).
+:: It also creates a batch command file that sets environment variables
+:: for use by the remainder of this batch file (build_env.cmd).
+::
+
+PowerShell -ExecutionPolicy Unrestricted .\Build.ps1 %* || exit /b
+
+::
+:: Below, we process the command file created by the PowerShell script.
+:: This sets the environment variables: Platform, Config, ROMName,
+:: & CPUType.
+::
+
+call build_env.cmd
+
+::
+:: Create a small app that is used to export key build variables of the build.
+:: Then run the app to output a file with the variables.  Finally, read the
+:: file into variables usable in this batch file.
+::
+
+tasm -t80 -g3 -dCMD hbios_env.asm hbios_env.com hbios_env.lst || exit /b
+zxcc hbios_env >hbios_env.cmd
+call hbios_env.cmd
+
+::
+:: Start of the actual build process for a given ROM.
+::
+
+echo Building %ROMSize%K ROM %ROMName% for Z%CPUType% CPU...
+
+::
+:: UNA is a special case, check for it and jump if needed.
+::
+
+if %Platform%==UNA goto :UNA
+
+::
+:: Bring the previously build font files into this directory
+::
+
+copy ..\Fonts\font*.asm . || exit /b
+
+::
+:: Build HBIOS Core (all variants)
+::
+
+tasm -t%CPUType% -g3 -dROMBOOT hbios.asm hbios_rom.bin hbios_rom.lst || exit /b
+tasm -t%CPUType% -g3 -dAPPBOOT hbios.asm hbios_app.bin hbios_app.lst || exit /b
+tasm -t%CPUType% -g3 -dIMGBOOT hbios.asm hbios_img.bin hbios_img.lst || exit /b
+
+::
+:: Build ROM Components
+::
+
+call :asm dbgmon || exit /b
+call :asm romldr || exit /b
+
+call :asm eastaegg || exit /b
+call :asm nascom || exit /b
+:: call :asm tastybasic || exit /b
+call :asm game || exit /b
+call :asm usrrom || exit /b
+call :asm updater || exit /b
+call :asm imgpad2 || exit /b
+
+::
+:: Create additional ROM bank images by assembling components into
+:: 32K chunks which can be concatenated later.  Note that
+:: osimg_small is a special case because it is 20K in size.  This
+:: image is subsequently used to generate the .com loadable file.
+::
+
+copy /b romldr.bin + dbgmon.bin + ..\zsdos\zsys_wbw.bin + ..\cpm22\cpm_wbw.bin osimg.bin || exit /b
+copy /b ..\Forth\camel80.bin + nascom.bin + ..\tastybasic\src\tastybasic.bin + game.bin + eastaegg.bin + netboot.mod + updater.bin + usrrom.bin osimg1.bin || exit /b
+copy /b imgpad2.bin osimg2.bin || exit /b
+
+copy /b romldr.bin + dbgmon.bin + ..\zsdos\zsys_wbw.bin osimg_small.bin || exit /b
+
+::
+:: Inject one byte checksum at the last byte of all 4 ROM bank image files.
+:: This means that computing a checksum over any of the 32K osimg banks
+:: should yield a result of zero.
+::
+
+if %ROMSize% gtr 0 (
+    for %%f in (hbios_rom.bin osimg.bin osimg1.bin osimg2.bin) do (
+      "%TOOLS%\srecord\srec_cat.exe" %%f -Binary -Crop 0 0x7FFF -Checksum_Negative_Big_Endian 0x7FFF 1 1 -o %%f -Binary || exit /b
+    )
+)
+
+::
+:: Create final images (.rom, .upd, & .com)
+:: The previously created bank images are concatenated as needed.
+::
+:: The .rom image is made up of 4 banks followed by the ROM Disk.  This
+:: is for programming onto a ROM.
+::
+:: The .upd image is the same as above, but without the the ROM Disk.
+:: This is so you can update just the code portion of your ROM without
+:: updating the ROM Disk contents.
+::
+:: The .com image is a scaled down version of the ROM that you can run
+:: as a standard application under an OS and it will replace your
+:: HBIOS on the fly for testing purposes.
+::
+
+if %ROMSize% gtr 0 (
+    copy /b hbios_rom.bin + osimg.bin + osimg1.bin + osimg2.bin + ..\RomDsk\rom%ROMSize%_wbw.dat %ROMName%.rom || exit /b
+    copy /b hbios_rom.bin + osimg.bin + osimg1.bin + osimg2.bin %ROMName%.upd || exit /b
+    copy /b hbios_app.bin + osimg_small.bin %ROMName%.com || exit /b
+) else (
+    copy /b hbios_rom.bin + osimg_small.bin %ROMName%.rom || exit /b
+    copy /b hbios_rom.bin + osimg_small.bin %ROMName%.upd || exit /b
+    copy /b hbios_app.bin + osimg_small.bin %ROMName%.com || exit /b
+)
+
+::
+:: Copy results to output directory
+::
+
+if exist %ROMName%.rom copy %ROMName%.rom ..\..\Binary || exit /b
+if exist %ROMName%.upd copy %ROMName%.upd ..\..\Binary || exit /b
+if exist %ROMName%.com copy %ROMName%.com ..\..\Binary || exit /b
+
+goto :eof
+
+::
+:: UNA specific ROM creation
+::
+
+:UNA
+
+::
+:: This process is basically equivalent to the one above, but tailored
+:: for the UNA BIOS.
+::
+
+:: Build ROM components required by UNA
+call :asm dbgmon || exit /b
+call :asm romldr || exit /b
+
+:: Create the OS bank
+copy /b romldr.bin + dbgmon.bin + ..\zsdos\zsys_una.bin + ..\cpm22\cpm_una.bin osimg.bin || exit /b
+
+:: Copy OS Bank and ROM Disk image files to output
+copy /b osimg.bin ..\..\Binary\UNA_WBW_SYS.bin || exit /b
+copy /b ..\RomDsk\rom%ROMSize%_una.dat ..\..\Binary\UNA_WBW_ROM%ROMSize%.bin || exit /b
+
+:: Create the final ROM image
+copy /b ..\UBIOS\UNA-BIOS.BIN + osimg.bin + ..\UBIOS\FSFAT.BIN + ..\RomDsk\rom%ROMSize%_una.dat %ROMName%.rom || exit /b
+
+:: Copy to output
+copy %ROMName%.rom ..\..\Binary || exit /b
+
+goto :eof
+
+::
+:: Simple procedure to assemble a specified component via TASM.
+::
+
+:asm
+
+echo.
+echo Building %1...
+tasm -t80 -g3 -fFF %1.asm %1.bin %1.lst || exit /b
+
+goto :eof
+
+::
+:: Build all of the official distribution ROMs
+::
+
+:dist
+
+call Build SBC std || exit /b
+call Build SBC simh || exit /b
+call Build MBC std || exit /b
+call Build ZETA std || exit /b
+call Build ZETA2 std || exit /b
+call Build N8 std || exit /b
+call Build MK4 std || exit /b
+call Build RCZ80 std || exit /b
+call Build RCZ80 kio || exit /b
+call Build RCZ80 easy || exit /b
+call Build RCZ80 tiny || exit /b
+call Build RCZ80 skz || exit /b
+:: call Build RCZ80 mt || exit /b
+:: call Build RCZ80 duart || exit /b
+call Build RCZ80 zrc || exit /b
+call Build RCZ80 zrc_ram || exit /b
+call Build RCZ180 ext || exit /b
+call Build RCZ180 nat || exit /b
+call Build RCZ280 ext || exit /b
+call Build RCZ280 nat || exit /b
+call Build RCZ280 zz80mb || exit /b
+call Build RCZ280 zzrc || exit /b
+call Build SCZ180 sc126 || exit /b
+call Build SCZ180 sc130 || exit /b
+call Build SCZ180 sc131 || exit /b
+call Build SCZ180 sc140 || exit /b
+call Build SCZ180 sc503 || exit /b
+call Build DYNO std || exit /b
+call Build UNA std || exit /b
+call Build RPH std || exit /b
+
+goto :eof

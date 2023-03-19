@@ -1,7 +1,8 @@
 ;:::::::::::::::::::::::::::::::::::::::************************************
 ;	  Warm  Boot  Routine		***  Machine Dependant for Moves ***
-;    - D-X Designs Pty Ltd P112 -	***  and custom load formatting  ***
+;    - Retro-Brew Hardware with HBIOS -	***  and custom load formatting  ***
 ;					************************************
+; 1.1 - 28 Nov 16 - Modified for version 2.8 of HBIOS			WW
 ; 1.0 - 12 Jun 96 - Initial Release for P112 from YASBEC.		HFB
 ;:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
@@ -16,24 +17,34 @@ WBOOT:
 	LD	SP,80H		; Use space below default buffer
 	  ENDIF
 	  
+	;CALL	PRTSTRD		; DEBUG
+	;DEFB	'[WBOOT]$'	; DEBUG
+
 	  IF  FASTWB
 	; Restore command processor from
 	; cache in (SYSBNK):100H.  We assume that the
 	; command processor lives in high memory.
+	;
+	; It is critical that we use the HB variants of MOVE and XMOVE
+	; because we are moving between banks even in a non-banked
+	; system!
 	LD	A,(SYSBNK)	; Source bank is SYSBNK
 	LD	C,A		; Put it in C
 	LD	A,(TPABNK)	; Destination bank is TPABNK
 	LD	B,A		; Put it in B
-	CALL	HBX_XCOPY	; Set banks for extended copy
+	CALL	HB_XMOVE		; Set banks for extended copy
 	LD	HL,100H		; Copy from start of cache in SYS
 	LD	DE,(CPADR)	; .. to location of command processor in TPA
 	LD	BC,(CPLEN)	; Length of command processor
-	CALL	HBX_COPY	; Do it
-
+	CALL	HB_MOVE		; Do it
+;	call	PRTSTRD		; DEBUG
+;	defb	CR,LF		; DEBUG
+;	defb	'WB - copied C'	; DEBUG
+;	defb	'P','$' 	; DEBUG
 WBOOTV:
 	XOR	A	 	; Indicate "A" logged as Host Disk
 	LD	(HSTDSK),A	; ..by showing Host Disk already logged
-	  ELSE
+	  ELSE			; FASTWB
 	   IF  BANKED
 	LD	SP,USP		; If banked, use stack in high common memory
 	CALL	GOSYSB		; Disk routines are in banked memory
@@ -149,7 +160,11 @@ GOZSYS:	LD	BC,80H		; Default DMA address is 80H
 ;	EI			; Enable the interrupt system
 ;	EX	DE,HL		; ..put destination in HL
 	POP	HL		; Restore CCP entry address
-	
+;	call	PRTSTRD		; DEBUG
+;	defb	CR,LF		; DEBUG
+;	defb	'WB exi'	; DEBUG
+;	defb	't$'		; DEBUG
+;	HALT			; DEBUG		
 	JP	(HL)		; Go to Z-System for further processing
 
 	  IF  [Z3 AND HAVIOP]
@@ -174,4 +189,4 @@ CPADR	DEFS	2		; Command processor address
 CPLEN	DEFS	2		; Command processor length
 	  ENDIF		;fastwb
 ;========================= End of WBOOT ============================
-
+

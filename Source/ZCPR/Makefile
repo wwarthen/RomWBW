@@ -7,6 +7,6 @@ TOOLS = ../../Tools
 include $(TOOLS)/Makefile.inc
 
 zcpr.bin: zcpr.asm
-	$(ZXCC) $(CPM)/MAC -$< -$$PO
-	$(ZXCC) $(CPM)/MLOAD25 -$@=zcpr.hex
+	$(ZXCC) MAC -$< -$$PO
+	$(ZXCC) MLOAD25 -$@=zcpr.hex
 

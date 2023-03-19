@@ -20,6 +20,7 @@
 
 Binary/**/*.mym
 Binary/**/*.pt3
+!Binary/cpnos-wbw.sys
 
 Source/**/eeprom
 Source/Apps/Assign.com
@@ -49,6 +50,9 @@ Source/Images/blankhd
 Source/Prop/Spin/ParPortProp.list
 Source/Prop/Spin/PropIO.list
 Source/Prop/Spin/PropIO2.list
+Source/Prop/ParPortProp.list
+Source/Prop/PropIO.list
+Source/Prop/PropIO2.list
 Source/ZPM3/bnkbios3.spr
 Source/ZPM3/gencpm.com
 Source/ZPM3/gencpm.com
@@ -73,24 +77,34 @@ Tools/unix/zx/zx
 
 !Source/ver.lib
 !Source/Apps/FAT/FAT.COM
+!Source/Apps/ZMP/zmpx.com
+!Source/Apps/ZMD/zmdsubs.rel
+!Source/Apps/Test/vdctest/font.asm
 !Source/BPBIOS/bpbuild.com
 !Source/BPBIOS/movp112.com
+!Source/BPBIOS/*.lib
 !Source/BPBIOS/Z34RCP11/cledinst.com
 !Source/BPBIOS/Z34RCP11/cledsave.com
-!Source/Fonts
-!Source/Images/**/*.[Cc][Oo][Mm]
-!Source/RomDsk/**/*.[Cc][Oo][Mm]
+!Source/Fonts/*
+!Source/Images/**
+!Source/RomDsk/**
 !Source/UBIOS/FSFAT.BIN
 !Source/UBIOS/UNA-BIOS.BIN
 !Source/ZCCP/*.[Cc][Oo][Mm]
 !Source/ZCPR-DJ/*.[Cc][Oo][Mm]
 !Source/ZPM3/*.[Cc][Oo][Mm]
 !Source/ZSDOS/*.[Cc][Oo][Mm]
-!Tools/cpm/bin
-!Tools/unix/zx
-!Tools/zx
+!Source/ZRC/*.bin
+!Source/ZZRC/*.bin
+!Source/ZZRC/*.hex
+!Tools/cpm/**
+!Tools/unix/zx/*
+!Tools/zx/*
 
 Source/ZPM3/gencpm.com
 Source/ZPM3/startzpm.com
 Source/ZPM3/zccp.com
 Source/ZPM3/zpmldr.com
+Source/ZPM3/genbnk.dat
+
+Source/ZSDOS/zsdos.err

@@ -271,6 +271,19 @@ diskdef interak
   os 2.2
 end
 
+# RomWBW 256KB ROM (128KB reserved, 128KB ROM Disk)
+
+diskdef wbw_rom256
+  seclen 512
+  tracks 4
+  sectrk 64
+  blocksize 2048
+  maxdir 256
+  skew 0
+  boottrk 0
+  os 2.2
+end
+
 # RomWBW 512KB ROM (128KB reserved, 384KB ROM Disk)
 
 diskdef wbw_rom512
@@ -297,78 +310,8 @@ diskdef wbw_rom1024
   os 2.2
 end
 
-# UNA 512KB ROM (128KB reserved, 384KB ROM Disk)
-
-diskdef una_rom512
-  seclen 512
-  tracks 12
-  sectrk 64
-  blocksize 2048
-  maxdir 256
-  skew 0
-  boottrk 0
-  os 2.2
-end
-
-# UNA 512KB ROM (128KB reserved, 896KB ROM Disk)
-
-diskdef una_rom1024
-  seclen 512
-  tracks 28
-  sectrk 64
-  blocksize 2048
-  maxdir 256
-  skew 0
-  boottrk 0
-  os 2.2
-end
-
-# RomWBW 8MB Hard Disk, LU 0-3
-diskdef wbw_hd0
-  seclen 512
-  tracks 65
-  sectrk 256
-  blocksize 4096
-  maxdir 512
-  skew 0
-  boottrk 1
-  os 2.2
-end
-
-diskdef wbw_hd1
-  seclen 512
-  tracks 130
-  sectrk 256
-  blocksize 4096
-  maxdir 512
-  skew 0
-  boottrk 66
-  os 2.2
-end
-
-diskdef wbw_hd2
-  seclen 512
-  tracks 195
-  sectrk 256
-  blocksize 4096
-  maxdir 512
-  skew 0
-  boottrk 131
-  os 2.2
-end
-
-diskdef wbw_hd3
-  seclen 512
-  tracks 260
-  sectrk 256
-  blocksize 4096
-  maxdir 512
-  skew 0
-  boottrk 196
-  os 2.2
-end
-
 # RomWBW 720K floppy media
+
 diskdef wbw_fd720
   seclen 512
   tracks 160
@@ -381,6 +324,7 @@ diskdef wbw_fd720
 end
 
 # RomWBW 1.44M floppy media
+
 diskdef wbw_fd144
   seclen 512
   tracks 160
@@ -393,6 +337,7 @@ diskdef wbw_fd144
 end
 
 # RomWBW 360K floppy media
+
 diskdef wbw_fd360
   seclen 512
   tracks 80
@@ -405,6 +350,7 @@ diskdef wbw_fd360
 end
 
 # RomWBW 1.20M floppy media
+
 diskdef wbw_fd120
   seclen 512
   tracks 160
@@ -413,5 +359,381 @@ diskdef wbw_fd120
   maxdir 256
   skew 0
   boottrk 2
+  os 2.2
+end
+
+# RomWBW 8320KB Hard Disk Slice (512 directory entry format)
+# Legacy format: 512 dir entries, 16,630 sectors / slice
+
+diskdef wbw_hd512
+  seclen 512
+  tracks 1040
+  sectrk 16
+  blocksize 4096
+  maxdir 512
+  skew 0
+  boottrk 16
+  os 2.2
+end
+
+# First 4 slices of wbw_hd512
+# Assumes first slice (slice 0) starts at sector 0
+# Offset of any slice (in tracks) = (1040 * <slice_num>)
+
+diskdef wbw_hd512_0
+  seclen 512
+  tracks 1040
+  sectrk 16
+  blocksize 4096
+  maxdir 512
+  skew 0
+  boottrk 16
+  offset 0T
+  os 2.2
+end
+
+diskdef wbw_hd512_1
+  seclen 512
+  tracks 1040
+  sectrk 16
+  blocksize 4096
+  maxdir 512
+  skew 0
+  boottrk 16
+  offset 1040T
+  os 2.2
+end
+
+diskdef wbw_hd512_2
+  seclen 512
+  tracks 1040
+  sectrk 16
+  blocksize 4096
+  maxdir 512
+  skew 0
+  boottrk 16
+  offset 2080T
+  os 2.2
+end
+
+diskdef wbw_hd512_3
+  seclen 512
+  tracks 1040
+  sectrk 16
+  blocksize 4096
+  maxdir 512
+  skew 0
+  boottrk 16
+  offset 3120T
+  os 2.2
+end
+
+# RomWBW 8MB Hard Disk (1024 directory entry format)
+# New format: 1024 dir entries, 16,384 sectors / slice
+# Pure filesystem image, no MBR prefix
+
+diskdef wbw_hd1k
+  seclen 512
+  tracks 1024
+  sectrk 16
+  blocksize 4096
+  maxdir 1024
+  skew 0
+  boottrk 2
+  os 2.2
+end
+
+# First 4 slices of wbw_hd1k
+# Assumes standard 1MB prefix
+# Offset of any slice (in tracks) = 128 + (1024 * <slice_num)
+
+diskdef wbw_hd1k_0
+  seclen 512
+  tracks 1024
+  sectrk 16
+  blocksize 4096
+  maxdir 1024
+  skew 0
+  boottrk 2
+  offset 128T
+  os 2.2
+end
+
+diskdef wbw_hd1k_1
+  seclen 512
+  tracks 1024
+  sectrk 16
+  blocksize 4096
+  maxdir 1024
+  skew 0
+  boottrk 2
+  offset 1152T
+  os 2.2
+end
+
+diskdef wbw_hd1k_2
+  seclen 512
+  tracks 1024
+  sectrk 16
+  blocksize 4096
+  maxdir 1024
+  skew 0
+  boottrk 2
+  offset 2176T
+  os 2.2
+end
+
+diskdef wbw_hd1k_3
+  seclen 512
+  tracks 1024
+  sectrk 16
+  blocksize 4096
+  maxdir 1024
+  skew 0
+  boottrk 2
+  offset 3200T
+  os 2.2
+end
+
+# SmallZ80 Hard Disk Image
+# 5 slices
+
+diskdef smz80_hd0
+  seclen 512
+  tracks 1024
+  sectrk 16
+  blocksize 4096
+  maxdir 1024
+  skew 0
+  boottrk 0
+  offset 10T
+  os 2.2
+end
+
+diskdef smz80_hd1
+  seclen 512
+  tracks 1024
+  sectrk 16
+  blocksize 4096
+  maxdir 1024
+  skew 0
+  boottrk 0
+  offset 1034T
+  os 2.2
+end
+
+diskdef smz80_hd2
+  seclen 512
+  tracks 1024
+  sectrk 16
+  blocksize 4096
+  maxdir 1024
+  skew 0
+  boottrk 0
+  offset 2058T
+  os 2.2
+end
+
+diskdef smz80_hd3
+  seclen 512
+  tracks 1024
+  sectrk 16
+  blocksize 4096
+  maxdir 1024
+  skew 0
+  boottrk 0
+  offset 3082T
+  os 2.2
+end
+
+diskdef smz80_hd4
+  seclen 512
+  tracks 1024
+  sectrk 16
+  blocksize 4096
+  maxdir 1024
+  skew 0
+  boottrk 0
+  offset 4106T
+  os 2.2
+end
+
+# RC2014 standard (Grant Searle) hard disk image
+# Slices A-P
+# Offset of slice (in tracks) = (512 * <slice_num>)
+
+diskdef rc2014a
+  seclen 512
+  tracks 512
+  sectrk 32
+  blocksize 4096
+  maxdir 512
+  boottrk 1
+  offset 0T
+  os 2.2
+end
+
+diskdef rc2014b
+  seclen 512
+  tracks 512
+  sectrk 32
+  blocksize 4096
+  maxdir 512
+  boottrk 0
+  offset 512T
+  os 2.2
+end
+
+diskdef rc2014c
+  seclen 512
+  tracks 512
+  sectrk 32
+  blocksize 4096
+  maxdir 512
+  boottrk 0
+  offset 1024T
+  os 2.2
+end
+
+diskdef rc2014d
+  seclen 512
+  tracks 512
+  sectrk 32
+  blocksize 4096
+  maxdir 512
+  boottrk 0
+  offset 1536T
+  os 2.2
+end
+
+diskdef rc2014e
+  seclen 512
+  tracks 512
+  sectrk 32
+  blocksize 4096
+  maxdir 512
+  boottrk 0
+  offset 2048T
+  os 2.2
+end
+
+diskdef rc2014f
+  seclen 512
+  tracks 512
+  sectrk 32
+  blocksize 4096
+  maxdir 512
+  boottrk 0
+  offset 2560T
+  os 2.2
+end
+
+diskdef rc2014g
+  seclen 512
+  tracks 512
+  sectrk 32
+  blocksize 4096
+  maxdir 512
+  boottrk 0
+  offset 3072T
+  os 2.2
+end
+
+diskdef rc2014h
+  seclen 512
+  tracks 512
+  sectrk 32
+  blocksize 4096
+  maxdir 512
+  boottrk 0
+  offset 3584T
+  os 2.2
+end
+
+diskdef rc2014i
+  seclen 512
+  tracks 512
+  sectrk 32
+  blocksize 4096
+  maxdir 512
+  boottrk 0
+  offset 4096T
+  os 2.2
+end
+
+diskdef rc2014j
+  seclen 512
+  tracks 512
+  sectrk 32
+  blocksize 4096
+  maxdir 512
+  boottrk 0
+  offset 4608T
+  os 2.2
+end
+
+diskdef rc2014k
+  seclen 512
+  tracks 512
+  sectrk 32
+  blocksize 4096
+  maxdir 512
+  boottrk 0
+  offset 5120T
+  os 2.2
+end
+
+diskdef rc2014l
+  seclen 512
+  tracks 512
+  sectrk 32
+  blocksize 4096
+  maxdir 512
+  boottrk 0
+  offset 5632T
+  os 2.2
+end
+
+diskdef rc2014m
+  seclen 512
+  tracks 512
+  sectrk 32
+  blocksize 4096
+  maxdir 512
+  boottrk 0
+  offset 6144T
+  os 2.2
+end
+
+diskdef rc2014n
+  seclen 512
+  tracks 512
+  sectrk 32
+  blocksize 4096
+  maxdir 512
+  boottrk 0
+  offset 6656T
+  os 2.2
+end
+
+diskdef rc2014o
+  seclen 512
+  tracks 512
+  sectrk 32
+  blocksize 4096
+  maxdir 512
+  boottrk 0
+  offset 7168T
+  os 2.2
+end
+
+diskdef rc2014p
+  seclen 512
+  tracks 128
+  sectrk 32
+  blocksize 4096
+  maxdir 512
+  boottrk 0
+  offset 7680T
   os 2.2
 end

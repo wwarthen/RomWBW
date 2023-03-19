@@ -1,7 +1,7 @@
 RomWBW HBIOS CP/M FAT Utility ("FAT.COM")
 
 Author: Wayne Warthen
-Updated: 11-Oct-2019
+Updated: 12-Apr-2021
 
 Application to manipulate and exchange files with a FAT (DOS)
 filesystem.  Runs on any HBIOS hosted CP/M implementation.
@@ -47,7 +47,7 @@ NOTES:
    "C:README.TXT" refers to CP/M file README.TXT on CP/M drive C
    "README.TXT" refers to CP/M file README.TXT on current CP/M drive
    
- - Files with SYS, HIDDEN, or R/O only attributes are not given
+ - FAT files with SYS, HIDDEN, or R/O only attributes are not given
    any special treatment.  Such files are found and processed
    like any other file.  However, any attempt to write to a
    read-only file will fail and the application will abort.
@@ -70,7 +70,7 @@ BUILD NOTES:
 
  - Application is based on FatFs.  FatFs source is included.
 
- - SDCC compiler is required to build (v3.9.0 known working).
+ - SDCC compiler is required to build (v4.0.0 known working).
 
  - ZX CP/M emulator is required to build (from RomWBW distribution).
 
@@ -88,6 +88,8 @@ TO DO:
  
  - Do something intelligent with R/O and SYS files on FAT
  
+ - Support UNA
+ 
 HISTORY:
    2-May-2019: v0.9   (beta) initial release
    7-May-2019: v0.9.1 (beta) added REN and DEL
@@ -98,4 +100,5 @@ HISTORY:
   10-Oct-2019: v0.9.6 (beta) added FORMAT
   11-Oct-2019: v0.9.7 (beta) fix FORMAT to use existing partition table entries
                              add attributes to directory listing
+  12-Apr-2021: v0.9.8 (beta) support CP/NET drives
 		      

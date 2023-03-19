@@ -1,0 +1,22 @@
+
+        G2QPM CommandsG0
+        G2============G0
+The QCP command processor has the following built-in commands;
+afn=wildcard filename(s); ufn=filename; []=optional
+
+G2DFD [drive[:]]G0      - Sets the default drive (A: at startup)
+G2DFLTG0                - Shows the default drive and user (@=disabled)
+G2DFUG0                 - Sets the default user (0 at startup)
+G2DIR [afn]G0           - Simple directory listing (D.COM is recommended)
+G2ERA afnG0             - Erase specified file(s)
+G2GET addr ufnG0        - Load file at address
+G2GO [params]G0         - Reruns the program in TPA (with params)
+G2JUMP addr [params]G0  - Run the program at address (with params)
+G2LIST ufnG0            - Print the specified file on the LST: device
+G2REN ufnnew=ufnoldG0   - Rename ufnold to ufnnew
+G2SAVE n ufnG0          - Save n pages from the TPA into file
+G2TIMEG0                - Display the current date and time
+G2TOFG0                 - Sends top-of-form character to LST: device
+G2TYPE ufn [option]G0   - Display file on console, with page pauses
+G2USER [n]G0            - Set user # to n (0 if no value given)
+

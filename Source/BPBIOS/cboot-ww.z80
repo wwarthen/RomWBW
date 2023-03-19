@@ -2,8 +2,11 @@
 ;  CBOOT.	B/P BIOS Cold Boot Module.	    ** Hardware Specific **
 ; This MUST be the Last Module in the BIOS because  ** for prompts, Env  **
 ; it is overwritten by RAM Data.  No Dflt Termcap.  ** and Termcap Dflts **
-;	  - D-X Designs Pty Ltd P112 -		    ***********************
+;	- Retro-Brew Boards W/ RomWBW HBIOS	    ***********************
 ;
+; 1.5 - 04 Sep 16 - Mods to work with HBIOS V 2.8		      LWN+WW
+; 1.4 - 15 Apr 15 - Mods to work with HBIOS V 2.7.1		      WW+LN_
+; 1.3 - 24 Mar 14 - Initial N8VEM HBIOS test release		      WW+LN
 ; 1.2 - 30 Aug 01 - Cleaned up for GPL release, Set Bank Numbers on boot
 ;		(TPABNK only if MOVCPM) by reading Regs set by ROM.	HFB
 ; 1.1 -  8 May 97 - Added code to activate ASCI channels.		HFB
@@ -23,27 +26,44 @@
 ;  module must be one of the first linked to place HSTBUF/DIRBUF at the
 ;  beginning of B2RAM and DSEG.
 
-CBOOT:	DI			; Disable interrupt system
+CBOOT:
+	DI			; Disable interrupt system
+
+	  IF  BANKED
+	LD	SP,USP		; Set to User Stack in High memory
+	  ELSE
+	LD	SP,80H		; Set stack in Low memory
+	  ENDIF		; BANKED
 
 	LD	HL,(IOBYT)	; Get IOBYTE, Default Drive & User
 	LD	(3),HL		;   Set values in TPA bank
 
 	  IF  BANKED
-	LD	SP,USP		; Set to User Stack in High memory
-	CALL	HBX_INIT	; WW
+	; Copy vectors from TPA page zero to SYS page zero
+	; This is done very early to ensure interrupt mode 1
+	; vector is available.
+	LD	BC,(TPABNK)	; C := TPABNK, B := SYSBNK
+	CALL	XMOVE		; Set source/dest banks for copy
+	LD	HL,0		; Source address is zero
+	LD	DE,0		; Destination address is zero
+	LD	BC,40H		; Copy 40H bytes
+	CALL	MOVE		; Do it
+	  ENDIF		; BANKED
+
+	  IF  BANKED
 	CALL	GOSYSB		; Turn on the System bank
 	XOR	A
 	LD	(BIOSTK),A	; Init bank switcher
 	LD	(3),HL		; Set IOBYTE and Default DU in System bank
+	CALL	HB_INIT		; Do HBIOS initialization
 	CALL	CBOOT0		; Execute main part of Cold Setup
 	LD	A,(TPABNK)
 	CALL	SELBNK		; Insure TPA is in context
 	  ELSE
-	LD	SP,80H		; Set stack in Low memory
-	CALL	HBX_INIT	; WW
+	CALL	HB_INIT		; Do HBIOS initialization
 	CALL	CBOOT0		; Execute main part of Cold Setup
-	  ENDIF
-	  
+	  ENDIF		; Banked
+
 	  IF  NOT MOVCPM
 	LD	HL,003CH	; Point to ZMP Flag
 	LD	(HL),0E5H	;   say this is first time run
@@ -53,20 +73,24 @@ CBOOT:	DI			; Disable interrupt system
 	; Grab a copy of command processor from TPA and
 	; cache it in (SYSBNK):100H.  We assume that the
 	; original copy of command processor is in high memory.
+	;
+	; It is critical that we use the HB variants of MOVE and XMOVE
+	; because we are moving between banks even in a non-banked
+	; system!
 	LD	A,(TPABNK)	; Source bank is TPABNK
 	LD	C,A		; Put it in C
 	LD	A,(SYSBNK)	; Destination bank is SYSBNK
 	LD	B,A		; Put it in B
-	CALL	HBX_XCOPY	; Set banks for extended copy
+	CALL	HB_XMOVE	; Set banks for extended copy
 	LD	HL,(CPADR)	; Copy from start of command processor
 	LD	DE,100H		; .. to $100 in system bank
 	LD	BC,(CPLEN)	; Length of command processor
-	CALL	HBX_COPY	; Do it
-	
+	CALL	HB_MOVE		; Do it
+
 	JP	WBOOTV		;   move it and commence execution
 	  ELSE
 	JP	GOZSYS		; Otherwise just go to Command Processor
-	  ENDIF
+	  ENDIF		;FASTWB
 
 	  IF  BANKED
 	COMMON	/B2RAM/
@@ -77,7 +101,8 @@ CBOOT:	DI			; Disable interrupt system
 ; system bank and will be dynamically sized during Cold Boot.  This permits
 ; BPCNFG to configure a generic IMG file for specific Hard Drive Partitions.
 
-CBOOT0:	LD	HL,BRAME	; Get end of banked RAM
+CBOOT0:
+	LD	HL,BRAME	; Get end of banked RAM
 	LD	(HISAV),HL	;   and save for later use
 	  IF  HARDDSK
 	LD	HL,DPHTBL	; Point to start of DPH Table
@@ -92,14 +117,14 @@ DYNLP:	LD	E,(HL)
 	DEC	DE		; Else back up Ptr to Driver
 	DEC	DE
 	LD	A,(DE)		; Get driver #
-	   IF  RAMDSK
-	DEC	A
-	DEC	A		; Hard Disk (Driver 2)?
-	JR	Z,ADDSIZ	; ..jump if so
-	DEC	A		; RAM Disk (Driver 3)?
-	   ELSE
+;	   IF  RAMDSK
+;	DEC	A
+;	DEC	A		; Hard Disk (Driver 2)?
+;	JR	Z,ADDSIZ	; ..jump if so
+;	DEC	A		; RAM Disk (Driver 3)?
+;	   ELSE
 	CP	2		; Hard Disk (Driver 2)?
-	   ENDIF	; Ramdsk
+;	   ENDIF	; Ramdsk
 	JR	NZ,DYNCHK	; ..jump to end if Not
 ADDSIZ:	PUSH	BC		; Save loop counter
 	PUSH	HL		;   and ptr to DPH
@@ -137,7 +162,7 @@ DVRAME:	SRL	D		; Divide by 2
 DYNCHK:	DJNZ	DYNLP		; Loop til all 16 tested
 
 	  ENDIF		;harddsk
-	  
+
 	  IF  BANKED
 	LD	DE,USP		; Point above critical Bios Ram storage
 	  ELSE
@@ -146,7 +171,7 @@ DYNCHK:	DJNZ	DYNLP		; Loop til all 16 tested
 	  IF  Z3
 	LD	HL,(ENVADR)	; And top of memory
 	  ELSE
-	LD	HL,0FFFFH
+	LD	HL,MEMTOP
 	  ENDIF
 	SBC	HL,DE		; Calculate # bytes to clear (CF already clr)
 	EX	DE,HL		; Ptr to HL, Cnt to DE
@@ -156,7 +181,7 @@ Clr0:	LD	(HL),0
 	LD	A,D
 	OR	E
 	JR	NZ,Clr0		; ..loop til all cleared
-	
+
 ; In systems where we have enough space, we clear unused High Memory too
 
 	  IF  NOT MOVCPM
@@ -184,7 +209,7 @@ ATTOP:
 	LD	A,H
 	OR	L
 	JR	NZ,BMOVE	; ..jump if we already have one
-	  ENDIF			; (Always move Env if using MOVCPM type load)
+	  ENDIF	; NOT MOVCPM	; (Always move Env if using MOVCPM type load)
 	LD	HL,Z3ENV	; Else set up pointers
 	LD	(ENVADR),HL
 	LD	DE,ENV
@@ -202,11 +227,11 @@ ATTOP:
 BMOVE:
 	  IF  NOT MOVCPM	; No need to set values on Boot Track System
 	LD	DE,(ENVADR)	; Get pointer to ENV
-	   IF  HAVIOP
+	    IF  HAVIOP
 	LD	HL,0FH		; Set offset to IOP Addr in ENV
 	CALL	CALCOF		;  get the addr and size
 	LD	(IOPPTR),HL	;   and set addr
-	   ENDIF	;haviop
+	    ENDIF	;haviop
 	LD	HL,18H		; Set offset to Mult Comnd Line in ENV
 	CALL	CALCOF		;  get addr and size
 	LD	(CLPTR),HL	;   set addr
@@ -222,10 +247,10 @@ BMOVE:
 	LD	(PTHPTR),HL	;   and set
 	  ENDIF		;Movcpm
 	  IF  FASTWB		; Do we restore CPR from Bank?
-	   IF  MOVCPM
+	    IF  MOVCPM
 	LD	DE,BIOSJT-1600H	; Get CPR Starting Addr
 	LD	HL,0800H	;  and Default Length
-	   ELSE
+	    ELSE
 	LD	HL,(ENVADR)	; Get pointer to ENV start
 	LD	DE,3FH		;  offset to CPR start
 	ADD	HL,DE
@@ -237,11 +262,11 @@ BMOVE:
 	LD	L,0		;   convert to Word
 	SRL	H		; Compute Blks * 128
 	RR	L		;   to give HL = CPR length in bytes
-	   ENDIF	;~Movcpm
+	    ENDIF	; Movcpm
 
-	;
-	; SETUP FOR FASTWB
-	;
+;
+;	SETUP FOR FASTWB
+;
 
 	LD	(CPLEN),HL	; Save command processor length
 	LD	(CPADR),DE	; Save command processor address (in TPA)
@@ -267,12 +292,12 @@ BLKMV:	POP	BC		; And number of bytes to move
 
 	; Allocate disk buffer in HBIOS bank and
 	; save it for use later in disk access.
-	LD	B,0F6H			; BIOS FUNC: ALLOCATE HEAP MEMORY
-	LD	HL,512			; 1 SECTOR, 512 BYTES
-	CALL	HBX_INVOKE		; DO IT
-	CALL	NZ,PANIC		; HANDLE ERROR
-	LD	(HB_DSKBUF),HL		; RECORD THE BUFFER ADDRESS
-	
+	LD	B,HBF_ALLOC	; HBIOS Func: ALLOCATE Heap Memory
+	LD	HL,512		; 1 Sector, 512 Bytes
+	CALL	HBX_INVOKE	; Do it
+	CALL	NZ,PANIC	; Handle error
+	LD	(HB_DSKBUF),HL	; Record the buffer address
+
 	  IF  HAVIOP
 	LD	HL,IOPRET
 	LD	(BIOSJT+1),HL
@@ -302,77 +327,74 @@ BLKMV:	POP	BC		; And number of bytes to move
 MEMOK:
 	CALL	PRINT
 	  IF  MOVCPM		; Space is critical for boot tracks
-	DEFB	CR,LF,'P112 - '	;  Save all bytes possible
+	DEFB	CR,LF,'RetroB'	;  Save all bytes possible
 	  ELSE			;   Otherwise sign on with complete name
-	DEFB	CR,LF,'RomWBW - '
-	  ENDIF
- 	DEFB	'B/P 50.00k Bios'	;**** Do NOT alter this string ****
+	DEFB	CR,LF,'Retro-Brew '
+;	    IF  SBC
+;	DEFB	' SBC V1/2 '
+;	    ENDIF	;SBC
+;	    IF  SIMH
+;	DEFB	'ON SimH '
+;	    ENDIF	;SIMH
+;	    IF  ZETA
+;	DEFB	' ZETA '
+;	    ENDIF	;ZETA
+;	    IF  N8
+;	DEFB	' N8 '
+;	    ENDIF	;N8
+;	    IF  MK4
+;	DEFB	' Mark IV '
+;	    ENDIF	;MK4
+	  ENDIF		; MOVCPM
+	DEFB	'B/P 50.00k Bios'	;**** Do NOT alter this string ****
 
 	DEFB	' V',VERS/16+'0','.',VERS MOD 16+'0','  '	; Vers in BCD
 	DATE
 	  IF  BANKED
 	DEFB	' (Banked)  '
 	  ELSE
-	   IF  NOT MOVCPM
+	    IF  NOT MOVCPM
 	DEFB	' (Non-Banked)  '	; Nothing for boot track system
-	   ENDIF
-	  ENDIF
-	  IF  BANKED
+	    ENDIF	;NOT MOVCPM
+	  ENDIF		; Banked
 	DEFB	' with:',CR,LF,LF
 	DEFB	'  ZCPR3+ Env'
-	   IF  CLOCK
-	    IF  DS1202
+	  IF  CLOCK
 	DEFB	CR,LF,'  RomWBW HBIOS Clock, '
-	     IF  CLKSET
+	    IF  CLKSET
 	DEFB	'with '
-	     ELSE
-	DEFB	'NO '
-	     ENDIF
-	DEFB	'Set'
 	    ELSE
-	DEFB	CR,LF,'  ZSDOS Interrupt Clock'
-	    ENDIF
-	   ENDIF
+	DEFB	'NO '
+	    ENDIF	; CLKSET
+	DEFB	'Set'
+	  ENDIF		; Clock
 	DEFB	CR,LF,'  High-Density Floppy'
-	   IF  FDDMA
+	  IF  FDDMA
 	DEFB	' (DMA-driven IO)'
-	   ELSE
+	  ELSE
 	DEFB	' (Polled IO)'
-	   ENDIF
-	   IF  HARDDSK
-	   IF SCSI
-	DEFB	CR,LF,'  SCSI Hard Disk Driver'
-	   ENDIF
-	    IF  IDE
-	DEFB	CR,LF,'  GIDE Hard Disk Driver'
-	    ENDIF
-	    IF  SIMHDSK
-	DEFB	CR,LF,'  SIMH Hard Disk Driver'
-	    ENDIF
-	    IF  HBDSK
+	  ENDIF		; FDDMA
+	  IF  HARDDSK
 	DEFB	CR,LF,'  HBIOS Hard Disk Driver'
-	    ENDIF
-	     IF  HDDMA
+	    IF  HDDMA
 	DEFB	' (DMA-driven IO)'
-	     ELSE
+	    ELSE
 	DEFB	' (Polled IO)'
-	     ENDIF
-	   ENDIF
-	   IF  FASTWB
+	    ENDIF	;HDDMA
+	  ENDIF		; HARDDSK
+	  IF  FASTWB
 	DEFB	CR,LF,'  Warm Boot from RAM'
-	   ENDIF
-	   IF  RAMDSK
-	DEFB	CR,LF,'  RAM Disk (M:)'
-	   ENDIF
-	   IF  BIOERM
+	  ENDIF		;FASTWB
+;	  IF  RAMDSK
+	DEFB	CR,LF,'  RAM Disk (A:)'
+;	  ENDIF		;RAMDSK
+	  IF  BIOERM
 	DEFB	CR,LF,'  Full Error Messages'
-	   ENDIF
-	  ENDIF		;Banked
+	  ENDIF		;BIOERM
 	DEFB	CR,LF+80H
 
-;WW	EI		; Turn Interrupts back on
+	EI		; Turn Interrupts back on
 	RET		; ..and return
-
 ;.....
 ; Offset to and get ENV Address and respective element size
 
@@ -385,6 +407,112 @@ CALCOF:	ADD	HL,DE		; Add offset to Base ENV Addr
 	LD	H,(HL)		;   and grab
 	LD	L,C		; Ptr to Segment now in HL
 	RET			;   return to caller
+	
+;.....
+; HBIOS Initialization
+
+HB_INIT:
+	  IF HB_DEBUG AND FALSE
+	CALL	PRTSTRD
+	DEFB	'[HB_INIT]',CR,LF,'$'
+	  ENDIF
+
+	;; Setup RST 08 vector
+	;LD	A,0C3H			; $C3 = JP
+	;LD	(08H),A
+	;LD	HL,HBX_INVOKE
+	;LD	(09H),HL
+	
+	;IF  BANKED
+	;
+	;; Copy vectors from TPA page zero to SYS page zero
+	;LD	BC,(TPABNK)	; C := TPABNK, B := SYSBNK
+	;CALL	XMOVE		; Set source/dest banks for copy
+	;LD	HL,0		; Source address is zero
+	;LD	DE,0		; Destination address is zero
+	;LD	BC,40H		; Copy 40H bytes
+	;CALL	MOVE		; Do it
+	;
+	;ENDIF		;BANKED
+
+	  IF HB_DEBUG
+
+	CALL 	NEWLINE2
+	LD	DE,HB_STR_TAG
+	CALL	WRITESTR
+
+	LD	DE,HB_STR_CSEG
+	CALL	WRITESTR
+	LD	BC,ORG_CSEG
+	CALL	PRTHEXWORD
+	LD	DE,HB_STR_DSEG
+	CALL	WRITESTR
+	LD	BC,ORG_DSEG
+	CALL	PRTHEXWORD
+	
+	    IF BANKED
+	LD	DE,HB_STR_BANK2
+	CALL	WRITESTR
+	LD	BC,ORG_BANK2
+	CALL	PRTHEXWORD
+	LD	DE,HB_STR_B2RAM
+	CALL	WRITESTR
+	LD	BC,ORG_B2RAM
+	CALL	PRTHEXWORD
+	LD	DE,HB_STR_RESVD
+	CALL	WRITESTR
+	LD	BC,ORG_RESVD
+	CALL	PRTHEXWORD
+	    ENDIF		;BANKED
+	
+	CALL	NEWLINE
+	
+	  ENDIF ; [HB_DEBUG]
+
+	; Update RAM and ROM DPB for true RAM/ROM sizes
+	LD	BC,HBF_MEMINFO	; HBIOS Memory Information
+	CALL	HBX_INVOKE	; Do it, D=ROM Banks, E=RAM Banks
+	PUSH	DE		; Save results
+	LD	HL,DPBROM+4	; EXM byte of ROM DPB
+	LD	A,D		; ROM bank count to accum
+	SUB	HB_ROMRESV	; Less reserved ROM banks
+	CALL	HB_FIXDPB	; Adjust ROM DPB
+	POP	DE		; Recover memory info
+	LD	HL,DPBRAM+4	; EXM byte of RAM DPB
+	LD	A,E		; ROM bank count to accum
+	SUB	HB_RAMRESV	; Less reserved RAM banks
+	CALL	HB_FIXDPB	; Adjust RAM DPB
+	RET
+
+HB_FIXDPB:
+	CP	16		; 16 banks = 256 blocks
+	LD	E,0		; Init EXM value to zero
+	RL	E		; Put CF in E
+	LD	(HL),E		; Save EXM
+	LD	D,0		; Init blk cnt to bank cnt
+	LD	E,A		; "
+	LD	B,4		; Multiply by 4
+HB_FIXDPB1:
+	SLA	E		; ... to convert to
+	RL	D		; ... 2K block cnt
+	DJNZ	HB_FIXDPB1	; Loop
+	DEC	DE		; Convert to blk cnt - 1
+	INC	HL		; Point to LSB of DSM
+	LD	(HL),E		; Save LSB
+	INC	HL		; Point to MSB of DSM
+	LD	(HL),D		; Save it
+	RET
+
+	IF HB_DEBUG
+
+HB_STR_TAG:	DB	"HBIOS: $"
+HB_STR_CSEG:	DB	"CSEG=$"
+HB_STR_DSEG:	DB	", DSEG=$"
+HB_STR_BANK2:	DB	", BANK2=$"
+HB_STR_B2RAM:	DB	", B2RAM=$"
+HB_STR_RESVD:	DB	", RESVD=$"
+
+	ENDIF ; HB_DEBUG
 
 ; Block Move Parameters
 
@@ -404,13 +532,13 @@ PTHPTR:	DEFW	EXPATH
 	DEFW	IOPLEN+2
 	DEFW	IOPENT
 IOPPTR:	DEFW	IOP
-	  ENDIF
+	  ENDIF		;HAVIOP
 
 ;	  IF  HARDDSK AND HDDMA AND (NOT IDE)
 ;	DEFW	DMALEN
 ;	DEFW	DMADAT
 ;	DEFW	DMATBL
-;	  ENDIF
+;	  ENDIF		;HARDDSK AND HDDMA AND (NOT IDE)
 
 BLOCKE	EQU	$
 
@@ -470,7 +598,7 @@ ENV1:				; ZCPR3 enviornment descriptor ...
 	DEFB	0		; Crt selection			()
 	DEFB	0		; Printer selection		()
 	DEFB	80		; Crt 0: width
-	DEFB	24		; # of lines
+	DEFB	25		; # of lines
 	DEFB	22		; # of text lines
 
 ; In Extended ENV, CRT 1 is replaced by System Info
@@ -659,4 +787,5 @@ HISAV:	DEFS	2		; Storage for Hi-ALV address
 BTTBL:	DEFS	8		; Initial WB DMA Block
 	  ENDIF
 ;======================== End of CBOOT =============================
-
+
+

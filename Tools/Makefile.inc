@@ -34,42 +34,62 @@ DIFFPATH := $(DIFFTO)/$(RELPATH)
 #
 CASEFN = $(TOOLS)/unix/casefn.sh
 
-ZXCC=$(BINDIR)/zx
-TASM=$(BINDIR)/uz80as -t hd64180
+#
+# compiler/assembler locations and flags
+#
+ZXCC=$(BINDIR)/zxcc
+export CPMDIR80=$(TOOLS)/cpm/
+TASM=$(BINDIR)/uz80as -t z80
+TASMFLAGS=
 OPENSPIN=$(BINDIR)/openspin
 BSTC=$(BINDIR)//bstc
 CPMCP=$(BINDIR)/cpmcp
+CPMCHATTR=$(BINDIR)/cpmchattr
 
 #
 # directory containing cpm binaries
 #
-CPM=$(TOOLS)/cpm/bin
+CPM=$(TOOLS)/cpm/bin80/
+
+#
+# .ONESHELL uses a single shell instance for all shell scripts.
+# .SHELLFLAGS is used to cause all shell scripts to echo ("e") and to
+#    exit if any command returns a non-zero result ("x").
+#
+.ONESHELL:
+.SHELLFLAGS = -cex
 
 %.com: %.asm
-	if [ "$(USETASM)" = 1 ] ; then \
-		$(TASM) $< $@ ; \
+	@if [ "$(USETASM)" = 1 ] ; then \
+		$(TASM) $(TASMFLAGS) $< $@ $*.lst ; \
 	else \
 		$(ZXCC) $(CPM)/MAC -$< -$$PO ; \
 		$(ZXCC) $(CPM)/MLOAD25 -tmp.bin=$*.hex ; \
 		mv tmp.bin $@ ; \
+		rm -f /tmp/casefn.cache ; \
 		rm -f $$($(CASEFN) $*.hex) ; \
 	fi
 
+%.rom: %.asm
+	$(TASM) $(TASMFLAGS) $< $@ $*.lst
+
 %.hex: %.asm
-	$(ZXCC) $(CPM)/MAC -$< -$$PO ; \
-	
+	$(ZXCC) $(CPM)/MAC -$< -$$PO
+
 %.bin: %.ASM
 	$(ZXCC) $(CPM)/MAC -$< -$$PO
 	$(ZXCC) $(CPM)/MLOAD25 -tmp.bin=$*.hex
 	mv tmp.bin $@
+	rm -f /tmp/casefn.cache
 	rm -f $$($(CASEFN) $*.hex)
 
 %.com: %.z80
-	$(ZXCC) $(CPM)/Z80ASM -$(basename $<)/F ; \
+	$(ZXCC) $(CPM)/Z80ASM -$(basename $<)/F
+	rm -f /tmp/casefn.cache
 	mv $$($(CASEFN) $@) tmp.com ; mv tmp.com $@
-	
+
 %.bin: %.asm
-	$(TASM) $< $@
+	$(TASM) $(TASMFLAGS) $< $@ $(basename $<).lst
 
 %.rel: %.asm
 	$(ZXCC) $(CPM)/RMAC -$<
@@ -77,17 +97,23 @@ CPM=$(TOOLS)/cpm/bin
 %.rel: %.z80
 	$(ZXCC) $(CPM)/Z80ASM -$(basename $<)/MF
 
-%.hex: %.180 
+#%.hex: %.z80
+#	$(ZXCC) $(CPM)/Z80ASM -$(basename $<)/HF
+
+%.hex: %.z80
 	$(ZXCC) $(CPM)/SLR180 -$(basename $<)/HF
 
-%.rel: %.azm 
-	$(ZXCC) $(CPM)/ZSM =$<
+%.rel: %.azm
+	$(ZXCC) $(CPM)/ZSM =$< -/L
 
 %.bin: %.rel
 	$(ZXCC) $(CPM)/LINK -$@=$<
 
 %.rel: %.mac
 	$(ZXCC) $(CPM)/M80 -=$(basename $<)
+
+%.com: %.rel
+	$(ZXCC) $(CPM)/L80 -$(basename $<),$(basename $<).com/n/e
 
 ifeq ($(UNAME), Linux)
 %.eeprom: %.spin
@@ -108,33 +134,28 @@ endif
 #
 all:: $(OBJECTS)
 	@for dir in $(SUBDIRS) ; do \
-		( echo "building in `pwd`/$$dir" ; cd "$$dir" ; make all ) ; \
+		$(MAKE) --directory $$dir ; \
 	done
-	@if [ "$(DEST)" ] ; then for file in $(OBJECTS) ; do \
+	@if [ "$(DEST)" ] && [ "$(OBJECTS)" ] ; then for file in $(filter-out $(NOCOPY),$(OBJECTS)) ; do \
 		mkdir -p $(DEST) ; \
-		echo copy $$file to $(DEST) ; \
+		echo Copying $$file to $(DEST) ; \
+		rm -f /tmp/casefn.cache ; \
 		cp $$($(CASEFN) $$file) $(DEST) ; \
 	done ; fi
-	@if [ "$(DOCDEST)" ] ; then for file in $(DOCS) ; do \
+	@if [ "$(DOCDEST)" ] && [ "$(DOCS)" ] ; then for file in $(DOCS) ; do \
 		mkdir -p $(DOCDEST) ; \
-		echo copy $$file to $(DOCDEST) ; \
+		echo Copying $$file to $(DOCDEST) ; \
+		rm -f /tmp/casefn.cache ; \
 		cp $$($(CASEFN) $$file) $(DOCDEST) ; \
 	done ; fi
 
 clean::
 	@-rm -f $$($(CASEFN) make.out *.sym *.lst *.prn *.diff *.dump $(OTHERS) $(filter-out $(NODELETE),$(OBJECTS)))
 	@for dir in $(SUBDIRS) ; do \
-		( echo "cleaning in `pwd`/$$dir" ; cd "$$dir" ; make clean ) ; \
+		$(MAKE) --directory $$dir clean ; \
 	done
 
 clobber:: clean
-	@if [ "$(DEST)" ] ; then for file in $(OBJECTS) ; do \
-		rm -f $$($(CASEFN) $(DEST)/$$file) ; \
-	done ; fi
-	@-rm -f $$($(CASEFN) $(filter-out $(NODELETE),$(OBJECTS)))
-	@for dir in $(SUBDIRS) ; do \
-		( echo "clobbering in `pwd`/$$dir" ; cd "$$dir" ; make clobber ) ; \
-	done
 
 #
 # this is used to verify that the unix and windows tool chains are generating
@@ -145,7 +166,7 @@ ifneq ($(DIFFTO),)
 	@for dir in $(SUBDIRS) ; do \
 		( echo "diff in $(HERE)/$$dir" ; cd "$$dir" ; make diff ) ; \
 	done
-	@for i in $(OBJECTS) $(MOREDIFF) ; do \
+	@for i in $(filter-out $(NODIFF),$(OBJECTS) $(MOREDIFF)) ; do \
         sf=$$($(CASEFN) $$i) ; \
 		df=$$($(CASEFN) $(DIFFPATH)/$$i) ; \
         if [ -f "$$df" -a -f "$$sf" ] ; then \
@@ -166,6 +187,6 @@ ifneq ($(DIFFTO),)
     done
 endif
 
+
 vdiff:
 	make VERBOSEDIFF=2 diff
-

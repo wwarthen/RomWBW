@@ -3,8 +3,8 @@
   ************************************
   *  ParPortProp for RomWBW          *
   *  Interface to RBC ParPortProp    *
-  *  Version 0.96                 *
-  *  March 11, 2018               *
+  *  Version 0.97                    *
+  *  May 9, 2020                     *
   ************************************
 
   Wayne Warthen
@@ -29,11 +29,12 @@
   Updates:
 
     2018-03-11 WBW: Implement character attributes
+    2020-05-09 WBW: Switch monitor refresh to 60Hz
 
 }}
 
 CON
-  VERSION = (((0 << 8) + 96) << 16) + 0
+  VERSION = (((0 << 8) + 97) << 16) + 0
 
   _CLKMODE = XTAL1 + PLL16X
   _XINFREQ = 5_000_000
@@ -440,6 +441,7 @@ PRI KeyboardStatus
 
   dbg.Hex(ByteVal, 2)
   dbg.Str(string(" <done>"))
+  dbg.NewLine
 
   ExecFunction(FUNC_PUTBYTE)
 
@@ -608,7 +610,7 @@ PRI Activity
 
 DAT
 
-strVer	byte	"F/W v0.96",0
+strVer	byte	"F/W v0.97",0
 strHW	byte	"ParPortProp",0
 strROM	byte	"RomWBW",0
 

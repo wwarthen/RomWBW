@@ -1,14 +1,36 @@
 Font files for ROMWBW.
 
-There are three fonts associated with ROMWBW supported hardware - ECB-SCG, ECB-CVDU and the ECB-VGA3.
+8x8: 8x8 cell, mostly IBM CGA, first 16 differ, thin font
+8x11: 8x11 cell, possibly VT-100?
+8x16: 8x16 cell, IBM MDA
+CGA: 8x16 cell, IBM CGA, normal (thick) CGA font, rows 8-15 are unused padding
 
-Name            Format      Size    Board & Display Mode
-------------------------------------------------------------------------------------
-font8x8u.bin    8x8         2048    ECB-SCG, ECB-VGA3 (80x60)     
-font8x11u.bin   8x11        2816    ECB-VGA3 (80x43)
-font8x16u.bin   8x16        4096    ECB-CVDU (80x25), ECB-VGA3 (80x24, 80x25, 80x30)
+There are multiple fonts associated with ROMWBW supported hardware:
 
-For inclusion in HBIOS the .bin format files must be convert to assembler .asm format.
+	Board		Driver		Chip
+	--------	--------	--------
+	ECB-SCG		tms.asm		9918
+	ECB-VDU		vdu.asm		6545
+	ECB-CVDU	cvdu.asm	8563
+	ECB-VGA3	vga.asm		6445
+	MBC-VDC		cvdu.asm	8568
+	MBC-VDP		tms.asm		9938/9958
+
+Name            Font    Storage	    Size    Board & Display Mode
+--------------------------------------------------------------------------------------------
+font8x8u.bin    6x8     8x8         2048    ECB-SCG, ECB-VGA3 (80x60), MBC-VDP
+font8x11u.bin   8x11    8x11        2816    ECB-VGA3 (80x43)
+font8x16u.bin   8x14    8x16        4096    ECB-CVDU (80x25), ECB-VGA3 (80x24, 80x25, 80x30), MBC-VDC
+fontcgau.bin    8x8     8x16        4096    ECB-CVDU (80x25), MBC-VDC
+
+Notes:
+
+- The CGA font is roughly equivalent to the 8x8 font, but padded out to 8x16.  Scan lines
+  8-15 are unused.  The CVDU driver (8563 chip) always uses fonts defined in an 8x16 cell.
+  When the CVDU is configured for use with a CGA monitor, an 8x8 character cell is used,
+  but the font definition must still be 8x16.  The CGA font is used for this.
+
+For inclusion in HBIOS the .bin format files must be converted to assembler .asm format.
 This is acheived using the fonttool utility and is completed automatically as part of the build process.
 i.e. fonts files are converted to .asm format and then copied to the HBIOS directory. 
 

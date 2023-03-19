@@ -9,19 +9,11 @@ ifeq ($(UNAME), Darwin)
 	SUFFIX=osx
 endif
 
-SUBDIRS= bst uz80as zx cpmtools bin2asm lzsa
+SUBDIRS = bst uz80as zxcc cpmtools bin2asm lzsa
 
 all:
-	@for i in $(SUBDIRS) ; do \
-		(cd $$i ; make all ) \
-	done
-
-clobber:
-	@for i in $(SUBDIRS) ; do \
-		(cd $$i ; make clobber ) \
-	done
+	@chmod +x casefn.sh
+	@$(foreach subdir,$(SUBDIRS),$(MAKE) --directory $(subdir) all;)
 
 clean:
-	@for i in $(SUBDIRS) ; do \
-		(cd $$i ; make clean ) \
-	done
+	@$(foreach subdir,$(SUBDIRS),$(MAKE) --directory $(subdir) clean;)

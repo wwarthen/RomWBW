@@ -10,8 +10,8 @@
 ;  1) STACK LOCATION DURING BOOT OR WBOOT???
 ;  2) REVIEW USE OF DI/EI IN INIT
 ;
-FALSE		.EQU 	0
-TRUE		.EQU 	~FALSE
+FALSE		.EQU	0
+TRUE		.EQU	~FALSE
 ;
 BDOS		.EQU	5		; BDOS FUNC INVOCATION VECTOR
 ;
@@ -56,8 +56,8 @@ DEV_NUL		.EQU	$FF		; NUL:
 ;
 ; MEMORY LAYOUT
 ;
-IOBYTE		.EQU 	3		; LOC IN PAGE 0 OF I/O DEFINITION BYTE
-CDISK		.EQU 	4		; LOC IN PAGE 0 OF CURRENT DISK NUMBER 0=A,...,15=P
+IOBYTE		.EQU	3		; LOC IN PAGE 0 OF I/O DEFINITION BYTE
+CDISK		.EQU	4		; LOC IN PAGE 0 OF CURRENT DISK NUMBER 0=A,...,15=P
 ;
 CCP_LOC		.EQU	CPM_LOC
 CCP_SIZ		.EQU	$800
@@ -78,7 +78,7 @@ MEMTOP		.EQU	$10000
 #INCLUDE "../UBIOS/ubios.inc"
 #ENDIF
 ;
-     	.ORG	CBIOS_LOC		; DEFINED IN STD.ASM
+	.ORG	CBIOS_LOC		; DEFINED IN STD.ASM
 ;
 STACK	.EQU	CBIOS_END		; USE SLACK SPACE FOR STACK AS NEEDED
 ;
@@ -112,7 +112,7 @@ WBOOTE	JP	WBOOT			; #1  - WARM START
 ;
 ; RomWBW CBIOS places the following stamp data into page zero
 ; at address $40.  The address range $40-$4F is reserved by CP/M
-; as a scratch area for CBIOS.  This data below is copied there at
+; as a scratch area for CBIOS.	This data below is copied there at
 ; every warm start.  It allows applications to identify RomWBW CBIOS.
 ; Additionally, it contains a pointer to additional CBIOS extension
 ; data (CBX) specific to RomWBW CBIOS.
@@ -130,7 +130,7 @@ STPIMG:	.DB	'W',~'W'		; MARKER
 STPSIZ	.EQU	$ - STPIMG
 ;
 ; The following section contains key information and addresses for the
-; RomWBW CBIOS.  A pointer to the start of this section is stored with
+; RomWBW CBIOS.	 A pointer to the start of this section is stored with
 ; with the CBX data in page zero at $44 (see above).
 ;
 CBX:
@@ -144,6 +144,43 @@ CBXSIZ	.EQU	$ - CBX
 	.ECHO	" bytes.\n"
 ;
 ;==================================================================================================
+; TIMDAT ROUTINE FOR QP/M
+;==================================================================================================
+;
+#IFDEF PLTWBW
+  #IF QPMTIMDAT
+;
+TIMDAT:
+	; GET CURRENT DATE/TIME FROM RTC INTO BUFFER
+	LD	B,BF_RTCGETTIM		; HBIOS GET TIME FUNCTION
+	LD	HL,CLKDAT		; POINTER TO BUFFER
+	RST	08			; DO IT
+;
+	; CONVERT ALL BYTES FROM BCD TO BINARY
+	LD	HL,CLKDAT		; BUFFER
+	LD	B,7			; DO 7 BYTES
+TIMDAT1:
+	LD	A,(HL)
+	CALL	BCD2BYTE
+	LD	(HL),A
+	INC	HL
+	DJNZ	TIMDAT1
+;
+	; SWAP BYTES 0 & 2 TO MAKE BUFFER INTO QP/M ORDER
+	LD	A,(CLKDAT+0)
+	PUSH	AF
+	LD	A,(CLKDAT+2)
+	LD	(CLKDAT+0),A
+	POP	AF
+	LD	(CLKDAT+2),A
+;
+	LD	HL,CLKDAT		; RETURN BUFFER ADDRESS
+	RET
+;
+  #ENDIF
+#ENDIF
+;
+;==================================================================================================
 ; CHARACTER DEVICE MAPPING
 ;==================================================================================================
 ;
@@ -152,15 +189,15 @@ CBXSIZ	.EQU	$ - CBX
 ; IOBYTE (0003H)
 ; ==============
 ;
-;      Device         LST:    PUN:    RDR:    CON:
-; Bit positions       7 6     5 4     3 2     1 0
+;      Device	      LST:    PUN:    RDR:    CON:
+; Bit positions	      7 6     5 4     3 2     1 0
 ;
-; Dec   Binary
+; Dec	Binary
 ;
-;  0      00          TTY:    TTY:    TTY:    TTY:
-;  1      01          CRT:    PTP:    PTR:    CRT:
-;  2      10          LPT:    UP1:    UR1:    BAT:
-;  3      11          UL1:    UP2:    UR2:    UC1:
+;  0	  00	      TTY:    TTY:    TTY:    TTY:
+;  1	  01	      CRT:    PTP:    PTR:    CRT:
+;  2	  10	      LPT:    UP1:    UR1:    BAT:
+;  3	  11	      UL1:    UP2:    UR2:    UC1:
 ;
 ; TTY:	Teletype device (slow speed console)
 ; CRT:	Cathode ray tube device (high speed console)
@@ -235,7 +272,7 @@ DEVMAP:
 ;==================================================================================================
 ;
 ; Disk mapping is done using a drive map table (DRVMAP) which is built
-; dynamically at cold boot.  See the DRV_INIT routine.  This table is
+; dynamically at cold boot.  See the DRV_INIT routine.	This table is
 ; made up of entries as documented below.  The table is prefixed with one
 ; byte indicating the number of entries.  The position of the entry indicates
 ; the drive letter, so the first entry is A:, the second entry is B:, etc.
@@ -245,27 +282,27 @@ DEVMAP:
 ;	DPH:	DPH ADDRESS OF DRIVE (WORD)
 ;
 ; DRVMAP --+
-;          |   DRIVE A          |   DRIVE B          |     |   DRIVE N          |
-;    +-----V------+-------+-----+--------------------+     +--------------------+
-;    |  N  | UNIT | SLICE | DPH | UNIT | SLICE | DPH | ... | UNIT | SLICE | DPH |
-;    +----8+-----8+------8+-+-16+-----8+------8+-+-16+     +-----8+------8+-+-16+
-;                           |                    |                          |
-;      +--------------------+                    +-> [DPH]                  +-> [DPH]
-;      |                                         
-;      V-----+-------+-------+-------+--------+-----+-----+-----+   
-; DPH: | XLT | 0000H | 0000H | 0000H | DIRBUF | DPB | CSV | ALV |   
-;      +---16+-----16+-----16+-----16+------16+-+-16+-+-16+-+-16+   
-;                  (ONE DPH PER DRIVE)          |     |     |
-;                                               |     |     +----------+
-;                                               |     |                |
-;                        +----------------------+     V-------------+  V-------------+
-;                        |                            |   CSV BUF   |  |   ALV BUF   |
-;                        |                            +-------------+  +-------------+
-;                        |                              (CSZ BYTES)      (ASZ BYTES)
-;                        |
-;      +-----+-----+-----V-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+    
-; DPB: | CSZ | ASZ | BLS | SPT | BSH | BLM | EXM | DSM | DRM | AL0 | AL1 | CKS | OFF |    
-;      +---16+---16+----8+---16+----8+----8+----8+---16+---16+----8+----8+---16+---16+    
+;	   |   DRIVE A		|   DRIVE B	     |	   |   DRIVE N		|
+;    +-----V------+-------+-----+--------------------+	   +--------------------+
+;    |	N  | UNIT | SLICE | DPH | UNIT | SLICE | DPH | ... | UNIT | SLICE | DPH |
+;    +----8+-----8+------8+-+-16+-----8+------8+-+-16+	   +-----8+------8+-+-16+
+;			    |			 |			    |
+;      +--------------------+			 +-> [DPH]		    +-> [DPH]
+;      |
+;      V-----+-------+-------+-------+--------+-----+-----+-----+--------+
+; DPH: | XLT | 0000H | 0000H | 0000H | DIRBUF | DPB | CSV | ALV | LBAOFF |
+;      +---16+-----16+-----16+-----16+------16+-+-16+-+-16+-+-16+------32+
+;		   (ONE DPH PER DRIVE)		|     |	    |
+;						|     |	    +----------+
+;						|     |		       |
+;			 +----------------------+     V-------------+  V-------------+
+;			 |			      |	  CSV BUF   |  |   ALV BUF   |
+;			 |			      +-------------+  +-------------+
+;			 |				(CSZ BYTES)	 (ASZ BYTES)
+;			 |
+;      +-----+-----+-----V-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+; DPB: | CSZ | ASZ | BLS | SPT | BSH | BLM | EXM | DSM | DRM | AL0 | AL1 | CKS | OFF |
+;      +---16+---16+----8+---16+----8+----8+----8+---16+---16+----8+----8+---16+---16+
 ;      |<--- PREFIX ---->|<------------------- STANDARD CP/M DPB ------------------->|
 ;
 ;==================================================================================================
@@ -289,6 +326,7 @@ DPBMAP:
 	.DW	DPB_FD360	; MID_FD360
 	.DW	DPB_FD120	; MID_FD120
 	.DW	DPB_FD111	; MID_FD111
+	.DW	DPB_HDNEW	; MID_HDNEW (1024 DIR ENTRIES)
 ;
 DPBCNT	.EQU	($ - DPBMAP) / 2
 ;
@@ -299,7 +337,15 @@ DPBCNT	.EQU	($ - DPBMAP) / 2
 ;__________________________________________________________________________________________________
 BOOT:
 	; STANDARD BOOT INVOCATION
-	LD	SP,STACK	; STACK FOR INITIALIZATION
+	;LD	SP,STACK	; STACK FOR INITIALIZATION
+	LD	SP,CCP_LOC	; PUT STACK JUST BELOW CCP
+;
+#IF DEBUG
+	CALL	PRTSTRD
+	.DB	"\r\nCBIOS Starting...$"
+	CALL	PRTSTRD
+	.DB	"\r\nCopying INIT code to 0x8000...$"
+#ENDIF
 ;
 	; COPY INITIALIZATION CODE TO RUNNING LOCATION $8000
 	LD	HL,BUFPOOL
@@ -310,6 +356,11 @@ BOOT:
 	PUSH	BC		; SAVE LENGTH FOR BELOW
 	LDIR			; COPY THE CODE
 ;
+#IF DEBUG
+	CALL	PRTSTRD
+	.DB	"\r\nClearing disk buffer...$"
+#ENDIF
+;
 	; CLEAR BUFFER
 	POP	BC		; RECOVER LENGTH
 	POP	HL		; RECOVER START
@@ -319,25 +370,50 @@ BOOT:
 	DEC	BC		; REDUCE LEN BY ONE
 	LDIR			; USE LDIR TO FILL
 ;
+#IF DEBUG
+	CALL	PRTSTRD
+	.DB	"\r\nStarting INIT routine at 0x8000$"
+#ENDIF
+;
 	CALL	INIT		; PERFORM COLD BOOD ROUTINE
+;
+#IF DEBUG
+	CALL	PRTSTRD
+	.DB	"\r\nResetting CP/M...$"
+#ENDIF
 	CALL	RESCPM		; RESET CPM
+;
+#IF AUTOSUBMIT
+  #IF DEBUG
+	CALL	PRTSTRD
+	.DB	"\r\nPerforming Auto Submit...$"
+  #ENDIF
 	CALL	AUTOSUB		; PREP AUTO SUBMIT, IF APPROPRIATE
+#ENDIF
+;
+#IF DEBUG
+	CALL	PRTSTRD
+	.DB	"\r\nLaunching CP/M...$"
+#ENDIF
 ;
 	JR	GOCPM		; THEN OFF TO CP/M WE GO...
 ;
 ;__________________________________________________________________________________________________
 REBOOT:
-	; REBOOT FROM ROM, REPLACES BOOT AFTER INIT
+	; RESTART, REPLACES BOOT AFTER INIT
 #IFDEF PLTUNA
+	; FOR UNA, COLD BOOT
 	DI				; NO INTERRUPTS
 	LD	BC,$01FB		; UNA FUNC = SET BANK
 	LD	DE,0			; ROM BOOT BANK
 	CALL	$FFFD			; DO IT (RST 08 NOT SAFE HERE)
 #ENDIF
+;
 #IFDEF PLTWBW
-	DI				; NO INTERRUPTS
-	LD	A,0			; ROM BOOT BANK
-	CALL	HB_BNKSEL		; SELECT IT INTO LOW MEMORY
+	; WARM START
+	LD	B,BF_SYSRESET		; SYSTEM RESTART
+	LD	C,BF_SYSRES_WARM	; WARM START
+	CALL	$FFF0			; CALL HBIOS
 #ENDIF
 ;
 	; JUMP TO RESTART ADDRESS
@@ -345,33 +421,43 @@ REBOOT:
 ;
 ;__________________________________________________________________________________________________
 WBOOT:
-	LD	SP,STACK	; STACK FOR INITIALIZATION
+;
+#IFDEF PLTWBW
+	; GIVE HBIOS A CHANCE TO DIAGNOSE ISSUES, PRIMARILY
+	; THE OCCURRENCE OF A Z180 INVALID OPCODE TRAP
+	POP	HL			; SAVE PC FOR DIAGNOSIS
+	LD	SP,STACK		; STACK FOR INITIALIZATION
+	LD	BC,$F003		; HBIOS USER RESET FUNCTION
+	RST	08			; DO IT
+#ENDIF
 ;
 #IFDEF PLTUNA
-	; RESTORE COMMAND PROCESSOR FROM UNA BIOS CACHE
-	LD	BC,$01FB	; UNA FUNC = SET BANK
-	LD	DE,(BNKBIOS)	; UBIOS_PAGE (SEE PAGES.INC)
-	RST	08		; DO IT
-	PUSH	DE		; SAVE PREVIOUS BANK
-	
-	LD	HL,(CCPBUF)	; ADDRESS OF CCP BUF IN BIOS MEM
-	LD	DE,CCP_LOC	; ADDRESS IN HI MEM OF CCP
-	LD	BC,CCP_SIZ	; SIZE OF CCP
-	LDIR			; DO IT
+	LD	SP,STACK		; STACK FOR INITIALIZATION
 
-	LD	BC,$01FB	; UNA FUNC = SET BANK
-	POP	DE		; RECOVER OPERATING BANK
-	RST	08		; DO IT
+	; RESTORE COMMAND PROCESSOR FROM UNA BIOS CACHE
+	LD	BC,$01FB		; UNA FUNC = SET BANK
+	LD	DE,(BNKBIOS)		; UBIOS_PAGE (SEE PAGES.INC)
+	RST	08			; DO IT
+	PUSH	DE			; SAVE PREVIOUS BANK
+	
+	LD	HL,(CCPBUF)		; ADDRESS OF CCP BUF IN BIOS MEM
+	LD	DE,CCP_LOC		; ADDRESS IN HI MEM OF CCP
+	LD	BC,CCP_SIZ		; SIZE OF CCP
+	LDIR				; DO IT
+	
+	LD	BC,$01FB		; UNA FUNC = SET BANK
+	POP	DE			; RECOVER OPERATING BANK
+	RST	08			; DO IT
 #ELSE
 	; RESTORE COMMAND PROCESSOR FROM CACHE IN HB BANK
-	LD	B,BF_SYSSETCPY	; HBIOS FUNC: SETUP BANK COPY
-	LD	DE,(BNKBIOS)	; D = DEST (USER BANK), E = SRC (BIOS BANK)
-	LD	HL,CCP_SIZ	; HL = COPY LEN = SIZE OF COMMAND PROCESSOR
-	RST	08		; DO IT
-	LD	B,BF_SYSBNKCPY	; HBIOS FUNC: PERFORM BANK COPY
-	LD	HL,(CCPBUF)	; COPY FROM FIXED LOCATION IN HB BANK
-	LD	DE,CCP_LOC	; TO CCP LOCATION IN USR BANK
-	RST	08		; DO IT
+	LD	B,BF_SYSSETCPY		; HBIOS FUNC: SETUP BANK COPY
+	LD	DE,(BNKBIOS)		; D = DEST (USER BANK), E = SRC (BIOS BANK)
+	LD	HL,CCP_SIZ		; HL = COPY LEN = SIZE OF COMMAND PROCESSOR
+	RST	08			; DO IT
+	LD	B,BF_SYSBNKCPY		; HBIOS FUNC: PERFORM BANK COPY
+	LD	HL,(CCPBUF)		; COPY FROM FIXED LOCATION IN HB BANK
+	LD	DE,CCP_LOC		; TO CCP LOCATION IN USR BANK
+	RST	08			; DO IT
 #ENDIF
 ;
 	; SOME APPLICATIONS STEAL THE BDOS SERIAL NUMBER STORAGE
@@ -383,11 +469,11 @@ WBOOT:
 	LD	BC,6
 	XOR	A
 	CALL	FILL
-;	
+;
 	CALL	RESCPM		; RESET CPM
 	JR	GOCPM		; THEN OFF TO CP/M WE GO...
 ;
-;__________________________________________________________________________________________________			
+;__________________________________________________________________________________________________
 RESCPM:
 ;
 	LD	A,$C3			; LOAD A WITH 'JP' INSTRUCTION (USED BELOW)
@@ -397,23 +483,13 @@ RESCPM:
 	LD	HL,WBOOTE		; GET WARM BOOT ENTRY ADDRESS
 	LD	($0001),HL		; AND PUT IT AT $0001
 
-;	; INT / RST 38 -> INVOKE MONITOR
-;	LD	($0038),A
-;	LD	HL,GOMON
-;	LD	($0039),HL
-
-;	; INT / RST 38 -> PANIC
-;	LD	($0038),A
-;	LD	HL,PANIC		; PANIC ROUTINE ADDRESS
-;	LD	($0039),HL		; POKE IT
-	
 	; CALL 5 -> INVOKE BDOS
 	LD	($0005),A		; JP OPCODE AT $0005
 	LD	HL,BDOS_LOC + 6		; GET BDOS ENTRY ADDRESS
 	LD	($0006),HL		; PUT IT AT $0006
 ;
 	; INSTALL ROMWBW CBIOS PAGE ZERO STAMP AT $40
-	LD	HL,STPIMG		; FORM STAMP DATA IMAGE
+	LD	HL,STPIMG		; FROM STAMP DATA IMAGE
 	LD	DE,STPLOC		; TO IT'S LOCATION IN PAGE ZERO
 	LD	BC,STPSIZ		; SIZE OF BLOCK TO COPY
 	LDIR				; DO IT
@@ -427,7 +503,7 @@ RESCPM:
 ;
 	RET
 ;
-;__________________________________________________________________________________________________			
+;__________________________________________________________________________________________________
 GOCPM:
 ;
 	; ENSURE VALID DISK AND JUMP TO CCP
@@ -441,35 +517,19 @@ GOCPM:
 CURDSK:
 	LD	A,(CDISK)		; GET CURRENT USER/DISK
 GOCCP:
+;
+#IF DEBUG
+	CALL	PRTSTRD
+	.DB	"\r\nTransfer to CCP...$"
+#ENDIF
+;
 	LD	C,A			; SETUP C WITH CURRENT USER/DISK, ASSUME IT IS OK
 	JP	CCP_LOC			; JUMP TO COMMAND PROCESSOR
-;
-;__________________________________________________________________________________________________			
-GOMON:
-	CALL	PANIC
-;
-;	DI
-;	IM	1
-;
-;	LD	SP,STACK
-;
-;	; RELOAD MONITOR INTO RAM (IN CASE IT HAS BEEN OVERWRITTEN)
-;	CALL	ROMPGZ
-;	LD	HL,MON_IMG
-;	LD	DE,MON_LOC
-;	LD	BC,MON_SIZ
-;	LDIR
-;	CALL	RAMPGZ
-	
-;	; JUMP TO MONITOR WARM ENTRY
-;	JP	MON_UART
 ;
 ;
 ;==================================================================================================
 ;   CHARACTER BIOS FUNCTIONS
 ;==================================================================================================
-;
-;__________________________________________________________________________________________________
 ;
 ;__________________________________________________________________________________________________
 CONST:
@@ -479,7 +539,7 @@ CONST:
 	LD	HL,CIOST	; HL = ADDRESS OF COMPLETION ROUTINE
 	JR	CONIO
 ;
-;__________________________________________________________________________________________________			
+;__________________________________________________________________________________________________
 CONIN:
 ; CONSOLE CHARACTER INTO REGISTER A
 ;
@@ -487,7 +547,7 @@ CONIN:
 	LD	HL,CIOIN	; HL = ADDRESS OF COMPLETION ROUTINE
 	JR	CONIO
 
-;__________________________________________________________________________________________________			
+;__________________________________________________________________________________________________
 CONOUT:
 ; CONSOLE CHARACTER OUTPUT FROM REGISTER C
 ;
@@ -496,7 +556,7 @@ CONOUT:
 	LD	E,C		; E = CHARACTER TO SEND
 ;	JR	CONIO		; COMMENTED OUT, FALL THROUGH OK
 ;
-;__________________________________________________________________________________________________			
+;__________________________________________________________________________________________________
 CONIO:
 ;
 	LD	A,(IOBYTE)	; GET IOBYTE
@@ -504,8 +564,8 @@ CONIO:
 	;OR	$00		; PUT LOGICAL DEVICE IN BITS 2-3 (CON:=$00, RDR:=$04, PUN:=$08, LST:=$0C
 	JR	CIO_DISP
 ;
-;__________________________________________________________________________________________________			
-LIST:					
+;__________________________________________________________________________________________________
+LIST:
 ; LIST CHARACTER FROM REGISTER C
 ;
 	LD	B,BF_CIOOUT	; B = FUNCTION
@@ -513,7 +573,7 @@ LIST:
 	LD	E,C		; E = CHARACTER TO SEND
 	JR	LISTIO
 ;
-;__________________________________________________________________________________________________			
+;__________________________________________________________________________________________________
 LISTST:
 ; RETURN LIST STATUS (0 IF NOT READY, 1 IF READY)
 ;
@@ -521,7 +581,7 @@ LISTST:
 	LD	HL,CIOST	; HL = ADDRESS OF COMPLETION ROUTINE
 	;JR	LISTIO		; COMMENTED OUT, FALL THROUGH OK
 ;
-;__________________________________________________________________________________________________			
+;__________________________________________________________________________________________________
 LISTIO:
 ;
 	LD	A,(IOBYTE)	; GET IOBYTE
@@ -531,7 +591,7 @@ LISTIO:
 	OR	$0C		; PUT LOGICAL DEVICE IN BITS 2-3 (CON:=$00, RDR:=$04, PUN:=$08, LST:=$0C
 	JR	CIO_DISP
 ;
-;__________________________________________________________________________________________________			
+;__________________________________________________________________________________________________
 PUNCH:
 ; PUNCH CHARACTER FROM REGISTER C
 ;
@@ -540,7 +600,7 @@ PUNCH:
 	LD	E,C		; E = CHARACTER TO SEND
 	;JR	PUNCHIO		; COMMENTED OUT, FALL THROUGH OK
 ;
-;__________________________________________________________________________________________________			
+;__________________________________________________________________________________________________
 PUNCHIO:
 ;
 	LD	A,(IOBYTE)	; GET IOBYTE
@@ -552,7 +612,7 @@ PUNCHIO:
 	OR	$08		; PUT LOGICAL DEVICE IN BITS 2-3 (CON:=$00, RDR:=$04, PUN:=$08, LST:=$0C
 	JR	CIO_DISP
 ;
-;__________________________________________________________________________________________________			
+;__________________________________________________________________________________________________
 READER:
 ; READ CHARACTER INTO REGISTER A FROM READER DEVICE
 ;
@@ -560,7 +620,7 @@ READER:
 	LD	HL,CIOIN	; HL = ADDRESS OF COMPLETION ROUTINE
 	JR	READERIO
 ;
-;__________________________________________________________________________________________________			
+;__________________________________________________________________________________________________
 READERST:
 ; RETURN READER STATUS (0 IF NOT READY, 1 IF READY)
 ;
@@ -568,7 +628,7 @@ READERST:
 	LD	HL,CIOST	; HL = ADDRESS OF COMPLETION ROUTINE
 ;	JR	READERIO	; COMMENTED OUT, FALL THROUGH OK
 ;
-;__________________________________________________________________________________________________			
+;__________________________________________________________________________________________________
 READERIO:
 ;
 	LD	A,(IOBYTE)	; GET IOBYTE
@@ -578,20 +638,20 @@ READERIO:
 	OR	$04		; PUT LOGICAL DEVICE IN BITS 2-3 (CON:=$00, RDR:=$04, PUN:=$08, LST:=$0C
 	JR	CIO_DISP
 ;
-;__________________________________________________________________________________________________			
+;__________________________________________________________________________________________________
 CIOIN:
 ; COMPLETION ROUTINE FOR CHARACTER INPUT FUNCTIONS
 ;
 	LD	A,E		; MOVE CHARACTER RETURNED TO A
 	RET			; FALL THRU
 ;;
-;;__________________________________________________________________________________________________			
+;;__________________________________________________________________________________________________
 ;CIOOUT:
 ;; COMPLETION ROUTINE FOR CHARACTER OUTPUT FUNCTIONS
 ;;
 ;	RET
 ;
-;__________________________________________________________________________________________________			
+;__________________________________________________________________________________________________
 CIOST:
 ; COMPLETION ROUTINE FOR CHARACTER STATUS FUNCTIONS (IST/OST)
 ;
@@ -621,7 +681,7 @@ CIO_DISP:
 
 	LD	HL,DEVMAP	; HL = ADDRESS OF DEVICE MAP
 	CALL	ADDHLA		; ADD OFFSET
-	
+
 	LD	A,(HL)		; LOOKUP DEVICE CODE
 #IFDEF PLTUNA
 	LD	C,B		; MOVE FUNCTION TO C
@@ -695,13 +755,13 @@ SELDSK:
 ;
 	JP	DSK_SELECT
 ;
-;__________________________________________________________________________________________________	
+;__________________________________________________________________________________________________
 HOME:
 ; SELECT TRACK 0 (BC = 0) AND FALL THRU TO SETTRK
 #IF DSKTRACE
 	CALL	PRTHOME
 #ENDIF
-;	
+;
 	LD	A,(HSTWRT)	; CHECK FOR PENDING WRITE
 	OR	A		; SET FLAGS
 	JR	NZ,HOMED	; BUFFER IS DIRTY
@@ -764,7 +824,7 @@ BLKRES:
 	XOR	A
 	LD	(HSTACT),A	; BUFFER NO LONGER VALID
 	LD	(UNACNT),A	; CLEAR UNALLOC COUNT
-	
+
 	RET
 ;__________________________________________________________________________________________________
 ;
@@ -812,7 +872,7 @@ BLKRW:
 	XOR	A		; ZERO TO A
 	LD	(WRTYPE),A	; SET WRITE TYPE = 0 (WRT_ALC) TO ENSURE READ OCCURS
 	LD	(UNACNT),A	; SET UNACNT TO ABORT SEQ WRITE PROCESSING
-	
+
 	JR	BLKRW4		; GO TO I/O
 
 BLKRW1:
@@ -821,7 +881,7 @@ BLKRW1:
 	LD	A,(WRTYPE)	; GET WRITE TYPE
 	CP	WRT_UNA		; IS IT WRITE TO UNALLOC?
 	JR	NZ,BLKRW2	; NOPE, BYPASS
-	
+
 	; INITIALIZE START OF SEQUENTIAL WRITING TO UNALLOCATED BLOCK
 	; AND THEN TREAT SUBSEQUENT PROCESSING AS A NORMAL WRITE
 	CALL	UNA_INI		; INITIALIZE SEQUENTIAL WRITE TRACKING
@@ -835,11 +895,11 @@ BLKRW2:
 
 	CALL	UNA_CHK		; CHECK FOR CONTINUATION OF SEQ WRITES TO UNALLOCATED BLOCK
 	JR	NZ,BLKRW3	; NOPE, ABORT
-	
+
 	; WE MATCHED EVERYTHING, TREAT AS WRITE TO UNALLOCATED BLOCK
 	LD	A,WRT_UNA	; WRITE TO UNALLOCATED
 	LD	(WRTYPE),A	; SAVE WRITE TYPE
-	
+
 	CALL	UNA_INC		; INCREMENT SEQUENTIAL WRITE TRACKING
 	JR	BLKRW4		; PROCEED TO I/O PROCESSING
 
@@ -870,16 +930,16 @@ BLKRW4:
 
 	; IMPLEMENT THE TRANSLATED VALUES
 	CALL	BLK_SAV		; SAVE XLAT VALUES: XLT... -> HST...
-	
+
 	; IF WRITE TO UNALLOC BLOCK, BYPASS READ, LEAVES BUFFER UNDEFINED
 	LD	A,(WRTYPE)
 	CP	2
 	JR	Z,BLKRW6
-	
+
 	; DO THE ACTUAL READ
 	CALL	DSK_READ	; READ PHYSICAL SECTOR INTO BUFFER
 	JR	Z,BLKRW6	; GOOD READ, CONTINUE
-	
+
 	; IF READ FAILED, RESET (DE)BLOCKING ALGORITHM AND RETURN ERROR
 	PUSH	AF		; SAVE ERROR STATUS
 	CALL	BLKRES		; INVALIDATE (DE)BLOCKING BUFFER
@@ -896,7 +956,7 @@ BLKRW6:
 	CALL	BLK_DEBLOCK	; EXTRACT DATA FROM BLOCK
 	XOR	A		; NO ERROR
 	RET			; ALL DONE
-	
+
 BLKRW7:
 	; THIS IS A WRITE OPERATION, INSERT DATA INTO BLOCK
 	CALL	BLK_BLOCK	; INSERT DATA INTO BLOCK
@@ -904,7 +964,7 @@ BLKRW7:
 	; MARK THE BUFFER AS WRITTEN
 	LD	A,TRUE		; BUFFER DIRTY = TRUE
 	LD	(HSTWRT),A	; SAVE IT
-	
+
 	; CHECK WRITE TYPE, IF WRT_DIR, FORCE THE PHYSICAL WRITE
 	LD	A,(WRTYPE)	; GET WRITE TYPE
 	CP	WRT_DIR		; 1 = DIRECTORY WRITE
@@ -974,24 +1034,24 @@ UNA_INC:
 	; DECREMENT THE BLOCK RECORD COUNT
 	LD	HL,UNACNT
 	DEC	(HL)
-	
+
 	; INCREMENT THE SECTOR
 	LD	DE,(UNASEC)
 	INC	DE
 	LD	(UNASEC),DE
-	
+
 	; CHECK FOR END OF TRACK
 	LD	HL,(UNASPT)
 	XOR	A
 	SBC	HL,DE
 	RET	NZ
-	
+
 	; HANDLE END OF TRACK
 	LD	(UNASEC),HL	; SECTOR BACK TO 0 (NOTE: HL=0 AT THIS POINT)
 	LD	HL,(UNATRK)	; GET CURRENT TRACK
 	INC	HL		; BUMP IT
 	LD	(UNATRK),HL	; SAVE IT
-	
+
 	RET
 #ELSE
 ;
@@ -1022,15 +1082,15 @@ BLKRW1:
 	CALL	BLK_DEBLOCK	; EXTRACT DATA FROM BLOCK
 	XOR	A		; NO ERROR
 	RET			; ALL DONE
-	
+
 BLKRW2:
 	CALL	BLK_BLOCK	; INSERT DATA INTO BLOCK
 	CALL	DSK_WRITE	; WRITE PHYSICAL SECTOR FROM BUFFER
 	RET	NZ		; BAIL OUT ON ERROR
-	
+
 	LD	A,TRUE		; BUFFER IS NOW VALID
 	LD	(HSTACT),A	; SAVE IT
-	
+
 	XOR	A		; ALL IS WELL, SET RETURN CODE 0
 	RET			; RETURN
 #ENDIF
@@ -1172,6 +1232,11 @@ DSK_GETINF:
 	RLCA			; ... TO USE AS OFFSET INTO DRVMAP
 	CALL	ADDHLA		; ADD OFFSET
 	LD	D,(HL)		; D := UNIT
+	
+	LD	A,D		; PUT UNIT IN ACCUM
+	INC	A		; $FF -> $00
+	JR	Z,DSK_GETINF1	; HANDLE UNASSIGNED DRIVE LETTER
+	
 	INC	HL		; BUMP TO SLICE
 	LD	E,(HL)		; E := SLICE
 	INC	HL		; POINT TO DPH LSB
@@ -1179,9 +1244,11 @@ DSK_GETINF:
 	INC	HL		; POINT TO DPH MSB
 	LD	H,(HL)		; H := DPH MSB
 	LD	L,A		; L := DPH LSB
-	LD	A,H		; TEST FOR INVALID DPH
-	OR	L		; ... BY CHECKING FOR ZERO VALUE
-	JR	Z,DSK_GETINF1	; HANDLE ZERO DPH, DRIVE IS INVALID
+
+	;LD	A,H		; TEST FOR INVALID DPH
+	;OR	L		; ... BY CHECKING FOR ZERO VALUE
+	;JR	Z,DSK_GETINF1	; HANDLE ZERO DPH, DRIVE IS INVALID
+
 	XOR	A		; SET SUCCESS
 	RET
 ;
@@ -1199,6 +1266,7 @@ DSK_GETINF1:	; ERROR RETURN
 DSK_SELECT:
 	LD	B,E		; SAVE E IN B FOR NOW
 	CALL	DSK_GETINF	; GET D=UNIT, E=SLICE, HL=DPH ADDRESS
+	;CALL	NZ,PANIC	; *DEBUG*
 	RET	NZ		; RETURN IF INVALID DRIVE (A=1, NZ SET, HL=0)
 	PUSH	BC		; WE NEED  B LATER, SAVE ON STACK
 ;
@@ -1209,23 +1277,50 @@ DSK_SELECT:
 	LD	(SEKUNIT),A	; SAVE UNIT
 	LD	(SEKDPH),HL	; SAVE DPH ADDRESS
 ;
-	; UPDATE OFFSET FOR ACTIVE SLICE
-	; A TRACK IS ASSUMED TO BE 16 SECTORS
-	; THE OFFSET REPRESENTS THE NUMBER OF BLOCKS * 256
-	;   TO USE AS THE OFFSET
-	LD	H,65		; H = TRACKS PER SLICE, E = SLICE NO
-	CALL	MULT8		; HL := H * E (TOTAL TRACK OFFSET)
-	LD	(SEKOFF),HL	; SAVE NEW TRACK OFFSET
+	LD	A,E		; A := SLICE
+	LD	(SLICE),A	; SAVE IT
+	; UPDATE LBAOFF FROM DPH
+	LD	HL,(SEKDPH)
+	LD	A,16
+	CALL	ADDHLA
+	LD	DE,SEKLBA
+	LD	BC,4
+	LDIR
 ;
 	; RESTORE DE TO BC (FOR ACCESS TO DRIVE LOGIN BIT)
 	POP	BC		; GET ORIGINAL E INTO B
-;
-#IFDEF PLTWBW
 ;
 	; CHECK IF THIS IS LOGIN, IF NOT, BYPASS MEDIA DETECTION
 	; FIX: WHAT IF PREVIOUS MEDIA DETECTION FAILED???
 	BIT	0,B		; TEST DRIVE LOGIN BIT
 	JR	NZ,DSK_SELECT2	; BYPASS MEDIA DETECTION
+;
+#IFDEF PLTUNA
+;
+	LD	A,(SEKUNIT)	; GET DISK UNIT
+	LD	B,A		; UNIT NUM TO B
+	LD	C,$48		; UNA FUNC: GET DISK TYPE
+	CALL	$FFFD		; CALL UNA
+	LD	A,D		; MOVE DISK TYPE TO A
+	CP	$40		; RAM/ROM DRIVE?
+	JR	Z,DSK_SELECT1	; HANDLE RAM/ROM DRIVE
+	LD	A,MID_HD	; OTHERWISE WE HAVE A HARD DISK
+	JR	DSK_SELECT1A	; DONE
+;
+DSK_SELECT1:
+	; UNA RAM/ROM DRIVE
+	LD	C,$45		; UNA FUNC: GET DISK INFO
+	LD	DE,(DSKBUF)	; 512 BYTE BUFFER
+	CALL	$FFFD		; CALL UNA
+	BIT	7,B		; TEST RAM DRIVE BIT
+	LD	A,MID_MDROM	; ASSUME ROM
+	JR	Z,DSK_SELECT1A	; IS ROM, DONE
+	LD	A,MID_MDRAM	; MUST BE RAM
+;
+DSK_SELECT1A:
+	LD	(MEDID),A
+;
+#ELSE
 ;
 	; DETERMINE MEDIA IN DRIVE
 	LD	A,(SEKUNIT)	; GET UNIT
@@ -1234,11 +1329,48 @@ DSK_SELECT:
 	LD	E,1		; ENABLE MEDIA CHECK/DISCOVERY
 	RST	08		; DO IT
 	LD	A,E		; RESULTANT MEDIA ID TO ACCUM
+	LD	(MEDID),A	; SAVE IT
 	OR	A		; SET FLAGS
 	LD	HL,0		; ASSUME FAILURE
 	RET	Z		; BAIL OUT IF NO MEDIA
 ;
-	; A HAS MEDIA ID, SET HL TO CORRESPONDING DPBMAP ENTRY
+#ENDIF
+;
+	; CLEAR LBA OFFSET (DWORD)
+	; SET HI BIT FOR LBA ACCESS FOR NOW
+	LD	HL,0		; ZERO
+	LD	(SEKLBA),HL	; CLEAR FIRST WORD
+	SET	7,H		; ASSUME LBA ACCESS FOR NOW
+	LD	(SEKLBA+2),HL	; CLEAR SECOND WORD
+;
+#IFDEF PLTWBW
+;
+	LD	A,(SEKUNIT)	; GET UNIT
+	LD	C,A		; STORE IN C
+	LD	B,BF_DIODEVICE	; HBIOS FUNC: REPORT DEVICE INFO
+	RST	08		; GET UNIT INFO, DEVICE TYPE IN D
+	LD	A,D		; DEVICE TYPE -> A
+	AND	$F0		; ISOLATE HIGH BITS
+	CP	DIODEV_FD	; FLOPPY?
+	JR	NZ,DSK_SELECT1B	; IF NOT, DO LBA IO
+	LD	HL,SEKLBA+3	; POINT TO HIGH ORDER BYTE
+	RES	7,(HL)		; SWITCH FROM LBA -> CHS
+;
+#ENDIF
+;
+DSK_SELECT1B:
+	; SET LEGACY SECTORS PER SLICE
+	LD	HL,16640	; LEGACY SECTORS PER SLICE
+	LD	(SPS),HL	; SAVE IT
+;
+	; CHECK MBR OF PHYSICAL DISK BEING SELECTED
+	; WILL UPDATE MEDID AND LBAOFF IF VALID CP/M PARTITION EXISTS
+	CALL	DSK_MBR		; UPDATE MEDIA FROM MBR
+	LD	HL,0		; ASSUME FAILURE
+	RET	NZ		; ABORT ON I/O ERROR
+;
+	; SET HL TO DPBMAP ENTRY CORRESPONDING TO MEDIA ID
+	LD	A,(MEDID)	; GET MEDIA ID
 	LD	HL,DPBMAP	; HL = DPBMAP
 	RLCA			; DPBMAP ENTRIES ARE 2 BYTES EACH
 	CALL	ADDHLA		; ADD OFFSET TO HL
@@ -1247,20 +1379,168 @@ DSK_SELECT:
 	LD	E,(HL)		; DEREFERENCE HL...
 	INC	HL		; INTO DE...
 	LD	D,(HL)		; DE = ADDRESS OF DESIRED DPB
-;	
+;
 	; PLUG DPB INTO THE ACTIVE DPH
-	LD	HL,(SEKDPH)
+	LD	HL,(SEKDPH)	; POINT TO START OF DPH
 	LD	BC,10		; OFFSET OF DPB IN DPH
 	ADD	HL,BC		; HL := DPH.DPB
 	LD	(HL),E		; SET LSB OF DPB IN DPH
 	INC	HL		; BUMP TO MSB
 	LD	(HL),D		; SET MSB OF DPB IN DPH
-#ENDIF
+;
+	; PLUG LBA OFFSET INTO ACTIVE DPH
+	LD	HL,(SEKDPH)	; POINT TO START OF DPH
+	LD	BC,16		; OFFSET OF LBA OFFSET IN DPH
+	ADD	HL,BC		; HL := DPH.LBAOFF PTR
+	EX	DE,HL		; DEST IS DPH.LBAOFF PTR
+	LD	HL,SEKLBA	; SOURCE IS LBAOFF
+	LD	BC,4		; 4 BYTES
+	LDIR			; DO IT
 ;
 DSK_SELECT2:
 	LD	HL,(SEKDPH)	; HL = DPH ADDRESS FOR CP/M
 	XOR	A		; FLAG SUCCESS
 	RET			; NORMAL RETURN
+;
+; CHECK MBR OF DISK TO SEE IF IT HAS A PARTITION TABLE.
+; IF SO, LOOK FOR A CP/M PARTITION.  IF FOUND, GET
+; UPDATE THE PARTITION OFFSET (LBAOFF) AND UPDATE
+; THE MEDIA ID (MEDID).
+;
+DSK_MBR:
+	; CHECK MEDIA TYPE, ONLY HARD DISK IS APPLICABLE
+	LD	A,(MEDID)	; GET MEDIA ID
+	CP	MID_HD		; HARD DISK?
+	JR	Z,DSK_MBR0	; IF SO, CONTINUE
+	XOR	A		; ELSE, N/A, SIGNAL SUCCESS
+	RET			; AND RETURN
+	
+DSK_MBR0:
+;
+#IFDEF PLTWBW
+	; ACTIVATE BIOS BANK TO ACCESS DISK BUFFER
+	LD	(STKSAV),SP	; SAVE CUR STACK
+	LD	SP,STACK	; NEW STACK IN HI MEM
+	LD	A,(BNKBIOS)	; ACTIVATE HBIOS BANK
+	PUSH	IX		; SAVE IX
+	LD	IX,DSK_MBR1	; ROUTINE TO RUN
+	CALL	HB_BNKCALL	; DO IT
+	POP	IX		; RESTORE IX
+	LD	SP,(STKSAV)	; RESTORE ORIGINAL STACK
+	RET
+#ENDIF
+;
+DSK_MBR1:
+	; FLUSH DSKBUF TO MAKE SURE IT IS SAFE TO USE IT.
+	CALL	BLKFLSH		; MAKE SURE DISK BUFFER IS NOT DIRTY
+	XOR	A		; CLEAR ACCUM
+	LD	(HSTACT),A	; CLEAR HOST BUFFER ACTIVE FLAG
+;
+	; READ SECTOR ZERO (MBR)
+	LD	B,BF_DIOREAD	; READ FUNCTION
+	LD	A,(SEKUNIT)	; GET UNIT
+	LD	C,A		; PUT IN C
+	LD	DE,0		; LBA SECTOR ZERO
+	LD	HL,0		; ...
+#IFDEF PLTWBW
+	SET	7,D		; MAKE SURE LBA ACCESS BIT SET
+#ENDIF
+	CALL	DSK_IO2		; DO IT
+	RET	NZ		; ABORT ON ERROR
+;
+	; CHECK SIGNATURE
+	LD	HL,(DSKBUF)	; DSKBUF ADR
+	LD	DE,$1FE		; OFFSET TO SIGNATURE
+	ADD	HL,DE		; POINT TO SIGNATURE
+	LD	A,(HL)		; GET FIRST BYTE
+	CP	$55		; CHECK FIRST BYTE
+	JR	NZ,DSK_MBR5	; NO MATCH, NO PART TABLE
+	INC	HL		; NEXT BYTE
+	LD	A,(HL)		; GET SECOND BYTE
+	CP	$AA		; CHECK SECOND BYTE
+	JR	NZ,DSK_MBR5	; NO MATCH, NO PART TABLE, ABORT
+;
+	; TRY TO FIND OUR ENTRY IN PART TABLE AND CAPTURE LBA OFFSET
+	LD	B,4		; FOUR ENTRIES IN PART TABLE
+	LD	HL,(DSKBUF)	; DSKBUF ADR
+	LD	DE,$1BE+4	; OFFSET OF FIRST ENTRY PART TYPE
+	ADD	HL,DE		; POINT TO IT
+DSK_MBR2:
+	LD	A,(HL)		; GET PART TYPE
+	CP	$2E		; CP/M PARTITION?
+	JR	Z,DSK_MBR3	; COOL, GRAB THE LBA OFFSET
+	LD	DE,16		; PART TABLE ENTRY SIZE
+	ADD	HL,DE		; BUMP TO NEXT ENTRY PART TYPE
+	DJNZ	DSK_MBR2	; LOOP THRU TABLE
+	JR	DSK_MBR5	; TOO BAD, NO CP/M PARTITION
+;
+DSK_MBR3:
+	; WE HAVE LOCATED A VALID CP/M PARTITION
+	; HL POINTS TO PART TYPE FIELD OF PART ENTRY
+;
+	; CAPTURE THE LBA OFFSET
+	LD	DE,4		; LBA IS 4 BYTES AFTER PART TYPE
+	ADD	HL,DE		; POINT TO IT
+	LD	DE,SEKLBA	; LOC TO STORE LBA OFFSET
+	LD	BC,4		; 4 BYTES (32 BITS)
+	LDIR			; COPY IT
+;
+	; CHECK THAT REQUESTED SLICE IS "INSIDE" PARTITION
+	; SLICE SIZE IS EXACTLY 16,384 SECTORS (8MB), SO WE CAN JUST
+	; RIGHT SHIFT PARTITION SECTOR COUNT BY 14 BITS
+	LD	E,(HL)		; HL POINTS TO FIRST BYTE
+	INC	HL		; ... OF 32 BIT PARTITION
+	LD	D,(HL)		; ... SECTOR COUNT,
+	INC	HL		; ... LOAD SECTOR COUNT
+	PUSH	DE		; ... INTO DE:HL
+	LD	E,(HL)		; ...
+	INC	HL		; ...
+	LD	D,(HL)		; ...
+	POP	HL		; ... DE:HL = PART SIZE IN SECTORS
+	LD	B,2		; DE = DE:HL >> 2  (TRICKY!)
+	CALL	RL32		; DE = SLICECNT
+	EX	DE,HL		; HL = SLICECNT
+	LD	A,(SLICE)	; GET TARGET SLICE
+	LD	C,A		; PUT IN C
+	LD	B,0		; BC := REQUESTED SLICE #
+	SCF			; SET CARRY!
+	SBC	HL,BC		; MAX SLICES - SLICE - 1
+	JR	NC,DSK_MBR4	; NO OVERFLOW, OK TO CONTINUE
+	OR	$FF		; SLICE TOO HIGH, SIGNAL ERROR
+	RET			; AND BAIL OUT
+;
+DSK_MBR4:
+	; IF BOOT FROM PARTITION, USE NEW SECTORS PER SLICE VALUE
+	LD	HL,16384		; NEW SECTORS PER SLICE
+	LD	(SPS),HL		; SAVE IT
+
+	; UPDATE MEDIA ID
+	LD	A,MID_HDNEW	; NEW MEDIA ID
+	LD	(MEDID),A	; SAVE IT
+;
+DSK_MBR5:
+	; ADJUST LBA OFFSET BASED ON TARGET SLICE
+	LD	A,(SLICE)		; GET SLICE, A IS LOOP CNT
+	LD	HL,(SEKLBA)		; SET DE:HL
+	LD	DE,(SEKLBA+2)		; ... TO STARTING LBA
+	LD	BC,(SPS)		; SECTORS PER SLICE
+DSK_MBR6:
+	OR	A			; SET FLAGS TO CHECK LOOP CNTR
+	JR	Z,DSK_MBR8		; DONE IF COUNTER EXHAUSTED
+	ADD	HL,BC			; ADD ONE SLICE TO LOW WORD
+	JR	NC,DSK_MBR7		; CHECK FOR CARRY
+	INC	DE			; IF SO, BUMP HIGH WORD
+DSK_MBR7:
+	DEC	A			; DEC LOOP DOWNCOUNTER
+	JR	DSK_MBR6		; AND LOOP
+DSK_MBR8:
+	SET	7,D		; SET LBA ACCESS FLAG
+	; RESAVE IT
+	LD	(SEKLBA),HL	; LOWORD
+	LD	(SEKLBA+2),DE	; HIWORD
+	; SUCCESSFUL FINISH
+	XOR	A		; SUCCESS
+	RET			; DONE
 ;
 ;
 ;
@@ -1272,7 +1552,7 @@ DSK_STATUS:
 	; C HAS CPM DRIVE, LOOKUP UNIT AND CHECK FOR INVALID DRIVE
 	CALL	DSK_GETINF	; B := UNIT
 	RET	NZ		; INVALID DRIVE ERROR
-	
+
 	; VALID DRIVE, DISPATCH TO DRIVER
 	LD	C,D		; C := UNIT
 	LD	B,BF_DIOSTATUS	; B := FUNCTION: STATUS
@@ -1296,71 +1576,18 @@ DSK_WRITE:
 ;
 ;
 ;
-#IFDEF PLTUNA
-
 DSK_IO:
-	PUSH	BC
-	LD	DE,(HSTTRK)	; GET TRACK INTO HL
-	LD	B,4		; PREPARE TO LEFT SHIFT BY 4 BITS
-DSK_IO1:
-	SLA	E		; SHIFT DE LEFT BY 4 BITS
-	RL	D
-	DJNZ	DSK_IO1		; LOOP TILL ALL BITS DONE
-	LD	A,(HSTSEC)	; GET THE SECTOR INTO A
-	AND	$0F		; GET RID OF TOP NIBBLE
-	OR	E		; COMBINE WITH E
-	LD	E,A		; BACK IN E
-	LD	HL,0		; HL:DE NOW HAS SLICE RELATIVE LBA
-	; APPLY OFFSET NOW
-	; OFFSET IS EXPRESSED AS NUMBER OF BLOCKS * 256 TO OFFSET!
-	LD	A,(HSTOFF)	; LSB OF SLICE OFFSET TO A
-	ADD	A,D		; ADD WITH D
-	LD	D,A		; PUT IT BACK IN D
-	LD	A,(HSTOFF+1)	; MSB OF SLICE OFFSET TO A
-	CALL	ADCHLA		; ADD OFFSET
-	POP	BC		; RECOVER FUNCTION IN B
-	LD	A,(HSTUNIT)	; GET THE UNIT VALUE
-	LD	C,A		; PUT IT IN C
-	; DISPATCH TO DRIVER
-	PUSH	BC
-	EX	DE,HL		; DE:HL NOW HAS LBA
-	LD	B,C		; UNIT TO B
-	LD	C,$41		; UNA SET LBA
-	RST	08		; CALL UNA
-	CALL	NZ,PANIC
-	POP	BC		; RECOVER B=FUNC, C=UNIT
-	LD	E,C		; UNIT TO E
-	LD	C,B		; FUNC TO C
-	LD	B,E		; UNIT TO B
-	LD	DE,(DSKBUF)	; SET BUFFER ADDRESS
-	LD	HL,1		; 1 SECTOR
-	; DISPATCH TO UBIOS
-	RST	08
-	OR	A		; SET FLAGS BASED ON RESULT
-	RET
-
-#ELSE
-
-DSK_IO:
-;
-; TRANSLATE CP/M TRACK/SECTOR -> HBIOS TRACK/HEAD/SECTOR
-; NEEDS TO HANDLE FLOPPY SEPARATE FROM HARD DISK
-;
-CHS:
 	LD	A,(HSTUNIT)		; GET UNIT
 	LD	C,A			; UNIT -> C
-	PUSH	BC			; SAVE FUNC/UNIT
-	LD	B,BF_DIODEVICE		; HBIOS FUNC: REPORT DEVICE INFO
-	RST	08			; GET UNIT INFO, DEVICE TYPE IN D
-	POP	BC			; GET FUNC/UNIT BACK TO BC
-	LD	A,D			; DEVICE TYPE -> A
-	AND	$F0			; ISOLATE HIGH BITS
-	CP	DIODEV_FD		; FLOPPY?
-	JR	NZ,CHSHD		; IF NOT, DO HD CHS XLAT
+;
+#IFDEF PLTWBW
+	LD	A,(HSTLBA+3)		; GET HIGH ORDER BYTE
+	BIT	7,A			; LBA ACCESS?
+	JR	NZ,LBA_IO		; IF SET, GO TO LBA I/O
 ;
 ; FLOPPY SPECIFIC TRANSLATION ASSUMES FLOPPY IS DOUBLE-SIDED AND
 ; USES LOW ORDER BIT OF TRACK AS HEAD VALUE
-; 
+;
 ; HBIOS SEEK: HL=CYLINDER, D=HEAD, E=SECTOR
 ;
 	LD	DE,(HSTSEC)		; SECTOR -> DE, HEAD(D) BECOMES ZERO
@@ -1368,53 +1595,74 @@ CHS:
 	SRL	H			; SHIFT HEAD BIT OUT OF HL
 	RR	L			; ... AND INTO CARRY
 	RL	D			; CARRY BIT (HEAD) INTO D
-	JR	CHS2
+	JR	DSK_IO2			; DO THE DISK I/O
 ;
-; HARD DISK SPECIFIC TRANSLATION
-; ASSUMES 16 HEADS PER CYLINDER AND 16 SECTORS PER TRACK
+#ENDIF
 ;
-CHSHD:
-	LD	HL,(HSTTRK)		; GET TRACK VALUE
-	LD	A,L			; LSB OF TRACK TO A
-	AND	$0F			; ISOLATE HEAD IN LOW 4 BITS
-	LD	D,A			; STUFF IT IN D
+LBA_IO:
+	PUSH	BC			; SAVE FUNC/UNIT
+	; GET TRACK AND SHIFT TO MAKE ROOM FOR 4 BIT SECTOR VALUE
+	LD	HL,(HSTTRK)		; GET TRACK
+	LD	DE,0			; CLEAR HIWORD
+	LD	B,4			; X16 (16 SPT ASSUMED)
+	CALL	RL32			; DO IT
+	; COMBINE WITH SECTOR
 	LD	A,(HSTSEC)		; GET SECTOR
-	LD	E,A			; STUFF IT IN E
-	LD	A,B			; SAVE B (HBIOS FUNC)
-	LD	B,4			; PREPARE TO SHIFT OUT 4 BIT HEAD VALUE
-CHSHD1:
-	SRL	H			; SHIFT ONE BIT OUT
-	RR	L			; ... OF HL
-	DJNZ	CHSHD1			; DO ALL 4 BITS
-	LD	B,A			; RESTORE B (HBIOS FUNC)
-	; FALL THRU TO CHS2
+	OR	L
+	LD	L,A
+	; ADD IN LBA OFFSET FOR PARTITION AND/OR SLICE
+	LD	BC,(HSTLBA)		; LBA OFFSET LOWORD
+	ADD	HL,BC	
+	EX	DE,HL	
+	LD	BC,(HSTLBA+2)		; LBA OFFSET HIWORD
+	ADC	HL,BC
+	EX	DE,HL
+	POP	BC			; RESTORE FUNC/UNIT
+	;JR	DSK_IO2			; DO THE DISK I/O (FALL THRU)
 ;
-; ALL TYPES OF TRANSLATION WIND UP HERE TO
-; MAKE THE ACTUAL HBIOS CALL
+#IFDEF PLTUNA
 ;
-CHS2:
-	PUSH	DE			; SAVE HEAD/SECTOR	+ COULD MOVE
-	LD	DE,(HSTOFF)		; NOW GET SLICE OFFSET	| TO CHSHD,
-	ADD	HL,DE			; ADD IT TO TRACK VALUE	| NO SLICES
-	POP	DE			; RECOVER HEAD/SECTOR	+ FOR FLOPPY
+; MAKE UNA UBIOS CALL
+; HBIOS FUNC SHOULD STILL BE IN B
+; UNIT SHOULD STILL BE IN C
+;
+DSK_IO2:
+	PUSH	BC			; SAVE INCOMING FUNCTION, UNIT
+	RES	7,D			; CLEAR LBA BIT FOR UNA
+	LD	B,C			; UNIT TO B
+	LD	C,$41			; UNA SET LBA
+	RST	08			; CALL UNA
+	POP	BC			; RECOVER B=FUNC, C=UNIT
+	RET	NZ			; ABORT IF SEEK RETURNED AN ERROR W/ ERROR IN A
+	LD	E,C			; UNIT TO E
+	LD	C,B			; FUNC TO C
+	LD	B,E			; UNIT TO B
+	LD	DE,(DSKBUF)		; SET BUFFER ADDRESS
+	LD	HL,1			; 1 SECTOR
+	; DISPATCH TO UBIOS
+	RST	08			; CALL UNA
+	RET				; DONE
+;
+#ELSE
 ;
 ; MAKE HBIOS CALL
 ; HBIOS FUNC SHOULD STILL BE IN B
 ; UNIT SHOULD STILL BE IN C
 ;
-	PUSH	BC			; SAVE INCOMING FUNCTION, DEVICE/UNIT
-	LD	B,BF_DIOSEEK	   	; SETUP FOR NEW SEEK CALL
+DSK_IO2:
+	PUSH	BC			; SAVE INCOMING FUNCTION, UNIT
+	LD	B,BF_DIOSEEK		; SETUP FOR NEW SEEK CALL
 	RST	08			; DO IT
-	POP	BC              	; RESTORE INCOMING FUNCTION, DEVICE/UNIT
-	RET	NZ              	; ABORT IF SEEK RETURNED AN ERROR W/ ERROR IN A
-	LD	HL,(DSKBUF)     	; GET BUFFER ADDRESS
+	POP	BC			; RESTORE INCOMING FUNCTION, DEVICE/UNIT
+	RET	NZ			; ABORT IF SEEK RETURNED AN ERROR W/ ERROR IN A
+	LD	HL,(DSKBUF)		; GET BUFFER ADDRESS
 	LD	A,(BNKBIOS)		; GET BIOS BANK
 	LD	D,A			; TRANSFER TO/FROM BIOS BANK
-	LD	E,1	            	; TRANSFER ONE SECTOR
+	LD	E,1			; TRANSFER ONE SECTOR
 	RST	08			; DO IT
 	OR	A			; SET FLAGS
 	RET				; DONE
-
+;
 #ENDIF
 ;
 ;==================================================================================================
@@ -1501,12 +1749,22 @@ STR_SEC		.DB	" SEC=$"
 ; DATA
 ;==================================================================================================
 ;
-;STR_READONLY	.DB 	"\r\nCBIOS Err: Read Only Drive$"
-;STR_STALE	.DB 	"\r\nCBIOS Err: Stale Drive$"
+;STR_READONLY	.DB	"\r\nCBIOS Err: Read Only Drive$"
+;STR_STALE	.DB	"\r\nCBIOS Err: Stale Drive$"
 ;
-SECADR		.DW 	0		; ADDRESS OF SECTOR IN ROM/RAM PAGE
+;SECADR		.DW	0		; ADDRESS OF SECTOR IN ROM/RAM PAGE
 DEFDRIVE	.DB	0		; DEFAULT DRIVE
 CCPBUF		.DW	0		; ADDRESS OF CCP BUF IN BIOS BANK
+MEDID		.DB	0		; TEMP STORAGE FOR MEDIA ID
+SLICE		.DB	0		; CURRENT SLICE
+SPS		.DW	0		; SECTORS PER SLICE
+STKSAV		.DW	0		; TEMP SAVED STACK POINTER
+;
+#IFDEF PLTWBW
+  #IF QPMTIMDAT
+CLKDAT		.FILL	7,0		; RTC CLOCK DATA BUFFER
+  #ENDIF
+#ENDIF
 ;
 #IFDEF PLTWBW
 BNKBIOS		.DB	0		; BIOS BANK ID
@@ -1521,21 +1779,22 @@ BNKUSER		.DW	0		; USER BANK ID
 ; DOS DISK VARIABLES
 ;
 DSKOP		.DB	0		; DISK OPERATION (DOP_READ/DOP_WRITE)
-WRTYPE		.DB 	0		; WRITE TYPE (0=NORMAL, 1=DIR (FORCE), 2=FIRST RECORD OF BLOCK)
-DMAADR		.DW 	0		; DIRECT MEMORY ADDRESS
+WRTYPE		.DB	0		; WRITE TYPE (0=NORMAL, 1=DIR (FORCE), 2=FIRST RECORD OF BLOCK)
+DMAADR		.DW	0		; DIRECT MEMORY ADDRESS
 HSTWRT		.DB	0		; TRUE = BUFFER IS DIRTY
 DSKBUF		.DW	0		; ADDRESS OF PHYSICAL SECTOR BUFFER
 ;
 ; LOGICAL DISK I/O REQUEST PENDING
 ;
 SEK:
-SEKDSK		.DB 	0		; DISK NUMBER 0-15
-SEKTRK		.DW 	0		; TWO BYTES FOR TRACK # (LOGICAL)
-SEKSEC		.DW 	0		; TWO BYTES FOR SECTOR # (LOGICAL)
-SEKUNIT		.DB 	0		; DISK UNIT
+SEKDSK		.DB	0		; DISK NUMBER 0-15
+SEKTRK		.DW	0		; TWO BYTES FOR TRACK # (LOGICAL)
+SEKSEC		.DW	0		; TWO BYTES FOR SECTOR # (LOGICAL)
+SEKUNIT		.DB	0		; DISK UNIT
 SEKDPH		.DW	0		; ADDRESS OF ACTIVE (SELECTED) DPH
 SEKOFF		.DW	0		; TRACK OFFSET IN EFFECT FOR SLICE
 SEKACT		.DB	TRUE		; ALWAYS TRUE!
+SEKLBA		.FILL	4,0		; LBA OFFSET
 ;
 ; RESULT OF CPM TO PHYSICAL TRANSLATION
 ;
@@ -1547,6 +1806,7 @@ XLTUNIT		.DB	0
 XLTDPH		.DW	0
 XLTOFF		.DW	0
 XLTACT		.DB	TRUE		; ALWAYS TRUE!
+XLTLBA		.FILL	4,0		; LBA OFFSET
 ;
 XLTSIZ		.EQU	$ - XLT
 ;
@@ -1560,13 +1820,14 @@ HSTUNIT		.DB	0		; DISK UNIT IN BUFFER
 HSTDPH		.DW	0		; CURRENT DPH ADDRESS
 HSTOFF		.DW	0		; TRACK OFFSET IN EFFECT FOR SLICE
 HSTACT		.DB	0		; TRUE = BUFFER HAS VALID DATA
+HSTLBA		.FILL	4,0		; LBA OFFSET
 ;
 ; SEQUENTIAL WRITE TRACKING FOR (UNA)LLOCATED BLOCK
 ;
 UNA:
-UNADSK		.DB 	0		; DISK NUMBER 0-15
-UNATRK		.DW 	0		; TWO BYTES FOR TRACK # (LOGICAL)
-UNASEC		.DW 	0		; TWO BYTES FOR SECTOR # (LOGICAL)
+UNADSK		.DB	0		; DISK NUMBER 0-15
+UNATRK		.DW	0		; TWO BYTES FOR TRACK # (LOGICAL)
+UNASEC		.DW	0		; TWO BYTES FOR SECTOR # (LOGICAL)
 ;
 UNASIZ		.EQU	$ - UNA
 ;
@@ -1595,13 +1856,13 @@ ALS_HD		.EQU	256	; ALS: BLKS / 8 = 2048 / 8 = 256 (ROUNDED UP)
 ; BLS		BSH	BLM	EXM (DSM<256)	EXM (DSM>255)
 ; ----------	---	---	-------------	-------------
 ; 1,024		3	7	0		N/A
-; 2,048 	4	15	1		0
-; 4,096 	5	31	3		1
-; 8,192 	6	63	7		3
-; 16,384 	7	127	15		7
+; 2,048		4	15	1		0
+; 4,096		5	31	3		1
+; 8,192		6	63	7		3
+; 16,384	7	127	15		7
 ;
-; AL0/1: EACH BIT SET ALLOCATES A BLOCK OF DIR ENTRIES.  EACH DIR ENTRY
-;        IS 32 BYTES.  BIT COUNT = (((DRM + 1) * 32) / BLS)
+; AL0/1: EACH BIT SET ALLOCATES A BLOCK OF DIR ENTRIES.	 EACH DIR ENTRY
+;	 IS 32 BYTES.  BIT COUNT = (((DRM + 1) * 32) / BLS)
 ;
 ; CKS = (DIR ENT / 4), ZERO FOR NON-REMOVABLE MEDIA
 ;
@@ -1623,21 +1884,21 @@ ALS_HD		.EQU	256	; ALS: BLKS / 8 = 2048 / 8 = 256 (ROUNDED UP)
 	.DW	ALS_ROM		; ALS: BLKS / 8
 	.DB	(2048 / 128)	; RECORDS PER BLOCK (BLS / 128)
 DPB_ROM:
-	.DW  	64		; SPT: SECTORS PER TRACK
-	.DB  	4		; BSH: BLOCK SHIFT FACTOR
-	.DB  	15		; BLM: BLOCK MASK
+	.DW	64		; SPT: SECTORS PER TRACK
+	.DB	4		; BSH: BLOCK SHIFT FACTOR
+	.DB	15		; BLM: BLOCK MASK
 	.DB	1		; EXM: (BLKS <= 256) ? 1 : 0
 	.DW	192 - 1		; DSM: TOTAL STORAGE IN BLOCKS - 1
-	.DW  	255		; DRM: DIR ENTRIES - 1 = 255
-	.DB  	11110000B	; AL0: DIR BLK BIT MAP, FIRST BYTE
-	.DB  	00000000B	; AL1: DIR BLK BIT MAP, SECOND BYTE
-	.DW  	0		; CKS: ZERO FOR NON-REMOVABLE MEDIA
-	.DW  	0		; OFF: ROM DISK HAS NO SYSTEM AREA
+	.DW	255		; DRM: DIR ENTRIES - 1 = 255
+	.DB	11110000B	; AL0: DIR BLK BIT MAP, FIRST BYTE
+	.DB	00000000B	; AL1: DIR BLK BIT MAP, SECOND BYTE
+	.DW	0		; CKS: ZERO FOR NON-REMOVABLE MEDIA
+	.DW	0		; OFF: ROM DISK HAS NO SYSTEM AREA
 ;__________________________________________________________________________________________________
 ;
 ; RAM DISK: 64 SECS/TRK, 128 BYTES/SEC
 ; BLOCKSIZE (BLS) = 2K, DIRECTORY ENTRIES = 256
-; RAM DISK SIZE = TOTAL RAM - 128K RESERVED FOR SYSTEM USE
+; RAM DISK SIZE = TOTAL RAM - 256K RESERVED FOR SYSTEM USE
 ;
 ; ALS_RAM, EXM, DSM MUST BE FILLED DYNAMICALLY:
 ;  - ALS_RAM := (BANKS * 2)
@@ -1650,16 +1911,16 @@ DPB_ROM:
 	.DW	ALS_RAM		; ALS: BLKS / 8
 	.DB	(2048 / 128)	; RECORDS PER BLOCK (BLS / 128)
 DPB_RAM:
-	.DW  	64		; SPT: SECTORS PER TRACK
-	.DB  	4		; BSH: BLOCK SHIFT FACTOR
-	.DB  	15		; BLM: BLOCK MASK
+	.DW	64		; SPT: SECTORS PER TRACK
+	.DB	4		; BSH: BLOCK SHIFT FACTOR
+	.DB	15		; BLM: BLOCK MASK
 	.DB	1		; EXM: (BLKS <= 256) ? 1 : 0
-	.DW	192 - 1		; DSM: TOTAL STORAGE IN BLOCKS - 1
-	.DW  	255		; DRM: DIR ENTRIES - 1 = 255
-	.DB  	11110000B	; AL0: DIR BLK BIT MAP, FIRST BYTE
-	.DB  	00000000B	; AL1: DIR BLK BIT MAP, SECOND BYTE
-	.DW  	0		; CKS: ZERO FOR NON-REMOVABLE MEDIA
-	.DW  	0		; OFF: RESERVED TRACKS = 0 TRK
+	.DW	128 - 1		; DSM: TOTAL STORAGE IN BLOCKS - 1
+	.DW	255		; DRM: DIR ENTRIES - 1 = 255
+	.DB	11110000B	; AL0: DIR BLK BIT MAP, FIRST BYTE
+	.DB	00000000B	; AL1: DIR BLK BIT MAP, SECOND BYTE
+	.DW	0		; CKS: ZERO FOR NON-REMOVABLE MEDIA
+	.DW	0		; OFF: RESERVED TRACKS = 0 TRK
 ;__________________________________________________________________________________________________
 ;
 ; 4MB RAM FLOPPY DRIVE, 32 TRKS, 1024 SECS/TRK, 128 BYTES/SEC
@@ -1669,16 +1930,16 @@ DPB_RAM:
 	.DW	ALS_HD
 	.DB	(2048 / 128)	; RECORDS PER BLOCK (BLS / 128)
 DPB_RF:
-	.DW  	64		; SPT: SECTORS PER TRACK
-	.DB  	4		; BSH: BLOCK SHIFT FACTOR
-	.DB  	15		; BLM: BLOCK MASK
-	.DB  	0		; EXM: EXTENT MASK
-	.DW  	2047		; DSM: TOTAL STORAGE IN BLOCKS - 1 BLK = (4MB / 2K BLS) - 1 = 2047
-	.DW  	511		; DRM: DIR ENTRIES - 1 = 256 - 1 = 255
-	.DB  	11111111B	; AL0: DIR BLK BIT MAP, FIRST BYTE
-	.DB  	00000000B	; AL1: DIR BLK BIT MAP, SECOND BYTE
-	.DW  	0		; CKS: ZERO FOR NON-REMOVABLE MEDIA
-	.DW  	0		; OFF: RESERVED TRACKS = 0 TRK
+	.DW	64		; SPT: SECTORS PER TRACK
+	.DB	4		; BSH: BLOCK SHIFT FACTOR
+	.DB	15		; BLM: BLOCK MASK
+	.DB	0		; EXM: EXTENT MASK
+	.DW	2047		; DSM: TOTAL STORAGE IN BLOCKS - 1 BLK = (4MB / 2K BLS) - 1 = 2047
+	.DW	511		; DRM: DIR ENTRIES - 1 = 256 - 1 = 255
+	.DB	11111111B	; AL0: DIR BLK BIT MAP, FIRST BYTE
+	.DB	00000000B	; AL1: DIR BLK BIT MAP, SECOND BYTE
+	.DW	0		; CKS: ZERO FOR NON-REMOVABLE MEDIA
+	.DW	0		; OFF: RESERVED TRACKS = 0 TRK
 ;__________________________________________________________________________________________________
 ;
 ; GENERIC HARD DISK DRIVE (8MB DATA SPACE + 128K RESERVED SPACE)
@@ -1690,16 +1951,33 @@ DPB_RF:
 	.DW	ALS_HD
 	.DB	(4096 / 128)	; RECORDS PER BLOCK (BLS / 128)
 DPB_HD:
-	.DW  	64		; SPT: SECTORS PER TRACK
-	.DB  	5		; BSH: BLOCK SHIFT FACTOR
-	.DB  	31		; BLM: BLOCK MASK
-	.DB  	1		; EXM: EXTENT MASK
-	.DW  	2047		; DSM: TOTAL STORAGE IN BLOCKS - 1 = (8MB / 4K BLS) - 1 = 2047
-	.DW  	511		; DRM: DIR ENTRIES - 1 = 512 - 1 = 511
-	.DB  	11110000B	; AL0: DIR BLK BIT MAP, FIRST BYTE
-	.DB  	00000000B	; AL1: DIR BLK BIT MAP, SECOND BYTE
-	.DW  	0		; CKS: DIRECTORY CHECK VECTOR SIZE = 256 / 4
-	.DW  	16		; OFF: RESERVED TRACKS = 16 TRKS * (16 TRKS * 16 HEADS * 16 SECS * 512 BYTES) = 128K
+	.DW	64		; SPT: SECTORS PER TRACK
+	.DB	5		; BSH: BLOCK SHIFT FACTOR
+	.DB	31		; BLM: BLOCK MASK
+	.DB	1		; EXM: EXTENT MASK
+	.DW	2047		; DSM: TOTAL STORAGE IN BLOCKS - 1 = (8MB / 4K BLS) - 1 = 2047
+	.DW	512 - 1		; DRM: DIR ENTRIES - 1
+	.DB	11110000B	; AL0: DIR BLK BIT MAP, FIRST BYTE
+	.DB	00000000B	; AL1: DIR BLK BIT MAP, SECOND BYTE
+	.DW	0		; CKS: DIRECTORY CHECK VECTOR SIZE = 256 / 4
+	.DW	16		; OFF: RESERVED TRACKS
+;
+;   BLOCKSIZE (BLS) = 4K, DIRECTORY ENTRIES = 1024
+;
+	.DW	CKS_HD
+	.DW	ALS_HD
+	.DB	(4096 / 128)	; RECORDS PER BLOCK (BLS / 128)
+DPB_HDNEW:
+	.DW	64		; SPT: SECTORS PER TRACK
+	.DB	5		; BSH: BLOCK SHIFT FACTOR
+	.DB	31		; BLM: BLOCK MASK
+	.DB	1		; EXM: EXTENT MASK
+	.DW	2048 - 1 - 4	; DSM: STORAGE BLOCKS - 1 - RES TRKS
+	.DW	1024 - 1	; DRM: DIR ENTRIES - 1
+	.DB	11111111B	; AL0: DIR BLK BIT MAP, FIRST BYTE
+	.DB	00000000B	; AL1: DIR BLK BIT MAP, SECOND BYTE
+	.DW	0		; CKS: DIRECTORY CHECK VECTOR SIZE = 256 / 4
+	.DW	2		; OFF: RESERVED TRACKS
 ;__________________________________________________________________________________________________
 ;
 ; IBM 720KB 3.5" FLOPPY DRIVE, 80 TRKS, 36 SECS/TRK, 512 BYTES/SEC
@@ -1709,16 +1987,16 @@ DPB_HD:
 	.DW	ALS_FD
 	.DB	(2048 / 128)	; RECORDS PER BLOCK (BLS / 128)
 DPB_FD720:
-	.DW  	36		; SPT: SECTORS PER TRACK
-	.DB  	4		; BSH: BLOCK SHIFT FACTOR
-	.DB  	15		; BLM: BLOCK MASK
-	.DB  	0		; EXM: EXTENT MASK
-	.DW  	350		; DSM: TOTAL STORAGE IN BLOCKS - 1 BLK = ((720K - 18K OFF) / 2K BLS) - 1 = 350
-	.DW  	127		; DRM: DIR ENTRIES - 1 = 128 - 1 = 127
-	.DB  	11000000B	; AL0: DIR BLK BIT MAP, FIRST BYTE
-	.DB  	00000000B	; AL1: DIR BLK BIT MAP, SECOND BYTE
-	.DW  	32		; CKS: DIRECTORY CHECK VECTOR SIZE = 128 / 4
-	.DW  	4		; OFF: RESERVED TRACKS = 4 TRKS * (512 B/SEC * 36 SEC/TRK) = 18K
+	.DW	36		; SPT: SECTORS PER TRACK
+	.DB	4		; BSH: BLOCK SHIFT FACTOR
+	.DB	15		; BLM: BLOCK MASK
+	.DB	0		; EXM: EXTENT MASK
+	.DW	350		; DSM: TOTAL STORAGE IN BLOCKS - 1 BLK = ((720K - 18K OFF) / 2K BLS) - 1 = 350
+	.DW	127		; DRM: DIR ENTRIES - 1 = 128 - 1 = 127
+	.DB	11000000B	; AL0: DIR BLK BIT MAP, FIRST BYTE
+	.DB	00000000B	; AL1: DIR BLK BIT MAP, SECOND BYTE
+	.DW	32		; CKS: DIRECTORY CHECK VECTOR SIZE = 128 / 4
+	.DW	4		; OFF: RESERVED TRACKS = 4 TRKS * (512 B/SEC * 36 SEC/TRK) = 18K
 ;__________________________________________________________________________________________________
 ;
 ; IBM 1.44MB 3.5" FLOPPY DRIVE, 80 TRKS, 72 SECS/TRK, 512 BYTES/SEC
@@ -1728,16 +2006,16 @@ DPB_FD720:
 	.DW	ALS_FD
 	.DB	(2048 / 128)	; RECORDS PER BLOCK (BLS / 128)
 DPB_FD144:
-	.DW  	72		; SPT: SECTORS PER TRACK
-	.DB  	4		; BSH: BLOCK SHIFT FACTOR
-	.DB  	15		; BLM: BLOCK MASK
-	.DB  	0		; EXM: EXTENT MASK
-	.DW  	710		; DSM: TOTAL STORAGE IN BLOCKS - 1 BLK = ((1,440K - 18K OFF) / 2K BLS) - 1 = 710
-	.DW  	255		; DRM: DIR ENTRIES - 1 = 256 - 1 = 255
-	.DB  	11110000B	; AL0: DIR BLK BIT MAP, FIRST BYTE
-	.DB  	00000000B	; AL1: DIR BLK BIT MAP, SECOND BYTE
-	.DW  	64		; CKS: DIRECTORY CHECK VECTOR SIZE = 256 / 4
-	.DW  	2		; OFF: RESERVED TRACKS = 2 TRKS * (512 B/SEC * 72 SEC/TRK) = 18K
+	.DW	72		; SPT: SECTORS PER TRACK
+	.DB	4		; BSH: BLOCK SHIFT FACTOR
+	.DB	15		; BLM: BLOCK MASK
+	.DB	0		; EXM: EXTENT MASK
+	.DW	710		; DSM: TOTAL STORAGE IN BLOCKS - 1 BLK = ((1,440K - 18K OFF) / 2K BLS) - 1 = 710
+	.DW	255		; DRM: DIR ENTRIES - 1 = 256 - 1 = 255
+	.DB	11110000B	; AL0: DIR BLK BIT MAP, FIRST BYTE
+	.DB	00000000B	; AL1: DIR BLK BIT MAP, SECOND BYTE
+	.DW	64		; CKS: DIRECTORY CHECK VECTOR SIZE = 256 / 4
+	.DW	2		; OFF: RESERVED TRACKS = 2 TRKS * (512 B/SEC * 72 SEC/TRK) = 18K
 ;__________________________________________________________________________________________________
 ;
 ; IBM 360KB 5.25" FLOPPY DRIVE, 40 TRKS, 9 SECS/TRK, 512 BYTES/SEC
@@ -1747,16 +2025,16 @@ DPB_FD144:
 	.DW	ALS_FD
 	.DB	(2048 / 128)	; RECORDS PER BLOCK (BLS / 128)
 DPB_FD360:
-	.DW  	36		; SPT: SECTORS PER TRACK
-	.DB  	4		; BSH: BLOCK SHIFT FACTOR
-	.DB  	15		; BLM: BLOCK MASK
-	.DB  	1		; EXM: EXTENT MASK
-	.DW  	170		; DSM: TOTAL STORAGE IN BLOCKS - 1 BLK = ((360K - 18K OFF) / 2K BLS) - 1 = 170
-	.DW  	127		; DRM: DIR ENTRIES - 1 = 128 - 1 = 127
-	.DB  	11110000B	; AL0: DIR BLK BIT MAP, FIRST BYTE
-	.DB  	00000000B	; AL1: DIR BLK BIT MAP, SECOND BYTE
-	.DW  	32		; CKS: DIRECTORY CHECK VECTOR SIZE = 128 / 4
-	.DW  	4		; OFF: RESERVED TRACKS = 4 TRKS * (512 B/SEC * 36 SEC/TRK) = 18K
+	.DW	36		; SPT: SECTORS PER TRACK
+	.DB	4		; BSH: BLOCK SHIFT FACTOR
+	.DB	15		; BLM: BLOCK MASK
+	.DB	1		; EXM: EXTENT MASK
+	.DW	170		; DSM: TOTAL STORAGE IN BLOCKS - 1 BLK = ((360K - 18K OFF) / 2K BLS) - 1 = 170
+	.DW	127		; DRM: DIR ENTRIES - 1 = 128 - 1 = 127
+	.DB	11110000B	; AL0: DIR BLK BIT MAP, FIRST BYTE
+	.DB	00000000B	; AL1: DIR BLK BIT MAP, SECOND BYTE
+	.DW	32		; CKS: DIRECTORY CHECK VECTOR SIZE = 128 / 4
+	.DW	4		; OFF: RESERVED TRACKS = 4 TRKS * (512 B/SEC * 36 SEC/TRK) = 18K
 ;__________________________________________________________________________________________________
 ;
 ; IBM 1.20MB 5.25" FLOPPY DRIVE, 80 TRKS, 15 SECS/TRK, 512 BYTES/SEC
@@ -1766,16 +2044,16 @@ DPB_FD360:
 	.DW	ALS_FD
 	.DB	(2048 / 128)	; RECORDS PER BLOCK (BLS / 128)
 DPB_FD120:
-	.DW  	60		; SPT: SECTORS PER TRACK
-	.DB  	4		; BSH: BLOCK SHIFT FACTOR
-	.DB  	15		; BLM: BLOCK MASK
-	.DB  	0		; EXM: EXTENT MASK
-	.DW  	591		; DSM: TOTAL STORAGE IN BLOCKS - 1 BLK = ((1,200K - 15K OFF) / 2K BLS) - 1 = 591
-	.DW  	255		; DRM: DIR ENTRIES - 1 = 256 - 1 = 255
-	.DB  	11110000B	; AL0: DIR BLK BIT MAP, FIRST BYTE
-	.DB  	00000000B	; AL1: DIR BLK BIT MAP, SECOND BYTE
-	.DW  	64		; CKS: DIRECTORY CHECK VECTOR SIZE = 256 / 4
-	.DW  	2		; OFF: RESERVED TRACKS = 2 TRKS * (512 B/SEC * 60 SEC/TRK) = 15K
+	.DW	60		; SPT: SECTORS PER TRACK
+	.DB	4		; BSH: BLOCK SHIFT FACTOR
+	.DB	15		; BLM: BLOCK MASK
+	.DB	0		; EXM: EXTENT MASK
+	.DW	591		; DSM: TOTAL STORAGE IN BLOCKS - 1 BLK = ((1,200K - 15K OFF) / 2K BLS) - 1 = 591
+	.DW	255		; DRM: DIR ENTRIES - 1 = 256 - 1 = 255
+	.DB	11110000B	; AL0: DIR BLK BIT MAP, FIRST BYTE
+	.DB	00000000B	; AL1: DIR BLK BIT MAP, SECOND BYTE
+	.DW	64		; CKS: DIRECTORY CHECK VECTOR SIZE = 256 / 4
+	.DW	2		; OFF: RESERVED TRACKS = 2 TRKS * (512 B/SEC * 60 SEC/TRK) = 15K
 ;__________________________________________________________________________________________________
 ;
 ; IBM 1.11MB 8" FLOPPY DRIVE, 77 TRKS, 15 SECS/TRK, 512 BYTES/SEC
@@ -1785,16 +2063,16 @@ DPB_FD120:
 	.DW	ALS_FD
 	.DB	(2048 / 128)	; RECORDS PER BLOCK (BLS / 128)
 DPB_FD111:
-	.DW  	60		; SPT: SECTORS PER TRACK
-	.DB  	4		; BSH: BLOCK SHIFT FACTOR
-	.DB  	15		; BLM: BLOCK MASK
-	.DB  	0		; EXM: EXTENT MASK
-	.DW  	569		; DSM: TOTAL STORAGE IN BLOCKS - 1 BLK = ((1,155K - 15K OFF) / 2K BLS) - 1 = 569
-	.DW  	255		; DRM: DIR ENTRIES - 1 = 256 - 1 = 255
-	.DB  	11110000B	; AL0: DIR BLK BIT MAP, FIRST BYTE
-	.DB  	00000000B	; AL1: DIR BLK BIT MAP, SECOND BYTE
-	.DW  	64		; CKS: DIRECTORY CHECK VECTOR SIZE = 256 / 4
-	.DW  	2		; OFF: RESERVED TRACKS = 2 TRKS * (512 B/SEC * 60 SEC/TRK) = 15K
+	.DW	60		; SPT: SECTORS PER TRACK
+	.DB	4		; BSH: BLOCK SHIFT FACTOR
+	.DB	15		; BLM: BLOCK MASK
+	.DB	0		; EXM: EXTENT MASK
+	.DW	569		; DSM: TOTAL STORAGE IN BLOCKS - 1 BLK = ((1,155K - 15K OFF) / 2K BLS) - 1 = 569
+	.DW	255		; DRM: DIR ENTRIES - 1 = 256 - 1 = 255
+	.DB	11110000B	; AL0: DIR BLK BIT MAP, FIRST BYTE
+	.DB	00000000B	; AL1: DIR BLK BIT MAP, SECOND BYTE
+	.DW	64		; CKS: DIRECTORY CHECK VECTOR SIZE = 256 / 4
+	.DW	2		; OFF: RESERVED TRACKS = 2 TRKS * (512 B/SEC * 60 SEC/TRK) = 15K
 ;
 #IFDEF PLTUNA
 SECBUF	.FILL	512,0	; PHYSICAL DISK SECTOR BUFFER
@@ -1819,7 +2097,13 @@ BUFPOOL	.EQU	$		; START OF BUFFER POOL
 HEAPEND	.EQU	CBIOS_END - 64		; TOP OF HEAP MEM, END OF CBIOS LESS 32 ENTRY STACK
 ;
 INIT:
-	DI				; NO INTERRUPTS FOR NOW
+;
+#IF DEBUG
+	CALL	PRTSTRD
+	.DB	"\r\nStarting INIT....$"
+#ENDIF
+;
+	;DI				; NO INTERRUPTS FOR NOW
 
 	; ADJUST BOOT VECTOR TO REBOOT ROUTINE
 	LD	HL,REBOOT		; GET REBOOT ADDRESS
@@ -1846,12 +2130,12 @@ INIT:
 	LD	DE,(BNKBIOS)		; UBIOS_PAGE (SEE PAGES.INC)
 	CALL	$FFFD			; DO IT (RST 08 NOT YET INSTALLED)
 	PUSH	DE			; SAVE PREVIOUS BANK
-	
+
 	LD	HL,0			; FROM ADDRESS 0 (PAGE ZERO)
 	LD	DE,SECBUF		; USE SECBUF AS BOUNCE BUFFER
 	LD	BC,256			; ONE PAGE IS 256 BYTES
 	LDIR				; DO IT
-	
+
 	LD	BC,$01FB		; UNA FUNC = SET BANK
 	POP	DE			; RECOVER OPERATING BANK
 	CALL	$FFFD			; DO IT (RST 08 NOT YET INSTALLED)
@@ -1860,7 +2144,7 @@ INIT:
 	LD	DE,0			; TO PAGE ZERO OF OPERATING BANK
 	LD	BC,256			; ONE PAGE IS 256 BYTES
 	LDIR				; DO IT
-	
+
 	; INSTALL UNA INVOCATION VECTOR FOR RST 08
 	LD	A,$C3			; JP INSTRUCTION
 	LD	(8),A			; STORE AT 0x0008
@@ -1876,11 +2160,21 @@ INIT:
 	LD	(BNKBIOS),A		; ... AND SAVE IT
 	LD	A,E			; GET USER BANK RETURNED IN E
 	LD	(BNKUSER),A		; ... AND SAVE IT
-
+;
+  #IF DEBUG
+	CALL	PRTSTRD
+	.DB	"\r\nReseting HBIOS....$"
+  #ENDIF
+;
 	; SOFT RESET HBIOS
 	LD	B,BF_SYSRESET		; HB FUNC: RESET
+	LD	C,BF_SYSRES_INT		; WARM START
 	RST	08			; DO IT
-	
+;
+  #IF DEBUG
+	CALL	PRTSTRD
+	.DB	"\r\nCopying HCB....$"
+  #ENDIF
 	; CREATE A TEMP COPY OF THE HBIOS CONFIG BLOCK (HCB)
 	; FOR REFERENCE USE DURING INIT
 	LD	B,BF_SYSSETCPY		; HBIOS FUNC: SETUP BANK COPY
@@ -1891,7 +2185,7 @@ INIT:
 	LD	HL,HCB_LOC		; COPY FROM FIXED LOCATION IN HB BANK
 	LD	DE,HCB			; TO TEMP LOCATION IN USR BANK
 	RST	08			; DO IT
-	
+
 	; CAPTURE RAM DRIVE STARTING BANK
 	LD	A,(HCB + HCB_BIDRAMD0)
 	LD	(BNKRAMD),A
@@ -1905,13 +2199,33 @@ INIT:
 	CALL	NEWLINE2		; FORMATTING
 	LD	DE,STR_BANNER		; POINT TO BANNER
 	CALL	WRITESTR		; DISPLAY IT
-	
+
+#IFDEF PLTWBW
+	; CHECK FPR HBIOS/CBIOS VERSION MISMATCH
+	LD	B,BF_SYSVER		; HBIOS VERSION
+	RST	08			; DO IT, DE=MAJ/MIN/UP/PAT
+	LD	A,D			; A := MAJ/MIN
+	CP	((RMJ << 4) | RMN)	; MATCH?
+	JR	NZ,INIT1		; HANDLE VER MISMATCH
+	LD	A,E			; A := OS UP/PAT
+	AND	$F0			; PAT NOT INCLUDED IN MATCH
+	CP	(RUP << 4)		; MATCH?
+	JR	NZ,INIT1		; HANDLE VER MISMATCH
+	JR	INIT2			; ALL GOOD, CONTINUE
+INIT1:
+	; DISPLAY VERSION MISMATCH
+	CALL	NEWLINE2		; FORMATTING
+	LD	DE,STR_VERMIS		; VERSION MISMATCH
+	CALL	WRITESTR		; DISPLAY IT
+INIT2:
+#ENDIF
+;
 #IFDEF PLTUNA
 	; SAVE COMMAND PROCESSOR IMAGE TO MALLOCED CACHE IN UNA BIOS PAGE
 	LD	C,$F7		; UNA MALLOC
 	LD	DE,CCP_SIZ	; SIZE OF CCP
 	RST	08		; DO IT
-	CALL	NZ,PANIC	; BIG PROBLEM
+	CALL	NZ,ERR_BIOMEM	; BIG PROBLEM
 	LD	(CCPBUF),HL	; SAVE THE ADDRESS (IN BIOS MEM)
 
 	LD	BC,$01FB	; UNA FUNC = SET BANK
@@ -1932,7 +2246,7 @@ INIT:
 	LD	B,BF_SYSALLOC	; HBIOS FUNC: ALLOCATE HEAP MEMORY
 	LD	HL,CCP_SIZ	; SIZE TO ALLOC (SIZE OF CCP)
 	RST	08		; DO IT
-	CALL	NZ,PANIC	; BIG PROBLEM
+	CALL	NZ,ERR_BIOMEM	; BIG PROBLEM
 	LD	(CCPBUF),HL	; SAVE THE ADDRESS (IN BIOS MEM)
 	LD	B,BF_SYSSETCPY	; HBIOS FUNC: SETUP BANK COPY
 	LD	A,(BNKUSER)	; GET USER BANK
@@ -1953,6 +2267,56 @@ INIT:
 	CALL	MD_INIT		; INITIALIZE MEMORY DISK DRIVER (RAM/ROM)
 	CALL	DRV_INIT	; INITIALIZE DRIVE MAP
 	CALL	DPH_INIT	; INITIALIZE DPH TABLE AND BUFFERS
+;
+	; SET THE DEFAULT DRIVE
+	XOR	A		; ZERO ACCUM
+	LD	(DEFDRIVE),A	; SET DEFAULT DRIVE TO A: TO START
+;
+#IFDEF PLTWBW
+;
+	; IF WE HAVE MULTIPLE DRIVES AND THE FIRST DRIVE IS RAM DRIVE
+	; AND THE SECOND DRIVE IS ROM DRIVE OR FLASH DRIVE
+	; THEN MAKE OUR DEFAULT STARTUP DRIVE THE SECOND DRIVE (B:)
+;
+	; CHECK FOR 2+ DRIVES
+	LD	HL,(DRVMAPADR)	; POINT TO DRIVE MAP
+	DEC	HL		; BUMP BACK TO DRIVE COUNT
+	LD	A,(HL)		; GET IT
+	CP 	2		; COMPARE TO 2
+	JR	C,INIT2X	; IF LESS THAN 2, THEN DONE
+;
+	; CHECK IF FIRST UNIT IS RAM
+	LD	B,BF_DIODEVICE	; HBIOS FUNC: REPORT DEVICE INFO
+	INC	HL		; POINT TO UNIT FIELD OF FIRST DRIVE
+	LD	C,(HL)		; PUT UNIT NUM IN C
+	RST	08		; CALL HBIOS
+	LD	A,C		; GET ATTRIBUTES
+	AND	%00111000	; ISOLATE TYPE BITS
+	CP	%00101000	; TYPE = RAM?
+	JR	NZ,INIT2X	; IF NOT THEN DONE
+;
+	; CHECK IF SECOND UNIT IS ROM OR FLASH
+	LD	B,BF_DIODEVICE	; HBIOS FUNC: REPORT DEVICE INFO
+	LD	HL,(DRVMAPADR)	; POINT TO DRIVE MAP
+	LD	A,4		; 4 BYTES PER ENTRY
+	CALL	ADDHLA		; POINT TO UNIT FIELD OF SECOND DRIVE
+	LD	C,(HL)		; PUT UNIT NUM IN C
+	RST	08		; CALL HBIOS
+	LD	A,C		; GET ATTRIBUTES
+	AND	%00111000	; ISOLATE TYPE BITS
+	CP	%00100000	; TYPE = ROM?
+	JR	Z,INIT2A	; IF SO, ADJUST DEF DRIVE
+	CP	%00111000	; TYPE = FLASH?
+	JR	NZ,INIT2X	; IF NOT THEN DONE
+;
+INIT2A:
+	; CRITERIA MET, ADJUST DEF DRIVE TO B:
+	LD	A,1		; USE SECOND DRIVE AS DEFAULT
+	LD	(DEFDRIVE),A	; RECORD DEFAULT DRIVE
+;
+INIT2X:
+;
+#ENDIF
 ;
 #IFDEF PLTUNA
 	; USE A DEDICATED BUFFER FOR UNA PHYSICAL DISK I/O
@@ -1978,7 +2342,7 @@ INIT:
 	CALL	PRTDEC			; PRINT IT
 	LD	DE,STR_MEMFREE		; ADD DESCRIPTION
 	CALL	WRITESTR		; AND PRINT IT
-;	
+;
 	LD	A,(DEFDRIVE)		; GET DEFAULT DRIVE
 	LD	(CDISK),A		; ... AND SETUP CDISK
 ;
@@ -1987,9 +2351,9 @@ INIT:
 	LD	DE,STR_CPM		; DEFAULT TO CP/M LABEL
 	LD	A,(BDOS_LOC)		; GET FIRST BYTE OF BDOS
 	CP	'Z'			; IS IT A 'Z' (FOR ZSDOS)?
-	JR	NZ,INIT2		; NOPE, CP/M IS RIGHT
+	JR	NZ,INIT3		; NOPE, CP/M IS RIGHT
 	LD	DE,STR_ZSDOS		; SWITCH TO ZSDOS LABEL
-INIT2:
+INIT3:
 	CALL	WRITESTR		; DISPLAY OS LABEL
 	LD	DE,STR_TPA1		; TPA PREFIX
 	CALL	WRITESTR
@@ -1997,14 +2361,35 @@ INIT2:
 	CALL	PRTDECB			; PRINT IT
 	CALL	PC_PERIOD		; DECIMAL POINT
 	LD	A,0 + (((BDOS_LOC % 1024) * 100) / 1024)
-	CALL	PRTDECB			; MANTISSA 
+	CALL	PRTDECB			; MANTISSA
 	LD	DE,STR_TPA2		; AND TPA SUFFIX
 	CALL	WRITESTR
 	CALL	NEWLINE			; FORMATTING
+;
+; SETUP QP/M TIMDAT ROUTINE VECTOR IN ZERO PAGE AT 0x0010
+;
+#IFDEF PLTWBW
+  #IF QPMTIMDAT
+	LD	A,$C3			; JP INSTRUCTION
+	LD	($0010),A		; STORE AT 0x0008
+	LD	HL,TIMDAT		; ROUTINE ADDRESS
+	LD	($0011),HL		; SET VECTOR
+  #ENDIF
+#ENDIF
+;
 	RET				; DONE
+;
+ERR_BIOMEM:
+	CALL	NEWLINE2		; FORMATTING
+	LD	DE,STR_HEAPOVF		; HBIOS HEAP MEM OVERFLOW
+	CALL	WRITESTR		; TELL THE USER
+	CALL	PANIC			; AND GRIND TO A SCREACHING HALT
 ;
 ;
 ;__________________________________________________________________________________________________
+;
+#IF AUTOSUBMIT
+;
 AUTOSUB:
 ;
 	; SETUP AUTO SUBMIT COMMAND (IF REQUIRED FILES EXIST)
@@ -2036,6 +2421,8 @@ AUTOSUB:
 	LDIR				; PATCH COMMAND LINE INTO CCP
 	RET				; DONE
 ;
+#ENDIF
+;
 ;
 ;__________________________________________________________________________________________________
 DEV_INIT:
@@ -2045,7 +2432,7 @@ DEV_INIT:
 	; PATCH IN CRT: DEVICE
 	LD	A,(HCB + HCB_CRTDEV)	; GET CONSOLE DEVICE
 	CP	$FF			; NUL MEANS NO CRT DEVICE
-	JR	Z,DEV_INIT00		; IF SO, LEAVE IT ALONE
+	JR	Z,DEV_INIT000		; IF SO, LEAVE IT ALONE
 	LD	(DEVMAP + 1),A		; CONSOLE CRT
 	LD	(DEVMAP + 13),A		; LIST CRT
 ;
@@ -2054,31 +2441,43 @@ DEV_INIT:
 	LD	B,A			; SAVE IN B
 	LD	A,(HCB + HCB_CONDEV)	; GET CONSOLE DEVICE
 	CP	B			; COMPARE
-	JR	NZ,DEV_INIT00		; IF DIFFERENT (CRT NOT ACTIVE), LEAVE IOBYTE ALONE
+	JR	NZ,DEV_INIT000		; IF DIFFERENT (CRT NOT ACTIVE), LEAVE IOBYTE ALONE
 	LD	A,1			; IF SAME (CRT ACTIVE), SET IOBYTE FOR CON: = CRT:
 	LD	(IOBYTE),A		; STORE IN IOBYTE
+	LD	HL,DEV_INIT1		; INIT FIRST DEV ASSIGN ADR
+	JR	DEV_INIT00		; SKIP AHEAD
+;
+DEV_INIT000:
+	; CONSOLE IS NOT THE CRT, SO
+	; ASSIGN CURRENT CONSOLE AS TTY
+	LD	A,(HCB + HCB_CONDEV)	; GET CONSOLE DEVICE
+	CALL	DEV_INIT1		; ASSIGN AS TTY
 ;
 DEV_INIT00:
-	; LOOP THRU DEVICES ADDING NON-CRT DEVICES TO DEVMAP
+	; LOOP THRU DEVICES ADDING DEVICES TO DEVMAP
+	; CONSOLE DEVICE WAS ALREADY DONE, SO IT IS SKIPPED HERE
 	LD	B,BF_SYSGET		; HBIOS FUNC: GET SYS INFO
 	LD	C,BF_SYSGET_CIOCNT	; SUBFUNC: GET CIO UNIT COUNT
 	RST	08			; E := SERIAL UNIT COUNT
 	LD	B,E			; COUNT TO B
 	LD	C,0			; UNIT INDEX
-	LD	HL,DEV_INIT1		; POINTER FOR FIRST ENTRY FOUND
 DEV_INIT0:
-	PUSH	BC			; SAVE LOOP CONTROL
-	PUSH	HL			; SAVE TARGET
-	LD	B,BF_CIODEVICE		; HBIOS FUNC: GET DEVICE INFO
-	RST	08			; D := DEVICE TYPE, E := PHYSICAL UNIT NUMBER
-	POP	HL			; RESTORE TARGET
-	LD	A,D			; DEVICE TYPE TO A
-	; FIX: BELOW SHOULD TEST THE "TERMINAL" BIT INSTEAD OF CHECKING DEVICE NUMBER
-	CP	CIODEV_TERM		; COMPARE TO FIRST VIDEO DEVICE
-	POP	BC			; RESTORE LOOP CONTROL
+	;PUSH	BC			; SAVE LOOP CONTROL
+	;PUSH	HL			; SAVE TARGET
+	;LD	B,BF_CIODEVICE		; HBIOS FUNC: GET DEVICE INFO
+	;RST	08			; D := DEVICE TYPE, E := PHYSICAL UNIT NUMBER
+	;POP	HL			; RESTORE TARGET
+	;LD	A,D			; DEVICE TYPE TO A
+	;; FIX: BELOW SHOULD TEST THE "TERMINAL" BIT INSTEAD OF CHECKING DEVICE NUMBER
+	;CP	CIODEV_TERM		; COMPARE TO FIRST VIDEO DEVICE
+	;POP	BC			; RESTORE LOOP CONTROL
+	;LD	A,C			; UNIT INDEX TO ACCUM
+	;;CALL	C,JPHL			; DO IT IF DEVICE TYPE < VDU
+
+	LD	A,(HCB + HCB_CONDEV)	; CURRENT CONSOLE UNIT
+	CP	C			; IS CURRENT CONSOLE?
 	LD	A,C			; UNIT INDEX TO ACCUM
-	;CALL	C,JPHL			; DO IT IF DEVICE TYPE < VDU
-	CALL	JPHL			; DO FOR ANY CHARACTER DEVICE TYPE
+	CALL	NZ,JPHL			; DO IF NOT CURRENT CONSOLE
 	INC	C			; NEXT UNIT
 	DJNZ	DEV_INIT0		; LOOP TILL DONE
 	RET				; ALL DONE
@@ -2130,11 +2529,20 @@ MD_INIT:
 ; UDPATE THE RAM/ROM DPB STRUCTURES BASED ON HARDWARE
 ;
 #IFDEF PLTWBW
+	; TODO: HANDLE DISABLED RAM/ROM DISK BETTER.
+	; IF RAM OR ROM DISK ARE DISABLED, BELOW WILL STILL
+	; TRY TO ADJUST THE DPB BASED ON RAM BANK CALCULATIONS.
+	; IT SHOULD NOT MATTER BECAUSE THE DPB SHOULD NEVER BE
+	; USED.  IT WOULD BE BETTER TO GET RAMD0/ROMD0 AND
+	; RAMDN/ROMDN FROM THE HCB AND USE THOSE TO CALC THE
+	; DPB ADJUSTMENT.  IF DN-D0=0, BYPASS ADJUSTMENT.
 	LD	A,(HCB + HCB_ROMBANKS)	; ROM BANK COUNT
+	SUB	4		; REDUCE BANK COUNT BY RESERVED PAGES
 	LD	IX,DPB_ROM	; ADDRESS OF DPB
 	CALL	MD_INIT1	; FIX IT UP
 ;
 	LD	A,(HCB + HCB_RAMBANKS)	; RAM BANK COUNT
+	SUB	8		; REDUCE BANK COUNT BY RESERVED PAGES
 	LD	IX,DPB_RAM	; ADDRESS OF DPB
 	CALL	MD_INIT1	; FIX IT UP
 ;
@@ -2143,7 +2551,6 @@ MD_INIT:
 MD_INIT1:
 ;
 	; PUT USABLE BANK COUNT IN HL
-	SUB	4		; REDUCE BANK COUNT BY RESERVED PAGES
 	LD	L,A		; PUT IN LSB OF HL
 	LD	H,0		; MSB IS ALWAYS ZERO
 ;
@@ -2186,8 +2593,19 @@ MD_INIT4:
 	LD	BC,$01FB		; UNA FUNC = SET BANK
 	LD	DE,(BNKRAMD)		; FIRST BANK OF RAM DISK
 	CALL	$FFFD			; DO IT (RST 08 NOT SAFE HERE)
-
+;
 #IF (CLRRAMDISK == CLR_AUTO)
+	; CHECK THE FIRST SECTOR (512 BYTES) FOR ALL ZEROES.  IF SO,
+	; IT IMPLIES THE RAM IS UNINITIALIZED.
+	LD	HL,0			; START AT BEGINING OF RAM DISK
+	LD	BC,512			; COMPARE 512 BYTES
+	XOR	A			; COMPARE TO ZERO
+CLRRAM000:
+	CPI				; A - (HL), HL++, BC--
+	JR	NZ,CLRRAM00		; IF NOT ZERO, GO TO NEXT TEST
+	JP	PE,CLRRAM000		; LOOP THRU ALL BYTES
+	JR	CLRRAM2			; ALL ZEROES, JUMP TO INIT
+CLRRAM00:
 	; CHECK FIRST 32 DIRECTORY ENTRIES.  IF ANY START WITH AN INVALID
 	; VALUE, INIT THE RAM DISK.  VALID ENTRIES ARE E5 (EMPTY ENTRY) OR
 	; 0-15 (USER NUMBER).
@@ -2211,15 +2629,15 @@ CLRRAM2:
 	LD	BC,$01FB		; UNA FUNC = SET BANK
 	LD	DE,(BNKUSER)		; SWITCH BACK TO EXEC BANK FOR WRITESTR
 	CALL	$FFFD			; DO IT (RST 08 NOT SAFE HERE)
-
+;
 	CALL	NEWLINE2		; FORMATTING
 	LD	DE,STR_INITRAMDISK	; RAM DISK INIT MESSAGE
 	CALL	WRITESTR		; DISPLAY IT
-
+;
 	LD	BC,$01FB		; UNA FUNC = SET BANK
 	LD	DE,(BNKRAMD)		; FIRST BANK OF RAM DISK
 	CALL	$FFFD			; DO IT (RST 08 NOT SAFE HERE)
-
+;
 	LD	HL,0			; SOURCE ADR FOR FILL
 	LD	BC,$2000		; LENGTH OF FILL IS 8K
 	LD	A,$E5			; FILL VALUE
@@ -2229,20 +2647,33 @@ CLRRAM3:
 	LD	DE,(BNKUSER)		; SWITCH BACK TO EXEC BANK
 	CALL	$FFFD			; DO IT (RST 08 NOT SAFE HERE)
 	EI				; RESUME INTERRUPTS
-
+;
 #ENDIF
-
+;
 #ELSE
 ;
 ; INITIALIZE RAM DISK BY FILLING DIRECTORY WITH 'E5' BYTES
 ; FILL FIRST 8K OF RAM DISK TRACK 1 WITH 'E5'
 ;
 #IF (CLRRAMDISK != CLR_NEVER)
-	DI				; NO INTERRUPTS
 	LD	A,(BNKRAMD)		; FIRST BANK OF RAM DISK
+	CP	$FF			; $FF SIGNIFIES NO RAM DISK
+	RET	Z			; BAIL OUT IF NO RAM DISK
+	DI				; NO INTERRUPTS
 	CALL	HB_BNKSEL		; SELECT BANK
 
 #IF (CLRRAMDISK == CLR_AUTO)
+	; CHECK THE FIRST SECTOR (512 BYTES) FOR ALL ZEROES.  IF SO,
+	; IT IMPLIES THE RAM IS UNINITIALIZED.
+	LD	HL,0			; START AT BEGINING OF RAM DISK
+	LD	BC,512			; COMPARE 512 BYTES
+	XOR	A			; COMPARE TO ZERO
+CLRRAM000:
+	CPI				; A - (HL), HL++, BC--
+	JR	NZ,CLRRAM00		; IF NOT ZERO, GO TO NEXT TEST
+	JP	PE,CLRRAM000		; LOOP THRU ALL BYTES
+	JR	CLRRAM2			; ALL ZEROES, JUMP TO INIT
+CLRRAM00:
 	; CHECK FIRST 32 DIRECTORY ENTRIES.  IF ANY START WITH AN INVALID
 	; VALUE, INIT THE RAM DISK.  VALID ENTRIES ARE E5 (EMPTY ENTRY) OR
 	; 0-15 (USER NUMBER).
@@ -2296,8 +2727,16 @@ DRV_INIT:
 	; GET BOOT UNIT/SLICE INFO
 	LD	BC,$00FC		; UNA FUNC: GET BOOTSTRAP HISTORY
 	RST	08			; CALL UNA
-	LD	D,L			; SAVE L AS UNIT
-	LD	E,0			; SLICE IS ZERO
+	LD	A,L			; PUT IN ACCUM
+	AND	$0F			; UNIT IN LOW NIBBLE
+	LD	D,A			; UNIT NUM TO D
+	LD	A,L			; GET ORIGINAL VALUE BACK
+	RLCA				; MOVE SLICE TO LOW NIBBLE
+	RLCA				; ...
+	RLCA				; ...
+	RLCA				; ...
+	AND	$0F			; SLICE NOW IN LOW NIBBLE
+	LD	E,A			; SLICE TO E
 	LD	(BOOTVOL),DE		; D -> UNIT, E -> SLICE
 ;
 	; INIT DEFAULT
@@ -2439,14 +2878,6 @@ DRV_INIT:
 	LD	DE,(HCB + HCB_BOOTVOL)	; BOOT VOLUME (UNIT, SLICE)
 	LD	(BOOTVOL),DE		; D -> UNIT, E -> SLICE
 ;
-	; INIT DEFAULT
-	LD	A,D			; BOOT UNIT?
-	CP	1			; IF ROM BOOT, DEF DRIVE SHOULD BE B:
-	JR	Z,DRV_INIT1		; ... SO LEAVE AS IS AND SKIP AHEAD
-	XOR	A			; ELSE FORCE TO DRIVE A:
-DRV_INIT1:
-	LD	(DEFDRIVE),A		; STORE IT
-;
 	; SETUP THE DRVMAP STRUCTURE
 	LD	HL,(HEAPTOP)		; GET CURRENT HEAP TOP
 	INC	HL			; SKIP 1 BYTE FOR ENTRY COUNT PREFIX
@@ -2502,7 +2933,7 @@ DRV_INIT3A:
 	PUSH	DE			; SAVE DE (HARD DISK VOLUME COUNTER)
 	PUSH	HL			; SAVE DRIVE LIST PTR
 	PUSH	BC			; SAVE LOOP CONTROL
-	
+
 	LD	B,BF_DIOMEDIA		; HBIOS FUNC: SENSE MEDIA
 	LD	E,1			; PERFORM MEDIA DISCOVERY
 	RST	08
@@ -2510,9 +2941,9 @@ DRV_INIT3A:
 	POP	BC			; RESTORE LOOP CONTROL
 	POP	HL			; RESTORE DRIVE LIST PTR
 	POP	DE			; RESTORE DE
-	
+
 	RET	NZ			; IF NO MEDIA, JUST RETURN
-	
+
 	; IF ACTIVE...
 	LD	(HL),C			; SAVE UNIT NUM IN LIST
 	INC	HL			; BUMP PTR
@@ -2534,11 +2965,8 @@ DRV_INIT5:
 	LD	A,E			; SLICES PER VOLUME VALUE TO ACCUM
 	LD	(HDSPV),A		; SAVE IT
 	LD	DE,(BOOTVOL)		; BOOT VOLUME (UNIT, SLICE)
-	LD	A,1			; ROM DISK UNIT?
-	CP	D			; CHECK IT
-	JR	Z,DRV_INIT5A		; IF SO, SKIP BOOT DRIVE
 	LD	B,1			; JUST ONE SLICE PLEASE
-	CALL	DRV_INIT8A		; DO THE BOOT DEVICE
+	CALL	DRV_INIT8A		; DO THE BOOT UNIT & SLICE FIRST
 ;
 DRV_INIT5A:
 	LD	A,(DRVLSTC)		; ACTIVE DRIVE LIST COUNT TO ACCUM
@@ -2574,9 +3002,10 @@ DRV_INIT7:	; PROCESS UNIT
 DRV_INIT8:
 	; SLICE CREATION LOOP
 	; DE=UNIT/SLICE, B=SLICE CNT
+;
+	; FIRST, CHECK TO SEE IF THIS IS THE BOOT VOL & SLICE.
+	; IF SO, IT HAS ALREADY BEEN PROCESSED ABOVE, SO SKIP IT HERE.
 	LD	A,(BOOTVOL + 1)		; GET BOOT UNIT
-	CP	1			; ROM BOOT?
-	JR	Z,DRV_INIT8A		; IF SO, OK TO CONTINUE
 	CP	D			; COMPARE TO CUR UNIT
 	JR	NZ,DRV_INIT8A		; IF NE, OK TO CONTINUE
 	LD	A,(BOOTVOL)		; GET BOOT SLICE
@@ -2630,7 +3059,8 @@ DPH_INIT:
 	LD	H,0		; ... INTO HL
 	ADD	HL,HL		; MULTIPLY
 	ADD	HL,HL		; ... BY SIZE
-	ADD	HL,HL		; ... OF DPH (16)
+	CALL	ADDHLA		; ...
+	ADD	HL,HL		; ... OF DPH (20)
 	ADD	HL,HL		; ... FOR TOTAL SIZE
 	CALL	ALLOC		; ALLOCATE THE SPACE
 	CALL	C,PANIC		; SHOULD NEVER ERROR
@@ -2669,7 +3099,7 @@ DPH_INIT1:
 	CALL	PRTDRV		; PRINT DRIVE INFO
 	LD	A,D		; A := UNIT
 	PUSH	HL		; SAVE DRIVE MAP POINTER
-DPH_INIT1A:	
+DPH_INIT1A:
 	LD	DE,(DPHTOP)	; GET ADDRESS OF NEXT DPH
 	PUSH	DE		; ... AND SAVE IT
 	; INVOKE THE DPH BUILD ROUTINE
@@ -2687,7 +3117,8 @@ DPH_INIT2:
 	LD	(HL),D		; ... DRIVE MAP
 	INC	HL		; AND BUMP TO START OF NEXT ENTRY
 	; UPDATE DPH ALLOCATION TOP
-	LD	A,16		; SIZE OF A DPH ENTRY
+	;LD	A,16		; SIZE OF A DPH ENTRY
+	LD	A,20		; SIZE OF A DPH ENTRY
 	EX	DE,HL		; HL := DPH POINTER
 	CALL	ADDHLA		; CALC NEW DPHTOP
 	LD	(DPHTOP),HL	; SAVE IT
@@ -2752,12 +3183,12 @@ MAKDPH0:
 	; RAM/ROM DISK DPB DERIVATION
 	; TYPE OF MEMORY DISK (RAM/ROM) DETERMINED BY PHYSICAL UNIT NUMBER
 	LD	A,E		; LOAD PHYSICAL UNIT NUMBER
-	LD	DE,DPB_ROM	; PRELOAD ROM DISK DPB
-	OR	A		; UNIT=0 (ROM)?
-	JR	Z,MAKDPH1	; IF UNIT=0, IT IS ROM, PROCEED TO DPH CREATION
 	LD	DE,DPB_RAM	; PRELOAD RAM DISK DPB
-	CP	$01		; UNIT=1 (RAM)?
-	JR	Z,MAKDPH1	; IF UNIT=0, IT IS ROM, PROCEED TO DPH CREATION
+	OR	A		; UNIT=0 (RAM)?
+	JR	Z,MAKDPH1	; IF SO, CREATE RAM DISK DPH
+	LD	DE,DPB_ROM	; PRELOAD ROM DISK DPB
+	CP	$01		; UNIT=1 (ROM)?
+	JR	Z,MAKDPH1	; IF SO, CREATE ROM DISK DPH
 	CALL	PANIC		; OTHERWISE UNKNOWN, NOT POSSIBLE, JUST PANIC
 ;
 #ENDIF
@@ -2768,7 +3199,7 @@ MAKDPH1:
 	POP	HL		; HL := START OF DPH
 	LD	A,8		; SIZE OF DPH RESERVED AREA
 	CALL	ADDHLA		; LEAVE IT ALONE (ZERO FILLED)
-	
+
 	LD	BC,(DIRBUF)	; ADDRESS OF DIRBUF
 	LD	(HL),C		; PLUG DIRBUF
 	INC	HL		; ... INTO DPH
@@ -2805,7 +3236,7 @@ MAKDPH2:
 	LD	(HL),C		; SAVE CKS/ALS BUF
 	INC	HL		; ... ADDRESS IN
 	LD	(HL),B		; ... DPH AND BUMP
-	INC	HL		; ... TO NEXT DPH ENTRY	
+	INC	HL		; ... TO NEXT DPH ENTRY
 	XOR	A		; SIGNAL SUCCESS
 	RET
 ;
@@ -2823,9 +3254,9 @@ ALLOC:
 	EX	DE,HL		; DE=NEW HEAPTOP, HL=HEAPLIM
 	SBC	HL,DE		; HEAPLIM - HEAPTOP
 	JR	C,ALLOCX	; C SET ON OVERFLOW ERROR
-	; ALLOCATION SUCCEEDED, COMMIT NEW HEAPTOP              
+	; ALLOCATION SUCCEEDED, COMMIT NEW HEAPTOP
 	LD	(HEAPTOP),DE	; SAVE NEW HEAPTOP
-ALLOCX:                         
+ALLOCX:
 	POP	HL		; RETURN VALUE TO HL
 	POP	DE		; RECOVER DE
 	RET
@@ -2854,15 +3285,15 @@ PRTDRV:
 	PUSH	BC		; PRESERVE BC
 	PUSH	DE		; PRESERVE DE
 	PUSH	HL		; PRESERVE HL
-	
+
 	LD	B,D		; B := UNIT
 	LD	C,$48		; UNA FUNC: GET DISK TYPE
 	CALL	$FFFD		; CALL UNA
 	LD	A,D		; DISK TYPE TO A
-	
+
 	CP	$40
 	JR	Z,PRTDRV1	; IF SO, HANDLE RAM/ROM
-	
+
 	LD	DE,DEVIDE	; IDE STRING
 	CP	$41		; IDE?
 	JR	Z,PRTDRVX	; IF YES, PRINT
@@ -3003,10 +3434,11 @@ FCB_PRO	.DB	'?'			; DRIVE CODE, 0 = CURRENT DRIVE
 STR_BANNER	.DB	"CBIOS v", BIOSVER, " [", PLTSTR, "]$"
 STR_INITRAMDISK	.DB	"Formatting RAMDISK...$"
 STR_LDR2	.DB	"\r\n"
-STR_LDR		.DB	"\r\n   $"
+STR_LDR		.DB	"\r\n	$"
 STR_DPHINIT	.DB	"Configuring Drives...$"
-STR_HEAPOVF	.DB	" *** Insufficient Memory ***$"
+STR_HEAPOVF	.DB	" *** Insufficient HBIOS Heap Memory ***$"
 STR_INVMED	.DB	" *** Invalid Device ID ***$"
+STR_VERMIS	.DB	7,"*** WARNING: HBIOS/CBIOS Version Mismatch ***$"
 STR_MEMFREE	.DB	" Disk Buffer Bytes Free$"
 STR_CPM		.DB	"CP/M-80 v2.2$"
 STR_ZSDOS	.DB	"ZSDOS v1.1$"

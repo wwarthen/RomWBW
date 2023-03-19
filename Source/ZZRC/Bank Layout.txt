@@ -1,0 +1,32 @@
+ZZRCC has no real ROM.  It has a single 512K RAM chip.  The first
+256K of the RAM chip is loaded from the CF card.  This 256K is
+treated like ROM by RomWBW.  The remainder of the RAM (256K) is
+treated like RAM by RomWBW.
+
+Because of the memory constraints, notice that there is no RAM Disk,
+only a ROM disk.  If you perform a ROM boot to an OS, the A: drive
+will be the ROM disk and will not be writable.  Booting a ROM OS
+on this system is not typical since the system has a CF card by
+definition.
+
+Bank	ROM			RAM			RAM
+----	---			---			---
+0	HBIOS (IMG)					
+1	ROMLDR+MON+CP/M2+ZSYS				
+2	FTH+BAS+TBAS+PLAY+USR				
+3	RESERVED					
+4	ROMDISK						
+5	ROMDISK						
+6	ROMDISK						
+7	ROMDISK						
+							
+8				BUF (CPM3)		BUF (CPM3)
+9				BUF (CPM3)		BUF (CPM3)
+A				BUF (CPM3)		BUF (CPM3)
+B				BUF (CPM3)		BUF (CPM3)
+C				AUX (CPM3)		TPA (CPM3)
+D				HBIOS (EXEC)		HBIOS (EXEC)
+E				TPA-LO			OS (CPM3)
+F				COMMON (TPA-HI)		COMMON (TPA-HI)
+
+--WBW 6:40 PM 2/16/2022

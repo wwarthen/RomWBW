@@ -1,6 +1,7 @@
 ;**************************************************************************
 ; DEBLOCK - Disk Deblocking Buffer Routines.  (Based on CP/M Example code)
 ;
+; 1.1 - 14 Jun 16 - eliminated unnecessary disk accessess		WW
 ; 1.0 -  3 Jul 92 - First General Release.				HFB
 ; 0.0 -  8 Jul 91 - Initial Test Release.				HFB
 ;**************************************************************************
@@ -267,7 +268,9 @@ MATCH:	LD	A,(SECMSK)	; Get the sector mask
 ;
 ; Modified to use HBIOS host buffer
 ;
-	LD	A,BID_HB	; HSTBUF is in HBIOS
+	; HSTBUF is always in HBIOS bank where I/O is done
+	LD	A,(TPABNK)	; TPA BANK
+	DEC	A		; HBIOS bank is one below
 	LD	C,A
 	  IF  BANKED
 	LD	A,(DMABNK)	; Set Read Destination Bank
@@ -281,8 +284,7 @@ MATCH:	LD	A,(SECMSK)	; Get the sector mask
 	LD	A,B		; Else reverse banks
 	LD	B,C
 	LD	C,A
-OKBNKS:	CALL	HBX_XCOPY	; Set source & destination banks
-;	LD	DE,HBBUF	; Host buffer address in HBIOS bank
+OKBNKS:	CALL	HB_XMOVE	; Set source & destination banks
 	LD	DE,(HB_DSKBUF)	; Host buffer address in HBIOS bank
 	ADD	HL,DE		; Point to the sector
 	LD	DE,(DMAADR)	; User's buffer
@@ -299,17 +301,19 @@ OKBNKS:	CALL	HBX_XCOPY	; Set source & destination banks
 
 ; Move the data
 
-RWMOVE:	CALL	HBX_COPY	; Handle possible inter-bank move
+RWMOVE:	
+	CALL	HB_MOVE		; Handle possible inter-bank move
 
 	  ELSE	; HBIOS
-	  IF  BANKED
-	  IF  INROM
+
+	    IF  BANKED
+	      IF  INROM
 	LD	A,(TPABNK)	; If bank in ROM, HSTBUF is in TPA
 	LD	C,A
-	  ELSE
+	      ELSE
 	LD	A,(SYSBNK)	; If bank in RAM, HSTBUF is in System Bank
 	LD	C,A
-	  ENDIF
+	      ENDIF	;INROM
 	LD	A,(DMABNK)	; Set Read Destination Bank
 	LD	B,A
 	LD	A,(READOP)	; Direction?
@@ -319,7 +323,7 @@ RWMOVE:	CALL	HBX_COPY	; Handle possible inter-bank move
 	LD	B,C
 	LD	C,A
 OKBNKS:	CALL	XMOVE		; Set source & destination banks
-	  ENDIF
+	    ENDIF		;BANKED
 	LD	DE,HSTBUF	; Host buffer address
 	ADD	HL,DE		; Point to the sector
 	LD	DE,(DMAADR)	; User's buffer
@@ -413,4 +417,4 @@ UNASEC:	 DEFS	1		; Current record
 UNACNT:	 DEFS	1		; Unallocated record count
 
 ;========================= End of DEBLOCK =================================
-
+

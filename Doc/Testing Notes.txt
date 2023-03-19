@@ -23,7 +23,7 @@ Zeta 2 (X)
 - Test FD driver
 - Test FDU app
 
-RC2014 (X)
+RCBus (X)
 ------
 - Test SIO driver (Serial Module)
 - Test ACIA driver (Dual Serial Module)
@@ -40,7 +40,7 @@ N8-2312 (X)
 - Test FDU app
 - Test TMS driver (video & kbd)
 
-N8-2511 ( )
+N8-2511 (X)
 -------
 - Test ASCI driver
 - Test SD driver (Juha mode)
@@ -139,27 +139,6 @@ GENERAL (X)
 - ASSIGN app
 - MODE app
 - SYSCOPY app
-- OSLDR app
 - FDU app
 - FDISK80 app
 - TUNE app
-
-RESULTS
--------
-- Missing HBIOS startup banner (X)
-- PANIC while printing Serial device inventory (X)
-- Unexpected interrupt signals not handled well (X)
-- Fix IT_??? usage (X)
-- Fix HB_DI/HB_EI in PEEK/POKE/BNKCPY (X)
-- Fix SIMH timer interrupt setup (X)
-- Move DI/EI in PEEK/POKE/BNKCPY to API layer? (X)
-- RETI vs. JP in page zero when INTMODE = 0 (X)
-- Check interrupt stack space (X)
-- If an early INT fires, we return with INTs enabled (not good) (X)
-- PPPCON init should display ANSI 80x25 or similar (X)
-- Add INT MODE X message to early boot messages (X)
-- OSLDR fails when LDDS is loaded (X)
-- Add "!!!" to force assembly error as needed ( )
-- TIMER app should check for HBIOS active (X)
-- Halt system after bad interrupt??? ( )
-- Adapt and bundle PLAYER.COM (X)

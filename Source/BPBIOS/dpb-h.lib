@@ -8,10 +8,10 @@
 ; these rates without hardware modifications and this file should not be
 ; included.  See DPB.LIB for definitions of Format Type Bytes.
 ;.....
-; D-X Designs Pty Ltd, P112 Board   (IBM/MS-DOS Compatible) 3.5" HD Disk
+; Retro-Brew Board with RomWBW HBIOS   (IBM/MS-DOS Compatible) 3.5" HD Disk
 ;  This format is: 18-512 byte Sectors/Track, Skew=2, 500 kbps, 300 rpm.
 
-	DEFB	'D-X Desgn','1'+80H ; Id - 10 bytes
+	DEFB	'RetroB 3.','5'+80H ; Id - 10 bytes
 	DEFB	DSK3+DD+TSBTL	    ; Format type byte 0
 	DEFB	SPEED8+SEC512+ALC2K ; Format type byte 1
 	DEFB	-2		; Skew factor
@@ -143,4 +143,4 @@
 	   ENDIF
 	  ENDIF		;~Movcpm
 ;======================= End of DPB-H.LIB ===========================
-
+

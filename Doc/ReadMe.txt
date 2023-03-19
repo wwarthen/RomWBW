@@ -10,6 +10,26 @@ This directory ("Doc") is part of the RomWBW System Software
 distribution archive.  It contains documentation for components of 
 the system.
 
+ChangeLog.txt
+-------------
+
+Log of changes in RomWBW by version.
+
+
+RomWBW User Guide ("RomWBW User Guide.pdf")
+RomWBW System Guide ("RomWBW System Guide.pdf")
+RomWBW Applications ("RomWBW Applications.pdf")
+RomWBW ROM Applications ("RomWBW ROM Applications.pdf")
+RomWBW Disk Catalog ("RomWBW Disk Catalog.pdf")
+RomWBW Errata ("RomWBW Errata.pdf")
+-------------------------------------------------------
+
+Documentation set for RomWBW.  The primary document is the
+User Guide.  The System Guide explains internal system operation
+and has a reference for the HBIOS API.  Use of included tools
+and utilities are detailed in the  Applications and
+ROM Applications documents.
+
 
 CPM Manual ("CPM Manual.pdf")
 -----------------------------
@@ -43,12 +63,6 @@ The operational manual for John Coffman's hard disk partitioning
 program.  This program is included in RomWBW as FDISK80.
 
 
-Floppy Disk Utility Documentation ("FDU.tst")
----------------------------------------------
-
-Operational documentation for the RomWBW FDU application.
-
-
 Hard Disk Anatomy ("Hard Disk Anatomy.pdf")
 -------------------------------------------
 
@@ -61,11 +75,47 @@ NZCOM User's Manual ("NZCOM Users Manual.pdf")
 NZCOM operating system operation manual.
 
 
-RomWBW Architecture ("RomWBW Architecture.pdf")
------------------------------------------------
+ZCPR Manual ("ZCPR Manual.pdf")
+-------------------------------
 
-Document describing the architecture of the RomWBW HBIOS.  It 
-includes reference information for the HBIOS calls.
+ZCPR is the command proccessor portion of Z-System.  This is the 
+manual for ZCPR 1.x as included in RomWBW.  The installation 
+instructions can be ignored since that work has already been 
+completed as part of the RomWBW distribution.
+
+ZCPR D&J Manual ("ZCPR-DJ.doc")
+-------------------------------
+
+ZCPR D&J User Manual.  This manual supplements the ZCPR Manual.
+
+
+ZSDOS Manual ("ZSDOS Manual.pdf")
+---------------------------------
+
+ZSDOS is the DOS portion of Z-System.  This is the manual for ZSDOS 
+1.x as included in RomWBW.  The installation instructions can be 
+ignored since that work has already been completed as part of the 
+RomWBW distribution.
+
+Microsoft Basic-80 Reference Manual v5.0 (Microsoft Basic-80 Reference Manual v5.0.pdf)
+---------------------------------------------------------------------------------------
+
+Official manual for Microsoft BASIC as included in RomWBW.
+
+
+QP/M 2.7 Installation Guide and Supplements ("qpm27.pdf")
+QP/M 2.7 Interface Guide ("qdos27.pdf")
+QP/M 2.7 Features and Facilities ("qcp27.pdf")
+--------------------------------------------
+
+Official documentation set for QP/M 2.7 from original QP/M distribution.
+
+
+SIO+CTC Baud Rate Options (SIO+CTC Baud Rate Options.pdf)
+---------------------------------------------------------
+
+Documents possible baud rates available based on different baud
+clock rates for Zilog SIO using CTC for baud rate clock generation.
 
 
 Z180 ASCI Baud Rate Options ("Z180 ASCI Baud Rate Options.pdf")
@@ -77,19 +127,10 @@ clock rate.  This document provides a list of the possible
 baud rates for typical CPU clock rates.
 
 
-ZCPR Manual ("ZCPR Manual.pdf")
--------------------------------
+UCSD p-System Users Manual ("UCSD p-System Users Manual.pdf")
+-------------------------------------------------------------
 
-ZCPR is the command proccessor portion of Z-System.  This is the 
-manual for ZCPR 1.x as included in RomWBW.  The installation 
-instructions can be ignored since that work has already been 
-completed as part of the RomWBW distribution.
+Official user manual for p-System operating system included with
+RomWBW.
 
-
-ZSDOS Manual ("ZSDOS Manual.pdf")
----------------------------------
-
-ZSDOS is the DOS portion of Z-System.  This is the manual fo ZSDOS 
-1.x as included in RomWBW.  The installation instructions can be 
-ignored since that work has already been completed as part of the 
-RomWBW distribution.
+--WBW 5:18 PM 3/16/2023

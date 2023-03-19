@@ -1,0 +1,20 @@
+Commands: Precede with ESC:
+
+B     Send break to modem
+C     Configure system
+D     Get disk directory
+F     File operations, change/reset disk
+H     Get instructions
+I     Initiate phone call (dial)
+K     Display keyboard macros
+L     Change line parameters (baud rate, full/half duplex/echo, UART settings)
+M     Toggle memory capture mode
+P     Toggle printer
+Q     Quit
+R     Receive a file
+S     Send a file
+X     Hangup
+Y     Print screen
+Z     Clear local screen
+
+

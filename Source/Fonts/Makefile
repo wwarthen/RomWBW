@@ -1,10 +1,9 @@
 OBJECTS = \
-	font8x8u.asm font8x11u.asm font8x16u.asm \
-	font8x8c.asm font8x11c.asm font8x16c.asm
+	font8x8u.asm font8x11u.asm font8x16u.asm fontcgau.asm \
+	font8x8c.asm font8x11c.asm font8x16c.asm fontcgac.asm
 
-OTHERS = font8x8c.bin font8x11c.bin font8x16c.bin
+OTHERS = font8x8c.bin font8x11c.bin font8x16c.bin fontcgac.bin
 
-DEST = ../HBIOS
 TOOLS = ../../Tools
 
 include $(TOOLS)/Makefile.inc
@@ -22,6 +21,9 @@ font8x11c.bin: font8x11u.bin
 	$(BINDIR)/lzsa -f2 -r $< $@
 
 font8x16c.bin: font8x16u.bin
+	$(BINDIR)/lzsa -f2 -r $< $@
+
+fontcgac.bin: fontcgau.bin
 	$(BINDIR)/lzsa -f2 -r $< $@
 
 %.asm: %.bin

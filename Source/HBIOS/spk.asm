@@ -1,46 +1,190 @@
-;
-;======================================================================
-; I/O BIT DRIVER FOR CONSOLE BELL FOR SBC V2 USING BIT 0 OF RTC DRIVER
 ;======================================================================
 ;
-SPK_INIT:
-	CALL	NEWLINE			; FORMATTING
+;	BIT MODE SOUND DRIVER FOR SBC V2 USING BIT 0 OF RTC DRIVER
+;
+;======================================================================
+;
+;	LIMITATIONS -	CPU FREQUENCY ADJUSTMENT LIMITED TO 1MHZ RESOLUTION
+;			QUARTER TONES NOT SUPPORTED
+;			DURATION FIXED TO 1 SECOND.
+;			NO VOLUME ADJUSTMENT DUE TO HARDWARE LIMITATION
+;======================================================================
+;
+;	DRIVER FUNCTION TABLE AND INSTANCE DATA
+;
+SP_FNTBL:
+	.DW	SP_STUB			; SP_RESET
+	.DW	SP_STUB			; SP_VOLUME
+	.DW	SP_PERIOD
+	.DW	SP_NOTE
+	.DW	SP_PLAY
+	.DW	SP_QUERY
+	.DW	SP_DURATION
+	.DW	SP_DEVICE
+;
+#IF (($ - SP_FNTBL) != (SND_FNCNT * 2))
+	.ECHO	"*** INVALID SND FUNCTION TABLE ***\n"
+	!!!!!
+#ENDIF
+;
+SP_IDAT	.EQU	0			; NO INSTANCE DATA ASSOCIATED WITH THIS DEVICE
+;
+SP_TONECNT	.EQU	1		; COUNT NUMBER OF TONE CHANNELS
+SP_NOISECNT	.EQU	0		; COUNT NUMBER OF NOISE CHANNELS
+;
+SP_RTCIOMSK	.EQU	00000100B
+;
+; FOR OTHER DRIVERS, THE PERIOD VALUE FOR THE TONE IS STORED AT PENDING_PERIOD
+; FOR THE SPK DRIVER THE ADDRESS IN THE TONE TABLE IS STORED IN PENDING_PERIOD
+;
+SP_PENDING_PERIOD	.DW	SP_NOTE_C8	; PENDING PERIOD (16 BITS)
+SP_PENDING_VOLUME	.DB	$FF		; PENDING VOL (8 BITS)
+SP_PENDING_DURATION	.DW	0		; PENDING DURATION (16 BITS)
+;
+;======================================================================
+;	DRIVER INITIALIZATION
+;======================================================================
+;
+SP_INIT:
+	LD	IY, SP_IDAT		; SETUP FUNCTION TABLE
+	LD	BC, SP_FNTBL		; POINTER TO INSTANCE DATA
+	LD	DE, SP_IDAT		; BC := FUNCTION TABLE ADDRESS
+	CALL	SND_ADDENT		; DE := INSTANCE DATA PTR
+;
+	CALL	NEWLINE			; ANNOUNCE DEVICE
 	PRTS("SPK: IO=0x$")
 	LD	A,RTCIO
 	CALL	PRTHEXBYTE
-	CALL	SPK_SETTBL
-	CALL	SPK_BEEP		; PLAY A NOTE
+	CALL	SP_SETTBL		; SETUP TONE TABLE
+	CALL	SP_PLAY			; PLAY DEFAULT NOTE
 	XOR	A
 	RET
 ;
-; SETUP THE SPEAKER NOTE TABLE ACCORDING TO THE CPU SPEED.
-; FREQUENCY ACCURACY DECREASES AS CLOCK SPEED MULITPLIER INCREASES.
-; 1MHZ ERROR MAY OCCUR IF CPU CLOCK IS UNDER. I.E 3.999 = 3MHZ 
-
-SPK_SETTBL:
-	LD	A,(CB_CPUMHZ)		; GET CPU SPEED. 
-	LD	C,A
-
-	LD	B,SPK_NOTCNT		; SET  NUMBER OF NOTES TO 
-	LD	HL,SPK_TUNTBL+2		; ADJUST AND START POINT
-
-SPK_SETTBL2:
+;======================================================================
+;	SOUND DRIVER FUNCTION - RESET
+;======================================================================
+;
+;SP_RESET:
+;	XOR	A			; SUCCESSFULL RESET
+;	RET
+;
+;======================================================================
+;	SOUND DRIVER FUNCTION - VOLUME
+;======================================================================
+;
+;SP_VOLUME:
+;	XOR	A			; SIGNAL SUCCESS
+;	RET
+;
+;======================================================================
+;	SOUND DRIVER FUNCTION - PERIOD
+;======================================================================
+;
+SP_PERIOD:
+	LD	(SP_PENDING_PERIOD), HL	; SAVE AND RETURN SUCCESSFUL
+SP_STUB:
+	XOR	A
+	RET
+;
+;======================================================================
+;	SOUND DRIVER FUNCTION - NOTE
+;======================================================================
+;
+SP_NOTE:
+;	CALL	PRTHEXWORDHL
+;	CALL	PC_COLON
 	PUSH	HL
-	LD	A,(HL)			; READ
-	LD	E,A			; IN
-	INC	HL			; THE
-	LD	A,(HL)			; 1MHZ
-	LD	D,A			; NOTE
-
+	PUSH	DE			; ON ENTRY HL IS A NOTE INDEX
+	LD	A,L			; CONVERT THIS NOTE INDEX
+	AND	00000011B		; TO THE ASSOCIATED ENTRY
+	JR	Z,SP_NOTE1		; IN THE TUNE TABLE.
+;
+	LD	HL,$FFFF		; QUARTER NOTES
+	JR	SP_NOTE2		; NOT SUPPORTED
+;
+SP_NOTE1:
+	LD	DE,SP_TUNTBL		; SAVE THIS ADDRESS AS
+	ADD	HL,DE			; THE PERIOD
+SP_NOTE2:
+;	CALL	PRTHEXWORDHL
+;	CALL	NEWLINE
+	LD	(SP_PENDING_PERIOD),HL
+	POP	DE
+	POP	HL
+	RET
+;
+;======================================================================
+;	SOUND DRIVER FUNCTION - QUERY AND SUBFUNCTIONS
+;======================================================================
+;
+SP_QUERY:
+	LD	A, E
+	CP	BF_SNDQ_CHCNT		; SUB FUNCTION 01
+	JR	Z, SP_QUERY_CHCNT
+;
+	CP	BF_SNDQ_VOLUME		; SUB FUNCTION 02
+	JR	Z, SP_QUERY_VOLUME
+;
+	CP	BF_SNDQ_PERIOD		; SUB FUNCTION 03
+	JR	Z, SP_QUERY_PERIOD
+;
+	CP	BF_SNDQ_DEV		; SUB FUNCTION 04
+	JR	Z, SP_QUERY_DEV
+;
+	OR	$FF			; SIGNAL FAILURE
+	RET
+;
+SP_QUERY_CHCNT:
+	LD	BC,(SP_TONECNT*256)+SP_NOISECNT		; RETURN NUMBER OF
+	XOR	A					; TONE AND NOISE
+	RET						; CHANNELS IN BC
+;
+SP_QUERY_PERIOD:
+	LD	HL, (SP_PENDING_PERIOD)	; RETURN 16-BIT PERIOD
+	XOR	A			; IN HL REGISTER
+	RET
+;
+SP_QUERY_VOLUME:
+	LD	L, 255			; RETURN 8-BIT VOLUME
+	XOR	A			; IN L REGISTER
+	RET
+;
+SP_QUERY_DEV:
+	LD	B, SNDDEV_BITMODE		; RETURN DEVICE IDENTIFIER
+	LD	DE, (RTCIO*256)+SP_RTCIOMSK	; AND ADDRESS AND DATA PORT
+	XOR	A
+	RET
+;
+;======================================================================
+;	INITIALIZE THE TONE TABLE - ONLY ACCURATE FOR 1MHZ INCREMENTS
+;======================================================================
+;
+SP_SETTBL:
+	LD	BC,(CB_CPUMHZ)		; GET MHZ CPU SPEED (IN C).
+;	 
+SP_SETTBL3:
+	LD	B,SP_NOTCNT		; SET NUMBER OF NOTES TO
+	LD	HL,SP_TUNTBL+2		; ADJUST AND START POINT
+;
+SP_SETTBL2:
+	PUSH	HL
+	LD	E,(HL)			; READ IN
+	INC	HL			; THE 1MHZ 
+	LD	D,(HL)			; NOTE
+;
 	PUSH	BC
 	LD	B,C
-	LD	HL,0			; MULTIPLY
-SPK_SETTBL1:				; 1MHZ NOTE
-	ADD	HL,DE			; VALUE BY
-	DJNZ	SPK_SETTBL1		; SYSTEM MHZ
+	LD	HL,0			; MULTIPLY 1MHZ
+SP_SETTBL1:				; NOTE VALUE BY
+	ADD	HL,DE			; SYSTEM MHZ
+	JR	NC,SP_SETBL4
+	LD	HL,$FFFF		; FOR CPU > 10MHz
+	LD	B,1			; HANDLE OVERFLOW 
+SP_SETBL4:
+	DJNZ	SP_SETTBL1
 	POP	BC
 ;
-	LD	DE,30			; ADD OVEREAD
+	LD	DE,15			; ADD OVERHEAD
 	ADD	HL,DE			; COMPENSATION
 ;
 	POP	DE			; RECALL NOTE
@@ -52,34 +196,49 @@ SPK_SETTBL1:				; 1MHZ NOTE
 	INC	HL			; NOTE
 	INC	HL			; AND MOVE
 	INC	HL			; TO NEXT
-
-	DJNZ	SPK_SETTBL2		; NEXT NOTE
+;
+	DJNZ	SP_SETTBL2		; NEXT NOTE
 	RET
+;
+;======================================================================
+;	SOUND DRIVER FUNCTION - PLAY
+;======================================================================
+;
+SP_PLAY:
+	LD	HL,(SP_PENDING_PERIOD)	; SELECT NOTE
+;
+	LD	A,$FF			; EXIT WITH ERROR 
+	CP	H			; STATUS IF INVALID 
+	JR	NZ,SP_PLAY1		; PERIOD ($FFFF)
+	CP	L
+	RET	Z
 
-SPK_BEEP:
-	LD	HL,SPK_NOTE_C8		; SELECT NOTE
-;
-	LD	A,(HL)			; LOAD 1ST ARG
+SP_PLAY1:
+	LD	E,(HL)			; LOAD 1ST ARG
 	INC	HL			; IN DE
-	LD	E,A
-	LD	A,(HL)
+	LD	D,(HL)
 	INC	HL
-	LD	D,A
 ;
-	LD	A,(HL)			; LOAD 2ND ARG
+	LD	C,(HL)			; LOAD 2ND ARG
 	INC	HL			; IN BC
-	LD	C,A
-	LD	A,(HL)	
+	LD	B,(HL)
 	INC	HL
-	LD	B,A
+;
+;	LD	A,$FF			; EXIT WITH ERROR 
+	CP	B			; STATUS IF INVALID 
+	JR	NZ,SP_PLAY2		; NOTE ($FFFF)
+	CP	C
+	RET	Z
+;
+SP_PLAY2:
 	PUSH	BC			; SETUP ARG IN HL
 	POP	HL
 ;
-	CALL	SPK_BEEPER		; PLAY 
+;	CALL	SP_BEEPER		; PLAY 
 ;
-	RET
+;	RET
 ;
-;	The following SPK_BEEPER routine is a modification of code from 
+;	The following SP_BEEPER routine is a modification of code from 
 ;	"The Complete SPECTRUM ROM DISSASSEMBLY" by Dr Ian Logan & Dr Frank O’Hara
 ;
 ;	https://www.esocop.org/docs/CompleteSpectrumROMDisassemblyThe.pdf
@@ -87,9 +246,9 @@ SPK_BEEP:
 ;	DE 	Number of passes to make through the sound generation loop
 ;	HL 	Loop delay parameter
 ;
-SPK_BEEPER:
+SP_BEEPER:
 	PUSH	IX
-	DI 				; Disable the interrupt for the duration of a 'beep'.
+	HB_DI 				; Disable the interrupt for the duration of a 'beep'.
 	LD	A,L 			; Save L temporarily.
 	SRL	L 			; Each '1' in the L register is to count 4 T states, but take INT (L/4) and count 16 T states instead.
 	SRL	L
@@ -99,7 +258,7 @@ SPK_BEEPER:
 	LD	B,$00
 	LD	IX,SPK_DLYADJ 		; The base address of the timing loop.
 	ADD	IX,BC			; Alter the length of the timing loop. Use an earlier starting point for each '1' lost by taking INT (L/4).
-	LD	A,(RTCVAL)		; Fetch the present border colour from BORDCR and move it to bits 2, 1 and 0 of the A register.
+	LD	A,(HB_RTCVAL)		; Fetch the present border colour from BORDCR and move it to bits 2, 1 and 0 of the A register.
 ;
 ;	The HL register holds the 'length of the timing loop' with 16 T states being used for each '1' in the L register and 1024 T states for each '1' in the H register.
 ;
@@ -118,7 +277,7 @@ BE_H_L_LP:
 ;
 ;	The loudspeaker is now alternately activated and deactivated.
 ;
-	XOR	%00000100		; Flip bit 2.
+	XOR	SP_RTCIOMSK		; Flip bit 2.
 	OUT	(RTCIO),A		; Perform the 'OUT' operation, leaving other bits unchanged.
 	LD	B,H			; Reset the B register.
 	LD	C,A			; Save the A register.
@@ -142,122 +301,151 @@ BE_AGAIN:
 	INC	C 			; Add 16 T states as this path is shorter.
 	JP	(IX)			; Jump back.
 BE_END:
-	EI
+	HB_EI
 	POP	IX
+	RET				; ALWAYS EXITS WITH SUCCESS STATUS (A=0)
+;
+;======================================================================
+;	SOUND DRIVER FUNCTION - DURATION
+;======================================================================
+;
+SP_DURATION:
+	LD	(SP_PENDING_DURATION),HL; SET TONE PERIOD TO ZERO
+	XOR	A
 	RET
 ;
-;	STANDARD ONE SECOND TONE TABLES AT 1MHZ (UNCOMPENSATED). FOR SPK_BEEPER, FIRST WORD LOADED INTO DE, SECOND INTO HL
+;======================================================================
+;	SOUND DRIVER FUNCTION - DEVICE
+;======================================================================
 ;
-;	EXCEL SPREADSHEET FOR CALCULATION CAN BE FOUND HERE:
+SP_DEVICE:
+	LD	D,SNDDEV_BITMODE	; D := DEVICE TYPE
+	LD	E,0			; E := PHYSICAL UNIT
+	LD	C,$00			; C := DEVICE TYPE
+	LD	H,0			; H := 0, DRIVER HAS NO MODES
+	LD	L,RTCIO			; L := BASE I/O ADDRESS
+	XOR	A
+	RET
 ;
-;	https://www.retrobrewcomputers.org/lib/exe/fetch.php?media=boards:sbc:sbc_v2:sbc_v2-004:spk_beep_tuntbl.xlsx
+;======================================================================
 ;
-SPK_TUNTBL:
-	.DW $13, $191A ;  D
-	.DW $14, $17B3 ; E0
-	.DW $15, $165E ; F0
-	.DW $17, $151E ;  F
-	.DW $18, $13EE ; G0
-	.DW $19, $12CF ;  G
-	.DW $1B, $11C1 ; A0
-	.DW $1D, $10C1 ;  A
-	.DW $1E, $FD1 ; B0
-	.DW $20, $EEE ; C1
-	.DW $22, $E17 ;  C
-	.DW $24, $D4D ; D1
-	.DW $26, $C8E ;  D
-	.DW $29, $BD9 ; E1
-	.DW $2B, $B2F ; F1
-	.DW $2E, $A8E ;  F
-	.DW $31, $9F7 ; G1
-	.DW $33, $968 ;  G
-	.DW $37, $8E0 ; A1
-	.DW $3A, $861 ;  A
-	.DW $3D, $7E8 ; B1
-	.DW $41, $777 ; C2
-	.DW $45, $70B ;  C
-	.DW $49, $6A6 ; D2
-	.DW $4D, $647 ;  D
-	.DW $52, $5EC ; E2
-	.DW $57, $597 ; F2
-	.DW $5C, $547 ;  F
-	.DW $62, $4FB ; G2
-	.DW $67, $4B3 ;  G
-	.DW $6E, $470 ; A2
-	.DW $74, $430 ;  A
-	.DW $7B, $3F4 ; B2
-	.DW $82, $3BB ; C3
-	.DW $8A, $385 ;  C
-	.DW $92, $353 ; D3
-	.DW $9B, $323 ;  D
-	.DW $A4, $2F6 ; E3
-	.DW $AE, $2CB ; F3
-	.DW $B9, $2A3 ;  F
-	.DW $C4, $27D ; G3
-	.DW $CF, $259 ;  G
-	.DW $DC, $238 ; A3
-	.DW $E9, $218 ;  A
-	.DW $F6, $1FA ; B3
-	.DW $105, $1DD ; C4
-	.DW $115, $1C2 ;  C
-	.DW $125, $1A9 ; D4
-	.DW $137, $191 ;  D
-	.DW $149, $17B ; E4
-	.DW $15D, $165 ; F4
-	.DW $171, $151 ;  F
-	.DW $188, $13E ; G4
-	.DW $19F, $12C ;  G
-	.DW $1B8, $11C ; A4
-	.DW $1D2, $10C ;  A
-	.DW $1ED, $FD ; B4
-	.DW $20B, $EE ; C5
-	.DW $22A, $E1 ;  C
-	.DW $24B, $D4 ; D5
-	.DW $26E, $C8 ;  D
-	.DW $293, $BD ; E5
-	.DW $2BA, $B2 ; F5
-	.DW $2E3, $A8 ;  F
-	.DW $30F, $9F ; G5
-	.DW $33E, $96 ;  G
-	.DW $370, $8E ; A5
-	.DW $3A4, $86 ;  A
-	.DW $3DB, $7E ; B5
-	.DW $416, $77 ; C6
-	.DW $454, $70 ;  C
-	.DW $496, $6A ; D6
-	.DW $4DC, $64 ;  D
-	.DW $526, $5E ; E6
-	.DW $574, $59 ; F6
-	.DW $5C7, $54 ;  F
-	.DW $61F, $4F ; G6
-	.DW $67D, $4B ;  G
-	.DW $6E0, $47 ; A6
-	.DW $748, $43 ;  A
-	.DW $7B7, $3F ; B6
-	.DW $82D, $3B ; C7
-	.DW $8A9, $38 ;  C
-	.DW $92D, $35 ; D7
-	.DW $9B9, $32 ;  D
-	.DW $A4D, $2F ; E7
-	.DW $AE9, $2C ; F7
-	.DW $B8F, $2A ;  F
-	.DW $C3F, $27 ; G7
-	.DW $CFA, $25 ;  G
-	.DW $DC0, $23 ; A7
-	.DW $E91, $21 ;  A
-	.DW $F6F, $1F ; B7	
-SPK_NOTE_C8:
-	.DW $105A, $1D ; C8
-	.DW $1152, $1C ;  C
-	.DW $125A, $1A ; D8
-	.DW $1372, $19 ;  D
-	.DW $149A, $17 ; E8
-	.DW $15D3, $16 ; F8
-	.DW $171F, $15 ;  F
-	.DW $187F, $13 ; G8
-	.DW $19F4, $12 ;  G
-	.DW $1B80, $11 ; A8
-	.DW $1D22, $10 ;  A
-	.DW $1EDE, $F ; B8
-
-SPK_NOTCNT	.EQU	($-SPK_TUNTBL) / 4
+;	STANDARD ONE SECOND TONE TABLES AT 1MHZ.
+;	FOR SP_BEEPER ROUTINE, FIRST WORD LOADED INTO DE, SECOND INTO HL
+;
+;======================================================================
+;
+#DEFINE	SP_TONESET(SP_FREQ) .DW SP_FREQ/100, 12500000/SP_FREQ
+;
+SP_TUNTBL:
+	SP_TONESET(1635)		; C0
+	SP_TONESET(1732)		;  C
+	SP_TONESET(1835)		; D0
+	SP_TONESET(1945)		;  D
+	SP_TONESET(2060)		; E0
+	SP_TONESET(2183)		; F0
+	SP_TONESET(2312)		;  F
+	SP_TONESET(2450)		; G0
+	SP_TONESET(2596)		;  G
+	SP_TONESET(2750)		; A0
+	SP_TONESET(2914)		;  A
+	SP_TONESET(3087)		; B0
+	SP_TONESET(3270)		; C1
+	SP_TONESET(3465)		;  C
+	SP_TONESET(3671)		; D1
+	SP_TONESET(3889)		;  D
+	SP_TONESET(4120)		; E1
+	SP_TONESET(4365)		; F1
+	SP_TONESET(4625)		;  F
+	SP_TONESET(4900)		; G1
+	SP_TONESET(5191)		;  G
+	SP_TONESET(5500)		; A1 
+	SP_TONESET(5827)		;  A
+	SP_TONESET(6174)		; B1
+	SP_TONESET(6541)		; C2
+	SP_TONESET(6930)		;  C
+	SP_TONESET(7342)		; D2
+	SP_TONESET(7778)		;  D
+	SP_TONESET(8241)		; E2
+	SP_TONESET(8731)		; F2
+	SP_TONESET(9250)		;  F
+	SP_TONESET(9800)		; G2
+	SP_TONESET(10383)		;  G
+	SP_TONESET(11000)		; A2
+	SP_TONESET(11654)		;  A
+	SP_TONESET(12347)		; B2
+	SP_TONESET(13081)		; C3
+	SP_TONESET(13859)		;  C
+	SP_TONESET(14683)		; D3
+	SP_TONESET(15556)		;  D
+	SP_TONESET(16481)		; E3
+	SP_TONESET(17461)		; F3
+	SP_TONESET(18500)		;  F
+	SP_TONESET(19600)		; G3
+	SP_TONESET(20765)		;  G
+	SP_TONESET(22000)		; A3
+	SP_TONESET(23308)		;  A
+	SP_TONESET(24694)		; B3
+	SP_TONESET(26163)		; C4
+	SP_TONESET(27718)		;  C
+	SP_TONESET(29366)		; D4
+	SP_TONESET(31113)		;  D
+	SP_TONESET(32963)		; E4
+	SP_TONESET(34923)		; F4
+	SP_TONESET(36999)		;  F
+	SP_TONESET(39200)		; G4
+	SP_TONESET(41530)		;  G
+	SP_TONESET(44000)		; A4
+	SP_TONESET(46616)		;  A
+	SP_TONESET(49388)		; B4
+	SP_TONESET(52325)		; C5
+	SP_TONESET(55437)		;  C
+	SP_TONESET(58733)		; D5
+	SP_TONESET(62225)		;  D
+	SP_TONESET(65925)		; E5
+	SP_TONESET(69846)		; F5
+	SP_TONESET(73999)		;  F
+	SP_TONESET(78399)		; G5
+	SP_TONESET(83061)		;  G
+	SP_TONESET(88000)		; A5
+	SP_TONESET(93233)		;  A
+	SP_TONESET(98777)		; B5
+	SP_TONESET(104650)		; C6
+	SP_TONESET(110873)		;  C
+	SP_TONESET(117466)		; D6
+	SP_TONESET(124451)		;  D
+	SP_TONESET(131851)		; E6
+	SP_TONESET(139691)		; F6
+	SP_TONESET(147998)		;  F
+	SP_TONESET(156798)		; G6
+	SP_TONESET(166122)		;  G
+	SP_TONESET(179000)		; A6
+	SP_TONESET(186466)		;  A
+	SP_TONESET(197553)		; B6
+	SP_TONESET(209300)		; C7
+	SP_TONESET(221746)		;  C
+	SP_TONESET(234932)		; D7
+	SP_TONESET(248902)		;  D
+	SP_TONESET(263702)		; E7
+	SP_TONESET(279383)		; F7
+	SP_TONESET(295996)		;  F
+	SP_TONESET(313596)		; G7
+	SP_TONESET(332244)		;  G
+	SP_TONESET(352000)		; A7
+	SP_TONESET(372931)		;  A
+	SP_TONESET(395107)		; B7
+SP_NOTE_C8:
+	SP_TONESET(418601)		; C8
+	SP_TONESET(443492)		;  C
+	SP_TONESET(469863)		; D8
+	SP_TONESET(497803)		;  D
+	SP_TONESET(527404)		; E8
+	SP_TONESET(558765)		; F8
+	SP_TONESET(591991)		;  F
+	SP_TONESET(627193)		; G8
+	SP_TONESET(664488)		;  G
+	SP_TONESET(704000)		; A8
+	SP_TONESET(745862)		;  A
+	SP_TONESET(790213)		; B8 
+;
+SP_NOTCNT	.EQU	($-SP_TUNTBL) / 4
+;

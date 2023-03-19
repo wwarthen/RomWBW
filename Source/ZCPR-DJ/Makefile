@@ -1,10 +1,13 @@
 
-OBJECTS= zcpr.bin
+OBJECTS= zcpr.bin zcprdemo.com
 
-OTHERS = zcpr.rel
+OTHERS = *.rel
 
 TOOLS = ../../Tools
 include $(TOOLS)/Makefile.inc
 
 zcpr.bin: zcpr.rel
-	$(ZXCC) $(TOOLS)/cpm/bin/L80 -zcpr,zcpr.bin/n/e
+	$(ZXCC) L80 -zcpr,zcpr.bin/n/e
+
+zcprdemo.com: zcprdemo.rel
+	$(ZXCC) L80 -zcprdemo,zcprdemo/n/e

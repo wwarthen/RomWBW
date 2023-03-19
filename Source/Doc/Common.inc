@@ -1,7 +1,0 @@
-!def(ver)(3.0.1)
-!def(date)(!mdate)
-!def(product)(RomWBW)
-!def(author)(Wayne Warthen)
-!def(authmail)(wwarthen@gmail.com)
-!def(orgname)(RetroBrew Computers Group)
-!def(orgurl)(www.retrobrewcomputers.org)

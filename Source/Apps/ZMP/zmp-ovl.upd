@@ -1,0 +1,256 @@
+                 ZMP Overlay Update Information
+
+	This file contains information on updating ZMP overlays designed for
+previous versions to the current version. Newer versions appear first in 
+this file.
+
+Updates to ZMP14 Overlays for use with ZMP15.
+---------------------------------------------
+
+   The changes required here are associated with ZMP15's ability to access
+either of two UART ports, if available on the specific machine. One entry
+needs to be added to the jump table, and an extra routine needs to be added
+to set which port is in use. Lines which must be added to the overlay have
+an asterisk at the beginning.
+
+1. Add an entry to the jump table.
+
+   Add the following instruction at the end of the jump table, after the
+'jp getvars' instruction and before the spare jumps:
+
+*	jp	setport			; Set the modem port being used
+
+2. Add the setport routine.
+
+   The following routine should be added into the code. A good place is
+immediately following the UART init code.
+
+*;
+*; Set the port. ZMP supplies either 0 or 1 as a parameter. You're on your
+*; own here -- your system is bound to be different from any other! You may
+*; implement a software switch on all the modem-dependent routines, or perhaps
+*; you can have one or two centralised routines for accessing the UARTs and
+*; modify the code from this routine to select one or the other. (Who said
+*; there was anything wrong with self-modifying code?). If you have only one
+*; UART port, or if you don't want to go through all the hassles, just have
+*; this routine returning with no changes made. Note that ZMP calls this
+*; routine twice -- once for each port value -- on initialisation.
+*;
+*setport:
+*	ld	hl,2		; get port number
+*	add	hl,sp
+*	ex	de,hl
+*	call	getparm		; in HL (values are 0 and 1)
+*
+*				; <== Insert your own code here
+*
+*				; <== End of your own code
+*	ret
+*
+*port:	ds	1
+*
+
+End of changes ZMP14 --> ZMP15.
+
+		-- Ron Murray
+		   25/3/89
+
+===============================================================================
+
+Updates to ZMP13 Overlays for use with ZMP14.
+---------------------------------------------
+
+   Some changes need to be made to accommodate the user-specification
+of drive/user area for the .OVR files. Changes need to be made in three
+places in your overlay (asterisks at the start of lines indicate which lines
+should be added):
+
+1. Specify the required drive/user area.
+
+   Add the following section after the mspeed equate:
+
+*;Set the following two equates to the drive and user area which will contain
+*;   ZMP's .OVR files, .CFG file, .FON file and .HLP file. Set both to zero
+*;   (null) to locate them on the drive from which ZMP was invoked.
+*
+*overdrive	equ	'A'	; Drive to find overlay files on ('A'-'P')
+*overuser	equ	0	; User area to find files
+
+2. Add to the jump table
+
+   Add the following instruction at the end of the jump table, after the
+'jp userout' instruction and before the spare jumps:
+
+*	jp	getvars		; get system variables
+
+
+3. Add code at the end to get the system variables:
+
+   Add the following code just in front of the overlay size test:
+
+*;Get address of user-defined variables
+*
+*getvars:
+*	ld	hl,uservars
+*	ret
+*
+*uservars:
+*	dw	overdrive	; .OVR etc. drive/user
+*	dw	overuser
+*
+
+End of ZMP14 overlay modifications.
+
+	-- Ron Murray, 20/11/88
+
+===============================================================================
+
+Updates to ZMP12 Overlays for use with ZMP13.
+---------------------------------------------
+
+   There have been very few changes made to the overlay structure in ZMP13.
+Some shuffling of module orders has allowed the origin to be set at 0145 hex,
+and here it should stay (unless I fiddle with the startup code -- MOST
+unlikely!). So, set your 'userdef' equate to 0145h and you should be able to
+leave it there.
+   There is also a bug fix which should be installed in all overlays.
+
+1. Fix a bug in the wait routines
+
+   Two routines in the user overlays are misnamed. You would expect wait1s
+to pause for one second, and wait1ms to pause for one millisecond, wouldn't
+you? Well they don't. Blame it on a lack of sleep on my part. They actually
+pause for a number of seconds (milliseconds) in hl. I suggest renaming them
+to waithls amd waithlms. The main consequence of this has been the pause in
+the middle of the 'send break' routine: there was originally a ld hl, 1 before
+the call to wait1s, but it got lost somewhere along the way. In any case, one
+second is probably too long for this, and I suggest you change it to
+
+	ld hl,	300		; wait 300 mS
+	call	waithlms
+
+  There are two faults in the waithls (formerly wait1s) routine. The first
+is a misplaced jr instruction that caused waits of more than 1 second to be
+much longer than intended. The other concerns z80 machines with a clock speed
+greater than 9 MHz: these will cause 16-bit overflow in the ld de,6667
+instruction. (It had never occurred to me that anyone would have a z80 running
+at this speed!). Both these faults can be solved by replacing the whole
+waithls routine with the following:
+
+;Wait seconds in HL
+waithls:
+	push	bc		; save bc
+	push	de		; de
+	push	ix		; and ix
+	ld	ix,0		; then point ix to 0
+				; so we don't upset memory-mapped i/o
+
+;Calculate values for loop constants. Need to have two loops to avoid
+;   16-bit overflow with clock speeds above 9 MHz.
+
+outerval	equ	(clkspd / 10) + 1
+innerval	equ	(6667 / outerval) * clkspd
+
+wait10:
+	ld	b,outerval
+
+wait11:
+	ld	de,innerval
+
+wait12:
+	bit	0,(ix)		; time-wasters
+	bit	0,(ix)
+	bit	0,(ix)		; 20 T-states each
+	bit	0,(ix)
+	bit	0,(ix)
+	bit	0,(ix)
+	dec	de
+	ld	a,e
+	ld	a,d
+	or	e
+	jr	nz,wait12	; 150 T-states per inner loop
+	djnz	wait11		; decrement outer loop
+	dec	hl		; ok, decrement count in hl
+	ld	a,h
+	or	l
+	jr	nz,wait10
+	pop	ix		; done -- restore ix
+	pop	de		; de
+	pop	bc		; and bc
+	ret
+
+; End of changes to waithls routine
+
+   The remaining changes concern baud rates. Firstly, ZMP13 will reject a
+selected baud rate if the machine is not capable of it. It does this by
+determining if the value in mspeed (location 3c hex) has changed. Thus if
+you modify your overlay to only change 003ch (mspeed) if the new baud rate
+is valid, then incorrect baud rates cannot be selected. No code is given for
+this as all overlays are different. Note that the only penalty for not making
+this change is that all baud rates are accepted, whether valid or not. Older
+overlays always set mspeed to the new value.
+   In response to numerous requests (well, actually, two), ZMP13 will accept
+speeds of 38400, 57600 and 76800 baud. This means that it accepts the numbers
+for these -- mspeed values are 10, 11 and 12 respectively. If you think that
+you can get your machine to actually work at these speeds, then go ahead. But
+don't blame me if it doesn't work. (Personally, I doubt if successful
+transfers in both directions with a 4 MHz machine can be done at much over
+4800 baud. But don't let me stop you.)
+
+			-- Ron Murray
+			   11/10/88
+
+
+End of changes ZMP12 --> ZMP13
+===============================================================================
+
+Updates to ZMP11 Overlays for ZMP12.
+------------------------------------
+
+   Some additions to the jump table have been made to allow for user-defined
+routines to be executed on entry/exit from ZMP. Modify your overlay as
+follows:
+
+1. Adding to the jump table
+
+	Add the following code to the end of the jump table after the line:
+
+	jp	mswait		; wait milliseconds (Last entry of old table)
+
+==> Insert this stuff
+	jp	userin		; user-defined entry routine
+	jp	userout		; user-defined exit routine
+
+;Spare jumps for compatibility with future versions
+	jp	spare		; spares for later use
+	jp	spare		; spares for later use
+	jp	spare		; spares for later use
+	jp	spare		; spares for later use
+	jp	spare		; spares for later use
+==> End of inserted jump codes
+
+2. Adding the 'spare' code
+
+     The following code can be added anywhere. A good idea is to put the
+'spare:' label in front of an existing ret instruction.
+
+spare:
+	ret
+
+3. Adding the user routines
+
+     Add the following code to your overlay. Anywhere will do. The code
+you put in here depends on what you want to do.
+
+;User-defined entry routine: leave empty if not used
+userin:
+	ret
+
+;User-defined exit routine: leave empty if not used
+userout:
+	ret
+
+End of changes ZMP11 --> ZMP12
+===============================================================================
+
+

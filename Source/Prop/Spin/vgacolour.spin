@@ -20,6 +20,7 @@
 
 CON
 
+{
 ' 640 x 480 @ 69Hz settings: 80 x 30 characters
 
 	hp = 640	' horizontal pixels
@@ -33,6 +34,24 @@ CON
 	hn = 1		' horizontal normal sync state (0|1)
 	vn = 1		' vertical normal sync state (0|1)
 	pr = 30		' pixel rate in MHz at 80MHz system clock (5MHz granularity)
+}
+	
+'{
+' 640 x 480 @ 60Hz settings: 80 x 40 characters
+
+  hp = 640      'horizontal pixels
+  vp = 480      'vertical pixels
+  hf = 16       'horizontal front porch pixels
+  hs = 96       'horizontal sync pixels
+  hb = 48      'horizontal back porch pixels
+  vf = 10        'vertical front porch lines
+  vs = 2        'vertical sync lines
+  vb = 33       'vertical back porch lines
+  hn = 1        'horizontal normal sync state (0|1)
+  vn = 1        'vertical normal sync state (0|1)
+  pr = 25       'pixel rate in MHz at 80MHz system clock (5MHz granularity)
+'}
+
 
 ' columns and rows
 

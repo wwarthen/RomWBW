@@ -1,8 +1,9 @@
 name: Release Build
 
 on:
-  release:
-    types: published
+  push:
+    tags:
+      - '**'
 
 jobs:
   build:
@@ -10,42 +11,93 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
-      
+      - name: Checkout
+        uses: actions/checkout@v3.3.0
+
       - name: Create Package Label
         run: |
+          echo GITHUB_REF: "$GITHUB_REF"
           LABEL=`echo "$GITHUB_REF" | sed "s|^refs/tags/||"`
-          echo "::set-env name=PKGLBL::$LABEL"
-         
-      - name: Display Diagnostics
-        run: |
+          echo "PKGLBL=$LABEL" >> $GITHUB_ENV
           echo PKGLBL: "$PKGLBL"
           echo Upload URL: "${{github.event.release.upload_url}}"
           echo GITHUB_TOKEN: "${{secrets.GITHUB_TOKEN}}"
-          
+         
       - name: Build
         run: |
+          export TZ='America/Los_Angeles'
           sudo apt-get install libncurses-dev
-          make
-          make clean
+          sudo apt-get install srecord
+          make dist
           rm -rf .git*
-      
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v1
-        with:
-          name: RomWBW-${{env.PKGLBL}}-Package
-          path: .
       
       - name: Create Package Archive
         run: |
-            zip -r Package.zip .
-          
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+            zip -r RomWBW-${{env.PKGLBL}}-Package.zip .
+
+      - name: Attach Package Archive
+        uses: wwarthen/actions/packages/automatic-releases@built-packages
         with:
-          upload_url: ${{github.event.release.upload_url}}
-          asset_path: Package.zip
-          asset_name: RomWBW-${{env.PKGLBL}}-Package.zip
-          asset_content_type: application/zip
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          draft: true
+          prerelease: true
+          title: "RomWBW Development SnapShot ${{env.PKGLBL}}"
+          files: |
+            RomWBW-${{env.PKGLBL}}-Package.zip
+      
+#      - name: Upload Package Archive
+#        uses: AButler/upload-release-assets@v2.0.2
+#        with:
+#          repo-token: ${{ secrets.GITHUB_TOKEN }}
+#          files: |
+#            RomWBW-${{env.PKGLBL}}-Package.zip
+
+
+#      - name: Post SnapShot
+#        uses: docker://antonyurchenko/git-release:latest
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#          RELEASE_NAME_PREFIX: "Development SnapShot Release "
+#          CHANGELOG_FILE: "none"
+#        with:
+#          args: |
+#            RomWBW-SnapShot-Package.zip
+            
+#      - name: Post SnapShot
+#        uses: cb80/pubrel@latest
+#        with:
+#          replace: true
+#          files: |
+#            RomWBW-SnapShot-Package.zip
+
+#      - name: Post SnapShot
+#        uses: wwarthen/actions/packages/automatic-releases@built-packages
+#        with:
+#          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+#          prerelease: true
+#          title: "RomWBW Development SnapShot ${{env.GITHUB_REF_SLUG}}"
+#          files: |
+#            RomWBW-SnapShot-Package.zip
+
+#      - name: Remove Older Releases
+#        uses: wwarthen/delete-release-action@v1.2
+#        with:
+#          release-drop: true
+#          release-keep-count: 0
+#          release-drop-tag: true
+#          pre-release-drop: false
+#          pre-release-keep-count: 0
+#          pre-release-drop-tag: true
+#          draft-drop: true
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+#      - name: Remove Older Releases
+#        uses: s00d/delete-older-releases@0.2.1
+#        with:
+#          keep_latest: 1
+##          delete_tag_pattern: beta # defaults to ""
+#          delete_type: 'release'
+#          delete_branch: 'main'
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

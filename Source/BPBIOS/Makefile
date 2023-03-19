@@ -14,7 +14,7 @@ OTHERS = zcpr33n.rel zcpr33t.rel \
 
 TOOLS = ../../Tools
 
-SUBDIRS = ZCPR33 NZFCP13 Z34RCP11
+SUBDIRS = ZCPR33
 include $(TOOLS)/Makefile.inc
 
 $(HD0IMG): $(IMGFILES)
@@ -30,14 +30,14 @@ zcpr33n.rel zcpr33t.rel:
 
 all:: $(HD0IMG)
 
-clobber::
+clean::
 	@rm -f $(HD0IMG)
 
 %.img: zcpr33n.rel zcpr33t.rel
 	$(eval VER := $(subst .img,,$(subst bp,,$@)))
 	cp def-ww-z$(VER).lib def-ww.lib
 	rm -f bpbio-ww.rel
-	$(ZXCC) $(CPM)/ZMAC -BPBIO-WW -/P
+	$(ZXCC) ZMAC -BPBIO-WW -/P
 	mv bpbio-ww.prn bp$(VER).prn
 	cp bp$(VER).dat bpsys.dat
 	$(ZXCC) ./bpbuild.com -bpsys.dat 0 < bpbld1.rsp

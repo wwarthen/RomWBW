@@ -1,19 +1,19 @@
 all:
-	cd Tools/unix ; make
-	cd Source ; make
-	cd Source/Images ; make
+	$(MAKE) --directory Tools
+	$(MAKE) --directory Source
 
 clean:
-	cd Tools/unix ; make clean
-	cd Source ; make clean
-	cd Binary ; make clean
+	$(MAKE) --directory Tools clean
+	$(MAKE) --directory Source clean
+	$(MAKE) --directory Binary clean
+	rm -f make.log
 
-clobber:
-	cd Tools/unix ; make clobber
-	cd Source ; make clobber
-	cd Binary ; make clobber
-	rm -f typescript
+clobber: clean
 
 diff:
-	cd Source ; make diff
+	$(MAKE) --directory Source diff
 
+dist:
+	$(MAKE) ROM_PLATFORM=dist 2>&1 | tee make.log
+	$(MAKE) --directory Source clean
+	$(MAKE) --directory Tools clean

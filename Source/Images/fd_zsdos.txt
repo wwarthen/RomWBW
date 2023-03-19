@@ -1,0 +1,64 @@
+#
+# Add the ReadMe document
+#
+d_zsdos/ReadMe.txt 0:
+#
+# Include selected CP/M 2.2 files
+#
+d_cpm22/u0/ASM.COM 0:
+d_cpm22/u0/LIB.COM 0:
+d_cpm22/u0/LINK.COM 0:
+d_cpm22/u0/LOAD.COM 0:
+d_cpm22/u0/MAC.COM 0:
+#d_cpm22/u0/PIP.COM 0: ???
+d_cpm22/u0/RMAC.COM 0:
+d_cpm22/u0/STAT.COM 0:
+d_cpm22/u0/SUBMIT.COM 0:
+d_cpm22/u0/XSUB.COM 0:
+#
+# Add RomWBW utilities
+#
+#../../Binary/Apps/*.com 0:
+../../Binary/Apps/assign.com 0:
+../../Binary/Apps/cpuspd.com 0:
+../../Binary/Apps/fat.com 0:
+../../Binary/Apps/fdu.com 0:
+../../Binary/Apps/fdu.doc 0:
+../../Binary/Apps/format.com 0:
+../../Binary/Apps/mode.com 0:
+../../Binary/Apps/rtc.com 0:
+../../Binary/Apps/survey.com 0:
+../../Binary/Apps/syscopy.com 0:
+../../Binary/Apps/sysgen.com 0:
+../../Binary/Apps/talk.com 0:
+../../Binary/Apps/tbasic.com 0:
+../../Binary/Apps/timer.com 0:
+../../Binary/Apps/tune.com 0:
+../../Binary/Apps/xm.com 0:
+../../Binary/Apps/zmp.com 0:
+../../Binary/Apps/zmp.hlp 0:
+../../Binary/Apps/zmp.doc 0:
+../../Binary/Apps/zmxfer.ovr 0:
+../../Binary/Apps/zmterm.ovr 0:
+../../Binary/Apps/zminit.ovr 0:
+../../Binary/Apps/zmconfig.ovr 0:
+../../Binary/Apps/zmd.com 0:
+../../Binary/Apps/vgmplay.com 0:
+#
+# Add Tune sample files
+#
+../../Binary/Apps/Tunes/*.pt? 3:
+#../../Binary/Apps/Tunes/*.mym 3:
+../../Binary/Apps/Tunes/*.vgm 3:
+#
+# Add OS image
+#
+../ZSDOS/zsys_wbw.sys 0:zsys.sys
+#
+# Add Common Applications
+#
+Common/All/*.* 0:
+Common/CPM22/*.* 0:
+#Common/Z/u10/*.* 0:
+Common/Z/u14/*.* 0:
+Common/Z/u15/*.* 0:

@@ -1,5 +1,5 @@
 ;:::::::::::::::::::::::::::::::::::::::*****************************
-;   UTIL - N8VEM Utility Routines  	***** Hardware-Specific *****
+;   UTIL - Retro-Brew Utility Routines  ***** Hardware-Specific *****
 ;	                        	*****************************
 ;
 ;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -306,8 +306,11 @@ COUT:
 	PUSH	BC
 	PUSH	DE
 	PUSH	HL
-	LD	C,A
-	CALL	CONOUT
+	;LD	C,A
+	;CALL	CONOUT
+	LD	E,A			; OUTPUT CHAR TO E
+	LD	BC,0180H
+	CALL	HBX_INVOKE
 	POP	HL
 	POP	DE
 	POP	BC
@@ -333,3 +336,4 @@ STR_EMPTY	DEFB	"<EMPTY>$"
 ;	DSEG			; Put the following areas in Data Segment (uninitialized REAM)
 ;
 ;======================= End of UTIL ==============================
+

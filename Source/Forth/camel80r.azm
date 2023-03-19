@@ -1,0 +1,144 @@
+; LISTING 4.
+;
+; ===============================================
+; CamelForth for the Zilog Z80
+; Copyright (c) 1994,1995 Bradford J. Rodriguez
+;
+; This program is free software; you can redistribute it and/or modify
+; it under the terms of the GNU General Public License as published by
+; the Free Software Foundation; either version 3 of the License, or
+; (at your option) any later version.
+;
+; This program is distributed in the hope that it will be useful,
+; but WITHOUT ANY WARRANTY; without even the implied warranty of
+; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+; GNU General Public License for more details.
+;
+; You should have received a copy of the GNU General Public License
+; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+; Commercial inquiries should be directed to the author at 
+; 115 First St., #105, Collingwood, Ontario L9Y 4W3 Canada
+; or via email to bj@camelforth.com
+;
+; ===============================================
+; CAMEL80R.AZM: ROMWBW additions
+;   Source code is for the ZSM assembler.
+;   Forth words are documented as follows:
+;*   NAME     stack -- stack    description
+;   Word names in upper case are from the ANS
+;   Forth Core word set.  Names in lower case are
+;   "internal" implementation words & extensions.
+; ===============================================
+;
+; DOUBLE PRECISION WORDS       ==================
+;
+;C D.    d --           display d signed
+    head DDOT,2,D.,docolon
+        DW LESSNUM,DUP,TOR,DABS,NUMS
+        DW RFROM,SIGN,NUMGREATER,TYPE,SPACE,EXIT
+
+;X D+               d1 d2 -- d1+d2              Add double numbers
+    head DPLUS,2,D+,docode
+        exx
+        pop bc          ; BC'=d2lo
+        exx
+        pop hl          ; HL=d1hi,BC=d2hi
+        exx
+        pop hl          ; HL'=d1lo
+        add hl,bc
+        push hl         ; 2OS=d1lo+d2lo
+        exx
+        adc hl,bc       ; HL=d1hi+d2hi+cy
+        ld b,h
+        ld c,l
+        next
+
+;C 2>R   d --           2 to R
+    head TWOTOR,3,2!>R,docolon
+        DW SWOP,RFROM,SWOP,TOR,SWOP,TOR,TOR,EXIT
+
+;C 2R>   d --           fetch 2 from R
+    head TWORFROM,3,2R!>,docolon
+        DW RFROM,RFROM,RFROM,SWOP,ROT,TOR,EXIT
+
+TNEGATE:
+        call docolon
+        DW TOR,TWODUP,OR,DUP,qbranch,TNEG1,DROP,DNEGATE,lit,1
+TNEG1:
+        DW RFROM,PLUS,NEGATE,EXIT
+
+qtneg:
+        call docolon
+        DW ZEROLESS,qbranch,qtneg1,TNEGATE
+qtneg1:
+        DW EXIT
+
+TSTAR:
+        call docolon
+        DW TWODUP,XOR,TOR
+        DW TOR,DABS,RFROM,ABS
+        DW TWOTOR
+        DW RFETCH,UMSTAR,lit,0
+        DW TWORFROM,UMSTAR
+        DW DPLUS
+        DW RFROM
+        DW qtneg
+        DW EXIT
+
+TDIV:
+        call docolon
+        DW OVER,TOR,TOR
+        DW DUP,qtneg
+        DW RFETCH,UMSLASHMOD
+        DW ROT,ROT
+        DW RFROM,UMSLASHMOD
+        DW NIP,SWOP
+        DW RFROM,ZEROLESS,qbranch,tdiv1,DNEGATE
+tdiv1:
+        DW EXIT
+
+;C M*/   d1 n2 u3 --  d=(d1*n2)/u3  double precision mult. div
+    head MSTARSLASH,3,M*/,docolon
+        DW TOR,TSTAR,RFROM,TDIV,EXIT
+;
+; ROMWBW APPLICATION INTERFACE ==================
+;
+;C SVC ( hl de bc n -- hl de bc af )
+;execute ROMWBW API Call)
+    head API,3,API,docode
+        LD      A,C
+        EXX
+        POP     BC
+        POP     DE
+        POP     HL
+        RST     08
+        PUSH    HL
+        PUSH    DE
+        PUSH    BC
+        EXX
+        PUSH    AF
+        POP     BC
+        next
+;
+; BYTE INPUT/OUTPUT            ==================
+;
+;C  P!  ( n p -- ) write byte n to i/o port p
+
+    head PSTORE,2,P!!,docode
+;;        LD      A,C     ;save portnum in reg A
+;;        POP     BC      ;get datum
+;;        LD      B,C     ;  xfer datum to reg B
+;;        LD      C,A     ;xfer portnum to reg C
+;;        OUT     (C),B   ;write byte to I/O port.
+        POP     HL
+        OUT     (C),L
+        POP     BC      ; get new TOS
+        next
+
+;C P@   ( p -- n )  read byte n from i/o port p
+
+    head PFETCH,2,P@,docode
+        IN C,(C)        ;simple stuff...
+        next
+

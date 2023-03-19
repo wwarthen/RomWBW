@@ -1,0 +1,31 @@
+Start   Length  Sector  Count   Description
+------- ------- ------- ------- -----------------------------------------
+0x00000 0x00100 0x000   0x001   CF Boot Loader (first 256 bytes)
+0x00100 0x00100 0x000   0x001   RomWBW Partition Table (last 256 bytes)
+0x00200 0x1EE00 0x001   0x0F7   Filler
+0x1F000 0x01000 0x0F8   0x008   ZZRCC Monitor / RomWBW Loader
+0x20000 0x04000 0x100   0x020   Filler
+0x24000 0x40000 0x120   0x200   RomWBW (256KB ROM image)
+0x64000 0x9C000 0x320   0x4E0   Filler
+0x100000        0x800           Slices
+
+Notes
+-----
+
+- At startup CPLD ROM is mapped to Z80 CPU address space 0x0000-0x003F, CPU begins execution at 0x0000
+- CPLD ROM (CF bootstrap mode) loads CF Boot Loader (256B) to 0xB000 and runs it
+- CF Boot Loader loads ZZRCC Monitor to 0xB000 and runs it starting at address 0xB400
+- Monitor (Boot RomWBW) loads RomWBW ROM image to first 8 banks of RAM, then runs it starting at address 0x000
+
+Possible alternative layout:
+
+Start   Length  Sector  Count   Description
+------- ------- ------- ------- -----------------------------------------
+0x00000 0x00100 0       1       CF Boot Loader (first 256 bytes)
+0x00100 0x00100 0       1       RomWBW Partition Table (last 256 bytes)
+0x00200 0x01000 0x001   0x008   ZZRCC Monitor / RomWBW Loader
+0x01200 0x7EE00 0x009   0x3F7   Filler
+0x80000 0x40000 0x400   0x200   RomWBW (256KB ROM image)
+0xC0000 0x40000 0x600   0x200   Filler
+0x100000        0x800           Slices (0x1E partition start)
+

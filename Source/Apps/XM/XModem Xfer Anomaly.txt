@@ -1,0 +1,77 @@
+XModem 12.5 & Tera Term Anomaly Analysis
+----------------------------------------
+
+Protocol Notes:
+
+- During protocol startup, the receiver NAKs the sender repeatedly
+  to let the sender know it can start sending.
+- Normally, the receiver sends a NAK character to ask the sender to
+  resend a packet.
+- Prior to receiving the first packet, the receiver may send a "C"
+  or a "CK" instead of a NAK.  This mechanism is used to inform the
+  sender that the receiver wants to use (C)RC error detection 
+  instead of checksum error detection and optionally 1(K) packet sizes.
+- After the first packet exchange, a NAK is always used to
+  request a packet be resent.
+  
+Anomalous Exchange Description:
+
+XModem on RomWBW is being used to receive a file being sent
+by Tera Term on a Windows PC...
+
+- XModem is started in receive mode
+- User starts process of selecting a file to send on Tera Term
+- XModem begins sending "CK" sequences as described above
+  to wake up the sender
+- Tera Term buffers incoming "CK" sequences while user is selecting
+  a file to send
+- User completes file selection
+- Tera Term receives the first "CK" which was buffered while user
+  was selecting a file
+- Tera Term correctly receives the first "CK", sets itself to
+  use CRC and 1K packets, then sends the first packet
+- While waiting for Tera Term to send the first packet, XModem
+  is repeatedly timing out and resending the "CK" sequence
+- For each timeout, XModem spends 1 second flushing any incoming
+  characters from the sender (it assumes it is flushing line garbage).
+- IFF the first packet from Tera Term starts to arrive during this
+  1 second flushing interval, XModem gobbles up and discards the
+  first packet sent by Tera Term
+- XModem then sends a new "CK" because it is still waiting for the
+  first packet (having just flushed the actual first packet)
+- Tera Term has already switched out of "first packet" mode and will
+  now only respond to an actual NAK character, so it ignores all of
+  the CKs send from XModem
+- XModem continues to send CKs and Tera Term continues to ignore them
+  until XModem hits a retry threshold
+- When XModem hits the retry threshold, it attempts to switch from
+  CRC to Checksum assuming the sender was not capable of using
+  CRCs
+- XModem now sends a NAK character because that is what is used for
+  for first packet NAKing in Checksum mode
+- Tera Term sees the NAK and resends the first packet, but appends a
+  CRC instead of a Checksum because Tera Term is still in CRC mode
+- XModem fails the Tera Term first packet resends because it is
+  looking for a Checksum and Tera Term is appending CRCs.
+- XModem eventually gives up.
+
+Summary of failure:
+
+If Tera Term happens to start sending the first packet during the
+one second "flush" window of XModem, the exchange will fail during
+the startup sequence.
+
+Since the precise start timing of the first packet is dependent on
+the time the user takes to select a file, the occurrence of the
+failure is essentially random.
+
+The timeout used by XModem is about 5 seconds followed by the 1
+second line flush.  So, there is a 1 in 6 chance that the protocol
+will fail to startup successfully.
+
+Mitigation:
+
+- Modified the receive timeout recovery to *not* flush the incoming
+  buffer for one second.  Flushing in this scenario makes no sense
+  anyway because a timeout just occurred meaning no data is being
+  received.

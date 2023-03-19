@@ -1,6 +1,6 @@
 ;:::::::::::::::::::::::::::::::::::::::::::::::**********************
 ;  B/P BIOS Configuration and Equate File.	** System Dependant **
-;  - D-X Designs Pty Ltd P112 CPU Board -	**********************
+;  - Retro-Brew Processors W/ RomWBW HBIOS -	**********************
 ;	  HBIOS specific customizations
 ;:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ; BIOS Configuration Equates and Macros
@@ -9,74 +9,64 @@
 ;       HBIOS configuration.
 ;
 HBIOS	EQU	YES			; Use HBIOS functions
-HBLOC	EQU	0FE00H			; Location of HBIOS proxy (used if not INTPXY)
+HBLOC	EQU	0FE00H			; Location of HBIOS proxy
+MEMTOP	EQU	HBLOC - 1		; Last usable address
 ;
-; Set exactly one of the following to YES to specify platform
+HB_DEBUG	EQU	FALSE		; See hbios.z80 file
 ;
-N8VEM	EQU	YES
-ZETA	EQU	NO
-ZETA2	EQU	NO
-N8	EQU	NO
-MK4	EQU	NO
+; Set HB_IODEV to desired HBIOS character device unit number
 ;
-; Set either the following to YES (or both to NO for no clock code)
+; TODO: Query system via HBIOS API to determine number of serial
+; devices available and assign up to 3 of them to the 3 serial
+; device slots in BPBIOS at boot.
 ;
-SIMHCLK	EQU	NO			; Direct SIMH clock access
-HBCLK	EQU	YES			; HBIOS clock driver
+HB_IODEV	EQU	80H		; 0x80 is current HBIOS console
 ;
-; Set HB_IODEV to appropriate console device
+; Set HB_MDRAM/ROM to desired HBIOS disk device numbers
 ;
-HB_IODEV	EQU	0		; Assume we want to use first HBIOS serial device
+HB_MDRAM	EQU	0		; HBIOS Disk Unit #0 is usually the RAM Disk
+HB_MDROM	EQU	1		; HBIOS Disk Unit #1 is usually the ROM Disk
 ;
-; Set HB_HDDEV to appropriate hard disk driver
+; Set HB_HDDEVN to appropriate HBIOS disk device numbers
 ;
-HB_HDDEV	EQU	2		; Assumes disk device #2 is first hard disk device
+; If the RomWBW system has no floppy drives, then the hard disk units
+; will start right after the memory disk units.  So, the first hard disk
+; will be unit #2.  Refer to the DPH entries to see how the HBIOS
+; units are mapped to drive letters.
 ;
-; Set HB_MDDEV to appropriate memory disk driver
+HB_HDDEV0	EQU	2		; If no floppy drives in system, first HBIOS hard disk is unit #2
+HB_HDDEV1	EQU	3		; Second hard disk is HBIOS Disk Device #3
+HB_HDDEV2	EQU	4		; Third hard disk is HBIOS Disk Device #4
 ;
-HB_MDDEV	EQU	0		; Assumes disk device #0 is ROM disk device
+; Floppy disk support
 ;
-; RAM/ROM disk sizes expressed as count of 2K blocks
+; TODO: Query HBIOS to see if system has floppy drive(s).  For now
+; we do not really support floppy drives.
 ;
-HB_RAMBLKS	EQU	192		; 512K - 128K reserved / 2K per block
-HB_ROMBLKS	EQU	192		; 512K - 128K reserved / 2K per block
-;HB_ROMBLKS	EQU	448		; 1024K - 128K reserved / 2K per block
+DRV_O		SET	NO		; YES if system has flopy drives
+DRV_P		SET	NO		; YES if system has flopy drives
+;
+; RAM/ROM Bank Reserve
+;
+HB_RAMRESV	EQU	8		; RAM reserve is 8 banks
+HB_ROMRESV	EQU	4		; ROM reserve is 4 banks
 ;
 ; Layout of RAM banks
 ;
-	IF N8VEM OR ZETA OR ZETA2 OR MK4
-BID_RAMD	EQU	80H
-BID_RAMM	EQU	8BH
-BID_SYS		EQU	8CH
-BID_HB		EQU	8DH
-BID_USR		EQU	8EH
-BID_COM		EQU	8FH
-	ENDIF
-	IF N8
-BID_RAMD	EQU	80H
-BID_RAMM	EQU	9BH
-BID_SYS		EQU	9CH
-BID_HB		EQU	9DH
-BID_USR		EQU	9EH
-BID_COM		EQU	9FH
-	ENDIF
+; TODO: Query system via HBIOS API to determine the actual bank
+; assignments, then adjust BPBIOS operation accordingly.
 ;
-	IF INTPXY
-MEMTOP	EQU	0FFE0H - 1	; Start of HBIOS 32 byte control block
-	ELSE
-MEMTOP	EQU	HBLOC - 1	; Start of HBIOS 512 byte proxy
-	ENDIF
-
-	IF INTPXY
-HB_EI	MACRO
-	ENDM
-HB_DI	MACRO
-	ENDM
-	ELSE
+BID_RAMD	EQU	-16	; 90h - 16 = 80h
+BID_RAMM	EQU	-9	; 90h - 9 = 87h
+BID_SYS		EQU	-4	; 90h - 4 = 8Ch
+BID_HB		EQU	-3	; 90h - 3 = 8Dh
+BID_USR		EQU	-2	; 90h - 2 = 8Eh
+BID_COM		EQU	-1	; 90h - 1 = 8Fh
+;
 HB_EI	MACRO
 	EI
 	ENDM
 HB_DI	MACRO
 	DI
 	ENDM
-	ENDIF
+

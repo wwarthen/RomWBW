@@ -10,6 +10,4 @@ if exist zcpr33*.rel del zcpr33*.rel
 if exist *.bak del *.bak
 if exist def-ww.lib del def-ww.lib
 
-setlocal & cd ZCPR33 && call Clean.cmd & endlocal
-setlocal & cd Z34RCP11 && call Clean.cmd & endlocal
-setlocal & cd NZFCP13 && call Clean.cmd & endlocal
+pushd ZCPR33 && call Clean.cmd & popd

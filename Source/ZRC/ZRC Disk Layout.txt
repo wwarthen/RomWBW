@@ -1,0 +1,24 @@
+CF Boot Loader: Sector 0 (bytes 0-255)
+RomWBW Partition Table: Sector 0 (bytes 256-511)
+ZRC Monitor: Sectors 0xF8-0xFF (bytes 0x1F000-0x1FFFF)
+RomWBW: Sectors 0x120-0x51F (bytes 0x24000-0xA3FFF)
+Start of Slices (0x1E partition): Sector 0x800 (byte 0x100000)
+
+Start	Length	Description
+-------	-------	---------------------------
+0x00000 0x00100	CF Boot Loader
+0x00100 0x00100	RomWBW Partition Table
+0x00200 0x1EE00	Filler
+0x1F000 0x01000	ZRC Monitor
+0x20000 0x04000	Filler
+0x24000 0x80000	RomWBW
+0xA4000 0x5C000	Filler
+0x100000: Start of slices (partition 0x1E)
+
+Notes
+-----
+
+- At startup CPLD ROM is mapped to Z80 CPU address space 0x0000-0x003F, CPU begins execution at 0x0000
+- CPLD ROM (CF bootstrap mode) reads CF Boot Loader (256B) from start of CF (MBR) to 0xB000 and runs it
+- CF Boot Loader reads ZRC Monitor (4KB) from sectors 0xF8-0xFF of CF to 0xB400 and runs it
+- ZRC Monitor reads 512KB (RomWBW) from sectors 0x120-0x51F of CF into first 512KB of RAM

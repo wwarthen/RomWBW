@@ -1,0 +1,20 @@
+;; Set the ZCPR and ZSDOS paths
+c15:zpath $$$$ a0 b0 c15 c0 /d=$$$$ c15 c0
+;; Load ZCPR segments
+jetldr rcp-16h.zrl,fcp-4t.zrl,bpbio.ndr,nzdec23d.z3t
+;; Load date/time extension into user space
+ldtimec
+;; Initialize the RAM disk if needed and copy some useful files there
+if ~ex a0:-ram.000
+;; Load datestamping file on a:
+putds -d=a:
+;; Enable datestamping 
+relog
+save 0 a:-ram.000
+rcopy ramfiles.txt a0: /q
+fi
+;; Print Time & Date as a reminder in case they need setting
+td
+;; Load the command history shell and editor
+lsh
+

@@ -1,0 +1,73 @@
+#
+# Add files from ZPM3 build
+#
+../ZPM3/zpmldr.com 0:
+../ZPM3/zpmldr.sys 0:
+../CPM3/cpmldr.com 0:
+../CPM3/cpmldr.sys 0:
+../ZPM3/autotog.com 15:
+../ZPM3/clrhist.com 15:
+../ZPM3/setz3.com 15:
+../ZPM3/cpm3.sys 0:
+../ZPM3/zccp.com 0:
+../ZPM3/zinstal.zpm 0:
+../ZPM3/startzpm.com 0:
+../ZPM3/makedos.com 0:
+../ZPM3/gencpm.dat 0:
+../ZPM3/bnkbios3.spr 0:
+../ZPM3/bnkbdos3.spr 0:
+../ZPM3/resbdos3.spr 0:
+#
+# Add RomWBW utilities
+#
+#../../Binary/Apps/*.com 15:
+../../Binary/Apps/assign.com 15:
+../../Binary/Apps/cpuspd.com 15:
+../../Binary/Apps/fat.com 15:
+../../Binary/Apps/fdu.com 15:
+../../Binary/Apps/fdu.doc 15:
+../../Binary/Apps/format.com 15:
+../../Binary/Apps/mode.com 15:
+../../Binary/Apps/rtc.com 15:
+../../Binary/Apps/survey.com 15:
+../../Binary/Apps/syscopy.com 15:
+../../Binary/Apps/sysgen.com 15:
+../../Binary/Apps/talk.com 15:
+../../Binary/Apps/tbasic.com 15:
+../../Binary/Apps/timer.com 15:
+../../Binary/Apps/tune.com 15:
+../../Binary/Apps/xm.com 15:
+../../Binary/Apps/zmp.com 15:
+../../Binary/Apps/zmp.hlp 15:
+../../Binary/Apps/zmp.doc 15:
+../../Binary/Apps/zmxfer.ovr 15:
+../../Binary/Apps/zmterm.ovr 15:
+../../Binary/Apps/zminit.ovr 15:
+../../Binary/Apps/zmconfig.ovr 15:
+../../Binary/Apps/zmd.com 15:
+../../Binary/Apps/vgmplay.com 15:
+#
+../../Binary/Apps/Test/*.com 2:
+Test/*.* 2:
+#
+# Add Tune sample files
+#
+../../Binary/Apps/Tunes/*.pt? 3:
+../../Binary/Apps/Tunes/*.mym 3:
+../../Binary/Apps/Tunes/*.vgm 3:
+#
+# Add CPNET client files
+#
+cpnet3/*.* 4:
+#
+# Add Common Applications
+#
+Common/All/*.* 15:
+Common/CPM3/*.* 15:
+#Common/Z/u10/*.* 10:
+Common/Z/u14/*.* 14:
+Common/Z/u15/*.* 15:
+Common/Z3/u10/*.* 10:
+Common/Z3/u14/*.* 14:
+Common/Z3/u15/*.* 15:
+Common/SIMH/*.* 13:

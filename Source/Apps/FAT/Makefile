@@ -1,5 +1,5 @@
-OBJECTS = FAT.com
-NODELETE = FAT.com
+OBJECTS = fat.com
+NODELETE = fat.com
 DEST = ../../../Binary/Apps
 
 TOOLS=../../../Tools

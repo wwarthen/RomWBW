@@ -2,7 +2,5 @@ This directory contains the official ZCPR 3.3 source with minor customizations
 to support the BPBIOS build in the parent directory:
 
  - Modified to produce a relocatable image compatibile with BPBUILD
- - Build process (Build.cmd) creates ZCPR33T.REL and ZCPR33N.REL based
-   on Z3BASET.LIB and B3BASEN.LIB from parent directory.
 
 See "@WBW Z3ENV.txt" file in parent directory for more information.

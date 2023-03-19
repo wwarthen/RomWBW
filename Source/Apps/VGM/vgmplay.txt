@@ -1,0 +1,74 @@
+VGM Player for Z80
+==================
+
+Simple player for VGM (Video Game Music) files.
+
+Usage:
+
+VGMPLAY MUSIC[.VGM]
+
+Press a key to exit the program. 
+
+Supported devices
+=================
+
+SN76489
+AY-3-89810
+YM2612/YM3484
+YM2151
+
+Supported platforms
+===================
+
+VGM Player is currently being developed on the ROMWBW platform using the Retrobrew computers
+EBC-SBC-V2 (Z80), ECB-SCG (AY-3-8910) and ECB-VGM (YM2612 and 2xSN76489) board. 
+It can be configured to run with other hardware such as RCBus, P8X180 and nhyodyne MBC.
+
+VGM files can be very big and are limited in size by the available TPA space, which is typically 52k.
+
+Processor speed affects the playback speed. Under ROMWBW the player will detect the cpu speed configuration
+and adjust timing loops. For other platforms, default speeds are configured but may need to be changed
+to suit your hardware. Counter/Timer hardware may be supported in future.
+
+Example Music Files
+===================
+
+ENDING.VGM   - AY-3-8910           * Puyo Puyo: Ending (Unused)                                   : 24K
+QIX.VGM      - AY-3-8910           - Super Qix: Main BGM 2                                        : 28K
+AGGRESS.VGM  - AY-3-8910           - Rastan Saga: Aggressive World                                : 32K
+PENGUI03.VGM - AY-3-8910           - Penguin Adventure: Forest Path                               : 44K
+TIGER02.VGM  - 2xAY-3-8910         - Tiger Hely: First Mission                                    : 28K
+BGM.VGM      - 2xAY-3-8910         * SHM: BGM                                                     : 8K
+LEMMIN01.VGM - SN76489             - Lemmings: Title Screen                                       : 44K
+TEDDY.VGM    - 2xSN76489           - TeddyBoy Blues: Title ~ Main Theme                           : 52K
+PITFAL02.VGM - 2xSN76489           - Pitfall II: Scene 1                                          : 16K
+WONDER01.VGM - 2xSN76489           * Wonder Boy in Monster Land: Monster Land                     : 40K
+DESCENT.VGM  - SN76489+YM2612      - Flashback: The Quest for Identity: Descent into the Tunnels  : 40K
+SHIRAKAW.VGM - SN76489+YM2612      * Jantei Monogatari: St. Shirakawa University                  : 32K
+ANNA.VGM     - SN76489+YM2612      - Jantei Monogatari: Anna                                      : 32K
+FIELDMAP.VGM - SN76489+YM2612      - Taikou Risshiden: Field Map: Summer                          : 8K
+ITSGAMOV.VGM - SN76489+YM2612      - Puyo Puyo Tsuu: It's Game Over!                              : 16K
+STARTDEM.VGN - 2xSN76489+AY-3-8910 * Exed Exes / Savage Bees: Start Demo ~Main BGM                : 32K
+INCHINA.VGM  - YM2612              * Double Dragon 3: The Rosetta Stone: In China                 : 44K
+
+* Included in disk images
+
+VGM sources
+===========
+https://www.smspower.org/forums/15359-VGMPacksGameGearMegaCollection
+https://vgmrips.net/packs/chip/ym2612
+https://project2612.org/
+
+VGM Tools
+=========
+https://vgmrips.net/wiki/VGMTool
+https://github.com/vgmrips/vgmtools
+
+References
+==========
+http://www.primrosebank.net/computers/mtx/tools/PD/vgmplayer.zip - Paul Daniels MTX SN76489 interrupt version with embedded VGM tune.
+https://github.com/jblang/SN76489/blob/master/examples/vgmplayer.asm - J.B. Langston RCBus polled version with file loading.
+https://groups.google.com/g/rc2014-z80/c/9nHnETJzGKU - Marco Maccaferri P8X180 & AY-3-8910 support
+https://github.com/electrified/rc2014-ym2151/tree/main/software/vgmplay - Ed Brindly RCBus & YM2151 support
+
+ROMWBW version by Phil Summers. VGM Player is still in development. The ECB-VGM is also still under development.

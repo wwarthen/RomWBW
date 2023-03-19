@@ -1,0 +1,54 @@
+#
+# Add ZSystem images
+#
+../BPBIOS/*.img 0:
+../BPBIOS/*.rel 0:
+../BPBIOS/*.zrl 0:
+../BPBIOS/*.zex 0:
+../BPBIOS/bpbuild.com 0:
+#
+# Add RomWBW utilities
+#
+#../../Binary/Apps/*.com 15:
+../../Binary/Apps/assign.com 15:
+../../Binary/Apps/cpuspd.com 15:
+../../Binary/Apps/fat.com 15:
+../../Binary/Apps/fdu.com 15:
+../../Binary/Apps/fdu.doc 15:
+../../Binary/Apps/format.com 15:
+../../Binary/Apps/mode.com 15:
+../../Binary/Apps/rtc.com 15:
+../../Binary/Apps/survey.com 15:
+../../Binary/Apps/syscopy.com 15:
+../../Binary/Apps/sysgen.com 15:
+../../Binary/Apps/talk.com 15:
+../../Binary/Apps/tbasic.com 15:
+../../Binary/Apps/timer.com 15:
+../../Binary/Apps/tune.com 15:
+../../Binary/Apps/xm.com 15:
+../../Binary/Apps/zmp.com 15:
+../../Binary/Apps/zmp.hlp 15:
+../../Binary/Apps/zmp.doc 15:
+../../Binary/Apps/zmxfer.ovr 15:
+../../Binary/Apps/zmterm.ovr 15:
+../../Binary/Apps/zminit.ovr 15:
+../../Binary/Apps/zmconfig.ovr 15:
+../../Binary/Apps/zmd.com 15:
+../../Binary/Apps/vgmplay.com 15:
+
+# Add Tune sample files
+#
+../../Binary/Apps/Tunes/*.pt? 3:
+../../Binary/Apps/Tunes/*.mym 3:
+../../Binary/Apps/Tunes/*.vgm 3:
+#
+# Add Common Applications
+#
+Common/All/*.* 15:
+Common/CPM22/*.* 15:
+#Common/Z/u10/*.* 10:
+Common/Z/u14/*.* 14:
+Common/Z/u15/*.* 15:
+Common/Z3/u10/*.* 10:
+Common/Z3/u14/*.* 14:
+Common/Z3/u15/*.* 15:

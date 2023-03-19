@@ -1,0 +1,1043 @@
+ZDE 1.0 Manual
+                               ZDE
+ 
+                     Z-System Display Editor
+
+                     Version 1.0   10 Mar 89
+
+  ZDE and its documentation are copyright 1989 by Carson Wilson,
+  all rights reserved.  They may not be circulated in any
+  incomplete or modified form without written permission of the
+  author.  Any commercial use of ZDE, defined as any situation
+  where the duplicator receives revenue by duplicating or
+  distributing ZDE by itself or in conjunction with any hardware
+  or software product, is expressly prohibited unless authorized
+  in writing by Carson Wilson.
+
+
+1.  Introduction.
+
+     ZDE, the Z-System Display Editor, is a small, fast, powerful
+text editor based Eric Meyer's famous Video Display Editor (VDE). 
+ZDE retains all features of VDE, but removes defects and supports
+special ZCPR and ZSDOS features such as named directories,
+register variables, automatic disk relog, and file datestamp
+support.  The install program has also been improved (see
+ZDE10.NEW for a complete rundown of improvements).  At the same
+time, I have tried to be conscientious about the balance between
+features and memory usage.  If I added every new feature or
+convenience that came to mind, we would soon have a luxurious
+in-memory editor for 2 kilobyte files!  Much of the following is
+adapted with permission from Eric Meyer's VDE.DOC.
+
+     ZDE's native ASCII mode and definable macros make it an ideal
+programmer's editor; its full formatting and printing features
+also make it an efficient word processor.  Written entirely in Z80
+assembler, ZDE is F-A-S-T.  There are no disk overlays, and all
+editing is done in memory.  As a result, finding a string near the
+end of a 50K file takes WordStar 3.3 about 14 seconds (8MHz Z80);
+ZDE does it in under a second.  This is like moving through air
+instead of molasses: you will find that you can do more of your
+work on screen, and less on paper.
+
+Among ZDE's features are:
+
+Full-screen editing       User area and named directory support
+Block operations          Wordwrap and reformat
+File datestamp support    Macro programs
+Disk file operations      Margins, tabs, spacing
+Find and replace          WordStar compatibility
+Many print features       Undeletion
+Configurable options      Support for all CP/M terminals
+
+
+2.  Installing ZDE.
+
+     ZDE works with Z80 CP/M 2.2 and 3.0 and compatible systems. 
+It is ideal for portable computers with limited disk space.  There
+are many user configurable options, and ZDE can be installed for
+all CP/M terminals.  If you are running ZCPR, ZSDOS or Z3PLUS, ZDE
+offers features not available with less advanced system software,
+but these system enhancements are not required.
+
+     To install ZDE, use the ZDENSTAL configuration program; see
+the accompanying file ZDENSTAL.DOC.  You should install ZDE for
+your computer's terminal at the earliest convenience, since this
+greatly enhances performance.  There are many other installable
+options; you will discover how you want everything set in the
+course of using ZDE, so don't worry about going through all of it
+at first.  For ease of reference, portions of this manual
+referring to installable options and settings are enclosed in
+square brackets ("[" and "]").
+
+
+3.  Invoking ZDE.
+
+     ZDE is invoked from your system's command prompt using the
+following syntax ("ufn" means "unambiguous file name"):
+
+     ZDE                 Begin working on a new file.
+
+     ZDE ufn             Edit a new or already existing file.
+
+     ZDE dir:ufn         Edit a new or existing file from another
+                          directory.
+
+     ZDE ufn m           Edit a file using mode "m."
+     ZDE ufn[m
+
+"m" above can be either W, A, or N (see File Modes, below), and
+"dir" can be either a drive, a user area, a drive followed by a
+user area, or a ZCPR named directory.  For example:
+
+     ZDE A4:MYFILE.TXT N      Begin working on MYFILE.TXT at user
+                               area 4, drive A, in non-document
+                               mode.
+
+     The size of the file to be edited is limited by available
+memory.  This will vary for different systems, but normally the
+maximum size will be between 45 and 55k.  If a file is too large
+to edit, you must break it up and edit the pieces separately. 
+Numerous CP/M utilities are available which will break up and
+rejoin ASCII files.
+
+
+4.  ZDE's Command Set.
+
+     ZDE's commands consist of simple one- or two-key
+combinations, easily found by the touch typist without
+distraction.  Most commands are the same as WordStar's.  If you
+have questions that this file can't answer, a WordStar manual may
+be a useful reference.  But ZDE is not a WordStar "clone"; there
+are significant differences, including an extended set of
+ESC-commands for functions such as macros (see below).
+     Virtually complete compatibility with the WordStar command
+(sub)set can be achieved UNLESS the keys ^J, ^K, and ^L are used
+as arrow keys (as on many CP/M computers).  In this event ZDE
+synonyms must be used: ESC- for the ^K- prefix; ESC-H for ^J; and
+^\ for ^L (see ZDENSTAL.DOC for terminal installation).
+
+4.1.  Command Summary.
+
+     Below, the "^" character indicates use of the Ctrl key:  ^K =
+Ctrl+K.  The ESC (^K), ^O, and ^Q prefixes require pressing two
+keys in sequence: ^O C, for instance means press ^O, then C (or
+^C).  Any prefix may be canceled by typing ESC or Space.
+
+4.1.1.  Control Keys:  Single Keystroke Commands.
+
+     ^J (ESC H) = display Help menus.
+
+     CR = Carriage return (^M).  Marks a paragraph end.
+     BS = Backspace (^H).
+    TAB = Hard Tab mode: insert tab (^I).  Variable Tab mode: move
+          to next stop.
+
+     Arrow keys:  WordStar: ^E up, ^X down, ^S left, ^D right.
+                  Alternate: configurable, default ^K, ^J, ^H, ^L.
+
+     ^F = move to start of next word right.
+     ^A = move to start of next word left.
+     ^R = scroll back one screen.
+     ^C = scroll forward one screen.
+     ^W = scroll back one line.
+     ^Z = scroll forward one line.
+
+     ^G = delete character to the right of the cursor.
+    DEL = delete character to the left (configurable).
+     ^U = undelete a character.
+     ^T = delete word to right of cursor.
+     ^Y = delete current line.
+
+     ^N = insert a carriage return (break line) at present
+          position.
+     ^V = toggle INSERT mode on and off.
+     ^^ = toggle case (upper/lower) of character at cursor.
+     ^P = insert following control code in text.
+     ^B = reformat current paragraph.
+     ^L (^\) = repeat find/replace (repeats last ^QF or ^QA
+               command).
+
+4.1.2.  File and Block Commands: first hit ^K (or ESC), then the
+        key shown.
+
+     ^K I = display file/memory Information message.
+
+     ^K F = List files in disk directory.
+     ^K E = Erase a disk file.
+
+     ^K L = Load a brand new file to begin editing.
+     ^K N = change the current file Name (affects Save, eXit).
+     ^K S = Save the current file to disk, and continue editing.
+     ^K D = Done.  Save the file, then load a new one.
+     ^K X = eXit: Save the file, then Quit to CP/M.
+     ^K Q = Quit to CP/M, abandoning current file.
+
+     ^K R = Read a disk file into text at cursor position.
+     ^K P = Print the text (whole file or block).
+
+     ^K B = mark the start of a Block.
+     ^K K = mark the end of a block.
+     ^K U = Unmark the block.
+     ^K Y = Delete the marked block.
+     ^K C = Copy the block text at present cursor position.
+     ^K V = moVe the block text to the present cursor position.
+     ^K W = Write the marked block to a disk file.
+
+4.1.3.  Escape and Macro Commands: first hit ESC, then the key
+        shown.
+
+     ESC arrows:  Left/Right (including ^S/D) = shift screen
+                                                horizontally
+                                                by 32 columns.
+                  Up/Down (including ^E/X)    = shift screen
+                                                vertically
+                                                by 1/4 screen.
+     ESC TAB     = move back to last tab stop.
+
+     ESC M       = execute a Macro string of commands.
+     ESC #       = store macro on numeric key for later recall.
+     ESC 0..9    = use stored key.  (In macro mode: jump label.)
+     ESC !,=,~,+ = used in Macro programming (see below).
+     ESC ;       = brief pause, during Macro execution only.
+
+4.1.4.  Quick Commands: first hit ^Q, then the key shown.
+
+     ^Q Arrows:  Left/Right (including ^S/D) = go to start or end
+                                               of line.
+                 Up/Down (including ^E/X)    = go to top or bottom
+                                               of screen.
+     ^Q R = move to top of file.
+     ^Q C = move to end of file.
+     ^Q I = move to specified page or line number.
+     ^Q B = move to marked block.
+     ^Q Q = move to next line in queue (ZCPR only).
+     ^Q Z = move to next place marker.
+
+     ^Q F = find next occurrence of a string.
+     ^Q A = find and replace a string.
+
+     ^Q Y = delete from cursor to end of current line.
+   ^Q DEL = delete from cursor to beginning of current line.
+     ^Q T = delete until specified character (caution--powerful!).
+     ^Q U = undelete a line.
+
+4.1.5.  Onscreen Commands: first hit ^O, then the key shown.
+
+     ^O Arrow:  Up (including ^E) = make current line top of
+                                    screen.
+
+     ^O R = set right margin (column 1 turns off
+            wordwrap/formatting).
+     ^O L = set left margin.
+     ^O X = toggle Margin Release on/off.
+     ^O C = center current line.
+     ^O F = align current line flush with the right margin.
+
+     ^O Q = toggle header on/off.
+     ^O T = toggle ruler line on/off.
+     ^O D = toggle display of hard CRs on/off.
+
+     ^O A = toggle Auto Indent on/off.
+     ^O S = toggle Double Spacing on/off.
+     ^O H = toggle hyphenation on/off.
+     ^O V = toggle tab mode Hard/Variable.
+     ^O I = set variable tab stop.
+     ^O N = clear variable tab stop.
+
+     ^O P = set page length (0 turns off pagination).
+     ^O W = toggle windowing on/off (see below).
+     ^O Z = temporarily blank the entire screen.
+
+
+5.  Command Descriptions.
+
+5.1.  Auto-Indent Mode (^O-A).
+
+     Auto-Indent is useful for typing outlines, structured program
+source code, and other text where the "left margin" varies. 
+Auto-Indent causes the RETURN key to act differently: If you are
+entering new text, it will be indented to match the previous line.
+If you are just moving through the file, the cursor advances past
+any existing indentation.
+
+5.2.  Block Commands (^K-B, -K, -U, -R, -Y, -W, -C, -V, -P-B,
+      ^Q-B).
+
+     A "block" of text is normally delimited by two markers
+[default: ^@] which remain in memory until reset or deleted.
+     ^K-B marks the beginning of the block; ^K-K marks its end.
+Markers are inserted in the text.  The two markers are identical;
+the first one present is the start.
+     ^K-U unmarks the block, removing any marker(s) set (block
+markers can also be deleted individually as ordinary characters). 
+Markers are automatically removed as appropriate when ^K-B/-K are
+used again.
+     ^K-R reads in the contents of a disk file, inserting it as a
+block after the current cursor position.  You will be asked for
+the name (and, optionally, mode) of the file.  Other block
+operation commands all require a Block to be marked:
+     ^K-Y deletes the block (including markers).
+     ^K-W writes the block text to a disk file; you will be asked
+for the filename (and optional mode).
+     ^K-V moves the Block text to the present cursor location,
+deleting the original; ^K-C copies it and leaves the original. 
+Sometimes ZDE will run out of memory when moving blocks within a
+large file.  If this occurs, just write the block to a file,
+delete it, and read it back in as: "^K-W, ^K-Y, ^K-R".
+    ^K-P-B (^K-P with B option) prints the block text only.
+     The ^Q-B command, from wherever you are in the file, moves
+the cursor to the Block start.
+
+5.3.  Cursor Movement (Arrow keys; ^F; ^A; ^Q-R, -C, -I).
+
+     ZDE supports three sets of Arrow keys, which function
+interchangeably.  The two built-in sets support the WordStar
+"arrow key diamond" ^E, ^X, ^D, ^S, and the ANSI standard 3-byte
+sequences (ESC-[-A, etc.).  The third set is user-configurable,
+and must be installed with ZDENSTAL.  These keys move the cursor
+up, down, right, and left respectively.  Note: if you install ^J,
+^K, and ^L as arrow keys, you must use ESC- commands for help,
+file operations, and repeat find/replace, respectively.
+     Preceded by ^Q-, any arrow key (except ANSI) moves more
+quickly: to the top or bottom of the screen, to the left or right
+end of the line.
+     There are also two word movement commands: ^F moves right, to
+the start of the next word; ^A moves left, to the start of the
+previous (or current) word.  Both have maximum ranges of 255
+characters.
+     For quickly covering large distances, the commands ^Q-R and
+^Q-C go all the way to the beginning and end of the file,
+respectively, and ^Q-I goes to any specified page (or line, in
+non-documents).
+
+5.4.  Deleting (^G, DEL, ^T, ^Y, ^Q-Y, -DEL, -T).
+
+     You can delete text one CHARACTER at a time: ^G deletes to
+the right of the cursor, and DEL to the left.  [If you have no DEL
+key, you can install another equivalent.]  Note that the ordinary
+BS (^H) does not normally delete.
+     ^T deletes an entire WORD to the right (up to 255 characters)
+     ^Y deletes the entire current LINE.  ^Q-Y deletes only the
+part of the line to the right of the cursor; ^Q-DEL deletes the
+part to the left.
+     ^Q-T deletes UP TO a specified character.  Example: "^Q-T."
+deletes to the end of the sentence.  Special case: "^Q-T-CR"
+deletes to the next HARD CR, the end of the paragraph.  This is a
+powerful command, so use it with caution.
+     Accidentally deleted text can usually be recovered (see
+Undelete, below).
+
+5.5.  Disk Operations (^K-F, -E).
+
+     ^K-F gives an unsorted list of disk FILES: hit CR to list the
+directory specified by the current file, or specify a drive, user,
+or named directory (colon optional).  If there is not enough room
+to fit all the files on the screen, you will see "..." at the end
+to indicate that there were still more.  Press ESC or Space to
+continue.
+     ^K-E will ERASE a single disk file to provide more room on
+the disk (no wildcards allowed).
+
+5.6.  File Commands (^K-N, -S, -X, -Q, -D, -L).
+
+     ^K-N NAMES your work or changes the current file mode.  You
+can change the filename in the header before saving, and/or change
+its mode to WordStar, ASCII, or Nondocument.  To set the file
+mode, introduce the mode character with the left square bracket,
+e.g., "Name: MYFILE.WS [W".
+     ^K-S SAVES your work: what's in memory is written to disk
+under the file name in the header (you must have a file name; one
+will be requested if necessary).  If that file already existed, a
+backup (.BAK) file may be preserved [configurable; see
+installation guide].  If you haven't changed the file, ZDE prompts
+you to confirm that you want to resave it anyway.
+     There are several different commands for finishing up:
+     ^K-X saves your work and then EXITS to CP/M.
+     ^K-Q just QUITS.  If the file has been modified, ZDE asks if
+you want to abandon the changes.
+     ^K-D (DONE) saves your work, then loads a new file to edit.
+     ^K-L quits the current file and LOADS a new one to begin
+editing.
+
+5.7.  Find, Replace (^Q-F, -A, ^L, ^\).
+
+      ^Q-F is the command to FIND a string.  The search normally
+proceeds from the cursor position forward, and is case
+(upper/lower) insensitive.  There are two options: "B" = search
+backwards;  "C" = case sensitive search.  If used, the options
+must be enclosed in slashes (eg, "/bc/") before the search string.
+(If you want to search for a string beginning with a slash, use an
+empty (//) option first.)  In addition, a ^P-Z [this can be
+reconfigured] functions as a wildcard matching any single
+character.  Other control codes, like ^M for newline, can be
+included (with the ^P prefix where needed).  Examples:
+
+     Find: /c/^MLABEL    matches "LABEL" at start of line only;
+     Find: 4^Z^Z01       matches "42201", "47401", etc;
+     Find: wordstar      matches "WORDSTAR", "WordStar" etc;
+     Find: ///88         matches "/88";
+     Find: /b/esc        looks backwards for "Esc", "esc", etc.
+
+     ^Q-A is the FIND/REPLACE command.  It asks for a string to
+find, and what to change it to (all options above apply to the
+search string only).  The cursor will be placed on each occurrence
+of the string successively, starting at the cursor location.  You
+will see the prompt "Chg?" in the header.  To replace the old
+string with the new one, press "Y"; anything else skips to the
+next.  To change all further occurrences without being asked,
+press "*".  ESC cancels at any time.  (Note: if ^Q-A is used in a
+Macro, it will automatically assume "*" with no further input
+required.)
+     ^L (or ^\, if ^L is an arrow key) repeats the last ^Q-F or
+^Q-A command.  For ^Q-A, you will be asked whether you want to
+replace the found string.  For both, direction and case options
+remain unchanged.
+
+5.8.  Header (^O-Q).
+
+     ZDE normally gives you a header, or status line, at the top
+of the screen.  However, if you like you can toggle the header
+display on and off with the ^O-Q (QUIET) command.  [The header may
+also be suppressed by default.]  This lets you see more file text.
+It can also speed up operation on some slower terminals, as the
+position doesn't have to be continually updated.
+
+     A typical header line looks something like:
+------------------------------------------------------------------
+B0/WORK:ZDE.DOC [A Pg 8    Ln 31   Cl 53   INS vt hy AI DS MR  ^Q_
+------------------------------------------------------------------
+     "B0/WORK:ZDE.DOC [A" = Current directory, filename, and mode.
+     "Pg 8, etc" = Current position in file by page, line, column.
+For "N"ondocuments, there is no page number display.  If
+pagination (^O-P) is off, you will see "Pg 0" (document) or "OP"
+(nondocument) here.
+     "INS" = Insert mode on (^V).
+     "vt" = Variable tabs on (^O-V).
+     "hy" = Hyphenation enabled. (^O-H)  Doesn't display in "N"
+            mode.
+     "AI" = Auto indent mode on (^O-A).
+     "DS" = Double spacing (^O-S).
+     "MR" = Margins released (^O-X).  Doesn't display in "N" mode.
+     "^Q_": Prefix keys (and some prompts) display here.
+
+5.9.  Information (^K-I).
+
+     ^KI displays an Information message with:
+
+     - the ZDE version and date;
+     - whether (Y/N) the file has been changed since last saved;
+     - the current size of the file in bytes;
+     - the number of bytes of text memory used and free (1024
+       bytes = 1K).
+
+     You will note that the file uses about 20-25% less memory
+than its actual length; this is due to ZDE's compression of text. 
+(Note: ZDE is limited to 16-bit arithmetic.  In the unlikely event
+that file size should exceed 64K it will be shown mod 64K; just
+add 65536.)
+     Block moves and copying are limited by the amount of free
+memory.  Further, when there is less than 1K free, response time
+can get very slow.
+
+5.10.  Insert Mode (^V).
+
+     ^V toggles insertion on and off.  If insert is OFF, any text
+to the right of the cursor is overwritten as you type.  If insert
+is ON, what you type is inserted, and existing text moves to the
+right.
+
+5.11.  Line Spacing (^O-S).
+
+     The ^O-S command toggles between single and double line
+spacing.  In double space mode, the following functions generate
+double carriage returns:  CR (^M), Insert CR (^N), Reform (^B),
+Wordwrap.  You can easily mix single and double spacing; the ^B
+command can convert between the two.  Note: if you prefer to keep
+your actual file single spaced, you can still get a double-spaced
+printout by using the "D" option of the ^K-P command (see
+Printing).
+
+5.12.  Margins (^O-R, -L, -X, -C, -F).
+
+     ^O-R sets the RIGHT margin, enabling wordwrap, reformatting,
+and centering.  A right margin of 1 disables all formatting
+functions (same as in "N"ondocument mode).  At the prompt
+"Column:" enter the column number (1-255), or just hit CR for the
+current cursor column.  If the value entered conflicts with the
+current left margin, ZDE sets the left margin to 1.
+     ^O-L sets the LEFT margin in an identical fashion; of course,
+the value must always be less than the current right margin,
+meaning it's best to set the right margin first.
+     ^O-X temporarily RELEASES the margins (resets them to 1),
+allowing you to type outside them.  Use ^O-X again to restore the
+margins.
+     ^O-C CENTERS the current line with respect to the margins, if
+set.  ^O-F sets the current line FLUSH right, if the right margin
+is set.
+
+5.13.  Pagination (^O-P).
+
+     The ^O-P command sets the page length.  Enter a value from 0
+to 255, or just hit CR to restore the default value [normally 54].
+     When the value is nonzero, it determines the page and line
+shown in the document header ("Pg xx Ln xx"), and page-oriented
+Print functions (formfeeds, headers, start/stop print) are enabled.
+     When the value is zero, pagination is off.  The header will
+say "Pg 0 Ln xxxx", showing you the absolute line number in the
+file.  Also, printing occurs with no page breaks or formfeeds. 
+This can be useful for printing small things right after each
+other on the same sheet; or, in conjunction with the "*" print
+option, can be used to print out multiple copies of index cards,
+labels, etc.
+     ZDE never sends a formfeed before printing; begin your file
+with a ^P-L character if you need one.  Otherwise, use of ^P-L is
+not recommended in document files as it renders ZDE's page count
+inaccurate.
+
+5.14.  Place Markers and Line Queue (^P-Z, ^Q-Z, ^Q-Q).
+
+     You can set any number of temporary PLACE MARKERS in the text
+with ^P-Z (they will appear as ^Z).  The ^Q-Z command moves the
+cursor to the next place marker in the file, cycling back to the
+top of the file if needed.  Place markers are NOT saved to disk.
+     ZCPR users may also store a QUEUE of up to eight line numbers
+in their user-defined messages (a set of sixteen bytes of
+protected memory "available for user definition").  The ^Q-Q
+command will then cycle through the queue of line numbers,
+returning to the first location when it reaches a value of zero. 
+A value greater than the number of lines in the file takes the
+cursor to the end of the file.  The numbers are stored as two-byte
+inverted hexadecimal words.  This facility is intended as an
+interface between other programs and ZDE for such purposes as
+storing the locations of compiler errors, however ZCPR users may
+also find it useful to POKE these locations directly before
+invoking ZDE.
+
+5.15.  Printer Codes (^P).
+
+     Control codes for special effects in printing can be entered
+in the text with the ^P prefix.  Thus pressing ^P-^H (or ^P-H)
+embeds a ^H, etc.  Several standard codes are:
+
+     ^H - backspace - overstrike previous character
+     ^I - hard (ASCII) tab - printers respond variously to this
+     ^L - formfeed  (Not recommended unless pagination (^O-P)
+          disabled)
+
+     The Block marker, normally ^@, cannot be embedded, and ^Z is
+reserved for use as a place marker.  Control codes display on
+screen as capital letters, highlighted if possible.  ZDE assumes
+they are not characters, so they are not counted when reformatting
+text.
+     For greater convenience, you can also arrange to have a
+single ^P-code produce an entire string of bytes for commonly used
+printing effects.  ZDE supports a subset of WordStar's printer
+installation, seven definable codes: four toggles, four switches. 
+The Printer Installation in ZDENSTAL allows you to choose what
+codes you want to use, and install the actual control sequences
+your printer needs.  The defaults are:
+
+     toggles:  ^B, ^D, ^S, ^Y
+     switches: ^Q, ^W, ^E, ^R
+
+     In WordStar these toggles are Boldface, Doublestrike,
+Underline, and Ribbon/Italic respectively, but you can make them
+anything you like.  "Toggles" are good for features like underline
+and bold that are turned on and off.  "Switches" are better for
+multivalued parameters like character pitch.
+     Example: your printer uses ESC-U-01 (and 00) to turn
+underlining on (and off).  If you install these codes with
+ZDENSTAL:
+                   ^S toggle on:  (03)1B5501
+                     ...and off:  (03)1B5500
+
+then all you have to type in ZDE to get underlined text is:
+^PSunderlined text^PS.
+
+5.16.  Printing (^K-P).
+
+     The ^K-P command PRINTS all or part of the file in memory. 
+You will be asked for a set of "Options:", at which point you may
+enter zero or more of the following, in any order:
+
+     B      prints only the currently marked BLOCK.
+     P      PAUSES for your keystroke before each page (sheet
+             feed).
+     D      DOUBLE SPACES all text to be printed.
+     Lnn    sets the printer LEFT MARGIN to nn columns [the
+             default value can be set with ZDENSTAL].
+     ^      FILTERS control characters ^X to text "^X".
+     *nn    prints the job out nn TIMES (nn=1..255).
+     @nn    begins printing AT the nn'th page.
+     =nn    renumbers the pages beginning with nn.
+     #nn    prints only (up to) a TOTAL of nn pages.
+     "..."  uses the quoted string as a HEADER.  The string,
+             followed immediately by the page number, will print
+             at the top right of each page near the margin (maxi-
+             mum length is 50 characters; an empty string, "",
+             gives numbered pages with no header text.)
+
+The last four options (@,=,#,"") are NOT allowed if pagination is
+disabled (^O-P), or if "B"lock print was chosen.  Examples:
+
+Options:  L12P
+     - Print the file with a left margin of 12 columns, pausing
+       before each page for you to press a key (other than Esc).
+
+Options:  @6#2=14"Instructions, page "
+     - Print the sixth and seventh pages of the file, but numbered
+       14 and 15, with the header shown.
+
+Options:  BD^*2
+     - Print out the current marked Block twice, double spaced,
+       with control filtering.
+
+     In "W" mode, lines beginning with a "." will be regarded as
+WordStar dot commands, and will neither print out nor affect the
+page count (they have no other effect either).
+     You can abort printing at any time with ESC (this may take a
+moment, or a few keystrokes, depending on your BIOS).
+
+5.17.  Ruler Line (^O-T).
+
+     To help you align text properly, ^O-T toggles display of a
+"ruler line" above the text on and off.
+     In each column you will see one of several symbols: "[]"
+designate the current margins (if set); "-" indicates areas within
+the current margins, "." outside them.  Also, tab stops are marked
+by either "T" (Variable) or "I" (Hard).  Examples:
+
+("A" mode)      [-----T-----T-----------T--------------]........
+("N" mode)      I.......I.......I.......I.......I.......I.......
+
+5.18.  Tabs (^I, ESC-TAB, ^O-V, ^O-I, ^O-N).
+
+     There are two Tab modes: Variable and Hard, and the ^O-V
+command toggles between them.  In Hard Tab mode the Tab key
+produces an actual ^I (ASCII 09); whether this overwrites any
+existing text depends on the Insert toggle.  Hard Tabs display by
+default at fixed intervals of 8 screen columns [this is
+configurable to any multiple of 2].
+     In Variable Tab mode, the Tab key moves the cursor to the
+next variable tab stop (you can always get a Hard Tab by typing
+^P-I).  If Insert is on, spaces are inserted up to the next tab
+stop.  Otherwise, existing text is skipped over, but spaces are
+still added at the end of a line as needed.  Up to eight tab stops
+may be set with ^O-I and cleared with ^O-N; the defaults are in
+columns 6, 11, 16, and 21 [these are configurable].  At the
+prompt, enter the column number desired, or hit RETURN for the
+cursor column.
+     The ^O-I command also accepts two multiple-set inputs: "@nn"
+sets tab stops every "nn" columns, while "#n1,n2,..." sets tabs at
+columns "n1,n2, ...".  Both remove any pre-existing tabs, and
+typing "@" or "#" alone simply clears all tabs.
+     The ESC-TAB command moves backward (left) to the previous
+variable or hard tab stop.
+
+5.19.  Undelete (^U, ^Q-U).
+
+     The undelete functions may be used (repeatedly if necessary)
+to recover a reasonable amount of text deleted either by
+overtyping, or with any of ZDE's delete commands, IF the cursor
+has not yet been moved away.  ^U undeletes one character; ^Q-U
+does a whole line.
+     Restrictions: undelete may not recover all of a Block delete
+unless the cursor was in or near the block deleted, and it may
+work imperfectly if DEL has been used several times in sequence.
+     Further use after all deleted text is recovered will produce
+junk (usually duplicates of text above the cursor, which is
+sometimes useful).
+
+5.20.  Upper/Lower Case (^^).
+
+     The ^^ (ctl-caret) command changes the case of the character
+at the cursor, if it was a letter, and moves the cursor one
+character to the right.  Useful for capitalizing a string of
+lowercase text, or vice versa.
+
+5.21.  Window and Screen (^W, ^Z, ESC-Arrows, ^O-Up, -W, -Z).
+
+     ZDE supports several functions to move and alter the display
+screen.
+     The ^W and ^Z commands scroll the screen up and down a line
+at a time, without moving the cursor (unless necessary).
+     Preceded by ESC, any arrow (except ANSI) moves the screen
+rather than the cursor:  the text as a whole shifts up/down 1/4
+screen, or right/left 32 columns, while the cursor stays put (the
+cursor must be past column 32 for horizontal shifts to work).
+     Preceded by ^O-, any UP arrow key (except ANSI) makes the
+current text line the top of the screen.
+     The ^O-W command creates a WINDOW in the bottom half of the
+screen, which retains a copy of the file text starting at the
+current line, plus the current status and/or ruler line(s), if
+any.  Editing continues normally in the top half of the screen. 
+This is useful for comparing different sections of text within a
+file, or even between different files.  Typing ^O-W again removes
+the Window.  Note: Windowing is only supported for screens of 15
+or more lines.
+     The ^O-Z command temporarily zaps (blanks) the entire screen;
+good for avoiding CRT burn-in, or just protecting work from prying
+eyes or fingers.  Restore the screen by pressing ESC or SPACE. 
+Note: if Windowing was in effect, any text in the window will be
+lost.
+
+5.22.  Wordwrap, Reformat (^B, ^O-D).
+
+     WORDWRAP is automatic in Document ("W" or "A") modes whenever
+the right margin is set.  Any text entered will be formatted to
+the current margin settings as you type.  The end of a paragraph
+is marked by a "HARD CR", which occurs when you press the RETURN
+key (this is a CR immediately following a character of text).  In
+contrast, when wordwrap occurs you get a "SOFT CR" (which is
+actually a CR with a space before it).  You can change a hard CR
+into a soft one, or vice versa, by deleting or adding a space at
+the end of the line.  Hitting RETURN also hardens a soft CR.  The
+distinction between hard and soft CRs is only important when
+reformatting.
+     ^B REFORMATS from the line the cursor is on, to the end of
+the paragraph, according to the current margin settings and line
+spacing.  ^B may be used not only to reshape a paragraph after
+editing, but also to change its margins and line spacing. 
+Indentation can be tricky if you have a left margin set.  If the
+current line is indented relative to the next one, ZDE assumes
+that amount as your paragraph indentation.
+     ^O-D toggles DISPLAY OF HARD CRs.  Hard CRs, otherwise
+invisible, can be caused to display as a "<" character.  This can
+be useful; some may find it distracting, so it turns off.
+
+
+6.  Macros.
+
+6.1.  Macro (ESC-M).
+
+     A MACRO is a string of ZDE commands and text that, once
+defined, can be repeated automatically.  When you type ESC-M you
+will be asked for the string, then a "Repeat count".  Usually you
+will simply type a number for the repeat count (0-9, or "*" for
+"indefinitely").  You will see the results as the macro executes,
+and you can abort it at any time by pressing ESC.  If you are sure
+you know what you're doing, you can speed up Macro execution by
+specifying "Quiet" mode: press "Q" before the repeat count.  Only
+the header, if present, will be updated as the Macro runs.
+     Macros also stop any time an error occurs; the error message
+will be visible, and can be cleared by pressing ESC.  Many
+commands (like Find or Reformat) are designed to generate errors
+at the end of the file so that indefinite ("*") Macros containing
+them halt there.  You may need to abort other indefinite Macros
+manually.
+     ZDE turns INSERT OFF before running a macro, so that the same
+key sequence will always have the same effect.  INSERT status is
+restored when the macro terminates.
+     In order to include any input line editing characters (BS,
+CR, etc.) in a macro, you must prefix them with ^P.  (NOTE:  To
+make them easier to read and understand, Macro listings are given
+here as they function, not as they are typed in.  ^P prefixes as
+needed are NOT shown.  Keystrokes are separated by dashes or
+commas for clarity, and "_" means a space or blank.) Here are some
+sample Macros:
+
+     1.  View a file by scrolling slowly through it:
+
+               ESC-;, ^C
+
+         This will pause, then scroll down.  (Use a repeat count
+          of "*".)
+    
+     2.  Can you figure out what this one does? 
+
+       ^QR, ^QF, (, CR, ^G, ^KB, ^QF, ), CR, ^G, ^KK, ^QC, CR, ^KV
+
+         (Answer:  .elif eht fo dne eht ta meht fo tsil a gnikam
+         elif a fo tuo sesehtnerap ni stnemmoc ekat lliw tI)
+
+     ZDE Macros are very powerful tools, particularly given their
+programmability and storage on function keys.
+
+6.2.  Macro Key (ESC-#, ESC-0..9).
+
+     Up to 10 MACRO KEYS can be stored (0..9), by entering them
+with the ESC-M command, then using ESC-# to save them.  They can
+then be recalled and used simply by typing ESC-number.  Example:
+typing ESC-#-0 will store the last Macro used in the ESC-0 command
+so that it can be recalled and reused at any future time simply by
+typing ESC-0.
+     Ordinarily, Macro Keys operate just like the original Macro,
+asking for a "Repeat count" when executed.  If you want to
+suppress this prompt (resulting in a "function key" that executes
+just once) you can type "N" (for No repeat) before storing the key
+number.  Example:  ESC-#-N-0 makes ESC-0 a no-repeat macro key. 
+If you also don't need to see the Macro work, and want to make it
+faster, you can make it QUIET as well by typing "Q" instead (for
+Quiet) before the key number.  Example: ESC-#-Q-0 stores ESC-0 as
+a quiet no-repeat key sequence.
+     If the Macro (ESC-M) string is empty, using ESC-# will delete
+a Macro Key.  Using a defined Key makes it the last macro used, so
+it can be stored again in another key if desired.  Trying to use
+an undefined Macro Key results in an error.
+     There are 500 bytes total available for all 10 keys, and a
+128 byte limit for any one Key (ZDE's own input line will only
+accept 65 bytes, but ZDENSTAL can handle up to the full 128.)
+     USAGE HINT: If you want to re-use a macro without having to
+type it in again, use ESC-# to assign it to a key, then call it up
+by number.
+     Besides simply storing Macros, here are some useful Macro
+Keys:
+
+     1.  Storing different sets of margins (e.g., for quotes). 
+     For example,
+               ^OL, 12, CR, ^OR, 66, CR
+
+     2.  Typing any frequently repeated phrase; "ESC-6" is much
+     more convenient than "^PSWorld Wide Widgets Ltd. (N.A.)^PS".
+
+     3.  Swap the two characters preceding the cursor:
+               ^S, ^S, ^G, ^D, ^U, ^U, ^D, ^G
+
+[ZDENSTAL allows you to install defaults for all ten Macro Keys. 
+Thus a copy of ZDE can be customized for any task, such as the
+formatting requirements of specialized writing or programming
+languages.]
+
+6.3.  Macro Programming (ESC-0..9, ESC-!,=,~,+,;).
+
+     ZDE has several commands which function only in a Macro
+string, and give you control over the execution of a macro,
+allowing true programming.
+     ESC-0..9 function as LABELS 0..9 when entered as part of a
+Macro.  They have no effect, but can be "jumped" to by other
+commands.
+     ESC-! followed by 0..9 is a JUMP instruction, and causes
+macro execution to resume with the command following the label
+ESC-0..9.  Example: ESC!2 jumps to label 2.  As two special cases,
+ESC-![ jumps to the beginning of the Macro, and ESC-!] jumps to
+the end (aborts).
+     ESC-= and ESC-~, followed by a character and then a label
+0..9 (or "[","]"), are CONDITIONAL JUMPS: they jump to the label
+or the start or end of the macro IF the character at the cursor
+position matches (ESC-=) or doesn't match (ESC-~) the character
+specified.  Example: ESC~^M2 jumps to ESC-2 if the current
+character is NOT a CR.
+     ESC-= and ESC-~, followed by a character and then ">" or "<",
+are SEARCH LOOPS.  They will continue to move the cursor right
+(">") or left ("<") AS LONG AS the character at the cursor matches
+(ESC-=) or doesn't match (ESC-~) the specified character.  Both
+search loops terminate automatically at the beginning or end of
+the file.  Example: ESC=_> moves right as long as the current
+character is a space.
+     ESC-+, followed by 0..9, CHAINS to another macro key,
+allowing you to build macros strings longer than the storage limit
+of any one key.  It does not "call" the key; there is no
+returning.  Example: ESC+9 chains to Key 9.
+     ESC-; (semicolon) gives a brief pause, presumably so the user
+can see what's happening on screen.
+     Macro programs are stored just like any other macro string
+(usually with "N"o repeat count).  If you program in an endless
+loop, you will at some point have to abort with ESC.  Don't make
+macro programs "Q"uiet until you're sure they work.
+     Example: here is a good macro program (best stored as a Quiet
+Key) to move the cursor to the start of the current sentence:
+
+       ESC~.1, ^S, ESC1, ESC~.<, ESC2, ^D, ESC=_2, ESC=^M2
+
+You could write this out in programmer's pseudo-code as:
+
+         If not "." goto label1
+         Move left                 ;move left if already on period
+label1:  While not "." move Left   ;move left to previous period
+label2:  Move right                ;now move back right
+         If " " goto label2        ;  as long as you see a space
+         If "^M" goto label2       ;  or a Return
+         (all done)
+
+
+7.  General Information.
+
+7.1.  Disk Space.
+
+     ZDE isn't disk-bound; if you run out of disk space, just
+insert another disk (always keep a blank FORMATTED disk around). 
+Alternatively, you can use the ESC-F and ESC-E commands to purge
+unneeded files.  [If you have small disks, you can also install
+ZDE not to preserve BAK files.]
+     Let ZDE's filesize limits encourage you to break work up into
+files of 50K or less; larger files make inefficient use of floppy
+disks.
+
+7.2.  Error Messages.
+
+     Press ESC or Space to continue.  "Error" alone means the
+command used just won't work in this situation.  (Example: a block
+command was used with no block marked.)  More specific errors are:
+
+  "Out of Memory" - the file, block, or key string won't fit in
+                     RAM.
+    "Invalid Key" - an illegal command key sequence was pressed.
+      "I/O Error" - file not found, disk full, empty/invalid
+                     drive, etc.
+"Cannot Reformat" - word too long, or margins invalid.
+      "Not Found" - the object of a search was not found.
+   "Syntax Error" - a macro programming command was misused.
+
+7.3.  File Modes.
+
+     ZDE has three FILE MODES: "W"ordStar document, "A"SCII
+document, and "N"on-document.  The basic difference concerns the
+format of disk files.
+     In "W" mode, ZDE reads and writes WordStar-compatible files. 
+ZDE can edit a WordStar document, except that any right
+justification will be lost.  WordStar can edit any ZDE "W" file in
+Document mode.
+     In "A" or "N" mode, ZDE reads and writes text as standard
+ASCII 7-bit characters, a universal format accepted by virtually
+all software.  The only difference between "A" and "N" modes lies
+in the default settings on loading a new file.  Typically "A" mode
+is used for word processing, and "N" mode for programming and
+other technical applications.
+
+DEFAULTS FOR:                Margins      Tabs       Hard CR disp.
+------------                 -------      ----       ------------  
+"A"SCII or "W"ordStar mode   ACTIVE       VARIABLE   [ON]
+"N"on-document               DISABLED     HARD       OFF
+
+     The file mode option can be specified along with the filename
+at any ZDE file function prompt, allowing you to mix WordStar and
+ASCII disk files as needed (see Invoking ZDE, above).  You can
+also change the current mode with the ^K-N function by entering a
+new mode (e.g., "[W") with or without a filename.
+     [ZDENSTAL allows you to select a default file mode, to be
+used when no mode is specified (originally this is "A").  Further,
+you can specify two filetype masks for automatic mode selection
+(e.g., all "ASM" files as "N" mode) to override that default.]
+     NOTE ON ASCII FILES - The "A"SCII-document file format used
+since VDE 2.50, to allow accurate formatting and WordStar
+compatibility, distinguishes between HARD and SOFT CRs (see
+Wordwrap, above).  Consequently, if you edit an ASCII file created
+by other software (including earlier versions of VDE), it may
+appear to be full of hard CRs, making text impossible to reformat.
+There are two easy ways to solve this problem: first, you can use
+^Q-A to find "^M"s and selectively replace them with " ^M". 
+Alternatively, the following Macro (best stored as a Quiet macro
+Key) does a good job of "softening up" paragraphs for reformatting:
+
+               ^QS,^X,ESC=_],ESC=CR],^S,^V_^V,^D,ESC![
+
+7.4.  Hyphenation (^O-H).
+
+     ZDE can't introduce hyphens, but it does recognize them in
+the text, treating them as a legitimate place to break a line, so
+if you have a long word close to the margin, you can insert a
+hyphen where you'd like the word to be broken.
+     Similarly, ZDE can't unhyphenate.  If it is trying to
+reformat and finds a hyphen at the end of a line, it will pause to
+ask you what to do with it.  You will see the prompt "Chg?" in the
+header, and can:
+     Press "Y" to remove the hyphen and space, joining the word;
+           "N" to leave the hyphen, but still join the word;
+           "ESC" to leave both the hyphen and the space alone.
+Typically you would choose "Y" for "soft" hyphens that you
+introduced to break up a word ("intro-duction"); "N" for hard
+hyphens that are part of a word ("vis-a-vis"); and "ESC" for
+punctuation (dashes "--", etc.).  After your choice, reformatting
+will proceed automatically.
+     You can toggle hyphenation on and off with ^O-H.  If off,
+hyphens are not treated differently from any other text character.
+[The ^O-H default can be changed with ZDENSTAL.]
+
+7.5.  Interruption.
+
+     If ZDE is interrupted by messages from other software (BIOS
+error, resident utilities, etc.), it may lose control of the
+screen.  The best way to return it to normal is by blanking and
+restoring the screen (^O-Z, ESC).
+
+7.6.  Prompts.
+
+     First, ZDE has several simple prompts requiring you to
+confirm an action by typing "Y" or "N":
+
+       "Abandon changes?" - warns the file you want to Quit has
+                             been changed.
+"Unchanged; save anyway?" - reminds the file you want saved isn't
+                             changed.
+       "Delete original?" - do you want to delete block copied
+                             from 2nd file?
+                   "Chg?" - do you want to change this instance of
+                             a string?
+
+Then, there are a few special purpose prompts:
+
+          "Repeat count:" - enter (optional "Q" and) repeat count
+                             for Macro.
+            "Key number:" - enter (optional "N/Q" and) key number
+                             for Key.
+                    "Rdy" - press any key to print next page (ESC
+                             quits).
+
+Finally, there are a variety of prompts for either numeric or
+string input, like "Column:" or "Find string:".  You are expected
+to type in a string (up to 65 characters).  The following control
+keys operate:
+
+         Correct mistake:     BS (^H), ^S, or Del
+         Erase entire entry:  ^X
+         Abort operation:     ^U
+
+Note that to get any of these codes, or a CR, into the string
+itself, you must precede it with ^P (this includes ^P).  Examples:
+to find a line beginning with a "*" (find "^M,*") type
+
+               ^Q-F, ^P-CR, *, CR.
+
+Now to get this into a Macro with ESC-M, you would have to type
+
+               ESC-M, ^Q-F, ^P-P, ^P-CR, *, ^P-CR, CR.
+
+7.7.  WordStar Compatibility.
+
+     In most respects ZDE operates much like WordStar; one big
+difference is the absence of a "No-File" menu.  You are always in
+edit mode; use ^K-L to select a new file to edit.
+     If the keys ^J, ^K, ^L are in use as CP/M arrow keys, you
+must use ZDE's original command set to substitute for them as
+follows:
+
+                    Block prefix (^K-)... ESC-
+                    Help menu (^J)....... ESC-H
+                    Repeat find (^L)..... ^\
+
+     If these keys are NOT installed as arrow keys, they retain
+their WordStar functions.  Then, of course, ZDE lacks some
+WordStar commands, and has some of its own.  Aside from these,
+there are the following differences in common commands:
+
+COMMON USE         WORDSTAR 4    ZDE    ZDE NOTES
+Hide block         ^K-H         ^K-U    Actually unmarks block.
+Erase disk file    ^K-J         ^K-E
+Set Place Mark     ^K-0..9      ^P-Z    Not individually numbered.
+Go to Place Mark   ^Q-0..9      ^Q-P    Cyclic.
+
+COMMON COMMAND     WORDSTAR 4 USE        ZDE USE
+      ^^           Soften hard CR        Transpose upper/lowercase
+      ^K-N         Column block mode     Rename current work
+      ^O-D         Display ^P codes      Display hard CRs
+      ^O-F         Ruler from text       Flush right
+      ^O-P         Preview mode          Page length
+      ^Q-U         Repeat align          Repeat undelete
+
+Note that ZDE does not implement WordStar "dot commands" in text,
+though in "W" mode it avoids printing them.
+
+
+8.  Disclaimer.
+
+     You use ZDE at your own risk.  The author accepts no
+liability for any damages resulting from its use or misuse. 
+Direct problem reports and suggestions to the author; include a
+stamped return envelope for a reply if desired.  Thanks to the
+many users of ZDE whose feedback has led to improvements and bug
+fixes in the past.
+
+     Carson Wilson              Sysop: Antelope Freeway RAS
+     1359 W. Greenleaf                 312-764-5162, Chicago
+     Chicago, IL 60626                 24 hours, 3-12-2400 baud

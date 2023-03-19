@@ -1,19 +1,37 @@
 ;::::::::::::::::::::::::::::::::::::::::::::::::**************************
-; Hard disk routines as implemented for the	 **  Hardware Dependent  **
-; D-X Designs Pty Ltd P112 via an external	 ** for exact interface  **
-; NCR/National 5380 Controller. These routines	 **************************
-; may be assembled to use Polled or DMA (no Interrupt) transfers without
-; Arbitration depending on an equate in the DEF-DX.LIB assembly definition
-; file.  Direct driver IO routines to Select (SELHD), Read (HDREAD) and
-; Write (HDWRIT) are all included here.  Thanks to Terry Hazen for
-; debugging the polled code while working on the YASBEC and Ampro versions.
+; Hard disk routines as implemented for		 **  Hardware Dependent  **
+; Retro-Brew Hardware with HBIOS.		 ** for exact interface  **
+; Uses HBIOS disk routines for all HD access	 **************************
+;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+; This file uses modifications of the definitions in ICFG-xx to reflect
+; Physical and/or logical definitions for HBIOS drives.  A controller type of
+; 8xH signifies IDE/ATA drives, in which case the Drive byte at HDRVx is:
+;	7 6 5 4 3 2 1 0
+;	| | | | | +-+-+- Unit Number (0-7)
+;	| | | | +-------  (reserved)
+;	| | | +--------- 1 = Active, 0 = Inactive
+;	+-+-+-----------  (reserved)
+; Additionally, the first byte of the Reduced Write Cylinder word is re-
+; defined to be the number of physical/logical Sectors-Per-Track.
+; Uses HBIOS disk routines for all HD access.  Direct BIOS disk access
+; in not implemented.
+;   These parameters are used to convert the Track & 16 Sector/Track format
+; assumed in the B/P Bios definitions for Hard Drives into Track/Sector/Head
+; Sector Number needed for HBIOS Disk accesses.  Direct driver IO routines
+; to Select (SELHD), Read (HDREAD) and Write (HDWRIT) are all included here.
 ;--------------------------------------------------------------------------
-; 1.3 - 22 Aug 01 - Cleaned source for GPL Release.			HFB
-; 1.2a- 15 Sep 97 - Corrected Data saves for Direct Device IO when
+; 1.8 - 06 Feb 20 - Updated for HBIOS version 2.9.2			WW
+; 1.7 - 28 Nov 16 - Updated for HBIOS version 2.8			WW
+; 1.6 - 20 Jan 14 - Initial N8VEM test release				WW+LWN
+; 1.5 - 31 May 12 - Added ability to handle two IDE devices		LN
+; 1.4 - 12 Dec 07 - Initial Test LabZ80 Release				LN
+; 1.3 - 26 Aug 01 - Cleaned up source and included fixes from SCSI.	HFB
+; 1.2 - 15 Sep 97 - Corrected Data saves for Direct Device IO when
 ;		flushing to/from other SCSI units, added Busy tests.	HFB
-; 1.2 - 17 Jul 96 - Initial P112 integration, deleted Xebec 1410/Shugart
+; 1.1 - 28 Jun 97 - Added Home Drive, Retry Disable bit handling.	HFB
+; 1.0 - 17 Jul 96 - Initial P112 integration, deleted Xebec 1410/Shugart
 ;		1610-3 driver, selectable Polled/DMA modes.		HFB
-; 1.1 - 28 May 93 - Fixed Access to fast drives.			JTH
+; 0.1 - 28 May 93 - Fixed Access to fast drives.			JTH
 ; 0.0 -  9 Jul 91 - Initial Test Release				HFB
 ;***************************************************************************
 
@@ -24,157 +42,28 @@
 	  ENDIF
 
 ;:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-; Function 0 - Set User Data Area Adress for Direct SCSI IO, Return
-;		Number of Bytes in the SCSI driver Command Block
+; Function 0 - Set User Data Area Address for Direct Disk IO, Return
+;		Number of Bytes in the driver Command Block (SCSI-"like")
+;   For IDE, a minimum of 6 Bytes is needed (Comnd,Trk(2),Sctr,Head,Drive)
+;	***** direct disk IO no longer supported - so this function is not
+;	implemented *****
 ; Enter: DE = Address of User Data Area
-; Exit :  A = Number of bytes available in the SCSI Command Block
+; Exit :  A = Number of bytes available in the Command Block
 ; Uses : A,HL
 ;:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-HDVALS:	LD	(DATADR),DE	; Save the Users Data Area
-	LD	A,CMDSIZ
+HDVALS:	CALL	PANIC		; NOT IMPLEMENTED!!!!
 	RET
 
 ;:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-; Function 1 - Set Physical Device bit and Logical Unit Number in SCSI
-;	Command Block (Byte 1, bits 7-5) from byte in A
-; Enter:  A = Device Byte (See ICFG-xx.Z80)
-; Exit :  A = Physical Device Bit of selected drive
+; Function 1 - Set Unit # and dev/unit in Command Block from A - return
+;		unit # in A
+; Enter:  A = Drive Byte
+; Exit :  A = Unit # 
 ; Uses : AF
 ;:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-HDSlct:	LD	(xUnit),A	; Save Dev/LUN byte for later
-	RET
-
-HDSlc0:	PUSH	BC		; Save regs
-	LD	C,A		;   and entry byte
-	AND	0E0H		; Mask off all but Logical Unit Number
-	LD	(LUNSAV),A	;   and save for execution
-	LD	A,C		; Get byte back
-	AND	07H		;   keeping only Physical Device bits
-	LD	B,A		; Prepare for bit rotation
-	INC	B		;   by bumping count for initial value
-	XOR	A		; Start with 0 byte
-	SCF			;  and 1 bit in Carry
-HDSLCZ:	RLA			; Rotate bit around thru Carry
-	DJNZ	HDSLCZ		; ..until properly positioned
-	LD	(HDEVIC),A	; Save for future operations
-	POP	BC		; Restore regs
-	RET
-
-;=========================================================================
-; Select Hard Disk (SCSI Device and Unit)	< Internal Bios routine >
-
-SELHD:	LD	A,(SEKPDN)	; Load Device and Unit # to select
-SELHDA:	LD	C,A		;  position for calculations
-	LD	B,HDRV1-HDRV0	;   with size
-	MLT	BC		; Calculate offset into table
-	LD	HL,HDRV0	;  from first Physical drive
-	ADD	HL,BC
-	LD	A,(HL)		; Fetch Device/LUN byte
-	ld	(iUnit),a	;  save as internal unit #
-	CALL	HDSlc0		;   setting variables for Device and LUN
-	CALL	HDINIT		; Do the actual initialization
-	JP	NZ,SELERR	; ..return Error if Bad
-	JP	SETPARMS	; Else set parameters for DPH/DPB
-
-;:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-; Initialize Xebec 1410/Shugart 1610-3 Controller for appropriate
-;   Drive Specs.  Does Nothing if Owl, Adaptec or SCSI.
-; <<-- Returns Error for Xebec/Shugart...deleted in 1.2. -->>
-; Enter: HL -> Configuration block for desired drive (see ICFG-xx)
-; Exit :  A = 0, Zero Set (Z) if Ok, A <> 0, Zero Clear (NZ) if Error
-; Uses : AF,BC,DE,HL
-; NOTE : This routine uses the Physical drive parameters contained
-;	 in ICFG-xx to determine some of the parameters.
-;:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-HDINIT:	LD	A,(CNTRLR)	; Set Controller type
-	CP	2		; Is it Xebec 1410/Shugart 1610-3?
-	JR	NZ,HDINIS	; ..jump if Not to return Ok
-	DEFB	0F6H		; Fall thru w/"OR  0AFH" and return Error
-HDINIS:	XOR	A		; Else signify this was done Ok
-	RET			; ..and quit
-
-;:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-; Write to SCSI Hard Disk Drive			< Internal BIOS Routine >
-;  Writes from HSTBUF using HSTTRK and HSTSEC to build Block Number.
-; NOTE: This routine uses physical drive characteristics from ICFG-xx.
-
-HDWRIT:	XOR	A
-	LD	(HSTWRT),A 	; Show No pending Write
-
-	LD	A,0AH		; Set the SCSI Write Command
-	DEFB	11H		; ..trash DE, fall thru to save
-
-;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-; Read from SCSI Hard Disk Drive		< Internal BIOS Routine >
-;  Reads to HSTBUF using HSTTRK and HSTSEC to build Block Number.
-; NOTE: This routine uses physical drive characteristics from ICFG-xx.
-
-HDREAD:	LD	A,08H		; Set the SCSI Read Command
-	LD	(HDCOMD),A	;   save command in CDB
-	LD	HL,(HSTDPH)	; Get pointer to desired DPH
-	DEC	HL		;  back up to Device #
-	LD	A,(HL)		;   and fetch
-	CALL	SELHDA		; Select this device from A-Reg
-
-	LD	DE,HDCOMD+1	; Point to second byte of Command Block
-	LD	BC,4*256+0	; Count = 4, MSB of Block # = 0
-	LD	HL,(HSTTRK)	; Get requested track
-MUL16:	ADD	HL,HL		; Multiply C,H,L by 16 for 21-bit block #
-	RL	C		;  shifting overflow bit to C
-	DJNZ	MUL16		; ..and looping til * 16
-	LD	A,(DE)		; Get LUN/High Address
-	AND	11100000B	;  keep only LUN
-	OR	C		;   and add in High 5 bits of Block #
-	LD	(DE),A		; Store back in LUN/High Address
-	INC	DE		; Pt to next
-	LD	A,H		; Get middle Block #
-	LD	(DE),A		;   and save
-	INC	DE		; Pt to next
-	LD	A,(HSTSEC)	; Get Logical Host Sector # (4-bits)
-	ADD	A,L		;  add in Hi 4-bits of low Block #
-	LD	(DE),A		;   save lowest 8 bits of Block #
-	INC	DE		; Pt to next
-	LD	A,1
-	LD	(DE),A		; Set HDSIZ for 1 block
-	INC	DE		; Pt to next
-
-; NOTE: Support for Xebec 1410/Shugart 1610-3 removed.  They required a
-;  step rate byte to be stored at this point.
-
-	XOR	A		; Get a Zero
-	LD	(DE),A		;  Set in Command Block
-
-; Set Physical/Logical Unit numbers just prior to accessing the Drive
-
-	LD	A,(iUnit)	; Get internal unit data
-	CALL	HDSlc0		;  set variables for Device and LUN
-
-; Try the Command specified.  If errors returned (e.g. Attn assertion),
-;  read the SCSI Sense status and try the command again.
-
-RWSCSI:	CALL	HDRW0		; Try a Normal Data Access
-	RET	Z		; ..exitting if Ok
-	LD	HL,sense	; Set Ptr to Sense Command Block
-	LD	DE,snsDat	;  and Sense Data Poiner
-	CALL	HDRW1		; Try a Sense Read, following thru to Dat Rd
-HDRW0:	LD	DE,HSTBUF	;  and Data Pointer for Normal Accesses
-STSCSI:	LD	HL,HDCOMD	; Set Command Block Address
-HDRW1:	LD	(HDCMDV),HL	; Save Command Block Address
-	LD	(HDDATV),DE	;   and Data Area Pointer
-	  IF  NOWAIT		; If Wait States not desired..
-	IN0	A,(DCNTL)	; Get current settings
-	LD	(WTSAVE),A	;  save for exit
-	AND	11001111B	;   Keep everything but IO Waits
-	OUT0	(DCNTL),A	;    and set to No IO Wait States
-	  ENDIF		;nowait
-			;..fall thru to change phases on the SCSI bus
-
-	CALL	SCSI		; Do the Work
-	AND	00000010B	; Any errors?
-	LD	(ERFLAG),A	;   save resulting status here
+HDSLCT:	CALL	PANIC		; NOT IMPLEMENTED!!!!
 	RET
 
 ;:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -197,424 +86,124 @@ HDRW1:	LD	(HDCMDV),HL	; Save Command Block Address
 ; set the data transfer source/dest address and logical & physical drive.
 ;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-HD_RW:	PUSH	AF		; Save User Data Flag
-	PUSH	DE		;  and ptr to User's CDB
-	CALL	FLUSH		; Insure Host Buffer is Free
-	POP	HL		;   restore User CDB ptr to HL for move
-	  IF  BANKED
-	CALL	SHDBNK		; Load Banks for transfer to System fm User
-	CALL	XMOVE		;   and Set
-	  ENDIF		;Banked
-	LD	DE,HDCOMD
-	LD	BC,CMDSIZ	; Move Command Descriptor Block
-	CALL	MOVE		;   into SCSI Command area (6-12 bytes)
-	POP	AF		; Restore Flag
-	OR	A		; Any User data to write?
-	JR	Z,DOSCS0	; ..bypass move if not
-	  IF  BANKED
-	CALL	SHDBNK		; Load for move from User's to System Banks
-	CALL	XMOVE		;   and Set
-	  ENDIF		;Banked
-	CALL	HDDMOV		; Set to move 512 bytes from User to Hstbuf
-	CALL	MOVE		;  Do It!
-DOSCS0:	LD	A,(xUnit)	; Get External Device data
-	CALL	HDSlc0		;  set variables for Device & LUN
+HD_RW:	CALL	PANIC		; NOT IMPLEMENTED!!!!
+	RET
 
-	CALL	RWSCSI		; Set Data Addr and do the operation
-	  IF  BANKED
-	CALL	SHDBNK		; Load Bank Numbers
-	LD	A,B		; Swap
-	LD	B,C		;  Source
-	LD	C,A		;   and Destination Banks
-	CALL	XMOVE		; Set Source/Dest
-	  ENDIF		;Banked
-	PUSH	HL		; Save Status and Message bytes
-	CALL	HDDMOV		;  set Addresses and Length
-	EX	DE,HL		;   write back to User's area
-	CALL	MOVE		;    move without affecting status in A
-	POP	HL		; Restore Status and Message bytes
-	LD	A,L		; Load Status byte for checks
-	AND	1010B		;  keeping only Check (3) and Busy (1) Bits
-	RET			; ..and quit
+;========================================================================
+; Select Hard Disk (Unit 0/1, Master/Slave)	< Internal Bios routine >
 
-;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-; Raw SCSI Driver
+SELHD:	; SET DEVICE
 
-SCSI:
-	  IF  HDDMA
-	LD	(DATPTR),DE	; Save Pointer to Data Area
-	  ENDIF
-	LD	HL,LUNSAV	; Address LUN storage location
-	LD	A,(HDUNIT)	; Get LUN/HiBlock byte from Command Blk
-	AND	1FH		;  Strip off old LUN
-	OR	(HL)		;   add in New LUN
-	LD	(HDUNIT),A	;    save new byte
+;	CALL	PRTSTRD
+;	DEFB	'[SELHD]$'
+
+	JP	SETPARMS	;   then set parameters for DPH/DPB
+
+;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+; Write to Hard Disk Drive			< Internal BIOS Routine >
+;  Writes from HSTBUF using HSTTRK and HSTSEC to build Block Number.
+; NOTE: This routine uses physical drive characteristics from ICFG-xx.
+
+HDWRIT:	
+
 	XOR	A
-	OUT0	(NCRCMD),A	;1.1 Clear any previous Controller status
-	OUT0	(NCRMOD),A	;1.1  no Mode settings
-	OUT0	(NCRTGT),A	;1.1   nothing asserted
+	LD	(HSTWRT),A	; Show no active writes pending
+	JP	HDSK_WRITE	; ..continue
 
-	  IF  HDDMA
-	DEC	A		; 0 --> FF
-	LD	(STATUS),A	; Set Initial timeout status
-	IN0	A,(NCRINT)	;  Clear interrupts & Error Bits
-	  ENDIF
-
-	LD	A,(HDEVIC)	; Get the Target Device address bit
-	OR	10000000B	;   add Host initiator address bit
-	OUT0	(NCRDAT),A
-	IN0	A,(NCRCMD)	; Get Initiator Comnd Reg
-	OR	B_ABUS		;  Assert the Data Bus
-	OUT0	(NCRCMD),A
-	LD	A,B_ASEL+B_ABUS	; Now Assert both Select and Data Bus bits
-	OUT0	(NCRCMD),A
-
-; Wait for 200-300 mS for Target to become Busy.  The SCSI spec says 250 mS,
-; but we don't know when the triggering will occur with our 100ms counter.
-; We therefore set it for 300 mS which results in 200-300 mS w/250 on average.
-
-	LD	L,0FFH		; Preset Timeout Error Status
-	LD	A,3		; 3-100mS ticks
-	LD	(MTM),A		;   from Now!
-BSYWT:	LD	A,(MTM)		; Get Current Count
-	OR	A		; Have we timed out?
-	JR	Z,TIMOUT	; ..exit to Error if So
-	IN0	A,(NCRBUS)	; Get the Current Bus Status
-	AND	B_BSY		; Is it BSY?
-	JR	Z,BSYWT		; ..loop if Not
-			;..else fall thru..
-	LD	A,B_ABUS
-	OUT0	(NCRCMD),A	; Assert Bus w/o Select Command (or free)
-	XOR	A		;  get a Zero
-	OUT0	(NCRCMD),A	;   then free the Data Bus
-	  IF  HDDMA
-	LD	(HDONE),A	; Start by showing Not Done
-			;..fall thru to wait for a Request on the SCSI bus
-
-RQWAIT:	IN0	A,(NCRBUS)	; Get Bus status
-	AND	B_REQ		; Bus Request yet?
-	JR	Z,RQWAIT	; ..jump if Not and wait
-
-WtCall:	CALL	NZ,SCSINT	; Call the Interrupt to start transfer
-	LD	A,(HDONE)	; Get Hard Drive Done flag
-	OR	A		; Finished?
-	JR	NZ,WtDonX	; ..exit if So
-
-	IN0	A,(DRA)		; Else fetch Status (from Z182 Port A)
-	BIT	4,A		; Interrupt?
-	JR	WtCall		; ..check & Read/Write SCSI if So
-
-WtDonX:	LD	HL,(STATUS)	; Else get Status and Message bytes
-TIMOUT:
-	   IF  NOWAIT
-	LD	A,(WTSAVE)	; Get entry Wait state settings
-	OUT0	(DCNTL),A	;   and restore
-	   ENDIF
-	LD	A,L		;  get Status Byte
-	OR	A		;   set flags
-	RET			;    and return
-	  ELSE		;Not hddma
-	LD	(STATUS),A	; Assume Status is Ok
-			    ;..fall thru to check SCSI Bus phase changes..
-	  ENDIF		;Not hddma
-
-;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-; SCSINT - Interrupt routine for the NCR 5380/DP 8490 chip.
+;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+; Read from Hard Disk Drive			< Internal BIOS Routine >
+;  Reads to HSTBUF using HSTTRK and HSTSEC to build Block Number.
+; NOTE: This routine uses physical drive characteristics from ICFG-xx.
+; The routine computes a sequential block number with the algorithm; 
+; Trk * 16 + Sector, HBIOS uses LBA addressing for hard drive like 
+; devices i.e. everything but floppies. The Track contains the most
+; significant 16 bits, Head the next byte and Sector the least 
+; significant byte. Note, only 16 bits are needed to address 33 
+; megabytes for now 24 bits will be used for the LBA address.  For non-
+; hard drive like devices, Head, Sector and Track can be computed
+; using Physical characteristics (hdHds = Number_of_Heads,
+; hdSPT = Sectors_per_Track) according to the algorithm:
 ;
-; This routine handles Interrupts generated by the SCSI controller on phase
-; changes or loss of BSY signal meaning that the operation is complete.
-;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+;   Sector := (Block# MOD hdSPT)+1	(* Quotient1 := Block# DIV hdSPT *)
+;   Head   := Quotient1 MOD hdHds	(* Quotient2 := Quotient1 DIV hdHds *)
+;   Track  := Quotient2
+;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-	  IF  HDDMA
-;	CSEG		;<-- NOTE: If "True" Interrupts are used,this Vector
-			;	   MUST be in Common Memory (CSEG) in case an
-			;	   interrupt hits unexpectedly.  Also, insert
-			;	   code to save registers and set Local Stack.
+HDREAD:
+	JP	HDSK_READ
 
-SCSINT:	DI			; ..disable interrupts here for local calls
-	XOR	A
-	OUT0	(NCRCMD),A	; Release the SCSI Bus
-	IN0	A,(NCRST)	; Get status
-	AND	B_BBSY+B_PHAS	; Phase Match or Bus Busy?
-	JR	Z,SCSIN0	; ..jump if Not to continue
-			;..else fall thru to Exit..
-; Exit here when we are done to set the Completed flag
-
-DISCSI:	XOR	A		; Turn off any SCSI operations
-	OUT0	(NCRMOD),A
-	OUT0	(NCRTGT),A
-	DEC	A		; 0 --> FF
-	LD	(HDONE),A	; Indicate Hard Disk Operation Complete
-	IN0	A,(NCRINT)	; Discard any pending 5380 Interrupts
-	IN0	A,(DSTAT)
-	AND	5FH		; Disable DMA1 Interrupts
-	OUT0	(DSTAT),A
-	EI
-	RET
-
-; Continue with Transaction
-
-SCSIN0:	XOR	A
-	OUT0	(NCRMOD),A	; Clear DMA mode
-	IN0	A,(NCRINT)	; Clear SCSI Interrupts
-	IN0	A,(DSTAT)
-	AND	5FH		;   and Stop Z-180 DMA Ch #1
-	OUT0	(DSTAT),A
-	LD	A,B_MBSY+B_DMA	; Monitor Busy and Set DMA Mode
-	OUT0	(NCRMOD),A
-	  ENDIF		;hddma
-;.....
-; Come here when phases change (Main Handler for Polled IO Mode)
-
-PHASE:	IN0	A,(NCRBUS)	; Read the Bus Status
-	AND	B_MSG+B_CD+B_IO	;  keep the three phases we are interested in
-	RRCA			; Rotate Phase status bits
-	RRCA			;   into B0-2 position for testing
-	OUT0	(NCRTGT),A	; Check for phase match
-	  IF  NOT HDDMA		;  (only need this with Polled IO)
-	LD	BC,NCRDAT	;   with data going to/from this port (B=0)
-	  ENDIF
-	LD	HL,MESSAGE	;  (Ph 7 input goes here)
-	CP	7		; Are we in Phase 7 ?
-	JR	Z,HDIN		; ..jump if so to Message In Phase
-	LD	HL,(HDDATV)	;  (Ph 0/1 IO From/To here)
-	OR	A		; Are we in Phase 0 ?
-	JR	Z,HDOUT		; ..jump to if so to Data Out Phase
-	DEC	A		; Are we in Phase 1 ?
-	JR	Z,HDIN		; ..jump to if so to Data In Phase
-	LD	HL,(HDCMDV)	;  (Ph 2 output from here)
-	DEC	A		; Are we in Phase 2 ?
-	JR	Z,HDOUT		; ..jump to if so to Command Out Phase
-	LD	HL,STATUS	;  (Ph 3 Input to here)
-	DEC	A		; Are we in Phase 3 ?
-	JR	Z,HDIN		; ..jump to if so to Status In Phase
-			;..else fall thru
-; Phases 4, 5 and 6 wind up here in an Error
-
-	  IF  NOWAIT
-	LD	A,(WTSAVE)	; Get entry Wait state settings
-	OUT0	(DCNTL),A	;   and restore
-	  ENDIF
-	CALL	PRINT
-	DEFB	CR,LF,' Phase Err',CR,LF+80H
-	  IF  HDDMA
-	CALL	DISCSI		; Disable any ongoing DMA/SCSI operation
-	  ENDIF		;..else fall thru to abort.  Stack is reset so don't
-			;   worry about popping and restoring anything
 	  IF  BANKED
-	JP	ABORT		; Use this error exit if banked
+	COMMON	/BANK2/
 	  ELSE
-	RST	0		; ..this exit if Non-banked
-	  ENDIF		;banked
+	CSEG
+	  ENDIF
+;
+;==================================================================================================
+;   HBIOS Disk Driver Interface
+;==================================================================================================
+;
+; HBIOS disk commands
+;
+HB_DSKRD	EQU	13H
+HB_DSKWR	EQU	14H
+;
+HDSK_READ:
+;	CALL	PRTSTRD		; DEBUG
+;	DEFB	'[HDSK READ]$'	; DEBUG
 
-;.....
-; SCSI Input Routine (Polled IO)
-;  Enter with HL pointing to buffer, C addressing 5380 Data Port
+	LD	B,HB_DSKRD	; HBIOS DISK READ (13H)
+	JR	HDSK_RW
+;
+HDSK_WRITE:
+;	CALL	PRTSTRD
+;	DEFB	'[HDSK WRITE]$'
 
-	  IF  NOT HDDMA
-HDIN:	IN0	A,(NCRBUS)	; Check the Bus
-	BIT	5,A		; Do we have a REQuest?
-	JR	NZ,HDIN1	; ..jump if so to read it
-	AND	B_BSY		; Is the Bus Busy?
-	JR	NZ,HDIN		; ..loop if so
+	LD	B,HB_DSKWR	; HBIOS DISK WRITE (14H)
+;
+HDSK_RW:
+	LD	HL,(HSTDPH)	; GET ACTIVE DPH POINTER
+	DEC	HL		; ADJUST TO POINT TO UNIT NUMBER
+	LD	C,(HL)		; LOAD IT IN C FOR HBIOS CALL LATER
+	PUSH	BC		; SAVE FUNCTION AND DEVICE FOR LATER
+	LD	HL,(HSTTRK)	; GET TRACK VALUE
+	LD	A,L		; LSB OF TRACK TO A
+	AND	0FH		; ISOLATE HEAD IN LOW 4 BITS
+	LD	D,A		; STUFF IT IN D
+	LD	A,(HSTSEC)	; GET SECTOR
+	LD	E,A		; STUFF IT IN E
+	LD	B,4		; PREPARE TO SHIFT OUT 4 BIT HEAD VALUE
+HDSK_RW1:                       
+	SRL	H		; SHIFT ONE BIT OUT
+	RR	L		; ... OF HL
+	DJNZ	HDSK_RW1	; DO ALL 4 BITS
+	POP	BC		; RECOVER FUNCTION AND DEVICE
+	PUSH	BC		; SAVE INCOMING FUNCTION, DEVICE/UNIT
+	LD	B,12H		; SETUP FOR NEW SEEK CALL
+	CALL	HBX_INVOKE	; DO IT
+	POP	BC              ; RESTORE INCOMING FUNCTION, DEVICE/UNIT
+	RET	NZ              ; ABORT IF SEEK RETURNED AN ERROR W/ ERROR IN A
+	LD	HL,(HB_DSKBUF)  ; GET BUFFER ADDRESS
+	;LD	D,BID_HB	; BUFFER IN HBIOS BANK
+	LD	A,(HB_BNKBIOS)	; BUFFER IN HBIOS BANK
+	LD	D,A		; PUT IN D
+	LD	E,1		; ONE SECTOR
+	CALL	HBX_INVOKE	; DO IT
+	OR	A		; SET FLAGS
+	RET	Z		; DONE IF NO ERROR
 
-HDEXIT:	XOR	A		; Else we are finished.  Clean up & Quit
-	OUT0	(NCRCMD),A	;  Clear Initiator Command Register
-	OUT0	(NCRTGT),A	;   and Target Command Register
-	LD	HL,(STATUS)	; Get Message (H) and Status (L) bytes
-TIMOUT:
-	   IF  NOWAIT
-	LD	A,(WTSAVE)	; Get entry Wait state settings
-	OUT0	(DCNTL),A	;   and restore
-	   ENDIF
-	LD	A,L		; Get Status byte
-	OR	A		;   Set Return Status Ok if Status Byte = 0
-	RET
-
-HDIN1:	IN0	A,(NCRST)	; Get SCSI Status
-	AND	B_PHAS		; Do the Phases Match?
-	JR	Z,PHASE		; ..quit here if Not and clear
-	INI			; Get a byte from Port (C) to Memory at (HL)
-	INC	B		;  (correct B for decrement in INI)
-	LD	A,B_AACK
-	OUT0	(NCRCMD),A	; ACKnowledge the byte
-	XOR	A
-	OUT0	(NCRCMD),A	;  clear *ACK bit
-	JR	HDIN		;   and back for more
-
-;.....
-; SCSI Output Routine (Polled IO)
-;  Enter with HL pointing to buffer, C addressing 5380 Data Port
-
-HDOUT:	LD	A,B_ABUS	; Assert Data Bus
-	OUT0	(NCRCMD),A
-	IN0	A,(NCRBUS)	; Check the SCSI Bus
-	BIT	5,A		; Do we have a REQuest?
-	JR	NZ,HDOUT1	; ..jump if So to Send a byte
-	AND	B_BSY		; Else is the Bus Busy?
-	JR	NZ,HDOUT	; ..loop if so because we have more to go
-	JR	HDEXIT		; Quit
-
-HDOUT1:	IN0	A,(NCRST)	; Get current Status
-	AND	B_PHAS		; Do we have a Phase Match?
-	JP	Z,PHASE		; ..quit here if Not and clear
-
-	OUTI			; Send a byte from (HL) to Port (C)
-	INC	B		;  (Correct B for decrement in OUTI)
-	LD	A,B_AACK+B_ABUS
-	OUT0	(NCRCMD),A	; Set ACKnowledge and BUS bits
-	XOR	A
-	OUT0	(NCRCMD),A	;  clear *ACK and *BUS
-	JR	HDOUT		;   and back for more
-	  ENDIF		;Not hddma
-
-;.....
-; SCSI Input routine (DMA Controlled)
-; Enter: HL = Address of Receive Buffer start
-
-	  IF  HDDMA
-HDIN:	LD	C,1010B		; Set for Edge Triggering and Read mode
-	CALL	STDMA		;  Set up Transfer and DMA Data
-	OUT0	(NCRINT),A	;   Start DMA Initiator Rcv (bits don't care)
-		;<-- NOTE: If using true Interrupts, restore local Stack Ptr
-		;	   and preserved registers here
-	EI			; Interrupts Ok Now
-	RET
-
-;.....
-; SCSI Output Routine (DMA Controlled)
-; Enter: HL = Address of Send Buffer start
-
-HDOUT:	LD	C,1000B		; Set for Edge Triggering bit and Write mode
-	CALL	STDMA		;  Set up Transfer and DMA Data
-	LD	A,B_ABUS	;   Assert the Data Bus
-	OUT0	(NCRCMD),A
-	OUT0	(NCRST),A	;    Start DMA Send (bits irrelevant)
-		;<-- NOTE: If using true Interrupts, restore local Stack Ptr
-		;	   and preserved registers here
-	EI			; Interrupts Ok Now
-	RET
-
-;.....
-; STDMA - Set up DMA Channel 1 for a SCSI Read or Write operation.
-; Enter: HL = Start Address of Buffer to Read/Write from/to
-;	  C = Write (1x00B) or Read (1x10B) DMA1 Control bits
-;		     ||++- Mem->IO   ||++- IO->Mem
-;		     |+--- DMA0-Sns  |+--- DMA0-Sns
-;		     +---- DMA1-Edge +---- DMA1-Edge
-
-STDMA:	IN0	A,(DCNTL)	; Get DMA1 Control bits
-	AND	0F4H		;  mask pertinent bits assuming a Write
-	OR	C		; Add Edge Triggering bit and R/W mode
-	OUT0	(DCNTL),A	;   and Command DMA Chan 1
-
-	   IF  BANKED
-	LD	A,(SYSBNK)	; Get system Bank #
-	   ELSE
-	LD	A,(TPABNK)	; If Not Banked, load TPA Bank #
-	   ENDIF	;banked
-	RL	H		; Place Address MSB in Carry
-	ADC	A,0		;  offset Bank # by 32k banks
-	RRA			;   shift Bank LSB to Carry
-	RR	H		; Move Bank # LSB (Carry) to Address MSB
-	LD	(DMATBL+2),A	; Store Bank byte in DMA Block
-	LD	(DMATBL),HL	;   save Actual DMA Addr in Ctl Block
-	LD	HL,DMATBL	; Point to DMA Control Block
-	LD	BC,8*256+MAR1L	; Set for 8 bytes to DMA Channel 1
-	OTIMR			;   and output 8 bytes to 8 ports
-	IN0	A,(DSTAT)	; Get DMA Chan 1 Status
-	AND	57H		;  set for No Terminating Interrupt
-	OR	81H		;   enable DMA operation
-	OUT0	(DSTAT),A	;    and Start the action!
-	RET
-	  ENDIF		;hddma
-
-;.....
-; Set registers for Whole Block Move
-
-HDDMOV:	LD	HL,(DATADR)	; Get ptr to User's Area
-	LD	DE,HSTBUF	;  Pt to local Host Buffer
-	LD	BC,512		;   set length
-	RET			;  ..and return
-
-;.....
-; Set banks for Interbank move
-
-	  IF  BANKED
-SHDBNK:	LD	A,(USP-1)	; Get Source Bank Byte
-	RRA			;  shift to
-	RRA			;
-	RRA			;   Bank #
-	AND	1FH		; Mask off any Junk
-	LD	C,A		;  position
-	LD	A,(SYSBNK)	; Get System Bank
-	LD	B,A		;  position it too
-	RET			;   and return
-	  ENDIF		;banked
-
-;.....
-; SCSI Read Sense Command Data Block
-
-sense:	DEFB	03H		; SCSI Sense Command
-	DEFB	0,0,0,SNSLEN,0	;   remainder of Sense Command Block
-				; (data length set to available space)
+	OR	0FFH		; A=$FF TO SIGNAL ERROR
+	RET			; AND DONE W/ ERROR
+;
+;==================================================================================================
+;   HDSK DISK DRIVER - DATA
+;==================================================================================================
+;
 	  IF  BANKED
 	COMMON	/B2RAM/
 	  ELSE
 	DSEG
 	  ENDIF
 
-HDCMDV:	DEFS	2		; Storage for Current Command Data Block
-HDDATV:	DEFS	2		; Storage for current Data Transfer Area
-snsDat:	DEFS	18		; Storage for extended Sense Data Received
-SNSLEN	 EQU  $-snsDat
-; SCSI Controller Command Block
+HDSK_PDN	DEFS	1		; PHYSICAL DEVICE
 
-HDCOMD:	DEFS	1		; Command Byte
-HDUNIT:	DEFS	1		; B7-5 = Unit #, remainder is Hi-Addr
-HIBLK:	DEFS	1		; Mid-Addr Byte
-LOBLK:	DEFS	1		; Lo-Addr Byte
-HDSIZ:	DEFS	1		; Block Size to Read/Write (1=512 byte blk)
-HDCTL	DEFS	1		; Control/Step Byte
-	DEFS	6		;   (pad for 12-byte Command Block)
-CMDSIZ	EQU	$-HDCOMD	; Size of Command Block
-
-	  IF  HDDMA
-DATPTR:	DEFS	2		; Pointer to Data Area
-	  ENDIF
-DATADR:	DEFS	2		; Pointer to User Buffer Space (user bank)
-HDEVIC:	DEFS	1		; Target Device address bit
-LUNSAV:	DEFS	1		; Storage for LUN
-
-HDSTEP:	DEFS	1		; Step Rate Byte for Xebec/Shugart
-INIBUF:	DEFS	9		; Buffer for Xebec/Shugart 1610-3 Init.
-
-; Z-180 DMA Control Block for SCSI Data Transfers
-
-	  IF  HDDMA
-DMATBL:	DEFS	2		; MAR1L, MAR1H
-	DEFS	1		; MAR1B (Bank)
-	DEFS	2		; DMAACK Output Port
-	DEFS	1		; (unused)
-NBYTES:	DEFS	2		; BCR1L, BCR1H
-	  ENDIF		;hddma
-
-;<<--- WARNING! --- Do not re-order the following Two Bytes --->>
-
-STATUS:	 DEFS	1		; Ending Status Byte
-MESSAGE: DEFS	1		; Ending Message Byte
-
-;	  IF  HDDMA	;<-- If using True Interrupts, uncomment this
-			;    Section and add code to Interrupt Handler
-			;    to save registers here.
-;	 DEFS	12		; ..fill bytes and stack space
-;INTSTK:	DEFS	2		; Storage for Stack Pointer
-;	  ENDIF		;hddma
-	  IF  NOWAIT
-WTSAVE:	 DEFS	1		; Entry Wait State Setting
-	  ENDIF
-iUnit:	 DEFS	1		; Bios Select Unit/LUN byte
-xUnit:	 DEFS	1		; Direct Access Unit/LUN byte
-
-;======================= End of HARD-DX ===========================
-
+

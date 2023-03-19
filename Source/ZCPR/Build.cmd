@@ -3,16 +3,14 @@ setlocal
 
 set TOOLS=../../Tools
 
-set PATH=%TOOLS%\tasm32;%TOOLS%\zx;%PATH%
+set PATH=%TOOLS%\tasm32;%TOOLS%\zxcc;%PATH%
 
 set TASMTABS=%TOOLS%\tasm32
 
-set ZXBINDIR=%TOOLS%/cpm/bin/
-set ZXLIBDIR=%TOOLS%/cpm/lib/
-set ZXINCDIR=%TOOLS%/cpm/include/
+set CPMDIR80=%TOOLS%/cpm/
 
-zx MAC -ZCPR.ASM -$PO
-zx MLOAD25 -ZCPR.BIN=ZCPR.HEX
+zxcc MAC -ZCPR.ASM -$PO || exit /b
+zxcc MLOAD25 -ZCPR.BIN=ZCPR.HEX || exit /b
 
-zx MAC -BDLOC.ASM -$PO
-zx MLOAD25 -BDLOC.COM=BDLOC.HEX
+zxcc MAC -BDLOC.ASM -$PO || exit /b
+zxcc MLOAD25 -BDLOC.COM=BDLOC.HEX || exit /b

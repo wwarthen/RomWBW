@@ -18,17 +18,34 @@
 ;
 CVDU_BASE	.EQU	$E0
 ;
+#IF (CVDUMODE == CVDUMODE_ECB)
 CVDU_KBDDATA	.EQU	CVDU_BASE + $02	; KBD CTLR DATA PORT
 CVDU_KBDST	.EQU	CVDU_BASE + $0A	; KBD CTLR STATUS/CMD PORT
 CVDU_STAT	.EQU	CVDU_BASE + $04	; READ M8563 STATUS
 CVDU_REG	.EQU	CVDU_BASE + $04	; SELECT M8563 REGISTER
 CVDU_DATA	.EQU	CVDU_BASE + $0C	; READ/WRITE M8563 DATA
+#ENDIF
+;
+#IF (CVDUMODE == CVDUMODE_MBC)
+CVDU_KBDDATA	.EQU	CVDU_BASE + $02	; KBD CTLR DATA PORT
+CVDU_KBDST	.EQU	CVDU_BASE + $03	; KBD CTLR STATUS/CMD PORT
+CVDU_STAT	.EQU	CVDU_BASE + $04	; READ M8563 STATUS
+CVDU_REG	.EQU	CVDU_BASE + $04	; SELECT M8563 REGISTER
+CVDU_DATA	.EQU	CVDU_BASE + $05	; READ/WRITE M8563 DATA
+#ENDIF
 ;
 CVDU_ROWS	.EQU	25
 CVDU_COLS	.EQU	80
 ;
-#DEFINE USEFONT8X16
-#DEFINE	CVDU_FONT FONT8X16
+#IF (CVDUMON == CVDUMON_CGA)
+  #DEFINE	USEFONTCGA
+  #DEFINE	CVDU_FONT FONTCGA
+#ENDIF
+;
+#IF (CVDUMON == CVDUMON_EGA)
+  #DEFINE	USEFONT8X16
+  #DEFINE	CVDU_FONT FONT8X16
+#ENDIF
 ;
 TERMENABLE	.SET	TRUE		; INCLUDE TERMINAL PSEUDODEVICE DRIVER
 ;
@@ -38,9 +55,24 @@ TERMENABLE	.SET	TRUE		; INCLUDE TERMINAL PSEUDODEVICE DRIVER
 ;
 CVDU_INIT:
 	LD	IY,CVDU_IDAT		; POINTER TO INSTANCE DATA
-
-	CALL	NEWLINE			; FORMATTING
-	PRTS("CVDU: IO=0x$")
+	
+	CALL	NEWLINE
+	PRTS("CVDU: MODE=$")
+#IF (CVDUMODE == CVDUMODE_ECB)
+	PRTS("ECB$")
+#ENDIF
+#IF (CVDUMODE == CVDUMODE_MBC)
+	PRTS("MBC$")
+#ENDIF
+;
+#IF (CVDUMON == CVDUMON_CGA)
+	PRTS(" CGA$")
+#ENDIF	
+#IF (CVDUMON == CVDUMON_EGA)
+	PRTS(" EGA$")
+#ENDIF	
+;
+	PRTS(" IO=0x$")
 	LD	A,CVDU_STAT
 	CALL	PRTHEXBYTE
 	CALL	CVDU_PROBE		; CHECK FOR HW PRESENCE
@@ -94,8 +126,10 @@ CVDU_FNTBL:
 	.DW	KBD_STAT
 	.DW	KBD_FLUSH
 	.DW	KBD_READ
+	.DW	CVDU_VDARDC
 #IF (($ - CVDU_FNTBL) != (VDA_FNCNT * 2))
 	.ECHO	"*** INVALID CVDU FUNCTION TABLE ***\n"
+	!!!!!
 #ENDIF
 
 CVDU_VDAINI:
@@ -112,11 +146,11 @@ CVDU_VDAQRY:
 	LD	HL,0		; EXTRACTION OF CURRENT BITMAP DATA NOT SUPPORTED YET
 	XOR	A		; SIGNAL SUCCESS
 	RET
-	
+
 CVDU_VDARES:
 	LD	A,$0E			; ATTRIBUTE IS STANDARD WHITE ON BLACK
 	LD	(CVDU_ATTR),A		; SAVE IT
-	
+
 	LD	DE,0			; ROW = 0, COL = 0
 	CALL	CVDU_XY			; SEND CURSOR TO TOP LEFT
 	LD	A,' '			; BLANK THE SCREEN
@@ -124,24 +158,27 @@ CVDU_VDARES:
 	CALL	CVDU_FILL		; DO IT
 	LD	DE,0			; ROW = 0, COL = 0
 	CALL	CVDU_XY			; SEND CURSOR TO TOP LEFT
-	
+
 	XOR	A
 	RET
 
 CVDU_VDADEV:
 	LD	D,VDADEV_CVDU	; D := DEVICE TYPE
 	LD	E,0		; E := PHYSICAL UNIT IS ALWAYS ZERO
+	LD	H,0		; H := 0, DRIVER HAS NO MODES
+	LD	L,CVDU_BASE	; L := BASE I/O ADDRESS
 	XOR	A		; SIGNAL SUCCESS
 	RET
-	
+
 CVDU_VDASCS:
-	CALL	PANIC		; NOT IMPLEMENTED (YET)
-	
+	SYSCHKERR(ERR_NOTIMPL)	; NOT IMPLEMENTED (YET)
+	RET
+
 CVDU_VDASCP:
 	CALL	CVDU_XY		; SET CURSOR POSITION
 	XOR	A		; SIGNAL SUCCESS
 	RET
-	
+
 CVDU_VDASAT:
 	; INCOMING IS:  -----RUB (R=REVERSE, U=UNDERLINE, B=BLINK)
 	; TRANSFORM TO: -RUB----
@@ -158,7 +195,7 @@ CVDU_VDASAT:
 	LD	(CVDU_ATTR),A	; AND SAVE THE RESULT
 	XOR	A		; SIGNAL SUCCESS
 	RET
-	
+
 CVDU_VDASCO:
 	; INCOMING IS:  IBGRIBGR (I=INTENSITY, B=BLUE, G=GREEN, R=RED)
 	; TRANSFORM TO: ----RGBI (DISCARD BACKGROUND COLOR IN HIGH NIBBLE)
@@ -175,13 +212,13 @@ CVDU_VDASCO1:
 	LD	(CVDU_ATTR),A	; AND SAVE THE RESULT
 	XOR	A		; SIGNAL SUCCESS
 	RET
-	
+
 CVDU_VDAWRC:
 	LD	A,E		; CHARACTER TO WRITE GOES IN A
 	CALL	CVDU_PUTCHAR	; PUT IT ON THE SCREEN
 	XOR	A		; SIGNAL SUCCESS
 	RET
-	
+
 CVDU_VDAFIL:
 	LD	A,E		; FILL CHARACTER GOES IN A
 	EX	DE,HL		; FILL LENGTH GOES IN DE
@@ -197,7 +234,7 @@ CVDU_VDACPY:
 	POP	BC		; RECOVER LENGTH IN BC
 	LD	DE,(CVDU_POS)	; PUT DEST IN DE
 	JP	CVDU_BLKCPY	; DO A BLOCK COPY
-	
+
 CVDU_VDASCR:
 	LD	A,E		; LOAD E INTO A
 	OR	A		; SET FLAGS
@@ -213,6 +250,15 @@ CVDU_VDASCR1:
 	POP	DE		; RECOVER E
 	INC	E		; INCREMENT IT
 	JR	CVDU_VDASCR	; LOOP
+
+;----------------------------------------------------------------------
+; READ VALUE AT CURRENT VDU BUFFER POSITION
+; RETURN E = CHARACTER, B = COLOUR, C = ATTRIBUTES
+;----------------------------------------------------------------------
+
+CVDU_VDARDC:
+	OR	$FF		; UNSUPPORTED FUNCTION
+	RET
 ;
 ;======================================================================
 ; CVDU DRIVER - PRIVATE DRIVER FUNCTIONS
@@ -246,7 +292,7 @@ CVDU_WRX:
 ;----------------------------------------------------------------------
 ; READ M8563 REGISTERS
 ;   CVDU_RD READS VDU REGISTER SPECIFIED IN C AND RETURNS VALUE IN A
-;   CVDU_RDX READS VDU REGISTER PAIR SPECIFIED BY C, C+1 
+;   CVDU_RDX READS VDU REGISTER PAIR SPECIFIED BY C, C+1
 ;     AND RETURNS VALUE IN HL
 ;----------------------------------------------------------------------
 ;
@@ -317,7 +363,7 @@ CVDU_CRTINIT1:
 ; ASSUMES THAT VDU RAM SIZE IS SET FOR 64KB ABOVE
 ;   A.  WRITE ZERO TO ADDRESS $0000
 ;   B.  WRITE NON-ZERO TO ADDRESS $0100
-;   C.  CHECK THE VALUE IN ADDRESS $0000; IF IT CHANGED, 
+;   C.  CHECK THE VALUE IN ADDRESS $0000; IF IT CHANGED,
 ;       16K DRAM CHIPS INSTALLED; IF NOT, 64K DRAM CHIPS INSTALLED
 ; IF 16KB RAM DETECTED, ADJUST VDU REGISTERS APPROPRIATELY
 ;
@@ -367,7 +413,7 @@ CVDU_LOADFONT:
 	LD	(CVDU_STACK),SP		; SAVE STACK
 	LD	HL,(CVDU_STACK)		; AND SHIFT IT
 	LD	DE,$2000		; DOWN 4KB TO
-	CCF				; CREATE A 
+	OR	A			; CREATE A
 	SBC	HL,DE			; DECOMPRESSION BUFFER
 	LD	SP,HL			; HL POINTS TO BUFFER
 	EX	DE,HL			; START OF STACK BUFFER
@@ -424,7 +470,7 @@ CVDU_XY2IDX:
 	RET				; RETURN
 ;
 ;----------------------------------------------------------------------
-; WRITE VALUE IN A TO CURRENT VDU BUFFER POSTION, ADVANCE CURSOR
+; WRITE VALUE IN A TO CURRENT VDU BUFFER POSITION, ADVANCE CURSOR
 ;----------------------------------------------------------------------
 ;
 CVDU_PUTCHAR:
@@ -436,7 +482,7 @@ CVDU_PUTCHAR:
 	CALL	CVDU_WRX		; DO IT
 
 	; PUT THE CHARACTER THERE
-	POP	AF			; RECOVER CHARACTER VALLUE TO WRITE
+	POP	AF			; RECOVER CHARACTER VALUE TO WRITE
 	LD	C,31			; DATA REGISTER
 	CALL	CVDU_WR			; DO IT
 
@@ -475,19 +521,19 @@ CVDU_FILL:
 	POP	DE			; RECOVER FILL COUNT
 	LD	A,(CVDU_ATTR)		; SET ATTRIBUTE VALUE FOR ATTRIBUTE FILL
 	JR	CVDU_FILL1		; DO ATTRIBUTE FILL AND RETURN
-	
+
 CVDU_FILL1:
 	LD	B,A			; SAVE REQUESTED FILL VALUE
-	
+
 	; CHECK FOR VALID FILL LENGTH
 	LD	A,D			; LOAD D
 	OR	E			; OR WITH E
 	RET	Z			; BAIL OUT IF LENGTH OF ZERO SPECIFIED
-	
+
 	; POINT TO BUFFER LOCATION TO START FILL
 	LD	C,18			; UPDATE ADDRESS REGISTER PAIR
 	CALL	CVDU_WRX		; DO IT
-	
+
 	; SET MODE TO BLOCK WRITE
 	LD	C,24			; BLOCK MODE CONTROL REGISTER
 	CALL	CVDU_RD			; GET CURRENT VALUE
@@ -499,7 +545,7 @@ CVDU_FILL1:
 	LD	C,31			; DATA REGISTER
 	CALL	CVDU_WR			; DO IT
 	DEC	DE			; REFLECT ONE CHARACTER WRITTEN
-	
+
 	; LOOP TO DO BULK WRITE (UP TO 255 BYTES PER LOOP)
 	EX	DE,HL			; NOW USE HL FOR COUNT
 	LD	C,30			; BYTE COUNT REGISTER
@@ -527,7 +573,7 @@ CVDU_SCROLL:
 	LD	A,' '			; CHAR VALUE TO FILL NEW EXPOSED LINE
 	LD	HL,0			; SOURCE ADDRESS OF CHARACER BUFFER
 	CALL	CVDU_SCROLL1		; SCROLL CHARACTER BUFFER
-	
+
 	; SCROLL THE ATTRIBUTE BUFFER
 	LD	A,(CVDU_ATTR)		; ATTRIBUTE VALUE TO FILL NEW EXPOSED LINE
 	LD	HL,$800			; SOURCE ADDRESS OF ATTRIBUTE BUFFER
@@ -535,7 +581,7 @@ CVDU_SCROLL:
 
 CVDU_SCROLL1:
 	PUSH	AF			; SAVE FILL VALUE FOR NOW
-	
+
 	; SET MODE TO BLOCK COPY
 	LD	C,24			; BLOCK MODE CONTROL REGISTER
 	CALL	CVDU_RD			; GET CURRENT VALUE
@@ -563,13 +609,13 @@ CVDU_SCROLL2:
 
 	; LOOP TILL DONE WITH ALL LINES
 	DJNZ	CVDU_SCROLL2		; REPEAT FOR ALL LINES
-	
+
 	; SET MODE TO BLOCK WRITE TO CLEAR NEW LINE EXPOSED BY SCROLL
 	LD	C,24			; BLOCK MODE CONTROL REGISTER
 	CALL	CVDU_RD			; GET CURRENT VALUE
 	AND	$7F			; CLEAR BIT 7 FOR FILL MODE
 	CALL	CVDU_WR			; DO IT
-	
+
 	; SET VALUE TO WRITE
 	POP	AF			; RESTORE THE FILL VALUE PASSED IN
 	LD	C,31			; DATA REGISTER
@@ -579,7 +625,7 @@ CVDU_SCROLL2:
 	LD	A,CVDU_COLS - 1	; SET WRITE COUNT TO LINE LENGTH - 1 (1 CHAR ALREADY WRITTEN)
 	LD	C,30			; WORD COUNT REGISTER
 	CALL	CVDU_WR			; DO IT
-	
+
 	RET
 ;
 ;----------------------------------------------------------------------
@@ -591,7 +637,7 @@ CVDU_RSCROLL:
 	LD	A,' '			; CHAR VALUE TO FILL NEW EXPOSED LINE
 	LD	HL,$0 + ((CVDU_ROWS - 1) * CVDU_COLS) 	; SOURCE ADDRESS OF CHARACER BUFFER
 	CALL	CVDU_RSCROLL1		; SCROLL CHARACTER BUFFER
-	
+
 	; SCROLL THE ATTRIBUTE BUFFER
 	LD	A,(CVDU_ATTR)		; ATTRIBUTE VALUE TO FILL NEW EXPOSED LINE
 	LD	HL,$800 + ((CVDU_ROWS - 1) * CVDU_COLS)	; SOURCE ADDRESS OF ATTRIBUTE BUFFER
@@ -599,7 +645,7 @@ CVDU_RSCROLL:
 
 CVDU_RSCROLL1:
 	PUSH	AF			; SAVE FILL VALUE FOR NOW
-	
+
 	; SET MODE TO BLOCK COPY
 	LD	C,24			; BLOCK MODE CONTROL REGISTER
 	CALL	CVDU_RD			; GET CURRENT VALUE
@@ -629,7 +675,7 @@ CVDU_RSCROLL2:
 	CALL	CVDU_WR			; DO IT
 
 	DJNZ	CVDU_RSCROLL2		; REPEAT FOR ALL LINES
-	
+
 	; SET FILL DESTINATION (USING HL PASSED IN)
     	LD 	C,18			; UPDATE ADDRESS (DESTINATION) REGISTER
 	CALL	CVDU_WRX		; DO IT
@@ -639,7 +685,7 @@ CVDU_RSCROLL2:
 	CALL	CVDU_RD			; GET CURRENT VALUE
 	AND	$7F			; CLEAR BIT 7 FOR FILL MODE
 	CALL	CVDU_WR			; DO IT
-	
+
 	; SET VALUE TO WRITE
 	POP	AF			; RESTORE THE FILL VALUE PASSED IN
 	LD	C,31			; DATA REGISTER
@@ -649,7 +695,7 @@ CVDU_RSCROLL2:
 	LD	A,CVDU_COLS - 1	; SET WRITE COUNT TO LINE LENGTH - 1 (1 CHAR ALREADY WRITTEN)
 	LD	C,30			; WORD COUNT REGISTER
 	CALL	CVDU_WR			; DO IT
-	
+
 	RET
 ;
 ;----------------------------------------------------------------------
@@ -759,9 +805,59 @@ CVDU_POS		.DW 	0	; CURRENT DISPLAY POSITION
 ;
 ;
 CVDU_INIT8563:
-#IF 1
-; EGA 720X368  9-BIT CHARACTERS
+;
+#IF (CVDUMON == CVDUMON_CGA)
+;
+; CGA 640x200  8-BIT CHARACTERS
+;   - requires 16.000Mhz oscillator frequency
+;
+	.DB	$7E		; 0: hor. total - 1
+	.DB	$50		; 1: hor. displayed
+	.DB	$66		; 2: hor. sync position 85
+	.DB	$49		; 3: vert/hor sync width 		or 0x4F -- MDA
+	.DB	$20		; 4: vert total
+	.DB	$E0		; 5: vert total adjust
+	.DB	$19		; 6: vert. displayed
+	.DB	$1D		; 7: vert. sync postition
+	.DB	$FC		; 8: interlace mode
+	.DB	$E7		; 9: char height - 1
+;	.DB	$A0		; 10: cursor mode, start line
+	.DB	$47		; 10: cursor mode, start line
+;	.DB	$E7		; 11: cursor end line
+	.DB	$07		; 11: cursor end line
+	.DB	$00		; 12: display start addr hi
+	.DB	$00		; 13: display start addr lo
+	.DB	$07		; 14: cursor position hi
+	.DB	$80		; 15: cursor position lo
+	.DB	$12		; 16: light pen vertical
+	.DB	$17		; 17: light pen horizontal
+	.DB	$0F		; 18: update address hi
+	.DB	$D0		; 19: update address lo
+	.DB	$08		; 20: attribute start addr hi
+;	.DB	$20		; 21: attribute start addr lo
+	.DB	$00		; 21: attribute start addr lo
+	.DB	$78		; 22: char hor size cntrl 		0x78
+	.DB	$E8		; 23: vert char pixel space - 1, increase to 13 with new font
+	.DB	$20		; 24: copy/fill, reverse, blink rate; vertical scroll
+	.DB	$47		; 25: gr/txt, color/mono, pxl-rpt, dbl-wide; horiz. scroll
+	.DB	$F0		; 26: fg/bg colors (monochr)
+	.DB	$00		; 27: row addr display incr
+	.DB	$2F		; 28: char set addr; RAM size (64/16)
+	.DB	$E7		; 29: underline position
+	.DB	$4F		; 30: word count - 1
+	.DB	$07		; 31: data
+	.DB	$0F		; 32: block copy src hi
+	.DB	$D0		; 33: block copy src lo
+	.DB	$7D		; 34: display enable begin
+	.DB	$64		; 35: display enable end
+	.DB	$F5		; 36: refresh rate
+#ENDIF
+;
+#IF (CVDUMON == CVDUMON_EGA)
+;
+; EGA 720X350  9-BIT CHARACTERS
 ;   - requires 16.257Mhz oscillator frequency
+;
 	.DB	$61		; 0: hor. total - 1
 	.DB	$50		; 1: hor. displayed
 	.DB	$5A		; 2: hor. sync position 85
@@ -799,44 +895,6 @@ CVDU_INIT8563:
 	.DB	$06		; 34: display enable begin
 	.DB	$56		; 35: display enable end
 	.DB	$00		; 36: refresh rate
-#ELSE
-	.DB	$7E		; 0: hor. total - 1
-	.DB	$50		; 1: hor. displayed
-	.DB	$66		; 2: hor. sync position 85
-	.DB	$49		; 3: vert/hor sync width 		or 0x4F -- MDA
-	.DB	$20		; 4: vert total
-	.DB	$E0		; 5: vert total adjust
-	.DB	$19		; 6: vert. displayed
-	.DB	$1D		; 7: vert. sync postition
-	.DB	$FC		; 8: interlace mode
-	.DB	$E7		; 9: char height - 1
-	.DB	$A0		; 10: cursor mode, start line
-	.DB	$E7		; 11: cursor end line
-	.DB	$00		; 12: display start addr hi
-	.DB	$00		; 13: display start addr lo
-	.DB	$07		; 14: cursor position hi
-	.DB	$80		; 15: cursor position lo
-	.DB	$12		; 16: light pen vertical
-	.DB	$17		; 17: light pen horizontal
-	.DB	$0F		; 18: update address hi
-	.DB	$D0		; 19: update address lo
-	.DB	$08		; 20: attribute start addr hi
-	.DB	$20		; 21: attribute start addr lo
-	.DB	$78		; 22: char hor size cntrl 		0x78
-	.DB	$E8		; 23: vert char pixel space - 1, increase to 13 with new font
-	.DB	$20		; 24: copy/fill, reverse, blink rate; vertical scroll
-	.DB	$47		; 25: gr/txt, color/mono, pxl-rpt, dbl-wide; horiz. scroll
-	.DB	$F0		; 26: fg/bg colors (monochr)
-	.DB	$00		; 27: row addr display incr
-	.DB	$2F		; 28: char set addr; RAM size (64/16)
-	.DB	$E7		; 29: underline position
-	.DB	$4F		; 30: word count - 1
-	.DB	$07		; 31: data
-	.DB	$0F		; 32: block copy src hi
-	.DB	$D0		; 33: block copy src lo
-	.DB	$7D		; 34: display enable begin
-	.DB	$64		; 35: display enable end
-	.DB	$F5		; 36: refresh rate
 #ENDIF
 ;
 ;==================================================================================================

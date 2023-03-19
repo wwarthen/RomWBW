@@ -1,309 +1,490 @@
-;======= Hard Disk Parameter Blocks =======
+;======= Hard Disk Parameter Blocks =======	************************
+;   - Retro-Brew boards w/ RomWBW HBIOS -	** Hardware Dependant **
+;						************************
+; 1.4 - 04 Sep 16 - Mods for HBIOS V 2.8 pre 5                       LWN+WW
+; 1.3 - 20 Jan 14 - Initial N8VEM test release			     LWN
+; 1.2 - 17 Nov 07 - Initial LabZ80 test release			     LWN
+; 1.1 - 27 Feb 93 - General Release.				     HFB
+; 0.0 - 12 Jun 91 - Initial Test Release.			     HFB
+;:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 ; The B/P BIOS DPB's contain prefix information that provide data on the
 ; logical format.  This table contains only DPB Data on Hard Disk Partitions.
 ; See DPB.LIB for definitions of bit equates used in all DPB files.
 
-; NOTE: For simplicity, the code always assumes a logical 16 512-byte sectors
-;	per track for SCSI interface.  Translate the actual 17 or 18 sectors
-;	to an increased track count of 16 sector tracks.
+; NOTE: For simplicity, BPBIOS always assumes a logical 16 512-byte 
+;	sectors (64 128 byte records) per track for hard disks.  
+;	One must therefore translate the actual number of sectors 
+;	to a track count of 16 sectors per track.
 
 ;.....
 ; Format Type Byte 0  (Fixed Disk Subset)
 ; ------------------
 ; D D D D D D D D
 ; 7 6 5 4 3 2 1 0
-; | | | | | +-+-+----- Disk Size 000 = Fixed Disk, remainder unused
-; +-+-+-+-+----------- (unused)
+;  \ \ \ \ \ \_\_\____ Disk Size 000 = Fixed Disk
+;   \_\_\_\_\_________ (unused)
 
-; All DPBs use the equate:  FIXDSK  EQU  00000000B  from DPB.LIB
+; Format Type Byte is set to  FIXDSK  EQU  00000000B.  See DPB.LIB for 
+;        def'ns.
 
 ; Format Type Byte 1  (Fixed Disk Subset)
 ; ------------------
 ; D D D D D D D D
 ; 7 6 5 4 3 2 1 0
-; | | | | | +-+-+----- Sector Size: 010 = 512 bytes assumed in driver
-; | | +-+-+----------- Allocation Size: 000=1K, 001=2K, 010=4K, 011=8K, 100=16K
-; | +----------------- (reserved)
-; +------------------- 1 = High Speed.  (0 Not Used)
+;  \ \ \ \ \ \_\_\____ Sector Size
+;   \ \ \ \ \		000=128, 001=256, 010=512, 011=1024
+;    \ \ \_\_\________ Allocation Size
+;     \ \		000=1K, 001=2K, 010=4K, 011=8K, 100=16K
+;      \ \____________ Reserved
+;	\_____________ Speed Normal 5.25" (0), 8" or HD Floppy (1)
 
-; Information in this byte is not used in the SCSI driver, but is simply
-; maintained for future use and compatibility with other DPB access routines.
+; Information in this byte is not used in the driver, but is simply
+; maintained for future use and compatibility with other DPB access 
+; applications such as BPCNFG.  Refer to DPB.LIB for bit definitions.
 
-; NOTE: No Skew Table is needed since Hard Disk Format is locked
+; NOTE: No Skew Table needed since Hard Disk Format is locked w/No Skew 
 
 ;.....
-; Partition A.  HBIOS Disk 0, Slice 0
+; Currently, BPBIOS supports 2 memory drive devices and 3 phyical hard 
+;	drive like devices.  BPBIOS can support seven but unfortunately
+;	BPCNFG only supports 3 hard drive like devices and the source 
+;	code is not available, so menu 4 is meaningless.  Devices 
+;	include IDE Hard drives (16 bit), USB and SD card drives.  CF 
+;	cards can connect to both 8 and 16 bit IDE interfaces.  Note
+;	that the RAM and ROM drives are handled separately.  A default 
+;	system configuration consists of two Floppy drives, an IDE drive 
+;	and an SD drive.  The IDE drive is allocated eight 8 MB slices 
+;	while the SD drive will have four 8 MB slices.  For SIMH, the 
+;	IDE drive is replaced by SIMH HDSK0 with eight slices and the SD 
+;	drive with SIMH HDSK1 with 4 slices.  The configuration
+;	and/or mix of drives can be altered at any time by using BPCNFG
+;	Manually or by editting the appropriate .CNF file.  The SD card
+;	could replaced by the USB for example,
+;
+;	Starting with ver 2.8 of HBIOS, devices are discovered at boot
+;	time and assigned device numbers.  Since devices are tested in
+;	a certain order, the device numbers are somewhat predicably 
+;	assigned.  Memory drives are discovered first.  IDE drives are 
+;	discovered next so that IDE Hard drives including CF cards are 
+;	assigned device 2 and device 3 if a slave drive is supported by
+;	the interface.  Next comes the SD drive and is assigned device 3
+;	or 4 depending on the whether there is an ide slave drive.
+;	USB drive is assigned device 4 or 5 .  For SIMH HDSK0 is device 0
+;	and HDSK1 is device 1.  Memory drives are now handled as LBA
+;	devices, ie like hard drives.
+;
+; The following non-memory drive capacities and configurations used for 
+; the SIMH, SD and IDE drives: Slice geometry is 256, 512 byte sectors, 
+; 1 head per track and 1 with one reserved track, a block size of 4096 
+; bytes with 512 directory entries.  An equivalent geometry is 16 
+; sectors and 16 heads per track.  Internally BPBIOS uses a uniform 
+; logical organization with 64 logical records per logical track.  
+; Thus there are 16 logical tracks per physical track with 1040 
+; logical (65 physical) tracks per slice.  If all partitions are not 
+; physically present, the missing partitions can be disabled in the 
+; BPBCNFG configuration file or by hand.  Note that HBIOS uses LBA, 
+; Logical Block Addressing, for non-floppy drives.
+;
+; For SBC V1,2, ZETA, MARK IV and N8, the following non-memory partitions 
+;   are available: 
+;
+; These are the capacities and configuration used for the IDE drives:
+;
+;	partition	Size	Blocks	Block 	Offset in
+;			MByte		Size	logical tracks
+;====================================================================
+;	   C		 8	 2048	4096	1*16          = 16
+;	   D		 8	 2048	4096	(1+65)*16     = 1056
+;	   E		 8	 2048	4096	(1+2*65)*16   = 2096
+;	   F		 8	 2048	4096	(1+3*65)*16   = 3136
+;	   G		 8	 2048	4096	(1+4*65)*16   = 4176
+;	   H		 8	 2048	4096	(1+5*65)*16   = 5216
+;	   I		 8	 2048	4096	(1+6*65)*16   = 6256
+;	   J		 8	 2048	4096	(1+7*65)*16   = 7296
+;
+; These are capacities and configurations used for SD card:
+;
+;	partition	Size	Blocks	Block 	Offset
+;			MByte		Size	logical tracks
+;====================================================================
+;	   K		 8	 2048	4096	1*16          = 16
+;	   L		 8	 2048	4096	(1+65)*16     = 1056
+;	   M		 8	 2048	4096	(1+2*65)*16   = 2096
+;	   N		 8	 2048	4096	(1+3*65)*16   = 3136
+;
+; RAM drive is paritition A while ROM drive is partition B. 
+;
+; For example, a typical Memory drive configuration is: 
+;
+;	partition	Size	Blocks	Block 	Offset
+;			MByte		Size	logical tracks
+;====================================================================
+;	   B		 384K	  192	2048	0
+;
+; For SIMH the IDE and SD drives are replaced by HDSK0 and HDSK1. The 
+;   follow non-RAM partitions are available:
+;
+; Simh HDSK0 drive configuration is identical to the IDE drive.
+;
+; Simh HDSK1 drive configuration is identical to the SD drive.
+;
+; Memory disks are drives A and B
+; Hard drives (IDE, SD AND USB) are drives E TO L and M to P
+; Floppies are drives O and P
+;
+;====================================================================
+;
+;.....
+; Partition A.  RAM Disk
+; Retro-Brew HBIOS RAM Disk Format assuming 64k for System & HBIOS banks
 
-	  IF  DRV_E
-	DEFB	'HBDSK0:0 ','A'+80H ; Id - 10 bytes
+	DEFB	'Ram Drive',' '+80H ; Id - 10 bytes
+	DEFB	FIXDSK		    ; Format type byte 0
+	DEFB	SPEED8+SEC512+ALC2K ; Format type byte 1
+	DEFB	-1		; Skew factor (== Only the +/- sign used)
+	DEFB	1		; Starting sector number
+	DEFB	16		; Physical # sectors/trk (16*512=8k per 'track')
+	DEFB	0		; Physical tracks/side (No Meaning in HD)
+
+MSIZR	EQU	(32*16)		; Maximum blocks in RAM drive (assume 1MB)
+
+DPBRAM:	DEFW	64		; Records/Track (16 sectors*4 records/sector)
+	DEFB	4		; Block Shift Factor (2k per block)
+	DEFB	0FH		; Block Mask
+	DEFB	1		; Extent Mask (updated at boot by HB_INIT)
+	DEFW	MSIZR-1		; Disk Blocks (updated at boot by HB_INIT)
+	DEFW	255		; Dir Max-1	4 blocks
+	DEFB	0F0H,0		; Alloc 0,1
+	DEFW	0000		; Check Size
+	DEFW	0000		; Trk Offset from beginning of Ram Bank base
+;
+;.....
+; Partition B.  ROM Disk
+; Retro-Brew HBIOS ROM Disk Format assuming 64k for System & HBIOS banks
+
+	DEFB	'ROM Drive',' '+80H ; Id - 10 bytes
+	DEFB	FIXDSK		    ; Format type byte 0
+;	DEFB	SPEED8+SEC128+ALC2K ; Format type byte 1
+	DEFB	SPEED8+SEC512+ALC2K ; Format type byte 1
+	DEFB	-1		; Skew factor (== Only the +/- sign used)
+;	DEFB	0		; Starting sector number
+	DEFB	1		; Starting sector number
+;	DEFB	32		; Physical # sectors/trk (32=4k per 'track')
+	DEFB	16		; Physical # sectors/trk (32=4k per 'track')
+	DEFB	0		; Physical tracks/side (No Meaning in HD)
+
+MSIZO	EQU	(32*16)		; Maximum blocks in ROM drive (assume 1MB)
+
+DPBROM:	DEFW	64		; Sectors/Track
+	DEFB	4		; Block Shift Factor (2k per block)
+	DEFB	0FH		; Block Mask
+	DEFB	1		; Extent Mask (updated at boot by HB_INIT)
+	DEFW	MSIZO-1		; Disk Blocks (updated at boot by HB_INIT)
+	DEFW	255		; Dir Max-1	4 blocks
+	DEFB	0F0H,0		; Alloc 0,1
+	DEFW	0000		; Check Size
+	DEFW	0000		; Trk Offset from beginning of Ram Bank base
+;
+;.....
+; Partition C.  HBIOS Disk 0, Slice 0
+
+	  IF  DRV_C
+	DEFB	'HBDSK0:0 ','C'+80H ; Id - 10 bytes
 	DEFB	FIXDSK		    ; Format type byte 0
 	DEFB	SPEED8+SEC512+ALC4K ; Format type byte 1
 	DEFB	-2		; Skew factor (== Only the +/- sign used)
 	DEFB	1		; Starting sector number
-	DEFB	16		; Logical Sectors per track
+	DEFB	16		; 16 Logical sectors are defined in DPB
+				;  even though real layout is 256 physical
+				;  sectors per track
 	DEFB	0		; Physical tracks/side (No Meaning in HD)
-
 HSIZ0	EQU	2048		; # of blocks in first Partition  (1024 trks)
-
 				;	
-				;	
-DPB50:	DEFW	64	; Sctrs/Trk	
-	DEFB	5	; Blk Shf Fctr	
-	DEFB	31	; Block Mask	
-	DEFB	1	; Extent Mask	
-	DEFW	HSIZ0-1	; Disk Size-1	
-	DEFW	511	; Dir Max	
-	DEFB	0F0H,0	; Alloc 0,1	
-	DEFW	0	; Check Size	
-	DEFW	16	; Trk Offset	
+DPB50:	DEFW	64		; Sctrs/Trk	
+	DEFB	5		; Blk Shf Fctr	
+	DEFB	31		; Block Mask	
+	DEFB	1		; Extent Mask	
+	DEFW	HSIZ0-1		; Disk Size-1	
+	DEFW	511		; Dir Max-1 - 4 blocks	
+	DEFB	0F0H,0		; Alloc 0,1 - 4 blocks	
+	DEFW	0		; Check Size	
+	DEFW	16		; Trk Offset	
 	  ENDIF
-
+;
 ;.....
-; Partition B.  HBIOS Disk 0, Slice 1
+; Partition D.  HBIOS Disk 0, Slice 1
 
-	  IF  DRV_F
-	DEFB	'HBDSK0:1 ','B'+80H ; Id - 10 bytes
+	  IF  DRV_D
+	DEFB	'HBDSK0:1 ','D'+80H ; Id - 10 bytes
 	DEFB	FIXDSK		    ; Format type byte 0
 	DEFB	SPEED8+SEC512+ALC4K ; Format type byte 1
 	DEFB	-2		; Skew factor
 	DEFB	1		; Starting sector number
-	DEFB	16		; Logical Sectors per track
+	DEFB	16		; 16 Logical Sectors per track is defined
+				; in DPB even though there is 256 physical
+				; sectors per track
 	DEFB	0		; Physical tracks/side (No Meaning in HD)
 
 HSIZ1	EQU	2048		; # of blocks in Second Partition  (1024 trks)
-
-			;		
-			;		
-DPB51:	DEFW	64	; Scts/Trk	
-	DEFB	5	; Blk Shf Fctr	
-	DEFB	31	; Block Mask	
-	DEFB	1	; Extent Mask	
-	DEFW	HSIZ1-1	; Disk Size-1	
-	DEFW	511	; Dir Max	
-	DEFB	0F0H,0	; Alloc 0,1	
-	DEFW	0	; Check size	
-	DEFW	1056	; Track offset	
+				;		
+DPB51:	DEFW	64		; Scts/Trk	
+	DEFB	5		; Blk Shf Fctr
+	DEFB	31		; Block Mask	
+	DEFB	1		; Extent Mask	
+	DEFW	HSIZ1-1		; Disk Size-1	
+	DEFW	511		; Dir Max-1	4 blocks
+	DEFB	0F0H,0		; Alloc 0,1	
+	DEFW	0		; Check size	
+	DEFW	(1+65)*16	; Track offset	1056
 	  ENDIF
-
+;
 ;.....
-; Partition C.  HBIOS Disk 0, Slice 2
+; Partition E.  HBIOS Disk 0, Slice 2
 
-	  IF  DRV_G
-	DEFB	'HBDSK0:2 ','C'+80H ; Id - 10 bytes
+	  IF  DRV_E
+	DEFB	'HBDSK0:2 ','E'+80H ; Id - 10 bytes
 	DEFB	FIXDSK		    ; Format type byte 0
 	DEFB	SPEED8+SEC512+ALC4K ; Format type byte 1
 	DEFB	-2		; Skew factor
 	DEFB	1		; Starting sector number
-	DEFB	16		; Logical Sectors per track
+	DEFB	16		; 16 Logical Sectors per track is defined
+				; in DPB even though there is 256 physical
+				; sectors per track
 	DEFB	0		; Physical tracks/side (No Meaning in HD)
 
 HSIZ2	EQU	2048		; # of blocks in third Partition (1024 tracks)
-
 				;	
-				;	
-DPB52:	DEFW	64	; Scts/Trk	
-	DEFB	5	; Blk Shf Fctr	
-	DEFB	31	; Block Mask	
-	DEFB	1	; Extent Mask	
-	DEFW	HSIZ2-1	; Disk Size-1	
-	DEFW	511	; Dir Max	
-	DEFB	0F0H,0	; Alloc0,1	
-	DEFW	0	; Check size	
-	DEFW	2096	; Track offset	
+DPB52:	DEFW	64		; Scts/Trk	
+	DEFB	5		; Blk Shf Fctr	
+	DEFB	31		; Block Mask	
+	DEFB	1		; Extent Mask	
+	DEFW	HSIZ2-1		; Disk Size-1	
+	DEFW	511		; Dir Max-1	4 blocks
+	DEFB	0F0H,0		; Alloc 0,1	
+	DEFW	0		; Check size	
+	DEFW	(1+2*65)*16	; Track offset = 2096
 	  ENDIF
-
+;
 ;.....
-; Partition D.  HBIOS Disk 0, Slice 3
+; Partition F.  HBIOS Disk 0, Slice 4
 
-	  IF  DRV_H
-	DEFB	'HBDSK0:3 ','D'+80H ; Id - 10 bytes
+	  IF  DRV_F
+	DEFB	'HBDSK0:3 ','F'+80H ; Id - 10 bytes
 	DEFB	FIXDSK		    ; Format type byte 0
 	DEFB	SPEED8+SEC512+ALC4K ; Format type byte 1
 	DEFB	-2		; Skew factor
 	DEFB	1		; Starting sector number
-	DEFB	16		; Logical Sectors per track
+	DEFB	16		; 16 Logical Sectors per track is defined
+				; in DPB even though there is 256 physical
+				; sectors per track
 	DEFB	0		; Physical tracks/side (No Meaning in HD)
 
 HSIZ3	EQU	2048		; # of blocks in Fourth Partition (1024 tracks)
-
 				;	
-				;	
-DPB53:	DEFW	64	; Scts/Trk	
-	DEFB	5	; Blk Shf Fctr	
-	DEFB	31	; Block Mask	
-	DEFB	1	; Extent Mask	
-	DEFW	HSIZ3-1	; Disk Size-1	
-	DEFW	511	; Dir Max	
-	DEFB	0F0H,0	; Alloc 0,1	
-	DEFW	0	; Check size	
-	DEFW	3136	; Track offset	
+DPB53:	DEFW	64		; Scts/Trk	
+	DEFB	5		; Blk Shf Fctr	
+	DEFB	31		; Block Mask	
+	DEFB	1		; Extent Mask	
+	DEFW	HSIZ3-1		; Disk Size-1	
+	DEFW	511		; Dir Max-1	4 blocks
+	DEFB	0F0H,0		; Alloc 0,1	
+	DEFW	0		; Check size	
+	DEFW	(1+3*65)*16	; Track offset = 3136
 	  ENDIF
-
+;	
 ;.....
-; Partition A.  HBIOS Disk 1, Slice 0
+; Partition G.  HBIOS Disk 0, Slice 4
 
-	  IF  DRV_I
-	DEFB	'HBDSK1:0 ','E'+80H ; Id - 10 bytes
+	  IF  DRV_G
+	DEFB	'HBDSK0:4 ','G'+80H ; Id - 10 bytes
 	DEFB	FIXDSK		    ; Format type byte 0
 	DEFB	SPEED8+SEC512+ALC4K ; Format type byte 1
 	DEFB	-2		; Skew factor (== Only the +/- sign used)
 	DEFB	1		; Starting sector number
-	DEFB	16		; Logical Sectors per track
+	DEFB	16		; 16 Logical Sectors per track is defined
+				; in DPB even though there is 64 physical
+				; sectors per track
 	DEFB	0		; Physical tracks/side (No Meaning in HD)
 
 HSIZ4	EQU	2048		; # of blocks in first Partition  (1024 trks)
-
 				;	
-				;	
-DPB54:	DEFW	64	; Sctrs/Trk	
-	DEFB	5	; Blk Shf Fctr	
-	DEFB	31	; Block Mask	
-	DEFB	1	; Extent Mask	
-	DEFW	HSIZ4-1	; Disk Size-1	
-	DEFW	511	; Dir Max	
-	DEFB	0F0H,0	; Alloc 0,1	
-	DEFW	0	; Check Size	
-	DEFW	16	; Trk Offset	
+DPB54:	DEFW	64		; Sctrs/Trk	
+	DEFB	5		; Blk Shf Fctr
+	DEFB	31		; Block Mask
+	DEFB	1		; Extent Mask
+	DEFW	HSIZ4-1		; Disk Size - 1
+	DEFW	511		; Dir Max-1	4 blocks
+	DEFB	0F0H,0		; Alloc 0,1	
+	DEFW	0		; Check size	
+	DEFW	(1+4*65)*16	; Track offset = 16
 	  ENDIF
-
+;
 ;.....
-; Partition B.  HBIOS Disk 1, Slice 1
+; Partition H.  HBIOS Disk 0, Slice 5
 
-	  IF  DRV_J
-	DEFB	'HBDSK1:1 ','F'+80H ; Id - 10 bytes
+	  IF  DRV_H
+	DEFB	'HBDSK0:5 ','H'+80H ; Id - 10 bytes
 	DEFB	FIXDSK		    ; Format type byte 0
 	DEFB	SPEED8+SEC512+ALC4K ; Format type byte 1
-	DEFB	-2		; Skew factor
+	DEFB	-2		; Skew factor (== Only the +/- sign used)
 	DEFB	1		; Starting sector number
-	DEFB	16		; Logical Sectors per track
+	DEFB	16		; 16 Logical sectors is defined in DPB
+				;  even though real layout is 64 physical
+				;   sectors per track
 	DEFB	0		; Physical tracks/side (No Meaning in HD)
 
 HSIZ5	EQU	2048		; # of blocks in Second Partition  (1024 trks)
-
-			;		
-			;		
-DPB55:	DEFW	64	; Scts/Trk	
-	DEFB	5	; Blk Shf Fctr	
-	DEFB	31	; Block Mask	
-	DEFB	1	; Extent Mask	
-	DEFW	HSIZ5-1	; Disk Size-1	
-	DEFW	511	; Dir Max	
-	DEFB	0F0H,0	; Alloc 0,1	
-	DEFW	0	; Check size	
-	DEFW	1056	; Track offset	
+				;		
+DPB55:	DEFW	64		; Sctrs/Trk - actually 256	
+	DEFB	5		; Blk Shf Fctr	
+	DEFB	31		; Block Mask	
+	DEFB	1		; Extent Mask	
+	DEFW	HSIZ5-1		; Disk Size-1	
+	DEFW	511		; Dir Max-1	
+	DEFB	0F0H,0		; Alloc 0,1 - 4 blocks	
+	DEFW	0		; Check Size	
+	DEFW	(1+5*65)*16	; Trk Offset = 1056
 	  ENDIF
-
+;
 ;.....
-; Partition C.  HBIOS Disk 1, Slice 2
+; Partition I.  HBIOS Disk 0, Slice 6
 
-	  IF  DRV_K
-	DEFB	'HBDSK1:2 ','G'+80H ; Id - 10 bytes
+	  IF  DRV_I
+	DEFB	'HBDSK0:6 ','I'+80H ; Id - 10 bytes
 	DEFB	FIXDSK		    ; Format type byte 0
 	DEFB	SPEED8+SEC512+ALC4K ; Format type byte 1
 	DEFB	-2		; Skew factor
 	DEFB	1		; Starting sector number
-	DEFB	16		; Logical Sectors per track
+	DEFB	16		; 16 Logical Sectors per track is defined
+				; in DPB even though there is 64 physical
+				; sectors per track
 	DEFB	0		; Physical tracks/side (No Meaning in HD)
 
 HSIZ6	EQU	2048		; # of blocks in third Partition (1024 tracks)
-
 				;	
-				;	
-DPB56:	DEFW	64	; Scts/Trk	
-	DEFB	5	; Blk Shf Fctr	
-	DEFB	31	; Block Mask	
-	DEFB	1	; Extent Mask	
-	DEFW	HSIZ6-1	; Disk Size-1	
-	DEFW	511	; Dir Max	
-	DEFB	0F0H,0	; Alloc0,1	
-	DEFW	0	; Check size	
-	DEFW	2096	; Track offset	
+DPB56:	DEFW	64		; Scts/Trk	
+	DEFB	5		; Blk Shf Fctr	
+	DEFB	31		; Block Mask	
+	DEFB	1		; Extent Mask	
+	DEFW	HSIZ6-1		; Disk Size-1	
+	DEFW	511		; Dir Max-1	4 blocks
+	DEFB	0F0H,0		; Alloc 0,1	
+	DEFW	0		; Check size	
+	DEFW	(1+6*65)*16	; Track offset	= 2096
 	  ENDIF
 
 ;.....
-; Partition D.  HBIOS Disk 1, Slice 3
+; Partition J.  HBIOS Disk 0, Slice 7
 
-	  IF  DRV_L
-	DEFB	'HBDSK1:3 ','H'+80H ; Id - 10 bytes
+	  IF  DRV_J
+	DEFB	'HBDSK0:7 ','J'+80H ; Id - 10 bytes
 	DEFB	FIXDSK		    ; Format type byte 0
 	DEFB	SPEED8+SEC512+ALC4K ; Format type byte 1
 	DEFB	-2		; Skew factor
 	DEFB	1		; Starting sector number
-	DEFB	16		; Logical Sectors per track
+	DEFB	16		; 16 Logical Sectors per track is defined
+				; in DPB even though there is 64 physical
+				; sectors per track
 	DEFB	0		; Physical tracks/side (No Meaning in HD)
 
 HSIZ7	EQU	2048		; # of blocks in Fourth Partition (1024 tracks)
-
-				;	
-				;	
-DPB57:	DEFW	64	; Scts/Trk	
-	DEFB	5	; Blk Shf Fctr	
-	DEFB	31	; Block Mask	
-	DEFB	1	; Extent Mask	
-	DEFW	HSIZ7-1	; Disk Size-1	
-	DEFW	511	; Dir Max	
-	DEFB	0F0H,0	; Alloc 0,1	
-	DEFW	0	; Check size	
-	DEFW	3136	; Track offset	
+				;
+DPB57:	DEFW	64		; Scts/Trk	
+	DEFB	5		; Blk Shf Fctr	
+	DEFB	31		; Block Mask	
+	DEFB	1		; Extent Mask	
+	DEFW	HSIZ7-1		; Disk Size-1	
+	DEFW	511		; Dir Max-1	4 blocks
+	DEFB	0F0H,0		; Alloc 0,1	
+	DEFW	0		; Check size	
+	DEFW	(1+7*65)*16	; Track offset = 3136
 	  ENDIF
+;
+;.....
+; partition K.  HBIOS Disk 1, Slice 0
 
-;<<< --- Drive M is used for RAM Drive --- >>>
+	  IF  DRV_K
+	DEFB	'HBDSK1:0 ','K'+80H ; Id - 10 bytes
+	DEFB	FIXDSK		    ; Format type byte 0
+	DEFB	SPEED8+SEC512+ALC4K ; Format type byte 1
+	DEFB	-2		; Skew factor (== Only the +/- sign used)
+	DEFB	1		; Starting sector number
+	DEFB	16		; 16 Logical sectors are defined in DPB
+				;  even though real layout is 256 physical
+				;  sectors per track
+	DEFB	0		; Physical tracks/side (No Meaning in HD)
+HSIZ8	EQU	2048		; # of blocks in first Partition  (1024 trks)
+				;	
+DPB58:	DEFW	64		; Sctrs/Trk	
+	DEFB	5		; Blk Shf Fctr	
+	DEFB	31		; Block Mask	
+	DEFB	1		; Extent Mask	
+	DEFW	HSIZ8-1		; Disk Size-1	
+	DEFW	511		; Dir Max-1 - 4 blocks	
+	DEFB	0F0H,0		; Alloc 0,1 - 4 blocks	
+	DEFW	0		; Check Size	
+	DEFW	16		; Trk Offset	
+	  ENDIF
+;
+;.....
+; partition L.  HBIOS Disk 1, Slice 1
 
+	  IF  DRV_L
+	DEFB	'HBDSK1:1 ','L'+80H ; Id - 10 bytes
+	DEFB	FIXDSK		    ; Format type byte 0
+	DEFB	SPEED8+SEC512+ALC4K ; Format type byte 1
+	DEFB	-2		; Skew factor
+	DEFB	1		; Starting sector number
+	DEFB	16		; 16 Logical Sectors per track is defined
+				; in DPB even though there is 256 physical
+				; sectors per track
+	DEFB	0		; Physical tracks/side (No Meaning in HD)
+
+HSIZ9	EQU	2048		; # of blocks in Second Partition  (1024 trks)
+				;		
+DPB59:	DEFW	64		; Scts/Trk	
+	DEFB	5		; Blk Shf Fctr
+	DEFB	31		; Block Mask	
+	DEFB	1		; Extent Mask	
+	DEFW	HSIZ9-1		; Disk Size-1	
+	DEFW	511		; Dir Max-1	4 blocks
+	DEFB	0F0H,0		; Alloc 0,1	
+	DEFW	0		; Check size	
+	DEFW	(1+65)*16	; Track offset	1056
+	  ENDIF
+;
+;.....
+; partition M.  HBIOS Disk 1, Slice 2
+
+	  IF  DRV_M
+	DEFB	'HBDSK1:2 ','M'+80H ; Id - 10 bytes
+	DEFB	FIXDSK		    ; Format type byte 0
+	DEFB	SPEED8+SEC512+ALC4K ; Format type byte 1
+	DEFB	-2		; Skew factor
+	DEFB	1		; Starting sector number
+	DEFB	16		; 16 Logical Sectors per track is defined
+				; in DPB even though there is 256 physical
+				; sectors per track
+	DEFB	0		; Physical tracks/side (No Meaning in HD)
+
+HSIZ10	EQU	2048		; # of blocks in Second Partition  (1024 trks)
+				;		
+DPB60:	DEFW	64		; Scts/Trk
+	DEFB	5		; Blk Shf Fctr
+	DEFB	31		; Block Mask	
+	DEFB	1		; Extent Mask	
+	DEFW	HSIZ10		; Disk Size-1	
+	DEFW	511		; Dir Max-1	4 blocks
+	DEFB	0F0H,0		; Alloc 0,1	
+	DEFW	0		; Check size	
+	DEFW	(1+2*65)*16	; Track offset	2096
+	  ENDIF
+;
+;.....
+; partition N.  HBIOS Disk 1, Slice 3
 	  IF  DRV_N
-	DEFB	'ROM      ',' '+80H ; Id - 10 bytes
-	DEFB	FIXDSK		    ; Format type byte 0
-	DEFB	SPEED8+SEC512+ALC2K ; Format type byte 1
-	DEFB	-2		; Skew factor
-	DEFB	1		; Starting sector number
-	DEFB	16		; Logical Sectors per track
-	DEFB	0		; Physical tracks/side (No Meaning in HD)
-
-HSIZ8	EQU	HB_ROMBLKS
-
-DPB58:	DEFW	64	; Scts/Trk
-	DEFB	4	; Blk Shf Fctr
-	DEFB	15	; Block Mask
-	  IF ((HSIZ8 - 1) < 256)
-	DEFB	1	; Extent Mask
-	  ELSE
-	DEFB	0	; Extent Mask
-	  ENDIF
-	DEFW	HSIZ8-1	; Disk Size-1
-	DEFW	255	; Dir Max
-	DEFB	0F0H,0	; Alloc 0,1
-	DEFW	0	; Check size
-	DEFW	0	; Track offset
-	  ENDIF
-
-	  IF  DRV_O
-	DEFB	'RAM      ',' '+80H ; Id - 10 bytes
-	DEFB	FIXDSK		    ; Format type byte 0
-	DEFB	SPEED8+SEC512+ALC2K ; Format type byte 1
-	DEFB	-2		; Skew factor
-	DEFB	1		; Starting sector number
-	DEFB	16		; Logical Sectors per track
-	DEFB	0		; Physical tracks/side (No Meaning in HD)
-
-HSIZ9	EQU	HB_RAMBLKS
-
-DPB59:	DEFW	64	; Scts/Trk
-	DEFB	4	; Blk Shf Fctr
-	DEFB	15	; Block Mask
-	  IF ((HSIZ9 - 1) < 256)
-	DEFB	1	; Extent Mask
-	  ELSE
-	DEFB	0	; Extent Mask
-	  ENDIF
-	DEFW	HSIZ9-1	; Disk Size-1
-	DEFW	255	; Dir Max
-	DEFB	0F0H,0	; Alloc 0,1
-	DEFW	0	; Check size
-	DEFW	0	; Track offset
-	  ENDIF
-
-	  IF  DRV_P
-	DEFB	'         ',' '+80H ; Id - 10 bytes
+	DEFB	'HBDSK1:3 ','N'+80H ; Id - 10 bytes
 	DEFB	FIXDSK		    ; Format type byte 0
 	DEFB	SPEED8+SEC512+ALC4K ; Format type byte 1
 	DEFB	-2		; Skew factor
@@ -311,18 +492,19 @@ DPB59:	DEFW	64	; Scts/Trk
 	DEFB	16		; Logical Sectors per track
 	DEFB	0		; Physical tracks/side (No Meaning in HD)
 
-HSIZ10	EQU	2762		; Number of blocks in Fourth Logical Drive
+HSIZ11	EQU	2048		; # of blocks in Forth Logical Drive 
+				;   (1024 tracks)
 
-DPB60:	DEFW	64	; Scts/Trk
-	DEFB	5	; Blk Shf Fctr
-	DEFB	31	; Block Mask
-	DEFB	1	; Extent Mask
-	DEFW	HSIZ10-1 ; Disk Size-1
-	DEFW	1023	; Dir Max
-	DEFB	0FFH,0	; Alloc 0,1
-	DEFW	0	; Check size
-	DEFW	2	; Track offset
+DPB61:	DEFW	64		; Scts/Trk
+	DEFB	5		; Blk Shf Fctr
+	DEFB	31		; Block Mask
+	DEFB	1		; Extent Mask
+	DEFW	HSIZ11-1 	; Disk Size-1
+	DEFW	511		; Dir Max-1
+	DEFB	0F0H,0		; Alloc 0,1
+	DEFW	0		; Check size
+	DEFW	(1+3*65)*16	; Track offset	3136
 	  ENDIF
-
-;----------- End of Hard Disk DPBs -------------
-
+		
+;=========== End of Hard Disk DPBs ===========
+

@@ -4,6 +4,12 @@
 	maclib	cpm3.lib
 
 	cseg
+	
+	extrn	phex16, phex8
+	extrn	cin, cout
+	extrn	crlf, crlf2
+	
+	debug	equ	false
 
 ; BIOS Jump vector.
 
@@ -51,109 +57,211 @@
 	jp	0	; reserved for future expansion
 	jp	0	; reserved for future expansion
 
+mbrsec	equ	dtabuf
+
 boot:
+	; The main module (cpmldr.asm) does not expect the
+	; boot call to use much stack.	We use our own during
+	; this routine to avoid issues.
+	ld	(stksav),sp
+	ld	sp,stack
+	
+	; Do the real work
+	call	boot0
+
+	; Restore original stack and return
+	ld	sp,(stksav)
+	ret
+
+boot0:
 
 	  if cmdline
 
-	ld	(stksav),sp
-	ld	sp,stack
-
 boot1:
-	ld	de,msgunit
-	call	writestr
-	call	cin
-	push	af
-	call	cout
-	pop	af
-	
-	sub	'0'
-	ld	(unit),a
-	jr	c,selerr
-	
-	ld	bc,0F810h	; HBIOS, get disk unit count
-	call	0FFF0h		; do it, E := disk unit count
-	ld	a,(unit)	; get unit num back
-	cp 	e		; compare to entry
-	jr	nc,selerr	; loop if too high
+	; Get disk unit from user
+	ld	de,msgunit		; disk unit prompt
+	call	writestr		; display on console
+	call	cin			; get a character
+	push	af			; save it
+	call	cout			; echo character
+	pop	af			; restore it
+	sub	'0'			; convert to binary
+	ld	(unit),a		; save it
+	jr	c,selerr		; loop if below 0 entered
+	ld	bc,0F810h		; HBIOS, get disk unit count
+	call	0FFF0h			; do it, E := disk unit count
+	ld	a,(unit)		; get unit num back
+	cp	e			; compare to entry
+	jr	nc,selerr		; loop if too high
 
-	ld	de,msgslc
-	call	writestr
-	call	cin
-	push	af
-	call	cout
-	pop	af
-	
-	sub	'0'
-	ld	(slice),a
-	jr	c,selerr
-	cp	10
-	jr	nc,selerr
-
-	jr	boot2
+	; Get disk slice from user
+	ld	de,msgslc		; slice prompt
+	call	writestr		; display on console
+	call	cin			; get a character
+	push	af			; save it
+	call	cout			; echo it
+	pop	af			; restore it
+	sub	'0'			; convert to binary
+	ld	(slice),a		; save it
+	jr	c,selerr		; loop if below 0 entered
+	cp	10			; check for over 9
+	jr	nc,selerr		; loop if over 9
+	ld	de,msgcrlf		; linefeed
+	call	writestr		; ... to console
+	jr	boot2			; boot w/ unit & slice
 
 selerr:
-	ld	de,msginv
-	call	writestr
-	jr	boot1
+	; Display invalid entry message and restart
+	ld	de,msginv		; error message
+	call	writestr		; display on console
+	jr	boot1			; loop
 
 boot2:
-	ld	de,crlf
-	call	writestr
+	; Record unit & slice w/ HBIOS
+	ld	bc,0F9E0h		; HBIOS func: set boot info
+	ld	a,(unit)		; get unit
+	ld	d,a			; put in D
+	ld	a,(slice)		; get slice
+	ld	e,a			; put in E
+	ld	l,0			; Bank is always zero
+	call	0FFF0h			; do it
 
-	ld	sp,(stksav)
-
-	ld	bc,0F9E0h	; HBIOS func: set boot info
-	ld	a,(unit)	; get unit
-	ld	d,a		; put in D
-	ld	a,(slice)	; get slice
-	ld	e,a		; put in E
-	ld	l,0		; Bank is always zero
-	call	0FFF0h		; do it
-	
 	  else
-	
-	ld	bc,0F8E0h	; HBIOS func: get boot info
-	call	0FFF0h		; do it, D := boot unit, E: := slice
-	ld	a,d		; move unit to A
-	ld	(unit),a	; save it
-	ld	a,e		; move slice to A
-	ld	(slice),a	; save it
+
+	; Get unit & slice from HBIOS
+	ld	bc,0F8E0h		; HBIOS func: get boot info
+	call	0FFF0h			; do it, D := boot unit, E: := slice
+	ld	a,d			; move unit to A
+	ld	(unit),a		; save it
+	ld	a,e			; move slice to A
+	ld	(slice),a		; save it
 
 	  endif
 
-	ld	a,(unit)	; Get boot unit
-	ld	c,a		; put in C
-	ld	b,18h		; HBIOS Media function
-	ld	e,1		; Enable media check/discovery
-	call	0FFF0H		; HBIOS call
-	ld	a,e		; Resultant media id to accum
-	or	a		; Set flags
-	;halt
-	;
-	; !!! Need to do something on error !!!
-	;
-	ret	z		; Bail out on error
-	
+	; Check that drive actually exists
+	ld	bc,0F810h		; HBIOS func: get disk count
+	call	0FFF0h			; do it, E=disk count
+	ld	a,(unit)		; get boot disk unit
+	cp	e			; compare to count
+	jp	nc,err_nodisk		; handle no disk err
+
+	; Sense media to determine media format
+	ld	a,(unit)		; Get boot unit
+	ld	c,a			; put in C
+	ld	b,18h			; HBIOS Media function
+	ld	e,1			; Enable media check/discovery
+	call	0FFF0H			; HBIOS call
+	jp	nz,err_diskio		; handle error
+	ld	a,e			; resultant media id to accum
+	ld	(medid),a		; save media id
+	or	a			; set flags, 0 is no media
+	jp	z,err_diskio		; handle no media error
+
+	; Initialize slice start LBA & sectors per slice
+	ld	hl,0			; assume slice starts
+	ld	(lba),hl		; ... at LBA offset
+	ld	(lba+2),hl		; ... of zero
+	ld	hl,16640		; assume legacy value for
+	ld	(sps),hl		; ... sectors per slice
+
+	; If not hard disk, skip partition & slice stuff
+	ld	a,(medid)		; get media id
+	cp	4			; hard disk?
+	jr	nz,boot9		; if not, jump ahead
+
+	; Read MBR
+	ld	de,8000h		; LBA address zero
+	ld	hl,0			; ... to read first sector
+	ld	bc,mbrsec		; read into MBR buffer
+	ld	(dma),bc		; save
+	ld	b,1			; one sector
+	ld	a,(unit)		; get bootunit
+	ld	c,a			; put in C
+	call	diskread		; do it, no return on err
+
+	; Check signature
+	ld	hl,(mbrsec+1FEh)	; get signature
+	ld	a,l			; first byte
+	cp	055h			; should be $55
+	jr	nz,boot5		; if not, no part table
+	ld	a,h			; second byte
+	cp	0AAh			; should be $AA
+	jr	nz,boot5		; if not, no part table
+
+	; Search part table for CP/M entry (type 0x2E)
+	ld	b,4			; four entries in part table
+	ld	hl,mbrsec+1BEh+4	; offset of first part type
+boot3:
+	ld	a,(hl)			; get part type
+	cp	2Eh			; CP/M partition?
+	jr	z,boot4			; cool, grab the LBA offset
+	ld	de,16			; part table entry size
+	add	hl,de			; bump to next part type
+	djnz	boot3			; loop thru table
+	jr	boot5			; too bad, no CP/M partition
+
+boot4:
+	; Capture the starting LBA of the CP/M partition we found
+	ld	de,4			; LBA is 4 bytes after part type
+	add	hl,de			; point to it
+	ld	de,lba			; loc to store lba offset
+	ld	bc,4			; 4 bytes (32 bits)
+	ldir				; copy it
+
+	; For now, it is implied that a slice within a partition
+	; table will be in the "new" disk format.  So, we now
+	; adjust the sectors per slice and media id.
+
+	; Use new slice format sectors per slice value
+	ld	hl,16384		; new sectors per slice
+	ld	(sps),hl		; save it
+
+	; Update media id for new hard disk format
+	ld	a,10			; new media id
+	ld	(medid),a		; save it
+
+boot5:
+	; Adjust LBA offset based on target slice
+	ld	a,(slice)		; get boot slice, A is loop cnt
+	ld	hl,(lba)		; set DE:HL
+	ld	de,(lba+2)		; ... to starting LBA
+	ld	bc,(sps)		; sectors per slice
+boot6:
+	or	a			; set flags to check loop cntr
+	jr	z,boot8			; done if counter exhausted
+	add	hl,bc			; add one slice to low word
+	jr	nc,boot7		; check for carry
+	inc	de			; if so, bump high word
+boot7:
+	dec	a			; dec loop downcounter
+	jr	boot6			; and loop
+boot8:
+	ld	(lba),hl		; save new lba, low word
+	ld	(lba+2),de		; save new lba, high word
+
+boot9:
+	; Locate DPB corresponding to media id
 	ld	hl,dpb$start - dpb$sz
 	ld	de,dpb$sz
-	ld	b,a		; loop count
-dsk$login1:
-	add	hl,de		; next dpb
-	djnz	dsk$login1	; loop as needed
-	
-	; hl is ptr to desired dpb
-	ld	de,dph0		; load DPH pointer
-	ex	de,hl		; de = DPB adr, hl = DPH adr
-	push	de		; save DPB adr
-	ld	de,12		; offset of DPB in DPH
-	add	hl,de		; hl = adr of DPB field in DPH
-	pop	de		; recover DPB adr
-	ld	(hl),e		; update LSB
-	inc	hl
-	ld	(hl),d		; udpate MSB
+	ld	a,(medid)		; get media id
+	ld	b,a			; to loop count
+boot10:
+	add	hl,de			; next dpb
+	djnz	boot10			; loop as needed
 
-	ret
-	
+	; Stuff DPB ptr (HL) into DPH
+	ld	de,dph0			; load DPH pointer
+	ex	de,hl			; de = DPB adr, hl = DPH adr
+	push	de			; save DPB adr
+	ld	de,12			; offset of DPB in DPH
+	add	hl,de			; hl = adr of DPB field in DPH
+	pop	de			; recover DPB adr
+	ld	(hl),e			; update LSB
+	inc	hl			; point to MSB
+	ld	(hl),d			; update MSB
+
+	ret				; done
+
 wboot:
 	ld	a,81H
 	halt
@@ -162,15 +270,14 @@ const:
 	ld	a,82H
 	halt
 conin:
-	ld	bc,0080H	; unit 80h (console), func 0 = CIN
-	call	0FFF0H
-	
+	ld	bc,0080h		; unit 80h (console), func 0 = CIN
+	call	0FFF0h			; do it
+	ld	a,e			; put in C
+	ret				; done
 conout:
-	ld	e,c		; output character in E
-	ld	bc,0180H	; unit 80h (console), func 1 = COUT
-	;rst	08		; do it
-	call	0FFF0H
-	ret			; return
+	ld	e,c			; output character in E
+	ld	bc,0180h		; unit 80h (console), func 1 = COUT
+	jp	0FFF0h	
 list:
 	ld	a,85H
 	halt
@@ -195,63 +302,122 @@ setsec:
 	ld	(sect),bc
 	ret
 setdma:
+
+	  if debug
+
+	push	hl
+	push	bc
+	pop	hl
+	call	crlf
+	call	phex16
+	pop	hl
+	
+	  endif
+
 	ld	(dma),bc
 	ret
-read:
-	ld	a,(unit)	; get unit
-	ld	c,a		; BIOS Disk Unit in C
-	ld	b,12H		; HBIOS SEEK function
-	push	bc		; save it
-	;push	de		; save XDPH pointer
-	ld	b,17h		; HBIOS DEVICE function
-	rst	08		; Do it, D=device type
-	ld	a,d		; put in accum
-	and	0F0h		; isolate high bits
-	ld	b,1		; assume it is floppy, 1 head bit
-	ld	c,01h		; 1 bit head mask
-	cp	10h		; floppy?
-	jr	z,seek0	; yup, skip ahead
-	ld	b,4		; must be hard disk, 4 head bits
-	ld	c,0Fh		; 4 bit head mask
-seek0:
-	;pop	de		; recover XDPH pointer
-	push	bc		; save bc
-	ld	a,(slice)	; get slice
-	ld	e,a		; slice to E
-	ld	h,65		; number of tracks per slice
-	call	mult8		; HL now has track offset for slice
-	pop	bc		; recover bc
-	push	hl		; save track offset for now
-	ld	hl,(trk)	; get track value
-	ld	a,l		; lsb of track to a
-	and	c		; apply mask
-	ld	d,a		; save in d
-seek1:                          
-	srl	h		; shift one bit out
-	rr	l		; ... of hl
-	djnz	seek1		; do all bits
-	ld	a,(sect)	; get sector
-	ld	e,a		; stuff it in e
-	ex	de,hl		; de=track, hl=head/sect
-	ex	(sp),hl		; save head/sect, hl = offset
-	add	hl,de		; hl has final track value
-	pop	de		; recover head/sect to de
-	pop	bc		; recover function & unit
-	;rst	08		; perform seek
-	call	0FFF0H
 
-	; Read Sector
-	ld	b,13h		; HBIOS read
-	ld	a,(unit)	; get boot unit
-	ld	c,a		; put in C
-	ld	hl,(dma)	; dma address
-	ld	a,(0FFE0H)	; current bank
-	ld	d,a		; ... to D
-	ld	e,1		; 1 sector
-	;rst	08
-	call	0FFF0H
+read:
+	  if debug
+
+	call	crlf
+	ld	a,(unit)
+	call	phex8
+	ld	a,' '
+	call	cout
+	ld	hl,(trk)
+	call	phex16
+	ld	a,' '
+	call	cout
+	ld	hl,(sect)
+	call	phex16
+	ld	a,' '
+	call	cout
+	ld	hl,(lba+2)
+	call	phex16
+	ld	hl,(lba+0)
+	call	phex16
 	
-	ret
+	  endif
+
+	; Check device type
+	ld	a,(unit)		; get unit
+	ld	c,a			; BIOS Disk Unit in C
+	ld	b,17h			; HBIOS DEVICE function
+	rst	08			; Do it, D=device type
+	ld	a,d			; put in accum
+	and	0F0h			; isolate high bits
+	cp	10h			; floppy?
+	jr	nz,read2		; if not, do LBA i/o
+	
+	; Floppy I/O
+	ld	de,(sect)		; sector -> de, head(d) becomes zero
+	ld	hl,(trk)		; track -> hl (low bit has head)
+	srl	h			; shift head bit out of hl
+	rr	l			; ... and into carry
+	rl	d			; carry bit (head) into d
+	jr	read3			; do the disk i/o
+	
+	; LBA I/O
+read2:
+	ld	hl,(trk)		; get track
+	ld	de,0			; clear hiword
+	ld	b,4			; x16 (16 spt assumed)
+	call	rl32			; do it
+	; combine with sector
+	ld	a,(sect)		; get sector
+	or	l			; combine
+	ld	l,a			; and back to L
+	; add in lba offset
+	ld	bc,(lba)		; lba offset loword
+	add	hl,bc			; add to cur loword
+	ex	de,hl			; swap
+	ld	bc,(lba+2)		; lba offset hiword
+	adc	hl,bc			; add w/ carry to cur hiword
+	ex	de,hl			; swap back
+	set	7,d			; set lba access bit
+
+read3:
+
+	  if debug
+
+	ld	a,' '
+	call	cout
+	ex	de,hl
+	call	phex16
+	ex	de,hl
+	call	phex16
+	
+	  endif
+
+	; DE:HL has sector address to read (LBA or CHS)
+	ld	a,(unit)		; get disk unit
+	ld	c,a			; put in C
+	ld	b,1			; read 1 sector
+	jr	diskread		; read sector and return
+
+diskread:
+	; Read disk sector(s)
+	; DE:HL is LBA, B is sector count, C is disk unit
+
+	; Seek to requested sector in DE:HL
+	push	bc			; save unit & count
+	ld	b,012h			; HBIOS func: seek
+	call	0FFF0h			; do it
+	pop	bc			; recover unit & count
+	jp	nz,err_diskio		; handle error
+
+	; Read sector(s) into buffer
+	ld	e,b			; transfer count
+	ld	b,013h			; HBIOS func: disk read
+	ld	hl,(dma)		; read into info sec buffer
+	ld	a,(0FFE0h)		; get current bank
+	ld	d,a			; put in D
+	call	0FFF0h			; do it
+	jp	nz,err_diskio		; handle error
+	xor	a			; signal success
+	ret				; and done
+
 write:
 	ld	a,8EH
 	halt
@@ -291,10 +457,11 @@ flush:
 	halt
 
 move:
-	ex	de,hl	; we are passed source in DE and dest in HL
-	ldir		; use Z80 block move instruction
-	ex	de,hl	; need next addresses in same regs
-	ret
+	; On input, DE=src, HL=dest
+	ex	de,hl			; swap HL/DE for LDIR
+	ldir				; Z80 block move
+	ex	de,hl			; swap back (required!)
+	ret				; done
 time:
 	ld	a,9AH
 	halt
@@ -307,22 +474,21 @@ setbnk:
 xmove:
 	ld	a,9DH
 	halt
-	
-cin:
-	; input character from console via hbios
-	ld	c,080H			; console unit to c
-	ld	b,00H			; hbios func: input char
-	call	0FFF0H			; hbios reads character
-	ld	a,e			; move character to a for return
-	ret
 
-cout:
-	; output character to console via hbios
-	ld	e,a			; output char to e
-	ld	c,080H			; console unit to c
-	ld	b,01H			; hbios func: output char
-	call	0FFF0H			; hbios outputs character
-	ret
+;cin:
+;	; Input character from console via HBIOS
+;	ld	c,080H			; console unit to C
+;	ld	b,00H			; HBIOS func: input char
+;	call	0FFF0H			; HBIOS reads character
+;	ld	a,e			; To A for return
+;	ret				; done
+
+;cout:
+;	; Output character to console via HBIOS
+;	ld	e,a			; output char to E
+;	ld	c,080H			; console unit to C
+;	ld	b,01H			; HBIOS func: output char
+;	jp	0FFF0H			; output & return
 
 writestr:
 	push	af
@@ -339,153 +505,190 @@ writestr2:
 	pop	af
 	ret
 
-;
-; multiply 8-bit values
-; in:  multiply h by e
-; out: hl = result, e = 0, b = 0
-;
-mult8:
-	ld	d,0
-	ld	l,d
-	ld	b,8
-mult8_loop:
-	add	hl,hl
-	jr	nc,mult8_noadd
-	add	hl,de
-mult8_noadd:
-	djnz	mult8_loop
-	ret
+rl32:
+	; Left shift DE:HL by B bits (B > 0)
+	or	a			; clear carry
+	rl	l			; rotate L thru carry
+	rl	h			; rotate H thru carry
+	rl	e			; rotate E thru carry
+	rl	d			; rotate D thru carry
+	djnz	rl32			; loop B times
+	ret				; done
+
+err_nodisk:
+	ld	hl,str_err_nodisk
+	jr	err
+err_noslice:
+	ld	hl,str_err_noslice
+	jr	err
+err_diskio:
+	ld	hl,str_err_diskio
+	jr	err
+err_sig:
+	ld	hl,str_err_sig
+	jr	err
+err_api:
+	ld	hl,str_err_api
+	jr	err
+err:
+	push	hl
+	ld	de,str_err_prefix
+	call	writestr
+	pop	de
+	call	writestr
+	halt
+
+str_err_prefix	db	"\r\n\r\n*** ","$"
+str_err_nodisk	db	"Disk unit not available","$"
+str_err_noslice	db	"Disk unit does not support slices","$"
+str_err_diskio	db	"Disk I/O failure","$"
+str_err_sig	db	"No system image on disk","$"
+str_err_api	db	"HBIOS API failure","$"
 
 msgunit	db	13,10,13,10,'Boot CP/M 3 from Disk Unit: $'
 msgslc	db	'   Slice: $'
 msginv	db	13,10,13,10,'*** Invalid Selection ***$'
-crlf	db	13,10,'$'
+msgcrlf	db	13,10,'$'
 
 dpb$start:
 dpb$rom:	; 384K ROM Drive
-	dw  	64		; spt: sectors per track
-	db  	4		; bsh: block shift factor
-	db  	15		; blm: block mask
-	db  	1		; exm: extent mask
-	dw  	192 - 1		; dsm: total storage in blocks - 1 = (384kb / 2k bls) - 1 = 191
-	dw  	256 - 1		; drm: dir entries - 1 = 256 - 1 = 255
-	db  	11110000b	; al0: dir blk bit map, first byte
-	db  	00000000b	; al1: dir blk bit map, second byte
-	dw  	8000h		; cks: directory check vector size - permanent storage = 8000H
-	dw  	0		; off: reserved tracks = 16 trks * (16 trks * 16 heads * 16 secs * 512 bytes) = 128k
+	dw	64		; spt: sectors per track
+	db	4		; bsh: block shift factor
+	db	15		; blm: block mask
+	db	1		; exm: extent mask
+	dw	192 - 1		; dsm: total storage in blocks - 1 = (384kb / 2k bls) - 1 = 191
+	dw	256 - 1		; drm: dir entries - 1 = 256 - 1 = 255
+	db	11110000b	; al0: dir blk bit map, first byte
+	db	00000000b	; al1: dir blk bit map, second byte
+	dw	8000h		; cks: directory check vector size - permanent storage = 8000H
+	dw	0		; off: reserved tracks = 16 trks * (16 trks * 16 heads * 16 secs * 512 bytes) = 128k
 	db	2		; psh: 2 for 512 byte sectors
 	db	3		; phm: (512 / 128) - 1
 dpb$sz	equ	$ - dpb$start
 
 dpb$ram:	; 256K RAM Drive
-	dw  	64		; spt: sectors per track
-	db  	4		; bsh: block shift factor
-	db  	15		; blm: block mask
-	db  	1		; exm: extent mask
-	dw  	128 - 1		; dsm: total storage in blocks - 1 = (256kb / 2k bls) - 1 = 127
-	dw  	256 - 1		; drm: dir entries - 1 = 256 - 1 = 255
-	db  	11110000b	; al0: dir blk bit map, first byte
-	db  	00000000b	; al1: dir blk bit map, second byte
-	dw  	8000h		; cks: directory check vector size - permanent storage = 8000H
-	dw  	0		; off: reserved tracks = 16 trks * (16 trks * 16 heads * 16 secs * 512 bytes) = 128k
+	dw	64		; spt: sectors per track
+	db	4		; bsh: block shift factor
+	db	15		; blm: block mask
+	db	1		; exm: extent mask
+	dw	128 - 1		; dsm: total storage in blocks - 1 = (256kb / 2k bls) - 1 = 127
+	dw	256 - 1		; drm: dir entries - 1 = 256 - 1 = 255
+	db	11110000b	; al0: dir blk bit map, first byte
+	db	00000000b	; al1: dir blk bit map, second byte
+	dw	8000h		; cks: directory check vector size - permanent storage = 8000H
+	dw	0		; off: reserved tracks = 16 trks * (16 trks * 16 heads * 16 secs * 512 bytes) = 128k
 	db	2		; psh: 2 for 512 byte sectors
 	db	3		; phm: (512 / 128) - 1
 
 dpb$rf:		; 4MB RAM Floppy Drive
-	dw  	64		; spt: sectors per track
-	db  	4		; bsh: block shift factor
-	db  	15		; blm: block mask
-	db  	0		; exm: extent mask
-	dw  	2047		; dsm: total storage in blocks - 1 = (4mb / 2k bls) - 1 = 2047
-	dw  	255		; drm: dir entries - 1 = 256 - 1 = 255
-	db  	11110000b	; al0: dir blk bit map, first byte
-	db  	00000000b	; al1: dir blk bit map, second byte
-	dw  	8000h		; cks: directory check vector size - permanent storage = 8000H
-	dw  	0		; off: reserved tracks = 0 trks
+	dw	64		; spt: sectors per track
+	db	4		; bsh: block shift factor
+	db	15		; blm: block mask
+	db	0		; exm: extent mask
+	dw	2047		; dsm: total storage in blocks - 1 = (4mb / 2k bls) - 1 = 2047
+	dw	255		; drm: dir entries - 1 = 256 - 1 = 255
+	db	11110000b	; al0: dir blk bit map, first byte
+	db	00000000b	; al1: dir blk bit map, second byte
+	dw	8000h		; cks: directory check vector size - permanent storage = 8000H
+	dw	0		; off: reserved tracks = 0 trks
 	db	2		; psh: 2 for 512 byte sectors
 	db	3		; phm: (512 / 128) - 1
 
 dpb$hd:		; 8MB Hard Disk Drive
-	dw  	64		; spt: sectors per track
-	db  	5		; bsh: block shift factor
-	db  	31		; blm: block mask
-	db  	1		; exm: extent mask
-	dw  	2047		; dsm: total storage in blocks - 1 = (8mb / 4k bls) - 1 = 2047
-	dw  	511		; drm: dir entries - 1 = 512 - 1 = 511
-	db  	11110000b	; al0: dir blk bit map, first byte
-	db  	00000000b	; al1: dir blk bit map, second byte
-	dw  	8000h		; cks: directory check vector size - permanent storage = 8000H
-	dw  	16		; off: reserved tracks = 16 trks * (16 trks * 16 heads * 16 secs * 512 bytes) = 128k
+	dw	64		; spt: sectors per track
+	db	5		; bsh: block shift factor
+	db	31		; blm: block mask
+	db	1		; exm: extent mask
+	dw	2047		; dsm: total storage in blocks - 1 = (8mb / 4k bls) - 1 = 2047
+	dw	512-1		; drm: dir entries - 1 = 512 - 1 = 511
+	db	11110000b	; al0: dir blk bit map, first byte
+	db	00000000b	; al1: dir blk bit map, second byte
+	dw	8000h		; cks: directory check vector size - permanent storage = 8000H
+	dw	16		; off: reserved tracks = 16 trks * (16 trks * 16 heads * 16 secs * 512 bytes) = 128k
 	db	2		; psh: 2 for 512 byte sectors
 	db	3		; phm: (512 / 128) - 1
 
 dpb$fd720:	; 3.5" DS/DD Floppy Drive (720K)
-	dw  	36		; spt: sectors per track
-	db  	4		; bsh: block shift factor
-	db  	15		; blm: block mask
-	db  	0		; exm: extent mask
-	dw  	350		; dsm: total storage in blocks - 1 blk = ((720k - 18k off) / 2k bls) - 1 = 350
-	dw  	127		; drm: dir entries - 1 = 128 - 1 = 127
-	db  	11000000b	; al0: dir blk bit map, first byte
-	db  	00000000b	; al1: dir blk bit map, second byte
-	dw  	32		; cks: directory check vector size = 128 / 4
-	dw  	4		; off: reserved tracks = 4 trks * (512 b/sec * 36 sec/trk) = 18k
+	dw	36		; spt: sectors per track
+	db	4		; bsh: block shift factor
+	db	15		; blm: block mask
+	db	0		; exm: extent mask
+	dw	350		; dsm: total storage in blocks - 1 blk = ((720k - 18k off) / 2k bls) - 1 = 350
+	dw	127		; drm: dir entries - 1 = 128 - 1 = 127
+	db	11000000b	; al0: dir blk bit map, first byte
+	db	00000000b	; al1: dir blk bit map, second byte
+	dw	32		; cks: directory check vector size = 128 / 4
+	dw	4		; off: reserved tracks = 4 trks * (512 b/sec * 36 sec/trk) = 18k
 	db	2		; psh: 2 for 512 byte sectors
 	db	3		; phm: (512 / 128) - 1
 
 dpb_fd144:	; 3.5" DS/HD Floppy Drive (1.44M)
-	dw  	72		; spt: sectors per track
-	db  	4		; bsh: block shift factor
-	db  	15		; blm: block mask
-	db  	0		; exm: extent mask
-	dw  	710		; dsm: total storage in blocks - 1 blk = ((1,440k - 18k off) / 2k bls) - 1 = 710
-	dw  	255		; drm: dir entries - 1 = 256 - 1 = 255
-	db  	11110000b	; al0: dir blk bit map, first byte
-	db  	00000000b	; al1: dir blk bit map, second byte
-	dw  	64		; cks: directory check vector size = 256 / 4
-	dw  	2		; off: reserved tracks = 2 trks * (512 b/sec * 72 sec/trk) = 18k
+	dw	72		; spt: sectors per track
+	db	4		; bsh: block shift factor
+	db	15		; blm: block mask
+	db	0		; exm: extent mask
+	dw	710		; dsm: total storage in blocks - 1 blk = ((1,440k - 18k off) / 2k bls) - 1 = 710
+	dw	255		; drm: dir entries - 1 = 256 - 1 = 255
+	db	11110000b	; al0: dir blk bit map, first byte
+	db	00000000b	; al1: dir blk bit map, second byte
+	dw	64		; cks: directory check vector size = 256 / 4
+	dw	2		; off: reserved tracks = 2 trks * (512 b/sec * 72 sec/trk) = 18k
 	db	2		; psh: 2 for 512 byte sectors
 	db	3		; phm: (512 / 128) - 1
 
-dpb_fd360:	; 5.25" DS/DD Floppy Drive (360K) 
-	dw  	36		; spt: sectors per track
-	db  	4		; bsh: block shift factor
-	db  	15		; blm: block mask
-	db  	1		; exm: extent mask
-	dw  	170		; dsm: total storage in blocks - 1 blk = ((360k - 18k off) / 2k bls) - 1 = 170
-	dw  	127		; drm: dir entries - 1 = 128 - 1 = 127
-	db  	11110000b	; al0: dir blk bit map, first byte
-	db  	00000000b	; al1: dir blk bit map, second byte
-	dw  	32		; cks: directory check vector size = 128 / 4
-	dw  	4		; off: reserved tracks = 4 trks * (512 b/sec * 36 sec/trk) = 18k
+dpb_fd360:	; 5.25" DS/DD Floppy Drive (360K)
+	dw	36		; spt: sectors per track
+	db	4		; bsh: block shift factor
+	db	15		; blm: block mask
+	db	1		; exm: extent mask
+	dw	170		; dsm: total storage in blocks - 1 blk = ((360k - 18k off) / 2k bls) - 1 = 170
+	dw	127		; drm: dir entries - 1 = 128 - 1 = 127
+	db	11110000b	; al0: dir blk bit map, first byte
+	db	00000000b	; al1: dir blk bit map, second byte
+	dw	32		; cks: directory check vector size = 128 / 4
+	dw	4		; off: reserved tracks = 4 trks * (512 b/sec * 36 sec/trk) = 18k
 	db	2		; psh: 2 for 512 byte sectors
 	db	3		; phm: (512 / 128) - 1
 
 dpb_fd120:	; 5.25" DS/HD Floppy Drive (1.2M)
-	dw  	60		; spt: sectors per track
-	db  	4		; bsh: block shift factor
-	db  	15		; blm: block mask
-	db  	0		; exm: extent mask
-	dw  	591		; dsm: total storage in blocks - 1 blk = ((1,200k - 15k off) / 2k bls) - 1 = 591
-	dw  	255		; drm: dir entries - 1 = 256 - 1 = 255
-	db  	11110000b	; al0: dir blk bit map, first byte
-	db  	00000000b	; al1: dir blk bit map, second byte
-	dw  	64		; cks: directory check vector size = 256 / 4
-	dw  	2		; off: reserved tracks = 2 trks * (512 b/sec * 60 sec/trk) = 15k
+	dw	60		; spt: sectors per track
+	db	4		; bsh: block shift factor
+	db	15		; blm: block mask
+	db	0		; exm: extent mask
+	dw	591		; dsm: total storage in blocks - 1 blk = ((1,200k - 15k off) / 2k bls) - 1 = 591
+	dw	255		; drm: dir entries - 1 = 256 - 1 = 255
+	db	11110000b	; al0: dir blk bit map, first byte
+	db	00000000b	; al1: dir blk bit map, second byte
+	dw	64		; cks: directory check vector size = 256 / 4
+	dw	2		; off: reserved tracks = 2 trks * (512 b/sec * 60 sec/trk) = 15k
 	db	2		; psh: 2 for 512 byte sectors
 	db	3		; phm: (512 / 128) - 1
 
 dpb_fd111:	; 8" DS/DD Floppy Drive (1.11M)
-	dw  	60		; spt: sectors per track
-	db  	4		; bsh: block shift factor
-	db  	15		; blm: block mask
-	db  	0		; exm: extent mask
-	dw  	569		; dsm: total storage in blocks - 1 blk = ((1,155k - 15k off) / 2k bls) - 1 = 569
-	dw  	255		; drm: dir entries - 1 = 256 - 1 = 255
-	db  	11110000b	; al0: dir blk bit map, first byte
-	db  	00000000b	; al1: dir blk bit map, second byte
-	dw  	64		; cks: directory check vector size = 256 / 4
-	dw  	2		; off: reserved tracks = 2 trks * (512 b/sec * 60 sec/trk) = 15k
+	dw	60		; spt: sectors per track
+	db	4		; bsh: block shift factor
+	db	15		; blm: block mask
+	db	0		; exm: extent mask
+	dw	569		; dsm: total storage in blocks - 1 blk = ((1,155k - 15k off) / 2k bls) - 1 = 569
+	dw	255		; drm: dir entries - 1 = 256 - 1 = 255
+	db	11110000b	; al0: dir blk bit map, first byte
+	db	00000000b	; al1: dir blk bit map, second byte
+	dw	64		; cks: directory check vector size = 256 / 4
+	dw	2		; off: reserved tracks = 2 trks * (512 b/sec * 60 sec/trk) = 15k
+	db	2		; psh: 2 for 512 byte sectors
+	db	3		; phm: (512 / 128) - 1
+
+dpb$hdnew:	; 8MB Hard Disk Drive (new format)
+	dw	64		; spt: sectors per track
+	db	5		; bsh: block shift factor
+	db	31		; blm: block mask
+	db	1		; exm: extent mask
+	dw	2048 - 1 - 4	; dsm: total storage in blocks - 1 = 2048 - 1 - resvd tracks
+	dw	1024 - 1	; drm: dir entries
+	db	11111111b	; al0: dir blk bit map, first byte
+	db	00000000b	; al1: dir blk bit map, second byte
+	dw	8000h		; cks: directory check vector size - permanent storage = 8000H
+	dw	2		; off: reserved tracks
 	db	2		; psh: 2 for 512 byte sectors
 	db	3		; phm: (512 / 128) - 1
 
@@ -493,13 +696,13 @@ dph0:	dw	0		; xlt, 0 means no translation
 	db	0,0,0,0,0,0,0,0,0	; scratch (9 bytes)
 	db	0		; mf: media flag
 	dw	dpb$hd		; dpb
-	dw	csvbuf		; csv: 
-	dw	alvbuf		; alv: 
+	dw	csvbuf		; csv:
+	dw	alvbuf		; alv:
 	dw	dirbcb		; dirbcb
 	dw	dtabcb		; dtabcb
 	dw	0ffffh		; hash (disabled)
 	db	0		; hbank
-	
+
 dtbl:	dtbl	dph0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 
 dirbcb:	db	0ffh		; drv
@@ -524,13 +727,32 @@ trk	ds	2	; current track
 sect	ds	2	; current sector
 dma	ds	2	; current DMA address
 
-csvbuf	ds	128	; length (CSV) = ((DRM+1)/4)
-alvbuf	ds	512	; length (ALV) = ((DSM+1)/4)
-dirbuf	ds	512	; sector buffer
-dtabuf	ds	512	; sector buffer
+medid	ds	1	; media id
+lba	ds	4	; current lba
+sps	ds	2	; sectors per slice
 
 	ds	64
 stack	equ	$
-stksav	dw	0
+stksav	ds	2
+
+csvbufs	equ	256
+alvbufs	equ	512
+dirbufs	equ	512
+dtabufs	equ	512
+
+;csvbuf	ds	256	; length (CSV) = ((DRM+1)/4)
+;alvbuf	ds	512	; length (ALV) = ((DSM+1)/4)
+;dirbuf	ds	512	; sector buffer
+;dtabuf	ds	512	; sector buffer
+
+; Trying to save space.  The loader must fit underneath
+; the start of BNKBDOS3 and we have a big BNKBDOS because
+; of all the disk allocations.  Putting these buffers
+; in upper memory actually helps quite a bit.
+
+csvbuf	equ	8000h
+alvbuf	equ	csvbuf + csvbufs
+dirbuf	equ	alvbuf + alvbufs
+dtabuf	equ	dirbuf + dirbufs
 
 	end

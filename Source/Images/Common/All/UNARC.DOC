@@ -1,0 +1,623 @@
+File:     UNARC.DOC
+Subject:  User Documentation for UNARC Program
+Version:  1.6
+Date:     March 27, 1987
+------------------------------------------------------------------------------
+
+
+                                    UNARC
+
+                     CP/M Archive File Extraction Utility
+
+
+                 Copyright (C) 1986, 1987 by Robert A. Freed
+                             All Rights Reserved
+
+
+
+This file provides user-level documentation and operating instructions for
+UNARC version 1.6, released March 27, 1987.  Refer to the notice at the end of
+this file regarding rights of use and distribution of this program.
+
+The release message file, UNARC.MSG, provides a list of all additional files
+distributed with the current UNARC release and describes the program changes
+from the previous version 1.4 and 1.5 releases.
+
+
+
+ABSTRACT
+--------
+
+UNARC is a utility program for CP/M systems which allows the listing, typeout,
+printing, checking, and extraction of subfiles contained in "archive" library
+(*.ARC or *.ARK) files.  These are commonly used for compressed file storage
+on remote access bulletin board systems.  UNARC provides the CP/M user the
+ability to process such files after downloading them via modem from these
+remote systems.
+
+
+
+REQUIREMENTS
+------------
+
+UNARC requires CP/M version 2 or higher.  The program is offered in two
+versions.  The standard version, UNARC.COM, requires a Z80 processor (or
+compatible equivalent, e.g. HD64180 or NSC800).  An alternate version,
+UNARCA.COM, is provided for systems with 8080 or 8085 processors (or 16-bit
+systems using the NEC V20 for CP/M emulation).  Identical capabilities are
+provided by the two program versions.
+
+                                     NOTE
+
+      Although UNARCA.COM can execute on ANY system capable of
+      supporting CP/M, it is larger and significantly slower than
+      UNARC.COM and should be avoided by users of Z80-based systems.
+
+UNARC is written in Z80 assembly language and requires only 5K bytes of disk
+storage (6K for UNARCA).  As distributed, the program requires at least 30K
+bytes of available memory space (TPA) for full support of all archive file
+formats (31K TPA size for UNARCA).  (Smaller systems may be able to use some
+of the program's capabilities.)
+
+
+
+ABOUT ARC/ARK FILES
+-------------------
+
+The files which UNARC processes utilize a format that was introduced by the
+ARC shareware utility program, which executes on 16-bit computers running the
+MS-DOS (or PC-DOS) operating system.  This format has achieved widespread
+popularity since the ARC program first appeared in March 1985, and it has
+become the de facto standard for file storage on remote access systems
+catering to 16-bit computer users.  More recently this file format has
+achieved increased popularity on RCP/M (Remote CP/M) systems.
+
+                                     NOTE
+
+      Most RCP/M system operators have adopted the convention of naming
+      CP/M archive files with the filetype ARK.  This differentiates
+      these from MS-DOS archive files, which use the filetype ARC.  This
+      is a naming convention only:  There is no difference in format,
+      and UNARC will accept files of either type interchangeably.
+
+An archive is a group of files collected together into a single file in such a
+way that the individual files may be recovered intact.  In this respect,
+archives are similar in function to libraries (*.LBR files), which have been
+commonplace on CP/M systems since 1982, when the original LU library utility
+program was introduced by Gary P. Novosielski.  (However, the two file formats
+are not compatible.)
+
+The distinguishing characteristic of an ARC archive is that its component
+files are automatically compressed when they are added to the archive, so that
+the resulting file occupies a minimum amount of disk space.  Of course, file
+compression techniques have also been commonplace in the CP/M world since
+1981, when the public domain SQ and USQ "squeeze and unsqueeze" programs were
+introduced by Richard Greenlaw.
+
+The SQ/USQ programs and their numerous popular descendants utilize a well-
+known general-purpose form of data compression (Huffman coding).  This
+technique, which is also utilized in ARC files, performs well for many text
+files but often produces poor compression of binary files (e.g. object program
+.COM files).  The ARC program also provides an advanced data compression
+method, which it terms "crunching."  This method (which is based on the
+Lempel-Ziv-Welch or "LZW" algorithm) performs better than squeezing in most
+cases, often achieving 50% or better compression of ASCII text files, 15-40%
+compression of binary object files, and as much as 95% compression of bit-
+mapped graphics image files.
+
+Five different methods are actually employed for storing files in an archive.
+The method chosen for a particular file is the one which results in the best
+compression for that file:
+
+(1)  No compression ("unpacked").  The file is stored in its original form.
+
+(2)  Run-length encoding ("packed").  Repeated sequences of 3-255 identical
+     bytes are compressed into a three-byte sequence.
+
+(3)  Huffman coding ("squeezed").  Each 8-bit byte (after run-length encoding)
+     is encoded by a variable number of bits, with bit length (approximately)
+     inversely proportional to the frequency of occurence of the corresponding
+     byte.
+
+(4)  LZW compression ("crunched").  Variable-length strings of bytes (in
+     theory, up to nearly 4000 bytes in length) are represented by a single
+     (maximum) 12-bit code (after run-length encoding).
+
+(5)  LZW compression ("squashed").  This is a variation of crunching which
+     uses (maximum) 13-bit codes (and no run-length encoding).
+
+Note that since one of the five methods involves no compression at all, the
+resulting archive entry will never be larger than the original file.
+
+                                     NOTE
+
+      The most recent release of the MS-DOS ARC program (version 5.20)
+      has eliminated squeezing as a compression technique.  However,
+      UNARC continues to process squeezed files for compatibility with
+      archives created by earlier versions of ARC and by other MS-DOS
+      archiving programs (notably PKARC).
+
+      The squashed compression method was recently introduced by the
+      MS-DOS programs PKARC and PKXARC.  UNARC can process files which
+      use this method, although it is not universally accepted by other
+      MS-DOS archive extraction programs (including ARC).
+
+During its lifetime, the ARC program has undergone numerous revisions which
+have employed different variations on some of the above methods, particularly
+LZW compression.  In order to retain compatibility with archives created by
+earlier program revisions, ARC stores a "version" indicator with each file in
+an archive.  Based on this indicator, the latest release of the ARC program
+can always extract files created by older releases (although it will only use
+the latest data compression versions when adding new files to an archive).
+
+                                     NOTE
+
+      The current release of UNARC supports archive file versions
+      generated by all releases of the following MS-DOS programs through
+      (at least) the indicated program versions:
+
+         ARC  5.20 (24 Oct 86), by System Enhancement Associates, Inc.
+         ARCA 1.22 (13 Sep 86), by Wayne Chin and Vernon Buerg
+         ARCH 5.38 (26 Jun 86), by Les Satenstein
+         PKARC 2.0 (15 Dec 86), by Phil Katz (PKWARE, Inc.)
+
+      (UNARC does not recognize, but is unaffected by, the non-standard
+      archive and file commenting feature of PKARC.)
+
+Although the above discussion has emphasized the origin of archive files for
+the MS-DOS operating system, their use has recently spread to many other
+systems.  Programs compatible with MS-DOS ARC have appeared for UNIX, Atari
+68000, VAX/VMS, and TOPS-20 systems.  A CP/M utility for building archive
+files will also be available in the near future.
+
+For additional information about archive files and the MS-DOS ARC utility,
+refer to the documentation file, ARC.DOC, which is available from most remote
+access systems which utilize archive files.  For additional information about
+the LZW algorithm (and data compression methods in general), refer to the
+article "A Technique for High-Performance Data Compression", by Terry A.
+Welch, in IEEE Computer magazine, Vol. 17, No. 6, June 1984.
+
+
+
+USING UNARC
+-----------
+
+The UNARC program provides an on-line help message, which is generated by
+running the program with an empty command line:
+
+
+  A>UNARC
+
+  UNARC  1.6  27 Mar 87
+  CP/M Archive File Extractor
+
+  Usage:  UNARC [d:]arcfile[.typ] [d:][afn] [N|P|C]
+
+  Examples:
+  B>UNARC A:SAVE.ARK *.*  ; List all files in CP/M archive SAVE on drive A
+  B>UNARC A:SAVE.ARC *.*  ; List all files in MS-DOS archive SAVE on drive A
+  A>UNARC SAVE            ; Same as either of above
+  A>UNARC SAVE *.* N      ; Same as above (no screen pauses)
+  A>UNARC SAVE *.DOC      ; List just .DOC files
+  A>UNARC SAVE READ.ME    ; Typeout the file READ.ME
+  A>UNARC SAVE READ.ME N  ; Typeout the file READ.ME (no screen pauses)
+  A>UNARC SAVE A:         ; Extract all files to drive A
+  A>UNARC SAVE B:*.DOC    ; Extract .DOC files to drive B
+  A>UNARC SAVE C:READ.ME  ; Extract file READ.ME to drive C
+  A>UNARC SAVE PRN.DAT P  ; Print the file PRN.DAT (no formatting)
+  A>UNARC SAVE *.* C      ; Check validity of all files in archive
+
+
+As shown by this help display, the UNARC utility provides the following
+capabilities:
+
+(1)  Listing the directory of an archive
+(2)  Extracting component files from an archive
+(3)  Typing the contents of a component file at the console
+(4)  Printing a component file directly on the CP/M list device
+(5)  Checking the validity of an archive and its component files
+
+The particular operation to be performed is determined by the form of the file
+parameter(s) in the command line, as described separately in the sections
+which follow.  The following characteristics apply to all operations:
+
+The first command line parameter must specify the name of an archive file.  A
+drive name and filetype are optional.  The filetype, if omitted, defaults to
+"ARK" or, if no such file exists, the alternate (MS-DOS) default "ARC" is
+assumed.
+
+The standard CP/M terminal control characters, CTRL-S (to suspend console
+output) and CTRL-C (to abort the program), may be used at any time.  CTRL-K
+may also be used as an alternate for CTRL-C.  Printer output to the CP/M list
+device may be obtained by typing CTRL-P at CCP command level before executing
+UNARC.
+
+In addition, by default UNARC will pause after every 23 lines of console
+output.  At this time, the message "[more]" will appear at the bottom of the
+console screen.  The listing may be resumed by typing any key (other than
+CTRL-S, CTRL-C, or CTRL-K, which will function as described above).  If the
+space bar is used, one more line of console output will be displayed (over-
+writing the "[more]" message) and the program will again pause.  If any other
+key is typed (e.g. RETURN), another 23 lines of output will be allowed to
+scroll onto the screen before the next pause.  (LINE FEED may be used to
+prevent overprinting of the "[more]" line, e.g. for hard-copy terminals.)
+
+If continuous display is desired, this automatic pause feature may be disabled
+by specifying "N" at the end of the command line.  The "N" must be the last
+command line character, and it must be preceded by a space.  Also, there must
+be two preceding file parameters on the command line.  E.g., note the
+difference between the following commands:
+
+      A>UNARC SAVE N          ; Typeout the file N. in archive SAVE
+      A>UNARC SAVE *.* N      ; List all files in archive SAVE with no pauses
+
+The N option may not be used in conjunction with the P (Print) or C (Check)
+options.
+
+
+
+LISTING AN ARCHIVE DIRECTORY
+----------------------------
+
+By default, UNARC produces a detailed console listing of the component files
+in an archive.  (In fact, there is no way to suppress this listing; it is
+generated during all UNARC operations.)  If only the archive file name appears
+on the command line, UNARC will generate a complete directory of all component
+files in the specified archive file.  Otherwise, the second command line
+parameter may be used to select a particular file to be listed (or group of
+files, if it contains the ambiguous file specification characters "*" or "?").
+If no disk drive name is provided for the second parameter, and this parameter
+specifies a group of files, the directory listing is the only output generated
+by the program.
+
+A sample directory listing is illustrated here:
+
+
+A>UNARC CODES
+
+Archive File = CODES.ARK
+
+Name           Length  Disk   Method  Ver  Stored Saved    Date    Time   CRC
+============  =======  ====  ======== === ======= ===== ========= ======  ====
+ABLE    .DOC    24320   24k  Crunched  8    11777  52%  30 Apr 86 10:50a  42C0
+BRAVO   .COM    17152   17k  Squeezed  4    14750  14%   2 May 86  4:11p  8CBD
+CHARLIE .TXT      234    1k   Packed   3       99  58%   2 May 86  4:11p  8927
+        ====  =======  ====               =======  ===                    ====
+Total      3    41706   42k                 26626  36%                    58A4
+
+
+This listing is equivalent to the "verbose" listing of the MS-DOS ARC program
+(with the addition of the "Disk" and "Ver" fields, which are unique to UNARC).
+The listing requires a 78-column terminal width; there is currently no "short"
+listing format.
+
+"Name" is the file name which will be generated if the file is extracted by
+UNARC on a CP/M system.  (This is not necessarily the same as the name
+recorded in the archive file.  Although CP/M and MS-DOS file naming
+conventions are identical, two conversions are made to guarantee file name
+validity under CP/M:  Lower-case letters are converted to upper-case, and
+non-printing characters are converted to dollar signs, "$".)  Archive entries
+are usually maintained (and hence listed) in alphabetic name order.
+
+"Length" is the uncompressed file length, i.e. the number of bytes the file
+will occupy if extracted to disk, exclusive of any additional length imposed
+by the CP/M file system.  Note that MS-DOS permits files of arbitrary lengths
+(unlike CP/M which restricts all files to a multiple of 128 bytes).
+
+"Disk" is the actual amount of disk space required to extract the file to a
+CP/M disk, expressed as a multiple of 1K (1024) bytes.  Note that this number
+is dependent on the disk data allocation block size.  (CP/M permits various
+block sizes, ranging from 1K to 16K bytes.  Typical sizes are 1K for single-
+density floppy disks, 2K for double-density floppies, and 4K for hard disks,
+although these values are quite system-dependent.)  In the absence of an
+explicit output drive name, UNARC uses the block size of the default
+(currently "logged") disk drive (i.e. the drive which appears in the CCP
+prompt).
+
+"Method" is the compression method used, specified as "Unpacked", "Packed",
+"Squeezed", "Crunched", "Squashed", or "Unknown!".  If the method "Unknown!"
+appears, it most likely indicates (if not a faulty archive file) a newer
+release of the MS-DOS ARC program that supports a new compression method (or a
+new variation of an existing method).  In this case, a corresponding new
+release of UNARC will be required to extract the file.
+
+"Ver" further identifies the version of compression used.  Currently, UNARC
+supports versions 1-9: unpacked files can have versions 1 or 2; packed files,
+version 3; squeezed files, version 4; crunched files, versions 5-8; and
+squashed files, version 9.  The highest version number associated with each
+compression method is the one generated by the most recent release of the
+MS-DOS ARC program.
+
+"Stored" is the compressed file length, i.e. the number of bytes occupied by
+the file in the archive.  (This does not include the overhead associated with
+the directory information itself, which adds an additional 29 bytes to the
+size of each component file.)
+
+"Saved" is the percentage of the original file length which was saved by
+compression; i.e., higher values indicate better compression.  (The MS-DOS ARC
+documentation refers to this as the "stowage factor.")  The value shown on the
+totals line applies to the archive as a whole, not including the directory
+overhead.
+
+"Date" and "Time" refer to the last file modification, as of the time it was
+added to the archive.  (Date and time stamping is, of course, one of the nice
+features of MS-DOS which is lacking in standard CP/M 2.2.)
+
+"CRC" is an internal 16-bit cyclic redundancy check value which is computed
+when a file is added to an archive (expressed in hexadecimal).  As a test of
+file validity, UNARC re-computes this value when it extracts a file (see
+below).  Note that this value is calculated by a different method than that
+used by either of the two popular public domain programs, CRCK and CHEK.  (It
+is however quite valid as a reliable error-detection mechanism.)  This value
+is shown in the listing for completeness only.  The value shown on the totals
+line is the 16-bit sum of all displayed CRC values.  This is useful as a
+single "checksum" value for comparing entire archives.  (Since the CRC values
+are computed before compression takes place, the total should be the same for
+all archives created from the same set of input files, independent of any
+particular variations in file order or compression methods.)
+
+The "Total" line is displayed only if multiple files appear in the listing,
+and it includes a count of the number of files listed.
+
+
+
+EXTRACTING FILES FROM AN ARCHIVE
+--------------------------------
+
+If the second command line parameter contains a disk drive name, UNARC will
+extract the selected file(s) from the archive to CP/M file(s) on the indicated
+disk drive.  If only a drive name appears, all component files of the archive
+will be extracted.  The following illustrates a sample archive directory
+listing as generated during a file extraction operation:
+
+
+A>UNARC CODES B:
+
+Archive File = CODES.ARK
+Output Drive = B:
+
+Name           Length  Disk   Method  Ver  Stored Saved    Date    Time   CRC
+============  =======  ====  ======== === ======= ===== ========= ======  ====
+ABLE    .DOC    24320   24k  Crunched  8    11777  52%  30 Apr 86 10:50a  42C0
+Replace existing output file (y/n)? Y
+BRAVO   .COM    17152   18k  Squeezed  4    14740  14%   2 May 86  4:11p  8CBD
+Warning: Extracted file has incorrect CRC
+Warning: Extracted file has incorrect length
+Warning: Bad archive file header, bytes skipped = 10
+CHARLIE .TXT      234    2k   Packed   3       99  58%   2 May 86  4:11p  8927
+        ====  =======  ====               =======  ===                    ====
+Total      3    41706   44k                 26616  36%                    58A4
+
+
+The above listing also illustrates several warning messages which may occur
+when extracting files from an archive.
+
+The message "Replace existing output file (y/n)?" appears if a file of the
+same name already exists on the output drive.  The user must answer "Y" (or
+"y") to allow the extraction to proceed (in which case, the existing file is
+unceremoniously deleted).  Any other response will cause UNARC to preserve the
+existing file, bypass the extraction operation for the current file, and
+(except for a CTRL-C response) skip to the next file to be extracted (if any).
+
+The first two warning messages illustrated above are provided as a check on
+the validity of the extracted file.  These indicate that either the cyclic
+redundancy check (CRC) value computed by UNARC, or the resulting extracted
+file length, does not match the corresponding value recorded in the archive
+when the original file was added to it.  The final warning message occurs if
+UNARC fails to detect the proper format for the start of a new subfile, but
+can recover by skipping a certain number of bytes in the archive file.  (If
+the recovery attempt fails, UNARC aborts with the message "Invalid archive
+file format.")  The appearance of any of these messages most likely indicates
+that the file data has been corrupted in some way (e.g. during modem
+transmission from a remote system).
+
+Note that if the original (i.e. MS-DOS) file length was not an exact multiple
+of 128 bytes (as required by CP/M), UNARC will pad the final record of the
+extracted file with hex "1A" (ASCII CTRL-Z) bytes.  This provides the correct
+end-of-file termination for text files, according to CP/M conventions.
+
+Also, the disk space shown in the archive directory listing will be correct
+for the specified disk drive.  (In the above examples, drive A: has a 1K data
+allocation block size while drive B: has a 2K block size, which accounts for
+the differences in the two listings.)  In order to determine the exact disk
+space requirements in advance of a file extraction operation, the user may
+first "log into" the desired output drive (i.e. select it as the default
+drive), and run UNARC to obtain a directory listing only.  (This is a
+consideration only on systems with mixed disk drive types.)
+
+A file extraction operation may be aborted at any time by entering CTRL-C from
+the console.  In this case, any partial output file will remain on disk and
+should be deleted manually following the program abort.  (Any existing file of
+the same name will have already been deleted, however.)
+
+
+
+TYPING OUT A FILE IN AN ARCHIVE
+-------------------------------
+
+A console typeout of the contents of a single component file in an archive may
+be requested by specifying a non-ambiguous file name (and no disk drive name)
+in the second command line parameter.  For example:
+
+
+A>UNARC CODES ABLE.DOC
+
+Archive File = CODES.ARK
+
+Name           Length  Disk   Method  Ver  Stored Saved    Date    Time   CRC
+============  =======  ====  ======== === ======= ===== ========= ======  ====
+ABLE    .DOC    24320   24k  Crunched  8    11777  52%  30 Apr 86 10:50a  42C0
+-------------------------------------------------------------------------------
+ This is file ABLE.DOC, contained within the archive CODES.ARK.  Typeout will
+ proceed until the end of this file or may be aborted by CTRL-C.....
+
+
+The specified file is assumed to contain valid ASCII text data.  In
+particular, all bytes are masked to seven bits, and all ASCII control
+characters are ignored except for HT (horizontal tab, which is expanded to
+blanks with assumed tab stops at every eighth column), LF, VT or FF (line
+feed, vertical tab or form feed, which generate a new typeout line), and SUB
+(CTRL-Z, which by CP/M convention indicates end-of-file and terminates the
+typeout).  Note that BS (backspace) and CR (carriage return) are ignored, so
+that text will not be obscured within files which utilize these for over-
+printing (i.e. when directed to a printer).
+
+The following filetypes, which are usually associated with binary (non-text)
+data, are specifically excluded from typeout operations:  COM, EXE, OBJ, OV?,
+REL, ?RL, INT, SYS, BAD, LBR, ARC, ARK, ?Q?, and ?Z?.  If one of these types
+is specified, only the directory information for the requested file is listed.
+
+Note that CRC and file length checking are not performed during a typeout
+operation, as they are during extraction to a disk file.
+
+
+
+PRINTING A FILE IN AN ARCHIVE
+-----------------------------
+
+A single component file in an archive may be output directly to the printer
+(CP/M list device) by specifying a trailing "P" on the command line.  The "P"
+must be the last command line character, and it must be separated from the
+second file parameter by a space.  (The file parameter must specify a non-
+ambiguous file name and no disk drive name.)  For example:
+
+      A>UNARC CODES CHARLIE.TXT P
+
+The specified file is assumed to contain data suitable for printer output and
+is passed directly to the printer without alteration or additional formatting.
+This operation is particularly well-suited for output of binary graphics
+images on dot-matrix printers, since these can be extemely large but tend to
+compress quite well (e.g. to less than 5% of their original size).  Note that
+the binary data filetypes which are excluded from typeout operations are also
+excluded from printing operations.  Printing may be paused or aborted by use
+of the console CTRL-S and CTRL-C characters.
+
+
+
+CHECKING FILES IN AN ARCHIVE
+----------------------------
+
+UNARC may be directed to extract one or more component files from an archive,
+without actually storing these as disk files, by specifying a trailing "C" on
+the command line.  This operation performs file CRC and length checking, and
+it is useful for verifying correct modem data transmission of an archive.  The
+"C" must be the last command line character, and it must be separated from the
+second file parameter by a space.  (The file parameter must not specify a disk
+drive name, which indicates extraction to disk.)  To check an entire archive,
+specify "*.*" for the second file parameter, for example:
+
+      A>UNARC CODES *.* C
+
+
+
+PROGRAM OPTIONS
+---------------
+
+UNARC provides several options which may be used to tailor the program for
+specific non-universal requirements.  Many of these are intended for RCP/M
+(Remote CP/M) system operators, to allow generation of a secure version of
+UNARC which can be used by remote callers for purposes of archive directory
+listing and/or file typeout only (but not file extraction).  Others are
+provided for specialized non-standard CP/M systems and need not concern the
+majority of users running CP/M 2.2, CP/M 3.0 (CP/M Plus), or ZCPR3/ZRDOS
+systems.  Additional options provide user preference features (such as the
+number of screen lines between console output pauses, or the list of filetypes
+excluded from typeout operations).
+
+All of these options are described in UNARCOVL.ASM, an assembly language
+source file that can be edited and assembled to generate a HEX-format overlay
+for easy patching of the UNARC.COM or UNARCA.COM program files.  Complete
+details are provided for technically-oriented users in UNARCOVL.ASM.  However,
+the default options in the distributed program files are suitable for the
+majority of users with standard CP/M operating systems.
+
+
+
+PROGRAM DISTRIBUTION
+--------------------
+
+The UNARC program, its documentation, and all related files are distributed in
+archive file format (of course!).  The distribution file is named UNARCxx.ARK,
+where "xx" is derived from the current version number (e.g. UNARC16.ARK for
+version 1.6).  (This does not include the program source code, which is
+distributed separately.)  This archive has the special characteristic that it
+is "self-unpacking."  I.e., a separate copy of the UNARC.COM program file is
+NOT required to extract the component files from this archive.
+
+The procedure for extracting the distribution files is quite simple:  First,
+copy or rename UNARCxx.ARK to a program file, UNARCxx.COM, on the current disk
+drive.  (Note that the filename, UNARCxx, must NOT be changed.)  Then, run
+this program with a single optional command line parameter specifying the disk
+drive to which all distribution files will be extracted (defaults to current
+drive).
+
+For example, assuming UNARC16.ARK is on drive B: and the files are to be
+extracted to drive C:, the following CP/M commands may be used:
+
+  A>B:                             ; Set current drive for UNARC16.ARK
+  B>REN UNARC16.COM=UNARC16.ARK    ; Rename it to UNARC16.COM
+  B>UNARC16 C:                     ; Run it to extract all files to drive C:
+
+Note that this self-unpacking capability is provided only by the distributed
+archive file, and it will not work if that file is altered or reconstructed.
+
+
+
+AUTHOR'S NOTE
+-------------
+
+I undertook writing the UNARC program to satisfy my curiosity about software
+developments in the MS-DOS/PC-DOS world.  At the time I began work on UNARC,
+the MS-DOS ARC program had been in existence for over a year and had achieved
+widespread popularity and acceptance in the 16-bit community.   Unfortunately,
+the lack of a compatible equivalent for CP/M systems rendered a large amount
+of public domain software inaccessible to 8-bit users such as myself.  (Note
+that 16-bit software can indeed be of interest to users of 8-bit systems, e.g.
+Pascal and C language programs.)
+
+Also, an increasing number of RCP/M systems now cater to both 8-bit and 16-bit
+users.  Since the release of UNARC 1.0 (May 3, 1986), I have been encouraged
+to see that the program has found a welcome home on many such systems.
+Special thanks are due to Irv Hoff and Norman Beeler for providing archive
+file support in the KMD20 and LUX52 series of programs, respectively.  With
+the increasing popularity of .ARC files on many different computer systems, I
+believe that continued such support of this compression format is both
+desirable and inevitable for CP/M systems.  At the time of this writing I am
+about to release NOAH, a companion program to UNARC which will allow CP/M
+users to generate ARC-compatible files.
+
+                                      Bob Freed
+                                      March 27, 1987
+
+
+
+                                    NOTICE
+
+      The UNARC program and its associated documentation is the copy-
+      righted property of its author -- it is NOT in the public domain.
+      HOWEVER...  Free use, distribution, and modification of these
+      files is permitted (and encouraged), subject to the following
+      conditions:
+
+      (1)  Such use or distribution must be for non-profit purposes only.
+      (2)  The author's copyright notice may not be altered or removed.
+      (3)  Modifications to this program or its documentation files may
+           not be distributed without notification of and approval by
+           the author.
+      (4)  The source program code may not be used, in whole or in part,
+           in any other publicly-distributed or derivative work without
+           similar notification and approval.
+
+      No fee is requested or expected for the use and distribution of
+      this program subject to the above conditions.  The author reserves
+      the right to modify these conditions for any future revisions of
+      this program.  Questions, comments, suggestions, commercial
+      inquiries, and bug reports or fixes are welcomed by the author:
+
+                           Robert A. Freed
+                           62 Miller Road
+                           Newton Centre, MA  02159
+                           Telephone (617) 332-3533
+
+------------------------------------------------------------------------------
+

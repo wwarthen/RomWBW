@@ -23,7 +23,7 @@
 ;
 ; ===============================================
 ; CAMEL80D.AZM: CPU and Model Dependencies
-;   Source code is for the Z80MR macro assembler.
+;   Source code is for the ZSM macro assembler.
 ;   Forth words are documented as follows:
 ;*   NAME     stack -- stack    description
 ;   Word names in upper case are from the ANS

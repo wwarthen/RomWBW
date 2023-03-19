@@ -14,7 +14,6 @@ goto :eof
 :bstc
 echo.
 echo Building %1...
-bstc Spin\%1 -e -l
-if errorlevel 1 goto :eof
-move /Y %1.eeprom "..\..\Binary"
+bstc Spin\%1 -e -l || exit /b
+move /Y %1.eeprom "..\..\Binary" || exit /b
 goto :eof

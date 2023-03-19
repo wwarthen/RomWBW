@@ -1,15 +1,22 @@
-Loader uses CBIOS Disk I/O prior to CBOOT/WBOOT being run. As a 
-result, DIOBUF is not properly initialized.  At present, it is 
-initialized to $7C00 which will work unless the location of the 
-physical disk buffer in HBIOS ever changes!
- 
-The clock drivers supplied with BPBIOS (LDDS, LDP2D, and LDNZT) 
-load into ZSYS user memory.  If the user segment is not at the 
-same location as the original BPBIOS ($E900), then the clock 
-driver will just overlay other code.  At present, the N config 
-is OK because it does not relocate the user segment, but the T 
-config fails because it uses a user segment at $E700. Note that 
-this does not affect ZSDOS2 variants because they do not require 
-a loadable clock driver.
+In general, the BPBIOS for RomWBW is incomplete.  This is
+mostly just a proof of concept that it can work.  As such,
+it is not built or included in the default builds of
+RomWBW.  You *must* review and adjust the file romwbw.lib
+before building BPBIOS.  To include BPBIOS in the build
+process, you need to uncomment the corresponding line
+in the Build.cmd file in the Source directory.
 
-BPBIOS needs to assign disk units dynamically via discovery of disk type
+For now, BPBIOS does not understand the dynamic disk assignment
+mechanism of RomWBW.  This means that you need to explicitly
+tell BPBIOS the console unit number and the disk unit number of
+the first hard disk device.  Floppy drives are basically not
+supported.  You should review and adjust the romwbw.lib file
+as needed.  The RomWBW ASSIGN command is not supported.  BPBIOS
+will boot from the first hard disk unit number you assign and
+always from the first slice.
+
+BPBIOS does not yet understand the 1024 directory entry
+hard disk format.  You must use the 512 directory entry
+format images.
+
+--WBW 1:25 PM 10/7/2021

@@ -14,9 +14,12 @@
 	extrn	@date,@hour,@min,@sec
 	extrn	@srch1
 	extrn	@hbbio
-	extrn	addhla, bcd2bin, bin2bcd
-	extrn	cout, phex8, phex16, crlf, crlf2
-	
+	extrn	addhla
+	extrn	phex16, phex8
+	extrn	cin, cout
+	extrn	crlf, crlf2
+	extrn	bcd2bin, bin2bcd
+
 	include	c:ver.lib
 	
 bdos	equ 5
@@ -41,7 +44,7 @@ tpa$bank	equ 0
 	if banked
 
 	; Clone page zero from bank 0 to additional banks
-	ld	b,3			; last bank
+	ld	b,4			; last bank
 	ld	c,0			; src bank
 init$2:
 	push	bc			; save bank id's
@@ -58,6 +61,23 @@ init$2:
 	call	cinit			; char device init
 	ld	hl,signon$msg		; signon message
 	call	?pmsg			; print it
+
+	; Check for HBIOS/CBIOS mismatch
+	ld	b,0F1h			; hbios version
+	rst	08			; do it, de=maj/min/up/pat
+	ld	a,d			; a := maj/min
+	cp	((rmj << 4) | rmn)	; match?
+	jr	nz,init$3		; handle ver mismatch
+	ld	a,e			; a := os up/pat
+	and	0F0h			; pat not included in match
+	cp	(rup << 4)		; match?
+	jr	nz,init$3		; handle ver mismatch
+	jr	init$4			; all good, continue
+init$3:
+	; display version mismatch
+	ld	hl,vermis$msg		; version mismatch
+	call	?pmsg			; display it
+init$4:
 
 	; Get boot disk unit and save it
 	ld	bc,0F8E0h		; HBIOS func: get boot info
@@ -228,25 +248,7 @@ dinit6:
 	pop	de			; restore drive list ptr
 	inc	de			; increment active drive list ptr
 	djnz	dinit6			; loop as needed
-
-	; zero out remaining dph table entries
-	ld	a,16			; dph table entries
-	sub	l			; subtract entries used
-	ret	z			; return if all entries used
-	ld	b,a			; save as loop counter
-	ld	a,l			; current dph to accum
-	rlca				; *2 for word entry
-	ld	hl,@dtbl		; start of dtbl
-	call	addhla			; hl now points to entry
-	
-dinit6a:
-	xor	a			; zero accum
-	ld	(hl),a			; zero lsb
-	inc	hl			; next byte
-	ld	(hl),a			; zero msb
-	inc	hl			; next byte
-	djnz	dinit6a
-	ret				; finished
+	ret
 
 dinit7:	; process a unit (all slices)
 	ld	e,0			; initialize slice index
@@ -315,11 +317,28 @@ clrram:
 	di				; no interrupts
 	ld	a,(0FFE0h)		; get current bank
 	push 	af			; save it
-	;ld	a,(bnkramd)		; first bank of ram disk
-	ld	a,080h			; first bank of ram disk
+	ld	b,0FAh			; HBIOS Peek Function
+	ld	a,(@hbbio)		; HBIOS bank id
+	ld	d,a			; ... goes in D
+	ld	hl,1DCh			; Offset 1DCh is ram disk bank 0
+	rst	08			; Call HBIOS, value in E
+	ld	a,e			; move to A for bank sel
+	cp	0FFh
+	jr	z,clrram3
 	;call	hb_bnksel		; select bank
 	call	0FFF3h			; select bank
 
+	; Check the first sector (512 bytes) for all zeroes.  If so,
+	; it implies the RAM is uninitialized.
+	ld	hl,0			; start at begining of ram disk
+	ld	bc,512			; compare 512 bytes
+	xor	a			; compare to zero
+clrram000:
+	cpi				; a - (hl), hl++, bc--
+	jr	nz,clrram00		; if not zero, go to next test
+	jp	pe,clrram000		; loop thru all bytes
+	jr	clrram2			; all zeroes, jump to init
+clrram00:
 	; Check first 32 directory entries.  If any start with an invalid
 	; value, init the ram disk.  Valid entries are e5 (empty entry) or
 	; 0-15 (user number).
@@ -346,7 +365,6 @@ clrram2:
 	or	0ffh			; flag value for cleared
 	ld	(clrflg),a		; save it
 clrram3:
-	;ld	a,(bnkuser)		; usr bank (tpa)
 	pop	af			; recover original bank
 	;call	hb_bnksel		; select bank
 	call	0FFF3h			; select bank
@@ -380,18 +398,18 @@ fill:
 
 ?ldccp:
 	; Force CCP to use system boot drive as initial default
-	ld	a,(@sysdr)		; get system boot drive
-	ld	(@ccpdr),a		; set CCP current drive
+	;ld	a,(@sysdr)		; get system boot drive
+	;ld	(@ccpdr),a		; set CCP current drive
 
 	; First time, load the CCP.COM file into TPA
-	ld	a,(@sysdr)		; get system boot drive
-	;ld	(4),a			; save in page zero???
-	inc	a			; drive + 1 for FCB
-	ld	(ccp$fcb),a		; stuff into FCB
-	add	'A' - 1			; drive letter
-	ld	(ccp$msg$drv),a		; save for load msg
-	xor	a
-	ld	(ccp$fcb+15),a
+	;ld	a,(@sysdr)		; get system boot drive
+	;;ld	(4),a			; save in page zero???
+	;inc	a			; drive + 1 for FCB
+	;ld	(ccp$fcb),a		; stuff into FCB
+	;add	'A' - 1			; drive letter
+	;ld	(ccp$msg$drv),a		; save for load msg
+	;xor	a
+	;ld	(ccp$fcb+15),a
 	ld	hl,0
 	ld	(fcb$nr),hl
 	ld	de,ccp$fcb
@@ -490,7 +508,7 @@ time$ret:
 
 time$get:
 	; RTC -> cpm date/time in SCB
-	
+
 	; read time from RTC
 	ld	b,020h		; HBIOS func: get time
 	ld	hl,tim$buf	; time buffer
@@ -500,6 +518,7 @@ time$get:
 	; convert yymmss in time buffer -> cpm3 epoch date offset
 	call	date2cpm	; time buf (yr, mon, day) -> SCB (@date)
 
+time$get1:
 	; set time fields in SCB
 	ld	a,(tim$hr)	; get hour from time buf
 	ld	(@hour),a	; ... and put in SCB
@@ -515,7 +534,7 @@ time$set:
 	
 	; convert CPM3 epoch date offset in SCB -> yymmss in time buffer
 	call	cpm2date	; SCB (@date) -> time buf (yr, mon, day)
-	
+
 	; copy CPM3 time values from SCB -> time buffer
 	ld	a,(@hour)	; get hour from SCB
 	ld	(tim$hr),a	; ... and put in tim$hr
@@ -523,7 +542,7 @@ time$set:
 	ld	(tim$min),a     ; ... and put in tim$min
 	ld	a,(@sec)	; get second from SCB
 	ld	(tim$sec),a     ; ... and put in tim$sec
-	
+
 	; send time to RTC
 	ld	b,021h		; HBIOS func: set time
 	ld	hl,tim$buf	; ... from time buffer
@@ -535,7 +554,7 @@ date2cpm:
 	; Convert YYMMSS from time buffer at HL
 	; into offset from CPM epoch and store
 	; result in SCB.
-	
+
 	ld	hl,0		; initialize day counter
 	; Add in days for elapsed years
 	ld	a,(tim$yr)	; get current year
@@ -552,33 +571,31 @@ d2c1:
 d2c2:
 	add	hl,de		; add non-leap days
 	dec	c		; dec leap counter
-	jr	nz,d2c3		; if not leap, bypss leap inc
+	jr	nz,d2c3		; if not leap, bypass leap inc
 	inc	hl		; add leap day
 	ld	c,4		; reset leap year counter
 d2c3:
 	djnz	d2c2		; loop for all years
+
 d2c10:
 	; Add in days for elapsed months
-	ex	de,hl		; save HL in DE
-	ld	hl,daystbl	; point to table of cum days by month
+	ld	de,daysmon	; point to start of days per mon tbl
 	ld	a,(tim$mon)	; get current month
 	call	bcd2bin		; convert to binary
-	dec	a		; index from zero
-	rlca			; table entries are 2 bytes
-	call	addhla		; offset to desired month entry
-	ld	a,(hl)		; get the entry into HL
-	inc	hl		; ...
-	ld	h,(hl)		; ...
-	ld	l,a		; ...
-	ex	de,hl		; HL = day count, DE = months count
-	add	hl,de		; add months count into day count
-	; Add leap day for current year if appropriate
-	dec	c		; C still has leap counter
-	jr	nz,d2c20	; skip if not leap year
-	ld	a,(tim$mon)	; get cur mon
-	cp	3		; March?
-	jr	c,d2c20		; skip if mon less than March
-	inc	hl		; add leap day for cur year
+	dec	a		; don't include cur mon
+	jr	z,d2c20		; done if Jan
+	ld	b,a		; save as loop counter
+	cp	2		; Mar = 2
+	jr	c,d2c11		; bypass if < Mar (no leap month)
+	dec	c		; C still has leap year counter
+	jr	nz,d2c11	; skip if not leap year
+	inc	hl		; add in the leap day
+d2c11:
+	ld	a,(de)		; get days for cur mon
+	call	addhla		; add to running count
+	inc	de		; bump to next mon ptr
+	djnz	d2c11		; loop for # of months
+
 d2c20:
 	; Add in days elapsed within month
 	; Note that we don't adjust the date to be a zero
@@ -590,37 +607,104 @@ d2c20:
 	call	bcd2bin		; make binary
 	call	addhla		; add in days
 	ld	(@date),hl	; store in SCB
+	;call	phex16		; *debug*
+	;call	crlf		; *debug*
 	ret
 
 cpm2date:
 	; Convert CPM epoch date offset in SCB
 	; into YYMMSS values and store result in
 	; time buffer at HL.
-	ld	a,019h
-	ld	(tim$yr),a
-	ld	a,001h
-	ld	(tim$mon),a
-	ld	a,001h
-	ld	(tim$day),a
+
+	; We start by subtracting years keeping a count
+	; of the number of years.  Every fourth year is a leap
+	; year, so we account for that as we go.
+	ld	hl,(@date)	; get the count of days since epoch
+	dec	hl		; because we want 1/1/78 to be offset 0
+	ld	c,78		; init the years value
+c2d1:
+	ld	de,365		; normal number of days per year
+	ld	a,c
+	ld	b,0		; init leap year flag
+	and	03h		; check for leap year
+	jr	nz,c2d2		; if not zero, no need to adjust
+	inc	de		; add a day for leap year
+	ld	b,1		; leap year flag for later
+c2d2:
+	or	a		; clear carry
+	sbc	hl,de		; subtract
+	jr	c,c2d3		; get out if we went too far
+	inc	c		; add a year to year value
+	ld	a,c		; to accum
+	cp	100		; century rollover?
+	jr	nz,c2d1		; nope, loop
+	ld	c,0		; reset for start of century
+	jr	c2d1		; loop
+c2d3:
+	ld	a,c		; years to accum
+	call	bin2bcd		; convert to bcd
+	ld	(tim$yr),a	; ... and save it
+	;call	phex8		; *debug*
+;
+	; Now we use the days per month table to find the
+	; month.
+	add	hl,de		; restore days remaining
+	ld	c,0		; init month value (zero indexed)
+c2d4:
+	ld	a,c		; get month value
+	push	hl		; save hl (days remaining)
+	ld	hl,daysmon	; point to start of table
+	call	addhla		; point to month entry
+	ld	e,(hl)		; get months day count to E
+	ld	d,0		; zero msb, DE is days in month
+	pop	hl		; recover hl (days remaining)
+	ld	a,c		; month value to accum
+	cp	1		; leap month? check for Feb
+	jr	nz,c2d5		; no, leave alone
+	ld	a,b		; get leap year flag (set above)
+	or	a		; leap year?
+	jr	z,c2d5		; if not, skip ahead
+	inc	de		; account for leap year
+c2d5:
+	or	a		; clear carry
+	sbc	hl,de		; subtract days for the month
+	jr	c,c2d6		; get out if we went too far
+	inc	c		; next month
+	jr	c2d4		; continue
+c2d6:
+	inc	c		; switch from 0 to 1 offset
+	ld	a,c		; move to accum
+	call	bin2bcd		; convert to bcd
+	ld	(tim$mon),a	; save it
+	;call	phex8		; *debug*
+;
+	; Leftover days is day value
+	add	hl,de		; restore days remaining
+	ld	a,l		; only need lsb
+	inc	a		; switch from 0 to 1 offset
+	call	bin2bcd		; convert to bcd
+	ld	(tim$day),a	; save it
+	;call	phex8		; *debug*
 	
 	ret
 
-daystbl:
-	; cumulative days elapsed by month (non-leap year)
-	dw	0		; January
-	dw	31		; February (non-leap)
-	dw	59		; March
-	dw	90		; April
-	dw	120		; May
-	dw	151		; June
-	dw	181		; July
-	dw	212		; August
-	dw	243		; September
-	dw	273		; October
-	dw	304		; November
-	dw	334		; December
+daysmon:
+	; days per month
+	db	31		; January
+	db	28		; February (non-leap)
+	db	31		; March
+	db	30		; April
+	db	31		; May
+	db	30		; June
+	db	31		; July
+	db	31		; August
+	db	30		; September
+	db	31		; October
+	db	30		; November
+	db	31		; December
 
-		; RTC time buffer (all values packed bcd)
+; RTC time buffer (all values packed bcd)
+
 tim$buf:
 tim$yr		db	80h
 tim$mon		db	05h
@@ -647,6 +731,7 @@ read:
 	
 clrflg		db	0		; RAM disk cleared flag
 clr$msg		db	'RAM Disk Initialized',13,10,13,10,0
+vermis$msg	db	7,'*** WARNING: HBIOS/CBIOS Version Mismatch ***',13,10,13,10,0
 
 	if zpm
 
@@ -654,16 +739,16 @@ signon$msg	db	13,10,'ZPM3'
 	if banked
 		db	' [BANKED]'
 	endif
-		db	' on HBIOS v'
+		db	' for HBIOS v'
 		biosver
 		db	13,10,13,10,0
 		
 ccp$msg		db	13,10,'BIOS Err on '
-ccp$msg$drv	db	'?'
+ccp$msg$drv	db	'A'
 		db	': No ZCCP.COM file',0
 
 
-ccp$fcb		db	0,'ZCCP    ','COM',0,0,0,0
+ccp$fcb		db	1,'ZCCP    ','COM',0,0,0,0
 		ds	16
 fcb$nr		db	0,0,0
 
@@ -673,16 +758,16 @@ signon$msg	db	13,10,'CP/M v3.0'
 	if banked
 		db	' [BANKED]'
 	endif
-		db	' on HBIOS v'
+		db	' for HBIOS v'
 		biosver
 		db	13,10,13,10,0
 		
 ccp$msg		db	13,10,'BIOS Err on '
-ccp$msg$drv	db	'?'
+ccp$msg$drv	db	'A'
 		db	': No CCP.COM file',0
 
 
-ccp$fcb		db	0,'CCP     ','COM',0,0,0,0
+ccp$fcb		db	1,'CCP     ','COM',0,0,0,0
 		ds	16
 fcb$nr		db	0,0,0
 

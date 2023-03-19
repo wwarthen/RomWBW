@@ -1,0 +1,27 @@
+     Version 1.5+/- of ZMP now compiles and links with v3.09 of 
+Hi Tech C and fixes a few things that had niggled at me for
+awhile (some, a few decades):
+
+* Datestamps transferred in Y/Zmodem transfers.
+* Fixed long filename conversions on Y/Zmodem transfers.
+* Fixed issues displaying baud rate and send times when the
+  baud rate is > 19.2K.
+* Removed superfluous CR sent to the remote end when a
+  connection was established, which was a pita when connecting to
+  a Linux box.
+* In keyboard macros, ! translates to a CR now, not CR/LF.
+* \ escapes ! and ~ so those literal characters can be used in
+  keyboard macros.
+* Long distance access code has been removed.
+* Quick dialing letters limited to A-T.
+
+     This version, based on the version of the source code in
+ZMP-SRC.LBR, is missing a few things that made it into the later
+version in ZMP15.LBR. So, to quote the original author, 
+
+"As always,  ensure that you erase your .CFG file and make a 
+new one with the config option.  There have again been changes to 
+the format of this file."
+
+June 7, 2021
+

@@ -71,7 +71,7 @@ STX	EQU	02H	; 'Start of header' for 1024 byte blocks
 ; Conditional equates - change to suit your system, then assemble
 ;
 MHZ	EQU	10	; Clock speed, use integer (2,4,5,8, etc.)
-SCL	EQU	6600	; WBW: Receive loop timeout scalar
+SCL	EQU	6600	; [WBW] Receive loop timeout scalar
 CPM3	EQU	NO	; Yes, if operating in CP/M v3.0 environment
 STOPBIT	EQU	NO	; No, if using 1 stop bit, yes if using 2
 BYEBDOS	EQU	NO	; Yes, if using BYE338-up, BYE501-up, or NUBYE
@@ -758,7 +758,10 @@ RECVOPT:MVI	A,'K'		; First off, default to 1K mode
 	CALL	RCVOPC		; Check 4th (or 5th) option
 	 ENDIF
 ;
-	JMP	OPTERR		; If 5th or 6th option, whoops!
+	; [WBW] Added to support port number
+	CALL	RCVOPC		; Check 5th (or 6th) option
+;
+	JMP	OPTERR		; If 7th or 8th option, whoops!
 ;
 RCVOPC:	INX	H		; Increment pointer to next character
 	MOV	A,M		; Get option character HL points to
@@ -790,7 +793,7 @@ CHK3RD:	CPI	'X'		; Got an "X" for first option?
 CHK4TH:
 	 IF	MBFMSG		; Allowing "RM" for message uploads?
 	CPI	'M'		; Got an "M" for message upload?
-	JNZ	CHK5TH		; If not, bad option
+	JNZ	CHK5TH		; Nope, try next
 	STA	MSGFLG		; If "M", set MSGFLG
 	MVI	A,'P'		; Also, set PRVTFL
 	STA	PRVTFL
@@ -804,10 +807,20 @@ CHK4TH:
 CHK5TH:
 	 IF	NDESC		; Allowing "RN" to skip upload descript?
 	CPI	'N'		; Got an 'N'?
-	JNZ	BADROP		; If nope, is NG..
+	JNZ	CHK6TH		; Nope, try next
 	STA	NDSCFL		; else set flag to skip descript phase
 	RET
 	 ENDIF
+;
+CHK6TH:
+	; [WBW] Get target serial port (0-9 supported)
+	CPI	'0'
+	JC	BADROP		; If < 0, out of range
+	CPI	'9' + 1
+	JNC	BADROP		; If > 9, out of range
+	SUI	'0'		; Make binary
+	STA	PORT
+	RET
 ;
 BADROP:	POP	PSW		; Restore stack
 	JMP	OPTERR		; is bad option
@@ -817,9 +830,10 @@ BADROP:	POP	PSW		; Restore stack
 ;
 ALLSET:	CALL	GETCHR
 	CALL	GETCHR
+	LDA	PORT		; [WBW] Pass serial port to driver
 	CALL	MINIT
-	STA	CPUMHZ		; WBW: Save CPU speed from MINIT
-	SHLD	RCVSCL		; WBW: Save rcv loop scalar from MINIT
+	STA	CPUMHZ		; [WBW] Save CPU speed from MINIT
+	SHLD	RCVSCL		; [WBW] Save rcv loop scalar from MINIT
 ;
 ; Jump to appropriate function
 ;
@@ -920,7 +934,8 @@ SKSK2:	CALL	ILPRT
 	DB	'XMODEM L CAT.LBR CAT.COM   send a file from a library'
 	DB	CR,LF
 	DB	'XMODEM LK CAT.LBR CAT.COM  send in 1k blocks',CR,LF
-	DB	'   The ".LBR" file extension may be omitted',CR,LF,LF
+	DB	'   The ".LBR" file extension may be omitted',CR,LF
+	DB	'   Add "0"-"9" to specify serial port',CR,LF,LF
 	DB	'XMODEM R HELLO.DOC         receive a file from you'
 	DB	CR,LF
 	DB	'XMODEM RP HELLO.DOC        receive in a private area'
@@ -939,7 +954,8 @@ SKSK2:	CALL	ILPRT
 ;
 	 IF	NOT LUXMOD
 	DB	'   Add "C" for forced checksum ("RC" "RPC")',CR,LF
-	DB	'   Add "X" for forced 128 byte protocol ("RX" "RPX")'
+	DB	'   Add "X" for forced 128 byte protocol ("RX" "RPX")',CR,LF
+	DB	'   Add "0"-"9" to specify serial port'
 	DB	CR,LF
 	DB	'   "R" switches from CRC to checksum after 5 retries'
 	DB	CR,LF,LF
@@ -2214,13 +2230,13 @@ ILLDU:	CALL	ERXIT
 RCVRECD:XRA	A		; Initialize error count to zero
 	STA	ERRCT
 ;	
-;WBW BEGIN: Be more patient waiting for host to start sending file
-	LDA	FRSTIM		; WBW: Get first time flag
-	ORA	A		; WBW: Set CPU flags
-	JNZ	RCVRPT		; WBW: If not first time, bypass
-	MVI	A,-10		; WBW: Else increase error limit
-	STA	ERRCT		; WBW: Save error new limit
-;WBW END
+; [WBW] BEGIN: Be more patient waiting for host to start sending file
+	LDA	FRSTIM		; Get first time flag
+	ORA	A		; Set CPU flags
+	JNZ	RCVRPT		; If not first time, bypass
+	MVI	A,-10		; Else increase error limit
+	STA	ERRCT		; Save error new limit
+; [WBW] END
 ;
 RCVRPT:	 IF	CONFUN		; Check for function key?
 	CALL	FUNCHK		; Yeah, why not?
@@ -2233,7 +2249,7 @@ RCVRPT:	 IF	CONFUN		; Check for function key?
 	 ENDIF
 ;
 	;MVI	B,10-1		; 10-second timeout
-	MVI	B,5-1		; WBW: 5-second timeout
+	MVI	B,5-1		; [WBW] 5-second timeout
 	CALL	RECV		; Get any character received
 	JC	RCVSTOT		; Timeout
 ;
@@ -2259,7 +2275,7 @@ RCVRPTB:CPI	SOH		; 'SOH' for a 128-byte block?
 RCVSERR:MVI	B,1		; Wait for 1 second
 	CALL	RECV		; After last char. received
 	JNC	RCVSERR		; Loop until sender done
-	LDA	FRSTIM		; Is it the first time?
+RCVSER1:LDA	FRSTIM		; Is it the first time?
 	ORA	A
 	MVI	A,NAK
 	JNZ	RCVSER2		; If not first time, send NAK
@@ -2320,7 +2336,9 @@ DELFILE:LXI	D,FCB		; Point to file
 ;
 ; Timed out on receive
 ;
-RCVSTOT:JMP	RCVSERR		; Bump error count, etc.
+;RCVSTOT:JMP	RCVSERR		; Bump error count, etc.
+; [WBW] Bypass line flush if error is timeout
+RCVSTOT:JMP	RCVSER1		; Bump error count, etc.
 ;
 ; Got SOH or STX - get block number, block number complemented
 ;
@@ -3457,9 +3475,18 @@ RSDMA:	LXI	D,TBUF		; Reset DMA address
 WRERR:	CALL	RSDMA		; Reset DMA to normal
 	MVI	C,CAN		; Cancel
 	CALL	SEND		; Sender
+; [WBW] BEGIN: RCVSABT does not return, so file write error
+; message was never being displayed.  Swapped things around
+; to fix this.
+;	CALL	RCVSABT		; Kill receive file
+;	CALL	ERXIT		; Exit with msg:
+;	DB	'++ Error writing file ++$'
+; [WBW] -----
+	CALL	ILPRT		; Dispaly error msg
+	DB	CR,LF,'++ Error writing file ++',CR,LF,0
 	CALL	RCVSABT		; Kill receive file
-	CALL	ERXIT		; Exit with msg:
-	DB	'++ Error writing file ++$'
+; [WBW] END
+	
 ;
 ; Receive a character - timeout time is in 'B' in seconds.  Entry via
 ; 'RECVDG' deletes garbage characters on the line.  For example, having
@@ -3470,11 +3497,17 @@ RECVDG:	CALL	GETCHR
 	CALL	GETCHR
 ;
 RECV:	PUSH	D		; Save 'DE' regs.
-;WBW BEGIN: Use dynamic CPU speed
+;
+; [WBW] BEGIN: Check immediately for char pending to avoid delay
+	CALL	RCVRDY		; Input from modem ready
+	JZ	MCHAR		; Got the character
+; [WBW] END
+;
+; [WBW] BEGIN: Use dynamic CPU speed
 ;	MVI	E,MHZ		; Get the clock speed
 	LDA	CPUMHZ		; Get the clock speed
 	MOV	E,A		; Put speed in E
-;WBW END
+; [WBW] END
 	XRA	A		; Clear the 'A' reg.
 ;
 MSLOOP:	ADD	B		; Number of seconds
@@ -3483,12 +3516,12 @@ MSLOOP:	ADD	B		; Number of seconds
 	MOV	B,A		; Put total value back into 'B'
 ;
 MSEC:	 IF	NOT BYEBDOS
-;WBW BEGIN: Use scalar passed in by patch
+; [WBW] BEGIN: Use scalar passed in by patch
 	;LXI	D,6600		; 1 second DCR count
 	XCHG
 	LHLD	RCVSCL		; Use scalar value from patch
 	XCHG
-;WBW END
+; [WBW] END
 	 ENDIF
 ;
 	 IF	BYEBDOS
@@ -3567,7 +3600,7 @@ CARCK2:	LDA	OPTSAV		; Get option
 ; Delay - 100 millisecond delay.
 ;
 DELAY:	PUSH	B		; Save 'BC'
-; WBW BEGIN: Use dynamic CPU speed
+; [WBW] BEGIN: Use dynamic CPU speed
 ; Loop below is 105TS on Z80 and 96TS on Z180
 ; Approx 1024 iter per 100ms per MHz
 ; Loop time below extended to accommodate CPU speeds up to 64MHz
@@ -3578,7 +3611,7 @@ DELAY:	PUSH	B		; Save 'BC'
 	RLC			; * 2, A now has MHz * 4
 	MOV	B,A		; Use as high byte
 	MVI	C,0		; Zero low byte, BC now has MHz * 1024
-; WBW END
+; [WBW] END
 DELAY2:	DCX	B		; Update count
 	MOV	A,B		; Get MSP byte
 	ORA	C		; Count = zero?
@@ -3967,7 +4000,7 @@ INPUT:	PUSH	H		; Save current values
 	PUSH	D
 	PUSH	B
 ;
-; WBW BEGIN: Use dynamic CPU speed
+; [WBW] BEGIN: Use dynamic CPU speed
 ;INPUT1:	LXI	D,1200		; Outer loop count (about 2 minutes)
 ;;
 ;INPUT2:	LXI	B,MHZ*100	; Roughly 100 ms.
@@ -3976,7 +4009,7 @@ INPUT1:	LXI	D,468		; Outer loop count (about 2 minutes)
 INPUT2:	LDA	CPUMHZ		; CPU MHz to A
 	MOV	B,A		; Put in B
 	MVI	C,0		; Zero C, BC is now CPU MHz * 256, ~256ms
-; WBW END
+; [WBW] END
 ;
 INPUT3:	PUSH	D		; Save the outer delay count
 	PUSH	B		; Save the inner delay count
@@ -5655,8 +5688,9 @@ MSGFLG:	DB	0		; Message upload flag
 SAVEHL:	DW	0		; Saves TBUF command line address
 TOTERR:	DW	0		; Total errors for transmission attempt
 VRECNO:	DW	0		; Virtual record # in 128 byte records
-CPUMHZ:	DB	MHZ		; WBW: CPU speed in MHz
-RCVSCL: DW	SCL		; WBW: Recv loop scalar
+CPUMHZ:	DB	MHZ		; [WBW] CPU speed in MHz
+RCVSCL: DW	SCL		; [WBW] Recv loop scalar
+PORT:	DB	0FFH		; [WBW] Target serial port, FFH=not specified
 ;
 EOFLG:	DB	0		; 'EOF' flag (1=yes)
 EOFCTR:	DB	0		; EOF send counter
@@ -5685,7 +5719,8 @@ OLINE:	DS	80		; Temporary buffer to store line
 	ORG	($+127)/128*128
 ;
 DBUF	EQU	$		; 16-record disk buffer
-STACK	EQU	DBUF-2		; Save original stack address
+;STACK	EQU	DBUF-2		; Save original stack address
+STACK	EQU	0B000H		; [WBW] Above 8000h for HBIOS Fastpath
 LOGBUF	EQU	DBUF+128	; For use with LOGCAL
 ;
 ;-----------------------------------------------------------------------

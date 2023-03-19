@@ -4,7 +4,7 @@ BPBIOS for RomWBW / HBIOS
 The build process included in this directory constructs multiple BPBIOS OS images that
 can be loaded dynamically on a running RomWBW CP/M-like system.	 Normally, you would
 boot CP/M and then load the desired variant.  On a running system, you would enter
-something like "LDSYS BP34T".  This document describes the specifics of the build
+something like "LDSYS BP34".  This document describes the specifics of the build
 process and the image variations which are identified by naming convention.
 
 Each image is composed of three basic components: Command Processor (CCP), Disk
@@ -36,112 +36,98 @@ ZCPR 4.X == ZSDOS 2.X
 
 BPBIOS must be assembled for the target configuration.	BPBIOS includes a DEF-WW-???????.LIB
 file during assembly which sets various equates to contol the features and behavior of
-BPBIOS.	 The most critical ones are:
+BPBIOS.	 The relevant settings are:
 
   BANKED: If YES, BPBIOS implements memory banking features
   ZSDOS2: If YES, BPBIOS is built to utilize ZSDOS 2.X specifics features
-  INTPXY: If YES, BPBIOS implements HBIOS proxy code internally w/ stub at FFE0H-FFFFH
 
 The table below illustrates the target build configurations along with the
 .DAT and .LIB files which are utilized for the specific configuration.	The "?"
 is replaced with a letter that represents one of the ZCPR memory segment configurations
 described later in this document.
 
-BP33?.DAT	DEF-WW-Z33?.LIB		Non-Banked BPBIOS w/ ZCPR 3.3 & ZSDOS 1.1
-BP33?BNK.DAT	DEF-WW-Z33?BNK.LIB	Banked BPBIOS w/ ZCPR 3.3 & ZSDOS 1.1
-BP34?.DAT	DEF-WW-Z34?.LIB		Non-Banked BPBIOS w/ ZCPR 3.4 & ZSDOS 1.1
-BP34?BNK.DAT	DEF-WW-Z34?BNK.LIB	Banked BPBIOS w/ ZCPR 3.4 & ZSDOS 1.1
-BP41?BNK.DAT	DEF-WW-Z41?BNK.LIB	Banked BPBIOS w/ ZCPR 4.1 & ZSDOS 2.03
+BP33.DAT	DEF-WW-Z33.LIB		Non-Banked BPBIOS w/ ZCPR 3.3 & ZSDOS 1.1
+BP33BNK.DAT	DEF-WW-Z33BNK.LIB	Banked BPBIOS w/ ZCPR 3.3 & ZSDOS 1.1
+BP34.DAT	DEF-WW-Z34.LIB		Non-Banked BPBIOS w/ ZCPR 3.4 & ZSDOS 1.1
+BP34BNK.DAT	DEF-WW-Z34BNK.LIB	Banked BPBIOS w/ ZCPR 3.4 & ZSDOS 1.1
+BP41BNK.DAT	DEF-WW-Z41BNK.LIB	Banked BPBIOS w/ ZCPR 4.1 & ZSDOS 2.X
 
 The table below illustrates the BPBIOS equates used and the specific CCP/DOS/BIOS
 components that are used to generate each configuration.  As above, the "?" is
 replaced with a letter that represents one of the ZCPR memory segment configurations
 described later in this document.
 
-		BP33?		BP33?BNK	BP34?		BP34?BNK	BP41?BNK
+		BP33		BP33BNK		BP34		BP34BNK		BP41BNK
 --------------	--------------	--------------	--------------	--------------	--------------
 BANKED		NO		YES		NO		YES		YES
 ZSDOS2		NO		NO		NO		NO		YES
 --------------	--------------	--------------	--------------	--------------	--------------
-CCP		ZCPR33?.REL	ZCPR33?.REL	Z34.REL		Z34.REL		Z41.ZRL
-DOS		ZSDOS.ZRL	ZSDOS.ZRL	ZSDOS.ZRL	ZSDOS.ZRL	ZS203.ZRL
-BIOS		BP33.REL	BP33BNK.REL	BP34.REL	BP34BNK.REL	BP41.REL
+CCP		ZCPR33.REL	ZCPR33.REL	Z34.REL		Z34.REL		Z41.ZRL
+DOS		ZSDOS.ZRL	ZSDOS.ZRL	ZSDOS.ZRL	ZSDOS.ZRL	ZS227G.ZRL
+BIOS		BP33.REL	BP33BNK.REL	BP34.REL	BP34BNK.REL	BP41BNK.REL
 --------------	--------------	--------------	--------------	--------------	--------------
 
-In addition to the configuration options above, ZCPR also utilizes a
-defined set of memory segments in upper memory.	 The location and size of these
-segments have many ramifications and general ZCPR / BPBIOS documents
-should be consulted to understand these.  The build process used here
-produces several different configurations which can be loaded at runtime.
-The original distributed memory segment configuration occupies the top
-of memory which, unfortunately, conflicts with the RomWBW HBIOS need to
-occupy this space.
+In addition to the configuration options above, ZCPR also utilizes a 
+defined set of memory segments in upper memory.	 The location and 
+size of these segments have many ramifications and general ZCPR / 
+BPBIOS documents should be consulted to understand these.  The build 
+process used here produces a custom configuration appropriate for 
+RomWBW. The original distributed memory segment configuration occupies 
+the top of memory which, unfortunately, conflicts with the RomWBW 
+HBIOS need to occupy this space.
 
-Although RomWBW HBIOS is implemented in it's own dedicated memory bank, it
-requires a small proxy at the top of memory which acts as a mechansim to
-route calls to HBIOS.  There are two ways to implement this upper memory
-proxy.	The full proxy occupies FE00H-FFFFH and implements all of the
-HBIOS routing code.  Alternatively, a mini proxy can be utilized to
-minimize the dedicated proxy space in upper memory.  The mini proxy
-requires just 20H bytes at the top of memory (FFE0H-FFFFH), but requires
-that the bulk of the proxy code be implemented internally in BPBIOS.
+Although RomWBW HBIOS is implemented in it's own dedicated memory 
+bank, it requires a small proxy at the top of memory which acts as a 
+mechansim to route calls to HBIOS.  The proxy occupies FE00H-FFFFH and 
+implements all of the HBIOS routing code.
 
-Taking the above into account, the build process implements a couple of
-memory segment configurations that are compatible with RomWBW HBIOS.
-Essentially, these configurations rearrange the ZCPR memory segments
-to free up the area required by the HBIOS full or mini proxy.  Note
-that this is a bit complicated because there are some constraints on
-the locations of certain segments.
-
-First, the RCP, FCP, and IOP segments contain executable code which is
-pre-built and intended to run at specific locations.  Specifically, the
-SYS.RCP, SYS.FCP, and SYS.IOP files provided with the BPBIOS distribution
-must be loaded at their original intended location.  In theory, new
-versions of these files could be created to load at different locations,
-but that is not the approach taken here.  Instead, the memory segment
-configurations are designed to keep these 3 components at the same
-location as the original distribution.
+Taking the above into account, the build process implements a memory 
+segment configuration that is compatible with RomWBW HBIOS. 
+Essentially, this configuration rearranges the ZCPR memory segments to 
+free up the area required by the HBIOS proxy.  Note that this is a bit 
+complicated because there are some constraints on the locations of 
+certain segments.
 
 BPBIOS is assembled as relocatable code.  Subsequently, the BPBUILD tool
 is used to link BPBIOS with the CCP and DOS relocatable code to produce
-the absolute image (.IMG file).  Note that BPBUILD does more than just
+the loadable image (.IMG file).  Note that BPBUILD does more than just
 linking.  As part of it's work, BPBUILD adjusts the built-in environment
 segment to customize the final image for the desired location and size
 of Z-System segments.
 
 The following table summarizes the original memory segment configuration and the
-two new configurations utilized by this build process.	As indicated above, the
+new configuration utilized by this build process.  As indicated above, the
 original configuration is incompatible with RomWBW HBIOS because it occupies the
-very top of memory.  This configuration is shown below purely to document the
-original distribued configuration.
+very top of memory.  The original configuration is shown below purely to
+document the original distributed configuration.
 
-SEGMENT		Original	T Config	N Config
---------------	--------------	--------------	--------------
-Environment	FE00		EA00*		FE00
-  # Recs	   2		   2		   2
-Flow Ctl Pkg	FA00		FA00		FA00
-  # Recs	   4		   4		   4
-I/O Pkg		EC00		EC00		EC00
-  # Recs	  12		  12		  12
-Res Cmd Pkg	F200		F200		F200
-  # Recs	  16		  16		  16
-Cmd Line	FF00		EB00*		FF00
-  # Bytes	 203		 203		 171*
-Named Dirs	FC00		FC00		FC00
-  # Ents	  14		  14		  14
-Ext Path	FDF4		FDF4		FDF4
-  # Ents	   5		   5		   5
-Shell Stack	FD00		FD00		FD00
-  # Ents	   4		   4		   4
-  Ent Size	  32		  32		  32
-Msg Buffer	FD80		FD80		FD80
-Ext FCB		FDD0		FDD0		FDD0
-Ext Stack	FFD0		EBD0*		FFB0*
+SEGMENT		Original	RomWBW Config
+--------------	--------------	--------------
+Environment	FE00		FC00
+  # Recs	   2		   2
+Flow Ctl Pkg	FA00		F700
+  # Recs	   4		   4
+I/O Pkg		EC00		EF00
+  # Recs	  12		   0
+Res Cmd Pkg	F200		EF00
+  # Recs	  16		  16
+Cmd Line	FF00		FD00
+  # Bytes	 203		 251
+Named Dirs	FC00		F900
+  # Ents	  14		  25
+Ext Path	FDF4		FBF4
+  # Ents	   5		   5
+Shell Stack	FD00		FB00
+  # Ents	   4		   4
+  Ent Size	  32		  32
+Msg Buffer	FD80		FB80
+Ext FCB		FDD0		FBD0
+Ext Stack	FFD0		FAD0
 
-User Space	E900		E700*		E900
-  Size		 300		 300		 300
+User Space	E900		EC00
+  Size		 300		 300
 
-Wheel Byte	FDFF		FDFF		FDFF
+Wheel Byte	FDFF		FBFF
 
 The sections below provide a more detailed description of the memory
 segment configurations.
@@ -167,63 +153,34 @@ ORIGINAL DISTRIBUTION CONFIGURATION (NO HBIOS):
 =============================================================================
 
 =============================================================================
-T CONFIGURATION (HBIOS FULL PROXY @ FC00-FFFF):
-  This configuration uses a modified layout of the ZSystem segments so
-  that critical segments can be located at the same address as the
-  "stock" configuration.  Some segments are built with an assumed
-  memory location and will generally fail if they are not loaded in
-  that location.  The Flow Control Package (FCP) and Resident
-  Command Processor (RCP) are very sensitive to this.  This configuration
-  places them at their original locations, so they work well.
+ROMWBW CONFIGURATION (HBIOS PROXY @ FE00-FFFF):
 -----------------------------------------------------------------------------
-  A  - Environment   - EA00H	  F  - Named Dirs    -	FC00H
-	Size (# recs)-	  2		# of Entries -	  14
-  B  - Flow Ctrl Pkg - FA00H	  G  - External Path -	FDF4H
-	Size (# recs)-	  4		# of Entries -	   5
-  C  - I/O Package   - EC00H	  H  - Shell Stack   -	FD00H
-	Size (# recs)-	 12		# of Entries -	   4
-  D  - Res Cmd Proc  - F200H		Entry Size   -	  32
-	Size (# recs)-	 16	  I  - Msg Buffer    -	FD80H
-  E  - Command Line  - EB00H	  J  - Ext. FCB	     -	FDD0H
-	Size (bytes) -	203	  K  - Ext. Stack    -	EBD0H
-=============================================================================
-
-=============================================================================
-N CONFIGURATION (HBIOS MINI PROXY @ FFE0-FFFF):
-  This configuration frees up the top 20H bytes of memory to make space for the
-  HBIOS mini-proxy.  It does this by shrinking Cmd Line and shifting the Ext Stack
-  down by 32 bytes.  This configuration will only work if INTPXY=YES in HBIOS.
------------------------------------------------------------------------------
-  A  - Environment   - FE00H	  F  - Named Dirs    -	FC00H
-	Size (# recs)-	  2		# of Entries -	  14
-  B  - Flow Ctrl Pkg - FA00H	  G  - External Path -	FDF4H
-	Size (# recs)-	  4		# of Entries -	   5
-  C  - I/O Package   - EC00H	  H  - Shell Stack   -	FD00H
-	Size (# recs)-	 12		# of Entries -	   4
-  D  - Res Cmd Proc  - F200H		Entry Size   -	  32
-	Size (# recs)-	 16	  I  - Msg Buffer    -	FD80H
-  E  - Command Line  - FF00H	  J  - Ext. FCB	     -	FDD0H
-	Size (bytes) -	171	  K  - Ext. Stack    -	FFB0H
+  A  - Environment   - FC00H      F  - Named Dirs    -  F900H
+        Size (# recs)-    2             # of Entries -    25
+  B  - Flow Ctrl Pkg - F700H      G  - External Path -  FBF4H
+        Size (# recs)-    4             # of Entries -     5
+  C  - I/O Package   - EF00H      H  - Shell Stack   -  FB00H
+        Size (# recs)-    0             # of Entries -     4
+  D  - Res Cmd Proc  - EF00H            Entry Size   -    32
+        Size (# recs)-   16       I  - Msg Buffer    -  FB80H
+  E  - Command Line  - FD00H      J  - Ext. FCB      -  FBD0H
+        Size (bytes) -  251       K  - Ext. Stack    -  FAD0H
 =============================================================================
 
 BPBIOS is designed to invoke a command at startup (autostart command).  There
-are 3 ZEX command files customized for this build.  They are Z33.ZEX, Z34.ZEX,
-and Z41.ZEX.  BPBIOS is customized to launch the ZEX command file corresponding
+are 3 ZEX command files customized for this build.  They are ZSTT.ZEX, ZSTN.ZEX,
+and ZSTF.ZEX.  BPBIOS is customized to launch the ZEX command file corresponding
 to the version of ZCPR being linked with it.
 
 The table below summarizes the loadable image files created by the build
 process:
 
-ZCPR	ZSDOS	BPBIOS		STARTUP		T (INTPXY=NO)	N (INTPXY=YES)
-------	------	--------------  --------------	--------------	--------------		
-v3.3	v1.1	NON-BANKED      Z33.ZEX		BP33T.IMG	BP33N.IMG		
-v3.3	v1.1	BANKED          Z33.ZEX		BP33TBNK.IMG	BP33NBNK.IMG		
-v3.4	v1.1	NON-BANKED      Z34.ZEX		BP34T.IMG	BP34N.IMG		
-v3.4	v1.1	BANKED          Z34.ZEX		BP34TBNK.IMG	BP34NBNK.IMG		
-v4.1	v2.03	BANKED          Z41.ZEX		BP41TBNK.IMG	BP41NBNK.IMG
+ZCPR	ZSDOS	BPBIOS		STARTUP		HBIOS PROXY		IMAGE
+------	------	--------------  --------------	--------------  --------------
+v3.3	v1.1	NON-BANKED      ZST.ZEX		EXTERNAL	BP33.IMG
+v3.3	v1.1	BANKED          ZST.ZEX		EXTERNAL	BP33BNK.IMG
+v3.4	v1.1	NON-BANKED      ZST.ZEX		EXTERNAL	BP34.IMG
+v3.4	v1.1	BANKED          ZST.ZEX		EXTERNAL	BP34BNK.IMG
+v4.1	v2.03	BANKED          ZSTF.ZEX	EXTERNAL	BP41BNK.IMG
 
-WARNING: Once an N configuration image has been loaded, it is no longer
-possible to load a T configuration without rebooting.  This constraint
-exists because the N configurations wipe out all but the top 20H bytes
-of memory.  The T configurations rely on the full 200H byte HBIOS
-proxy.
+--WBW 1:34 PM 10/7/2021

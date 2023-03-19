@@ -31,7 +31,6 @@
  */
 
 #include <stdio.h>
-#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 #ifdef _WIN32
@@ -48,7 +47,7 @@
 #define OPT_RAW_BACKWARD   8
 #define OPT_STATS          16
 
-#define TOOL_VERSION "1.2.0"
+#define TOOL_VERSION "1.3.6"
 
 /*---------------------------------------------------------------------------*/
 
@@ -295,7 +294,7 @@ int comparestream_open(lzsa_stream_t *stream, const char *pszCompareFilename, co
 
    pCompareStream->pCompareDataBuf = NULL;
    pCompareStream->nCompareDataSize = 0;
-   pCompareStream->f = (void*)fopen(pszCompareFilename, pszMode);
+   pCompareStream->f = (FILE*)fopen(pszCompareFilename, pszMode);
 
    if (pCompareStream->f) {
       stream->obj = pCompareStream;
@@ -866,11 +865,11 @@ int main(int argc, char **argv) {
    const char *pszInFilename = NULL;
    const char *pszOutFilename = NULL;
    const char *pszDictionaryFilename = NULL;
-   bool bArgsError = false;
-   bool bCommandDefined = false;
-   bool bVerifyCompression = false;
-   bool bMinMatchDefined = false;
-   bool bFormatVersionDefined = false;
+   int nArgsError = 0;
+   int nCommandDefined = 0;
+   int nVerifyCompression = 0;
+   int nMinMatchDefined = 0;
+   int nFormatVersionDefined = 0;
    char cCommand = 'z';
    int nMinMatchSize = 0;
    unsigned int nOptions = OPT_FAVOR_RATIO;
@@ -878,51 +877,51 @@ int main(int argc, char **argv) {
 
    for (i = 1; i < argc; i++) {
       if (!strcmp(argv[i], "-d")) {
-         if (!bCommandDefined) {
-            bCommandDefined = true;
+         if (!nCommandDefined) {
+            nCommandDefined = 1;
             cCommand = 'd';
          }
          else
-            bArgsError = true;
+            nArgsError = 1;
       }
       else if (!strcmp(argv[i], "-z")) {
-         if (!bCommandDefined) {
-            bCommandDefined = true;
+         if (!nCommandDefined) {
+            nCommandDefined = 1;
             cCommand = 'z';
          }
          else
-            bArgsError = true;
+            nArgsError = 1;
       }
       else if (!strcmp(argv[i], "-c")) {
-         if (!bVerifyCompression) {
-            bVerifyCompression = true;
+         if (!nVerifyCompression) {
+            nVerifyCompression = 1;
          }
          else
-            bArgsError = true;
+            nArgsError = 1;
       }
       else if (!strcmp(argv[i], "-cbench")) {
-         if (!bCommandDefined) {
-            bCommandDefined = true;
+         if (!nCommandDefined) {
+            nCommandDefined = 1;
             cCommand = 'B';
          }
          else
-            bArgsError = true;
+            nArgsError = 1;
       }
       else if (!strcmp(argv[i], "-dbench")) {
-         if (!bCommandDefined) {
-            bCommandDefined = true;
+         if (!nCommandDefined) {
+            nCommandDefined = 1;
             cCommand = 'b';
          }
          else
-            bArgsError = true;
+            nArgsError = 1;
       }
       else if (!strcmp(argv[i], "-test")) {
-         if (!bCommandDefined) {
-            bCommandDefined = true;
+         if (!nCommandDefined) {
+            nCommandDefined = 1;
             cCommand = 't';
          }
          else
-            bArgsError = true;
+            nArgsError = 1;
       }
       else if (!strcmp(argv[i], "-D")) {
          if (!pszDictionaryFilename && (i + 1) < argc) {
@@ -930,119 +929,119 @@ int main(int argc, char **argv) {
             i++;
          }
          else
-            bArgsError = true;
+            nArgsError = 1;
       }
       else if (!strncmp(argv[i], "-D", 2)) {
          if (!pszDictionaryFilename) {
             pszDictionaryFilename = argv[i] + 2;
          }
          else
-            bArgsError = true;
+            nArgsError = 1;
       }
       else if (!strcmp(argv[i], "-m")) {
-         if (!bMinMatchDefined && (i + 1) < argc) {
+         if (!nMinMatchDefined && (i + 1) < argc) {
             char *pEnd = NULL;
             nMinMatchSize = (int)strtol(argv[i + 1], &pEnd, 10);
             if (pEnd && pEnd != argv[i + 1] && (nMinMatchSize >= 2 && nMinMatchSize <= 5)) {
                i++;
-               bMinMatchDefined = true;
+               nMinMatchDefined = 1;
                nOptions &= (~OPT_FAVOR_RATIO);
             }
             else {
-               bArgsError = true;
+               nArgsError = 1;
             }
          }
          else
-            bArgsError = true;
+            nArgsError = 1;
       }
       else if (!strncmp(argv[i], "-m", 2)) {
-         if (!bMinMatchDefined) {
+         if (!nMinMatchDefined) {
             char *pEnd = NULL;
             nMinMatchSize = (int)strtol(argv[i] + 2, &pEnd, 10);
             if (pEnd && pEnd != (argv[i]+2) && (nMinMatchSize >= 2 && nMinMatchSize <= 5)) {
-               bMinMatchDefined = true;
+               nMinMatchDefined = 1;
                nOptions &= (~OPT_FAVOR_RATIO);
             }
             else {
-               bArgsError = true;
+               nArgsError = 1;
             }
          }
          else
-            bArgsError = true;
+            nArgsError = 1;
       }
       else if (!strcmp(argv[i], "--prefer-ratio")) {
-         if (!bMinMatchDefined) {
+         if (!nMinMatchDefined) {
             nMinMatchSize = 0;
-            bMinMatchDefined = true;
+            nMinMatchDefined = 1;
          }
          else
-            bArgsError = true;
+            nArgsError = 1;
       }
       else if (!strcmp(argv[i], "--prefer-speed")) {
-         if (!bMinMatchDefined) {
+         if (!nMinMatchDefined) {
             nMinMatchSize = 3;
             nOptions &= (~OPT_FAVOR_RATIO);
-            bMinMatchDefined = true;
+            nMinMatchDefined = 1;
          }
          else
-            bArgsError = true;
+            nArgsError = 1;
       }
       else if (!strcmp(argv[i], "-f")) {
-         if (!bFormatVersionDefined && (i + 1) < argc) {
+         if (!nFormatVersionDefined && (i + 1) < argc) {
             char *pEnd = NULL;
             nFormatVersion = (int)strtol(argv[i + 1], &pEnd, 10);
             if (pEnd && pEnd != argv[i + 1] && (nFormatVersion >= 1 && nFormatVersion <= 2)) {
                i++;
-               bFormatVersionDefined = true;
+               nFormatVersionDefined = 1;
             }
             else {
-               bArgsError = true;
+               nArgsError = 1;
             }
          }
          else
-            bArgsError = true;
+            nArgsError = 1;
       }
       else if (!strncmp(argv[i], "-f", 2)) {
-         if (!bFormatVersionDefined) {
+         if (!nFormatVersionDefined) {
             char *pEnd = NULL;
             nFormatVersion = (int)strtol(argv[i] + 2, &pEnd, 10);
             if (pEnd && pEnd != (argv[i] + 2) && (nFormatVersion >= 1 && nFormatVersion <= 2)) {
-               bFormatVersionDefined = true;
+               nFormatVersionDefined = 1;
             }
             else {
-               bArgsError = true;
+               nArgsError = 1;
             }
          }
          else
-            bArgsError = true;
+            nArgsError = 1;
       }
       else if (!strcmp(argv[i], "-v")) {
          if ((nOptions & OPT_VERBOSE) == 0) {
             nOptions |= OPT_VERBOSE;
          }
          else
-            bArgsError = true;
+            nArgsError = 1;
       }
       else if (!strcmp(argv[i], "-r")) {
          if ((nOptions & OPT_RAW) == 0) {
             nOptions |= OPT_RAW;
          }
          else
-            bArgsError = true;
+            nArgsError = 1;
       }
       else if (!strcmp(argv[i], "-b")) {
          if ((nOptions & OPT_RAW_BACKWARD) == 0) {
             nOptions |= OPT_RAW_BACKWARD;
          }
          else
-            bArgsError = true;
+            nArgsError = 1;
       }
       else if (!strcmp(argv[i], "-stats")) {
       if ((nOptions & OPT_STATS) == 0) {
          nOptions |= OPT_STATS;
       }
       else
-         bArgsError = true;
+         nArgsError = 1;
       }
       else {
          if (!pszInFilename)
@@ -1051,21 +1050,21 @@ int main(int argc, char **argv) {
             if (!pszOutFilename)
                pszOutFilename = argv[i];
             else
-               bArgsError = true;
+               nArgsError = 1;
          }
       }
    }
 
-   if (!bArgsError && (nOptions & OPT_RAW_BACKWARD) && !(nOptions & OPT_RAW)) {
+   if (!nArgsError && (nOptions & OPT_RAW_BACKWARD) && !(nOptions & OPT_RAW)) {
       fprintf(stderr, "error: -b (compress backwards) requires -r (raw block format)\n");
       return 100;
    }
 
-   if (!bArgsError && cCommand == 't') {
+   if (!nArgsError && cCommand == 't') {
       return do_self_test(nOptions, nMinMatchSize, nFormatVersion);
    }
 
-   if (bArgsError || !pszInFilename || !pszOutFilename) {
+   if (nArgsError || !pszInFilename || !pszOutFilename) {
       fprintf(stderr, "lzsa command-line tool v" TOOL_VERSION " by Emmanuel Marty and spke\n");
       fprintf(stderr, "usage: %s [-c] [-d] [-v] [-r] <infile> <outfile>\n", argv[0]);
       fprintf(stderr, "       -c: check resulting stream after compressing\n");
@@ -1089,7 +1088,7 @@ int main(int argc, char **argv) {
 
    if (cCommand == 'z') {
       int nResult = do_compress(pszInFilename, pszOutFilename, pszDictionaryFilename, nOptions, nMinMatchSize, nFormatVersion);
-      if (nResult == 0 && bVerifyCompression) {
+      if (nResult == 0 && nVerifyCompression) {
          return do_compare(pszOutFilename, pszInFilename, pszDictionaryFilename, nOptions, nFormatVersion);
       } else {
          return nResult;

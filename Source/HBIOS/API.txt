@@ -45,13 +45,41 @@ GET ($F8):
       BC=Function/Subfunction                   A=Result
                                                 E=Serial Unit Count
 
+    CIOFN ($01):
+      BC=Function/Subfunction                   A=Result
+                                                HL=Function Address
+                                                DE=Unit Data Address
+
     DIOCNT ($10):
       BC=Function/Subfunction                   A=Result
                                                 E=Disk Unit Count
 
+    DIOFN ($11):
+      BC=Function/Subfunction                   A=Result
+                                                HL=Function Address
+                                                DE=Unit Data Address
+
+    RTCCNT ($20):
+      BC=Function/Subfunction                   A=Result
+                                                E=RTC Unit Count
+
     VDACNT ($40):
       BC=Function/Subfunction                   A=Result
                                                 E=Video Unit Count
+
+    VDAFN ($41):
+      BC=Function/Subfunction                   A=Result
+                                                HL=Function Address
+                                                DE=Unit Data Address
+
+    SNDCNT ($50):
+      BC=Function/Subfunction                   A=Result
+                                                E=Sound Unit Count
+
+    SNDFN ($51):
+      BC=Function/Subfunction                   A=Result
+                                                HL=Function Address
+                                                DE=Unit Data Address
 
     TIMER ($D0):
       BC=Function/Subfunction                   A=Result
@@ -72,9 +100,10 @@ GET ($F8):
                                                 H=Z80 CPU Variant
                                                 L=CPU Speed in MHz
                                                 DE=CPU Speed in KHz
+						BC=Oscillator Freq in KHz
 
     MEMINFO ($F1):
-      BC=Function/Subfunction                   A=Result
+      BC=FuSnction/Subfunction                   A=Result
                                                 D=# ROM Banks
                                                 E=# RAM Banks
 
@@ -82,6 +111,13 @@ GET ($F8):
       BC=Function/Subfunction                   A=Result
                                                 D=BIOS Bank Id
                                                 E=User Bank Id
+
+    CPUSPD ($F3):
+      BC=Function/Subfunction			A=Result
+						L=Clock Mult (0:Half, 1:Full, 2: Double)
+						D=Memory Wait States
+						E=I/O Wait States
+						
 
 SET ($F9):
   BC=Function/Subfunction                       A=Result
@@ -98,6 +134,13 @@ SET ($F9):
       BC=Function/Subfunction                   A=Result
       DE=Boot Volume (Disk Unit/Slice)
       L=Boot Bank Id
+
+    CPUSPD ($F3):
+      BC=Function/Subfunction			A=Result
+						L=Clock Mult (0:Half, 1:Full, 2: Double)
+						D=Memory Wait States
+						E=I/O Wait States
+						
 
 PEEK ($FA):
   B=Function                       		A=Result
@@ -239,6 +282,8 @@ DEVICE ($06):
                                         D=Device Type
                                         E=Device Number
 					C=Device Attributes
+					H=Device Mode
+					L=Base I/O Adr
 
   Serial Device Attributes Byte:
     7: 0=RS-232, 1=Terminal
@@ -303,6 +348,8 @@ DEVICE ($17)
                                         D=Device Type (MD, FD, IDE, etc.)
                                         E=Device Number (0..n)
 					C=Device Attributes
+					H=Device Mode
+					L=Base I/O Adr
 
   Report the Device Type (Floppy, IDE, SD, etc.) and Device Number.  Call
   does not perform any I/O and succeeds even if the device is in an error state.

@@ -1,0 +1,4858 @@
+;
+
+	TITLE  ZMD.Z80	- 09/29/88 - Z80 RCP/M File Transfer Program
+;				     Copyrighted (c) 1987, 1988
+;				     Robert W. Kramer III
+
+	PAGE
+;-									 -;
+;                         Update History                                  ;
+;                                                                         ;
+;    Date	Release			     Comments                     ;
+;  --------	-------	  ----------------------------------------------  ;
+;									  ;
+;  09/29/88	v1.50	- If an LBR/ARK/ARC member extraction is being	  ;
+;			  made, a check at OPNOK5: determines if (FCB+9)  ;
+;			  is an 'L' for a .LBR member extraction.  If so, ;
+;			  ZMD informs the receiver that the file is ready ;
+;			  for downloading.  If (FCB+9) is other than an	  ;
+;			  'L' an ARC/ARK member extraction is assumed and ;
+;			  the receiver is told to name the received file  ;
+;			  accordingly.  Extractions on LBR/ARC/ARK files  ;
+;			  with the high bit set in (FCB+9) triggers this  ;
+;			  test unreliable.  The simple fix has been made, ;
+;			  which strips the parity bit of (FCB+9) before	  ;
+;			  anylizing it.					  ;
+;			- Fixed a problem that caused some systems to	  ;
+;			  ignore the first character typed in some ZMD	  ;
+;			  utilities.  The modification was made at the	  ;
+;			  TYPE: routine in ZMDSUBS.  Instead of using	  ;
+;			  BDOS function 2 to display a character, we are  ;
+;			  now using BDOS call 6.			  ;
+;			- Fixed CONSTAT: routine in ZMDSUBS to properly	  ;
+;			  react to cancel requests from Sysop.		  ;
+;			- Modified all low level I/O routines to preserve ;
+;			  HL, DE, and BC registers.  Whether you're using ;
+;			  BYE's extended BDOS calls or have a custom I/O  ;
+;			  overlay installed in ZMD, those registers are	  ;
+;			  will return intact.  This allows those writing  ;
+;			  overlays to not have to worry about register	  ;
+;			  integrity.					  ;
+;			- Single file Receive now defaults to 1k blocks.  ;
+;			- Library extractions now default to 1k blocks.	  ;
+;			- Fixed bugs in the handshaking that have been	  ;
+;			  around since 1k Batch was implemented on CPM	  ;
+;			  systems.  This required several modifications	  ;
+;			  to the SNDFIL routines.  All of them were	  ;
+;			  modified specifically for the Batch routines,	  ;
+;			  however, other Send routines were directly	  ;
+;			  effected by them.				  ;
+;									  ;
+;			     1.	ZMD does not use the BDOS call 35 to get  ;
+;				the file size since this information is	  ;
+;				supplied in the directory entry for each  ;
+;				extent retreived during filename lookup.  ;
+;									  ;
+;			     2. We no longer open a file to send until	  ;
+;				the receiver has ACKnowledged header 0	  ;
+;				*AND* sent his invitation for CRC ('C').  ;
+;				Previously, opening the file immediately  ;
+;				after the header 0 ACK caused the 'C' to  ;
+;				be missed during the time the sender is	  ;
+;				opening the file and filling his transmit ;
+;				buffer.					  ;
+;									  ;
+;			     3. I personally feel there is no need to	  ;
+;				purge the line of incoming characters at  ;
+;				anytime during a batch session. All of the;
+;				occurences of CALL CATCH have been removed;
+;				from the Send batch routines with the	  ;
+;				exception of the GTACK routine, in which  ;
+;				case a call to CATCH is only made if the  ;
+;				current byte received is other than an	  ;
+;				ACK, NAK, 7Bh, FBh, or a CANCEL.	  ;
+;									  ;
+;				I do not have the resources to change all ;
+;				the other CP/M file transfer utilities	  ;
+;				floating around, so you may still notice  ;
+;				some minor delays between files in BATCH  ;
+;				protocol.  Since most of the problem was  ;
+;				in the Send routines, you'll not notice	  ;
+;				lengthy delays when using ZMD to send.	  ;
+;				Delays when using ZMD to receive will be  ;
+;				dependant upon what software the sender	  ;
+;				is using.  (IBM comm programs don't seem  ;
+;				to have this problem, however all CP/M	  ;
+;				comm programs will have these irritating  ;
+;				delays - except ZMD).			  ;
+;									  ;
+;			- Added code to initialize KDRV with current	  ;
+;			  drive at program startup.  CPM3 systems were	  ;
+;			  experiencing problems with BDOS 46.		  ;
+;			- CPM3 BDOS call 46 returns the current disk space;
+;			  free in the first 3 bytes of the currently set  ;
+;			  DMA.  This was being done during a check for	  ;
+;			  the batch intention and destroying the current  ;
+;			  command line buffer (at 80h where DMA address is;
+;			  usually set).  CPM3 systems should now have no  ;
+;			  problems with ZMD.				  ;
+;			- Fixed bug to allow 255 files to be transferred  ;
+;			  when descriptions are disabled (either by the	  ;
+;			  ZINSTL program or by using the 'RW' option).	  ;
+;			- Added CKWILD routine to prevent commands such   ;
+;			  as 'ZMD R *.*' enter '*.*' into the directory.  ;
+;			  Using any wildcards in the filename or extent   ;
+;			  of the receive filename will trigger YMODEM 1k  ;
+;			  Batch.					  ;
+;			- Log file routines were writing some filename	  ;
+;			  attributes to the log file.  Fixed at PUTLOG:	  ;
+;			- Modified ZMDSUBS.REL and send/send Batch code   ;
+;			  to take care of incorrect drive display problem ;
+;			  for local terminal.  Created new subroutine to  ;
+;			  poke the current binary 'BDOS' drive/user area  ;
+;			  into (DUU) and (DUD) in both SNDFIL: and SBTCH: ;
+;			  routines.  Both DUD and DUU have been moved to  ;
+;			  the ZMDSUBS file for global use.		  ;
+;			- Fixed EDATE routines for LOG and FOR files.	  ;
+;			  Previously, the EDATE setting had no effect on  ;
+;			  the ZMD.Z80 program.				  ;
+;			- Fixed message upload routine at RCVFL to check  ;
+;			  for access restrictions.  If ACCESS is set to	  ;
+;			  NO, the message upload will be accepted, else	  ;
+;			  bit 3 of AFBYTE will be anylized.		  ;
+;									  ;
+;  03/18/88	v1.49	- No change(s) made to this file		  ;
+;  03/13/88	v1.48	- Had a small problem with TPA fix which has been ;
+;			  corrected.  CHKTPA was calculating the total	  ;
+;			  number of bytes available for DBUF, but wasn't  ;
+;			  clearing register L (forcing an even amount of  ;
+;			  sectors before initializing OUTSIZ buffer limit ;
+;			  comparison word).  This may have introduced	  ;
+;			  minimal garbage to your FOR file if your FOR	  ;
+;			  file is large enough to fill available TPA with ;
+;			  ZMD, ZFORS or to the log file if running ZMDEL. ;
+;			- Rewrote OUTCHR routine in ZMDSUBS.		  ;
+;			- Redefined buffer table at end of programs. STACK;
+;			  and filename buffers now EQUated with offsets	  ;
+;			  from the last switch/toggle in program instead  ;
+;			  of with DS directive.				  ;
+;			- Some systems which do NOT have an interrupt	  ;
+;			  driven keyboard may have noticed problems when  ;
+;			  an invalid key was entered in the ZNEWP, ZFORP  ;
+;			  and ZMDEL programs.  In ZNEWP and ZFORP, if a   ;
+;			  CR was entered to pause the output, output was  ;
+;			  limited to one line at a time per key pressed.  ;
+;			  If an invalid key was hit, output would have	  ;
+;			  remained in a paused state until one of the	  ;
+;			  abort keys were pressed.  This was difficult to ;
+;			  find since my keyboard is interrupt driven and  ;
+;			  I could not duplicate the problem on my own	  ;
+;			  system.					  ;
+;			- Fixed a problem in the MODE parsing routines	  ;
+;			  that caused ZMD to default to 128 byte blocks	  ;
+;			  in single file SEND mode.  Now defaults to 1k	  ;
+;			  YMODEM.					  ;
+;  02/25/88	v1.47	- Fixed a problem that caused only partial display;
+;			  of the help guide if an invalid command such as ;
+;			  ZMD RPC with no filename was entered. 	  ;
+;			- Repaired routine that loads access flags byte	  ;
+;			  into AFBYTE.  If ACCESS was disabled and BYE	  ;
+;			  was running, a check for a modem overlay was	  ;
+;			  being made that caused a system hang up.  v1.46 ;
+;			  was the only version with this problem.	  ;
+;			- And then there were TPA problems. Past versions ;
+;			  of ZMD required at least 48k TPA to run.  If	  ;
+;			  your system has less, and descriptions enabled, ;
+;			  you most likely had a system hang up during the ;
+;			  FOR file read/write operations.  This version	  ;
+;			  will run on any system with as little as 24k of ;
+;			  available TPA.  Maximum number of uploads is	  ;
+;			  automatically calculated according to your TPA  ;
+;			  limitations.  If upload descriptions have been  ;
+;			  disabled (either during installation or during  ;
+;			  program execution with the RW or RP options),   ;
+;			  as many as 255 files may be uploaded.		  ;
+;			- Fixed time out error in CRC receive routine.	  ;
+;			  Register B contains the number of seconds to	  ;
+;			  wait for a character on entry to RECV and some- ;
+;			  how I inadvertanly removed the line that loads  ;
+;			  this value on entry. (Label RCVCRC2)		  ;
+;			- Fixed description routine so that the caller	  ;
+;			  will be asked for the category of each uploaded ;
+;			  file if ASKAREA is disabled. Problem caused ZMD ;
+;			  to ask only 1 time for the file descriptor of	  ;
+;			  uploaded files - no matter how many of them	  ;
+;			  there were.					  ;
+;  01/27/88	v1.46	- Fixed BYE time routines.  Now displays correct  ;
+;			  time on system when exiting.			  ;
+;			- Fixed SUBS file so that discrepency check will  ;
+;			  not turn off CLOCK, and DSTAMP if MODE is set	  ;
+;			  to 255.  (So ZFORS and ZFORP can react to the	  ;
+;			  clock related features without BYE running).	  ;
+;			- Added prompt to tell remote when ZMD is waiting ;
+;			  for him to come back to terminal mode.  Gets	  ;
+;			  redisplayed every 3 seconds for a total of	  ;
+;			  approximately 30 seconds before continuing on	  ;
+;			  automatically. 			  	  ;
+;			- Added code to SUBS file that determines if we   ;
+;			  are in private mode or not. If so, only private ;
+;			  drive/user information is displayed when asking ;
+;			  for file descriptors/categories choice.  If in  ;
+;			  regular mode or in SPACE routines only the	  ;
+;			  regular drive/user is shown.  Fix is for upload ;
+;			  routing routines.  				  ;
+;			- Repaired message file exit routine.  Command	  ;
+;			  line wasn't being properly built.	  	  ;
+;			- Fixed so that batch mode is not valid with the  ;
+;			  RM option.  (Slipped by during a rewrite of the ;
+;			  command tail parsing routines).		  ;
+;  01/17/88	v1.45	- First public release				  ;
+;  01/14/88     v1.43	- Removed MBYE/BYE3 specific switches in ZMDHDR.  ;
+;			  Added new switch CLOCK.  Removed Extended BDOS  ;
+;			  calls from time and date routines.  Rewrote for ;
+;			  100% compatibility with BYE5/MBYE/BYE3 remote	  ;
+;			  console programs.  RTC switch can be set for 	  ;
+;			  user defined time and date routines at RTCTIM	  ;
+;			  in ZMDHDR.Z80					  ;
+;			- Fixed an error in send routines that allowed 	  ;
+;			  FCB+9-FCB+12 to remain initialized to nulls, if ;
+;			  file requested had less than 3 characters in	  ;
+;			  the filename extent.			  	  ;
+;  12/29/87	v1.41	- Removed and rewrote description routines to be  ;
+;			  universal with ZMD, ZFORS and ZINSTL programs.  ;
+;			  Routine is now requested from ZMDSUBS.REL	  ;
+;  12/23/87	v1.40	- Fixed numerous trivial bugs.			  ;
+;			- Rewrote the help and time/date routines.	  ;
+;			- Added code to determine if BIOS local console	  ;
+;			  output address has been included in the modem	  ;
+;			  overlay and if not calculate it according to	  ;
+;			  standard CP/M specifications and store it for	  ;
+;			  program use.					  ;
+;  12/13/87	v1.39	- Rewrote common subroutines for inclusion in	  ;
+;			  ZMDSUBS.REL subroutines file.			  ;
+;  12/07/87	v1.38	- Modified to support drive/user area requests	  ;
+;			  in SEND BATCH mode.  Drive/user restrictions	  ;
+;			  remain enforced.				  ;
+;  10/02/87	v1.37	- Wrote code for automatic host disk block size   ;
+;			  detection.  All file sizes (and total file	  ;
+;			  sizes) are rounded to reflect this block size.  ;
+;  08/29/87	V1.36	- Rewrote all time routines.  Moved RTC reader	  ;
+;			  code insert address to ZMDHDR.  Moved all date  ;
+;			  and time routines together to be updated all	  ;
+;			  in same pass.  Values stored at end of program  ;
+;			  to free up registers and retain values for any  ;
+;			  subsequent use.				  ;
+;  08/14/87	v1.35	- Removed access restriction routines and rewrote ;
+;			  completely.  Access switches now bit mapped.	  ;
+;  07/24/87	v1.34	- Updated to detect and process batch filename	  ;
+;			  requests automatically.  (AUTO-BATCH).	  ;
+;			- Removed entire SBTCH routines and threw away.	  ;
+;			  Rewrote from scratch to enhance speed,	  ;
+;			  efficiency, readability, and user friendliness. ;
+;			  ZMD is capable of locating multiple filenames	  ;
+;			  on multiple drive user areas with full drive	  ;
+;			  and user area, filename, and time restrictions  ;
+;			  in force in 5 seconds (all other CP/M file	  ;
+;			  transfer programs take 7 minutes or more) to	  ;
+;			  find maximum 255 filenames.			  ;
+;			- Complete rewrites of: command line parsing,	  ;
+;			  exit, abort, credit and descriptions routines.  ;
+;  06/18/87	v1.30	- Removed conditional assembly and modified to	  ;
+;			  support .COM file installation/reconfiguration  ;
+;			  without reassembling.				  ;
+;  06/17/87	v1.29	- Converted entire program to Microsoft MACRO-80  ;
+;			  language.  Programs no longer compatible with	  ;
+;			  8080 microcomputers.				  ;
+;-                                                                       -;
+
+;-------------------------------------------------------------------------;
+; EXTERNAL Declarations:						  |
+;-------------------------------------------------------------------------
+;
+
+	EXTRN	BCDBIN,BLKSIZ,BUFSTR,BYECHK,CATCH,CHARLN,CKDIR,CLEARIT
+	EXTRN	CMDBUF,CNREC,CONIN,CONONL,CONSTAT,CPDEHL,CPM3,CRCCHK
+	EXTRN	CRCVAL,DATDEC,DATMSG,DBUF,DECOUT,DELAY,DIVREC,DSCFLG
+	EXTRN	DSKSAV,DVHLDE,ERXIT,EXIT,FILCNT,FILTM1,FINCRC,FUNCHK
+	EXTRN	GETDSC,GETKIND,GETOFF,GETSPD,GTCURDU,HEXO,ILPRT,ILPRTB
+	EXTRN	ILPRTL,INCRNO,INITFCB,INITFLG,INITIT,INPUT,KDRV,KIND
+	EXTRN	KSHOW,KTIM,LBRARC,LCASE,LOGBUF,LOW41K,MATCH,MCHFTYP
+	EXTRN	MEMFCB,MODE,MOVFCB,MSGFLG,NAMBUF,NOARK,OLDDRV
+	EXTRN	OLDUSR,PGSIZE,PRINTV,PRIVATE,RDARC,RDCOUNT,RECAR1
+	EXTRN	RECARE,RECDR1,RECDRX,RECTBL,RECV,RENFCB,RENTYP,RSDMA
+	EXTRN	RSTLCK,SEND,SENDBEL,SETLCK,SHOCAT,SHONM,SHONM3,SHOSPD
+	EXTRN	SNDABT,SPCDRV,STACK,STDMA,STORTM,TYPE,UCASE,USRSAV
+	EXTRN	WAIT1,WHLCHK,XTIM,NEWNAM,SHONM4,NOROOM,BYEBDOS,BATCH
+	EXTRN	FILIMT,PUPFLG,CHKTPA
+
+;
+;-------------------------------------------------------------------------;
+; PUBLIC Declarations:							  |
+;-------------------------------------------------------------------------;
+;
+
+	PUBLIC	KTABLE,XTABLE,KECTBL,DONE,EOTFLG,ABORT,ABORTX,HELP
+	PUBLIC	KFLG,FCBBUF,HDRADR,RCNT,RECDNO,SAVEHL,RCDCNT,TIME
+
+;
+;-------------------------------------------------------------------------;
+; Program Starts Here							  |
+;-------------------------------------------------------------------------;
+
+
+       .Z80
+	ASEG
+	ORG	100H		; Program starts 
+	JP	BEGIN		; Jump around configuration table
+	INCLUDE	ZMDHDR.Z80	; Include the ZMD header overlay
+       .REQUEST ZMDSUBS		; Include the ZMD subroutines
+
+;
+;
+; Save current CP/M stack address
+;
+BEGIN:	LD	(STACK),SP	; Save current CP/M stack address
+	;LD	SP,STACK	; Initialize new one for ZMD
+	LD	SP,0C000H	; [WBW] For HBIOS Fastpath
+
+;
+; Save current drive and user area for later
+;
+	LD	A,255
+	CALL	RECAR1		; Get current user
+	LD	(OLDUSR),A	; Save current user
+	LD	C,CURDRV	; Current drive
+	CALL	BDOS
+	LD	(OLDDRV),A	; Save current drive
+	ADD	A,'A'		; Make it ASCII
+	LD	(KDRV),A	; And store as default drive for DPB info
+
+;
+; Display signon message and check environmental discrepencies
+;
+	LD	HL,ZMDNAM	; Point to this program's name
+	CALL	PRINTV		; Display it and version number
+
+;
+; If running under CPM3 tell rest of program
+;
+	LD	C,GETVER	; Get CPM version
+	CALL	BDOS
+	CP	48		; Version 3.0?
+	JR	C,$+5		; No, it's 2.n so skip next
+	LD	(CPM3),A	; Else set CPM3 switch on
+
+;
+; Locate modem I/O routines
+;
+	CALL	BYECHK		; BYE extended BDOS valid?
+	CP	5
+	JR	NZ,BEGIN0	; No, check for I/O overlay
+	LD	A,255
+	LD	(BYEBDOS),A	; Enable BYE extended BDOS for modem I/O
+	JR	BEGIN1
+
+BEGIN0:	LD	A,(MDINP+2)	; Check for MDINP address
+	OR	A		; Anything there?
+	JP	Z,NOIO		; No overlay either, bitch then exit
+	LD	(INITFLG),A	; Tell exit routine to 'UNINIT'
+	CALL	MINIT		; Initialize system routine (if included)
+	LD	(MHZ),A		; [WBW] Save system speed reported by HBIOS
+
+;
+; Get bit mapped access flags byte
+;
+BEGIN1:	LD	A,(ACCESS)	; Using access flags byte?
+	OR	A
+	JR	Z,BEGIN3	; No
+
+	CALL	BYECHK		; Check version of BYE
+	CP	5		; BYE5?
+	JR	NZ,BEGIN2	; No
+
+	LD	E,255
+	LD	C,85		; Get access flags byte
+	CALL	BDOS
+	LD	(AFBYTE),A	; Store it
+	JR	BEGIN3
+
+BEGIN2:	LD	DE,ACBOFF	; Offset to access flags byte
+	CALL	GETOFF		; Get address
+	LD	A,(HL)		; HL points to access flags byte
+	LD	(AFBYTE),A	; Store it
+
+;
+; Set WRTLOC, display time on system
+;
+BEGIN3:	CALL	SETLCK		; Set WRTLOC if needed
+	CALL	CATCH		; Gobble up garbage characters from line
+	CALL	TIME		; Get clock values and display time on
+
+;
+;-------------------------------------------------------------------------;
+; P a r s e   ' M o d e '   f r o m   C o m m a n d   T a i l		  |
+;-------------------------------------------------------------------------;
+;
+; Second character in CP/M FCB contains program mode
+;
+	LD	HL,FCB+1
+	LD	A,(HL)		; Get the main option
+	LD	(MODE),A	; Save it for later use
+	CP	'F'		; Free space?
+	JP	Z,SPACE		; Yes
+	CP	'A'		; .ARC/.ARK member extraction?
+	JP	Z,CKSND-3	; Yes
+	CP	'L'		; .LBR member extraction?
+	JP	Z,CKSND-3	; Yes
+	CP	'S'		; Send a file?
+	JP	Z,CKSND		; Yes
+	CP	'R'		; Receive a file?
+	JP	NZ,HELP		; No, show help guide
+
+;
+; Check additional 'R'eceive mode options
+;
+	INC	HL		; Point to next option
+	LD	A,(HL)		; Put in A
+	CP	'P'		; Receive Private?
+	JR	Z,CKRCV2-3	; Yes
+	CP	'W'		; Receive Privileged?  (No descriptions)
+	JR	NZ,CKRCV1	; No
+	LD	A,(PUPOPT)	; Is >0 if allowing privileged uploads
+	LD	(PUPFLG),A	; Sets our flag this way
+	OR	A		; Allowed?
+	JP	Z,HELP		; No, show help guide
+	JR	CKRCV2		; Else get next option
+
+CKRCV1:	CP	'M'		; Receive message?
+	JR	NZ,CKRCV3	; No
+	LD	A,(FCB1+1)	; See if a filename was requested
+	CP	' '
+	JP	Z,HELP		; No, batch mode not allowed
+	LD	A,(MSGFIL)	; Is >0 if allowing message uploads
+	LD	(MSGFLG),A 	; Sets our flag this way
+	OR	A		; Allowed?
+	JP	Z,HELP		; No, show help guide
+	LD	A,'P'		; Else...
+	LD	(PRIVATE),A	; Set the private flag
+
+CKRCV2:	INC	HL		; Point to next option
+	LD	A,(HL)		; Put in A
+
+CKRCV3:	CP	' '		; Anything there?
+	JP	Z,BCHMSG	; No, see if requesting Batch
+	CP	'B'		; Batch mode?
+	JP	Z,BCHMSG	; Yes
+	CP	'C'		; Force Checksum?
+	JP	Z,CHKMSG	; Yes
+	CP	'X'		; Force 128 byte packets?
+	JP	Z,XMDMSG	; Yes
+	CP	'K'		; Force 1k packets?
+	JP	Z,YMDMSG	; Yes
+	JP	HELP		; Invalid option, show help guide
+
+;
+; Check additional 'S'end mode options
+;
+	LD	(LBRARC),A	; Set .LBR/.ARK/.ARC extraction flag
+
+CKSND:	INC	HL		; Next option on command line
+	LD	A,(LBRARC)	; Get the member extraction flag
+	OR	A		; Is is set?
+	JR	Z,CKSND0	; No, we can check for batch
+	LD	A,(HL)		; Get the character
+ 	CP	' '		; Any more options?
+	JP	Z,YMDMSG	; No, and batch not used with extractions
+
+CKSND0:	LD	A,(HL)		; Get the character back
+	CP	' '		; Any more options?
+	JR	Z,BCHMSG	; No, check for batch intention
+	CP	'C'		; Force checksums?
+	JP	Z,CHKMSG	; Show protocol
+	CP	'X'		; Force XMODEM protocol?
+	JP	Z,XMDMSG	; Show protocol
+	CP	'K'		; Force 1k protocol?
+	JP	Z,YMDMSG	; Show protocol
+	LD	A,(LBRARC)	; Get LBR/ARC extraction flag
+	OR	A		; Enabled?
+	JP	NZ,NOMSG	; Yes, ignore Batch
+	LD	A,(HL)		; Get option back
+	CP	'B'		; Forcing batch?
+	JR	NZ,CKSND1	; No
+	LD	A,(PRIVATE)	; Get special download area flag
+	OR	A		; Enabled?
+	JP	NZ,NOMSG	; Yes, don't allow batch
+	JP	BCMSG2		; Go set batch flag and display mode
+
+CKSND1:	CP	'P'		; Send private?
+	JP	NZ,HELP		; No
+	LD	(PRIVATE),A	; Enable private download
+	JR	CKSND		; Loop for more options
+
+;
+; Display the currently selected (or default) protocol.
+;
+BCHMSG:	LD	A,(MODE)	; Get main option again
+	CP	'R'		; Receiving?
+	JR	NZ,BCMSG1	; No
+	LD	A,(FCB1+1)	; Was a file requested?
+	CP	' '
+	JR	Z,BCMSG2	; No, in batch receive
+
+	LD	HL,FCB1+1	; Point to secondary FCB
+	CALL	CKWILD		; Check for wildcards
+	LD	A,(BATCH)	; Batch enabled now?
+	OR	A
+	JR	NZ,BCMSG2	; Yes, report protocol
+	JR	YMDMSG		; Else, single file receive.  Default to 1k
+
+;
+; Scan the command line to see if there was any intention of batch and if
+; so, set program environment to Ymodem 1k batch protocol.
+;
+BCMSG1:	XOR	A		; Clear accumulator
+	LD	(MODE),A	; Gets us back from the SBTCH routines
+	CALL	SBTCH		; Check for batch intention
+	LD	A,'S'
+	LD	(MODE),A	; Fix the transfer mode flag
+	LD	A,(BATCH)	; Get the batch mode flag
+	OR	A		; Was it enabled?
+	JR	Z,YMDMSG	; No, sending single file.  Default to 1k
+
+BCMSG2:	CALL	LOW41K		; 1k packets allowed?
+	JP	C,TOOSLOW	; No, can't use batch
+	LD	A,1
+	LD	(BATCH),A	; Enable batch
+	CALL	ILPRTB
+	DB	'1k Batch',0
+	JR	MSGEND
+
+YMDMSG:	CALL	LOW41K		; 1k packets allowed?
+	JR	C,NOMSG		; No
+	LD	(KFLG),A	; Enable 1k
+	CALL	ILPRTB
+	DB	'1k',0
+	JR	MSGEND
+
+XMDMSG:	XOR	A		; Clear accumulator
+	LD	(KFLG),A	; Disable 1k blocks
+	CALL	ILPRTB
+	DB	'128 byte CRC',0
+	JR	MSGEND
+
+CHKMSG:	XOR	A		; Clear accumulator
+	LD	(CRCFLG),A	; Disable CRC
+	LD	(KFLG),A	; Disable 1k blocks (not allowed in Checksum)
+	CALL	ILPRTB
+	DB	'128 byte Checksum',0
+
+MSGEND:	CALL	ILPRTB
+	DB	' enabled',0
+
+NOMSG:	CALL	CHKTPA		; Calculate TPA limitations
+	CALL	ILPRTB
+	DB	CR,LF,0
+	LD	A,(MODE)	; Get transfer mode
+	CP	'R'		; Receiving?
+	JP	Z,RCVFL		; Yes
+	LD	A,'S'
+	LD	(MODE),A	; Else make mode an 'S' (send mode)
+
+;
+;-------------------------------------------------------------------------;
+; ----> SNDFIL  -  S e n d  f i l e ( s )				  |
+;-------------------------------------------------------------------------;
+;
+; The file specified in the ZMD command line is transferred over the phone
+; to another computer with modem using the "S"end option. The data is sent
+; 1 record at a time with headers, checksums, and retransmission on errors.
+;
+SNDFIL:	LD	A,(BATCH)	; Batch mode requested?
+	OR	A
+	JP	NZ,SBTCH	; Yes, go handle batch mode
+
+;
+; Take care of single file transfer - not in batch
+;
+	CALL	LOGDU		; Log into drive and get DPB info
+	CALL	GTCDUD		; Get current binary drive/user in DUU/DUD
+	CALL	CNREC		; Calculate number of records (unless LBRARC)
+	CALL	CATCH		; Clear the decks
+	CALL	OPNFIL		; Open the file and check restrictions
+
+;
+; Loop back here for the start of each BATCH file sent
+;
+SNDFL1:	LD	E,60		; Number of seconds to wait for initial 'NAK'
+
+SNDFL2:	CALL	FUNCHK		; Check for function keys
+	CALL	SNDABT		; Local abort?
+	LD	B,1
+	CALL	RECV		; Wait 1 second for initial NAK
+	JR	C,SNDFL3	; No character
+	CP	CRC		; CRC request?
+	JR	Z,SNDFL4	; Yes
+	CP	KSND		; 1k request?
+	JR	Z,SNDFL7	; Yes
+	CP	NAK		; NAK for checksum?
+	JR	Z,SNDFL8	; Yes
+	CP	CANCEL		; Cancel?
+	JP	Z,ABORT		; Yes
+
+SNDFL3:	DEC	E		; One less second
+	JP	Z,ABORT		; Abort if 0
+	JR	SNDFL2		; Else wait some more
+
+;
+; Got a 'C', now wait up to 1 second for 'K'
+;
+SNDFL4:	LD	A,(BATCH)	; In batch mode?
+	OR	A
+	JR	NZ,SNDFL7	; Yes, don't wait for 'K'
+	LD	B,1
+	CALL	RECV		; Get character from remote
+	JR	C,SNDFL5	; No character received, so not using 1k
+	AND	7FH		; Strip high bit
+	CP	'{'
+	JR	Z,SNDFL4	; Disregard noisy lines
+	CP	KSND		; Requesting 1k?
+	JR	Z,SNDFL7	; Exit if yes, otherwise set CRC
+
+;
+; Turn on the flag for CRC
+;
+SNDFL5:	LD	A,(KFLG)	; KFLG manually set from 'SK'?
+	OR	A
+	JR	NZ,SNDFL7	; If yes, keep it set
+
+SNDFL6:	XOR	A
+	LD	(KFLG),A	; Defaults to 128 character blocks
+	INC	A
+	LD	(CRCFLG),A	; Insures in CRC mode
+	CALL	ILPRTL
+	DB	CR
+	DB	'CRC',0
+	JP	SNDFL10
+
+;
+; Turn on the flag for 1k blocks and insure in CRC mode
+;
+SNDFL7:	CALL	LOW41K		; 1k packets allowed?
+	JP	C,SNDFL6	; No
+	LD	(KFLG),A	; Set the flag for 1k blocks
+	LD	(CRCFLG),A	; Insures in CRC mode
+	LD	A,(BATCH)	; In Ymodem Batch?
+	OR	A
+	CALL	NZ,OPNFIL	; Yes, then open file/check restrictions
+	CALL	ILPRTL
+	DB	CR
+	DB	'Ymodem',0
+	JR	SNDFL10
+
+;
+; Turn on checksum flag, insure sending 128 character blocks
+;
+SNDFL8:	LD	A,(BATCH)	; In batch mode now?
+	OR	A
+	JR	NZ,SNDFL9	; If yes, exit
+	XOR	A
+	LD	(CRCFLG),A	; Make sure in checksum mode
+	LD	(KFLG),A	; Defaults to 128 character blocks
+	CALL	ILPRTL
+	DB	CR
+	DB	'Checksum',0
+	JR	SNDFL10
+
+SNDFL9:	CALL	ILPRTL
+	DB	CR
+	DB	'-- Checksum not used in batch'
+	DB	CR,LF,0
+	JP	SNDFL2		; If yes, ignore checksum request
+
+SNDFL10:CALL	ILPRTL
+	DB	' requested '
+	DB	CR,LF,0
+	CALL	RDBLOK		; Put up to 16k from file into buffer
+	CALL	SETFLG		; Disable 1k if less than 8 records left
+
+;
+; Loop back here to send the next 1k/128 byte block after a successful trans-
+; mission.  If using 1k blocks, check the ACK ratio.  Check total error count
+; vs. records sent, and switch from 1k to 128 byte transmissions if higher.
+;
+SNDLP:	LD	A,(KFLG)	; Using 1k blocks?
+	OR	A
+	JP	Z,RDRECD	; If not, skip checking 1k error ratio
+	LD	A,(ERRCNT)	; See if we got any errors last record
+	CP	4		; 4 or more?
+	JR	NC,SNDLP1	; Yes, switch to 128 size
+	LD	A,(ACCERR)	; See if up to minimum errors yet
+	CP	3		; Had as many as three errors yet?
+	JR	C,RDRECD	; If not, don't get excited too quickly
+
+	LD	HL,(RECDNO)	; Get current record number increment
+	LD	DE,65528	; Have not successfully sent this 1k yet
+	ADD	HL,DE		; Subtract the current increment, then
+	LD	DE,(ACCERR)	; Number of non-'ACK' errors in HL
+	CALL	DVHLDE		; Get ratio in BC of records/hit
+	CALL	GETSPD		; Get current speed
+	CP	5		; 1200 baud?
+	LD	A,70		; for 1200 bps
+	JR	Z,$+4		; If 1200, skip next line
+	LD	A,42		; for 2400 bps
+	CP	C		; Compare with actual ratio
+	JR	C,RDRECD	; Continue if less hits than allowed
+
+SNDLP1:	XOR	A		; Clear A
+	LD	(KFLG),A	; Reset system to 128 byte blocks
+	CALL	ILPRTL		; Inform locally
+	DB	' - YMODEM 1k blocks disabled'
+	DB	CR,LF,0
+
+;
+; Read a record, refill buffer if empty, update record read
+;
+RDRECD:	LD	A,(RECNBF)	; Any records in the buffer?
+	OR	A
+	JR	Z,RDBLOCK	; No, go get some
+	LD	A,(KFLG)	; Using 1k blocks?
+	OR	A
+	JR	Z,RDREC1	; No, exit
+	LD	A,(RECNBF)	; See how many records in buffer
+	CP	8		; 8 or more records?
+	JR	NC,RDREC2	; Yes, stay in 1k blocks
+	XOR	A
+	LD	(KFLG),A	; Reset the 1k flag for 128 byte
+
+RDREC1:	LD	A,(RECNBF)	; Point to number of records in buffer
+	DEC	A		; Decrement it for 128 character blocks
+	LD	(RECNBF),A	; Store it
+	JP	SNDLP2		; Send it
+
+RDREC2:	SUB	8		; Subtract 8 records (1k worth)
+	LD	(RECNBF),A	; Store it
+	JP	SNDLP2		; Send it
+
+;
+; Buffer is empty - read in another block of 16k
+;
+RDBLOCK:LD	A,(EOFLG)	; Get 'EOF' flag
+	CP	1		; Is it set?
+	SCF			; To show 'EOF'
+	JP	Z,SNDLP2	; Got 'EOF'
+	CALL	RDBLOK		; Read up to 16k into DBUF
+	JR	RDRECD		; Pass record to caller
+
+;
+; Read up to 16k from the disk file into the buffer, ready to send
+;
+RDBLOK:	LD	C,0		; Set number of records in block to 0
+	LD	DE,DBUF		; Point to disk buffer as destination
+
+RDBLOK1:PUSH	BC
+	PUSH	DE
+	LD	A,(LBRARC)	; Get ARK/ARC/LBR extraction flag
+	OR	A		; Enabled?
+	JR	Z,RDBLOK2	; No, skip next
+	LD	A,(FCB+9)	; Get filetype byte 1
+	AND	7FH		; Strip high bit
+	CP	'A'		; Is it an ARK/ARC extraction?
+	CALL	Z,RDARC		; Yes, (flags saved at RDARC)
+	JR	Z,RDBLOK3	; Same flags
+
+RDBLOK2:CALL	STDMA		; Set DMA address
+	LD	C,READ
+	LD	DE,FCB
+	CALL	BDOS
+
+RDBLOK3:POP	DE
+	POP	BC
+	OR	A		; Read ok?
+	JR	NZ,RDBLOK5	; If not, error or end of file
+	LD	HL,128		; Add length of one record
+	ADD	HL,DE		; To next buffer
+	EX	DE,HL		; Buffer to 'DE'
+	INC	C		; More records?
+	LD	A,(BUFSIZ)
+	ADD	A,A
+	ADD	A,A
+	ADD	A,A
+	CP	C
+	JR	NZ,RDBLOK1	; Read more
+
+;
+; Buffer is full or got EOF
+;
+RDBLOK4:LD	(RECNBF),A	; Store record count
+	LD	HL,DBUF		; Get the beginning buffer address
+	LD	(RECPTR),HL	; Save for next record
+	JP	RSDMA		; Reset DMA address to default
+
+RDBLOK5:DEC	A		; 'EOF'?
+	JR	NZ,READERR	; Got 'EOF'
+
+RDBLOK6:INC	A
+	LD	(EOFLG),A	; Set EOF flag
+	LD	A,C
+	JR	RDBLOK4
+
+READERR:CALL	ILPRTB
+	DB	CR,LF
+	DB	'-- Read Error: ',0
+	CALL	SHONM3
+	JP	EXIT
+
+;
+; Now send the next record
+;
+SNDLP2:	JP	C,SNDEOF	; Send 'EOF' if done
+	CALL	INCRNO		; Bump record number if sent ok
+	XOR	A		; Initialize error count to zero
+	LD	(ERRCNT),A
+
+SNDRPT:	CALL	CKABORT		; Check for remote abort
+	CALL	SNDABT		; Check for local abort
+	CALL	SNDHDR		; Send a header
+	CALL	SNDREC		; Send data record
+	CALL	SNDCHK		; Send CRC or checksum value
+	CALL	GTACK		; Get the 'ACK'
+	CP	ACK		; ACK?
+	JR	NZ,SNDRPT	; No, repeat transmission
+	LD	DE,128		; For 128 character blocks
+	LD	A,(KFLG)	; See if last block sent was 1k
+	OR	A
+	JR	Z,$+5		; No, skip next line
+	LD	DE,1024		; Else set for 1024 character blocks
+	LD	HL,(RECPTR)	; Get the buffer pointer
+	ADD	HL,DE		; Increment for the record just sent
+	LD	(RECPTR),HL	; New buffer address for next block
+	LD	A,(LBRARC)	; Get LBR/ARC/ARK extraction flag
+	OR	A		; Enabled?
+	JP	Z,SNDLP		; No
+	LD	A,(KFLG)	; 1k enabled?
+	LD	DE,65535	; 128 byte
+	OR	A
+	JR	Z,$+5
+	LD	DE,65528	; 1k
+	LD	HL,(RCNT)	; Alter the records-sent count
+	ADD	HL,DE
+	LD	(RCNT),HL	; One less transmission to go
+	OR	A		; 'K' flag set?
+	CALL	NZ,SETFLG	; Yes, see if enough records for 1k packet
+	LD	HL,(RCNT)	; See if anything was actually sent
+	LD	A,H
+	OR	L		; L and H both zero now?
+	JP	NZ,SNDLP	; No, continue
+
+;
+; End of Transmission (Send mode)
+;
+SNDEOF:	LD	A,(LOGLDS)	; Counting transfers?
+	OR	A
+	JR	Z,SNDEOF1	; No
+	LD	A,(PRIVATE)	; Is this a private transfer?
+	OR	A
+	JR	NZ,SNDEOF1	; Yes, don't increment download count
+	LD	IY,(DNLDS)	; Get Downloads counter address
+	INC	(IY)		; One more download since log in
+
+SNDEOF1:CALL	LOGCALL		; Log transfer if supposed to
+	CALL	EOFSND
+	CALL	ADDTON		; Update BYE's time on byte if supposed to
+	CALL	ALLDON
+	JP	DONE
+
+;
+; See if enough records left to use 1k protocol
+;
+SETFLG:	LD	HL,(RCNT)
+	LD	A,H		; Anything in the 'H' register?
+	OR	A
+	RET	NZ		; Yes, enough records for another 1k packet
+	LD	A,L		; Get number of records in 'L' register
+	CP	8		; At least 8 yet?
+	RET	NC		; Yes, keep going
+	XOR	A		; Reset the 'K' flag
+	LD	(KFLG),A
+	RET
+
+;
+; HL points to filename FCB - now search for it wildcards.  If any, enable
+; BATCH flag and pad with '?' as needed
+; 
+CKWILD:	LD	B,8		; Check first 8 bytes
+	CALL	CKWLD1
+	LD	B,3		; And check filetype
+
+CKWLD1:	LD	A,(HL)		; Get the character
+	CP	'*'		; '*'?
+	JR	NZ,CKWLD2	; No, check for little wildcards
+	LD	(BATCH),A	; Enable AUTO-BATCH
+	LD	A,'?'		; Fill rest with '?' character
+	JP	INITIT		; Initialize
+
+CKWLD2:	CP	'?'		; '?'?
+	JR	NZ,$+5		; No, don't enable AUTO-BATCH
+	LD	(BATCH),A	; Enable AUTO-BATCH
+	INC	HL		; Point to next character
+	DJNZ	CKWLD1		; Loop until B=0
+	RET
+
+;
+; Get the current drive/user
+;
+GTCDUD:	LD	A,0FFH		; Stuffed into E at RECAR1
+	CALL	RECAR1		; Get current user area
+	LD	(DUU),A		; Store it
+	LD	C,CURDRV	; Get current drive
+	CALL	BDOS
+	LD	(DUD),A 	; Store it
+	RET
+
+;
+;-------------------------------------------------------------------------;
+; S e n d   B a t c h							  |
+;-------------------------------------------------------------------------;
+;
+; Copy original command line buffer to internal work buffer
+;
+SBTCH:	LD	A,(FSTFLG)	; If first time through
+	OR	A
+	JP	NZ,SBTCH1	; If not first time, exit
+
+	LD	HL,TBUF		; Source
+	LD	DE,CMDBUF	; Destination
+	LD	BC,128		; Count
+	LDIR			; Move
+
+;
+; Locate end of command line and place a ' ' as a delimiter
+;
+	LD	HL,CMDBUF	; Point to number of bytes in line
+	LD	B,0		; Zero high order
+	LD	C,(HL)		; Number of characters in command line
+	INC	HL		; Point to start of line
+	ADD	HL,BC		; Plus number of characters equals end of line
+	LD	(HL),' '	; Place the delimiter at end of line
+	INC	BC		; Increment character count for delimiter
+
+;
+; Count ambiguous/unambiguous filenames in command line
+;
+	XOR	A		; Clear accumulator
+	LD	(FILCNT),A	; Reset the file count
+	LD	(NAMECT),A	; Reset name count (used in parsing routines)
+	LD	HL,CMDBUF+2	; Point to command tail option
+	LD	A,' '		; Looking for space/non-space characters
+	CPIR			; On command option, look for next space
+	JP	PO,SCANDN	; If at end of line, done
+	CPI			; Find first character of first name
+	JP	PO,SCANDN	; If at end of line, done
+	JR	Z,$-5		; Eat extra spaces
+	DEC	HL		; CPI is one ahead of us, so back up
+	LD	(BGNMS),HL	; Store address of beginning name
+	INC	HL		; And it was supposed to be, so restore it
+
+SCANLP:	CPIR			; Move to end of current name (next space)
+	EX	AF,AF'		; Save A (match char) & current flags (result)
+	LD	A,(NAMECT)	; Get current name count
+	INC	A		; Bump it one
+	LD	(NAMECT),A	; Put it back
+	CP	255		; 255 names?
+	JR	Z,SCANDN	; Yes, that's all we allow
+	EX	AF,AF'		; Restore A and old flags
+	JP	PO,SCANDN	; If at end of line, done
+	CPI			; Find next non-space character
+	JP	PO,SCANDN	; If at end of line, done
+	JR	Z,$-5		; Was a space, keep looking
+	JR	SCANLP		; Found next non-space, find next name
+
+SCANDN:	LD	A,(NAMECT)	; Get the ambiguous filename count
+	OR	A		; Were there any?
+	JP	Z,HELP		; No, they must need help
+	CP	1		; Just 1 name?
+	JR	Z,$+5		; If only 1, don't force AUTO-BATCH here
+	LD	(BATCH),A	; Else set batch mode flag (for AUTO-BATCH)
+	LD	HL,NAMBUF	; Get start of batch filename buffer
+	LD	(NBSAVE),HL	; Save as address of the first name
+
+;
+; Place a name in work buffer 
+;
+TNLP:	LD	B,0		; Initialize character count
+	LD	HL,(BGNMS)	; Source is address of first name
+	LD	DE,FCBBUF+2	; Destination
+
+TNLP1:	LD	A,(HL)		; Get a byte in A
+	CP	' '		; A space?
+	JR	Z,TNLP2		; Yes, done with name
+	LD	(DE),A		; Move character to FCB buffer
+	INC	HL		; Increment pointers
+	INC	DE
+	INC	B		; Bump count of characters in name
+	JR	TNLP1		; Loop until space
+
+TNLP2:	INC	HL		; Point to next character
+	LD	A,(HL)		; Put it in A
+	CP	' '		; Is it a ' '?
+	JR	Z,TNLP2		; Yes, eat extra spaces
+	LD	(BGNMS),HL	; Store address of next name
+	LD	HL,FCBBUF+1	; # characters in filename
+	LD	(HL),B		; Before name
+
+;
+; Initialize FCB for search routines
+;
+	LD	A,0		; String of all 0's for intitialization
+	LD	HL,FCB		; Destination
+	LD	B,16		; 16 bytes
+	CALL	INITIT		; Initialize FCB
+
+	LD	HL,FCBBUF+1	; Point to # of bytes in command line
+	LD	D,0		; Zero high order
+	LD	E,(HL)		; Load DE pair with # bytes
+	INC	HL		; Increment to start of command line
+	ADD	HL,DE		; Point to byte after last character
+	LD	(HL),CR		; Store CR for delimiter
+
+;
+; Check for valid drive/user combination and move filename to FCB
+;
+	LD	HL,FCBBUF+2	; Start of filename
+	LD	DE,DUSAVE	; Isolate possible 'duu:'
+	LD	BC,4		; Up to 4 bytes
+	LDIR			; For logging into specified d/u
+
+	LD	HL,FCBBUF+1	; Point to amount of characters in filename
+	LD	B,(HL)		; In B for d/u parsing routines
+	INC	B		; Increment character count for CR terminator
+	INC	HL		; And point to start filename again
+	LD	(SAVEHL),HL	; Initialize 'current' address pointer
+
+	LD	A,(MODE)	; Get transfer mode
+	PUSH	AF		; Save it while checking valid d/u
+	XOR	A 		; Zero accumulator for new mode
+	LD	(MODE),A	; Save it (keeps us out of trouble in LGDU1:)
+	CALL	LGDU1		; Check valid d/u and copy filename to FCB
+	CALL	GTCDUD		; Get current binary drive user in DUU/DUD
+	POP	AF		; Get possible previously determined mode
+	LD	(MODE),A	; Restore
+	LD	HL,FCB+1	; Filename FCB
+	CALL	CKWILD		; Check it for wildcards, enable Batch if any
+
+	LD	A,(MODE)	; Get file transfer mode
+	OR	A		; 0=checking batch intention
+	RET	Z		; All done if so
+
+;
+; Now search directory and store first matching filename
+;
+	CALL	RSDMA		; Reset to default memory address
+	LD	A,'?'
+ 	LD	(FCBEXT),A	; Fetch all extents of matching filenames
+	XOR	A
+	LD	(FCBRNO),A	; Clear FCB record number byte
+	LD	DE,FCB		; Use default FCB for search
+	LD	C,SRCHF		; Search for first occurence
+	CALL	BDOS
+	CP	0FFH		; Anything found?
+	JP	Z,NEXTNM	; No, go get next ambiguous filename
+	LD	HL,(LIST)	; Initialize list pointer parameters
+	LD	(LISTPOS),HL	; Save current position of list
+
+;
+; Calculate offset to matched directory entry
+;
+FNDENT:	AND	3		; Zero based, two bit index
+	ADD	A,A		; *2
+	ADD	A,A		; *4
+	ADD	A,A		; *8
+	ADD	A,A		; *16
+	ADD	A,A		; *32 to make position index
+	LD	C,A		; Put in BC
+	XOR	B		; Clear MSB
+	LD	HL,TBUF		; Address of default command line buffer
+	ADD	HL,BC		; And offset to matched directory entry
+	LD	A,(DUD)		; Get drive number
+	LD	(HL),A		; Put in front of name in name buffer
+
+;
+; Check the match for download restrictions
+;
+	PUSH	HL		; Save address of matched entry
+	PUSH	HL		; Save another copy
+	POP	IX		; As address of filename to check
+	CALL	RESTRCT		; Check for download restrictions
+	POP	HL		; Get our matched entry address back
+	JP	NZ,DONEXT	; NZ=entry not allowed
+
+;
+; Trap zero length file before adding to list
+;
+	PUSH	HL		; Save matched entry address
+	POP	IY		; Get a copy in IY
+	LD	A,(IY+12)	; Get the extent byte
+	OR	A		; Is this the first extent?  (#0)
+	JR	NZ,COPYNM	; No, can't be 0 length (at least 16k already)
+	LD	A,(IY+15)	; Get it
+	OR	A		; Any records?
+	JP	Z,DONEXT	; No, zero length, but in batch so no messages
+
+;
+; Copy the name to list
+;
+COPYNM:	LD	A,(FSTFLG)	; Displayed the following message yet?
+	OR	A
+	JR	NZ,NAM2LST	; Yes, they alreay know to wait
+	PUSH	HL		; Save matched entry address
+	CALL	ILPRTB
+	DB	CR,LF
+	DB	'Locating selection(s)...',0
+	LD	A,1
+	LD	(FSTFLG),A	; Set so message don't show again
+	POP	HL		; Restore matched entry address
+
+NAM2LST:LD	DE,(LISTPOS)	; Pointer to current load point in list
+	LD	B,12		; Move drive number and name to list
+
+NM2LST1:LD	A,(HL)		; HL contains address of entry
+	AND	7FH		; All done with high bits
+	LD	(DE),A		; Move it to list
+	INC	HL		; Increment pointer
+	INC	DE
+	DJNZ	NM2LST1		; Loop until B equals 0
+	LD	A,(HL)		; Get the EX byte
+	LD	(DE),A		; Put it in list
+	INC	HL		; Increment to RC byte
+	INC	HL
+	INC	HL
+	INC	DE
+	LD	A,(HL)		; Get it
+	LD	(DE),A		; Put it in list
+	INC	DE		; Point to start of next name in list
+	LD	A,(DUU)
+	LD	(DE),A
+	INC	DE
+	INC	DE
+	LD	(LISTPOS),DE	; Store address of next load point
+
+;
+; Search for next occurance of specified filename
+;
+DONEXT:	LD	C,SRCHN		; Search next function code
+	LD	DE,FCB		; Filename specification field
+	CALL	BDOS
+	CP	0FFH		; See if all through directory yet
+	JP	NZ,FNDENT	; If not, calculate code offset and add 2 list
+
+;
+; Trap conditions of 0 files found
+;
+ 	LD	HL,(LISTPOS)	; Get the end of list address
+	LD	DE,(LIST) 	; Get beginning of list address
+	CALL	CPDEHL		; Are they the same?
+	JP	Z,NEXTNM	; Yes, none of the files found were allowed
+
+;
+; Prepare associated sort parameters
+;
+	LD	HL,(LIST)	; Adjust I and J pointers for initial sort
+	LD	(LISTI),HL	; Beginning of list
+	LD	DE,ITEMSZ	; Get offset to next name
+	ADD	HL,DE		; Add the offset
+	LD	(LISTJ),HL	; Into J variable
+
+;
+; Don't need a sort if only 1 file extent found
+;
+	LD	HL,(LIST)	; Was there more than one entry found?
+	LD	BC,ITEMSZ
+	ADD	HL,BC
+	EX	DE,HL
+	LD	HL,(LISTPOS)	; Next load name of list is start of buffer
+	LD	(LISTEND),HL	; Set list end marker
+	CALL	CPDEHL		; Compare DE address with HL address
+	JP	Z,MINNN		; If same, no sort needed
+
+;
+; Sort the list by disk, filename, and EX byte.
+;
+SORT:	LD	HL,(LISTI)	; Compare entries I and J
+	LD	DE,(LISTJ)
+	LD	B,13		; Number of bytes to compare
+	CALL	MATCH		;
+	JR	NC,SORT1	; Swap entries if J is larger than I
+	LD	HL,(LISTI)	; Get our original pointers back
+	LD	DE,(LISTJ)
+	LD	B,ITEMSZ	; Counter for number of bytes to swap
+
+SWAP:	LD	C,(HL)		; Get character from string 1
+	LD	A,(DE)		; And one from other string
+	LD	(HL),A		; Second into first
+	LD	A,C		; First into second
+	LD	(DE),A
+	INC	HL		; Bump swap pointers
+	INC	DE
+	DJNZ	SWAP		; Loop until B=0
+
+SORT1:	LD	HL,(LISTJ)	; Increment J pointer
+	LD	DE,ITEMSZ	; By the amount of items per entry
+	ADD	HL,DE
+	LD	(LISTJ),HL
+	LD	DE,(LISTEND)	; Get the address of the end of list
+	CALL	CPDEHL		; DE and HL the same?
+	JR	NZ,SORT		; No, so more J loop
+
+	LD	HL,(LISTI)	; Get the I pointer
+	LD	DE,ITEMSZ	; Get offset to next name
+	ADD	HL,DE		; Add
+	LD	(LISTI),HL 
+	ADD	HL,DE		; Add offset to next name
+	LD	(LISTJ),HL	; Start J loop over again
+	LD	DE,(LISTEND)	; Get the address of the end of list
+	CALL	CPDEHL		; DE and HL the same?
+	JR	NZ,SORT		; No, must be more I loop to go
+
+;
+; List minimization loop
+;
+	LD	HL,(LIST)	; Point to the beginning of our list
+	LD	(LISTI),HL	; Initialize current name pointer
+	LD	DE,ITEMSZ	; Get offset to next name
+	ADD	HL,DE		; Add it to current name address
+	LD	(LISTJ),HL	; Store as next name
+
+MINCL:	LD	DE,(LISTEND)	; End of list address
+	LD	HL,(LISTJ)	; Next name address
+	CALL	CPDEHL		; Are they the same?
+	JR	Z,MINNN		; Yes, go set kbytes on last name (End of list)
+
+	LD	DE,(LISTJ)	; Next name address
+	LD	HL,(LISTI)	; Current name address
+	LD	B,12		; # of bytes to check
+	CALL	MATCH		; Are they the same?
+	JR	NZ,MINNN	; No, go set kbytes on last extent (Next name)
+
+;
+; Increment next name pointer and get parameter bytes
+;
+	LD	HL,(LISTJ)	; Fetch EX and RC from next name
+	LD	DE,ITEMSZ	; Offset to next name
+	ADD	HL,DE		; Add it
+	LD	(LISTJ),HL	; Save bumped J value
+
+	DEC	HL		; Point to parameter bytes of previous name
+	DEC	HL
+	DEC	HL
+	LD	B,(HL)		; Save the RC byte
+	DEC	HL
+	LD	C,(HL)		; Save the EX number
+
+	LD	HL,(LISTI)	; Point at current name
+	ADD	HL,DE		; Point at current name info bytes
+	DEC	HL
+	DEC	HL
+	DEC	HL
+	LD	D,(HL)		; Fetch that RC byte
+	DEC	HL
+	LD	E,(HL)		; Fetch current EX byte
+
+	LD	A,E		; Check if new EXtent is bigger than last
+	CP	C
+	JR	NC,MINCL	; Skip using size of a less or equal EX
+	LD	(HL),C		; Put new sizes into the location
+	INC	HL
+	LD	(HL),B		; New RC byte too
+	JR	MINCL		; Continue handling as current file
+
+;
+; File size computation loop
+;
+MINNN:	LD	HL,(LISTI)	; Point to name to convert records
+	LD	DE,ITEMSZ-4	; Index to largest extent number
+	ADD	HL,DE		; Add the offset
+	LD	B,(HL)		; Get the extent number for a loop counter
+	INC	HL		; Bump to the last extent RC byte
+	PUSH	HL		; Save pointer to list parameters
+	LD	HL,0		; Zero extent total record count
+	LD	DE,128		; Set size of one extent
+
+;
+; Calculate total number of 128 byte records
+;
+MINEL:	LD	A,B		; Get the number of extents left
+	OR	A		; Any more?
+	JR	Z,MINELD	; No, done with 128 multiply
+	ADD	HL,DE		; Else add another 128 to HL
+	DEC	B		; 1 less extent left
+	JR	MINEL		; Loop until no more
+
+MINELD:	EX	DE,HL		; Total extent size to DE
+	POP	HL		; Get back RC byte pointer
+	LD	B,0
+	LD	C,(HL)		; Get final extent size to BC
+	EX	DE,HL		; Add remainder to total records in DE
+	ADD	HL,BC
+	LD	B,H		; Move total record count to BC
+	LD	C,L
+	LD	HL,(TOTREC)	; Get current total records
+	ADD	HL,BC		; Add records of this file
+	LD	(TOTREC),HL	; And save it for later display
+	EX	DE,HL		; Get table entry pointer back in HL
+	CALL	ROUNDK		; Get disk space needed for file DE
+	LD	(HL),D		; Put kilobyte count in table
+	DEC	HL
+	LD	(HL),E
+	LD	A,(FILCNT)	; Bump the file count
+	CP	255		; 255 file names yet?
+	JR	Z,MINN0		; Yes, that's all we allow
+	INC	A		; Else bump it one
+	LD	(FILCNT),A	; Store it
+	LD	HL,(FILEK)	; Get current total file kilobytes
+	ADD	HL,DE		; Add in the current file's kilobyte size
+	LD	(FILEK),HL	; And store it
+	LD	HL,(LISTI)	; Source
+	LD	DE,(NBSAVE)	; Destination
+	LD	BC,16		; 16 byte count
+	LDIR			; Move filename to names buffer
+	LD	(NBSAVE),DE	; And store address to put next filename
+
+MINN0:	LD	DE,(LISTJ)	; Done with all names
+	LD	HL,(LISTEND)	; Check if at end of list
+	CALL	CPDEHL
+	JR	Z,NEXTNM	; Get next ambiguous filename, if finished
+	LD	HL,(LISTI)	; Point to LISTI value
+	LD	DE,ITEMSZ	; Point to next position
+	ADD	HL,DE
+	LD	(LISTI),HL	; Set new working LISTI
+	LD	DE,(LISTI)
+	LD	HL,(LISTJ)	; Next name position to copy from
+	CALL	CPDEHL		; See if pointers only one apart
+	JR	Z,MINN1		; If so, don't cover up one name
+	LD	BC,ITEMSZ
+	LDIR			; Move that name up there
+	JR	MINN2
+
+MINN1:	LD	DE,ITEMSZ	; No open slot, so just move LISTJ up one slot
+	ADD	HL,DE
+
+MINN2:	LD	(LISTJ),HL
+	JP	MINCL		; Go to MIN NAME start of loop
+
+NEXTNM:	LD	A,(OLDDRV)
+	CALL	RECDRX		; Restore default drive
+	LD	A,(OLDUSR)
+	CALL	RECAR1		; Restore default user
+	LD	A,(NAMECT)	; Get number of names found
+	DEC	A		; Decrement it
+	LD	(NAMECT),A	; Put it back
+	JP	NZ,TNLP		; Loop until zero
+	LD	(FSTFLG),A	; Done with first time flag, reinitialize it
+	LD	HL,NAMBUF	; Save start of buffer
+	LD	(NBSAVE),HL
+
+	LD	A,(FILCNT)	; Get total files
+	LD	(SHOCNT),A
+	OR	A		; Were there any?
+	JR	NZ,NXTNM1	; Yes
+	CALL	ILPRT
+	DB	CR,LF,0
+	JP	NOFILE		; No
+
+NXTNM1:	CALL	ILPRTB
+	DB	CR
+	DB	'Number of files found    > ',0
+	LD	A,(SHOCNT)
+	LD	L,A
+	LD	H,0
+	CALL	DECOUT		; Show number of files found
+	LD	HL,(TOTREC)
+	LD	(RCNT),HL
+	LD	A,1
+	LD	(SBSHOW),A	; Get's us back early
+	CALL	OPNOK2		; Go show total file stats
+	XOR	A
+	LD	(SBSHOW),A
+
+SBTCH1:	LD	A,(FILCNT)	; Get the count of files to send
+	OR	A		; Is there any?
+	JP	Z,SNDFN		; No
+	LD	A,(FSTFLG)	; Past first batch file yet?
+	LD	(CONONL),A	; Toggle to local display only
+	OR	A
+	CALL	NZ,CLEARIT	; Else show local
+	CALL	ILPRT
+	DB	CR,LF,LF
+	DB	'Total transfer time      > ',0
+	CALL	GETSPD		; Get speed indicator
+	CP	1		; Are we at 300 bps?
+	LD	HL,XTABLE	; This gives us 128-byte transfer time
+	JR	Z,$+5		; Yes, skip next line, show 128-byte time
+	LD	HL,KTABLE	; This gives us 1k transfer time
+	LD	D,0
+	LD	E,A		; Set up for table access
+	ADD	HL,DE		; Index to proper factor
+	ADD	HL,DE
+	LD	E,(HL)
+	INC	HL
+	LD	D,(HL)
+	LD	HL,(TOTREC)	; Get number of records
+	CALL	FILTM1
+	CALL	XFRTIM		; Check for time restrictions
+	CALL	ILPRT
+	DB	CR,LF,0
+	LD	A,(FSTFLG)
+	OR	A
+	CALL	Z,DLRDY
+
+;
+; Send the batch filename to remote
+;
+SNDFN:	CALL	CKABORT		; Check for remote abort
+	LD	HL,FCB
+	CALL	INITFCB		; Initialize FCB
+	XOR	A
+	LD	(ERRCNT),A	; Reset the error count
+	INC	A
+	LD	(CONONL),A	; Set to local display only
+	LD	A,(FILCNT)	; Get file count
+	OR	A
+	JP	Z,CCHECK	; No more files, exit
+	LD	A,1
+	LD	(CRCFLG),A	; Make sure in CRC mode
+
+	LD	A,0FFH
+	CALL	RECAR1		; Get the current user area
+	LD	B,A		; Save current user area
+	PUSH	BC		; On stack
+	LD	HL,(NBSAVE)	; Get start of filename
+	LD	BC,14		; Offset to user area
+	ADD	HL,BC		; Point to binary user area
+	LD	A,(HL)		; Get it
+	POP	BC		; Get current user area back
+	CP	B		; Same?
+	CALL	NZ,RECAR1	; No, but it is now
+	CALL	SPCDRV		; Get disk parameter block info
+
+	LD	HL,(NBSAVE)	; Get address of next batch filename
+	INC	(HL)		; Escape default situation in FCB drive byte
+	LD	DE,FCB		; Where to put it
+	LD	BC,12		; 12 bytes for drive and filename
+	LDIR			; Move
+	LD	BC,4		; Next filename is 4 bytes away
+	ADD	HL,BC		; Add offset
+	LD	(NBSAVE),HL	; Store address for next filename
+	LD	HL,(RECPTR)	; Where to load the 0 block
+	EX	DE,HL		; Put into DE
+	LD	HL,FCB+1	; Get the start of the filename in HL
+	LD	B,8
+
+SZMD1:	LD	A,(HL)
+	AND	7FH		; Strip any high bit set
+	OR	A
+	JR	Z,SZMD6		; Null pathname
+	CP	' '
+	JR	Z,SZMD3
+
+SZMD2:	CALL	LCASE		; Put file name in lower case for UNIX
+	LD	(DE),A
+	INC	HL
+	INC	DE
+	DJNZ	SZMD1
+	JR	SZMD4
+
+SZMD3:	INC	HL		; Skip over spaces if short name
+	DJNZ	SZMD3
+
+SZMD4:	LD	A,(HL)
+	CP	' '
+	JR	Z,SZMD6		; Missing file type field
+	LD	A,'.'		; Send name-type seperator
+	LD	(DE),A
+	INC	DE
+	LD	B,3
+
+SZMD5:	LD	A,(HL)
+	AND	7FH		; Strip any high bit set
+	CP	' '
+	JR	Z,SZMD6
+	CALL	LCASE		; Put in lower case for UNIX
+	LD	(DE),A
+	INC	HL
+	INC	DE
+	DJNZ	SZMD5
+
+SZMD6:	EX	DE,HL		; Get the address back to HL
+	LD	(HL),0
+	INC	HL
+	LD	(HDRADR),HL
+	CALL	CNREC		; Get number of records in this file
+	CALL	CHARLN		; Include the ASCII character length
+
+SZMD7:	LD	(HL),0		; Fill rest with zeroes
+	INC	L		; Pad to end of block with binary 0
+	JR	NZ,SZMD7
+	LD	HL,(RCNT)
+	LD	(BUFSTR),HL	; Store the file length at end of block
+	XOR	A		; Make sure the header starts with Zero
+	LD	(RCDCNT),A
+
+;
+; Wait for 'C' from remote to indicate he is ready
+;
+CCHECK:	LD	E,60		; Wait up to 60 seconds to abort
+
+CCHECK1:CALL	CKABORT		; Manually requesting an abort?
+	LD	B,3
+	CALL	RECV		; Wait up to 5 seconds for a character
+	JR	C,CCHECK2	; No character, decrement counter
+	CP	CANCEL		; If they sent a CTL-X, abort now
+	CALL	Z,CKCAN
+	CP	CRC		; If they sent a CRC, go to work
+	JR	Z,SZMD8
+	JR	CCHECK		; None of these, wait some more
+
+CCHECK2:DEC	E		; One less to go
+	JR	NZ,CCHECK1
+	JP	ACKMSG		; Abort if timed out and no character
+
+SZMD8:	LD	A,(FILCNT)	; Any files to send?
+	OR	A
+	JR	NZ,SZMD9	; Yes, continue
+	XOR	A		; Reset the pointers
+	LD	(ACKCHK),A	; Reset flag for normal GTACK use
+	LD	(RCDCNT),A	; Reset the record counter
+	LD	(KFLG),A	; Show in 128 size now
+	LD	HL,(RECPTR)
+	LD	(HL),A		; Reset record pointer
+	LD	A,SOH		; Send a start of header
+	CALL	SEND
+	CALL	SNDHNM		; This header is a zero count
+	CALL	SNDREC		; Send an empty record
+	CALL	SNDCRC		; Send the CRC for the empty record
+	LD	A,(GOTONE)	; Did we actually send at least one?
+	OR	A
+	JP	Z,ABORT		; If not, don't act like we did
+	CALL	EOFSND		; No more files so send EOT to finish
+	CALL	XFRDON
+	JP	EXIT
+
+;
+; Now send the 128 byte filename record
+;
+SZMD9:	DEC	A		; Decrement file count for this one
+	LD	(FILCNT),A	; Store it
+
+SZMD10:	XOR	A
+	LD	(KFLG),A
+	LD	A,SOH		; Send SOH
+	LD	(ACKCHK),A
+	CALL	SEND		; Send SOH character to the modem
+	CALL	SNDHNM		; Send header (record number, inverse)
+	CALL	SNDREC		; Send a 128 byte record
+	CALL	SNDCRC		; Send a two byte CRC
+	CALL	GTACK
+	CP	ACK
+	JR	NZ,SZMD10	; Not an ACK, send it again
+	XOR	A
+	LD	(ACKCHK),A	; Reset flag for normal GTACK use
+	CALL	LOW41K		; Check speed being used
+	JR	C,$+7		; Don't allow 1k blocks if less than MINKSPD
+	LD	A,1
+	LD	(KFLG),A	; Change to 1k for normal file xfer
+	XOR	A		; Clear A
+	LD	(ERRCNT),A	; Start fresh for the main file
+	JP	SNDFL1
+
+;
+; Send EOT.  Get Acknowledgement from remote.  Try up to 4 times then abort.
+;
+EOFSND:	LD	A,EOT		; Send an 'EOT'
+	CALL	SEND
+	LD	A,(CHKEOT)	; Did not get an ACK, try again
+	INC	A
+	LD	(CHKEOT),A	; Limit number of retries to 4
+	CP	4		;    (to prevent possible 'lock-up')
+	RET	NC		; Quit if already sent 4 or more
+	CALL	GTACK		; Get the ACK
+	CP	ACK
+	JR	NZ,EOFSND	; Resend if no ACK
+	RET
+
+ALLDON:	LD	A,(BATCH)	; In batch mode?
+	OR	A
+	RET	NZ		; If yes, ignore message
+	CALL	ILPRT		; (Want to keep this a separate message)
+	DB	CR,LF,0
+
+XFRDON:	CALL	ILPRTL
+	DB	CR,LF
+	DB	'-- Transfer completed'
+	DB	CR,LF,0
+	RET
+
+;
+;-------------------------------------------------------------------------;
+; ---->  RCVFL  -  R e c e i v e   f i l e ( s )			  |
+;-------------------------------------------------------------------------;
+;
+; The filename specified in ZMD command line is transferred over the phone
+; from the user's computer to the RCPM system via modem using the 'R'
+; (receive) option.  The data is sent one record at a time, with headers
+; and checksums and retransmissions on errors.  'RM' option is disallowed
+; at time of command tail parsing at beginning of program (MSGFLG cannot
+; be set unless MSGFIL is enabled).
+;
+RCVFL:	LD	A,(MSGFLG)	; Get message file upload flag
+	OR	A		; Enabled?
+	JR	Z,RCVF2		; No, skip the rest
+	CALL	WHLCHK		; Yes, WHEEL byte set?
+	JR	NZ,RCVF1	; Yes, turn it off and skip access check
+
+	LD	A,(ACCESS)	; Checking access restrictions?
+	OR	A
+	JR	Z,RCVF3		; No
+	LD	A,(AFBYTE)	; Get access flags byte
+	AND	8		; Test for write access (bit 3)
+	JP	Z,NOACC		; Not allowed to write messages
+
+RCVF1:	XOR	A		; Clear A
+	LD	HL,(WHEEL)	; Point to WHEEL byte
+	LD	(HL),A		; And stuff a 0 to turn WHEEL off
+	JR	RCVF3		; WHEEL 'was' on, so skip access check
+
+;
+; Check additional receive flags
+;
+RCVF2:	LD	A,(ACCESS)	; Checking access restrictions?
+	OR	A
+	JR	Z,RCVF3		; No
+	CALL	WHLCHK		; SYSOP online?
+	JR	NZ,RCVF3	; Yep, skip all this checking
+	LD	A,(PUPFLG)	; Privileged transfer option request?
+	OR	A
+	LD	A,(AFBYTE)	; Get access flags byte
+	JR	Z,$+7		; No
+	AND	80H		; Test for privileged user access (bit 7)
+	JP	Z,NOACC		; Not allowed to use "RW" option
+	AND	40H		; Test for upload access (bit 6)
+	JP	Z,NOACC		; Not allowed to upload files
+
+;
+; User has the access he asked for
+;
+RCVF3:	LD	A,(BATCH)	; Requesting batch mode?
+	OR	A
+	JP	NZ,RBTCH	; Yes, go do batch stuff first
+	CALL	RCVFL1		; Find drive/user/filetype permitted
+	LD	IX,FCB
+	CALL	RESTRCT		; Check restrictions on uploads
+	CALL	CONTIN		; Display drive/user area
+	CALL	MAKEFIL		; Open the file, ready to receive
+
+;
+; Receive records until EOT
+;
+RCVLP:	XOR	A
+	LD	(ERRCNT),A	; Initialize error count to zero
+	CALL	RCVRECD		; Receive a record
+	JR	NC,RCVLP1	; If not EOT, store this record and get next
+	LD	HL,(RECDNO)	; Get number of records
+	LD	A,H
+	OR	L		; 0 length file?
+	JP	Z,ABORT		; Yes, abort and erase file
+	LD	A,(EOTFLG)	; This the first EOT character?
+	OR	A
+	JP	NZ,RCVEOT	; No, exit
+	LD	A,NAK
+	LD	(EOTFLG),A	; Set the flag
+	CALL	SEND		; Send a NAK
+	JR	RCVLP		; Go wait another EOT
+
+;
+; Increment record number
+;
+RCVLP1:	CALL	INCRNO		; Bump record number, if received ok
+	LD	HL,(RECPTR)	; Get buffer address
+	LD	DE,128		; 128 chars/record
+	LD	A,(KFLG)	; Using 1k blocks?
+	OR	A
+	JR	Z,$+5		; If not, skip next line
+	LD	DE,1024		; 1k/record
+	ADD	HL,DE		; To next buffer
+	LD	(RECPTR),HL	; Save buffer address
+	LD	A,(KFLG)	; Using 1k blocks?
+	OR	A
+	LD	A,(RECNBF)	; Get number of records in buffer
+	JR	Z,$+6		; If not, skip next 2 lines
+	ADD	A,8		; Increment it 8 records for 1k
+	JR	$+3		; Skip next line
+	INC	A		; Else only 1 record
+	LD	(RECNBF),A	; Store new record count
+
+;
+; If 16k in buffer, write to disk
+;
+	LD	C,A		; Put the record count in C
+	LD	A,(BUFSIZ)	; Buffer size in A
+	ADD	A,A
+	ADD	A,A
+	ADD	A,A
+	CP	C		; Is the buffer full, yet?
+	CALL	Z,WRBLOCK	; No, return
+	CALL	SNDACK		; Ack the record
+	JP	RCVLP		; Loop until 'EOF'
+
+;
+; End of transmission received
+;
+RCVEOT:	CALL	SNDACK		; ACK the record
+	CALL	WRBLOCK
+	JP	RCVEOT0
+
+WRBLOCK:LD	A,(RECNBF)	; Number of records in the buffer
+	OR	A		; 0 means end of file
+	RET	Z		; None to write
+	LD	C,A		; Save count
+	LD	DE,DBUF		; Point to disk buff
+
+WRBLOK1:PUSH	HL
+	PUSH	DE
+	PUSH	BC
+	CALL	STDMA		; Set DMA
+	LD	DE,FCB		; Then write the block
+	LD	C,WRITE
+	CALL	BDOS
+	POP	BC
+	POP	DE
+	POP	HL
+	OR	A		; Write error?
+	JR	Z,WRBLOK2	; No
+	CALL	RSDMA		; Reset DMA to normal
+	LD	A,CANCEL	; Cancel
+	CALL	SEND		; Sender
+	CALL	SEND
+	CALL	SEND
+	CALL	CLOSFIL		; Kill received file
+	CALL	ILPRTB		; Exit with msg:
+	DB	CR,LF
+	DB	'-- Write Error: ',0
+	CALL	SHONM3
+	JP	EXIT
+
+WRBLOK2:LD	HL,128		; Length of 1 record
+	ADD	HL,DE		; 'HL'= next buff
+	EX	DE,HL		; To 'DE' for setdma
+	DEC	C		; More records?
+	JR	NZ,WRBLOK1	; Yes, loop
+	XOR	A		; Get a zero
+	LD	(RECNBF),A	; Reset number of records
+	LD	HL,DBUF		; Reset buffer
+	LD	(RECPTR),HL	; Save buffer address
+	JP	RSDMA
+
+;
+; Write record to log file if LOGCAL is YES
+;
+RCVEOT0:CALL	CLOSFIL		; Close the file
+	LD	HL,(RECDNO)	; Get # of records
+	LD	(RCNT),HL	; Stuff in RCNT
+	CALL	XTIM		; Calculate approximate transfer time
+	CALL	STORTM		; Store time
+	CALL	LOGCALL		; Log transfer if supposed to
+
+RCVEOT1:LD	A,(LOGLDS)	; Counting uploads?
+	OR	A
+	JR	Z,RCVEOT2	; No
+	LD	A,(PRIVATE)	; Private upload?
+	OR	A
+	JR	NZ,RCVEOT2	; Yes, no credit for private uploads
+	LD	IY,(UPLDS)	; Get Upload Counter
+	INC	(IY)		; One more upload since log in
+
+RCVEOT2:CALL	ALLDON		; If not in BATCH, print transfer complete
+	JP	CRED		; Credit upload time and ask for descriptions
+
+;
+;-------------------------------------------------------------------------;
+; R e c e i v e   B a t c h						  |
+;-------------------------------------------------------------------------;
+;
+RBTCH:	XOR	A		; Using batch so reset some flags
+	LD	(FRSTIM),A	; Needs to be reset for each new file
+	LD	A,(FSTFLG)	; First batch file?
+	OR	A
+	JR	Z,RBTCH0	; Yes, give them time to setup
+	LD	A,CRC
+	CALL	SEND		; In case he's quick like us
+	JP	RBTCH1
+
+;
+; Initial setup only
+;
+RBTCH0:	CALL	RCVFL1		; Find drive/user/filetype permitted
+	CALL	CONTIN		; Display drive/user area
+	LD	HL,NAMBUF
+	LD	(NBSAVE),HL
+	LD	A,1
+	LD	(FSTFLG),A	; No need to run those routines again
+
+;
+; Get the batch file name and display
+;
+RBTCH1:	LD	HL,FCB
+	CALL	INITFCB		; Initialize FCB
+	XOR	A
+	LD	(RCVTRY),A
+	INC	A		; Set to local display only
+	LD	(CONONL),A
+
+RBTCH2:	CALL	CKABORT		; Check for user abort
+	LD	B,5
+	CALL	RECV		; Wait up to 5 seconds for SOH from remote
+	JR	C,RBTCH3	; No character, decrement counter
+	CP	CANCEL		; Was it a CTL-X for cancel?
+	CALL	Z,CKCAN		; Check for abort
+	CP	SOH
+	JR	Z,RBTCH5	; Got SOH
+	JR	RBTCH2		; None of these, wait some more
+
+RBTCH3:	LD	A,CRC		; Send a 'C'
+	CALL	SEND
+
+RBTCH4:	LD	A,(RCVTRY)
+	INC	A
+	LD	(RCVTRY),A
+	CP	20
+	JR	C,RBTCH2
+	JP	ABORT		; Quit and try to force him to quit also
+
+RBTCH5:	LD	B,5
+	CALL	RECV		; Wait up to 5 seconds for sector number
+	JP	C,TOTERR
+	LD	D,A		; Save sector number in D
+	OR	A		; Must be a 0 if sending batch
+	JP	NZ,WRGHDR
+	LD	B,5
+	CALL	RECV		; Wait up to 5 seconds for reciprocal
+	JP	C,TOTERR
+	CPL			; Invert it and compare to sector #
+	CP	D
+	JP	NZ,CRCERR	; Bad match
+	LD	HL,0
+	LD	(CRCVAL),HL	; Clear CRC counter
+	LD	E,128		; Expecting a 128 character block
+	LD	HL,(RECPTR)	; Point to the buffer address
+
+RBTCH6:	LD	B,5
+	CALL	RECV		; Up to 5 seconds for 128 byte header block
+	JP	C,TOTERR	; Exit if no character
+	LD	(HL),A		; Store the character
+	INC	HL		; Point to next buffer location
+	DEC	E		; One less to go
+	JR	NZ,RBTCH6 
+	LD	E,2		; Number of CRC bytes to get
+
+RBTCH7:	LD	B,5
+	CALL	RECV		; Up to 5 seconds for CRC bytes
+	JP	C,TOTERR
+	DEC	E		; Done?
+	JR	NZ,RBTCH7	; No
+	CALL	CRCCHK		; Compare CRC received against ours
+	OR	A		; Ok?
+	JP	NZ,CRCERR	; No
+	CALL	SNDACK		; Yes, acknowledge to remote
+
+;
+; Decode pathname into CPM format
+;
+	LD	DE,FCB+1	; Where to put it
+	LD	HL,(RECPTR)	; Where to get it
+	LD	B,8		; Filename length
+
+RBTCH8:	LD	A,(HL)		; Get the character from the buffer
+	OR	A		; Was it a zero?
+	JR	Z,RBTCH12	; If yes, all done
+	CP	'.'		; Was it a delimiter?
+	JR	Z,RBTCH9
+	CALL	UCASE		; Insure name is in upper case
+	CP	'_'		; Is it an underline?
+	JR	NZ,$+4		; No
+	LD	A,'-'		; Else make it a dash
+	LD	(DE),A		; Store filename character in FCB
+	INC	DE		; Increment pointers
+	INC	HL
+	DJNZ	RBTCH8		; If not 8, keep going
+	LD	A,(HL)		; Get the character back
+	OR	A		; We had 8, was there an extent?
+	JR	Z,RBTCH11	; If zero, was all done
+	JR	RBTCH10		; Else must be a '.'
+
+RBTCH9:	LD	A,' '		; Spaces to make up 8 spaces for name
+	LD	(DE),A		; Store space character in FCB
+	INC	DE		; Increment pointers
+	DJNZ	RBTCH9		; Keep going until in extent area
+
+RBTCH10:INC	HL		; Skip the '.' position
+	LD	B,3		; Extent length
+
+RBTCH11:LD	A,(HL)		; Get the character from the buffer
+	OR	A		; Was it a zero?
+	JR	Z,RBTCH12	; If yes, all done
+	CALL	UCASE		; Insure extent is in upper case
+	LD	(DE),A		; Store extent character
+	INC	DE		; Increment pointers
+	INC	HL
+	DJNZ	RBTCH11		; Keep going until finished
+
+RBTCH12:LD	A,(FCB+1)	; See if there was any filename at all
+	CP	' '
+	JP	Z,RBCHDON	; No, all done, no more files
+	CALL	CLEARIT		; Clear screen locally if suppose to
+
+RBTCH13:LD	HL,(BUFSTR)	; Get the file length, if provided
+	LD	A,H
+	OR	L
+	JR	NZ,$+7		; If not both zero, length is provided 
+	CALL	SHONM		; Else show the filename
+	JR	RBTCH14		; And wait to receive
+	LD	(RCNT),HL	; Store the file length
+	CALL	OPNOK1		; Show filename and file sizes
+	CALL	ILPRTL
+	DB	CR,LF
+	DB	'Ymodem transfer time     > ',0
+	CALL	GETSPD		; Get speed indicator
+	CP	5		; Are we less than 1200 bps?
+	JR	C,$+7		; Yes, skip 1k time
+	CALL	KTIM		; Get 1k transfer time
+	JR	$+5		; Skip 128 byte transfer time
+	CALL	XTIM		; Get 128 byte transfer time
+	CALL	XFRTIM		; Display transfer time
+
+RBTCH14:CALL	ILPRTL
+	DB	CR,LF,LF,0	; Finish the filename line
+	XOR	A		; Reset the carry flag
+	LD	(RCVTRY),A	; Reset the error counter
+	LD	IX,FCB
+	CALL	RESTRCT		; Check restrictions on uploads
+	CALL	CHEKFIL		; Already have a file with that name?
+	CALL	MAKEFIL		; If not, make it
+	CALL	BCHINR
+	CALL	WAITMSG		; Display '[ waiting ]' message locally
+	LD	A,CRC
+	CALL	SEND
+	JP	RCVLP		; Start receiving the file
+
+RBCHDON:XOR	A		; Zero the batch mode flag
+	LD	(BATCH),A
+	LD	A,(GOTONE)	; Were there any files received?
+	OR	A
+	JP	Z,ABORT		; No, abort
+	CALL	XFRDON		; Show transmission is finished
+	JP	CRED		; Ask for descriptions
+
+CRCERR:	CALL	ILPRTL
+	DB	'-- CRC error'
+	DB	CR,LF,0
+	JP	INCERR
+
+WRGHDR:	CALL	ILPRTL
+	DB	'-- Wrong header type'
+	DB	CR,LF,0
+	JR	INCERR
+
+TOTERR:	CALL	ILPRTL
+	DB	'-- Timeout receiving filename'
+	DB	CR,LF,0
+
+INCERR:	CALL	WAIT1		; Make sure sender has stopped
+	LD	A,NAK		; Tell sender it was not successful
+	CALL	SEND
+	LD	A,(RCVTRY)	; Increment the error counter
+	INC	A
+	LD	(RCVTRY),A
+	CP	33
+	JP	C,RBTCH4	; Send a NAK and tell him to try again
+	JP	ABORT		; Else abort
+
+;
+;-------------------------------------------------------------------------;
+; C r e d i t   R o u t i n e s						  |
+;-------------------------------------------------------------------------;
+;
+; The following credits the caller for the amount of time spent uploading
+; any non-private files with descriptions.
+;
+CRED:	LD	A,(BATCH)
+	OR	A
+	JR	NZ,CRED0A
+	LD	E,10		; Set up for a 30 second wait
+
+CRED0:	LD	B,3		; 3 seconds to receive a character
+	CALL	RECV
+	JR	NC,CRED0A	; Got one, continue
+	CALL	ILPRTB		; Make sure this goes to modem
+	DB	CR
+	DB	'-- Hit a key'
+	DB	CR,0		; Let them know we're waiting
+	DEC	E		; 2 less seconds
+	JR	NZ,CRED0	; Wait until 0
+
+CRED0A:	LD	A,(CREDIT)	; Credit caller with upload time?
+	OR	A
+	JP	Z,CRED2		; No
+	CALL	WHLCHK		; WHEEL byte set?
+	JP	NZ,CRED2	; Yes, skip credit
+	LD	A,(PUPFLG)	; Privileged transfer request?
+	OR	A
+	JP	NZ,CRED2	; Yes, skip credit
+	LD	A,(PRIVATE)	; Was this a private file?
+	OR	A
+	JP	NZ,CRED2	; Yes, skip credit
+	LD	A,(BATCH)	; In batch mode now?
+	OR	A
+	JP	NZ,CRED1	; If yes, skip following messages
+
+	CALL	ILPRTB		; Show to remote also
+	DB	CR,LF
+	DB	'Thanks for the ',0
+	CALL	SHOCAT		; Show upload area descriptor, if supposed to
+	CALL	ILPRTB
+	DB	'upload(s)!',CR,LF,0
+	CALL	ILPRTB
+	DB	'Upload time has been credited to time left.',0
+
+CRED1:	LD	A,(MAXTOS)	; Get maximum time allowed
+	OR	A		; Unlimited?
+	JR	Z,CRED2		; Yes, skip credit
+	LD	HL,(RECDNO)	; Else get the number of records
+	LD	(RCNT),HL 
+	CALL	XTIM		; Get transfer time in C
+	LD	A,(MAXTOS)	; Get maximum time allowed back
+	INC	A		; Increment to next full minute
+	ADD	A,C		; Add upload time
+	LD	(MAXTOS),A	; Save for internal use
+
+;
+; If not still in BATCH mode, ask for file description
+;
+CRED2:	LD	A,(BATCH)	; Still in batch?
+	OR	A
+	JP	NZ,DONE		; Yes, see if anymore files left
+	LD	A,(HIDEIT)	; Did we make this upload a $SYS file?
+	OR	A
+	JR	Z,CRED3		; No, skip all this
+	CALL	WHLCHK		; Wheel byte set?
+	JR	NZ,CRED3	; Yes, file not set to $SYS
+	LD	A,(PRIVATE)	; Was this a private upload?
+	OR	A
+	JR	NZ,CRED3	; Yes, file not set to $SYS
+	CALL	ILPRTB
+	DB	CR,LF
+	DB	'Uploads remain hidden until cleared by Sysop.',0
+
+CRED3:	CALL	ILPRTB
+	DB	CR,LF,LF,0
+	CALL	RSTLCK		; Clear WRTLOC before descriptions
+	CALL	ADDTON		; Update BYE's time on byte if supposed to
+
+;
+;-------------------------------------------------------------------------;
+; D e s c r i p t i o n   R o u t i n e s				  |
+;-------------------------------------------------------------------------;
+
+ASK:	LD	A,(PRIVATE)	; Private upload?
+	OR	A
+	JP	NZ,EXIT		; Yes, no descriptions
+	LD	A,(PUPFLG)	; Privileged transfer request?
+	OR	A
+	JP	NZ,EXIT		; Yes, no descriptions
+	LD	A,(DESCRIB)	; Requiring descriptions?
+	OR	A
+	JR	NZ,ASK1		; Yes
+
+	LD	A,(MSGDESC)	; To BBS message base?
+	OR	A
+	JP	Z,EXIT		; No
+	LD	(DSCFLG),A	; Set flag to show message base descriptions
+	LD	A,(PRUSR)	; Get the private user
+	LD	(USER),A	; FOR destination
+	LD	A,(PRDRV)	; Get the private drive
+	LD	(DRIVE),A	; FOR destination
+
+ASK1:	CALL	GETTIME
+	LD	HL,DATMSG+6
+
+	LD	A,(EDATE)	; European date format?
+	OR	A
+	JR	Z,ASK1A		; No
+	LD	A,(DAY)
+	CALL	DATDEC		; Print DD
+	INC	HL
+	LD	A,(MONTH)	; Print MM
+	JR	ASK1B		; And finish with YY
+
+ASK1A:	LD	A,(MONTH)
+	CALL	DATDEC		; Print MM
+	INC	HL
+	LD	A,(DAY)
+
+ASK1B:	CALL	DATDEC		; Print DD
+	INC	HL
+	LD	A,(YEAR)
+	CALL	DATDEC		; Print YY
+
+	LD	A,(FILCNT)	; Any batch filenames?
+	OR	A
+	JR	Z,ASK3		; No
+	LD	HL,NAMBUF	; Point to name buffer
+	LD	(NBSAVE),HL
+
+ASK2:	LD	IY,FILCNT	; One less file to describe
+	DEC	(IY)
+	LD	HL,(NBSAVE)	; Get address of next batch filename
+	LD	DE,FCB		; Where to put it
+	LD	BC,12
+	LDIR
+	LD	(NBSAVE),HL	; Store address for next filename
+
+ASK3:	LD	A,(DESCRIB)	; FOR file descriptions?
+	OR	A
+	JR	Z,ASK6		; No
+
+	LD	A,(ASKAREA)	; Using upload routing?
+	OR	A
+	JR	Z,ASK4		; No, KIND contents doesn't matter
+
+	LD	A,(KIND)	; Do we have a the upload area yet?
+	OR	A
+	JR	NZ,ASK6		; Yes, don't ask them twice
+
+	CALL	ILPRTB
+	DB	CR,LF,LF
+	DB	'Upload category: '
+	DB	CR,LF,0
+	JR	ASK5
+
+ASK4:	LD	A,(ASKIND)	; Need file descriptors for FOR entries?
+	OR	A
+	JR	Z,ASK6		; No
+
+	CALL	ILPRTB
+	DB	CR,LF,LF,0
+	CALL	SHONM3		; Show the file name
+
+	CALL	ILPRTB
+	DB	' - this file is for:'
+	DB	CR,LF,0
+
+ASK5:	CALL	GETKIND		; Get file category for description header
+	CALL	TYPE		; Output to both consoles
+
+ASK6:	CALL	ILPRTB
+	DB	CR
+	DB	'Describe ',0
+	CALL	SHONM3		; Show the filename
+	CALL	ILPRTB
+	DB	' - 7 lines or less - ^W disables WRAP - CR when done',0
+
+	LD	HL,FCB+1	; FCB contains current filename
+	LD	DE,NEWNAM	; Needed in here for description routines
+	LD	B,8		; Filename is up to 8 bytes long
+	CALL	ASK7		; Go store it until a space
+
+	LD	A,'.'
+	LD	(DE),A		; Add seperator
+
+	INC	DE
+	LD	HL,FCB+9	; Point to file extent at FCB
+	LD	B,3		; File extent is up to 3 bytes long
+	CALL	ASK7		; Go store until space or B=3
+
+	LD	A,LF		; Stuff Terminator
+	LD	(DE),A
+
+	CALL	GETDSC		; Show typing guide and get upload description
+	JP	Z,ASK2		; If we got a description, get next
+	JP	ASK3		; Else get this one over again
+
+;
+; Small subroutine to store the filename located at FCB+1 into buffer area
+; located at DE
+;
+ASK7:	LD	A,(HL)		; Get character
+	AND	7FH		; Done with high bits
+	CP	' '		; A space?
+	RET	Z		; Yes, all done
+	LD	(DE),A		; Else store it in destination
+	INC	HL		; Increment source pointer
+	INC	DE		; Increment destination
+	DJNZ	ASK7		; Keep looping until B=0 or (HL)=' '
+	RET
+
+;
+;-----------------------
+; Set upload drive/user
+;
+RCVFL1:	CALL	LOGDU		; Select drive/user for upload
+	LD	A,(PUPFLG)	; Place "RW" file as needed
+	OR	A		; Can only be set if user is privileged
+	JR	NZ,RCVFL2	; Privileged, else check if sysop...
+	CALL	WHLCHK		; Let WHEEL user put file wherever he wants
+	JR	Z,RCVFL6	; If WHEEL byte not set, stay normal
+
+RCVFL2:	LD	A,(RCVDRV)
+	OR	A
+	JR	Z,RCVFL3
+	SUB	'A'		; Convert ASCII drive to binary
+	JR	RCVFL4
+
+RCVFL3:	LD	A,(OLDDRV)
+
+RCVFL4:	INC	A
+	LD	(FCB),A
+	ADD	A,'A'-1		; Convert binary to ASCII
+	LD	(DRV),A		; Drive
+	LD	A,(RCVDRV)	; See if a drive was requested
+	OR	A
+	LD	A,(OLDUSR)	; Current user
+	JR	Z,RCVFL5	; If not, use current user
+	LD	A,(RCVUSR)	; Else get requested user
+
+RCVFL5:	LD	(USR),A		; User
+	RET
+
+RCVFL6:	LD	A,(SETAREA)
+	OR	A
+	JR	NZ,RCVFL7
+	LD	A,(ASKAREA)
+	OR	A
+	JR	Z,RCVFL8
+
+RCVFL7:	LD	A,(DRV)
+	SUB	40H
+	LD	(FCB),A
+
+RCVFL8:	LD	A,(PRIVATE)	; Receiving to a private area?
+	OR	A
+	RET	Z		; If not, exit
+	LD	A,(PRDRV)	; Private area takes precedence
+	SUB	40H		; Convert to binary
+	LD	(FCB),A		; Store drive to be used
+	RET
+
+;
+; Display where file(s) will go, open file and display name
+;
+CONTIN:	LD	A,(ASKAREA)	; Upload routing enabled?
+	OR	A
+	JR	NZ,CONT0	; No
+	LD	A,(ASKIND)
+	OR	A
+	JR	Z,CONT1
+
+CONT0:	CALL	WHLCHK		; Is WHEEL byte set?
+	JR	NZ,CONT1	; No, skip this
+	CALL	GETKIND		; Get upload area
+	LD	A,CR		; So the line feed (LF) doesn't get printed
+	LD	(CONT1+4),A
+
+CONT1:	CALL	ILPRTB
+	DB	CR,LF
+	DB	'Receiving on:  Drive ',0
+	LD	A,(PRIVATE)	; Private upload?
+	OR	A
+	LD	A,(PRUSR)	; Get private user area
+	LD	B,A		; Put in B for now
+	LD	A,(PRDRV)	; Get private drive
+	JR	NZ,CONT2+3	; Yes, priority 1
+	LD	A,(USR)		; Get the regular user area
+	LD	B,A		; And put it in B
+	LD	A,(PUPFLG)	; Privileged upload?
+	OR	A
+	JR	NZ,CONT2	; Yes, priority 2
+	CALL	WHLCHK		; WHEEL set?
+	JR	NZ,CONT2	; Yes, priority 3
+	LD	A,(SETAREA)	; Uploading to designated drive/user?
+	OR	A
+	JR	NZ,CONT2	; Yes, priority 4
+	LD	A,(ASKAREA)	; Upload routing enabled?
+	OR	A
+	JR	Z,CONT3		; No
+
+CONT2:	LD	A,(DRV)		; Get regular upload drive
+	PUSH	AF		; Save ASCII upload drive
+	SUB	40H		; Convert drive to binary
+	LD	(FCB),A		; Store it in File Control Block
+	POP	AF		; Get ASCII drive back
+	JR	CONT4		; All done, now display it
+
+CONT3:	LD	A,(OLDUSR)	; Get current user area for default
+	LD	B,A		; Save in B
+	DB	0,0		; Contains 'LD B,n' (DUU) from GETDU
+	LD	A,(OLDDRV)	; Get current drive for default
+	ADD	A,'A'		; Convert to ASCII
+	DB	0,0		; Contains 'LD A,n' (DUD) from GETDU
+
+CONT4:	LD	(KDRV),A	; Save it for KSHOW
+	CALL	TYPE		; Print the drive to store on
+	CALL	ILPRTB
+	DB	', User ',0
+	LD	A,B		; B contains the user area
+	LD	(USR),A		; Save for MSGDESC upload info
+	LD	H,0
+	LD	L,A		; Binary user area in L
+	CALL	DECOUT		; Decimal output
+	CALL	ILPRTB
+	DB	'.  (',0
+	CALL	KSHOW		; Show available space remaining
+	CALL	ILPRTB
+	DB	')',0
+	CALL	CHEKFIL		; See if file exists
+
+	LD	A,(DESCRIB)	; Descriptions enabled?
+	OR	A
+	JR	NZ,CONT5	; Yes
+	LD	A,(MSGDESC)	; Message base descriptions?
+	OR	A
+	JR	Z,CONT6		; No
+
+CONT5:	LD	A,(PRIVATE)	; Private upload?
+	OR	A
+	JR	NZ,CONT6	; Yes, no descriptions
+	LD	A,(PUPFLG)	; Privileged upload?
+	OR	A
+	JR	NZ,CONT6	; Yes, no descriptions
+	CALL	ILPRTB
+	DB	CR,LF
+	DB	'Description(s) needed - ',0
+	JR	CONT7
+
+CONT6:	CALL	ILPRTB
+	DB	CR,LF,0
+
+CONT7:	CALL	ILPRTB
+	DB	'Abort: ^X pause ^X'
+	DB	CR,LF,LF,0
+	CALL	WAITMSG
+	RET
+
+;
+; Increment the file count
+;
+BCHINR:	LD	HL,(NBSAVE)	; Where to put the name
+	LD	DE,FCB		; Where to get the name
+	EX	DE,HL
+	LD	BC,12		; Move current filename to buffer for ASK:
+	LDIR
+	EX	DE,HL
+	LD	(NBSAVE),HL	; Store address for next filename
+	LD	A,(FILCNT)	; Increment the file count
+	INC	A
+	LD	(FILCNT),A
+	RET
+
+;
+;-------------------------------------------------------------------------;
+; T r a n s f e r   c o m p l e t e					  |
+;-------------------------------------------------------------------------;
+;
+; Done transferring current file.  Check to see if in BATCH mode and if so,
+; display filename transferred and reset flags for next possible file.
+; Otherwise eat garbage from line, reset WRTLOC, do timekeeping and exit
+; to CP/M (Forward text file to BBS message base if supposed to).
+;
+DONE:	LD	A,(BATCH)	; Still in batch mode?
+	OR	A
+	JP	Z,EXIT		; No.  All done
+	LD	A,(OLDDRV)	; Restore the original drive
+	CALL	RECDRX
+	LD	A,(OLDUSR)	; Restore the original number
+	CALL	RECAR1
+	CALL	RSDMA		; Reset to default DMA address
+	LD	A,1		; Display filename locally only
+	LD	(GOTONE),A	; Indicates there was a file handled
+	CALL	ILPRTL		; Display the file name
+	DB	CR,LF,0
+	CALL	SHONM3		; Show the filename at FCB+1
+	CALL	ILPRT
+	DB	' transferred',CR,LF,0
+
+;
+; Now reset some flags for another possible batch file
+;
+	XOR	A
+	LD	(EOFLG),A	; Clear end of file flag
+	LD	(EOTFLG),A	; And end of transmission flag
+	LD	(CHKEOT),A	; Clear the "resend EOT" flag
+	LD	HL,0
+	LD	(ACCERR),HL	; Reset the accumulate error count
+	LD	(RECNBF),HL	; Zero number of records in the buffer
+	LD	(RECDNO),HL	; Zero the current record number
+	LD	(RCDCNT),HL	; Zero the transmit record counter
+	LD	HL,DBUF		; Reset buffer pointers
+	LD	(RECPTR),HL
+	LD	A,(MODE)	; Get transfer mode
+	CP	'S'		; Sending files?
+	JP	Z,SNDFIL	; Yes
+
+	LD	A,(FILIMT)	; Maximum upload (TPA limitation)
+	LD	B,A		; Into B for comparison
+	LD	A,(FILCNT)	; Get current count received
+	CP	B		; Received BATCH transfer limit yet?
+	JP	C,RCVFL
+	LD	A,CANCEL
+	CALL	SEND
+	CALL	SEND
+	CALL	SEND
+	CALL	WAIT1
+
+	CALL	ILPRTB
+	DB	CR,LF
+	DB	'-- ',0
+	LD	A,(FILIMT)
+	LD	H,0
+	LD	L,A
+	CALL	DECOUT
+	CALL	ILPRTB
+	DB	' file limit in BATCH receive',CR,LF,0
+
+	XOR	A
+	LD	(BATCH),A	; Reset the batch mode flag to zero
+	JP	CRED3		; Go back and ask for descriptions
+
+;
+;-------------------------------------------------------------------------;
+; C o m m o n  S u b r o u t i n e s					  |
+;-------------------------------------------------------------------------;
+;
+; Universal access check routine checks restrictions of current file being
+; considered for transfer.
+;
+; On entry:  IX  = start address of byte before filename
+; On exit:    Z  = File ok to send/receive
+;	     NZ	 = Transfer denied
+;
+; Each bit of this word contains an image of the high bit within the filename
+; pointed to by IX+1 on entry.
+; 
+HBITMAP:DW	0000000000000000B
+
+;
+; First, make a bit map containing an image of the high bits in the filename
+; pointed to by IX+1 on entry.
+;
+RESTRCT:LD	B,11		; Number of bytes to map
+	LD	HL,0		; Initialize destination for bit map
+	PUSH	IX		; Save current filename address
+	INC	IX		; Skip past drive indicator
+
+ACCMASK:LD	A,(IX)		; Get next character of filename
+	AND	80H		; Isolate attribute bit
+	RLCA			; Move MS bit into LS bit
+	OR	L		; OR in any previously set bits
+	LD	L,A		; Save result
+	ADD	HL,HL		; Shift HL left one bit for next time
+	INC	IX		; IY+1 equals next character in filename-type
+	DJNZ	ACCMASK		; Loop through all 11 bytes
+	POP	IX		; Get our original filename pointer back
+
+;
+; Most significant bit will already be in bit 11 of HL, so only 4 shifts are
+; necessary
+;
+	ADD	HL,HL		; 000?????$??????00
+	ADD	HL,HL		; 00??????$?????000
+	ADD	HL,HL		; 0???????$????0000
+	ADD	HL,HL		; ????????$???00000
+	LD	(HBITMAP),HL	; Store filename high bit image
+
+;
+; See which (if any) restrictions we need to enforce
+;
+	CALL	WHLCHK		; WHEEL byte set?
+	JP	NZ,SENDOK	; Yes, transfer is approved
+	LD	A,(ACCMAP)	; Get user defined restriction flags
+	LD	B,A
+	LD	A,(MODE)	; Get the file transfer mode
+	CP	'S'		; Sending?
+	JR	Z,RSTRCT2	; Yes, check send restrictions
+
+;
+; Check RECEIVE restrictions
+;
+	LD	IX,FCB
+	BIT	NOCOMR,B	; Rename '.COM' uploads to '.OBJ'?
+	JR	Z,RSTRCT1	; No, check for ZCPR restrictions
+	LD	DE,COMCHG	; Compare to 'COM'
+	CALL	MCHFTYP		; Are they the same?
+	CALL	Z,RENTYP	; Yes, rename it to 'OBJ'
+
+RSTRCT1:BIT	ZCPR,B		; Using with ZCPR?
+	RET	Z		; No, all done
+	LD	DE,SYSCHK	; Compare to 'SYS'
+	CALL	MCHFTYP		; Are they the same?
+	JR	Z,FTYPERR	; Yes, tell them to use a different filetype
+	LD	DE,NDRCHK	; Compare to 'NDR'
+	CALL	MCHFTYP		; ...
+	JR	Z,FTYPERR	; ...
+	LD	DE,RCPCHK	; Compare to 'RCP'
+	CALL	MCHFTYP		; ...
+	RET	NZ		; If no match, filetype is ok to receive
+
+FTYPERR:CALL	ERXIT
+	DB	CR,LF
+	DB	'-- Use a different file extent','$'
+
+;
+; Check SEND restrictions
+;
+RSTRCT2:LD	A,(BATCH)	; In BATCH?
+	OR	A
+	JR	NZ,RSTRT2A	; Yes, require send access for any batch file
+	BIT	DWNTAG,B	; Allow F3 tagged file regardless of access?
+	JR	Z,RSTRT2A	; No, skip this
+	BIT	5,H		; Byte 3 of filename set?
+	JP	NZ,SENDOK	; Yes, send it immediately
+
+RSTRT2A:LD	A,(ACCESS)
+	OR	A
+	JR	Z,RSTRCT3
+	LD	A,(AFBYTE)	; Get BYE or BBS bit mapped access flag
+	AND	20H		; Download access allowed?
+	JP	Z,NOACC		; No, inform user of restricted function
+
+RSTRCT3:LD	A,(LBRARC)	; Get member extraction flag
+	OR	A		; Enabled?
+	JR	NZ,RSTRCT4	; Yes, skip these restrictions
+	BIT	TAGFIL,B	; Restricting tagged files?
+	JR	Z,RSTRCT4	; No
+	BIT	7,H		; First byte of filename set?
+	JR	NZ,NOSEND	; Yes, can't send it
+
+RSTRCT4:BIT	NOSYS,B		; Restricting $SYS files?
+	JR	Z,RSTRCT5	; No
+	BIT	6,L		; First byte of filetype set?
+	JR	NZ,NOSEND	; Yes, can't send
+
+RSTRCT5:LD	A,(LBRARC)	; Get member extraction flag
+	OR	A		; Enabled?
+	RET	NZ		; Yes, and file was not tagged (returning NZ)
+	BIT	NOLBS,B		; Restricting files with labels (#)?
+	JR	Z,RSTRCT6	; No
+	LD	A,(IX+11)	; Get possible label
+	AND	7FH		; Strip the high bit
+	CP	'#'		; Labeled?
+	JR	Z,NOSEND	; Yes, can't send
+
+RSTRCT6:BIT	NOCOMS,B	; Allow sending 'COM' files?
+	JP	Z,SENDOK	; Yes
+	LD	DE,COMCHG	; Point to string to compare with
+	CALL	MCHFTYP		; Is it a .COM file?
+	JP	NZ,SENDOK	; No
+
+;
+; Common exit point
+; 
+COMTRY:	LD	A,(BATCH)	; In batch mode?
+	OR	A
+	JP	NZ,NOSND2	; Yes, just set flag to not include (NZ)
+	POP	HL		; Remove call from OPNOK from stack
+	CALL	ERXIT
+	DB	CR,LF
+	DB	'-- Can''t send .COM files','$'
+
+NOSEND:	LD	A,(BATCH)	; Are we in batch mode?
+	OR	A
+	JP	NZ,NOSND2	; Yes, no error messages, just checking
+	LD	DE,LBRNAM
+	CALL	NOSND0
+	JR	Z,NOSND1
+	LD	DE,ARKNAM
+	CALL	NOSND0
+	JR	Z,NOSND1
+	LD	DE,ARCNAM
+	CALL	NOSND0
+	JR	Z,NOSND1
+	CALL	ERXIT
+	DB	CR,LF
+	DB	'-- File is not for distribution','$'
+
+NOSND0:	LD	B,3
+	LD	HL,FCB+9
+	CALL	MATCH
+	RET
+
+NOSND1:	CALL	ERXIT
+	DB	CR,LF
+	DB	'-- Individual members only','$'
+
+NOSND2:	LD	A,1		; Return NZ if file not allowed
+	OR	A
+	RET
+
+SENDOK:	XOR	A		; Return Z if file is ok
+	RET
+
+;
+; See if next character is ' ' or non ' '.  File name error if no ASCII
+; character.
+;
+CHKFSP:	LD	A,(BATCH)	; Requesting batch mode now?
+	OR	A
+	JR	Z,CHKFSP2	; Exit if not
+	LD	A,(MODE)	; Sending batch?
+	CP	'S'
+	JR	Z,CHKFSP2	; If yes, exit
+	DEC	B
+	JR	Z,CHKFSP1
+	INC	B
+	JR	CHKFSP2
+
+CHKFSP1:POP	HL		; Do not return to LOGDU
+	RET			; Return instead to SNDFIL
+
+CHKFSP2:DEC	B
+	JP	Z,NFN1		; Error if end of chars.
+	LD	A,(HL)
+	CP	' '+1
+	RET	NC		; Ok if valid character so return
+	INC	HL
+	JR	CHKFSP
+
+;
+; Check next character to see if a space or non-space, go to menu if a command
+; error.
+;
+CHKSP:	LD	A,(BATCH)	; Requesting batch mode?
+	OR	A
+	JR	Z,CHKSP2	; Exit if not
+	LD	A,(MODE)	; Sending in batch mode now?
+	CP	'S'
+	JR	Z,CHKSP2	; If yes, exit
+	DEC	B
+	JR	Z,CHKSP1
+	INC	B
+	JR	CHKSP2
+
+CHKSP1:	POP	HL		; Don't return to LOGDU
+	RET			; Return to SNDFIL
+
+CHKSP2:	DEC	B
+	JP	Z,HELP
+	INC	HL
+	LD	A,(HL)		; Get the character there
+	CP	' '		; Space character?
+	RET			; Z = space, NZ = non-space
+
+;
+; Determine the amount of disk storage needed for the current file.  On
+; entry:  BC = total record count of file
+;
+ROUNDK:	LD	DE,(BLKSIZ)	; Fetch block size in kilobytes
+	PUSH	DE		; Save block size
+	PUSH	BC		; Save file record count
+	LD	B,3		; Make a mask for size limit
+
+MSKCMP:	OR	A		; Clear carry
+	RL	E		; Make mask for size limit
+	RL	D		; Shift until
+	DJNZ	MSKCMP		; Shift until DE is A
+	DEC	DE		; Mask of records per block
+	POP	BC		; Get a copy of file record count
+	PUSH	BC
+
+	LD	A,C		; Mask file size with block size mask
+	AND	E
+	LD	C,A
+	LD	A,B
+	AND	D
+	OR	C		; Zero result indicates no block
+	POP	BC
+	PUSH	AF		; Remainder in file size
+	LD	A,D		; Compliment mask and zero file size
+	CPL			; Remainder in BC
+	AND	B
+	LD	B,A
+	LD	A,E
+	CPL
+	AND	C
+	LD	C,A
+	LD	E,3		; Shift count to divide masked file
+
+MINKL:	OR	A		; Clear carry
+	RR	B		; Rotate high byte through carry
+	RR	C
+	DEC	E		; Decrement shift count
+	JR	NZ,MINKL
+
+	POP	AF		; Check if even block size
+	POP	DE		; Get back block size
+	PUSH	HL		; Save kilobyte insert address
+	LD	HL,0		; Initial zero of remainderI
+	JR	Z,MINKS		; Zero if even
+	EX	DE,HL		; Block size to HL if remainder
+
+MINKS:	ADD	HL,BC		; Add in total kilobyte count
+	EX	DE,HL		; Total size to DE
+	POP	HL		; Get back load address
+	RET
+
+;
+; Log into drive and user
+;
+; (If specified).  If none mentioned, falls through to 'TRAP' routine for
+; normal use.
+;
+LOGDU:	LD	HL,TBUF		; Point to default buffer command line
+	LD	B,(HL)		; Store number of characters in command
+	INC	B		; Add in current location
+	CALL	CHKSP		; Skip spaces to find 1st command
+	JR	Z,$-3		; Loop until non-space character
+	CALL	CHKSP		; Skip 1st command (non-spaces)
+	JR	NZ,$-3		; Loop until a space
+	INC	HL
+	CALL	CHKFSP		; Skip spaces to find 2nd command
+	LD	(SAVEHL),HL	; Save start address of the 2nd command
+
+;
+; Now pointing to the first byte in the argument.  (If it was of a format
+; similar to: 'B6:HELLO.DOC' then we point at the drive character 'B'.  Then
+; transfer up to 4 bytes from the command line buffer (pointed at by HL) to
+; the drive/user storage buffer pointed at by DE
+;
+LGDU1:	PUSH	HL		; Save command line position
+	PUSH	BC		; And character count
+	LD	DE,DUSAVE	; Destination buffer
+	LD	C,4		; Drive/user is 4 characters maximum 'B15:'
+
+LGDU2:	LD	A,(HL)		; Get character
+	CP	' '+1		; Space or return?
+	JP	C,TRAP		; Yes, all done
+	LD	(DE),A		; Else store it in DUSAVE
+	INC	HL		; Increment to next argument
+	INC	DE		; Increment DUSAVE
+	CP	':'		; Was it a colon?
+	JR	Z,LGDU3		; Yes, was drive/user requested
+	DEC	B		; One less position to check
+	DEC	C		; One less to go
+	JR	NZ,LGDU2	; Loop until a colon or C=0
+	JP	TRAP		; Move name to FCB
+
+;
+; Get Disk and User from DUSAVE and log in if valid.
+;
+LGDU3:	EXX			; Save HL (buffer) pointer and BC (char count)
+	POP	BC		; We don't need these back, but fix the stack
+	POP	HL
+	EXX			; And get HL and BC back to continue
+	LD	A,(BATCH)	; Requesting batch mode?
+	OR	A
+	JR	Z,LGDU4		; No
+	LD	A,(MODE)	; Get program transfer mode
+	CP	'R'		; Receiving batch?
+	JR	Z,LGDU5		; Yes, skip next two lines
+
+LGDU4:	CALL	CHKFSP		; See if a file name is included
+	LD	(SAVEHL),HL	; Save location of the filename
+
+LGDU5:	LD	A,(PRIVATE)	; Uploading to a private area?
+	OR	A
+	JP	NZ,TRAP2	; If yes, going to a specified area
+
+	LD	A,(OLDDRV)	; Get current drive
+	LD	(DUD),A
+	ADD	A,'A'
+	LD	(RCVDRV),A
+
+	LD	HL,DUSAVE	; Point to drive/user
+	LD	A,(HL)		; Get 1st character
+	CP	'0'		; It is a ' ', CR or LF?
+	JR	C,LGDU6		; Yes, skip next 2 lines
+	CP	'9'+1		; Is it an ASCII number 0-9?
+	JR	C,LGDU10
+
+LGDU6:	LD	(RCVDRV),A	; Allows SYSOP to upload to any drive
+	CP	'A'-1
+	JR	C,LGDU9		; Satisfied with current drive
+	SUB	'A'
+	LD	(DUD),A
+
+	LD	A,(PUPFLG)	; Privileged user upload request?
+	OR	A
+	LD	A,(DUD)
+	JR	NZ,LGDU8	; Yes
+
+	CALL	WHLCHK
+	LD	A,(DUD)
+	JR	NZ,LGDU8
+
+	LD	A,(USEMAX)	; Using ZCPR low memory bytes?
+	OR	A
+	JR	NZ,LGDU7	; Yes
+	LD	A,(MAXDRV)
+	LD	C,A
+	LD	A,(DUD)
+	CP	C
+	JP	NC,ILLDU	; Drive selection not available
+	JR	LGDU8
+
+LGDU7:	LD	A,(DUD)		; Get the drive back
+	LD	IY,(DRIVMAX)	; Point to max drive byte
+	INC	(IY)
+	CP	(IY)		; And check it
+	PUSH	AF		; Save flags from the CP
+	DEC	(IY)		; Restore max drive to normal
+	POP	AF		; Restore flags from the CP
+	JP	NC,ILLDU
+
+LGDU8:	INC	HL		; Get 2nd character
+
+LGDU9:	LD	A,(HL)
+	CP	':'
+	JP	Z,LGDU17	; Colon for drive only, no user number
+	CALL	CKNUM		; Check if numeric
+
+LGDU10:	SUB	'0'		; Convert ASCII to binary
+	LD	(DUU),A		; Save it
+	INC	HL		; Get 3rd character if any
+	LD	A,(HL)
+	CP	':'
+	JR	Z,LGDU11
+	LD	A,(DUU)
+	CP	1		; Is first number a '1'?
+	JP	NZ,ILLDU
+	LD	A,(HL)
+	CALL	CKNUM
+	SUB	38
+	LD	(DUU),A
+	INC	HL		; Get 4th (and last character) if any
+	LD	A,(HL)
+	CP	':'
+	JP	NZ,ILLDU
+
+LGDU11:	LD	A,(MODE)
+	CP	'R'		; Receiving a file?
+	LD	A,(DUU)
+	JR	Z,LGDU12
+	LD	A,(SPLDRV)
+	SUB	'A'
+	LD	C,A
+	LD	A,(DUD)
+	CP	C
+	JR	NZ,LGDU12
+	LD	A,(SPLUSR)
+	LD	C,A
+	LD	A,(DUU)
+	CP	C
+	JR	Z,LGDU15
+
+LGDU12:	CALL	WHLCHK		; SYSOP using the system?
+	JR	Z,LGDU13
+	LD	A,(DUU)		; Restore desired user area
+	LD	(RCVUSR),A	; Allows SYSOP to upload anywhere
+	JR	NZ,LGDU15	; If yes, let him have all user areas
+
+LGDU13:	LD	A,(USEMAX)	; Using ZCPR low memory bytes?
+	OR	A
+	JR	NZ,LGDU14	; Yes
+	LD	A,(MAXUSR)	; Check for maximum user download area
+	ADD	A,1
+	LD	C,A
+	LD	A,(DUU)
+	CP	C
+	JP	NC,ILLDU	; Error if more (and not special area)
+	JR	LGDU15
+
+LGDU14:	LD	A,(DUU)
+	LD	IY,(USRMAX)	; Point at maximum user byte
+	CP	(IY)		; And check it
+	JP	NC,ILLDU
+
+LGDU15:	LD	E,A
+	LD	A,(SETAREA)	; Using designated drv/usr for reg. uploads?
+	OR	A
+	JR	NZ,LGDU16	; Yes
+	LD	A,(ASKAREA)	; Using upload routing?
+	OR	A
+	JR	NZ,LGDU16	; Yes
+	LD	A,E
+	LD	(CONT3+5),A	; Store requested user area
+	LD	A,6		; 'LD B,n' instruction
+	LD	(CONT3+4),A
+
+LGDU16:	LD	C,SETUSR	; Set to requested user area
+	CALL	BDOS
+
+LGDU17:	LD	A,(DUD)		; Get drive
+	LD	E,A
+	LD	A,(SETAREA)	; Using designated drv/usr for reg. uploads?
+	OR	A
+	JR	NZ,LGDU18	; Yes
+	LD	A,(ASKAREA)	; Using upload routing?
+	OR	A
+	JR	NZ,LGDU18	; Yes
+	LD	A,E
+	ADD	A,'A'
+	LD	(CONT3+12),A	; Store requested drive
+	LD	A,3EH		; 'LD A,n' instruction
+	LD	(CONT3+11),A
+
+LGDU18:	LD	C,SELDSK	; Set to requested drive
+	CALL	BDOS
+	JR	TRAP2		; Now find file selected
+
+;
+; If we get here, no d/u was specified.  Restore original command line pointer
+; and character count and move name to FCB.
+;
+TRAP:	POP	BC		; Get original character count back
+	POP	HL		; And original command line buffer position
+
+;
+; Check for no file name or ambiguous name
+;
+TRAP1:	LD	A,(PRIVATE)	; Get the private transfer flag
+	OR	A		; Is it enabled?
+	JR	Z,TRAP2		; No, current du stays normal
+	LD	A,(SPLUSR)	; Get the special download user area
+	CALL	RECAR1		; Set user area to special download user
+	LD	A,(SPLDRV)	; Get the special download drive
+	CALL	RECDR1		; Set drive to special download drive
+
+TRAP2:	CALL	SPCDRV		; Keep DPB info straight
+	LD	HL,FCB
+	CALL	INITFCB		; Make sure FCB initialized
+	CALL	MOVFCB		; Move the filename into the file block
+	LD	HL,FCB+1	; Point to file name
+	LD	A,(HL)		; Get first character
+	CP	' '		; Any there?
+	JR	NZ,TRAP3	; Yes, check wildcards
+	LD	HL,FCB+9	; Else point to file extent
+	LD	A,(HL)		; Get character
+	CP	' '		; Space also?
+	JP	Z,NFN		; Yes, we have no filename, exit with error
+	LD	HL,FCB+1	; Else point to start again
+
+TRAP3:	LD	A,(PRIVATE)	; Get the private transfer flag
+	OR	A		; Is it enabled?
+	RET	Z		; No, then don't trap wildcards
+	LD	B,11		; Else check all 11 characters of filename
+
+TRAP4:	LD	A,(HL)		; Get char from FCB
+	CP	'?'		; Ambiguous?
+	JR	Z,NOWILD	; Yes, exit with error message
+	CP	'*'		; Even more ambiguous?
+	JR	Z,NOWILD	; Yes, exit with error message
+	INC	HL		; Point to next character
+	DJNZ	TRAP4		; Not done, check some more
+	RET
+
+CKNUM:	CP	'0'
+	JR	C,ILLDU		; Error if less than ascii '0'
+	CP	'9'+1
+	RET	C		; Error if more than ascii '9'
+
+ILLDU:	CALL	ERXIT
+	DB	CR,LF
+	DB	'-- Unauthorized drive/user','$'
+
+NFN:	CALL	ILPRT
+	DB	CR,LF,0
+
+NFN1:	CALL	ERXIT		; Print message, exit
+	DB	'-- No filename(s) requested','$'
+
+NOWILD:	CALL	ERXIT		; Print message, exit
+	DB	CR,LF
+	DB	'-- Wildcards not valid for PRIVATE downloads','$'
+
+;
+; Previous record repeated, due to the last ACK being garbaged.  ACK it so the
+; sender will catch up
+;
+RCVACK:	CALL	SNDACK		; Send the ACK
+	XOR	A
+	LD	(ERRCNT),A	; Reset the error count
+
+;
+; Receive a record - returns with carry bit set if EOT received
+;
+RCVRECD:CALL	FUNCHK		; Check function keys
+	CALL	SNDABT		; See if wanting to abort
+	LD	A,(FRSTIM)	; Have we started, yet?
+	OR	A
+	LD	B,10		; Check every ten seconds if already started
+	JR	Z,$+4		; If yes, skip next line
+	LD	B,5		; Check every 5 seconds until started
+	CALL	RECV		; Get character
+	JP	C,RCVSTOT	; Timeout error if no character received
+	CP	SOH		; SOH?
+	JP	Z,RCVSOH	; Yes, get record
+	CP	STX		; STX for 1k blocks?
+	JR	NZ,$+11		; No
+	LD	(KFLG),A	; Set the 1k flag
+	LD	(CRCFLG),A	; Insure in CRC mode for 1k blocks
+	JP	RCVS1
+
+	CP	CANCEL		; Was it a CTL-X to abort?
+	CALL	Z,CKCAN		; If yes, check for aborting
+	OR	A		; Get another character, if a null
+	JR	Z,RCVRECD
+	CP	7BH		; V.22 synch character, ignore
+	JR	Z,RCVRECD
+	CP	0FBH		; V.22 synch character with high bit set
+	JR	Z,RCVRECD
+	CP	EOT		; See if end of transmission
+	SCF			; Set carry
+	RET	Z		; Return with carry set
+	CP	CRC		; Ignore our own character coming back
+	JR	Z,RCVRECD
+	CP	KSND		; Ignore our own character coming back
+	JR	Z,RCVRECD
+	CP	NAK		; Ignore our own character coming back
+	JR	Z,RCVRECD
+	CALL	ILPRTL		; Show locally only
+	DB	CR,'-- ',0
+	LD	A,B
+	CALL	HEXO
+	CALL	ILPRTL
+	DB	'H received not SOH',CR,LF,0
+	JR	RCVSR
+
+;
+; Checksum error
+;
+CKSMERR:CALL	ILPRTL
+	DB	' - Checksum error',CR,LF,0
+	JR	RCVSR		; Go check the error limit and send NAK
+
+;
+; Bad record number in header error
+;
+HDRERR:	CALL	ILPRTL
+	DB	' - Error in header',CR,LF,0
+	JR	RCVSR		; Go check error limit and send NAK
+
+;
+; Timed out on receive error
+;
+RCVSTOT:LD	A,(FRSTIM)	; First time flag set yet?
+	OR	A
+	JR	Z,RCVSR		; If not, don't show an error
+	CALL	TOTMSG
+
+;
+; Didn't get SOH or EOT or did not get valid header so purge the line,  then
+; send NAK.
+;
+RCVSR:	CALL	WAIT1		; Get anything coming in and discard
+	CALL	SNDABT		; See if wanting to abort
+	LD	A,(FRSTIM)	; Get first time switch
+	OR	A		; Has first 'SOH' been received?
+	LD	A,NAK
+	JR	NZ,RCVSR1	; Yes, then send 'NAK'
+	LD	A,(CRCFLG)	; Get the 'CRC' flag
+	OR	A		; 'CRC' in effect?
+	LD	A,NAK		; Put 'NAK' in 'A' register
+	JR	Z,RCVSR1	; No, send the 'NAK' for checksum
+	LD	A,CRC		; Tell sender we have 'CRC'
+	CALL	SEND
+	LD	A,(KFLG)	; Requesting 1k transmissions?
+	OR	A
+	JR	Z,RCVSR1	; If not, exit
+	LD	A,KSND		; Tell sender we also have 1k capability
+
+RCVSR1:	CALL	SEND		; The 'NAK' or 'CRC' request
+	LD	A,(ERRCNT)	; Get the error count
+	INC	A		; Increment error count
+	LD	(ERRCNT),A	; Store new value
+	LD	B,A		; Keep the error count for now
+	LD	A,(FRSTIM)	; Have we gotten under way yet?
+	OR	A
+	LD	A,B		; get the value back
+	JR	Z,RCVSR2	; If not, exit
+	CP	10		; 10 errors the limit, once under way
+	JP	NC,ABORT	; Abort if over the limit
+	CALL	RDCOUNT		; Display record count before repeating
+	JP	RCVRECD		; Less than 10, keep going
+
+RCVSR2:	CP	7		; 7 times for 1k/CRC yet? (40 seconds)
+	JP	C,RCVRECD	; Keep trying if less
+	XOR	A		; Else flip to checksum mode
+	LD	(CRCFLG),A
+	LD	A,B		; Get the count back
+	CP	3		; Another 3 times for checksum?
+	JP	C,RCVRECD	; If less, try again, quit at 60 seconds
+	JP	ABORT
+
+;
+; Aborts with 1 CTL-X if first time flag is not set, two otherwise
+;
+CKCAN:	LD	A,(FRSTIM)	; First time flag set yet?
+	OR	A
+	JR	Z,CKCAN1	; If not, abort
+	LD	B,2
+	CALL	RECV		; Maximum of 2 seconds for extra ^X
+	RET	C		; No additional character, ignore single ^X
+	CP	CANCEL		; Got a character, is it a ^X?
+	RET	NZ		; No, ignore 1st ^X and return
+
+CKCAN1:	POP	HL		; Reset stack for CALL	CKCAN
+	JP	ABORT		; Got 2nd ^X, abort and close file
+
+;
+; Got SOH - get block number (complemented)
+;
+RCVSOH:	XOR	A
+	LD	(KFLG),A	; If SOH, clear the 1k flag
+
+RCVS1:	LD	A,1		; Get something to store
+	LD	(FRSTIM),A	; Indicate first 'SOH' or 'STX' recvd.
+	LD	B,5
+	CALL	RECV		; Wait up to 5 seconds for block number
+	JP	C,RCVSTOT	; Got timeout
+	LD	D,A		; Save block number
+	LD	B,5
+	CALL	RECV		; 5 seconds for complimented record number
+	JP	C,RCVSTOT	; Timeout
+	CPL			; Get the complement
+	CP	D		; Same as original block number?
+	JP	NZ,HDRERR	; No, go report bad record number in header
+	LD	A,D		; Get record number
+	LD	(RCVCNT),A	; Save it
+	LD	C,0		; Initialize checksum
+	LD	HL,0		; Initialize CRC
+	LD	(CRCVAL),HL	; Clear CRC counter
+	LD	DE,128		; For 128 character blocks
+	LD	A,(KFLG)	; Using 1k blocks?
+	OR	A
+	JR	Z,$+5		; If not, skip next line
+	LD	DE,1024		; If using 1k blocks
+	LD	HL,(RECPTR)	; Get buffer address
+
+RCVCHR:	LD	B,5
+	CALL	RECV		; 5 seconds for character
+	JP	C,RCVSTOT	; Timeout
+	LD	(HL),A		; Store the character
+	INC	HL		; Point to next character
+	DEC	DE		; One less to go
+	LD	A,E		; See if 'D' and 'E' are both empty
+	OR	D
+	JR	NZ,RCVCHR	; No, get next character
+	LD	A,(CRCFLG)	; Using 'CRC'?
+	OR	A
+	JP	NZ,RCVCRC	; If yes go get 'CRC'
+
+;
+; Verify checksum
+;
+	LD	D,C		; Save checksum
+	LD	B,5
+	CALL	RECV		; Up to 5 seconds for checksum
+	JP	C,RCVSTOT	; Timeout
+	CP	D		; Checksum ok?
+	JP	NZ,CKSMERR	; No, report error
+
+;
+; Got a record, it's a duplicate if equal to the previous number, it's OK if
+; previous + 1 record
+;
+CHKSNUM:LD	A,(RCVCNT)	; Get received record number
+	LD	B,A		; Save it
+	LD	A,(RCDCNT)	; Get previous record number
+	CP	B		; Previous record repeated?
+	JP	Z,RCVACK	; If yes 'ACK' to catch up
+	INC	A		; Increment by 1 for 120 character block
+	CP	B		; Match this one we just got?
+	JP	NZ,ABORT	; No match, stop the sender, exit
+	RET			; Else return with carry not set, was ok
+
+;
+; Receive the Cyclic Redundancy Check characters (2 bytes) and see if the CRC
+; received matches the one calculated.	If they match,  get next record, else
+; send a NAK requesting the record be sent again.
+;
+RCVCRC:	LD	E,2		; Number of bytes to receive
+
+RCVCRC2:LD	B,5
+	CALL	RECV		; Up to 5 seconds for CRC byte
+	JP	C,RCVSTOT	; Timeout
+	DEC	E		; Decrement the number of bytes
+	JR	NZ,RCVCRC2	; Get both bytes
+	CALL	CRCCHK		; Check received CRC against calc'd CRC
+	OR	A		; Is CRC okay?
+	JR	Z,CHKSNUM	; Yes, go check record numbers
+	CALL	ILPRTL		; Show locally only 
+	DB	' - CRC error',CR,LF,0
+	JP	RCVSR		; Go check error limit and send NAK
+
+;
+;------------------
+; Send subroutines
+;------------------
+;
+; Send an ACK for the record
+;
+SNDACK:	LD	A,ACK		; Get 'ACK'
+	JP	SEND		; And send it
+
+;
+; Send SOH, block number and complemented block number (3 bytes total)
+;
+SNDHDR:	LD	A,(KFLG)	; Sending 1k blocks?
+	OR	A
+	LD	A,STX		; If yes, send a STX rather than SOH
+	JR	NZ,$+4
+	LD	A,SOH		; Send start of header
+	CALL	SEND
+
+SNDHNM:	LD	A,(RCDCNT)	; Send the current record number
+	CALL	SEND
+	LD	A,(RCDCNT)	; Get the record number again
+	CPL			; Complemented
+	JP	SEND		; From SENDHDR
+
+;
+; Send data record
+;
+SNDREC:	LD	C,0		; Initialize checksum
+	LD	HL,0		; Initialize CRC
+	LD	(CRCVAL),HL
+	LD	A,(KFLG)	; Sending 1k blocks?
+	OR	A
+	LD	DE,1024
+	JR	NZ,$+5		; If yes, skip the next line
+	LD	DE,128
+	LD	HL,(RECPTR)	; Get buffer address
+
+SENDC:	LD	A,(HL)		; Get a character
+	CALL	SEND		; Send it
+	INC	HL		; Point to next character
+	DEC	DE
+	LD	A,E
+	OR	D
+	JR	NZ,SENDC	; If DE not zero, keep going
+	RET			; From SENDREC
+
+;
+; Send the CRC or checksum value
+;
+SNDCHK:	LD	A,(CRCFLG)	; See if sending 'CRC' or 'checksum'
+	OR	A
+	JR	NZ,SNDCRC	; If not zero, send the 'CRC' value
+
+;
+; Send Checksum
+;
+SNDCKS:	LD	A,C		; Send the checksum
+	JP	SEND		; From SNDCKS
+
+;
+; Send CRC (2 characters).  Call FINCRC to calculate the CRC which will be
+; in 'DE' upon return.
+;
+SNDCRC:	CALL	FINCRC		; Calculate the 'CRC' for this record
+	LD	A,D		; Put first 'CRC' byte in accumulator
+	CALL	SEND		; Send it
+	LD	A,E		; Put second 'CRC' byte in accumulator
+	CALL	SEND		; Send it
+	XOR	A		; Set zero return code
+	RET
+
+;
+; Get acknowlegement
+;
+; After a record is sent, a character is returned telling if it was received
+; properly or not.  An ACK allows the next record to be sent.  A NAK causes
+; the current record to be resent.  If no character (or any character other
+; than ACK or NAK) is received after a short wait (10-12 seconds), a timeout
+; error message is shown and the record will be resent.
+;
+GTACK:	LD	B,12
+	CALL	RECV		; Wait up to 12 seconds for ACK or NAK
+	JR	NC,GTACK1	; Got one
+	CALL	TOTMSG
+	JP	ACKERR		; Set the carry bit and return
+
+GTACK1:	CP	ACK		; See if an ACK already
+	RET	Z		; If yes, return
+	CP	NAK		; See if a NAK
+	JR	Z,GTACK2	; If yes, print error, then resend
+	CP	07BH		; V.22 synch character?
+	JR	Z,GTACK		; If yes, ignore it
+	CP	0FBH		; V.22 synch character?
+	JR	Z,GTACK		; If yes, ignore it
+	CP	CANCEL		; CTL-X to cancel attempt?
+	CALL	Z,CKCAN
+
+GTACK2:	LD	B,A		; Save the character
+	LD	A,(CHKEOT)	; Sending EOT?
+	OR	A
+	JP	NZ,ACKERR	; If yes, don't show error (for ZMD)
+	CALL	ILPRTL
+	DB	' - ',0
+	LD	A,B
+	CP	NAK
+	JR	Z,GTACK3
+	CALL	HEXO
+	CALL	ILPRTL
+	DB	'H',0
+	JR	GTACK4
+
+GTACK3:	CALL	ILPRTL
+	DB	'NAK',0
+
+GTACK4:	CALL	ILPRTL
+	DB	' received not ACK',CR,LF,0
+	CALL	CATCH		; None of them, establish clear line again
+
+;
+; Timeout or error on ACK - bump error count then resend the record if
+; error limit is not exceeded
+;
+ACKERR:	LD	A,(ACCERR)	; Count accumulated errors on ACK
+	INC	A		; Add in this error
+	LD	(ACCERR),A
+	LD	A,(ERRCNT)	; Get count
+	INC	A		; Bump it
+	LD	(ERRCNT),A	; Save back
+	CP	10		; At limit?
+	JR	NC,ACKMSG	; If yes, send error message and abort
+	LD	A,(ACKCHK)	; Checking after a batch header?
+	OR	A
+	CALL	Z,RDCOUNT	; Yes, show the record count for repeat
+
+	LD	A,B		; Get character back
+	CP	NAK		; NAK?
+	JP	NZ,GTACK	; No, ignore and wait for ACK or NAK
+	RET			; And go back
+
+;
+; Reached error limit
+;
+ACKMSG:	CALL	WAIT1		; Wait for any input to stop
+	LD	A,CANCEL	; Tell remote we are quitting
+	CALL	SEND
+	CALL	SEND
+	CALL	SEND
+	LD	B,2
+	CALL	RECV		; Up to 2 seconds for remote to quit too
+	LD	A,BS
+	CALL	SEND		; Clear any CTL-X from buffer
+	CALL	SEND
+	CALL	SEND
+	CALL	ERXIT
+	DB	CR
+	DB	'-- File transfer aborted','$'
+
+;
+; Routines to trap abort conditions
+;
+; Check to see if a cancel requested.  Fall through to ABORT if so.
+;
+CKABORT:CALL	CONSTAT
+	OR	A
+	RET	Z
+	CALL	CONIN
+	CP	CANCEL
+	RET	NZ
+
+;
+; Aborts send or receive routines and returns to command line
+;
+ABORT:	CALL	WAIT1		; 1- second delay to clear input
+	CALL	CATCH
+	LD	A,(EOTFLG)	; Timed out after only 1 EOT?
+	OR	A
+	JP	NZ,RCVEOT+3	; Accept as valid EOT then
+	LD	A,CANCEL	; Show you are cancelling
+	CALL	SEND		; They may quit also with enough CTL-X
+	CALL	SEND
+	CALL	SEND
+	CALL	WAIT1		; 1-second delay to clear input
+	CALL	CATCH
+	LD	A,BS
+	CALL	SEND
+	CALL	SEND
+	CALL	SEND
+
+ABORTX:	CALL	CATCH		; Eat garbage characters
+	CALL	ABRTMSG		; Show we have aborted
+	LD	A,(MODE)	; Get file transfer mode
+	CP	'R'		; Sending a file?
+	JP	NZ,EXIT		; Yes, quit to CP/M
+
+;
+; Take care of received file (if any).
+;
+CLOSFIL:LD	C,CLOSE		; Get function
+	LD	DE,FCB		; Point to file
+	CALL	BDOS		; Close it
+	INC	A		; Close ok?
+	JR	NZ,CLOSFL1	; Yes
+	CALL	ILPRT		; No, abort
+	DB	CR,LF
+	DB	'-- Received file not closed',0
+	JP	NTDEL1
+
+CLOSFL1:LD	A,(EOTFLG)	; Get end of transmission flag
+	OR	A		; Received entire file?
+	RET	NZ		; Yes, return to RCVEOT routines
+	CALL	ILPRTB
+	DB	CR,LF
+	DB	'-- Upload has been cancelled',0
+
+;
+; Delete the received file
+;
+	LD	C,DELETE	; Get function
+	LD	DE,FCB		; Point to file
+	CALL	BDOS		; Delete it
+	INC	A		; Delete ok?
+	JR	Z,NOTDEL	; No
+	CALL	ERXIT		; Print second half of message
+	DB	CR,LF
+	DB	'-- Partial file is deleted','$'
+
+;
+; Unsuccessful delete
+;
+NOTDEL:	CALL	ILPRT
+	DB	CR,LF
+	DB	'-- Received file not deleted'
+
+NTDEL1: CALL	ERXIT
+	DB	' or no file received','$'
+
+;
+; See if a file exists.  If it exists, ask for a different name.
+;
+CHEKFIL:LD	A,(SETAREA)	; Uploading to designated drive/user?
+	OR	A
+	JR	NZ,CHEKF1	; Yes
+	LD	A,(ASKAREA)	; Upload routing enabled?
+	OR	A
+	JR	NZ,CHEKF1	; Yes
+	LD	A,(PRIVATE)	; Receiving in private area?
+	OR	A
+	JR	Z,$+5		; No
+
+CHEKF1:	CALL	RECARE		; Set the designated area up
+	LD	C,SRCHF		; See if it exists
+	LD	DE,FCB		; Point to control block
+	CALL	BDOS
+	INC	A		; Found?
+	RET	Z		; No, return
+	LD	A,CANCEL	; Tell the remote we are aborting
+	CALL	SEND		; Send several cancel requests
+	CALL	SEND
+	CALL	SEND
+
+CHEKF2:	LD	B,1
+	CALL	RECV		; Up to 1 seconds for character
+	JR	NC,CHEKF2	; Wait until no more characters
+	LD	A,(BATCH)	; Using batch mode now?
+	LD	(CONONL),A	; If not, send message to modem also
+	OR	A
+	JR	Z,CHEKF3	; If not, exit
+	LD	A,CANCEL
+	CALL	SEND
+	CALL	SEND
+	CALL	SEND
+	LD	A,BS
+	CALL	SEND
+
+CHEKF3:	CALL	ERXIT		; Exit, print error message
+	DB	CR,LF
+	DB	'-- File already exists','$'
+
+;
+; Make the file to be received
+;
+MAKEFIL:XOR	A		; Set extent and record number to 0
+	LD	(FCBEXT),A
+	LD	(FCBRNO),A
+	LD	A,(HIDEIT)
+	OR	A
+	JR	Z,MAKEF1	; HIDEIT not enabled, skip all this
+	CALL	WHLCHK
+	JR	NZ,MAKEF1	; Don't make it $SYS if SYSOP online
+	LD	A,(PRIVATE)
+	OR	A
+	JR	NZ,MAKEF1	; Don't make it $SYS if private upload
+
+	LD	DE,FCB+10	; Point at second char of file extent
+	LD	A,(DE)
+	OR	80H		; And turn on the high bit (Make file $SYS)
+	LD	(DE),A		; Put it back
+
+MAKEF1:	LD	C,MAKE		; Get BDOS FNC
+	LD	DE,FCB		; Point to FCB
+	CALL	BDOS		; To the make
+	PUSH	AF		; Save MAKE error code
+
+	LD	C,SETFILE	; Set up for BDOS FUNCTION 30
+	LD	DE,FCB
+	CALL	BDOS		; Set file attributes
+	POP	AF		; Error code from BDOS make function
+	INC	A		; 0FFH=bad?
+	RET	NZ		; Open ok
+
+	LD	HL,FCB+1
+	JP	NOROOM		; Tell them directory might be full
+
+;
+; Open file to be sent
+;
+OPNFIL:	XOR	A		; Zero accumulator
+	LD	(FCBEXT),A	; Set extent to 0
+	LD	(FCBRNO),A	; Set record number to 0
+	LD	DE,FCB		; Point to file
+	LD	C,OPEN		; Open it
+	CALL	BDOS
+	INC	A		; Open ok?
+	JR	NZ,OPNOK	; Yes, check restrictions
+
+	LD	A,(LBRARC)	; Get extraction flag
+	OR	A		; Enabled?
+	JP	Z,NOFILE	; No, abort
+	LD	HL,ARCNAM	; Force .ARC filetype
+	CALL	CHNGEXT		; Try to open it
+	JR	NZ,OPNOK	; File found
+	LD	HL,ARKNAM	; Force .ARK filetype
+	CALL	CHNGEXT		; Try to open it
+	JR	NZ,OPNOK	; File found
+	LD	HL,LBRNAM	; Force .LBR filetype
+	CALL	CHNGEXT		; Try to open it
+	JR	NZ,OPNOK	; File found
+	JP	NOARK		; Not found and no more filetypes to try
+
+CHNGEXT:LD	DE,FCB+9
+	LD	BC,3
+	LDIR
+	LD	C,OPEN
+	LD	DE,FCB
+	CALL	BDOS
+	INC	A
+	RET			; Z flag set=file not found
+
+;
+; Requested file was found, now check some restrictions
+;
+OPNOK:	LD	IX,FCB		; Point to filename
+	CALL	RESTRCT		; Check it for restrictions
+	LD	A,(LBRARC)	; Get the member extraction flag
+	OR	A		; Enabled?
+	JR	Z,OPNOK1	; No, skip this
+	CALL	RSDMA		; Reset to default DMA address
+	LD	C,READ		; Read first file record
+	LD	DE,FCB
+	CALL	BDOS
+	OR	A		; Read ok?
+	JP	NZ,READERR	; If not, error
+	CALL	CKDIR		; Take care of LBR stuff
+
+OPNOK1:	LD	HL,(RCNT)	; Get record count
+	LD	A,H
+	OR	L
+	JP	Z,ZEROLN	; Can't send 0-length files
+	LD	A,(BATCH)
+	OR	A
+	JR	Z,OPNOK1A	; Don't clear screen unless in BATCH mode
+	LD	A,(FSTFLG)	; Get first file sent flag
+	OR	A		; Sent it already?
+	LD	A,1		; Show we have for next time
+	LD	(FSTFLG),A
+	CALL	Z,CLEARIT	; No, need to clear screen here first time
+
+OPNOK1A:CALL	SHONM		; Show the name of this file
+	CALL	LOW41K		; Less than MINKSPD?
+	JR	C,OPNOK3	; Yes, don't show 1k packets
+
+OPNOK2:	CALL	ILPRT
+	DB	CR,LF
+	DB	'Ymodem packets total     > ',0
+	LD	HL,(RCNT)	; Get record count
+	CALL	DIVREC		; Divide number of records by 8
+	CALL	DECOUT		; Show # of 1k packets
+
+OPNOK3:	CALL	ILPRT
+	DB	CR,LF
+	DB	'Xmodem packets total     > ',0
+	LD	HL,(RCNT)	; Get original count
+	CALL	DECOUT		; Show # of 128 byte packets
+	LD	A,(MODE)	; Get transfer mode
+	CP	'R'		; Receiving?
+	RET	Z		; Yes, all done
+
+	CALL	ILPRT
+	DB	CR,LF
+	DB	'Disk space you need      > ',0
+
+	LD	A,(SBSHOW)	; Displaying intial BATCH screen to remote?
+	OR	A
+	PUSH	AF		; Save answer
+	LD	HL,(FILEK)	; Get precalculated total 'k' for all files
+	JR	NZ,OPNOK4	; Go show it
+	LD	BC,(RCNT)	; Else get single file record count back
+	CALL	ROUNDK		; Round disk space needed
+	EX	DE,HL
+;
+OPNOK4:	CALL	DECOUT		; Decimal output
+	CALL	ILPRT
+	DB	'k  (',0
+	LD	HL,(BLKSIZ)	; Get host disk block size
+	CALL	DECOUT		; Decimal output
+	CALL	ILPRT
+	DB	'k blocks)',0
+	POP	AF		; Displaying initial BATCH screen to remote?
+	RET	NZ		; Yes, then we're done in here
+
+;
+; Show transfer time, first for 1k blocks, then for 128-byte blocks. If we are
+; at 300 bps, report both transfer times the same.  (skip the 1k times for
+; speeds slower than MINKSPD bps.)
+;
+KSPD:	CALL	LOW41K		; Less than MINKSPD?
+	JR	C,XSPD		; Yes, skip 1k display
+	CALL	ILPRT
+	DB	CR,LF
+	DB	'Ymodem time / 1k         > ',0
+	CALL	GETSPD		; Get current modem speed
+	CP	1		; At 300 bps?
+	JR	Z,KSPD1		; 1k transfer time in BC (minutes) if >300
+	CALL	KTIM
+	JR	KSPD2
+
+KSPD1:	LD	HL,XECTBL
+	LD	(RECTBL+1),HL
+	CALL	XTIM
+
+KSPD2:	CALL	STORTM		; Store it
+	CALL	XFRTIM		; Display it
+
+XSPD:	CALL	ILPRT
+	DB	CR,LF
+	DB	'Xmodem time / 128 byte   > ',0
+	LD	HL,XECTBL	; 128 size values (300 bps)
+	LD	(RECTBL+1),HL
+	CALL	XTIM		; Xmodem transfer time
+	LD	A,(KFLG)	; If 'SK' set, 1k time already stored
+	OR	A
+	CALL	Z,STORTM
+	CALL	XFRTIM
+	LD	HL,KECTBL	; Restore to original 1k values
+	LD	(RECTBL+1),HL
+	CALL	ILPRT
+	DB	CR,LF,0
+
+	LD	A,(BATCH)	; In batch mode?
+	OR	A
+	JP	Z,OPNOK5	; No, couldn't have been here before
+	LD	A,(FSTFLG)	; Yes, been here before?
+	OR	A
+	JP	Z,OPNOK5	; No, following gets shown next time
+
+;
+; In batch, show files remaining after this one is sent
+;
+	CALL	ILPRTL
+	DB	CR,LF
+	DB	'Files remaining          > ',0
+	LD	A,(SHOCNT)	; Get cumulative files
+	DEC	A
+	LD	(SHOCNT),A	; Less one
+	LD	L,A
+	LD	H,0
+	CALL	DECOUT
+
+	CALL	ILPRTL
+	DB	CR,LF
+	DB	'Ymodem packets remaining > ',0
+	LD	HL,(RCNT)	; Get this file's record count again
+	EX	DE,HL		; Put in DE
+	LD	HL,(TOTREC)	; Total records remaining
+	LD	A,L
+	SUB	E
+	LD	L,A
+	LD	A,H
+	SBC	A,D
+	LD	H,A
+	JR	NC,$+5
+	LD	HL,0		; In case of a slightly negative number
+	PUSH	HL		; Save it for Xmodem packets show
+	CALL	DIVREC		; Divide number of records by 8
+	CALL	DECOUT
+
+	CALL	ILPRTL
+	DB	CR,LF
+	DB	'Xmodem packets remaining > ',0
+	POP	HL		; Get total records remaining after this file
+	LD	(TOTREC),HL
+	CALL	DECOUT		; Show remote remaining records
+	CALL	ILPRTL
+	DB	CR,LF,LF,0
+	CALL	WAITMSG		; Display '[ waiting ]' message locally
+	RET
+
+;
+; If sending an ARC or ARK file, tell user to rename to .ARK or .ARC file type.
+;
+OPNOK5:	LD	A,(LBRARC)	; Get extraction flag
+	OR	A		; Enabled?
+	JP	Z,DLRDY		; No, skip this
+	LD	A,(FCB+9)	; Point to member filetype
+	AND	7FH		; Strip parity
+	CP	'L'		; LBR member extraction?
+	JP	Z,DLRDY		; Yes, skip this
+	CALL	ILPRTB
+	DB	CR,LF
+	DB	'You MUST name file       > ',0
+	LD	D,8		; Filename count - ignore filetype
+	LD	HL,MEMFCB	; Get requested member name
+
+OPNOK6:	LD	A,(HL)
+	CP	' '		; Short filename?
+	JR	Z,OPNOK7	; If so, fill in type
+	CALL	TYPE
+
+	DEC	D		; One less...
+	INC	HL		; Next character
+	JR	NZ,OPNOK6	; Loop until done
+
+OPNOK7:	LD	A,(FCB+11)	; Get last character of parent filetype
+	LD	($+9),A		; Stuff it below to display
+	CALL	ILPRTB
+	DB	'.AR?'		; Either a 'C' or a 'K' gets poked at '?'
+	DB	CR,LF,0
+	CALL	DLRDY		; Tell them their download(s) are ready
+	RET
+
+;
+; These routines display the transfer time in minutes & seconds and check for
+; time restrictions,  if a clock is enabled.
+;
+XFRTIM:	PUSH	HL		; Save seconds in 'L'
+	CALL	WHLCHK		; Sysop online?
+	JR	NZ,SKPTIM	; Yes, then skip the limit
+
+	LD	A,(MAXTOS)
+	OR	A
+	JR	Z,SKPTIM
+	LD	D,C		; Save minutes for now
+	INC	D		; Increment to next full minute
+	LD	A,(TIMEON)	; Using TIMEON?
+	OR	A
+	LD	A,D		; Get length of this program
+	JR	Z,XFRTM1	; No, don't increment time
+	LD	HL,TON		; Point to time on system
+	ADD	A,(HL)		; Else add time on system to transfer time
+
+XFRTM1:	LD	(XFRMIN),A	; Store it
+	OR	A
+	LD	A,B		; Get hours in A
+	JR	NZ,$+3		; Don't increment if not zero
+	INC	A		; Increment to next full minute
+	LD	(XFRMIN+1),A
+
+SKPTIM:	LD	H,B		; Get most significant in H (hours)
+	LD	L,C		; Get least significant byte of minutes in L
+	CALL	DECOUT		; Print decimal number of minutes
+	CALL	ILPRT
+	DB	':',0
+	POP	HL		; Get seconds back
+	LD	A,L		; Get the number of seconds
+	CP	10		; 10 seconds or more?
+	JR	NC,$+7		; If yes, disregard next two lines
+	CALL	ILPRT
+	DB	'0',0
+	CALL	DECOUT		; Print decimal number of seconds
+	CALL	ILPRT
+	DB	' at ',0
+	CALL	GETSPD		; Get modem speed value in A
+	CALL	SHOSPD		; Display in BPS
+
+;
+; Determine if the caller has enough time left online to make the
+; requested download(s).
+;
+XFRTM3:	LD	A,(MODE)	; Get transfer mode
+	CP	'R'		; Receiving?
+	RET	Z		; Yes, all done
+
+	LD	A,(MAXTOS)	; Get maximum time allowed
+	OR	A		; Unlimited?
+	RET	Z		; Yes, skip time restriction
+
+	LD	A,(XFRMIN+1)	; Get most significant byte of minutes
+	OR	A		; 0?
+	JR	NZ,OVERTM	; If not, over 255 minutes
+	LD	A,(XFRMIN)	; Get least significant byte of minute count
+	LD	B,A		; Put in B
+	LD	A,(MAXTOS)	; Get maximum time allowed
+	INC	A
+	SBC	A,B
+	RET	NC
+
+;
+; There is not enough time to download the requested file(s). Inform user and
+; abort to CP/M.
+;
+OVERTM:	CALL	ILPRTB
+	DB	CR,LF,LF,0
+	CALL	ABRTMSG		; Display both local and remote we aborted
+	CALL	ILPRTB
+	DB	CR,LF,LF
+	DB	'Required send time exceeds the ',0
+	LD	A,(TLOS)	; Get time left on system
+	LD	H,0		; Zero H
+	LD	L,A		; Time left on system in L
+	CALL	DECOUT		; Decimal output routine
+	CALL	ERXIT		; Display following message and abort to CP/M
+	DB	' minutes allowed','$'
+
+;
+;-------------------------------------------------------------------------;
+; L o g   F i l e   T r a n s f e r					  |
+;-------------------------------------------------------------------------;
+;
+; Main log file routine, adds record to log file
+;
+LOGCALL:LD	A,(LOGCAL)	; Logging file transfers?
+	OR	A
+	RET	Z		; No
+	CALL	GTCURDU		; Get current drive/user in USRSAV and DSKSAV
+
+	LD	HL,FCBCLR	; FCB to initialize
+	LD	DE,LSTCLR	; Filename to insert
+	CALL	RENFCB		; Initialize FCB
+
+	LD	A,(LASTDRV)
+	SUB	'A'
+	LD	(DEFDSK),A
+	LD	A,(LASTUSR)
+	LD	(DEFUSR),A
+	LD	DE,FCBCLR
+	CALL	OPENF		; Open LASTCALR file
+	JR	NZ,LGCAL1
+	CALL	ILPRT
+	DB	CR,LF
+	DB	'-- File not Found: LASTCALR.???'
+	DB	CR,LF,0
+	RET			; Now go send EOT
+
+LGCAL1:	LD	C,SETRRD	; Get random record #
+	LD	DE,FCBCLR	; (for first record in file)
+	CALL	BDOS
+
+	LD	DE,DBUF		; Set DMA to DBUF
+	CALL	STDMA
+
+	LD	C,RRDM		; Read first (and only) record
+	LD	DE,FCBCLR
+	CALL	BDOS
+
+	LD	HL,DBUF		; Set pointer to beginning of record
+	LD	A,(CLOCK)	; Is there a clock installed?
+	OR	A
+	JR	Z,LGCAL2	; No, skip this then
+	LD	DE,0		; Zero DE
+	LD	A,(LCNAME)	; Offset to start of caller's name
+	LD	E,A		; To E
+	ADD	HL,DE		; HL now points to start of name
+
+LGCAL2:	LD	(CLRPTR),HL
+	LD	DE,LOGBUF	; Set DMA address to LOGBUF
+	CALL	STDMA
+
+	LD	HL,FCBLOG	; FCB to initialize
+	LD	DE,LOGNAM	; Filename to insert
+	CALL	RENFCB		; Initialize FCB
+
+	LD	A,(LOGDRV)
+	SUB	'A'
+	LD	(DEFDSK),A
+	LD	A,(LOGUSR)
+	LD	(DEFUSR),A
+	LD	DE,FCBLOG
+	CALL	OPENF		; Open log file
+	JR	NZ,LGCAL5	; If file exists, skip create
+	LD	DE,FCBLOG
+	LD	C,MAKE		; Create a new file if needed
+	CALL	BDOS
+	INC	A
+	JR	NZ,LGCAL3	; No error, continue
+	CALL	ILPRT		; File create error
+	DB	CR,LF
+	DB	'-- Directory Full: ',0
+	LD	HL,LOGNAM
+	CALL	SHONM4
+	RET			; Go back and send EOT
+
+LGCAL3:	LD	DE,LOGBUF	; Set DMA back to LOGBUF 
+	CALL	STDMA
+
+	LD	C,SETRRD	; Set random record #
+	LD	DE,FCBLOG	; (for first record in file)
+	CALL	BDOS
+
+LGCAL4:	LD	A,EOF
+	LD	(LOGBUF),A
+	JR	LGCAL6
+
+LGCAL5:	LD	DE,LOGBUF	; Set DMA to LOGBUF
+	CALL	STDMA
+
+	LD	C,FILSIZ	; Get file length
+	LD	DE,FCBLOG
+	CALL	BDOS
+	LD	HL,(FCBLOG+33)	; Back up to last record
+	LD	A,L
+	OR	H
+	JR	Z,LGCAL4	; Unless zero length file
+	DEC	HL
+	LD	(FCBLOG+33),HL
+	LD	DE,FCBLOG
+	LD	C,RRDM		; And read it
+	CALL	BDOS
+
+LGCAL6:	CALL	RSTLP		; Initialize LOGPTR and LOGCNT
+
+LGCAL7:	LD	A,(LOGCNT)
+	INC	A
+	LD	(LOGCNT),A
+	CP	129
+	JR	NZ,LGCAL8
+	LD	HL,(FCBLOG+33)
+	INC	HL
+	LD	(FCBLOG+33),HL
+	LD	HL,LOGBUF+1
+	LD	(LOGPTR),HL
+	LD	A,1
+	LD	(LOGCNT),A
+	LD	A,EOF
+	JR	LGCAL8A
+
+LGCAL8:	LD	HL,(LOGPTR)
+	LD	A,(HL)
+	INC	HL
+	LD	(LOGPTR),HL
+
+LGCAL8A:CP	EOF
+	JR	NZ,LGCAL7	; Until EOF
+	LD	A,(LOGCNT)	; Then backup one character
+	DEC	A
+	LD	(LOGCNT),A
+	LD	HL,(LOGPTR)
+	DEC	HL
+	LD	(LOGPTR),HL
+
+;
+; Print file transfer mode to LOG file (R, S, P, A, L)
+;
+	LD	A,(PUPFLG)
+	OR	A		; Privileged upload option request?
+	JR	Z,LGCAL8B	; No, skip next 2 lines
+	LD	A,'P'		; Else,
+	JR	LGCAL9		; Show as private upload for log file
+
+LGCAL8B:LD	A,(PRIVATE)
+	OR	A
+	JR	NZ,LGCAL9
+	LD	A,(MODE)	; Get transfer mode back and put in file
+
+LGCAL9:	CALL	PUTLOG
+
+;
+; Print baud rate to LOG file
+;
+	CALL	GETSPD		; Get speed factor
+	ADD	A,30H
+	CALL	PUTLOG
+	CALL	PUTSP		; Blank
+
+;
+; Print program size (in minutes and seconds) to LOG file
+;
+	LD	A,(PGSIZE)	; Now the program size in minutes..
+	CALL	PNDEC		; Of transfer time (mins)
+	LD	A,':'
+	CALL	PUTLOG		; ':'
+	LD	A,(PGSIZE+2)
+	CALL	PNDEC		; And seconds
+	CALL	PUTSP		; Blank
+
+;
+; Log the drive and user area as a prompt
+;
+	LD	A,(FCB)
+	OR	A
+	JR	NZ,WDRV
+	LD	A,(DSKSAV)
+	INC	A
+
+WDRV:	ADD	A,'A'-1
+	CALL	PUTLOG
+	LD	A,(USRSAV)
+	CALL	PNDEC
+	LD	A,'>'		; Make it look like a prompt
+	CALL	PUTLOG
+	LD	A,(LBRARC)
+	OR	A		; Member extraction?
+	JR	Z,WDRV1		; No, won't be member name
+	LD	HL,MEMFCB	; Name of file in library
+	LD	B,11
+	CALL	PUTSTR
+	CALL	PUTSP		; ' '
+
+;
+; Put filename in LOG file
+;
+WDRV1:	LD	HL,FCB+1	; Now the name of the file
+	LD	B,11
+	CALL	PUTSTR
+	LD	A,(LBRARC)
+	OR	A		; Member extraction?
+	JR	Z,WDRV2		; No, won't be member name
+	LD	C,1
+	JR	SPLOOP
+
+WDRV2:	LD	C,13
+
+SPLOOP:	PUSH	BC
+	CALL	PUTSP		; Put ' '
+	POP	BC
+	DEC	C
+	JR	NZ,SPLOOP
+
+;
+; Print number of 'k' to LOG file
+;
+	LD	HL,(RECDNO)	; Get record count
+	CALL	DIVREC		; Divide record count by 8
+
+EXKB2:	CALL	PNDEC3		; Print to log file (right just xxxk)
+	LD	HL,LOGK		; 'k '
+	LD	B,2
+	CALL	PUTSTR
+	XOR	A
+	LD	(COMMA),A	; Reset field counter
+
+;
+; Print date and time of transfer to LOG file
+;
+	LD	A,(CLOCK)	; Clock available in BYE?
+	OR	A
+	JR	NZ,EXKB3	; Yes, continue
+	LD	A,(RTC)		; Else how about an RTC overlay?
+	OR	A
+	JR	Z,CLOOP		; Nope, foget date and time
+
+EXKB3:	CALL	GETTIME		; Get CURRENT time for log
+
+	LD	A,(EDATE)	; European date format?
+	OR	A
+	JR	Z,EXKB4		; No
+
+	LD	A,(DAY)
+	CALL	PNDEC		; Print DD
+	LD	A,'/'		; '/'
+	CALL	PUTLOG
+	LD	A,(MONTH)
+	CALL	PNDEC		; Print MM
+	JR	EXKB5
+
+EXKB4:	LD	A,(MONTH)
+	CALL	PNDEC		; Print MM
+	LD	A,'/'		; '/'
+	CALL	PUTLOG
+	LD	A,(DAY)
+	CALL	PNDEC		; Print DD
+
+EXKB5:	LD	A,'/'		; '/'
+	CALL	PUTLOG
+	LD	A,(YEAR)
+	CALL	PNDEC		; Print YY
+	CALL	PUTSP		; ' '
+	LD	A,(HOUR)	; Get current hour
+	CALL	PNDEC		; Print hr to file
+	LD	A,':'		; With ':'
+	CALL	PUTLOG		; Between HH:MM
+	LD	A,(MINUTE)	; Get min
+	CALL	PNDEC		; And print min
+	CALL	PUTSP		; Print a space
+
+;
+; Print name of caller to LOG file
+;
+CLOOP:	LD	HL,(CLRPTR)
+	LD	A,(HL)
+	INC	HL
+	LD	(CLRPTR),HL
+	CP	EOF		; End of file?
+	JR	Z,QUIT		; Yes
+	CP	CR		; Do not print 2nd line of 'LASTCALR'
+	JR	NZ,CLOP1
+
+CEND:	CALL	PUTLOG
+	LD	A,LF
+	CALL	PUTLOG		; And add a LF
+	JR	QUIT
+
+CLOP1:	CP	' '		; Space?
+	JR	NZ,CLOP1A	; No, check for comma
+	LD	A,','		; Convert space to comma for field checking
+
+CLOP1A:	CP	','		; Comma?
+	JR	NZ,CLOP2
+	LD	A,(COMMA)
+	CP	1		; Is this the second comma or space?
+	JR	NZ,CLOP1B	; No, bump the counter
+	LD	A,CR
+	JR	CEND		; Yes, stop taking data from lastcalr
+
+CLOP1B:	INC	A		; Bump it one
+	LD	(COMMA),A
+	LD	A,' '		; Instead send a ' '
+
+CLOP2:	CALL	PUTLOG
+	JR	CLOOP
+
+QUIT:	LD	A,EOF		; Put in EOF
+	CALL	PUTLOG
+	LD	A,(LOGCNT)	; Check count of chars in buffer
+	CP	1
+	JR	NZ,QUIT		; Fill last buffer & write it
+	LD	DE,FCBCLR	; Close lastcaller file
+	LD	C,CLOSE
+	CALL	BDOS
+	INC	A
+	JR	Z,QUIT1
+	LD	HL,(FCBLOG+33)	; Move pointer back to show
+	DEC	HL		; Actual file size
+	LD	(FCBLOG+33),HL
+	LD	DE,FCBLOG	; Close log file
+	LD	C,CLOSE
+	CALL	BDOS
+	INC	A
+	RET	NZ		; If OK, return now...
+
+QUIT1:	CALL	ILPRT		; If error, oops
+	DB	CR,LF
+	DB	'-- Close Error: ',0
+	LD	HL,LOGNAM
+	CALL	SHONM4
+	RET			; Go back and send EOT
+
+;
+;------------------------- 
+; LOGCAL Support Routines
+;
+; Open file with FCB pointed to by DE (disk/user passed in DEFDSK and DEFUSR)
+;
+OPENF:	PUSH	DE		; Save FCB address
+	LD	A,(DEFDSK) 	; Get disk for file
+	CALL	RECDRX		; Log into it
+	LD	A,(DEFUSR) 	; Get default user
+	CALL	RECAR1		; Log into it
+	POP	DE		; Get FCB address
+	LD	A,(CPM3)	; Using with CPM3?
+	OR	A
+	JR	Z,OPENF1	; No
+	PUSH	DE		; Save FCB address
+	CALL	RSDMA		; Set DMA to 80H
+	POP	DE		; Get back pointer to FCB
+	PUSH	DE		; Save FCB pointer again
+	LD	C,SRCHF		; Search for first match
+	CALL	BDOS
+	INC	A		; Did file match?
+	POP	DE
+	RET	Z		; No, return
+	PUSH	DE
+	DEC	A		; A=directory code (0-3)
+	ADD	A,A		; *2
+	ADD	A,A		; *4
+	ADD	A,A		; *8
+	ADD	A,A		; *16
+	ADD	A,A		; *32
+	LD	E,A
+	LD	D,0
+	LD	HL,TBUF		; Add (32*dir code) to default DMA
+	ADD	HL,DE		; to find first match filename
+	POP	DE		; DE=FCB
+	PUSH	DE		; Save DE again
+	INC	HL		; Move HL past user # byte in buffer
+	INC	DE		; Move DE past drive # byte in FCB
+	LD	BC,11
+	LDIR			; Move name found to FCB
+	POP	DE		; And continue with open
+
+OPENF1:	LD	C,OPEN		; Open file
+	CALL	BDOS
+	CP	0FFH		; Not present?
+	RET			; Return to caller
+
+;
+; Write character to log file
+;
+PUTLOG:	LD	HL,(LOGPTR)	; Get pointer
+	AND	7FH		; Strip any attributes
+	LD	(HL),A		; Put data
+	INC	HL		; Increment pointer
+	LD	(LOGPTR),HL	; Update pointer
+	LD	B,A		; Save character in B
+	LD	A,(LOGCNT)	; Get count
+	INC	A		; Increment it
+	LD	(LOGCNT),A	; Update count
+	CP	129		; Check it
+	RET	NZ		; If not EOB, return
+	PUSH	BC		; Save character
+	LD	DE,FCBLOG	; Else, write this sector
+	LD	C,WRDM
+	CALL	BDOS
+	OR	A
+	JR	Z,ADVRCP	; If ok, cont.
+	CALL	ILPRT
+	DB	CR,LF
+	DB	'-- Disk Full: ',0
+	LD	HL,LOGNAM
+	CALL	SHONM4
+	RET
+
+ADVRCP:	LD	HL,(FCBLOG+33)	; Advance record number
+	INC	HL
+	LD	(FCBLOG+33),HL
+	CALL	RSTLP		; Reset buffer pointers
+	POP	AF		; Get saved character
+	JP	PUTLOG		; Put it in buffer and return
+
+RSTLP:	LD	HL,LOGBUF	; Reset pointers
+	LD	(LOGPTR),HL	; And return
+	LD	A,0
+	LD	(LOGCNT),A
+	RET
+
+;
+; Print number in decimal format (into log file)  IN: HL=binary number
+; OUT: nnn=right justified with spaces
+;
+PNDEC3:	LD	A,H		; Check high byte
+	OR	A
+	JR	NZ,DECOT	; If on, is at least 3 digits
+	LD	A,L		; Else, check low byte
+	CP	100
+	JR	NC,TEN
+	CALL	PUTSP
+
+TEN:	CP	10
+	JR	NC,DECOT
+	CALL	PUTSP
+	JR	DECOT
+
+;
+; Print number in decimal format (into log file)
+;
+PNDEC:	CP	10		; Two column decimal format routine
+	JR	C,ONE		; One or two digits to area number?
+	JR	TWO
+
+ONE:	PUSH	AF
+	LD	A,'0'
+	CALL	PUTLOG
+	POP	AF
+
+TWO:	LD	H,0
+	LD	L,A
+
+DECOT:	PUSH	BC
+	PUSH	DE
+	PUSH	HL
+	LD	BC,-10
+	LD	DE,-1
+
+DECOT2:	ADD	HL,BC
+	INC	DE
+	JR	C,DECOT2
+	LD	BC,10
+	ADD	HL,BC
+	EX	DE,HL
+	LD	A,H
+	OR	L
+	CALL	NZ,DECOT
+	LD	A,E
+
+DECOT3:	ADD	A,'0'
+	CALL	PUTLOG
+
+DECOT4:	POP	HL
+	POP	DE
+	POP	BC
+	RET
+
+;
+; Put string to log file
+;
+PUTSTR:	LD	A,(HL)
+	PUSH	HL
+	PUSH	BC
+	CALL	PUTLOG
+	POP	BC
+	POP	HL
+	INC	HL
+	DJNZ	PUTSTR
+	RET
+
+;
+; Puts a single space in log file, saves PSW/HL
+;
+PUTSP:	PUSH	AF
+	PUSH	HL
+	LD	A,' '
+	CALL	PUTLOG
+	POP	HL
+	POP	AF
+	RET
+
+;
+;-------------------------------------------------------------------------;
+; T I M E   &   D A T E	  R o u t i n e s			  	  |
+;-------------------------------------------------------------------------;
+;
+; Get RTCBUF address if running BYE
+;
+TIME:	LD	A,(CLOCK)	; Clock in BYE?
+	OR	A
+	JR	Z,TIME1		; No
+	LD	DE,25		; Offset to RTCBUF address
+	CALL	GETOFF		; Point to JP COLDBOOT + offset in DE
+	LD	E,(HL)		; HL points to RTCBUF address
+	INC	HL		; To most significant byte of address
+	LD	D,(HL)
+	EX	DE,HL		; Back to HL
+	LD	(RTCBUF),HL	; Save for later use
+	CALL	GETTIME		; Store RTCBUF contents internally
+
+	LD	HL,(RTCBUF)	; Get RTC buffer address
+	LD	DE,7		; Offset to time on system (TOS) word
+	ADD	HL,DE		; Address in HL
+	LD	A,(HL)		; Get minutes on system
+	LD	(TON),A		; Store time on system for SHOWTOS
+
+;
+; Get MAXTOS if restricting downloads to time left
+;
+	LD	A,(TIMEON)	; Policing time on system?
+	OR	A
+	JP	Z,SHOWTOS	; No
+	LD	DE,24		; Offset to maximum time allowed
+	CALL	GETOFF		; Point to JP COLDBOOT + offset in D
+
+	LD	A,(MODE)	; Exiting? (Gets set NZ in exit routine)
+	OR	A
+	JR	Z,TIME0		; No, skip next
+	LD	A,(MAXTOS)	; Reset maximum time allowed
+	LD	(HL),A
+	JR	TIME0A
+
+TIME0:	LD	A,(HL)		; Get maximum time allowed
+	LD	(MAXTOS),A	; Store it
+	LD	(HL),0		; Disable BYE from checking time for now
+
+TIME0A:	LD	A,(TON)
+	LD	B,A		; Save time on system for comparison
+	LD	A,(MAXTOS)	; Get maximum time allowed
+	SUB	B		; Get time left on system
+	LD	(TLOS),A	; Store time left on system
+	JP	SHOWTOS		; Go show TON
+
+;
+; Get TON if RTC
+;
+TIME1:	LD	A,(RTC)		; Clock reader code installed in ZMD?
+	OR	A
+	JP	Z,SHOWTOS	; No
+	CALL	GETTIME
+
+	LD	HL,(LHOUR)	; Get address to logon hour
+	LD	A,(HOUR)
+	CP	(HL)		; Same as current hour?
+	INC	HL		; Point to logon minute
+	LD	D,(HL)		; Get it in D
+	JR	NZ,TIME2	; No, not the same
+	LD	A,(MINUTE)	; Else get current minute
+	SUB	D		; Subtract logon minute
+	LD	(TON),A		; Store it as time on system
+	JR	TIME3		; Get maximum allowed
+
+TIME2:	LD	A,60		; Fake an hour
+	SUB	D		; Subtract logon minute
+	LD	HL,MINUTE	; Point to current minute
+	ADD	A,(HL)		; Add them
+	LD	(TON),A		; Store as current time on system
+
+;
+; Get MAXTOS if TIMEON
+;
+TIME3:	LD	A,(TIMEON)	; Restricting downloads to time left?
+	OR	A
+	JR	Z,SHOWTOS	; No
+	CALL	WHLCHK		; WHEEL byte set?
+	JR	NZ,SHOWTOS	; Yes, just display time on system
+	LD	A,(MODE)	; Else been here before?
+	OR	A
+	JR	NZ,TIME4	; Yes (MODE is 0 first time through)
+	LD	A,(MAXMIN)
+	LD	(MAXTOS),A	; Else set maximum time allowed
+	LD	(TLOS),A	; And current time left on system
+
+TIME4:	LD	A,(MAXTOS)	; Get current maximum time allowed
+	OR	A		; Unlimited?
+	JR	Z,SHOWTOS	; Yes, just display time on system
+	LD	A,(MAXMIN)	; Else get original maximum minutes allowed
+	LD	B,A		; Into B
+	LD	A,(TON)		; Get current time on system
+	SUB	B		; Time up?
+	JR	C,SHOWTOS	; No, just display time on system
+
+	CALL	ILPRTB
+	DB	CR,LF,LF
+	DB	'-- Your time is up, please share the system with others'
+	DB	CR,LF,0
+	POP	HL
+	LD	A,0CDH
+	LD	(0),A
+	JP	0
+
+;
+; Display the time on system
+;
+SHOWTOS:LD	A,(DSPTOS)	; Display time on system message?
+	OR	A
+	RET	Z		; No, all done
+	LD	A,(MODE)	; Else exiting?
+	OR	A
+	JR	Z,SHOTOS1	; Yes, no line feed
+	CALL	ILPRTB
+	DB	CR,LF,0
+
+SHOTOS1:CALL	ILPRTB
+	DB	'Online ',0
+	LD	A,(TON)		; Get time on system
+	LD	H,0		; Zero H
+	LD	L,A		; TON in L
+	CALL	DECOUT		; Decimal output
+	CALL	ILPRTB
+	DB	' minute',0
+	LD	A,(TON)		; Get time on system
+	CP	1		; 1?
+	JR	Z,SHOTOS2	; Yes, leave display as 'minute'
+	CALL	ILPRTB
+	DB	's',0		; Else make it plural
+
+SHOTOS2:LD	A,(MODE)
+	OR	A
+	RET	NZ
+	CALL	ILPRT
+	DB	CR,LF,0
+	RET
+
+;
+; Transfer BYE's RTCBUF contents to internal storage
+;
+GETTIME:LD	A,(RTC)		; User installed clock routines?
+	OR	A
+	JP	NZ,RTCTIM	; Yes, go do it
+	LD	HL,(RTCBUF)
+
+	LD	A,(HL)		; 00:
+	CALL	BCDBIN		; Convert to binary
+	LD	(HOUR),A	; Save
+
+	CALL	GETTIM3		; :00
+	LD	(MINUTE),A	; Save
+
+	INC	HL		; Skip seconds
+	INC	HL		; Skip '19'nn
+	CALL	GETTIM3		; YY
+	LD	(YEAR),A	; Save
+
+	CALL	GETTIM3		; MM
+	LD	(MONTH),A	; Save
+
+	CALL	GETTIM3		; DD
+	LD	(DAY),A		; Save
+	RET			; And return
+
+GETTIM3:INC	HL		; Increment to next RTC byte value
+	LD	A,(HL)		; Get it
+	JP	BCDBIN		; Return with binary value in A
+
+;
+; Add the time of the last upload/download to BYE's time on system byte
+;
+ADDTON:	LD	A,(TIMEON)	; Using TIMEON?
+	OR	A
+	RET	Z
+
+	CALL	BYECHK		; If so, see if BYE is running
+	OR	A		; 0 if no clock, or 0 if no BYE.
+	LD	HL,TON		; Prepare for internal RTC
+	JR	Z,ADDTN1
+
+	LD	HL,(RTCBUF)	; Get RTC buffer address
+	LD	DE,7		; Get offset to TOS word
+	ADD	HL,DE		; Add offset, HL contains TON address
+
+ADDTN1:	PUSH	HL		; Save it
+	LD	HL,(RECDNO)
+	LD	(RCNT),HL
+	CALL	XTIM		; Calculate transfer time
+	POP	HL		; Restore TON address
+	LD	A,(HL)		; Get time on in A
+	LD	B,A		; Save it
+	LD	A,(MODE)	; Get current transfer mode
+	CP	'S'		; Is this a download?
+	JR	Z,ADDTN2	; Yes, subtract download time
+	LD	A,(CREDIT)	; Else crediting upload time?
+	OR	A
+	RET	Z		; No, skip this
+	LD	A,B		; Else get time on system back
+	SUB	C		; Subtract upload time
+	LD	(HL),A		; Store it
+	RET	
+
+ADDTN2:	LD	A,B
+	INC	A		; Bump it one
+	ADD	A,C		; Add transfer time
+	LD	(HL),A		; Put it back for BYE
+	RET
+
+;
+;-------------------------------------------------------------------------;
+; A v a i l a b l e   U p l o a d   S p a c e				  |
+;-------------------------------------------------------------------------;
+;
+; This routine is called with the 'F' option from both CP/M (with 'ZMD F')
+; or from The HELP Guide routines.  First determine where uploads are
+; suppose to go.
+;
+SPACE:	CALL	RSTLCK		; Go reset WRTLOC if needed
+	CALL	WHLCHK		; WHEEL byte set?
+	JR	NZ,SPACE1	; Yes, give space for current drive/user
+	LD	A,(ASKAREA)
+	OR	A
+	JR	NZ,SPACE2
+	LD	A,(SETAREA)
+	OR	A
+	JR	NZ,SPACE2	; Yes
+
+SPACE1:	LD	A,(OLDDRV)	; Get currently logged drive
+	ADD	A,'A'		; Make it ASCII
+	LD	(DRV),A
+	LD	(KDRV),A	; Store it for KSHOW
+	LD	A,(OLDUSR)	; Get currently logged user
+	LD	(USR),A		; Store it for KSHOW
+
+SPACE2:	CALL	WHLCHK
+	CALL	Z,GETKIND	; Get upload area if ASKAREA
+	CALL	ILPRTB
+	DB	CR
+	DB	'  Regular ',0
+	CALL	SPACE8
+	CALL	ILPRTB
+	DB	CR,LF
+	DB	'  Private ',0
+	LD	A,1
+	LD	(PRVSPC),A
+	CALL	SPACE8
+	JP	EXIT		; Exit to CP/M
+
+;
+; Displays the file descriptor/category when showing available upload space.
+;
+SPACE8:	CALL	WHLCHK
+	CALL	Z,SHOCAT	; Show upload area descriptor, if supposed to
+	CALL	ILPRTB
+	DB	'uploads received on ',0
+	LD	A,(PRVSPC)	; Want private area space?
+	OR	A
+	JR	NZ,SPACE9	; Yes, do private stuff
+	LD	A,(DRV)		; Get drive to receive regular upload
+	LD	(KDRV),A	; Store it for KSHOW
+	CALL	TYPE		; Output to modem
+	LD	A,(USR)		; Get user area to receive regular upload
+	JR	SPACE10		; Go show free space
+
+SPACE9:	LD	A,(PRDRV)	; Get drive to receive private upload
+	LD	(KDRV),A	; Store it for KSHOW
+	CALL	TYPE		; Output to modem
+	LD	A,(PRUSR)	; Get user area to receive private upload
+
+SPACE10:LD	H,0
+	LD	L,A		; User area in L
+	CALL	DECOUT		; Decimal output
+	CALL	ILPRTB
+	DB	':',0
+	LD	A,(PRVSPC)	; Getting private info?
+	OR	A
+	JR	Z,SPACE11	; No
+	LD	A,(DRV)		; Else get regular drive
+	LD	HL,PRDRV	; Point to private drive
+	CP	(HL)		; Private same as regular drive?
+	RET	Z		; Yes, don't report 'k' this time
+
+SPACE11:CALL	ILPRTB
+	DB	'   (',0
+	LD	A,(KDRV)	; Get upload drive
+	CALL	KSHOW		; Show available space for drive
+	CALL	ILPRTB
+	DB	')',0
+	RET
+
+;
+;-------------------------------------------------------------------------;
+; R u n t i m e   H e l p   G u i d e					  |
+;-------------------------------------------------------------------------;
+;
+; Either 'ZMD' was entered by itself from CP/M, or an invalid option
+; given.
+;
+HELP:	CALL	ILPRTB
+	DB	CR,LF,'                 mode   drive/user'
+	DB	CR,LF,'                /      /'
+	DB	CR,LF,'Usage:  ZMD    SK   {du:}   <fn>'
+	DB	CR,LF,'               /             /'
+	DB	CR,LF,'       protocol      filename'
+	DB	CR,LF
+	DB	CR,LF,'Mode:                             Protocol:'
+	DB	CR,LF,'  S  - Send file from BBS           '
+	DB	'X  - Xmodem 128 byte blocks  (CRC)'
+	DB	CR,LF,'  SP - Send from private area       '
+	DB	'C  - Xmodem 128 byte blocks  (Checksum)'
+  	DB	CR,LF,'  A  - Send ARK/ARC/LBR member      '
+	DB	'K  - Ymodem 1024 byte blocks (CRC only)'
+	DB	CR,LF,'  R  - Receive file from YOU'
+  	DB	CR,LF,'  RP - Receive in private area',0
+
+
+	CALL	ILPRTB
+	DB	CR,LF,0
+	LD	A,(MSGFIL)
+	OR	A
+	JR	Z,HELP1 
+  	CALL	ILPRTB
+	DB	'  RM - Receive preformatted message base upload',0
+ 
+HELP1:	CALL	ILPRTB
+	DB	CR,LF,0
+	CALL	WHLCHK
+	JR	Z,HELP2
+	CALL	ILPRTB
+	DB	'  RW - Receive without description(s)',0
+
+HELP2:	CALL	ILPRTB
+	DB	CR,LF,'  F  - Displays available upload space'
+	DB	CR,LF
+	DB	CR,LF
+	DB	CR,LF
+	DB	'--SPACE BAR displays specific examples--',0
+
+	CALL	INPUT
+	CP	' '
+	JP	NZ,EXIT
+
+	LD	HL,ZMDNAM
+	CALL	PRINTV
+	CALL	ILPRTB
+	DB	'Usage examples:'
+	DB	CR,LF
+	DB	CR,LF,' ZMD S   filename.ext         '
+	DB	'Send single file        (Automatic detect)'
+	DB	CR,LF,' ZMD S   B4:filename.ext      '
+	DB	'Send single file        (Automatic detect)'
+ 	DB	CR,LF,' ZMD SK  filename.ext         '
+	DB	'Send single file        (Ymodem 1k)'
+ 	DB	CR,LF,' ZMD S   filename.*           '
+	DB	'Send from current d/u   (Ymodem 1k Batch)'
+ 	DB	CR,LF,' ZMD S   D1:*.*  B9:*.doc     '
+	DB	'Send from multiple d/u  (Ymodem 1k Batch)'
+	DB	CR,LF,' ZMD A   librnam lbrmber.ext  '
+	DB	'Send ARK/ARC/LBR member (Automatic detect)'
+ 	DB	CR,LF,' ZMD AK  librnam lbrmber.ext  '
+	DB	'Send ARK/ARC/LBR member (Ymodem 1k)'
+	DB	CR,LF
+	DB	CR,LF,' ZMD R   filename.ext         '
+	DB	'Receive single file     (Automatic detect)'
+ 	DB	CR,LF,' ZMD R                        '
+	DB	'Receive multiple files  (Ymodem 1k Batch)'
+ 	DB	CR,LF,' ZMD RPC filename.ext         '
+	DB	'Receive to private area (Checksum)'
+	DB	CR,LF,LF
+ 	DB	'Protocol may be omitted for automatic protocol detection.'
+ 	DB	CR,LF
+	DB	'Ymodem 1k Batch is enabled upon detection of wildcards or'
+	DB	' multiple'
+	DB	CR,LF
+    	DB	'   filenames on command line (can also be forced with'
+	DB	' ''SB'' mode).',0
+	JP	EXIT 
+
+
+ABRTMSG:CALL	ILPRTB
+	DB	CR
+	DB	'-- ZMD Aborted',0
+	RET
+
+NOACC:	CALL	SENDBEL		; Send a bell out modem only
+	CALL	ERXIT
+	DB	CR,LF
+	DB	'-- Restricted Function - Access Denied','$'
+
+ZEROLN:	CALL	ERXIT
+	DB	CR,LF
+	DB	'-- File empty - ZMD aborted','$'
+
+NOFILE:	CALL	ERXIT
+	DB	CR
+	DB	'-- No matching filename(s) found','$'
+
+NOIO:	XOR	A
+	LD	(RTC),A
+	LD	(TIMEON),A
+	LD	(DSPTOS),A
+	LD	(CLOCK),A
+	CALL	ERXIT
+	DB	BELL
+	DB	'-- Modem I/O unavailable - Aborting','$'
+
+TOOSLOW:CALL	ERXIT
+	DB	CR,LF,LF
+	DB	'-- YMODEM 1k/BATCH not valid - Modem speed too slow','$'
+
+
+TOTMSG:	CALL	ILPRTL
+	DB	' - Timeout, no character received',CR,LF,0
+	RET
+
+DLRDY:	CALL	ILPRT
+	DB	CR,LF
+	DB	'Your file(s) now ready to download',0
+	CALL	CONT6
+	RET
+
+WAITMSG:CALL	ILPRTL
+	DB	' -- Waiting --'
+	DB	CR,0
+	RET
+
+;
+;-------------------------------
+; File type restriction storage
+;-------------------------------
+;
+; Don't allow ___			    (If ZCPR is YES)
+;		 \
+SYSCHK:	DB	'SYS'
+NDRCHK:	DB	'NDR'
+RCPCHK:	DB	'RCP'
+
+;
+; If receiving __     change it to __       (If NOCOMR is YES)
+;		 \		     \
+COMCHG:	DB	'COM',		    'OBJ'
+PRLCHG:	DB	'PRL',		    'OBP'
+
+;
+; If the library extraction flag (LBRARC) is set and an unsuccessful open with
+; the default filetype occurs, the following file types are copied to FCB+9
+; and the open attempt is repeated.
+; 
+ARCNAM:	DB	'ARC'		; Copied to FCB+9
+LBRNAM:	DB	'LBR'		; Copied to FCB+9
+ARKNAM:	DB	'ARK'		; Copied to FCB+9
+
+;
+;---------------------
+; LOGCALL allocations
+;---------------------
+;
+DEFDSK:	DB	0		; Disk for open stored here
+DEFUSR:	DB	0		; User for open stored here
+CLRPTR:	DW	LOGBUF
+LOGPTR:	DW	DBUF
+LOGCNT:	DB	0
+LOGK:	DB	'k '
+DUSAVE:	DB	0,0,0,0		; Buffer for drive/user
+
+;
+;------------------
+; Time allocations
+;------------------
+;
+MAXTOS:	DB	0		; Maximum time left on system
+RTCBUF:	DW	0		; RTCBUF address
+TLOS:	DB	0		; Current time left on system
+TON:	DB	0		; Current time on system
+
+;
+XTABLE:	DW	5,   13,  19,  25,  30,  48,  85, 141, 210, 280,   0
+KTABLE:	DW	5,   14,  21,  27,  32,  53, 101, 190, 330, 525,   0
+XECTBL:	DB	192, 74,  51,  38,  32,  20,  11,   8,   5,   3,   0
+KECTBL:	DB	192, 69,  46,  36,  30,  18,  10,   5,   3,   2,   0
+
+;
+;--------------------
+; Batch mode storage
+;--------------------
+;
+BGNMS:	DW	0		; Start address of filenames in TBUFF
+LIST:	DW	DBUF		; Filename storage in send batch mode
+LISTPOS:DW	0		; Next position to store matching filename
+LISTEND:DW	0		; Address of last matching filename
+LISTI:	DW	0		; Pointer 1 for two-dimensional bubble sort
+LISTJ:	DW	0		; Pointer 2 for two-dimensional bubble sort
+FILEK:	DW	0		; Total kilobytes  of files found (send batch)
+FCBBUF:	DS	21		; Batch filename from command line
+FSTFLG:	DB	0		; Set to 1 when command line scan done
+NAMECT:	DB	0		; # of names on command line
+NBSAVE:	DW	0		; Start address in NAMBUF for next file
+SBSHOW:	DB	0		; Set shows partial stat display in batch
+SHOCNT:	DB	0		; Counter to show files left
+TOTREC:	DW	0		; Total records to be sent
+
+;
+;------------------------
+; Temporary storage area
+;------------------------
+;
+ACKCHK:	DB	0		; Lets batch header user GTACK routine
+AFBYTE:	DB	0		; Access flags byte storage
+CHKEOT:	DB	0		; Prevents locking up after an EOT
+COMMA:	DB	0		; Field counter for logcal
+CRCFLG:	DB	1		; For sending checksum rather than CRC
+EOFLG:	DB	0		; EOF (End of file) flag
+EOTFLG:	DB	0		; EOT (End of transmission) status flag
+ERRCNT:	DB	0		; Error count
+FRSTIM:	DB	0		; Turned on after first 'SOH' received
+GOTONE:	DB	0		; Prevents asking for a description
+KFLG:	DB	1		; For sending 1k blocks (Defaults to 1k)
+PRVSPC:	DB	0		; Shows in private display in SPACE: if set
+RCVCNT:	DB	0		; Record number received
+RCVTRY:	DB	0		; Keeps track of number of attempts
+RCVDRV:	DB	0		; Requested drive number
+RCVUSR:	DB	0		; Requested user number
+
+ACCERR:	DW	0		; No 'ACK' error count for 1k ratio
+HDRADR:	DW	0		; Current location in batch header block
+RCNT:	DW	0		; Record count
+RECDNO:	DW	0		; Current record number
+RCDCNT:	DW	0		; Used in sending the record header
+RECPTR:	DW	DBUF
+RECNBF:	DW	0		; Number of records in the buffer
+SAVEHL:	DW	0		; Saves TBUF command line address
+XFRMIN:	DW	0		; Transfer time in mins for TIMEON
+
+;
+	END			; 'Almost'...
+

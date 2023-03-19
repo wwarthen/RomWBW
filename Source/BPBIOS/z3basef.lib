@@ -1,0 +1,148 @@
+; z3base.fp -- fully banked B/P Bios System Z3 Definition File for HBIOS
+;		with 512 byte external proxy (no internal proxy).
+
+; This file is adapted from the basic Z3BASE.LIB configuration file used for
+; most ZCPR33 systems.  It has added the new definitions for the Resident
+; User Space defined in B/P Bios descriptions and modified for an HBIOS
+; implementation with a full external HBIOS proxy (i.e. proxy not internal
+; to BPBIOS).
+;
+;=========================================================================
+;==   NOTE: The Starting Address of the User Space marks the lower	==
+;==   base of memory and MUST be entered.  B/P Bios Utilities use	==
+;==   this address to locate many portions of the operating system.	==
+;=========================================================================
+; To change your systems definition, first sketch out the memory map in the
+; comment table, then set the equates to reflect the memory map, doing any
+; required calculations for element sizes and required spaces.  As an
+; alternative, just leave this file alone and configure everything with
+; the utilities provided.
+
+;  FE00 - FFFF  512 Bytes	HBIOS proxy AREA in the top of ram
+;  FD00 - FDFF	256 Bytes	Multiple Command Line Buffer
+;  FC00 - FCFF	256 Bytes	Environment Descriptor
+;				Bytes 00H-7FH:  Z3 Parameters
+;				Bytes 80H-FFH:  Z3 TCAP
+;  FBFF		  1 Byte	Wheel byte
+;  FBF4 - FBFE	 11 Bytes	Path (5 elements)
+;  FBD0 - FBF3	 36 Bytes	ZCPR3 External FCB
+;  FB80 - FBCF	 80 Bytes	ZCPR3 Message Buffers
+;  FB00 - FB7F	128 Bytes	ZCPR3 Shell Stack (4x32)
+;  FAD0 - FAFF	 48 Bytes	ZCPR3 External Stack (must be 48 bytes)
+;  F900 - FACF	464 Bytes	Named Directory Buffer (25 entries)
+;  F700 - F9FF	512 Bytes	Flow Command Package
+;  F700 - F700	  0 KBytes	Resident Command Package
+;  F700 - F700	  0 KBytes	IO Package - no IOP
+;  F700 - F700	  0 Bytes	Resident User Space (no clock driver needed)
+
+; The remainder is for the Operating System.  Exact sizes vary depending
+; primarily on the Number and sizes of Hard Drive Partitions, typically:
+
+;  EC00 - F6FF	 22 recs	B/P BIOS (unbanked version)
+;  E280 - EBFF	 19 recs	ZSDOS 2.0 BDOS
+;  DA80 - E27F	  2 KBytes	ZCPR 4.1 Command Processor
+;  0100 - C5FF	~50 KBytes	Transient Program Area
+;  0000 - 00FF	256 Bytes	Standard CP/M Buffers
+;========================================================================
+
+FALSE	EQU	0
+TRUE	EQU	NOT FALSE
+
+YES	EQU	TRUE
+NO	EQU	FALSE
+
+; The Multiple Command Line Buffer is mandatory for ZCPR 3.3. 3.4 & 4.1.
+;  FD00 - FDCF   208 Bytes
+;Z3CL	EQU	0FB00H		; ZCPR3 Command Line Buffer
+Z3CLS	EQU	256-5		; Size of Command Line Buffer-5
+Z3CL	EQU	MEMTOP+1-Z3CLS-5 ; ZCPR3 Command Line Buffer
+
+; The ZCPR3 External Environment Descriptor is mandatory B/P Bios & ZCPR 3.3.
+; The Environment Descriptor MUST begin on an even Page Boundary (xx00H).
+;  FC00 - FCFF   256 Bytes	Environment Descriptor
+Z3ENVS	EQU	2		; Size of Env Descriptor in 128-Byte Blks
+Z3ENV	EQU	(Z3CL-Z3ENVS*128) and 0FF00H
+
+; The ZCPR3 Wheel Byte is mandatory for ZCPR 3.3.
+
+;  FBFF		  1 Byte	Wheel byte
+Z3WHLS	EQU	YES
+Z3WHL	EQU	Z3ENV-1		; Wheel Byte Address
+
+; The Path is mandatory for ZCPR 3.3.
+
+;  FBF4 - FBFE	 11 Bytes	Path (5 elements)
+EXPATHS	EQU	5		; (Path Size = EXPATHS*2 + 1 = 11 bytes)
+				; This defines 5  2-byte Path Elements
+EXPATH	EQU	Z3WHL-EXPATHS*2-1	; External Path starting Address
+
+; The ZCPR3 External FCB is mandatory for ZCPR 3.3.
+
+;  FBD0 - FBF3	 36 Bytes	ZCPR3 External FCB
+EXTFCBS	EQU	YES
+EXFCBSZ	EQU	36
+EXTFCB	EQU	EXPATH-EXFCBSZ	; 36-Byte ZCPR3 External FCB
+
+; The ZCPR3 Message Buffers are mandatory for ZCPR 3.3.
+
+;  FB80 - FBCF	 80 Bytes	ZCPR3 Message Buffers
+Z3MSGS	EQU	YES
+Z3MSGSZ	EQU	80		; size of buffer
+Z3MSG	EQU	EXTFCB-Z3MSGSZ	; 80-Byte ZCPR3 Message Buffer
+
+; Shell Stack definition.  Set SHSTKS to 0 to eliminate Shell Stack
+
+;  FB00 - FB7F	128 Bytes	ZCPR3 Shell Stack
+SHSTKS	EQU	4		; Number of SHSIZE-Byte Shell Stack entries
+SHSIZE	EQU	32		; (Stack Size = SHSTKS * SHSIZE = 128 Bytes)
+SHSTK	EQU	Z3MSG-SHSTKS*SHSIZE	; Shell Stack Starting Address
+
+; The External Stack is mandatory for B/P Bios and ZCPR 3.3.
+;  FAD0 - FAFF	 48 Bytes	ZCPR3 External Stack (must be 48 bytes)
+;EXTSTK	EQU	0FAD0H		; ZCPR3 External Stack
+EXTSTK	EQU	SHSTK-48	; ZCPR3 External Stack
+EXTSTKS	EQU	YES
+
+; ZCPR3 Named Directory Buffer definition.  Set Z3NDIRS to 0 to eliminate
+; the named directory buffer.
+;  F900 - FACF	464 Bytes	; Named Directory Buffer - 25 NAMES
+Z3NDIRS	EQU	25		; Number of Named Directory Elements
+NDIRSZ	EQU	Z3NDIRS * 18 + 1
+				; (NDIR Size = Z3NDIRS * 18 + 1 = 451 Bytes)
+Z3NDIR	EQU	SHSTK-(NDIRSZ/256+1)*256	; Start of Named Directory Buffer
+
+; Flow Command Package definition.  Set FCPS to 0 to eliminate FCP
+
+;  F700 - F8FF	512 Bytes	Flow Command Package
+FCPS	EQU	4		; (FCP Size = 128 * FCPS = 512 Bytes)
+;FCPS	EQU	0		; (FCP Size = 128 * FCPS = 0 Bytes)
+FCP	EQU	Z3NDIR-FCPS*128	; Start of Flow Command Package
+
+; Resident Command Processor Definition.  Set RCPS to 0 to eliminate RCP
+
+;  F700 - F700	 0 KBytes	Resident Command Package
+;RCPS	EQU	16		; (RCP Size = 128 * RCPS = 2 kBytes)
+RCPS	EQU	0		; (RCP Size = 128 * RCPS = 0 kBytes)
+RCP	EQU	FCP-RCPS*128	; Start of Resident Command Processor
+
+; IO Package definition.  Set IOPS to 0 which eliminates IOP
+
+;IOP	EQU	0EC00H		; Start of IO Package
+;  F700 - F700	  0 KBytes	IO Package
+IOPS	DEFL	0		; (IOP Size = 128 * IOPS = 0 kBytes)
+;IOPS	DEFL	12		; (IOP Size = 128 * IOPS = 1.5 kBytes)
+;IOPS	DEFL	10		; (IOP Size = 128 * IOPS = 1.25 kBytes)
+IOP	EQU	RCP-IOPS*128	; Start of IO Package
+
+;=========================================================================
+; Resident User Space Definition.  Set USPCS to 0 to eliminate USPC.
+; The USPC Value marks the Lower Limit of Reserved Common High Memory and
+;   MUST BE PRESENT!
+
+USPCS	EQU	0		; (USPC Size = 128 * USPCS = 0 kBytes)
+;USPCS	EQU	6		; (USPC Size = 128 * USPCS = 0.75 kBytes)
+;  F700 - F700	  0 KBytes	Resident User Space
+USPC	EQU	IOP-USPCS*128	; Start of Resident User Space (MANDATORY)
+
+;--- End of Z3BASE.LIB ---
+

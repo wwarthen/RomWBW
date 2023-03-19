@@ -1,5 +1,5 @@
 ;
-;  Size-optimized LZSA2 decompressor by spke & uniabis (139 bytes)
+;  Size-optimized LZSA2 decompressor by spke & uniabis (134 bytes)
 ;
 ;  ver.00 by spke for LZSA 1.0.0 (02-09/06/2019, 145 bytes);
 ;  ver.01 by spke for LZSA 1.0.5 (24/07/2019, added support for backward decompression);
@@ -8,6 +8,9 @@
 ;  ver.04 by spke for LZSA 1.1.0 (26/09/2019, removed usage of IY, added full revision history)
 ;  ver.05 by spke for LZSA 1.1.1 (11/10/2019, 139(-1) bytes, +0.1% speed)
 ;  ver.051 by PSummers (14/1/2020), ROMWBW version.
+;  ver.06 by spke (11-12/04/2021, added some comments)
+;  ver.07 by spke (04-05/04/2022, 134(-5) bytes, +1% speed, using self-modifying code by default)
+;  ver.071 by PSummers (6/1/2023), ROMWBW version.
 ;
 ;  The data must be compressed using the command line compressor by Emmanuel Marty
 ;  The compression is done as follows:
@@ -56,8 +59,8 @@
 ;  3. This notice may not be removed or altered from any source distribution.
 ;
 
-;	DEFINE	BACKWARD_DECOMPRESS						; uncomment for data compressed with option -b
-;	DEFINE	HD64180								; uncomment for systems using Hitachi HD64180
+;	#DEFINE	BACKWARD_DECOMPRESS						; uncomment for data compressed with option -b (+5 bytes, -3% speed)
+;	#DEFINE	AVOID_SELFMODIFYING_CODE					; uncomment to disallow self-modifying code (-1 byte, -4% speed)
 
 	#IFNDEF	BACKWARD_DECOMPRESS
 
@@ -65,102 +68,106 @@
 		#DEFCONT \ inc hl
 
 		#DEFINE ADD_OFFSET \
-		#DEFCONT \ ex de,hl \ add hl,de
+		#DEFCONT \ add hl,de
 
 		#DEFINE BLOCKCOPY \
 		#DEFCONT \ ldir
-
 	#ELSE
-
 		#DEFINE NEXT_HL \
 		#DEFCONT \ dec hl
 
 		#DEFINE ADD_OFFSET \
-		#DEFCONT \ push hl \ or a \ sbc hl,de \ pop de
+		#DEFCONT \ ld a,e \ sub l \ ld l,a
+		#DEFCONT \ ld a,d \ sbc h \ ld h,a						; 6*4 = 24t / 6 bytes
 
 		#DEFINE BLOCKCOPY \
 		#DEFCONT \ lddr
-
-	#ENDIF
-
-	#IFDEF	HD64180
-
-		.ECHO	"HD64180 "
-
-		#DEFINE LD_IX_DE \
-		#DEFCONT \ ld ixl,e \ ld ixh,d
-
-		#DEFINE LD_DE_IX \
-		#DEFCONT \ ld e,ixl \ ld d,ixh
-
-	#ELSE
-
-		.ECHO	"Z80 "
-
-		#DEFINE LD_IX_DE \
-		#DEFCONT \ push de \ pop ix
-
-		#DEFINE LD_DE_IX \
-		#DEFCONT \ push ix \ pop de
-
 	#ENDIF
 
 DLZSA2:
+		; in many places we assume that B = 0
+		; flag P in A' signals the need to re-load the nibble store
 		xor a \ ld b,a \ ex af,af' \ jr ReadToken
 
-CASE00x:	call ReadNibble
-		ld e,a \ ld a,c
-		cp %00100000 \ rl e \ jr SaveOffset
+CASE00x:		; token "00Z" stands for 5-bit offsets
+			; (read a nibble for offset bits 1-4 and use the inverted bit Z
+			; of the token as bit 0 of the offset; set bits 5-15 of the offset to 1)
+			push af
+			call skipLDCA \ ld c,a
+			pop af
+			cp %00100000 \ rl c \ jr SaveOffset
 
-CASE0xx		ld d,$FF \ cp %01000000 \ jr c,CASE00x
+CASE0xx			dec b \ cp %01000000 \ jr c,CASE00x
 
-CASE01x:	cp %01100000 \ rl d
+CASE01x:		; token "01Z" stands for 9-bit offsets
+			; (read a byte for offset bits 0-7 and use the inverted bit Z
+			; for bit 8 of the offset; set bits 9-15 of the offset to 1)
+			cp %01100000
+doRLB			rl b
 
-OffsetReadE:	ld e,(hl) \ NEXT_HL
+OffsetReadC:		ld c,(hl) \ NEXT_HL
 		
-SaveOffset:	LD_IX_DE
+	#IFNDEF	AVOID_SELFMODIFYING_CODE
+SaveOffset:		ld (PrevOffset),bc \ ld b,0
+	#ELSE
+SaveOffset:		push bc \ pop ix \ ld b,0
+	#ENDIF
 
-MatchLen:	and %00000111 \ add a,2 \ cp 9 \ call z,ExtendedCode
+MatchLen:		and %00000111 \ add a,2 \ cp 9
+			call z,ExtendedCode
 
-CopyMatch:	ld c,a
-		ex (sp),hl							; BC = len, DE = -offset, HL = dest, SP -> [src]
-		ADD_OFFSET							; BC = len, DE = dest, HL = dest+(-offset), SP -> [src]
-		BLOCKCOPY							; BC = 0, DE = dest
-		pop hl								; HL = src
+CopyMatch:		ld c,a
+			push hl						; BC = len, DE = dest, HL = -offset, SP -> [src]
+
+	#IFNDEF	AVOID_SELFMODIFYING_CODE
+PrevOffset		.EQU $+1 \ ld hl,0
+	#ELSE
+			push ix \ pop hl
+	#ENDIF
+			ADD_OFFSET
+			BLOCKCOPY					; BC = 0, DE = dest
+			pop hl						; HL = src
 
 ReadToken:	ld a,(hl) \ NEXT_HL \ push af
 		and %00011000 \ jr z,NoLiterals
 
-		rrca \ rrca \ rrca
-		call pe,ExtendedCode
+			rrca \ rrca \ rrca
+			call pe,ExtendedCode
 
-		ld c,a
-		BLOCKCOPY
+			ld c,a
+			BLOCKCOPY
 
-NoLiterals:	pop af \ push de
-		or a \ jp p,CASE0xx
+NoLiterals:	pop af \ or a \ jp p,CASE0xx
 
-CASE1xx:	cp %11000000 \ jr nc,CASE11x
+CASE1xx		cp %11000000 \ jr c,CASE10x
+		; token "111" stands for repeat offsets
+		; (reuse the offset value of the previous match command)
+		cp %11100000 \ jr nc,MatchLen
 
-CASE10x:	call ReadNibble
-		ld d,a \ ld a,c
-		cp %10100000 ;: rl d
-		dec d \ rl d \ .DB $CA ; jr OffsetReadE				; #CA is JP Z,.. to skip all commands in CASE110 before jr OffsetReadE
+CASE110:		; token "110" stands for 16-bit offset
+			; (read a byte for offset bits 8-15, then another byte for offset bits 0-7)
+			ld b,(hl) \ NEXT_HL \ jr OffsetReadC
 
-CASE110:	ld d,(hl) \ NEXT_HL \ jr OffsetReadE
+CASE10x:		; token "10Z" stands for 13-bit offsets
+			; (read a nibble for offset bits 9-12 and use the inverted bit Z
+			; for bit 8 of the offset, then read a byte for offset bits 0-7.
+			; set bits 13-15 of the offset to 1. substract 512 from the offset to get the final value)
+			call ReadNibble \ ld b,a
+			ld a,c \ cp %10100000
+			dec b \ jr doRLB
 
-CASE11x:	cp %11100000 \ jr c,CASE110
-
-CASE111:	LD_DE_IX \ jr MatchLen
 
 ExtendedCode:	call ReadNibble \ inc a \ jr z,ExtraByte
 		sub $F0+1 \ add a,c \ ret
 ExtraByte	ld a,15 \ add a,c \ add a,(hl) \ NEXT_HL \ ret nc
 		ld a,(hl) \ NEXT_HL
 		ld b,(hl) \ NEXT_HL \ ret nz
-		pop de \ pop de							; RET is not needed, because RET from ReadNibble is sufficient
+		pop bc								; RET is not needed, because RET from ReadNibble is sufficient
 
-ReadNibble:	ld c,a \ xor a \ ex af,af' \ ret m
-UpdateNibble	ld a,(hl) \ or $F0 \ ex af,af'
+
+ReadNibble:	ld c,a
+skipLDCA	xor a \ ex af,af' \ ret m
+		ld a,(hl) \ or $F0 \ ex af,af'
 		ld a,(hl) \ NEXT_HL \ or $0F
 		rrca \ rrca \ rrca \ rrca \ ret
+
