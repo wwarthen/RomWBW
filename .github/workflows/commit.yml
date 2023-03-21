@@ -13,16 +13,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Make Slugs
-        uses: rlespinasse/github-slug-action@v4.4.1
-
       - name: Checkout
         uses: actions/checkout@v3.3.0
+
+      - name: Get Commit Ref
+        run: |
+          COMMIT_REF=$(git rev-parse --short $GITHUB_SHA)
+          echo "COMMIT_REF: $COMMIT_REF"
+          echo "COMMIT_REF=$COMMIT_REF" >>$GITHUB_ENV
 
       - name: Build
         run: |
           export TZ='America/Los_Angeles'
-          sudo apt-get install libncurses-dev
           sudo apt-get install srecord
           make dist
           rm -rf .git*
@@ -36,18 +38,21 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v3.1.1
         with:
-          name: RomWBW-${{env.GITHUB_SHA_SHORT}}-Linux
+          name: RomWBW-${{env.COMMIT_REF}}-Linux
           path: .
 
   buildMacOS:
     runs-on: macOS-latest
 
     steps:
-      - name: Make Slugs
-        uses: rlespinasse/github-slug-action@v4.4.1
-
       - name: Checkout
         uses: actions/checkout@v3.3.0
+
+      - name: Get Commit Ref
+        run: |
+          COMMIT_REF=$(git rev-parse --short $GITHUB_SHA)
+          echo "COMMIT_REF: $COMMIT_REF"
+          echo "COMMIT_REF=$COMMIT_REF" >>$GITHUB_ENV
 
       - name: Build
         run: |
@@ -65,5 +70,5 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v3.1.1
         with:
-          name: RomWBW-${{env.GITHUB_SHA_SHORT}}-MacOS
+          name: RomWBW-${{env.COMMIT_REF}}-MacOS
           path: .
