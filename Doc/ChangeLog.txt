@@ -1,3 +1,8 @@
+Version 3.2.1
+-------------
+- M?P: Fixed Zeta 2 FDD and CPUSPD config settings
+- WBW: Fixed SURVEY.COM (again)
+
 Version 3.2
 -----------
 - WBW: Version bump for release
