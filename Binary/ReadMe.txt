@@ -49,7 +49,7 @@ The files with a ".upd" extension are binary images identical to the
 .rom files, but they only have the first 128K bytes.  The first 128K
 is the system image without the ROM disk contents.  These files can be
 used to update the system image without modifying the ROM disk
-contents.  Refer to the Getting Started document for more information.
+contents.  Refer to the RomWBW User Guide for more information.
 
 ROM Executable Images (<plt>_<cfg>.com)
 ---------------------------------------

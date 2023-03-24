@@ -11,12 +11,13 @@ toc-depth: 2
 numbersections: true
 secnumdepth: 2
 header-includes:
-- \setlength{\headheight}{15pt}
 - |
   ```{=latex}
+  \setlength{\headheight}{15pt}
   \usepackage{fancyhdr}
   \usepackage{xcolor}
   \usepackage{xhfill}
+  \usepackage{tocloft}
   \renewcommand*{\familydefault}{\sfdefault}
   \renewcommand{\maketitle}{
     \begin{titlepage}
@@ -44,6 +45,7 @@ include-before:
   ```{=latex}
   \pagestyle{fancyplain}
   \fancyhf{}
+  \lhead{\fancyplain{}{\nouppercase{\bfseries \leftmark \hfill $doc_product$  $doc_title$}}}
   \lfoot{\small RetroBrew Computing Group ~~ {\xrfill[3pt]{1pt}[cyan]} ~~ \thepage}
   \pagenumbering{roman}
   ```
@@ -52,5 +54,4 @@ include-before:
 ```{=latex}
 \clearpage
 \pagenumbering{arabic}
-\lhead{\fancyplain{}{\nouppercase{\bfseries \leftmark \hfill $doc_product$  $doc_title$}}}
 ```

@@ -14,15 +14,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3.3.0
 
-      - name: Create Package Label
-        run: |
-          echo GITHUB_REF: "$GITHUB_REF"
-          LABEL=`echo "$GITHUB_REF" | sed "s|^refs/tags/||"`
-          echo "PKGLBL=$LABEL" >> $GITHUB_ENV
-          echo PKGLBL: "$PKGLBL"
-          echo Upload URL: "${{github.event.release.upload_url}}"
-          echo GITHUB_TOKEN: "${{secrets.GITHUB_TOKEN}}"
-         
       - name: Build
         run: |
           export TZ='America/Los_Angeles'
@@ -33,22 +24,37 @@ jobs:
       
       - name: Create Package Archive
         run: |
-            zip -r RomWBW-${{env.PKGLBL}}-Package.zip .
+          zip -r RomWBW-${{github.ref_name}}-Package.zip .
+
+      - name: Set Title
+        run: |
+          echo "Tag: ${{github.ref_name}}"
+          if grep -q "dev" <<< "${{github.ref_name}}"; then
+            TITLE="RomWBW Development Snapshot"
+          elif grep -q "pre" <<< "${{github.ref_name}}"; then
+            TITLE="RomWBW Prerelease"
+          elif grep -q "rc" <<< "${{github.ref_name}}"; then
+            TITLE="RomWBW Release Candidate"
+          else
+            TITLE="RomWBW"
+          fi
+          echo "Title: $TITLE"
+          echo "TITLE=$TITLE" >>$GITHUB_ENV
 
       - name: Attach Package Archive
         uses: wwarthen/actions/packages/automatic-releases@built-packages
         with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          repo_token: "${{secrets.GITHUB_TOKEN}}"
           draft: true
           prerelease: true
-          title: "RomWBW Development SnapShot ${{env.PKGLBL}}"
+          title: "${{env.TITLE}} ${{github.ref_name}}"
           files: |
-            RomWBW-${{env.PKGLBL}}-Package.zip
+            RomWBW-${{github.ref_name}}-Package.zip
       
 #      - name: Upload Package Archive
 #        uses: AButler/upload-release-assets@v2.0.2
 #        with:
-#          repo-token: ${{ secrets.GITHUB_TOKEN }}
+#          repo-token: ${{secrets.github_token}}
 #          files: |
 #            RomWBW-${{env.PKGLBL}}-Package.zip
 
@@ -57,7 +63,7 @@ jobs:
 #        uses: docker://antonyurchenko/git-release:latest
 #        env:
 #          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#          RELEASE_NAME_PREFIX: "Development SnapShot Release "
+#          RELEASE_NAME_PREFIX: "${{env.TITLE}} "
 #          CHANGELOG_FILE: "none"
 #        with:
 #          args: |

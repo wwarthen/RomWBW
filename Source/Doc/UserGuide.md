@@ -405,8 +405,9 @@ to your system that is not automatically identified, you may need
 to build a custom ROM to add support for it.  Building a custom ROM
 is covered later.
 
-[Appendix A - Device Summary] contains a list of the RomWBW hardware devices which may
-help you identify the hardware discovered in your system.
+[Appendix B - Device Summary] contains a list of the RomWBW hardware
+devices which may help you identify the hardware discovered in your
+system.
 
 ## Device Unit Assignments
 
@@ -1366,7 +1367,7 @@ Essentially, this means you are creating a set of blank directories on
 your disk so that files can be saved there.  This process is described
 below under Disk Initialization. In this scenario, you will need to
 subsequently copy any files you want to use onto the newly initialized
-disk (see Transferring Files).
+disk (see [Transferring Files]).
 
 You will notice that in the following instructions there is no mention
 of specific hardware.  Because the RomWBW firmware provides a 
@@ -1402,6 +1403,7 @@ The following table shows the disk images available.
 | xxx_cpm3.img    | DRI CP/M 3 Operating System            | Yes      |
 | xxx_zpm3.img    | ZPM3 Operating System                  | Yes      |
 | xxx_qpm.img     | QPM Operating System                   | Yes      |
+| xxx_dos65.img   | DOS/65 Operating System                | Yes      |
 | xxx_ws4.img     | WordStar v4 & ZDE Applications         | No       |
 
 You will find 3 sets of these .img files in the distribution.  The
@@ -1411,8 +1413,8 @@ layout hard disk image.
 
 There is also an image file called "psys.img" which contains a bootable 
 p-System hard disk image.  It contains 6 p-System filesystem slices, but
- these are not interoperable with the CP/M slices described above.  This
- file is discussed separately under p-System in the Operating Systems 
+these are not interoperable with the CP/M slices described above.  This
+file is discussed separately under p-System in the [Operating Systems] 
 section.
 
 ### Floppy Disk Images
@@ -1462,7 +1464,7 @@ hard disk image with the specific slice contents you choose.
 #### Combo Hard Disk Image
 
 The combo disk image is essentially just a single image that has several
- of the individual filesystem images already concatenated together. The 
+of the individual filesystem images already concatenated together. The 
 combo disk image contains the following 6 slices in the positions 
 indicated:
 
@@ -1515,6 +1517,9 @@ Linux/MacOS:
 In all of the examples above, the resulting file (hd.img) would now be 
 written to your hard disk media and would be ready to use in a RomWBW 
 system.
+
+If you wish to further customize or create new disk image definitions,
+please refer to the ReadMe.txt file in the Source/Images directory.
 
 #### Writing Hard Disk Images
 
@@ -1933,28 +1938,47 @@ has a new suite of support tools and help system.
 
 #### Boot Disk
 
-To make a CP/M 3 boot disk, you actually place CPMLDR.SYS
-on the system tracks of the disk. You do not place CPM3.SYS on the
-system tracks.  `CPMLDR.SYS` chain loads `CPM3.SYS` which must
-exist as a file on the disk.
-  
-CP/M 3 uses a multi-step boot process involving multiple files.
+To create (or update) a CP/M 3 boot drive, you must place `CPMLDR.SYS` on
+the system track of the disk.  You must also place `CPM3.SYS` and 
+`CCP.COM` on the target drive as regular files.  Do **not** place 
+CPM3.SYS on the boot track.  `CPMLDR.SYS` chain loads `CPM3.SYS` which 
+must exist as a regular file on the disk.  Subsequently, `CPM3.SYS` 
+loads `CCP.COM`.
+
 The CP/M 3 boot files are not included on the ROM disk due to
-space constraints.  You will need to transfer the files to your
-system from the RomWBW distribution directory Binary\\CPM3.
+space constraints.  You will need to transfer the following files to
+your system from the RomWBW distribution directory Binary/CPM3.  You
+can use XModem for this (or any of the mechanisms in [Transferring
+Files].
 
-After this is done, you will need to use `SYSCOPY` to place
-the CP/M 3 loader image on the boot tracks of all CP/M 3
-boot disks/slices.  The loader image is called `CPMLDR.SYS`.
-You must then copy (at a minimum) `CPM3.SYS` and `CCP.COM`
-onto the disk/slice.  Assuming you copied the CP/M 3 boot files
-onto your RAM disk at A:, you would use:
+- `CPMLDR.SYS`
+- `CPM3.SYS` or `CPM3BNK.SYS`
+- `CCP.COM`
+
+The `CPM3.SYS` boot file is provided in 2 versions.  In the Binary/CPM3 
+distribution directory, `CPM3.SYS` is the "non-banked" version of
+CP/M 3.  The `CPM3BNK.SYS` file is the "banked" version of CP/M 3.  You 
+almost certainly want to transfer the banked `CPM3BNK.SYS` version.
+
+After transferring the boot files to your RomWBW system, you will
+need to use `SYSCOPY` to place `CPMLDR.SYS` on the boot track of the
+target drive.  `CPM3.SYS` and `CCP.COM` can be copied to the target
+drive using any standard file copy tool such as `PIP` or `COPY`.
+
+You do not need to be booted into CP/M 3 to create or update a CP/M 3 
+disk.  The recommended approach is to boot CP/M 2.2 or Z-System from 
+ROM.  Transfer the boot files to the RAM disk.  Then simply copy the 
+files onto the CP/M 3 disk.  Assuming the target CP/M 3 disk is F:, you 
+can use the following commands to place the files on the target drive:
 
 ```
-SYSCOPY C:=CPMLDR.SYS
-PIP C:=CPM3.SYS
-PIP C:=CCP.COM
+SYSCOPY F:=A:CPMLDR.SYS
+COPY A:CPM3BNK.SYS F:CPM3.SYS
+COPY A:CCP.COM F:
 ```
+
+Note in the example above that `CPM3BNK.SYS` is renamed to `CPM3.SYS`
+in the copy command.
 
 #### Notes
 
@@ -1971,13 +1995,26 @@ PIP C:=CCP.COM
 - RomWBW fully supports CP/M 3 file date/time stamping, but this 
   requires that the disk be properly initialized for it.  This process 
   has not been performed on the CP/M 3 disk image.  Follow the 
-  CP/M 3 documentation to complete this process.
+  CP/M 3 documentation to complete this process, if desired.
 
-## Simeon Cran's ZPM3
+## ZPM3
 
-ZPM3 is an interesting combination of the features of both CP/M 3 and
-ZCPR 3. Essentially, it has the features of and compatibility with
-both.
+Simeon Cran's ZPM3 is an interesting combination of the features of both
+CP/M 3 and ZCPR3. Essentially, it has the features of and 
+compatibility with both.
+
+Due to this dual compatibility, the ZPM3 distribution image contains 
+most of the standard CP/M 3 files as well as a variety of common ZCPR3 
+applications.  However, you will notice that user area 0 of the disk has
+only a few files.  Most of the files are distributed among other user 
+areas which is standard practice for ZCPR3.  Most importantly, you will 
+see most of the applications in user area 15.  The applications can be 
+executed from any user area because ZPM3 has a default search path that 
+includes User 15.
+
+The ZPM3 distribution comes with essentially no utility programs at
+all.  In addition to the standard CP/M 3 utilities, RomWBW includes
+a variety of common ZCPR3 utilities.
 
 #### Documentation
 
@@ -1986,31 +2023,55 @@ CP/M 3 and ZCPR 3.
 
 #### Boot Disk
 
-ZPM3 uses a multi-step boot process involving multiple files. The ZPM3 
-boot files are not included on the ROM disk due to space constraints.  
-You will need to transfer the files to your system from the RomWBW 
-distribution directory Binary\\ZPM3.
+To create (or update) a ZPM3 boot drive, you must place `ZPMLDR.SYS` on 
+the system track of the disk.  You must also place `CPM3.SYS`, 
+`ZCCP.COM`, `ZINSTAL.ZPM`, and `STARTZPM.COM` on the target drive as 
+regular files.  Do **not** place CPM3.SYS on the boot track.  
+`ZPMLDR.SYS` chain loads `CPM3.SYS` which must exist as a regular file 
+on the disk.  Subsequently, `CPM3.SYS` loads `CCP.COM`.
 
-After this is done, you will need to use `SYSCOPY` to place the ZPM3 
-loader image on the boot tracks of the disk. The loader image is called 
-`ZPMLDR.SYS`. You must then copy (at a minimum) `CPM3.SYS`, `ZCCP.COM`, 
-`ZINSTAL.ZPM`, and `STARTZPM.COM` onto the disk/slice. Assuming you 
-copied the ZPM3 boot files onto your RAM disk at A:, you would use:
+The CP/M 3 boot files are not included on the ROM disk due to space 
+constraints.  You will need to transfer the following files to your 
+system from the RomWBW distribution directory Binary/ZPM3.  You can use 
+XModem for this (or any of the mechanisms in [Transferring Files].
+
+- `ZPMLDR.SYS`
+- `CPM3.SYS`
+- `ZCCP.COM`
+- `ZINSTAL.ZPM`
+- `STARTZPM.COM`
+
+You may be surprised to see the file called `CPM3.SYS`.  This is not a 
+typo. Although it is called `CPM3.SYS`, it is ZPM and not the same as 
+`CPM3.SYS` in the CPM3 directory.  Also, unlike CP/M 3, ZPM3 is always 
+banked, so you will not find two versions of the file.  `CPM3.SYS` is a 
+banked implementation of ZPM3.
+
+After transferring the boot files to your RomWBW system, you will
+need to use `SYSCOPY` to place `ZPMLDR.SYS` on the boot track of the
+target drive.  The remaining boot files can be copied to the target
+drive using any standard file copy tool such as `PIP` or `COPY`.
+
+You do not need to be booted into ZPM3 to create or update a ZPM3 
+disk.  The recommended approach is to boot CP/M 2.2 or Z-System from 
+ROM.  Transfer the boot files to the RAM disk.  Then simply copy the 
+files onto the ZPM disk.  Assuming the target ZPM3 disk is F:, you 
+can use the following commands to place the files on the target drive:
 
 ```
-A>B:SYSCOPY C:=ZPMLDR.SYS
-A>B:COPY CPM3.SYS C:
-A>B:COPY ZCCP.COM C:
-A>B:COPY ZINSTAL.ZPM C:
-A>B:COPY STARTZPM.COM C:
+SYSCOPY F:=A:ZPMLDR.SYS
+COPY A:CPM3.SYS F:CPM3.SYS
+COPY A:CCP.COM F:
+COPY A:ZINSTAL.ZPM F:
+COPY A:STARTZPM.COM F:
 ```
 
 #### Notes
 
-* The ZPM operating system is contained in the file called CPM3.SYS
+- The ZPM3 operating system is contained in the file called CPM3.SYS 
   which is confusing, but this is as intended by the ZPM3 distribution.
-  I believe it was done this way to make it easier for users to transition
-  from CP/M 3 to ZPM3.
+  I believe it was done this way to make it easier for users to
+  transition from CP/M 3 to ZPM3.
 
 ## QP/M
 
@@ -2029,18 +2090,27 @@ regarding the RomWBW adaptation and customizations.
 #### Boot Disk
 
 There is no RomWBW-specific boot disk creation procedure.  QP/M
-comes with a QINSTALL tool for this purpose.  You can use the
-tool if you want to perform a fresh installation.
+comes with a QINSTALL which is used to install QPM over an existing
+CP/M 2 installation or to update an existing QPM disk.  `QINSTALL.COM`
+is included with the RomWBW distribution.
 
 #### Notes
 
-* QPM is not available as source.  This implementation was based
+- QPM is not available as source.  This implementation was based
   on the QPM binary distribution and has been minimally customized
   for RomWBW.
- 
-* QINSTALL is used to customize QPM.  It is included on the
+
+- QINSTALL is used to customize QPM.  It is included on the
   disk image.  You should review the notes in the ReadMe.txt
-  file in Source/Image/d_qpm before making changes.
+  file in Source/Images/d_qpm before making changes.
+
+- In addition to the QPM disk image, all of the QPM distribution
+  files can be found in the RomWBW distribution in the
+  Source/Images/d_qpm/u0 directory.
+
+- The QPM disk image is not included as one of the slices on the
+  RomWBW combo disk image.  If you want to include QPM, you can do
+  so by following the directions in Source/Images/Readme.txt.
 
 ## UCSD p-System
 
@@ -2153,7 +2223,7 @@ therefore, globally available.
 | CPUSPD          | Change the running CPU speed and wait states of the system.                                          |
 
 Some custom applications do not fit on the ROM disk. They are found on the
-disk image files or the individual files can be found in the Binary\\Apps
+disk image files or the individual files can be found in the Binary/Apps
 directory of the distribution.
 
 | **Application** | **Description**                                                    |
@@ -2719,7 +2789,7 @@ usage documents.
 Note that the build scripts for RomWBW create the default disk images
 supplied with RomWBW. It is relatively easy to customize the contents
 of the disk images that are part of RomWBW. This is described in more
-detail in the Source\\Images directory of the distribution.
+detail in the Source/Images directory of the distribution.
 
 ## FAT Filesystem Transfers
 
@@ -2845,6 +2915,31 @@ Please refer to the
 [UNA BIOS Firmware Page](https://www.retrobrewcomputers.org/doku.php?id=software:firmwareos:una:start)
 for more information on UNA.
 
+## UNA Usage Notes
+
+- At startup, UNA will display a prompt similar to this:
+
+  `Boot UNA unit number or ROM? [R,X,0..3] (R):`
+
+  You generally want to choose 'R' which will then launch the RomWBW
+  loader.  Attempting to boot from a disk using a number at the UNA
+  prompt will only work for the legacy (hd512) disk format.  However,
+  if you go to the RomWBW loader, you will be able to perform a disk
+  boot on either disk format.
+
+- The disk images created and distributed with RomWBW do not have the
+  correct system track code for UNA.  In order to boot to disk under
+  UNA, you must first use SYSCOPY to update the system track of the
+  target disk.  The UNA ROM disk has the correct system track files
+  for UNA: `CPM.SYS` and `ZSYS.SYS`.  So, you can boot a ROM OS and
+  then use one of these files to update the system track.
+
+- Only Z-System and CP/M 2 are available OSes under UNA at this time.
+  Since NZ-COM launches from CP/M 2, it is usable.  p-System is not
+  usable under UNA.
+
+- Some of the RomWBW-specific applications are not UNA compatible.
+
 # Upgrading
 
 Upgrading to a newer release of RomWBW is essentially just a matter of
@@ -2937,7 +3032,7 @@ firmware, you are likely to have odd problems.
 
 The simplest way to update your disk media is to just use your modern
 computer to overwrite the entire media with the latest disk image of
-your choice. This process is described below in the Disk Images
+your choice. This process is described below in the [Disk Images]
 section. If you wish to update existing disk media in your system, you
 need to perform the following steps.
 
@@ -2953,7 +3048,7 @@ them over any older versions of the app on your disk:
 * ASSIGN.COM
 * SYSCOPY.COM
 * MODE.COM
-* FDU.COM (was FDTST.COM)
+* FDU.COM
 * FORMAT.COM
 * XM.COM
 * FLASH.COM
@@ -2961,14 +3056,13 @@ them over any older versions of the app on your disk:
 * TALK.COM
 * RTC.COM
 * TIMER.COM
-* INTTEST.COM
 
 For example: `B>COPY ASSIGN.COM C:`
 
 Some RomWBW custom applications are too large to fit on the ROM disk.
 If you are using any of these you will need to transfer them to your
 system and then update all copies. These applications are found in
-the Binary\\Apps directory of the distribution and in all of the disk
+the Binary/Apps directory of the distribution and in all of the disk
 images.
 
 * FAT.COM
@@ -2976,12 +3070,15 @@ images.
 
 ## System Update
 
-If the system running ROMWBW utilizes the SST39SF040 Flash chip then it
-is possible to do a System Update in place of a System Upgrade in some
-cases.
+As previously described, a RomWBW ROM contains ROM applications as well 
+as a ROM disk image.  If you are upgrading your ROM with a new patch 
+level release, you may wish to upgrade just the application portion of 
+the ROM.  This is referred to as a System Update.
 
-A System Update would involve only updating the BIOS, ROM applications
-and CP/M system.
+If the system running ROMWBW utilizes the SST39SF040 Flash chip then it 
+is possible to do a System Update in place of a System Upgrade in some 
+cases.  A System Update would involve only updating the BIOS, ROM 
+applications and ROM-hosted operating systems.
 
 A System Update may be more favorable than a System Upgrade in cases
 such as:
@@ -2992,15 +3089,15 @@ such as:
  - Configuration changes are only minor and do not impact disk
    applications.
 
-The ROMWBW build process generates a system upgrade file along with
+The RomWBW build process generates a system update file along with
 the normal ROM image and can be identified by the extension ".upd". It
 will be 128Kb in size. In comparison the normal ROM image will have
 the extension ".rom" and be 512Kb or 1024Kb in size.
 
-Transferring and flashing the System Update is accomplished in the
-same manner as described above in *Upgrading* with the required
-difference being that the flash application needs to be directed to
-complete a partial flash using the /P command line switch.
+Transferring and flashing the System Update is accomplished in the same 
+manner as described above in [Upgrading via Flash Utility] with the 
+required difference being that the flash application needs to be 
+directed to complete a partial flash using the /P command line switch.
 
 `E>FLASH WRITE ROM.UPD /P`
 
@@ -3014,7 +3111,7 @@ please let me know if I missed you!
 
 * Andrew Lynch started it all when he created the N8VEM Z80 SBC
   which became the first platform RomWBW supported.  Some of his
-  code can still be found in RomWBW.
+  original code can still be found in RomWBW.
 
 * Dan Werner wrote much of the code from which RomWBW was originally
   derived and he has always been a great source of knowledge and
@@ -3026,22 +3123,29 @@ please let me know if I missed you!
   due  to internal changes within RomWBW. As of RomWBW 2.6, these
   applications are no longer provided.
 
+* Sergey Kiselev created several hardware platforms for RomWBW
+  including the very popular Zeta.
+
 * David Giles created support for the Z180 CSIO which is now included
   SD Card driver.
+
+* Phil Summers contributed the Forth and BASIC adaptations in ROM, the
+  AY-3-8910 sound driver, DMA support, and a long list of general code
+  and documentation enhancements.
 
 * Ed Brindley contributed some of the code that supports the RCBus
   platform.
 
-* Phil Summers contributed the Forth and BASIC adaptations in ROM, the
-  AY-3-8910 sound driver as well as a long list of general code
-  enhancements.
-
 * Spencer Owen created the RC2014 series of hobbyist kit computers
-  which has exponentially increased RomWBW usage.
+  which has exponentially increased RomWBW usage.  Some of his kits
+  include RomWBW.
 
 * Stephen Cousins has likewise created a series of hobbyist kit
   computers at Small Computer Central and is distributing RomWBW
   with many of them.
+
+* Alan Cox has contributed some driver code and has provided a great
+  deal of advice.
 
 * The CP/NET client files were developed by Douglas Miller.
 
@@ -3086,8 +3190,8 @@ in accordance with the intentions and/or licensing of their creators.
 If anyone feels their work is being used outside of its intended
 licensing, please notify:
 
-> Wayne Warthen
-> wwarthen@gmail.com
+> $doc_author$ \
+> [$doc_authmail$](mailto:$doc_authmail$)
 
 RomWBW is an aggregate work.  It is composed of many individual,
 standalone programs that are distributed as a whole to function as
@@ -3249,7 +3353,7 @@ the RomWBW HBIOS configuration.
 | Interrupts        | Mode 2        |
 
  - CPU speed is detected at startup if DS1302 RTC is active
-   - Otherwise 20.000 MHz assumed
+   - Otherwise 8.000 MHz assumed
  - System timer is generated by onboard CTC
  - Hardware auto-detected:
    - Onboard DS1302 RTC

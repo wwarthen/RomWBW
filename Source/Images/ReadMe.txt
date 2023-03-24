@@ -105,7 +105,7 @@ where:
     <disk> specifies the disk contents (e.g., "cpm22")
     <type> specifies disk type ("fd" for floppy, or "hd" for hard disk)
     <format> specifies the disk format which must be one of:
-        - "fd144": 1.44M floppy disk
+      - "fd144": 1.44M floppy disk
 	- "hd512": hard disk with 512 directory entries
 	- "hd1k": hard disk with 1024 directory entries
     <system> optionally specifies a boot system image to place in the
@@ -203,10 +203,11 @@ command prompt:
   | C:\RomWBW\Binary>copy /b hd1k_prefix.dat + hd1k_zsdos.img + hd1k_ws4.img hd_multi.img
 
 Since the hd512 format does not utilize a partition, you do not
-prefix the hd512_xxx.img files with anything.  They are ready to write
-to your media as is.
+prefix the hd512_xxx.img files with anything.  You can simply
+concatenate the desired hd512_xxx.img files together and write the
+resulting file to the start of your hard disk media.
 
-In general, the hd1k format is considered the better format to use. 
+In general, the hd1k format is considered the preferred format to use. 
 It provides double the directory space and places all slices inside 
 of a hard disk partition that DOS/Windows should respect as "used" 
 space.

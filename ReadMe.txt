@@ -1,6 +1,6 @@
 RomWBW ReadMe
 Wayne Warthen (wwarthen@gmail.com)
-05 Mar 2023
+22 Mar 2023
 
 
 
@@ -129,8 +129,8 @@ contributions. The list below is probably missing many names – please
 let me know if I missed you!
 
 -   Andrew Lynch started it all when he created the N8VEM Z80 SBC which
-    became the first platform RomWBW supported. Some of his code can
-    still be found in RomWBW.
+    became the first platform RomWBW supported. Some of his original
+    code can still be found in RomWBW.
 
 -   Dan Werner wrote much of the code from which RomWBW was originally
     derived and he has always been a great source of knowledge and
@@ -142,22 +142,29 @@ let me know if I missed you!
     due to internal changes within RomWBW. As of RomWBW 2.6, these
     applications are no longer provided.
 
+-   Sergey Kiselev created several hardware platforms for RomWBW
+    including the very popular Zeta.
+
 -   David Giles created support for the Z180 CSIO which is now included
     SD Card driver.
+
+-   Phil Summers contributed the Forth and BASIC adaptations in ROM, the
+    AY-3-8910 sound driver, DMA support, and a long list of general code
+    and documentation enhancements.
 
 -   Ed Brindley contributed some of the code that supports the RCBus
     platform.
 
--   Phil Summers contributed the Forth and BASIC adaptations in ROM, the
-    AY-3-8910 sound driver as well as a long list of general code
-    enhancements.
-
 -   Spencer Owen created the RC2014 series of hobbyist kit computers
-    which has exponentially increased RomWBW usage.
+    which has exponentially increased RomWBW usage. Some of his kits
+    include RomWBW.
 
 -   Stephen Cousins has likewise created a series of hobbyist kit
     computers at Small Computer Central and is distributing RomWBW with
     many of them.
+
+-   Alan Cox has contributed some driver code and has provided a great
+    deal of advice.
 
 -   The CP/NET client files were developed by Douglas Miller.
 
@@ -202,14 +209,15 @@ Portions of RomWBW were created by, contributed by, or derived from the
 work of others. It is believed that these works are being used in
 accordance with the intentions and/or licensing of their creators.
 
-If anyone feels their work is being used outside of it’s intended
+If anyone feels their work is being used outside of its intended
 licensing, please notify:
 
-  Wayne Warthen wwarthen@gmail.com
+  Wayne Warthen
+  wwarthen@gmail.com
 
 RomWBW is an aggregate work. It is composed of many individual,
 standalone programs that are distributed as a whole to function as a
-cohesive system. Each program may have it’s own licensing which may be
+cohesive system. Each program may have its own licensing which may be
 different from other programs within the aggregate.
 
 In some cases, a single program (e.g., CP/M Operating System) is
