@@ -1028,3 +1028,81 @@ hardware interface code is specific to RomWBW and the application will
 not operate correctly on non-RomWBW systems.
 
 The source code is provided in the RomWBW distribution.
+
+
+`\clearpage`{=latex}
+
+# VGMPLAY
+
+This application will allow you to play Video Game Music files. VGM 
+files contain music samples from a range of different sound chips 
+that were used in arcade games, game consoles and personal computer 
+systems.
+
+Video Game Music files have a .VGM file extension and each file 
+contains an embedded header that identifies the hardware it is 
+intended for and also the title of the music.
+
+All RomWBW operating system boot disks include a selection of sound
+files in user area 3. Additional music files can be found at:
+
+[VGMRIPS website](https://vgmrips.net)
+
+[PROJECT2612 website](https://project2612.org/)
+
+Sound files are loaded into memory for playback, so the maximum size
+file that can be played is around 52Kb.
+
+Sound chips currently supported are:
+
+* AY-3-8190 (and equivalent YM2149)
+* YM2612 (and equivalent YM3848)
+* SN76489 (single chip mono and dual chip stereo)
+* YM2151 
+
+VGMPLAY supports playback of files with multiple combinations of these
+chips.
+
+## Syntax
+
+`VGMPLAY `*`<filename>`*
+
+*`<filename>`* is the name of a sound file ending in .VGM
+
+## Usage
+
+VGMPLAY does not automatically detect the hardware platform or sound
+hardware that you are using. This means a version customized for your
+system must be assembled before use.
+
+To play a sound file, just use the VGMPLAY command and specify the file
+to play after the command. So, for example, `VGMPLAY TEDDY` will load
+the TEDDY.VGM sound file into memory and begin playing it.
+
+Playback can be stopped by pressing a key. There may be a delay before
+playback stops.
+
+## Notes
+
+The default build configuration for VGMPLAY is:
+
+CPU speed: Autodetected
+
+| chip      | number  | port     | notes
+| --------- | ------- | -------- | ----------
+| AY-3-8910 |  1st    | 09ah     | stereo
+| AY-3-8910 |  2nd    | not set  | stereo
+| YM2612    |  1st    | 0c0h     | stereo
+| YM2612    |  2nd    | 0c4h     | stereo
+| SN76489   |  1st    | 0c8h     | mono/left
+| SN76489   |  2nd    | 0c9h     | mono/right
+| YM2151    |  1st    | 0cah     | stereo
+| YM2151    |  2nd    | 0cbh     | stereo
+
+Inconsistant, garbled or distorted playback can be an indication that
+your CPU clock speed is too high for your sound chip. In this case, if 
+your platform supports speed switching, then the CPUSPD application 
+can be used to reduce your processor speed.
+
+VGMPLAY is still under development. The source code is provided in the 
+RomWBW distribution.
