@@ -45,7 +45,7 @@ an equate. Version 1.2 was never distributed and contains only a few
 minor fixes.  Unfortunately, the use of v1.2 would make it incompatible 
 with many support modules and overlays due to their reliance on 
 hard-coded address assumptions.  This is probably why it was never 
-distributed.  I encountered this myself with the date stamping code –- 
+distributed.  I encountered this myself with the date stamping code -- 
 it won't work with v1.2 because it does a version check. For now, I have 
 chosen to use v1.1 to maximize compatibility (seems to be what everyone 
 is doing). Ultimately, I may go back and try to rebuild everything in 
