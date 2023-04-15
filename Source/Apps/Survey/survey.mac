@@ -15,6 +15,13 @@
 ;
 ;VERSION LIST - Most recent version first.
 ;
+;21/Mar/23 - Previous hack was worthless because it broke
+;            the memory survey.  Rehacked to use HBIOS to
+;            detect if N8VEM SBC MPCL memory management is
+;            in use and bypass MPCL ports if so.  HBIOS check
+;            should allow use in non-RomWBW systems again.
+;            Wayne Warthen
+;
 ;10/Feb/23 - Total hack to avoid crash on ECB SBC
 ;            RomWBW now required by this version
 ;            Wayne Warthen
@@ -240,20 +247,6 @@ TABS	EQU	9		; Tab columns
 ;
 	;ORG	100H
 ;
-;
-;
-	.Z80
-	LD	HL,IMGORG
-	LD	DE,START
-	LD	BC,IMGEND-IMGORG
-	LDIR
-	JP	START
-	.8080
-;
-IMGORG:
-;
-	.PHASE	8000H
-;
 START:
 	LXI	H,0			; Save stack pointer
 	DAD	SP
@@ -261,9 +254,38 @@ START:
 	LXI	SP,FINIS+64
 	CALL	TYPE			; Type initial CRLF
 	DW	CRLF,CRLF
-	DB	TAB,'*** RomWBW System Survey (Feb 2023) ***'
+	DB	TAB,'*** RomWBW System Survey (Mar 2023) ***'
 	DW	CRLF,CRLFE
+;
+; Are we running an N8VEM SBC w/ MPCL on RomWBW???
+;
+	.Z80
+	XOR	A		; assume not
+	LD	(ISMPCL),A	; save it
 
+	; Check for RomWBW (HBIOS)
+	LD	HL,(0FFFEH)	; HL := HBIOS ident location
+	LD	A,'W'		; First byte of ident
+	CP	(HL)		; Compare
+	JR	NZ,NOTMPCL	; Not HBIOS
+	INC	HL		; Next byte of ident
+	LD	A,NOT 'W'	; Second byte of ident
+	CP	(HL)		; Compare
+	JR	NZ,NOTMPCL	; Not HBIOS
+;
+	LD	B,0F1H		; HBIOS: VER function
+	LD	C,0		; required reserved value
+	RST	08		; DE := version, L := platform id
+	LD	A,L		; Platform ID
+	CP	01H		; SBC?
+	JR	NZ,NOTMPCL	; Not SBC
+	LD	A,0FFH		; Flag
+	LD	(ISMPCL),A	; Set flag
+;
+	.8080
+;
+NOTMPCL:
+;
 ;DISK SURVEY
 	LXI	H,8			; Init drive counter
 	MVI	C,24			; Get login vector
@@ -445,20 +467,19 @@ MSURV:
 	ENDM
 	DB	'|'
 	DW	CRLF
-	db	' '			; dmb 31-May-82
-	DB	'T'+EOL
+	DB	'TT','T'+EOL
 	LXI	H,RAM
-	MVI	M,LOW 1023		; Init RAM counter
+	MVI	M,LOW 2047		; Init RAM counter
 	INX	H
-	MVI	M,HIGH 1023
+	MVI	M,HIGH 2047
 	MVI	B,4			; Clear ROM, EMP
 CLREG:
 	INX	H
 	MVI	M,0
 	DCR	B
 	JNZ	CLREG
-	LXI	H,1024			; Init memory pointer
-	MVI	C,63			; K to be checked
+	LXI	H,2048			; Init memory pointer
+	MVI	C,62			; K to be checked
 
 ;Start of analysis loop
 BEGANA:
@@ -492,7 +513,7 @@ NOTEM:
 	INXI	ROM
 NEXT:
 	INX	H			; Index next byte
-	DCX	D			; Decrement K counter
+	DCX	D			; DEC DE; Decrement K counter
 	XRA	A
 	ORA	D
 	ORA	E
@@ -545,8 +566,19 @@ NEXTK:
 ; contents of first page
 	call	type
 	db	'BIOS at',' '+eol
-	hexout	bios+2
-	hexout	bios+1
+	;hexout	bios+2
+	;hexout	bios+1
+	.z80
+	ld	hl,(bios+1)
+	ld	de,-3
+	add	hl,de
+	push	hl
+	ld	a,h
+	call	hexprn
+	pop	hl
+	ld	a,l
+	call	hexprn
+	.8080
 	call	type
 	db	tab,'iobyte',' '+eol
 	hexout	bios+3
@@ -555,8 +587,19 @@ NEXTK:
 	hexout	bios+4
 	call	type
 	db	tab,'BDOS at',' '+eol
-	hexout	bdos+2
-	hexout	bdos+1
+	;hexout	bdos+2
+	;hexout	bdos+1
+	.z80
+	ld	hl,(bdos+1)
+	ld	de,-6
+	add	hl,de
+	push	hl
+	ld	a,h
+	call	hexprn
+	pop	hl
+	ld	a,l
+	call	hexprn
+	.8080
 	call	type
 	dw	crlf,crlfe
 ;
@@ -572,6 +615,8 @@ NEXTK:
 	CALL	TYPE
 	DB	' Bytes ROM',TAB,TAB+EOL
 	LHLD	BDOS+1
+	LXI	D,-6
+	DAD	D
 	CALL	BINDEC
 	CALL	TYPE
 	DB	' Bytes in TPA'
@@ -607,9 +652,6 @@ PDLY:
 	JNZ	PDLY
 ;
 	.Z80
-	; record the active bank
-	ld	a,(0ffe0h)		; get current hbios bank id
-	ld	(BANK),a		; and save it
 	; Check for Z180 CPU
 	xor	a			; assume Z80
 	ld	(IS180),a		; save it
@@ -635,6 +677,17 @@ PORTLP:
 	ENDIF
 ;
 	.Z80
+;
+	ld	a,(ISMPCL)		; MPCL?
+	or	a			; set flags
+	jr	z,PCONT			; if not, skip ahead
+	ld	a,d			; get port to test
+	and	0F8H			; range of 8 ports
+	cp	078H			; starting at 78H
+	jr	z,ISPORT		; if in range, assume real port
+;
+PCONT:
+
 	di				; interrupts off
 	ld	a,(IS180)		; Z180?
 	or	a
@@ -679,11 +732,6 @@ pnum1b	equ	$-1
 	push	af
 ;
 rdz:
-	; Make sure correct bank is still selected!
-	push	af
-	ld	a,(BANK)
-	call	0FFF3H
-	pop	af
 ;
 	ei				; interrupts back on now
 ;
@@ -818,13 +866,9 @@ RAMF:	DS	1			; RAM good flag
 EMPF:	DS	1			; Empty so far flag
 BLKSHF:	DS	1			; block shift factor
 MAXALL:	DS	2			; maximum block number
-BANK:	DS	1			; saved HBIOS bank id
 IS180:	DS	1			; non-zero for Z180 CPU
+ISMPCL:	DS	1			; non-zero for N8VEM SBC MPCL
 FINIS	EQU	$			; End of program
-;
-	.DEPHASE
-;
-IMGEND:
 ;
 	END
 

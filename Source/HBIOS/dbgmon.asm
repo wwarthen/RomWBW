@@ -878,6 +878,8 @@ GETLNLOP:
 	JR	Z,GETLNDONE		; YES, EXIT
 	CP	CHR_BS			; IS <BS>?
 	JR	Z,GETLNBS		; IF SO, HANDLE IT
+	CP	CHR_DEL			; IS <DEL>?
+	JR	Z,GETLNBS		; IF SO, HANDLE AS <BS>
 	CP	' '			; UNEXPECTED CONTROL CHAR?
 	JR	C,GETLNLOP		; IF SO, IGNORE IT AND GET NEXT
 	LD	B,A			; SAVE CHAR IN B FOR NOW
@@ -1854,6 +1856,7 @@ CHR_CR		.EQU	0DH
 CHR_LF		.EQU	0AH
 CHR_BS		.EQU	08H
 CHR_ESC		.EQU	1BH
+CHR_DEL		.EQU	7FH
 ;
 ;__________________________________________________________________________________________________
 ;

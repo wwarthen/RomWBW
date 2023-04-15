@@ -41,6 +41,7 @@ bel	.equ	7	; ASCII bell
 bs	.equ	8	; ASCII backspace
 lf	.equ	10	; ASCII linefeed
 cr	.equ	13	; ASCII carriage return
+del	.equ	127	; ASCII del/rubout
 ;
 cmdbuf	.equ	$80	; cmd buf is in second half of page zero
 cmdmax	.equ	60	; max cmd len (arbitrary), must be < bufsiz
@@ -1281,6 +1282,8 @@ rdln_nxt:
 	call	cin			; get a character
 	cp	bs			; backspace?
 	jr	z,rdln_bs		; handle it if so
+	cp	del			; del/rubout?
+	jr	z,rdln_bs		; handle as backspace
 	cp	cr			; return?
 	jr	z,rdln_cr		; handle it if so
 ;

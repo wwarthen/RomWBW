@@ -1,3 +1,7 @@
 #
+# Add the ReadMe document
+#
+d_dos65/ReadMe.txt 0:
+#
 # Nothing to add for now
 #

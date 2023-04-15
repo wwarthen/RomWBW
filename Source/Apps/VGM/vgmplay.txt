@@ -21,7 +21,7 @@ Supported platforms
 ===================
 
 VGM Player is currently being developed on the ROMWBW platform using the Retrobrew computers
-EBC-SBC-V2 (Z80), ECB-SCG (AY-3-8910) and ECB-VGM (YM2612 and 2xSN76489) board. 
+EBC-SBC-V2 (Z80), ECB-SCG (AY-3-8910) and ECB-VGM (YM2612,YM2151 2xSN76489) board. 
 It can be configured to run with other hardware such as RCBus, P8X180 and nhyodyne MBC.
 
 VGM files can be very big and are limited in size by the available TPA space, which is typically 52k.
@@ -50,13 +50,15 @@ FIELDMAP.VGM - SN76489+YM2612      - Taikou Risshiden: Field Map: Summer        
 ITSGAMOV.VGM - SN76489+YM2612      - Puyo Puyo Tsuu: It's Game Over!                              : 16K
 STARTDEM.VGN - 2xSN76489+AY-3-8910 * Exed Exes / Savage Bees: Start Demo ~Main BGM                : 32K
 INCHINA.VGM  - YM2612              * Double Dragon 3: The Rosetta Stone: In China                 : 44K
-
+SURE.VGM     - YM2151              - Martial Age: Sure??                                          : 36K
+SABERDAN.VGM - YM2151              - Road Runner: Sabre Dance (Attract Mode - Stage 4)            : 28K
 * Included in disk images
 
 VGM sources
 ===========
 https://www.smspower.org/forums/15359-VGMPacksGameGearMegaCollection
 https://vgmrips.net/packs/chip/ym2612
+https://vgmrips.net/packs/chip/ym2151 
 https://project2612.org/
 
 VGM Tools

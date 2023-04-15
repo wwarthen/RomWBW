@@ -565,11 +565,8 @@ cpm_word fcb_randwr(cpm_byte* fcb, cpm_byte* dma)
 	/* Update the file length */
 	len = redir_rd32(fcb + LENGTH_OFFSET);
 	/* PMO: Bug fix, account for the data just written */
-	if (len < offs + rv) {
+	if (len < offs + rv)
 		redir_wr32(fcb + LENGTH_OFFSET, offs + rv);
-		/* WBW: Not actually a bug.  Causes problems w/ GENCPM */
-		// fcb[0x20] = (offs + rv) % 256;
-	}
 
 	if (rv < redir_rec_len) FCBRET(1);	/* disk full */
 	FCBRET(0);

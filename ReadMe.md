@@ -1,9 +1,9 @@
 
 
 **RomWBW ReadMe** \
-Version 3.2 \
+Version 3.2.1 \
 Wayne Warthen  ([wwarthen@gmail.com](mailto:wwarthen@gmail.com)) \
-18 Mar 2023
+07 Apr 2023
 
 # Overview
 
@@ -102,22 +102,22 @@ functionality.
 
 Complete instructions for installation and operation of RomWBW are found
 in the [RomWBW User
-Guide](https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20User%20Guide.pdf).
+Guide](https://github.com/wwarthen/RomWBW/raw/dev/Doc/RomWBW%20User%20Guide.pdf).
 
 ## Documentation
 
 Documentation for RomWBW includes:
 
 - [RomWBW User
-  Guide](https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20User%20Guide.pdf)
+  Guide](https://github.com/wwarthen/RomWBW/raw/dev/Doc/RomWBW%20User%20Guide.pdf)
 - [RomWBW System
-  Guide](https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20System%20Guide.pdf)
+  Guide](https://github.com/wwarthen/RomWBW/raw/dev/Doc/RomWBW%20System%20Guide.pdf)
 - [RomWBW
-  Applications](https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20Applications.pdf)
+  Applications](https://github.com/wwarthen/RomWBW/raw/dev/Doc/RomWBW%20Applications.pdf)
 - [RomWBW ROM
-  Applications](https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20ROM%20Applications.pdf)
+  Applications](https://github.com/wwarthen/RomWBW/raw/dev/Doc/RomWBW%20ROM%20Applications.pdf)
 - [RomWBW
-  Errata](https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20Errata.pdf)
+  Errata](https://github.com/wwarthen/RomWBW/raw/dev/Doc/RomWBW%20Errata.pdf)
 
 # Acknowledgments
 

@@ -1,3 +1,11 @@
+Version 3.2.1
+-------------
+- M?P: Fixed Zeta 2 FDD and CPUSPD config settings
+- WBW: Fixed SURVEY.COM (again)
+- DDW: Updates to DOS/65 binaries in disk images
+- PMS: Updates to VGMPLAY including support for YM2151
+- WBW: Fix for quark delay adjustment being trashed
+
 Version 3.2
 -----------
 - WBW: Version bump for release

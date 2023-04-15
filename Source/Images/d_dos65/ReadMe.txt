@@ -4,6 +4,10 @@ This disk is one of several ready-to-run disks provided with RomWBW.
 It contains the files to start and run DOS/65 on an MBC system that
 contains Dan Werner's 6502 processor.
 
+WARNING: This is a work in progress.  Use of this disk image requires
+specific hardware and configuration.  You should contact Dan Werner
+before attempting to use this disk image.
+
 The remainder of this document describes the usage and contents of
 this disk.  It is highly recommended that you review the "RomWBW
 User Guide.pdf" document found in the Doc directory of the
