@@ -1,3 +1,7 @@
+Version 3.3
+-----------
+- Support Front Panel switches
+
 Version 3.2.1
 -------------
 - M?P: Fixed Zeta 2 FDD and CPUSPD config settings

@@ -2123,6 +2123,17 @@ Wait States (D) is the actual number of wait states, not the number
 of wait states added.  The returned Status (A) is a standard HBIOS 
 result code.
 
+#### SYSGET Subfunction 0xF4 -- Get Front Panel Swithes (PANEL)
+
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0xF8                                | A: Status                              |
+| C: 0xF4                                | L: Switches                            |
+
+This function will return the current value of the switches (L) from the
+front panel of the system.  If no front panel is available in the
+system, the returned Status (A) will indicate a No Hardware error.
+
 ### Function 0xF9 -- System Set (SYSSET)
 
 | **Entry Parameters**                   | **Returned Values**                    |
@@ -2205,6 +2216,18 @@ cases this may not be possible.  The baud rate of ASCI ports have a
 limited set of divisors.  If there is no satisfactory divisor to
 retain the existing baud rate under the new CPU speed, then the baud
 rate of the ASCI port(s) will be affected.
+
+#### SYSSET Subfunction 0xF4 -- Set Front Panel LEDs (PANEL)
+
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0xF8                                | A: Status                              |
+| C: 0xF4                                |                                        |
+| L: LEDs                                |                                        |
+
+This function will set the front panel LEDs based on the bits in L. If 
+no front panel is available in the system, the returned Status (A) will 
+indicate a No Hardware error.
 
 ### Function 0xFA -- System Peek (SYSPEEK)
 
