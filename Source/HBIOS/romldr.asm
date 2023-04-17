@@ -453,12 +453,19 @@ fp_hdboot1:
 	pop	bc			; restore loop control
 	ld	a,d			; device type to A
 	cp	DIODEV_IDE		; type IDE or greater is HD
-	jr	nc,fp_hdboot2		; if hd, go boot it
+	jr	c,fp_hdboot2		; if not, continue loop
+	push	bc			; save loop control
+	ld	b,BF_DIOMEDIA		; HBIOS Sense Media
+	ld	e,1			; perform media discovery
+	rst	08			; do it
+	pop	bc			; restore loop control
+	jr	z,fp_hdboot3		; if has media, go boot it
+fp_hdboot2:
 	inc	c			; else next disk
 	djnz	fp_hdboot1		; loop thru all disks
 	ret				; nothing works, abort
 ;
-fp_hdboot2:
+fp_hdboot3:
 	ld	a,c			; disk unit to A
 	ld	(bootunit),a		; save it
 	ld	a,(switches)		; get switches value

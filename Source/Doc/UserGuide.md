@@ -201,6 +201,7 @@ below, **carefully** pick the appropriate ROM image for your hardware.
 | [Z80 ZRC CPU Module]^7^                                        | RCBus   | RCZ80_zrc.rom      | 115200        |
 | [Z280 ZZRCC CPU Module]^7^                                     | RCBus   | RCZ280_zzrc.rom    | 115200        |
 | [Z280 ZZ80MB SBC]^7^                                           | RCBus   | RCZ280_zz80mb.rom  | 115200        |
+| [Z80-Retro SBC]^8^                                             | -       | Z80RETRO_std.rom   | 38400         |
 
 | ^1^Designed by Andrew Lynch
 | ^2^Designed by Sergey Kiselev
@@ -209,6 +210,7 @@ below, **carefully** pick the appropriate ROM image for your hardware.
 | ^5^Designed by Stephen Cousins
 | ^6^Designed by Steve Garcia
 | ^7^Designed by Bill Shen
+| ^8^Designed by Peter Wilson
 
 RCBus refers to Spencer Owen's RC2014 bus specification and derivatives
 including RC26, RC40, RC80, and BP80.
@@ -781,6 +783,55 @@ calls to RomWBW HBIOS detect problems.
 The use of diagnostic levels above 4 are really intended only for
 software developers.  I do not recommend changing this under
 normal circumstances.
+
+## Front Panel
+
+RomWBW supports the concept of a simple front panel.  The following 
+image is a conceptual view of such a front panel.  If your system has a 
+front panel, it should look similar to the [RomWBW Front Panel](#panel).
+
+![RomWBW Front Panel](Graphics/Panel){#panel width=50% }
+
+The LEDs in the top row of the panel are used for multiple purposes.
+They are initially used to display the progress of the
+system boot.  This may help in diagnosing a hardware or configuration
+issue in a system that does not progress far enough to display text
+output on the console.  The meaning of the LEDs is:
+
+|            |                              |
+|------------|------------------------------|
+| `O-------` | System Boot has started      |
+| `OO------` | Common RAM bank activated    |
+| `OOO-----` | HBIOS transitioned to RAM    |
+| `OOOO----` | Basic initialization done    |
+| `OOOOO---` | CPU detection complete       |
+| `OOOOOO--` | System timer configured      |
+| `OOOOOOO-` | Pre-console device init done |
+| `OOOOOOOO` | Console activation           |
+
+Once the system has booted, the LEDs are used to indicate disk device
+activity.  Each LED numbered 7-0 represents disk units 7-0.  As each
+disk device performs I/O, the LED will light.
+
+The second row of the front panel is composed of switches that allow
+you to control a few aspects of the system startup.
+
+The first two switches affect the device used as the console initially.
+Setting the CRT/Serial switch will cause the system to boot directly 
+to an attached CRT device (if available).  Setting the Pri/Sec switch 
+will cause the system to boot to the secondary Serial or CRT device 
+(depending on the setting of the first switch).
+
+The final six switches allow you to cause the system to automatically
+boot into a desired function.  The Auto/Menu switch must be set to
+enable this, otherwise the normal ROM Loader prompt will be used.
+If the Disk/ROM switch is not set, then you can use the last 3
+switches to select a ROM app to auto-start.  If the Disk/ROM switch is
+set, then the system will attempt a disk boot based on the following
+switches.  The Floppy/Hard switch can be used to boot to a Floppy or
+Hard Disk.  In either case, the first Floppy or Hard Disk will be used
+for the boot.  If a Hard Disk boot is selected, then the last three
+switches can be used to select any of the first 8 slices.
 
 # Disk Management
 
@@ -3805,6 +3856,21 @@ the RomWBW HBIOS configuration.
    - PPIDE Hard Disk Interface Module
  - Serial baud rate is usually determined by hardware for ACIA and
    SIO interfaces
+
+`\clearpage`{=latex}
+
+### Z80-Retro SBC
+
+|                   |                  |
+|-------------------|------------------|
+| ROM Image File    | Z80RETRO_std.rom |
+| Console Baud Rate | 38400            |
+| Interrupts        | Mode 2           |
+
+ - CPU speed is assumed to be 14.7456 MHz
+ - Hardware auto-detected:
+   - SIO Serial Interface Module
+   - Onboard CTC
 
 `\clearpage`{=latex}
 

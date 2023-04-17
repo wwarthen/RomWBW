@@ -1,5 +1,5 @@
 ; The purpose of this file is to define generic symbols and to include
-; the requested build configuraton file to bring in platform specifics.
+; the requested build configuration file to bring in platform specifics.
 
 ; There are several hardware platforms supported by SBC.
 ; 1.  SBC	Z80 SBC (v1 or v2) w/ ECB interface
@@ -16,6 +16,7 @@
 ; 12. RCZ280	Z280 CPU on RCBUS or ZZ80MB
 ; 13. MBC	Andrew Lynch's Multi Board Computer
 ; 14. RPH	Andrew Lynch's RHYOPHYRE Graphics Computer
+; 15. Z80RETRO	Peter Wilson's Z80-Retro Computer
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -116,6 +117,7 @@ SIOMODE_STD	.EQU	1		; STD SIO REG CFG (EZZ80, KIO)
 SIOMODE_RC	.EQU	2		; RCBUS SIO MODULE (SPENCER OWEN)
 SIOMODE_SMB	.EQU	3		; RCBUS SIO MODULE (SCOTT BAKER)
 SIOMODE_ZP	.EQU	4		; ECB-ZILOG PERIPHERALS BOARD
+SIOMODE_Z80R	.EQU	5		; SIO A/B SWAPPED
 ;
 ; TYPE OF CONSOLE BELL TO USE
 ;
@@ -182,6 +184,7 @@ SDMODE_MK4	.EQU	7		; MARK IV
 SDMODE_SC	.EQU	8		; SC (Steve Cousins)
 SDMODE_MT	.EQU	9		; MT (Shift register SPI WIZNET for RCBUS)
 SDMODE_USR	.EQU	10		; USER DEFINED (in sd.asm) (NOT COMPLETE)
+SDMODE_PIO	.EQU	11		; Z80 PIO bitbang
 ;
 ; AY SOUND CHIP MODE SELECTIONS
 ;
