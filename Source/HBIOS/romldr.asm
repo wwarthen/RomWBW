@@ -180,6 +180,30 @@ start1:
 	call	pstr			; do it
 	call	clrbuf			; zero fill the cmd buffer
 ;
+#if (BIOS == BIOS_WBW)
+;
+	ld	b,BF_SYSGET		; HBIOS SysGet
+	ld	c,BF_SYSGET_PANEL	; ... Panel swiches value
+	rst	08			; do it
+	jr	nz,nofp			; no switches, skip over
+	ld	a,l			; put value in A
+	ld	(switches),a		; save it
+;
+	call	nl			; formatting
+	ld	hl,str_switches		; tag
+	call	pstr			; display
+	ld	a,(switches)		; get switches value
+	call	prthexbyte		; display
+;
+	ld	a,(switches)		; get switches value
+	and	SW_AUTO			; auto boot?
+	call	nz,runfp		; process front panel
+;
+nofp:
+	; fall thru
+;
+#endif
+;
 #if (BOOT_TIMEOUT != -1)
 	; Initialize auto command timeout downcounter
 	or	$FF			; auto cmd active value
@@ -212,12 +236,12 @@ prompt:
 	ld	hl,msg_sel		; boot select msg
 	call	DSKY_SHOW		; show on DSKY
 
- #IF (DSKYMODE == DSKYMODE_NG)
+ #if (DSKYMODE == DSKYMODE_NG)
 	call 	DSKY_PUTLED
 	.db 	$3f,$3f,$3f,$3f,$00,$00,$00,$00
 	call 	DSKY_BEEP
 	call 	DSKY_L2ON
- #ENDIF
+ #endif
 
 #endif
 ;
@@ -365,6 +389,125 @@ runcmd2:
 	jp	c,err_invcmd		; handle overflow error
 	ld	(bootslice),a		; save boot slice
 	jp	diskboot		; boot the disk unit/slice
+;
+#if (BIOS == BIOS_WBW)
+;
+;=======================================================================
+; Process Front Panel switches
+;=======================================================================
+;
+runfp:
+	ld	a,(switches)		; get switches value
+	and	SW_DISK			; disk boot?
+	jr	nz,fp_diskboot		; handle disk boot
+;
+fp_romboot:
+	; Handle FP ROM boot
+	ld	a,(switches)		; get switches value
+	and	SW_OPT			; isolate options bits
+	ld	hl,fpapps		; rom apps cmd char list
+	call	addhla			; point to the right one
+	ld	a,(hl)			; get it
+;
+	; Attempt ROM application launch
+	ld	ix,(ra_tbl_loc)		; point to start of ROM app tbl
+	ld	c,a			; save command in C
+fp_romboot1:
+	ld	a,(ix+ra_conkey)	; get match char
+	and	~$80			; clear "hidden entry" bit
+	cp	c			; compare
+	jp	z,romload		; if match, load it
+	ld	de,ra_entsiz		; table entry size
+	add	ix,de			; bump IX to next entry
+	ld	a,(ix)			; check for end
+	or	(ix+1)			; ... of table
+	jr	nz,fp_romboot1		; loop till done
+	ret				; no match, return
+;
+fpapps	.db	"MBFPCZNU"
+;
+fp_diskboot:
+	; get count of disk units
+	ld	b,BF_SYSGET		; HBIOS Get function
+	ld	c,BF_SYSGET_DIOCNT	; HBIOS DIO Count sub fn
+	rst	08			; call HBIOS
+	ld	a,e			; count to A
+	ld	(diskcnt),a		; save it
+	or	a			; set flags
+	ret	z			; bort if no disk units
+	ld	a,(switches)		; get switches value
+	and	SW_FLOP			; floppy switch bit
+	jr	nz,fp_flopboot		; handle auto flop boot
+	; fall thru for auto hd boot
+;
+fp_hdboot:
+	; Find the first hd with media and boot to that unit using
+	; the slice specified by the FP switches.
+	ld	a,(diskcnt)		; get disk count
+	ld	b,a			; init loop counter
+	ld	c,0			; init disk index
+fp_hdboot1:
+	push	bc			; save loop control
+	ld	b,BF_DIODEVICE		; HBIOS Disk Device func
+	rst	08			; unit in C, do it
+	pop	bc			; restore loop control
+	ld	a,d			; device type to A
+	cp	DIODEV_IDE		; type IDE or greater is HD
+	jr	c,fp_hdboot2		; if not, continue loop
+	push	bc			; save loop control
+	ld	b,BF_DIOMEDIA		; HBIOS Sense Media
+	ld	e,1			; perform media discovery
+	rst	08			; do it
+	pop	bc			; restore loop control
+	jr	z,fp_hdboot3		; if has media, go boot it
+fp_hdboot2:
+	inc	c			; else next disk
+	djnz	fp_hdboot1		; loop thru all disks
+	ret				; nothing works, abort
+;
+fp_hdboot3:
+	ld	a,c			; disk unit to A
+	ld	(bootunit),a		; save it
+	ld	a,(switches)		; get switches value
+	and	SW_OPT			; isolate slice value
+	ld	(bootslice),a		; save it
+	jp	diskboot		; do it
+;
+fp_flopboot:
+	; Find the nth floppy drive and boot to that unit.  The
+	; floppy number is based on the option switches.
+	ld	a,(diskcnt)		; get disk count
+	ld	b,a			; init loop counter
+	ld	c,0			; init disk index
+	ld	a,(switches)		; get switches value
+	and	SW_OPT			; isolate option bits
+	ld	e,a			; floppy unit down counter
+	inc	e			; pre-increment for ZF check
+fp_flopboot1:
+	push	bc			; save loop control
+	push	de			; save floppy down ctr
+	ld	b,BF_DIODEVICE		; HBIOS Disk Device func
+	rst	08			; unit in C, do it
+	ld	a,d			; device type to A
+	pop	de			; restore loop control
+	pop	bc			; restore floppy down ctr
+	cp	DIODEV_FD		; type FD?
+	jr	nz,fp_flopboot3		; if not floppy, skip
+	dec	e			; decrement down ctr
+	jr	z,fp_flopboot2		; if ctr expired, boot this unit
+fp_flopboot3:
+	inc	c			; else next disk
+	djnz	fp_flopboot1		; loop thru all disks
+	ret				; nothing works, abort
+;
+fp_flopboot2:
+	ld	a,c			; disk unit to A
+	ld	(bootunit),a		; save it
+	xor	a		;	; zero accum
+	ld	(bootslice),a		; floppy boot slice is always 0
+	jp	diskboot		; do it
+;
+#endif
 ;
 ;=======================================================================
 ; Process a DSKY command from key in A
@@ -2168,6 +2311,7 @@ str_upd		.db	"XModem Flash Updater",0
 str_user	.db	"User App",0
 str_egg		.db	"",0
 str_net		.db	"Network Boot",0
+str_switches	.db	"FP Switches = 0x",0
 newcon		.db	0
 newspeed	.db	0
 ;
@@ -2194,6 +2338,8 @@ ra_tbl_loc	.dw	0		; points to active ra_tbl
 bootunit	.db	0		; boot disk unit
 bootslice	.db	0		; boot disk slice
 loadcnt		.db	0		; num disk sectors to load
+switches	.db	0		; front panel switches
+diskcnt		.db	0		; disk unit count value
 ;
 ;=======================================================================
 ; Pad remainder of ROM Loader

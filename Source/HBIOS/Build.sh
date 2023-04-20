@@ -38,6 +38,7 @@ if [ "${ROM_PLATFORM}" == "dist" ] ; then
 	ROM_PLATFORM="SCZ180"; ROM_CONFIG="sc140"; bash Build.sh
 	ROM_PLATFORM="SCZ180"; ROM_CONFIG="sc503"; bash Build.sh
 	ROM_PLATFORM="UNA"; ROM_CONFIG="std"; bash Build.sh
+	ROM_PLATFORM="Z80RETRO"; ROM_CONFIG="std"; bash Build.sh
 	ROM_PLATFORM="ZETA"; ROM_CONFIG="std"; bash Build.sh
 	ROM_PLATFORM="ZETA2"; ROM_CONFIG="std"; bash Build.sh
 	exit

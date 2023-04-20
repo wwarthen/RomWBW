@@ -1,3 +1,10 @@
+Version 3.3
+-----------
+- WBW: Support Front Panel switches
+- A?C: Preliminary support for Z80-Retro
+- A?C: Support for SD PIO
+- A?C: Support for Z80-Retro SD interface
+
 Version 3.2.1
 -------------
 - M?P: Fixed Zeta 2 FDD and CPUSPD config settings

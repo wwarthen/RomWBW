@@ -117,7 +117,11 @@ GET ($F8):
 						L=Clock Mult (0:Half, 1:Full, 2: Double)
 						D=Memory Wait States
 						E=I/O Wait States
-						
+
+    PANEL ($F4):
+      BC=Function/Subfunction			A=Result
+						L=Switch Values
+
 
 SET ($F9):
   BC=Function/Subfunction                       A=Result
@@ -141,6 +145,11 @@ SET ($F9):
 						D=Memory Wait States
 						E=I/O Wait States
 						
+
+    PANEL ($F4):
+      BC=Function/Subfunction			A=Result
+						L=LED Values
+
 
 PEEK ($FA):
   B=Function                       		A=Result
