@@ -4,6 +4,7 @@ Version 3.3
 - A?C: Preliminary support for Z80-Retro
 - A?C: Support for SD PIO
 - A?C: Support for Z80-Retro SD interface
+- WBW: Support per-drive floppy configuration
 
 Version 3.2.1
 -------------
