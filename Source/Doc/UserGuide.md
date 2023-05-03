@@ -3923,5 +3923,6 @@ may be discovered by RomWBW in your system.
 | USB-FIFO  | Char     | FT232H-based ECB USB FIFO                              |
 | VDU       | Video    | MC6845 Family Video Display Controller                 |
 | VGA       | Video    | HD6445CP4-based Video Display Controller               |
+| VRC       | Video    | VGARC Video Display Controller                        s |
 | YM        | Audio    | YM2612 Programmable Sound Generator                    |
 | Z2U       | Char     | Zilog Z280 CPU Built-in Serial Ports                   |

@@ -325,5 +325,6 @@ GDC_POS		.DW 	0	; CURRENT DISPLAY POSITION
 ;==================================================================================================
 ;
 GDC_IDAT:
+	.DB	KBDMODE_PS2	; PS/2 8242 KEYBOARD CONTROLLER
 	.DB	GDC_KBDST
 	.DB	GDC_KBDDATA

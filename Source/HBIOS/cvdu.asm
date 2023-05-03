@@ -902,5 +902,6 @@ CVDU_INIT8563:
 ;==================================================================================================
 ;
 CVDU_IDAT:
+	.DB	KBDMODE_PS2	; PS/2 8242 KEYBOARD CONTROLLER
 	.DB	CVDU_KBDST
 	.DB	CVDU_KBDDATA

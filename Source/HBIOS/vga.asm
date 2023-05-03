@@ -1039,5 +1039,6 @@ REGS_VGA:
 ;==================================================================================================
 ;
 VGA_IDAT:
+	.DB	KBDMODE_PS2	; PS/2 8242 KEYBOARD CONTROLLER
 	.DB	VGA_KBDST
 	.DB	VGA_KBDDATA
