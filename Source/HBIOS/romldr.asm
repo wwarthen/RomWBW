@@ -1352,20 +1352,24 @@ diskread:
 ;
 clrled:
 #if (BIOS == BIOS_WBW)
-  #if (DIAGENABLE)
-	xor	a		; zero accum
-	out	(DIAGPORT),a	; clear diag leds
+  #if (FPLED_ENABLE)
+	;xor	a			; zero accum
+	;out	(FPLED_IO),a		; clear diag leds
+	ld	b,BF_SYSSET		; HBIOS SysGet
+	ld	c,BF_SYSSET_PANEL	; ... Panel swiches value
+	ld	l,$00			; all LEDs off
+	rst	08			; do it
   #endif
   #if (LEDENABLE)
     #if (LEDMODE == LEDMODE_STD)
-	ld	a,$FF		; led is inverted
-	out	(LEDPORT),a	; clear led
+	ld	a,$FF			; led is inverted
+	out	(LEDPORT),a		; clear led
     #endif
     #if (LEDMODE == LEDMODE_RTC)
 	; Bits 0 and 1 of the RTC latch are for the LEDs.
 	ld	a,(HB_RTCVAL)
 	and	~%00000011
-	out	(RTCIO),a	; clear led
+	out	(RTCIO),a		; clear led
 	ld	(HB_RTCVAL),a
     #endif
   #endif

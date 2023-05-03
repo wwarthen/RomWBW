@@ -2221,7 +2221,7 @@ rate of the ASCI port(s) will be affected.
 
 | **Entry Parameters**                   | **Returned Values**                    |
 |----------------------------------------|----------------------------------------|
-| B: 0xF8                                | A: Status                              |
+| B: 0xF9                                | A: Status                              |
 | C: 0xF4                                |                                        |
 | L: LEDs                                |                                        |
 
