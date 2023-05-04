@@ -1,3 +1,4 @@
+;  WARNING: This code does not seem to be working on Z280.  WBW - 5/3/2023
 ;
 ;  Size-optimized LZSA2 decompressor by spke & uniabis (134 bytes)
 ;
