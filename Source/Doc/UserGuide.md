@@ -3808,6 +3808,7 @@ the RomWBW HBIOS configuration.
    - WDC Floppy Disk Controller w/ 3.5" HD Drives
    - Onboard IDE Hard Disk Interface Module
    - PPIDE Hard Disk Interface Module
+   - VGARC Video & Keyboard Module
  - Serial baud rate is usually determined by hardware for ACIA and
    SIO interfaces
 
@@ -3831,6 +3832,7 @@ the RomWBW HBIOS configuration.
    - WDC Floppy Disk Controller w/ 3.5" HD Drives
    - Onboard IDE Hard Disk Interface Module
    - PPIDE Hard Disk Interface Module
+   - VGARC Video & Keyboard Module
  - Serial baud rate is usually determined by hardware for ACIA and
    SIO interfaces
 
@@ -3854,6 +3856,7 @@ the RomWBW HBIOS configuration.
    - WDC Floppy Disk Controller w/ 3.5" HD Drives
    - Onboard IDE Hard Disk Interface Module
    - PPIDE Hard Disk Interface Module
+   - VGARC Video & Keyboard Module
  - Serial baud rate is usually determined by hardware for ACIA and
    SIO interfaces
 
@@ -3923,6 +3926,6 @@ may be discovered by RomWBW in your system.
 | USB-FIFO  | Char     | FT232H-based ECB USB FIFO                              |
 | VDU       | Video    | MC6845 Family Video Display Controller                 |
 | VGA       | Video    | HD6445CP4-based Video Display Controller               |
-| VRC       | Video    | VGARC Video Display Controller                        s |
+| VRC       | Video    | VGARC Video Display Controller                         |
 | YM        | Audio    | YM2612 Programmable Sound Generator                    |
 | Z2U       | Char     | Zilog Z280 CPU Built-in Serial Ports                   |

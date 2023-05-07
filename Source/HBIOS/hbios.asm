@@ -6225,6 +6225,16 @@ FONTCGA:
 	.ECHO	" CGA"
 #ENDIF
 ;
+#IFDEF USEFONTVGARC
+FONTVGARC:
+  #IF USELZSA2
+    #INCLUDE "fontvgarcc.asm"
+  #ELSE
+    #INCLUDE "fontvgarcu.asm"
+  #ENDIF
+	.ECHO	" VGARC"
+#ENDIF
+;
 SIZ_FONTS	.EQU	$ - ORG_FONTS
 		.ECHO	" occupy "
 		.ECHO	SIZ_FONTS

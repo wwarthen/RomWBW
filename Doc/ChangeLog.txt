@@ -5,6 +5,7 @@ Version 3.3
 - A?C: Support for SD PIO
 - A?C: Support for Z80-Retro SD interface
 - WBW: Support per-drive floppy configuration
+- WBW: Support for Bill Shen's VGARC
 
 Version 3.2.1
 -------------
