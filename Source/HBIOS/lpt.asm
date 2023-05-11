@@ -3,11 +3,14 @@
 ; CENTRONICS (LPT) INTERFACE DRIVER
 ;==================================================================================================
 ;
-; CENTRONICS-STYLE PARALLEL PRINTER DRIVER.  ASSUMES IBM STYLE
-; HARDWARE INTERFACE AS DESCRIBED BELOW.
+; CENTRONICS-STYLE PARALLEL PRINTER DRIVER.
 ;
 ; IMPLEMENTED AS A ROMWBW CHARACTER DEVICE.  CURRENTLY HANDLES OUPUT
 ; ONLY.
+;
+;==================================================================================================
+;
+;  IBM STYLE INTERFACE (USED BY NHYODYNE PRINT MODULE):
 ;
 ;  PORT 0 (INPUT/OUTPUT):
 ;
@@ -20,7 +23,7 @@
 ;
 ;	D7	D6	D5	D4	D3	D2	D1	D0
 ;     +-------+-------+-------+-------+-------+-------+-------+-------+
-;     | BUSY  | ACK   | POUT  | SEL   | ERR   | 0     | 0     | 0     |
+;     | /BUSY | /ACK  | POUT  | SEL   | /ERR  | 0     | 0     | 0     |
 ;     +-------+-------+-------+-------+-------+-------+-------+-------+
 ;
 ;  PORT 2 (INPUT/OUTPUT):
@@ -30,16 +33,40 @@
 ;     | STAT1 | STAT0 | ENBL  | PINT  | SEL   | RES   | LF    | STB   |
 ;     +-------+-------+-------+-------+-------+-------+-------+-------+
 ;
-LPT_NONE	.EQU	0		; NOT PRESENT
-LPT_IBM		.EQU	1		; IBM PC STYLE INTERFACE
+;==================================================================================================
+;
+;  MG014 STYLE INTERFACE (USED BY RCBUS MG014 MODULE):
+;
+;  PORT 0 (INPUT/OUTPUT):
+;
+;	D7	D6	D5	D4	D3	D2	D1	D0
+;     +-------+-------+-------+-------+-------+-------+-------+-------+
+;     | PD7   | PD6   | PD5   | PD4   | PD3   | PD2   | PD1   | PD0   |
+;     +-------+-------+-------+-------+-------+-------+-------+-------+
+;
+;  PORT 1 (INPUT):
+;
+;	D7	D6	D5	D4	D3	D2	D1	D0
+;     +-------+-------+-------+-------+-------+-------+-------+-------+
+;     |	      |	      |	      | /ERR  | SEL   | POUT  | BUSY  | /ACK  |
+;     +-------+-------+-------+-------+-------+-------+-------+-------+
+;
+;  PORT 2 (INPUT/OUTPUT):
+;
+;	D7	D6	D5	D4	D3	D2	D1	D0
+;     +-------+-------+-------+-------+-------+-------+-------+-------+
+;     | LED   |	      |	      |	      | /SEL  | /RES  | /LF   | /STB  |
+;     +-------+-------+-------+-------+-------+-------+-------+-------+
+;
+;==================================================================================================
 ;
 ; PRE-CONSOLE INITIALIZATION - DETECT AND INIT HARDWARE
 ;
 LPT_PREINIT:
 ;
 ; SETUP THE DISPATCH TABLE ENTRIES
-; NOTE: INTS WILL BE DISABLED WHEN PREINIT IS CALLED AND THEY MUST REMIAIN
-; DISABLED.
+; NOTE: INTS WILL BE DISABLED WHEN PREINIT IS CALLED AND THEY MUST
+; REMAIN DISABLED.
 ;
 	LD	B,LPT_CFGCNT		; LOOP CONTROL
 	XOR	A			; ZERO TO ACCUM
@@ -136,18 +163,26 @@ LPT_IN:
 LPT_OUT:
 	CALL	LPT_OST			; READY TO SEND?
 	JR	Z,LPT_OUT		; LOOP IF NOT
-	LD	A,(IY+3)
-	LD	C,A			; PORT 0 (DATA)
- 	OUT	(C),E			; OUTPUT DATA TO PORT
- 	CALL 	DELAY   		; IGNORE ANYTHING BACK AFTER A RESET
-        LD      A,%00001101             ; SELECT & STROBE, LEDS OFF
-	INC 	C 			; PUT CONTROL PORT IN C
-	INC 	C
-        OUT	(C),A			; OUTPUT DATA TO PORT
-  	CALL 	DELAY   		; IGNORE ANYTHING BACK AFTER A RESET
-        LD      A,%00001100             ; SELECT, LEDS OFF
-        OUT	(C),A			; OUTPUT DATA TO PORT
-
+	LD	C,(IY+3)		; PORT 0 (DATA)
+	OUT	(C),E			; OUTPUT DATA TO PORT
+#IF (LPTMODE == LPTMODE_IBM)
+	LD	A,%00001101		; SELECT & STROBE, LEDS OFF
+#ENDIF
+#IF (LPTMODE == LPTMODE_MG014)
+	LD	A,%00000100		; SELECT & STROBE, LED OFF
+#ENDIF
+	INC	C			; PUT CONTROL PORT IN C
+	INC	C
+	OUT	(C),A			; OUTPUT DATA TO PORT
+	CALL	DELAY
+#IF (LPTMODE == LPTMODE_IBM)
+	LD	A,%00001100		; SELECT, LEDS OFF
+#ENDIF
+#IF (LPTMODE == LPTMODE_MG014)
+	LD	A,%00000101		; SELECT, LED OFF
+#ENDIF
+	OUT	(C),A			; OUTPUT DATA TO PORT
+	CALL	DELAY
 	XOR	A			; SIGNAL SUCCESS
 	RET
 ;
@@ -161,11 +196,16 @@ LPT_IST:
 ; OUTPUT STATUS
 ;
 LPT_OST:
-	LD	A,(IY+3)
-	LD	C,A			; PORT 0 (DATA)
-	INC 	C			; SELECT STATUS PORT
- 	IN	A,(C)			; GET STATUS INFO
-    	AND	%10000000		; ONLY INTERESTED IN BUSY FLAG
+	LD	C,(IY+3)		; BASE PORT
+	INC	C			; SELECT STATUS PORT
+	IN	A,(C)			; GET STATUS INFO
+#IF (LPTMODE == LPTMODE_IBM)
+	AND	%10000000		; ISOLATE /BUSY
+#ENDIF
+#IF (LPTMODE == LPTMODE_MG014)
+	AND	%00000010		; ISOLATE BUSY
+	XOR	%00000010		; INVERT TO READY
+#ENDIF
 	RET				; DONE
 ;
 ; INITIALIZE DEVICE
@@ -180,19 +220,39 @@ LPT_INITDEV:
 ; PREINIT ABOVE.  PREINIT IS NOT ALLOWED TO ENABLE INTS!
 ;
 LPT_INITDEVX:
-	LD	A,(IY+3)
-	LD	C,A			; PORT 0 (DATA)
+;
+#IF (LPTMODE == LPTMODE_IBM)
+;
+	LD	C,(IY+3)		; PORT 0 (DATA)
 	XOR	A			; CLEAR ACCUM
 	OUT	(C),A			; SEND IT
 	INC	C			; BUMP TO
 	INC	C			; ... PORT 2
 	LD	A,%00001000		; SELECT AND ASSERT RESET, LEDS OFF
 	OUT	(C),A			; SEND IT
- 	CALL	LDELAY			; HALF SECOND DELAY
+	CALL	LDELAY			; HALF SECOND DELAY
 	LD	A,%00001100		; SELECT AND DEASSERT RESET, LEDS OFF
 	OUT	(C),A			; SEND IT
 	XOR	A			; SIGNAL SUCCESS
 	RET				; RETURN
+;
+#ENDIF
+;
+#IF (LPTMODE == LPTMODE_MG014)
+	LD	A,(IY+3)		; BASE PORT
+	ADD	A,3			; BUMP TO CONTROL PORT
+	LD	C,A			; MOVE TO C FOR I/O
+	LD	A,$82			; CONFIG A OUT, B IN, C OUT
+	OUT	(C),A			; DO IT
+	DEC	C			; OUTPUT PORT
+	LD	A,$81			; STROBE OFF, SELECT ON, RES ON, LED ON
+	OUT	(C),A			; SEND IT
+	CALL	LDELAY			; HALF SECOND DELAY
+	LD	A,$05			; STROBE OFF, SELECT ON, RES OFF, LED OFF
+	OUT	(C),A			; SEND IT
+	XOR	A			; SIGNAL SUCCESS
+	RET				; RETURN
+#ENDIF
 ;
 ;
 ;
@@ -215,17 +275,26 @@ LPT_DEVICE:
 ;
 ; LPT DETECTION ROUTINE
 ;
+#IF (LPTMODE == LPTMODE_NONE)
+;
 LPT_DETECT:
-	LD	A,(IY+3)		; BASE PORT ADDRESS
-	LD	C,A			; PUT IN C FOR I/O
+	LD	A,LPTMODE_NONE		; NOTHING TO DETECT
+	RET
+;
+#ENDIF
+;
+#IF (LPTMODE == LPTMODE_IBM)
+;
+LPT_DETECT:
+	LD	C,(IY+3)		; BASE PORT ADDRESS
 	CALL	LPT_DETECT2		; CHECK IT
 	JR	Z,LPT_DETECT1		; FOUND IT, RECORD IT
-	LD	A,LPT_NONE		; NOTHING FOUND
+	LD	A,LPTMODE_NONE		; NOTHING FOUND
 	RET				; DONE
 ;
 LPT_DETECT1:
 	; LPT FOUND, RECORD IT
-	LD	A,LPT_IBM		; RETURN CHIP TYPE
+	LD	A,LPTMODE_IBM		; RETURN CHIP TYPE
 	RET				; DONE
 ;
 LPT_DETECT2:
@@ -252,6 +321,43 @@ LPT_DETECT2:
 	IN	A,(C)			; READ IT BACK
 	CP	$A5			; CORRECT?
 	RET				; RETURN (ZF SET CORRECTLY)
+;
+#ENDIF
+;
+#IF (LPTMODE == LPTMODE_MG014)
+LPT_DETECT:
+;
+	; TEST FOR PPI EXISTENCE
+	; WE SETUP THE PPI TO WRITE, THEN WRITE A VALUE OF $A5
+	; TO PORT A (DATALO), THEN READ IT BACK.  IF THE PPI IS THERE
+	; THEN THE BUS HOLD CIRCUITRY WILL READ BACK THE $A5. SINCE
+	; WE ARE IN WRITE MODE, AN IDE CONTROLLER WILL NOT BE ABLE TO
+	; INTERFERE WITH THE VALUE BEING READ.
+;
+	LD	A,(IY+3)		; BASE IO ADDRESS
+	ADD	A,3			; BUMP TO CONTROL PORT
+	LD	C,A			; PUT IN C
+	LD	A,$80			; SET PORT A TO WRITE
+	OUT	(C),A			; WRITE IT
+;
+	LD	C,(IY+3)		; PPI PORT A
+	LD	A,$A5			; TEST VALUE
+	OUT	(C),A			; PUSH VALUE TO PORT
+	IN	A,(C)			; GET PORT VALUE
+#IF (LPTTRACE >= 3)
+	CALL	PC_SPACE
+	CALL	PRTHEXBYTE
+#ENDIF
+	CP	$A5			; CHECK FOR TEST VALUE
+	JR	Z,LPT_DETECT1		; FOUND IT
+	LD	A,LPTMODE_NONE		; NOT FOUND
+	RET
+;
+LPT_DETECT1:
+	; LPT FOUND, RECORD IT
+	LD	A,LPTMODE_MG014		; RETURN CHIP TYPE
+	RET				; DONE
+#ENDIF
 ;
 ;
 ;
@@ -291,9 +397,11 @@ LPT_PRTCFG:
 LPT_TYPE_MAP:
 		.DW	LPT_STR_NONE
 		.DW	LPT_STR_IBM
+		.DW	LPT_STR_MG014
 ;
 LPT_STR_NONE	.DB	"<NOT PRESENT>$"
 LPT_STR_IBM	.DB	"IBM$"
+LPT_STR_MG014	.DB	"MG014$"
 ;
 ; WORKING VARIABLES
 ;
