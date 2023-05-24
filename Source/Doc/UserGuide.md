@@ -3896,7 +3896,8 @@ may be discovered by RomWBW in your system.
 | DSKY      | System   | Keypad & Display                                       |
 | DSRTC     | RTC      | Maxim DS1302 Real-Time Clock w/ NVRAM                  |
 | DUART     | Char     | SCC2681 or compatible Dual UART                        |
-| FD        | Disk     | 8272 of compatible Floppy Disk Controller              |
+| EMM       | Disk     | Disk drive on Parallel Port emm interface (Zip Drive)  |
+| FD        | Disk     | 8272 or compatible Floppy Disk Controller              |
 | GDC       | Video    | uPD7220 Video Display Controller                       |
 | HDSK      | Disk     | SIMH Simulator Hard Disk                               |
 | IDE       | Disk     | IDE/ATA Hard Disk Interface                            |

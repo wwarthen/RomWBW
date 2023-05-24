@@ -889,6 +889,28 @@ written in C and requires SDCC to compile. As such it is not part of
 the RomWBW build process. However, the full project and source code is
 found in the [FAT GitHub Repository](https://github.com/wwarthen/FAT).
 
+## Known Issues
+
+CP/M (and workalike) OSes have significant restrictions on filename
+characters.  The FAT application will block any attempt to create a
+file on the CP/M filesystem containing any of these prohibited
+characters:
+
+|         `< > . , ; : = ? * [ ] _ % | ( ) / \`
+
+The operation will be aborted with "`Error: Invalid Path Name`" if such
+a filename character is encountered.
+
+Since MS-DOS does allow some of these characters, you can have
+issues when copying files from MS-DOS to CP/M if the MS-DOS filenames
+use these characters.  Unfortunately, FAT is not yet smart enough to
+substitute illegal characters with legal ones.  So, you will need to
+clean the filenames before trying to copy them to CP/M.
+
+The FAT application does try to detect the scenario where you are
+copying a file to itself.  However, this detection is not perfect and
+can corrupt a file if it occurs.  Be careful to avoid this.
+
 `\clearpage`{=latex}
 
 # TUNE
