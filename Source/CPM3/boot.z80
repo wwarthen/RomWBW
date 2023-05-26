@@ -181,6 +181,12 @@ dinit3:
 	ret
 ;
 dinit3a:
+	; check for hard disk removable cartridge drives
+	cp	0A0h			; ppa (zip drive) is removable
+	jr	z,dinit3b		; if so, skip media check
+	cp	0B0h			; imm (zip drive) is removable
+	jr	z,dinit3b		; if so, skip media check
+
 	; check for active and return if not
 	push	de			; save de (hard disk volume counter)
 	push	hl			; save drive list ptr
@@ -195,7 +201,8 @@ dinit3a:
 	pop	de			; restore de
 	
 	ret	nz			; if no media, just return
-	
+
+dinit3b:
 	; if active...
 	ld	(hl),c			; save unit num in list
 	inc	hl			; bump ptr
