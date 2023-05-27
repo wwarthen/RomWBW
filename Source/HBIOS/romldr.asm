@@ -180,7 +180,7 @@ start1:
 	call	pstr			; do it
 	call	clrbuf			; zero fill the cmd buffer
 ;
-#if (BIOS == BIOS_WBW)
+#if ((BIOS == BIOS_WBW) & FPSW_ENABLE)
 ;
 	ld	b,BF_SYSGET		; HBIOS SysGet
 	ld	c,BF_SYSGET_PANEL	; ... Panel swiches value
@@ -390,7 +390,7 @@ runcmd2:
 	ld	(bootslice),a		; save boot slice
 	jp	diskboot		; boot the disk unit/slice
 ;
-#if (BIOS == BIOS_WBW)
+#if ((BIOS == BIOS_WBW) & FPSW_ENABLE)
 ;
 ;=======================================================================
 ; Process Front Panel switches

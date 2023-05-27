@@ -10,9 +10,10 @@
 ;
 ;==================================================================================================
 ;
-;  IBM STYLE INTERFACE (USED BY NHYODYNE PRINT MODULE):
+;  IBM PC STANDARD PARALLEL PORT (SPP):
+;  - NHYODYNE PRINT MODULE
 ;
-;  PORT 0 (INPUT/OUTPUT):
+;  PORT 0 (OUTPUT):
 ;
 ;	D7	D6	D5	D4	D3	D2	D1	D0
 ;     +-------+-------+-------+-------+-------+-------+-------+-------+
@@ -26,7 +27,7 @@
 ;     | /BUSY | /ACK  | POUT  | SEL   | /ERR  | 0     | 0     | 0     |
 ;     +-------+-------+-------+-------+-------+-------+-------+-------+
 ;
-;  PORT 2 (INPUT/OUTPUT):
+;  PORT 2 (OUTPUT):
 ;
 ;	D7	D6	D5	D4	D3	D2	D1	D0
 ;     +-------+-------+-------+-------+-------+-------+-------+-------+
@@ -35,9 +36,10 @@
 ;
 ;==================================================================================================
 ;
-;  MG014 STYLE INTERFACE (USED BY RCBUS MG014 MODULE):
+;  MG014 STYLE INTERFACE:
+;  - RCBUS MG014 MODULE
 ;
-;  PORT 0 (INPUT/OUTPUT):
+;  PORT 0 (OUTPUT):
 ;
 ;	D7	D6	D5	D4	D3	D2	D1	D0
 ;     +-------+-------+-------+-------+-------+-------+-------+-------+
@@ -51,7 +53,7 @@
 ;     |	      |	      |	      | /ERR  | SEL   | POUT  | BUSY  | /ACK  |
 ;     +-------+-------+-------+-------+-------+-------+-------+-------+
 ;
-;  PORT 2 (INPUT/OUTPUT):
+;  PORT 2 (OUTPUT):
 ;
 ;	D7	D6	D5	D4	D3	D2	D1	D0
 ;     +-------+-------+-------+-------+-------+-------+-------+-------+
@@ -165,7 +167,7 @@ LPT_OUT:
 	JR	Z,LPT_OUT		; LOOP IF NOT
 	LD	C,(IY+3)		; PORT 0 (DATA)
 	OUT	(C),E			; OUTPUT DATA TO PORT
-#IF (LPTMODE == LPTMODE_IBM)
+#IF (LPTMODE == LPTMODE_SPP)
 	LD	A,%00001101		; SELECT & STROBE, LEDS OFF
 #ENDIF
 #IF (LPTMODE == LPTMODE_MG014)
@@ -175,7 +177,7 @@ LPT_OUT:
 	INC	C
 	OUT	(C),A			; OUTPUT DATA TO PORT
 	CALL	DELAY
-#IF (LPTMODE == LPTMODE_IBM)
+#IF (LPTMODE == LPTMODE_SPP)
 	LD	A,%00001100		; SELECT, LEDS OFF
 #ENDIF
 #IF (LPTMODE == LPTMODE_MG014)
@@ -199,7 +201,7 @@ LPT_OST:
 	LD	C,(IY+3)		; BASE PORT
 	INC	C			; SELECT STATUS PORT
 	IN	A,(C)			; GET STATUS INFO
-#IF (LPTMODE == LPTMODE_IBM)
+#IF (LPTMODE == LPTMODE_SPP)
 	AND	%10000000		; ISOLATE /BUSY
 #ENDIF
 #IF (LPTMODE == LPTMODE_MG014)
@@ -221,7 +223,7 @@ LPT_INITDEV:
 ;
 LPT_INITDEVX:
 ;
-#IF (LPTMODE == LPTMODE_IBM)
+#IF (LPTMODE == LPTMODE_SPP)
 ;
 	LD	C,(IY+3)		; PORT 0 (DATA)
 	XOR	A			; CLEAR ACCUM
@@ -283,7 +285,7 @@ LPT_DETECT:
 ;
 #ENDIF
 ;
-#IF (LPTMODE == LPTMODE_IBM)
+#IF (LPTMODE == LPTMODE_SPP)
 ;
 LPT_DETECT:
 	LD	C,(IY+3)		; BASE PORT ADDRESS
@@ -294,7 +296,7 @@ LPT_DETECT:
 ;
 LPT_DETECT1:
 	; LPT FOUND, RECORD IT
-	LD	A,LPTMODE_IBM		; RETURN CHIP TYPE
+	LD	A,LPTMODE_SPP		; RETURN CHIP TYPE
 	RET				; DONE
 ;
 LPT_DETECT2:
@@ -372,7 +374,7 @@ LPT_PRTCFG:
 	CALL	PRTHEXBYTE		; PRINT BASE PORT
 
 	; PRINT THE LPT TYPE
-	PRTS(": MODE=$")		; FORMATTING
+	PRTS(" MODE=$")			; FORMATTING
 	LD	A,(IY+1)		; GET LPT TYPE BYTE
 	RLCA				; MAKE IT A WORD OFFSET
 	LD	HL,LPT_TYPE_MAP		; POINT HL TO TYPE MAP TABLE
@@ -396,11 +398,11 @@ LPT_PRTCFG:
 ;
 LPT_TYPE_MAP:
 		.DW	LPT_STR_NONE
-		.DW	LPT_STR_IBM
+		.DW	LPT_STR_SPP
 		.DW	LPT_STR_MG014
 ;
 LPT_STR_NONE	.DB	"<NOT PRESENT>$"
-LPT_STR_IBM	.DB	"IBM$"
+LPT_STR_SPP	.DB	"SPP$"
 LPT_STR_MG014	.DB	"MG014$"
 ;
 ; WORKING VARIABLES
