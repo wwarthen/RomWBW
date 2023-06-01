@@ -186,6 +186,8 @@ dinit3a:
 	jr	z,dinit3b		; if so, skip media check
 	cp	0B0h			; imm (zip drive) is removable
 	jr	z,dinit3b		; if so, skip media check
+	cp	0C0h			; syq (syquest drive) is removable
+	jr	z,dinit3b		; if so, skip media check
 
 	; check for active and return if not
 	push	de			; save de (hard disk volume counter)

@@ -1920,7 +1920,7 @@ dev08	.db	"PPPSD",0
 dev09	.db	"HDSK",0
 dev10	.db	"PPA",0
 dev11	.db	"IMM",0
-dev12	.equ	devunk
+dev12	.db	"SYQ",0
 dev13	.equ	devunk
 dev14	.equ	devunk
 dev15	.equ	devunk
