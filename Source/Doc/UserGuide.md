@@ -3901,6 +3901,7 @@ may be discovered by RomWBW in your system.
 | GDC       | Video    | uPD7220 Video Display Controller                       |
 | HDSK      | Disk     | SIMH Simulator Hard Disk                               |
 | IDE       | Disk     | IDE/ATA Hard Disk Interface                            |
+| IMM       | Disk     | IMM Zip Drive on PPI                                   |
 | INTRTC    | RTC      | Interrupt-based Real Time Clock                        |
 | KBD       | Kbd      | 8242 PS/2 Keyboard Controller                          |
 | KIO       | System   | Zilog Serial/ Parallel Counter/Timer                   |
@@ -3910,6 +3911,7 @@ may be discovered by RomWBW in your system.
 | I2C       | System   | I2C Interface                                          |
 | PIO       | Char     | Zilog Parallel Interface Controller                    |
 | PPIDE     | Disk     | 8255 IDE/ATA Hard Disk Interface                       |
+| PPA       | Disk     | PPA Zip Drive on PPI                                   |
 | PPK       | Kbd      | Matrix Keyboard                                        |
 | PPPSD     | Disk     | ParPortProp SD Card Interface                          |
 | PPPCON    | Serial   | ParPortProp Serial Console Interface                   |
@@ -3922,6 +3924,7 @@ may be discovered by RomWBW in your system.
 | SIO       | Char     | Zilog Serial Port Interface                            |
 | SN76489   | Sound    | SN76489 Programmable Sound Generator                   |
 | SPK       | Sound    | Bit-bang Speaker                                       |
+| SYQ       | Disk     | Iomega SparQ Drive on PPI                              |
 | TMS       | Video    | TMS9918/38/58 Video Display Controller                 |
 | UART      | Char     | 16C550 Family Serial Interface                         |
 | USB-FIFO  | Char     | FT232H-based ECB USB FIFO                              |
