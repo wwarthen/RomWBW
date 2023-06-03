@@ -7,7 +7,9 @@ Version 3.3
 - WBW: Support per-drive floppy configuration
 - WBW: Support for Bill Shen's VGARC
 - WBW: Support for MG014 Parallel Port module + printer
-- WBW: Support for Zip Drive on emm interface (much inspiration from Alan Cox)
+- WBW: Support for EMM Zip Drive on PPI interface (much inspiration from Alan Cox)
+- WBW: Support for PPA Zip Drive on PPI interface (much inspiration from Alan Cox)
+- WBW: Support for SyQuest SparQ Drive on PPI interface (much inspiration from Alan Cox)
 
 Version 3.2.1
 -------------
