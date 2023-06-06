@@ -7583,6 +7583,52 @@ HB_HASFP	.DB	0		; NON-ZERO MEANS FP EXISTS
 ;
 HB_WRKBUF	.FILL	512,0		; INTERNAL DISK BUFFER
 ;
+;
+;
+#IFDEF MG014_MAP
+;
+	.FILL	32 - ($ & (32 - 1))	; ALIGN TO 32 BYTE BOUNDARY
+
+MG014_STATMAPLO:
+	; LOWER NIBBLE
+	.DB	$08	; 00
+	.DB	$0C	; 01
+	.DB	$00	; 02
+	.DB	$04	; 03
+	.DB	$0A	; 04
+	.DB	$0E	; 05
+	.DB	$02	; 06
+	.DB	$06	; 07
+	.DB	$09	; 08
+	.DB	$0D	; 09
+	.DB	$01	; 0A
+	.DB	$05	; 0B
+	.DB	$0B	; 0C
+	.DB	$0F	; 0D
+	.DB	$03	; 0E
+	.DB	$07	; 0F
+;
+MG014_STATMAPHI:
+	; UPPER NIBBLE
+	.DB	$80	; 00
+	.DB	$C0	; 01
+	.DB	$00	; 02
+	.DB	$40	; 03
+	.DB	$A0	; 04
+	.DB	$E0	; 05
+	.DB	$20	; 06
+	.DB	$60	; 07
+	.DB	$90	; 08
+	.DB	$D0	; 09
+	.DB	$10	; 0A
+	.DB	$50	; 0B
+	.DB	$B0	; 0C
+	.DB	$F0	; 0D
+	.DB	$30	; 0E
+	.DB	$70	; 0F
+;
+#ENDIF
+;
 HB_END		.EQU	$
 ;
 SLACK		.EQU	BNKTOP - $
