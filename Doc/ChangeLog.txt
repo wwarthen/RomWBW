@@ -10,6 +10,7 @@ Version 3.3
 - WBW: Support for EMM Zip Drive on PPI interface (much inspiration from Alan Cox)
 - WBW: Support for PPA Zip Drive on PPI interface (much inspiration from Alan Cox)
 - WBW: Support for SyQuest SparQ Drive on PPI interface (much inspiration from Alan Cox)
+- WBW: Support for ATAPI Disk Drives (not CD-ROMs) on IDE and PPIDE interfaces
 
 Version 3.2.1
 -------------
