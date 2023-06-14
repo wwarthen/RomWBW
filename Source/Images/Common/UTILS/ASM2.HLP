@@ -1,0 +1,83 @@
+Invoking the Assembler
+Assembler Pseudo-Ops
+Assembler In-Line Error Messages
+Assembler Console Error Messages
+:Invoking the Assembler
+
+     The CP/M Assembler is invoked by typing --
+
+          ASM filename   or   ASM filename.parms
+
+where 'filename' is the name of the file 'filename.ASM' to be assembled.
+
+     In the case of the first command, the following files are created --
+
+          filename.HEX        - "HEX" file containing machine code in
+                                Intel hex format
+          filename.PRN        - listing file
+
+
+     Iî  thå caså oæ thå seconä command¬  theså fileó arå createä accordinç 
+to the parameters specified --
+
+          ASM filename.pqr
+
+where
+          p : A,B,...  - designates the disk name which contains the source
+          q : A,B,...  - designates the disk name to receive the hex file
+              Z        - skips generation of the hex file
+          r : A,B,...  - designates the disk name which will receive the
+                         print file
+              X        - outputs the listing to the console
+              Z        - skips generation of the print file
+:Assembler Pseudo-Ops
+
+     ORG       Set the program or data origin
+     END       End program
+     EQU       Numeric equate
+     SET       Numeric set
+     IF        Begin conditional assembly
+     ENDIF     End conditional assembly
+     DB        Define data bytes
+     DW        Define data words
+     DS        Define data storage area
+:Assembler In-Line Error Messages
+
+     Ä    Datá errorº  elemenô iî datá statemenô cannoô bå  placeä  iî  thå 
+          specified data area
+     Å    Expressioî  errorº   expressioî   ió  ill-formeä  anä  cannoô  bå 
+          computed at assembly line
+
+     Ì    Labeì  errorº   labeì  cannoô  appeaò iî  thió  contexô  (maù  bå 
+          duplicate label)
+     Î    Noô  implemented:   featureó  whicè  wilì appeaò  iî  futurå  ASÍ 
+          versions
+
+     O    Overflow:  expression is too complicated to compute; simplify
+     Ğ    Phaså  errorº   labeì  doeó  noô  havå  thå  samå  valuå  oî  twï 
+          subsequent passes through the program
+
+     Ò    Registeò  errorº   thå  valuå  specifieä aó  á  registeò  ió  noô 
+          compatible with the operation code
+     Ö    Valuå  errorº  operanä  encountereä iî expressioî  ió  improperlù 
+          formed
+:Assembler Console Error Messages
+
+     NO SOURCE FILE PRESENT        The file specified in the ASM command
+                                   does not exist on disk
+
+     NO DIRECTORY SPACE            The disk directory is full, erase files
+                                   which are not needed, and retry
+
+     SOURCE FILE NAME ERROR        Improperly formed ASM file name
+Š     SOURCE FILE READ ERROR        Source file cannot be read properly by
+                                   the assembler, execute a TYPE to
+                                   determine the point of error
+
+     OUTPUT FILE WRITE ERROR       Output files cannot be written properly,
+                                   most likely cause is a full disk, erase
+                                   and retry
+
+     CANNOÔ CLOSÅ FILÅ             Outpuô filå cannoô bå closed¬ checë tï
+                                   see if disk is write protected
+

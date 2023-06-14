@@ -15,8 +15,8 @@ this disk.  It is highly recommended that you review the "RomWBW
 User Guide.pdf" document found in the Doc directory of the
 RomWBW Distribution.
 
-The primary documentation for NZ-COM is the "NZCOM Users Manual.pdf" 
-document  contained in the Doc directory of the RomWBW distribution.  
+The primary documentation for NZ-COM is the "NZCOM Users Manual.pdf"
+document  contained in the Doc directory of the RomWBW distribution.
 This document is a supplement to the primary documentation.  Additionally,
 please review the file called RELEASE.NOT on this disk which contains
 a variety of updates regarding the NZ-COM distribuition.
@@ -62,7 +62,7 @@ The following additional customizations were also performed:
 
   - The following files from the original distribution were removed
     because newer versions are included:
-    
+
     - COPY.COM
     - CRUNCH.COM
     - LBREXT.COM
@@ -73,13 +73,13 @@ The following additional customizations were also performed:
 
 == NZCOM Files ==
 
-The following files came from the official NZCOM distribution.  These 
-are generally documented in the "NZCOM Users Manual.pdf" document in 
-the Doc directory of the RomWBW distribution.  Note that some of the 
-files included in the NZ-COM distribution are not listed below because 
-they have been superseded by more recent versions listed in other 
-sections below.  For example, TCSELECT is not listed here, but a more 
-recent version is included and documented in the General Purpose 
+The following files came from the official NZCOM distribution.  These
+are generally documented in the "NZCOM Users Manual.pdf" document in
+the Doc directory of the RomWBW distribution.  Note that some of the
+files included in the NZ-COM distribution are not listed below because
+they have been superseded by more recent versions listed in other
+sections below.  For example, TCSELECT is not listed here, but a more
+recent version is included and documented in the General Purpose
 Applications section below.
 
 !(C)1988 - Original copyright (since placed in public domain)
@@ -289,6 +289,16 @@ LBREXT.COM - Extract file from .LBR libraries
 LBREXT36.CFG - ZCNFG configuration file for LBREXT
 ZXD.COM - Enhanced directory lister w/ date/time stamp support
 ZXD.CFG - ZCNFG configuration file for ZXD
+ASM2.HLP - Help file for the CP/M Assembler
+BBCBASIC.COM - BBC BASIC CP/M Version 3.00 by R.T.Russell
+BBCBASIC.TXT - Help file for BBC BASIC
+DELBR.COM - Unpacks the .LBR (Library) file format
+GENHEX.COM - Generates an Intel Hex file from the input file
+LS.COM - An alternative file listing to DIR
+LSWEEP.COM - Can extract and view member files of an .LBR archive
+MBASIC.HLP - Help file for MS BASIC
+MBASIC85.COM - Microsoft BASIC-85 Rev. 5.29
+USQ.COM - Decompress Squeezed file(s)
 
 == Testing Applications (User Area 2) ==
 

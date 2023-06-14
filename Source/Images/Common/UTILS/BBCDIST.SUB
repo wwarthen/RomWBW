@@ -1,0 +1,13 @@
+; patch BBCBASIC with BBCDIST
+; need M80 and L80
+xsub
+m80 =bbcdist/z
+l80 bbcdist,bbcdist/n/e
+ddt bbcbasic.org
+ibbcdist.com
+r
+g0
+save 58 bbcbasic.com
+era bbcdist.rel
+era bbcdist.com
+

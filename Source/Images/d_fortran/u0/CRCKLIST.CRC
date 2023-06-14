@@ -1,0 +1,16 @@
+
+--> FILE:  CPMIO   .MAC		CRC = 71 D9
+--> FILE:  CREF80  .COM		CRC = BB F2
+--> FILE:  DSKDRV  .MAC		CRC = 7A 3B
+--> FILE:  DTBF    .MAC		CRC = 26 3C
+--> FILE:  F80     .COM		CRC = EF E2
+--> FILE:  FCHAIN  .MAC		CRC = DA 61
+--> FILE:  FORLIB  .REL		CRC = DA 31
+--> FILE:  INIT    .MAC		CRC = 81 21
+--> FILE:  IOINIT  .MAC		CRC = 51 55
+--> FILE:  L80     .COM		CRC = 15 DF
+--> FILE:  LIB     .COM		CRC = 24 15
+--> FILE:  LPTDRV  .MAC		CRC = 0B 56
+--> FILE:  LUNTB   .MAC		CRC = 71 25
+--> FILE:  M80     .COM		CRC = 69 DB
+--> FILE:  TTYDRV  .MAC		CRC = C2 85

@@ -1,0 +1,159 @@
+Invoking FORTRAN-80 and MACRO-80
+FORTRAN-80 Compilation Switches
+FORTRAN-80 Library Subroutines
+FORTRAN-80 Logical Device Assignments
+Invoking LINK-80
+LINK-80 Switches
+Creating a FORTRAN-80 .COM File
+:Invoking FORTRAN-80 and MACRO-80
+     Thå FORTRAN-8° compileò anä thå MACRO-8° assembler¬  nameä F8° anä M8° 
+respectively¬ arå invokeä iî á similaò fashion®  Iî botè cases¬ thå namå oæ 
+thå  prograí ió giveî followeä bù aî argumenô list®   Thió argumenô lisô ió 
+of the general form --
+          obj-dev:filename.ext,list-dev:filename.ext=
+               source-dev:filename.ext
+     These symbols are defined as follows --
+        obj-dev:  The device on which the object program is to be written.
+        list-dev:  The device on which the program listing is written.
+        source-devº   Thå  devicå froí whicè thå sourcå  prograí  inpuô  tï 
+FORTRAN-80 or MACRO-80 is obtained.
+        filename.extº   Thå  filenamå anä filenamå extensioî oæ thå  objecô 
+prograí file¬  thå listinç file¬  anä thå sourcå prograí file®
+
+     Thå defaulô extensions are --
+
+               FOR  FORTRAN-80 Source File
+               MAC  MACRO-80 Source File
+               PRN  Print (Listing) File
+               REL  Relocatable Object File
+               COM  Absolute Object File ORGed to 100H
+
+     Thå specificationó foò eitheò thå objecô file¬  thå listinç  file¬  oò 
+botè  maù  bå  omitted®   Iæ neitheò á listinç filå noò aî objecô  filå  ió 
+desired¬ placå onlù á commá tï thå lefô oæ thå equaì sign®  Iæ thå nameó oæ 
+thå objecô filå anä thå listinç filå arå omitted¬  thå defaulô ió thå  namå 
+of the source file.  Logical CP/M devices may be specified as follows --
+
+               A:, B:    Disk Drives (Only A: or B:)
+               HSR:      High Speed Reader
+               LST:      Line Printer
+               TTY:      Teletype or CRT
+
+Examples --
+     A>F80
+     *=TEST
+          Compile the program TEST.FOR and place the object in TEST.REL
+     *,TTY:=TEST
+          Compilå  thå  prograí  TEST.FOÒ  anä  lisô  thå  prograí  oî  thå 
+terminal.  No object is generated.
+     *TESTOBJ=TEST.FOR
+          Compile the program TEST.FOR and put object in TESTOBJ.REL
+     *TEST,TEST=TEST
+          Compilå  TEST.FOR¬  anä  puô  objecô iî TEST.REÌ anä  listinç  iî 
+TEST.PRN
+     *,=TEST.FOR
+          Compilå TEST.FOÒ buô producå nï objecô oò listinç  file®   Usefuì 
+for checking for errors.
+
+   Iî  alì  cases¬  thå  ª ió thå prompô froí  FORTRAN-80®   Thå  indicateä 
+operationó  maù alsï bå performeä bù typinç 'F80§ followeä bù  thå  option¬ 
+like 'F80 =TEST'.
+   Refer to the 'FORTRAN-80 User's Manual', Copyright 1977, by Microsoft.
+:FORTRAN-80:  FORTRAN-80 Compilation Switches
+     Á numbeò oæ differenô switcheó maù bå giveî iî thå commanä strinç thaô 
+wilì affecô thå formaô oæ thå listinç file®  Eacè switcè shoulä bå precedeä 
+by a slash (/):
+
+Switch    Function
+------    --------
+   O      Print all listing addresses in octal
+   H      Print all listing addresses in hexadecimal (default)
+   N      Do not list generated code
+   R      Force generation of an object file
+   L      Force generation of a listing file
+   P      Each /P allocates an extra 100 bytes of runtime stack space
+   Í      Specifieó tï thå compileò thaô thå generateä codå shoulä bå iî  a
+          form which can be loaded into ROM.
+
+:FORTRAN-80:  FORTRAN-80 Library Subroutines
+     Thå  standarä librarù (FORLIB.REL© includeó thå followinç  subroutineó 
+and functions --
+
+     ABS       IABS      DABS      AINT      INT       IDINT
+     AMOD      MOD       AMAX0     AMAX1     MAX0      MAX1
+     DMAX1     AMIN0     AMIN1     MIN0      MIN1      DMIN1
+     FLOAT     IFIX      SIGN      ISIGN     DSIGN     DIM
+     IDIM      SNGL      DBLE      EXP       DEXP      ALOG
+     DLOG      ALOG10    DLOG10    SIN       DSIN      COS
+     DCOS      TANH      SQRT      DSQRT     ATAN      DATAN
+     ATAN2     DATAN2    DMOD      PEEK      POKE      INP
+     OUT
+
+:FORTRAN-80:  FORTRAN-80 Logical Device Assignments
+
+     LUN*      Device
+     ----      ------Š     1,3,4,5   Preassigned to CON:
+     2         Preassigned to LST:
+     6-10      Preassigned to Disk Files (Reassignable)
+     11-255    User-Assignable
+
+* LUN = Logical Unit Number
+:LINK-80:  Invoking LINK-80
+     Eacè commanä tï LINK-8° consistó oæ á numbeò oæ filenameó anä switcheó 
+separated by commas --
+          obj-dev1:filename.ext/sw1,obj-dev2:filename.ext, ...
+     Iæ  thå  inpuô  devicå  foò á filå ió  omitted¬  thå  defaulô  ió  thå 
+currentlù loggeä disk®   Iæ thå extensioî oæ á filå ió omitted¬ thå defaulô 
+ió  .REL®   Afteò  eacè  linå ió typed¬  LINK-8° wilì loaä  oò  searcè  thå 
+specifieä files¬  and¬  wheî finished¬ iô wilì lisô alì symboló thaô remaiî 
+undefineä followeä bù aî asterisk®   LINK-8° ió invokeä bù thå prograí namå 
+'L80'.
+     LINK-8°  caî bå useä tï generatå á .COÍ filå oæ á FORTRAN-8°  program®  
+This can be done by typing --
+          L80 program/E
+LINK-80 will respond with a string of the form --
+          [aaaa bbbb nn]
+The user may then create the .COM file by typing --
+          SAVE nn program.COM
+:LINK-80:  LINK-80 Switches
+     Thå followinç arå thå switcheó foò LINK-80®   Aó foò FORTRAN-80¬ theså 
+switches are preceeded by a slash (/).
+
+Switch    Function
+------    --------
+   R      Reset.  Initialize loader.
+E,E:namå  Exiô LINK-80®   FORLIB.REÌ wilì bå searcheä tï  satisfù  existinç 
+          undefineä references®   Iæ 'name§ ió specified¬ thå valuå oæ thió 
+          symbol is used as the start address of the program.
+G,G:namå  Go®   Starô executioî oæ program®  FORLIB.REÌ wilì bå searcheä tï 
+          satisfy any existing undefined references.
+   U      List all undefined references.
+   Í      Map®  Lisô alì defineä referenceó anä theiò values» alì undefineä 
+          references are followed by an asterisk.
+   Ó      Search®   Searcè thå filå specifieä beforå thió switcè tï satisfù 
+          references.
+   Î      Iæ á filename/Î ió specified¬  thå prograí wilì bå saveä oî  disë 
+          under the selected name with a default extension of .COM.
+P and D   See Addenda to Section 2 of documentation.
+
+     Threå numberó arå specifieä afteò thå /Å anä /Ç switcheó arå executed®  
+They are given in the form --
+          [aaaa bbbb nn]
+  aaaa - start address of program
+  bbbb - address of next available byte
+  nn   - number of 256-byte pages used
+:Creating a FORTRAN-80 .COM File
+     Therå  arå  twï  basiã  wayó tï creatå á .COÍ  filå  oæ  á  FORTRAN-8° 
+program®   Foò example¬  tï generatå PROG.COÍ froí PROG.FOR¬ proceeä iî onå 
+of the following ways --
+
+ I.  Using SAVE
+     F80 =PROG
+     L80 PROG/E
+       [aaaa bbbb nn] -- response from LINK-80 (necessary data)
+     SAVE nn PROG.COM
+
+II.  Using /N LINK-80 Switch
+     F80 =PROG
+     L80 PROG/E,PROG/N
+

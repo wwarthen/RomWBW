@@ -1,0 +1,494 @@
+Introduction to the Microsoft BASIC Interpreter
+Special Characters
+Variable Type Declaration Chars
+Commands
+Edit Mode Subcommands
+Program Statements (except I/O)
+PRINT USING Format Field Specifiers
+Input/Output Statements
+Operators
+Arithmetic Functions
+String Functions
+I/O and Special Functions
+Interpreter Error Codes
+Introduction to the Microsoft BASIC Compiler
+Compiler Commands and Switches
+Compiler Error Messages
+:Introduction to the Microsoft BASIC Interpreter
+
+     ThiÛ† HEL– FilÂ iÛ derive‰ froÌ thÂ "MicrosofÙ BASI√ ReferencÂ† Book"¨ ç
+an‰† iÙ† iÛ divide‰ intÔ twÔ partÛ -- onÂ coverinÁ thÂ InterpreteÚ an‰† thÂ ç
+otheÚ† coverinÁ thÂ CompilerÆ†  ThesÂ programÛ procesÛ programÛ writteÓ† iÓ ç
+almosÙ† exactl˘† thÂ† samÂ languagÂ -- MicrosofÙ† BASICª† therÂ† arÂ† minoÚ ç
+differenceÛ betweeÓ thÂ two¨† however¨† an‰ thesÂ arÂ discusse‰ iÓ thÂ filÂ ç
+under the Compiler Introduction.
+
+     The MBASIC (Microsoft BASIC) Interpreter is invoked as follows --
+
+          MBASIC [<filename>][/F:<# files>][/M:<memory loc>]
+
+IÊ† <filenameæ iÛ present¨† MBASI√ proceedÛ aÛ iÊ · RUŒ <filenameæ† comman‰ ç
+werÂ type‰ afteÚ initializatioÓ iÛ completeÆ†  ¡ defaulÙ extensioÓ oÊ† .BA” ç
+iÛ† assumedÆ†  IÊ /F:<£ filesæ iÛ present¨† iÙ setÛ thÂ numbeÚ oÊ disÎ dat· ç
+fileÛ† thaÙ ma˘ bÂ opeÓ aÙ an˘ onÂ timÂ durinÁ thÂ executioÓ oÊ ·† programÆ  ç
+ThÂ† defaulÙ† herÂ† iÛ 3Æ†  ThÂ /M:<memor˘ locæ† setÛ† thÂ† highesÙ† memor˘ ç
+locationÛ thaÙ wilÏ bÂ use‰ b˘ MBASICÆ†  AlÏ memor˘ tÔ thÂ starÙ oÊ FDO” iÛ ç
+used by default.
+:Special Characters
+^A        Enters Edit Mode on line being typed or last line typed
+^C        Interrupts program execution and returns to MBASIC
+^G        Rings <BELL> at terminal
+^H        Deletes last char typed
+^I        Tab (every 8)
+^O        Halts/resumes program output
+^R        Retypes the line currently being typed
+^S        Suspends program execution
+^Q        Resumes execution after ^S
+^U,^X     Deletes line being typed
+<CR>      Ends every line being typed in
+<LF>      Breaks a logical line into physical lines
+<DEL>     Deletes last char typed
+<ESC>     Escapes Edit Mode Subcommands
+.         Current line for EDIT, RENUM, DELETE, LIST, LLIST commands
+&O,&      Prefix for Octal Constant
+&H        Prefix for Hex Constant
+ :        Separates statements typed on the same line
+ ?        Equivalent to PRINT statementä:Variable Type Declaration Characters
+
+$    String              0 to 255 chars
+
+%    Integer             -32768 to 32767
+
+!    Single Precision    7.1 digit floating point
+
+#    Double Precision    17.8 digit floating point
+:Commands
+
+Command   Syntax                        Function
+AUTO      AUTO [line][,inc]             Generate line numbers
+CLEA“     CLEA“ [,[exp1][,exp2]›        CleaÚ prograÌ variablesª† Exp± setÛ ç
+                                        en‰† oÊ memor˘ an‰ Exp≤ setÛ amounÙ ç
+                                        of stack space
+CONT      CONT                          Continue program execution
+DELETE    DELETE [[start][-[end]]]      Delete program lines
+EDIT      EDIT line                     Edit a program line
+
+FILES     FILES [filename]              Directory
+LIST      LIST [line[-[line]]]          List program line(s)
+LLIST     LLIST [line[-[line]]]         List program line(s) on printer
+LOAD      LOAD filename[,R]             Load program; ,R means RUN
+MERGE     MERGE filename                Merge prog on disk with that in mem
+
+NAME      NAME old AS new               Change the name of a disk file
+NEW       NEW                           Delete current prog and vars
+NULL      NULL exp                      Set num of <NULL>s after each line
+RENUM     RENUM [[new][,[old][,inc]]]   Renumber program lines
+RESET     RESET                         Init CP/M; use after disk change
+
+Command   Syntax                        Function
+RUN       RUN [line number]             Run a prog (from a particular line)
+          RUN filename[,R]              Run a prog on disk
+SAV≈      SAV≈ filename[,¡ oÚ ,P›       SavÂ proÁ ontÔ diskª† ,¡ saveÛ proÁ ç
+                                        in ASCII and ,P protects file
+SYSTEM    SYSTEM                        Return to CP/M
+TROFF     TROFF                         Turn trace off
+TRON      TRON                          Turn trace on
+WIDT»     WIDT» [LPRINT› ex            SeÙ terÌ oÚ printeÚ carriagÂ widthª ç
+                                        default is 80 (term) and 132 (prin)
+:Edit Mode Subcommands
+A         Abort -- restore original line and restart Edit
+nCc       Change n characters
+nD        Delete n characters
+E         End edit and save changes; don't type rest of line
+Hstr<ESC> Delete rest of line and insert string
+Istr<ESC> Insert string at current pos
+nKc       Kill all chars up to the nth occurrance of c
+L         Print the rest of the line and go to the start of the line
+Q         Quit edit and restore original line
+nSc       Search for nth occurrance of c
+Xstr<ESC> Goto the end of the line and insert string
+<DEL>     Backspace over chars; in insert mode, delete chars
+<CR>      End edit and save changes
+:Program Statements (except I/O)
+Statement Syntax                        Function
+CALL      CALL variable [(arg list)]    Call assembly or FORTRAN routine
+CHAIN     CHAIN [MERGE] filename [,[line exp][,ALL][,DELETE range]]
+               CalÏ† · prograÌ an‰ pasÛ variableÛ tÔ itª† MERG≈ witË† ASCI… ç
+               fileÛ allowÛ overlaysª starÙ aÙ linÂ ex iÊ givenª ALÃ meanÛ ç
+               alÏ variableÛ wilÏ bÂ passe‰ (otherwisÂ COMMOŒ only)ª DELET≈ ç
+               allows deletion of an overlay before CHAIN is executed
+COMMON    COMMON list of vars           Pass vars to a CHAINed prog
+DEF       DEF FNx[(arg list)]=exp       Arith or String Function
+          DEF USRn=address              Define adr for nth assembly routine
+          DEFINT range(s) of letters    Define default var type INTeger
+          DEFSNG "        "   "         "         "     "   "   Single
+          DEFDBL "        "   "         "         "     "   "   Double
+          DEFSTR "        "   "         "         "     "   "   String
+DIM       DIM list of subscripted vars  Allocate arrays
+
+END       END                           Stop prog and close files
+ERASE     ERASE var [,var ... ]         Release space and var names
+ERROR     ERROR code                    Generate error code/message
+FOR       FOR var=exp TO exp [STEP exp] FOR loop
+
+
+Statement Syntax                        Function
+GOSUB     GOSUB line number             Call BASIC subroutine
+GOTO      GOTO line number              Branch to specified line
+IF/GOTO   IF exp GOTO line [ELSE stmt ... ]
+                                        IF exp <> 0 then GOTO
+IF/THEN   IF exp THEN stmt[:stmt] [ELSE stmt ... ]
+                                        IF exp <> 0 then ... else ...
+LET       [LET] var=exp                 Assignment
+
+MID§†     MID$(string,n[,m])=string≤†   ReplacÂ  ·  portioÓ oÊ strinÁ† witË ç
+                                        string2; start at pos n for m chars
+NEXT      NEXT var[,var ... ]           End FOR
+ON ERROR  ON ERROR GOTO line            Error trap subroutine
+  GOTO
+ON/GOSUB  ON exp GOSUB line[,line]      Computed GOSUB
+ON/GOTO   ON exp GOTO line[,line]       Computed GOTO
+
+
+Statement Syntax                        Function
+OPTION    OPTION BASE n                 Min val for subscripts (n=0,1)
+  BASE
+OUT       OUT port,byte                 Output byte to port
+POKE      POKE address,byte             Memory put
+RANDOMIZE RANDOMIZE [exp]               Reseed random number generator
+REM       REM any text                  Remark -- comment
+
+RESTORE   RESTORE [line]                Reset DATA pointer
+RESUME    RESUME or RESUME 0            Return from ON ERROR GOTO
+          RESUME NEXT                   Return to stmt after error line
+          RESUME line                   Return to specified line
+RETURN    RETURN                        Return from subroutine
+STOP      STOP                          Stop prog and print BREAK msg
+WAI‘      WAI‘ prot,mask[,select›       PausÂ untiÏ inpuÙ porÙ [XO“ select› ç
+                                        AND mask <> 0
+
+WHILE/    WHILE exp stmts ... WEND      Execute stmts as long as exp is T
+  WEND
+:PRINT USING Format Field Specifiers
+Numeric Specifiers
+
+Specifier Digits    Chars     Definition
+  #         1         1       Numeric field
+  .         0         1       Decimal point
+  +         0         1       Print leading or trailing sign
+  -         0         1       Trailing sign (- if neg, <sp> otherwise)
+  **        2         2       Leading asterisk
+
+  $§†       ±†        ≤       FloatinÁ  dollaÚ  signª† place‰ iÓ† fronÙ† oÊ 
+                              leading digit
+  **$       2         3       Asterisk fill and floating dollar sign
+  ,         1         1       Use comma every three digits
+  ^^^^      0         4       Exponential format
+  _         0         1       Next character is literal
+
+String Specifiers
+
+Specifier                     Definition
+  !                           Single character
+  /<spaces>/                  Character field; width=2+number of <spaces>
+  &                           Variable length field
+:Input/Output Statements
+
+Statement Syntax/Function
+CLOSE     CLOSE [[#]f[,[#]f ... ]]
+           Close disk files; if no arg, close all
+DATA      DATA constant list  
+           List data for READ statement
+FIELD     FIELD [#]f,n AS string var [,n AS string var ...]
+           Define fields in random file buffer
+GET       GET [#]f[,record number]
+           Read a record from a random disk file
+INPUT     INPUT [;] [prompt string;] var [,var ...]
+          INPUT [;] [prompt string,] var [,var ...]
+           Rea‰† dat· froÌ thÂ terminalª† leadinÁ semicoloÓ suppresseÛ echÔ ç
+           oÊ† <CR>/<LFæ an‰ semicoloÓ afteÚ prompÙ strinÁ causeÛ† questioÓ ç
+           marÎ† afteÚ prompÙ whilÂ comm· afteÚ prompÙ suppresseÛ† questioÓ ç
+           mark
+
+Statement Syntax/Function
+
+KILL      KILL filename
+           Delete a disk file
+LINE      LINE INPUT [;] [prompt string;] string var
+INPU‘      Rea‰ aÓ entirÂ linÂ froÌ terminalª† leadinÁ semicoloÓ suppresseÛ ç
+           echo of <CR>/<LF>
+          LINE INPUT #f,string var
+           Read an entire line from a disk file
+LSET      LSET field var=string exp
+           StorÂ dat· iÓ randoÌ filÂ buffeÚ left-justifie‰ oÚ† left-justif˘ ç
+           a non-disk string in a given field
+OPEN      OPEN mode,[#] f,filename
+           Open a disk file; mode must be one of --
+               I = sequential input file
+               O = sequential output file
+               R = random input/output file
+Statement Syntax/Function
+
+PRINT     PRINT [USING format string;] exp [,exp ...]
+           Print data at the terminal using the format specified
+          PRINT #f, [USING format string;] exp [,exp ...]
+           Write data to a disk file
+          LPRINT [USING format string;] var [,var ...]
+           Write data to a line printer
+PUT       PUT [#] f [,record number]
+           Write data from a random buffer to a data file
+READ      READ var [,var ...]
+           Read data from a DATA statement into the specified vars
+RSET      RSET field var = string exp
+           StorÂ† dat·† iÓ† · randoÌ filÂ buffeÚ righÙ justifie‰† oÚ† righÙ ç
+           justify a non-disk string in a given field
+WRITE     WRITE [list of exps]
+           Output data to the terminal
+          WRITE #f, list of exps
+           Output data to a sequential file or a random field buffer
+:Operators
+
+Symbol    Function
+ =        Assignment or equality test
+ -        Negation or subtraction
+ +        Addition or string concatenation
+ *        Multiplication
+ /        Division (floating point result)
+ ^        Exponentiation
+ \        Integer division (integer result)
+MOD       Integer modulus (integer result)
+NOT       One's complement (integer)
+AND       Bitwise AND (integer)
+OR        Bitwise OR (integer)
+XOR       Bitwise exclusive OR (integer)
+EQV       Bitwise equivalence (integer)
+IMP       Bitwise implication (integer)
+=,>,<,    Relational tests (TRUE=-1, FALSE=0)
+  <=,=<,
+  >=,=>,
+  <>
+
+The precedence of operators is --
+ 1.  Expressions in parentheses     8.  Relational Operators
+ 2.  Exponentiation                 9.  NOT
+ 3.  Negation (Unary -)            10.  AND
+ 4.  *,/                           11.  OR
+ 5.  \                             12.  XOR
+ 6.  MOD                           13.  IMP
+ 7.  +,-                           14.  EQV
+:Arithmetic Functions
+Function       Action
+
+ABS(exp)       Absolute value of expression
+ATN(exp)       Arctangent of expression (in radians)
+CDBL(exp)      Convert the expression to a double precision number
+CINT(exp)      Convert the expression to an integer
+COS(exp)       Cosine of the expression (in radians)
+
+CSNG(exp)      Convert the expression to a single precision number
+EXP(exp)       Raises the constant E to the power of the expression
+FIX(exp)       Returns truncated integer of expression
+FRE(exp)       Gives memory free space not used by MBASIC
+INT(exp)       Evaluates the expression for the largest integer
+
+LOG(exp)       Gives the natural log of the expression
+RND[(exp)]     Generates a random number
+                 exp <0 seeds new sequence
+                 exp =0 returns previous number
+                 exp >0 or omitted returns new random number
+
+Function       Action
+
+SGN(exp)       1 if exp >0
+               0 if exp =0
+               -1 if exp <0
+SIN(exp)       Sine of the expression (in radians)
+SQR(exp)       Square root of expression
+TAN(exp)       Tangent of the expression (in radians)
+:String Functions
+Function       Action
+
+ASC(str)       Returns ASCII value of first char in string
+CHR$(exp)      Returns a 1-char string whose char has ASCII code of exp
+FRE(str)       Returns remaining memory free space
+HEX$(exp)      Converts a number to a hexadecimal string
+INPUT$(length [,[#]f])
+               ReturnÛ · strinÁ oÊ lengtË charÛ rea‰ froÌ consolÂ oÚ froÌ · ç
+               disk file; characters are not echoed
+
+INSTR([exp,]str1,str2)
+               ReturnÛ† thÂ firsÙ positioÓ oÊ thÂ firsÙ occurrencÂ oÊ† str≤ ç
+               in str1 starting at position exp
+LEFT$(str,len) Returns leftmost length chars of the string expression
+LEN(str)       Returns the length of a string
+MID$(string,start[,length])
+               ReturnÛ charÛ froÌ thÂ middlÂ oÊ thÂ strinÁ startinÁ aÙ† thÂ ç
+               positioÓ† specifie‰† tÔ thÂ en‰ oÊ thÂ strinÁ oÚ foÚ† lengtË ç
+               characters
+
+Function       Action
+
+OCT$(exp)      Converts an expression to an Octal string
+RIGHT$(str,len)
+               Returns rightmost length chars of the string expression
+SPACE$(exp)    Returns a string of exp spaces
+STR$(exp)      Converts a numeric expression to a string
+STRING$(length,str)
+               ReturnÛ† · strinÁ lengtË lonÁ containinÁ thÂ firsÙ† chaÚ† oÊ ç
+               the str
+STRING$(length,exp)
+               ReturnÛ† · strinÁ lengtË lonÁ containinÁ charÛ witË† numeri„ ç
+               value exp
+VAL(str©†      ConvertÛ† thÂ† strinÁ† representatioÓ oÊ  ·† numbeÚ† tÔ† itÛ ç
+               numeric value
+:I/O and Special Functions
+
+Function       Action
+CVI(str)       Converts a 2-char string to an integer
+CVS(str)       Converts a 4-char string to a single precision number
+CVD(str)       Converts an 8-char string to a double precision number
+
+EOF(f)         Returns TRUE (-1) if file is positioned at its end
+ERL            Error Line Number
+ERR            Error Code Number
+INP(port)      Inputs a byte from an input port
+LOC(f©         ReturnÛ nexÙ recor‰ numbeÚ tÔ rea‰ oÚ writÂ (randoÌ file© oÚ ç
+               number of sectors read or written (sequential file)
+LPOS(n)        Returns carriage position of line printer (n is dummy)
+
+MKI$(value)    Converts an integer to a 2-char string
+MKS$(value)    Converts a single precision values to a 4-char string
+MKD$(value)    Converts a double precision value to an 8-char string
+
+
+Function       Action
+
+PEEK(exp)      Reads a byte from memory location specified by exp
+POS(n)         Returns carriage position of terminal (n is dummy)
+
+SPC(exp)       Used in PRINT statements to print spaces
+TAB(exp)       Used in PRINT statements to tab to specified position
+
+USR[n](arg)    Calls the user's machine language subroutine with the arg
+
+VARPTR(var©    ReturnÛ addresÛ oÊ vaÚ iÓ memor˘ oÚ zerÔ iÊ vaÚ haÛ noÙ beeÓ ç
+               assigned a value
+VARPTR(#f©     ReturnÛ thÂ addresÛ oÊ thÂ disÎ I/œ buffeÚ assigne‰ tÔ† filÂ ç
+               number
+:Interpreter Error Codes
+Code Error                         Code Error
+  1  NEXT without FOR               14  Out of string space
+  2  Syntax error                   15  String too long
+  3  RETURN without GOSUB           16  String formula too complex
+  4  Out of data                    17  Can't continue
+  5  Illegal function call          18  Undefined user function
+  6  Overflow                       19  No RESUME
+  7  Out of memory                  20  RESUME without error
+  8  Undefined line                 21  Unprintable error
+  9  Subscript out of range         22  Missing operand
+ 10  Redimensioned array            23  Line buffer overflow
+ 11  Division by zero               26  FOR without NEXT
+ 12  Illegal direct                 29  WHILE without WEND
+ 13  Type mismatch                  30  WEND without WHILE
+
+
+Disk Errors --
+Code Error                         Code Error
+
+ 50  Field overflow                 58  File already exists
+ 51  Internal error                 61  Disk full
+ 52  Bad file number                62  Input past end
+ 53  File not found                 63  Bad record number
+ 54  Bad file mode                  64  Bad file name
+ 55  File already open              66  Direct statement in file
+ 57  Disk I/O error                 67  Too many files
+:Introduction to the Microsoft BASIC Compiler
+
+     ThÂ followinÁ direcÙ modÂ commandÛ arÂ NO‘ implemente‰ oÓ thÂ compileÚ ç
+and will generate an error message --
+
+          AUTO      CLEAR     CLOAD
+          CSAVE     CONT      DELETE
+          EDIT      LIST      LLIST
+          RENUM     COMMON    SAVE
+          LOAD      MERGE     NEW
+          ERASE
+
+     ThÂ† followinÁ statementÛ arÂ use‰ differentl˘ witË thÂ compileÚ† thaÓ ç
+with the interpreter (refer to the manual for details) --
+
+          CALL      DEFINT    DEFSNG
+          DEFDBL    DEFSTR    DIM
+          ERASE     END       ON ERROR GOTO
+          RESUME    STOP      TRON
+          TROFF     USRn
+:BASIC Compiler Commands and Switches
+
+     The compiler is invoked by the BASCOM command; it may be called by --
+
+          BASCOM
+or
+          BASCOM command line
+
+where "command line" is --
+
+[dev:][obj file][,[dev:][lst file]]=[dev:]source file[/switch ...]
+
+     IÊ† jusÙ BASCOÕ iÛ used¨† thÂ useÚ wilÏ bÂ prompte‰ witË aÓ† asterisk¨ ç
+after which he should enter the command line.
+
+Switches --
+
+/E   Use this switch if ON ERROR GOTO with RESUME <line number> is used
+
+/ÿ   UsÂ thiÛ switcË iÊ OŒ ERRO“ GOTœ witË RESUME¨ RESUM≈ 0¨ oÚ RESUM≈ NEX‘ ç
+     is used
+
+/N   Do not list generated object code
+
+/D   Generate debug/checking code at runtime
+
+/S   Write quoted strings of more than 4 chars as they are encountered
+
+/4   Recognize Microsoft 4.51 BASIC Interpreter conventions
+
+/√†  Rela¯† linÂ† numberinÁ†  constraintsª†† lineÛ† nee‰† noÙ† bÂ† numbere‰ ç
+     sequentially; /4 and /C may not be used together
+
+/Z   Use Z80 opcodes
+:BASIC Compiler Error Messages
+Compile-Time Fatal Errors
+
+     SN   Syntax error             OM   Out of memory
+     SQ   Sequence error           TM   Type mismatch
+     TC   Too complex              BS   Bad subscript
+     LL   Line too long            UC   Unrecognizable command
+     OV   Math overflow            /0   Division by zero
+
+     DD   Array already dim'ed     FN   FOR/NEXT error
+     FD   Function already def     UF   Function not defined
+     WE   WHILE/WEND error         /E   Missing /E switch
+                                   /X   Missing /X switch
+
+Compile-Time Warning Errors
+
+     ND   Array not dimensioned    SI   Statement ignored
+
+
+Run-Time Error Messages
+
+      2   Syntax error             52   Bad file number
+      3   RETURN without GOSUB     53   File not found
+      4   Out of data              54   Bad file mode
+      5   Illegal function call    55   File already open
+      6   Floating/Integer ovfl    57   Disk I/O error
+
+      9   Subscript out of range   58   File already exists
+     11   Division by zero         61   Disk full
+     14   Out of string space      62   Input past end
+     20   RESUME without error     63   Bad record number
+     21   Unprintable error        64   Bad filename
+
+     50   Field overflow           67   Too many files
+     51   Internal error
+

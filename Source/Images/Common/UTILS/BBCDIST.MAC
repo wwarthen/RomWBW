@@ -1,0 +1,225 @@
+	TITLE	BBCDIST.Z80 (C) R.T.RUSSELL 1982
+;
+;BBC BASIC (Z80) - CP/M VERSION 2.30 & 3.00
+;(C) COPYRIGHT R.T.RUSSELL, 1982.
+;ALL RIGHTS RESERVED.
+;
+;THIS PROGRAM ALLOWS THE USER TO ADAPT BBC BASIC TO THE
+;PARTICULAR CHARACTERISTICS OF HIS SYSTEM HARDWARE ETC.
+;
+;THE PROGRAM RESIDES AT 100H FOR EASE OF LOADING.
+;*** IT MUST NOT EXCEED 256 BYTES IN TOTAL LENGTH ***
+;
+;PLEASE NOTE THAT A Z80 PROCESSOR AND CP/M VERSION 2.2
+;OR LATER ARE REQUIRED.
+;
+;R.T.RUSSELL, 11-03-1984, 03-05-1989
+;ALTERNATE REGISTERS SAVED FOR BDOS CALL, 04-06-2000
+;
+CPM	EQU	5
+COLD	EQU	200H
+;
+	GLOBAL	CLRSCN
+	GLOBAL	PUTCSR
+	GLOBAL	GETCSR
+	GLOBAL	PUTIME
+	GLOBAL	GETIME
+	GLOBAL	GETKEY
+	GLOBAL	BYE
+;
+	ASEG
+	ORG	100H
+;
+;JUMP TABLE - BASIC makes calls to hardware-dependent
+;features via this table:
+;
+	JP	INIT
+CLRSCN:	JP	CLS		;CLEAR SCREEN
+PUTCSR:	JP	PCSR		;SET CURSOR POSN.
+GETCSR:	JP	GCSR		;READ CURSOR POSN.
+PUTIME:	JP	PTIME		;SET ELAPSED TIME
+GETIME:	JP	GTIME		;READ ELAPSED TIME
+GETKEY:	JP	INKEY		;READ KEY (TIME LIMIT)
+BYE:	JP	REBOOT		;RETURN TO CP/M
+;
+;THE CODE WHICH FOLLOWS IS A SKELETON VERSION SUITABLE
+;FOR ANY CP/M SYSTEM.  IT HAS BEEN CONFIGURED FOR A VT100 TO SOME DEGREE
+;BY PETER SCHORN.
+;
+
+PRSTR	EQU	9
+
+;INIT	- Perform hardware initialisation (if any).
+;
+INIT:	LD	A,2
+	INC	A
+	LD	DE,NOTZ80
+	JP	PE,FAIL
+	LD	C,12
+	CALL	BDOS
+	OR	A
+	LD	DE,NOTV2
+	JP	NZ,COLD
+FAIL:	LD	C,PRSTR
+	CALL	BDOS
+	RST	0
+;
+NOTZ80:	DEFB	'Wrong processor$'
+NOTV2:	DEFB	'Wrong CP/M version$'
+;
+;REBOOT	- Switch off interrupts and return to CP/M
+;
+REBOOT:	RST	0
+;
+;GTIME	- Read elapsed-time clock.
+;  	  Outputs: DEHL = elapsed time (centiseconds)
+; 	  Destroys: A,D,E,H,L,F
+;
+GTIME:	LD	DE,0
+	LD	HL,0
+	RET
+;
+;PTIME	- Load elapsed-time clock.
+;   	  Inputs: DEHL = time to load (centiseconds)
+; 	  Destroys: A,D,E,H,L,F
+;
+PTIME:	RET
+;
+;CLS	- Clear screen for VT100.
+; 	  Destroys: A,D,E,H,L,F
+;
+CLS:	PUSH	BC		; save BC
+	LD	C,PRSTR		; command for output string
+	LD	DE,CLSSTR	; start address of string
+	CALL	BDOS		; output to terminal
+	POP	BC		; restore BC
+	RET
+CLSSTR:	DEFB	27,'[2J$'	; VT100 string for clear screen
+
+;
+;INKEY	- Sample keyboard with specified wait.
+;	  This version uses a simple software timing loop.
+;	  Modify to use hardware/interrupt timer if available.
+;   	  Inputs: HL = Time to wait (centiseconds)
+;  	  Outputs: Carry reset indicates time-out.
+;                  If carry set, A = character typed.
+; 	  Destroys: A,D,E,H,L,F
+;
+INKEY:	PUSH	BC
+	PUSH	HL
+	LD	C,6
+	LD	E,0FFH
+	CALL	BDOS		;CONSOLE INPUT
+	POP	HL
+	POP	BC
+	OR	A
+	SCF
+	RET	NZ		;KEY PRESSED
+	OR	H
+	OR	L
+	RET	Z		;TIME-OUT
+	PUSH	BC
+	LD	A,-1
+	LD	BC,1250		;DELAY CONSTANT
+WAIT:	DEC	BC
+	CP	B
+	JP	NZ,WAIT		;WAIT FOR APPROX 10ms
+	POP	BC
+	DEC	HL
+	JR	INKEY
+;
+;PCSR	- Move cursor to specified position.
+;   	  Inputs: DE = horizontal position (LHS=0)
+;                 HL = vertical position (TOP=0)
+; called by TAB(column, row)
+PCSR:	LD	B,L		; vertical = line (row)
+	CALL	CONV		; normalized and convert to decimal
+	LD	(LIN),HL	; and store into string
+	LD	B,E		; horizontal = column
+	CALL	CONV		; normalized and convert to decimal
+	LD	(COL),HL	; and store into string
+	LD	C,PRSTR		; output string command
+	LD	DE,CURS		; start of string
+	JR	BDOS		; output string to terminal
+
+; VT100 sequence for cursor positioning
+CURS:	DEFB	27, '['
+LIN:	DEFW	0		; high byte, low byte for decimal line
+	DEFB	';'
+COL:	DEFW	0		; high byte, low byte for decimal column
+	DEFB	'H$'
+
+; convert binary B (0 <= B < 99, not checked) into B+1 in decimal.
+; L = upper byte, H = lower byte. ready for LD (...), HL
+; destroys A, B, L, H
+; optimized for space over time
+CONV:	INC	B		; normalize, home in VT100 is (1,1)
+	LD	A,'0'		; A is counter for low byte of result
+	LD	L,A		; L is counter for high byte of result
+CONVLP:	INC	A		; now B times increment AL in decimal
+	CP	'9'+1		; low byte overflow?
+	JR	NZ,CONT		; no, continue incrementing
+	LD	A,'0'		; reset low byte
+	INC	L		; and increment high byte
+CONT:	DJNZ	CONVLP		; B times
+	LD	H,A		; put low byte into right place
+	RET
+
+
+;BDOS   - Save the IX and IY and alternate registers
+;         before performing a CP/M function call.
+;
+BDOS:	PUSH	IX
+	PUSH	IY
+        EXX
+        PUSH    BC
+        PUSH    DE
+        PUSH    HL
+        EXX
+        EX      AF,AF'
+        PUSH    AF
+        EX      AF,AF'
+	CALL	CPM
+        EX      AF,AF'
+        POP     AF
+        EX      AF,AF'
+        EXX
+        POP     HL
+        POP     DE
+        POP     BC
+        EXX
+	POP	IY
+	POP	IX
+	RET
+
+
+;GCSR	- Return cursor coordinates.
+;   	  Outputs:  DE = X coordinate (POS)
+;                   HL = Y coordinate (VPOS)
+;  	  Destroys: A,D,E,H,L,F
+;
+GCSR:	LD	DE,0
+	LD	HL,0
+	RET
+;
+	IF	$ GT 1F4H
+	ERROR	'INSUFFICIENT SPACE'
+	ENDIF
+;
+	ORG	1F4H
+;
+	DEFB	80		;WIDTH
+	DEFB	'E' AND 1FH	;CURSOR UP
+	DEFB	'X' AND 1FH	;CURSOR DOWN
+	DEFB	'A' AND 1FH	;START OF LINE
+	DEFB	'F' AND 1FH	;END OF LINE
+	DEFB	'T' AND 1FH	;DELETE TO END OF LINE
+	DEFB	'H' AND 1FH	;BACKSPACE
+	DEFB	'U' AND 1FH	;CANCEL LINE
+	DEFB	'S' AND 1FH	;CURSOR LEFT
+	DEFB	'D' AND 1FH	;CURSOR RIGHT
+	DEFB	'G' AND 1FH	;DELETE CHARACTER
+	DEFB	'V' AND 1FH	;INSERT CHARACTER
+;
+FIN:	END
+
