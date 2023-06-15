@@ -134,14 +134,12 @@ LBREXT.COM - Extract file from .LBR libraries
 LBREXT36.CFG - ZCNFG configuration file for LBREXT
 ZXD.COM - Enhanced directory lister w/ date/time stamp support
 ZXD.CFG - ZCNFG configuration file for ZXD
-ASM2.HLP - Help file for the CP/M Assembler
 BBCBASIC.COM - BBC BASIC CP/M Version 3.00 by R.T.Russell
 BBCBASIC.TXT - Help file for BBC BASIC
 DELBR.COM - Unpacks the .LBR (Library) file format
 GENHEX.COM - Generates an Intel Hex file from the input file
 LS.COM - An alternative file listing to DIR
 LSWEEP.COM - Can extract and view member files of an .LBR archive
-MBASIC.HLP - Help file for MS BASIC
 MBASIC85.COM - Microsoft BASIC-85 Rev. 5.29
 USQ.COM - Decompress Squeezed file(s)
 
