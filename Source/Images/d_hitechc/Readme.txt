@@ -1,4 +1,4 @@
-===== HI-TECH Z80 CP/M C compiler V3.09 =====
+===== HI-TECH Z80 CP/M C compiler V3.09-17 =====
 
 The HI-TECH C Compiler  is  a  set  of  software  which
 translates  programs written in the C language to executable
@@ -6,6 +6,9 @@ machine code programs. Versions are available which  compile
 programs  for  operation under the host operating system, or
 which produce programs for  execution  in  embedded  systems
 without an operating system.
+
+This is the Mar 21, 2023 update 17 released by Tory Nicholson who currently
+maintains HI-TECH C at https://github.com/agn453/HI-TECH-Z80-C
 
 The manual is available in the Docs directory,
 HI-TECH Z80 C Compiler Manual.txt
