@@ -295,7 +295,6 @@ DELBR.COM - Unpacks the .LBR (Library) file format
 GENHEX.COM - Generates an Intel Hex file from the input file
 LS.COM - An alternative file listing to DIR
 LSWEEP.COM - Can extract and view member files of an .LBR archive
-MBASIC85.COM - Microsoft BASIC-85 Rev. 5.29
 USQ.COM - Decompress Squeezed file(s)
 
 == Testing Applications (User Area 2) ==
