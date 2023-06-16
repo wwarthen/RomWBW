@@ -5,22 +5,28 @@ SYSTEMS = ../CPM22/cpm_wbw.sys ../ZSDOS/zsys_wbw.sys ../CPM3/cpmldr.sys ../ZPM3/
 
 FDIMGS = fd144_cpm22.img fd144_zsdos.img fd144_nzcom.img \
 	fd144_cpm3.img fd144_zpm3.img fd144_ws4.img fd144_qpm.img \
-  fd144_z80asm fd144_aztec fd144_hitechc fd144_basecomp fd144_fortran fd144_games
+	fd144_z80asm.img fd144_aztecc.img fd144_hitechc.img \
+	fd144_bascomp.img fd144_fortran.img fd144_games.img \
+	fd144_tpascal.img
 HD512IMGS = hd512_cpm22.img hd512_zsdos.img hd512_nzcom.img \
-	hd512_cpm3.img hd512_zpm3.img hd512_ws4.img \
-  hd512_z80asm hd512_aztec hd512_hitechc hd512_basecomp hd512_fortran hd512_games
+	hd512_cpm3.img hd512_zpm3.img hd512_ws4.img
+HD512XIMGS = hd512_z80asm.img hd512_aztecc.img hd512_hitechc.img \
+	hd512_bascomp.img hd512_fortran.img hd512_games.img \
+	hd512_tpascal.img hd512_dos65.img hd512_qpm.img
 # HDIMGS += hd512_bp.img
 HD1KIMGS = hd1k_cpm22.img hd1k_zsdos.img hd1k_nzcom.img \
-	hd1k_cpm3.img hd1k_zpm3.img hd1k_ws4.img \
-  hd1k_z80asm hd1k_aztec hd1k_hitechc hd1k_basecomp hd1k_fortran hd1k_games
+	hd1k_cpm3.img hd1k_zpm3.img hd1k_ws4.img
+HD1KXIMGS = hd1k_z80asm.img hd1k_aztecc.img hd1k_hitechc.img \
+	hd1k_bascomp.img hd1k_fortran.img hd1k_games.img \
+	hd1k_tpascal.img hd1k_qpm.img
 # HD1KIMGS += hd1k_bp.img
 
 HD512PREFIX =
 HD1KPREFIX = hd1k_prefix.dat
 
 OBJECTS = $(FDIMGS)
-OBJECTS += $(HD512IMGS) hd512_combo.img  hd512_dos65.img hd512_qpm.img $(HD512PREFIX)
-OBJECTS += $(HD1KIMGS) hd1k_combo.img hd1k_qpm.img $(HD1KPREFIX)
+OBJECTS += $(HD512IMGS) $(HD512XIMGS) hd512_combo.img $(HD512PREFIX)
+OBJECTS += $(HD1KIMGS) $(HD1KXIMGS) hd1k_combo.img $(HD1KPREFIX)
 
 OTHERS = blank144 blankhd512 blankhd1k
 
@@ -125,7 +131,7 @@ clean::
 	@rm -f *.ls
 
 imgdiff:
-	@for i in $(FDIMGS) $(HD512IMGS) $(HD1KIMGS) ; do \
+	@for i in $(FDIMGS) $(HD512IMGS) $(HD512XIMGS) $(HD1KIMGS) $(HD1KXIMGS) ; do \
 		echo $$i ; \
 		if echo $$i | grep -q ^fd144_ ; then \
 			fmt=wbw_fd144 ; \
