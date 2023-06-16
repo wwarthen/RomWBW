@@ -6,8 +6,8 @@
 ***                                                                 ***
 ***********************************************************************
 
-This directory ("Doc") is part of the RomWBW System Software 
-distribution archive.  It contains documentation for components of 
+This directory ("Doc") is part of the RomWBW System Software
+distribution archive.  It contains documentation for components of
 the system.
 
 ChangeLog.txt
@@ -34,9 +34,9 @@ ROM Applications documents.
 CPM Manual ("CPM Manual.pdf")
 -----------------------------
 
-The original DRI CP/M 2.x Operating System Manual.  This should be 
-considered the primary reference for system operation.  The section 
-on CP/M 2 Alteration can be ignored since this work has already been 
+The original DRI CP/M 2.x Operating System Manual.  This should be
+considered the primary reference for system operation.  The section
+on CP/M 2 Alteration can be ignored since this work has already been
 completed as part of the RomWBW distribution.
 
 
@@ -59,7 +59,7 @@ Manual for the DDTZ v2.7 debug tool included on the ROM drive.
 FDisk Manual ("FDisk Manual.pdf")
 ---------------------------------
 
-The operational manual for John Coffman's hard disk partitioning 
+The operational manual for John Coffman's hard disk partitioning
 program.  This program is included in RomWBW as FDISK80.
 
 
@@ -78,9 +78,9 @@ NZCOM operating system operation manual.
 ZCPR Manual ("ZCPR Manual.pdf")
 -------------------------------
 
-ZCPR is the command proccessor portion of Z-System.  This is the 
-manual for ZCPR 1.x as included in RomWBW.  The installation 
-instructions can be ignored since that work has already been 
+ZCPR is the command proccessor portion of Z-System.  This is the
+manual for ZCPR 1.x as included in RomWBW.  The installation
+instructions can be ignored since that work has already been
 completed as part of the RomWBW distribution.
 
 ZCPR D&J Manual ("ZCPR-DJ.doc")
@@ -92,9 +92,9 @@ ZCPR D&J User Manual.  This manual supplements the ZCPR Manual.
 ZSDOS Manual ("ZSDOS Manual.pdf")
 ---------------------------------
 
-ZSDOS is the DOS portion of Z-System.  This is the manual for ZSDOS 
-1.x as included in RomWBW.  The installation instructions can be 
-ignored since that work has already been completed as part of the 
+ZSDOS is the DOS portion of Z-System.  This is the manual for ZSDOS
+1.x as included in RomWBW.  The installation instructions can be
+ignored since that work has already been completed as part of the
 RomWBW distribution.
 
 Microsoft Basic-80 Reference Manual v5.0 (Microsoft Basic-80 Reference Manual v5.0.pdf)
@@ -109,7 +109,6 @@ QP/M 2.7 Features and Facilities ("qcp27.pdf")
 --------------------------------------------
 
 Official documentation set for QP/M 2.7 from original QP/M distribution.
-
 
 SIO+CTC Baud Rate Options (SIO+CTC Baud Rate Options.pdf)
 ---------------------------------------------------------
@@ -133,4 +132,37 @@ UCSD p-System Users Manual ("UCSD p-System Users Manual.pdf")
 Official user manual for p-System operating system included with
 RomWBW.
 
---WBW 5:18 PM 3/16/2023
+
+Z80 Assembler User Manual (z80asm (SLR Systems).pdf)
+----------------------------------------------------
+
+Official user manual for the Z80 Macro Assembler by SLR Systems
+included in the z80asm disk image.
+
+
+HI-TECH C Compiler User Manual (HI-TECH Z80 C Compiler Manual.txt)
+------------------------------------------------------------------
+
+Official user manual for the HI-TECH C Compiler included in the
+hitechc disk image.
+
+
+Borland TurboPascal User Manual (Turbo_Pascal_Version_3.0_Reference_Manual_1986.pdf)
+------------------------------------------------------------------------------------
+
+Official user manual Borland TurboPascal included in the pascal disk image.
+
+
+Aztec C Compiler User Manual (Aztec_C_1.06_User_Manual_Mar84.pdf)
+-----------------------------------------------------------------
+
+Official user manual for the Aztec C Compiler included in the aztecc disk image.
+
+
+FORTRAN-80 User Manual (Microsoft_FORTRAN-80_Users_Manual_1977.pdf)
+---------------------------------------------------------------
+
+Official user manual for Microsoft's FORTRAN-80 compiler included in the fortran
+disk image.
+
+--WBW 5:18 PM 6/14/2023

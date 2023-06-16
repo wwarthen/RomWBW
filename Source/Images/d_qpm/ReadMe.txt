@@ -7,8 +7,8 @@ tracks was created using QINSTALL with default settings EXCEPT
 for the two settings described under Notes (current drive/user
 storage address and TIMDAT vector).
 
-QINSTALL can be run again as desired to further customize your 
-installation.  However, note that QINSTALL does NOT remember prior 
+QINSTALL can be run again as desired to further customize your
+installation.  However, note that QINSTALL does NOT remember prior
 settings, so you must reapply all settings you made previously
 especially the two setting changes described below.
 
@@ -168,6 +168,11 @@ LBREXT.COM - Extract file from .LBR libraries
 LBREXT36.CFG - ZCNFG configuration file for LBREXT
 ZXD.COM - Enhanced directory lister w/ date/time stamp support
 ZXD.CFG - ZCNFG configuration file for ZXD
+BBCBASIC.COM - BBC BASIC CP/M Version 3.00 by R.T.Russell
+BBCBASIC.TXT - Help file for BBC BASIC
+GENHEX.COM - Generates an Intel Hex file from the input file
+LS.COM - An alternative file listing to DIR
+LSWEEP.COM - Can extract and view member files of an .LBR archive
 
 == Testing Applications (User Area 2) ==
 

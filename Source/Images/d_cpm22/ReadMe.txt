@@ -1,9 +1,9 @@
 ===== CP/M-80 2.2 Disk for RomWBW =====
 
-This disk is one of several ready-to-run disks provided with RomWBW.  
-It contains a vanilla distribution of DRI's CP/M-80 2.2 adapted for 
-RomWBW.  The disk is bootable as is (the operating system image is 
-already embedded in the system tracks) and can be launched from the 
+This disk is one of several ready-to-run disks provided with RomWBW.
+It contains a vanilla distribution of DRI's CP/M-80 2.2 adapted for
+RomWBW.  The disk is bootable as is (the operating system image is
+already embedded in the system tracks) and can be launched from the
 RomWBW Loader prompt.
 
 The remainder of this document describes the usage and contents of
@@ -134,15 +134,21 @@ LBREXT.COM - Extract file from .LBR libraries
 LBREXT36.CFG - ZCNFG configuration file for LBREXT
 ZXD.COM - Enhanced directory lister w/ date/time stamp support
 ZXD.CFG - ZCNFG configuration file for ZXD
+BBCBASIC.COM - BBC BASIC CP/M Version 3.00 by R.T.Russell
+BBCBASIC.TXT - Help file for BBC BASIC
+GENHEX.COM - Generates an Intel Hex file from the input file
+LS.COM - An alternative file listing to DIR
+LSWEEP.COM - Can extract and view member files of an .LBR archive
+
 
 == Testing Applications (User Area 2) ==
 
 User area 2 contains a variety of hardware testing applications.
 These are generally user contributed and have no documentation.
 
-N.B., these applications are frequently not compatible with all RomWBW 
-hardware.  They are included here as a convenience.  If applicable, 
-your hardware documentation should refer to them and provide usage 
+N.B., these applications are frequently not compatible with all RomWBW
+hardware.  They are included here as a convenience.  If applicable,
+your hardware documentation should refer to them and provide usage
 instructions.
 
 == Sample Tune Files (User Area 3) ==

@@ -14,6 +14,13 @@ call BuildDisk.cmd cpm3 fd wbw_fd144 ..\cpm3\cpmldr.sys || exit /b
 call BuildDisk.cmd zpm3 fd wbw_fd144 ..\zpm3\zpmldr.sys || exit /b
 call BuildDisk.cmd ws4 fd wbw_fd144 || exit /b
 call BuildDisk.cmd qpm fd wbw_fd144 d_qpm\u0\qpm.sys || exit /b
+call BuildDisk.cmd z80asm hd wbw_fd144 || exit /b
+call BuildDisk.cmd aztecc hd wbw_fd144 || exit /b
+call BuildDisk.cmd hitechc hd wbw_fd144 || exit /b
+call BuildDisk.cmd tpascal hd wbw_fd144 || exit /b
+call BuildDisk.cmd bascomp hd wbw_fd144 || exit /b
+call BuildDisk.cmd fortran hd wbw_fd144 || exit /b
+call BuildDisk.cmd games hd wbw_fd144 || exit /b
 
 echo.
 echo Building Hard Disk Images (512 directory entry format)...
@@ -26,6 +33,13 @@ call BuildDisk.cmd zpm3 hd wbw_hd512 ..\zpm3\zpmldr.sys || exit /b
 call BuildDisk.cmd ws4 hd wbw_hd512 || exit /b
 call BuildDisk.cmd dos65 hd wbw_hd512 ..\zsdos\zsys_wbw.sys || exit /b
 call BuildDisk.cmd qpm hd wbw_hd512 d_qpm\u0\qpm.sys || exit /b
+call BuildDisk.cmd z80asm hd wbw_hd512 || exit /b
+call BuildDisk.cmd aztecc hd wbw_hd512 || exit /b
+call BuildDisk.cmd hitechc hd wbw_hd512 || exit /b
+call BuildDisk.cmd tpascal hd wbw_hd512 || exit /b
+call BuildDisk.cmd bascomp hd wbw_hd512 || exit /b
+call BuildDisk.cmd fortran hd wbw_hd512 || exit /b
+call BuildDisk.cmd games hd wbw_hd512 || exit /b
 
 if exist ..\BPBIOS\bpbio-ww.rel call BuildDisk.cmd bp hd wbw_hd512 || exit /b
 
@@ -43,6 +57,13 @@ call BuildDisk.cmd cpm3 hd wbw_hd1k ..\cpm3\cpmldr.sys || exit /b
 call BuildDisk.cmd zpm3 hd wbw_hd1k ..\zpm3\zpmldr.sys || exit /b
 call BuildDisk.cmd ws4 hd wbw_hd1k || exit /b
 call BuildDisk.cmd qpm hd wbw_hd1k d_qpm\u0\qpm.sys || exit /b
+call BuildDisk.cmd z80asm hd wbw_hd1k || exit /b
+call BuildDisk.cmd aztecc hd wbw_hd1k || exit /b
+call BuildDisk.cmd hitechc hd wbw_hd1k || exit /b
+call BuildDisk.cmd tpascal hd wbw_hd1k || exit /b
+call BuildDisk.cmd bascomp hd wbw_hd1k || exit /b
+call BuildDisk.cmd fortran hd wbw_hd1k || exit /b
+call BuildDisk.cmd games hd wbw_hd1k || exit /b
 
 if exist ..\BPBIOS\bpbio-ww.rel call BuildDisk.cmd bp hd wbw_hd1k || exit /b
 

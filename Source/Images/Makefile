@@ -4,19 +4,22 @@
 SYSTEMS = ../CPM22/cpm_wbw.sys ../ZSDOS/zsys_wbw.sys ../CPM3/cpmldr.sys ../ZPM3/zpmldr.sys
 
 FDIMGS = fd144_cpm22.img fd144_zsdos.img fd144_nzcom.img \
-	fd144_cpm3.img fd144_zpm3.img fd144_ws4.img fd144_qpm.img
+	fd144_cpm3.img fd144_zpm3.img fd144_ws4.img fd144_qpm.img \
+  fd144_z80asm fd144_aztec fd144_hitechc fd144_basecomp fd144_fortran fd144_games
 HD512IMGS = hd512_cpm22.img hd512_zsdos.img hd512_nzcom.img \
-	hd512_cpm3.img hd512_zpm3.img hd512_ws4.img
+	hd512_cpm3.img hd512_zpm3.img hd512_ws4.img \
+  hd512_z80asm hd512_aztec hd512_hitechc hd512_basecomp hd512_fortran hd512_games
 # HDIMGS += hd512_bp.img
 HD1KIMGS = hd1k_cpm22.img hd1k_zsdos.img hd1k_nzcom.img \
-	hd1k_cpm3.img hd1k_zpm3.img hd1k_ws4.img
+	hd1k_cpm3.img hd1k_zpm3.img hd1k_ws4.img \
+  hd1k_z80asm hd1k_aztec hd1k_hitechc hd1k_basecomp hd1k_fortran hd1k_games
 # HD1KIMGS += hd1k_bp.img
 
 HD512PREFIX =
 HD1KPREFIX = hd1k_prefix.dat
 
 OBJECTS = $(FDIMGS)
-OBJECTS += $(HD512IMGS) hd512_combo.img  hd512_dos65.img hd512_qpm.img$(HD512PREFIX)
+OBJECTS += $(HD512IMGS) hd512_combo.img  hd512_dos65.img hd512_qpm.img $(HD512PREFIX)
 OBJECTS += $(HD1KIMGS) hd1k_combo.img hd1k_qpm.img $(HD1KPREFIX)
 
 OTHERS = blank144 blankhd512 blankhd1k
@@ -61,7 +64,7 @@ blankhd512:
 	@echo Making Blank HD512 of size $(HD512SIZE)k
 	@LC_ALL=en_US.US-ASCII tr '\000' '\345' </dev/zero | dd of=$@ bs=1024 count=$(HD512SIZE)
 	@hexdump $@
-	
+
 blankhd1k:
 	@echo Making Blank HD1K of size $(HD1KSIZE)k
 	@LC_ALL=en_US.US-ASCII tr '\000' '\345' </dev/zero | dd of=$@ bs=1024 count=$(HD1KSIZE)

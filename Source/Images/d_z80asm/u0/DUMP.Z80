@@ -1,0 +1,154 @@
+	TITLE   'DUMP - Recreated by Z80DIS'
+
+	ORG 0100H
+
+CPM EQU 0005H
+DFCB    EQU 005CH
+FCBEXT  EQU 0065H
+
+DUMP
+	LD  DE,DFCB
+	LD  C,0FH       ;SI
+	CALL    CPM     ;OPENFIL
+	INC A
+	JR  NZ,FILEOK
+	LD  DE,CANTOPE
+	LD  C,09H       ;HT
+	CALL    CPM     ;PRNTSTG
+	RET 
+FILEOK
+	LD  HL,FCBEXT
+	LD  A,(HL)
+	CP  43H     ;'C'
+	JR  NZ,NEXTPAGE
+	INC HL
+	LD  A,(HL)
+	CP  4FH     ;'O'
+	JR  NZ,NEXTPAGE
+	INC HL
+	LD  A,(HL)
+	CP  4DH     ;'M'
+	JR  NZ,NEXTPAGE
+	LD  HL,DUMP
+	LD  (ADDR),HL
+NEXTPAGE
+	LD  E,0CH       ;FF
+	LD  C,02H       ;STX
+	CALL    CPM     ;CONOUT
+	LD  A,08H       ;BS
+	LD  (PAGECNT),A
+NEXTSECT
+	LD  DE,DFCB
+	LD  C,14H       ;DC4
+	CALL    CPM     ;READSEQ
+	OR  A
+	RET NZ
+	LD  A,08H       ;BS
+	LD  (LINECNT),A
+	LD  HL,0080H
+	LD  (ADDR1),HL
+NXTLINE
+	LD  C,0BH       ;VT
+	CALL    CPM     ;CONSTAT
+	OR  A
+	RET NZ
+	LD  HL,OUTBUF
+	LD  (HL),0DH    ;CR
+	INC HL
+	LD  (HL),0AH    ;LF
+	INC HL
+	LD  DE,(ADDR)
+	LD  A,D
+	CALL    HEXOUT
+	LD  A,E
+	CALL    HEXOUT
+	LD  (HL),20H    ;' '
+	INC HL
+	EX  DE,HL
+	LD  BC,0010H
+	ADD HL,BC
+	LD  (ADDR),HL
+	EX  DE,HL
+	LD  DE,(ADDR1)
+	LD  B,10H       ;DLE
+NXTBYTE
+	LD  A,(DE)
+	INC DE
+	CALL    HEXOUT
+	LD  (HL),20H    ;' '
+	INC HL
+	DJNZ    NXTBYTE
+	LD  (HL),20H    ;' '
+	INC HL
+	LD  (HL),24H    ;'$'
+	LD  DE,OUTBUF
+	LD  C,09H       ;HT
+	CALL    CPM     ;PRNTSTG
+	LD  HL,(ADDR1)
+	LD  B,10H       ;DLE
+NXTASCI
+	LD  A,(HL)
+	INC HL
+	AND 7FH     ;DEL
+	CP  20H     ;' '
+	JR  C,CTRL
+	CP  7FH     ;DEL
+	JR  NZ,NOTCTRL
+CTRL
+	LD  A,2EH       ;'.'
+NOTCTRL
+	LD  E,A
+	LD  C,02H       ;STX
+	PUSH    BC
+	PUSH    HL
+	CALL    CPM     ;CONOUT
+	POP HL
+	POP BC
+	DJNZ    NXTASCI
+	LD  (ADDR1),HL
+	LD  HL,LINECNT
+	DEC (HL)
+	JP  NZ,NXTLINE
+	LD  HL,PAGECNT
+	DEC (HL)
+	JP  NZ,NEXTSECT
+	JP  NEXTPAGE
+HEXOUT
+	PUSH    AF
+	RRA
+	RRA
+	RRA
+	RRA
+	AND 0FH     ;SI
+	ADD A,30H       ;'0'
+	CP  3AH     ;':'
+	JR  C,HEX1
+	ADD A,07H       ;BEL
+HEX1
+	LD  (HL),A
+	INC HL
+	POP AF
+	AND 0FH     ;SI
+	ADD A,30H       ;'0'
+	CP  3AH     ;':'
+	JR  C,HEX2
+	ADD A,07H       ;BEL
+HEX2
+	LD  (HL),A
+	INC HL
+	RET 
+CANTOPE
+	DEFB    43H,61H,6EH,27H,74H,20H     ; Can't 
+	DEFB    4FH,70H,65H,6EH,20H,46H     ; Open F
+	DEFB    69H,6CH,65H,24H         ; ile$
+LINECNT
+	DEFS    0001H
+ADDR
+	DEFS    0002H
+ADDR1
+	DEFS    0002H
+PAGECNT
+	DEFS    0001H
+OUTBUF
+	DEFS    0004H
+	END
