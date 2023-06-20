@@ -88,7 +88,6 @@ by CiderPress.  The script is also capable of re-inserting a modified
 volume back into the disk image file.  This tool is available at:
 https://github.com/robosnacks/psysimg.
 
-
 There is currently no support for floppy drives.
 
 Wayne Warthen

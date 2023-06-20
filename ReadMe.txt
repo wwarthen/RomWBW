@@ -1,6 +1,6 @@
 RomWBW ReadMe
 Wayne Warthen (wwarthen@gmail.com)
-06 Jun 2023
+20 Jun 2023
 
 
 
@@ -184,6 +184,10 @@ let me know if I missed you!
     SN76489 sound driver.
 
 -   The RomWBW Disk Catalog document was produced by Mykl Orders.
+
+-   Rob Prouse has created many of the supplemental disk images
+    including Aztec C, HiTech C, SLR Z80ASM, Turbo Pascal, Microsoft
+    BASIC Compiler, Microsoft Fortran Compiler, and a Games compendium.
 
 Contributions of all kinds to RomWBW are very welcome.
 

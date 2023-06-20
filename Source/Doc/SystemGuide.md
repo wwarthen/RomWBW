@@ -757,28 +757,36 @@ of memory because it avoids a double copy.
 Reports device information about the specified Disk Unit (C).  The 
 Status (A) is a standard HBIOS result code.
 
-Bit 7 of the Device Attribute (C) value returned indicates whether the 
-device is a floppy disk.  If it is a floppy disk, the Device Attribute 
-(C) value is encoded as follows:
+The Device Attribute (C) value returned indicates various
+feature indicators related to the device being referenced
+by the specified Disk Unit (C).  The high 3 bits apply to
+all devices.  The definition of the low 5 bits depends on
+whether the device is a Floppy (indicated by bit 5).
+
+The common bits are:
 
 | **Bits** | **Definition**                                   |
 |---------:|--------------------------------------------------|
-| 7        | = 1 (Floppy Disk)                                |
-| 6-5      | Form Factor: 0=8", 1=5.25", 2=3.5", 3=Other      |
-| 4        | Sides: 0=SS, 1=DS                                |
-| 3-2      | Density: 0=SD, 1=DD, 2=HD, 3=ED                  |
-| 1-0      | Reserved                                         |
-
-If the Disk Unit (C) specified is a not floppy disk, then the Device 
-Attribute (C) encoding is as follows:
-
-| **Bits** | **Definition**                                   |
-|---------:|--------------------------------------------------|
-| 7        | = 0 (not Floppy Disk)                            |
+| 7        | Floppy                                           |
 | 6        | Removable                                        |
-| 5-3      | Type: 0=Hard, 1=CF, 2=SD, 3=USB,                 |
-|          | 4=ROM, 5=RAM, 6=RAMF, 7=FLASH                    |
-| 2-0      | Reserved                                         |
+| 5        | High Capacity (>8 MB)                            |
+
+The Floppy specific bits are:
+
+| **Bits** | **Definition**                                   |
+|---------:|--------------------------------------------------|
+| 4-3      | Form Factor: 0=8", 1=5.25", 2=3.5", 3=Other      |
+| 2        | Sides: 0=SS, 1=DS                                |
+| 1-0      | Density: 0=SD, 1=DD, 2=HD, 3=ED                  |
+
+The non-Floppy specific bits are:
+
+| **Bits** | **Definition**                                   |
+|---------:|--------------------------------------------------|
+| 4        | LBA Capable                                      |
+| 3-0      | Media Type: 0=Hard Disk, 1=CF, 2=SD, 3=USB,      |
+|          |   4=ROM, 5=RAM, 6=RAMF, 7=FLASH, 8=CD-ROM,       |
+|          |   9=Cartridge                                    |
 
 Device Type (D) indicates the specific hardware driver that handles the 
 specified Disk Unit (C).  Values are listed at the start of this 

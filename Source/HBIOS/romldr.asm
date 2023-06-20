@@ -450,10 +450,9 @@ fp_hdboot1:
 	push	bc			; save loop control
 	ld	b,BF_DIODEVICE		; HBIOS Disk Device func
 	rst	08			; unit in C, do it
+	bit	5,C			; high capacity disk?
 	pop	bc			; restore loop control
-	ld	a,d			; device type to A
-	cp	DIODEV_IDE		; type IDE or greater is HD
-	jr	c,fp_hdboot2		; if not, continue loop
+	jr	z,fp_hdboot2		; if not, continue loop
 	push	bc			; save loop control
 	ld	b,BF_DIOMEDIA		; HBIOS Sense Media
 	ld	e,1			; perform media discovery
@@ -488,11 +487,10 @@ fp_flopboot1:
 	push	de			; save floppy down ctr
 	ld	b,BF_DIODEVICE		; HBIOS Disk Device func
 	rst	08			; unit in C, do it
-	ld	a,d			; device type to A
+	bit	7,c			; floppy device?
 	pop	de			; restore loop control
 	pop	bc			; restore floppy down ctr
-	cp	DIODEV_FD		; type FD?
-	jr	nz,fp_flopboot3		; if not floppy, skip
+	jr	z,fp_flopboot3		; if not floppy, skip
 	dec	e			; decrement down ctr
 	jr	z,fp_flopboot2		; if ctr expired, boot this unit
 fp_flopboot3:
@@ -1017,6 +1015,18 @@ diskboot:
 	cp	e			; compare to count
 	jp	nc,err_nodisk		; handle no disk err
 ;
+	; If non-zero slice requested, confirm device can handle it
+	ld	a,(bootslice)		; get slice
+	or	a			; set flags
+	jr	z,diskboot0		; slice 0, skip slice check
+	ld	a,(bootunit)		; get disk unit
+	ld	c,a			; put in C for func call
+	ld	b,BF_DIODEVICE		; HBIOS func: device info
+	rst	08			; do it
+	bit	5,c			; high capacity device?
+	jp	z,err_noslice		; no such slice, handle err
+;
+diskboot0:
 	; Sense media
 	ld	a,(bootunit)		; get boot disk unit
 	ld	c,a			; put in C for func call
@@ -1026,18 +1036,6 @@ diskboot:
 	jp	nz,err_diskio		; handle error
 	ld	a,e			; media id to A
 	ld	(mediaid),a		; save media id
-;
-	; If non-zero slice requested, confirm device can handle it
-	ld	a,(bootslice)		; get slice
-	or	a			; set flags
-	jr	z,diskboot1		; slice 0, skip slice check
-	ld	a,(bootunit)		; get disk unit
-	ld	c,a			; put in C for func call
-	ld	b,BF_DIODEVICE		; HBIOS func: device info
-	rst	08			; do it
-	ld	a,d			; device type to A
-	cp	DIODEV_IDE		; IDE is max slice device type
-	jp	c,err_noslice		; no such slice, handle err
 ;
 #endif
 ;

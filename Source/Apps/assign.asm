@@ -30,11 +30,11 @@
 ;   2021-12-06 [WBW] Fix inverted ROM/RAM DPB mapping in buffer alloc
 ;   2022-02-28 [WBW] Use HBIOS to swap banks under CP/M 3
 ;                    Use CPM3 BDOS direct BIOS call to get DRVTBL adr
+;   2023-06-19 [WBW] Update for revised DIODEVICE API
 ;_______________________________________________________________________________
 ;
 ; ToDo:
-;  1) Do something to prevent assigning slices when device does not support them
-;  2) ASSIGN C: causes drive map to be reinstalled unnecessarily
+;  1) ASSIGN C: causes drive map to be reinstalled unnecessarily
 ;_______________________________________________________________________________
 ;
 ;===============================================================================
@@ -1405,12 +1405,11 @@ chkdev:		; HBIOS variant
 	; get device/unit info
 	ld	b,$17		; hbios func: diodevice
 	ld	c,a		; unit to C
-	rst	08		; call hbios, D := device, E := unit
-	ld	a,d		; device to A
+	rst	08		; call hbios, C := device attributes
 ;
 	; check slice support
-	cp	$30		; A has device/unit, in hard disk range?
-	jr	c,chkdev1	; if not hard disk, check slice val
+	bit	5,c		; high capacity device?
+	jr	z,chkdev1	; if not high cap, check slice val
 	xor	a		; otherwise, signal OK
 	ret
 ;
@@ -1943,10 +1942,10 @@ stack	.equ	$		; stack top
 ; Messages
 ;
 indent	.db	"   ",0
-msgban1	.db	"ASSIGN v1.5 for RomWBW CP/M ",0
+msgban1	.db	"ASSIGN v1.6 for RomWBW CP/M ",0
 msg22	.db	"2.2",0
 msg3	.db	"3",0
-msbban2	.db	", 28-Feb-2022",0
+msbban2	.db	", 16-Jun-2023",0
 msghb	.db	" (HBIOS Mode)",0
 msgub	.db	" (UBIOS Mode)",0
 msgban3	.db	"Copyright 2021, Wayne Warthen, GNU GPL v3",0

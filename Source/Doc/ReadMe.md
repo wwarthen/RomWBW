@@ -172,6 +172,11 @@ please let me know if I missed you!
 
 * The RomWBW Disk Catalog document was produced by Mykl Orders.
 
+* Rob Prouse has created many of the supplemental disk images
+  including Aztec C, HiTech C, SLR Z80ASM, Turbo Pascal, Microsoft
+  BASIC Compiler, Microsoft Fortran Compiler, and a Games
+  compendium.
+
 Contributions of all kinds to RomWBW are very welcome.
 
 # Licensing

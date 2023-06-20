@@ -2213,18 +2213,23 @@ file which is bootable.
   output will be garbled if no such terminal or emulator
   is used for console output.
 
-* There is no straightforward mechanism to move files in
+* There is no built-in mechanism to move files in
   and out of p-System.  However, the .vol files in Source/pSys
   can be read and modified by CiderPress.  CiderPress is able
   to add and remove individual files.
+
+  Andrew Davidson has created a Python script that can extract p-System 
+  volumes from an existing disk image file.  The script is also capable
+  of inserting a modified volume back into the disk image file.
+  This tool is available at
+  <https://github.com/robosnacks/psysimg>.
 
 ## FreeRTOS
 
 Phillip Stevens has ported FreeRTOS to run under RomWBW. FreeRTOS is
 not provided in the RomWBW distribution. FreeRTOS is available under
-the
-[MIT licence](https://www.freertos.org/a00114.html) and further general
-information is available at
+the [MIT licence](https://www.freertos.org/a00114.html)
+and further general information is available at
 [FreeRTOS](https://www.freertos.org/RTOS.html).
 
 You can also contact Phillip for detailed information on the Z180
@@ -3152,6 +3157,46 @@ directed to complete a partial flash using the /P command line switch.
 
 `E>FLASH WRITE ROM.UPD /P`
 
+# Related Projects
+
+Outside of the hardware platforms adapted to RomWBW, there are a variety 
+of software projects that either target RomWBW specifically or provide
+a RomWBW-specific variation.
+
+## Z88DK
+
+Z88DK is a software powerful development kit for Z80 computers
+supporting both C and assembly language.  This kit now provides
+specific library support for RomWBW HBIOS.  The Z88DK project is
+hosted at <https://github.com/z88dk/z88dk>.
+
+## Paleo Editor
+
+Steve Garcia has created a Windows-hosted IDE that is tailored to
+development of RomWBW.  The project can be found at
+<https://github.com/alloidian/PaleoEditor>.
+
+## p-System Volume Management Script
+
+Andrew Davidson has created a Python script to automate the insertion
+and deletion of volumes within the p-System disk image.  These scripts
+are hosted at <https://github.com/robosnacks/psysimg>.
+
+## Z80 fig-FORTH
+
+Dimitri Theulings' implementation of fig-FORTH for the Z80 has a
+RomWBW-specific variant.  This fig-FORTH is built into the RomWBW
+ROM.  However, the project itself is hosted at
+<https://github.com/dimitrit/figforth>.
+
+## RomWBW Date/Time Utility
+
+Kevin Boone has created a generic application that will display or
+set the date/time of an RTC on RomWBW.  The application runs on all of
+the CP/M OS variants.  This tool (`WDATE`) is included on the RomWBW
+OS disk images.  The project is hosted at
+<https://github.com/kevinboone/wdate-cpm>.
+
 # Acknowledgments
 
 I want to acknowledge that a great deal of the code and inspiration
@@ -3216,6 +3261,11 @@ please let me know if I missed you!
   the SN76489 sound driver.
 
 * The RomWBW Disk Catalog document was produced by Mykl Orders.
+
+* Rob Prouse has created many of the supplemental disk images
+  including Aztec C, HiTech C, SLR Z80ASM, Turbo Pascal, Microsoft
+  BASIC Compiler, Microsoft Fortran Compiler, and a Games
+  compendium.
 
 Contributions of all kinds to RomWBW are very welcome.
 
