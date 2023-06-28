@@ -63,7 +63,6 @@
 ;  - decode.asm
 ;  - encode.asm
 ;  - [xio|mio].asm
-;  - [dsky.asm|dskyng.asm]
 ;  - unlzsa2s.asm
 ;
 ; INCLUDE GENERIC STUFF
@@ -1878,6 +1877,35 @@ HB_CPU1:
 	CALL	DSRTC_PREINIT
 #ENDIF
 ;
+#IF (DSKYENABLE)
+  #IF (ICMENABLE)
+	CALL	ICM_PREINIT
+  #ENDIF
+#ENDIF
+;
+#IF (DSKYENABLE)
+  #IF (PKDENABLE)
+	CALL	PKD_PREINIT
+  #ENDIF
+#ENDIF
+;
+#IF (DSKYENABLE)
+	LD	HL,MSG_HBVER +  5
+	LD	A,(DSKY_HEXMAP + RMJ)
+	OR	$80
+	LD	(HL),A
+	INC	HL
+	LD	A,(DSKY_HEXMAP + RMN)
+	OR	$80
+	LD	(HL),A
+	INC	HL
+	LD	A,(DSKY_HEXMAP + RUP)
+	LD	(HL),A
+	LD	HL,MSG_HBVER
+	LD	B,BF_DSKYSHOWSEG
+	CALL	DSKY_DISPATCH
+#ENDIF
+;
 #IF (SKZENABLE)
 ;
 	; SET THE SK Z80-512K UART CLK2 DIVIDER AS
@@ -2210,22 +2238,6 @@ NOT_REC_M0:
 ;
 #ENDIF
 	CALL	CALLLIST							; PROCESS THE PRE-INIT CALL TABLE
-;
-#IF (DSKYENABLE)
-	LD	HL,MSG_HBVER +  5
-	LD	A,(DSKY_HEXMAP + RMJ)
-	OR	$80
-	LD	(HL),A
-	INC	HL
-	LD	A,(DSKY_HEXMAP + RMN)
-	OR	$80
-	LD	(HL),A
-	INC	HL
-	LD	A,(DSKY_HEXMAP + RUP)
-	LD	(HL),A
-	LD	HL,MSG_HBVER
-	CALL	DSKY_SHOW
-#ENDIF
 ;
 #IF FALSE
 ;
@@ -3078,9 +3090,6 @@ HB_INITRLEN	.EQU	(($ - HB_INIT_REC) / 2)
 ;==================================================================================================
 ;
 HB_PCINITTBL:
-#IF (DSKYENABLE)
-	.DW	DSKY_PREINIT
-#ENDIF
 #IF (ASCIENABLE)
 	.DW	ASCI_PREINIT
 #ENDIF
@@ -3128,7 +3137,14 @@ HB_INITTBL:
 	.DW	CTC_INIT
 #ENDIF
 #IF (DSKYENABLE)
-	.DW	DSKY_INIT
+  #IF (ICMENABLE)
+	.DW	ICM_INIT
+  #ENDIF
+#ENDIF
+#IF (DSKYENABLE)
+  #IF (PKDENABLE)
+	.DW	PKD_INIT
+  #ENDIF
 #ENDIF
 #IF (AY38910ENABLE)
 	.DW	AY38910_INIT		; AUDIBLE INDICATOR OF BOOT START
@@ -3212,9 +3228,6 @@ HB_INITTBL:
 #IF (VRCENABLE)
 	.DW	VRC_INIT
 #ENDIF
-;#IF (DSKYENABLE)
-;	.DW	DSKY_INIT
-;#ENDIF
 #IF (DMAENABLE)
 	.DW	DMA_INIT
 #ENDIF
@@ -3322,8 +3335,8 @@ HB_DISPATCH1:
 	JP	C,DIO_DISPATCH
 	CP	BF_RTC + $10		; $20-$2F: REAL TIME CLOCK (RTC)
 	JP	C,RTC_DISPATCH
-	CP	BF_EMU + $10		; $30-$3F: EMULATION
-	JR	C,HB_DISPERR
+	CP	BF_DSKY + $10		; $30-$3F: DSKY
+	JP	C,DSKY_DISPATCH
 	CP	BF_VDA + $10		; $40-$4F: VIDEO DISPLAY ADAPTER
 	JP	C,VDA_DISPATCH
 	CP	BF_SND + $08		; $50-$58: SOUND DRIVERS
@@ -3691,6 +3704,7 @@ HB_DSKUNIT	.DB	0		; CURRENT DISK UNIT
 HB_DSKFUNC	.DB	0		; CURRENT DISK FUNCTION
 ;
 #IF (DSKYENABLE)
+  #IF (DSKYDSKACT)
 ;
 ;==================================================================================================
 ;   DSKY DISK ACTIVITY MONITOR
@@ -3740,7 +3754,8 @@ HB_DSKACT2:
 	LD	(DSKY_BUF+7),A		; SAVE IT
 HB_DSKACT3:
 	EX	DE,HL			; SEG DISPLAY BUF TO HL
-	CALL	DSKY_SHOW		; DISPLAY ON DSKY
+	LD	B,BF_DSKYSHOWSEG
+	CALL	DSKY_DISPATCH
 	POP	HL
 	POP	DE
 	POP	BC
@@ -3780,6 +3795,7 @@ HB_DSKACTCHS:
 	LD	(DE),A			; ADD TO BUF
 	JR	HB_DSKACT2
 ;
+  #ENDIF
 #ENDIF
 ;
 ;==================================================================================================
@@ -3813,6 +3829,38 @@ RTC_SETDISP:
 ;
 RTC_DISPADR	.DW	RTC_DISPERR	; RTC DISPATCH ADDRESS
 RTC_DISPACT	.DB	0		; SET WHEN DISPADR SET
+;
+;==================================================================================================
+;   DSKY DEVICE DISPATCHER
+;==================================================================================================
+;
+; ROUTE CALL TO DSKY DRIVER
+;   B: FUNCTION
+;
+DSKY_DISPATCH:
+	PUSH	HL			; SAVE INCOMING HL
+	LD	HL,(DSKY_DISPADR)	;
+	EX	(SP),HL
+	RET
+;
+DSKY_DISPERR:
+	SYSCHKERR(ERR_NOHW)
+	RET
+;
+; SET DSKY DISPATCH ADDRESS, USED BY DSKY DRIVERS DURING INIT
+; BC HAS ADDRESS OF DISPATCH ADDRESS
+; WILL ONLY SAVE THE FIRST ADDRESS SET
+;
+DSKY_SETDISP:
+	LD	(DSKY_DISPADR),BC	; SAVE THE ADDRESS
+	OR	$FF			; FLAG ACTIVE VALUE
+	LD	(DSKY_DISPACT),A	; SAVE IT
+	RET				; AND DONE
+;
+;
+;
+DSKY_DISPADR	.DW	DSKY_DISPERR	; DSKY DISPATCH ADDRESS
+DSKY_DISPACT	.DB	0		; SET WHEN DISPADR SET
 ;
 ;==================================================================================================
 ;   VIDEO DISPLAY ADAPTER DEVICE DISPATCHER
@@ -4216,6 +4264,8 @@ SYS_GET:
 	JP	Z,SYS_GETDIOFN
 	CP	BF_SYSGET_RTCCNT
 	JP	Z,SYS_GETRTCCNT
+	CP	BF_SYSGET_DSKYCNT
+	JP	Z,SYS_GETDSKYCNT
 	CP	BF_SYSGET_VDACNT
 	JP	Z,SYS_GETVDACNT
 	CP	BF_SYSGET_VDAFN
@@ -4300,6 +4350,18 @@ SYS_GETRTCCNT:
 	JR	Z,SYS_GETRTCCNT1	; IF NONE, DONE
 	INC	E			; SET ONE DEVICE
 SYS_GETRTCCNT1:
+	XOR	A			; SIGNALS SUCCESS
+	RET
+;
+; GET DSKY UNIT COUNT
+;
+SYS_GETDSKYCNT:
+	LD	E,0			; ASSUME 0 RTC DEVICES
+	LD	A,(DSKY_DISPACT)	; IS DSKY ACTIVE?
+	OR	A			; SET FLAGS
+	JR	Z,SYS_GETDSKYCNT1	; IF NONE, DONE
+	INC	E			; SET ONE DEVICE
+SYS_GETDSKYCNT1:
 	XOR	A			; SIGNALS SUCCESS
 	RET
 ;
@@ -5066,6 +5128,50 @@ HB_ADDIM1:
 HB_IM1CNT	.DB	0		; NUMBER OF ENTRIES IN CALL LIST
 HB_IM1MAX	.DB	8		; MAX ENTRIES IN CALL LIST
 HB_IM1PTR	.DW	HB_IVT		; POINTER FOR NEXT IM1 ENTRY
+;
+#ENDIF
+;
+#IF (DSKYENABLE)
+;
+;==================================================================================================
+; CONVERT 32 BIT BINARY TO 8 BYTE HEX SEGMENT DISPLAY
+;==================================================================================================
+;
+; HL: ADR OF 32 BIT BINARY
+; DE: ADR OF DEST LED SEGMENT DISPLAY BUFFER (8 BYTES)
+;
+DSKY_BIN2SEG:
+	PUSH	HL
+	PUSH	DE
+	LD	B,4			; 4 BYTES OF INPUT
+	EX	DE,HL
+DSKY_BIN2SEG1:
+	LD	A,(DE)			; FIRST NIBBLE
+	SRL	A
+	SRL	A
+	SRL	A
+	SRL	A
+	PUSH	HL
+	LD	HL,DSKY_HEXMAP
+	CALL	ADDHLA
+	LD	A,(HL)
+	POP	HL
+	LD	(HL),A
+	INC	HL
+	LD	A,(DE)			; SECOND NIBBLE
+	AND	0FH
+	PUSH	HL
+	LD	HL,DSKY_HEXMAP
+	CALL	ADDHLA
+	LD	A,(HL)
+	POP	HL
+	LD	(HL),A
+	INC	HL
+	INC	DE			; NEXT BYTE
+	DJNZ	DSKY_BIN2SEG1
+	POP	DE
+	POP	HL
+	RET
 ;
 #ENDIF
 ;
@@ -5966,6 +6072,28 @@ Z280_SYSCALL_GO:
 ;   DEVICE DRIVERS
 ;==================================================================================================
 ;
+#IF (DSKYENABLE)
+  #IF (ICMENABLE)
+ORG_ICM	.EQU	$
+  #INCLUDE "icm.asm"
+SIZ_ICM	.EQU	$ - ORG_ICM
+		.ECHO	"ICM occupies "
+		.ECHO	SIZ_ICM
+		.ECHO	" bytes.\n"
+  #ENDIF
+#ENDIF
+;
+#IF (DSKYENABLE)
+  #IF (PKDENABLE)
+ORG_PKD	.EQU	$
+  #INCLUDE "pkd.asm"
+SIZ_PKD	.EQU	$ - ORG_PKD
+		.ECHO	"PKD occupies "
+		.ECHO	SIZ_PKD
+		.ECHO	" bytes.\n"
+  #ENDIF
+#ENDIF
+;
 #IF (DSRTCENABLE)
 ORG_DSRTC	.EQU	$
   #INCLUDE "dsrtc.asm"
@@ -6459,16 +6587,6 @@ SIZ_YM2612	.EQU	$ - ORG_YM2612
 #ENDIF
 #IF (WBWDEBUG == USEMIO)
 #INCLUDE "mio.asm"
-#ENDIF
-;
-#IF (DSKYENABLE)
-#DEFINE	DSKY_KBD
-  #IF (DSKYMODE == DSKYMODE_V1)
-#INCLUDE "dsky.asm"
-  #ENDIF
-  #IF (DSKYMODE == DSKYMODE_NG)
-#INCLUDE "dskyng.asm"
-  #ENDIF
 #ENDIF
 ;
 ; INCLUDE LZSA2 decompression engine if required.
@@ -7560,12 +7678,7 @@ STR_CONTINUE	.TEXT	"\r\nContinue (Y/N)? $"
 STR_RESTART	.TEXT	"\r\n\r\n>>> Press hardware reset button to restart system\r\n\r\n$"
 ;
 #IF (DSKYENABLE)	;	'H','B','I','O',' ',' ',' ',' '
-  #IF (DSKYMODE == DSKYMODE_V1)
-MSG_HBVER		.DB	$3E,$7F,$0A,$7B,$00,$00,$00,$00	; "HBIO    "
-  #ENDIF
-  #IF (DSKYMODE == DSKYMODE_NG)
 MSG_HBVER		.DB	$76,$7F,$30,$3F,$00,$00,$00,$00	; "HBIO    "
-  #ENDIF
 #ENDIF
 ;
 HB_APPBNK	.DB	0		; START BANK WHEN RUN IN APP MODE
@@ -7625,6 +7738,41 @@ MG014_STATMAPHI:
 	.DB	$F0	; 0D
 	.DB	$30	; 0E
 	.DB	$70	; 0F
+;
+#ENDIF
+;
+#IF (DSKYENABLE)
+;
+;==================================================================================================
+; STORAGE
+;==================================================================================================
+;
+; CODES FOR NUMERICS
+; HIGH BIT ALWAYS CLEAR TO SUPPRESS DECIMAL POINT
+; SET HIGH BIT TO SHOW DECIMAL POINT
+;
+DSKY_HEXMAP:
+	.DB	$3F	; 0
+	.DB	$06	; 1
+	.DB	$5B	; 2
+	.DB	$4F	; 3
+	.DB	$66	; 4
+	.DB	$6D	; 5
+	.DB	$7D	; 6
+	.DB	$07	; 7
+	.DB	$7F	; 8
+	.DB	$67	; 9
+	.DB	$77	; A
+	.DB	$7C	; B
+	.DB	$39	; C
+	.DB	$5E	; D
+	.DB	$79	; E
+	.DB	$71	; F
+;
+DSKY_BUF	.FILL	8,0
+DSKY_BUFLEN	.EQU	$ - DSKY_BUF
+DSKY_HEXBUF	.FILL	4,0
+DSKY_HEXBUFLEN	.EQU	$ - DSKY_HEXBUF
 ;
 #ENDIF
 ;

@@ -1009,6 +1009,198 @@ used.
 
 `\clearpage`{=latex}
 
+## Display Keypad (DSKY)
+
+The Display Keypad functions provide read/write access to a segment
+style display and associated hex keypad.
+
+HBIOS only supports a single DSKY device since there is no reason to have
+more than one at a time.  The DSKY unit is assigned a Device Type ID 
+which indicates the specific hardware device driver that handles the 
+unit.  The table below enumerates these values.
+
+| **Device Type** | **ID** | **Description**                          | **Driver** |
+|-----------------|-------:|------------------------------------------|------------|
+| DSKYDEV_ICM     | 0x00   | Original ICM7218 based DSKY              | icm.asm    |
+| DSKYDEV_PKD     | 0x10   | Next Gen Intel P8279 based DSKY          | pkd.asm    |
+
+When segment display function encodes the display data in a byte per
+character format.  Currently, all segment displays are exactly
+8 charadcters and this is assumed in API calls.  The encoding of each
+byte is as shown below:
+
+```
+  +---01---+
+  |        |
+  20      02
+  |        |
+  +---40---+
+  |        |
+  10      04
+  |        |
+  +---08---+  80
+```
+
+The keypad keys are identified by the following key ids.  Not all
+keypads will contain all keys.
+
+| **Key Id** | **Key Definition** | **Key Id** | **Key Definition** |
+|------------|--------------------|------------|--------------------|
+| $00        | Hex Numeric 0      | $10        | Forward            |
+| $01        | Hex Numeric 1      | $11        | Backward           |
+| $02        | Hex Numeric 2      | $12        | Clear              |
+| $03        | Hex Numeric 3      | $13        | Enter              |
+| $04        | Hex Numeric 4      | $14        | Deposit            |
+| $05        | Hex Numeric 5      | $15        | Examine            |
+| $06        | Hex Numeric 6      | $16        | Go                 |
+| $07        | Hex Numeric 7      | $17        | Boot               |
+| $08        | Hex Numeric 8      | $18        | F4                 |
+| $09        | Hex Numeric 9      | $19        | F3                 |
+| $0A        | Hex Numeric A      | $1A        | F2                 |
+| $0B        | Hex Numeric B      | $1B        | F1                 |
+| $0C        | Hex Numeric C      |            |                    |
+| $0D        | Hex Numeric D      |            |                    |
+| $0E        | Hex Numeric E      |            |                    |
+| $0F        | Hex Numeric F      |            |                    |
+
+### Function 0x30 -- DSKY Reset (DSKYRESET)
+
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x30                                | A: Status                              |
+
+This function performs a device dependent reset operation on the DSKY.
+The display will be cleared, keyboard queue will be flushed, and
+chip will be reinitialized.  The returned Status (A) is a standard 
+HBIOS result code.
+
+### Function 0x31 -- DSKY (DSKYSTATUS)
+
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x31                                | A: Status / Characters Pending         |
+
+Return the count of Characters Pending (A) in the input buffer of the 
+DSKY.  If the unit has no input buffer or the 
+buffer utilization is not available, the function may return simply 0 or
+1 where 0 means there is no character available and 1 means there is at
+least one character available.
+
+The value returned in register A is used as both a Status (A) code and 
+the return value. Negative values (bit 7 set) indicate a standard HBIOS 
+result (error) code.  Otherwise, the return value represents the number 
+of characters in the buffer.
+
+### Function 0x32 -- DSKY Get Key (DSKYGETKEY)
+
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x32                                | A: Status                              |
+|                                        | E: Character Value                     |
+
+Read and return a Character (E) from the DSKY.
+If no character(s) are available in the unit's input buffer, this 
+function will wait indefinitely.  The returned Status (A) is a standard 
+HBIOS result code.
+
+The Character Value (E) returned is not ASCII.  It is a keypad key
+id.  The possible id values are listed at the start of this section.
+
+### Function 0x33 -- DSKY Show HEX (RTCSHOWHEX)
+
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x33                                | A: Status                              |
+| DE:HL=Binary Value                     |                                        |
+
+Display the 32-bit binary value (DE:HL) in hex on the DSKY segment
+display.  All decimal points of the display will be off.
+The Status (A) is a standard HBIOS result code.
+
+### Function 0x34 -- DSKY Show Segments (DSKYSHOWSEG)
+
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x34                                | A: Status                              |
+| HL: Buffer Address                     |                                        |
+
+Display the segment-encoded values on the segment display.  The encoding
+is defined at the start of this section.  The entire displa is updated
+and it is assumed that an 8 character buffer will be pointed to by HL.
+The buffer must reside in high memory.
+The Status (A) is a standard HBIOS result code.
+
+### Function 0x35 -- DSKY Keypad LEDs (DSKYKEYLEDS)
+
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x35                                | A: Status                              |
+| HL: Buffer Address                     |                                        |
+
+Light the LEDs for the keypad keys according to the
+bitmap contained in the buffer pointed to by HL.  The buffer
+must be located in high memory and is assumed to be 8 bytes.
+
+At this time, the bitmap is specific to the PKD hardware.
+This function is ignored by the ICM hardware.
+The Status (A) is a standard HBIOS result code.
+
+### Function 0x36 -- DSKY Status LED (DSKYSTATLED)
+
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x36                                | A: Status                              |
+| D: LED Number                          |                                        |
+| E: LED State                           |                                        |
+
+Set or clear the status LED specified in D.  The state of
+the LED is contained in E.  If E=0, the LED will be turned
+off.  If E=1, the LED will be turned on.
+
+This function is specific to the PKD hardware.  It will be ignored
+by the ICM hardware.
+The Status (A) is a standard HBIOS result code.
+
+### Function 0x37 -- DSKY Beep (DSKYBEEP)
+
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x37                                | A: Status                              |
+
+Beep the onboard speaker of the DSKY.
+This function is specific to the PKD hardware.  It will be ignored
+by the ICM hardware.
+The Status (A) is a standard HBIOS result code.
+
+### Function 0x38 -- DSKY Device (DSKYDEVICE)
+
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x38                                | A: Status                              |
+|                                        | C: Device Attributes                   |
+|                                        | D: Device Type                         |
+|                                        | E: Device Number                       |
+|                                        | H: Device Unit Mode                    |
+|                                        | L: Device I/O Base Address             |
+
+Returns device information for the DSKY unit.  The Status (A) is a 
+standard HBIOS result code.
+
+Device Attribute (C) values are not yet defined.  Device Type (D) 
+indicates the specific hardware driver that handles the specified 
+character unit.  Values are listed at the start of this section. Device 
+Number (E) indicates the physical device number assigned per driver 
+which is always 0 for DSKY.
+
+Device Mode (H) is used to indicate the variant of the chip or circuit 
+that is used by the specified unit.  The Device I/O Base Address (L) 
+indicates the starting port address of the hardware interface that is 
+servicing the specified unit.  Both of these values are considered 
+driver specific.  Refer to the associated hardware driver for the values
+used.
+
+`\clearpage`{=latex}
+
 ## Video Display Adapter (VDA)
 
 The VDA functions are provided as a common interface to Video Display

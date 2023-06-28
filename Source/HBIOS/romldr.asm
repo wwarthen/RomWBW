@@ -171,6 +171,16 @@ start1:
 	ei
 #endif
 ;
+#if (BIOS == BIOS_WBW)
+	; Check for DSKY and set flag
+	ld	b,BF_SYSGET		; HBIOS func: get
+	ld	c,BF_SYSGET_DSKYCNT	; get DSKY count
+	rst	08			; do it
+	ld	a,e			; put in A
+	ld	(dskyact),a		; save it
+#endif
+
+;
 ;=======================================================================
 ; Loader prompt
 ;=======================================================================
@@ -231,18 +241,11 @@ prompt:
 	call	clrbuf			; zero fill the cmd buffer
 ;
 #if (DSKYENABLE)
-	call	DSKY_PREINIT		; *** TEMPORARY ***
-	call	DSKY_RESET		; clear DSKY
 	ld	hl,msg_sel		; boot select msg
-	call	DSKY_SHOW		; show on DSKY
-
- #if (DSKYMODE == DSKYMODE_NG)
-	call 	DSKY_PUTLED
-	.db 	$3f,$3f,$3f,$3f,$00,$00,$00,$00
-	call 	DSKY_BEEP
-	call 	DSKY_L2ON
- #endif
-
+	call	dsky_show		; show on DSKY
+	call	dsky_highlightallkeys
+	call 	dsky_beep
+	call 	dsky_l2on
 #endif
 ;
 wtkey:
@@ -251,8 +254,7 @@ wtkey:
 	jr	nz,concmd		; if pending, do console command
 ;
 #if (DSKYENABLE)
-	call	DSKY_STAT		; check DSKY for keypress
-	or	a			; set flags
+	call	dsky_stat		; check DSKY for keypress
 	jp	nz,dskycmd		; if pending, do DSKY command
 #endif
 ;
@@ -295,11 +297,8 @@ concmd:
 	call	clrled			; clear LEDs
 ;
 #if (DSKYENABLE)
-  #if (DSKYMODE == DSKYMODE_NG)
-	call 	DSKY_PUTLED
-	.db 	$00,$00,$00,$00,$00,$00,$00,$00
-	call 	DSKY_L2OFF
-  #endif
+	call	dsky_highlightkeysoff
+	call 	dsky_l2off
 #endif
 ;
 	; Get a command line from console and handle it
@@ -516,15 +515,15 @@ fp_flopboot2:
 dskycmd:
 	call	clrled			; clear LEDs
 ;
-	call	DSKY_GETKEY		; get DSKY key
+	call	dsky_getkey		; get DSKY key
+	ld	a,e			; put in A
 	cp	$FF			; check for error
 	ret	z			; abort if so
 ;
-  #if (DSKYMODE == DSKYMODE_NG)
-	call 	DSKY_PUTLED
-	.db 	$00,$00,$00,$00,$00,$00,$00,$00
-	call 	DSKY_L2OFF
-  #endif
+	push	af
+	call	dsky_highlightkeysoff
+	call 	dsky_l2off
+	pop	af
 ;
 	; Attempt built-in commands
 	cp	KY_BO			; reboot system
@@ -861,7 +860,7 @@ reboot:
 ;
 #if (DSKYENABLE)
 	ld	hl,msg_boot		; point to boot message
-	call	DSKY_SHOW		; display message
+	call	dsky_show		; display message
 #endif
 ;
 	; cold boot system
@@ -893,7 +892,7 @@ romload:
 ;
 #if (DSKYENABLE)
 	ld	hl,msg_load		; point to load message
-	call	DSKY_SHOW		; display message
+	call	dsky_show		; display message
 #endif
 ;
 #if (BIOS == BIOS_WBW)
@@ -977,7 +976,7 @@ romload1:
 ;
 #if (DSKYENABLE)
 	ld	hl,msg_go		; point to go message
-	call	DSKY_SHOW		; display message
+	call	dsky_show		; display message
 #endif
 ;
 	ld	l,(ix+ra_ent)		; HL := app entry address
@@ -1002,7 +1001,7 @@ diskboot:
 ;
 #if (DSKYENABLE)
 	ld	hl,msg_load		; point to load message
-	call	DSKY_SHOW		; display message
+	call	dsky_show		; display message
 #endif
 ;
 #if (BIOS == BIOS_WBW)
@@ -1286,7 +1285,7 @@ diskboot10:
 ;
 #if (DSKYENABLE)
 	ld	hl,msg_go		; point to go message
-	call	DSKY_SHOW		; display message
+	call	dsky_show		; display message
 #endif
 ;
 	; Jump to entry vector
@@ -2061,6 +2060,60 @@ devunk		.db	"UNK",0
 str_devlst	.db	"\r\n\r\nDisk Devices:",0
 ;
 #endif
+
+#if (DSKYENABLE)
+
+;
+;=======================================================================
+; DSKY interface routines
+;=======================================================================
+;
+dsky_stat:
+	ld	b,BF_DSKYSTAT
+	jr	dsky_hbcall
+;
+dsky_getkey:
+	ld	b,BF_DSKYGETKEY
+	jr	dsky_hbcall
+;
+dsky_show:
+	ld	b,BF_DSKYSHOWSEG
+	jr	dsky_hbcall
+;
+dsky_beep:
+	ld	b,BF_DSKYBEEP
+	jr	dsky_hbcall
+;
+dsky_l2on:
+	ld	e,1
+	jr	dsky_statled
+dsky_l2off:
+	ld	e,0
+dsky_statled:
+	ld	b,BF_DSKYSTATLED
+	ld	d,1
+	jr	dsky_hbcall
+;
+dsky_putled:
+	ld	b,BF_DSKYKEYLEDS
+	jr	dsky_hbcall
+;
+dsky_highlightallkeys:
+	ld	hl,dsky_highlightallkeyleds
+	jr 	dsky_putled
+;
+dsky_highlightkeysoff:
+	ld	hl,dsky_highlightkeyledsoff
+	jr 	dsky_putled
+;
+dsky_hbcall:
+	ld	a,(dskyact)
+	or	a
+	ret	z
+	rst	08
+	ret
+;
+#endif
 ;
 ;=======================================================================
 ; Error handlers
@@ -2116,22 +2169,6 @@ str_err_sig	.db	"No system image on disk",0
 str_err_api	.db	"Unexpected hardware BIOS API failure",0
 ;
 ;=======================================================================
-; Includes
-;=======================================================================
-;
-#if (DSKYENABLE)
-#define	DSKY_KBD
-  #if (DSKYMODE == DSKYMODE_V1)
-VDELAY	.equ	vdelay
-DLY2	.equ	dly2
-#include "dsky.asm"
-  #endif
-  #if (DSKYMODE == DSKYMODE_NG)
-#include "dskyng.asm"
-  #endif
-#endif
-;
-;=======================================================================
 ; Working data storage (initialized)
 ;=======================================================================
 ;
@@ -2179,19 +2216,18 @@ str_help	.db	"\r\n"
 		.db	0
 ;
 #if (DSKYENABLE)
-  #if (DSKYMODE == DSKYMODE_V1)
-msg_sel		.db	$7f,$1d,$1d,$0f,$6c,$00,$00,$00	; "boot?   "
-msg_boot	.db	$7f,$1d,$1d,$0f,$80,$80,$80,$00	; "boot... "
-msg_load	.db	$0b,$1d,$7d,$3d,$80,$80,$80,$00	; "load... "
-msg_go		.db	$5b,$1d,$80,$80,$80,$00,$00,$00	; "go...   "
-  #endif
-  #if (DSKYMODE == DSKYMODE_NG)
 msg_sel		.db	$7f,$5c,$5c,$78,$53,$00,$00,$00	; "boot?   "
 msg_boot	.db	$7f,$5c,$5c,$78,$80,$80,$80,$00	; "boot... "
 msg_load	.db	$38,$5c,$5f,$5e,$80,$80,$80,$00	; "load... "
 msg_go		.db	$3d,$5c,$80,$80,$80,$00,$00,$00	; "go...   "
-  #endif
 #endif
+;
+;=======================================================================
+; DSKY keypad led matrix masks
+;=======================================================================
+;
+dsky_highlightallkeyleds	.db 	$3f,$3f,$3f,$3f,$00,$00,$00,$00
+dsky_highlightkeyledsoff	.db 	$00,$00,$00,$00,$00,$00,$00,$00
 ;
 ;=======================================================================
 ; ROM Application Table
@@ -2342,6 +2378,7 @@ bootslice	.db	0		; boot disk slice
 loadcnt		.db	0		; num disk sectors to load
 switches	.db	0		; front panel switches
 diskcnt		.db	0		; disk unit count value
+dskyact		.db	0		; DSKY active if != 0
 ;
 ;=======================================================================
 ; Pad remainder of ROM Loader

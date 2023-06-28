@@ -3943,7 +3943,6 @@ may be discovered by RomWBW in your system.
 | DMA       | System   | Zilog DMA Controller                                   |
 | DS1307    | RTC      | Maxim DS1307 PCF I2C Real-Time Clock w/ NVRAM          |
 | DS1501RTC | RTC      | Maxim DS1501/DS1511 Watchdog Real-Time Clock           |
-| DSKY      | System   | Keypad & Display                                       |
 | DSRTC     | RTC      | Maxim DS1302 Real-Time Clock w/ NVRAM                  |
 | DUART     | Char     | SCC2681 or compatible Dual UART                        |
 | EMM       | Disk     | Disk drive on Parallel Port emm interface (Zip Drive)  |
@@ -3951,6 +3950,7 @@ may be discovered by RomWBW in your system.
 | GDC       | Video    | uPD7220 Video Display Controller                       |
 | HDSK      | Disk     | SIMH Simulator Hard Disk                               |
 | IDE       | Disk     | IDE/ATA Hard Disk Interface                            |
+| ICM       | DsKy     | ICM7218-based Display/Keypad on PPI                    |
 | IMM       | Disk     | IMM Zip Drive on PPI                                   |
 | INTRTC    | RTC      | Interrupt-based Real Time Clock                        |
 | KBD       | Kbd      | 8242 PS/2 Keyboard Controller                          |
@@ -3960,6 +3960,7 @@ may be discovered by RomWBW in your system.
 | MSXKYB    | Kbd      | MSX Compliant Matrix Keyboard                          |
 | I2C       | System   | I2C Interface                                          |
 | PIO       | Char     | Zilog Parallel Interface Controller                    |
+| PKD       | DsKy     | P8279-based Display/Keypad on PPI                      |
 | PPIDE     | Disk     | 8255 IDE/ATA Hard Disk Interface                       |
 | PPA       | Disk     | PPA Zip Drive on PPI                                   |
 | PPK       | Kbd      | Matrix Keyboard                                        |
