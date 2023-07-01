@@ -47,7 +47,8 @@ cmdbuf	.equ	$80	; cmd buf is in second half of page zero
 cmdmax	.equ	60	; max cmd len (arbitrary), must be < bufsiz
 bufsiz	.equ	$80	; size of cmd buf
 ;
-int_im1	.equ	$FF00	; IM1 vector target for RomWBW HBIOS proxy
+;;int_im1	.equ	$FF00	; IM1 vector target for RomWBW HBIOS proxy
+hbx_int		.equ	$FF60	; IM1 vector target for RomWBW HBIOS proxy
 ;
 bid_cur	.equ	-1	; used below to indicate current bank
 ;
@@ -77,7 +78,8 @@ bid_cur	.equ	-1	; used below to indicate current bank
 	.fill	($38 - $)
 #if (BIOS == BIOS_WBW)
   #if (INTMODE == 1)
-	jp	int_im1			; go to handler in hi mem
+	call	hbx_int			; handle im1 interrupts
+	.db	$10 << 2		; use special vector #16
   #else
 	ret				; return w/ ints left disabled
   #endif

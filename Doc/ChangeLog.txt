@@ -12,6 +12,8 @@ Version 3.3
 - WBW: Support for SyQuest SparQ Drive on PPI interface (much inspiration from Alan Cox)
 - WBW: Support for ATAPI Disk Drives (not CD-ROMs) on IDE and PPIDE interfaces
 - R?P: Added new disk images: Aztec C, MS BASIC Compiler, MS Fortran, Games, HiTech-C, Turbo Pascal, SLR Z80ASM
+- JBL: Added RCZ80 configuration for ColecoVision
+- WBW: Support for Z180 running interrupt mode 1
 
 Version 3.2.1
 -------------
