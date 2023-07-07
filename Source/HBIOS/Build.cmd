@@ -93,7 +93,14 @@ call :asm imgpad2 || exit /b
 
 copy /b romldr.bin + dbgmon.bin + ..\zsdos\zsys_wbw.bin + ..\cpm22\cpm_wbw.bin osimg.bin || exit /b
 copy /b ..\Forth\camel80.bin + nascom.bin + ..\tastybasic\src\tastybasic.bin + game.bin + eastaegg.bin + netboot.mod + updater.bin + usrrom.bin osimg1.bin || exit /b
-copy /b imgpad2.bin osimg2.bin || exit /b
+
+if %Platform%==S100 (
+    zxcc slr180 -s100mon/fh
+    zxcc mload25 -s100mon || exit /b
+    copy /b s100mon.com osimg2.bin || exit /b
+) else (
+    copy /b imgpad2.bin osimg2.bin || exit /b
+)
 
 copy /b romldr.bin + dbgmon.bin + ..\zsdos\zsys_wbw.bin osimg_small.bin || exit /b
 
@@ -224,5 +231,7 @@ call Build DYNO std || exit /b
 call Build UNA std || exit /b
 call Build RPH std || exit /b
 call Build Z80RETRO std || exit /b
+call Build S100 std || exit /b
+call Build DUO std || exit /b
 
 goto :eof

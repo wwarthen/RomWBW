@@ -630,6 +630,9 @@ CFGTBL:	;	PLT	RSEL	RDAT	RIN	Z180	ACR
 	.DB	13,	$A0,	$A1,	$A0,	$FF,	$A2	; MBC
 	.DW	HWSTR_MBC
 ;
+	.DB	17,	$A0,	$A1,	$A0,	$FF,	$A2	; DUODYNE
+	.DW	HWSTR_DUO
+;
 	.DB	$FF					; END OF TABLE MARKER
 ;
 CFG:		; ACTIVE CONFIG VALUES (FROM SELECTED CFGTBL ENTRY)
@@ -682,6 +685,7 @@ HWSTR_RCEB6	.DB	"RCBus Sound Module (EBv6)",0
 HWSTR_RCMF	.DB	"RCBus Sound Module (MF)",0
 HWSTR_LINC	.DB	"Z50 LiNC Sound Module",0
 HWSTR_MBC	.DB	"NHYODYNE Sound Module",0
+HWSTR_DUO	.DB	"DUODYNE Sound Module",0
 
 MSGUNSUP	.db	"MYM files not supported with HBIOS yet!\r\n", 0
 

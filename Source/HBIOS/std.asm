@@ -17,6 +17,8 @@
 ; 13. MBC	Andrew Lynch's Multi Board Computer
 ; 14. RPH	Andrew Lynch's RHYOPHYRE Graphics Computer
 ; 15. Z80RETRO	Peter Wilson's Z80-Retro Computer
+; 16. S100	S100 Computers Z180-based System
+; 17. DUO	Andrew Lynch's Duodyne Computer
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

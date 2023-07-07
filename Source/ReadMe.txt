@@ -142,6 +142,9 @@ to determine the <plt> component of the configuration filename:
 	DYNO		Dyno Z180 Single Board Computer
 	MBC		Andrew Lynch's Nhyodyne Z80 MBC
 	RPH		Andrew Lynch's Rhyophyre Z180 SBC
+	Z80RETRO	Peter Wilson's Z80-Retro Computer
+	S100		S100 Computers Z180-based System
+	DUO		Andrew Lynch's Duodyne Computer
 	UNA		John Coffman's UNA System
 
 Configuration files are found in the Source\HBIOS\Config 

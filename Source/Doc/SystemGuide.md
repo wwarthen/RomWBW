@@ -1952,6 +1952,9 @@ The hardware Platform (L) is identified as follows:
 | PLT_RCZ280    |12      | RCBUS W/ Z280                           |
 | PLT_MBC       |13      | NHYODYNE MULTI-BOARD COMPUTER           |
 | PLT_RPH       |14      | RHYOPHYRE GRAPHICS SBC                  |
+| PLT_Z80RETRO  |15      | Z80 RETRO COMPUTER                      |
+| PLT_S100      |16      | S100 COMPUTERS Z180                     |
+| PLT_DUO       |17      | DUODYNE Z80 SYSTEM                      |
 
 ### Function 0xF2 -- System Set Bank (SYSSETBNK)
 

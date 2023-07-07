@@ -6,7 +6,7 @@ MOREDIFF = game.bin hbios_rom.bin nascom.bin usrrom.bin \
 SUBDIRS =
 DEST = ../../Binary
 TOOLS =../../Tools
-OTHERS =  *.img *.rom *.com *.upd *.bin *.z80 cpm.sys zsys.sys Build.inc font*.asm *.dat hbios_env.sh
+OTHERS =  *.img *.rom *.com *.upd *.bin *.hex cpm.sys zsys.sys Build.inc font*.asm *.dat hbios_env.sh
 
 # DIFFMAKE = 1
 
@@ -58,7 +58,13 @@ $(OBJECTS) : $(ROMDEPS)
 	cat romldr.bin dbgmon.bin ../ZSDOS/zsys_$(BIOS).bin >osimg_small.bin
 	if [ $(ROM_PLATFORM) != UNA ] ; then \
 		cat camel80.bin nascom.bin tastybasic.bin game.bin eastaegg.bin netboot.mod updater.bin usrrom.bin >osimg1.bin ; \
-		cat imgpad2.bin >osimg2.bin ; \
+		if [ $(ROM_PLATFORM) = S100 ] ; then \
+			$(ZXCC) slr180 -s100mon/fh ; \
+			$(ZXCC) mload25 -s100mon ; \
+			cat s100mon.com >osimg2.bin ; \
+		else \
+			cat imgpad2.bin >osimg2.bin ; \
+		fi ; \
 		if [ $(ROMSIZE) -gt 0 ] ; then \
 			for f in hbios_rom.bin osimg.bin osimg1.bin osimg2.bin ; do \
 				srec_cat $$f -Binary -Crop 0 0x7FFF -Checksum_Negative_Big_Endian 0x7FFF 1 1 -o $$f -Binary ; \

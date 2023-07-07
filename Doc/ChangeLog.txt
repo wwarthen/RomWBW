@@ -14,6 +14,7 @@ Version 3.3
 - R?P: Added new disk images: Aztec C, MS BASIC Compiler, MS Fortran, Games, HiTech-C, Turbo Pascal, SLR Z80ASM
 - JBL: Added RCZ80 configuration for ColecoVision
 - WBW: Support for Z180 running interrupt mode 1
+- WBW: Preliminary support for S100 Computers Z180
 
 Version 3.2.1
 -------------
