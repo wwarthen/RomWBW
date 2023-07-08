@@ -59,8 +59,8 @@ $(OBJECTS) : $(ROMDEPS)
 	if [ $(ROM_PLATFORM) != UNA ] ; then \
 		cat camel80.bin nascom.bin tastybasic.bin game.bin eastaegg.bin netboot.mod updater.bin usrrom.bin >osimg1.bin ; \
 		if [ $(ROM_PLATFORM) = S100 ] ; then \
-			$(ZXCC) slr180 -s100mon/fh ; \
-			$(ZXCC) mload25 -s100mon ; \
+			$(ZXCC) $(CPM)/SLR180 -s100mon/fh ; \
+			$(ZXCC) $(CPM)/MLOAD25 -s100mon ; \
 			cat s100mon.com >osimg2.bin ; \
 		else \
 			cat imgpad2.bin >osimg2.bin ; \
