@@ -16,14 +16,13 @@
 ; The CPU is configured to run at the most conservative settings.
 ; PHI at 1/2 XTAL input, +3 memory wait states, and +3 I/O wait states.
 ;
-; Serial port baud rate divisor is programmed to 480, so the baud rate
-; will be PHI / 480, so nominally 19,200 baud.  See below for CNTLB
-; value to use for 57,600 baud.  Line characteristics are set to
+; Serial port baud rate divisor is programmed to a 57,600 baud rate
+; with PHI at 9.2MHz.  Line characteristics are set to
 ; 8 data bits, 1 stop bit, no parity.
 ;
 ; The initialization code relocates the internal Z180 CPU registers
 ; to start at C0H.  This is not a requirement of the code, but I
-; thought it might be helpful for testing external devices that are
+; thought it might be helpful for testing S100 bus external devices that are
 ; more likely to be located at the lower I/O addresses.
 ;
 ; The submit file (xxx2.sub) contains:-
@@ -40,7 +39,7 @@
 ; I:
 ;
 ; Use the "r" SIMH command to move SLR180.COM file across to the I: Drive 
-; Also "r" the XXX0.SUB file across to the I: drive (one time only)
+; Also "r" the XXX2.SUB file across to the I: drive (one time only)
 ; Note I already have these files on the Altair I: drive you are using here.
 ;
 ; Then....
@@ -48,8 +47,9 @@
 ;
 ; Ignore the SLR assembler error about the load address being less than 100H
 ;
-; The .HEX file will have a start address of F000H. It must reside in the ROM starting
-; at 0H. With the Wellon VP 290 Programmer:-
+; The .HEX file will have a start address of 0000H. It must reside in the ROM starting
+; at 0H. For the "ROM" I use the Microchip SST39F040 chip type
+; With the Wellon VP 290 Programmer:-
 ;
 ; To Buffer Address (HEX) 	
 ; For File Address (Hex) 0000 <------
@@ -59,12 +59,18 @@
 ; To Buffer Mode Normal
 ; From File Mode Normal
 ;
+;
+;----------------------------------------------------------------------------------------
+;
 ;	V0.0	5/10/2023			;Initial boot code supplied by Wayne Warthen
 ;	V0.1	5/18/2023			;First addition of S100 bus Z80 Master.Z80 monitor code.
 ;       V0.11   6/5/2023                        ;Menu to test S100 bus signals & set Baud Rate
 ;	V0.2	7/4/2023			;Remove baud rate option, add date,time, start IDE
 ;	V0.21	7/6/2023			;Cleaned up IDE drive section
-
+;	V0.22	7/6/2023			;Added default NMI and INT0 interrupt traps
+;	V0.23	7/7/2023			;Better use of ESC character for data entry aborts
+;	V0.24	7/8/2023			;Added Master/Slave S100 bus request ("W" CMD)
+;
 ;--------------------------------- Port equates used throughout the monitor ---------------
 ;
 ;
@@ -92,11 +98,12 @@ NAK		EQU	15H
 FALSE		EQU	0
 TRUE		EQU	NOT FALSE
 
-DIAGNOSTIC_MODE EQU	FALSE
 ST8C4		EQU	TRUE		;TRUE if S100_Parallel_IO Board.  False if IMSAI PIO Board	
 IOBYTE		EQU	075H		;IOBYTE PORT ON Z180 CPU Board (74H-77H or 64H-67H. Set with K8)
 SOUT_PORT	EQU	074H		;Onboard port to control sOUT signal to S100 bus.
 
+NMI_VECTOR	EQU	66H		;Default NMI Vector location
+INT0_VECTOR	EQU	38H		;Default INT0 vector location
 
 ;-------------- PROPELLER CONSOLE_IO (OR SD SYSTEMS VIDIO BOARD) FOR CONSOLE INPUT & OUTPUT
 CONSOLE_STATUS	EQU	0H	
@@ -370,17 +377,9 @@ CNTLB0_VALUE	equ     00H                     ; For setting final baud rate from 
 	; register base I/O address is zero, so initially, ICR is
 	; at 3FH.
 	
-	ld	a,z180_base
+	ld	a,z180_base		; C0H
 	out0	(3Fh),a			; at reset, icr is at 3FH
 
-IF DIAGNOSTIC_MODE
-;	*** Test point #1 ***
-;
-	ld	a,'@'			; Put an '@' character on the S100 bus Propeller Console board
-	out0	(1),a			; if present/hooked up as a diagnostic
-;
-ENDIF
-					
 	xor	a			; Disable refresh (not really required)
 	out0	(z180_rcr),a
 					; To make PHI=Osc Input, set bit 7 of CCR
@@ -413,16 +412,6 @@ ENDIF
 					; Confirm RAM is working by pushing a value on the stack, then
 					; popping the value to a different register and writing it to the
 					; diagnostic LEDs
-IF DIAGNOSTIC_MODE
-;	*** Test point #2 ***
-;
-	ld	b,'#'			; value to B
-	push	bc			; push it
-	pop	af			; pop into A
-	out0	(1),a			; Show all is OK if we have a Propeller IO board present
-;
-ENDIF
-					; Copy monitor to RAM at F000H
 ;
 	ld	hl,mon_img
 	ld	de,mon_start
@@ -440,7 +429,7 @@ jp	mon_start
 	DB	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 	DB	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 	DB	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-	Db	0,0
+	Db	0,0,0,0
 	
 ; Jump to monitor!!!
 ;
@@ -457,14 +446,38 @@ mon_img	equ	$			; start of monitor image
 ;
 	.phase	mon_start		; running location for monitor
 ;
-IF DIAGNOSTIC_MODE
-;	*** Test point #3 ***
-;
-	ld	a,'$'			
-	out	(1),a			; Show all is OK if we have a Propeller IO board present
-;
-ENDIF					; Configure the ASCI0 port see the above equates table
+		JP	OVER_VECTORS		
+	
+CON_OUT:	JP	ZCO				;0E003H, Interrupt/BIOS routines are counting on these locations
+CON_STAT:	JP	ZCSTS				;0E006H, never changing
+CON_IN:		JP	ZCI				;0E009H
+SEND_STRING:	JP	PRINT_STRING			;0E00CH
+MONITOR_NMI	JP	DEFAULT_NMI			;0E00FH
+MONITOR_INTO	JP	DEFAULT_INT0			;0E012H
 
+DEFAULT_NMI:	
+	PUSH	AF
+	PUSH	BC
+	PUSH	HL
+	LD	HL,NMI_MSG
+	CALL	PRINT_STRING
+	POP	HL
+	POP	BC
+	POP	AF
+	RETI
+
+DEFAULT_INT0:	
+	PUSH	AF
+	PUSH	BC
+	PUSH	HL
+	LD	HL,INT0_MSG
+	CALL	PRINT_STRING
+	POP	HL
+	POP	BC
+	POP	AF
+	RETI
+	
+OVER_VECTORS:
 	ld	a,64h			; xmit enable, rcv enable, 8 data bits, no parity
 	out0	(z180_cntla0),a
 	ld	a,CNTLB0_VALUE		; 20H, Baud=19,200 @ 9.2 MHz
@@ -472,9 +485,8 @@ ENDIF					; Configure the ASCI0 port see the above equates table
 	ld	a,60h			; dcd0 disable, cts0 disable
 	out0	(z180_asext0),a
 ;
-					; Delay after ASCI setup (should not be needed)
 ;
-	ld	b,0
+	ld	b,0			; Delay after ASCI setup (should not be needed)
 	djnz	$
 	djnz	$
 ;
@@ -485,16 +497,6 @@ ENDIF					; Configure the ASCI0 port see the above equates table
 	ld	a,10h			; first physical bank of RAM
 	call	bnksel			; do it
 ;
-IF DIAGNOSTIC_MODE
-;	*** Test point #4 ***
-;
-	ld	a,'%'			; value to A
-	ld	(0000h),a		; save at cpu address 0000H
-	xor	a			; clear accum
-	ld	a,(0000h)		; load value to A
-	out	(1),a			; Show all is OK if we have a Propeller IO board present
-
-ENDIF
 					; *** Add code as desired to setup Z180 zero page ***
 ;
 					; At this point RAM is mapped to entire CPU address space.  This is
@@ -506,7 +508,7 @@ ENDIF
 ;
 BEGIN0:	JP	BEGIN			;JUMP OVER COMMAND TABLE
 
-TBL:	DW  FLUSH			;"@"  SEND FF to LaserJet printer
+TBL:	DW  FLUSH			;"@"  SEND FF to LaserJet printer      
 	DW  MEMMAP			;"A"  DISPLAY A MAP OF MEMORY
 	DW  BOOT			;	"B"  SWITCH CONTROL TO 68000 CPU 
 	DW  NOT_DONE			;	"C"  BOOT IN CP/M FROM 8" DISK WITH WITH ZFDC FDC 
@@ -529,7 +531,7 @@ TBL:	DW  FLUSH			;"@"  SEND FF to LaserJet printer
 	DW  TYPE			;"T"  TYPE ASCII PRESENT IN MEMORY  (Same as D cmd except ASCII
 	DW  HALT_CPU			;"U"  SPARE
 	DW  VERIFY			;"V"  COMPARE MEMORY
-	DW  SWITCH_8086			;	"W"  INPUT Port ED (switched in 8086/80286)
+	DW  SWITCH_8086			;"W"  INPUT Port ED (switched in 8086/80286)
 	DW  XMODEM			;"X"  DOWNLOAD A FILE FROM PC VIA XMODEM TO THIS S100 SYSTEM
 	DW  IDE_SETUP			;"Y"  IDE Menu for CF Card Board
 	DW  SIZE			;"Z"  FIND HIGHEST R/W RAM
@@ -613,7 +615,24 @@ ENDIF
 	LD	HL,CR_SMSG_SP		;lets V-Stamp chip get baud rate
 	CALL	SPEAK$		
 	
+	LD	HL,NMI_VECTOR		;Set default NMI vector jump at 66H in RAM
+	LD	A,0C3H
+	LD	(HL),A
+	INC	HL
+	LD	DE,DEFAULT_NMI
+	LD	(HL),E
+	INC	HL
+	LD	(HL),D
 	
+	LD	HL,INT0_VECTOR		;Set default INT0 vector jump at 38H in RAM
+	LD	A,0C3H
+	LD	(HL),A
+	INC	HL
+	LD	DE,DEFAULT_INT0
+	LD	(HL),E
+	INC	HL
+	LD	(HL),D
+
 					
 ;-------THIS IS THE START ON THE MAIN MONITOR LOOP--------------------------------
 
@@ -626,7 +645,7 @@ ZSTART:	LD	DE,ZSTART
 	CALL	ZCO
 
 STARO:	CALL	TI			; Main loop. Monitor will stay here until cmd.
-	cp	ESC			; escape?
+	CP	ESC			; escape?
 	jp	z,echoz			; done if so
 	AND	7FH
 	JR	Z,STARO
@@ -1050,6 +1069,8 @@ SF2E3:	LD	A,(HL)
 	CALL	PCHK
 	RET	C
 	JR	Z,SF2FC
+	CP	ESC			;Abort if ESC
+	JP	Z,ESC_ABORT
 	CP	5FH
 	JR	Z,SF305
 	PUSH	HL
@@ -1067,7 +1088,6 @@ SF2FD:	LD	A,L
 	JR	SF2E3
 SF305:	DEC	HL
 	JR	SF2FD
-
 
 
 
@@ -1101,11 +1121,13 @@ QUERY:	CALL	PCHK
 	LD	C,'*'
 	JP	ZCO			;WILL ABORT IF NOT 'I' OR 'O'
 
+
 IN_PORT:
 	LD	C,1			;IN Port
 	CALL	HEXSP
 	POP	BC
 	IN	A,(C)
+	CALL	ZSPACE
 	JP	ZBITS
 ;
 OUT_PORT:
@@ -1115,15 +1137,35 @@ OUT_PORT:
 	OUT	(C),E
 	RET
 
-
-
 ;-------------------------- U COMMAND     HALT the Z180 CPU ---------------------------------
 
 HALT_CPU:	
 	LD	HL,HALT_MSG
 	CALL	PRINT_STRING		;Print message up to '$'
 	HALT
+
+
+;-------------------------- W COMMAND     Switch control of S100 Bus to slave CPU (eg 8086) ---------------------------------
+
+SWITCH_8086:				; "W"  INPUT Port ED (switched in 8086/80286)
+					;Note currently the S100 slave switch ports overlaps with the Z180 internal ports
+					
+	LD	HL,SLAVE_MSG		;Send before we switch internal ports
+	CALL	PRINT_STRING
 	
+	ld	a,00H			;Move back to the defauly Z180 base register port (00H)
+	out0	(0FFH),a		;icr is currently at FFH
+
+	IN0	A,(SW_TMA0)		;THIS SWITCHES CPU'S with no block Move
+	NOP				;Z80 WILL BE HELD HERE
+	NOP
+	LD	A,01			;Utilize the more specific circuit on the V2-SMB
+	OUT0	(SW_TMAX),A		;Make sure its bit 0
+	NOP
+	NOP
+	NOP
+	JP	BEGIN0			;If we get back control
+
 
 ;------THIS IS THE MAIN ROUTINE TO GET THE TIME DATA FROM THE CMOS-RTC Chip on the MSDOS Support Board 
 
@@ -2337,8 +2379,12 @@ HL_ONLY:
 
 ;PRINT A SPACE
 
-ZSPACE:	LD	C,SPACE
+ZSPACE:	PUSH	AF
+	PUSH	BC
+	LD	C,SPACE
 	CALL	ZCO
+	POP	BC
+	POP	AF
 	RET
 
 ;CONVERT HEX TO ASCII
@@ -2384,6 +2430,9 @@ ZGET_HL:
 EXPR1:	LD	C,01H
 HEXSP:	LD	HL,0000
 EX0:	CALL	TI
+	CP	ESC
+	JR	NZ,EX1
+	JP	ESC_ABORT		;ABORT BACK TO MAIN LOOP
 EX1:	LD	B,A
 	CALL	NIBBLE
 	JR	C,EX2X
@@ -2409,6 +2458,15 @@ EXF:	LD	C,01H
 	LD	HL,0000H
 	JR	EX1
 
+ESC_ABORT:
+	LD	C,BELL
+	CALL	ZCO
+	CALL	ZCRLF
+	POP	AF			;BALANCE UP STACK
+	JP	ZSTART
+	
+	
+	
 ;RANGE TEST ROUTINE CARRY SET = RANGE EXCEEDED
 
 HILOX:	CALL	CCHK
@@ -2624,7 +2682,6 @@ XMEMMAP:				; "N"  Display extended memory Segment:Address
 UP8086:					; "O"  SWITCH CONTROL TO 8088, 8086 or 80286. 
 HBOOTCPM:				; "P"  BOOT IN CPM FROM IDE HARD DISK
 SPARE:					; "U"  SPARE
-SWITCH_8086:				; "W"  INPUT Port ED (switched in 8086/80286)
 ;XMODEM:				; "X"  DOWNLOAD A FILE FROM PC VIA XMODEM TO THIS S100 SYSTEM
 ZBOOT
 
@@ -2940,15 +2997,16 @@ bnksel:
 
 
 
-SIGNON_MSG:	DB	BELL		
-		DB	'Z180 ROM MONITOR (V0.21) @ E000H (J.Monahan,7/6/2023)$'	
+SIGNON_MSG:	DB	BELL,CR,LF		
+		DB	'Z180 ROM MONITOR (V0.24) @ E000H (J.Monahan,7/8/2023)$'	
 
-MENUMSG:	DB	'A=Memmap   B=         C=CP/M(F)  D=Disp  E=Echo   F=Fill  G=Goto',CR,LF
-		DB	'H=Date     I=Time     J=RAM Test K=Menu  L=CPM(V) M=Move  N=S100 Menu',CR,LF
-		DB	'O=         P=CPM(IDE) QI,O=Port  R=Ports S=Subs   T=Type  U=Halt ',CR,LF 
-		DB	'V=Verify   W=Port EDH X=XModem   Y=IDE   Z=Top    @=Flush Printer'
+MENUMSG:	DB	'A=Memmap   B=Boot      C=CP/M(F)  D=Disp  E=Echo   F=Fill  G=Goto',CR,LF
+		DB	'H=Date     I=Time      J=RAM Test K=Menu  L=CPM(V) M=Move  N=S100 Menu',CR,LF
+		DB	'O=         P=CPM(IDE)  QI,O=Port  R=Ports S=Subs   T=Type  U=Halt ',CR,LF 
+		DB	'V=Verify   W=Bus Req   X=XModem   Y=IDE   Z=Top    @=Flush Printer'
 		DB	CR,LF,LF,'$'
-SMSG_SP:	DB	'THE Z180 ROM MONITOR VERSION 0.1$'
+		
+SMSG_SP:	DB	'THE Z180 ROM MONITOR VERSION 0.24$'
 
 TOP_RAM_MSG	DB	'Top of RAM=$'
 SP_MSG		DB	'H  SP=$'
@@ -3024,7 +3082,9 @@ GET_DMA_MSG	DB	'Enter RAM location for sector data (xxxxH) = $'
 Write_Sure:	DB	'Warning: this will change data on the drive, '
 		DB	'are you sure? (Y/N)...$'
 msgwr:		DB	'Sec. Write OK',CR,LF,'$'
-
+NMI_MSG:	DB	'NMI Activated',CR,LF,'$'	;0E00FH
+INT0_MSG:	DB	'INT0 Activated',CR,LF,'$'	;0E01FH
+SLAVE_MSG	DB	BELL,'Activate Master/Slave switch',CR,LF,'$'
 
 
 
