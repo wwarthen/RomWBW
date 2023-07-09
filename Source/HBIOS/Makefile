@@ -43,6 +43,10 @@ else
 	BIOS=wbw
 endif
 
+ifeq ($(ROM_PLATFORM),S100)
+	ROMDEPS += s100mon.bin
+endif
+
 ROMNAME=${ROM_PLATFORM}_${ROM_CONFIG}
 
 # $(info DEPS=$(DEPS))
@@ -59,9 +63,7 @@ $(OBJECTS) : $(ROMDEPS)
 	if [ $(ROM_PLATFORM) != UNA ] ; then \
 		cat camel80.bin nascom.bin tastybasic.bin game.bin eastaegg.bin netboot.mod updater.bin usrrom.bin >osimg1.bin ; \
 		if [ $(ROM_PLATFORM) = S100 ] ; then \
-			$(ZXCC) $(CPM)/SLR180 -s100mon/fh ; \
-			$(ZXCC) $(CPM)/MLOAD25 -s100mon ; \
-			cat s100mon.com >osimg2.bin ; \
+			cat s100mon.bin >osimg2.bin ; \
 		else \
 			cat imgpad2.bin >osimg2.bin ; \
 		fi ; \
@@ -94,6 +96,10 @@ font%.asm:
 
 camel80.bin:
 	cp ../Forth/$@ .
+
+s100mon.bin:
+	$(ZXCC) $(CPM)/SLR180 -s100mon/FH
+	$(ZXCC) $(CPM)/MLOAD25 -s100mon.bin=s100mon
 
 tastybasic.bin:
 	cp ../TastyBasic/src/$@ .
