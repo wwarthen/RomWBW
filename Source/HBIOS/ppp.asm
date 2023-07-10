@@ -4,7 +4,6 @@
 ;==================================================================================================
 ;
 ; TODO:
-;   1) ADD SUPPORT FOR DSKY
 ;
 PPP_IO		.EQU	PPPBASE + 0	; PPP DATA I/O (PPI PORT A)
 PPP_CTL		.EQU	PPPBASE + 2	; PPP CTL LINES (PPI PORT C)
