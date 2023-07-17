@@ -9,14 +9,14 @@
 ;	- TEST XC CARD TYPE DETECTION
 ;	- TRY TO GET INIT TO FAIL, REMOVE DELAYS AT START OF GOIDLE?
 ;
-;----------------------------------------------------------------------------------------------
-; SD Signal	Active	JUHA	N8	CSIO	PPI	UART	DSD	MK4	SC	MT
-; ------------	------- ------- ------- ------- ------- ------- ------- -------	-------	-------
-; CS (DAT3)	LO ->	RTC:2	RTC:2	RTC:2	~PC:4	~MCR:3	OPR:2	SD:2	~RTC:2/3OPR:4/5
-; CLK		HI ->	RTC:1	RTC:1	CSIO	PC:1	~MCR:2	OPR:1	CSIO	CSIO	SPI
-; DI (CMD)	HI ->	RTC:0	RTC:0	CSIO	PC:0	~MCR:0	OPR:0	CSIO	CSIO	SPI
-; DO (DAT0)	HI ->	RTC:7	RTC:6	CSIO	PB:7	~MSR:5	OPR:0	CSIO	CSIO	SPI
-;----------------------------------------------------------------------------------------------
+;-----------------------------------------------------------------------------------------------------
+; SD Signal	Active	JUHA	N8	CSIO	PPI	UART	DSD	MK4	SC	MT     PIO
+; ------------	------- ------- ------- ------- ------- ------- ------- -------	-------	--------------
+; CS (DAT3)	LO ->	RTC:2	RTC:2	RTC:2	~PC:4	~MCR:3	OPR:2	SD:2	~RTC:2/3OPR:4/5~OPR:3
+; CLK		HI ->	RTC:1	RTC:1	CSIO	PC:1	~MCR:2	OPR:1	CSIO	CSIO	SPI    OPR:4
+; DI (CMD)	HI ->	RTC:0	RTC:0	CSIO	PC:0	~MCR:0	OPR:0	CSIO	CSIO	SPI    OPR:0
+; DO (DAT0)	HI ->	RTC:7	RTC:6	CSIO	PB:7	~MSR:5	OPR:0	CSIO	CSIO	SPI    OPR:7
+;-----------------------------------------------------------------------------------------------------
 ;
 ; CS = CHIP SELECT (AKA DAT3 FOR NON-SPI MODE)
 ; CLK = CLOCK
@@ -167,6 +167,7 @@ RTCDEF		.SET	RTCDEF | SD_OPRDEF	; SET DEFAULT IN HBIOS MAINLINE
 SD_DEVMAX	.EQU	1		; NUMBER OF PHYSICAL UNITS (SOCKETS)
 SD_PPIBASE	.EQU	SDPPIBASE	; BASE IO PORT FOR PPI
 SD_PPIB		.EQU	SDPPIBASE + 1	; PPI PORT B (INPUT: DOUT)
+SD_PPIB		.EQU	SDPPIBASE + 1	; PPI PORT B (INPUT: DOUT)
 SD_PPIC		.EQU	SDPPIBASE + 2	; PPI PORT C (OUTPUT: CS, CLK, DIN)
 SD_PPIX		.EQU	SDPPIBASE + 3	; PPI CONTROL PORT
 SD_OPRREG	.EQU	SD_PPIC		; PPI PORT C IS OPR REG
@@ -298,7 +299,10 @@ SD_INVCS	.EQU	FALSE		; INVERT CS
 SD_DEVMAX	.EQU	1		; NUMBER OF PHYSICAL UNITS (SOCKETS)
 SD_IOBASE	.EQU	$69		; IO BASE ADDRESS FOR SD INTERFACE
 SD_OPRREG	.EQU	SD_IOBASE	; OUTPUT PORT (OUTPUT: CS, CLK, DIN)
-SD_OPRDEF	.EQU	%11111111	; OUTPUT PORT DEFAULT STATE
+;--- WBW
+;SD_OPRDEF	.EQU	%11111111	; OUTPUT PORT DEFAULT STATE
+SD_OPRDEF	.EQU	%11101111	; OUTPUT PORT DEFAULT STATE
+;---
 SD_INPREG	.EQU	SD_IOBASE	; INPUT REGISTER
 SD_CS0		.EQU	%00001000	; SELECT
 SD_CLK		.EQU	%00010000	; CLOCK
@@ -1801,6 +1805,7 @@ SD_SETUP:
 ;
 #IF (SDMODE == SDMODE_PIO)
 	LD	A,SD_OPRDEF		; All output bits high
+	LD	(SD_OPRVAL),A		; WBW
 	OUT	(SD_OPRREG),A
 	LD	A,$CF			; Port B mode 3
 	OUT	(SD_DDR),A
