@@ -25,6 +25,12 @@
 ; thought it might be helpful for testing S100 bus external devices that are
 ; more likely to be located at the lower I/O addresses.
 ;
+; PLEASE NOTE THIS CODE ALMOST TAKES UP 8K TO RESIDE FROM E000H TO FFFFH IN RAM.
+; VERY LITTLE MORE CODE CAN BE ADDED WITHOUT OVERWRITING THE TOP OF RAM.
+; CURRENTLY THIS IS ONLY ~80 BYTES. CHECK THE VALUE OF "ROM_EMPTY" IN THE 
+; Z180MON1.LST FILE IF YOU MAKE MODIFICATIONS.
+;
+;
 ; The submit file (xxx2.sub) contains:-
 ; R Z180MOM1.180
 ; SLR180 Z180MOM1 FH
@@ -32,6 +38,8 @@
 ; W Z180MOM1.HEX
 ; W Z180MOM1.LST
 ; W Z180MOM1.COM
+;
+; Ignore the HEXCOM error "LOAD ADDRESS LESS THAN 100"
 ;
 ; To assemble under windows...
 ; Load Altair.EXE in the Windows CMD box
@@ -44,8 +52,6 @@
 ;
 ; Then....
 ; I:>Submit XXX2.SUB
-;
-; Ignore the SLR assembler error about the load address being less than 100H
 ;
 ; The .HEX file will have a start address of 0000H. It must reside in the ROM starting
 ; at 0H. For the "ROM" I use the Microchip SST39F040 chip type
@@ -70,6 +76,14 @@
 ;	V0.22	7/6/2023			;Added default NMI and INT0 interrupt traps
 ;	V0.23	7/7/2023			;Better use of ESC character for data entry aborts
 ;	V0.24	7/8/2023			;Added Master/Slave S100 bus request ("W" CMD)
+;	V0.241  7/9/2023			;Add B command to Boot ROMWBW (by Wayne Warthen)
+;	V0.242	7/9/2023			;INT0 test added (S100 Sub Menu)
+;	V0.30	7/16/2023			;Added IDE menu and "P" CMD to boot CPM (Non Banked)
+;	V0.31	7/16/2023			;Corrected stack problem in XModem command
+;	V0.32	7/16/2023			;SD card, but not initilizing, (only partially done)
+;	V0.33	7/22/2023			;SD card interface done
+;	V0.34	7/22/2023			;SD card interface with high clock speed
+
 ;
 ;--------------------------------- Port equates used throughout the monitor ---------------
 ;
@@ -98,13 +112,20 @@ NAK		EQU	15H
 FALSE		EQU	0
 TRUE		EQU	NOT FALSE
 
+DO_CODE		EQU	FALSE		;To skip over sections
 ST8C4		EQU	TRUE		;TRUE if S100_Parallel_IO Board.  False if IMSAI PIO Board	
 IOBYTE		EQU	075H		;IOBYTE PORT ON Z180 CPU Board (74H-77H or 64H-67H. Set with K8)
-SOUT_PORT	EQU	074H		;Onboard port to control sOUT signal to S100 bus.
+SOUT_PORT	EQU	074H		;Onboard port to control (on/off) sOUT signal to S100 bus.
 
 NMI_VECTOR	EQU	66H		;Default NMI Vector location
 INT0_VECTOR	EQU	38H		;Default INT0 vector location
 
+SD_CARD_CS	EQU	0CH		;Bit 2 to select onboard SD card adaptor (0=ON, 1=off)
+SD_CARD_LED	EQU	0EH		;Bit 2 to turn on/off SD Card LED (0=ON, 1=off)
+SD_CNTR		EQU	z180_cntr	;SPI CTRL PORT (0CAH)
+SD_TRDR		EQU	z180_trdr	;SPI DATA PORT IN & OUT  (0CBH)
+;
+;
 ;-------------- PROPELLER CONSOLE_IO (OR SD SYSTEMS VIDIO BOARD) FOR CONSOLE INPUT & OUTPUT
 CONSOLE_STATUS	EQU	0H	
 CONSOLE_IN	EQU	01H
@@ -249,6 +270,7 @@ MAXSEC		EQU	3DH		;Sectors per track for CF my Memory drive, Kingston CF 8G. (For
 					;so this program as is will also work with a Seagate 6531 IDE drive
 
 MAXTRK		EQU	0FFH		;CPM3 allows up to 8MG so 0-256 "tracks"
+STARTCPM	EQU	100H		;Start location for CPM
 
 ;-----------------------------------------------------------------------------------------------------
  
@@ -258,22 +280,12 @@ z180_base	equ	0C0h			;Will relocate all internal Z180 IO ports  from 0-3FH to C0
 						;hardware intrerface will kick in if these ports are activeted.
 						;See the schematic
 ;
-mon_start	equ	0E000h			;Final location of this monitor 0E000H  (First 56K free RAM)
+mon_start	EQU	0E000h			;Final location of this monitor 0E000H  (First 56K free RAM)
+RAM_STORE	EQU	07000H			;Need to store some RAM variables
+STACK		EQU	0DFF0H			;The stack below the monitor
 
-IDE_Buffer	EQU	0D000H			;Will place the IDE/CF Card Buffer here		
-@SEC		equ	IDE_Buffer - 10H	;Place these stores below the monitor location
-@TRK		equ	IDE_Buffer - 12H
-@SEC_COUNT	equ	IDE_Buffer - 14H
-@RAM_ADDRESS	equ	IDE_Buffer - 16H
-
-@DisplayFlag	equ	IDE_Buffer - 18H	;Display of sector data initially ON
-@StartLineHex	equ	IDE_Buffer - 1AH
-@BYTE$COUNT	equ	IDE_Buffer - 1CH
-@DRIVE$SEC	equ	IDE_Buffer - 1EH
-@DRIVE$TRK	equ	IDE_Buffer - 20H
-@StartLineASCII	equ	IDE_Buffer - 22H
-@NEXT_ADDRESS   equ	IDE_buffer - 24H
-
+IDE_Buffer	EQU	100H			;Will place the IDE/CF Card Buffer here	
+SD_Buffer	EQU	100H			;Will place the SD Card buffer here
 
 ;
 z180_cntla0	equ	z180_base + 00H		; asci0 control a
@@ -286,8 +298,8 @@ z180_tdr0	equ	z180_base + 06H		; asci0 transmit
 z180_tdr1	equ	z180_base + 07H		; asci1 transmit
 z180_rdr0	equ	z180_base + 08H		; asci0 receive
 z180_rdr1	equ	z180_base + 09H		; asci1 receive
-z180_cntr	equ	z180_base + 0aH		; csi/o control
-z180_trdr	equ	z180_base + 0bH		; csi/o transmit/receive
+z180_cntr	equ	z180_base + 0aH		; csi/o control				;<----- For SD Card
+z180_trdr	equ	z180_base + 0bH		; csi/o transmit/receive		;<----- For SD card
 z180_tmdr0l	equ	z180_base + 0cH		; timer 0 data lo
 z180_tmdr0h	equ	z180_base + 0dH		; timer 0 data hi
 z180_rldr0l	equ	z180_base + 0eH		; timer 0 reload lo
@@ -407,7 +419,7 @@ CNTLB0_VALUE	equ     00H                     ; For setting final baud rate from 
 ;
 					; We have RAM now in upper 32K now.  Initialize the stack
 					; at top of CPU memory.
-	ld	sp,mon_start - 10H	; now put stack at top of mem
+	ld	sp,STACK		; Put the stack just below the monitor at E000H (DFFF0)
 ;
 					; Confirm RAM is working by pushing a value on the stack, then
 					; popping the value to a different register and writing it to the
@@ -510,8 +522,8 @@ BEGIN0:	JP	BEGIN			;JUMP OVER COMMAND TABLE
 
 TBL:	DW  FLUSH			;"@"  SEND FF to LaserJet printer      
 	DW  MEMMAP			;"A"  DISPLAY A MAP OF MEMORY
-	DW  BOOT			;	"B"  SWITCH CONTROL TO 68000 CPU 
-	DW  NOT_DONE			;	"C"  BOOT IN CP/M FROM 8" DISK WITH WITH ZFDC FDC 
+	DW  BOOT			;"B"  BOOT ROMWBW
+	DW  NOT_DONE			;	"C"  SPARE
 	DW  DISP			;"D"  DISPLAY MEMORY (IN HEX & ASCII)
 	DW  CHAR_TEST			;"E"  ECHO CHAR IN TO CHAR OUT
 	DW  FILL			;"F"  FILL MEMORY WITH A CONSTANT
@@ -520,20 +532,20 @@ TBL:	DW  FLUSH			;"@"  SEND FF to LaserJet printer
 	DW  SHOW_TIME			;"I"  SHOW CURRENT TIME 
 	DW  MEM_TEST			;"J"  DESTRUCTIVE MEMORY TEST 
 	DW  KCMD			;"K"  DISPLAY THE LIST OF MONITOR COMMANDS
-	DW  ZVBOOT			;	"L"  BOOT IN CP/M FROM 8" DISK WITH VERSAFLOPPY II FDC
-	DW  MOVE			;	"M"  MOVE BLOCK OF MEMORY (START,FINISH,DESTINATION)
+	DW  NOT_DONE			;	"L"  SPARE
+	DW  MOVE			;"M"  MOVE BLOCK OF MEMORY (START,FINISH,DESTINATION)
 	DW  S100_TESTS			;"N"  Hardware tests for the S100 bus
-	DW  UP8086			;	"O"  SWITCH CONTROL TO 8088, 8086 or 80286. 
-	DW  HBOOTCPM			;	"P"  BOOT IN CPM FROM IDE HARD DISK
+	DW  SWITCH_8086			;"O"  INPUT Port ED (switched in 8086/80286)
+	DW  HBOOTCPM			;"P"  BOOT IN CPM FROM The S100 bus IDE/CF Card Board
 	DW  QUERY			;"Q"  QUERY PORT (IN OR OUT)
 	DW  INPORTS			;"R"  Read ALL Input Ports
 	DW  SUBS			;"S"  SUBSTITUTE &/OR EXAMINE MEMORY
-	DW  TYPE			;"T"  TYPE ASCII PRESENT IN MEMORY  (Same as D cmd except ASCII
-	DW  HALT_CPU			;"U"  SPARE
+	DW  TYPE			;"T"  TYPE ASCII PRESENT IN MEMORY  (Same as D cmd except ASCII)
+	DW  HALT_CPU			;"U"  HALT CPU
 	DW  VERIFY			;"V"  COMPARE MEMORY
-	DW  SWITCH_8086			;"W"  INPUT Port ED (switched in 8086/80286)
-	DW  XMODEM			;"X"  DOWNLOAD A FILE FROM PC VIA XMODEM TO THIS S100 SYSTEM
-	DW  IDE_SETUP			;"Y"  IDE Menu for CF Card Board
+	DW  SD_CARD_MENU		;"W"  SD CARD MENU    
+	DW  XMODEM			;"X"  DOWNLOAD A FILE FROM PC VIA XMODEM VIA THE S100 SERIAL BOARD
+	DW  IDE_BOARD_MENU		;"Y"  IDE Menu for IDE/CF Card Board
 	DW  SIZE			;"Z"  FIND HIGHEST R/W RAM
 
 
@@ -546,10 +558,7 @@ SETUP_STACK:
 	JP	MEMSZ1			;RETURNS WITH TOP OF RAM IN [HL]
 	DW	AHEAD			;A Return opcode will pick up this address
 AHEAD:	
-	PUSH	HL			;Store it
-	POP	IX
-	
-	LD	SP,mon_start - 10H	;Put stack below monitor at 0EFF0H
+	LD	SP,STACK		;Put stack below monitor at 0EFF0H
 	LD	HL,0
 	ADD	HL,SP
 	PUSH	HL			;Store it for below
@@ -581,8 +590,7 @@ ENDIF
 	LD	HL,TOP_RAM_MSG		;Print Top of RAM
 	CALL	PRINT_STRING
 	
-	PUSH	IX			;Top of RAM is stored from above in [IX]
-	POP	HL
+	LD	HL,STACK-0F0H		;Top of RAM available RAM
 	CALL	HL_ONLY			;Print HL/SP 
 
 	LD	HL,SP_MSG		;Print Current Stack Location
@@ -599,6 +607,10 @@ ENDIF
 	CALL	ZBITS
 	CALL	ZCRLF			;Then ZCRLF
 
+	LD	A,04H			; Turn off the SD card adaptor CS* line 
+	OUT0	(SD_CARD_CS),A		; 0CH
+	OUT0	(SD_CARD_LED),A		; 0EH
+	
 	CALL	ZCSTS			;CHECK IF GARBAGE AT KEYBOARD
 	CALL	NZ,ZCI			;If so flush it
 					; Echo input to output
@@ -615,25 +627,7 @@ ENDIF
 	LD	HL,CR_SMSG_SP		;lets V-Stamp chip get baud rate
 	CALL	SPEAK$		
 	
-	LD	HL,NMI_VECTOR		;Set default NMI vector jump at 66H in RAM
-	LD	A,0C3H
-	LD	(HL),A
-	INC	HL
-	LD	DE,DEFAULT_NMI
-	LD	(HL),E
-	INC	HL
-	LD	(HL),D
-	
-	LD	HL,INT0_VECTOR		;Set default INT0 vector jump at 38H in RAM
-	LD	A,0C3H
-	LD	(HL),A
-	INC	HL
-	LD	DE,DEFAULT_INT0
-	LD	(HL),E
-	INC	HL
-	LD	(HL),D
-
-					
+			
 ;-------THIS IS THE START ON THE MAIN MONITOR LOOP--------------------------------
 
 ZSTART:	LD	DE,ZSTART
@@ -672,7 +666,7 @@ STARO:	CALL	TI			; Main loop. Monitor will stay here until cmd.
 ; Will wait for serial output port to be ready.
 ;
 ZCO:	IN0	A,(IOBYTE)		;Charcter in C
-	AND	A,1
+	BIT	0,A
 	JR	NZ,SERIAL_ZCO
 S100_ZCO:
 	IN0	A,(CONSOLE_STATUS)	;S100 Bus PROPELLER CONSOLE I/O BOARD PORT
@@ -736,7 +730,7 @@ outstat:
 ;
 
 ZCI:	IN0	A,(IOBYTE)
-	AND	A,1
+	BIT	0,A
 	JR	NZ,SERIAL_ZCI
 S100_ZCI:	
 	IN0	A,(CONSOLE_STATUS)	;NEED CONSTAT TO CLEAN UP SHIFT KEYS ETC
@@ -761,7 +755,7 @@ SERIAL_ZCI:
 ; clear line errors.
 ;
 ZCSTS:	IN0	A,(IOBYTE)
-	AND	A,1
+	BIT	0,A
 	JR	NZ,SERIAL_ZCSTS
 S100_ZCSTS:
 	IN0	A,(CONSOLE_STATUS)
@@ -872,12 +866,15 @@ OTA:	PUSH	BC
 ;RESTART SYSTEM WITH ROMWBW BOOT OVERRIDE FLAG IN THE Z180 RELOAD
 ;REGISTER 1 LOW
 
-BOOT:
+BOOT:	LD	HL,BOOT_ROM_MSG		;Booting ROMWBW
+	CALL	PRINT_STRING
 	LD	A,'W'			;OVERRIDE VALUE
 	OUT0	(Z180_RLDR1L),A		;SET RELOAD REGISTER 1 LOW
 	XOR	A			;ROM BANK 0 PLEASE
 	CALL	bnksel			;SELECT BANK IN LOW MEM
 	JP	0			;AND JUMP TO THE START
+
+
 
 ;----------------------- D COMMAND    DISPLAY MEMORY IN HEX ---------------------------------------
 
@@ -946,6 +943,8 @@ S100_TESTS:
 	JP	Z,MODEM_TEST
 	CP	'6'
 	JP	Z,PRINTER_TEST
+	CP	'7'
+	JP	Z,TOGGLE_INTS
 	CP	ESC
 	JP	Z,MENU_DONE
 	JP	ERROR
@@ -953,7 +952,7 @@ S100_TESTS:
 MENU_DONE:
 	CALL	ZCRLF
 	CALL	ZCRLF
-	RET
+	JP	BEGIN
 	
 ROOL_ADDRESSES:
 	LD	HL,0
@@ -1053,9 +1052,49 @@ PRINTER_TEST2:
 	CALL	FLUSH
 	RET
 	
+	
 
+TOGGLE_INTS:
+	LD	HL,NMI_VECTOR		;Set default NMI vector jump at 66H in RAM
+	LD	A,0C3H
+	LD	(HL),A
+	INC	HL
+	LD	DE,DEFAULT_NMI
+	LD	(HL),E
+	INC	HL
+	LD	(HL),D
 	
+	LD	HL,INT0_VECTOR		;Set default INT0 vector jump at 38H in RAM
+	LD	A,0C3H
+	LD	(HL),A
+	INC	HL
+	LD	DE,DEFAULT_INT0
+	LD	(HL),E
+	INC	HL
+	LD	(HL),D
+			
+	LD	A,(@INTS_FLAG)
+	OR	A
+	JR	Z,TURN_ON_INTS
 	
+	LD	HL,INTS_OFF_MSG		;'Turning off Interrupts'
+	CALL	PRINT_STRING
+	XOR	A
+	LD	(@INTS_FLAG),A		;Flag Interrupts as OFF
+	DI				;Just in case
+	JP	S100_TESTS		;done
+	
+TURN_ON_INTS:
+	LD	HL,INTS_ON_MSG		;'Turning on Interrupts'
+	CALL	PRINT_STRING
+	LD	A,0FFH
+	LD	(@INTS_FLAG),A		;Flag Interrupts as ON
+	EI				;Just in case
+	JP	S100_TESTS		;done
+
+
+
+
 
 ;------------------------------   S COMMAND        SUBSTITUTE AND / OR MODIFY MEMORY ----------------------
 
@@ -1522,6 +1561,7 @@ SKIP:	DEC	E			;Next Port
 	CALL	ZCRLF
 	RET
 
+
 ;-----------------  K COMMAND PRINT MAIN MONITOR MENU ON CRT ---------------------------
 
 KCMD:	LD	HL,SIGNON_MSG		;Signon Msg again (K Command)
@@ -1560,11 +1600,11 @@ XMODEM:
 	LD	HL,MODEM_RAM_LOC	;Get RAM location for where to place code
 	CALL	PRINT_STRING
 	LD	C,1
-	CALL	ZGET_HL			;Get 16 bit value, put on stack
+	CALL	HEXSP			;Get 16 bit value, put on stack
 	POP	IY			;DMA Value now in IY
 	CALL	ZCRLF
 					
-	CALL	INIT_SCC_A		;INITITIALIZE THE SCC SERIAL PORT A
+	CALL	INIT_SCC_A		;INITITIALIZE THE SCC SERIAL PORT A Just in case it changed
 
 	LD	B,1			;TIMEOUT DELAY
 	CALL	MODEM_ZCI		;GOBBLE UP GARBAGE CHARS FROM THE LINE
@@ -1736,26 +1776,148 @@ XFER_CPLT:				;DONE - CLOSE UP SHOP
 	JP	ZSTART
 						
 
+
+;-------------- P COMMAND    BOOT UP CPM FROM HARD DISK ON S100COMPUTERS IDE BOARD ----------------
+
+;BOOT UP THE 8255/IDE Board HARD DISK/Flash Memory Card
+
+ZBOOT:					;Allow CTL Z to always boot CPM				
+HBOOTCPM:
+	IN0	A,(IOBYTE)		;Charcter in A
+	BIT	0,A
+	JP	NZ,S100_ONLY
+
+	POP	HL			;CLEAN UP STACK
+	LD	HL,SPEAKCPM_SP		;Announce Booting CPM on speaker 'Loading CPN'
+	CALL	SPEAK$
+	
+	CALL	IDEInit			;Initilze the 8255 and drive 
+	RET	C			;Abort if carry set
+	
+	LD	D,11100000B		;Data for IDE SDH reg (512bytes, LBA mode,single drive)
+	LD	E,REGshd		;00001110,(0EH) CS0,A2,A1,  
+	CALL	IDEwr8D			;Write byte to select the MASTER device
+
+	LD	B,0FFH			;Delay time to allow a Hard Disk to get up to speed
+WaitInit:	
+	LD	E,REGstatus		;Get status after initilization
+	CALL	IDErd8D			;Check Status (info in [D])
+	BIT	7,D
+	JR	Z,SECREAD		;Zero, so all is OK to write to drive
+					;Delay to allow drive to get up to speed
+	PUSH	BC
+	LD	BC,0FFFFH	
+DXLAY2:	LD	D,2			;May need to adjust delay time to allow cold drive to
+DXLAY1:	DEC	D			;to speed
+	JR	NZ,DXLAY1
+	DEC	BC
+	LD	A,C
+	OR	B
+	JR	NZ,DXLAY2
+	POP	BC
+	DJNZ	WaitInit		;If after 0FFH, 0FEH, 0FDH... 0, then drive initilization problem
+IDError:
+	LD	HL,DRIVE_NR_ERR		;Drive not ready
+	JP	ABORT_ERR_MSG
+
+SECREAD:				;Note CPMLDR will ALWAYS be on TRK 0,SEC 1,Head 0
+	CALL	IDEwaitnotbusy		;Make sure drive is ready
+	JR	C,IDError		;NC if ready
+
+	LD	D,1			;Load track 0,sec 1, head 0
+	LD	E,REGsector		;Send info to drive
+	CALL	IDEwr8D
+
+	LD	D,0			;Send Low TRK#
+	LD	E,REGcylinderLSB
+	CALL	IDEwr8D
+
+	LD	D,0			;Send High TRK#
+	LD	E,REGcylinderMSB
+	CALL	IDEwr8D
+
+	LD	D,SEC_COUNT		;Count of CPM sectors we wish to read
+	LD	E,REGseccnt
+	CALL	IDEwr8D
+
+	LD	D,COMMANDread		;Send read CMD
+	LD	E,REGcommand
+	CALL	IDEwr8D			;Send sec read CMD to drive.
+	CALL	IDEwaitdrq		;Wait until it's got the data
+
+	LD	HL,CPM_ADDRESS		;DMA address where the CPMLDR resides in RAM
+	LD	B,0			;256X2 bytes
+	LD	C,SEC_COUNT		;Count of sectors X 512
+BOOT_MoreRD16:
+	LD	A,REGdata		;REG regsiter address
+	OUT	(IDECport),A	
+
+	OR	IDErdline		;08H+40H, Pulse RD line
+	OUT	(IDECport),A	
+
+	IN	A,(IDEAport)		;read the LOWER byte
+	LD	(HL),A
+	INC	HL
+	IN	A,(IDEBport)		;read the UPPER byte
+	LD	(HL),A
+	INC	HL
+	
+	LD	A,REGdata		;Deassert RD line
+	OUT	(IDECport),A
+	DJNZ	BOOT_MoreRD16
+	DEC	C
+	JR	NZ,BOOT_MoreRD16
+
+	LD	E,REGstatus		;Check the R/W status when done
+	CALL	IDErd8D
+	BIT	0,D
+	JR	NZ,IDEerr1		;Z if no errors
+	LD	HL,STARTCPM
+	LD	A,(HL)
+	CP	31H			;EXPECT TO HAVE 31H @80H IE. LD SP,80H
+	JP	Z,STARTCPM		;AS THE FIRST INSTRUCTION. IF OK JP to 100H in RAM
+	JP	ERR_LD1			;Boot Sector Data incorrect
+
+IDEerr1:
+	LD	HL,IDE_RW_ERROR		;Drive R/W Error
+	JP	ABORT_ERR_MSG
+
+ABORT_ERR_MSG:	
+	CALL	PRINT_STRING
+	RET				;BACK TO START OF MONITOR.
+
+ERR_NR:	LD	HL,DRIVE_NR_ERR		;"DRIVE NOT READY
+	JP	ABORT_ERR_MSG
+ERR_LD:	LD	HL,BOOT_LD_ERR		;"ERROR READING BOOT/LOADER SECTORS"
+	JP	ABORT_ERR_MSG
+ERR_LD1:LD	HL,BOOT_LD1_ERR		;"DATA ERROR IN BOOT SECTOR"
+	JP	ABORT_ERR_MSG
+	
+	
+
 ;-----------------------Y IDE Menu ---------------------------------------------------
 
-IDE_SETUP:
+IDE_BOARD_MENU:
+	IN0	A,(IOBYTE)		;Charcter in A
+	BIT	0,A
+	JP	NZ,S100_ONLY
+	
 	LD	HL,0100H		;Default DMA address
 	LD	(@RAM_ADDRESS),HL
 	XOR	A
 	LD	(@SEC),A
 	LD	(@TRK+1),A
 	LD	(@TRK),A
+
 	CALL	WRITE_DRIVE_LBA		;Update Drive
-	LD	A,0FFH
-	LD	(@DisplayFlag),A	;Always display contents
 
 IDE_MENU1:
 	LD	HL,1
 	LD	(@SEC_COUNT),HL
 IDE_MENU:
-	CALL	PRINT_TRK_SEC		;Show current Track & Sector
+	CALL	PRINT_IDE_TRK_SEC	;Show current Track & Sector
 	
-	LD	HL,IDE_MENU4_MSG	;Menu
+	LD	HL,IDE_SD_MENU_MSG	;Menu
 	CALL	PRINT_STRING
 	
 	CALL	PCHK
@@ -1764,7 +1926,7 @@ IDE_MENU:
 	CP	'1'
 	JP	Z,SET_LBA		;Set track/Sector
 	CP	'2'
-	JP	Z,SET_DMA_ADDRESS	;Set Location in RAM to read/write sector data
+	JP	Z,SET_IDE_DMA_ADDRESS	;Set Location in RAM to read/write sector data
 	CP	'3'
 	JP	Z,READ_IDE_SEC		;Read Current Sector
 	CP	'4'
@@ -1774,13 +1936,19 @@ IDE_MENU:
 	CP	'6'
 	JP	Z,WRITE_N_IDE_SEC
 	CP	'7'
-	JP	Z,GOTO_NEXT
+	JP	Z,GOTO_NEXT_IDE
 	CP	'+'
-	JP	Z,GOTO_NEXT
+	JP	Z,GOTO_NEXT_IDE
 	CP	ESC
 	JP	Z,MENU_DONE
-	JP	ERROR
+	JP	IDE_MENU1
 
+
+S100_ONLY:
+	LD	HL,S100_ONLY_MSG
+	CALL	PRINT_STRING
+	JP	MENU_DONE
+	
 ;------------------------------------------------------
 INITILIZE_IDE:
 	CALL	IDEInit
@@ -1840,16 +2008,17 @@ M0:	DJNZ	M0
 	JR	NZ,DELAY1  
 	RET
 
-PRINT_TRK_SEC
-	LD	HL,IDE_MENU0_MSG	;Track=$'
+PRINT_IDE_TRK_SEC:
+	LD	HL,IDE_MENU0_MSG	;'S100 Bus IDE Board Menu  Track= '	
 	CALL	PRINT_STRING
-	LD	HL,(@TRK)
+	LD	HL,(@TRK)		;Track number'
 	CALL	HL_ONLY
 	LD	HL,IDE_MENU1_MSG	;H  Sector=
 	CALL	P_STRING
 	LD	A,(@SEC)
 	CALL	ZHEXOUT
-	
+
+SD_PRINT_2:				;Also used by SD CARD Menu
 	LD	HL,IDE_MENU3_MSG	;H  RAM Address=
 	CALL	P_STRING
 	LD	HL,(@RAM_ADDRESS)
@@ -1857,6 +2026,8 @@ PRINT_TRK_SEC
 	LD	HL,H_MSG		;H.
 	CALL	P_STRING
 	RET
+
+
 	
 ;-----------------------------------------
 SET_LBA:				;Set the logical block address
@@ -1870,22 +2041,18 @@ main3b:	CALL	ZCRLF
 
 
 ;-----------------------------------------
-SET_DMA_ADDRESS
+SET_IDE_DMA_ADDRESS
 	LD      HL,GET_DMA_MSG	
 	CALL	PRINT_STRING
-;	CALL	ZGET_HL			;Not clear why this returns incorrect values
-	CALL	GETHEX			;get 2 HEX digits
+	CALL	ZGET_HL			;Not clear why this returns incorrect values
 	JP	C,IDE_MENU
-	LD	(@RAM_ADDRESS+1),A
-	CALL	GETHEX			;get 2 more HEX digits
-	JP	C,IDE_MENU
-	LD	(@RAM_ADDRESS),A
+	LD	(@RAM_ADDRESS),HL
 	JP	IDE_MENU
 
 
 ;-------------------------------------------
-GOTO_NEXT:	
-	CALL	BUMP_SECTOR		;Advance one sector
+GOTO_NEXT_IDE:	
+	CALL	BUMP_IDE_SECTOR		;Advance one sector
 	JP	IDE_MENU
 
 
@@ -1906,7 +2073,7 @@ MORE_RD_SEC:
 	JP	IDE_MENU		;Was an error, don't display data
 
 main1b_N:
-	CALL	PRINT_TRK_SEC
+	CALL	PRINT_IDE_TRK_SEC
 	LD	HL,msgrd		;Sector read OK
 	CALL	PRINT_STRING
 	LD	HL,(@SEC_COUNT)
@@ -1915,7 +2082,7 @@ main1b_N:
 	LD	A,L
 	OR	A
 	JP	Z,IDE_MENU1	
-	CALL	BUMP_SECTOR		;Bump TRK, SEC, DMA
+	CALL	BUMP_IDE_SECTOR		;Bump TRK, SEC, DMA
 	JR	MORE_RD_SEC
 
 
@@ -1932,13 +2099,13 @@ READ_IDE_SEC:				;Read Sector @ LBA to the RAM buffer
 	
 main1b:	LD	HL,msgrd		;Sector read OK
 	CALL	PRINT_STRING
-
-	LD	A,(@DisplayFlag)	;Do we have detail sector data display flag on or off
-	OR	A			;NZ = on 
-	JP	Z,IDE_MENU
 	LD	HL,(@RAM_ADDRESS)
 	CALL	HEXDUMP			;Show sector data at @RAM_ADDRESS
-	CALL	ZCRLF
+	LD	HL,CONTINUE_MSG		;Print any character to continue
+	CALL	PRINT_STRING
+	CALL	ZCI
+	CP	A,ESC
+	JP	Z,BEGIN
 	JP	IDE_MENU
 	
 					;Read a sector, specified by the 3 bytes in LBA
@@ -1996,7 +2163,7 @@ SHOWerrors:
 	RET
 
 
-BUMP_SECTOR:				;For multi sec read/writes
+BUMP_IDE_SECTOR:			;For multi sec read/writes
 	LD	HL,(@NEXT_ADDRESS)
 	LD  	(@RAM_ADDRESS),HL	;DMA address
 	
@@ -2034,7 +2201,7 @@ MORE_WR_SEC:
 	JP	IDE_MENU		;Was an error, don't display data
 
 main3b_N:
-	CALL	PRINT_TRK_SEC
+	CALL	PRINT_IDE_TRK_SEC
 	LD	HL,msgwr		;Sector write OK
 	CALL	PRINT_STRING
 	LD	HL,(@SEC_COUNT)
@@ -2043,7 +2210,7 @@ main3b_N:
 	LD	A,L
 	OR	A
 	JP	Z,IDE_MENU1	
-	CALL	BUMP_SECTOR		;Bump TRK, SEC, DMA
+	CALL	BUMP_IDE_SECTOR		;Bump TRK, SEC, DMA
 	JR	MORE_WR_SEC
 
 
@@ -2177,7 +2344,8 @@ WRITE_DRIVE_LBA:			;Write the logical block address to the drive's registers
 	
 	
 	
-IDEwaitdrq:
+					
+IDEwaitdrq:				;Wait for the drive to be ready to transfer data.
 	LD	B,0FFH
 	LD	A,0FFH			;Delay, must be above 80H for 4MHz Z80. Leave longer for slower drives
 	LD	(@DELAYStore),A
@@ -2321,6 +2489,769 @@ IDEwr8D:				;WRITE Data in [D] to IDE register in [E]
 	RET
 
 
+;-----------------------W Command   SD CARD Menu ---------------------------------------------------
+
+SD_CARD_MENU:				
+	LD	HL,0100H		;Default DMA address
+	LD	(@RAM_ADDRESS),HL
+	LD	HL,0
+	LD	(@SEC),HL		;low byte,high byte
+	LD	(@TRK),HL
+	
+	XOR	A
+	LD	(@CARD_TYPE),A		; Unknown Card Type so far
+	
+SD_MENU1:
+	LD	HL,1
+	LD	(@SEC_COUNT),HL
+SD_MENU:
+	CALL	PRINT_SD_SEC		;Show current Sector
+	
+	LD	HL,IDE_SD_MENU_MSG	;Menu
+	CALL	PRINT_STRING
+	
+	CALL	PCHK
+	CP	A,'0'
+	JP	Z,INITILIZE_SD_CARD	
+	CP	A,'1'
+	JP	Z,SET_SD_SECTOR
+	CP	A,'2'
+	JP	Z,SET_SD_DMA_ADDRESS	;Set Location in RAM to read/write sector data
+	CP	A,'3'
+	JP	Z,READ_SD_SEC		;Read to Current SD Sector
+	CP	A,'4'
+	JP	Z,WRITE_SD_SEC		;Write to Current SD Sector
+	CP	'5'
+	JP	Z,READ_N_SD_SEC		;Read N SD Sectors
+	CP	'6'
+	JP	Z,WRITE_N_SD_SEC	;Write N SD Sectors
+	CP	'7'
+	JP	Z,GOTO_NEXT_SEC
+	CP	'+'
+	JP	Z,GOTO_NEXT_SEC
+	CP	'8'
+	JP	Z,GOTO_PREVIOUS_SEC
+	CP	'-'
+	JP	Z,GOTO_PREVIOUS_SEC
+	CP	ESC
+	JP	Z,MENU_DONE
+	JP	SD_MENU1
+
+
+;==========================================  INITILIZE SD CARD  =====================================================
+
+INITILIZE_SD_CARD:     
+	LD	A,0
+	LD	(@CARD_TYPE),A			; Unknown Card Type so far
+	
+	LD	A,06H				; Wayne Warthen's recomended slow value at the start
+	OUT0	(z180_cntr),A
+	
+	CALL	SEND_SD_RESET			;  Repeatidly send the RESET CMD0 to the adaptor (Up to 256 times)
+	JP	NZ,BAD_SD_RESET
+
+	LD	HL,INIT_OK			; Drive Init. OK
+	CALL	PRINT_STRING
+	
+	CALL	SEND_GET_TYPE			; Will put card type in (CARD_TYPE)
+	CALL	SEND_GET_TYPE			; Initilize a Type 2 Card, Get Card Type CMD8. Required for SDHC cards
+	LD	HL,CF_TYPE_ERR_MSG		; 'Sorry, SD Card Type 2 was NOT detected. (Status =
+	CALL	NZ,CMD_FAIL
+	JP	NZ,SD_MENU1
+	
+	LD	HL,CARD_TYPE2_MSG		; "SD Card Type 2 detected."
+	CALL	PRINT_STRING
+	
+	CALL	TYPE_2_ACTIVATE			; Type 2 needs special activation
+	LD	HL,CMD55_FAIL_MSG		; SD Card Type 2 Initilization failed (CMD55 or CMD41).
+	CALL	NZ,CMD_FAIL
+	JP	NZ,SD_MENU1
+	
+	LD	HL,CMD41_55_OK_MSG		; 'CMD41 & CMD55 accepted OK. SD Card is now initilized.'
+	CALL	PRINT_STRING
+
+	CALL	STOP_CRC_CHECK			; Turn off CRC Checking
+	LD	HL,CRC_ERROR_MSG		; "Got error trying to turn off CRC checking."
+	CALL	NZ,CMD_FAIL
+	JP	NZ,SD_MENU1
+
+	CALL	SET_SEC_SIZE			; <<<<<<<<<<< Set Sector size to 512 bytes
+	LD	HL,SIZE_ERROR_MSG		; "Got error trying set sector size to 512 bytes. (Status = "
+	CALL	NZ,CMD_FAIL
+
+	LD	A,00H				; Set to high speed SPI clock
+	OUT0	(z180_cntr),A
+	JP	SD_MENU1
+
+BAD_SD_RESET:
+	LD	HL,INIT_ERR			; 'Drive Init. Error
+	CALL	CMD_FAIL			; Print Error
+	JP	SD_MENU1
+	
+
+;==========================================  SET SECTOR  =====================================================
+
+SET_SD_SECTOR:
+	LD	HL,ENTER_SEC_NUM		; 'Please enter Sector Number (XXXXH):
+	CALL	P_STRING
+	CALL	ZGET_HL
+	JP	C,DATA_ERROR
+	LD	(@SEC),HL			; Store here
+	JP	SD_MENU1
+
+DATA_ERROR:
+	LD	HL,DATA_ERROR_MSG		; "Data error"
+	CALL	PRINT_STRING
+	JP	SD_MENU1
+
+
+;==========================================  SET DMA ADDRESS  =====================================================
+
+SET_SD_DMA_ADDRESS:
+	LD      HL,GET_DMA_MSG	
+	CALL	PRINT_STRING
+	CALL	ZGET_HL
+	JP	C,SD_MENU1
+	LD	(@RAM_ADDRESS),HL
+	JP	SD_MENU1
+
+
+;-------------------------------------------SD CARD RESET -----------------------------------------------------------
+
+SEND_SD_RESET:					; Send Card Reset CMD. CS is always off for SPI dummy clocks
+	LD	B,0				; Repeatidly send the RESET CMD0 (256 times)
+INIT2:	CALL	DRIVE_CS_OFF			; Lower CS on SD card (Port 0CH)
+	LD	C,12				; Send 12 empty clock cycles
+INIT1:	CALL	SPI_DUMMY_CLOCKS		; Clear SPI circuit/SD card
+	DEC	C
+	JP	NZ,INIT1
+	
+	CALL	DRIVE_CS_ON			; Lower CS on SD card (Port 0CH)
+	LD	HL,CMD_0			; (CMD0 OR 40H) 
+	CALL	SEND_SD_CMD	
+	CALL	READ_SPI			; Value returned in [A]
+	CALL	DRIVE_CS_OFF			; -- Turn off CS on both SD Cards (AF Unchanged)
+	CP	A,01H				; Is it OK
+	RET	Z				; All OK ret Z set
+	DJNZ	INIT2				; Try 256 times
+	XOR	A
+	DEC	A
+	RET					; Error RET NZ
+
+;------------------------------------------------ SEND_IDLE_STATE --------------------------------------
+
+SEND_IDLE_STATE:				; Wait until card is in Idle state		
+	LD	B,40				; Try several times
+	CALL	DRIVE_CS_ON			; Lower CS on current SD card
+SEND_IDLE1:
+	LD	HL,CMD_1			; <<<<<<<< SEND CMD1 
+	CALL	SEND_SD_CMD	
+	CALL	READ_SPI
+
+	CP	A,0
+	JP	Z,SEND_IDLE2			
+	DJNZ	SEND_IDLE1			; Need to retry several times.
+	CALL	DRIVE_CS_OFF			; -- Turn off CS on both SD Cards
+	XOR	A
+	DEC	A
+	RET					; Error RET NZ
+SEND_IDLE2:
+	LD	A,0FFH				; Flush with extra 0FF's
+	CALL	WRITE_SPI
+	LD	A,0FFH				; Flush with extra 0FF's
+	CALL	WRITE_SPI
+
+	CALL	DRIVE_CS_OFF			; -- Turn off CS on both SD Cards
+	XOR	A
+	RET					; Error RET Z
+	
+;------------------------------------------------ GET CARD VOLTAGE/TYPE --------------------------------------
+
+SEND_GET_TYPE:					; Get Card Voltage/Type
+	LD	B,40				; Try several times
+	CALL	DRIVE_CS_ON			; Lower CS on current SD card
+GET_TYPE1:
+	LD	HL,CMD_8			; SEND CMD8 to get Card Voltage
+	CALL	SEND_SD_CMD	
+	CALL	READ_SPI
+	 
+	CP	A,01H				; If 01 then Type 2
+	JP	Z,SD_TYPE_2			; If CMD8 is Illegal Cmd, then probably CARD_TYPE=1
+	DJNZ	GET_TYPE1
+	CALL	DRIVE_CS_OFF			; Turn off CS on both SD Cards
+	LD	A,1				; Probably Type 1 card
+	LD	(@CARD_TYPE),A			; Type 1 or Type 2 Card
+	XOR	A,A
+	DEC	A
+	RET					; SD CARD not Type 2, Return NZ
+
+SD_TYPE_2:					; Confirm type 2
+	CALL	READ_SPI			; value returned in [A] is 00H
+	CALL	READ_SPI			; value returned in [A] is 00H
+	CALL	READ_SPI			; value returned in [A] is 01H
+	CALL	READ_SPI			; value returned in [A] is 87H
+	
+	CALL	DRIVE_CS_OFF			; Turn off CS on both SD Cards
+	CP	A,0AAH				; Must be 0AAH for Type 2 cards
+	JP	NZ,NOT_2			; SD CARD UNKNOWN_TYPE, Return NZ
+	LD	A,2				 
+	LD	(@CARD_TYPE),A			; Definately Type 2 card
+	XOR	A,A				
+	RET					; RET Z
+
+NOT_2:	LD	A,0				; Unknown card
+	LD	(@CARD_TYPE),A			; Not Type 1 or Type 2 Card
+	XOR	A,A
+	DEC	A
+	RET					; Return NZ
+	
+	
+;  ------------------------------------- AVCTIVATE TYPE 2 CARDS  ---------------------------------
+
+TYPE_2_ACTIVATE:				; Initilize the SD card Type 2 cards with CMD55 & CMD44 Commands
+	LD	B,40				; Will try 40 times
+ACT1:	CALL	DRIVE_CS_ON			; Lower CS on current SD card
+	LD	HL,CMD_55			; Application specific command next
+	CALL	SEND_SD_CMD			
+	CALL	READ_SPI			; value returned in [A]
+	CP	A,01H				; Correct response is 01H
+	JP	Z,ACT2				; Got correct response try CMD41		
+	DJNZ	ACT1
+	CALL	DRIVE_CS_OFF			; -- Turn off CS on both SD Cards
+	XOR	A
+	DEC	A
+	RET					; Error RET NZ
+
+ACT2:	CALL	DRIVE_CS_OFF			; Turn off CS on both SD Cards
+	CALL	DRIVE_CS_ON			; Turn back on, Lower CS on current SD card (required!)
+	LD	HL,CMD_41			
+	CALL	SEND_SD_CMD			
+	CALL	READ_SPI			; Value returned in [A]
+	CALL	DRIVE_CS_OFF			; -- Turn off CS on both SD Cards
+	CP	A,0
+	RET	Z				; RET Z
+	DJNZ	ACT1
+	XOR	A
+	DEC	A
+	RET					; Error RET NZ
+
+
+;  ----------------------------------------------  DEACTIVATE CRC CHECKING  ----------------
+	
+STOP_CRC_CHECK:					; Will now stop CRC checking
+	CALL	DRIVE_CS_ON			; Lower CS on current SD card
+	LD	HL,CMD_59
+	CALL	SEND_SD_CMD			; SEND CMD59 Turn off CRC checking
+	CALL	READ_SPI			; Value returned in [A]
+	CALL	DRIVE_CS_OFF			; Turn off CS on both SD Cards
+	CP	A,0H
+	RET	Z				; RET Z
+	XOR	A
+	DEC	A
+	RET					; Error RET NZ
+	
+
+;  ---------------------------------------------- SET SECTOR SIZE FOR TYPE 1 & 2 CARDS  ----------------
+
+SET_SEC_SIZE:					; Will now set the sector size to 512 bytes
+	CALL	DRIVE_CS_ON			; Lower CS on current SD card
+	LD	HL,CMD_16
+	CALL	SEND_SD_CMD			; SEND CMD16 to set sector size (512 Bytes)
+	CALL	READ_SPI			; Value returned in [A]
+	CALL	DRIVE_CS_OFF			; Turn off CS on both SD Cards
+	CP	A,0H				; Should be 00000000B
+	RET	Z				; RET Z
+	XOR	A
+	DEC	A
+	RET					; Error RET NZ
+
+
+;------------------------------------------------ SEND CARD STATUS --------------------------------------
+
+GET_CARD_STATUS:				; Get card status		
+	LD	B,40				; Try several times
+	CALL	DRIVE_CS_ON			; Lower CS on current SD card
+CARD_STATUS_1:
+	LD	HL,CMD_13			; <<<<<<<< SEND CMD13 
+	CALL	SEND_SD_CMD	
+	CALL	READ_SPI
+	CP	A,0
+	JP	Z,CARD_STATUS_2			
+	DJNZ	CARD_STATUS_1			; Need to retry several times.
+	CALL	DRIVE_CS_OFF			; -- Turn off CS on both SD Cards
+	XOR	A
+	DEC	A
+	RET					; Error RET NZ
+CARD_STATUS_2:
+	LD	A,0FFH				; Flush with extra 0FF's
+	CALL	WRITE_SPI
+	LD	A,0FFH				; Flush with extra 0FF's
+	CALL	WRITE_SPI
+	CALL	DRIVE_CS_OFF			; -- Turn off CS on both SD Cards
+	XOR	A
+	RET					; Error RET Z
+
+
+;------------------------------------------- READ N SECTORS ----------------------------------------
+
+READ_N_SD_SEC:
+	LD	HL,ENTER_SEC_COUNT
+	CALL	PRINT_STRING
+	CALL	GETHEX				;get 2 HEX digits
+	LD	HL,0
+	LD	L,A			
+	LD	(@SEC_COUNT),HL
+	
+MORE_RD_SEC2:
+	CALL	CORE_SD_READ			;Read one sector at a time
+	JR	Z,MORE_RD_SEC1			;Z means the sector read was OK
+	CALL	ZCRLF
+	JP	SD_MENU1			;Was an error, don't display data
+
+MORE_RD_SEC1:
+	CALL	PRINT_SD_SEC			;Show current Sector
+	LD	HL,msgrd			;Sector read OK
+	CALL	PRINT_STRING
+	LD	HL,(@SEC_COUNT)
+	DEC	HL
+	LD	(@SEC_COUNT),HL
+	LD	A,L
+	OR	A
+	JP	Z,SD_MENU1	
+	CALL	BUMP_SD_SECTOR			;Bump SEC, DMA
+	JR	MORE_RD_SEC2
+
+
+;------------------------------------------- READ ONE SECTOR ----------------------------------------
+
+READ_SD_SEC:
+	LD	A,(@CARD_TYPE)			; Flag to check if SD card type has been determined 
+	OR	A,A
+	JP	NZ,SD_CARD_RD_OK
+	LD	HL,READ_ERR_MSG1		; 'Sorry, SD Card must first be initilized (Menu 0).
+	CALL	PRINT_STRING
+	JP	SD_MENU1			; Back to main menu
+
+SD_CARD_RD_OK:
+	CALL	CORE_SD_READ			; >>>>>> The main Read SD sector routine <<<<<<<<<
+	JR	Z,DONE_RD_WR_SEC1		;Z means the sector read was OK
+	CALL	ZCRLF
+	JP	SD_MENU1			;Was an error, don't display data
+	
+DONE_RD_WR_SEC1:
+	LD	HL,msgrd			; Sector Read OK
+	CALL	PRINT_STRING
+	LD	HL,(@RAM_ADDRESS)		; Point to start of DMA address
+	CALL	HEXDUMP				; Display sector contents		
+	LD	HL,CONTINUE_MSG			; Print any character to continue
+	CALL	PRINT_STRING
+	CALL	ZCI
+	CP	A,ESC
+	JP	Z,BEGIN				;Abort everything
+	JP	SD_MENU1
+
+
+;==========================================  READ A SECTOR  =====================================================
+
+	
+CORE_SD_READ:
+	CALL	DRIVE_CS_ON			; Lower CS on current SD card
+	LD	B,0H				; Try up to 255 times!
+READ_SEC1:
+	LD	A,51H				; <<<<<<<< SEND CMD17  OR bits 40H added
+	CALL	WRITE_SPI
+	LD	A,0				; Second byte of CMD
+	CALL	WRITE_SPI
+	LD	A,0				; Third byte of CMD
+	CALL	WRITE_SPI
+	LD	HL,(@SEC)			; <---------- SECTOR NNUMBER ----								
+	LD	A,L				; Forth byte of CMD 
+	CALL	WRITE_SPI
+	LD	A,H				; Fifth byte of CMD
+	CALL	WRITE_SPI
+	LD	A,0FFH				; CRC byte of CMD
+	CALL	WRITE_SPI
+	LD	A,0FFH				; Flush with extra 0FF's
+	CALL	WRITE_SPI
+
+	CALL	READ_SPI
+	
+	CP	A,0H				; Should be 00000000B
+	JP	Z,READ_SEC_OK1
+	LD	HL,SEC_RD_ERR0_MSG		; Got error with Read Sector command CMD17. (Status = "
+	CALL	CMD_FAIL			; Deselect CS, Low speed CLK, send error Message, Ret NZ
+	JP	SD_MENU1
+
+	LD	B,0H
+READ_SEC_OK1:
+	CALL	READ_SPI
+	CP	A,0FFH
+	JP	Z,READ_SEC_OK1
+	CP	A,0FEH				; Should be 0FEH (Start Token)
+	JP	Z,READ_SEC_OK2
+	DJNZ	READ_SEC_OK1			; Keep trying until we see 0FEH
+	LD	HL,SEC_RD_ERR1_MSG		; Got error with Read Sector command CMD17. (Status = "
+	CALL	CMD_FAIL			; Deselect CS, Low speed CLK, send error Message, RET NZ
+	JP	SD_MENU1
+
+READ_SEC_OK2: 
+	LD	HL,(@RAM_ADDRESS)		; <---------- RAM ADDRESS ----
+	LD	B,0
+READ_256:
+	CALL	READ_SPI
+	LD	(HL),A
+;	CALL	ZHEXOUT				; For debugging
+	INC	HL
+	DJNZ	READ_256
+	LD	B,0
+READ_512:
+	CALL	READ_SPI
+	LD	(HL),A
+;	CALL	ZHEXOUT				; For debugging
+	INC	HL
+	DJNZ	READ_512
+
+	LD	(@NEXT_ADDRESS),HL		; Save next sector DMA address
+	CALL	READ_SPI			; Read 16 bit CRC 
+	CALL	READ_SPI
+	
+	CALL	READ_SPI			; Need one extra!
+
+	CALL	DRIVE_CS_OFF			; Turn off CS on SD Card
+	XOR	A
+	RET
+
+
+;------------------------------------------- WRITE N SECTORS ----------------------------------------
+
+WRITE_N_SD_SEC:
+	LD	HL,ENTER_SEC_COUNT
+	CALL	PRINT_STRING
+	CALL	GETHEX				;get 2 HEX digits
+	LD	HL,0
+	LD	L,A			
+	LD	(@SEC_COUNT),HL
+	
+MORE_WR_SEC2:
+	CALL	CORE_SD_WRITE			;Write one sector at a time
+	JR	Z,MORE_WR_SEC1			;Z means the sector read was OK
+	CALL	ZCRLF
+	JP	SD_MENU1			;Was an error, don't display data
+
+MORE_WR_SEC1:
+	CALL	PRINT_SD_SEC			;Show current Sector
+	LD	HL,msgwr			;Sector written OK
+	CALL	PRINT_STRING
+	LD	HL,(@SEC_COUNT)
+	DEC	HL
+	LD	(@SEC_COUNT),HL
+	LD	A,L
+	OR	A
+	JP	Z,SD_MENU1	
+	CALL	BUMP_SD_SECTOR			;Bump SEC, DMA
+	JR	MORE_WR_SEC2
+
+;------------------------------------------- WRITE ONE SECTOR ----------------------------------------
+
+WRITE_SD_SEC:
+	LD	A,(@CARD_TYPE)			; Flag to check if SD card type has been determined 
+	OR	A,A
+	JP	NZ,SD_CARD_WR_OK
+	LD	HL,READ_ERR_MSG1		; 'Sorry, SD Card must first be initilized (Menu 0).
+	CALL	PRINT_STRING
+	JP	SD_MENU1			; Back to main menu
+
+SD_CARD_WR_OK:
+	CALL	CORE_SD_WRITE			; >>>>>> The main Write SD sector routine <<<<<<<<<
+	JP	Z,DONE_RD_WR_SEC1		;Z means the sector read was OK
+	CALL	ZCRLF
+	JP	SD_MENU1			;Was an error, don't display data
+
+
+;==========================================  WRITE A SECTOR  =====================================================
+
+
+CORE_SD_WRITE:
+	CALL	DRIVE_CS_ON			; Lower CS on current SD card
+
+	LD	A,58H				; <<<<<<<< SEND CMD24  OR bits 40H added
+	CALL	WRITE_SPI
+	LD	A,0				; Second byte of CMD
+	CALL	WRITE_SPI
+	LD	A,0				; Third byte of CMD
+	CALL	WRITE_SPI
+	LD	HL,(@SEC)
+												
+	LD	A,L				; Forth byte of CMD 
+	CALL	WRITE_SPI
+	LD	A,H				; Fifth byte of CMD
+	CALL	WRITE_SPI
+	LD	A,0FFH				; CRC byte of CMD
+	CALL	WRITE_SPI
+	LD	A,0FFH				; Flush with extra 0FF's
+	CALL	WRITE_SPI
+
+	CALL	READ_SPI
+	
+	CP	A,0H				; Should be 00000000B
+	JP	Z,WRITE_SEC_OK1
+	LD	HL,SEC_WR_ERR0_MSG		; 'Got error with Write Sector command CMD24. (Status = 
+	CALL	CMD_FAIL			; Deselect CS, Low speed CLK, send error Message
+	JP	SD_MENU1
+
+
+WRITE_SEC_OK1:
+	LD	A,0FEH				; Start Block write flag
+	CALL	WRITE_SPI
+
+	LD	HL,(@RAM_ADDRESS)
+	LD	B,0
+WRITE_256:
+	LD	A,(HL)
+	CALL	WRITE_SPI
+	INC	HL
+	DJNZ	WRITE_256
+	LD	B,0
+WRITE_512:
+	LD	A,(HL)
+	CALL	WRITE_SPI
+	INC	HL
+	DJNZ	WRITE_512
+
+	LD	(@NEXT_ADDRESS),HL		; Save next sector DMA address
+	LD	A,0FFH				; Send 16 bit CRC
+	CALL	WRITE_SPI
+	CALL	WRITE_SPI
+
+	CALL	READ_SPI			; Check all is OK
+
+	AND	A,1FH
+	CP	A,05H				; Should be xxx0AAA1H (AAA = 010)
+	JP	Z,WRITE_SEC_OK2
+	CALL	DRIVE_CS_OFF			; Turn off CS on SD Card
+	LD	HL,SEC_WR_ERR1_MSG		; Got error with Read Sector command CMD24. (Status = "
+	CALL	CMD_FAIL			; Deselect CS, Low speed CLK, send error Message
+	JP	SD_MENU1
+
+	LD	HL,0000H			; Wait until writing is done
+WRITE_SEC_OK2:
+	CALL	READ_SPI			; Wait for SD card to complete writing, (64K times)
+	CP	A,0
+	JP	Z,WRITE_SEC_OK3
+	DEC	HL
+	LD	A,L
+	OR	A,H
+	JP	NZ,WRITE_SEC_OK2
+ WRITE_ERR:	
+	CALL	DRIVE_CS_OFF			; Turn off CS on SD Card
+	LD	HL,SEC_WR_ERR2_MSG		; Error waiting for SD Card to complete sector write. (Status = "
+	CALL	CMD_FAIL			; Deselect CS, Low speed CLK, send error Message
+	JP	SD_MENU1
+
+
+						; >>> NOT CLEAR WHAT IS WRONG WITH THIS WRITE SECTOR CODE
+						; >>> I NEED TO RESET THE CARD AFTER EACH SECTOR WRITE
+						; >>> OTHEREWISE THE NEXT SEC READ GIVES ERROROUS DATA
+WRITE_SEC_OK3:
+	CALL	SEND_SD_RESET			; CMD0
+	JP	NZ,WRITE_RESET_ERR3		; Error resetting SD Card after sector write, CMD0. (Status =
+
+	CALL	SEND_GET_TYPE			; CMD8	
+	JP	NZ,WRITE_RESET_ERR4		; Error getting SD Card type after sector write, CMD8. (Status = 
+
+	CALL	TYPE_2_ACTIVATE			; CMD55+CMD41	 
+	JP	NZ,WRITE_RESET_ERR5
+
+	CALL	DRIVE_CS_OFF			; Turn off CS on both SD Cards
+	XOR	A,A
+	RET
+	
+WRITE_RESET_ERR3:	
+	LD	HL,SEC_WR_ERR3_MSG		; Error resetting SD Card after sector write, CMD0. (Status = 
+	CALL	CMD_FAIL			; Deselect CS, Low speed CLK, send error Message
+	JP	SD_MENU1
+	
+WRITE_RESET_ERR4:	
+	LD	HL,SEC_WR_ERR4_MSG		; Error getting SD Card type after sector write. (Status = 
+	CALL	CMD_FAIL			; Deselect CS, Low speed CLK, send error Message
+	JP	SD_MENU1
+
+WRITE_RESET_ERR5:	
+	LD	HL,SEC_WR_ERR5_MSG		; Error re-activating Type 2 Card after sector write. (Status = 
+	CALL	CMD_FAIL			; Deselect CS, Low speed CLK, send error Message
+	JP	SD_MENU1
+
+   
+
+
+
+;--------------------------------------------------------------------------------------------------
+
+GOTO_NEXT_SEC:
+	CALL	BUMP_SD_SECTOR
+	JP	SD_MENU1
+	
+GOTO_PREVIOUS_SEC:
+	LD	HL,(@NEXT_ADDRESS)
+	LD  	(@RAM_ADDRESS),HL		;DMA address
+	LD	HL,(@SEC)
+	LD	A,L
+	OR	H
+	JR	Z,AT_ZERO
+	DEC	HL
+	LD	(@SEC),HL
+	JP	SD_MENU1
+AT_ZERO:
+	LD	C,BELL
+	CALL	ZCO
+	JP	SD_MENU1
+		
+;--------------------------------------------------------------------------------------------------
+
+PRINT_SD_SEC:
+	LD	HL,SD_MENU0_MSG			;'SD Card Menu Sector='
+	CALL	PRINT_STRING
+	LD	HL,(@SEC)
+	CALL	HL_ONLY
+	JP	SD_PRINT_2
+
+
+;--------------------------------------------------------------------------------------------------
+	
+BUMP_SD_SECTOR:					;For multi sec read/writes
+	LD	HL,(@NEXT_ADDRESS)
+	LD  	(@RAM_ADDRESS),HL		;DMA address
+	
+	ld	hl,(@SEC)
+	inc	hl
+	ld	(@SEC),hl
+	RET
+	
+
+;------------------------- SPI COMMANDS -------------------------------------------------
+
+SPI_DUMMY_CLOCKS:			; Only [A] register altered
+	LD	A,0FFH
+	CALL	WRITE_SPI
+	RET
+
+
+SEND_SD_CMD:				; Generalized CMD to send SD Card 6 commands. Only [A] & [HL] registers altered
+	LD	A,(HL)			; Get first byte from CMD table (Note already has OR bits 40H added)
+	CALL	WRITE_SPI
+	INC	HL
+	LD	A,(HL)			; Get second byte from CMD table 
+	CALL	WRITE_SPI
+	INC	HL
+	LD	A,(HL)			; Get third byte from CMD table 
+	CALL	WRITE_SPI
+	INC	HL
+	LD	A,(HL)			; Get forth byte from CMD table 
+	CALL	WRITE_SPI
+	INC	HL
+	LD	A,(HL)			; Get fifth byte from CMD table 
+	CALL	WRITE_SPI
+	INC	HL
+	LD	A,(HL)			; Get sixth byte from CMD table 
+	CALL	WRITE_SPI
+
+	INC	HL
+	LD	A,0FFH			; Send dummy byte to get returned message (Required!)
+	CALL	WRITE_SPI
+	RET
+
+	
+	
+WRITE_SPI:				; SEND ONE BYTE, No registers altered
+	PUSH	AF
+	PUSH	BC
+	CALL	MIRROR			; MSB<-->LSB MIRROR BITS, RESULT IN C
+	CALL	SD_WAITTX		; MAKE SURE WE ARE DONE SENDING
+	OUT0	(SD_TRDR),C		; PUT BYTE IN BUFFER
+	IN0	A,(SD_CNTR)
+	SET	4,A			; SET TRANSMIT ENABLE
+	OUT0	(SD_CNTR),A
+	POP	BC
+	POP	AF
+	RET				
+
+
+READ_SPI:				; RECEIVE ONE BYTE, Only [A] register altered
+	PUSH	BC
+	CALL	SD_WAITTX		; MAKE SURE WE ARE DONE SENDING
+	IN0	A,(SD_CNTR)		; GET CSIO STATUS
+	SET	5,A			; START RECEIVER
+	OUT0	(SD_CNTR),A
+	CALL	SD_WAITRX
+	IN0	A,(SD_TRDR)		; GET RECEIVED BYTE
+	CALL	MIRROR			; MSB<-->LSB MIRROR BITS
+	LD	A,C			; KEEP RESULT
+	POP	BC
+	RET
+
+SD_WAITTX:				; CSIO WAIT FOR TRANSMIT READY (TX REGSITER EMPTY)
+	IN0	A,(SD_CNTR)		; GET CSIO STATUS
+	BIT	4,A			; TX EMPTY?
+	JR	NZ,SD_WAITTX		; LOOP WHILE BUSY
+	RET				
+	
+SD_WAITRX:				; CSIO WAIT FOR RECEIVER READY (BYTE AVAILABLE)
+	IN0	A,(SD_CNTR)		; WAIT FOR RECEIVER TO FINISH
+	BIT	5,A			; RX EMPTY?
+	JR	NZ,SD_WAITRX		; LOOP WHILE BUSY
+	RET				
+	
+
+MIRROR:					; MSB<-->LSB MIRROR BITS IN A, RESULT IN C
+	LD  C,A				; A = 76543210
+	RLCA
+	RLCA				; A = 54321076
+	XOR C
+	AND 0AAH
+	XOR C				; A = 56341270
+	LD C,A
+	RLCA
+	RLCA
+	RLCA				; A = 41270563
+	RRC C				; C = 05634127
+	XOR C
+	AND 066H
+	XOR C				; A = 01234567
+	LD C,A				; RETURN RESULT IN C
+	RET
+		
+
+;---------------------------------------------------------------------------------------
+
+CMD_FAIL:				; Generalized failure message routine (Message in [HL])
+	CALL	DRIVE_CS_OFF		; Always, turn off CS on SD Card
+	CALL	PRINT_STRING
+	IN0	A,(z180_trdr)		; Return data in [A] (Is latched)
+	CALL	ZBITS
+	LD	HL,BITS_END_MSG		; "B) "
+	CALL	P_STRING
+	XOR	A
+	DEC	A
+	RET				; Return NZ			
+
+					
+
+DRIVE_CS_OFF:				; Raise CS on SD card	
+	PUSH	AF			; Note no registers altered
+	LD	A,04H			; We only have one drive 
+	OUT0	(SD_CARD_CS),A		;Bit 2 to select onboard SD card adaptor (0=ON, 1=off)
+	OUT0	(SD_CARD_LED),A		;Bit 2 to turn on/off SD Card LED (0=ON, 1=off)
+	POP	AF
+	RET
+
+
+DRIVE_CS_ON:				; Lower CS on current SD card	
+	PUSH	AF			; Note no registers altered
+	LD	A,00H			; We only have one drive 	
+	OUT0	(SD_CARD_CS),A		;Bit 2 to select onboard SD card adaptor (0=ON, 1=off)
+	OUT0	(SD_CARD_LED),A		;Bit 2 to turn on/off SD Card LED (0=ON, 1=off)
+	POP	AF
+	RET
 
 
 ;-------------------------------------------------------------------------------------------	
@@ -2360,12 +3291,13 @@ LFADR:	CALL	ZCRLF
 ZPRINT_HL:	
 	PUSH	HL
 	PUSH	BC
-	CALL	LADR			;Print [HL] with no space afterwards
+	CALL	LADR			;Print [HL] with space afterwards
 	LD	C,SPACE
 	CALL	ZCO
 	POP	BC
 	POP	HL
 	RET
+
 
 ;PRINT [HL] ONLY
 
@@ -2423,10 +3355,22 @@ EXPR3:	INC	C			;ALREADY HAD [C]=2 FROM START
 	POP	DE
 	POP	HL
 	RET 
+
 	
-;GET ONE PARAMETER
+
 
 ZGET_HL:
+	CALL	GETHEX			;Get 4 digits into HL
+	RET	C
+	LD	H,A
+	CALL	GETHEX
+	RET	C
+	LD	L,A
+	OR	A			;To return NC
+	RET
+
+;GET ONE PARAMETER
+	
 EXPR1:	LD	C,01H
 HEXSP:	LD	HL,0000
 EX0:	CALL	TI
@@ -2487,7 +3431,7 @@ HILO:	INC	HL			;RANGE CHECK SET CARRY IF [DE]=[HL]
 
 ;PRINT [HL] ON CONSOL
 
-LADR:	LD	A,H
+LADR:	LD	A,H			;Print HEX in A no other registers altered
 	CALL	ZHEXOUT
 	LD	A,L
 LBYTE:
@@ -2499,9 +3443,8 @@ ZHEXOUT:
 	RRCA
 	CALL	SF598
 	POP	AF
-SF598:	CALL	CONV
+SF598:	CALL	CONV			;Char to [C]
 	JP	ZCO			;Will force a return
-
 
 PHEX:	PUSH	AF
 	PUSH	BC
@@ -2630,6 +3573,7 @@ HEXABORT:
 	SCF				;Set Carry flag 
 	RET
 
+
 GETCMD:	CALL	ZCI			;GET A CHARACTER, convert to UC, ECHO it
 	CALL	TO_UPPER
 	CP	A,ESC
@@ -2675,16 +3619,6 @@ exit:
 	halt
 	
 ;
-SWITCH_68K:				; "B"  SWITCH CONTROL TO 68000 CPU 
-ZBOOT:					; "C"  BOOT IN CP/M FROM 8" DISK WITH WITH ZFDC FDC 
-ZVBOOT:					; "L"  BOOT IN CP/M FROM 8" DISK WITH VERSAFLOPPY II FDC
-XMEMMAP:				; "N"  Display extended memory Segment:Address
-UP8086:					; "O"  SWITCH CONTROL TO 8088, 8086 or 80286. 
-HBOOTCPM:				; "P"  BOOT IN CPM FROM IDE HARD DISK
-SPARE:					; "U"  SPARE
-;XMODEM:				; "X"  DOWNLOAD A FILE FROM PC VIA XMODEM TO THIS S100 SYSTEM
-ZBOOT
-
 NOT_DONE:
 	LD	HL,CODE_NOT_DONE
 	CALL	PRINT_STRING
@@ -2692,29 +3626,38 @@ NOT_DONE:
 	
 ERROR:	LD	C,'?'
 	CALL	ZCO
-	RET
+	JP	BEGIN
 	
 ;=======================================================================
 ;                       I/O SUPPORT PROCEDURES
 ;
 ;=======================================================================
 ;
-; Print a null-terminated string at HL to the primary CONSOLE PORT
-;
+; Print a string at HL to the primary CONSOLE PORT.  In order to save ROM space
+; with numerous CR,LF's before or after the actual text this routine has 3 options:-
+; 1.	If there is a terminating '$' at the end of the string send a CR/LF before returning
+; 2.    If  there is a terminating 0H at the end of the string, just terminate the string
+;	In both the above cases the string always starts off with a CR/LF
+; 3.    If P_STRING is used then no CR/LF at the start of a string. 
+     
 PRINT_STRING:				;Print string on Propeller Board
 	CALL	ZCRLF
-P_STRING:
+P_STRING:				; Start without CR,LF
 	ld	a,(hl)			; get next char
-	CP	A,'$'			; Terminate with a '$' or 0H
-	RET	Z
+	CP	A,'$'			; Terminate with a '$'
+	JR	Z,P_STRING_CRLF		;Finish with CR,LF
 	or	a			; end of string?
-	ret	z			; if so, done
+	ret	z			; Immediatly terminate
 	LD	C,A
 	call	ZCO			; print the char
 	inc	hl			; bump to next char in string
 	jr	P_STRING		; loop till done
-
-
+P_STRING_CRLF:
+	LD	C,CR
+	call	ZCO			; print the char
+	LD	C,LF
+	call	ZCO			; print the char
+	RET
 
 ;>>>>>>>>>>>>>>>>>>>>>>>>> MODEM SERIAL PORT ROUTINES <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 ;
@@ -2998,126 +3941,172 @@ bnksel:
 
 
 SIGNON_MSG:	DB	BELL,CR,LF		
-		DB	'Z180 ROM MONITOR (V0.24) @ E000H (J.Monahan,7/8/2023)$'	
+		DB	'Z180 ROM MONITOR (V0.34) @ E000H (J.Monahan,7/22/2023)',0
 
-MENUMSG:	DB	'A=Memmap   B=Boot      C=CP/M(F)  D=Disp  E=Echo   F=Fill  G=Goto',CR,LF
-		DB	'H=Date     I=Time      J=RAM Test K=Menu  L=CPM(V) M=Move  N=S100 Menu',CR,LF
-		DB	'O=         P=CPM(IDE)  QI,O=Port  R=Ports S=Subs   T=Type  U=Halt ',CR,LF 
-		DB	'V=Verify   W=Bus Req   X=XModem   Y=IDE   Z=Top    @=Flush Printer'
-		DB	CR,LF,LF,'$'
+MENUMSG:	DB	'A=Memmap   B=ROMWBW   D=Disp  E=Echo  F=Fill  G=Goto     H=Date',CR,LF
+		DB	'I=Time     J=RAM Test K=Menu  M=Move  N=S100  O=Bus Req  P=CPM(IDE)',CR,LF
+		DB	'QI,O=Port  R=Ports    S=Subs  T=Type  U=Halt  V=Verify   W=SD Card',CR,LF 
+		DB	'X=XModem   Y=IDE      Z=Top   @=Flush Printer',CR,LF
+		DB	LF,'$' 
 		
-SMSG_SP:	DB	'THE Z180 ROM MONITOR VERSION 0.24$'
+SMSG_SP:	DB	'Z 1 8 0 ROM MONITOR VERSION 0.34 PRESENT$'
 
-TOP_RAM_MSG	DB	'Top of RAM=$'
-SP_MSG		DB	'H  SP=$'
-IOBYTE_MSG	DB	'H  IOBYTE=$'
-CR_SMSG_SP:	DB	CR,CR,CR,CR,'$'
-CODE_NOT_DONE	DB	'Code not written yet!',CR,LF,0
-CHAR_TEST_MSG	DB	'Keyboard input test. Enter characters. (ESC or ^C to abort)',CR,LF,0
+TOP_RAM_MSG	DB	'Top of RAM=',0
+SP_MSG		DB	'H  SP=',0
+IOBYTE_MSG	DB	'H  IOBYTE=',0
+CR_SMSG_SP:	DB	CR,CR,'$'
+CODE_NOT_DONE	DB	'Code not written yet!$'
+CHAR_TEST_MSG	DB	'Keyboard input test. Enter characters. (ESC or ^C to abort)$'
 
 S100_MENU	DB	LF,'S100 Bus Address Tests'
 		DB	CR,LF,'0   Address line test (0 to FFFFH)'
-		DB	CR,LF,'1   Send "33333..." to S100 Port 01H'
+		DB	CR,LF,'1   Send "333..." to S100 Port 01H'
 		DB	CR,LF,'2   S100 Input Port 01H Test'
 		DB	CR,LF,'3   S100 Consol I/O Test'
 		DB	CR,LF,'4   Speech Test'
-		DB	CR,LF,'5   Modem Port Test'
+		DB	CR,LF,'5   Serial Board Port Test'
 		DB	CR,LF,'6   Test Printer'
+		DB	CR,LF,'7   Activate Interrupts'
 		DB	CR,LF,'ESC To return to Main Menu'
 		DB	CR,LF,'>',0
 		
 CONSOLE_TEST	DB	'Enter S100 bus keyboard char. ESC to abort ',0
 FLUSH_MSG	DB	'Sending FF to Printer',0
 
-MEM_TEST_MSG	DB	'Memory Test 0-DF00H',CR,LF,0
+MEM_TEST_MSG	DB	'Memory Test 0-DF00H$'
 MEM_ERR_MSG	DB	BELL,'RAM error at ',0
-TIME_MSG	DB	'Time:- $'
-DATE_MSG	DB	'Date:- $'
-Time1_Msg	DB	'  $'
-Date1_Msg	DB	'  $'
+TIME_MSG	DB	'Time:- ',0
+DATE_MSG	DB	'Date:- ',0
+Time1_Msg	DB	'  ',0
+Date1_Msg	DB	'  ',0
 
-MODEM_SIGNON:	DB	'Get a File from PC (38,400 Baud. S100 Serial IO Board. Ports A1,A3)',CR,LF,0
-RMSG:		DB	'WAITING FOR SECTOR #$'
-ERRSOH:		DB	'H RECEIVED, NOT SOH',0DH,0AH,'$'
-ERR2:		DB	'++BAD SECTOR # IN HDR',0DH,0AH,'$'
-ERR3:		DB	'++BAD CKSUM ON SECTOR',0DH,0AH,'$'
-TOUTM:		DB	'TIMEOUT $'
+MODEM_SIGNON:	DB	'Get a File from PC (38,400 Baud)$'
+RMSG:		DB	'WAITING FOR SECTOR #',0
+ERRSOH:		DB	'H RECEIVED, NOT SOH$'
+ERR2:		DB	'++BAD SECTOR # IN HDR$'
+ERR3:		DB	'++BAD CKSUM ON SECTOR$'
+TOUTM:		DB	'TIMEOUT ',0
 QUITM:		DB	'MULTIPLE ERRORS.'
-		DB	'TYPE Q TO QUIT, R TO RETRY:$'
-MODEM_DONE_MSG:	DB	'TRANSFER COMPLETE$'
-BAD_HEADER_MSG:	DB	'INVALID HEADER.',0DH,0AH,'$'
-MODEM_RAM_MSG:	DB	'H. If OK will write to RAM at $'
-MODEM_RAM_LOC:	DB	'Enter RAM location (xxxxH +CR): $'
+		DB	'TYPE Q TO QUIT, R TO RETRY:',0
+MODEM_DONE_MSG:	DB	'TRANSFER COMPLETE',0
+BAD_HEADER_MSG:	DB	'INVALID HEADER.$'
+MODEM_RAM_MSG:	DB	'H. If OK will write to RAM at ',0
+MODEM_RAM_LOC:	DB	'Enter RAM location (xxxxH +CR): ',0
 
-HALT_MSG:	DB	'The CPU is now halted!$'
+HALT_MSG:	DB	'The CPU halted!',0
 
-IDE_MENU0_MSG:	DB	LF,LF,'S100 Bus IDE Board Menu'
-		DB	CR,LF,'Track=$'
-IDE_MENU1_MSG:	DB	'H  Sector=$'
-IDE_MENU3_MSG:	DB	'H  RAM Address=$'	
-H_MSG:		DB	'H.$'
-IDE_MENU4_MSG:	DB	'0   Initilize Drive 0'
-		DB	CR,LF,'1   Set Sec, Track'
+SD_MENU0_MSG:	DB	LF,LF,'SD Card Menu  '
+		DB	'Sector=',0
+		
+IDE_MENU0_MSG:	DB	LF,LF,'S100 Bus IDE Board Menu. Track=',0
+IDE_MENU1_MSG:	DB	'H  Sector=',0
+
+IDE_MENU3_MSG:	DB	'H  RAM Address=',0	
+BITS_END_MSG:	DB	'B)$'
+H_MSG:		DB	'H.',0
+SD_MENU4_MSG
+IDE_SD_MENU_MSG:	DB	'0   Initilize Drive 0'
+		DB	CR,LF,'1   Set Sec,(Track)'
 		DB	CR,LF,'2   Set RAM Address'
-		DB	CR,LF,'3   Read Sector'
-		DB	CR,LF,'4   Write Sector'
-		DB	CR,LF,'5   Read N Sectors'
-		DB	CR,LF,'6   Write N Sectors'
-		DB	CR,LF,'+   Next sector'
+		DB	CR,LF,'3   Read Sec'
+		DB	CR,LF,'4   Write Sec'
+		DB	CR,LF,'5   Read N Sec'
+		DB	CR,LF,'6   Write N Sec'
+		DB	CR,LF,'+   Next Sec'
 		DB	CR,LF,'ESC To return to Main Menu'
 		DB	CR,LF,'>',0
-
-INIT_ERR:	DB	BELL,'Drive Init. Error',CR,LF,0
+		
+INIT_ERR:	DB	BELL,'Drive Init. Error$'
 INIT_OK:	DB	'Drive Init. OK',0
-msgrd:		DB	'Sector Read OK. $'
-DRIVE_ERRORS	DB	BELL,'IDE Drive Errors Status=',0
-READING_MSG	DB	'Reading Sector(s)'
-WRITING_MSG	DB	'Writing Sector(s)'
-GET_LBA_MSG:	DB	'Enter CPM style TRK & SEC values (in hex).',CR,LF,'$'
-ENTER_SECL	DB	'Starting sector number,(xxH) = $'
-ENTER_TRKL	DB	'Track number (LOW byte, xxH) = $'
-ENTER_TRKH	DB	'Track number (HIGH byte, xxH) = $'
-ENTER_SEC_COUNT DB	'Number of Sectors (xxH) = $'
-GET_DMA_MSG	DB	'Enter RAM location for sector data (xxxxH) = $'
+msgrd:		DB	'Sec. Read OK',0
+msgwr:		DB	'Sec. Write OK',0
+DRIVE_ERRORS	DB	BELL,'IDE Drive Err.  Status=',0
+READING_MSG	DB	'Reading Sector(s)',0
+WRITING_MSG	DB	'Writing Sector(s)',0
+GET_LBA_MSG:	DB	'Enter CPM style TRK & SEC (in hex).$'
+ENTER_SECL	DB	'Starting sector no.,(xxH) = ',0
+ENTER_TRKL	DB	'Track no. (LOW byte, xxH) = ',0
+ENTER_TRKH	DB	'Track no. (HIGH byte, xxH) = ',0
+ENTER_SEC_COUNT DB	'Number of Sec (xxH) = ',0
+GET_DMA_MSG	DB	'Enter RAM location for Sec. data (xxxxH) = ',0
 Write_Sure:	DB	'Warning: this will change data on the drive, '
-		DB	'are you sure? (Y/N)...$'
-msgwr:		DB	'Sec. Write OK',CR,LF,'$'
-NMI_MSG:	DB	'NMI Activated',CR,LF,'$'	;0E00FH
-INT0_MSG:	DB	'INT0 Activated',CR,LF,'$'	;0E01FH
-SLAVE_MSG	DB	BELL,'Activate Master/Slave switch',CR,LF,'$'
+		DB	'are you sure? (Y/N)...',0
+NMI_MSG:	DB	'NMI Activated',CR,LF,'>',0			;0E00FH
+INT0_MSG:	DB	'INT0 Activated',CR,LF,'>',0			;0E01FH
+SLAVE_MSG	DB	BELL,'Activate Master/Slave switch$'
+INTS_OFF_MSG	DB	'Inactivating Interrupts$'
+INTS_ON_MSG	DB	'Activating Interrupts$'
+BOOT_ROM_MSG	DB	'Booting ROMWBW$'
+S100_ONLY_MSG	DB	BELL,'Code for the S100 bus only$'
 
+CF_TYPE_ERR_MSG: DB	BELL,'SD Card Type 2 was NOT detected. (Status =',0
+CARD_TYPE2_MSG:	DB	'Detected a Type 2 SD card.$'
+CMD41_55_OK_MSG: DB	'CMD55 & CMD41 Commands OK.',CR,LF
+                DB	'The SD Card init. correctly.$'
+CRC_ERROR_MSG:	DB	BELL,'Error turning off CRC checking. (Status = ',0
+SIZE_ERROR_MSG:	DB	BELL,'Sect. size error. (Status = ',0	
+CMD55_FAIL_MSG:	DB	BELL,'SD Card Type 2 Init. failed (CMD55/CMD41) (Status = ',0
+READ_ERR_MSG1:	DB	BELL,'SD Card must first be initilized (Menu 0).$'
+SEC_RD_ERR0_MSG: DB	BELL,'Read Sec. CMD CMD17 error. (Status = ',0
+SEC_RD_ERR1_MSG: DB	BELL,'Sec. read error. No 0FEH Flag. (Status = ',0
+CONTINUE_MSG:	DB	'Type any char. to continue.',0
+ENTER_SEC_NUM:	DB	'Enter Sec. No. (XXXXH): ',0
+SEC_WR_ERR0_MSG: DB	BELL,'Sec. write err., CMD24. (Status = ',0
+SEC_WR_ERR1_MSG: DB	BELL,'Error writing Sec. bytes, CMD24. (Status = ',0
+SEC_WR_ERR2_MSG: DB	BELL,'Error waiting for sec. write. (Status = ',0
+SEC_WR_ERR3_MSG: DB	BELL,'Error resetting sec. write, CMD0. (Status = ',0
+SEC_WR_ERR4_MSG: DB	BELL,'Error getting Card type, CMD8. (Status = ',0
+SEC_WR_ERR5_MSG: DB	BELL,'Error re-activating Type 2 Card, CMD55+CMD41. (Status = ',0
+
+DATA_ERROR_MSG:	DB	BELL,CR,LF,'Data entry error.$'
+SPEAKCPM_SP:	DB	'LOADING CPM $'
+DRIVE_NR_ERR:	DB	BELL,'Drive not Ready.',LF,'$'
+BOOT_LD1_ERR:	DB	BELL,'BOOT error.',LF,'$'
+BOOT_LD_ERR:	DB	BELL,'Read Error.',LF,'$'
+IDE_RW_ERROR:	DB	BELL,'IDE Drive R/W Error',LF,'$'
+
+
+
+CMD_0:		DB	40H,00H,00H,00H,00H,95H,0FFH		; (0+64)  To Reset the SD Card interface,
+CMD_1:		DB	41H,00H,00H,00H,00H,0F9H,0FFH		; (1+64)  Activate Init Process
+CMD_8:		DB	48H,00H,00H,01H,0AAH,87H,0FFH		; (8+64)  To check Card Voltage
+CMD_9:		DB	49H,00H,00H,00H,00H,8FH,0FFH		; (9+64)  Read SD Register (CSD)
+CMD_13:		DB	4DH,00H,00H,00H,00H,081H,0FFH		; (13+64) get SD card status
+CMD_16:		DB	50H,00H,00H,02H,00H,081H,0FFH		; (16+64) Set Sector size to 512 Bytes
+CMD_17:		DB	51H,00H,00H,00H,00H,0FFH,0FFH		; (17+64) Read a single block (Block 0, Used to load boot sector only)
+CMD_41:		DB	69H,40H,00H,00H,00H,077H,0FFH		; (41+64) Activates the card's init. process.
+;CMD_41:	DB	69H,00H,00H,00H,000H,0E5H,0FFH		; (41+64) Activates the card's init. process.
+CMD_55:		DB	77H,00H,00H,00H,00H,065H,0FFH		; (55+64) Application specific command NEXT
+CMD_58:		DB	7AH,00H,00H,00H,00H,0FDH,0FFH		; (58+64) Read SD Cards OCR register
+CMD_59:		DB	7BH,00H,00H,00H,00H,0FDH,0FFH		; (59+64) Turn off CRC checking
 
 
 ;----------------- LOCAL DATA STORAGE ----------------------------------------------------------
 
 @DELAYStore	DB	0
+@SEC		DW	0
+@TRK		DW	0			; +2H
+@SEC_COUNT	DW	0			; +4H
+@RAM_ADDRESS	DW	0			; +6H
 
-		
+@StartLineHex	DW	0			; +8H
+@BYTE$COUNT	DW	0			; +0AH
+@DRIVE$SEC	DW	0			; +0CH
+@DRIVE$TRK	DW	0			; +0EH
+@StartLineASCII	DW	0			; +10H
+@NEXT_ADDRESS   DW	0			; +12H
+@INTS_FLAG	DW	0			; +14H		;Flag to indicate if Interrupts are on = 1 or off = 0.
 
-str_goodbye	db	CR,LF,BACKS,QUIT,CR,LF,'Goodbye, CPU Halted',CR,LF,0
-		DB	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0  ;To clean up PROM for easy reading
-		DB	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0  ;To clean up PROM for easy reading
-		DB	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		DB	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		DB	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		DB	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		DB	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		DB	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		DB	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		DB	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		DB	'<---- End of ROM Code',0			;Check this text is in RAM
-		DB	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0  
-		DB	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0  
-		DB	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		DB	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		DB	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		DB	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		DB	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		DB	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		DB	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		DB	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-	
-;
+@CARD_TYPE	DW	0			; +16H		;For SD Cards
+@SPARE		DW	0			; +18H
+
+RAM_STORE_SIZE	equ	18H
+
+
+str_goodbye	db	CR,LF,'Goodbye, CPU Halted$'
+@FINAL_BYTE	DW	0			;		;Last usable byte in RAM (must be less than 0FFFFH.
+ROM_EMPTY	equ	(0FFFFH - $)
+
 mon_len		equ	($ - mon_start)
 ;
 	.dephase
