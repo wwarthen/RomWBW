@@ -118,6 +118,7 @@ MODCNT	.SET	MODCNT + 1
 ; TinyZ80: LED Port=0x6E, bit 0, inverted, dedicated port
 ; Z80-512K: LED Port=0x6E, bit 0, inverted, dedicated port
 ; MBC: LED Port=0x70, bits 1-0, normal, shared w/ RTC port
+; DUO: LED Port=0x94, bits 1-0, normal, shared w/ RTC port
 ; 
 #IF (LEDENABLE)
   #IF (LEDMODE == LEDMODE_STD)
@@ -465,7 +466,11 @@ HBX_ROM:
 	BIT	7,A			; BIT 7 SET REQUESTS RAM PAGE
 	JR	Z,HBX_ROM		; NOT SET, SELECT ROM PAGE
 	RES	7,A			; RAM PAGE REQUESTED: CLEAR ROM BIT
+  #IF (PLATFORM == PLT_DUO)
+	ADD	A,64			; ADD 64 x 32K - RAM STARTS FROM 2048K
+  #ELSE
 	ADD	A,16			; ADD 16 x 32K - RAM STARTS FROM 512K
+  #ENDIF
 ;
 HBX_ROM:
 	RLCA				; TIMES 2 - GET 16K PAGE INSTEAD OF 32K
@@ -1310,7 +1315,13 @@ Z280_INITZ:
 	INC	A
 	OUT	(MPGSEL_1),A
   #ENDIF
-	LD	A,62
+;
+  #IF (PLATFORM == PLT_DUO)
+	LD	A,128 + (RAMSIZE / 16) - 2
+  #ELSE
+	LD	A,64 - 2
+  #ENDIF
+;
 	OUT	(MPGSEL_2),A
 	INC	A
 	OUT	(MPGSEL_3),A

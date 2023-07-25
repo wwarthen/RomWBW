@@ -51,7 +51,7 @@ PORT_DYNO	.EQU	$0C		; RTC port for DYNO
 PORT_RCZ280	.EQU	$C0		; RTC port for RCZ280
 PORT_MBC	.EQU	$70		; RTC port for MBC
 PORT_RPH	.EQU	$84		; RTC port for RHYOPHYRE
-PORT_DUO	.EQU	$70		; RTC port for DUODYNE
+PORT_DUO	.EQU	$94		; RTC port for DUODYNE
 
 
 BDOS		.EQU	5		; BDOS invocation vector
@@ -1140,7 +1140,7 @@ HINIT:
 ;
 	LD	C,PORT_DUO
 	LD	DE,PLT_DUO
-	CP	13		; DUODYNE
+	CP	17		; DUODYNE
 	JP	Z,RTC_INIT2
 ;
 	; Unknown platform

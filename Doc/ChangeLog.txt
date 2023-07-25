@@ -16,6 +16,7 @@ Version 3.3
 - WBW: Support for Z180 running interrupt mode 1
 - WBW: Preliminary support for S100 Computers Z180
 - WBW: Preliminary support for Dan Werner's ESP32 MBC Module
+- WBW: Early support for Duodyne base system (CPU/UART/ROM/RAM/RTC/SPK)
 
 Version 3.2.1
 -------------
