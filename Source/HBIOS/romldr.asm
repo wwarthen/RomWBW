@@ -2311,6 +2311,11 @@ ra_tbl:
 ;      ---------  -------  -----  --------  -----        -------  -------  ----------
 ra_ent(str_mon,	  'M',	   KY_CL, BID_IMG0, MON_IMGLOC,  MON_LOC, MON_SIZ, MON_SERIAL)
 ra_entsiz	.equ	$ - ra_tbl
+#if (BIOS == BIOS_WBW)
+  #if (PLATFORM == PLT_S100)
+ra_ent(str_smon,  'S',	   $FF,	  BID_IMG2, $0000,       $0000,   $2100,   $0000)
+  #endif
+#endif
 ra_ent(str_zsys,  'Z',	   KY_FW, BID_IMG0, ZSYS_IMGLOC, CPM_LOC, CPM_SIZ, CPM_ENT)
 ra_ent(str_cpm22, 'C',	   KY_BK, BID_IMG0, CPM_IMGLOC,  CPM_LOC, CPM_SIZ, CPM_ENT)
 #if (BIOS == BIOS_WBW)
@@ -2349,6 +2354,7 @@ str_tbas	.db	"Tasty BASIC",0
 str_play	.db	"Play a Game",0
 str_upd		.db	"XModem Flash Updater",0
 str_user	.db	"User App",0
+str_smon	.db	"S100 Z180 Monitor",0
 str_egg		.db	"",0
 str_net		.db	"Network Boot",0
 str_switches	.db	"FP Switches = 0x",0
