@@ -1343,6 +1343,22 @@ diskread:
 ;
 #endif
 ;
+; Built-in mini-loader for S100 Monitor
+;
+#if (BIOS == BIOS_WBW)
+  #if (PLATFORM == PLT_S100)
+;
+s100mon:
+;
+	; Launch S100 Monitor from ROM Bank 3
+	call	ldelay			; wait for UART buf to empty
+	ld	a,BID_IMG2		; S100 monitor bank
+	ld	ix,0			; execution resumes here
+	jp	HB_BNKCALL		; do it
+;
+  #endif
+#endif
+;
 ;=======================================================================
 ; Utility functions
 ;=======================================================================
@@ -2313,7 +2329,7 @@ ra_ent(str_mon,	  'M',	   KY_CL, BID_IMG0, MON_IMGLOC,  MON_LOC, MON_SIZ, MON_SE
 ra_entsiz	.equ	$ - ra_tbl
 #if (BIOS == BIOS_WBW)
   #if (PLATFORM == PLT_S100)
-ra_ent(str_smon,  'S',	   $FF,	  BID_IMG2, $0000,       $0000,   $2100,   $0000)
+ra_ent(str_smon,  'S',	   $FF,	  bid_cur , $8000,       $8000,   $0001,   s100mon)
   #endif
 #endif
 ra_ent(str_zsys,  'Z',	   KY_FW, BID_IMG0, ZSYS_IMGLOC, CPM_LOC, CPM_SIZ, CPM_ENT)
@@ -2338,7 +2354,7 @@ ra_tbl_app:
 ;      Name	  Key	   Dsky	  Bank	    Src	         Dest	    Size     Entry
 ;      ---------  -------  -----  --------  -----       -------  -------  ----------
 ra_ent(str_mon,	  'M',	   KY_CL, bid_cur,  MON_IMGLOC,  MON_LOC, MON_SIZ, MON_SERIAL)
-ra_ent(str_zsys,  'Z',	   KY_FW, bid_cur,  ZSYS_IMGLOC,  CPM_LOC, CPM_SIZ, CPM_ENT)
+ra_ent(str_zsys,  'Z',	   KY_FW, bid_cur,  ZSYS_IMGLOC, CPM_LOC, CPM_SIZ, CPM_ENT)
 #if (DSKYENABLE)
 ra_ent(str_dsky,  'Y'+$80, KY_GO, bid_cur,  MON_IMGLOC,  MON_LOC, MON_SIZ, MON_DSKY)
 #endif
