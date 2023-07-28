@@ -1343,18 +1343,32 @@ diskread:
 ;
 #endif
 ;
-; Built-in mini-loader for S100 Monitor
+; Built-in mini-loader for S100 Monitor.  The S100 platform build
+; imbeds the S100 Monitor in the ROM at the start of bank 3 (BID_IMG2).
+; This bit of code just launches the monitor directly from that bank.
 ;
 #if (BIOS == BIOS_WBW)
   #if (PLATFORM == PLT_S100)
 ;
 s100mon:
+	; Warn user that console is being directed to the S100 bus
+	; if the IOBYTE bit 0 is 0 (%xxxxxxx0).
+	in	a,($75)			; get IO byte
+	and	%00000001		; isolate console bit
+	jr	nz,s100mon1		; if 0, bypass msg
+	ld	hl,str_s100con		; console msg string
+	call	pstr			; display it
 ;
+s100mon1:
 	; Launch S100 Monitor from ROM Bank 3
 	call	ldelay			; wait for UART buf to empty
+	di				; suspend interrupts
 	ld	a,BID_IMG2		; S100 monitor bank
 	ld	ix,0			; execution resumes here
 	jp	HB_BNKCALL		; do it
+;
+str_smon	.db	"S100 Z180 Monitor",0
+str_s100con	.db	"\r\n\r\nConsole on S100 Bus",0
 ;
   #endif
 #endif
@@ -2370,7 +2384,6 @@ str_tbas	.db	"Tasty BASIC",0
 str_play	.db	"Play a Game",0
 str_upd		.db	"XModem Flash Updater",0
 str_user	.db	"User App",0
-str_smon	.db	"S100 Z180 Monitor",0
 str_egg		.db	"",0
 str_net		.db	"Network Boot",0
 str_switches	.db	"FP Switches = 0x",0

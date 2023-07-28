@@ -103,9 +103,9 @@ DMA_FAIL_FLAG:
 ;==================================================================================================
 ;
 DMAProbe:
-	ld	a,DMA_RESET	
+	ld	a,DMA_RESET		; $C3
 	out	(DMABASE),a
-	ld	a,%01111101 		; R0-Transfer mode, A -> B, start address follows
+	ld	a,%01111101 		; R0-Transfer mode, A -> B, start address follows $7D
 	out	(DMABASE),a
 	ld	a,$cc
 	out	(DMABASE),a
@@ -115,14 +115,14 @@ DMAProbe:
 	out	(DMABASE),a
 	ld	a,$1a
 	out	(DMABASE),a
-	ld	a,DMA_LOAD
+	ld	a,DMA_LOAD		; $CF
 	out	(DMABASE),a
 ;
-	ld	a,DMA_READ_MASK_FOLLOWS	; set up
+	ld	a,DMA_READ_MASK_FOLLOWS	; set up ; $BB
 	out	(DMABASE),a		; for 
-	ld	a,%00011000		; register
+	ld	a,%00011000		; register $18
 	out	(DMABASE),a		; read
-	ld	a,DMA_START_READ_SEQUENCE
+	ld	a,DMA_START_READ_SEQUENCE	; $A7
 	out	(DMABASE),a
 ;
 	in	a,(DMABASE)		; read in 
