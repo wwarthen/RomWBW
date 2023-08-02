@@ -5,13 +5,24 @@
 ; MARCO MACCAFERRI, HTTPS://WWW.MACCASOFT.COM
 ; HBIOS VERSION BY PHIL SUMMERS (B1ACKMAILER) DIFFICULTLEVELHIGH@GMAIL.COM
 ;
-PCF	.EQU	1
-P8X180	.EQU	0
-SC126	.EQU	0
-SC137	.EQU	0
+PCFECB		.EQU	0
+PCFDUO		.EQU	1
+P8X180		.EQU	0
+SC126		.EQU	0
+SC137		.EQU	0
 ;
-#IF (PCF)
+#IF (PCFECB)
 I2C_BASE 	.EQU  	0F0H
+PCF_ID   	.EQU  	0AAH
+CPU_CLK	 	.EQU  	12
+;
+PCF_RS0  	.EQU  	I2C_BASE
+PCF_RS1  	.EQU  	PCF_RS0+1
+PCF_OWN	 	.EQU  	(PCF_ID >> 1)        	; PCF'S ADDRESS IN SLAVE MODE
+#ENDIF
+;
+#IF (PCFDUO)
+I2C_BASE 	.EQU  	056H
 PCF_ID   	.EQU  	0AAH
 CPU_CLK	 	.EQU  	12
 ;
@@ -153,8 +164,11 @@ lp5f:	ld	a,(addr)	; next address
 	jp	0
 
 signon:	.db	"I2C Bus Scanner"
-#IF (PCF)
-	.DB	" - PCF8584"
+#IF (PCFECB)
+	.DB	" - PCF8584 (ECB)"
+#ENDIF
+#IF (PCFDUO)
+	.DB	" - PCF8584 (Duodyne)"
 #ENDIF
 #IF (SC126)
 	.DB	" - SC126"
@@ -219,7 +233,7 @@ _cout:				; character
 	ret
 
 ;-----------------------------------------------------------------------------
-#IF (PCF)
+#IF (PCFECB | PCFDUO)
 _i2c_start:
 PCF_START:
         LD     A,PCF_START_  
@@ -418,7 +432,7 @@ PCF_PINFAIL 	.DB	"PIN FAIL$"
 PCF_BBFAIL	.DB	"BUS BUSY$"
 ;
 ;-----------------------------------------------------------------------------
-#IF (PCF)
+#IF (PCFECB | PCFDUO)
 _i2c_stop:  
 PCF_STOP: 
 	LD   	A,PCF_STOP_	; issue 

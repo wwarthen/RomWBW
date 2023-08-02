@@ -2308,26 +2308,35 @@ This application understands both FAT filesystems as well as CP/M filesystems.
 * Long filenames are not supported.  Files with long filenames will
   show up with their names truncated into the older 8.3 convention.
 * A FAT filesystem can be located on floppy or hard disk media.  For
-  hard disk media, the FAT filesystem must be located within a valid
-  FAT partition.
+  hard disk media, a valid FAT Filesystem partition must exist.
+* Note that CP/M (and compatible) OSes do not support all of the
+  filename characters that a modern computer does.  The following
+  characters are **not permitted** in a CP/M filename:
+
+  `< > . , ; : = ? * [ ] _ % | ( ) / \`
   
+  The FAT application does not auto-rename files when it encounters
+  invalid filenames.  It will just issue an error and quit.
+  Additionally, the error message is not very clear about the problem.
+
 ## FAT Filesystem Preparation
 
 In general, you can create media formatted with a FAT filesystem on
 your RomWBW computer or on your modern computer.  We will only be
 discussing the RomWBW-based approach here.
 
-In the case of a floppy disk, you can use the `FAT` application to
-format the floppy disk.  For example, if your floppy disk is on RomWBW
-disk unit 2, you could use `FAT FORMAT 2:`.  This will overwrite the
-floppy with a FAT filesystem and all previous contents will be lost.
-Once formatted this way, the floppy disk can be used in a floppy drive
-attached to a modern computer or it can be used on RomWBW using the
+In the case of a floppy disk, you can use the `FAT` application to 
+format the floppy disk.  The floppy disk must already be physically 
+formatted using RomWBW FDU or equivalent.  If your floppy disk is on 
+RomWBW disk unit 2, you could use `FAT FORMAT 2:`.  This will overwrite 
+the floppy with a FAT filesystem and all previous contents will be lost.
+Once formatted this way, the floppy disk can be used in a floppy drive 
+attached to a modern computer or it can be used on RomWBW using the 
 other `FAT` tool commands.
 
 In the case of hard disk media, it is necessary to have a FAT
 partition.  If you prepared your RomWBW hard disk media using the
-disk image process, then this partition will already be present and
+disk image process, then this partition will already be defined and
 you do not need to recreate it.  This default FAT partition is located
 at approximately 512MB from the start of your disk and it is 384MB in
 size.  So, your hard disk media must be 1GB or greater to use this
@@ -2375,8 +2384,13 @@ If your RomWBW system has multiple disk drives/slots, you can also just
 create a disk with your modern computer that is a dedicated FAT 
 filesystem disk.  You can use your modern computer to format the disk 
 (floppy, CF Card, SD Card, etc.), then insert the disk in your RomWBW 
-computer and access if using `FAT` based on its RomWBW unit number.
+computer and access it using `FAT` based on its RomWBW unit number.
 
+**WARNING**: Microsoft Windows will sometimes suggest reformatting
+partitions that it does not recognize.  If you are prompted to format
+a partition of your SD/CF Card when inserting the card into a Windows
+computer, you probably want to select Cancel.
+  
 ## FAT Application Usage
 
 Complete instructions for the `FAT` application are found in $doc_apps$.
