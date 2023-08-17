@@ -720,12 +720,17 @@ NOBYE:	LXI	H,FCB+1		; Get primary option
 ; Send option processor
 ; Single option: "K"	- force 1k mode
 ;
-	INX	H		; Look for a 'K'
+	CALL	SNDOPC
+	CALL	SNDOPC
+	JMP	ALLSET
+SNDOPC:INX	H		; Look for an option
 	MOV	A,M
 	CPI	' '		; Is it a space?
-	JZ	ALLSET		; Then we're ready to send...
-	CPI	'K'
-	JNZ	OPTERR		; "K" is the only setable 2nd option
+	JNZ	CHKK
+	POP	PSW
+	JMP	ALLSET
+CHKK:	CPI	'K'
+	JNZ	CHK6TH		; If it's not K it should be a port number
 	LDA	MSPEED
 	CPI	MINKSP		; If less than MINKSP bps, ignore 1k
 	JC	ALLSET		; Request
@@ -733,7 +738,7 @@ NOBYE:	LXI	H,FCB+1		; Get primary option
 	STA	KFLAG		; First, force us to 1K mode
 	CALL	ILPRT
 	DB	'(1k protocol selected)',CR,LF,0
-	JMP	ALLSET		; That's it for send...
+	RET		; That's it for send...
 ;
 ; Receive option processor
 ; 3 or 4 options: "X"	- disable auto-protocol select
