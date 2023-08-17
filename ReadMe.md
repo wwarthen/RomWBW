@@ -3,7 +3,7 @@
 **RomWBW ReadMe** \
 Version 3.3 \
 Wayne Warthen  ([wwarthen@gmail.com](mailto:wwarthen@gmail.com)) \
-02 Aug 2023
+08 Aug 2023
 
 # Overview
 
