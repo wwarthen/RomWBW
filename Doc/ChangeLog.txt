@@ -18,6 +18,7 @@ Version 3.3
 - WBW: Preliminary support for Dan Werner's ESP32 MBC Module
 - WBW: Early support for Duodyne base system (CPU/UART/ROM/RAM/RTC/SPK)
 - M?C: Fixed XM to allow specifying HBIOS port for send operations
+- WBW: Fix S100 Z180 LED operation (credit to Jay Cotton for finding this issue)
 
 Version 3.2.1
 -------------
