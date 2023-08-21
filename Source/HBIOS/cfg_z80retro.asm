@@ -1,6 +1,6 @@
 ;
 ;==================================================================================================
-;   ROMWBW 32.X CONFIGURATION DEFAULTS FOR SIMPLE Z80 RETRO
+;   ROMWBW 3.X CONFIGURATION DEFAULTS FOR SIMPLE Z80 RETRO
 ;==================================================================================================
 ;
 ; THIS FILE CONTAINS THE FULL SET OF DEFAULT CONFIGURATION SETTINGS FOR THE PLATFORM
