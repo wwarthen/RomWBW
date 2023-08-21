@@ -1,6 +1,6 @@
 ;
 ;==================================================================================================
-;   ROMWBW 2.X CONFIGURATION DEFAULTS FOR UNA
+;   ROMWBW 3.X CONFIGURATION DEFAULTS FOR UNA
 ;==================================================================================================
 ;
 ; THIS FILE CONTAINS THE FULL SET OF DEFAULT CONFIGURATION SETTINGS FOR THE PLATFORM
@@ -36,3 +36,5 @@ ROMSIZE		.EQU	512		; SIZE OF ROM IN KB (MUST MATCH YOUR HARDWARE!!!)
 RTCIO		.EQU	$70		; RTC LATCH REGISTER ADR
 ;
 DSKYENABLE	.EQU	FALSE		; ENABLES DSKY (DO NOT COMBINE WITH PPIDE)
+;
+HWTENABLE	.EQU	FALSE		; HARDWARE TIMER ON IM2 INTERRUPT CIRCUIT
