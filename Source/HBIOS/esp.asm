@@ -7,20 +7,22 @@
 ;==================================================================================================
 ;
 ; TODO:
+; - CLEAR CONSOLE SCREEN AT INITIALIZATION
+; - INITIALIZE BAUD/MODE OF SERIAL INTERFACES AT INITIALIZATION
 ;
 ESP_IOBASE	.EQU	$9C
 ESP_0_IO	.EQU	ESP_IOBASE + 0
 ESP_1_IO	.EQU	ESP_IOBASE + 1
 ESP_STAT	.EQU	ESP_IOBASE + 2
 ;
-; ESP  STATUS PORT
-; MSB XX S S S S S S
-;        | | | | | +- ESP0 READY OUTPUT
-;        | | | | +--- ESP0 BUSY
-;        | | | +----- ESP0 SPARE
-;        | | +------- ESP1 READY OUTPUT
-;        | +--------- ESP1 BUSY
-;        +----------- ESP1 SPARE
+; ESP   STATUS PORT
+; MSB X X S S S S S S
+;         | | | | | +- ESP0 READY OUTPUT
+;         | | | | +--- ESP0 BUSY
+;         | | | +----- ESP0 SPARE
+;         | | +------- ESP1 READY OUTPUT
+;         | +--------- ESP1 BUSY
+;         +----------- ESP1 SPARE
 ;
 ESP_0_RDY	.EQU	%00000001
 ESP_0_BUSY	.EQU	%00000010
@@ -33,7 +35,7 @@ ESP_1_SPARE	.EQU	%00100000
 ;
 ESP_CMD_NOP	.EQU	0		; NO OP
 ESP_0_CMD_COUT	.EQU	1		; CHAR OUT
-ESP_0_CMD_SOUT	.EQU	2		; STRING OUT
+ESP_0_CMD_CSTR	.EQU	2		; STRING OUT
 ESP_0_CMD_KIN	.EQU	3		; KEY IN
 ESP_0_CMD_KST	.EQU	4		; KBD BUF STATUS
 ESP_CMD_SBAUD	.EQU	6		; SET SERIAL BAUD RATE
