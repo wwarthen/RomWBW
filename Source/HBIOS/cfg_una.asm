@@ -1,6 +1,6 @@
 ;
 ;==================================================================================================
-;   ROMWBW 2.X CONFIGURATION DEFAULTS FOR UNA
+;   ROMWBW 3.X CONFIGURATION DEFAULTS FOR UNA
 ;==================================================================================================
 ;
 ; THIS FILE CONTAINS THE FULL SET OF DEFAULT CONFIGURATION SETTINGS FOR THE PLATFORM
