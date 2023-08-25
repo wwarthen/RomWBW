@@ -153,7 +153,8 @@ JP2 (/FAULT) shorted, JP3 (MINI): 2-3, JP4 (/DC/RDY): 2-3.
 
 The RCBus Scott Baker WDC-based floppy module should be jumpered
 for I/O base address 0x50 (SV1: 11-12), JP1 (/DACK): 1-2,
-JP2 (TC): 2-3.
+JP2 (TC): 2-3.  Note that pin 1 of JPX jumpers is toward the bottom
+of the board.
 
 The RCBus FDC by Alan Cox (Etched Pixels) needs to be strapped
 for base I/O address 0x48.
