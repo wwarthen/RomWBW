@@ -1118,7 +1118,7 @@ Z280_BOOTERR	.TEXT	"\r\n\r\n*** Application mode boot not supported under Z280 n
 	DJNZ	$
 #ENDIF
 ;
-#IF ((PLATFORM == PLT_DUO) & TRUE)
+#IF ((PLATFORM == PLT_DUO) & FALSE)
 	; WAIT A WHILE
 	LD	HL,0
 BOOTWAIT:

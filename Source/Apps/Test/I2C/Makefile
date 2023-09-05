@@ -1,4 +1,4 @@
-OBJECTS = i2cscan.com rtcds7.com i2clcd.com
+OBJECTS = i2cscan.com rtcds7.com i2clcd.com srom.com
 DEST = ../../../../Binary/Apps/Test/
 TOOLS = ../../../../Tools
 
