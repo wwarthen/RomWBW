@@ -7,9 +7,7 @@
 ; PCF8584 controller.
 ;
 ; WBW 2023-09-05: Initial release
-;
-; TODO:
-;   - Fix page read loop end game
+; WBW 2023-09-07: Code clean up
 ;
 ;=======================================================================
 ;
@@ -732,11 +730,7 @@ rom_write:
 	ld	a,(romadr)		; load ROM I2C adress
 	rlca				; move to top 7 bits
 	res	0,a			; clear low bit for write
-	push	de
-	push	hl
 	call	pcf_start		; generate start
-	pop	hl
-	pop	de
 	jr	nz,rom_write_z		; if error, skip write
 ;
 	; Send ROM address
@@ -815,11 +809,7 @@ rom_read:
 	ld	a,(romadr)		; load ROM I2C adress
 	rlca				; move to top 7 bits
 	res	0,a			; clear low bit for write
-	push	de
-	push	hl
 	call	pcf_start		; generate start
-	pop	hl
-	pop	de
 	jr	nz,rom_read_z		; if error, skip write
 ;
 rom_read2:
@@ -837,11 +827,7 @@ rom_read2:
 	ld	a,(romadr)		; load ROM I2C address
 	rlca				; move to top 7 bits
 	set	0,a			; set low bit for read
-	push	de			; save buffer pointer
-	push	hl			; save buffer length
 	call	pcf_repstart		; generate repeat start
-	pop	hl			; restore buffer length
-	pop	de			; restore buffer pointer
 	jr	nz,rom_read_z		; if error, bail out
 ;
 	; Read data into buffer
@@ -934,7 +920,7 @@ pcf_start:
 	;pop	de
 ;
 	; Wait for I2C bus clear
-	ld	l,a			; save start byte to L
+	ld	b,a			; move start byte to B
 	call	pcf_waitbb		; wait while bus busy
 	cp	$FF			; timeout?
 	jp	z,err_timeout		; timeout error return
@@ -942,10 +928,10 @@ pcf_start:
 	; Set start byte w/ slave address in S0
 	ld	a,(pcf_dat)		; data port
 	ld	c,a			; ... into C
-	ld	a,l			; value to A
+	;ld	a,b
 	;call	prtsp
 	;call	prthex
-	out	(c),a			; send start byte
+	out	(c),b			; send start byte
 ;
 	; Initiate start operation
 	inc	c			; ctl port
@@ -966,7 +952,7 @@ pcf_repstart:
 	;pop	de
 ;
 	; Send repeat start command
-	ld	l,a			; save start byte to L
+	ld	b,a			; move start byte to B
 	ld	a,(pcf_ctl)		; control port
 	ld	c,a			; ... into C
 	ld	a,pcf_op_repstart	; command
@@ -975,10 +961,10 @@ pcf_repstart:
 	; Set start byte w/ slave address in S0
 	ld	a,(pcf_dat)		; data port
 	ld	c,a			; ... into C
-	ld	a,l			; value to A
+	;ld	a,b
 	;call	prtsp
 	;call	prthex
-	out	(c),a			; send start byte
+	out	(c),b			; send start byte
 ;
 	xor	a			; signal success
 	ret				; done
@@ -1101,9 +1087,6 @@ pcf_read2:
 	ld	c,a			; ... into C
 	ld	a,$40			; prep for neg ack
 	out	(c),a			; send it
-;
-	; FIX: Final data byte should not be read until AFTER
-	; stop condition!!!
 ;
 	; Get final data byte
 	ld	a,(pcf_dat)		; data port
