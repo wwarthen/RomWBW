@@ -51,7 +51,7 @@ cpnet12/*.* 4:
 #
 # Add OS image
 #
-../CPM22/cpm_wbw.sys 0:cpm.sys
+../QPM/qpm_wbw.sys 0:qpm.sys
 #
 # Add Common Applications
 #

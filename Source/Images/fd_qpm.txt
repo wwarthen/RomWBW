@@ -44,7 +44,7 @@ d_cpm22/u0/*.* 0:
 #
 # Add OS image
 #
-../CPM22/cpm_wbw.sys 0:cpm.sys
+../QPM/qpm_wbw.sys 0:qpm.sys
 #
 # Add Common Applications
 #

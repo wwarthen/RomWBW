@@ -1,7 +1,7 @@
 #
 # this makefile subsumes all the work done in Build.cmd, BuildDisk.cmd, BuildDisk.ps1
 #
-SYSTEMS = ../CPM22/cpm_wbw.sys ../ZSDOS/zsys_wbw.sys ../CPM3/cpmldr.sys ../ZPM3/zpmldr.sys
+SYSTEMS = ../CPM22/cpm_wbw.sys ../ZSDOS/zsys_wbw.sys ../QPM/qpm_wbw.sys ../CPM3/cpmldr.sys ../ZPM3/zpmldr.sys
 
 FDIMGS = fd144_cpm22.img fd144_zsdos.img fd144_nzcom.img \
 	fd144_cpm3.img fd144_zpm3.img fd144_ws4.img fd144_qpm.img \
@@ -80,7 +80,7 @@ blankhd1k:
 	@sys= ; \
 	case $@ in \
 		(*cpm22*) sys=../CPM22/cpm_wbw.sys;; \
-		(*qpm*) sys=d_qpm/u0/qpm.sys;; \
+		(*qpm*) sys=../QPM/qpm_wbw.sys;; \
 		(*zsdos* | *nzcom* | *dos65*) sys=../ZSDOS/zsys_wbw.sys;; \
 		(*cpm3*) sys=../CPM3/cpmldr.sys;; \
 		(*zpm3*) sys=../ZPM3/zpmldr.sys;; \

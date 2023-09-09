@@ -4,6 +4,7 @@ setlocal
 pushd HDIAG && call Build || exit /b & popd
 pushd CBIOS && call Build || exit /b & popd
 pushd CPM22 && call Build || exit /b & popd
+pushd QPM && call Build || exit /b & popd
 pushd ZCPR && call Build || exit /b & popd
 pushd ZCPR-DJ && call Build || exit /b & popd
 pushd ZSDOS && call Build || exit /b & popd

@@ -48,10 +48,9 @@ The following files came from the official QP/M distribution.  Actually,
 they came from 3 Microcode Consulting files (qpm27.zip, debugz.zip,
 and linkz.zip).  The original distribution files can be found on the
 Microcode Consulting website at https://www.microcodeconsulting.com/.
-Documentation (pdf) files are incuded in these original distribution
-.zip files.  These documentation files have not been included in the
-RomWBW distribution.  Please retrieve them yourself from the website
-if desired.
+Documentation (pdf) files are included in these original distribution
+.zip files.  These documentation files have been included in the
+RomWBW distribution in the Doc folder.
 
 D.COM - Directory lister
 DBGINST.COM - Configures DEBUGZ debugger

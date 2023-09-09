@@ -2154,6 +2154,9 @@ is included with the RomWBW distribution.
   on the QPM binary distribution and has been minimally customized
   for RomWBW.
 
+- When booted, the QPM startup banner will indicate CP/M 2.2.  This
+  is because QPM uses the CP/M 2.2 CBIOS code.
+
 - QINSTALL is used to customize QPM.  It is included on the
   disk image.  You should review the notes in the ReadMe.txt
   file in Source/Images/d_qpm before making changes.
