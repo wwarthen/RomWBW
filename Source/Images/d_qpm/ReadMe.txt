@@ -36,11 +36,19 @@ code brakpoints.  This conflicts the use of that vector for any
 system that is using interrupt mode 1.  DEBUGZ can be configured
 (using DBGINST) to use a different vector.
 
-The QSTAMP program, which is used to initialize a disk for date/time
-stamping, misbehavews when run on the (new) RomWBW 1024 directory
-format disks.  It creates an invalid directory entry for the
-date/time stamp data file.  This is definitely a QP/M issue.  The
-directory entry can be manually corrected.
+The QSTAMP program, which is used to initialize a disk for date/time 
+stamping, misbehavews when run on the (new) RomWBW 1024 directory 
+format disks.  It creates an invalid directory entry for the date/time 
+stamp data file.  This is definitely a QP/M issue.  The directory entry 
+can be manually corrected.  Specifically the byte offset 15 should 
+contain the number of 128-byte records in the file.  Instead, it is set 
+to 0x01.  You can edit the entry, change it to 0x80 and everything
+starts working.
+
+There are two text files (QPMCMDS.TXT and QPMUTILS.TXT) included.  They
+came from the original QP/M 2.7 distribution.  These files have
+escape sequences imbedded in them which makes them look a little
+strange depending on the terminal emulation you are using.
 
 == QPM 2.7 Files ==
 

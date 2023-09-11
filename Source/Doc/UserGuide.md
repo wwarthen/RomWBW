@@ -2143,10 +2143,36 @@ regarding the RomWBW adaptation and customizations.
 
 #### Boot Disk
 
-There is no RomWBW-specific boot disk creation procedure.  QP/M
-comes with a QINSTALL which is used to install QPM over an existing
-CP/M 2 installation or to update an existing QPM disk.  `QINSTALL.COM`
-is included with the RomWBW distribution.
+
+To create or update a bootable QP/M Z-System disk, a special process
+is required.  QP/M is not provided in source format.  You are expected
+to install QP/M over an existing CP/M installation using the
+`QINSTALL.COM` application.
+
+To update an existing QP/M boot disk with the latest RomWBW CBIOS, you
+must use 2 steps: apply the generic CP/M system track, then reinstall
+the QP/M components.  To do this, you can perform the following steps:
+
+1. Boot to the existing QP/M disk.  At this point, drive A should be
+   the QP/M disk that you wish to update.  You may receive a warning
+   about CBIOS/HBIOS version mismatch.
+
+1. Use RomWBW `SYSCOPY` to place the stock RomWBW CP/M OS image
+   onto the system tracks of the QP/M boot disk:
+   
+   `SYSCOPY A:=x:CPM.SYS`
+   
+   where x is the drive letter of your ROM Disk.
+
+1. Run `QINSTALL` to overlay the QP/M OS components on your
+   QP/M boot disk.
+
+**WARNING**: `QINSTALL` has no mechanism for retaining previous
+non-default settings.  Any previous non-default settings you
+previously made with `QINSTALL` will need to be reapplied.  The
+pre-built RomWBW QP/M disk image includes a couple of specific
+non-default settings to optimize use with RomWBW.  Please review the
+notes in the ReadMe.txt file in Source/Images/d_qpm.
 
 #### Notes
 

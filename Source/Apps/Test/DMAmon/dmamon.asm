@@ -136,6 +136,8 @@ MAIN:
 	ld	de,$A000
 	ld	bc,hsiz
 	ldir
+	ld	a,(dmaport)
+	ld	(int_dmaport),a
 ;
 	; Install interrupt vector (RomWBW specific!!!)
 	ld	hl,int		; pointer to my interrupt handler
@@ -215,6 +217,9 @@ DMACFG_S:
 	call	HEXIN
 	ld	hl,dmaport
 	ld	(hl),a
+#IF (INTENABLE)
+	ld	(int_dmaport),a
+#ENDIF
 	jp	MENULP
 ;
 DMACFG_L:
@@ -1193,7 +1198,6 @@ CST:
 	RET
 ;
 USEINT	.DB	FALSE		; USE INTERRUPTS FLAG
-counter	.dw	0	
 dmaport	.db	DMABASE
 dmalach	.db	DMALATCH
 dmaxfer	.db	DMA_XMODE
@@ -1214,11 +1218,16 @@ reladr	.equ	$		; relocation start adr
 	.org	$A000		; code will run here
 ;
 int:
+	;LD	E,'.'			; OUTPUT CHAR TO E
+	;LD	C,CIO_CONSOLE		; CONSOLE UNIT TO C
+	;LD	B,BF_CIOOUT		; HBIOS FUNC: OUTPUT CHAR
+	;CALL	$FFF0			; HBIOS OUTPUTS CHARACTER
+
 	; According to the DMA doc, you must issue
 	; a DMA_DISABLE command prior to a
 	; DMA_REINIT_STATUS_BYTE command to avoid a
 	; potential race condition.
-	ld	a,(dmaport)
+	ld	a,(int_dmaport)
 	ld	c,a
 	ld	a,DMA_DISABLE
 	out	(c),a
@@ -1237,6 +1246,11 @@ int:
 ;
 	or	$ff		; signal int handled
 	ret
+;
+; data referred to in handler must reside in high mem
+;
+int_dmaport	.db	0	; hi mem copy of dmaport
+counter		.dw	0	; interrupt counter
 ;
 hsiz	.equ	$ - $A000	; size of handler to relocate
 ;
