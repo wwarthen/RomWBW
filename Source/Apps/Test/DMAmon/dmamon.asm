@@ -27,9 +27,9 @@ DMAIOTST	.EQU	$68		; AN OUTPUT PORT FOR TESTING - 16C450 SERIAL OUT
 ;
 #IF (DMAMODE==DMAMODE_DUO)
 DMABASE		.SET	$40		; DMA: DMA0 BASE ADDRESS
-;DMABASE 	.SET	$41		; DMA: DMA1 BASE ADDRESS
 DMALATCH	.SET	$43		; DMA: DMA LATCH ADDRESS
 DMAIOTST	.SET	$58		; AN OUTPUT PORT FOR TESTING - 16C450 SERIAL OUT
+;DMAIOTST	.SET	$94		; AN ALT OUTPUT PORT FOR TESTING - RTC/SPEAKER/LEDS PORT
 #ENDIF
 ;
 ;==================================================================================================
@@ -127,7 +127,7 @@ MAIN:
 	LD	SP,STACK		; STACK
 ;
 	call	PRTSTRD			; WELCOME
-	.db	"\n\rDMA Monitor V3\n\r$"
+	.db	"\n\rDMA Monitor V3.1\n\r$"
 ;
 #IF (INTENABLE)
 ;
@@ -403,7 +403,8 @@ DMA_INIT:
 ;
 	ld	hl,DMACode		; program the
 	ld	b,DMACode_Len		; dma command
-	ld	c,DMABASE		; block
+	ld	a,(dmaport)
+	ld	c,a		; block
 ;
 	di
 	otir				; load dma
@@ -514,6 +515,7 @@ DMACFG_V:
 ;==================================================================================================
 ;
 DMABUF	.TEXT	"0123456789abcdef"
+;DMABUF	.DB	$04,$00,$04,$00,$04,$00,$04,$00,$04,$00,$04,$00,$04,$00,$04,$00,$00,$00,$00 ; SPEAKER
 ;
 DMA_ReadyO:
 	call	PRTSTRD
@@ -636,9 +638,9 @@ DMAMemMove1:
 ;
 DMAMemMove2:
 ;
-;	LD	HL,$8400	; PLANT
-;	LD	A,$00		; BAD
-;	LD	(HL),A		; SEED
+	;LD	HL,$8400	; PLANT
+	;LD	A,$00		; BAD
+	;LD	(HL),A		; SEED
 ;
 	LD	A,$AA		; CHECK COPY SUCCESSFULL
 	LD	HL,$8000
@@ -646,6 +648,14 @@ DMAMemMove2:
 NXTCMP:	CPI
 	JP	PO,CMPOK
 	JR	Z,NXTCMP
+
+	DEC	HL
+	CALL	PRTHEXWORDHL
+	LD	A,' '
+	CALL	COUT
+	LD	A,(HL)
+	CALL	PRTHEXBYTE
+	
 	RET			; RET W/ ZF CLEAR
 ;
 CMPOK:

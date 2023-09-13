@@ -227,6 +227,7 @@ call Build SCZ180 sc130 || exit /b
 call Build SCZ180 sc131 || exit /b
 call Build SCZ180 sc140 || exit /b
 call Build SCZ180 sc503 || exit /b
+call Build SCZ180 sc700 || exit /b
 call Build DYNO std || exit /b
 call Build UNA std || exit /b
 call Build RPH std || exit /b
