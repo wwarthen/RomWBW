@@ -20,6 +20,7 @@ Version 3.3
 - M?C: Fixed XM to allow specifying HBIOS port for send operations
 - WBW: Fix S100 Z180 LED operation (credit to Jay Cotton for finding this issue)
 - WBW: QPM system image is now combined with current CBIOS during build
+- WBW: Added framework for Heath platform
 
 Version 3.2.1
 -------------

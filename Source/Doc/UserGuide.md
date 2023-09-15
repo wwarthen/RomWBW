@@ -206,6 +206,7 @@ below, **carefully** pick the appropriate ROM image for your hardware.
 | [Z80-Retro SBC]^8^                                             | -       | Z80RETRO_std.rom   | 38400         |
 | [S100 Computers Z180]^9^                                       | S100    | S100_std.rom       | 38400         |
 | [Duodyne Z80 System]^1^                                        | Duo     | DUO_std.rom        | 38400         |
+| [Heath H8 Z80 System]                                          | H8      | HEATH_std.rom      | 115200        |
 
 | ^1^Designed by Andrew Lynch
 | ^2^Designed by Sergey Kiselev
@@ -4032,6 +4033,29 @@ the RomWBW HBIOS configuration.
    - DS1302 RTC
    - Zilog DMA Module
    - UART Serial Adapter
+
+`\clearpage`{=latex}
+
+### Heath H8 Z80 System
+
+|                   |               |
+|-------------------|---------------|
+| ROM Image File    | HEATH_std.rom |
+| Console Baud Rate | 115200        |
+| Interrupts        | Mode 1        |
+
+ - CPU speed is detected at startup if DS1302 RTC is active
+   - Otherwise 7.3728 MHz assumed
+ - Hardware auto-detected:
+   - DS1302 RTC
+   - ACIA Serial Interface Module
+   - SIO Serial Interface Module
+   - EP Dual UART Serial Interface Module
+   - WDC Floppy Disk Controller w/ 3.5" HD Drives
+   - IDE Hard Disk Interface Module
+   - PPIDE Hard Disk Interface Module
+ - Serial baud rate is usually determined by hardware for ACIA and
+   SIO interfaces
 
 `\clearpage`{=latex}
 
