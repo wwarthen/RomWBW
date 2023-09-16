@@ -45,7 +45,7 @@ Source/CPM3/options.lib
 Source/CPM3/zpmbios3.spr
 Source/HBIOS/Blank512KB.dat
 Source/HBIOS/build.inc
-Source/HBIOS/Config/*_ddw.*
+Source/HBIOS/Config/*_ddw.asm
 Source/Images/blank144
 Source/Images/blankhd
 Source/Prop/Spin/ParPortProp.list
