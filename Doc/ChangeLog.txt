@@ -21,6 +21,8 @@ Version 3.3
 - WBW: Fix S100 Z180 LED operation (credit to Jay Cotton for finding this issue)
 - WBW: QPM system image is now combined with current CBIOS during build
 - WBW: Added framework for Heath platform
+- WBW: Support for USB Disks via CH375/CH376
+- D?J: Support for Raspberry Pi build process
 
 Version 3.2.1
 -------------

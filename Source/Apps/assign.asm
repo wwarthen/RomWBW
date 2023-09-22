@@ -31,6 +31,7 @@
 ;   2022-02-28 [WBW] Use HBIOS to swap banks under CP/M 3
 ;                    Use CPM3 BDOS direct BIOS call to get DRVTBL adr
 ;   2023-06-19 [WBW] Update for revised DIODEVICE API
+;   2023-09-19 [WBW] Added CHUSB & CHSD device support
 ;_______________________________________________________________________________
 ;
 ; ToDo:
@@ -1920,8 +1921,8 @@ dev09	.db	"HDSK",0
 dev10	.db	"PPA",0
 dev11	.db	"IMM",0
 dev12	.db	"SYQ",0
-dev13	.equ	devunk
-dev14	.equ	devunk
+dev13	.db	"CHUSB",0
+dev14	.db	"CHSD",0
 dev15	.equ	devunk
 ;
 devcnt	.equ	10		; 10 devices defined
@@ -1942,10 +1943,10 @@ stack	.equ	$		; stack top
 ; Messages
 ;
 indent	.db	"   ",0
-msgban1	.db	"ASSIGN v1.6 for RomWBW CP/M ",0
+msgban1	.db	"ASSIGN v1.7 for RomWBW CP/M ",0
 msg22	.db	"2.2",0
 msg3	.db	"3",0
-msbban2	.db	", 16-Jun-2023",0
+msbban2	.db	", 19-Sep-2023",0
 msghb	.db	" (HBIOS Mode)",0
 msgub	.db	" (UBIOS Mode)",0
 msgban3	.db	"Copyright 2021, Wayne Warthen, GNU GPL v3",0
