@@ -9,7 +9,7 @@
 ; his code in FUZIX (https://github.com/EtchedPixels/FUZIX).
 ;
 ; NOTES:
-;  - There seem to compatibility issues with older USB thumb drives.
+;  - There seem to be compatibility issues with older USB thumb drives.
 ;    Such drives will complete DISK_INIT successfully, but then return
 ;    an error attempting to do any I/O.  The error is $17 indicating
 ;    the CH37x encountered an overflow during communication with the
@@ -21,13 +21,13 @@
 ;    will clear this, but the RESET_ALL command is very problematic on
 ;    the CH376.  On the CH376, the hardware reset takes a very long
 ;    time (much longer than the documentation suggests).  It seems to
-;    work find on the CH375, but since you don't know what chip you
+;    work fine on the CH375, but since you don't know what chip you
 ;    are dealing with at that point, I have given up on using it.
 ;
 ; TODO:
 ;  - Implement auto-recovery on error status.
 ;
-CHUSB_FASTIO	.EQU	FALSE		; USE INIR/OTIR?
+CHUSB_FASTIO	.EQU	TRUE		; USE INIR/OTIR?
 ;
 ; PORT OFFSETS FROM BASE PORT
 ;
@@ -324,7 +324,7 @@ CH_FLUSH1:
 ;
 ;
 CH_DETECT:
-	PRTS("\r\nDETECT:$")		; *DEBUG*
+	;PRTS("\r\nDETECT:$")		; *DEBUG*
 CH_DETECT1:
 	LD	A,CH_CMD_EXIST		; LOAD COMMAND
 	CALL	CH_CMD			; SEND COMMAND
