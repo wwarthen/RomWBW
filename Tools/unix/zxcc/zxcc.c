@@ -127,7 +127,15 @@ void load_bios(void)
 		uint32_t size = CPM_MAXPATH - 8;
 		_NSGetExecutablePath(dir, &size);
 #else
-		readlink("/proc/self/exe", dir, CPM_MAXPATH - 8);   /* allow room for bios.bin */
+		ssize_t len;
+		len = readlink("/proc/self/exe", dir, CPM_MAXPATH - 8);   /* allow room for bios.bin */
+		if (len < 0)
+		{
+			/* len of -1 indicates an error occurred */
+			len = 0;
+		}
+		/* Terminate the dir string with a NUL character */
+		dir[len] = 0;
 #endif
 		q = strrchr(dir, DIRSEPCH);
 		*++q = 0;
