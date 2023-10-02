@@ -140,7 +140,8 @@ start:
 	rst	08			; do it
 	ld	a,c			; previous bank to A
 	ld	(bid_ldr),a		; save previous bank for later
-	bit	7,a			; starting from ROM?
+	;;;bit	7,a			; starting from ROM?
+	cp	BID_IMG0		; ROM startup?
 #endif
 ;
 #if (BIOS == BIOS_UNA)
@@ -2189,7 +2190,9 @@ err:
 	ld	hl,str_err_prefix
 	call	pstr
 	pop	hl
-	jp	pstr
+	call	pstr
+	or	$ff			; signal error
+	ret				; done
 ;
 str_err_prefix	.db	bel,"\r\n\r\n*** ",0
 str_err_invcmd	.db	"Invalid command",0

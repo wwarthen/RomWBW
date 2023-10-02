@@ -110,10 +110,8 @@ copy /b romldr.bin + dbgmon.bin + ..\zsdos\zsys_wbw.bin osimg_small.bin || exit 
 :: should yield a result of zero.
 ::
 
-if %ROMSize% gtr 0 (
-    for %%f in (hbios_rom.bin osimg.bin osimg1.bin osimg2.bin) do (
-      "%TOOLS%\srecord\srec_cat.exe" %%f -Binary -Crop 0 0x7FFF -Checksum_Negative_Big_Endian 0x7FFF 1 1 -o %%f -Binary || exit /b
-    )
+for %%f in (hbios_rom.bin osimg.bin osimg1.bin osimg2.bin) do (
+  "%TOOLS%\srecord\srec_cat.exe" %%f -Binary -Crop 0 0x7FFF -Checksum_Negative_Big_Endian 0x7FFF 1 1 -o %%f -Binary || exit /b
 )
 
 ::
@@ -137,8 +135,8 @@ if %ROMSize% gtr 0 (
     copy /b hbios_rom.bin + osimg.bin + osimg1.bin + osimg2.bin %ROMName%.upd || exit /b
     copy /b hbios_app.bin + osimg_small.bin %ROMName%.com || exit /b
 ) else (
-    copy /b hbios_rom.bin + osimg_small.bin %ROMName%.rom || exit /b
-    copy /b hbios_rom.bin + osimg_small.bin %ROMName%.upd || exit /b
+    copy /b hbios_rom.bin + osimg.bin + osimg1.bin + osimg2.bin %ROMName%.rom || exit /b
+    copy /b hbios_rom.bin + osimg.bin + osimg1.bin + osimg2.bin %ROMName%.upd || exit /b
     copy /b hbios_app.bin + osimg_small.bin %ROMName%.com || exit /b
 )
 

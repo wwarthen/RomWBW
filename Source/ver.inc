@@ -2,7 +2,7 @@
 #DEFINE	RMN	3
 #DEFINE	RUP	0
 #DEFINE	RTP	0
-#DEFINE BIOSVER	"3.3.0-dev.57"
+#DEFINE BIOSVER	"3.3.0-dev.58"
 #define rmj	RMJ
 #define rmn	RMN
 #define rup	RUP

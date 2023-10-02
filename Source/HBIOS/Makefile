@@ -67,11 +67,9 @@ $(OBJECTS) : $(ROMDEPS)
 		else \
 			cat imgpad2.bin >osimg2.bin ; \
 		fi ; \
-		if [ $(ROMSIZE) -gt 0 ] ; then \
-			for f in hbios_rom.bin osimg.bin osimg1.bin osimg2.bin ; do \
-				srec_cat $$f -Binary -Crop 0 0x7FFF -Checksum_Negative_Big_Endian 0x7FFF 1 1 -o $$f -Binary ; \
-			done \
-		fi \
+		for f in hbios_rom.bin osimg.bin osimg1.bin osimg2.bin ; do \
+			srec_cat $$f -Binary -Crop 0 0x7FFF -Checksum_Negative_Big_Endian 0x7FFF 1 1 -o $$f -Binary ; \
+		done \
 	fi
 	if [ $(ROM_PLATFORM) = UNA ] ; then \
 		cp osimg.bin $(DEST)/UNA_WBW_SYS.bin ; \
@@ -83,8 +81,8 @@ $(OBJECTS) : $(ROMDEPS)
 			cat hbios_rom.bin osimg.bin osimg1.bin osimg2.bin >$(ROMNAME).upd ; \
 			cat hbios_app.bin osimg_small.bin > $(ROMNAME).com ; \
 		else \
-			cat hbios_rom.bin osimg_small.bin > $(ROMNAME).rom ; \
-			cat hbios_rom.bin osimg_small.bin > $(ROMNAME).upd ; \
+			cat hbios_rom.bin osimg.bin osimg1.bin osimg2.bin >$(ROMNAME).rom ; \
+			cat hbios_rom.bin osimg.bin osimg1.bin osimg2.bin >$(ROMNAME).upd ; \
 			cat hbios_app.bin osimg_small.bin > $(ROMNAME).com ; \
 		fi \
 	fi
