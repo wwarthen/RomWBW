@@ -55,7 +55,7 @@ Bank ID         Usage
 
 
 ROMless Tiny Bank Layout (128K)
-NOTE: No ROM Apps, No CP/M 3 support
+NOTE: no ROM Apps, no CP/M 3 support, no RAM disk
 
 Bank ID         Usage
 -------         ------
@@ -63,3 +63,12 @@ Bank ID         Usage
 0x81		Loader, DbgMon, CP/M 2.2, ZSDOS
 0x82            User TPA
 0x83            Common
+
+Disk Image Sizes
+
+Image Size	ROM System	ROMless System
+----------	----------	--------------
+1024K		896K		768K
+512		384K		256K
+256		128K		0K
+128 (tiny)	n/a		0K

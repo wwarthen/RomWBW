@@ -4,39 +4,38 @@ setlocal
 set ROMFILE=..\..\Binary\RCZ280_zzrc.rom
 set ROMSIZE=262144
 
-if not exist %ROMFILE% goto :eof
+set TOOLS=../../Tools
 
-::
-:: The ROM image *must* be exactly 256K or the resulting disk
-:: image produced below will be invalid.  Check for the proper size.
-::
+set PATH=%TOOLS%\srecord;%PATH%
 
-call :filesize %ROMFILE%
+if exist ..\..\Binary\RCZ280_zzrc.rom call :build_zzrc
 
-if "%FILESIZE%" neq "%ROMSIZE%" (
-  echo.
-  echo.
-  echo ERROR: "%ROMFILE%" is not exactly %ROMSIZE% bytes as required!!!
-  echo You must specify a ROMSIZE of "256" when building the ZZRCC ROM image.
-  echo.
-  echo.
-  exit /b 1
-)
+if exist ..\..\Binary\RCZ280_zzrc_ram.rom call :build_zzrc_ram
 
-rem ..\..\Tools\srecord\srec_cat.exe ..\..\Binary\RCZ280_zzrc.rom -Binary -Exclude 0x5000 0x7000 zzrc_romldr.hex -Intel -Output ..\..\Binary\RCZ280_zzrc.hex -Intel || exit /b
+goto :eof
 
-..\..\Tools\srecord\srec_cat.exe ..\..\Binary\RCZ280_zzrc.rom -Binary -Output ..\..\Binary\RCZ280_zzrc.hex -Intel || exit /b
+:build_zzrc
 
-rem ..\..\Tools\srecord\srec_cat.exe ..\..\Binary\RCZ280_zzrc.hex -Intel -Output ..\..\Binary\RCZ280_zzrc_ldr.rom -Binary || exit /b
-
-rem copy /b zzrc_cfldr.bin + zzrc_ptbl.bin + zzrc_fill_1.bin + zzrc_mon.bin + zzrc_fill_2.bin + ..\..\Binary\RCZ280_zzrc_ldr.rom + zzrc_fill_3.bin ..\..\Binary\hd1k_zzrc_prefix.dat || exit /b
-
-copy /b zzrc_cfldr.bin + zzrc_ptbl.bin + zzrc_fill_1.bin + zzrc_mon.bin + zzrc_fill_2.bin + ..\..\Binary\RCZ280_zzrc.rom + zzrc_fill_3.bin ..\..\Binary\hd1k_zzrc_prefix.dat || exit /b
+srec_cat -generate 0x0 0x100000 --constant 0x00 -o temp.dat -binary
+srec_cat temp.dat -binary -exclude 0x0 0x100 zzrc_cfldr.bin -binary -o temp.dat -binary
+srec_cat temp.dat -binary -exclude 0x100 0x200 zzrc_ptbl.bin -binary -offset 0x100 -o temp.dat -binary
+srec_cat temp.dat -binary -exclude 0x1F000 0x20000 zzrc_mon.bin -binary -offset 0x1F000 -o temp.dat -binary
+srec_cat temp.dat -binary -exclude 0x24000 0xA4000 ..\..\Binary\RCZ280_zzrc.rom -binary -offset 0x24000 -o temp.dat -binary
+move temp.dat ..\..\Binary\hd1k_zzrc_prefix.dat
 
 copy /b ..\..\Binary\hd1k_zzrc_prefix.dat + ..\..\Binary\hd1k_cpm22.img + ..\..\Binary\hd1k_zsdos.img + ..\..\Binary\hd1k_nzcom.img + ..\..\Binary\hd1k_cpm3.img + ..\..\Binary\hd1k_zpm3.img + ..\..\Binary\hd1k_ws4.img ..\..\Binary\hd1k_zzrc_combo.img || exit /b
 
 goto :eof
 
-:filesize
-set FILESIZE=%~z1
+:build_zzrc_ram
+
+srec_cat -generate 0x0 0x100000 --constant 0x00 -o temp.dat -binary
+srec_cat temp.dat -binary -exclude 0x0 0x100 zzrc_cfldr.bin -binary -o temp.dat -binary
+srec_cat temp.dat -binary -exclude 0x100 0x200 zzrc_ptbl.bin -binary -offset 0x100 -o temp.dat -binary
+srec_cat temp.dat -binary -exclude 0x1F000 0x20000 zzrc_mon.bin -binary -offset 0x1F000 -o temp.dat -binary
+srec_cat temp.dat -binary -exclude 0x24000 0xA4000 ..\..\Binary\RCZ280_zzrc_ram.rom -binary -offset 0x24000 -o temp.dat -binary
+move temp.dat ..\..\Binary\hd1k_zzrc_ram_prefix.dat
+
+copy /b ..\..\Binary\hd1k_zzrc_ram_prefix.dat + ..\..\Binary\hd1k_cpm22.img + ..\..\Binary\hd1k_zsdos.img + ..\..\Binary\hd1k_nzcom.img + ..\..\Binary\hd1k_cpm3.img + ..\..\Binary\hd1k_zpm3.img + ..\..\Binary\hd1k_ws4.img ..\..\Binary\hd1k_zzrc_ram_combo.img || exit /b
+
 goto :eof
