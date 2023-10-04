@@ -24,7 +24,11 @@
 ;
 ; Print all desired config values...
 ;
+#if (ROMSIZE > 0)
 	prtval("ROMSIZE$", ROMSIZE)
+#else
+	prtval("ROMSIZE$", RAMSIZE)
+#endif
 	prtval("CPUFAM$", CPUFAM)
 ;
 	ret

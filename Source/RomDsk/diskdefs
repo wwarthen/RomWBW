@@ -310,6 +310,32 @@ diskdef wbw_rom1024
   os 2.2
 end
 
+# RomWBW 512KB RAM (256KB reserved, 256KB RAM Disk)
+
+diskdef wbw_ram512
+  seclen 512
+  tracks 8
+  sectrk 64
+  blocksize 2048
+  maxdir 256
+  skew 0
+  boottrk 0
+  os 2.2
+end
+
+# RomWBW 1024KB RAM (256KB reserved, 768KB RAM Disk)
+
+diskdef wbw_ram1024
+  seclen 512
+  tracks 24
+  sectrk 64
+  blocksize 2048
+  maxdir 256
+  skew 0
+  boottrk 0
+  os 2.2
+end
+
 # RomWBW 720K floppy media
 
 diskdef wbw_fd720

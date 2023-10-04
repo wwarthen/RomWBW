@@ -135,7 +135,7 @@ if %ROMSize% gtr 0 (
     copy /b hbios_rom.bin + osimg.bin + osimg1.bin + osimg2.bin %ROMName%.upd || exit /b
     copy /b hbios_app.bin + osimg_small.bin %ROMName%.com || exit /b
 ) else (
-    copy /b hbios_rom.bin + osimg.bin + osimg1.bin + osimg2.bin %ROMName%.rom || exit /b
+    copy /b hbios_rom.bin + osimg.bin + osimg1.bin + osimg2.bin  + ..\RomDsk\ram%ROMSize%_wbw.dat %ROMName%.rom || exit /b
     copy /b hbios_rom.bin + osimg.bin + osimg1.bin + osimg2.bin %ROMName%.upd || exit /b
     copy /b hbios_app.bin + osimg_small.bin %ROMName%.com || exit /b
 )

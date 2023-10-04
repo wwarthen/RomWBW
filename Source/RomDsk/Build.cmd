@@ -31,24 +31,29 @@ copy NUL rom128_una.dat
 
 set RomApps=%RomApps1%
 
-call :MakeDisk rom256_wbw 256 0x20000 wbw
-call :MakeDisk rom256_una 256 0x20000 una
+call :MakeDisk rom256_wbw wbw_rom256 ROM_256KB 0x20000 wbw
+call :MakeDisk rom256_una wbw_rom256 ROM_256KB 0x20000 una
 
 set RomApps=%RomApps1% %RomApps2%
 
-call :MakeDisk rom512_wbw 512 0x60000 wbw
-call :MakeDisk rom512_una 512 0x60000 una
+call :MakeDisk rom512_wbw wbw_rom512 ROM_512KB 0x60000 wbw
+call :MakeDisk rom512_una wbw_rom512 ROM_512KB 0x60000 una
 
-call :MakeDisk rom1024_wbw 1024 0xE0000 wbw
-call :MakeDisk rom1024_una 1024 0xE0000 una
+call :MakeDisk rom1024_wbw wbw_rom1024 ROM_1024KB 0xE0000 wbw
+call :MakeDisk rom1024_una wbw_rom1024 ROM_1024KB 0xE0000 una
+
+call :MakeDisk ram512_wbw wbw_ram512 RAM_512KB 0x40000 wbw
+
+call :MakeDisk ram1024_wbw wbw_ram1024 RAM_1024KB 0xC0000 wbw
 
 goto :eof
 
 :MakeDisk
 set Output=%1
-set RomSize=%2
-set ImgSize=%3
-set Bios=%4
+set DiskDef=%2
+set Dir=%3
+set ImgSize=%4
+set Bios=%5
 
 echo Making ROM Disk %Output%
 
@@ -56,12 +61,12 @@ echo Making ROM Disk %Output%
 srec_cat -Generate 0 %ImgSize% --Constant 0xE5 -Output %Output%.dat -Binary || exit /b
 
 :: Populate the disk image via cpmtools
-cpmcp -f wbw_rom%RomSize% %Output%.dat ROM_%RomSize%KB/*.* 0: || exit /b
-for %%f in (%RomApps%) do cpmcp -f wbw_rom%RomSize% %Output%.dat ../../Binary/Apps/%%f.com 0: || exit /b
-cpmcp -f wbw_rom%RomSize% %Output%.dat ..\cpm22\cpm_%Bios%.sys 0:cpm.sys || exit /b
-cpmcp -f wbw_rom%RomSize% %Output%.dat ..\zsdos\zsys_%Bios%.sys 0:zsys.sys || exit /b
+cpmcp -f %DiskDef% %Output%.dat %Dir%/*.* 0: || exit /b
+for %%f in (%RomApps%) do cpmcp -f %DiskDef% %Output%.dat ../../Binary/Apps/%%f.com 0: || exit /b
+cpmcp -f %DiskDef% %Output%.dat ..\cpm22\cpm_%Bios%.sys 0:cpm.sys || exit /b
+cpmcp -f %DiskDef% %Output%.dat ..\zsdos\zsys_%Bios%.sys 0:zsys.sys || exit /b
 
 :: Mark all disk files R/O for safety
-cpmchattr -f wbw_rom%RomSize% %Output%.dat r 0:*.* || exit /b
+cpmchattr -f %DiskDef% %Output%.dat r 0:*.* || exit /b
 
 goto :eof
