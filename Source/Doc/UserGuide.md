@@ -1537,7 +1537,46 @@ indicated:
 You will notice that there are actually 2 combo disk images in the 
 distribution.  One for an hd512 disk layout (hd512_combo.img) and one 
 for an hd1k disk layout (hd1k_combo.img). Simply use the image file that
-corresponds to your desired hard disk layout.
+corresponds to your desired hard disk layout.  Review the information
+in [Hard Disk Layouts] if you need more information of the disk layout
+options.
+
+The partition table in the combo disk images includes an entry for a
+FAT filesystem starting at 512K with a size of 384K.  So when using
+the combo disk image, by default, your disk will have the first 512K
+dedicated to CP/M slices followed by 384K for a FAT filesystem.  Note
+that the pre-allocated FAT partition must still be formatted using
+`FDISK32` in order to actually use it
+(see [FAT Filesystem Preparation]).
+
+The combo disk image layout was designed to fit well on a 1GB hard
+disk.  The 512K of CP/M slices and 384K of FAT filesystem all fit inside
+a 1GB hard disk.  This size choice was a bit arbitrary, but based on the
+idea that a 1GB CF or SD Card is easy and cheap to acquire.  It is fine
+if your hard disk is smaller than 1GB.  It just means that it will not
+be possible to use the pre-allocated FAT filesystem partition (you will
+get I/O errors if you attempt to do so).
+
+The 512KB area of the combo disk image set aside for slices can contain
+approximately 64 slices (8MB per slice).  If your actual hard disk is
+less than 512KB, then this will correspondingly reduce the number of
+possible slices.  If your hard disk is smaller than 64MB, then you
+will find that some of the higher drive letters do not work because
+they exist "off the end" of the hard disk.
+
+For RomWBW systems with a single hard disk (typical), you will notice 
+that an OS will pre-allocate 8 drive letters to the hard disk.  If the 
+combo disk image is being used, only the first 6 drive letters (A: - H:)
+will have any content because the combo disk image only provides 6 
+slices. The subsequent drives (I: - J:) will have no content and will 
+not be pre-initialized.  If you want to use any slices beyond the first 
+6, you must initialize them using `CLRDIR` first.
+
+A great way to maintain your own data on a hard disk is to put this
+data in slices beyond the first 6.  By doing so, you can always
+"reimage" your drive with the combo image without overlaying the data
+stored in the slices beyond the first 6.  Just be very careful to use
+the same combo image (hd512 or hd1k) as you used originally.
 
 #### Custom Hard Disk Image
 

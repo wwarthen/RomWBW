@@ -25,6 +25,7 @@ call BuildDisk.cmd games hd wbw_fd144 || exit /b
 echo.
 echo Building Hard Disk Images (512 directory entry format)...
 echo.
+call BuildDisk.cmd blank hd wbw_hd512 || exit /b
 call BuildDisk.cmd cpm22 hd wbw_hd512 ..\cpm22\cpm_wbw.sys || exit /b
 call BuildDisk.cmd zsdos hd wbw_hd512 ..\zsdos\zsys_wbw.sys || exit /b
 call BuildDisk.cmd nzcom hd wbw_hd512 ..\zsdos\zsys_wbw.sys || exit /b
@@ -50,6 +51,7 @@ copy /b ..\..\Binary\hd512_cpm22.img + ..\..\Binary\hd512_zsdos.img + ..\..\Bina
 echo.
 echo Building Hard Disk Images (1024 directory entry format)...
 echo.
+call BuildDisk.cmd blank hd wbw_hd1k || exit /b
 call BuildDisk.cmd cpm22 hd wbw_hd1k ..\cpm22\cpm_wbw.sys || exit /b
 call BuildDisk.cmd zsdos hd wbw_hd1k ..\zsdos\zsys_wbw.sys || exit /b
 call BuildDisk.cmd nzcom hd wbw_hd1k ..\zsdos\zsys_wbw.sys || exit /b
