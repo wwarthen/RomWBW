@@ -1300,7 +1300,7 @@ is considered the "legacy" disk layout for RomWBW.
 
 RomWBW has subsequently been enhanced to support the concept of
 partitioning.  The partition mechanism is entirely compliant with Master
- Boot Record (MBR) Partition Tables introduced by IBM for the PC.  The
+Boot Record (MBR) Partition Tables introduced by IBM for the PC.  The
 Wikipedia article on the
 [Master Boot Record](https://en.wikipedia.org/wiki/Master_boot_record)
 is excellent if you are not familiar with them.  This is considered the
@@ -1402,6 +1402,38 @@ It is critical that you include "dsk:" after the drive letter in the
 Directory Entries".  In this case, the value is 1024 which implies that
 this drive is located on a modern (hd1k) disk layout.  If the value
 was 512, it would indicate a legacy (hd512) disk layout.
+
+## Hard Disk Capacity
+
+Although RomWBW can support many CP/M filesystem slices on a single
+hard disk, you are still constrained by the physical capacity of the
+actual hard disk.  In most scenarios, RomWBW does not prevent you
+from attempting to use more slices than will fit on your hard disk
+device.  If you attempt to do so, disk I/O errors will be reported.
+
+The exact number of CP/M filesystem slices that will fit on your 
+specific physical hard disk can be determined as follows:
+
+- For hd512 disk layouts, it is slices * 8,320KB.
+- For hd1k disk layouts, it is 1024KB + (slices * 8192KB).  Since
+  1024KB is exactly 1MB, it is equivalent to say 1MB + (slices * 8MB).
+
+**WARNING**: In this document KB means 1024 bytes and MB means 1048576 
+bytes (frequently expressed as KiB and MiB in modern terminology).
+In general, hard disk capacities use KB to mean 1000 bytes and MB
+to mean 1,000,000 bytes.
+
+As an example, hardware distributors frequently supply a "64MB"
+CF Card with a RomWBW system.  Such a hard disk probably has
+less than 62.5MB of actual space (using the RomWBW definition that
+1MB is 1048576 bytes).  Such a drive will not support 8 slices.  It
+will support 7 slices just fine because 7 * 8,320KB = 58.24MB (hd512)
+or 1024KB + (7 * 8192MB) = 57MB (hd1k).
+
+The cost of high capacity CF and SD Cards has become very reasonable.
+I highly recommend upgrading to 1GB or greater media.  This size will
+support all features of the RomWBW Combo Disk Image with 64 slices
+and a 384MB FAT filesystem (see [Combo Hard Disk Image]).
 
 # Disk Content Preparation
 
@@ -1510,20 +1542,20 @@ command prompt.
 
 ### Hard Disk Images
 
-Keeping in mind that a RomWBW hard disk (including CF /SD Cards)
+Keeping in mind that a RomWBW hard disk (including CF/SD Cards)
 allows you to have multiple slices (CP/M filesystems), there are a
 couple ways to image hard disk media.  The easiest approach is to 
 use the "combo" disk image.  This image is already prepared
 with 6 slices containing 5 ready-to-run OSes and a slice with
-the WordStar application.  Alternatively, you can create your own
+the WordStar application files.  Alternatively, you can create your own
 hard disk image with the specific slice contents you choose.
 
 #### Combo Hard Disk Image
 
 The combo disk image is essentially just a single image that has several
-of the individual filesystem images already concatenated together. The 
-combo disk image contains the following 6 slices in the positions 
-indicated:
+ of the individual filesystem images (slices) already concatenated 
+together. The combo disk image contains the following 6 slices in the 
+positions indicated:
 
 | **Slice** | **Description**                                                  |
 |-----------|------------------------------------------------------------------|
@@ -1541,42 +1573,46 @@ corresponds to your desired hard disk layout.  Review the information
 in [Hard Disk Layouts] if you need more information of the disk layout
 options.
 
-The partition table in the combo disk images includes an entry for a
-FAT filesystem starting at 512K with a size of 384K.  So when using
-the combo disk image, by default, your disk will have the first 512K
-dedicated to CP/M slices followed by 384K for a FAT filesystem.  Note
-that the pre-allocated FAT partition must still be formatted using
-`FDISK32` in order to actually use it
-(see [FAT Filesystem Preparation]).
+Although the combo disk images contain only 6 slices of content, they
+reserve space to store 64 CP/M filesystem slices as well as a
+single 384MB FAT filesystem.  Keep in mind that the slices beyond the
+first 6 are not yet initialized.  You will need to use the `CLRDIR`
+application to initialize them before their first use.  Likewise, the
+pre-allocated FAT partition must still be formatted using `FAT FORMAT`
+in order to actually use it (see [FAT Filesystem Preparation]).
+Alternatively, the FAT partition can be formatted on a modern computer.
 
-The combo disk image layout was designed to fit well on a 1GB hard
-disk.  The 512K of CP/M slices and 384K of FAT filesystem all fit inside
-a 1GB hard disk.  This size choice was a bit arbitrary, but based on the
-idea that a 1GB CF or SD Card is easy and cheap to acquire.  It is fine
-if your hard disk is smaller than 1GB.  It just means that it will not
-be possible to use the pre-allocated FAT filesystem partition (you will
-get I/O errors if you attempt to do so).
+The combo disk image layout was designed to fit well on a 1GB hard disk.
+The 64 CP/M slices (approximately 512MB) and 384MB FAT filesystem all 
+fit well within a 1GB hard disk.  This size choice was a bit arbitrary, 
+but based on the idea that a 1GB CF or SD Card is easy and cheap to 
+acquire.  It is fine if your hard disk is smaller than 1GB.  It just 
+means that it will not be possible to use the pre-allocated FAT 
+filesystem partition and any CP/M filesystem slices that don't fit.  You
+will get I/O errors if you attempt to access an area beyond the end of
+the physical hard disk.
 
-The 512KB area of the combo disk image set aside for slices can contain
-approximately 64 slices (8MB per slice).  If your actual hard disk is
-less than 512KB, then this will correspondingly reduce the number of
-possible slices.  If your hard disk is smaller than 64MB, then you
-will find that some of the higher drive letters do not work because
-they exist "off the end" of the hard disk.
+**WARNING**:Your hard disk may be too small to contain the full 64
+CP/M filesystem slices.  The true number of CP/M filesystem slices that
+will fit on your specific physical hard disk can be calculated as
+described in [Hard Disk Capacity].
 
 For RomWBW systems with a single hard disk (typical), you will notice 
-that an OS will pre-allocate 8 drive letters to the hard disk.  If the 
-combo disk image is being used, only the first 6 drive letters (A: - H:)
-will have any content because the combo disk image only provides 6 
-slices. The subsequent drives (I: - J:) will have no content and will 
-not be pre-initialized.  If you want to use any slices beyond the first 
-6, you must initialize them using `CLRDIR` first.
+that the OS will pre-allocate 8 drive letters to the hard disk.  If the 
+combo disk image is being used, only the first 6 drive letters 
+(typically C: - H:) will have any content because the combo disk image 
+only provides 6 slices. The subsequent drives (typically I: - J:) will 
+have no content and will not be pre-initialized.  If you want to use any
+slices beyond the first 6 on the hard disk, then you must initialize 
+them using `CLRDIR` first.
 
 A great way to maintain your own data on a hard disk is to put this
 data in slices beyond the first 6.  By doing so, you can always
 "reimage" your drive with the combo image without overlaying the data
 stored in the slices beyond the first 6.  Just be very careful to use
-the same combo image (hd512 or hd1k) as you used originally.
+the same combo image layout (hd512 or hd1k) as you used originally.
+Also remember to calculate the maximum number of slices your hard disk
+will support and do not exceed this number.
 
 #### Custom Hard Disk Image
 
