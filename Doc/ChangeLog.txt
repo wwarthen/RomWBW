@@ -1,3 +1,8 @@
+Version 3.4
+-----------
+NOTE: Changes require HBIOS/CBIOS/Apps sync, version bump to 3.4 to ensure integrity
+- WBW: Device type number moved from upper nibble to full byte
+
 Version 3.3
 -----------
 - WBW: Support Front Panel switches

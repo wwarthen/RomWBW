@@ -390,17 +390,20 @@ below enumerates these values.
 | **Device Type** | **ID** | **Description**                          | **Driver** |
 |-----------------|-------:|------------------------------------------|------------|
 | CIODEV_UART     | 0x00   | 16C550 Family Serial Interface           | uart.asm   |
-| CIODEV_ASCI     | 0x10   | Z180 Built-in Serial Ports               | asci.asm   |
-| CIODEV_TERM     | 0x20   | Terminal                                 | ansi.asm   |
-| CIODEV_PRPCON   | 0x30   | PropIO Serial Console Interface          | prp.asm    |
-| CIODEV_PPPCON   | 0x40   | ParPortProp Serial Console Interface     | ppp.asm    |
-| CIODEV_SIO      | 0x50   | Zilog Serial Port Interface              | sio.asm    |
-| CIODEV_ACIA     | 0x60   | MC68B50 Asynchronous Interface           | acia.asm   |
-| CIODEV_PIO      | 0x70   | Zilog Parallel Interface Controller      | pio.asm    |
-| CIODEV_UF       | 0x80   | FT232H-based ECB USB FIFO                | uf.asm     |
-| CIODEV_DUART    | 0x90   | SCC2681 Family Dual UART                 | duart.asm  |
-| CIODEV_Z2U      | 0xA0   | Zilog Z280 Built-in Serial Ports         | z2u.asm    |
-| CIODEV_LPT      | 0xB0   | Parallel I/O Controller                  | lpt.asm    |
+| CIODEV_ASCI     | 0x01   | Z180 Built-in Serial Ports               | asci.asm   |
+| CIODEV_TERM     | 0x02   | Terminal                                 | ansi.asm   |
+| CIODEV_PRPCON   | 0x03   | PropIO Serial Console Interface          | prp.asm    |
+| CIODEV_PPPCON   | 0x04   | ParPortProp Serial Console Interface     | ppp.asm    |
+| CIODEV_SIO      | 0x05   | Zilog Serial Port Interface              | sio.asm    |
+| CIODEV_ACIA     | 0x06   | MC68B50 Asynchronous Interface           | acia.asm   |
+| CIODEV_PIO      | 0x07   | Zilog Parallel Interface Controller      | pio.asm    |
+| CIODEV_UF       | 0x08   | FT232H-based ECB USB FIFO                | uf.asm     |
+| CIODEV_DUART    | 0x09   | SCC2681 Family Dual UART                 | duart.asm  |
+| CIODEV_Z2U      | 0x0A   | Zilog Z280 Built-in Serial Ports         | z2u.asm    |
+| CIODEV_LPT      | 0x0B   | Parallel I/O Controller                  | lpt.asm    |
+| CIODEV_ESPCON   | 0x0B   | ESP32 VGA Console                        | esp.asm    |
+| CIODEV_ESPSER   | 0x0B   | ESP32 Serial Port                        | esp.asm    |
+| CIODEV_SCON     | 0x0B   | S100 Console                             | scon.asm   |
 
 Character devices can usually be configured with line characteristics
 such as speed, framing, etc. A word value (16 bit) is used to describe
@@ -568,15 +571,20 @@ below enumerates there values.
 | **Device Type** | **ID** | **Description**                          | **Driver** |
 |-----------------|-------:|------------------------------------------|------------|
 | DIODEV_MD       | 0x00   | Memory Disk                              | md.asm     |
-| DIODEV_FD       | 0x10   | Floppy Disk                              | fd.asm     |
-| DIODEV_RF       | 0x20   | RAM Floppy                               | rf.asm     |
-| DIODEV_IDE      | 0x30   | IDE Disk                                 | ide.asm    |
-| DIODEV_ATAPI    | 0x40   | ATAPI Disk (not implemented)             |            |
-| DIODEV_PPIDE    | 0x50   | PPIDE Disk                               | ppide.asm  |
-| DIODEV_SD       | 0x60   | SD Card                                  | sd.asm     |
-| DIODEV_PRPSD    | 0x70   | PropIO SD Card                           | prp.asm    |
-| DIODEV_PPPSD    | 0x80   | ParPortProp SD Card                      | ppp.asm    |
-| DIODEV_HDSK     | 0x90   | SIMH HDSK Disk                           | hdsk.asm   |
+| DIODEV_FD       | 0x01   | Floppy Disk                              | fd.asm     |
+| DIODEV_RF       | 0x02   | RAM Floppy                               | rf.asm     |
+| DIODEV_IDE      | 0x03   | IDE Disk                                 | ide.asm    |
+| DIODEV_ATAPI    | 0x04   | ATAPI Disk (not implemented)             |            |
+| DIODEV_PPIDE    | 0x05   | PPIDE Disk                               | ppide.asm  |
+| DIODEV_SD       | 0x06   | SD Card                                  | sd.asm     |
+| DIODEV_PRPSD    | 0x07   | PropIO SD Card                           | prp.asm    |
+| DIODEV_PPPSD    | 0x08   | ParPortProp SD Card                      | ppp.asm    |
+| DIODEV_HDSK     | 0x09   | SIMH HDSK Disk                           | hdsk.asm   |
+| DIODEV_PPA      | 0x0A   | Iomega PPA Disk                          | ppa.asm    |
+| DIODEV_IMM      | 0x0B   | Iomega IMM Disk                          | imm.asm    |
+| DIODEV_SYQ      | 0x0C   | Syquest Sparq Disk                       | syq.asm    |
+| DIODEV_CHUSB    | 0x0D   | CH375/376 USB Disk                       | ch.asm     |
+| DIODEV_CHSD     | 0x0E   | CH375/376 SD Card                        | ch.asm     |
 
 A fixed set of media types are defined. The currently defined media 
 types identifiers are listed below. Each driver will support one or
@@ -878,11 +886,11 @@ unit.  The table below enumerates these values.
 | **Device Type** | **ID** | **Description**                          | **Driver** |
 |-----------------|-------:|------------------------------------------|------------|
 | RTCDEV_DS       | 0x00   | Maxim DS1302 Real-Time Clock w/ NVRAM    | dsrtc.asm  |
-| RTCDEV_BQ       | 0x10   | BQ4845P Real Time Clock                  | bqrtc.asm  |
-| RTCDEV_SIMH     | 0x20   | SIMH Simulator Real-Time Clock           | simrtc.asm |
-| RTCDEV_INT      | 0x30   | Interrupt-based Real Time Clock          | intrtc.asm |
-| RTCDEV_DS7      | 0x40   | Maxim DS1307 PCF I2C RTC w/ NVRAM        | ds7rtc.asm |
-| RTCDEV_RP5      | 0x50   | Ricoh RPC01A Real-Time Clock w/ NVRAM    | rp5rtc.asm |
+| RTCDEV_BQ       | 0x01   | BQ4845P Real Time Clock                  | bqrtc.asm  |
+| RTCDEV_SIMH     | 0x02   | SIMH Simulator Real-Time Clock           | simrtc.asm |
+| RTCDEV_INT      | 0x03   | Interrupt-based Real Time Clock          | intrtc.asm |
+| RTCDEV_DS7      | 0x04   | Maxim DS1307 PCF I2C RTC w/ NVRAM        | ds7rtc.asm |
+| RTCDEV_RP5      | 0x05   | Ricoh RPC01A Real-Time Clock w/ NVRAM    | rp5rtc.asm |
 
 The time functions to get and set the time (RTCGTM and RTCSTM) require a
 6 byte date/time buffer in the following format. Each byte is BCD 
@@ -1021,8 +1029,8 @@ unit.  The table below enumerates these values.
 
 | **Device Type** | **ID** | **Description**                          | **Driver** |
 |-----------------|-------:|------------------------------------------|------------|
-| DSKYDEV_ICM     | 0x00   | Original ICM7218 based DSKY              | icm.asm    |
-| DSKYDEV_PKD     | 0x10   | Next Gen Intel P8279 based DSKY          | pkd.asm    |
+| DSKYDEV_ICM     | 0x01   | Original ICM7218 based DSKY              | icm.asm    |
+| DSKYDEV_PKD     | 0x02   | Next Gen Intel P8279 based DSKY          | pkd.asm    |
 
 When segment display function encodes the display data in a byte per
 character format.  Currently, all segment displays are exactly
@@ -1214,10 +1222,11 @@ below enumerates there values.
 | **Device Type** | **ID** | **Description**                          | **Driver** |
 |-----------------|-------:|------------------------------------------|------------|
 | VDADEV_VDU      | 0x00   | MC6845 Family Video Display Controller   | vdu.asm    |
-| VDADEV_CVDU     | 0x10   | MC8563-based Video Display Controller    | cvdu.asm   |
-| VDADEV_GDC      | 0x20   | uPD7220 Video Display Controller         | gdc.asm    |
-| VDADEV_TMS      | 0x30   | TMS9918/38/58 Video Display Controller   | tms.asm    |
-| VDADEV_VGA      | 0x40   | HD6445CP4-based Video Display Controller | vga.asm    |
+| VDADEV_CVDU     | 0x01   | MC8563-based Video Display Controller    | cvdu.asm   |
+| VDADEV_GDC      | 0x02   | uPD7220 Video Display Controller         | gdc.asm    |
+| VDADEV_TMS      | 0x03   | TMS9918/38/58 Video Display Controller   | tms.asm    |
+| VDADEV_VGA      | 0x04   | HD6445CP4-based Video Display Controller | vga.asm    |
+| VDADEV_VRC      | 0x05   | VGARC                                    | vrc.asm    |
 
 Depending on the capabilities of the hardware, the use of colors and
 attributes may or may not be supported. If the hardware does not support
@@ -1629,9 +1638,9 @@ below enumerates these values.
 | **Device Type** | **ID** | **Description**                              | **Driver**  |
 |-----------------|-------:|----------------------------------------------|-------------|
 | SNDDEV_SN76489  | $00    | SN76489 Programmable Sound Generator         | sn76489.asm |
-| SNDDEV_AY38910  | $10    | AY-3-8910/YM2149 Programmable Sound Generator| ay38910.asm |
-| SNDDEV_BITMODE  | $20    | Bit-bang Speaker                             | spk.asm     |
-| SNDDEV_YM2612   | $30    | YM2612 Programmable Sound Generator          | ym2612.asm  |
+| SNDDEV_AY38910  | $01    | AY-3-8910/YM2149 Programmable Sound Generator| ay38910.asm |
+| SNDDEV_BITMODE  | $02    | Bit-bang Speaker                             | spk.asm     |
+| SNDDEV_YM2612   | $03    | YM2612 Programmable Sound Generator          | ym2612.asm  |
 
 The Sound functions defer the actual programming of the sound chip
 until the SNDPLAY function is called.  You will call the volume

@@ -1066,10 +1066,6 @@ drvmap1:	; loop through device table looking for a match
 drvmap2:	
 	; convert index to device type id
 	ld	a,c		; index to accum
-	rlca			; move it to upper nibble
-	rlca			; ...
-	rlca			; ...
-	rlca			; ...
 	ld	(device),a	; save as device id
 ;
 	; loop thru hbios units looking for device type/unit match
@@ -1309,10 +1305,6 @@ prtdev:
 	rst	08		; call hbios, D := device, E := unit
 	push	de		; save results
 	ld	a,d		; device to A
-	rrca			; isolate high nibble (device)
-	rrca			;   ...
-	rrca			;   ...
-	rrca			;   ... into low nibble
 	and	$0F		; mask out undesired bits
 	push	hl		; save HL
 	add	a,a		; multiple A by two for word table
