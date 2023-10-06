@@ -1,7 +1,7 @@
 #
-# NOTE: Pandoc, Latex (MiKTeX or TexLive), and gpp must be installed
+# NOTE: gpp, Pandoc, and Latex (MiKTeX or TexLive) must be installed
 # and available on commandline for this build to work!!!
-# Typically "sudo apt install pandoc, texlive-latex-extra, gpp"
+# Typically "sudo apt install gpp pandoc texlive-latex-extra texlive-luatex texlive-fonts-extra fonts-roboto"
 #
 OBJECTS = ReadMe.gfm ReadMe.txt UserGuide.pdf SystemGuide.pdf Applications.pdf ROM_Applications.pdf Catalog.pdf Errata.pdf
 # DEST = ../../Doc
@@ -16,7 +16,7 @@ all :: deploy
 	gpp -o $@ -U "$$" "$$" "{" "}{" "}$$" "{" "}" "@@@" "" -M "$$" "$$" "{" "}{" "}$$" "{" "}" $<
 
 %.pdf : %.tmp
-	pandoc $< -f markdown -t latex -s -o $@ --default-image-extension=pdf
+	pandoc $< -f markdown -t pdf -s -o $@ --default-image-extension=pdf --pdf-engine=lualatex
 
 %.html : %.tmp
 	pandoc $< -f markdown -t html -s -o $@ --default-image-extension=pdf

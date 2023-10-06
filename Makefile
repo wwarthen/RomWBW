@@ -1,5 +1,11 @@
-all:
+.PHONY: tools source clean clobber diff dist
+
+all: tools source
+
+tools:
 	$(MAKE) --directory Tools
+
+source:
 	$(MAKE) --directory Source
 
 clean:

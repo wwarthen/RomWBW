@@ -206,7 +206,7 @@ below, **carefully** pick the appropriate ROM image for your hardware.
 | [Z80-Retro SBC]^8^                                             | -       | Z80RETRO_std.rom   | 38400         |
 | [S100 Computers Z180]^9^                                       | S100    | S100_std.rom       | 38400         |
 | [Duodyne Z80 System]^1^                                        | Duo     | DUO_std.rom        | 38400         |
-| [Heath H8 Z80 System]                                          | H8      | HEATH_std.rom      | 115200        |
+| [Heath H8 Z80 System]^10^                                      | H8      | HEATH_std.rom      | 115200        |
 
 | ^1^Designed by Andrew Lynch
 | ^2^Designed by Sergey Kiselev
@@ -217,6 +217,7 @@ below, **carefully** pick the appropriate ROM image for your hardware.
 | ^7^Designed by Bill Shen
 | ^8^Designed by Peter Wilson
 | ^9^Designed by John Monahan
+| ^10^Designed by Les Bird
 
 RCBus refers to Spencer Owen's RC2014 bus specification and derivatives
 including RC26, RC40, RC80, and BP80.
