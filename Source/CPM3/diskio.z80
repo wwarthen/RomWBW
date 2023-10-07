@@ -493,8 +493,7 @@ media:
 	ld	b,17h			; HBIOS func: report device info
 	call	0FFF0h			; get unit info, device type in D
 	ld	a,d			; device type -> A
-	and	0F0h			; isolate high bits
-	cp	10h			; floppy?
+	cp	01h			; floppy?
 	jr	nz,media1		; if not, do LBA I/O
 	ld	hl,lba+3		; point to high order byte
 	res	7,(hl)			; switch from LBA -> CHS
