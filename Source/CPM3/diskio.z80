@@ -38,7 +38,7 @@
 	
 	extrn	?bnkxlt
 	
-	extrn	phex8, cout
+	extrn	phex16, phex8, cout, crlf, crlf2
 
 
     ; CP/M 3 Disk definition macros
@@ -600,6 +600,53 @@ boot7:
 	dec	a			; dec loop downcounter
 	jr	boot6			; and loop
 boot8:
+
+	; LBA offset of desired slice is now in DE:HL.
+	; Need to check if the slice is beyond capacity of media.
+	; If lba_off + sps >= dsk_cap, error!
+
+	; Save lba_off
+	push	de		; msw
+	push	hl		; lsw
+	
+	; Add sps to compute lba_req
+	ld	bc,(sps)	; sectors per slice
+	add	hl,bc		; add one slice to low word
+	jr	nc,dsk_mbr9	; check for carry
+	inc	de		; if so, bump high word
+dsk_mbr9:
+	; Save cap_req
+	ld	(cap_req),hl	; lsw
+	ld	(cap_req+2),de	; msw
+
+	; Get dsk_cap (de:hl)
+	ld	b,1Ah		; hbios disk capacity func
+	ld	a,(unit)	; disk unit number
+	ld	c,a		; ... into c
+	rst	08		; hbios call (de:hl = capacity)
+
+	; Save dsk_cap (de:hl)
+	push	de		; save dsk_cap (msw)
+	push	hl		; save dsk_cap (lsw)
+
+	; Check dsk_cap >= cap_req, cf set on overflow
+	; No need save actual result
+	or	a		; clear carry for sbc
+	pop	hl		; dsk_cap lsw
+	ld	de,(cap_req)	; cap_req lsw
+	sbc	hl,de		; dsk_cap - lba_req (lsw)
+	pop	hl		; dsk_cap msw
+	ld	de,(cap_req+2)	; cap_req msw
+	sbc	hl,de		; dsk_cap - lba_req (msw)
+
+	; Restore lba_off
+	pop	hl		; lsw
+	pop	de		; msw
+
+	; Abort on overflow with error!
+	jp	c,err_noslice	; slice too high, error exit
+
+	; Finalize slice lba
 	set	7,d			; set LBA access flag
 	ld	(lba),hl		; save new lba, low word
 	ld	(lba+2),de		; save new lba, high word
@@ -870,6 +917,7 @@ unit		db	0		; working disk unit num
 slice		db	0		; working slice num
 lba		dw	0,0		; working  lba
 sps		dw	0		; sectors per slice
+cap_req		dw	0,0		; lba cap required for slice
 mbrsec		ds	512		; MBR sector buffer
 dma		dw	0		; current DMA address
 bank		db	0		; HBIOS DMA bank
