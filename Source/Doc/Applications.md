@@ -165,6 +165,13 @@ Be aware that this command will allow you to reassign or remove the
 assignment of your system drive letter. This can cause your operating
 system to fail and force you to reboot.
 
+The `ASSIGN` command does **not** prevent you from assigning a drive
+letter to a slice that does not fit on the physical media.  However,
+any subsequent attempt to refer to that drive letter will result in
+an immediate OS error of "no disk".  Refer to "Hard Disk Capacity"
+in the $doc_user$ for a discussion of the exact number of slices that
+will fit on a specific physical disk size.
+
 This command is particularly sensitive to being matched to the
 appropriate version of the RomWBW ROM you are using. Be very careful
 to keep all copies of `ASSIGN.COM` up to date with your ROM.

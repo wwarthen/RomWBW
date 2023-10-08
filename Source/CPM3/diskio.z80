@@ -576,28 +576,29 @@ media4:
 	; adjust the sectors per slice and media id.
 
 	; Use new slice format sectors per slice value
-	ld	hl,16384		; new sectors per slice
-	ld	(sps),hl		; save it
+	ld	hl,16384	; new sectors per slice
+	ld	(sps),hl	; save it
 
 	; Update media id for new hard disk format
-	ld	a,10			; new media id
-	ld	(medid),a		; save it
+	ld	a,10		; new media id
+	ld	(medid),a	; save it
 
 media5:
 	; Adjust LBA offset based on target slice
-	ld	a,(slice)		; get slice, A is loop cnt
-	ld	hl,(lba)		; set DE:HL
-	ld	de,(lba+2)		; ... to starting LBA
-	ld	bc,(sps)		; sectors per slice
+	ld	a,(slice)	; get slice, A is loop cnt
+	ld	hl,(lba)	; set DE:HL
+	ld	de,(lba+2)	; ... to starting LBA
+	ld	bc,(sps)	; sectors per slice
+	res	7,d		; clear lba mode bit
 boot6:
-	or	a			; set flags to check loop cntr
-	jr	z,boot8			; done if counter exhausted
-	add	hl,bc			; add one slice to low word
-	jr	nc,boot7		; check for carry
-	inc	de			; if so, bump high word
+	or	a		; set flags to check loop cntr
+	jr	z,boot8		; done if counter exhausted
+	add	hl,bc		; add one slice to low word
+	jr	nc,boot7	; check for carry
+	inc	de		; if so, bump high word
 boot7:
-	dec	a			; dec loop downcounter
-	jr	boot6			; and loop
+	dec	a		; dec loop downcounter
+	jr	boot6		; and loop
 boot8:
 
 	; LBA offset of desired slice is now in DE:HL.

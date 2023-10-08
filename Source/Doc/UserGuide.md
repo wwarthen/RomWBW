@@ -966,16 +966,24 @@ Drives E: thru L: have been assigned to the IDE0 hard disk device.  The
 4 entries for IDE0 are referring to 4 slices on that disk.  Slices are
 discussed later.
 
-The drive letter assignments **do not** change during an OS session
-unless you use the `ASSIGN` command yourself to do it. Additionally,
-the assignments at boot will stay the same on each boot as long as you
-do not make changes to your hardware configuration. Note that the
-assignments **are** dependent on the media currently inserted in hard
-disk drives. So, notice that if you insert or remove an SD Card or CF
-Card, the drive assignments will change. Since drive letter
-assignments can change, you must be careful when doing destructive
-things like using `CLRDIR` to make sure the drive letter you use is
-referring to the desired media.
+**WARNING**: Drive letter assignments do **not** ensure that the slice
+referenced by the drive letter actually fits on the media you are using.
+For example, a typical 64MB CF Card (which is typically a bit smaller
+than 64MB) will only fit 7 slices.  At startup, you will typically see
+8 drive letters assigned to the CF Card.  Attempting to access the
+last drive letter will result in a "no disk" error from the operating
+system.
+
+The drive letter assignments **do not** change during an OS session 
+unless you use the `ASSIGN` command yourself to do it. Additionally, the
+assignments at boot will stay the same on each boot as long as you do 
+not make changes to your hardware configuration. Note that the 
+assignments **are** dependent on the media currently inserted in hard 
+disk drives when the operating system is started. So, notice that if you
+insert or remove an SD Card or CF Card, the drive assignments will 
+change. Since drive letter assignments can change, you must be careful 
+when doing destructive things like using `CLRDIR` to make sure the drive
+letter you use is referring to the desired media.
 
 When performing a ROM boot of an operating system, note that A: will
 be your RAM disk and B: will be your ROM disk. When performing a disk
@@ -989,7 +997,8 @@ boot drive.
 A typical RomWBW system has 512KB of ROM and 512KB of RAM.  Some
 portions of each are dedicated to loading and running applications
 and operating system.  The space left over is available for an
-operating system to use as a pseudo-disk device.
+operating system to use as a pseudo-disk device (ROM Disk and RAM
+Disk).
 
 The RAM disk provides a small CP/M filesystem that you can use for the
 temporary storage of files. Unless your system has a battery backed
@@ -1018,13 +1027,13 @@ actual operating system and are not "bootable".  However, they are
 accessible to any operating system (whether the operating system is
 loaded from ROM or a different disk device).
 
-Neither RAM not ROM disks require explicit formatting or initialization.
+Neither RAM nor ROM disks require explicit formatting or initialization.
 ROM disks are pre-formatted and RAM disks are formatted automatically
 with an empty directory when first used.
 
 #### Flash ROM Disks
 
-The limitation of ROM disks being read only can be overcome on some
+The limitation of ROM disks being read-only can be overcome on some
 platforms with the appropriate selection of Flash ROM chip and
 system configuration. In this case the flash-file system can be
 enabled which will allow the ROM disk to be read and written to.
@@ -1208,7 +1217,7 @@ available storage devices. The allocation will depend on the number of
 mass storage devices available at boot. For example, if you have
 only one hard disk type media, you will see that 8 drive letters are
 assigned to the first 8 slices of that media. If you have two large
-storage devices, you will see that each device is allocated four drive
+storage devices, you will see that each device is allocated 4 drive
 letters.
 
 Referring to slices within a storage device is done by appending a :
@@ -1223,14 +1232,14 @@ slice of IDE0, you would type "IDE0:3". Here are some examples:
 | `IDE0:`  | First slice of disk in IDE0  |
 | `IDE0:3` | Fourth slice of disk in IDE0 |
 
-So, if you wanted to use drive letter L: to refer to the fourth slice
-of IDE0, you could use the command `ASSIGN L:=IDE0:3`. There are a
-couple of rules to be aware of when assigning drive letters. First,
-you may only refer to a specific device/slice with one drive letter at a time.
-Said another way, you cannot have multiple drive letters referring
-to a the same device/slice at the same time. Second, there must always
-be a drive assigned to A:. Any attempt to violate these rules will
-be blocked by the `ASSIGN` command.
+So, if you wanted to use drive letter L: to refer to the fourth slice of
+IDE0, you could use the command `ASSIGN L:=IDE0:3`. There are a couple 
+of rules to be aware of when assigning drive letters. First, you may 
+only refer to a specific device/slice with one drive letter at a time. 
+Said another way, you cannot have multiple drive letters referring to a 
+the same device/slice at the same time. Second, there must always be a 
+drive assigned to A:. Any attempt to violate these rules will be blocked
+by the `ASSIGN` command.
 
 In case this wasn't already clear, you **cannot** refer directly
 to slices using CP/M.  CP/M only understands drive letters, so
@@ -1258,6 +1267,11 @@ up the new empty directory.  Since `CLRDIR` works on drive letters, make
 absolutely sure you know what media and slice are assigned to that
 drive letter before using `CLRDIR` because CLRDIR will wipe out any
 pre-existing contents of the slice.
+
+**WARNING**: The `CLRDIR` application does not appear to check for
+disk errors when it runs.  If you attempt to run `CLRDIR` on a drive
+that is mapped to a slice that does not actually fit on the physical
+disk, it may behave erratically.
 
 Here is an example of using `CLRDIR`.  In this example, the `ASSIGN`
 command is used to show the current drive letter assignments.  Then
@@ -1408,9 +1422,11 @@ was 512, it would indicate a legacy (hd512) disk layout.
 
 Although RomWBW can support many CP/M filesystem slices on a single
 hard disk, you are still constrained by the physical capacity of the
-actual hard disk.  In most scenarios, RomWBW does not prevent you
-from attempting to use more slices than will fit on your hard disk
-device.  If you attempt to do so, disk I/O errors will be reported.
+actual hard disk.  RomWBW does not prevent you from assigning slices
+to drive letters even if the location of the slice does not fit on the
+physical disk.  Any attempt to access a drive letter mapped to a slice
+that does not fit will result in an error such as "no disk" from the
+operating system.
 
 The exact number of CP/M filesystem slices that will fit on your 
 specific physical hard disk can be determined as follows:
@@ -1590,8 +1606,8 @@ but based on the idea that a 1GB CF or SD Card is easy and cheap to
 acquire.  It is fine if your hard disk is smaller than 1GB.  It just 
 means that it will not be possible to use the pre-allocated FAT 
 filesystem partition and any CP/M filesystem slices that don't fit.  You
-will get I/O errors if you attempt to access an area beyond the end of
-the physical hard disk.
+will get "no disk" errors if you attempt to access a slice past the 
+end of the physical hard disk.
 
 **WARNING**:Your hard disk may be too small to contain the full 64
 CP/M filesystem slices.  The true number of CP/M filesystem slices that
