@@ -44,7 +44,7 @@ tpa$bank	equ 0
 	if banked
 
 	; Clone page zero from bank 0 to additional banks
-	ld	b,4			; last bank
+	ld	b,2			; last bank
 	ld	c,0			; src bank
 init$2:
 	push	bc			; save bank id's
