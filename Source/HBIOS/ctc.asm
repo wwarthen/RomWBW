@@ -25,7 +25,7 @@ CTC_TIM256CFG	.EQU	%00110111	; CTC TIMER/256 MODE CONFIG
 ; DETERMINE WHICH CHANNEL CAUSED AN INTERRUPT.
 ;==================================================================================================
 ;
-#IF (INTMODE != 2)
+#IF (CTCTIMER & (INTMODE != 2))
 	.ECHO	"*** WARNING: CTC TIMER DISABLED -- INTMODE 2 REQUIRED!!!\n"
 #ENDIF
 ;

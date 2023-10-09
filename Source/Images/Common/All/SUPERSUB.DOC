@@ -1,4 +1,4 @@
-			SUPERSUB DOCUMENTATION	(revised 09/13/81)
+			SUPERSUB DOCUMENTATION	(revised 09/25/84)
 			----------------------
 
 						09/05/81
@@ -8,6 +8,17 @@
 SUPERSUB is intended as a replacement program for SUBMIT.COM provided
 with CP/M by Digital Research Corporation.  This document assumes you
 are familiar with that utility and its use.
+
+			------------------
+
+Version 1.3 update:
+
+George Cary has added MP/M capability to version 1.2 of SuperSUB. In
+version 1.3 I fixed a problem that caused SuperSUB to bomb when the
+.SUB file did not end in a 1AH (which is an ascii end-of-file
+character). It was depending on the 1AH to end the file, and ignoring
+the physical end-of-file. Physical end-of-file will now terminate
+properly.			- Jeffrey J. Nonken
 
 			------------------
 
@@ -138,4 +149,4 @@ NOTES
 5) Interactive mode may be aborted by typing control-C as the first
    character of a line.  Also, all normal CP/M editing characters are
    available.
-
+

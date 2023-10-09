@@ -2363,6 +2363,53 @@ You can also contact Phillip for detailed information on the Z180
 implementation of FreeRTOS for RomWBW.
 [feilipu](https://github.com/feilipu)
 
+## Fuzix
+
+Fuzix is a Unix-ish operating system for small systems.  It is the work 
+of Alan Cox and is hosted on GitHub at
+<https://github.com/EtchedPixels/FUZIX>. Fuzix itself is a stand-alone 
+operating system, but it frequently utilizes RomWBW to boot and launch 
+on RomWBW-supported platforms.
+
+For those Fuzix platforms that leverage RomWBW for startup, you will
+program your ROM with the normal RomWBW ROM -- there
+is no Fuzix-specific ROM.  A Fuzix disk image for your system is then
+written to your disk media.  After booting your system via the normal
+RomWBW ROM, you start Fuzix simply by choosing the disk device
+containing the Fuzix image at the RomWBW Loader prompt.
+
+To create a Fuzix disk image:
+
+* Locate and download the Fuzix disk image for your system from
+  <https://www.fuzix.org/>.
+
+* Remove the 1KB header from the image file.  The Fuzix disk images
+  are built to run under an emulator that requires a 1KB prefix.  You
+  must remove this prefix before writing the image to your physical
+  disk media.  Unix dd is the easiest way to do this:
+  
+  `dd bs=1024 skip=1 if=sc126-0.3.ide of=sc126-0.3.trimmed`
+
+* Write the trimmed image to your disk media.  This can also be
+  done with dd or with Win32DiskImager under Windows.
+
+To boot into Fuzix:
+
+* Power-up or reset your system.  RomWBW should load normally
+  and bring you to the RomWBW Boot Loader prompt.
+
+* Change your baud rate to 38,400.  This can be done from the
+  RomWBW Boot Loader prompt with the following command:
+
+  `I 0 38400`
+
+  You will also need to change your terminal baud rate at this time.
+
+* At the `bootdev:` prompt, enter `hda1`.  Fuzix should load and
+  you will be prompted for a date/time.
+
+* At the `login:` prompt, enter `root`.  No password is required.
+
 # Custom Applications
 
 The operation of the RomWBW hosted operating systems is enhanced through
