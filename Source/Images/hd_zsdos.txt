@@ -31,6 +31,7 @@ d_cpm22/u0/XSUB.COM 0:
 ../../Binary/Apps/syscopy.com 0:
 ../../Binary/Apps/sysgen.com 0:
 ../../Binary/Apps/talk.com 0:
+../../Binary/Apps/htalk.com 0:
 ../../Binary/Apps/tbasic.com 0:
 ../../Binary/Apps/timer.com 0:
 ../../Binary/Apps/tune.com 0:

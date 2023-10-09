@@ -24,9 +24,9 @@ ifeq ($(UNAME), Linux)
 # uname machine strings for building Propeller
 endif
 
-.PHONY: doc prop shared bp images rom zrc zzrc
+.PHONY: doc prop shared bp images rom zrc zzrcc
 
-all: prop shared images rom zrc zzrc
+all: prop shared images rom zrc zzrcc
 
 doc:
 	$(MAKE) --directory Doc $(ACTION)
@@ -67,8 +67,8 @@ rom:
 zrc:
 	$(MAKE) --directory ZRC $(ACTION)
 
-zzrc:
-	$(MAKE) --directory ZZRC $(ACTION)
+zzrcc:
+	$(MAKE) --directory ZZRCC $(ACTION)
 
 
 clean: ACTION=clean

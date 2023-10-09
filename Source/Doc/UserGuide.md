@@ -4012,7 +4012,7 @@ the RomWBW HBIOS configuration.
 |-------------------|--------------------|
 | ROM Image Files   | RCZ80_zrc.rom      |
 | Console Baud Rate | 115200             |
-| Interrupts        | Mode 1        |
+| Interrupts        | Mode 1             |
 
  - CPU speed is detected at startup if DS1302 RTC is active
    - Otherwise 14.7456 MHz assumed

@@ -32,6 +32,7 @@ pushd Dev && call Build || exit /b & popd
 pushd VGM && call Build || exit /b & popd
 pushd cpuspd && call Build || exit /b & popd
 pushd Survey && call Build || exit /b & popd
+pushd HTalk && call Build || exit /b & popd
 
 copy *.com %APPBIN%\ || exit /b
 

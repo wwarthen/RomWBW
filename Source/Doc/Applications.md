@@ -52,6 +52,7 @@ found:
 | FAT         | No       | Yes        | Yes      |
 | TUNE        | No       | Yes        | Yes      |
 | WDATE       | No       | Yes        | Yes      |
+| HTALK       | No       | Yes        | Yes      |
 
 `\clearpage`{=latex}
 
@@ -628,9 +629,9 @@ shown on your console.  The `TALK` application does this.
 `TALK` operates at the operating system level (not HBIOS).
 
 The parameter to `TALK` refers to logical CP/M serial devices.  Upon
-execution all characters types at the console will be sent to the
+execution all characters typed at the console will be sent to the
 device specified and all characters received by the specified device
-will be echoes on the console.
+will be echoed on the console.
 
 Press Control+Z on the console to terminate the application.
 
@@ -643,6 +644,36 @@ operating systems such as CP/M 3 is not supported.
 
 The `TALK` command is an original product and the source code is
 provided in the RomWBW distribution.
+
+`\clearpage`{=latex}
+
+# HTALK
+
+`HTALK` is a variation of the `TALK` utility, but it works directly
+against HBIOS Character Units.
+
+## Syntax
+
+`HTALK COMn:`
+
+## Usage
+
+`HTALK` operates at the HBIOS level.
+
+The parameter to `TALK` refers to a HBIOS character unit.  Upon
+execution all characters typed at the console will be sent to the
+device specified and all characters received by the specified device
+will be echoed on the console.
+
+Press Control+Z on the console to terminate the application.
+
+## Notes
+
+
+## Etymology
+
+The `TALK` command was created and donated to RomWBW by Tom Plano.  It
+is an original product designed specifically for RomWBW.
 
 `\clearpage`{=latex}
 
