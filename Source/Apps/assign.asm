@@ -32,6 +32,7 @@
 ;                    Use CPM3 BDOS direct BIOS call to get DRVTBL adr
 ;   2023-06-19 [WBW] Update for revised DIODEVICE API
 ;   2023-09-19 [WBW] Added CHUSB & CHSD device support
+;   2023-10-13 [WBW] Fixed DPH creation to select correct DPB
 ;_______________________________________________________________________________
 ;
 ; ToDo:
@@ -665,10 +666,10 @@ makdphwbw:	; determine appropriate dpb (WBW mode, unit number in A)
 	jr	makdph0		; jump ahead
 makdph00:	
 	ld	e,6		; assume floppy
-	cp	$10		; floppy?
+	cp	$01		; floppy?
 	jr	z,makdph0	; yes, jump ahead
 	ld	e,3		; assume ram floppy
-	cp	$20		; ram floppy?
+	cp	$02		; ram floppy?
 	jr	z,makdph0	; yes, jump ahead
 	ld	e,4		; everything else is assumed to be hard disk
 	jr	makdph0		; yes, jump ahead
@@ -1935,13 +1936,13 @@ stack	.equ	$		; stack top
 ; Messages
 ;
 indent	.db	"   ",0
-msgban1	.db	"ASSIGN v1.7 for RomWBW CP/M ",0
+msgban1	.db	"ASSIGN v1.8 for RomWBW CP/M ",0
 msg22	.db	"2.2",0
 msg3	.db	"3",0
-msbban2	.db	", 19-Sep-2023",0
+msbban2	.db	", 13-Oct-2023",0
 msghb	.db	" (HBIOS Mode)",0
 msgub	.db	" (UBIOS Mode)",0
-msgban3	.db	"Copyright 2021, Wayne Warthen, GNU GPL v3",0
+msgban3	.db	"Copyright 2023, Wayne Warthen, GNU GPL v3",0
 msguse	.db	"Usage: ASSIGN D:[=[{D:|<device>[<unitnum>]:[<slicenum>]}]][,...]",13,10
 	.db	"  ex. ASSIGN           (display all active assignments)",13,10
 	.db	"      ASSIGN /?        (display version and usage)",13,10
