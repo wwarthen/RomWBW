@@ -17,8 +17,8 @@ goto :eof
 :build_zzrcc
 
 srec_cat -generate 0x0 0x100000 --constant 0x00 -o temp.dat -binary
-srec_cat temp.dat -binary -exclude 0x0 0x100 zzrcc_cfldr.bin -binary -o temp.dat -binary
-srec_cat temp.dat -binary -exclude 0x100 0x200 zzrcc_ptbl.bin -binary -offset 0x100 -o temp.dat -binary
+srec_cat temp.dat -binary -exclude 0x0 0x200 zzrcc_cfldr.bin -binary -o temp.dat -binary
+srec_cat temp.dat -binary -exclude 0x1B8 0x200 zzrcc_ptbl.bin -binary -offset 0x1B8 -o temp.dat -binary
 srec_cat temp.dat -binary -exclude 0x1F000 0x20000 zzrcc_mon.bin -binary -offset 0x1F000 -o temp.dat -binary
 srec_cat temp.dat -binary -exclude 0x24000 0xA4000 ..\..\Binary\RCZ280_zzrcc.rom -binary -offset 0x24000 -o temp.dat -binary
 move temp.dat ..\..\Binary\hd1k_zzrcc_prefix.dat
@@ -30,8 +30,8 @@ goto :eof
 :build_zzrcc_ram
 
 srec_cat -generate 0x0 0x100000 --constant 0x00 -o temp.dat -binary
-srec_cat temp.dat -binary -exclude 0x0 0x100 zzrcc_cfldr.bin -binary -o temp.dat -binary
-srec_cat temp.dat -binary -exclude 0x100 0x200 zzrcc_ptbl.bin -binary -offset 0x100 -o temp.dat -binary
+srec_cat temp.dat -binary -exclude 0x0 0x200 zzrcc_cfldr.bin -binary -o temp.dat -binary
+srec_cat temp.dat -binary -exclude 0x1B8 0x200 zzrcc_ptbl.bin -binary -offset 0x1B8 -o temp.dat -binary
 srec_cat temp.dat -binary -exclude 0x1F000 0x20000 zzrcc_mon.bin -binary -offset 0x1F000 -o temp.dat -binary
 srec_cat temp.dat -binary -exclude 0x24000 0xA4000 ..\..\Binary\RCZ280_zzrcc_ram.rom -binary -offset 0x24000 -o temp.dat -binary
 move temp.dat ..\..\Binary\hd1k_zzrcc_ram_prefix.dat
