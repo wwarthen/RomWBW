@@ -27,16 +27,16 @@ DIFFPATH = $(DIFFTO)/Binary
 
 $(HD1KZZRCCPREFIX):
 	srec_cat -generate 0x0 0x100000 --constant 0x00 -o temp.dat -binary
-	srec_cat temp.dat -binary -exclude 0x0 0x100 zzrcc_cfldr.bin -binary -o temp.dat -binary
-	srec_cat temp.dat -binary -exclude 0x100 0x200 zzrcc_ptbl.bin -binary -offset 0x100 -o temp.dat -binary
+	srec_cat temp.dat -binary -exclude 0x0 0x200 zzrcc_cfldr.bin -binary -o temp.dat -binary
+	srec_cat temp.dat -binary -exclude 0x1B8 0x200 zzrcc_ptbl.bin -binary -offset 0x1B8 -o temp.dat -binary
 	srec_cat temp.dat -binary -exclude 0x1F000 0x20000 zzrcc_mon.bin -binary -offset 0x1F000 -o temp.dat -binary
 	srec_cat temp.dat -binary -exclude 0x24000 0xA4000 $(ZZRCCROM) -binary -offset 0x24000 -o temp.dat -binary
 	mv temp.dat $@
 
 $(HD1KZZRCCRAMPREFIX):
 	srec_cat -generate 0x0 0x100000 --constant 0x00 -o temp.dat -binary
-	srec_cat temp.dat -binary -exclude 0x0 0x100 zzrcc_cfldr.bin -binary -o temp.dat -binary
-	srec_cat temp.dat -binary -exclude 0x100 0x200 zzrcc_ptbl.bin -binary -offset 0x100 -o temp.dat -binary
+	srec_cat temp.dat -binary -exclude 0x0 0x200 zzrcc_cfldr.bin -binary -o temp.dat -binary
+	srec_cat temp.dat -binary -exclude 0x1B8 0x200 zzrcc_ptbl.bin -binary -offset 0x1B8 -o temp.dat -binary
 	srec_cat temp.dat -binary -exclude 0x1F000 0x20000 zzrcc_mon.bin -binary -offset 0x1F000 -o temp.dat -binary
 	srec_cat temp.dat -binary -exclude 0x24000 0xA4000 $(ZZRCCRAMROM) -binary -offset 0x24000 -o temp.dat -binary
 	mv temp.dat $@
