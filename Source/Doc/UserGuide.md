@@ -1609,7 +1609,7 @@ filesystem partition and any CP/M filesystem slices that don't fit.  You
 will get "no disk" errors if you attempt to access a slice past the 
 end of the physical hard disk.
 
-**WARNING**:Your hard disk may be too small to contain the full 64
+**WARNING**: Your hard disk may be too small to contain the full 64
 CP/M filesystem slices.  The true number of CP/M filesystem slices that
 will fit on your specific physical hard disk can be calculated as
 described in [Hard Disk Capacity].
@@ -1625,11 +1625,19 @@ them using `CLRDIR` first.
 
 A great way to maintain your own data on a hard disk is to put this
 data in slices beyond the first 6.  By doing so, you can always
-"reimage" your drive with the combo image without overlaying the data
+"re-image" your drive with the combo image without overlaying the data
 stored in the slices beyond the first 6.  Just be very careful to use
 the same combo image layout (hd512 or hd1k) as you used originally.
 Also remember to calculate the maximum number of slices your hard disk
 will support and do not exceed this number.
+
+**WARNING**: The combo disk image includes a partition table at the 
+start of the image.  If you re-image drive with the combo image, you 
+will overwrite this partition table.  This is fine as long as you don't 
+make any changes to the partition table.  If you manually customize the 
+partition table (using `FDISK80` or other partition management 
+software), those changes will be lost if you re-image your disk with a 
+new combo disk image.
 
 #### Custom Hard Disk Image
 
@@ -1640,8 +1648,9 @@ For hard disks, each .img file represents a single slice (CP/M
 filesystem).  Since a hard disk can contain many slices, you can just 
 concatenate the slices (.img files) together to create your desired hard
 disk image.  For example, if you want to create a hard disk image that 
-has slices for CP/M 2.2, CP/M 3, and WordStar in the hd512 format, you would use 
-the command line of your modern computer to create the final image:
+has slices for CP/M 2.2, CP/M 3, and WordStar in the hd512 format, you 
+would use the command line of your modern computer to create the final 
+image:
 
 Windows:
 
@@ -3348,8 +3357,10 @@ directed to complete a partial flash using the /P command line switch.
 # Related Projects
 
 Outside of the hardware platforms adapted to RomWBW, there are a variety 
-of software projects that either target RomWBW specifically or provide
-a RomWBW-specific variation.
+of projects that either target RomWBW specifically or provide
+a RomWBW-specific variation.  These efforts are greatly appreciated
+and are listed below.  Please contact the author if there are any other
+such projects that are not listed.
 
 ## Z88DK
 
@@ -3384,6 +3395,16 @@ set the date/time of an RTC on RomWBW.  The application runs on all of
 the CP/M OS variants.  This tool (`WDATE`) is included on the RomWBW
 OS disk images.  The project is hosted at
 <https://github.com/kevinboone/wdate-cpm>.
+
+## Assembly Language Programming for the RC2014 Zed
+
+Bruce Hall has written a very nice document that describes how to
+develop assembly language applications on RomWBW.  It begins with the
+setup and configuration of a new RC2014 Zed system running RomWBW.
+It describes not only generic CP/M application development, but also
+RomWBW HBIOS programming and bare metal programming.  The latest copy
+of this document is hosted at
+[http://w8bh.net/Assembly for RC2014Z.pdf](http://w8bh.net/Assembly%20for%20RC2014Z.pdf).
 
 # Acknowledgments
 
