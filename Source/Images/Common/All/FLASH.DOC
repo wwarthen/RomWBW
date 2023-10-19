@@ -17,6 +17,11 @@ FLASH4 has been tested and confirmed working on:
 It should work on many other machines that run RomWBW or UNA BIOS.  If you test
 it on another machine please let me know the outcome.
 
+FLASH030 (also included) is a Linux version of the same software. It is
+targetted at my 68030 machine but should be very easy to port to other
+machines. It expects a machine with a larger address space, and thus omits much
+of the bank switching and other tricks required on Z80 platforms.
+
 
 = Introduction =
 
