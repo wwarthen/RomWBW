@@ -2660,6 +2660,166 @@ SAMPLE2.TXT ==> 4:/SAMPLE2.TXT ... [OK]
     2 File(s) Copied
 ```
 
+# Real Time Clock
+
+RomWBW supports a variety of real time clock hardware.  If your
+system has this hardware, then it will be able to maintain the
+current date and time even while your system is turned off.
+Additionally, depending on the operating system being used, you may be
+able to utilize date/time stamping of files.
+
+You can determine if your system has a real time clock present (and
+functioning) by looking at the boot messages.  Here is an example of
+a boot message reflecting the detection of a valid real time clock
+module:
+
+`DSRTC: MODE=STD IO=0x8A Thu 2023-10-19 14:07:11 CHARGE=ON`
+
+This example is from a DSRTC clock module.  You may have a different
+one, but it will always display the current date/time.
+
+In some cases, your real time clock will support charging of the
+battery or super-capacitor while the system has power.  The status of
+this charging is displayed.
+
+If the date/time of your RTC needs to be updated, you will need to do
+this with one of the utilities described below.  There is no ability to
+update the date/time of the RTC in the RomWBW Boot Loader or Monitor.
+
+## Date/Time Utilities
+
+RomwWBW includes two utilities for displaying or setting the date/time
+stored by the RTC.  They are both a bit different and are briefly
+described below.
+
+### WDATE Utility
+
+The `WDATE` utility (contributed by Kevin Boone) is an application
+that will display and/or update the current date/time.  Its operation is
+described in $doc_apps$.  This utility works with any of the supported
+RomWBW RTC hardware.  Here is an example of displaying and updating the
+date/time with this utility:
+
+```
+A>wdate
+Thursday 19 October 14:14:43 2023
+
+A>wdate 23 10 19 14 24 30
+
+A>wdate
+Thursday 19 October 14:24:34 2023
+
+```
+
+Note that `WDATE` does not have anything to do with date/time stamping
+of files.  It merely displays and sets the real time clock value.
+
+### RTC Utility
+
+Like `WDATE`, the `RTC` utility (contributed by Andrew Lynch) will let
+you display and set the current date/time.  However, this utility only
+works with the DSRTC hardware (DS1302 chip).  It is a "direct to
+hardware application".  Its operation is described in $doc_apps$.  Here
+is an example of displaying and updatting the date/time with this
+utility:
+
+```
+A>rtc
+Start RTC Program
+RomWBW HBIOS, Mark 4 RTC Latch Port 0x8A
+
+RTC: Version 1.9
+Commands: E)xit T)ime st(A)rt S)et R)aw L)oop C)harge N)ocharge D)elay I)nit G)et P)ut B)oot W)arm-start H)elp
+
+RTC>t
+Current time: 23-10-19 14:30:25-05
+
+RTC>i
+Init date/time.
+
+YEAR:23
+MONTH:10
+DATE:19
+HOURS:14
+MINUTES:31
+SECONDS:00
+DAY:05
+```
+
+The `RTC` utility is also capable of turning the charging feature of
+the DS1320 chip on or off.  Here is an example of turning if off and
+back on:
+
+```
+
+A>rtc
+Start RTC Program
+RomWBW HBIOS, Mark 4 RTC Latch Port 0x8A
+
+
+RTC: Version 1.9
+Commands: E)xit T)ime st(A)rt S)et R)aw L)oop C)harge N)ocharge D)elay I)nit G)et P)ut B)oot W)arm-start H)elp
+
+RTC>n
+Trickle charger disabled.
+
+RTC>c
+Trickle charger enabled.
+```
+
+Do **not** enable charging unless you are sure that your system
+supports this.  If your RTC is being powered by a normal battery, it
+would be dangerous to enable charging.
+
+## Date/Time File Stamping
+
+If an RTC is available in your system, then most operating systems
+can use it to date/time stamp files.  This just means recording the
+date/time of file creation, update, and or access in the directory.
+This capability is available in all of the RomWBW operating system
+except the original DRI CP/M 2.2.
+
+In some cases (such as ZSDOS), you must load an RSX (memory resident
+utility) to enable date/time stamping of files.  Additionally, you
+will need to initialize the directory.  The procedure varies in each
+operation system, so you must review the associated documentation.
+
+The date/time stamping mechanisms for each operating system are
+generally not compatible.  If you initialize a directory for a type
+of stamping, you should be careful not to manipulate that directory
+with a different operating system with a different date/time stamping
+mechanism.  Doing so may corrupt the directory.
+
+The RomWBW disk images do not have date/time stamping initialized.  This
+is to avoid any chance of directory corruption.
+
+## Timezone
+
+None of the operating systems distributed with RomWBW have any concept
+of timezone.  When files are date/time stamped, the date/time will
+simply be whatever date/time the RTC currently has.
+
+The normal practice is to set the RTC to your local time.  This implies
+that you would need to manually adjust the RTC for daylight savings time
+and/or when you travel to a different time zone.
+
+The date/time stamps of files in directories will also be stored in
+local time.  This includes files stored in a FAT filesystem.  If you
+subsequently view the directory from modern machines (Windows, Linux,
+etc.), the date/time displayed will depend on the behavior of the
+modern system.
+
+For example, Linux assumes that the date/time of files
+is UTC.  So, if you create a file on a FAT filesystem with your RomWBW
+computer and then use Linux to view the directory, the date/time stamps
+will seem "off" by a few hours.
+
+The only alternative you may consider is setting the date/time of your
+RTC to UTC.  Since UTC is consistent across all timezones and daylight
+savings time, your file date/time stamps will also be consistent.  Of
+course, this will mean that your RomWBW computer will display a
+date/time that seems wrong because it is not local time.
+
 # CP/NET Networking
 
 Digital Research created a simple network file sharing system called 
