@@ -4,6 +4,9 @@
 
 .PHONY: doc prop shared bp images rom zrc zzrcc
 
+.ONESHELL:
+.SHELLFLAGS = -cex
+
 all: prop shared images rom zrc zzrcc
 
 doc:
@@ -45,9 +48,7 @@ zzrcc:
 	$(MAKE) --directory ZZRCC $(ACTION)
 
 clean: ACTION=clean
-
 clean: all
 
 diff: ACTION=diff
-
 diff: all

@@ -1,5 +1,8 @@
 .PHONY: tools source clean clobber diff dist
 
+.ONESHELL:
+.SHELLFLAGS = -cex
+
 all: tools source
 
 tools:
@@ -21,8 +24,8 @@ diff:
 
 dist:
 	$(MAKE) ROM_PLATFORM=dist
-	$(MAKE) --directory Source clean
 	$(MAKE) --directory Tools clean
+	$(MAKE) --directory Source clean
 
 distlog:
 	$(MAKE) dist 2>&1 | tee make.log
