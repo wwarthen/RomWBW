@@ -7,20 +7,24 @@
 ; keyboard, and mouse.
 ;
 ; WBW 2022-03-28: Add menu driven port selection
-;                 Add support for RHYOPHYRE
+;                 Add support for Rhyophyre
 ; WBW 2022-04-01: Add menu for test functions
 ; WBW 2022-04-02: Fix prtchr register saving/recovery
+; WBW 2023-10-19: Add support for Duodyne
 ;
 ;=======================================================================
 ;
 ; PS/2 Keyboard/Mouse controller port addresses (adjust as needed)
 ;
-; MBC:
+; Nhyodyne:
 iocmd_mbc	.equ	$E3	; PS/2 controller command port address
 iodat_mbc	.equ	$E2	; PS/2 controller data port address
-; RPH:
+; Rhyophyre:
 iocmd_rph	.equ	$8D	; PS/2 controller command port address
 iodat_rph	.equ	$8C	; PS/2 controller data port address
+; Duodyne:
+iocmd_duo	.equ	$4D	; PS/2 controller command port address
+iodat_duo	.equ	$4C	; PS/2 controller data port address
 ;
 cpumhz	.equ	8	; for time delay calculations (not critical)
 ;
@@ -77,10 +81,12 @@ setup1:
 	jr	z,setup1
 	call	upcase
 	call	prtchr
-	cp	'1'			; MBC
+	cp	'1'			; Nhyodyne
 	jr	z,setup_mbc
-	cp	'2'			; RHYOPHYRE
+	cp	'2'			; Rhyophyre
 	jr	z,setup_rph
+	cp	'3'			; Duodyne
+	jr	z,setup_duo
 	cp	'X'
 	jr	z,exit
 	jr	setup
@@ -99,6 +105,14 @@ setup_rph:
 	ld	a,iodat_rph
 	ld	(iodat),a
 	ld	de,str_rph
+	jr	setup2
+;
+setup_duo:
+	ld	a,iocmd_duo
+	ld	(iocmd),a
+	ld	a,iodat_duo
+	ld	(iodat),a
+	ld	de,str_duo
 	jr	setup2
 ;
 setup2:
@@ -1344,14 +1358,16 @@ delay1:
 ; Constants
 ;=======================================================================
 ;
-str_banner		.db	"PS/2 Keyboard/Mouse Information v0.6a, 2-Apr-2022",0
+str_banner		.db	"PS/2 Keyboard/Mouse Information v0.7, 19-Oct-2023",0
 str_hwmenu		.db	"PS/2 Controller Port Options:\r\n\r\n"
-			.db	"  1 - MBC\r\n"
-			.db	"  2 - RHYOPHYRE\r\n"
+			.db	"  1 - Nhyodyne\r\n"
+			.db	"  2 - Rhyophyre\r\n"
+			.db	"  3 - Duodyne\r\n"
 			.db	"  X - Exit Application\r\n"
 			.db	"\r\nSelection? ",0
-str_mbc			.db	"MBC",0
-str_rph			.db	"RHYOPHYRE",0
+str_mbc			.db	"Nhyodyne",0
+str_rph			.db	"Rhyophyre",0
+str_duo			.db	"Duodyne",0
 str_menu		.db	"PS/2 Testing Options:\r\n\r\n"
 			.db	"  C - Test PS/2 Controller\r\n"
 			.db	"  K - Test PS/2 Keyboard\r\n"

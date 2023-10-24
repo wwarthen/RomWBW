@@ -42,7 +42,6 @@ export CPMDIR80=$(TOOLS)/cpm/
 TASM=$(BINDIR)/uz80as -t z80
 TASMFLAGS=
 OPENSPIN=$(BINDIR)/openspin
-BSTC=$(BINDIR)//bstc
 CPMCP=$(BINDIR)/cpmcp
 CPMCHATTR=$(BINDIR)/cpmchattr
 
@@ -115,19 +114,8 @@ CPM=$(TOOLS)/cpm/bin80/
 %.com: %.rel
 	$(ZXCC) $(CPM)/L80 -$(basename $<),$(basename $<).com/n/e
 
-ifeq ($(UNAME), Linux)
-%.eeprom: %.spin
-	$(BSTC) -e -l $<
-endif
-
-#
-# darwin bstc won't run, since mac os does not do 32 bit binaries any more
-# openspin ought to work
-#
-ifeq ($(UNAME), Darwin)
 %.eeprom: %.spin
 	$(OPENSPIN) -e $<
-endif
 
 #
 # first target is default

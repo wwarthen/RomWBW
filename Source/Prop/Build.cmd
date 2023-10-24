@@ -3,17 +3,17 @@ setlocal
 
 set TOOLS=../../Tools
 
-set PATH=%TOOLS%\bst;%PATH%
+set PATH=%TOOLS%\OpenSpin;%PATH%
 
-call :bstc PropIO
-call :bstc PropIO2
-call :bstc ParPortProp
+call :openspin PropIO
+call :openspin PropIO2
+call :openspin ParPortProp
 
 goto :eof
 
-:bstc
+:openspin
 echo.
 echo Building %1...
-bstc Spin\%1 -e -l || exit /b
-move /Y %1.eeprom "..\..\Binary" || exit /b
+openspin -e Spin\%1.spin || exit /b
+move /Y Spin\%1.eeprom "..\..\Binary" || exit /b
 goto :eof

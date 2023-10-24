@@ -20,6 +20,9 @@ diff:
 	$(MAKE) --directory Source diff
 
 dist:
-	$(MAKE) ROM_PLATFORM=dist 2>&1 | tee make.log
+	$(MAKE) ROM_PLATFORM=dist
 	$(MAKE) --directory Source clean
 	$(MAKE) --directory Tools clean
+
+distlog:
+	$(MAKE) dist 2>&1 | tee make.log
