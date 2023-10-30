@@ -2,7 +2,7 @@
 # order is actually important, because of build dependencies
 #
 
-.PHONY: doc prop shared bp images rom zrc zzrcc
+.PHONY: doc prop shared bp images rom zrc z1rcc zzrcc
 
 .ONESHELL:
 .SHELLFLAGS = -cex
@@ -43,6 +43,9 @@ rom:
 
 zrc:
 	$(MAKE) --directory ZRC $(ACTION)
+
+z1rcc:
+	$(MAKE) --directory Z1RCC $(ACTION)
 
 zzrcc:
 	$(MAKE) --directory ZZRCC $(ACTION)

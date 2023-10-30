@@ -8,6 +8,7 @@ call BuildShared || exit /b
 call BuildImages || exit /b
 call BuildROM %* || exit /b
 call BuildZRC || exit /b
+call BuildZ1RCC || exit /b
 call BuildZZRCC || exit /b
 
 if "%1" == "dist" (

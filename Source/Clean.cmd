@@ -22,4 +22,5 @@ pushd Prop && call Clean & popd
 pushd RomDsk && call Clean & popd
 pushd Doc && call Clean & popd
 pushd ZRC && call Clean & popd
+pushd Z1RCC && call Clean & popd
 pushd ZZRCC && call Clean & popd
