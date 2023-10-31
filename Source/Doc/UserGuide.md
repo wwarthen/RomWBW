@@ -596,6 +596,14 @@ technique is useful when:
 The RAM disk and ROM disk drives will be available even if you have
 no physical disk devices attached to your system.
 
+Booting an operating system from ROM is not intended as a way to use
+your operating system on a long-term basis.  The ROM disk has only
+a small subset of the operating system files.  Additionally, you
+cannot easily customize your ROM disk because you cannot write to it.
+For any significant use of an operating system, you should boot directly
+to the disk/slice that contains the complete operating system.  This
+is described in the next section.
+
 ## Starting Operating Systems from Disk
 
 In order to make use of the more sophisticated operating systems
@@ -619,7 +627,7 @@ has been assigned to the disk and slice you selected to boot.
 
 If you receive the error message "Disk not bootable!", you have
 either failed to properly initialize the disk and slice requested
-or you have selected the wrong disk/slice.
+or you have selected an invalid/unavailable disk/slice.
 
 The following example shows a disk boot into the first slice of disk
 unit 4 which happens to be the CP/M 2.2 operating system on this disk.
@@ -696,6 +704,26 @@ The Boot Loader simply launches whatever is in the disk unit/slice you
 have specified.  It does not know what operating system is at that
 location.  The layout of operating systems on disk media is described in
 the Using Disks section of this document.
+
+### Auto-Submit Batch Files
+
+All of the operating systems supplied with RomWBW have the ability to
+execute a "batch" of commands by creating a batch submission file
+containing the commands to be executed.  The specifics of using
+batch files in a specific operating system is covered in its specific
+documentation.
+
+At boot, the operating system will look for a specific batch file 
+(`PROFILE.SUB` for CP/M 2.2 and 3) on the boot drive and execute that 
+batch file automatically.  This allows you to automatically customize 
+your operating system with any commands desired at boot.  CP/M 2.2 did 
+not originally have the ability to automatically excute a batch file at 
+boot, but the CBIOS in RomWBW has added this capability.
+
+Since RomWBW can utilize many disk slices, it is very easy to create 
+slices for specific workflows (editing, software development, games, 
+etc.). You can then just boot to the slice that is optimized for the 
+task you want to perform.
 
 ## System Management
 
@@ -902,7 +930,7 @@ Configuring Drives...
 ```
 
 You will probably see more drive letters than this. The drive letter
-assignment process is described below in the Drive Letter Assignment
+assignment process is described below in the [Drive Letter Assignment]
 section. Be aware that RomWBW will only assign drive letters to disk
 interfaces that actually have media in them. If you do not see drive
 letters assigned as expected, refer to the prior system boot messages
@@ -992,6 +1020,69 @@ boot, the disk you are booting from will be assigned to A: and the
 rest of the drive letters will be offset to accommodate this. This is
 done because most legacy operating systems expect that A: will be the
 boot drive.
+
+### Default Drive Letter Assignment
+
+As shown above, when an operating system is booted, RomWBW will 
+automatically assign drive letters to physical disk devices.  The 
+assignment process varies depending on: 1) the drive/slice you choose to
+boot from, and 2) the number and type of physical drives in your 
+system.
+
+If you boot an operating system from ROM, then the first two drive
+letters will be assigned to your RAM disk (A:) and your ROM disk (B:).
+It may seem odd that the RAM disk is assigned to A: in this case.  The
+reason for this is to accommodate certain functions that require that A:
+be a writable disk drive.  For example, A: **must** be writable in order
+to submit batch files.
+
+If you boot to a physical disk device, then the first drive letter (A:) 
+will be assigned to the disk/slice that you chose to boot from.  The A: 
+drive letter is considered special by most operating systems and is 
+automatically used in some cases.  By making the selected disk/slice the
+A: drive, you can setup different disks/slices for specific uses and 
+just boot to it.
+
+After the first drive letter is assigned (as well as the second drive 
+letter in the case of a ROM boot), RomWBW will assign additional drive 
+letters based on the disk drives in the system.  Additional drive 
+letters will be assigned in the following order:
+
+- RAM Disk
+- ROM Disk
+- Floppy Disk(s)
+- Hard Disk(s)
+
+If a disk/slice was already assigned as the A: (or B:) drive letter, 
+then it will not be assigned again.
+
+In the case of floppy, RAM, and ROM disks, a single drive letter will be
+assigned to each physical disk (even if there is no disk media in the 
+drive).
+
+In the case of hard disks, 1-8 drive letters will be assigned to the
+initial 1-8 slices of the disk drive.  The number of drive letters
+assigned to each hard disk depends on the number of hard disks in the
+system:
+
+- 1 Hard Disk: 8 drive letters (slices)
+- 2 Hard Disks: 4 drive letters (slices) per disk
+- 3+ Hard Disks: 2 drive letters (slices) per disk
+
+This somewhat complicated algorithm is used to try and maximize the
+limited number of operating system drive letters available (16) to
+the available disk devices as evenly as possible.
+
+Note that for hard disk devices, drive letters will only be assigned
+to disk devices that actually contain media.  So, for example, if you
+have an SD Card slot in your system, but it has no SD Card inserted, then
+no drive letters will be assigned to it.
+
+Since drive letter assignments are easily changed at any time using the 
+`ASSIGN` command, you can customize your assignments as desired after 
+starting the operating system.  Even better, you can use an auto-submit 
+batch file to customzie the assignments at startup without any user 
+intervention.
 
 ## ROM & RAM Disks
 
