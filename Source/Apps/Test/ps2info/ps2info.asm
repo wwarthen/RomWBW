@@ -196,6 +196,12 @@ test_kbd:
 	call	ctlr_test
 	jr	nz,test_kbd_fail
 ;
+	ld	a,$20			; kbd enabled, mse disabled, no ints
+	call	ctlr_setup
+	jr	nz,test_kbd_fail
+;
+	call	ctlr_flush
+;
 	call	test_kbd_basic
 	jr	nz,test_kbd_fail
 ;
@@ -243,8 +249,12 @@ test_mse:
 	call	ctlr_setup
 	jr	nz,test_mse_fail
 ;
+	call	ctlr_flush
+;
 	call	mse_reset
 	jr	nz,test_mse_fail
+;
+	call	ctlr_flush
 ;
 	call	mse_ident
 	jr	nz,test_mse_fail
@@ -277,14 +287,20 @@ test_kbdmse:
 	call	ctlr_setup
 	jr	nz,test_kbdmse_fail
 ;
+	call	ctlr_flush
+;
 	call	kbd_reset
 	jr	nz,test_kbdmse_fail
+;
+	call	ctlr_flush
 ;
 	ld	a,2
 	call	kbd_setsc
 ;
 	call	mse_reset
 	jr	nz,test_kbdmse_fail
+;
+	call	ctlr_flush
 ;
 	call	mse_stream
 	jr	nz,test_kbdmse_fail
@@ -304,15 +320,13 @@ test_kbdmse_fail:
 ; inventory the supported scan code sets.
 ;
 test_kbd_basic:
-	ld	a,$20			; Xlat off for this checking
-	call	ctlr_setup
-	ret	nz
-;
 	call	kbd_reset
 	ret	nz
 ;
+	call	ctlr_flush
+;
 	call	kbd_ident
-	;ret	nz
+	ret	nz
 ;
 	ld	b,3			; Loop control, 3 scan code sets
 	ld	c,1			; Current scan code number
@@ -449,6 +463,19 @@ ctlr_setup:
 	jp	c,err_ctlr_to		; handle controller error
 	xor	a
 	ret
+;
+; Flush incoming data buffer
+;
+ctlr_flush:
+	call	crlf2
+	ld	de,str_ctlr_flush
+	call	prtstr
+ctlr_flush1:
+	call	delay			; small delay
+	call	check_read		; data pending?
+	ret	nz			; return if nothing there
+	call	get_data_dbg		; get and discard byte
+	jr	ctlr_flush1		; loop
 ;
 ; Perform a keyboard reset
 ;
@@ -626,12 +653,16 @@ mse_reset:
 	call	crlf2
 	ld	de,str_mse_reset
 	call	prtstr
-	ld	a,$f2			; Identify mouse command
+	ld	a,$ff			; Identify mouse command
 	call	put_data_mse_dbg
 	jp	c,err_ctlr_to		; handle controller error
 	call	get_data_dbg
 	jp	c,err_ctlr_to		; handle controller error
 	cp	$fa			; Is it an ack as expected?
+	jp	nz,err_mse_reset
+	call	get_data_dbg
+	jp	c,err_ctlr_to		; handle controller error
+	cp	$aa			; Success?
 	jp	nz,err_mse_reset
 	call	crlf
 	ld	de,str_mse_reset_ok
@@ -648,18 +679,61 @@ mse_ident:
 	ld	a,$f2			; Identify mouse command
 	call	put_data_mse_dbg
 	jp	c,err_ctlr_to		; handle controller error
+mse_ident0:
 	call	get_data_dbg
 	jp	c,err_ctlr_to		; handle controller error
+
+	;cp	$00			; extraneous?
+	;jr	z,mse_ident0		; ignore it, get another
+
 	cp	$fa			; Is it an ack as expected?
 	jp	nz,err_mse_ident
-	call	get_data_dbg
-	jp	c,err_ctlr_to		; handle controller error
+	; Now we need to receive 0-2 bytes.  There is no way to know
+	; how many are coming, so we receive bytes until there is a
+	; timeout error.  Timeout is shortened here so that we don't
+	; have to wait seconds for the routine to complete normally.
+	; A short timeout is more than sufficient here.
+	ld	ix,workbuf
+	ld	a,(timeout)		; save current timeout
 	push	af
+	ld	a,stimout		; set a short timeout
+	ld	(timeout),a
+	ld	b,8			; buf max
+	ld	c,0			; buf len
+mse_ident1:
+	push	bc
+	call	get_data_dbg
+	pop	bc
+	jr	c,mse_ident2
+	ld	(ix),a
+	inc	ix
+	inc	c
+	djnz	mse_ident1
+mse_ident2:
+	pop	af			; restore original timeout
+	ld	(timeout),a
 	call	crlf
 	ld	de,str_mse_ident_disp
 	call	prtstr
-	pop	af
-	call	prtdecb
+	ld	a,'['
+	call	prtchr
+	ld	ix,workbuf
+	ld	a,c			; bytes to print
+	or	a			; check for zero
+	jr	z,mse_ident4		; handle zero
+	ld	b,a			; setup loop counter
+	jr	mse_ident3a
+mse_ident3:
+	ld	a,','
+	call	prtchr
+mse_ident3a:
+	ld	a,(ix)
+	call	prthex
+	inc	ix
+	djnz	mse_ident3
+mse_ident4:
+	ld	a,']'
+	call	prtchr
 	xor	a
 	ret
 ;
@@ -672,8 +746,13 @@ mse_stream:
 	ld	a,$f4			; Stream packets cmd
 	call	put_data_mse_dbg
 	jp	c,err_ctlr_to		; handle controller error
+mse_stream0:
 	call	get_data_dbg
 	jp	c,err_ctlr_to		; handle controller error
+
+	;cp	$00			; extraneous?
+	;jr	z,mse_stream0		; ignore it, get another
+
 	cp	$FA			; Is it an ack as expected?
 	jp	nz,err_mse_stream
 	xor	a
@@ -1358,7 +1437,7 @@ delay1:
 ; Constants
 ;=======================================================================
 ;
-str_banner		.db	"PS/2 Keyboard/Mouse Information v0.7, 19-Oct-2023",0
+str_banner		.db	"PS/2 Keyboard/Mouse Information v0.8, 6-Nov-2023",0
 str_hwmenu		.db	"PS/2 Controller Port Options:\r\n\r\n"
 			.db	"  1 - Nhyodyne\r\n"
 			.db	"  2 - Rhyophyre\r\n"
@@ -1398,6 +1477,7 @@ str_trans_off		.db	"***** Testing Keyboard with Scan Code Translation DISABLED *
 str_trans_on		.db	"***** Testing Keyboard with Scan Code Translation ENABLED *****",0
 str_basic_mse		.db	"***** Basic Mouse Tests *****",0
 str_kbdmse			.db	"***** Test All Devices Combined *****",0
+str_ctlr_flush		.db	"Flushing controller input buffer",0
 str_kbd_reset		.db	"Attempting Keyboard Reset",0
 str_kbd_reset_ok	.db	"Keyboard Reset OK",0
 str_err_kbd_reset	.db	"Keyboard Reset Failed",0
