@@ -180,8 +180,8 @@ ACIA_INTRCV:
         ; CHECK TO SEE IF SOMETHING IS ACTUALLY THERE
         LD      C,(IY+3)                ; CMD/STAT PORT TO C
         IN      A,(C)                   ; GET STATUS
-        RRA                             ; READY BIT TO CF
-        RET     NC                      ; NOTHING AVAILABLE ON CURRENT CHANNEL
+	AND	$01			; ISOLATE READY BIT
+	RET	Z			; IF NOT READY, RET W/ ZF SET (INT NOT HANDLED)
 ;
 ACIA_INTRCV1:
         ; RECEIVE CHARACTER INTO BUFFER
