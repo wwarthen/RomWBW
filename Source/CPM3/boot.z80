@@ -13,7 +13,7 @@
 	extrn	@dtbl,@ctbl
 	extrn	@date,@hour,@min,@sec
 	extrn	@srch1
-	extrn	@hbbio
+	extrn	@hbbio,@hbusr
 	extrn	addhla
 	extrn	phex16, phex8
 	extrn	cin, cout
@@ -46,7 +46,7 @@ tpa$bank	equ 0
 	; Clone page zero from bank 0 to additional banks
 	ld	b,2			; last bank
 	ld	c,0			; src bank
-init$2:
+init$1:
 	push	bc			; save bank id's
 	call	?xmove			; set src/dest banks
 	ld	bc,0100h		; size is one page
@@ -54,7 +54,7 @@ init$2:
 	ld	de,0			; src adr is 0
 	call	?move			; do it
 	pop	bc			; restore bank id's
-	djnz	init$2			; loop till done
+	djnz	init$1			; loop till done
 	
 	endif
 
@@ -62,6 +62,35 @@ init$2:
 	ld	hl,signon$msg		; signon message
 	call	?pmsg			; print it
 
+	if banked
+	
+	; Confirm that HBIOS is configured with enough RAM banks
+	; to accommodate banked version of CP/M 3.  We use 2
+	; additional banks which live below the user bank.  So we
+	; check that the these don't overlap with the RomWBW HBIOS
+	; bank.
+
+	ld	bc,0F8F2h	; HBIOS GET BNKINFO
+	call	0FFF0h		; D: BIOS Bank, E: User Bank
+	ld	a,d
+	ld	(@hbbio),a
+	ld	a,e
+	ld	(@hbusr),a
+	
+	sub	3		; 2 extra banks (+1 for compare)
+	cp	d		; lowest cpm bank - hbios bank
+	jr	nc,init$2	; continue if space available
+	
+	ld	hl,noram$msg	; signon message
+	call	?pmsg		; print it
+
+	ld	b,0F0h		; HBIOS system reset
+	ld	c,1h		; reset type warm (back to loader)
+	call	0FFFFh		; do it
+
+	endif
+
+init$2:
 	; Check for HBIOS/CBIOS mismatch
 	ld	b,0F1h			; hbios version
 	rst	08			; do it, de=maj/min/up/pat
@@ -730,6 +759,10 @@ read:
 clrflg		db	0		; RAM disk cleared flag
 clr$msg		db	'RAM Disk Initialized',13,10,13,10,0
 vermis$msg	db	7,'*** WARNING: HBIOS/CBIOS Version Mismatch ***',13,10,13,10,0
+
+	if banked
+noram$msg	db	7,'*** ERROR: Insufficient RAM for banked CP/M 3 ***',13,10,13,10,0
+	endif
 
 	if zpm
 
