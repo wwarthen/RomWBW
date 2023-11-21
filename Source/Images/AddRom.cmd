@@ -2,28 +2,37 @@
 setlocal
 
 set PATH=..\..\Tools\cpmtools;%PATH%
-set ROMLOC=..\..\Binary
+set BINLOC=..\..\Binary
+set DISKIMG=hd1k_combo.img
 
 if "%1"=="" goto :usage
 
-if not exist %ROMLOC%\%1.rom goto :nofile
+if not exist %BINLOC%\%DISKIMG% goto :noimage
+
+if not exist %BINLOC%\%1.rom goto :nofile
 
 echo.
 
-cpmrm.exe -f wbw_hd1k_0 %ROMLOC%/hd1k_combo.img 0:rom.img
-cpmcp.exe -f wbw_hd1k_0 %ROMLOC%/hd1k_combo.img %ROMLOC%/%1.rom 0:rom.img
+cpmrm.exe -f wbw_hd1k_0 %BINLOC%/%DISKIMG% 0:rom.img
+cpmcp.exe -f wbw_hd1k_0 %BINLOC%/%DISKIMG% %BINLOC%/%1.rom 0:rom.img
 
 if errorlevel 1 goto :err
 
-::cpmls.exe -f wbw_hd1k_0 %ROMLOC%/hd1k_combo.img 0:rom.img
+::cpmls.exe -f wbw_hd1k_0 %BINLOC%/%DISKIMG% 0:rom.img
 
-echo %1.rom has been added to hd1k_combo.img in user area 0
+echo %1.rom has been added to %DISKIMG% as ROM.IMG in user area 0
+echo.
+goto :eof
+
+:noimage
+echo.
+echo %BINLOC%\%DISKIMG% file not found!!!
 echo.
 goto :eof
 
 :nofile
 echo.
-echo %ROMLOC%\%1.rom file not found!!!
+echo %BINLOC%\%1.rom file not found!!!
 echo.
 goto :eof
 
@@ -32,7 +41,7 @@ echo.
 echo Usage:
 echo   AddRom romname
 echo.
-echo romname is the root filename of an existing ROM image in the %ROMLOC% directory
+echo romname is the root filename of an existing ROM image in the %BINLOC% directory
 echo.
 echo Example:
 echo   AddRom RCZ80_std
