@@ -28,7 +28,7 @@ $ErrorAction = 'Stop'
 #
 
 $PlatformListZ80 = "SBC", "MBC", "ZETA", "ZETA2", "RCZ80", "Z80RETRO", "DUO", "UNA", "HEATH"
-$PlatformListZ180 = "N8", "MK4", "RCZ180", "SCZ180", "DYNO", "RPH", "S100"
+$PlatformListZ180 = "N8", "MK4", "RCZ180", "SCZ180", "DYNO", "RPH", "S100", "EPITX"
 $PlatformListZ280 = "RCZ280"
 
 #

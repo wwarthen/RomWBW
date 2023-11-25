@@ -47,6 +47,7 @@ if [ "${ROM_PLATFORM}" == "dist" ] ; then
 	ROM_PLATFORM="ZETA"; ROM_CONFIG="std"; bash Build.sh
 	ROM_PLATFORM="ZETA2"; ROM_CONFIG="std"; bash Build.sh
 	ROM_PLATFORM="HEATH"; ROM_CONFIG="std"; bash Build.sh
+	ROM_PLATFORM="EPITX"; ROM_CONFIG="std"; bash Build.sh
 	exit
 fi
 
