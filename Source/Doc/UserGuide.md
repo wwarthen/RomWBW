@@ -43,6 +43,33 @@ find this document far too basic.  Others will find it lacking in many
 areas.  I am doing my best and encourage you to provide constructive
 feedback.
 
+`\clearpage`{=latex}
+
+#### Conventions
+
+##### Size Suffixes
+
+Within this document and in RomWBW in general, the use of size
+suffixes KB, MB, GB, and TB refer to the binary variant as shown
+below.  The modern suffixes (KiB, MiB, etc.) are not used here because
+they were not prevalent during the time that the RomWBW OSes were
+used.  This keeps all of RomWBW and associated applications consistent.
+
+| Suffix     | Value     | Meaning                                |
+|------------|-----------|----------------------------------------|
+| KB         | 1024      | 1,024 bytes                            |
+| MB         | 1024^2^   | 1,048,576 bytes                        |
+| GB         | 1024^3^   | 1,073,741,824 bytes                    |
+| TB         | 1024^4^   | 1,099,511,627,776 bytes                |
+
+##### Links and URLs
+
+Many of the references in this document to Internet addresses (URLs)
+do not provide the address in the text.  However, these links are
+embedded and "clickable" within the documents.  Your PDF viewer should
+highlight these links in some manner (typically an alternate color
+or an underline).
+
 # Overview
 
 RomWBW software provides a complete, commercial quality 
@@ -52,9 +79,14 @@ A wide variety of platforms are supported including those
 produced by these developer communities:
 
 * [RetroBrew Computers](https://www.retrobrewcomputers.org)
-* [RC2014](https://rc2014.co.uk), [RC2014-Z80](https://groups.google.com/g/rc2014-z80)
-* [retro-comp](https://groups.google.com/forum/#!forum/retro-comp)
+  (<https://www.retrobrewcomputers.org>)
+* [RC2014](https://rc2014.co.uk) (<https://rc2014.co.uk>), \
+  [RC2014-Z80](https://groups.google.com/g/rc2014-z80)
+  (<https://groups.google.com/g/rc2014-z80>)
+* [Retro Computing](https://groups.google.com/g/retro-comp)
+  (<https://groups.google.com/g/retro-comp>)
 * [Small Computer Central](https://smallcomputercentral.com/)
+  (<https://smallcomputercentral.com/>)
 
 A complete list of the currently supported platforms is found in the
 [Installation] section.
@@ -118,18 +150,19 @@ OSes such as Windows, MacOS, and Linux very easy.
 
 ## Acquiring RomWBW
 
-The [RomWBW Repository](https://github.com/wwarthen/RomWBW) on GitHub is
-the official distribution location for all project source and
-documentation.  The fully-built distribution releases are available on
-the [RomWBW Releases Page](https://github.com/wwarthen/RomWBW/releases)
-of the repository.  On this page, you will normally see a Development
-Snapshot as well as recent stable releases. Unless you have a specific
-reason, I suggest you stick to the most recent stable release. Expand
-the "Assets" drop-down for the release you want to download, then select
-the asset named RomWBW-vX.X.X-Package.zip. The Package asset includes
-all pre-built ROM and Disk images as well as full source code. The other
-assets contain only source code and do not have the pre-built ROM or
-disk images.
+The [RomWBW Repository](https://github.com/wwarthen/RomWBW)
+(<https://github.com/wwarthen/RomWBW>) on GitHub is the official 
+distribution location for all project source and documentation.  The 
+fully-built distribution releases are available on the
+[RomWBW Releases Page](https://github.com/wwarthen/RomWBW/releases)
+(<https://github.com/wwarthen/RomWBW/releases>) of the repository.  On 
+this page, you will normally see a Development Snapshot as well as 
+recent stable releases. Unless you have a specific reason, I suggest you
+ stick to the most recent stable release. Expand the "Assets" drop-down 
+for the release you want to download, then select the asset named 
+RomWBW-vX.X.X-Package.zip. The Package asset includes all pre-built ROM 
+and Disk images as well as full source code. The other assets contain 
+only source code and do not have the pre-built ROM or disk images.
 
 All source code and distributions are maintained on GitHub. Code
 contributions are very welcome.
@@ -277,7 +310,8 @@ your hardware provider's documentation for details. A null-modem
 connection may be required. Set the baud rate as indicated in the table 
 above. Set the line characteristics to 8 data bits, 1 stop bit, no 
 parity, and no flow control. If possible, select ANSI or VT-100 terminal
-emulation.
+emulation.  Hardware flow control is not required for terminal
+operation, but may be necessary for [Serial Port Transfers].
 
 RomWBW will automatically attempt to detect and support typical add-on
 components for each of the systems supported. More information on the
@@ -798,7 +832,8 @@ Sound 0     SND0:       AY-3-8910         3+1 CHANNELS
 
 The 'R' command within the Boot Loader performs a software reset of
 the system.  The system will perform a startup just like powering
-up or pressing the hardware reset button.
+up or pressing the hardware reset button (although the hardware is
+not physically reset).
 
 There is generally no need to do this, but it can be convenient when
 you want to see the boot messages again or ensure your system is in
@@ -3434,11 +3469,11 @@ users. All required build tools (compilers, assemblers, etc.) are
 included in the distribution, so it is not necessary to setup a build
 environment on your computer.
 
-RomWBW can be built on modern Windows, Linux, or MacOS computers.  The
-process for building a custom ROM is documented in the ReadMe.txt file
-in the Source directory of the distribution.  Any modern version of
-Windows, MacOS, or Linux released in the last 10 years should be able
-to run the build process.
+RomWBW can be built on modern Windows, Linux, or MacOS computers.  The 
+process for building a custom ROM is documented in the ReadMe.txt file 
+in the Source directory of the distribution.  Any modern version of 
+Windows (32-bit or 64-bit), MacOS, or Linux released in the last 10 
+years should be able to run the build process.
 
 For those who are interested in more than basic system customization,
 note that all source code is provided (including the operating
