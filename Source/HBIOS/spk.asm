@@ -41,6 +41,10 @@ SP_PENDING_PERIOD	.DW	SP_NOTE_C8	; PENDING PERIOD (16 BITS)
 SP_PENDING_VOLUME	.DB	$FF		; PENDING VOL (8 BITS)
 SP_PENDING_DURATION	.DW	0		; PENDING DURATION (16 BITS)
 ;
+	.ECHO	"SPK: IO="
+	.ECHO	RTCIO
+	.ECHO	"\n"
+;
 ;======================================================================
 ;	DRIVER INITIALIZATION
 ;======================================================================

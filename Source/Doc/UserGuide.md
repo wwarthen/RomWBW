@@ -3966,21 +3966,33 @@ the RomWBW HBIOS configuration.
 
 ##### Supported Hardware (see [Appendix B - Device Summary]):
 
-- DSRTC
-- UART
-- SIO
-- VGA
-- CVDU
-- PRP
-- MD
-- FD
-- IDE
-- PPIDE
+- DSRTC: MODE=STD, IO=112
+- UART: MODE=SBC, IO=104
+- UART: MODE=CAS, IO=128
+- UART: MODE=MFP, IO=104
+- UART: MODE=4UART, IO=192
+- UART: MODE=4UART, IO=200
+- UART: MODE=4UART, IO=208
+- UART: MODE=4UART, IO=216
+- SIO MODE=ZP, IO=176, CHANNEL A
+- SIO MODE=ZP, IO=176, CHANNEL B
+- VGA: IO=224, KBD MODE=PS/2, KBD IO=224
+- CVDU: MODE=ECB, IO=224, KBD MODE=PS/2, KBD IO=226
+- CVDU occupies 905 bytes.
+- KBD: ENABLED
+- PRP: IO=168
+- PRPCON: ENABLED
+- PRPSD: ENABLED
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=DIO, IO=54, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=DIO, IO=54, DRIVE 1, TYPE=3.5" HD
+- PPIDE: IO=96, MASTER
+- PPIDE: IO=96, SLAVE
 
 ##### Notes:
 
 - CPU speed will be dynamically measured at startup if DSRTC is present
-- FD configured for 3.5" HD floppy drives
 
 `\clearpage`{=latex}
 
@@ -4000,11 +4012,20 @@ the RomWBW HBIOS configuration.
 
 ##### Supported Hardware (see [Appendix B - Device Summary]):
 
-- SIMRTC
-- UART
-- SIO
-- MD
-- HDSK
+- SIMRTC: IO=254
+- UART: MODE=SBC, IO=104
+- UART: MODE=CAS, IO=128
+- UART: MODE=MFP, IO=104
+- UART: MODE=4UART, IO=192
+- UART: MODE=4UART, IO=200
+- UART: MODE=4UART, IO=208
+- UART: MODE=4UART, IO=216
+- SIO MODE=ZP, IO=176, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=ZP, IO=176, CHANNEL B, INTERRUPTS ENABLED
+- FONTS occupy 0 bytes.
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- HDSK: IO=253, DEVICE COUNT=2
 
 ##### Notes:
 
@@ -4029,20 +4050,26 @@ the RomWBW HBIOS configuration.
 
 ##### Supported Hardware (see [Appendix B - Device Summary]):
 
-- DSRTC
-- ASCI
-- UART
-- TMS
-- PPK
-- MD
-- FD
-- SD
-- AY38910
+- DSRTC: MODE=STD, IO=136
+- ASCI: IO=64, INTERRUPTS ENABLED
+- ASCI: IO=65, INTERRUPTS ENABLED
+- UART: MODE=CAS, IO=128
+- UART: MODE=4UART, IO=192
+- UART: MODE=4UART, IO=200
+- UART: MODE=4UART, IO=208
+- UART: MODE=4UART, IO=216
+- TMS: MODE=N8, IO=152
+- PPK: ENABLED
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=N8, IO=140, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=N8, IO=140, DRIVE 1, TYPE=3.5" HD
+- SD: MODE=CSIO, IO=136, UNITS=1
+- AY38910: MODE=N8, IO=156, CLOCK=1789772 HZ
 
 ##### Notes:
 
 - CPU speed will be dynamically measured at startup if DSRTC is present
-- FD configured for 3.5" HD floppy drives
 - SD Card interface is configured for CSIO (N8 date code >= 2312)
 
 `\clearpage`{=latex}
@@ -4063,16 +4090,18 @@ the RomWBW HBIOS configuration.
 
 ##### Supported Hardware (see [Appendix B - Device Summary]):
 
-- DSRTC
-- UART
-- PPP
-- MD
-- FD
+- DSRTC: MODE=STD, IO=112
+- UART: MODE=SBC, IO=104
+- PPP: IO=96
+- PPPCON: ENABLED
+- PPPSD: ENABLED
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=DIO, IO=54, DRIVE 0, TYPE=3.5" HD
 
 ##### Notes:
 
 - CPU speed will be dynamically measured at startup if DSRTC is present
-- FD configured for 3.5" HD floppy drives
 - If ParPortProp is installed, initial console output is
   determined by JP1:
    - Shorted: console to on-board serial port
@@ -4096,17 +4125,19 @@ the RomWBW HBIOS configuration.
 
 ##### Supported Hardware (see [Appendix B - Device Summary]):
 
-- DSRTC
-- UART
-- PPP
-- MD
-- FD
-- CTC
+- DSRTC: MODE=STD, IO=112
+- UART: MODE=SBC, IO=104
+- PPP: IO=96
+- PPPCON: ENABLED
+- PPPSD: ENABLED
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=ZETA2, IO=48, DRIVE 0, TYPE=3.5" HD
+- CTC: IO=32, TIMER MODE=COUNTER, DIVISOR=18432, HI=256, LO=72, INTERRUPTS ENABLED
 
 ##### Notes:
 
 - CPU speed will be dynamically measured at startup if DSRTC is present
-- FD configured for 3.5" HD floppy drives
 - If ParPortProp is installed, initial console output is
   determined by JP1:
    - Shorted: console to on-board serial port
@@ -4130,22 +4161,32 @@ the RomWBW HBIOS configuration.
 
 ##### Supported Hardware (see [Appendix B - Device Summary]):
 
-- DSRTC
-- ASCI
-- UART
-- VGA
-- CVDU
-- KBD
-- PRP
-- MD
-- FD
-- IDE
-- SD
+- DSRTC: MODE=STD, IO=138
+- ASCI: IO=64, INTERRUPTS ENABLED
+- ASCI: IO=65, INTERRUPTS ENABLED
+- UART: MODE=CAS, IO=128
+- UART: MODE=MFP, IO=104
+- UART: MODE=4UART, IO=192
+- UART: MODE=4UART, IO=200
+- UART: MODE=4UART, IO=208
+- UART: MODE=4UART, IO=216
+- VGA: IO=224, KBD MODE=PS/2, KBD IO=224
+- CVDU: MODE=ECB, IO=224, KBD MODE=PS/2, KBD IO=226
+- KBD: ENABLED
+- PRP: IO=168
+- PRPCON: ENABLED
+- PRPSD: ENABLED
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=DIDE, IO=42, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=DIDE, IO=42, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=MK4, IO=128, MASTER
+- IDE: MODE=MK4, IO=128, SLAVE
+- SD: MODE=MK4, IO=137, UNITS=1
 
 ##### Notes:
 
 - CPU speed will be dynamically measured at startup if DSRTC is present
-- FD configured for 3.5" HD floppy drives
 
 `\clearpage`{=latex}
 
@@ -4165,20 +4206,28 @@ the RomWBW HBIOS configuration.
 
 ##### Supported Hardware (see [Appendix B - Device Summary]):
 
-- DSRTC
-- UART
-- SIO
-- ACIA
-- MD
-- FD
-- IDE
-- PPIDE
-- CTC
+- FP: LEDIO=0, SWIO=0
+- DSRTC: MODE=STD, IO=192
+- UART: MODE=RC, IO=160
+- UART: MODE=RC, IO=168
+- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- ACIA: IO=128, INTERRUPTS ENABLED
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
+- CTC: IO=136
 
 ##### Notes:
 
 - CPU speed will be dynamically measured at startup if DSRTC is present
-- FD configured for 3.5" HD floppy drives
 
 `\clearpage`{=latex}
 
@@ -4196,20 +4245,25 @@ the RomWBW HBIOS configuration.
 
 ##### Supported Hardware (see [Appendix B - Device Summary]):
 
-- DSRTC
-- UART
-- SIO
-- MD
-- FD
-- IDE
-- PPIDE
-- KIO
-- CTC
+- FP: LEDIO=0, SWIO=0
+- DSRTC: MODE=STD, IO=192
+- UART: MODE=RC, IO=160
+- UART: MODE=RC, IO=168
+- SIO MODE=STD, IO=136, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=STD, IO=136, CHANNEL B, INTERRUPTS ENABLED
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
+- CTC: IO=132, TIMER MODE=TIMER/16, DIVISOR=9216, HI=256, LO=36, INTERRUPTS ENABLED
 
 ##### Notes:
 
 - CPU speed will be dynamically measured at startup if DSRTC is present
-- FD configured for 3.5" HD floppy drives
 - SIO Serial baud rate managed by CTC
 
 `\clearpage`{=latex}
@@ -4230,21 +4284,30 @@ the RomWBW HBIOS configuration.
 
 ##### Supported Hardware (see [Appendix B - Device Summary]):
 
-- DSRTC
-- INTRTC
-- ASCI
-- UART
-- SIO
-- MD
-- FD
-- IDE
-- PPIDE
+- FP: LEDIO=0, SWIO=0
+- DSRTC: MODE=STD, IO=12
+- INTRTC: ENABLED
+- ASCI: IO=192, INTERRUPTS ENABLED
+- ASCI: IO=193, INTERRUPTS ENABLED
+- UART: MODE=RC, IO=160
+- UART: MODE=RC, IO=168
+- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
 
 ##### Notes:
 
 - For use with Z2 bank switched memory board (Z2 external memory management)
 - CPU speed will be dynamically measured at startup if DSRTC is present
-- FD configured for 3.5" HD floppy drives
 
 `\clearpage`{=latex}
 
@@ -4262,21 +4325,30 @@ the RomWBW HBIOS configuration.
 
 ##### Supported Hardware (see [Appendix B - Device Summary]):
 
-- DSRTC
-- INTRTC
-- ASCI
-- UART
-- SIO
-- MD
-- FD
-- IDE
-- PPIDE
+- FP: LEDIO=0, SWIO=0
+- DSRTC: MODE=STD, IO=12
+- INTRTC: ENABLED
+- ASCI: IO=192, INTERRUPTS ENABLED
+- ASCI: IO=193, INTERRUPTS ENABLED
+- UART: MODE=RC, IO=160
+- UART: MODE=RC, IO=168
+- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
 
 ##### Notes:
 
 - For use with linear memory board (Z180 native memory management)
 - CPU speed will be dynamically measured at startup if DSRTC is present
-- FD configured for 3.5" HD floppy drives
 
 `\clearpage`{=latex}
 
@@ -4296,20 +4368,30 @@ the RomWBW HBIOS configuration.
 
 ##### Supported Hardware (see [Appendix B - Device Summary]):
 
-- DSRTC
-- Z2U
-- UART
-- SIO
-- ACIA
-- MD
-- FD
-- IDE
-- PPIDE
+- FP: LEDIO=0, SWIO=0
+- DSRTC: MODE=STD, IO=192
+- Z2U: IO=16
+- UART: MODE=RC, IO=160
+- UART: MODE=RC, IO=168
+- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- ACIA: IO=128, INTERRUPTS ENABLED
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
 
 ##### Notes:
 
-- For use with linear memory board (Z280 native memory management)
-- FD configured for 3.5" HD floppy drives
+- For use with Z2 bank switched memory board (Z2 external memory management)
+
+`\clearpage`{=latex}
 
 #### ROM Image File:  RCZ280_nat.rom
 
@@ -4325,19 +4407,27 @@ the RomWBW HBIOS configuration.
 
 ##### Supported Hardware (see [Appendix B - Device Summary]):
 
-- DSRTC
-- Z2U
-- UART
-- SIO
-- MD
-- FD
-- IDE
-- PPIDE
+- FP: LEDIO=0, SWIO=0
+- DSRTC: MODE=STD, IO=192
+- Z2U: IO=16, INTERRUPTS ENABLED
+- UART: MODE=RC, IO=160
+- UART: MODE=RC, IO=168
+- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
 
 ##### Notes:
 
-- For use with Z2 bank switched memory board (Z2 external memory management)
-- FD configured for 3.5" HD floppy drives
+- For use with linear memory board (Z280 native memory management)
 
 `\clearpage`{=latex}
 
@@ -4357,26 +4447,34 @@ the RomWBW HBIOS configuration.
 
 ##### Supported Hardware (see [Appendix B - Device Summary]):
 
-- DSRTC
-- INTRTC
-- UART
-- SIO
-- MD
-- FD
-- IDE
-- PPIDE
-- CTC
+- FP: LEDIO=0, SWIO=0
+- DSRTC: MODE=STD, IO=192
+- INTRTC: ENABLED
+- UART: MODE=RC, IO=160
+- UART: MODE=RC, IO=168
+- SIO MODE=STD, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=STD, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
+- CTC: IO=136, TIMER MODE=COUNTER, DIVISOR=18432, HI=256, LO=72, INTERRUPTS ENABLED
 
 ##### Notes:
 
 - CPU speed will be dynamically measured at startup if DSRTC is present
-- FD configured for 3.5" HD floppy drives
 
 `\clearpage`{=latex}
 
 ### Tiny Z80 SBC
 
-#### ROM Image File:  RCZ80_easy.rom
+#### ROM Image File:  RCZ80_tiny.rom
 
 |                   |               |
 |-------------------|---------------|
@@ -4390,19 +4488,27 @@ the RomWBW HBIOS configuration.
 
 ##### Supported Hardware (see [Appendix B - Device Summary]):
 
-- DSRTC
-- UART
-- SIO
-- MD
-- FD
-- IDE
-- PPIDE
-- CTC
+- FP: LEDIO=0, SWIO=0
+- DSRTC: MODE=STD, IO=192
+- UART: MODE=RC, IO=160
+- UART: MODE=RC, IO=168
+- SIO MODE=STD, IO=24, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=STD, IO=24, CHANNEL B, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=144, MASTER
+- IDE: MODE=RC, IO=144, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
+- CTC: IO=16, TIMER MODE=COUNTER, DIVISOR=18432, HI=256, LO=72, INTERRUPTS ENABLED
 
 ##### Notes:
 
 - CPU speed will be dynamically measured at startup if DSRTC is present
-- FD configured for 3.5" HD floppy drives
 
 `\clearpage`{=latex}
 
@@ -4422,20 +4528,28 @@ the RomWBW HBIOS configuration.
 
 ##### Supported Hardware (see [Appendix B - Device Summary]):
 
-- DSRTC
-- UART
-- SIO
-- ACIA
-- MD
-- FD
-- IDE
-- PPIDE
-- CTC
+- FP: LEDIO=0, SWIO=0
+- DSRTC: MODE=STD, IO=192
+- UART: MODE=RC, IO=160
+- UART: MODE=RC, IO=168
+- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- ACIA: IO=128, INTERRUPTS ENABLED
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
+- CTC: IO=136
 
 ##### Notes:
 
 - CPU speed will be dynamically measured at startup if DSRTC is present
-- FD configured for 3.5" HD floppy drives
 
 `\clearpage`{=latex}
 
@@ -4455,22 +4569,31 @@ the RomWBW HBIOS configuration.
 
 ##### Supported Hardware (see [Appendix B - Device Summary]):
 
-- DSRTC
-- INTRTC
-- ASCI
-- UART
-- SIO
-- MD
-- FD
-- IDE
-- PPIDE
-- SD
-- AY38910
+- FP: LEDIO=13, SWIO=0
+- DSRTC: MODE=STD, IO=12
+- INTRTC: ENABLED
+- ASCI: IO=192, INTERRUPTS ENABLED
+- ASCI: IO=193, INTERRUPTS ENABLED
+- UART: MODE=RC, IO=160
+- UART: MODE=RC, IO=168
+- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
+- SD: MODE=SC, IO=12, UNITS=1
+- AY38910: MODE=RCZ180, IO=104, CLOCK=1789772 HZ
 
 ##### Notes:
 
 - CPU speed will be dynamically measured at startup if DSRTC is present
-- FD configured for 3.5" HD floppy drives
 
 `\clearpage`{=latex}
 
@@ -4490,22 +4613,31 @@ the RomWBW HBIOS configuration.
 
 ##### Supported Hardware (see [Appendix B - Device Summary]):
 
-- DSRTC
-- INTRTC
-- ASCI
-- UART
-- SIO
-- MD
-- FD
-- IDE
-- PPIDE
-- SD
-- AY38910
+- FP: LEDIO=0, SWIO=0
+- DSRTC: MODE=STD, IO=12
+- INTRTC: ENABLED
+- ASCI: IO=192, INTERRUPTS ENABLED
+- ASCI: IO=193, INTERRUPTS ENABLED
+- UART: MODE=RC, IO=160
+- UART: MODE=RC, IO=168
+- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
+- SD: MODE=SC, IO=12, UNITS=1
+- AY38910: MODE=RCZ180, IO=104, CLOCK=1789772 HZ
 
 ##### Notes:
 
 - CPU speed will be dynamically measured at startup if DSRTC is present
-- FD configured for 3.5" HD floppy drives
 
 `\clearpage`{=latex}
 
@@ -4525,10 +4657,12 @@ the RomWBW HBIOS configuration.
 
 ##### Supported Hardware (see [Appendix B - Device Summary]):
 
-- INTRTC
-- ASCI
-- MD
-- SD
+- INTRTC: ENABLED
+- ASCI: IO=192, INTERRUPTS ENABLED
+- ASCI: IO=193, INTERRUPTS ENABLED
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- SD: MODE=SC, IO=12, UNITS=1
 
 ##### Notes:
 
@@ -4550,21 +4684,30 @@ the RomWBW HBIOS configuration.
 
 ##### Supported Hardware (see [Appendix B - Device Summary]):
 
-- DSRTC
-- INTRTC
-- ASCI
-- UART
-- SIO
-- MD
-- FD
-- IDE
-- PPIDE
-- SD
+- FP: LEDIO=160, SWIO=160
+- DSRTC: MODE=STD, IO=12
+- INTRTC: ENABLED
+- ASCI: IO=192, INTERRUPTS ENABLED
+- ASCI: IO=193, INTERRUPTS ENABLED
+- UART: MODE=RC, IO=160
+- UART: MODE=RC, IO=168
+- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=144, MASTER
+- IDE: MODE=RC, IO=144, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
+- SD: MODE=SC, IO=12, UNITS=1
 
 ##### Notes:
 
 - CPU speed will be dynamically measured at startup if DSRTC is present
-- FD configured for 3.5" HD floppy drives
 
 `\clearpage`{=latex}
 
@@ -4584,21 +4727,30 @@ the RomWBW HBIOS configuration.
 
 ##### Supported Hardware (see [Appendix B - Device Summary]):
 
-- DSRTC
-- INTRTC
-- ASCI
-- UART
-- SIO
-- MD
-- FD
-- IDE
-- PPIDE
-- SD
+- FP: LEDIO=160, SWIO=160
+- DSRTC: MODE=STD, IO=12
+- INTRTC: ENABLED
+- ASCI: IO=192, INTERRUPTS ENABLED
+- ASCI: IO=193, INTERRUPTS ENABLED
+- UART: MODE=RC, IO=160
+- UART: MODE=RC, IO=168
+- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=144, MASTER
+- IDE: MODE=RC, IO=144, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
+- SD: MODE=SC, IO=12, UNITS=1
 
 ##### Notes:
 
 - CPU speed will be dynamically measured at startup if DSRTC is present
-- FD configured for 3.5" HD floppy drives
 
 `\clearpage`{=latex}
 
@@ -4618,21 +4770,31 @@ the RomWBW HBIOS configuration.
 
 ##### Supported Hardware (see [Appendix B - Device Summary]):
 
-- DSRTC
-- INTRTC
-- ASCI
-- UART
-- SIO
-- MD
-- FD
-- IDE
-- PPIDE
-- SD
+- FP: LEDIO=0
+- DSRTC: MODE=STD, IO=12
+- INTRTC: ENABLED
+- ASCI: IO=192, INTERRUPTS ENABLED
+- ASCI: IO=193, INTERRUPTS ENABLED
+- UART: MODE=RC, IO=160
+- UART: MODE=RC, IO=168
+- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
+- SD: MODE=SC, IO=12, UNITS=1
+- AY38910: MODE=RCZ180, IO=104, CLOCK=1789772 HZ
 
 ##### Notes:
 
 - CPU speed will be dynamically measured at startup if DSRTC is present
-- FD configured for 3.5" HD floppy drives
 
 `\clearpage`{=latex}
 
@@ -4652,15 +4814,17 @@ the RomWBW HBIOS configuration.
 
 ##### Supported Hardware (see [Appendix B - Device Summary]):
 
-- BQRTC
-- ASCI
-- MD
-- FD
-- PPIDE
+- BQRTC: IO=80
+- ASCI: IO=192, INTERRUPTS ENABLED
+- ASCI: IO=193, INTERRUPTS ENABLED
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=DYNO, IO=132, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=DYNO, IO=132, DRIVE 1, TYPE=3.5" HD
+- PPIDE: IO=76, MASTER
+- PPIDE: IO=76, SLAVE
 
 ##### Notes:
-
-- FD configured for 3.5" HD floppy drives
 
 `\clearpage`{=latex}
 
@@ -4680,25 +4844,37 @@ the RomWBW HBIOS configuration.
 
 ##### Supported Hardware (see [Appendix B - Device Summary]):
 
-- PKD
-- DSRTC
-- UART
-- SIO
-- PIO
-- LPT
-- CVDU
-- TMS
-- KBD
-- ESP
-- MD
-- FD
-- PPIDE
-- SPK
+- PKD: IO=96
+- DSRTC: MODE=STD, IO=112
+- UART: MODE=SBC, IO=104
+- UART: MODE=DUAL, IO=128
+- UART: MODE=DUAL, IO=136
+- SIO MODE=ZP, IO=176, CHANNEL A
+- SIO MODE=ZP, IO=176, CHANNEL B
+- PIO: IO=184, CHANNEL A
+- PIO: IO=184, CHANNEL B
+- PIO: IO=188, CHANNEL A
+- PIO: IO=188, CHANNEL B
+- LPT: MODE=SPP, IO=232
+- CVDU: MODE=MBC, IO=224, KBD MODE=PS/2, KBD IO=226
+- TMS: MODE=MBC, IO=152
+- KBD: ENABLED
+- ESP: IO=156
+- ESPCON: ENABLED
+- ESPSER: DEVICE=0
+- ESPSER: DEVICE=1
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=MBC, IO=48, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=MBC, IO=48, DRIVE 1, TYPE=3.5" HD
+- PPIDE: IO=96, MASTER
+- PPIDE: IO=96, SLAVE
+- SPK: IO=112
+- CTC: IO=176
 
 ##### Notes:
 
 - CPU speed will be dynamically measured at startup if DSRTC is present
-- FD configured for 3.5" HD floppy drives
 
 `\clearpage`{=latex}
 
@@ -4718,12 +4894,15 @@ the RomWBW HBIOS configuration.
 
 ##### Supported Hardware (see [Appendix B - Device Summary]):
 
-- DSRTC
-- ASCI
-- GDC
-- KBD
-- MD
-- PPIDE
+- DSRTC: MODE=STD, IO=132
+- ASCI: IO=64
+- ASCI: IO=65
+- GDC: MODE=RPH, DISPLAY=EGA, IO=144
+- KBD: ENABLED
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- PPIDE: IO=136, MASTER
+- PPIDE: IO=136, SLAVE
 
 ##### Notes:
 
@@ -4747,24 +4926,32 @@ the RomWBW HBIOS configuration.
 
 ##### Supported Hardware (see [Appendix B - Device Summary]):
 
-- DSRTC
-- UART
-- SIO
-- ACIA
-- VRC
-- KBD
-- MD
-- FD
-- IDE
-- PPIDE
-- CTC
+- FP: LEDIO=0, SWIO=0
+- DSRTC: MODE=STD, IO=192
+- UART: MODE=RC, IO=160
+- UART: MODE=RC, IO=168
+- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- ACIA: IO=128, INTERRUPTS ENABLED
+- VRC: IO=0, KBD MODE=VRC, KBD IO=244
+- KBD: ENABLED
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
+- CTC: IO=136
 
 ##### Notes:
 
 - ZRC is actually contains no ROM and 2MB of RAM.  The first 512KB
   of RAM is loaded from disk and then handled like ROM.
 - CPU speed will be dynamically measured at startup if DSRTC is present
-- FD configured for 3.5" HD floppy drives
 
 `\clearpage`{=latex}
 
@@ -4782,23 +4969,30 @@ the RomWBW HBIOS configuration.
 
 ##### Supported Hardware (see [Appendix B - Device Summary]):
 
-- DSRTC
-- UART
-- SIO
-- ACIA
-- VRC
-- KBD
-- MD
-- FD
-- IDE
-- PPIDE
-- CTC
+- FP: LEDIO=0, SWIO=0
+- DSRTC: MODE=STD, IO=192
+- UART: MODE=RC, IO=160
+- UART: MODE=RC, IO=168
+- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- ACIA: IO=128, INTERRUPTS ENABLED
+- VRC: IO=0, KBD MODE=VRC, KBD IO=244
+- KBD: ENABLED
+- MD: TYPE=RAM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
+- CTC: IO=136
 
 ##### Notes:
 
 - ROMless boot -- HBIOS is loaded from disk at boot
 - CPU speed will be dynamically measured at startup if DSRTC is present
-- FD configured for 3.5" HD floppy drives
 
 `\clearpage`{=latex}
 
@@ -4818,21 +5012,29 @@ the RomWBW HBIOS configuration.
 
 ##### Supported Hardware (see [Appendix B - Device Summary]):
 
-- DSRTC
-- INTRTC
-- ASCI
-- UART
-- SIO
-- MD
-- FD
-- IDE
-- PPIDE
+- FP: LEDIO=0, SWIO=0
+- DSRTC: MODE=STD, IO=12
+- INTRTC: ENABLED
+- ASCI: IO=192, INTERRUPTS ENABLED
+- ASCI: IO=193, INTERRUPTS ENABLED
+- UART: MODE=RC, IO=160
+- UART: MODE=RC, IO=168
+- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- MD: TYPE=RAM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
 
 ##### Notes:
 
 - ROMless boot -- HBIOS is loaded from disk at boot
 - CPU speed will be dynamically measured at startup if DSRTC is present
-- FD configured for 3.5" HD floppy drives
 
 `\clearpage`{=latex}
 
@@ -4852,23 +5054,31 @@ the RomWBW HBIOS configuration.
 
 ##### Supported Hardware (see [Appendix B - Device Summary]):
 
-- DSRTC
-- Z2U
-- UART
-- SIO
-- VRC
-- KBD
-- MD
-- FD
-- IDE
-- PPIDE
+- FP: LEDIO=0, SWIO=0
+- DSRTC: MODE=STD, IO=192
+- Z2U: IO=16, INTERRUPTS ENABLED
+- UART: MODE=RC, IO=160
+- UART: MODE=RC, IO=168
+- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- VRC: IO=0, KBD MODE=VRC, KBD IO=244
+- KBD: ENABLED
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
 
 ##### Notes:
 
 - ZZRCC actually contains no ROM and 512KB of RAM.  The first 256KB
   of RAM is loaded from disk and then handled like ROM.
 - CPU speed will be dynamically measured at startup if DSRTC is present
-- FD configured for 3.5" HD floppy drives
 
 `\clearpage`{=latex}
 
@@ -4886,22 +5096,29 @@ the RomWBW HBIOS configuration.
 
 ##### Supported Hardware (see [Appendix B - Device Summary]):
 
-- DSRTC
-- Z2U
-- UART
-- SIO
-- VRC
-- KBD
-- MD
-- FD
-- IDE
-- PPIDE
+- FP: LEDIO=0, SWIO=0
+- DSRTC: MODE=STD, IO=192
+- Z2U: IO=16, INTERRUPTS ENABLED
+- UART: MODE=RC, IO=160
+- UART: MODE=RC, IO=168
+- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- VRC: IO=0, KBD MODE=VRC, KBD IO=244
+- KBD: ENABLED
+- MD: TYPE=RAM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
 
 ##### Notes:
 
 - ROMless boot -- HBIOS is loaded from disk at boot
 - CPU speed will be dynamically measured at startup if DSRTC is present
-- FD configured for 3.5" HD floppy drives
 
 `\clearpage`{=latex}
 
@@ -4921,21 +5138,29 @@ the RomWBW HBIOS configuration.
 
 ##### Supported Hardware (see [Appendix B - Device Summary]):
 
-- DSRTC
-- Z2U
-- UART
-- SIO
-- VRC
-- KBD
-- MD
-- FD
-- IDE
-- PPIDE
+- FP: LEDIO=0, SWIO=0
+- DSRTC: MODE=STD, IO=192
+- Z2U: IO=16, INTERRUPTS ENABLED
+- UART: MODE=RC, IO=160
+- UART: MODE=RC, IO=168
+- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- VRC: IO=0, KBD MODE=VRC, KBD IO=244
+- KBD: ENABLED
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
 
 ##### Notes:
 
 - CPU speed will be dynamically measured at startup if DSRTC is present
-- FD configured for 3.5" HD floppy drives
 
 `\clearpage`{=latex}
 
@@ -4955,10 +5180,12 @@ the RomWBW HBIOS configuration.
 
 ##### Supported Hardware (see [Appendix B - Device Summary]):
 
-- SIO
-- MD
-- SD
-- CTC
+- SIO MODE=Z80R, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=Z80R, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- SD: MODE=, IO=104, UNITS=1
+- CTC: IO=64
 
 ##### Notes:
 
@@ -4980,11 +5207,15 @@ the RomWBW HBIOS configuration.
 
 ##### Supported Hardware (see [Appendix B - Device Summary]):
 
-- INTRTC
-- ASCI
-- SCON
-- MD
-- SD
+- FP: LEDIO=0
+- INTRTC: ENABLED
+- ASCI: IO=192, INTERRUPTS ENABLED
+- ASCI: IO=193, INTERRUPTS ENABLED
+- SCON: IO=0
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- SD: MODE=SC, IO=12, UNITS=1
+
 
 ##### Notes:
 
@@ -5006,17 +5237,31 @@ the RomWBW HBIOS configuration.
 
 ##### Supported Hardware (see [Appendix B - Device Summary]):
 
-- DSRTC
-- PCF
-- UART
-- SIO
-- PIO
-- LPT
-- DMA
-- CH
-- ESP
-- MD
-- SPK
+- DSRTC: MODE=STD, IO=148
+- PCF: IO=86
+- UART: MODE=SBC, IO=88
+- UART: MODE=AUX, IO=168
+- UART: MODE=DUAL, IO=112
+- UART: MODE=DUAL, IO=120
+- SIO MODE=ZP, IO=96, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=ZP, IO=96, CHANNEL B, INTERRUPTS ENABLED
+- PIO: IO=104, CHANNEL A
+- PIO: IO=104, CHANNEL B
+- PIO: IO=108, CHANNEL A
+- PIO: IO=108, CHANNEL B
+- LPT: MODE=SPP, IO=72
+- DMA: MODE=DUO, IO=64
+- CH: IO=78
+- CHUSB: IO=78
+- CHSD: IO=78
+- ESP: IO=156
+- ESPCON: ENABLED
+- ESPSER: DEVICE=0
+- ESPSER: DEVICE=1
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- SPK: IO=148
+- CTC: IO=96, TIMER MODE=COUNTER, DIVISOR=18432, HI=256, LO=72, INTERRUPTS ENABLED
 
 ##### Notes:
 
@@ -5040,20 +5285,28 @@ the RomWBW HBIOS configuration.
 
 ##### Supported Hardware (see [Appendix B - Device Summary]):
 
-- DSRTC
-- UART
-- SIO
-- ACIA
-- MD
-- FD
-- IDE
-- PPIDE
-- CTC
+- FP: LEDIO=0, SWIO=0
+- DSRTC: MODE=STD, IO=192
+- UART: MODE=RC, IO=160
+- UART: MODE=RC, IO=168
+- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- ACIA: IO=128, INTERRUPTS ENABLED
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
+- CTC: IO=136
 
 ##### Notes:
 
 - CPU speed will be dynamically measured at startup if DSRTC is present
-- FD configured for 3.5" HD floppy drives
 
 `\clearpage`{=latex}
 
@@ -5073,17 +5326,19 @@ the RomWBW HBIOS configuration.
 
 ##### Supported Hardware (see [Appendix B - Device Summary]):
 
-- INTRTC
-- ASCI
-- UART
-- TMS
-- MD
-- FD
-- SD
+- INTRTC: ENABLED
+- ASCI: IO=192, INTERRUPTS ENABLED
+- ASCI: IO=193, INTERRUPTS ENABLED
+- UART: MODE=RC, IO=160
+- UART: MODE=RC, IO=168
+- TMS: MODE=MSX, IO=152
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=EPFDC, IO=72, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=EPFDC, IO=72, DRIVE 1, TYPE=3.5" HD
+- SD: MODE=, IO=66, UNITS=1
 
 ##### Notes:
-
-- FD configured for 3.5" HD floppy drives
 
 `\clearpage`{=latex}
 
@@ -5113,27 +5368,30 @@ may be discovered by RomWBW in your system.
 | FP        | System   | Simple LED & Switch Front Panel                        |
 | GDC       | Video    | uPD7220 Video Display Controller                       |
 | HDSK      | Disk     | SIMH Simulator Hard Disk                               |
-| I2C       | System   | I2C Interface                                          |
 | ICM       | DsKy     | ICM7218-based Display/Keypad on PPI                    |
 | IDE       | Disk     | IDE/ATA/ATAPI Hard Disk Interface                      |
 | IMM       | Disk     | IMM Zip Drive on PPI                                   |
 | INTRTC    | RTC      | Interrupt-based Real Time Clock                        |
-| KBD       | Kbd      | 8242 PS/2 Keyboard Controller                          |
+| KBD       | Keyboard | 8242 PS/2 Keyboard Controller                          |
 | KIO       | System   | Zilog Serial/ Parallel Counter/Timer                   |
 | LPT       | Char     | Parallel I/O Controller                                |
 | MD        | Disk     | ROM/RAM Disk                                           |
-| MSXKYB    | Kbd      | MSX Compliant Matrix Keyboard                          |
-| PKD       | DsKy     | P8279-based Display/Keypad on PPI                      |
+| MSXKYB    | Keyboard | MSX Compliant Matrix Keyboard                          |
+| PCF       | RTC      | PCF8584-based I2C Real-Time Clock                      |
 | PIO       | Char     | Zilog Parallel Interface Controller                    |
+| PKD       | DsKy     | P8279-based Display/Keypad on PPI                      |
 | PPA       | Disk     | PPA Zip Drive on PPI                                   |
 | PPIDE     | Disk     | 8255 IDE/ATA/ATAPI Hard Disk Interface                 |
-| PPK       | Kbd      | Matrix Keyboard                                        |
+| PPK       | Keyboard | Matrix Keyboard                                        |
+| PPP       | System   | ParPortProp Host Interface Controller                  |
 | PPPCON    | Serial   | ParPortProp Serial Console Interface                   |
 | PPPSD     | Disk     | ParPortProp SD Card Interface                          |
+| PRP       | System   | PropIO Host Interface Controller                       |
 | PRPCON    | Serial   | PropIO Serial Console Interface                        |
 | PRPSD     | Disk     | PropIO SD Card Interface                               |
 | RF        | Disk     | RAM Floppy Disk Interface                              |
 | RP5C01    | RTC      | Ricoh RPC01A Real-Time Clock w/ NVRAM                  |
+| SCON      | Char     | S100 Console                                           |
 | SD        | Disk     | SD Card Interface                                      |
 | SIMRTC    | RTC      | SIMH Simulator Real-Time Clock                         |
 | SIO       | Char     | Zilog Serial Port Interface                            |

@@ -26,6 +26,13 @@ VRC_COLS	.EQU	64
 ;
 TERMENABLE	.SET	TRUE		; INCLUDE TERMINAL PSEUDODEVICE DRIVER
 ;
+		.ECHO	"VRC: IO="
+		.ECHO	VRC_BASE
+		.ECHO	", KBD MODE=VRC"
+		.ECHO	", KBD IO="
+		.ECHO	VRC_KBDDATA
+		.ECHO	"\n"
+;
 ;======================================================================
 ; VRC DRIVER - INITIALIZATION
 ;======================================================================

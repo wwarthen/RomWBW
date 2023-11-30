@@ -34,6 +34,16 @@ PowerShell -ExecutionPolicy Unrestricted .\Build.ps1 %* || exit /b
 call build_env.cmd
 
 ::
+:: Start of the actual build process for a given ROM.
+::
+
+echo.
+echo ============================================================
+echo %ROMName% for Z%CPUType% CPU
+echo ============================================================
+echo.
+
+::
 :: Create a small app that is used to export key build variables of the build.
 :: Then run the app to output a file with the variables.  Finally, read the
 :: file into variables usable in this batch file.
@@ -42,12 +52,6 @@ call build_env.cmd
 tasm -t80 -g3 -dCMD hbios_env.asm hbios_env.com hbios_env.lst || exit /b
 zxcc hbios_env >hbios_env.cmd
 call hbios_env.cmd
-
-::
-:: Start of the actual build process for a given ROM.
-::
-
-echo Building %ROMSize%K ROM %ROMName% for Z%CPUType% CPU...
 
 ::
 :: UNA is a special case, check for it and jump if needed.

@@ -66,6 +66,10 @@ PKD_CMD_FIFO	.EQU	%01000000		; READ FIFO
 ;
 PKD_PRESCL	.EQU	PKDOSC/100000		; PRESCALER
 ;
+	.ECHO	"PKD: IO="
+	.ECHO	PKDPPIBASE
+	.ECHO	"\n"
+;
 ;__PKD_PREINIT_______________________________________________________________________________________
 ;
 ;  CONFIGURE PARALLEL PORT AND INITIALIZE 8279

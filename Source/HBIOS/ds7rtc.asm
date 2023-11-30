@@ -23,6 +23,8 @@ DS7_WRITE 	.EQU    (DS7_DS1307 | DS7_W)	; WRITE
 ;
 DS7_CTL		.EQU	(DS7_OUT | DS7_SQWE | DS7_RATE)
 ;
+		.ECHO	"DS1307: ENABLED\n"
+;
 ;-----------------------------------------------------------------------------
 ; DS1307 INITIALIZATION
 ;
