@@ -1,9 +1,6 @@
 @echo off
 setlocal
 
-::call BuildDisk.cmd bp hd wbw_hd512 || exit /b
-::goto :eof
-
 echo.
 echo Building Floppy Disk Images...
 echo.
@@ -42,8 +39,6 @@ call BuildDisk.cmd bascomp hd wbw_hd512 || exit /b
 call BuildDisk.cmd fortran hd wbw_hd512 || exit /b
 call BuildDisk.cmd games hd wbw_hd512 || exit /b
 
-if exist ..\BPBIOS\bpbio-ww.rel call BuildDisk.cmd bp hd wbw_hd512 || exit /b
-
 echo.
 echo Building Combo Disk (512 directory entry format) Image...
 copy /b ..\..\Binary\hd512_cpm22.img + ..\..\Binary\hd512_zsdos.img + ..\..\Binary\hd512_nzcom.img + ..\..\Binary\hd512_cpm3.img + ..\..\Binary\hd512_zpm3.img + ..\..\Binary\hd512_ws4.img ..\..\Binary\hd512_combo.img || exit /b
@@ -67,7 +62,7 @@ call BuildDisk.cmd bascomp hd wbw_hd1k || exit /b
 call BuildDisk.cmd fortran hd wbw_hd1k || exit /b
 call BuildDisk.cmd games hd wbw_hd1k || exit /b
 
-if exist ..\BPBIOS\bpbio-ww.rel call BuildDisk.cmd bp hd wbw_hd1k || exit /b
+if exist ..\BPBIOS\bp*.rel call BuildDisk.cmd bp hd wbw_hd1k || exit /b
 
 copy hd1k_prefix.dat ..\..\Binary\ || exit /b
 

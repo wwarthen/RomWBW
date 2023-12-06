@@ -19,7 +19,7 @@ HD1KIMGS = hd1k_cpm22.img hd1k_zsdos.img hd1k_nzcom.img \
 HD1KXIMGS = hd1k_z80asm.img hd1k_aztecc.img hd1k_hitechc.img \
 	hd1k_bascomp.img hd1k_fortran.img hd1k_games.img \
 	hd1k_tpascal.img hd1k_qpm.img hd1k_blank.img
-# HD1KIMGS += hd1k_bp.img
+HD1KXIMGS += hd1k_bp.img
 
 HD512PREFIX =
 HD1KPREFIX = hd1k_prefix.dat
