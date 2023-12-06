@@ -48,10 +48,12 @@ HBX_CPYLEN	EQU	0FFE8H
 	; ------------	--------------	--------------
 	;  -1: <COMMON>	BID_COM		90h - 1 = 8Fh
 	;  -2: TPABNK	BID_USR         90h - 2 = 8Eh
-	;  -3: <HBIOS>	BID_BIOS	90h - 3 = 8Dh	
-	;  -4: SYSBNK	BID_AUX		90h - 4 = 8Ch
-	;  -9: BNKM	BID_AUX-5	90h - 9 = 87h
-	; -16: RAMBNK	RAMD0		90h - 16 = 80h
+	;  -3: SYSBNK	BID_SYS		90h - 3 = 8Dh
+	;  -4: RAMBNK	BID_BUF		90h - 4 = 8Ch
+	;  -4: MAXBNK	BID_BUF		90h - 4 = 8Ch
+	;  -5:		BID_RAMM	90h - 5 = 8BH
+	; -15:		BID_RAMD	90h - 15 = 81h (varies w/ memory size)
+	; -16:		BID_HB		90h - 16 = 80h (varies w/ memory size)
 	
 HB_SELMEM:
 	PUSH	AF
@@ -71,7 +73,8 @@ HB_SELMEM:
 	CALL	HBX_INVOKE	; DO IT, D=BID_BIOS, E=BID_USER
 	LD	A,D		; BID_BIOS
 	LD	(HB_BNKBIOS),A	; SET HB_BNKBIOS
-	ADD	A,3		; HBIOS + 3
+	LD	A,E		; BID_USER
+	ADD	2		; ... + 2
 	LD	(HB_BNKEND),A	; ... is the ending RAM bank
 	  IF BANKED
 	LD	(BNKADJ+1),A	; Dynamically update SELBNK

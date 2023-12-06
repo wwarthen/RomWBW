@@ -133,8 +133,8 @@ BNK1	EQU	BID_COM		;   Second TPA Bank (Common Bank)	48000H
 BNK2	EQU	BID_SYS		; System Bank (BIOS, DOS, CPR)		50000H
 BNKU	EQU	00H		; User Area Bank			58000H
 				; (set to 0 to disable)
-BNK3	EQU	BID_RAMD	; First Bank for RAM disk		60000H
-BNKM	EQU	BID_RAMM	; Maximum Bank #			F8000H
+BNK3	EQU	BID_BUF		; First Bank for RAM disk		60000H
+BNKM	EQU	BID_BUF		; Maximum Bank #			F8000H
 
 	  IF  NO	; REMOVE CODE - NOT NEEDED WITH HBIOS makes a
        			; nice resource for Z180 programing in general

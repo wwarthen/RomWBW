@@ -48,7 +48,7 @@ DRV_P		SET	NO		; YES if system has flopy drives
 ;
 ; RAM/ROM Bank Reserve
 ;
-HB_RAMRESV	EQU	8		; RAM reserve is 8 banks
+HB_RAMRESV	EQU	5		; RAM reserve is 8 banks
 HB_ROMRESV	EQU	4		; ROM reserve is 4 banks
 ;
 ; Layout of RAM banks
@@ -56,10 +56,11 @@ HB_ROMRESV	EQU	4		; ROM reserve is 4 banks
 ; TODO: Query system via HBIOS API to determine the actual bank
 ; assignments, then adjust BPBIOS operation accordingly.
 ;
-BID_RAMD	EQU	-16	; 90h - 16 = 80h
-BID_RAMM	EQU	-9	; 90h - 9 = 87h
-BID_SYS		EQU	-4	; 90h - 4 = 8Ch
-BID_HB		EQU	-3	; 90h - 3 = 8Dh
+BID_HB		EQU	-16	; 90h - 16 = 80h
+BID_RAMD	EQU	-15	; 90h - 15 = 81h
+BID_RAMM	EQU	-5	; 90h - 5 = 8Bh
+BID_BUF		EQU	-4	; 90h - 4 = 8Ch
+BID_SYS		EQU	-3	; 90h - 3 = 8Dh
 BID_USR		EQU	-2	; 90h - 2 = 8Eh
 BID_COM		EQU	-1	; 90h - 1 = 8Fh
 ;

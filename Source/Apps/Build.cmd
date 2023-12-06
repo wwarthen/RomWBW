@@ -1,13 +1,10 @@
 @echo off
 setlocal
 
-set TOOLS=../../Tools
+set TOOLS=..\..\Tools
 set APPBIN=..\..\Binary\Apps
-
 set PATH=%TOOLS%\tasm32;%TOOLS%\zxcc;%PATH%
-
 set TASMTABS=%TOOLS%\tasm32
-
 set CPMDIR80=%TOOLS%/cpm/
 
 call :asm syscopy || exit /b

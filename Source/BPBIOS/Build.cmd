@@ -3,8 +3,8 @@ setlocal
 
 pushd ZCPR33 && call Build || exit /b & popd
 
-set PATH=%PATH%;..\..\Tools\zxcc;..\..\Tools\cpmtools;
-
+set TOOLS=..\..\Tools
+set PATH=%PATH%;%TOOLS%\zxcc;%TOOLS%\cpmtools;
 set CPMDIR80=%TOOLS%/cpm/
 
 call :makebp 33

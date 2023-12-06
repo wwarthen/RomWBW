@@ -268,10 +268,11 @@ MATCH:	LD	A,(SECMSK)	; Get the sector mask
 ;
 ; Modified to use HBIOS host buffer
 ;
-	; HSTBUF is always in HBIOS bank where I/O is done
-	LD	A,(TPABNK)	; TPA BANK
-	DEC	A		; HBIOS bank is one below
-	LD	C,A
+	; HSTBUF is always in HBIOS bank where I/O is actually done
+	; We need to refer to HBIOS bank using BPBIOS bank id
+	LD	A,(HB_BNKEND)	; Undo the bank adjustment
+	SUB	80h		; ... and refer to HBIOS bank id
+	LD	C,A		; Set Read Source Bank
 	  IF  BANKED
 	LD	A,(DMABNK)	; Set Read Destination Bank
 	  ELSE
