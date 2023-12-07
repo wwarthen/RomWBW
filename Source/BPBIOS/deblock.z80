@@ -269,16 +269,14 @@ MATCH:	LD	A,(SECMSK)	; Get the sector mask
 ; Modified to use HBIOS host buffer
 ;
 	; HSTBUF is always in HBIOS bank where I/O is actually done
-	; We need to refer to HBIOS bank using BPBIOS bank id
-	LD	A,(HB_BNKEND)	; Undo the bank adjustment
-	SUB	80h		; ... and refer to HBIOS bank id
+	LD	A,(HB_BNKBIOS)	; HBIOS bank id
 	LD	C,A		; Set Read Source Bank
 	  IF  BANKED
-	LD	A,(DMABNK)	; Set Read Destination Bank
+	LD	A,(DMABNK)	; Read Destination Bank
 	  ELSE
-	LD	A,(TPABNK)	; Set Read Destination Bank
+	LD	A,(TPABNK)	; Read Destination Bank
 	  ENDIF
-	LD	B,A
+	LD	B,A		; Set Read Destination Bank
 	LD	A,(READOP)	; Direction?
 	OR	A
 	JR	NZ,OKBNKS	; ..jump if read

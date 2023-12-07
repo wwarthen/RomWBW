@@ -120,8 +120,6 @@ SELMEM:	LD	(USRBNK),A	; Update user bank
 
 SELBNK:	PUSH	AF		; Save regs
 SELBN0:	LD	(CURBNK),A	; Save as current bank #
-	NEG
-BNKADJ:	ADD	A,0FFH		; Adjust for HBIOS bank ids
 
 	  IF HB_DEBUG AND FALSE
 
@@ -186,9 +184,7 @@ FRGETB:
 	PUSH	BC		; Save BC
 	PUSH	DE		; Save DE
 	LD	B,0FAH		; HBIOS Peek function
-	LD	A,(HB_BNKEND)	; Adjust BP bank id
-	SUB	C		; ... to HBIOS bank id
-	LD	D,A		; Put in D
+	LD	D,C
 	CALL	HBX_INVOKE	; Do it
 	LD	A,E		; Value to A
 	POP	DE		; Restore DE
@@ -220,9 +216,7 @@ FRPUTB:
 	PUSH	DE		; Save DE
 	LD	B,0FBH		; HBIOS Poke function
 	LD	E,A		; Value in E
-	LD	A,(HB_BNKEND)	; Adjust BP bank id
-	SUB	C		; ... to HBIOS bank id
-	LD	D,A		; Put in D
+	LD	D,C
 	CALL	HBX_INVOKE	; Do it
 	POP	DE		; Restore DE
 	POP	BC		; Restore BC

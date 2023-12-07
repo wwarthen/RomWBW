@@ -102,6 +102,9 @@ CBOOT:
 ; BPCNFG to configure a generic IMG file for specific Hard Drive Partitions.
 
 CBOOT0:
+	LD	BC,HBF_SYSRES_INT	; HB Func: Internal Reset
+	CALL	HBX_INVOKE		; Do it
+
 	LD	HL,BRAME	; Get end of banked RAM
 	LD	(HISAV),HL	;   and save for later use
 	  IF  HARDDSK
