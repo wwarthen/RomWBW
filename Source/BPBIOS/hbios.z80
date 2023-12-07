@@ -43,18 +43,15 @@ HBX_CPYLEN	EQU	0FFE8H
 ; call here, make required changes, then update the
 ; BIOSJT to point directly to the normal SELMEM routine for
 ; all subsequent calls.
+;
+; HBIOS bank ids are computed by subtracting the BPBIOS bank id
+; from the ending HBIOS bank id.  HBIOS RAM bank ids start at 80h.
+; The ending HBIOS bank id (HB_BNKEND) is (80h + RAM banks).  Since
+; the number of RAM banks in a system can vary, HB_BNKEND is
+; determined here at startup.
+;
+; See romwbw.lib for additional RAM bank layout information.
 
-	; BPBIOS	HBIOS		Typical
-	; ------------	--------------	--------------
-	;  -1: <COMMON>	BID_COM		90h - 1 = 8Fh
-	;  -2: TPABNK	BID_USR         90h - 2 = 8Eh
-	;  -3: SYSBNK	BID_SYS		90h - 3 = 8Dh
-	;  -4: RAMBNK	BID_BUF		90h - 4 = 8Ch
-	;  -4: MAXBNK	BID_BUF		90h - 4 = 8Ch
-	;  -5:		BID_RAMM	90h - 5 = 8BH
-	; -15:		BID_RAMD	90h - 15 = 81h (varies w/ memory size)
-	; -16:		BID_HB		90h - 16 = 80h (varies w/ memory size)
-	
 HB_SELMEM:
 	PUSH	AF
 	PUSH	BC
@@ -103,9 +100,11 @@ HB_MOVE:
 	PUSH	HL
 	LD	HL,HB_BNKEND
 	LD	A,(HB_SRCBNK)
+	NEG
 	ADD	A,(HL)		; Adjust for HBIOS bank ids
 	LD	(HBX_SRCBNK),A
 	LD	A,(HB_DSTBNK)
+	NEG
 	ADD	A,(HL)		; Adjust for HBIOS bank ids
 	LD	(HBX_DSTBNK),A
 	POP	HL
