@@ -10,6 +10,7 @@ call BuildROM %* || exit /b
 call BuildZRC || exit /b
 call BuildZ1RCC || exit /b
 call BuildZZRCC || exit /b
+call BuildZRC512 || exit /b
 
 if "%1" == "dist" (
   call Clean || exit /b

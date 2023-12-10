@@ -218,6 +218,7 @@ call Build RCZ80 skz || exit /b
 :: call Build RCZ80 duart || exit /b
 call Build RCZ80 zrc || exit /b
 call Build RCZ80 zrc_ram || exit /b
+call Build RCZ80 zrc512 || exit /b
 call Build RCZ180 ext || exit /b
 call Build RCZ180 nat || exit /b
 call Build RCZ180 z1rcc || exit /b

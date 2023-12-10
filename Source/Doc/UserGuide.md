@@ -253,6 +253,7 @@ is discussed in [Customizing RomWBW].
 | [Rhyophyre Z180 SBC]^1^                                        | -       | RPH_std.rom           | 38400         |
 | [Z80 ZRC CPU Module]^7^                                        | RCBus   | RCZ80_zrc.rom         | 115200        |
 | [Z80 ZRC CPU Module]^7^ ROMless                                | RCBus   | RCZ80_zrc_ram.rom     | 115200        |
+| [Z80 ZRC512 CPU Module]^7^                                     | RCBus   | RCZ80_zrc512.rom      | 115200        |
 | [Z180 Z1RCC CPU Module]^7^                                     | RCBus   | RCZ180_z1rcc.rom      | 115200        |
 | [Z280 ZZRCC CPU Module]^7^                                     | RCBus   | RCZ280_zzrcc.rom      | 115200        |
 | [Z280 ZZRCC CPU Module]^7^ ROMless                             | RCBus   | RCZ280_zzrcc_ram.rom  | 115200        |
@@ -4995,6 +4996,49 @@ the RomWBW HBIOS configuration.
 |                   |               |
 |-------------------|---------------|
 | Default CPU Speed | 14.745 MHz    |
+| Interrupts        | Mode 1        |
+| System Timer      | None          |
+| Serial Default    | 115200 Baud   |
+| Memory Manager    | ZRC           |
+| ROM Size          | 0 KB          |
+| RAM Size          | 512 KB        |
+
+##### Supported Hardware (see [Appendix B - Device Summary]):
+
+- FP: LEDIO=0, SWIO=0
+- DSRTC: MODE=STD, IO=192
+- UART: MODE=RC, IO=160
+- UART: MODE=RC, IO=168
+- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- ACIA: IO=128, INTERRUPTS ENABLED
+- VRC: IO=0, KBD MODE=VRC, KBD IO=244
+- KBD: ENABLED
+- MD: TYPE=RAM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
+- CTC: IO=136
+
+##### Notes:
+
+- ROMless boot -- HBIOS is loaded from disk at boot
+- CPU speed will be dynamically measured at startup if DSRTC is present
+
+`\clearpage`{=latex}
+
+### Z80 ZRC512 CPU Module
+
+#### ROM Image File:  RCZ80_zrc512.rom
+
+|                   |               |
+|-------------------|---------------|
+| Default CPU Speed | 22.000 MHz    |
 | Interrupts        | Mode 1        |
 | System Timer      | None          |
 | Serial Default    | 115200 Baud   |
