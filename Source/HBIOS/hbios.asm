@@ -610,6 +610,25 @@ HBX_ROM:
 	RET				; DONE
 #ENDIF
 ;
+#IF (MEMMGR == MM_MON)
+;
+; CURRENTLY ASSUMES FIRST 16 PAGES ARE RAM FOLLOWED BY 16 PAGES OF ROM.
+; SO, WE MAP HBIOS BANKS $00-$0F (ROM SELECT) TO $10-$%1F AND HBIOS
+; BANKS $80-$8F (RAM SELECT) TO $00-$0F.
+;
+	BIT	7,A			; BIT 7 SET REQUESTS RAM PAGE
+	JR	Z,HBX_ROM		; NOT SET, SELECT ROM PAGE
+	RES	7,A			; RAM PAGE REQUESTED: CLEAR ROM BIT
+	OUT	($FF),A			; DO IT
+	RET				; AND DONE
+;
+HBX_ROM:
+	ADD	A,$10			; OFFSET INTO ROM BANKS
+	OUT	($FF),A			; DO IT
+	RET				; DONE
+#ENDIF
+;
+;
 ;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ; Copy Data - Possibly between banks.  This resembles CP/M 3, but
 ;  usage of the HL and DE registers is reversed.

@@ -241,5 +241,6 @@ call Build S100 std || exit /b
 call Build DUO std || exit /b
 call Build HEATH std || exit /b
 call Build EPITX std || exit /b
+:: call Build MON std || exit /b
 
 goto :eof

@@ -3884,6 +3884,11 @@ please let me know if I missed you!
   BASIC Compiler, Microsoft Fortran Compiler, and a Games
   compendium.
 
+* Martin R has provided substantial help reviewing and improving the
+  User Guide.
+
+* Jacques Pelletier has contributed the DS1501 RTC driver code.
+
 Contributions of all kinds to RomWBW are very welcome.
 
 # Licensing

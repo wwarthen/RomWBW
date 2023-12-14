@@ -19,6 +19,9 @@
 ; 15. Z80RETRO	Peter Wilson's Z80-Retro Computer
 ; 16. S100	S100 Computers Z180-based System
 ; 17. DUO	Andrew Lynch's Duodyne Computer
+; 18. HEATH	Les Bird's Heath Z80 Board
+; 19. EPITX	Alan Cox' Mini-ITX System
+; 20. MON	Jacques Pelletier's Monsputer
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -70,6 +73,7 @@ MM_Z280		.EQU	5		; Z280 NATIVE MEMORY MANAGER
 MM_ZRC		.EQU	6		; ZRC BANK SWITCHING
 MM_MBC		.EQU	7		; MBC MEMORY MANAGER
 MM_RPH		.EQU	8		; Z180 WITH RPH EXTENSIONS
+MM_MON		.EQU	9		; MONSPUTER MMU
 ;
 ; BOOT STYLE
 ;
@@ -629,6 +633,9 @@ SYSTIM	.SET	TM_Z280
   #ENDIF
   #IF (MEMMGR == MM_RPH)
 	.ECHO	"RHYOPHYRE ONBOARD (RPH)"
+  #ENDIF
+  #IF (MEMMGR == MM_MON)
+	.ECHO	"MONSPUTER ONBOARD (MON)"
   #ENDIF
 	.ECHO   "\n"
 #ENDIF
