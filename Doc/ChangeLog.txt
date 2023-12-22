@@ -5,10 +5,38 @@ NOTE: Changes require HBIOS/CBIOS/Apps sync, version bump to 3.4 to ensure integ
 - A?C: Support for EP ITX-Mini Z180 Platform
 - M?R: Significant improvement in User Guide document
 - J?P: Preliminary support for Monsputer (MON)
-
+- JLC: Standardize TMS driver memory map for compatibility
+- WBW: Improved IDE device detection
+- WBW: Fixed decompression when run on Z280
+- K?B: WDATE generic HBIOS date/time utility
+- WBW: Create new DSKY framework with simple driver style interface
+- JBL: Added ColecoVision config in TMS driver
+- WBW: Added support for interrupt mode 1 on Z180
+- WBW: Added S100 platform
+- WBW: Added Duodyne platform
+- WBW: Incorporated John Monahan's S100 Monitor in S100 platform build
+- WBW: Support ESP32 on Duodyne
+- M?C: Fixed port specification when using XM.COM send transfers
+- PMS: Support for Duodyne DMA
+- WBW: Added Serial ROM (SROM.COM) utility
+- WBW: Support S100 Propeller Console
+- SCC: Added support for SC700
+- WBW: Added Heath H8 platform
+- D?J: Enhanced build to run on Raspberry Pi 4
+- WBW: Complete overhaul of ROMless boot operation
+- WBW: Prevent access to slices outside of partition
+- T?P: Contributed the HTALK utility
+- WBW: CTS stall detection
+- W?S: Updated FLASH utility to v1.3.7
+- L?N: Updated UNARC to new OS universal version
+- B?C: Added support for Z1RCC
+- M?R: User Guide enhancements and corrections
+- D?H: Added support for specification of secondary console
+- WBW: Added platform for Monsputer
 
 Version 3.3
 -----------
+NOTE: v3.3 was never released
 - WBW: Support Front Panel switches
 - A?C: Preliminary support for Z80-Retro
 - A?C: Support for SD PIO
@@ -16,7 +44,7 @@ Version 3.3
 - WBW: Support per-drive floppy configuration
 - WBW: Support for Bill Shen's VGARC
 - WBW: Support for MG014 Parallel Port module + printer
-- WBW: Support for EMM Zip Drive on PPI interface (much inspiration from Alan Cox)
+- WBW: Support for IMM Zip Drive on PPI interface (much inspiration from Alan Cox)
 - WBW: Support for PPA Zip Drive on PPI interface (much inspiration from Alan Cox)
 - WBW: Support for SyQuest SparQ Drive on PPI interface (much inspiration from Alan Cox)
 - WBW: Support for ATAPI Disk Drives (not CD-ROMs) on IDE and PPIDE interfaces

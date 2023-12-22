@@ -3889,6 +3889,25 @@ please let me know if I missed you!
 
 * Jacques Pelletier has contributed the DS1501 RTC driver code.
 
+* Jose Collado has contributed enhancements to the TMS driver
+  including compatibility with standard TMS register configuration.
+
+* Kevin Boone has contributed a generic HBIOS date/time utility (WDATE).
+
+* Matt Carroll has contributed a fix to XM.COM that corrects the
+  port specification when doing a send.
+
+* Dean Jenkins enhanced the build process to accommodate the
+  Raspberry Pi 4.
+
+* Tom Plano has contributed a new utility (HTALK) to allow talking
+  directly to HBIOS COM ports.
+
+* Lars Nelson has contributed several generic utilities such as
+  a universal (OS agnostic) UNARC application.
+
+* Dylan Hall added support for specifying a secondary console.
+
 Contributions of all kinds to RomWBW are very welcome.
 
 # Licensing
