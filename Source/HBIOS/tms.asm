@@ -201,7 +201,7 @@ TMS_INIT:
 #IF (TMSMODE == TMSMODE_MSX)
 	PRTS("MSX$")
 #ENDIF
-#IF (TMSMODE == TMSMODE_COLECO)		; ### JLC Mod for completeness ###
+#IF (TMSMODE == TMSMODE_COLECO)
 	PRTS("COLECO$")
 #ENDIF
 #IF (TMSMODE == TMSMODE_MSXKBD)
@@ -215,7 +215,6 @@ TMS_INIT:
 	LD	A,TMS_DATREG
 	CALL	PRTHEXBYTE
 	CALL	TMS_PROBE		; CHECK FOR HW EXISTENCE
-	;JP	TMS_INIT1		; ### JLC DEBUG: ALLWAYS CONTINUE ###
 	JR	Z,TMS_INIT1		; CONTINUE IF PRESENT
 ;
 	; *** HARDWARE NOT PRESENT ***
@@ -370,7 +369,40 @@ TMS_VDASAT:
 	RET
 
 TMS_VDASCO:
-	XOR	A			; NOT POSSIBLE, JUST SIGNAL SUCCESS
+	; ### JLC Mod - Implement Default Text Mode Colors via ANSI_VDAINI or direct HBIOS Call
+	;
+	; Color setting is in reg D in ANSI Format as described in RomWBW System Guide
+	; Convert Color Format from ANSI to TMS shuffling bits arround and using
+	; Color Conversion Table at TMS_COLOR_TBL (approximated equivalences)
+	; Save converted value to (TMS_TMSCOLOR)
+	;
+	; TMS hardware only allows setting a global (screen) foreground/background color.  So, we
+	; only process this command if E is 1.
+	;
+	LD	A,D			; GET CHAR/SCREEN SCOPE
+	CP	1			; SCREEN?
+	JR	NZ,TMS_VDASCO_Z		; IF NOT, JUST RETURN
+;
+	LD	A,E			; GET COLOR BYTE
+	AND	$F0			; ISOLATE BACKGROUND
+	RRCA \ RRCA \ RRCA \ RRCA	; MOVE TO LOWER NIBBLE
+	LD	HL,TMS_COLOR_TBL	; POINT TO COLOR CONVERSION TABLE
+	CALL	ADDHLA			; OFFSET TO DESIRED COLOR
+	LD	B,(HL)			; PUT NEW BG IN B
+;
+	LD	A,E			; GET COLOR BYTE
+	AND	$0F			; ISOLATE FOREGROUND
+	LD	HL,TMS_COLOR_TBL	; POINT TO COLOR CONVERSION TABLE
+	CALL	ADDHLA			; OFFSET TO DESIRED COLOR
+	LD	A,(HL)			; PUT NEW FG IN A
+	RLCA \ RLCA \ RLCA \ RLCA	; MOVE TO UPPER NIBBLE
+;
+	OR	B			; COMBINE WITH FG
+	LD	C, 7			; C = Color Register, A = Desired new Color in TMS Format
+	CALL	TMS_SET			; Write to specific TMS Register, Change Default Text Color
+;
+TMS_VDASCO_Z:
+	XOR	A			; SIGNAL SUCCESS
 	RET
 
 TMS_VDAWRC:
@@ -558,7 +590,7 @@ TMS_CRTINIT:
 	LD	HL,0
 	CALL	TMS_WR
 ;
-	; FILL ENTIRE 16KB VRAM CONTENTS with $00 ### JLC Comment fix ###
+	; FILL ENTIRE 16KB VRAM CONTENTS with $00
 	LD	DE,$4000		; 16KB
 TMS_CRTINIT1:
 	XOR	A
@@ -614,7 +646,7 @@ TMS_LOADFONT:
 #ENDIF
 ;
 	; FILL TMS_FNTVADDR BYTES FROM FONTDATA
-	LD	DE,TMS_FNTSIZE		; ### JLC Mod for JBL compatibility ###
+	LD	DE,TMS_FNTSIZE
 TMS_LOADFONT1:
 	LD	A,(HL)
 	OUT	(TMS_DATREG),A
@@ -738,7 +770,6 @@ TMS_XY2IDX:
 	CALL	MULT8			; MULTIPLY TO GET ROW OFFSET
 	LD	E,A			; GET COLUMN BACK
 	ADD	HL,DE			; ADD IT IN
-	; ### JLC Fix to allow Name Table Addresses other than $0000 and JBL Compatibility ###
 	LD	DE,TMS_CHRVADDR		; Add offset Address to start of Name Table (Char)
 	ADD	HL,DE
 	RET				; RETURN
@@ -787,7 +818,6 @@ TMS_FILL1:
 ;----------------------------------------------------------------------
 ;
 TMS_SCROLL:
-	; ### JLC Fix to allow Name Table Addresses other than $0000 and JBL Compatibility ###
 	LD	HL,TMS_CHRVADDR		; SOURCE ADDRESS OF CHARACTER BUFFER
 	LD	C,TMS_ROWS - 1		; SET UP LOOP COUNTER FOR ROWS - 1
 ;
@@ -839,7 +869,6 @@ TMS_SCROLL3:
 ;----------------------------------------------------------------------
 ;
 TMS_RSCROLL:
-	; ### JLC Fix to allow Name Table Addresses other than $0000 and JBL Compatibility ###
 	LD	HL,TMS_COLS * (TMS_ROWS - 1)
 	LD	DE,TMS_CHRVADDR		; Add offset Address to start of Name Table (Char)
 	ADD	HL,DE
@@ -980,10 +1009,13 @@ TMS_INTHNDL:
 ;   TMS DRIVER - DATA
 ;==================================================================================================
 ;
-TMS_POS		.DW 	0		; CURRENT DISPLAY POSITION
+TMS_POS		.DW	0		; CURRENT DISPLAY POSITION
 TMS_CURSAV	.DB	0		; SAVES ORIGINAL CHARACTER UNDER CURSOR
 TMS_BUF		.FILL	256,0		; COPY BUFFER
-
+;
+; ### JLC Mod
+; ANSI-->TMS Color Conversion Table
+TMS_COLOR_TBL	.DB	$01,$08,$02,$0A,$04,$06,$0C,$0F,$0E,$09,$03,$0B,$05,$0D,$07,$0F
 ;
 ;==================================================================================================
 ;   TMS DRIVER - INSTANCE DATA
@@ -1055,6 +1087,10 @@ TMS_IDAT:
 ; https://www.msx.org/wiki/Screen_Modes_Description#SCREEN_0_in_80-column_.28Text_mode_2.29
 ; BITS 1-0 SHOULD BE 1.  BITS 8-2 SHOULD BE (ADR >> 8).
 ;
+; ### JLC Mod
+; TEXT MODE DEFAULT COLOR (REG 7) CAN BE CHANGED INVOKING VDASCO
+; OR VIA ANSI PRIVATE ESC SEQ. (SEE ANSI.ASM FOR DETAILS)
+;
 TMS_INITVDU:	; V9958 REGISTER SET
 	.DB	$04		; REG 0 - NO EXTERNAL VID, SET M4 = 1 FOR 80 COLS
 TMS_INITVDU_REG_1:
@@ -1069,7 +1105,7 @@ TMS_INITVDU_REG_1:
 	.DB	$00		; REG 9
 	.DB	$00		; REG 10 - COLOUR TABLE A14-A16 (TMS_FNTVADDR - $1000)
 ;
-#ELSE 		; _______TMS9918 REGISTER SET ### JLC Mod for JBL compatibility & MODE II Readiness ###_______
+#ELSE 		; _______TMS9918 REGISTER SET_______
 ;
 TMS_INITVDU:	; V9918 REGISTER SET
 	.DB	$00		; REG 0 - SET TEXT MODE, NO EXTERNAL VID
@@ -1080,18 +1116,7 @@ TMS_INITVDU_REG_1:
 	.DB	$00		; REG 4 - SET PATTERN GENERATOR TABLE TO (TMS_FNTVADDR -> $0000)
 	.DB	$76		; REG 5 - SPRITE ATTRIBUTE IRRELEVANT, SET TO MODE II DEFAULT VALUE
 	.DB	$03		; REG 6 - NO SPRITE GENERATOR TABLE, SET TO MODE II DEFAULT VALUE
-	.DB	$E1		; REG 7 - GREY ON BLACK ### JLC Mod Change default text color for better readability YMMV ###
-;
-;TMS_INITVDU:
-;	.DB	$00		; REG 0 - NO EXTERNAL VID
-;TMS_INITVDU_REG_1:
-;	.DB	$50		; REG 1 - ENABLE SCREEN, SET TEXT MODE & BLANK SCREEN ### JLC comment fix (NOT MODE 1) ###
-;	.DB	$00		; REG 2 - PATTERN NAME TABLE := 0
-;	.DB	$00		; REG 3 - NO COLOR TABLE
-;	.DB	$01		; REG 4 - SET PATTERN GENERATOR TABLE TO (TMS_FNTVADDR -> $0800)
-;	.DB	$00		; REG 5 - SPRITE ATTRIBUTE IRRELEVANT
-;	.DB	$00		; REG 6 - NO SPRITE GENERATOR TABLE
-;	.DB	$F0		; REG 7 - WHITE ON TRANSPARENT
+	.DB	$E1		; REG 7 - TEXT COLOR
 ;
 #ENDIF
 ;
@@ -1101,3 +1126,29 @@ TMS_INITVDULEN	.EQU	$ - TMS_INITVDU
 #IF (CPUFAM == CPU_Z180)
 TMS_DCNTL	.DB	$00	; SAVE Z180 DCNTL AS NEEDED
 #ENDIF
+;
+; ### JLC Mod
+;===============================================================================
+; BASIC ANSI to TMS COLOR CONVERSION TABLE (NIBBLES FOR FOREGROUND & BACKGROUND)
+;          Follows RomWBW System Guide Chapter 8, HBIOS Reference
+;-------------------------------------------------------------------------------
+;					 ANSI Color 		TMS Equivalent
+;-------------------------------------------------------------------------------
+;					 0 Black		1
+;					 1 Red			8
+;					 2 Green		2
+;					 3 Brown		A
+;					 4 Blue			4
+;					 5 Magenta		6
+;					 6 Cyan			C
+;					 7 White		F
+;					 8 Gray			E
+;					 9 Light Red		9
+;					 A Light Green		3
+;					 B Yellow		B
+;	 				 C Light Blue		5
+;	 				 D Light Magenta	D
+;	 				 E Light Cyan		7
+;	 				 F Bright White		F
+;===============================================================================
+;
