@@ -124,16 +124,17 @@ all:: $(OBJECTS)
 	@for dir in $(SUBDIRS) ; do \
 		$(MAKE) --directory $$dir ; \
 	done
+	rm -f /tmp/casefn.cache
 	@if [ "$(DEST)" ] && [ "$(OBJECTS)" ] ; then for file in $(filter-out $(NOCOPY),$(OBJECTS)) ; do \
 		mkdir -p $(DEST) ; \
 		echo Copying $$file to $(DEST) ; \
-		rm -f /tmp/casefn.cache ; \
+		#rm -f /tmp/casefn.cache ; \
 		cp $$($(CASEFN) $$file) $(DEST) ; \
 	done ; fi
 	@if [ "$(DOCDEST)" ] && [ "$(DOCS)" ] ; then for file in $(DOCS) ; do \
 		mkdir -p $(DOCDEST) ; \
 		echo Copying $$file to $(DOCDEST) ; \
-		rm -f /tmp/casefn.cache ; \
+		#rm -f /tmp/casefn.cache ; \
 		cp $$($(CASEFN) $$file) $(DOCDEST) ; \
 	done ; fi
 

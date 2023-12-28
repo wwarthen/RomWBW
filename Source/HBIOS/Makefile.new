@@ -1,27 +1,35 @@
-DIST_OBJECTS := DYNO_std MK4_std N8_std RCZ180_ext RCZ180_nat RCZ180_z1rcc \
-		RCZ280_ext RCZ280_nat RCZ280_zz80mb RCZ280_zzrcc RCZ280_zzrcc_ram \
-		RCZ80_std RCZ80_kio RCZ80_easy RCZ80_tiny RCZ80_skz RCZ80_zrc \
-		RCZ80_zrc_ram RCZ80_zrc512 RPH_std SBC_std SBC_simh MBC_std \
-		DUO_std SCZ180_sc126 SCZ180_sc130 SCZ180_sc131 SCZ180_sc140 \
-		SCZ180_sc503 SCZ180_sc700 S100_std UNA_std Z80RETRO_std \
-		ZETA_std ZETA2_std HEATH_std EPITX_std
-#		RCZ80_mt RCZ80_duart MON_std 
+DIST_OBJECTS := \
+	DYNO_std MK4_std N8_std RCZ180_ext RCZ180_nat RCZ180_z1rcc \
+	RCZ280_ext RCZ280_nat RCZ280_zz80mb RCZ280_zzrcc RCZ280_zzrcc_ram \
+	RCZ80_std RCZ80_kio RCZ80_easy RCZ80_tiny RCZ80_skz RCZ80_zrc \
+	RCZ80_zrc_ram RCZ80_zrc512 RPH_std SBC_std SBC_simh MBC_std \
+	DUO_std SCZ180_sc126 SCZ180_sc130 SCZ180_sc131 SCZ180_sc140 \
+	SCZ180_sc503 SCZ180_sc700 S100_std UNA_std Z80RETRO_std \
+	ZETA_std ZETA2_std HEATH_std EPITX_std
+#	RCZ80_mt RCZ80_duart MON_std 
 
 OBJECTS := $(DIST_OBJECTS)
-#OBJECTS := SBC_std S100_std
+#OBJECTS := SBC_std MK4_std UNA_std S100_std
 OBJECTS := $(OBJECTS:=.rom) $(OBJECTS:=.com) $(OBJECTS:=.upd)
 OBJECTS := $(filter-out UNA_%.com UNA_%.upd,$(OBJECTS))
 
 DEST = ../../Binary
 TOOLS = ../../Tools
-OTHERS =  *.img *.rom *.com *.upd *.bin *.hex cpm.sys zsys.sys build.inc *.build.inc font*.asm *.dat hbios_env.sh
+OTHERS := *.img *.rom *.com *.upd *.bin *.hex cpm.sys zsys.sys build.inc
+OTHERS +=  *.build.inc font*.asm *.dat hbios_env.sh
 
-FONTS := font8x11c.asm font8x11u.asm font8x16c.asm font8x16u.asm font8x8c.asm font8x8u.asm \
-	fontcgac.asm fontcgau.asm fontvgarcc.asm fontvgarcu.asm
+FONTS := font8x11c.asm font8x11u.asm font8x16c.asm font8x16u.asm
+FONTS += font8x8c.asm font8x8u.asm fontcgac.asm fontcgau.asm
+FONTS += fontvgarcc.asm fontvgarcu.asm
 
-include $(TOOLS)/Makefile.inc
+BUILD_COMPONENT = \
+	cp $(*F).build.inc build.inc ; \
+	$(TASM) $(TASMFLAGS) $< $@ $(@:.bin=.lst) ; \
+	rm build.inc
 
 SHELL=/bin/bash
+
+include $(TOOLS)/Makefile.inc
 
 font%.asm:
 	cp ../Fonts/$@ .
@@ -49,40 +57,13 @@ s100mon.bin:
 	EOF
 	cat $@
 
-%.usrrom.bin: usrrom.asm %.build.inc
-	cp $(*F).build.inc build.inc
-	$(TASM) $(TASMFLAGS) $< $@ $(@:.bin=.lst)
-	rm build.inc
-
-%.updater.bin: updater.asm %.build.inc
-	cp $(*F).build.inc build.inc
-	$(TASM) $(TASMFLAGS) $< $@ $(@:.bin=.lst)
-	rm build.inc
-
-%.eastaegg.bin: eastaegg.asm %.build.inc
-	cp $(*F).build.inc build.inc
-	$(TASM) $(TASMFLAGS) $< $@ $(@:.bin=.lst)
-	rm build.inc
-
-%.game.bin: game.asm %.build.inc
-	cp $(*F).build.inc build.inc
-	$(TASM) $(TASMFLAGS) $< $@ $(@:.bin=.lst)
-	rm build.inc
-
-%.nascom.bin: nascom.asm %.build.inc
-	cp $(*F).build.inc build.inc
-	$(TASM) $(TASMFLAGS) $< $@ $(@:.bin=.lst)
-	rm build.inc
-
-%.romldr.bin: romldr.asm %.build.inc
-	cp $(*F).build.inc build.inc
-	$(TASM) $(TASMFLAGS) $< $@ $(@:.bin=.lst)
-	rm build.inc
-
-%.dbgmon.bin: dbgmon.asm %.build.inc
-	cp $(*F).build.inc build.inc
-	$(TASM) $(TASMFLAGS) $< $@ $(@:.bin=.lst)
-	rm build.inc
+%.usrrom.bin: usrrom.asm %.build.inc ; $(BUILD_COMPONENT)
+%.updater.bin: updater.asm %.build.inc ; $(BUILD_COMPONENT)
+%.eastaegg.bin: eastaegg.asm %.build.inc ; $(BUILD_COMPONENT)
+%.game.bin: game.asm %.build.inc ; $(BUILD_COMPONENT)
+%.nascom.bin: nascom.asm %.build.inc ; $(BUILD_COMPONENT)
+%.romldr.bin: romldr.asm %.build.inc ; $(BUILD_COMPONENT)
+%.dbgmon.bin: dbgmon.asm %.build.inc ; $(BUILD_COMPONENT)
 
 %.hbios_env.com: hbios_env.asm %.build.inc
 	cp $(*F).build.inc build.inc

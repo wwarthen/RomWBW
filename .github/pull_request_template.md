@@ -1,7 +1,7 @@
 <!--
 BEFORE YOU CREATE A PULL REQUEST:
 
-- Please base all pull requests against the dev branch
+- Please base all pull requests against the master branch
 - Include a clear description of your change
 - Reference related Issue(s) (e.g., "Resolves Issue #123")
 
