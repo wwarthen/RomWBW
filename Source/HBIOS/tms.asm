@@ -369,7 +369,7 @@ TMS_VDASAT:
 	RET
 
 TMS_VDASCO:
-	; ### JLC Mod - Implement Default Text Mode Colors via ANSI_VDAINI or direct HBIOS Call
+	; ### JLC Mod - Implement Default Text Mode Colors via ANSI_VDASCO or direct HBIOS Call
 	;
 	; Color setting is in reg D in ANSI Format as described in RomWBW System Guide
 	; Convert Color Format from ANSI to TMS shuffling bits arround and using

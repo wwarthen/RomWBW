@@ -53,6 +53,7 @@ ROMNAME=${ROM_PLATFORM}_${ROM_CONFIG}
 # $(info ROM_PLATFORM=$(ROM_PLATFORM))
 # $(info ROM_CONFIG=$(ROM_CONFIG))
 # $(info ROMSIZE=$(ROMSIZE))
+# $(info RAMSIZE=$(RAMSIZE))
 # $(info ROMNAME=$(ROMNAME))
 # $(info CPUFAM=$(CPUFAM))
 # $(info TASM=$(TASM))
@@ -81,7 +82,7 @@ $(OBJECTS) : $(ROMDEPS)
 			cat hbios_rom.bin osimg.bin osimg1.bin osimg2.bin >$(ROMNAME).upd ; \
 			cat hbios_app.bin osimg_small.bin > $(ROMNAME).com ; \
 		else \
-			cat hbios_rom.bin osimg.bin osimg1.bin osimg2.bin >$(ROMNAME).rom ; \
+			cat hbios_rom.bin osimg.bin osimg1.bin osimg2.bin ../RomDsk/ram$(RAMSIZE)_wbw.dat >$(ROMNAME).rom ; \
 			cat hbios_rom.bin osimg.bin osimg1.bin osimg2.bin >$(ROMNAME).upd ; \
 			cat hbios_app.bin osimg_small.bin > $(ROMNAME).com ; \
 		fi \

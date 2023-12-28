@@ -1257,7 +1257,7 @@ ANSI_SGR_BG:
 ;
 ;
 ;......................................................................................
-; ### JLC Mod - Implement new Private Sequence to call VDAINI and Change Default Colors
+; ### JLC Mod - Implement new Private Sequence to call VDASCO and Change Default Colors
 ;
 ANSI_SSC:	; SET SCREEN COLOR (CUSTOM EXTENSION)
 	LD	A,(ANSI_PARIDX)		; GET CURRENT PARM INDEX

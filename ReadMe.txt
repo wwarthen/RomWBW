@@ -1,6 +1,6 @@
 RomWBW ReadMe
 Wayne Warthen (wwarthen@gmail.com)
-22 Dec 2023
+27 Dec 2023
 
 
 
@@ -196,6 +196,31 @@ let me know if I missed you!
 -   Rob Prouse has created many of the supplemental disk images
     including Aztec C, HiTech C, SLR Z80ASM, Turbo Pascal, Microsoft
     BASIC Compiler, Microsoft Fortran Compiler, and a Games compendium.
+
+-   Martin R has provided substantial help reviewing and improving the
+    User Guide.
+
+-   Jacques Pelletier has contributed the DS1501 RTC driver code.
+
+-   Jose Collado has contributed enhancements to the TMS driver
+    including compatibility with standard TMS register configuration.
+
+-   Kevin Boone has contributed a generic HBIOS date/time utility
+    (WDATE).
+
+-   Matt Carroll has contributed a fix to XM.COM that corrects the port
+    specification when doing a send.
+
+-   Dean Jenkins enhanced the build process to accommodate the Raspberry
+    Pi 4.
+
+-   Tom Plano has contributed a new utility (HTALK) to allow talking
+    directly to HBIOS COM ports.
+
+-   Lars Nelson has contributed several generic utilities such as a
+    universal (OS agnostic) UNARC application.
+
+-   Dylan Hall added support for specifying a secondary console.
 
 Contributions of all kinds to RomWBW are very welcome.
 
