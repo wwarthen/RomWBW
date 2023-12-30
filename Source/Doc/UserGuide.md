@@ -3713,6 +3713,7 @@ them over any older versions of the app on your disk:
 * TALK.COM
 * RTC.COM
 * TIMER.COM
+* FAT.COM
 
 For example: `B>COPY ASSIGN.COM C:`
 
@@ -3722,8 +3723,12 @@ system and then update all copies. These applications are found in
 the Binary/Apps directory of the distribution and in all of the disk
 images.
 
-* FAT.COM
 * TUNE.COM
+
+The files normally contained on the standard ROM Disk is based on a 512K
+ROM.  If your system has a smaller size ROM, then not all of these 
+files will be included on your ROM Disk.  You will need to copy them to
+your system from the /Binary/Apps folder of the RomWBW distribution.
 
 **WARNING**: If you run a RomWBW-specific application that is not
 the appropriate for the version of RomWBW you are running, the

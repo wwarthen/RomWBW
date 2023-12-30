@@ -24,27 +24,27 @@ set RomApps2=fdu format survey sysgen talk timer cpuspd
 
 set RomApps=
 
-copy NUL rom128_wbw.dat
-copy NUL rom128_una.dat
+copy NUL rom128_wbw.dat  || exit /b
+copy NUL rom128_una.dat || exit /b
 
 :: MakeDisk <OutputFile> <ImageSize> <Format> <Directory> <Bios>
 
 set RomApps=%RomApps1%
 
-call :MakeDisk rom256_wbw wbw_rom256 ROM_256KB 0x20000 wbw
-call :MakeDisk rom256_una wbw_rom256 ROM_256KB 0x20000 una
+call :MakeDisk rom256_wbw wbw_rom256 ROM_256KB 0x20000 wbw || exit /b
+call :MakeDisk rom256_una wbw_rom256 ROM_256KB 0x20000 una || exit /b
 
 set RomApps=%RomApps1% %RomApps2%
 
-call :MakeDisk rom512_wbw wbw_rom512 ROM_512KB 0x60000 wbw
-call :MakeDisk rom512_una wbw_rom512 ROM_512KB 0x60000 una
+call :MakeDisk rom512_wbw wbw_rom512 ROM_512KB 0x60000 wbw || exit /b
+call :MakeDisk rom512_una wbw_rom512 ROM_512KB 0x60000 una || exit /b
 
-call :MakeDisk rom1024_wbw wbw_rom1024 ROM_1024KB 0xE0000 wbw
-call :MakeDisk rom1024_una wbw_rom1024 ROM_1024KB 0xE0000 una
+call :MakeDisk rom1024_wbw wbw_rom1024 ROM_1024KB 0xE0000 wbw || exit /b
+call :MakeDisk rom1024_una wbw_rom1024 ROM_1024KB 0xE0000 una || exit /b
 
-call :MakeDisk ram512_wbw wbw_ram512 RAM_512KB 0x40000 wbw
+call :MakeDisk ram512_wbw wbw_ram512 RAM_512KB 0x40000 wbw || exit /b
 
-call :MakeDisk ram1024_wbw wbw_ram1024 RAM_1024KB 0xC0000 wbw
+call :MakeDisk ram1024_wbw wbw_ram1024 RAM_1024KB 0xC0000 wbw || exit /b
 
 goto :eof
 
