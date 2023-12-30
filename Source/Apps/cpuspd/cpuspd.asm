@@ -189,9 +189,9 @@ show_spd:
 	ld	b,BF_SYSGET
 	ld	c,BF_SYSGET_CPUINFO
 	rst	08
-	jp	nz,err_not_sup
+	jp	nz,err_api
 	call	crlf2
-	ld	(cpu_spd),de		; save CPU speed for now
+	push	de			; save CPU speed for now
 	push	bc			; Oscillator speed to HL
 	pop	hl
 	ld	de,str_spacer
@@ -199,10 +199,18 @@ show_spd:
 	call	prtd3m			; print it
 	ld	de,str_oscspd
 	call	prtstr
+	call	crlf
+	ld	de,str_cpuspd
+	call	prtstr
+	pop	hl			; recover CPU speed
+	call	prtd3m			; print it
+	ld	de,str_mhz
+	call	prtstr
+;
 	ld	b,BF_SYSGET
 	ld	c,BF_SYSGET_CPUSPD
 	rst	08
-	jp	nz,err_not_sup
+	ret	nz			; no CPU speed info, done
 	push	de			; save wait states for now
 	ld	a,l
 	ld	de,str_slow
@@ -216,11 +224,6 @@ show_spd:
 	jr	z,show_spd1
 	jp	err_invalid
 show_spd1:
-	call	crlf
-	call	prtstr
-	ld	hl,(cpu_spd)		; recover CPU speed
-	call	prtd3m
-	ld	de,str_cpuspd
 	call	prtstr
 	pop	hl
 	ld	a,h			; memory wait states
@@ -283,6 +286,9 @@ err_not_sup:
 	jr	err_ret
 err_invalid:
 	ld	de,str_err_invalid
+	jr	err_ret
+err_api:
+	ld	de,str_err_api
 	jr	err_ret
 ;
 err_ret:
@@ -659,21 +665,24 @@ delay1:
 ; Constants
 ;=======================================================================
 ;
-str_banner		.db	"RomWBW CPU Speed Selector v0.5, 2-Feb-2022",0
+str_banner		.db	"RomWBW CPU Speed Selector v0.6, 29-Dec-2023",0
 str_spacer		.db	"  ",0
 str_oscspd		.db	" MHz Oscillator",0
-str_slow		.db	"  CPU speed is HALF (",0
-str_full		.db	"  CPU speed is FULL (",0
-str_dbl			.db	"  CPU speed is DOUBLE (",0
-str_cpuspd		.db	" MHz)",0
+str_cpuspd		.db	"  CPU speed is ",0
+str_mhz			.db	" MHz",0
+
+str_slow		.db	" (Half)",0
+str_full		.db	" (Full)",0
+str_dbl			.db	" (Double)",0
 str_memws		.db	" Memory Wait State(s)",0
 str_iows		.db	" I/O Wait State(s)",0
 str_err_una		.db	"  ERROR: UNA not supported by application",0
 str_err_inv		.db	"  ERROR: Invalid BIOS (signature missing)",0
 str_err_ver		.db	"  ERROR: Unexpected HBIOS version",0
 str_err_parm		.db	"  ERROR: Parameter error (CPUSPD /? for usage)",0
-str_err_not_sup		.db	"  ERROR: Platform or configuration not supported!",0
+str_err_not_sup		.db	"  ERROR: Platform or configuration does not support CPU speed configuration!",0
 str_err_invalid		.db	"  ERROR: Invalid configuration!",0
+str_err_api		.db	"  ERROR: HBIOS API error!",0
 str_usage		.db	"  Usage: CPUSPD <cpuspd>,<memws>,<iows>\r\n"
 			.db	"\r\n"
 			.db	"         <cpuspd>: \"Half\", \"Full\", or \"Double\"\r\n"
@@ -693,7 +702,6 @@ stack		.equ	$		; stack top
 ;
 ;
 tmpstr		.fill	9,0		; temp string (8 chars, 0 term)
-cpu_spd		.dw	0		; current cpu speed
 new_cpu_spd	.db	$FF		; new CPU speed
 new_ws_mem	.db	$FF		; new memory wait states
 new_ws_io	.db	$FF		; new I/O wait states
