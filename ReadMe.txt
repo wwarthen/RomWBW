@@ -222,6 +222,8 @@ let me know if I missed you!
 
 -   Dylan Hall added support for specifying a secondary console.
 
+-   Bill Shen has contributed boot loaders for several of his systems.
+
 Contributions of all kinds to RomWBW are very welcome.
 
 

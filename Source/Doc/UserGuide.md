@@ -2640,6 +2640,7 @@ therefore, globally available.
 | XM              | XModem file transfer program adapted to hardware. Automatically uses primary serial port on system.  |
 | FLASH           | Will Sowerbutts' in-situ ROM programming utility.                                                    |
 | FDISK80         | John Coffman's Z80 hard disk partitioning tool.  See documentation in Doc directory.                 |
+| FAT             | Access MS-DOS FAT filesystems from RomWBW (based on FatFs).        |
 | TALK            | Direct console I/O to a specified character device.                                                  |
 | RTC             | Manage and test the Real Time Clock hardware.                                                        |
 | TIMER           | Display value of running periodic system timer.                                                      |
@@ -2647,12 +2648,12 @@ therefore, globally available.
 
 Some custom applications do not fit on the ROM disk. They are found on the
 disk image files or the individual files can be found in the Binary/Apps
-directory of the distribution.
+directory of the distribution.  They are also included on the
+floppy disk and hard disk images.
 
 | **Application** | **Description**                                                    |
 |-----------------|--------------------------------------------------------------------|
 | TUNE            | Play .PT2, .PT3, .MYM audio files.                                 |
-| FAT             | Access MS-DOS FAT filesystems from RomWBW (based on FatFs).        |
 | INTTEST         | Test interrupt vector hooking.                                     |
 
 # FAT Filesystem
@@ -3912,6 +3913,9 @@ please let me know if I missed you!
   a universal (OS agnostic) UNARC application.
 
 * Dylan Hall added support for specifying a secondary console.
+
+* Bill Shen has contributed boot loaders for several of his
+  systems.
 
 Contributions of all kinds to RomWBW are very welcome.
 
