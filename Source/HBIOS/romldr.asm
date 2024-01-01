@@ -47,7 +47,8 @@ cmdbuf	.equ	$80	; cmd buf is in second half of page zero
 cmdmax	.equ	60	; max cmd len (arbitrary), must be < bufsiz
 bufsiz	.equ	$80	; size of cmd buf
 ;
-int_im1	.equ	$FF00	; IM1 vector target for RomWBW HBIOS proxy
+;;int_im1	.equ	$FF00	; IM1 vector target for RomWBW HBIOS proxy
+hbx_int		.equ	$FF60	; IM1 vector target for RomWBW HBIOS proxy
 ;
 bid_cur	.equ	-1	; used below to indicate current bank
 ;
@@ -77,7 +78,8 @@ bid_cur	.equ	-1	; used below to indicate current bank
 	.fill	($38 - $)
 #if (BIOS == BIOS_WBW)
   #if (INTMODE == 1)
-	jp	int_im1			; go to handler in hi mem
+	call	hbx_int			; handle im1 interrupts
+	.db	$10 << 2		; use special vector #16
   #else
 	ret				; return w/ ints left disabled
   #endif
@@ -138,7 +140,8 @@ start:
 	rst	08			; do it
 	ld	a,c			; previous bank to A
 	ld	(bid_ldr),a		; save previous bank for later
-	bit	7,a			; starting from ROM?
+	;;;bit	7,a			; starting from ROM?
+	cp	BID_IMG0		; ROM startup?
 #endif
 ;
 #if (BIOS == BIOS_UNA)
@@ -171,6 +174,16 @@ start1:
 	ei
 #endif
 ;
+#if (BIOS == BIOS_WBW)
+	; Check for DSKY and set flag
+	ld	b,BF_SYSGET		; HBIOS func: get
+	ld	c,BF_SYSGET_DSKYCNT	; get DSKY count
+	rst	08			; do it
+	ld	a,e			; put in A
+	ld	(dskyact),a		; save it
+#endif
+
+;
 ;=======================================================================
 ; Loader prompt
 ;=======================================================================
@@ -179,6 +192,30 @@ start1:
 	ld	hl,str_banner		; display boot banner
 	call	pstr			; do it
 	call	clrbuf			; zero fill the cmd buffer
+;
+#if ((BIOS == BIOS_WBW) & FPSW_ENABLE)
+;
+	ld	b,BF_SYSGET		; HBIOS SysGet
+	ld	c,BF_SYSGET_PANEL	; ... Panel swiches value
+	rst	08			; do it
+	jr	nz,nofp			; no switches, skip over
+	ld	a,l			; put value in A
+	ld	(switches),a		; save it
+;
+	call	nl			; formatting
+	ld	hl,str_switches		; tag
+	call	pstr			; display
+	ld	a,(switches)		; get switches value
+	call	prthexbyte		; display
+;
+	ld	a,(switches)		; get switches value
+	and	SW_AUTO			; auto boot?
+	call	nz,runfp		; process front panel
+;
+nofp:
+	; fall thru
+;
+#endif
 ;
 #if (BOOT_TIMEOUT != -1)
 	; Initialize auto command timeout downcounter
@@ -207,18 +244,11 @@ prompt:
 	call	clrbuf			; zero fill the cmd buffer
 ;
 #if (DSKYENABLE)
-	call	DSKY_PREINIT		; *** TEMPORARY ***
-	call	DSKY_RESET		; clear DSKY
 	ld	hl,msg_sel		; boot select msg
-	call	DSKY_SHOW		; show on DSKY
-
- #IF (DSKYMODE == DSKYMODE_NG)
-	call 	DSKY_PUTLED
-	.db 	$3f,$3f,$3f,$3f,$00,$00,$00,$00
-	call 	DSKY_BEEP
-	call 	DSKY_L2ON
- #ENDIF
-
+	call	dsky_show		; show on DSKY
+	call	dsky_highlightallkeys
+	call 	dsky_beep
+	call 	dsky_l2on
 #endif
 ;
 wtkey:
@@ -227,8 +257,7 @@ wtkey:
 	jr	nz,concmd		; if pending, do console command
 ;
 #if (DSKYENABLE)
-	call	DSKY_STAT		; check DSKY for keypress
-	or	a			; set flags
+	call	dsky_stat		; check DSKY for keypress
 	jp	nz,dskycmd		; if pending, do DSKY command
 #endif
 ;
@@ -271,11 +300,8 @@ concmd:
 	call	clrled			; clear LEDs
 ;
 #if (DSKYENABLE)
-  #if (DSKYMODE == DSKYMODE_NG)
-	call 	DSKY_PUTLED
-	.db 	$00,$00,$00,$00,$00,$00,$00,$00
-	call 	DSKY_L2OFF
-  #endif
+	call	dsky_highlightkeysoff
+	call 	dsky_l2off
 #endif
 ;
 	; Get a command line from console and handle it
@@ -366,6 +392,123 @@ runcmd2:
 	ld	(bootslice),a		; save boot slice
 	jp	diskboot		; boot the disk unit/slice
 ;
+#if ((BIOS == BIOS_WBW) & FPSW_ENABLE)
+;
+;=======================================================================
+; Process Front Panel switches
+;=======================================================================
+;
+runfp:
+	ld	a,(switches)		; get switches value
+	and	SW_DISK			; disk boot?
+	jr	nz,fp_diskboot		; handle disk boot
+;
+fp_romboot:
+	; Handle FP ROM boot
+	ld	a,(switches)		; get switches value
+	and	SW_OPT			; isolate options bits
+	ld	hl,fpapps		; rom apps cmd char list
+	call	addhla			; point to the right one
+	ld	a,(hl)			; get it
+;
+	; Attempt ROM application launch
+	ld	ix,(ra_tbl_loc)		; point to start of ROM app tbl
+	ld	c,a			; save command in C
+fp_romboot1:
+	ld	a,(ix+ra_conkey)	; get match char
+	and	~$80			; clear "hidden entry" bit
+	cp	c			; compare
+	jp	z,romload		; if match, load it
+	ld	de,ra_entsiz		; table entry size
+	add	ix,de			; bump IX to next entry
+	ld	a,(ix)			; check for end
+	or	(ix+1)			; ... of table
+	jr	nz,fp_romboot1		; loop till done
+	ret				; no match, return
+;
+fpapps	.db	"MBFPCZNU"
+;
+fp_diskboot:
+	; get count of disk units
+	ld	b,BF_SYSGET		; HBIOS Get function
+	ld	c,BF_SYSGET_DIOCNT	; HBIOS DIO Count sub fn
+	rst	08			; call HBIOS
+	ld	a,e			; count to A
+	ld	(diskcnt),a		; save it
+	or	a			; set flags
+	ret	z			; bort if no disk units
+	ld	a,(switches)		; get switches value
+	and	SW_FLOP			; floppy switch bit
+	jr	nz,fp_flopboot		; handle auto flop boot
+	; fall thru for auto hd boot
+;
+fp_hdboot:
+	; Find the first hd with media and boot to that unit using
+	; the slice specified by the FP switches.
+	ld	a,(diskcnt)		; get disk count
+	ld	b,a			; init loop counter
+	ld	c,0			; init disk index
+fp_hdboot1:
+	push	bc			; save loop control
+	ld	b,BF_DIODEVICE		; HBIOS Disk Device func
+	rst	08			; unit in C, do it
+	bit	5,C			; high capacity disk?
+	pop	bc			; restore loop control
+	jr	z,fp_hdboot2		; if not, continue loop
+	push	bc			; save loop control
+	ld	b,BF_DIOMEDIA		; HBIOS Sense Media
+	ld	e,1			; perform media discovery
+	rst	08			; do it
+	pop	bc			; restore loop control
+	jr	z,fp_hdboot3		; if has media, go boot it
+fp_hdboot2:
+	inc	c			; else next disk
+	djnz	fp_hdboot1		; loop thru all disks
+	ret				; nothing works, abort
+;
+fp_hdboot3:
+	ld	a,c			; disk unit to A
+	ld	(bootunit),a		; save it
+	ld	a,(switches)		; get switches value
+	and	SW_OPT			; isolate slice value
+	ld	(bootslice),a		; save it
+	jp	diskboot		; do it
+;
+fp_flopboot:
+	; Find the nth floppy drive and boot to that unit.  The
+	; floppy number is based on the option switches.
+	ld	a,(diskcnt)		; get disk count
+	ld	b,a			; init loop counter
+	ld	c,0			; init disk index
+	ld	a,(switches)		; get switches value
+	and	SW_OPT			; isolate option bits
+	ld	e,a			; floppy unit down counter
+	inc	e			; pre-increment for ZF check
+fp_flopboot1:
+	push	bc			; save loop control
+	push	de			; save floppy down ctr
+	ld	b,BF_DIODEVICE		; HBIOS Disk Device func
+	rst	08			; unit in C, do it
+	bit	7,c			; floppy device?
+	pop	de			; restore loop control
+	pop	bc			; restore floppy down ctr
+	jr	z,fp_flopboot3		; if not floppy, skip
+	dec	e			; decrement down ctr
+	jr	z,fp_flopboot2		; if ctr expired, boot this unit
+fp_flopboot3:
+	inc	c			; else next disk
+	djnz	fp_flopboot1		; loop thru all disks
+	ret				; nothing works, abort
+;
+fp_flopboot2:
+	ld	a,c			; disk unit to A
+	ld	(bootunit),a		; save it
+	xor	a		;	; zero accum
+	ld	(bootslice),a		; floppy boot slice is always 0
+	jp	diskboot		; do it
+;
+#endif
+;
 ;=======================================================================
 ; Process a DSKY command from key in A
 ;=======================================================================
@@ -375,15 +518,15 @@ runcmd2:
 dskycmd:
 	call	clrled			; clear LEDs
 ;
-	call	DSKY_GETKEY		; get DSKY key
+	call	dsky_getkey		; get DSKY key
+	ld	a,e			; put in A
 	cp	$FF			; check for error
 	ret	z			; abort if so
 ;
-  #if (DSKYMODE == DSKYMODE_NG)
-	call 	DSKY_PUTLED
-	.db 	$00,$00,$00,$00,$00,$00,$00,$00
-	call 	DSKY_L2OFF
-  #endif
+	push	af
+	call	dsky_highlightkeysoff
+	call 	dsky_l2off
+	pop	af
 ;
 	; Attempt built-in commands
 	cp	KY_BO			; reboot system
@@ -720,7 +863,7 @@ reboot:
 ;
 #if (DSKYENABLE)
 	ld	hl,msg_boot		; point to boot message
-	call	DSKY_SHOW		; display message
+	call	dsky_show		; display message
 #endif
 ;
 	; cold boot system
@@ -752,7 +895,7 @@ romload:
 ;
 #if (DSKYENABLE)
 	ld	hl,msg_load		; point to load message
-	call	DSKY_SHOW		; display message
+	call	dsky_show		; display message
 #endif
 ;
 #if (BIOS == BIOS_WBW)
@@ -836,7 +979,7 @@ romload1:
 ;
 #if (DSKYENABLE)
 	ld	hl,msg_go		; point to go message
-	call	DSKY_SHOW		; display message
+	call	dsky_show		; display message
 #endif
 ;
 	ld	l,(ix+ra_ent)		; HL := app entry address
@@ -861,7 +1004,7 @@ diskboot:
 ;
 #if (DSKYENABLE)
 	ld	hl,msg_load		; point to load message
-	call	DSKY_SHOW		; display message
+	call	dsky_show		; display message
 #endif
 ;
 #if (BIOS == BIOS_WBW)
@@ -874,6 +1017,18 @@ diskboot:
 	cp	e			; compare to count
 	jp	nc,err_nodisk		; handle no disk err
 ;
+	; If non-zero slice requested, confirm device can handle it
+	ld	a,(bootslice)		; get slice
+	or	a			; set flags
+	jr	z,diskboot0		; slice 0, skip slice check
+	ld	a,(bootunit)		; get disk unit
+	ld	c,a			; put in C for func call
+	ld	b,BF_DIODEVICE		; HBIOS func: device info
+	rst	08			; do it
+	bit	5,c			; high capacity device?
+	jp	z,err_noslice		; no such slice, handle err
+;
+diskboot0:
 	; Sense media
 	ld	a,(bootunit)		; get boot disk unit
 	ld	c,a			; put in C for func call
@@ -883,18 +1038,6 @@ diskboot:
 	jp	nz,err_diskio		; handle error
 	ld	a,e			; media id to A
 	ld	(mediaid),a		; save media id
-;
-	; If non-zero slice requested, confirm device can handle it
-	ld	a,(bootslice)		; get slice
-	or	a			; set flags
-	jr	z,diskboot1		; slice 0, skip slice check
-	ld	a,(bootunit)		; get disk unit
-	ld	c,a			; put in C for func call
-	ld	b,BF_DIODEVICE		; HBIOS func: device info
-	rst	08			; do it
-	ld	a,d			; device type to A
-	cp	DIODEV_IDE		; IDE is max slice device type
-	jp	c,err_noslice		; no such slice, handle err
 ;
 #endif
 ;
@@ -1145,7 +1288,7 @@ diskboot10:
 ;
 #if (DSKYENABLE)
 	ld	hl,msg_go		; point to go message
-	call	DSKY_SHOW		; display message
+	call	dsky_show		; display message
 #endif
 ;
 	; Jump to entry vector
@@ -1201,6 +1344,36 @@ diskread:
 ;
 #endif
 ;
+; Built-in mini-loader for S100 Monitor.  The S100 platform build
+; imbeds the S100 Monitor in the ROM at the start of bank 3 (BID_IMG2).
+; This bit of code just launches the monitor directly from that bank.
+;
+#if (BIOS == BIOS_WBW)
+  #if (PLATFORM == PLT_S100)
+;
+s100mon:
+	; Warn user that console is being directed to the S100 bus
+	; if the IOBYTE bit 0 is 0 (%xxxxxxx0).
+	in	a,($75)			; get IO byte
+	and	%00000001		; isolate console bit
+	jr	nz,s100mon1		; if 0, bypass msg
+	ld	hl,str_s100con		; console msg string
+	call	pstr			; display it
+;
+s100mon1:
+	; Launch S100 Monitor from ROM Bank 3
+	call	ldelay			; wait for UART buf to empty
+	di				; suspend interrupts
+	ld	a,BID_IMG2		; S100 monitor bank
+	ld	ix,0			; execution resumes here
+	jp	HB_BNKCALL		; do it
+;
+str_smon	.db	"S100 Z180 Monitor",0
+str_s100con	.db	"\r\n\r\nConsole on S100 Bus",0
+;
+  #endif
+#endif
+;
 ;=======================================================================
 ; Utility functions
 ;=======================================================================
@@ -1209,20 +1382,24 @@ diskread:
 ;
 clrled:
 #if (BIOS == BIOS_WBW)
-  #if (DIAGENABLE)
-	xor	a		; zero accum
-	out	(DIAGPORT),a	; clear diag leds
+  #if (FPLED_ENABLE)
+	;xor	a			; zero accum
+	;out	(FPLED_IO),a		; clear diag leds
+	ld	b,BF_SYSSET		; HBIOS SysGet
+	ld	c,BF_SYSSET_PANEL	; ... Panel swiches value
+	ld	l,$00			; all LEDs off
+	rst	08			; do it
   #endif
   #if (LEDENABLE)
     #if (LEDMODE == LEDMODE_STD)
-	ld	a,$FF		; led is inverted
-	out	(LEDPORT),a	; clear led
+	ld	a,$FF			; led is inverted
+	out	(LEDPORT),a		; clear led
     #endif
     #if (LEDMODE == LEDMODE_RTC)
 	; Bits 0 and 1 of the RTC latch are for the LEDs.
 	ld	a,(HB_RTCVAL)
 	and	~%00000011
-	out	(RTCIO),a	; clear led
+	out	(RTCIO),a		; clear led
 	ld	(HB_RTCVAL),a
     #endif
   #endif
@@ -1916,6 +2093,60 @@ devunk		.db	"UNK",0
 str_devlst	.db	"\r\n\r\nDisk Devices:",0
 ;
 #endif
+
+#if (DSKYENABLE)
+
+;
+;=======================================================================
+; DSKY interface routines
+;=======================================================================
+;
+dsky_stat:
+	ld	b,BF_DSKYSTAT
+	jr	dsky_hbcall
+;
+dsky_getkey:
+	ld	b,BF_DSKYGETKEY
+	jr	dsky_hbcall
+;
+dsky_show:
+	ld	b,BF_DSKYSHOWSEG
+	jr	dsky_hbcall
+;
+dsky_beep:
+	ld	b,BF_DSKYBEEP
+	jr	dsky_hbcall
+;
+dsky_l2on:
+	ld	e,1
+	jr	dsky_statled
+dsky_l2off:
+	ld	e,0
+dsky_statled:
+	ld	b,BF_DSKYSTATLED
+	ld	d,1
+	jr	dsky_hbcall
+;
+dsky_putled:
+	ld	b,BF_DSKYKEYLEDS
+	jr	dsky_hbcall
+;
+dsky_highlightallkeys:
+	ld	hl,dsky_highlightallkeyleds
+	jr 	dsky_putled
+;
+dsky_highlightkeysoff:
+	ld	hl,dsky_highlightkeyledsoff
+	jr 	dsky_putled
+;
+dsky_hbcall:
+	ld	a,(dskyact)
+	or	a
+	ret	z
+	rst	08
+	ret
+;
+#endif
 ;
 ;=======================================================================
 ; Error handlers
@@ -1959,7 +2190,9 @@ err:
 	ld	hl,str_err_prefix
 	call	pstr
 	pop	hl
-	jp	pstr
+	call	pstr
+	or	$ff			; signal error
+	ret				; done
 ;
 str_err_prefix	.db	bel,"\r\n\r\n*** ",0
 str_err_invcmd	.db	"Invalid command",0
@@ -1969,22 +2202,6 @@ str_err_nocon	.db	"Invalid character unit specification",0
 str_err_diskio	.db	"Disk I/O failure",0
 str_err_sig	.db	"No system image on disk",0
 str_err_api	.db	"Unexpected hardware BIOS API failure",0
-;
-;=======================================================================
-; Includes
-;=======================================================================
-;
-#if (DSKYENABLE)
-#define	DSKY_KBD
-  #if (DSKYMODE == DSKYMODE_V1)
-VDELAY	.equ	vdelay
-DLY2	.equ	dly2
-#include "dsky.asm"
-  #endif
-  #if (DSKYMODE == DSKYMODE_NG)
-#include "dskyng.asm"
-  #endif
-#endif
 ;
 ;=======================================================================
 ; Working data storage (initialized)
@@ -2034,19 +2251,18 @@ str_help	.db	"\r\n"
 		.db	0
 ;
 #if (DSKYENABLE)
-  #if (DSKYMODE == DSKYMODE_V1)
-msg_sel		.db	$7f,$1d,$1d,$0f,$6c,$00,$00,$00	; "boot?   "
-msg_boot	.db	$7f,$1d,$1d,$0f,$80,$80,$80,$00	; "boot... "
-msg_load	.db	$0b,$1d,$7d,$3d,$80,$80,$80,$00	; "load... "
-msg_go		.db	$5b,$1d,$80,$80,$80,$00,$00,$00	; "go...   "
-  #endif
-  #if (DSKYMODE == DSKYMODE_NG)
 msg_sel		.db	$7f,$5c,$5c,$78,$53,$00,$00,$00	; "boot?   "
 msg_boot	.db	$7f,$5c,$5c,$78,$80,$80,$80,$00	; "boot... "
 msg_load	.db	$38,$5c,$5f,$5e,$80,$80,$80,$00	; "load... "
 msg_go		.db	$3d,$5c,$80,$80,$80,$00,$00,$00	; "go...   "
-  #endif
 #endif
+;
+;=======================================================================
+; DSKY keypad led matrix masks
+;=======================================================================
+;
+dsky_highlightallkeyleds	.db 	$3f,$3f,$3f,$3f,$00,$00,$00,$00
+dsky_highlightkeyledsoff	.db 	$00,$00,$00,$00,$00,$00,$00,$00
 ;
 ;=======================================================================
 ; ROM Application Table
@@ -2128,6 +2344,11 @@ ra_tbl:
 ;      ---------  -------  -----  --------  -----        -------  -------  ----------
 ra_ent(str_mon,	  'M',	   KY_CL, BID_IMG0, MON_IMGLOC,  MON_LOC, MON_SIZ, MON_SERIAL)
 ra_entsiz	.equ	$ - ra_tbl
+#if (BIOS == BIOS_WBW)
+  #if (PLATFORM == PLT_S100)
+ra_ent(str_smon,  'S',	   $FF,	  bid_cur , $8000,       $8000,   $0001,   s100mon)
+  #endif
+#endif
 ra_ent(str_zsys,  'Z',	   KY_FW, BID_IMG0, ZSYS_IMGLOC, CPM_LOC, CPM_SIZ, CPM_ENT)
 ra_ent(str_cpm22, 'C',	   KY_BK, BID_IMG0, CPM_IMGLOC,  CPM_LOC, CPM_SIZ, CPM_ENT)
 #if (BIOS == BIOS_WBW)
@@ -2150,7 +2371,7 @@ ra_tbl_app:
 ;      Name	  Key	   Dsky	  Bank	    Src	         Dest	    Size     Entry
 ;      ---------  -------  -----  --------  -----       -------  -------  ----------
 ra_ent(str_mon,	  'M',	   KY_CL, bid_cur,  MON_IMGLOC,  MON_LOC, MON_SIZ, MON_SERIAL)
-ra_ent(str_zsys,  'Z',	   KY_FW, bid_cur,  ZSYS_IMGLOC,  CPM_LOC, CPM_SIZ, CPM_ENT)
+ra_ent(str_zsys,  'Z',	   KY_FW, bid_cur,  ZSYS_IMGLOC, CPM_LOC, CPM_SIZ, CPM_ENT)
 #if (DSKYENABLE)
 ra_ent(str_dsky,  'Y'+$80, KY_GO, bid_cur,  MON_IMGLOC,  MON_LOC, MON_SIZ, MON_DSKY)
 #endif
@@ -2168,6 +2389,7 @@ str_upd		.db	"XModem Flash Updater",0
 str_user	.db	"User App",0
 str_egg		.db	"",0
 str_net		.db	"Network Boot",0
+str_switches	.db	"FP Switches = 0x",0
 newcon		.db	0
 newspeed	.db	0
 ;
@@ -2194,6 +2416,9 @@ ra_tbl_loc	.dw	0		; points to active ra_tbl
 bootunit	.db	0		; boot disk unit
 bootslice	.db	0		; boot disk slice
 loadcnt		.db	0		; num disk sectors to load
+switches	.db	0		; front panel switches
+diskcnt		.db	0		; disk unit count value
+dskyact		.db	0		; DSKY active if != 0
 ;
 ;=======================================================================
 ; Pad remainder of ROM Loader

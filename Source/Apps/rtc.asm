@@ -31,6 +31,8 @@
 ;
 ;[2022/03/27] v1.8 Support RHYOPHYRE
 ;
+;[2023/07/07] v1.9 Support DUODYNE
+;
 ; Constants
 ;
 mask_data	.EQU	%10000000	; RTC data line
@@ -49,6 +51,7 @@ PORT_DYNO	.EQU	$0C		; RTC port for DYNO
 PORT_RCZ280	.EQU	$C0		; RTC port for RCZ280
 PORT_MBC	.EQU	$70		; RTC port for MBC
 PORT_RPH	.EQU	$84		; RTC port for RHYOPHYRE
+PORT_DUO	.EQU	$94		; RTC port for DUODYNE
 
 
 BDOS		.EQU	5		; BDOS invocation vector
@@ -1079,61 +1082,66 @@ HINIT:
 	LD	C,PORT_SBC
 	LD	DE,PLT_SBC
 	CP	$01		; SBC
-	JR	Z,RTC_INIT2
+	JP	Z,RTC_INIT2
 	CP	$02		; ZETA
-	JR	Z,RTC_INIT2
+	JP	Z,RTC_INIT2
 	CP	$03		; ZETA 2
-	JR	Z,RTC_INIT2
+	JP	Z,RTC_INIT2
 ;
 	LD	C,PORT_N8
 	LD	DE,PLT_N8
 	CP	$04		; N8
-	JR	Z,RTC_INIT2
+	JP	Z,RTC_INIT2
 ;
 	LD	C,PORT_MK4
 	LD	DE,PLT_MK4
 	CP	$05		; Mark IV
-	JR	Z,RTC_INIT2
+	JP	Z,RTC_INIT2
 ;
 	LD	C,PORT_RCZ80
 	LD	DE,PLT_RCZ80
 	CP	$07		; RCBus w/ Z80
-	JR	Z,RTC_INIT2
+	JP	Z,RTC_INIT2
 ;
 	LD	C,PORT_RCZ180
 	LD	DE,PLT_RCZ180
 	CP	$08		; RCBus w/ Z180
-	JR	Z,RTC_INIT2
+	JP	Z,RTC_INIT2
 ;
 	LD	C,PORT_EZZ80
 	LD	DE,PLT_EZZ80
 	CP	$09		; Easy Z80
-	JR	Z,RTC_INIT2
+	JP	Z,RTC_INIT2
 ;
 	LD	C,PORT_SCZ180
 	LD	DE,PLT_SCZ180
 	CP	$0A		; SCZ180
-	JR	Z,RTC_INIT2
+	JP	Z,RTC_INIT2
 ;
 	LD	C,PORT_DYNO
 	LD	DE,PLT_DYNO
 	CP	11		; DYNO
-	JR	Z,RTC_INIT2
+	JP	Z,RTC_INIT2
 ;
 	LD	C,PORT_RCZ280
 	LD	DE,PLT_RCZ280
 	CP	12		; RCZ280
-	JR	Z,RTC_INIT2
+	JP	Z,RTC_INIT2
 ;
 	LD	C,PORT_MBC
 	LD	DE,PLT_MBC
 	CP	13		; MBC
-	JR	Z,RTC_INIT2
+	JP	Z,RTC_INIT2
 ;
 	LD	C,PORT_RPH
 	LD	DE,PLT_RPH
 	CP	14		; RHYOPHYRE
-	JR	Z,RTC_INIT2
+	JP	Z,RTC_INIT2
+;
+	LD	C,PORT_DUO
+	LD	DE,PLT_DUO
+	CP	17		; DUODYNE
+	JP	Z,RTC_INIT2
 ;
 	; Unknown platform
 	LD	DE,PLTERR	; BIOS error message
@@ -1630,7 +1638,7 @@ TESTING_BIT_DELAY_OVER:
 
 RTC_HELP_MSG:
 	.DB	0Ah, 0Dh		; line feed and carriage return
-	.TEXT	"RTC: Version 1.8"
+	.TEXT	"RTC: Version 1.9"
 	.DB	0Ah, 0Dh		; line feed and carriage return
 	.TEXT	"Commands: E)xit T)ime st(A)rt S)et R)aw L)oop C)harge N)ocharge D)elay I)nit G)et P)ut B)oot W)arm-start H)elp"
 	.DB	0Ah, 0Dh		; line feed and carriage return
@@ -1760,6 +1768,7 @@ PLT_DYNO	.TEXT	", DYNO RTC Module Latch Port 0x0C\r\n$"
 PLT_RCZ280	.TEXT	", RCBus Z280 RTC Module Latch Port 0xC0\r\n$"
 PLT_MBC		.TEXT	", MBC RTC Latch Port 0x70\r\n$"
 PLT_RPH		.TEXT	", RHYOPHYRE RTC Latch Port 0x84\r\n$"
+PLT_DUO		.TEXT	", DUODYNE RTC Latch Port 0x70\r\n$"
 
 ;
 ; Generic FOR-NEXT loop algorithm

@@ -1,0 +1,3 @@
+#
+# Blank disk template
+#

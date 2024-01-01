@@ -53,42 +53,42 @@
 ;  +---+--+--+-----+----+----+----+----+----+----+------------------+----------------+
 ;  |14-1F |              Reserved                |                  |                |
 ;  +------+--+-----+----+----+----+----+----+----+------------------+----------------+
-
+;
 ;  * = Unused bits; unwritable and read as 0.
 ;  0 = should be set to 0 for valid time/calendar range.
 ;  Clock calendar data is BCD. Automatic leap year adjustment.
 ;  Day-Of-Week coded as Sunday = 1 through Saturday = 7.
-
+;
 ; Constants
+;
+; By defining 2 bases, this allows some flexibility for address decoding
+DS1501NVM_BASE		.EQU	DS1501RTC_BASE + $10
 
-;By defining 2 bases, this allows some flexibility for address decoding
-DS1501NVM_BASE      .EQU    DS1501RTC_BASE + $10
-
-DS1501RTC_SEC	    .EQU	DS1501RTC_BASE + $00
-DS1501RTC_MIN	    .EQU	DS1501RTC_BASE + $01
-DS1501RTC_HOUR	    .EQU	DS1501RTC_BASE + $02
+DS1501RTC_SEC		.EQU	DS1501RTC_BASE + $00
+DS1501RTC_MIN		.EQU	DS1501RTC_BASE + $01
+DS1501RTC_HOUR		.EQU	DS1501RTC_BASE + $02
 DS1501RTC_WEEK_DAY	.EQU	DS1501RTC_BASE + $03
-DS1501RTC_DAY	    .EQU	DS1501RTC_BASE + $04
-DS1501RTC_MONTH	    .EQU	DS1501RTC_BASE + $05
-DS1501RTC_YEAR	    .EQU	DS1501RTC_BASE + $06
-DS1501RTC_CENT      .EQU	DS1501RTC_BASE + $07
+DS1501RTC_DAY		.EQU	DS1501RTC_BASE + $04
+DS1501RTC_MONTH		.EQU	DS1501RTC_BASE + $05
+DS1501RTC_YEAR		.EQU	DS1501RTC_BASE + $06
+DS1501RTC_CENT		.EQU	DS1501RTC_BASE + $07
 DS1501RTC_SEC_ALM	.EQU	DS1501RTC_BASE + $08
 DS1501RTC_MIN_ALM	.EQU	DS1501RTC_BASE + $09
 DS1501RTC_HOUR_ALM	.EQU	DS1501RTC_BASE + $0A
 DS1501RTC_DAY_ALM	.EQU	DS1501RTC_BASE + $0B
-DS1501RTC_WDOG1     .EQU	DS1501RTC_BASE + $0C
-DS1501RTC_WDOG2 	.EQU	DS1501RTC_BASE + $0D
+DS1501RTC_WDOG1		.EQU	DS1501RTC_BASE + $0C
+DS1501RTC_WDOG2		.EQU	DS1501RTC_BASE + $0D
 DS1501RTC_CONTROLA	.EQU	DS1501RTC_BASE + $0E
 DS1501RTC_CONTROLB	.EQU	DS1501RTC_BASE + $0F
-
+;
 DS1501RTC_RAMADDR	.EQU	DS1501NVM_BASE + $00
 DS1501RTC_RAMDATA	.EQU	DS1501NVM_BASE + $03
-
-DS1501RTC_HIGH	.EQU	%11110000
-DS1501RTC_LOW	.EQU	%00001111
-
-;ControlA bit masks
-;BLF1| BLF2| PRS| PAB| TDF| KSF| WDF|IRQF
+;
+DS1501RTC_HIGH		.EQU	%11110000
+DS1501RTC_LOW		.EQU	%00001111
+;
+; ControlA bit masks
+; BLF1| BLF2| PRS| PAB| TDF| KSF| WDF|IRQF
 DS1501RTC_IRQF	.EQU	%00000001
 DS1501RTC_WDF	.EQU	%00000010
 DS1501RTC_KSF	.EQU	%00000100
@@ -97,9 +97,9 @@ DS1501RTC_PAB	.EQU	%00010000
 DS1501RTC_PRS 	.EQU	%00100000
 DS1501RTC_BLF2  .EQU	%01000000
 DS1501RTC_BLF1	.EQU	%10000000
-
-;ControlB bit masks
-;TE| CS| BME| TPE| TIE| KIE| WDE| WDS|
+;
+; ControlB bit masks
+; TE| CS| BME| TPE| TIE| KIE| WDE| WDS|
 DS1501RTC_WDS 	.EQU	%00000001
 DS1501RTC_WDE	.EQU	%00000010
 DS1501RTC_KIE	.EQU	%00000100
@@ -108,29 +108,36 @@ DS1501RTC_TPE	.EQU	%00010000
 DS1501RTC_BME 	.EQU	%00100000
 DS1501RTC_CS    .EQU	%01000000
 DS1501RTC_TE	.EQU	%10000000
-
+;
 DS1501RTC_BUFSIZE	.EQU	6		; 6 BYTE BUFFER (YYMMDDHHMMSS)
 
+	.ECHO	"DS1501RTC: RTCIO="
+	.ECHO	DS1501RTC_BASE
+	.ECHO	", NVMIO="
+	.ECHO	DS1501NVM_BASE
+	.ECHO	"\n"
+;
 ; RTC Device Initialization Entry
-
+;
 DS1501RTC_INIT:
 	CALL	NEWLINE				; Formatting
 	PRTS("DS1501RTC: IO=0x$")
 	LD	A, DS1501RTC_BASE
 	CALL	PRTHEXBYTE
-
+;
 	CALL	NEWLINE				; Formatting
 	PRTS("DS1501NVM: IO=0x$")
 	LD	A, DS1501NVM_BASE
 	CALL	PRTHEXBYTE
-
-    IN	A,(DS1501RTC_CONTROLB)      ;clear any pending interrupt flags
-
+;
+	IN	A,(DS1501RTC_CONTROLB)		; Clear any pending interrupt flags
+;
 	XOR	A				; Zero A
-    OR      DS1501RTC_TE            ;enable time updates
-    OUT	(DS1501RTC_CONTROLB), A
-
+	OR	DS1501RTC_TE			; Enable time updates
+	OUT	(DS1501RTC_CONTROLB), A
+;
 	CALL	DS1501RTC_LOAD
+;
 	; DISPLAY CURRENT TIME
 	PRTS("  $")
 	LD	A, (DS1501RTC_BUF_MON)
@@ -150,44 +157,36 @@ DS1501RTC_INIT:
 	PRTS(":$")
 	LD	A, (DS1501RTC_BUF_SEC)
 	CALL	PRTHEXBYTE
-
+;
 	LD	BC,DS1501RTC_DISPATCH
 	CALL	RTC_SETDISP
-
+;
 	XOR	A				; Signal success
 	RET
-
+;
 ; RTC Device Function Dispatch Entry
 ;   A: Result (OUT), 0=OK, Z=OK, NZ=Error
 ;   B: Function (IN)
-
+;
 DS1501RTC_DISPATCH:
 	LD	A, B				; Get requested function
 	AND	$0F				; Isolate Sub-Function
-	JP	Z, DS1501RTC_GETTIM			; Get Time
+	JP	Z, DS1501RTC_GETTIM		; Get Time
 	DEC	A
-	JP	Z, DS1501RTC_SETTIM			; Set Time
+	JP	Z, DS1501RTC_SETTIM		; Set Time
 	DEC	A
-	JP	Z, DS1501RTC_GETBYT			; Get NVRAM Byte Value
+	JP	Z, DS1501RTC_GETBYT		; Get NVRAM Byte Value
 	DEC	A
-	JP	Z, DS1501RTC_SETBYT			; Set NVRAM Byte Value
+	JP	Z, DS1501RTC_SETBYT		; Set NVRAM Byte Value
 	DEC	A
-	JP	Z, DS1501RTC_GETBLK			; Get NVRAM Data Block Value
+	JP	Z, DS1501RTC_GETBLK		; Get NVRAM Data Block Value
 	DEC	A
-	JP	Z, DS1501RTC_SETBLK			; Set NVRAM Data Block Value
+	JP	Z, DS1501RTC_SETBLK		; Set NVRAM Data Block Value
 	DEC	A
-	JP	Z, DS1501RTC_GETALM			; Get Alarm
+	JP	Z, DS1501RTC_GETALM		; Get Alarm
 	DEC	A
-	JP	Z, DS1501RTC_SETALM			; Set Alarm
+	JP	Z, DS1501RTC_SETALM		; Set Alarm
 ;
-; NVRAM FUNCTIONS ARE NOT IMPLEMENTED YET
-;
-DS1501RTC_GETBYT:
-DS1501RTC_SETBYT:
-DS1501RTC_GETBLK:
-DS1501RTC_SETBLK:
-	CALL	PANIC
-
 ; RTC Get Time
 ;   A: Result (OUT), 0=OK, Z=OK, NZ=Error
 ;   HL: Date/Time Buffer (OUT)
@@ -228,7 +227,7 @@ DS1501RTC_SETTIM:
 	LD	(HB_SRCBNK), A			; Set it
 	LD	A, BID_BIOS			; Copy to BIOS bank
 	LD	(HB_DSTBNK), A			; Set it
-	LD	DE, DS1501RTC_BUF			; Destination Address
+	LD	DE, DS1501RTC_BUF		; Destination Address
 	LD	BC, DS1501RTC_BUFSIZE		; Length is 6 bytes
 #IF (INTMODE == 1)
 	DI
@@ -241,27 +240,123 @@ DS1501RTC_SETTIM:
 	LD	HL, DS1501RTC_BUF
 	CALL	DS1501RTC_SUSPEND
 	LD	A, (HL)
-	OUT	(DS1501RTC_YEAR), A			; Write Year
+	OUT	(DS1501RTC_YEAR), A		; Write Year
 	INC	HL
 	LD	A, (HL)
 	OUT	(DS1501RTC_MONTH), A		; Write Month
 	INC	HL
 	LD	A, (HL)
-	OUT	(DS1501RTC_DAY), A			; Write Day
+	OUT	(DS1501RTC_DAY), A		; Write Day
 	INC	HL
 	LD	A, (HL)
-	OUT	(DS1501RTC_HOUR), A			; Write Hour
+	OUT	(DS1501RTC_HOUR), A		; Write Hour
 	INC	HL
 	LD	A, (HL)
-	OUT	(DS1501RTC_MIN), A			; Write Minute
+	OUT	(DS1501RTC_MIN), A		; Write Minute
 	INC	HL
 	LD	A, (HL)
-	OUT	(DS1501RTC_SEC), A			; Write Second
+	OUT	(DS1501RTC_SEC), A		; Write Second
 	CALL	DS1501RTC_RESUME
-	; clean up and return
+;
+	; Clean up and return
 	XOR	A				; Signal success
 	RET					; And return
-
+;
+; RTC Get Byte
+;
+DS1501RTC_GETBYT:
+;
+; C Index
+; E Value
+; Set address
+;
+	LD	B, C
+	LD	C, DS1501RTC_RAMADDR
+	OUT	(C), B
+;
+	; Get data
+	IN	A, (DS1501RTC_RAMDATA)
+	LD	E,A
+;
+	; Return success
+	XOR	
+;
+	RET
+;
+; RTC Set Byte
+;
+DS1501RTC_SETBYT:
+;
+; C Index
+; E Value
+; Set address
+;
+	LD	B, C
+	LD	C, DS1501RTC_RAMADDR
+	OUT	(C), B
+;	
+	; Set data
+	LD	A,E
+	OUT	(DS1501RTC_RAMDATA), A
+;	
+	; Return success
+	XOR	A
+	RET
+;
+; RTC Get Block
+;
+DS1501RTC_GETBLK:
+;
+; HL Buffer Address
+;
+	LD	B, 0				; 256 Bytes
+;	
+	; Set BME
+	IN	A, (DS1501RTC_CONTROLB)
+	OR	DS1501RTC_BME
+	OUT	(DS1501RTC_CONTROLB), A
+;	
+	XOR	A
+	OUT	(DS1501RTC_RAMADDR), A
+	LD	C, DS1501RTC_RAMDATA
+	INIR
+;	
+	; Clear BME
+	IN	A, (DS1501RTC_CONTROLB)
+	AND	~DS1501RTC_BME
+	OUT	(DS1501RTC_CONTROLB), A
+;	
+	; Return success
+	XOR	A
+	RET
+;
+; RTC Set Block
+;
+DS1501RTC_SETBLK:
+;
+; HL Buffer Address
+;
+	LD B, 0					; 256 Bytes
+;
+	; Set BME
+	IN	A, (DS1501RTC_CONTROLB)
+	OR	DS1501RTC_BME
+	OUT	(DS1501RTC_CONTROLB), A
+;
+	XOR	A
+	OUT	(DS1501RTC_RAMADDR), A
+	LD	C, DS1501RTC_RAMDATA
+	OTIR
+;
+	; Clear BME
+	IN	A, (DS1501RTC_CONTROLB)
+	AND	~DS1501RTC_BME
+	OUT	(DS1501RTC_CONTROLB), A
+;
+	; Return success
+	XOR	A
+	RET
+;
 ; RTC Get Alarm
 ;   A: Result (OUT), 0=OK, Z=OK, NZ=Error
 ;   HL: Date/Time Buffer (OUT)
@@ -291,6 +386,7 @@ DS1501RTC_GETALM:
 	LD	(HL), A
 	CALL	DS1501RTC_RESUME
 	POP	HL				; Restore address of source buffer
+;
 	; Now copy to read destination (Interbank Save)
 	LD	A, BID_BIOS			; Copy from BIOS bank
 	LD	(HB_SRCBNK), A			; Set it
@@ -321,7 +417,7 @@ DS1501RTC_SETALM:
 	LD	(HB_SRCBNK), A			; Set it
 	LD	A, BID_BIOS			; Copy to BIOS bank
 	LD	(HB_DSTBNK), A			; Set it
-	LD	DE, DS1501RTC_BUF			; Destination Address
+	LD	DE, DS1501RTC_BUF		; Destination Address
 	LD	BC, DS1501RTC_BUFSIZE		; Length is 6 bytes
 #IF (INTMODE == 1)
 	DI
@@ -345,49 +441,50 @@ DS1501RTC_SETALM:
 	LD	A, (HL)
 	OUT	(DS1501RTC_SEC_ALM), A		; Write Second
 	CALL	DS1501RTC_RESUME
-	; clean up and return
+;
+	; Clean up and return
 	XOR	A				; Signal success
 	RET					; And return
-
+;
 DS1501RTC_SUSPEND:
 	IN	A, (DS1501RTC_CONTROLB)		; Suspend Clock
 	AND	~DS1501RTC_TE
 	OUT	(DS1501RTC_CONTROLB), A
 	RET
-
+;
 DS1501RTC_RESUME:
 	IN	A, (DS1501RTC_CONTROLB)		; Resume Clock
 	OR	DS1501RTC_TE
 	OUT	(DS1501RTC_CONTROLB), A
 	RET
-
+;
 DS1501RTC_LOAD:
 	LD	HL, DS1501RTC_BUF
 	PUSH	HL				; Save address of source buffer
 	CALL	DS1501RTC_SUSPEND
-	IN	A, (DS1501RTC_YEAR)			; Read Year
+	IN	A, (DS1501RTC_YEAR)		; Read Year
 	LD	(HL), A
 	INC	HL
 	IN	A, (DS1501RTC_MONTH)		; Read Month
 	LD	(HL), A
 	INC	HL
-	IN	A, (DS1501RTC_DAY)			; Read Day
+	IN	A, (DS1501RTC_DAY)		; Read Day
 	LD	(HL), A
 	INC	HL
-	IN	A, (DS1501RTC_HOUR)			; Read Hour
+	IN	A, (DS1501RTC_HOUR)		; Read Hour
 	LD	(HL), A
 	INC	HL
-	IN	A, (DS1501RTC_MIN)			; Read Minute
+	IN	A, (DS1501RTC_MIN)		; Read Minute
 	LD	(HL), A
 	INC	HL
-	IN	A, (DS1501RTC_SEC)			; Read Second
+	IN	A, (DS1501RTC_SEC)		; Read Second
 	LD	(HL), A
 	CALL	DS1501RTC_RESUME
 	POP	HL				; Restore address of source buffer
 	RET
-
+;
 ; Working Variables
-
+;
 DS1501RTC_BUF:
 DS1501RTC_BUF_YEAR:	.DB	0		; Year
 DS1501RTC_BUF_MON:	.DB	0		; Month

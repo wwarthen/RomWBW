@@ -13,7 +13,7 @@
 	extrn	@dtbl,@ctbl
 	extrn	@date,@hour,@min,@sec
 	extrn	@srch1
-	extrn	@hbbio
+	extrn	@hbbio,@hbusr
 	extrn	addhla
 	extrn	phex16, phex8
 	extrn	cin, cout
@@ -44,9 +44,9 @@ tpa$bank	equ 0
 	if banked
 
 	; Clone page zero from bank 0 to additional banks
-	ld	b,4			; last bank
+	ld	b,2			; last bank
 	ld	c,0			; src bank
-init$2:
+init$1:
 	push	bc			; save bank id's
 	call	?xmove			; set src/dest banks
 	ld	bc,0100h		; size is one page
@@ -54,7 +54,7 @@ init$2:
 	ld	de,0			; src adr is 0
 	call	?move			; do it
 	pop	bc			; restore bank id's
-	djnz	init$2			; loop till done
+	djnz	init$1			; loop till done
 	
 	endif
 
@@ -62,6 +62,35 @@ init$2:
 	ld	hl,signon$msg		; signon message
 	call	?pmsg			; print it
 
+	if banked
+	
+	; Confirm that HBIOS is configured with enough RAM banks
+	; to accommodate banked version of CP/M 3.  We use 2
+	; additional banks which live below the user bank.  So we
+	; check that the these don't overlap with the RomWBW HBIOS
+	; bank.
+
+	ld	bc,0F8F2h	; HBIOS GET BNKINFO
+	call	0FFF0h		; D: BIOS Bank, E: User Bank
+	ld	a,d
+	ld	(@hbbio),a
+	ld	a,e
+	ld	(@hbusr),a
+	
+	sub	3		; 2 extra banks (+1 for compare)
+	cp	d		; lowest cpm bank - hbios bank
+	jr	nc,init$2	; continue if space available
+	
+	ld	hl,noram$msg	; signon message
+	call	?pmsg		; print it
+
+	ld	b,0F0h		; HBIOS system reset
+	ld	c,1h		; reset type warm (back to loader)
+	call	0FFFFh		; do it
+
+	endif
+
+init$2:
 	; Check for HBIOS/CBIOS mismatch
 	ld	b,0F1h			; hbios version
 	rst	08			; do it, de=maj/min/up/pat
@@ -156,7 +185,9 @@ dinit:
 	ld	hl,drvlst		; init hl ptr to drive list
 ;
 dinit2:
+	push	bc			; save loop cnt & unit
 	call	dinit3			; check drive
+	pop	bc			; recover loop cnt & unit
 	inc	c			; next unit
 	djnz	dinit2			; loop
 	ld	a,d			; total device count to d
@@ -169,39 +200,35 @@ dinit3:
 	push	bc			; save loop control
 	ld	b,17h			; hbios func: report device info
 	rst	08			; call hbios, unit to c
-	ld	a,d			; device type to a
+	ld	a,c			; device attributes to a
 	pop	bc			; restore loop control
 	pop	hl			; restore drive list ptr
 	pop	de			; restore de
-	cp	30h			; hard disk device?
-	jr	nc,dinit3a		; if so, handle special
-	ld	(hl),c			; save unit num in list
-	inc	hl			; bump ptr
-	inc	d			; inc total device count
-	ret
+	ld	b,a			; attributes to b
 ;
-dinit3a:
-	; check for active and return if not
+	; if device is not removable, then check to ensure it is
+	; actually online.  if not, skip unit entirely.
+	bit	6,b			; removable?
+	jr	nz,dinit3a		; if so, skip media check
 	push	de			; save de (hard disk volume counter)
 	push	hl			; save drive list ptr
 	push	bc			; save loop control
-	
 	ld	b,18h			; hbios func: sense media
 	ld	e,1			; perform media discovery
-	rst	08
-
+	rst	08			; do it
 	pop	bc			; restore loop control
 	pop	hl			; restore drive list ptr
 	pop	de			; restore de
-	
-	ret	nz			; if no media, just return
-	
-	; if active...
+	ret	nz			; offline, skip entire unit
+;
+dinit3a:
 	ld	(hl),c			; save unit num in list
 	inc	hl			; bump ptr
 	inc	d			; inc total device count
+	bit	5,b			; high capacity?
+	ret	z			; done if not
 	inc	e			; increment hard disk count
-	ret				; and return
+	ret				; done
 
 dinit4:	; set slices per volume (hdspv) based on hard disk volume count
 	ld	a,e			; hard disk volume count to a
@@ -238,7 +265,8 @@ dinit6:
 	push	bc			; preserve loop control
 	push	hl			; preserve dph pointer
 	ld	b,17h			; hbios func: report device info
-	rst	08			; call hbios, d := device type
+	rst	08			; call hbios, a := device attributes
+	ld	a,c			; device attributes to a
 	pop	hl			; restore dph pointer
 	pop	bc			; get unit index back in c
 	push	bc			; resave loop control
@@ -253,10 +281,9 @@ dinit6:
 dinit7:	; process a unit (all slices)
 	ld	e,0			; initialize slice index
 	ld	b,1			; default loop counter
-	ld	a,d			; device type to accum
 	ld	d,c			; unit number to d
-	cp	030h			; hard disk device?
-	jr	c,dinit8		; nope, leave loop count at 1
+	bit	5,a			; high capacity device?
+	jr	z,dinit8		; nope, leave loop count at 1
 	ld	a,(hdspv)		; get slices per volume to accum
 	ld	b,a			; move to b for loop counter
 
@@ -732,6 +759,10 @@ read:
 clrflg		db	0		; RAM disk cleared flag
 clr$msg		db	'RAM Disk Initialized',13,10,13,10,0
 vermis$msg	db	7,'*** WARNING: HBIOS/CBIOS Version Mismatch ***',13,10,13,10,0
+
+	if banked
+noram$msg	db	7,'*** ERROR: Insufficient RAM for banked CP/M 3 ***',13,10,13,10,0
+	endif
 
 	if zpm
 

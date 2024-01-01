@@ -2,6 +2,32 @@
 ; Z80 DMA DRIVER
 ;==================================================================================================
 ;
+;
+	.ECHO	"DMA: MODE="
+;
+#IF ((DMAMODE == DMAMODE_ECB) | (DMAMODE == DMAMODE_MBC))
+DMA_IO		.EQU	DMABASE
+DMA_CTL		.EQU	DMABASE + 1
+DMA_USEHALF	.EQU	TRUE
+  #IF (DMAMODE == DMAMODE_ECB)
+	.ECHO	"ECB"
+  #ENDIF
+  #IF (DMAMODE == DMAMODE_MBC)
+	.ECHO	"MBC"
+  #ENDIF
+#ENDIF
+;
+#IF (DMAMODE == DMAMODE_DUO)
+DMA_IO		.EQU	DMABASE
+DMA_CTL		.EQU	DMABASE + 3
+DMA_USEHALF	.EQU	FALSE
+	.ECHO	"DUO"
+#ENDIF
+;S
+	.ECHO	", IO="
+	.ECHO	DMA_IO
+	.ECHO	"\n"
+;
 DMA_CONTINUOUS			.equ 	%10111101	; + Pulse
 DMA_BYTE			.equ 	%10011101	; + Pulse
 DMA_BURST 			.equ	%11011101	; + Pulse
@@ -30,21 +56,18 @@ DMA_FORCE			.EQU	0
 ; DMA CLOCK SPEED CONTROL - OPTION TO SWITCH TO HALF CLOCK SPEED. MOST SYSTEMS NEED THIS.
 ;==================================================================================================
 ;
-DMA_USEHALF			.equ	TRUE	; USE CLOCK DIVIDER
-;
-#IF (DMA_USEHALF & (DMAMODE=DMAMODE_MBC))
-#DEFINE DMAIOHALF LD A,(HB_RTCVAL) \ AND ~%00001000 \ OUT (RTCIO),A
-#DEFINE DMAIOFULL PUSH AF \ LD A,(HB_RTCVAL) \ OUT (RTCIO),A \ POP AF
-#ENDIF
-;
-#IF (DMA_USEHALF & (DMAMODE=DMAMODE_ECB))
-#DEFINE DMAIOHALF LD A,(HB_RTCVAL) \ OR %00001000 \ OUT (RTCIO),A 
-#DEFINE DMAIOFULL PUSH AF \ LD A,(HB_RTCVAL) \ OUT (RTCIO),A \ POP AF
-#ENDIF
-;
-#IF (!DMA_USEHALF)
-#DEFINE DMAIOHALF \;
-#DEFINE DMAIOFULL \;
+#IF (DMA_USEHALF)
+  #IF (DMAMODE=DMAMODE_MBC)
+    #DEFINE DMAIOHALF LD A,(HB_RTCVAL) \ AND ~%00001000 \ OUT (RTCIO),A
+    #DEFINE DMAIOFULL PUSH AF \ LD A,(HB_RTCVAL) \ OUT (RTCIO),A \ POP AF
+  #ENDIF
+  #IF (DMAMODE=DMAMODE_ECB)
+    #DEFINE DMAIOHALF LD A,(HB_RTCVAL) \ OR %00001000 \ OUT (RTCIO),A 
+    #DEFINE DMAIOFULL PUSH AF \ LD A,(HB_RTCVAL) \ OUT (RTCIO),A \ POP AF
+  #ENDIF
+#ELSE
+  #DEFINE DMAIOHALF \;
+  #DEFINE DMAIOFULL \;
 #ENDIF
 ;
 ;==================================================================================================
@@ -54,11 +77,11 @@ DMA_USEHALF			.equ	TRUE	; USE CLOCK DIVIDER
 DMA_INIT:
 	CALL	NEWLINE
 	PRTS("DMA: IO=0x$")		; announce
-	LD	A, DMABASE
+	LD	A, DMA_IO
 	CALL	PRTHEXBYTE
 ;
 	LD	A,DMA_FORCE
-	out	(DMABASE+1),a		; force ready off
+	out	(DMA_CTL),a		; force ready off
 ;
 	DMAIOHALF
 ;
@@ -67,7 +90,7 @@ DMA_INIT:
 ;
 	ld	hl,DMACode		; program the
 	ld	b,DMACode_Len		; dma command
-	ld	c,DMABASE		; block
+	ld	c,DMA_IO		; block
 ;
 	di
 	otir				; load dma
@@ -103,31 +126,31 @@ DMA_FAIL_FLAG:
 ;==================================================================================================
 ;
 DMAProbe:
-	ld	a,DMA_RESET	
-	out	(DMABASE),a
-	ld	a,%01111101 		; R0-Transfer mode, A -> B, start address follows
-	out	(DMABASE),a
+	ld	a,DMA_RESET		; $C3
+	out	(DMA_IO),a
+	ld	a,%01111101 		; R0-Transfer mode, A -> B, start address follows $7D
+	out	(DMA_IO),a
 	ld	a,$cc
-	out	(DMABASE),a
+	out	(DMA_IO),a
 	ld	a,$dd
-	out	(DMABASE),a
+	out	(DMA_IO),a
 	ld	a,$e5
-	out	(DMABASE),a
+	out	(DMA_IO),a
 	ld	a,$1a
-	out	(DMABASE),a
-	ld	a,DMA_LOAD
-	out	(DMABASE),a
+	out	(DMA_IO),a
+	ld	a,DMA_LOAD		; $CF
+	out	(DMA_IO),a
 ;
-	ld	a,DMA_READ_MASK_FOLLOWS	; set up
-	out	(DMABASE),a		; for 
-	ld	a,%00011000		; register
-	out	(DMABASE),a		; read
-	ld	a,DMA_START_READ_SEQUENCE
-	out	(DMABASE),a
+	ld	a,DMA_READ_MASK_FOLLOWS	; set up ; $BB
+	out	(DMA_IO),a		; for 
+	ld	a,%00011000		; register $18
+	out	(DMA_IO),a		; read
+	ld	a,DMA_START_READ_SEQUENCE	; $A7
+	out	(DMA_IO),a
 ;
-	in	a,(DMABASE)		; read in 
+	in	a,(DMA_IO)		; read in 
 	ld	c,a			; address
-	in	a,(DMABASE)
+	in	a,(DMA_IO)
 	ld	b,a
 ;
 	xor	a			; is it
@@ -165,7 +188,7 @@ DMALDIR:
 ;
 	ld	hl,DMACopy		; program the
 	ld	b,DMACopy_Len		; dma command
-	ld	c,DMABASE		; block
+	ld	c,DMA_IO		; block
 ;
 	DMAIOHALF
 ;
@@ -174,8 +197,8 @@ DMALDIR:
 	ei
 ;
 	ld	a,DMA_READ_STATUS_BYTE	; check status
-	out	(DMABASE),a		; of transfer
-	in	a,(DMABASE)		; set non-zero
+	out	(DMA_IO),a		; of transfer
+	in	a,(DMA_IO)		; set non-zero
 	and	%00111011		; if failed
 	sub	%00011011
 
@@ -211,7 +234,7 @@ DMAOTIR:
 ;
 	ld	hl,DMAOutCode		; program the
 	ld	b,DMAOut_Len		; dma command
-	ld	c,DMABASE		; block
+	ld	c,DMA_IO		; block
 ;
 	DMAIOHALF
 
@@ -220,8 +243,8 @@ DMAOTIR:
 	ei
 ;
 	ld	a,DMA_READ_STATUS_BYTE	; check status
-	out	(DMABASE),a		; of transfer
-	in	a,(DMABASE)		; set non-zero
+	out	(DMA_IO),a		; of transfer
+	in	a,(DMA_IO)		; set non-zero
 	and	%00111011		; if failed
 	sub	%00011011
 ;
@@ -262,7 +285,7 @@ DMAINIR:
 ;
 	ld	hl,DMAInCode		; program the
 	ld	b,DMAIn_Len		; dma command
-	ld	c,DMABASE		; block
+	ld	c,DMA_IO		; block
 ;
 	DMAIOHALF
 ;
@@ -271,8 +294,8 @@ DMAINIR:
 	ei
 ;
 	ld	a,DMA_READ_STATUS_BYTE	; check status
-	out	(DMABASE),a		; of transfer
-	in	a,(DMABASE)		; set non-zero
+	out	(DMA_IO),a		; of transfer
+	in	a,(DMA_IO)		; set non-zero
 	and	%00111011		; if failed
 	sub	%00011011
 ;
@@ -306,31 +329,31 @@ DMAIn_Len 	.equ	$-DMAInCode
 ;
 DMARegDump:
 	ld	a,DMA_READ_MASK_FOLLOWS
-	out	(DMABASE),a
+	out	(DMA_IO),a
 	ld	a,%01111110
-	out	(DMABASE),a
+	out	(DMA_IO),a
 	ld	a,DMA_START_READ_SEQUENCE
-	out	(DMABASE),a
+	out	(DMA_IO),a
 ;
-	in	a,(DMABASE)
+	in	a,(DMA_IO)
 	ld	c,a
-	in	a,(DMABASE)
+	in	a,(DMA_IO)
 	ld	b,a
 	call	PRTHEXWORD
 	ld	a,':'
 	call	COUT
 ;
-	in	a,(DMABASE)
+	in	a,(DMA_IO)
 	ld	c,a
-	in	a,(DMABASE)
+	in	a,(DMA_IO)
 	ld	b,a
 	call	PRTHEXWORD
 	ld	a,':'
 	call	COUT
 ;
-	in	a,(DMABASE)
+	in	a,(DMA_IO)
 	ld	c,a
-	in	a,(DMABASE)
+	in	a,(DMA_IO)
 	ld	b,a
 	call	PRTHEXWORD
 ;

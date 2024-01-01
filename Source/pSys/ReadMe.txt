@@ -48,7 +48,7 @@ The layout of the first track does not conform exactly to the
 recommended p-System layout.  The recommended layout is not possible 
 because it conflicts with the RomWBW definition for a boot track.  
 However, the changes are only slightly different sector assignments for 
-the different boot componets -- the general boot sequence and mechanism 
+the different boot components -- the general boot sequence and mechanism 
 for the p-System is completely standard.
 
 The logical disk geometry used by this p-System
@@ -77,14 +77,16 @@ escape sequence handling configuration.  The debugger code as added to
 SYSTEM.PASCAL to enable the debug function.  SYSTEM.INTERP was modified 
 to enable the extended BIOS functions.
 
-The build/makefile creates the psys disk image (psys.img) by adding 
-concatentating psys.vol and blank.vol (after adding track 0 contents to 
+The build/makefile creates the psys disk image (psys.img) by 
+concatenating psys.vol and blank.vol (after adding track 0 contents to 
 each).  psys.vol and blank.vol are recognized by CiderPress and 
 CiderPress can be used to add/remove files from these volumes.  
-However, there is currently no straightforward way to extract the 
-volumes from the disk image.  If you are good with a binary disk 
-editor, you can do it that way.  Please contact me if you are 
-interested in pursuing that.
+To extract volumes from a disk image, Andrew Davidson has created
+a nice Python script that can extract p-System volumes from an
+existing disk image file.  The extracted volume can be manipulated
+by CiderPress.  The script is also capable of re-inserting a modified
+volume back into the disk image file.  This tool is available at:
+https://github.com/robosnacks/psysimg.
 
 There is currently no support for floppy drives.
 
@@ -119,7 +121,7 @@ that SofTech produced a IV.1 with some nice enhancements (like
 subsidiary volumes and decent support for ANSI/VT-100 terminals).  I
 have been unable to track down the IV.1 distribution media despite
 trying very hard.  If anyone knows of a source for the media of the
-Adapable p-System for Z80, I would love to get hold of it.
+Adaptable p-System for Z80, I would love to get hold of it.
 
 3:58 PM Tuesday, January 17, 2023
 
@@ -139,3 +141,9 @@ the setup program was used to define up/down/left/right like
 WordStar does: ^E,^X,^S,^D.
 
 5:48 PM Tuesday, January 17, 2023
+
+Updated instructions above to include a reference to Andrew 
+Davidson's Python script that will extract/insert volumes from/to
+a disk image.
+
+1:31 PM Thursday, May 11, 2023

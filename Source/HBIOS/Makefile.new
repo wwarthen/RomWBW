@@ -1,0 +1,132 @@
+DIST_OBJECTS := \
+	DYNO_std MK4_std N8_std RCZ180_ext RCZ180_nat RCZ180_z1rcc \
+	RCZ280_ext RCZ280_nat RCZ280_zz80mb RCZ280_zzrcc RCZ280_zzrcc_ram \
+	RCZ80_std RCZ80_kio RCZ80_easy RCZ80_tiny RCZ80_skz RCZ80_zrc \
+	RCZ80_zrc_ram RCZ80_zrc512 RPH_std SBC_std SBC_simh MBC_std \
+	DUO_std SCZ180_sc126 SCZ180_sc130 SCZ180_sc131 SCZ180_sc140 \
+	SCZ180_sc503 SCZ180_sc700 S100_std UNA_std Z80RETRO_std \
+	ZETA_std ZETA2_std HEATH_std EPITX_std
+#	RCZ80_mt RCZ80_duart MON_std 
+
+OBJECTS := $(DIST_OBJECTS)
+OBJECTS := SBC_std MK4_std UNA_std S100_std
+OBJECTS := $(OBJECTS:=.rom) $(OBJECTS:=.com) $(OBJECTS:=.upd)
+OBJECTS := $(filter-out UNA_%.com UNA_%.upd,$(OBJECTS))
+
+DEST = ../../Binary
+TOOLS = ../../Tools
+OTHERS := *.img *.rom *.com *.upd *.bin *.hex cpm.sys zsys.sys build.inc
+OTHERS +=  *.build.inc font*.asm *.dat hbios_env.sh
+
+FONTS := font8x11c.asm font8x11u.asm font8x16c.asm font8x16u.asm
+FONTS += font8x8c.asm font8x8u.asm fontcgac.asm fontcgau.asm
+FONTS += fontvgarcc.asm fontvgarcu.asm
+
+BUILD_COMPONENT = \
+	cp $(*F).build.inc build.inc ; \
+	$(TASM) $(TASMFLAGS) $< $@ $(@:.bin=.lst) ; \
+	rm build.inc
+
+SHELL=/bin/bash
+
+include $(TOOLS)/Makefile.inc
+
+font%.asm:
+	cp ../Fonts/$@ .
+
+camel80.bin:
+	cp ../Forth/$@ .
+
+tastybasic.bin:
+	cp ../TastyBasic/src/$@ .
+
+s100mon.bin:
+	$(ZXCC) $(CPM)/SLR180 -s100mon/FH
+	$(ZXCC) $(CPM)/MLOAD25 -s100mon.bin=s100mon
+
+%.build.inc:
+	echo $@
+	echo "; RomWBW Configured for $(*F) at $$(date +%Y-%m-%d)" >>$@
+	echo ";" >>$@
+	echo "#DEFINE TIMESTAMP \"$$(date +%Y-%m-%d)\"" >>$@
+	echo "#DEFINE CONFIG \"$(*F)\"" >>$@
+	echo ";" >>$@
+	echo "#INCLUDE \"Config/$(*F).asm\"" >>$@
+	echo ";" >>$@
+	cat $@
+
+%.usrrom.bin: usrrom.asm %.build.inc ; $(BUILD_COMPONENT)
+%.updater.bin: updater.asm %.build.inc ; $(BUILD_COMPONENT)
+%.eastaegg.bin: eastaegg.asm %.build.inc ; $(BUILD_COMPONENT)
+%.game.bin: game.asm %.build.inc ; $(BUILD_COMPONENT)
+%.nascom.bin: nascom.asm %.build.inc ; $(BUILD_COMPONENT)
+%.romldr.bin: romldr.asm %.build.inc ; $(BUILD_COMPONENT)
+%.dbgmon.bin: dbgmon.asm %.build.inc ; $(BUILD_COMPONENT)
+
+%.hbios_env.com: hbios_env.asm %.build.inc
+	cp $(*F).build.inc build.inc
+	$(TASM) $(TASMFLAGS) -dBASH $< $@ $(@:.com=.lst)
+	rm build.inc
+
+%.hbios_env.sh: %.hbios_env.com
+	$(ZXCC) $< >$@
+
+%.hbios_rom.bin: hbios.asm %.build.inc %.hbios_env.sh $(FONTS)
+	. ./$(*F).hbios_env.sh ; \
+	TARGETS=("" "z80" "hd64180" "z280") ; \
+	CPU=$${TARGETS[$$CPUFAM]} ; \
+	cp $(*F).build.inc build.inc ; \
+	$(BINDIR)/uz80as -t $$CPU -dROMBOOT $< $@ $(@:.bin=.lst) ; \
+	srec_cat $@ -Binary -Crop 0 0x7FFF -Checksum_Negative_Big_Endian 0x7FFF 1 1 -o $@ -Binary ; \
+	rm build.inc
+
+%.hbios_app.bin: hbios.asm %.build.inc %.hbios_env.sh $(FONTS)
+	. ./$(*F).hbios_env.sh ; \
+	TARGETS=("" "z80" "hd64180" "z280") ; \
+	CPU=$${TARGETS[$$CPUFAM]} ; \
+	cp $(*F).build.inc build.inc ; \
+	$(BINDIR)/uz80as -t $$CPU -dAPPBOOT $< $@ $(@:.bin=.lst) ; \
+	rm build.inc
+
+UNA_%.osimg.bin: UNA_%.romldr.bin UNA_%.dbgmon.bin
+	cat UNA_$(*F).romldr.bin UNA_$(*F).dbgmon.bin ../ZSDOS/zsys_una.bin ../CPM22/cpm_una.bin >$@
+	srec_cat $@ -Binary -Crop 0 0x7FFF -Checksum_Negative_Big_Endian 0x7FFF 1 1 -o $@ -Binary
+
+%.osimg.bin: %.romldr.bin %.dbgmon.bin
+	cat $(*F).romldr.bin $(*F).dbgmon.bin ../ZSDOS/zsys_wbw.bin ../CPM22/cpm_wbw.bin >$@
+	srec_cat $@ -Binary -Crop 0 0x7FFF -Checksum_Negative_Big_Endian 0x7FFF 1 1 -o $@ -Binary
+
+%.osimg_small.bin: %.romldr.bin %.dbgmon.bin
+	cat $(*F).romldr.bin $(*F).dbgmon.bin ../ZSDOS/zsys_wbw.bin >$@
+
+%.osimg1.bin: camel80.bin %.nascom.bin tastybasic.bin %.game.bin %.eastaegg.bin netboot.mod %.updater.bin %.usrrom.bin
+	cat camel80.bin $(*F).nascom.bin tastybasic.bin $(*F).game.bin $(*F).eastaegg.bin netboot.mod $(*F).updater.bin $(*F).usrrom.bin >$@
+	srec_cat $@ -Binary -Crop 0 0x7FFF -Checksum_Negative_Big_Endian 0x7FFF 1 1 -o $@ -Binary
+
+%.imgpad2.bin: imgpad2.asm %.build.inc
+	cp $(*F).build.inc build.inc
+	$(TASM) $(TASMFLAGS) $< $@ $(@:.bin=.lst)
+	srec_cat $@ -Binary -Crop 0 0x7FFF -Checksum_Negative_Big_Endian 0x7FFF 1 1 -o $@ -Binary
+	rm build.inc
+
+S100_%.imgpad2.bin: s100mon.bin
+	cp $< $@
+	srec_cat $@ -Binary -Crop 0 0x7FFF -Checksum_Negative_Big_Endian 0x7FFF 1 1 -o $@ -Binary
+
+UNA_%.rom: UNA_%.osimg.bin UNA_%.hbios_env.sh
+	. ./UNA_$(*F).hbios_env.sh ; \
+	cat ../UBIOS/UNA-BIOS.BIN UNA_$(*F).osimg.bin ../UBIOS/FSFAT.BIN ../RomDsk/rom$${ROMSIZE}_una.dat >$@ ; \
+	cp UNA_$(*F).osimg.bin $(DEST)/UNA_WBW_SYS.bin ; \
+	cp ../RomDsk/rom$${ROMSIZE}_una.dat $(DEST)/UNA_WBW_ROM$${ROMSIZE}.bin
+
+%.rom: %.hbios_rom.bin %.osimg.bin %.osimg1.bin %.imgpad2.bin %.hbios_env.sh
+	. ./$(*F).hbios_env.sh ; \
+	if [ $$ROMSIZE -gt 0 ] ; then RD="rom$$ROMSIZE" ; else RD="ram$$RAMSIZE" ; fi ; \
+	cat $(*F).hbios_rom.bin $(*F).osimg.bin $(*F).osimg1.bin $(*F).imgpad2.bin ../RomDsk/$${RD}_wbw.dat >$@
+
+%.com: %.hbios_app.bin %.osimg_small.bin
+	cat $(*F).hbios_app.bin $(*F).osimg_small.bin >$@
+
+%.upd: %.hbios_rom.bin %.osimg.bin %.osimg1.bin %.imgpad2.bin
+	cat $(*F).hbios_rom.bin $(*F).osimg.bin $(*F).osimg1.bin $(*F).imgpad2.bin >$@
+

@@ -346,8 +346,7 @@ read:
 	ld	b,17h			; HBIOS DEVICE function
 	rst	08			; Do it, D=device type
 	ld	a,d			; put in accum
-	and	0F0h			; isolate high bits
-	cp	10h			; floppy?
+	cp	01h			; floppy?
 	jr	nz,read2		; if not, do LBA i/o
 	
 	; Floppy I/O

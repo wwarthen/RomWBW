@@ -30,7 +30,9 @@ header-includes:
       {\scshape \bfseries \fontsize{48pt}{56pt} \selectfont $doc_product$ \par}
       {\bfseries \fontsize{32pt}{36pt} \selectfont $doc_title$ \par}
       \vspace{24pt}
-      {\huge $doc_ver$ \\ $doc_date$ \par}
+      {\huge $doc_ver$ \par}
+      \vspace{12pt}
+      {\large Updated $doc_date$ \par}
       \vspace{24pt}
       {\large \itshape $doc_orgname$ \\ \href{http://$doc_orgurl$}{$doc_orgurl$} \par}
       \vspace{12pt}

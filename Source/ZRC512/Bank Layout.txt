@@ -1,0 +1,41 @@
+ZRC has no real ROM.  It has a single 2048K RAM chip.  There
+are two startup modes supported by RomWBW.
+
+The normal startup mode treats the first 512KB like ROM and the
+remaining 1536KB as RAM.  The first 512KB (pseudo-ROM) must be preloaded
+by the ZRC CF Loader.  This mode simulates a normal ROM-based RomWBW
+startup.
+
+Bank		Contents	Description
+----		--------	-----------
+0x0		BOOT		Boot Bank (HBIOS image)		+
+0x1		IMG0		ROM Loader, Monitor, ROM OSes	|
+0x2		IMG1		ROM Applications		| Pseudo-ROM
+0x3		IMG2		Reserved			|
+0x4-0xF		ROMD		ROM Disk Banks			+
+0x10		BIOS		HBIOS Bank (operating)
+0x11-0x3B	RAMD		RAM Disk Banks
+0x3C		BUF		OS Buffers (CP/M3)
+0x3D		AUX		Aux Bank (CP/M 3, BPBIOS, etc.)
+0x3E		USR		User Bank (CP/M TPA, etc.)
+0x3F		COM		Common Bank, Upper 32KB
+
+The ROMless startup mode treats the entire 2048KB as RAM.  However, in
+this mode, only the first 512KB of RAM is utilized.  This is because
+the RAM Disk is seeded by the CF Loader which is currently constrained
+to loading 512KB.  The entire 512KB of RAM (less the top 32KB) must be
+preloaded by the ZRC CF Loader.  There will be no ROM disk available
+under RomWBW.  There will be a RAM Disk and it's initial contents will
+be seeded by the image loaded by the CF Loader.
+
+Bank		Contents	Description
+--------	--------	-----------
+0x0		BIOS		HBIOS Bank (operating)
+0x1		IMG0		ROM Loader, Monitor, ROM OSes
+0x2		IMG1		ROM Applications
+0x3		IMG2		Reserved
+0x4-0xB		RAMD		RAM Disk Banks
+0xC		BUF		OS Buffers (CP/M3)
+0xD		AUX		Aux Bank (CP/M 3, BPBIOS, etc.)
+0xE		USR		User Bank (CP/M TPA, etc.)
+0xF		COM		Common Bank, Upper 32KB

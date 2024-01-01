@@ -117,7 +117,11 @@ GET ($F8):
 						L=Clock Mult (0:Half, 1:Full, 2: Double)
 						D=Memory Wait States
 						E=I/O Wait States
-						
+
+    PANEL ($F4):
+      BC=Function/Subfunction			A=Result
+						L=Switch Values
+
 
 SET ($F9):
   BC=Function/Subfunction                       A=Result
@@ -141,6 +145,11 @@ SET ($F9):
 						D=Memory Wait States
 						E=I/O Wait States
 						
+
+    PANEL ($F4):
+      BC=Function/Subfunction			A=Result
+						L=LED Values
+
 
 PEEK ($FA):
   B=Function                       		A=Result
@@ -475,3 +484,93 @@ TERM_ATTACH: (C=VIDEO UNIT, DE=<VDA>_DISPATCH)
   - QUERY ATTACHED VDA FOR SCREEN SIZE (VIA <EMU>_VDADISP)
   - INITIALIZE ALL WORKING VARIABLES AND EMULATOR STATE
   - RETURN (A=STATUS)
+
+
+==============
+DSKY Functions
+==============
+
+RESET ($30):
+  B=Function				A=Result
+
+STAT ($31):
+  B=Function				A=Result / Bytes Pending
+
+  A=Number of characters waiting or error code if negative
+
+GETKEY ($32):
+  B=Function				A=Result
+					E=Key Code
+
+  A=DSKY key value or error code if negative
+
+SHOWHEX ($33):
+  B=Function				A=Result
+  DE:HL=Value (32-bit)
+
+  Display value of DE:HL in hex on display.  It is not
+  possible to show decimal points.
+
+SHOWSEG ($34):
+  B=Function				A=Result
+  HL=Buffer (raw segment encoded)
+  
+  Display raw segment values.  Each byte represents one
+  character.  Each segment of the character is represented
+  by a bit.  The buffer must be located in high memory.
+  The segments are encoded as shown below:
+  
+  +--01--+
+  20    02
+  +--40--+
+  10    04
+  +--08--+  80
+  
+KEYLEDS ($35):
+  B=Function				A=Result
+  HL=Buffer (LED bitmap)
+  
+  Light the LEDs for the keypad keys according to the
+  bitmap contained in the buffer pointed to by HL.  The buffer
+  must be located in high memory.
+  
+  At this time, the bitmap is specific to the DSKYNG hardware.
+  This function is ignored by the original DSKY.
+
+STATLED ($36):
+  B=Function				A=Result
+  D=LED Number
+  E=LED State (0/1)
+  
+  Set or clear the status LED specified in D.  The state of
+  the LED is contained in E.  If E=0, the LED will be turned
+  off.  If E=1, the LED will be turned on.
+
+BEEP ($37):
+  B=Function				A=Result
+
+  Beep the onboard speaker of the DSKY.  Only the DSKYNG hardware
+  has a speaker.  This function will be ignored by the original
+  DSKY.
+
+DEVICE ($38):
+  B=Function				A=Result
+					D=Device Type
+					E=Device Number
+					C=Device Attributes
+					H=Device Mode
+					L=Base I/O Adr
+
+  Returns device information for the DSKY unit. The Status (A) is a 
+  standard HBIOS result code. Device Attribute (C) values are not yet 
+  defined. Device Type (D) indicates the specific hardware driver that 
+  handles the specified character unit. Values are listed at the start
+  of this section. Device Number (E) indicates the physical device
+  number assigned per driver which is always 0 for DSKY.
+
+  Device Mode (H) is used to indicate the variant of the chip or circuit 
+  that is used by the specified unit. The Device I/O Base Address (L) 
+  indicates the starting port address of the hardware interface that is 
+  servicing the specified unit. Both of these values are considered 
+  driver specific. Refer to the associated hardware driver for the
+  values used.

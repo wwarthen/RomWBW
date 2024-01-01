@@ -1,0 +1,9 @@
+BDOS	EQU	5
+WCONF	EQU	2
+	ORG	100H
+	LD	C,WCONF
+	LD	E,'*'
+	CALL	BDOS
+	RET
+	END
+	

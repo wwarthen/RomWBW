@@ -7,20 +7,24 @@
 ; keyboard, and mouse.
 ;
 ; WBW 2022-03-28: Add menu driven port selection
-;                 Add support for RHYOPHYRE
+;                 Add support for Rhyophyre
 ; WBW 2022-04-01: Add menu for test functions
 ; WBW 2022-04-02: Fix prtchr register saving/recovery
+; WBW 2023-10-19: Add support for Duodyne
 ;
 ;=======================================================================
 ;
 ; PS/2 Keyboard/Mouse controller port addresses (adjust as needed)
 ;
-; MBC:
+; Nhyodyne:
 iocmd_mbc	.equ	$E3	; PS/2 controller command port address
 iodat_mbc	.equ	$E2	; PS/2 controller data port address
-; RPH:
+; Rhyophyre:
 iocmd_rph	.equ	$8D	; PS/2 controller command port address
 iodat_rph	.equ	$8C	; PS/2 controller data port address
+; Duodyne:
+iocmd_duo	.equ	$4D	; PS/2 controller command port address
+iodat_duo	.equ	$4C	; PS/2 controller data port address
 ;
 cpumhz	.equ	8	; for time delay calculations (not critical)
 ;
@@ -77,10 +81,12 @@ setup1:
 	jr	z,setup1
 	call	upcase
 	call	prtchr
-	cp	'1'			; MBC
+	cp	'1'			; Nhyodyne
 	jr	z,setup_mbc
-	cp	'2'			; RHYOPHYRE
+	cp	'2'			; Rhyophyre
 	jr	z,setup_rph
+	cp	'3'			; Duodyne
+	jr	z,setup_duo
 	cp	'X'
 	jr	z,exit
 	jr	setup
@@ -99,6 +105,14 @@ setup_rph:
 	ld	a,iodat_rph
 	ld	(iodat),a
 	ld	de,str_rph
+	jr	setup2
+;
+setup_duo:
+	ld	a,iocmd_duo
+	ld	(iocmd),a
+	ld	a,iodat_duo
+	ld	(iodat),a
+	ld	de,str_duo
 	jr	setup2
 ;
 setup2:
@@ -182,6 +196,12 @@ test_kbd:
 	call	ctlr_test
 	jr	nz,test_kbd_fail
 ;
+	ld	a,$20			; kbd enabled, mse disabled, no ints
+	call	ctlr_setup
+	jr	nz,test_kbd_fail
+;
+	call	ctlr_flush
+;
 	call	test_kbd_basic
 	jr	nz,test_kbd_fail
 ;
@@ -229,8 +249,12 @@ test_mse:
 	call	ctlr_setup
 	jr	nz,test_mse_fail
 ;
+	call	ctlr_flush
+;
 	call	mse_reset
 	jr	nz,test_mse_fail
+;
+	call	ctlr_flush
 ;
 	call	mse_ident
 	jr	nz,test_mse_fail
@@ -263,14 +287,20 @@ test_kbdmse:
 	call	ctlr_setup
 	jr	nz,test_kbdmse_fail
 ;
+	call	ctlr_flush
+;
 	call	kbd_reset
 	jr	nz,test_kbdmse_fail
+;
+	call	ctlr_flush
 ;
 	ld	a,2
 	call	kbd_setsc
 ;
 	call	mse_reset
 	jr	nz,test_kbdmse_fail
+;
+	call	ctlr_flush
 ;
 	call	mse_stream
 	jr	nz,test_kbdmse_fail
@@ -290,15 +320,13 @@ test_kbdmse_fail:
 ; inventory the supported scan code sets.
 ;
 test_kbd_basic:
-	ld	a,$20			; Xlat off for this checking
-	call	ctlr_setup
-	ret	nz
-;
 	call	kbd_reset
 	ret	nz
 ;
+	call	ctlr_flush
+;
 	call	kbd_ident
-	;ret	nz
+	ret	nz
 ;
 	ld	b,3			; Loop control, 3 scan code sets
 	ld	c,1			; Current scan code number
@@ -435,6 +463,19 @@ ctlr_setup:
 	jp	c,err_ctlr_to		; handle controller error
 	xor	a
 	ret
+;
+; Flush incoming data buffer
+;
+ctlr_flush:
+	call	crlf2
+	ld	de,str_ctlr_flush
+	call	prtstr
+ctlr_flush1:
+	call	delay			; small delay
+	call	check_read		; data pending?
+	ret	nz			; return if nothing there
+	call	get_data_dbg		; get and discard byte
+	jr	ctlr_flush1		; loop
 ;
 ; Perform a keyboard reset
 ;
@@ -612,12 +653,16 @@ mse_reset:
 	call	crlf2
 	ld	de,str_mse_reset
 	call	prtstr
-	ld	a,$f2			; Identify mouse command
+	ld	a,$ff			; Identify mouse command
 	call	put_data_mse_dbg
 	jp	c,err_ctlr_to		; handle controller error
 	call	get_data_dbg
 	jp	c,err_ctlr_to		; handle controller error
 	cp	$fa			; Is it an ack as expected?
+	jp	nz,err_mse_reset
+	call	get_data_dbg
+	jp	c,err_ctlr_to		; handle controller error
+	cp	$aa			; Success?
 	jp	nz,err_mse_reset
 	call	crlf
 	ld	de,str_mse_reset_ok
@@ -634,18 +679,61 @@ mse_ident:
 	ld	a,$f2			; Identify mouse command
 	call	put_data_mse_dbg
 	jp	c,err_ctlr_to		; handle controller error
+mse_ident0:
 	call	get_data_dbg
 	jp	c,err_ctlr_to		; handle controller error
+
+	;cp	$00			; extraneous?
+	;jr	z,mse_ident0		; ignore it, get another
+
 	cp	$fa			; Is it an ack as expected?
 	jp	nz,err_mse_ident
-	call	get_data_dbg
-	jp	c,err_ctlr_to		; handle controller error
+	; Now we need to receive 0-2 bytes.  There is no way to know
+	; how many are coming, so we receive bytes until there is a
+	; timeout error.  Timeout is shortened here so that we don't
+	; have to wait seconds for the routine to complete normally.
+	; A short timeout is more than sufficient here.
+	ld	ix,workbuf
+	ld	a,(timeout)		; save current timeout
 	push	af
+	ld	a,stimout		; set a short timeout
+	ld	(timeout),a
+	ld	b,8			; buf max
+	ld	c,0			; buf len
+mse_ident1:
+	push	bc
+	call	get_data_dbg
+	pop	bc
+	jr	c,mse_ident2
+	ld	(ix),a
+	inc	ix
+	inc	c
+	djnz	mse_ident1
+mse_ident2:
+	pop	af			; restore original timeout
+	ld	(timeout),a
 	call	crlf
 	ld	de,str_mse_ident_disp
 	call	prtstr
-	pop	af
-	call	prtdecb
+	ld	a,'['
+	call	prtchr
+	ld	ix,workbuf
+	ld	a,c			; bytes to print
+	or	a			; check for zero
+	jr	z,mse_ident4		; handle zero
+	ld	b,a			; setup loop counter
+	jr	mse_ident3a
+mse_ident3:
+	ld	a,','
+	call	prtchr
+mse_ident3a:
+	ld	a,(ix)
+	call	prthex
+	inc	ix
+	djnz	mse_ident3
+mse_ident4:
+	ld	a,']'
+	call	prtchr
 	xor	a
 	ret
 ;
@@ -658,8 +746,13 @@ mse_stream:
 	ld	a,$f4			; Stream packets cmd
 	call	put_data_mse_dbg
 	jp	c,err_ctlr_to		; handle controller error
+mse_stream0:
 	call	get_data_dbg
 	jp	c,err_ctlr_to		; handle controller error
+
+	;cp	$00			; extraneous?
+	;jr	z,mse_stream0		; ignore it, get another
+
 	cp	$FA			; Is it an ack as expected?
 	jp	nz,err_mse_stream
 	xor	a
@@ -1344,14 +1437,16 @@ delay1:
 ; Constants
 ;=======================================================================
 ;
-str_banner		.db	"PS/2 Keyboard/Mouse Information v0.6a, 2-Apr-2022",0
+str_banner		.db	"PS/2 Keyboard/Mouse Information v0.8, 6-Nov-2023",0
 str_hwmenu		.db	"PS/2 Controller Port Options:\r\n\r\n"
-			.db	"  1 - MBC\r\n"
-			.db	"  2 - RHYOPHYRE\r\n"
+			.db	"  1 - Nhyodyne\r\n"
+			.db	"  2 - Rhyophyre\r\n"
+			.db	"  3 - Duodyne\r\n"
 			.db	"  X - Exit Application\r\n"
 			.db	"\r\nSelection? ",0
-str_mbc			.db	"MBC",0
-str_rph			.db	"RHYOPHYRE",0
+str_mbc			.db	"Nhyodyne",0
+str_rph			.db	"Rhyophyre",0
+str_duo			.db	"Duodyne",0
 str_menu		.db	"PS/2 Testing Options:\r\n\r\n"
 			.db	"  C - Test PS/2 Controller\r\n"
 			.db	"  K - Test PS/2 Keyboard\r\n"
@@ -1382,6 +1477,7 @@ str_trans_off		.db	"***** Testing Keyboard with Scan Code Translation DISABLED *
 str_trans_on		.db	"***** Testing Keyboard with Scan Code Translation ENABLED *****",0
 str_basic_mse		.db	"***** Basic Mouse Tests *****",0
 str_kbdmse			.db	"***** Test All Devices Combined *****",0
+str_ctlr_flush		.db	"Flushing controller input buffer",0
 str_kbd_reset		.db	"Attempting Keyboard Reset",0
 str_kbd_reset_ok	.db	"Keyboard Reset OK",0
 str_err_kbd_reset	.db	"Keyboard Reset Failed",0

@@ -9,6 +9,7 @@
 HBF_ALLOC	EQU	0F6H		; HBIOS Func: ALLOCATE Heap Memory
 HBF_PEEK	EQU	0FAH		; HBIOS Func: Peek Byte
 HBF_POKE	EQU	0FBH		; HBIOS Func: Poke Byte
+HBF_SYSRES_INT	EQU	0F000H		; HBIOS Func: Internal Reset
 HBF_MEMINFO	EQU	0F8F1H		; HBIOS Func: Get Memory Info
 HBF_BNKINFO	EQU	0F8F2H		; HBIOS Func: Get Bank Info
 ;
@@ -43,21 +44,22 @@ HBX_CPYLEN	EQU	0FFE8H
 ; call here, make required changes, then update the
 ; BIOSJT to point directly to the normal SELMEM routine for
 ; all subsequent calls.
+;
+; When called, the incoming bank id will be the original hard-coded
+; bank id prior to any adjustments.  These original bank id's are
+; coded to be an offset from the ending HBIOS RAM bank id which
+; is (80h + RAM banks).  See romwbw.lib.  We update the requested
+; bank id for this initial call to make it the proper absolute
+; HBIOS bank id.
+;
+; See romwbw.lib for additional RAM bank layout information.
 
-	; BPBIOS	HBIOS		Typical
-	; ------------	--------------	--------------
-	;  -1: <COMMON>	BID_COM		90h - 1 = 8Fh
-	;  -2: TPABNK	BID_USR         90h - 2 = 8Eh
-	;  -3: <HBIOS>	BID_BIOS	90h - 3 = 8Dh	
-	;  -4: SYSBNK	BID_AUX		90h - 4 = 8Ch
-	;  -9: BNKM	BID_AUX-5	90h - 9 = 87h
-	; -16: RAMBNK	RAMD0		90h - 16 = 80h
-	
 HB_SELMEM:
-	PUSH	AF
 	PUSH	BC
 	PUSH	DE
 	PUSH	HL
+	
+	PUSH	AF		; Save incoming bank request
 	
 	  IF HB_DEBUG AND FALSE
 	CALL	PRTSTRD
@@ -68,23 +70,30 @@ HB_SELMEM:
 	  ENDIF
 	
 	LD	BC,HBF_BNKINFO	; HBIOS BNKINFO function
-	CALL	HBX_INVOKE	; DO IT, D=BID_BIOS, E=BID_USER
-	LD	A,D		; BID_BIOS
-	LD	(HB_BNKBIOS),A	; SET HB_BNKBIOS
-	ADD	A,3		; HBIOS + 3
-	LD	(HB_BNKEND),A	; ... is the ending RAM bank
-	  IF BANKED
-	LD	(BNKADJ+1),A	; Dynamically update SELBNK
-	  ENDIF
-	  
+	CALL	HBX_INVOKE	; Do it, D=BIOS bank, E=USER (TPA) bank
+	LD	A,D		; BIOS bank
+	LD	(HB_BNKBIOS),A	; Save it for later (deblock & hard-ww)
+	LD	A,E		; USER (TPA) bank
+	LD	(TPABNK),A	; Update BP register
+	DEC	A		; SYS bank is one below USER
+	LD	(SYSBNK),A	; Update BP register
+	DEC	A		; HBIOS BUF bank is one more below
+	;LD	(UABNK),A	; Set BPBIOS USER bank
+	LD	(RAMBNK),A	; Update BP RAM disk bank register
+	LD	(MAXBNK),A	; Update ending bank register
+	
 	LD	HL,SELMEM	; Future SELMEM calls will
 	LD	(BIOSJT+(27*3)+1),HL	; ... go to real SELMEM
+	
+	POP	BC		; Recover requested bank to B
+	LD	A,(TPABNK)	; Get TPA bank
+	ADD	2		; Offset to ending RAM bank id
+	ADD	B		; Adjust for incoming request
 	
 	POP	HL
 	POP	DE
 	POP	BC
-	POP	AF
-	JP	SELMEM
+	JP	SELMEM		; Continue to normal SELMEM
 	
 ;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ; Move Data - Possibly between banks.  This resembles CP/M 3, but
@@ -97,15 +106,10 @@ HB_SELMEM:
 ;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 HB_MOVE:
-	PUSH	HL
-	LD	HL,HB_BNKEND
 	LD	A,(HB_SRCBNK)
-	ADD	A,(HL)		; Adjust for HBIOS bank ids
 	LD	(HBX_SRCBNK),A
 	LD	A,(HB_DSTBNK)
-	ADD	A,(HL)		; Adjust for HBIOS bank ids
 	LD	(HBX_DSTBNK),A
-	POP	HL
 	CALL	HBX_BNKCPY
 	PUSH	HL
 	LD	HL,(TPABNK)	; Get TPA Bank #
@@ -141,6 +145,5 @@ HB_XMOVE:
 HB_SRCBNK:	DEFS	1	; Move Source Bank #
 HB_DSTBNK:	DEFS	1	; Move Destination Bank #
 HB_BNKBIOS:	DEFS	1	; Bank id of HBIOS bank
-HB_BNKEND:	DEFS	1	; End of available RAM banks (last bank + 1)
 HB_DSKBUF:	DEFS	2	; Address of physical disk buffer in HBIOS bank
 

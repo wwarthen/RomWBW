@@ -38,7 +38,7 @@
 	
 	extrn	?bnkxlt
 	
-	extrn	phex8, cout
+	extrn	phex16, phex8, cout, crlf, crlf2
 
 
     ; CP/M 3 Disk definition macros
@@ -355,38 +355,30 @@ dpb$hdnew:	; 8MB Hard Disk Drive (new format)
 ;		called for first time initialization.
 
 dsk$init:
-	; TODO: Handle disabled RAM/ROM disk better.
-	; If RAM or ROM disk are disabled, below will still
-	; try to adjust the DPB based on RAM bank calculations.
-	; It should not matter because the DPB should never be
-	; used.  It would be better to get RAMD0/ROMD0 and
-	; RAMDN/ROMDN from the HCB and use those to calc the
-	; DPB adjustment.  If DN-D0=0, bypass adjustment.
-	ld	b,0FAh			; HBIOS Peek Function
-	ld	a,(@hbbio)		; HBIOS bank id
-	ld	d,a			; ... goes in D
-	ld	hl,10Ch			; Offset 10Ch is ROM bank cnt
-	rst	08			; Call HBIOS, value in E
-	ld	a,e			; move count to accum
-	sub	4			; reduce by # reserved banks
-	ld	ix,dpb$rom		; address of DPB
-	call	dsk$init1		; fix it up
-	
-	ld	b,0FAh			; HBIOS Peek Function
-	ld	a,(@hbbio)		; HBIOS bank id
-	ld	d,a			; ... goes in D
-	ld	hl,10Bh			; Offset 10Bh is RAM bank cnt
-	rst	08			; Call HBIOS, value in E
-	ld	a,e			; move count to accum
-	sub	8			; reduce by # reserved banks
-	ld	ix,dpb$ram		; address of DPB
-	call	dsk$init1		; fix it up
 
+	; NOTE: ROM and/or RAM disk may not be active, but we go
+	; ahead and update both DPBs anyway.  It causes no harm since
+	; inactive RAM/ROM disk will never be accessed.
+
+	ld	hl,1DFh			; ROM disk bank cnt in HCB
+	ld	ix,dpb$rom		; address of ROM Disk DPB
+	call	dsk$init1		; fix it up
+	ld	hl,1DDh			; RAM dsik bank cnt in HCB
+	ld	ix,dpb$ram		; address of RAM Disk DPB
+	call	dsk$init1		; fix it up
 	ret				; done
 
 dsk$init1:
+	; Get bank count of RAM/ROM disk
+	ld	b,0FAh			; HBIOS Peek Function
+	ld	a,(@hbbio)		; HBIOS bank id
+	ld	d,a			; ... goes in D
+	rst	08			; Call HBIOS, value in E
+	;ld	a,e			; move count to accum
+
 	; Setup HL with bank count
-	ld	l,a			; lsb
+	;ld	l,a			; lsb
+	ld	l,e			; lsb
 	ld	h,0			; msb is always zero
 
 	; Update EXM field
@@ -501,8 +493,7 @@ media:
 	ld	b,17h			; HBIOS func: report device info
 	call	0FFF0h			; get unit info, device type in D
 	ld	a,d			; device type -> A
-	and	0F0h			; isolate high bits
-	cp	10h			; floppy?
+	cp	01h			; floppy?
 	jr	nz,media1		; if not, do LBA I/O
 	ld	hl,lba+3		; point to high order byte
 	res	7,(hl)			; switch from LBA -> CHS
@@ -585,29 +576,77 @@ media4:
 	; adjust the sectors per slice and media id.
 
 	; Use new slice format sectors per slice value
-	ld	hl,16384		; new sectors per slice
-	ld	(sps),hl		; save it
+	ld	hl,16384	; new sectors per slice
+	ld	(sps),hl	; save it
 
 	; Update media id for new hard disk format
-	ld	a,10			; new media id
-	ld	(medid),a		; save it
+	ld	a,10		; new media id
+	ld	(medid),a	; save it
 
 media5:
 	; Adjust LBA offset based on target slice
-	ld	a,(slice)		; get slice, A is loop cnt
-	ld	hl,(lba)		; set DE:HL
-	ld	de,(lba+2)		; ... to starting LBA
-	ld	bc,(sps)		; sectors per slice
+	ld	a,(slice)	; get slice, A is loop cnt
+	ld	hl,(lba)	; set DE:HL
+	ld	de,(lba+2)	; ... to starting LBA
+	ld	bc,(sps)	; sectors per slice
+	res	7,d		; clear lba mode bit
 boot6:
-	or	a			; set flags to check loop cntr
-	jr	z,boot8			; done if counter exhausted
-	add	hl,bc			; add one slice to low word
-	jr	nc,boot7		; check for carry
-	inc	de			; if so, bump high word
+	or	a		; set flags to check loop cntr
+	jr	z,boot8		; done if counter exhausted
+	add	hl,bc		; add one slice to low word
+	jr	nc,boot7	; check for carry
+	inc	de		; if so, bump high word
 boot7:
-	dec	a			; dec loop downcounter
-	jr	boot6			; and loop
+	dec	a		; dec loop downcounter
+	jr	boot6		; and loop
 boot8:
+
+	; LBA offset of desired slice is now in DE:HL.
+	; Need to check if the slice is beyond capacity of media.
+	; If lba_off + sps >= dsk_cap, error!
+
+	; Save lba_off
+	push	de		; msw
+	push	hl		; lsw
+	
+	; Add sps to compute lba_req
+	ld	bc,(sps)	; sectors per slice
+	add	hl,bc		; add one slice to low word
+	jr	nc,dsk_mbr9	; check for carry
+	inc	de		; if so, bump high word
+dsk_mbr9:
+	; Save cap_req
+	ld	(cap_req),hl	; lsw
+	ld	(cap_req+2),de	; msw
+
+	; Get dsk_cap (de:hl)
+	ld	b,1Ah		; hbios disk capacity func
+	ld	a,(unit)	; disk unit number
+	ld	c,a		; ... into c
+	rst	08		; hbios call (de:hl = capacity)
+
+	; Save dsk_cap (de:hl)
+	push	de		; save dsk_cap (msw)
+	push	hl		; save dsk_cap (lsw)
+
+	; Check dsk_cap >= cap_req, cf set on overflow
+	; No need save actual result
+	or	a		; clear carry for sbc
+	pop	hl		; dsk_cap lsw
+	ld	de,(cap_req)	; cap_req lsw
+	sbc	hl,de		; dsk_cap - lba_req (lsw)
+	pop	hl		; dsk_cap msw
+	ld	de,(cap_req+2)	; cap_req msw
+	sbc	hl,de		; dsk_cap - lba_req (msw)
+
+	; Restore lba_off
+	pop	hl		; lsw
+	pop	de		; msw
+
+	; Abort on overflow with error!
+	jp	c,err_noslice	; slice too high, error exit
+
+	; Finalize slice lba
 	set	7,d			; set LBA access flag
 	ld	(lba),hl		; save new lba, low word
 	ld	(lba+2),de		; save new lba, high word
@@ -878,6 +917,7 @@ unit		db	0		; working disk unit num
 slice		db	0		; working slice num
 lba		dw	0,0		; working  lba
 sps		dw	0		; sectors per slice
+cap_req		dw	0,0		; lba cap required for slice
 mbrsec		ds	512		; MBR sector buffer
 dma		dw	0		; current DMA address
 bank		db	0		; HBIOS DMA bank

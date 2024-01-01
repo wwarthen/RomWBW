@@ -390,17 +390,20 @@ below enumerates these values.
 | **Device Type** | **ID** | **Description**                          | **Driver** |
 |-----------------|-------:|------------------------------------------|------------|
 | CIODEV_UART     | 0x00   | 16C550 Family Serial Interface           | uart.asm   |
-| CIODEV_ASCI     | 0x10   | Z180 Built-in Serial Ports               | asci.asm   |
-| CIODEV_TERM     | 0x20   | Terminal                                 | ansi.asm   |
-| CIODEV_PRPCON   | 0x30   | PropIO Serial Console Interface          | prp.asm    |
-| CIODEV_PPPCON   | 0x40   | ParPortProp Serial Console Interface     | ppp.asm    |
-| CIODEV_SIO      | 0x50   | Zilog Serial Port Interface              | sio.asm    |
-| CIODEV_ACIA     | 0x60   | MC68B50 Asynchronous Interface           | acia.asm   |
-| CIODEV_PIO      | 0x70   | Zilog Parallel Interface Controller      | pio.asm    |
-| CIODEV_UF       | 0x80   | FT232H-based ECB USB FIFO                | uf.asm     |
-| CIODEV_DUART    | 0x90   | SCC2681 Family Dual UART                 | duart.asm  |
-| CIODEV_Z2U      | 0xA0   | Zilog Z280 Built-in Serial Ports         | z2u.asm    |
-| CIODEV_LPT      | 0xB0   | Parallel I/O Controller                  | lpt.asm    |
+| CIODEV_ASCI     | 0x01   | Z180 Built-in Serial Ports               | asci.asm   |
+| CIODEV_TERM     | 0x02   | Terminal                                 | ansi.asm   |
+| CIODEV_PRPCON   | 0x03   | PropIO Serial Console Interface          | prp.asm    |
+| CIODEV_PPPCON   | 0x04   | ParPortProp Serial Console Interface     | ppp.asm    |
+| CIODEV_SIO      | 0x05   | Zilog Serial Port Interface              | sio.asm    |
+| CIODEV_ACIA     | 0x06   | MC68B50 Asynchronous Interface           | acia.asm   |
+| CIODEV_PIO      | 0x07   | Zilog Parallel Interface Controller      | pio.asm    |
+| CIODEV_UF       | 0x08   | FT232H-based ECB USB FIFO                | uf.asm     |
+| CIODEV_DUART    | 0x09   | SCC2681 Family Dual UART                 | duart.asm  |
+| CIODEV_Z2U      | 0x0A   | Zilog Z280 Built-in Serial Ports         | z2u.asm    |
+| CIODEV_LPT      | 0x0B   | Parallel I/O Controller                  | lpt.asm    |
+| CIODEV_ESPCON   | 0x0B   | ESP32 VGA Console                        | esp.asm    |
+| CIODEV_ESPSER   | 0x0B   | ESP32 Serial Port                        | esp.asm    |
+| CIODEV_SCON     | 0x0B   | S100 Console                             | scon.asm   |
 
 Character devices can usually be configured with line characteristics
 such as speed, framing, etc. A word value (16 bit) is used to describe
@@ -568,15 +571,20 @@ below enumerates there values.
 | **Device Type** | **ID** | **Description**                          | **Driver** |
 |-----------------|-------:|------------------------------------------|------------|
 | DIODEV_MD       | 0x00   | Memory Disk                              | md.asm     |
-| DIODEV_FD       | 0x10   | Floppy Disk                              | fd.asm     |
-| DIODEV_RF       | 0x20   | RAM Floppy                               | rf.asm     |
-| DIODEV_IDE      | 0x30   | IDE Disk                                 | ide.asm    |
-| DIODEV_ATAPI    | 0x40   | ATAPI Disk (not implemented)             |            |
-| DIODEV_PPIDE    | 0x50   | PPIDE Disk                               | ppide.asm  |
-| DIODEV_SD       | 0x60   | SD Card                                  | sd.asm     |
-| DIODEV_PRPSD    | 0x70   | PropIO SD Card                           | prp.asm    |
-| DIODEV_PPPSD    | 0x80   | ParPortProp SD Card                      | ppp.asm    |
-| DIODEV_HDSK     | 0x90   | SIMH HDSK Disk                           | hdsk.asm   |
+| DIODEV_FD       | 0x01   | Floppy Disk                              | fd.asm     |
+| DIODEV_RF       | 0x02   | RAM Floppy                               | rf.asm     |
+| DIODEV_IDE      | 0x03   | IDE Disk                                 | ide.asm    |
+| DIODEV_ATAPI    | 0x04   | ATAPI Disk (not implemented)             |            |
+| DIODEV_PPIDE    | 0x05   | PPIDE Disk                               | ppide.asm  |
+| DIODEV_SD       | 0x06   | SD Card                                  | sd.asm     |
+| DIODEV_PRPSD    | 0x07   | PropIO SD Card                           | prp.asm    |
+| DIODEV_PPPSD    | 0x08   | ParPortProp SD Card                      | ppp.asm    |
+| DIODEV_HDSK     | 0x09   | SIMH HDSK Disk                           | hdsk.asm   |
+| DIODEV_PPA      | 0x0A   | Iomega PPA Disk                          | ppa.asm    |
+| DIODEV_IMM      | 0x0B   | Iomega IMM Disk                          | imm.asm    |
+| DIODEV_SYQ      | 0x0C   | Syquest Sparq Disk                       | syq.asm    |
+| DIODEV_CHUSB    | 0x0D   | CH375/376 USB Disk                       | ch.asm     |
+| DIODEV_CHSD     | 0x0E   | CH375/376 SD Card                        | ch.asm     |
 
 A fixed set of media types are defined. The currently defined media 
 types identifiers are listed below. Each driver will support one or
@@ -757,28 +765,36 @@ of memory because it avoids a double copy.
 Reports device information about the specified Disk Unit (C).  The 
 Status (A) is a standard HBIOS result code.
 
-Bit 7 of the Device Attribute (C) value returned indicates whether the 
-device is a floppy disk.  If it is a floppy disk, the Device Attribute 
-(C) value is encoded as follows:
+The Device Attribute (C) value returned indicates various
+feature indicators related to the device being referenced
+by the specified Disk Unit (C).  The high 3 bits apply to
+all devices.  The definition of the low 5 bits depends on
+whether the device is a Floppy (indicated by bit 5).
+
+The common bits are:
 
 | **Bits** | **Definition**                                   |
 |---------:|--------------------------------------------------|
-| 7        | = 1 (Floppy Disk)                                |
-| 6-5      | Form Factor: 0=8", 1=5.25", 2=3.5", 3=Other      |
-| 4        | Sides: 0=SS, 1=DS                                |
-| 3-2      | Density: 0=SD, 1=DD, 2=HD, 3=ED                  |
-| 1-0      | Reserved                                         |
-
-If the Disk Unit (C) specified is a not floppy disk, then the Device 
-Attribute (C) encoding is as follows:
-
-| **Bits** | **Definition**                                   |
-|---------:|--------------------------------------------------|
-| 7        | = 0 (not Floppy Disk)                            |
+| 7        | Floppy                                           |
 | 6        | Removable                                        |
-| 5-3      | Type: 0=Hard, 1=CF, 2=SD, 3=USB,                 |
-|          | 4=ROM, 5=RAM, 6=RAMF, 7=FLASH                    |
-| 2-0      | Reserved                                         |
+| 5        | High Capacity (>8 MB)                            |
+
+The Floppy specific bits are:
+
+| **Bits** | **Definition**                                   |
+|---------:|--------------------------------------------------|
+| 4-3      | Form Factor: 0=8", 1=5.25", 2=3.5", 3=Other      |
+| 2        | Sides: 0=SS, 1=DS                                |
+| 1-0      | Density: 0=SD, 1=DD, 2=HD, 3=ED                  |
+
+The non-Floppy specific bits are:
+
+| **Bits** | **Definition**                                   |
+|---------:|--------------------------------------------------|
+| 4        | LBA Capable                                      |
+| 3-0      | Media Type: 0=Hard Disk, 1=CF, 2=SD, 3=USB,      |
+|          |   4=ROM, 5=RAM, 6=RAMF, 7=FLASH, 8=CD-ROM,       |
+|          |   9=Cartridge                                    |
 
 Device Type (D) indicates the specific hardware driver that handles the 
 specified Disk Unit (C).  Values are listed at the start of this 
@@ -870,11 +886,11 @@ unit.  The table below enumerates these values.
 | **Device Type** | **ID** | **Description**                          | **Driver** |
 |-----------------|-------:|------------------------------------------|------------|
 | RTCDEV_DS       | 0x00   | Maxim DS1302 Real-Time Clock w/ NVRAM    | dsrtc.asm  |
-| RTCDEV_BQ       | 0x10   | BQ4845P Real Time Clock                  | bqrtc.asm  |
-| RTCDEV_SIMH     | 0x20   | SIMH Simulator Real-Time Clock           | simrtc.asm |
-| RTCDEV_INT      | 0x30   | Interrupt-based Real Time Clock          | intrtc.asm |
-| RTCDEV_DS7      | 0x40   | Maxim DS1307 PCF I2C RTC w/ NVRAM        | ds7rtc.asm |
-| RTCDEV_RP5      | 0x50   | Ricoh RPC01A Real-Time Clock w/ NVRAM    | rp5rtc.asm |
+| RTCDEV_BQ       | 0x01   | BQ4845P Real Time Clock                  | bqrtc.asm  |
+| RTCDEV_SIMH     | 0x02   | SIMH Simulator Real-Time Clock           | simrtc.asm |
+| RTCDEV_INT      | 0x03   | Interrupt-based Real Time Clock          | intrtc.asm |
+| RTCDEV_DS7      | 0x04   | Maxim DS1307 PCF I2C RTC w/ NVRAM        | ds7rtc.asm |
+| RTCDEV_RP5      | 0x05   | Ricoh RPC01A Real-Time Clock w/ NVRAM    | rp5rtc.asm |
 
 The time functions to get and set the time (RTCGTM and RTCSTM) require a
 6 byte date/time buffer in the following format. Each byte is BCD 
@@ -1001,6 +1017,198 @@ used.
 
 `\clearpage`{=latex}
 
+## Display Keypad (DSKY)
+
+The Display Keypad functions provide read/write access to a segment
+style display and associated hex keypad.
+
+HBIOS only supports a single DSKY device since there is no reason to have
+more than one at a time.  The DSKY unit is assigned a Device Type ID 
+which indicates the specific hardware device driver that handles the 
+unit.  The table below enumerates these values.
+
+| **Device Type** | **ID** | **Description**                          | **Driver** |
+|-----------------|-------:|------------------------------------------|------------|
+| DSKYDEV_ICM     | 0x01   | Original ICM7218 based DSKY              | icm.asm    |
+| DSKYDEV_PKD     | 0x02   | Next Gen Intel P8279 based DSKY          | pkd.asm    |
+
+When segment display function encodes the display data in a byte per
+character format.  Currently, all segment displays are exactly
+8 charadcters and this is assumed in API calls.  The encoding of each
+byte is as shown below:
+
+```
+  +---01---+
+  |        |
+  20      02
+  |        |
+  +---40---+
+  |        |
+  10      04
+  |        |
+  +---08---+  80
+```
+
+The keypad keys are identified by the following key ids.  Not all
+keypads will contain all keys.
+
+| **Key Id** | **Key Definition** | **Key Id** | **Key Definition** |
+|------------|--------------------|------------|--------------------|
+| $00        | Hex Numeric 0      | $10        | Forward            |
+| $01        | Hex Numeric 1      | $11        | Backward           |
+| $02        | Hex Numeric 2      | $12        | Clear              |
+| $03        | Hex Numeric 3      | $13        | Enter              |
+| $04        | Hex Numeric 4      | $14        | Deposit            |
+| $05        | Hex Numeric 5      | $15        | Examine            |
+| $06        | Hex Numeric 6      | $16        | Go                 |
+| $07        | Hex Numeric 7      | $17        | Boot               |
+| $08        | Hex Numeric 8      | $18        | F4                 |
+| $09        | Hex Numeric 9      | $19        | F3                 |
+| $0A        | Hex Numeric A      | $1A        | F2                 |
+| $0B        | Hex Numeric B      | $1B        | F1                 |
+| $0C        | Hex Numeric C      |            |                    |
+| $0D        | Hex Numeric D      |            |                    |
+| $0E        | Hex Numeric E      |            |                    |
+| $0F        | Hex Numeric F      |            |                    |
+
+### Function 0x30 -- DSKY Reset (DSKYRESET)
+
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x30                                | A: Status                              |
+
+This function performs a device dependent reset operation on the DSKY.
+The display will be cleared, keyboard queue will be flushed, and
+chip will be reinitialized.  The returned Status (A) is a standard 
+HBIOS result code.
+
+### Function 0x31 -- DSKY (DSKYSTATUS)
+
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x31                                | A: Status / Characters Pending         |
+
+Return the count of Characters Pending (A) in the input buffer of the 
+DSKY.  If the unit has no input buffer or the 
+buffer utilization is not available, the function may return simply 0 or
+1 where 0 means there is no character available and 1 means there is at
+least one character available.
+
+The value returned in register A is used as both a Status (A) code and 
+the return value. Negative values (bit 7 set) indicate a standard HBIOS 
+result (error) code.  Otherwise, the return value represents the number 
+of characters in the buffer.
+
+### Function 0x32 -- DSKY Get Key (DSKYGETKEY)
+
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x32                                | A: Status                              |
+|                                        | E: Character Value                     |
+
+Read and return a Character (E) from the DSKY.
+If no character(s) are available in the unit's input buffer, this 
+function will wait indefinitely.  The returned Status (A) is a standard 
+HBIOS result code.
+
+The Character Value (E) returned is not ASCII.  It is a keypad key
+id.  The possible id values are listed at the start of this section.
+
+### Function 0x33 -- DSKY Show HEX (RTCSHOWHEX)
+
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x33                                | A: Status                              |
+| DE:HL=Binary Value                     |                                        |
+
+Display the 32-bit binary value (DE:HL) in hex on the DSKY segment
+display.  All decimal points of the display will be off.
+The Status (A) is a standard HBIOS result code.
+
+### Function 0x34 -- DSKY Show Segments (DSKYSHOWSEG)
+
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x34                                | A: Status                              |
+| HL: Buffer Address                     |                                        |
+
+Display the segment-encoded values on the segment display.  The encoding
+is defined at the start of this section.  The entire displa is updated
+and it is assumed that an 8 character buffer will be pointed to by HL.
+The buffer must reside in high memory.
+The Status (A) is a standard HBIOS result code.
+
+### Function 0x35 -- DSKY Keypad LEDs (DSKYKEYLEDS)
+
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x35                                | A: Status                              |
+| HL: Buffer Address                     |                                        |
+
+Light the LEDs for the keypad keys according to the
+bitmap contained in the buffer pointed to by HL.  The buffer
+must be located in high memory and is assumed to be 8 bytes.
+
+At this time, the bitmap is specific to the PKD hardware.
+This function is ignored by the ICM hardware.
+The Status (A) is a standard HBIOS result code.
+
+### Function 0x36 -- DSKY Status LED (DSKYSTATLED)
+
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x36                                | A: Status                              |
+| D: LED Number                          |                                        |
+| E: LED State                           |                                        |
+
+Set or clear the status LED specified in D.  The state of
+the LED is contained in E.  If E=0, the LED will be turned
+off.  If E=1, the LED will be turned on.
+
+This function is specific to the PKD hardware.  It will be ignored
+by the ICM hardware.
+The Status (A) is a standard HBIOS result code.
+
+### Function 0x37 -- DSKY Beep (DSKYBEEP)
+
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x37                                | A: Status                              |
+
+Beep the onboard speaker of the DSKY.
+This function is specific to the PKD hardware.  It will be ignored
+by the ICM hardware.
+The Status (A) is a standard HBIOS result code.
+
+### Function 0x38 -- DSKY Device (DSKYDEVICE)
+
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x38                                | A: Status                              |
+|                                        | C: Device Attributes                   |
+|                                        | D: Device Type                         |
+|                                        | E: Device Number                       |
+|                                        | H: Device Unit Mode                    |
+|                                        | L: Device I/O Base Address             |
+
+Returns device information for the DSKY unit.  The Status (A) is a 
+standard HBIOS result code.
+
+Device Attribute (C) values are not yet defined.  Device Type (D) 
+indicates the specific hardware driver that handles the specified 
+character unit.  Values are listed at the start of this section. Device 
+Number (E) indicates the physical device number assigned per driver 
+which is always 0 for DSKY.
+
+Device Mode (H) is used to indicate the variant of the chip or circuit 
+that is used by the specified unit.  The Device I/O Base Address (L) 
+indicates the starting port address of the hardware interface that is 
+servicing the specified unit.  Both of these values are considered 
+driver specific.  Refer to the associated hardware driver for the values
+used.
+
+`\clearpage`{=latex}
+
 ## Video Display Adapter (VDA)
 
 The VDA functions are provided as a common interface to Video Display
@@ -1014,10 +1222,11 @@ below enumerates there values.
 | **Device Type** | **ID** | **Description**                          | **Driver** |
 |-----------------|-------:|------------------------------------------|------------|
 | VDADEV_VDU      | 0x00   | MC6845 Family Video Display Controller   | vdu.asm    |
-| VDADEV_CVDU     | 0x10   | MC8563-based Video Display Controller    | cvdu.asm   |
-| VDADEV_GDC      | 0x20   | uPD7220 Video Display Controller         | gdc.asm    |
-| VDADEV_TMS      | 0x30   | TMS9918/38/58 Video Display Controller   | tms.asm    |
-| VDADEV_VGA      | 0x40   | HD6445CP4-based Video Display Controller | vga.asm    |
+| VDADEV_CVDU     | 0x01   | MC8563-based Video Display Controller    | cvdu.asm   |
+| VDADEV_GDC      | 0x02   | uPD7220 Video Display Controller         | gdc.asm    |
+| VDADEV_TMS      | 0x03   | TMS9918/38/58 Video Display Controller   | tms.asm    |
+| VDADEV_VGA      | 0x04   | HD6445CP4-based Video Display Controller | vga.asm    |
+| VDADEV_VRC      | 0x05   | VGARC                                    | vrc.asm    |
 
 Depending on the capabilities of the hardware, the use of colors and
 attributes may or may not be supported. If the hardware does not support
@@ -1251,14 +1460,17 @@ standard HBIOS result code.
 |----------------------------------------|----------------------------------------|
 | B: 0x47                                | A: Status                              |
 | C: Video Unit                          |                                        |
+| D: Scope                               |                                        |
 | E: Color                               |                                        |
 
-Assign the specified Color (E) code to be used for all subsequent 
-character writes/fills. This color is also used to fill new lines 
-generated by scroll operations. Refer to the color code table above for 
-a list of the available color codes. Note that a given video display may
-or may not support any/all colors.  The Status (A) is a standard HBIOS 
-result code.
+Assign the specified Color (E) code for character foreground/background.
+If Scope (D) is 0, the specified color will  be used for all 
+subsequent character writes/fills. This color is also used to fill new 
+lines generated by scroll operations.  If Scope (D) is 1, then the 
+specified foreground/background color will be applied immediately to the
+ entire screen.  Refer to the color code table above for a list of the 
+available color codes. Note that a given video display may or may not 
+support any/all colors.  The Status (A) is a standard HBIOS result code.
 
 ### Function 0x48 -- Video Write Character (VDAWRC)
 
@@ -1429,9 +1641,9 @@ below enumerates these values.
 | **Device Type** | **ID** | **Description**                              | **Driver**  |
 |-----------------|-------:|----------------------------------------------|-------------|
 | SNDDEV_SN76489  | $00    | SN76489 Programmable Sound Generator         | sn76489.asm |
-| SNDDEV_AY38910  | $10    | AY-3-8910/YM2149 Programmable Sound Generator| ay38910.asm |
-| SNDDEV_BITMODE  | $20    | Bit-bang Speaker                             | spk.asm     |
-| SNDDEV_YM2612   | $30    | YM2612 Programmable Sound Generator          | ym2612.asm  |
+| SNDDEV_AY38910  | $01    | AY-3-8910/YM2149 Programmable Sound Generator| ay38910.asm |
+| SNDDEV_BITMODE  | $02    | Bit-bang Speaker                             | spk.asm     |
+| SNDDEV_YM2612   | $03    | YM2612 Programmable Sound Generator          | ym2612.asm  |
 
 The Sound functions defer the actual programming of the sound chip
 until the SNDPLAY function is called.  You will call the volume
@@ -1752,6 +1964,9 @@ The hardware Platform (L) is identified as follows:
 | PLT_RCZ280    |12      | RCBUS W/ Z280                           |
 | PLT_MBC       |13      | NHYODYNE MULTI-BOARD COMPUTER           |
 | PLT_RPH       |14      | RHYOPHYRE GRAPHICS SBC                  |
+| PLT_Z80RETRO  |15      | Z80 RETRO COMPUTER                      |
+| PLT_S100      |16      | S100 COMPUTERS Z180                     |
+| PLT_DUO       |17      | DUODYNE Z80 SYSTEM                      |
 
 ### Function 0xF2 -- System Set Bank (SYSSETBNK)
 
@@ -2123,6 +2338,17 @@ Wait States (D) is the actual number of wait states, not the number
 of wait states added.  The returned Status (A) is a standard HBIOS 
 result code.
 
+#### SYSGET Subfunction 0xF4 -- Get Front Panel Swithes (PANEL)
+
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0xF8                                | A: Status                              |
+| C: 0xF4                                | L: Switches                            |
+
+This function will return the current value of the switches (L) from the
+front panel of the system.  If no front panel is available in the
+system, the returned Status (A) will indicate a No Hardware error.
+
 ### Function 0xF9 -- System Set (SYSSET)
 
 | **Entry Parameters**                   | **Returned Values**                    |
@@ -2205,6 +2431,18 @@ cases this may not be possible.  The baud rate of ASCI ports have a
 limited set of divisors.  If there is no satisfactory divisor to
 retain the existing baud rate under the new CPU speed, then the baud
 rate of the ASCI port(s) will be affected.
+
+#### SYSSET Subfunction 0xF4 -- Set Front Panel LEDs (PANEL)
+
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0xF9                                | A: Status                              |
+| C: 0xF4                                |                                        |
+| L: LEDs                                |                                        |
+
+This function will set the front panel LEDs based on the bits in L. If 
+no front panel is available in the system, the returned Status (A) will 
+indicate a No Hardware error.
 
 ### Function 0xFA -- System Peek (SYSPEEK)
 

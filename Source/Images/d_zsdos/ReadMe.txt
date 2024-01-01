@@ -40,16 +40,16 @@ more information.  I have chosen to use ZSDOS to pick up the maximum
 number of features. Date stamping is still available, but must be
 loaded as an RSX.
 
-The source allows you to compile the OS code as either v1.1 or v1.2 via 
-an equate. Version 1.2 was never distributed and contains only a few 
-minor fixes.  Unfortunately, the use of v1.2 would make it incompatible 
-with many support modules and overlays due to their reliance on 
-hard-coded address assumptions.  This is probably why it was never 
-distributed.  I encountered this myself with the date stamping code -- 
-it won't work with v1.2 because it does a version check. For now, I have 
-chosen to use v1.1 to maximize compatibility (seems to be what everyone 
-is doing). Ultimately, I may go back and try to rebuild everything in 
-the distribution to bring it all up to v1.2. That is for the future 
+The source allows you to compile the OS code as either v1.1 or v1.2 via
+an equate. Version 1.2 was never distributed and contains only a few
+minor fixes.  Unfortunately, the use of v1.2 would make it incompatible
+with many support modules and overlays due to their reliance on
+hard-coded address assumptions.  This is probably why it was never
+distributed.  I encountered this myself with the date stamping code --
+it won't work with v1.2 because it does a version check. For now, I have
+chosen to use v1.1 to maximize compatibility (seems to be what everyone
+is doing). Ultimately, I may go back and try to rebuild everything in
+the distribution to bring it all up to v1.2. That is for the future
 though.
 
 == Usage ==
@@ -275,6 +275,11 @@ LBREXT.COM - Extract file from .LBR libraries
 LBREXT36.CFG - ZCNFG configuration file for LBREXT
 ZXD.COM - Enhanced directory lister w/ date/time stamp support
 ZXD.CFG - ZCNFG configuration file for ZXD
+BBCBASIC.COM - BBC BASIC CP/M Version 3.00 by R.T.Russell
+BBCBASIC.TXT - Help file for BBC BASIC
+GENHEX.COM - Generates an Intel Hex file from the input file
+LS.COM - An alternative file listing to DIR
+LSWEEP.COM - Can extract and view member files of an .LBR archive
 
 == Testing Applications (User Area 2) ==
 

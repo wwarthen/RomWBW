@@ -3,6 +3,12 @@
 #
 d_nzcom/ReadMe.txt 0:
 #
+# Include selected CP/M 2.2 files
+#
+d_cpm22/u0/STAT.COM 0:
+d_cpm22/u0/SUBMIT.COM 0:
+d_cpm22/u0/XSUB.COM 0:
+#
 # Add RomWBW utilities
 #
 #../../Binary/Apps/*.com 0:
@@ -13,6 +19,7 @@ d_nzcom/ReadMe.txt 0:
 ../../Binary/Apps/rtc.com 0:
 ../../Binary/Apps/syscopy.com 0:
 ../../Binary/Apps/talk.com 0:
+../../Binary/Apps/htalk.com 0:
 ../../Binary/Apps/timer.com 0:
 ../../Binary/Apps/xm.com 0:
 #

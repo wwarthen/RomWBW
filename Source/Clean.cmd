@@ -4,6 +4,7 @@ setlocal
 pushd HDIAG && call Clean.cmd & popd
 pushd Apps && call Clean.cmd & popd
 pushd CPM22 && call Clean.cmd & popd
+pushd QPM && call Clean.cmd & popd
 pushd ZCPR && call Clean.cmd & popd
 pushd ZCPR-DJ && call Clean.cmd & popd
 pushd ZSDOS && call Clean.cmd & popd
@@ -21,4 +22,5 @@ pushd Prop && call Clean & popd
 pushd RomDsk && call Clean & popd
 pushd Doc && call Clean & popd
 pushd ZRC && call Clean & popd
-pushd ZZRC && call Clean & popd
+pushd Z1RCC && call Clean & popd
+pushd ZZRCC && call Clean & popd

@@ -1,0 +1,460 @@
+	SUBTTL	Global Equates,Temps,Defs
+	TITLE	FCHAIN - Fortran CALL FCHAIN Statement
+
+	ENTRY	FCHAIN
+	EXTRN	$CLSFL,$INIT,$IOERR
+
+CPM	SET	0		; True for CP/M
+CPM42	SET	1		; True for CP/M's at X'4200'
+ISIS	SET	0		; True for ISIS-II
+MOD1	SET	0		; True for TRS-80 Mod-1
+MOD2	SET	0		; True for TRS-80 Mod-2
+TEK	SET	0		; True for Tektronics
+
+CR	SET	13
+LF	SET	10
+
+NAMLEN	SET	11		; Default Filename Length **3.36
+
+IF	MOD1
+NAMLEN	SET	23
+	ENDIF
+IF	MOD2
+NAMLEN	SET	30
+	ENDIF
+
+
+IF	CPM42
+CPM	SET	1
+	ENDIF
+IF	CPM
+CPMWRM	SET	0		; CP/M Base ( & Warm Boot Addr)
+	ENDIF
+IF	CPM42
+CPMWRM	SET	4200H
+	ENDIF
+;	----
+IF	CPM
+C.EMSG	SET	9
+C.OPEN	SET	15
+C.READ	SET	20
+C.BUFF	SET	26
+CPMENT	SET	CPMWRM+5	; CP/M Entry (BDOS Funct call addr)
+TFCB	SET	CPMWRM+5CH
+TBUFF	SET	CPMWRM+80H
+TPA	SET	CPMWRM+100H
+
+;**3.36 DFTEXT:	DB	'COM'
+
+	ENDIF
+;	================
+IF	ISIS
+CISIS	SET	40H		;ISIS Entry Point
+I.LOAD	SET	6		;Load Pgrm Function
+	ENDIF
+;	================
+IF	MOD1
+M.ABRT	SET	4430H		;Error return to system
+M.GET	SET	13H		;Input a byte from an I/O device
+M.OPEN	SET	4424H		;Open an existing file
+M.EXIT	SET	402DH		;Normal return to system
+	ENDIF
+;	================
+IF	TEK
+SRB	SET	3
+T.CHAN	SET	SRB+1		; Channel No.
+T.LEN	SET	SRB+5		; Filename Len
+T.BPTR	SET	SRB+6		; Address of Buffer
+T.FNAM	SET	SRB+8		; Filename Buffer
+	ENDIF
+;	================
+IF2
+	.PRINTX/Fortran CHAIN/
+	IF	CPM
+		.PRINTX/	For CPM/
+	ENDIF
+	IF	CPM42
+		.PRINTX/	..at 4200H/
+	ENDIF
+	IF	ISIS
+		.PRINTX/	For ISIS-II/
+	ENDIF
+	IF	MOD1
+		.PRINTX/	For TRS80 Mod-1/
+	ENDIF
+	IF	MOD2
+		.PRINTX/	For TRS80 Mod-2/
+	ENDIF
+	IF	TEK
+		.PRINTX/	For Tektronics/
+	ENDIF
+ENDIF
+
+	PAGE
+	SUBTTL	FCHAIN - Process a CALL FCHAIN statement
+
+;  FCHAIN processes a CALL FCHAIN statement by the following steps:
+;
+;	1.	Parse filename to see if valid
+;
+;	2.	Open file in default OS File Control Block
+;
+;	3.	Move a short program loader to top of memory
+;		and load new program
+;
+;	SYNTAX:		CALL FCHAIN ('<OS dependent filename> ')
+
+;	ENTRY	[HL] = FWA SDESC for Filename
+;	EXIT	Start executing new program
+;	USES	ALL
+
+FCHAIN:
+IF	CPM
+	LDAX	D		;Get Drive no.
+	STA	TFCB		;Put in TFCB
+	ENDIF
+	SHLD	.NFWA		; Save FWA of Name
+	LXI	H,CHN01
+	PUSH	H
+	LHLD	$CLSFL
+	PCHL			; Close all Files
+CHN01:
+	LXI	B,CHN02		; Addr to RET to..
+	JMP	$INIT		; Reset SP to top of ram
+CHN02:
+IF	CPM
+	CALL	.SNAM		; Go scan filename
+	LXI	D,TBUFF		;Set DMA buffer
+	MVI	C,C.BUFF
+	CALL	CPMENT
+	LXI	D,TFCB		;Open file
+	MVI	C,C.OPEN
+	CALL	CPMENT
+	INR	A
+	JZ	$IOERR		; **IO** Error - File not found
+	LXI	H,0
+	DAD	SP
+	DCR	H
+	MVI	L,0		;Get 1 page below user stack
+	LXI	D,LOADER	;Move program loader to high memory
+	MVI	B,ENDIPL-IPL
+	CALL	$$MOV
+	MOV	L,B		;[HL] = addr of loader
+	PUSH	H		;For 'RET' to loader
+	LXI	D,LOCTAB	;[DE] = addr of ADDRESS MODIFY TABLE
+CHN03:	LDAX	D		;Get low byte address
+	ORA	A		;Are we done?
+	JZ	CHN04		;  Yes
+	MOV	L,A		;[HL] = address to modify
+	MOV	M,H		;Modify it with [H]
+	INX	D
+	JMP	CHN03		;Keep looping
+CHN04:	LXI	H,TPA		;[HL] = TPA address
+	RET			;'RET' to loader
+ENDIF
+;	================
+IF	ISIS
+	LHLD	.NFWA
+	XCHG			;[DE] = Strt of Name
+	LXI	H,I.FNAM
+	MVI	B,15
+	CALL	$$MOV		;Move Filename to FCB
+	MVI	C,I.LOAD	;Load Function
+	LXI	D,I.FCB
+	CALL	CISIS		;Load next Pgm & Go
+	JMP	$IOERR		; (Just in case)
+	ENDIF
+;	================
+IF	MOD1
+	LXI	H,0		;Get stack address
+	DAD	SP
+	MVI	L,0		;Get below user stack
+	DCR	H
+	DCR	H		;Blocking buffer address
+	DCR	H		;Loader start address
+	PUSH	H		;Save loader start address
+	MVI	B,32		;Blank fill 32 byte DCB
+SPLOOP:	DCX	H
+	MVI	M,' '
+	DCR	B
+	JNZ	SPLOOP
+	POP	B		;Loader start address
+	PUSH	H		;Save DCB addr
+	LHLD	.NFWA
+	XCHG			;[DE] = Strt of Filename
+	POP	H
+	PUSH	H		;[HL] = DCB addr
+	PUSH	B		;Save loader start address
+	CALL	.SNAM		;Scan Filename into DCB
+	MVI	B,0		;LRL = 256
+	POP	H		;Loader start address
+	POP	D		;DCB (Filespec) address
+	PUSH	D		;Save DCB address
+	PUSH	H		;Save loader start address
+	INR	H		;Blocking buffer address
+	CALL	M.OPEN		;Open an existing file
+	JNZ	$IOERR		;**IO** Err - Fnf.
+
+	DCR	H		;Top loader start address
+	LXI	D,LOADER	;Loader start address
+	MVI	B,ENDIPL-IPL	;Size of loader program
+	CALL	$$MOV		;Move to top of memory
+
+	POP	H		;Loader start address
+	POP	D		;DCB address
+	PCHL			;Run loader
+ENDIF
+;	================
+IF	MOD2
+	LHLD	.NFWA		;[HL] points to name
+	PUSH	H		;Save SOS
+	LXI	B,NAMLEN	;[B]=0, [C]=Max Name Len
+CHN03:
+	MOV	A,M
+	CPI	' '+1
+	JC	CHN04		;Brif EOS
+	INX	H
+	INR	B		;String Len+1
+	DCR	C		;Max len-1
+	JNZ	CHN03
+	JMP	$IOERR		;**IO** Error, Name too long
+CHN04:
+	MVI	M,CR		;Proper TRSDOS Terminator
+	POP	H		;Get SOS
+	MVI	A,37		;Exeq TRSDOS cmnd, no ret
+	RST	1		;Do it, [HL]=string, [B]=string len
+	JMP	$IOERR		; (Who trusts Trash-DOS)
+ENDIF
+;	================
+IF	TEK
+	LHLD	.NFWA
+	XCHG			; [DE]=Filename STR
+	LXI	H,T.FNAM	; [HL]=Filename Buffer
+	LXI	B,NAMLEN	; [B]=0, [C]=Max Name Len
+CHN03:
+	LDAX	D
+	CPI	' '+1
+	JC	CHN04		; Brif End-of-Name
+	MOV	M,A
+	INX	D
+	INX	H
+	INR	B		; Len+1
+	DCR	C		; Max-1
+	JZ	$IOERR		; **IO** Error if name too long..
+	JMP	CHN03
+CHN04:
+	MVI	M,CR		; Store Terminator
+	MOV	A,B
+	INR	A		; Include CR in Len Cnt
+	STA	T.LEN		; Store Filename Len in SRB
+	MVI	A,18H		; Load Overlay & Execute
+	STA	SRB
+	MVI	A,4
+	STA	T.CHAN		; Store Chan 4 (Doc is unclear)
+	LXI	D,T.FNAM
+	LXI	H,T.BPTR
+	MOV	M,D
+	INX	H		; Store Fname Pntr in SRB
+	MOV	M,E
+	MVI	A,0FFH
+	OUT	0F7H		; Load Overlay & Execute
+	JMP	$IOERR		; Should never happen
+ENDIF
+;	================
+
+	PAGE
+	SUBTTL	Scan for valid Filename
+
+.SNAM:
+IF	CPM
+	LHLD	.NFWA		; FWA of Filename
+	XCHG			; [DE] = name FWA
+	LXI	H,TFCB+1	; [HL] = FILE CTRL BLOCK
+	MVI	B,NAMLEN
+.COMMENT	&	**3.36
+.SNAM1:
+	LDAX	D		; GET NAME CHAR
+	INX	D
+	STA	.NFWA		; Set '.' if user supplied Ext.
+	CPI	'.'
+	JZ	.SNAM3		; Brif saw Ext
+	CPI	' '+1
+	JC	.SNAM3		; Brif End-of-Name
+	MOV	M,A		; PUT IN FCB
+	INX	H
+	DCR	B		; UNTIL STRING EXHAUSTED
+	JNZ	.SNAM1
+.SNAM2:
+	LDAX	D
+	INX	D
+	STA	.NFWA
+	CPI	'.'		; Looking for Ext..
+	JZ	.SNAM4
+	CPI	' '+1		; or end of name
+	JNC	.SNAM2
+	JMP	.SNAM4		; Go copy user or default ext
+.SNAM3:
+	MVI	M,' '
+	INX	H
+	DCR	B
+	JNZ	.SNAM3
+.SNAM4:
+	MVI	B,3		; Scan Extention
+	LDA	.NFWA
+	CPI	'.'
+	JZ	.SNAM5		; Brif user supplied ext
+	LXI	D,DFTEXT	; ..Else use default
+**3.36	&
+.SNAM5:
+	LDAX	D
+	INX	D
+	MOV	M,A
+	INX	H
+	DCR	B
+	JNZ	.SNAM5
+;	----------------
+	MOV	M,B		; Clear File EX
+	MOV	A,B
+	STA	TFCB+32		; NR = 0
+	RET
+ENDIF
+;	================
+IF	MOD1
+	MVI	B,NAMLEN
+.SNAM0:
+	LDAX	D
+	CPI	' '+1
+	JC	.SNAM1		;Brif EOS
+	MOV	M,A
+	INX	D
+	INX	H
+	DCR	B
+	JNZ	.SNAM0
+	JMP	$IOERR		;**IO** Error if name too long
+.SNAM1:
+	MVI	M,CR		;Terminate with CR
+	RET
+ENDIF
+
+	PAGE
+	SUBTTL	Relocated loader for CP/M & MOD1
+
+IF	CPM
+LOCTAB:
+	DB	(X0+2) AND 0FFH
+	DB	(X1+1) AND 0FFH
+	DB	(X2+2) AND 0FFH
+	DB	(X3+2) AND 0FFH
+	DB	0
+
+;	================
+LOADER:
+	.PHASE	0
+IPL:	LXI	D,TPA			;Program start address
+	PUSH	D			;Save as return address
+IPL1:	XCHG				;[DE] = Next load address
+	PUSH	D			;Save load address
+	MVI	C,C.BUFF		;Set DMA address
+	CALL	CPMENT
+	LXI	D,TFCB			;Read record
+	MVI	C,C.READ
+	CALL	CPMENT
+	POP	D			;Restore base address of record
+	ORA	A
+X0:	JNZ	IPLDON			;EOF
+	LXI	H,128			;[HL] = Record size
+	DAD	D			;[HL] = Start of next record
+X1:	MVI	A,IPL/256		;Get hi byte of IPL address
+	CMP	H			;Are we there?
+X2:	JNZ	IPL1			;No - continue loading program
+X3:	LXI	D,OVFMSG		;Print '* OUT OF MEMORY*'
+	MVI	C,C.EMSG
+	CALL	CPMENT
+	JMP	CPMWRM			;Reset and die
+IPLDON:
+	XRA	A
+	STA	TBUFF			; 0 = No cmnd line passed
+	MVI	A,' '
+	STA	TFCB+1			; Clear TFCB for Utilities
+	LXI	B,CPMWRM		; Push Warm Boot addr for
+	PUSH	B			; Utilities that just return...
+	JMP	TPA			;CLOSE FILE AND START PROG
+OVFMSG:
+	DB	CR,LF,'* Out of Memory *',CR,LF,'$'
+ENDIPL:
+	.DEPHASE	
+ENDIF
+;	================
+IF	MOD1
+LOADER:
+IPL:	CALL	M.GET			;Read character
+	JNZ	M.ABRT			;In case of error
+	CPI	2			;Is it EOF ?
+	.Z80
+	JR	Z,(IPL1)		;Get start address
+	.8080
+	CPI	1			;Is it data ?
+	JNZ	M.ABRT			;Not data then error
+	CALL	M.GET			;Length + 2
+	DCR	A
+	DCR	A
+	MOV	B,A			;Length
+	CALL	M.GET			;Load address
+	JNZ	M.ABRT			;In case of error
+	MOV	L,A
+	CALL	M.GET
+	JNZ	M.ABRT			;In case of error
+	MOV	H,A
+
+IPL0:	CALL	M.GET			;Get data
+	MOV	M,A			;Put data in load address
+	INX	H			;Increment load address
+	DCR	B			;# of bytes left to load
+	.Z80
+	JR	NZ,(IPL0)
+	JR	Z,(IPL)
+	.8080
+
+IPL1:	CALL	M.GET			;Get second 2 (EOF)
+	CPI	2
+	JNZ	M.ABRT			;In case of error
+	CALL	M.GET			;Get start address
+	JNZ	M.ABRT			;In case of error
+	MOV	L,A
+	CALL	M.GET
+	JNZ	M.ABRT			;In case of error
+	MOV	H,A
+	PCHL				;Run program
+ENDIPL:
+
+ENDIF
+;	================
+IF	CPM OR ISIS OR MOD1
+$$MOV:
+	LDAX	D
+	MOV	M,A
+	INX	D
+	INX	H
+	DCR	B
+	JNZ	$$MOV
+	RET
+ENDIF
+
+	DSEG
+
+.NFWA:	DS	2		; Temp for FWA of Filename
+
+IF	ISIS
+I.FCB:	DW	I.FNAM		;Pntr to Filename
+	DW	0		;Bias field
+	DW	1		;RETSW, Xfer control to new pgm
+	DW	I.NTRY		;Pntr to Entry addr store
+	DW	I.STAT		;Status
+;	--
+I.FNAM:	DS	15		;Filename
+I.NTRY:	DS	2		;Entry Point Address
+I.STAT:	DS	2		;Ret Status
+	ENDIF
+
+	END
+

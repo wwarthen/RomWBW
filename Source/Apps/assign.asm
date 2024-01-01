@@ -30,11 +30,13 @@
 ;   2021-12-06 [WBW] Fix inverted ROM/RAM DPB mapping in buffer alloc
 ;   2022-02-28 [WBW] Use HBIOS to swap banks under CP/M 3
 ;                    Use CPM3 BDOS direct BIOS call to get DRVTBL adr
+;   2023-06-19 [WBW] Update for revised DIODEVICE API
+;   2023-09-19 [WBW] Added CHUSB & CHSD device support
+;   2023-10-13 [WBW] Fixed DPH creation to select correct DPB
 ;_______________________________________________________________________________
 ;
 ; ToDo:
-;  1) Do something to prevent assigning slices when device does not support them
-;  2) ASSIGN C: causes drive map to be reinstalled unnecessarily
+;  1) ASSIGN C: causes drive map to be reinstalled unnecessarily
 ;_______________________________________________________________________________
 ;
 ;===============================================================================
@@ -664,10 +666,10 @@ makdphwbw:	; determine appropriate dpb (WBW mode, unit number in A)
 	jr	makdph0		; jump ahead
 makdph00:	
 	ld	e,6		; assume floppy
-	cp	$10		; floppy?
+	cp	$01		; floppy?
 	jr	z,makdph0	; yes, jump ahead
 	ld	e,3		; assume ram floppy
-	cp	$20		; ram floppy?
+	cp	$02		; ram floppy?
 	jr	z,makdph0	; yes, jump ahead
 	ld	e,4		; everything else is assumed to be hard disk
 	jr	makdph0		; yes, jump ahead
@@ -1065,10 +1067,6 @@ drvmap1:	; loop through device table looking for a match
 drvmap2:	
 	; convert index to device type id
 	ld	a,c		; index to accum
-	rlca			; move it to upper nibble
-	rlca			; ...
-	rlca			; ...
-	rlca			; ...
 	ld	(device),a	; save as device id
 ;
 	; loop thru hbios units looking for device type/unit match
@@ -1308,10 +1306,6 @@ prtdev:
 	rst	08		; call hbios, D := device, E := unit
 	push	de		; save results
 	ld	a,d		; device to A
-	rrca			; isolate high nibble (device)
-	rrca			;   ...
-	rrca			;   ...
-	rrca			;   ... into low nibble
 	and	$0F		; mask out undesired bits
 	push	hl		; save HL
 	add	a,a		; multiple A by two for word table
@@ -1405,12 +1399,11 @@ chkdev:		; HBIOS variant
 	; get device/unit info
 	ld	b,$17		; hbios func: diodevice
 	ld	c,a		; unit to C
-	rst	08		; call hbios, D := device, E := unit
-	ld	a,d		; device to A
+	rst	08		; call hbios, C := device attributes
 ;
 	; check slice support
-	cp	$30		; A has device/unit, in hard disk range?
-	jr	c,chkdev1	; if not hard disk, check slice val
+	bit	5,c		; high capacity device?
+	jr	z,chkdev1	; if not high cap, check slice val
 	xor	a		; otherwise, signal OK
 	ret
 ;
@@ -1918,11 +1911,11 @@ dev06	.db	"SD",0
 dev07	.db	"PRPSD",0
 dev08	.db	"PPPSD",0
 dev09	.db	"HDSK",0
-dev10	.equ	devunk
-dev11	.equ	devunk
-dev12	.equ	devunk
-dev13	.equ	devunk
-dev14	.equ	devunk
+dev10	.db	"PPA",0
+dev11	.db	"IMM",0
+dev12	.db	"SYQ",0
+dev13	.db	"CHUSB",0
+dev14	.db	"CHSD",0
 dev15	.equ	devunk
 ;
 devcnt	.equ	10		; 10 devices defined
@@ -1943,13 +1936,13 @@ stack	.equ	$		; stack top
 ; Messages
 ;
 indent	.db	"   ",0
-msgban1	.db	"ASSIGN v1.5 for RomWBW CP/M ",0
+msgban1	.db	"ASSIGN v1.8 for RomWBW CP/M ",0
 msg22	.db	"2.2",0
 msg3	.db	"3",0
-msbban2	.db	", 28-Feb-2022",0
+msbban2	.db	", 13-Oct-2023",0
 msghb	.db	" (HBIOS Mode)",0
 msgub	.db	" (UBIOS Mode)",0
-msgban3	.db	"Copyright 2021, Wayne Warthen, GNU GPL v3",0
+msgban3	.db	"Copyright 2023, Wayne Warthen, GNU GPL v3",0
 msguse	.db	"Usage: ASSIGN D:[=[{D:|<device>[<unitnum>]:[<slicenum>]}]][,...]",13,10
 	.db	"  ex. ASSIGN           (display all active assignments)",13,10
 	.db	"      ASSIGN /?        (display version and usage)",13,10

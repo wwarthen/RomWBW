@@ -51,6 +51,8 @@ found:
 | INTTEST     | No       | Yes        | Yes      |
 | FAT         | No       | Yes        | Yes      |
 | TUNE        | No       | Yes        | Yes      |
+| WDATE       | No       | Yes        | Yes      |
+| HTALK       | No       | Yes        | Yes      |
 
 `\clearpage`{=latex}
 
@@ -163,6 +165,13 @@ device/unit/slice, unassign the existing drive letter first.
 Be aware that this command will allow you to reassign or remove the
 assignment of your system drive letter. This can cause your operating
 system to fail and force you to reboot.
+
+The `ASSIGN` command does **not** prevent you from assigning a drive
+letter to a slice that does not fit on the physical media.  However,
+any subsequent attempt to refer to that drive letter will result in
+an immediate OS error of "no disk".  Refer to "Hard Disk Capacity"
+in the $doc_user$ for a discussion of the exact number of slices that
+will fit on a specific physical disk size.
 
 This command is particularly sensitive to being matched to the
 appropriate version of the RomWBW ROM you are using. Be very careful
@@ -620,9 +629,9 @@ shown on your console.  The `TALK` application does this.
 `TALK` operates at the operating system level (not HBIOS).
 
 The parameter to `TALK` refers to logical CP/M serial devices.  Upon
-execution all characters types at the console will be sent to the
+execution all characters typed at the console will be sent to the
 device specified and all characters received by the specified device
-will be echoes on the console.
+will be echoed on the console.
 
 Press Control+Z on the console to terminate the application.
 
@@ -635,6 +644,36 @@ operating systems such as CP/M 3 is not supported.
 
 The `TALK` command is an original product and the source code is
 provided in the RomWBW distribution.
+
+`\clearpage`{=latex}
+
+# HTALK
+
+`HTALK` is a variation of the `TALK` utility, but it works directly
+against HBIOS Character Units.
+
+## Syntax
+
+`HTALK COMn:`
+
+## Usage
+
+`HTALK` operates at the HBIOS level.
+
+The parameter to `TALK` refers to a HBIOS character unit.  Upon
+execution all characters typed at the console will be sent to the
+device specified and all characters received by the specified device
+will be echoed on the console.
+
+Press Control+Z on the console to terminate the application.
+
+## Notes
+
+
+## Etymology
+
+The `TALK` command was created and donated to RomWBW by Tom Plano.  It
+is an original product designed specifically for RomWBW.
 
 `\clearpage`{=latex}
 
@@ -889,6 +928,28 @@ written in C and requires SDCC to compile. As such it is not part of
 the RomWBW build process. However, the full project and source code is
 found in the [FAT GitHub Repository](https://github.com/wwarthen/FAT).
 
+## Known Issues
+
+CP/M (and workalike) OSes have significant restrictions on filename
+characters.  The FAT application will block any attempt to create a
+file on the CP/M filesystem containing any of these prohibited
+characters:
+
+|         `< > . , ; : = ? * [ ] _ % | ( ) / \`
+
+The operation will be aborted with "`Error: Invalid Path Name`" if such
+a filename character is encountered.
+
+Since MS-DOS does allow some of these characters, you can have
+issues when copying files from MS-DOS to CP/M if the MS-DOS filenames
+use these characters.  Unfortunately, FAT is not yet smart enough to
+substitute illegal characters with legal ones.  So, you will need to
+clean the filenames before trying to copy them to CP/M.
+
+The FAT application does try to detect the scenario where you are
+copying a file to itself.  However, this detection is not perfect and
+can corrupt a file if it occurs.  Be careful to avoid this.
+
 `\clearpage`{=latex}
 
 # TUNE
@@ -1106,3 +1167,85 @@ can be used to reduce your processor speed.
 
 VGMPLAY is still under development. The source code is provided in the 
 RomWBW distribution.
+
+`\clearpage`{=latex}
+
+# WDATE
+
+`wdate` is a utility for CP/M systems that have Wayne Warthen's
+ROMWBW firmware. It reads or sets the real-time clock, using function
+calls in the BIOS. It should work on any RTC device that is supported by
+ROMWBW, including the internal interrupt-driven timer that is is available
+on some systems. 
+
+`wdate` differs from the `rtc.com` utility that is provided with the
+ROMWBW version of CP/M in that it only gets and sets the date/time. 
+`rtc.com` can also manipulate the nonvolatile RAM in certain clock
+devices, and modify the charge controller. However, `wdate` is (I would
+argue) easier to use, as it takes its input from the command line, which
+can be edited, and it's less fussy about the format. It doesn't require
+the date to be set if you only want to change the time, for example.
+ In addition, `wdate` has at least some error checking.
+
+`wdate` displays the day-of-week and month as English text, not 
+numbers. It calculates the day-of-week from the year, month, and day.
+RTC chips usually store a day-of-week value, but it's useless in this
+application for two reasons: first, the BIOS does not expose it. Second,
+there is no universally-accepted way to interpret it (which day does
+the week start on? Is '0' a valid day of the week?)
+
+## Syntax
+
+| `WDATE`
+| `WDATE ` *`<hr> <min>`*
+| `WDATE ` *`<hr> <min> <sec>`*
+| `WDATE ` *`<year> <month> <day> <hr> <min> <sec>`*
+
+## Usage
+
+    A> wdate
+    Saturday 27 May 13:14:39 2023
+
+With no arguments, displays the current date and time. 
+
+    A> wdate hr min
+
+With two arguments, sets the time in hours and minutes, without changing date
+or seconds
+
+    A> wdate hr min sec
+
+With three arguments, sets the time in hours, minutes, and seconds, without
+changing date
+
+    A> wdate year month day hr min sec
+
+With six arguments, sets date and time. All numbers are one or two digits.  The
+two-digit year starts at 2000. 
+
+    A> wdate /?
+
+Show a summary of the command-line usage.
+
+## Notes
+
+I've tested this utility with the DS1302 clock board designed by Ed 
+Brindly, and on the interrupt-driven timer built into my Z180 board. 
+However, it does not interact with hardware, only BIOS; I would expect 
+it to work with other hardware.
+
+wdate checks for the non-existence of ROMWBW, and also for failing 
+operations on the RTC. It will display the terse "No RTC" message in 
+both cases.
+
+The ROMWBW functions that manipulate the date and time operate on BCD 
+numbers, as RTC chips themselves usually do. wdate works in decimal, so 
+that it can check that the user input makes sense. A substantial part of
+the program's code is taken up by number format conversion and range 
+checking.
+
+## Etymology
+
+The `WDATE` application was written and contributed by Kevin Boone.
+The source code is available on GitHub at
+[https://github.com/kevinboone/wdate-cpm/blob/main/README.md](https://github.com/kevinboone/wdate-cpm/blob/main/README.md).

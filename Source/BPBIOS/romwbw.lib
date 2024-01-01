@@ -48,20 +48,33 @@ DRV_P		SET	NO		; YES if system has flopy drives
 ;
 ; RAM/ROM Bank Reserve
 ;
-HB_RAMRESV	EQU	8		; RAM reserve is 8 banks
+HB_RAMRESV	EQU	5		; RAM reserve is 5 banks
 HB_ROMRESV	EQU	4		; ROM reserve is 4 banks
 ;
 ; Layout of RAM banks
 ;
-; TODO: Query system via HBIOS API to determine the actual bank
-; assignments, then adjust BPBIOS operation accordingly.
+; The BID_xxx values below are used to set the initial values of
+; the BPBIOS bank registers (see def-ww-xxx.lib and HB_SELMEM in
+; hbios.z80).  The running values of the BPBIOS bank registers (TPABNK,
+; SYSBNK, etc.) are set to absolute HBIOS bank ids in hbios.z80 during
+; startup.
 ;
-BID_RAMD	EQU	-16	; 90h - 16 = 80h
-BID_RAMM	EQU	-9	; 90h - 9 = 87h
-BID_SYS		EQU	-4	; 90h - 4 = 8Ch
-BID_HB		EQU	-3	; 90h - 3 = 8Dh
-BID_USR		EQU	-2	; 90h - 2 = 8Eh
-BID_COM		EQU	-1	; 90h - 1 = 8Fh
+; The values below are expressed as an offset from the ending HBIOS
+; RAM bank id.  They map to HBIOS bank ids
+; by subtracting from the ending HBIOS bank id (N).  HBIOS RAM bank ids
+; start at 80h.  The ending HBIOS bank id is (80h + RAM banks).  The
+; typical layout assumes 16 banks of RAM starting at HBIOS bank id 80h
+; and ending at bank id 90h (N = 90h).
+;
+; BPBIOS					HBIOS (TYPICAL)
+; --------------------------------------	---------------
+; <HBIOS>					80h   (80h)
+; <RAMD>					81h   (81h)
+; <RAMM>					N - 5 (8Bh)
+BID_BUF	EQU	-4	; BNK3 -> RAMBNK	N - 4 (8Ch)
+BID_SYS	EQU	-3	; BNK2 -> SYSBNK	N - 3 (8Dh)		
+BID_USR	EQU	-2	; BNK0 -> TPABNK	N - 2 (8Eh)		
+BID_COM	EQU	-1	; BNK1 ->		N - 1 (8Fh)		
 ;
 HB_EI	MACRO
 	EI

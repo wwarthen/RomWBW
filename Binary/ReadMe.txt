@@ -39,8 +39,8 @@ image for the Mark IV with the standard configuration. If a custom
 configuration called "custom" is created and built, a new file called 
 MK4_custom.rom will be added to this directory.
 
-Documentation of the pre-built ROM Images is contained in the 
-RomList.txt file in this directory.
+Documentation of the pre-built ROM Images is contained in
+"RomWBW User Guide.pdf" in the Doc directory.
 
 ROM Firmware Update Images (<plt>_<cfg>.upd)
 -------------------------------------

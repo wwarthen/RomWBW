@@ -18,7 +18,7 @@ NCURSESLIBS=$(shell if env pkg-config --libs ncurses ; then : ; else echo -lncur
 
 CPPFLAGS = -DDISKDEFS=\"$(DISKDEFS)\" -DFORMAT=\"$(DEFFORMAT)\"
 
-DEVICEOBJ =	device_posix.o 
+DEVICEOBJ = device_posix.o 
 
 OBJECTS = cpmls cpmrm cpmcp cpmchmod cpmchattr mkfs.cpm fsck.cpm fsed.cpm
 

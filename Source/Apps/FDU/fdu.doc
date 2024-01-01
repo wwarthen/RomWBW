@@ -1,14 +1,15 @@
 ================================================================
-Floppy Disk Utility (FDU) v5.3 for RetroBrew Computers 
-Disk IO / Zeta / Dual-IDE / N8 / RCBus / SmallZ80 / Dyno
+Floppy Disk Utility (FDU) v5.9 for RetroBrew Computers 
+Disk IO / Zeta / Dual-IDE / N8 / RCBus / SmallZ80 / Dyno / Nhyodyne / Duodyne
 ================================================================
 
-Updated January 5, 2020
+Updated December 12, 2023
 by Wayne Warthen (wwarthen@gmail.com)
 
 Application to test the hardware functionality of the Floppy 
 Disk Controller (FDC) on the ECB DISK I/O, DISK I/O V3, ZETA 
-SBC, Dual IDE w/ Floppy, or N8 board.
+SBC, Dual IDE w/ Floppy, N8, RCBus, SmallZ80, Dyno, Nhyodyne,
+Duodyne systems.
  
 The intent is to provide a testbed that allows direct testing 
 of all possible media types and modes of access.  The 
@@ -77,9 +78,10 @@ supported:
  - RCBus
  - SmallZ80
  - Dyno
- - MBC
+ - Nhyodyne (MBC)
+ - Duodyne (DUO)
 
-You must be using either a RomWBW or UBA based OS version.
+You must be using either a RomWBW or UNA based OS version.
 
 You must have one of the following floppy disk controllers:
 
@@ -93,7 +95,8 @@ You must have one of the following floppy disk controllers:
  - RCBus Scott Baker WDC-based Floppy Module
  - SmallZ80 FDC
  - Dyno FDC
- - MBC FDC
+ - Nhyodyne (MBC) FDC
+ - Duodyne (DUO) FDC
  
 Finally, you will need a floppy drive connected via an 
 appropriate cable:
@@ -153,7 +156,8 @@ JP2 (/FAULT) shorted, JP3 (MINI): 2-3, JP4 (/DC/RDY): 2-3.
 
 The RCBus Scott Baker WDC-based floppy module should be jumpered
 for I/O base address 0x50 (SV1: 11-12), JP1 (/DACK): 1-2,
-JP2 (TC): 2-3.
+JP2 (TC): 2-3.  Note that pin 1 of JPX jumpers is toward the bottom
+of the board.
 
 The RCBus FDC by Alan Cox (Etched Pixels) needs to be strapped
 for base I/O address 0x48.
@@ -164,8 +168,11 @@ hardwired I/O ranges are assumed in the code.
 Dyno does not have any relevant jumper settings.  The 
 hardwired I/O ranges are assumed in the code.
 
-The MBC FDC is expected to be strapped to use neither INT nor NMI.  It
-is also not expected to use DMA.
+The Nhyodyne (MBC) FDC is expected to be strapped to use neither INT
+nor NMI.  It is also not expected to use DMA.
+
+The Duodyne (DUO) FDC is expected to be strapped to use neither INT
+nor NMI.  It is also not expected to use DMA.
 
 Modes of Operation
 ------------------
@@ -532,4 +539,7 @@ WW 3/24/2021: v5.7
   - Added support for a few single-sided formats
 
 WW 7/26/2021: v5.8
-  - Added support for MBC FDC
+  - Added support for Nhyodyne (MBC) FDC
+
+WW 12/10/2023: v5.9
+  - Added support for Duodyne (DUO) FDC

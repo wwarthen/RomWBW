@@ -65,12 +65,11 @@ xbnkmov:
 ; ------------	--------------	-------
 ; COMMON	BID_COM		8Fh
 ; 0: OS/BUFS	BID_USR         8Eh
-;		BID_BIOS	8Dh	
-; 1: TPA	BID_AUX		8Ch
-; 2: BUFS	BID_AUX-1	8Bh
-; 3: BUFS	BID_AUX-2	8Ah
-; 4: BUFS	BID_AUX-3	89h
-; 5: BUFS	BID_AUX-4	88h
+; 1: TPA	BID_AUX		8Dh
+; 2: BUFS	BID_AUX-1	8Ch
+; 3: BUFS	BID_AUX-2	8Bh
+; 4: BUFS	BID_AUX-3	8Ah
+; 5: BUFS	BID_AUX-4	89h
 ;
 ; N.B., Below BID_AUX is considered RAM disk bank.  Need to
 ; make sure RAM disk is kept small enough to stay below
@@ -80,17 +79,13 @@ xbnkmov:
 ; to adjust for real size of RAM in system
 ;
 ?bnkxlt:
-	or	a
-	jr	z,bank0
-	neg			; 2 -> -2
-	add	a,8Dh		; 8Dh - 2 = 8Bh
-@hbbio	equ	$ - 1		; BID_BIOS
-	ret
-bank0:
-	ld	a,8Eh		; 0 -> 8Eh
+	neg			; ex: 2 -> -2
+	add	a,8Eh		; ex: 8Eh - 2 = 8Ch
 @hbusr	equ	$ - 1		; BID_USR
 	ret
-	
+
+@hbbio	db	0		; BID_BIOS
+
 movtyp	db	0		; non-zero for interbank move
 
 movbnks:

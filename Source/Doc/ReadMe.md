@@ -10,14 +10,23 @@ A wide variety of platforms are supported including those
 produced by these developer communities:
 
 * [RetroBrew Computers](https://www.retrobrewcomputers.org)
-* [RC2014](https://rc2014.co.uk), [RC2014-Z80](https://groups.google.com/g/rc2014-z80)
-* [retro-comp](https://groups.google.com/forum/#!forum/retro-comp)
+  (<https://www.retrobrewcomputers.org>)
+* [RC2014](https://rc2014.co.uk) (<https://rc2014.co.uk>), \
+  [RC2014-Z80](https://groups.google.com/g/rc2014-z80)
+  (<https://groups.google.com/g/rc2014-z80>)
+* [Retro Computing](https://groups.google.com/g/retro-comp)
+  (<https://groups.google.com/g/retro-comp>)
 * [Small Computer Central](https://smallcomputercentral.com/)
+  (<https://smallcomputercentral.com/>)
+
+A complete list of the currently supported platforms is found in the
+[Installation] section.
 
 General features include:
 
+* Z80 Family CPUs including Z80, Z180, and Z280
 * Banked memory services for several banking designs
-* Disk drivers for RAM, ROM, Floppy, IDE, CF, and SD
+* Disk drivers for RAM, ROM, Floppy, IDE ATA/ATAPI, CF, SD, USB, Zip, Iomega
 * Serial drivers including UART (16550-like), ASCI, ACIA, SIO
 * Video drivers including TMS9918, SY6545, MOS8563, HD6445
 * Keyboard (PS/2) drivers via VT8242 or PPI interfaces
@@ -34,12 +43,12 @@ ROM firmware itself:
 * ROM BASIC (Nascom BASIC and Tasty BASIC)
 * ROM Forth
 
-A dynamic disk drive letter assignment mechanism allows mapping
-operating system drive letters to any available disk media.
-Additionally, mass storage devices (IDE Disk, CF Card, SD Card) support
-the use of multiple slices (up to 256 per device). Each slice contains
-a complete CP/M filesystem and can be mapped independently to any
-drive letter. This overcomes the inherent size limitations in legacy
+A dynamic disk drive letter assignment mechanism allows mapping 
+operating system drive letters to any available disk media. 
+Additionally, mass storage devices (IDE Disk, CF Card, SD Card, etc.) 
+support the use of multiple slices (up to 256 per device). Each slice 
+contains a complete CP/M filesystem and can be mapped independently to 
+any drive letter. This overcomes the inherent size limitations in legacy
 OSes and allows up to 2GB of accessible storage on a single device.
 
 The pre-built ROM firmware images are generally suitable for most
@@ -61,7 +70,7 @@ By design, RomWBW isolates all of the hardware specific functions in
 the ROM chip itself.  The ROM provides a hardware abstraction layer
 such that all of the operating systems and applications on a disk
 will run on any RomWBW-based system.  To put it simply, you can take
-a disk (or CF/SD Card) and move it between systems transparently.
+a disk (or CF/SD/USB Card) and move it between systems transparently.
 
 A tool is provided that allows you to access a FAT-12/16/32 filesystem. 
 The FAT filesystem may be coresident on the same disk media as RomWBW 
@@ -70,18 +79,19 @@ OSes such as Windows, MacOS, and Linux very easy.
 
 # Acquiring RomWBW
 
-The [RomWBW Repository](https://github.com/wwarthen/RomWBW) on GitHub is
-the official distribution location for all project source and
-documentation.  The fully-built distribution releases are available on
-the [RomWBW Releases Page](https://github.com/wwarthen/RomWBW/releases)
-of the repository.  On this page, you will normally see a Development
-Snapshot as well as recent stable releases. Unless you have a specific
-reason, I suggest you stick to the most recent stable release. Expand
-the "Assets" drop-down for the release you want to download, then select
-the asset named RomWBW-vX.X.X-Package.zip. The Package asset includes
-all pre-built ROM and Disk images as well as full source code. The other
-assets contain only source code and do not have the pre-built ROM or
-disk images.
+The [RomWBW Repository](https://github.com/wwarthen/RomWBW)
+(<https://github.com/wwarthen/RomWBW>) on GitHub is the official 
+distribution location for all project source and documentation.  The 
+fully-built distribution releases are available on the
+[RomWBW Releases Page](https://github.com/wwarthen/RomWBW/releases)
+(<https://github.com/wwarthen/RomWBW/releases>) of the repository.  On 
+this page, you will normally see a Development Snapshot as well as 
+recent stable releases. Unless you have a specific reason, I suggest you
+ stick to the most recent stable release. Expand the "Assets" drop-down 
+for the release you want to download, then select the asset named 
+RomWBW-vX.X.X-Package.zip. The Package asset includes all pre-built ROM 
+and Disk images as well as full source code. The other assets contain 
+only source code and do not have the pre-built ROM or disk images.
 
 All source code and distributions are maintained on GitHub. Code
 contributions are very welcome.
@@ -171,6 +181,38 @@ please let me know if I missed you!
   the SN76489 sound driver.
 
 * The RomWBW Disk Catalog document was produced by Mykl Orders.
+
+* Rob Prouse has created many of the supplemental disk images
+  including Aztec C, HiTech C, SLR Z80ASM, Turbo Pascal, Microsoft
+  BASIC Compiler, Microsoft Fortran Compiler, and a Games
+  compendium.
+
+* Martin R has provided substantial help reviewing and improving the
+  User Guide.
+
+* Jacques Pelletier has contributed the DS1501 RTC driver code.
+
+* Jose Collado has contributed enhancements to the TMS driver
+  including compatibility with standard TMS register configuration.
+
+* Kevin Boone has contributed a generic HBIOS date/time utility (WDATE).
+
+* Matt Carroll has contributed a fix to XM.COM that corrects the
+  port specification when doing a send.
+
+* Dean Jenkins enhanced the build process to accommodate the
+  Raspberry Pi 4.
+
+* Tom Plano has contributed a new utility (HTALK) to allow talking
+  directly to HBIOS COM ports.
+
+* Lars Nelson has contributed several generic utilities such as
+  a universal (OS agnostic) UNARC application.
+
+* Dylan Hall added support for specifying a secondary console.
+
+* Bill Shen has contributed boot loaders for several of his
+  systems.
 
 Contributions of all kinds to RomWBW are very welcome.
 

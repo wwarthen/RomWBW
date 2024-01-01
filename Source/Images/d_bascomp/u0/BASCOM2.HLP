@@ -1,0 +1,691 @@
+Compiling a program
+Compilation switches
+Compile-time error messages
+The LINK-80 linking loader
+LINK-80 error messages
+Storing your program on disk
+Running your compiled program
+Runtime error messages
+Using M80
+:COMPILING A PROGRAM  
+
+Is your BASIC program now saved in ASCII format on your diskette?  (To save 
+your program in ASCII format when using the interpreter,  add an "A" switch 
+to the "SAVE" command, as shown in SAMPLE SESSION, Step 3: 
+
+          SAVE "<filename>[.<ext>]",A
+
+Return to CP/M command level and enter:
+
+          BASCOM
+
+BASIC  will  return  the prompt:       "*",  informing you that  the  BASIC 
+Compiler is loaded and ready to accept a command.
+
+Now enter the command of the form:
+
+     objfile,lstfile=source file
+
+where objfile is the relocatable object file,  lstfile is the listing file, 
+and source file is the BASIC source program file.
+
+A command to BASIC conveys the name of the source file to be compiled,  and 
+the names of the file(s) to be created. With CP/M filenames are up to eight 
+characters long with a three-character extension.    The  default  filename
+extensions supplied to CP/M are:
+
+          REL       Relocatable object file
+          LST       Listing file
+          BAS       BASIC source file
+          MAC       MACRO-80 source file
+          FOR       FORTRAN-80 source file
+          COB       COBOL-80 source file
+          COM       Executable command file
+
+If you have a multi-drive system, you can tell the compiler where to obtain 
+or  put  the files you are working with by adding a drive  number  to  each 
+filename. For example:
+
+     A:MYPROG.REL=B:TEST
+
+finds the program TEST.BAS on the diskette that is in drive B, compiles it, 
+and puts the object in MYPROG.REL (on the diskette that is in drive A).
+
+If a drive is NOT specified, the object and listing files are placed on the 
+diskette that is in the default drive.
+
+Either  the  object  file or the listing file or both may  be  omitted.  An 
+object file is created only if the lstfile field is filled.  Therefore,  if 
+you wish to omit either, simply leave its filename out of the command.
+
+Examples:
+
+TESTOBJ=TEST.BAS    Compile  the  program  TEST.BAS 
+                    and  put object in  TESTOBJ.REL 
+                    without producing listing file.
+TEST,TEST=TEST      Compile TEST.BAS, put object in 
+                    TEST.REL    and   listing    in 
+                    TEST.LST.
+,=TEST.BAS          Compile TEST.BAS but produce no 
+                    object or listing file.  Useful 
+                    for checking for errors.
+RABBIT=TEST         Compile  the  program  TEST.BAS 
+                    and  put object  in  RABBIT.REL 
+                    without producing listing file.
+:BASIC COMPILATION SWITCHES
+
+You can specify special parameters to be used during compilation by  adding 
+a switch to the end of the command string.  Switches are always preceded by 
+a slash,  and  more  than one switch may be used in the  same  command.  An 
+example of the format would be:
+
+     TEST,TEST=TEST/D/X
+
+The default switch settings used if you don't specify any switches are:  
+
+      /Z/4/T
+
+The available switches and their actions are as follows:
+
+SWITCH    ACTION
+
+/E        The /E switch tells the compiler that the program contains the ON 
+          ERROR  GOTO statement.  If a RESUME statement other  than  RESUME 
+          <line  number> is used with the ON ERROR GOTO statement,  use  /X 
+          instead  (see  below).  To handle ON ERROR GOTO  properly,  in  a 
+          compiled environment, BASIC must generate some extra code for the 
+          GOSUB  and RETURN statements.  Therefore,  do not use this switch 
+          unless your program contains the ON ERROR GOTO statement.  The /E 
+          switch  also  causes line numbers to be included  in  the  binary 
+          file,  so  runtime error messages will include the number of  the 
+          line in error.
+
+SWITCH    ACTION
+/X        The  /X switch tells the BASIC Compiler that the program contains 
+          one or more RESUME,  RESUME NEXT,  or RESUME 0 statements. The /E 
+          switch  is  assumed when the /X switch is  specified.  To  handle 
+          RESUME  statements  properly  in  a  compiled  environment,   the 
+          compiler must relinquish certain optimizations. Therefore, do not 
+          use  this switch unless your program contains  RESUME  statements 
+          other  than RESUME <line number>.  The /X switch also causes line 
+          numbers  to  be included in the binary  file,  so  runtime  error 
+          messages will include the number of the line in error.
+
+/N        The  /N switch prevents listing of the generated code in symbolic 
+          notation.  If this switch is not set, the source listing produced 
+          by  the compiler will contain the object code generated  by  each 
+          statement.
+
+SWITCH    ACTION
+
+/D        The  /D  switch  causes debug/checking code to  be  generated  at 
+          runtime.  This  switch must be set if you want to use TRON/TROFF. 
+          The  BASIC Compiler generates somewhat larger and slower code  in 
+          order to perform the following checks:
+          1.   Arithmetic overflow.  All arithmetic operations, integer and 
+               floating point, are checked for overflow and underflow.
+          2.   Array bounds. All array references are checked to see if the 
+               subscripts are within the bounds specified in the DIM state-
+               ment.
+          3.   Line  numbers are included in the generated binary  so  that 
+               runtime errors can indicate the statement which contains the 
+               error.
+          4.   RETURN is checked for a prior GOSUB.
+
+/Z        The /Z switch tells the compiler to use Z80  opcodes. 
+
+SWITCH    ACTION
+
+/S        The  /S  switch forces the compiler to write long quoted  strings 
+          (i.e.  more  than  4 characters) to the binary file as  they  are 
+          encountered.  This allows large programs with many quoted strings 
+          to compile in less memory. However, there are two disadvantages:
+          1.    Memory  space is wasted if identical,  long quoted  strings 
+               appear in the program.
+          2.   Code  generated while the -S switch is set cannot be  placed 
+               in ROM.
+
+SWITCH    ACTION
+
+/4        The  /4 switch allows the compiler to use the lexical conventions 
+          of  Microsoft 4.51 Disk BASIC interpreter.  That is,  spaces  are 
+          insignificant,   variables  with  imbedded  reserved  words   are 
+          illegal,   variable  names  are  restricted  to  two  significant 
+          characters,  etc. this feature is useful if you wish to compile a 
+          source program that was coded without spaces,  and contains lines 
+          such as
+
+               FORI=ATOBSTEPC
+
+          Without  the  /4 switch,  the compiler would assign the  variable 
+          "ATOBSTEPC" to the variable FORI.  With the /4 switch,  it  would 
+          recognize it as a FOR statement.
+
+SWITCH    ACTION
+/C        The  /C  switch tells the compiler to relax line  numbering  con-
+          straints.  Whene  /C  is specified,  line numbers may be  in  any 
+          order,  or  they may be eliminated entirely.  Lines are  compiled 
+          normally,  but  of course cannot be targets for GOTO's,  GOSUB's, 
+          etc.  While  /C  is  set,  the  underline  character  causes  the 
+          remainder  of  the  physical line to be  ignored,  and  the  next 
+          physical  line is considered to be a continuation of the  current 
+          logical line.  NOTE:   /C  and  /4 may not be  used  together. 
+
+/T        Use 4.51 execution conventions
+
+/O        (Newer versions only).  Tells the compiler to  construct a stand-
+          alone program instead of one  requiring presence of the  BRUN.COM
+          runtime module.  This generates much bigger programs because  all
+          of the runtime routines must be included.
+:BASIC COMPILER ERROR MESSAGES
+
+The  following  errors may occur while a program is  compiling.  The  BASIC 
+Compiler outputs the two-character code for the err,  along with an  arrow. 
+The  arrow indicates where in the line the error occurred.  In those  cases 
+where the compiler has read ahead before it discovered an error,  the arrow 
+points a few characters beyond the error, or at the end of the line.    The
+error codes are as follows:
+
+FATAL ERRORS  
+
+CODE      ERROR
+SN        Syntax Error. Caused by one of the following:
+               Illegal argument name
+               Illegal assignment target
+               Illegal constant format
+               Illegal debug request
+               Illegal DEFxxx character specification
+               Illegal expression syntax
+               Illegal function argument list
+               Illegal function name
+
+CODE      ERROR
+SN        Syntax Error. Caused by one of the following:
+               Illegal function formal parameter
+               Illegal separator
+               Illegal format for statement number
+               Illegal subroutine syntax
+               Invalid character
+               Missing AS
+               Missing equal sign
+               Missing GOTO or GOSUB
+               Missing comma
+               Missing INPUT
+               Missing line number
+               Missing left parenthesis
+               Missing minus sign
+               Missing operand in expression
+               Missing right parenthesis
+               Missing semicolon
+               Name too long
+               Expected GOTO or GOSUB
+
+CODE      ERROR
+SN        Syntax Error. Caused by one of the following:
+               String assignment required
+               String expression required
+               String variable required here
+               Illegal syntax
+               Variable required here
+               Wrong number of arguments
+               Formal parameters must be unique
+               Single variable only allowed
+               Missing TO
+               Illegal FOR loop index variable
+               Missin THEN
+               Missing BASE
+               Illegal subroutine name
+OM        Out of memory
+               Array too big
+               Data memory overflow
+               Too many statement numbers
+               Program memory overflow
+
+CODE      ERROR
+SQ        Sequence Error
+               Duplicate statement number
+               Statement out of sequence
+TM        Type Mismatch
+               Data type conflict
+               Variables must be of same type
+BS        Bad Subscript
+               Illegal dimension value
+               Wrong number of subscripts
+LL        Line Too Long
+UC        Unrecognizable Command
+               Statement unrecognizable
+               Command not implemented
+OV        Math Overflow
+/0        Division by Zero
+DD        Array Already Dimensioned
+FN        FOR/NEXT Error
+               FOR loop index variable already in use
+               FOR without NEXT
+               NEXT without FOR
+
+CODE      ERROR
+FD        Function Already Defined
+UF        Function Not Defined
+WE        WHILE/WEND Error
+               WHILE without WEND
+               WEND without WHILE
+/E        Missing "/E" Switch
+/X        Missing "/X" Switch
+
+WARNING ERRORS 
+ND        Array Not Dimensioned
+SI        Statement Ignored
+               Statement ignored
+               Unimplemented command
+
+If  the  BASIC Compiler informs you of any of these errors,  return to  the 
+source  program for debugging and try again.  
+
+If no errors were encountered during compilation,  and if you so chose, you 
+now  have an object file containing machine readable code on your diskette. 
+Also  on your diskette is a listing file which contains the  BASIC  program 
+statements along with the machine language generated by each statement.
+
+The next step in the process is loading and executing the program with 
+LINK-80.
+
+:LINK-80 LINKING LOADER
+
+As  demonstrated in SAMPLE SESSION,  compiled BASIC object files are loaded 
+into memory and executed using the LINK-80 linking loader.  The loader  has 
+many uses.  You may wish to simply load one compiled program and run it, or 
+you   may  load  several  programs,   subprograms,   or  assembly  language 
+subroutines  at  the same time.  Programs may be loaded  at  user-specified 
+locations,  and program areas and data areas may be separated in memory.  A 
+memory  image  of the executable file produced by LINK-80 can be  saved  on 
+disk and run at a later time.
+
+RUNNING LINK-80
+
+At CP/M command level, enter:
+
+     L80
+
+This loads LINK-80,  which will respond with:    *  . The loader exits back 
+to CP/M if a CONTROL-C is typed after the asterisk.  (The loader also exits 
+back  to CP/M after an /E switch or /G switch is executed.  More  on  these 
+switches later.)
+
+LINK-80 COMMAND FORMAT
+
+A  command  to LINK-80 is made up of the filename(s) of the file(s)  to  be 
+loaded. For example, to load the compiled program MYPROG.REL, enter:
+
+     MYPROG
+
+(It  is  not necessary to type the default extension .REL.) This loads  the 
+program  but  does  not run it.  Whenever LINK-80 loads  a  BASIC  Compiler 
+program,  it  automatically  searches the BASIC library for  the  necessary 
+routines  and loads these as well.  Therefore,  BASLIB.REL must be  on  the 
+default drive during the loading process. 
+
+To run MYPROG, enter:
+
+     /G
+
+This is the "go" or execute switch.  LINK-80 prints two numbers and a BEGIN 
+EXECUTION  message.  LINK-80 always returns to TRSDOS after a /G switch has 
+been executed.
+
+As  you  probably have guessed,  it  is  not  necessary  to  perform  these
+operations with separate commands.  It is possible to type one command line 
+that runs LINK-80, loads MYPROG.REL and executes it. To do this, enter:  
+
+L80 MYPROG/G
+
+MORE COMMANDS AND SWITCHES
+
+LINK-80  provides  other capabilities besides  loading  and  executing 
+programs,  such  as  looking at output without saving the  program  or 
+resetting  the loader so that you can correct a mistake.  Switches are 
+used to inform LINK-80 that you wish to perform special tasks.
+
+Here is an example that loads and saves a program called TEST.REL.
+
+     >L80
+     *TEST,TEST/N/E
+
+The first part of the command (TEST) loads the program called TEST.REL. The 
+next  part  (TEST/N) saves a copy of the loaded program on disk in  a  file 
+called TEST.COM. The last part (/E) causes LINK-80 to exit back to CP/M.
+
+THE /N SWITCH
+
+Take  note  of  the /N switch.  This switch saves a  memory  image  of  the 
+executable file on disk.  The default extension for the saved file is .COM, 
+and this file is called a "command file". Once saved on disk, you need only 
+type  the filename at CP/M command level to run the program.  The /N switch 
+must immediately follow the filename of each file you wish to save,  and it 
+does not take effect until a /E or /G switch is done.
+
+The  following example links several object files,  saves the main  program 
+image and executes the program TAXES.REL.
+
+     >L80
+     *SUB1,SUB2,TAXES/N,TAXES/G
+
+Two subroutines (SUB1) and (SUB2) and an object file (TAXES) are linked and 
+loaded.  The program is executed and the command file TAXES.COM is saved on 
+disk.
+
+THE /R SWITCH
+
+Another  handy switch is /R.  It returns LINK-80 to it's initial  state  by 
+"unloading"  whatever you've loaded.  Use it to reset the loader if  you've 
+made  a  typing mistake or loaded the wrong program.  The /R  switch  takes 
+effect  as  soon as LINK-80 sees it,  so if you enter it at any time  while 
+LINK-80 is running, the loader will reset. For example:
+
+     >L80
+     *INVEN1
+     */R            (oops-- meant to load INVEN2)
+     *INVEN2        (now only INVEN2 is loaded)
+
+SPECIAL SWITCHES
+
+For  typical  BASIC Compiler operation,  only the above  switches  will  be 
+needed.   Some   users  may  find  that  their  applications  require  more 
+specialized capabilities.  For this reason, the following switches are also 
+provided with LINK-80.
+
+In these examples, all  programs  have  been  loaded at the default origins
+of CP/M.    In special cases,  the user may wish to specify the origins  of
+the programs and data that are loaded. LINK-80 provides special switches to 
+do this.
+
+/E:Name   This is an optional form of the /E switch.  Name is a global 
+          symbol  previously defined in one of  the  modules.  LINK-80 
+          uses Name for the start address of the program.
+
+/G:Name   This is an optional form of the /G switch.  Name is a global 
+          symbol  previously  defined in one of the  modules.  LINK-80 
+          uses Name for the start address of the program.
+
+/P and /D /P and /D allow the origin(s) to be set for the next program 
+          loaded.  /P and /D take effect when seen (not deferred), and 
+          they have no effect on programs already loaded.  The form is 
+          /P:<address> or /D:<address>, where <address> is the desired 
+          origin  in  the current typeout  radix.  (Default  radix  is 
+          hexadecimal.  /O  sets radix to octal;  /H to hex.)  LINK-80 
+          does a default /P:<link origin> (i.e., 100h).
+
+          If  no  /D is given,  data areas are loaded  before  program 
+          areas for each module. If a /D is given, All Data and Common 
+          areas are loaded starting at the data origin and the program 
+          area at the program origin. Example:
+
+               */P:200,FOO
+               DATA      200       300
+               */R
+               */P:200-D:400,FOO
+               DATA      400       480
+               PROGRAM   200       280
+
+/U        List the origin and end of the program and data area and all 
+          undefined  globals as soon as the current command  line  has 
+          been interpreted. The program information is only printed if 
+          a /D has been done.  Otherwise, the program is stored in the 
+          data area.
+
+/M        List  the origin and end of the program and data  area,  all 
+          undefined  globals  and  their  values,  and  all  undefined 
+          globals followed by an asterisk.  The program information is 
+          only printed if a /D has been done.  Otherwise,  the program 
+          is stored in the data area.
+
+/X        If a filename/N was specified, /X will cause the file to  be 
+          saved in INTEL ascii HEX format with an extension of .HEX.
+
+/Y        If a filename/N was specified, /Y will create a filename.SYM
+          file when /E is entered.  This file contains the  names  and 
+          addresses of all Globals for use with Digital Research's SID
+          and ZSID debuggers. 
+
+SYSTEM LIBRARY SEARCHES
+
+Whenever a BASIC Compiler program is loaded, LINK-80 automatically searches 
+the BASIC Compiler library for the routines it needs and loads them. If you 
+gat an "Undefined" error,  it means the compiler couldn't find something it 
+needed  to  finish  compiling the program.  Usually this is the name  of  a 
+subroutine that you forgot to load.
+
+If  you  are  using  the BASIC Compiler  in  conjunction  with  Microsoft's 
+FORTRAN-80, you may also be referencing some of FORTRAN's library routines. 
+For this reason,  the /S switch is included in LINK-80 to force a search of 
+particular library modules. For example:
+
+     *FORLIB/S,TEST/G
+
+Unless you are using FORLIB (supplied with FORTRAN-80), you should not need 
+the /S switch.
+
+
+:LINK-80 ERROR MESSAGES
+
+LINK-80 has the following error messages:
+
+?No Start Address        A /G switch was issued, but no main 
+                         program had been loaded.
+
+?Loading Error           The  last file given for input  was 
+                         not  a  properly formatted  LINK-80 
+                         object file.
+
+?Out of Memory           Not enough memory to load program.
+
+?Command Error           Unrecognizable LINK-80 command.
+
+?<file> Not Found        <file>,  as given in the command string, 
+                         did not exist.
+
+%2nd COMMON larger       The   first  definition  of  COMMON 
+                         block /XXXXXX/ was not the  largest 
+                         definition.  Reorder module loading 
+                         sequence  or  change  COMMON  block 
+                         definitions.
+
+%Mult. Def. Global YYYYYY
+                         More  than  one definition for  the 
+                         global (internal) symbol YYYYYY was 
+                         encountered   during  the   loading 
+                         process.
+
+%Overlaying Program Area     ,Start = xxxx
+            Data             ,Public = <symbol name>(xxxx)
+                             ,External = <symbol name>(xxxx)
+                         A  /D  or  /P  will  cause  already 
+                         loaded data to be destroyed.
+
+?Intersecting Program Area
+              Data       The program and data area intersect
+                         and an address  or  external  chain
+                         entry is in this intersection.  The
+                         final value cannot be  converted to
+                         a current value  since it is in the
+                         area intersection.
+?Start Symbol - <name> - Undefined
+                         After a /E:  or /G:  is given,  the 
+                         symbol specified was not defined.
+
+Origin Above (Below) Loader Memory, Move Anyway (Y or N)?
+                         After a /E or /G was given,  either 
+                         the  data  or program area  has  an 
+                         origin  or  top which lies  outside 
+                         loader memory (i.e.,  loader origin 
+                         to  top of memory).  If a Y  CR  is 
+                         given,  LINK-80  will move the area 
+                         and continue.  If anything else  is 
+                         given, LINK-80 will exit. In either 
+                         case,  if a /N was given, the image 
+                         will already have been saved.
+
+?Can't save Object File  A disk error occurred when the file was being 
+saved.
+:STORING YOUR PROGRAM ON DISKETTE
+
+Once it has been loaded by LINK-80,  the object file is in a form that  can 
+be  executed  by any CP/M computer.  You can save this compiled program  on 
+your own diskette so that it can be executed at a later time without  using 
+the  BASIC  Compiler  at  all.  
+
+The  /N switch (discussed in the LINK-80 section) is the switch that causes 
+your  object file to be saved.  The default extension for the saved file is 
+.COM and this file is called a "command file".
+
+:RUNNING YOUR COMPILED PROGRAM  
+
+Your  compiled program (previously saved on your own diskette) can  now  be 
+executed any time you wish. When you are at CP/M command level the diskette 
+on which you saved your program is inserted into a drive, simply enter:
+
+     <filename>
+
+At this point, your program should execute and your output should appear on 
+the screen.  However,  you may get a runtime error message. If you do, look 
+it up in the following list,  and debug your program as best you can before 
+trying to store it on diskette again.
+
+
+:RUNTIME ERROR MESSAGES
+
+The following errors may occur while a compiled program is  executing.  The 
+error numbers match those issued by the BASIC-80 interpreter.  The compiler 
+runtime  system prints long error messages followed by an  address,  unless 
+/D, /E, or /X is specified. In those cases the error message is followed by 
+the number of the line in which the error occurred.
+
+NUMBER              MESSAGE
+2         Syntax error
+          A  line is encountered that contains an  incorrect 
+          sequence of characters in a DATA statement.
+3         RETURN without GOSUB
+          A  RETURN statement is encountered for which there 
+          is no previous, unmatched GOSUB ststement.
+4         Out of Data
+          A  READ  statement is executed when there  are  no 
+          DATA statements with unread data remaining in  the 
+          program.
+
+NUMBER              MESSAGE
+
+5         Illegal function call
+          A  parameter  that is out of range is passed to  a 
+          math  or  string function.  An FC error  may  also 
+          occur as the result of:
+
+          1.   a negative or unreasonably large subscript
+          2.   a negative or zero argument with LOG
+          3.   a negative argument to SQR
+          4.   a   negative  mantissa  with  a   non-integer 
+               exponent
+          5.   a  call  to  a USR  function  for  which  the 
+               starting address has not yet been given
+          6.   an  improper  argument to  ASC,  CHR$,  MID$, 
+               LEFT$,  RIGHT$,  INP,  OUT, WAIT, PEEK, POKE, 
+               TAB,   SPC,   STRING$,   SPACE$,   INSTR,  or 
+               ON...GOTO
+          7.   a  string concatenation that is  longer  than 
+               255 characters
+
+NUMBER              MESSAGE
+6         Floating overflow or integer overflow
+          The  result  of a calculation is too large  to  be 
+          represented   in  BASIC-80's  number  format.   If 
+          underflow occurs, the result is zero and execution 
+          continues without an error.
+9         Subscript out of range
+          An  array element is referenced with  a  subscript 
+          that is outside the dimensions of the array.
+11        Division by zero
+          A   division   by  zero  is  encountered   in   an 
+          expression, or the operation of involution results 
+          in zero being raised to a negative power.  Machine 
+          infinity   with  the  sign  of  the  numerator  is 
+          supplied  as  the  result  of  the  division,   or 
+          positive  machine  infinity  is  supplied  as  the 
+          result of the involution, and execution continues.
+14        Out of string space
+          String  variables exceed the allocated  amount  of 
+          string space.
+
+NUMBER              MESSAGE
+20        RESUME without error
+          A  RESUME statement is encountered before an error 
+          trapping routine is entered.
+21        Unprintable error
+          An  error message is not available for  the  error 
+          condition which exists.  This is usually caused by 
+          an ERROR with an undefined error code.
+50        Field overflow
+          A  FIELD statement is attempting to allocate  more 
+          bytes than were specified for the record length of 
+          a random file.
+51        Internal error
+          An  internal  malfunction  has  occurred  in  Disk 
+          BASIC-80. Report to Microsoft the conditions under 
+          which the message appeared.
+52        Bad file number
+          A  statement  or command references a file with  a 
+          file  number  that is not OPEN or is  out  of  the 
+          range of file numbers specified at initialization.
+
+NUMBER              MESSAGE
+53        File not found
+          A RUN, CHAIN, KILL, or OPEN statement references a 
+          file that does not exist on the current disk.
+54        Bad file mode
+          An attempt is made to use PUT,  GET, or LOF with a 
+          sequential  or to execute an OPEN with a file mode 
+          other than I, O, R, D.
+55        File already open
+          A sequential output mode OPEN is issued for a file 
+          that  is already open;  or a KILL is given  for  a 
+          file that is open.
+57        Disk I/O error
+          An I/O error occurred on a disk I/O operation.  It 
+          is a fatal error, i.e., theoperating system cannot 
+          recover from the error.
+58        File already exists
+          The  filename specified is identical to a filename 
+          already in use on the disk.
+61        Disk Full
+          All disk storage space is in use.
+
+NUMBER              MESSAGE
+62        Input past end
+          An INPUT statement is executed after all the  data 
+          in the file has been INPUT,  or for a null (empty) 
+          file. To avoid this error, use the EOF function to 
+          detect the end of file.
+63        Bad record number
+          In  a PUT or GET statement,  the record number  is 
+          either greater than the maximum allowed (32767) or 
+          equal to zero.
+64        Bad file name
+          An illegal form is used for the filename with RUN, 
+          CHAIN,  KILL,  or OPEN (e.g.,  a filename with too 
+          many characters).
+67        Too  many  files
+          An  attempt  is made to create a new  file  (using 
+          OPEN) when the directory is full.
+::M80.HQP
+
+
+
+
+
+
+
+
+
+
+
+
+
+d file is .COM, 
+and this file is called a "command file". Once saved

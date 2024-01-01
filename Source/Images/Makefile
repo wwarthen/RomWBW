@@ -1,23 +1,32 @@
 #
 # this makefile subsumes all the work done in Build.cmd, BuildDisk.cmd, BuildDisk.ps1
 #
-SYSTEMS = ../CPM22/cpm_wbw.sys ../ZSDOS/zsys_wbw.sys ../CPM3/cpmldr.sys ../ZPM3/zpmldr.sys
+SYSTEMS = ../CPM22/cpm_wbw.sys ../ZSDOS/zsys_wbw.sys ../QPM/qpm_wbw.sys ../CPM3/cpmldr.sys ../ZPM3/zpmldr.sys
 
 FDIMGS = fd144_cpm22.img fd144_zsdos.img fd144_nzcom.img \
-	fd144_cpm3.img fd144_zpm3.img fd144_ws4.img fd144_qpm.img
+	fd144_cpm3.img fd144_zpm3.img fd144_ws4.img fd144_qpm.img \
+	fd144_z80asm.img fd144_aztecc.img fd144_hitechc.img \
+	fd144_bascomp.img fd144_fortran.img fd144_games.img \
+	fd144_tpascal.img
 HD512IMGS = hd512_cpm22.img hd512_zsdos.img hd512_nzcom.img \
 	hd512_cpm3.img hd512_zpm3.img hd512_ws4.img
+HD512XIMGS = hd512_z80asm.img hd512_aztecc.img hd512_hitechc.img \
+	hd512_bascomp.img hd512_fortran.img hd512_games.img \
+	hd512_tpascal.img hd512_dos65.img hd512_qpm.img hd512_blank.img
 # HDIMGS += hd512_bp.img
 HD1KIMGS = hd1k_cpm22.img hd1k_zsdos.img hd1k_nzcom.img \
 	hd1k_cpm3.img hd1k_zpm3.img hd1k_ws4.img
-# HD1KIMGS += hd1k_bp.img
+HD1KXIMGS = hd1k_z80asm.img hd1k_aztecc.img hd1k_hitechc.img \
+	hd1k_bascomp.img hd1k_fortran.img hd1k_games.img \
+	hd1k_tpascal.img hd1k_qpm.img hd1k_blank.img
+HD1KXIMGS += hd1k_bp.img
 
 HD512PREFIX =
 HD1KPREFIX = hd1k_prefix.dat
 
 OBJECTS = $(FDIMGS)
-OBJECTS += $(HD512IMGS) hd512_combo.img  hd512_dos65.img hd512_qpm.img$(HD512PREFIX)
-OBJECTS += $(HD1KIMGS) hd1k_combo.img hd1k_qpm.img $(HD1KPREFIX)
+OBJECTS += $(HD512IMGS) $(HD512XIMGS) hd512_combo.img $(HD512PREFIX)
+OBJECTS += $(HD1KIMGS) $(HD1KXIMGS) hd1k_combo.img $(HD1KPREFIX)
 
 OTHERS = blank144 blankhd512 blankhd1k
 
@@ -61,7 +70,7 @@ blankhd512:
 	@echo Making Blank HD512 of size $(HD512SIZE)k
 	@LC_ALL=en_US.US-ASCII tr '\000' '\345' </dev/zero | dd of=$@ bs=1024 count=$(HD512SIZE)
 	@hexdump $@
-	
+
 blankhd1k:
 	@echo Making Blank HD1K of size $(HD1KSIZE)k
 	@LC_ALL=en_US.US-ASCII tr '\000' '\345' </dev/zero | dd of=$@ bs=1024 count=$(HD1KSIZE)
@@ -71,7 +80,7 @@ blankhd1k:
 	@sys= ; \
 	case $@ in \
 		(*cpm22*) sys=../CPM22/cpm_wbw.sys;; \
-		(*qpm*) sys=d_qpm/u0/qpm.sys;; \
+		(*qpm*) sys=../QPM/qpm_wbw.sys;; \
 		(*zsdos* | *nzcom* | *dos65*) sys=../ZSDOS/zsys_wbw.sys;; \
 		(*cpm3*) sys=../CPM3/cpmldr.sys;; \
 		(*zpm3*) sys=../ZPM3/zpmldr.sys;; \
@@ -122,7 +131,7 @@ clean::
 	@rm -f *.ls
 
 imgdiff:
-	@for i in $(FDIMGS) $(HD512IMGS) $(HD1KIMGS) ; do \
+	@for i in $(FDIMGS) $(HD512IMGS) $(HD512XIMGS) $(HD1KIMGS) $(HD1KXIMGS) ; do \
 		echo $$i ; \
 		if echo $$i | grep -q ^fd144_ ; then \
 			fmt=wbw_fd144 ; \

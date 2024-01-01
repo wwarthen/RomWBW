@@ -22,6 +22,7 @@
 ../../Binary/Apps/syscopy.com 15:
 ../../Binary/Apps/sysgen.com 15:
 ../../Binary/Apps/talk.com 15:
+../../Binary/Apps/htalk.com 15:
 ../../Binary/Apps/tbasic.com 15:
 ../../Binary/Apps/timer.com 15:
 ../../Binary/Apps/tune.com 15:

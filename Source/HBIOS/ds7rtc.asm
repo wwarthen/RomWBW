@@ -5,6 +5,11 @@
 ;
 ;==================================================================================================
 ;
+#IF (!PCFENABLE)
+	.ECHO	"*** DS7 DRIVER REQUIRES PCF DRIVER.  SET PCFENABLE!!!\n"
+	!!!	; FORCE AN ASSEMBLY ERROR
+#ENDIF
+;
 DS7_OUT		.EQU	10000000B		; SELECT SQUARE WAVE FUNCTION
 DS7_SQWE	.EQU	00010000B		; ENABLE SQUARE WAVE OUTPUT
 DS7_RATE	.EQU	00000000B		; SET 1HZ OUPUT
@@ -17,6 +22,8 @@ DS7_READ   	.EQU    (DS7_DS1307 | DS7_R)	; READ
 DS7_WRITE 	.EQU    (DS7_DS1307 | DS7_W)	; WRITE
 ;
 DS7_CTL		.EQU	(DS7_OUT | DS7_SQWE | DS7_RATE)
+;
+		.ECHO	"DS1307: ENABLED\n"
 ;
 ;-----------------------------------------------------------------------------
 ; DS1307 INITIALIZATION
@@ -31,6 +38,7 @@ DS7_CTL		.EQU	(DS7_OUT | DS7_SQWE | DS7_RATE)
 ; 12HR MODE IS CURRENTLY ASSUMED
 ;
 DS7RTC_INIT:
+	CALL	NEWLINE			; Formatting
 	PRTS("DS1307: $")		; ANNOUNCE DRIVER
 ;
 	LD	A,(PCF_FAIL_FLAG)	; CHECK IF THE

@@ -1,0 +1,4114 @@
+; Z180MOM1.180  This is the Z180 CPU main monitor program for the S100Computers Z180 SBC Project. 
+; Assemble and SLR's Z180ASM Assembler
+;
+; The code is intended to run starting at location 0000H and ignores
+; all page zero stuff.  Interrupts are kept disabled.  The resultant
+; binary is intended to be programmed into a ROM that is addressed at
+; CPU address 0000H on reset.  The code assumes the CPU has been reset
+; and makes no attempt to "reset" Z180 registers back to defaults.
+;
+; The code assumes a physical memory layout of 1MB.  The first 512KB
+; is assumed to be ROM and the second 512KB is assumed to be RAM.  The
+; code configures the MMU to place the highest 32KB of physical RAM
+; into the top 32KB of CPU address space.
+;
+; Input XTAL clock is expected to be 18.432 MHz.
+; The CPU is configured to run at the most conservative settings.
+; PHI at 1/2 XTAL input, +3 memory wait states, and +3 I/O wait states.
+;
+; Serial port baud rate divisor is programmed to a 57,600 baud rate
+; with PHI at 9.2MHz.  Line characteristics are set to
+; 8 data bits, 1 stop bit, no parity.
+;
+; The initialization code relocates the internal Z180 CPU registers
+; to start at C0H.  This is not a requirement of the code, but I
+; thought it might be helpful for testing S100 bus external devices that are
+; more likely to be located at the lower I/O addresses.
+;
+; PLEASE NOTE THIS CODE ALMOST TAKES UP 8K TO RESIDE FROM E000H TO FFFFH IN RAM.
+; VERY LITTLE MORE CODE CAN BE ADDED WITHOUT OVERWRITING THE TOP OF RAM.
+; CURRENTLY THIS IS ONLY ~80 BYTES. CHECK THE VALUE OF "ROM_EMPTY" IN THE 
+; Z180MON1.LST FILE IF YOU MAKE MODIFICATIONS.
+;
+;
+; The submit file (xxx2.sub) contains:-
+; R Z180MOM1.180
+; SLR180 Z180MOM1 FH
+; HEXCOM Z180MOM1
+; W Z180MOM1.HEX
+; W Z180MOM1.LST
+; W Z180MOM1.COM
+;
+; Ignore the HEXCOM error "LOAD ADDRESS LESS THAN 100"
+;
+; To assemble under windows...
+; Load Altair.EXE in the Windows CMD box
+; do cpm3
+; I:
+;
+; Use the "r" SIMH command to move SLR180.COM file across to the I: Drive 
+; Also "r" the XXX2.SUB file across to the I: drive (one time only)
+; Note I already have these files on the Altair I: drive you are using here.
+;
+; Then....
+; I:>Submit XXX2.SUB
+;
+; The .HEX file will have a start address of 0000H. It must reside in the ROM starting
+; at 0H. For the "ROM" I use the Microchip SST39F040 chip type
+; With the Wellon VP 290 Programmer:-
+;
+; To Buffer Address (HEX) 	
+; For File Address (Hex) 0000 <------
+; File Size (Hex) 8000
+; Intel
+; Clear buffer options 0
+; To Buffer Mode Normal
+; From File Mode Normal
+;
+;
+;----------------------------------------------------------------------------------------
+;
+;	V0.0	5/10/2023			;Initial boot code supplied by Wayne Warthen
+;	V0.1	5/18/2023			;First addition of S100 bus Z80 Master.Z80 monitor code.
+;       V0.11   6/5/2023                        ;Menu to test S100 bus signals & set Baud Rate
+;	V0.2	7/4/2023			;Remove baud rate option, add date,time, start IDE
+;	V0.21	7/6/2023			;Cleaned up IDE drive section
+;	V0.22	7/6/2023			;Added default NMI and INT0 interrupt traps
+;	V0.23	7/7/2023			;Better use of ESC character for data entry aborts
+;	V0.24	7/8/2023			;Added Master/Slave S100 bus request ("W" CMD)
+;	V0.241  7/9/2023			;Add B command to Boot ROMWBW (by Wayne Warthen)
+;	V0.242	7/9/2023			;INT0 test added (S100 Sub Menu)
+;	V0.30	7/16/2023			;Added IDE menu and "P" CMD to boot CPM (Non Banked)
+;	V0.31	7/16/2023			;Corrected stack problem in XModem command
+;	V0.32	7/16/2023			;SD card, but not initilizing, (only partially done)
+;	V0.33	7/22/2023			;SD card interface done
+;	V0.34	7/22/2023			;SD card interface with high clock speed
+
+;
+;--------------------------------- Port equates used throughout the monitor ---------------
+;
+;
+SCROLL		EQU	01H		;Set scrool direction UP.
+BELL		EQU	07H
+SPACE		EQU	20H
+TAB		EQU	09H		;TAB ACROSS (8 SPACES FOR SD-BOARD)
+CR		EQU	0DH
+LF		EQU	0AH
+FF		EQU	0CH
+QUIT		EQU	11H		;Turns off any screen enhancements (flashing, underline etc).
+NO_ENHANCEMENT	EQU	17H		;Turns off whatever is on
+FAST		EQU	10H		;High speed scrool
+ESC		EQU	1BH
+DELETE		EQU	7FH
+BACKS		EQU	08H
+CLEAR		EQU	1AH		;TO CLEAR SCREEN
+RST7		EQU	38H		;RST 7 (LOCATION FOR TRAP)
+NN		EQU	0H		;[I] INITIAL VALUE
+SOH		EQU	1		; For XModem etc.
+EOT		EQU	4
+ACK		EQU	6
+NAK		EQU	15H
+
+FALSE		EQU	0
+TRUE		EQU	NOT FALSE
+
+DO_CODE		EQU	FALSE		;To skip over sections
+ST8C4		EQU	TRUE		;TRUE if S100_Parallel_IO Board.  False if IMSAI PIO Board	
+IOBYTE		EQU	075H		;IOBYTE PORT ON Z180 CPU Board (74H-77H or 64H-67H. Set with K8)
+SOUT_PORT	EQU	074H		;Onboard port to control (on/off) sOUT signal to S100 bus.
+
+NMI_VECTOR	EQU	66H		;Default NMI Vector location
+INT0_VECTOR	EQU	38H		;Default INT0 vector location
+
+SD_CARD_CS	EQU	0CH		;Bit 2 to select onboard SD card adaptor (0=ON, 1=off)
+SD_CARD_LED	EQU	0EH		;Bit 2 to turn on/off SD Card LED (0=ON, 1=off)
+SD_CNTR		EQU	z180_cntr	;SPI CTRL PORT (0CAH)
+SD_TRDR		EQU	z180_trdr	;SPI DATA PORT IN & OUT  (0CBH)
+;
+;
+;-------------- PROPELLER CONSOLE_IO (OR SD SYSTEMS VIDIO BOARD) FOR CONSOLE INPUT & OUTPUT
+CONSOLE_STATUS	EQU	0H	
+CONSOLE_IN	EQU	01H
+CONSOLE_OUT	EQU	01H
+
+;-------------- THIS IS MY PORT TO OUTPUT DATA TO HP 4050T LASAR PRINTER  (IMSAI or 8PIO Board)
+
+
+IF	ST8C4				;If S100_Parallel_IO Board for Printer output
+PRINTER_CTRL	EQU	0C2H		;ST8C4 Control Port
+PRINTER_STATUS	EQU	0C1H		;ST8C4 Status port
+PRINTER_OUT	EQU	0C0H		;ST8C4 Data port
+PRINTER_ST_LOW	EQU	0DH		;OUT STROBE LOW
+PRINTER_ST_HIGH	EQU	0CH		;OUT STROBE HIGH
+ELSE
+PRINTER_STATUS	EQU	5		;IN, IMSAI PIO Board PARRELL PORT
+PRINTER_OUT	EQU	5		;OUT
+PRINTER_STROBE	EQU	4		;OUT
+ENDIF
+
+;-------------- S100Computers MSDOS Support Board PORT ASSIGNMENTS 
+ 
+CMOS_PORT	EQU	70H		;Base Port for CMOS Clock/Date Chip on MSDOS Support Board
+MASTER_PIC_PORT	EQU	20h		;Hardware port the 8259A (two ports 20H & 21H)
+
+MasterICW1	equ	00010111B	;EDGE triggered, 4 bytes, single Master,ICW4 needed
+MasterICW2	equ	8H		;Base address for 8259A Int Table (IBM-PC uses 8X4 = 20H)
+MasterICW3	equ	0H		;No slave
+MasterICW4	equ	00000011B	;No special mode, non buffer, Auto EOI, 8086.  ;<<<<,
+
+
+;-------------------------- SMBs Board ------------------------------------------------
+
+SW_TMAX	EQU	0EEH			;OUTPUT BIT 0 HIGH FROM THIS PORT LOWERS DMA0* ON THE SMB_V2 (SWITCH IN THE 8086 FAMILY of boards)
+					;OUTPUT BIT 1 HIGH FROM THIS PORT LOWERS DMA1* ON THE SMB_V2 (SWITCH IN THE 68000 CPU Board)
+					;OUTPUT BIT 2 HIGH FROM THIS PORT LOWERS DMA2* ON THE SMB_V2 
+					;OUTPUT BIT 3 HIGH FROM THIS PORT LOWERS DMA3* ON THE SMB_V2 
+SW_TMA0	EQU	0EDH			;INPUT FROM THIS PORT LOWERS DMA0* (SWITCHES IN THE 8088,8086,80286 or 80386 boards)
+
+
+;-------------- S100Computers I/O BOARD PORT ASSIGNMENTS  (A0-AC) ------------------------------------
+
+BCTL		EQU	0A0H		;CHANNEL B CONTROL  (SPEECH PORT) ;<--- Adjust as necessary, 
+BDTA		EQU	0A2H		;CHANNEL B DATA
+ACTL		EQU	0A1H		;CHANNEL A CONTROL (MODEM_CTL_PORT)		
+ADTA		EQU	0A3H		;CHANNEL A DATA (MODEM_DATA_PORT)
+
+PortA_8255	EQU	0A8H		;A port of 8255 ;<--- Adjust as necessary
+PortB_8255	EQU	0A9H		;B port of 8255
+PortC_8255	EQU	0AAH		;C Port of 8255
+PortCtrl_8255	EQU	0ABH		;8255 configuration port
+AinBout8255cfg	EQU	10011000b	;Set 8255 ports:- A input, B output, 
+
+USB_DATA	EQU	0ACH		;PORT ASSIGNEMENT FOR DLP-USB Controller chip
+USB_STATUS	EQU	0AAH		;Status port for USB port (Port C of 8255, bits 6,7)
+USB_RXE		EQU	80H		;If Bit 7 = 0, data available to recieve by S-100 Computer	
+USB_TXE		EQU	40H		;If Bit 6 = 0 data CAN be written for transmission to PC
+
+BASE_PORT	EQU	0A1H		;For XModem communication routines
+MODEM_CTL_PORT	EQU	BASE_PORT 	;A1H (Note modem I/O will be on CHANNEL A. Speaker on CHANNEL B
+MODEM_DATA_PORT	EQU	BASE_PORT+2	;A3H 
+
+MODEM_SEND_MASK	EQU	4
+SEND_READY	EQU	4		;VALUE WHEN READY
+MODEM_RECV_MASK	EQU	1
+RECV_READY	EQU	1		;BIT ON WHEN READY
+MODEM_ERR_LIMIT	EQU	8		;Max number of Modem serial port re-reads aborting
+MODEM_RTS_DELAY	EQU	1		;Time to check Modem RTS line (See XMODEM_LOAD & P_XMODEM_LOAD). Not critical.
+
+RECVD_SECT_NO	EQU	0H		;IX Offset for XModem Recieved Sector Number
+SECTNO		EQU	1H		;IX Offset for XModem CURRENT SECTOR NUMBER 
+ERRCT		EQU	2H		;IX Offset for XModem ERROR COUNT
+
+;-------------- S100Computers IDE/CF CARD Port Assignements  (30-34H)----------------------------
+
+IDEAport	EQU	030H		;lower 8 bits of IDE interface
+IDEBport	EQU	031H		;upper 8 bits of IDE interface
+IDECport	EQU	032H		;control lines for IDE interface
+IDECtrl		EQU	033H		;8255 configuration port
+IDEDrivePort	EQU	034H		;To select the 1st or 2nd CF card/drive (Not used with this monitor)
+
+IDE_Reset_Delay	EQU	020H		;Time delay for reset/initilization (~60 uS, with 10MHz Z80, 2 I/O wait states)
+					
+CPM_ADDRESS	EQU	100H		;Will place the CPMLDR.COM Loader here with 
+					;CPMLDR.COM will ALWAYS be on TRK 0,SEC2, (LBA Mode)
+SEC_COUNT	EQU	12		;CPMLDR.COM requires (currently) 10, 512 byte sectors
+
+RDcfg8255	EQU	10010010B	;Set 8255 IDECport out, IDEAport/B input
+WRcfg8255	EQU	10000000B	;Set all three 8255 ports output
+
+;IDE control lines for use with IDEportC.  
+
+IDEa0line	EQU	01H		;direct from 8255 to IDE interface
+IDEa1line	EQU	02H		;direct from 8255 to IDE interface
+IDEa2line	EQU	04H		;direct from 8255 to IDE interface
+IDEcs0line	EQU	08H		;inverter between 8255 and IDE interface
+IDEcs1line	EQU	10H		;inverter between 8255 and IDE interface
+IDEwrline	EQU	20H		;inverter between 8255 and IDE interface
+IDErdline	EQU	40H		;inverter between 8255 and IDE interface
+IDEreset	EQU	80H		;inverter between 8255 and IDE interface
+
+;Symbolic constants for the IDE Drive registers, which makes the
+;code more readable than always specifying the address bits
+
+REGdata		EQU	IDEcs0line
+REGerr		EQU	IDEcs0line + IDEa0line
+REGseccnt	EQU	IDEcs0line + IDEa1line
+REGsector	EQU	IDEcs0line + IDEa1line + IDEa0line
+REGcylinderLSB	EQU	IDEcs0line + IDEa2line
+REGcylinderMSB	EQU	IDEcs0line + IDEa2line + IDEa0line
+REGshd		EQU	IDEcs0line + IDEa2line + IDEa1line		;(0EH)
+REGcommand	EQU	IDEcs0line + IDEa2line + IDEa1line + IDEa0line	;(0FH)
+REGstatus	EQU	IDEcs0line + IDEa2line + IDEa1line + IDEa0line
+REGcontrol	EQU	IDEcs1line + IDEa2line + IDEa1line
+REGastatus	EQU	IDEcs1line + IDEa2line + IDEa1line + IDEa0line
+
+;IDE Command Constants.  These should never change.
+
+COMMANDrecal	EQU	10H
+COMMANDread	EQU	20H
+COMMANDwrite	EQU	30H
+COMMANDinit	EQU	91H
+COMMANDid	EQU	0ECH
+COMMANDspindown	EQU	0E0H
+COMMANDspinup	EQU	0E1H
+ 
+; IDE Status Register:
+;  bit 7: Busy	1=busy, 0=not busy
+;  bit 6: Ready 1=ready for command, 0=not ready yet
+;  bit 5: DF	1=fault occured insIDE drive
+;  bit 4: DSC	1=seek complete
+;  bit 3: DRQ	1=data request ready, 0=not ready to xfer yet
+;  bit 2: CORR	1=correctable error occured
+;  bit 1: IDX	vendor specific
+;  bit 0: ERR	1=error occured
+
+SEC$SIZE	EQU	512		;Assume sector size as 512. (Not tested for other sizes)
+MAXSEC		EQU	3DH		;Sectors per track for CF my Memory drive, Kingston CF 8G. (For CPM format, 0-3CH)
+					;This translates to LBA format of 1 to 3D sectors, for a total of 61 sectors/track.
+					;This CF card actully has 3F sectors/track. Will use 3D for my CPM3 system because
+					;my Seagate drive has 3D sectors/track. Don't want different CPM3.SYS files around
+					;so this program as is will also work with a Seagate 6531 IDE drive
+
+MAXTRK		EQU	0FFH		;CPM3 allows up to 8MG so 0-256 "tracks"
+STARTCPM	EQU	100H		;Start location for CPM
+
+;-----------------------------------------------------------------------------------------------------
+ 
+
+ 
+z180_base	equ	0C0h			;Will relocate all internal Z180 IO ports  from 0-3FH to C0-FFH. The S100 bus
+						;hardware intrerface will kick in if these ports are activeted.
+						;See the schematic
+;
+mon_start	EQU	0E000h			;Final location of this monitor 0E000H  (First 56K free RAM)
+RAM_STORE	EQU	07000H			;Need to store some RAM variables
+STACK		EQU	0DFF0H			;The stack below the monitor
+
+IDE_Buffer	EQU	100H			;Will place the IDE/CF Card Buffer here	
+SD_Buffer	EQU	100H			;Will place the SD Card buffer here
+
+;
+z180_cntla0	equ	z180_base + 00H		; asci0 control a
+z180_cntla1	equ	z180_base + 01H		; asci1 control a
+z180_cntlb0	equ	z180_base + 02H		; asci0 control b
+z180_cntlb1	equ	z180_base + 03H		; asci1 control b
+z180_stat0	equ	z180_base + 04H		; asci0 status
+z180_stat1	equ	z180_base + 05H		; asci1 status
+z180_tdr0	equ	z180_base + 06H		; asci0 transmit
+z180_tdr1	equ	z180_base + 07H		; asci1 transmit
+z180_rdr0	equ	z180_base + 08H		; asci0 receive
+z180_rdr1	equ	z180_base + 09H		; asci1 receive
+z180_cntr	equ	z180_base + 0aH		; csi/o control				;<----- For SD Card
+z180_trdr	equ	z180_base + 0bH		; csi/o transmit/receive		;<----- For SD card
+z180_tmdr0l	equ	z180_base + 0cH		; timer 0 data lo
+z180_tmdr0h	equ	z180_base + 0dH		; timer 0 data hi
+z180_rldr0l	equ	z180_base + 0eH		; timer 0 reload lo
+z180_rldr0h	equ	z180_base + 0fH		; timer 0 reload hi
+z180_tcr	equ	z180_base + 10H		; timer control
+;	
+z180_asext0	equ	z180_base + 12H		; asci0 extension control (z8s180)
+z180_asext1	equ	z180_base + 13H		; asci1 extension control (z8s180)
+;
+z180_tmdr1l	equ	z180_base + 14H		; timer 1 data lo
+z180_tmdr1h	equ	z180_base + 15H		; timer 1 data hi
+z180_rldr1l	equ	z180_base + 16H		; timer 1 reload lo
+z180_rldr1h	equ	z180_base + 17H		; timer 1 reload hi
+z180_frc	equ	z180_base + 18H		; free running counter
+
+z180_astc0l	equ	z180_base + 1aH		; asci0 time constant lo (z8s180)
+z180_astc0h	equ	z180_base + 1bH		; asci0 time constant hi (z8s180)
+z180_astc1l	equ	z180_base + 1cH		; asci1 time constant lo (z8s180)
+z180_astc1h	equ	z180_base + 1dH		; asci1 time constant hi (z8s180)
+z180_cmr	equ	z180_base + 1eH		; clock multiplier (latest z8s180)
+z180_ccr	equ	z180_base + 1fH		; cpu control (z8s180)
+;
+z180_sar0l	equ	z180_base + 20H		; dma0 source addr lo
+z180_sar0h	equ	z180_base + 21H		; dma0 source addr hi
+z180_sar0b	equ	z180_base + 22H		; dma0 source addr bank
+z180_dar0l	equ	z180_base + 23H		; dma0 dest addr lo
+z180_dar0h	equ	z180_base + 24H		; dma0 dest addr hi
+z180_dar0b	equ	z180_base + 25H		; dma0 dest addr bank
+z180_bcr0l	equ	z180_base + 26H		; dma0 byte count lo
+z180_bcr0h	equ	z180_base + 27H		; dma0 byte count hi
+z180_mar1l	equ	z180_base + 28H		; dma1 memory addr lo
+z180_mar1h	equ	z180_base + 29H		; dma1 memory addr hi
+z180_mar1b	equ	z180_base + 2aH		; dma1 memory addr bank
+z180_iar1l	equ	z180_base + 2bH		; dma1 i/o addr lo
+z180_iar1h	equ	z180_base + 2cH		; dma1 i/o addr hi
+z180_iar1b	equ	z180_base + 2dH		; dma1 i/o addr bank (z8s180)
+z180_bcr1l	equ	z180_base + 2eH		; dma1 byte count lo
+z180_bcr1h	equ	z180_base + 2fH		; dma1 byte count hi
+z180_dstat	equ	z180_base + 30H		; dma status
+z180_dmode	equ	z180_base + 31H		; dma mode
+z180_dcntl	equ	z180_base + 32H		; dma/wait control
+z180_il		equ	z180_base + 33H		; interrupt vector load
+z180_itc	equ	z180_base + 34H		; int/trap control
+;
+z180_rcr	equ	z180_base + 36H		; refresh control
+;
+z180_cbr	equ	z180_base + 38H		; mmu common base register
+z180_bbr	equ	z180_base + 39H		; mmu bank base register
+z180_cbar	equ	z180_base + 3aH		; mmu common/bank area register
+;
+z180_omcr	equ	z180_base + 3eH		; operation mode control
+z180_icr	equ	z180_base + 3fH		; i/o control register
+
+;
+;
+CLOCK_VALUE_CMR	equ	00H			;For setting CPU clock speed	
+CLOCK_VALUE_CCR	equ	00H			;  "      "
+CNTLB0_VALUE	equ     00H                     ; For setting final baud rate from clock
+;
+;  (CMR)       (CCR)        (CNTLB0)     Baud       PHI			;These settings need to be checked!
+;  00H          80H         20H         38,400      18.432 MHz		;Using 18.432MHz Oscillator
+;  00H          00H         20H         19,200      9.2 MHz		;Using 18.432MHz Oscillator
+;  00H          80H         00H         115,200     18.432 MHz		;Using 18.432MHz Oscillator
+;
+;  00H          00H         00H         57,600      9.2 MHz		;Setting for S100 Bus Interface
+;
+;=======================================================================
+; BOOTSTRAP
+;
+; This code is begins at 0000H and is expected to get control upon
+; CPU reset.  It does minimal Z180 CPU initialization, then copy
+; the monitor code to upper CPU RAM (F000H) and jump to it.
+;=======================================================================
+;
+	org	0000h
+;
+; Initialize Z180
+;
+	; This code does *not* handle interrupts.  Disable them and leave
+	; them disabled.
+	im	1
+	di
+;
+	; Set base for CPU I/O registers.
+	; Do not use z180_icr equate from z180.inc because the ICR
+	; is not yet at the running location.  At reset, the Z180
+	; register base I/O address is zero, so initially, ICR is
+	; at 3FH.
+	
+	ld	a,z180_base		; C0H
+	out0	(3Fh),a			; at reset, icr is at 3FH
+
+	xor	a			; Disable refresh (not really required)
+	out0	(z180_rcr),a
+					; To make PHI=Osc Input, set bit 7 of CCR
+					; To make OHI=2X Osc Input, set bits 7 of CCR and CMR
+	ld	a,CLOCK_VALUE_CMR	; 00H, Set clock speed,(normally 0H)
+	out0	(z180_cmr),a		; set CMR
+	ld	a,CLOCK_VALUE_CCR	; 80H, (normally 80H, OSC=PHI)
+	out0	(z180_ccr),a		; set CCR
+					;
+;
+					; set default wait states (super conservative for now)
+	ld	a,0F0h			; +3 mem waits, +3 i/o waits
+	out0	(z180_dcntl),a
+;
+					; Setup Z180 MMU assuming physical memory is
+					; 512KB ROM / 512KB RAM.  CPU address spaces is split at
+					; 32KB/32KB.  The upper 32KB is mapped to the top 32KB of
+					; physical memory (RAM).  The lower 32KB is left mapped to
+					; the lowest 32KB of memory (ROM), so we continue to run
+					; from ROM at this point.
+	ld	a,80h
+	out0	(z180_cbar),a		; setup for 32k/32k bank config
+	ld	a,(1024 - 64) >> 2
+	out0	(z180_cbr),a		; common base = last (top) bank
+;
+					; We have RAM now in upper 32K now.  Initialize the stack
+					; at top of CPU memory.
+	ld	sp,STACK		; Put the stack just below the monitor at E000H (DFFF0)
+;
+					; Confirm RAM is working by pushing a value on the stack, then
+					; popping the value to a different register and writing it to the
+					; diagnostic LEDs
+;
+	ld	hl,mon_img
+	ld	de,mon_start
+	ld	bc,mon_len
+	ldir
+;	
+jp	mon_start
+
+	DB	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0  ;To clean up PROM for easy reading
+	DB	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+	DB	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+	DB	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+	DB	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+	DB	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+	DB	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+	DB	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+	DB	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+	Db	0,0,0,0
+	
+; Jump to monitor!!!
+;
+
+;
+;=======================================================================
+; MONITOR
+;
+; This is the system moitor code that is intended to run from RAM at
+; E000H.
+;=======================================================================
+;
+mon_img	equ	$			; start of monitor image
+;
+	.phase	mon_start		; running location for monitor
+;
+		JP	OVER_VECTORS		
+	
+CON_OUT:	JP	ZCO				;0E003H, Interrupt/BIOS routines are counting on these locations
+CON_STAT:	JP	ZCSTS				;0E006H, never changing
+CON_IN:		JP	ZCI				;0E009H
+SEND_STRING:	JP	PRINT_STRING			;0E00CH
+MONITOR_NMI	JP	DEFAULT_NMI			;0E00FH
+MONITOR_INTO	JP	DEFAULT_INT0			;0E012H
+
+DEFAULT_NMI:	
+	PUSH	AF
+	PUSH	BC
+	PUSH	HL
+	LD	HL,NMI_MSG
+	CALL	PRINT_STRING
+	POP	HL
+	POP	BC
+	POP	AF
+	RETI
+
+DEFAULT_INT0:	
+	PUSH	AF
+	PUSH	BC
+	PUSH	HL
+	LD	HL,INT0_MSG
+	CALL	PRINT_STRING
+	POP	HL
+	POP	BC
+	POP	AF
+	RETI
+	
+OVER_VECTORS:
+	ld	a,64h			; xmit enable, rcv enable, 8 data bits, no parity
+	out0	(z180_cntla0),a
+	ld	a,CNTLB0_VALUE		; 20H, Baud=19,200 @ 9.2 MHz
+	out0	(z180_cntlb0),a
+	ld	a,60h			; dcd0 disable, cts0 disable
+	out0	(z180_asext0),a
+;
+;
+	ld	b,0			; Delay after ASCI setup (should not be needed)
+	djnz	$
+	djnz	$
+;
+					; Select first bank of RAM into lower 32K of CPU memory.  This is
+					; where we abandon the physical ROM and switch to all RAM in the
+					; CPU address space.
+;
+	ld	a,10h			; first physical bank of RAM
+	call	bnksel			; do it
+;
+					; *** Add code as desired to setup Z180 zero page ***
+;
+					; At this point RAM is mapped to entire CPU address space.  This is
+					; the right place to setup lower RAM, if needed.  However, nothing
+					; needs to be done for the remainder of this sample code.
+;
+;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+;
+;
+BEGIN0:	JP	BEGIN			;JUMP OVER COMMAND TABLE
+
+TBL:	DW  FLUSH			;"@"  SEND FF to LaserJet printer      
+	DW  MEMMAP			;"A"  DISPLAY A MAP OF MEMORY
+	DW  BOOT			;"B"  BOOT ROMWBW
+	DW  NOT_DONE			;	"C"  SPARE
+	DW  DISP			;"D"  DISPLAY MEMORY (IN HEX & ASCII)
+	DW  CHAR_TEST			;"E"  ECHO CHAR IN TO CHAR OUT
+	DW  FILL			;"F"  FILL MEMORY WITH A CONSTANT
+	DW  GOTO			;"G"  GO TO [ADDRESS]
+	DW  SHOW_DATE			;"H"  SHOW CURRENT DATE
+	DW  SHOW_TIME			;"I"  SHOW CURRENT TIME 
+	DW  MEM_TEST			;"J"  DESTRUCTIVE MEMORY TEST 
+	DW  KCMD			;"K"  DISPLAY THE LIST OF MONITOR COMMANDS
+	DW  NOT_DONE			;	"L"  SPARE
+	DW  MOVE			;"M"  MOVE BLOCK OF MEMORY (START,FINISH,DESTINATION)
+	DW  S100_TESTS			;"N"  Hardware tests for the S100 bus
+	DW  SWITCH_8086			;"O"  INPUT Port ED (switched in 8086/80286)
+	DW  HBOOTCPM			;"P"  BOOT IN CPM FROM The S100 bus IDE/CF Card Board
+	DW  QUERY			;"Q"  QUERY PORT (IN OR OUT)
+	DW  INPORTS			;"R"  Read ALL Input Ports
+	DW  SUBS			;"S"  SUBSTITUTE &/OR EXAMINE MEMORY
+	DW  TYPE			;"T"  TYPE ASCII PRESENT IN MEMORY  (Same as D cmd except ASCII)
+	DW  HALT_CPU			;"U"  HALT CPU
+	DW  VERIFY			;"V"  COMPARE MEMORY
+	DW  SD_CARD_MENU		;"W"  SD CARD MENU    
+	DW  XMODEM			;"X"  DOWNLOAD A FILE FROM PC VIA XMODEM VIA THE S100 SERIAL BOARD
+	DW  IDE_BOARD_MENU		;"Y"  IDE Menu for IDE/CF Card Board
+	DW  SIZE			;"Z"  FIND HIGHEST R/W RAM
+
+
+BEGIN:	DI				;No interrupts
+	XOR	A			;SET INTERUPT TO PAGE 0H
+	LD	I,A			;Z80 Interrupt page 0
+
+SETUP_STACK:
+	LD	SP,AHEAD-4		;SETUP A FAKE STACK
+	JP	MEMSZ1			;RETURNS WITH TOP OF RAM IN [HL]
+	DW	AHEAD			;A Return opcode will pick up this address
+AHEAD:	
+	LD	SP,STACK		;Put stack below monitor at 0EFF0H
+	LD	HL,0
+	ADD	HL,SP
+	PUSH	HL			;Store it for below
+	POP	IY
+	
+IF	ST8C4				;If S100_Parallel_IO Board for Printer output
+	LD	A,08H			;Initilize the ST8C4 PC-Printer Port IO
+	OUT	(PRINTER_CTRL),A
+ELSE
+	LD	A,0FFH			;IMSAI PIO Board. Clear Printer strobe, comes up 0 on a reset
+	OUT	(PRINTER_STROBE),A	
+ENDIF
+
+					;We need to clear the 8259A otherewise the 8086 monitor sometimes hangs
+	LD	A,MasterICW1		;Initilize the 8259A PIC Controller (;EDGE triggered, 4 bytes, single Master,ICW4 needed)
+	OUT	(MASTER_PIC_PORT),A
+	LD	A,MasterICW2		;Ints starts at 20H in RAM (IBM-PC uses 8X4 = 20H)
+	OUT	(MASTER_PIC_PORT+1),A
+	LD	A,MasterICW4		;No slaves above, so 8259 does not expect ICW3
+	out	(MASTER_PIC_PORT+1),A
+
+	LD	A,11111111b		;Allow no interrupts to the 8259A with Z80.
+	out	(MASTER_PIC_PORT+1),A
+			
+
+	LD	HL,SIGNON_MSG
+	CALL	PRINT_STRING		;Have a Stack, so now we can use CALL
+
+	LD	HL,TOP_RAM_MSG		;Print Top of RAM
+	CALL	PRINT_STRING
+	
+	LD	HL,STACK-0F0H		;Top of RAM available RAM
+	CALL	HL_ONLY			;Print HL/SP 
+
+	LD	HL,SP_MSG		;Print Current Stack Location
+	CALL	P_STRING
+	
+	PUSH	IY			;SP is stored from above in [IY]
+	POP	HL
+	CALL	HL_ONLY			;Print HL/SP 
+
+	LD	HL,IOBYTE_MSG		;Print Current IOBYTE value
+	CALL	P_STRING
+	
+	IN0	A,(IOBYTE)		;Show IOBYTE. If bit 0=0 (force printer output), CMP/3 boot will hang
+	CALL	ZBITS
+	CALL	ZCRLF			;Then ZCRLF
+
+	LD	A,04H			; Turn off the SD card adaptor CS* line 
+	OUT0	(SD_CARD_CS),A		; 0CH
+	OUT0	(SD_CARD_LED),A		; 0EH
+	
+	CALL	ZCSTS			;CHECK IF GARBAGE AT KEYBOARD
+	CALL	NZ,ZCI			;If so flush it
+					; Echo input to output
+
+					;Initilize the S100Computers Serial Ports I/O Board
+	CALL	INIT_SCC_A		;Initilize the Zilog 8530-A (XModem I/O)
+	CALL	INIT_SCC_B		;Initilize the Zilog 8530-B (Speech synthizer)
+					;Next initilize the 8255 on this same board
+	
+	LD	A,AinBout8255cfg	;A input, B output, C(bits 0-3) output, (bits 4-7)input
+	OUT	(PortCtrl_8255),A	;Config 8255 chip, Mode 0 
+					;Note 8255 port C used for DLP-USP Port Chip Status
+
+	LD	HL,CR_SMSG_SP		;lets V-Stamp chip get baud rate
+	CALL	SPEAK$		
+	
+			
+;-------THIS IS THE START ON THE MAIN MONITOR LOOP--------------------------------
+
+ZSTART:	LD	DE,ZSTART
+	PUSH	DE			;EXTRA UNBALANCED POP & [DE] WOULD END UP IN [PC]
+	CALL	ZCRLF
+	LD	C,'-'
+	CALL	ZCO
+	LD	C,'>'	   
+	CALL	ZCO
+
+STARO:	CALL	TI			; Main loop. Monitor will stay here until cmd.
+	CP	ESC			; escape?
+	jp	z,echoz			; done if so
+	AND	7FH
+	JR	Z,STARO
+	SUB	'@'			;Commands @ to Z only
+	RET	M
+	CP	1BH			;A-Z only
+	RET	NC
+	ADD	A,A
+	LD	HL,TBL
+	ADD	A,L
+	LD	L,A
+	LD	A,(HL)
+	INC	HL
+	LD	H,(HL)
+	LD	L,A
+	LD	C,02H
+	JP	(HL)			;JUMP TO THE COMMAND TABLE
+
+
+
+;>>>>>>>>>>>>>>>>>>>> MAIN CONSOLE ROUTINES <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+; Print a single character in C to the primary CONSOLE PORT
+; Will wait for serial output port to be ready.
+;
+ZCO:	IN0	A,(IOBYTE)		;Charcter in C
+	BIT	0,A
+	JR	NZ,SERIAL_ZCO
+S100_ZCO:
+	IN0	A,(CONSOLE_STATUS)	;S100 Bus PROPELLER CONSOLE I/O BOARD PORT
+	AND	4H
+	JR	Z,S100_ZCO
+;	CALL	DELAY	
+	LD	A,C
+	CP	07H			;IS IT A BELL
+	JR	Z,BELL1
+	CP	0H			;SD BOARD CANNOT TAKE A NULL!
+	RET	Z
+	OUT0	(CONSOLE_OUT),A
+	RET				;RETURN CHARACTER SENT IN [A]
+
+BELL1:	LD	A,06H			;SEND A BELL
+	OUT0	(CONSOLE_OUT),A
+	LD	A,0FH
+	CALL	BELL_DELAY
+	LD	A,07H
+	OUT0	(CONSOLE_OUT),A
+	LD	A,C
+	RET
+
+
+BELL_DELAY:	
+	DEC	A			;GENERAL COUNT DOWN TIME DELAY
+	RET	Z			;LENGTH SET IN [A]
+	PUSH	AF
+	LD	A,05H
+MORE:	DEC	A
+	PUSH	AF
+	XOR	A
+MORE2:	DEC	A
+	JR	NZ,MORE2
+	POP	AF
+	JR	NZ,MORE
+	POP	AF
+	JR	BELL_DELAY
+;
+;
+SERIAL_ZCO:				;;SC131 CIRCUIT SERIAL PORT
+	call	outstat			; get output status
+	jr	z,SERIAL_ZCO		; loop till ready
+;	CALL	DELAY	
+	out0	(z180_tdr0),C		; send character in C
+	ret				; done
+;
+; Check status of ASCI serial output. Returns non-zero (ZF cleared)
+; if output register ready
+;
+outstat:
+	in0	a,(z180_stat0)		; get status
+	and	02h			; bit 1 set means ready
+	ret				; done
+;
+;
+;
+;
+; Get a single character from the primary CONSOLE PORT and return
+; it in A.  Will wait for serial input port to have a char ready.
+;
+
+ZCI:	IN0	A,(IOBYTE)
+	BIT	0,A
+	JR	NZ,SERIAL_ZCI
+S100_ZCI:	
+	IN0	A,(CONSOLE_STATUS)	;NEED CONSTAT TO CLEAN UP SHIFT KEYS ETC
+	AND	02H
+	JR	Z,S100_ZCI
+	IN0	A,(CONSOLE_IN)
+	AND	7FH			;7 bits only
+	RET
+;
+;
+SERIAL_ZCI:	
+	call	SERIAL_ZCSTS		; get input status
+	jr	z,SERIAL_ZCI		; loop till char ready
+	in0	a,(z180_rdr0)		; get it
+	ret				; done
+;
+;
+; Check status of CONSOLE INPUT PORT.  Returns non-zero (ZF cleared)
+; if the input port has a character available.  Note that Z180 ASCI
+; will stall (stop reception) if a line error is detected.  In order
+; to ensure continuous reception, it is necessary to check for and
+; clear line errors.
+;
+ZCSTS:	IN0	A,(IOBYTE)
+	BIT	0,A
+	JR	NZ,SERIAL_ZCSTS
+S100_ZCSTS:
+	IN0	A,(CONSOLE_STATUS)
+	AND	02H
+	JP	Z,NOCHAR		
+	XOR	A
+	DEC	A			;RETURN WITH 0FFH IN [A] IF SOMETHING
+	RET
+NOCHAR: XOR	A			;RETURN WITH 0 IN A IF NOTHING THERE
+	RET
+;
+;
+SERIAL_ZCSTS:	
+	in0	a,(z180_stat0)		; read stat reg
+	push	af			; save status
+	and	70h			; parity, framing, or overrun error?
+	jr	z,instat1		; jump ahead if no errors
+					; clear error(s) or nothing further can be received!!!
+	in0	a,(z180_cntla0)		; read CNTLA
+	res	3,a			; clear efr (error flag reset)
+	out0	(z180_cntla0),a		; write updated CNTLA
+instat1:
+	pop	af			; restore status value
+	and	80h			; data ready?
+	ret				; done
+;
+;
+;DELAY:	
+;	PUSH	BC
+;	LD	B,10
+;	DJNZ	$
+;	POP	BC
+;	RET
+	
+
+
+;---------------------------- A COMMAND    MEMORY MAP  -------------------------------------------
+
+;MEMORY MAP PROGRAM CF.DR.DOBBS VOL 31 P40.
+;IT WILL SHOW ON CONSOL TOTAL MEMORY SUMMARY OF RAM,PROM, AND NO MEMORY
+
+MEMMAP:
+	CALL	ZCRLF
+	LD	HL,0
+	LD	B,1
+MAP1:	LD	E,'R'			;PRINT R FOR RAM
+	LD	A,(HL)
+	CPL
+	LD	(HL),A
+	CP	(HL)
+	CPL
+	LD	(HL),A
+	JR	NZ,MAP2
+	CP	(HL)
+	JR	Z,PRINT
+MAP2:	LD	E,'p'
+MAP3:	LD	A,0FFH
+	CP	(HL)
+	JR	NZ,PRINT
+	INC	L
+	XOR	A
+	CP	L
+	JR	NZ,MAP3
+	LD	E,'.'
+PRINT:	LD	L,0
+	DEC	B
+	JR	NZ,NLINE
+	LD	B,16
+	CALL	ZCRLF
+	CALL	HXOT4
+NLINE:	LD	A,SPACE
+	CALL	OTA
+	LD	A,E
+	CALL	OTA
+	INC	H
+	JR	NZ,MAP1
+	CALL	ZCRLF
+	CALL	ZCRLF
+	JP	ZSTART
+	
+
+;16 HEX OUTPUT ROUTINE
+
+HXOT4:	LD	C,H
+	CALL	HXO2
+	LD	C,L
+HXO2:	LD	A,C
+	RRA
+	RRA
+	RRA
+	RRA
+	CALL	HXO3
+	LD	A,C
+HXO3:	AND	0FH
+	CP	10
+	JR	C,HADJ
+	ADD	A,7
+HADJ:	ADD	A,30H
+OTA:	PUSH	BC
+	LD	C,A
+	CALL	ZCO			;SEND TO CONSOL
+	POP	BC
+	RET
+
+
+;---------------------------- B COMMAND    BOOT ROMWBW -------------------------------------------
+
+;RESTART SYSTEM WITH ROMWBW BOOT OVERRIDE FLAG IN THE Z180 RELOAD
+;REGISTER 1 LOW
+
+BOOT:	LD	HL,BOOT_ROM_MSG		;Booting ROMWBW
+	CALL	PRINT_STRING
+	LD	A,'W'			;OVERRIDE VALUE
+	OUT0	(Z180_RLDR1L),A		;SET RELOAD REGISTER 1 LOW
+	XOR	A			;ROM BANK 0 PLEASE
+	CALL	bnksel			;SELECT BANK IN LOW MEM
+	JP	0			;AND JUMP TO THE START
+
+
+
+;----------------------- D COMMAND    DISPLAY MEMORY IN HEX ---------------------------------------
+
+DISP:	CALL	EXLF			;GET PARAMETERS IN [HL],[DE]
+	LD	A,L			;ROUND OFF ADDRESSES TO XX00H
+	AND	0F0H
+	LD	L,A
+	LD	A,E			;FINAL ADDRESS LOWER HALF
+	AND	0F0H
+	ADD	A,10H			;FINISH TO END 0F LINE
+SF172:	CALL	LFADR
+SF175:	CALL	BLANK
+	LD	A,(HL)
+	CALL	ZHEXOUT
+	CALL	HILOX
+	LD	A,L
+	AND	0FH
+	JR	NZ,SF175
+	LD	C,TAB			;INSERT A TAB BETWEEN DATA
+	CALL	ZCO
+	LD	B,4H			;ALSO 4 SPACES
+TA11:	LD	C,SPACE
+	CALL	ZCO
+	DJNZ	TA11	
+
+	LD	B,16			;NOW PRINT ASCII (16 CHARACTERS)
+	PUSH	DE			;TEMPORLY SAVE [DE]
+	LD	DE,0010H
+	SBC	HL,DE
+	POP	DE
+T11:	LD	A,(HL)
+	AND	7FH
+	CP	' ' 			;FILTER OUT CONTROL CHARACTERS'
+	JR	NC,T33
+T22:	LD	A,'.'
+T33:	CP	07CH
+	JR	NC,T22
+	LD	C,A			;SET UP TO SEND
+	CALL	ZCO
+	INC	HL
+	DJNZ	T11			;REPEAT FOR WHOLE LINE
+	JR	SF172
+
+BLANK:	LD	C,' '
+	JP	ZCO
+
+
+;----------------------- N COMMAND    S100 BUS TESTS ---------------------------------------
+
+S100_TESTS:
+	LD	HL,S100_MENU
+	CALL	PRINT_STRING
+	
+	CALL	PCHK
+	CP	'0' 
+	JP	Z,ROOL_ADDRESSES
+	CP	'1'
+	JP	Z,sOUT_TEST
+	CP	'2'
+	JP	Z,sINP_TEST
+	CP	'3'
+	JP	Z,CONSOLE_IO_TEST
+	CP	'4'
+	JP	Z,SPEECH_TEST
+	CP	'5'
+	JP	Z,MODEM_TEST
+	CP	'6'
+	JP	Z,PRINTER_TEST
+	CP	'7'
+	JP	Z,TOGGLE_INTS
+	CP	ESC
+	JP	Z,MENU_DONE
+	JP	ERROR
+	
+MENU_DONE:
+	CALL	ZCRLF
+	CALL	ZCRLF
+	JP	BEGIN
+	
+ROOL_ADDRESSES:
+	LD	HL,0
+HL_LOOP:
+	PUSH	HL
+	CALL	HL_ONLY	
+	CALL	ZSPACE
+	LD	A,(HL)
+	CALL	ZHEXOUT
+	CALL	ZCRLF
+	POP	HL
+	INC	HL
+	CALL	ZCSTS			; get input status
+	JR	Z,HL_LOOP		; nothing
+	CALL	ZCI			; loop till char ready
+	CP	A,ESC			; Abort if ESC
+	JP	Z,S100_TESTS		; done
+	JR	HL_LOOP
+	
+sOUT_TEST:
+	LD	A,'3'
+	OUT	(CONSOLE_OUT),A
+	JR	sOUT_TEST
+		
+		
+sINP_TEST:
+	IN0	A,(CONSOLE_IN)
+	PUSH	AF
+	CALL	ZHEXOUT
+	CALL	ZSPACE
+	POP	AF
+	CALL	ZBITS
+	CALL	ZCRLF
+	JR	sINP_TEST
+
+
+CONSOLE_IO_TEST:
+	LD	HL,CONSOLE_TEST		;'Enter S100 bus keyboard char. ESC to abort ',0
+	CALL	PRINT_STRING
+IN_TEST2:
+	CALL	S100_ZCI
+	CP	A,ESC
+	JP	Z,S100_TESTS		; done
+	LD	C,A
+	CALL	S100_ZCO
+	JR	IN_TEST2
+	
+
+
+SPEECH_TEST:
+	LD	HL,SMSG_SP		
+	CALL	SPEAK$	
+	JP	S100_TESTS		; done
+
+
+	
+MODEM_TEST:
+	LD	HL,CONSOLE_TEST		;'Enter S100 bus keyboard char. ESC to abort ',0
+	CALL	PRINT_STRING
+MODEM_TEST1:
+	CALL	S100_ZCSTS
+	JR	Z,MODEM_TEST2
+	CALL	ZCI			;Get a keyboard character
+	LD	C,A
+	CP	A,ESC
+	JP	Z,S100_TESTS		; done
+	CALL	ZCO
+	CALL	MODEM_ZCO
+
+MODEM_TEST2:	
+	CALL	MODEM_ZSTATUS
+	JP	Z,MODEM_TEST1
+	CALL	MODEM_ZCI		;Get a character
+	LD	C,A
+	CP	A,ESC
+	JP	Z,S100_TESTS		; done
+	CALL	ZCO
+	CALL	MODEM_ZCO
+	JP	MODEM_TEST1
+
+
+
+PRINTER_TEST:
+	LD	HL,S100_MENU		; Print test menu
+PRINTER_TEST1:
+	ld	a,(hl)			; get next char
+	CP	A,'$'			; Terminate with a '$' or 0H
+	JP	Z,PRINTER_TEST2
+	or	a			; end of string?
+	JP	Z,PRINTER_TEST2
+	LD	C,A
+	call	LO			; print the char
+	inc	hl			; bump to next char in string
+	jr	PRINTER_TEST1		; loop till done
+
+PRINTER_TEST2:
+	CALL	FLUSH
+	RET
+	
+	
+
+TOGGLE_INTS:
+	LD	HL,NMI_VECTOR		;Set default NMI vector jump at 66H in RAM
+	LD	A,0C3H
+	LD	(HL),A
+	INC	HL
+	LD	DE,DEFAULT_NMI
+	LD	(HL),E
+	INC	HL
+	LD	(HL),D
+	
+	LD	HL,INT0_VECTOR		;Set default INT0 vector jump at 38H in RAM
+	LD	A,0C3H
+	LD	(HL),A
+	INC	HL
+	LD	DE,DEFAULT_INT0
+	LD	(HL),E
+	INC	HL
+	LD	(HL),D
+			
+	LD	A,(@INTS_FLAG)
+	OR	A
+	JR	Z,TURN_ON_INTS
+	
+	LD	HL,INTS_OFF_MSG		;'Turning off Interrupts'
+	CALL	PRINT_STRING
+	XOR	A
+	LD	(@INTS_FLAG),A		;Flag Interrupts as OFF
+	DI				;Just in case
+	JP	S100_TESTS		;done
+	
+TURN_ON_INTS:
+	LD	HL,INTS_ON_MSG		;'Turning on Interrupts'
+	CALL	PRINT_STRING
+	LD	A,0FFH
+	LD	(@INTS_FLAG),A		;Flag Interrupts as ON
+	EI				;Just in case
+	JP	S100_TESTS		;done
+
+
+
+
+
+;------------------------------   S COMMAND        SUBSTITUTE AND / OR MODIFY MEMORY ----------------------
+
+SUBS:	LD	C,1
+	CALL	HEXSP
+	POP	HL
+SF2E3:	LD	A,(HL)
+	CALL	ZHEXOUT
+	LD	C,'-'
+	CALL	ZCO
+	CALL	PCHK
+	RET	C
+	JR	Z,SF2FC
+	CP	ESC			;Abort if ESC
+	JP	Z,ESC_ABORT
+	CP	5FH
+	JR	Z,SF305
+	PUSH	HL
+	CALL	EXF
+	POP	DE
+	POP	HL
+	LD	(HL),E
+	LD	A,B
+	CP	CR
+	RET	Z	
+SF2FC:	INC	HL
+SF2FD:	LD	A,L
+	AND	07H
+	CALL	Z,LFADR
+	JR	SF2E3
+SF305:	DEC	HL
+	JR	SF2FD
+
+
+
+;-------------------------- F COMMAND FILL A BLOCK OF MEMORY WITH A VALUE ------------------------
+
+FILL:	CALL	EXPR3
+SF1A5:	LD	(HL),C
+	CALL	HILOX
+	JR	NC,SF1A5
+	POP	DE
+	JP	ZSTART
+
+
+;---------------------------- G COMMAND    GO TO A RAM LOCATION --------------------------------
+
+GOTO:	LD	C,1			;SIMPLE GOTO FIRST GET PARMS.
+	CALL	HEXSP
+	CALL	ZCRLF
+	POP	HL			;GET PARAMETER PUSHED BY EXF
+	JP	(HL)
+
+
+
+;-------------------------- Q COMMAND     GET OR OUTPUT TO A PORT ---------------------------------
+
+QUERY:	CALL	PCHK
+	CP	'O'			;OUTPUT TO PORT
+	JR	Z,OUT_PORT
+	CP	'I'			;INPUT FROM PORT
+	JP	Z,IN_PORT
+	LD	C,'*'
+	JP	ZCO			;WILL ABORT IF NOT 'I' OR 'O'
+
+
+IN_PORT:
+	LD	C,1			;IN Port
+	CALL	HEXSP
+	POP	BC
+	IN	A,(C)
+	CALL	ZSPACE
+	JP	ZBITS
+;
+OUT_PORT:
+	CALL	HEXSP			;OUT Port
+	POP	DE
+	POP	BC
+	OUT	(C),E
+	RET
+
+;-------------------------- U COMMAND     HALT the Z180 CPU ---------------------------------
+
+HALT_CPU:	
+	LD	HL,HALT_MSG
+	CALL	PRINT_STRING		;Print message up to '$'
+	HALT
+
+
+;-------------------------- W COMMAND     Switch control of S100 Bus to slave CPU (eg 8086) ---------------------------------
+
+SWITCH_8086:				; "W"  INPUT Port ED (switched in 8086/80286)
+					;Note currently the S100 slave switch ports overlaps with the Z180 internal ports
+					
+	LD	HL,SLAVE_MSG		;Send before we switch internal ports
+	CALL	PRINT_STRING
+	
+	ld	a,00H			;Move back to the defauly Z180 base register port (00H)
+	out0	(0FFH),a		;icr is currently at FFH
+
+	IN0	A,(SW_TMA0)		;THIS SWITCHES CPU'S with no block Move
+	NOP				;Z80 WILL BE HELD HERE
+	NOP
+	LD	A,01			;Utilize the more specific circuit on the V2-SMB
+	OUT0	(SW_TMAX),A		;Make sure its bit 0
+	NOP
+	NOP
+	NOP
+	JP	BEGIN0			;If we get back control
+
+
+;------THIS IS THE MAIN ROUTINE TO GET THE TIME DATA FROM THE CMOS-RTC Chip on the MSDOS Support Board 
+
+SHOW_TIME:	
+	LD	HL,TIME_MSG
+	CALL	PRINT_STRING		;Print message up to '$'
+	CALL	READ_TIME
+	RET
+	
+SHOW_DATE:	
+	LD	HL,DATE_MSG
+	CALL	PRINT_STRING		;Print message up to '$'
+	CALL	READ_DATE
+	RET
+
+								
+;-------------------------------------------------------------------------------------
+READ_TIME:
+	CALL	UPD_IN_PR		;CHECK FOR UPDATE IN PROCESS 
+	JP	NC,RTC_2A		;GO AROUND IF OK
+	JP	ERROR			;IF ERROR
+
+RTC_2A:	LD	E,-2			;-2 goes to 0 for PORT_INC_2 
+	CALL	PORT_INC_2		;SET ADDRESS OF SECONDS
+	IN0	A,(CMOS_PORT+1)		;Get BCD value returned
+	LD	D,A			;SAVE IN D
+	CALL	PORT_INC_2		;SET ADDRESS OF MINUTES
+	IN0	A,(CMOS_PORT+1)		;Get BCD value returned
+	LD	C,A			;SAVE IN C
+	CALL	PORT_INC_2		;SET ADDRESS OF HOURS
+	IN0	A,(CMOS_PORT+1)		;Get BCD value returned
+	LD	B,A			;SAVE
+	LD	E,0			;SET E TO ZERO
+	CALL	DisplayTime		;<<<<<<<<<<<<<<
+	CALL	ZCRLF
+	CALL	ACTIVATE_CLOCK	
+	RET
+
+;Display time
+;	Arrive with B = HOURS IN BCD
+;		    C = Minutes in BCD
+;		    D = Seconds in BCD
+DisplayTime:
+	PUSH	HL
+	PUSH	DE
+	PUSH	BC
+	LD	A,B
+	CALL	PRINT_BCD		;Hours.  Convert BCD to ASCII
+	LD	C,':'
+	CALL	ZCO
+	POP	BC
+	LD	A,C
+	CALL	PRINT_BCD		;Minutes.  Convert BCD to ASCII
+	LD	C,':'
+	CALL	ZCO
+	POP	DE
+	LD	A,D
+	CALL	PRINT_BCD		;Seconds.  Convert BCD to ASCII
+	POP	HL
+	RET
+
+;-------------------------------------------------------------------------------------------
+READ_DATE:
+	CALL	UPD_IN_PR
+	JP	NC,RTC_4A
+	JP	ERROR			;ON ERROR
+	
+RTC_4A:	LD	E,6
+	CALL	PORT_INC		;POINT TO DAY
+	IN0	A,(CMOS_PORT+1)
+	LD	B,A			;SAVE IN A
+	CALL	PORT_INC		;POINT TO MONTH
+	IN0	A,(CMOS_PORT+1)
+	LD	D,A			;SAVE IN D
+	CALL	PORT_INC		;POINT TO YEAR
+	IN0	A,(CMOS_PORT+1)
+	LD	C,A			;SAVE IN C
+	LD	E,31H			;POINT TO CENTURY BYTE SAVE AREA
+	CALL	PORT_INC		;
+	IN0	A,(CMOS_PORT+1)		;GET VALUE
+	LD	E,B			;GET DAY BACK
+	LD	B,A
+	CALL	DisplayDate		
+	CALL	ZCRLF
+	CALL	ACTIVATE_CLOCK	
+	RET	  			;FINISHED
+
+
+;Display date
+;	Return	B = CENTURY IN BCD
+;		C = Year in BCD
+;		D = Month in BCD
+;		E = Day in BCD
+DisplayDate:
+	PUSH	HL
+	PUSH	DE
+	PUSH	DE
+	PUSH	BC
+	LD	A,20H			;<--20
+	CALL	PRINT_BCD		;Century (19/20).  Convert BCD to ASCII
+	POP	BC
+	LD	A,C
+	CALL	PRINT_BCD		;Year.  Convert BCD to ASCII
+	LD	C,'/'
+	CALL	ZCO
+	POP	DE
+	LD	A,D
+	CALL	PRINT_BCD		;Month.  Convert BCD to ASCII
+	LD	C,'/'
+	CALL	ZCO
+	POP	DE
+	LD	A,E
+	CALL	PRINT_BCD		;Day.  Convert BCD to ASCII
+	POP	HL
+	CALL	ACTIVATE_CLOCK	
+	RET
+
+
+ACTIVATE_CLOCK:
+	LD	A,0AH
+	OUT0	(CMOS_PORT),A
+	LD	A,0AAH
+	OUT0	(CMOS_PORT+1),A
+	RET
+
+
+PRINT_BCD:				;Print BCD in [A]
+	PUSH	AF
+	PUSH	AF
+	RRA	
+	RRA	
+	RRA	
+	RRA	
+	AND	A,0FH
+	ADD	A,30H
+	LD	C,A			;Write high byte mins to CRT
+	CALL	ZCO
+	POP	AF
+	AND	A,0FH
+	ADD	A,30H
+	LD	C,A
+	CALL	ZCO
+	POP	AF
+	RET
+	
+
+UPD_IN_PR:				;Check we are ready to read clock
+	PUSH	BC
+	LD	BC,8000			;SET LOOP COUNT
+UPDATE:	LD	A,0AH			;ADDRESS OF [A] REGISTER
+	OUT0	(CMOS_PORT),A
+	NOP
+	NOP
+	NOP
+	IN0	A,(CMOS_PORT+1)		;READ  IN REGISTER [A]
+	AND	A,80H			;IF 8XH--> UIP BIT  IS ON (CANNOT READ TIME)
+	JP	Z,UPD_IN_PREND		;Are we ready/done
+	DEC	BC
+	LD	A,C
+	OR	A,B
+	JP	NZ,UPDATE		;Try again
+	XOR	A,A			;
+	SCF				;SET CARRY FOR ERROR
+	POP	BC
+	RET
+UPD_IN_PREND:
+	XOR	A,A			;Clear Carry
+	POP	BC
+	RET				;RETURN
+
+
+PORT_INC:
+	LD	A,E
+	INC	A			;INCREMENT ADDRESS
+	LD	E,A
+	OUT0	(CMOS_PORT),A
+	RET
+
+
+PORT_INC_2:
+	LD	A,E
+	ADD	2			;INCREMENT ADDRESS
+	LD	E,A
+	OUT0	(CMOS_PORT),A
+	RET
+
+
+;--------------------- J COMMAND   MEMORY TEST ---------------------------------
+
+MEM_TEST:
+	LD	HL,MEM_TEST_MSG		;Memory test
+	CALL	PRINT_STRING
+	LD	HL,0DF00H		
+	LD	E,00H
+	LD	D,01H
+	LD	B,0H			;256 loops
+MEM_LOOP:
+	LD	(HL),00H		;Fill RAM with 0's
+	DEC	HL
+	LD	A,L
+	OR	A,H	
+	JR	NZ,MEM_LOOP
+
+	LD	HL,0DF00H		;Next check and change to 1's....
+	LD	E,00H
+	LD	D,01H
+MEM_LOOP1:
+	PUSH	AF
+	PUSH	BC
+	CALL	ZPRINT_HL
+	LD	A,E
+	CALL	ZHEXOUT			;Print address and value + CR
+	CALL	ZSPACE
+	LD	C,CR
+	CALl	ZCO
+	POP	BC
+	POP	AF
+	
+	LD	A,(HL)
+	CP	A,E
+	CALL	NZ,RAM_ERROR
+	LD	(HL),D
+	DEC	HL
+	LD	A,L
+	OR	A,H	
+	JR	NZ,MEM_LOOP1
+	
+	CALL	ZCRLF
+	LD	HL,0DF00H
+	INC	E
+	INC	D	
+	DEC	B			;Do 256 tests
+	JR	NZ,MEM_LOOP1
+	JP	BEGIN
+	
+RAM_ERROR:
+	PUSH	HL	
+	LD	HL,MEM_ERR_MSG		;Memory error
+	CALL	PRINT_STRING
+	POP	HL
+	CALL	ZPRINT_HL
+	CALL	ZCRLF	
+	RET
+
+
+
+
+
+;---------------------- M COMMAND   MOVE A BLOCK OF MEMORY TO ANOTHER LOCATION -------------------
+
+MOVE:	CALL	EXPR3
+SF21E:	LD	A,(HL)
+	LD	(BC),A
+	INC	BC
+	CALL	HILOX
+	JR	SF21E
+
+
+
+;----------------------V  COMMAND    VERIFY ONE BLOCK OF MEMORY WITH ANOTHER ----------------------
+ 
+VERIFY:	CALL	EXPR3
+VERIO:	LD	A,(BC)
+	CP	(HL)
+	JR	Z,SF78E
+	PUSH	BC
+	CALL	CERR
+	POP	BC
+SF78E:	INC	BC
+	CALL	HILOX
+	JR	VERIO
+	RET
+;
+CERR:	LD	B,A
+	CALL	ZPRINT_HL
+	LD	A,(HL)
+	CALL	ZHEXOUT
+	CALL	BLANK
+	LD	A,B
+	CALL	ZHEXOUT
+	JP	ZCRLF
+
+
+
+;--------------------   E COMMAND    CHECK ECHO CHAR IN TO CHAR OUT  --------------------------------
+
+CHAR_TEST:	
+	LD	HL,CHAR_TEST_MSG	;Keyboard test
+	CALL	PRINT_STRING
+CHAR_TEST1:
+	CALL	ZCI			;Routeen to check keyboard etc.
+	CP	ESC			;Loop until  ^C or ESC
+	RET	Z
+	CP	'Z'-40H
+	RET	Z
+	LD	C,A
+	CALL	ZCO
+	JR	CHAR_TEST
+
+
+
+;-----------------  T COMMAND    READ ASCII FROM MEMORY --------------------------------------
+
+TYPE:	CALL	EXLF
+SF30B:	CALL	LFADR
+	LD	B,56
+SF310:	LD	A,(HL)
+	AND	7FH
+	CP	SPACE
+	JR	NC,SF319
+SF317:	LD	A,2EH
+SF319:	CP	7CH
+	JR	NC,SF317
+	LD	C,A
+	CALL	ZCO
+	CALL	HILOX
+	DJNZ	SF310
+	JR	SF30B
+
+
+;----------------------  R COMMAND  Display all active IO inputports in the system ----------------------
+;
+INPORTS:CALL	ZCRLF	
+	LD	B,0			;Now loop through all ports (0-FF)
+	LD	D,6			;Display 6 ports across
+	LD	E,0FFH			;Will contain port number
+LOOPIO:	LD	C,E
+	LD	A,E
+	CP	A,SW_TMA0		;Inputting here will switch out the Z80 to 8086/80286
+	JR	Z,SKIP			;Skip because we don't want that right now
+	CP	SOUT_PORT		
+	JR	Z,SKIP
+;
+	IN	A,(C)			;Remember  [ZASMB does not work with this opcode,SLR is OK]
+	CP	A,0FFH			;No need for 0FF's
+	JR	Z,SKIP
+	LD	H,A			;store port data in H for below
+	LD	A,E			;Need to print port # first
+	CALL	ZHEXOUT			;Print port number
+	LD	C,'-'
+	CALL	ZCO
+	LD	C,'>'
+	CALL	ZCO
+	LD	A,H			;get back port data
+	CALL	ZHEXOUT			;print it
+	LD	C,TAB
+	CALL	ZCO
+	DEC	D			;6 ports per line
+	JR	NZ,SKIP
+	LD	D,6
+	CALL	ZCRLF
+SKIP:	DEC	E			;Next Port
+	DJNZ	LOOPIO
+	CALL	ZCRLF
+	RET
+
+
+;-----------------  K COMMAND PRINT MAIN MONITOR MENU ON CRT ---------------------------
+
+KCMD:	LD	HL,SIGNON_MSG		;Signon Msg again (K Command)
+	CALL	PRINT_STRING
+	LD	HL,SMSG_SP		;Signon speech message
+	CALL	SPEAK$
+	LD	HL,MENUMSG		;Then Menu Message
+	JP	PRINT_STRING
+
+
+
+
+
+;----------------------  X COMMAND XMODEM ---------------------------------------------------
+
+;This routine will download any XMODEM formatted data from a file on a PC over teh USB port.
+;If the USB port is NOT also also used console I/O progress of the download will appear on the screen.
+;If the USB port is ALSO used for console I/O no progress is shown until the download is complete.
+
+XMODEM:
+	LD	HL,MODEM_SIGNON		;Send Modem signon message
+	CALL	PRINT_STRING
+					
+	LD	HL,0			;SP to HL
+	ADD	HL,SP			
+	LD	DE,40H			;Drop 40H bytes below to be safe
+	SBC	HL,DE
+	PUSH	HL
+	POP	IX			;Will store data  below in RAM 40H bytes below SP to be safe
+					
+	XOR	A,A			;Initilize flags
+	LD	(IX+RECVD_SECT_NO),A
+	LD	(IX+SECTNO),A
+	LD	(IX+ERRCT),A
+					
+	LD	HL,MODEM_RAM_LOC	;Get RAM location for where to place code
+	CALL	PRINT_STRING
+	LD	C,1
+	CALL	HEXSP			;Get 16 bit value, put on stack
+	POP	IY			;DMA Value now in IY
+	CALL	ZCRLF
+					
+	CALL	INIT_SCC_A		;INITITIALIZE THE SCC SERIAL PORT A Just in case it changed
+
+	LD	B,1			;TIMEOUT DELAY
+	CALL	MODEM_ZCI		;GOBBLE UP GARBAGE CHARS FROM THE LINE
+
+
+
+RECV_LOOP:				;<------- MAIN RECIEVE LOOP 
+	XOR	A,A			;GET 0
+	LD	(IX+ERRCT),A		;INITIAL ERROR COUNT SET TO 0
+RECV_HDR:
+	LD	HL,RMSG
+	CALL	PRINT_STRING		;Skip print if USB port is also console
+	LD	A,(IX+SECTNO)		;Get current sector number
+	INC	A
+	CALL	LBYTE			;Show Sector Number on Console if USB port is NOT also console
+
+	LD	HL,MODEM_RAM_MSG	;"H.  IF OK, will write to RAM location"
+	CALL	P_STRING
+	PUSH	IY
+	POP	HL			;IY to HL
+	CALL	LADR			;Show DMA Address if USB port is NOT also console
+	CALL	ZCRLF
+
+	LD	B,5			;5 SEC TIMEOUT
+	CALL	MODEM_ZCI
+	JP	NC,RHNTO		;IF ALL OK (NO TIMEOUT), THEN DROP DOWN TO RHNTO TO GET DATA
+	
+RECV_HDR_TIMEOUT:
+	CALL	TOUT			;PRINT TIMEOUT
+	
+RECV_SECT_ERR:				;PURGE THE LINE OF INPUT CHARS
+	LD	B,1			;1 SEC W/NO CHARS
+	CALL	MODEM_ZCI
+	JP	NC,RECV_SECT_ERR	;LOOP UNTIL SENDER DONE
+	LD	A,NAK
+	CALL	MODEM_ZCO		;SEND NAK
+	
+	LD	A,(IX+ERRCT)
+	INC	A
+	LD	(IX+ERRCT),A
+	CP	A,MODEM_ERR_LIMIT
+	JP	C,RECV_HDR
+	
+	CALL	CHECK_FOR_QUIT
+	JP	Z,RECV_HDR
+	LD	HL,BAD_HEADER_MSG
+	CALL	PRINT_STRING
+	JP	BEGIN
+
+								
+RHNTO:	CP	A,SOH			;GOT CHAR - MUST BE SOH
+	JP	Z,GOT_SOH		;Z IF OK
+	OR	A,A			;00 FROM SPEED CHECK?
+	JP	Z,RECV_HDR
+	CP	A,EOT
+	JP	Z,GOT_EOT
+					;DIDN'T GET SOH - 
+	CALL	LBYTE			;Print [A] on console
+	LD	HL,ERRSOH
+	CALL	PRINT_STRING
+	JP	RECV_SECT_ERR
+
+GOT_SOH:
+	LD	B,1
+	CALL	MODEM_ZCI
+	JP	C,RECV_HDR_TIMEOUT
+	LD	D,A			;D=BLK #
+	LD	B,1
+	CALL	MODEM_ZCI		;GET CMA'D SECT #
+	JP	C,RECV_HDR_TIMEOUT
+	CPL
+	CP	A,D			;GOOD SECTOR #?
+	JP	Z,RECV_SECTOR
+					
+	LD	HL,ERR2			;GOT BAD SECTOR #
+	CALL	PRINT_STRING
+	JP	RECV_SECT_ERR
+
+
+RECV_SECTOR:				;Sector is OK, so read data and place in RAM
+	LD	A,D			;GET SECTOR #
+	LD	(IX+RECVD_SECT_NO),A
+	LD	C,0			;INIT CKSUM
+	LD	E,80H			;Sector Byte Count
+	PUSH	IY
+	POP	HL			;DMA address (IY) to HL
+					
+RECV_CHAR:
+	LD	B,1			;1 SEC TIMEOUT
+	CALL	MODEM_ZCI		;GET CHAR
+	JP	C,RECV_HDR_TIMEOUT
+	LD	(HL),A			;STORE CHAR
+	INC	HL		
+	DEC	E			;Next sector byte
+	JP	NZ,RECV_CHAR
+
+					;VERIFY CHECKSUM
+	LD	D,C			;SAVE CHECKSUM
+	LD	B,1			;TIMEOUT
+	CALL	MODEM_ZCI		;GET CHECKSUM
+	JP	C,RECV_HDR_TIMEOUT
+	CP	A,D			;CHECK
+	JP	NZ,RECV_CKSUM_ERR
+
+					;GOT A SECTOR, WRITE IF = 1+PREV SECTOR
+	LD	A,(IX+RECVD_SECT_NO)
+	LD	B,A			;SAVE IT
+	LD	A,(IX+SECTNO)		;GET PREV
+	INC	A			;CALC NEXT SECTOR #
+	CP	B			;MATCH?
+	JP	NZ,DO_ACK
+	LD	(IX+SECTNO),A		;UPDATE SECTOR #
+DO_ACK:	LD	A,ACK
+	CALL	MODEM_ZCO
+				
+	PUSH	HL			;ALL OK SO SAVE DMA Address in IY
+	POP	IY			
+	JP	RECV_LOOP		;Back to Top recieve loop
+
+RECV_CKSUM_ERR:
+	LD	HL,ERR3
+	CALL	PRINT_STRING
+	JP	RECV_SECT_ERR
+
+GOT_EOT:
+	LD	A,ACK			;ACK THE EOT
+	CALL	MODEM_ZCO
+	JP	XFER_CPLT
+
+
+TOUT:	LD	HL,TOUTM		;PRINT TIMEOUT MESSAGE
+	CALL	PRINT_STRING
+	LD	A,(IX+ERRCT)
+	CALL	LBYTE		
+	CALL	ZCRLF
+	RET
+
+
+CHECK_FOR_QUIT:				;MULTIPLE ERRORS, ASK IF TIME TO QUIT
+	XOR	A,A			;GET 0
+	LD	(IX+ERRCT),A		;RESET ERROR COUNT
+	LD	HL,QUITM
+	CALL	PRINT_STRING
+
+CI3:	IN0 	A,(CONSOLE_STATUS)	;NEED CONSTAT TO CLEAN UP SHIFT KEYS ETC
+	AND	A,02H
+	JP	Z,CI3
+	IN0	A,(CONSOLE_IN)
+	AND	A,7FH
+	PUSH	AF			;SAVE CHAR
+	CALL	ZCRLF
+	POP	AF
+	CP	A,'R'
+	RET	Z			;RETURN IF RETRY
+	CP	A,'r'
+	RET	Z
+	CP	A,'Q'			;QUIT?
+	JP	NZ,LCQ
+	OR	A,A			;TURN OFF ZERO FLAG
+	RET
+LCQ:	CP	A,'q'
+	JP	NZ,CHECK_FOR_QUIT
+	OR	A,A			;TURN OFF ZERO FLAG
+	RET
+
+XFER_CPLT:				;DONE - CLOSE UP SHOP
+	LD	HL,MODEM_DONE_MSG
+	CALL	PRINT_STRING
+	JP	ZSTART
+						
+
+
+;-------------- P COMMAND    BOOT UP CPM FROM HARD DISK ON S100COMPUTERS IDE BOARD ----------------
+
+;BOOT UP THE 8255/IDE Board HARD DISK/Flash Memory Card
+
+ZBOOT:					;Allow CTL Z to always boot CPM				
+HBOOTCPM:
+	IN0	A,(IOBYTE)		;Charcter in A
+	BIT	0,A
+	JP	NZ,S100_ONLY
+
+	POP	HL			;CLEAN UP STACK
+	LD	HL,SPEAKCPM_SP		;Announce Booting CPM on speaker 'Loading CPN'
+	CALL	SPEAK$
+	
+	CALL	IDEInit			;Initilze the 8255 and drive 
+	RET	C			;Abort if carry set
+	
+	LD	D,11100000B		;Data for IDE SDH reg (512bytes, LBA mode,single drive)
+	LD	E,REGshd		;00001110,(0EH) CS0,A2,A1,  
+	CALL	IDEwr8D			;Write byte to select the MASTER device
+
+	LD	B,0FFH			;Delay time to allow a Hard Disk to get up to speed
+WaitInit:	
+	LD	E,REGstatus		;Get status after initilization
+	CALL	IDErd8D			;Check Status (info in [D])
+	BIT	7,D
+	JR	Z,SECREAD		;Zero, so all is OK to write to drive
+					;Delay to allow drive to get up to speed
+	PUSH	BC
+	LD	BC,0FFFFH	
+DXLAY2:	LD	D,2			;May need to adjust delay time to allow cold drive to
+DXLAY1:	DEC	D			;to speed
+	JR	NZ,DXLAY1
+	DEC	BC
+	LD	A,C
+	OR	B
+	JR	NZ,DXLAY2
+	POP	BC
+	DJNZ	WaitInit		;If after 0FFH, 0FEH, 0FDH... 0, then drive initilization problem
+IDError:
+	LD	HL,DRIVE_NR_ERR		;Drive not ready
+	JP	ABORT_ERR_MSG
+
+SECREAD:				;Note CPMLDR will ALWAYS be on TRK 0,SEC 1,Head 0
+	CALL	IDEwaitnotbusy		;Make sure drive is ready
+	JR	C,IDError		;NC if ready
+
+	LD	D,1			;Load track 0,sec 1, head 0
+	LD	E,REGsector		;Send info to drive
+	CALL	IDEwr8D
+
+	LD	D,0			;Send Low TRK#
+	LD	E,REGcylinderLSB
+	CALL	IDEwr8D
+
+	LD	D,0			;Send High TRK#
+	LD	E,REGcylinderMSB
+	CALL	IDEwr8D
+
+	LD	D,SEC_COUNT		;Count of CPM sectors we wish to read
+	LD	E,REGseccnt
+	CALL	IDEwr8D
+
+	LD	D,COMMANDread		;Send read CMD
+	LD	E,REGcommand
+	CALL	IDEwr8D			;Send sec read CMD to drive.
+	CALL	IDEwaitdrq		;Wait until it's got the data
+
+	LD	HL,CPM_ADDRESS		;DMA address where the CPMLDR resides in RAM
+	LD	B,0			;256X2 bytes
+	LD	C,SEC_COUNT		;Count of sectors X 512
+BOOT_MoreRD16:
+	LD	A,REGdata		;REG regsiter address
+	OUT	(IDECport),A	
+
+	OR	IDErdline		;08H+40H, Pulse RD line
+	OUT	(IDECport),A	
+
+	IN	A,(IDEAport)		;read the LOWER byte
+	LD	(HL),A
+	INC	HL
+	IN	A,(IDEBport)		;read the UPPER byte
+	LD	(HL),A
+	INC	HL
+	
+	LD	A,REGdata		;Deassert RD line
+	OUT	(IDECport),A
+	DJNZ	BOOT_MoreRD16
+	DEC	C
+	JR	NZ,BOOT_MoreRD16
+
+	LD	E,REGstatus		;Check the R/W status when done
+	CALL	IDErd8D
+	BIT	0,D
+	JR	NZ,IDEerr1		;Z if no errors
+	LD	HL,STARTCPM
+	LD	A,(HL)
+	CP	31H			;EXPECT TO HAVE 31H @80H IE. LD SP,80H
+	JP	Z,STARTCPM		;AS THE FIRST INSTRUCTION. IF OK JP to 100H in RAM
+	JP	ERR_LD1			;Boot Sector Data incorrect
+
+IDEerr1:
+	LD	HL,IDE_RW_ERROR		;Drive R/W Error
+	JP	ABORT_ERR_MSG
+
+ABORT_ERR_MSG:	
+	CALL	PRINT_STRING
+	RET				;BACK TO START OF MONITOR.
+
+ERR_NR:	LD	HL,DRIVE_NR_ERR		;"DRIVE NOT READY
+	JP	ABORT_ERR_MSG
+ERR_LD:	LD	HL,BOOT_LD_ERR		;"ERROR READING BOOT/LOADER SECTORS"
+	JP	ABORT_ERR_MSG
+ERR_LD1:LD	HL,BOOT_LD1_ERR		;"DATA ERROR IN BOOT SECTOR"
+	JP	ABORT_ERR_MSG
+	
+	
+
+;-----------------------Y IDE Menu ---------------------------------------------------
+
+IDE_BOARD_MENU:
+	IN0	A,(IOBYTE)		;Charcter in A
+	BIT	0,A
+	JP	NZ,S100_ONLY
+	
+	LD	HL,0100H		;Default DMA address
+	LD	(@RAM_ADDRESS),HL
+	XOR	A
+	LD	(@SEC),A
+	LD	(@TRK+1),A
+	LD	(@TRK),A
+
+	CALL	WRITE_DRIVE_LBA		;Update Drive
+
+IDE_MENU1:
+	LD	HL,1
+	LD	(@SEC_COUNT),HL
+IDE_MENU:
+	CALL	PRINT_IDE_TRK_SEC	;Show current Track & Sector
+	
+	LD	HL,IDE_SD_MENU_MSG	;Menu
+	CALL	PRINT_STRING
+	
+	CALL	PCHK
+	CP	'0' 
+	JP	Z,INITILIZE_IDE		;Initilize drive
+	CP	'1'
+	JP	Z,SET_LBA		;Set track/Sector
+	CP	'2'
+	JP	Z,SET_IDE_DMA_ADDRESS	;Set Location in RAM to read/write sector data
+	CP	'3'
+	JP	Z,READ_IDE_SEC		;Read Current Sector
+	CP	'4'
+	JP	Z,WRITE_IDE_SEC		;Write to Current Sector
+	CP	'5'
+	JP	Z,READ_N_IDE_SEC
+	CP	'6'
+	JP	Z,WRITE_N_IDE_SEC
+	CP	'7'
+	JP	Z,GOTO_NEXT_IDE
+	CP	'+'
+	JP	Z,GOTO_NEXT_IDE
+	CP	ESC
+	JP	Z,MENU_DONE
+	JP	IDE_MENU1
+
+
+S100_ONLY:
+	LD	HL,S100_ONLY_MSG
+	CALL	PRINT_STRING
+	JP	MENU_DONE
+	
+;------------------------------------------------------
+INITILIZE_IDE:
+	CALL	IDEInit
+	JP	C,IDE_MENU
+	LD	HL,INIT_OK
+	CALL	PRINT_STRING
+	JP	IDE_MENU
+	
+	
+IDEinit:				;Initilze the 8255 and drive then do a hard reset on the drive, 
+	LD	A,RDcfg8255		;Config 8255 chip (10010010B), read mode on return
+	OUT0	(IDECtrl),A		;Config 8255 chip, READ mode
+				
+					;Hard reset the disk drive 
+					;For some reason some CF cards need to the RESET line 
+					;pulsed very carefully. You may need to play around   
+	LD	A,IDEreset		;with the pulse length. Symptoms are: incorrect data comming
+	OUT0	(IDECport),A		;back from a sector read (often due to the wrong sector being read)
+					;I have a (negative)pulse of 60 uSec. (10Mz Z80, two IO wait states).
+
+	LD	C,IDE_Reset_Delay	;~60 uS seems to work for the 5 different CF cards I have
+ResetDelay:
+	DEC	C
+	JP	NZ,ResetDelay		;Delay (reset pulse width)
+	XOR	A
+	OUT0	(IDECport),A		;No IDE control lines asserted (just bit 7 of port C)
+	
+	CALL	DELAY_15		;Need to delay a little before checking busy status
+	
+IDEwaitnotbusy:				;Drive READY if 01000000
+	LD	B,0FFH
+	LD	C,080H			;Delay, must be above 80H for 4MHz Z80. Leave longer for slower drives
+MoreWait:
+	LD	E,REGstatus		;Wait for RDY bit to be set
+	CALL	IDErd8D
+	LD	A,D
+	AND	11000000B
+	XOR	01000000B
+	JR	Z,DoneNotbusy	
+	DJNZ	MoreWait
+	DEC	C
+	JR	NZ,MoreWait
+	LD	HL,INIT_ERR
+	CALL	PRINT_STRING
+	SCF				;Set carry to indicate an error
+	RET
+DoneNotBusy:
+	LD	A,1
+	OR	A			;Clear carry it indicate no error
+	RET
+
+DELAY_15:
+	LD	A,40			;DELAY ~15 MS 		
+DELAY1:	LD	B,0
+M0:	DJNZ	M0
+	DEC	A
+	JR	NZ,DELAY1  
+	RET
+
+PRINT_IDE_TRK_SEC:
+	LD	HL,IDE_MENU0_MSG	;'S100 Bus IDE Board Menu  Track= '	
+	CALL	PRINT_STRING
+	LD	HL,(@TRK)		;Track number'
+	CALL	HL_ONLY
+	LD	HL,IDE_MENU1_MSG	;H  Sector=
+	CALL	P_STRING
+	LD	A,(@SEC)
+	CALL	ZHEXOUT
+
+SD_PRINT_2:				;Also used by SD CARD Menu
+	LD	HL,IDE_MENU3_MSG	;H  RAM Address=
+	CALL	P_STRING
+	LD	HL,(@RAM_ADDRESS)
+	CALL	HL_ONLY
+	LD	HL,H_MSG		;H.
+	CALL	P_STRING
+	RET
+
+
+	
+;-----------------------------------------
+SET_LBA:				;Set the logical block address
+	LD      HL,GET_LBA_MSG	
+	CALL	PRINT_STRING
+	CALL	GET_DRIVE_LBA		;Get new CPM style Track & Sector number and put them in RAM at @SEC & @TRK 
+	JR	C,main3b		;Ret C set if abort/error
+	CALL	WRITE_DRIVE_LBA		;Update LBA on drive
+main3b:	CALL	ZCRLF
+	JP	IDE_MENU
+
+
+;-----------------------------------------
+SET_IDE_DMA_ADDRESS
+	LD      HL,GET_DMA_MSG	
+	CALL	PRINT_STRING
+	CALL	ZGET_HL			;Not clear why this returns incorrect values
+	JP	C,IDE_MENU
+	LD	(@RAM_ADDRESS),HL
+	JP	IDE_MENU
+
+
+;-------------------------------------------
+GOTO_NEXT_IDE:	
+	CALL	BUMP_IDE_SECTOR		;Advance one sector
+	JP	IDE_MENU
+
+
+;-------------------------------------------
+READ_N_IDE_SEC:
+	LD	HL,ENTER_SEC_COUNT
+	CALL	PRINT_STRING
+	CALL	GETHEX			;get 2 HEX digits
+	LD	HL,0
+	LD	L,A			
+	LD	(@SEC_COUNT),HL
+	
+MORE_RD_SEC:
+	CALL	READSECTOR
+
+	JR	Z,main1b_N		;Z means the sector read was OK
+	CALL	ZCRLF
+	JP	IDE_MENU		;Was an error, don't display data
+
+main1b_N:
+	CALL	PRINT_IDE_TRK_SEC
+	LD	HL,msgrd		;Sector read OK
+	CALL	PRINT_STRING
+	LD	HL,(@SEC_COUNT)
+	DEC	HL
+	LD	(@SEC_COUNT),HL
+	LD	A,L
+	OR	A
+	JP	Z,IDE_MENU1	
+	CALL	BUMP_IDE_SECTOR		;Bump TRK, SEC, DMA
+	JR	MORE_RD_SEC
+
+
+;-------------------------------------------
+READ_IDE_SEC:				;Read Sector @ LBA to the RAM buffer
+	LD	HL,READING_MSG		;Sector read to @RAM_ADDRESS
+	CALL	PRINT_STRING
+
+	CALL	READSECTOR
+
+	JR	Z,main1b		;Z means the sector read was OK
+	CALL	ZCRLF
+	JP	IDE_MENU		;Was an error, don't display data
+	
+main1b:	LD	HL,msgrd		;Sector read OK
+	CALL	PRINT_STRING
+	LD	HL,(@RAM_ADDRESS)
+	CALL	HEXDUMP			;Show sector data at @RAM_ADDRESS
+	LD	HL,CONTINUE_MSG		;Print any character to continue
+	CALL	PRINT_STRING
+	CALL	ZCI
+	CP	A,ESC
+	JP	Z,BEGIN
+	JP	IDE_MENU
+	
+					;Read a sector, specified by the 3 bytes in LBA
+					;Z on success, NZ call error routine if problem
+READSECTOR:
+	CALL	WRITE_DRIVE_LBA	
+	
+	CALL	IDEwaitnotbusy		;make sure drive is ready
+	JP	C,SHOWerrors		;Returned with NZ set if error
+
+	LD	D,COMMANDread
+	LD	E,REGcommand
+	CALL	IDEwr8D			;Send sec read command to drive.
+	CALL	IDEwaitdrq		;wait until it's got the data
+	JP	C,SHOWerrors
+
+	LD  	HL,(@RAM_ADDRESS)	;DMA address
+	LD	B,0			;Read 512 bytes to [HL] (256X2 bytes)
+MoreRD16:
+	LD	A,REGdata		;REG regsiter address
+	OUT0	(IDECport),A	
+
+	OR	A,IDErdline		;08H+40H, Pulse RD line
+	OUT0	(IDECport),A	
+
+	IN0	A,(IDEAport)		;Read the lower byte first (Note very early versions had high byte then low byte
+	LD	(HL),A			;this made sector data incompatable with other controllers).
+	INC	HL
+
+	IN0	A,(IDEBport)		;THEN read the upper byte  
+	LD	(HL),A
+	INC	HL
+	
+	LD	A,REGdata		;Deassert RD line
+	OUT0	(IDECport),A
+	DJNZ	MoreRD16
+
+	LD	(@NEXT_ADDRESS),HL	;For multi sec read
+	LD	E,REGstatus
+	CALL	IDErd8D
+	LD	A,D
+	AND	A,1H
+	CALL	NZ,SHOWerrors		;If error display status
+	RET
+
+
+SHOWerrors:
+	LD	HL,DRIVE_ERRORS
+	CALL	PRINT_STRING
+	LD	A,D
+	CALL	ZBITS
+	CALL	ZCRLF
+	OR	A			;Set NZ flag
+	SCF				;Set Carry Flag
+	RET
+
+
+BUMP_IDE_SECTOR:			;For multi sec read/writes
+	LD	HL,(@NEXT_ADDRESS)
+	LD  	(@RAM_ADDRESS),HL	;DMA address
+	
+	ld	hl,(@SEC)
+	inc	hl
+	ld	(@SEC),hl
+	ld	a,L			;0 to 62 CPM Sectors
+	cp	MAXSEC-1
+	RET	nz
+
+	ld	hl,0			;Back to CPM sector 0
+	ld	(@SEC),hl
+	ld	hl,(@TRK)		;Bump to next track
+	inc	hl
+	ld	(@TRK),hl
+	RET
+	
+	
+	
+
+;-------------------------------------------
+WRITE_N_IDE_SEC:
+	LD	HL,ENTER_SEC_COUNT
+	CALL	PRINT_STRING
+	CALL	GETHEX			;get 2 HEX digits
+	LD	HL,0
+	LD	L,A			
+	LD	(@SEC_COUNT),HL
+	
+MORE_WR_SEC:
+	CALL	WRITESECTOR
+
+	JR	Z,main3b_N		;Z means the sector read was OK
+	CALL	ZCRLF
+	JP	IDE_MENU		;Was an error, don't display data
+
+main3b_N:
+	CALL	PRINT_IDE_TRK_SEC
+	LD	HL,msgwr		;Sector write OK
+	CALL	PRINT_STRING
+	LD	HL,(@SEC_COUNT)
+	DEC	HL
+	LD	(@SEC_COUNT),HL
+	LD	A,L
+	OR	A
+	JP	Z,IDE_MENU1	
+	CALL	BUMP_IDE_SECTOR		;Bump TRK, SEC, DMA
+	JR	MORE_WR_SEC
+
+
+
+;-------------------------------------------
+WRITE_IDE_SEC:
+	ld	HL,Write_Sure		;Are you sure?
+	call	PRINT_STRING
+	call	ZCI
+	call	TO_UPPER
+	LD	C,A			;Print response
+	CALL	ZCO
+	CP	'Y'
+	PUSH	AF
+	CALL	ZCRLF
+	POP	AF
+	jp	nz,IDE_MENU
+	CALL	ZCRLF
+
+	call	WRITESECTOR
+
+	jr	z,main2b		;Z means the sector write was OK
+	call	ZCRLF
+	jp	IDE_MENU
+	
+main2b:	ld	HL,msgwr		;Sector written OK
+	call	PRINT_STRING
+	CALL	ZCRLF
+	JP	IDE_MENU
+	
+					;Write a sector, specified by the 3 bytes in LBA 
+					;Z on success, NZ to error routine if problem
+WRITESECTOR:
+	CALL	WRITE_DRIVE_LBA
+
+	call	IDEwaitnotbusy		;Make sure drive is ready
+	jp	c,SHOWerrors
+
+	ld	d,COMMANDwrite
+	ld	e,REGcommand
+	call	IDEwr8D			;tell drive to write a sector
+	call	IDEwaitdrq		;wait unit it wants the data
+	jp	c,SHOWerrors
+
+	ld	hl,(@RAM_ADDRESS)
+	ld	b,0			;256X2 bytes
+
+	ld	a,WRcfg8255
+	out0	(IDECtrl),a
+
+MoreWR16:	
+	ld	a,(hl)
+	inc	hl
+	out0	(IDEAport),a		;Write the lower byte first (Note early versions had high byte then low byte
+	ld	a,(hl)			;this made sector data incompatible with other controllers).
+	inc	hl
+	out0	(IDEBport),a		;THEN High byte on B
+	ld	a,REGdata
+	push	af
+	out0	(IDECport),a		;Send write command
+	or	IDEwrline		;Send WR pulse
+	out0	(IDECport),a
+	pop	af
+	out0	(IDECport),a
+	DJNZ	MoreWR16
+
+	ld	a,RDcfg8255		;Set 8255 back to read mode
+	out0	(IDECtrl),a
+
+	LD	(@NEXT_ADDRESS),HL	;For multi sec read
+	ld	e,REGstatus
+	call	IDErd8D
+	ld	a,D
+	and	A,1H
+	call	nz,SHOWerrors		;If error display status
+	RET
+
+	
+	
+GET_DRIVE_LBA:				;Get CPM style Track# & Sector# data and convert to LBA format
+	LD	HL,ENTER_SECL		;Enter sector number
+	CALL	PRINT_STRING
+	CALL	GETHEX			;get 2 HEX digits
+	RET	C
+	LD	(@SEC),A		;Note: no check data is < MAXSEC, sectors start 0,1,2,3....
+
+	LD	HL,ENTER_TRKH		;Enter high byte track number
+	CALL	PRINT_STRING
+	CALL	GETHEX			;get 2 HEX digits
+	RET	C
+	LD	(@TRK+1),A
+
+	LD      HL,ENTER_TRKL		;Enter low byte track number
+	CALL	PRINT_STRING
+	CALL	GETHEX			;get 2 more HEX digits
+	RET	C
+	LD	(@TRK),A
+	CALL	ZCRLF
+	XOR	A
+	OR	A			;To return NC
+	RET
+
+	
+WRITE_DRIVE_LBA:			;Write the logical block address to the drive's registers
+					;Note we do not need to set the upper nibble of the LBA
+					;It will always be 0 for these small drives
+	LD	A,(@SEC)		;LBA mode Low sectors go directly 
+	INC	A			;Sectors are numbered 1 -- MAXSEC (even in LBA mode)
+	LD	(@DRIVE$SEC),A		;<<<<< For Diagnostic Display Only
+	LD	D,A
+	LD	E,REGsector		;Send info to drive
+	CALL	IDEwr8D			;Note: For drive we will have 0 - MAXSEC sectors only
+				
+	LD	HL,(@TRK)		
+	LD	A,L
+	LD	(@DRIVE$TRK),A	
+	LD	D,L			;Send Low TRK#
+	LD	E,REGcylinderLSB
+	CALL	IDEwr8D
+
+	LD	A,H
+	LD	(@DRIVE$TRK+1),A
+	LD	D,H			;Send High TRK#
+	LD	E,REGcylinderMSB
+	CALL	IDEwr8D
+
+	LD	D,1			;For now, one sector at a time
+	LD	E,REGseccnt
+	CALL	IDEwr8D
+	RET
+	
+	
+	
+					
+IDEwaitdrq:				;Wait for the drive to be ready to transfer data.
+	LD	B,0FFH
+	LD	A,0FFH			;Delay, must be above 80H for 4MHz Z80. Leave longer for slower drives
+	LD	(@DELAYStore),A
+
+MoreDRQ:
+	LD	E,REGstatus		;wait for DRQ bit to be set
+	CALL	IDErd8D
+	LD	A,D
+	AND	A,10001000B
+	CP	A,00001000B
+	JR	Z,DoneDRQ
+	DEC	B
+	JR	NZ,MoreDRQ
+	LD	A,(@DELAYStore)		;Check timeout delay
+	DEC	A
+	LD	(@DELAYStore),A
+	JR	NZ,MoreDRQ
+	SCF				;Set carry to indicate error
+	RET
+DoneDRQ:
+	OR	A			;Clear carry
+	RET
+	
+	
+
+HEXDUMP:				;Print a hexdump of the data in the 512 byte buffer @[HL]
+	PUSH	AF			;Save everything
+	PUSH	BC
+	PUSH	DE			 
+	PUSH	HL
+	
+NEXT_SECTOR:
+	CALL	ZCRLF			;CR/LF first
+	LD	D,32			;Print 32 lines total
+	LD	B,16			;16 characters across
+	LD	(@StartLineHex),HL	;Save the buffer location (@RAM_ADDRESS++) for ASCII display below
+	LD	HL,0
+	LD	(@BYTE$COUNT),HL
+	
+SF172X:	CALL	ZCRLF
+	LD	HL,(@BYTE$COUNT)
+	LD	A,H
+	CALL	ZHEXOUT			;Print byte count in sector
+	LD	A,L
+	CALL	ZHEXOUT		
+	
+	PUSH	DE
+	LD	DE,16
+	ADD	HL,DE
+	LD	(@BYTE$COUNT),HL	;store for next time
+	POP	DE
+
+	CALL	ZSPACE
+	LD	HL,(@StartLineHex)
+	LD	(@StartLineASCII),HL	;Store for ASCII display below
+SF175X:	LD	A,(HL)
+	CALL	LBYTE			;Display [A] on CRT/LCD
+	INC	HL
+	DJNZ	SF175X
+;
+	LD	(@StartLineHex),HL	;Save for next line later
+	CALL	ShowAscii		;Now translate to ASCII and display
+	LD	B,16			;16 characters across for next line
+	DEC	D
+	JP	NZ,SF172X		;Have we done all 32 lines
+;
+	CALL	ZCRLF
+	POP   HL			;Get back origional registers
+	POP   DE
+	POP   BC
+	POP   AF
+	RET
+	
+	
+ShowAscii:				;Now show as ascii info
+	LD	HL,(@StartLineASCII)
+	LD	B,16			;16 ASCII characters across
+XF172:	CALL	ZSPACE			;send a space character
+	CALL	ZSPACE
+XF175:	LD	A,(HL)
+	AND	A,7FH
+	CP	A,' ' 			;FILTER OUT CONTROL CHARACTERS
+	JR	NC,XT33
+XT22:	LD	A,'.'
+XT33:	CP	A,07CH
+	JR	NC,XT22
+	LD	C,A			;SET UP TO SEND
+	PUSH	BC
+	CALL	ZCO
+	POP	BC
+	INC	HL			;Next position in buffer
+	DJNZ	XF175
+	RET
+;
+
+;------------------------------------------------------------------
+; Low Level 8 bit R/W to the drive controller.  These are the routines that talk
+; directly to the drive controller registers, via the 8255 chip.  
+; Note the 16 bit I/O to the drive (which is only for SEC R/W) is done directly 
+; in the routines READSECTOR & WRITESECTOR for speed reasons.
+;
+IDErd8D:				;READ 8 bits from IDE register in [E], return info in [D]
+	LD	A,E
+	OUT0	(IDECport),A		;drive address onto control lines
+
+	OR	A,IDErdline		;RD pulse pin (40H)
+	OUT0	(IDECport),A		;assert read pin
+
+	IN0	A,(IDEAport)
+	LD	D,A			;return with data in [D]
+
+	LD	A,E			;<---Ken Robbins suggestion
+	OUT0	(IDECport),A		;Deassert RD pin
+
+	XOR	A
+	OUT0	(IDECport),A		;Zero all port C lines
+	RET
+
+
+IDEwr8D:				;WRITE Data in [D] to IDE register in [E]
+	LD	A,WRcfg8255		;Set 8255 to write mode
+	OUT0	(IDECtrl),A
+
+	LD	A,D			;Get data put it in 8255 A port
+	OUT0	(IDEAport),A
+
+	LD	A,E			;select IDE register
+	OUT0	(IDECport),A
+
+	OR	IDEwrline		;lower WR line
+	OUT0	(IDECport),A
+
+	LD	A,E			;<-- Kens Robbins suggestion, raise WR line
+	OUT0	(IDECport),A
+
+	XOR	A			;Deselect all lines including WR line
+	OUT0	(IDECport),A
+
+	LD	A,RDcfg8255		;Config 8255 chip, read mode on return
+	OUT0	(IDECtrl),A
+	RET
+
+
+;-----------------------W Command   SD CARD Menu ---------------------------------------------------
+
+SD_CARD_MENU:				
+	LD	HL,0100H		;Default DMA address
+	LD	(@RAM_ADDRESS),HL
+	LD	HL,0
+	LD	(@SEC),HL		;low byte,high byte
+	LD	(@TRK),HL
+	
+	XOR	A
+	LD	(@CARD_TYPE),A		; Unknown Card Type so far
+	
+SD_MENU1:
+	LD	HL,1
+	LD	(@SEC_COUNT),HL
+SD_MENU:
+	CALL	PRINT_SD_SEC		;Show current Sector
+	
+	LD	HL,IDE_SD_MENU_MSG	;Menu
+	CALL	PRINT_STRING
+	
+	CALL	PCHK
+	CP	A,'0'
+	JP	Z,INITILIZE_SD_CARD	
+	CP	A,'1'
+	JP	Z,SET_SD_SECTOR
+	CP	A,'2'
+	JP	Z,SET_SD_DMA_ADDRESS	;Set Location in RAM to read/write sector data
+	CP	A,'3'
+	JP	Z,READ_SD_SEC		;Read to Current SD Sector
+	CP	A,'4'
+	JP	Z,WRITE_SD_SEC		;Write to Current SD Sector
+	CP	'5'
+	JP	Z,READ_N_SD_SEC		;Read N SD Sectors
+	CP	'6'
+	JP	Z,WRITE_N_SD_SEC	;Write N SD Sectors
+	CP	'7'
+	JP	Z,GOTO_NEXT_SEC
+	CP	'+'
+	JP	Z,GOTO_NEXT_SEC
+	CP	'8'
+	JP	Z,GOTO_PREVIOUS_SEC
+	CP	'-'
+	JP	Z,GOTO_PREVIOUS_SEC
+	CP	ESC
+	JP	Z,MENU_DONE
+	JP	SD_MENU1
+
+
+;==========================================  INITILIZE SD CARD  =====================================================
+
+INITILIZE_SD_CARD:     
+	LD	A,0
+	LD	(@CARD_TYPE),A			; Unknown Card Type so far
+	
+	LD	A,06H				; Wayne Warthen's recomended slow value at the start
+	OUT0	(z180_cntr),A
+	
+	CALL	SEND_SD_RESET			;  Repeatidly send the RESET CMD0 to the adaptor (Up to 256 times)
+	JP	NZ,BAD_SD_RESET
+
+	LD	HL,INIT_OK			; Drive Init. OK
+	CALL	PRINT_STRING
+	
+	CALL	SEND_GET_TYPE			; Will put card type in (CARD_TYPE)
+	CALL	SEND_GET_TYPE			; Initilize a Type 2 Card, Get Card Type CMD8. Required for SDHC cards
+	LD	HL,CF_TYPE_ERR_MSG		; 'Sorry, SD Card Type 2 was NOT detected. (Status =
+	CALL	NZ,CMD_FAIL
+	JP	NZ,SD_MENU1
+	
+	LD	HL,CARD_TYPE2_MSG		; "SD Card Type 2 detected."
+	CALL	PRINT_STRING
+	
+	CALL	TYPE_2_ACTIVATE			; Type 2 needs special activation
+	LD	HL,CMD55_FAIL_MSG		; SD Card Type 2 Initilization failed (CMD55 or CMD41).
+	CALL	NZ,CMD_FAIL
+	JP	NZ,SD_MENU1
+	
+	LD	HL,CMD41_55_OK_MSG		; 'CMD41 & CMD55 accepted OK. SD Card is now initilized.'
+	CALL	PRINT_STRING
+
+	CALL	STOP_CRC_CHECK			; Turn off CRC Checking
+	LD	HL,CRC_ERROR_MSG		; "Got error trying to turn off CRC checking."
+	CALL	NZ,CMD_FAIL
+	JP	NZ,SD_MENU1
+
+	CALL	SET_SEC_SIZE			; <<<<<<<<<<< Set Sector size to 512 bytes
+	LD	HL,SIZE_ERROR_MSG		; "Got error trying set sector size to 512 bytes. (Status = "
+	CALL	NZ,CMD_FAIL
+
+	LD	A,00H				; Set to high speed SPI clock
+	OUT0	(z180_cntr),A
+	JP	SD_MENU1
+
+BAD_SD_RESET:
+	LD	HL,INIT_ERR			; 'Drive Init. Error
+	CALL	CMD_FAIL			; Print Error
+	JP	SD_MENU1
+	
+
+;==========================================  SET SECTOR  =====================================================
+
+SET_SD_SECTOR:
+	LD	HL,ENTER_SEC_NUM		; 'Please enter Sector Number (XXXXH):
+	CALL	P_STRING
+	CALL	ZGET_HL
+	JP	C,DATA_ERROR
+	LD	(@SEC),HL			; Store here
+	JP	SD_MENU1
+
+DATA_ERROR:
+	LD	HL,DATA_ERROR_MSG		; "Data error"
+	CALL	PRINT_STRING
+	JP	SD_MENU1
+
+
+;==========================================  SET DMA ADDRESS  =====================================================
+
+SET_SD_DMA_ADDRESS:
+	LD      HL,GET_DMA_MSG	
+	CALL	PRINT_STRING
+	CALL	ZGET_HL
+	JP	C,SD_MENU1
+	LD	(@RAM_ADDRESS),HL
+	JP	SD_MENU1
+
+
+;-------------------------------------------SD CARD RESET -----------------------------------------------------------
+
+SEND_SD_RESET:					; Send Card Reset CMD. CS is always off for SPI dummy clocks
+	LD	B,0				; Repeatidly send the RESET CMD0 (256 times)
+INIT2:	CALL	DRIVE_CS_OFF			; Lower CS on SD card (Port 0CH)
+	LD	C,12				; Send 12 empty clock cycles
+INIT1:	CALL	SPI_DUMMY_CLOCKS		; Clear SPI circuit/SD card
+	DEC	C
+	JP	NZ,INIT1
+	
+	CALL	DRIVE_CS_ON			; Lower CS on SD card (Port 0CH)
+	LD	HL,CMD_0			; (CMD0 OR 40H) 
+	CALL	SEND_SD_CMD	
+	CALL	READ_SPI			; Value returned in [A]
+	CALL	DRIVE_CS_OFF			; -- Turn off CS on both SD Cards (AF Unchanged)
+	CP	A,01H				; Is it OK
+	RET	Z				; All OK ret Z set
+	DJNZ	INIT2				; Try 256 times
+	XOR	A
+	DEC	A
+	RET					; Error RET NZ
+
+;------------------------------------------------ SEND_IDLE_STATE --------------------------------------
+
+SEND_IDLE_STATE:				; Wait until card is in Idle state		
+	LD	B,40				; Try several times
+	CALL	DRIVE_CS_ON			; Lower CS on current SD card
+SEND_IDLE1:
+	LD	HL,CMD_1			; <<<<<<<< SEND CMD1 
+	CALL	SEND_SD_CMD	
+	CALL	READ_SPI
+
+	CP	A,0
+	JP	Z,SEND_IDLE2			
+	DJNZ	SEND_IDLE1			; Need to retry several times.
+	CALL	DRIVE_CS_OFF			; -- Turn off CS on both SD Cards
+	XOR	A
+	DEC	A
+	RET					; Error RET NZ
+SEND_IDLE2:
+	LD	A,0FFH				; Flush with extra 0FF's
+	CALL	WRITE_SPI
+	LD	A,0FFH				; Flush with extra 0FF's
+	CALL	WRITE_SPI
+
+	CALL	DRIVE_CS_OFF			; -- Turn off CS on both SD Cards
+	XOR	A
+	RET					; Error RET Z
+	
+;------------------------------------------------ GET CARD VOLTAGE/TYPE --------------------------------------
+
+SEND_GET_TYPE:					; Get Card Voltage/Type
+	LD	B,40				; Try several times
+	CALL	DRIVE_CS_ON			; Lower CS on current SD card
+GET_TYPE1:
+	LD	HL,CMD_8			; SEND CMD8 to get Card Voltage
+	CALL	SEND_SD_CMD	
+	CALL	READ_SPI
+	 
+	CP	A,01H				; If 01 then Type 2
+	JP	Z,SD_TYPE_2			; If CMD8 is Illegal Cmd, then probably CARD_TYPE=1
+	DJNZ	GET_TYPE1
+	CALL	DRIVE_CS_OFF			; Turn off CS on both SD Cards
+	LD	A,1				; Probably Type 1 card
+	LD	(@CARD_TYPE),A			; Type 1 or Type 2 Card
+	XOR	A,A
+	DEC	A
+	RET					; SD CARD not Type 2, Return NZ
+
+SD_TYPE_2:					; Confirm type 2
+	CALL	READ_SPI			; value returned in [A] is 00H
+	CALL	READ_SPI			; value returned in [A] is 00H
+	CALL	READ_SPI			; value returned in [A] is 01H
+	CALL	READ_SPI			; value returned in [A] is 87H
+	
+	CALL	DRIVE_CS_OFF			; Turn off CS on both SD Cards
+	CP	A,0AAH				; Must be 0AAH for Type 2 cards
+	JP	NZ,NOT_2			; SD CARD UNKNOWN_TYPE, Return NZ
+	LD	A,2				 
+	LD	(@CARD_TYPE),A			; Definately Type 2 card
+	XOR	A,A				
+	RET					; RET Z
+
+NOT_2:	LD	A,0				; Unknown card
+	LD	(@CARD_TYPE),A			; Not Type 1 or Type 2 Card
+	XOR	A,A
+	DEC	A
+	RET					; Return NZ
+	
+	
+;  ------------------------------------- AVCTIVATE TYPE 2 CARDS  ---------------------------------
+
+TYPE_2_ACTIVATE:				; Initilize the SD card Type 2 cards with CMD55 & CMD44 Commands
+	LD	B,40				; Will try 40 times
+ACT1:	CALL	DRIVE_CS_ON			; Lower CS on current SD card
+	LD	HL,CMD_55			; Application specific command next
+	CALL	SEND_SD_CMD			
+	CALL	READ_SPI			; value returned in [A]
+	CP	A,01H				; Correct response is 01H
+	JP	Z,ACT2				; Got correct response try CMD41		
+	DJNZ	ACT1
+	CALL	DRIVE_CS_OFF			; -- Turn off CS on both SD Cards
+	XOR	A
+	DEC	A
+	RET					; Error RET NZ
+
+ACT2:	CALL	DRIVE_CS_OFF			; Turn off CS on both SD Cards
+	CALL	DRIVE_CS_ON			; Turn back on, Lower CS on current SD card (required!)
+	LD	HL,CMD_41			
+	CALL	SEND_SD_CMD			
+	CALL	READ_SPI			; Value returned in [A]
+	CALL	DRIVE_CS_OFF			; -- Turn off CS on both SD Cards
+	CP	A,0
+	RET	Z				; RET Z
+	DJNZ	ACT1
+	XOR	A
+	DEC	A
+	RET					; Error RET NZ
+
+
+;  ----------------------------------------------  DEACTIVATE CRC CHECKING  ----------------
+	
+STOP_CRC_CHECK:					; Will now stop CRC checking
+	CALL	DRIVE_CS_ON			; Lower CS on current SD card
+	LD	HL,CMD_59
+	CALL	SEND_SD_CMD			; SEND CMD59 Turn off CRC checking
+	CALL	READ_SPI			; Value returned in [A]
+	CALL	DRIVE_CS_OFF			; Turn off CS on both SD Cards
+	CP	A,0H
+	RET	Z				; RET Z
+	XOR	A
+	DEC	A
+	RET					; Error RET NZ
+	
+
+;  ---------------------------------------------- SET SECTOR SIZE FOR TYPE 1 & 2 CARDS  ----------------
+
+SET_SEC_SIZE:					; Will now set the sector size to 512 bytes
+	CALL	DRIVE_CS_ON			; Lower CS on current SD card
+	LD	HL,CMD_16
+	CALL	SEND_SD_CMD			; SEND CMD16 to set sector size (512 Bytes)
+	CALL	READ_SPI			; Value returned in [A]
+	CALL	DRIVE_CS_OFF			; Turn off CS on both SD Cards
+	CP	A,0H				; Should be 00000000B
+	RET	Z				; RET Z
+	XOR	A
+	DEC	A
+	RET					; Error RET NZ
+
+
+;------------------------------------------------ SEND CARD STATUS --------------------------------------
+
+GET_CARD_STATUS:				; Get card status		
+	LD	B,40				; Try several times
+	CALL	DRIVE_CS_ON			; Lower CS on current SD card
+CARD_STATUS_1:
+	LD	HL,CMD_13			; <<<<<<<< SEND CMD13 
+	CALL	SEND_SD_CMD	
+	CALL	READ_SPI
+	CP	A,0
+	JP	Z,CARD_STATUS_2			
+	DJNZ	CARD_STATUS_1			; Need to retry several times.
+	CALL	DRIVE_CS_OFF			; -- Turn off CS on both SD Cards
+	XOR	A
+	DEC	A
+	RET					; Error RET NZ
+CARD_STATUS_2:
+	LD	A,0FFH				; Flush with extra 0FF's
+	CALL	WRITE_SPI
+	LD	A,0FFH				; Flush with extra 0FF's
+	CALL	WRITE_SPI
+	CALL	DRIVE_CS_OFF			; -- Turn off CS on both SD Cards
+	XOR	A
+	RET					; Error RET Z
+
+
+;------------------------------------------- READ N SECTORS ----------------------------------------
+
+READ_N_SD_SEC:
+	LD	HL,ENTER_SEC_COUNT
+	CALL	PRINT_STRING
+	CALL	GETHEX				;get 2 HEX digits
+	LD	HL,0
+	LD	L,A			
+	LD	(@SEC_COUNT),HL
+	
+MORE_RD_SEC2:
+	CALL	CORE_SD_READ			;Read one sector at a time
+	JR	Z,MORE_RD_SEC1			;Z means the sector read was OK
+	CALL	ZCRLF
+	JP	SD_MENU1			;Was an error, don't display data
+
+MORE_RD_SEC1:
+	CALL	PRINT_SD_SEC			;Show current Sector
+	LD	HL,msgrd			;Sector read OK
+	CALL	PRINT_STRING
+	LD	HL,(@SEC_COUNT)
+	DEC	HL
+	LD	(@SEC_COUNT),HL
+	LD	A,L
+	OR	A
+	JP	Z,SD_MENU1	
+	CALL	BUMP_SD_SECTOR			;Bump SEC, DMA
+	JR	MORE_RD_SEC2
+
+
+;------------------------------------------- READ ONE SECTOR ----------------------------------------
+
+READ_SD_SEC:
+	LD	A,(@CARD_TYPE)			; Flag to check if SD card type has been determined 
+	OR	A,A
+	JP	NZ,SD_CARD_RD_OK
+	LD	HL,READ_ERR_MSG1		; 'Sorry, SD Card must first be initilized (Menu 0).
+	CALL	PRINT_STRING
+	JP	SD_MENU1			; Back to main menu
+
+SD_CARD_RD_OK:
+	CALL	CORE_SD_READ			; >>>>>> The main Read SD sector routine <<<<<<<<<
+	JR	Z,DONE_RD_WR_SEC1		;Z means the sector read was OK
+	CALL	ZCRLF
+	JP	SD_MENU1			;Was an error, don't display data
+	
+DONE_RD_WR_SEC1:
+	LD	HL,msgrd			; Sector Read OK
+	CALL	PRINT_STRING
+	LD	HL,(@RAM_ADDRESS)		; Point to start of DMA address
+	CALL	HEXDUMP				; Display sector contents		
+	LD	HL,CONTINUE_MSG			; Print any character to continue
+	CALL	PRINT_STRING
+	CALL	ZCI
+	CP	A,ESC
+	JP	Z,BEGIN				;Abort everything
+	JP	SD_MENU1
+
+
+;==========================================  READ A SECTOR  =====================================================
+
+	
+CORE_SD_READ:
+	CALL	DRIVE_CS_ON			; Lower CS on current SD card
+	LD	B,0H				; Try up to 255 times!
+READ_SEC1:
+	LD	A,51H				; <<<<<<<< SEND CMD17  OR bits 40H added
+	CALL	WRITE_SPI
+	LD	A,0				; Second byte of CMD
+	CALL	WRITE_SPI
+	LD	A,0				; Third byte of CMD
+	CALL	WRITE_SPI
+	LD	HL,(@SEC)			; <---------- SECTOR NNUMBER ----								
+	LD	A,L				; Forth byte of CMD 
+	CALL	WRITE_SPI
+	LD	A,H				; Fifth byte of CMD
+	CALL	WRITE_SPI
+	LD	A,0FFH				; CRC byte of CMD
+	CALL	WRITE_SPI
+	LD	A,0FFH				; Flush with extra 0FF's
+	CALL	WRITE_SPI
+
+	CALL	READ_SPI
+	
+	CP	A,0H				; Should be 00000000B
+	JP	Z,READ_SEC_OK1
+	LD	HL,SEC_RD_ERR0_MSG		; Got error with Read Sector command CMD17. (Status = "
+	CALL	CMD_FAIL			; Deselect CS, Low speed CLK, send error Message, Ret NZ
+	JP	SD_MENU1
+
+	LD	B,0H
+READ_SEC_OK1:
+	CALL	READ_SPI
+	CP	A,0FFH
+	JP	Z,READ_SEC_OK1
+	CP	A,0FEH				; Should be 0FEH (Start Token)
+	JP	Z,READ_SEC_OK2
+	DJNZ	READ_SEC_OK1			; Keep trying until we see 0FEH
+	LD	HL,SEC_RD_ERR1_MSG		; Got error with Read Sector command CMD17. (Status = "
+	CALL	CMD_FAIL			; Deselect CS, Low speed CLK, send error Message, RET NZ
+	JP	SD_MENU1
+
+READ_SEC_OK2: 
+	LD	HL,(@RAM_ADDRESS)		; <---------- RAM ADDRESS ----
+	LD	B,0
+READ_256:
+	CALL	READ_SPI
+	LD	(HL),A
+;	CALL	ZHEXOUT				; For debugging
+	INC	HL
+	DJNZ	READ_256
+	LD	B,0
+READ_512:
+	CALL	READ_SPI
+	LD	(HL),A
+;	CALL	ZHEXOUT				; For debugging
+	INC	HL
+	DJNZ	READ_512
+
+	LD	(@NEXT_ADDRESS),HL		; Save next sector DMA address
+	CALL	READ_SPI			; Read 16 bit CRC 
+	CALL	READ_SPI
+	
+	CALL	READ_SPI			; Need one extra!
+
+	CALL	DRIVE_CS_OFF			; Turn off CS on SD Card
+	XOR	A
+	RET
+
+
+;------------------------------------------- WRITE N SECTORS ----------------------------------------
+
+WRITE_N_SD_SEC:
+	LD	HL,ENTER_SEC_COUNT
+	CALL	PRINT_STRING
+	CALL	GETHEX				;get 2 HEX digits
+	LD	HL,0
+	LD	L,A			
+	LD	(@SEC_COUNT),HL
+	
+MORE_WR_SEC2:
+	CALL	CORE_SD_WRITE			;Write one sector at a time
+	JR	Z,MORE_WR_SEC1			;Z means the sector read was OK
+	CALL	ZCRLF
+	JP	SD_MENU1			;Was an error, don't display data
+
+MORE_WR_SEC1:
+	CALL	PRINT_SD_SEC			;Show current Sector
+	LD	HL,msgwr			;Sector written OK
+	CALL	PRINT_STRING
+	LD	HL,(@SEC_COUNT)
+	DEC	HL
+	LD	(@SEC_COUNT),HL
+	LD	A,L
+	OR	A
+	JP	Z,SD_MENU1	
+	CALL	BUMP_SD_SECTOR			;Bump SEC, DMA
+	JR	MORE_WR_SEC2
+
+;------------------------------------------- WRITE ONE SECTOR ----------------------------------------
+
+WRITE_SD_SEC:
+	LD	A,(@CARD_TYPE)			; Flag to check if SD card type has been determined 
+	OR	A,A
+	JP	NZ,SD_CARD_WR_OK
+	LD	HL,READ_ERR_MSG1		; 'Sorry, SD Card must first be initilized (Menu 0).
+	CALL	PRINT_STRING
+	JP	SD_MENU1			; Back to main menu
+
+SD_CARD_WR_OK:
+	CALL	CORE_SD_WRITE			; >>>>>> The main Write SD sector routine <<<<<<<<<
+	JP	Z,DONE_RD_WR_SEC1		;Z means the sector read was OK
+	CALL	ZCRLF
+	JP	SD_MENU1			;Was an error, don't display data
+
+
+;==========================================  WRITE A SECTOR  =====================================================
+
+
+CORE_SD_WRITE:
+	CALL	DRIVE_CS_ON			; Lower CS on current SD card
+
+	LD	A,58H				; <<<<<<<< SEND CMD24  OR bits 40H added
+	CALL	WRITE_SPI
+	LD	A,0				; Second byte of CMD
+	CALL	WRITE_SPI
+	LD	A,0				; Third byte of CMD
+	CALL	WRITE_SPI
+	LD	HL,(@SEC)
+												
+	LD	A,L				; Forth byte of CMD 
+	CALL	WRITE_SPI
+	LD	A,H				; Fifth byte of CMD
+	CALL	WRITE_SPI
+	LD	A,0FFH				; CRC byte of CMD
+	CALL	WRITE_SPI
+	LD	A,0FFH				; Flush with extra 0FF's
+	CALL	WRITE_SPI
+
+	CALL	READ_SPI
+	
+	CP	A,0H				; Should be 00000000B
+	JP	Z,WRITE_SEC_OK1
+	LD	HL,SEC_WR_ERR0_MSG		; 'Got error with Write Sector command CMD24. (Status = 
+	CALL	CMD_FAIL			; Deselect CS, Low speed CLK, send error Message
+	JP	SD_MENU1
+
+
+WRITE_SEC_OK1:
+	LD	A,0FEH				; Start Block write flag
+	CALL	WRITE_SPI
+
+	LD	HL,(@RAM_ADDRESS)
+	LD	B,0
+WRITE_256:
+	LD	A,(HL)
+	CALL	WRITE_SPI
+	INC	HL
+	DJNZ	WRITE_256
+	LD	B,0
+WRITE_512:
+	LD	A,(HL)
+	CALL	WRITE_SPI
+	INC	HL
+	DJNZ	WRITE_512
+
+	LD	(@NEXT_ADDRESS),HL		; Save next sector DMA address
+	LD	A,0FFH				; Send 16 bit CRC
+	CALL	WRITE_SPI
+	CALL	WRITE_SPI
+
+	CALL	READ_SPI			; Check all is OK
+
+	AND	A,1FH
+	CP	A,05H				; Should be xxx0AAA1H (AAA = 010)
+	JP	Z,WRITE_SEC_OK2
+	CALL	DRIVE_CS_OFF			; Turn off CS on SD Card
+	LD	HL,SEC_WR_ERR1_MSG		; Got error with Read Sector command CMD24. (Status = "
+	CALL	CMD_FAIL			; Deselect CS, Low speed CLK, send error Message
+	JP	SD_MENU1
+
+	LD	HL,0000H			; Wait until writing is done
+WRITE_SEC_OK2:
+	CALL	READ_SPI			; Wait for SD card to complete writing, (64K times)
+	CP	A,0
+	JP	Z,WRITE_SEC_OK3
+	DEC	HL
+	LD	A,L
+	OR	A,H
+	JP	NZ,WRITE_SEC_OK2
+ WRITE_ERR:	
+	CALL	DRIVE_CS_OFF			; Turn off CS on SD Card
+	LD	HL,SEC_WR_ERR2_MSG		; Error waiting for SD Card to complete sector write. (Status = "
+	CALL	CMD_FAIL			; Deselect CS, Low speed CLK, send error Message
+	JP	SD_MENU1
+
+
+						; >>> NOT CLEAR WHAT IS WRONG WITH THIS WRITE SECTOR CODE
+						; >>> I NEED TO RESET THE CARD AFTER EACH SECTOR WRITE
+						; >>> OTHEREWISE THE NEXT SEC READ GIVES ERROROUS DATA
+WRITE_SEC_OK3:
+	CALL	SEND_SD_RESET			; CMD0
+	JP	NZ,WRITE_RESET_ERR3		; Error resetting SD Card after sector write, CMD0. (Status =
+
+	CALL	SEND_GET_TYPE			; CMD8	
+	JP	NZ,WRITE_RESET_ERR4		; Error getting SD Card type after sector write, CMD8. (Status = 
+
+	CALL	TYPE_2_ACTIVATE			; CMD55+CMD41	 
+	JP	NZ,WRITE_RESET_ERR5
+
+	CALL	DRIVE_CS_OFF			; Turn off CS on both SD Cards
+	XOR	A,A
+	RET
+	
+WRITE_RESET_ERR3:	
+	LD	HL,SEC_WR_ERR3_MSG		; Error resetting SD Card after sector write, CMD0. (Status = 
+	CALL	CMD_FAIL			; Deselect CS, Low speed CLK, send error Message
+	JP	SD_MENU1
+	
+WRITE_RESET_ERR4:	
+	LD	HL,SEC_WR_ERR4_MSG		; Error getting SD Card type after sector write. (Status = 
+	CALL	CMD_FAIL			; Deselect CS, Low speed CLK, send error Message
+	JP	SD_MENU1
+
+WRITE_RESET_ERR5:	
+	LD	HL,SEC_WR_ERR5_MSG		; Error re-activating Type 2 Card after sector write. (Status = 
+	CALL	CMD_FAIL			; Deselect CS, Low speed CLK, send error Message
+	JP	SD_MENU1
+
+   
+
+
+
+;--------------------------------------------------------------------------------------------------
+
+GOTO_NEXT_SEC:
+	CALL	BUMP_SD_SECTOR
+	JP	SD_MENU1
+	
+GOTO_PREVIOUS_SEC:
+	LD	HL,(@NEXT_ADDRESS)
+	LD  	(@RAM_ADDRESS),HL		;DMA address
+	LD	HL,(@SEC)
+	LD	A,L
+	OR	H
+	JR	Z,AT_ZERO
+	DEC	HL
+	LD	(@SEC),HL
+	JP	SD_MENU1
+AT_ZERO:
+	LD	C,BELL
+	CALL	ZCO
+	JP	SD_MENU1
+		
+;--------------------------------------------------------------------------------------------------
+
+PRINT_SD_SEC:
+	LD	HL,SD_MENU0_MSG			;'SD Card Menu Sector='
+	CALL	PRINT_STRING
+	LD	HL,(@SEC)
+	CALL	HL_ONLY
+	JP	SD_PRINT_2
+
+
+;--------------------------------------------------------------------------------------------------
+	
+BUMP_SD_SECTOR:					;For multi sec read/writes
+	LD	HL,(@NEXT_ADDRESS)
+	LD  	(@RAM_ADDRESS),HL		;DMA address
+	
+	ld	hl,(@SEC)
+	inc	hl
+	ld	(@SEC),hl
+	RET
+	
+
+;------------------------- SPI COMMANDS -------------------------------------------------
+
+SPI_DUMMY_CLOCKS:			; Only [A] register altered
+	LD	A,0FFH
+	CALL	WRITE_SPI
+	RET
+
+
+SEND_SD_CMD:				; Generalized CMD to send SD Card 6 commands. Only [A] & [HL] registers altered
+	LD	A,(HL)			; Get first byte from CMD table (Note already has OR bits 40H added)
+	CALL	WRITE_SPI
+	INC	HL
+	LD	A,(HL)			; Get second byte from CMD table 
+	CALL	WRITE_SPI
+	INC	HL
+	LD	A,(HL)			; Get third byte from CMD table 
+	CALL	WRITE_SPI
+	INC	HL
+	LD	A,(HL)			; Get forth byte from CMD table 
+	CALL	WRITE_SPI
+	INC	HL
+	LD	A,(HL)			; Get fifth byte from CMD table 
+	CALL	WRITE_SPI
+	INC	HL
+	LD	A,(HL)			; Get sixth byte from CMD table 
+	CALL	WRITE_SPI
+
+	INC	HL
+	LD	A,0FFH			; Send dummy byte to get returned message (Required!)
+	CALL	WRITE_SPI
+	RET
+
+	
+	
+WRITE_SPI:				; SEND ONE BYTE, No registers altered
+	PUSH	AF
+	PUSH	BC
+	CALL	MIRROR			; MSB<-->LSB MIRROR BITS, RESULT IN C
+	CALL	SD_WAITTX		; MAKE SURE WE ARE DONE SENDING
+	OUT0	(SD_TRDR),C		; PUT BYTE IN BUFFER
+	IN0	A,(SD_CNTR)
+	SET	4,A			; SET TRANSMIT ENABLE
+	OUT0	(SD_CNTR),A
+	POP	BC
+	POP	AF
+	RET				
+
+
+READ_SPI:				; RECEIVE ONE BYTE, Only [A] register altered
+	PUSH	BC
+	CALL	SD_WAITTX		; MAKE SURE WE ARE DONE SENDING
+	IN0	A,(SD_CNTR)		; GET CSIO STATUS
+	SET	5,A			; START RECEIVER
+	OUT0	(SD_CNTR),A
+	CALL	SD_WAITRX
+	IN0	A,(SD_TRDR)		; GET RECEIVED BYTE
+	CALL	MIRROR			; MSB<-->LSB MIRROR BITS
+	LD	A,C			; KEEP RESULT
+	POP	BC
+	RET
+
+SD_WAITTX:				; CSIO WAIT FOR TRANSMIT READY (TX REGSITER EMPTY)
+	IN0	A,(SD_CNTR)		; GET CSIO STATUS
+	BIT	4,A			; TX EMPTY?
+	JR	NZ,SD_WAITTX		; LOOP WHILE BUSY
+	RET				
+	
+SD_WAITRX:				; CSIO WAIT FOR RECEIVER READY (BYTE AVAILABLE)
+	IN0	A,(SD_CNTR)		; WAIT FOR RECEIVER TO FINISH
+	BIT	5,A			; RX EMPTY?
+	JR	NZ,SD_WAITRX		; LOOP WHILE BUSY
+	RET				
+	
+
+MIRROR:					; MSB<-->LSB MIRROR BITS IN A, RESULT IN C
+	LD  C,A				; A = 76543210
+	RLCA
+	RLCA				; A = 54321076
+	XOR C
+	AND 0AAH
+	XOR C				; A = 56341270
+	LD C,A
+	RLCA
+	RLCA
+	RLCA				; A = 41270563
+	RRC C				; C = 05634127
+	XOR C
+	AND 066H
+	XOR C				; A = 01234567
+	LD C,A				; RETURN RESULT IN C
+	RET
+		
+
+;---------------------------------------------------------------------------------------
+
+CMD_FAIL:				; Generalized failure message routine (Message in [HL])
+	CALL	DRIVE_CS_OFF		; Always, turn off CS on SD Card
+	CALL	PRINT_STRING
+	IN0	A,(z180_trdr)		; Return data in [A] (Is latched)
+	CALL	ZBITS
+	LD	HL,BITS_END_MSG		; "B) "
+	CALL	P_STRING
+	XOR	A
+	DEC	A
+	RET				; Return NZ			
+
+					
+
+DRIVE_CS_OFF:				; Raise CS on SD card	
+	PUSH	AF			; Note no registers altered
+	LD	A,04H			; We only have one drive 
+	OUT0	(SD_CARD_CS),A		;Bit 2 to select onboard SD card adaptor (0=ON, 1=off)
+	OUT0	(SD_CARD_LED),A		;Bit 2 to turn on/off SD Card LED (0=ON, 1=off)
+	POP	AF
+	RET
+
+
+DRIVE_CS_ON:				; Lower CS on current SD card	
+	PUSH	AF			; Note no registers altered
+	LD	A,00H			; We only have one drive 	
+	OUT0	(SD_CARD_CS),A		;Bit 2 to select onboard SD card adaptor (0=ON, 1=off)
+	OUT0	(SD_CARD_LED),A		;Bit 2 to turn on/off SD Card LED (0=ON, 1=off)
+	POP	AF
+	RET
+
+
+;-------------------------------------------------------------------------------------------	
+;------------------------ SUPPORT ROUTINES -------------------------------------------------	
+;-------------------------------------------------------------------------------------------	
+
+
+;SEND MESSAGE TO CONSOL MESSAGE IN [HL],LENGTH IN [B]
+
+TOM:	LD	C,(HL)
+	INC	HL
+	CALL	ZCO
+	DJNZ	TOM
+	RET
+
+;ABORT IF ESC  AT CONSOL, PAUSE IF ^S AT CONSOL
+
+CCHK:	CALL	ZCSTS			;FIRST IS THERE ANYTHING THERE
+	RET	Z
+	CALL	ZCI
+	CP	'S'-40H
+	JR	NZ,CCHK1
+CCHK2:	CALL	ZCSTS			;WAIT HERE UNTIL ANOTHER INPUT IS GIVEN
+	JR	Z,CCHK2
+CCHK1:	CP	ESC
+	RET	NZ			;RETURN EXECPT IF ESC
+
+
+;PRINT HIGHEST MEMORY FROM BOTTOM
+
+SIZE:	CALL	MEMSIZ			;RETURNS WITH [HL]= RAM AVAILABLE-WORKSPACE
+
+LFADR:	CALL	ZCRLF
+
+;PRINT [HL] AND A SPACE
+
+ZPRINT_HL:	
+	PUSH	HL
+	PUSH	BC
+	CALL	LADR			;Print [HL] with space afterwards
+	LD	C,SPACE
+	CALL	ZCO
+	POP	BC
+	POP	HL
+	RET
+
+
+;PRINT [HL] ONLY
+
+HL_ONLY:	
+	PUSH	HL
+	PUSH	BC
+	CALL	LADR			;Print [HL] with no space afterwards
+	POP	BC
+	POP	HL
+	RET
+
+;PRINT A SPACE
+
+ZSPACE:	PUSH	AF
+	PUSH	BC
+	LD	C,SPACE
+	CALL	ZCO
+	POP	BC
+	POP	AF
+	RET
+
+;CONVERT HEX TO ASCII
+
+CONV:	AND	0FH
+	ADD	90H
+	DAA 
+	ADC	40H
+	DAA 
+	LD	C,A
+	RET
+
+	
+;GET TWO PARAMETERS AND PUT THEM IN [HL] & [DE] THEN ZCRLF
+
+EXLF:	CALL	HEXSP	
+	POP	DE
+	POP	HL
+
+;SEND TO CONSOL CR/LF
+
+ZCRLF:	PUSH	BC
+	LD	C,LF
+	CALL	ZCO
+	LD	C,CR
+	CALL	ZCO
+	POP	BC
+	RET
+
+;PUT THREE PARAMETERS IN [BC] [DE] [HL] THEN CR/LF
+
+EXPR3:	INC	C			;ALREADY HAD [C]=2 FROM START
+	CALL	HEXSP
+	CALL	ZCRLF
+	POP	BC
+	POP	DE
+	POP	HL
+	RET 
+
+	
+
+
+ZGET_HL:
+	CALL	GETHEX			;Get 4 digits into HL
+	RET	C
+	LD	H,A
+	CALL	GETHEX
+	RET	C
+	LD	L,A
+	OR	A			;To return NC
+	RET
+
+;GET ONE PARAMETER
+	
+EXPR1:	LD	C,01H
+HEXSP:	LD	HL,0000
+EX0:	CALL	TI
+	CP	ESC
+	JR	NZ,EX1
+	JP	ESC_ABORT		;ABORT BACK TO MAIN LOOP
+EX1:	LD	B,A
+	CALL	NIBBLE
+	JR	C,EX2X
+	ADD	HL,HL
+	ADD	HL,HL
+	ADD	HL,HL
+	ADD	HL,HL
+	OR	L
+	LD	L,A
+	JR	EX0
+EX2X:	EX	(SP),HL
+	PUSH	HL
+	LD	A,B
+	CALL	QCHK
+	JR	NC,SF560
+	DEC	C
+	RET	Z
+SF560:	JP	NZ,ERROR
+	DEC	C
+	JR	NZ,HEXSP
+	RET 
+EXF:	LD	C,01H
+	LD	HL,0000H
+	JR	EX1
+
+ESC_ABORT:
+	LD	C,BELL
+	CALL	ZCO
+	CALL	ZCRLF
+	POP	AF			;BALANCE UP STACK
+	JP	ZSTART
+	
+	
+	
+;RANGE TEST ROUTINE CARRY SET = RANGE EXCEEDED
+
+HILOX:	CALL	CCHK
+	CALL	HILO
+	RET	NC
+	POP	DE			;DROP ONE LEVEL BACK TO START
+	RET 
+HILO:	INC	HL			;RANGE CHECK SET CARRY IF [DE]=[HL]
+	LD	A,H
+	OR	L
+	SCF
+	RET	Z
+	LD	A,E
+	SUB	L
+	LD	A,D
+	SBC	A,H
+	RET 
+
+;PRINT [HL] ON CONSOL
+
+LADR:	LD	A,H			;Print HEX in A no other registers altered
+	CALL	ZHEXOUT
+	LD	A,L
+LBYTE:
+ZHEXOUT:	
+	PUSH	AF			;<<<< PRINT VALUE IN [A] in HEX ON CONSOLE
+	RRCA
+	RRCA
+	RRCA
+	RRCA
+	CALL	SF598
+	POP	AF
+SF598:	CALL	CONV			;Char to [C]
+	JP	ZCO			;Will force a return
+
+PHEX:	PUSH	AF
+	PUSH	BC
+	CALL	ZHEXOUT
+	POP	BC
+	POP	AF
+
+
+;THIS IS A CALLED ROUTINE USED TO CALCULATE TOP OF RAM IS USED BY
+;THE ERROR ROUTINE TO RESET THE STACK. 
+;Returns top of RAM in [HL]
+
+MEMSIZ:	PUSH	BC			;SAVE [BC]
+MEMSZ1:	LD	HL,0FFFFH		;START FROM THE TOP DOWN
+MEMSZ2:	LD	A,(HL)
+	CPL 
+	LD	(HL),A
+	CP	(HL)
+	CPL 				;PUT BACK WHAT WAS THERE
+	LD	(HL),A
+	JP	Z,GOTTOP
+	DEC	H			;TRY 100H BYTES LOWER
+	JR	MEMSZ2			;KEEP LOOKING FOR RAM
+GOTTOP:	POP	BC			;RESTORE [BC]
+	RET 
+
+NIBBLE:	SUB	30H
+	RET	C
+	CP	17H
+	CCF
+	RET	C
+	CP	LF
+	CCF
+	RET	NC
+	SUB	07H
+	CP	LF
+	RET
+
+COPCK:	LD	C,'-'
+	CALL	ZCO
+
+PCHK:	CALL	TI
+
+;TEST FOR DELIMITERS
+
+QCHK:	CP	SPACE
+	RET	Z
+	CP	','
+	RET	Z
+	CP	CR
+	SCF
+	RET	Z
+	CCF
+	RET 
+
+;KEYBOARD HANDELING ROUTINE (WILL NOT ECHO CR/LF)
+;IT CONVERTS LOWER CASE TO UPPER CASE FOR LOOKUP COMMANDS
+;ALSO ^C WILL FORCE A JUMP TO BOOT IN CP/M
+;ALL OTHERE CHARACTERS ARE ECHOED ON CONSOL
+
+TI:	CALL	ZCI
+	CP	CR
+	RET	Z
+	CP	'C'-40H			;^C TO BOOT IN CP/M
+	JP	Z,ZBOOT
+	PUSH	BC
+	LD	C,A
+	CALL	ZCO
+	LD	A,C
+	POP	BC
+	CP	40H			;LC->UC
+	RET	C
+	CP	7BH
+	RET	NC
+SF754:	AND	5FH
+	RET 
+
+
+;DISPLAY 8 BITS OF [A] (B & C registers changed)
+
+ZBITS:	PUSH	DE			
+	PUSH	BC
+	LD	E,A
+	CALL	BITS
+	POP	BC
+	POP	DE
+	RET
+
+;DISPLAY 8 BITS OF [A] (B & C registers changed)
+
+BITS:	LD	B,08H			
+SF76E:	SLA	E
+	LD	A,18H
+	ADC	A,A
+	LD	C,A
+	CALL	ZCO
+	DJNZ	SF76E
+	RET 
+
+GETHEX:
+	CALL	GETCMD			;Get a character from keyboard & ECHO
+	CP	A,ESC
+	JR	Z,HEXABORT
+	CP	A,'/'			;check 0-9, A-F
+	JR	C,HEXABORT
+	CP	A,'F'+1
+	JR	NC,HEXABORT
+	CALL	ASBIN			;Convert to binary
+	RRCA
+	RRCA
+	RRCA
+	RRCA
+	LD	B,A			;Store it
+	CALL	GETCMD			;Get 2nd character from keyboard & ECHO
+	CP	A,ESC
+	JR	Z,HEXABORT
+	CP	A,'/'			;check 0-9, A-F
+	JR	C,HEXABORT
+	CP	A,'F'+1
+	JR	NC,HEXABORT
+	CALL	ASBIN			;Convert to binary
+	OR	A,B			;add in the first digit
+	OR	A			;To return NC
+	RET
+HEXABORT:
+	SCF				;Set Carry flag 
+	RET
+
+
+GETCMD:	CALL	ZCI			;GET A CHARACTER, convert to UC, ECHO it
+	CALL	TO_UPPER
+	CP	A,ESC
+	RET	Z			;Don't echo an ESC
+	PUSH	AF			;Save it
+	PUSH	BC
+ 	LD	C,A
+	CALL	ZCO			;Echo it
+	POP	BC
+	POP	AF			;get it back
+	RET
+
+					;Convert LC to UC
+TO_UPPER:	
+	CP	A,'a'			;must be >= lowercase a
+	RET	C				; else go back...
+	CP	A,'z'+1			;must be <= lowercase z
+	RET	NC			; else go back...
+	SUB	A,'a'-'A'		;subtract lowercase bias
+	RET
+
+
+ASBIN:	SUB	A,30H 
+	CP	A,0AH 
+	RET	M
+	SUB	A,07H 
+	RET
+
+
+echo:
+	call	ZCI			; get a character
+	cp	ESC			; escape?
+	jr	z,echoz			; done if so
+	LD	C,A
+	call	ZCO			; else send char
+	jr	echo			; and loop
+;
+echoz:					; Say "Goodbye"
+	
+	ld	hl,str_goodbye
+	call	PRINT_STRING
+exit:
+	halt
+	
+;
+NOT_DONE:
+	LD	HL,CODE_NOT_DONE
+	CALL	PRINT_STRING
+	RET
+	
+ERROR:	LD	C,'?'
+	CALL	ZCO
+	JP	BEGIN
+	
+;=======================================================================
+;                       I/O SUPPORT PROCEDURES
+;
+;=======================================================================
+;
+; Print a string at HL to the primary CONSOLE PORT.  In order to save ROM space
+; with numerous CR,LF's before or after the actual text this routine has 3 options:-
+; 1.	If there is a terminating '$' at the end of the string send a CR/LF before returning
+; 2.    If  there is a terminating 0H at the end of the string, just terminate the string
+;	In both the above cases the string always starts off with a CR/LF
+; 3.    If P_STRING is used then no CR/LF at the start of a string. 
+     
+PRINT_STRING:				;Print string on Propeller Board
+	CALL	ZCRLF
+P_STRING:				; Start without CR,LF
+	ld	a,(hl)			; get next char
+	CP	A,'$'			; Terminate with a '$'
+	JR	Z,P_STRING_CRLF		;Finish with CR,LF
+	or	a			; end of string?
+	ret	z			; Immediatly terminate
+	LD	C,A
+	call	ZCO			; print the char
+	inc	hl			; bump to next char in string
+	jr	P_STRING		; loop till done
+P_STRING_CRLF:
+	LD	C,CR
+	call	ZCO			; print the char
+	LD	C,LF
+	call	ZCO			; print the char
+	RET
+
+;>>>>>>>>>>>>>>>>>>>>>>>>> MODEM SERIAL PORT ROUTINES <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+;
+;
+MODEM_ZCI:	
+	PUSH	DE			;SAVE D,E
+	LD	A,5H			;Lower RTS line
+	OUT0	(MODEM_CTL_PORT),A	;Sel Reg 5
+	LD	A,11101010B		;EAH
+	OUT0	(MODEM_CTL_PORT),A
+	NOP
+	NOP
+MSEC:	LD	DE,0BBBBH		;1 SEC DCR COUNT
+MWTI:	IN0	A,(MODEM_CTL_PORT)
+	AND	A,MODEM_RECV_MASK
+	CP	A,RECV_READY
+	JP	Z,MCHAR			;GOT CHAR
+	DEC	E			;COUNT DOWN
+	JP	NZ,MWTI			;FOR TIMEOUT
+	DEC	D
+	JP	NZ,MWTI
+	DEC	B			;DCR # OF SECONDS
+	JP	NZ,MSEC			;MODEM TIMED OUT RECEIVING
+	POP	DE			;RESTORE D,E
+	SCF				;CARRY SHOWS TIMEOUT
+	RET
+
+MCHAR:	IN0	A,(MODEM_DATA_PORT)
+	POP	DE			;RESTORE DE
+	PUSH	AF			;CALC CHECKSUM
+	ADD	A,C
+	LD	C,A
+	POP	AF
+	OR	A,A			;TURN OFF CARRY TO SHOW NO TIMEOUT
+	RET
+
+
+;GET A CHARACTER FROM THE "MODEM" SERIAL PORT ON THE S100 BUS SERIAL IO BOARD 
+
+MODEM_ZCO:	
+	PUSH	AF			;CHECK IF MONITORING OUTPUT
+	ADD	A,C			;CALC CKSUM
+	LD	C,A
+SENDW:	IN0	A,(MODEM_CTL_PORT)	;Don't worry PC is always fast enough!
+	AND	A,MODEM_SEND_MASK
+	CP	A,SEND_READY
+	JP	NZ,SENDW
+	POP	AF			;GET CHAR
+	OUT0	(MODEM_DATA_PORT),A
+				
+					;Raise RTS line to prevent the next character arriving
+	LD	A,5H			;while the Z80 is busy processing info
+	OUT0	(MODEM_CTL_PORT),A	;Sel Reg 5
+	LD	A,11101000B		;E8H
+	OUT0	(MODEM_CTL_PORT),A
+	RET
+;
+;
+MODEM_ZSTATUS:
+	IN0	A,(MODEM_CTL_PORT)
+	AND	A,MODEM_RECV_MASK
+	CP	A,RECV_READY
+	JP	Z,MREADY		;GOT CHAR
+	XOR	A
+	RET				;RET Z if nothing
+
+MREADY:	XOR	A
+	DEC	A
+	RET				;RET NZ IF CHARACTER
+
+
+;>>>>>>>>>>>>>>>>>>>>>>>>> SPEECH OUTPUT ROUTINES <<<<<<<<<<<<<<<<<<
+;
+;SPEAK OUTPUT (WILL BE USED TO COMMUNICATE WITH TALKER)
+; Note the S100Computers I/O board V-Stamp speech chip will use the initial baud rate 
+; of of the SCC to communicate with it. This is determines after each reset/slave clear.
+
+SPEAKER_CTS:				;Cannot get this to work. SCC does not change bit 5 of RR1
+					;when E1 sent to WR3 (No Auto Enable). See SCCINIT:
+	IN0	A,(BCTL)		;A0H
+	BIT	5,A
+	LD	A,0FFH
+	RET	NZ			;Ret NZ if CTS is High
+	XOR	A
+	RET				;Ret Z if CTS is Low
+
+SPEAKOUT:
+	XOR	A,A			;Will try 256 times, then timeout
+SPXXX:	PUSH	AF
+	IN0	A,(BCTL)		;(A0), Is SCC RX Buffer empty
+	AND	04H
+	JR	NZ,SENDS		;NZ if ready to recieve character
+	POP	AF
+	DEC	A
+	JR	NZ,SPXXX
+	RET
+SENDS:	POP	AF
+	LD	A,C
+	OUT0	(BDTA),A		;(A2), Send it
+	RET
+;
+;SPEAKTOMM THIS IS A ROUTINE TO SEND A STRING TO TALKER [HL] AT STRING
+SPEAK$:	LD	A,(HL)
+	CP	'$'
+	JR	Z,SPEAK1
+	LD	C,A
+	CALL	SPEAKOUT
+	INC	HL
+	JR	SPEAK$
+SPEAK1:	LD	C,0DH			;MUST END WITH A CR
+	JP	SPEAKOUT
+
+
+;>>>>>>>>>>>>>>>>>>>> MAIN PRINTER OUTPUT ROUTINES <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+LO:	PUSH	BC
+	LD	B,0FFH			;First make sure an actual printer is connected
+LO2:	CALL	LSTAT
+	JR	NZ,LO1			;Printer is ready go to it
+	DJNZ	LO2
+	POP	BC
+	XOR	A
+	LD	A,C
+	RET				;RET Z if Printer problem (Not switched on)
+
+
+IF	ST8C4				;If S100_Parallel_IO Board for Printer output
+	LD	A,80H			;Z180 internal ports must be temporaly moved away from C0-FFH
+	out0	(z180_base),A
+LO1:	POP	BC
+	LD	A,PRINTER_ST_HIGH	;Make sure strobe is high
+	OUT0	(PRINTER_CTRL),A
+	LD	A,C			;Send Data from [C]
+	OUT0	(PRINTER_OUT),A		
+	LD	A,PRINTER_ST_LOW	;Now send strobe High->Low
+	OUT0	(PRINTER_CTRL),A
+	LD	A,PRINTER_ST_HIGH	;Now returb strobe back high
+	OUT0	(PRINTER_CTRL),A
+	ld	a,z180_base		;Put internal Z180 ports back to C0-FFH range
+	out0	(0BFh),a			
+	OR	A,A
+	RET				;Ret NZ if OK
+	
+ELSE					;IMSAI PIO Board PARRELL PORT
+
+LO1:	POP	BC
+	LD	A,0FFH			;Setup strobe high to low then high
+	OUT0	(PRINTER_STROBE),A
+	LD	A,C
+	OUT0	(PRINTER_OUT),A		;Now Data
+	XOR	A	 		;STROBE FOR CENTRONICS
+	OUT	(PRINTER_STROBE),A
+	LD	A,0FFH			;Raise strobe again
+	OUT0	(PRINTER_STROBE),A
+	OR	A,A
+	RET				;Ret NZ if OK
+ENDIF
+
+
+FLUSH:	LD	HL,FLUSH_MSG
+	CALL	PRINT_STRING		;Have a Stack, so now we can use CALL
+	LD	C,FF			;Send a Form Feed to laserJet Printer
+	CALL	LO			;This forces a partial page to be printed
+	RET
+	
+
+IF	ST8C4				;If S100_Parallel_IO Board for Printer output
+	LD	A,0			;Z180 internal ports must be temporaly moved away from C0-FFH
+	ld	a,z180_base
+LSTAT:	IN0	A,(PRINTER_STATUS)   	;0CH status port of ST8C4
+	AND	11111111B    		;For now
+	CP	11011111B    		;should see 11011111 if printer is selected, ready, with paper etc.
+	JR	Z,LSTAT1
+	ld	a,z180_base		;Put them back to C0-FFH range
+	ld	a,z180_base		;Put internal Z180 ports back to C0-FFH range
+	out0	(3Fh),a			
+	RET				;Return Z if not ready
+LSTAT1:	ld	a,z180_base		;Put internal Z180 ports back to C0-FFH range
+	out0	(3Fh),a			
+	XOR	A	     		;PUT 0FFH IN [A] IF READY & NO ZERO FLAG
+	DEC	A
+	RET	
+ELSE					;IMSAI PIO Board PARRELL PORT
+LSTAT:	IN0	A,(PRINTER_STATUS)   	
+	AND	00001111B    		;XXXX0110 IS READY (BIT 3=PAPER BIT 2=FAULT
+	CP	00000110B    		;BIT 1=SELECT  BIT 0=BUSY
+	JR	Z,LSTAT1
+	XOR	A
+	RET	
+LSTAT1:	XOR	A	     		;PUT 0FFH IN [A] IF READY & NO ZERO FLAG
+	DEC	A
+	RET	
+ENDIF
+;
+
+
+;
+;S100Computers Serial I/O Board Initilization
+;Note Zilog SCC serial port A will be set to 19,200 Baud initially (for speech synthesizer).
+;Note Zilog SCC serial port B will be set to 38,400 Baud initially (for XModem etc).
+
+INIT_SCC_A:				
+	LD	A,ACTL			;Program Channel A
+	LD	C,A
+	LD	B,0EH			;Byte count for OTIR below
+	LD	HL,SCCINIT_A
+	OTIR
+	RET
+	
+INIT_SCC_B:
+	LD	A,BCTL			;Program Channel B
+	LD	C,A
+	LD	B,0EH			;Byte count for OTIR below
+	LD	HL,SCCINIT_B
+	OTIR
+	RET
+;
+;	
+SCCINIT_A:
+	DB	04H			;Point to WR4
+	DB	44H			;X16 clock,1 Stop,NP
+	DB	03H			;Point to WR3
+	DB	0C1H			;Enable reciever, Auto Enable, Recieve 8 bits	
+;	DB	0E1H			;Enable reciever, No Auto Enable, Recieve 8 bits (for CTS bit)	
+	DB	05H			;Point to WR5
+	DB	0EAH			;Enable, Transmit 8 bits
+	DB	0BH			;Set RTS,DTR, Enable. Point to WR11
+	DB	56H			;Recieve/transmit clock = BRG
+	DB	0CH			;Point to WR12
+;	DB	40H			;Low Byte 2400 Baud 
+;	DB	1EH			;Low Byte 4800 Baud <<<<<<<<<<< XModem I/O
+;	DB	0EH			;Low Byte 9600 Baud 
+;	DB	06H			;Low byte 19,200 Baud 
+	DB	02H			;Low byte 38,400 Baud <<<<<<<<<<< XModem I/O
+;	DB	00H			;Low byte 76,800 Baud  
+	DB	0DH			;Point to WR13
+	DB	00H			;High byte for Baud
+	DB	0EH			;Point to WR14
+	DB	01H			;Use 4.9152 MHz Clock. Note SD Systems uses a 2.4576 MHz clock, enable BRG
+	DB	0FH			;Point to WR15
+	DB	00H			;Generate Int with CTS going high
+
+SCCINIT_B:
+	DB	04H			;Point to WR4
+	DB	44H			;X16 clock,1 Stop,NP
+	DB	03H			;Point to WR3
+	DB	0C1H			;Enable reciever, Auto Enable, Recieve 8 bits	
+	DB	05H			;Point to WR5
+	DB	0EAH			;Enable, Transmit 8 bits
+	DB	0BH			;Set RTS,DTR, Enable. Point to WR11
+	DB	56H			;Recieve/transmit clock = BRG
+	DB	0CH			;Point to WR12
+	DB	06H			;Low byte 19,200 Baud <<<<<<<<<<< Note Speech synthizer defaults to this value
+	DB	0DH			;Point to WR13
+	DB	00H			;High byte for Baud
+	DB	0EH			;Point to WR14
+	DB	01H			;Use 4.9152 MHz Clock. Note SD Systems uses a 2.4576 MHz clock, enable BRG
+	DB	0FH			;Point to WR15
+	DB	00H			;Generate Int with CTS going high
+
+;
+; Simply bank selection routine.  Enter with A indicating the
+; 32K bank of memory to select into the lower 32K of CPU space.
+; For example, 00H selects first bank of ROM, 10H selects first
+; bank of RAM.  Register A is trashed!
+;
+; We want 32K banks, but Z180 uses 4K increments.  So, we need to
+; scale the input from 32K chunks to 4K chunks.
+;
+bnksel:
+	rlca				; Scale input from
+	rlca				; ... 32K chunk addressing to
+	rlca				; ... 4K chunk addressing
+	out0	(z180_bbr),a		; write to bank base reg
+	ret
+;
+; Data
+;
+
+
+
+
+SIGNON_MSG:	DB	BELL,CR,LF		
+		DB	'Z180 ROM MONITOR (V0.34) @ E000H (J.Monahan,7/22/2023)',0
+
+MENUMSG:	DB	'A=Memmap   B=ROMWBW   D=Disp  E=Echo  F=Fill  G=Goto     H=Date',CR,LF
+		DB	'I=Time     J=RAM Test K=Menu  M=Move  N=S100  O=Bus Req  P=CPM(IDE)',CR,LF
+		DB	'QI,O=Port  R=Ports    S=Subs  T=Type  U=Halt  V=Verify   W=SD Card',CR,LF 
+		DB	'X=XModem   Y=IDE      Z=Top   @=Flush Printer',CR,LF
+		DB	LF,'$' 
+		
+SMSG_SP:	DB	'Z 1 8 0 ROM MONITOR VERSION 0.34 PRESENT$'
+
+TOP_RAM_MSG	DB	'Top of RAM=',0
+SP_MSG		DB	'H  SP=',0
+IOBYTE_MSG	DB	'H  IOBYTE=',0
+CR_SMSG_SP:	DB	CR,CR,'$'
+CODE_NOT_DONE	DB	'Code not written yet!$'
+CHAR_TEST_MSG	DB	'Keyboard input test. Enter characters. (ESC or ^C to abort)$'
+
+S100_MENU	DB	LF,'S100 Bus Address Tests'
+		DB	CR,LF,'0   Address line test (0 to FFFFH)'
+		DB	CR,LF,'1   Send "333..." to S100 Port 01H'
+		DB	CR,LF,'2   S100 Input Port 01H Test'
+		DB	CR,LF,'3   S100 Consol I/O Test'
+		DB	CR,LF,'4   Speech Test'
+		DB	CR,LF,'5   Serial Board Port Test'
+		DB	CR,LF,'6   Test Printer'
+		DB	CR,LF,'7   Activate Interrupts'
+		DB	CR,LF,'ESC To return to Main Menu'
+		DB	CR,LF,'>',0
+		
+CONSOLE_TEST	DB	'Enter S100 bus keyboard char. ESC to abort ',0
+FLUSH_MSG	DB	'Sending FF to Printer',0
+
+MEM_TEST_MSG	DB	'Memory Test 0-DF00H$'
+MEM_ERR_MSG	DB	BELL,'RAM error at ',0
+TIME_MSG	DB	'Time:- ',0
+DATE_MSG	DB	'Date:- ',0
+Time1_Msg	DB	'  ',0
+Date1_Msg	DB	'  ',0
+
+MODEM_SIGNON:	DB	'Get a File from PC (38,400 Baud)$'
+RMSG:		DB	'WAITING FOR SECTOR #',0
+ERRSOH:		DB	'H RECEIVED, NOT SOH$'
+ERR2:		DB	'++BAD SECTOR # IN HDR$'
+ERR3:		DB	'++BAD CKSUM ON SECTOR$'
+TOUTM:		DB	'TIMEOUT ',0
+QUITM:		DB	'MULTIPLE ERRORS.'
+		DB	'TYPE Q TO QUIT, R TO RETRY:',0
+MODEM_DONE_MSG:	DB	'TRANSFER COMPLETE',0
+BAD_HEADER_MSG:	DB	'INVALID HEADER.$'
+MODEM_RAM_MSG:	DB	'H. If OK will write to RAM at ',0
+MODEM_RAM_LOC:	DB	'Enter RAM location (xxxxH +CR): ',0
+
+HALT_MSG:	DB	'The CPU halted!',0
+
+SD_MENU0_MSG:	DB	LF,LF,'SD Card Menu  '
+		DB	'Sector=',0
+		
+IDE_MENU0_MSG:	DB	LF,LF,'S100 Bus IDE Board Menu. Track=',0
+IDE_MENU1_MSG:	DB	'H  Sector=',0
+
+IDE_MENU3_MSG:	DB	'H  RAM Address=',0	
+BITS_END_MSG:	DB	'B)$'
+H_MSG:		DB	'H.',0
+SD_MENU4_MSG
+IDE_SD_MENU_MSG:	DB	'0   Initilize Drive 0'
+		DB	CR,LF,'1   Set Sec,(Track)'
+		DB	CR,LF,'2   Set RAM Address'
+		DB	CR,LF,'3   Read Sec'
+		DB	CR,LF,'4   Write Sec'
+		DB	CR,LF,'5   Read N Sec'
+		DB	CR,LF,'6   Write N Sec'
+		DB	CR,LF,'+   Next Sec'
+		DB	CR,LF,'ESC To return to Main Menu'
+		DB	CR,LF,'>',0
+		
+INIT_ERR:	DB	BELL,'Drive Init. Error$'
+INIT_OK:	DB	'Drive Init. OK',0
+msgrd:		DB	'Sec. Read OK',0
+msgwr:		DB	'Sec. Write OK',0
+DRIVE_ERRORS	DB	BELL,'IDE Drive Err.  Status=',0
+READING_MSG	DB	'Reading Sector(s)',0
+WRITING_MSG	DB	'Writing Sector(s)',0
+GET_LBA_MSG:	DB	'Enter CPM style TRK & SEC (in hex).$'
+ENTER_SECL	DB	'Starting sector no.,(xxH) = ',0
+ENTER_TRKL	DB	'Track no. (LOW byte, xxH) = ',0
+ENTER_TRKH	DB	'Track no. (HIGH byte, xxH) = ',0
+ENTER_SEC_COUNT DB	'Number of Sec (xxH) = ',0
+GET_DMA_MSG	DB	'Enter RAM location for Sec. data (xxxxH) = ',0
+Write_Sure:	DB	'Warning: this will change data on the drive, '
+		DB	'are you sure? (Y/N)...',0
+NMI_MSG:	DB	'NMI Activated',CR,LF,'>',0			;0E00FH
+INT0_MSG:	DB	'INT0 Activated',CR,LF,'>',0			;0E01FH
+SLAVE_MSG	DB	BELL,'Activate Master/Slave switch$'
+INTS_OFF_MSG	DB	'Inactivating Interrupts$'
+INTS_ON_MSG	DB	'Activating Interrupts$'
+BOOT_ROM_MSG	DB	'Booting ROMWBW$'
+S100_ONLY_MSG	DB	BELL,'Code for the S100 bus only$'
+
+CF_TYPE_ERR_MSG: DB	BELL,'SD Card Type 2 was NOT detected. (Status =',0
+CARD_TYPE2_MSG:	DB	'Detected a Type 2 SD card.$'
+CMD41_55_OK_MSG: DB	'CMD55 & CMD41 Commands OK.',CR,LF
+                DB	'The SD Card init. correctly.$'
+CRC_ERROR_MSG:	DB	BELL,'Error turning off CRC checking. (Status = ',0
+SIZE_ERROR_MSG:	DB	BELL,'Sect. size error. (Status = ',0	
+CMD55_FAIL_MSG:	DB	BELL,'SD Card Type 2 Init. failed (CMD55/CMD41) (Status = ',0
+READ_ERR_MSG1:	DB	BELL,'SD Card must first be initilized (Menu 0).$'
+SEC_RD_ERR0_MSG: DB	BELL,'Read Sec. CMD CMD17 error. (Status = ',0
+SEC_RD_ERR1_MSG: DB	BELL,'Sec. read error. No 0FEH Flag. (Status = ',0
+CONTINUE_MSG:	DB	'Type any char. to continue.',0
+ENTER_SEC_NUM:	DB	'Enter Sec. No. (XXXXH): ',0
+SEC_WR_ERR0_MSG: DB	BELL,'Sec. write err., CMD24. (Status = ',0
+SEC_WR_ERR1_MSG: DB	BELL,'Error writing Sec. bytes, CMD24. (Status = ',0
+SEC_WR_ERR2_MSG: DB	BELL,'Error waiting for sec. write. (Status = ',0
+SEC_WR_ERR3_MSG: DB	BELL,'Error resetting sec. write, CMD0. (Status = ',0
+SEC_WR_ERR4_MSG: DB	BELL,'Error getting Card type, CMD8. (Status = ',0
+SEC_WR_ERR5_MSG: DB	BELL,'Error re-activating Type 2 Card, CMD55+CMD41. (Status = ',0
+
+DATA_ERROR_MSG:	DB	BELL,CR,LF,'Data entry error.$'
+SPEAKCPM_SP:	DB	'LOADING CPM $'
+DRIVE_NR_ERR:	DB	BELL,'Drive not Ready.',LF,'$'
+BOOT_LD1_ERR:	DB	BELL,'BOOT error.',LF,'$'
+BOOT_LD_ERR:	DB	BELL,'Read Error.',LF,'$'
+IDE_RW_ERROR:	DB	BELL,'IDE Drive R/W Error',LF,'$'
+
+
+
+CMD_0:		DB	40H,00H,00H,00H,00H,95H,0FFH		; (0+64)  To Reset the SD Card interface,
+CMD_1:		DB	41H,00H,00H,00H,00H,0F9H,0FFH		; (1+64)  Activate Init Process
+CMD_8:		DB	48H,00H,00H,01H,0AAH,87H,0FFH		; (8+64)  To check Card Voltage
+CMD_9:		DB	49H,00H,00H,00H,00H,8FH,0FFH		; (9+64)  Read SD Register (CSD)
+CMD_13:		DB	4DH,00H,00H,00H,00H,081H,0FFH		; (13+64) get SD card status
+CMD_16:		DB	50H,00H,00H,02H,00H,081H,0FFH		; (16+64) Set Sector size to 512 Bytes
+CMD_17:		DB	51H,00H,00H,00H,00H,0FFH,0FFH		; (17+64) Read a single block (Block 0, Used to load boot sector only)
+CMD_41:		DB	69H,40H,00H,00H,00H,077H,0FFH		; (41+64) Activates the card's init. process.
+;CMD_41:	DB	69H,00H,00H,00H,000H,0E5H,0FFH		; (41+64) Activates the card's init. process.
+CMD_55:		DB	77H,00H,00H,00H,00H,065H,0FFH		; (55+64) Application specific command NEXT
+CMD_58:		DB	7AH,00H,00H,00H,00H,0FDH,0FFH		; (58+64) Read SD Cards OCR register
+CMD_59:		DB	7BH,00H,00H,00H,00H,0FDH,0FFH		; (59+64) Turn off CRC checking
+
+
+;----------------- LOCAL DATA STORAGE ----------------------------------------------------------
+
+@DELAYStore	DB	0
+@SEC		DW	0
+@TRK		DW	0			; +2H
+@SEC_COUNT	DW	0			; +4H
+@RAM_ADDRESS	DW	0			; +6H
+
+@StartLineHex	DW	0			; +8H
+@BYTE$COUNT	DW	0			; +0AH
+@DRIVE$SEC	DW	0			; +0CH
+@DRIVE$TRK	DW	0			; +0EH
+@StartLineASCII	DW	0			; +10H
+@NEXT_ADDRESS   DW	0			; +12H
+@INTS_FLAG	DW	0			; +14H		;Flag to indicate if Interrupts are on = 1 or off = 0.
+
+@CARD_TYPE	DW	0			; +16H		;For SD Cards
+@SPARE		DW	0			; +18H
+
+RAM_STORE_SIZE	equ	18H
+
+
+str_goodbye	db	CR,LF,'Goodbye, CPU Halted$'
+@FINAL_BYTE	DW	0			;		;Last usable byte in RAM (must be less than 0FFFFH.
+ROM_EMPTY	equ	(0FFFFH - $)
+
+mon_len		equ	($ - mon_start)
+;
+	.dephase
+
+	end

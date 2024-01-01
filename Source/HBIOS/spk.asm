@@ -41,6 +41,10 @@ SP_PENDING_PERIOD	.DW	SP_NOTE_C8	; PENDING PERIOD (16 BITS)
 SP_PENDING_VOLUME	.DB	$FF		; PENDING VOL (8 BITS)
 SP_PENDING_DURATION	.DW	0		; PENDING DURATION (16 BITS)
 ;
+	.ECHO	"SPK: IO="
+	.ECHO	RTCIO
+	.ECHO	"\n"
+;
 ;======================================================================
 ;	DRIVER INITIALIZATION
 ;======================================================================
@@ -303,6 +307,14 @@ BE_AGAIN:
 BE_END:
 	HB_EI
 	POP	IX
+;
+;	Above flow flips the speaker bit an odd number of times which
+;	leaves the bit set to the opposite value it started at.  This
+;	ensures that the bit is properly reset to its original value.
+;
+	LD	A,(HB_RTCVAL)		; Get the current RTC latch value
+	OUT	(RTCIO),A		; Set it
+;
 	RET				; ALWAYS EXITS WITH SUCCESS STATUS (A=0)
 ;
 ;======================================================================

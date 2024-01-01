@@ -39,6 +39,10 @@ YM_DEBUG		.EQU	0	; CHANGE TO 1 TO ENABLE DEBUGGING
 YM_RSTCFG		.EQU	0	; SET TO 1 FOR FULL REGISTER CLEAR
 YM_FAST3438		.EQU	0	; FAST CPU'S WITH A YM3438 MAY REQUIRE A DELAY
 ;
+		.ECHO	"YM: IO="
+		.ECHO	YMSEL
+		.ECHO	"\n"
+;
 ;------------------------------------------------------------------------------
 ; Driver function table and instance data
 ;------------------------------------------------------------------------------

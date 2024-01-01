@@ -60,6 +60,8 @@ PPK_REPEAT	.DB	0	; CURRENT REPEAT RATE
 PPK_IDLE	.DB	0	; IDLE COUNT
 PPK_WAITTO	.DW	0	; TIMEOUT WAIT LOOP COUNT (COMPUTED IN INIT)
 ;
+	.ECHO	"PPK: ENABLED\n"
+;
 ;__________________________________________________________________________________________________
 ; KEYBOARD INITIALIZATION
 ;__________________________________________________________________________________________________

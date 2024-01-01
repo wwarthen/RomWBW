@@ -42,7 +42,6 @@ export CPMDIR80=$(TOOLS)/cpm/
 TASM=$(BINDIR)/uz80as -t z80
 TASMFLAGS=
 OPENSPIN=$(BINDIR)/openspin
-BSTC=$(BINDIR)//bstc
 CPMCP=$(BINDIR)/cpmcp
 CPMCHATTR=$(BINDIR)/cpmchattr
 
@@ -115,19 +114,8 @@ CPM=$(TOOLS)/cpm/bin80/
 %.com: %.rel
 	$(ZXCC) $(CPM)/L80 -$(basename $<),$(basename $<).com/n/e
 
-ifeq ($(UNAME), Linux)
-%.eeprom: %.spin
-	$(BSTC) -e -l $<
-endif
-
-#
-# darwin bstc won't run, since mac os does not do 32 bit binaries any more
-# openspin ought to work
-#
-ifeq ($(UNAME), Darwin)
 %.eeprom: %.spin
 	$(OPENSPIN) -e $<
-endif
 
 #
 # first target is default
@@ -136,16 +124,15 @@ all:: $(OBJECTS)
 	@for dir in $(SUBDIRS) ; do \
 		$(MAKE) --directory $$dir ; \
 	done
+	rm -f /tmp/casefn.cache
 	@if [ "$(DEST)" ] && [ "$(OBJECTS)" ] ; then for file in $(filter-out $(NOCOPY),$(OBJECTS)) ; do \
 		mkdir -p $(DEST) ; \
 		echo Copying $$file to $(DEST) ; \
-		rm -f /tmp/casefn.cache ; \
 		cp $$($(CASEFN) $$file) $(DEST) ; \
 	done ; fi
 	@if [ "$(DOCDEST)" ] && [ "$(DOCS)" ] ; then for file in $(DOCS) ; do \
 		mkdir -p $(DOCDEST) ; \
 		echo Copying $$file to $(DOCDEST) ; \
-		rm -f /tmp/casefn.cache ; \
 		cp $$($(CASEFN) $$file) $(DOCDEST) ; \
 	done ; fi
 

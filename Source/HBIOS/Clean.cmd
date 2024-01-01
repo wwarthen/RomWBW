@@ -11,6 +11,7 @@ if exist *.exp del *.exp
 if exist *.tmp del *.tmp
 if exist *.mrk del *.mrk
 if exist *.sys del *.sys
+if exist *.hex del *.hex
 if exist build.inc del build.inc
 if exist font*.asm del font*.asm
 if exist build_env.cmd del build_env.cmd

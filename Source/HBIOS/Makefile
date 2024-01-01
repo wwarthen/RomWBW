@@ -6,7 +6,7 @@ MOREDIFF = game.bin hbios_rom.bin nascom.bin usrrom.bin \
 SUBDIRS =
 DEST = ../../Binary
 TOOLS =../../Tools
-OTHERS =  *.img *.rom *.com *.upd *.bin *.z80 cpm.sys zsys.sys Build.inc font*.asm *.dat hbios_env.sh
+OTHERS =  *.img *.rom *.com *.upd *.bin *.hex cpm.sys zsys.sys Build.inc font*.asm *.dat hbios_env.sh
 
 # DIFFMAKE = 1
 
@@ -24,7 +24,8 @@ endif
 
 include $(TOOLS)/Makefile.inc
 
-FONTS := font8x11c.asm font8x11u.asm font8x16c.asm font8x16u.asm font8x8c.asm font8x8u.asm fontcgac.asm fontcgau.asm
+FONTS := font8x11c.asm font8x11u.asm font8x16c.asm font8x16u.asm font8x8c.asm font8x8u.asm \
+	fontcgac.asm fontcgau.asm fontvgarcc.asm fontvgarcu.asm
 
 ifeq ($(CPUFAM),2)
 	TASM=$(BINDIR)/uz80as -t hd64180
@@ -42,12 +43,17 @@ else
 	BIOS=wbw
 endif
 
+ifeq ($(ROM_PLATFORM),S100)
+	ROMDEPS += s100mon.bin
+endif
+
 ROMNAME=${ROM_PLATFORM}_${ROM_CONFIG}
 
 # $(info DEPS=$(DEPS))
 # $(info ROM_PLATFORM=$(ROM_PLATFORM))
 # $(info ROM_CONFIG=$(ROM_CONFIG))
 # $(info ROMSIZE=$(ROMSIZE))
+# $(info RAMSIZE=$(RAMSIZE))
 # $(info ROMNAME=$(ROMNAME))
 # $(info CPUFAM=$(CPUFAM))
 # $(info TASM=$(TASM))
@@ -57,12 +63,14 @@ $(OBJECTS) : $(ROMDEPS)
 	cat romldr.bin dbgmon.bin ../ZSDOS/zsys_$(BIOS).bin >osimg_small.bin
 	if [ $(ROM_PLATFORM) != UNA ] ; then \
 		cat camel80.bin nascom.bin tastybasic.bin game.bin eastaegg.bin netboot.mod updater.bin usrrom.bin >osimg1.bin ; \
-		cat imgpad2.bin >osimg2.bin ; \
-		if [ $(ROMSIZE) -gt 0 ] ; then \
-			for f in hbios_rom.bin osimg.bin osimg1.bin osimg2.bin ; do \
-				srec_cat $$f -Binary -Crop 0 0x7FFF -Checksum_Negative_Big_Endian 0x7FFF 1 1 -o $$f -Binary ; \
-			done \
-		fi \
+		if [ $(ROM_PLATFORM) = S100 ] ; then \
+			cat s100mon.bin >osimg2.bin ; \
+		else \
+			cat imgpad2.bin >osimg2.bin ; \
+		fi ; \
+		for f in hbios_rom.bin osimg.bin osimg1.bin osimg2.bin ; do \
+			srec_cat $$f -Binary -Crop 0 0x7FFF -Checksum_Negative_Big_Endian 0x7FFF 1 1 -o $$f -Binary ; \
+		done \
 	fi
 	if [ $(ROM_PLATFORM) = UNA ] ; then \
 		cp osimg.bin $(DEST)/UNA_WBW_SYS.bin ; \
@@ -74,8 +82,8 @@ $(OBJECTS) : $(ROMDEPS)
 			cat hbios_rom.bin osimg.bin osimg1.bin osimg2.bin >$(ROMNAME).upd ; \
 			cat hbios_app.bin osimg_small.bin > $(ROMNAME).com ; \
 		else \
-			cat hbios_rom.bin osimg_small.bin > $(ROMNAME).rom ; \
-			cat hbios_rom.bin osimg_small.bin > $(ROMNAME).upd ; \
+			cat hbios_rom.bin osimg.bin osimg1.bin osimg2.bin ../RomDsk/ram$(RAMSIZE)_wbw.dat >$(ROMNAME).rom ; \
+			cat hbios_rom.bin osimg.bin osimg1.bin osimg2.bin >$(ROMNAME).upd ; \
 			cat hbios_app.bin osimg_small.bin > $(ROMNAME).com ; \
 		fi \
 	fi
@@ -87,6 +95,10 @@ font%.asm:
 
 camel80.bin:
 	cp ../Forth/$@ .
+
+s100mon.bin:
+	$(ZXCC) $(CPM)/SLR180 -s100mon/FH
+	$(ZXCC) $(CPM)/MLOAD25 -s100mon.bin=s100mon
 
 tastybasic.bin:
 	cp ../TastyBasic/src/$@ .

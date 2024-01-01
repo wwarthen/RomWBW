@@ -1,3 +1,4 @@
+;  WARNING: This code does not seem to be working on Z280.  WBW - 5/3/2023
 ;
 ;  Size-optimized LZSA2 decompressor by spke & uniabis (134 bytes)
 ;
@@ -59,8 +60,8 @@
 ;  3. This notice may not be removed or altered from any source distribution.
 ;
 
-;	#DEFINE	BACKWARD_DECOMPRESS						; uncomment for data compressed with option -b (+5 bytes, -3% speed)
-;	#DEFINE	AVOID_SELFMODIFYING_CODE					; uncomment to disallow self-modifying code (-1 byte, -4% speed)
+;	#DEFINE	BACKWARD_DECOMPRESS		; uncomment for data compressed with option -b (+5 bytes, -3% speed)
+;	#DEFINE	AVOID_SELFMODIFYING_CODE	; uncomment to disallow self-modifying code (-1 byte, -4% speed)
 
 	#IFNDEF	BACKWARD_DECOMPRESS
 
@@ -78,7 +79,7 @@
 
 		#DEFINE ADD_OFFSET \
 		#DEFCONT \ ld a,e \ sub l \ ld l,a
-		#DEFCONT \ ld a,d \ sbc h \ ld h,a						; 6*4 = 24t / 6 bytes
+		#DEFCONT \ ld a,d \ sbc h \ ld h,a	; 6*4 = 24t / 6 bytes
 
 		#DEFINE BLOCKCOPY \
 		#DEFCONT \ lddr
@@ -117,7 +118,7 @@ MatchLen:		and %00000111 \ add a,2 \ cp 9
 			call z,ExtendedCode
 
 CopyMatch:		ld c,a
-			push hl						; BC = len, DE = dest, HL = -offset, SP -> [src]
+			push hl		; BC = len, DE = dest, HL = -offset, SP -> [src]
 
 	#IFNDEF	AVOID_SELFMODIFYING_CODE
 PrevOffset		.EQU $+1 \ ld hl,0
@@ -125,8 +126,8 @@ PrevOffset		.EQU $+1 \ ld hl,0
 			push ix \ pop hl
 	#ENDIF
 			ADD_OFFSET
-			BLOCKCOPY					; BC = 0, DE = dest
-			pop hl						; HL = src
+			BLOCKCOPY	; BC = 0, DE = dest
+			pop hl		; HL = src
 
 ReadToken:	ld a,(hl) \ NEXT_HL \ push af
 		and %00011000 \ jr z,NoLiterals
@@ -162,12 +163,16 @@ ExtendedCode:	call ReadNibble \ inc a \ jr z,ExtraByte
 ExtraByte	ld a,15 \ add a,c \ add a,(hl) \ NEXT_HL \ ret nc
 		ld a,(hl) \ NEXT_HL
 		ld b,(hl) \ NEXT_HL \ ret nz
-		pop bc								; RET is not needed, because RET from ReadNibble is sufficient
+		pop bc			; RET is not needed, because RET from ReadNibble is sufficient
 
 
 ReadNibble:	ld c,a
-skipLDCA	xor a \ ex af,af' \ ret m
+skipLDCA	xor a \ nop \ ex af,af' \ ret m		; NOP for Z280 bug
 		ld a,(hl) \ or $F0 \ ex af,af'
 		ld a,(hl) \ NEXT_HL \ or $0F
 		rrca \ rrca \ rrca \ rrca \ ret
 
+; The extraneous NOP instruction above is to workaround a bug in the
+; Z280 processor where ex af,af' can copy rather than swap the flags
+; register.
+; See https://www.retrobrewcomputers.org/forum/index.php?t=msg&goto=10183&

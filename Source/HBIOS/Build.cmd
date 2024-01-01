@@ -34,6 +34,16 @@ PowerShell -ExecutionPolicy Unrestricted .\Build.ps1 %* || exit /b
 call build_env.cmd
 
 ::
+:: Start of the actual build process for a given ROM.
+::
+
+echo.
+echo ============================================================
+echo %ROMName% for Z%CPUType% CPU
+echo ============================================================
+echo.
+
+::
 :: Create a small app that is used to export key build variables of the build.
 :: Then run the app to output a file with the variables.  Finally, read the
 :: file into variables usable in this batch file.
@@ -42,12 +52,6 @@ call build_env.cmd
 tasm -t80 -g3 -dCMD hbios_env.asm hbios_env.com hbios_env.lst || exit /b
 zxcc hbios_env >hbios_env.cmd
 call hbios_env.cmd
-
-::
-:: Start of the actual build process for a given ROM.
-::
-
-echo Building %ROMSize%K ROM %ROMName% for Z%CPUType% CPU...
 
 ::
 :: UNA is a special case, check for it and jump if needed.
@@ -93,7 +97,14 @@ call :asm imgpad2 || exit /b
 
 copy /b romldr.bin + dbgmon.bin + ..\zsdos\zsys_wbw.bin + ..\cpm22\cpm_wbw.bin osimg.bin || exit /b
 copy /b ..\Forth\camel80.bin + nascom.bin + ..\tastybasic\src\tastybasic.bin + game.bin + eastaegg.bin + netboot.mod + updater.bin + usrrom.bin osimg1.bin || exit /b
-copy /b imgpad2.bin osimg2.bin || exit /b
+
+if %Platform%==S100 (
+    zxcc slr180 -s100mon/fh
+    zxcc mload25 -s100mon || exit /b
+    copy /b s100mon.com osimg2.bin || exit /b
+) else (
+    copy /b imgpad2.bin osimg2.bin || exit /b
+)
 
 copy /b romldr.bin + dbgmon.bin + ..\zsdos\zsys_wbw.bin osimg_small.bin || exit /b
 
@@ -103,10 +114,8 @@ copy /b romldr.bin + dbgmon.bin + ..\zsdos\zsys_wbw.bin osimg_small.bin || exit 
 :: should yield a result of zero.
 ::
 
-if %ROMSize% gtr 0 (
-    for %%f in (hbios_rom.bin osimg.bin osimg1.bin osimg2.bin) do (
-      "%TOOLS%\srecord\srec_cat.exe" %%f -Binary -Crop 0 0x7FFF -Checksum_Negative_Big_Endian 0x7FFF 1 1 -o %%f -Binary || exit /b
-    )
+for %%f in (hbios_rom.bin osimg.bin osimg1.bin osimg2.bin) do (
+  "%TOOLS%\srecord\srec_cat.exe" %%f -Binary -Crop 0 0x7FFF -Checksum_Negative_Big_Endian 0x7FFF 1 1 -o %%f -Binary || exit /b
 )
 
 ::
@@ -130,8 +139,8 @@ if %ROMSize% gtr 0 (
     copy /b hbios_rom.bin + osimg.bin + osimg1.bin + osimg2.bin %ROMName%.upd || exit /b
     copy /b hbios_app.bin + osimg_small.bin %ROMName%.com || exit /b
 ) else (
-    copy /b hbios_rom.bin + osimg_small.bin %ROMName%.rom || exit /b
-    copy /b hbios_rom.bin + osimg_small.bin %ROMName%.upd || exit /b
+    copy /b hbios_rom.bin + osimg.bin + osimg1.bin + osimg2.bin  + ..\RomDsk\ram%RAMSize%_wbw.dat %ROMName%.rom || exit /b
+    copy /b hbios_rom.bin + osimg.bin + osimg1.bin + osimg2.bin %ROMName%.upd || exit /b
     copy /b hbios_app.bin + osimg_small.bin %ROMName%.com || exit /b
 )
 
@@ -209,19 +218,29 @@ call Build RCZ80 skz || exit /b
 :: call Build RCZ80 duart || exit /b
 call Build RCZ80 zrc || exit /b
 call Build RCZ80 zrc_ram || exit /b
+call Build RCZ80 zrc512 || exit /b
 call Build RCZ180 ext || exit /b
 call Build RCZ180 nat || exit /b
+call Build RCZ180 z1rcc || exit /b
 call Build RCZ280 ext || exit /b
 call Build RCZ280 nat || exit /b
 call Build RCZ280 zz80mb || exit /b
-call Build RCZ280 zzrc || exit /b
+call Build RCZ280 zzrcc || exit /b
+call Build RCZ280 zzrcc_ram || exit /b
 call Build SCZ180 sc126 || exit /b
 call Build SCZ180 sc130 || exit /b
 call Build SCZ180 sc131 || exit /b
 call Build SCZ180 sc140 || exit /b
 call Build SCZ180 sc503 || exit /b
+call Build SCZ180 sc700 || exit /b
 call Build DYNO std || exit /b
 call Build UNA std || exit /b
 call Build RPH std || exit /b
+call Build Z80RETRO std || exit /b
+call Build S100 std || exit /b
+call Build DUO std || exit /b
+call Build HEATH std || exit /b
+call Build EPITX std || exit /b
+:: call Build MON std || exit /b
 
 goto :eof

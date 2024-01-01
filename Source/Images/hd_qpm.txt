@@ -22,6 +22,7 @@ d_cpm22/u0/*.* 0:
 ../../Binary/Apps/syscopy.com 0:
 ../../Binary/Apps/sysgen.com 0:
 ../../Binary/Apps/talk.com 0:
+../../Binary/Apps/htalk.com 0:
 ../../Binary/Apps/tbasic.com 0:
 ../../Binary/Apps/timer.com 0:
 ../../Binary/Apps/tune.com 0:
@@ -51,10 +52,11 @@ cpnet12/*.* 4:
 #
 # Add OS image
 #
-../CPM22/cpm_wbw.sys 0:cpm.sys
+../QPM/qpm_wbw.sys 0:qpm.sys
 #
 # Add Common Applications
 #
 Common/All/*.* 0:
 Common/CPM22/*.* 0:
 Common/SIMH/*.* 13:
+Common/UTILS/*.* 0:

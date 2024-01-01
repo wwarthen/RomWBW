@@ -115,10 +115,22 @@ SELMEM:	LD	(USRBNK),A	; Update user bank
 ;  Must preserve all Registers including Flags.
 ;  All Bank Switching MUST be done by this routine
 ;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+;
+; Parameter to BNKADJ (ADD) is set dynamically at initialization.
 
 SELBNK:	PUSH	AF		; Save regs
 SELBN0:	LD	(CURBNK),A	; Save as current bank #
-BNKADJ:	ADD	A,90H		; Adjust for HBIOS bank ids
+
+	  IF HB_DEBUG AND FALSE
+
+	CALL	PRTSTRD
+	DEFB	'[SELBNK: $'
+	CALL	PRTHEXBYTE
+	CALL	PRTSTRD
+	DEFB	']$'
+
+	  ENDIF
+
 	CALL	HBX_BNKSEL
 	POP	AF		; restore regs
 	RET
@@ -172,7 +184,7 @@ FRGETB:
 	PUSH	BC		; Save BC
 	PUSH	DE		; Save DE
 	LD	B,0FAH		; HBIOS Peek function
-	LD	D,C		; Bank in D
+	LD	D,C
 	CALL	HBX_INVOKE	; Do it
 	LD	A,E		; Value to A
 	POP	DE		; Restore DE
@@ -203,8 +215,8 @@ FRPUTB:
 	PUSH	BC		; Save BC
 	PUSH	DE		; Save DE
 	LD	B,0FBH		; HBIOS Poke function
-	LD	D,C		; Bank in D
 	LD	E,A		; Value in E
+	LD	D,C
 	CALL	HBX_INVOKE	; Do it
 	POP	DE		; Restore DE
 	POP	BC		; Restore BC

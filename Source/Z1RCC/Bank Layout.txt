@@ -1,0 +1,20 @@
+Z1RCC has no real ROM.  It has a single 512K RAM chip.  The RomWBW
+ROMless startup mode is used.
+
+The ROMless startup mode treats the entire 512KB as RAM.  The entire 
+512KB of RAM (less the top 32KB) must be preloaded by the Z1RCC CF 
+Loader.  There will be no ROM disk available under RomWBW.  There will 
+be a RAM Disk and it's initial contents will be seeded by the image 
+loaded by the CF Loader.
+
+Bank		Contents	Description
+--------	--------	-----------
+0x0		BIOS		HBIOS Bank (operating)
+0x1		IMG0		ROM Loader, Monitor, ROM OSes
+0x2		IMG1		ROM Applications
+0x3		IMG2		Reserved
+0x4-0xB		RAMD		RAM Disk Banks
+0xC		BUF		OS Buffers (CP/M3)
+0xD		AUX		Aux Bank (CP/M 3, BPBIOS, etc.)
+0xE		USR		User Bank (CP/M TPA, etc.)
+0xF		COM		Common Bank, Upper 32KB

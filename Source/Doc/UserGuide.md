@@ -11,11 +11,11 @@ companion documents you should refer to as appropriate:
   of RomWBW.  It includes a reference for the RomWBW HBIOS API
   functions.
 
-* $doc_apps$ is a reference for the OS-hosted proprietary command
-  line applications that were created to enhance RomWBW.
-
 * $doc_romapps$ is a reference for the ROM-hosted applications provided
   with RomWBW including the monitor, programming languages, etc.
+
+* $doc_apps$ is a reference for the OS-hosted proprietary command
+  line applications that were created to enhance RomWBW.
 
 * $doc_catalog$ is a reference for the contents of the disk images
   provided with RomWBW.  It is somewhat out of date at this time.
@@ -43,6 +43,33 @@ find this document far too basic.  Others will find it lacking in many
 areas.  I am doing my best and encourage you to provide constructive
 feedback.
 
+`\clearpage`{=latex}
+
+#### Conventions
+
+##### Size Suffixes
+
+Within this document and in RomWBW in general, the use of size
+suffixes KB, MB, GB, and TB refer to the binary variant as shown
+below.  The modern suffixes (KiB, MiB, etc.) are not used here because
+they were not prevalent during the time that the RomWBW OSes were
+used.  This keeps all of RomWBW and associated applications consistent.
+
+| Suffix     | Value     | Meaning                                |
+|------------|-----------|----------------------------------------|
+| KB         | 1024      | 1,024 bytes                            |
+| MB         | 1024^2^   | 1,048,576 bytes                        |
+| GB         | 1024^3^   | 1,073,741,824 bytes                    |
+| TB         | 1024^4^   | 1,099,511,627,776 bytes                |
+
+##### Links and URLs
+
+Many of the references in this document to Internet addresses (URLs)
+do not provide the address in the text.  However, these links are
+embedded and "clickable" within the documents.  Your PDF viewer should
+highlight these links in some manner (typically an alternate color
+or an underline).
+
 # Overview
 
 RomWBW software provides a complete, commercial quality 
@@ -52,14 +79,23 @@ A wide variety of platforms are supported including those
 produced by these developer communities:
 
 * [RetroBrew Computers](https://www.retrobrewcomputers.org)
-* [RC2014](https://rc2014.co.uk), [RC2014-Z80](https://groups.google.com/g/rc2014-z80)
-* [retro-comp](https://groups.google.com/forum/#!forum/retro-comp)
+  (<https://www.retrobrewcomputers.org>)
+* [RC2014](https://rc2014.co.uk) (<https://rc2014.co.uk>), \
+  [RC2014-Z80](https://groups.google.com/g/rc2014-z80)
+  (<https://groups.google.com/g/rc2014-z80>)
+* [Retro Computing](https://groups.google.com/g/retro-comp)
+  (<https://groups.google.com/g/retro-comp>)
 * [Small Computer Central](https://smallcomputercentral.com/)
+  (<https://smallcomputercentral.com/>)
+
+A complete list of the currently supported platforms is found in the
+[Installation] section.
 
 General features include:
 
+* Z80 Family CPUs including Z80, Z180, and Z280
 * Banked memory services for several banking designs
-* Disk drivers for RAM, ROM, Floppy, IDE, CF, and SD
+* Disk drivers for RAM, ROM, Floppy, IDE ATA/ATAPI, CF, SD, USB, Zip, Iomega
 * Serial drivers including UART (16550-like), ASCI, ACIA, SIO
 * Video drivers including TMS9918, SY6545, MOS8563, HD6445
 * Keyboard (PS/2) drivers via VT8242 or PPI interfaces
@@ -76,12 +112,12 @@ ROM firmware itself:
 * ROM BASIC (Nascom BASIC and Tasty BASIC)
 * ROM Forth
 
-A dynamic disk drive letter assignment mechanism allows mapping
-operating system drive letters to any available disk media.
-Additionally, mass storage devices (IDE Disk, CF Card, SD Card) support
-the use of multiple slices (up to 256 per device). Each slice contains
-a complete CP/M filesystem and can be mapped independently to any
-drive letter. This overcomes the inherent size limitations in legacy
+A dynamic disk drive letter assignment mechanism allows mapping 
+operating system drive letters to any available disk media. 
+Additionally, mass storage devices (IDE Disk, CF Card, SD Card, etc.) 
+support the use of multiple slices (up to 256 per device). Each slice 
+contains a complete CP/M filesystem and can be mapped independently to 
+any drive letter. This overcomes the inherent size limitations in legacy
 OSes and allows up to 2GB of accessible storage on a single device.
 
 The pre-built ROM firmware images are generally suitable for most
@@ -103,7 +139,7 @@ By design, RomWBW isolates all of the hardware specific functions in
 the ROM chip itself.  The ROM provides a hardware abstraction layer
 such that all of the operating systems and applications on a disk
 will run on any RomWBW-based system.  To put it simply, you can take
-a disk (or CF/SD Card) and move it between systems transparently.
+a disk (or CF/SD/USB Card) and move it between systems transparently.
 
 A tool is provided that allows you to access a FAT-12/16/32 filesystem. 
 The FAT filesystem may be coresident on the same disk media as RomWBW 
@@ -114,18 +150,19 @@ OSes such as Windows, MacOS, and Linux very easy.
 
 ## Acquiring RomWBW
 
-The [RomWBW Repository](https://github.com/wwarthen/RomWBW) on GitHub is
-the official distribution location for all project source and
-documentation.  The fully-built distribution releases are available on
-the [RomWBW Releases Page](https://github.com/wwarthen/RomWBW/releases)
-of the repository.  On this page, you will normally see a Development
-Snapshot as well as recent stable releases. Unless you have a specific
-reason, I suggest you stick to the most recent stable release. Expand
-the "Assets" drop-down for the release you want to download, then select
-the asset named RomWBW-vX.X.X-Package.zip. The Package asset includes
-all pre-built ROM and Disk images as well as full source code. The other
-assets contain only source code and do not have the pre-built ROM or
-disk images.
+The [RomWBW Repository](https://github.com/wwarthen/RomWBW)
+(<https://github.com/wwarthen/RomWBW>) on GitHub is the official 
+distribution location for all project source and documentation.  The 
+fully-built distribution releases are available on the
+[RomWBW Releases Page](https://github.com/wwarthen/RomWBW/releases)
+(<https://github.com/wwarthen/RomWBW/releases>) of the repository.  On 
+this page, you will normally see a Development Snapshot as well as 
+recent stable releases. Unless you have a specific reason, I suggest you
+ stick to the most recent stable release. Expand the "Assets" drop-down 
+for the release you want to download, then select the asset named 
+RomWBW-vX.X.X-Package.zip. The Package asset includes all pre-built ROM 
+and Disk images as well as full source code. The other assets contain 
+only source code and do not have the pre-built ROM or disk images.
 
 All source code and distributions are maintained on GitHub. Code
 contributions are very welcome.
@@ -137,12 +174,12 @@ a set of directories. Each of these directories has its own
 ReadMe.txt file describing the contents in detail. In summary, these
 directories are:
 
-| **Directory**   | **Description**                                                                                                                                                    |
-|-----------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Binary**      | The final output files of the build process are placed here. Most importantly, the ROM images with the file names ending in ".rom" and disk images ending in .img. |
-| **Doc**         | Contains various detailed documentation, both RomWBW specifically as well as the operating systems and applications.                                               |
-| **Source**      | Contains the source code files used to build the software and ROM images.                                                                                          |
-| **Tools**       | Contains the programs that are used by the build process or that may be useful in setting up your system.                                                          |
+| **Directory**            | **Description**                                                                                                                                                    |
+|--------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Binary**               | The final output files of the build process are placed here. Most importantly, the ROM images with the file names ending in ".rom" and disk images ending in .img. |
+| **Doc**                  | Contains various detailed documentation, both RomWBW specifically as well as the operating systems and applications.                                               |
+| **Source**               | Contains the source code files used to build the software and ROM images.                                                                                          |
+| **Tools**                | Contains the programs that are used by the build process or that may be useful in setting up your system.                                                          |
 
 ## Installation
 
@@ -151,6 +188,12 @@ just need to program your ROM with the correct ROM image from the RomWBW
 distribution.  Subsequently, you can write disk images on your disk
 drives (IDE disk, CF Card, SD Card, etc.) which then provides even more
 functionality.
+
+**NOTE:** The pre-built ROM images distributed with RomWBW are based on
+the default system configurations as determined by the hardware
+provider/designer.  This document does not provide hardware
+construction or configuration information.  Please contact your hardware
+provider/designer as needed.
 
 The pre-built ROM images will automatically detect and support typical
 devices for their corresponding platform including serial ports, video
@@ -164,43 +207,62 @@ Depending on how you got your hardware, you may have already been
 provided with a pre-programmed ROM chip. If so, use that initially.
 Otherwise, you will need to use a ROM programmer to initially program
 your ROM chip. Please refer to the documentation that came with your ROM
-programmer for more information. Once you have a running RomWBW system,
-you can generally update your ROM to a newer version in-situ with the
-included ROM Flashing tool (Will Sowerbutts' FLASH application) as
-described in the Upgrading section of this document.
+programmer for more information.
 
 The Binary directory of the distribution contains the pre-built ROM and
-disk images. The ROM image files all end in ".rom". Based on the table
-below, **carefully** pick the appropriate ROM image for your hardware.
+disk images.  Refer to [Supported Platforms] below to identify the
+correct ROM image for your system.
 
-| **Description**                                                | **Bus** | **ROM Image File** | **Baud Rate** |
-|----------------------------------------------------------------|---------|--------------------|--------------:|
-| [RetroBrew Z80 SBC]^1^                                         | ECB     | SBC_std.rom        | 38400         |
-| [RetroBrew Z80 SimH]^1^                                        | -       | SBC_simh.rom       | 38400         |
-| [RetroBrew N8 Z180 SBC]^1^ (date code >= 2312)                 | ECB     | N8_std.rom         | 38400         |
-| [Zeta Z80 SBC]^2^, ParPortProp                                 | -       | ZETA_std.rom       | 38400         |
-| [Zeta V2 Z80 SBC]^2^, ParPortProp                              | -       | ZETA2_std.rom      | 38400         |
-| [Mark IV Z180 SBC]^3^                                          | ECB     | MK4_std.rom        | 38400         |
-| [RCBus Z80 CPU Module]^4^, 512K RAM/ROM                        | RCBus   | RCZ80_std.rom      | 115200        |
-| [RCBus Z80 CPU Module]^4^, 512K RAM/ROM, KIO                   | RCBus   | RCZ80_kio.rom      | 115200        |
-| [RCBus Z180 CPU Module]^4^ w/ external banking                 | RCBus   | RCZ180_ext.rom     | 115200        |
-| [RCBus Z180 CPU Module]^4^ w/ native banking                   | RCBus   | RCZ180_nat.rom     | 115200        |
-| [RCBus Z280 CPU Module]^4^ w/ external banking                 | RCBus   | RCZ180_ext.rom     | 115200        |
-| [RCBus Z280 CPU Module]^4^ w/ native banking                   | RCBus   | RCZ180_nat.rom     | 115200        |
-| [Easy Z80 SBC]^2^                                              | RCBus   | RCZ80_easy.rom     | 115200        |
-| [Tiny Z80 SBC]^2^                                              | RCBus   | RCZ80_tiny.rom     | 115200        |
-| [Z80-512K CPU/RAM/ROM Module]^2^                               | RCBus   | RCZ80_skz.rom      | 115200        |
-| [Small Computer SC126 Z180 SBC]^5^                             | BP80    | SCZ180_sc126.rom   | 115200        |
-| [Small Computer SC130 Z180 SBC]^5^                             | RCBus   | SCZ180_sc130.rom   | 115200        |
-| [Small Computer SC131 Z180 Pocket Computer]^5^                 | -       | SCZ180_sc131.rom   | 115200        |
-| [Small Computer SC140 Z180 CPU Module]^5^                      | Z50     | SCZ180_sc140.rom   | 115200        |
-| [Small Computer SC503 Z180 CPU Module]^5^                      | Z50     | SCZ180_sc503.rom   | 115200        |
-| [Dyno Z180 SBC]^6^                                             | Dyno    | DYNO_std.rom       | 38400         |
-| [Nhyodyne Z80 MBC]^1^                                          | MBC     | MBC_std.rom        | 38400         |
-| [Rhyophyre Z180 SBC]^1^                                        | -       | RPH_std.rom        | 38400         |
-| [Z80 ZRC CPU Module]^7^                                        | RCBus   | RCZ80_zrc.rom      | 115200        |
-| [Z280 ZZRCC CPU Module]^7^                                     | RCBus   | RCZ280_zzrc.rom    | 115200        |
-| [Z280 ZZ80MB SBC]^7^                                           | RCBus   | RCZ280_zz80mb.rom  | 115200        |
+Once you have a running RomWBW system, you can generally update your ROM
+to a newer version in-situ with the included ROM Flashing tool (Will 
+Sowerbutts' FLASH application) as described in the [Upgrading] chapter
+of this document.
+
+## Supported Platforms
+
+The table below summarizes the hardware platforms currently supported
+by RomWBW along with the standard pre-built ROM image(s).  RomWBW does
+allow for the creation of ROM images with custom configurations.  This
+is discussed in [Customizing RomWBW].
+
+| **Description**                                                | **Bus** | **ROM Image File**    | **Baud Rate** |
+|----------------------------------------------------------------|---------|-----------------------|--------------:|
+| [RetroBrew Z80 SBC]^1^                                         | ECB     | SBC_std.rom           | 38400         |
+| [RetroBrew Z80 SimH]^1^                                        | -       | SBC_simh.rom          | 38400         |
+| [RetroBrew N8 Z180 SBC]^1^ (date code >= 2312)                 | ECB     | N8_std.rom            | 38400         |
+| [Zeta Z80 SBC]^2^, ParPortProp                                 | -       | ZETA_std.rom          | 38400         |
+| [Zeta V2 Z80 SBC]^2^, ParPortProp                              | -       | ZETA2_std.rom         | 38400         |
+| [Mark IV Z180 SBC]^3^                                          | ECB     | MK4_std.rom           | 38400         |
+| [RCBus Z80 CPU Module]^4^, 512K RAM/ROM                        | RCBus   | RCZ80_std.rom         | 115200        |
+| [RCBus Z80 CPU Module]^4^, 512K RAM/ROM, KIO                   | RCBus   | RCZ80_kio.rom         | 115200        |
+| [RCBus Z180 CPU Module]^4^ w/ external banking                 | RCBus   | RCZ180_ext.rom        | 115200        |
+| [RCBus Z180 CPU Module]^4^ w/ native banking                   | RCBus   | RCZ180_nat.rom        | 115200        |
+| [RCBus Z280 CPU Module]^4^ w/ external banking                 | RCBus   | RCZ180_ext.rom        | 115200        |
+| [RCBus Z280 CPU Module]^4^ w/ native banking                   | RCBus   | RCZ180_nat.rom        | 115200        |
+| [Easy Z80 SBC]^2^                                              | RCBus   | RCZ80_easy.rom        | 115200        |
+| [Tiny Z80 SBC]^2^                                              | RCBus   | RCZ80_tiny.rom        | 115200        |
+| [Z80-512K CPU/RAM/ROM Module]^2^                               | RCBus   | RCZ80_skz.rom         | 115200        |
+| [Small Computer SC126 Z180 SBC]^5^                             | BP80    | SCZ180_sc126.rom      | 115200        |
+| [Small Computer SC130 Z180 SBC]^5^                             | RCBus   | SCZ180_sc130.rom      | 115200        |
+| [Small Computer SC131 Z180 Pocket Computer]^5^                 | -       | SCZ180_sc131.rom      | 115200        |
+| [Small Computer SC140 Z180 CPU Module]^5^                      | Z50     | SCZ180_sc140.rom      | 115200        |
+| [Small Computer SC503 Z180 CPU Module]^5^                      | Z50     | SCZ180_sc503.rom      | 115200        |
+| [Small Computer SC700 Z180 CPU Module]^5^                      | RCBus   | SCZ180_sc700.rom      | 115200        |
+| [Dyno Z180 SBC]^6^                                             | Dyno    | DYNO_std.rom          | 38400         |
+| [Nhyodyne Z80 MBC]^1^                                          | MBC     | MBC_std.rom           | 38400         |
+| [Rhyophyre Z180 SBC]^1^                                        | -       | RPH_std.rom           | 38400         |
+| [Z80 ZRC CPU Module]^7^                                        | RCBus   | RCZ80_zrc.rom         | 115200        |
+| [Z80 ZRC CPU Module]^7^ ROMless                                | RCBus   | RCZ80_zrc_ram.rom     | 115200        |
+| [Z80 ZRC512 CPU Module]^7^                                     | RCBus   | RCZ80_zrc512.rom      | 115200        |
+| [Z180 Z1RCC CPU Module]^7^                                     | RCBus   | RCZ180_z1rcc.rom      | 115200        |
+| [Z280 ZZRCC CPU Module]^7^                                     | RCBus   | RCZ280_zzrcc.rom      | 115200        |
+| [Z280 ZZRCC CPU Module]^7^ ROMless                             | RCBus   | RCZ280_zzrcc_ram.rom  | 115200        |
+| [Z280 ZZ80MB SBC]^7^                                           | RCBus   | RCZ280_zz80mb.rom     | 115200        |
+| [Z80-Retro SBC]^8^                                             | -       | Z80RETRO_std.rom      | 38400         |
+| [S100 Computers Z180]^9^                                       | S100    | S100_std.rom          | 57600         |
+| [Duodyne Z80 System]^1^                                        | Duo     | DUO_std.rom           | 38400         |
+| [Heath H8 Z80 System]^10^                                      | H8      | HEATH_std.rom         | 115200        |
+| [EP Mini-ITX Z180]^11^                                         | RCBus?  | EPITX_std.rom         | 115200        |
 
 | ^1^Designed by Andrew Lynch
 | ^2^Designed by Sergey Kiselev
@@ -209,6 +271,10 @@ below, **carefully** pick the appropriate ROM image for your hardware.
 | ^5^Designed by Stephen Cousins
 | ^6^Designed by Steve Garcia
 | ^7^Designed by Bill Shen
+| ^8^Designed by Peter Wilson
+| ^9^Designed by John Monahan
+| ^10^Designed by Les Bird
+| ^11^Designed by Alan Cox
 
 RCBus refers to Spencer Owen's RC2014 bus specification and derivatives
 including RC26, RC40, RC80, and BP80.
@@ -236,8 +302,8 @@ of the ROM chip (address 0).  Most of the pre-built images are
 program the image into the first 512KB of the ROM for now.
 
 Initially, don't worry about trying to write a disk image to any disk 
-(or CF/SD) devices you have.  This will be covered later.  You will be 
-able to boot and check out your system with just the ROM.
+(or CF/SD/USB) devices you have.  This will be covered later.  You will 
+be able to boot and check out your system with just the ROM.
 
 Connect a serial terminal or computer with terminal emulation software 
 to the primary serial port of your CPU board. You may need to refer to 
@@ -245,7 +311,8 @@ your hardware provider's documentation for details. A null-modem
 connection may be required. Set the baud rate as indicated in the table 
 above. Set the line characteristics to 8 data bits, 1 stop bit, no 
 parity, and no flow control. If possible, select ANSI or VT-100 terminal
-emulation.
+emulation.  Hardware flow control is not required for terminal
+operation, but may be necessary for [Serial Port Transfers].
 
 RomWBW will automatically attempt to detect and support typical add-on
 components for each of the systems supported. More information on the
@@ -321,7 +388,8 @@ with the system.
 At the Boot Loader prompt, you can type `H <enter>` for help.  You
 can type `L <enter>` to list the available built-in ROM applications.
 If your terminal supports ANSI escape sequences, you can try the
-'G' command to play a simple on-screen game.
+'P' command to play a simple on-screen game.  Instructions for the
+game are found in $doc_romapps$.
 
 If all of this seems fine, your ROM has been successfully programmed.
 See the [Boot Loader Operation] section of this document for further
@@ -349,7 +417,7 @@ example, the platform is the RCBus running a configuration named
 There are 0 memory wait states and 1 I/O wait state.  Z80 interrupt mode
 2 is active and the bank memory manager is type "Z2" which is standard
 for RCBus.  The system has 512KB of ROM total and 512KB of RAM total.
-Finally, a verification of the checksum of the critical ROM banks is
+Finally, a verification of the checksums of the critical ROM banks is
 shown (all 4 should be 00).
 
 RomWBW attempts to detect the running configuration of the
@@ -464,7 +532,8 @@ system supports up to two drives, but there is only one actual drive
 attached. A unit number is assigned to all available devices
 regardless of whether they have actual media installed at boot time.
 
-Note that Character Unit 0 is normally the initial system console.
+Note that Character Unit 0 is the initial system console unless modified
+in a customized ROM image.
 
 If your system has an RTC/NVRAM device, it will not be listed in the
 unit summary table. Since only a single RTC/NVRAM device can exist in
@@ -480,7 +549,9 @@ select and launch a desired application or operating system.  It also
 has the ability to configure some aspects of system operation.
 
 After starting your system, following the hardware initialization, you
-will see the RomWBW Boot Loader prompt.  Below is an example:
+will see the RomWBW Boot Loader prompt.  Below is an example.  Note
+that the text preceding "Boot Loader" will vary and identifies your
+specific system and configuration.
 
 ```
 Mark IV [MK4_wbw] Boot Loader
@@ -563,12 +634,19 @@ prompt:
 | Play              | A simple video game (requires ANSI terminal emulation)         |
 | Network&nbsp;Boot | Boot system via Wiznet MT011 device                            |
 | Flash&nbsp;Update | Upload and flash a new ROMWBW image using xmodem               |
+| User App          | User written application placeholder                           |
+
+The User App is provided as a way to access a custom written
+ROM module.  In the pre-built ROMs, selecting User App will just
+return to the Boot Loader menu.  If you are interested in creating a
+custom application to run here, review the "usrrom.asm" file in the
+Source/HBIOS folder of the distribution.
 
 Each of the ROM Applications is documented in $doc_romapps$.  Some
 of the applications (such as BASIC) also have their own independent
 manual in the Doc directory of the distribution.  The OSes included
 in the ROM (CP/M 2.2 & Z-System) are described in the Operating Systems
-section of this document.
+chapter of this document.
 
 In general, the command to exit any of these applications and restart
 the system is `BYE`. The exceptions are the Monitor which uses `B` and
@@ -585,6 +663,14 @@ technique is useful when:
 
 The RAM disk and ROM disk drives will be available even if you have
 no physical disk devices attached to your system.
+
+Booting an operating system from ROM is not intended as a way to use
+your operating system on a long-term basis.  The ROM disk has only
+a small subset of the operating system files.  Additionally, you
+cannot easily customize your ROM disk because you cannot write to it.
+For any significant use of an operating system, you should boot directly
+to the disk/slice that contains the complete operating system.  This
+is described in the next section.
 
 ## Starting Operating Systems from Disk
 
@@ -609,7 +695,7 @@ has been assigned to the disk and slice you selected to boot.
 
 If you receive the error message "Disk not bootable!", you have
 either failed to properly initialize the disk and slice requested
-or you have selected the wrong disk/slice.
+or you have selected an invalid/unavailable disk/slice.
 
 The following example shows a disk boot into the first slice of disk
 unit 4 which happens to be the CP/M 2.2 operating system on this disk.
@@ -685,41 +771,70 @@ drive assignments during initialization.  In this case, you can use the
 The Boot Loader simply launches whatever is in the disk unit/slice you
 have specified.  It does not know what operating system is at that
 location.  The layout of operating systems on disk media is described in
-the Using Disks section of this document.
+the [Disk Images] section of this document.
+
+### Auto-Submit Batch Files
+
+All of the operating systems supplied with RomWBW have the ability to
+execute a "batch" of commands by creating a batch submission file
+containing the commands to be executed.  The specifics of using
+batch files in a specific operating system is covered in its specific
+documentation.
+
+At boot, the operating system will look for a specific batch file 
+(`PROFILE.SUB` for CP/M 2.2 and 3) on the boot drive and execute that 
+batch file automatically.  This allows you to automatically customize 
+your operating system with any commands desired at boot.  CP/M 2.2 did 
+not originally have the ability to automatically excute a batch file at 
+boot, but the CBIOS in RomWBW has added this capability.
+
+Since RomWBW can utilize many disk slices, it is very easy to create 
+slices for specific workflows (editing, software development, games, 
+etc.). You can then just boot to the slice that is optimized for the 
+task you want to perform.
 
 ## System Management
 
-### Listing Disk Device Inventory
+### Listing Device Inventory
 
-The disk device units available in your system are listed in the
+The device units available in your system are listed in the
 boot messages.  However, if that list has scrolled off of your
 screen, you can use the 'D' command to display a list of them at
 any time from the Boot Loader prompt.
 
 ```
-Boot [H=Help]: d
-
-Disk Devices:
-
-  Disk Unit 0 on MD0:
-  Disk Unit 1 on MD1:
-  Disk Unit 2 on FD0:
-  Disk Unit 3 on FD1:
-  Disk Unit 4 on IDE0:
-  Disk Unit 5 on IDE1:
-  Disk Unit 6 on IDE2:
-  Disk Unit 7 on IDE3:
-  Disk Unit 8 on IDE4:
-  Disk Unit 9 on IDE5:
-  Disk Unit 10 on SD0:
-  Disk Unit 11 on PRPSD0:
+Unit        Device      Type              Capacity/Mode
+----------  ----------  ----------------  --------------------
+Char 0      ASCI0:      RS-232            38400,8,N,1
+Char 1      ASCI1:      RS-232            38400,8,N,1
+Char 2      UART0:      RS-232            38400,8,N,1
+Char 3      UART1:      RS-232            38400,8,N,1
+Char 4      UART2:      RS-232            38400,8,N,1
+Char 5      UART3:      RS-232            38400,8,N,1
+Char 6      TERM0:      Terminal          Video 0,ANSI
+Char 7      PRPCON0:    Terminal          Term Module,ANSI
+Disk 0      MD0:        RAM Disk          352KB,LBA
+Disk 1      MD1:        Flash Drive       384KB,LBA
+Disk 2      FD0:        Floppy Disk       3.5",DS/HD,CHS
+Disk 3      FD1:        Floppy Disk       3.5",DS/HD,CHS
+Disk 4      IDE0:       CompactFlash      3815MB,LBA
+Disk 5      IDE1:       Hard Disk         --
+Disk 6      IDE2:       CompactFlash      3823MB,LBA
+Disk 7      IDE3:       Hard Disk         --
+Disk 8      IDE4:       Hard Disk         --
+Disk 9      IDE5:       Hard Disk         --
+Disk 10     SD0:        SD Card           --
+Disk 11     PRPSD0:     SD Card           15193MB,LBA
+Video 0     TMS0:       CRT               Text,40x24
+Sound 0     SND0:       AY-3-8910         3+1 CHANNELS
 ```
 
 ### Rebooting the System
 
 The 'R' command within the Boot Loader performs a software reset of
-the system.  It is the software equivalent of pressing the reset
-button.
+the system.  The system will perform a startup just like powering
+up or pressing the hardware reset button (although the hardware is
+not physically reset).
 
 There is generally no need to do this, but it can be convenient when
 you want to see the boot messages again or ensure your system is in
@@ -782,11 +897,60 @@ The use of diagnostic levels above 4 are really intended only for
 software developers.  I do not recommend changing this under
 normal circumstances.
 
+## Front Panel
+
+RomWBW supports the concept of a simple front panel.  The following 
+image is a conceptual view of such a front panel.  If your system has a 
+front panel, it should look similar to the [RomWBW Front Panel](#panel).
+
+![RomWBW Front Panel](Graphics/Panel){#panel width=50% }
+
+The LEDs in the top row of the panel are used for multiple purposes.
+They are initially used to display the progress of the
+system boot.  This may help in diagnosing a hardware or configuration
+issue in a system that does not progress far enough to display text
+output on the console.  The meaning of the LEDs is:
+
+|            |                              |
+|------------|------------------------------|
+| `O-------` | System Boot has started      |
+| `OO------` | Common RAM bank activated    |
+| `OOO-----` | HBIOS transitioned to RAM    |
+| `OOOO----` | Basic initialization done    |
+| `OOOOO---` | CPU detection complete       |
+| `OOOOOO--` | System timer configured      |
+| `OOOOOOO-` | Pre-console device init done |
+| `OOOOOOOO` | Console activation           |
+
+Once the system has booted, the LEDs are used to indicate disk device
+activity.  Each LED numbered 7-0 represents disk units 7-0.  As each
+disk device performs I/O, the LED will light.
+
+The second row of the front panel is composed of switches that allow
+you to control a few aspects of the system startup.
+
+The first two switches affect the device used as the console initially.
+Setting the CRT/Serial switch will cause the system to boot directly 
+to an attached CRT device (if available).  Setting the Pri/Sec switch 
+will cause the system to boot to the secondary Serial or CRT device 
+(depending on the setting of the first switch).
+
+The final six switches allow you to cause the system to automatically
+boot into a desired function.  The Auto/Menu switch must be set to
+enable this, otherwise the normal ROM Loader prompt will be used.
+If the Disk/ROM switch is not set, then you can use the last 3
+switches to select a ROM app to auto-start.  If the Disk/ROM switch is
+set, then the system will attempt a disk boot based on the following
+switches.  The Floppy/Hard switch can be used to boot to a Floppy or
+Hard Disk.  In either case, the first Floppy or Hard Disk will be used
+for the boot.  If a Hard Disk boot is selected, then the last three
+switches can be used to select any of the first 8 slices.
+
 # Disk Management
 
 The systems supported by RomWBW all have the ability to use persistent
 disk media. A wide variety of disk devices are supported including
-floppy drives, hard disks, CF Cards, and SD Cards.  RomWBW also
+floppy drives, hard disks, CF Cards, SD Cards, etc.  RomWBW also
 supports the use of extra RAM and ROM memory as pseudo-disk devices.
 
 RomWBW supports a variety of storage devices which will be discussed
@@ -795,7 +959,7 @@ in more detail later.
 * ROM Disk
 * RAM Disk
 * Floppy Disk
-* Hard Disk (includes CF Cards and SD Cards)
+* Hard Disk (includes CF Cards, SD Cards, USB Drives, etc.)
 
 We will start by discussing each of these types of storage devices and
 how to prepare them so files can be stored on them.  Subsequently, we
@@ -828,10 +992,10 @@ Once your system has working disk devices, they will be accessible
 from any operating system you choose to run.  Disk storage is available
 whether you boot your OS from ROM or from the disk media itself.
 
-Referring back to the Boot Loader section on "Launching from ROM", you
-could start CP/M 2.2 using the 'C' command.  As the operating system
-starts up, you should see a list of drive letters assigned to the disk
-media you have installed. Here is an example of this:
+Referring back to [Starting Applications from ROM], you could start CP/M
+2.2 using the 'C' command.  As the operating system starts up, you 
+should see a list of drive letters assigned to the disk media you have 
+installed. Here is an example of this:
 
 ```
 Configuring Drives...
@@ -843,7 +1007,7 @@ Configuring Drives...
 ```
 
 You will probably see more drive letters than this. The drive letter
-assignment process is described below in the Drive Letter Assignment
+assignment process is described below in the [Drive Letter Assignment]
 section. Be aware that RomWBW will only assign drive letters to disk
 interfaces that actually have media in them. If you do not see drive
 letters assigned as expected, refer to the prior system boot messages
@@ -856,7 +1020,7 @@ interface like IDE0. This is important as it is telling you what each
 drive letter refers to. Also notice that mass storage disks (like IDE)
 will normally have multiple drive letters assigned. The extra drive
 letters refer to additional "slices" on the disk. The concept of slices
-is described below in the Slices section.
+is described below in the [Slices] section.
 
 ## Drive Letter Assignment
 
@@ -908,16 +1072,24 @@ Drives E: thru L: have been assigned to the IDE0 hard disk device.  The
 4 entries for IDE0 are referring to 4 slices on that disk.  Slices are
 discussed later.
 
-The drive letter assignments **do not** change during an OS session
-unless you use the `ASSIGN` command yourself to do it. Additionally,
-the assignments at boot will stay the same on each boot as long as you
-do not make changes to your hardware configuration. Note that the
-assignments **are** dependent on the media currently inserted in hard
-disk drives. So, notice that if you insert or remove an SD Card or CF
-Card, the drive assignments will change. Since drive letter
-assignments can change, you must be careful when doing destructive
-things like using `CLRDIR` to make sure the drive letter you use is
-referring to the desired media.
+**WARNING**: Drive letter assignments do **not** ensure that the slice
+referenced by the drive letter actually fits on the media you are using.
+For example, a typical 64MB CF Card (which is typically a bit smaller
+than 64MB) will only fit 7 slices.  At startup, you will typically see
+8 drive letters assigned to the CF Card.  Attempting to access the
+last drive letter will result in a "no disk" error from the operating
+system.
+
+The drive letter assignments **do not** change during an OS session 
+unless you use the `ASSIGN` command yourself to do it. Additionally, the
+ assignments at boot will stay the same on each boot as long as you do 
+not make changes to your hardware configuration. Note that the 
+assignments **are** dependent on the media currently inserted in hard 
+disk drives when the operating system is started. So, notice that if you
+ insert or remove an SD Card, CF Card or USB Drive, the drive 
+assignments will change. Since drive letter assignments can change, you 
+must be careful when doing destructive things like using `CLRDIR` to 
+make sure the drive letter you use is referring to the desired media.
 
 When performing a ROM boot of an operating system, note that A: will
 be your RAM disk and B: will be your ROM disk. When performing a disk
@@ -926,12 +1098,76 @@ rest of the drive letters will be offset to accommodate this. This is
 done because most legacy operating systems expect that A: will be the
 boot drive.
 
+### Default Drive Letter Assignment
+
+As shown above, when an operating system is booted, RomWBW will 
+automatically assign drive letters to physical disk devices.  The 
+assignment process varies depending on: 1) the drive/slice you choose to
+boot from, and 2) the number and type of physical drives in your 
+system.
+
+If you boot an operating system from ROM, then the first two drive
+letters will be assigned to your RAM disk (A:) and your ROM disk (B:).
+It may seem odd that the RAM disk is assigned to A: in this case.  The
+reason for this is to accommodate certain functions that require that A:
+be a writable disk drive.  For example, A: **must** be writable in order
+to submit batch files.
+
+If you boot to a physical disk device, then the first drive letter (A:) 
+will be assigned to the disk/slice that you chose to boot from.  The A: 
+drive letter is considered special by most operating systems and is 
+automatically used in some cases.  By making the selected disk/slice the
+A: drive, you can setup different disks/slices for specific uses and 
+just boot to it.
+
+After the first drive letter is assigned (as well as the second drive 
+letter in the case of a ROM boot), RomWBW will assign additional drive 
+letters based on the disk drives in the system.  Additional drive 
+letters will be assigned in the following order:
+
+- RAM Disk
+- ROM Disk
+- Floppy Disk(s)
+- Hard Disk(s)
+
+If a disk/slice was already assigned as the A: (or B:) drive letter, 
+then it will not be assigned again.
+
+In the case of floppy, RAM, and ROM disks, a single drive letter will be
+assigned to each physical disk (even if there is no disk media in the 
+drive).
+
+In the case of hard disks, 1-8 drive letters will be assigned to the
+initial 1-8 slices of the disk drive.  The number of drive letters
+assigned to each hard disk depends on the number of hard disks in the
+system:
+
+- 1 Hard Disk: 8 drive letters (slices)
+- 2 Hard Disks: 4 drive letters (slices) per disk
+- 3+ Hard Disks: 2 drive letters (slices) per disk
+
+This somewhat complicated algorithm is used to try and maximize the
+limited number of operating system drive letters available (16) to
+the available disk devices as evenly as possible.
+
+Note that for hard disk devices, drive letters will only be assigned
+to disk devices that actually contain media.  So, for example, if you
+have an SD Card slot in your system, but it has no SD Card inserted, then
+no drive letters will be assigned to it.
+
+Since drive letter assignments are easily changed at any time using the 
+`ASSIGN` command, you can customize your assignments as desired after 
+starting the operating system.  Even better, you can use an auto-submit 
+batch file to customzie the assignments at startup without any user 
+intervention.
+
 ## ROM & RAM Disks
 
 A typical RomWBW system has 512KB of ROM and 512KB of RAM.  Some
 portions of each are dedicated to loading and running applications
 and operating system.  The space left over is available for an
-operating system to use as a pseudo-disk device.
+operating system to use as a pseudo-disk device (ROM Disk and RAM
+Disk).
 
 The RAM disk provides a small CP/M filesystem that you can use for the
 temporary storage of files. Unless your system has a battery backed
@@ -960,13 +1196,13 @@ actual operating system and are not "bootable".  However, they are
 accessible to any operating system (whether the operating system is
 loaded from ROM or a different disk device).
 
-Neither RAM not ROM disks require explicit formatting or initialization.
+Neither RAM nor ROM disks require explicit formatting or initialization.
 ROM disks are pre-formatted and RAM disks are formatted automatically
 with an empty directory when first used.
 
 #### Flash ROM Disks
 
-The limitation of ROM disks being read only can be overcome on some
+The limitation of ROM disks being read-only can be overcome on some
 platforms with the appropriate selection of Flash ROM chip and
 system configuration. In this case the flash-file system can be
 enabled which will allow the ROM disk to be read and written to.
@@ -992,12 +1228,12 @@ adapts to double-density or high-density media.  It cannot automatically
 detect 3.5" vs. 5.25" drive types -- the ROM must be pre-configured
 for the drive type.
 
-Floppy media must be physically formatted before it can be used.  This
+Floppy media must be physically formatted before it can be used.  This 
 is normally accomplished by using the supplied Floppy Disk Utility (FDU)
-application.  This application interacts directly with your hardware
-and therefore you must specify your floppy interface hardware at startup.
-Additionally, you need to specify the floppy drive and media format to
-use for formatting.
+application.  This application interacts directly with your hardware 
+and therefore you must specify your floppy interface hardware at 
+application startup. Additionally, you need to specify the floppy drive 
+and media format to use for formatting.
 
 Below is a sample session using FDU to format a 1.44M floppy disk in
 the first (primary) floppy disk drive:
@@ -1086,7 +1322,9 @@ the appropriate OS/application documentation as needed.
 **WARNING:** Some of the operating systems provided with RomWBW require
 that a soft-reset be performed when swapping floppy disk media.  For
 example, under CP/M 2.2, you must press control-C at the CP/M prompt
-after inserting a new floppy disk.
+after inserting a new floppy disk.  The consequences of failing to
+perform the soft-reset vary from unexpected error messages to full
+disk directory corruption.
 
 ## Hard Disks
 
@@ -1150,14 +1388,14 @@ available storage devices. The allocation will depend on the number of
 mass storage devices available at boot. For example, if you have
 only one hard disk type media, you will see that 8 drive letters are
 assigned to the first 8 slices of that media. If you have two large
-storage devices, you will see that each device is allocated four drive
+storage devices, you will see that each device is allocated 4 drive
 letters.
 
-Referring to slices within a storage device is done by appending a :
-*<n>* where *<n>* is the device relative slice number from 0-255. For
-example, if you have an IDE device, it will show up as IDE0: in the
-boot messages meaning the first IDE device. To refer to the fourth
-slice of IDE0, you would type "IDE0:3". Here are some examples:
+Referring to slices within a storage device is done by appending a
+`:<n>` where \<n\> is the device relative slice number from 0-255. 
+For example, if you have an IDE device, it will show up as IDE0: in the 
+boot messages meaning the first IDE device. To refer to the fourth slice
+of IDE0, you would type "IDE0:3". Here are some examples:
 
 |          |                              |
 |----------|------------------------------|
@@ -1165,14 +1403,14 @@ slice of IDE0, you would type "IDE0:3". Here are some examples:
 | `IDE0:`  | First slice of disk in IDE0  |
 | `IDE0:3` | Fourth slice of disk in IDE0 |
 
-So, if you wanted to use drive letter L: to refer to the fourth slice
-of IDE0, you could use the command `ASSIGN L:=IDE0:3`. There are a
-couple of rules to be aware of when assigning drive letters. First,
-you may only refer to a specific device/slice with one drive letter at a time.
-Said another way, you cannot have multiple drive letters referring
-to a the same device/slice at the same time. Second, there must always
-be a drive assigned to A:. Any attempt to violate these rules will
-be blocked by the `ASSIGN` command.
+So, if you wanted to use drive letter L: to refer to the fourth slice of
+IDE0, you could use the command `ASSIGN L:=IDE0:3`. There are a couple 
+of rules to be aware of when assigning drive letters. First, you may 
+only refer to a specific device/slice with one drive letter at a time. 
+Said another way, you cannot have multiple drive letters referring to a 
+the same device/slice at the same time. Second, there must always be a 
+drive assigned to A:. Any attempt to violate these rules will be blocked
+by the `ASSIGN` command.
 
 In case this wasn't already clear, you **cannot** refer directly
 to slices using CP/M.  CP/M only understands drive letters, so
@@ -1200,6 +1438,11 @@ up the new empty directory.  Since `CLRDIR` works on drive letters, make
 absolutely sure you know what media and slice are assigned to that
 drive letter before using `CLRDIR` because CLRDIR will wipe out any
 pre-existing contents of the slice.
+
+**WARNING**: The `CLRDIR` application does not appear to check for
+disk errors when it runs.  If you attempt to run `CLRDIR` on a drive
+that is mapped to a slice that does not actually fit on the physical
+disk, it may behave erratically.
 
 Here is an example of using `CLRDIR`.  In this example, the `ASSIGN`
 command is used to show the current drive letter assignments.  Then
@@ -1241,14 +1484,16 @@ to the size of the disk media -- if you attempted to read/write to a
 slice that would exceed the disk size, you would see I/O errors.  This
 is considered the "legacy" disk layout for RomWBW.
 
-RomWBW has subsequently been enhanced to support the concept of
+Starting with v3.2, RomWBW has been enhanced to support the concept of
 partitioning.  The partition mechanism is entirely compliant with Master
- Boot Record (MBR) Partition Tables introduced by IBM for the PC.  The
+Boot Record (MBR) Partition Tables introduced by IBM for the PC.  The
 Wikipedia article on the
 [Master Boot Record](https://en.wikipedia.org/wiki/Master_boot_record)
 is excellent if you are not familiar with them.  This is considered the
 "modern" disk layout for RomWBW.  RomWBW uses the partition type id
-0x2E.  RomWBW does not support extended partitions -- only a single
+0x2E.  This partition type id does not equate to any existing well-known
+partition types -- it was chosen because it is not generally used.
+RomWBW does not support extended partitions -- only a single
 primary partition can be used.
 
 Both the legacy and modern disk layouts continue to be fully supported
@@ -1263,6 +1508,8 @@ the legacy disk layout contain 512 directory entries.  The modern disk
 layout filesystems provide 1024 directory entries.  In fact, you will
 subsequently see that the prefixes "hd512" and "hd1k" are used to
 identify disk images appropriate for the legacy and modern format.
+These prefixes were chosen specifically to highlight the number of
+directory entries supported.
 
 You **cannot** mix disk layouts on a single disk device.  To say it
 another way, the existence of a partition table entry for RomWBW on
@@ -1285,7 +1532,9 @@ recommended for the following reasons:
 ### Checking Hard Disk Layout
 
 If you are not sure which hard disk layout was used for your existing
-media, you can use the CP/M `STAT` command to determine this.  This
+media, you can use the OSes command to display the number of directory
+entries for a drive letter on the corresponding hard disk.  For example,
+the `STAT` command is used in CP/M 2.2 to determine this.  This
 command displays the number of directory entries on a filesystem.  If
 it indicates 512, your disk layout is legacy (hd512).  If it indicates
 1024, your disk layout is modern (hd1k).
@@ -1296,9 +1545,9 @@ and boot to Z-System in ROM by using the 'Z' command at the Boot Loader.
 As Z-System starts, we see the following disk assignments:
 
 ```
-Boot [H=Help]: z
+Boot [H=Help]: c
 
-Loading Z-System...
+Loading CP/M 2.2...
 
 CBIOS v3.1.1-pre.194 [WBW]
 
@@ -1319,7 +1568,7 @@ Configuring Drives...
 
         1081 Disk Buffer Bytes Free
 
-ZSDOS v1.1, 54.0K TPA
+CP/M-80 v2.2, 54.0K TPA
 ```
 
 You can see that the IDE0 interface (which contains the CF Card) has
@@ -1346,6 +1595,40 @@ Directory Entries".  In this case, the value is 1024 which implies that
 this drive is located on a modern (hd1k) disk layout.  If the value
 was 512, it would indicate a legacy (hd512) disk layout.
 
+## Hard Disk Capacity
+
+Although RomWBW can support many CP/M filesystem slices on a single
+hard disk, you are still constrained by the physical capacity of the
+actual hard disk.  RomWBW does not prevent you from assigning slices
+to drive letters even if the location of the slice does not fit on the
+physical disk.  Any attempt to access a drive letter mapped to a slice
+that does not fit will result in an error such as "no disk" from the
+operating system.
+
+The exact number of CP/M filesystem slices that will fit on your 
+specific physical hard disk can be determined as follows:
+
+- For hd512 disk layouts, it is slices * 8,320KB.
+- For hd1k disk layouts, it is 1024KB + (slices * 8192KB).  Since
+  1024KB is exactly 1MB, it is equivalent to say 1MB + (slices * 8MB).
+
+**WARNING**: In this document KB means 1024 bytes and MB means 1048576 
+bytes (frequently expressed as KiB and MiB in modern terminology).
+In general, hard disk capacities use KB to mean 1000 bytes and MB
+to mean 1,000,000 bytes.
+
+As an example, hardware distributors frequently supply a "64MB"
+CF Card with a RomWBW system.  Such a hard disk probably has
+less than 62.5MB of actual space (using the RomWBW definition that
+1MB is 1048576 bytes).  Such a drive will not support 8 slices.  It
+will support 7 slices just fine because 7 * 8,320KB = 58.24MB (hd512)
+or 1024KB + (7 * 8192MB) = 57MB (hd1k).
+
+The cost of high capacity CF/SD/USB Media has become very reasonable.
+I highly recommend upgrading to 1GB or greater media.  This size will
+support all features of the RomWBW Combo Disk Image with 64 slices
+and a 384MB FAT filesystem (see [Combo Hard Disk Image]).
+
 # Disk Content Preparation
 
 With some understanding of how RomWBW presents disk space to the
@@ -1369,13 +1652,13 @@ below under Disk Initialization. In this scenario, you will need to
 subsequently copy any files you want to use onto the newly initialized
 disk (see [Transferring Files]).
 
-You will notice that in the following instructions there is no mention
-of specific hardware.  Because the RomWBW firmware provides a 
-hardware abstraction layer, all disk images will work on all 
-hardware variations. Yes, this means you can remove an CF/SD Card from 
-one RomWBW system and put it in a different RomWBW system. The only 
-constraint is that the applications on the disk media must be up to date
-with the firmware on the system being used.
+You will notice that in the following instructions there is no mention 
+of specific hardware.  Because the RomWBW firmware provides a hardware 
+abstraction layer, all disk images will work on all hardware variations.
+Yes, this means you can remove disk media from one RomWBW system and 
+put it in a different RomWBW system. The only constraint is that the 
+applications on the disk media must be up to date with the firmware on 
+the system being used.
 
 ## Disk Images
 
@@ -1411,6 +1694,9 @@ You will find 3 sets of these .img files in the distribution.  The
 "hd512" for a legacy layout hard disk image, and "hd1K" for a modern
 layout hard disk image.
 
+In the case of xxx_dos65.img, only an hd512 variant is provided.  This
+is a constraint of the DOS65 distribution.
+
 There is also an image file called "psys.img" which contains a bootable 
 p-System hard disk image.  It contains 6 p-System filesystem slices, but
 these are not interoperable with the CP/M slices described above.  This
@@ -1435,7 +1721,9 @@ image onto it.  You can do this with RomWBW using FDU as described
 in the [Floppy Disks] section of this document.  You can also format
 the floppy using your modern computer, but using FDU on RomWBW is
 preferable because it will allow you to use optimal physical sector
-interleaving.
+interleaving.  FDU defaults to a sector interleave of 2 which will
+result in faster floppy disk I/O.  Other interleaves will work, but
+will be slower.
 
 RomWBW includes a Windows application called RawWriteWin in the Tools 
 directory of the distribution.  This simple application will let you 
@@ -1453,20 +1741,20 @@ command prompt.
 
 ### Hard Disk Images
 
-Keeping in mind that a RomWBW hard disk (including CF /SD Cards)
+Keeping in mind that a RomWBW hard disk (including CF/SD/USB devices)
 allows you to have multiple slices (CP/M filesystems), there are a
 couple ways to image hard disk media.  The easiest approach is to 
 use the "combo" disk image.  This image is already prepared
 with 6 slices containing 5 ready-to-run OSes and a slice with
-the WordStar application.  Alternatively, you can create your own
+the WordStar application files.  Alternatively, you can create your own
 hard disk image with the specific slice contents you choose.
 
 #### Combo Hard Disk Image
 
 The combo disk image is essentially just a single image that has several
-of the individual filesystem images already concatenated together. The 
-combo disk image contains the following 6 slices in the positions 
-indicated:
+ of the individual filesystem images (slices) already concatenated 
+together. The combo disk image contains the following 6 slices in the 
+positions indicated:
 
 | **Slice** | **Description**                                                  |
 |-----------|------------------------------------------------------------------|
@@ -1480,7 +1768,58 @@ indicated:
 You will notice that there are actually 2 combo disk images in the 
 distribution.  One for an hd512 disk layout (hd512_combo.img) and one 
 for an hd1k disk layout (hd1k_combo.img). Simply use the image file that
-corresponds to your desired hard disk layout.
+corresponds to your desired hard disk layout.  Review the information
+in [Hard Disk Layouts] if you need more information of the disk layout
+options.
+
+Although the combo disk images contain only 6 slices of content, they
+reserve space to store 64 CP/M filesystem slices as well as a
+single 384MB FAT filesystem.  Keep in mind that the slices beyond the
+first 6 are not yet initialized.  You will need to use the `CLRDIR`
+application to initialize them before their first use.  Likewise, the
+pre-allocated FAT partition must still be formatted using `FAT FORMAT`
+in order to actually use it (see [FAT Filesystem Preparation]).
+Alternatively, the FAT partition can be formatted on a modern computer.
+
+The combo disk image layout was designed to fit well on a 1GB hard disk.
+The 64 CP/M slices (approximately 512MB) and 384MB FAT filesystem all 
+fit well within a 1GB hard disk.  This size choice was a bit arbitrary, 
+but based on the idea that 1GB CF/SD/USB Media is easy and cheap to 
+acquire.  It is fine if your hard disk is smaller than 1GB.  It just 
+means that it will not be possible to use the pre-allocated FAT 
+filesystem partition and any CP/M filesystem slices that don't fit.  You
+will get "no disk" errors if you attempt to access a slice past the 
+end of the physical hard disk.
+
+**WARNING**: Your hard disk may be too small to contain the full 64
+CP/M filesystem slices.  The true number of CP/M filesystem slices that
+will fit on your specific physical hard disk can be calculated as
+described in [Hard Disk Capacity].
+
+For RomWBW systems with a single hard disk (typical), you will notice 
+that the OS will pre-allocate 8 drive letters to the hard disk.  If the 
+combo disk image is being used, only the first 6 drive letters 
+(typically C: - H:) will have any content because the combo disk image 
+only provides 6 slices. The subsequent drives (typically I: - J:) will 
+have no content and will not be pre-initialized.  If you want to use any
+slices beyond the first 6 on the hard disk, then you must initialize 
+them using `CLRDIR` first.
+
+A great way to maintain your own data on a hard disk is to put this
+data in slices beyond the first 6.  By doing so, you can always
+"re-image" your drive with the combo image without overlaying the data
+stored in the slices beyond the first 6.  Just be very careful to use
+the same combo image layout (hd512 or hd1k) as you used originally.
+Also remember to calculate the maximum number of slices your hard disk
+will support and do not exceed this number.
+
+**WARNING**: The combo disk image includes a partition table at the 
+start of the image.  If you re-image drive with the combo image, you 
+will overwrite this partition table.  This is fine as long as you don't 
+make any changes to the partition table.  If you manually customize the 
+partition table (using `FDISK80` or other partition management 
+software), those changes will be lost if you re-image your disk with a 
+new combo disk image.
 
 #### Custom Hard Disk Image
 
@@ -1491,8 +1830,9 @@ For hard disks, each .img file represents a single slice (CP/M
 filesystem).  Since a hard disk can contain many slices, you can just 
 concatenate the slices (.img files) together to create your desired hard
 disk image.  For example, if you want to create a hard disk image that 
-has slices for CP/M 2.2, CP/M 3, and WordStar in the hd512 format, you would use 
-the command line of your modern computer to create the final image:
+has slices for CP/M 2.2, CP/M 3, and WordStar in the hd512 format, you 
+would use the command line of your modern computer to create the final 
+image:
 
 Windows:
 
@@ -1530,8 +1870,8 @@ using your modern computer.  Note that you **do not** run `CLRDIR` or
 the disk will be partitioned and setup with 1 or more slices containing 
 ready-to-run bootable operating systems.
 
-To write a hard disk image file onto your actual media (actual hard 
-disk or CF/SD Card), you need to use an image writing utility on your 
+To write a hard disk image file onto your actual media (actual hard disk
+ or CF/SD/USB Media), you need to use an image writing utility on your 
 modern computer. Your modern computer will need to have an appropriate 
 interface or slot that accepts the media. To actually copy the image, 
 you can use the `dd` command on Linux or MacOS. On Windows, in the 
@@ -1567,7 +1907,7 @@ survive re-imaging, you **must** follow these rules:
 
 Once you have copied the image onto the hard disk media, you can
 move the media over to your RomWBW system.  You can then boot to the
-operating system slices by specify "<unitnum>.<slicenum>" at the
+operating system slices by specifying "<unitnum>.<slicenum>" at the
 RomWBW Boot Loader command prompt.
 
 ## In-situ Disk Preparation
@@ -1610,6 +1950,9 @@ start, it is critical that you decide which disk layout approach to use
 are not sure.
 
 #### Partition Setup
+
+**WARNING**: Modifying the partition table of existing media will
+make the data on the media inaccessible.
 
 Since the disk layout is determined by the existence (or lack) of
 a RomWBW partition, you must start by running `FDISK80`.  When FDISK80
@@ -1689,10 +2032,10 @@ You can use the `ASSIGN` command to handle this.
 
 Once you have your slice(s) initialized, you can begin transferring 
 files to the associated drive letters.  Refer to the [Transferring 
-Files] section for options to do this.  If you want to make a slice
+Files] chapter for options to do this.  If you want to make a slice
 bootable, you will need to use `SYSCOPY` to setup the system track(s)
 of the slice.  The use of `SYSCOPY` depends on the operating system
-and is described in the [Operating Systems] section of this document.
+and is described in the [Operating Systems] chapter of this document.
 
 As an example, let's assume you want to setup C: as a bootable
 Z-System disk and add to it all the files from the ROM disk.  To
@@ -2089,16 +2432,45 @@ regarding the RomWBW adaptation and customizations.
 
 #### Boot Disk
 
-There is no RomWBW-specific boot disk creation procedure.  QP/M
-comes with a QINSTALL which is used to install QPM over an existing
-CP/M 2 installation or to update an existing QPM disk.  `QINSTALL.COM`
-is included with the RomWBW distribution.
+
+To create or update a bootable QP/M Z-System disk, a special process
+is required.  QP/M is not provided in source format.  You are expected
+to install QP/M over an existing CP/M installation using the
+`QINSTALL.COM` application.
+
+To update an existing QP/M boot disk with the latest RomWBW CBIOS, you
+must use 2 steps: apply the generic CP/M system track, then reinstall
+the QP/M components.  To do this, you can perform the following steps:
+
+1. Boot to the existing QP/M disk.  At this point, drive A should be
+   the QP/M disk that you wish to update.  You may receive a warning
+   about CBIOS/HBIOS version mismatch.
+
+1. Use RomWBW `SYSCOPY` to place the stock RomWBW CP/M OS image
+   onto the system tracks of the QP/M boot disk:
+   
+   `SYSCOPY A:=x:CPM.SYS`
+   
+   where x is the drive letter of your ROM Disk.
+
+1. Run `QINSTALL` to overlay the QP/M OS components on your
+   QP/M boot disk.
+
+**WARNING**: `QINSTALL` has no mechanism for retaining previous
+non-default settings.  Any previous non-default settings you
+previously made with `QINSTALL` will need to be reapplied.  The
+pre-built RomWBW QP/M disk image includes a couple of specific
+non-default settings to optimize use with RomWBW.  Please review the
+notes in the ReadMe.txt file in Source/Images/d_qpm.
 
 #### Notes
 
 - QPM is not available as source.  This implementation was based
   on the QPM binary distribution and has been minimally customized
   for RomWBW.
+
+- When booted, the QPM startup banner will indicate CP/M 2.2.  This
+  is because QPM uses the CP/M 2.2 CBIOS code.
 
 - QINSTALL is used to customize QPM.  It is included on the
   disk image.  You should review the notes in the ReadMe.txt
@@ -2162,23 +2534,74 @@ file which is bootable.
   output will be garbled if no such terminal or emulator
   is used for console output.
 
-* There is no straightforward mechanism to move files in
+* There is no built-in mechanism to move files in
   and out of p-System.  However, the .vol files in Source/pSys
   can be read and modified by CiderPress.  CiderPress is able
   to add and remove individual files.
+
+  Andrew Davidson has created a Python script that can extract p-System 
+  volumes from an existing disk image file.  The script is also capable
+  of inserting a modified volume back into the disk image file.
+  This tool is available at
+  <https://github.com/robosnacks/psysimg>.
 
 ## FreeRTOS
 
 Phillip Stevens has ported FreeRTOS to run under RomWBW. FreeRTOS is
 not provided in the RomWBW distribution. FreeRTOS is available under
-the
-[MIT licence](https://www.freertos.org/a00114.html) and further general
-information is available at
+the [MIT licence](https://www.freertos.org/a00114.html)
+and further general information is available at
 [FreeRTOS](https://www.freertos.org/RTOS.html).
 
-You can also contact Phillip for detailed information on the Z180
-implementation of FreeRTOS for RomWBW.
-[feilipu](https://github.com/feilipu)
+Phillip may be contacted via his
+[GitHub Page](https://github.com/feilipu).
+
+## Fuzix
+
+Fuzix is a Unix-ish operating system for small systems.  It is the work 
+of Alan Cox and is hosted on GitHub at
+<https://github.com/EtchedPixels/FUZIX>. Fuzix itself is a stand-alone 
+operating system, but it frequently utilizes RomWBW to boot and launch 
+on RomWBW-supported platforms.
+
+For those Fuzix platforms that leverage RomWBW for startup, you will
+program your ROM with the normal RomWBW ROM -- there
+is no Fuzix-specific ROM.  A Fuzix disk image for your system is then
+written to your disk media.  After booting your system via the normal
+RomWBW ROM, you start Fuzix simply by choosing the disk device
+containing the Fuzix image at the RomWBW Loader prompt.
+
+To create a Fuzix disk image:
+
+* Locate and download the Fuzix disk image for your system from
+  <https://www.fuzix.org/>.
+
+* Remove the 1KB header from the image file.  The Fuzix disk images
+  are built to run under an emulator that requires a 1KB prefix.  You
+  must remove this prefix before writing the image to your physical
+  disk media.  Unix dd is the easiest way to do this:
+  
+  `dd bs=1024 skip=1 if=sc126-0.3.ide of=sc126-0.3.trimmed`
+
+* Write the trimmed image to your disk media.  This can also be
+  done with dd or with Win32DiskImager under Windows.
+
+To boot into Fuzix:
+
+* Power-up or reset your system.  RomWBW should load normally
+  and bring you to the RomWBW Boot Loader prompt.
+
+* Change your baud rate to 38,400.  This can be done from the
+  RomWBW Boot Loader prompt with the following command:
+
+  `I 0 38400`
+
+  You will also need to change your terminal baud rate at this time.
+
+* At the `bootdev:` prompt, enter `hda1`.  Fuzix should load and
+  you will be prompted for a date/time.
+
+* At the `login:` prompt, enter `root`.  No password is required.
 
 # Custom Applications
 
@@ -2217,6 +2640,7 @@ therefore, globally available.
 | XM              | XModem file transfer program adapted to hardware. Automatically uses primary serial port on system.  |
 | FLASH           | Will Sowerbutts' in-situ ROM programming utility.                                                    |
 | FDISK80         | John Coffman's Z80 hard disk partitioning tool.  See documentation in Doc directory.                 |
+| FAT             | Access MS-DOS FAT filesystems from RomWBW (based on FatFs).        |
 | TALK            | Direct console I/O to a specified character device.                                                  |
 | RTC             | Manage and test the Real Time Clock hardware.                                                        |
 | TIMER           | Display value of running periodic system timer.                                                      |
@@ -2224,17 +2648,17 @@ therefore, globally available.
 
 Some custom applications do not fit on the ROM disk. They are found on the
 disk image files or the individual files can be found in the Binary/Apps
-directory of the distribution.
+directory of the distribution.  They are also included on the
+floppy disk and hard disk images.
 
 | **Application** | **Description**                                                    |
 |-----------------|--------------------------------------------------------------------|
 | TUNE            | Play .PT2, .PT3, .MYM audio files.                                 |
-| FAT             | Access MS-DOS FAT filesystems from RomWBW (based on FatFs).        |
 | INTTEST         | Test interrupt vector hooking.                                     |
 
 # FAT Filesystem
 
-The FAT filesystem format that originated with MS-DOS has been almost
+The FAT filesystem format that originated with MS-DOS is almost
 ubiquitous across modern computers.  Virtually all operating systems
 now support reading and writing files to a FAT filesystem.  For this
 reason, RomWBW now has the ability to read and write files on FAT
@@ -2249,26 +2673,35 @@ This application understands both FAT filesystems as well as CP/M filesystems.
 * Long filenames are not supported.  Files with long filenames will
   show up with their names truncated into the older 8.3 convention.
 * A FAT filesystem can be located on floppy or hard disk media.  For
-  hard disk media, the FAT filesystem must be located within a valid
-  FAT partition.
+  hard disk media, a valid FAT Filesystem partition must exist.
+* Note that CP/M (and compatible) OSes do not support all of the
+  filename characters that a modern computer does.  The following
+  characters are **not permitted** in a CP/M filename:
+
+  `< > . , ; : = ? * [ ] _ % | ( ) / \`
   
+  The FAT application does not auto-rename files when it encounters
+  invalid filenames.  It will just issue an error and quit.
+  Additionally, the error message is not very clear about the problem.
+
 ## FAT Filesystem Preparation
 
 In general, you can create media formatted with a FAT filesystem on
 your RomWBW computer or on your modern computer.  We will only be
 discussing the RomWBW-based approach here.
 
-In the case of a floppy disk, you can use the `FAT` application to
-format the floppy disk.  For example, if your floppy disk is on RomWBW
-disk unit 2, you could use `FAT FORMAT 2:`.  This will overwrite the
-floppy with a FAT filesystem and all previous contents will be lost.
-Once formatted this way, the floppy disk can be used in a floppy drive
-attached to a modern computer or it can be used on RomWBW using the
+In the case of a floppy disk, you can use the `FAT` application to 
+format the floppy disk.  The floppy disk must already be physically 
+formatted using RomWBW FDU or equivalent.  If your floppy disk is on 
+RomWBW disk unit 2, you could use `FAT FORMAT 2:`.  This will overwrite 
+the floppy with a FAT filesystem and all previous contents will be lost.
+Once formatted this way, the floppy disk can be used in a floppy drive 
+attached to a modern computer or it can be used on RomWBW using the 
 other `FAT` tool commands.
 
 In the case of hard disk media, it is necessary to have a FAT
 partition.  If you prepared your RomWBW hard disk media using the
-disk image process, then this partition will already be present and
+disk image process, then this partition will already be defined and
 you do not need to recreate it.  This default FAT partition is located
 at approximately 512MB from the start of your disk and it is 384MB in
 size.  So, your hard disk media must be 1GB or greater to use this
@@ -2316,8 +2749,13 @@ If your RomWBW system has multiple disk drives/slots, you can also just
 create a disk with your modern computer that is a dedicated FAT 
 filesystem disk.  You can use your modern computer to format the disk 
 (floppy, CF Card, SD Card, etc.), then insert the disk in your RomWBW 
-computer and access if using `FAT` based on its RomWBW unit number.
+computer and access it using `FAT` based on its RomWBW unit number.
 
+**WARNING**: Microsoft Windows will sometimes suggest reformatting 
+partitions that it does not recognize.  If you are prompted to format a 
+partition of your SD/CF/USB Media when inserting the card into a Windows
+ computer, you probably want to select Cancel.
+  
 ## FAT Application Usage
 
 Complete instructions for the `FAT` application are found in $doc_apps$.
@@ -2406,6 +2844,166 @@ SAMPLE2.TXT ==> 4:/SAMPLE2.TXT ... [OK]
 
     2 File(s) Copied
 ```
+
+# Real Time Clock
+
+RomWBW supports a variety of real time clock hardware.  If your
+system has this hardware, then it will be able to maintain the
+current date and time even while your system is turned off.
+Additionally, depending on the operating system being used, you may be
+able to utilize date/time stamping of files.
+
+You can determine if your system has a real time clock present (and
+functioning) by looking at the boot messages.  Here is an example of
+a boot message reflecting the detection of a valid real time clock
+module:
+
+`DSRTC: MODE=STD IO=0x8A Thu 2023-10-19 14:07:11 CHARGE=ON`
+
+This example is from a DSRTC clock module.  You may have a different
+one, but it will always display the current date/time.
+
+In some cases, your real time clock will support charging of the
+battery or super-capacitor while the system has power.  The status of
+this charging is displayed.
+
+If the date/time of your RTC needs to be updated, you will need to do
+this with one of the utilities described below.  There is no ability to
+update the date/time of the RTC in the RomWBW Boot Loader or Monitor.
+
+## Date/Time Utilities
+
+RomwWBW includes two utilities for displaying or setting the date/time
+stored by the RTC.  They are both a bit different and are briefly
+described below.
+
+### WDATE Utility
+
+The `WDATE` utility (contributed by Kevin Boone) is an application
+that will display and/or update the current date/time.  Its operation is
+described in $doc_apps$.  This utility works with any of the supported
+RomWBW RTC hardware.  Here is an example of displaying and updating the
+date/time with this utility:
+
+```
+A>wdate
+Thursday 19 October 14:14:43 2023
+
+A>wdate 23 10 19 14 24 30
+
+A>wdate
+Thursday 19 October 14:24:34 2023
+
+```
+
+Note that `WDATE` does not have anything to do with date/time stamping
+of files.  It merely displays and sets the real time clock value.
+
+### RTC Utility
+
+Like `WDATE`, the `RTC` utility (contributed by Andrew Lynch) will let
+you display and set the current date/time.  However, this utility only
+works with the DSRTC hardware (DS1302 chip).  It is a "direct to
+hardware application".  Its operation is described in $doc_apps$.  Here
+is an example of displaying and updatting the date/time with this
+utility:
+
+```
+A>rtc
+Start RTC Program
+RomWBW HBIOS, Mark 4 RTC Latch Port 0x8A
+
+RTC: Version 1.9
+Commands: E)xit T)ime st(A)rt S)et R)aw L)oop C)harge N)ocharge D)elay I)nit G)et P)ut B)oot W)arm-start H)elp
+
+RTC>t
+Current time: 23-10-19 14:30:25-05
+
+RTC>i
+Init date/time.
+
+YEAR:23
+MONTH:10
+DATE:19
+HOURS:14
+MINUTES:31
+SECONDS:00
+DAY:05
+```
+
+The `RTC` utility is also capable of turning the charging feature of
+the DS1320 chip on or off.  Here is an example of turning if off and
+back on:
+
+```
+
+A>rtc
+Start RTC Program
+RomWBW HBIOS, Mark 4 RTC Latch Port 0x8A
+
+
+RTC: Version 1.9
+Commands: E)xit T)ime st(A)rt S)et R)aw L)oop C)harge N)ocharge D)elay I)nit G)et P)ut B)oot W)arm-start H)elp
+
+RTC>n
+Trickle charger disabled.
+
+RTC>c
+Trickle charger enabled.
+```
+
+Do **not** enable charging unless you are sure that your system
+supports this.  If your RTC is being powered by a normal battery, it
+would be dangerous to enable charging.
+
+## Date/Time File Stamping
+
+If an RTC is available in your system, then most operating systems
+can use it to date/time stamp files.  This just means recording the
+date/time of file creation, update, and or access in the directory.
+This capability is available in all of the RomWBW operating system
+except the original DRI CP/M 2.2.
+
+In some cases (such as ZSDOS), you must load an RSX (memory resident
+utility) to enable date/time stamping of files.  Additionally, you
+will need to initialize the directory.  The procedure varies in each
+operation system, so you must review the associated documentation.
+
+The date/time stamping mechanisms for each operating system are
+generally not compatible.  If you initialize a directory for a type
+of stamping, you should be careful not to manipulate that directory
+with a different operating system with a different date/time stamping
+mechanism.  Doing so may corrupt the directory.
+
+The RomWBW disk images do not have date/time stamping initialized.  This
+is to avoid any chance of directory corruption.
+
+## Timezone
+
+None of the operating systems distributed with RomWBW have any concept
+of timezone.  When files are date/time stamped, the date/time will
+simply be whatever date/time the RTC currently has.
+
+The normal practice is to set the RTC to your local time.  This implies
+that you would need to manually adjust the RTC for daylight savings time
+and/or when you travel to a different time zone.
+
+The date/time stamps of files in directories will also be stored in
+local time.  This includes files stored in a FAT filesystem.  If you
+subsequently view the directory from modern machines (Windows, Linux,
+etc.), the date/time displayed will depend on the behavior of the
+modern system.
+
+For example, Linux assumes that the date/time of files
+is UTC.  So, if you create a file on a FAT filesystem with your RomWBW
+computer and then use Linux to view the directory, the date/time stamps
+will seem "off" by a few hours.
+
+The only alternative you may consider is setting the date/time of your
+RTC to UTC.  Since UTC is consistent across all timezones and daylight
+savings time, your file date/time stamps will also be consistent.  Of
+course, this will mean that your RomWBW computer will display a
+date/time that seems wrong because it is not local time.
 
 # CP/NET Networking
 
@@ -2743,8 +3341,12 @@ computers terminal program to complete the process.
 The `XM` application generally tries to detect the hardware you are
 using and adapt to it. However, you must ensure that you have a
 reliable serial connection. You must also ensure that the speed of
-the connection is not too fast for XModem to service. Alternatively,
-you can ensure that hardware flow control is working properly.
+the connection is not too fast for XModem to service.  If your
+file transfer attempts are failing, try either of the following:
+
+- Check that hardware flow control is enabled in your terminal
+  emulation software.
+- Reduce the speed of your serial port connection.
 
 There is an odd interaction between XModem and partner terminal
 programs that can occur. Essentially, after launching `XM`, you must
@@ -2759,7 +3361,7 @@ scope of this document.
 It is possible to pass disk images between your RomWBW system and
 your modern computer. This assumes you have an appropriate media slot
 on your modern computer for the media you want to use (CF Card, SD
-Card, or floppy drive).
+Card, floppy drive, etc.).
 
 The general process to get files from your modern computer to a RomWBW
 computer is:
@@ -2767,8 +3369,8 @@ computer is:
 1. Use `cpmtools` on your modern computer to create a RomWBW CP/M
 filesystem image.
 
-2. Insert your RomWBW media (CF Card, SD Card, or floppy disk) in your
-modern computer.
+2. Insert your RomWBW media (CF Card, SD Card, floppy disk, etc.) in
+your modern computer.
 
 3. Use a disk imaging tool to copy the RomWBW filesystem image onto the
 media.
@@ -2793,11 +3395,11 @@ detail in the Source/Images directory of the distribution.
 
 ## FAT Filesystem Transfers
 
-The ability to interact with FAT filesystems was covered in [FAT 
-Filesystem].  This capability means that you can generally use your 
-modern computer to make an SD Card or CF Card with a standard FAT32 
-filesystem on it, then place that media in your RomWBW computer and 
-access the files.
+The ability to interact with FAT filesystems was covered in
+[FAT Filesystem].  This capability means that you can generally use your
+ modern computer to make an SD Card, CF Card, or USB Drive with a 
+standard FAT32 filesystem on it, then place that media in your RomWBW 
+computer and access the files.
 
 When formatting the media on your modern computer, be sure to pick the 
 FAT filesystem. NTFS and other filesystems will not work.  As previously
@@ -2869,9 +3471,11 @@ users. All required build tools (compilers, assemblers, etc.) are
 included in the distribution, so it is not necessary to setup a build
 environment on your computer.
 
-RomWBW can be built on modern Windows, Linux, or MacOS computers.  The
-process for building a custom ROM is documented in the ReadMe.txt file
-in the Source directory of the distribution.
+RomWBW can be built on modern Windows, Linux, or MacOS computers.  The 
+process for building a custom ROM is documented in the ReadMe.txt file 
+in the Source directory of the distribution.  Any modern version of 
+Windows (32-bit or 64-bit), MacOS, or Linux released in the last 10 
+years should be able to run the build process.
 
 For those who are interested in more than basic system customization,
 note that all source code is provided (including the operating
@@ -2949,17 +3553,62 @@ existing, working ROM chip and program a new one with the new
 firmware. If the new one fails to boot, you can easily return to the
 known working ROM.
 
+For each ROM that comes with the RomWBW distribution, you will find
+that there are actually 3 different variants:
+
+- `.rom` contains the complete ROM chip image
+- `.upd` contains the system code, but omits the ROM Disk contents
+- `.com` contains a CP/M executable version of the ROM code
+
+So, for example, RCZ80_std contains the following files:
+
+- `SBC_std.rom`
+- `SBC_std.upd`
+- `SBC_std.com`
+
+The use of the `.com` variant is described below in [Application Boot].
+
+As previously discussed, the ROM in most RomWBW systems contains both
+the system code as well as a ROM Disk with files on it.  The `.rom`
+variant of the ROM contains a full ROM chip image including both the
+system code and the Rom Disk contents.  The `.upd` variant of the ROM
+contains only the system code portion of the ROM.  If you apply the
+`.upd` variant to your system, it will overlay the system code, but
+will not overlay the ROM Disk contents (they remain intact).  You may
+use either the `.rom` or the `.upd` file when updating your ROM chip
+(this does not apply to Application Boot).  It is best to use the
+`.rom` file for your upgrade because the files on your ROM Disk should
+be updated whenever you update your system code.  The advantage of the
+`.upd` variant is that is much smaller, so you can upload and apply it
+faster.  The ROM update instructions below generally refer to using
+the `.rom` variant.  However, you may substitute the `.upd` variant
+if desired.
+
+## Application Boot
+
 Prior to attempting to reprogram your actual ROM chip, you may wish to
 "try" the update to ensure it will work on your system. With RomWBW, you
 can upload a new ROM image executable and load it from the command
 line. For each ROM image file (.rom) in the Binary directory, you will
 find a corresponding application file (.com). For example, for
-SBC_std.rom, there is also an SBC_std.com file. You can upload the .com
-file to your system using XModem, then simply run the .com file. You
-will see your system go through the normal startup process just like it
-was started from ROM. However, your ROM has not been updated and the
-next time you boot your system, it will revert to the system image
-contained in ROM.
+SBC_std.rom, there is also an SBC_std.com file.
+
+You can upload the `.com` file to your system using XModem, then simply 
+run the `.com` file. You will see your system go through the normal 
+startup process just like it was started from ROM. However, your 
+physical ROM has not been updated and the next time you boot your 
+system, it will revert to the system image contained in ROM.
+
+Using this `.com` version of a ROM is an excellent way to confirm that
+the new ROM code you intend to program will work correctly.  If it
+does not, then you can just reboot and your old ROM will be loaded.
+
+When the `.com` file is loaded, you will be taken to the normal
+Boot Loader menu.  However, you will find that the only OS that is
+available to boot from ROM is ZSDOS.  There is only room for a
+single OS in the .com file.  Even if you don't normally use ZSDOS,
+this will still confirm that your system operates well under the
+new ROM code.
 
 ## Upgrading via Flash Utility
 
@@ -2968,12 +3617,18 @@ possible to reprogram your system ROM using the FLASH utility from
 Will Sowerbutts. This application, called FLASH.COM, can be found on the
 ROM drive of any running system. In this case, you would need to
 transfer the new ROM image (.rom) over to your system using XModem (or
-one of the other mechanisms described in the Transferring Files
+one of the other mechanisms described in the [Transferring Files]
 section). The ROM image is too large to fit on your RAM drive,
 so you will need to transfer it to a larger storage drive. Once the
 ROM image is on your system, you can use the FLASH application to
 update your ROM. The following is a typical example of transferring
 ROM image using XModem and flashing the chip in-situ.
+
+**NOTE**: The FLASH utility **can not** determine the type of your
+ROM chip if it is write protected.  Additionally, it has not way to
+even determine if it is write protected.  If the FLASH utility
+indicates it does not recognize your ROM chip, check to ensure the
+chip is not write protected.
 
 ```
 E>xm r rom.rom
@@ -3009,15 +3664,18 @@ occurred.
 ## Upgrading via XModem Flash Updater
 
 Similar to using the Flash utility, the system ROM can be updated
-or upgraded through the ROM based updater utility. This works by
-by reprogrammed the flash ROM as the file is being transferred.
+or upgraded through the ROM-based updater utility. This works by
+reprogramming the flash ROM as the file is being transferred.
 
-This has the advantage that secondary storage is not required to
-hold the new image.
+Using the ROM-based updater has the advantage that secondary storage is 
+not required to hold the new image.  In other words, it is not
+necessary to have a mass storage device available to store the
+ROM image.
 
 From the Boot Loader menu select X (Xmodem Flash Updater) and then
-U (Begin Update). Then initiate the Xmodem transfer of the .img or
-.upd file.
+U (Begin Update). Then initiate the Xmodem transfer of the `.rom` file.
+Since the XModem Flash Updater will be relatively slow, you may wish
+to use the `.upd` varient of the ROM.
 
 More information can be found in the ROM Applications document.
 
@@ -3056,6 +3714,7 @@ them over any older versions of the app on your disk:
 * TALK.COM
 * RTC.COM
 * TIMER.COM
+* FAT.COM
 
 For example: `B>COPY ASSIGN.COM C:`
 
@@ -3065,8 +3724,16 @@ system and then update all copies. These applications are found in
 the Binary/Apps directory of the distribution and in all of the disk
 images.
 
-* FAT.COM
 * TUNE.COM
+
+The files normally contained on the standard ROM Disk is based on a 512K
+ROM.  If your system has a smaller size ROM, then not all of these 
+files will be included on your ROM Disk.  You will need to copy them to
+your system from the /Binary/Apps folder of the RomWBW distribution.
+
+**WARNING**: If you run a RomWBW-specific application that is not
+the appropriate for the version of RomWBW you are running, the
+application will generate an error message and abort.
 
 ## System Update
 
@@ -3100,6 +3767,58 @@ required difference being that the flash application needs to be
 directed to complete a partial flash using the /P command line switch.
 
 `E>FLASH WRITE ROM.UPD /P`
+
+# Related Projects
+
+Outside of the hardware platforms adapted to RomWBW, there are a variety 
+of projects that either target RomWBW specifically or provide
+a RomWBW-specific variation.  These efforts are greatly appreciated
+and are listed below.  Please contact the author if there are any other
+such projects that are not listed.
+
+## Z88DK
+
+Z88DK is a software powerful development kit for Z80 computers
+supporting both C and assembly language.  This kit now provides
+specific library support for RomWBW HBIOS.  The Z88DK project is
+hosted at <https://github.com/z88dk/z88dk>.
+
+## Paleo Editor
+
+Steve Garcia has created a Windows-hosted IDE that is tailored to
+development of RomWBW.  The project can be found at
+<https://github.com/alloidian/PaleoEditor>.
+
+## p-System Volume Management Script
+
+Andrew Davidson has created a Python script to automate the insertion
+and deletion of volumes within the p-System disk image.  These scripts
+are hosted at <https://github.com/robosnacks/psysimg>.
+
+## Z80 fig-FORTH
+
+Dimitri Theulings' implementation of fig-FORTH for the Z80 has a
+RomWBW-specific variant.  This fig-FORTH is built into the RomWBW
+ROM.  However, the project itself is hosted at
+<https://github.com/dimitrit/figforth>.
+
+## RomWBW Date/Time Utility
+
+Kevin Boone has created a generic application that will display or
+set the date/time of an RTC on RomWBW.  The application runs on all of
+the CP/M OS variants.  This tool (`WDATE`) is included on the RomWBW
+OS disk images.  The project is hosted at
+<https://github.com/kevinboone/wdate-cpm>.
+
+## Assembly Language Programming for the RC2014 Zed
+
+Bruce Hall has written a very nice document that describes how to
+develop assembly language applications on RomWBW.  It begins with the
+setup and configuration of a new RC2014 Zed system running RomWBW.
+It describes not only generic CP/M application development, but also
+RomWBW HBIOS programming and bare metal programming.  The latest copy
+of this document is hosted at
+[http://w8bh.net/Assembly for RC2014Z.pdf](http://w8bh.net/Assembly%20for%20RC2014Z.pdf).
 
 # Acknowledgments
 
@@ -3165,6 +3884,38 @@ please let me know if I missed you!
   the SN76489 sound driver.
 
 * The RomWBW Disk Catalog document was produced by Mykl Orders.
+
+* Rob Prouse has created many of the supplemental disk images
+  including Aztec C, HiTech C, SLR Z80ASM, Turbo Pascal, Microsoft
+  BASIC Compiler, Microsoft Fortran Compiler, and a Games
+  compendium.
+
+* Martin R has provided substantial help reviewing and improving the
+  User Guide.
+
+* Jacques Pelletier has contributed the DS1501 RTC driver code.
+
+* Jose Collado has contributed enhancements to the TMS driver
+  including compatibility with standard TMS register configuration.
+
+* Kevin Boone has contributed a generic HBIOS date/time utility (WDATE).
+
+* Matt Carroll has contributed a fix to XM.COM that corrects the
+  port specification when doing a send.
+
+* Dean Jenkins enhanced the build process to accommodate the
+  Raspberry Pi 4.
+
+* Tom Plano has contributed a new utility (HTALK) to allow talking
+  directly to HBIOS COM ports.
+
+* Lars Nelson has contributed several generic utilities such as
+  a universal (OS agnostic) UNARC application.
+
+* Dylan Hall added support for specifying a secondary console.
+
+* Bill Shen has contributed boot loaders for several of his
+  systems.
 
 Contributions of all kinds to RomWBW are very welcome.
 
@@ -3232,6 +3983,15 @@ Also feel free to email $doc_author$ at [$doc_authmail$](mailto:$doc_authmail$).
 
 ## Appendix A - Pre-built ROM Images
 
+This appendix contains a summary of the system configuration target
+for each of the pre-built ROM images included in the RomWBW
+distribution.  It is intended to help you select the correct ROM
+image and understand the basic hardware components supported.
+Detailed hardware system configuration information should be obtained
+from your system provider/designer.  I am happy to provide support
+adapting RomWBW to new or modified systems -- see [Getting Assistance]
+for contact information.
+
 The standard ROM images will detect and install support for certain
 devices and peripherals that are on-board or frequently used with
 each platform as documented below.  If the device or peripheral is
@@ -3261,84 +4021,158 @@ the RomWBW HBIOS configuration.
 
 ### RetroBrew Z80 SBC
 
+#### ROM Image File:  SBC_std.rom
+
 |                   |               |
 |-------------------|---------------|
-| ROM Image File    | SBC_std.rom   |
-| Console Baud Rate | 38400         |
+| Default CPU Speed | 8.000 MHz     |
 | Interrupts        | None          |
+| System Timer      | None          |
+| Serial Default    | 38400 Baud    |
+| Memory Manager    | SBC           |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
 
- - CPU speed is detected at startup if DS1302 RTC is active
-   - Otherwise 8.000 MHz assumed
- - Hardware auto-detected:
-   - Onboard DS1302 RTC
-   - Onboard UART Serial Adapter
-   - Onboard PPIDE Hard Disk Interface
-   - Zilog Peripherals SIO Serial Interface
-   - CVDU Display Adapter
-   - VGA3 Display Adapter
-   - DiskIO V3 Floppy Disk Controller w/ 3.5" HD Drives
-   - PropIO Video, Keyboard, & SD Card
- - SBC V1 has a known race condition in the bank switching
-   circuit which is likely to cause system instability.  SBC V2
-   does not have this issue.
+##### Supported Hardware (see [Appendix B - Device Summary]):
+
+- DSRTC: MODE=STD, IO=112
+- UART: MODE=SBC, IO=104
+- UART: MODE=CAS, IO=128
+- UART: MODE=MFP, IO=104
+- UART: MODE=4UART, IO=192
+- UART: MODE=4UART, IO=200
+- UART: MODE=4UART, IO=208
+- UART: MODE=4UART, IO=216
+- SIO MODE=ZP, IO=176, CHANNEL A
+- SIO MODE=ZP, IO=176, CHANNEL B
+- VGA: IO=224, KBD MODE=PS/2, KBD IO=224
+- CVDU: MODE=ECB, IO=224, KBD MODE=PS/2, KBD IO=226
+- CVDU occupies 905 bytes.
+- KBD: ENABLED
+- PRP: IO=168
+- PRPCON: ENABLED
+- PRPSD: ENABLED
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=DIO, IO=54, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=DIO, IO=54, DRIVE 1, TYPE=3.5" HD
+- PPIDE: IO=96, MASTER
+- PPIDE: IO=96, SLAVE
+
+##### Notes:
+
+- CPU speed will be dynamically measured at startup if DSRTC is present
 
 `\clearpage`{=latex}
 
 ### RetroBrew Z80 SimH
 
+#### ROM Image File:  SBC_simh.rom
+
 |                   |               |
 |-------------------|---------------|
-| ROM Image File    | SBC_simh.rom  |
-| Console Baud Rate | 38400         |
+| Default CPU Speed | 8.000 MHz     |
 | Interrupts        | Mode 1        |
+| System Timer      | SimH          |
+| Serial Default    | 38400 Baud    |
+| Memory Manager    | SBC           |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
 
- - System timer is generated by SimH
- - Hardware auto-detected:
-   - SimH emulated 8250 Serial Adapter
-   - SimH emulated hard disk drives
-   - SimH RTC
-   
+##### Supported Hardware (see [Appendix B - Device Summary]):
+
+- SIMRTC: IO=254
+- UART: MODE=SBC, IO=104
+- UART: MODE=CAS, IO=128
+- UART: MODE=MFP, IO=104
+- UART: MODE=4UART, IO=192
+- UART: MODE=4UART, IO=200
+- UART: MODE=4UART, IO=208
+- UART: MODE=4UART, IO=216
+- SIO MODE=ZP, IO=176, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=ZP, IO=176, CHANNEL B, INTERRUPTS ENABLED
+- FONTS occupy 0 bytes.
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- HDSK: IO=253, DEVICE COUNT=2
+
+##### Notes:
+
+- Image for SimH emulator
+- CPU speed and Serial configuration not relevant in emulator
+
 `\clearpage`{=latex}
 
 ### RetroBrew N8 Z180 SBC
 
+#### ROM Image File:  N8_std.rom
+
 |                   |               |
 |-------------------|---------------|
-| ROM Image File    | N8_std.rom    |
-| Console Baud Rate | 38400         |
+| Default CPU Speed | 18.432 MHz    |
 | Interrupts        | Mode 2        |
+| System Timer      | Z180          |
+| Serial Default    | 38400 Baud    |
+| Memory Manager    | N8            |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
 
- - CPU speed is detected at startup if DS1302 RTC is active
-   - Otherwise 18.432 MHz assumed
- - System timer is generated by Z180 CPU
- - Hardware auto-detected:
-   - Onboard DS1302 RTC
-   - Onboard Z180 ASCI Serial Ports
-   - Onboard Floppy Disk Controller w/ 3.5" HD Drives
-   - Onboard TMS9918 Video Controller
-   - Onboard PS/2 Keyboard Controller
-   - Onboard SD Card Interface via CSIO
- - Assumes N8 with date code >= 2312 for CSIO interface to SD Card
+##### Supported Hardware (see [Appendix B - Device Summary]):
+
+- DSRTC: MODE=STD, IO=136
+- ASCI: IO=64, INTERRUPTS ENABLED
+- ASCI: IO=65, INTERRUPTS ENABLED
+- UART: MODE=CAS, IO=128
+- UART: MODE=4UART, IO=192
+- UART: MODE=4UART, IO=200
+- UART: MODE=4UART, IO=208
+- UART: MODE=4UART, IO=216
+- TMS: MODE=N8, IO=152
+- PPK: ENABLED
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=N8, IO=140, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=N8, IO=140, DRIVE 1, TYPE=3.5" HD
+- SD: MODE=CSIO, IO=136, UNITS=1
+- AY38910: MODE=N8, IO=156, CLOCK=1789772 HZ
+
+##### Notes:
+
+- CPU speed will be dynamically measured at startup if DSRTC is present
+- SD Card interface is configured for CSIO (N8 date code >= 2312)
 
 `\clearpage`{=latex}
 
 ### Zeta Z80 SBC
 
+#### ROM Image File:  ZETA_std.rom
+
 |                   |               |
 |-------------------|---------------|
-| ROM Image File    | ZETA_std.rom  |
-| Console Baud Rate | 38400         |
+| Default CPU Speed | 8.000  MHz    |
 | Interrupts        | None          |
+| System Timer      | None          |
+| Serial Default    | 38400 Baud    |
+| Memory Manager    | SBC           |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
 
- - CPU speed is detected at startup if DS1302 RTC is active
-   - Otherwise 20.000 MHz assumed
- - Hardware auto-detected:
-   - Onboard DS1302 RTC
-   - Onboard UART Serial Adapter
-   - Onboard Floppy Disk Controller w/ 1 3.5" HD Drive
-   - ParPortProp Video, Keyboard, & SD Card
- - If ParPortProp is installed, initial console output is determined 
-   by JP1:
+##### Supported Hardware (see [Appendix B - Device Summary]):
+
+- DSRTC: MODE=STD, IO=112
+- UART: MODE=SBC, IO=104
+- PPP: IO=96
+- PPPCON: ENABLED
+- PPPSD: ENABLED
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=DIO, IO=54, DRIVE 0, TYPE=3.5" HD
+
+##### Notes:
+
+- CPU speed will be dynamically measured at startup if DSRTC is present
+- If ParPortProp is installed, initial console output is
+  determined by JP1:
    - Shorted: console to on-board serial port
    - Open: console to ParPortProp video and keyboard
 
@@ -3346,23 +4180,35 @@ the RomWBW HBIOS configuration.
 
 ### Zeta V2 Z80 SBC
 
+#### ROM Image File:  ZETA2_std.rom
+
 |                   |               |
 |-------------------|---------------|
-| ROM Image File    | ZETA2_std.rom |
-| Console Baud Rate | 38400         |
+| Default CPU Speed | 8.000  MHz    |
 | Interrupts        | Mode 2        |
+| System Timer      | CTC           |
+| Serial Default    | 38400 Baud    |
+| Memory Manager    | Z2            |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
 
- - CPU speed is detected at startup if DS1302 RTC is active
-   - Otherwise 8.000 MHz assumed
- - System timer is generated by onboard CTC
- - Hardware auto-detected:
-   - Onboard DS1302 RTC
-   - Onboard CTC
-   - Onboard UART Serial Adapter
-   - Onboard Floppy Disk Controller w/ 1 3.5" HD Drive
-   - ParPortProp Video, Keyboard, & SD Card
- - If ParPortProp is installed, initial console output is determined 
-   by JP1:
+##### Supported Hardware (see [Appendix B - Device Summary]):
+
+- DSRTC: MODE=STD, IO=112
+- UART: MODE=SBC, IO=104
+- PPP: IO=96
+- PPPCON: ENABLED
+- PPPSD: ENABLED
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=ZETA2, IO=48, DRIVE 0, TYPE=3.5" HD
+- CTC: IO=32, TIMER MODE=COUNTER, DIVISOR=18432, HI=256, LO=72, INTERRUPTS ENABLED
+
+##### Notes:
+
+- CPU speed will be dynamically measured at startup if DSRTC is present
+- If ParPortProp is installed, initial console output is
+  determined by JP1:
    - Shorted: console to on-board serial port
    - Open: console to ParPortProp video and keyboard
 
@@ -3370,441 +4216,1324 @@ the RomWBW HBIOS configuration.
 
 ### Mark IV Z180 SBC
 
+#### ROM Image File:  MK4_std.rom
+
 |                   |               |
 |-------------------|---------------|
-| ROM Image File    | MK4_std.rom   |
-| Console Baud Rate | 38400         |
+| Default CPU Speed | 18.432 MHz    |
 | Interrupts        | Mode 2        |
+| System Timer      | Z180          |
+| Serial Default    | 38400 Baud    |
+| Memory Manager    | Z180          |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
 
- - CPU speed is detected at startup if DS1302 RTC is active
-   - Otherwise 18.432 MHz assumed
- - System timer is generated by Z180 CPU
- - Hardware auto-detected:
-   - Onboard DS1302 RTC
-   - Onboard Z180 ASCI Serial Ports
-   - UART Serial Interfaces (CAS, MFP, UART4)
-   - CVDU Display Adapter
-   - VGA3 Display Adapter
-   - Onboard SD Card Interface via CSIO
-   - Onboard IDE CF Card Interface
-   - DIDE Floppy Disk Controller w/ 3.5" HD Drives
-   - DIDE IDE Hard Disk Controller
-   - PropIO Video, Keyboard, & SD Card
+##### Supported Hardware (see [Appendix B - Device Summary]):
+
+- DSRTC: MODE=STD, IO=138
+- ASCI: IO=64, INTERRUPTS ENABLED
+- ASCI: IO=65, INTERRUPTS ENABLED
+- UART: MODE=CAS, IO=128
+- UART: MODE=MFP, IO=104
+- UART: MODE=4UART, IO=192
+- UART: MODE=4UART, IO=200
+- UART: MODE=4UART, IO=208
+- UART: MODE=4UART, IO=216
+- VGA: IO=224, KBD MODE=PS/2, KBD IO=224
+- CVDU: MODE=ECB, IO=224, KBD MODE=PS/2, KBD IO=226
+- KBD: ENABLED
+- PRP: IO=168
+- PRPCON: ENABLED
+- PRPSD: ENABLED
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=DIDE, IO=42, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=DIDE, IO=42, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=MK4, IO=128, MASTER
+- IDE: MODE=MK4, IO=128, SLAVE
+- SD: MODE=MK4, IO=137, UNITS=1
+
+##### Notes:
+
+- CPU speed will be dynamically measured at startup if DSRTC is present
 
 `\clearpage`{=latex}
 
 ### RCBus Z80 CPU Module
 
+#### ROM Image File:  RCZ80_std.rom
+
 |                   |               |
 |-------------------|---------------|
-| ROM Image File    | RCZ80_std.rom |
-| Console Baud Rate | 115200        |
+| Default CPU Speed | 7.372 MHz     |
 | Interrupts        | Mode 1        |
+| System Timer      | None          |
+| Serial Default    | 115200 Baud   |
+| Memory Manager    | Z2            |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
 
- - CPU speed is detected at startup if DS1302 RTC is active
-   - Otherwise 7.3728 MHz assumed
- - Requires 512K RAM/ROM Module
- - Hardware auto-detected:
-   - DS1302 RTC
-   - ACIA Serial Interface Module
-   - SIO Serial Interface Module
-   - EP Dual UART Serial Interface Module
-   - WDC Floppy Disk Controller w/ 3.5" HD Drives
-   - IDE Hard Disk Interface Module
-   - PPIDE Hard Disk Interface Module
- - Serial baud rate is usually determined by hardware for ACIA and
-   SIO interfaces
+##### Supported Hardware (see [Appendix B - Device Summary]):
+
+- FP: LEDIO=0, SWIO=0
+- DSRTC: MODE=STD, IO=192
+- UART: MODE=RC, IO=160
+- UART: MODE=RC, IO=168
+- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- ACIA: IO=128, INTERRUPTS ENABLED
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
+- CTC: IO=136
+
+##### Notes:
+
+- CPU speed will be dynamically measured at startup if DSRTC is present
+
+`\clearpage`{=latex}
+
+#### ROM Image File:  RCZ80_kio.rom
 
 |                   |               |
 |-------------------|---------------|
-| ROM Image File    | RCZ80_kio.rom |
-| Console Baud Rate | 38400         |
+| Default CPU Speed | 7.372 MHz     |
 | Interrupts        | Mode 2        |
+| System Timer      | CTC           |
+| Serial Default    | 115200 Baud   |
+| Memory Manager    | Z2            |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
 
- - Equivalent to RCZ80_std w/ following modifications:
-   - KIO-SIO Serial Interface uses KIO port standards
-   - KIO-CTC generates system timer
-   - SIO Serial baud rate managed by KIO-CTC
- - Use of Interrupt Mode 2 requires proper IEI/IEO configuration
-   for all peripherals generating interrupts
+##### Supported Hardware (see [Appendix B - Device Summary]):
+
+- FP: LEDIO=0, SWIO=0
+- DSRTC: MODE=STD, IO=192
+- UART: MODE=RC, IO=160
+- UART: MODE=RC, IO=168
+- SIO MODE=STD, IO=136, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=STD, IO=136, CHANNEL B, INTERRUPTS ENABLED
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
+- CTC: IO=132, TIMER MODE=TIMER/16, DIVISOR=9216, HI=256, LO=36, INTERRUPTS ENABLED
+
+##### Notes:
+
+- CPU speed will be dynamically measured at startup if DSRTC is present
+- SIO Serial baud rate managed by CTC
 
 `\clearpage`{=latex}
 
 ### RCBus Z180 CPU Module
 
-|                   |                |
-|-------------------|----------------|
-| ROM Image Files   | RCZ180_ext.rom |
-|                   | RCZ180_nat.rom |
-| Console Baud Rate | 115200         |
-| Interrupts        | Mode 2         |
+#### ROM Image File:  RCZ180_ext.rom
 
- - CPU speed is detected at startup if DS1302 RTC is active
-   - Otherwise 18.432 MHz assumed
- - System timer is generated by Z180 CPU
- - Hardware auto-detected:
-   - DS1302 RTC
-   - Z180 ASCI Serial Ports
-   - SIO Serial Interface Module
-   - EP Dual UART Serial Interface Module
-   - WDC Floppy Disk Controller w/ 3.5" HD Drives
-   - IDE Hard Disk Interface Module
-   - PPIDE Hard Disk Interface Module
- - Specific ROM image determined by memory module used:
-   - RCZ180_ext - Bank switching on memory module (external of CPU)
-   - RCZ180_nat - Linear memory module (native CPU bank switching)
- - Use of Interrupt Mode 2 requires proper IEI/IEO configuration
-   for all peripherals generating interrupts
+|                   |               |
+|-------------------|---------------|
+| Default CPU Speed | 18.432 MHz    |
+| Interrupts        | Mode 2        |
+| System Timer      | Z180          |
+| Serial Default    | 115200 Baud   |
+| Memory Manager    | Z2            |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
+
+##### Supported Hardware (see [Appendix B - Device Summary]):
+
+- FP: LEDIO=0, SWIO=0
+- DSRTC: MODE=STD, IO=12
+- INTRTC: ENABLED
+- ASCI: IO=192, INTERRUPTS ENABLED
+- ASCI: IO=193, INTERRUPTS ENABLED
+- UART: MODE=RC, IO=160
+- UART: MODE=RC, IO=168
+- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
+
+##### Notes:
+
+- For use with Z2 bank switched memory board (Z2 external memory management)
+- CPU speed will be dynamically measured at startup if DSRTC is present
+
+`\clearpage`{=latex}
+
+#### ROM Image File:  RCZ180_nat.rom
+
+|                   |               |
+|-------------------|---------------|
+| Default CPU Speed | 18.432 MHz    |
+| Interrupts        | Mode 2        |
+| System Timer      | Z180          |
+| Serial Default    | 115200 Baud   |
+| Memory Manager    | Z180          |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
+
+##### Supported Hardware (see [Appendix B - Device Summary]):
+
+- FP: LEDIO=0, SWIO=0
+- DSRTC: MODE=STD, IO=12
+- INTRTC: ENABLED
+- ASCI: IO=192, INTERRUPTS ENABLED
+- ASCI: IO=193, INTERRUPTS ENABLED
+- UART: MODE=RC, IO=160
+- UART: MODE=RC, IO=168
+- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
+
+##### Notes:
+
+- For use with linear memory board (Z180 native memory management)
+- CPU speed will be dynamically measured at startup if DSRTC is present
 
 `\clearpage`{=latex}
 
 ### RCBus Z280 CPU Module
 
-|                   |                |
-|-------------------|----------------|
-| ROM Image Files   | RCZ280_ext.rom |
-|                   | RCZ280_nat.rom |
-| Console Baud Rate | 115200         |
-| Interrupts        | Mode 1 (ext)   |
-|                   | Mode 3 (nat)   |
+#### ROM Image File:  RCZ280_ext.rom
 
- - CPU speed is assumed to be 12 MHz (24 MHz oscillator)
- - System timer is generated by Z280 CPU
- - Hardware auto-detected:
-   - DS1302 RTC
-   - Z280 Z2U Serial Ports
-   - ACIA Serial Interface Module (ext only)
-   - SIO Serial Interface Module
-   - EP Dual UART Serial Interface Module
-   - WDC Floppy Disk Controller w/ 3.5" HD Drives
-   - IDE Hard Disk Interface Module
-   - PPIDE Hard Disk Interface Module
- - Serial baud rate is usually determined by hardware for ACIA and
-   SIO interfaces
- - Requires 512K RAM/ROM module
- - Specific ROM image determined by memory module used:
-   - RCZ180_ext - Bank switching on memory module (external of CPU)
-   - RCZ180_nat - Linear memory module (native CPU bank switching)
+|                   |               |
+|-------------------|---------------|
+| Default CPU Speed | 6.000 MHz     |
+| Interrupts        | Mode 1        |
+| System Timer      | None          |
+| Serial Default    | 115200 Baud   |
+| Memory Manager    | Z2            |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
+
+##### Supported Hardware (see [Appendix B - Device Summary]):
+
+- FP: LEDIO=0, SWIO=0
+- DSRTC: MODE=STD, IO=192
+- Z2U: IO=16
+- UART: MODE=RC, IO=160
+- UART: MODE=RC, IO=168
+- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
+- ACIA: IO=128, INTERRUPTS ENABLED
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
+
+##### Notes:
+
+- For use with Z2 bank switched memory board (Z2 external memory management)
+
+`\clearpage`{=latex}
+
+#### ROM Image File:  RCZ280_nat.rom
+
+|                   |               |
+|-------------------|---------------|
+| Default CPU Speed | 6.000 MHz     |
+| Interrupts        | Mode 3        |
+| System Timer      | Z280          |
+| Serial Default    | 115200 Baud   |
+| Memory Manager    | Z280          |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
+
+##### Supported Hardware (see [Appendix B - Device Summary]):
+
+- FP: LEDIO=0, SWIO=0
+- DSRTC: MODE=STD, IO=192
+- Z2U: IO=16, INTERRUPTS ENABLED
+- UART: MODE=RC, IO=160
+- UART: MODE=RC, IO=168
+- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
+
+##### Notes:
+
+- For use with linear memory board (Z280 native memory management)
 
 `\clearpage`{=latex}
 
 ### Easy Z80 SBC
 
-|                   |                |
-|-------------------|----------------|
-| ROM Image File    | RCZ80_easy.rom |
-| Console Baud Rate | 115200         |
-| Interrupts        | Mode 2         |
+#### ROM Image File:  RCZ80_easy.rom
 
- - CPU speed is detected at startup if DS1302 RTC is active
-   - Otherwise 10.000 MHz assumed
- - System timer is generated by onboard CTC
- - Hardware auto-detected:
-   - DS1302 RTC
-   - Onboard SIO Serial Interface
-   - EP Dual UART Serial Interface Module
-   - WDC Floppy Disk Controller w/ 3.5" HD Drives
-   - IDE Hard Disk Interface Module
-   - PPIDE Hard Disk Interface Module
- - SIO Serial baud rate managed by CTC
+|                   |               |
+|-------------------|---------------|
+| Default CPU Speed | 10.000 MHz    |
+| Interrupts        | Mode 2        |
+| System Timer      | CTC           |
+| Serial Default    | 115200 Baud   |
+| Memory Manager    | Z2            |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
+
+##### Supported Hardware (see [Appendix B - Device Summary]):
+
+- FP: LEDIO=0, SWIO=0
+- DSRTC: MODE=STD, IO=192
+- INTRTC: ENABLED
+- UART: MODE=RC, IO=160
+- UART: MODE=RC, IO=168
+- SIO MODE=STD, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=STD, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
+- CTC: IO=136, TIMER MODE=COUNTER, DIVISOR=18432, HI=256, LO=72, INTERRUPTS ENABLED
+
+##### Notes:
+
+- CPU speed will be dynamically measured at startup if DSRTC is present
 
 `\clearpage`{=latex}
 
 ### Tiny Z80 SBC
 
-|                   |                |
-|-------------------|----------------|
-| ROM Image File    | RCZ80_tiny.rom |
-| Console Baud Rate | 115200         |
-| Interrupts        | Mode 2         |
+#### ROM Image File:  RCZ80_tiny.rom
 
- - CPU speed is detected at startup if DS1302 RTC is active
-   - Otherwise 16.000 MHz assumed
- - System timer is generated by onboard CTC
- - Hardware auto-detected:
-   - DS1302 RTC
-   - Onboard SIO Serial Interface
-   - EP Dual UART Serial Interface Module
-   - WDC Floppy Disk Controller w/ 3.5" HD Drives
-   - IDE Hard Disk Interface Module
-   - PPIDE Hard Disk Interface Module
- - SIO Serial baud rate managed by CTC
+|                   |               |
+|-------------------|---------------|
+| Default CPU Speed | 16.000 MHz    |
+| Interrupts        | Mode 2        |
+| System Timer      | CTC           |
+| Serial Default    | 115200 Baud   |
+| Memory Manager    | Z2            |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
+
+##### Supported Hardware (see [Appendix B - Device Summary]):
+
+- FP: LEDIO=0, SWIO=0
+- DSRTC: MODE=STD, IO=192
+- UART: MODE=RC, IO=160
+- UART: MODE=RC, IO=168
+- SIO MODE=STD, IO=24, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=STD, IO=24, CHANNEL B, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=144, MASTER
+- IDE: MODE=RC, IO=144, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
+- CTC: IO=16, TIMER MODE=COUNTER, DIVISOR=18432, HI=256, LO=72, INTERRUPTS ENABLED
+
+##### Notes:
+
+- CPU speed will be dynamically measured at startup if DSRTC is present
 
 `\clearpage`{=latex}
 
 ### Z80-512K CPU/RAM/ROM Module
 
-|                   |                |
-|-------------------|----------------|
-| ROM Image File    | RCZ80_skz.rom  |
-| Console Baud Rate | 115200         |
-| Interrupts        | Mode 1         |
+#### ROM Image File:  RCZ80_skz.rom
 
+|                   |               |
+|-------------------|---------------|
+| Default CPU Speed | 7.372 MHz     |
+| Interrupts        | Mode 1        |
+| System Timer      | None          |
+| Serial Default    | 115200 Baud   |
+| Memory Manager    | Z2            |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
 
- - CPU speed is detected at startup if DS1302 RTC is active
-   - Otherwise 7.3728 MHz assumed
- - Hardware auto-detected:
-   - DS1302 RTC
-   - ACIA Serial Interface Module
-   - SIO Serial Interface Module
-   - EP Dual UART Serial Interface Module
-   - WDC Floppy Disk Controller w/ 3.5" HD Drives
-   - IDE Hard Disk Interface Module
-   - PPIDE Hard Disk Interface Module
- - Serial baud rate is determined by hardware for ACIA and SIO
-   interfaces
+##### Supported Hardware (see [Appendix B - Device Summary]):
+
+- FP: LEDIO=0, SWIO=0
+- DSRTC: MODE=STD, IO=192
+- UART: MODE=RC, IO=160
+- UART: MODE=RC, IO=168
+- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- ACIA: IO=128, INTERRUPTS ENABLED
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
+- CTC: IO=136
+
+##### Notes:
+
+- CPU speed will be dynamically measured at startup if DSRTC is present
 
 `\clearpage`{=latex}
 
 ### Small Computer SC126 Z180 SBC
 
-|                   |                  |
-|-------------------|------------------|
-| ROM Image Files   | SCZ180_sc126.rom |
-| Console Baud Rate | 115200           |
-| Interrupts        | Mode 2           |
+#### ROM Image File:  SCZ180_sc126.rom
 
- - CPU speed is detected at startup if DS1302 RTC is active
-   - Otherwise 18.432 MHz assumed
- - System timer is generated by Z180 CPU
- - Hardware auto-detected:
-   - DS1302 RTC
-   - Z180 ASCI Serial Ports
-   - SIO Serial Interface Module
-   - EP Dual UART Serial Interface Module
-   - WDC Floppy Disk Controller w/ 3.5" HD Drives
-   - IDE Hard Disk Interface Module
-   - PPIDE Hard Disk Interface Module
-   - Onboard SD Card Interface
- - Use of Interrupt Mode 2 requires proper IEI/IEO configuration
-   for all peripherals generating interrupts
+|                   |               |
+|-------------------|---------------|
+| Default CPU Speed | 18.432 MHz    |
+| Interrupts        | Mode 2        |
+| System Timer      | Z180          |
+| Serial Default    | 115200 Baud   |
+| Memory Manager    | Z180          |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
+
+##### Supported Hardware (see [Appendix B - Device Summary]):
+
+- FP: LEDIO=13, SWIO=0
+- DSRTC: MODE=STD, IO=12
+- INTRTC: ENABLED
+- ASCI: IO=192, INTERRUPTS ENABLED
+- ASCI: IO=193, INTERRUPTS ENABLED
+- UART: MODE=RC, IO=160
+- UART: MODE=RC, IO=168
+- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
+- SD: MODE=SC, IO=12, UNITS=1
+- AY38910: MODE=RCZ180, IO=104, CLOCK=1789772 HZ
+
+##### Notes:
+
+- CPU speed will be dynamically measured at startup if DSRTC is present
 
 `\clearpage`{=latex}
 
 ### Small Computer SC130 Z180 SBC
 
-|                   |                  |
-|-------------------|------------------|
-| ROM Image Files   | SCZ180_sc130.rom |
-| Console Baud Rate | 115200           |
-| Interrupts        | Mode 2           |
+#### ROM Image File:  SCZ180_sc130.rom
 
- - CPU speed is detected at startup if DS1302 RTC is active
-   - Otherwise 18.432 MHz assumed
- - System timer is generated by Z180 CPU
- - Hardware auto-detected:
-   - DS1302 RTC
-   - Z180 ASCI Serial Ports
-   - SIO Serial Interface Module
-   - EP Dual UART Serial Interface Module
-   - WDC Floppy Disk Controller w/ 3.5" HD Drives
-   - IDE Hard Disk Interface Module
-   - PPIDE Hard Disk Interface Module
-   - Onboard SD Card Interface
- - Use of Interrupt Mode 2 requires proper IEI/IEO configuration
-   for all peripherals generating interrupts
+|                   |               |
+|-------------------|---------------|
+| Default CPU Speed | 18.432 MHz    |
+| Interrupts        | Mode 2        |
+| System Timer      | Z180          |
+| Serial Default    | 115200 Baud   |
+| Memory Manager    | Z180          |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
+
+##### Supported Hardware (see [Appendix B - Device Summary]):
+
+- FP: LEDIO=0, SWIO=0
+- DSRTC: MODE=STD, IO=12
+- INTRTC: ENABLED
+- ASCI: IO=192, INTERRUPTS ENABLED
+- ASCI: IO=193, INTERRUPTS ENABLED
+- UART: MODE=RC, IO=160
+- UART: MODE=RC, IO=168
+- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
+- SD: MODE=SC, IO=12, UNITS=1
+- AY38910: MODE=RCZ180, IO=104, CLOCK=1789772 HZ
+
+##### Notes:
+
+- CPU speed will be dynamically measured at startup if DSRTC is present
 
 `\clearpage`{=latex}
 
 ### Small Computer SC131 Z180 Pocket Computer
 
-|                   |                  |
-|-------------------|------------------|
-| ROM Image Files   | SCZ180_sc131.rom |
-| Console Baud Rate | 115200           |
-| Interrupts        | Mode 2           |
+#### ROM Image File:  SCZ180_sc131.rom
 
- - CPU speed assumed to be 18.432 MHz
- - System timer is generated by Z180 CPU
- - Hardware auto-detected:
-   - Interrupt-driven RTC
-   - Z180 ASCI Serial Ports
-   - Onboard SD Card Interface
+|                   |               |
+|-------------------|---------------|
+| Default CPU Speed | 18.432 MHz    |
+| Interrupts        | Mode 2        |
+| System Timer      | Z180          |
+| Serial Default    | 115200 Baud   |
+| Memory Manager    | Z180          |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
+
+##### Supported Hardware (see [Appendix B - Device Summary]):
+
+- INTRTC: ENABLED
+- ASCI: IO=192, INTERRUPTS ENABLED
+- ASCI: IO=193, INTERRUPTS ENABLED
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- SD: MODE=SC, IO=12, UNITS=1
+
+##### Notes:
 
 `\clearpage`{=latex}
 
 ### Small Computer SC140 Z180 CPU Module
 
-|                   |                  |
-|-------------------|------------------|
-| ROM Image Files   | SCZ180_sc140.rom |
-| Console Baud Rate | 115200           |
-| Interrupts        | Mode 2           |
+#### ROM Image File:  SCZ180_sc140.rom
 
- - CPU speed is detected at startup if DS1302 RTC is active
-   - Otherwise 18.432 MHz assumed
- - System timer is generated by Z180 CPU
- - Hardware auto-detected:
-   - DS1302 RTC
-   - Z180 ASCI Serial Ports
-   - SIO Serial Interface Module
-   - EP Dual UART Serial Interface Module
-   - WDC Floppy Disk Controller w/ 3.5" HD Drives
-   - IDE Hard Disk Interface Module
-   - PPIDE Hard Disk Interface Module
-   - Onboard SD Card Interface
- - Use of Interrupt Mode 2 requires proper IEI/IEO configuration
-   for all peripherals generating interrupts
+|                   |               |
+|-------------------|---------------|
+| Default CPU Speed | 18.432 MHz    |
+| Interrupts        | Mode 2        |
+| System Timer      | Z180          |
+| Serial Default    | 115200 Baud   |
+| Memory Manager    | Z180          |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
+
+##### Supported Hardware (see [Appendix B - Device Summary]):
+
+- FP: LEDIO=160, SWIO=160
+- DSRTC: MODE=STD, IO=12
+- INTRTC: ENABLED
+- ASCI: IO=192, INTERRUPTS ENABLED
+- ASCI: IO=193, INTERRUPTS ENABLED
+- UART: MODE=RC, IO=160
+- UART: MODE=RC, IO=168
+- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=144, MASTER
+- IDE: MODE=RC, IO=144, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
+- SD: MODE=SC, IO=12, UNITS=1
+
+##### Notes:
+
+- CPU speed will be dynamically measured at startup if DSRTC is present
 
 `\clearpage`{=latex}
 
 ### Small Computer SC503 Z180 CPU Module
 
-|                   |                  |
-|-------------------|------------------|
-| ROM Image Files   | SCZ180_sc503.rom |
-| Console Baud Rate | 115200           |
-| Interrupts        | Mode 2           |
+#### ROM Image File:  SCZ180_sc503.rom
 
- - CPU speed is detected at startup if DS1302 RTC is active
-   - Otherwise 18.432 MHz assumed
- - System timer is generated by Z180 CPU
- - Hardware auto-detected:
-   - DS1302 RTC
-   - Z180 ASCI Serial Ports
-   - SIO Serial Interface Module
-   - EP Dual UART Serial Interface Module
-   - WDC Floppy Disk Controller w/ 3.5" HD Drives
-   - IDE Hard Disk Interface Module
-   - PPIDE Hard Disk Interface Module
-   - Onboard SD Card Interface
- - Use of Interrupt Mode 2 requires proper IEI/IEO configuration
-   for all peripherals generating interrupts
+|                   |               |
+|-------------------|---------------|
+| Default CPU Speed | 18.432 MHz    |
+| Interrupts        | Mode 2        |
+| System Timer      | Z180          |
+| Serial Default    | 115200 Baud   |
+| Memory Manager    | Z180          |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
+
+##### Supported Hardware (see [Appendix B - Device Summary]):
+
+- FP: LEDIO=160, SWIO=160
+- DSRTC: MODE=STD, IO=12
+- INTRTC: ENABLED
+- ASCI: IO=192, INTERRUPTS ENABLED
+- ASCI: IO=193, INTERRUPTS ENABLED
+- UART: MODE=RC, IO=160
+- UART: MODE=RC, IO=168
+- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=144, MASTER
+- IDE: MODE=RC, IO=144, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
+- SD: MODE=SC, IO=12, UNITS=1
+
+##### Notes:
+
+- CPU speed will be dynamically measured at startup if DSRTC is present
+
+`\clearpage`{=latex}
+
+### Small Computer SC700 Z180 CPU Module
+
+#### ROM Image File:  SCZ180_sc700.rom
+
+|                   |               |
+|-------------------|---------------|
+| Default CPU Speed | 18.432 MHz    |
+| Interrupts        | Mode 2        |
+| System Timer      | Z180          |
+| Serial Default    | 115200 Baud   |
+| Memory Manager    | Z180          |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
+
+##### Supported Hardware (see [Appendix B - Device Summary]):
+
+- FP: LEDIO=0
+- DSRTC: MODE=STD, IO=12
+- INTRTC: ENABLED
+- ASCI: IO=192, INTERRUPTS ENABLED
+- ASCI: IO=193, INTERRUPTS ENABLED
+- UART: MODE=RC, IO=160
+- UART: MODE=RC, IO=168
+- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
+S- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
+- SD: MODE=SC, IO=12, UNITS=1
+- AY38910: MODE=RCZ180, IO=104, CLOCK=1789772 HZ
+
+##### Notes:
+
+- CPU speed will be dynamically measured at startup if DSRTC is present
 
 `\clearpage`{=latex}
 
 ### Dyno Z180 SBC
 
-|                   |                |
-|-------------------|----------------|
-| ROM Image Files   | DYNO0_std.rom  |
-| Console Baud Rate | 38400          |
-| Interrupts        | Mode 2         |
+#### ROM Image File:  DYNO_std.rom
 
- - CPU speed is assumed to be 18.432 MHz
- - System timer is generated by Z180 CPU
- - Hardware auto-detected:
-   - BQ4845P RTC
-   - Z180 ASCI Serial Ports
-   - WDC Floppy Disk Controller w/ 3.5" HD Drives
-   - Onboard PPIDE Hard Disk Interface Module
+|                   |               |
+|-------------------|---------------|
+| Default CPU Speed | 18.432 MHz    |
+| Interrupts        | Mode 2        |
+| System Timer      | Z180          |
+| Serial Default    | 38400 Baud    |
+| Memory Manager    | Z180          |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
+
+##### Supported Hardware (see [Appendix B - Device Summary]):
+
+- BQRTC: IO=80
+- ASCI: IO=192, INTERRUPTS ENABLED
+- ASCI: IO=193, INTERRUPTS ENABLED
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=DYNO, IO=132, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=DYNO, IO=132, DRIVE 1, TYPE=3.5" HD
+- PPIDE: IO=76, MASTER
+- PPIDE: IO=76, SLAVE
+
+##### Notes:
 
 `\clearpage`{=latex}
 
 ### Nhyodyne Z80 MBC
 
+#### ROM Image File:  MBC_std.rom
+
 |                   |               |
 |-------------------|---------------|
-| ROM Image File    | MBC_std.rom   |
-| Console Baud Rate | 38400         |
+| Default CPU Speed | 8.000 MHz     |
 | Interrupts        | None          |
+| System Timer      | None          |
+| Serial Default    | 38400 Baud    |
+| Memory Manager    | MBC           |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
 
- - CPU speed is detected at startup if DS1302 RTC is active
-   - Otherwise 8.000 MHz assumed
- - System timer is generated by CTC if available
- - Hardware auto-detected:
-   - DS1302 RTC
-   - Zilog CTC
-   - Zilog DMA Module
-   - UART Serial Adapter
-   - SIO Serial Interface
-   - LPT Printer Interface
-   - Zilog Parallel Interface
-   - CVDU Display Adapter
-   - TMS9938/58 Display Adapter
-   - PS/2 Keyboard Interface
-   - AY-3-8910/YM2149 Sound Module
-   - Floppy Disk Controller w/ 3.5" HD Drives
-   - PPIDE Hard Disk Interface
- - Interrupts may be enabled in build options
+##### Supported Hardware (see [Appendix B - Device Summary]):
+
+- PKD: IO=96
+- DSRTC: MODE=STD, IO=112
+- UART: MODE=SBC, IO=104
+- UART: MODE=DUAL, IO=128
+- UART: MODE=DUAL, IO=136
+- SIO MODE=ZP, IO=176, CHANNEL A
+- SIO MODE=ZP, IO=176, CHANNEL B
+- PIO: IO=184, CHANNEL A
+- PIO: IO=184, CHANNEL B
+- PIO: IO=188, CHANNEL A
+- PIO: IO=188, CHANNEL B
+- LPT: MODE=SPP, IO=232
+- CVDU: MODE=MBC, IO=224, KBD MODE=PS/2, KBD IO=226
+- TMS: MODE=MBC, IO=152
+- KBD: ENABLED
+- ESP: IO=156
+- ESPCON: ENABLED
+- ESPSER: DEVICE=0
+- ESPSER: DEVICE=1
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=MBC, IO=48, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=MBC, IO=48, DRIVE 1, TYPE=3.5" HD
+- PPIDE: IO=96, MASTER
+- PPIDE: IO=96, SLAVE
+- SPK: IO=112
+- CTC: IO=176
+
+##### Notes:
+
+- CPU speed will be dynamically measured at startup if DSRTC is present
 
 `\clearpage`{=latex}
 
 ### Rhyophyre Z180 SBC
 
+#### ROM Image File:  RPH_std.rom
+
 |                   |               |
 |-------------------|---------------|
-| ROM Image File    | RPH_std.rom   |
-| Console Baud Rate | 38400         |
+| Default CPU Speed | 18.432 MHz    |
 | Interrupts        | None          |
+| System Timer      | None          |
+| Serial Default    | 38400 Baud    |
+| Memory Manager    | RPH           |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
 
- - CPU speed is detected at startup if DS1302 RTC is active
-   - Otherwise 18.432 MHz assumed
- - System timer is generated by Z180 CPU
- - Hardware auto-detected:
-   - Onboard Z180 ASCI Serial Ports
-   - Onboard PPIDE CF Interface
-   - Onboard PS/2 Keyboard Controller
- - Interrupts may be enabled in build options
+##### Supported Hardware (see [Appendix B - Device Summary]):
+
+- DSRTC: MODE=STD, IO=132
+- ASCI: IO=64
+- ASCI: IO=65
+- GDC: MODE=RPH, DISPLAY=EGA, IO=144
+- KBD: ENABLED
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- PPIDE: IO=136, MASTER
+- PPIDE: IO=136, SLAVE
+
+##### Notes:
+
+- CPU speed will be dynamically measured at startup if DSRTC is present
 
 `\clearpage`{=latex}
 
 ### Z80 ZRC CPU Module
 
-|                   |                    |
-|-------------------|--------------------|
-| ROM Image Files   | RCZ80_zrc.rom      |
-| Console Baud Rate | 115200             |
-| Interrupts        | Mode 1        |
+#### ROM Image File:  RCZ80_zrc.rom
 
- - CPU speed is detected at startup if DS1302 RTC is active
-   - Otherwise 14.7456 MHz assumed
- - Hardware auto-detected:
-   - DS1302 RTC
-   - ACIA Serial Interface Module
-   - SIO Serial Interface Module
-   - EP Dual UART Serial Interface Module
-   - WDC Floppy Disk Controller w/ 3.5" HD Drives
-   - Onboard IDE Hard Disk Interface Module
-   - PPIDE Hard Disk Interface Module
- - Serial baud rate is usually determined by hardware for ACIA and
-   SIO interfaces
+|                   |               |
+|-------------------|---------------|
+| Default CPU Speed | 14.745 MHz    |
+| Interrupts        | Mode 1        |
+| System Timer      | None          |
+| Serial Default    | 115200 Baud   |
+| Memory Manager    | ZRC           |
+| ROM Size          | 512 KB        |
+| RAM Size          | 1536 KB       |
+
+##### Supported Hardware (see [Appendix B - Device Summary]):
+
+- FP: LEDIO=0, SWIO=0
+- DSRTC: MODE=STD, IO=192
+- UART: MODE=RC, IO=160
+- UART: MODE=RC, IO=168
+- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- ACIA: IO=128, INTERRUPTS ENABLED
+- VRC: IO=0, KBD MODE=VRC, KBD IO=244
+- KBD: ENABLED
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
+- CTC: IO=136
+
+##### Notes:
+
+- ZRC is actually contains no ROM and 2MB of RAM.  The first 512KB
+  of RAM is loaded from disk and then handled like ROM.
+- CPU speed will be dynamically measured at startup if DSRTC is present
+
+`\clearpage`{=latex}
+
+#### ROM Image File:  RCZ80_zrc_ram.rom
+
+|                   |               |
+|-------------------|---------------|
+| Default CPU Speed | 14.745 MHz    |
+| Interrupts        | Mode 1        |
+| System Timer      | None          |
+| Serial Default    | 115200 Baud   |
+| Memory Manager    | ZRC           |
+| ROM Size          | 0 KB          |
+| RAM Size          | 512 KB        |
+
+##### Supported Hardware (see [Appendix B - Device Summary]):
+
+- FP: LEDIO=0, SWIO=0
+- DSRTC: MODE=STD, IO=192
+- UART: MODE=RC, IO=160
+- UART: MODE=RC, IO=168
+- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- ACIA: IO=128, INTERRUPTS ENABLED
+- VRC: IO=0, KBD MODE=VRC, KBD IO=244
+- KBD: ENABLED
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
+- MD: TYPE=RAM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
+- CTC: IO=136
+
+##### Notes:
+
+- ROMless boot -- HBIOS is loaded from disk at boot
+- CPU speed will be dynamically measured at startup if DSRTC is present
+
+`\clearpage`{=latex}
+
+### Z80 ZRC512 CPU Module
+
+#### ROM Image File:  RCZ80_zrc512.rom
+
+|                   |               |
+|-------------------|---------------|
+| Default CPU Speed | 22.000 MHz    |
+| Interrupts        | Mode 1        |
+| System Timer      | None          |
+| Serial Default    | 115200 Baud   |
+| Memory Manager    | ZRC           |
+| ROM Size          | 0 KB          |
+| RAM Size          | 512 KB        |
+
+##### Supported Hardware (see [Appendix B - Device Summary]):
+
+- FP: LEDIO=0, SWIO=0
+- DSRTC: MODE=STD, IO=192
+- UART: MODE=RC, IO=160
+- UART: MODE=RC, IO=168
+- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- ACIA: IO=128, INTERRUPTS ENABLED
+- VRC: IO=0, KBD MODE=VRC, KBD IO=244
+- KBD: ENABLED
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
+- MD: TYPE=RAM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
+- CTC: IO=136
+
+##### Notes:
+
+- ROMless boot -- HBIOS is loaded from disk at boot
+- CPU speed will be dynamically measured at startup if DSRTC is present
+
+`\clearpage`{=latex}
+
+### Z180 Z1RCC CPU Module
+
+#### ROM Image File:  RCZ180_z1rcc.rom
+
+|                   |               |
+|-------------------|---------------|
+| Default CPU Speed | 18.432 MHz    |
+| Interrupts        | Mode 2        |
+| System Timer      | Z180          |
+| Serial Default    | 115200 Baud   |
+| Memory Manager    | Z180          |
+| ROM Size          | 0 KB          |
+| RAM Size          | 512 KB        |
+
+##### Supported Hardware (see [Appendix B - Device Summary]):
+
+- FP: LEDIO=0, SWIO=0
+- DSRTC: MODE=STD, IO=12
+- INTRTC: ENABLED
+- ASCI: IO=192, INTERRUPTS ENABLED
+- ASCI: IO=193, INTERRUPTS ENABLED
+- UART: MODE=RC, IO=160
+- UART: MODE=RC, IO=168
+- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
+- MD: TYPE=RAM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
+
+##### Notes:
+
+- ROMless boot -- HBIOS is loaded from disk at boot
+- CPU speed will be dynamically measured at startup if DSRTC is present
 
 `\clearpage`{=latex}
 
 ### Z280 ZZRCC CPU Module
 
-|                   |                    |
-|-------------------|--------------------|
-| ROM Image Files   | RCZ280_zzrc.rom    |
-| Console Baud Rate | 115200             |
-| Interrupts        | Mode 3             |
+#### ROM Image File:  RCZ280_zzrcc.rom
 
- - CPU speed is assumed to be 12 MHz (24 MHz oscillator)
- - System timer is generated by Z280 CPU
- - Hardware auto-detected:
-   - DS1302 RTC
-   - Z280 Z2U Serial Ports
-   - SIO Serial Interface Module
-   - EP Dual UART Serial Interface Module
-   - WDC Floppy Disk Controller w/ 3.5" HD Drives
-   - Onboard IDE Hard Disk Interface Module
-   - PPIDE Hard Disk Interface Module
- - Serial baud rate is usually determined by hardware for ACIA and
-   SIO interfaces
+|                   |               |
+|-------------------|---------------|
+| Default CPU Speed | 14.745 MHz    |
+| Interrupts        | Mode 3        |
+| System Timer      | Z280          |
+| Serial Default    | 115200 Baud   |
+| Memory Manager    | Z280          |
+| ROM Size          | 256 KB        |
+| RAM Size          | 256 KB        |
+
+##### Supported Hardware (see [Appendix B - Device Summary]):
+
+- FP: LEDIO=0, SWIO=0
+- DSRTC: MODE=STD, IO=192
+- Z2U: IO=16, INTERRUPTS ENABLED
+- UART: MODE=RC, IO=160
+- UART: MODE=RC, IO=168
+- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
+- VRC: IO=0, KBD MODE=VRC, KBD IO=244
+- KBD: ENABLED
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
+
+##### Notes:
+
+- ZZRCC actually contains no ROM and 512KB of RAM.  The first 256KB
+  of RAM is loaded from disk and then handled like ROM.
+- CPU speed will be dynamically measured at startup if DSRTC is present
+
+`\clearpage`{=latex}
+
+#### ROM Image File:  RCZ280_zzrcc_ram.rom
+
+|                   |               |
+|-------------------|---------------|
+| Default CPU Speed | 14.745 MHz    |
+| Interrupts        | Mode 3        |
+| System Timer      | Z280          |
+| Serial Default    | 115200 Baud   |
+| Memory Manager    | Z280          |
+| ROM Size          | 0 KB          |
+| RAM Size          | 512 KB        |
+
+##### Supported Hardware (see [Appendix B - Device Summary]):
+
+- FP: LEDIO=0, SWIO=0
+- DSRTC: MODE=STD, IO=192
+- Z2U: IO=16, INTERRUPTS ENABLED
+- UART: MODE=RC, IO=160
+- UART: MODE=RC, IO=168
+- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- VRC: IO=0, KBD MODE=VRC, KBD IO=244
+- KBD: ENABLED
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
+- MD: TYPE=RAM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
+
+##### Notes:
+
+- ROMless boot -- HBIOS is loaded from disk at boot
+- CPU speed will be dynamically measured at startup if DSRTC is present
 
 `\clearpage`{=latex}
 
 ### Z280 ZZ80MB SBC
 
-|                   |                   |
-|-------------------|-------------------|
-| ROM Image Files   | RCZ280_zz80mb.rom |
-| Console Baud Rate | 115200            |
-| Interrupts        | Mode 3            |
+#### ROM Image File:  RCZ280_zz80mb.rom
 
- - CPU speed is assumed to be 12 MHz (24 MHz oscillator)
- - System timer is generated by Z280 CPU
- - Hardware auto-detected:
-   - DS1302 RTC
-   - Z280 Z2U Serial Ports
-   - SIO Serial Interface Module
-   - EP Dual UART Serial Interface Module
-   - WDC Floppy Disk Controller w/ 3.5" HD Drives
-   - Onboard IDE Hard Disk Interface Module
-   - PPIDE Hard Disk Interface Module
- - Serial baud rate is usually determined by hardware for ACIA and
-   SIO interfaces
+|                   |               |
+|-------------------|---------------|
+| Default CPU Speed | 12.000 MHz    |
+| Interrupts        | Mode 3        |
+| System Timer      | Z280          |
+| Serial Default    | 115200 Baud   |
+| Memory Manager    | Z280          |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
+
+##### Supported Hardware (see [Appendix B - Device Summary]):
+
+- FP: LEDIO=0, SWIO=0
+- DSRTC: MODE=STD, IO=192
+- Z2U: IO=16, INTERRUPTS ENABLED
+- UART: MODE=RC, IO=160
+- UART: MODE=RC, IO=168
+- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- VRC: IO=0, KBD MODE=VRC, KBD IO=244
+- KBD: ENABLED
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
+
+##### Notes:
+
+- CPU speed will be dynamically measured at startup if DSRTC is present
+
+`\clearpage`{=latex}
+
+### Z80-Retro SBC
+
+#### ROM Image File:  Z80RETRO_std.rom
+
+|                   |               |
+|-------------------|---------------|
+| Default CPU Speed | 14.745 MHz    |
+| Interrupts        | Mode 2        |
+| System Timer      | None          |
+| Serial Default    | 38400 Baud    |
+| Memory Manager    | Z2            |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
+
+##### Supported Hardware (see [Appendix B - Device Summary]):
+
+- SIO MODE=Z80R, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=Z80R, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- SD: MODE=, IO=104, UNITS=1
+- CTC: IO=64
+
+##### Notes:
+
+`\clearpage`{=latex}
+
+### S100 Computers Z180
+
+#### ROM Image File:  S100_std.rom
+
+|                   |               |
+|-------------------|---------------|
+| Default CPU Speed | 18.432 MHz    |
+| Interrupts        | Mode 2        |
+| System Timer      | Z180          |
+| Serial Default    | 57600 Baud    |
+| Memory Manager    | Z180          |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
+
+##### Supported Hardware (see [Appendix B - Device Summary]):
+
+- FP: LEDIO=0
+- INTRTC: ENABLED
+- ASCI: IO=192, INTERRUPTS ENABLED
+- ASCI: IO=193, INTERRUPTS ENABLED
+- SCON: IO=0
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- SD: MODE=SC, IO=12, UNITS=1
+
+##### Notes:
+
+`\clearpage`{=latex}
+
+### Duodyne Z80 System
+
+#### ROM Image File:  DUO_std.rom
+
+|                   |               |
+|-------------------|---------------|
+| Default CPU Speed | 8.000 MHz     |
+| Interrupts        | Mode 2        |
+| System Timer      | CTC           |
+| Serial Default    | 38400 Baud    |
+| Memory Manager    | Z2            |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
+
+##### Supported Hardware (see [Appendix B - Device Summary]):
+
+- DSRTC: MODE=STD, IO=148
+- PCF: IO=86
+- UART: MODE=SBC, IO=88
+- UART: MODE=AUX, IO=168
+- UART: MODE=DUAL, IO=112
+- UART: MODE=DUAL, IO=120
+- SIO MODE=ZP, IO=96, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=ZP, IO=96, CHANNEL B, INTERRUPTS ENABLED
+- PIO: IO=104, CHANNEL A
+- PIO: IO=104, CHANNEL B
+- PIO: IO=108, CHANNEL A
+- PIO: IO=108, CHANNEL B
+- LPT: MODE=SPP, IO=72
+- DMA: MODE=DUO, IO=64
+- CH: IO=78
+- CHUSB: IO=78
+- CHSD: IO=78
+- ESP: IO=156
+- ESPCON: ENABLED
+- ESPSER: DEVICE=0
+- ESPSER: DEVICE=1
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- SPK: IO=148
+- CTC: IO=96, TIMER MODE=COUNTER, DIVISOR=18432, HI=256, LO=72, INTERRUPTS ENABLED
+
+##### Notes:
+
+- CPU speed will be dynamically measured at startup if DSRTC is present
+
+`\clearpage`{=latex}
+
+### Heath H8 Z80 System
+
+#### ROM Image File:  HEATH_std.rom
+
+|                   |               |
+|-------------------|---------------|
+| Default CPU Speed | 7.372 MHz     |
+| Interrupts        | Mode 1        |
+| System Timer      | None          |
+| Serial Default    | 115200 Baud   |
+| Memory Manager    | Z2            |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
+
+##### Supported Hardware (see [Appendix B - Device Summary]):
+
+- FP: LEDIO=0, SWIO=0
+- DSRTC: MODE=STD, IO=192
+- UART: MODE=RC, IO=160
+- UART: MODE=RC, IO=168
+- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- ACIA: IO=128, INTERRUPTS ENABLED
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
+- CTC: IO=136
+
+##### Notes:
+
+- CPU speed will be dynamically measured at startup if DSRTC is present
+
+`\clearpage`{=latex}
+
+### EP Mini-ITX Z180
+
+#### ROM Image File:  EPITX_std.rom
+
+|                   |               |
+|-------------------|---------------|
+| Default CPU Speed | 18.432 MHz    |
+| Interrupts        | Mode 2        |
+| System Timer      | Z180          |
+| Serial Default    | 115200 Baud   |
+| Memory Manager    | Z180          |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
+
+##### Supported Hardware (see [Appendix B - Device Summary]):
+
+- INTRTC: ENABLED
+- ASCI: IO=192, INTERRUPTS ENABLED
+- ASCI: IO=193, INTERRUPTS ENABLED
+- UART: MODE=RC, IO=160
+- UART: MODE=RC, IO=168
+- TMS: MODE=MSX, IO=152
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=EPFDC, IO=72, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=EPFDC, IO=72, DRIVE 1, TYPE=3.5" HD
+- SD: MODE=, IO=66, UNITS=1
+
+##### Notes:
 
 `\clearpage`{=latex}
 
@@ -3819,43 +5548,56 @@ may be discovered by RomWBW in your system.
 | ASCI      | Char     | Zilog Z180 CPU Built-in Serial Ports                   |
 | AY        | Audio    | AY-3-8910/YM2149 Programmable Sound Generator          |
 | BQRTC     | RTC      | BQ4845P Real Time Clock                                |
+| CH        | System   | CH375/376 USB Controller                               |
+| CHSD      | Disk     | CH37x SD Card Interface                                |
+| CHUSB     | Disk     | CH37x USB Drive Interface                              |
 | CTC       | System   | Zilog Clock/Timer                                      |
 | CVDU      | Video    | MC8563-based Video Display Controller                  |
 | DMA       | System   | Zilog DMA Controller                                   |
 | DS1307    | RTC      | Maxim DS1307 PCF I2C Real-Time Clock w/ NVRAM          |
 | DS1501RTC | RTC      | Maxim DS1501/DS1511 Watchdog Real-Time Clock           |
-| DSKY      | System   | Keypad & Display                                       |
 | DSRTC     | RTC      | Maxim DS1302 Real-Time Clock w/ NVRAM                  |
 | DUART     | Char     | SCC2681 or compatible Dual UART                        |
-| FD        | Disk     | 8272 of compatible Floppy Disk Controller              |
+| EMM       | Disk     | Disk drive on Parallel Port emm interface (Zip Drive)  |
+| FD        | Disk     | 8272 or compatible Floppy Disk Controller              |
+| FP        | System   | Simple LED & Switch Front Panel                        |
 | GDC       | Video    | uPD7220 Video Display Controller                       |
 | HDSK      | Disk     | SIMH Simulator Hard Disk                               |
-| IDE       | Disk     | IDE/ATA Hard Disk Interface                            |
+| ICM       | DsKy     | ICM7218-based Display/Keypad on PPI                    |
+| IDE       | Disk     | IDE/ATA/ATAPI Hard Disk Interface                      |
+| IMM       | Disk     | IMM Zip Drive on PPI                                   |
 | INTRTC    | RTC      | Interrupt-based Real Time Clock                        |
-| KBD       | Kbd      | 8242 PS/2 Keyboard Controller                          |
+| KBD       | Keyboard | 8242 PS/2 Keyboard Controller                          |
 | KIO       | System   | Zilog Serial/ Parallel Counter/Timer                   |
 | LPT       | Char     | Parallel I/O Controller                                |
 | MD        | Disk     | ROM/RAM Disk                                           |
-| MSXKYB    | Kbd      | MSX Compliant Matrix Keyboard                          |
-| I2C       | System   | I2C Interface                                          |
+| MSXKYB    | Keyboard | MSX Compliant Matrix Keyboard                          |
+| PCF       | RTC      | PCF8584-based I2C Real-Time Clock                      |
 | PIO       | Char     | Zilog Parallel Interface Controller                    |
-| PPIDE     | Disk     | 8255 IDE/ATA Hard Disk Interface                       |
-| PPK       | Kbd      | Matrix Keyboard                                        |
-| PPPSD     | Disk     | ParPortProp SD Card Interface                          |
+| PKD       | DsKy     | P8279-based Display/Keypad on PPI                      |
+| PPA       | Disk     | PPA Zip Drive on PPI                                   |
+| PPIDE     | Disk     | 8255 IDE/ATA/ATAPI Hard Disk Interface                 |
+| PPK       | Keyboard | Matrix Keyboard                                        |
+| PPP       | System   | ParPortProp Host Interface Controller                  |
 | PPPCON    | Serial   | ParPortProp Serial Console Interface                   |
-| PRPSD     | Disk     | PropIO SD Card Interface                               |
+| PPPSD     | Disk     | ParPortProp SD Card Interface                          |
+| PRP       | System   | PropIO Host Interface Controller                       |
 | PRPCON    | Serial   | PropIO Serial Console Interface                        |
+| PRPSD     | Disk     | PropIO SD Card Interface                               |
 | RF        | Disk     | RAM Floppy Disk Interface                              |
 | RP5C01    | RTC      | Ricoh RPC01A Real-Time Clock w/ NVRAM                  |
+| SCON      | Char     | S100 Console                                           |
 | SD        | Disk     | SD Card Interface                                      |
 | SIMRTC    | RTC      | SIMH Simulator Real-Time Clock                         |
 | SIO       | Char     | Zilog Serial Port Interface                            |
 | SN76489   | Sound    | SN76489 Programmable Sound Generator                   |
 | SPK       | Sound    | Bit-bang Speaker                                       |
+| SYQ       | Disk     | Iomega SparQ Drive on PPI                              |
 | TMS       | Video    | TMS9918/38/58 Video Display Controller                 |
 | UART      | Char     | 16C550 Family Serial Interface                         |
 | USB-FIFO  | Char     | FT232H-based ECB USB FIFO                              |
 | VDU       | Video    | MC6845 Family Video Display Controller                 |
 | VGA       | Video    | HD6445CP4-based Video Display Controller               |
+| VRC       | Video    | VGARC Video Display Controller                         |
 | YM        | Audio    | YM2612 Programmable Sound Generator                    |
 | Z2U       | Char     | Zilog Z280 CPU Built-in Serial Ports                   |

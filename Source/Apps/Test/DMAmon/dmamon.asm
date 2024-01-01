@@ -12,11 +12,25 @@ DMAMODE_Z180	.EQU	2		; Z180 INTEGRATED DMA
 DMAMODE_Z280	.EQU	3		; Z280 INTEGRATED DMA
 DMAMODE_RC	.EQU	4		; RCBUS Z80 DMA
 DMAMODE_MBC	.EQU	5		; MBC
-DMAMODE_VDG	.EQU	6		; VELESOFT DATAGEAR
+DMAMODE_DUO	.EQU	6		; DUO
+DMAMODE_VDG	.EQU	7		; VELESOFT DATAGEAR
+;
+DMAMODE		.EQU	DMAMODE_DUO	; SELECT DMA DEVICE FOR TESTING
+;
+;==================================================================================================
+; SOME DEFAULT PLATFORM CONFIGURATIONS
+;==================================================================================================
 ;
 DMABASE		.EQU	$E0		; DMA: DMA BASE ADDRESS
-DMAMODE		.EQU	DMAMODE_MBC	; SELECT DMA DEVICE FOR TESTING
+DMALATCH	.EQU	DMABASE+1	; DMA: DMA LATCH ADDRESS
 DMAIOTST	.EQU	$68		; AN OUTPUT PORT FOR TESTING - 16C450 SERIAL OUT
+;
+#IF (DMAMODE==DMAMODE_DUO)
+DMABASE		.SET	$40		; DMA: DMA0 BASE ADDRESS
+DMALATCH	.SET	$43		; DMA: DMA LATCH ADDRESS
+DMAIOTST	.SET	$58		; AN OUTPUT PORT FOR TESTING - 16C450 SERIAL OUT
+;DMAIOTST	.SET	$94		; AN ALT OUTPUT PORT FOR TESTING - RTC/SPEAKER/LEDS PORT
+#ENDIF
 ;
 ;==================================================================================================
 ; HELPER MACROS AND EQUATES
@@ -113,7 +127,7 @@ MAIN:
 	LD	SP,STACK		; STACK
 ;
 	call	PRTSTRD			; WELCOME
-	.db	"\n\rDMA Monitor V3\n\r$"
+	.db	"\n\rDMA Monitor V3.1\n\r$"
 ;
 #IF (INTENABLE)
 ;
@@ -122,6 +136,8 @@ MAIN:
 	ld	de,$A000
 	ld	bc,hsiz
 	ldir
+	ld	a,(dmaport)
+	ld	(int_dmaport),a
 ;
 	; Install interrupt vector (RomWBW specific!!!)
 	ld	hl,int		; pointer to my interrupt handler
@@ -156,17 +172,17 @@ MENULP1:
 	CP	'N'
 	JP	Z,DMATST_N		; MEMORY COPY ITER
 	CP	'0'
-	JP	Z,DMATST_01
+	JP	Z,DMATST_0		; PULSE DMA PORT
+	CP	'1'
+	JP	Z,DMATST_1		; PULSE LATCH PORT
 	CP	'O'
 	JP	Z,DMATST_O
-#IF !(DMAMODE==DMAMODE_VDG)
-	CP	'1'
-	JP	Z,DMATST_01
 	CP	'R'
 	JP	Z,DMATST_R		; TOGGLE RESET
 	CP	'Y'
-	JP	Z,DMATST_Y		; TOGGLE READY
-#ENDIF
+	JP	Z,DMATST_Y
+	cp	'L'
+	jp	z,DMACFG_L		; SET LATCH PORT
 	cp	'S'
 	jp	z,DMACFG_S		; SET PORT
 	cp	'V'
@@ -197,12 +213,20 @@ DMABYE:
 ;
 DMACFG_S:
 	call	PRTSTRD
-	.db	"\n\rSet port address\n\rPort:$"
+	.db	"\n\rSet DMA port address\n\rPort:$"
 	call	HEXIN
 	ld	hl,dmaport
 	ld	(hl),a
-	inc	hl
-	inc	a
+#IF (INTENABLE)
+	ld	(int_dmaport),a
+#ENDIF
+	jp	MENULP
+;
+DMACFG_L:
+	call	PRTSTRD
+	.db	"\n\rSet Latch port address\n\rPort:$"
+	call	HEXIN
+	ld	hl,dmalach
 	ld	(hl),a
 	jp	MENULP
 ;
@@ -234,11 +258,17 @@ DMATST_N:
 	CALL	DMAMemTestIter
 	JP	MENULP
 ;
-DMATST_01:
+DMATST_0:
 	call	PRTSTRD
-	.db	"\n\rPerforming Port Selection Test\n\r$"
-	CALL	DMA_Port01
-	JP	MENULP
+	.db	"\n\rPerforming DMA Port Selection Test\n\r$"
+	CALL	DMA_Port0
+	ret
+
+DMATST_1:
+	call	PRTSTRD
+	.db	"\n\rPerforming Latch Port Selection Test\n\r$"
+	CALL	DMA_Port1
+	ret
 ;
 DMATST_O:
 	call	PRTSTRD
@@ -255,7 +285,7 @@ DMATST_D:
 DMATST_Y:
 	call	PRTSTRD
 	.db	"\n\rPerforming Ready Bit Test\n\r$"
-	CALL	DMA_ReadyT
+	CALL	DMA_ReadyY
 	JP	MENULP
 ;
 DMATST_R:
@@ -288,6 +318,10 @@ DISPM:	call	PRTSTRD
 	call	PRTSTRD
 	.db	", Port=0x$"
 	LD	A,(dmaport)		; DISPLAY
+	CALL	PRTHEXBYTE		; DMA PORT
+	call	PRTSTRD
+	.db	", Latch Port=0x$"
+	ld	A,(dmalach)
 	CALL	PRTHEXBYTE		; DMA PORT
 ;
 #IF (INTENABLE)
@@ -351,7 +385,7 @@ DMA_INIT:
 	CALL	PRTHEXBYTE
 ;
 #IF !(DMAMODE==DMAMODE_VDG)
-	ld	a,(dmautil)
+	ld	a,(dmalach)
 	ld	c,a
 	LD	A,DMA_FORCE
 	out	(c),a			; force ready off
@@ -369,7 +403,8 @@ DMA_INIT:
 ;
 	ld	hl,DMACode		; program the
 	ld	b,DMACode_Len		; dma command
-	ld	c,DMABASE		; block
+	ld	a,(dmaport)
+	ld	c,a		; block
 ;
 	di
 	otir				; load dma
@@ -417,6 +452,7 @@ DMA_DEV_STR:
 	.TEXT	"Z280$"
 	.TEXT	"RCBUS$"
 	.TEXT	"MBC$"
+	.TEXT	"DUODYNE$"
 	.TEXT	"DATAGEAR$"
 ;
 DMA_SPD_STR:
@@ -479,11 +515,12 @@ DMACFG_V:
 ;==================================================================================================
 ;
 DMABUF	.TEXT	"0123456789abcdef"
+;DMABUF	.DB	$04,$00,$04,$00,$04,$00,$04,$00,$04,$00,$04,$00,$04,$00,$04,$00,$00,$00,$00 ; SPEAKER
 ;
 DMA_ReadyO:
 	call	PRTSTRD
 	.db	"\r\nOutputing string to port 0x$"
-	ld	a,DMAIOTST
+	ld	a,(tstport)
 	call	PRTHEXBYTE
 	call	NEWLINE
 ;
@@ -491,7 +528,7 @@ DMA_ReadyO:
 IOLoop:	push	bc
 	call	NEWLINE
 	ld	hl,DMABUF
-	ld	a,DMAIOTST
+	ld	a,(tstport)
 	ld	bc,16
 ;
 	call	DMAOTIR
@@ -502,16 +539,17 @@ IOLoop:	push	bc
 	ret
 ;
 ;==================================================================================================
-; PULSE PORT (COMMON ROUTINE WHERE A CONTAINS THE ASCII PORT OFFSET)
+; PULSE PORT
 ;==================================================================================================
 ;
-DMA_Port01:
+DMA_Port0:
+	ld	a,(dmaport)
+	jr	DMA_Port
+DMA_Port1:
+	ld	a,(dmalach)
+DMA_Port:
 	call	PRTSTRD
 	.db	"\r\nPulsing port 0x$"
-	sub	'0'			; Calculate
-	ld	c,a
-	ld	a,(dmaport)		; Port to
-	add	a,c
 	call	PRTHEXBYTE
 	call	NEWLINE
 	ld	c,a			; toggle
@@ -543,12 +581,9 @@ dlylp:	dec	bc
 ; TOGGLE READY BIT
 ;==================================================================================================
 ;
-DMA_ReadyT:
+DMA_ReadyY:
 	call	NEWLINE
-#IF !(DMAMODE==DMAMODE_VDG)
-
-#ENDIF
-	ld	a,(dmautil)
+	ld	a,(dmalach)
 	ld	c,a			; toggle
 	ld	b,$20			; loop counter
 portlp2:push	bc
@@ -558,14 +593,12 @@ portlp2:push	bc
 	.db	": ON$"
 	call	delay
 	ld	a,$FF
-;	ld	c,DMABASE+1
 	out	(c),a
 	call	PRTSTRD
 	.db	" -> OFF$"
 	call	delay
 	call	PRTSTRD
 	.db	"\r               \r$"
-;	ld	c,DMABASE+1
 	ld	a,0
 	out	(c),a
 	pop	bc
@@ -605,9 +638,9 @@ DMAMemMove1:
 ;
 DMAMemMove2:
 ;
-;	LD	HL,$8400	; PLANT
-;	LD	A,$00		; BAD
-;	LD	(HL),A		; SEED
+	;LD	HL,$8400	; PLANT
+	;LD	A,$00		; BAD
+	;LD	(HL),A		; SEED
 ;
 	LD	A,$AA		; CHECK COPY SUCCESSFULL
 	LD	HL,$8000
@@ -615,6 +648,14 @@ DMAMemMove2:
 NXTCMP:	CPI
 	JP	PO,CMPOK
 	JR	Z,NXTCMP
+
+	DEC	HL
+	CALL	PRTHEXWORDHL
+	LD	A,' '
+	CALL	COUT
+	LD	A,(HL)
+	CALL	PRTHEXBYTE
+	
 	RET			; RET W/ ZF CLEAR
 ;
 CMPOK:
@@ -1167,10 +1208,10 @@ CST:
 	RET
 ;
 USEINT	.DB	FALSE		; USE INTERRUPTS FLAG
-counter	.dw	0	
 dmaport	.db	DMABASE
-dmautil	.db	DMABASE+1
+dmalach	.db	DMALATCH
 dmaxfer	.db	DMA_XMODE
+tstport	.db	DMAIOTST
 dmavbs	.db	0
 SAVSTK:	.DW	2
 	.FILL	64
@@ -1187,11 +1228,16 @@ reladr	.equ	$		; relocation start adr
 	.org	$A000		; code will run here
 ;
 int:
+	;LD	E,'.'			; OUTPUT CHAR TO E
+	;LD	C,CIO_CONSOLE		; CONSOLE UNIT TO C
+	;LD	B,BF_CIOOUT		; HBIOS FUNC: OUTPUT CHAR
+	;CALL	$FFF0			; HBIOS OUTPUTS CHARACTER
+
 	; According to the DMA doc, you must issue
 	; a DMA_DISABLE command prior to a
 	; DMA_REINIT_STATUS_BYTE command to avoid a
 	; potential race condition.
-	ld	a,(dmaport)
+	ld	a,(int_dmaport)
 	ld	c,a
 	ld	a,DMA_DISABLE
 	out	(c),a
@@ -1210,6 +1256,11 @@ int:
 ;
 	or	$ff		; signal int handled
 	ret
+;
+; data referred to in handler must reside in high mem
+;
+int_dmaport	.db	0	; hi mem copy of dmaport
+counter		.dw	0	; interrupt counter
 ;
 hsiz	.equ	$ - $A000	; size of handler to relocate
 ;
