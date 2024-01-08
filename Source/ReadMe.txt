@@ -304,7 +304,7 @@ associated config file.
 
 At this point, the build should continue and you will see output 
 related to the assembler runs and some utility invocations.  Just 
-review the output for any obvioius errors.  Normally, all errors 
+review the output for any obvious errors.  Normally, all errors 
 will cause the build to stop immediately and display an error 
 message in red.
 
