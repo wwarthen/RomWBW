@@ -3625,8 +3625,8 @@ update your ROM. The following is a typical example of transferring
 ROM image using XModem and flashing the chip in-situ.
 
 **NOTE**: The FLASH utility **can not** determine the type of your
-ROM chip if it is write protected.  Additionally, it has not way to
-even determine if it is write protected.  If the FLASH utility
+ROM chip if it is write protected.  Additionally, it has no way to
+determine if it is write protected.  If the FLASH utility
 indicates it does not recognize your ROM chip, check to ensure the
 chip is not write protected.
 
