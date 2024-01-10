@@ -882,12 +882,12 @@ table which will be recognized by the application to find the FAT
 filesystem.
 
 Although RomWBW-style CP/M media does not know anything about
-partition tables, it is entirely possible to have media that has both
-CP/M and FAT file systems on it. This is accomplished by creating a
-FAT filesystem on the media that starts on a track beyond the last
-track used by CP/M. Each CP/M slice on a media will occupy 8,320K
-(16,640 sectors). So, make sure to start your FAT partition beyond (<
-slice count> * 8,320K) or (<slice count * 16,640 sectors).
+partition tables, it is entirely possible to have media that
+has both CP/M and FAT file systems on it.  This is accomplished
+by creating a FAT filesystem on the media that starts on a track
+beyond the last track used by CP/M.  Each CP/M slice can occupy
+up to 8MB.  So, make sure to start your FAT partition beyond
+(slice count) * 9MB.
 
 The application infers whether you are attempting to reference a FAT
 or CP/M filesystem via the drive specifier (char before ':'). A
@@ -899,8 +899,7 @@ assumed. For example:
 
 | `2:README.TXT` refers to FAT file "README.TXT" on disk unit #2
 | `C:README.TXT` refers to CP/M file "README.TXT" on CP/M drive C
-| `README.TXT` refers to CP/M file "README.TXT" on the current CP/M
-drive
+| `README.TXT` refers to CP/M file "README.TXT" on the current CP/M drive
 
 Files with SYS, HIDDEN, or R/O only attributes are not given any
 special treatment. Such files are found and processed like any other
@@ -914,6 +913,8 @@ copy the file to the desired user area.
 
 Accessing FAT filesystems on a floppy requires the use of RomWBW HBIOS
 v2.9.1-pre.13 or greater.
+
+Only the first 8 RomWBW disk units (0-7) can be referenced.
 
 Files written are not verified.
 
@@ -935,7 +936,7 @@ characters.  The FAT application will block any attempt to create a
 file on the CP/M filesystem containing any of these prohibited
 characters:
 
-|         `< > . , ; : = ? * [ ] _ % | ( ) / \`
+|         `< > . , ; : ? * [ ] |/ \`
 
 The operation will be aborted with "`Error: Invalid Path Name`" if such
 a filename character is encountered.
