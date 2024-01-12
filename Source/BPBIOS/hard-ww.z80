@@ -104,15 +104,69 @@ SELHD:	; SET DEVICE
 ;  Writes from HSTBUF using HSTTRK and HSTSEC to build Block Number.
 ; NOTE: This routine uses physical drive characteristics from ICFG-xx.
 
-HDWRIT:	
+HDWRIT:
+;	CALL	PRTSTRD
+;	DEFB	'[HD WRITE]$'
 
 	XOR	A
 	LD	(HSTWRT),A	; Show no active writes pending
-	JP	HDSK_WRITE	; ..continue
+
+	LD	B,HB_DIOWRITE	; HBIOS WRITE
+	JR	HDIO	; ..continue
 
 ;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ; Read from Hard Disk Drive			< Internal BIOS Routine >
 ;  Reads to HSTBUF using HSTTRK and HSTSEC to build Block Number.
+
+HDREAD:
+;	CALL	PRTSTRD		; DEBUG
+;	DEFB	'[HD READ]$'	; DEBUG
+
+	LD	B,HB_DIOREAD	; HBIOS READ
+	JR	HDIO	; ..continue
+
+;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+; Common read/write code for hard disk
+
+HDIO:
+	LD	HL,(HSTDPH)	; GET ACTIVE DPH POINTER
+	DEC	HL		; ADJUST TO POINT TO BPBIOS LOGICAL UNIT NUMBER
+	LD	A,(HL)		; LOAD IT IN A
+;
+	; Convert logical -> physical
+	; Code below is ugly brute force approach, but since there are
+	; always exactly 3 logical drives in BPBIOS and the first one
+	; is the most commonly used, this turns out to be reasonably
+	; efficient.
+	LD	HL,HDRV0	; PERHAPS HDRV0
+	OR	A		; A == 0?
+	JR	Z,HDSK_HDIO1	; HANDLE IF SO
+	LD	HL,HDRV1	; PERHAPS HDRV1
+	DEC	A		; A == 1?
+	JR	Z,HDSK_HDIO1	; HANDLE IF SO
+	LD	HL,HDRV2	; PERHAPS HDRV2
+	DEC	A		; A == 2?
+	JR	Z,HDSK_HDIO1	; HANDLE IF SO
+	CALL	PANIC		; INVALID LOGICAL UNIT NUMBER
+HDSK_HDIO1:
+	LD	A,(HL)		; LOAD PHYS UNIT NUM (HBIOS DISK UNIT)
+	AND	0FH		; REMOVE EXTRANEOUS BITS
+	LD	C,A		; PUT IN C FOR BELOW
+	JR	HB_DSKIO
+
+	  IF  BANKED
+	COMMON	/BANK2/
+	  ELSE
+	CSEG
+	  ENDIF
+;
+;==================================================================================================
+;   HBIOS Disk Driver Interface
+;==================================================================================================
+;
+; Enter with B=HBIOS disk function code (read/write)
+;            C=HBIOS disk unit number
+;
 ; NOTE: This routine uses physical drive characteristics from ICFG-xx.
 ; The routine computes a sequential block number with the algorithm; 
 ; Trk * 16 + Sector, HBIOS uses LBA addressing for hard drive like 
@@ -127,43 +181,8 @@ HDWRIT:
 ;   Sector := (Block# MOD hdSPT)+1	(* Quotient1 := Block# DIV hdSPT *)
 ;   Head   := Quotient1 MOD hdHds	(* Quotient2 := Quotient1 DIV hdHds *)
 ;   Track  := Quotient2
-;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-HDREAD:
-	JP	HDSK_READ
-
-	  IF  BANKED
-	COMMON	/BANK2/
-	  ELSE
-	CSEG
-	  ENDIF
-;
-;==================================================================================================
-;   HBIOS Disk Driver Interface
-;==================================================================================================
-;
-; HBIOS disk commands
-;
-HB_DSKRD	EQU	13H
-HB_DSKWR	EQU	14H
-;
-HDSK_READ:
-;	CALL	PRTSTRD		; DEBUG
-;	DEFB	'[HDSK READ]$'	; DEBUG
-
-	LD	B,HB_DSKRD	; HBIOS DISK READ (13H)
-	JR	HDSK_RW
-;
-HDSK_WRITE:
-;	CALL	PRTSTRD
-;	DEFB	'[HDSK WRITE]$'
-
-	LD	B,HB_DSKWR	; HBIOS DISK WRITE (14H)
-;
-HDSK_RW:
-	LD	HL,(HSTDPH)	; GET ACTIVE DPH POINTER
-	DEC	HL		; ADJUST TO POINT TO UNIT NUMBER
-	LD	C,(HL)		; LOAD IT IN C FOR HBIOS CALL LATER
+HB_DSKIO:
 	PUSH	BC		; SAVE FUNCTION AND DEVICE FOR LATER
 	LD	HL,(HSTTRK)	; GET TRACK VALUE
 	LD	A,L		; LSB OF TRACK TO A
@@ -172,10 +191,10 @@ HDSK_RW:
 	LD	A,(HSTSEC)	; GET SECTOR
 	LD	E,A		; STUFF IT IN E
 	LD	B,4		; PREPARE TO SHIFT OUT 4 BIT HEAD VALUE
-HDSK_RW1:                       
+HB_DSKIO1:                       
 	SRL	H		; SHIFT ONE BIT OUT
 	RR	L		; ... OF HL
-	DJNZ	HDSK_RW1	; DO ALL 4 BITS
+	DJNZ	HB_DSKIO1	; DO ALL 4 BITS
 	POP	BC		; RECOVER FUNCTION AND DEVICE
 	PUSH	BC		; SAVE INCOMING FUNCTION, DEVICE/UNIT
 	LD	B,12H		; SETUP FOR NEW SEEK CALL
@@ -192,17 +211,3 @@ HDSK_RW1:
 
 	OR	0FFH		; A=$FF TO SIGNAL ERROR
 	RET			; AND DONE W/ ERROR
-;
-;==================================================================================================
-;   HDSK DISK DRIVER - DATA
-;==================================================================================================
-;
-	  IF  BANKED
-	COMMON	/B2RAM/
-	  ELSE
-	DSEG
-	  ENDIF
-
-HDSK_PDN	DEFS	1		; PHYSICAL DEVICE
-
-

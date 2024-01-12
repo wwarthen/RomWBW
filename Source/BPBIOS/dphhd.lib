@@ -9,10 +9,11 @@
 ; 1.0 - 31 Aug 92 - General Release.					HFB
 ; 0.1 -  3 Jan 92 - Initial release.					HFB
 ;:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-; The Physical Drive Number byte (XDPH+3) is simply an index to the Physical
-; Drive as specified in the ICFG-xx.Z80 file.  Up to three physical drives
-; may be defined in that section, the first byte of which defines the
-; Physical/Logical Unit Address (Device & LUN for SCSI, Master/Slave for IDE),
+; The Logical Drive Number byte (XDPH+3) is simply an index into the
+; BPBIOS physical drive table as specified in the ICFG-xx.Z80 file.
+; BPBIOS supports exactly three logical drives which
+; are defined in that section, the first byte of which defines the
+; Physical Unit (HBIOS Disk Unit)
 ; and a flag bit to specify whether or not the drive is physically present.
 ; See ICFG-xx.Z80 for a definition of the data.
 
@@ -21,7 +22,7 @@
 
 XDPH90:	DEFB	TRUE		; Format lock flag (Lock RAM Drive)
 	DEFB	FIXDSK		; Disk Drive Type
-	DEFB	2		; Driver ID = Treat as Hard Drive
+	DEFB	3		; Driver ID = Treat as Hard Drive
 	DEFB	HB_MDRAM	; Physical Drive Number
 DPH$90:	DEFW	0		; Skew Table pointer
 	DEFW	0,0,0		; Scratch area
@@ -34,7 +35,7 @@ DPH$90:	DEFW	0		; Skew Table pointer
 
 XDPH91:	DEFB	TRUE		; Format lock flag (Lock ROM Drive)
 	DEFB	FIXDSK		; Disk Drive Type
-	DEFB	2		; Driver ID = Treat as Hard Drive
+	DEFB	3		; Driver ID = Treat as Hard Drive
 	DEFB	HB_MDROM	; Physical Drive Number
 DPH$91:	DEFW	0		; Skew Table pointer
 	DEFW	0,0,0		; Scratch area
@@ -48,7 +49,7 @@ DPH$91:	DEFW	0		; Skew Table pointer
 XDPH50:	DEFB	TRUE		; Format lock flag (Lock First Hard Drive)
 	DEFB	FIXDSK		; Disk drive type
 	DEFB	2		; Driver ID - 2=hard drive
-	DEFB	HB_HDDEV0	; Physical drive [0..6] for this Partition
+	DEFB	0		; Logical drive [0..2] for this Partition
 DPH$50:	DEFW	0		; Skew table pointer
 	DEFW	0,0,0		; Scratch area
 	DEFW	DIRBUF		; Directory buffer pointer
@@ -61,7 +62,7 @@ DPH$50:	DEFW	0		; Skew table pointer
 XDPH51:	DEFB	TRUE		; --- Second Hard Drive/Partition
 	DEFB	FIXDSK		; Disk drive type
 	DEFB	2		; Driver ID - 2=hard drive
-	DEFB	HB_HDDEV0	; Physical drive [0..6] for this Partition
+	DEFB	0		; Logical drive [0..2] for this Partition
 DPH$51:	DEFW	0
 	DEFW	0,0,0
 	DEFW	DIRBUF
@@ -74,7 +75,7 @@ DPH$51:	DEFW	0
 XDPH52:	DEFB	TRUE		; --- Third Hard Drive/Partition
 	DEFB	FIXDSK		; Disk drive type
 	DEFB	2		; Driver ID - 2=hard drive
-	DEFB	HB_HDDEV0	; Physical drive [0..2] for this Partition
+	DEFB	0		; Physical drive [0..2] for this Partition
 DPH$52:	DEFW	0
 	DEFW	0,0,0
 	DEFW	DIRBUF
@@ -87,7 +88,7 @@ DPH$52:	DEFW	0
 XDPH53:	DEFB	TRUE		; --- Fourth Hard Drive/Partition
 	DEFB	FIXDSK		; Disk drive type
 	DEFB	2		; Driver ID - 2=hard drive
-	DEFB	HB_HDDEV0	; Physical drive [0..6] for this Partition
+	DEFB	0		; Logical drive [0..2] for this Partition
 DPH$53:	DEFW	0
 	DEFW	0,0,0
 	DEFW	DIRBUF
@@ -100,7 +101,7 @@ DPH$53:	DEFW	0
 XDPH54:	DEFB	TRUE		; --- Fifth Hard Drive/Partition
 	DEFB	FIXDSK		; Disk drive type
 	DEFB	2		; Driver ID - 2=hard drive
-	DEFB	HB_HDDEV0	; Physical drive [0..6] for this Partition
+	DEFB	0		; Logical drive [0..2] for this Partition
 DPH$54:	DEFW	0
 	DEFW	0,0,0
 	DEFW	DIRBUF
@@ -113,7 +114,7 @@ DPH$54:	DEFW	0
 XDPH55:	DEFB	TRUE		; --- Sixth Hard Drive/Partition
 	DEFB	FIXDSK		; Disk drive type
 	DEFB	2		; Driver ID - 2=hard drive
-	DEFB	HB_HDDEV0	; Physical drive [0..6] for this Partition
+	DEFB	0		; Logical drive [0..2] for this Partition
 DPH$55:	DEFW	0
 	DEFW	0,0,0
 	DEFW	DIRBUF
@@ -126,7 +127,7 @@ DPH$55:	DEFW	0
 XDPH56:	DEFB	TRUE		; --- Seventh Hard Drive/Partition
 	DEFB	FIXDSK		; Disk drive type
 	DEFB	2		; Driver ID - 2=hard drive
-	DEFB	HB_HDDEV0	; Physical drive [0..6] for this Partition
+	DEFB	0		; Logical drive [0..2] for this Partition
 DPH$56:	DEFW	0
 	DEFW	0,0,0
 	DEFW	DIRBUF
@@ -139,7 +140,7 @@ DPH$56:	DEFW	0
 XDPH57:	DEFB	TRUE		; --- Eighth Hard Drive/Partition
 	DEFB	FIXDSK		; Disk drive type
 	DEFB	2		; Driver ID - 2=hard drive
-	DEFB	HB_HDDEV0	; Physical drive [0..6] for this Partition
+	DEFB	0		; Logical drive [0..2] for this Partition
 DPH$57:	DEFW	0
 	DEFW	0,0,0
 	DEFW	DIRBUF
@@ -152,7 +153,7 @@ DPH$57:	DEFW	0
 XDPH58:	DEFB	TRUE		; --- Ninth Hard Drive/Partition
 	DEFB	FIXDSK		; Disk drive type
 	DEFB	2		; Driver ID - 2=hard drive
-	DEFB	HB_HDDEV1	; Physical drive [0..6] for this Partition
+	DEFB	1		; Logical drive [0..2] for this Partition
 DPH$58:	DEFW	0
 	DEFW	0,0,0
 	DEFW	DIRBUF
@@ -165,7 +166,7 @@ DPH$58:	DEFW	0
 XDPH59:	DEFB	TRUE		; --- Tenth Hard Drive/Partition
 	DEFB	FIXDSK		; Disk drive type
 	DEFB	2		; Driver ID - 2=hard drive
-	DEFB	HB_HDDEV1	; Physical drive [0..6] for this Partition
+	DEFB	1		; Logical drive [0..2] for this Partition
 DPH$59:	DEFW	0
 	DEFW	0,0,0
 	DEFW	DIRBUF
@@ -178,7 +179,7 @@ DPH$59:	DEFW	0
 XDPH60:	DEFB	TRUE		; --- Eleventh Hard Drive/Partition
 	DEFB	FIXDSK		; Disk drive type
 	DEFB	2		; Driver ID - 2=hard drive
-	DEFB	HB_HDDEV1	; Physical drive [0..6] for this Partition
+	DEFB	1		; Logical drive [0..2] for this Partition
 DPH$60:	DEFW	0
 	DEFW	0,0,0
 	DEFW	DIRBUF
@@ -191,7 +192,7 @@ DPH$60:	DEFW	0
 XDPH61:	DEFB	TRUE		; --- Twelveth Hard Drive/Partition
 	DEFB	FIXDSK		; Disk drive type
 	DEFB	2		; Driver ID - 2=hard drive
-	DEFB	HB_HDDEV1	; Physical drive [0..6] for this Partition
+	DEFB	1		; Logical drive [0..2] for this Partition
 DPH$61:	DEFW	0
 	DEFW	0,0,0
 	DEFW	DIRBUF

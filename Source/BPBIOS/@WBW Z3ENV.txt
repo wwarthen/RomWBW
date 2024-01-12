@@ -12,7 +12,7 @@ Operating System (DOS), and Basic I/O System (BIOS).  The CCP and DOS components
 are pre-built, relocatable binaries.  The BIOS (BPBIOS) is assembled into a relocatable
 binary by the build, then the build links together all three components to form the
 final loadable image (.IMG) file.  The linking process is performed by the custom BPBIOS
-linker (BPBUILD.COM).  In addition to linking the 3 components, BPBUILD also sets
+linker (BPBUILD.COM).  In addition to linking the 3 components, BPBUILD also
 adjusts the ZCPR environment configuration.
 
 BPBUILD is designed to be run interactively.  However, it can be started with an
@@ -24,8 +24,8 @@ running of BPBUILD.
 
 The CCP can be ZCPR 3.3 (ZCPR33?.REL), ZCPR 3.4 (Z34.REL), or ZCPR 4.1 (Z41.ZRL).  ZCPR 3.3
 uses static references to the ZCPR segments, so a custom version of it must be assembled.
-The ZCPR33 subdirectory provides a build process for doing this.  It produces a specific
-version for each of the memory segment configurations (ZCPR33T.REL & ZCPR33N.REL).
+The ZCPR33 subdirectory provides a build process for doing this.  It produces a custom
+version of ZCPR33.REL with the correct static references to the ZCPR segments.
 
 The DOS can be ZSDOS 1.1 (ZSDOS.ZRL) or ZSDOS 2.03 (ZS203.ZRL).	 These are both pre-built
 relocatable binaries.  Note that only certain version combinations of ZSDOS and ZCPR are

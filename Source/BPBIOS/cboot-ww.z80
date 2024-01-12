@@ -120,14 +120,14 @@ DYNLP:	LD	E,(HL)
 	DEC	DE		; Else back up Ptr to Driver
 	DEC	DE
 	LD	A,(DE)		; Get driver #
-;	   IF  RAMDSK
-;	DEC	A
-;	DEC	A		; Hard Disk (Driver 2)?
-;	JR	Z,ADDSIZ	; ..jump if so
-;	DEC	A		; RAM Disk (Driver 3)?
-;	   ELSE
+	   IF  RAMDSK
+	DEC	A
+	DEC	A		; Hard Disk (Driver 2)?
+	JR	Z,ADDSIZ	; ..jump if so
+	DEC	A		; RAM Disk (Driver 3)?
+	   ELSE
 	CP	2		; Hard Disk (Driver 2)?
-;	   ENDIF	; Ramdsk
+	   ENDIF	; Ramdsk
 	JR	NZ,DYNCHK	; ..jump to end if Not
 ADDSIZ:	PUSH	BC		; Save loop counter
 	PUSH	HL		;   and ptr to DPH

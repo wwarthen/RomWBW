@@ -19,6 +19,8 @@
 ;  1) Actually implement this
 ;_______________________________________________________________________________
 ;
+#include "../ver.inc"
+;
 ;===============================================================================
 ; Definitions
 ;===============================================================================
@@ -29,9 +31,6 @@ restart	.equ	$0000		; CP/M restart vector
 bdos	.equ	$0005		; BDOS invocation vector
 ;;
 ;stamp	.equ	$40		; loc of RomWBW CBIOS zero page stamp
-;
-rmj	.equ	3		; CBIOS version - major
-rmn	.equ	0		; CBIOS version - minor
 ;
 ;===============================================================================
 ; Code Section

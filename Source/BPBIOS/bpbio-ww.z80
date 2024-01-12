@@ -421,6 +421,12 @@ DRVTBL:	LD	HL,DPHTBL	; Point to DPH table
 	PAGE
 	  ENDIF		;HARDDSK
 
+	  IF  RAMDSK		; << ****** Hardware Specific ****** >>
+	INCLUDE	RAMD-WW.Z80	; << This Driver is for HBIOS >>
+
+	PAGE
+	  ENDIF		;RAMDSK
+
 
 				; << ****** Hardware Specific ****** >>
 				; <<   Enter Warm Boot routines in   >>

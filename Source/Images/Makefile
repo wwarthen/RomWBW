@@ -81,7 +81,7 @@ blankhd1k:
 	case $@ in \
 		(*cpm22*) sys=../CPM22/cpm_wbw.sys;; \
 		(*qpm*) sys=../QPM/qpm_wbw.sys;; \
-		(*zsdos* | *nzcom* | *dos65*) sys=../ZSDOS/zsys_wbw.sys;; \
+		(*zsdos* | *nzcom* | *dos65* | *bp*) sys=../ZSDOS/zsys_wbw.sys;; \
 		(*cpm3*) sys=../CPM3/cpmldr.sys;; \
 		(*zpm3*) sys=../ZPM3/zpmldr.sys;; \
 	esac ; \

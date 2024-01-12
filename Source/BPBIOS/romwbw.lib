@@ -27,7 +27,11 @@ HB_IODEV	EQU	80H		; 0x80 is current HBIOS console
 HB_MDRAM	EQU	0		; HBIOS Disk Unit #0 is usually the RAM Disk
 HB_MDROM	EQU	1		; HBIOS Disk Unit #1 is usually the ROM Disk
 ;
-; Set HB_HDDEVN to appropriate HBIOS disk device numbers
+; Map BPBIOS logical drive numbers (0-2) to HBIOS physical disk units
+; HB_HDDEVn values map to HDRVn (see icfg-ww).
+;
+; The values below will be the default mapping.  They can be changed
+; using BPCNFG *Physical Drive* configuration.
 ;
 ; If the RomWBW system has no floppy drives, then the hard disk units
 ; will start right after the memory disk units.  So, the first hard disk

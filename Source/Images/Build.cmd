@@ -66,7 +66,7 @@ call BuildDisk.cmd bascomp hd wbw_hd1k || exit /b
 call BuildDisk.cmd fortran hd wbw_hd1k || exit /b
 call BuildDisk.cmd games hd wbw_hd1k || exit /b
 
-if exist ..\BPBIOS\bp*.rel call BuildDisk.cmd bp hd wbw_hd1k || exit /b
+if exist ..\BPBIOS\bp*.rel call BuildDisk.cmd bp hd wbw_hd1k ..\zsdos\zsys_wbw.sys || exit /b
 
 copy hd1k_prefix.dat ..\..\Binary\ || exit /b
 

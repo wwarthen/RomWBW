@@ -1,8 +1,8 @@
 #DEFINE	RMJ	3
-#DEFINE	RMN	4
+#DEFINE	RMN	5
 #DEFINE	RUP	0
 #DEFINE	RTP	0
-#DEFINE BIOSVER	"3.4.0"
+#DEFINE BIOSVER	"3.5.0-pre.0"
 #define rmj	RMJ
 #define rmn	RMN
 #define rup	RUP

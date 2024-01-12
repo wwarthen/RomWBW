@@ -74,7 +74,7 @@ MORDPB	EQU	NO		; Include additional Floppy DPB Formats?
 
 ;;--- RAM Disk Section ---
 ;
-;RAMDSK	EQU	YES		; YES = Make RAM-Disk Code, NO = No code made
+RAMDSK	EQU	YES		; YES = Make RAM-Disk Code, NO = No code made
 
 ;--- Hard Disk Section ---
 
