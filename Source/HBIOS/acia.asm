@@ -178,26 +178,13 @@ ACIA1_INT:
 ;
 ACIA_INTRCV:
         ; CHECK TO SEE IF SOMETHING IS ACTUALLY THERE
-	CALL	DELAY
         LD      C,(IY+3)                ; CMD/STAT PORT TO C
         IN      A,(C)                   ; GET STATUS
-	LD	B,A
-	AND	$01			; ISOLATE READY BIT
-	JR	NZ,ACIA_INTRCV1
-;
-#IF FALSE
-	CALL	PC_LT
-	LD	A,B
-	CALL	PRTHEXBYTE
-	INC	C
-	IN	A,(C)
-	CALL	PRTHEXBYTE
-	CALL	PC_GT
-	OR	$FF
-#ENDIF
-;
-	RET
-	
+        RRA                             ; READY BIT TO CF
+	JR	C,ACIA_INTRCV1		; RECEIVE CHAR
+	XOR	A			; INT NOT HANDLED, CLEAR ZF
+        RET                             ; ... AND RETURN
+
 ;
 ACIA_INTRCV1:
         ; RECEIVE CHARACTER INTO BUFFER
@@ -285,9 +272,9 @@ ACIA_IN:
 ACIA_IN:
         CALL    ACIA_IST                ; SEE IF CHAR AVAILABLE
         JR      Z,ACIA_IN               ; LOOP UNTIL SO
-        HB_DI                           ; AVOID COLLISION WITH INT HANDLER
         LD      L,(IY+6)                ; SET HL TO
         LD      H,(IY+7)                ; ... START OF BUFFER STRUCT
+        HB_DI                           ; AVOID COLLISION WITH INT HANDLER
         LD      A,(HL)                  ; GET COUNT
         DEC     A                       ; DECREMENT COUNT
         LD      (HL),A                  ; SAVE UPDATED COUNT
@@ -322,8 +309,8 @@ ACIA_IN2:
         LD      (HL),E                  ; SAVE UPDATED TAIL PTR
         INC     HL
         LD      (HL),D
-        LD      E,C                     ; MOVE CHAR TO RETURN TO E
         HB_EI                           ; INTERRUPTS OK AGAIN
+        LD      E,C                     ; MOVE CHAR TO RETURN TO E
         XOR     A                       ; SIGNAL SUCCESS
         RET                             ; AND DONE
 ;
