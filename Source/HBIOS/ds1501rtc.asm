@@ -279,8 +279,7 @@ DS1501RTC_GETBYT:
 	LD	E,A
 ;
 	; Return success
-	XOR	
-;
+	XOR	A
 	RET
 ;
 ; RTC Set Byte

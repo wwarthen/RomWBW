@@ -103,15 +103,15 @@ UNA_%.osimg.bin: UNA_%.romldr.bin UNA_%.dbgmon.bin
 	cat camel80.bin $(*F).nascom.bin tastybasic.bin $(*F).game.bin $(*F).eastaegg.bin netboot.mod $(*F).updater.bin $(*F).usrrom.bin >$@
 	srec_cat $@ -Binary -Crop 0 0x7FFF -Checksum_Negative_Big_Endian 0x7FFF 1 1 -o $@ -Binary
 
+S100_%.imgpad2.bin: s100mon.bin
+	cp $< $@
+	srec_cat $@ -Binary -Crop 0 0x7FFF -Checksum_Negative_Big_Endian 0x7FFF 1 1 -o $@ -Binary
+
 %.imgpad2.bin: imgpad2.asm %.build.inc
 	cp $(*F).build.inc build.inc
 	$(TASM) $(TASMFLAGS) $< $@ $(@:.bin=.lst)
 	srec_cat $@ -Binary -Crop 0 0x7FFF -Checksum_Negative_Big_Endian 0x7FFF 1 1 -o $@ -Binary
 	rm build.inc
-
-S100_%.imgpad2.bin: s100mon.bin
-	cp $< $@
-	srec_cat $@ -Binary -Crop 0 0x7FFF -Checksum_Negative_Big_Endian 0x7FFF 1 1 -o $@ -Binary
 
 UNA_%.rom: UNA_%.osimg.bin UNA_%.hbios_env.sh
 	. ./UNA_$(*F).hbios_env.sh ; \
