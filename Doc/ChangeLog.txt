@@ -2,6 +2,9 @@ Version 3.5
 -----------
 - M?F: Fix for hours display in HBRTC application
 - M?F: Fix for assembly error in DS1501RTC driver
+- WBW: Add VT-100 graphics char selection to Propeller firmware
+- WBW: Allow all lines of VGA display to be used on Propeller firmware
+- WBW: Allow front panel LED/Switch bits to be inverted in config
 
 Version 3.4
 -----------

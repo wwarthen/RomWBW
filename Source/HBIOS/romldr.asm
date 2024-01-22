@@ -1383,8 +1383,6 @@ str_s100con	.db	"\r\n\r\nConsole on S100 Bus",0
 clrled:
 #if (BIOS == BIOS_WBW)
   #if (FPLED_ENABLE)
-	;xor	a			; zero accum
-	;out	(FPLED_IO),a		; clear diag leds
 	ld	b,BF_SYSSET		; HBIOS SysGet
 	ld	c,BF_SYSSET_PANEL	; ... Panel swiches value
 	ld	l,$00			; all LEDs off
