@@ -312,13 +312,13 @@ hardware into the proper mode, etc.
 ## Invocation
 
 HBIOS functions are invoked by placing the required parameters in CPU 
-registers and executing an RST 08 instruction. Note that HBIOS does not 
+registers and executing an `RST 08` instruction. Note that HBIOS does not 
 preserve register values that are unused. However, the values of the Z80
 alternate registers and IX/IY will be preserved (these registers may be
 used within HBIOS, but will be saved and restored internally).
 
-An alternate method of invoking HBIOS functions is to use `CALL 0xFFF0`.
-Since the RST 08 vector exists in page zero of the CPU address space,
+An alternate method of invoking HBIOS functions is to use `CALL $FFF0`.
+Since the `RST 08` vector exists in page zero of the CPU address space,
 it may be paged out when alternate memory banks are selected.  If this
 may be true when you are invoking a function, you should use the `CALL`
 method.
@@ -351,6 +351,12 @@ space. However, performance sensitive buffers (primarily disk I/O
 buffers) will require double-buffering if the caller’s buffer is in the 
 lower 32K of CPU address space. For optimal performance, such buffers 
 should be placed in the upper 32K of CPU address space.
+
+HBIOS also implements a small number of core functions in the HBIOS 
+proxy area at the top of RAM.  These exist primarily to faciliate the 
+operation of normal HBIOS function calls.  However, they are available 
+to be used by OSes and applications.  These functions can only be 
+invoked by calling into a jump table in upper RAM.
 
 ## Result Codes
 
@@ -1976,9 +1982,24 @@ The hardware Platform (L) is identified as follows:
 | C: Bank ID                             | C: Prior Bank ID                       |
 
 Activates the specified memory Bank ID (C) and returns the Prior Bank ID
- (C). The function **must** be invoked from code located in the upper 
+(C).
+
+The function **must** be invoked from code located in the upper 
 32K and the stack **must** be in the upper 32K.  The Status (A) is a 
 standard HBIOS result code.
+
+If the system is using interrupt mode 1 interrupts, the you **must**
+take steps to ensure interrupts are properly handled.  You generally
+have two choices:
+
+- Disable interrupts while the normal user bank is switched out
+- Duplicate the interrupt mode 1 vector from the normal user bank
+  into the bank you are switching to.
+
+If the normal user bank has been switched out, you will not be able to
+invoke the HBIOS API functions using an `RST 08` instruction.  You can
+use the alternative mechanism using `CALL $FFF0` as described in
+[Invocation].
 
 ### Function 0xF3 -- System Get Bank (SYSGETBNK)
 
@@ -2349,6 +2370,37 @@ This function will return the current value of the switches (L) from the
 front panel of the system.  If no front panel is available in the
 system, the returned Status (A) will indicate a No Hardware error.
 
+#### SYSGET Subfunction 0xF5 -- Get Application Banks Information (APPBNKS)
+
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0xF8                                | A: Status                              |
+| C: 0xF5                                | H: App Banks Start ID                  |
+|                                        | L: App Banks Count                     |
+|                                        | E: Bank Size                           |
+
+HBIOS may be configured to reserve a number of RAM memory banks that 
+will be available for application use.  This function returns 
+information about the RAM memory banks currently available for 
+application use.  The function provides the bank id of the first 
+available application bank (H) and the count of banks available (L).  It
+also returns the size of a bank expressed as a number of 256-byte pages
+(E).  The returned Status (A) is a standard HBIOS result code.
+
+The application banks are always a contiguous set of banks, so the App 
+Banks Start ID can be incremented to address additional banks up to the 
+limit indicated by App Banks Count.  If the App Banks Count is zero, 
+then there are no application banks available (regardless of the value 
+of App Banks Start ID).
+
+HBIOS does not provide any mechanism to reserve application banks. Any 
+concept of allocation of application banks must be implemented within 
+the OS or application.
+
+This function does not change the current bank selected.  You must use 
+[Function 0xF2 -- System Set Bank (SYSSETBNK)] or ???? for this. Be sure
+to observe the warnings in the description of this function.
+
 ### Function 0xF9 -- System Set (SYSSET)
 
 | **Entry Parameters**                   | **Returned Values**                    |
@@ -2574,6 +2626,99 @@ provided.
 
 `\clearpage`{=latex}
 
+## Proxy Functions
+
+The following special functions are implemented inside of the HBIOS
+proxy area at the top of RAM.  They do not cause a bank switch are are,
+therefore, much faster than their corresponding HBIOS API functions.
+
+The functions are invoked via the following dedicated jump table:
+
+| **Function**                           | **Address**                            |
+|----------------------------------------|----------------------------------------|
+| Invoke HBIOS Function (INVOKE)         | 0xFFF0                                 |
+| Bank Select (BNKSEL)                   | 0xFFF3                                 |
+| Bank Copy (BNKCPY)                     | 0xFFF6                                 |
+| Bank Call (BNKCALL)                    | 0xFFF9                                 |
+
+### Invoke HBIOS Function (INVOKE)
+
+**Address 0xFFF0**
+
+This function is an alternate mechanism for invoking the normal HBIOS
+API functions.  The parameters and return values are as documented
+above.  To put it another way, `CALL $FFF0` is equivalent to `RST 08`,
+but it can be used in any scenario when the normal bank is not
+selected.
+
+These functions are inherently dangerous and generally not value
+checked.  Use with extreme caution.
+
+### Bank Select (BNKSEL)
+
+**Address 0xFFF3**
+
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| A: Bank ID                             |                                        |
+
+This function will select the memory bank identified by Bank ID (A).
+All registers are preserved.
+
+The warnings described in [Function 0xF3 -- System Get Bank (SYSGETBNK)]
+should be observed.
+
+### Bank Copy (BNKCPY)
+
+**Address 0xFFF6**
+
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| HL: Source Address                     | HL: Ending Source Address              |
+| DE: Destination Address                | DE: Ending Destination Address         |
+| BC: Count                              | BC: 0                                  |
+| HB_SRCBNK: Source Bank ID              |                                        |
+| HB_DSTBNK: Destination Bank ID         |                                        |
+
+This function will copy Count (BC) bytes from Source Address (HL) in 
+Source Bank ID (HB_SRCBNK) to Destination Address (DE) in Destination 
+Bank ID (HB_DSTBNK).  The HB_SRCBNK and HB_DSTBNK fields are dedicated 
+locations in the proxy.  These locations are defined in hbios.inc:
+
+- Source Bank ID: `HB_SRCBNK` = $FFE4
+- Destination Bank ID: `HB_DSTBNK` = $FFE7
+
+The Source Bank ID and Destination Bank ID values must be populated in
+the specified addresses before calling this function.
+
+During processing, HL and DE, will be incremented.  At termination,
+HL and DE will contain the "next" source/destination addresses that
+would be copied.  This allows this function to be invoked repeatedly
+to copy continuous blocks of data.
+
+Register AF is destroyed by this function.  Register BC will be 0.
+
+### Bank Call (BNKCALL)
+
+**Address 0xFFF9**
+
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| A: Target Bank ID                      |                                        |
+| IX: Target Address                     |                                        |
+
+This function will perform a function call to a routine in another
+bank.  It does this by selecting the Target Bank ID (A) and then
+calling the Target Address (IX).  On return from the target function,
+the originally active bank is selected.
+
+Register usage is determined by the routine that is called.
+
+Since a different bank will be selected while the target function is
+active, the warnings described in
+[Function 0xF3 -- System Get Bank (SYSGETBNK)] should be observed.
+
+`\clearpage`{=latex}
 
 # Errors and diagnostics
 

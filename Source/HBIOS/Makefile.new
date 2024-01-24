@@ -9,7 +9,8 @@ DIST_OBJECTS := \
 #	RCZ80_mt RCZ80_duart MON_std 
 
 OBJECTS := $(DIST_OBJECTS)
-OBJECTS := SBC_std MK4_std UNA_std S100_std
+# OBJECTS := SBC_std MK4_std UNA_std S100_std
+
 OBJECTS := $(OBJECTS:=.rom) $(OBJECTS:=.com) $(OBJECTS:=.upd)
 OBJECTS := $(filter-out UNA_%.com UNA_%.upd,$(OBJECTS))
 
@@ -115,13 +116,13 @@ S100_%.imgpad2.bin: s100mon.bin
 
 UNA_%.rom: UNA_%.osimg.bin UNA_%.hbios_env.sh
 	. ./UNA_$(*F).hbios_env.sh ; \
-	cat ../UBIOS/UNA-BIOS.BIN UNA_$(*F).osimg.bin ../UBIOS/FSFAT.BIN ../RomDsk/rom$${ROMSIZE}_una.dat >$@ ; \
+	cat ../UBIOS/UNA-BIOS.BIN UNA_$(*F).osimg.bin ../UBIOS/FSFAT.BIN ../RomDsk/rom$${ROMDISKSIZE}_una.dat >$@ ; \
 	cp UNA_$(*F).osimg.bin $(DEST)/UNA_WBW_SYS.bin ; \
-	cp ../RomDsk/rom$${ROMSIZE}_una.dat $(DEST)/UNA_WBW_ROM$${ROMSIZE}.bin
+	cp ../RomDsk/rom$${ROMDISKSIZE}_una.dat $(DEST)/UNA_WBW_ROM$${ROMDISKSIZE}.bin
 
 %.rom: %.hbios_rom.bin %.osimg.bin %.osimg1.bin %.imgpad2.bin %.hbios_env.sh
 	. ./$(*F).hbios_env.sh ; \
-	if [ $$ROMSIZE -gt 0 ] ; then RD="rom$$ROMSIZE" ; else RD="ram$$RAMSIZE" ; fi ; \
+	if [ $$ROMSIZE -gt 0 ] ; then RD="rom$$ROMDISKSIZE" ; else RD="rom$$RAMDISKSIZE" ; fi ; \
 	cat $(*F).hbios_rom.bin $(*F).osimg.bin $(*F).osimg1.bin $(*F).imgpad2.bin ../RomDsk/$${RD}_wbw.dat >$@
 
 %.com: %.hbios_app.bin %.osimg_small.bin
