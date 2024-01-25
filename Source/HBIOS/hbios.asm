@@ -440,7 +440,7 @@ HBX_INVSP	.EQU	$ - 2
 ;
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;; BNKSEL - Switch Memory Bank to Bank in A.
-;;   Preserve all Registers including Flags.
+;;   AF is destroyed, all other registers are preserved.
 ;;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;
 HBX_BNKSEL:

@@ -1992,11 +1992,11 @@ If the system is using interrupt mode 1 interrupts, the you **must**
 take steps to ensure interrupts are properly handled.  You generally
 have two choices:
 
-- Disable interrupts while the normal user bank is switched out
-- Duplicate the interrupt mode 1 vector from the normal user bank
+- Disable interrupts while the User Bank is switched out
+- Duplicate the interrupt mode 1 vector from the User Bank
   into the bank you are switching to.
 
-If the normal user bank has been switched out, you will not be able to
+If the User Bank has been switched out, you will not be able to
 invoke the HBIOS API functions using an `RST 08` instruction.  You can
 use the alternative mechanism using `CALL $FFF0` as described in
 [Invocation].
@@ -2398,7 +2398,8 @@ concept of allocation of application banks must be implemented within
 the OS or application.
 
 This function does not change the current bank selected.  You must use 
-[Function 0xF2 -- System Set Bank (SYSSETBNK)] or ???? for this. Be sure
+[Function 0xF2 -- System Set Bank (SYSSETBNK)] or the proxy function
+[Bank Select (BNKSEL)] for this. Be sure
 to observe the warnings in the description of this function.
 
 ### Function 0xF9 -- System Set (SYSSET)
@@ -2629,17 +2630,32 @@ provided.
 ## Proxy Functions
 
 The following special functions are implemented inside of the HBIOS
-proxy area at the top of RAM.  They do not cause a bank switch are are,
+proxy area at the top of RAM.  They do not cause a bank switch and are,
 therefore, much faster than their corresponding HBIOS API functions.
 
 The functions are invoked via the following dedicated jump table:
 
-| **Function**                           | **Address**                            |
-|----------------------------------------|----------------------------------------|
-| Invoke HBIOS Function (INVOKE)         | 0xFFF0                                 |
-| Bank Select (BNKSEL)                   | 0xFFF3                                 |
-| Bank Copy (BNKCPY)                     | 0xFFF6                                 |
-| Bank Call (BNKCALL)                    | 0xFFF9                                 |
+| **Function**                           | **Address**   | ** Equate **           |
+|----------------------------------------|---------------|------------------------|
+| Invoke HBIOS Function (INVOKE)         | 0xFFF0        | HB_INVOKE              |
+| Bank Select (BNKSEL)                   | 0xFFF3        | HB_BNKSEL              |
+| Bank Copy (BNKCPY)                     | 0xFFF6        | HB_BNKCPY              |
+| Bank Call (BNKCALL)                    | 0xFFF9        | HB_BNKCALL             |
+
+The function addresses are also defined as equates in hbios.inc.  It
+is suggested that you use the equates when possible.
+
+To use the functions, you may either call or jump to them.  Some
+examples:
+
+```
+        CALL    $FFF0
+        JP      $FFF3
+        CALL    HB_BNKCPY
+```
+
+These functions are inherently dangerous and generally not value
+checked.  Use with extreme caution.
 
 ### Invoke HBIOS Function (INVOKE)
 
@@ -2651,9 +2667,6 @@ above.  To put it another way, `CALL $FFF0` is equivalent to `RST 08`,
 but it can be used in any scenario when the normal bank is not
 selected.
 
-These functions are inherently dangerous and generally not value
-checked.  Use with extreme caution.
-
 ### Bank Select (BNKSEL)
 
 **Address 0xFFF3**
@@ -2663,9 +2676,9 @@ checked.  Use with extreme caution.
 | A: Bank ID                             |                                        |
 
 This function will select the memory bank identified by Bank ID (A).
-All registers are preserved.
+Register AF is destroyed.  All other registers are preserved.
 
-The warnings described in [Function 0xF3 -- System Get Bank (SYSGETBNK)]
+The warnings described in [Function 0xF2 -- System Set Bank (SYSSETBNK)]
 should be observed.
 
 ### Bank Copy (BNKCPY)
@@ -2716,7 +2729,7 @@ Register usage is determined by the routine that is called.
 
 Since a different bank will be selected while the target function is
 active, the warnings described in
-[Function 0xF3 -- System Get Bank (SYSGETBNK)] should be observed.
+[Function 0xF2 -- System Set Bank (SYSSETBNK)] should be observed.
 
 `\clearpage`{=latex}
 
