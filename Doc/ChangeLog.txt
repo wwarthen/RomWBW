@@ -5,6 +5,8 @@ Version 3.5
 - WBW: Add VT-100 graphics char selection to Propeller firmware
 - WBW: Allow all lines of VGA display to be used on Propeller firmware
 - WBW: Allow front panel LED/Switch bits to be inverted in config
+- WBW: Add API to expose application banks available
+- WBW: Added console takeover at boot loader prompt
 
 Version 3.4
 -----------

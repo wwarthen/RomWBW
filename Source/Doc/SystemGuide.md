@@ -670,11 +670,10 @@ by this function.  The function typically just records the sector
 address for subsequent I/O function calls.
 
 The double-word Sector Address (DEHL) can represent either a Logical 
-Block Address (LBA) or a Cylinder/Head/Sector (CHS).  If the high bit of
-register D is set, then an LBA value is specified.  Otherwise, the 
-value is CHS.
+Block Address (LBA) or a Cylinder/Head/Sector (CHS).  Bit 7 of D is
+set (1) for LBA mode and cleared (0) for CHS mode.
 
-For LBA mode operation, the high bit is cleared and the entire 
+For LBA mode operation, the high bit is set and the rest of the 
 double-word is then treated as the logical sector address.
 
 For CHS mode operation, the Sector Address (DEHL) registers are 
