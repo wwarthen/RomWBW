@@ -903,23 +903,23 @@ If your system has more than one character unit, then the Boot Loader
 will "poll" all of the character devices for a request to make any of 
 the alternate character devices the active console.  This is called a 
 console takeover request.  This functionality must be enabled in the ROM
-build configuration, but it is for all standard ROMs.
+build configuration, but currently it is for all standard ROMs.
 
-To request a console takeover, you just press the \<space\> character
-at the port or terminal that you want to move the console to.  The
-terminal or communication software **must** be configured for the
-default serial port speed and data bits for this to work.
+To request a console takeover, you just press the \<space\> character 
+twice in a row at the port or terminal that you want to move the console
+to.  The terminal or communication software **must** be configured for 
+the default serial port speed and data bits for this to work.
 
 A takeover request is only possible while the active console is
 showing the Boot Loader prompt prior to typing any characters at
 the active console.  In other words, once you start typing at the
 active console prompt, the takeover polling is suspended.  If you have
 started typing characters, you can press \<enter\> at the active
-console to get a new Boot Loader prompt and reactivate the polling.
+console to get a fresh Boot Loader prompt and reactivate the polling.
 
 If you have built a custom ROM that includes an automatic boot
 command with a timeout, then performing a console takeover will
-abort the timeout process and the automatic command will not be
+abort the timeout process and the automatic boot command will not be
 performed.
 
 ## Front Panel

@@ -266,6 +266,18 @@ prompt:
 	call 	dsky_l2on
 #endif
 ;
+	; purge any garbage on the line
+	call	delay			; wait for prompt to be sent
+	ld	b,0			; failsafe max iterations
+purge:
+	call	cst			; anything there?
+	jr	z,wtkey			; if not, move on
+	call	cin			; read and discard
+	djnz	purge			; and loop till no more
+;
+	or	$ff			; initial value
+	ld	(conpend),a		; ... for conpoll routine
+;
 wtkey:
 	; wait for a key or timeout
 	call	cst			; check for keyboard key
@@ -319,9 +331,10 @@ clrbuf1:
 ;=======================================================================
 ;
 ; Poll all character units in system for a console takeover request.
-; A takeover request is just pressing <space> at the port that wants
-; to takeover.  Return with ZF set if a console takeover was requested.
-; If so, the requested console unit will be recorded in (newcon).
+; A takeover request consists of pressing the <space> twice in a row.
+; at the character unit that wants to be the console.  Return with ZF
+; set if a console takeover was requested. If so, the requested console
+; unit will be recorded in (newcon).
 ;
 #if (BIOS == BIOS_WBW)
   #if (AUTOCON)
@@ -329,7 +342,6 @@ clrbuf1:
 conpoll:
 	; save active console unit
 	ld	a,(curcon)
-	;ld	(savcon),a
 	ld	e,a			; save in E
 ;
 	; loop through all char ports
@@ -347,7 +359,14 @@ conpoll1:
 	call	cin			; get char
 	cp	' '			; space char?
 	jr	nz,conpoll2		; if not, move on
-	jr	conpoll3		; space char typed, take console
+;
+	; a <space> char was typed.  check to see if we just saw a
+	; <space> from this same unit.
+	ld	a,(conpend)		; pending con unit to A
+	cp	c			; compare to active unit
+	jr	z,conpoll3		; if =, second <space>, take con
+	ld	a,c			; if not, unit to A
+	ld	(conpend),a		; and update pending console
 ;
 conpoll2:
 	inc	c			; next char unit
@@ -2498,6 +2517,7 @@ dskyact		.db	0		; DSKY active if != 0
 curcon		.db	CIO_CONSOLE	; current console unit
 ciocnt		.db	1		; count of char units
 savcon		.db	0		; con save for conpoll
+conpend		.db	$ff		; pending con unit (first <space> pressed)
 #endif
 
 ;
