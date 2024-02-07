@@ -275,8 +275,12 @@ purge:
 	call	cin			; read and discard
 	djnz	purge			; and loop till no more
 ;
+#if (BIOS == BIOS_WBW)
+  #if (AUTOCON)
 	or	$ff			; initial value
 	ld	(conpend),a		; ... for conpoll routine
+  #endif
+#endif
 ;
 wtkey:
 	; wait for a key or timeout
