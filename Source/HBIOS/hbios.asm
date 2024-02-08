@@ -3368,6 +3368,9 @@ HB_INITTBL:
 #IF (SCONENABLE)
 	.DW	SCON_INIT
 #ENDIF
+#IF (EFENABLE)
+	.DW	EF_INIT
+#ENDIF
 #IF (VRCENABLE)
 	.DW	VRC_INIT
 #ENDIF
@@ -6464,6 +6467,15 @@ ORG_SCON		.EQU	$
 SIZ_SCON	.EQU	$ - ORG_SCON
 		.ECHO	"SCON occupies "
 		.ECHO	SIZ_SCON
+		.ECHO	" bytes.\n"
+#ENDIF
+;
+#IF (EFENABLE)
+ORG_EF		.EQU	$
+  #INCLUDE "ef.asm"
+SIZ_EF		.EQU	$ - ORG_EF
+		.ECHO	"EF occupies "
+		.ECHO	SIZ_EF
 		.ECHO	" bytes.\n"
 #ENDIF
 ;

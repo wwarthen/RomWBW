@@ -5658,6 +5658,7 @@ may be discovered by RomWBW in your system.
 | DS1501RTC | RTC      | Maxim DS1501/DS1511 Watchdog Real-Time Clock           |
 | DSRTC     | RTC      | Maxim DS1302 Real-Time Clock w/ NVRAM                  |
 | DUART     | Char     | SCC2681 or compatible Dual UART                        |
+| EF        | Char     | EF9345 Video Display Controller                        |
 | EMM       | Disk     | Disk drive on Parallel Port emm interface (Zip Drive)  |
 | FD        | Disk     | 8272 or compatible Floppy Disk Controller              |
 | FP        | System   | Simple LED & Switch Front Panel                        |
