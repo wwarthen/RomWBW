@@ -65,6 +65,7 @@ GDC_COLS	.EQU	80
 	.ECHO	"\n"
 ;
 TERMENABLE	.SET	TRUE		; INCLUDE TERMINAL PSEUDODEVICE DRIVER
+KBDENABLE	.SET	TRUE		; INCLUDE KBD KEYBOARD SUPPORT
 ;
 ;======================================================================
 ; GDC DRIVER - INITIALIZATION
