@@ -1,0 +1,150 @@
+sub print(ptr: [uint8]) is
+    loop
+        var c := [ptr];
+        if c == 0 then
+            return;
+        end if;
+        print_char(c);
+        ptr := ptr + 1;
+    end loop;
+end sub;
+
+sub print_nl() is
+	print_char('\n');
+end sub;
+
+sub UIToA(value: uint32, base: uint8, buffer: [uint8]): (ptr: [uint8]) is
+	ptr := buffer;
+	loop
+		var rem := value % (base as uint32);
+		value := value / (base as uint32);
+		if rem < 10 then
+			rem := rem + '0';
+		else
+			rem := rem + ('a' - 10);
+		end if;
+		[ptr] := rem as uint8;
+		ptr := @next ptr;
+
+		if value == 0 then
+			break;
+		end if;
+	end loop;
+
+	var s1 := buffer;
+	var s2 := @prev ptr;
+	while s2 > s1 loop
+		var c := [s1];
+		[s1] := [s2];
+		[s2] := c;
+		s1 := @next s1;
+		s2 := @prev s2;
+	end loop;
+
+	[ptr] := 0;
+end sub;
+
+sub IToA(value: int32, base: uint8, buffer: [uint8]): (ptr: [uint8]) is
+	if value < 0 then
+		[buffer] := '-';
+		buffer := @next buffer;
+		value := -value;
+	end if;
+	ptr := UIToA(value as uint32, base, buffer);
+end sub;
+
+sub print_i32(value: uint32) is
+    var buffer: uint8[12];
+	var pe := UIToA(value, 10, &buffer[0]);
+	print(&buffer[0]);
+end sub;
+
+sub print_i16(value: uint16) is
+    print_i32(value as uint32);
+end sub;
+
+sub print_i8(value: uint8) is
+    print_i32(value as uint32);
+end sub;
+
+sub print_hex_i8(value: uint8) is
+    var i: uint8 := 2;
+    loop
+        var digit := value >> 4;
+        if digit < 10 then
+            digit := digit + '0';
+        else
+            digit := digit + ('a' - 10);
+        end if;
+        print_char(digit);
+        value := value << 4;
+        i := i - 1;
+        if i == 0 then
+            break;
+        end if;
+    end loop;
+end sub;
+
+sub print_hex_i16(value: uint16) is
+    print_hex_i8((value >> 8) as uint8);
+    print_hex_i8(value as uint8);
+end sub;
+
+sub print_hex_i32(value: uint32) is
+    print_hex_i8((value >> 24) as uint8);
+    print_hex_i8((value >> 16) as uint8);
+    print_hex_i8((value >> 8) as uint8);
+    print_hex_i8(value as uint8);
+end sub;
+
+sub AToI(buffer: [uint8]): (result: int32, ptr: [uint8]) is
+	var negative: uint8 := 0;
+	var base: uint8 := 10;
+	ptr := buffer;
+	result := 0;
+	
+	var c := [ptr];
+	if (c == '-') then
+		negative := 1;
+		ptr := ptr + 1;
+		c := [ptr];
+	end if;
+	if (c == '0') then
+		case [ptr+1] is
+			when 'x':  base := 16;
+			when 'o':  base := 8;
+			when 'b':  base := 2;
+			when 'd':  base := 10;
+
+			when else: ptr := ptr - 2;
+		end case;
+		ptr := ptr + 2;
+		c := [ptr];
+	end if;
+
+	loop
+		if c >= 'a' then
+			c := c - 'a' + 10;
+		elseif c >= 'A' then
+			c := c - 'A' + 10;
+		else
+			c := c - '0';
+		end if;
+		if c >= (base as uint8) then
+			break;
+		end if;
+		result := (result * base as int32) + (c as int32);
+
+		ptr := ptr + 1;
+		c := [ptr];
+	end loop;
+
+	if negative != 0 then
+		result := -result;
+	end if;
+end sub;
+
+sub MemZero(ptr: [uint8], size: intptr) is
+	MemSet(ptr, 0, size);
+end sub;
+

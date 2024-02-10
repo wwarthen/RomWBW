@@ -7,18 +7,19 @@ FDIMGS = fd144_cpm22.img fd144_zsdos.img fd144_nzcom.img \
 	fd144_cpm3.img fd144_zpm3.img fd144_ws4.img fd144_qpm.img \
 	fd144_z80asm.img fd144_aztecc.img fd144_hitechc.img \
 	fd144_bascomp.img fd144_fortran.img fd144_games.img \
-	fd144_tpascal.img
+	fd144_tpascal.img fd144_cowgol.img
 HD512IMGS = hd512_cpm22.img hd512_zsdos.img hd512_nzcom.img \
 	hd512_cpm3.img hd512_zpm3.img hd512_ws4.img
 HD512XIMGS = hd512_z80asm.img hd512_aztecc.img hd512_hitechc.img \
 	hd512_bascomp.img hd512_fortran.img hd512_games.img \
-	hd512_tpascal.img hd512_dos65.img hd512_qpm.img hd512_blank.img
-# HDIMGS += hd512_bp.img
+	hd512_tpascal.img hd512_dos65.img hd512_qpm.img \
+	hd512_cowgol.img hd512_blank.img
 HD1KIMGS = hd1k_cpm22.img hd1k_zsdos.img hd1k_nzcom.img \
 	hd1k_cpm3.img hd1k_zpm3.img hd1k_ws4.img
 HD1KXIMGS = hd1k_z80asm.img hd1k_aztecc.img hd1k_hitechc.img \
 	hd1k_bascomp.img hd1k_fortran.img hd1k_games.img \
-	hd1k_tpascal.img hd1k_qpm.img hd1k_blank.img
+	hd1k_tpascal.img hd1k_qpm.img \
+	hd1k_cowgol.img hd1k_blank.img
 HD1KXIMGS += hd1k_bp.img
 
 HD512PREFIX =

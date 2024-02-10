@@ -22,6 +22,8 @@ call BuildDisk.cmd tpascal hd wbw_fd144 || exit /b
 call BuildDisk.cmd bascomp hd wbw_fd144 || exit /b
 call BuildDisk.cmd fortran hd wbw_fd144 || exit /b
 call BuildDisk.cmd games hd wbw_fd144 || exit /b
+call BuildDisk.cmd cowgol hd wbw_fd144 || exit /b
+
 
 echo.
 echo Building Hard Disk Images (512 directory entry format)...
@@ -42,6 +44,7 @@ call BuildDisk.cmd tpascal hd wbw_hd512 || exit /b
 call BuildDisk.cmd bascomp hd wbw_hd512 || exit /b
 call BuildDisk.cmd fortran hd wbw_hd512 || exit /b
 call BuildDisk.cmd games hd wbw_hd512 || exit /b
+call BuildDisk.cmd cowgol hd wbw_hd512 || exit /b
 
 echo.
 echo Building Combo Disk (512 directory entry format) Image...
@@ -65,6 +68,7 @@ call BuildDisk.cmd tpascal hd wbw_hd1k || exit /b
 call BuildDisk.cmd bascomp hd wbw_hd1k || exit /b
 call BuildDisk.cmd fortran hd wbw_hd1k || exit /b
 call BuildDisk.cmd games hd wbw_hd1k || exit /b
+call BuildDisk.cmd cowgol hd wbw_hd1k || exit /b
 
 if exist ..\BPBIOS\bp*.rel call BuildDisk.cmd bp hd wbw_hd1k ..\zsdos\zsys_wbw.sys || exit /b
 
