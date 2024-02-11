@@ -25,6 +25,7 @@ shared:
 	$(MAKE) --directory ZSDOS $(ACTION)
 	$(MAKE) --directory CPM3 $(ACTION)
 	$(MAKE) --directory ZPM3 $(ACTION)
+	$(MAKE) --directory CPNET $(ACTION)
 	$(MAKE) --directory pSys $(ACTION)
 	$(MAKE) --directory Apps $(ACTION)
 	$(MAKE) --directory Forth $(ACTION)

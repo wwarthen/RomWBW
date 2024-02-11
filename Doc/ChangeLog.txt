@@ -10,6 +10,7 @@ Version 3.5
 - L?N: Fixed Propeller font vertical line character to align properly
 - L?S: EF9345 video display controller driver
 - WBW: Added Cowgol disk image based on the work of Ladislau Szilagyi
+- WBW: Added support for CP/NET on Duodyne Disk I/O
 
 Version 3.4
 -----------
