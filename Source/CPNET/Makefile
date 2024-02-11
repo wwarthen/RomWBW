@@ -4,8 +4,8 @@ TOOLS = ../../Tools
 
 include $(TOOLS)/Makefile.inc
 
-ZXCC=$(TREEROOT)/Tools/$(UNAME)/zxcc
-export CPMDIR80=$(TREEROOT)/Tools/cpm/
+ZXCC=../../$(TOOLS)/$(UNAME)/zxcc
+export CPMDIR80=../../$(TOOLS)/cpm/
 
 cpn12%.lbr: CPNETVER=cpnet12
 cpn3%.lbr: CPNETVER=cpnet3
