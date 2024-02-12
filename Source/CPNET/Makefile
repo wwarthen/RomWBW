@@ -14,5 +14,5 @@ cpn3%.lbr: CPNETVER=cpnet3
 
 %.lbr:
 	cd $(HWVER)/$(CPNETVER)
-	$(ZXCC) nulu --O -$(*F) -\<30 --A -*.* --L --X
+	$(ZXCC) NULU --O -$(*F) -\<30 --A -*.* --L --X
 	mv $@ ../..
