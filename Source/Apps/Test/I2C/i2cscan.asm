@@ -121,7 +121,7 @@ lp2b:	push	de
 
 	CALL	PCF_WAIT_FOR_BB
 	JP	NZ,PCF_BBERR
-;
+;	
 	LD	A,(addr)
         OUT	(PCF_RS0),A
         CALL	PCF_START	; GENERATE START CONDITION
@@ -148,7 +148,7 @@ lp4f:	ld	a,(addr)	; adjust address
 	call	_hexout
 
 lp5f:	ld	a,(addr)	; next address
-	add	a,2		; adjust for
+	add	a,2		; adjust for 
 	ld	(addr),a	; 7-bit
 
 	CALL	PCF_STOP
@@ -157,7 +157,7 @@ lp5f:	ld	a,(addr)	; next address
 	dec	e		; reached end
 	jp	nz,lp2b		; of line
 	call	_eolout
-
+	
 	dec	d		; loop until
 	jp	nz,lp3b		; all done
 
@@ -180,8 +180,8 @@ signon:	.db	"I2C Bus Scanner"
 
 _strout:
 st1:	ld	a,(hl)		; display
-	CP	'$'		; zero
-	ret	z		; terminated
+	CP	'$'		; zero 
+	ret	z		; terminated 
 	ld	c,a		; string
 	call	_cout
 	inc	hl
@@ -236,12 +236,12 @@ _cout:				; character
 #IF (PCFECB | PCFDUO)
 _i2c_start:
 PCF_START:
-        LD     A,PCF_START_
+        LD     A,PCF_START_  
 	OUT    (PCF_RS1),A
 	RET
 #ELSE
 ;_i2c_start:
-	ld	a,_idle		; issue
+	ld	a,_idle		; issue 
 	out	(I2C_BASE),a	; start
 				; command
 	res	_sda,a
@@ -271,7 +271,7 @@ PCF_ACK  	.EQU  00000001B
 ; STATUS REGISTER BITS
 ;
 ;PCF_PIN  	.EQU  10000000B
-PCF_INI   	.EQU  01000000B   ; 1 if not initialized
+PCF_INI   	.EQU  01000000B   ; 1 if not initialized 
 PCF_STS   	.EQU  00100000B
 PCF_BER   	.EQU  00010000B
 PCF_AD0   	.EQU  00001000B
@@ -306,12 +306,12 @@ PCF_WFA0:
 	IN      A,(PCF_RS1)	; READ PIN
         LD	(PCF_STATUS),A	; STATUS
         LD	B,A
-;
+;        
         DEC	HL		; SEE IF WE HAVE TIMED
         LD	A,H		; OUT WAITING FOR PIN
         OR	L		; EXIT IF
         JR	Z,PCF_WFA1	; WE HAVE
-;
+;        
         LD	A,B		; OTHERWISE KEEP LOOPING
         AND     PCF_PIN		; UNTIL WE GET PIN
         JR	NZ,PCF_WFA0	; OR TIMEOUT
@@ -346,8 +346,8 @@ PCF_WFBB0:
         LD     A,H
         OR     L
         JR     NZ,PCF_WFBB0	; REPEAT IF NOT TIMED OUT
-        CPL                	; RET NZ IF TIMEOUT
-	RET
+        CPL                	; RET NZ IF TIMEOUT  
+	RET 
 ;
 ;-----------------------------------------------------------------------------
 ; DISPLAY ERROR MESSAGES
@@ -361,7 +361,7 @@ PCF_INIERR:
 	PUSH	HL
 	LD      HL,PCF_NOPCF
 	JR	PCF_PRTERR
-;
+;	
 PCF_SETERR:
 	PUSH	HL
 	LD      HL,PCF_WRTFAIL
@@ -371,17 +371,17 @@ PCF_REGERR:
 	PUSH	HL
 	LD      HL,PCF_REGFAIL
 	JR	PCF_PRTERR
-;
+;	
 PCF_CLKERR:
 	PUSH	HL
 	LD      HL,PCF_CLKFAIL
 	JR	PCF_PRTERR
-;
+;	
 PCF_IDLERR:
 	PUSH	HL
 	LD      HL,PCF_IDLFAIL
-	JR	PCF_PRTERR
-;
+	JR	PCF_PRTERR 
+;	
 PCF_ACKERR:
 	PUSH	HL
 	LD      HL,PCF_ACKFAIL
@@ -415,7 +415,7 @@ PCF_BBERR:
 PCF_PRTERR:
 	CALL	_strout
 	CALL	_eolout
-	POP	HL
+	POP	HL	
 	RET
 ;
 PCF_NOPCF	.DB	"NO DEVICE FOUND$"
@@ -433,15 +433,15 @@ PCF_BBFAIL	.DB	"BUS BUSY$"
 ;
 ;-----------------------------------------------------------------------------
 #IF (PCFECB | PCFDUO)
-_i2c_stop:
-PCF_STOP:
-	LD   	A,PCF_STOP_	; issue
+_i2c_stop:  
+PCF_STOP: 
+	LD   	A,PCF_STOP_	; issue 
         OUT  	(PCF_RS1),A     ; stop
         RET                     ; command
 #ELSE
-;_i2c_stop:
-	ld	a,(oprval)
-	res	_scl,a
+;_i2c_stop:			
+	ld	a,(oprval)	
+	res	_scl,a		
 	res	_sda,a
 	out	(I2C_BASE),a
 
@@ -495,7 +495,7 @@ i2c4:	in	a,(I2C_BASE)
 	res	_scl,a
 	out	(I2C_BASE),a
 	ld	(oprval),a
-
+	
 	xor	a
 	bit	_sda,c
 	ret	z
