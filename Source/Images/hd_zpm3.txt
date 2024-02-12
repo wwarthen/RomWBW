@@ -57,10 +57,6 @@ Test/*.* 2:
 ../../Binary/Apps/Tunes/*.mym 3:
 ../../Binary/Apps/Tunes/*.vgm 3:
 #
-# Add CPNET client files
-#
-cpnet3/*.* 4:
-#
 # Add Common Applications
 #
 Common/All/*.* 15:

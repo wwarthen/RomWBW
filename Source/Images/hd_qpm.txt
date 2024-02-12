@@ -46,10 +46,6 @@ Test/*.* 2:
 ../../Binary/Apps/Tunes/*.mym 3:
 ../../Binary/Apps/Tunes/*.vgm 3:
 #
-# Add CPNET client files
-#
-cpnet12/*.* 4:
-#
 # Add OS image
 #
 ../QPM/qpm_wbw.sys 0:qpm.sys
