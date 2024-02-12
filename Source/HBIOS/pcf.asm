@@ -44,7 +44,7 @@ PCF_IDLE_	.EQU  (PCF_PIN | PCF_ES0 | PCF_ACK)
 ; STATUS REGISTER BITS
 ;
 ;PCF_PIN  	.EQU  10000000B
-PCF_INI   	.EQU  01000000B   ; 1 if not initialized 
+PCF_INI   	.EQU  01000000B   ; 1 if not initialized
 PCF_STS   	.EQU  00100000B
 PCF_BER   	.EQU  00010000B
 PCF_AD0   	.EQU  00001000B
@@ -53,14 +53,14 @@ PCF_AAS   	.EQU  00000100B
 PCF_LAB   	.EQU  00000010B
 PCF_BB		.EQU  00000001B
 ;
-; THE PCF8584 TARGETS A TOP I2C CLOCK SPEED OF 90KHZ AND SUPPORTS DIVIDERS FOR 
+; THE PCF8584 TARGETS A TOP I2C CLOCK SPEED OF 90KHZ AND SUPPORTS DIVIDERS FOR
 ; 3, 4.43, 6, 8 AND 12MHZ TO ACHEIVE THIS.
 ;
 ; +--------------------------------------------------------------------------------------------+
 ; | div/clk |  2MHz |  4MHz  |  6MHz | 7.38Mhz |  10MHz | 12MHz |  16MHz | 18.432Mhz |  20MHz  |
 ; +----------------------------------------------------------------------------------+---------+
 ; |   3MHz  | 60Khz | 120Khz |       |         |        |       |        |           |         |
-; | 4.43MHz |       |  81Khz |       |         |        |       |        |           |         | 
+; | 4.43MHz |       |  81Khz |       |         |        |       |        |           |         |
 ; |   6MHz  |       |        | 90Khz | 110Khz  |        |       |        |           |         |
 ; |   8MHz  |       |        |       |  83Khz  | 112Khz |       |        |           |         |
 ; |  12MHz  |       |        |       |         |        | 90Khz | 120Khz |   138Khz  |  150Khz |
@@ -116,21 +116,21 @@ PCF_INIT:
 ;	I2C_OUTB	= LD A,* | OUT (PCF_RS0),A
 ;	SET_PCF		-= LD A,* | OUT (PCF_RS1),A
 ;	GET_PCF		= IN A,(PCF_RS1)
-;	
+;
 ;-----------------------------------------------------------------------------
 PCF_START:
-	LD	A,PCF_START_  
+	LD	A,PCF_START_
 	OUT	(PCF_RS1),A
 	RET
 ;
 ;-----------------------------------------------------------------------------
 PCF_REPSTART:
-	LD	A,PCF_REPSTART_  
+	LD	A,PCF_REPSTART_
 	OUT	(PCF_RS1),A
 	RET
 ;
 ;-----------------------------------------------------------------------------
-PCF_STOP:   
+PCF_STOP:
 	LD   	A,PCF_STOP_
 	OUT  	(PCF_RS1),A
 	RET
@@ -138,7 +138,7 @@ PCF_STOP:
 ;-----------------------------------------------------------------------------
 ;
 PCF_INITDEV:
-	LD	A,PCF_PIN   	; S1=80H: S0 SELECTED, SERIAL 
+	LD	A,PCF_PIN   	; S1=80H: S0 SELECTED, SERIAL
 	OUT	(PCF_RS1),A	; INTERFACE OFF
 	NOP
 	IN	A,(PCF_RS1)	; CHECK TO SEE S1 NOW USED AS R/W
@@ -147,7 +147,7 @@ PCF_INITDEV:
 	AND	07FH	  	; CTRL. PCF8584 DOES THAT WHEN ESO
 	JR	NZ,PCF_FAIL	; IS ZERO
 ;
-	LD	A,PCF_OWN	; LOAD OWN ADDRESS IN S0,	
+	LD	A,PCF_OWN	; LOAD OWN ADDRESS IN S0,
 	OUT	(PCF_RS0),A	; EFFECTIVE ADDRESS IS (OWN <<1)
 	NOP
 	IN	A,(PCF_RS0)	; CHECK IT IS REALLY WRITTEN
@@ -177,9 +177,9 @@ PCF_INITDEV:
 	JP	NZ,PCF_CLKERR
 ;
 	LD	A,PCF_IDLE_
-	OUT	(PCF_RS1),A  
+	OUT	(PCF_RS1),A
 	NOP
-	IN	A,(PCF_RS1)  
+	IN	A,(PCF_RS1)
 	;CALL	PC_SPACE
 	;CALL	PRTHEXBYTE
 	CP	+(PCF_PIN | PCF_BB)
@@ -195,21 +195,21 @@ PCF_FAIL:
 	RET
 ;
 PCF_FAIL_FLAG:
-	.DB	0		
+	.DB	0
 ;
 ;-----------------------------------------------------------------------------
 PCF_HANDLE_LAB:
 ;
-	LD	A,PCF_PIN  
-	OUT	(PCF_RS1),A	 
-	LD	A,PCF_ES0  
+	LD	A,PCF_PIN
+	OUT	(PCF_RS1),A
+	LD	A,PCF_ES0
 	OUT	(PCF_RS1),A
 ;
 	LD	HL,PCF_LABDLY
 PCF_LABLP:
 	LD	A,H
 	OR	L
-	DEC	HL  
+	DEC	HL
 	JR	NZ,PCF_LABLP
 ;
 	IN	A,(PCF_RS1)
@@ -226,7 +226,7 @@ PCF_WAIT_FOR_PIN:
 	PUSH	HL
 	LD	HL,PCF_PINTO					; SET TIMEOUT VALUE
 
-PCF_WFP0: 
+PCF_WFP0:
 	IN	A,(PCF_RS1)					; GET BUS
 	LD	(PCF_STATUS),A					; STATUS
 	LD	B,A
@@ -236,7 +236,7 @@ PCF_WFP0:
 	OR	L
 	JR	Z,PCF_WFP1					; YES WE HAVE, GO ACTION IT
 
-	LD	A,B						; 		
+	LD	A,B						;
 	AND	PCF_PIN						; IS TRANSMISSION COMPLETE?
 	JR	NZ,PCF_WFP0					; KEEP ASKING IF NOT OR
 	POP	HL						; YES COMPLETE (PIN=0) RETURN WITH ZERO
@@ -244,14 +244,14 @@ PCF_WFP0:
 PCF_WFP1:
 	LD	A,B						; DID WE LOSE ARBITRATION?
 	AND	PCF_LAB						; IF A=0 THEN NO
-	CPL	
-	JR	NZ,PCF_WFP2					; NO 
+	CPL
+	JR	NZ,PCF_WFP2					; NO
 	CALL	PCF_HANDLE_LAB					; YES GO HANDLE IT
 	LD	(PCF_STATUS),A
 	XOR	A						; RETURN NZ, A=01H
 	INC	A
 PCF_WFP2:
-	POP	HL		  				; RET NZ, A=FF IF TIMEOUT 
+	POP	HL		  				; RET NZ, A=FF IF TIMEOUT
 	RET
 ;
 PCF_STATUS	.DB	00H
@@ -270,12 +270,12 @@ PCF_WFA0:
 	IN	A,(PCF_RS1)	; READ PIN
 	LD	(PCF_STATUS),A	; STATUS
 	LD	B,A
-;	 
+;
 	DEC	HL		; SEE IF WE HAVE TIMED
 	LD	A,H		; OUT WAITING FOR PIN
 	OR	L		; EXIT IF
 	JR	Z,PCF_WFA1	; WE HAVE
-;	 
+;
 	LD	A,B		; OTHERWISE KEEP LOOPING
 	AND	PCF_PIN		; UNTIL WE GET PIN
 	JR	NZ,PCF_WFA0	; OR TIMEOUT
@@ -291,7 +291,7 @@ PCF_WFA1:
 PCF_WFA2:
 	POP	HL		; EXIT WITH NZ = FF
 	RET
-;	
+;
 ;--------------------------------------------------------------------------------
 ;
 ;	HL POINTS TO DATA
@@ -321,7 +321,7 @@ PCF_RB1:
 
 	; IS THIS THE SECOND TO LAST BYTE TO GO?
 
-	PUSH	DE		; SAVE COUNT	
+	PUSH	DE		; SAVE COUNT
 	DEC	DE		; COUNT (DE) = NUMBER OF BYTES TO READ LESS 1
 	EX	DE,HL		; SAVE POINTER, PUT COUNT IN DE
 	XOR	A		; CLEAR CARRY FLAG
@@ -333,7 +333,7 @@ PCF_RB1:
 				; NZ = NO IT ISN'T
 	JR	NZ,PCF_RB4
 ;
-PCF_RB4:LD	A,B		; IF FIRST READ DO A DUMMY 
+PCF_RB4:LD	A,B		; IF FIRST READ DO A DUMMY
 	OR	C		; READ OTHERWISE READ AND SAVE
 	JR	NZ,PCF_RB5
 
@@ -401,8 +401,8 @@ PCF_WFBB0:
 	LD	A,H
 	OR	L
 	JR	NZ,PCF_WFBB0	; REPEAT IF NOT TIMED OUT
-	CPL		  	; RET NZ IF TIMEOUT  
-	RET 
+	CPL		  	; RET NZ IF TIMEOUT
+	RET
 ;
 ;-----------------------------------------------------------------------------
 ; DISPLAY ERROR MESSAGES
@@ -416,7 +416,7 @@ PCF_INIERR:
 	PUSH	HL
 	LD	HL,PCF_NOPCF
 	JR	PCF_PRTERR
-;	
+;
 PCF_SETERR:
 	PUSH	HL
 	LD	HL,PCF_WRTFAIL
@@ -426,17 +426,17 @@ PCF_REGERR:
 	PUSH	HL
 	LD	HL,PCF_REGFAIL
 	JR	PCF_PRTERR
-;	
+;
 PCF_CLKERR:
 	PUSH	HL
 	LD	HL,PCF_CLKFAIL
 	JR	PCF_PRTERR
-;	
+;
 PCF_IDLERR:
 	PUSH	HL
 	LD	HL,PCF_IDLFAIL
-	JR	PCF_PRTERR 
-;	
+	JR	PCF_PRTERR
+;
 PCF_ACKERR:
 	PUSH	HL
 	LD	HL,PCF_ACKFAIL
@@ -470,7 +470,7 @@ PCF_BBERR:
 PCF_PRTERR:
 	CALL	PRTSTR
 ;	CALL	NEWLINE
-	POP	HL	
+	POP	HL
 	RET
 ;
 ;-----------------------------------------------------------------------------
@@ -494,7 +494,7 @@ PCF_DBG:
 	POP  	DE
 	POP  	AF
 	RET
-PCF_DBGF:	
+PCF_DBGF:
 	.DB	0		; DEBUG STAGE COUNTER
 #ENDIF
 ;

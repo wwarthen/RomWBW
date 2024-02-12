@@ -13,9 +13,9 @@
 ;
 ; Hardware port addresses
 ;
-rsel	.equ	$9A		; Register seelection port address
-rdat	.equ	$9B		; Register data port address
-acr	.equ	$9C		; Aux control register port address
+rsel	.equ	$A4		; Register seelection port address
+rdat	.equ	$A5		; Register data port address
+acr	.equ	$A2		; Aux control register port address
 ;
 ; CPU speed for delay scaling
 ;
