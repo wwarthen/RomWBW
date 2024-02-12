@@ -10,6 +10,7 @@ pushd ZCPR-DJ && call Build || exit /b & popd
 pushd ZSDOS && call Build || exit /b & popd
 pushd CPM3 && call Build || exit /b & popd
 pushd ZPM3 && call Build || exit /b & popd
+pushd CPNET && call Build || exit /b & popd
 pushd pSys && call Build || exit /b & popd
 pushd Apps && call Build || exit /b & popd
 pushd Forth && call Build || exit /b & popd

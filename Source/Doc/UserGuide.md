@@ -897,6 +897,31 @@ The use of diagnostic levels above 4 are really intended only for
 software developers.  I do not recommend changing this under
 normal circumstances.
 
+## Console Takeover
+
+If your system has more than one character unit, then the Boot Loader 
+will "poll" all of the character devices for a request to make any of 
+the alternate character devices the active console.  This is called a 
+console takeover request.  This functionality must be enabled in the ROM
+build configuration, but currently it is for all standard ROMs.
+
+To request a console takeover, you just press the \<space\> character 
+twice in a row at the port or terminal that you want to move the console
+to.  The terminal or communication software **must** be configured for 
+the default serial port speed and data bits for this to work.
+
+A takeover request is only possible while the active console is
+showing the Boot Loader prompt prior to typing any characters at
+the active console.  In other words, once you start typing at the
+active console prompt, the takeover polling is suspended.  If you have
+started typing characters, you can press \<enter\> at the active
+console to get a fresh Boot Loader prompt and reactivate the polling.
+
+If you have built a custom ROM that includes an automatic boot
+command with a timeout, then performing a console takeover will
+abort the timeout process and the automatic boot command will not be
+performed.
+
 ## Front Panel
 
 RomWBW supports the concept of a simple front panel.  The following 
@@ -924,7 +949,8 @@ output on the console.  The meaning of the LEDs is:
 
 Once the system has booted, the LEDs are used to indicate disk device
 activity.  Each LED numbered 7-0 represents disk units 7-0.  As each
-disk device performs I/O, the LED will light.
+disk device performs I/O, the LED will light while the disk is active.
+This is only possible for the first 8 disk units.
 
 The second row of the front panel is composed of switches that allow
 you to control a few aspects of the system startup.
@@ -1749,10 +1775,84 @@ with 6 slices containing 5 ready-to-run OSes and a slice with
 the WordStar application files.  Alternatively, you can create your own
 hard disk image with the specific slice contents you choose.
 
+#### Standard Hard Disk Physical Layout
+
+As previously described in [Hard Disk Layouts], the exact placement of
+slices and optional FAT partition will vary depending on which disk
+layout (hd512 or hd1k) you are using and your partition table entries.
+To simplify the use of hard disk images, RomWBW has adopted standard
+partition table entries for disk image files provided.
+
+These partition sizes and locations were chosen to:
+
+- Fit entirely on 1GB media
+- Allow for 64 CP/M filesystem slices
+- Allow for a 384KB FAT filesystem
+
+**NOTE:** RomWBW is not limited to these partition table entries.  You 
+can change the size and location of the RomWBW and/or FAT partitions to 
+increase/decrease the number of slices or FAT filesystem size.
+
++---------------------------------+-------------------------------+-------------------------------+
+|                                 | **--- Legacy (hd512) ---**    | **--- Modern (hd1k) ---**     |
+|                                 +---------------+---------------+---------------+---------------+
+|                                 | Byte(s)       | Sector(s)     | Byte(s)       | Sector(s)     |
++=================================+==============:+==============:+==============:+==============:+
+| RomWBW (slices) Start           | 0             | 0             | 1,048,576     | 2,048         |
++---------------------------------+---------------+---------------+---------------+---------------+
+| RomWBW (slices) Size            | 545,259,520   | 1,064,960     | 536,870,912   | 1,048,576     |
++---------------------------------+---------------+---------------+---------------+---------------+
+| FAT Filesystem Start            | 545,259,520   | 1,064,960     | 537,919,488   | 1,050,624     |
++---------------------------------+---------------+---------------+---------------+---------------+
+| FAT Filesystem Size             | 402,653,184   | 786,432       | 402,653,184   | 786,432       |
++---------------------------------+---------------+---------------+---------------+---------------+
+| \<end\>                         | 947,912,704   | 1,851,392     | 940,572,672   | 1,837,056     |
++---------------------------------+---------------+---------------+---------------+---------------+
+
+The above partition table entries will result in the following locations and sizes of
+filesystems on the RomWBW disk images.
+
+
++---------------------------------+-------------------------------+-------------------------------+
+|                                 | **--- Legacy (hd512) ---**    | **--- Modern (hd1k) ---**     |
+|                                 +---------------+---------------+---------------+---------------+
+|                                 | Byte(s)       | Sector(s)     | Byte(s)       | Sector(s)     |
++=================================+==============:+==============:+==============:+==============:+
+| Prefix Start                    | --            | --            | 0             | 0             |
++---------------------------------+---------------+---------------+---------------+---------------+
+| Prefix Size                     | --            | --            | 1,048,576     | 2,048         |
++---------------------------------+---------------+---------------+---------------+---------------+
+| Slice Size                      | 8,519,680     | 16,640        | 8,388,608     | 16,384        |
++---------------------------------+---------------+---------------+---------------+---------------+
+| Slice 0 Start                   | 0             | 0             | 1,048,576     | 2,048         |
++---------------------------------+---------------+---------------+---------------+---------------+
+| Slice 1 Start                   | 8,519,680     | 16,640        | 9,437,184     | 18,432        |
++---------------------------------+---------------+---------------+---------------+---------------+
+| Slice 2 Start                   | 17,039,360    | 33,280        | 17,825,792    | 34,816        |
++---------------------------------+---------------+---------------+---------------+---------------+
+| Slice 3 Start                   | 25,559,040    | 49,920        | 26,214,400    | 51,200        |
++---------------------------------+---------------+---------------+---------------+---------------+
+| Slice 4 Start                   | 34,078,720    | 66,560        | 34,603,008    | 67,584        |
++---------------------------------+---------------+---------------+---------------+---------------+
+| Slice 5 Start                   | 42,598,400    | 83,200        | 42,991,616    | 83,968        |
++---------------------------------+---------------+---------------+---------------+---------------+
+| Slice 6 Start                   | 51,118,080    | 99,840        | 51,380,224    | 100,352       |
++---------------------------------+---------------+---------------+---------------+---------------+
+| Slice 7 Start                   | 59,637,760    | 116,480       | 59,768,832    | 116,736       |
++---------------------------------+---------------+---------------+---------------+---------------+
+| Slice 63 Start                  | 536,739,840   | 1,048,320     | 529,530,880   | 1,034,240     |
++---------------------------------+---------------+---------------+---------------+---------------+
+| FAT Filesystem Start            | 545,259,520   | 1,064,960     | 537,919,488   | 1,050,624     |
++---------------------------------+---------------+---------------+---------------+---------------+
+| FAT Filesystem Size             | 402,653,184   | 786,432       | 402,653,184   | 786,432       |
++---------------------------------+---------------+---------------+---------------+---------------+
+| \<end\>                         | 947,912,704   | 1,851,392     | 940,572,672   | 1,837,056     |
++---------------------------------+---------------+---------------+---------------+---------------+
+
 #### Combo Hard Disk Image
 
 The combo disk image is essentially just a single image that has several
- of the individual filesystem images (slices) already concatenated 
+of the individual filesystem images (slices) already concatenated 
 together. The combo disk image contains the following 6 slices in the 
 positions indicated:
 
@@ -3022,45 +3122,116 @@ Both CP/NET 1.2 and 3.0 clients are provided.  Version 1.2 is for use
 with CP/M 2.2 and compatible OSes.  Version 3.0 is for use with CP/M 3 
 and compatible OSes.
 
-The CP/NET client software provided with RomWBW is specifically for the 
-MT011 Module developed by Mark T for the RCBus.  The client software 
-interacts directly with this hardware.  In a future version of RomWBW, I
-hope to add a generic networking API that will allow a greater range of
-network hardware to be used.
+The CP/NET client software provided with RomWBW requires a supported
+ethernet interface module.  At this time, the following are supported:
+
+* RCBus MT011 w/ Ethernet Featherwing and (optionally) SPI FRAM
+  (e.g., Adafruit SPI Non-Volatile FRAM Breakout)
+* Duodyne Disk I/O w/ Wiz850IO and (optionally) SPI NVRAM
+  (e.g., 25LC256)
+
+The client software interacts directly with this hardware.  In a future 
+version of RomWBW, I hope to add a generic networking API that will 
+allow a greater range of network hardware to be used.
 
 To use CP/NET effectively, you will want to review the documentation 
-provided by Douglas on his
+provided by Douglas on at his
 [cpnet-z80 GitHub Project](https://github.com/durgadas311/cpnet-z80). 
 Additionally, you should consult the DRI documentation which is not 
 included with RomWBW, but is available on the
 [cpnet-z80](https://github.com/durgadas311/cpnet-z80) site.
 
 Below, I will provide the general steps involved in setting up a
-network using MT011 with RomWBW.  The examples are all based on
-Z-System.
+network using MT011 with RomWBW.
 
 ## CP/NET Client Setup
 
 The CP/NET client files are included on the RomWBW disk images, but
 they are found in user area 4.  They are placed there to avoid
 confusing anyone that is not specifically trying to run a network
-client.
+client.  They are only found on the CPM 2.2 and CP/M 3 slices.  Using
+CP/NET on alternative OSes may work, but is not officially supported.
 
-First, you need to merge the files from user area 4 into user area 0.
-After booting into Z-System (disk boot), you can copy the files
-using the following command:
+The CP/NET client files are packaged in `.LBR` library files.  The
+library files are found in user area 4.
 
-`COPY 4:*.* 0:`
+| File         | CP/NET Version | OS       | Hardware              |
+|--------------|----------------|----------|-----------------------|
+| CPN12MT.LBR  | CP/NET 1.2     | CP/M 2.2 | RCBus w/ MT011        |
+| CPN3MT.LBR   | CP/NET 3       | CP/M 3   | RCBus w/ MT011        |
+| CPN12DUO.LBR | CP/NET 1.2     | CP/M 2.2 | Duodyne w/ Disk I/O   |
+| CPN3DUO.LBR  | CP/NET 3       | CP/M 3   | Duodyne w/ Disk I/O   |
 
-You will be asked if you want to overwrite `README.TXT`.  It doesn't
-really matter, but I suggest you do not overwrite it.
+First, you need to merge the files from the correct library file
+into user area 0.  This is done by extracting the files using the
+`NULU` library management utility application.
 
-The MT011 Module uses a WizNet network module.  At this point, you will 
-need to configure it for your local network.  The definitive guide to 
-the use of `WIZCFG` is on the
-[cpnet-z80](https://github.com/durgadas311/cpnet-z80) site in the 
-document called "CPNET-WIZ850io.pdf". Here is an example of the commands
-needed to configure the WizNet:
+1. Start NULU specifying desired CP/NET library for \<filename\>:
+
+   `A>NULU 4:<filename>`
+
+2. At the NULU prompt, extract the files using the `-E *.*` command:
+
+   `-READY A0:>-E *.*`
+
+3. Exit NULU using the `-X` command:
+
+   `-Extract members A0:>-x`
+
+Here is an example of extracting the CP/NET 1.2 client files for an 
+RCBus system w/ MT011.  You should be in user area 0 when performing 
+this operation.
+
+```
+A>nulu 4:cpn12mt
+NULU 1.52  (07/12/87)
+Copyright (C) 1984, 1985 & 1987 by Martin Murray
+Bug fixes in version 1.52 by Mick Waters
+
+Library A4:CPN12MT.LBR open.
+(Buffer size: 259 sectors)
+Active entries: 27, Deleted: 0, Free: 5, Total: 32.
+-READY A0:>-e *.*
+Extracting...
+  CCP     .SPR to A0:CCP     .SPR
+  CPM2NET .HLP to A0:CPM2NET .HLP
+  CPNBOOT .COM to A0:CPNBOOT .COM
+  CPNET12 .HLP to A0:CPNET12 .HLP
+  CPNETLDR.COM to A0:CPNETLDR.COM
+  CPNETSTS.COM to A0:CPNETSTS.COM
+  DSKRESET.COM to A0:DSKRESET.COM
+  ENDLIST .COM to A0:ENDLIST .COM
+  LOCAL   .COM to A0:LOCAL   .COM
+  LOGIN   .COM to A0:LOGIN   .COM
+  LOGOFF  .COM to A0:LOGOFF  .COM
+  MAIL    .COM to A0:MAIL    .COM
+  NDOS    .SPR to A0:NDOS    .SPR
+  NETDOWN .COM to A0:NETDOWN .COM
+  NETSTAT .COM to A0:NETSTAT .COM
+  NETWORK .COM to A0:NETWORK .COM
+  NVRAM   .COM to A0:NVRAM   .COM
+  PIPNET  .COM to A0:PIPNET  .COM
+  RDATE   .COM to A0:RDATE   .COM
+  SNIOS   .SPR to A0:SNIOS   .SPR
+  SRVSTAT .COM to A0:SRVSTAT .COM
+  TR      .COM to A0:TR      .COM
+  WIZCFG  .COM to A0:WIZCFG  .COM
+  WIZDBG  .COM to A0:WIZDBG  .COM
+  WIZTEST .COM to A0:WIZTEST .COM
+  XSUBNET .COM to A0:XSUBNET .COM
+-Extract members A0:>-x
+
+Closing A4:CPN12MT.LBR...
+
+```
+
+
+
+At this point, you will need to configure your ethernet adapter for your
+ local network using `WIZCFG`.  The definitive guide to the use of 
+`WIZCFG` is on the [cpnet-z80](https://github.com/durgadas311/cpnet-z80)
+site in the document called "CPNET-WIZ850io.pdf". Here is an example of
+the commands needed to configure the WizNet:
 
 |                                    |                                        |
 |------------------------------------|----------------------------------------|
@@ -3084,8 +3255,15 @@ MAC:      98:76:B6:11:00:C4
 Socket 0: 00H 192.168.1.3 31100 0
 ```
 
-You will need to reapply these commands every time you power cycle
-your RomWBW computer, so I recommend putting them into a `SUBMIT` file.
+These values can be persisted across power-cycles if your system has
+NVRAM storage.  To program the values into your NVRAM, you would use
+the same commands as above, but omit the `w` parameter.  The
+"CPNET-WIZ850io.pdf" document is highly recommended to understand the
+operation of `WIZCFG`.
+
+If you do not utilize NVRAM to persist your configuration, you will need
+to reapply these commands every time you power cycle your RomWBW 
+computer, so I recommend putting them into a `SUBMIT` file.
 
 After applying these commands, you should be able ping the WizNet from
 another computer on the local network.  If this works, then the 
@@ -3093,10 +3271,11 @@ client-side is ready.
 
 ## CP/NET Sever Setup
 
-These instructions will assume you are using Douglas' CpnetSocketServer
-as the server on your network.  The definitive guide to this software
-is also on the [cpnet-z80](https://github.com/durgadas311/cpnet-z80)
-site and is called "CpnetSocketServer.pdf".
+These instructions will assume you are using Douglas Miller's 
+CpnetSocketServer to implement a CP/NOS server on your network.  The 
+definitive guide to this software is also on the [cpnet-z80] 
+(https://github.com/durgadas311/cpnet-z80) site and is called 
+"CpnetSocketServer.pdf".
 
 The software is a Java application, so it can generally run anywhere
 there is a Java runtime environment available.  I have normally used
@@ -3140,10 +3319,11 @@ use CP/NET on your RomWBW system.  CP/NET documentation is available
 on the [cpnet-z80](https://github.com/durgadas311/cpnet-z80) site.
 The document is called "dri-cpnet.pdf".
 
-After booting your computer, you will always need to start CP/NET using 
-the `CPNETLDR` command.  If that works, you can map network drives as 
-local drives using the `NETWORK` command.  The `CPNETSTS` command is 
-useful for displaying the current status.  Here is a sample session:
+Under CP/M 2.2, you will start the networking client using the command 
+`CPNETLDR`.  Under CP/M 3, you use the command `NDOS3`. If that works, 
+you can map network drives as local drives using the `NETWORK` command.
+The `CPNETSTS` command is useful for displaying the current status.  
+Here is a sample session from CP/M 2.2:
 
 ```
 A>cpnetldr
@@ -3195,7 +3375,8 @@ Console Device = LOCAL
 List Device = LOCAL
 ```
 
-You will see some additional messages on your server when clients
+If you are using CpSocketServer to provide the CP/NOS server, then
+you will see some messages on your server console when clients
 connect.  Here are the messages issued by the server in the above
 example:
 
@@ -3205,14 +3386,17 @@ Remote 192.168.1.201 is f0
 Creating HostFileBdos 00 device with root dir /home/wayne/cpnet/root
 ```
 
-At this point CP/NET is ready for general use.
+At this point CP/NET is ready for general use.  You should be able
+to access files on the network mapped drives just like files on your
+local drives.
 
 ## Network Boot
 
-It is possible to boot your MT011 equipped RomWBW system directly
-from a network server.  This means that the operating system will be
-loaded directly from the network server and all of your drive letters
-will be provided by the network server.
+It is possible to boot your MT011 equipped RomWBW system directly from a
+network server.  This means that the operating system will be loaded 
+directly from the network server and all of your drive letters will be 
+provided by the network server.  Duodyne is not yet supported in this 
+mode of operation.
 
 It is important to understand that the operating system that is loaded
 in this case is **not** a RomWBW enhanced operating system.  Some
@@ -3220,13 +3404,13 @@ commands (such as the `ASSIGN` command) will not be possible.  Also,
 you will only have access to drives provided by the network server --
 no local disk drives will be available.
 
-In order to do this, your MT011 Module must be enhanced with an NVRAM 
-SPI FRAM mini-board.  The NVRAM is used to store your WizNet 
+In order to do this, your MT011 Module **must** be enhanced with an 
+NVRAM SPI FRAM mini-board.  The NVRAM is used to store your WizNet 
 configuration values so they do not need to be re-entered every time you
-cold boot your system.
+power-cycle your system.
 
 Using the same values from the previous example, you would
-issue the WizNet commands:
+issue the `WIZCFG` commands:
 
 ```
 wizcfg n F0
@@ -3245,15 +3429,20 @@ contains some files that will be sent to your RomWBW system when the
 Network boot is performed.  By default the directory will be
 `~/NetBoot`.  In this directory you need to place the following files:
 
-* `cpnos-wbw.sys` found in the Binary directory of RomWBW
-* `ndos.spr` found in the Source/Images/cpnet12 directory of RomWBW
-* `snios.spr` found in the Source/Images/cpnet12 directory of RomWBW
+* `cpnos-wbw.sys`
+* `ndos.spr`
+* `snios.spr`
+
+All of these files are found in the Binary/CPNET/NetBoot directory of 
+the RomWBW distribution.
 
 You also need to make sure CpnetSocketServer is configured with an 'A' 
 drive and that drive must contain (at an absolute minimum) the following
 file:
 
-* `ccp.spr` found in the Source/Images/cpnet12 directory of RomWBW
+* `ccp.spr`
+
+which is also found in the Binary/CPNET/NetBoot directory of RomWBW
 
 Finally, you need to add the following line to your CpnetSocketServer 
 configuration file:
@@ -3316,7 +3505,8 @@ List Device = LOCAL
 ```
 
 At this point you can use CP/M and CP/NET normally, but all disk
-access will be to/from the network drives.
+access will be to/from the network drives.  There is no access to
+your local disk drives in this boot mode.
 
 # Transferring Files
 
@@ -3916,6 +4106,12 @@ please let me know if I missed you!
 
 * Bill Shen has contributed boot loaders for several of his
   systems.
+
+* Laszlo Szolnoki has contributed an EF9345 video display
+  controller driver.
+
+* Ladislau Szilagyi has contributed an enhanced version of
+  CP/M Cowgol that leverages RomWBW memory banking.
 
 Contributions of all kinds to RomWBW are very welcome.
 
@@ -5558,6 +5754,7 @@ may be discovered by RomWBW in your system.
 | DS1501RTC | RTC      | Maxim DS1501/DS1511 Watchdog Real-Time Clock           |
 | DSRTC     | RTC      | Maxim DS1302 Real-Time Clock w/ NVRAM                  |
 | DUART     | Char     | SCC2681 or compatible Dual UART                        |
+| EF        | Char     | EF9345 Video Display Controller                        |
 | EMM       | Disk     | Disk drive on Parallel Port emm interface (Zip Drive)  |
 | FD        | Disk     | 8272 or compatible Floppy Disk Controller              |
 | FP        | System   | Simple LED & Switch Front Panel                        |

@@ -60,7 +60,8 @@ Test/*.* 2:
 #
 # Add CPNET client files
 #
-cpnet3/*.* 4:
+../../Binary/CPNET/cpn3*.lbr 4:
+../../Binary/CPNET/ReadMe.txt 4:
 #
 # Add Common Applications
 #

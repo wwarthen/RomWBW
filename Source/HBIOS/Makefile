@@ -74,15 +74,15 @@ $(OBJECTS) : $(ROMDEPS)
 	fi
 	if [ $(ROM_PLATFORM) = UNA ] ; then \
 		cp osimg.bin $(DEST)/UNA_WBW_SYS.bin ; \
-		cp ../RomDsk/rom$(ROMSIZE)_una.dat $(DEST)/UNA_WBW_ROM$(ROMSIZE).bin ; \
-		cat ../UBIOS/UNA-BIOS.BIN osimg.bin ../UBIOS/FSFAT.BIN ../RomDsk/rom$(ROMSIZE)_una.dat >$(ROMNAME).rom ; \
+		cp ../RomDsk/rom$(ROMDISKSIZE)_una.dat $(DEST)/UNA_WBW_ROM$(ROMDISKSIZE).bin ; \
+		cat ../UBIOS/UNA-BIOS.BIN osimg.bin ../UBIOS/FSFAT.BIN ../RomDsk/rom$(ROMDISKSIZE)_una.dat >$(ROMNAME).rom ; \
 	else \
 		if [ $(ROMSIZE) -gt 0 ] ; then \
-			cat hbios_rom.bin osimg.bin osimg1.bin osimg2.bin ../RomDsk/rom$(ROMSIZE)_wbw.dat >$(ROMNAME).rom ; \
+			cat hbios_rom.bin osimg.bin osimg1.bin osimg2.bin ../RomDsk/rom$(ROMDISKSIZE)_wbw.dat >$(ROMNAME).rom ; \
 			cat hbios_rom.bin osimg.bin osimg1.bin osimg2.bin >$(ROMNAME).upd ; \
 			cat hbios_app.bin osimg_small.bin > $(ROMNAME).com ; \
 		else \
-			cat hbios_rom.bin osimg.bin osimg1.bin osimg2.bin ../RomDsk/ram$(RAMSIZE)_wbw.dat >$(ROMNAME).rom ; \
+			cat hbios_rom.bin osimg.bin osimg1.bin osimg2.bin ../RomDsk/rom$(RAMDISKSIZE)_wbw.dat >$(ROMNAME).rom ; \
 			cat hbios_rom.bin osimg.bin osimg1.bin osimg2.bin >$(ROMNAME).upd ; \
 			cat hbios_app.bin osimg_small.bin > $(ROMNAME).com ; \
 		fi \

@@ -214,6 +214,12 @@ please let me know if I missed you!
 * Bill Shen has contributed boot loaders for several of his
   systems.
 
+* Laszlo Szolnoki has contributed an EF9345 video display
+  controller driver.
+
+* Ladislau Szilagyi has contributed an enhanced version of
+  CP/M Cowgol that leverages RomWBW memory banking.
+
 Contributions of all kinds to RomWBW are very welcome.
 
 # Licensing

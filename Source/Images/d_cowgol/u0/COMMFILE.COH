@@ -1,0 +1,27 @@
+sub FCBPutString(fcb: [FCB], s: [uint8]) is
+	loop
+		var c := [s];
+		if c == 0 then
+			break;
+		end if;
+		FCBPutChar(fcb, c);
+		s := @next s;
+	end loop;
+end sub;
+
+sub FCBGetBlock(fcb: [FCB], buffer: [uint8], length: intptr) is
+	while length != 0 loop;
+		[buffer] := FCBGetChar(fcb);
+		buffer := buffer + 1;
+		length := length - 1;
+	end loop;
+end sub;
+
+sub FCBPutBlock(fcb: [FCB], buffer: [uint8], length: intptr) is
+	while length != 0 loop;
+		FCBPutChar(fcb, [buffer]);
+		buffer := buffer + 1;
+		length := length - 1;
+	end loop;
+end sub;
+

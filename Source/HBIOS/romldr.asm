@@ -175,6 +175,21 @@ start1:
 #endif
 ;
 #if (BIOS == BIOS_WBW)
+	; Get the current console unit
+	ld	b,BF_SYSPEEK		; HBIOS func: POKE
+	ld	d,BID_BIOS		; BIOS bank
+	ld	hl,HCB_LOC + HCB_CONDEV	; Con unit num in HCB
+	rst	08			; do it
+	ld	a,e			; put in A
+	ld	(curcon),a		; save it
+;
+	; Get character unit count
+	ld	b,BF_SYSGET		; HBIOS func: SYS GET
+	ld	c,BF_SYSGET_CIOCNT	; HBIOS subfunc: CIO unit count
+	rst	08			; E := unit count
+	ld	a,e			; put in A
+	ld	(ciocnt),a		; save it
+;
 	; Check for DSKY and set flag
 	ld	b,BF_SYSGET		; HBIOS func: get
 	ld	c,BF_SYSGET_DSKYCNT	; get DSKY count
@@ -251,6 +266,22 @@ prompt:
 	call 	dsky_l2on
 #endif
 ;
+	; purge any garbage on the line
+	call	delay			; wait for prompt to be sent
+	ld	b,0			; failsafe max iterations
+purge:
+	call	cst			; anything there?
+	jr	z,wtkey			; if not, move on
+	call	cin			; read and discard
+	djnz	purge			; and loop till no more
+;
+#if (BIOS == BIOS_WBW)
+  #if (AUTOCON)
+	or	$ff			; initial value
+	ld	(conpend),a		; ... for conpoll routine
+  #endif
+#endif
+;
 wtkey:
 	; wait for a key or timeout
 	call	cst			; check for keyboard key
@@ -259,6 +290,13 @@ wtkey:
 #if (DSKYENABLE)
 	call	dsky_stat		; check DSKY for keypress
 	jp	nz,dskycmd		; if pending, do DSKY command
+#endif
+;
+#if (BIOS == BIOS_WBW)
+  #if (AUTOCON)
+	call	conpoll			; poll for console takeover
+	jp	nz,docon		; if requested, takeover	
+  #endif
 #endif
 ;
 #if (BOOT_TIMEOUT != -1)
@@ -291,6 +329,69 @@ clrbuf1:
 	ld	(hl),a
 	djnz	clrbuf1
 	ret
+;
+;=======================================================================
+; Poll character units for console takeover request
+;=======================================================================
+;
+; Poll all character units in system for a console takeover request.
+; A takeover request consists of pressing the <space> twice in a row.
+; at the character unit that wants to be the console.  Return with ZF
+; set if a console takeover was requested. If so, the requested console
+; unit will be recorded in (newcon).
+;
+#if (BIOS == BIOS_WBW)
+  #if (AUTOCON)
+;
+conpoll:
+	; save active console unit
+	ld	a,(curcon)
+	ld	e,a			; save in E
+;
+	; loop through all char ports
+	ld	a,(ciocnt)		; count of char units
+	ld	b,a			; use for loop counter
+	ld	c,0			; init unit num
+;
+conpoll1:
+	ld	a,c			; next char unit to test
+	cp	e			; is this the active console?
+	jr	z,conpoll2		; if so, don't test, move on
+	ld	(curcon),a		; make it current port
+	call	cst			; char waiting?
+	jr	z,conpoll2		; if no char, move on
+	call	cin			; get char
+	cp	' '			; space char?
+	jr	nz,conpoll2		; if not, move on
+;
+	; a <space> char was typed.  check to see if we just saw a
+	; <space> from this same unit.
+	ld	a,(conpend)		; pending con unit to A
+	cp	c			; compare to active unit
+	jr	z,conpoll3		; if =, second <space>, take con
+	ld	a,c			; if not, unit to A
+	ld	(conpend),a		; and update pending console
+;
+conpoll2:
+	inc	c			; next char unit
+	djnz	conpoll1		; loop till done
+	xor	a			; ret w/ Z for no takeover
+	jr	conpoll4		; all done, no takeover
+;
+conpoll3:
+	; record a new console request
+	ld	a,(curcon)		; record the unit
+	ld	(newcon),a		; ... as new console
+	or	$ff			; ret w/ NZ for new con req
+;
+conpoll4:
+	; restore active console and exit
+	ld	a,e			; restore active
+	ld	(curcon),a		; ... console
+	ret				; done, NZ if new con request
+;
+  #endif
+#endif
 ;
 ;=======================================================================
 ; Process a command line from buffer
@@ -625,14 +726,8 @@ setcon:
 	jp	c,err_nocon		; handle overflow error
 ;
 	; Check against max char unit
-	push	de
-	push	af			; save requested unit
-	ld	b,BF_SYSGET		; HBIOS func: SYS GET
-	ld	c,BF_SYSGET_CIOCNT	; HBIOS subfunc: CIO unit count
-	rst	08			; E := unit count
-	pop	af			; restore requested unit
-	cp	e			; compare
-	pop	de
+	ld	hl,ciocnt
+	cp	(hl)
 	jp	nc,err_nocon		; handle invalid unit
 	ld	(newcon),a		; save validated console
 ;
@@ -716,6 +811,7 @@ docon:	ld	hl,str_newcon		; new console msg
 	call	prtdecb			; print unit num
 ;
 	; Set console unit
+	ld	(curcon),a		; update loader console unit
 	ld	b,BF_SYSPOKE		; HBIOS func: POKE
 	ld	d,BID_BIOS		; BIOS bank
 	ld	e,a			; Char unit value
@@ -1383,8 +1479,6 @@ str_s100con	.db	"\r\n\r\nConsole on S100 Bus",0
 clrled:
 #if (BIOS == BIOS_WBW)
   #if (FPLED_ENABLE)
-	;xor	a			; zero accum
-	;out	(FPLED_IO),a		; clear diag leds
 	ld	b,BF_SYSSET		; HBIOS SysGet
 	ld	c,BF_SYSSET_PANEL	; ... Panel swiches value
 	ld	l,$00			; all LEDs off
@@ -1866,7 +1960,8 @@ cout:
 ;
 	; Output character to console via HBIOS
 	ld	e,a			; output char to E
-	ld	c,CIO_CONSOLE		; console unit to C
+	ld	a,(curcon)		; get current console
+	ld	c,a			; console unit to C
 	ld	b,BF_CIOOUT		; HBIOS func: output char
 	rst	08			; HBIOS outputs character
 ;
@@ -1886,7 +1981,8 @@ cin:
 	push	hl
 ;
 	; Input character from console via hbios
-	ld	c,CIO_CONSOLE		; console unit to c
+	ld	a,(curcon)		; get current console
+	ld	c,a			; console unit to C
 	ld	b,BF_CIOIN		; HBIOS func: input char
 	rst	08			; HBIOS reads character
 	ld	a,e			; move character to A for return
@@ -1906,7 +2002,8 @@ cst:
 	push	hl
 ;
 	; Get console input status via HBIOS
-	ld	c,CIO_CONSOLE		; console unit to C
+	ld	a,(curcon)		; get current console
+	ld	c,a			; console unit to C
 	ld	b,BF_CIOIST		; HBIOS func: input status
 	rst	08			; HBIOS returns status in A
 ;
@@ -2419,6 +2516,14 @@ loadcnt		.db	0		; num disk sectors to load
 switches	.db	0		; front panel switches
 diskcnt		.db	0		; disk unit count value
 dskyact		.db	0		; DSKY active if != 0
+;
+#if (BIOS == BIOS_WBW)
+curcon		.db	CIO_CONSOLE	; current console unit
+ciocnt		.db	1		; count of char units
+savcon		.db	0		; con save for conpoll
+conpend		.db	$ff		; pending con unit (first <space> pressed)
+#endif
+
 ;
 ;=======================================================================
 ; Pad remainder of ROM Loader

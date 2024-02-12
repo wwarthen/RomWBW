@@ -1,0 +1,237 @@
+record MallocFreeBlock is
+	next: [MallocFreeBlock];
+	size: intptr; # bytes
+end record;
+
+record MallocUsedBlock is
+	size: intptr; # bytes
+end record;
+
+var freeList: [MallocFreeBlock] := LOMEM as [MallocFreeBlock];
+freeList.next := 0 as [MallocFreeBlock];
+freeList.size := HIMEM - LOMEM;
+
+sub DumpBlocks() is
+	var p := freeList;
+	var bytes: intptr := 0;
+	print("* freelist: ");
+	print_hex_i32(p as intptr as uint32);
+	print_nl();
+	while p != (0 as [MallocFreeBlock]) loop
+		print("* block @");
+		print_hex_i32(p as intptr as uint32);
+		print("+");
+		print_hex_i32(p.size as intptr as uint32);
+		print("=");
+		print_hex_i32((p+p.size) as intptr as uint32);
+		print(" -> ");
+		print_hex_i32(p.next as intptr as uint32);
+		print_nl();
+
+		bytes := bytes + p.size;
+		p := p.next;
+	end loop;
+	print("* free bytes: ");
+	print_i32(bytes as intptr as uint32);
+	print_nl();
+	print_nl();
+end sub;
+
+sub CheckMemoryChain() is
+	var p := freeList;
+	while p != (0 as [MallocFreeBlock]) loop
+		var next := p.next;
+		if next == (0 as [MallocFreeBlock]) then
+			break;
+		end if;
+		if next <= p then
+			DumpBlocks();
+			print("bad chain: block ");
+			print_hex_i32(p as intptr as uint32);
+			print(" points at prior block ");
+			print_hex_i32(next as intptr as uint32);
+			print_nl();
+			ExitWithError();
+		end if;
+
+		p := p.next;
+	end loop;
+end sub;
+
+sub RawAlloc(length: intptr): (block: [uint8]) is
+	var totallength := AlignUp(length + @bytesof MallocUsedBlock);
+	if totallength < @bytesof MallocFreeBlock then
+		totallength := @bytesof MallocFreeBlock;
+	end if;
+
+	# Make sure everything's rounded to 8 bytes to try and reduce
+	# fragmentation.
+	totallength := (totallength + 7) & ~7;
+
+	# Fragmentation is a killer on small systems, so we use best fit.
+
+	var p := freeList;
+	var prev: [MallocFreeBlock] := 0 as [MallocFreeBlock];
+	var candidate: [MallocFreeBlock] := 0 as [MallocFreeBlock];
+	var cprev: [MallocFreeBlock] := 0 as [MallocFreeBlock];
+	var csize: intptr := -1;
+
+	# Try to find the smallest block which will fit.
+	while p != (0 as [MallocFreeBlock]) loop
+		var s := p.size;
+		if (s >= totallength) and (s < csize) then
+			candidate := p;
+			csize := s;
+			cprev := prev;
+			if csize == totallength then
+				# This is an exact fit. We can't do better than this, so stop here.
+				break;
+			end if;
+		end if;
+		prev := p;
+		p := p.next;
+	end loop;
+	if candidate == (0 as [MallocFreeBlock]) then
+		# Nothing was found.
+		block := 0 as [uint8];
+		return;
+	end if;
+
+	var delta := csize - totallength;
+	if delta < @bytesof MallocFreeBlock then
+		# Consume the entire block.
+		if cprev != (0 as [MallocFreeBlock]) then
+			cprev.next := candidate.next;
+		else
+			freeList := candidate.next;
+		end if;
+		totallength := csize;
+	else
+		# We found a hole bigger than we need. We shrink the hole and return
+		# what's left.
+		candidate.size := delta;
+		candidate := candidate + candidate.size;
+	end if;
+
+	#print("malloc ");
+	#print_hex_i32(candidate as intptr as uint32);
+	#print("+");
+	#print_hex_i32(totallength as uint32);
+	#print_nl();
+
+	var usedblock := candidate as [MallocUsedBlock];
+	usedblock.size := totallength;
+	block := (@next usedblock) as [uint8];
+
+	#print("malloc ");
+	#print_hex_i32(block as intptr as uint32);
+	#print("+");
+	#print_hex_i32(length as uint32);
+	#print_nl();
+
+	MemSet(block, 0, totallength - @bytesof MallocUsedBlock);
+	#CheckMemoryChain();
+end sub;
+
+sub Alloc(length: intptr): (block: [uint8]) is
+	block := RawAlloc(length);
+	if block == (0 as [uint8]) then
+		print("Out of memory");
+		ExitWithError();
+	end if;
+end sub;
+
+sub AddFreeBlock(start: [uint8], length: intptr) is
+	#print("free ");
+	#print_hex_i32(start as intptr as uint32);
+	#print("+");
+	#print_hex_i32(length as uint32);
+	#print_nl();
+
+	MemSet(start, 0xaa, length);
+
+	var h := start as [MallocFreeBlock];
+	h.size := length;
+
+	# freeList points at an ordered list of free blocks. First, we run
+	# through the list until we find the last block *before* this one.
+
+	var p := freeList;
+	if h < p then
+		# Special case: the new block will become the new *first* block.
+
+		if (h + h.size) == p then
+			h.size := length + p.size;
+			h.next := p.next;
+		else
+			h.next := p;
+		end if;
+		freeList := h;
+	else
+		# Otherwise, work through the list and find the block immediately
+		# preceding the one we're going to insert.
+
+		loop
+			# Is this the last block?
+
+			if p.next == (0 as [MallocFreeBlock]) then
+				# Insert the new block after it.
+
+				p.next := h;
+				h.next := 0 as [MallocFreeBlock];
+				break;
+			end if;
+
+			# We know that h cannot be before p, so if h is before the
+			# *next* block, then this must be the block preceding it.
+
+			if h < p.next then
+				# Try to merge the next block onto the end of h.
+
+				if (h + length) == p.next then
+					h.size := length + p.next.size;
+					h.next := p.next.next;
+				else
+					h.next := p.next;
+				end if;
+				p.next := h;
+				break;
+			end if;
+
+			p := p.next;
+		end loop;
+
+		# p now points at the preceding block. Try to merge h onto the
+		# end of it.
+
+		if (p + p.size) == h then
+			p.size := p.size + h.size;
+			p.next := h.next;
+		end if;
+	end if;
+
+	#CheckMemoryChain();
+end sub;
+
+sub Free(start: [uint8]) is
+	if start != (0 as [uint8]) then
+		var usedblock := @prev (start as [MallocUsedBlock]);
+		AddFreeBlock(usedblock as [uint8], usedblock.size);
+	end if;
+end sub;
+
+sub GetFreeMemory(): (bytes: intptr) is
+	bytes := 0;
+	var p := freeList;
+	while p != (0 as [MallocFreeBlock]) loop
+		bytes := bytes + p.size;
+		p := p.next;
+	end loop;
+end sub;
+
+sub StrDup(s: [uint8]): (news: [uint8]) is
+	var len := StrLen(s) + 1;
+	news := Alloc(len);
+	MemCopy(s, len, news);
+end sub;
+

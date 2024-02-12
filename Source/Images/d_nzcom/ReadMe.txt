@@ -51,8 +51,10 @@ done to create a minimal ready-to-run setup for RomWBW:
   - Extract VT100 TCAP from Z3TCAP.LBR and saved it as TCAP.Z3T.
   - Created PROFILE.SUB to launch NZCOM at startup.
   - Created empty STARTZCM.COM.
-  - TCSELECT.COM was removed because a later version is provided
+  - Original TCSELECT.COM was removed and replaced with a newer version
     from the Z3 files.
+  - TCAP.LBR and Z3TCAP.TCP were removed and replaced with
+    Z3TCAP.LBR from new TCSELECT distribution.
   - Z3LOC.COM and LBREXT.COM were removed because more recent
     versions are provided from Common files.
   - Replaced ZRDOS with ZSDOS in NZCOM.LBR.  The standalone
@@ -318,4 +320,4 @@ in this user area for more information.
 N.B., at a minimum, some of the files in this user area must be copied
 to user area 0 for CP/NET to work properly.
 
--- WBW 3:20 PM 8/27/2021
+-- WBW 11:19 AM 1/22/2024

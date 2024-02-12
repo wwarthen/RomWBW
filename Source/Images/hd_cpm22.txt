@@ -44,7 +44,8 @@ Test/*.* 2:
 #
 # Add CPNET client files
 #
-cpnet12/*.* 4:
+../../Binary/CPNET/cpn12*.lbr 4:
+../../Binary/CPNET/ReadMe.txt 4:
 #
 # Add OS image
 #

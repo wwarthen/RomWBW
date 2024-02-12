@@ -1,0 +1,121 @@
+const FCB_FLAG_ERROR := 1<<0;
+const FCB_FLAG_READ := 1<<1;
+const FCB_FLAG_WRITE := 1<<2;
+
+record FCB: RawFCB is
+	pos: uint32;
+	buflen: FCBIndexType;
+	index: FCBIndexType;
+	buffer: uint8[FCB_BUFFER_SIZE];
+	flags: uint8;
+end record;
+
+@decl sub FCBRawRead(fcb: [FCB], pos: uint32, len: FCBIndexType): (amount: FCBIndexType);
+@decl sub FCBRawWrite(fcb: [FCB], pos: uint32, len: FCBIndexType);
+
+sub _fcb_init(fcb: [FCB]) is
+	fcb.pos := 0;
+	fcb.buflen := 0;
+	fcb.index := 0;
+	fcb.flags := 0;
+end sub;
+
+sub _fcb_advance(fcb: [FCB]) is
+	fcb.index := fcb.index + 1;
+end sub;
+
+sub _fcb_fillbuffer(fcb: [FCB]): (b: uint8) is
+	var bufpos := fcb.pos + (fcb.index as uint32);
+	fcb.buflen := FCBRawRead(fcb, bufpos, FCB_BUFFER_SIZE);
+	b := 0;
+	if (fcb.flags  & FCB_FLAG_ERROR) != 0 then
+		return;
+	end if;
+	fcb.flags := FCB_FLAG_READ;
+	fcb.pos := bufpos;
+	fcb.index := 0;
+	if fcb.buflen != 0 then
+		b := fcb.buffer[0];
+		_fcb_advance(fcb);
+	end if;
+end sub;
+
+sub FCBFlush(fcb: [FCB]) is
+	var bufpos := fcb.pos;
+	if (fcb.flags & FCB_FLAG_WRITE) != 0 then
+		FCBRawWrite(fcb, bufpos, fcb.index);
+		if (fcb.flags & FCB_FLAG_ERROR) != 0 then
+			return;
+		end if;
+	end if;
+	fcb.pos := bufpos + (fcb.index as uint32);
+	fcb.flags := 0;
+	fcb.index := 0;
+	fcb.buflen := 0;
+end sub;
+
+sub _fcb_flushbuffer(fcb: [FCB], b: uint8) is
+	FCBFlush(fcb);
+	if (fcb.flags  & FCB_FLAG_ERROR) != 0 then
+		return;
+	end if;
+	fcb.flags := FCB_FLAG_WRITE;
+	fcb.buffer[0] := b;
+	_fcb_advance(fcb);
+end sub;
+
+sub FCBGetChar(fcb: [FCB]): (b: uint8) is
+	if (fcb.flags & FCB_FLAG_WRITE) != 0 then
+		FCBFlush(fcb);
+	end if;
+	var i := fcb.index;
+	if i == fcb.buflen then
+		b := _fcb_fillbuffer(fcb);
+	else
+		b := fcb.buffer[i];
+		_fcb_advance(fcb);
+	end if;
+end sub;
+
+sub FCBPutChar(fcb: [FCB], b: uint8) is
+	if (fcb.flags & FCB_FLAG_READ) != 0 then
+		FCBFlush(fcb);
+	end if;
+	var i := fcb.index;
+	if i == FCB_BUFFER_SIZE then
+		_fcb_flushbuffer(fcb, b);
+	else
+		fcb.buffer[i] := b;
+		_fcb_advance(fcb);
+	end if;
+	fcb.flags := fcb.flags | FCB_FLAG_WRITE;
+end sub;
+
+sub FCBPos(fcb: [FCB]): (pos: uint32) is
+	pos := fcb.pos + (fcb.index as uint32);
+end sub;
+
+sub FCBError(fcb: [FCB]): (e: uint8) is
+	e := 0;
+	if (fcb.flags & FCB_FLAG_ERROR) != 0 then
+		e := 1;
+	end if;
+end sub;
+
+sub FCBSeek(fcb: [FCB], pos: uint32) is
+	var delta := pos - fcb.pos;
+	if (fcb.flags & FCB_FLAG_READ) != 0 then
+		if delta < (fcb.buflen as uint32) then
+			fcb.index := delta as FCBIndexType;
+			return;
+		end if;
+	elseif (fcb.flags & FCB_FLAG_WRITE) != 0 then
+		if delta <= (fcb.index as uint32) then
+			fcb.index := delta as FCBIndexType;
+			return;
+		end if;
+	end if;
+	FCBFlush(fcb);
+	fcb.pos := pos;
+end sub;
+

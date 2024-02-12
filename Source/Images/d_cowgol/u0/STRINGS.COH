@@ -1,0 +1,63 @@
+sub StrCmp(s1: [uint8], s2: [uint8]): (res: int8) is
+	loop
+		res := ([s1] - [s2]) as int8;
+		if (res != 0) or ([s1] == 0) then
+			break;
+		end if;
+		s1 := s1 + 1;
+		s2 := s2 + 1;
+	end loop;
+end sub;
+
+sub ToLower(c: uint8): (cc: uint8) is
+	if (c >= 'A') and (c <= 'Z') then
+		cc := c | 32;
+	else
+		cc := c;
+	end if;
+end sub;
+
+sub StrICmp(s1: [uint8], s2: [uint8]): (res: int8) is
+	loop
+		res := (ToLower([s1]) - ToLower([s2])) as int8;
+		if (res != 0) or ([s1] == 0) then
+			break;
+		end if;
+		s1 := s1 + 1;
+		s2 := s2 + 1;
+	end loop;
+end sub;
+
+sub StrLen(s: [uint8]): (size: intptr) is
+	var p := s;
+	loop
+		var c := [p];
+		if c == 0 then
+			break;
+		end if;
+		p := p + 1;
+	end loop;
+	size := p - s;
+end sub;
+
+sub CopyString(src: [uint8], dest: [uint8]) is
+	loop
+		var c := [src];
+		[dest] := c;
+		src := src + 1;
+		dest := dest + 1;
+		if c == 0 then
+			break;
+		end if;
+	end loop;
+end sub;
+
+sub MemCopy(src: [uint8], size: intptr, dest: [uint8]) is
+	while size != 0 loop
+		[dest] := [src];
+		dest := dest + 1;
+		src := src + 1;
+		size := size - 1;
+	end loop;
+end sub;
+

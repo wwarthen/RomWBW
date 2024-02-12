@@ -3,8 +3,8 @@
   ************************************
   *  ParPortProp for RomWBW          *
   *  Interface to RBC ParPortProp    *
-  *  Version 0.97                    *
-  *  May 9, 2020                     *
+  *  Version 0.98                    *
+  *  January 20, 2024                *
   ************************************
 
   Wayne Warthen
@@ -30,24 +30,24 @@
 
     2018-03-11 WBW: Implement character attributes
     2020-05-09 WBW: Switch monitor refresh to 60Hz
+    2024-01-20 WBW: Add graphics char selection to AnsiTerm
 
 }}
 
 CON
-  VERSION = (((0 << 8) + 97) << 16) + 0
+  VERSION = (((0 << 8) + 98) << 16) + 0
 
   _CLKMODE = XTAL1 + PLL16X
   _XINFREQ = 5_000_000
-
+  
   'SLEEP = 60 * 5                ' Screen saver timeout in seconds
   SLEEP = 0			' Zero for no screen saver
   
   VGA_BASE = 16                 ' VGA Video pins 16-23 (??)
   KBD_BASE = 14                 ' PS/2 Keyboard pins 14-15 (DATA, CLK)
   SD_BASE = 24                  ' SD Card pins 24-27 (DO, CLK, DI, CS)
-
-  STAT_ATTR1 = %00110000_00000000	' Status area screen attribute (first line)
-  STAT_ATTR = %01110000_00000000	' Status area screen attribute
+  
+  STAT_ATTR = %00110000_00000000	' Status area screen attribute (first line)
 
   PPI_CMD = $0100               ' pin 8, PC0, active ???
   PPI_STB = $0200               ' pin 9, PC4, active low
@@ -143,19 +143,16 @@ PUB main | tmp
     dsp.cls
   MsgNewLine
 
-  dsp.VidOn
+  dsp.vidOn
 
   statRows := (dsp.statInfo >> 8)  & $FF
   statCols := dsp.statInfo & $FF
     
   dsp.statFill(0, 0, STAT_ATTR, $20, statRows * statCols)
-  dsp.statFill(0, 0, STAT_ATTR1, $20, statCols)
 
-  dsp.statStr(0, 1, STAT_ATTR1, @strROM)
-  dsp.statStr(0, (statCols - strsize(@strHW)) / 2, STAT_ATTR1, @strHW)
-  dsp.statStr(0, (statCols - strsize(@strVer) - 1), STAT_ATTR1, @strVer)
-  
-  'dsp.statStr(2, (statCols - 20) / 2, STAT_ATTR, string("<<< Message Area >>>"))
+  dsp.statStr(0, 1, STAT_ATTR, @strROM)
+  dsp.statStr(0, (statCols - strsize(@strHW)) / 2, STAT_ATTR, @strHW)
+  dsp.statStr(0, (statCols - strsize(@strVer) - 1), STAT_ATTR, @strVer)
 
   MsgStr(string("Initializing ParPortProp..."))
 
@@ -221,7 +218,7 @@ PUB main | tmp
   else
     MsgStr(string(" OK"))
   MsgNewLine
-
+  
   dsp.beep
 
   MsgStr(string("ParPortProp Ready!"))
@@ -610,7 +607,7 @@ PRI Activity
 
 DAT
 
-strVer	byte	"F/W v0.97",0
+strVer	byte	"F/W v0.98",0
 strHW	byte	"ParPortProp",0
 strROM	byte	"RomWBW",0
 

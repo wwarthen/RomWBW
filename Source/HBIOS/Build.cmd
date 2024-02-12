@@ -135,11 +135,11 @@ for %%f in (hbios_rom.bin osimg.bin osimg1.bin osimg2.bin) do (
 ::
 
 if %ROMSize% gtr 0 (
-    copy /b hbios_rom.bin + osimg.bin + osimg1.bin + osimg2.bin + ..\RomDsk\rom%ROMSize%_wbw.dat %ROMName%.rom || exit /b
+    copy /b hbios_rom.bin + osimg.bin + osimg1.bin + osimg2.bin + ..\RomDsk\rom%ROMDiskSize%_wbw.dat %ROMName%.rom || exit /b
     copy /b hbios_rom.bin + osimg.bin + osimg1.bin + osimg2.bin %ROMName%.upd || exit /b
     copy /b hbios_app.bin + osimg_small.bin %ROMName%.com || exit /b
 ) else (
-    copy /b hbios_rom.bin + osimg.bin + osimg1.bin + osimg2.bin  + ..\RomDsk\ram%RAMSize%_wbw.dat %ROMName%.rom || exit /b
+    copy /b hbios_rom.bin + osimg.bin + osimg1.bin + osimg2.bin  + ..\RomDsk\rom%RAMDiskSize%_wbw.dat %ROMName%.rom || exit /b
     copy /b hbios_rom.bin + osimg.bin + osimg1.bin + osimg2.bin %ROMName%.upd || exit /b
     copy /b hbios_app.bin + osimg_small.bin %ROMName%.com || exit /b
 )
@@ -174,10 +174,10 @@ copy /b romldr.bin + dbgmon.bin + ..\zsdos\zsys_una.bin + ..\cpm22\cpm_una.bin o
 
 :: Copy OS Bank and ROM Disk image files to output
 copy /b osimg.bin ..\..\Binary\UNA_WBW_SYS.bin || exit /b
-copy /b ..\RomDsk\rom%ROMSize%_una.dat ..\..\Binary\UNA_WBW_ROM%ROMSize%.bin || exit /b
+copy /b ..\RomDsk\rom%ROMDiskSize%_una.dat ..\..\Binary\UNA_WBW_ROM%ROMDiskSize%.bin || exit /b
 
 :: Create the final ROM image
-copy /b ..\UBIOS\UNA-BIOS.BIN + osimg.bin + ..\UBIOS\FSFAT.BIN + ..\RomDsk\rom%ROMSize%_una.dat %ROMName%.rom || exit /b
+copy /b ..\UBIOS\UNA-BIOS.BIN + osimg.bin + ..\UBIOS\FSFAT.BIN + ..\RomDsk\rom%ROMDiskSize%_una.dat %ROMName%.rom || exit /b
 
 :: Copy to output
 copy %ROMName%.rom ..\..\Binary || exit /b

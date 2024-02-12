@@ -1,0 +1,115 @@
+#
+# Copyright (c) 2020 Brian Callahan <bcallah@openbsd.org>
+#
+# Permission to use, copy, modify, and distribute this software for any
+# purpose with or without fee is hereby granted, provided that the above
+# copyright notice and this permission notice appear in all copies.
+#
+# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+# WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+# ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+# ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+# OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+#
+
+# Clone of Unix hexdump -C
+# Should work on all Cowgol systems
+
+include "stdcow.coh";
+include "argv.coh";
+
+var InputFile: FCB;
+
+var addr: uint32;
+var len: uint32;
+
+sub Hexdump() is
+	var buf: uint8[16];
+	var i: uint8;
+	var j: uint8;
+
+	print_hex_i32(addr);
+	print("  ");
+
+	i := 0;
+
+	loop
+		var c: uint8 := FCBGetChar(&InputFile);
+
+		buf[i] := c;
+		print_hex_i8(c);
+		print(" ");
+		if i == 7 then
+			print(" ");
+		end if;
+
+		i := i + 1;
+		len := len - 1;
+
+		if len == 0 or i > 15 then
+			break;
+		end if;
+	end loop;
+
+	addr := addr + (i as uint32);
+
+	var k: uint8 := i;
+	if len == 0 then
+		if i < 8 then
+			print(" ");
+		end if;
+
+		while i < 16 loop
+			print("   ");
+			buf[i] := ' ';
+			i := i + 1;
+		end loop;
+	end if;
+
+	print(" |");
+
+	j := 0;
+
+	while j < k loop
+		if buf[j] >= 0x20 and buf[j] <= 0x7e then
+			print_char(buf[j]);
+		else
+			print_char('.');
+		end if;
+
+		j := j + 1;
+	end loop;
+
+	print("|\n");
+end sub;
+
+ArgvInit();
+
+var FileName: [uint8] := ArgvNext();
+
+if FileName == (0 as [uint8]) then
+	print("usage: hexdump file\n");
+	ExitWithError();
+end if;
+
+if FCBOpenIn(&InputFile, FileName) != 0 then
+	print("hexdump: cannot open ");
+	print(FileName);
+	print("\n");
+	ExitWithError();
+end if;
+
+addr := 0;
+len := FCBExt(&InputFile);
+while len > 0 loop 
+	Hexdump();
+end loop;
+
+print_hex_i32(addr);
+print("\n");
+
+if FCBClose(&InputFile) != 0 then
+	ExitWithError();
+end if;

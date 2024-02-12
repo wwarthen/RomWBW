@@ -3,9 +3,9 @@
   *******************************
   *  PropIO for RomWBW          *
   *  Interface to RBC PropIO    *
-  *  Version 0.97               *
-  *  May 9, 2020                *
-  *******************************
+  *  Version 0.98                 *
+  *  January 20, 2024             *
+  *********************************
 
   Wayne Warthen
   wwarthen@gmail.com
@@ -35,11 +35,12 @@
     2015-11-15 WBW: Added SD card capacity reporting
     2018-03-11 WBW: Implement character attributes
     2020-05-09 WBW: Switch monitor refresh to 60Hz
+    2024-01-20 WBW: Add graphics char selection to AnsiTerm
 
 }}
 
 CON
-  VERSION = (((0 << 8) + 97) << 16) + 0
+  VERSION = (((0 << 8) + 98) << 16) + 0
 
   _CLKMODE = XTAL1 + PLL16X
   _XINFREQ = 5_000_000
@@ -50,9 +51,8 @@ CON
   VGA_BASE = 16                 ' VGA Video pins 16-23 (??)
   KBD_BASE = 14                 ' PS/2 Keyboard pins 14-15 (DATA, CLK)
   SD_BASE = 24                  ' SD Card pins 24-27 (DO, CLK, DI, CS)
-
-  STAT_ATTR1 = %00110000_00000000	' Status area screen attribute (first line)
-  STAT_ATTR = %01110000_00000000	' Status area screen attribute
+  
+  STAT_ATTR = %00110000_00000000	' Status area screen attribute (first line)
 
   DSKCMD_NOP = $00
   DSKCMD_STATUS = $01
@@ -78,10 +78,7 @@ CON
 
   TRMST_ACTMASK = (TRMST_KBDACT | TRMST_DSPACT)         ' bit mask for kbd or dsp active
 
-
-
 OBJ
-  'dsp : "VGA_1024"                                      ' VGA Terminal Driver
   dsp : "AnsiTerm"                                      ' VGA Terminal Driver
   kbd : "Keyboard"                                      ' PS/2 Keyboard Driver
   sdc : "safe_spi"                                      ' SD Card Driver
@@ -101,7 +98,7 @@ VAR
   long  TimerCount
   long  DiskResult
   long  CardType
-   
+  
   byte	statRows
   byte	statCols
   
@@ -122,20 +119,17 @@ PUB main
     dsp.cls
   MsgNewLine
 
-  dsp.VidOn
+  dsp.vidOn
 
   statRows := (dsp.statInfo >> 8)  & $FF
   statCols := dsp.statInfo & $FF
     
   dsp.statFill(0, 0, STAT_ATTR, $20, statRows * statCols)
-  dsp.statFill(0, 0, STAT_ATTR1, $20, statCols)
 
-  dsp.statStr(0, 1, STAT_ATTR1, @strROM)
-  dsp.statStr(0, (statCols - strsize(@strHW)) / 2, STAT_ATTR1, @strHW)
-  dsp.statStr(0, (statCols - strsize(@strVer) - 1), STAT_ATTR1, @strVer)
+  dsp.statStr(0, 1, STAT_ATTR, @strROM)
+  dsp.statStr(0, (statCols - strsize(@strHW)) / 2, STAT_ATTR, @strHW)
+  dsp.statStr(0, (statCols - strsize(@strVer) - 1), STAT_ATTR, @strVer)
   
-  'dsp.statStr(2, (statCols - 20) / 2, STAT_ATTR, string("<<< Message Area >>>"))
-
   MsgStr(string("Initializing PropIO..."))
 
   TermStatKbdAdr := @TermStatKbd
@@ -185,10 +179,12 @@ PUB main
   else
     MsgStr(string(" OK"))
   MsgNewLine
+  
+  dsp.beep
 
   MsgStr(string("PropIO Ready!"))
   MsgNewLine
-
+  
   repeat
     if (DiskStat & DSKST_ACT)
       ProcessDiskCmd
@@ -315,13 +311,13 @@ PRI Timer
     waitcnt(clkfreq * 1 + cnt)
     if (TimerCount > 0)
       if (TimerCount == 1)
-        dsp.VidOff
+        dsp.vidOff
       TimerCount--
 
 PRI Activity
   if (SLEEP > 0)
     if (TimerCount == 0)
-      dsp.VidOn
+      dsp.vidOn
     TimerCount := SLEEP
 
 {
@@ -338,18 +334,18 @@ PRI DumpBuffer(Buffer) | i, j
 
 DAT
 
-strVer	byte	"F/W v0.97",0
+strVer	byte	"F/W v0.98",0
 strHW	byte	"PropIO",0
 strROM	byte	"RomWBW",0
 
 {{                        Ports
 
 
-                    +------/WAIT
-                    |+-----/RD
+                    +------ CLR
+                    |+----- /RD
                     ||+---- A1
                     |||+--- A0
-                    ||||+--/CS
+                    ||||+-- /CS
                     |||||
                     |||||
    P15..P0  -->  xxxxxxxx_xxxxxxxx

@@ -15,11 +15,11 @@ CON
   cols          = 80                  	' screen columns
   rows          = 30                  	' screen rows
   chars         = rows * cols         	' screen characters
-  termRows      = 25                  	' rows in terminal area
+  termRows      = rows - 1             	' rows in terminal area
   termChars     = termRows * cols      	' characters in terminal area
   termLastRow	= termChars - cols	' buffer pos of first char in last term row
   statArea	= termChars		' starting position of status area
-  statRows	= rows - TermRows	' status area rows
+  statRows	= 1			' status area rows
   blank         = $20
   
   spkVol	= 75
@@ -46,6 +46,7 @@ VAR
   long  vgaBasePin
   word	curAttr				' active attribute value
   word	bold, underscore, blink, reverse, fg, bg
+  word	alt				' alt char set active
 
   
 DAT
@@ -81,6 +82,7 @@ PUB start(BasePin) | i, char
   reverse := 0
   fg := 0
   bg := 0
+  alt := 0
   setMode(0)				' reset attributes
 
 PUB vidOn
@@ -173,6 +175,10 @@ PRI clsTerm
   wordfill (@screen, (curAttr | blank), termChars)
 
 PRI outc(c)
+
+  if (alt == 1)
+    if ((c => $5F) and (c < $7F))
+      c := c - $5F
 
   screen[pos++] := (curAttr | c)
   lastc := c
@@ -400,11 +406,11 @@ PRI ansi(c) | x, defVal
         x += cols
 
     "K":
-      if arg0 == -1
+      if ((arg0 == -1) or (arg0 == 0))
           clEOL(pos)
-      elseif arg0 == 1
+      elseif (arg0 == 1)
           clBOL(pos)
-      else
+      elseif (arg0 == 2)
           clEOL(pos - (pos // cols))
 
     "L":
@@ -563,6 +569,11 @@ PUB processChar(c)
       return
 
    5:					' Set character set (not implemented)
+    if (c == "0")
+      alt := 1
+    if (c == "B")
+      alt := 0
+
     state := 0
     return
 
