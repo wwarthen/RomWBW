@@ -13,6 +13,6 @@ cpn3%.lbr: CPNETVER=cpnet3
 %duo.lbr: HWVER=duo
 
 %.lbr:
-	cd $(HWVER)/$(CPNETVER)
-	$(ZXCC) NULU --O -$(*F) -\<30 --A -*.* --L --X
+	cd $(HWVER)/$(CPNETVER) ; \
+	$(ZXCC) NULU --O -$(*F) -\<30 --A -*.* --L --X ; \
 	mv $@ ../..
