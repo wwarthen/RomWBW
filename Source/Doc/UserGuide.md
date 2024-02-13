@@ -3129,6 +3129,11 @@ ethernet interface module.  At this time, the following are supported:
   (e.g., Adafruit SPI Non-Volatile FRAM Breakout)
 * Duodyne Disk I/O w/ Wiz850IO and (optionally) SPI NVRAM
   (e.g., 25LC256)
+* Generic Serial Interface
+
+**NOTE:** The Generic Serial Interface is supported by RomWBW, but is
+not documented here.  You must refer to the CP/NET documentation
+referenced below.
 
 The client software interacts directly with this hardware.  In a future 
 version of RomWBW, I hope to add a generic networking API that will 
@@ -3161,6 +3166,8 @@ library files are found in user area 4.
 | CPN3MT.LBR   | CP/NET 3       | CP/M 3   | RCBus w/ MT011        |
 | CPN12DUO.LBR | CP/NET 1.2     | CP/M 2.2 | Duodyne w/ Disk I/O   |
 | CPN3DUO.LBR  | CP/NET 3       | CP/M 3   | Duodyne w/ Disk I/O   |
+| CPN12SER.LBR | CP/NET 1.2     | CP/M 2.2 | RomWBW Serial Port    |
+| CPN3SER.LBR  | CP/NET 3       | CP/M 3   | RomWBW Serial Port    |
 
 First, you need to merge the files from the correct library file
 into user area 0.  This is done by extracting the files using the
@@ -3187,6 +3194,8 @@ A>nulu 4:cpn12mt
 NULU 1.52  (07/12/87)
 Copyright (C) 1984, 1985 & 1987 by Martin Murray
 Bug fixes in version 1.52 by Mick Waters
+
+TYPE -H FOR HELP
 
 Library A4:CPN12MT.LBR open.
 (Buffer size: 259 sectors)

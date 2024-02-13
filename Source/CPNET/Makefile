@@ -1,4 +1,4 @@
-OBJECTS = cpn12mt.lbr cpn3mt.lbr cpn12duo.lbr cpn3duo.lbr
+OBJECTS = cpn12mt.lbr cpn3mt.lbr cpn12duo.lbr cpn3duo.lbr cpn12ser.lbr cpn3ser.lbr
 DEST = ../../Binary/CPNET/
 TOOLS = ../../Tools
 
@@ -8,6 +8,7 @@ cpn12%.lbr: CPNETVER=cpnet12
 cpn3%.lbr: CPNETVER=cpnet3
 %mt.lbr: HWVER=mt011
 %duo.lbr: HWVER=duo
+%ser.lbr: HWVER=serial
 
 %.lbr:
 	rm -f $@
