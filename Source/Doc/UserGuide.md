@@ -2674,34 +2674,95 @@ containing the Fuzix image at the RomWBW Loader prompt.
 To create a Fuzix disk image:
 
 * Locate and download the Fuzix disk image for your system from
-  <https://www.fuzix.org/>.
+  <https://www.fuzix.org/>.  For each platform, you will typically
+  find two image files.  An emulator image (`emu-xxx.img`) and a
+  disk image (`disk.img`).  You want the disk image file.
 
-* Remove the 1KB header from the image file.  The Fuzix disk images
-  are built to run under an emulator that requires a 1KB prefix.  You
-  must remove this prefix before writing the image to your physical
-  disk media.  Unix dd is the easiest way to do this:
-  
-  `dd bs=1024 skip=1 if=sc126-0.3.ide of=sc126-0.3.trimmed`
-
-* Write the trimmed image to your disk media.  This can also be
-  done with dd or with Win32DiskImager under Windows.
+* Write the disk image file to your physical media (CF Card, SD Card,
+  etc.) starting at the beginning of the media (first sector).  Do
+  not combine the Fuzix image with the RomWBW disk images -- they are
+  entirely separate.
 
 To boot into Fuzix:
+
+* Insert your Fuzix disk media.
 
 * Power-up or reset your system.  RomWBW should load normally
   and bring you to the RomWBW Boot Loader prompt.
 
-* Change your baud rate to 38,400.  This can be done from the
-  RomWBW Boot Loader prompt with the following command:
+* Depending on the platform, Fuzix may be built to run at a different
+  baud rate that the default RomWBW baud rate.  If so, it is best to
+  change your RomWBW baud rate prior to initiating the Fuzix startup.
+  You can do this at the loader prompt with a command like this:
 
   `I 0 38400`
 
-  You will also need to change your terminal baud rate at this time.
+  Replace 38400 with the desired baud rate for Fuzix.  You will be
+  prompted to change your terminal's baud rate at this time.
+
+* At the RomWBW Boot Loader prompt, enter the disk unit number of
+  the Fuzix media.  Fuzix should load and you will see device
+  discovery/information messages that vary depending on your
+  platform.  This is a typical example:
+
+  ```
+  RCBus [RCZ180_nat_wbw] Boot Loader
+  FP Switches = 0x00
+  
+  Boot [H=Help]: 2
+  
+  Booting Disk Unit 2, Slice 0, Sector 0x00000000...
+  
+  Volume "Fuzix 126 Loader" [0xF200-0xF400, entry @ 0xF200]...
+  FUZIX version 0.4
+  Copyright (c) 1988-2002 by H.F.Bower, D.Braun, S.Nitschke, H.Peraza
+  Copyright (c) 1997-2001 by Arcady Schekochikhin, Adriano C. R. da Cunha
+  Copyright (c) 2013-2015 Will Sowerbutts <wi...@sowerbutts.com>
+  Copyright (c) 2014-2023 Alan Cox <al...@etchedpixels.co.uk>
+  Devboot
+  512kB total RAM, 448kB available to processes (15 processes max)
+  Enabling interrupts ... ok.
+  0000 : CF Card                                  - OK
+  0001 :  - absent
+  hda: hda1 hda2 (swap)
+  bootdev:
+  ```
 
 * At the `bootdev:` prompt, enter `hda1`.  Fuzix should load and
-  you will be prompted for a date/time.
+  you will be prompted for a date/time.  Here is a typical example:
 
-* At the `login:` prompt, enter `root`.  No password is required.
+  ```
+  bootdev: hda1
+  Mounting root fs (root_dev=1, ro): OK
+  Starting /init
+  init version 0.9.1
+  Checking root file system.
+  Current date is Fri 2023-08-18
+  Enter new date:
+  Current time is 13:30:24
+  Enter new time:
+  
+   ^ ^
+   n n   Fuzix 0.4
+   >@<
+         Welcome to Fuzix
+   m m
+  
+  login:
+  ```
+
+* At the `login:` prompt, enter `root`.  No password is required.  You
+  should then get a Fuzix `#` command prompt.
+
+  ```
+  login: root
+  
+  Welcome to FUZIX.
+  #
+  ```
+
+You may now use Fuzix as desired.  The general operation and use of
+Fuzix is outside of the scope of this document.
 
 # Custom Applications
 
