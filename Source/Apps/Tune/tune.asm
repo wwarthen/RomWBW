@@ -46,6 +46,7 @@
 ;   2021-08-17 [WBW] When playing via HBIOS, call BF_SNDRESET at end
 ;   2022-03-20 [DDW] Add support for MBC PSG module
 ;   2023-03-30 [WBW] Fix for quark delay adjustment being trashed
+;   2024-02-23 [WBW] Include ACR value in config table
 ;_______________________________________________________________________________
 ;
 ; ToDo:
@@ -138,11 +139,10 @@ CFGSEL:
 	; Activate card if applicable
 	CALL	SLOWIO			; Slow down I/O now
 	LD	A,(ACR)			; Get ACR port address (if any)
+	LD	C,A			; Copy to C for I/O later
 	INC	A			; $FF -> $00 & set flags
-	JR	Z,PROBE			; Skip ahead to probe if no ACR
-	DEC	A			; Restore real ACR port address
-	LD	C,A			; Put in C for I/O
-	LD	A,$FF			; Value to activate card
+	JR	Z,PROBE			; If no ACR, skip ahead
+	LD	A,(ACRVAL)		; Value to activate card
 	OUT	(C),A			; Write value to ACR
 ;
 PROBE:
@@ -554,83 +554,83 @@ ERR2:	; without the string
 ;
 ; CONFIG TABLE, ENTRY ORDER MATCHES HBIOS PLATFORM ID
 ;
-CFGSIZ	.EQU	8
-;
-CFGTBL:	;	PLT	RSEL	RDAT	RIN	Z180	ACR
+CFGTBL:	;	PLT	RSEL	RDAT	RIN	Z180	ACR	ACRVAL
 	;	DESC
-	.DB	$01,	$9A,	$9B,	$9A,	$FF,	$9C	; SBC W/ SCG
+	.DB	$01,	$9A,	$9B,	$9A,	$FF,	$9C,	$FF	; SBC W/ SCG
 	.DW	HWSTR_SCG
 ;
-	.DB	$04,	$9C,	$9D,	$9C,	$40,	$FF	; N8 W/ ONBOARD PSG
+CFGSIZ	.EQU	$ - CFGTBL
+;
+	.DB	$04,	$9C,	$9D,	$9C,	$40,	$FF,	$FF	; N8 W/ ONBOARD PSG
 	.DW	HWSTR_N8
 ;
-	.DB	$05,	$9A,	$9B,	$9A,	$40,	$9C	; MK4 W/ SCG
+	.DB	$05,	$9A,	$9B,	$9A,	$40,	$9C,	$FF	; MK4 W/ SCG
 	.DW	HWSTR_SCG
 ;
-	.DB	$07,	$D8,	$D0,	$D8,	$FF,	$FF	; RCZ80 W/ RC SOUND MODULE (EB)
+	.DB	$07,	$D8,	$D0,	$D8,	$FF,	$FF,	$FF	; RCZ80 W/ RC SOUND MODULE (EB)
 	.DW	HWSTR_RCEB
 ;
-	.DB	$07,	$A0,	$A1,	$A2,	$FF,	$FF	; RCZ80 W/ RC SOUND MODULE (EB Rev 6)
+	.DB	$07,	$A0,	$A1,	$A2,	$FF,	$FF,	$FF	; RCZ80 W/ RC SOUND MODULE (EB Rev 6)
 	.DW	HWSTR_RCEB6
 ;
-	.DB	$07,	$D1,	$D0,	$D0,	$FF,	$FF	; RCZ80 W/ RC SOUND MODULE (MF)
+	.DB	$07,	$D1,	$D0,	$D0,	$FF,	$FF,	$FF	; RCZ80 W/ RC SOUND MODULE (MF)
 	.DW	HWSTR_RCMF
 ;
-	.DB	$07,	$33,	$32,	$32,	$FF,	$FF	; RCZ80 W/ LINC SOUND MODULE
+	.DB	$07,	$33,	$32,	$32,	$FF,	$FF,	$FF	; RCZ80 W/ LINC SOUND MODULE
 	.DW	HWSTR_LINC
 ;
-	.DB	$08,	$68,	$60,	$68,	$C0,	$FF	; RCZ180 W/ RC SOUND MODULE (EB)
+	.DB	$08,	$68,	$60,	$68,	$C0,	$FF,	$FF	; RCZ180 W/ RC SOUND MODULE (EB)
 	.DW	HWSTR_RCEB
 ;
-	.DB	$08,	$A0,	$A1,	$A2,	$C0,	$FF	; RCZ180 W/ RC SOUND MODULE (EB Rev 6)
+	.DB	$08,	$A0,	$A1,	$A2,	$C0,	$FF,	$FF	; RCZ180 W/ RC SOUND MODULE (EB Rev 6)
 	.DW	HWSTR_RCEB6
 ;
-	.DB	$08,	$61,	$60,	$60,	$C0,	$FF	; RCZ180 W/ RC SOUND MODULE (MF)
+	.DB	$08,	$61,	$60,	$60,	$C0,	$FF,	$FF	; RCZ180 W/ RC SOUND MODULE (MF)
 	.DW	HWSTR_RCMF
 ;
-	.DB	$08,	$33,	$32,	$32,	$C0,	$FF	; RCZ180 W/ LINC SOUND MODULE
+	.DB	$08,	$33,	$32,	$32,	$C0,	$FF,	$FF	; RCZ180 W/ LINC SOUND MODULE
 	.DW	HWSTR_LINC
 ;
-	.DB	$09,	$D8,	$D0,	$D8,	$FF,	$FF	; EZZ80 W/ RC SOUND MODULE (EB)
+	.DB	$09,	$D8,	$D0,	$D8,	$FF,	$FF,	$FF	; EZZ80 W/ RC SOUND MODULE (EB)
 	.DW	HWSTR_RCEB
 ;
-	.DB	$09,	$A0,	$A1,	$A2,	$FF,	$FF	; EZZ80 W/ RC SOUND MODULE (EB Rev 6)
+	.DB	$09,	$A0,	$A1,	$A2,	$FF,	$FF,	$FF	; EZZ80 W/ RC SOUND MODULE (EB Rev 6)
 	.DW	HWSTR_RCEB6
 ;
-	.DB	$09,	$D1,	$D0,	$D0,	$FF,	$FF	; EZZ80 W/ RC SOUND MODULE (MF)
+	.DB	$09,	$D1,	$D0,	$D0,	$FF,	$FF,	$FF	; EZZ80 W/ RC SOUND MODULE (MF)
 	.DW	HWSTR_RCMF
 ;
-	.DB	$09,	$33,	$32,	$32,	$FF,	$FF	; EZZ80 W/ LINC SOUND MODULE
+	.DB	$09,	$33,	$32,	$32,	$FF,	$FF,	$FF	; EZZ80 W/ LINC SOUND MODULE
 	.DW	HWSTR_LINC
 ;
-	.DB	$0A,	$68,	$60,	$68,	$C0,	$FF	; SCZ180 W/ RC SOUND MODULE (EB)
+	.DB	$0A,	$68,	$60,	$68,	$C0,	$FF,	$FF	; SCZ180 W/ RC SOUND MODULE (EB)
 	.DW	HWSTR_RCEB
 ;
-	.DB	$0A,	$A0,	$A1,	$A2,	$C0,	$FF	; SCZ180 W/ RC SOUND MODULE (EB Rev 6)
+	.DB	$0A,	$A0,	$A1,	$A2,	$C0,	$FF,	$FF	; SCZ180 W/ RC SOUND MODULE (EB Rev 6)
 	.DW	HWSTR_RCEB6
 ;
-	.DB	$0A,	$61,	$60,	$60,	$C0,	$FF	; SCZ180 W/ RC SOUND MODULE (MF)
+	.DB	$0A,	$61,	$60,	$60,	$C0,	$FF,	$FF	; SCZ180 W/ RC SOUND MODULE (MF)
 	.DW	HWSTR_RCMF
 ;
-	.DB	$0A,	$33,	$32,	$32,	$C0,	$FF	; SCZ180 W/ LINC SOUND MODULE
+	.DB	$0A,	$33,	$32,	$32,	$C0,	$FF,	$FF	; SCZ180 W/ LINC SOUND MODULE
 	.DW	HWSTR_LINC
 ;
-	.DB	$0B,	$D8,	$D0,	$D8,	$FF,	$FF	; RCZ280 W/ RC SOUND MODULE (EB)
+	.DB	$0B,	$D8,	$D0,	$D8,	$FF,	$FF,	$FF	; RCZ280 W/ RC SOUND MODULE (EB)
 	.DW	HWSTR_RCEB
 ;
-	.DB	$0B,	$A0,	$A1,	$A2,	$FF,	$FF	; RCZ280 W/ RC SOUND MODULE (EB Rev 6)
+	.DB	$0B,	$A0,	$A1,	$A2,	$FF,	$FF,	$FF	; RCZ280 W/ RC SOUND MODULE (EB Rev 6)
 	.DW	HWSTR_RCEB6
 ;
-	.DB	$0B,	$D1,	$D0,	$D0,	$FF,	$FF	; RCZ280 W/ RC SOUND MODULE (MF)
+	.DB	$0B,	$D1,	$D0,	$D0,	$FF,	$FF,	$FF	; RCZ280 W/ RC SOUND MODULE (MF)
 	.DW	HWSTR_RCMF
 ;
-	.DB	$0B,	$33,	$32,	$32,	$FF,	$FF	; RCZ280 W/ LINC SOUND MODULE
+	.DB	$0B,	$33,	$32,	$32,	$FF,	$FF,	$FF	; RCZ280 W/ LINC SOUND MODULE
 	.DW	HWSTR_LINC
 ;
-	.DB	13,	$A0,	$A1,	$A0,	$FF,	$A2	; MBC
+	.DB	13,	$A0,	$A1,	$A0,	$FF,	$A2,	$FE	; MBC
 	.DW	HWSTR_MBC
 ;
-	.DB	17,	$A4,	$A5,	$A4,	$FF,	$FF	; DUODYNE
+	.DB	17,	$A4,	$A5,	$A4,	$FF,	$A6,	$FE	; DUODYNE
 	.DW	HWSTR_DUO
 ;
 	.DB	$FF					; END OF TABLE MARKER
@@ -642,7 +642,8 @@ RSEL		.DB	0	; Register selection port
 RDAT		.DB	0	; Register data port
 RIN		.DB	0	; Register input port
 Z180		.DB	0	; Z180 base I/O port
-ACR		.DB	0	; Aux Ctrl Reg I/O port on SCG
+ACR		.DB	0	; Aux Ctrl Reg I/O port (ACR)
+ACRVAL		.DB	0	; ACR sound enable value
 DESC		.DW	0	; Hardware description string adr
 ;
 CURPLT		.DB	0	; Current platform id reported by HBIOS
@@ -660,8 +661,8 @@ TMP		.DB	0	; work around use of undocumented Z80
 HBIOSMD		.DB	0	; NON-ZERO IF USING HBIOS SOUND DRIVER, ZERO OTHERWISE
 OCTAVEADJ	.DB	0	; AMOUNT TO ADJUST OCTAVE UP OR DOWN
 
-MSGBAN		.DB	"Tune Player for RomWBW v3.5a, 30-Mar-2023",0
-MSGUSE		.DB	"Copyright (C) 2023, Wayne Warthen, GNU GPL v3",13,10
+MSGBAN		.DB	"Tune Player for RomWBW v3.6, 23-Feb-2024",0
+MSGUSE		.DB	"Copyright (C) 2024, Wayne Warthen, GNU GPL v3",13,10
 		.DB	"PTxPlayer Copyright (C) 2004-2007 S.V.Bulba",13,10
 		.DB	"MYMPlay by Marq/Lieves!Tuore",13,10,13,10
 		.DB	"Usage: TUNE <filename>.[PT2|PT3|MYM] [--hbios] [+tn|-tn]",0
