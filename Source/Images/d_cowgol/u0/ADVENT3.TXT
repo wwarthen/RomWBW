@@ -1,0 +1,269 @@
+#1
+/Set of keys.
+/There are some keys on the ground here.
+/
+#2
+/Brass lantern
+/There is a shiny brass lamp nearby.
+/There is a lamp shining nearby.
+/
+#3
+/*Grate
+/The grate is locked.
+/The grate is open.
+/
+#4
+/Wicker cage
+/There is a small wicker cage discarded nearby.
+/
+#5
+/Black rod
+/A three foot black rod with a rusty star on an end lies nearby.
+/
+#6
+/Black rod
+/A three foot black rod with a rusty mark on an end lies nearby.
+/
+#7
+/*Steps
+/Rough stone steps lead down the pit.
+/Rough stone steps lead up the dome.
+/
+#8
+/Little bird in cage
+/A cheerful little bird is sitting here singing.
+/There is a little bird in the cage.
+/
+#9
+/*Rusty door
+/The way north is barred by a massive, rusty, iron door.
+/The way north leads through a massive, rusty, iron door.
+/
+#10
+/Velvet pillow
+/A small velvet pillow lies on the floor.
+/
+#11
+/*Snake
+/A huge green fierce snake bars the way!
+//
+#12
+/*Fissure
+//A crystal bridge now spans the fissure.
+/The crystal bridge has vanished!
+/
+#13
+/*Stone tablet
+/A massive stone tablet imbedded in the wall reads:
+"Congratulations on bringing light into the dark-room!"
+/
+#14
+/Giant clam >Grunt!<
+/There is an enormous clam here with its shell tightly closed.
+/
+#15
+/Giant oyster >Groan!<
+/There is an enormous oyster here with its shell tightly closed.
+/Interesting.  There seems to be something written on the
+underside of the oyster.
+/
+#16
+/"Spelunker Today"
+/There are a few recent issues of "Spelunker Today" magazine
+here.
+/
+#17
+#18
+#19
+/Tasty food
+/There is tasty food here.
+/
+#20
+/Small bottle
+/There is a bottle of water here.
+/There is an empty bottle here.
+/There is a bottle of oil here.
+/
+#21
+/Water in the bottle.
+/
+#22
+/Oil in the bottle
+/
+#23
+/*Mirror
+//
+#24
+/*Plant
+/There is a tiny little plant in the pit, murmuring
+"Water, Water, ..."
+/The plant spurts into furious growth for a few seconds.
+/There is a 12-foot-tall beanstalk stretching up out of
+the pit, bellowing "Water!! Water!!"
+/The plant grows explosively, almost filling the bottom
+of the pit. 
+/There is a gigantic beanstalk stretching all the way
+up to the hole.
+/You've over-watered the plant!  It's shriveling up!
+It's, It's...
+/
+#25
+/*Phony plant
+/
+/The top of a 12-foot-tall beanstalk is poking up out of
+the west pit.
+/There is a huge beanstalk growing out of the west pit up to
+the hole.
+/
+#26
+/*Stalactite
+//
+#27
+/*Shadowy figure
+/The shadowy figure seems to be trying to attract your attention.
+/
+#28
+/Dwarf's axe
+/There is a little axe here.
+/There is a little axe lying beside the bear.
+/
+#29
+/*Cave drawings
+//
+#30
+/*Pirate
+//
+#31
+/*Dragon
+/A huge green fierce dragon bars the way!
+/Congratulations!  You have just vanquished a dragon with
+your bare hands!  (Unbelievable, Isn't it?)
+/The body of a huge green dead dragon is lying off to one
+side.
+/
+#32
+/*Chasm
+/A rickety wooden bridge extends across the chasm, vanishing
+into the mist.  A sign posted on the bridge reads:
+          "Stop!  Pay Troll!"
+/The wreckage of a bridge (and a dead bear) can be seen
+at the bottom of the chasm.
+/
+#33
+/*Troll
+/A burly troll stands by the bridge and insists you throw
+him a treasure before you may cross.
+/The troll steps out from beneath the bridge and blocks
+your way.
+//
+#34
+/*Phony troll
+/The troll is nowhere to be seen.
+/
+#35
+//There is a ferocious cave bear eyeing you from the far
+end of the room!
+/There is a gentle cave bear sitting placidly in one corner.
+/There is a contented-looking bear wandering about nearby.
+//
+#36
+/*Message in second maze
+/There is a message scrawled in the dust in a flowery script,
+reading:
+           "This is not the maze where the"
+           "pirate leaves his treasure chest"
+/
+#37
+/*Volcano and,or Geyser
+//
+#38
+/*Vending machine
+/There is a massive vending machine here.  The instructions
+on it read:
+     "Drop coins here to receive fresh batteries."
+/
+#39
+/Batteries
+/There are fresh batteries here.
+/Some worn-out batteries have been discarded nearby.
+/
+#40
+/*Carpet and,or moss
+//
+#41
+#42
+#43
+#44
+#45
+#46
+#47
+#48
+#49
+#50
+/Large gold nugget
+/There is a large sparkling nugget of gold here!
+/
+#51
+/Several diamonds
+/There are diamonds here!
+/
+#52
+/Bars of silver
+/There are bars of silver here!
+/
+#53
+/Precious jewelry
+/There is precious jewelry here!
+/
+#54
+/Rare coins
+/There are many coins here!
+/
+#55
+/Treasure chest
+/The pirate's treasure chest is here!
+/
+#56
+/Golden eggs
+/There is a large nest here, full of golden eggs!
+/The nest of golden eggs has vanished!
+/Done!
+/
+#57
+/Jeweled trident
+/There is a jewel-encrusted trident here!
+/
+#58
+/Ming vase
+/There is a delicate, precious, ming vase here!
+/The vase is now resting, delicately, on a velvet pillow.
+/The floor is littered with worthless shards of pottery.
+/The ming vase drops with a delicate crash.
+/
+#59
+/Egg-sized emerald
+/There is an emerald here the size of a plover's egg!
+/
+#60
+/Platinum pyramid
+/There is a platinum pyramid here, 8 inches on a side!
+/
+#61
+/Glistening pearl
+/Off to one side lies a glistening pearl!
+/
+#62
+/Persian rug
+/There is a persian rug spread out on the floor!
+/The dragon is sprawled out on a persian rug!!
+/
+#63
+/Rare spices
+/There are rare spices here!
+/
+#64
+/Golden chain
+/There is a golden chain lying in a heap on the floor!
+/The bear is locked to the wall with a golden chain!
+/There is a golden chain locked to the wall!
+/

@@ -39,7 +39,18 @@ applications which can be used as follows:
     SUBMIT HEXDUMP
     SUBMIT DYNMSORT
 
--- WBW 12:38 PM 2/10/2024    
+-- WBW 12:38 PM 2/10/2024
 
-    
+The Adventure game program source has been added.  The command to
+build the source is:
 
+    COWGOL ADVENT.COW ADVMAIN.COW XRND.AS
+
+or you can use the SUBMIT file:
+
+    SUBMIT ADVENT
+
+WARNING: You will need to build this application under CP/M 3 because
+COWGOL needs more main memory than is available under CP/M 2.2.
+
+-- WBW 11:43 AM 2/25/2024
