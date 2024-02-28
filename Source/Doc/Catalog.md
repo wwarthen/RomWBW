@@ -10,6 +10,11 @@ distributed with RomWBW.  Specifically, RomWBW provides a set
 of floppy and hard disk images in the Binary directory of the
 distribution.  The contents of these images is listed here.
 
+**NOTE:** This document has become somewhat out-of-date.  I apologize
+for this.  It is very difficult to maintain due to the volume of
+disk content updates and the way that files are dynamically merged
+into disk images during the build process.
+
 The files on the disk images were sourced from a variety of locations.
 The primary sources of these files are listed below.  Note that the
 primary documentation for each of these sources is listed.  You are
@@ -20,7 +25,7 @@ on using the applications and files listed.
 
 - **RomWBW**: RomWBW Custom Applications
 
-  Documentation: RomWBW Applications.pdf*
+  Documentation: *RomWBW Applications.pdf*
 
   These files are custom applications built exclusively to enhance the
   functionality of RomWBW.  In some cases they are built from scratch
@@ -28,7 +33,7 @@ on using the applications and files listed.
 
 - **CPM22**: Digital Research CP/M-80 2.2 Distribution Files
 
-  Documentation: CPM Manual.pdf
+  Documentation: *CPM Manual.pdf*
 
   These files are from the official Digital Research distribution
   of CP/M 2.2.  Applications have been patched according to the

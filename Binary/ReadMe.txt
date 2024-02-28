@@ -110,7 +110,9 @@ Refer to the ReadMe.txt in the Source/Images directory
 for details.
 
 Documentation of the pre-built disk images is contained in the 
-DiskList.txt file in this directory.
+"RomWBW User Guide" found in the Doc directory.  The contents of
+the disk images is contained in the "RomWBW Disk Catalog", but it
+is significantly out-of-date.
 
 The contents of the floppy/hard disk images are created by 
 the BuildImages.cmd script in the Source directory.  Additional 
