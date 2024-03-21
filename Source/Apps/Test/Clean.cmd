@@ -21,3 +21,4 @@ pushd 2piotst && call Clean || exit /b 1 & popd
 pushd piomon && call Clean || exit /b 1 & popd
 pushd banktest && call Clean || exit /b 1 & popd
 pushd portscan && call Clean || exit /b 1 & popd
+pushd sound && call Clean || exit /b 1 & popd
