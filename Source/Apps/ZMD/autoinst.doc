@@ -1,0 +1,36 @@
+
+   -----------------------------------------------------------------------
+   Copyright (c) 1987, 1988  by Robert W. Kramer III,  ALL RIGHTS RESERVED
+         Release 1.50	     1569 40th St.
+	   09/29/88 	     Rock Island, Il.  61201
+			     Voice: (309) 786-6711, 24hr
+    RI RCPM-RDOS (128 Meg)   Data:  (309) 786-6227, 24hr, 300/1200/2400
+   -----------------------------------------------------------------------
+
+
+   ZMD AUTO-INSTALL FEATURE
+   ------------------------
+
+   ZINSTL can automatically install the new release of ZMD (and utilities)
+   with the use of the  '!'  option.  ZINSTL ! will read all switch/toggle
+   configurations and port/modem/rtc overlays from your already  installed
+   version of ZMD where you can then use them to install this new release.
+
+   Follow these steps:
+
+	1)  Extract all files from ZMDnnn.LBR
+        2)  Rename your already configured ZMD.COM to ZMD149.COM
+        3)  Run ZINSTL (Release 1.50) with the '!' option:  ZINSTL !
+        4)  Answer any questions ZINSTL may ask
+	5)  Use the 'J' option to save configurations
+	6)  Rename ZMD150.COM to ZMD.COM
+
+
+   NOTE:  This will not work with any other version of ZMD except for 1.49
+   and 1.50. Running ZINSTL without the ! option will cause it to run just
+   like you've all been used to.  In the future, if the new release header
+   file ZMDHDR.Z80  becomes incompatible with that of the previous release
+   this feature will be disabled.
+
+
+

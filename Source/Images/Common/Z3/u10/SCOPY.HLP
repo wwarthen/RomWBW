@@ -1,0 +1,53 @@
+;
+                                  SCOPY.COM                                   
+
+             Size (recs) CRC   Version    Author/Latest Issue      Disk
+              18k (141)  62B8  1.0f       Lars Nelson 7/21
+              15k (120)  D6DB  0.8        Rob Friefeld 10/91       Z3COM19
+
+  1- Syntax  2- SCOPY Commands  3- Notes                                      
+
+   Screen Copy is a  screen-oriented file copy utility for  ZCPR3 and  Z3PLUS.
+It displays both the source and  destination  directories in  vertical windows
+and uses copy commands much like ZFILER's.   It also has extensive support for
+file datestamping with commands to select and copy files by  date.   It is not
+intended to be a comprehensive file-management tool like ZFILER or DATSWEEP.
+
+   SCOPY requires an  extended  TCAP and  will not  work without Insert/Delete
+Line and Clear to End of Screen.  It also makes optional use of cursor on/off,
+line graphics,  and character  attributes  (to underline a file name character
+with its attribute set.) 
+:1
+ Syntax   SCOPY <source or destination dir:>[mask] [dest dir:]
+
+   If only one DIR is given,  it is the target  directory,  and the  currently
+logged DIR is the source directory.   If two directories are given, the source
+is the first one.  The optional MASK is automatically wildcarded. 
+
+   Example:  These three are equivalent --
+
+   ( source:  work:       B0:WORK>scopy backup:x.c      or,
+destination:  backup:     B0:WORK>scopy x.c backup:     or,
+       mask:  x*.c?? )    B0:WORK>scopy work:x.c backup:
+
+                          B0:SCOPY X     --> Error: Scr=Dest
+
+   File operations are  bi-directional,  so it  doesn't  matter  which  is the
+master and which is the target directory.
+
+   When re-logging from  within  SCOPY,  the  syntax has the same meaning, but
+remember that you will not  necessarily be  currently  logged  into  the  same
+directory as at startup.
+:2 :SCOPY10F
+:3
+ SCOPY Notes  
+
+   a. Z3PLUS Users:  This  version of  SCOPY does copy file datestamps.  
+      Also copies datestamps under ZSDOS/ZDDOS and DateStamper.
+      
+   b. HINT:  Set up SCOPY's query options to allow you to safely play with the
+      new date selection methods.   You will be  able  to see  on  screen what
+      SCOPY intends to do, but can bail out  at  the  prompt  before  anything
+      happens.  The easiest way to do this is to  Ask For Verification.   A ^C
+      at the Y/N prompt will cancel the command.
+

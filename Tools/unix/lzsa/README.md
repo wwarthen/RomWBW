@@ -7,6 +7,16 @@ Check out [The Hollow](https://www.pouet.net/prod.php?which=81909) by Darklite a
 
 [Gabba](https://www.pouet.net/prod.php?which=83539) by Stardust ranked 2nd in the ZX Spectrum demo compo at CAFe demoparty 2019 and also used LZSA on Z80. 
 
+[Myst Demake](http://www.deater.net/weave/vmwprod/mist/) for the Apple II by Vince Weaver, uses LZSA on 6502.
+
+The 8 bit guy's [Commander X16 ROM](https://github.com/commanderx16/x16-rom) uses LZSA on 6502 as well.
+
+[RomWBW](https://github.com/wwarthen/RomWBW) uses LZSA on Z80 for a variety of hobbyist computers.
+
+The popular [rasm](https://github.com/EdouardBERGE/rasm) assembler for Z80 features LZSA-compressed data sections.
+
+The [desolate](https://github.com/nzeemin/spectrum-desolate) game port to the ZX Spectrum uses LZSA compression on Z80.
+
 The LZSA compression tool uses an aggressive optimal packing strategy to try to find the sequence of commands that gives the smallest packed file that decompresses to the original while maintaining the maximum possible decompression speed.
 
 The compression formats give the user choices that range from decompressing faster than LZ4 on 8-bit systems with better compression, to compressing as well as ZX7 with much better decompression speed. LZSA1 is designed to replace LZ4 and LZSA2 to replace ZX7, in 8-bit scenarios.
@@ -55,7 +65,7 @@ Inspirations:
 * [LZ5/Lizard](https://github.com/inikep/lizard) by Przemyslaw Skibinski and Yann Collet.
 * The suffix array intervals in [Wimlib](https://wimlib.net/git/?p=wimlib;a=tree) by Eric Biggers.
 * ZX7 by Einar Saukas
-* [apc](https://github.com/svendahl/cap) by Sven-Åke Dahl
+* [apc](https://github.com/svendahl/cap) by Sven-Ã…ke Dahl
 * [Charles Bloom](http://cbloomrants.blogspot.com/)'s compression blog
 
 License:
@@ -65,14 +75,19 @@ License:
 
 8-bit assembly code:
 
-* Z80 decompressors (size- and speed-optimized) written by [introspec](https://github.com/specke)
+* Z80 decompressors (size- and speed-optimized) written by [introspec](https://github.com/specke) with optimizations by [uniabis](https://github.com/uniabis)
 * 6502 and 8088 size-optimized improvements by [Peter Ferrie](https://github.com/peterferrie)
+* 6502 speed-optimized decompressor by [John Brandwood](https://github.com/jbrandwood)
 * 8088 speed-optimized decompressor by [Jim Leonard](https://github.com/mobygamer)
+* 6809 decompressors (Tandy CoCo, Thomson MO/TO, Dragon 32/64..) optimized by [Doug Masten](https://github.com/dougmasten)
+* Hitachi 6309 decompressors (Tandy CoCo 3) also contributed by [Doug Masten](https://github.com/dougmasten)
 
 External links:
 
 * [i8080 decompressors](https://gitlab.com/ivagor/lzsa8080/tree/master) by Ivan Gorodetsky
 * [PDP-11 decompressors](https://gitlab.com/ivagor/lzsa8080/tree/master/PDP11) also by Ivan Gorodetsky
+* [MC68000 decompressors](https://github.com/tattlemuss/lz4-m68k/blob/master/src/lzsa.s) by Steven Tattersall
+* [Gameboy decompressors](https://github.com/meltycode) by Meltycode, based on the Z80 code by introspec
 * LZSA's page on [Pouet](https://www.pouet.net/prod.php?which=81573)
 
 # Compressed format

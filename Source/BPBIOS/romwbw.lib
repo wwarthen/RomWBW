@@ -1,6 +1,6 @@
 ;:::::::::::::::::::::::::::::::::::::::::::::::**********************
 ;  B/P BIOS Configuration and Equate File.	** System Dependant **
-;  - D-X Designs Pty Ltd P112 CPU Board -	**********************
+;  - Retro-Brew Processors W/ RomWBW HBIOS -	**********************
 ;	  HBIOS specific customizations
 ;:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ; BIOS Configuration Equates and Macros
@@ -9,74 +9,81 @@
 ;       HBIOS configuration.
 ;
 HBIOS	EQU	YES			; Use HBIOS functions
-HBLOC	EQU	0FE00H			; Location of HBIOS proxy (used if not INTPXY)
+HBLOC	EQU	0FE00H			; Location of HBIOS proxy
+MEMTOP	EQU	HBLOC - 1		; Last usable address
 ;
-; Set exactly one of the following to YES to specify platform
+HB_DEBUG	EQU	FALSE		; See hbios.z80 file
 ;
-N8VEM	EQU	YES
-ZETA	EQU	NO
-ZETA2	EQU	NO
-N8	EQU	NO
-MK4	EQU	NO
+; Set HB_IODEV to desired HBIOS character device unit number
 ;
-; Set either the following to YES (or both to NO for no clock code)
+; TODO: Query system via HBIOS API to determine number of serial
+; devices available and assign up to 3 of them to the 3 serial
+; device slots in BPBIOS at boot.
 ;
-SIMHCLK	EQU	NO			; Direct SIMH clock access
-HBCLK	EQU	YES			; HBIOS clock driver
+HB_IODEV	EQU	80H		; 0x80 is current HBIOS console
 ;
-; Set HB_IODEV to appropriate console device
+; Set HB_MDRAM/ROM to desired HBIOS disk device numbers
 ;
-HB_IODEV	EQU	0		; Assume we want to use first HBIOS serial device
+HB_MDRAM	EQU	0		; HBIOS Disk Unit #0 is usually the RAM Disk
+HB_MDROM	EQU	1		; HBIOS Disk Unit #1 is usually the ROM Disk
 ;
-; Set HB_HDDEV to appropriate hard disk driver
+; Map BPBIOS logical drive numbers (0-2) to HBIOS physical disk units
+; HB_HDDEVn values map to HDRVn (see icfg-ww).
 ;
-HB_HDDEV	EQU	2		; Assumes disk device #2 is first hard disk device
+; The values below will be the default mapping.  They can be changed
+; using BPCNFG *Physical Drive* configuration.
 ;
-; Set HB_MDDEV to appropriate memory disk driver
+; If the RomWBW system has no floppy drives, then the hard disk units
+; will start right after the memory disk units.  So, the first hard disk
+; will be unit #2.  Refer to the DPH entries to see how the HBIOS
+; units are mapped to drive letters.
 ;
-HB_MDDEV	EQU	0		; Assumes disk device #0 is ROM disk device
+HB_HDDEV0	EQU	2		; If no floppy drives in system, first HBIOS hard disk is unit #2
+HB_HDDEV1	EQU	3		; Second hard disk is HBIOS Disk Device #3
+HB_HDDEV2	EQU	4		; Third hard disk is HBIOS Disk Device #4
 ;
-; RAM/ROM disk sizes expressed as count of 2K blocks
+; Floppy disk support
 ;
-HB_RAMBLKS	EQU	192		; 512K - 128K reserved / 2K per block
-HB_ROMBLKS	EQU	192		; 512K - 128K reserved / 2K per block
-;HB_ROMBLKS	EQU	448		; 1024K - 128K reserved / 2K per block
+; TODO: Query HBIOS to see if system has floppy drive(s).  For now
+; we do not really support floppy drives.
+;
+DRV_O		SET	NO		; YES if system has flopy drives
+DRV_P		SET	NO		; YES if system has flopy drives
+;
+; RAM/ROM Bank Reserve
+;
+HB_RAMRESV	EQU	5		; RAM reserve is 5 banks
+HB_ROMRESV	EQU	4		; ROM reserve is 4 banks
 ;
 ; Layout of RAM banks
 ;
-	IF N8VEM OR ZETA OR ZETA2 OR MK4
-BID_RAMD	EQU	80H
-BID_RAMM	EQU	8BH
-BID_SYS		EQU	8CH
-BID_HB		EQU	8DH
-BID_USR		EQU	8EH
-BID_COM		EQU	8FH
-	ENDIF
-	IF N8
-BID_RAMD	EQU	80H
-BID_RAMM	EQU	9BH
-BID_SYS		EQU	9CH
-BID_HB		EQU	9DH
-BID_USR		EQU	9EH
-BID_COM		EQU	9FH
-	ENDIF
+; The BID_xxx values below are used to set the initial values of
+; the BPBIOS bank registers (see def-ww-xxx.lib and HB_SELMEM in
+; hbios.z80).  The running values of the BPBIOS bank registers (TPABNK,
+; SYSBNK, etc.) are set to absolute HBIOS bank ids in hbios.z80 during
+; startup.
 ;
-	IF INTPXY
-MEMTOP	EQU	0FFE0H - 1	; Start of HBIOS 32 byte control block
-	ELSE
-MEMTOP	EQU	HBLOC - 1	; Start of HBIOS 512 byte proxy
-	ENDIF
-
-	IF INTPXY
-HB_EI	MACRO
-	ENDM
-HB_DI	MACRO
-	ENDM
-	ELSE
+; The values below are expressed as an offset from the ending HBIOS
+; RAM bank id.  They map to HBIOS bank ids
+; by subtracting from the ending HBIOS bank id (N).  HBIOS RAM bank ids
+; start at 80h.  The ending HBIOS bank id is (80h + RAM banks).  The
+; typical layout assumes 16 banks of RAM starting at HBIOS bank id 80h
+; and ending at bank id 90h (N = 90h).
+;
+; BPBIOS					HBIOS (TYPICAL)
+; --------------------------------------	---------------
+; <HBIOS>					80h   (80h)
+; <RAMD>					81h   (81h)
+; <RAMM>					N - 5 (8Bh)
+BID_BUF	EQU	-4	; BNK3 -> RAMBNK	N - 4 (8Ch)
+BID_SYS	EQU	-3	; BNK2 -> SYSBNK	N - 3 (8Dh)		
+BID_USR	EQU	-2	; BNK0 -> TPABNK	N - 2 (8Eh)		
+BID_COM	EQU	-1	; BNK1 ->		N - 1 (8Fh)		
+;
 HB_EI	MACRO
 	EI
 	ENDM
 HB_DI	MACRO
 	DI
 	ENDM
-	ENDIF
+

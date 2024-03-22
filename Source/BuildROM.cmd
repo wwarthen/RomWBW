@@ -1,4 +1,4 @@
 @echo off
 setlocal
 
-setlocal & cd HBIOS && Powershell -ExecutionPolicy Unrestricted .\Build.ps1 %* || exit /b 1 & endlocal
+pushd HBIOS && call Build %* || exit /b & popd

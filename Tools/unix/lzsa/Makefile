@@ -33,14 +33,11 @@ OBJS += $(OBJDIR)/src/libdivsufsort/lib/trsort.o
 UNAME := $(shell uname)
 
 all: $(APP)
-	cp $(APP) ../../$(UNAME)
+	cp -p $(APP) ../../$(UNAME)
 
 $(APP): $(OBJS)
-	@mkdir -p ../../bin/posix
+	#@mkdir -p ../../bin/posix
 	$(CC) $^ $(LDFLAGS) -o $(APP)
 
 clean:
 	@rm -rf $(APP) $(OBJDIR)
-
-clobber:
-	rm -f ../../$(UNAME)/$(APP)

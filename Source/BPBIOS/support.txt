@@ -1,0 +1,95 @@
+This library contains a number of support files, programs and scripts needed
+to bring up a fully functioning BPBIOS Zsystem.  These programs and files
+are used and/or loaded by the startup scripts.
+
+Some of the support files are startup ZEX scripts, some are Z3+ segment files, 
+others are Date and Time stamp drivers, some are command line editors and 
+history shells others are needed to initialize the RAMDRIVE as well as help files.  
+
+The following table shows which files are needed to support each of the ten 
+BPBIOS variants (BP33, BP33BNK, BP34, BP34BNK & BBP41BNK). 
+
+Variant Name		BP33	BP33BNK	BP34	BP34BNK BP41BNK
+================================================================
+bpbio.ndr				X	X	X	
+bpbioz33.ndr		X	X
+BPCNFG.COM		X	X	X	X	X
+EASE.COM		X	X
+EASE.HLP		X	X
+fcp-4.zrl		X	X
+fcp-4t.zrl				X	X	X
+RELOG			X	X	X	X	X
+HELPLSH.COM				X	X	X
+IF.COM			X       X	X	X	
+jetldr.com		X	X	X	X	X
+LDTIMEC.COM		X	X		X
+LSH.COM					X	X	X
+LSHF.COM*				X	X	X
+LSHF.VAR*				X	X	X
+myterm.z3t		X	X	X	X	X 
+nzdec23d.z3t		X	X	X	X	X 
+PUTDS.COM		X	X	X	X	X
+RAMFILES.TXT		X	X	X	X	X
+RCOPY.COM		X	X	X	X	X
+rcp-16h.zrl		X	X	X	X	
+SAVE.COM		X	X	X	X
+Z33.ZEX			X	X
+ZEX.COM			X	X	X	X	X
+ZPATH.COM		X	X	X	X	X
+ZSCFG2.COM						X
+ZSTF.ZEX						X
+ZST.ZEX					X	X
+
+
+Instructions:
+	The support files are "crunched" and stored in the library file
+SUPPORT.LBR.  Place SUPPORT.LBR on the RAMDRIVE using for example 
+XModem. Use LBREXT with the /U option to extract and uncrunch the
+files.  First extract ZEX.COM while logged onto the A: drive with the 
+following command:
+	B0:LBREXT SUPPORT C0:ZEX.C?M /U
+Next place all the .COM files on C15: by typing:
+	B0:LBREXT SUPPORT C15:*.C?M /U
+The remaining files should be placed on C0:.  
+	B0:LBREXT SUPPORT C0:*.Z?X /U
+	B0:LBREXT SUPPORT C0:*.Z?L /U
+	B0:LBREXT SUPPORT C0:*.N?R /U
+	B0:LBREXT SUPPORT C0:*.Z?T /U
+	B0:LBREXT SUPPORT C0:*.T?T /U
+	B0:LBREXT SUPPORT C0:*.H?P /U
+
+Note in all BPBIOS variants that A: is the RAMDRIVE, B: is
+the ROMDRIVE and C: is the system drive.  Hard drive slices occupy C: 
+through N: and floppy drives are O: & P:.  A short desciption
+of each of the support files follows:
+
+bpbioz33.ndr	- Named Directory Table for Z33
+bpbio.ndr	- Named Directory Table for Z34 & Z41
+BPCNFG.COM	- BPBIOS configuration program
+EASE.COM	- Command line editor & history shell for Z33* 
+EASE.HLP	- Help file for EASE
+fcp-4.zrl	- Z33 Flow Control Processor (handles IF, ELSE etc)
+fcp-4t.zrl	- Z34 & Z41 Flow Control Processor (IF is transient)
+RELOG.COM	- Enables date stamping on RAM drive.
+HELPLSH.COM	- Help file for LSH
+if.com		- Adds tests to fcp-4t
+jetldr.com	- Loads Zsystem segments
+LDTIMEC.COM	- Date stamping & clock drivers for z33* & Z34* variants
+LSH.COM		- Command line editor & history shell for Z34 & Z41
+LSHF.COM	- LSH with a fixed length History file (runs faster)
+LSHF.VAR	- History file for LSHF
+myterm.z3t	- Terminal Capabilities file (defines ESC sequences etc)
+NZDEC23D.Z3T	- VT100 Terminal Capabilities File.
+PUTDS.COM	- Installs date stamping for RAM drive.
+RAMFILES.TXT	- List of frequently used command (edit to suit)
+RCOPY.COM	- Copies files listed in RAMFILES.TXT to RAMDRIVE
+rcp-16h.zrl	- Zsystem Resident Command Processor
+SAVE.COM	- Transient save command loads at 8000h
+Z33.ZEX		- Automatically executed Startup script for Z33 variants
+ZEX.COM		- Memory resident SUBMIT - executes startup scripts
+ZPATH.COM	- Loads the Zsystem & ZSDOS search paths
+ZSCFG2.COM	- Configures ZSDOS 2
+ZSTF.ZEX	- Automatically executed Startup script for BP41BNK
+ZST.ZEX		- Automatically executed Startup script for BP34*
+
+Note that clock & datestamping drivers are builtin to Z41.

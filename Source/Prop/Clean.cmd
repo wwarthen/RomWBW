@@ -1,5 +1,5 @@
 @echo off
 setlocal
 
-if exist *.eeprom del *.eeprom
-if exist *.list del *.list
+if exist Spin\*.eeprom del Spin\*.eeprom
+if exist Spin\*.list del Spin\*.list

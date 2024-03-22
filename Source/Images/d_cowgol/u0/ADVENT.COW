@@ -1,0 +1,1284 @@
+## 
+## This is Daimler's 350-point "Adventure" (circa June 1990, according
+## to Russel Dalenberg). Its version information lists
+##     
+##         -Conversion to BDS  C by J. R. Jaeger
+##         -Unix standardization by Jerry D. Pohl.
+##         -OS/2 Conversion by Martin Heller
+##         -Conversion to TurboC 2.0 by Daimler
+##     
+## It contains Jerry Pohl's original ADVENT.DOC (dated 12 JUNE 1984),
+## plus comments from Martin Heller (dated 30-Aug-1988). Strangely for
+## an expansion, Daimler's version actually introduces a number of typos
+## into the data files, and disables a handful of inessential verbs
+## (READ, EAT, FILL) with the comment that there is "no room" for them
+## (presumably in the PC's limited memory).
+##  -------------------------------------------------------------------
+##  Adapted for HiTech C Z80 under CP/M by Ladislau Szilagyi, Oct. 2023
+##  Uncommented Daimler's disabled verbs - game is complete again !
+##  Added a new pseudo-random number generator (Xorshift)
+##  Adapted to Cowgol language by Ladislau Szilagyi, Feb. 2024
+
+@decl sub get_dbugflg(): (ret: uint8) @extern("get_dbugflg");
+@decl sub move(obj: uint16, where: int16) @extern("move");
+
+# some utilities --------------------------------------------------------------
+
+sub exit() @extern("exit") is
+	@asm "rst 0";
+end sub;
+
+sub get_char(): (c: uint8) @extern("get_char") is
+	@asm "ld c, 1";
+	@asm "call 5";
+	@asm "ld (", c, "), a";
+end sub;
+
+# expands LF to CR,LF
+sub print_char(c: uint8) @extern("print_char") is
+	if c == 10 then
+		@asm "ld e, 13";
+		@asm "ld c, 2";
+		@asm "call 5";
+	end if;
+	@asm "ld a, (", c, ")";
+	@asm "ld e, a";
+	@asm "ld c, 2";
+	@asm "call 5";
+end sub;
+
+sub print(ptr: [uint8]) @extern("print") is
+    loop
+        var c := [ptr];
+        if c == 0 then
+            return;
+        end if;
+        print_char(c);
+        ptr := ptr + 1;
+    end loop;
+end sub;
+
+sub print_nl() @extern("print_nl") is
+	print_char('\n');
+end sub;
+
+# get up to 80 chars , ended with CR
+sub get_line(p: [uint8]) @extern("get_line") is
+	var n: uint8;
+	var ch: uint8;
+
+	n := 0;
+	while n < 80 loop
+		ch := get_char();
+		if ch == '\r' then
+			print_nl();
+			[p] := 0;
+			return;
+		end if;
+		[p] := ch;
+		p := p + 1; 
+		n := n + 1;
+	end loop;
+	[p] := 0;
+end sub;
+
+var pbuf: [uint8] := "            ";
+
+sub itoa(i: int16): (pbuf: [uint8]) @extern("itoa") is
+	var sign: uint8 := 0;
+
+	if i < 0 then 
+		sign := 1;
+	end if;
+
+        pbuf := pbuf + 11;  # points to terminating zero
+        [pbuf] := 0;
+
+        loop
+                pbuf := pbuf - 1;
+                [pbuf] := '0' + ((i % 10) as uint8);
+                i := i / 10;
+                if i == 0 then break; end if;
+        end loop;
+
+	if sign == 1 then
+		pbuf := pbuf - 1;
+		[pbuf] := '-';
+	end if;
+end sub;
+
+sub ltoa(i: int32): (pbuf: [uint8]) @extern("ltoa") is
+	var sign: uint8 := 0;
+
+	if i < 0 then 
+		sign := 1;
+	end if;
+
+        pbuf := pbuf + 11;  # points to terminating zero
+        [pbuf] := 0;
+
+        loop
+                pbuf := pbuf - 1;
+                [pbuf] := '0' + ((i % 10) as uint8);
+                i := i / 10;
+                if i == 0 then break; end if;
+        end loop;
+
+	if sign == 1 then
+		pbuf := pbuf - 1;
+		[pbuf] := '-';
+	end if;
+end sub;
+
+sub isdigit(ch: uint8): (ret: uint8) @extern("isdigit") is
+	if ch >= '0' and ch <= '9' then
+		ret := 1;
+	else
+		ret := 0;
+	end if;
+end sub;
+
+sub atoi(p: [uint8]): (ret: int16) @extern("atoi") is
+	var sign: uint8 := 0;
+
+	ret := 0;
+	if [p] == '-' then
+		sign := 1;
+		p := p + 1;
+	end if;
+	while [p] != 0 loop
+		if isdigit([p]) == 1 then
+			ret := ret * 10 + (([p] - '0') as int16); p := p + 1;
+		else
+			ret := -1; return;
+		end if;
+	end loop;
+	if sign == 1 then
+		ret := -ret;
+	end if;
+end sub;
+
+sub atol(p: [uint8]): (ret: int32) @extern("atol") is
+	var sign: uint8 := 0;
+
+	ret := 0;
+	while [p] != 0 loop
+		if isdigit([p]) == 1 then
+			ret := ret * 10 + (([p] - '0') as int32); p := p + 1;
+		else
+			ret := -1; return;
+		end if;
+	end loop;
+	if sign == 1 then
+		ret := -ret;
+	end if;
+end sub;
+
+#	Fatal error routine
+sub bug(n: uint8) @extern("bug") is
+	print("Fatal error number ");
+	print(itoa(n as int16));
+	print_nl();
+	exit();
+end sub;
+
+sub strcpy(dest: [uint8], src: [uint8]) @extern("strcpy") is
+	while [src] != 0 loop
+		[dest] := [src]; dest := dest + 1; src := src + 1;
+	end loop;
+	[dest] := 0;
+end sub;
+
+sub strcmp(s1: [uint8], s2: [uint8]): (ret: int8) @extern("strcmp") is
+	loop
+		if [s1] < [s2] then
+			ret := -1; return;
+		elseif [s1] > [s2] then
+			ret := 1; return;
+		elseif [s1] == 0 then
+			ret := 0; return;
+		end if;
+		s1 := s1 + 1;
+		s2 := s2 + 1;	
+	end loop;
+end sub;
+
+sub strlen(s: [uint8]): (ret: uint16) @extern("strlen") is
+	ret := 0;
+	while [s] != 0 loop
+		ret := ret + 1;
+		s := s + 1;
+	end loop;
+end sub;
+
+sub strcat(dest: [uint8], src: [uint8]) @extern("strcat") is
+	dest := dest + strlen(dest);
+	while [src] != 0 loop
+		[dest] := [src]; dest := dest + 1; src := src + 1;
+	end loop;
+	[dest] := 0;
+end sub;
+
+sub rindex(str: [uint8], ch: uint8): (ret: [uint8]) @extern("rindex") is
+	loop
+		if [str] == ch then
+			ret := str;
+			return;
+		end if;
+		str := str + 1;
+		if [str] == 0 then
+			ret := 0 as [uint8];
+			return;
+		end if;
+	end loop;
+end sub;
+
+sub MemSet(buf: [uint8], byte: uint8, len: uint16) @extern("MemSet") is
+	var bufend := buf + len;
+	loop
+		if buf == bufend then
+			return;
+		end if;
+		[buf] := byte;
+		buf := buf + 1;
+	end loop;
+end sub;
+
+var argv_pointer: [uint8];
+
+sub ArgvInit() @extern("ArgvInit") is
+	argv_pointer := 0x81 as [uint8];
+	[argv_pointer + [0x80 as [uint8]] as intptr] := 0;
+end sub;
+
+# Returns null is there's no next argument.
+sub ArgvNext(): (arg: [uint8]) @extern("ArgvNext") is
+	# No more arguments?
+
+	if argv_pointer == (0 as [uint8]) then
+		arg := argv_pointer;
+		return;
+	end if;
+
+	# Skip leading whitespace.
+
+	var c: uint8;
+	loop
+		c := [argv_pointer];
+		if c != ' ' then
+			break;
+		end if;
+		argv_pointer := argv_pointer + 1;
+	end loop;
+
+	arg := argv_pointer;
+
+	# Skip to end of word and terminate.
+
+	loop
+		c := [argv_pointer];
+		if (c == ' ') or (c == '\n') or (c == 0) then
+			break;
+		end if;
+		argv_pointer := argv_pointer + 1;
+	end loop;
+	[argv_pointer] := 0;
+
+	if c == ' ' then
+		argv_pointer := argv_pointer + 1;
+	else
+		argv_pointer := 0 as [uint8];
+	end if;
+end sub;
+
+# file I/O support ---------------------------------------------------------
+
+record CpmFCB is
+	dr: uint8;
+	f: uint8[11];
+	ex: uint8;
+	s1: uint8;
+	s2: uint8;
+	rc: uint8;
+	d: uint8[16];
+	cr: uint8;
+	r: uint16;
+	r2: uint8;
+end record;
+
+record FCB is
+	bufferptr: uint8; # byte just read
+	dirty: uint8;
+	cpm: CpmFCB;
+	buffer: uint8[128];
+end record;
+
+sub file_i_init(fcb: [FCB], filename: [uint8]) is 
+	sub fill(dest: [uint8], src: [uint8], len: uint8): (srcout: [uint8]) is
+		loop
+			var c := [src];
+			if (c < 32) or (c == '.') then
+				c := ' ';
+			elseif (c == '*') then
+				c := '?';
+			else
+				src := src + 1;
+			end if;
+			if (c >= 'a') and (c <= 'z') then
+				c := c - ('a' - 'A');
+			end if;
+			[dest] := c;
+			dest := dest + 1;
+
+			len := len - 1;
+			if len == 0 then
+				break;
+			end if;
+		end loop;
+		srcout := src;
+	end sub;
+
+	MemSet(fcb as [uint8], 0, @bytesof FCB);
+	MemSet(&fcb.cpm.f[0] as [uint8], ' ', 11);
+	filename := fill(&fcb.cpm.f[0], filename, 8);
+
+	var c: uint8;
+	loop
+		c := [filename];
+		if (c < 32) or (c == '.') then
+			break;
+		end if;
+		filename := filename + 1;
+	end loop;
+
+	if c == '.' then
+		filename := fill(&fcb.cpm.f[8], filename+1, 3);
+	end if;
+
+	fcb.cpm.r := 0xffff;
+	fcb.bufferptr := 127;
+end sub;
+
+sub fcb_i_gbpb(fcb: [FCB], c: uint8) is 
+	var cpmfcb := &fcb.cpm;
+	var dma := &fcb.buffer[0];
+
+	@asm "ld c, 26"; # SET DMA
+	@asm "ld de, (", dma, ")";
+	@asm "call 5";
+
+	@asm "ld a, (", c, ")";
+	@asm "ld c, a";
+	@asm "ld de, (", cpmfcb, ")";
+	@asm "call 5";
+end sub;
+
+sub fcb_i_blockin(fcb: [FCB]) is 
+	MemSet(&fcb.buffer[0], 0, 128);
+	fcb_i_gbpb(fcb, 33); # READ RANDOM
+	fcb.dirty := 0;
+end sub;
+
+sub fcb_i_blockout(fcb: [FCB]) is 
+	if fcb.dirty != 0 then
+		fcb_i_gbpb(fcb, 34); # WRITE RANDOM
+		fcb.dirty := 0;
+	end if;
+end sub;
+
+sub fcb_i_changeblock(fcb: [FCB], newblock: uint16) is 
+	if newblock != fcb.cpm.r then
+		fcb_i_blockout(fcb);
+		fcb.cpm.r := newblock;
+		fcb_i_blockin(fcb);
+	end if;
+end sub;
+
+sub fcb_a_to_error() is 
+	@asm "cp 0xff";
+	@asm "ld a, 0";
+	@asm "ret nz";
+	@asm "inc a";
+end sub;
+
+sub FCBOpenIn(fcb: [FCB], filename: [uint8]): (errno: uint8) @extern("FCBOpenIn") is 
+	file_i_init(fcb, filename);
+
+	var cpmfcb := &fcb.cpm;
+	@asm "ld c, 15"; # OPEN_FILE
+	@asm "ld de, (", cpmfcb, ")";
+	@asm "call 5";
+	@asm "call", fcb_a_to_error;
+	@asm "ld (", errno, "), a";
+end sub;
+
+sub FCBOpenUp(fcb: [FCB], filename: [uint8]): (errno: uint8) is 
+	(errno) := FCBOpenIn(fcb, filename);
+end sub;
+
+sub FCBOpenOut(fcb: [FCB], filename: [uint8]): (errno: uint8) is 
+	file_i_init(fcb, filename);
+
+	var cpmfcb := &fcb.cpm;
+	@asm "ld c, 19"; # DELETE_FILE
+	@asm "ld de, (", cpmfcb, ")";
+	@asm "call 5";
+
+	@asm "ld c, 22"; # CREATE_FILE
+	@asm "ld de, (", cpmfcb, ")";
+	@asm "call 5";
+	@asm "call", fcb_a_to_error;
+	@asm "ld (", errno, "), a";
+end sub;
+	
+sub FCBClose(fcb: [FCB]): (errno: uint8) @extern("FCBClose") is 
+	fcb_i_blockout(fcb);
+
+	var cpmfcb := &fcb.cpm;
+	@asm "ld c, 16"; # CLOSE_FILE
+	@asm "ld de, (", cpmfcb, ")";
+	@asm "call 5";
+	@asm "call", fcb_a_to_error;
+	@asm "ld (", errno, "), a";
+end sub;
+
+sub FCBSeek(fcb: [FCB], pos: uint32) @extern("FCBSeek") is
+	pos := pos - 1; # seek to *previous* character
+	var newblock := (pos >> 7) as uint16;
+	var newptr := (pos as uint8) & 127;
+	fcb_i_changeblock(fcb, newblock);
+	fcb.bufferptr := newptr;
+end sub;
+
+sub FCBPos(fcb: [FCB]): (pos: uint32) is 
+	pos := (((fcb.cpm.r as uint32) << 7) | (fcb.bufferptr as uint32)) + 1;
+end sub;
+
+sub FCBExt(fcb: [FCB]): (len: uint32) is 
+	var oldblock := fcb.cpm.r;
+	var cpmfcb := &fcb.cpm;
+
+	@asm "ld c, 16"; # CLOSE_FILE (actually flushing it to disk)
+	@asm "ld de, (", cpmfcb, ")";
+	@asm "call 5";
+
+	@asm "ld c, 35"; # COMPUTE FILE SIZE
+	@asm "ld de, (", cpmfcb, ")";
+	@asm "call 5";
+
+	len := ([&fcb.cpm.r as [uint32]] & 0x00ffffff) << 7;
+	fcb.cpm.r := oldblock;
+end sub;
+
+sub fcb_i_nextchar(fcb: [FCB]) is 
+	fcb.bufferptr := fcb.bufferptr + 1;
+	if fcb.bufferptr == 128 then
+		fcb_i_changeblock(fcb, fcb.cpm.r + 1);
+		fcb.bufferptr := 0;
+	end if;
+end sub;
+
+sub FCBGetChar(fcb: [FCB]): (c: uint8) @extern("FCBGetChar") is 
+	fcb_i_nextchar(fcb);
+	c := fcb.buffer[fcb.bufferptr];
+end sub;
+
+sub FCBPutChar(fcb: [FCB], c: uint8) is 
+	fcb_i_nextchar(fcb);
+	fcb.buffer[fcb.bufferptr] := c;
+	fcb.dirty := 1;
+end sub;
+
+# ---------------------------------------------------------
+
+var	fd1: FCB;
+var	fd2: FCB;
+var	fd3: FCB;
+var	fd4: FCB;
+
+sub closefiles() @extern("closefiles") is
+	var sts: uint8;
+	sts := FCBClose(&fd1);
+	sts := FCBClose(&fd2);
+	sts := FCBClose(&fd3);
+	sts := FCBClose(&fd4);
+end sub;
+
+#	Open advent?.txt files
+sub opentxt() @extern("opentxt") is
+	var sts: uint8;
+
+	sts := FCBOpenIn(&fd1, "advent1.txt");
+	if sts != 0 then
+		print("Sorry, I can't open advent1.txt...\n");
+		exit();
+	end if;
+	sts := FCBOpenIn(&fd2, "advent2.txt");
+	if sts != 0 then
+		print("Sorry, I can't open advent2.txt...\n");
+		exit();
+	end if;
+	sts := FCBOpenIn(&fd3, "advent3.txt");
+	if sts != 0 then
+		print("Sorry, I can't open advent3.txt...\n");
+		exit();
+	end if;
+	sts := FCBOpenIn(&fd4, "advent4.txt");
+	if sts != 0 then
+		print("Sorry, I can't open advent4.txt...\n");
+		exit();
+	end if;
+end sub;
+
+const	MAXLOC :=	140;
+
+var    idx1: uint32[MAXLOC] := {
+        3,160,304,367,448,
+        507,564,689,855,980,
+        1086,1333,1385,1567,1694,
+        2033,2083,2224,2332,2415,
+        2472,2496,2525,2647,2770,
+        2894,2963,3029,3125,3164,
+        3274,3282,3314,3490,3547,
+        4023,4151,4229,4335,4477,
+        4574,4733,4793,4853,4913,
+        4973,4986,4999,5012,5072,
+        5132,5192,5252,5312,5325,
+        5385,5398,5581,5594,5691,
+        5863,5977,6045,6058,6270,
+        6398,6557,6892,7187,7242,
+        7302,7447,7512,7532,7688,
+        7744,7803,7896,7953,8065,
+        8125,8139,8153,8213,8273,
+        8287,8301,8361,8516,8589,
+        8643,8818,9043,9096,9154,
+        9364,9499,9698,9944,10149,
+        10283,10357,10504,10769,10834,
+        10888,11197,11262,11328,11802,
+        12278,12486,12553,12884,12899,
+        13652,14160,14346,14427,14494,
+        14561,14628,14722,14818,15026,
+        15215,16503,16733,16843,16980,
+        17180,17247,17312,17379,17446,
+        17511,17576,17641,17708,17773
+        };
+
+var    idx2: uint32[MAXLOC] := {
+        3,35,62,89,110,
+        131,152,184,209,237,
+        265,292,344,372,404,
+        433,483,519,554,586,
+        644,668,697,736,760,
+        784,853,919,1015,1054,
+        1164,1172,1204,1224,1281,
+        1310,1339,1417,1523,1554,
+        1651,1692,1752,1812,1872,
+        1932,1946,1960,1974,2034,
+        2094,2154,2214,2274,2288,
+        2348,2362,2390,2404,2501,
+        2538,2575,2643,2657,2689,
+        2817,2850,2889,2914,2969,
+        3029,3077,3142,3162,3214,
+        3270,3329,3422,3479,3591,
+        3651,3665,3679,3739,3799,
+        3813,3827,3887,3918,3991,
+        4045,4091,4117,4170,4228,
+        4265,4290,4319,4347,4370,
+        4398,4424,4452,4479,4544,
+        4598,4623,4688,4715,4745,
+        4775,4809,4876,4902,4917,
+        4954,4991,5024,5057,5124,
+        5191,5258,5291,5316,5345,
+        5386,5421,5457,5491,5528,
+        5556,5623,5688,5755,5822,
+        5887,5952,6017,6084,6149
+        };
+
+const	MAXOBJ :=	100;
+
+var    idx3: uint32[MAXOBJ] := {
+        3,63,153,208,274,
+        355,436,524,636,770,
+        833,889,981,1110,1200,
+        1377,1469,1473,1477,1522,
+        1640,1668,1693,1709,2151,
+        2315,2335,2424,2518,2541,
+        2557,2780,3020,3196,3250,
+        3451,3643,3674,3821,3924,
+        3952,3956,3960,3964,3968,
+        3972,3976,3980,3984,3988,
+        4062,4112,4166,4223,4269,
+        4329,4444,4509,4733,4812,
+        4891,4957,5072,5120,0,
+	0,0,0,0,0,
+	0,0,0,0,0,
+	0,0,0,0,0,
+	0,0,0,0,0,
+	0,0,0,0,0,
+	0,0,0,0,0,
+	0,0,0,0,0
+        };
+
+const	MAXMSG :=	201;
+
+var    idx4: uint32[MAXMSG] := {
+        3,485,537,655,716,
+        760,785,810,842,884,
+        959,1073,1119,1148,1194,
+        1301,1376,1427,1465,1580,
+        1631,1796,1832,1891,1924,
+        1950,2060,2113,2152,2180,
+        2276,2298,2318,2371,2398,
+        2427,2458,2487,2520,2545,
+        2571,2666,2687,2698,2735,
+        2790,2855,2886,2947,2979,
+        3033,4327,4342,4359,4366,
+        4397,4485,4609,4659,4781,
+        4809,4819,4860,5032,5394,
+        5717,5810,5842,5874,6040,
+        6067,6104,6138,6268,6306,
+        6401,6444,6492,6517,6531,
+        6546,6717,6921,7054,7171,
+        7312,7372,7385,7398,7411,
+        7424,7493,7566,7613,7665,
+        7708,7780,7820,7854,7900,
+        7990,8033,8097,8170,8214,
+        8248,8306,8345,8382,8408,
+        8434,8488,8565,8630,8733,
+        8804,8874,8991,9059,9129,
+        9197,9267,9328,9391,9592,
+        9688,9825,9892,10117,10254,
+        10373,10503,10712,10986,11202,
+        11294,11474,11518,11577,11649,
+        11685,11741,13063,13100,13156,
+        13229,13270,13293,13333,13418,
+        13474,13542,13605,13672,13793,
+        13807,13937,14078,14222,14291,
+        14332,14382,14619,14759,14830,
+        14889,14950,15008,15134,15178,
+        15210,15242,15272,15333,15368,
+        15395,15442,15509,15564,15737,
+        15780,15800,15870,16064,16101,
+        16236,16564,16636,16719,16820,
+        16873,16945,17067,17195,17238,
+        17274,17335,17433,17502,17612,
+        17637
+        };
+
+const EOF := 0x1A;
+
+#	Function to scan a file up to a specified
+#	point and either print or return a string.
+sub rdupto(fdi: [FCB], uptoc: uint8, print: uint8, str: [uint8]) is
+	var ch: uint8;
+	ch := FCBGetChar(fdi);
+	while ch != uptoc loop
+		if ch == EOF or ch == 0 then
+			return;
+#		elseif ch == '\n' then
+#			ch := FCBGetChar(fdi);
+#			continue;
+		elseif print == 1 then
+			print_char(ch);
+		else
+			[str] := ch; str := str + 1;
+		end if;
+		ch := FCBGetChar(fdi);
+	end loop;
+	if print == 0 then
+		[str] := 0;
+	end if;
+end sub;
+
+#	Function to read a file skipping
+#	a given character a specified number
+#	of times, with or without repositioning
+#	the file.
+sub rdskip(fdi: [FCB], skipc: uint8, n: uint16, rewind: uint8) is
+	var ch: uint8;
+	if rewind == 1 then
+		FCBSeek(fdi, 0);
+	end if;
+	while n > 0 loop
+ 		ch := FCBGetChar(fdi);
+		while ch != skipc loop
+			if ch == EOF or ch == 0 then
+				bug(32);
+			end if;
+			ch := FCBGetChar(fdi);
+		end loop;
+		n := n - 1;
+	end loop;
+end sub;
+
+#	Print a location description from "advent4.txt"
+sub rspeak(msg: uint8) @extern("rspeak") is
+	if msg == 54 then
+		print("ok.\n");
+	else 
+		if get_dbugflg() == 1 then
+			print("Seek loc msg #");
+			print(itoa(msg as int16));
+			print(" @ ");
+			print(ltoa(idx4[msg - 1] as int32));
+		end if;
+		FCBSeek(&fd4, idx4[msg - 1]);
+		rdupto(&fd4, '#', 1, 0);
+	end if;
+end sub;
+
+#	Print an item message for a given state from "advent3.txt"
+sub pspeak(item: uint8, state: int8) @extern("pspeak") is
+	FCBSeek(&fd3, idx3[item - 1]);
+	rdskip(&fd3, '/', (state+2) as uint16, 0);
+	rdupto(&fd3, '/', 1, 0);
+end sub;
+
+#	Print a long location description from "advent1.txt"
+sub desclg(loc: uint8) @extern("desclg") is
+	FCBSeek(&fd1, idx1[loc - 1]);
+	rdupto(&fd1, '#', 1, 0);
+end sub;
+
+#	Print a short location description from "advent2.txt"
+sub descsh(loc: uint8) @extern("descsh") is
+	FCBSeek(&fd2, idx2[loc - 1]);
+	rdupto(&fd2, '#', 1, 0);
+end sub;
+
+record	wac is
+	aword: [uint8];
+	acode: uint16;
+end record;
+
+#	Adventure vocabulary & encryption
+const	MAXWC :=	301;
+var	wc: wac[] :=
+{
+	{"spelunker today",1016},
+	{"?",		3051},
+	{"above",	29},
+	{"abra",	3050},
+	{"abracadabra",	3050},
+	{"across",	42},
+	{"ascend",	29},
+	{"attack",	2012},
+	{"awkward",	26},
+	{"axe",		1028},
+	{"back",	8},
+	{"barren",	40},
+	{"bars",	1052},
+	{"batteries",	1039},
+	{"battery",	1039},
+	{"beans",	1024},
+	{"bear",	1035},
+	{"bed",		16},
+	{"bedquilt",	70},
+	{"bird",	1008},
+	{"blast",	2023},
+	{"blowup",	2023},
+	{"bottle",	1020},
+	{"box",		1055},
+	{"break",	2028},
+	{"brief",	2026},
+	{"broken",	54},
+	{"building",	12},
+	{"cage",	1004},
+	{"calm",	2010},
+	{"canyon",	25},
+	{"capture",	2001},
+	{"carpet",	1040},
+	{"carry",	2001},
+	{"catch",	2001},
+	{"cave",	67},
+	{"cavern",	73},
+	{"chain",	1064},
+	{"chant",	2003},
+	{"chasm",	1032},
+	{"chest",	1055},
+	{"clam",	1014},
+	{"climb",	56},
+	{"close",	2006},
+	{"cobblestone",	18},
+	{"coins",	1054},
+	{"continue",	2011},
+	{"crack",	33},
+	{"crap",	3079},
+	{"crawl",	17},
+	{"cross",	69},
+	{"d",		30},
+	{"damn",	3079},
+	{"damnit",	3079},
+	{"dark",	22},
+	{"debris",	51},
+	{"depression",	63},
+	{"descend",	30},
+	{"describe",	57},
+	{"detonate",	2023},
+	{"devour",	2014},
+	{"diamonds",	1051},
+	{"dig",		3066},
+	{"discard",	2002},
+	{"disturb",	2029},
+	{"dome",	35},
+	{"door",	1009},
+	{"down",	30},
+	{"downstream",	4},
+	{"downward",	30},
+	{"dragon",	1031},
+	{"drawing",	1029},
+	{"drink",	2015},
+	{"drop",	2002},
+	{"dump",	2002},
+	{"dwarf",	1017},
+	{"dwarves",	1017},
+	{"e",		43},
+	{"east",	43},
+	{"eat",		2014},
+	{"egg",		1056},
+	{"eggs",	1056},
+	{"emerald",	1059},
+	{"enter",	3},
+	{"entrance",	64},
+	{"examine",	57},
+	{"excavate",	3066},
+	{"exit",	11},
+	{"explore",	2011},
+	{"extinguish",	2008},
+	{"fee",		2025},
+	{"fee",		3001},
+	{"feed",	2021},
+	{"fie",		2025},
+	{"fie",		3002},
+	{"fight",	2012},
+	{"figure",	1027},
+	{"fill",	2022},
+	{"find",	2019},
+	{"fissure",	1012},
+	{"floor",	58},
+	{"foe",		2025},
+	{"foe",		3003},
+	{"follow",	2011},
+	{"foo",		2025},
+	{"foo",		3004},
+	{"food",	1019},
+	{"forest",	6},
+	{"fork",	77},
+	{"forward",	7},
+	{"free",	2002},
+	{"fuck",	3079},
+	{"fum",		2025},
+	{"fum",		3005},
+	{"get",		2001},
+	{"geyser",	1037},
+	{"giant",	27},
+	{"go",		2011},
+	{"gold",	1050},
+	{"goto",	2011},
+	{"grate",	1003},
+	{"gully",	13},
+	{"h2o",		1021},
+	{"hall",	38},
+	{"headlamp",	1002},
+	{"help",	3051},
+	{"hill",	2},
+	{"hit",		2012},
+	{"hocus",	3050},
+	{"hole",	52},
+	{"hours",	2031},
+	{"house",	12},
+	{"ignite",	2023},
+	{"in",		19},
+	{"info",	3142},
+	{"information",	3142},
+	{"inside",	19},
+	{"inventory",	2020},
+	{"inward",	19},
+	{"issue",	1016},
+	{"jar",		1020},
+	{"jewel",	1053},
+	{"jewelry",	1053},
+	{"jewels",	1053},
+	{"jump",	39},
+	{"keep",	2001},
+	{"key",		1001},
+	{"keys",	1001},
+	{"kill",	2012},
+	{"knife",	1018},
+	{"knives",	1018},
+	{"lamp",	1002},
+	{"lantern",	1002},
+	{"leave",	11},
+	{"left",	36},
+	{"light",	2007},
+	{"lock",	2006},
+	{"log",		2032},
+	{"look",	57},
+	{"lost",	3068},
+	{"low",		24},
+	{"machine",	1038},
+	{"magazine",	1016},
+	{"main",	76},
+	{"message",	1036},
+	{"ming",	1058},
+	{"mirror",	1023},
+	{"mist",	3069},
+	{"moss",	1040},
+	{"mumble",	2003},
+	{"n",		45},
+	{"ne",		47},
+	{"nest",	1056},
+	{"north",	45},
+	{"nothing",	2005},
+	{"nowhere",	21},
+	{"nugget",	1050},
+	{"null",	21},
+	{"nw",		50},
+	{"off",		2008},
+	{"office",	76},
+	{"oil",		1022},
+	{"on",		2007},
+	{"onward",	7},
+	{"open",	2004},
+	{"opensesame",	3050},
+	{"oriental",	72},
+	{"out",		11},
+	{"outdoors",	32},
+	{"outside",	11},
+	{"over",	41},
+	{"oyster",	1015},
+	{"passage",	23},
+	{"pause",	2030},
+	{"pearl",	1061},
+	{"persian",	1062},
+	{"peruse",	2027},
+	{"pillow",	1010},
+	{"pirate",	1030},
+	{"pit",		31},
+	{"placate",	2010},
+	{"plant",	1024},
+	{"plant",	1025},
+	{"platinum",	1060},
+	{"plover",	71},
+	{"plugh",	65},
+	{"pocus",	3050},
+	{"pottery",	1058},
+	{"pour",	2013},
+	{"proceed",	2011},
+	{"pyramid",	1060},
+	{"quit",	2018},
+	{"rations",	1019},
+	{"read",	2027},
+	{"release",	2002},
+	{"reservoir",	75},
+	{"retreat",	8},
+	{"return",	8},
+	{"right",	37},
+	{"road",	2},
+	{"rock",	15},
+	{"rod",		1005},
+	{"rod",		1006},
+	{"room",	59},
+	{"rub",		2016},
+	{"rug",		1062},
+	{"run",		2011},
+	{"s",		46},
+	{"save",	2030},
+	{"say",		2003},
+	{"score",	2024},
+	{"se",		48},
+	{"secret",	66},
+	{"sesame",	3050},
+	{"shadow",	1027},
+	{"shake",	2009},
+	{"shard",	1058},
+	{"shatter",	2028},
+	{"shazam",	3050},
+	{"shell",	74},
+	{"shit",	3079},
+	{"silver",	1052},
+	{"sing",	2003},
+	{"slab",	61},
+	{"slit",	60},
+	{"smash",	2028},
+	{"snake",	1011},
+	{"south",	46},
+	{"spelunker",	1016},
+	{"spice",	1063},
+	{"spices",	1063},
+	{"stairs",	10},
+	{"stalactite",	1026},
+	{"steal",	2001},
+	{"steps",	1007},
+	{"steps",	34},
+	{"stop",	3139},
+	{"stream",	14},
+	{"strike",	2012},
+	{"surface",	20},
+	{"suspend",	2030},
+	{"sw",		49},
+	{"swim",	3147},
+	{"swing",	2009},
+	{"tablet",	1013},
+	{"take",	2001},
+	{"tame",	2010},
+	{"throw",	2017},
+	{"toss",	2017},
+	{"tote",	2001},
+	{"touch",	57},
+	{"travel",	2011},
+	{"treasure",	1055},
+	{"tree",	3064},
+	{"trees",	3064},
+	{"trident",	1057},
+	{"troll",	1033},
+	{"troll",	1034},
+	{"tunnel",	23},
+	{"turn",	2011},
+	{"u",		29},
+	{"unlock",	2004},
+	{"up",		29},
+	{"upstream",	4},
+	{"upward",	29},
+	{"utter",	2003},
+	{"valley",	9},
+	{"vase",	1058},
+	{"velvet",	1010},
+	{"vending",	1038},
+	{"view",	28},
+	{"volcano",	1037},
+	{"w",		44},
+	{"wake",	2029},
+	{"walk",	2011},
+	{"wall",	53},
+	{"water",	1021},
+	{"wave",	2009},
+	{"west",	44},
+	{"xyzzy",	62},
+	{"y2",		55}
+};
+
+#	binary search
+sub binary(w: [uint8], wctable: [wac], maxwc: uint16): (ret: int16) is
+	var lo: uint16;
+	var mid: uint16;
+	var hi: uint16;
+	var check: int8;
+	var pwc: [wac];
+
+	lo := 0;
+	hi := maxwc - 1;
+	while lo <= hi loop
+		mid := (lo + hi) / 2;
+		pwc := wctable + 4 * mid;
+		check := strcmp(w, [pwc].aword);
+
+		if check == -1 then
+			hi := mid - 1;
+		elseif check == 1 then
+			lo := mid + 1;
+		else
+			ret := mid as int16;
+			return;
+		end if;
+	end loop;
+	ret := -1;
+end sub;
+
+#	look-up vocabulary word in lex-ordered table.  words may have
+#	two entries with different codes. if minimum acceptable value
+#	= 0, then return minimum of different codes.  last word CANNOT
+#	have two entries(due to binary sort).
+#	word is the word to look up.
+#	val  is the minimum acceptable value,
+#		if != 0 return %1000
+sub vocab(word: [uint8], val: uint16): (ret: int16) @extern("vocab") is
+	var v1: int16;
+	var v2: int16;
+
+	v1 := binary(word, &wc[0], MAXWC);
+	
+	if v1 >= 0 then
+		v2 := binary(word, &wc[0], MAXWC-1);
+		if v2 < 0 then
+			v2 := v1;
+		end if;
+		if val == 0 then
+			if wc[v1 as uint16].acode < wc[v2 as uint16].acode then
+				ret := wc[v1 as uint16].acode as int16;
+			else
+				ret := wc[v2 as uint16].acode as int16;
+			end if;
+		else
+			if val <= wc[v1 as uint16].acode then
+				ret := (wc[v1 as uint16].acode % 1000) as int16;
+			elseif val <= wc[v2 as uint16].acode then
+				ret := (wc[v2 as uint16].acode % 1000) as int16;
+			else
+				ret := -1;
+			end if;
+		end if;
+	else
+		ret := -1;
+	end if;
+end sub;
+
+sub tolower(ch:uint8): (ret: uint8) @extern("tolower") is
+	@asm "cp 'A'";
+	@asm "ret c";
+	@asm "cp 'Z'+1";
+	@asm "ret nc";
+	@asm "or 20H";
+	@asm "ld (", ret, "),a";
+end sub;
+
+#	output adventure word list (motion/0xxx & verb/2xxx) only
+#	6 words/line pausing at 20th line until keyboard active
+sub outwords() @extern("outwords") is
+	var	i: uint16;
+	var	j: uint16;
+	var	line: uint16;
+	var	ch: uint8;
+
+	j := 0;
+	line := 0;
+
+	i := 0;
+	while i < 301 loop
+		if (wc[i].acode < 1000) or ((wc[i].acode < 3000) and (wc[i].acode > 1999)) then
+			print(wc[i].aword);
+			print_char(' ');
+			j := j + 1;
+			if (j == 6) or (i == 300) then
+				j := 0;
+				print_nl();
+				line := line + 1;
+				if line == 20 then
+					line := 0;
+					print("\nHit any key to continue...");
+					ch := get_char();
+				end if;
+			end if;
+		end if;
+		i := i + 1;
+	end loop;
+end sub;
+
+#	Routine true x% of the time.
+sub pct(x: uint16): (ret: uint8) @extern("pct") is
+	var v: uint16;
+
+	@asm "call _xrnd";
+	@asm "ld (", v, "),hl";
+
+	if v % 100 < x then
+		ret := 1;
+	else
+		ret := 0;
+	end if;
+end sub;
+
+#	Routine to request a yes or no answer to a question.
+sub yes(msg1: uint8, msg2: uint8, msg3: uint8): (ret: uint8) @extern("yes") is
+	var answer: uint8[80];
+	var n: uint8;
+	var ch: uint8;
+
+	if msg1 > 0 then
+		rspeak(msg1);
+	end if;
+	print_char('>');
+	get_line(&answer[0]);
+	if answer[0] == 'n' or answer[0] == 'N' then
+		if msg3 == 1 then
+			rspeak(msg3);
+		end if;
+		ret := 0;
+	end if;
+	if msg2 == 1 then
+		rspeak(msg2);
+	end if;
+	ret := 1;
+end sub;
+
+#	Routine to analyze a word.
+sub analyze(word: [uint8]): (valid: uint8, type: int16, value: int16) @extern("analyze") is
+	var	wordval: int16;
+	var	msg: uint8;
+	var v: uint16;
+
+	@asm "call _xrnd";
+	@asm "ld (", v, "),hl";
+
+	# make sure I understand
+	wordval := vocab(word, 0);
+
+	if wordval == -1 then
+		case (v % 3) is
+		when 0:
+			msg := 60;
+		when 1:
+			msg := 61;
+		when else:
+			msg := 13;
+		end case;
+		rspeak(msg);
+		valid := 0;
+		type := -1;
+		value := -1;
+	else
+		valid := 1;
+		type := wordval/1000;
+		value := wordval%1000;
+	end if;
+end sub;
+
+#	Routine to destroy an object
+sub dstroy(obj: uint16) @extern("dstroy") is
+	move(obj, 0);
+end sub;
+
+#	Juggle an object, currently a no-op
+sub juggle(loc: uint16) @extern("juggle") is
+end sub;
+
+#	routine to move an object and return a
+#	value used to set the negated prop values
+#	for the repository.
+sub put(obj: uint16, where: int16, pval: int16): (ret: int16) @extern("put") is
+	move(obj, where);
+	ret := -pval-1;
+end sub;
+
+const	WATER := 21;
+const	OIL :=	22;
+
+#	Convert  0 to WATER
+#		 1 to nothing
+#		 2 to OIL
+sub liq2(pbottle: uint16): (ret: uint16) @extern("liq2") is
+	ret := (1 - pbottle) * WATER + (pbottle >> 1) * (WATER + OIL);
+end sub;
+
+record	trav is
+	tdest: int16;
+	tverb: int16;
+	tcond: int16;
+end record;
+const	MAXTRAV	:= 	16+1;
+
+#	Routine to copy a travel array
+sub copytrv(trav1: [trav], trav2: [trav]) @extern("copytrv") is
+	var	i: uint8;
+
+	i := 0;
+	while i < MAXTRAV loop
+		[trav2].tdest := [trav1].tdest;
+		[trav2].tverb := [trav1].tverb;
+		[trav2].tcond := [trav1].tcond;
+		trav1 := @next trav1;
+		trav2 := @next trav2;
+		i := i + 1;
+	end loop;
+end sub;
+

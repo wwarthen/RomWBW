@@ -5,9 +5,7 @@ set TOOLS=../../../Tools
 set PATH=%TOOLS%\tasm32;%PATH%
 set TASMTABS=%TOOLS%\tasm32
 
-tasm -t80 -b -fFF FDU.asm FDU.com FDU.lst
+tasm -t80 -b -fFF fdu.asm fdu.com fdu.lst || exit /b
 
-if errorlevel 1 goto :eof
-
-copy /Y FDU.com ..\..\..\Binary\Apps\
-copy /Y FDU.txt ..\..\..\Doc\
+copy /Y fdu.com ..\..\..\Binary\Apps\ || exit /b
+copy /Y fdu.doc ..\..\..\Binary\Apps\ || exit /b

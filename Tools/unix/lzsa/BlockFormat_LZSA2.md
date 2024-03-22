@@ -44,7 +44,7 @@ The match offset is decoded according to the XYZ bits in the token
     XYZ
     00Z 5-bit offset: read a nibble for offset bits 1-4 and use the inverted bit Z of the token as bit 0 of the offset. set bits 5-15 of the offset to 1.
     01Z 9-bit offset: read a byte for offset bits 0-7 and use the inverted bit Z for bit 8 of the offset. set bits 9-15 of the offset to 1.
-    10Z 13-bit offset: read a nibble for offset bits 9-12 and use the inverted bit Z for bit 8 of the offset, then read a byte for offset bits 0-7. set bits 13-15 of the offset to 1.
+    10Z 13-bit offset: read a nibble for offset bits 9-12 and use the inverted bit Z for bit 8 of the offset, then read a byte for offset bits 0-7. set bits 13-15 of the offset to 1. substract 512 from the offset to get the final value.
     110 16-bit offset: read a byte for offset bits 8-15, then another byte for offset bits 0-7.
     111 repeat offset: reuse the offset value of the previous match command.
 

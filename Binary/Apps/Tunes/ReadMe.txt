@@ -7,4 +7,4 @@
 ***********************************************************************
 
 This directory contains some sample ProTracker and MYM sound
-files that can be played by the TUNE application.
+files that can be played by the TUNE or VGMPLAY application.

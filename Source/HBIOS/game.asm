@@ -300,9 +300,14 @@ EXIT:
 ;           CALL    BDOS
 	    CALL    PRTSTRDE
 
-	    LD      A,00H
-	    LD      HL,0000H
-            JP    0FFF9H
+	    ;LD      A,00H
+	    ;LD      HL,0000H
+            ;JP    0FFF9H
+	    
+	    LD       B,0F0H
+	    LD       C,01H
+	    CALL     0FFF0H
+	    
 ;            RET
 
 ISOVER:
@@ -1177,10 +1182,12 @@ PRTSTR:
 COUT:	PUSH	AF
 	PUSH	BC
 	PUSH	DE
+	PUSH	HL
 	LD	B,01H
-	LD	C,0
+	LD	C,80H
 	LD	E,A
 	RST	08
+	POP	HL
 	POP	DE
 	POP	BC
 	POP	AF
@@ -1197,10 +1204,14 @@ COUTE:	PUSH	AF
 ; WAIT FOR A CHARACTER FROM THE CONSOLE DEVICE AND RETURN IT IN A
 ;
 CIN:	PUSH	BC
+	PUSH	DE
+	PUSH	HL
 	LD	B,00H
-	LD	C,00H
+	LD	C,80H
 	RST	08
 	LD	A,E
+	POP	HL
+	POP	DE
 	POP	BC
 	RET
 

@@ -1,34 +1,5 @@
-!include(Common.inc)
-!def(document)(Applications)
----
-title: !product !document
-author: !author (mailto:!authmail)
-date: !date
-institution: !orgname
-documentclass: article
-toc: true
-toc-depth: 1
-classoption:
- - oneside
-papersize: letter
-geometry:
- - top=1.5in
- - bottom=1.5in
- - left=1.5in
- - right=1.5in
-# - showframe
-linestretch: 1.25
-colorlinks: true
-fontfamily: helvet
-fontsize: 12pt
-header-includes:
- - |
-   ```{=latex}
-   \renewcommand*{\familydefault}{\sfdefault}
-   ```
----
-
-`\clearpage  % new page after TOC`{=latex}
+$define{doc_title}{Applications}$
+$include{"Book.h"}$
 
 # Summary
 
@@ -76,9 +47,12 @@ found:
 | TALK        | Yes      | Yes        | Yes      |
 | RTC         | Yes      | Yes        | Yes      |
 | TIMER       | Yes      | Yes        | Yes      |
-| INTTEST     | Yes      | Yes        | Yes      |
+| CPUSPD      | Yes      | Yes        | Yes      |
+| INTTEST     | No       | Yes        | Yes      |
 | FAT         | No       | Yes        | Yes      |
 | TUNE        | No       | Yes        | Yes      |
+| WDATE       | No       | Yes        | Yes      |
+| HTALK       | No       | Yes        | Yes      |
 
 `\clearpage`{=latex}
 
@@ -132,7 +106,7 @@ The `ASSIGN` command supports "stacking" of instructions. For example,
 two slices of IDE 0 and will unassign E:.
 
 When the command runs it will echo the resultant assignments to the
-console to confirm it's actions. It will also display the remaining
+console to confirm its actions. It will also display the remaining
 space available in disk buffers.
 
 ## Notes
@@ -186,15 +160,27 @@ should only be specified for hard disk devices (SD, IDE, PPIDE).
 Only one drive letter may be assigned to a specific device/unit/slice
 at a time. Attempts to assign a duplicate drive letter will fail and
 display an error. If you wish to assign a different drive letter to a
-device/unit/slice, unassign the the existing drive letter first.
+device/unit/slice, unassign the existing drive letter first.
 
 Be aware that this command will allow you to reassign or remove the
 assignment of your system drive letter. This can cause your operating
 system to fail and force you to reboot.
 
+The `ASSIGN` command does **not** prevent you from assigning a drive
+letter to a slice that does not fit on the physical media.  However,
+any subsequent attempt to refer to that drive letter will result in
+an immediate OS error of "no disk".  Refer to "Hard Disk Capacity"
+in the $doc_user$ for a discussion of the exact number of slices that
+will fit on a specific physical disk size.
+
 This command is particularly sensitive to being matched to the
 appropriate version of the RomWBW ROM you are using. Be very careful
 to keep all copies of `ASSIGN.COM` up to date with your ROM.
+
+Additionally, the `ASSIGN` command must be able to adjust to CP/M 2.2
+vs. CP/M 3.  If you utilize an RSX that modifies the BDOS version
+returned, you are likely to have serious problems.  In this case, be
+sure to use `ASSIGN` prior to loading the RSX or after it is unloaded.
 
 ## Etymology
 
@@ -258,8 +244,8 @@ confusing that ZPM3 is in the file called CPM3.SYS, but it is normal
 for ZPM3.
 
 For the purposes of booting an operating system, each disk slice is
-considered it's own operating system. Each slice can be made bootable
-with it's own system tracks.
+considered its own operating system. Each slice can be made bootable
+with its own system tracks.
 
 `SYSCOPY` uses drive letters to specify where to read/write the system
 boot images. However, at startup, the boot loaded will require you to
@@ -269,7 +255,7 @@ to a drive letter so you will know what to enter at the boot loader
 prompt. By way of explanation, the boot loader does not know about
 drive letters because the operating system is not loaded yet.
 
-If you want to put a a boot system image on a device and slice that is
+If you want to put a boot system image on a device and slice that is
 not currently assigned to a drive letter, you will need to assign a
 drive letter first.
 
@@ -360,7 +346,7 @@ message.
 
 ## Etymology
 
-The `SYSCOPY` command is an original product and the source code is
+The `MODE` command is an original product and the source code is
 provided in the RomWBW distribution.
 
 `\clearpage`{=latex}
@@ -489,7 +475,7 @@ control is fully functional (end to end).
 The `XM` application provided in RomWBW is an adaptation of a
 pre-existing XModem application. Based on the source code comments, it
 was originally adapted from Ward Christensen's MODEM2 by Keith
-Petersen and is labeled version 12.5.
+Petersen and is labelled version 12.5.
 
 The original source of the application was found in the Walnut Creek
 CD-ROM and is called XMDM125.ARK dated 7/15/86.
@@ -521,15 +507,20 @@ This application is provided by Will Sowerbutts.
 
 *`<filename>`* is the filename of the ROM image file
 
-Options: (access method is auto-detected by default)
+FLASH4 will auto-detect most parameters so additional options should not
+normally be required.
 
-| `/PARTIAL`: Allow flashing a large ROM from a smaller image file
+Options:
+
+| `/V`: Enable verbose output (one line per sector)
+| `/P` or `/PARTIAL`: Allow flashing a large ROM from a smaller image file
 | `/ROM`: Allow read-only use of unknown chip types
 | `/Z180DMA`: Force Z180 DMA engine
 | `/UNABIOS`: Force UNA BIOS bank switching
 | `/ROMWBW`: Force RomWBW (v2.6+) bank switching
 | `/ROMWBWOLD`: Force RomWBW (v2.5 and earlier) bank switching
 | `/P112`: Force P112 bank switching
+| `/N8VEMSBC`: Force N8VEM SBC (v1, v2), Zeta (v1) SBC bank switching
 
 ## Usage
 
@@ -547,14 +538,14 @@ manually perform a verification function with the `FLASH VERIFY` form
 of the command.
 
 The author's documentation for the application is found in the RomWBW
-distribution in the Doc\\Contrib directory.
+distribution in the Doc/Contrib directory.
 
 ## Notes
 
 The application supports a significant number of EEPROM parts. It
 should automatically detect your part. If it does not recognize your
 chip, make sure that you do not have a write protect jumper set --
-this jumper will cause the ROM chip type to be unrecognized.
+this jumper can prevent the ROM chip from being recognized.
 
 Reprogramming a ROM chip in-place is inherently dangerous. If anything
 goes wrong, you will be left with a non-functional system and no
@@ -575,12 +566,17 @@ GitHub repository](https://github.com/willsowerbutts/flash4).
 
 # FDISK80
 
-RomWBW supports disk media with MS-DOS FAT filesystems (see FAT
-application). If you wish to put a FAT filesystem on your media, the
-FDISK80 application can be used to partition your media which is
-required in order to add a FAT filesystem.
+`FDISK80` allows you to create and manage traditional partitions on
+your hard disk media.  Depending on the hard disk format and features
+you are using, RomWBW may need hard disk partitions defined.
 
-This application is provided by John Coffman.
+Please refer to the $doc_user$ for more information on the use of
+partitions within RomWBW.  It is very important to understand that
+RomWBW slices are completely different from disk partitions.
+
+This application is provided by John Coffman.  The primary
+documentation is in the file "FDisk Manual.pdf" found in the
+Doc directory of the RomWBW distribution.
 
 ## Usage
 
@@ -595,20 +591,15 @@ applications. Please refer to the file called "FDisk Manual.pdf" in
 the Doc directory of the RomWBW distribution for further instructions.
 
 There is also more information on using FAT partitions with RomWBW in
-the "RomWBW Getting Started.pdf" document in the Doc directory of the
-distribution.
+the $doc_user$ document in the Doc directory of the distribution.
 
 ## Notes
 
-Partitioning of RomWBW media is **only** required if you want to add a
-FAT filesystem to your media. Do not partition your media if you are
-simply using it for RomWBW. To be clear, RomWBW slices do not require
-partitioning.
-
-As described in "RomWBW Getting Started.pdf", you should be careful
-when adding a FAT partition to your media that the partition does not
-overlap with the area of the media being used for RomWBW slices. The
-"(R)eserve" function in `FDISK80` can help prevent this.
+Hard disk partition tables allow a maximum of 1024 cylinders when
+defining partitions.  However, RomWBW uses exclusively Logical Block
+Addressing (LBA) which does not have this limitation.  When defining
+partitions is usually best to define the start and size of of the
+partition using bytes or sectors.
 
 ## Etymology
 
@@ -638,9 +629,9 @@ shown on your console.  The `TALK` application does this.
 `TALK` operates at the operating system level (not HBIOS).
 
 The parameter to `TALK` refers to logical CP/M serial devices.  Upon
-execution all characters types at the console will be sent to the
+execution all characters typed at the console will be sent to the
 device specified and all characters received by the specified device
-will be echoes on the console.
+will be echoed on the console.
 
 Press Control+Z on the console to terminate the application.
 
@@ -653,6 +644,36 @@ operating systems such as CP/M 3 is not supported.
 
 The `TALK` command is an original product and the source code is
 provided in the RomWBW distribution.
+
+`\clearpage`{=latex}
+
+# HTALK
+
+`HTALK` is a variation of the `TALK` utility, but it works directly
+against HBIOS Character Units.
+
+## Syntax
+
+`HTALK COMn:`
+
+## Usage
+
+`HTALK` operates at the HBIOS level.
+
+The parameter to `TALK` refers to a HBIOS character unit.  Upon
+execution all characters typed at the console will be sent to the
+device specified and all characters received by the specified device
+will be echoed on the console.
+
+Press Control+Z on the console to terminate the application.
+
+## Notes
+
+
+## Etymology
+
+The `TALK` command was created and donated to RomWBW by Tom Plano.  It
+is an original product designed specifically for RomWBW.
 
 `\clearpage`{=latex}
 
@@ -679,7 +700,7 @@ After startup, the application provides the following options:
 | `R)aw`      | will read the minute/second of the RTC clock iteratively every time the space key is pressed.  Press enter to end. |
 | `L)oop`     | will read the full date/time of the RTC clock iteratively every time the space key is pressed.  Press enter to end. |
 | `C)harge`   | will enable the battery charging function of the RTC.  |
-| `N)ocharge` | will disable the battery charging functino of the RTC. |
+| `N)ocharge` | will disable the battery charging function of the RTC. |
 | `D)elay`    | allows you to test the built-in timing delay in the program.  It is not unusual for it to be wrong. |
 | `I)nit`     | allows you to enter a date/time value for subsequent programming of the RTC using the S)et option. |
 | `G)et`      | allows you to read the value of a non-volatile register in the RTC. |
@@ -701,7 +722,7 @@ bypassing HBIOS.
 
 ## Etymology
 
-The `RTC` application was originally written by Andrew Lync as part of
+The `RTC` application was originally written by Andrew Lynch as part of
 the original ECB SBC board development.  It has since been modified to
 support most of the hardware variations included with RomWBW.
 
@@ -861,12 +882,12 @@ table which will be recognized by the application to find the FAT
 filesystem.
 
 Although RomWBW-style CP/M media does not know anything about
-partition tables, it is entirely possible to have media that has both
-CP/M and FAT file systems on it. This is accomplished by creating a
-FAT filesystem on the media that starts on a track beyond the last
-track used by CP/M. Each CP/M slice on a media will occupy 8,320K
-(16,640 sectors). So, make sure to start your FAT partition beyond (<
-slice count> * 8,320K) or (<slice count * 16,640 sectors).
+partition tables, it is entirely possible to have media that
+has both CP/M and FAT file systems on it.  This is accomplished
+by creating a FAT filesystem on the media that starts on a track
+beyond the last track used by CP/M.  Each CP/M slice can occupy
+up to 8MB.  So, make sure to start your FAT partition beyond
+(slice count) * 9MB.
 
 The application infers whether you are attempting to reference a FAT
 or CP/M filesystem via the drive specifier (char before ':'). A
@@ -878,8 +899,7 @@ assumed. For example:
 
 | `2:README.TXT` refers to FAT file "README.TXT" on disk unit #2
 | `C:README.TXT` refers to CP/M file "README.TXT" on CP/M drive C
-| `README.TXT` refers to CP/M file "README.TXT" on the current CP/M
-drive
+| `README.TXT` refers to CP/M file "README.TXT" on the current CP/M drive
 
 Files with SYS, HIDDEN, or R/O only attributes are not given any
 special treatment. Such files are found and processed like any other
@@ -894,6 +914,8 @@ copy the file to the desired user area.
 Accessing FAT filesystems on a floppy requires the use of RomWBW HBIOS
 v2.9.1-pre.13 or greater.
 
+Only the first 8 RomWBW disk units (0-7) can be referenced.
+
 Files written are not verified.
 
 Wildcard matching in FAT filesystems is a bit unusual as implemented by
@@ -906,6 +928,28 @@ FsFat library for all of the FAT filesystem work. This application is
 written in C and requires SDCC to compile. As such it is not part of
 the RomWBW build process. However, the full project and source code is
 found in the [FAT GitHub Repository](https://github.com/wwarthen/FAT).
+
+## Known Issues
+
+CP/M (and workalike) OSes have significant restrictions on filename
+characters.  The FAT application will block any attempt to create a
+file on the CP/M filesystem containing any of these prohibited
+characters:
+
+|         `< > . , ; : ? * [ ] |/ \`
+
+The operation will be aborted with "`Error: Invalid Path Name`" if such
+a filename character is encountered.
+
+Since MS-DOS does allow some of these characters, you can have
+issues when copying files from MS-DOS to CP/M if the MS-DOS filenames
+use these characters.  Unfortunately, FAT is not yet smart enough to
+substitute illegal characters with legal ones.  So, you will need to
+clean the filenames before trying to copy them to CP/M.
+
+The FAT application does try to detect the scenario where you are
+copying a file to itself.  However, this detection is not perfect and
+can corrupt a file if it occurs.  Be careful to avoid this.
 
 `\clearpage`{=latex}
 
@@ -940,7 +984,7 @@ for the hardware found. If no hardware is detected, it will abort with
 an error message.
 
 On Z180 systems, I/O wait states are added when writing to the sound
-chip to avoid exceeding it's speed limitations. On Z80 systems, you
+chip to avoid exceeding its speed limitations. On Z80 systems, you
 will need to ensure that the CPU clock speed of your system does not
 exceed the timing limitations of your sound chip.
 
@@ -948,6 +992,24 @@ The application probes for an active system timer and uses it to
 accurately pace the sound file output. If no system timer is
 available, a delay loop is calculated instead. The delay loop will not
 be as accurate as the system timer.
+
+There are two modes of operations.  A direct hardware interface for the
+AY-3-8910 or YM2149 chips, or a compatibility layer thru HBIOS supporting
+the SN76489 chip.
+
+By default the application will attempt to interface directly to the sound
+chip.  The optional argument `--hbios` supplied after the filename, will
+enable the application to use the HBIOS sound driver.
+
+The HBIOS mode also support other switch as described below.
+
+| Switch      | Description                                            |
+| ----------- | ------------------------------------------------------ |
+|  `--hbios`  | Utilise HBIOS' sound driver                            |
+| `+t1`       | Play tune an octave higher                             |
+| `+t2`       | Play tune two octaves higher                           |
+| `-t1`       | Play tune an octave lower                              |
+| `-t2`       | Play tune two octaves lower                            |
 
 All RomWBW operating system boot disks include a selection of sound
 files in user area 3.
@@ -961,3 +1023,230 @@ player code is from MYMPLAY 0.4 by Lieves!Tuore and the PT player code
 is (c)2004-2007 S.V.Bulba <vorobey@mail.khstu.ru>.
 
 The source code is provided in the RomWBW distribution.
+
+# CPUSPD
+
+The `CPUSPD` application is used to change the running speed and wait
+states of a RomWBW system.
+
+  The functionality is highly dependent on
+the capabilities of your system.
+
+At present, all Z180 systems can change their CPU speed and their
+wait states.  SBC and MBC systems may be able to change their CPU
+speed if the hardware supports it and it is enabled in the HBIOS
+configuration.
+
+## Syntax
+
+| `CPUSPD [`*`<speed>`*`[,[`*`<memws>`*`][,[`*`<iows>`*`]]]`
+
+*`<speed>`* is one of HALF, FULL, or DOUBLE.  
+*`<memws>`* is a number specifying the desired memory wait states.  
+*`<iows>`* is a number specifying the desired I/O wait states.
+
+## Usage
+
+Entering `CPUSPD` with no parameters will display the current CPU speed
+and wait state information of the running system.  Wait state
+information is not available for all systems.
+
+To modify the running speed of a system, you can specify the
+`*`<speed>`*` parameter.  To modify either or both of the wait
+states, you can enter the desired number.  Either or both of the wait
+state parameters may be omitted and the current wait state settings
+will remain in effect.
+
+## Notes
+
+The ability to modify the running speed and wait states of a system
+varies widely depending on the hardware capabilities and the HBIOS
+configuration settings.
+
+Note that it is frequently impossible to tell if a system is capable
+of dynamic speed changes.  This function makes the changes blindly.
+If an attempt is made to change the speed of a system
+that is definitely incapable of doing so, then an error result is
+returned.
+
+The `CPUSPD` command makes no attempt to ensure that the new CPU
+speed will actually work on the current hardware.  Setting a CPU
+speed that exceeds the capabilities of the system will result in
+unstable operation or a system stall.
+
+Some peripherals are dependent on the CPU speed.  For example, the Z180
+ASCI baud rate and system timer are derived from the CPU speed.  The
+CPUSPD application will attempt to adjust these peripherals for
+correct operation after modifying the CPU speed.  However, in some
+cases this may not be possible.  The baud rate of ASCI ports have a
+limited set of divisors.  If there is no satisfactory divisor to
+retain the existing baud rate under the new CPU speed, then the baud
+rate of the ASCI port(s) will be affected.
+
+## Etymology
+
+The `CPUSPD` application was custom written for RomWBW. All of the
+hardware interface code is specific to RomWBW and the application will
+not operate correctly on non-RomWBW systems.
+
+The source code is provided in the RomWBW distribution.
+
+
+`\clearpage`{=latex}
+
+# VGMPLAY
+
+This application will allow you to play Video Game Music files. VGM 
+files contain music samples from a range of different sound chips 
+that were used in arcade games, game consoles and personal computer 
+systems.
+
+Video Game Music files have a .VGM file extension and each file 
+contains an embedded header that identifies the hardware it is 
+intended for and also the title of the music.
+
+All RomWBW operating system boot disks include a selection of sound
+files in user area 3. Additional music files can be found at:
+
+[VGMRIPS website](https://vgmrips.net)
+
+[PROJECT2612 website](https://project2612.org/)
+
+Sound files are loaded into memory for playback, so the maximum size
+file that can be played is around 52Kb.
+
+Sound chips currently supported are:
+
+* AY-3-8190 (and equivalent YM2149)
+* YM2612 (and equivalent YM3848)
+* SN76489 (single chip mono and dual chip stereo)
+* YM2151 
+
+VGMPLAY supports playback of files with multiple combinations of these
+chips.
+
+## Syntax
+
+`VGMPLAY `*`<filename>`*
+
+*`<filename>`* is the name of a sound file ending in .VGM
+
+## Usage
+
+VGMPLAY does not automatically detect the hardware platform or sound
+hardware that you are using. This means a version customized for your
+system must be assembled before use.
+
+To play a sound file, just use the VGMPLAY command and specify the file
+to play after the command. So, for example, `VGMPLAY TEDDY` will load
+the TEDDY.VGM sound file into memory and begin playing it.
+
+Playback can be stopped by pressing a key. There may be a delay before
+playback stops.
+
+## Notes
+
+The default build configuration for VGMPLAY is:
+
+CPU speed: Autodetected
+
+| chip      | number  | port     | notes
+| --------- | ------- | -------- | ----------
+| AY-3-8910 |  1st    | 09ah     | stereo
+| AY-3-8910 |  2nd    | not set  | stereo
+| YM2612    |  1st    | 0c0h     | stereo
+| YM2612    |  2nd    | 0c4h     | stereo
+| SN76489   |  1st    | 0c8h     | mono/left
+| SN76489   |  2nd    | 0c9h     | mono/right
+| YM2151    |  1st    | 0cah     | stereo
+| YM2151    |  2nd    | 0cbh     | stereo
+
+Inconsistant, garbled or distorted playback can be an indication that
+your CPU clock speed is too high for your sound chip. In this case, if 
+your platform supports speed switching, then the CPUSPD application 
+can be used to reduce your processor speed.
+
+VGMPLAY is still under development. The source code is provided in the 
+RomWBW distribution.
+
+`\clearpage`{=latex}
+
+# WDATE
+
+`wdate` is a utility for CP/M systems that have Wayne Warthen's
+ROMWBW firmware. It reads or sets the real-time clock, using function
+calls in the BIOS. It should work on any RTC device that is supported by
+ROMWBW, including the internal interrupt-driven timer that is is available
+on some systems. 
+
+`wdate` differs from the `rtc.com` utility that is provided with the
+ROMWBW version of CP/M in that it only gets and sets the date/time. 
+`rtc.com` can also manipulate the nonvolatile RAM in certain clock
+devices, and modify the charge controller. However, `wdate` is (I would
+argue) easier to use, as it takes its input from the command line, which
+can be edited, and it's less fussy about the format. It doesn't require
+the date to be set if you only want to change the time, for example.
+ In addition, `wdate` has at least some error checking.
+
+`wdate` displays the day-of-week and month as English text, not 
+numbers. It calculates the day-of-week from the year, month, and day.
+RTC chips usually store a day-of-week value, but it's useless in this
+application for two reasons: first, the BIOS does not expose it. Second,
+there is no universally-accepted way to interpret it (which day does
+the week start on? Is '0' a valid day of the week?)
+
+## Syntax
+
+| `WDATE`
+| `WDATE ` *`<hr> <min>`*
+| `WDATE ` *`<hr> <min> <sec>`*
+| `WDATE ` *`<year> <month> <day> <hr> <min> <sec>`*
+
+## Usage
+
+    A> wdate
+    Saturday 27 May 13:14:39 2023
+
+With no arguments, displays the current date and time. 
+
+    A> wdate hr min
+
+With two arguments, sets the time in hours and minutes, without changing date
+or seconds
+
+    A> wdate hr min sec
+
+With three arguments, sets the time in hours, minutes, and seconds, without
+changing date
+
+    A> wdate year month day hr min sec
+
+With six arguments, sets date and time. All numbers are one or two digits.  The
+two-digit year starts at 2000. 
+
+    A> wdate /?
+
+Show a summary of the command-line usage.
+
+## Notes
+
+I've tested this utility with the DS1302 clock board designed by Ed 
+Brindly, and on the interrupt-driven timer built into my Z180 board. 
+However, it does not interact with hardware, only BIOS; I would expect 
+it to work with other hardware.
+
+wdate checks for the non-existence of ROMWBW, and also for failing 
+operations on the RTC. It will display the terse "No RTC" message in 
+both cases.
+
+The ROMWBW functions that manipulate the date and time operate on BCD 
+numbers, as RTC chips themselves usually do. wdate works in decimal, so 
+that it can check that the user input makes sense. A substantial part of
+the program's code is taken up by number format conversion and range 
+checking.
+
+## Etymology
+
+The `WDATE` application was written and contributed by Kevin Boone.
+The source code is available on GitHub at
+[https://github.com/kevinboone/wdate-cpm/blob/main/README.md](https://github.com/kevinboone/wdate-cpm/blob/main/README.md).

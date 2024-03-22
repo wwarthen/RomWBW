@@ -1,0 +1,78 @@
+################################
+#        Cowgol program        #
+#                              #
+# Sorting 1000 random integers #
+# stored in a vector allocated #
+# using Cowgol's Alloc         #
+#                              #
+# calls:                       #
+#  assembler routine xrndseed  #
+#  assembler routine xrnd      #
+#  C routine mergeSort         #
+#                              #
+# Ladislau Szilagyi, Nov. 2023 #
+################################
+
+include "cowgolc.coh";
+include "strings.coh";
+include "malloc.coh";
+
+typedef intstring is [uint16];
+
+var Unsorted: intstring;
+var size: uint16 := 999;
+ 
+sub random(): (n: uint16) is
+  @asm "call _xrnd"; 			#calls assembler routine
+  @asm "ld (", n, "),hl";
+end sub;
+
+sub PrintArray(array: intstring) is
+  var i: uint16 := 0;
+  var p := array;
+  print("\r\nArray:\r\n");
+  while i != 1000 loop
+    print_i16([p]);
+    print(",");
+    p := p + 2;
+    i := i + 1;
+  end loop;
+end sub;
+
+sub PopulateArray(array: intstring) is
+  var i: uint16 := 0;
+  var p := array;
+  while i != 1000 loop
+    [p] := random();
+    p := p + 2;
+    i := i + 1;
+  end loop;
+end sub;
+
+sub RandSeed() is
+  @asm "call _xrndseed"; 		#calls assembler routine
+end sub;
+
+sub MergeSort() is
+  print("\r\nSorting...\r\n");
+  @asm "ld hl,(", size, ")";
+  @asm "push hl";			# r on stack as param # 3
+  @asm "ld hl,0";
+  @asm "push hl";			# l on stack as param # 2
+  @asm "ld hl,(", Unsorted, ")";
+  @asm "push hl";			# vector addr on stack as param # 1
+  @asm "call _mergeSort";		# calls C routine msort(int* array, int l, int r)
+  @asm "pop bc";			# drops C routine params
+  @asm "pop bc";			# drops C routine params
+  @asm "pop bc";			# drops C routine params
+end sub;
+
+### start ###
+
+RandSeed();
+Unsorted := Alloc(2000) as intstring;
+PopulateArray(Unsorted);
+PrintArray(Unsorted);
+MergeSort();
+PrintArray(Unsorted); # now is sorted !
+Exit();

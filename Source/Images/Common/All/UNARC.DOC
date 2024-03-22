@@ -1,0 +1,437 @@
+
+                             UNARCU
+              Universal Archive File Extraction Utility
+                           Version 1.0
+
+               Modified for Universal use by Lars Nelson
+                        September 17, 2023
+               Modified for ZCPR3 by Gene Pizzetta
+                        December 9, 1990
+               Original CP/M 2.2 version is
+           Copyright (C) 1986, 1987 by Robert A. Freed
+                       All Rights Reserved
+
+
+UNARCU allows the listing, typeout, printing, checking, and extraction of 
+member files contained in ARK and ARC archive files.  These are commonly 
+used for compressed file storage on remote access bulletin boards.  This is 
+a universal version and runs on the following CP/M compatible systems:
+
+     CP/M 2.2 with DRI CCP or ZCPRD&J
+     ZSDOS 1.2 and 2.0 with DRI CCP, ZCPRD&J or Zsystem
+     CP/M 3 with DRI CCP or Z3Plus
+     ZPM3 with DRI CCP or ZCCP
+
+DU file specification is supported on all systems.  If Zsystem is active 
+then named directories can be used and the bad directories flag is 
+automatically checked.
+
+If datestamping is available then extracted files will recieve the ARK file's 
+stored date stamp.  The program handles DateStamper, NZTIME and CP.M Plus 
+date stamping methods.  
+
+UNARCU requires at least 32K of free memory (TPA) for full support of all 
+archive file formats, but smaller systems may be able to use some of the 
+program's capabilities.
+
+USAGE:
+
+     UNARCU {DU: or dir:}arcfile{.typ} {DU: or dir:}{afn.aft} {{/}options}
+
+If a DIR or DU specification is not given for the archive file, the current 
+drive/user is assumed.  The second filename, which can be ambiguous, 
+refers to a member file or files in the archive.  DIR: file specification
+only available when Zsystem is active.  DU: specification always available.
+
+If a DU or DIR specification is provided for the member filespec, it will be 
+extracted to that directory.  To extract to the current directory, only a 
+colon is required.  If a directory specification is given without a filename, 
+all files ("*.*") is assumed.
+
+If no DU or DIR specification is given, UNARCU acts differently depending 
+on whether the member name is ambiguous or not.  If the member name is 
+unambiguous, and the filetype is not restricted, the file will be typed to 
+the screen.  If the member name is ambiguous, or if no member name is 
+given at all, a directory of the ARK will be displayed.
+
+If no filetype is given for the archive file, UNARCU first tries ARK and then 
+ARC.
+
+An on-line help message will be displayed if UNARCU is called with no 
+command tail or if the command tail is "//".
+
+OPTIONS:  Options may or may not be preceded by a slash, but the slash is 
+required if the options are not the third token (element) on the command 
+line.
+
+     C    Check the validity of the archive and the given member
+          files.  If a member filespec is not given, all files
+          ("*.*") is assumed.
+
+     E    Toggle erasing of existing files without asking on and
+          off.  UNARCU may be configured to automatically erase,
+          during member file extraction, existing files in the
+          target directory that have the same name.  Or it can
+          be configured to ask first.  This option will turn off
+          user query before erasure, if it is on by default, and
+          vice versa.
+
+     N    Toggle console paging on or off.  UNARCU may be
+          configured to default to console paging or not.  This
+          option will turn paging off, if the the default is on,
+          and vice-versa.  Paging effects both archive directory
+          display and member file type-out.  During member file
+          extraction, console paging is always off.
+
+     P    Sends a member file to the printer (LST device).  The
+          member name cannot be ambiguous.  The file will be
+          printed continuously, with no formatting or paging.
+
+UNARCU can be aborted at any time with ^C or ^K.
+
+If screen paging is enabled, UNARCU pauses after the screen fills.  The 
+listing may be resumed by typing any key other than ^S, ^C, or ^K.  The 
+space bar displays one more line of output (overwriting the "[more]" 
+message) and the program will again pause.  For hard copy terminals, line 
+feed may be used to prevent overprinting of the "[more]" line.  If paging 
+is disabled, the display can be paused with ^S.
+
+LISTING AN ARCHIVE DIRECTORY:  UNARC always produces a detailed 
+console listing of all the member files of an archive, or of those members 
+which match the second file specification, if one is given.  If no member 
+name is given, or if the member name is ambiguous, then UNARCU only lists 
+the directory, without doing anything else.  (That is, unless the C option is 
+included.)
+
+A sample directory listing:
+
+A0>UNARCU CODES
+Archive File = A0:CODES.ARK
+Name           Length  Disk   Method  Ver  Stored Saved    Date    Time   CRC
+============  =======  ====  ======== === ======= ===== ========= ======  ====
+ABLE    .DOC    24320   24k  Crunched  8    11777  52%  30 Apr 86 10:50a  42C0
+BRAVO   .COM    17152   17k  Squeezed  4    14750  14%   2 May 86  4:11p  8CBD
+CHARLIE .TXT      234    1k   Packed   3       99  58%   2 May 86  4:11p  8927
+        ====  =======  ====               =======  ===                    ====
+Total      3    41706   42k                 26626  36%                    58A4
+
+The listing is equivalent to the "verbose" listing of the MS-DOS ARC 
+program, with the addition of the "Disk" and "Ver" fields, which are unique 
+to UNARCU and previous UNARC versions.  The listing requires 78-columns 
+of terminal width.
+
+"Name" is the filename which will be generated if the file is extracted by 
+UNARCU.  This is not necessarily the same as the name recorded in the 
+archive file.  Although CP/M and MS-DOS file naming conventions are 
+identical, two conversions are made to guarantee filename validity:  Lower- 
+case letters are converted to upper-case and non-printing characters are 
+converted to dollar signs ("$").  Archive entries are usually maintained and 
+listed in alphabetical order.
+
+"Length" is the uncompressed file length, i.e., the number of bytes the file 
+will occupy if extracted to disk, exclusive of any additional length imposed 
+by the file system.  MS-DOS permits files of arbitrary lengths, but CP/M 
+restricts files to multiples of 128 bytes.
+
+"Disk" is the actual amount of space required to extract the file to a CP/M 
+disk, expressed as a multiple of 1K (1024) bytes.  The number is dependent 
+on the output drive's allocation block size, which can range from 1K to 16K 
+bytes.  Typically, 1K is used for single-density floppy disks, 2K for 
+double-density floppies, and 4K for hard disks.  In the absence of an 
+explicit output drive, UNARCU uses the block size of the currently logged 
+drive, or a configured default size.
+
+"Method" is the compression method used:  "Unpacked", "Packed", 
+"Squeezed", "Crunched", "Squashed", or "Unknown!".  If the method 
+"Unknown!" appears, it likely indicates a faulty archive file or a newer 
+compression method not yet supported by UNARCU.
+
+"Ver" is the version of compression method used.  UNARC supports versions 
+1-9:  unpacked files, versions 1 or 2; packed files, version 3; squeezed 
+files, version 4; crunched files, versions 5 and squashed files, version 9.
+
+"Stored" is the compressed file length, that is, the number of bytes 
+occupied by the file in the archive, not including the directory information 
+overhead, which adds an additional 29 bytes to each member file.
+
+"Saved" indicates the percentage of the original file length which was saved 
+by compression.  Higher values indicate better compression.  The MS-DOS 
+ARC documentation refers to this as the "stowage factor".  The value shown 
+in the totals applies to the archive as a whole, excluding directory 
+overhead.
+
+"Date" and "Time" are the file modification stamp at the time it was added 
+to the archive.
+
+"CRC" is an internal 16-bit cyclic redundancy check value computed when a 
+file is added to an archive, expressed in hexadecimal.  UNARCU checks file 
+validity by recomputing this value when it extracts a file.  The value is 
+calculated by a different method than that used by either of the two 
+popular public domain programs, CRCK and CHEK, but it is a quite valid and 
+reliable error-detection mechanism.  The value is given for completeness 
+only.  The total in the last line is the 16-bit sum of the displayed CRC 
+values and is useful for comparing entire archives.  Since the CRC values 
+are computed before compression, the total should be the same for all 
+archives created from the same set of input files, without regard for 
+variations in file order or compression methods.
+
+The "Total" line is displayed only if more than one file appears in the 
+listing.
+
+EXTRACTING FILES FROM AN ARCHIVE:  If the second command line 
+parameter contains a DU or DIR specification UNARCU will extract the 
+selected member file or files to to the indicated disk directory.  If the 
+directory specification is given without a filename, all member files will be 
+extracted to the indicated directory.  If only a colon is given, the current 
+drive/user will be assumed.
+
+Below is a directory listing as might be generated during file extraction, 
+along with some possible warning messages:
+
+A0>UNARCU CODES B1:
+Archive File = A0:CODES.ARK
+Output Directory = B1:
+Name           Length  Disk   Method  Ver  Stored Saved    Date    Time   CRC
+============  =======  ====  ======== === ======= ===== ========= ======  ====
+ABLE    .DOC    24320   24k  Crunched  8    11777  52%  30 Apr 86 10:50a  42C0
+Replace existing output file (y/n)? Y
+BRAVO   .COM    17152   18k  Squeezed  4    14740  14%   2 May 86  4:11p  8CBD
+Warning: Extracted file has incorrect CRC
+Warning: Extracted file has incorrect length
+Warning: Bad archive file header, bytes skipped = 10
+CHARLIE .TXT      234    2k   Packed   3       99  58%   2 May 86  4:11p  8927
+        ====  =======  ====               =======  ===                    ====
+Total      3    41706   44k                 26616  36%                    58A4
+
+"Replace existing output file (y/n)?" appears if a file of the same name 
+exists in the output directory, requiring a "Y" or "N" response.  Any 
+response other than "Y" will be consided to be the same as "N".  If UNARCU 
+has been configured to erase without query, this message will not appear.
+
+The first two of the "Warning:" messages above indicate that either the 
+cyclic redundancy check (CRC) value or the extracted file length does not 
+match the value recorded in the archive header when the original file was 
+added.  The third warning message is displayed if the proper format for 
+the beginning of a new member is not detected, but UNARCU recovered by 
+skipping a certain number of bytes in the archive file.  If a recovery 
+attempt fails, UNARC aborts and issues a different message, "Invalid archive 
+file format".  The appearance of any of these messages probably means the 
+file data has been corrupted in some way.
+
+If the original MS-DOS file length was not an exact multiple of 128 bytes, 
+the final record of the extracted file will be padded with 1Ah characters 
+(ASCII ^Z).
+
+Disk space in the listing will be correct for the specified output directory.  
+In the two examples above, drive A has 1K allocation blocks while drive B 
+has a 2K blocks, which accounts for the differences in the two listings.  To 
+determine the exact disk space requirements before extracting files, log 
+into the desired output drive and take an UNARCU directory listing of the 
+ARK file.
+
+If a file extraction is aborted with ^C, any partial output file will have to 
+be deleted manually.
+
+TYPING MEMBER FILES:  Typing the contents of a member file in an archive 
+to the console may be requested by giving a non-ambiguous filename and no 
+output disk directory as the second command line parameter.  For example:
+
+A0>UNARCU CODES ABLE.DOC
+Archive File = A0:CODES.ARK
+Name           Length  Disk   Method  Ver  Stored Saved    Date    Time   CRC
+============  =======  ====  ======== === ======= ===== ========= ======  ====
+ABLE    .DOC    24320   24k  Crunched  8    11777  52%  30 Apr 86 10:50a  42C0
+-------------------------------------------------------------------------------
+ This is file ABLE.DOC, contained within the archive CODES.ARK.  Typeout will
+ proceed until the end of this file, so you'd better be patient.  For somebody
+ who has nothing to say, I've written an awfully big file here.  If you don't
+ want to read all 24K of it, you can type ^C ....
+
+The specified file is assumed to contain valid ASCII text data.  All bytes 
+are masked to seven bits and all control characters are ignored except 
+horizontal tabs, which are expanded to blanks with stops at every eighth 
+column), and line feeds, vertical tabs, and form feeds, all of which generate 
+a new line.  SUB (^Z) is interpreted as the end of the file.  Backspaces and 
+carriage returns are ignored, so text will not be obscured.
+
+UNARCU will refuse to type files whose filetype indicates are not ASCII text 
+files, including COM, CMD, EXE, OBJ, OVL, REL, PRL, CRL, IRL, INI, SYS, 
+BAD, ARK, ARC, LBR, ?Q?, ?Y? and ?Z?.  If one of these or other restricted 
+types is given, directory information only is listed.
+
+CRC and file length checking are not performed when a file is typed to the 
+screen.
+
+PRINTING MEMBER FILES:  A single member file may be sent to the printer 
+(CP/M LST device) with the "P" option as the third parameter on the 
+command line with or without a preceding slash.  In addition, the member 
+name must be non-ambiguous and must not be preceded by a drive or user 
+specification.  For example:
+     A0>UNARCU CODES CHARLIE.TXT P
+or
+     A0>UNARCU CODES CHARLIE.TXT /P
+
+The contents of the specified file is passed directly to the printer without 
+alteration, additional formatting, or even paging.  The user should make 
+sure it contains data suitable for printer output.  This unfiltered operation 
+is particularly well-suited for the output of binary graphics images to 
+dot-matrix printers.  These files can be extremely large, but compress quite 
+well, often to less than 5% of their original size.  The same filetypes 
+excluded from typing are also excluded from printing.  Printing may be 
+paused or aborted with ^S and ^C respectively.
+
+CHECKING MEMBER FILES:  With the "C" option UNARCU can be directed to 
+extract one or more member files from an archive, without actually storing 
+them as disk files.  This operation performs file CRC and length checking, 
+so it is useful for verifying correct modem data transmission of an archive. 
+If the "C" is the second parameter on the command line, it must be 
+preceded by a slash.  In that case all files in the archive will be checked.  
+If a member filename is given, it may be ambiguous, but it cannot be 
+preceded by a disk directory specification.  For example:
+     A0>UNARCU CODES *.DOC C
+or
+     A0>UNARCU CODES /C
+
+FILE DATE STAMPING:  ARK and ARC files contain only a member file's 
+modification date and time.  When a member is extracted under ZSDOS or 
+CP/M 3 with date stamping, its modification date will be transferred to disk 
+as both the create and modification file date stamps.  If the modification 
+date is not included in the archive, then the extracted file will be stamped 
+with the current date and time.
+
+SECURITY:  Z-Node security is handled automatically by UNARCU when 
+Zsystem is running.  If the Wheel byte is off (reset), file extraction, 
+archive checking, and file printing are all disabled.  In addition, UNARCU 
+can be configured to disable file type-out or to limit type-out to a maximum 
+number of lines.
+
+
+Directory security depends on the file specification parsing of ZCPR 3.3 or 
+higher to indicate that the DU or DIR are illegal.  Security should be 
+adequate, however, under other CPR's.
+
+PROGRAM CONFIGURATION OPTIONS:  Several configuration bytes are 
+available to tailor the program for specific requirements, particularly for 
+RCP/M systems.  With the Wheel byte off, UNARCU can be used by remote 
+callers only for archive directory listing and, optionally, for member file 
+typeout.
+
+Configuration bytes also determine the default conditions for the N and E 
+command line options and the filetypes excluded from type-out.
+
+Other configuration points are provided for non-standard systems and need 
+not concern the majority of users running ZCPR3, NZ-COM, or Z3PLUS.
+
+Patching is accomplished using ZCNFG and the configuration file, 
+UNARCUnn.CFG, where nn is the current version.  The options are discussed 
+in detail in the CFG file help screens.  ZCNFG will find the CFG file 
+automatically, even if you change the name of the program, as long as you 
+do not change the name of the CFG file.
+
+For most users no configuration is necessary.
+
+ABOUT ARC/ARK FILES:  The files which UNARCU processes utilize a format 
+that was introduced by the ARC shareware utility program, which executes 
+on 16-bit computers running the MS-DOS (or PC-DOS) operating system.  
+This format has achieved widespread popularity since the ARC program 
+first appeared in March 1985, and it has become the de facto standard for 
+file storage on remote access systems catering to 16-bit computer users.  
+This file format also achieved popularity on RCP/Ms (Remote CP/M) systems.  
+While ARC files have given way to ZIP files in general, many ARC files are 
+available on the web containing CP/M software.
+
+RCP/M system operators adopted the convention of naming CP/M archive 
+files with the filetype ARK.  This differentiates these from MS-DOS archive 
+files, which use the filetype ARC.  This is a naming convention only; there 
+is no difference in format, and UNARC will accept files of either type 
+interchangeably.
+
+An archive is a group of files compressed and collected together into a 
+single file in such a way that the individual files may be recovered intact.  
+In this respect, archives are similar in function to libraries (LBR files), 
+which have been commonplace on CP/M systems since 1982, when the 
+original LU library utility program was introduced by Gary P. Novosielski.  
+The two file formats, however, are not compatible.)
+
+The distinguishing characteristic of an ARC archive is that its component 
+files are automatically compressed when they are added to the archive, so 
+that the resulting file occupies a minimum amount of disk space.  Of 
+course, file compression techniques have also been commonplace in the CP/M 
+world since 1981, when the public domain SQ and USQ "squeeze and 
+unsqueeze" programs were introduced by Richard Greenlaw.
+
+The SQ/USQ programs and their numerous popular descendants utilize a 
+well-known general-purpose form of data compression (Huffman coding).  
+This technique, which is also utilized in ARC files, performs well for many 
+text files but often produces poor compression of binary files (e.g., object 
+program COM files).  The ARC program also provides an advanced data 
+compression method, which it terms "crunching."  This method (which is 
+based on the Lempel-Ziv-Welch or "LZW" algorithm) performs better than 
+squeezing in most cases, often achieving 50% or better compression of ASCII 
+text files, 15-40% compression of binary object files, and as much as 95% 
+compression of bit-mapped graphics image files.
+
+Five different methods are actually employed for storing files in an 
+archive.  The method chosen for a particular file is the one which results 
+in the best compression for that file:
+     1.  No compression ("unpacked").  The file is stored in its 
+         original form.
+     2.  Run-length encoding ("packed").  Repeated sequences of 3- 
+         255 identical bytes are compressed into a three-byte sequence.
+     3.  Huffman coding ("squeezed").  Each 8-bit byte (after run- 
+         length encoding) is encoded by a variable number of bits, with 
+         bit length (approximately) inversely proportional to the 
+         frequency of occurence of the corresponding byte.
+     4.  LZW compression ("crunched").  Variable-length strings 
+         of bytes (in theory, up to nearly 4000 bytes in length) are 
+         represented by a single (maximum) 12-bit code (after run-length 
+         encoding).
+     5.  LZW compression ("squashed").  This is a variation of 
+         crunching which uses (maximum) 13-bit codes (and no run-length 
+         encoding).
+
+Since one of the five methods involves no compression at all, the resulting 
+archive entry will never be larger than the original file.
+
+The last release of the MS-DOS ARC program (version 5.20) has eliminated 
+squeezing as a compression technique.  However, UNARC continues to 
+process squeezed files for compatibility with archives created by earlier 
+versions of ARC and by other MS-DOS archiving programs (notably PKARC).
+
+The squashed compression method was introduced by the MS-DOS programs 
+PKARC and PKXARC.  UNARC can process files which use this method, 
+although it is not universally accepted by other MS-DOS archive extraction 
+programs (including ARC).
+
+During its lifetime, the ARC program has undergone numerous revisions 
+which have employed different variations on some of the above methods, 
+particularly LZW compression.  In order to retain compatibility with 
+archives created by earlier program revisions, ARC stores a "version" 
+indicator with each file in an archive.  Based on this indicator, the latest 
+release of the ARC program can always extract files created by older 
+releases (although it will only use the latest data compression versions when 
+adding new files to an archive).
+
+The current release of UNARC supports archive file versions generated by 
+all releases of the following MS-DOS programs through (at least) the 
+indicated program versions:
+     ARC  5.20 (24 Oct 86), by System Enhancement Associates, Inc.
+     ARCA 1.22 (13 Sep 86), by Wayne Chin and Vernon Buerg
+     ARCH 5.38 (26 Jun 86), by Les Satenstein
+     PKARC 2.0 (15 Dec 86), by Phil Katz (PKWARE, Inc.)
+UNARC does not recognize, but is unaffected by, the non-standard archive 
+and file commenting feature of PKARC.
+
+Although the above discussion has emphasized the origin of archive files 
+for the MS-DOS operating system, their use did spread to many other 
+systems.  Programs compatible with MS-DOS ARC have appeared for UNIX, 
+Atari 68000, VAX/VMS, and TOPS-20 systems.  A CP/M utility for building 
+archive files is also available.
+
+For additional information about archive files and the MS-DOS ARC utility, 
+refer to the documentation file, ARC.DOC, which is available on the web.  
+For additional information about the LZW algorithm (and data compression 
+methods in general), refer to the article "A Technique for High-Performance 
+Data Compression", by Terry A.  Welch, in IEEE Computer magazine, Vol. 17, 
+No. 6, June 1984.
+

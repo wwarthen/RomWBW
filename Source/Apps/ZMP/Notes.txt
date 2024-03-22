@@ -1,0 +1,30 @@
+This ROMWBW version is an extract of https://github.com/mecparts/zmp/bin
+as at Aug 23rd, 2021.
+
+- Overlay files must reside on default drive at time program is
+  launched.  This seems to preclude the path search feature of
+  ZSDOS/ZCPR which would be nice.  Need to look into this.
+- Need some mechanism for user to select a CIO unit other than CIO 1
+  without modifying and rebuilding application.
+- Initialization messages refer to CIO 1 as CIO 0
+- System hangs after error message if there is no CIO 1 unit
+- When leaving program, terminal cursor remains hidden
+
+--WBW 1:42 PM 8/23/2021
+
+- When leaving program, terminal cursor remains hidden (fixed)
+- System hangs after error message if there is no CIO 1 unit (fixed)
+- Initialization messages refer to CIO 1 as CIO 0 (fixed)
+
+--WBW 1:58 PM 8/23/2021
+
+- Restore cursor on normal program exit.
+- Revert original HBIOS conout and default console code as there
+  is no associated facility for direct HBIOS conin.
+- Allow setting port 0 and port 1 CIO device from command line
+  ZMP 2 sets comms port to CIO 2. Can set primary and secondary
+  i.e. ZMP 21 but only primary supported on this ZMP version.
+  Untested on Ron Murrays ZMP15
+- Space getting short so messages shortened. 
+
+--PMS 8/24/2021

@@ -3,30 +3,72 @@ name: Commit Build
 on:
   push:
     branches: 
-      - master
+      - '**'
     tags-ignore:
-      - v*
+      - '**'
 
 jobs:
-  build:
+  buildLinux:
 
     runs-on: ubuntu-latest
 
     steps:
-      - uses: rlespinasse/github-slug-action@v3.x
-        
-      - uses: actions/checkout@v2
-          
+      - name: Checkout
+        uses: actions/checkout@v4.1.1
+
+      - name: Get Commit Ref
+        run: |
+          COMMIT_REF=$(git rev-parse --short $GITHUB_SHA)
+          echo "COMMIT_REF: $COMMIT_REF"
+          echo "COMMIT_REF=$COMMIT_REF" >>$GITHUB_ENV
+
       - name: Build
         run: |
           export TZ='America/Los_Angeles'
-          sudo apt-get install libncurses-dev
-          make
-          make clean
+          sudo apt-get install srecord
+          make distlog
           rm -rf .git*
-        
+
+      - name: List Output
+        run: |
+          cd Binary
+          ls -l
+          find -type f -exec md5sum '{}' \;
+
       - name: Upload Artifact
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v4.3.0
         with:
-          name: RomWBW-${{env.GITHUB_REF_SLUG}}-${{env.GITHUB_SHA_SHORT}}
+          name: RomWBW-${{env.COMMIT_REF}}-Linux
+          path: .
+
+  buildMacOS:
+    runs-on: macOS-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.1.1
+
+      - name: Get Commit Ref
+        run: |
+          COMMIT_REF=$(git rev-parse --short $GITHUB_SHA)
+          echo "COMMIT_REF: $COMMIT_REF"
+          echo "COMMIT_REF=$COMMIT_REF" >>$GITHUB_ENV
+
+      - name: Build
+        run: |
+          export TZ='America/Los_Angeles'
+          brew install srecord
+          make distlog
+          rm -rf .git*
+
+      - name: List Output
+        run: |
+          cd Binary
+          ls -l
+          find . -type f -exec md5 -r -- '{}' +;
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4.3.0
+        with:
+          name: RomWBW-${{env.COMMIT_REF}}-MacOS
           path: .

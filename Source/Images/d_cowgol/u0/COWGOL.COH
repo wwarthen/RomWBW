@@ -1,0 +1,52 @@
+var LOMEM: [uint8];
+@asm "ld hl, LOMEM";
+@asm "ld (", LOMEM, "), hl";
+
+var HIMEM: [uint8];
+@asm "ld hl, (6)";
+@asm "ld (", HIMEM, "), hl";
+
+sub Exit() is
+	@asm "rst 0";
+end sub;
+
+sub ExitWithError() is
+	@asm "rst 0";
+end sub;
+
+sub AlignUp(in: intptr): (out: intptr) is
+	out := in;
+end sub;
+
+sub get_char(): (c: uint8) is
+	@asm "ld c, 1";
+	@asm "call 5";
+	@asm "ld (", c, "), a";
+end sub;
+
+sub print_char(c: uint8) is
+	if c == 10 then
+		@asm "ld e, 13";
+		@asm "ld c, 2";
+		@asm "call 5";
+	end if;
+	@asm "ld a, (", c, ")";
+	@asm "ld e, a";
+	@asm "ld c, 2";
+	@asm "call 5";
+end sub;
+
+sub MemSet(buf: [uint8], byte: uint8, len: uint16) is
+	var bufend := buf + len;
+	loop
+		if buf == bufend then
+			return;
+		end if;
+		[buf] := byte;
+		buf := buf + 1;
+	end loop;
+end sub;
+
+include "common.coh";
+
+

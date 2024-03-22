@@ -1,5 +1,5 @@
 ;**************************************************************************
-; BYTEIO.  Character IO High-Level Routines.	(MUST be in Common Memory)
+; BYTEIO.  Character IO High-Level Routines.	(MUSt be in Common Memory)
 ;  Calling parameters apply to both High and Low-Level routines.
 ;
 ; Output Routines - Enter: C = Character to be sent
@@ -124,7 +124,8 @@ ISFALSE: XOR	A
 ;.....
 ; Print routine prints to console the Null or Zero-terminated string at (SP)
 
-PRINT:	EX	(SP),HL		; Print inline 0 or Hi-bit terminated
+PRINT:
+	EX	(SP),HL		; Print inline 0 or Hi-bit terminated
 PSTR:	LD	A,(HL)		; General purpose print 0 or Hi-bit
 	INC	HL		; Terminated string pointed to by HL
 	OR	A
@@ -143,4 +144,4 @@ PSTRX:	EX	(SP),HL		; Else swap Ptr to next instr for entry HL val
 	RET			; ..and return to caller
 
 ;========================== End of BYTEIO ================================
-
+

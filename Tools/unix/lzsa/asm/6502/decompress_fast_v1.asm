@@ -68,7 +68,7 @@ LARGE_VARLEN_LITERALS                   ; handle 16 bits literals count
    JSR GETLARGESRC                      ; grab low 8 bits in X, high 8 bits in A
    TAY                                  ; put high 8 bits in Y
    TXA
-   JMP PREPARE_COPY_LARGE_LITERALS
+   BCS PREPARE_COPY_LARGE_LITERALS      ; (*like JMP PREPARE_COPY_LITERALS_DIRECT but shorter)
 
 PREPARE_COPY_LITERALS
    TAX

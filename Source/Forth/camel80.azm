@@ -1,15 +1,17 @@
-CIODEV_CONSOLE	EQU	0D0h
-CIOIN			EQU 00h ; CHARACTER INPUT
-CIOOUT			EQU	01h	; CHARACTER OUTPUT
-CIOIST			EQU 02h ; CHARACTER INPUT STATUS
-BID_BOOT		EQU	00h
-HB_BNKCALL		EQU 0fff9h
+CIODEV_CONSOLE		EQU	0D0h
+CIOIN			EQU	00h 		; CHARACTER INPUT
+CIOOUT			EQU	01h		; CHARACTER OUTPUT
+CIOIST			EQU	02h 		; CHARACTER INPUT STATUS
+BF_SYSRESET		EQU	0F0h		; RESTART SYSTEM
+BF_SYSRES_WARM		EQU	01h		; WARM START (RESTART BOOT LOADER)
+
 
 ; THE FOLLOWING NEED TO BE SYNCED WITH STD.ASM SO ROMLDR
 ; KNOWS WHERE THIS EXECUTES AT
 
 FTH_SIZ			EQU	1700h
 FTH_LOC			EQU	0200h
+HB_LOC			EQU	0FD80h
 
 ; Listing 2.
 ; ===============================================
@@ -66,6 +68,18 @@ FTH_LOC			EQU	0200h
 ;                   keywords are being passed in a
 ;                   macro.
 ;       b1ackmai1er difficultylevelhigh@gmail.com
+;   03-Dec 20 v1.02 Add James Bowmans double 
+;                   precision words as per RC2014
+;                   version. Increase terminal 
+;                   input buffer (TIB) size.
+;       b1ackmai1er difficultylevelhigh@gmail.com  
+;   22-Jan 21 v1.02 Adjust for revised HBIOS
+;                   proxy size.
+;       b1ackmai1er difficultylevelhigh@gmail.com
+;   07-Sep 21 v1.02 Separate additions.  
+;   05-Oct 21 v1.02 Add Douglas Beattie Jr.'s
+;                   API call and port read and
+;                   write words.                
 ; ===============================================
 ; Macros to define Forth headers
 ; HEAD  label,length,name,action
@@ -131,9 +145,10 @@ nexthl  MACRO
 
 ; RELOCATED ENTRY POINT
 
+	CSEG
 	.PHASE	FTH_LOC
 
-reset:  ld hl,0FDFFh ; HBIOS address, rounded down
+reset:  ld hl,HB_LOC ; HBIOS address, rounded down
         ld l,0       ;    = end of avail.mem (EM)
         dec h        ; EM-100h
         ld sp,hl     ;      = top of param stack
@@ -148,15 +163,17 @@ reset:  ld hl,0FDFFh ; HBIOS address, rounded down
         jp COLD      ; enter top-level Forth word
 
 ; Memory map:
-;               Terminal Input Buffer, 128 bytes
+
 ;   FTH_LOC     Forth kernel = starts after ROMLDR
 ;     ? h       Forth dictionary (user RAM)
+;   EM-400h     Terminal Input Buffer, 512 bytes
+;		Below user area
 ;   EM-200h     User area, 128 bytes
 ;   EM-180h     Parameter stack, 128B, grows down
 ;   EM-100h     HOLD area, 40 bytes, grows down
 ;   EM-0D8h     PAD buffer, 88 bytes
 ;   EM-80h      Return stack, 128 B, grows down
-;   EM          End of RAM = start of HBIOS
+;   EM=HB_LOC   End of RAM = start of HBIOS
 ; See also the definitions of U0, S0, and R0
 ; in the "system variables & constants" area.
 ; A task w/o terminal input requires 200h bytes.
@@ -332,10 +349,9 @@ KEY2:   DW SAVEKEY,CFETCH,LIT,0,SAVEKEY,CSTORE
 
 ;X BYE     i*x --    return to CP/M
     head bye,3,bye,docode
-		LD A,BID_BOOT				; BOOT BANK
-		LD HL,0				 		; ADDRESS ZERO
-		CALL HB_BNKCALL				; DOES NOT RETURN
-		HALT
+		LD	B,BF_SYSRESET		; SYSTEM RESTART
+		LD	C,BF_SYSRES_WARM	; WARM START
+		JP	0FFF0h			; CALL HBIOS
 
 ; STACK OPERATIONS ==============================
 
@@ -1058,13 +1074,21 @@ snext:  next
 
 INCLUDE camel80d.azm   ; CPU Dependencies
 INCLUDE camel80h.azm   ; High Level words
+INCLUDE camel80r.azm   ; ROMWBW additions
+;INCLUDE cameltst.azm   ; Test Functions
 lastword EQU link   ; nfa of last word in dict.
 enddict EQU $       ; user's code starts here
 
 		; force padding to page boundary
 
-		ds (FTH_SIZ-(enddict-reset)-1)
-		nop
+IF ((enddict-reset) GT FTH_SIZ)
+ IF2
+	FORTH SIZE ERROR
+ ENDIF
+ELSE
+	ds (FTH_SIZ-(enddict-reset)-1)
+	nop
+ENDIF
 	.DEPHASE
 		
         END

@@ -1,0 +1,48 @@
+var argv_pointer: [uint8];
+
+sub ArgvInit() is
+	argv_pointer := 0x81 as [uint8];
+	[argv_pointer + [0x80 as [uint8]] as intptr] := 0;
+end sub;
+
+# Returns null is there's no next argument.
+sub ArgvNext(): (arg: [uint8]) is
+	# No more arguments?
+
+	if argv_pointer == (0 as [uint8]) then
+		arg := argv_pointer;
+		return;
+	end if;
+
+	# Skip leading whitespace.
+
+	var c: uint8;
+	loop
+		c := [argv_pointer];
+		if c != ' ' then
+			break;
+		end if;
+		argv_pointer := argv_pointer + 1;
+	end loop;
+
+	arg := argv_pointer;
+
+	# Skip to end of word and terminate.
+
+	loop
+		c := [argv_pointer];
+		if (c == ' ') or (c == '\n') or (c == 0) then
+			break;
+		end if;
+		argv_pointer := argv_pointer + 1;
+	end loop;
+	[argv_pointer] := 0;
+
+	if c == ' ' then
+		argv_pointer := argv_pointer + 1;
+	else
+		argv_pointer := 0 as [uint8];
+	end if;
+end sub;
+
+

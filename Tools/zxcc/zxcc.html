@@ -1,0 +1,200 @@
+<HTML><HEAD><TITLE>zxcc v0.5.7</TITLE></HEAD><BODY>
+
+<H1>zxcc v0.5.7</H1>
+
+<P><em>zxcc</em> is a wrapper for the Hi-Tech C CP/M compiler, allowing it to 
+be used as a cross-compiler under UNIX. Version 0.5.0 also works with the build
+tools necessary to assemble CP/M 3 (MAC, RMAC, LINK, GENCOM).
+
+<p>New in this version: 
+<ul>
+<li>Compiles on boxes where sync() does not return int (reported by multiple
+users).
+<li>BDOS function 10 takes a pointer to unsigned char, thus allowing input
+buffers longer than 128 bytes (Andy Parkins)
+</ul>
+
+<H2>Setting up</H2>
+
+<P>Firstly, build the compiler. It should not be necessary to rebuild bios.bin; 
+but if you have to, it assembles using the <em>z80asm</em> assembler (part of
+the <em>z80pack</em> emulation package which can be found on the Walnut Creek
+CP/M CDROM) or the 
+<a href="http://www.nenie.org/cpcip/index.html#zmac">ZMAC</a> assembler
+(downloadable from &lt;http://www.nenie.org/cpcip/index.html#zmac&gt;).
+<p>Previous versions of ZXCC could be compiled under DOS using 
+DJGPP; this may still be possible, but has not been tested since the build
+system was changed to use the GNU autotools.
+
+<P>This version of zxcc contains copies of the CPMIO and CPMREDIR libraries,
+so you won't need to obtain them separately.
+
+<P>You will need the tools you want to use; either the Hi-Tech C compiler for 
+CP/M &lt;<A HREF="http://www.hitech.com.au">http://www.hitech.com.au</A>&gt;
+
+or Digital Research's tools at
+
+&lt;<A HREF="http://www.cpm.z80.de">http://www.cpm.z80.de</A>&gt;
+
+Once you have obtained the tools, documentation and possibly the library 
+source, you need to decide where to put the files. <em>zxcc</em> uses 
+three directories:
+
+<UL>
+<LI><strong>BINDIR80</strong> (by default, /usr/local/lib/cpm/bin80) 
+   holds the compiler itself. You should copy the compiler .com files 
+   (or MAC, RMAC etc.) and bios.bin to this directory.
+<LI><strong>LIBDIR80</strong> (by default, /usr/local/lib/cpm/lib80)
+   holds the C libraries libc.lib, libf.lib, crtcpm.obj and rrtcpm.obj.
+<LI><strong>INCDIR80</strong> (by default, /usr/local/lib/cpm/include80)
+   holds the compiler .h files.
+</UL>
+
+<P>The locations of these directories are normally set by the configure
+script; you can override them by editing zxcc.h and uncommenting the lines
+that redefine them.
+
+<P>Once you have installed zxcc and the build tools, try 
+building Hello World:
+
+<BLOCKQUOTE>
+#include &lt;stdio.h&gt;<br>
+void main()<br>
+{<br>
+	printf("Hello World\n");<br>
+}<br>
+</BLOCKQUOTE>
+
+or for RMAC:
+
+<BLOCKQUOTE><TT>
+	CSEG<br>
+<br>
+	LXI	D,HELLO<br>
+	MVI	C,9<br>
+	CALL	5<br>
+	RST	0<br>
+<br>
+HELLO:	DB	'Hello World',13,10,'$'
+
+</TT></BLOCKQUOTE>
+
+<P>To compile the first example, type <blockquote>zxc hello.c</blockquote>; if 
+all goes well, you should end up with a file called hello.com. You can 
+test the resulting file by typing <blockquote>zxcc hello.com</blockquote>.
+
+<P>To assemble the second example, type
+<blockquote>
+	zxcc rmac.com hello<Br>
+	zxcc link.com hello
+</blockquote>
+and run it as above. NOTE: RMAC requires that lines be terminated with CR/LF.
+You may need to put a unix2dos command in your makefile before you invoke RMAC.
+
+<H2>Using zxcc</H2>
+
+<P>For detailed instructions, see the documentation for Hi-Tech C or
+the CP/M tools. <em>zxcc</em> behaves in the same way, but note the 
+following points:
+
+<H3>Program names</H3>
+
+<P>The names of the programs have been changed between CP/M and UNIX; for 
+example, you would type <blockquote>zxc hello.c</blockquote> instead of 
+<blockquote>c hello.c</blockquote>. The programs to use are:
+
+<DL>
+<DT>zxc<DD>The equivalent of C.COM. 
+<DT>zxas<DD>The equivalent of ZAS.COM.
+<DT>zxlink<DD>The equivalent of LINK.COM.
+<DT>zxlibr<DD>The equivalent of LIBR.COM.
+</DL>
+
+<P>All these programs work by converting their arguments to a form suitable
+for <em>zxcc</em>, and then invoking <em>zxcc</em>. 
+
+<P>There are no front-end programs for the CP/M build tools; you will have to
+enter arguments to these in the zxcc format given below.
+
+<H3>Filenames</H3>
+
+<P>Where the documentation allows you to enter a CP/M filename, you should
+instead enter a UNIX one. The filename itself (as opposed to any directories in
+its path) must obey CP/M 8.3 naming conventions and be all lowercase.
+<P>Where the documentation requires a CP/M driveletter / user number 
+  <blockquote>-I2:C:</blockquote> you should enter a path complete with 
+  trailing slash: <blockquote>-I/usr/src/linux-80/include/</blockquote>
+
+<h2>Technical</h2>
+
+<P><em>zxcc</em> emulates a subset of CP/M 3; hopefully enough to run the
+Hi-Tech C compiler. It can be used as a limited general-purpose CP/M 3 
+emulator provided the emulated program only uses a restricted subset of 
+system calls.
+<P><em>zxcc</em> behaves like the emulator <em>com</em>, allowing CP/M 
+programs to be used transparently from a UNIX prompt. However <em>com</em>:
+<UL>
+<LI>Emulates all of CP/M 2, rather than a subset of CP/M 3;
+<LI>Is designed for general use, not tailored to Hi-Tech C;
+<LI>Is written partly in assembly language and will only run on 68000-based
+computers;
+<LI>Cannot map UNIX directories to CP/M drives;
+<LI>Contains some bugs connected with command parsing and file I/O.
+</UL>
+
+<P>Syntax for zxcc is:
+
+<BLOCKQUOTE>
+	zxcc <i>comfile.com</i> arg1 arg2 ...
+</BLOCKQUOTE>
+
+<P>The comfile is the program to run; <em>zxcc</em> searches the current 
+directory and <strong>BINDIR80</strong> for it. 
+<P>The arguments are parsed in this way:
+
+<UL>
+<LI>Any argument starting with a - sign is passed to the CP/M program as-is,
+  minus the leading - sign.
+<LI>Any argument starting with a + sign is parsed as a filename (see below)
+  and then concatenated to the previous argument.
+<LI>Any argument starting "+-" is concatenated without being parsed. 
+<LI>All other arguments are parsed as filenames. The UNIX pathname is 
+  converted to a CP/M driveletter.
+</UL>
+<P>For example: 
+<BLOCKQUOTE>
+	zxcc foo.com --Q -A /dev/null --I +/dev/zero +-, +/foo/bar
+</BLOCKQUOTE>
+would pass these arguments to foo.com:
+<BLOCKQUOTE>
+	-Q A d:null -Id:zero,e:bar
+</BLOCKQUOTE>
+
+<P>The other programs are merely wrappers that convert their command lines
+into the form required by <em>zxcc</em>.
+
+<h2>Errors</h2>
+
+<P>Any errors raised by the <em>zxcc</em> runtime system will be prefixed 
+with <tt>zxcc:</tt>. Some errors you may encounter are:
+
+<DL>
+<DT>Unsupported BDOS call
+<DD>Part of CP/M 3 that the program uses has not been emulated. Add the
+required functionality to zxbdos.c and recompile. 
+<DT>Z80 encountered invalid trap
+<DD>The CP/M program being run attempted to call the <em>zxcc</em> runtime 
+system with an unknown call number. This will happen if the program was 
+written for my emulator "<em>Joyce</em>".
+</DL>
+<H2>Acknowledgements</H2>
+
+<UL>
+<LI>Hi-Tech C was written by Hi-Tech Software.
+<LI>The Z80 emulation engine was written by Ian Collier.
+<LI>Thanks to Jacob Nevins, Andy Parkins and others for bug fix suggestions.
+</UL>
+<hr>
+<address>John Elliott, 28 March 2003</address>
+</body>
+</html>

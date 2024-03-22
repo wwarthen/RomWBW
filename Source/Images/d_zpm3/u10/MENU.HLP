@@ -6,6 +6,7 @@
      V - VLU (Visual Library Utility)
      F - ZFiler (Point and Shoot Shell)
      Z - ZPatch (File/Disk/Memory Record Patcher)
+     S - SCopy (Screen Oriented File Copy Utility)
 
 ZHELP can also be used to access help files directly by
 entering ZHELP followed by the name of the help file.
@@ -21,3 +22,4 @@ command HELP.
 :V:VLU.HLP
 :F:ZFILER.HLP
 :Z:ZP.HLP
+:S:SCOPY.HLP

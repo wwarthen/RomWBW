@@ -1,35 +1,18 @@
 ;:::::::::::::::::::::::::::::::::::::::***************************
 ;	Time-handling Routines		**   Machine-Dependant   **
-;     D-X Designs Pty Ltd, P112		***************************
+;   Retro-Brew Hardware with HBIOS	***************************
 ;
-; This module incorporates provisions for an interrupt-driven clock, or
-; the Dallas DS-1202 Real Time Clock for obtaining Time and Date Info.
+; This module incorporates provisions for an HBIOS clock for 
+; obtaining  Time and Date Info. 
 ;
+; 1.1 - 24 Mar 14 - Initial N8VEM test release		      WW-LN
 ; 1.0 - 18 Jul 96 - Initial Release.				HFB
-;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-; This code module should handle all Time-related segments, to include
-; Interrupt handlers for Real Time update, motor timeouts, user down-
-; counter and any necessary time format conversion routines.
-
-;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-;  TIMER
-;	This routine keeps the Real Time Clock, Diskette Time Out
-;	counter, and General-Purpose down-counters.  An interrupt is
-;	generated every 50 mS by the Z-182 Programmable Interrupt Timer
-;	and used to update parameters.  Every other interrupt (100 mS
-;	intervals) is used to update the 100 mS counters and Time string
-;	if using Interrupt-driven Time and Date.
-; Enter: No parameters needed (Interrupt)
-; Exit : None
-; Uses : None.  All registers preserved.  Decrements MTM, User and BIOS
-;		general-purpose counter bytes every 100 mS.
-;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+; This code module should handle all Time-related segments
+; including any necessary time format conversion routines.
 
 	CSEG
-
-TIMER:
-	RET	; NOT IMPLEMENTED FOR HBIOS
 
 ;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ; TIME - Set or Return the time string as defined for ZSDOS.  If Reading,
@@ -55,46 +38,15 @@ TIMER:
 
 	  IF  CLOCK
 	  
-	    IF SIMHCLK
-SIMHPORT	EQU	0FEH
-READCLOCK	EQU	7
-WRITECLOCK	EQU	8
-PARBLOCKSIZE	EQU	6
-
-TIME:
-	EX	DE,HL	; GET DE TO HL
-	LD	A,C
-	OR	A
-	JR	NZ,WRCLK
-;
-GETTIM:	LD	A,READCLOCK
-	OUT     (SIMHPORT),A
-	LD      BC,256*(PARBLOCKSIZE-1)+SIMHPORT	; B := 5, C := 0FEH
-	INIR
-	LD      E,(HL)	; Save original seconds in E
-	INI		; READ SECONDS
-	DEC     HL
-	LD      A,1	; Set OK status return
-	LD	BC,DCNTR	;  Get Address of User Down-Counter
-	RET
-;
-WRCLK:	LD	A,WRITECLOCK
-	OUT     (SIMHPORT),A
-	LD      A,L
-	OUT     (SIMHPORT),A
-	LD      A,H
-	OUT     (SIMHPORT),A
-	LD      A,1
-	LD	BC,DCNTR	;  Get Address of User Down-Counter
-	RET
-	    ENDIF	; SIMHCLK
-	    
-	    IF HBCLK
-
 TIME:
 	LD	A,C
 	OR	A
 	JR	NZ,WRCLK
+;
+;
+;- - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;	R e a d  T h e  C l o c k
+;- - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ;
 RDCLK:
 	PUSH	DE		; Save the final destination
@@ -118,6 +70,11 @@ RDCLK:
 	
 	RET
 ;
+	    if  CLKSET
+;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;		S e t    T h e    C l o c k
+;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
 WRCLK:
 	EX	DE,HL		; Make incoming DE the copy source in HL
 	LD	DE,TIMBUF	; We are copying to time buffer
@@ -131,26 +88,21 @@ WRCLK:
 	LD	A,1		; Signal success
 
 	RET
-
-	    ENDIF	; HBCLK
-
+	    else
 	XOR	A		;  Set Error Return
 	RET			;   and exit
-
+	    endif	; clkset
 	  ENDIF		; Clock
 
 
 ;.....
-; Save some space in the Common RAM Area for a local stack
+; Buffer space in the Common RAM Area for Time & Date
 
 	DSEG
-
-DCNTR:	DEFS	1		; User 100 mS General-Purpose Down-Counter
-
-	    IF HBCLK
-TIMBUF	DEFS	6
-	    ENDIF
+DCNTR:	DEFS	1
+TIMBUF:	DEFS	6
 
 	CSEG			; End up by restoring CSEG
 
-;=========================== END of TIM-DX ==================================
+;=========================== END of TIM-WW ==================================
+

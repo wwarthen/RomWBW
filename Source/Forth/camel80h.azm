@@ -39,7 +39,7 @@
 
 ;Z tibsize  -- n         size of TIB
     head TIBSIZE,7,TIBSIZE,docon
-        dw 124          ; 2 chars safety zone
+        dw 512-2          ; 2 chars safety zone
 
 ;X tib     -- a-addr     Terminal Input Buffer
 ;  HEX 82 CONSTANT TIB   CP/M systems: 126 bytes
@@ -47,7 +47,7 @@
 ;    head TIB,3,TIB,docon
 ;       dw 82h
     head TIB,3,TIB,douser
-        dw -80h
+        dw -512
 		
 ;Z u0      -- a-addr       current user area adrs
 ;  0 USER U0
@@ -1020,7 +1020,8 @@ DOTS2:  DW EXIT
         DW UINIT,U0,NINIT,CMOVE
 ;        DW LIT,80h,COUNT,INTERPRET
         DW XSQUOTE
-        DB 55,'Z80 CamelForth v1.02  25 Jan 1995, ROMWBW 19 Oct 2019'
+        DB 59,0dh,0ah,0dh,0ah
+	DB 'Z80 CamelForth v1.02  25 Jan 1995, RomWBW 07 Sep 2021'
         DB 0dh,0ah
         DW TYPE,ABORT       ; ABORT never returns
 ; DON'T FORGET TO UPDATE THE BYTE COUNT IF YOU CHANGE THE SIZE OF THE BOOT MSG

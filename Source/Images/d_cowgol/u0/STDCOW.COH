@@ -1,0 +1,91 @@
+#
+# Copyright (c) 2020 Brian Callahan <bcallah@openbsd.org>
+#
+# Permission to use, copy, modify, and distribute this software for any
+# purpose with or without fee is hereby granted, provided that the above
+# copyright notice and this permission notice appear in all copies.
+#
+# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+# WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+# ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+# ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+# OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+#
+
+# Cowgol standard library
+
+# Uncomment these if you'd like to abstract the includes away.
+include "cowgol.coh";
+include "file.coh";
+include "strings.coh";
+include "malloc.coh";
+
+# Print a properly formatted 8-bit hex number to a file.
+sub FCBPutHex8(fcb: [FCB], number: uint8) is
+	var i: uint8 := 0;
+	var nibble: uint8;
+
+	while i < 2 loop
+		nibble := number >> 4;
+
+		if nibble < 10 then
+			nibble := nibble + '0';
+		else
+			nibble := nibble + ('A' - 10);
+		end if;
+
+		FCBPutChar(fcb, nibble);
+
+		number := number << 4;
+
+		i := i + 1;
+	end loop;
+end sub;
+
+# Print a properly formatted 16-bit hex number to a file.
+sub FCBPutHex16(fcb: [FCB], number: uint16) is
+	FCBPutHex8(fcb, ((number >> 8) as uint8));
+	FCBPutHex8(fcb, (number as uint8));
+end sub;
+
+# Print a properly formatted 32-bit hex number to a file.
+sub FCBPutHex32(fcb: [FCB], number: uint32) is
+	FCBPutHex16(fcb, ((number >> 16) as uint16));
+	FCBPutHex16(fcb, (number as uint16));
+end sub;
+
+# Print a signed 32-bit integer to the console.
+sub print_d32(value: int32) is
+	var buffer: uint8[12];
+	var pe := IToA(value, 10, &buffer[0]);
+	print(&buffer[0]);
+end sub;
+
+# Read in a string.
+sub GetString(): (s: [uint8]) is
+	var temp: uint8[256];
+	var c: uint8;
+	var i: uint8 := 0;
+
+	while i < 255 loop
+		c := get_char();
+		if c == 10 or c == 13 then
+			break;
+		end if;
+
+		temp[i] := c;
+
+		i := i + 1;
+	end loop;
+	temp[i] := 0;
+
+	if i == 0 then
+		s := (0 as [uint8]);
+		return;
+	end if;
+
+	s := Alloc(((i + 1) as intptr));
+	CopyString(&temp[0], s);
+end sub;

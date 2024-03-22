@@ -1,0 +1,293 @@
+#1
+You're at end of road again.
+#2
+You're at hill in road.
+#3
+You're inside building.
+#4
+You're in valley.
+#5
+You're in forest.
+#6
+You're in forest.
+#7
+You're at slit in streambed.
+#8
+You're outside grate.
+#9
+You're below the grate.
+#10
+You're in cobble crawl.
+#11
+You're in debris room.
+#12
+You are in an awkward sloping east/west canyon.
+#13
+You're in bird chamber.
+#14
+You're at top of small pit.
+#15
+You're in hall of mists.
+#16
+The crack is far too small for you to follow.
+#17
+You're on east bank of fissure.
+#18
+You're in nugget of gold room.
+#19
+You're in hall of mt. king.
+#20
+You are the the bottom of the pit with a broken neck.
+#21
+You didn't make it.
+#22
+The dome is unclimbable.
+#23
+You're at west end of twopit room.
+#24
+You're in east pit.
+#25
+You're in west pit.
+#26
+You clamber up the plant and scurry through the hole at the
+top.
+#27
+You are on the west side of the fissure in the hall of mists.
+#28
+You are in a low N/S passage at a hole in the floor.  The
+hole goes down to an E/W passage.
+#29
+You are in the south side chamber.
+#30
+You are in the west side chamber of the hall of the
+mountain king.  A passage continues west and up here.
+#31
+>$<
+#32
+You can't get by the snake.
+#33
+You're at "Y2".
+#34
+You are in a jumble of rock, with cracks everywhere.
+#35
+You're at window on pit.
+#36
+You're in dirty passage.
+#37
+You are on the brink of a small clean climbable pit.  A
+crawl leads west.
+#38
+You are in the bottom of a small pit with a little stream,
+which enters and exits through tiny slits.
+#39
+You're in dusty rock room.
+#40
+You have crawled through a very low wide passage parallel
+to and north of the hall of mists.
+#41
+You're at west end of hall of mists.
+#42
+You are in a maze of twisty little passages, all alike.
+#43
+You are in a maze of twisty little passages, all alike.
+#44
+You are in a maze of twisty little passages, all alike.
+#45
+You are in a maze of twisty little passages, all alike.
+#46
+Dead end.
+#47
+Dead end.
+#48
+Dead end.
+#49
+You are in a maze of twisty little passages, all alike.
+#50
+You are in a maze of twisty little passages, all alike.
+#51
+You are in a maze of twisty little passages, all alike.
+#52
+You are in a maze of twisty little passages, all alike.
+#53
+You are in a maze of twisty little passages, all alike.
+#54
+Dead end.
+#55
+You are in a maze of twisty little passages, all alike.
+#56
+Dead end.
+#57
+You're at brink of pit.
+#58
+Dead end.
+#59
+You have crawled through a very low wide passage paralled
+to and north of the hall of mists.
+#60
+You're at east end of long hall.
+#61
+You're at west end of long hall.
+#62
+You are at a crossover of a high N/S passage and a low
+E/W one.
+#63
+Dead end.
+#64
+You're at complex junction.
+#65
+You are in bedquilt, a long east/west passage with holes
+everywhere.  To explore at random select north, south, up
+or down.
+#66
+You're in swiss cheese room.
+#67
+You're at east end of twopit room.
+#68
+You're in slab room.
+#69
+You are in a secret N/S canyon above a large room.
+#70
+You are in a secret N/S canyon above a sizable passage.
+#71
+You're at junction of three secret canyons.
+#72
+You are in a large low room.  Crawls lead north, se, and sw.
+#73
+Dead end crawl.
+#74
+You're at secret E/W canyon above tight canyon.
+#75
+You are at a wide place in a very tight N/S canyon.
+#76
+The canyon here becomes too tight to go further south.
+#77
+You are in a tall E/W canyon.  A low tight crawl goes 3
+feet north and seems to open up.
+#78
+The canyon runs into a mass of boulders -- dead end.
+#79
+The stream flows out through a pair of 1 foot diameter
+sewer pipes.  It would be advisable to use the exit.
+#80
+You are in a maze of twisty little passages, all alike.
+#81
+Dead end.
+#82
+Dead end.
+#83
+You are in a maze of twisty little passages, all alike.
+#84
+You are in a maze of twisty little passages, all alike.
+#85
+Dead end.
+#86
+Dead end.
+#87
+You are in a maze of twisty little passages, all alike.
+#88
+You're in narrow corridor.
+#89
+There is nothing here to climb.  Use "up" or "out" to leave
+the pit.
+#90
+You have climbed up the plant and out of the pit.
+#91
+You're at steep incline above large room.
+#92
+You're in giant room.
+#93
+The passage here is blocked by a recent cave-in.
+#94
+You are at one end of an immense north/south passage.
+#95
+You're in cavern with waterfall.
+#96
+You're in soft room.
+#97
+You're in oriental room.
+#98
+You're in misty cavern.
+#99
+You're in alcove.
+#100
+You're in plover room.
+#101
+You're in dark-room.
+#102
+You're in arched hall.
+#103
+You're in shell room.
+#104
+You are in a long sloping corridor with ragged sharp walls.
+#105
+You are in a cul-de-sac about eight feet across.
+#106
+You're in anteroom.
+#107
+You are in a maze of twisty little passages, all different.
+#108
+You're at Witt's end.
+#109
+You're in mirror canyon.
+#110
+You're at window on pit.
+#111
+You're at top of stalactite.
+#112
+You are in a little maze of twisting passages, all different.
+#113
+You're at reservoir.
+#114
+Dead end.
+#115
+You're at ne end of repository.
+#116
+You're at sw end of repository.
+#117
+You're on sw side of chasm.
+#118
+You're in sloping corridor.
+#119
+You are in a secret canyon which exits to the north and east.
+#120
+You are in a secret canyon which exits to the north and east.
+#121
+You are in a secret canyon which exits to the north and east.
+#122
+You're on ne side of chasm.
+#123
+You're in corridor.
+#124
+You're at fork in path.
+#125
+You're at junction with warm walls.
+#126
+You're at breath-taking view.
+#127
+You're in chamber of boulders.
+#128
+You're in limestone passage.
+#129
+You're in front of barren room.
+#130
+You're in barren room.
+#131
+You are in a maze of twisting little passages, all different.
+#132
+You are in a little maze of twisty passages, all different.
+#133
+You are in a twisting maze of little passages, all different.
+#134
+You are in a twisting little maze of passages, all different.
+#135
+You are in a twisty little maze of passages, all different.
+#136
+You are in a twisty maze of little passages, all different.
+#137
+You are in a little twisty maze of passages, all different.
+#138
+You are in a maze of little twisting passages, all different.
+#139
+You are in a maze of little twisty passages, all different.
+#140
+Dead end.

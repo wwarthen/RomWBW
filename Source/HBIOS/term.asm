@@ -16,6 +16,22 @@
 ;
 ;
 ;======================================================================
+; TERMINAL DRIVER - PRE-CONSOLE INITIALIZATION
+;======================================================================
+;
+; GIVE EMULATION MODULES A CHANCE TO RESET THEMSELVES AT STARTUP
+;
+TERM_PREINIT:
+#IF (TERMENABLE)
+	XOR	A			; ZERO TO ACCUM
+	LD	(TERM_DEVCNT),A		; INITIALIZE DEVCNT
+	CALL	TTY_PREINIT		; DO TTY PREINIT
+	CALL	ANSI_PREINIT		; DO ANSI PREINIT
+#ENDIF
+	XOR	A			; SIGNAL SUCCESS
+	RET				; DONE
+;
+;======================================================================
 ; TERMINAL DRIVER - ATTACH
 ;======================================================================
 ;
@@ -31,6 +47,8 @@
 ;   DE: VDA DRIVER'S DISPATCH ADDRESS
 ;   HL: VDA DRIVER'S INSTANCE DATA
 ;
+#IF (TERMENABLE)
+;
 TERM_ATTACH:
 ;
 	LD	A,(TERM_DEVCNT)		; GET NEXT DEVICE NUMBER TO USE
@@ -40,12 +58,12 @@ TERM_ATTACH:
 	; SETUP EMULATOR MODULE FUNC TBL ADDRESS BASED ON DESIRED EMULATION
 	; EMULATOR PASSES BACK IT'S FUNC TBL ADDRESS IN DE
 	OR	$FF			; PRESET FAILURE
-#IF (VDAEMU == EMUTYP_TTY)
+  #IF (VDAEMU == EMUTYP_TTY)
 	CALL	TTY_INIT		; INIT TTY, DE := TTY_FNTBL
-#ENDIF
-#IF (VDAEMU == EMUTYP_ANSI)
+  #ENDIF
+  #IF (VDAEMU == EMUTYP_ANSI)
 	CALL	ANSI_INIT		; INIT ANSI, DE := ANSI_FNTBL
-#ENDIF
+  #ENDIF
 	POP	HL			; RECOVER VDA INSTANCE DATA  PTR
 	RET	NZ			; BAIL OUT ON ERROR
 ;
@@ -74,5 +92,7 @@ TERM_DEVCNT	.DB	0		; TERMINAL DEVICE COUNT
 ; EMULATION MODULES
 ;======================================================================
 ;
-#INCLUDE "tty.asm"
-#INCLUDE "ansi.asm"
+  #INCLUDE "tty.asm"
+  #INCLUDE "ansi.asm"
+;
+#ENDIF

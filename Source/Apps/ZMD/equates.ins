@@ -1,0 +1,88 @@
+;
+; Version identification
+;
+VERS	EQU	1	; Release
+MODLEV	EQU	5	; Major modification level
+REV	EQU	0	; Minor revision number
+
+VMONTH	EQU	09	; Version month
+VDAY	EQU	29	; Version day
+VYEAR	EQU	88	; Version year
+;
+;==========================================================================
+;
+NO	EQU	0
+YES	EQU	0FFH
+;
+;--------------------------------------------------------------------------
+; Define ASCII characters used
+;--------------------------------------------------------------------------
+
+SOH	EQU	1	; ^A - start of header
+STX	EQU	2	; ^B - start of 1k header
+CTRLC	EQU	3	; ^C - abort/break character
+EOT	EQU	4	; ^D - end of transmission
+ACK	EQU	6	; ^F - acknowledge
+BELL	EQU	7	; ^G - bell
+BS	EQU	8	; ^H - backspace
+TAB	EQU	9	; ^I - horizontal tab
+LF	EQU	10	; ^J - line feed
+CTRLK	EQU	11	; ^K - abort character
+CR	EQU	13	; ^M - carriage return
+PAUSE	EQU	19	; ^S - pause request
+NAK	EQU	21	; ^U - negative acknowledge
+CANCEL	EQU	24	; ^X - cancel
+EOF	EQU	26	; ^Z - end of file
+CRC	EQU	67	;  C - CRC request character
+KSND	EQU	75	;  K - 1k block request character
+DEL	EQU	127	;  Delete/Rubout
+;
+;
+; Define standard CP/M BDOS equates
+;
+DIRCON	EQU	6	; Direct console output
+PRINT	EQU	9	; Print string function
+GETVER	EQU	12	; Get CP/M version
+SELDSK	EQU	14	; Select drive
+OPEN	EQU	15	; Open file
+CLOSE	EQU	16	; Close file
+SRCHF	EQU	17	; Search for first occurence
+SRCHN	EQU	18	; Search for next occurence
+DELETE	EQU	19	; Delete file
+READ	EQU	20	; Read record
+WRITE	EQU	21	; Write record
+MAKE	EQU	22	; Make new file
+RENAME	EQU	23	; Rename a file
+CURDRV	EQU	25	; Get current drive
+SETDMA	EQU	26	; Set DMA
+SETFILE	EQU	30	; Set file attributes
+SETUSR	EQU	32	; Set user area to receive file
+RRDM	EQU	33	; Read random
+WRDM	EQU	34	; Write random
+FILSIZ	EQU	35	; Compute file size
+SETRRD	EQU	36	; Set random record
+
+BDOS	EQU	0005H	; Address for BDOS jump vectors
+TBUF	EQU	0080H	; Default DMA address
+FCB	EQU	005CH	; System FCB
+FCB1	EQU	006CH	; Secondary FCB area
+FCBEXT	EQU	FCB+12	; File extent
+FCBRNO	EQU	FCB+32	; Record number
+RANDOM	EQU	FCB+33	; Random record field
+RLEN	EQU	128	; Record length
+ITEMSZ	EQU	16	; Number of data bytes in each filename entry
+;
+;
+TAGFIL	EQU	7
+DWNTAG	EQU	6
+NOSYS	EQU	5
+NOLBS	EQU	4
+NOCOMS	EQU	3
+NOCOMR	EQU	2
+RESERV1	EQU	1
+ZCPR	EQU	0
+;
+;
+;
+;--------------------------------------------------------------------------
+
