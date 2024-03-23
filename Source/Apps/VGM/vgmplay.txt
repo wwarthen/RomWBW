@@ -48,7 +48,7 @@ SHIRAKAW.VGM - SN76489+YM2612      * Jantei Monogatari: St. Shirakawa University
 ANNA.VGM     - SN76489+YM2612      - Jantei Monogatari: Anna                                      : 32K
 FIELDMAP.VGM - SN76489+YM2612      - Taikou Risshiden: Field Map: Summer                          : 8K
 ITSGAMOV.VGM - SN76489+YM2612      - Puyo Puyo Tsuu: It's Game Over!                              : 16K
-STARTDEM.VGN - 2xSN76489+AY-3-8910 * Exed Exes / Savage Bees: Start Demo ~Main BGM                : 32K
+STARTDEM.VGM - 2xSN76489+AY-3-8910 * Exed Exes / Savage Bees: Start Demo ~Main BGM                : 32K
 INCHINA.VGM  - YM2612              * Double Dragon 3: The Rosetta Stone: In China                 : 44K
 SURE.VGM     - YM2151              - Martial Age: Sure??                                          : 36K
 SABERDAN.VGM - YM2151              - Road Runner: Sabre Dance (Attract Mode - Stage 4)            : 28K
