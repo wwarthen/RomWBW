@@ -31,6 +31,8 @@ TERM_PREINIT:
 	XOR	A			; SIGNAL SUCCESS
 	RET				; DONE
 ;
+#IF (TERMENABLE)
+;
 ;======================================================================
 ; TERMINAL DRIVER - ATTACH
 ;======================================================================
@@ -46,8 +48,6 @@ TERM_PREINIT:
 ;   C: VIDEO UNIT NUMBER OF CALLING VDA DRIVER
 ;   DE: VDA DRIVER'S DISPATCH ADDRESS
 ;   HL: VDA DRIVER'S INSTANCE DATA
-;
-#IF (TERMENABLE)
 ;
 TERM_ATTACH:
 ;
@@ -83,6 +83,34 @@ TERM_ATTACH:
 	RET				; RETURN
 ;
 ;======================================================================
+; TERMINAL DRIVER - RESET
+;======================================================================
+;
+; RESET THE FULL EMULATION STACK INCLUDING THE UNDERLYING VDA.
+; THIS IS USED TO RECOVER FROM APPLICATIONS THAT REPROGRAM THE
+; VIDEO CHIP.
+;
+TERM_RESET:
+	; ABORT IF NOTHING ATTACHED
+	LD	A,(TERM_DEVCNT)
+	OR	A
+	JR	NZ,TERM_RESET1
+	OR	$FF
+	RET
+;
+TERM_RESET1:
+	; CALL EMULATOR INITDEV FUNCTION
+  #IF (VDAEMU == EMUTYP_TTY)
+	CALL	TTY_INITDEV
+  #ENDIF
+  #IF (VDAEMU == EMUTYP_ANSI)
+	CALL	ANSI_INITDEV
+  #ENDIF
+;
+	XOR	A
+	RET
+;
+;======================================================================
 ; TERMINAL DRIVER PRIVATE DATA
 ;======================================================================
 ;
@@ -94,5 +122,11 @@ TERM_DEVCNT	.DB	0		; TERMINAL DEVICE COUNT
 ;
   #INCLUDE "tty.asm"
   #INCLUDE "ansi.asm"
+;
+#ELSE
+;
+TERM_RESET:
+	XOR	A
+	RET
 ;
 #ENDIF
