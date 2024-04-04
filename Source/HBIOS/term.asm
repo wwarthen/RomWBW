@@ -31,6 +31,8 @@ TERM_PREINIT:
 	XOR	A			; SIGNAL SUCCESS
 	RET				; DONE
 ;
+#IF (TERMENABLE)
+;
 ;======================================================================
 ; TERMINAL DRIVER - ATTACH
 ;======================================================================
@@ -47,13 +49,14 @@ TERM_PREINIT:
 ;   DE: VDA DRIVER'S DISPATCH ADDRESS
 ;   HL: VDA DRIVER'S INSTANCE DATA
 ;
-#IF (TERMENABLE)
-;
 TERM_ATTACH:
 ;
 	LD	A,(TERM_DEVCNT)		; GET NEXT DEVICE NUMBER TO USE
 	LD	B,A			; PUT IT IN B
 	PUSH	HL			; SAVE VDA INSTANCE DATA PTR
+;
+	LD	A,C			; VIDEO UNIT TO A
+	LD	(TERM_VDADEV),A		; SAVE IT
 ;
 	; SETUP EMULATOR MODULE FUNC TBL ADDRESS BASED ON DESIRED EMULATION
 	; EMULATOR PASSES BACK IT'S FUNC TBL ADDRESS IN DE
@@ -83,10 +86,34 @@ TERM_ATTACH:
 	RET				; RETURN
 ;
 ;======================================================================
+; TERMINAL DRIVER - RESET
+;======================================================================
+;
+; RESET THE FULL EMULATION STACK INCLUDING THE UNDERLYING VDA.
+; THIS IS USED TO RECOVER FROM APPLICATIONS THAT REPROGRAM THE
+; VIDEO CHIP.
+;
+TERM_RESET:
+	; ABORT IF NOTHING ATTACHED
+	LD	A,(TERM_DEVCNT)
+	OR	A
+	JR	NZ,TERM_RESET1
+	OR	$FF
+	RET
+;
+TERM_RESET1:
+	; RESET THE ATTACHED VDA DEVICE
+	LD	B,BF_VDARES		; FUNC: RESET
+	LD	A,(TERM_VDADEV)		; GET VDA UNIT NUM
+	LD	C,A			; PUT IN C
+	JP	ANSI_VDADISP		; CALL THE VDA DRIVER
+;
+;======================================================================
 ; TERMINAL DRIVER PRIVATE DATA
 ;======================================================================
 ;
 TERM_DEVCNT	.DB	0		; TERMINAL DEVICE COUNT
+TERM_VDADEV	.DB	0		; ATTACHED VDA UNIT
 ;
 ;======================================================================
 ; EMULATION MODULES
@@ -94,5 +121,11 @@ TERM_DEVCNT	.DB	0		; TERMINAL DEVICE COUNT
 ;
   #INCLUDE "tty.asm"
   #INCLUDE "ansi.asm"
+;
+#ELSE
+;
+TERM_RESET:
+	XOR	A
+	RET
 ;
 #ENDIF

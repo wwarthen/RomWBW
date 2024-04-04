@@ -5680,6 +5680,16 @@ S- MD: TYPE=RAM
 
 ##### Notes:
 
+- Z180 SBC SW2 (IOBYTE) Dip Switches:
+
+| Bit | Setting | Function                            |
+|-----|---------|-------------------------------------|
+| 0   | Off     | Use Z180 ASCI Channel A for console |
+|     | On      | Use Propeller Console               |
+|     |         |                                     |
+| 1   | Off     | Boot to RomWBW Boot Loader          |
+|     | On      | Boot to S100 Monitor                |
+
 `\clearpage`{=latex}
 
 ### Duodyne Z80 System

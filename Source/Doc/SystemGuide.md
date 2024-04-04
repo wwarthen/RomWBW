@@ -1327,7 +1327,7 @@ specified (set to 0 for default/not specified). Video Mode (E) values
 are specific to each VDA.  The returned Status (A) is a standard HBIOS 
 result code.
 
-If the hardware and driver support it, you can specify a Font Bitmap 
+If the hardware and driver supports it, you can specify a Font Bitmap 
 (HL) buffer address containing the character bitmap data to be loaded 
 into the video processor.  The buffer **must** be located entirely in the 
 top 32K of the CPU memory space. HL must be set to zero if no character 
@@ -1372,10 +1372,10 @@ data, then Font Bitmap (HL) will be set to zero on return.
 | B: 0x42                                | A: Status                              |
 | C: Video Unit                          |                                        |
 
-Performs a soft reset of the specified Video Unit (C). Will clear the 
-screen, home the cursor, and restore active attribute/color to defaults.
-Keyboard will be flushed.  The current video mode will not be changed. 
-The returned Status (A) is a standard HBIOS result code.
+Performs a non-destructive reset of the specified Video Unit (C).  
+Should re-initialize the video hardware without destroying the screen 
+contents or cursor position.  The current video mode will not be 
+changed. The returned Status (A) is a standard HBIOS result code.
 
 ### Function 0x43 -- Video Device (VDADEV)
 
