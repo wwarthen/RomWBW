@@ -10,7 +10,7 @@ programming languages.
 
 `\clearpage`{=latex}
 
-# ROMWBW Monitor
+# RomWBW Monitor
 
 The Monitor program is a low level utility that can be used 
 for testing and programming. It allows programs to be entered,
@@ -339,8 +339,8 @@ A comprehensive instruction manual is available in the Doc\\Contrib directory.
 
 ## ROMWBW unsupported features
 
--  Cassette loading
--  Cassette saving
+- This ROM-hosted implementation does not support cassette or disk
+  access for loading and saving programs.
 
 # TastyBASIC
 
@@ -350,10 +350,12 @@ original source can be found here [https://github.com/dimitrit/tastybasic](https
 
 ## Features / Limitations
 
- Integer arithmetic, numbers -32767 to 32767
- Singles letter variables A-Z
- 1-dimensional array support
- Strings are not supported  
+- This ROM-hosted implementation does not support disk access for
+  loading and saving programs.
+- Integer arithmetic, numbers -32767 to 32767
+- Singles letter variables A-Z
+- 1-dimensional array support
+- Strings are not supported
 
 ## Direct Commands
 
@@ -494,7 +496,8 @@ Due to different platform processor speeds,  serials speeds and flow control cap
 
 See the ROMWBW Applications guide for additional information on performing upgrades.
 
- ## Console Options
+## Console Options
+
 Option ( C ) - Set Console Device
 
 Option ( S ) - Set Serial Device
@@ -576,7 +579,7 @@ Can be used to verify if a ROM image has been transferred and flashed correctly.
 
 In Windows, right clicking on a file should also give you a context menu option CRC SHA which will allow you to select a CRC32 calculation to be done on the selected file.
 
-## Teraterm macro configuration 
+## Tera Term macro configuration 
 
 Macros are a useful tool for automatic common tasks. There are a number of instances where using macros to facilitate the update process could be worthwhile if you are:
 
@@ -595,20 +598,21 @@ crc32file crc '\\desktop\users\phillip\documents\github\romwbw\binary\sbc_std_cu
 sprintf '0x%08x' crc
 messagebox inputstr 'crc32'
 ```
+
 ## Serial speed guidelines
 
 As identified in the introduction, there are limitations on serial speed depending on processor speed and flow control settings. Listed below are some of the results identified during testing.
 
 Platform / Configuration       | Processor Speed | Maximum Serial Speed
 -------------------------------|-----------------|---------------------
-Sbc-v2  uart no flow control   | 2mhz            | 9600
-sbc-v2  uart no flow control   | 4mhz            | 19200
-sbc-v2  uart no flow control   | 5mhz            | 19200
-sbc-v2  uart no flow control   | 8mhz            | 38400
-sbc-v2  uart no flow control   | 10mhz           | 38400
-sbc-v2  usb-fifo 2mhz+         |                 | n/a
-sbc-mk4 asci no flow control   | 18.432mhz       | 9600
-sbc-mk4 asci with flow control | 18.432mhz       | 38400
+SBC-V2  UART no flow control   | 2mhz            | 9600
+SBC-V2  UART no flow control   | 4mhz            | 19200
+SBC-V2  UART no flow control   | 5mhz            | 19200
+SBC-V2  UART no flow control   | 8mhz            | 38400
+SBC-V2  UART no flow control   | 10mhz           | 38400
+SBC-V2  USB-FIFO 2mhz+         |                 | n/a
+SBC-MK4 ASCI no flow control   | 18.432mhz       | 9600
+SBC-MK4 ASCI with flow control | 18.432mhz       | 38400
 
 The **Set Recommend Baud Rate** option in the Updater menu follows the following guidelines.
 
@@ -623,9 +627,9 @@ These can be customized in the updater.asm source code in the CLKTBL table  if d
 Feedback to the ROMWBW developers on these guidelines would be appreciated.
 
 ## Notes:
-All testing was done with Teraterm x-modem, Forcing checksum mode using macros was found to give  the most reliable transfer.
-Partial writes can be completed with 39SF040 chips. Other chips require entire flash to be erased before being written.
-An SBC V2-005 MegaFlash or Z80 MBC required for 1mb flash support. The Updater assumes both chips are same type
-Failure handling has not been tested.
-Timing broadly calibrated on a Z80 SBC-v2
-Unabios not supported
+- All testing was done with Teraterm x-modem, Forcing checksum mode using macros was found to give  the most reliable transfer.
+- Partial writes can be completed with 39SF040 chips. Other chips require entire flash to be erased before being written.
+- An SBC V2-005 MegaFlash or Z80 MBC required for 1mb flash support. The Updater assumes both chips are same type
+- Failure handling has not been tested.
+- Timing broadly calibrated on a Z80 SBC-v2
+- UNA BIOS not supported

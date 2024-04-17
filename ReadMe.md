@@ -3,7 +3,7 @@
 **RomWBW ReadMe** \
 Version 3.5 \
 Wayne Warthen  ([wwarthen@gmail.com](mailto:wwarthen@gmail.com)) \
-16 Apr 2024
+17 Apr 2024
 
 # Overview
 
@@ -228,6 +228,8 @@ let me know if I missed you!
 
 - Ladislau Szilagyi has contributed an enhanced version of CP/M Cowgol
   that leverages RomWBW memory banking.
+
+- Les Bird has contributed support for the NABU w/ Option Board
 
 Contributions of all kinds to RomWBW are very welcome.
 
