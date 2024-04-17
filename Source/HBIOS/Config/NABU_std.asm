@@ -1,6 +1,6 @@
 ;
 ;==================================================================================================
-;   RCBUS Z80 STANDARD CONFIGURATION
+;   NABU Z80 STANDARD CONFIGURATION
 ;==================================================================================================
 ;
 ; THE COMPLETE SET OF DEFAULT CONFIGURATION SETTINGS FOR THIS PLATFORM ARE FOUND IN THE
@@ -27,3 +27,5 @@
 #include "cfg_nabu.asm"
 ;
 CPUOSC		.SET	3580000		; CPU OSC FREQ IN MHZ
+;
+CRTACT		.SET	FALSE		; ACTIVATE CRT (VDU,CVDU,PROPIO,ETC) AT STARTUP

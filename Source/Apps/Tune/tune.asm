@@ -47,6 +47,8 @@
 ;   2022-03-20 [DDW] Add support for MBC PSG module
 ;   2023-03-30 [WBW] Fix for quark delay adjustment being trashed
 ;   2024-02-23 [WBW] Include ACR value in config table
+;   2024-04-16 [WBW] Add support for NABU AY-3-8910
+;   
 ;_______________________________________________________________________________
 ;
 ; ToDo:
@@ -633,6 +635,9 @@ CFGSIZ	.EQU	$ - CFGTBL
 	.DB	17,	$A4,	$A5,	$A4,	$FF,	$A6,	$FE	; DUODYNE
 	.DW	HWSTR_DUO
 ;
+	.DB	22,	$41,	$40,	$40,	$FF,	$FF,	$FF	; NABU
+	.DW	HWSTR_NABU
+;
 	.DB	$FF					; END OF TABLE MARKER
 ;
 CFG:		; ACTIVE CONFIG VALUES (FROM SELECTED CFGTBL ENTRY)
@@ -661,7 +666,7 @@ TMP		.DB	0	; work around use of undocumented Z80
 HBIOSMD		.DB	0	; NON-ZERO IF USING HBIOS SOUND DRIVER, ZERO OTHERWISE
 OCTAVEADJ	.DB	0	; AMOUNT TO ADJUST OCTAVE UP OR DOWN
 
-MSGBAN		.DB	"Tune Player for RomWBW v3.6, 23-Feb-2024",0
+MSGBAN		.DB	"Tune Player for RomWBW v3.7, 16-Apr-2024",0
 MSGUSE		.DB	"Copyright (C) 2024, Wayne Warthen, GNU GPL v3",13,10
 		.DB	"PTxPlayer Copyright (C) 2004-2007 S.V.Bulba",13,10
 		.DB	"MYMPlay by Marq/Lieves!Tuore",13,10,13,10
@@ -687,6 +692,7 @@ HWSTR_RCMF	.DB	"RCBus Sound Module (MF)",0
 HWSTR_LINC	.DB	"Z50 LiNC Sound Module",0
 HWSTR_MBC	.DB	"NHYODYNE Sound Module",0
 HWSTR_DUO	.DB	"DUODYNE Sound Module",0
+HWSTR_NABU	.DB	"NABU Onboard Sound",0
 
 MSGUNSUP	.db	"MYM files not supported with HBIOS yet!\r\n", 0
 

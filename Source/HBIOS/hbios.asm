@@ -6324,13 +6324,6 @@ SIZ_NABU .EQU	$ - ORG_NABU
 		.ECHO	"NABU occupies "
 		.ECHO	SIZ_NABU
 		.ECHO	" bytes.\n"
-;
-ORG_KBD .EQU	$
-  #INCLUDE "nabukb.asm"
-SIZ_KBD		.EQU	$ - ORG_KBD
-		.ECHO	"NABUKB occupies "
-		.ECHO	SIZ_KBD
-		.ECHO	" bytes.\n"
 #ENDIF
 ;
 #IF (DSRTCENABLE)
@@ -6654,6 +6647,15 @@ ORG_MKY		.EQU	$
 SIZ_MKY		.EQU	$ - ORG_MKY
 		.ECHO	"MKY occupies "
 		.ECHO	SIZ_MKY
+		.ECHO	" bytes.\n"
+#ENDIF
+;
+#IF (NABUKBENABLE)
+ORG_NABUKB .EQU	$
+  #INCLUDE "nabukb.asm"
+SIZ_NABUKB	.EQU	$ - ORG_NABUKB
+		.ECHO	"NABUKB occupies "
+		.ECHO	SIZ_NABUKB
 		.ECHO	" bytes.\n"
 #ENDIF
 ;

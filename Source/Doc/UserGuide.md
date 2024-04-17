@@ -263,6 +263,7 @@ is discussed in [Customizing RomWBW].
 | [Duodyne Z80 System]^1^                                        | Duo     | DUO_std.rom           | 38400         |
 | [Heath H8 Z80 System]^10^                                      | H8      | HEATH_std.rom         | 115200        |
 | [EP Mini-ITX Z180]^11^                                         | RCBus?  | EPITX_std.rom         | 115200        |
+| [NABU w/ RomWBW Option Board]^10^                              | NABU    | NABU_std.rom          | 115200        |
 
 | ^1^Designed by Andrew Lynch
 | ^2^Designed by Sergey Kiselev
@@ -5817,6 +5818,36 @@ S- MD: TYPE=RAM
 - SD: MODE=, IO=66, UNITS=1
 
 ##### Notes:
+
+`\clearpage`{=latex}
+
+### NABU w/ RomWBW Option Board
+
+#### ROM Image File:  NABU_std.rom
+
+|                   |               |
+|-------------------|---------------|
+| Default CPU Speed | 3.580 MHz     |
+| Interrupts        | Mode 1        |
+| System Timer      | None          |
+| Serial Default    | 115200 Baud   |
+| Memory Manager    | Z2            |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
+
+##### Supported Hardware (see [Appendix B - Device Summary]):
+
+- UART: MODE=NABU, IO=72
+- TMS: MODE=NABU, IO=160
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- PPIDE: IO=96, MASTER
+- PPIDE: IO=96, SLAVE
+- AY38910: MODE=NABU, IO=65, CLOCK=1789772 HZ
+
+##### Notes:
+
+- TMS video assumes F18A replacement for TMS9918
 
 `\clearpage`{=latex}
 
