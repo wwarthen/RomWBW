@@ -1496,6 +1496,11 @@ clrled:
 	out	(RTCIO),a		; clear led
 	ld	(HB_RTCVAL),a
     #endif
+    #if (LEDMODE == LEDMODE_NABU)
+	; Bits 0 and 1 of the RTC latch are for the LEDs.
+	xor	a
+	out	(LEDPORT),a
+    #endif
   #endif
 #endif
 	ret

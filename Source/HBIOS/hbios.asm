@@ -126,6 +126,7 @@ MODCNT	.SET	MODCNT + 1
 ; MBC: LED Port=0x70, bits 1-0, normal, shared w/ RTC port
 ; DUO: LED Port=0x94, bits 1-0, normal, shared w/ RTC port
 ; S100: LED Port = $0E, bit 2, inverted, dedicated port
+; NABU: LED Port = $00, bits 5-3, normal, shared port
 ; 
 #IF (LEDENABLE)
   #IF (LEDMODE == LEDMODE_STD)
@@ -140,6 +141,12 @@ MODCNT	.SET	MODCNT + 1
     #DEFCONT \		AND	%11111100
     #DEFCONT \		OR	(N & %00000011)
     #DEFCONT \		LD	(HB_RTCVAL),A
+    #DEFCONT \		OUT	(LEDPORT),A
+    #DEFCONT \		POP	AF
+  #ENDIF
+  #IF (LEDMODE == LEDMODE_NABU)
+    #DEFINE LED(N)	PUSH	AF
+    #DEFCONT \		LD	A,+(((N << 3)) & %00011000)
     #DEFCONT \		OUT	(LEDPORT),A
     #DEFCONT \		POP	AF
   #ENDIF
@@ -1220,6 +1227,9 @@ BOOTWAIT:
 	;LD	A,(RTCDEFVAL)		; DEFAULT LATCH VALUE
 	LD	A,RTCDEF		; DEFAULT LATCH VALUE
 	OR	%00000001		; LED 0 ON
+  #ENDIF
+  #IF (LEDMODE == LEDMODE_NABU)
+	LD	A,%00001000		; LOW LED BIT ONLY
   #ENDIF
 	OUT	(LEDPORT),A
 #ENDIF
