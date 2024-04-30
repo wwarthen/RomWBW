@@ -154,6 +154,10 @@ EF_FG_WHITE	.EQU	7
 ;
 EF_SCREENSIZE	.EQU	EF_DROWS * EF_DLINES
 ;
+	DEVECHO	"EF: IO="
+	DEVECHO	EF_BASE
+	DEVECHO	"\n"
+;
 ;======================================================================
 ; VDU DRIVER - INITIALIZATION
 ;======================================================================

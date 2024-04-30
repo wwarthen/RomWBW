@@ -50,6 +50,7 @@ echo.
 ::
 
 tasm -t80 -g3 -dCMD hbios_env.asm hbios_env.com hbios_env.lst || exit /b
+zxcc hbios_env
 zxcc hbios_env >hbios_env.cmd
 call hbios_env.cmd
 

@@ -27,7 +27,7 @@ Bank ID		Module		Start	Size
 0x04 - N	ROM Disk Data
 
 
-Typical ROM Bank Layout
+Typical ROM Bank Layout (512K)
 
 Bank ID         Usage
 -------         ------
@@ -35,22 +35,43 @@ Bank ID         Usage
 0x01		ROM Loader, Monitor, ROM OSes
 0x02		ROM Applications
 0x03		Reserved
-0x04-0x0F	ROM Disk Banks
+0x04-0x0F	ROM Disk Banks (12)
 
 
-Typical RAM Bank Layout
+Standard RAM Bank Layout (512K)
 
 Bank ID         Usage
 -------         ------
 0x80            RomWBW HBIOS
-0x81-0x8B       RAM Disk Data
+0x81-0x88       RAM Disk Data (3)
+0x89-0x8B	App Banks (8)
 0x8C		CP/M 3 Buffers
 0x8D            CP/M 3 OS
 0x8E            User TPA
 0x8F            Common
 
+Large RAM Bank Layout (2048K)
 
-Typical ROMless Bank Layout
+Bank ID         Usage
+-------         ------
+0x80            RomWBW HBIOS
+0x81-0xB0       RAM Disk Data (30)
+0xB1-0xBB	App Banks (11)
+0xBC		CP/M 3 Buffers
+0x8D            CP/M 3 OS
+0x8E            User TPA
+0x8F            Common
+
+Tiny RAM Bank Layout (128K)
+
+Bank ID         Usage
+-------         ------
+0x80            RomWBW HBIOS
+0x81		CP/M 3 OS
+0x82            User TPA
+0x83            Common
+
+ROMless Standard Bank Layout (512K)
 
 Bank ID         Usage
 -------         ------
@@ -58,7 +79,7 @@ Bank ID         Usage
 0x81		Loader, DbgMon, CP/M 2.2, ZSDOS
 0x82		ROM Apps
 0x83		More ROM Apps
-0x84-0x8B       RAM Disk Data
+0x84-0x8B       RAM Disk Data (8)
 0x8C		CP/M 3 Buffers
 0x8D            CP/M 3 OS
 0x8E            User TPA

@@ -83,11 +83,11 @@ VDU_R10		.EQU	(VDU_BLNK + DSCANL-1)
 VDU_R11		.EQU	DSCANL-1
 #ENDIF
 ;
-		.ECHO	"VDU: IO="
-		.ECHO	VDU_RAMRD
-		.ECHO	", PPK IO="
-		.ECHO	VDU_PPIA
-		.ECHO	"\n"
+		DEVECHO	"VDU: IO="
+		DEVECHO	VDU_RAMRD
+		DEVECHO	", PPK IO="
+		DEVECHO	VDU_PPIA
+		DEVECHO	"\n"
 ;
 ;======================================================================
 ; VDU DRIVER - INITIALIZATION

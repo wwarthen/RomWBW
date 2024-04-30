@@ -3,17 +3,17 @@
 ;==================================================================================================
 ;
 ;
-	.ECHO	"DMA: MODE="
+	DEVECHO	"DMA: MODE="
 ;
 #IF ((DMAMODE == DMAMODE_ECB) | (DMAMODE == DMAMODE_MBC))
 DMA_IO		.EQU	DMABASE
 DMA_CTL		.EQU	DMABASE + 1
 DMA_USEHALF	.EQU	TRUE
   #IF (DMAMODE == DMAMODE_ECB)
-	.ECHO	"ECB"
+	DEVECHO	"ECB"
   #ENDIF
   #IF (DMAMODE == DMAMODE_MBC)
-	.ECHO	"MBC"
+	DEVECHO	"MBC"
   #ENDIF
 #ENDIF
 ;
@@ -21,12 +21,12 @@ DMA_USEHALF	.EQU	TRUE
 DMA_IO		.EQU	DMABASE
 DMA_CTL		.EQU	DMABASE + 3
 DMA_USEHALF	.EQU	FALSE
-	.ECHO	"DUO"
+	DEVECHO	"DUO"
 #ENDIF
 ;S
-	.ECHO	", IO="
-	.ECHO	DMA_IO
-	.ECHO	"\n"
+	DEVECHO	", IO="
+	DEVECHO	DMA_IO
+	DEVECHO	"\n"
 ;
 DMA_CONTINUOUS			.equ 	%10111101	; + Pulse
 DMA_BYTE			.equ 	%10011101	; + Pulse

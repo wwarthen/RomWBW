@@ -177,6 +177,11 @@ SCANCODE_TBL:
 	.DB	S_RETURN,	S_SELECT,	S_BACKSPACE,	S_STOP,		S_TAB,		S_ESC,		S_F5,		S_F4		; 07
 	.DB	S_RIGHT,	S_DOWN,		S_UP,		S_LEFT,		S_DELETE,	S_INSERT,	S_HOME,		S_SPACE		; 08
 
+
+	DEVECHO	"MKY: IO="
+	DEVECHO	MKY_REGA
+	DEVECHO	"\n"
+
 ;__________________________________________________________________________________________________
 ; KEYBOARD INITIALIZATION
 ;__________________________________________________________________________________________________

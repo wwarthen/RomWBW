@@ -32,6 +32,10 @@ ICM_PPIB		.EQU 	ICMPPIBASE + 1	; PORT B
 ICM_PPIC		.EQU 	ICMPPIBASE + 2	; PORT C
 ICM_PPIX	 	.EQU 	ICMPPIBASE + 3	; PPI CONTROL PORT
 ;
+	DEVECHO	"ICM: IO="
+	DEVECHO	ICMPPIBASE
+	DEVECHO	"\n"
+;
 ;__ICM_INIT__________________________________________________________________________________________
 ;
 ;  CONFIGURE PARALLEL PORT AND CLEAR KEYPAD BUFFER
