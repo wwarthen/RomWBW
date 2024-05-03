@@ -48,8 +48,9 @@ found:
 | RTC         | Yes      | Yes        | Yes      |
 | TIMER       | Yes      | Yes        | Yes      |
 | CPUSPD      | Yes      | Yes        | Yes      |
+| FAT         | Yes      | Yes        | Yes      |
+| CLRDIR      | Yes      | Yes        | Yes      |
 | INTTEST     | No       | Yes        | Yes      |
-| FAT         | No       | Yes        | Yes      |
 | TUNE        | No       | Yes        | Yes      |
 | WDATE       | No       | Yes        | Yes      |
 | HTALK       | No       | Yes        | Yes      |
@@ -545,7 +546,7 @@ distribution in the Doc/Contrib directory.
 The application supports a significant number of EEPROM parts. It
 should automatically detect your part. If it does not recognize your
 chip, make sure that you do not have a write protect jumper set --
-this jumper can prevent the ROM chip from being recognized.
+this jumper will prevent the ROM chip from being recognized.
 
 Reprogramming a ROM chip in-place is inherently dangerous. If anything
 goes wrong, you will be left with a non-functional system and no
@@ -921,6 +922,15 @@ Files written are not verified.
 Wildcard matching in FAT filesystems is a bit unusual as implemented by
 FatFs. See FatFs documentation.
 
+The `FAT FORMAT` command will not perform a physical format on floppy 
+disks.  You must use FDU to do this prior to using `FAT FORMAT`.
+
+Formatting (`FAT FORMAT`) of floppies does not work well.  The    
+underlying FatFs library uses some non-standard fields.  The resulting 
+floppy may or may not be useable on other systems.  It is best to format
+a FAT floppy on a Windows or DOS system.  You should have no problems 
+copying files to/from such a floppy using `FAT`.
+
 ## Etymology
 
 The `FAT` application is an original RomWBW work, but utilizes the
@@ -950,6 +960,60 @@ clean the filenames before trying to copy them to CP/M.
 The FAT application does try to detect the scenario where you are
 copying a file to itself.  However, this detection is not perfect and
 can corrupt a file if it occurs.  Be careful to avoid this.
+
+`\clearpage`{=latex}
+
+# CLRDIR
+
+`CLRDIR` is used to initialize a CP/M filesystem.  This is frequently
+used to prepare RomWBW disk slices for use.  If there is any data
+on the filesystem, it will be destroyed.  `CLRDIR` works on CP/M
+drive letters.  To initialize a RomWBW slice, the slice must first be
+assigned to a CP/M drive letter.
+
+
+This application is provided by Max Scane.
+
+## Syntax
+
+| `CLRDIR `*`<drive>`*` [options]`
+
+*`<drive>`* is the CP/M drive letter to be cleared (e.g., "A:")
+
+
+Options:
+
+| `-D`: Enable debug output
+| `-Y`: Do not ask for confirmation
+
+## Usage
+
+This application has a command line interface only.  Type an 
+appropriately formatted command at the command prompt at any of the 
+RomWBW CP/M operatings systems (CP/M 2.2, ZSDOS, CP/M 3, etc.).
+
+You will be prompted for confirmation to continue.  You must type a
+**capital** 'Y' to proceed.  The application will confirm that the
+drive has been cleared.
+
+If used under ZSDOS, you should issue a `RELOG` command after using
+`CLRDIR` to ensure that CP/M relogs the cleared drive.
+
+## Notes
+
+This command is inherently dangerous.  It will completely destroy the
+directory area of the target drive.  Be very careful to ensure you do
+not target a drive that contains useful data.
+
+`CLRDIR` understands the directory formats of all of the RomWBW
+CPM-like operating systems and devices including floppy disks, CF/SD
+Cards, etc.
+
+## Etymology
+
+This application was written and provided by Max Scane. He
+provides it in binary format and is included in the RomWBW
+distribution as a binary file.
 
 `\clearpage`{=latex}
 

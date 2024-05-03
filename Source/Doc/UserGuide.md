@@ -1118,11 +1118,11 @@ system.
 
 The drive letter assignments **do not** change during an OS session 
 unless you use the `ASSIGN` command yourself to do it. Additionally, the
- assignments at boot will stay the same on each boot as long as you do 
+assignments at boot will stay the same on each boot as long as you do 
 not make changes to your hardware configuration. Note that the 
 assignments **are** dependent on the media currently inserted in hard 
 disk drives when the operating system is started. So, notice that if you
- insert or remove an SD Card, CF Card or USB Drive, the drive 
+insert or remove an SD Card, CF Card or USB Drive, the drive 
 assignments will change. Since drive letter assignments can change, you 
 must be careful when doing destructive things like using `CLRDIR` to 
 make sure the drive letter you use is referring to the desired media.
@@ -1513,10 +1513,10 @@ B>assign
    H:=IDE0:3
 
 B>clrdir G:
-CLRDIR Version 1.2 April 2020 by Max Scane
+CLRDIR Version 1.2B May 2024 by Max Scane
 
 Warning - this utility will overwrite the directory sectors of Drive: G
-Type Y to proceed, any key other key to exit. Y
+Type CAPITAL Y to proceed, any key other key to exit. Y
 Directory cleared.
 B>
 ```
@@ -1993,10 +1993,12 @@ custom hard disk image file, it will need to be written to the media
 using your modern computer.  Note that you **do not** run `CLRDIR` or 
 `SYSCOPY` on the slices that contain the data.  When using this method, 
 the disk will be partitioned and setup with 1 or more slices containing 
-ready-to-run bootable operating systems.
+ready-to-run bootable operating systems.  You **do** need to run
+`CLRDIR` and optionally `SYSCOPY` on slices that are not part of the
+image (slices beyond the ones included with the image).
 
 To write a hard disk image file onto your actual media (actual hard disk
- or CF/SD/USB Media), you need to use an image writing utility on your 
+or CF/SD/USB Media), you need to use an image writing utility on your 
 modern computer. Your modern computer will need to have an appropriate 
 interface or slot that accepts the media. To actually copy the image, 
 you can use the `dd` command on Linux or MacOS. On Windows, in the 
