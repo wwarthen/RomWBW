@@ -2,18 +2,66 @@
 ;==================================================================================================
 ; NABU INTERRUPT INTERCEPTOR
 ;==================================================================================================
+;
 NABU_INT1CLR	.EQU	$68
 NABU_TICCNT	.EQU	$FFEA		; TICCNT AT $FFEA IS COPIED DOWN TO $000B
+;
+; NABU INTERRUPT ENABLE PORT AND STATUS PORTS ARE MANAGED BY THE
+; PSG IO PORTS.
+;
+; INTERRUPT ENABLE (OUTPUT) - PSG PORT A
+;
+;	D7 - HCCA Receive
+;	D6 - HCCA Send
+;	D5 - Keyboard
+;	D4 - Video Frame Sync
+;	D3 - Option Card 0 (J9)
+;	D2 - Option Card 1 (J10)
+;	D1 - Option Card 2 (J11)
+;	DO - Option Card 3 (J12)
+;
+; STATUS BYTE (INPUT) - PSG PORT B
+;
+;	D7 - N.C.
+;	D6 - Overrun Error (HCCA UART)
+;	D5 - Framing Error (HCCA UART)
+;	D4 - Printer Busy
+;	D3 - A2 Priority
+;	D2 - A1 Priority
+;	D1 - AO Priority
+;	DO - Interrupt Request
+;
+; PORTS TO MANAGE PSG
+;
+NABU_RSEL	.EQU	$41		; SELECT PSG REGISTER
+NABU_RDAT	.EQU	$40		; WRITE TO SELECTED REGISTER
+NABU_RIN	.EQU	$40		; READ FROM SELECTED REGISTER
 ;
 	DEVECHO	"NABU: IO="
 	DEVECHO	NABU_INT1CLR
 	DEVECHO	"\n"
-
 ;
 ;
 ; HARDWARE RESET PRIOR TO ROMWBW CONSOLE INITIALIZATION
 ;
 NABU_PREINIT:
+	; INITIALIZE THE NABU PSG I/O PORTS
+	; PORT A IN WRITE MODE AND SET ALL BITS TO ZERO
+	; PORT B IN READ MODE
+;
+	; SET I/O PORT MODES
+	LD	A,7			; PSG REGISTER 7 (ENABLE REG)
+	OUT	(NABU_RSEL),A		; SELECT IT
+	LD	A,%01000000		; PORT B INPUT, PORT A OUPUT
+	OUT	(NABU_RDAT),A		; SET IT
+;
+	; SET PORT A TO VALUE 0
+	LD	A,16			; PSG REGISTER 16 (PORT A DATA)
+	OUT	(NABU_RSEL),A		; SELECT IT
+	XOR	A			; VALUE 0
+	OUT	(NABU_RDAT),A		; SET IT
+;
+	; ADD TO INTERRUPT CHAIN
 	LD	HL,NABU_STAT
 	CALL	HB_ADDIM1		; ADD TO IM1 CALL LIST
 	RET
