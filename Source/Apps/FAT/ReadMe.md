@@ -1,7 +1,7 @@
 # RomWBW HBIOS CP/M FAT Utility ("FAT.COM")
 
 Author: Wayne Warthen \
-Updated: 6-Jan-2024
+Updated: 6-May-2024
 
 This application allows copying files between CP/M filesystems and FAT 
 filesystems (DOS, Windows, Mac, Linux, etc.).  The application runs on 
@@ -72,6 +72,38 @@ creation.
  - Wildcard matching in FAT filesystems is a bit unusual as
    implemented by FatFs.  See FatFs documentation.
 
+ - The `FAT FORMAT` command will not perform a physical format on
+   floppy disks.  You must use FDU to do this prior to using
+   `FAT FORMAT`.
+
+ - Formatting (`FAT FORMAT`) of floppies does not work well.  The    
+   underlying FatFs library uses some non-standard fields.  The 
+   resulting floppy may or may not be useable on other systems.  It is 
+   best to format a FAT floppy on a Windows or DOS system.  You should 
+   have no problems copying files to/from such a floppy using `FAT`.
+
+### Known Issues
+
+ - CP/M (and workalike) OSes have significant restrictions on filename
+   characters.  The FAT application will block any attempt to create a
+   file on the CP/M filesystem containing any of these prohibited
+   characters:
+
+|         `< > . , ; : ? * [ ] |/ \`
+
+   The operation will be aborted with "`Error: Invalid Path Name`" if such
+   a filename character is encountered.
+
+   Since MS-DOS does allow some of these characters, you can have
+   issues when copying files from MS-DOS to CP/M if the MS-DOS filenames
+   use these characters.  Unfortunately, FAT is not yet smart enough to
+   substitute illegal characters with legal ones.  So, you will need to
+   clean the filenames before trying to copy them to CP/M.
+
+ - The FAT application does try to detect the scenario where you are
+   copying a file to itself.  However, this detection is not perfect and
+   can corrupt a file if it occurs.  Be careful to avoid this.
+
 ### License:
 
   GNU GPLv3 (see file LICENSE.txt)
@@ -123,3 +155,4 @@ creation.
 | 12-Oct-2023 | v0.9.9  | (beta) handle updated HBIOS Disk Device call                |
 | 6-Jan-2024  | v1.0.0  | updated to latest FsFat (v0.15)                             |
 |             |         | updated to latest SDCC (v4.3)                               |
+| 6-May-2024  | v1.1.0  | improve floppy format boot record                           |
