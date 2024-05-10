@@ -48,7 +48,7 @@
 ;   2023-03-30 [WBW] Fix for quark delay adjustment being trashed
 ;   2024-02-23 [WBW] Include ACR value in config table
 ;   2024-04-16 [WBW] Add support for NABU AY-3-8910
-;   
+;   2024-05-10 [WBW] Hack to avoid corrupting bits 6&7 of PSG R7 for NABU!
 ;_______________________________________________________________________________
 ;
 ; ToDo:
@@ -666,7 +666,7 @@ TMP		.DB	0	; work around use of undocumented Z80
 HBIOSMD		.DB	0	; NON-ZERO IF USING HBIOS SOUND DRIVER, ZERO OTHERWISE
 OCTAVEADJ	.DB	0	; AMOUNT TO ADJUST OCTAVE UP OR DOWN
 
-MSGBAN		.DB	"Tune Player for RomWBW v3.7, 16-Apr-2024",0
+MSGBAN		.DB	"Tune Player for RomWBW v3.8, 10-May-2024",0
 MSGUSE		.DB	"Copyright (C) 2024, Wayne Warthen, GNU GPL v3",13,10
 		.DB	"PTxPlayer Copyright (C) 2004-2007 S.V.Bulba",13,10
 		.DB	"MYMPlay by Marq/Lieves!Tuore",13,10,13,10
@@ -2086,8 +2086,23 @@ LOUT	OUT (C),A
 	LD 	HL, AYREGS	; START OF VALUE LIST
 LOUT	OUT 	(C), A		; SELECT REGISTER
 	LD 	C, D		; POINT TO DATA PORT
-	OUTI			; WRITE (HL) TO DATA PORT, BUMP HL
-	LD 	C, E		; POINT TO ADDRESS PORT
+
+	; UGLINESS FOR NABU!  WE NEED TO KEEP BIT 7 = 0, AND BIT 6 = 1
+	; FOR PSG REG 7
+	CP	7		; PSG REG 7?
+	JR	NZ,LOUT1	; SKIP SPECIAL PROCESSING
+	PUSH	AF		; SAVE AF
+	LD	A,(HL)		; GET VALUE BYTE
+	AND	%00111111	; FIX BITS 6 & 7
+	OR	%01000000	; ... FOR NABU!
+	OUT	(C),A		; SEND THE FIXED VALUE
+	DEC	B		; SIMULATE THE RESET		
+	INC	HL		; ... OF OUTI
+	POP	AF		; RESTORE AF
+	JR	LOUT1A		; RESUME LOOP
+	
+LOUT1	OUTI			; WRITE (HL) TO DATA PORT, BUMP HL
+LOUT1A	LD 	C, E		; POINT TO ADDRESS PORT
 	INC 	A		; NEXT REGISTER
 	CP 	13		; REG 13?
 	JR 	NZ, LOUT	; IF NOT, LOOP
@@ -2097,6 +2112,7 @@ LOUT	OUT 	(C), A		; SELECT REGISTER
 	JP 	M, LOUT2	; IF BIT 7 SET, RETURN W/O WRITING VALUE
 	LD 	C, D		; SELECT DATA PORT
 	OUT 	(C), A		; WRITE VALUE TO REGISTER 13
+
 LOUT2	CALL 	NORMIO
 	EI
 	RET			; AND DONE
@@ -2543,8 +2559,23 @@ upsg1:	ld	hl,(psource)
 psglp:	ld	c, e		; C := RSEL
 	out	(c), a		; Select register
 	ld	c, d		; C := RDAT
-	outi			; Set register value
-	inc	a		; Next register
+	
+	; ugliness for nabu!  we need to keep bit 7 = 0, and bit 6 = 1
+	; for psg reg 7
+	cp	7		; psg reg 7?
+	jr	nz,psglp1	; if not, skip special processing
+	push	af		; save af
+	ld	a,(hl)		; get value byte
+	and	%00111111	; fix bits 6 & 7
+	or	%01000000	; ... for NABU!
+	out	(c),a		; send the fixed value
+	dec	b		; simulate the rest
+	inc	hl		; ... of outi
+	pop	af		; restore af
+	jr	psglp2		; resume loop
+
+psglp1:	outi			; Set register value
+psglp2:	inc	a		; Next register
 
         ld      bc, (3 * FRAG) - 1   ; Bytes to skip before next reg-1
         add     hl, bc		; Update HL
