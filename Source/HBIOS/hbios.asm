@@ -2371,7 +2371,7 @@ HB_CPU3:
 #ENDIF
 ;
 ;--------------------------------------------------------------------------------------------------
-; SYSTEM TIME INITIALIZATION
+; SYSTEM TIMER INITIALIZATION
 ;--------------------------------------------------------------------------------------------------
 ;
 #IF (PLATFORM == PLT_SBC)
@@ -2707,6 +2707,34 @@ NXTMIO:	LD	A,(HL)
 NOT_REC_M2:
 ;
 	FPLEDS(DIAG_08)
+
+#IF (PLATFORM == PLT_NABU) & TRUE
+;
+	; GET CURRENT VALUE OF PSG ENABLE REGISTER
+	LD	A,7
+	OUT	(NABU_RSEL),A
+	NOP
+	IN	A,(NABU_RDAT)
+	LD	B,A
+;
+	; GET CURRENT VALUE OF PSG ENABLE REGISTER
+	LD	A,7
+	OUT	(NABU_RSEL),A
+	NOP
+	IN	A,(NABU_RDAT)
+	LD	C,A
+;
+	; DUMP IT
+	CALL	PC_ASTERISK
+	LD	A,B
+	CALL	PRTHEXBYTE
+	LD	A,C
+	CALL	PRTHEXBYTE
+	CALL	PC_ASTERISK
+;
+#ENDIF
+
+
 ;
 ;--------------------------------------------------------------------------------------------------
 ; IO PORT SCAN
@@ -3061,6 +3089,7 @@ HB_CKBNKSIZ	.EQU	$-HB_CKBNK	; SIZE OF ROUTINE
 HB_ROMCKZ:
 ;
   #ENDIF
+;
 #ENDIF
 ;
 ;--------------------------------------------------------------------------------------------------
