@@ -15,7 +15,7 @@ ZSDOS is a replacement for the BDOS portion of the CP/M 2.2 operating
 system.  Since it does not include it's own command processor, the
 the ZCPR D&J Command Processor has been included.
 
-The primary documentation for ZSDOS and ZCPR 1 are contained in the Doc
+The primary documentation for ZSDOS and ZCPR 1 are contained in the Doc/CPM
 directory of the RomWBW distribution.  The specific files are "ZSDOS
 Manual.pdf", "ZCPR Manual.pdf", and "ZCPR-DJ.doc".  This document is a
 supplement to the primary documentation.
@@ -141,7 +141,7 @@ distribution as possible.
 == ZSDOS 1.1 Files ==
 
 The following files came from the official ZSDOS distribution.  These
-are generally documented in the "ZSDOS Manual.pdf" document in the Doc
+are generally documented in the "ZSDOS Manual.pdf" document in the Doc/CPM
 directory of the RomWBW distribution.  Note that some of the files
 included in the ZSDOS distribution are not listed below because they
 have been superseded by more recent versions listed in other sections
@@ -192,7 +192,7 @@ The following files have been included from CP/M 2.2.  These files
 provide various functionality that is not really available from the
 ZSDOS applications themselves.  For example, the CP/M 2.2 application
 called STAT is useful for modifying the IOBYTE.  Most of these
-applications are documented in the "CPM Manual.pdf" document in the Doc
+applications are documented in the "CPM Manual.pdf" document in the Doc/CPM
 directory of the RomWBW distribution.
 
 ASM.COM - DRI 8080 assembler producing Intel hex files

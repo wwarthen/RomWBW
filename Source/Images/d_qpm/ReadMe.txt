@@ -36,12 +36,12 @@ code brakpoints.  This conflicts the use of that vector for any
 system that is using interrupt mode 1.  DEBUGZ can be configured
 (using DBGINST) to use a different vector.
 
-The QSTAMP program, which is used to initialize a disk for date/time 
-stamping, misbehavews when run on the (new) RomWBW 1024 directory 
-format disks.  It creates an invalid directory entry for the date/time 
-stamp data file.  This is definitely a QP/M issue.  The directory entry 
-can be manually corrected.  Specifically the byte offset 15 should 
-contain the number of 128-byte records in the file.  Instead, it is set 
+The QSTAMP program, which is used to initialize a disk for date/time
+stamping, misbehavews when run on the (new) RomWBW 1024 directory
+format disks.  It creates an invalid directory entry for the date/time
+stamp data file.  This is definitely a QP/M issue.  The directory entry
+can be manually corrected.  Specifically the byte offset 15 should
+contain the number of 128-byte records in the file.  Instead, it is set
 to 0x01.  You can edit the entry, change it to 0x80 and everything
 starts working.
 
@@ -92,7 +92,7 @@ The following files have been included from CP/M 2.2.  These files
 provide various functionality that is not really available from the
 ZSDOS applications themselves.  For example, the CP/M 2.2 application
 called STAT is useful for modifying the IOBYTE.  Most of these
-applications are documented in the "CPM Manual.pdf" document in the Doc
+applications are documented in the "CPM Manual.pdf" document in the Doc/CPM
 directory of the RomWBW distribution.
 
 ASM.COM - DRI 8080 assembler producing Intel hex files
