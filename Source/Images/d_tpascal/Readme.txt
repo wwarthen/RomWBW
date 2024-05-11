@@ -8,7 +8,7 @@ and mathematician.
 Turbo Pascal closely follows the definition of Standard Pascal as defined in
 the Pascal User Manual and Report with a few minor differences.
 
-The manual can be found in the Docs directory,
+The manual can be found in the Docs/Language directory,
 Turbo_Pascal_Version_3.0_Reference_Manual_1986.pdf
 
 A good overview of using Turbo Pascal in CP/M is available at
