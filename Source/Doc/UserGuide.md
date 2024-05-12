@@ -263,6 +263,7 @@ is discussed in [Customizing RomWBW].
 | [Duodyne Z80 System]^1^                                        | Duo     | DUO_std.rom           | 38400         |
 | [Heath H8 Z80 System]^10^                                      | H8      | HEATH_std.rom         | 115200        |
 | [EP Mini-ITX Z180]^11^                                         | RCBus?  | EPITX_std.rom         | 115200        |
+| [NABU w/ RomWBW Option Board]^10^                              | NABU    | NABU_std.rom          | 115200        |
 
 | ^1^Designed by Andrew Lynch
 | ^2^Designed by Sergey Kiselev
@@ -630,6 +631,7 @@ prompt:
 | CP/M 2.2          | Digital Research CP/M 2.2 OS                                   |
 | Z-System          | ZSDOS 1.1 w/ ZCPR 1 (Enhanced CP/M compatible OS)              |
 | Forth             | Brad Rodriguez's ANSI compatible Forth language                |
+| BASIC             | Microsoft ROM BASIC                                            |
 | Tasty&nbsp;BASIC  | Dimitri Theuling's Tiny BASIC implementation                   |
 | Play              | A simple video game (requires ANSI terminal emulation)         |
 | Network&nbsp;Boot | Boot system via Wiznet MT011 device                            |
@@ -649,8 +651,16 @@ in the ROM (CP/M 2.2 & Z-System) are described in the Operating Systems
 chapter of this document.
 
 In general, the command to exit any of these applications and restart
-the system is `BYE`. The exceptions are the Monitor which uses `B` and
+the system is `BYE`. The exceptions are the Monitor which uses `X` and
 Play which uses `Q`.
+
+**NOTE:** Of the ROM Applications, only the operating systems (CP/M and 
+Z-System) have the ability to interact with disk drives. So, other than 
+these 2 OSes, the ROM Applications do **not** have any way to save or 
+load data from peristent/disk storage.  For example, if you launch BASIC
+from the Boot Loader, you will not be able to save or load your 
+programs.  You will need to start an operating system first and then run
+BASIC in order to save or load programs.
 
 Two of the ROM Applications are, in fact, complete operating systems.
 Specifically, "CP/M 2.2" and "Z-System" are provided so that you can
@@ -1108,11 +1118,11 @@ system.
 
 The drive letter assignments **do not** change during an OS session 
 unless you use the `ASSIGN` command yourself to do it. Additionally, the
- assignments at boot will stay the same on each boot as long as you do 
+assignments at boot will stay the same on each boot as long as you do 
 not make changes to your hardware configuration. Note that the 
 assignments **are** dependent on the media currently inserted in hard 
 disk drives when the operating system is started. So, notice that if you
- insert or remove an SD Card, CF Card or USB Drive, the drive 
+insert or remove an SD Card, CF Card or USB Drive, the drive 
 assignments will change. Since drive letter assignments can change, you 
 must be careful when doing destructive things like using `CLRDIR` to 
 make sure the drive letter you use is referring to the desired media.
@@ -1394,15 +1404,24 @@ filesystem format used is 8MB. This ensures any filesystem will be
 accessible to any of the operating systems.
 
 Since storage devices today are quite large, RomWBW implements a
-mechanism called slicing to allow up to 256 8MB filesystems on a
-single large storage device. This allows up to 2GB of usable space on
+mechanism called slicing to allow up to 256 8MB CP/M filesystems on a
+single large storage device.  To say it another way, the media is
+"sliced up" into many 8MB CP/M filesystems.  Each slice is a complete
+CP/M filesystem.  This allows up to 2GB of usable space on
 one media. You can think of slices as a way to refer to any of
-the first 256 8MB chunks of space on a single media.
+the first 256 8MB chunks of space on a single media.  Each chunk
+is a CP/M filesystem.
 
-Note that although you can use up to 256 slices per physical disk, this
-large number of slices is rarely used.  The recommended RomWBW disk
-layout provides for 64 slices which is more than enough for most
-use cases.
+Note that slices are **not** the same thing as a hard disk partition.
+In fact, these slices all live inside of a single hard disk partition.
+Normally, a RomWBW hard disk will have one partition (called the
+RomWBW partition) containing 64 slices.  Optionally, there may be
+a second partition which contains a FAT filesystem.  For now, we
+are just talking about the slices within the single RomWBW partition.
+
+Although you can use up to 256 slices per physical disk, this large 
+number of slices is rarely used.  The recommended RomWBW disk layout 
+provides for 64 slices which is more than enough for most use cases.
 
 Of course, the problem is that CP/M-like operating systems have only
 16 drive letters (A:-P:) available. Under the covers, RomWBW allows
@@ -1438,22 +1457,28 @@ the same device/slice at the same time. Second, there must always be a
 drive assigned to A:. Any attempt to violate these rules will be blocked
 by the `ASSIGN` command.
 
+As you see, the name of a slice does not reference the hard disk 
+partition containing the slices.  Since there can only be a single 
+RomWBW partition containing slices on any disk, the partition is 
+determined automatically.
+
 In case this wasn't already clear, you **cannot** refer directly
 to slices using CP/M.  CP/M only understands drive letters, so
 to access a given slice, you must assign a drive letter to it first.
 
-While it may be obvious, you cannot use slices on any media less
-than 8MB in size. Specifically, you cannot slice RAM disks, ROM
-disks, floppy disks, etc.  All of these are considered to have a single
-slice and any attempt to ASSIGN a drive letter to a slice beyond that
-will result in an error message.
+While it may be obvious, you cannot use slices on any media less than 
+8MB in size. Specifically, you cannot slice RAM disks, ROM disks, floppy
+ disks, etc.  All of these are considered to have a single slice (slice 
+0) and any attempt to ASSIGN a drive letter to a slice beyond that will 
+fail and produce an error message.
 
 It is very important to understand that RomWBW slices are not
 individually created or allocated on your hard disk.  RomWBW uses a
-single, large chunk of space on your hard disk to contain the slices.
-You should think of slices as just an index into a sequential set of 8MB
-areas that exist in this large chunk of space.  The next section will
-go into more detail on how slices are located on your hard disk.
+single, large chunk of space (partition) on your hard disk to contain
+the slices. You should think of slices as just an index into a
+sequential set of 8MB areas that exist in this large chunk of space.
+The next section will go into more detail on how slices are located on
+your hard disk.
 
 Although you do not need to allocate slices individually, you do need to
 initialize each slice for CP/M to use it.  This is somewhat analogous
@@ -1465,10 +1490,10 @@ absolutely sure you know what media and slice are assigned to that
 drive letter before using `CLRDIR` because CLRDIR will wipe out any
 pre-existing contents of the slice.
 
-**WARNING**: The `CLRDIR` application does not appear to check for
-disk errors when it runs.  If you attempt to run `CLRDIR` on a drive
-that is mapped to a slice that does not actually fit on the physical
-disk, it may behave erratically.
+**WARNING**: Earlier versions of the `CLRDIR` application does not 
+appear to check for disk errors when it runs.  If you attempt to run 
+`CLRDIR` on a drive that is mapped to a slice that does not actually fit
+on the physical disk, it may behave erratically.
 
 Here is an example of using `CLRDIR`.  In this example, the `ASSIGN`
 command is used to show the current drive letter assignments.  Then
@@ -1488,10 +1513,10 @@ B>assign
    H:=IDE0:3
 
 B>clrdir G:
-CLRDIR Version 1.2 April 2020 by Max Scane
+CLRDIR Version 1.2B May 2024 by Max Scane
 
 Warning - this utility will overwrite the directory sectors of Drive: G
-Type Y to proceed, any key other key to exit. Y
+Type CAPITAL Y to proceed, any key other key to exit. Y
 Directory cleared.
 B>
 ```
@@ -1695,9 +1720,9 @@ transferring your files over individually. You use your modern
 computer (Windows, Linux, MacOS) to write the disk image onto the
 disk media, then just move the media over to your system.
 
-The disk image files are found in the Binary directory of the
-distribution. Floppy disk images are prefixed with "fd_" and hard
-disk images are prefixed with either "hd512_" or "hd1k_" depending on the
+The disk image files are found in the Binary directory of the 
+distribution. Floppy disk images are prefixed with "fd_" and hard disk 
+images are prefixed with either "hd512_" or "hd1k_" depending on the 
 hard disk layout they are for.
 
 Each disk image has the complete set of normal applications and tools 
@@ -1968,10 +1993,12 @@ custom hard disk image file, it will need to be written to the media
 using your modern computer.  Note that you **do not** run `CLRDIR` or 
 `SYSCOPY` on the slices that contain the data.  When using this method, 
 the disk will be partitioned and setup with 1 or more slices containing 
-ready-to-run bootable operating systems.
+ready-to-run bootable operating systems.  You **do** need to run
+`CLRDIR` and optionally `SYSCOPY` on slices that are not part of the
+image (slices beyond the ones included with the image).
 
 To write a hard disk image file onto your actual media (actual hard disk
- or CF/SD/USB Media), you need to use an image writing utility on your 
+or CF/SD/USB Media), you need to use an image writing utility on your 
 modern computer. Your modern computer will need to have an appropriate 
 interface or slot that accepts the media. To actually copy the image, 
 you can use the `dd` command on Linux or MacOS. On Windows, in the 
@@ -2254,7 +2281,7 @@ significant improvements such as date/time stamping of files.
 
 Z-System is a somewhat ambiguous term because there are multiple 
 generations of this software.  RomWBW Z-System is a combination of both 
-ZCPR-DJ (the CCP) and ZSDOS 1.1 (the BDOS) when referring to Z-System.  
+ZCPR-DJ (the CCP) and ZSDOS 1.1 (the BDOS) when referring to Z-System. 
 The latest version of Z-System (ZCPR 3.4) is also provided with RomWBW 
 via the NZ-COM adaptation (see below).
 
@@ -2469,7 +2496,7 @@ CP/M 3 and ZCPR 3.
 To create (or update) a ZPM3 boot drive, you must place `ZPMLDR.SYS` on 
 the system track of the disk.  You must also place `CPM3.SYS`, 
 `ZCCP.COM`, `ZINSTAL.ZPM`, and `STARTZPM.COM` on the target drive as 
-regular files.  Do **not** place CPM3.SYS on the boot track.  
+regular files.  Do **not** place CPM3.SYS on the boot track. 
 `ZPMLDR.SYS` chain loads `CPM3.SYS` which must exist as a regular file 
 on the disk.  Subsequently, `CPM3.SYS` loads `CCP.COM`.
 
@@ -2548,9 +2575,9 @@ the QP/M components.  To do this, you can perform the following steps:
 
 1. Use RomWBW `SYSCOPY` to place the stock RomWBW CP/M OS image
    onto the system tracks of the QP/M boot disk:
-   
+
    `SYSCOPY A:=x:CPM.SYS`
-   
+
    where x is the drive letter of your ROM Disk.
 
 1. Run `QINSTALL` to overlay the QP/M OS components on your
@@ -2708,11 +2735,11 @@ To boot into Fuzix:
   ```
   RCBus [RCZ180_nat_wbw] Boot Loader
   FP Switches = 0x00
-  
+
   Boot [H=Help]: 2
-  
+
   Booting Disk Unit 2, Slice 0, Sector 0x00000000...
-  
+
   Volume "Fuzix 126 Loader" [0xF200-0xF400, entry @ 0xF200]...
   FUZIX version 0.4
   Copyright (c) 1988-2002 by H.F.Bower, D.Braun, S.Nitschke, H.Peraza
@@ -2741,13 +2768,13 @@ To boot into Fuzix:
   Enter new date:
   Current time is 13:30:24
   Enter new time:
-  
+
    ^ ^
    n n   Fuzix 0.4
    >@<
          Welcome to Fuzix
    m m
-  
+
   login:
   ```
 
@@ -2756,7 +2783,7 @@ To boot into Fuzix:
 
   ```
   login: root
-  
+
   Welcome to FUZIX.
   #
   ```
@@ -2840,7 +2867,7 @@ This application understands both FAT filesystems as well as CP/M filesystems.
   characters are **not permitted** in a CP/M filename:
 
   `< > . , ; : = ? * [ ] _ % | ( ) / \`
-  
+
   The FAT application does not auto-rename files when it encounters
   invalid filenames.  It will just issue an error and quit.
   Additionally, the error message is not very clear about the problem.
@@ -2915,8 +2942,8 @@ computer and access it using `FAT` based on its RomWBW unit number.
 **WARNING**: Microsoft Windows will sometimes suggest reformatting 
 partitions that it does not recognize.  If you are prompted to format a 
 partition of your SD/CF/USB Media when inserting the card into a Windows
- computer, you probably want to select Cancel.
-  
+computer, you probably want to select Cancel.
+
 ## FAT Application Usage
 
 Complete instructions for the `FAT` application are found in $doc_apps$.
@@ -3392,7 +3419,7 @@ The document is called "dri-cpnet.pdf".
 Under CP/M 2.2, you will start the networking client using the command 
 `CPNETLDR`.  Under CP/M 3, you use the command `NDOS3`. If that works, 
 you can map network drives as local drives using the `NETWORK` command.
-The `CPNETSTS` command is useful for displaying the current status.  
+The `CPNETSTS` command is useful for displaying the current status.
 Here is a sample session from CP/M 2.2:
 
 ```
@@ -4182,6 +4209,8 @@ please let me know if I missed you!
 
 * Ladislau Szilagyi has contributed an enhanced version of
   CP/M Cowgol that leverages RomWBW memory banking.
+
+* Les Bird has contributed support for the NABU w/ Option Board
 
 Contributions of all kinds to RomWBW are very welcome.
 
@@ -5817,6 +5846,36 @@ S- MD: TYPE=RAM
 - SD: MODE=, IO=66, UNITS=1
 
 ##### Notes:
+
+`\clearpage`{=latex}
+
+### NABU w/ RomWBW Option Board
+
+#### ROM Image File:  NABU_std.rom
+
+|                   |               |
+|-------------------|---------------|
+| Default CPU Speed | 3.580 MHz     |
+| Interrupts        | Mode 1        |
+| System Timer      | None          |
+| Serial Default    | 115200 Baud   |
+| Memory Manager    | Z2            |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
+
+##### Supported Hardware (see [Appendix B - Device Summary]):
+
+- UART: MODE=NABU, IO=72
+- TMS: MODE=NABU, IO=160
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- PPIDE: IO=96, MASTER
+- PPIDE: IO=96, SLAVE
+- AY38910: MODE=NABU, IO=65, CLOCK=1789772 HZ
+
+##### Notes:
+
+- TMS video assumes F18A replacement for TMS9918
 
 `\clearpage`{=latex}
 

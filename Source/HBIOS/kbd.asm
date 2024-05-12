@@ -56,7 +56,7 @@ KBD_STATUS	.DB	0	; CURRENT STATUS BITS (SEE ABOVE)
 KBD_REPEAT	.DB	0	; CURRENT REPEAT RATE
 KBD_IDLE	.DB	0	; IDLE COUNT
 ;
-	.ECHO	"KBD: ENABLED\n"
+	DEVECHO	"KBD: ENABLED\n"
 ;
 ;__________________________________________________________________________________________________
 ; KEYBOARD INITIALIZATION

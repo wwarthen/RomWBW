@@ -96,13 +96,7 @@ init$2:
 	rst	08			; do it, de=maj/min/up/pat
 	ld	a,d			; a := maj/min
 	cp	((rmj << 4) | rmn)	; match?
-	jr	nz,init$3		; handle ver mismatch
-	ld	a,e			; a := os up/pat
-	and	0F0h			; pat not included in match
-	cp	(rup << 4)		; match?
-	jr	nz,init$3		; handle ver mismatch
-	jr	init$4			; all good, continue
-init$3:
+	jr	z,init$4		; all good, continue
 	; display version mismatch
 	ld	hl,vermis$msg		; version mismatch
 	call	?pmsg			; display it

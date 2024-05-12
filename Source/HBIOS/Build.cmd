@@ -50,6 +50,7 @@ echo.
 ::
 
 tasm -t80 -g3 -dCMD hbios_env.asm hbios_env.com hbios_env.lst || exit /b
+zxcc hbios_env
 zxcc hbios_env >hbios_env.cmd
 call hbios_env.cmd
 
@@ -241,6 +242,7 @@ call Build S100 std || exit /b
 call Build DUO std || exit /b
 call Build HEATH std || exit /b
 call Build EPITX std || exit /b
+call Build NABU std || exit /b
 :: call Build MON std || exit /b
 
 goto :eof

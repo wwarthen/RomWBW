@@ -12,6 +12,8 @@ Version 3.5
 - WBW: Added Cowgol disk image based on the work of Ladislau Szilagyi
 - WBW: Added support for CP/NET on Duodyne Disk I/O
 - DDW: Added support for Duodyne Media board
+- WBW: Auto restore TMS video on user reset (CP/M warm boot)
+- L?B: Added support for NABU w/ RomWBW Option Board
 
 Version 3.4
 -----------

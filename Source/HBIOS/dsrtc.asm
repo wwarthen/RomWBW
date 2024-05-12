@@ -66,30 +66,30 @@
 ; RTC LATCH WRITE
 ; ---------------
 ;
-; BIT	SBC	RCBUS	SBC-004	MFPIC	K80W  	N8	N8-CSIO	MK4	SC130	SC131	SC126		MBC	RPH
-; -----	-------	-------	-------	-------	-------	-------	-------	-------	-------	-------	---------------	------- -------
-; D7	RTC_OUT RTC_OUT RTC_OUT	--	--	RTC_OUT RTC_OUT	RTC_OUT	--	--	RTC_OUT,I2C_SDA	RTC_OUT	RTC_OUT
-; D6	RTC_CLK RTC_CLK RTC_CLK	--	--	RTC_CLK RTC_CLK	RTC_CLK	--	--	RTC_CLK		RTC_CLK	RTC_CLK
-; D5	/RTC_WE /RTC_WE /RTC_WE	--	--	/RTC_WE /RTC_WE	/RTC_WE	--	--	/RTC_WE		/RTC_WE	/RTC_WE
-; D4	RTC_CE	RTC_CE	RTC_CE	--	--	RTC_CE  RTC_CE	RTC_CE	--	--	RTC_CE		RTC_CE	RTC_CE
-; D3	NC	NC	CLKSEL	/RTC_CE	/RTC_CE	NC	NC	NC	--	--	/SPI_CS2	CLKSEL	--
-; D2	NC	NC	SPK	RTC_CLK	RTC_CLK	SPI_CS	SPI_CS	NC	/SPI_CS1/SPI_CS1/SPI_CS1	SPK	--
-; D1	--	--	--	RTC_WE	RTC_WE	SPI_CLK	NC	NC	--	--	FS		LED1	--
-; D0	--	--	--	RTC_OUT	RTC_OUT	SPI_DI	NC	NC	--	--	I2C_SCL		LED0	--
+; BIT	SBC	RCBUS	SBC-004	MFPIC	K80W  	N8	N8-CSIO	MK4	SC126		SC130	SC131	SC140	SC503	SC722	MBC	RPH
+; -----	-------	-------	-------	-------	-------	-------	-------	-------	---------------	-------	-------	-------	-------	-------	------- -------
+; D7	RTC_OUT RTC_OUT RTC_OUT	--	--	RTC_OUT RTC_OUT	RTC_OUT	RTC_OUT,I2C_SDA	--	--	--	--	--	RTC_OUT	RTC_OUT
+; D6	RTC_CLK RTC_CLK RTC_CLK	--	--	RTC_CLK RTC_CLK	RTC_CLK	RTC_CLK		--	--	--	--	--	RTC_CLK	RTC_CLK
+; D5	/RTC_WE /RTC_WE /RTC_WE	--	--	/RTC_WE /RTC_WE	/RTC_WE	/RTC_WE		--	--	--	--	--	/RTC_WE	/RTC_WE
+; D4	RTC_CE	RTC_CE	RTC_CE	--	--	RTC_CE  RTC_CE	RTC_CE	RTC_CE		--	--	--	--	--	RTC_CE	RTC_CE
+; D3	NC	NC	CLKSEL	/RTC_CE	/RTC_CE	NC	NC	NC	/SPI_CS2	--	--	--	--	--	CLKSEL	--
+; D2	NC	NC	SPK	RTC_CLK	RTC_CLK	SPI_CS	SPI_CS	NC	/SPI_CS1	/SPI_CS1/SPI_CS1/SPI_CS1/SPI_CS1/SPI_CS1SPK	--
+; D1	--	--	--	RTC_WE	RTC_WE	SPI_CLK	NC	NC	FS		--	--	--	--	--	LED1	--
+; D0	--	--	--	RTC_OUT	RTC_OUT	SPI_DI	NC	NC	I2C_SCL		--	--	--	--	--	LED0	--
+;                                                                                                                       
+; RTC LATCH LATCH READ                                                                                                  
+; --------------------                                                                                                  
+;                                                                                                                       
+; D7	--	--	--	--	--	--	--	--	I2C_SDA		--	--	--	--	--	--	--
+; D6	CFG	--	CFG	--	--	SPI_DO	CFG	--	--		--	--	--	--	--	CFG	--
+; D5	--	--	--	--	--	--	--	--	--		--	--	--	--	--	--	--
+; D4	--	--	--	--	--	--	--	--	--		--	--	--	--	--	--	--
+; D3	--	--	--	--	--	--	--	--	--		--	--	--	--	--	--	--
+; D2	--	--	--	--	--	--	--	--	--		--	--	--	--	--	--	--
+; D1	--	--	--	--	--	--	--	--	--		--	--	--	--	--	CLKSEL	--
+; D0	RTC_IN	RTC_IN	RTC_IN	RTC_IN	RTC_IN	RTC_IN	RTC_IN	RTC_IN	RTC_IN		--	--	--	--	--	RTC_IN	RTC_IN
 ;
-; RTC LATCH READTCH READ
-; ----------------------
-;
-; D7	--	--	--	--	--	--	--	--	--	--	I2C_SDA		--	--
-; D6	CFG	--	CFG	--	--	SPI_DO	CFG	--	--	--	--		CFG	--
-; D5	--	--	--	--	--	--	--	--	--	--	--		--	--
-; D4	--	--	--	--	--	--	--	--	--	--	--		--	--
-; D3	--	--	--	--	--	--	--	--	--	--	--		--	--
-; D2	--	--	--	--	--	--	--	--	--	--	--		--	--
-; D1	--	--	--	--	--	--	--	--	--	--	--		CLKSEL	--
-; D0	RTC_IN	RTC_IN	RTC_IN	RTC_IN	RTC_IN	RTC_IN	RTC_IN	RTC_IN	--	--	RTC_IN		RTC_IN	RTC_IN
-;
-	.ECHO	"DSRTC: MODE="
+	DEVECHO	"DSRTC: MODE="
 ;
 #IF (DSRTCMODE == DSRTCMODE_STD)
 ;
@@ -107,7 +107,7 @@ RTCDEF		.SET	RTCDEF | DSRTC_IDLE	; FOR HBIOS MAINLINE
 ;
 #DEFINE	DSRTC_OPRVAL	HB_RTCVAL
 ;
-		.ECHO	"STD"
+		DEVECHO	"STD"
 ;
 #ENDIF
 ;
@@ -125,7 +125,7 @@ DSRTC_IDLE	.EQU	%00001000	; QUIESCENT STATE
 ;
 #DEFINE	DSRTC_OPRVAL	DSRTC_RTCVAL
 ;
-		.ECHO	"MFPIC"
+		DEVECHO	"MFPIC"
 ;
 #ENDIF
 ;
@@ -143,13 +143,13 @@ DSRTC_IDLE	.EQU	%00001000	; QUIESCENT STATE
 ;
 #DEFINE	DSRTC_OPRVAL	HB_RTCVAL
 ;
-		.ECHO	"K80W"
+		DEVECHO	"K80W"
 ;
 #ENDIF
 ;
-		.ECHO	", IO="
-		.ECHO	DSRTC_IO
-		.ECHO	"\n"
+		DEVECHO	", IO="
+		DEVECHO	DSRTC_IO
+		DEVECHO	"\n"
 ;
 ; VALUES FOR DIFFERENT BATTERY OR SUPERCAPACITOR CHARGE RATES
 ;
