@@ -6,7 +6,7 @@
 ***                                                                 ***
 ***********************************************************************
 
-This directory ("Doc/CPM") is part of the RomWBW System Software
+This directory ("Doc/Language") is part of the RomWBW System Software
 distribution archive.  It contains documentation for Programming
 Languages provided with the system.
 
