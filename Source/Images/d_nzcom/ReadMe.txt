@@ -16,7 +16,7 @@ User Guide.pdf" document found in the Doc directory of the
 RomWBW Distribution.
 
 The primary documentation for NZ-COM is the "NZCOM Users Manual.pdf"
-document  contained in the Doc directory of the RomWBW distribution.
+document  contained in the Doc/CPM directory of the RomWBW distribution.
 This document is a supplement to the primary documentation.  Additionally,
 please review the file called RELEASE.NOT on this disk which contains
 a variety of updates regarding the NZ-COM distribuition.
@@ -77,7 +77,7 @@ The following additional customizations were also performed:
 
 The following files came from the official NZCOM distribution.  These
 are generally documented in the "NZCOM Users Manual.pdf" document in
-the Doc directory of the RomWBW distribution.  Note that some of the
+the Doc/CPM directory of the RomWBW distribution.  Note that some of the
 files included in the NZ-COM distribution are not listed below because
 they have been superseded by more recent versions listed in other
 sections below.  For example, TCSELECT is not listed here, but a more
@@ -164,7 +164,7 @@ The following files have been included from CP/M 2.2.  These files
 provide various functionality that is not really available from the
 ZSDOS applications themselves.  For example, the CP/M 2.2 application
 called STAT is useful for modifying the IOBYTE.  Most of these
-applications are documented in the "CPM Manual.pdf" document in the Doc
+applications are documented in the "CPM Manual.pdf" document in the Doc/CPM
 directory of the RomWBW distribution.
 
 ASM.COM - DRI 8080 assembler producing Intel hex files
@@ -180,7 +180,7 @@ XSUB.COM - DRI batch file enhancer resident system extension
 == ZSDOS Files ==
 
 The following files came from the official ZSDOS distribution.  These
-are generally documented in the "ZSDOS Manual.pdf" document in the Doc
+are generally documented in the "ZSDOS Manual.pdf" document in the Doc CPM
 directory of the RomWBW distribution.  These files are relevant under
 NZ-COM because ZSDOS is a part of the NZ-COM system.
 

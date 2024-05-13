@@ -2241,7 +2241,7 @@ less likely to encounter compatibility issues.
 
 #### Documentation
 
-* [CPM Manual]($doc_root$/CPM Manual.pdf)
+* [CPM Manual]($doc_root$/CPM/CPM Manual.pdf)
 
 #### Boot Disk
 
@@ -2287,9 +2287,9 @@ via the NZ-COM adaptation (see below).
 
 #### Documentation
 
-* [ZCPR Manual]($doc_root$/ZCPR Manual.pdf)
-* [ZCPR-DJ]($doc_root$/ZCPR-DJ.doc)
-* [ZSDOS Manual]($doc_root$/ZSDOS Manual.pdf)
+* [ZCPR Manual]($doc_root$/CPM/ZCPR Manual.pdf)
+* [ZCPR-DJ]($doc_root$/CPM/ZCPR-DJ.doc)
+* [ZSDOS Manual]($doc_root$/CPM/ZSDOS Manual.pdf)
 
 #### Boot Disk
 
@@ -2376,7 +2376,7 @@ Manual.pdf" document in order to use this operating system effectively.
 
 #### Documentation
 
-* [NZCOM Users Manual]($doc_root$/NZCOM Users Manual.pdf)
+* [NZCOM Users Manual]($doc_root$/CPM/NZCOM Users Manual.pdf)
 
 #### Boot Disk
 
@@ -2401,10 +2401,10 @@ has a new suite of support tools and help system.
 
 #### Documentation
 
-* [CPM3 Users Guide]($doc_root$/CPM3 Users Guide.pdf)
-* [CPM3 Command Summary]($doc_root$/CPM3 Command Summary.pdf)
-* [CPM3 Programmers Guide]($doc_root$/CPM3 Programmers Guide.pdf)
-* [CPM3 System Guide]($doc_root$/CPM3 System Guide.pdf)
+* [CPM3 Users Guide]($doc_root$/CPM/CPM3 Users Guide.pdf)
+* [CPM3 Command Summary]($doc_root$/CPM/CPM3 Command Summary.pdf)
+* [CPM3 Programmers Guide]($doc_root$/CPM/CPM3 Programmers Guide.pdf)
+* [CPM3 System Guide]($doc_root$/CPM/CPM3 System Guide.pdf)
 
 #### Boot Disk
 
@@ -2553,9 +2553,9 @@ regarding the RomWBW adaptation and customizations.
 
 #### Documentation
 
-* [QP/M 2.7 Installation Guide and Supplements]($doc_root$/qpm27.pdf)
-* [QP/M 2.7 Interface Guide]($doc_root$/qdos27.pdf)
-* [QP/M 2.7 Features and Facilities]($doc_root$/qcp27.pdf)
+* [QP/M 2.7 Installation Guide and Supplements]($doc_root$/CPM/qpm27.pdf)
+* [QP/M 2.7 Interface Guide]($doc_root$/CPM/qdos27.pdf)
+* [QP/M 2.7 Features and Facilities]($doc_root$/CPM/qcp27.pdf)
 
 #### Boot Disk
 

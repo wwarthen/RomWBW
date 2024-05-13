@@ -7,7 +7,7 @@ for MS-DOS or Windows XP is also available.
 
 For full documentation, see https://www.aztecmuseum.ca/
 
-The user manual is available in the Doc directory
+The user manual is available in the Doc/Language directory
 Aztec_C_1.06_User_Manual_Mar84.pdf
 
 == License ==

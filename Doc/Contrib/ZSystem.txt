@@ -4,7 +4,7 @@ ZSDOS Adaptation Notes for RomWBW
 Wayne Warthen
 wwarthen@gmail.com
 
-This file is a log of the work done to adapt the ZSDOS distribution to the N8VEM platforms under RomWBW.  I strongly recommend reviewing the zsdos.pdf file in the Doc directory.
+This file is a log of the work done to adapt the ZSDOS distribution to the N8VEM platforms under RomWBW.  I strongly recommend reviewing the zsdos.pdf file in the Doc/CPM directory.
 
 The starting point was the general public release of ZSDOS that is generally available.  The first line of the README file is "ZSDOS-GP.  General Public Release of the ZSDOS 1.x Operating System."
 

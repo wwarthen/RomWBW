@@ -8,7 +8,7 @@ listing output may be sent to a disk file, the console and/or the printer, in
 any combination. Output files may also be generated containing cross-reference
 information on each symbol used.
 
-The manual is available in the Doc directory,
+The manual is available in the Doc/Language directory,
 z80asm (SLR Systems).pdf
 
 A run through of using the assembler is available at
