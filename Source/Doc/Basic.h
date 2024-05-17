@@ -1,6 +1,7 @@
 $define{doc_ver}{Version 3.5}$
 $define{doc_product}{RomWBW}$
-$define{doc_root}{https://github.com/wwarthen/RomWBW/raw/dev/Doc}$
+$define{file_root}{https://github.com/wwarthen/RomWBW/raw/master}$
+$define{doc_root}{$file_root$/Doc}$
 $ifndef{doc_title}$ $define{doc_title}{Document Title}$ $endif$
 $ifndef{doc_author}$ $define{doc_author}{Wayne Warthen}$ $endif$
 $define{doc_date}{$date{%d %b %Y}$}$

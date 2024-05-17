@@ -2628,7 +2628,19 @@ selecting slice 0 of the corresponding hard disk unit at
 the RomWBW Boot Loader prompt.  Do not attempt to use
 CP/M slices on the same disk.
 
-Refer to the ReadMe.txt file in Source/pSys for more details.
+Due to limitations in the p-System configuration mechanism, it does
+not recognize the arrow keys of an ANSI Terminal.  To work around
+this, the following control keys have been defined:
+
+| Function   | Key        |
+|------------|------------|
+| Up         | ctrl+E     |
+| Down       | ctrl+X     |
+| Left       | ctrl+S     |
+| Right      | ctrl+D     |
+
+Refer to [Source/pSys/ReadMe.txt]($file_root$/Source/pSys/ReadMe.txt)
+for more details about the p-System adaptation.
 
 #### Documentation
 
