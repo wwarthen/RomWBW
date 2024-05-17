@@ -176,6 +176,8 @@ estidx:
 	jr	z,hkim
 	cp	2
 	jr	z,hkim
+	cp	3
+	jr	z,hkim
 	ret
 ;
 ; Setup interrupt handler
@@ -545,8 +547,8 @@ stack	.equ	$		; stack top
 ;
 ; Messages
 ;
-msgban	.db	"INTTEST v1.2, 15-May-2019",13,10
-	.db	"Copyright (C) 2019, Wayne Warthen, GNU GPL v3",0
+msgban	.db	"INTTEST v1.3, 16-May-2024",13,10
+	.db	"Copyright (C) 2024, Wayne Warthen, GNU GPL v3",0
 msginfo	.db	"Interrupt information request...",0
 msgmode	.db	"  Active interrupt mode: ",0
 msgcnt	.db	"  Vector entries in use: ",0
