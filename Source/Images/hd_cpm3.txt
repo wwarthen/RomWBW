@@ -23,6 +23,8 @@
 #
 #../../Binary/Apps/*.com 0:
 ../../Binary/Apps/assign.com 0:
+../../Binary/Apps/bbcbasic.com 0:
+../../Binary/Apps/bbcbasic.txt 0:
 ../../Binary/Apps/cpuspd.com 0:
 ../../Binary/Apps/fat.com 0:
 ../../Binary/Apps/fdu.com 0:

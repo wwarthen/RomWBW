@@ -1,3 +1,20 @@
+This is a RomWBW HBIOS adaptation of BBCBASIC v5.00.  The
+cursor and screen management assumes the use of an ANSI/VT-100 terminal
+which is generally correct for RomWBW.  Support for a hardware system
+timer is also implemented.  If your system does not have a hardware
+timer, the TIME function will always return 0 and the timeout
+parameter of the INKEY(n) function will not be observed (will never
+timeout).
+
+What follows is some basic information on BBCBASIC from the
+distribution.  Note that it starts with the v3.00 information and
+later on provides information on the changes in v5.00.
+
+-- WBW 1:15 PM 5/30/2024
+
+
+
+
                               BBC BASIC (Z80)
 
                          Generic CP/M Version 3.00
@@ -367,3 +384,72 @@
      200  Close error              255  CP/M error
      204  Bad name
 
+
+New features in BBC BASIC (Z80) version 5.00, May 2024:
+
+1. BASIC V statements
+
+1.1  WHILE...ENDWHILE
+1.2  Multi-line IF...THEN...ELSE...ENDIF
+1.3  CASE...WHEN...OTHERWISE...ENDCASE
+1.4  LOCAL DATA / RESTORE DATA
+1.5  ON ERROR LOCAL / RESTORE ERROR
+1.6  DIM var LOCAL size 
+1.7  ERROR err, message$
+1.8  RESTORE +n
+1.9  SWAP var1,var2
+1.10 BPUT #file,string$[;]
+1.11 QUIT
+
+2. BASIC V functions
+
+2.1  DIM(array()[,sub])
+2.2  END (pointer to free space)
+2.3  REPORT$
+2.4  Binary constants
+2.5  LEFT$ & RIGHT$ with last parameter omitted
+2.6  MOD(array)
+2.7  SUM(array)
+2.8  SUMLEN(array)
+2.9  GET$#file 
+
+3. BASIC V whole array operations
+
+3.1  Pass a whole array to a FN/PROC
+3.2  Pass a whole array to CALL
+3.3  Whole array assignment
+3.4  Whole array arithmetic *
+3.5  Array dot-product operator
+3.6  Array initialisation lists
+3.7  Array compound assignment (+= etc.)
+3.8  Make a whole array LOCAL
+3.9  DIM a LOCAL array (on the stack) + 
+
+* String array expressions A$() = B$() + C$() are not currently supported.
++ LOCAL string arrays should be initialised to their maximum needed length
+  to eliminate the risk of a memory leak each time the PROC/FN is called:
+     LOCAL a$() : DIM a$(size%) : a$() = STRING$(max%, "a") : a$() = ""
+
+4. Miscellaneous BASIC V features
+
+4.1  Bit-shifts <<, >>, >>>
+4.2  Floating-point indirection (|)
+4.3  RETURNed parameters from FN/PROC
+4.4  Compound assignment (+=, -=, *=, /= etc.)
+4.5  Assigning to a sub-string: LEFT$()=, MID$()= , RIGHT$()=
+4.6  Hooks for CIRCLE,ELLIPSE,FILL,LINE,MOUSE,ORIGIN,RECTANGLE,TINT,SYS,WAIT
+4.7  Hooks for WIDTH function, TINT function, MODE function
+
+5. Extensions to Acorn's BASIC V, compatible with BB4W, BBCSDL and BBCTTY
+
+5.1  EXIT REPEAT / WHILE / FOR [var]
+5.2  Address-of operator ^
+5.3  Byte variables and arrays (& suffix)
+5.4  'BY len' and 'TO term' qualifiers to GET$#file
+5.5  ELSE IF <condition> THEN; (trailing semicolon)
+5.6  == synonymous with = in comparisons
+5.7  DIM a global array inside a FN/PROC (use RETURN)
+
+Note: The token for PUT has changed from &CE in version 3 to &0E in version 5.
+If this token is present in existing programs it will list as ENDWHILE rather
+than PUT, and the programs will need to be modified to restore functionality.

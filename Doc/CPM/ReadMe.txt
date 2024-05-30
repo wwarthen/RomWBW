@@ -7,8 +7,8 @@
 ***********************************************************************
 
 This directory ("Doc/CPM") is part of the RomWBW System Software
-distribution archive.  It contains documentation for the CP/M
-operating system components of the system.
+distribution archive.  It contains documentation for the CP/M and
+CP/M work-alike operating system components of the system.
 
 
 CPM Manual ("CPM Manual.pdf")
