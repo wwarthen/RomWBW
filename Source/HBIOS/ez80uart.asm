@@ -14,6 +14,9 @@ LSR_THRE	.EQU	$20
 
 ; #DEFINE CALLIL(a,b)	.DB	$5B,$CD \	.DW b	\ .DB b
 
+; call.IL $01FFxx WHERE xx IS r*4
+#DEFINE FIRMWARE_FN(r)	.DB	$5B,$CD \	.DW	($FF00+(r*4))	\ .DB $01
+
 EZUART_PREINIT:
 	LD	E, 'A'
 	CALL	EZUART_OUT
@@ -27,6 +30,9 @@ EZUART_PREINIT:
 	CALL	EZUART_OUT
 	LD	E, 10
 	CALL	EZUART_OUT
+
+	FIRMWARE_FN(0)
+
 	RET
 
 EZUART_INIT:
@@ -43,10 +49,11 @@ EZUART_INIT:
 	LD	E, 10
 	CALL	EZUART_OUT
 
-	;call.il, $001000
-	.db	$5B,$CD
-	.dw	$1000
-	.db	$00
+	FIRMWARE_FN(1)
+	; ;call.il, $001000
+	; .db	$5B,$CD
+	; .dw	$FF00
+	; .db	$01
 
 	RET
 
