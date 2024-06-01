@@ -4,7 +4,9 @@ FROM ubuntu:jammy-20240111 as basebuilder
 
 # docker run -v ${PWD}:/src/ --privileged=true -u $(id -u ${USER}):$(id -g ${USER}) -it vipoo/romwbw:latest
 
-# cd Source && make ROM_PLATFORM=RCZ80 ROM_CONFIG=std
+# cd Tools && make
+# cd Source && make rom ROM_PLATFORM=RCEZ80 ROM_CONFIG=std
+
 LABEL Maintainer="Dean Netherton" \
       Description="spike to use clang for ez80 target"
 
