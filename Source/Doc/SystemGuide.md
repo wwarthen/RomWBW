@@ -1963,6 +1963,7 @@ The hardware Platform (L) is identified as follows:
 | PLT_MK4       |5       | MARK IV                                 |
 | PLT_UNA       |6       | UNA BIOS                                |
 | PLT_RCZ80     |7       | RCBUS W/ Z80                            |
+| PLT_RCEZ80    |7       | RCBUS W/ eZ80                           |
 | PLT_RCZ180    |8       | RCBUS W/ Z180                           |
 | PLT_EZZ80     |9       | EASY/TINY Z80                           |
 | PLT_SCZ180    |10      | RCBUS SC126, SC130, SC131, SC140        |
