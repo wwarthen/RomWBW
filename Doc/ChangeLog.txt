@@ -17,6 +17,7 @@ Version 3.5
 - M?P: Reorganization of Doc directory introducing subfolders
 - WBW: Upgraded BBCBASIC to v5.00
 - W?S: Updated FLASH utility to v1.3.9
+- WBW: Support RCBus PS/2 Keyboard (EP/Sally)
 
 Version 3.4
 -----------
