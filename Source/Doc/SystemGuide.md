@@ -126,6 +126,142 @@ execution.
 
 ![Bank Switched Memory Layout](Graphics/BankSwitchedMemory){ width=100% }
 
+## Bank Id
+
+RomWBW utilizes a specific assignment of memory banks for dedicated
+purposes.  A numeric Bank Id is used to refer to the memory banks.  The
+Bank Id is a single byte.  In general, the Bank Id simply refers to each
+of the 32K banks in sequential order.  In other words, Bank Id 0 is the
+first physical 32K, Bank Id 1 is the second, etc.  However, the high
+order bit of the Bank Id has a special meaning.  If it is 0, it indicates
+a ROM bank is being referred to.  If it is 1, it indicates a RAM bank
+is being referred to.
+
+For example, let's say we have a typical system with 512KB of ROM and
+512KB of RAM.  The Bank Ids would look like this:
+
+| Physical Memory   | Type | Physical Bank | Bank Id   |
+|-------------------|------|---------------|-----------|
+| 0x000000-0x007FFF | ROM  | 0             | 0x00      |
+| 0x008000-0x00FFFF | ROM  | 1             | 0x01      |
+| 0x010000-0x07FFFF | ROM  | 2-15          | 0x02-0x0F |
+| 0x080000-0x087FFF | RAM  | 16            | 0x80      |
+| 0x088000-0x08FFFF | RAM  | 17            | 0x81      |
+| 0x090000-0x0FFFFF | RAM  | 18-31         | 0x82-0x8F |
+
+Note that Bank Id 0x00 is **always** the first bank of ROM and 0x80 is
+**always** the first bank of RAM.  If there were more banks of physical ROM,
+they would be assigned Bank Ids starting with 0x10.  Likewise, additional
+bank of physical RAM would be assigned Bank Ids starting with 0x90.
+
+The Bank Id is used in all RomWBW API functions when referring to
+the mapping of banks to the lower 32K bank area of the processor.  In
+this way, all RomWBW functions can refer to a generic Bank Id without
+needing to understand how a specific hardware platform accesses the
+physical memory areas.  A single routine within the HBIOS is implemented
+for each memory manager that maps Bank Ids to physical memory.
+
+## Bank Assignments
+
+RomWBW requires dedicated banks of memory for specific purposes.  It
+uses Bank Ids via an algorithm to make these assignments.  The following
+table describes the way the banks are assigned.  The Typical column
+shows the specific values that would be assigned for a common system
+with 512KB of ROM and 512KB of RAM (nROM=16, nRAM=16).
+
+| Bank Id           | Identity  | Typical | Purpose                                  |
+|-------------------|-----------|---------|------------------------------------------|
+| 0x00              |BID_BOOT   | 0x00    | Boot Bank (HBIOS image)                  |
+| 0x01              |BID_IMG0   | 0x01    | Boot Loader, Monitor, ROM OSes, ROM Apps |
+| 0x02              |BID_IMG1   | 0x02    | ROM Apps                                 |
+| 0x03              |BID_IMG2   | 0x03    | \<Reserved\>                             |
+| 0x04              |BID_ROMD0  | 0x04    | First ROM Disk Bank                      |
+| nROM - 1          |           | 0x0F    | Last ROM Disk Bank                       |
+| 0x80              |BID_BIOS   | 0x80    | HBIOS (working copy)                     |
+| 0x81              |BID_RAMD0  | 0x81    | First RAM Disk Bank                      |
+| 0x80 + nRAM - 8   |           | 0x88    | Last RAM Disk Bank                       |
+| 0x80 + nRAM - 7   |BID_APP0   | 0x89    | First Application Bank                   |
+| 0x80 + nRAM - 5   |           | 0x8B    | Last Application Bank                    |
+| 0x80 + nRAM - 4   |BID_BUF    | 0x8C    | OS Disk Buffers                          |
+| 0x80 + nRAM - 3   |BID_AUX    | 0x8D    | OS Code Bank                             |
+| 0x80 + nRAM - 2   |BID_USR    | 0x8E    | User Bank (CP/M TPA)                     |
+| 0x80 + nRAM - 1   |BID_COM    | 0x8F    | Common Bank                              |
+
+In this table, nROM and nRAM refer to the number of corresponding
+ROM and RAM banks in the the system.
+
+The contents of the banks referred to above are described in more detail
+below:
+
+Boot Bank:
+
+: The Boot Bank receives control when a system is first powered
+on.  It contains a ROM (read-only) copy of the HBIOS.  At boot, it does
+minimal hardware initialization, then copies itself to the HBIOS bank
+in RAM, then resumes execution from the RAM bank.
+
+Boot Loader:
+
+: The application that handles loading of ROM or Disk based applications
+including operating systems.  It copies itself to a RAM bank at the
+start of it's execution.
+
+Monitor:
+
+: The application that implements the basic system monitor functions.
+It copies itself to a RAM bank at the start of it's execution.
+
+ROM OSes:
+
+: Code images of CP/M 2.2 and Z-System which are copied to RAM and
+executed when a ROM-based operating system is selected in the Boot
+Loader.
+
+ROM Applications:
+
+: Various ROM-based application images such as BASIC, FORTH, etc.  They
+can be selected in the Boot Loader.  The Boot Loader will copy the
+application image to a RAM bank, then transfer control to it.
+
+ROM Disk:
+
+: A sequential series of banks assigned to provide the system ROM Disk
+contents.
+
+HBIOS:
+
+: This bank hosts the running copy of the RomWBW HBIOS.
+
+RAM Disk:
+
+: A sequential series of banks assigned to provide the system RAM Disk.
+
+Application Bank:
+
+: A sequential series of banks that are available for use by applications
+that wish to utilize banked memory.
+
+OS Disk Buffers:
+
+: This bank is used by CP/M 3 and ZPM3 for disk buffer storage.
+
+OS Code Bank:
+
+: This bank is used by CP/M 3 and ZPM3 as an alternate bank for code.
+This allows these operating systems to make additional TPA space
+available for applications.
+
+User Bank:
+
+: This is the default bank for applications to use.  This includes the
+traditional TPA space for CP/M.
+
+Common Bank:
+
+: This bank is mapped to the upper 32K of the processors memory space.
+It is a fixed mapping that is never changed in normal RomWBW operation
+hence the name "Common".
+
 # System Boot Process
 
 A multi-phase boot strategy is employed. This is necessary because at

@@ -18,6 +18,7 @@ Version 3.5
 - WBW: Upgraded BBCBASIC to v5.00
 - W?S: Updated FLASH utility to v1.3.9
 - WBW: Support RCBus PS/2 Keyboard (EP/Sally)
+- M?R: Update Timer app to display output in decimal
 
 Version 3.4
 -----------
