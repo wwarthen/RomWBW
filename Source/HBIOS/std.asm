@@ -24,6 +24,8 @@
 ; 20. MON	Jacques Pelletier's Monsputer
 ; 21. STDZ180	Genesis Z180 System
 ; 22. NABU	NABU w/ Les Bird's RomWBW Option Board
+; 23. FZ80	S100 Computers FPGA Z80
+; 
 ;
 ; INCLUDE BUILD VERSION
 ;

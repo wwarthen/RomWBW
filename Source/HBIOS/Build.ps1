@@ -27,7 +27,7 @@ $ErrorAction = 'Stop'
 # UNA BIOS is simply imbedded, it is not built here.
 #
 
-$PlatformListZ80 = "SBC", "MBC", "ZETA", "ZETA2", "RCZ80", "Z80RETRO", "DUO", "UNA", "HEATH", "MON", "NABU"
+$PlatformListZ80 = "SBC", "MBC", "ZETA", "ZETA2", "RCZ80", "Z80RETRO", "DUO", "UNA", "HEATH", "MON", "NABU", "FZ80"
 $PlatformListZ180 = "N8", "MK4", "RCZ180", "SCZ180", "DYNO", "RPH", "S100", "EPITX"
 $PlatformListZ280 = "RCZ280"
 

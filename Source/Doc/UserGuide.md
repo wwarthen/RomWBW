@@ -264,6 +264,7 @@ is discussed in [Customizing RomWBW].
 | [Heath H8 Z80 System]^10^                                      | H8      | HEATH_std.rom         | 115200        |
 | [EP Mini-ITX Z180]^11^                                         | RCBus?  | EPITX_std.rom         | 115200        |
 | [NABU w/ RomWBW Option Board]^10^                              | NABU    | NABU_std.rom          | 115200        |
+| [S100 FPGA Z80]^9^                                             | S100    | FZ80_std.rom          | 9600          |
 
 | ^1^Designed by Andrew Lynch
 | ^2^Designed by Sergey Kiselev
@@ -5890,6 +5891,33 @@ S- MD: TYPE=RAM
 - TMS video assumes F18A replacement for TMS9918
 
 `\clearpage`{=latex}
+
+### S100 FPGA Z80
+
+#### ROM Image File:  FZ80_std.rom
+
+|                   |               |
+|-------------------|---------------|
+| Default CPU Speed | 8.000 MHz     |
+| Interrupts        | None          |
+| System Timer      | None          |
+| Serial Default    | 9600 Baud     |
+| Memory Manager    | Z2            |
+| ROM Size          | 0 KB          |
+| RAM Size          | 512 KB        |
+
+##### Supported Hardware (see [Appendix B - Device Summary]):
+
+FP: LEDIO=255
+SSER: IO=52
+SCON: IO=0
+MD: TYPE=RAM
+PPIDE: IO=48, MASTER
+PPIDE: IO=48, SLAVE
+
+##### Notes:
+
+- Requires matching FPGA code
 
 ## Appendix B - Device Summary
 

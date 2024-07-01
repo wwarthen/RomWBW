@@ -2408,14 +2408,19 @@ to see if it is incrementing.
 |----------------------------------------|----------------------------------------|
 | B: 0xF8                                | A: Status                              |
 | C: 0xD1                                | DEHL: Seconds Count                    |
-|                                        | C: Ticks per Second                    |
+|                                        | C: Remainder Ticks                     |
 
-Return the a Seconds Count (DEHL) with the number of seconds that have 
+Return the Seconds Count (DEHL) with the number of seconds that have 
 elapsed since the system was started.  This is a double-word binary 
-value.  Additionally, the number of Ticks per Second (C) is returned.  
-The returned Status (A) is a standard HBIOS result code.
+value.  Additionally, Remainder Ticks (C) is returned and contains the number
+of ticks that have elapsed within the current second.
 
-This availability of the Seconds Count (DEHL) is dependent on having a 
+Note that Remainder Ticks (C) will have a value from 0 to 49 since there are
+50 ticks per second.  So, Remainder Ticks does not represent a fraction of the
+current second.  Remainder Ticks (C) can be doubled to derive the hundredths of
+milliseconds elapsed within the current second.
+
+The availability of the Seconds Count (DEHL) is dependent on having a 
 system timer active.  If the hardware configuration has no system timer,
 then Seconds Count (DEHL) will not increment.
 

@@ -19,6 +19,8 @@ Version 3.5
 - W?S: Updated FLASH utility to v1.3.9
 - WBW: Support RCBus PS/2 Keyboard (EP/Sally)
 - M?R: Update Timer app to display output in decimal
+- WBW: Preliminary support for S100 FPGA Z80 platform
+- WBW: Added simple serial (SSER) driver
 
 Version 3.4
 -----------

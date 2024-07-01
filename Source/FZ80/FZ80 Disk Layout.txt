@@ -1,0 +1,19 @@
+FZ80 Disk Prefix Layout
+=======================
+
+---- Bytes ----   --- Sectors ---
+Start   Length    Start   Length    Description
+------- -------   ------- -------   ---------------------------
+0x00000 0x001BE   0       1         Unused
+0x001B8 0x00048                     RomWBW Partition Table
+0x00200 0x1EE00   1       7FE00     Unused
+0x80000 0x60000   1024    768       RomWBW
+0x100000          2048              Start of slices (partition 0x1E)
+
+Notes
+-----
+
+- FPGA Z80 Monitor reads 384KB (RomWBW) from sectors 1024-1791 of CF into first 384KB of physical RAM
+- FPGA Z80 ZRC Monitor maps first 32KB of physical RAM to first 32KB of CPU RAM and starts execution at 0x0000
+
+-- WBW 3:18 PM 6/30/2024
