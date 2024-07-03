@@ -21,6 +21,7 @@ Version 3.5
 - M?R: Update Timer app to display output in decimal
 - WBW: Preliminary support for S100 FPGA Z80 platform
 - WBW: Added simple serial (SSER) driver
+- WBW: Added preliminary support for S100 FPGA Z80 SD Cards
 
 Version 3.4
 -----------
