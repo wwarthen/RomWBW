@@ -114,7 +114,6 @@ Documentation for $doc_product$ includes:
 * $doc_user$
 * $doc_sys$
 * $doc_apps$
-* $doc_romapps$
 * $doc_errata$
 
 # Acknowledgments

@@ -11,11 +11,8 @@ companion documents you should refer to as appropriate:
   of RomWBW.  It includes a reference for the RomWBW HBIOS API
   functions.
 
-* $doc_romapps$ is a reference for the ROM-hosted applications provided
-  with RomWBW including the monitor, programming languages, etc.
-
-* $doc_apps$ is a reference for the OS-hosted proprietary command
-  line applications that were created to enhance RomWBW.
+* $doc_apps$ is a reference for the ROM-hosted and OS-hosted applications
+  created or customized to enhance the operation of RomWBW.
 
 * $doc_catalog$ is a reference for the contents of the disk images
   provided with RomWBW.  It is somewhat out of date at this time.
@@ -391,7 +388,7 @@ At the Boot Loader prompt, you can type `H <enter>` for help.  You
 can type `L <enter>` to list the available built-in ROM applications.
 If your terminal supports ANSI escape sequences, you can try the
 'P' command to play a simple on-screen game.  Instructions for the
-game are found in $doc_romapps$.
+game are found in $doc_apps$.
 
 If all of this seems fine, your ROM has been successfully programmed.
 See the [Boot Loader Operation] section of this document for further
@@ -645,7 +642,7 @@ return to the Boot Loader menu.  If you are interested in creating a
 custom application to run here, review the "usrrom.asm" file in the
 Source/HBIOS folder of the distribution.
 
-Each of the ROM Applications is documented in $doc_romapps$.  Some
+Each of the ROM Applications is documented in $doc_apps$.  Some
 of the applications (such as BASIC) also have their own independent
 manual in the Doc directory of the distribution.  The OSes included
 in the ROM (CP/M 2.2 & Z-System) are described in the Operating Systems

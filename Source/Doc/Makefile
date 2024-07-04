@@ -3,7 +3,7 @@
 # and available on commandline for this build to work!!!
 # Typically "sudo apt install gpp pandoc texlive-latex-extra texlive-luatex texlive-fonts-extra fonts-roboto"
 #
-OBJECTS = ReadMe.gfm ReadMe.txt UserGuide.pdf SystemGuide.pdf Applications.pdf ROM_Applications.pdf Catalog.pdf Errata.pdf
+OBJECTS = ReadMe.gfm ReadMe.txt UserGuide.pdf SystemGuide.pdf Applications.pdf Catalog.pdf Errata.pdf
 # DEST = ../../Doc
 TOOLS = ../../Tools
 OTHERS = *.tmp
@@ -36,6 +36,5 @@ deploy :
 	cp UserGuide.pdf         "../../Doc/RomWBW User Guide.pdf"
 	cp SystemGuide.pdf       "../../Doc/RomWBW System Guide.pdf"
 	cp Applications.pdf      "../../Doc/RomWBW Applications.pdf"
-	cp ROM_Applications.pdf  "../../Doc/RomWBW ROM Applications.pdf"
 	cp Catalog.pdf           "../../Doc/RomWBW Disk Catalog.pdf"
 	cp Errata.pdf             "../../Doc/RomWBW Errata.pdf"

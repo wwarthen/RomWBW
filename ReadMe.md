@@ -3,7 +3,7 @@
 **RomWBW ReadMe** \
 Version 3.5 \
 Wayne Warthen  ([wwarthen@gmail.com](mailto:wwarthen@gmail.com)) \
-30 Jun 2024
+03 Jul 2024
 
 # Overview
 
@@ -124,8 +124,6 @@ Documentation for RomWBW includes:
   Guide](https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20System%20Guide.pdf)
 - [RomWBW
   Applications](https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20Applications.pdf)
-- [RomWBW ROM
-  Applications](https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20ROM%20Applications.pdf)
 - [RomWBW
   Errata](https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20Errata.pdf)
 

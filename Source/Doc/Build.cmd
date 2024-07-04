@@ -15,7 +15,6 @@ call :GenDoc ReadMe
 call :GenDoc UserGuide
 call :GenDoc SystemGuide
 call :GenDoc Applications
-call :GenDoc ROM_Applications
 call :GenDoc Catalog
 call :GenDoc Errata
 
@@ -24,7 +23,6 @@ if exist ReadMe.txt copy ReadMe.txt ..\..\ReadMe.txt || exit /b
 if exist UserGuide.pdf copy UserGuide.pdf "..\..\Doc\RomWBW User Guide.pdf" || exit /b
 if exist SystemGuide.pdf copy SystemGuide.pdf "..\..\Doc\RomWBW System Guide.pdf" || exit /b
 if exist Applications.pdf copy Applications.pdf "..\..\Doc\RomWBW Applications.pdf" || exit /b
-if exist ROM_Applications.pdf copy ROM_Applications.pdf "..\..\Doc\RomWBW ROM Applications.pdf" || exit /b
 if exist Catalog.pdf copy Catalog.pdf "..\..\Doc\RomWBW Disk Catalog.pdf" || exit /b
 if exist Errata.pdf copy Errata.pdf "..\..\Doc\RomWBW Errata.pdf" || exit /b
 

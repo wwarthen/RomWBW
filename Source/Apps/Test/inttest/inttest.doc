@@ -1,0 +1,44 @@
+INTTEST
+=======
+
+RomWBW includes an API allowing applications to "hook" interrupts.
+The `INTTEST` utility allows you to test this functionality.
+
+
+** Syntax **
+
+`INTTEST`
+
+
+** Usage **
+
+`INTTEST` is an interactive application.  At startup, it will display
+a list of the interrupt vector slots in your system along with the
+current vector address for each of them.
+
+It then prompts you to enter the slot number (in hex) of a vector to
+hook.  After entering this, the application will watch the hooked
+vector and countdown from 0xFF to 0x00 as interrupts are noted.
+
+When the counter reaches 0x00, the interrupt is unhooked and the
+application terminates.  The application can also be terminated by
+pressing <esc>.
+
+
+** Notes **
+
+If your system is running without interrupts active, the application
+will terminate immediately.
+
+All slots have vectors even if the corresponding interrupt is not
+doing anything.  In this case, the vector is pointing to the "bad
+interrupt" handler.
+
+If you hook a vector that is not receiving any interrupts, the
+down-counter will not do anything.
+
+
+** Etymology* *
+
+The `INTTEST` command is an original product and the source code is
+provided in the RomWBW distribution.

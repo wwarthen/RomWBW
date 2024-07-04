@@ -11,7 +11,6 @@ $define{doc_orgurl}{www.retrobrewcomputers.org}$
 $define{doc_user}{[RomWBW User Guide]($doc_root$/RomWBW User Guide.pdf)}$
 $define{doc_sys}{[RomWBW System Guide]($doc_root$/RomWBW System Guide.pdf)}$
 $define{doc_apps}{[RomWBW Applications]($doc_root$/RomWBW Applications.pdf)}$
-$define{doc_romapps}{[RomWBW ROM Applications]($doc_root$/RomWBW ROM Applications.pdf)}$
 $define{doc_catalog}{[RomWBW Disk Catalog]($doc_root$/RomWBW Disk Catalog.pdf)}$
 $define{doc_errata}{[RomWBW Errata]($doc_root$/RomWBW Errata.pdf)}$
 

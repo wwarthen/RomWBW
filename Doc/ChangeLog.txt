@@ -22,6 +22,8 @@ Version 3.5
 - WBW: Preliminary support for S100 FPGA Z80 platform
 - WBW: Added simple serial (SSER) driver
 - WBW: Added preliminary support for S100 FPGA Z80 SD Cards
+- M?R: Consolidated ROM Applications document into the Applications document
+- M?R: Reviewed and substantially improved the Applications document
 
 Version 3.4
 -----------
