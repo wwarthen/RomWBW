@@ -1,11 +1,24 @@
 FROM ubuntu:jammy-20240111 as basebuilder
 
-# docker build --progress plain -t vipoo/romwbw .
+# This docker file can be used to build a tool chain docker image for building RomWBW images.
 
-# docker run -v ${PWD}:/src/ --privileged=true -u $(id -u ${USER}):$(id -g ${USER}) -it vipoo/romwbw:latest
+# Tested on a ubuntu host and on Windows un WSL (with docker desktop)
+
+# First build the docker image (will b)
+# docker build --progress plain -t romwbw-chain .
+
+# After you have built the above image (called romwbw-chain), you can use it to compile and build the RomWBW images
+# as per the standard make scripts within RomWBW.
+# Start a new terminal, cd to where you have clone RomWBW, and then run this command: 
+# docker run -v ${PWD}:/src/ --privileged=true -u $(id -u ${USER}):$(id -g ${USER}) -it romwbw-chain:latest
+
+# you can now compile and build the required images:
 
 # cd Tools && make
+# cd Source && make # at least once to build many common units
 # cd Source && make rom ROM_PLATFORM=RCEZ80 ROM_CONFIG=std
+
+# when finish, type 'exit' to return to back to your standard terminal session
 
 LABEL Maintainer="Dean Netherton" \
       Description="spike to use clang for ez80 target"
@@ -33,4 +46,3 @@ WORKDIR /src/
 RUN apt install -y --no-install-recommends build-essential libncurses-dev srecord bsdmainutils
 
 RUN adduser --disabled-password --gecos "" builder
-
