@@ -6,7 +6,7 @@ include $(TOOLS)/Makefile.inc
 
 .SHELLFLAGS = -ce
 
-ROMAPPS1 := assign mode rtc syscopy xm
+ROMAPPS1 := assign mode rtc syscopy xm ../../Source/Images/Common/All/WDATE
 ROMAPPS2 := fdu format survey sysgen talk timer cpuspd
 
 rom128_%.dat: DISKDEF=wbw_rom128

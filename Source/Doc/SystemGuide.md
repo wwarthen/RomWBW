@@ -889,14 +889,15 @@ more than one at a time.  The RTC unit is assigned a Device Type ID
 which indicates the specific hardware device driver that handles the 
 unit.  The table below enumerates these values.
 
-| **Device Type** | **ID** | **Description**                          | **Driver** |
-|-----------------|-------:|------------------------------------------|------------|
-| RTCDEV_DS       | 0x00   | Maxim DS1302 Real-Time Clock w/ NVRAM    | dsrtc.asm  |
-| RTCDEV_BQ       | 0x01   | BQ4845P Real Time Clock                  | bqrtc.asm  |
-| RTCDEV_SIMH     | 0x02   | SIMH Simulator Real-Time Clock           | simrtc.asm |
-| RTCDEV_INT      | 0x03   | Interrupt-based Real Time Clock          | intrtc.asm |
-| RTCDEV_DS7      | 0x04   | Maxim DS1307 PCF I2C RTC w/ NVRAM        | ds7rtc.asm |
-| RTCDEV_RP5      | 0x05   | Ricoh RPC01A Real-Time Clock w/ NVRAM    | rp5rtc.asm |
+| **Device Type** | **ID** | **Description**                          | **Driver**  |
+|-----------------|-------:|------------------------------------------|-------------|
+| RTCDEV_DS       | 0x00   | Maxim DS1302 Real-Time Clock w/ NVRAM    | dsrtc.asm   |
+| RTCDEV_BQ       | 0x01   | BQ4845P Real Time Clock                  | bqrtc.asm   |
+| RTCDEV_SIMH     | 0x02   | SIMH Simulator Real-Time Clock           | simrtc.asm  |
+| RTCDEV_INT      | 0x03   | Interrupt-based Real Time Clock          | intrtc.asm  |
+| RTCDEV_DS7      | 0x04   | Maxim DS1307 PCF I2C RTC w/ NVRAM        | ds7rtc.asm  |
+| RTCDEV_RP5      | 0x05   | Ricoh RPC01A Real-Time Clock w/ NVRAM    | rp5rtc.asm  |
+| RTCDEV_EZ80     | 0x06   | eZ80 on-chip RTC                         | ez80rtc.asm |
 
 The time functions to get and set the time (RTCGTM and RTCSTM) require a
 6 byte date/time buffer in the following format. Each byte is BCD 
