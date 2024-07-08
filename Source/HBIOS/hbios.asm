@@ -173,7 +173,7 @@ SUPCTS	.EQU	FALSE		; SUPPRESS CTS DURING HBIOS BOOT
 ; SET DIAGNOSTIC LEDS
 ;
 ; SCxxx: LED Port=0x0E, bit 2, inverted, dedicated port (LEDMODE_SC)
-; SC7xx: LED Port=0x0E, bit 0, inverted, dedicated port (LEDMODE_STD)
+; SC7xx/SC5xx: LED Port=0x0E, bit 0, inverted, dedicated port (LEDMODE_STD)
 ; TinyZ80: LED Port=0x6E, bit 0, inverted, dedicated port (LEDMODE_STD)
 ; Z80-512K: LED Port=0x6E, bit 0, inverted, dedicated port (LEDMODE_STD)
 ; MBC: LED Port=0x70, bits 1-0, normal, shared w/ RTC port (LEDMODE_RTC)
@@ -3704,6 +3704,9 @@ HB_INITTBL:
 #ENDIF
 #IF (DS7RTCENABLE)
 	.DW	DS7RTC_INIT
+#ENDIF
+#IF (DS5RTCENABLE)
+	.DW	DS5RTC_INIT
 #ENDIF
 #IF (RP5RTCENABLE)
 	.DW	RP5RTC_INIT
@@ -7953,12 +7956,12 @@ SIZ_PCF		.EQU	$ - ORG_PCF
 		MEMECHO	" bytes.\n"
 #ENDIF
 ;
-#IF (DS7RTCENABLE)
-ORG_DS7RTC	.EQU	$
-  #INCLUDE "ds7rtc.asm"
-SIZ_DS7RTC	.EQU	$ - ORG_DS7RTC
-		MEMECHO	"DS7RTC occupies "
-		MEMECHO	SIZ_DS7RTC
+#IF (DS5RTCENABLE)
+ORG_DS5RTC	.EQU	$
+  #INCLUDE "ds5rtc.asm"
+SIZ_DS5RTC	.EQU	$ - ORG_DS5RTC
+		MEMECHO	"DS5RTC occupies "
+		MEMECHO	SIZ_DS5RTC
 		MEMECHO	" bytes.\n"
 #ENDIF
 ;

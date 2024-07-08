@@ -5912,6 +5912,16 @@ MD: TYPE=RAM
 PPIDE: IO=48, MASTER
 PPIDE: IO=48, SLAVE
 
+
+FP: LEDIO=255
+DS5RTC: RTCIO=104, IO=104
+SSER: IO=52
+SCON: IO=0
+MD: TYPE=RAM
+PPIDE: IO=48, MASTER
+PPIDE: IO=48, SLAVE
+SD: MODE=FZ80, IO=108, UNITS=2
+
 ##### Notes:
 
 - Requires matching FPGA code
@@ -5933,7 +5943,8 @@ may be discovered by RomWBW in your system.
 | CTC       | System   | Zilog Clock/Timer                                      |
 | CVDU      | Video    | MC8563-based Video Display Controller                  |
 | DMA       | System   | Zilog DMA Controller                                   |
-| DS1307    | RTC      | Maxim DS1307 PCF I2C Real-Time Clock w/ NVRAM          |
+| DS5RTC    | RTC      | Maxim DS1305 SPI Real-Time Clock w/ NVRAM              |
+| DS7RTC    | RTC      | Maxim DS1307 PCF I2C Real-Time Clock w/ NVRAM          |
 | DS1501RTC | RTC      | Maxim DS1501/DS1511 Watchdog Real-Time Clock           |
 | DSRTC     | RTC      | Maxim DS1302 Real-Time Clock w/ NVRAM                  |
 | DUART     | Char     | SCC2681 or compatible Dual UART                        |
@@ -5973,6 +5984,7 @@ may be discovered by RomWBW in your system.
 | SN76489   | Sound    | SN76489 Programmable Sound Generator                   |
 | SPK       | Sound    | Bit-bang Speaker                                       |
 | SYQ       | Disk     | Iomega SparQ Drive on PPI                              |
+| SSER      | Char     | Simple Serial Interface                                |
 | TMS       | Video    | TMS9918/38/58 Video Display Controller                 |
 | UART      | Char     | 16C550 Family Serial Interface                         |
 | USB-FIFO  | Char     | FT232H-based ECB USB FIFO                              |
