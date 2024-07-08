@@ -25,6 +25,7 @@ Version 3.5
 - M?R: Consolidated ROM Applications document into the Applications document
 - M?R: Reviewed and substantially improved the Applications document
 - WBW: Added support for DS1305 RTC on S100 FPGA Z80
+- WBW: Added support for Les Bird's RCBus Graphics/Sound/Joystick module
 
 Version 3.4
 -----------
