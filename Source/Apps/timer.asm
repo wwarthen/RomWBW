@@ -186,6 +186,8 @@ option:
 	jp	z,usage		; yes, display usage
 	cp	'C'		; is it a 'C', continuous?
 	jp	z,setcont	; yes, set continuous display
+	cp	'R'
+	jp	z,reset		; reset timer
 	jp	errprm		; anything else is an error
 ;
 usage:
@@ -197,6 +199,30 @@ setcont:
 	or	$FF		; set A to true
 	ld	(cont),a	; and set continuous flag
 	jr	option		; check for more option letters
+
+reset:
+	; Test of API function to set seconds value
+	push	bc
+	push	hl
+	push	de
+	push	af
+	ld	b,bf_sysset	; HBIOS SYSGET function
+	ld	c,bf_syssettimer; SECONDS subfunction
+	ld	de,0		; set seconds value
+	ld	hl,0		; ... to 1000
+	rst	08		; call HBIOS, DE:HL := seconds value
+
+	ld	b,bf_sysset	; HBIOS SYSGET function
+	ld	c,bf_syssetsecs	; SECONDS subfunction
+	ld	de,0		; set seconds value
+	ld	hl,0		; ... to 1000
+	rst	08		; call HBIOS, DE:HL := seconds value
+
+	pop	af
+	pop	de
+	pop	hl
+	pop	bc
+	jr	option
 ;
 ; Identify active BIOS.  RomWBW HBIOS=1, UNA UBIOS=2, else 0
 ;
@@ -491,12 +517,13 @@ stack	.equ	$		; stack top
 ;
 ; Messages
 ;
-msgban	.db	"TIMER v1.1, 10-Nov-2019",13,10
+msgban	.db	"TIMER v1.2, 10-Nov-2019",13,10
 	.db	"Copyright (C) 2019, Wayne Warthen, GNU GPL v3",0
 msguse	.db	"Usage: TIMER [/C] [/?]",13,10
 	.db	"  ex. TIMER           (display current timer value)",13,10
 	.db	"      TIMER /?        (display version and usage)",13,10
-	.db	"      TIMER /C        (display timer value continuously)",0
+	.db	"      TIMER /C        (display timer value continuously)",13,10
+	.db	"      TIMER /R        (reset timer values to 0)",0
 msgprm	.db	"Parameter error (TIMER /? for usage)",0
 msgbio	.db	"Incompatible BIOS or version, "
 	.db	"HBIOS v", '0' + rmj, ".", '0' + rmn, " required",0
