@@ -350,20 +350,9 @@ RTCDEF	.SET	RTCDEF | %00001000	; INITIAL SPEED LOW
   #ENDIF
 	DEVECHO	"\n"
 #ENDIF
-;
-; EMIT PREFIX REQUIRED BY EZ80 TO ENSURE CORRECT 16 BIT IO OPERATION
-;
-#IF (CPUFAM == CPU_EZ80)
-  #DEFINE EZ80_IO	.DB 	$49, $CF	; RST.L $08
-  #DEFINE EZ80_FN 	.DB	$49, $D7	; RST.L $10
-  #DEFINE EZ80_BNKSEL 	.DB	$49, $DF	; RST.L $18
 
-  #DEFINE RET.L		.DB	$49 \ RET
-IO_SEGMENT	.EQU		$FF		; THE UPPER 8-BIT ADDRESS FOR I/O
+#include "ez80instr.inc"
 
-#ELSE
-  #DEFINE EZ80_IO
-#ENDIF
 ;
 ;==================================================================================================
 ; Z80 PAGE ZERO, VECTORS, ETC.
