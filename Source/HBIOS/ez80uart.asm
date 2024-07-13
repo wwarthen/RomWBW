@@ -3,6 +3,29 @@
 ; eZ80 UART DRIVER (SERIAL PORT)
 ;==================================================================================================
 ;
+;
+; Supported Line Characteristics are encoded as follows in the DE register pair:
+;
+; | **Bits** | **Characteristic**                     |
+; |---------:|----------------------------------------|
+; | 15-14    | Reserved (set to 0)                    |
+; | 13       | RTS (Not implemented)                  |
+; | 12-8     | Baud Rate* (see below)                 |
+; | 7        | DTR (Not implemented)                  |
+; | 6        | XON/XOFF Flow Control (not implemented)|
+; | 5        | Stick Parity (not implemented)         |
+; | 4        | Even Parity (set for true)             |
+; | 3        | Parity Enable (set for true)           |
+; | 2        | Stop Bits (0-> 1 BIT, 1-> 2 BITS)      |
+; | 1-0      | Data Bits (5-8 encoded as 0-3)         |
+;
+; * The 5-bit Baud Rate value (V) is encoded as V = 75 * 2^X * 3^Y. The
+; bits are defined as YXXXX.
+;
+; STICK & EVEN & PARITY -> MARK PARITY -> NOT SUPPORTED
+; STICK & !EVEN & PARITY -> SPACE PARITY -> NOT SUPPORTED
+; THEREFORE, MARK PARITY WILL BE INTERPRETED AS EVEN PARITY
+; AND SPACE PARITY WILL BE INTERPRETED AS ODD PARITY
 
 UART0_LSR	.EQU	$C5
 UART0_THR	.EQU	$C0
@@ -10,6 +33,7 @@ UART0_RBR	.EQU	$C0
 
 LSR_THRE	.EQU	$20
 LSR_DR		.EQU	$01
+
 
 EZUART_PREINIT:
 	LD	BC, EZUART_FNTBL
@@ -23,28 +47,69 @@ EZUART_PREINIT:
 EZUART_INIT:
 	XOR	A
 	RET
-
-
-; RETRIEVE THE NEXT CHARACTER FROM THE UART AND RETURN IN E
+;
+; ### Function 0x00 -- Character Input (CIOIN)
+;
+; Read and return a Character (E).  If no character(s) are available in the
+; input buffer, this function will wait indefinitely.  The returned Status
+; (A) is a standard HBIOS result code.
+;
+; Outputs:
+;  E: Character
+;  A: Status (0-OK, else error)
+;
 EZUART_IN:
 	LD	A, 3			; UART
 	LD	B, 0			; UART-IN
 	EZ80_FN				; CHAR RETURNED IN E
 	RET
-	
-; OUT CHAR IN E
+;
+; ### Function 0x01 -- Character Output (CIOOUT)
+;
+; Send the Character (E).  If there is no space available in the unit's output
+; buffer, the function will wait indefinitely.  The returned Status (A) is a
+; standard HBIOS result code.
+;
+; Inputs:
+;  E: Character
+;
+; Outputs:
+;  A: Status (0-OK, else error)
+;
 EZUART_OUT:
 	LD	A, 3			; UART
 	LD	B, 1			; UART-OUT
 	EZ80_FN
 	RET
-
+;
+; ### Function 0x02 -- Character Input Status (CIOIST)
+;
+; Return the count of Characters Pending (A) in the input buffer.
+;
+; The value returned in register A is used as both a Status (A) code and
+; the return value. Negative values (bit 7 set) indicate a standard HBIOS
+; result (error) code.  Otherwise, the return value represents the number
+; of characters in the input buffer.
+;
+; Outputs:
+;  A: Status / Characters Pending
+;
 EZUART_IST:
 	LD	A, 3			; UART
 	LD	B, 2			; UART-IST
 	EZ80_FN
 	RET
-
+;
+; ### Function 0x03 -- Character Output Status (CIOOST)
+;
+; Return the status of the output FIFO.  0 means the output FIFO is full and
+; no more characters can be sent. 1 means the output FIFO is not full and at
+; least one character can be sent.  Negative values (bit 7 set) indicate a
+; standard HBIOS result (error) code.
+;
+; Outputs
+;   A: Status (0 -> Full, 1 -> OK to send, < 0 -> HBIOS error code)
+;
 EZUART_OST:
 	LD	A, 3			; UART
 	LD	B, 3			; UART-OST
@@ -52,16 +117,76 @@ EZUART_OST:
 	RET
 
 BAUD_RATE	.EQU	115200
-
+;
+; ### Function 0x04 -- Character I/O Initialization (CIOINIT)
+;
+; Apply the requested line Characteristics in (DE). The definition of the
+; line characteristics value is described above.  If DE contains -1 (0xFFFF),
+; then the input and output buffers will be flushed and reset.
+; The Status (A) is a standard HBIOS result code.
+;
+; Inputs:
+;   DE: Line Characteristics
+;
+; Outputs:
+;   A: Status (0-OK, else error)
+;
 EZUART_INITDEV:
-	LD	A, 3			; UART
-	LD	B, 4			; UART-CONFIG
-	LDHLMM.LIL(BAUD_RATE)
+	LD	A, D
+	CP	E
+	JR	NZ, NOT_RESET
+	CP	$FF
+	JR	NZ, NOT_RESET
 
-	LD	E, 3 << 3
+	; reset requested
+	LD	A, 3			; UART
+	LD	B, 6			; UART-RESET
 	EZ80_FN
 	RET
 
+NOT_RESET:
+	PUSH	DE			; SAVE LINE CHARACTERISTICS
+	LD	A, D
+	AND	$1F			; ISOLATE ENCODED BAUD RATE
+	LD	L, A			; PUT IN L
+	LD	H, 0			; H IS ALWAYS ZERO
+	LD	DE, 75			; BAUD RATE DECODE CONSTANT
+	CALL	DECODE			; DE:HL := BAUD RATE
+
+	;; convert E:HL{15:0} to HL{23:0}
+	LD	A, 0
+	LD	B, 1			; UTIL - LD HL, E:HL
+	EZ80_FN				;
+
+	POP	DE			; RESTORE REQUESTED LINE CHARACTERISTICS
+	LD	A, E
+	AND	3			; MASK FOR DATA BITS
+	RLCA
+	RLCA
+	RLCA				; SHIFT TO BITS 4:3
+	LD	D, A			; SAVE INTO D
+
+	BIT	2, E			; STOP BITS (1 OR 2)
+	JR	Z, ISKIP1
+	SET	2, D			; APPLY TO D
+ISKIP1:
+
+	BIT	3, E			; PARITY ENABLE
+	JR	Z, ISKIP2
+	SET	1, D			; APPLY TO D
+ISKIP2:
+
+	BIT	4, E			; EVEN PARITY
+	JR	Z, ISKIP3
+	SET	0, D			; APPLY TO D
+ISKIP3:
+
+	; D NOW CONTAINS THE LINE CONTROL BITS AS PER EZ80 FUNCTION
+
+	LD	A, 3			; UART
+	LD	B, 4			; UART-CONFIG
+	EZ80_FN
+	RET
 
 #DEFINE	TRANSLATE(nnn,rrr) \
 #defcont \		LDBCMM.LIL(nnn)
@@ -69,11 +194,27 @@ EZUART_INITDEV:
 #defcont \		JR	NC, $+7
 #defcont \		LD	D, rrr
 #defcont \		JP	uart_query_end
-
+;
+; ### Function 0x05 -- Character I/O Query (CIOQUERY)
+;
+; Returns the current Line Characteristics (DE). The definition of the line
+; characteristics value is described above. The returned status (A) is a
+; standard HBIOS result code.
+;
+; As the eZ80 UART driver supports more than the defined HBIOS baud rates, the
+; returned baud rate may be an approximation of the actual baud rate.
+;
+; Outputs:
+;  DE: Line Characteristics
+;  A: Status (0-OK, else error)
+;
 EZUART_QUERY:
 	LD	A, 3			; UART
 	LD	B, 5			; UART-QUERY
-	EZ80_FN
+	EZ80_FN		
+					; HL{23:0} := BAUD RATE
+					; D = LINE CONTROL BITS
+	PUSH	DE			; SAVE D
 
 	OR	A
 	; HL24 bit has the baud rate, we need to convert to the 5 bit representation?
@@ -109,15 +250,17 @@ EZUART_QUERY:
 	TRANSLATE(3072000-2150400,	01111b)	; BAUDRATE=2457600 (BETWEEN 2150401 AND 3072000)
 	TRANSLATE(5529600-3072000,	11110b)	; BAUDRATE=3686400 (BETWEEN 3072001 AND 5529600)
 
-	LD	D, 11111b				; BAUDRATE=7372800 (>=5529601)
+	LD	D, 11111b			; BAUDRATE=7372800 (>=5529601)
 uart_query_end:
+
+	POP	BC				; B = LINE CONTROL BITS
 
 ; Convert from line control settings from:
 ;
-;     E{0:1} = Parity    (00 -> NONE, 01 -> NONE, 10 -> ODD, 11 -> EVEN)
-;     E{2}   = Stop Bits (0 -> 1, 1 -> 2)
-;     E{3:4} = Data Bits (00 -> 5, 01 -> 6, 10 -> 7, 11 -> 8)
-;     E{5:5} = Hardware Flow Control CTS (0 -> OFF, 1 -> ON)
+;     B{0:1} = Parity    (00 -> NONE, 01 -> NONE, 10 -> ODD, 11 -> EVEN)
+;     B{2}   = Stop Bits (0 -> 1, 1 -> 2)
+;     B{3:4} = Data Bits (00 -> 5, 01 -> 6, 10 -> 7, 11 -> 8)
+;     B{5:5} = Hardware Flow Control CTS (0 -> OFF, 1 -> ON)
 ;
 ; to
 ;
@@ -131,24 +274,24 @@ uart_query_end:
 
 	XOR	A
 	OR	3 << 3		; ISOLATE DATA BITS
-	AND	E		; MASK IN DATA BITS
+	AND	B		; MASK IN DATA BITS
 
 	RRCA			; SHIFT TO BITS 1:0
 	RRCA
 	RRCA
 	LD	H, A		; H{1:0} DATA BITS
 
-	BIT	2, E		; STOP BITS
+	BIT	2, B		; STOP BITS
 	JR	Z, SKIP1
 	SET	2, H		; APPLY TO H
 
 SKIP1:
-	BIT	0, E		; PARITY ENABLE
+	BIT	1, B		; PARITY ENABLE
 	JR	Z, SKIP2
 	SET	3, H		; APPLY TO H
 
 SKIP2:
-	BIT	1, E		; EVEN PARITY
+	BIT	0, B		; EVEN PARITY
 	JR	Z, SKIP3
 	SET	4, H		; APPLY TO H
 
@@ -156,7 +299,20 @@ SKIP3:
 	LD	E, H
 	XOR	A
 	RET
-
+;
+; ### Function 0x06 -- Character I/O Device (CIODEVICE)
+;
+; Returns device information.  The status (A) is a standard HBIOS result
+; code.
+;
+; Outputs
+;  A: Status (0 - OK)
+;  C: Device Attribute (0 - RS/232)
+;  D: Device Type (CIODEV_EZ80UART)
+;  E: Physical Device Number
+;  H: Device Mode (0)
+;  L: Device I/O Base Address - Not Supported (0)
+;
 EZUART_DEVICE:
 	LD	D, CIODEV_EZ80UART	; D := DEVICE TYPE
 	LD	E, (IY)			; E := PHYSICAL UNIT
