@@ -2015,7 +2015,7 @@ sound will play for the duration defined in HL and then return.
 | **Entry Parameters**                   | **Returned Values**                    |
 |----------------------------------------|----------------------------------------|
 | B: 0x57                                | A: Status                              |
-| C: Disk Unit                           | C: Device Attributes                   |
+| C: Sound Unit                          | C: Device Attributes                   |
 |                                        | D: Device Type                         |
 |                                        | E: Device Number                       |
 |                                        | H: Device Unit Mode                    |
@@ -2037,6 +2037,17 @@ that is used by the specified unit.  The Device I/O Base Address
 is servicing the specified unit.  Both of these values are considered 
 driver specific.  Refer to the associated hardware driver for the values
 used.
+
+### Function 0x58 -- Sound Beep (SNDBEEP)
+
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x58                                | A: Status                              |
+| C: Sound Unit                          |                                        |
+
+Play a beep tone on the specified Sound Unit (C).  The beep will
+normally be about 1/3 second in duration and the tone will be
+approximately B5.
 
 `\clearpage`{=latex}
 

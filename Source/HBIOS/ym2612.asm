@@ -55,6 +55,7 @@ YM_FNTBL:	.DW	YM_RESET
 		.DW	YM_QUERY
 		.DW	YM_DURATION
 		.DW	YM_DEVICE
+		.DW	YM_BEEP
 ;
 #IF (($ - YM_FNTBL) != (SND_FNCNT * 2))
 	.ECHO	"*** INVALID SND FUNCTION TABLE ***\n"
@@ -195,6 +196,13 @@ YM_DEVICE:	LD	D,SNDDEV_YM2612		; D := DEVICE TYPE
 		LD	L,YMSEL			; L := BASE I/O ADDRESS
 		XOR	A
 		RET
+;
+;------------------------------------------------------------------------------
+; Sound driver function - BEEP
+;------------------------------------------------------------------------------
+;
+YM_BEEP:
+	JP	SND_BEEP		; DEFER TO GENERIC CODE IN HBIOS
 ;
 ;------------------------------------------------------------------------------
 ; Sound driver function - RESET
