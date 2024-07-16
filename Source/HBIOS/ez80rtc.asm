@@ -7,8 +7,6 @@ EZ80RTC_BUFSIZ	.EQU	6	; SIX BYTE BUFFER (YYMMDDHHMMSS)
 ;
 ; RTC DEVICE INITIALIZATION ENTRY
 
-		DEVECHO	"EZ80 RTC:\n"
-
 EZ80RTC_INIT:
 	; display driver install message
 	; delegate init function to firmware
