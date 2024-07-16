@@ -5074,6 +5074,12 @@ SYS_GETSECS:
 	LD	A, 2
 	LD	B, 1			; GET SECOND TICK
 	EZ80_FN
+
+	LD	A, 0
+	LD	B, 2			; LD E:HL{15:0}, HL
+	EZ80_FN
+	LD	D, 0
+
 	RET
 
 #ELSE
