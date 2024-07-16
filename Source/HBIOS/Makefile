@@ -18,7 +18,7 @@ endif
 
 ifeq ($(OBJECTS),)
 start:
-	chmod +x Build.sh
+	@chmod +x Build.sh
 	bash Build.sh $(DIFFBUILD)
 endif
 
@@ -59,7 +59,7 @@ ROMNAME=${ROM_PLATFORM}_${ROM_CONFIG}
 # $(info TASM=$(TASM))
 
 $(OBJECTS) : $(ROMDEPS)
-	cat romldr.bin dbgmon.bin ../ZSDOS/zsys_$(BIOS).bin ../CPM22/cpm_$(BIOS).bin >osimg.bin
+	@cat romldr.bin dbgmon.bin ../ZSDOS/zsys_$(BIOS).bin ../CPM22/cpm_$(BIOS).bin >osimg.bin
 	cat romldr.bin dbgmon.bin ../ZSDOS/zsys_$(BIOS).bin >osimg_small.bin
 	if [ $(ROM_PLATFORM) != UNA ] ; then \
 		cat camel80.bin nascom.bin tastybasic.bin game.bin eastaegg.bin netboot.mod updater.bin usrrom.bin >osimg1.bin ; \
@@ -104,19 +104,19 @@ tastybasic.bin:
 	cp ../TastyBasic/src/$@ .
 	
 hbios_rom.bin:	hbios.asm build.inc  $(DEPS)
-	$(TASM) -dROMBOOT hbios.asm hbios_rom.bin hbios_rom.lst
+	@$(TASM) -dROMBOOT hbios.asm hbios_rom.bin hbios_rom.lst
 
 hbios_app.bin:	hbios.asm build.inc  $(DEPS)
-	$(TASM) -dAPPBOOT hbios.asm hbios_app.bin hbios_app.lst
+	@$(TASM) -dAPPBOOT hbios.asm hbios_app.bin hbios_app.lst
 
 hbios_img.bin:	hbios.asm build.inc  $(DEPS)
-	$(TASM) -dIMGBOOT hbios.asm hbios_img.bin hbios_img.lst
+	@$(TASM) -dIMGBOOT hbios.asm hbios_img.bin hbios_img.lst
 
 hbios_env.com:	hbios_env.asm build.inc
-	$(TASM) -dBASH hbios_env.asm hbios_env.com hbios_env.lst
+	@$(TASM) -dBASH hbios_env.asm hbios_env.com hbios_env.lst
 	
 hbios_env.sh: hbios_env.com
-	$(ZXCC) hbios_env.com >hbios_env.sh
+	@$(ZXCC) hbios_env.com >hbios_env.sh
 
 romldr.bin:	build.inc
 dbgmon.bin:	build.inc
