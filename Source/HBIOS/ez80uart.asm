@@ -58,9 +58,7 @@ EZUART_INIT:
 ;  A: Status (0-OK, else error)
 ;
 EZUART_IN:
-	LD	A, 3			; UART
-	LD	B, 0			; UART-IN
-	EZ80_FN				; CHAR RETURNED IN E
+	EZ80_UART_IN()			; CHAR RETURNED IN E
 	RET
 ;
 ; ### Function 0x01 -- Character Output (CIOOUT)
@@ -76,9 +74,7 @@ EZUART_IN:
 ;  A: Status (0-OK, else error)
 ;
 EZUART_OUT:
-	LD	A, 3			; UART
-	LD	B, 1			; UART-OUT
-	EZ80_FN
+	EZ80_UART_OUT()
 	RET
 ;
 ; ### Function 0x02 -- Character Input Status (CIOIST)
@@ -94,9 +90,7 @@ EZUART_OUT:
 ;  A: Status / Characters Pending
 ;
 EZUART_IST:
-	LD	A, 3			; UART
-	LD	B, 2			; UART-IST
-	EZ80_FN
+	EZ80_UART_IN_STAT()
 	RET
 ;
 ; ### Function 0x03 -- Character Output Status (CIOOST)
@@ -110,9 +104,7 @@ EZUART_IST:
 ;   A: Status (0 -> Full, 1 -> OK to send, < 0 -> HBIOS error code)
 ;
 EZUART_OST:
-	LD	A, 3			; UART
-	LD	B, 3			; UART-OST
-	EZ80_FN
+	EZ80_UART_OUT_STAT()
 	RET
 
 BAUD_RATE	.EQU	115200
@@ -137,10 +129,7 @@ EZUART_INITDEV:
 	CP	$FF
 	JR	NZ, NOT_RESET
 
-	; reset requested
-	LD	A, 3			; UART
-	LD	B, 6			; UART-RESET
-	EZ80_FN
+	EZ80_UART_RESET()
 	RET
 
 NOT_RESET:
@@ -152,10 +141,7 @@ NOT_RESET:
 	LD	DE, 75			; BAUD RATE DECODE CONSTANT
 	CALL	DECODE			; DE:HL := BAUD RATE
 
-	;; convert E:HL{15:0} to HL{23:0}
-	LD	A, 0
-	LD	B, 1			; UTIL - LD HL, E:HL
-	EZ80_FN
+	EZ80_UTIL_EHL_TO_HL()		; HL{23:0} <- E:HL{15:0}
 
 	POP	DE			; RESTORE REQUESTED LINE CHARACTERISTICS
 	LD	A, E
@@ -182,9 +168,7 @@ ISKIP3:
 
 	; D NOW CONTAINS THE LINE CONTROL BITS AS PER EZ80 FUNCTION
 
-	LD	A, 3			; UART
-	LD	B, 4			; UART-CONFIG
-	EZ80_FN
+	EZ80_UART_CONFIG()
 	RET
 
 #DEFINE	TRANSLATE(nnn,rrr) \
@@ -208,9 +192,7 @@ ISKIP3:
 ;  A: Status (0-OK, else error)
 ;
 EZUART_QUERY:
-	LD	A, 3			; UART
-	LD	B, 5			; UART-QUERY
-	EZ80_FN		
+	EZ80_UART_QUERY()
 					; HL{23:0} := BAUD RATE
 					; D = LINE CONTROL BITS
 	PUSH	DE			; SAVE D
