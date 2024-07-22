@@ -43,8 +43,8 @@ Standard RAM Bank Layout (512K)
 Bank ID         Usage
 -------         ------
 0x80            RomWBW HBIOS
-0x81-0x88       RAM Disk Data (3)
-0x89-0x8B	App Banks (8)
+0x81-0x88       RAM Disk Data (8)
+0x89-0x8B	App Banks (3)
 0x8C		CP/M 3 Buffers
 0x8D            CP/M 3 OS
 0x8E            User TPA

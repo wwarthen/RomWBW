@@ -17,6 +17,21 @@
 ;    F   E   D   C   B   A   9   8     7   6   5   4   3   2   1   0
 ;              -- MCR --                        -- LCR --
 ;
+;  STANDARD UART BASE I/O ADDRESSES:
+;    - ECB SBC Z80	$68
+;    - ECB CASSETTE	$80
+;    - ECB 4UART	$C0,$C8,$D0,$D8
+;    - ECB MFPIC	$18
+;    - ZETA		$68
+;    - DUODYNE Z80	$58
+;    - DUODYNE SELFHOST	$A8
+;    - DUODYNE MULTI IO	$70,$78
+;    - NHYODYNE Z80	$68
+;    - NHYODYNE DUART	$80,$88
+;    - RCBUS EPSER	$A0,$A8
+;    - RCBUS DUAL RS232	$80,$88
+;    - EPITX		$A0,$A8
+;    - NABU		$48
 ;
 UART_DEBUG		.EQU	FALSE
 ;
