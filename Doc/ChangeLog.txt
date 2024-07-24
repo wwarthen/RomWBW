@@ -28,6 +28,7 @@ Version 3.5
 - WBW: Added support for Les Bird's RCBus Graphics/Sound/Joystick module
 - WBW: Added support for Les Bird's Dual 16C550 UART module
 - WBW: Refactor UART driver for more flexible configuration
+- M?R: Added hour/minute/second display to timer app
 
 Version 3.4
 -----------
