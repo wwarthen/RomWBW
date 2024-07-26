@@ -11,12 +11,12 @@ set PATH=%TOOLS%\gpp;%PATH%
 
 if not "%1"=="" (call :GenDoc %1 & goto :eof)
 
-call :GenDoc ReadMe
-call :GenDoc UserGuide
-call :GenDoc SystemGuide
-call :GenDoc Applications
-call :GenDoc Catalog
-call :GenDoc Errata
+call :GenDoc ReadMe || exit /b
+call :GenDoc UserGuide || exit /b
+call :GenDoc SystemGuide || exit /b
+call :GenDoc Applications || exit /b
+call :GenDoc Catalog || exit /b
+call :GenDoc Errata || exit /b
 
 if exist ReadMe.gfm copy Readme.gfm ..\..\ReadMe.md || exit /b
 if exist ReadMe.txt copy ReadMe.txt ..\..\ReadMe.txt || exit /b
