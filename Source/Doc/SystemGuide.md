@@ -1088,6 +1088,7 @@ below enumerates their values.
 | DIODEV_SYQ      | 0x0C   | Syquest Sparq Disk                       | syq.asm    |
 | DIODEV_CHUSB    | 0x0D   | CH375/376 USB Disk                       | ch.asm     |
 | DIODEV_CHSD     | 0x0E   | CH375/376 SD Card                        | ch.asm     |
+| DIODEV_USB      | 0x0F   | CH376 Native USB Device                  | ch376.asm  |
 
 A fixed set of media types are defined. The currently defined media 
 types identifiers are listed below. Each driver will support one or

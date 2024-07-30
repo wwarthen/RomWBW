@@ -1,4 +1,22 @@
 {
   "files.trimTrailingWhitespace": false,
-  "files.eol": "\r\n"
+  "files.eol": "\r\n",
+  "files.associations": {
+    "*.inc": "z80-macroasm",
+    "*.asm": "z80-macroasm",
+    "*.180": "z80-macroasm",
+    "*.asm.m4": "z80-macroasm",
+    "*.inc.m4": "z80-macroasm",
+    "*.mac": "z80-macroasm",
+    "*.asmpp": "z80-macroasm",
+    "*.zdsproj": "xml",
+    "ch376.h": "c",
+    "protocol.h": "c",
+    "usb_state.h": "c",
+    "functional": "c",
+    "class_scsi.h": "c",
+    "z80.h": "c",
+    "dev_transfers.h": "c",
+    "usb-base-drv.h": "c"
+  }
 }

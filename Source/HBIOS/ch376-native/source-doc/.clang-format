@@ -1,0 +1,13 @@
+BasedOnStyle: LLVM
+IndentWidth: 2
+AlignConsecutiveMacros: true
+ColumnLimit: 132
+AlignConsecutiveAssignments: true
+AlignConsecutiveDeclarations: true
+AlignEscapedNewlines: true
+AlignConsecutiveMacros: true
+AlignEscapedNewlines: Right
+BinPackArguments: true
+BinPackParameters: false
+IncludeBlocks: Preserve
+SortIncludes: CaseInsensitive
