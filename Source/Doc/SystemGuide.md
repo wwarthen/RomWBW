@@ -2409,6 +2409,9 @@ a double-word binary value.  The frequency of the system timer in Hertz
 is returned in Frequency (C). The returned Status (A) is a standard HBIOS
 result code.
 
+The tick count is a 32 bit binary value.  It will rollover to zero
+if the maximum value for a 32 bit number is reached.
+
 Note that not all hardware configuration have a system timer.  You
 can determine if a timer exists by calling this function repeatedly
 to see if it is incrementing.
