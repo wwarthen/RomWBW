@@ -2846,6 +2846,42 @@ PSCNX	.EQU	$ + 1
 	DJNZ	PSCN1
 ;
 #ENDIF
+
+#IF (CPUFAM == CPU_EZ80)
+;
+;--------------------------------------------------------------------------------------------------
+; DELAY LOOP TEST CALIBRATION
+;--------------------------------------------------------------------------------------------------
+;
+; IF ENABLED, THE GPIO PCBx PINS OF THE EZ80 WILL BE TOGGLED AT 'DELAY' RATE
+; CAN BE USED TO VERIFY DELAY WORKS SUFFICIENT FOR DIFFERENT EZ80 CLOCK SPEEDS
+; AND BUS CYCLES
+;
+#IF FALSE
+
+PC_DR:		.equ	$009E
+PC_DDR:		.equ	$009F
+
+	; ENABLE PC5 GPIO AS OUTPUT
+	LD	BC, PC_DDR
+	XOR	A
+	OUT	(C), A
+	PUSH	AF
+
+	LD	BC, PC_DR
+	LD	D, 0
+LOOP:
+	POP	AF
+	OUT	(C), A
+	CPL
+	PUSH	AF
+
+	LD	DE, 2
+	CALL	VDELAY
+	JR	LOOP
+#ENDIF
+#ENDIF
+
 ;
 ;--------------------------------------------------------------------------------------------------
 ; CPU SPEED DETECTION ALIGNMENT TEST
