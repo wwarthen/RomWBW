@@ -265,9 +265,24 @@ hence the name "Common".
 
 # Disk Layout
 
-RomWBW supports and automatically detects 2 different disk layouts
-known as Modern (hd1k) and Classic (hd512).  Specifics of these two
-variants are described in separate sections below.
+RomWBW supports two hard disk layouts: the Classic layout used by 
+RomWBW with 512 directory entries per slice and a Modern layout with 
+1024 directory entries per slice.  These layouts are referred to as
+hd512 and hd1k respectively.
+
+WARNING: You **can not** mix the two hard disk layouts on one hard 
+disk device.  You can use different layouts on different hard disk 
+devices in a single system though.
+
+RomWBW determines which of the hard disk layouts to use for a given 
+hard disk device based on whether there is a RomWBW hard disk 
+partition on the disk containing the slices.   If there is no RomWBW 
+partition, then RomWBW will assume the 512 directory entry format for 
+all slices and will assume the slices start at the first sector of 
+the hard disk.  If there is a RomWBW partition on the hard disk 
+device, then RomWBW will assume the 1024 directory entry format for 
+all slices and will assume the slices are located in the defined 
+partition.
 
 RomWBW supports up to 256 CP/M slices (0-255).  Under hd512, the slices
 begin at the start of the hard disk.  Under hd1k, the slices reside
@@ -282,8 +297,10 @@ geometry for operating systems:
 - Cylinder = 16 Tracks (256 Sectors per Cylinder, 128KB per Cylinder)
 
 If one is used, the FAT Partition must not overlap the CP/M slices.
-In the case of hd1k, the CP/M slices are within partition 0x2E and the
-FAT partition must not start after the last CP/M slice, but does not need to start immediately after it nor does it need to extend to the end of the hard disk.
+The FAT partition does not need to start immediately after the CP/M
+slices nor does it need to extend to the end of the hard disk.  Its
+location and size are entirely determined by its corresponding
+partition table entry.
 
 Drive letters in CP/M are ASSIGNed to the numbered slices as desired.  
 At boot, RomWBW automatically assigns up to  8 slices to drive letters 
