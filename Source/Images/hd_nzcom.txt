@@ -5,52 +5,58 @@ d_nzcom/ReadMe.txt 0:
 #
 # Include selected CP/M 2.2 files
 #
-d_cpm22/u0/ASM.COM 0:
-d_cpm22/u0/LIB.COM 0:
-d_cpm22/u0/LINK.COM 0:
-d_cpm22/u0/LOAD.COM 0:
-d_cpm22/u0/MAC.COM 0:
-#d_cpm22/u0/PIP.COM 0: ???
-d_cpm22/u0/RMAC.COM 0:
-d_cpm22/u0/STAT.COM 0:
+d_cpm22/u0/ASM.COM 15:
+d_cpm22/u0/LIB.COM 15:
+d_cpm22/u0/LINK.COM 15:
+d_cpm22/u0/LOAD.COM 15:
+d_cpm22/u0/MAC.COM 15:
+#d_cpm22/u0/PIP.COM 15: ???
+d_cpm22/u0/RMAC.COM 15:
+d_cpm22/u0/STAT.COM 15:
 d_cpm22/u0/SUBMIT.COM 0:
-d_cpm22/u0/XSUB.COM 0:
+d_cpm22/u0/XSUB.COM 15:
 #
 # Include ZSDOS files
 #
-d_zsdos/u0/*.* 0:
+d_zsdos/u0/*.COM 15:
+d_zsdos/u0/*.CFG 14:
+d_zsdos/u0/*.UPD 10:
+d_zsdos/u0/*.DOC 10:
+d_zsdos/u0/*.FOR 10:
+d_zsdos/u0/*.TXT 10:
+d_zsdos/u0/*.DAT 15:
 #
 # Add RomWBW utilities
 #
-#../../Binary/Apps/*.com 0:
-../../Binary/Apps/assign.com 0:
-../../Binary/Apps/bbcbasic.com 0:
-../../Binary/Apps/bbcbasic.txt 0:
-../../Binary/Apps/cpuspd.com 0:
-../../Binary/Apps/fat.com 0:
-../../Binary/Apps/fdu.com 0:
-../../Binary/Apps/fdu.doc 0:
-../../Binary/Apps/format.com 0:
-../../Binary/Apps/mode.com 0:
-../../Binary/Apps/rtc.com 0:
-../../Binary/Apps/survey.com 0:
-../../Binary/Apps/syscopy.com 0:
-../../Binary/Apps/sysgen.com 0:
-../../Binary/Apps/talk.com 0:
-../../Binary/Apps/htalk.com 0:
-../../Binary/Apps/tbasic.com 0:
-../../Binary/Apps/timer.com 0:
-../../Binary/Apps/tune.com 0:
-../../Binary/Apps/xm.com 0:
-../../Binary/Apps/zmp.com 0:
-../../Binary/Apps/zmp.hlp 0:
-../../Binary/Apps/zmp.doc 0:
-../../Binary/Apps/zmxfer.ovr 0:
-../../Binary/Apps/zmterm.ovr 0:
-../../Binary/Apps/zminit.ovr 0:
-../../Binary/Apps/zmconfig.ovr 0:
-../../Binary/Apps/zmd.com 0:
-../../Binary/Apps/vgmplay.com 0:
+#../../Binary/Apps/*.com 15:
+../../Binary/Apps/assign.com 15:
+../../Binary/Apps/bbcbasic.com 15:
+../../Binary/Apps/bbcbasic.txt 10:
+../../Binary/Apps/cpuspd.com 15:
+../../Binary/Apps/fat.com 15:
+../../Binary/Apps/fdu.com 15:
+../../Binary/Apps/fdu.doc 10:
+../../Binary/Apps/format.com 15:
+../../Binary/Apps/mode.com 15:
+../../Binary/Apps/rtc.com 15:
+../../Binary/Apps/survey.com 15:
+../../Binary/Apps/syscopy.com 15:
+../../Binary/Apps/sysgen.com 15:
+../../Binary/Apps/talk.com 15:
+../../Binary/Apps/htalk.com 15:
+../../Binary/Apps/tbasic.com 15:
+../../Binary/Apps/timer.com 15:
+../../Binary/Apps/tune.com 15:
+../../Binary/Apps/xm.com 15:
+../../Binary/Apps/zmp.com 15:
+../../Binary/Apps/zmp.hlp 15:
+../../Binary/Apps/zmp.doc 10:
+../../Binary/Apps/zmxfer.ovr 15:
+../../Binary/Apps/zmterm.ovr 15:
+../../Binary/Apps/zminit.ovr 15:
+../../Binary/Apps/zmconfig.ovr 15:
+../../Binary/Apps/zmd.com 15:
+../../Binary/Apps/vgmplay.com 15:
 #
 ../../Binary/Apps/Test/*.com 2:
 ../../Binary/Apps/Test/*.doc 2:
@@ -68,13 +74,13 @@ Test/*.* 2:
 #
 # Add Common Applications
 #
-Common/All/*.* 0:
-Common/CPM22/*.* 0:
-#Common/Z/u10/*.* 0:
-Common/Z/u14/*.* 0:
-Common/Z/u15/*.* 0:
-Common/Z3/u10/*.* 0:
-Common/Z3/u14/*.* 0:
-Common/Z3/u15/*.* 0:
+Common/All/*.* 15:
+Common/CPM22/*.* 15:
+#Common/Z/u10/*.* 10:
+Common/Z/u14/*.* 14:
+Common/Z/u15/*.* 15:
+Common/Z3/u10/*.* 10:
+Common/Z3/u14/*.* 14:
+Common/Z3/u15/*.* 15:
 Common/SIMH/*.* 13:
-Common/UTILS/*.* 0:
+Common/UTILS/*.* 15:

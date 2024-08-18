@@ -1,4 +1,4 @@
-===== NZCOM Disk for RomWBW =====
+===== NZ-COM Disk for RomWBW =====
 
 This disk is one of several ready-to-run disks provided with
 RomWBW.  It contains NZ-COM, which is an implementation of the
@@ -19,7 +19,7 @@ The primary documentation for NZ-COM is the "NZCOM Users Manual.pdf"
 document  contained in the Doc/CPM directory of the RomWBW distribution.
 This document is a supplement to the primary documentation.  Additionally,
 please review the file called RELEASE.NOT on this disk which contains
-a variety of updates regarding the NZ-COM distribuition.
+a variety of updates regarding the NZ-COM distribution.
 
 The starting point for the disk content was the final official release of
 NZ-COM which is generally available on the Internet.  A minimal
@@ -30,27 +30,24 @@ use the system effectively.
 
 == Usage ==
 
-NZCOM is not designed to load directly from the boot tracks of a
+NZ-COM is not designed to load directly from the boot tracks of a
 disk.  Instead, it expects to be loaded from an already running
 OS.  This disk has been configured to boot using ZSDOS with a
-PROFILE.SUB command file that automatically loads NZCOM.  So, NZCOM
+PROFILE.SUB command file that automatically loads NZ-COM.  So, NZ-COM
 will load completely without any intervention, but you may notice
-that ZSDOS loads first, then ZSDOS loads NZCOM.  This is normal.
-
-There is no DIR command.  Use SDZ or ZXD instead.
+that ZSDOS loads first, then ZSDOS loads NZ-COM.  This is normal.
 
 *** TODO: Date stamping ***
 
 == Notes ==
 
-NZCOM is distributed in an unconfigured state.  The following was
-done to create a minimal ready-to-run setup for RomWBW:
+NZ-COM is distributed in an unconfigured state.  The following was
+done to create a ready-to-run setup for RomWBW:
 
   - Ran MKZCM and saved default configuration to NZCOM.ZCM and
     NZCOM.ENV.
   - Extract VT100 TCAP from Z3TCAP.LBR and saved it as TCAP.Z3T.
   - Created PROFILE.SUB to launch NZCOM at startup.
-  - Created empty STARTZCM.COM.
   - Original TCSELECT.COM was removed and replaced with a newer version
     from the Z3 files.
   - TCAP.LBR and Z3TCAP.TCP were removed and replaced with
@@ -59,6 +56,20 @@ done to create a minimal ready-to-run setup for RomWBW:
     versions are provided from Common files.
   - Replaced ZRDOS with ZSDOS in NZCOM.LBR.  The standalone
     ZRDOS.ZRL and ZSDOS.ZRL files were saved.
+  - Copied ARUNZ.COM to CMDRUN.COM
+  - Moved all configuration files to 14: per ZCPR3 conventions
+  - Moved all help and documentation files to 10: per ZCPR3 conventions
+  - Moved executables to 15: per ZCPR3 conventions
+  - Updated HELP.COM to search for help files in A10: instead of A15:
+  - Updated LBRHELP.COM to search for help files in A10: instead of A15:
+  - Updated STARTZCM with
+  	ZPATH /C=A0:,$$:,A15: /D=A0:,A15:
+	NZCOM TCAP.Z3T
+  - Updated NZCOM.NDR in NZCOM.LBR with new directory names:
+  	A  0: SYSTEM    A 10: HELP      A 14: CONFIG    A 15: ROOT
+  - Moved DOCFILES.LBR to 10:
+  - Moved all TCJ files to 10:
+  - Added REN, SAVE, and SP commands to ALIAS.CMD
 
 The following additional customizations were also performed:
 
@@ -73,9 +84,9 @@ The following additional customizations were also performed:
     - Z3LOC.COM
     - ZCNFG.COM
 
-== NZCOM Files ==
+== NZ-COM Files ==
 
-The following files came from the official NZCOM distribution.  These
+The following files came from the official NZ-COM distribution.  These
 are generally documented in the "NZCOM Users Manual.pdf" document in
 the Doc/CPM directory of the RomWBW distribution.  Note that some of the
 files included in the NZ-COM distribution are not listed below because
@@ -89,7 +100,7 @@ Applications section below.
 !VERS--1.2H - Version marker directory entry (empty file)
 ALIAS.CMD - Sample alias definitions for use with ARUNZ
 ARUNZ.COM - Alias-RUN-forZ-System command alias execution
-BGZRDS19.LBR - ???
+BGZRDS19.LBR - Patch for Backgrounder II
 CLEDINST.COM - Configure RCP-resident command line editor
 CLEDSAVE.COM - Save RCP-resident command line editor history
 CONFIG.LBR - Various configuration files for use with ZCNFG
@@ -311,13 +322,4 @@ instructions.
 User area 3 contains sample audio files that can be played using
 the TUNE application.
 
-== CP/NET 1.2 (User Area 4) ==
-
-User area 4 contains a full implementation of the CP/NET 1.2
-client provided by Doug Miller.  Please read the README.TXT file
-in this user area for more information.
-
-N.B., at a minimum, some of the files in this user area must be copied
-to user area 0 for CP/NET to work properly.
-
--- WBW 11:19 AM 1/22/2024
+-- WBW 7:14 PM 8/17/2024
