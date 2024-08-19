@@ -4,7 +4,11 @@ FZ80ROM = ../../Binary/FZ80_std.rom
 HD1KIMGS = ../../Binary/hd1k_cpm22.img ../../Binary/hd1k_zsdos.img ../../Binary/hd1k_nzcom.img \
 	../../Binary/hd1k_cpm3.img ../../Binary/hd1k_zpm3.img ../../Binary/hd1k_ws4.img
 
-OBJECTS := $(HD1KFZ80PREFIX) $(HD1KFZ80COMBOIMG)
+OBJECTS :=
+
+ifneq ($(wildcard $(FZ80ROM)),)
+	OBJECTS += $(HD1KFZ80PREFIX) $(HD1KFZ80COMBOIMG)
+endif
 
 DEST=../../Binary
 
