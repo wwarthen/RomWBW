@@ -222,46 +222,46 @@ by RomWBW along with the standard pre-built ROM image(s).  RomWBW does
 allow for the creation of ROM images with custom configurations.  This
 is discussed in [Customizing RomWBW].
 
-| **Description**                                                | **Bus** | **ROM Image File**    | **Baud Rate** |
-|----------------------------------------------------------------|---------|-----------------------|--------------:|
-| [RetroBrew Z80 SBC]^1^                                         | ECB     | SBC_std.rom           | 38400         |
-| [RetroBrew Z80 SimH]^1^                                        | -       | SBC_simh.rom          | 38400         |
-| [RetroBrew N8 Z180 SBC]^1^ (date code >= 2312)                 | ECB     | N8_std.rom            | 38400         |
-| [Zeta Z80 SBC]^2^, ParPortProp                                 | -       | ZETA_std.rom          | 38400         |
-| [Zeta V2 Z80 SBC]^2^, ParPortProp                              | -       | ZETA2_std.rom         | 38400         |
-| [Mark IV Z180 SBC]^3^                                          | ECB     | MK4_std.rom           | 38400         |
-| [RCBus Z80 CPU Module]^4^, 512K RAM/ROM                        | RCBus   | RCZ80_std.rom         | 115200        |
-| [RCBus Z80 CPU Module]^4^, 512K RAM/ROM, KIO                   | RCBus   | RCZ80_kio.rom         | 115200        |
-| [RCBus Z180 CPU Module]^4^ w/ external banking                 | RCBus   | RCZ180_ext.rom        | 115200        |
-| [RCBus Z180 CPU Module]^4^ w/ native banking                   | RCBus   | RCZ180_nat.rom        | 115200        |
-| [RCBus Z280 CPU Module]^4^ w/ external banking                 | RCBus   | RCZ180_ext.rom        | 115200        |
-| [RCBus Z280 CPU Module]^4^ w/ native banking                   | RCBus   | RCZ180_nat.rom        | 115200        |
-| [Easy Z80 SBC]^2^                                              | RCBus   | RCZ80_easy.rom        | 115200        |
-| [Tiny Z80 SBC]^2^                                              | RCBus   | RCZ80_tiny.rom        | 115200        |
-| [Z80-512K CPU/RAM/ROM Module]^2^                               | RCBus   | RCZ80_skz.rom         | 115200        |
-| [Small Computer SC126 Z180 SBC]^5^                             | BP80    | SCZ180_sc126.rom      | 115200        |
-| [Small Computer SC130 Z180 SBC]^5^                             | RCBus   | SCZ180_sc130.rom      | 115200        |
-| [Small Computer SC131 Z180 Pocket Computer]^5^                 | -       | SCZ180_sc131.rom      | 115200        |
-| [Small Computer SC140 Z180 CPU Module]^5^                      | Z50     | SCZ180_sc140.rom      | 115200        |
-| [Small Computer SC503 Z180 CPU Module]^5^                      | Z50     | SCZ180_sc503.rom      | 115200        |
-| [Small Computer SC700 Z180 CPU Module]^5^                      | RCBus   | SCZ180_sc700.rom      | 115200        |
-| [Dyno Z180 SBC]^6^                                             | Dyno    | DYNO_std.rom          | 38400         |
-| [Nhyodyne Z80 MBC]^1^                                          | MBC     | MBC_std.rom           | 38400         |
-| [Rhyophyre Z180 SBC]^1^                                        | -       | RPH_std.rom           | 38400         |
-| [Z80 ZRC CPU Module]^7^                                        | RCBus   | RCZ80_zrc.rom         | 115200        |
-| [Z80 ZRC CPU Module]^7^ ROMless                                | RCBus   | RCZ80_zrc_ram.rom     | 115200        |
-| [Z80 ZRC512 CPU Module]^7^                                     | RCBus   | RCZ80_zrc512.rom      | 115200        |
-| [Z180 Z1RCC CPU Module]^7^                                     | RCBus   | RCZ180_z1rcc.rom      | 115200        |
-| [Z280 ZZRCC CPU Module]^7^                                     | RCBus   | RCZ280_zzrcc.rom      | 115200        |
-| [Z280 ZZRCC CPU Module]^7^ ROMless                             | RCBus   | RCZ280_zzrcc_ram.rom  | 115200        |
-| [Z280 ZZ80MB SBC]^7^                                           | RCBus   | RCZ280_zz80mb.rom     | 115200        |
-| [Z80-Retro SBC]^8^                                             | -       | Z80RETRO_std.rom      | 38400         |
-| [S100 Computers Z180]^9^                                       | S100    | S100_std.rom          | 57600         |
-| [Duodyne Z80 System]^1^                                        | Duo     | DUO_std.rom           | 38400         |
-| [Heath H8 Z80 System]^10^                                      | H8      | HEATH_std.rom         | 115200        |
-| [EP Mini-ITX Z180]^11^                                         | RCBus?  | EPITX_std.rom         | 115200        |
-| [NABU w/ RomWBW Option Board]^10^                              | NABU    | NABU_std.rom          | 115200        |
-| [S100 FPGA Z80]^9^                                             | S100    | FZ80_std.rom          | 9600          |
+| **Description**                                             | **Bus** | **ROM Image File**           | **Baud Rate** |
+|-------------------------------------------------------------|---------|------------------------------|--------------:|
+| [RetroBrew Z80 SBC]^1^                                      | ECB     | SBC_std.rom                  | 38400         |
+| [RetroBrew Z80 SimH]^1^                                     | -       | SBC_simh.rom                 | 38400         |
+| [RetroBrew N8 Z180 SBC]^1^ (date >= 2312)                   | ECB     | N8_std.rom                   | 38400         |
+| [Zeta Z80 SBC]^2^, ParPortProp                              | -       | ZETA_std.rom                 | 38400         |
+| [Zeta V2 Z80 SBC]^2^, ParPortProp                           | -       | ZETA2_std.rom                | 38400         |
+| [Mark IV Z180 SBC]^3^                                       | ECB     | MK4_std.rom                  | 38400         |
+| [RCBus Z80 CPU Module]^4^, 512K RAM/ROM                     | RCBus   | RCZ80_std.rom                | 115200        |
+| [RCBus Z80 CPU Module]^4^, 512K w/KIO                       | RCBus   | RCZ80_kio_std.rom            | 115200        |
+| [RCBus Z180 CPU Module]^4^ w/ ext banking                   | RCBus   | RCZ180_ext_std.rom           | 115200        |
+| [RCBus Z180 CPU Module]^4^ w/ native banking                | RCBus   | RCZ180_nat_std.rom           | 115200        |
+| [RCBus Z280 CPU Module]^4^ w/ ext banking                   | RCBus   | RCZ180_ext_std.rom           | 115200        |
+| [RCBus Z280 CPU Module]^4^ w/ native banking                | RCBus   | RCZ180_nat_std.rom           | 115200        |
+| [Easy Z80 SBC]^2^                                           | RCBus   | RCZ80_easy_std.rom           | 115200        |
+| [Tiny Z80 SBC]^2^                                           | RCBus   | RCZ80_tiny_std.rom           | 115200        |
+| [Z80-512K CPU/RAM/ROM Module]^2^                            | RCBus   | RCZ80_skz_std.rom            | 115200        |
+| [Small Computer SC126 Z180 SBC]^5^                          | BP80    | SCZ180_sc126_std.rom         | 115200        |
+| [Small Computer SC130 Z180 SBC]^5^                          | RCBus   | SCZ180_sc130_std.rom         | 115200        |
+| [Small Computer SC131 Z180 Pocket Comp]^5^                  | -       | SCZ180_sc131_std.rom         | 115200        |
+| [Small Computer SC140 Z180 CPU Module]^5^                   | Z50     | SCZ180_sc140_std.rom         | 115200        |
+| [Small Computer SC503 Z180 CPU Module]^5^                   | Z50     | SCZ180_sc503_std.rom         | 115200        |
+| [Small Computer SC700 Z180 CPU Module]^5^                   | RCBus   | SCZ180_sc700_std.rom         | 115200        |
+| [Dyno Z180 SBC]^6^                                          | Dyno    | DYNO_std.rom                 | 38400         |
+| [Nhyodyne Z80 MBC]^1^                                       | MBC     | MBC_std.rom                  | 38400         |
+| [Rhyophyre Z180 SBC]^1^                                     | -       | RPH_std.rom                  | 38400         |
+| [Z80 ZRC CPU Module]^7^                                     | RCBus   | RCZ80_zrc_std.rom            | 115200        |
+| [Z80 ZRC CPU Module]^7^ ROMless                             | RCBus   | RCZ80_zrc_ram_std.rom        | 115200        |
+| [Z80 ZRC512 CPU Module]^7^                                  | RCBus   | RCZ80_zrc512_std.rom         | 115200        |
+| [Z180 Z1RCC CPU Module]^7^                                  | RCBus   | RCZ180_z1rcc_std.rom         | 115200        |
+| [Z280 ZZRCC CPU Module]^7^                                  | RCBus   | RCZ280_zzrcc_std.rom         | 115200        |
+| [Z280 ZZRCC CPU Module]^7^ ROMless                          | RCBus   | RCZ280_zzrcc_ram_std.rom     | 115200        |
+| [Z280 ZZ80MB SBC]^7^                                        | RCBus   | RCZ280_zz80mb_std.rom        | 115200        |
+| [Z80-Retro SBC]^8^                                          | -       | Z80RETRO_std.rom             | 38400         |
+| [S100 Computers Z180]^9^                                    | S100    | S100_std.rom                 | 57600         |
+| [Duodyne Z80 System]^1^                                     | Duo     | DUO_std.rom                  | 38400         |
+| [Heath H8 Z80 System]^10^                                   | H8      | HEATH_std.rom                | 115200        |
+| [EP Mini-ITX Z180]^11^                                      | RCBus?  | EPITX_std.rom                | 115200        |
+| [NABU w/ RomWBW Option Board]^10^                           | NABU    | NABU_std.rom                 | 115200        |
+| [S100 FPGA Z80]^9^                                          | S100    | FZ80_std.rom                 | 9600          |
 
 | ^1^Designed by Andrew Lynch
 | ^2^Designed by Sergey Kiselev
@@ -4648,7 +4648,7 @@ the RomWBW HBIOS configuration.
 
 `\clearpage`{=latex}
 
-#### ROM Image File:  RCZ80_kio.rom
+#### ROM Image File:  RCZ80_kio_std.rom
 
 |                   |               |
 |-------------------|---------------|
@@ -4691,7 +4691,7 @@ the RomWBW HBIOS configuration.
 
 ### RCBus Z180 CPU Module
 
-#### ROM Image File:  RCZ180_ext.rom
+#### ROM Image File:  RCZ180_ext_std.rom
 
 |                   |               |
 |-------------------|---------------|
@@ -4736,7 +4736,7 @@ the RomWBW HBIOS configuration.
 
 `\clearpage`{=latex}
 
-#### ROM Image File:  RCZ180_nat.rom
+#### ROM Image File:  RCZ180_nat_std.rom
 
 |                   |               |
 |-------------------|---------------|
@@ -4783,7 +4783,7 @@ the RomWBW HBIOS configuration.
 
 ### RCBus Z280 CPU Module
 
-#### ROM Image File:  RCZ280_ext.rom
+#### ROM Image File:  RCZ280_ext_std.rom
 
 |                   |               |
 |-------------------|---------------|
@@ -4826,7 +4826,7 @@ the RomWBW HBIOS configuration.
 
 `\clearpage`{=latex}
 
-#### ROM Image File:  RCZ280_nat.rom
+#### ROM Image File:  RCZ280_nat_std.rom
 
 |                   |               |
 |-------------------|---------------|
@@ -4870,7 +4870,7 @@ the RomWBW HBIOS configuration.
 
 ### Easy Z80 SBC
 
-#### ROM Image File:  RCZ80_easy.rom
+#### ROM Image File:  RCZ80_easy_std.rom
 
 |                   |               |
 |-------------------|---------------|
@@ -4915,7 +4915,7 @@ the RomWBW HBIOS configuration.
 
 ### Tiny Z80 SBC
 
-#### ROM Image File:  RCZ80_tiny.rom
+#### ROM Image File:  RCZ80_tiny_std.rom
 
 |                   |               |
 |-------------------|---------------|
@@ -4959,7 +4959,7 @@ the RomWBW HBIOS configuration.
 
 ### Z80-512K CPU/RAM/ROM Module
 
-#### ROM Image File:  RCZ80_skz.rom
+#### ROM Image File:  RCZ80_skz_std.rom
 
 |                   |               |
 |-------------------|---------------|
@@ -5004,7 +5004,7 @@ the RomWBW HBIOS configuration.
 
 ### Small Computer SC126 Z180 SBC
 
-#### ROM Image File:  SCZ180_sc126.rom
+#### ROM Image File:  SCZ180_sc126_std.rom
 
 |                   |               |
 |-------------------|---------------|
@@ -5052,7 +5052,7 @@ the RomWBW HBIOS configuration.
 
 ### Small Computer SC130 Z180 SBC
 
-#### ROM Image File:  SCZ180_sc130.rom
+#### ROM Image File:  SCZ180_sc130_std.rom
 
 |                   |               |
 |-------------------|---------------|
@@ -5098,9 +5098,9 @@ the RomWBW HBIOS configuration.
 
 `\clearpage`{=latex}
 
-### Small Computer SC131 Z180 Pocket Computer
+### Small Computer SC131 Z180 Pocket Comp
 
-#### ROM Image File:  SCZ180_sc131.rom
+#### ROM Image File:  SCZ180_sc131_std.rom
 
 |                   |               |
 |-------------------|---------------|
@@ -5127,7 +5127,7 @@ the RomWBW HBIOS configuration.
 
 ### Small Computer SC140 Z180 CPU Module
 
-#### ROM Image File:  SCZ180_sc140.rom
+#### ROM Image File:  SCZ180_sc140_std.rom
 
 |                   |               |
 |-------------------|---------------|
@@ -5174,7 +5174,7 @@ the RomWBW HBIOS configuration.
 
 ### Small Computer SC503 Z180 CPU Module
 
-#### ROM Image File:  SCZ180_sc503.rom
+#### ROM Image File:  SCZ180_sc503_std.rom
 
 |                   |               |
 |-------------------|---------------|
@@ -5221,7 +5221,7 @@ the RomWBW HBIOS configuration.
 
 ### Small Computer SC700 Z180 CPU Module
 
-#### ROM Image File:  SCZ180_sc700.rom
+#### ROM Image File:  SCZ180_sc700_std.rom
 
 |                   |               |
 |-------------------|---------------|
@@ -5381,7 +5381,7 @@ S- MD: TYPE=RAM
 
 ### Z80 ZRC CPU Module
 
-#### ROM Image File:  RCZ80_zrc.rom
+#### ROM Image File:  RCZ80_zrc_std.rom
 
 |                   |               |
 |-------------------|---------------|
@@ -5428,7 +5428,7 @@ S- MD: TYPE=RAM
 
 `\clearpage`{=latex}
 
-#### ROM Image File:  RCZ80_zrc_ram.rom
+#### ROM Image File:  RCZ80_zrc_ram_std.rom
 
 |                   |               |
 |-------------------|---------------|
@@ -5475,7 +5475,7 @@ S- MD: TYPE=RAM
 
 ### Z80 ZRC512 CPU Module
 
-#### ROM Image File:  RCZ80_zrc512.rom
+#### ROM Image File:  RCZ80_zrc512_std.rom
 
 |                   |               |
 |-------------------|---------------|
@@ -5522,7 +5522,7 @@ S- MD: TYPE=RAM
 
 ### Z180 Z1RCC CPU Module
 
-#### ROM Image File:  RCZ180_z1rcc.rom
+#### ROM Image File:  RCZ180_z1rcc_std.rom
 
 |                   |               |
 |-------------------|---------------|
@@ -5568,7 +5568,7 @@ S- MD: TYPE=RAM
 
 ### Z280 ZZRCC CPU Module
 
-#### ROM Image File:  RCZ280_zzrcc.rom
+#### ROM Image File:  RCZ280_zzrcc_std.rom
 
 |                   |               |
 |-------------------|---------------|
@@ -5614,7 +5614,7 @@ S- MD: TYPE=RAM
 
 `\clearpage`{=latex}
 
-#### ROM Image File:  RCZ280_zzrcc_ram.rom
+#### ROM Image File:  RCZ280_zzrcc_ram_std.rom
 
 |                   |               |
 |-------------------|---------------|
@@ -5660,7 +5660,7 @@ S- MD: TYPE=RAM
 
 ### Z280 ZZ80MB SBC
 
-#### ROM Image File:  RCZ280_zz80mb.rom
+#### ROM Image File:  RCZ280_zz80mb_std.rom
 
 |                   |               |
 |-------------------|---------------|
