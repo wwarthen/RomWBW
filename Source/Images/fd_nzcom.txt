@@ -5,23 +5,23 @@ d_nzcom/ReadMe.txt 0:
 #
 # Include selected CP/M 2.2 files
 #
-d_cpm22/u0/STAT.COM 0:
+d_cpm22/u0/STAT.COM 15:
 d_cpm22/u0/SUBMIT.COM 0:
-d_cpm22/u0/XSUB.COM 0:
+d_cpm22/u0/XSUB.COM 15:
 #
 # Add RomWBW utilities
 #
-#../../Binary/Apps/*.com 0:
-../../Binary/Apps/assign.com 0:
-../../Binary/Apps/cpuspd.com 0:
-../../Binary/Apps/fat.com 0:
-../../Binary/Apps/fdu.com 0:
-../../Binary/Apps/rtc.com 0:
-../../Binary/Apps/syscopy.com 0:
-../../Binary/Apps/talk.com 0:
-../../Binary/Apps/htalk.com 0:
-../../Binary/Apps/timer.com 0:
-../../Binary/Apps/xm.com 0:
+#../../Binary/Apps/*.com 15:
+../../Binary/Apps/assign.com 15:
+../../Binary/Apps/cpuspd.com 15:
+../../Binary/Apps/fat.com 15:
+../../Binary/Apps/fdu.com 15:
+../../Binary/Apps/rtc.com 15:
+../../Binary/Apps/syscopy.com 15:
+../../Binary/Apps/talk.com 15:
+../../Binary/Apps/htalk.com 15:
+../../Binary/Apps/timer.com 15:
+../../Binary/Apps/xm.com 15:
 #
 # Add OS images
 #
@@ -29,11 +29,11 @@ d_cpm22/u0/XSUB.COM 0:
 #
 # Add Common Applications
 #
-Common/All/*.* 0:
-Common/CPM22/*.* 0:
-#Common/Z/u10/*.* 0:
-Common/Z/u14/*.* 0:
-Common/Z/u15/*.* 0:
-Common/Z3/u10/*.* 0:
-Common/Z3/u14/*.* 0:
-Common/Z3/u15/*.* 0:
+Common/All/*.* 15:
+Common/CPM22/*.* 15:
+#Common/Z/u10/*.* 10:
+Common/Z/u14/*.* 14:
+Common/Z/u15/*.* 15:
+Common/Z3/u10/*.* 10:
+Common/Z3/u14/*.* 14:
+Common/Z3/u15/*.* 15:

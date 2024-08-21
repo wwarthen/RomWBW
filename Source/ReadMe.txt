@@ -45,8 +45,32 @@ process.  These scripts utilize both batch command files as well as
 Windows PowerShell.  Windows 7 or greater is recommended.  If you want 
 to use Windows Vista or XP, you will need to first install PowerShell 
 which available for free from Microsoft.  Either 32 or 64 bit versions 
-of Microsoft Windows are fine.No additional programs need to be 
+of Microsoft Windows are fine.  No additional programs need to be 
 installed to run the build.
+
+You may find that you get messages such as this during the Windows
+build process:
+
+Security warning
+Run only scripts that you trust. While scripts from the internet can be 
+useful, this script can potentially harm your computer. If you trust 
+this script, use the Unblock-File cmdlet to allow the script to run 
+without this warning message. Do you want to run 
+C:\Temp\RomWBW-v3.5.0-dev.67-Package\Source\Images\BuildDisk.ps1?
+[D] Do not run  [R] Run once  [S] Suspend  [?] Help (default is "D"):
+
+These prompts occur if Windows has marked the files as "blocked"
+because they were downloaded from the Internet.  To unblock all of
+the files in the entire RomWBW distribution tree, start PowerShell
+and navigate to the root of the distribution.  Enter the following
+command:
+
+	dir -recurse | unblock-file
+
+This will unblock all files within the distribution and preclude the
+security warning messages.  Obviously, you should make sure you have
+downloaded the RomWBW distribution from a valid/trustworthy source
+before removing the file block protection.
 
 Linux Build System Requirements
 -------------------------------

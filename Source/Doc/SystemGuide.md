@@ -126,6 +126,7 @@ execution.
 
 ![Bank Switched Memory Layout](Graphics/BankSwitchedMemory){ width=100% }
 
+
 ## Bank Id
 
 RomWBW utilizes a specific assignment of memory banks for dedicated
@@ -261,6 +262,106 @@ Common Bank:
 : This bank is mapped to the upper 32K of the processors memory space.
 It is a fixed mapping that is never changed in normal RomWBW operation
 hence the name "Common".
+
+# Disk Layout
+
+RomWBW supports two hard disk layouts: the Classic layout used by 
+RomWBW with 512 directory entries per slice and a Modern layout with 
+1024 directory entries per slice.  These layouts are referred to as
+hd512 and hd1k respectively.
+
+WARNING: You **can not** mix the two hard disk layouts on one hard 
+disk device.  You can use different layouts on different hard disk 
+devices in a single system though.
+
+RomWBW determines which of the hard disk layouts to use for a given 
+hard disk device based on whether there is a RomWBW hard disk 
+partition on the disk containing the slices.   If there is no RomWBW 
+partition, then RomWBW will assume the 512 directory entry format for 
+all slices and will assume the slices start at the first sector of 
+the hard disk.  If there is a RomWBW partition on the hard disk 
+device, then RomWBW will assume the 1024 directory entry format for 
+all slices and will assume the slices are located in the defined 
+partition.
+
+RomWBW supports up to 256 CP/M slices (0-255).  Under hd512, the slices
+begin at the start of the hard disk.  Under hd1k, the slices reside
+within partition type 0x2E.
+
+RomWBW accesses all hard disks using Logical Block Addressing (pure
+sector offset).  When necessary, RomWBW simulates the following disk
+geometry for operating systems:
+
+- Sector = 512 Bytes
+- Track = 16 Sectors (8KB per Track)
+- Cylinder = 16 Tracks (256 Sectors per Cylinder, 128KB per Cylinder)
+
+If one is used, the FAT Partition must not overlap the CP/M slices.
+The FAT partition does not need to start immediately after the CP/M
+slices nor does it need to extend to the end of the hard disk.  Its
+location and size are entirely determined by its corresponding
+partition table entry.
+
+Drive letters in CP/M are ASSIGNed to the numbered slices as desired.  
+At boot, RomWBW automatically assigns up to  8 slices to drive letters 
+starting with the first available drive letter (typically C:).
+
+Microsoft Windows will assign a single drive letter to the FAT partition
+when the CF/SD Card is inserted.  The drive letter assigned has no 
+relationship to the CP/M drive letters assigned to CP/M slices.
+
+In general, Windows, MacOS, or Linux know nothing about the CP/M slices 
+and CP/M knows nothing about the FAT partition.  However, the FAT 
+application can be run under CP/M to access the FAT partition 
+programmatically.
+
+A CP/M slice is (re)initialized using the CP/M command CLRDIR.  A CP/M 
+slice can be made bootable by copying system image to the System Area 
+using SYSCOPY.
+
+The FAT partition can be created from CP/M using the FDISK80 application.
+
+The FAT partition can be initialized using the FAT application from CP/M
+using the command `FAT FORMAT n:` where n is the RomWBW disk unit 
+number containing the FAT partition to be formatted.
+
+## Modern Disk Layout (hd1k)
+
+![Modern Disk Layout](Graphics/hd1k)
+
+The CP/M filesystem on a Modern disk will accommodate 1,024 directory 
+entries.
+
+The CP/M slices reside entirely within a hard disk partition of type
+0x2E.  The number of slices is determined by the number of slices that
+fit within the partition spaces allocated up to the maximum of 256.
+
+## Classic Disk Layout (hd512)
+
+![Classic Disk Layout](Graphics/hd512)
+
+The CP/M filesystem on a Classic disk will accommodate 512 directory 
+entries.
+
+The CP/M slices reside on the hard disk starting at the first sector
+of the hard disk.  The number of CP/M slices is not explicitly recorded
+anywhere on the hard disk.  It is up to the system user to know how
+many slices are being used based on the size of the hard disk media
+and/or the start of a FAT partition.
+
+A partition table may exist within the first sector of the first
+slice.  For Classic disks, the partition table defines only the
+location and size of the FAT partition.  The Partition Table does
+not control the location or number of CP/M slices in any way.
+
+The Partition Table resides in a sector that is shared with the System 
+Area of CP/M Slice 0.  However, the RomWBW implementation of CP/M takes 
+steps to avoid changing or corrupting the Partition Table area.
+
+The FAT partition can be created from CP/M using the FDISK80 
+application.  The user is responsible for ensuring that the start of the
+FAT partition does not overlap with the area they intend to use for 
+CP/M slices.  FDISK80 has a Reserve option to assist with this.
 
 # System Boot Process
 
@@ -2408,6 +2509,9 @@ Return the value of the global system timer Tick Count (DEHL).  This is
 a double-word binary value.  The frequency of the system timer in Hertz 
 is returned in Frequency (C). The returned Status (A) is a standard HBIOS
 result code.
+
+The tick count is a 32 bit binary value.  It will rollover to zero
+if the maximum value for a 32 bit number is reached.
 
 Note that not all hardware configuration have a system timer.  You
 can determine if a timer exists by calling this function repeatedly

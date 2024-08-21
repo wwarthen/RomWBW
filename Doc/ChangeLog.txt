@@ -29,6 +29,8 @@ Version 3.5
 - WBW: Added support for Les Bird's Dual 16C550 UART module
 - WBW: Refactor UART driver for more flexible configuration
 - M?R: Added hour/minute/second display to timer app
+- WBW: Substantial customization of NZ-COM disk image
+- WBW: Refactor build post-processing (ZRC, ZZRCC, etc.)
 
 Version 3.4
 -----------
