@@ -1985,13 +1985,38 @@ new combo disk image.
 
 #### Custom Hard Disk Image
 
-If you want to use specific slices in a specific order, you can easily
-generate a custom hard disk image file.
-
 For hard disks, each .img file represents a single slice (CP/M 
 filesystem).  Since a hard disk can contain many slices, you can just 
 concatenate the slices (.img files) together to create your desired hard
-disk image.  For example, if you want to create a hard disk image that 
+disk image.  
+
+If you look in the Binary directory of the distribution, you will see
+that there are more disk (slice) images than the 6 that are included
+in the "combo" disk images.  These images are identified by looking
+for the files that start with hd1k_ or hd512_.
+
+You can add slices to the combo disk images simply by tacking
+slices onto the end.  For example, if you want to add a slice
+containing the MSX ROMs to the end of the combo image, you could
+use one of the following command lines depending on your operating
+system:
+
+Windows:
+
+`COPY /B hd1k_combo.img + hd1k_msxroms.img my_hd.img` 
+
+Linus/MaxOS:
+
+`cat hd1k_combo.img hd1k_msxroms.img >my_hd.img`
+
+Note that you **must** be sure to use either the hd1k_ or hd512_
+prefixed files together.  You cannot mix them.
+
+If you want to create a completely custom hard disk image that is not
+based on the existing combo image, you can generate a disk image entirely
+from scratch using whatever slices you want in whatever order you like.
+
+For example, if you want to create a hard disk image that 
 has slices for CP/M 2.2, CP/M 3, and WordStar in the hd512 format, you 
 would use the command line of your modern computer to create the final 
 image:
