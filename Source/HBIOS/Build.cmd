@@ -211,31 +211,28 @@ call Build ZETA2 std || exit /b
 call Build N8 std || exit /b
 call Build MK4 std || exit /b
 call Build RCZ80 std || exit /b
-call Build RCZ80 kio || exit /b
-call Build RCZ80 easy || exit /b
-call Build RCZ80 tiny || exit /b
-call Build RCZ80 skz || exit /b
-:: call Build RCZ80 mt || exit /b
-:: call Build RCZ80 duart || exit /b
-call Build RCZ80 zrc || exit /b
-call Build RCZ80 zrc_ram || exit /b
-call Build RCZ80 zrc512 || exit /b
-call Build RCZ180 ext || exit /b
-call Build RCZ180 nat || exit /b
-call Build RCZ180 z1rcc || exit /b
-call Build RCZ280 ext || exit /b
-call Build RCZ280 nat || exit /b
-call Build RCZ280 zz80mb || exit /b
-call Build RCZ280 zzrcc || exit /b
-call Build RCZ280 zzrcc_ram || exit /b
-call Build SCZ180 sc126 || exit /b
-call Build SCZ180 sc130 || exit /b
-call Build SCZ180 sc131 || exit /b
-call Build SCZ180 sc140 || exit /b
-call Build SCZ180 sc503 || exit /b
-call Build SCZ180 sc700 || exit /b
+call Build RCZ80 kio_std || exit /b
+call Build RCZ80 easy_std || exit /b
+call Build RCZ80 tiny_std || exit /b
+call Build RCZ80 skz_std || exit /b
+call Build RCZ80 zrc_std || exit /b
+call Build RCZ80 zrc_ram_std || exit /b
+call Build RCZ80 zrc512_std || exit /b
+call Build RCZ180 ext_std || exit /b
+call Build RCZ180 nat_std || exit /b
+call Build RCZ180 z1rcc_std || exit /b
+call Build RCZ280 ext_std || exit /b
+call Build RCZ280 nat_std || exit /b
+call Build RCZ280 zz80mb_std || exit /b
+call Build RCZ280 zzrcc_std || exit /b
+call Build RCZ280 zzrcc_ram_std || exit /b
+call Build SCZ180 sc126_std || exit /b
+call Build SCZ180 sc130_std || exit /b
+call Build SCZ180 sc131_std || exit /b
+call Build SCZ180 sc140_std || exit /b
+call Build SCZ180 sc503_std || exit /b
+call Build SCZ180 sc700_std || exit /b
 call Build DYNO std || exit /b
-call Build UNA std || exit /b
 call Build RPH std || exit /b
 call Build Z80RETRO std || exit /b
 call Build S100 std || exit /b
@@ -245,5 +242,6 @@ call Build EPITX std || exit /b
 :: call Build MON std || exit /b
 call Build NABU std || exit /b
 call Build FZ80 std || exit /b
+call Build UNA std || exit /b
 
 goto :eof
