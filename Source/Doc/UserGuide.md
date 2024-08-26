@@ -3282,7 +3282,7 @@ mechanism.  Doing so may corrupt the directory.
 The RomWBW disk images do not have date/time stamping initialized.  This
 is to avoid any chance of directory corruption.
 
-### DateStampter
+### DateStamper
 
 DateStamper datestamping follows the standard set by Plu*Perfect Systems. 
 This method stores stamps in a disk file named `!!!TIME&.DAT`. 
