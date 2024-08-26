@@ -2353,27 +2353,11 @@ call "ZSYS.SYS".  For example:
   or MAP, you may need to run “RELOG” to get the drive properly 
   recognized by ZSDOS.
 
-* RomWBW fully supports both DateStamper and P2DOS file date/time
-  stamping.  You must load the desired stamping module (`LDDS` for
-  DateStamper or `LDP2D` for P2DOS).  This could be automated using
-  a `PROFILE.SUB` file.  Follow the ZSDOS documentation to initialize
-  a disk for stamping.
-
 * ZSVSTAMP expects to be running under the ZCPR 3.X command processor. 
   By default, RomWBW uses ZCPR 1.0 (intentionally, to reduce space usage) 
   and ZSVSTAMP will just abort in this case. It will work fine if you 
   implement NZCOM. ZSVSTAMP is included solely to facilitate usage 
   if/when you install NZCOM.
-
-* FILEDATE only works with DateStamper style date stamping. If you run 
-  it on a drive that is not initialized for DateStamper, it will complain 
-  `FILEDATE, !!!TIME&.DAT missing`. This is normal and just means that 
-  you have not initialized that drive for DateStamper (using PUTDS).
-
-* ZXD will handle either DateStamper or P2DOS type date stamping. 
-  However, it **must** be configured appropriately. As distributed, it will 
-  look for P2DOS date stamps. Use ZCNFG to reconfigure it for P2DOS if 
-  that is what you are using.
 
 * Many of the tools can be configured (using either ZCNFG or DSCONFIG). 
   The configuration process modifies the actual application file itself. 
@@ -2384,10 +2368,6 @@ call "ZSYS.SYS".  For example:
   needs to be configured first for proper terminal emulation by using 
   SETTERM. So, run SETTERM on DSCONFIG before using DSCONFIG to configure 
   DATSWEEP!
-
-* After using PUTDS to initialize a directory for ZDS date stamping, I 
-  am finding that it is necessary to run RELOG before the stamping 
-  routines will actually start working.
 
 * Generic CP/M PIP and ZSDOS path searching do not mix well if you use 
   PIP to copy to or from a directory in the ZSDOS search path. Best to 
@@ -3087,8 +3067,11 @@ SAMPLE2.TXT ==> 4:/SAMPLE2.TXT ... [OK]
 RomWBW supports a variety of real time clock hardware.  If your
 system has this hardware, then it will be able to maintain the
 current date and time even while your system is turned off.
+
 Additionally, depending on the operating system being used, you may be
 able to utilize date/time stamping of files.
+To facilitate this a CP/M clock driver (WBWCLK) has been included 
+inside `CLOCKS.DAT` that will read the clock via a RomWBW HBIOS call
 
 You can determine if your system has a real time clock present (and
 functioning) by looking at the boot messages.  Here is an example of
@@ -3113,6 +3096,8 @@ update the date/time of the RTC in the RomWBW Boot Loader or Monitor.
 RomwWBW includes two utilities for displaying or setting the date/time
 stored by the RTC.  They are both a bit different and are briefly
 described below.
+
+A third utility `TESTCLOK` is also included as part of ZSDOS
 
 ### WDATE Utility
 
@@ -3193,6 +3178,57 @@ Do **not** enable charging unless you are sure that your system
 supports this.  If your RTC is being powered by a normal battery, it
 would be dangerous to enable charging.
 
+### TESTCLOK Utility
+
+The `TESTCLOK` utility is used to test a selected CPM clock driver 
+loaded from the CLOCKS.DAT file. After selecting the location of CLOCKS.DAT 
+and the clock driver (45. WBWCLK) it displays the currently configured time 
+until a key is pressed. 
+
+```
+A>testclok
+
+TESTCLOK V1.0    Copyright (C) 1988    H.F. Bower / C.W. Cotrill
+
+Extract Clock from Library ([Y]/N) : Y
+Location of CLOCKS.DAT [A0:] : <RETURN> 
+
+  1. ACTRIX             2. ALSPA              3. AMPRO-LB         
+  4. ANLYTCL-PRD        5. AP2-CDZ180         6. AP2-THND/MT      
+  7. AP2-TIMASTR        8. AP2E+PCP-TM        9. AP2E+PCPI        
+ 10. AP2E-THUNDR       11. AP2E-TMASTR       12. BIG-BD-II        
+ 13. BP-BIOS           14. CCS-WALLCLK       15. CPUPRO-SSB1      
+ 16. ELECTR-MFIO       17. EPSON-QX10        18. ETS180IO+        
+ 19. H19-SUPER19       20. H19-ULTRA         21. H19-WATZMAN      
+ 22. H89-BITZERO       23. H89-PC12          24. H89-WIDGET       
+ 25. H89-WISE          26. H89UTI            27. HEATH-BIOS       
+ 28. HOUSEMASTER       29. K83-HOLMES        30. KAYPRO-84        
+ 31. KENMOR-ZTIM       32. KPRO-ADVENT       33. KPRO-LEGACY      
+ 34. MD3-MACK          35. MTN100K-DAY       36. ONEAC-ON!        
+ 37. OTRANA-ATCH       38. P&T-HEARTBT       39. QTSYS-S100       
+ 40. RELATIVE          41. S100-5832         42. SB180-HRTBT      
+ 43. SB180-XBIOS       44. SIMHCLOK          45. WBWCLK           
+ 46. XEROX-820         47. ZSDOS-BIOS       
+
+Enter Clock Driver Selection : 45
+
+..Loading : WBWCLK      ... 
+Linking Clock Module... OK
+RomWBW HBIOS Clock      1.1
+
+RomWBW Series HBIOS Clock
+
+Press any key to quit...
+
+ 19 Oct 2023  14:24:34
+```
+
+Since this runs at the CPM driver level it is useful as an end-to-end test
+to prove that date time stamping is able to read the correct time
+
+The `TESTCLOK` utility is provided by ZSDOS, plese see the ZSDOS Manual 
+for further information
+
 ## Date/Time File Stamping
 
 If an RTC is available in your system, then most operating systems
@@ -3201,10 +3237,16 @@ date/time of file creation, update, and or access in the directory.
 This capability is available in all of the RomWBW operating system
 except the original DRI CP/M 2.2.
 
-In some cases (such as ZSDOS), you must load an RSX (memory resident
-utility) to enable date/time stamping of files.  Additionally, you
-will need to initialize the directory.  The procedure varies in each
-operation system, so you must review the associated documentation.
+Three types of date/time stamping are supported using realtime clock 
+supported by RomWBW HBIOS. DateStamper, NZT and P2DOS.
+
+In some cases (such as ZSDOS), you must load an RSX (memory resident 
+utility) to enable date/time stamping of files. This could be automated 
+using a `PROFILE.SUB` file.
+Preconfigured loaders are provided, bypassing the need to use SETUPZST.
+
+Additionally, you will need to initialize the directory. The procedure varies
+depending on the date/time stamping mechanism, so you must review the associated documentation.
 
 The date/time stamping mechanisms for each operating system are
 generally not compatible.  If you initialize a directory for a type
@@ -3214,6 +3256,71 @@ mechanism.  Doing so may corrupt the directory.
 
 The RomWBW disk images do not have date/time stamping initialized.  This
 is to avoid any chance of directory corruption.
+
+### DateStampter
+
+DateStamper datestamping follows the standard set by Plu*Perfect Systems. 
+This method stores stamps in a disk file named `!!!TIME&.DAT`. 
+Only DateStamper stamping stores full time and date stamps for
+file Creation, Last Modification, and Last Access, 
+and may be used with any CP/M diskette format. In addition, 
+the DateStamper protocol is supported by a mature set of compatible utilities.
+
+Key Utilities
+
+* LDDS.COM - Load DateStamper date/time stamping resident extension. (RomWBW Provided)
+* PUTDS.COM - Prepare disk for DateStamper date/time stamping.
+
+After using PUTDS to initialize a directory for ZDS date stamping,
+it may be necessary to run RELOG before the stamping routines 
+will actually start working.
+
+### P2DOS (CP/M Plus compatible)
+
+CP/M Plus-type datestamping is also widely used due to the popularity 
+of CP/M Plus (also know as CP/M 3). CP/M Plus-type file datestamping uses 
+directory sectors to store file datestamps which may be accessed more quickly 
+by programs, but there is no Last File Access stamp. Finally, the range of 
+utilities for this type of stamps is more limited than for the DateStamper protocol.
+
+Key Utilities
+
+* LDP2D.COM - Load P2DOS date/time stamping resident extension. (RomWBW Provided)
+* INITDIR.COM - Prepares disks for P2DOS-type file stamping.
+
+### NZT
+
+_The use of NZT needs to be further documented_
+
+Key Utilities
+
+* LDNZT.COM - Load NZT date/time stamping resident extension. (RomWBW Provided)
+
+### Additional Notes
+
+The following files have been provided, customised and tested for for use in RomWBW
+
+* `CLOCKS.DAT` - Library of clock drivers, which has been updated to include 
+   the RomWBW clock driver WBWCLK, and also includes the SIMHCLOK clock driver.
+   The file is just a standard LU type library and is easily updated using NULU. 
+   The members are the relocatable binaries, but with the .REL extension removed.
+* `STAMPS.DAT` - Library of available date/time stamping modules for SETUPZST.
+   The file has been replaced with an updated version from the Walnut Creek CP/M CDROM. 
+   The original version has a bug that prevents RSX (resident system extension) mode 
+   to load properly.
+
+Additional Notes
+
+* `SETUPZST` (provided by ZSDOS) Should not normally be needed since the 
+   creation of the appropriate LDTIM loaders has already been performed.
+* `FILEDATE` only works with DateStamper style date stamping. If you run
+   it on a drive that is not initialized for DateStamper, it will complain
+   `FILEDATE, !!!TIME&.DAT missing`. This is normal and just means that
+   you have not initialized that drive for DateStamper (using PUTDS).
+* `ZXD` will handle either DateStamper or P2DOS type date stamping.
+   However, it **must** be configured appropriately. As distributed, it will
+   look for P2DOS date stamps. Use ZCNFG to reconfigure it for P2DOS if
+   that is what you are using.
 
 ## Timezone
 
