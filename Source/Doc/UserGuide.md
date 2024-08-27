@@ -6131,6 +6131,7 @@ may be discovered by RomWBW in your system.
 | INTRTC    | RTC      | Interrupt-based Real Time Clock                        |
 | KBD       | Keyboard | 8242 PS/2 Keyboard Controller                          |
 | KIO       | System   | Zilog Serial/ Parallel Counter/Timer                   |
+| LCD       | System   | Hitachi HD44780-based LCD Display                      |
 | LPT       | Char     | Parallel I/O Controller                                |
 | MD        | Disk     | ROM/RAM Disk                                           |
 | MSXKYB    | Keyboard | MSX Compliant Matrix Keyboard                          |
