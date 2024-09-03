@@ -847,12 +847,19 @@ more of the defined media types.
 | MID_FD111     | 9      | 8" 1.11M Floppy                            |
 | MID_HD1K      | 10     | Hard Disk (LBA) w/ 1024 directory entries  |
 
+**NOTE**: HBIOS does not actually differentiate between MID_HD512 and
+MID_HD1K.  The use of these two formats is determined by the use of a
+partition table on the media and is implemented by the operating
+system itself.  HBIOS treats all hard disks as raw sectors. See
+[Function 0x18 -- Disk Media (DIOMEDIA)] for more information on the
+Media ID byte returned.
+
 HBIOS supports both Cylinder/Head/Sector (CHS) and Logical Block 
 Addresses (CHS) when locating a sector for I/O (see DIOSEEK function). 
 For devices that are natively CHS (e.g., floppy disk), the HBIOS driver 
 can convert LBA values to CHS values according to the geometry of the 
 current media.  For devices that are natively LBA (e.g., hard disk), the
- HBIOS driver simulates CHS using a fictitious geometry provided by the 
+HBIOS driver simulates CHS using a fictitious geometry provided by the 
 driver (typically 16 sectors per track and 16 heads per cylinder).
 
 ### Function 0x10 -- Disk Status (DIOSTATUS)
@@ -1065,6 +1072,12 @@ Report the Media ID (E) for the for media in the specified Disk Unit
 will be performed.  The Status (A) is a standard HBIOS result code. If 
 there is no media in device, function will return an error status.
 
+**NOTE**: This function will always return MID_HD512 for hard disk
+devices.  MID_HD1K is provided for use internally by operating systems
+that provide different filsystem formats depending on the partition
+table.  This function cannot be used to determine if an HD1K formatted
+partition exists on the hard disk.
+
 ### Function 0x19 -- Disk Define Media (DIODEFMED)
 
 | **Entry Parameters**                   | **Returned Values**                    |
@@ -1098,7 +1111,7 @@ DIOMEDIA function to force this if desired.
 | **Entry Parameters**                   | **Returned Values**                    |
 |----------------------------------------|----------------------------------------|
 | B: 0x1B                                | A: Status                              |
-| C: Disk Unit                           | D: Heads                               |
+| C: Disk Unit                           | D: Heads / LBA                         |
 |                                        | E: Sectors                             |
 |                                        | HL: Cylinder Count                     |
 |                                        | BC: Block Size                         |
@@ -1108,7 +1121,11 @@ device uses LBA mode addressing natively, then the drivers simulated
 geometry will be returned. The Status (A) is a standard HBIOS result 
 code.  If the media is unknown, an error will be returned.
 
-Heads (D) refers to the number of heads per cylinder.  Sectors (E)
+LBA capability is indicated by D:7.  When set, the device is capable
+of LBA addressing.  Refer to [Function 0x12 -- Disk Seek (DIOSEEK)]
+for more information on specifying LBA vs. CHS addresses.
+
+Heads (D:6-0) refers to the number of heads per cylinder.  Sectors (E)
 refers to the number of sectors per track.  Cylinder Count (HL) is the
 total number of cylinders addressable for the media.  Block Size (BC)
 is the number of bytes in one sector.
