@@ -51,6 +51,7 @@ if [ "${ROM_PLATFORM}" == "dist" ] ; then
 	ROM_PLATFORM="NABU"; ROM_CONFIG="std"; bash Build.sh
 	ROM_PLATFORM="FZ80"; ROM_CONFIG="std"; bash Build.sh
 	ROM_PLATFORM="UNA"; ROM_CONFIG="std"; bash Build.sh
+      ROM_PLATFORM="GMZ180"; ROM_CONFIG="std"; bash Build.sh
 	exit
 fi
 
