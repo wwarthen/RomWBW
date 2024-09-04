@@ -33,6 +33,8 @@
 ;
 ;[2023/07/07] v1.9 Support DUODYNE
 ;
+;[2024/09/02] v1.10  Support Genesis STD Z180
+;
 ; Constants
 ;
 mask_data	.EQU	%10000000	; RTC data line
@@ -52,6 +54,7 @@ PORT_RCZ280	.EQU	$C0		; RTC port for RCZ280
 PORT_MBC	.EQU	$70		; RTC port for MBC
 PORT_RPH	.EQU	$84		; RTC port for RHYOPHYRE
 PORT_DUO	.EQU	$94		; RTC port for DUODYNE
+PORT_STDZ180 .EQU $84         ; RTC Port for STD Bus Z180 board
 
 
 BDOS		.EQU	5		; BDOS invocation vector
@@ -1143,7 +1146,13 @@ HINIT:
 	CP	17		; DUODYNE
 	JP	Z,RTC_INIT2
 ;
-	; Unknown platform
+	LD	C,PORT_STDZ180
+	LD	DE,PLT_STDZ180
+	CP	21		; STD Z180
+	JP	Z,RTC_INIT2
+;
+
+; Unknown platform
 	LD	DE,PLTERR	; BIOS error message
 	LD	C,9		; BDOS string display function
 	CALL	BDOS		; Do it
@@ -1769,6 +1778,7 @@ PLT_RCZ280	.TEXT	", RCBus Z280 RTC Module Latch Port 0xC0\r\n$"
 PLT_MBC		.TEXT	", MBC RTC Latch Port 0x70\r\n$"
 PLT_RPH		.TEXT	", RHYOPHYRE RTC Latch Port 0x84\r\n$"
 PLT_DUO		.TEXT	", DUODYNE RTC Latch Port 0x70\r\n$"
+PLT_STDZ180 .TEXT ", STD Z180 RTC Module latch port 0x84\r\n$"
 
 ;
 ; Generic FOR-NEXT loop algorithm
