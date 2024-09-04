@@ -262,6 +262,7 @@ is discussed in [Customizing RomWBW].
 | [EP Mini-ITX Z180]^11^                                      | RCBus?  | EPITX_std.rom                | 115200        |
 | [NABU w/ RomWBW Option Board]^10^                           | NABU    | NABU_std.rom                 | 115200        |
 | [S100 FPGA Z80]^9^                                          | S100    | FZ80_std.rom                 | 9600          |
+| [Genesis STD Z180]^12^                                      | STD     | GMZ180_std.rom               | 115200        |
 
 | ^1^Designed by Andrew Lynch
 | ^2^Designed by Sergey Kiselev
@@ -274,6 +275,7 @@ is discussed in [Customizing RomWBW].
 | ^9^Designed by John Monahan
 | ^10^Designed by Les Bird
 | ^11^Designed by Alan Cox
+| ^12^Designed by Doug Jackson
 
 RCBus refers to Spencer Owen's RC2014 bus specification and derivatives
 including RC26, RC40, RC80, and BP80.
@@ -5382,7 +5384,7 @@ the RomWBW HBIOS configuration.
 - CH: IO=60
 - CHUSB: IO=62
 - CHUSB: IO=60
-S- MD: TYPE=RAM
+- MD: TYPE=RAM
 - MD: TYPE=ROM
 - FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
 - FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
@@ -6097,6 +6099,36 @@ SD: MODE=FZ80, IO=108, UNITS=2
 
 - Requires matching FPGA code
 
+### Genesis STD Z180
+
+#### ROM Image File:  GMZ180_std.rom
+
+|                   |               |
+|-------------------|---------------|
+| Default CPU Speed | 18.432 MHz    |
+| Interrupts        | Mode 2        |
+| System Timer      | Z180          |
+| Serial Default    | 115200 Baud   |
+| Memory Manager    | Z180          |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
+
+##### Supported Hardware (see [Appendix B - Device Summary]):
+
+DSRTC: MODE=STD, IO=132
+INTRTC: ENABLED
+ASCI: IO=192, INTERRUPTS ENABLED
+ASCI: IO=193, INTERRUPTS ENABLED
+MD: TYPE=RAM
+MD: TYPE=ROM
+IDE: MODE=GIDE, IO=32, MASTER
+IDE: MODE=GIDE, IO=32, SLAVE
+SD: MODE=GM, IO=132, UNITS=1
+
+##### Notes:
+
+- CPU speed will be dynamically measured at startup if DSRTC is present
+
 ## Appendix B - Device Summary
 
 The table below briefly describes each of the possible devices that
@@ -6123,6 +6155,7 @@ may be discovered by RomWBW in your system.
 | EMM       | Disk     | Disk drive on Parallel Port emm interface (Zip Drive)  |
 | FD        | Disk     | 8272 or compatible Floppy Disk Controller              |
 | FP        | System   | Simple LED & Switch Front Panel                        |
+| FV        | Video    | S100 FPGA Z80 Onboard VGA/Keyboard                     |
 | GDC       | Video    | uPD7220 Video Display Controller                       |
 | HDSK      | Disk     | SIMH Simulator Hard Disk                               |
 | ICM       | DsKy     | ICM7218-based Display/Keypad on PPI                    |
