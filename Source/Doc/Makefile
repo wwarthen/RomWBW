@@ -2,9 +2,6 @@
 # NOTE: gpp, Pandoc, and Latex (MiKTeX or TexLive) must be installed
 # and available on commandline for this build to work!!!
 # Typically "sudo apt install gpp pandoc texlive-latex-extra texlive-luatex texlive-fonts-extra fonts-roboto"
-# On Macintosh
-# brew install gpp pandoc texlive
-# brew install --cask font-roboto
 #
 OBJECTS = ReadMe.gfm ReadMe.txt UserGuide.pdf SystemGuide.pdf Applications.pdf Catalog.pdf Errata.pdf
 # DEST = ../../Doc
