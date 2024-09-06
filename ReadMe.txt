@@ -1,6 +1,6 @@
 RomWBW ReadMe
 Wayne Warthen (wwarthen@gmail.com)
-04 Sep 2024
+05 Sep 2024
 
 
 
@@ -197,7 +197,10 @@ let me know if I missed you!
     BASIC Compiler, Microsoft Fortran Compiler, and a Games compendium.
 
 -   Martin R has provided substantial help reviewing and improving the
-    User Guide.
+    User Guide and Applications documents.
+
+-   Mark Pruden has also contributed a great deal of content to the User
+    Guide.
 
 -   Jacques Pelletier has contributed the DS1501 RTC driver code.
 
