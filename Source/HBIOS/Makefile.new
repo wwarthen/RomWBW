@@ -5,7 +5,7 @@ DIST_OBJECTS := \
 	RCZ80_zrc_ram RCZ80_zrc512 RPH_std SBC_std SBC_simh MBC_std \
 	DUO_std SCZ180_sc126 SCZ180_sc130 SCZ180_sc131 SCZ180_sc140 \
 	SCZ180_sc503 SCZ180_sc700 S100_std UNA_std Z80RETRO_std \
-	ZETA_std ZETA2_std HEATH_std EPITX_std
+	ZETA_std ZETA2_std HEATH_std EPITX_std GMZ180_std
 #	RCZ80_mt RCZ80_duart MON_std 
 
 OBJECTS := $(DIST_OBJECTS)
