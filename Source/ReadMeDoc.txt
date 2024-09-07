@@ -22,12 +22,18 @@ Required for Windows:
  - MiKTeX (https://miktex.org/)
    - Install Roboto font from MiKTeX Console
 
-Required for Linux:
- - gpp ((apt install gpp)
- - Pandoc (dpkg -i pandoc-3.1.8-1-amd64.deb)
- - TexLive (apt install texlive-latex-extra texlive-luatex fonts-roboto texlive-fonts-extra)
+Required for Ubuntu Linux:
+ - gpp (apt install gpp)
+ - Pandoc (apt install pandoc)
+ - TexLive (apt install texlive texlive-luatex texlive-fonts-extra)
 
-The source directory for the documentation is .../Source/Doc. From this 
-directory run Build.cmd for Windows or make for Linux to create the 
-output documents.  This will create the final documents and copy them 
-to their destination directories.
+Required for MacOS:
+ - gpp (brew install gpp)
+ - pandoc (brew install pandoc)
+ - TexLive (brew install texlive)
+ - Roboto Font (brew install --cask font-roboto)
+
+The source directory for the documentation is /Source/Doc. From this 
+directory run "Build.cmd" on Windows or "make" on Linux/Mac to create
+the output documents.  This will create the final documents and copy
+them to their destination directories.

@@ -2,8 +2,12 @@
 setlocal
 
 ::
-:: NOTE: Pandoc and Latex (MiKTeX or TexLive) must be installed
-:: and available on commandline for this build to work!!!
+:: NOTE: Pandoc, LuaLatex (MiKTeX or TexLive), and Roboto Font
+:: must be installed and available on commandline for this build to work!!!
+::
+:: - Pandoc (https://pandoc.org/)
+:: - MiKTeX (https://miktex.org/)
+::   - Install Roboto font from MiKTeX Console
 ::
 
 set TOOLS=..\..\Tools
@@ -35,9 +39,6 @@ echo.
 
 echo Processing document %1...
 
-::gpp -o %1.tmp %1.md
-::gpp -o %1.tmp -U "\\" "" "{" "}{" "}" "{" "}" "#" "" %1.md
-::gpp -o %1.tmp -U "" "" "(" "," ")" "(" ")" "#" "" -M "#" "\n" " " " " "\n" "(" ")" %1.md
 gpp -o %1.tmp -U "$" "$" "{" "}{" "}$" "{" "}" "@@@" "" -M "$" "$" "{" "}{" "}$" "{" "}" %1.md || exit /b
 
 ::pandoc %1.tmp -f markdown -t latex -s -o %1.tex --default-image-extension=pdf || exit /b
