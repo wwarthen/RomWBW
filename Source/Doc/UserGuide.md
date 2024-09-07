@@ -1848,6 +1848,12 @@ At this point, it is best to restart your system to make sure that
 the operating system is aware of the partition table updates.  Start
 CP/M 2.2 or Z-System from ROM again.
 
+#### FAT Partition
+
+At this point you may want to consider creating a FAT partition
+Please see the section [FAT Filesystem Preparation] for detils on how
+to setup the FAT partition.
+
 ### Slice Initialization
 
 You need to initialize each slice for CP/M to use it. 
@@ -2998,195 +3004,6 @@ floppy disk and hard disk images.
 | TUNE            | Play .PT2, .PT3, .MYM audio files.                                 |
 | INTTEST         | Test interrupt vector hooking.                                     |
 
-# FAT Filesystem
-
-The FAT filesystem format that originated with MS-DOS is almost
-ubiquitous across modern computers.  Virtually all operating systems
-now support reading and writing files to a FAT filesystem.  For this
-reason, RomWBW now has the ability to read and write files on FAT
-filesystems.
-
-This is accomplished by running a RomWBW custom application called `FAT`.
-This application understands both FAT filesystems as well as CP/M filesystems.
-
-* Files can be copied between a FAT filesystem and a CP/M filesystem,
-  but you cannot execute files directly from a FAT filesystem.
-* FAT12, FAT16, and FAT32 formats are supported.
-* Long filenames are not supported.  Files with long filenames will
-  show up with their names truncated into the older 8.3 convention.
-* A FAT filesystem can be located on floppy or hard disk media.  For
-  hard disk media, a valid FAT Filesystem partition must exist.
-* Note that CP/M (and compatible) OSes do not support all of the
-  filename characters that a modern computer does.  The following
-  characters are **not permitted** in a CP/M filename:
-
-  `< > . , ; : = ? * [ ] _ % | ( ) / \`
-
-  The FAT application does not auto-rename files when it encounters
-  invalid filenames.  It will just issue an error and quit.
-  Additionally, the error message is not very clear about the problem.
-
-## FAT Filesystem Preparation
-
-In general, you can create media formatted with a FAT filesystem on
-your RomWBW computer or on your modern computer.  We will only be
-discussing the RomWBW-based approach here.
-
-In the case of a floppy disk, you can use the `FAT` application to 
-format the floppy disk.  The floppy disk must already be physically 
-formatted using RomWBW FDU or equivalent.  If your floppy disk is on 
-RomWBW disk unit 2, you could use `FAT FORMAT 2:`.  This will overwrite 
-the floppy with a FAT filesystem and all previous contents will be lost.
-Once formatted this way, the floppy disk can be used in a floppy drive 
-attached to a modern computer or it can be used on RomWBW using the 
-other `FAT` tool commands.
-
-In the case of hard disk media, it is necessary to have a FAT
-partition.  If you prepared your RomWBW hard disk media using the
-disk image process, then this partition will already be defined and
-you do not need to recreate it.  This default FAT partition is located
-at approximately 512MB from the start of your disk and it is 384MB in
-size.  So, your hard disk media must be 1GB or greater to use this
-default FAT partition.
-
-You can confirm the existence of the FAT partition with `FDISK80` by 
-using the 'P' command to show the current partition table.  Here is an 
-example of a partition table listing from `FDISK80` that includes the 
-FAT partition (labelled "FAT16"):
-
-```
-Capacity of disk 4:  (  4G)  7813120      Geom 77381010
-Nr  ---Type- A --      Start         End   LBA start  LBA count  Size
- 1    RomWBW   2e      8:0:1  1023:15:16        2048    1048576  512M
- 2     FAT16   06   1023:0:1  1023:15:16     1050624     786432  384M
- 3             00       *** empty ***
- 4             00       *** empty ***
-```
-
-If your hard disk media does not have a FAT partition already defined,
-you will need to define one using FDISK80 by using the 'N' command.
-Ensure that the location and size of the FAT partition does not
-overlap any of the CP/M slice area and that it fits within the size
-of your media.
-
-Once the partition is defined, you will still need to format it.  Just
-as with a floppy disk, you use the `FAT` tool to do this.  If your
-hard disk media is on RomWBW disk unit 4, you would use `FAT FORMAT 4:`.
-This will look something like this:
-
-```
-E>fat format 4:
-
-About to format FAT Filesystem on Disk Unit #4.
-All existing FAT partition data will be destroyed!!!
-
-Continue (y/n)?
-
-Formatting... Done
-```
-
-Your FAT filesystem is now ready to use.
-
-If your RomWBW system has multiple disk drives/slots, you can also just 
-create a disk with your modern computer that is a dedicated FAT 
-filesystem disk.  You can use your modern computer to format the disk 
-(floppy, CF Card, SD Card, etc.), then insert the disk in your RomWBW 
-computer and access it using `FAT` based on its RomWBW unit number.
-
-**WARNING**: Microsoft Windows will sometimes suggest reformatting 
-partitions that it does not recognize.  If you are prompted to format a 
-partition of your SD/CF/USB Media when inserting the card into a Windows
-computer, you probably want to select Cancel.
-
-## FAT Application Usage
-
-Complete instructions for the `FAT` application are found in $doc_apps$.
-Here, we will just provide a couple of simple examples.  Note that the 
-FAT application is not on the ROM disk because it is too large to 
-include there.
-
-The most important thing to understand about the `FAT` application is
-how it refers to FAT filesystems vs. CP/M filesystems.  It infers this
-based on the file specification provided.  If you use a specification
-like `C:SAMPLE.TXT`, it will use the C: drive of your CP/M operating
-system.  If you use a specification like `4:SAMPLE.TXT`, it will use
-the FAT filesystem on the disk in RomWBW disk unit 4.  Basically, if
-you start your file or directory specification with a number followed
-by a colon, it means FAT filesystem.  Anything else will mean CP/M
-filesystem.
-
-Here are a few examples.  This first example shows how to get a FAT
-directory listing from RomWBW disk unit 4:
-
-```
-E>fat dir 4:
-
-Directory of 4:
-
-
-E>
-```
-
-As you can see, there are currently no files there.  Now let's copy
-a file from CP/M to the FAT directory:
-
-```
-E>fat copy sample.txt 4:
-
-Copying...
-
-SAMPLE.TXT ==> 4:/SAMPLE.TXT ... [OK]
-
-    1 File(s) Copied
-```
-
-If we list the FAT directory again, you will see the file:
-
-```
-E>fat dir 4:
-
-Directory of 4:
-
-01/30/2023  17:50:14         29952  ---A  SAMPLE.TXT
-
-```
-
-Now let's copy the file from the FAT filesystem back to CP/M.  This
-time we will get a warning about overwriting the file.  For this
-example, we don't want to do that, so we abort and reissue the
-command specifying a new filename to use:
-
-```
-E>fat copy 4:sample.txt e:
-
-Copying...
-
-4:/SAMPLE.TXT ==> E:SAMPLE.TXT Overwrite? (Y/N) [Skipped]
-
-    0 File(s) Copied
-
-E>fat copy 4:sample.txt e:sample2.txt
-
-Copying...
-
-4:/SAMPLE.TXT ==> E:SAMPLE2.TXT ... [OK]
-
-    1 File(s) Copied
-```
-
-Finally, let's try using wildcards:
-
-```
-E>fat copy sample*.* 4:
-
-Copying...
-
-SAMPLE.TXT ==> 4:/SAMPLE.TXT Overwrite? (Y/N) ... [OK]
-SAMPLE2.TXT ==> 4:/SAMPLE2.TXT ... [OK]
-
-    2 File(s) Copied
-```
-
 # Real Time Clock
 
 RomWBW supports a variety of real time clock hardware.  If your
@@ -3963,35 +3780,222 @@ detail in the Source/Images directory of the distribution.
 
 ## FAT Filesystem Transfers
 
-The ability to interact with FAT filesystems was covered in
-[FAT Filesystem].  This capability means that you can generally use your
- modern computer to make an SD Card, CF Card, or USB Drive with a 
-standard FAT32 filesystem on it, then place that media in your RomWBW 
-computer and access the files.
+The FAT filesystem format that originated with MS-DOS is almost
+ubiquitous across modern computers.  Virtually all operating systems
+now support reading and writing files to a FAT filesystem.  For this
+reason, RomWBW now has the ability to read and write files on FAT
+filesystems.
 
-When formatting the media on your modern computer, be sure to pick the 
-FAT filesystem. NTFS and other filesystems will not work.  As previously
-mentioned, the `FAT` application does not understand long filenames, 
-only the traditional 8.3 filenames.  If you have files on your modern 
-computer with long filenames, it is usually easiest to rename them on 
-the modern computer.
+This capability means that you can generally use your modern computer 
+to make an SD Card, CF Card, or USB Drive with a standard FAT filesystem 
+on it, then place that media in your RomWBW computer and access the files.
+
+* Files can be copied between a FAT filesystem and a CP/M filesystem,
+  but you cannot execute files directly from a FAT filesystem.
+
+* FAT12, FAT16, and FAT32 formats are supported.
+
+* Long filenames are not supported.  Files with long filenames will
+  show up with their names truncated into the older 8.3 convention.
+  If you have files on your modern computer with long filenames, 
+  it is usually easiest to rename them on the modern computer.
+
+* A FAT filesystem can be located on floppy or hard disk media.  For
+  hard disk media, a valid FAT Filesystem partition must exist.
+
+Some additional **Notes** and **WARNINGS** Things to be careful about
+
+* CP/M (and compatible) OSes do not support all of the
+  filename characters that a modern computer does.  The following
+  characters are **not permitted** in a CP/M filename:
+
+  `< > . , ; : = ? * [ ] _ % | ( ) / \`
+
+  The FAT application does not auto-rename files when it encounters
+  invalid filenames.  It will just issue an error and quit.
+  Additionally, the error message is not very clear about the problem.
+
+* Microsoft Windows will sometimes suggest **reformatting**
+  partitions that it does not recognize (e.g. RomWBW).
+  If you are using media that contains both a FAT partition
+  and a RomWBW partition you may prompted to format a partition of your 
+  SD/CF/USB Media when inserting the card into a Windows computer, 
+  you probably want to select Cancel.
+
+### FAT Filesystem Preparation
+
+In general, you can create media formatted with a FAT filesystem on
+your RomWBW computer or on your modern computer.  We will only be
+discussing the RomWBW-based approach here.
+
+#### Floppy Disk
+
+In the case of a floppy disk, you can use the `FAT` application to
+format the floppy disk.  The floppy disk must already be physically
+formatted using RomWBW FDU or equivalent.  If your floppy disk is on
+RomWBW disk unit 2, you could use `FAT FORMAT 2:`.  This will overwrite
+the floppy with a FAT filesystem and all previous contents will be lost.
+Once formatted this way, the floppy disk can be used in a floppy drive
+attached to a modern computer or it can be used on RomWBW using the
+other `FAT` tool commands.
+
+#### Hard Disk
+
+In the case of hard disk media, it is necessary to have a FAT
+partition.  If you prepared your RomWBW hard disk media using the
+disk image process, then this partition will already be defined and
+you do not need to recreate it.  This default FAT partition is located
+at approximately 512MB from the start of your disk and it is 384MB in
+size.  So, your hard disk media must be 1GB or greater to use this
+default FAT partition.
+
+You can confirm the existence of the FAT partition with `FDISK80` by
+using the 'P' command to show the current partition table.  Here is an
+example of a partition table listing from `FDISK80` that includes the
+FAT partition (labelled "FAT16"):
+
+```
+Capacity of disk 4:  (  4G)  7813120      Geom 77381010
+Nr  ---Type- A --      Start         End   LBA start  LBA count  Size
+ 1    RomWBW   2e      8:0:1  1023:15:16        2048    1048576  512M
+ 2     FAT16   06   1023:0:1  1023:15:16     1050624     786432  384M
+ 3             00       *** empty ***
+ 4             00       *** empty ***
+```
+
+If your hard disk media does not have a FAT partition already defined,
+you will need to define one using FDISK80 by using the 'N' command.
+Ensure that the location and size of the FAT partition does not
+overlap any of the CP/M slice area and that it fits within the size
+of your media.
+
+Once the partition is defined, you will still need to format it.  Just
+as with a floppy disk, you use the `FAT` tool to do this.  If your
+hard disk media is on RomWBW disk unit 4, you would use `FAT FORMAT 4:`.
+This will look something like this:
+
+```
+E>fat format 4:
+
+About to format FAT Filesystem on Disk Unit #4.
+All existing FAT partition data will be destroyed!!!
+
+Continue (y/n)?
+
+Formatting... Done
+```
+
+Your FAT filesystem is now ready to use.
+
+If your RomWBW system has multiple disk drives/slots, you can also just
+create a disk with your modern computer that is a dedicated FAT
+filesystem disk.  You can use your modern computer to format the disk
+(floppy, CF Card, SD Card, etc.), then insert the disk in your RomWBW
+computer and access it using `FAT` based on its RomWBW unit number.
+
+### FAT Application Usage
+
+Transferring files is accomplished by running a RomWBW custom application 
+called `FAT`. This application understands both FAT filesystems as well 
+as CP/M filesystems.
 
 To copy files from your modern computer to your RomWBW computer, start 
 by putting the disk media with the FAT filesystem in your modern 
 computer.  The modern computer should recognize it. Then copy the files 
 you want to get to your RomWBW computer onto this media.  Once done, 
 remove the media from your modern computer and insert it in the RomWBW 
-computer.  Finally, use the `FAT` tool to copy the files onto a CP/M 
-drive.
+computer.  
 
-This process works just fine in reverse if you want to copy files from a
+Finally, use the `FAT` tool to copy the files onto a CP/M 
+drive. This process works just fine in reverse if you want to copy files from a
 CP/M filesystem to your modern computer.
 
-**WARNING**: If you are using media that contains both a FAT partition 
-and a RomWBW partition, your modern computer may be confused by the 
-RomWBW partition.  In some cases, it will prompt you to format the 
-RomWBW partition because it doesn't know what it is. You will be 
-prompted before it does this -- just be careful not to allow it.
+Complete instructions for the `FAT` application are found in $doc_apps$.
+Here, we will just provide a couple of simple examples.  Note that the
+FAT application is not on the ROM disk because it is too large to
+include there.
+
+The most important thing to understand about the `FAT` application is
+how it refers to FAT filesystems vs. CP/M filesystems.  It infers this
+based on the file specification provided.  If you use a specification
+like `C:SAMPLE.TXT`, it will use the C: drive of your CP/M operating
+system.  If you use a specification like `4:SAMPLE.TXT`, it will use
+the FAT filesystem on the disk in RomWBW disk unit 4.  Basically, if
+you start your file or directory specification with a number followed
+by a colon, it means FAT filesystem.  Anything else will mean CP/M
+filesystem.
+
+Here are a few examples.  This first example shows how to get a FAT
+directory listing from RomWBW disk unit 4:
+
+```
+E>fat dir 4:
+
+Directory of 4:
+
+
+E>
+```
+
+As you can see, there are currently no files there.  Now let's copy
+a file from CP/M to the FAT directory:
+
+```
+E>fat copy sample.txt 4:
+
+Copying...
+
+SAMPLE.TXT ==> 4:/SAMPLE.TXT ... [OK]
+
+    1 File(s) Copied
+```
+
+If we list the FAT directory again, you will see the file:
+
+```
+E>fat dir 4:
+
+Directory of 4:
+
+01/30/2023  17:50:14         29952  ---A  SAMPLE.TXT
+
+```
+
+Now let's copy the file from the FAT filesystem back to CP/M.  This
+time we will get a warning about overwriting the file.  For this
+example, we don't want to do that, so we abort and reissue the
+command specifying a new filename to use:
+
+```
+E>fat copy 4:sample.txt e:
+
+Copying...
+
+4:/SAMPLE.TXT ==> E:SAMPLE.TXT Overwrite? (Y/N) [Skipped]
+
+    0 File(s) Copied
+
+E>fat copy 4:sample.txt e:sample2.txt
+
+Copying...
+
+4:/SAMPLE.TXT ==> E:SAMPLE2.TXT ... [OK]
+
+    1 File(s) Copied
+```
+
+Finally, let's try using wildcards:
+
+```
+E>fat copy sample*.* 4:
+
+Copying...
+
+SAMPLE.TXT ==> 4:/SAMPLE.TXT Overwrite? (Y/N) ... [OK]
+SAMPLE2.TXT ==> 4:/SAMPLE2.TXT ... [OK]
+
+    2 File(s) Copied
+```
 
 # Customizing RomWBW
 
