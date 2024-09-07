@@ -1072,6 +1072,18 @@ The concept of slices is described in detail in the section
 The mapping of a hardware disk (and slice) to a Drive letter 
 in an operating system. A Drive has a file system installed on it 
 
+#### Disk Image
+
+A disk image is a predefined image of a complete CP/M filesystem, 
+or filesystem(s), including any partition tables (for hard disk images).
+Each disk image has the complete set of normal applications and tools
+distributed with the associated operating system or application suite.
+
+This comes in for form of a file which is suitable for copying directly 
+onto target media, using a modern computer. It is generally easier to 
+use these disk images than transferring files over individually. 
+See the section [Disk Images] for further details.
+
 ## Startup Hardware Discovery
 
 During startup RomWBW performs detection for hardware supported by your 
@@ -1241,16 +1253,17 @@ With some understanding of how RomWBW presents disk space to the
 operating systems, we need to go over the options for actually setting
 up your disk(s) with content.
 
-### Preparing Media for first use
+### Preparing Media for First Use
 
 You can initialize the media in-place using your RomWBW system.
 Essentially, this means you are creating a set of blank directories on
 your disk so that files can be saved there.
-This is somewhat analogous to partitioning partitioning of a hard disk
+This is somewhat analogous to partitioning of a hard disk
 or doing a low level format of a floppy disk.
 
 Initilizing a Floppy disk is covered in the section [Floppy Disk Formatting],
-or for a Hard disk the section [Hard Disk Preparation] 
+or for a Hard disk the section [Hard Disk Preparation] covers the steps to 
+manually setup a hard disk for first use. 
 
 ### Clearing (Formatting) Drives 
 
@@ -1297,30 +1310,6 @@ Type CAPITAL Y to proceed, any key other key to exit. Y
 Directory cleared.
 B>
 ```
-
-### Making Bootable Media
-
-If you want to make a disk bootable, you will need to use `SYSCOPY` to 
-setup the system track(s) of the slice.
-The use of `SYSCOPY` depends on the operating system and is 
-described in the [Operating Systems] chapter of this document.
-
-As an example, let's assume you want to setup C: as a bootable Z-System disk.  
-To setup the system track you would use:
-
-```
-B>SYSCOPY C:=B:ZSYS.SYS
-
-SYSCOPY v2.0 for RomWBW CP/M, 17-Feb-2020 (CP/M 2 Mode)
-Copyright 2020, Wayne Warthen, GNU GPL v3
-
-Transfer system image from B:ZSYS.SYS to C: (Y/N)? Y
-Reading image... Writing image... Done
-```
-
-Once this process succeeds, you will be able to boot directly to the
-disk slice from the boot loader prompt. See the instructions in
-[Starting Operating Systems from Disk] for details on this.
 
 ### Checking Disk Layout
 
@@ -1643,10 +1632,7 @@ There are two approaches to preparing disks for use by RomWBW.
   including files to a disk.
 
 This section of the document describes the manual process of preparing
-empty disks that are ready for use by an operating system.  You will
-need to refer to [Transferring Files] for more information on getting
-files onto the disks.  You will also need to follow the instructions
-in [Operating Systems] to make disks bootable.
+empty disks that are ready for use by an operating system. 
 
 Alternatively, you can use the pre-built RomWBW disk images to quickly
 create disk media that already has a large selection of files and
@@ -1760,7 +1746,7 @@ First you need to understand
 
 *  The disk layout approach (either hd1k or the legacy hd512). 
    See [Hard Disk Layouts] section if you are not sure. 
-   HD1K should be the preferred layout.
+   hd1k should be the preferred layout.
 *  The number of 8MB slices that you want to allocate, preferred is 64 slices.
    At least 1 slice of 8MB is required
 *  If you want to leave space for a FAT partition. See [FAT Filesystem Preparation]
@@ -1787,9 +1773,9 @@ The disk unit number was assigned at boot See [Device Unit Assignments]
 
 Refer to $doc_apps$ for more information on use of the `FDISK80` utility. 
 
-If you want to use the legacy hd512 layout skip down to the [Legacy (HD512)] section
+If you want to use the legacy hd512 layout skip down to the [Legacy (hd512)] section
 
-#### Modern (HD1K)
+#### Modern (hd1k)
 
 At this point, use the `I` command to initialize (reset)
 the partition table to an empty state.
@@ -1849,7 +1835,7 @@ At this point, it is best to restart your system to make sure that
 the operating system is aware of the partition table updates.  Start
 CP/M 2.2 or Z-System from ROM again.
 
-#### Legacy (HD512)
+#### Legacy (hd512)
 
 At this point, use the `I` command to initialize (reset) 
 the partition table to an empty state.
@@ -1879,6 +1865,43 @@ Assuming you want to use additional slices, you should initialize them
 using the same process.  You may need to reassign drive letters to
 access some slices that are beyond the ones automatically assigned.
 You can use the `ASSIGN` command to handle this.
+
+## Post Disk Preparation
+
+Once a disk (either floppy or hard disk) has been initialised and 
+formattted you may optionally;
+* Make the disk bootable
+* Copy system (or other) files to the disk
+
+### Making a Disk Bootable
+
+To make a disk bootable you will need to follow the specific instructions
+in [Operating Systems], as each operating system will be different.
+
+Generally you will need to use `SYSCOPY` to setup the system track(s) 
+of the disk.As an example, If you wanted to setup C: as a bootable 
+Z-System disk you would use:
+
+```
+B>SYSCOPY C:=B:ZSYS.SYS
+
+SYSCOPY v2.0 for RomWBW CP/M, 17-Feb-2020 (CP/M 2 Mode)
+Copyright 2020, Wayne Warthen, GNU GPL v3
+
+Transfer system image from B:ZSYS.SYS to C: (Y/N)? Y
+Reading image... Writing image... Done
+```
+
+Once this process succeeds, you will be able to boot directly to the
+disk slice from the boot loader prompt. See the instructions in
+[Starting Operating Systems from Disk] for details on this.
+
+### Copying System Files
+
+As well as making the disk bootable, you may need to transfer other
+system and application files to your disks.
+Refer to [Transferring Files] for more information on getting
+files onto your disks.
 
 # Disk Images
 
@@ -2072,12 +2095,18 @@ positions indicated:
 | Slice 5    | WordStar v4 & ZDE Applications          |
 | Slice 6-63 | _blank unformatted_                     |
 
-There are actually 2 combo disk images in the 
+There are actually 2 primary combo disk images in the 
 distribution.  One for an hd512 disk layout (hd512_combo.img) and one 
 for an hd1k disk layout (hd1k_combo.img). Simply use the image file that
 corresponds to your desired hard disk layout.  Review the information
 in [Hard Disk Layouts] if you need more information of the disk layout
 options.
+
+> **Note**: Apart from the hd512 and hd1k combo disk images (mentioned above)
+> there are actaully a number of other `hd1k_*_combo.img` files. These 
+> additional combo files are platform (generally romless) specific, 
+> and should be ignored unless you are on one of these platforms.
+> If you are on one of these platforms you must use the correct combo file
 
 The combo disk image actaully only contains the initial partition table, 
 and the first 6 slices (Slice 0 to 5), this is approximately 49MB in size. 
@@ -2174,6 +2203,12 @@ Windows:
 Linux/MacOS:
 
 `cat hd1k_prefix.dat hd1k_cpm22.img hd1k_cpm3.img hd1k_ws >hd.img`
+
+> **Note**: Apart from the hd1k_prefix.dat file (mentioned above)
+> there are actaully a number of other `hd1k_*_prefix.dat` files. These
+> additional prefix files are platform (generally romless) specific,
+> and should be ignored unless you are on one of these platforms.
+> If you are on one of these platforms you must use the correct prefix file
 
 In all of the examples above, the resulting file (hd.img) would now be 
 written to your hard disk media and would be ready to use in a RomWBW 
