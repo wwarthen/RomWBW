@@ -144,13 +144,13 @@ file that is included in the build process.
 
 RomWBW uses cascading configuration files as indicated below:
 
-  cfg_master.asm - MASTER CONFIGURATION FILE DEFINES ALL POSSIBLE ROMWBW SETTINGS
+cfg_MASTER.asm				- MASTER: CONFIGURATION FILE DEFINES ALL POSSIBLE ROMWBW SETTINGS
+|
++-> cfg_<platform>.asm			- PLATFORM: DEFAULT SETTINGS FOR SPECIFIC PLATFORM
     |
-    +-- cfg_<platform>.asm - PLATFORM SPECIFIC DEFAULT CONFIGURATION SETTINGS
-          |
-          +-- Config/<platform>_std.asm - DEFAULT BUILD SETTINGS FOR PLATFORM
-                |
-                +-- Config/<platform>_<custom>.asm - OPTIONAL CUSTOM USER SETTINGS
+    +-> Config/<plt>_std.asm		- BUILD: SETTINGS FOR EACH OFFICIAL DIST BUILD
+        |
+        +-> Config/<plt>_<cust>.asm	- USER: CUSTOM USER BUILD SETTINGS
 
 The top (master configuration) file defines all possible RomWBW
 configuration settings. Each file below the master configuration file
@@ -228,10 +228,10 @@ platform.  This is accomplished via the "#INCLUDE" directive near
 the top of the file.  For the "MK4_std.asm" configuration file,
 this line reads:
 
-#INCLUDE "cfg_mk4.asm"
+#INCLUDE "cfg_MK4.asm"
 
 When the configuration file (MK4_std.asm) is processed, it will first
-read in all the default platform settings from "cfg_mk4.asm".  All of
+read in all the default platform settings from "cfg_MK4.asm".  All of
 the platform default configuration files are found in the parent
 directory (the HBIOS directory).  You will see a "cfg_<plt>.asm" for
 each platform in the parent directory.

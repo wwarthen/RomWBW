@@ -24,7 +24,7 @@
 ;
 #DEFINE	BOOT_DEFAULT	"H"		; DEFAULT BOOT LOADER CMD ON <CR> OR AUTO BOOT
 ;
-#include "cfg_sbc.asm"
+#include "cfg_SBC.asm"
 ;
 INTMODE		.SET	1		; INTERRUPTS: 0=NONE, 1=MODE 1, 2=MODE 2
 ;
