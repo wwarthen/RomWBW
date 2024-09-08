@@ -140,9 +140,33 @@ Each of the 4 steps above is described in more detail below.
 -----------------------------------
 
 The options for a build are primarily controlled by a configuration 
-file that is included in the build process.  In order to customize 
-your settings, it is easiest to make a copy of an existing 
-configuration file and make your changes there.
+file that is included in the build process.
+
+RomWBW uses cascading configuration files as indicated below:
+
+  cfg_master.asm - MASTER CONFIGURATION FILE DEFINES ALL POSSIBLE ROMWBW SETTINGS
+    |
+    +-- cfg_<platform>.asm - PLATFORM SPECIFIC DEFAULT CONFIGURATION SETTINGS
+          |
+          +-- Config/<platform>_std.asm - DEFAULT BUILD SETTINGS FOR PLATFORM
+                |
+                +-- Config/<platform>_<custom>.asm - OPTIONAL CUSTOM USER SETTINGS
+
+The top (master configuration) file defines all possible RomWBW
+configuration settings. Each file below the master configuration file
+inherits the cumulative settings of the files above it and may
+override these settings as desired.
+
+Other than the top master file, each file must "#INCLUDE" its parent 
+file.  The top two files should not be modified.  To customize your 
+build settings you should modify the default build settings 
+(config/<platform>_std.asm) or preferably create an optional custom 
+user settings file that includes the default build settings file (see 
+example Config/SBC_user.asm).
+
+By creating a custom user settings file, you are less likely to be
+impacted by future changes because you will only be inheriting most
+of your settings which will be updated by authors as RomWBW evolves.
 
 RomWBW uses the concept of a "platform" and "configuration" to
 define the settings for a build.  Platform refers to one of the core
@@ -153,23 +177,29 @@ defaults as desired.
 The platform names are predefined.  Refer to the following table 
 to determine the <plt> component of the configuration filename:
 
-	SBC		Retrocomputing ECB Z80 SBC V1/V2
-	N8		RetroComputing N8 SBC
-	MK4		RetroComputing Mark IV Z180
-	ZETA		Sergey Kiselev's Zeta Z80
-	ZETA2		Sergey Kiselev's Zeta V2 Z80
-	RCZ80		RCBus Z80
-	RCZ180		RCBus Z180
-	SCZ180		Stephen Cousins' Z180 Systems
-	RCZ280		RCBus Z280
-	EZZ80		Sergey Kiselev's Easy/Tiny Z80
-	DYNO		Dyno Z180 Single Board Computer
-	MBC		Andrew Lynch's Nhyodyne Z80 MBC
-	RPH		Andrew Lynch's Rhyophyre Z180 SBC
+	SBC		Z80 SBC (v1 or v2) w/ ECB interface
+	ZETA		Standalone Z80 SBC w/ SBC compatibility
+	ZETA2		Second version of ZETA with enhanced memory bank switching
+	N8		MSX-ish Z180 SBC w/ onboard video and sound
+	MK4		Mark IV Z180 based SBC w/ ECB interface
+	UNA		Any Z80/Z180 computer with UNA BIOS
+	RCZ80		RCBUS based system with 512K banked RAM/ROM card
+	RCZ180		RCBUS based system with Z180 CPU
+	EZZ80		Easy Z80, Z80 SBC w/ RCBUS and CTC
+	SCZ180		Steve Cousins Z180 based system
+	DYNO		Steve Garcia's Dyno Micro-ATX Motherboard
+	RCZ280		Z280 CPU on RCBUS or ZZ80MB
+	MBC		Andrew Lynch's Multi Board Computer
+	RPH		Andrew Lynch's RHYOPHYRE Graphics Computer
 	Z80RETRO	Peter Wilson's Z80-Retro Computer
 	S100		S100 Computers Z180-based System
 	DUO		Andrew Lynch's Duodyne Computer
-	UNA		John Coffman's UNA System
+	HEATH		Les Bird's Heath Z80 Board
+	EPITX		Alan Cox' Mini-ITX System
+	MON		Jacques Pelletier's Monsputer
+	GMZ180		Doug Jacksons' Genesis Z180 System
+	NABU		NABU w/ Les Bird's RomWBW Option Board
+	FZ80		S100 Computers FPGA Z80
 
 Configuration files are found in the Source\HBIOS\Config 
 directory.  If you look in the this directory, you will see a 
@@ -194,11 +224,11 @@ and easily revert back to the original if you have problems.
 
 It is important to understand how configuration files are processed.
 They start by inheriting all of the default settings for the
-platform.  This is accomplished via the "#include" directive near
+platform.  This is accomplished via the "#INCLUDE" directive near
 the top of the file.  For the "MK4_std.asm" configuration file,
 this line reads:
 
-#include "cfg_mk4.asm"
+#INCLUDE "cfg_mk4.asm"
 
 When the configuration file (MK4_std.asm) is processed, it will first
 read in all the default platform settings from "cfg_mk4.asm".  All of
