@@ -46,27 +46,28 @@
 ;
 ; INCLUDE FILE NESTING:
 ;
-; hbios.asm
-;  - std.asm
-;    - ver.inc
-;    - hbios.inc
-;    - build.inc
-;      - config/<plt>_<cfg>.asm
-;        - cfg_<plt>.asm
-;      - [z180.inc|z280.inc]
-;      - [eipc.inc]
-;  - <drivers>.asm
-;  - <fonts>.asm
-;  - util.asm
-;  - time.asm
-;  - bcd.asm
-;  - decode.asm
-;  - encode.asm
-;  - [xio|mio].asm
-;  - unlzsa2s.asm
+; - std.asm
+;   - ../ver.inc
+;   - build.inc
+;     - Config/<plt>_std.asm
+;       - cfg_<plt>.asm
+;         - cfg_MASTER.asm
+;           - hbios.inc
+;   - [z180.inc]
+;   - [z280.inc]
+;   - [eipc.inc]
+; - util.asm
+; - time.asm
+; - bcd.asm
+; - decode.asm
+; - encode.asm
+; - [xio.asm]
+; - [mio.asm]
+; - [unlzsa2s.asm]
+; - <drivers...>.asm
+; - <fonts...>.asm
 ;
 ; MEMORY LAYOUT:
-;
 ;
 ; DESCRIPTION			START	LENGTH
 ; ----------------------------- ------- -------
