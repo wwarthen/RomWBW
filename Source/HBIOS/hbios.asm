@@ -2964,6 +2964,11 @@ HB_Z280BUS:
 HB_Z280BUS1:
 	PRTS("MHz$")			; SUFFIX
 #ENDIF
+
+#IF (CPUFAM == CPU_EZ80)
+	CALL	EZ80_RPT_FIRMWARE
+#ENDIF
+
 ;
 ;--------------------------------------------------------------------------------------------------
 ; DISPLAY CPU CONFIGURATION
