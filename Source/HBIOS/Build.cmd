@@ -204,7 +204,7 @@ goto :eof
 :dist
 
 call Build SBC std || exit /b
-call Build SBC simh || exit /b
+call Build SBC simh_std || exit /b
 call Build MBC std || exit /b
 call Build ZETA std || exit /b
 call Build ZETA2 std || exit /b
