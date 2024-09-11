@@ -1138,7 +1138,8 @@ reinitialised and the data previously stored will be lost.
 | Disk-based          |Yes|
 
 The `CPUSPD` application is used to change the running speed and wait
-states of a RomWBW system.
+states of a RomWBW system.  It can also be used to invoke a warm or
+cold reboot of the system.
 
 The functionality is highly dependent on the capabilities of your system.
 
@@ -1150,8 +1151,10 @@ configuration.
 #### Syntax
 
 | `CPUSPD [`*`<speed>`*`[,[`*`<memws>`*`][,[`*`<iows>`*`]]]`
+| `CPUSPD (W)armBoot`
+| `CPUSPD (C)oldBoot`
 
-*`<speed>`* is one of HALF, FULL, or DOUBLE.  
+*`<speed>`* is one of (H)alf, (F)ull, (D)ouble, or (Q)uad.  
 *`<memws>`* is a number specifying the desired memory wait states.  
 *`<iows>`* is a number specifying the desired I/O wait states.
 
