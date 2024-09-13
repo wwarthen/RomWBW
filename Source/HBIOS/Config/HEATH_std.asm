@@ -44,5 +44,4 @@
 ;
 #DEFINE	BOOT_DEFAULT	"H"		; DEFAULT BOOT LOADER CMD ON <CR> OR AUTO BOOT
 ;
-#include "cfg_HEATH.asm"
-;
+#INCLUDE "cfg_HEATH.asm"

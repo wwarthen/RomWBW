@@ -44,4 +44,4 @@
 ;
 #DEFINE	BOOT_DEFAULT	"H"		; DEFAULT BOOT LOADER CMD ON <CR> OR AUTO BOOT
 ;
-#include "cfg_UNA.asm"
+#INCLUDE "cfg_UNA.asm"
