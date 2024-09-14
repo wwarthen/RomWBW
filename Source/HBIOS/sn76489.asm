@@ -43,7 +43,7 @@ SN76489_PORT16_RIGHT	.EQU	(IO_SEGMENT*256) + SN76489_PORT_RIGHT
 
 #IF (CPUFAM == CPU_EZ80)
 ; The eZ80 configuration must have sufficient bus cycles configured for this driver
-; to work.  See the entries: (EZ80_ASSIGN and EZ80_IO_CYCLES or EZ80_IO_FREQ)
+; to work.  See the entries: (EZ80_ASSIGN and EZ80_IO_CYCLES, EZ80_IO_WS, EZ80_IO_MIN_NS)
 ;
 ; For CPU @ ~18Mhz, the eZ80 must have at least 4 Bus Cycles for I/O operations
 ; For CPU @ ~24Mhz, the eZ80 must have at least 5 Bus Cycles for I/O operations
