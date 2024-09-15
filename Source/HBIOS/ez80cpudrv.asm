@@ -1,15 +1,28 @@
 ;
 ;==================================================================================================
-; EZ80 50/60HZ TIMER TICK DRIVER
+; RCBUS EZ80 CPU DRIVER
 ;==================================================================================================
 ;
-; Communicate with on-chip eZ80 firmware to:
-; 1. Exchange platform version numbers
-; 2. Configure memory banking type
-; 3. Retrieve CPU Frequency
-; 4. Set Memory and I/O Bus Timings
-; 5. Set Timer Tick Frequency
+; Driver code designed for the RCBus eZ80 CPU Module.  
+; The driver expects the eZ80 firmware to manage the initial booting of the system.
+; Details for the platform and the software for the on-chip firmware can be found at:
+; https://github.com/dinoboards/rc2014-ez80
 ;
+; Although the eZ80 firmware is booted before HBIOS, the eZ80 CPU driver is still required
+; to communicate with the firmware to perform a number of initialisation tasks.
+; See also the associated ez80 platform drivers (ez80rtc, ez80systmr, ez80uart).
+;
+; The driver 'exports' two key functions:
+; 1. EZ80_PREINIT - This function is called by the HBIOS boot code to initialise the eZ80 firmware.
+; 2. EZ80_RPT_TIMINGS - This function is called by the HBIOS boot code to report the platform timings.
+;
+; EZ80_PREINIT performs the following:
+; 1. Exchange platform version numbers
+; 2. Retrieve CPU Frequency
+; 3. Set Memory and I/O Bus Timings
+; 4. Set Timer Tick Frequency
+;
+
 EZ80_PREINIT:
 	EZ80_TMR_INT_DISABLE()
 
