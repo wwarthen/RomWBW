@@ -3,7 +3,7 @@
 #
 
 .ONESHELL:
-.SHELLFLAGS = -cex
+.SHELLFLAGS = -ce
 
 UNAME := $(shell uname)
 ifeq ($(UNAME), Linux)

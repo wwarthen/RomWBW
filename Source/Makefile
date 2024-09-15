@@ -5,7 +5,7 @@
 .PHONY: doc prop shared bp images rom zrc z1rcc zzrcc zrc512 fz80
 
 .ONESHELL:
-.SHELLFLAGS = -cex
+.SHELLFLAGS = -ce
 
 all: prop shared bp images rom zrc z1rcc zzrcc zrc512 fz80
 
@@ -40,7 +40,7 @@ images:
 	$(MAKE) --directory Images $(ACTION)
 
 rom:
-	$(MAKE) --directory HBIOS $(ACTION)
+	@$(MAKE) --directory HBIOS $(ACTION)
 
 zrc:
 	$(MAKE) --directory ZRC $(ACTION)

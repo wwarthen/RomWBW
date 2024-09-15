@@ -630,23 +630,24 @@ All character units are assigned a Device Type ID which indicates
 the specific hardware device driver that handles the unit.  The table
 below enumerates these values.
 
-| **Device Type** | **ID** | **Description**                          | **Driver** |
-|-----------------|-------:|------------------------------------------|------------|
-| CIODEV_UART     | 0x00   | 16C550 Family Serial Interface           | uart.asm   |
-| CIODEV_ASCI     | 0x01   | Z180 Built-in Serial Ports               | asci.asm   |
-| CIODEV_TERM     | 0x02   | Terminal                                 | ansi.asm   |
-| CIODEV_PRPCON   | 0x03   | PropIO Serial Console Interface          | prp.asm    |
-| CIODEV_PPPCON   | 0x04   | ParPortProp Serial Console Interface     | ppp.asm    |
-| CIODEV_SIO      | 0x05   | Zilog Serial Port Interface              | sio.asm    |
-| CIODEV_ACIA     | 0x06   | MC68B50 Asynchronous Interface           | acia.asm   |
-| CIODEV_PIO      | 0x07   | Zilog Parallel Interface Controller      | pio.asm    |
-| CIODEV_UF       | 0x08   | FT232H-based ECB USB FIFO                | uf.asm     |
-| CIODEV_DUART    | 0x09   | SCC2681 Family Dual UART                 | duart.asm  |
-| CIODEV_Z2U      | 0x0A   | Zilog Z280 Built-in Serial Ports         | z2u.asm    |
-| CIODEV_LPT      | 0x0B   | Parallel I/O Controller                  | lpt.asm    |
-| CIODEV_ESPCON   | 0x0B   | ESP32 VGA Console                        | esp.asm    |
-| CIODEV_ESPSER   | 0x0B   | ESP32 Serial Port                        | esp.asm    |
-| CIODEV_SCON     | 0x0B   | S100 Console                             | scon.asm   |
+| **Device Type** | **ID** | **Description**                          | **Driver**   |
+|-----------------|-------:|------------------------------------------|--------------|
+| CIODEV_UART     | 0x00   | 16C550 Family Serial Interface           | uart.asm     |
+| CIODEV_ASCI     | 0x01   | Z180 Built-in Serial Ports               | asci.asm     |
+| CIODEV_TERM     | 0x02   | Terminal                                 | ansi.asm     |
+| CIODEV_PRPCON   | 0x03   | PropIO Serial Console Interface          | prp.asm      |
+| CIODEV_PPPCON   | 0x04   | ParPortProp Serial Console Interface     | ppp.asm      |
+| CIODEV_SIO      | 0x05   | Zilog Serial Port Interface              | sio.asm      |
+| CIODEV_ACIA     | 0x06   | MC68B50 Asynchronous Interface           | acia.asm     |
+| CIODEV_PIO      | 0x07   | Zilog Parallel Interface Controller      | pio.asm      |
+| CIODEV_UF       | 0x08   | FT232H-based ECB USB FIFO                | uf.asm       |
+| CIODEV_DUART    | 0x09   | SCC2681 Family Dual UART                 | duart.asm    |
+| CIODEV_Z2U      | 0x0A   | Zilog Z280 Built-in Serial Ports         | z2u.asm      |
+| CIODEV_LPT      | 0x0B   | Parallel I/O Controller                  | lpt.asm      |
+| CIODEV_ESPCON   | 0x0B   | ESP32 VGA Console                        | esp.asm      |
+| CIODEV_ESPSER   | 0x0B   | ESP32 Serial Port                        | esp.asm      |
+| CIODEV_SCON     | 0x0B   | S100 Console                             | scon.asm     |
+| CIODEV_EZ80UART | 0x11   | eZ80 Built-in UART0 Interface            | ez80uart.asm | 
 
 Character devices can usually be configured with line characteristics
 such as speed, framing, etc. A word value (16 bit) is used to describe
@@ -1142,14 +1143,15 @@ more than one at a time.  The RTC unit is assigned a Device Type ID
 which indicates the specific hardware device driver that handles the 
 unit.  The table below enumerates these values.
 
-| **Device Type** | **ID** | **Description**                          | **Driver** |
-|-----------------|-------:|------------------------------------------|------------|
-| RTCDEV_DS       | 0x00   | Maxim DS1302 Real-Time Clock w/ NVRAM    | dsrtc.asm  |
-| RTCDEV_BQ       | 0x01   | BQ4845P Real Time Clock                  | bqrtc.asm  |
-| RTCDEV_SIMH     | 0x02   | SIMH Simulator Real-Time Clock           | simrtc.asm |
-| RTCDEV_INT      | 0x03   | Interrupt-based Real Time Clock          | intrtc.asm |
-| RTCDEV_DS7      | 0x04   | Maxim DS1307 PCF I2C RTC w/ NVRAM        | ds7rtc.asm |
-| RTCDEV_RP5      | 0x05   | Ricoh RPC01A Real-Time Clock w/ NVRAM    | rp5rtc.asm |
+| **Device Type** | **ID** | **Description**                          | **Driver**  |
+|-----------------|-------:|------------------------------------------|-------------|
+| RTCDEV_DS       | 0x00   | Maxim DS1302 Real-Time Clock w/ NVRAM    | dsrtc.asm   |
+| RTCDEV_BQ       | 0x01   | BQ4845P Real Time Clock                  | bqrtc.asm   |
+| RTCDEV_SIMH     | 0x02   | SIMH Simulator Real-Time Clock           | simrtc.asm  |
+| RTCDEV_INT      | 0x03   | Interrupt-based Real Time Clock          | intrtc.asm  |
+| RTCDEV_DS7      | 0x04   | Maxim DS1307 PCF I2C RTC w/ NVRAM        | ds7rtc.asm  |
+| RTCDEV_RP5      | 0x05   | Ricoh RPC01A Real-Time Clock w/ NVRAM    | rp5rtc.asm  |
+| RTCDEV_EZ80     | 0x07   | eZ80 on-chip RTC                         | ez80rtc.asm |
 
 The time functions to get and set the time (RTCGTM and RTCSTM) require a
 6 byte date/time buffer in the following format. Each byte is BCD 
@@ -2237,6 +2239,7 @@ The hardware Platform (L) is identified as follows:
 | PLT_Z80RETRO  |15      | Z80 RETRO COMPUTER                      |
 | PLT_S100      |16      | S100 COMPUTERS Z180                     |
 | PLT_DUO       |17      | DUODYNE Z80 SYSTEM                      |
+| PLT_RCEZ80    |24      | RCBUS W/ eZ80                           |
 
 ### Function 0xF2 -- System Set Bank (SYSSETBNK)
 

@@ -56,7 +56,7 @@ CPM=$(TOOLS)/cpm/bin80/
 #    exit if any command returns a non-zero result ("x").
 #
 .ONESHELL:
-.SHELLFLAGS = -cex
+.SHELLFLAGS = -ce
 
 %.com: %.asm
 	@if [ "$(USETASM)" = 1 ] ; then \
@@ -70,52 +70,52 @@ CPM=$(TOOLS)/cpm/bin80/
 	fi
 
 %.rom: %.asm
-	$(TASM) $(TASMFLAGS) $< $@ $*.lst
+	@$(TASM) $(TASMFLAGS) $< $@ $*.lst
 
 %.hex: %.asm
-	$(ZXCC) $(CPM)/MAC -$< -$$PO
+	@$(ZXCC) $(CPM)/MAC -$< -$$PO
 
 %.bin: %.ASM
-	$(ZXCC) $(CPM)/MAC -$< -$$PO
+	@$(ZXCC) $(CPM)/MAC -$< -$$PO
 	$(ZXCC) $(CPM)/MLOAD25 -tmp.bin=$*.hex
 	mv tmp.bin $@
 	rm -f /tmp/casefn.cache
 	rm -f $$($(CASEFN) $*.hex)
 
 %.com: %.z80
-	$(ZXCC) $(CPM)/Z80ASM -$(basename $<)/F
+	@$(ZXCC) $(CPM)/Z80ASM -$(basename $<)/F
 	rm -f /tmp/casefn.cache
 	mv $$($(CASEFN) $@) tmp.com ; mv tmp.com $@
 
 %.bin: %.asm
-	$(TASM) $(TASMFLAGS) $< $@ $(basename $<).lst
+	@$(TASM) $(TASMFLAGS) $< $@ $(basename $<).lst
 
 %.rel: %.asm
-	$(ZXCC) $(CPM)/RMAC -$<
+	@$(ZXCC) $(CPM)/RMAC -$<
 
 %.rel: %.z80
-	$(ZXCC) $(CPM)/Z80ASM -$(basename $<)/MF
+	@$(ZXCC) $(CPM)/Z80ASM -$(basename $<)/MF
 
 #%.hex: %.z80
-#	$(ZXCC) $(CPM)/Z80ASM -$(basename $<)/HF
+#	@$(ZXCC) $(CPM)/Z80ASM -$(basename $<)/HF
 
 %.hex: %.z80
-	$(ZXCC) $(CPM)/SLR180 -$(basename $<)/HF
+	@$(ZXCC) $(CPM)/SLR180 -$(basename $<)/HF
 
 %.rel: %.azm
-	$(ZXCC) $(CPM)/ZSM =$< -/L
+	@$(ZXCC) $(CPM)/ZSM =$< -/L
 
 %.bin: %.rel
-	$(ZXCC) $(CPM)/LINK -$@=$<
+	@$(ZXCC) $(CPM)/LINK -$@=$<
 
 %.rel: %.mac
-	$(ZXCC) $(CPM)/M80 -=$(basename $<)
+	@$(ZXCC) $(CPM)/M80 -=$(basename $<)
 
 %.com: %.rel
-	$(ZXCC) $(CPM)/L80 -$(basename $<),$(basename $<).com/n/e
+	@$(ZXCC) $(CPM)/L80 -$(basename $<),$(basename $<).com/n/e
 
 %.eeprom: %.spin
-	$(OPENSPIN) -e $<
+	@$(OPENSPIN) -e $<
 
 #
 # first target is default
