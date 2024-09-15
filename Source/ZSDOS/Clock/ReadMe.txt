@@ -2,10 +2,10 @@ This directory contains the source and assembled versions of the
 ZSystem Clock Drivers for RomWBW HBIOS.
 
 The wbwclk.z80 source file can be compiled using Build.cmd which will
-produce a relocatable binary (hbclk.rel).
+produce a relocatable binary (wbwclk.rel).
 
-The relocatable binary should be added/updated in the STAMPS.DAT
-library.  The STAMPS.DAT file is just a standard LU type library and
+The relocatable binary should be added/updated in the CLOCKS.DAT
+library.  The CLOCKS.DAT file is just a standard LU type library and
 is easily updated using NULU.  The members are the relocatable
 binaries, but with the .REL extension removed.
 

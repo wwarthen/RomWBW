@@ -217,9 +217,9 @@ on using the applications and files listed.
 | `INITDIR.COM`  | ZSDOS      | ZSDOS Prepare disks for P2DOS Stamps |
 | `KERMIT.COM`   |     --     | Generic CP/M 2.2 Kermit communication application |
 | `LBREXT.COM`   |     --     | Extract library files |
-| `LDDS.COM`     | ZSDOS      | Clock driver |
-| `LDNZT.COM`    | ZSDOS      | Clock driver |
-| `LDP2D.COM`    | ZSDOS      | Clock driver |
+| `LDDS.COM`     | ZSDOS      | Load DateStamper date/time stamping resident extension |
+| `LDNZT.COM`    | ZSDOS      | Load NZT date/time stamping resident extension |
+| `LDP2D.COM`    | ZSDOS      | Load P2DOS date/time stamping resident extension |
 | `LIB.COM`      |     --     | DRI Library manager |
 | `LINK.COM`     |     --     | DRI CPM relocatable linker |
 | `LOAD.COM`     |     --     | DRI hex file loader into memory |
@@ -229,7 +229,7 @@ on using the applications and files listed.
 | `PMARC.COM`    |     --     | LHA file compressor |
 | `PMEXT.COM`    |     --     | Extractor for PMARC archives |
 | `PUTBG.COM`    | ZSDOS      | ZSDOS Prepare disk for backgrounder |
-| `PUTDS.COM`    | ZSDOS      | ZSDOS Prepare disk for datestamper |
+| `PUTDS.COM`    | ZSDOS      | ZSDOS Prepare disk for datestamper date/time stamping|
 | `RELOG.COM`    | ZSDOS      | ZSDOS relog disks after program that bypasses BDOS |
 | `RMAC.COM`     |     --     | DRI Relocatable Macro Assembler |
 | `SETTERM.COM`  | ZSDOS      | ZSDOS Installs terminal control codes into DateSamper utilities |

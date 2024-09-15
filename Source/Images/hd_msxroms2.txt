@@ -1,0 +1,4 @@
+#
+# Add the ReadMe document
+#
+d_msxroms2/ReadMe.txt 0:

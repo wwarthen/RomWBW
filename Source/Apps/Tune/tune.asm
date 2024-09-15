@@ -49,6 +49,8 @@
 ;   2024-02-23 [WBW] Include ACR value in config table
 ;   2024-04-16 [WBW] Add support for NABU AY-3-8910
 ;   2024-05-10 [WBW] Hack to avoid corrupting bits 6&7 of PSG R7 for NABU!
+;   2024-07-08 [WBW] Add support for Les Bird's Graphics, Sound, Joystick
+;   2024-07-11 [WBW] Updated, Les Bird's module now uses same settings as EB6
 ;_______________________________________________________________________________
 ;
 ; ToDo:
@@ -572,8 +574,8 @@ CFGSIZ	.EQU	$ - CFGTBL
 	.DB	$07,	$D8,	$D0,	$D8,	$FF,	$FF,	$FF	; RCZ80 W/ RC SOUND MODULE (EB)
 	.DW	HWSTR_RCEB
 ;
-	.DB	$07,	$A0,	$A1,	$A2,	$FF,	$FF,	$FF	; RCZ80 W/ RC SOUND MODULE (EB Rev 6)
-	.DW	HWSTR_RCEB6
+	.DB	$07,	$A0,	$A1,	$A2,	$FF,	$FF,	$FF	; RCZ80 W/ RC SOUND MODULE (MSX)
+	.DW	HWSTR_RCMSX
 ;
 	.DB	$07,	$D1,	$D0,	$D0,	$FF,	$FF,	$FF	; RCZ80 W/ RC SOUND MODULE (MF)
 	.DW	HWSTR_RCMF
@@ -584,8 +586,8 @@ CFGSIZ	.EQU	$ - CFGTBL
 	.DB	$08,	$68,	$60,	$68,	$C0,	$FF,	$FF	; RCZ180 W/ RC SOUND MODULE (EB)
 	.DW	HWSTR_RCEB
 ;
-	.DB	$08,	$A0,	$A1,	$A2,	$C0,	$FF,	$FF	; RCZ180 W/ RC SOUND MODULE (EB Rev 6)
-	.DW	HWSTR_RCEB6
+	.DB	$08,	$A0,	$A1,	$A2,	$C0,	$FF,	$FF	; RCZ180 W/ RC SOUND MODULE (MSX)
+	.DW	HWSTR_RCMSX
 ;
 	.DB	$08,	$61,	$60,	$60,	$C0,	$FF,	$FF	; RCZ180 W/ RC SOUND MODULE (MF)
 	.DW	HWSTR_RCMF
@@ -596,8 +598,8 @@ CFGSIZ	.EQU	$ - CFGTBL
 	.DB	$09,	$D8,	$D0,	$D8,	$FF,	$FF,	$FF	; EZZ80 W/ RC SOUND MODULE (EB)
 	.DW	HWSTR_RCEB
 ;
-	.DB	$09,	$A0,	$A1,	$A2,	$FF,	$FF,	$FF	; EZZ80 W/ RC SOUND MODULE (EB Rev 6)
-	.DW	HWSTR_RCEB6
+	.DB	$09,	$A0,	$A1,	$A2,	$FF,	$FF,	$FF	; EZZ80 W/ RC SOUND MODULE (MSX)
+	.DW	HWSTR_RCMSX
 ;
 	.DB	$09,	$D1,	$D0,	$D0,	$FF,	$FF,	$FF	; EZZ80 W/ RC SOUND MODULE (MF)
 	.DW	HWSTR_RCMF
@@ -608,8 +610,8 @@ CFGSIZ	.EQU	$ - CFGTBL
 	.DB	$0A,	$68,	$60,	$68,	$C0,	$FF,	$FF	; SCZ180 W/ RC SOUND MODULE (EB)
 	.DW	HWSTR_RCEB
 ;
-	.DB	$0A,	$A0,	$A1,	$A2,	$C0,	$FF,	$FF	; SCZ180 W/ RC SOUND MODULE (EB Rev 6)
-	.DW	HWSTR_RCEB6
+	.DB	$0A,	$A0,	$A1,	$A2,	$C0,	$FF,	$FF	; SCZ180 W/ RC SOUND MODULE (MS6)
+	.DW	HWSTR_RCMSX
 ;
 	.DB	$0A,	$61,	$60,	$60,	$C0,	$FF,	$FF	; SCZ180 W/ RC SOUND MODULE (MF)
 	.DW	HWSTR_RCMF
@@ -620,8 +622,8 @@ CFGSIZ	.EQU	$ - CFGTBL
 	.DB	$0B,	$D8,	$D0,	$D8,	$FF,	$FF,	$FF	; RCZ280 W/ RC SOUND MODULE (EB)
 	.DW	HWSTR_RCEB
 ;
-	.DB	$0B,	$A0,	$A1,	$A2,	$FF,	$FF,	$FF	; RCZ280 W/ RC SOUND MODULE (EB Rev 6)
-	.DW	HWSTR_RCEB6
+	.DB	$0B,	$A0,	$A1,	$A2,	$FF,	$FF,	$FF	; RCZ280 W/ RC SOUND MODULE (MSX)
+	.DW	HWSTR_RCMSX
 ;
 	.DB	$0B,	$D1,	$D0,	$D0,	$FF,	$FF,	$FF	; RCZ280 W/ RC SOUND MODULE (MF)
 	.DW	HWSTR_RCMF
@@ -666,7 +668,7 @@ TMP		.DB	0	; work around use of undocumented Z80
 HBIOSMD		.DB	0	; NON-ZERO IF USING HBIOS SOUND DRIVER, ZERO OTHERWISE
 OCTAVEADJ	.DB	0	; AMOUNT TO ADJUST OCTAVE UP OR DOWN
 
-MSGBAN		.DB	"Tune Player for RomWBW v3.8, 10-May-2024",0
+MSGBAN		.DB	"Tune Player for RomWBW v3.10, 11-Jul-2024",0
 MSGUSE		.DB	"Copyright (C) 2024, Wayne Warthen, GNU GPL v3",13,10
 		.DB	"PTxPlayer Copyright (C) 2004-2007 S.V.Bulba",13,10
 		.DB	"MYMPlay by Marq/Lieves!Tuore",13,10,13,10
@@ -687,7 +689,7 @@ MSGERR		.DB	"App Error", 0
 HWSTR_SCG	.DB	"SCG ECB Board",0
 HWSTR_N8	.DB	"N8 Onboard Sound",0
 HWSTR_RCEB	.DB	"RCBus Sound Module (EB)",0
-HWSTR_RCEB6	.DB	"RCBus Sound Module (EBv6)",0
+HWSTR_RCMSX	.DB	"RCBus Sound Module (MSX)",0
 HWSTR_RCMF	.DB	"RCBus Sound Module (MF)",0
 HWSTR_LINC	.DB	"Z50 LiNC Sound Module",0
 HWSTR_MBC	.DB	"NHYODYNE Sound Module",0

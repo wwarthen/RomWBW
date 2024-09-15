@@ -114,7 +114,6 @@ Documentation for $doc_product$ includes:
 * $doc_user$
 * $doc_sys$
 * $doc_apps$
-* $doc_romapps$
 * $doc_errata$
 
 # Acknowledgments
@@ -188,6 +187,9 @@ please let me know if I missed you!
   compendium.
 
 * Martin R has provided substantial help reviewing and improving the
+  User Guide and Applications documents.
+  
+* Mark Pruden has also contributed a great deal of content to the
   User Guide.
 
 * Jacques Pelletier has contributed the DS1501 RTC driver code.

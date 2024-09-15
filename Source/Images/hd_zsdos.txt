@@ -49,6 +49,7 @@ d_cpm22/u0/XSUB.COM 0:
 ../../Binary/Apps/vgmplay.com 0:
 #
 ../../Binary/Apps/Test/*.com 2:
+../../Binary/Apps/Test/*.doc 2:
 Test/*.* 2:
 #
 # Add Tune sample files

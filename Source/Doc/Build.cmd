@@ -2,8 +2,12 @@
 setlocal
 
 ::
-:: NOTE: Pandoc and Latex (MiKTeX or TexLive) must be installed
-:: and available on commandline for this build to work!!!
+:: NOTE: Pandoc, LuaLatex (MiKTeX or TexLive), and Roboto Font
+:: must be installed and available on commandline for this build to work!!!
+::
+:: - Pandoc (https://pandoc.org/)
+:: - MiKTeX (https://miktex.org/)
+::   - Install Roboto font from MiKTeX Console
 ::
 
 set TOOLS=..\..\Tools
@@ -11,20 +15,18 @@ set PATH=%TOOLS%\gpp;%PATH%
 
 if not "%1"=="" (call :GenDoc %1 & goto :eof)
 
-call :GenDoc ReadMe
-call :GenDoc UserGuide
-call :GenDoc SystemGuide
-call :GenDoc Applications
-call :GenDoc ROM_Applications
-call :GenDoc Catalog
-call :GenDoc Errata
+call :GenDoc ReadMe || exit /b
+call :GenDoc UserGuide || exit /b
+call :GenDoc SystemGuide || exit /b
+call :GenDoc Applications || exit /b
+call :GenDoc Catalog || exit /b
+call :GenDoc Errata || exit /b
 
 if exist ReadMe.gfm copy Readme.gfm ..\..\ReadMe.md || exit /b
 if exist ReadMe.txt copy ReadMe.txt ..\..\ReadMe.txt || exit /b
 if exist UserGuide.pdf copy UserGuide.pdf "..\..\Doc\RomWBW User Guide.pdf" || exit /b
 if exist SystemGuide.pdf copy SystemGuide.pdf "..\..\Doc\RomWBW System Guide.pdf" || exit /b
 if exist Applications.pdf copy Applications.pdf "..\..\Doc\RomWBW Applications.pdf" || exit /b
-if exist ROM_Applications.pdf copy ROM_Applications.pdf "..\..\Doc\RomWBW ROM Applications.pdf" || exit /b
 if exist Catalog.pdf copy Catalog.pdf "..\..\Doc\RomWBW Disk Catalog.pdf" || exit /b
 if exist Errata.pdf copy Errata.pdf "..\..\Doc\RomWBW Errata.pdf" || exit /b
 
@@ -37,9 +39,6 @@ echo.
 
 echo Processing document %1...
 
-::gpp -o %1.tmp %1.md
-::gpp -o %1.tmp -U "\\" "" "{" "}{" "}" "{" "}" "#" "" %1.md
-::gpp -o %1.tmp -U "" "" "(" "," ")" "(" ")" "#" "" -M "#" "\n" " " " " "\n" "(" ")" %1.md
 gpp -o %1.tmp -U "$" "$" "{" "}{" "}$" "{" "}" "@@@" "" -M "$" "$" "{" "}{" "}$" "{" "}" %1.md || exit /b
 
 ::pandoc %1.tmp -f markdown -t latex -s -o %1.tex --default-image-extension=pdf || exit /b

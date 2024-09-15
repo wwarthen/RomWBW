@@ -3,7 +3,7 @@
 **RomWBW ReadMe** \
 Version 3.5 \
 Wayne Warthen  ([wwarthen@gmail.com](mailto:wwarthen@gmail.com)) \
-17 May 2024
+11 Sep 2024
 
 # Overview
 
@@ -124,8 +124,6 @@ Documentation for RomWBW includes:
   Guide](https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20System%20Guide.pdf)
 - [RomWBW
   Applications](https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20Applications.pdf)
-- [RomWBW ROM
-  Applications](https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20ROM%20Applications.pdf)
 - [RomWBW
   Errata](https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20Errata.pdf)
 
@@ -198,7 +196,10 @@ let me know if I missed you!
   Microsoft Fortran Compiler, and a Games compendium.
 
 - Martin R has provided substantial help reviewing and improving the
-  User Guide.
+  User Guide and Applications documents.
+
+- Mark Pruden has also contributed a great deal of content to the User
+  Guide.
 
 - Jacques Pelletier has contributed the DS1501 RTC driver code.
 

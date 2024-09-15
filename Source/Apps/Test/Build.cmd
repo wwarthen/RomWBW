@@ -25,6 +25,7 @@ pushd piomon && call Build || exit /b & popd
 pushd banktest && call Build || exit /b & popd
 pushd portscan && call Build || exit /b & popd
 pushd sound && call Build || exit /b & popd
+pushd testh8p && call Build || exit /b & popd
 
 goto :eof
 
