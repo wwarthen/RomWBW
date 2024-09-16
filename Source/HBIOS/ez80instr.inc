@@ -102,7 +102,7 @@
 
   #DEFINE LDBCMM.LIL(Mmn)	\
   #defcont \	.DB	$5B
-  #defcont \	LD	BC, Mmn
+  #defcont \	LD	BC, Mmn & $FFFF
   #defcont \	.DB	(Mmn >> 16) & $FF
 
   #DEFINE SBCHLBC.LIL \
