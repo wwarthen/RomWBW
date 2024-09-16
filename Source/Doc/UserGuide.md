@@ -234,8 +234,9 @@ is discussed in [Customizing RomWBW].
 | [RCBus Z80 CPU Module]^4^, 512K w/KIO                       | RCBus   | RCZ80_kio_std.rom            | 115200        |
 | [RCBus Z180 CPU Module]^4^ w/ ext banking                   | RCBus   | RCZ180_ext_std.rom           | 115200        |
 | [RCBus Z180 CPU Module]^4^ w/ native banking                | RCBus   | RCZ180_nat_std.rom           | 115200        |
-| [RCBus Z280 CPU Module]^4^ w/ ext banking                   | RCBus   | RCZ180_ext_std.rom           | 115200        |
-| [RCBus Z280 CPU Module]^4^ w/ native banking                | RCBus   | RCZ180_nat_std.rom           | 115200        |
+| [RCBus Z280 CPU Module]^4^ w/ ext banking                   | RCBus   | RCZ280_ext_std.rom           | 115200        |
+| [RCBus Z280 CPU Module]^4^ w/ native banking                | RCBus   | RCZ280_nat_std.rom           | 115200        |
+| [RCBus eZ80 CPU Module]^13^, 512K RAM/ROM                   | RCBus   | RCEZ80_std.rom               | 115200        |
 | [Easy Z80 SBC]^2^                                           | RCBus   | RCZ80_easy_std.rom           | 115200        |
 | [Tiny Z80 SBC]^2^                                           | RCBus   | RCZ80_tiny_std.rom           | 115200        |
 | [Z80-512K CPU/RAM/ROM Module]^2^                            | RCBus   | RCZ80_skz_std.rom            | 115200        |
@@ -276,6 +277,7 @@ is discussed in [Customizing RomWBW].
 | ^10^Designed by Les Bird
 | ^11^Designed by Alan Cox
 | ^12^Designed by Doug Jackson
+| ^13^Designed by Dean Netherton
 
 RCBus refers to Spencer Owen's RC2014 bus specification and derivatives
 including RC26, RC40, RC80, and BP80.
@@ -4452,8 +4454,8 @@ please let me know if I missed you!
 
 * Tasty Basic is a product of Dimitri Theulings.
 
-* Dean Netherton contributed the sound driver interface and
-  the SN76489 sound driver.
+* Dean Netherton contributed eZ80 CPU support, the sound driver
+  interface, and the SN76489 sound driver.
 
 * The RomWBW Disk Catalog document was produced by Mykl Orders.
 
@@ -5104,6 +5106,43 @@ the RomWBW HBIOS configuration.
 ##### Notes:
 
 - For use with linear memory board (Z280 native memory management)
+
+`\clearpage`{=latex}
+
+### RCBus eZ80 CPU Module
+
+#### ROM Image File:  RCEZ80_std.rom
+
+|                   |               |
+|-------------------|---------------|
+| Default CPU Speed | 20.000 MHz    |
+| Interrupts        | Mode 1        |
+| System Timer      | EZ80          |
+| Serial Default    | 115200 Baud   |
+| Memory Manager    | Z2            |
+| ROM Size          | 512 KB        |
+| RAM Size          | 512 KB        |
+
+##### Supported Hardware (see [Appendix B - Device Summary]):
+
+- FP: LEDIO=0, SWIO=0
+- LCD: IO=218
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
+- MD: TYPE=RAM
+- MD: TYPE=ROM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
+- CTC: IO=136
+- EZ80 DRIVERS
+
+##### Notes:
 
 `\clearpage`{=latex}
 
