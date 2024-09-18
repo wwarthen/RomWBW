@@ -21,10 +21,11 @@
 ; 17. DUO	Andrew Lynch's Duodyne Computer
 ; 18. HEATH	Les Bird's Heath Z80 Board
 ; 19. EPITX	Alan Cox' Mini-ITX System
-; 20. MON	Jacques Pelletier's Monsputer
+; 20. MON	Jacques Pelletier's Monsputer
 ; 21. GMZ180	Doug Jacksons' Genesis Z180 System
 ; 22. NABU	NABU w/ Les Bird's RomWBW Option Board
 ; 23. FZ80	S100 Computers FPGA Z80
+; 24. RCZ80	RCBus eZ80
 ; 
 ;
 ; INCLUDE BUILD VERSION
