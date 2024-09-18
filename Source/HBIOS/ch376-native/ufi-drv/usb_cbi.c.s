@@ -4,7 +4,7 @@
 ; 
 ;--------------------------------------------------------
 ; File Created by SDCC : free open source ISO C Compiler
-; Version 4.3.0 #14210 (Linux)
+; Version 4.4.0 #14648 (Linux)
 ;--------------------------------------------------------
 ; Processed by Z88DK
 ;--------------------------------------------------------
@@ -62,10 +62,10 @@ _usb_execute_cbi:
 	add	hl, sp
 	ld	sp, hl
 ;source-doc/ufi-drv/./usb_cbi.c:18: const uint8_t interface_number = storage_device->interface_number;
-	ld	l,(ix+4)
-	ld	h,(ix+5)
-	ld	c,l
-	ld	b,h
+	ld	c,(ix+4)
+	ld	b,(ix+5)
+	ld	l, c
+	ld	h, b
 	inc	hl
 	inc	hl
 	ld	e, (hl)
@@ -76,8 +76,8 @@ _usb_execute_cbi:
 	ld	hl,4
 	add	hl, sp
 	ex	de, hl
-	ld	bc,0x0008
 	ld	hl,_cbi2_adsc
+	ld	bc,0x0008
 	ldir
 	pop	bc
 	pop	de
@@ -116,8 +116,10 @@ _usb_execute_cbi:
 	ld	h,(ix+5)
 	push	hl
 	call	_usbdev_dat_in_trnsfer
-	ld	hl,7
-	add	hl, sp
+	pop	af
+	pop	af
+	pop	af
+	inc	sp
 l_usb_execute_cbi_00102:
 ;source-doc/ufi-drv/./usb_cbi.c:30: return USB_ERR_STALL;
 	ld	l,0x02

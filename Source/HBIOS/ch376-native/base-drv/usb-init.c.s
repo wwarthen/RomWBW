@@ -4,7 +4,7 @@
 ; 
 ;--------------------------------------------------------
 ; File Created by SDCC : free open source ISO C Compiler
-; Version 4.3.0 #14210 (Linux)
+; Version 4.4.0 #14648 (Linux)
 ;--------------------------------------------------------
 ; Processed by Z88DK
 ;--------------------------------------------------------
@@ -78,8 +78,7 @@ _usb_host_bus_reset:
 ;source-doc/base-drv/./ch376.h:162: delay();
 	call	_delay
 ;source-doc/base-drv/./ch376.h:163: CH376_DATA_PORT = retry << 6 | (number_of_retries & 0x1F);
-	ld	a,0xc0
-	or	0x1f
+	ld	a,0xdf
 	ld	bc,_CH376_DATA_PORT
 	out	(c),a
 ;source-doc/base-drv/./ch376.h:164: delay();
@@ -95,12 +94,11 @@ _usb_host_bus_reset:
 _chnative_init:
 ;source-doc/base-drv/./usb-init.c:26: memset(get_usb_work_area(), 0, sizeof(_usb_state));
 	ld	hl,_x
-	push	hl
-	ld	hl,0x0000
-	push	hl
-	ld	l,0x69
-	push	hl
-	call	_memset_callee
+	ld	b,0x69
+l_chnative_init_00139:
+	ld	(hl),0x00
+	inc	hl
+	djnz	l_chnative_init_00139
 ;source-doc/base-drv/./usb-init.c:28: ch_cmd_reset_all();
 	call	_ch_cmd_reset_all
 ;source-doc/base-drv/./usb-init.c:30: delay_medium();

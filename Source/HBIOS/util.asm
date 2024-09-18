@@ -578,6 +578,17 @@ DELAY1:				;				|
 	; --- LOOP = ((CPUSCL * 16) - 5) TS ------------+	|
 	DEC	A		; 4TS			|	|
   #IF (BIOS == BIOS_WBW)	;			|	|
+    #IF (CPUFAM == CPU_EZ80)	;			|	|
+	OR	A		; +?TS FOR EZ80		|	|
+	OR	A		; +?TS FOR EZ80		|	|
+	OR	A		; +?TS FOR EZ80		|	|
+	OR	A		; +?TS FOR EZ80		|	|
+	OR	A		; +?TS FOR EZ80		|	|
+	OR	A		; +?TS FOR EZ80		|	|
+	OR	A		; +?TS FOR EZ80		|	|
+	OR	A		; +?TS FOR EZ80		|	|
+	OR	A		; +?TS FOR EZ80		|	|
+    #ENDIF			;			|	|
     #IF (CPUFAM == CPU_Z180)	;			|	|
 	OR	A		; +4TS FOR Z180		|	|
     #ENDIF			;			|	|

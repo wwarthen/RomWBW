@@ -16,6 +16,7 @@
 #include <stdlib.h>
 
 #include "print.h"
+#include "ez80-helpers.h"
 
 const setup_packet cmd_get_device_descriptor = {0x80, 6, {0, 1}, {0, 0}, 8};
 
@@ -31,6 +32,7 @@ usb_error usbtrn_get_descriptor(device_descriptor *const buffer) {
   cmd         = cmd_get_device_descriptor;
   cmd.wLength = 8;
 
+  debugger();
   result = usb_control_transfer(&cmd, (uint8_t *)buffer, 0, 8);
 
   CHECK(result);

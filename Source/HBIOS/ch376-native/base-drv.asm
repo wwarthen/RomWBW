@@ -21,7 +21,6 @@ _ch_wait_int_and_get_status:
 	ld	bc, DELAY_FACTOR
 
 keep_waiting:
-	CALL	_delay
 	ld	a, $FF
 	in	a, (_CH376_COMMAND_PORT & 0xFF)
 	rlca

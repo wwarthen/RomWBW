@@ -1,8 +1,10 @@
-SHELL := /bin/bash
-.SHELLFLAGS := -eu -o pipefail -c
+SHELL := /bin/sh
+SHELLFLAGS := -c -e -x
 .ONESHELL:
 MAKEFLAGS += --warn-undefined-variables
 MAKEFLAGS += --no-builtin-rules
+
+ZCC_EXTRA := --vc -Cs --Werror
 
 ZCCRELFLAGS=
 ifdef RELEASE
@@ -12,7 +14,7 @@ endif
 SRC := ./source-doc/
 LIBS := -I./$(SRC)base-drv/
 
-ZCC := zcc +msx --vc -subtype=rom -startup=1 -crt0 $(SRC)crt.asm -compiler=sdcc -Cs--std=c23 -Cs--Werror  $(ZCCRELFLAGS) $(LIBS)
+ZCC := zcc +z80 -vn -startup=0 -clib=sdcc_iy -crt0 $(SRC)crt.asm -compiler=sdcc -Cs--std=c23 -Cs--Werror  $(ZCCRELFLAGS) $(LIBS)
 
 ASSDIR := ./
 
@@ -79,7 +81,7 @@ format:
 	@clang-format --version
 	find \( -name "*.c" -o -name "*.h" \) -exec echo "formating {}" \; -exec clang-format -i {} \;
 
-ZSDCPP_FLAGS=-iquote"." -isystem"${ZCCCFG}/../../include/_DEVELOPMENT/sdcc" $(LIBS)
+ZSDCPP_FLAGS= -I"${ZCCCFG}../../include/_DEVELOPMENT/sdcc" $(LIBS)
 
 include ${SRC}depends.d
 
@@ -92,7 +94,10 @@ deps:
 		filename=$$(basename $$file_no_ext)
 		from="$$filename.o"
 		to="${ASSDIR}$$file_no_ext.c.s"
-		sdcpp ${ZSDCPP_FLAGS} -MM -MF /tmp/deps.deps ./${SRC}$$file_no_ext.c
+		echo -n "$${file}: " > /tmp/deps.deps
+		echo -n "$${file_no_ext}.c " >> /tmp/deps.deps
+		z88dk-ucpp ${ZSDCPP_FLAGS} -M ./${SRC}$$file_no_ext.c  >> /tmp/deps.deps
+		touch /tmp/deps.deps
 		sed "s+$$from+$$to+g" /tmp/deps.deps >> ${SRC}/depends.d
 	done
 

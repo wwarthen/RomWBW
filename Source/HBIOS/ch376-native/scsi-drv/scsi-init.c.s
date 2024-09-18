@@ -4,7 +4,7 @@
 ; 
 ;--------------------------------------------------------
 ; File Created by SDCC : free open source ISO C Compiler
-; Version 4.3.0 #14210 (Linux)
+; Version 4.4.0 #14648 (Linux)
 ;--------------------------------------------------------
 ; Processed by Z88DK
 ;--------------------------------------------------------
@@ -78,11 +78,11 @@ l_chscsi_init_00105:
 ;source-doc/scsi-drv/./scsi-init.c:24: storage_device->drive_index = storage_count++;
 	ld	hl,0x0010
 	add	hl, de
-	ld	a,(_storage_count+0)
+	ld	c, l
+	ld	b, h
+	ld	hl,_storage_count
+	ld	a, (hl)
 	ld	(ix-2),a
-	ld	c,l
-	ld	b,h
-	ld	hl,_storage_count+0
 	inc	(hl)
 	ld	a,(ix-2)
 	ld	(bc), a
@@ -103,11 +103,13 @@ l_chscsi_init_00106:
 	jr	NZ,l_chscsi_init_00105
 l_chscsi_init_00107:
 ;source-doc/scsi-drv/./scsi-init.c:31: if (storage_count == 0)
-;source-doc/scsi-drv/./scsi-init.c:32: return;
-;source-doc/scsi-drv/./scsi-init.c:34: print_device_mounted(" STORAGE DEVICE$", storage_count);
-	ld	a,(_storage_count+0)
+	ld	hl,_storage_count
+	ld	a, (hl)
 	or	a
+;source-doc/scsi-drv/./scsi-init.c:32: return;
 	jr	Z,l_chscsi_init_00110
+;source-doc/scsi-drv/./scsi-init.c:34: print_device_mounted(" STORAGE DEVICE$", storage_count);
+	ld	a,(_storage_count)
 	push	af
 	inc	sp
 	ld	hl,scsi_init_str_0

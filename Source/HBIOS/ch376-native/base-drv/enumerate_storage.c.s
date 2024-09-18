@@ -4,7 +4,7 @@
 ; 
 ;--------------------------------------------------------
 ; File Created by SDCC : free open source ISO C Compiler
-; Version 4.3.0 #14210 (Linux)
+; Version 4.4.0 #14648 (Linux)
 ;--------------------------------------------------------
 ; Processed by Z88DK
 ;--------------------------------------------------------
@@ -60,17 +60,22 @@ _parse_endpoints:
 ;source-doc/base-drv/./enumerate_storage.c:7: if (!(pEndpoint->bmAttributes & 0x02))
 	ld	c,(ix+6)
 	ld	b,(ix+7)
-	push	bc
-	pop	iy
-	ld	a,(iy+3)
+	ld	l, c
+	ld	h, b
+	inc	hl
+	inc	hl
+	inc	hl
+	ld	a, (hl)
 	ld	(ix-2),a
-	bit	1,a
+	bit	1,(ix-2)
 ;source-doc/base-drv/./enumerate_storage.c:8: return;
 	jr	Z,l_parse_endpoints_00108
 ;source-doc/base-drv/./enumerate_storage.c:10: const uint8_t         x   = calc_max_packet_sizex(pEndpoint->wMaxPacketSize);
-	push	bc
-	pop	iy
-	ld	a,(iy+4)
+	ld	e, c
+	ld	d, b
+	ld	hl,4
+	add	hl, de
+	ld	a, (hl)
 	ld	(ix-1),a
 ;source-doc/base-drv/./enumerate_storage.c:11: endpoint_param *const eps = storage_dev->endpoints;
 	ld	e,(ix+4)
@@ -82,24 +87,27 @@ _parse_endpoints:
 	inc	bc
 	inc	bc
 	ld	a, (bc)
-	ld	c,a
+	ld	l,a
 	and	0x80
-	ld	b,0x00
+	ld	c, a
+	xor	a
 ;source-doc/base-drv/./enumerate_storage.c:14: if (pEndpoint->bmAttributes & 0x01) { // 3 -> Interrupt
 	bit	0,(ix-2)
 	jr	Z,l_parse_endpoints_00106
 ;source-doc/base-drv/./enumerate_storage.c:15: if (!(pEndpoint->bEndpointAddress & 0x80))
-	or	b
+	or	c
 ;source-doc/base-drv/./enumerate_storage.c:16: return;
 	jr	Z,l_parse_endpoints_00108
 ;source-doc/base-drv/./enumerate_storage.c:18: ep = &eps[ENDPOINT_INTERRUPT_IN];
-	ld	hl,0x0006
-	add	hl, de
-	ex	de, hl
+	ld	a, e
+	add	a,0x06
+	ld	e, a
+	jr	NC,l_parse_endpoints_00107
+	inc	d
 	jr	l_parse_endpoints_00107
 l_parse_endpoints_00106:
 ;source-doc/base-drv/./enumerate_storage.c:21: ep = (pEndpoint->bEndpointAddress & 0x80) ? &eps[ENDPOINT_BULK_IN] : &eps[ENDPOINT_BULK_OUT];
-	or	b
+	or	c
 	jr	Z,l_parse_endpoints_00110
 	inc	de
 	inc	de
@@ -107,17 +115,17 @@ l_parse_endpoints_00106:
 l_parse_endpoints_00110:
 l_parse_endpoints_00107:
 ;source-doc/base-drv/./enumerate_storage.c:24: ep->number           = pEndpoint->bEndpointAddress & 0x07;
-	ld	l, e
-	ld	h, d
-	ld	a, c
+	ld	c, e
+	ld	b, d
+	ld	a, l
 	and	0x07
 	rlca
 	and	0x0e
-	ld	c, a
-	ld	a, (hl)
+	ld	l, a
+	ld	a, (bc)
 	and	0xf1
-	or	c
-	ld	(hl), a
+	or	l
+	ld	(bc), a
 ;source-doc/base-drv/./enumerate_storage.c:25: ep->toggle           = 0;
 	ld	l, e
 	ld	h, d

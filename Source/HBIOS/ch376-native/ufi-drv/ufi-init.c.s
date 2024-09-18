@@ -4,7 +4,7 @@
 ; 
 ;--------------------------------------------------------
 ; File Created by SDCC : free open source ISO C Compiler
-; Version 4.3.0 #14210 (Linux)
+; Version 4.4.0 #14648 (Linux)
 ;--------------------------------------------------------
 ; Processed by Z88DK
 ;--------------------------------------------------------
@@ -78,11 +78,11 @@ l_chufi_init_00105:
 ;source-doc/ufi-drv/./ufi-init.c:23: storage_device->drive_index = storage_count++;
 	ld	hl,0x0010
 	add	hl, de
-	ld	a,(_storage_count+0)
+	ld	c, l
+	ld	b, h
+	ld	hl,_storage_count
+	ld	a, (hl)
 	ld	(ix-2),a
-	ld	c,l
-	ld	b,h
-	ld	hl,_storage_count+0
 	inc	(hl)
 	ld	a,(ix-2)
 	ld	(bc), a
@@ -97,11 +97,13 @@ l_chufi_init_00106:
 	jr	NZ,l_chufi_init_00105
 l_chufi_init_00107:
 ;source-doc/ufi-drv/./ufi-init.c:30: if (storage_count == 0)
-;source-doc/ufi-drv/./ufi-init.c:31: return;
-;source-doc/ufi-drv/./ufi-init.c:33: print_device_mounted(" FLOPPY DRIVE$", storage_count);
-	ld	a,(_storage_count+0)
+	ld	hl,_storage_count
+	ld	a, (hl)
 	or	a
+;source-doc/ufi-drv/./ufi-init.c:31: return;
 	jr	Z,l_chufi_init_00110
+;source-doc/ufi-drv/./ufi-init.c:33: print_device_mounted(" FLOPPY DRIVE$", storage_count);
+	ld	a,(_storage_count)
 	push	af
 	inc	sp
 	ld	hl,ufi_init_str_0
@@ -131,12 +133,11 @@ _chufi_get_cap:
 ;source-doc/ufi-drv/./ufi-init.c:38: memset(&response, 0, sizeof(ufi_format_capacities_response));
 	ld	hl,0
 	add	hl, sp
-	push	hl
-	ld	hl,0x0000
-	push	hl
-	ld	l,0x24
-	push	hl
-	call	_memset_callee
+	ld	b,0x24
+l_chufi_get_cap_00112:
+	ld	(hl),0x00
+	inc	hl
+	djnz	l_chufi_get_cap_00112
 ;source-doc/ufi-drv/./ufi-init.c:40: wait_for_device_ready(dev, 25);
 	ld	a,0x19
 	push	af
@@ -219,25 +220,22 @@ _chufi_read:
 	call	_wait_for_device_ready
 	pop	af
 	inc	sp
-	ld	a, l
+	ld	e, l
 	pop	bc
+	ld	a, e
 	or	a
 	jr	Z,l_chufi_read_00102
 ;source-doc/ufi-drv/./ufi-init.c:68: return -1; // Not READY!
 	ld	l,0xff
-	jp	l_chufi_read_00109
+	jr	l_chufi_read_00109
 l_chufi_read_00102:
 ;source-doc/ufi-drv/./ufi-init.c:73: memset(&sense_codes, 0, sizeof(sense_codes));
-	push	bc
-	ld	hl,2
+	ld	hl,0
 	add	hl, sp
-	push	hl
-	ld	hl,0x0000
-	push	hl
-	ld	l,0x02
-	push	hl
-	call	_memset_callee
-	pop	bc
+	xor	a
+	ld	(hl), a
+	inc	hl
+	ld	(hl), a
 ;source-doc/ufi-drv/./ufi-init.c:75: if (ufi_read_write_sector((device_config *)dev, false, dev->current_lba, 1, buffer, (uint8_t *)&sense_codes) != USB_ERR_OK)
 	ld	e,(ix+4)
 	ld	d,(ix+5)
@@ -262,9 +260,11 @@ l_chufi_read_00102:
 	inc	sp
 	push	bc
 	call	_ufi_read_write_sector
-	ld	iy,10
-	add	iy, sp
-	ld	sp, iy
+	pop	af
+	pop	af
+	pop	af
+	pop	af
+	pop	af
 	ld	a, l
 	pop	bc
 	or	a
@@ -277,12 +277,11 @@ l_chufi_read_00104:
 	push	bc
 	ld	hl,4
 	add	hl, sp
-	push	hl
-	ld	hl,0x0000
-	push	hl
-	ld	l,0x12
-	push	hl
-	call	_memset_callee
+	ld	b,0x12
+l_chufi_read_00139:
+	ld	(hl),0x00
+	inc	hl
+	djnz	l_chufi_read_00139
 	pop	bc
 ;source-doc/ufi-drv/./ufi-init.c:81: if ((result = ufi_request_sense((device_config *)dev, &response)) != USB_ERR_OK)
 	ld	hl,2

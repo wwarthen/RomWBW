@@ -1,6 +1,7 @@
 #include "ch376.h"
 
 #include "print.h"
+#include "ez80-helpers.h"
 
 usb_error result = 0;
 
@@ -20,6 +21,9 @@ void ch_command(const uint8_t command) __z88dk_fastcall {
   delay();
   CH376_COMMAND_PORT = command;
   delay();
+  delay();
+  delay();
+  delay();
 }
 
 extern usb_error ch_wait_int_and_get_status(const int16_t timeout) __z88dk_fastcall;
@@ -32,8 +36,12 @@ usb_error ch_very_short_wait_int_and_get_status(void) { return ch_wait_int_and_g
 
 usb_error ch_get_status(void) {
   ch_command(CH_CMD_GET_STATUS);
+  delay();
+  delay();
+  delay();
+  delay();
   uint8_t ch_status = CH376_DATA_PORT;
-
+  
   if (ch_status >= USB_FILERR_MIN && ch_status <= USB_FILERR_MAX)
     return ch_status;
 
@@ -135,9 +143,13 @@ uint8_t ch_cmd_get_ic_version(void) {
 
 void ch_issue_token(const uint8_t toggle_bit, const uint8_t endpoint, const ch376_pid pid) {
   ch_command(CH_CMD_ISSUE_TKN_X);
+  delay();
+  delay();
   CH376_DATA_PORT = toggle_bit;
   delay();
+  delay();
   CH376_DATA_PORT = endpoint << 4 | pid;
+  delay();
   delay();
 }
 

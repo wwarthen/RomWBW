@@ -16,6 +16,9 @@
 #include "z80.h"
 #include <stdlib.h>
 
+#include "print.h"
+#include "ez80-helpers.h"
+
 #define LOWER_SAFE_RAM_ADDRESS 0x8000
 
 usb_error usb_ctrl_trnsfer_ext(const setup_packet *const cmd_packet,
@@ -57,7 +60,8 @@ usb_error usb_control_transfer(const setup_packet *const cmd_packet,
 
   ch_write_data((const uint8_t *)cmd_packet, sizeof(setup_packet));
   ch_issue_token_setup();
-  CHECK(ch_short_wait_int_and_get_status())
+  result = ch_short_wait_int_and_get_status();
+  CHECK(result);
 
   const uint16_t length = cmd_packet->wLength;
 

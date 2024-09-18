@@ -4,7 +4,7 @@
 ; 
 ;--------------------------------------------------------
 ; File Created by SDCC : free open source ISO C Compiler
-; Version 4.3.0 #14210 (Linux)
+; Version 4.4.0 #14648 (Linux)
 ;--------------------------------------------------------
 ; Processed by Z88DK
 ;--------------------------------------------------------
@@ -58,16 +58,20 @@ _chnative_seek:
 	push	ix
 	ld	ix,0
 	add	ix,sp
+	push	af
 	ld	c, l
 	ld	b, h
 ;source-doc/base-drv/./usb-base-drv.c:7: storage_device->current_lba = lba;
-	ld	h,(ix+5)
 	ld	a,(ix+4)
+	ld	(ix-2),a
+	ld	a,(ix+5)
+	ld	(ix-1),a
+	ld	a,(ix-2)
 	add	a,0x0c
 	ld	l, a
-	jr	NC,l_chnative_seek_00103
-	inc	h
-l_chnative_seek_00103:
+	ld	a,(ix-1)
+	adc	a,0x00
+	ld	h, a
 	ld	(hl), e
 	inc	hl
 	ld	(hl), d
@@ -78,6 +82,7 @@ l_chnative_seek_00103:
 ;source-doc/base-drv/./usb-base-drv.c:8: return 0;
 	xor	a
 ;source-doc/base-drv/./usb-base-drv.c:9: }
+	ld	sp, ix
 	pop	ix
 	pop	hl
 	pop	bc

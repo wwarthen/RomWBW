@@ -4,7 +4,7 @@
 ; 
 ;--------------------------------------------------------
 ; File Created by SDCC : free open source ISO C Compiler
-; Version 4.3.0 #14210 (Linux)
+; Version 4.4.0 #14648 (Linux)
 ;--------------------------------------------------------
 ; Processed by Z88DK
 ;--------------------------------------------------------
@@ -62,10 +62,15 @@ _hub_set_feature:
 ;source-doc/base-drv/./enumerate_hub.c:15: set_feature = cmd_set_feature;
 	ld	hl,0
 	add	hl, sp
-	ex	de, hl
-	ld	bc,0x0008
+	ld	c, l
+	ld	b, h
+	ld	e, c
+	ld	d, b
+	push	bc
 	ld	hl,_cmd_set_feature
+	ld	bc,0x0008
 	ldir
+	pop	bc
 ;source-doc/base-drv/./enumerate_hub.c:17: set_feature.bValue[0] = feature;
 	ld	a,(ix+6)
 	ld	(ix-6),a
@@ -73,26 +78,28 @@ _hub_set_feature:
 	ld	a,(ix+7)
 	ld	(ix-4),a
 ;source-doc/base-drv/./enumerate_hub.c:19: return usb_control_transfer(&set_feature, 0, hub_config->address, hub_config->max_packet_size);
-	ld	l,(ix+4)
-	ld	h,(ix+5)
-	ld	e,l
-	ld	d,h
+	ld	a,(ix+4)
+	ld	d,(ix+5)
+	ld	l, a
+	ld	h, d
 	inc	hl
-	ld	b, (hl)
-	ex	de, hl
+	ld	e, (hl)
+	ld	l, a
+	ld	h, d
 	ld	a, (hl)
 	rlca
 	rlca
 	rlca
 	rlca
 	and	0x0f
-	ld	c,a
-	push	bc
+	ld	h, e
+	push	hl
+	inc	sp
+	push	af
+	inc	sp
 	ld	hl,0x0000
 	push	hl
-	ld	hl,4
-	add	hl, sp
-	push	hl
+	push	bc
 	call	_usb_control_transfer
 ;source-doc/base-drv/./enumerate_hub.c:20: }
 	ld	sp,ix
@@ -136,10 +143,15 @@ _hub_clear_feature:
 ;source-doc/base-drv/./enumerate_hub.c:24: clear_feature = cmd_clear_feature;
 	ld	hl,0
 	add	hl, sp
-	ex	de, hl
-	ld	bc,0x0008
+	ld	c, l
+	ld	b, h
+	ld	e, c
+	ld	d, b
+	push	bc
 	ld	hl,_cmd_clear_feature
+	ld	bc,0x0008
 	ldir
+	pop	bc
 ;source-doc/base-drv/./enumerate_hub.c:26: clear_feature.bValue[0] = feature;
 	ld	a,(ix+6)
 	ld	(ix-6),a
@@ -147,26 +159,28 @@ _hub_clear_feature:
 	ld	a,(ix+7)
 	ld	(ix-4),a
 ;source-doc/base-drv/./enumerate_hub.c:28: return usb_control_transfer(&clear_feature, 0, hub_config->address, hub_config->max_packet_size);
-	ld	l,(ix+4)
-	ld	h,(ix+5)
-	ld	e,l
-	ld	d,h
+	ld	a,(ix+4)
+	ld	d,(ix+5)
+	ld	l, a
+	ld	h, d
 	inc	hl
-	ld	b, (hl)
-	ex	de, hl
+	ld	e, (hl)
+	ld	l, a
+	ld	h, d
 	ld	a, (hl)
 	rlca
 	rlca
 	rlca
 	rlca
 	and	0x0f
-	ld	c,a
-	push	bc
+	ld	h, e
+	push	hl
+	inc	sp
+	push	af
+	inc	sp
 	ld	hl,0x0000
 	push	hl
-	ld	hl,4
-	add	hl, sp
-	push	hl
+	push	bc
 	call	_usb_control_transfer
 ;source-doc/base-drv/./enumerate_hub.c:29: }
 	ld	sp,ix
@@ -187,17 +201,17 @@ _hub_get_status_port:
 	ld	hl,0
 	add	hl, sp
 	ex	de, hl
-	ld	bc,0x0008
 	ld	hl,_cmd_get_status_port
+	ld	bc,0x0008
 	ldir
 ;source-doc/base-drv/./enumerate_hub.c:35: get_status_port.bIndex[0] = index;
 	ld	a,(ix+6)
 	ld	(ix-4),a
 ;source-doc/base-drv/./enumerate_hub.c:36: return usb_control_transfer(&get_status_port, port_status, hub_config->address, hub_config->max_packet_size);
-	ld	l,(ix+4)
-	ld	h,(ix+5)
-	ld	e,l
-	ld	d,h
+	ld	e,(ix+4)
+	ld	d,(ix+5)
+	ld	l, e
+	ld	h, d
 	inc	hl
 	ld	b, (hl)
 	ex	de, hl
@@ -209,11 +223,13 @@ _hub_get_status_port:
 	and	0x0f
 	ld	e,(ix+7)
 	ld	d,(ix+8)
-	ld	c,a
-	push	bc
-	push	de
-	ld	hl,4
+	ld	hl,0
 	add	hl, sp
+	push	bc
+	inc	sp
+	push	af
+	inc	sp
+	push	de
 	push	hl
 	call	_usb_control_transfer
 ;source-doc/base-drv/./enumerate_hub.c:37: }
@@ -228,111 +244,104 @@ _configure_usb_hub:
 	push	ix
 	ld	ix,0
 	add	ix,sp
-	ld	iy, -14
-	add	iy, sp
-	ld	sp, iy
+	ld	c, l
+	ld	b, h
+	ld	hl, -15
+	add	hl, sp
+	ld	sp, hl
+	ld	(ix-3),c
+	ld	(ix-2),b
 ;source-doc/base-drv/./enumerate_hub.c:45: const device_config_hub *const hub_config = working->hub_config;
-	push	hl
-	ld	c,l
-	ld	b,h
-	pop	iy
-	ld	a,(iy+25)
-	ld	(ix-2),a
-	ld	a,(iy+26)
-	ld	(ix-1),a
+	ld	c,(ix-3)
+	ld	b,(ix-2)
+	ld	hl,25
+	add	hl, bc
+	ld	c, (hl)
+	inc	hl
+	ld	b, (hl)
 ;source-doc/base-drv/./enumerate_hub.c:47: CHECK(hub_get_descriptor(hub_config, &hub_description));
 	push	bc
 	ld	hl,2
 	add	hl, sp
 	ex	de, hl
-	ld	l,(ix-2)
-	ld	h,(ix-1)
+	ld	l, c
+	ld	h, b
 	call	_hub_get_descriptor
+	ld	e, a
 	pop	bc
-	ld	e,a
+	ld	a, e
 	or	a
 	jr	Z,l_configure_usb_hub_00102
 	ld	l, e
 	jp	l_configure_usb_hub_00129
 l_configure_usb_hub_00102:
 ;source-doc/base-drv/./enumerate_hub.c:49: uint8_t i = hub_description.bNbrPorts;
-	ld	d,(ix-12)
+	ld	a,(ix-13)
+	ld	(ix-1),a
 ;source-doc/base-drv/./enumerate_hub.c:50: do {
 l_configure_usb_hub_00126:
 ;source-doc/base-drv/./enumerate_hub.c:51: CHECK(hub_clear_feature(hub_config, FEAT_PORT_POWER, i));
 	push	bc
-	push	de
+	ld	d,(ix-1)
 	ld	e,0x08
 	push	de
-	ld	l,(ix-2)
-	ld	h,(ix-1)
-	push	hl
+	push	bc
 	call	_hub_clear_feature
 	pop	af
 	pop	af
-	pop	de
 	pop	bc
 	ld	a, l
 	or	a
 	jp	NZ,l_configure_usb_hub_00129
 ;source-doc/base-drv/./enumerate_hub.c:53: CHECK(hub_set_feature(hub_config, FEAT_PORT_POWER, i));
 	push	bc
-	push	de
+	ld	d,(ix-1)
 	ld	e,0x08
 	push	de
-	ld	l,(ix-2)
-	ld	h,(ix-1)
-	push	hl
+	push	bc
 	call	_hub_set_feature
 	pop	af
 	pop	af
-	pop	de
 	pop	bc
 	ld	a, l
 	or	a
 	jp	NZ,l_configure_usb_hub_00129
 ;source-doc/base-drv/./enumerate_hub.c:55: hub_clear_feature(hub_config, FEAT_PORT_RESET, i);
 	push	bc
-	push	de
+	ld	d,(ix-1)
 	ld	e,0x04
 	push	de
-	ld	l,(ix-2)
-	ld	h,(ix-1)
-	push	hl
+	push	bc
 	call	_hub_clear_feature
 	pop	af
 	pop	af
-	pop	de
-	push	de
+	pop	bc
+;source-doc/base-drv/./enumerate_hub.c:57: CHECK(hub_set_feature(hub_config, FEAT_PORT_RESET, i));
+	push	bc
+	ld	d,(ix-1)
 	ld	e,0x04
 	push	de
-	ld	l,(ix-2)
-	ld	h,(ix-1)
-	push	hl
+	push	bc
 	call	_hub_set_feature
 	pop	af
 	pop	af
-	pop	de
 	pop	bc
 	ld	a, l
 	or	a
 	jp	NZ,l_configure_usb_hub_00129
 ;source-doc/base-drv/./enumerate_hub.c:59: CHECK(hub_get_status_port(hub_config, i, &port_status));
 	push	bc
-	push	de
-	ld	hl,12
+	ld	hl,10
 	add	hl, sp
 	push	hl
-	push	de
+	ld	a,(ix-1)
+	push	af
 	inc	sp
-	ld	l,(ix-2)
-	ld	h,(ix-1)
-	push	hl
+	push	bc
 	call	_hub_get_status_port
 	pop	af
 	pop	af
 	inc	sp
-	pop	de
 	pop	bc
 	ld	a, l
 	or	a
@@ -342,97 +351,81 @@ l_configure_usb_hub_00126:
 	add	hl, sp
 	ld	a, (hl)
 	and	0x01
-	jp	Z, l_configure_usb_hub_00124
+	jr	Z,l_configure_usb_hub_00124
 ;source-doc/base-drv/./enumerate_hub.c:62: CHECK(hub_clear_feature(hub_config, HUB_FEATURE_PORT_CONNECTION_CHA, i));
 	push	bc
-	push	de
+	ld	d,(ix-1)
 	ld	e,0x10
 	push	de
-	ld	l,(ix-2)
-	ld	h,(ix-1)
-	push	hl
+	push	bc
 	call	_hub_clear_feature
 	pop	af
 	pop	af
-	pop	de
 	pop	bc
 	ld	a, l
 	or	a
-	jp	NZ,l_configure_usb_hub_00129
+	jr	NZ,l_configure_usb_hub_00129
 ;source-doc/base-drv/./enumerate_hub.c:64: CHECK(hub_clear_feature(hub_config, FEAT_PORT_ENABLE_CHANGE, i));
 	push	bc
-	push	de
+	ld	d,(ix-1)
 	ld	e,0x11
 	push	de
-	ld	l,(ix-2)
-	ld	h,(ix-1)
-	push	hl
+	push	bc
 	call	_hub_clear_feature
 	pop	af
 	pop	af
-	pop	de
 	pop	bc
 	ld	a, l
 	or	a
 	jr	NZ,l_configure_usb_hub_00129
 ;source-doc/base-drv/./enumerate_hub.c:66: CHECK(hub_clear_feature(hub_config, FEAT_PORT_RESET_CHANGE, i));
 	push	bc
-	push	de
+	ld	d,(ix-1)
 	ld	e,0x14
 	push	de
-	ld	l,(ix-2)
-	ld	h,(ix-1)
-	push	hl
+	push	bc
 	call	_hub_clear_feature
 	pop	af
 	pop	af
-	pop	de
 	pop	bc
 	ld	a, l
 	or	a
 	jr	NZ,l_configure_usb_hub_00129
 ;source-doc/base-drv/./enumerate_hub.c:67: delay_short();
 	push	bc
-	push	de
 	call	_delay_short
-	pop	de
-	push	de
-	ld	hl,12
+	pop	bc
+;source-doc/base-drv/./enumerate_hub.c:69: CHECK(hub_get_status_port(hub_config, i, &port_status));
+	push	bc
+	ld	hl,10
 	add	hl, sp
 	push	hl
-	push	de
+	ld	a,(ix-1)
+	push	af
 	inc	sp
-	ld	l,(ix-2)
-	ld	h,(ix-1)
-	push	hl
+	push	bc
 	call	_hub_get_status_port
 	pop	af
 	pop	af
 	inc	sp
-	pop	de
 	pop	bc
 	ld	a, l
 	or	a
 	jr	NZ,l_configure_usb_hub_00129
 ;source-doc/base-drv/./enumerate_hub.c:70: delay_short();
 	push	bc
-	push	de
 	call	_delay_short
-	pop	de
+	pop	bc
 ;source-doc/base-drv/./enumerate_hub.c:72: CHECK(read_all_configs(working->state));
-	pop	hl
-	ld	e,(hl)
-	ld	c,l
-	ld	b,h
+	ld	l,(ix-3)
+	ld	h,(ix-2)
+	ld	e, (hl)
 	inc	hl
-	ld	h, (hl)
+	ld	d, (hl)
 	push	bc
 	push	de
-	ld	l, e
-	push	hl
 	call	_read_all_configs
 	pop	af
-	pop	de
 	pop	bc
 	ld	a, l
 	or	a
@@ -441,28 +434,23 @@ l_configure_usb_hub_00126:
 l_configure_usb_hub_00124:
 ;source-doc/base-drv/./enumerate_hub.c:75: CHECK(hub_clear_feature(hub_config, FEAT_PORT_POWER, i));
 	push	bc
-	push	de
+	ld	d,(ix-1)
 	ld	e,0x08
 	push	de
-	ld	l,(ix-2)
-	ld	h,(ix-1)
-	push	hl
+	push	bc
 	call	_hub_clear_feature
 	pop	af
 	pop	af
-	pop	de
 	pop	bc
 	ld	a, l
 	or	a
 	jr	NZ,l_configure_usb_hub_00129
 l_configure_usb_hub_00127:
 ;source-doc/base-drv/./enumerate_hub.c:77: } while (--i != 0);
-	dec	d
-	ld	a, d
+	dec	(ix-1)
+	jp	NZ, l_configure_usb_hub_00126
 ;source-doc/base-drv/./enumerate_hub.c:79: return USB_ERR_OK;
-	or	a
-	jp	NZ,l_configure_usb_hub_00126
-	ld	l,a
+	ld	l,0x00
 l_configure_usb_hub_00129:
 ;source-doc/base-drv/./enumerate_hub.c:80: }
 	ld	sp, ix

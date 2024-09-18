@@ -4,7 +4,7 @@
 ; 
 ;--------------------------------------------------------
 ; File Created by SDCC : free open source ISO C Compiler
-; Version 4.3.0 #14210 (Linux)
+; Version 4.4.0 #14648 (Linux)
 ;--------------------------------------------------------
 ; Processed by Z88DK
 ;--------------------------------------------------------
@@ -196,17 +196,15 @@ _get_usb_device_config:
 	push	ix
 	ld	ix,0
 	add	ix,sp
-	dec	sp
+	push	af
 	ld	(ix-1),a
 ;source-doc/base-drv/./usb_state.c:69: const _usb_state *const usb_state = get_usb_work_area();
 ;source-doc/base-drv/./usb_state.c:71: uint8_t counter = 1;
-	ld	c,0x01
+	ld	(ix-2),0x01
 ;source-doc/base-drv/./usb_state.c:73: for (device_config *p = first_device_config(usb_state); p; p = next_device_config(usb_state, p)) {
-	push	bc
 	ld	hl,_x
 	call	_first_device_config
-	pop	bc
-	ld	b,0x01
+	ld	c,0x01
 l_get_usb_device_config_00112:
 	ld	a, d
 	or	e
@@ -220,12 +218,12 @@ l_get_usb_device_config_00112:
 	jr	NZ,l_get_usb_device_config_00113
 ;source-doc/base-drv/./usb_state.c:75: if (counter == device_index)
 	ld	a,(ix-1)
-	sub	b
+	sub	c
 ;source-doc/base-drv/./usb_state.c:76: return p;
 	jr	Z,l_get_usb_device_config_00117
 ;source-doc/base-drv/./usb_state.c:77: counter++;
-	inc	b
-	ld	c, b
+	inc	c
+	ld	(ix-2),c
 l_get_usb_device_config_00113:
 ;source-doc/base-drv/./usb_state.c:73: for (device_config *p = first_device_config(usb_state); p; p = next_device_config(usb_state, p)) {
 	push	bc
@@ -235,10 +233,9 @@ l_get_usb_device_config_00113:
 	jr	l_get_usb_device_config_00112
 l_get_usb_device_config_00105:
 ;source-doc/base-drv/./usb_state.c:81: for (device_config *p = first_device_config(usb_state); p; p = next_device_config(usb_state, p)) {
-	push	bc
 	ld	hl,_x
 	call	_first_device_config
-	pop	bc
+	ld	c,(ix-2)
 l_get_usb_device_config_00115:
 	ld	a, d
 	or	e
@@ -269,6 +266,6 @@ l_get_usb_device_config_00110:
 	ld	de,0x0000
 l_get_usb_device_config_00117:
 ;source-doc/base-drv/./usb_state.c:90: }
-	inc	sp
+	ld	sp, ix
 	pop	ix
 	ret

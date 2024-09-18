@@ -4,7 +4,7 @@
 ; 
 ;--------------------------------------------------------
 ; File Created by SDCC : free open source ISO C Compiler
-; Version 4.3.0 #14210 (Linux)
+; Version 4.4.0 #14648 (Linux)
 ;--------------------------------------------------------
 ; Processed by Z88DK
 ;--------------------------------------------------------
@@ -53,17 +53,12 @@ _USB_MODULE_LEDS	.EQU	0xff8a
 ; Function hub_get_descriptor
 ; ---------------------------------
 _hub_get_descriptor:
-	push	ix
-	ld	ix,0
-	add	ix,sp
-	dec	sp
 ;source-doc/base-drv/./class_hub.c:8: return usb_control_transfer(&cmd_get_hub_descriptor, hub_description, hub_config->address, hub_config->max_packet_size);
-	ld	c,l
+	ld	a,l
 	ld	b,h
 	inc	hl
-	ld	a, (hl)
-	ld	(ix-1),a
-	ld	l, c
+	ld	c, (hl)
+	ld	l, a
 	ld	h, b
 	ld	a, (hl)
 	rlca
@@ -72,12 +67,13 @@ _hub_get_descriptor:
 	rlca
 	and	0x0f
 	ld	b, a
-	ld	a,(ix-1)
-	ld	c,b
-	ld	b,a
-	push	bc
-	push	de
 	ld	hl,_cmd_get_hub_descriptor
+	ld	a, c
+	push	af
+	inc	sp
+	push	bc
+	inc	sp
+	push	de
 	push	hl
 	call	_usb_control_transfer
 	pop	af
@@ -85,8 +81,6 @@ _hub_get_descriptor:
 	pop	af
 	ld	a, l
 ;source-doc/base-drv/./class_hub.c:9: }
-	inc	sp
-	pop	ix
 	ret
 _cmd_get_hub_descriptor:
 	DEFB +0xa0
