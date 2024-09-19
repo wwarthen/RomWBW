@@ -2337,19 +2337,21 @@ str_help	.db	"\r\n"
 		.db	"\r\n  <u>[.<s>]   - Boot Disk Unit/Slice"
 		.db	0
 ;
-#if (DSKYENABLE & GM7303ENABLE) 
-; The GM7303 has an ASCII LCD display
+#if (DSKYENABLE)
+  #if (GM7303ENABLE)
+		; The GM7303 has an ASCII LCD display
 msg_sel		.db	"Boot?", $00
 msg_boot	.db	"Boot...", $00
 msg_load	.db	"Load...", $00
 msg_go		.db	"Go...", $00
-#else if (DSKYENABLE & !GM7303ENABLE)		; Other DSKY devices use 7 segment LEDs
+  #else
+		; Other DSKY devices use 7 segment LEDs
 msg_sel		.db	$7f,$5c,$5c,$78,$53,$00,$00,$00	; "boot?   "
 msg_boot	.db	$7f,$5c,$5c,$78,$80,$80,$80,$00	; "boot... "
 msg_load	.db	$38,$5c,$5f,$5e,$80,$80,$80,$00	; "load... "
 msg_go		.db	$3d,$5c,$80,$80,$80,$00,$00,$00	; "go...   "
+  #endif
 #endif
-
 ;
 ;=======================================================================
 ; DSKY keypad led matrix masks

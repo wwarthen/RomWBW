@@ -1763,9 +1763,9 @@ MSGBOOT	.DB	"Boot!   ",0
 ADDR	.DB	"Adr 0000",0
 PORT	.DB	"Port  00",0
 GOTO	.DB	"Go  0000",0
-
-#ELSE IF (!GM7303ENABLE)	
-
+;
+#ELSE
+;
 CPUUP	.DB 	$40,$39,$73,$3E,$00,$3E,$73,$40	; "-CPU UP-" (RAW SEG)
 MSGBOOT	.DB	$7F,$5C,$5C,$78,$82,$00,$00,$00 ; "Boot!   " (RAW SEG)
 ADDR	.DB	$17,$18,$19,$10,$00,$00,$00,$00	; "Adr 0000" (ENCODED)
