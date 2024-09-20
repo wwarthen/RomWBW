@@ -12,9 +12,11 @@
 ; to communicate with the firmware to perform a number of initialisation tasks.
 ; See also the associated ez80 platform drivers (ez80rtc, ez80systmr, ez80uart).
 ;
-; The driver 'exports' two key functions:
+; The driver 'exports' the following:
 ; 1. EZ80_PREINIT - This function is called by the HBIOS boot code to initialise the eZ80 firmware.
 ; 2. EZ80_RPT_TIMINGS - This function is called by the HBIOS boot code to report the platform timings.
+; 3. DELAY - pause for approx 17us
+; 4. VDELAY - pause for approx 17us * DE
 ;
 ; EZ80_PREINIT performs the following:
 ; 1. Exchange platform version numbers
@@ -77,14 +79,12 @@ EZ80_PREINIT:
 
 
 #IF (EZ80_WSMD_TYP == EZ80WSMD_CYCLES)
-	LD	L, EZ80_MEM_CYCLES
-	OR	$80
+	LD	L, EZ80_MEM_CYCLES | $80
 	EZ80_UTIL_MEMTM_SET()
 	LD	A, L
 	LD	(EZ80_PLT_MEMWS), A
 
-	LD	L, EZ80_IO_CYCLES
-	OR	$80
+	LD	L, EZ80_IO_CYCLES | $80
 	EZ80_UTIL_IOTM_SET()
 	LD	A, L
 	LD	(EZ80_PLT_IOWS), A
@@ -126,7 +126,10 @@ EZ80_PREINIT:
 	EZ80_TMR_SET_FREQTICK
 
 	RET
-
+;
+; --------------------------------
+; eZ80 CPU DRIVER REPORT TIMINGS
+; --------------------------------
 EZ80_RPT_TIMINGS:
 	LD	A, (EZ80_PLT_MEMWS)
 	BIT	7, A
@@ -163,7 +166,79 @@ EZ80_RPT_FSH_TIMINGS:
 	LD	A, (EZ80_PLT_FLSHWS)
 	CALL	PRTDECB
 	CALL	PRTSTRD
-	.TEXT	" FSH W/S$"
+	.TEXT	" FSH W/S$";
+
+;--------------------------------------------------------------------------------------------------
+; DELAY LOOP TEST CALIBRATION
+;--------------------------------------------------------------------------------------------------
+;
+; IF ENABLED, THE GPIO PCBx PINS OF THE EZ80 WILL BE TOGGLED AT 'DELAY' RATE * 16 
+; CAN BE USED TO VERIFY DELAY WORKS SUFFICIENT FOR DIFFERENT EZ80 CLOCK SPEEDS
+; AND BUS CYCLES
+;
+#IF FALSE
+
+;   7.3728 MHZ -- 1 MEM W/S, 6 I/O W/S, 0 FSH W/S - 428 - 26.7us
+;  18.4320 MHZ -- 2 MEM W/S, 6 I/O W/S, 1 FSH W/S - 284 - 17.8us
+;  20.0000 MHZ -- 2 MEM W/S, 6 I/O W/S, 1 FSH W/S - 281 - 17.6us
+;  25.0000 MHZ -- 2 MEM W/S, 3 I/O B/C, 1 FSH W/S - 271 - 16.9us
+;  32.0000 MHZ -- 3 MEM W/S, 4 I/O B/C, 2 FSH W/S - 289 - 18.0us
+
+
+PC_DR:		.equ	$009E
+PC_DDR:		.equ	$009F
+	DI
+
+	; ENABLE PC5 GPIO AS OUTPUT
+	LD	BC, PC_DDR
+	XOR	A
+	OUT	(C), A
+	PUSH	AF
+
+	LD	BC, PC_DR
+LOOP:
+
+	POP	AF
+	OUT	(C), A
+	CPL
+	PUSH	AF
+
+	CALL	DELAY
+	CALL	DELAY
+	CALL	DELAY
+	CALL	DELAY
+
+	CALL	DELAY
+	CALL	DELAY
+	CALL	DELAY
+	CALL	DELAY
+
+	CALL	DELAY
+	CALL	DELAY
+	CALL	DELAY
+	CALL	DELAY
+
+	CALL	DELAY
+	CALL	DELAY
+	CALL	DELAY
+	CALL	DELAY
+
+	JR	LOOP
+#ENDIF
+	RET
+
+DELAY:
+	EZ80_DELAY
+	EZ80_DELAY
+	EZ80_DELAY
+	RET
+
+VDELAY:
+	EZ80_DELAY
+	DEC	DE
+	LD	A,D
+	OR	E
+	JR	NZ, VDELAY
 	RET
 
 EZ80_RPT_FIRMWARE:
