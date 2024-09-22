@@ -6,7 +6,7 @@
 ; Driver code designed for the RCBus eZ80 CPU Module.  
 ; The driver expects the eZ80 firmware to manage the initial booting of the system.
 ; Details for the platform and the software for the on-chip firmware can be found at:
-; https://github.com/dinoboards/rc2014-ez80
+; https://github.com/dinoboards/ez80-for-rc
 ;
 ; Although the eZ80 firmware is booted before HBIOS, the eZ80 CPU driver is still required
 ; to communicate with the firmware to perform a number of initialisation tasks.
