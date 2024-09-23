@@ -1445,14 +1445,10 @@ up to 256 8MB CP/M filesystems on a single large storage device,
 where each slice can be assigned to a drive letter in CPM, 
 and be treated as its own hard disk drive (from a CPM perspective).
 
-In order to achieve compatibility across
-all of the operating systems supported by RomWBW, the hard disk
-filesystem format used is 8MB. This ensures any filesystem will be
-accessible to any of the operating systems.
-
-While hard disks while often implemented by removable media, are treated
-as non-removable. e.g. Removing an SD card is like unplugging a hard 
-drive in a modern sense.
+In order to achieve compatibility across all of the operating systems 
+supported by RomWBW, the hard disk filesystem format used is 8MB. This 
+ensures any filesystem will be accessible to any of the operating 
+systems.
 
 RomWBW uses Logical Block Addressing (LBA) to interact with all hard
 disks.  The RomWBW operating systems use older Cylinder/Head/Sector
