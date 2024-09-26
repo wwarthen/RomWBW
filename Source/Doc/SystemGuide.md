@@ -1280,35 +1280,22 @@ used.
 
 ## Display Keypad (DSKY)
 
-The Display Keypad functions provide read/write access to a segment
-style display and associated hex keypad.
+The Display Keypad functions provide access to a segment or LCD
+style display and associated optional keypad
 
-HBIOS only supports a single DSKY device since there is no reason to have
-more than one at a time.  The DSKY unit is assigned a Device Type ID 
-which indicates the specific hardware device driver that handles the 
-unit.  The table below enumerates these values.
+HBIOS only supports a single DSKY device since there is no reason to 
+have more than one at a time.  If the system contains multiple DSKY 
+devices, only the first device discovered will be used.  The DSKY unit 
+is assigned a Device Type ID which indicates the specific hardware 
+device driver that handles the unit.  The table below enumerates these 
+values.
 
-| **Device Type** | **ID** | **Description**                          | **Driver** |
-|-----------------|-------:|------------------------------------------|------------|
-| DSKYDEV_ICM     | 0x01   | Original ICM7218 based DSKY              | icm.asm    |
-| DSKYDEV_PKD     | 0x02   | Next Gen Intel P8279 based DSKY          | pkd.asm    |
-
-When segment display function encodes the display data in a byte per
-character format.  Currently, all segment displays are exactly
-8 charadcters and this is assumed in API calls.  The encoding of each
-byte is as shown below:
-
-```
-  +---01---+
-  |        |
-  20      02
-  |        |
-  +---40---+
-  |        |
-  10      04
-  |        |
-  +---08---+  80
-```
+| **Device Type**    | **ID** | **Description**                       | **Driver** |
+|--------------------|-------:|---------------------------------------|------------|
+| DSKYDEV_ICM        | 0x01   | Original ICM7218 based DSKY           | icm.asm    |
+| DSKYDEV_PKD        | 0x02   | Next Gen Intel P8279 based DSKY       | pkd.asm    |
+| DSKYDEV_GM7303     | 0x03   | GM7303 LCD Display + Keypad           | gm7303.asm |
+| DSKYDEV_LCD        | 0x04   | HD44780-based LCD Display             | lcd.asm    |
 
 The keypad keys are identified by the following key ids.  Not all
 keypads will contain all keys.
@@ -1394,10 +1381,21 @@ The Status (A) is a standard HBIOS result code.
 | HL: Buffer Address                     |                                        |
 
 Display the segment-encoded values on the segment display.  The encoding
-is defined at the start of this section.  The entire displa is updated
-and it is assumed that an 8 character buffer will be pointed to by HL.
-The buffer must reside in high memory.
-The Status (A) is a standard HBIOS result code.
+uses a small alphabet as defined below.  The actual representation of a
+character is determined by the driver.  The entire display is updated 
+and it is assumed that an 8 character buffer will be pointed to by HL. 
+The buffer must reside in high memory. The Status (A) is a standard 
+HBIOS result code.
+
+|               |               |               |               |
+|---------------|---------------|---------------|---------------|
+| 0x00: '0'     | 0x01: '1'     | 0x02: '2'     | 0x03: '3'     |
+| 0x04: '4'     | 0x05: '5'     | 0x06: '6'     | 0x07: '7'     |
+| 0x08: '8'     | 0x09: '9'     | 0x0A: 'A'     | 0x0B: 'B'     |
+| 0x0C: 'C'     | 0x0D: 'D'     | 0x0E: 'E'     | 0x0F: 'F'     |
+| 0x10: ' '     | 0x11: '-'     | 0x12: '.'     | 0x13: 'p'     |
+| 0x14: 'o'     | 0x15: 'r'     | 0x16: 't'     | 0x17: 'A'     |
+| 0x18: 'd'     | 0x19: 'r'     | 0x1A: 'G'     |               |
 
 ### Function 0x35 -- DSKY Keypad LEDs (DSKYKEYLEDS)
 
@@ -1410,9 +1408,8 @@ Light the LEDs for the keypad keys according to the
 bitmap contained in the buffer pointed to by HL.  The buffer
 must be located in high memory and is assumed to be 8 bytes.
 
-At this time, the bitmap is specific to the PKD hardware.
-This function is ignored by the ICM hardware.
-The Status (A) is a standard HBIOS result code.
+At this time, the bitmap is specific to the PKD hardware and will be
+ignored by all other hardware.
 
 ### Function 0x36 -- DSKY Status LED (DSKYSTATLED)
 
@@ -1426,8 +1423,8 @@ Set or clear the status LED specified in D.  The state of
 the LED is contained in E.  If E=0, the LED will be turned
 off.  If E=1, the LED will be turned on.
 
-This function is specific to the PKD hardware.  It will be ignored
-by the ICM hardware.
+This function is specific to the PKD hardware and will be ignored
+by all other hardware.
 The Status (A) is a standard HBIOS result code.
 
 ### Function 0x37 -- DSKY Beep (DSKYBEEP)
@@ -1467,6 +1464,29 @@ indicates the starting port address of the hardware interface that is
 servicing the specified unit.  Both of these values are considered 
 driver specific.  Refer to the associated hardware driver for the values
 used.
+
+### Function 0x39 -- DSKY Device (DSKYMESSAGE)
+
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x39                                | A: Status                              |
+| C: Message ID                          |                                        |
+
+Instructs the display to show a textual representation of the associated
+message on the display.  The IDs are defined in std.asm.
+
+### Function 0x3A -- DSKY Device (DSKYEVENT)
+
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x3A                                | A: Status                              |
+| C: Event ID                            |                                        |
+
+Instructs the display to update itself in response to an internal
+HBIOS state change.  At this time the the events are:
+
+0: CPU Speed Change \
+1: Disk Activity
 
 `\clearpage`{=latex}
 

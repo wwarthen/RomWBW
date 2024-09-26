@@ -275,9 +275,11 @@ prompt:
 	call	pstr			; do it
 	call	clrbuf			; zero fill the cmd buffer
 ;
+	;ld	hl,msg_sel		; boot select msg
+	;call	dsky_show		; show on DSKY
+	ld	c,DSKY_MSG_LDR_SEL	; boot select msg
+	call	dsky_msg                ; show on DSKY
 #if (DSKYENABLE)
-	ld	hl,msg_sel		; boot select msg
-	call	dsky_show		; show on DSKY
 	call	dsky_highlightallkeys
 	call 	dsky_beep
 	call 	dsky_l2on
@@ -972,10 +974,10 @@ reboot:
 ;
 #if (BIOS == BIOS_WBW)
 ;
-#if (DSKYENABLE)
-	ld	hl,msg_boot		; point to boot message
-	call	dsky_show		; display message
-#endif
+	;ld	hl,msg_boot		; point to boot message
+	;call	dsky_show		; display message
+	ld	c,DSKY_MSG_LDR_BOOT	; point to boot message
+	call	dsky_msg                ; display message
 ;
 	; cold boot system
 	ld	b,BF_SYSRESET		; system restart
@@ -1004,10 +1006,10 @@ romload:
 	ld	h,(ix+ra_name+1)
 	call	pstr
 ;
-#if (DSKYENABLE)
-	ld	hl,msg_load		; point to load message
-	call	dsky_show		; display message
-#endif
+	;ld	hl,msg_load		; point to load message
+	;call	dsky_show		; display message
+	ld	c,DSKY_MSG_LDR_LOAD	; point to load message
+	call	dsky_msg                ; display message
 ;
 #if (BIOS == BIOS_WBW)
 ;
@@ -1088,10 +1090,10 @@ romload1:
 ;
 #endif
 ;
-#if (DSKYENABLE)
-	ld	hl,msg_go		; point to go message
-	call	dsky_show		; display message
-#endif
+	;ld	hl,msg_go		; point to go message
+	;call	dsky_show		; display message
+	ld	c,DSKY_MSG_LDR_GO	; point to go message
+	call	dsky_msg                ; display message
 ;
 	ld	l,(ix+ra_ent)		; HL := app entry address
 	ld	h,(ix+ra_ent+1)		; ...
@@ -1113,10 +1115,10 @@ diskboot:
 	ld	a,(bootslice)
 	call	prtdecb
 ;
-#if (DSKYENABLE)
-	ld	hl,msg_load		; point to load message
-	call	dsky_show		; display message
-#endif
+	;ld	hl,msg_load		; point to load message
+	;call	dsky_show		; display message
+	ld	c,DSKY_MSG_LDR_LOAD	; point to load message
+	call	dsky_msg                ; display message
 ;
 #if (BIOS == BIOS_WBW)
 ;
@@ -1397,10 +1399,10 @@ diskboot10:
 ;
 	call	pdot			; show progress
 ;
-#if (DSKYENABLE)
-	ld	hl,msg_go		; point to go message
-	call	dsky_show		; display message
-#endif
+	;ld	hl,msg_go		; point to go message
+	;call	dsky_show		; display message
+	ld	c,DSKY_MSG_LDR_GO	; point to go message
+	call	dsky_msg                ; display message
 ;
 	; Jump to entry vector
 	ld	hl,(bb_cpment)		; get entry vector
@@ -2225,14 +2227,20 @@ dsky_highlightkeysoff:
 	ld	hl,dsky_highlightkeyledsoff
 	jr 	dsky_putled
 ;
+#endif
+;
+dsky_msg:
+#if (BIOS == BIOS_WBW)
+	ld	b,BF_DSKYMESSAGE
+	jr	dsky_hbcall
+;
 dsky_hbcall:
 	ld	a,(dskyact)
 	or	a
 	ret	z
 	rst	08
-	ret
-;
 #endif
+	ret
 ;
 ;=======================================================================
 ; Error handlers
@@ -2336,22 +2344,22 @@ str_help	.db	"\r\n"
 #endif
 		.db	"\r\n  <u>[.<s>]   - Boot Disk Unit/Slice"
 		.db	0
-;
-#if (DSKYENABLE)
-  #if (GM7303ENABLE)
-		; The GM7303 has an ASCII LCD display
-msg_sel		.db	"Boot?", $00
-msg_boot	.db	"Boot...", $00
-msg_load	.db	"Load...", $00
-msg_go		.db	"Go...", $00
-  #else
-		; Other DSKY devices use 7 segment LEDs
-msg_sel		.db	$7f,$5c,$5c,$78,$53,$00,$00,$00	; "boot?   "
-msg_boot	.db	$7f,$5c,$5c,$78,$80,$80,$80,$00	; "boot... "
-msg_load	.db	$38,$5c,$5f,$5e,$80,$80,$80,$00	; "load... "
-msg_go		.db	$3d,$5c,$80,$80,$80,$00,$00,$00	; "go...   "
-  #endif
-#endif
+;;;;
+;;;#if (DSKYENABLE)
+;;;  #if (GM7303ENABLE)
+;;;		; The GM7303 has an ASCII LCD display
+;;;msg_sel		.db	"Boot?", $00
+;;;msg_boot	.db	"Boot...", $00
+;;;msg_load	.db	"Load...", $00
+;;;msg_go		.db	"Go...", $00
+;;;  #else
+;;;		; Other DSKY devices use 7 segment LEDs
+;;;msg_sel		.db	$7f,$5c,$5c,$78,$53,$00,$00,$00	; "boot?   "
+;;;msg_boot	.db	$7f,$5c,$5c,$78,$80,$80,$80,$00	; "boot... "
+;;;msg_load	.db	$38,$5c,$5f,$5e,$80,$80,$80,$00	; "load... "
+;;;msg_go		.db	$3d,$5c,$80,$80,$80,$00,$00,$00	; "go...   "
+;;;  #endif
+;;;#endif
 ;
 ;=======================================================================
 ; DSKY keypad led matrix masks
