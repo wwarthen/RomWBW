@@ -37,6 +37,8 @@ Version 3.5
 - MAP: Improved section Disk Management in User Guide document
 - WBW: Add CPU speed selection for HEATH platform to HBIOS
 - WBW: Add Warm/Cold reboot options to CPUSPD utility
+- D?N: Added support for eZ80 CPU
+- MAP: Contributed COPYSL utility
 
 Version 3.4
 -----------

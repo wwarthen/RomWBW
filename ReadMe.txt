@@ -200,7 +200,7 @@ let me know if I missed you!
     User Guide and Applications documents.
 
 -   Mark Pruden has also contributed a great deal of content to the User
-    Guide.
+    Guide as well as the COPYSL utility.
 
 -   Jacques Pelletier has contributed the DS1501 RTC driver code.
 

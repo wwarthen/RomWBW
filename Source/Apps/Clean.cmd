@@ -20,3 +20,4 @@ pushd cpuspd && call Clean || exit /b 1 & popd
 pushd Survey && call Clean || exit /b 1 & popd
 pushd HTalk && call Clean || exit /b 1 & popd
 pushd BBCBASIC && call Clean || exit /b 1 & popd
+pushd copysl && call Clean || exit /b 1 & popd

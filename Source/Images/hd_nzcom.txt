@@ -33,6 +33,8 @@ d_zsdos/u0/*.DAT 15:
 ../../Binary/Apps/bbcbasic.com 15:
 ../../Binary/Apps/bbcbasic.txt 10:
 ../../Binary/Apps/cpuspd.com 15:
+../../Binary/Apps/copysl.com 0:
+../../Binary/Apps/copysl.doc 0:
 ../../Binary/Apps/fat.com 15:
 ../../Binary/Apps/fdu.com 15:
 ../../Binary/Apps/fdu.doc 10:

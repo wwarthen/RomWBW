@@ -31,6 +31,7 @@ pushd cpuspd && call Build || exit /b & popd
 pushd Survey && call Build || exit /b & popd
 pushd HTalk && call Build || exit /b & popd
 pushd BBCBASIC && call Build || exit /b & popd
+pushd copysl && call Build || exit /b & popd
 
 copy *.com %APPBIN%\ || exit /b
 

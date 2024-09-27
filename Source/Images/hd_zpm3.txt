@@ -25,6 +25,8 @@
 ../../Binary/Apps/bbcbasic.com 0:
 ../../Binary/Apps/bbcbasic.txt 0:
 ../../Binary/Apps/cpuspd.com 15:
+../../Binary/Apps/copysl.com 0:
+../../Binary/Apps/copysl.doc 0:
 ../../Binary/Apps/fat.com 15:
 ../../Binary/Apps/fdu.com 15:
 ../../Binary/Apps/fdu.doc 15:
