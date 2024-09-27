@@ -77,6 +77,7 @@ Tools/unix/zx/zx
 
 !Source/ver.lib
 !Source/Apps/FAT/FAT.COM
+!Source/Apps/copysl/copysl.com
 !Source/Apps/ZMP/zmpx.com
 !Source/Apps/ZMD/zmdsubs.rel
 !Source/Apps/Test/vdctest/font.asm
