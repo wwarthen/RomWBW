@@ -49,9 +49,10 @@ ICM_COLS	.EQU	8		; DISPLAY COLUMNS
 ;__________________________________________________________________________________________________
 ;
 ICM_PREINIT:
-	LD	A,(DSKY_DISPACT)	; DSKY DISPATCHER ALREADY SET?
-	OR	A			; SET FLAGS
-	RET	NZ			; IF ALREADY ACTIVE, ABORT
+;
+	; RESET PRESENCE FLAG
+	XOR	A			; ASSUME NOT PRESENT
+	LD	(ICM_PRESENT),A		; SAVE IT
 ;
 	OR	$FF			; SIGNAL TO WAIT FOR KEY RELEASE
 	LD	(ICM_KEYBUF),A		; SET IT
