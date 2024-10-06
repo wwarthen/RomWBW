@@ -1076,8 +1076,10 @@ there is no media in device, function will return an error status.
 **NOTE**: This function will always return MID_HD512 for hard disk
 devices.  MID_HD1K is provided for use internally by operating systems
 that provide different filsystem formats depending on the partition
-table.  This function cannot be used to determine if an HD1K formatted
-partition exists on the hard disk.
+table.  To determine if an HD1K formatted partition exists on the hard disk
+please see the following function.
+
+[SYSGET Subfunction 0x12 -- Get Extended Disk Media (DIOMED)]
 
 ### Function 0x19 -- Disk Define Media (DIODEFMED)
 
@@ -2459,6 +2461,36 @@ the caller can use interbank calls directly to the function in the
 driver which bypasses the overhead of the normal function invocation
 lookup.
 
+#### SYSGET Subfunction 0x12 -- Get Extended Disk Media (DIOMED)
+
+| **Entry Parameters**                   | **Returned Values**                   |
+|----------------------------------------|---------------------------------------|
+| B: 0xF8                                | A: Status                             |
+| C: 0x12                                | C: Media ID                           |             
+| D: Disk Unit                           | DEHL: Sector Address                  |
+| E: Slice                               |                                       |
+
+Report the Media ID (C) for the for media in the specified Disk Unit (D),
+and for hard disks the absolute Sector offset to the start of the Slice (E).
+The Status (A) is a standard HBIOS result code.
+
+This function extends upon [Function 0x18 -- Disk Media (DIOMEDIA)] for hard 
+disk media by scanning for a partition to determine if the disk uses HD512 
+or HD1K, correctly reporting MID_HD or MID_HDNEW respectively.
+
+It will also return the sector number of the first sector in the
+slice if the slice number is valid. If the slice number is invalid
+(it wont fix on the media) an error will be returned.
+
+The slice calculation is performed by considering the partition start 
+(if it exists), the size of a slice for the given format type, and ensuring 
+that the slice fits within the media or partition size, taking into 
+consideration other partitions that may exist.
+
+If the Unit specified is not a hard disk the Media ID will be returned and 
+the slice parameter ignored. If there is no media in device, or the slice 
+number is invaid (Parameter Out Of Range) the function will return an error status.
+
 #### SYSGET Subfunction 0x20 -- Get RTC Device Unit Count (RTCCNT)
 
 | **Entry Parameters**                   | **Returned Values**                    |
@@ -3211,7 +3243,7 @@ The following section outlines the read only data referenced by the
 | CMDREG | 5  | 1  | IO PORT ADDRESS FOR MODE 1 |
 |        |    |    | _Below are the register mirror values_ |
 |        |    |    | _that HBIOS used for initialisation_ |
-| REG. 0 | 6  | 1  | $00 - NO EXTERNAL VID
+| REG. 0 | 6  | 1  | $00 - NO EXTERNAL VID |
 | REG. 1 | 7  | 1  | $50 or $70 - SET MODE 1 and interrupt if enabled |
 | REG. 2 | 8  | 1  | $00 - PATTERN NAME TABLE := 0 |
 | REG. 3 | 9  | 1  | $00 - NO COLOR TABLE |
