@@ -271,7 +271,7 @@ prompt:
 	ld	hl,reprompt		; adr of prompt restart routine
 	push	hl			; put it on stack
 	call	nl2			; formatting
-	ld	hl,str_prompt		; display boot prompt
+	ld	hl,str_prompt		; display boot prompt "Boot [H=Help]:"
 	call	pstr			; do it
 	call	clrbuf			; zero fill the cmd buffer
 ;
@@ -305,6 +305,7 @@ wtkey:
 	; wait for a key or timeout
 	call	cst			; check for keyboard key
 	jr	nz,concmd		; if pending, do console command
+	; NOTE Above is like a CALL, with a RET to reprompt: (manually pushed)
 ;
 #if (DSKYENABLE)
 	call	dsky_stat		; check DSKY for keypress
@@ -314,7 +315,7 @@ wtkey:
 #if (BIOS == BIOS_WBW)
   #if (AUTOCON)
 	call	conpoll			; poll for console takeover
-	jp	nz,docon		; if requested, takeover	
+	jp	nz,docon		; if requested, takeover
   #endif
 #endif
 ;
@@ -884,13 +885,13 @@ getbnum2:
 	or	a		; with flags set, CF is cleared
 	ret
 ;
-tmpbcd:	.db	0		
+tmpbcd:	.db	0
 ;
 #DEFINE PACK(a,b,c,d,e,f,g) \
 #DEFCONT \ 	.db	(16*('0'-'0'))+(a-'0'))
 #DEFCONT \ 	.db	(16*(b-'0'))+(c-'0'))
 #DEFCONT \ 	.db	(16*(d-'0'))+(e-'0'))
-#DEFCONT \ 	.db	(16*(f-'0'))+(g-'0'))	
+#DEFCONT \ 	.db	(16*(f-'0'))+(g-'0'))
 ;
 tbl_baud:
 	PACK('0','0','0','0','0','7','5') ;      75  0 >  0
@@ -1106,11 +1107,11 @@ romload1:
 diskboot:
 ;
 	; Notify user
-	ld	hl,str_boot1
+	ld	hl,str_boot1		; "Booting Disk Unit"
 	call	pstr
 	ld	a,(bootunit)
 	call	prtdecb
-	ld	hl,str_boot2
+	ld	hl,str_boot2		; "Slice"
 	call	pstr
 	ld	a,(bootslice)
 	call	prtdecb
@@ -1122,34 +1123,27 @@ diskboot:
 ;
 #if (BIOS == BIOS_WBW)
 ;
-	; Check that drive actually exists
+	; Get Extended information for the Device, and Slice
 	ld	b,BF_SYSGET		; HBIOS func: sys get
-	ld	c,BF_SYSGET_DIOCNT	; HBIOS sub-func: disk count
-	rst	08			; do it, E=disk count
-	ld	a,(bootunit)		; get boot disk unit
-	cp	e			; compare to count
-	jp	nc,err_nodisk		; handle no disk err
-;
-	; If non-zero slice requested, confirm device can handle it
-	ld	a,(bootslice)		; get slice
-	or	a			; set flags
-	jr	z,diskboot0		; slice 0, skip slice check
-	ld	a,(bootunit)		; get disk unit
-	ld	c,a			; put in C for func call
-	ld	b,BF_DIODEVICE		; HBIOS func: device info
+	ld	c,BF_SYSGET_DIOMED	; HBIOS sub-func: get extended disk info
+	ld	a,(bootunit)		; passing boot unit
+	ld	d,a
+	ld	a,(bootslice)		; and slice
+	ld	e,a
 	rst	08			; do it
-	bit	5,c			; high capacity device?
-	jp	z,err_noslice		; no such slice, handle err
+
+	; Check errors from the Function
+	cp	ERR_NOUNIT		; compare to no unit error
+	jp	z,err_nodisk		; handle no disk err
+	cp	ERR_NOMEDIA		; no media in the device
+	jp	z,err_nomedia		; handle the error
+	cp	ERR_RANGE		; slice is invalid
+	jp	z,err_badslice		; bad slice, handle err
+	or	a			; any other error
+	jp	nz,err_diskio		; handle as general IO error
 ;
 diskboot0:
-	; Sense media
-	ld	a,(bootunit)		; get boot disk unit
-	ld	c,a			; put in C for func call
-	ld	b,BF_DIOMEDIA		; HBIOS func: media
-	ld	e,1			; enable media check/discovery
-	rst	08			; do it
-	jp	nz,err_diskio		; handle error
-	ld	a,e			; media id to A
+	ld	a,c			; media id to A
 	ld	(mediaid),a		; save media id
 ;
 #endif
@@ -1185,8 +1179,6 @@ diskboot0:
 	; worry about this.
 	ld	a,4			; assume legacy hard disk
 	ld	(mediaid),a		; save media id
-;
-#endif
 ;
 diskboot1:
 	; Initialize working LBA value
@@ -1262,13 +1254,15 @@ diskboot6:
 	dec	a			; dec loop downcounter
 	jr	diskboot5		; and loop
 ;
+#endif
+;
 diskboot7:
 	ld	(lba),hl		; update lba, low word
 	ld	(lba+2),de		; update lba, high word
 ;
 diskboot8:
 	; Note that we could be coming from diskboot1!
-	ld	hl,str_ldsec		; display prefix
+	ld	hl,str_ldsec		; display prefix "Sector Ox"
 	call	pstr			; do it
 	ld	hl,(lba)		; recover lba loword
 	ld	de,(lba+2)		; recover lba hiword
@@ -1407,6 +1401,8 @@ diskboot10:
 	; Jump to entry vector
 	ld	hl,(bb_cpment)		; get entry vector
 	jp	(hl)			; and go there
+;
+;-----------------------------------------------------------------------
 ;
 ; Read disk sector(s)
 ; DE:HL is LBA, B is sector count, C is disk unit
@@ -2254,10 +2250,17 @@ err_nodisk:
 	ld	hl,str_err_nodisk
 	jr	err
 ;
+err_nomedia:
+	ld	hl,str_err_nomedia
+	jr	err
+;
 err_noslice:
 	ld	hl,str_err_noslice
 	jr	err
 ;
+err_badslice:
+	ld	hl,str_err_badslice
+	jr	err
 err_nocon:
 	ld	hl,str_err_nocon
 	jr	err
@@ -2291,7 +2294,9 @@ err:
 str_err_prefix	.db	bel,"\r\n\r\n*** ",0
 str_err_invcmd	.db	"Invalid command",0
 str_err_nodisk	.db	"Disk unit not available",0
+str_err_nomedia	.db	"Media not present",0
 str_err_noslice	.db	"Disk unit does not support slices",0
+str_err_badslice .db	"Slice specified is illegal",0
 str_err_nocon	.db	"Invalid character unit specification",0
 str_err_diskio	.db	"Disk I/O failure",0
 str_err_sig	.db	"No system image on disk",0
