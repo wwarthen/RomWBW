@@ -363,6 +363,38 @@ application.  The user is responsible for ensuring that the start of the
 FAT partition does not overlap with the area they intend to use for 
 CP/M slices.  FDISK80 has a Reserve option to assist with this.
 
+## Mapping to Media ID
+
+HBIOS has a definition of "Media ID", which defines the type and physical
+properties of disk media provided by an underlying storage device. For a 
+complete list of Media ID's please see the following section
+
+[Disk Input/Output (DIO)]
+
+There are two important Media ID's relating to Hard Disk Layouts:
+
+| **Media**  | **ID** | **Format / Meaning**                                        |
+|------------|-------:|-------------------------------------------------------------|
+| MID_HD     |      4 | Classic Disk Layout (hd512) *--and--* HBIOS Hard Disk Drive |
+| MID_HDNEW  |     10 | Modern Disk Layout (hd1k)                                   |
+
+HBIOS typically does not understand the format of data on a device,
+instead just treating all hard disks as raw sectors. `MID_HD` is the typical
+Media ID used by HBIOS to describe high capaity hard disk media
+
+When the Modern Disk Layout was added, the `MID_HDNEW`, was added to
+differentiate (at the oerating system level) between the Classic and Modern layouts.
+
+However HBIOS itself typically does NOT make this distinction, since the use 
+of these two formats is determined by the operating system based on the 
+partition table on the media. 
+
+There are two important HBIOS functions that deal with Media ID.
+
+[Function 0x18 -- Disk Media (DIOMEDIA)]
+
+[SYSGET Subfunction 0x12 -- Get Extended Disk Media (DIOMED)]
+
 # System Boot Process
 
 A multi-phase boot strategy is employed. This is necessary because at
@@ -840,20 +872,17 @@ more of the defined media types.
 | MID_MDROM     | 1      | ROM Drive                                  |
 | MID_MDRAM     | 2      | RAM Drive                                  |
 | MID_RF        | 3      | RAM Floppy (LBA)                           |
-| MID_HD512     | 4      | Hard Disk (LBA) w/ 512 directory entries   |
+| MID_HD        | 4      | Hard Disk (LBA) w/ 512 directory entries   |
 | MID_FD720     | 5      | 3.5" 720K Floppy                           |
 | MID_FD144     | 6      | 3.5" 1.44M Floppy                          |
 | MID_FD360     | 7      | 5.25" 360K Floppy                          |
 | MID_FD120     | 8      | 5.25" 1.2M Floppy                          |
 | MID_FD111     | 9      | 8" 1.11M Floppy                            |
-| MID_HD1K      | 10     | Hard Disk (LBA) w/ 1024 directory entries  |
+| MID_HDNEW     | 10     | Hard Disk (LBA) w/ 1024 directory entries  |
 
-**NOTE**: HBIOS does not actually differentiate between MID_HD512 and
-MID_HD1K.  The use of these two formats is determined by the use of a
-partition table on the media and is implemented by the operating
-system itself.  HBIOS treats all hard disks as raw sectors. See
-[Function 0x18 -- Disk Media (DIOMEDIA)] for more information on the
-Media ID byte returned.
+**NOTE**: HBIOS typically does not actually differentiate between MID_HD and 
+MID_HDNEW, it will generally only use MID_HD. 
+See the section [Mapping to Media ID] for information on this.
 
 HBIOS supports both Cylinder/Head/Sector (CHS) and Logical Block 
 Addresses (CHS) when locating a sector for I/O (see DIOSEEK function). 
@@ -1073,10 +1102,9 @@ Report the Media ID (E) for the for media in the specified Disk Unit
 will be performed.  The Status (A) is a standard HBIOS result code. If 
 there is no media in device, function will return an error status.
 
-**NOTE**: This function will always return MID_HD512 for hard disk
-devices.  MID_HD1K is provided for use internally by operating systems
-that provide different filsystem formats depending on the partition
-table.  To determine if an HD1K formatted partition exists on the hard disk
+**NOTE**: This function will always return MID_HD for hard disk
+devices. See the section [Mapping to Media ID] for information on this.
+To determine if an HD1K formatted partition exists on the hard disk
 please see the following function.
 
 [SYSGET Subfunction 0x12 -- Get Extended Disk Media (DIOMED)]
@@ -2466,17 +2494,22 @@ lookup.
 | **Entry Parameters**                   | **Returned Values**                   |
 |----------------------------------------|---------------------------------------|
 | B: 0xF8                                | A: Status                             |
-| C: 0x12                                | C: Media ID                           |             
-| D: Disk Unit                           | DEHL: Sector Address                  |
-| E: Slice                               |                                       |
+| C: 0x12                                | B: Device Attributes                  |             
+| D: Disk Unit                           | C: Media ID                           |
+| E: Slice                               | DEHL: Sector Address                  |
 
-Report the Media ID (C) for the for media in the specified Disk Unit (D),
-and for hard disks the absolute Sector offset to the start of the Slice (E).
-The Status (A) is a standard HBIOS result code.
+Report the Media ID (C), and Device Attributes (B) for the for media in the 
+specified Disk Unit (D), and for hard disks the absolute Sector offset to the 
+start of the Slice (E). The Status (A) is a standard HBIOS result code.
 
 This function extends upon [Function 0x18 -- Disk Media (DIOMEDIA)] for hard 
 disk media by scanning for a partition to determine if the disk uses HD512 
 or HD1K, correctly reporting MID_HD or MID_HDNEW respectively.
+
+**NOTE: This is contrary to the design of HBIOS. See the section
+[Mapping to Media ID] for information on this.
+This function was placed in HBIOS to be shared between the diffeent CP/M
+varients supported by RomWBW, and may be moved in future.
 
 It will also return the sector number of the first sector in the
 slice if the slice number is valid. If the slice number is invalid
@@ -2487,9 +2520,14 @@ The slice calculation is performed by considering the partition start
 that the slice fits within the media or partition size, taking into 
 consideration other partitions that may exist.
 
+The Device Attributes (B) are the same as defined in 
+[Function 0x17 -- Disk Device (DIODEVICE)]
+
 If the Unit specified is not a hard disk the Media ID will be returned and 
 the slice parameter ignored. If there is no media in device, or the slice 
 number is invaid (Parameter Out Of Range) the function will return an error status.
+
+Also see [Function 0x18 -- Disk Media (DIOMEDIA)]
 
 #### SYSGET Subfunction 0x20 -- Get RTC Device Unit Count (RTCCNT)
 
