@@ -41,6 +41,7 @@ Version 3.5
 - MAP: Contributed COPYSL utility
 - MAP: Added new HBIOS function SYSGET_DIOMED
 - MAP: ROMLDR now uses SYSGET_DIOMED to get Slice Sector for boot
+- MAP: CBIOS now uses SYSGET_DIOMED during drive selection
 
 Version 3.4
 -----------
