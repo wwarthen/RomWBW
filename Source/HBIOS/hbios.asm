@@ -105,6 +105,15 @@
 ;
 #DEFINE	HBIOS
 ;
+; IF BUILDING FULL BOOT ROM, INCLUDE INFO MACROS
+;
+#IFDEF ROMBOOT
+  #DEFINE BNKINFO
+  #DEFINE MEMINFO
+  #DEFINE DEVINFO
+  #DEFINE SYSINFO
+#ENDIF
+;
 ; INCLUDE GENERIC STUFF
 ;
 #INCLUDE "std.asm"
@@ -117,12 +126,6 @@ BOOTMODE	.EQU	0
 #IFDEF ROMBOOT
 BOOTMODE	.SET	BM_ROMBOOT
 MODCNT		.SET	MODCNT + 1
-;
-  #DEFINE BNKINFO
-  #DEFINE MEMINFO
-  #DEFINE DEVINFO
-  #DEFINE SYSINFO
-;
 #ENDIF
 ;
 #IFDEF APPBOOT
@@ -5243,8 +5246,8 @@ SYS_GETDIOFN:
 ;     E: SLICE, ignored if media is not a hard disk
 ;   RETURNS:
 ;     A: STATUS, -6 (parameter out of range) - if Slice is invalid
-	Other errors Include ERR_NOUNIT, ERR_NOMEDIA,
-	If any error is raised the other return values are undefined
+;	Other errors Include ERR_NOUNIT, ERR_NOMEDIA,
+;	If any error is raised the other return values are undefined
 ;     B: DEVICE ATTRIBUTES, as reported by DIODEVICE
 ;     C: MEDIAID, including MID_HDNEW if hd1k partition is found
 ;     DEHL: LBAOFFSET, of Slice if valid, 0 otherwise.
