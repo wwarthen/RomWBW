@@ -1124,8 +1124,7 @@ diskboot:
 #if (BIOS == BIOS_WBW)
 ;
 	; Get Extended information for the Device, and Slice
-	ld	b,BF_SYSGET		; HBIOS func: sys get
-	ld	c,BF_SYSGET_DIOMED	; HBIOS sub-func: get extended disk info
+	ld	b,BF_EXTSLICE		; HBIOS func: SLICE CALC
 	ld	a,(bootunit)		; passing boot unit
 	ld	d,a
 	ld	a,(bootslice)		; and slice

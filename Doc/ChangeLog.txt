@@ -39,9 +39,9 @@ Version 3.5
 - WBW: Add Warm/Cold reboot options to CPUSPD utility
 - D?N: Added support for eZ80 CPU
 - MAP: Contributed COPYSL utility
-- MAP: Added new HBIOS function SYSGET_DIOMED
-- MAP: ROMLDR now uses SYSGET_DIOMED to get Slice Sector for boot
-- MAP: CBIOS now uses SYSGET_DIOMED during drive selection
+- MAP: Added new HBIOS function EXT_SLICE (orginally SYSGET_DIOMED)
+- MAP: ROMLDR now uses EXT_SLICE to get Slice Sector for boot
+- MAP: CBIOS now uses EXT_SLICE during drive selection
 
 Version 3.4
 -----------

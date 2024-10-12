@@ -388,12 +388,11 @@ differentiate (at the oerating system level) between the Classic and Modern layo
 However HBIOS itself typically does NOT make this distinction, since the use 
 of these two formats is determined by the operating system based on the 
 partition table on the media. 
-
 There are two important HBIOS functions that deal with Media ID.
 
-[Function 0x18 -- Disk Media (DIOMEDIA)]
+* [Function 0x18 -- Disk Media (DIOMEDIA)]
 
-[SYSGET Subfunction 0x12 -- Get Extended Disk Media (DIOMED)]
+* [Function 0xE0 -- Calculate Slice (EXTSLICE)]
 
 # System Boot Process
 
@@ -1107,7 +1106,7 @@ devices. See the section [Mapping to Media ID] for information on this.
 To determine if an HD1K formatted partition exists on the hard disk
 please see the following function.
 
-[SYSGET Subfunction 0x12 -- Get Extended Disk Media (DIOMED)]
+[Function 0xE0 -- Calculate Slice (EXTSLICE)]
 
 ### Function 0x19 -- Disk Define Media (DIODEFMED)
 
@@ -2221,6 +2220,51 @@ approximately B5.
 
 `\clearpage`{=latex}
 
+## Extension (EXT)
+
+Helper (extension) functions that are not a core part of a BIOS.
+
+### Function 0xE0 -- Calculate Slice (EXTSLICE)
+
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0xE0                                | A: Status                              |
+| D: Disk Unit                           | B: Device Attributes                   |             
+| E: Slice                               | C: Media ID                            |
+|                                        | DEHL: Sector Address                   |
+
+Report the Media ID (C), and Device Attributes (B) for the for media in the
+specified Disk Unit (D), and for hard disks the absolute Sector offset to the
+start of the Slice (E). The Status (A) is a standard HBIOS result code.
+
+This function extends upon [Function 0x18 -- Disk Media (DIOMEDIA)] for hard
+disk media by scanning for a partition to determine if the disk uses HD512
+or HD1K, correctly reporting MID_HD or MID_HDNEW respectively.
+See the folowing for some background [Mapping to Media ID]
+
+It will also return the sector number of the first sector in the
+slice if the slice number is valid. If the slice number is invalid
+(it wont fix on the media) an error will be returned.
+
+The slice calculation is performed by considering the partition start
+(if it exists), the size of a slice for the given format type, and ensuring
+that the slice fits within the media or partition size, taking into
+consideration other partitions that may exist.
+
+The Device Attributes (B) are the same as defined in
+[Function 0x17 -- Disk Device (DIODEVICE)]
+
+If the Unit specified is not a hard disk the Media ID will be returned and
+the slice parameter ignored. If there is no media in device, or the slice
+number is invaid (Parameter Out Of Range) the function will return an error status.
+
+**NOTE:
+This function was placed in HBIOS to be shared between the diffeent CP/M
+varients supported by RomWBW. It is not strictly a BIOS function,
+and may be moved in future.
+
+`\clearpage`{=latex}
+
 ## System (SYS)
 
 ### Function 0xF0 -- System Reset (SYSRESET)
@@ -2265,7 +2309,7 @@ The Version (DE)number is encoded as BCD where the 4 digits are:
 
   [Major Version][Minor Version][Patch Level][Build Number]
 
-So, for example, a Version (L) number of 0x3102 would indicate
+So, for example, a Version (DE) number of 0x3102 would indicate
 version 3.1.0, build 2.
 
 The hardware Platform (L) is identified as follows:
@@ -2488,46 +2532,6 @@ function and data address for a specific driver function.  After this,
 the caller can use interbank calls directly to the function in the
 driver which bypasses the overhead of the normal function invocation
 lookup.
-
-#### SYSGET Subfunction 0x12 -- Get Extended Disk Media (DIOMED)
-
-| **Entry Parameters**                   | **Returned Values**                   |
-|----------------------------------------|---------------------------------------|
-| B: 0xF8                                | A: Status                             |
-| C: 0x12                                | B: Device Attributes                  |             
-| D: Disk Unit                           | C: Media ID                           |
-| E: Slice                               | DEHL: Sector Address                  |
-
-Report the Media ID (C), and Device Attributes (B) for the for media in the 
-specified Disk Unit (D), and for hard disks the absolute Sector offset to the 
-start of the Slice (E). The Status (A) is a standard HBIOS result code.
-
-This function extends upon [Function 0x18 -- Disk Media (DIOMEDIA)] for hard 
-disk media by scanning for a partition to determine if the disk uses HD512 
-or HD1K, correctly reporting MID_HD or MID_HDNEW respectively.
-
-**NOTE: This is contrary to the design of HBIOS. See the section
-[Mapping to Media ID] for information on this.
-This function was placed in HBIOS to be shared between the diffeent CP/M
-varients supported by RomWBW, and may be moved in future.
-
-It will also return the sector number of the first sector in the
-slice if the slice number is valid. If the slice number is invalid
-(it wont fix on the media) an error will be returned.
-
-The slice calculation is performed by considering the partition start 
-(if it exists), the size of a slice for the given format type, and ensuring 
-that the slice fits within the media or partition size, taking into 
-consideration other partitions that may exist.
-
-The Device Attributes (B) are the same as defined in 
-[Function 0x17 -- Disk Device (DIODEVICE)]
-
-If the Unit specified is not a hard disk the Media ID will be returned and 
-the slice parameter ignored. If there is no media in device, or the slice 
-number is invaid (Parameter Out Of Range) the function will return an error status.
-
-Also see [Function 0x18 -- Disk Media (DIOMEDIA)]
 
 #### SYSGET Subfunction 0x20 -- Get RTC Device Unit Count (RTCCNT)
 
