@@ -1,6 +1,6 @@
 RomWBW ReadMe
 Wayne Warthen (wwarthen@gmail.com)
-05 Oct 2024
+13 Oct 2024
 
 
 
@@ -113,6 +113,7 @@ functionality.
 
 Complete instructions for installation and operation of RomWBW are found
 in the RomWBW User Guide.
+
 
 Documentation
 

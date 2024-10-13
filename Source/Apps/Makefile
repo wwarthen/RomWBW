@@ -1,6 +1,6 @@
 OBJECTS = sysgen.com syscopy.com assign.com format.com talk.com \
 	mode.com rtc.com timer.com rtchb.com
-SUBDIRS = HTalk XM FDU FAT Tune Test ZMP ZMD Dev VGM cpuspd Survey BBCBASIC copysl
+SUBDIRS = HTalk XM FDU FAT Tune Test ZMP ZMD Dev VGM cpuspd reboot Survey BBCBASIC copysl
 DEST = ../../Binary/Apps
 TOOLS =../../Tools
 

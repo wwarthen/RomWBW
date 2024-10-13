@@ -403,7 +403,7 @@ CP/M, while others rely on particular hardware or
 aspects of RomWBW itself.
 
 Those that are written specific to RomWBW include: ASSIGN,
-CPUSPD, FDU, FORMAT, FLASH, FDISK80, MODE, RTC, SYSCOPY, 
+CPUSPD, FDU, FORMAT, FLASH, FDISK80, MODE, REBOOT, RTC, SYSCOPY, 
 TALK, TIMER, XM, and COPYSL.
 
 The CP/M utilities supplied with RomWBW warrant more detailed descriptions, 
@@ -905,6 +905,7 @@ incuded within RomWBW may be found with in the Binary/Apps directory.
 | FORMAT      | Yes      | Yes        |
 | HTALK       | Yes      | Yes        |
 | MODE        | Yes      | Yes        |
+| REBOOT      | Yes      | Yes        |
 | RTC         | Yes      | Yes        |
 | SURVEY      | Yes      | Yes        |
 | SYSCOPY     | Yes      | Yes        |
@@ -918,7 +919,7 @@ incuded within RomWBW may be found with in the Binary/Apps directory.
 All of the CP/M applications may be found in the RomWBW Binary/Apps directory 
 and a user may copy those they need to their own customised disk/slice.
 
-Independantly of whether the CP/M system was started from ROM or a boot disk,
+Independently of whether the CP/M system was started from ROM or a boot disk,
 such as a floppy disk or a slice on a CF or uSD memory card, applications 
 may be located on and executed from either the ROM-disk itself or from other media. 
 There are multiple disk images available for CP/M (eg floppy, legacy hard-disk and new 
@@ -1750,6 +1751,50 @@ message.
 
 The `MODE` command is an original product and the source code is
 provided in the RomWBW distribution.
+
+`\clearpage`{=latex}
+
+## REBOOT
+
+| REBOOT              |   |
+| --------------------|---|
+| ROM-based           |Yes|
+| Disk-based          |Yes|
+
+The `REBOOT` application is used to restart a running system from an
+operating system prompt.  It can invoke either a warm or cold restart
+via command line switches.
+
+#### Syntax
+
+| `REBOOT /W`
+| `REBOOT /C`
+| `REBOOT /?`
+
+- /C initiates a cold restart
+- /W initiates a warm restart
+- /? displays command line usage
+
+#### Usage
+
+Entering `REBOOT` with no parameters will display the usage and
+version information.  Use /C or /W to immediately initiate a 
+cold or warm restart.
+
+#### Notes
+
+A warm restart just returns to the Boot Loader menu.
+
+A cold restart will reinitialize the system as though power had
+been recycled.
+
+#### Etymology
+
+The `REBOOT` application was custom written for RomWBW by MartinR. All 
+of the hardware interface code is specific to RomWBW and the application
+will not operate correctly on non-RomWBW systems.
+
+The source code is provided in the RomWBW distribution.
 
 `\clearpage`{=latex}
 

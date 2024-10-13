@@ -23,6 +23,7 @@
 #../../Binary/Apps/*.com 15:
 ../../Binary/Apps/assign.com 15:
 ../../Binary/Apps/cpuspd.com 15:
+../../Binary/Apps/reboot.com 15:
 ../../Binary/Apps/fat.com 15:
 ../../Binary/Apps/fdu.com 15:
 #../../Binary/Apps/fdu.doc 15:

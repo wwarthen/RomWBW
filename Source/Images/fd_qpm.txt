@@ -12,6 +12,7 @@ d_cpm22/u0/*.* 0:
 #../../Binary/Apps/*.com 0:
 ../../Binary/Apps/assign.com 0:
 ../../Binary/Apps/cpuspd.com 0:
+../../Binary/Apps/reboot.com 0:
 ../../Binary/Apps/fat.com 0:
 ../../Binary/Apps/fdu.com 0:
 ../../Binary/Apps/fdu.doc 0:
