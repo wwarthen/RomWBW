@@ -11,8 +11,8 @@
 ;   REBOOT [/C] [/W] [/?]
 ;     ex: REBOOT	Display version and usage
 ;         REBOOT /?	Display version and usage
-;         REBOOT /C	Cold boot RomWBW system 
-;	  REBOOT /W	Warm boot RomWBW system 	
+;         REBOOT /C	Cold boot RomWBW system
+;	  REBOOT /W	Warm boot RomWBW system
 ;
 ; Operation:
 ;   Cold or warm boots a RomWBW system depending on the user option selected.
@@ -37,7 +37,7 @@
 #include "../../HBIOS/hbios.inc"
 
 ;#include "ver.inc"			; Used for testing purposes....
-;#include "hbios.inc"			; ....during code development	
+;#include "hbios.inc"			; ....during code development
 ;
 ;===============================================================================
 ;
@@ -128,11 +128,11 @@ main:
 	ld	ix,$0081	; point to start of parm area (past length byte)
 	call	nonblank	; skip to next non-blank char
 	cp	'/'		; option prefix?
-	jr	nz,usage	; display help info & exit if nothing to do 
-;	
+	jr	nz,usage	; display help info & exit if nothing to do
+;
 	; process any options
 	inc	ix		; fetch next character and process
-	ld	a,(ix)		
+	ld	a,(ix)
 	call	upcase		; ensure it's an upper case character
 	cp	'C'		; if it's a 'C' then
 	jr	z,cboot		; do a cold boot.
@@ -271,7 +271,7 @@ upcase:
 ;===============================================================================
 ;
 str_banner	.db	"RomWBW Reboot Utility, Version 1.0, 12-Oct-2024\r\n"
-		.db	"   Wayne Warthen (wwarthen@gmail.com) & MartinR",0		
+		.db	"   Wayne Warthen (wwarthen@gmail.com) & MartinR",0
 ;
 str_warmboot	.db	"\r\n\r\nWarm booting...\r\n",0
 str_coldboot	.db	"\r\n\r\nCold booting...\r\n",0

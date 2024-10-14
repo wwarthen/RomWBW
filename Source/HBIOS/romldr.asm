@@ -1130,7 +1130,7 @@ diskboot:
 	ld	a,(bootslice)		; and slice
 	ld	e,a
 	rst	08			; do it
-
+;
 	; Check errors from the Function
 	cp	ERR_NOUNIT		; compare to no unit error
 	jp	z,err_nodisk		; handle no disk err
