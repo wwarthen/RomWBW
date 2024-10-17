@@ -2,6 +2,8 @@ SYSFILES = zsys_wbw.sys zsys_una.sys
 BINFILES =  zsys_wbw.bin zsys_una.bin
 OBJECTS = $(SYSFILES) $(BINFILES)
 OTHERS = zsdos.rel zsdos.err loader.bin zsdos.bin
+NOCOPY = zsys_wbw.bin zsys_una.bin loader.* zsdos.*
+DEST = ../../Binary/ZSDOS
 TOOLS = ../../Tools
 CCP = ../ZCPR-DJ/zcpr.bin
 
