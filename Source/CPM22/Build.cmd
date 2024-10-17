@@ -38,6 +38,10 @@ copy /b os2ccp.bin + os3bdos.bin + ..\cbios\cbios_una.bin cpm_una.bin || exit /b
 copy /b loader.bin + cpm_wbw.bin cpm_wbw.sys || exit /b
 copy /b loader.bin + cpm_una.bin cpm_una.sys || exit /b
 
+rem Copy OS files to Binary directory
+copy cpm_wbw.sys ..\..\Binary\CPM22 || exit /b
+copy cpm_una.sys ..\..\Binary\CPM22 || exit /b
+
 goto :eof
 
 :asm

@@ -19,3 +19,7 @@ copy /b ..\zcpr-dj\zcpr.bin + zsdos.bin + ..\cbios\cbios_una.bin zsys_una.bin ||
 
 copy /b loader.bin + zsys_wbw.bin zsys_wbw.sys || exit /b
 copy /b loader.bin + zsys_una.bin zsys_una.sys || exit /b
+
+rem Copy OS files to Binary directory
+copy zsys_wbw.sys ..\..\Binary\ZSDOS || exit /b
+copy zsys_una.sys ..\..\Binary\ZSDOS || exit /b
