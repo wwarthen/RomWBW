@@ -35,9 +35,9 @@
 	extrn	?pderr		; print BIOS disk error header
 	extrn	?conin,?cono	; con in and out
 	extrn	?const		; get console status
-	
+
 	extrn	?bnkxlt
-	
+
 	extrn	phex16, phex8, cout, crlf, crlf2
 
 
@@ -45,15 +45,18 @@
 
 	maclib cpm3.lib
 
+    ; HBIOS related definitons
+
+	include	hbios.z80
+
     ; common control characters
 
 cr	equ 13
 lf	equ 10
 bell	equ 7
 
+    ; Extended Disk Parameter Headers (XDPHs)
 
-    ; Extended Disk Parameter Headers (XPDHs)
-    
     ; All DPH entries below are generic.  They are updated during
     ; boot to point to available HBIOS disk unit/slices dynamically.
 
@@ -186,7 +189,7 @@ dph15:	dph	0,dpb$max	; Real DPB filled in at disk login
 	dw	0, 0		; LBA Offset
 
 	cseg	; DPB must be resident
-	
+
 dpb$max:
 	dw  	64		; spt: sectors per track
 	db  	5		; bsh: block shift factor
@@ -288,7 +291,7 @@ dpb_fd144:	; 3.5" DS/HD Floppy Drive (1.44M)
 	db	2		; psh: 2 for 512 byte sectors
 	db	3		; phm: (512 / 128) - 1
 
-dpb_fd360:	; 5.25" DS/DD Floppy Drive (360K) 
+dpb_fd360:	; 5.25" DS/DD Floppy Drive (360K)
 	dw  	36		; spt: sectors per track
 	db  	4		; bsh: block shift factor
 	db  	15		; blm: block mask
@@ -370,7 +373,7 @@ dsk$init:
 
 dsk$init1:
 	; Get bank count of RAM/ROM disk
-	ld	b,0FAh			; HBIOS Peek Function
+	ld	b,BF_SYSPEEK		; HBIOS Peek Function
 	ld	a,(@hbbio)		; HBIOS bank id
 	ld	d,a			; ... goes in D
 	rst	08			; Call HBIOS, value in E
@@ -399,9 +402,9 @@ dsk$init3:
 	dec	hl			; subtract 1 for proper DSM value
 	ld	(ix+5),l		; save updated
 	ld	(ix+6),h		; ... DSM value
-	
+
 	ret
-	
+
 	;ld	a,(@rdrv)		; unit being initialized
 	;ld	hl,@bootdu
 	;cp	(hl)			; compare to boot unit
@@ -445,14 +448,13 @@ dsk$login:
 
 	;ret	; we have nothing to do in
 		;	simple single density only environment.
-		
-		
+
 	;ld	a,'L'
 	;call	cout
-	
+
 	ld	(curdph),de		; save working DPH
 	ex	de,hl			; DPH adr to HL
-	dec	hl			; point to slice 
+	dec	hl			; point to slice
 	ld	a,(hl)			; get slice
 	ld	(slice),a		; save it
 	dec	hl			; point to disk unit
@@ -460,194 +462,38 @@ dsk$login:
 	ld	(unit),a		; save it
 	inc	a			; 0FFh -> 000h
 	jp	z,err_ret		; bail out on no disk mapped here
-	
-	;call	media			; update DPH for media
-	;ret
 
 media:
 	; Set retry address
 	ld	hl,media
 	ld	(retry$adr),hl
-	
+
 	; Sense media to determine media format
-	ld	a,(unit)		; get disk unit
-	ld	c,a			; put in C
-	ld	b,18h			; HBIOS Media function
-	ld	e,1			; Enable media check/discovery
+	ld	b,BF_EXTSLICE		; HBIOS func: SLICE
+	ld	a,(unit)		; passing boot unit
+	ld	d,a
+	ld	a,(slice)		; and slice
+	ld	e,a
 	call	0FFF0H			; HBIOS call
-	jp	nz,err_diskio		; handle error
-	ld	a,e			; resultant media id to accum
+
+	; Check errors from the Function
+	cp	ERR_NOUNIT		; compare to no unit error
+	jp	z,err_nodisk		; handle no disk err
+	cp	ERR_NOMEDIA		; no media in the device
+	jp	z,err_nodisk		; handle the error
+	cp	ERR_RANGE		; slice is invalid
+	jp	z,err_noslice		; bad slice, handle err
+	or	a			; any other error
+	jp	nz,err_diskio		; handle as general IO error
+
+	; Capture the Result
+	ld	a,c			; resultant media id to accum
 	ld	(medid),a		; save media id
-	or	a			; set flags, 0 is no media
-	jp	z,err_nodisk		; handle no media error
-	
-	; Initialize slice start LBA & sectors per slice
-	ld	hl,0			; assume slice starts
-	ld	(lba),hl		; ... at LBA offset
-	set	7,h			; ... of zero
-	ld	(lba+2),hl		; ... w/ LBA access
-
-	; Check device type
-	ld	a,(unit)		; get disk unit
-	ld	c,a			; put in C
-	ld	b,17h			; HBIOS func: report device info
-	call	0FFF0h			; get unit info, device type in D
-	ld	a,d			; device type -> A
-	cp	01h			; floppy?
-	jr	nz,media1		; if not, do LBA I/O
-	ld	hl,lba+3		; point to high order byte
-	res	7,(hl)			; switch from LBA -> CHS
-
-media1:
-	ld	hl,16640		; assume legacy value for
-	ld	(sps),hl		; ... sectors per slice
-
-	; If not hard disk, skip partition & slice stuff
-	ld	a,(medid)		; get media id
-	cp	4			; hard disk?
-	jp	nz,media9		; if not, jump ahead
-
-	; Read MBR
-	ld	de,8000h		; LBA address zero
-	ld	hl,0			; ... to read first sector
-	ld	bc,mbrsec		; read into MBR buffer
-	ld	(dma),bc		; save
-	ld	a,(0FFE0h)		; get current HBIOS bank
-	ld	(bank),a		; set DMA bank
-	ld	a,(unit)		; get bootunit
-	ld	c,a			; put in C
-	ld	b,013h			; HBIOS func: disk read
-	call	dsk$io			; do it
-	ret	nz			; abort on error
-
-	; Check signature
-	ld	hl,(mbrsec+1FEh)	; get signature
-	ld	a,l			; first byte
-	cp	055h			; should be $55
-	jr	nz,media5		; if not, no part table
-	ld	a,h			; second byte
-	cp	0AAh			; should be $AA
-	jr	nz,media5		; if not, no part table
-
-	; Search part table for CP/M entry (type 0x2E)
-	ld	b,4			; four entries in part table
-	ld	hl,mbrsec+1BEh+4	; offset of first part type
-media3:
-	ld	a,(hl)			; get part type
-	cp	2Eh			; CP/M partition?
-	jr	z,media4		; cool, grab the LBA offset
-	ld	de,16			; part table entry size
-	add	hl,de			; bump to next part type
-	djnz	media3			; loop thru table
-	jr	media5			; too bad, no CP/M partition
-
-media4:
-	; Capture the starting LBA of the CP/M partition we found
-	ld	de,4			; LBA is 4 bytes after part type
-	add	hl,de			; point to it
-	ld	de,lba			; loc to store lba offset
-	ld	bc,4			; 4 bytes (32 bits)
-	ldir				; copy it
-	
-	; Check that requested slice is "inside" partition.
-	; Slice size is exactly 16,384 sectors (8mb), so we can just
-	; right shift partition sector count by 14 bits
-	ld	e,(hl)		; HL points to first byte
-	inc	hl		; ... of 32 bit partition
-	ld	d,(hl)		; ... sector count,
-	inc	hl		; ... load sector count
-	push	de		; ... into DE:HL
-	ld	e,(hl)		; ...
-	inc	hl		; ...
-	ld	d,(hl)		; ...
-	pop	hl		; ... DE:HL = part size in sectors
-	ld	b,2		; DE = DE:HL >> 2  (tricky!)
-	call	rl32		; DE = slicecnt
-	ex	de,hl		; HL = slicecnt
-	ld	a,(slice)	; get target slice
-	ld	c,a		; put in C
-	ld	b,0		; BC := requested slice #
-	scf			; set carry!
-	sbc	hl,bc		; max slices - slice - 1
-	jp	c,err_noslice	; slice too high, error exit
-
-	; For now, it is implied that a slice within a partition
-	; table will be in the "new" disk format.  So, we now
-	; adjust the sectors per slice and media id.
-
-	; Use new slice format sectors per slice value
-	ld	hl,16384	; new sectors per slice
-	ld	(sps),hl	; save it
-
-	; Update media id for new hard disk format
-	ld	a,10		; new media id
-	ld	(medid),a	; save it
-
-media5:
-	; Adjust LBA offset based on target slice
-	ld	a,(slice)	; get slice, A is loop cnt
-	ld	hl,(lba)	; set DE:HL
-	ld	de,(lba+2)	; ... to starting LBA
-	ld	bc,(sps)	; sectors per slice
-	res	7,d		; clear lba mode bit
-boot6:
-	or	a		; set flags to check loop cntr
-	jr	z,boot8		; done if counter exhausted
-	add	hl,bc		; add one slice to low word
-	jr	nc,boot7	; check for carry
-	inc	de		; if so, bump high word
-boot7:
-	dec	a		; dec loop downcounter
-	jr	boot6		; and loop
-boot8:
-
-	; LBA offset of desired slice is now in DE:HL.
-	; Need to check if the slice is beyond capacity of media.
-	; If lba_off + sps >= dsk_cap, error!
-
-	; Save lba_off
-	push	de		; msw
-	push	hl		; lsw
-	
-	; Add sps to compute lba_req
-	ld	bc,(sps)	; sectors per slice
-	add	hl,bc		; add one slice to low word
-	jr	nc,dsk_mbr9	; check for carry
-	inc	de		; if so, bump high word
-dsk_mbr9:
-	; Save cap_req
-	ld	(cap_req),hl	; lsw
-	ld	(cap_req+2),de	; msw
-
-	; Get dsk_cap (de:hl)
-	ld	b,1Ah		; hbios disk capacity func
-	ld	a,(unit)	; disk unit number
-	ld	c,a		; ... into c
-	rst	08		; hbios call (de:hl = capacity)
-
-	; Save dsk_cap (de:hl)
-	push	de		; save dsk_cap (msw)
-	push	hl		; save dsk_cap (lsw)
-
-	; Check dsk_cap >= cap_req, cf set on overflow
-	; No need save actual result
-	or	a		; clear carry for sbc
-	pop	hl		; dsk_cap lsw
-	ld	de,(cap_req)	; cap_req lsw
-	sbc	hl,de		; dsk_cap - lba_req (lsw)
-	pop	hl		; dsk_cap msw
-	ld	de,(cap_req+2)	; cap_req msw
-	sbc	hl,de		; dsk_cap - lba_req (msw)
-
-	; Restore lba_off
-	pop	hl		; lsw
-	pop	de		; msw
-
-	; Abort on overflow with error!
-	jp	c,err_noslice	; slice too high, error exit
-
 	; Finalize slice lba
+	BIT	7,B			; Is the floppy Disk Attribute Set
+	jr	nz,media8		; if it is Floppy; Skip Setting LBA
 	set	7,d			; set LBA access flag
+media8:
 	ld	(lba),hl		; save new lba, low word
 	ld	(lba+2),de		; save new lba, high word
 
@@ -698,23 +544,23 @@ media10:
 		; if necessary, then return an error code in <A>
 
 dsk$read:
-	ld	a,13h		; HBIOS disk read function
+	ld	a,BF_DIOREAD	; HBIOS disk read function
 	ld	(func),a	; save it
 	jr	dsk$rw		; common disk read/write code
 
 dsk$write:
-	ld	a,14h		; HBIOS disk write function
+	ld	a,BF_DIOWRITE	; HBIOS disk write function
 	ld	(func),a	; save it
 	jr	dsk$rw		; common disk read/write code
 
 dsk$rw:
 	; Common disk read/write routine
 	; Assumes func is set to HBIOS read or write
-	
+
 	; Set retry address
 	ld	hl,dsk$rw$retry
 	ld	(retry$adr),hl
-	
+
 	; Save XDPH address
 	ld	(curdph),de		; save to curdph
 
@@ -743,12 +589,12 @@ dsk$rw$retry:
 	rr	l			; ... and into carry
 	rl	d			; carry bit (head) into d
 	jr	dsk$rw9			; do the disk I/O
-	
+
 dsk$rw2:
 	; LBA I/O
 	push	de			; save hiword of LBA
 	push	hl			; save loword of LBA
-	
+
 	; Get track and shift into correct bits
 	ld	hl,(@trk)		; get track
 	ld	de,0			; clear hiword
@@ -767,7 +613,7 @@ dsk$rw2:
 	pop	bc			; lba offset hiword
 	adc	hl,bc			; add w/ carry to cur hiword
 	ex	de,hl			; swap back
-	
+
 dsk$rw9:
 	; DE:HL has sector address to read (LBA or CHS)
 	ld	bc,(@dma)		; get dma address
@@ -791,7 +637,7 @@ dsk$io:
 
 	; Seek to requested sector in DE:HL
 	push	bc			; save func & unit
-	ld	b,012h			; HBIOS func: seek
+	ld	b,BF_DIOSEEK		; HBIOS func: seek
 	call	0FFF0h			; do it
 	pop	bc			; recover func & unit
 	jp	nz,err_diskio		; handle error
@@ -824,7 +670,7 @@ mult8_loop:
 mult8_noadd:
 	djnz	mult8_loop
 	ret
-	
+
 rl32:
 	; Left shift DE:HL by B bits (B > 0)
 	or	a			; clear carry
@@ -834,7 +680,7 @@ rl32:
 	rl	d			; rotate D thru carry
 	djnz	rl32			; loop B times
 	ret				; done
-	
+
 cin$echo:	; get console input, echo it, and shift to upper case
 	call	?const			; check for char
 	or	a			; set flags
@@ -851,7 +697,7 @@ cin$echo1:
 	ret	c			; done if carry
 	sub	'a' - 'A'		; make upper case
 	ret				; and done
-	
+
 ;	call ?const ! ora a ! jz u$c1	; see if any char already struck
 ;	call ?conin ! jmp u$conin$echo	; yes, eat it and try again
 ;u$c1:
@@ -872,7 +718,7 @@ err_perm:
 	call	prt_err
 	jr	err_ret
 err_diskio:
-	cp	-10			; HBIOS read only error
+	cp	ERR_READONLY		; HBIOS read only error
 	jr	z,err_rdonly		; if so, handle special
 	ld	a,(@ermde)		; get error mode
 	cp	0FFh			; FFh means suppress
@@ -916,9 +762,6 @@ medid		db	0		; working media id value
 unit		db	0		; working disk unit num
 slice		db	0		; working slice num
 lba		dw	0,0		; working  lba
-sps		dw	0		; sectors per slice
-cap_req		dw	0,0		; lba cap required for slice
-mbrsec		ds	512		; MBR sector buffer
 dma		dw	0		; current DMA address
 bank		db	0		; HBIOS DMA bank
 func		db	0		; HBIOS function
