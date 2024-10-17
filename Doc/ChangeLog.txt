@@ -42,6 +42,7 @@ Version 3.5
 - MAP: Added new HBIOS function EXT_SLICE (orginally SYSGET_DIOMED)
 - MAP: ROMLDR now uses EXT_SLICE to get Slice Sector for boot
 - MAP: CBIOS now uses EXT_SLICE during drive selection
+- MAP: CPM3 Boot Loader, and BIOS (drive select) now use EXT_SLICE
 - M?R: Added REBOOT application
 
 Version 3.4
