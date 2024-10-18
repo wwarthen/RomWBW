@@ -180,8 +180,8 @@ This directory contains the CP/NET client packages.  Please refer to
 the RomWBW User Guide for instructions on installing these packages,
 or see the Readme.txt file in this sub-directory
 
-CPM22 CPM3 ZSDOS ZPM3 Directories
----------------------------------
+CPM22 CPM3 ZSDOS ZPM3 QPM Directories
+-------------------------------------
 
 These directories contains the system files for the RomWBW adaptations
 for each operating system.  All of these files are already included on

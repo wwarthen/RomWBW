@@ -2,6 +2,8 @@ SYSFILES = qpm_wbw.sys qpm_una.sys
 BINFILES = qpm_wbw.bin qpm_una.bin
 OBJECTS = loader.bin $(SYSFILES) $(BINFILES)
 OTHERS = *.hex
+NOCOPY = qpm_wbw.bin qpm_una.bin loader.bin loader.lst
+DEST = ../../Binary/QPM
 TOOLS = ../../Tools
 include $(TOOLS)/Makefile.inc
 
