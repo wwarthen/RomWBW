@@ -3,7 +3,13 @@ BINFILES = cpm_wbw.bin cpm_una.bin
 OBJECTS = CCP.bin BDOS.bin CCP22.bin BDOS22.bin OS2CCP.bin OS3BDOS.bin \
 	ccpb03.bin bdosb01.bin loader.bin $(SYSFILES) $(BINFILES)
 OTHERS = *.hex
+NOCOPY = cpm_wbw.bin cpm_una.bin \
+	CCP.bin BDOS.bin CCP22.bin BDOS22.bin OS2CCP.bin OS3BDOS.bin \
+	ccpb03.bin bdosb01.bin loader.bin
+
+DEST = ../../Binary/CPM22
 TOOLS = ../../Tools
+
 include $(TOOLS)/Makefile.inc
 
 %.sys: %.bin loader.bin

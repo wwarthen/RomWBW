@@ -1,6 +1,6 @@
 TOOLS = ../Tools
 MOREDIFF := $(shell $(TOOLS)/unix/casefn.sh *.img *.rom *.com *.eeprom)
-SUBDIRS = Apps CPM3 ZPM3 CPNET
+SUBDIRS = Apps CPM22 CPM3 QPM ZSDOS ZPM3 CPNET
 
 include $(TOOLS)/Makefile.inc
 

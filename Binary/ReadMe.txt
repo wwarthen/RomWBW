@@ -163,9 +163,32 @@ indicates which file targets each of the Propeller board variants:
 Refer to the board documentation of the boards for more information
 on how to program the EEPROMs on these boards.
 
+SUB DIRECTORIES
+===============
+
 Apps Directory
 --------------
 
 The Apps subdirectory contains the executable application files that
 are specific to RomWBW.  The source for these applications is found
 in the Source\Apps directory of the distribution.
+
+CPNET Directory
+---------------
+
+This directory contains the CP/NET client packages.  Please refer to
+the RomWBW User Guide for instructions on installing these packages,
+or see the Readme.txt file in this sub-directory
+
+CPM22 CPM3 ZSDOS ZPM3 QPM Directories
+-------------------------------------
+
+These directories contains the system files for the RomWBW adaptations
+for each operating system.  All of these files are already included on
+the boot disk images.  However if you are creating a o/s boot disk
+manually, you will need copy all of these files to the boot disk.
+
+These files should also be copied to any boot disks on your
+system when you upgrade your ROM firmware.  Some of these files
+*must* match the version of the RomWBW firmware you are using for
+proper operation of your system.
