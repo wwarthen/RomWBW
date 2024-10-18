@@ -16,8 +16,8 @@
 #include "z80.h"
 #include <stdlib.h>
 
-#include "print.h"
 #include "ez80-helpers.h"
+#include "print.h"
 
 #define LOWER_SAFE_RAM_ADDRESS 0x8000
 

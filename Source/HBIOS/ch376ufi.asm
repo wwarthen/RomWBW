@@ -100,12 +100,37 @@ CH_UFI_READ:
 	ld	bc, 512
 	add	hl, bc
 	ret
-
+;
+; ### Function 0x14 -- Disk Write (DIOWRITE)
+;
+; Inputs
+; IY: device config pointer
+; D: Buffer Bank ID
+; E: Sector Count
+; HL: Buffer Address
+;
+; Outputs
+; A: Status
+; E: Sectors Written
+;
+; Write Sector Count (E) sectors from the buffer located in Buffer Bank ID (D)
+; at Buffer Address (HL) starting at the Current Sector.  The returned 
+; Status (A) is a standard HBIOS result code.
+;
 CH_UFI_WRITE:
-	EZ80_UTIL_DEBUG
+	CALL	HB_DSKWRITE		; HOOK HBIOS DISK WRITE SUPERVISOR
 
-	XOR	A
-	RET
+	; call scsi_write(IY, HL);
+	; HL = HL + 512
+	push	hl
+	push	iy
+	call	_chufi_write
+	ld	a, l
+	pop	hl
+	pop	iy
+	ld	bc, 512
+	add	hl, bc
+	ret
 
 CH_UFI_VERIFY:
 CH_UFI_FORMAT:
@@ -158,7 +183,7 @@ CH_UFI_FORMAT:
 ; |          |   9=Cartridge, 10=usb-scsi, 11=usb-ufi           |
 ;
 CH_UFI_DEVICE:
-	LD	C, %01011011
+	LD	C, %11010110
 	LD	D, DIODEV_USB
 	LD	E, (iy+16)
 	LD	H, 0

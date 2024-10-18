@@ -20,17 +20,15 @@ void chufi_init(void) {
     const usb_device_type t = storage_device->type;
 
     if (t == USB_IS_FLOPPY) {
+      print_string("\r\n  FLOPPY @ $");
+      print_uint16(index);
+      print_string(" $");
       storage_device->drive_index = storage_count++;
       // scsi_sense_init(storage_device);
       dio_add_entry(ch_ufi_fntbl, storage_device);
     }
 
   } while (++index != MAX_NUMBER_OF_DEVICES + 1);
-
-  if (storage_count == 0)
-    return;
-
-  print_device_mounted(" FLOPPY DRIVE$", storage_count);
 }
 
 uint32_t chufi_get_cap(device_config *const dev) {
@@ -49,17 +47,7 @@ uint32_t chufi_get_cap(device_config *const dev) {
   if (result != USB_ERR_OK)
     return 0;
 
-  // info->sector_size       = response.descriptors[0].block_size[1] << 8 + response.descriptors[0].block_size[0];
   return convert_from_msb_first(response.descriptors[0].number_of_blocks);
-
-  // const disk_geometry *const geometry = size_to_geometry(info->number_of_sectors);
-
-  // info->flags                       = INFO_FLAG_REMOVABLE | INFO_FLAG_FLOPPY;
-  // info->number_of_cylinders         = geometry->tracks;
-  // info->number_of_heads             = geometry->sides;
-  // info->number_of_sectors_per_track = geometry->sectors_per_track;
-
-  // return 0;
 }
 
 uint8_t chufi_read(device_config_storage *const dev, uint8_t *const buffer) {
@@ -80,6 +68,35 @@ uint8_t chufi_read(device_config_storage *const dev, uint8_t *const buffer) {
 
   if ((result = ufi_request_sense((device_config *)dev, &response)) != USB_ERR_OK)
     return -1; // error
+
+  const uint8_t asc       = response.asc;
+  const uint8_t ascq      = response.ascq;
+  const uint8_t sense_key = response.sense_key;
+
+  if (sense_key != 0)
+    return -1;
+
+  return USB_ERR_OK;
+}
+
+usb_error chufi_write(device_config_storage *const dev, uint8_t *const buffer) {
+
+  if (wait_for_device_ready((device_config *)dev, 20) != 0)
+    return -1; // Not READY!
+
+  ufi_interrupt_status sense_codes;
+
+  memset(&sense_codes, 0, sizeof(sense_codes));
+  if ((ufi_read_write_sector((device_config *)dev, true, dev->current_lba, 1, buffer, (uint8_t *)&sense_codes)) != USB_ERR_OK) {
+    return -1;
+  }
+
+  ufi_request_sense_response response;
+  memset(&response, 0, sizeof(response));
+
+  if ((ufi_request_sense((device_config *)dev, &response)) != USB_ERR_OK) {
+    return -1;
+  }
 
   const uint8_t asc       = response.asc;
   const uint8_t ascq      = response.ascq;

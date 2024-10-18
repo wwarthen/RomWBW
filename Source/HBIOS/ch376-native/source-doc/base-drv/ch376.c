@@ -1,7 +1,7 @@
 #include "ch376.h"
 
-#include "print.h"
 #include "ez80-helpers.h"
+#include "print.h"
 
 usb_error result = 0;
 
@@ -41,7 +41,7 @@ usb_error ch_get_status(void) {
   delay();
   delay();
   uint8_t ch_status = CH376_DATA_PORT;
-  
+
   if (ch_status >= USB_FILERR_MIN && ch_status <= USB_FILERR_MAX)
     return ch_status;
 

@@ -66,7 +66,7 @@ l_chscsi_init_00105:
 ;source-doc/scsi-drv/./scsi-init.c:18: if (storage_device == NULL)
 	ld	a, d
 	or	e
-	jr	Z,l_chscsi_init_00107
+	jr	Z,l_chscsi_init_00108
 ;source-doc/scsi-drv/./scsi-init.c:21: const usb_device_type t = storage_device->type;
 	ld	l, e
 	ld	h, d
@@ -75,7 +75,20 @@ l_chscsi_init_00105:
 ;source-doc/scsi-drv/./scsi-init.c:23: if (t == USB_IS_MASS_STORAGE) {
 	sub	0x02
 	jr	NZ,l_chscsi_init_00106
-;source-doc/scsi-drv/./scsi-init.c:24: storage_device->drive_index = storage_count++;
+;source-doc/scsi-drv/./scsi-init.c:24: print_string("\r\n  MASS STORAGE @ $");
+	push	de
+	ld	hl,scsi_init_str_0
+	call	_print_string
+	pop	de
+;source-doc/scsi-drv/./scsi-init.c:25: print_uint16(index);
+	ld	l,(ix-1)
+	ld	h,0x00
+	push	de
+	call	_print_uint16
+	ld	hl,scsi_init_str_1
+	call	_print_string
+	pop	de
+;source-doc/scsi-drv/./scsi-init.c:28: storage_device->drive_index = storage_count++;
 	ld	hl,0x0010
 	add	hl, de
 	ld	c, l
@@ -86,42 +99,31 @@ l_chscsi_init_00105:
 	inc	(hl)
 	ld	a,(ix-2)
 	ld	(bc), a
-;source-doc/scsi-drv/./scsi-init.c:25: scsi_sense_init(storage_device);
+;source-doc/scsi-drv/./scsi-init.c:29: scsi_sense_init(storage_device);
 	push	de
 	push	de
 	call	_scsi_sense_init
 	pop	af
 	pop	de
-;source-doc/scsi-drv/./scsi-init.c:26: dio_add_entry(ch_scsi_fntbl, storage_device);
+;source-doc/scsi-drv/./scsi-init.c:30: dio_add_entry(ch_scsi_fntbl, storage_device);
 	ld	hl,_ch_scsi_fntbl
 	call	_dio_add_entry
 l_chscsi_init_00106:
-;source-doc/scsi-drv/./scsi-init.c:29: } while (++index != MAX_NUMBER_OF_DEVICES + 1);
+;source-doc/scsi-drv/./scsi-init.c:33: } while (++index != MAX_NUMBER_OF_DEVICES + 1);
 	inc	(ix-1)
 	ld	a,(ix-1)
 	sub	0x07
 	jr	NZ,l_chscsi_init_00105
-l_chscsi_init_00107:
-;source-doc/scsi-drv/./scsi-init.c:31: if (storage_count == 0)
-	ld	hl,_storage_count
-	ld	a, (hl)
-	or	a
-;source-doc/scsi-drv/./scsi-init.c:32: return;
-	jr	Z,l_chscsi_init_00110
-;source-doc/scsi-drv/./scsi-init.c:34: print_device_mounted(" STORAGE DEVICE$", storage_count);
-	ld	a,(_storage_count)
-	push	af
-	inc	sp
-	ld	hl,scsi_init_str_0
-	push	hl
-	call	_print_device_mounted
-	pop	af
-	inc	sp
-l_chscsi_init_00110:
-;source-doc/scsi-drv/./scsi-init.c:35: }
+l_chscsi_init_00108:
+;source-doc/scsi-drv/./scsi-init.c:34: }
 	ld	sp, ix
 	pop	ix
 	ret
 scsi_init_str_0:
-	DEFM " STORAGE DEVICE$"
+	DEFB 0x0d
+	DEFB 0x0a
+	DEFM "  MASS STORAGE @ $"
+	DEFB 0x00
+scsi_init_str_1:
+	DEFM " $"
 	DEFB 0x00

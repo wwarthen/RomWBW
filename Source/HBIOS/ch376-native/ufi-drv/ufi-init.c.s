@@ -66,7 +66,7 @@ l_chufi_init_00105:
 ;source-doc/ufi-drv/./ufi-init.c:17: if (storage_device == NULL)
 	ld	a, d
 	or	e
-	jr	Z,l_chufi_init_00107
+	jr	Z,l_chufi_init_00108
 ;source-doc/ufi-drv/./ufi-init.c:20: const usb_device_type t = storage_device->type;
 	ld	l, e
 	ld	h, d
@@ -75,7 +75,20 @@ l_chufi_init_00105:
 ;source-doc/ufi-drv/./ufi-init.c:22: if (t == USB_IS_FLOPPY) {
 	dec	a
 	jr	NZ,l_chufi_init_00106
-;source-doc/ufi-drv/./ufi-init.c:23: storage_device->drive_index = storage_count++;
+;source-doc/ufi-drv/./ufi-init.c:23: print_string("\r\n  FLOPPY @ $");
+	push	de
+	ld	hl,ufi_init_str_0
+	call	_print_string
+	pop	de
+;source-doc/ufi-drv/./ufi-init.c:24: print_uint16(index);
+	ld	l,(ix-1)
+	ld	h,0x00
+	push	de
+	call	_print_uint16
+	ld	hl,ufi_init_str_1
+	call	_print_string
+	pop	de
+;source-doc/ufi-drv/./ufi-init.c:26: storage_device->drive_index = storage_count++;
 	ld	hl,0x0010
 	add	hl, de
 	ld	c, l
@@ -86,40 +99,29 @@ l_chufi_init_00105:
 	inc	(hl)
 	ld	a,(ix-2)
 	ld	(bc), a
-;source-doc/ufi-drv/./ufi-init.c:25: dio_add_entry(ch_ufi_fntbl, storage_device);
+;source-doc/ufi-drv/./ufi-init.c:28: dio_add_entry(ch_ufi_fntbl, storage_device);
 	ld	hl,_ch_ufi_fntbl
 	call	_dio_add_entry
 l_chufi_init_00106:
-;source-doc/ufi-drv/./ufi-init.c:28: } while (++index != MAX_NUMBER_OF_DEVICES + 1);
+;source-doc/ufi-drv/./ufi-init.c:31: } while (++index != MAX_NUMBER_OF_DEVICES + 1);
 	inc	(ix-1)
 	ld	a,(ix-1)
 	sub	0x07
 	jr	NZ,l_chufi_init_00105
-l_chufi_init_00107:
-;source-doc/ufi-drv/./ufi-init.c:30: if (storage_count == 0)
-	ld	hl,_storage_count
-	ld	a, (hl)
-	or	a
-;source-doc/ufi-drv/./ufi-init.c:31: return;
-	jr	Z,l_chufi_init_00110
-;source-doc/ufi-drv/./ufi-init.c:33: print_device_mounted(" FLOPPY DRIVE$", storage_count);
-	ld	a,(_storage_count)
-	push	af
-	inc	sp
-	ld	hl,ufi_init_str_0
-	push	hl
-	call	_print_device_mounted
-	pop	af
-	inc	sp
-l_chufi_init_00110:
-;source-doc/ufi-drv/./ufi-init.c:34: }
+l_chufi_init_00108:
+;source-doc/ufi-drv/./ufi-init.c:32: }
 	ld	sp, ix
 	pop	ix
 	ret
 ufi_init_str_0:
-	DEFM " FLOPPY DRIVE$"
+	DEFB 0x0d
+	DEFB 0x0a
+	DEFM "  FLOPPY @ $"
 	DEFB 0x00
-;source-doc/ufi-drv/./ufi-init.c:36: uint32_t chufi_get_cap(device_config *const dev) {
+ufi_init_str_1:
+	DEFM " $"
+	DEFB 0x00
+;source-doc/ufi-drv/./ufi-init.c:34: uint32_t chufi_get_cap(device_config *const dev) {
 ; ---------------------------------
 ; Function chufi_get_cap
 ; ---------------------------------
@@ -130,7 +132,7 @@ _chufi_get_cap:
 	ld	hl, -72
 	add	hl, sp
 	ld	sp, hl
-;source-doc/ufi-drv/./ufi-init.c:38: memset(&response, 0, sizeof(ufi_format_capacities_response));
+;source-doc/ufi-drv/./ufi-init.c:36: memset(&response, 0, sizeof(ufi_format_capacities_response));
 	ld	hl,0
 	add	hl, sp
 	ld	b,0x24
@@ -138,7 +140,7 @@ l_chufi_get_cap_00112:
 	ld	(hl),0x00
 	inc	hl
 	djnz	l_chufi_get_cap_00112
-;source-doc/ufi-drv/./ufi-init.c:40: wait_for_device_ready(dev, 25);
+;source-doc/ufi-drv/./ufi-init.c:38: wait_for_device_ready(dev, 25);
 	ld	a,0x19
 	push	af
 	inc	sp
@@ -148,7 +150,7 @@ l_chufi_get_cap_00112:
 	call	_wait_for_device_ready
 	pop	af
 	inc	sp
-;source-doc/ufi-drv/./ufi-init.c:44: ufi_inquiry(dev, &inquiry);
+;source-doc/ufi-drv/./ufi-init.c:42: ufi_inquiry(dev, &inquiry);
 	ld	hl,36
 	add	hl, sp
 	push	hl
@@ -157,7 +159,7 @@ l_chufi_get_cap_00112:
 	push	hl
 	call	_ufi_inquiry
 	pop	af
-;source-doc/ufi-drv/./ufi-init.c:46: wait_for_device_ready(dev, 15);
+;source-doc/ufi-drv/./ufi-init.c:44: wait_for_device_ready(dev, 15);
 	ld	h,0x0f
 	ex	(sp),hl
 	inc	sp
@@ -167,7 +169,7 @@ l_chufi_get_cap_00112:
 	call	_wait_for_device_ready
 	pop	af
 	inc	sp
-;source-doc/ufi-drv/./ufi-init.c:48: const usb_error result = ufi_read_frmt_caps(dev, &response);
+;source-doc/ufi-drv/./ufi-init.c:46: const usb_error result = ufi_read_frmt_caps(dev, &response);
 	ld	hl,0
 	add	hl, sp
 	push	hl
@@ -178,27 +180,27 @@ l_chufi_get_cap_00112:
 	pop	af
 	pop	af
 	ld	a, l
-;source-doc/ufi-drv/./ufi-init.c:49: if (result != USB_ERR_OK)
+;source-doc/ufi-drv/./ufi-init.c:47: if (result != USB_ERR_OK)
 	or	a
 	jr	Z,l_chufi_get_cap_00102
-;source-doc/ufi-drv/./ufi-init.c:50: return 0;
+;source-doc/ufi-drv/./ufi-init.c:48: return 0;
 	ld	hl,0x0000
 	ld	e, l
 	ld	d, l
 	jr	l_chufi_get_cap_00103
 l_chufi_get_cap_00102:
-;source-doc/ufi-drv/./ufi-init.c:53: return convert_from_msb_first(response.descriptors[0].number_of_blocks);
+;source-doc/ufi-drv/./ufi-init.c:50: return convert_from_msb_first(response.descriptors[0].number_of_blocks);
 	ld	hl,4
 	add	hl, sp
 	push	hl
 	call	_convert_from_msb_first
 	pop	af
 l_chufi_get_cap_00103:
-;source-doc/ufi-drv/./ufi-init.c:63: }
+;source-doc/ufi-drv/./ufi-init.c:51: }
 	ld	sp, ix
 	pop	ix
 	ret
-;source-doc/ufi-drv/./ufi-init.c:65: uint8_t chufi_read(device_config_storage *const dev, uint8_t *const buffer) {
+;source-doc/ufi-drv/./ufi-init.c:53: uint8_t chufi_read(device_config_storage *const dev, uint8_t *const buffer) {
 ; ---------------------------------
 ; Function chufi_read
 ; ---------------------------------
@@ -209,7 +211,7 @@ _chufi_read:
 	ld	hl, -20
 	add	hl, sp
 	ld	sp, hl
-;source-doc/ufi-drv/./ufi-init.c:67: if (wait_for_device_ready((device_config *)dev, 20) != 0)
+;source-doc/ufi-drv/./ufi-init.c:55: if (wait_for_device_ready((device_config *)dev, 20) != 0)
 	ld	c,(ix+4)
 	ld	b,(ix+5)
 	push	bc
@@ -225,18 +227,18 @@ _chufi_read:
 	ld	a, e
 	or	a
 	jr	Z,l_chufi_read_00102
-;source-doc/ufi-drv/./ufi-init.c:68: return -1; // Not READY!
+;source-doc/ufi-drv/./ufi-init.c:56: return -1; // Not READY!
 	ld	l,0xff
 	jr	l_chufi_read_00109
 l_chufi_read_00102:
-;source-doc/ufi-drv/./ufi-init.c:73: memset(&sense_codes, 0, sizeof(sense_codes));
+;source-doc/ufi-drv/./ufi-init.c:61: memset(&sense_codes, 0, sizeof(sense_codes));
 	ld	hl,0
 	add	hl, sp
 	xor	a
 	ld	(hl), a
 	inc	hl
 	ld	(hl), a
-;source-doc/ufi-drv/./ufi-init.c:75: if (ufi_read_write_sector((device_config *)dev, false, dev->current_lba, 1, buffer, (uint8_t *)&sense_codes) != USB_ERR_OK)
+;source-doc/ufi-drv/./ufi-init.c:63: if (ufi_read_write_sector((device_config *)dev, false, dev->current_lba, 1, buffer, (uint8_t *)&sense_codes) != USB_ERR_OK)
 	ld	e,(ix+4)
 	ld	d,(ix+5)
 	ld	hl,12
@@ -269,11 +271,11 @@ l_chufi_read_00102:
 	pop	bc
 	or	a
 	jr	Z,l_chufi_read_00104
-;source-doc/ufi-drv/./ufi-init.c:76: return -1; // general error
+;source-doc/ufi-drv/./ufi-init.c:64: return -1; // general error
 	ld	l,0xff
 	jr	l_chufi_read_00109
 l_chufi_read_00104:
-;source-doc/ufi-drv/./ufi-init.c:79: memset(&response, 0, sizeof(response));
+;source-doc/ufi-drv/./ufi-init.c:67: memset(&response, 0, sizeof(response));
 	push	bc
 	ld	hl,4
 	add	hl, sp
@@ -283,7 +285,7 @@ l_chufi_read_00139:
 	inc	hl
 	djnz	l_chufi_read_00139
 	pop	bc
-;source-doc/ufi-drv/./ufi-init.c:81: if ((result = ufi_request_sense((device_config *)dev, &response)) != USB_ERR_OK)
+;source-doc/ufi-drv/./ufi-init.c:69: if ((result = ufi_request_sense((device_config *)dev, &response)) != USB_ERR_OK)
 	ld	hl,2
 	add	hl, sp
 	push	hl
@@ -294,25 +296,143 @@ l_chufi_read_00139:
 	ld	a, l
 	or	a
 	jr	Z,l_chufi_read_00106
-;source-doc/ufi-drv/./ufi-init.c:82: return -1; // error
+;source-doc/ufi-drv/./ufi-init.c:70: return -1; // error
 	ld	l,0xff
 	jr	l_chufi_read_00109
 l_chufi_read_00106:
-;source-doc/ufi-drv/./ufi-init.c:86: const uint8_t sense_key = response.sense_key;
+;source-doc/ufi-drv/./ufi-init.c:74: const uint8_t sense_key = response.sense_key;
 	ld	hl,4
 	add	hl, sp
 	ld	a, (hl)
-;source-doc/ufi-drv/./ufi-init.c:88: if (sense_key != 0)
+;source-doc/ufi-drv/./ufi-init.c:76: if (sense_key != 0)
 	and	0x0f
 	jr	Z,l_chufi_read_00108
-;source-doc/ufi-drv/./ufi-init.c:89: return -1;
+;source-doc/ufi-drv/./ufi-init.c:77: return -1;
 	ld	l,0xff
 	jr	l_chufi_read_00109
 l_chufi_read_00108:
-;source-doc/ufi-drv/./ufi-init.c:91: return USB_ERR_OK;
+;source-doc/ufi-drv/./ufi-init.c:79: return USB_ERR_OK;
 	ld	l,0x00
 l_chufi_read_00109:
-;source-doc/ufi-drv/./ufi-init.c:92: }
+;source-doc/ufi-drv/./ufi-init.c:80: }
+	ld	sp, ix
+	pop	ix
+	ret
+;source-doc/ufi-drv/./ufi-init.c:82: usb_error chufi_write(device_config_storage *const dev, uint8_t *const buffer) {
+; ---------------------------------
+; Function chufi_write
+; ---------------------------------
+_chufi_write:
+	push	ix
+	ld	ix,0
+	add	ix,sp
+	ld	hl, -20
+	add	hl, sp
+	ld	sp, hl
+;source-doc/ufi-drv/./ufi-init.c:84: if (wait_for_device_ready((device_config *)dev, 20) != 0)
+	ld	c,(ix+4)
+	ld	b,(ix+5)
+	push	bc
+	ld	a,0x14
+	push	af
+	inc	sp
+	push	bc
+	call	_wait_for_device_ready
+	pop	af
+	inc	sp
+	ld	e, l
+	pop	bc
+	ld	a, e
+	or	a
+	jr	Z,l_chufi_write_00102
+;source-doc/ufi-drv/./ufi-init.c:85: return -1; // Not READY!
+	ld	l,0xff
+	jr	l_chufi_write_00109
+l_chufi_write_00102:
+;source-doc/ufi-drv/./ufi-init.c:89: memset(&sense_codes, 0, sizeof(sense_codes));
+	ld	hl,0
+	add	hl, sp
+	xor	a
+	ld	(hl), a
+	inc	hl
+	ld	(hl), a
+;source-doc/ufi-drv/./ufi-init.c:90: if ((ufi_read_write_sector((device_config *)dev, true, dev->current_lba, 1, buffer, (uint8_t *)&sense_codes)) != USB_ERR_OK) {
+	ld	e,(ix+4)
+	ld	d,(ix+5)
+	ld	hl,12
+	add	hl, de
+	ld	e, (hl)
+	inc	hl
+	ld	d, (hl)
+	push	bc
+	ld	hl,2
+	add	hl, sp
+	push	hl
+	ld	l,(ix+6)
+	ld	h,(ix+7)
+	push	hl
+	ld	a,0x01
+	push	af
+	inc	sp
+	push	de
+	ld	a,0x01
+	push	af
+	inc	sp
+	push	bc
+	call	_ufi_read_write_sector
+	pop	af
+	pop	af
+	pop	af
+	pop	af
+	pop	af
+	ld	a, l
+	pop	bc
+	or	a
+	jr	Z,l_chufi_write_00104
+;source-doc/ufi-drv/./ufi-init.c:91: return -1;
+	ld	l,0xff
+	jr	l_chufi_write_00109
+l_chufi_write_00104:
+;source-doc/ufi-drv/./ufi-init.c:95: memset(&response, 0, sizeof(response));
+	push	bc
+	ld	hl,4
+	add	hl, sp
+	ld	b,0x12
+l_chufi_write_00139:
+	ld	(hl),0x00
+	inc	hl
+	djnz	l_chufi_write_00139
+	pop	bc
+;source-doc/ufi-drv/./ufi-init.c:97: if ((ufi_request_sense((device_config *)dev, &response)) != USB_ERR_OK) {
+	ld	hl,2
+	add	hl, sp
+	push	hl
+	push	bc
+	call	_ufi_request_sense
+	pop	af
+	pop	af
+	ld	a, l
+	or	a
+	jr	Z,l_chufi_write_00106
+;source-doc/ufi-drv/./ufi-init.c:98: return -1;
+	ld	l,0xff
+	jr	l_chufi_write_00109
+l_chufi_write_00106:
+;source-doc/ufi-drv/./ufi-init.c:103: const uint8_t sense_key = response.sense_key;
+	ld	hl,4
+	add	hl, sp
+	ld	a, (hl)
+;source-doc/ufi-drv/./ufi-init.c:105: if (sense_key != 0)
+	and	0x0f
+	jr	Z,l_chufi_write_00108
+;source-doc/ufi-drv/./ufi-init.c:106: return -1;
+	ld	l,0xff
+	jr	l_chufi_write_00109
+l_chufi_write_00108:
+;source-doc/ufi-drv/./ufi-init.c:108: return USB_ERR_OK;
+	ld	l,0x00
+l_chufi_write_00109:
+;source-doc/ufi-drv/./ufi-init.c:109: }
 	ld	sp, ix
 	pop	ix
 	ret

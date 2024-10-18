@@ -94,7 +94,7 @@ usb_error ufi_read_write_sector(device_config *const storage_device,
                                 const bool           send,
                                 const uint16_t       sector_number,
                                 const uint8_t        sector_count,
-                                const uint8_t *const buffer,
+                                uint8_t *const       buffer,
                                 uint8_t *const       sense_codes) {
   ufi_read_write_command cmd;
   memset(&cmd, 0, sizeof(cmd));

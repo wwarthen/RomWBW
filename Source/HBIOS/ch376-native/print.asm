@@ -2,6 +2,9 @@
 	; HL = unsigned 16 bit number to write out
 	; call CHPUT to write a single ascii character (in A)
 _print_uint16:
+	ld	a, h
+	or	l
+	jr	z, print_zero
 	ld	e, 0
 	ld	bc, -10000
 	call	num1
@@ -29,4 +32,8 @@ num2:	inc	a
 
 num3:
 	ld	e, 1
+	jp	COUT
+
+print_zero
+	ld	a, '0'
 	jp	COUT
