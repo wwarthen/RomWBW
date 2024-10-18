@@ -94,7 +94,7 @@ _usb_host_bus_reset:
 _chnative_init:
 ;source-doc/base-drv/./usb-init.c:26: memset(get_usb_work_area(), 0, sizeof(_usb_state));
 	ld	hl,_x
-	ld	b,0x69
+	ld	b,0x63
 l_chnative_init_00139:
 	ld	(hl),0x00
 	inc	hl

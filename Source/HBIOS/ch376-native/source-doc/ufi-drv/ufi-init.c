@@ -20,11 +20,9 @@ void chufi_init(void) {
     const usb_device_type t = storage_device->type;
 
     if (t == USB_IS_FLOPPY) {
-      print_string("\r\n  FLOPPY @ $");
+      print_string("\r\nUSB: FLOPPY @ $");
       print_uint16(index);
       print_string(" $");
-      storage_device->drive_index = storage_count++;
-      // scsi_sense_init(storage_device);
       dio_add_entry(ch_ufi_fntbl, storage_device);
     }
 

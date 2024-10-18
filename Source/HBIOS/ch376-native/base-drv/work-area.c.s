@@ -34,7 +34,7 @@ _USB_MODULE_LEDS	.EQU	0xff8a
 ; .area _INITIALIZED removed by z88dk
 	
 _x:
-	DEFS 105
+	DEFS 99
 	
 #ENDIF
 	
@@ -53,12 +53,6 @@ _x:
 _x:
 	DEFB 0x00
 	DEFB +0x00
-	DEFB 0x00
-	DEFB 0x00
-	DEFB 0x00
-	DEFB 0x00
-	DEFB 0x00
-	DEFB 0x00
 	DEFB 0x00
 	DEFB 0x00
 	DEFB 0x00

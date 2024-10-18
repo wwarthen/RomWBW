@@ -1,5 +1,5 @@
 ;
-; Generated from source-doc/scsi-drv/./scsi-init.c.asm -- not to be modify directly
+; Generated from source-doc/keyboard/./kyb-init.c.asm -- not to be modify directly
 ;
 ; 
 ;--------------------------------------------------------
@@ -48,71 +48,87 @@ _USB_MODULE_LEDS	.EQU	0xff8a
 ;--------------------------------------------------------
 ; code
 ;--------------------------------------------------------
-;source-doc/scsi-drv/./scsi-init.c:13: void chscsi_init(void) {
+;source-doc/keyboard/./kyb-init.c:8: void keyboard_init(void) {
 ; ---------------------------------
-; Function chscsi_init
+; Function keyboard_init
 ; ---------------------------------
-_chscsi_init:
-	push	ix
-	ld	ix,0
-	add	ix,sp
-	dec	sp
-;source-doc/scsi-drv/./scsi-init.c:15: do {
-	ld	(ix-1),0x01
-l_chscsi_init_00105:
-;source-doc/scsi-drv/./scsi-init.c:16: device_config_storage *const storage_device = (device_config_storage *)get_usb_device_config(index);
-	ld	a,(ix-1)
+_keyboard_init:
+;source-doc/keyboard/./kyb-init.c:10: uint8_t index = 1;
+;source-doc/keyboard/./kyb-init.c:11: do {
+	ld	bc,0x0101
+l_keyboard_init_00105:
+;source-doc/keyboard/./kyb-init.c:12: device_config_keyboard *const keyboard_config = (device_config_keyboard *)get_usb_device_config(index);
+	push	bc
+	ld	a, b
 	call	_get_usb_device_config
-;source-doc/scsi-drv/./scsi-init.c:18: if (storage_device == NULL)
+	pop	bc
+;source-doc/keyboard/./kyb-init.c:14: if (keyboard_config == NULL)
 	ld	a, d
 	or	e
-	jr	Z,l_chscsi_init_00108
-;source-doc/scsi-drv/./scsi-init.c:21: const usb_device_type t = storage_device->type;
+	jr	Z,l_keyboard_init_00107
+;source-doc/keyboard/./kyb-init.c:17: const usb_device_type t = keyboard_config->type;
 	ld	l, e
 	ld	h, d
 	ld	a, (hl)
 	and	0x0f
-;source-doc/scsi-drv/./scsi-init.c:23: if (t == USB_IS_MASS_STORAGE) {
-	sub	0x02
-	jr	NZ,l_chscsi_init_00106
-;source-doc/scsi-drv/./scsi-init.c:24: print_string("\r\nUSB: MASS STORAGE @ $");
+;source-doc/keyboard/./kyb-init.c:19: if (t == USB_IS_KEYBOARD) {
+	sub	0x04
+	jr	NZ,l_keyboard_init_00106
+;source-doc/keyboard/./kyb-init.c:20: print_string("\r\nUSB: KEYBOARD @ $");
+	push	bc
 	push	de
-	ld	hl,scsi_init_str_0
+	ld	hl,kyb_init_str_0
 	call	_print_string
 	pop	de
-;source-doc/scsi-drv/./scsi-init.c:25: print_uint16(index);
-	ld	l,(ix-1)
+	pop	bc
+;source-doc/keyboard/./kyb-init.c:21: print_uint16(index);
 	ld	h,0x00
 	push	de
+	ld	l, c
 	call	_print_uint16
-	ld	hl,scsi_init_str_1
+	ld	hl,kyb_init_str_1
 	call	_print_string
 	pop	de
-;source-doc/scsi-drv/./scsi-init.c:29: scsi_sense_init(storage_device);
+;source-doc/keyboard/./kyb-init.c:25: hid_set_protocol(keyboard_config, 1);
 	push	de
-	push	de
-	call	_scsi_sense_init
-	pop	af
-	pop	de
-;source-doc/scsi-drv/./scsi-init.c:30: dio_add_entry(ch_scsi_fntbl, storage_device);
-	ld	hl,_ch_scsi_fntbl
-	call	_dio_add_entry
-l_chscsi_init_00106:
-;source-doc/scsi-drv/./scsi-init.c:33: } while (++index != MAX_NUMBER_OF_DEVICES + 1);
-	inc	(ix-1)
-	ld	a,(ix-1)
-	sub	0x07
-	jr	NZ,l_chscsi_init_00105
-l_chscsi_init_00108:
-;source-doc/scsi-drv/./scsi-init.c:34: }
+	ld	a,0x01
+	push	af
 	inc	sp
-	pop	ix
+	ex	de,hl
+	call	_hid_set_protocol
+	pop	de
+;source-doc/keyboard/./kyb-init.c:26: hid_set_idle(keyboard_config, 0x80);
+	ld	a,0x80
+	push	af
+	inc	sp
+	ex	de, hl
+	call	_hid_set_idle
+;source-doc/keyboard/./kyb-init.c:27: return;
+	jr	l_keyboard_init_00108
+l_keyboard_init_00106:
+;source-doc/keyboard/./kyb-init.c:29: } while (++index != MAX_NUMBER_OF_DEVICES + 1);
+	inc	b
+	ld	a,b
+	ld	c,a
+	sub	0x07
+	jr	NZ,l_keyboard_init_00105
+l_keyboard_init_00107:
+;source-doc/keyboard/./kyb-init.c:31: print_string("\r\nUSB: KEYBOARD: NOT FOUND$");
+	ld	hl,kyb_init_str_2
+	jp	_print_string
+l_keyboard_init_00108:
+;source-doc/keyboard/./kyb-init.c:32: }
 	ret
-scsi_init_str_0:
+kyb_init_str_0:
 	DEFB 0x0d
 	DEFB 0x0a
-	DEFM "USB: MASS STORAGE @ $"
+	DEFM "USB: KEYBOARD @ $"
 	DEFB 0x00
-scsi_init_str_1:
+kyb_init_str_1:
 	DEFM " $"
+	DEFB 0x00
+kyb_init_str_2:
+	DEFB 0x0d
+	DEFB 0x0a
+	DEFM "USB: KEYBOARD: NOT FOUND$"
 	DEFB 0x00

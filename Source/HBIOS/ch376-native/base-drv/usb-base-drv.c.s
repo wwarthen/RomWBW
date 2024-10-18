@@ -33,8 +33,6 @@ _USB_MODULE_LEDS	.EQU	0xff8a
 	
 ; .area _INITIALIZED removed by z88dk
 	
-_storage_count:
-	DEFS 1
 	
 #ENDIF
 	
@@ -87,5 +85,3 @@ _chnative_seek:
 	pop	hl
 	pop	bc
 	jp	(hl)
-_storage_count:
-	DEFB +0x00

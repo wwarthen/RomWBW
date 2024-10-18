@@ -21,11 +21,11 @@ void chscsi_init(void) {
     const usb_device_type t = storage_device->type;
 
     if (t == USB_IS_MASS_STORAGE) {
-      print_string("\r\n  MASS STORAGE @ $");
+      print_string("\r\nUSB: MASS STORAGE @ $");
       print_uint16(index);
       print_string(" $");
 
-      storage_device->drive_index = storage_count++;
+      // storage_device->drive_index = usb_device_count++;
       scsi_sense_init(storage_device);
       dio_add_entry(ch_scsi_fntbl, storage_device);
     }

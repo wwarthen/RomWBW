@@ -29,6 +29,7 @@ sed -E \
   -e 's/\s+or\s+a,\((ix\+[0-9-]+)\)/\tor\t\(\1\)/g' \
   -e 's/\s+or\s+a,\((ix\-[0-9-]+)\)/\tor\t\(\1\)/g' \
   -e 's/\s+or\s+a,\((iy\+[0-9-]+)\)/\tor\t\(\1\)/g' \
+  -e 's/\s+or\s+a,\((hl)\)/\tor\t\(\1\)/g' \
   -e 's/\s+cp\s+a,(0x[0-9A-Fa-f]{2})/\tcp\t\1/g' \
   -e 's/\s+or\s+a,(0x[0-9A-Fa-f]{2})/\tor\t\1/g' \
   -e 's/\s+xor\s+a,(0x[0-9A-Fa-f]{2})/\txor\t\1/g' \

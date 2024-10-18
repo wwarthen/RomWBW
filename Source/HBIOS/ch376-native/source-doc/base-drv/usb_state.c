@@ -71,15 +71,7 @@ device_config *get_usb_device_config(const uint8_t device_index) __sdcccall(1) {
   uint8_t counter = 1;
 
   for (device_config *p = first_device_config(usb_state); p; p = next_device_config(usb_state, p)) {
-    if (p->type == USB_IS_FLOPPY) {
-      if (counter == device_index)
-        return p;
-      counter++;
-    }
-  }
-
-  for (device_config *p = first_device_config(usb_state); p; p = next_device_config(usb_state, p)) {
-    if (p->type == USB_IS_MASS_STORAGE) {
+    if (p->type != USB_NOT_SUPPORTED) {
       if (counter == device_index)
         return p;
       counter++;

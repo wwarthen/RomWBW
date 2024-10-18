@@ -18,7 +18,7 @@ ZCC := zcc +z80 -vn -startup=0 -clib=sdcc_iy -crt0 $(SRC)crt.asm -compiler=sdcc 
 
 ASSDIR := ./
 
-all: $(ASSDIR)base-drv.s $(ASSDIR)scsi-drv.s $(ASSDIR)ufi-drv.s
+all: $(ASSDIR)base-drv.s $(ASSDIR)scsi-drv.s $(ASSDIR)ufi-drv.s $(ASSDIR)keyboard.s
 
 clean:
 	@rm -rf base-drv
@@ -52,6 +52,15 @@ $(ASSDIR)ufi-drv.s:
 		echo '#include "'ch376-native/ufi-drv/$${dep}'"' >> $(ASSDIR)ufi-drv.s
 	done
 
+$(ASSDIR)keyboard.s:
+	@echo "Creating keyboard.s"
+	echo "; Generated File -- not to be modify directly" > $(ASSDIR)keyboard.s
+	for dep in $^; do
+		dep=$${dep#*/}
+		dep=$${dep#*/}
+		echo '#include "'ch376-native/keyboard/$${dep}'"' >> $(ASSDIR)keyboard.s
+	done
+
 $(ASSDIR)%.c.s: $(ASSDIR)%.c.asm
 	@mkdir -p $(dir $@)
 	echo "Converting $< to $@"
@@ -70,6 +79,7 @@ endef
 
 $(ASSDIR)base-drv/%.c.asm: $(SRC)base-drv/%.c; $(compile)
 $(ASSDIR)scsi-drv/%.c.asm: $(SRC)scsi-drv/%.c; $(compile)
+$(ASSDIR)keyboard/%.c.asm: $(SRC)keyboard/%.c; $(compile)
 $(ASSDIR)ufi-drv/%.c.asm: $(SRC)ufi-drv/%.c; $(compile)
 $(ASSDIR)%.c.asm: $(SRC)%.c; $(compile)
 $(ASSDIR)libraries/delay/%.c.asm: ../apps/libraries/delay/%.c; $(compile)
@@ -131,6 +141,17 @@ deps:
 		file_no_ext=$${file_no_ext#./}
 		filename=$$(basename $$file_no_ext)
 		printf "ufi-drv/$$file.s " >> ${SRC}/depends.d
+	done
+
+	printf "\r\n" >> ${SRC}/depends.d
+	# # configure keyboard.s to all .s files
+	printf "##\r\n" >> ${SRC}/depends.d
+	printf "./keyboard.s: " >> ${SRC}/depends.d
+	(cd ${SRC}/keyboard && find -name "*.c") | while read -r file; do
+		file_no_ext="$${file%.*}"
+		file_no_ext=$${file_no_ext#./}
+		filename=$$(basename $$file_no_ext)
+		printf "keyboard/$$file.s " >> ${SRC}/depends.d
 	done
 
 	echo "" >> ${SRC}/depends.d

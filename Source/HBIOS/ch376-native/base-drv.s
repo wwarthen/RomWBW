@@ -7,7 +7,6 @@
 #include "ch376-native/base-drv/enumerate_hub.c.s"
 #include "ch376-native/base-drv/usb-base-drv.c.s"
 #include "ch376-native/base-drv/transfers.c.s"
-#include "ch376-native/base-drv/print.c.s"
 #include "ch376-native/base-drv/ch376.c.s"
 #include "ch376-native/base-drv/protocol.c.s"
 #include "ch376-native/base-drv/work-area.c.s"

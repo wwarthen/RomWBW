@@ -6,20 +6,23 @@
 ./base-drv/enumerate_storage.c: base-drv/enumerate_storage.c  ././source-doc/base-drv/enumerate_storage.h ././source-doc/base-drv/protocol.h ././source-doc/base-drv/ch376.h ././source-doc/base-drv/ch376inc.h ././source-doc/base-drv/delay.h ././source-doc/base-drv/dev_transfers.h ././source-doc/base-drv/transfers.h
 ./base-drv/enumerate_hub.c: base-drv/enumerate_hub.c  ././source-doc/base-drv/enumerate_hub.h ././source-doc/base-drv/enumerate.h ././source-doc/base-drv/ch376.h ././source-doc/base-drv/ch376inc.h ././source-doc/base-drv/delay.h ././source-doc/base-drv/protocol.h ././source-doc/base-drv/dev_transfers.h ././source-doc/base-drv/transfers.h ././source-doc/base-drv/usb_state.h ././source-doc/base-drv/class_hub.h ././source-doc/base-drv/work-area.h
 ./base-drv/usb-base-drv.c: base-drv/usb-base-drv.c  ././source-doc/base-drv/usb-base-drv.h ././source-doc/base-drv//ch376inc.h ././source-doc/base-drv//delay.h
-./base-drv/transfers.c: base-drv/transfers.c  ././source-doc/base-drv/transfers.h ././source-doc/base-drv/ch376.h ././source-doc/base-drv/ch376inc.h ././source-doc/base-drv/delay.h ././source-doc/base-drv/z80.h ././source-doc/base-drv/print.h
-./base-drv/print.c: base-drv/print.c  ././source-doc/base-drv/print.h
-./base-drv/ch376.c: base-drv/ch376.c  ././source-doc/base-drv/ch376.h ././source-doc/base-drv/ch376inc.h ././source-doc/base-drv/delay.h ././source-doc/base-drv/print.h
-./base-drv/protocol.c: base-drv/protocol.c  ././source-doc/base-drv/protocol.h ././source-doc/base-drv/ch376.h ././source-doc/base-drv/ch376inc.h ././source-doc/base-drv/delay.h ././source-doc/base-drv/dev_transfers.h ././source-doc/base-drv/transfers.h ././source-doc/base-drv/print.h
+./base-drv/transfers.c: base-drv/transfers.c  ././source-doc/base-drv/transfers.h ././source-doc/base-drv/ch376.h ././source-doc/base-drv/ch376inc.h ././source-doc/base-drv/delay.h ././source-doc/base-drv/z80.h ././source-doc/base-drv/ez80-helpers.h ././source-doc/base-drv/print.h
+./base-drv/ch376.c: base-drv/ch376.c  ././source-doc/base-drv/ch376.h ././source-doc/base-drv/ch376inc.h ././source-doc/base-drv/delay.h ././source-doc/base-drv/ez80-helpers.h ././source-doc/base-drv/print.h
+./base-drv/protocol.c: base-drv/protocol.c  ././source-doc/base-drv/protocol.h ././source-doc/base-drv/ch376.h ././source-doc/base-drv/ch376inc.h ././source-doc/base-drv/delay.h ././source-doc/base-drv/dev_transfers.h ././source-doc/base-drv/transfers.h ././source-doc/base-drv/ez80-helpers.h ././source-doc/base-drv/print.h
 ./base-drv/work-area.c: base-drv/work-area.c  ././source-doc/base-drv/usb_state.h ././source-doc/base-drv/ch376.h ././source-doc/base-drv/ch376inc.h ././source-doc/base-drv/delay.h ././source-doc/base-drv/protocol.h ././source-doc/base-drv/dev_transfers.h ././source-doc/base-drv/transfers.h
 ./base-drv/usb-init.c: base-drv/usb-init.c  ././source-doc/base-drv/ch376.h ././source-doc/base-drv/ch376inc.h ././source-doc/base-drv/delay.h ././source-doc/base-drv/enumerate.h ././source-doc/base-drv/protocol.h ././source-doc/base-drv/dev_transfers.h ././source-doc/base-drv/transfers.h ././source-doc/base-drv/usb_state.h ././source-doc/base-drv/print.h ././source-doc/base-drv/work-area.h ././source-doc/base-drv/z80.h
 ./ufi-drv/ufi-init.c: ufi-drv/ufi-init.c  ././source-doc/ufi-drv/class_ufi.h ././source-doc/base-drv//transfers.h ././source-doc/ufi-drv/usb_cbi.h
 ./ufi-drv/usb_cbi.c: ufi-drv/usb_cbi.c  ././source-doc/ufi-drv/usb_cbi.h
 ./ufi-drv/class_ufi.c: ufi-drv/class_ufi.c  ././source-doc/ufi-drv/class_ufi.h ././source-doc/base-drv//transfers.h ././source-doc/ufi-drv/usb_cbi.h
+./keyboard/kyb-init.c: keyboard/kyb-init.c  ././source-doc/base-drv//ch376inc.h ././source-doc/base-drv//delay.h ././source-doc/keyboard/class_hid.h ././source-doc/keyboard/class_hid_keyboard.h
+./keyboard/class_hid.c: keyboard/class_hid.c  ././source-doc/keyboard/class_hid.h ././source-doc/base-drv//transfers.h
 ./scsi-drv/scsi-init.c: scsi-drv/scsi-init.c  ././source-doc/scsi-drv/class_scsi.h ././source-doc/base-drv//ch376inc.h ././source-doc/base-drv//delay.h ././source-doc/base-drv//transfers.h
 ./scsi-drv/class_scsi.c: scsi-drv/class_scsi.c  ././source-doc/scsi-drv/class_scsi.h ././source-doc/base-drv//ch376inc.h ././source-doc/base-drv//delay.h ././source-doc/base-drv//transfers.h
 ##
-./base-drv.s: base-drv/./dev_transfers.c.s base-drv/./enumerate.c.s base-drv/./usb_state.c.s base-drv/./class_hub.c.s base-drv/./enumerate_storage.c.s base-drv/./enumerate_hub.c.s base-drv/./usb-base-drv.c.s base-drv/./transfers.c.s base-drv/./print.c.s base-drv/./ch376.c.s base-drv/./protocol.c.s base-drv/./work-area.c.s base-drv/./usb-init.c.s 
+./base-drv.s: base-drv/./dev_transfers.c.s base-drv/./enumerate.c.s base-drv/./usb_state.c.s base-drv/./class_hub.c.s base-drv/./enumerate_storage.c.s base-drv/./enumerate_hub.c.s base-drv/./usb-base-drv.c.s base-drv/./transfers.c.s base-drv/./ch376.c.s base-drv/./protocol.c.s base-drv/./work-area.c.s base-drv/./usb-init.c.s 
 ##
 ./scsi-drv.s: scsi-drv/./scsi-init.c.s scsi-drv/./class_scsi.c.s 
 ##
 ./ufi-drv.s: ufi-drv/./ufi-init.c.s ufi-drv/./usb_cbi.c.s ufi-drv/./class_ufi.c.s 
+##
+./keyboard.s: keyboard/./kyb-init.c.s keyboard/./class_hid.c.s 

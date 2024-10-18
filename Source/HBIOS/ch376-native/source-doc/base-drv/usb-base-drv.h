@@ -4,7 +4,7 @@
 #include <dev_transfers.h>
 #include <stdint.h>
 
-extern uint8_t storage_count;
+// extern uint8_t usb_device_count;
 
 extern uint8_t chnative_seek(const uint32_t lba, device_config_storage *const storage_device) __sdcccall(1);
 
