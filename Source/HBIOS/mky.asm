@@ -216,6 +216,14 @@ MKY_INIT:
 	LD	A, 64			; CAPS OFF
 	EZ80_IO
 	OUT	(MKY_REGC), A
+
+	; INSTALL INTERRUPT HANDLER
+	LD	HL, (VEC_TICK+1)
+	LD	(VEC_TICK_MKY+1), HL
+
+	LD	HL, MKY_INT
+	LD	(VEC_TICK+1), HL
+
 	RET
 ;
 ;__________________________________________________________________________________________________
@@ -739,7 +747,7 @@ MKY_INTSCAN1:
 	LD      A, (MKY_SCNCNT)			; SCAN THE KEYBOARD EVERY 'SCAN_INT_PERIOD' INTERRUPTS.
 	DEC     A
 	LD      (MKY_SCNCNT), A
-	RET	NZ
+	JR	NZ, VEC_TICK_MKY
 
 	LD      A, SCAN_INT_PERIOD
 	LD      (MKY_SCNCNT), A
@@ -765,7 +773,9 @@ MKY_SCAN_LP:
 
 	LD	A, $FF				; NOTE THAT A SCAN HAS BEEN DONE
 	LD	(MKY_SCANNED), A
-	RET
+
+VEC_TICK_MKY:
+	JP	HB_TICK
 
 ;
 ;__________________________________________________________________________________________________
