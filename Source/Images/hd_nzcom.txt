@@ -34,8 +34,8 @@ d_zsdos/u0/*.DAT 15:
 ../../Binary/Apps/bbcbasic.txt 10:
 ../../Binary/Apps/cpuspd.com 15:
 ../../Binary/Apps/reboot.com 15:
-../../Binary/Apps/copysl.com 0:
-../../Binary/Apps/copysl.doc 0:
+../../Binary/Apps/copysl.com 15:
+../../Binary/Apps/copysl.doc 10:
 ../../Binary/Apps/fat.com 15:
 ../../Binary/Apps/fdu.com 15:
 ../../Binary/Apps/fdu.doc 10:
@@ -63,7 +63,7 @@ d_zsdos/u0/*.DAT 15:
 #
 ../../Binary/Apps/Test/*.com 2:
 ../../Binary/Apps/Test/*.doc 2:
-Test/*.* 2:
+Common/Test/*.* 2:
 #
 # Add Tune sample files
 #
@@ -79,7 +79,6 @@ Test/*.* 2:
 #
 Common/All/*.* 15:
 Common/CPM22/*.* 15:
-#Common/Z/u10/*.* 10:
 Common/Z/u14/*.* 14:
 Common/Z/u15/*.* 15:
 Common/Z3/u10/*.* 10:

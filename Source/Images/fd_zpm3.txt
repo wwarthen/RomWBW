@@ -1,4 +1,8 @@
 #
+# Add the ReadMe document
+#
+d_zpm3/ReadMe.txt 0:
+#
 # Add files from ZPM3 build
 #
 ../ZPM3/zpmldr.com 0:

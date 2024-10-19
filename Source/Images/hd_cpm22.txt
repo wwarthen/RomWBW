@@ -40,7 +40,7 @@ d_cpm22/ReadMe.txt 0:
 #
 ../../Binary/Apps/Test/*.com 2:
 ../../Binary/Apps/Test/*.doc 2:
-Test/*.* 2:
+Common/Test/*.* 2:
 #
 # Add Tune sample files
 #

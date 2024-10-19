@@ -1,4 +1,8 @@
 #
+# Add the ReadMe document
+#
+d_zpm3/ReadMe.txt 0:
+#
 # Add files from ZPM3 build
 #
 ../ZPM3/zpmldr.com 0:
@@ -22,12 +26,12 @@
 #
 #../../Binary/Apps/*.com 15:
 ../../Binary/Apps/assign.com 15:
-../../Binary/Apps/bbcbasic.com 0:
-../../Binary/Apps/bbcbasic.txt 0:
+../../Binary/Apps/bbcbasic.com 15:
+../../Binary/Apps/bbcbasic.txt 15:
 ../../Binary/Apps/cpuspd.com 15:
 ../../Binary/Apps/reboot.com 15:
-../../Binary/Apps/copysl.com 0:
-../../Binary/Apps/copysl.doc 0:
+../../Binary/Apps/copysl.com 15:
+../../Binary/Apps/copysl.doc 15:
 ../../Binary/Apps/fat.com 15:
 ../../Binary/Apps/fdu.com 15:
 ../../Binary/Apps/fdu.doc 15:
@@ -55,7 +59,7 @@
 #
 ../../Binary/Apps/Test/*.com 2:
 ../../Binary/Apps/Test/*.doc 2:
-Test/*.* 2:
+Common/Test/*.* 2:
 #
 # Add Tune sample files
 #
@@ -67,11 +71,10 @@ Test/*.* 2:
 #
 Common/All/*.* 15:
 Common/CPM3/*.* 15:
-#Common/Z/u10/*.* 10:
 Common/Z/u14/*.* 14:
 Common/Z/u15/*.* 15:
 Common/Z3/u10/*.* 10:
 Common/Z3/u14/*.* 14:
 Common/Z3/u15/*.* 15:
 Common/SIMH/*.* 13:
-Common/UTILS/*.* 0:
+Common/UTILS/*.* 15:
