@@ -37,12 +37,6 @@
 ../../Binary/Apps/zmconfig.ovr 15:
 ../../Binary/Apps/zmd.com 15:
 ../../Binary/Apps/vgmplay.com 15:
-
-# Add Tune sample files
-#
-../../Binary/Apps/Tunes/*.pt? 3:
-../../Binary/Apps/Tunes/*.mym 3:
-../../Binary/Apps/Tunes/*.vgm 3:
 #
 # Add Common Applications
 #
