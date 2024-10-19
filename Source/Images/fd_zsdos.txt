@@ -47,12 +47,6 @@ d_cpm22/u0/XSUB.COM 0:
 ../../Binary/Apps/zmd.com 0:
 ../../Binary/Apps/vgmplay.com 0:
 #
-# Add Tune sample files
-#
-../../Binary/Apps/Tunes/*.pt? 3:
-#../../Binary/Apps/Tunes/*.mym 3:
-../../Binary/Apps/Tunes/*.vgm 3:
-#
 # Add OS image
 #
 ../ZSDOS/zsys_wbw.sys 0:zsys.sys

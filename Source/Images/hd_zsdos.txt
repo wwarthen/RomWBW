@@ -53,7 +53,7 @@ d_cpm22/u0/XSUB.COM 0:
 #
 ../../Binary/Apps/Test/*.com 2:
 ../../Binary/Apps/Test/*.doc 2:
-Test/*.* 2:
+Common/Test/*.* 2:
 #
 # Add Tune sample files
 #
@@ -69,7 +69,6 @@ Test/*.* 2:
 #
 Common/All/*.* 0:
 Common/CPM22/*.* 0:
-#Common/Z/u10/*.* 0:
 Common/Z/u14/*.* 0:
 Common/Z/u15/*.* 0:
 Common/SIMH/*.* 13:

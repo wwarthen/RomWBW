@@ -6,7 +6,7 @@ and stores the output in either a core-image, Intel hex format, or relocatable
 object file. The mnemonics recognized are those of Zilog/Mostek. The optional
 listing output may be sent to a disk file, the console and/or the printer, in
 any combination. Output files may also be generated containing cross-reference
-information on each symbol used.
+information on each symbol used.
 
 The manual is available in the Doc/Language directory,
 z80asm (SLR Systems).pdf

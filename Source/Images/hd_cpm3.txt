@@ -1,4 +1,8 @@
 #
+# Add the ReadMe document
+#
+d_cpm3/ReadMe.txt 0:
+#
 # Add files from CPM3 build
 #
 ../CPM3/cpmldr.com 0:
@@ -56,7 +60,7 @@
 #
 ../../Binary/Apps/Test/*.com 2:
 ../../Binary/Apps/Test/*.doc 2:
-Test/*.* 2:
+Common/Test/*.* 2:
 #
 # Add Tune sample files
 #
