@@ -10,16 +10,19 @@ distributed with RomWBW.  Specifically, RomWBW provides a set
 of floppy and hard disk images in the Binary directory of the
 distribution.  The contents of these images is listed here.
 
-**NOTE:** This document has become somewhat out-of-date.  I apologize
-for this.  It is very difficult to maintain due to the volume of
-disk content updates and the way that files are dynamically merged
-into disk images during the build process.
-
 The files on the disk images were sourced from a variety of locations.
 The primary sources of these files are listed below.  Note that the
 primary documentation for each of these sources is listed.  You are
 strongly encouraged to refer to this documentation for more information
 on using the applications and files listed.
+
+This document primarily describes to contents of the hard disk images.
+Floppy disk images may contain a cut down (sub-set) of the files on
+a hard disk. This is of course to conserve disk space
+
+Note: This document received a major update in October 2024, when
+while still not fully complete, most of the core operating system
+disks should now be fully described.
 
 ## Sources
 
@@ -75,718 +78,1225 @@ on using the applications and files listed.
 
 `\clearpage`{=latex}
 
-# CPM 2.2 Boot Disk
+# Operating System Boot Disks
+
+RomWBW contains several ready-to-run disks, that have been
+adapted for RomWBW.  Theses disks are bootable as is 
+(the operating system image is already embedded in the system tracks) 
+and can be launched from the RomWBW Loader prompt.
+
+Each Disk contains the following file
+
+| **File**      | **Description**                        |
+|---------------|----------------------------------------|
+| `README.TXT`  | Information about the Operating System |
+
+## CP/M 2.2
+
+A vanilla distribution of DRI's CP/M-80 2.2 adapted for RomWBW.  
 
 | Floppy Disk Image: **fd_cpm22.img**
 | Hard Disk Image: **hd_cpm22.img**
 | Combo Disk Image: **Slice 0**
 
-| **User 0**     | **Source** | **Description** |
-| -------------- | ---------- | ------------------------------------------------------------ |
-| `ASM.COM`      | CPM22      | DRI 8080 Assembler |
-| `CR.COM`       |     --     | Crunch archiver |
-| `DDT.COM`      | CPM22      | DRI Dynamic Debugger |
-| `DDTZ.DOC`     |     --     | Z80 replacement for DDT |
-| `DIRX.COM`     |     --     | Directory lister with file sizes |
-| `DUMP.COM`     | CPM22      | DRI type contents of disk file in hex |
-| `ED.COM`       | CPM22      | DRI context editor |
-| `KERMIT.COM`   |     --     | Generic CP/M 2.2 Kermit communication application |
-| `LBREXT.COM`   |     --     | Extract library files |
-| `LIB.COM`      |     --     | DRI Library manager |
-| `LINK.COM`     |     --     | DRI CPM relocatable linker |
-| `LOAD.COM`     |     --     | DRI hex file loader into memory |
-| `MAC.COM`      |     --     | DRI CPM macro assembler |
-| `MBASIC.COM`   |     --     | Microsoft Basic |
-| `PIP.COM`      | CPM22      | DRI Periperal Interchange Program |
-| `PMARC.COM`    |     --     | LHA file compressor |
-| `PMEXT.COM`    |     --     | Extractor for PMARC archives |
-| `RMAC.COM`     |     --     | DRI Relocatable Macro Assembler |
-| `STAT.COM`     | CPM22      | DRI statistices about file storage and device  assignment |
-| `SUBMIT.COM`   | CPM22      | DRI batch processor |
-| `UNCR.COM`     |     --     | NZCOM Uncrunch decompression |
-| `UNZIP.COM`    |     --     | Extractor for ZIP archives |
-| `XSUB.COM`     | CPM22      | DRI eXtended submit |
-| `ZSID.COM`     |     --     | DRI Z80 symbolic instruction debugger |
-| `ASSIGN.COM`   | RomWBW     | RomWBW Drive/Slice mapper |
-| `FAT.COM`      | RomWBW     | RomWBW FAT filesystem access |
-| `FDU.COM`      | RomWBW     | RomWBW Floppy Disk Utility |
-| `FORMAT.COM`   | RomWBW     | RomWBW media formatter (placeholder) |
-| `INTTEST.COM`  | RomWBW     | RomWBW Interrupt test |
-| `MODE.COM`     | RomWBW     | RomWBW Modify serial port characteristics |
-| `RTC.COM`      | RomWBW     | RomWBW Display and set RTC |
-| `SURVEY.COM`   | RomWBW     | System survey |
-| `SYSCOPY.COM`  | RomWBW     | RomWBW Read/write system boot image |
-| `SYSGEN.COM`   | RomWBW     | DRI CPM SYSGEN to put CPM onto a new drive |
-| `TALK.COM`     | RomWBW     | RomWBW Direct console I/O to a serial port |
-| `TIMER.COM`    | RomWBW     | RomWBW Display timer tick counter |
-| `TUNE.COM`     | RomWBW     | RomWBW Play PT or MYM sound files |
-| `XM.COM`       | RomWBW     | RomWBW XMODEM file transfer |
-| `CPM.SYS`      | RomWBW     | CPM2.2 system image |
-| `CLRDIR.COM`   |     --     | Max Scane's disk directory cleaner |
-| `COMPARE.COM`  |     --     | FoxHollow compare two files |
-| `DDTZ.COM`     |     --     | Z80 replacement for DDT |
-| `FDISK80.COM`  |     --     | John Coffman's Partition editor for FAT filesystem |
-| `FLASH.COM`    |     --     | Will Sowerbutts' in-situ EEPROM programmer |
-| `NULU.COM`     |     --     | NZCOM new library utility |
-| `UNARC.COM`    |     --     | Extractor for ARC archives |
-| `ZAP.COM`      |     --     | Disk editor/patcher |
-| `ZDE.COM`      |     --     | Z-system display editor |
-| `ZDENST.COM`   |     --     | ZDE Installer |
+### CP/M 2.2 OS Files
 
-| **User 1**     | **Source** | **Description** |
-| -------------- | ---------- | ------------------------------------------------------------ |
-| `SAMPKEY.DOC`  |     --     | ZDE Distribution File |
-| `SAMPKEY.ZDK`  |     --     | ZDE Distribution File |
-| `SAMPKEY.ZDT`  |     --     | ZDE Distribution File |
-| `ZDE10.DOC`    |     --     | ZDE Distribution File |
-| `ZDE10.FOR`    |     --     | ZDE Distribution File |
-| `ZDE10.NEW`    |     --     | ZDE Distribution File |
-| `ZDE10.QRF`    |     --     | ZDE Distribution File |
-| `ZDE10.TOC`    |     --     | ZDE Distribution File |
-| `ZDE13.FOR`    |     --     | ZDE Distribution File |
-| `ZDE13.NEW`    |     --     | ZDE Distribution File |
-| `ZDE16.COM`    |     --     | ZDE Distribution File |
-| `ZDE16.DIR`    |     --     | ZDE Distribution File |
-| `ZDE16.FIX`    |     --     | ZDE Distribution File |
-| `ZDE16.FOR`    |     --     | ZDE Distribution File |
-| `ZDE16.NEW`    |     --     | ZDE Distribution File |
-| `ZDE16A.COM`   |     --     | ZDE Distribution File |
-| `ZDE16A.PAT`   |     --     | ZDE Distribution File |
-| `ZDENST16.COM` |     --     | ZDE Distribution File |
-| `ZDEPROP.DOC`  |     --     | ZDE Distribution File |
-| `ZDEPROP.Z80`  |     --     | ZDE Distribution File |
-| `ZDKCOM13.COM` |     --     | ZDE Distribution File |
-| `ZDKCOM13.DOC` |     --     | ZDE Distribution File |
+These are built and provide the OS. CP/M 2.2 Typically has no boot files 
+stored on the disk. It entirely boots from the system track
 
-| **User 3**     | **Source** | **Description** |
-| -------------- | ---------- | ------------------------------------------------------------ |
-| `ATTACK.PT3`   |     --     | Sound File |
-| `BACKUP.PT3`   |     --     | Sound File |
-| `BADMICE.PT3`  |     --     | Sound File |
-| `DEMO.MYM`     |     --     | Sound File |
-| `DEMO1.MYM`    |     --     | Sound File |
-| `DEMO3.MYM`    |     --     | Sound File |
-| `DEMO3MIX.MYM` |     --     | Sound File |
-| `DEMO4.MYM`    |     --     | Sound File |
-| `HOWRU.PT3`    |     --     | Sound File |
-| `ITERATN.PT3`  |     --     | Sound File |
-| `LOOKBACK.PT3` |     --     | Sound File |
-| `LOUBOUTN.PT3` |     --     | Sound File |
-| `NAMIDA.PT3`   |     --     | Sound File |
-| `RECOLL.PT3`   |     --     | Sound File |
-| `SANXION.PT3`  |     --     | Sound File |
-| `SYNCH.PT3`    |     --     | Sound File |
-| `TOSTAR.PT3`   |     --     | Sound File |
-| `VICTORY.PT3`  |     --     | Sound File |
-| `WICKED.PT3`   |     --     | Sound File |
-| `YEOLDE.PT3`   |     --     | Sound File |
-| `YEOVIL.PT3`   |     --     | Sound File |
+The following files appear in User Area 0
+
+| **File**    | **Source**   | **Description**                    |
+|-------------|--------------|------------------------------------|
+| `CPM.SYS`   | RomWBW       | DRI CPM 2.2 Boot Image for SYSCOPY |
+
+The 
+
+### CP/M 2.2 Files
+
+The following CP/M 2.2 files were distributed by DRI with the operating
+system or as supplemental add-on programs.  They are documented in the
+"CP/M Manual.pdf" document in the Doc/CPM directory of the Rom WBW
+distribution.  
+
+The following files appear in User Area 0
+
+| **File**        | **Description**                  | **Also Found In** |
+|-----------------|----------------------------------|-------------------|
+| `ASM.COM`       | 8080 assembler                   | NZCOM, QPM, ZSDOS |
+| `DDT.COM`       | 8080 dunamic debugger            | QPM               |
+| `DUMP.COM`      | type contents of file in hex     | QPM               |
+| `ED.COM`        | line editor                      | QPM               |
+| `HELP.COM`      | CP/M 3 Derived HELP display      | QPM               |
+| `HELP.HLP`      | CP/M 3 Derived HELP data file    | QPM               |
+| `LIB.COM`       | object file library manager      | NZCOM, QPM, ZSDOS |
+| `LINK.COM`      | object file linker               | NZCOM, QPM, ZSDOS |
+| `LOAD.COM`      | loader for Intel hex files       | NZCOM, QPM, ZSDOS |
+| `MAC.COM`       | 8080 macro assembler             | NZCOM, QPM, ZSDOS |
+| `PIP.COM`       | file transfer program            | QPM               |
+| `RMAC.COM`      | 8080 macro assembler             | NZCOM, QPM, ZSDOS |
+| `STAT.COM`      | file/disk/device info & config   | NZCOM, QPM, ZSDOS |
+| `SUBMIT.COM`    | batch file submission tool       | NZCOM, QPM, ZSDOS |
+| `XSUB.COM`      | batch file resident extension    | NZCOM, QPM, ZSDOS |
+| `ZSID.COM`      | Z80 symbolic debugger            | QPM               |
+
+As noted above several of theses files are also present in other 
+disk images besides CP/M 2.2
+
+MAC, RMAC, ZSID are supplemental programs from DRI
+with separate standalone documentation which is not included in the
+RomWBW package (but easily found on the Internet via Google search).
+
+### Additional Files
+
+| **File** | **Documentation**                  | **User Area** |
+|----------|------------------------------------|---------------|
+|          | [RomWBW Supplemental Applications] | 0             |
+|          | [General Purpose Applications]     | 0             |
+|          | [Testing Applications]             | 2             |
+|          | [Sample Audio Files]               | 3             |
+|          | [CP/NET 1.2]                       | 4             |
+|          | [SIMH Simulator]                   | 13            |
 
 `\clearpage`{=latex}
 
-# ZSDOS 1.1 Boot Disk
+## ZSDOS 1.1
+
+It contains a customized version of ZSDOS 1.1 for RomWBW.
+The disk is bootable as is (the operating system image is already
+embedded in the system tracks) and can be launched from the RomWBW
+Loader prompt.
+
+The starting point for the disk content was the final public release of
+ZSDOS which is generally available on the Internet. 
 
 | Floppy Disk Image: **fd_zsdos.img**
 | Hard Disk Image: **hd_zsdos.img**
 | Combo Disk Image: **Slice 1**
 
-| **User 0**     | **Source** | **Description** |
-| -------------- | ---------- | ------------------------------------------------------------ |
-| `ASM.COM`      | CPM22      | DRI 8080 Assembler |
-| `CLOCKS.DAT`   | ZSDOS      | ZSDOS Library of clock drivers |
-| `COPY.CFG`     | ZSDOS      | ZSDOS Configuration file for COPY.COM |
-| `COPY.COM`     | ZSDOS      | ZSDOS File copier with file dates and archiving |
-| `COPY.UPD`     | ZSDOS      | ZSDOS ??? |
-| `CR.COM`       |     --     | Crunch archiver |
-| `DATSWEEP.COM` | ZSDOS      | ZSDOS Comprehensive file management utility |
-| `DDT.COM`      | CPM22      | DRI Dynamic Debugger |
-| `DDTZ.DOC`     |     --     | Z80 replacement for DDT |
-| `DIRX.COM`     |     --     | Directory lister with file sizes |
-| `DSCONFIG.COM` | ZSDOS      | ZSDOS DATSWEEP configuration tool |
-| `DUMP.COM`     | CPM22      | DRI type contents of disk file in hex |
-| `ED.COM`       | CPM22      | DRI context editor |
-| `FA16.CFG`     | ZSDOS      | ZSDOS FILEATTR.COM v1.6 configuration file |
-| `FA16.DOC`     | ZSDOS      | ZSDOS FILEATTR.COM v1.6 documentation |
-| `FA16A.FOR`    | ZSDOS      | ZSDOS FILEATTR.COM v1.6a information |
-| `FA16CFG.TXT`  | ZSDOS      | ZSDOS FILEATTR.COM v1.6 configuration instructions |
-| `FILEATTR.COM` | ZSDOS      | ZSDOS Modify file attributes |
-| `FILEDATE.CFG` | ZSDOS      | ZSDOS Configuration file for FILEDATE.COM |
-| `FILEDATE.COM` | ZSDOS      | ZSDOS Disk directory that allows sorting and selecting by date and name |
-| `FILEDATE.COM` | ZSDOS      | ZSDOS Disk directory that allows sorting and selecting by date and name |
-| `INITDIR.CFG`  | ZSDOS      | ZSDOS Configuration file for INITDIR.COM |
-| `INITDIR.COM`  | ZSDOS      | ZSDOS Prepare disks for P2DOS Stamps |
-| `KERMIT.COM`   |     --     | Generic CP/M 2.2 Kermit communication application |
-| `LBREXT.COM`   |     --     | Extract library files |
-| `LDDS.COM`     | ZSDOS      | Load DateStamper date/time stamping resident extension |
-| `LDNZT.COM`    | ZSDOS      | Load NZT date/time stamping resident extension |
-| `LDP2D.COM`    | ZSDOS      | Load P2DOS date/time stamping resident extension |
-| `LIB.COM`      |     --     | DRI Library manager |
-| `LINK.COM`     |     --     | DRI CPM relocatable linker |
-| `LOAD.COM`     |     --     | DRI hex file loader into memory |
-| `MAC.COM`      |     --     | DRI CPM macro assembler |
-| `MBASIC.COM`   |     --     | Microsoft Basic |
-| `PIP.COM`      | CPM22      | DRI Periperal Interchange Program |
-| `PMARC.COM`    |     --     | LHA file compressor |
-| `PMEXT.COM`    |     --     | Extractor for PMARC archives |
-| `PUTBG.COM`    | ZSDOS      | ZSDOS Prepare disk for backgrounder |
-| `PUTDS.COM`    | ZSDOS      | ZSDOS Prepare disk for datestamper date/time stamping|
-| `RELOG.COM`    | ZSDOS      | ZSDOS relog disks after program that bypasses BDOS |
-| `RMAC.COM`     |     --     | DRI Relocatable Macro Assembler |
-| `SETTERM.COM`  | ZSDOS      | ZSDOS Installs terminal control codes into DateSamper utilities |
-| `SETUPZST.COM` | ZSDOS      | ZSDOS Select clock driver |
-| `STAMPS.DAT`   | ZSDOS      | ZSDOS Library of stamping routines |
-| `STAT.COM`     | CPM22      | DRI statistices about file storage and device assignment |
-| `SUBMIT.COM`   | CPM22      | DRI batch processor |
-| `SUPERSUB.COM` | ZSDOS      |  |
-| `TD.CFG`       | ZSDOS      | ZSDOS Configuration file for TD.COM |
-| `TD.COM`       | ZSDOS      | ZSDOS Time/Date utility |
-| `TERMBASE.DAT` | ZSDOS      | ZSDOS Terminal information library for SETTERM |
-| `TESTCLOK.COM` | ZSDOS      | ZSDOS Test various clock drivers |
-| `UNCR.COM`     |     --     | NZCOM Uncrunch decompression |
-| `UNZIP.COM`    |     --     | Extractor for ZIP archives |
-| `XSUB.COM`     | CPM22      | DRI eXtended submit |
-| `ZCAL.COM`     | ZSDOS      | ZSDOS Show month calendar |
-| `ZCNFG.COM`    | ZSDOS      | ZSDOS Configure various utilities |
-| `ZCNFG24.CFG`  | ZSDOS      | ZSDOS Configuration file for ZCNFG.COM |
-| `ZPATH.COM`    | ZSDOS      | ZSDOS Set BDOS and/or ZCPR command path |
-| `ZSCONFIG.COM` | ZSDOS      | ZSDOS Dynamically regulate many of ZSDOS features |
-| `ZSID.COM`     |     --     | DRI Z80 symbolic instruction debugger |
-| `ZSVSTAMP.COM` | ZSDOS      | ZSDOS Save/restore file timestamp |
-| `ZSVSTAMP.DOC` | ZSDOS      | ZSDOS ZSVSTAMP.COM documentation |
-| `ZXD.CFG`      | ZSDOS      | ZSDOS Configuration file for ZXD.COM |
-| `ZXD.COM`      | ZSDOS      | ZSDOS Extended directory utility |
-| `ASSIGN.COM`   | RomWBW     | RomWBW Drive/Slice mapper |
-| `FAT.COM`      | RomWBW     | RomWBW FAT filesystem access |
-| `FDU.COM`      | RomWBW     | RomWBW Floppy Disk Utility |
-| `FORMAT.COM`   | RomWBW     | RomWBW media formatter (placeholder) |
-| `INTTEST.COM`  | RomWBW     | RomWBW Interrupt test |
-| `MODE.COM`     | RomWBW     | RomWBW Modify serial port characteristics |
-| `RTC.COM`      | RomWBW     | RomWBW Display and set RTC |
-| `SURVEY.COM`   | RomWBW     | System survey |
-| `SYSCOPY.COM`  | RomWBW     | RomWBW Read/write system boot image |
-| `SYSGEN.COM`   | RomWBW     | DRI CPM SYSGEN to put CPM onto a new drive |
-| `TALK.COM`     | RomWBW     | RomWBW Direct console I/O to a serial port |
-| `TIMER.COM`    | RomWBW     | RomWBW Display timer tick counter |
-| `TUNE.COM`     | RomWBW     | RomWBW Play PT or MYM sound files |
-| `XM.COM`       | RomWBW     | RomWBW XMODEM file transfer |
-| `ZSYS.SYS`     | RomWBW     | ZSDOS system image |
-| `CLRDIR.COM`   |     --     | Max Scane's disk directory cleaner |
-| `COMPARE.COM`  |     --     | FoxHollow compare two files |
-| `DDTZ.COM`     |     --     | Z80 replacement for DDT |
-| `FDISK80.COM`  |     --     | John Coffman's Partition editor for FAT filesystem |
-| `FLASH.COM`    |     --     | Will Sowerbutts' in-situ EEPROM programmer |
-| `NULU.COM`     |     --     | NZCOM new library utility |
-| `UNARC.COM`    |     --     | Extractor for ARC archives |
-| `ZAP.COM`      |     --     | Disk editor/patcher |
-| `ZDE.COM`      |     --     | Z-system display editor |
-| `ZDENST.COM`   |     --     | ZDE Installer |
+### ZSDOS 1.1 OS Files
 
-| **User 1**     | **Source** | **Description** |
-| -------------- | ---------- | ------------------------------------------------------------ |
-| `SAMPKEY.DOC`  |     --     | ZDE Distribution File |
-| `SAMPKEY.ZDK`  |     --     | ZDE Distribution File |
-| `SAMPKEY.ZDT`  |     --     | ZDE Distribution File |
-| `ZDE10.DOC`    |     --     | ZDE Distribution File |
-| `ZDE10.FOR`    |     --     | ZDE Distribution File |
-| `ZDE10.NEW`    |     --     | ZDE Distribution File |
-| `ZDE10.QRF`    |     --     | ZDE Distribution File |
-| `ZDE10.TOC`    |     --     | ZDE Distribution File |
-| `ZDE13.FOR`    |     --     | ZDE Distribution File |
-| `ZDE13.NEW`    |     --     | ZDE Distribution File |
-| `ZDE16.COM`    |     --     | ZDE Distribution File |
-| `ZDE16.DIR`    |     --     | ZDE Distribution File |
-| `ZDE16.FIX`    |     --     | ZDE Distribution File |
-| `ZDE16.FOR`    |     --     | ZDE Distribution File |
-| `ZDE16.NEW`    |     --     | ZDE Distribution File |
-| `ZDE16A.COM`   |     --     | ZDE Distribution File |
-| `ZDE16A.PAT`   |     --     | ZDE Distribution File |
-| `ZDENST16.COM` |     --     | ZDE Distribution File |
-| `ZDEPROP.DOC`  |     --     | ZDE Distribution File |
-| `ZDEPROP.Z80`  |     --     | ZDE Distribution File |
-| `ZDKCOM13.COM` |     --     | ZDE Distribution File |
-| `ZDKCOM13.DOC` |     --     | ZDE Distribution File |
+These are built and provide the OS. ZSDOS Typically has no boot files 
+stored on the disk. It entirely boots from the system track
 
-| **User 3**     | **Source** | **Description** |
-| -------------- | ---------- | ------------------------------------------------------------ |
-| `ATTACK.PT3`   |     --     | Sound File |
-| `BACKUP.PT3`   |     --     | Sound File |
-| `BADMICE.PT3`  |     --     | Sound File |
-| `DEMO.MYM`     |     --     | Sound File |
-| `DEMO1.MYM`    |     --     | Sound File |
-| `DEMO3.MYM`    |     --     | Sound File |
-| `DEMO3MIX.MYM` |     --     | Sound File |
-| `DEMO4.MYM`    |     --     | Sound File |
-| `HOWRU.PT3`    |     --     | Sound File |
-| `ITERATN.PT3`  |     --     | Sound File |
-| `LOOKBACK.PT3` |     --     | Sound File |
-| `LOUBOUTN.PT3` |     --     | Sound File |
-| `NAMIDA.PT3`   |     --     | Sound File |
-| `RECOLL.PT3`   |     --     | Sound File |
-| `SANXION.PT3`  |     --     | Sound File |
-| `SYNCH.PT3`    |     --     | Sound File |
-| `TOSTAR.PT3`   |     --     | Sound File |
-| `VICTORY.PT3`  |     --     | Sound File |
-| `WICKED.PT3`   |     --     | Sound File |
-| `YEOLDE.PT3`   |     --     | Sound File |
-| `YEOVIL.PT3`   |     --     | Sound File |
+The following files appear in User Area 0
+
+| **File**   | **Source**   | **Description**              |
+|------------|--------------|------------------------------|
+| `ZSYS.SYS` | RomWBW       | ZSDOS Boot Image for SYSCOPY |
+
+### ZSDOS 1.1 Files
+
+The following files came from the official ZSDOS distribution.  These
+are generally documented in the "ZSDOS Manual.pdf" document in the Doc/CPM
+directory of the RomWBW distribution.  
+
+Note: Some of the files included in the ZSDOS distribution are not listed 
+below because they have been superseded by more recent versions listed in 
+other sections below.  
+
+The following files appear in User Area 0
+
+| **File**       | **Description**                                        |
+|----------------|--------------------------------------------------------|
+| `BGPATCH.HEX`  | Patches BackGrounder II for ZSDOS 1.1 compatibility    |
+| `CLOCKS.DAT`   | Library of clock drivers                               |
+| `COPY.COM`     | Enhanced File copier with file dates and archiving     |
+| `COPY.CFG`     | Configuration file (ZCNFG) for COPY.COM                |
+| `COPY.UPD`     | Document describing updates to COPY program            |
+| `DATSWEEP.COM` | Comprehensive file management w/ date stamp awareness  |
+| `DSCONFIG.COM` | Program to configure DATSWEEP                          |
+| `FA16.CFG`     | ZCNFG configuration file for FILEATTR.COM              |
+| `FA16.DOC`     | Documentation for FILEATTR.COM                         |
+| `FA16A.FOR`    | Summary Information for FILEATTR.COM                   |
+| `FA16CFG.TXT`  | describes configuration options for FILEATTR.COM       |
+| `FILEATTR.COM` | Set and/or display file attributes                     |
+| `FILEDATE.COM` | Date/time stamping aware disk directory utility        |
+| `FILEDATE.CFG` | ZCNFG configuration fie for FILEDATE                   |
+| `INITDIR.COM`  | Prepare disk for P2DOS date/time stamping              |
+| `INITDIR.CFG`  | ZCNFG configuration file for INITDIR                   |
+| `LDDS.COM`     | Load DateStamper date/time stamping resident extension |
+| `LDNZT.COM`    | Load NZT date/time stamping resident extension         |
+| `LDP2D.COM`    | Load P2DOS date/time stamping resident extension       |
+| `PUTBG.COM`    | Updated replacement for BackGrounder II PUTBG program  |
+| `PUTDS.COM`    | Prepare disk for datestamper date/time stamping        |
+| `RELOG.COM`    | Clear fixed disk login vector in ZSDOS                 |
+| `SETTERM.COM`  | Terminal configuration utility for DATSWEEP & DSCONFIG |
+| `SETUPZST.COM` | Creates date/time stamping resident extensions         |
+| `STAMPS.DAT`   | Library of date/time stamping modules for SETUPZST     |
+| `TD.COM`       | Read and set system real-time clock                    |
+| `TD.CFG`       | ZCNFG Configuration file for TD.COM                    |
+| `TERMBASE.DAT` | Library of terminals used by SETTERM                   |
+| `TESTCLOK.COM` | Test a selected clock driver                           |
+| `ZCAL.COM`     | Display a small one-month calendar to the screen       |
+| `ZCNFG.COM`    | Configuration tool for programs with .CFG files        |
+| `ZCNFG24.CFG`  | Configuration file for ZCNFG.COM                       |
+| `ZPATH.COM`    | Set or display ZSDOS and ZCPR search paths             |
+| `ZSCONFIG.COM` | Configure features of ZSDOS operating systems          |
+| `ZSVSTAMP.COM` | Preserves file date/time stamp across modifications    |
+| `ZSVSTAMP.DOC` | Document describes the use and operation of ZSVSTAMP   |
+
+NOTE: These files are also included in the NZ-COM disk image distribution
+
+### Additional Files
+
+|     | **Documentation**                  | **User Area** |
+|-----|------------------------------------|---------------|
+|     | [CP/M 2.2 Files]                   | 0             |
+|     | [RomWBW Supplemental Applications] | 0             |
+|     | [General Purpose Applications]     | 0             |
+|     | [Testing Applications]             | 2             |
+|     | [Sample Audio Files]               | 3             |
+|     | [Common Z-System Files]            | 10,14,15      |
+|     | [SIMH Simulator]                   | 13            |
 
 `\clearpage`{=latex}
 
-# NZCOM Boot Disk
+## NZCOM
+
+This disk contains NZ-COM, which is an implementation of the
+Z-System.  You may also see NZ-COM referred to as ZCPR 3.4.  This is
+a powerful replacement for CP/M 2.2 w/ full backward compatibility.
+NZ-COM is extremely configurable and far more powerful than
+DRI CP/M.  It is almost mandatory that you read the NZ-COM manual to
+use the system effectively.
 
 | Floppy Disk Image: **fd_nzcom.img**
 | Hard Disk Image: **hd_nzcom.img**
 | Combo Disk Image: **Slice 2**
 
-| **User 0**     | **Source** | **Description** |
-| -------------- | ---------- | ------------------------------------------------------------ |
-| `!(C)1988`     | NZCOM      |  |
-| `!NZ-COM`      | NZCOM      |  |
-| `!VERS--1.2H`  | NZCOM      |  |
-| `ALIAS.CMD`    | NZCOM      | NZCOM Aliases file for ARUNZ.COM |
-| `ARUNZ.COM`    | NZCOM      | NZCOM Invoke an alias in ALIAS.CMD |
-| `BGZRDS19.LBR` | NZCOM      |  |
-| `CLEDINST.COM` | NZCOM      | Command line editing and history shell installer |
-| `CLEDSAVE.COM` | NZCOM      | Write command line history to disk |
-| `CONFIG.LBR`   | NZCOM      |  |
-| `COPY.COM`     | NZCOM      | ZSDOS File copier with file dates and archiving |
-| `CPSET.COM`    | NZCOM      | NZCOM Create multiple definitions for CRT and PRT |
-| `CRUNCH.COM`   | NZCOM      | NZCOM Text compression |
-| `DOCFILES.LBR` | NZCOM      |  |
-| `EDITNDR.COM`  | NZCOM      | NZCOM Associate names with directories |
-| `FCP.LBR`      | NZCOM      | NZCOM ??? Flow control |
-| `FF.COM`       | NZCOM      | NZCOM File finder |
-| `HELP.COM`     | NZCOM      | DRI CPM+ |
-| `HLPFILES.LBR` | NZCOM      |  |
-| `IF.COM`       | NZCOM      | NZCOM  Flow condition tester for FCP |
-| `JETLDR.COM`   | NZCOM      | NZCOM General-purpose module loader |
-| `KERMIT.COM`   |     --     | Generic CP/M 2.2 Kermit communication application |
-| `LBREXT.COM`   | NZCOM      | Extract library files |
-| `LBRHELP.COM`  | NZCOM      |  |
-| `LDIR.COM`     | NZCOM      | NZCOM Display the directory of a library |
-| `LPUT.COM`     | NZCOM      | NZCOM Put files into a library |
-| `LSH-HELP.COM` | NZCOM      |  |
-| `LSH.COM`      | NZCOM      |  |
-| `LSH.WZ`       | NZCOM      |  |
-| `LSHINST.COM`  | NZCOM      |  |
-| `LX.COM`       | NZCOM      | NZCOM Extract and execute a memeber of a library |
-| `MKZCM.COM`    | NZCOM      | NZCOM NZCOM system defining utility |
-| `NAME.COM`     | NZCOM      | NZCOM Name a drive/user |
-| `NZ-DBASE.INF` | NZCOM      | NZCOM Dbase information |
-| `NZBLITZ.COM`  | NZCOM      |  |
-| `NZBLTZ14.CFG` | NZCOM      |  |
-| `NZBLTZ14.HZP` | NZCOM      |  |
-| `NZCOM.COM`    | NZCOM      | NZCOM system loader from CP/M |
-| `NZCOM.LBR`    | NZCOM      | NZCOM Library of NZCOM system modules |
-| `NZCPR.LBR`    | NZCOM      | NZCOM Default command processor |
-| `PATH.COM`     | NZCOM      | NZCOM Set/display command search path |
-| `PUBLIC.COM`   | NZCOM      |  |
-| `PWD.COM`      | NZCOM      |  |
-| `RCP.LBR`      | NZCOM      | NZCOM Resident command package |
-| `RELEASE.NOT`  | NZCOM      |  |
-| `SAINST.COM`   | NZCOM      |  |
-| `SALIAS.COM`   | NZCOM      | NZCOM Screen alias |
-| `SAVENDR.COM`  | NZCOM      | NZCOM Save named directory assignments to a file |
-| `SDZ.COM`      | NZCOM      | NZCOM Super directory |
-| `SHOW.COM`     | NZCOM      | NZCOM Show resident commands |
-| `SUB.COM`      | NZCOM      |  |
-| `SUBMIT.COM`   |     --     | DRI batch processor |
-| `TCAP.LBR`     | NZCOM      | NZCOM Terminal capability descriptor library |
-| `TCJ.INF`      | NZCOM      |  |
-| `TCJ25.WZ`     | NZCOM      |  |
-| `TCJ26.WZ`     | NZCOM      |  |
-| `TCJ27.WZ`     | NZCOM      |  |
-| `TCJ28.WZ`     | NZCOM      |  |
-| `TCJ29.WZ`     | NZCOM      |  |
-| `TCJ30.WZ`     | NZCOM      |  |
-| `TCJ31UPD.WZ`  | NZCOM      |  |
-| `TCJ32.WZ`     | NZCOM      |  |
-| `TCJ33UPD.WZ`  | NZCOM      |  |
-| `TCSELECT.COM` | NZCOM      | NZCOM Create terminal capability file |
-| `TY3ERA.COM`   | NZCOM      | NZCOM Type-3 transient program to erase a file |
-| `TY3REN.COM`   | NZCOM      | NZCOM Type-3 transient program to rename a file |
-| `TY4ERA.COM`   | NZCOM      | NZCOM Type-4 transient program to erase a file |
-| `TY4REN.COM`   | NZCOM      | NZCOM Type-4 transient program to rename a file |
-| `TY4SAVE.COM`  | NZCOM      | NZCOM Type-4 transient program to save memory to a file |
-| `TY4SP.COM`    | NZCOM      | NZCOM Type-4 transient program ti display disk space |
-| `UNCRUNCH.COM` | NZCOM      | NZCOM Text decompressor |
-| `VIEW.COM`     | NZCOM      |  |
-| `XTCAP.COM`    | NZCOM      |  |
-| `Z3LOC.COM`    | NZCOM      | NZCOM Display the addresses of the ZCPR3 CCP, BDOS, and BIOS |
-| `Z3TCAP.TCP`   | NZCOM      | NZCOM Database of terminal descriptors |
-| `ZCNFG.COM`    | NZCOM      | ZSDOS Configure various utilities |
-| `ZERR.COM`     | NZCOM      |  |
-| `ZEX.COM`      | NZCOM      | NZCOM Memory-based batch processor |
-| `ZF-DIM.COM`   | NZCOM      | NZCOM ZFILER shell for dim-video terminals |
-| `ZF-REV.COM`   | NZCOM      | NZCOM ZFILER shell for reverse-video terminals |
-| `ZFILEB38.LZT` | NZCOM      |  |
-| `ZFILER.CMD`   | NZCOM      | NZCOM Macro script file for ZFILER |
-| `ZHELPERS.LZT` | NZCOM      |  |
-| `ZLT.COM`      | NZCOM      |  |
-| `ZNODES66.LZT` | NZCOM      |  |
-| `ZSDOS.ZRL`    | NZCOM      |  |
-| `ZSYSTEM.IZF`  | NZCOM      |  |
-| `ASSIGN.COM`   | RomWBW     | RomWBW Drive/Slice mapper |
-| `FAT.COM`      | RomWBW     | RomWBW FAT filesystem access |
-| `FDU.COM`      | RomWBW     | RomWBW Floppy Disk Utility |
-| `FORMAT.COM`   | RomWBW     | RomWBW media formatter (placeholder) |
-| `INTTEST.COM`  | RomWBW     | RomWBW Interrupt test |
-| `MODE.COM`     | RomWBW     | RomWBW Modify serial port characteristics |
-| `RTC.COM`      | RomWBW     | RomWBW Display and set RTC |
-| `SURVEY.COM`   | RomWBW     | System survey |
-| `SYSCOPY.COM`  | RomWBW     | RomWBW Read/write system boot image |
-| `SYSGEN.COM`   | RomWBW     | DRI CPM SYSGEN to put CPM onto a new drive |
-| `TALK.COM`     | RomWBW     | RomWBW Direct console I/O to a serial port |
-| `TIMER.COM`    | RomWBW     | RomWBW Display timer tick counter |
-| `TUNE.COM`     | RomWBW     | RomWBW Play PT or MYM sound files |
-| `XM.COM`       | RomWBW     | RomWBW XMODEM file transfer |
-| `CPM.SYS`      | RomWBW     |  |
-| `ZSYS.SYS`     | RomWBW     |  |
-| `CLRDIR.COM`   |     --     | Max Scane's disk directory cleaner |
-| `COMPARE.COM`  |     --     | FoxHollow compare two files |
-| `DDTZ.COM`     |     --     | Z80 replacement for DDT |
-| `FDISK80.COM`  |     --     | John Coffman's Partition editor for FAT filesystem |
-| `FLASH.COM`    |     --     | Will Sowerbutts' in-situ EEPROM programmer |
-| `NULU.COM`     |     --     | NZCOM new library utility |
-| `UNARC.COM`    |     --     | Extractor for ARC archives |
-| `ZAP.COM`      |     --     | Disk editor/patcher |
-| `ZDE.COM`      |     --     | Z-system display editor |
-| `ZDENST.COM`   |     --     | ZDE Installer |
+### NZ-COM OS Files
 
-| **User 3**     | **Source** | **Description** |
-| -------------- | ---------- | ------------------------------------------------------------ |
-| `ATTACK.PT3`   |     --     | Sound File |
-| `BACKUP.PT3`   |     --     | Sound File |
-| `BADMICE.PT3`  |     --     | Sound File |
-| `DEMO.MYM`     |     --     | Sound File |
-| `DEMO1.MYM`    |     --     | Sound File |
-| `DEMO3.MYM`    |     --     | Sound File |
-| `DEMO3MIX.MYM` |     --     | Sound File |
-| `DEMO4.MYM`    |     --     | Sound File |
-| `HOWRU.PT3`    |     --     | Sound File |
-| `ITERATN.PT3`  |     --     | Sound File |
-| `LOOKBACK.PT3` |     --     | Sound File |
-| `LOUBOUTN.PT3` |     --     | Sound File |
-| `NAMIDA.PT3`   |     --     | Sound File |
-| `RECOLL.PT3`   |     --     | Sound File |
-| `SANXION.PT3`  |     --     | Sound File |
-| `SYNCH.PT3`    |     --     | Sound File |
-| `TOSTAR.PT3`   |     --     | Sound File |
-| `VICTORY.PT3`  |     --     | Sound File |
-| `WICKED.PT3`   |     --     | Sound File |
-| `YEOLDE.PT3`   |     --     | Sound File |
-| `YEOVIL.PT3`   |     --     | Sound File |
+NZ-COM is not designed to load directly from the boot tracks of a
+disk.  Instead, it expects to be loaded from an already running OS.  
+
+This disk has been configured to boot using ZSDOS with a PROFILE.SUB 
+command file that automatically loads NZ-COM. So, NZ-COM will load completely 
+without any intervention, but you may notice that ZSDOS loads first, 
+then ZSDOS loads NZ-COM.
+
+The following files appear in User Area 0
+
+| **File**       | **Source** | **Description**                                    |
+|----------------|------------|----------------------------------------------------|
+| `!(C)1988`     | NZCOM      | Original copyright (since placed in public domain) |
+| `!NZ-COM`      | NZCOM      | Software marker directory entry (empty file)       |
+| `!VERS--1.2H`  | NZCOM      | Version marker directory entry (empty file)        |
+| `NZCOM.COM`    | NZCOM      | NZCOM Loads and launches NZ-COM system             |
+| `NZCOM.ENV`    | RomWBW     | NZCOM Z-System environment descriptor              |
+| `NZCOM.LBR`    | NZCOM      | NZCOM Library of NZCOM system modules              |
+| `NZCOM.ZCM`    | RomWBW     | NZCOM environment descriptor (alternate format)    |
+| `NZCPR.LBR`    | NZCOM      | NZCOM Library of alternative ZCPR modules          |
+| `PROFILE.SUB`  | RomWBW     | Command file to auto-start NZ-COM at system boot   |
+| `RCP.LBR`      | NZCOM      | NZCOM Library of alternative RCP modules           |
+| `STARTZCM.COM` | NZCOM      | Commands to execute after NZ-COM is launched       |
+| `ZRDOS.ZRL`    | NZCOM      | NZCOM Relocatable version of ZRDOS BDOS module     |
+| `ZSDOS.ZRL`    | NZCOM      | NCCOM Relocatable version of ZSDOS 1.1 BDOS module |
+| `ZSYS.SYS`     | RomWBW     | ZSDOS Boot Image for SYSCOPY                       |
+
+### NZ-COM Files
+
+The following files came from the official NZ-COM distribution.  These
+are generally documented in the "NZCOM Users Manual.pdf" document in
+the Doc/CPM directory of the RomWBW distribution.  Note that some of the
+files included in the NZ-COM distribution are not listed below because
+they have been superseded by more recent versions listed in other
+sections below. 
+
+The following file are in User Area 15, and where noted 14 for config files.  
+
+| **File**       | **Description**                                          |
+|----------------|----------------------------------------------------------|
+| `ALIAS.CMD`    | Sample alias definitions for use with ARUNZ              |
+| `ARUNZ.COM`    | Alias-RUN-forZ-System command alias execution            |
+| `CLEDINST.COM` | Command line editing and history shell installer         |
+| `CLEDSAVE.COM` | Save RCP-resident command line editor history            |
+| `CMDRUN.COM`   | Extended Command Processor (copied from ARUNZ)           |
+| `CONFIG.LBR`   | Various configuration files for use with ZCNFG. (U14)    |
+| `CPSET.COM`    | Displays/defines CRT/PRT characteristics                 |
+| `EDITNDR.COM`  | Edit named directory register in memory                  |
+| `FCP.LBR`      | Library of alternative FCP modules                       |
+| `FF.COM`       | File finder utility                                      |
+| `HELP.COM`     | (HELPC14) is an improved version of the help utility     |
+| `IF.COM`       | Extended flow control tester for FCP                     |
+| `JETLDR.COM`   | Z-System General-purpose module loader                   |
+| `LBRHELP.COM`  | Help file viewer for use with help file libraries (.LBR) |
+| `LDIR.COM`     | Directory lister for libraries (.LBR)                    |
+| `LPUT.COM`     | Puts file(s) into a library (.LBR)                       |
+| `LSH.COM`      | Command history shell and command line editor            |
+| `LSH-HELP.COM` | Display LSH help when LSH is running                     |
+| `LSHINST.COM`  | LSH configuration editor                                 |
+| `LX.COM`       | Execute programs directly from a library (.LBR)          |
+| `MKZCM.COM`    | Create/update NZ-COM load environment                    |
+| `NAME.COM`     | Quickly add or remove a name for a single directory      |
+| `NZBLITZ.COM`  | Rapid coldboot of complete NZ-COM system image           |
+| `NZBLTZ14.CFG` | ZCNFG configuration file for NZBLITZ. (U14)              |
+| `PATH.COM`     | Set/display command search path                          |
+| `PUBLIC.COM`   | Specify ZRDOS public directories/user areas              |
+| `PWD.COM`      | Displays DU and Directory Names with paging              |
+| `SAINST.COM`   | Install/configure SALIAS                                 |
+| `SALIAS.COM`   | Screen oriented alias editor                             |
+| `SAVENDR.COM`  | Writes the named directory register to disk              |
+| `SDZ.COM`      | Enhanced directory lister                                |
+| `SHOW.COM`     | Display Z-System configuration information               |
+| `SUB.COM`      | Enhanced version of SUBMIT                               |
+| `TY3ERA.COM`   | Type-3 program to erase a file                           |
+| `TY3REN.COM`   | Type-3 program to rename a file                          |
+| `TY4ERA.COM`   | Type-4 program to erase a file                           |
+| `TY4REN.COM`   | Type-4 program to rename a file                          |
+| `TY4SAVE.COM`  | Type-4 program to save memory to a file                  |
+| `TY4SP.COM`    | Type-4 program to display disk space                     |
+| `VIEW.COM`     | Quad directional file viewer                             |
+| `XTCAP.COM`    | Interactive Extended TCAP Installer                      |
+| `ZERR.COM`     | Z34 Error Handler                                        |
+| `ZEX.COM`      | Powerful command line batch processor                    |
+| `ZF-DIM.COM`   | ZFILER shell for dim-video terminals                     |
+| `ZF-REV.COM`   | ZFILER shell for reverse-video terminals                 |
+| `ZFILER.CMD`   | Macro script file for ZFILER                             |
+| `ZLT.COM`      | File lister with support for compressed files            |
+
+Documentation
+
+The following documentation files are in User Area 10
+
+| **File**       | **Description**                                          |
+|----------------|----------------------------------------------------------|
+| `BGZRDS19.LBR` | Patch for Backgrounder II                                |
+| `DOCFILES.LBR` | Documentation and help files collected into an LBR file  |
+| `HLPFILES.LBR` | Various app help files for use with LBRHELP              |
+| `LSH.WZ`       | User manual for LSH                                      |
+| `NZ-DBASE.INF` | dBase II application note regarding SUBMIT files         |
+| `NZBLTZ14.HZP` | Help file for NZBLITZ                                    |
+| `RELEASE.NOT`  | NZCOM Update information on NZ-COM                       |
+| `TCJ.INF`      | List of included articles from The Computer Journal      |
+| `TCJ*.WZ`      | Selected articles from The Computer Journal              |
+| `ZFILEB38.LZT` | Brief listing of Z-System support programs               |
+| `ZHELPERS.LZT` | List of volunteers who will help installing Z-System     |
+| `ZNODES66.LZT` | List of Z-Node remote access systems                     |
+| `ZSYSTEM.IZF`  | Information on Z-System and related products             |
+
+### Additional Files
+
+|     | **Documentation**                  | **User Area** |
+|-----|------------------------------------|---------------|
+|     | [Testing Applications]             | 2             |
+|     | [Sample Audio Files]               | 3             |
+|     | [CP/NET 1.2]                       | 4             |
+|     | [Common Z-System Files]            | 10,14,15      |
+|     | [ZSDOS 1.1 Files]                  | 10,14,15      |
+|     | [SIMH Simulator]                   | 13            |
+|     | [CP/M 2.2 Files]                   | 15            |
+|     | [RomWBW Supplemental Applications] | 15,10         |
+|     | [General Purpose Applications]     | 15            |
 
 `\clearpage`{=latex}
 
-# CP/M 3 Boot Disk
+## CP/M 3
+
+A vanilla distribution of DRI's CP/M 3, also known as CP/M Plus adapted for RomWBW.
 
 | Floppy Disk Image: **fd_cpm3.img**
 | Hard Disk Image: **hd_cpm3.img**
 | Combo Disk Image: **Slice 3**
 
-| **User 0**     | **Source** | **Description** |
-| -------------- | ---------- | ------------------------------------------------------------ |
-| `DATE.COM`     | CPM3       | DRI CPM+ Set or display the date and time |
-| `DEVICE.COM`   | CPM3       | DRI CPM+ Assign logical devices with one or more physical devices |
-| `DIR.COM`      | CPM3       | DRI CPM+ DIR with options |
-| `DUMP.COM`     | CPM3       | DRI type contents of disk file in hex |
-| `ED.COM`       | CPM3       | DRI context editor |
-| `ERASE.COM`    | CPM3       | DRI file deletion |
-| `GENCOM.COM`   | CPM3       | DRI CPM+ Generate special COM file with attached RSX files |
-| `GET.COM`      | CPM3       | DRI CPM+ Temporarily get console input form a disk file |
-| `HELP.COM`     | CPM3       | DRI CPM+ Display information on how to use commands |
-| `HELP.HLP`     | CPM3       | DRI CPM+ Databse of help information for HELP.COM |
-| `HEXCOM.CPM`   | CPM3       | DRI CPM+ Create a COM file from a nex file output by MAC |
-| `INITDIR.COM`  | CPM3       | DRI CPM+ Initializes a disk to allow time and date stamping |
-| `KERMIT.COM`   |     --     | Generic CP/M 3 Kermit communication application |
-| `PATCH.COM`    | CPM3       | DRI CPM+ Display or install patch to the CPM+ system or command files |
-| `PIP.COM`      | CPM3       | DRI Periperal Interchange Program |
-| `PUT.COM`      | CPM3       | DIR CPM+ Temporarily redirect printer or console output to a disk file |
-| `RENAME.COM`   | CPM3       | DRI CPM+ Rename a file |
-| `ROMWBW.TXT`   | RomWBW     |  |
-| `SAVE.COM`     | CPM3       | DRI CPM+ Copy the contents of memory to a file |
-| `SET.COM`      | CPM3       | DIR CPM+ Set file options |
-| `SETDEF.COM`   | CPM3       | DIR CPM+ Set system options including the drive search chain |
-| `SHOW.COM`     | CPM3       | DIR CPM+ Display disk and drive statistics |
-| `SUBMIT.COM`   | CPM3       | DRI batch processor |
-| `TYPE.COM`     | CPM3       | DIR CPM+ Display the contents of an ASCII character file |
-| `ZSID.COM`     | CPM3       | DRI Z80 symbolic instruction debugger |
-| `CPMLDR.COM`   | RomWBW     | DRI CPM 3.0 loader |
-| `CPMLDR.SYS`   | RomWBW     | DRI CPM 3.0 loader |
-| `CCP.COM`      | CPM3       | DRI CPM+ Console Command Processor |
-| `GENCPM.COM`   | CPM3       | DRI CPM+ Create a memory image of CPM3.SYS |
-| `GENRES.DAT`   | RomWBW     |  |
-| `GENBNK.DAT`   | RomWBW     |  |
-| `BIOS3.SPR`    | RomWBW     | DRI CPM+ GENCPM input file for non-banked BIOS |
-| `BNKBIOS3.SPR` | RomWBW     | DRI CPM+ GENCPM input file for banked BIOS |
-| `BDOS3.SPR`    | CPM3       | DRI CPM+ GENCPM input file for the non-banked BDOS |
-| `BNKBDOS3.SPR` | CPM3       | DRI CPM+ GENCPM input file for banked BDOS |
-| `RESBDOS3.SPR` | CPM3       | DRI CPM+ GENCPM input file for resident BDOS |
-| `CPM3RES.SYS`  | RomWBW     | DRI CPM+ (non-banked) memory image |
-| `CPM3BNK.SYS`  | RomWBW     | DRI CPM+ (banked) memory image |
-| `GENCPM.DAT`   | RomWBW     | DRI CPM+ System generation tool data file |
-| `CPM3.SYS`     | RomWBW     | DRI CPM+ (non-banked) memory image |
-| `README.1ST`   | CPM3       |  |
-| `CPM3FIX.PAT`  | CPM3       |  |
-| `ASSIGN.COM`   | RomWBW     | RomWBW Drive/Slice mapper |
-| `FAT.COM`      | RomWBW     | RomWBW FAT filesystem access |
-| `FDU.COM`      | RomWBW     | RomWBW Floppy Disk Utility |
-| `FORMAT.COM`   | RomWBW     | RomWBW media formatter (placeholder) |
-| `INTTEST.COM`  | RomWBW     | RomWBW Interrupt test |
-| `MODE.COM`     | RomWBW     | RomWBW Modify serial port characteristics |
-| `RTC.COM`      | RomWBW     | RomWBW Display and set RTC |
-| `SURVEY.COM`   | RomWBW     | System survey |
-| `SYSCOPY.COM`  | RomWBW     | RomWBW Read/write system boot image |
-| `SYSGEN.COM`   | RomWBW     | DRI CPM SYSGEN to put CPM onto a new drive |
-| `TALK.COM`     | RomWBW     | RomWBW Direct console I/O to a serial port |
-| `TIMER.COM`    | RomWBW     | RomWBW Display timer tick counter |
-| `TUNE.COM`     | RomWBW     | RomWBW Play PT or MYM sound files |
-| `XM.COM`       | RomWBW     | RomWBW XMODEM file transfer |
-| `CLRDIR.COM`   |     --     | Max Scane's disk directory cleaner |
-| `COMPARE.COM`  |     --     | FoxHollow compare two files |
-| `DDTZ.COM`     |     --     | Z80 replacement for DDT |
-| `FDISK80.COM`  |     --     | John Coffman's Partition editor for FAT filesystem |
-| `FLASH.COM`    |     --     | Will Sowerbutts' in-situ EEPROM programmer |
-| `NULU.COM`     |     --     | NZCOM new library utility |
-| `UNARC.COM`    |     --     | Extractor for ARC archives |
-| `ZAP.COM`      |     --     | Disk editor/patcher |
-| `ZDE.COM`      |     --     | Z-system display editor |
-| `ZDENST.COM`   |     --     | ZDE Installer |
+### CP/M 3 OS Files
 
-| **User 3**     | **Source** | **Description** |
-| -------------- | ---------- | ------------------------------------------------------------ |
-| `ATTACK.PT3`   |     --     | Sound File |
-| `BACKUP.PT3`   |     --     | Sound File |
-| `BADMICE.PT3`  |     --     | Sound File |
-| `DEMO.MYM`     |     --     | Sound File |
-| `DEMO1.MYM`    |     --     | Sound File |
-| `DEMO3.MYM`    |     --     | Sound File |
-| `DEMO3MIX.MYM` |     --     | Sound File |
-| `DEMO4.MYM`    |     --     | Sound File |
-| `HOWRU.PT3`    |     --     | Sound File |
-| `ITERATN.PT3`  |     --     | Sound File |
-| `LOOKBACK.PT3` |     --     | Sound File |
-| `LOUBOUTN.PT3` |     --     | Sound File |
-| `NAMIDA.PT3`   |     --     | Sound File |
-| `RECOLL.PT3`   |     --     | Sound File |
-| `SANXION.PT3`  |     --     | Sound File |
-| `SYNCH.PT3`    |     --     | Sound File |
-| `TOSTAR.PT3`   |     --     | Sound File |
-| `VICTORY.PT3`  |     --     | Sound File |
-| `WICKED.PT3`   |     --     | Sound File |
-| `YEOLDE.PT3`   |     --     | Sound File |
-| `YEOVIL.PT3`   |     --     | Sound File |
+The following files appear in User Area 0
+
+| **File**       | **Source** | **Description**                                    |
+|----------------|------------|----------------------------------------------------|
+| `BDOS3.SPR`    | CPM3       | DRI CPM+ GENCPM input file for the non-banked BDOS |
+| `BIOS3.SPR`    | RomWBW     | DRI CPM+ GENCPM input file for non-banked BIOS     |
+| `BNKBIOS3.SPR` | RomWBW     | DRI CPM+ GENCPM input file for banked BIOS         |
+| `BNKBDOS3.SPR` | CPM3       | DRI CPM+ GENCPM input file for banked BDOS         |
+| `CCP.COM`      | CPM3       | DRI CPM+ Console Command Processor                 |
+| `CPM3.SYS`     | RomWBW     | DRI CPM+ (non-banked) memory image                 |
+| `CPM3RES.SYS`  | RomWBW     | DRI CPM+ (non-banked) memory image                 |
+| `CPM3BNK.SYS`  | RomWBW     | DRI CPM+ (banked) memory image                     |
+| `CPM3FIX.PAT`  | CPM3       |                                                    |
+| `CPMLDR.COM`   | RomWBW     | DRI CPM 3.0 Boot Loader Application                |
+| `CPMLDR.SYS`   | RomWBW     | DRI CPM 3.0 Boot Loader for SYSCOPY                |
+| `GENBNK.DAT`   | RomWBW     |                                                    |
+| `GENRES.DAT`   | RomWBW     |                                                    |
+| `GENCPM.DAT`   | RomWBW     | DRI CPM+ System generation tool data file          |
+| `GENCPM.COM`   | CPM3       | DRI CPM+ Create a memory image of CPM3.SYS         |
+| `RESBDOS3.SPR` | CPM3       | DRI CPM+ GENCPM input file for resident BDOS       |
+| `README.1ST`   | CPM3       |                                                    |
+
+### CP/M 3 Files
+
+The following CP/M 3 files were distributed by DRI with the operating
+system or as supplemental add-on programs.
+
+The following files appear in User Area 0
+
+| **File*       | **Description**                                                        |
+|---------------|------------------------------------------------------------------------|
+| `DATE.COM`    | DRI CPM+ Set or display the date and time                              |
+| `DEVICE.COM`  | DRI CPM+ Assign logical devices with one or more physical devices      |
+| `DIR.COM`     | DRI CPM+ DIR with options                                              |
+| `DUMP.COM`    | DRI type contents of disk file in hex                                  |
+| `ED.COM`      | DRI context editor                                                     |
+| `ERASE.COM`   | DRI file deletion                                                      |
+| `GENCOM.COM`  | DRI CPM+ Generate special COM file with attached RSX files             |
+| `GET.COM`     | DRI CPM+ Temporarily get console input form a disk file                |
+| `HELP.COM`    | DRI CPM+ Display information on how to use commands                    |
+| `HELP.HLP`    | DRI CPM+ Databse of help information for HELP.COM                      |
+| `HEXCOM.COM`  | DRI CPM+ Create a COM file from a hex file output by MAC               |
+| `INITDIR.COM` | DRI CPM+ Initializes a disk to allow time and date stamping            |
+| `PATCH.COM`   | DRI CPM+ Display or install patch to the CPM+ system or command files  |
+| `PIP.COM`     | DRI Periperal Interchange Program                                      |
+| `PUT.COM`     | DIR CPM+ Temporarily redirect printer or console output to a disk file |
+| `RENAME.COM`  | DRI CPM+ Rename a file                                                 |
+| `SAVE.COM`    | DRI CPM+ Copy the contents of memory to a file                         |
+| `SET.COM`     | DIR CPM+ Set file options                                              |
+| `SETDEF.COM`  | DIR CPM+ Set system options including the drive search chain           |
+| `SHOW.COM`    | DIR CPM+ Display disk and drive statistics                             |
+| `SUBMIT.COM`  | DRI batch processor                                                    |
+| `TYPE.COM`    | DIR CPM+ Display the contents of an ASCII character file               |
+| `ZSID.COM`    | DRI Z80 symbolic instruction debugger                                  |                                                                    |
+
+### Additional Files
+
+|     | **Documentation**                  | **User Area** |
+|-----|------------------------------------|---------------|
+|     | [RomWBW Supplemental Applications] | 0             |
+|     | [General Purpose Applications]     | 0             |
+|     | [Testing Applications]             | 2             |
+|     | [Sample Audio Files]               | 3             |
+|     | [CP/NET 1.2]                       | 4             |
+|     | [SIMH Simulator]                   | 13            |
 
 `\clearpage`{=latex}
 
-# ZPM3 Boot Disk
+## ZPM3
+
+This is a generic ZPM3 adaptation for RomWBW.
 
 | Floppy Disk Image: **fd_zpm3.img**
 | Hard Disk Image: **hd_zpm3.img**
 | Combo Disk Image: **Slice 4**
 
-| **User 0**     | **Source** | **Description** |
-| -------------- | ---------- | ------------------------------------------------------------ |
-| `HELP.HLP`     | ZPM3       |  |
-| `ROMWBW.TXT`   | RomWBW     |  |
-| `ZPMLDR.COM`   | RomWBW     |  |
-| `ZPMLDR.SYS`   | RomWBW     |  |
-| `CPMLDR.COM`   | RomWBW     |  |
-| `CPMLDR.SYS`   | RomWBW     |  |
-| `CPM3.SYS`     | RomWBW     |  |
-| `ZCCP.COM`     | ZPM3       |  |
-| `ZINSTAL.ZPM`  | ZPM3       |  |
-| `STARTZPM.COM` | ZPM3       |  |
-| `MAKEDOS.COM`  | ZPM3       |  |
-| `GENCPM.DAT`   | RomWBW     |  |
-| `BNKBIOS3.SPR` | RomWBW     |  |
-| `BNKBDOS3.SPR` | ZPM3       |  |
-| `RESBDOS3.SPR` | ZPM3       |  |
+Per ZPM3 standard, files are distributed across different user areas
+depending on their usage.  Normal applications are in user area 15.  Help
+files in user area 10.  Configuration files in user area 14.
 
-| **User 3**     | **Source** | **Description** |
-| -------------- | ---------- | ------------------------------------------------------------ |
-| `ATTACK.PT3`   |     --     | Sound File |
-| `BACKUP.PT3`   |     --     | Sound File |
-| `BADMICE.PT3`  |     --     | Sound File |
-| `DEMO.MYM`     |     --     | Sound File |
-| `DEMO1.MYM`    |     --     | Sound File |
-| `DEMO3.MYM`    |     --     | Sound File |
-| `DEMO3MIX.MYM` |     --     | Sound File |
-| `DEMO4.MYM`    |     --     | Sound File |
-| `HOWRU.PT3`    |     --     | Sound File |
-| `ITERATN.PT3`  |     --     | Sound File |
-| `LOOKBACK.PT3` |     --     | Sound File |
-| `LOUBOUTN.PT3` |     --     | Sound File |
-| `NAMIDA.PT3`   |     --     | Sound File |
-| `RECOLL.PT3`   |     --     | Sound File |
-| `SANXION.PT3`  |     --     | Sound File |
-| `SYNCH.PT3`    |     --     | Sound File |
-| `TOSTAR.PT3`   |     --     | Sound File |
-| `VICTORY.PT3`  |     --     | Sound File |
-| `WICKED.PT3`   |     --     | Sound File |
-| `YEOLDE.PT3`   |     --     | Sound File |
-| `YEOVIL.PT3`   |     --     | Sound File |
+### ZPM3 OS Files
 
-| **User 10**    | **Source** | **Description** |
-| -------------- | ---------- | ------------------------------------------------------------ |
-| `ALIAS.HLP`    |     --     |  |
-| `HP-RPN.HLP`   |     --     |  |
-| `HP-ZP.HLP`    |     --     |  |
-| `IF.HLP`       |     --     |  |
-| `MENU.HLP`     |     --     |  |
-| `VLU.HLP`      |     --     |  |
-| `ZFHIST.HLP`   |     --     |  |
-| `ZFILER.HLP`   |     --     |  |
-| `ZFMACRO.HLP`  |     --     |  |
-| `ZP.HLP`       |     --     |  |
+The following files appear in User Area 0
 
-| **User 14**    | **Source** | **Description** |
-| -------------- | ---------- | ------------------------------------------------------------ |
-| `COPY.CFG`     |     --     |  |
-| `ERASE.CFG`    |     --     |  |
-| `HELPC15.CFG`  |     --     |  |
-| `ZCNFG24.CFG`  |     --     |  |
-| `ZEX.CFG`      |     --     |  |
-| `ZF11.CFG`     |     --     |  |
-| `ZP17.CFG`     |     --     |  |
+| **File**       | **Source** | **Description**                               |
+|----------------| ---------- |-----------------------------------------------|
+| `BNKBIOS3.SPR` | RomWBW     | Banked BIOS                                   |
+| `BNKBDOS3.SPR` | ZPM3       | Banked BDOS                                   |
+| `CPM3.SYS`     | RomWBW     | ZPM3 system file (See Note)                   |
+| `GENCPM.DAT`   | RomWBW     | DRI CPM+ System generation tool data file     |
+| `HELP.HLP`     | ZPM3       | System Help File                              |
+| `MAKEDOS.COM`  | ZPM3       | Utility to overlay your system file with ZPM3 |
+| `STARTZPM.COM` | RomWBW     | Commands to execute after ZPM is launched     |
+| `RESBDOS3.SPR` | ZPM3       | Resident BDOS                                 |
+| `ZCCP.COM`     | ZPM3       | ZCCP replacement for CCP.COM                  |
+| `ZINSTAL.ZPM`  | ZPM3       | Segment containing environment information    |
+| `ZPMLDR.COM`   | RomWBW     | ZPM3 Boot Loader Application                  |
+| `ZPMLDR.SYS`   | RomWBW     | ZPM3 Boot Loader for SYSCOPY                  |
 
-| **User 15**    | **Source** | **Description** |
-| -------------- | ---------- | ------------------------------------------------------------ |
-| `ALIAS.COM`    |     --     |  |
-| `ARUNZ.COM`    |     --     |  |
-| `COPY.COM`     |     --     |  |
-| `DATE.COM`     | CPM3       |  |
-| `DEV.COM`      |     --     |  |
-| `DEVICE.COM`   | CPM3       |  |
-| `DIR.COM`      | CPM3       |  |
-| `DISKINFO.COM` |     --     |  |
-| `DU.COM`       |     --     |  |
-| `DUMP.COM`     | CPM3       |  |
-| `ED.COM`       | CPM3       |  |
-| `ERASE.COM`    | CPM3       |  |
-| `GENCOM.COM`   | CPM3       |  |
-| `GENCPM.COM`   | CPM3       |  |
-| `GET.COM`      | CPM3       |  |
-| `GOTO.COM`     |     --     |  |
-| `HELP.COM`     | CPM3       |  |
-| `HEXCOM.COM`   | CPM3       |  |
-| `IF.COM`       |     --     |  |
-| `INITDIR.COM`  | CPM3       |  |
-| `KERMIT.COM`   | CPM3       |  |
-| `LBREXT.COM`   |     --     |  |
-| `LIB.COM`      |     --     |  |
-| `LINK.COM`     |     --     |  |
-| `LOADSEG.COM`  |     --     |  |
-| `MAC.COM`      |     --     |  |
-| `MBASIC.COM`   |     --     |  |
-| `NAMES.NDR`    |     --     |  |
-| `PATCH.COM`    | CPM3       |  |
-| `PIP.COM`      | CPM3       |  |
-| `PUT.COM`      | CPM3       |  |
-| `REMOVE.COM`   |     --     |  |
-| `RENAME.COM`   | CPM3       |  |
-| `RMAC.COM`     |     --     |  |
-| `RSXDIR.COM`   |     --     |  |
-| `SAINST.COM`   |     --     |  |
-| `SALIAS.COM`   |     --     |  |
-| `SAVE.COM`     | CPM3       |  |
-| `SET.COM`      | CPM3       |  |
-| `SETDEF.COM`   | CPM3       |  |
-| `SETPATH.COM`  |     --     |  |
-| `SHOW.COM`     | CPM3       |  |
-| `SUBMIT.COM`   | CPM3       |  |
-| `TCAP.Z3T`     |     --     |  |
-| `TYPE.COM`     | CPM3       |  |
-| `VERROR.COM`   |     --     |  |
-| `VLU.COM`      |     --     |  |
-| `XREF.COM`     |     --     |  |
-| `ZCNFG.COM`    |     --     |  |
-| `ZERASE.COM`   |     --     |  |
-| `ZEX.COM`      |     --     |  |
-| `ZFILER.COM`   |     --     |  |
-| `ZHELP.COM`    |     --     |  |
-| `ZP.COM`       |     --     |  |
-| `ZSHOW.COM`    |     --     |  |
-| `ZSID.COM`     |     --     |  |
-| `ZXD.COM`      |     --     |  |
-| `AUTOTOG.COM`  | ZPM3       |  |
-| `CLRHIST.COM`  | ZPM3       |  |
-| `SETZ3.COM`    | ZPM3       |  |
-| `ASSIGN.COM`   | RomWBW     |  |
-| `FAT.COM`      | RomWBW     |  |
-| `FDU.COM`      | RomWBW     |  |
-| `FORMAT.COM`   | RomWBW     |  |
-| `INTTEST.COM`  | RomWBW     |  |
-| `MODE.COM`     | RomWBW     |  |
-| `RTC.COM`      | RomWBW     |  |
-| `SURVEY.COM`   | RomWBW     |  |
-| `SYSCOPY.COM`  | RomWBW     |  |
-| `SYSGEN.COM`   | RomWBW     |  |
-| `TALK.COM`     | RomWBW     |  |
-| `TIMER.COM`    | RomWBW     |  |
-| `TUNE.COM`     | RomWBW     |  |
-| `XM.COM`       | RomWBW     |  |
-| `CLRDIR.COM`   |     --     |  |
-| `COMP.COM`     |     --     |  |
-| `DDTZ.COM`     |     --     |  |
-| `FDISK80.COM`  |     --     |  |
-| `FLASH.COM`    |     --     |  |
-| `NULU.COM`     |     --     |  |
-| `TCVIEW.COM`   |     --     |  |
-| `UNARC.COM`    |     --     |  |
-| `Z3LOC.COM`    |     --     |  |
-| `ZAP.COM`      |     --     |  |
-| `ZDE.COM`      |     --     |  |
-| `ZDENST.COM`   |     --     |  |
+**NOTE:** Currently `GENCPM.COM` is located in User Area 15
+
+**NOTE:** The ZPM3 system file is called CPM3.SYS. This is the ZPM3 
+default configuration. It is done to maximize compatibility with CP/M 3. 
+
+Either ZPMLDR or CPMLDR can be used to launch ZPM3. CPMLDR is equivalent to ZPMLDR.
+
+The following files appear in User Area 15
+
+| **File**      | **Source** | **Description** |
+|---------------| ---------- |-----------------|
+| `AUTOTOG.COM` | ZPM3       |                 |
+| `CLRHIST.COM` | ZPM3       |                 |
+| `SETZ3.COM`   | ZPM3       |                 |
+
+### ZPM3 Files
+
+This is a generic ZPM3 adaptation for RomWBW.
+
+| **File**       | **User Area** | **Description**                                              |
+|----------------|---------------|--------------------------------------------------------------|
+| `ALIAS.COM`    | 15            |                                                              |
+| `ALIAS.HLP`    | 10            |                                                              |
+| `ARUNZ.COM`    | 15            | Alias-RUN-forZ-System command alias execution                |
+| `COPY.COM`     | 15            |                                                              |
+| `COPY.CFG`     | 14            |                                                              |
+| `DEV.COM`      | 15            |                                                              |
+| `DISKINFO.COM` | 15            | ZCPR utility which gives information about your disks.       |
+| `DU.COM`       | 15            |                                                              |
+| `EDITNDR.COM`  | 15            |                                                              |
+| `ERASE.CFG`    | 14            |                                                              |
+| `GENCPM.COM`   | 15            | DRI CPM3 Utility to Create a memory image of CPM3.SYS        |
+| `GOTO.COM`     | 15            |                                                              |
+| `HELPC15.CFG`  | 14            |                                                              |
+| `HP-RPN.HLP`   | 10            | Help File for HP RPN Calculators ?                           |
+| `HP-ZP.HLP`    | 10            | Help File for HP ZP Calculators ?                            |
+| `IF.COM`       | 15            |                                                              |
+| `IF.HLP`       | 10            |                                                              |
+| `LOADSEG.COM`  | 15            | ZCCP Utility to Load RSXes, TCAPs and Named Directory files. |
+| `MENU.HLP`     | 10            |                                                              |
+| `NAMES.NDR`    | 15            | Default Directory Names loaded at boot                       |
+| `REMOVE.COM`   | 15            |                                                              |
+| `RSXDIR.COM`   | 15            | ZCPR Utility which displays RSXes in memory                  |
+| `SAINST.COM`   | 15            |                                                              |
+| `SALIAS.COM`   | 15            | Screen oriented alias editor                                 |
+| `SAVENDR.COM`  | 15            | NZCOM Writes the named directory to disk                     |
+| `SDZ.COM`      | 15            | NZCOM Enhanced directory lister                              |
+| `SETPATH.COM`  | 15            | used to set the command search path.                         |
+| `VERROR.COM`   | 15            | Installs a resident error handler                            |
+| `VLU.COM`      | 15            | Video Library Utility views or extracts files from libraries |
+| `VLU.HLP`      | 10            |                                                              |
+| `XREF.COM`     | 15            |                                                              |
+| `ZCNFG.COM`    | 15            | Configuration tool for programs with .CFG files              |
+| `ZCNFG24.CFG`  | 14            | Configuration file for ZCNFG.COM                             |
+| `ZERASE.COM`   | 15            |                                                              |
+| `ZEX.COM`      | 15            | ZCPR A memory-based command file processor, like SUBMIT      |
+| `ZEX.CFG`      | 14            |                                                              |
+| `ZFHIST.HLP`   | 10            |                                                              |
+| `ZFILER.COM`   | 15            | File management shell, with GUI.                             |
+| `ZFILER.HLP`   | 10            | Help file for ZFILER.COM                                     |
+| `ZF11.CFG`     | 14            |                                                              |
+| `ZFMACRO.HLP`  | 10            |                                                              |
+| `ZHELP.COM`    | 15            |                                                              |
+| `ZP.COM`       | 15            | Z-System Patch utility edits files, disk sectors, or memory  |
+| `ZP.HLP`       | 10            | Help File for ZP.COM                                         |
+| `ZP17.CFG`     | 14            |                                                              |
+| `ZSHOW.COM`    | 15            | displays amount of information about your Z-System           |
+
+### Additional Files
+
+|     | **Documentation**                  | **User Area** |
+|-----|------------------------------------|---------------|
+|     | [Testing Applications]             | 2             |
+|     | [Sample Audio Files]               | 3             |
+|     | [Common Z-System Files]            | 10,14,15      |
+|     | [SIMH Simulator]                   | 13            |
+|     | [CP/M 3 Files]                     | 15            |
+|     | [RomWBW Supplemental Applications] | 15            |
+|     | [General Purpose Applications]     | 15            |
+
+## QPM 2.7
+
+The following files came from from Microcode Consulting. The official
+distribution files can be found on the Microcode Consulting website at
+[https://www.microcodeconsulting.com/z80/qpm.htm].
+Also included in this image are debugz, and linkz frm the same company.
+
+This disk includes the standard DRI CP/M 2.2 files in addition to the
+QP/M files.  QP/M generally assumes you already had DRI CP/M 2.2
+prior to adding QP/M features.
+
+### QPM 2.7 OS Files
+
+These are built and provide the OS.
+QPM Typically has no boot files stored on the disk.
+It entirely boots from the system track
+
+The following files appear in User Area 0
+
+| **File**   | **Description**                                            |
+|------------|------------------------------------------------------------|
+| `QPM.SYS`  | RomWBW configured QP/M system image (for use with SYSCOPY) |                                                        
+
+The qpm.sys file and the QP/M image on the system
+tracks was created using QINSTALL with default settings EXCEPT
+for the two settings described under Notes (current drive/user
+storage address and TIMDAT vector).
+
+### QPM 2.7 Files
+
+The following files appear in User Area 0
+
+| **File**       | **Description**                                           |
+|----------------|-----------------------------------------------------------|
+| `D.COM`        | Directory lister                                          |
+| `DBGINST.COM`  | Configures DEBUGZ debugger                                |
+| `DEBUGZ.COM`   | Symbolic debugger for Z80                                 |
+| `DEBUGZ.HLP`   | Symbolic debugger help file                               |
+| `DHORIZ.COM`   | Version of directory lister for horizontal file sorting   |
+| `HELLO.QPM`    | Text file with QP/M version information                   |
+| `LZ.COM`       | Z80 Linking Loader                                        |
+| `QBACKUP.COM`  | Data backup application                                   |
+| `QINSTALL.COM` | QP/M installer / configurator                             |
+| `QPATCH.COM`   | Patches (customizes) a few QP/M applications              |
+| `QPIP.COM`     | QP/M enhanced version of CP/M 2.2 PIP application         |                                                          
+| `QPMCLK.MAC`   | Example of QP/M clock assembler routine                   |
+| `QPMCMDS.TXT`  | Brief summary of QP/M commands                            |
+| `QPMUTILS.TXT` | Brief summary of QP/M utilities                           |
+| `QSTAMP.COM`   | Initializes disk for date/time stamping                   |
+| `QSTAMPV.COM`  | Initializes disk for date/time stamping (vertical sort)   |
+| `QSTAMPX.COM`  | Initializes disk for date/time stamping (horizontal sort) |
+| `QSTAT.COM`    | QP/M enhanced version of CP/M 2.2 STAT application        |
+| `QSUB.COM`     | QP/M batch file submission program                        |
+| `QSWEEP.COM`   | QP/M directory sweep utility                              |
+| `QTERM.DAT`    | Terminal control codes used by DEBUGZ                     |
+| `QTERMS.LIB`   | Library of available terminal definitions                 |
+| `SETQTERM.COM` | Configures QTERM.DAT                                      |
+| `TDCNFG.COM`   | Configures date/time directory display preferences        |
+
+There are two text files (QPMCMDS.TXT and QPMUTILS.TXT) included.  
+These files have escape sequences imbedded in them which makes them 
+look a little strange depending on the terminal emulation you are using.
+
+### Additional Files
+
+|     | **Documentation**                  | **User Area** |
+|-----|------------------------------------|---------------|
+|     | [CP/M 2.2 Files]                   | 0             |
+|     | [RomWBW Supplemental Applications] | 0             |
+|     | [General Purpose Applications]     | 0             |
+|     | [Testing Applications]             | 2             |
+|     | [Sample Audio Files]               | 3             |
+|     | [SIMH Simulator]                   | 13            |
 
 `\clearpage`{=latex}
 
-# WordStar 4 Application Disk
+# Common Disk Contents
+
+## CP/NET 1.2
+
+User area 4 contains a full implementation of the CP/NET 1.2 client 
+provided by Doug Miller. Please refer to
+[https://github.com/durgadas311/cpnet-z80] for more information, 
+complete documentation and the latest source code.
+
+Please refer to the RomWBW User Guide for instructions on installing
+and using these these packages. Either the MT011 RCBus module or the
+Duodyne Disk I/O board is required.  In general, to use CP/NET on RomWBW, 
+it is intended that you will extract the appropriate set of files 
+into your default directory in user area 0.
+
+The following are found in
+
+*  /Binary/CPNET
+
+| File         | CP/NET Version | OS       | Hardware              |
++--------------+----------------+----------+-----------------------+
+| CPN12MT.LBR  | CP/NET 1.2     | CP/M 2.2 | RCBus w/ MT011        |
+| CPN3MT.LBR   | CP/NET 3       | CP/M 3   | RCBus w/ MT011        |
+| CPN12DUO.LBR | CP/NET 1.2     | CP/M 2.2 | Duodyne w/ Disk I/O   |
+| CPN3DUO.LBR  | CP/NET 3       | CP/M 3   | Duodyne w/ Disk I/O   |
+
+## Common Z-System Files
+
+The following files are found in
+
+* /Source/Images/Common/Z
+* /Source/Images/Common/Z3
+
+Included in All Z Operating Systems (ZSDOS, NZ-COM, ZPM3)
+
+| **File**      | **Source** | **Description**                                       |
+|---------------|------------|-------------------------------------------------------|
+| `LBREX36.CFG` | Z          | ZCNFG configuration file for LBREXT                                                      |
+| `LBREXT.COM`  | Z          | Extract file from .LBR libraries                      |
+| `UNARCU1.CFG` | Z          |                                                       |
+| `ZXD.CFG`     | Z          | Configuration file for ZXD.COM                        |
+| `ZXD.COM`     | Z          | Extended directory utility w/ date/time stamp support |
+
+Included in Z Operating Systems (NZCOM, ZPM3) - Excluding ZSDOS
+
+| **File**       | **Source** | **Description**                                      |
+|----------------|------------|------------------------------------------------------|
+| `SCOPY.COM`    | Z3         |                                                      |  
+| `SCOPY10F.CFG` | Z3         |                                                      |  
+| `SCOPY.HLP`    | Z3         |                                                      |  
+| `SCOPY10F.HLP` | Z3         |                                                      |  
+| `TCAP.Z3T`     | Z3         |                                                      |  
+| `TCSELECT.COM` | NZCOM      | NZCOM Create terminal capability file                |
+| `TCVIEW.COM`   | Z3         |                                                      |  
+| `UMAP.COM`     | Z3         |                                                      |  
+| `UMAP18.CFG`   | Z3         |                                                      |  
+| `Z3lOC.COM`    | NZCOM      | Display info of the ZCPR3 CCP, BDOS, and BIOS        |  
+| `Z3TCAP.LBR`   | NZCOM      | NZCOM Database of terminal descriptors               |  
+
+Notes
+
+*  Original TCSELECT.COM was removed and replaced with a newer version
+   from the Z3 files
+*  TCAP.LBR and Z3TCAP.TCP were removed and replaced with
+   Z3TCAP.LBR from new TCSELECT distribution.
+*  Extract VT100 TCAP from Z3TCAP.LBR and saved it as TCAP.Z3T.
+*  Z3LOC.COM was removed because more recent
+   versions are provided from Common files.
+
+
+## General Purpose Applications
+
+The following files are commonly used CP/M applications that
+are generally useful in any CP/M-like system.  In general, there is
+no documentation for these applications included with the RomWBW
+distribution.  Some provide command line help themselves.  Some
+are fairly obvious.
+
+The following files are found in
+
+*  /Source/Images/Common/All
+*  /Source/Images/Common/CPM22 (for CP/M 2.2 based operatng system)
+*  /Source/Images/Common/CPM3 (for CP/M 3 based operatng system)
+*  /Source/Images/Common/UTILS
+
+| **File**       | **Source** | **Description**                                             |
+|----------------|------------|-------------------------------------------------------------|
+| `CLRDIR.COM`   | All        | Initializes the directory area of a disk (from Max Scane)   |  
+| `COMPARE.COM`  | All        | Compare content of two files (binary)                       |                                                                 
+| `CRUNCH.COM`   | All        | Compress file(s) using Crunch algorithmn                    |                                            
+| `CRUNCH28.CFG` | All        | ZCNFG configuration file for CRUNCH & UNCR                  |                                            
+| `DDTZ.COM`     | All        | Z80 debug tool (modified to use RST 6)                      |                                             
+| `DDTZ.DOC`     | All        | Documentation for DDTZ                                      |  
+| `EX.COM`       | All        | Batch file processor (alternative to DRI SUBMIT)            |  
+| `FDISK80.COM`  | All        | Hard disk partitioning tool (from John Coffman)             |  
+| `FIND.COM`     | All        | Search all drives for a file (from Jay Cotton)              |  
+| `FLASH.COM`    | All        | Program FLASH chips in-situ (from Will Sowerbutts)          |  
+| `FLASH.DOC`    | All        | Documentation for FLASH                                     |  
+| `GENHEX.COM`   | UTILS      | Generates an Intel Hex file from the input file             |  
+| `KERCPM22.COM` | CP/M 2.2   | Kermit communication application                            |
+| `KERCPM3.COM`  | CP/M 3     | Kermit communication application                            |
+| `LS.COM`       | UTILS      | An alternative file listing to DIR                          |  
+| `LSWEEP.COM`   | UTILS      | Can extract and view member files of an .LBR archive        |  
+| `MBASIC.COM`   | All        | Microsoft BASIC language interpreter                        |  
+| `NULU.COM`     | All        | NZCOM new library utility (.LBR) management tool            |  
+| `PMARC.COM`    | All        | Create or add file(s) to LHA .PMA archive                   |  
+| `PMEXT.COM`    | All        | Extract file(s) from .PMA/.LZH/.LHA archive                 |  
+| `RZ.COM`       | CP/M 3     |                                                             |
+| `RZSC.FOR`     | CP/M 3     |                                                             |
+| `RMXSUB1.COM`  | All        | Remove XSUB1 RSX from memory (from Lars Nelson)             |  
+| `SZ.COM`       | CP/M 3     |                                                             |
+| `SUPERSUB.COM` | All        | Enhanced replacement for DRI SUBMIT                         |  
+| `SUPERSUB.DOC` | All        | Documentation for SUPERSUB                                  |  
+| `TDLBASIC.COM` | All        | TDL Zapple 12K BASIC language interpreter                   |  
+| `UNARC.COM`    | All        | Extract file(s) from .ARC or .ARK archive                   |  
+| `UNARC.DOC`    | All        | Documentation for UNARC                                     |  
+| `UNCR.COM`     | All        | Decompress Crunched file(s). See CRUNCH.COM                 |  
+| `UNZIP.COM`    | All        | UNZIP extracts from all MS-DOS ZIP files (from Lars Nelson) |  
+| `UNZIP.DOC`    | All        | Documentation for UNZIP                                     |  
+| `WDATE.COM`    | All        | Utility to configure RTC Date. (from Kevin Boone)           |  
+| `XSUB1.COM`    | All        | Replacement for DRI SUB (from Lars Nelson)                  |  
+| `ZAP.COM`      | All        | Interactive disk & file utility                             |  
+| `ZDE.COM`      | All        | Compact WordStar-like editor                                |  
+| `ZDE.DOC`      | All        | ZDE Documentation                                           |  
+| `ZDENST.COM`   | All        | Installation/configuration tool for ZDE                     |  
+| `ZMRX.COM`     | All        |                                                             |  
+| `ZMTX.COM`     | All        |                                                             |  
+        
+CLRDIR.COM, FDISK80.COM, FLASH.COM, WDATE.COM are documented in the  
+"RomWBW Applications.pdf" document in the Doc directory of the
+RomWBW Distribution.                                          
+
+## RomWBW Supplemental Applications
+
+The following files provide specific functionality enabled by
+RomWBW enhancements.  These applications are typically documented in the
+"RomWBW Applications.pdf" document in the Doc directory of the
+RomWBW Distribution.
+
+The following files are found in
+
+* /Source/Apps
+* /Source/Apps/*
+* /Source/TastyBasic
+
+| **File**       | **Source**   | **Description**                                               |
+|----------------|--------------|---------------------------------------------------------------|
+| `ASSIGN.COM`   | RomWBW       | Assign,remove,swap drive letters of RomWBW disk slices        |
+| `COPYSL.COM`   | M.Pruden     | Copy CPM Hard Disk Slices                                     |  
+| `COPYSL.DOC`   | M.Pruden     | Documentation for COPYSL.COM                                  |  
+| `CPUSPD.COM`   | RomWBW       | CPU Speed                                                     |  
+| `FAT.COM`      | RomWBW       | MS-DOS FAT filesystem tool (list, copy, delete, format, etc.) |  
+| `FDU.COM`      | RomWBW       | Floppy Disk Utility, Test and format floppy disks             |  
+| `FDU.DOC`      | RomWBW       | Documentation for FDU                                         |  
+| `FORMAT.COM`   | RomWBW       | Placeholder application with formatting instructions          |  
+| `HTALK.COM`    | Tom Plano    | Terminal utility talking directly to HBIOS Character Units    |  
+| `MODE.COM`     | RomWBW       | Change serial line characteristics (baud rate, etc.)          |  
+| `REBOOT.COM`   | MartinR      | Cold or Warm Boot the RomWBW System                           |  
+| `RTC.COM`      | Andrew Lynch | Test real time clock hardware on your system                  |  
+| `SURVEY.COM`   | RomWBW       | Display system resources summary                              |  
+| `SYSCOPY.COM`  | RomWBW       | Copy system tracks to disks (make bootable)                   |  
+| `SYSGEN.COM`   | DRI          | Copy system tracks to disks                                   |  
+| `TALK.COM`     | RomWBW       | Route console I/O to & from specified serial port             |  
+| `TIMER.COM`    | RomWBW       | Test and display system timer ticks                           |  
+| `TUNE.COM`     | RomWBW       | Play .PT2, .PT3, and .MYM audio files on supported hardware   |  
+| `VGMPLAY.COM`  |              | Simple player for VGM (Video Game Music) files.               |
+| `XM.COM`       | RomWBW       | XModem file transfer application                              |  
+| `ZMD.COM`      | R.W.K        | Z80 RCP/M File Transfer Program (Robert W. Kramer III)        |
+| `ZMP.COM `     |              | ZModem communications program (requires dedicated comm port)  |  
+| `ZMP.DOC`      |              | Documentation for ZMP                                         |  
+| `ZMP.HLP`      |              | Help file for ZMP                                             |  
+| `ZMXFER.OVR`   |              | Overlay file for ZMP                                          |  
+| `ZMTERM.OVR`   |              | Overlay file for ZMP                                          |  
+| `ZMINIT.OVR`   |              | Overlay file for ZMP                                          |  
+| `ZMCONFIG.OVR` |              | Overlay file for ZMP                                          |  
+
+The following files are more general purpose applications built specifically by RomWBW     
+
+| **File**       | **Source**        | **Description**                                         |
+|----------------|-------------------|---------------------------------------------------------|
+| `BBCBASIC.COM` | R.T.Russell       | BBC BASIC CP/M Version                                  |
+| `BBCBASIC.TXT` | R.T.Russell       | Help file for BBC BASIC                                 |
+| `TBASIC.COM`   | Dimitri Theulings | Tasty Basic                                             |
+
+## Sample Audio Files
+
+User area 3 contains sample audio files that can be played using
+the TUNE or VGMPLAY applications. 
+
+**NOTE** These files are NOT present on floppy disk images
+
+The following files are found in
+
+*  /Binary/Apps/Tunes
+
+| **File**       | **Description**  |
+|----------------|------------------|
+| `ATTACK.PT3`   | Sound File       |
+| `BACKUP.PT3`   | Sound File       |
+| `BADMICE.PT3`  | Sound File       |
+| `DEMO.MYM`     | Sound File       |
+| `DEMO1.MYM`    | Sound File       |
+| `DEMO3.MYM`    | Sound File       |
+| `DEMO3MIX.MYM` | Sound File       |
+| `DEMO4.MYM`    | Sound File       |
+| `ENDING.VGM`   | Sound File       |
+| `HOWRU.PT3`    | Sound File       |
+| `INCHINA.VGM`  | Sound File       |
+| `ITERATN.PT3`  | Sound File       |
+| `LOOKBACK.PT3` | Sound File       |
+| `LOUBOUTN.PT3` | Sound File       |
+| `NAMIDA.PT3`   | Sound File       |
+| `RECOLL.PT3`   | Sound File       |
+| `SANXION.PT3`  | Sound File       |
+| `SHIRAKAW.VGM` | Sound File       |
+| `STARTDEM.VGM` | Sound File       |
+| `SYNCH.PT3`    | Sound File       |
+| `TOSTAR.PT3`   | Sound File       |
+| `VICTORY.PT3`  | Sound File       |
+| `WICKED.PT3`   | Sound File       |
+| `WONDER01.VGM` | Sound File       |
+| `YEOLDE.PT3`   | Sound File       |
+| `YEOVIL.PT3`   | Sound File       |
+
+## SIMH Simulator
+
+Files for use with the SIMH Simulator
+
+The following files are found in
+
+*  /Source/Images/Common/SIMH
+
+| **File** | **Description** |
+|----------|-----------------|
+| --       |       --        |
+
+## Testing Applications
+
+User area 2 contains a variety of hardware testing applications.
+These are generally user contributed and have no documentation.
+
+These applications are frequently not compatible with all RomWBW
+hardware.  They are included here as a convenience.  If applicable,
+your hardware documentation should refer to them and provide usage
+instructions.
+
+**NOTE** These files are NOT present on floppy disk images
+
+The following files are found in
+
+* /Binary/Apps/Test
+* /Source/Images/Common/Test
+
+| **File**       | **Description**                                  |
+|----------------|--------------------------------------------------|
+| `2PIOTST.COM`  | ECB-ZILOG PERIPHERALS BOARD TEST 2 PIO's         |
+| `AY-TEST.COM`  | AY-3-8910 Sound Test Program (SOUND)             |
+| `BANKTEST.COM` | Test RomWBW bank management API                  |
+| `DMAMON.COM`   | Verify operation of the Z80 MBC DMA board        |
+| `I2CLCD.COM`   | PCF8584 HD44780  I2C LCD UTILITY                 |
+| `I2CSCAN.COM`  | I2C BUS SCANNER                                  |
+| `INTTEST.COM`  | Test HBIOS interrupt API functions               |
+| `KBDTEST.COM`  | test program to work with the Z80 KBDMSE board   |
+| `PIOMON.COM`   | Zilog PIO Monitor & Hardware Testing Application |
+| `PORTSCAN.COM` | Reads all ports and displays values read         |
+| `PPIDETST.COM` | PPI IDE test for checkout of all 8255 IDE drives |
+| `PS2INFO.COM`  | PS/2 Keyboard/Mouse Information Utility          |
+| `RAMTEST.COM`  | RAM_TEST_PROGRAM                                 |
+| `RTCDS7.COM`   | PCF8584/DS1307 I2C DATE AND TIME UTILITY (I2C)   |
+| `RZ.COM`       | Receive Zmodem disassembly of CP/M 3 binaries    |
+| `SOUND.COM`    | RomWBW HBIOS Sound Device Test Tool (SOUND)      |
+| `SROM.COM`     | I2C Serial ROM Read/Write Utility (I2C)          |
+| `SZ.COM`       | Send Zmodem is a disassembly of CP/M 3 binaries  |
+| `TESTH8P.COM`  | H8 Panel Test                                    |
+| `TSTDSKNG.COM` | DSKY NEXT GENERATION TEST APPLICATION            |
+| `VDCONLY.COM`  | COLOR VDU TEST                                   |
+| `VDCTEST.COM`  | COLOR VDU TEST                                   |
+| `ZEXALL.COM`   | Z80 Instruction Set Exerciser                    |
+| `ZEXDOC.COM`   | Z80 Instruction Set Exerciser                    |
+
+And The following CPU Tests - Which are probably originally from this source. 
+[https://github.com/raxoft/z80test]
+
+| **File**       | **Description**                                               |
+|----------------|---------------------------------------------------------------|
+| `Z80CCF.COM`   | tests flags after executing CCF after each instruction.       |
+| `Z80DOC.COM`   | tests registers, but only officially documented flags         |
+| `Z80DOCF.COM`  |                                                               |
+| `Z80FLAGS.COM` | tests flags, ignores registers.                               |
+| `Z80FULL.COM`  | tests flags and registers                                     |
+| `Z80MPTR.COM`  | tests flags after executing BIT N,(HL) after each instruction |
+
+# Application Standalone Disks
+
+## Aztec C Compiler
+
+| Floppy Disk Image: **fd_aztecc.img**
+| Hard Disk Image: **hd_aztecc.img**
+
+Aztec C is a discontinued programming language for a variety of platforms
+including MS-DOS, Apple II DOS 3.3 and PRoDOS, Commodore 64, Macintosh and
+Amiga. This disk contains the CP/M version of that compiler. A cross-compiler
+for MS-DOS or Windows XP is also available.
+
+For full documentation, see [https://www.aztecmuseum.ca] 
+The user manual is available in the Doc/Language directory
+Aztec_C_1.06_User_Manual_Mar84.pdf
+
+The following files are found in
+
+*  /Source/Images/d_aztec
+
+| **File** | **Description** |
+|----------|-----------------|
+| --       |       --        |
+
+NOTE : The above is incomplete
+
+## Microsoft Basic Compiler
+
+| Floppy Disk Image: **fd_bascomp.img**
+| Hard Disk Image: **hd_bascomp.img**
+
+The Microsoft BASIC Compiler is a highly efficient programming tool that
+converts BASIC programs from BASIC source code into machine code. This
+provides much faster BASIC program execution than has previously been
+possible. It can make programs run an average of 3 to 10 times faster than
+programs run under BASIC-80. Compiled programs can be up to 30 times
+faster than interpreted programs if maximum use of integer variables is
+made.
+
+View BASCOM.HLP included in the disk image using HELP.COM for documentation.
+
+The following files are found in
+
+*  /Source/Images/d_bascomp
+
+| **File** | **Description** |
+|----------|-----------------|
+| --       |       --        |
+
+NOTE : The above is incomplete
+
+## Cowgol Compiler
+
+| Floppy Disk Image: **fd_cowgol.img**
+| Hard Disk Image: **hd_cowgol.img**
+
+The Cowgol 2.0 compiler and related tools.
+These files were provided by Ladislau Szilagyi and were sourced
+from his GitHub repository at [https://github.com/Laci1953/Cowgol_on_CP_M].
+
+The primary distribution site for Cowgol 2.0 is at
+[https://github.com/davidgiven/cowgol].
+The user manual is available in the Doc/Language directory
+Cowgol Language.pdf
+
+The following files are found in
+
+*  /Source/Images/d_cowgol
+
+| **File**     | **Description**                            |
+|--------------|--------------------------------------------|
+| ADVENT.COW   | Adventure game program source              |
+| ADVENT.SUB   | Submit file to build ADVENT                |
+| ADVENT?.TXT  | Adventure game program resource            |
+| ADVMAIN.COW  | Adventure game program source              |
+| RAND.AS      | Assembler Library File                     |
+| COWBE.COM    |                                            |
+| COWFE.COM    | RomWBW specific (Memory Manage) version    |
+| COWLINK.COM  |                                            |
+| DYNMSORT.COW | demonstrates a sort algorithm              |
+| DYNMSORT.SUB | Submit file to build DYNMSORT              |
+| HEXDUMP.COW  | a simple hex dump utility, purely a Cowgol |
+| HEXDUMP.SUB  | Submit file to build HEXDUMP               |
+| HMERGES.C    | C Library File                             |
+| XRND.AS      | Assembler Library File                     |
+| -            | -                                          |
+
+NOTE : The above is incomplete
+
+## Microsoft Fortran 80 (Fortran)
+
+| Floppy Disk Image: **fd_fortran.img**
+| Hard Disk Image: **hd_fortran.img**
+
+This is Microsoft's implementation of the FORTRAN scientific-oriented high level
+programming language. It was one of their early core languages developed for the
+8-bit computers and later brought to the 8086 and IBM PC. In 1993 Microsoft
+rebranded the product as Microsoft Fortran Powerstation. (Note: -80 refers to
+the 8080/Z80 platform, not the language specification version)
+
+The user manual is available in the Doc/Language directory,
+Microsoft_FORTRAN-80_Users_Manual_1977.pdf
+
+The following files are found in
+
+*  /Source/Images/d_fortram
+
+| **File** | **Description** |
+|----------|-----------------|
+| --       |       --        |
+
+NOTE : The above is incomplete
+
+## Games
+
+| Floppy Disk Image: **fd_games.img**
+| Hard Disk Image: **hd_games.img**
+
+This disk contains several games for CP/M including the Infocom games
+Zork 1 through 3, Planetfall and Hitchhiker's Guide to the Galaxy.
+
+Nemesis and Dungeon Master is a Rogue-like game released in 1981. It is playable
+on a text terminal using ASCII graphics to represent the dungeon. Only a few
+thousand copies of the game were ever made, making it very rare. See
+[http://crpgaddict.blogspot.com/2019/03/game-322-nemesis-1981.html]
+
+Colossal Cave Adventure is a CP/M port of the 1976 classic game originally
+written by Will Crowther for the PDP-10 mainframe. See
+[https://en.wikipedia.org/wiki/Colossal_Cave_Adventure] and
+[https://if50.substack.com/p/1976-adventure]
+
+The following files are found in
+
+*  /Source/Images/d_games
+
+| **File** | **Description** |
+|----------|-----------------|
+| --       |       --        |
+
+NOTE : The above is incomplete
+
+## HI-TECH C Compiler
+
+| Floppy Disk Image: **fd_hitechc.img**
+| Hard Disk Image: **hd_hitechc.img**
+
+The HI-TECH C Compiler  is  a  set  of  software  which
+translates  programs written in the C language to executable
+machine code programs. Versions are available which  compile
+programs  for  operation under the host operating system, or
+which produce programs for  execution  in  embedded  systems
+without an operating system.
+
+This is the Mar 21, 2023 update 17 released by Tony Nicholson who currently
+maintains HI-TECH C at [https://github.com/agn453/HI-TECH-Z80-C]
+
+The manual is available in the Doc/Language directory,
+HI-TECH Z80 C Compiler Manual.txt
+
+A good blog post about the HI-TECH C Compiler is available at
+[https://techtinkering.com/2008/10/22/installing-the-hi-tech-z80-c-compiler-for-cpm]
+
+The following files are found in
+
+*  /Source/Images/d_hitechc
+
+| **File** | **Description** |
+|----------|-----------------|
+| --       |       --        |
+
+NOTE : The above is incomplete
+
+## MSX ROMS
+
+| Hard Disk Image: **hd_msxroms1.img**
+| Hard Disk Image: **hd_msxroms2.img**
+
+The collection of MSX ROMs (2 disks) as provided by Les Bird.  
+These ROMs are "run" by using the
+appropriate variant of Les' MSX8 ROM loader.  You can download the
+loader binaries from [https://github.com/lesbird/MSX8].  You will need
+appropriate hardware to run the loader.
+
+Please review the file ROMLIST.TXT for information on the current
+operational status of the ROM and it's long file name/description.
+
+This disk (RomWBW slice) is not automatically included with the
+RomWBW "combo" disk images.  You can simply add it to a combo
+image by appending it to the end.  After booting your system,
+you can use the ASSIGN command to map the slice to a drive letter.
+Refer to the RomWBW User Guide for more information on this
+process.
+
+The ROM files are found in
+
+*  /Source/Images/d_msxroms1
+*  /Source/Images/d_msxroms2
+
+## Turbo Pascal Compiler
+
+| Floppy Disk Image: **fd_tpascal.img**
+| Hard Disk Image: **hd_tpascal.img**
+
+The Borland Turbo Pascal Compiler.
+Pascal is a general-purpose, high level programming language originally
+designed by Professor Niklaus Wirth of the Technical University of Zurich,
+Switzerland and named in honor of Blise Pascal, the famous French philosopher
+and mathematician.
+
+Turbo Pascal closely follows the definition of Standard Pascal as defined in
+the Pascal User Manual and Report with a few minor differences.
+
+The manual can be found in the Docs/Language directory,
+Turbo_Pascal_Version_3.0_Reference_Manual_1986.pdf
+
+A good overview of using Turbo Pascal in CP/M is available at
+[https://techtinkering.com/2013/03/05/turbo-pascal-a-great-choice-for-programming-under-cpm]
+
+The following files are found in
+
+*  /Source/Images/d_tpascal
+
+| **File**     | **Description**                |
+|--------------|--------------------------------|
+| ART.TXT      | Part of the Example program    |
+| SA.PAS       | Example Program                |
+| TINST.COM    | Installation and Configuration |
+| TINST.DTA    | Part of TINST                  |
+| TINST.MSG    | Part of TINST                  |
+| TURBO.COM    | The main Turbo Pascal program  |
+| TURBO.MSG    | Part of TURBO tascal           |
+| TURBO.OVR    | Part of TURBO tascal           |
+| TURBOMSG.OVR | Part of TURBO tascal           |
+
+## WordStar 4
 
 | Floppy Disk Image: **fd_ws4.img**
 | Hard Disk Image: **hd_ws4.img**
 | Combo Disk Image: **Slice 5**
 
-| **User 0**     | **Source** | **Description** |
-| -------------- | ---------- | ------------------------------------------------------------ |
-| `ANAGRAM.COM`  | WS4        | MicroPro WordStar 4 Distribution File |
-| `CHAPTER1.DOC` | WS4        | MicroPro WordStar 4 Distribution File |
-| `CHAPTER2.DOC` | WS4        | MicroPro WordStar 4 Distribution File |
-| `CHAPTER3.DOC` | WS4        | MicroPro WordStar 4 Distribution File |
-| `DIARY.DOC`    | WS4        | MicroPro WordStar 4 Distribution File |
-| `DICTSORT.COM` | WS4        | MicroPro WordStar 4 Distribution File |
-| `FIND.COM`     | WS4        | MicroPro WordStar 4 Distribution File |
-| `HOMONYMS.TXT` | WS4        | MicroPro WordStar 4 Distribution File |
-| `HYEXCEPT.TXT` | WS4        | MicroPro WordStar 4 Distribution File |
-| `HYPHEN.COM`   | WS4        | MicroPro WordStar 4 Distribution File |
-| `LOOKUP.COM`   | WS4        | MicroPro WordStar 4 Distribution File |
-| `MAINDICT.CMP` | WS4        | MicroPro WordStar 4 Distribution File |
-| `MARKFIX.COM`  | WS4        | MicroPro WordStar 4 Distribution File |
-| `MOVEPRN.COM`  | WS4        | MicroPro WordStar 4 Distribution File |
-| `PATCH.LST`    | WS4        | MicroPro WordStar 4 Distribution File |
-| `PRINT.TST`    | WS4        | MicroPro WordStar 4 Distribution File |
-| `READ.ME`      | WS4        | MicroPro WordStar 4 Distribution File |
-| `README.`      | WS4        | MicroPro WordStar 4 Distribution File |
-| `REVIEW.COM`   | WS4        | MicroPro WordStar 4 Distribution File |
-| `RULER.DOC`    | WS4        | MicroPro WordStar 4 Distribution File |
-| `SAMPLE1.DOC`  | WS4        | MicroPro WordStar 4 Distribution File |
-| `SAMPLE2.DOC`  | WS4        | MicroPro WordStar 4 Distribution File |
-| `SAMPLE3.DOC`  | WS4        | MicroPro WordStar 4 Distribution File |
-| `SPELL.COM`    | WS4        | MicroPro WordStar 4 Distribution File |
-| `TABLE.DOC`    | WS4        | MicroPro WordStar 4 Distribution File |
-| `TEXT.DOC`     | WS4        | MicroPro WordStar 4 Distribution File |
-| `TW.COM`       | WS4        | MicroPro WordStar 4 Distribution File |
-| `WC.COM`       | WS4        | MicroPro WordStar 4 Distribution File |
-| `WINSTALL.COM` | WS4        | MicroPro WordStar 4 Distribution File |
-| `WORDFREQ.COM` | WS4        | MicroPro WordStar 4 Distribution File |
-| `WS.COM`       | WS4        | MicroPro WordStar 4 Distribution File |
-| `WS.OVR`       | WS4        | MicroPro WordStar 4 Distribution File |
-| `WSCHANGE.COM` | WS4        | MicroPro WordStar 4 Distribution File |
-| `WSCHANGE.OVR` | WS4        | MicroPro WordStar 4 Distribution File |
-| `WSCHHELP.OVR` | WS4        | MicroPro WordStar 4 Distribution File |
-| `WSHELP.OVR`   | WS4        | MicroPro WordStar 4 Distribution File |
-| `WSINDEX.XCL`  | WS4        | MicroPro WordStar 4 Distribution File |
-| `WSMSGS.OVR`   | WS4        | MicroPro WordStar 4 Distribution File |
-| `WSPRINT.OVR`  | WS4        | MicroPro WordStar 4 Distribution File |
-| `WSSHORT.OVR`  | WS4        | MicroPro WordStar 4 Distribution File |
+The following files are found in
+
+*  /Source/Images/d_ws4
+
+| **File**       | **Description** |
+|----------------|-----------------|
+| `ANAGRAM.COM`  |                 |
+| `CHAPTER1.DOC` |                 |
+| `CHAPTER2.DOC` |                 |
+| `CHAPTER3.DOC` |                 |
+| `DIARY.DOC`    |                 |
+| `DICTSORT.COM` |                 |
+| `FIND.COM`     |                 |
+| `HOMONYMS.TXT` |                 |
+| `HYEXCEPT.TXT` |                 |
+| `HYPHEN.COM`   |                 |
+| `LOOKUP.COM`   |                 |
+| `MAINDICT.CMP` |                 |
+| `MARKFIX.COM`  |                 |
+| `MOVEPRN.COM`  |                 |
+| `PATCH.LST`    |                 |
+| `PRINT.TST`    |                 |
+| `READ.ME`      |                 |
+| `README.`      |                 |
+| `REVIEW.COM`   |                 |
+| `RULER.DOC`    |                 |
+| `SAMPLE1.DOC`  |                 |
+| `SAMPLE2.DOC`  |                 |
+| `SAMPLE3.DOC`  |                 |
+| `SPELL.COM`    |                 |
+| `TABLE.DOC`    |                 |
+| `TEXT.DOC`     |                 |
+| `TW.COM`       |                 |
+| `WC.COM`       |                 |
+| `WINSTALL.COM` |                 |
+| `WORDFREQ.COM` |                 |
+| `WS.COM`       |                 |
+| `WS.OVR`       |                 |
+| `WSCHANGE.COM` |                 |
+| `WSCHANGE.OVR` |                 |
+| `WSCHHELP.OVR` |                 |
+| `WSHELP.OVR`   |                 |
+| `WSINDEX.XCL`  |                 |
+| `WSMSGS.OVR`   |                 |
+| `WSPRINT.OVR`  |                 |
+| `WSSHORT.OVR`  |                 |
+
+Also contained on this image in User Area 1 are.
+
+| **File**       | **Description**       |
+|----------------|-----------------------|
+| `SAMPKEY.DOC`  | ZDE Distribution File |
+| `SAMPKEY.ZDK`  | ZDE Distribution File |
+| `SAMPKEY.ZDT`  | ZDE Distribution File |
+| `ZDE10.DOC`    | ZDE Distribution File |
+| `ZDE10.FOR`    | ZDE Distribution File |
+| `ZDE10.NEW`    | ZDE Distribution File |
+| `ZDE10.QRF`    | ZDE Distribution File |
+| `ZDE10.TOC`    | ZDE Distribution File |
+| `ZDE13.FOR`    | ZDE Distribution File |
+| `ZDE13.NEW`    | ZDE Distribution File |
+| `ZDE16.COM`    | ZDE Distribution File |
+| `ZDE16.DIR`    | ZDE Distribution File |
+| `ZDE16.FIX`    | ZDE Distribution File |
+| `ZDE16.FOR`    | ZDE Distribution File |
+| `ZDE16.NEW`    | ZDE Distribution File |
+| `ZDE16A.COM`   | ZDE Distribution File |
+| `ZDE16A.PAT`   | ZDE Distribution File |
+| `ZDENST16.COM` | ZDE Distribution File |
+| `ZDEPROP.DOC`  | ZDE Distribution File |
+| `ZDEPROP.Z80`  | ZDE Distribution File |
+| `ZDKCOM13.COM` | ZDE Distribution File |
+| `ZDKCOM13.DOC` | ZDE Distribution File |
+
+## Z80ASM Macro Assembler
+
+| Floppy Disk Image: **fd_z80asm.img**
+| Hard Disk Image: **hd_z80asm.img**
+
+Z80ASM is a relocating macro assembler for CP/M. It takes assembly language
+source statements from a disk file, converts them into their binary equivalent,
+and stores the output in either a core-image, Intel hex format, or relocatable
+object file. The mnemonics recognized are those of Zilog/Mostek. The optional
+listing output may be sent to a disk file, the console and/or the printer, in
+any combination. Output files may also be generated containing cross-reference
+information on each symbol used.
+
+The manual is available in the Doc/Language directory,
+z80asm (SLR Systems).pdf
+
+A run through of using the assembler is available at
+[https://8bitlabs.ca/Posts/2023/05/20/learning-z80-asm]
+
+The following files are found in
+
+*  /Source/Images/d_z80asm
+
+| **File**   | **Description**                     |
+|------------|-------------------------------------|
+| DUMP.*     | Sample Program                      |
+| TEST.*     | Sample Program                      |
+| Z80ASM.COM | Relocating macro assembler for CP/M |
+| Z80ASM.DOC | Documentation for Z80.COM           |
+
+# ERATTA
+
+## File Locations in Build
+
+ZCNFG.COM and the associed CFG file that goes with it. There are alot of these in the 
+source repository, it is  good candidate to move to a Common/Z3 folder
+since it appears to be the same version across most distributions
+

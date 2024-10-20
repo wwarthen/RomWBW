@@ -43,6 +43,7 @@ Version 3.5
 - MAP: ROMLDR now uses EXT_SLICE to get Slice Sector for boot
 - MAP: CBIOS now uses EXT_SLICE during drive selection
 - M?R: Added REBOOT application
+- MAP: Significant improvement in Disk Catalog document
 
 Version 3.4
 -----------
