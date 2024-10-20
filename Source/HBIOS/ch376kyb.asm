@@ -15,8 +15,67 @@
 
 #include "./ch376-native/keyboard.s"
 
+; COUNT FOR INTERRUPT HANDLER TO TRIGGER KEYBOARD SCANNER (EG: SCAN KEYBOARD ONLY EVERY 3RD INTERRUPT (3/60))
+SCAN_INT_PERIOD:	.EQU	3
 
-CHUKB_INIT	.EQU	_keyboard_init
+; VDP-INTERUPT COUNTER THAT COUNTS FROM SCAN_INT_PERIOD TO 0, WHEN IT REACHES ZERO, THE
+; KEYBOARD MATRIX IS SCANNED, AND THE COUNTERS IS RESET AT SCAN_INT_PERIOD
+UKY_SCNCNT:		.DB	SCAN_INT_PERIOD
+
+	.DB	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+	.DB	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+	.DB	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+	.DB	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+	.DB	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+	.DB	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+	.DB	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+	.DB	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+	.DB	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+	.DB	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+	.DB	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+	.DB	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+	.DB	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+	.DB	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+	.DB	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+	.DB	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+UKY_INTSTK:	; 128 bytes for keyboard interrupt stack - need ~52 bytes???
+
+CHUKB_INIT:
+	; INSTALL INTERRUPT HANDLER
+	LD	HL, (VEC_TICK+1)
+	LD	(VEC_CHUKB_TICK+1), HL
+
+	LD	HL, CHUKB_TICK
+	LD	(VEC_TICK+1), HL
+
+	JP	_keyboard_init
+
+CHUKB_TICK:
+	LD      A, (UKY_SCNCNT)			; SCAN THE KEYBOARD EVERY 'SCAN_INT_PERIOD' INTERRUPTS.
+	DEC     A
+	LD      (UKY_SCNCNT), A
+	JR	NZ, VEC_CHUKB_TICK
+
+	LD      A, SCAN_INT_PERIOD
+	LD      (UKY_SCNCNT), A
+
+	; we gonna need a bigger stack
+
+	EZ80_UTIL_DEBUG
+
+	LD	(UKY_INT_SP),SP		; SAVE ORIGINAL STACK FRAME
+	LD	SP,UKY_INTSTK		; USE DEDICATED INT STACK FRAME IN HI MEM
+
+	CALL	_keyboard_tick
+
+	LD	SP, $FFFF		; RESTORE ORIGINAL STACK FRAME
+UKY_INT_SP	.EQU	$ - 2
+;
+
+
+VEC_CHUKB_TICK:
+	JP	HB_TICK
+
 
 ; ### Function 0x4C -- Keyboard Status (VDAKST)
 ;
@@ -36,8 +95,7 @@ CHUKB_INIT	.EQU	_keyboard_init
 ; pending.
 ;
 UKY_STAT:
-	XOR A
-	RET
+	JP	_keyboard_buf_size
 
 ; ### Function 0x4D -- Video Keyboard Flush (VDAKFL)
 ;
@@ -50,6 +108,8 @@ UKY_STAT:
 ; Purged and all contents discarded. The Status (A) is a standard HBIOS result code.
 ;
 UKY_FLUSH:
+	CALL	_keyboard_buf_flush
+	XOR	A
 	RET
 ;
 ; ### Function 0x4E -- Video Keyboard Read (VDAKRD)
@@ -87,4 +147,14 @@ UKY_FLUSH:
 ; function keys and arrows, are returned as reserved codes as described at the start of this section.
 ;
 UKY_READ:
+	HB_DI
+	CALL	_keyboard_buf_get_next
+	HB_EI
+	LD	A, H
+	OR	A
+	JR	NZ, UKY_READ
+	LD	C, 0
+	LD	D, 0
+	; LD	E, 'A'
+	XOR	A
 	RET

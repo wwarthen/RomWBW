@@ -94,6 +94,8 @@ usb_error op_capture_hub_driver_interface(_working *const working) __sdcccall(1)
   hub_config.type = USB_IS_HUB;
   CHECK(configure_device(working, interface, (device_config *const)&hub_config));
   RETURN_CHECK(configure_usb_hub(working));
+done:
+  return result;
 }
 
 usb_error op_cap_drv_intf(_working *const working) __z88dk_fastcall {
@@ -129,25 +131,21 @@ usb_error op_cap_drv_intf(_working *const working) __z88dk_fastcall {
   }
   }
 
-  CHECK(op_parse_endpoint(working));
+  result = op_parse_endpoint(working);
 
+done:
   return result;
 }
 
 usb_error op_id_class_drv(_working *const working) __sdcccall(1) {
-  usb_error                         result;
   const interface_descriptor *const ptr = (const interface_descriptor *)working->ptr;
 
   working->usb_device = ptr->bLength > 5 ? identify_class_driver(working) : 0;
 
-  CHECK(op_cap_drv_intf(working));
-
-  return result;
+  return op_cap_drv_intf(working);
 }
 
 usb_error op_get_cfg_desc(_working *const working) __sdcccall(1) {
-  usb_error result;
-
   memset(working->config.buffer, 0, MAX_CONFIG_SIZE);
 
   const uint8_t max_packet_size = working->desc.bMaxPacketSize0;
@@ -158,8 +156,8 @@ usb_error op_get_cfg_desc(_working *const working) __sdcccall(1) {
   working->ptr             = (working->config.buffer + sizeof(config_descriptor));
   working->interface_count = working->config.desc.bNumInterfaces;
 
-  CHECK(op_id_class_drv(working));
-
+  return op_id_class_drv(working);
+done:
   return result;
 }
 
@@ -184,6 +182,8 @@ usb_error read_all_configs(enumeration_state *const state) {
   }
 
   return USB_ERR_OK;
+done:
+  return result;
 }
 
 usb_error enumerate_all_devices(void) {
@@ -196,8 +196,7 @@ usb_error enumerate_all_devices(void) {
 
   work_area->count_of_detected_usb_devices = state.next_device_address;
 
-  CHECK(result);
-
+done:
   return result;
 }
 

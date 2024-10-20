@@ -27,26 +27,6 @@ _memset_callee:
 	pop	hl
 	ret
 
-; _strlen_fastcall:
-
-;    ; enter: hl = char *s
-;    ;
-;    ; exit : hl = length
-;    ;        bc = -(length + 1)
-;    ;         a = 0
-;    ;        z flag set if 0 length
-;    ;        carry reset
-;    ;
-;    ; uses : af, bc, hl
-
-;    xor a
-;    ld c,a
-;    ld b,a
-;    cpir
-;    ld hl,$ffff
-;    sbc hl,bc
-
-;    ret
 
 _memcpy_callee:
 
@@ -84,51 +64,83 @@ zero_n:
 	pop	hl
    ret
 
-; _strcat_callee:
 
-;    pop hl
-;    pop de
+; ; ===============================================================
+; ; Stefano Bodrato
+; ; aralbrec: accommodate nmos z80 bug
+; ; ===============================================================
+; ;
+; ; void z80_push_di(void)
+; ;
+; ; Save the current ei/di status on the stack and disable ints.
+; ;
+; ; ===============================================================
+
+; ____sdcc_cpu_push_di:
+
+;    ; exit  : stack = ei_di_status
+;    ;
+;    ; uses  : af
+
 ;    ex (sp),hl
-
+;    push hl
+       
+;    ld a,i
    
-;    ; enter : hl = char *s2 = src
-;    ;         de = char *s1 = dst
-;    ;
-;    ; exit  : hl = char *s1 = dst
-;    ;         de = ptr in s1 to terminating 0
-;    ;
-;    ; uses  : af, bc, de, hl
+;    di
+   
+;    push af
+;    pop hl                      ; hl = ei_di status
+   
+;    pop af                      ; af = ret
+;    ex (sp),hl                  ; restore hl, push ei_di_status
+   
+;    push af
 
-;    push de                     ; save dst
-
-;    ex de,hl
-;    call __str_locate_nul       ; a = 0
-;    ex de,hl
-
-; loop:                          ; append s2 to s1
-;    cp (hl)
-;    ldi
-;    jr NZ,loop
-
-; ENDIF
-
-;    pop hl                      ; hl = dst
-;    dec de
 ;    ret
 
-; __str_locate_nul:
-;    ; enter : hl = char *s
-;    ;
-;    ; exit  : hl = ptr in s to terminating 0
-;    ;         bc = -(strlen + 1)
-;    ;          a = 0
-;    ;         carry reset
-;    ;
-;    ; uses  : af, bc, hl
 
-;    xor a
-;    ld c,a
-;    ld b,a
-;    cpir
-;    dec hl
+; ; ===============================================================
+; ; Stefano Bodrato
+; ; ===============================================================
+; ;
+; ; void z80_pop_ei(void)
+; ;
+; ; Pop the ei_di_status from the stack and restore the di/ei
+; ; state to what it was previously when a push was called.
+; ;
+; ; The "ei" in the function name has no bearing on what the
+; ; function does; the name is meant to balance "z80_push_di".
+; ;
+; ; ===============================================================
+
+; ____sdcc_cpu_pop_ei:
+
+;    ; enter  : stack = ei_di_status, ret
+;    ;
+;    ; uses  : af
+
+;    ex (sp),hl
+;    pop af                      ; af = old hl
+   
+;    ex (sp),hl                  ; hl = ei_di_status
+;    push af
+   
+;    ex (sp),hl                  ; hl restored
+
+; ____sdcc_cpu_pop_ei_jp:
+;    ; enter : stack = ret, ei_di_status
+;    ;
+;    ; uses  : af
+
+;    pop af                      ; af = ei_di_status
+
+;    jp PO, di_state
+
+; ei_state:
+;    ei
+;    ret
+
+; di_state:
+;    di
 ;    ret

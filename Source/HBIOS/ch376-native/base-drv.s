@@ -1,5 +1,6 @@
 ; Generated File -- not to be modify directly
 #include "ch376-native/base-drv/dev_transfers.c.s"
+#include "ch376-native/base-drv/critical-section.c.s"
 #include "ch376-native/base-drv/enumerate.c.s"
 #include "ch376-native/base-drv/usb_state.c.s"
 #include "ch376-native/base-drv/class_hub.c.s"

@@ -77,4 +77,6 @@ usb_error configure_usb_hub(_working *const working) __z88dk_fastcall {
   } while (--i != 0);
 
   return USB_ERR_OK;
+done:
+  return result;
 }

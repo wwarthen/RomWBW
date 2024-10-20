@@ -196,10 +196,10 @@ _ufi_test_unit_ready:
 	ld	l, e
 	ld	h, d
 	ld	b,0x0c
-l_ufi_test_unit_ready_00103:
+l_ufi_test_unit_ready_00104:
 	ld	(hl),0x00
 	inc	hl
-	djnz	l_ufi_test_unit_ready_00103
+	djnz	l_ufi_test_unit_ready_00104
 ;source-doc/ufi-drv/./class_ufi.c:37: usb_execute_cbi(storage_device, (uint8_t *)&ufi_cmd_request_test_unit_ready, false, 0, NULL, NULL);
 	ld	hl,0x0000
 	push	hl
@@ -245,12 +245,12 @@ l_ufi_test_unit_ready_00103:
 	ld	h,(ix+5)
 	push	hl
 	call	_usb_execute_cbi
-;source-doc/ufi-drv/./class_ufi.c:45: RETURN_CHECK(result);
-;source-doc/ufi-drv/./class_ufi.c:46: }
+;source-doc/ufi-drv/./class_ufi.c:46: return result;
+;source-doc/ufi-drv/./class_ufi.c:47: }
 	ld	sp,ix
 	pop	ix
 	ret
-;source-doc/ufi-drv/./class_ufi.c:48: usb_error ufi_request_sense(device_config *const storage_device, ufi_request_sense_response const *response) {
+;source-doc/ufi-drv/./class_ufi.c:49: usb_error ufi_request_sense(device_config *const storage_device, ufi_request_sense_response const *response) {
 ; ---------------------------------
 ; Function ufi_request_sense
 ; ---------------------------------
@@ -261,7 +261,7 @@ _ufi_request_sense:
 	ld	hl, -12
 	add	hl, sp
 	ld	sp, hl
-;source-doc/ufi-drv/./class_ufi.c:50: ufi_cmd_request_sense = _ufi_cmd_request_sense;
+;source-doc/ufi-drv/./class_ufi.c:51: ufi_cmd_request_sense = _ufi_cmd_request_sense;
 	ld	hl,0
 	add	hl, sp
 	ld	c, l
@@ -273,7 +273,7 @@ _ufi_request_sense:
 	ld	bc,0x000c
 	ldir
 	pop	bc
-;source-doc/ufi-drv/./class_ufi.c:52: usb_error result = usb_execute_cbi(storage_device, (uint8_t *)&ufi_cmd_request_sense, false, sizeof(ufi_request_sense_response),
+;source-doc/ufi-drv/./class_ufi.c:53: usb_error result = usb_execute_cbi(storage_device, (uint8_t *)&ufi_cmd_request_sense, false, sizeof(ufi_request_sense_response),
 	ld	e,(ix+6)
 	ld	d,(ix+7)
 	ld	hl,0x0000
@@ -289,12 +289,12 @@ _ufi_request_sense:
 	ld	h,(ix+5)
 	push	hl
 	call	_usb_execute_cbi
-;source-doc/ufi-drv/./class_ufi.c:55: RETURN_CHECK(result);
-;source-doc/ufi-drv/./class_ufi.c:56: }
+;source-doc/ufi-drv/./class_ufi.c:58: return result;
+;source-doc/ufi-drv/./class_ufi.c:59: }
 	ld	sp,ix
 	pop	ix
 	ret
-;source-doc/ufi-drv/./class_ufi.c:58: usb_error ufi_read_frmt_caps(device_config *const storage_device, ufi_format_capacities_response const *response) {
+;source-doc/ufi-drv/./class_ufi.c:61: usb_error ufi_read_frmt_caps(device_config *const storage_device, ufi_format_capacities_response const *response) {
 ; ---------------------------------
 ; Function ufi_read_frmt_caps
 ; ---------------------------------
@@ -305,14 +305,14 @@ _ufi_read_frmt_caps:
 	ld	hl, -24
 	add	hl, sp
 	ld	sp, hl
-;source-doc/ufi-drv/./class_ufi.c:62: ufi_cmd_read_format_capacities = _ufi_cmd_read_format_capacities;
+;source-doc/ufi-drv/./class_ufi.c:65: ufi_cmd_read_format_capacities = _ufi_cmd_read_format_capacities;
 	ld	hl,0
 	add	hl, sp
 	ex	de, hl
 	ld	hl,__ufi_cmd_read_format_capacitie
 	ld	bc,0x000c
 	ldir
-;source-doc/ufi-drv/./class_ufi.c:63: result = usb_execute_cbi(storage_device, (uint8_t *)&ufi_cmd_read_format_capacities, false, 12, (uint8_t *)response, NULL);
+;source-doc/ufi-drv/./class_ufi.c:66: result = usb_execute_cbi(storage_device, (uint8_t *)&ufi_cmd_read_format_capacities, false, 12, (uint8_t *)response, NULL);
 	ld	c,(ix+6)
 	ld	b,(ix+7)
 	push	bc
@@ -337,24 +337,26 @@ _ufi_read_frmt_caps:
 	pop	af
 	pop	af
 	inc	sp
+	ld	e, l
 	pop	bc
-;source-doc/ufi-drv/./class_ufi.c:66: CHECK(result);
-	ld	a, l
+;source-doc/ufi-drv/./class_ufi.c:69: CHECK(result);
+	ld	a,e
+	ld	d,a
 	or	a
 	jr	NZ,l_ufi_read_frmt_caps_00103
-;source-doc/ufi-drv/./class_ufi.c:68: const uint8_t available_length = response->capacity_list_length;
+;source-doc/ufi-drv/./class_ufi.c:71: const uint8_t available_length = response->capacity_list_length;
 	ld	e,(ix+6)
 	ld	d,(ix+7)
 	ld	hl,3
 	add	hl, de
 	ld	e, (hl)
-;source-doc/ufi-drv/./class_ufi.c:70: const uint8_t max_length =
+;source-doc/ufi-drv/./class_ufi.c:73: const uint8_t max_length =
 	ld	a,0x24
 	sub	e
-	jr	NC,l_ufi_read_frmt_caps_00105
+	jr	NC,l_ufi_read_frmt_caps_00106
 	ld	e,0x24
-l_ufi_read_frmt_caps_00105:
-;source-doc/ufi-drv/./class_ufi.c:74: memcpy(&cmd, &ufi_cmd_read_format_capacities, sizeof(cmd));
+l_ufi_read_frmt_caps_00106:
+;source-doc/ufi-drv/./class_ufi.c:77: memcpy(&cmd, &ufi_cmd_read_format_capacities, sizeof(cmd));
 	push	de
 	push	bc
 	ex	de, hl
@@ -367,9 +369,9 @@ l_ufi_read_frmt_caps_00105:
 	ldir
 	pop	bc
 	pop	de
-;source-doc/ufi-drv/./class_ufi.c:75: cmd.allocation_length[1] = max_length;
+;source-doc/ufi-drv/./class_ufi.c:78: cmd.allocation_length[1] = max_length;
 	ld	(ix-4),e
-;source-doc/ufi-drv/./class_ufi.c:77: result = usb_execute_cbi(storage_device, (uint8_t *)&cmd, false, max_length, (uint8_t *)response, NULL);
+;source-doc/ufi-drv/./class_ufi.c:80: result = usb_execute_cbi(storage_device, (uint8_t *)&cmd, false, max_length, (uint8_t *)response, NULL);
 	ld	d,0x00
 	ld	hl,0x0000
 	push	hl
@@ -391,13 +393,16 @@ l_ufi_read_frmt_caps_00105:
 	pop	af
 	pop	af
 	inc	sp
-;source-doc/ufi-drv/./class_ufi.c:80: RETURN_CHECK(result);
+	ld	d, l
+;source-doc/ufi-drv/./class_ufi.c:84: done:
 l_ufi_read_frmt_caps_00103:
-;source-doc/ufi-drv/./class_ufi.c:81: }
+;source-doc/ufi-drv/./class_ufi.c:85: return result;
+	ld	l, d
+;source-doc/ufi-drv/./class_ufi.c:86: }
 	ld	sp, ix
 	pop	ix
 	ret
-;source-doc/ufi-drv/./class_ufi.c:83: usb_error ufi_inquiry(device_config *const storage_device, ufi_inquiry_response const *response) {
+;source-doc/ufi-drv/./class_ufi.c:88: usb_error ufi_inquiry(device_config *const storage_device, ufi_inquiry_response const *response) {
 ; ---------------------------------
 ; Function ufi_inquiry
 ; ---------------------------------
@@ -408,7 +413,7 @@ _ufi_inquiry:
 	ld	hl, -12
 	add	hl, sp
 	ld	sp, hl
-;source-doc/ufi-drv/./class_ufi.c:85: ufi_cmd_inquiry = _ufi_cmd_inquiry;
+;source-doc/ufi-drv/./class_ufi.c:90: ufi_cmd_inquiry = _ufi_cmd_inquiry;
 	ld	hl,0
 	add	hl, sp
 	ld	c, l
@@ -420,7 +425,7 @@ _ufi_inquiry:
 	ld	bc,0x000c
 	ldir
 	pop	bc
-;source-doc/ufi-drv/./class_ufi.c:87: usb_error result =
+;source-doc/ufi-drv/./class_ufi.c:92: usb_error result =
 	ld	e,(ix+6)
 	ld	d,(ix+7)
 	ld	hl,0x0000
@@ -436,12 +441,12 @@ _ufi_inquiry:
 	ld	h,(ix+5)
 	push	hl
 	call	_usb_execute_cbi
-;source-doc/ufi-drv/./class_ufi.c:90: RETURN_CHECK(result);
-;source-doc/ufi-drv/./class_ufi.c:91: }
+;source-doc/ufi-drv/./class_ufi.c:97: return result;
+;source-doc/ufi-drv/./class_ufi.c:98: }
 	ld	sp,ix
 	pop	ix
 	ret
-;source-doc/ufi-drv/./class_ufi.c:93: usb_error ufi_read_write_sector(device_config *const storage_device,
+;source-doc/ufi-drv/./class_ufi.c:100: usb_error ufi_read_write_sector(device_config *const storage_device,
 ; ---------------------------------
 ; Function ufi_read_write_sector
 ; ---------------------------------
@@ -452,33 +457,33 @@ _ufi_read_write_sector:
 	ld	hl, -12
 	add	hl, sp
 	ld	sp, hl
-;source-doc/ufi-drv/./class_ufi.c:100: memset(&cmd, 0, sizeof(cmd));
+;source-doc/ufi-drv/./class_ufi.c:107: memset(&cmd, 0, sizeof(cmd));
 	ld	hl,0
 	add	hl, sp
 	ld	b,0x0c
-l_ufi_read_write_sector_00112:
+l_ufi_read_write_sector_00113:
 	ld	(hl),0x00
 	inc	hl
-	djnz	l_ufi_read_write_sector_00112
-;source-doc/ufi-drv/./class_ufi.c:101: cmd.operation_code     = send ? 0x2A : 0x28;
+	djnz	l_ufi_read_write_sector_00113
+;source-doc/ufi-drv/./class_ufi.c:108: cmd.operation_code     = send ? 0x2A : 0x28;
 	bit	0,(ix+6)
-	jr	Z,l_ufi_read_write_sector_00103
+	jr	Z,l_ufi_read_write_sector_00104
 	ld	a,0x2a
-	jr	l_ufi_read_write_sector_00104
-l_ufi_read_write_sector_00103:
-	ld	a,0x28
+	jr	l_ufi_read_write_sector_00105
 l_ufi_read_write_sector_00104:
+	ld	a,0x28
+l_ufi_read_write_sector_00105:
 	ld	(ix-12),a
-;source-doc/ufi-drv/./class_ufi.c:102: cmd.lba[2]             = sector_number >> 8;
+;source-doc/ufi-drv/./class_ufi.c:109: cmd.lba[2]             = sector_number >> 8;
 	ld	a,(ix+8)
 	ld	(ix-8),a
-;source-doc/ufi-drv/./class_ufi.c:103: cmd.lba[3]             = sector_number & 0xFF;
+;source-doc/ufi-drv/./class_ufi.c:110: cmd.lba[3]             = sector_number & 0xFF;
 	ld	a,(ix+7)
 	ld	(ix-7),a
-;source-doc/ufi-drv/./class_ufi.c:104: cmd.transfer_length[1] = sector_count;
+;source-doc/ufi-drv/./class_ufi.c:111: cmd.transfer_length[1] = sector_count;
 	ld	a,(ix+9)
 	ld	(ix-4),a
-;source-doc/ufi-drv/./class_ufi.c:106: usb_error result = usb_execute_cbi(storage_device, (uint8_t *)&cmd, send, 512 * sector_count, (uint8_t *)buffer, sense_codes);
+;source-doc/ufi-drv/./class_ufi.c:113: usb_error result = usb_execute_cbi(storage_device, (uint8_t *)&cmd, send, 512 * sector_count, (uint8_t *)buffer, sense_codes);
 	ld	a,(ix+9)
 	add	a, a
 	ld	c,0x00
@@ -500,12 +505,12 @@ l_ufi_read_write_sector_00104:
 	ld	h,(ix+5)
 	push	hl
 	call	_usb_execute_cbi
-;source-doc/ufi-drv/./class_ufi.c:108: RETURN_CHECK(result);
-;source-doc/ufi-drv/./class_ufi.c:109: }
+;source-doc/ufi-drv/./class_ufi.c:117: return result;
+;source-doc/ufi-drv/./class_ufi.c:118: }
 	ld	sp,ix
 	pop	ix
 	ret
-;source-doc/ufi-drv/./class_ufi.c:118: usb_error ufi_format(device_config *const                        storage_device,
+;source-doc/ufi-drv/./class_ufi.c:127: usb_error ufi_format(device_config *const                        storage_device,
 ; ---------------------------------
 ; Function ufi_format
 ; ---------------------------------
@@ -516,17 +521,17 @@ _ufi_format:
 	ld	hl, -26
 	add	hl, sp
 	ld	sp, hl
-;source-doc/ufi-drv/./class_ufi.c:125: memset(&parameter_list, 0, sizeof(parameter_list));
+;source-doc/ufi-drv/./class_ufi.c:134: memset(&parameter_list, 0, sizeof(parameter_list));
 	ld	hl,2
 	add	hl, sp
 	push	hl
 	ld	b,0x0c
-l_ufi_format_00103:
+l_ufi_format_00104:
 	ld	(hl),0x00
 	inc	hl
-	djnz	l_ufi_format_00103
+	djnz	l_ufi_format_00104
 	pop	bc
-;source-doc/ufi-drv/./class_ufi.c:128: cmd = _ufi_cmd_format;
+;source-doc/ufi-drv/./class_ufi.c:137: cmd = _ufi_cmd_format;
 	ld	hl,14
 	add	hl, sp
 	ex	de, hl
@@ -535,14 +540,14 @@ l_ufi_format_00103:
 	ld	bc,0x000c
 	ldir
 	pop	bc
-;source-doc/ufi-drv/./class_ufi.c:131: cmd.track_number             = track_number;
+;source-doc/ufi-drv/./class_ufi.c:140: cmd.track_number             = track_number;
 	ld	a,(ix+7)
 	ld	(ix-10),a
-;source-doc/ufi-drv/./class_ufi.c:132: cmd.interleave[1]            = 0;
+;source-doc/ufi-drv/./class_ufi.c:141: cmd.interleave[1]            = 0;
 	ld	(ix-8),0x00
-;source-doc/ufi-drv/./class_ufi.c:133: cmd.parameter_list_length[1] = sizeof(parameter_list);
+;source-doc/ufi-drv/./class_ufi.c:142: cmd.parameter_list_length[1] = sizeof(parameter_list);
 	ld	(ix-4),0x0c
-;source-doc/ufi-drv/./class_ufi.c:135: parameter_list.defect_list_header.side                   = side;
+;source-doc/ufi-drv/./class_ufi.c:144: parameter_list.defect_list_header.side                   = side;
 	ld	e, c
 	ld	d, b
 	inc	de
@@ -553,36 +558,36 @@ l_ufi_format_00103:
 	and	0xfe
 	or	l
 	ld	(de), a
-;source-doc/ufi-drv/./class_ufi.c:136: parameter_list.defect_list_header.immediate              = 0;
+;source-doc/ufi-drv/./class_ufi.c:145: parameter_list.defect_list_header.immediate              = 0;
 	ld	l, e
 	ld	h, d
 	res	1, (hl)
-;source-doc/ufi-drv/./class_ufi.c:137: parameter_list.defect_list_header.reserved2              = 0;
+;source-doc/ufi-drv/./class_ufi.c:146: parameter_list.defect_list_header.reserved2              = 0;
 	ld	l, e
 	ld	h, d
 	ld	a, (hl)
 	and	0xf3
 	ld	(hl), a
-;source-doc/ufi-drv/./class_ufi.c:138: parameter_list.defect_list_header.single_track           = 1;
+;source-doc/ufi-drv/./class_ufi.c:147: parameter_list.defect_list_header.single_track           = 1;
 	ld	l, e
 	ld	h, d
 	set	4, (hl)
-;source-doc/ufi-drv/./class_ufi.c:139: parameter_list.defect_list_header.dcrt                   = 1;
+;source-doc/ufi-drv/./class_ufi.c:148: parameter_list.defect_list_header.dcrt                   = 1;
 	ld	l, e
 	ld	h, d
 	set	5, (hl)
-;source-doc/ufi-drv/./class_ufi.c:140: parameter_list.defect_list_header.extend                 = 0;
+;source-doc/ufi-drv/./class_ufi.c:149: parameter_list.defect_list_header.extend                 = 0;
 	ld	l, e
 	ld	h, d
 	res	6, (hl)
-;source-doc/ufi-drv/./class_ufi.c:141: parameter_list.defect_list_header.fov                    = 1;
+;source-doc/ufi-drv/./class_ufi.c:150: parameter_list.defect_list_header.fov                    = 1;
 	ex	de, hl
 	set	7, (hl)
-;source-doc/ufi-drv/./class_ufi.c:142: parameter_list.defect_list_header.defect_list_length_msb = 0;
+;source-doc/ufi-drv/./class_ufi.c:151: parameter_list.defect_list_header.defect_list_length_msb = 0;
 	ld	(ix-22),0x00
-;source-doc/ufi-drv/./class_ufi.c:143: parameter_list.defect_list_header.defect_list_length_lsb = 8;
+;source-doc/ufi-drv/./class_ufi.c:152: parameter_list.defect_list_header.defect_list_length_lsb = 8;
 	ld	(ix-21),0x08
-;source-doc/ufi-drv/./class_ufi.c:144: memcpy(&parameter_list.format_descriptor, (void *)format, sizeof(ufi_format_capacity_descriptor));
+;source-doc/ufi-drv/./class_ufi.c:153: memcpy(&parameter_list.format_descriptor, (void *)format, sizeof(ufi_format_capacity_descriptor));
 	ld	e,(ix+8)
 	ld	d,(ix+9)
 	push	bc
@@ -595,7 +600,7 @@ l_ufi_format_00103:
 	ld	bc,0x0008
 	ldir
 	pop	bc
-;source-doc/ufi-drv/./class_ufi.c:146: usb_error result = usb_execute_cbi(storage_device, (uint8_t *)&cmd, true, sizeof(parameter_list), (uint8_t *)&parameter_list,
+;source-doc/ufi-drv/./class_ufi.c:155: usb_error result = usb_execute_cbi(storage_device, (uint8_t *)&cmd, true, sizeof(parameter_list), (uint8_t *)&parameter_list,
 	ld	hl,0
 	add	hl, sp
 	push	hl
@@ -612,12 +617,12 @@ l_ufi_format_00103:
 	ld	h,(ix+5)
 	push	hl
 	call	_usb_execute_cbi
-;source-doc/ufi-drv/./class_ufi.c:151: RETURN_CHECK(result);
-;source-doc/ufi-drv/./class_ufi.c:152: }
+;source-doc/ufi-drv/./class_ufi.c:162: return result;
+;source-doc/ufi-drv/./class_ufi.c:163: }
 	ld	sp,ix
 	pop	ix
 	ret
-;source-doc/ufi-drv/./class_ufi.c:154: usb_error ufi_send_diagnostics(device_config *const storage_device) {
+;source-doc/ufi-drv/./class_ufi.c:165: usb_error ufi_send_diagnostics(device_config *const storage_device) {
 ; ---------------------------------
 ; Function ufi_send_diagnostics
 ; ---------------------------------
@@ -628,7 +633,7 @@ _ufi_send_diagnostics:
 	ld	hl, -12
 	add	hl, sp
 	ld	sp, hl
-;source-doc/ufi-drv/./class_ufi.c:158: ufi_cmd_send_diagnostic = _ufi_cmd_send_diagnostic;
+;source-doc/ufi-drv/./class_ufi.c:168: ufi_cmd_send_diagnostic = _ufi_cmd_send_diagnostic;
 	ld	hl,0
 	add	hl, sp
 	ld	c, l
@@ -640,7 +645,7 @@ _ufi_send_diagnostics:
 	ld	bc,0x000c
 	ldir
 	pop	bc
-;source-doc/ufi-drv/./class_ufi.c:160: result = usb_execute_cbi(storage_device, (uint8_t *)&ufi_cmd_send_diagnostic, true, 0, NULL, NULL);
+;source-doc/ufi-drv/./class_ufi.c:170: return usb_execute_cbi(storage_device, (uint8_t *)&ufi_cmd_send_diagnostic, true, 0, NULL, NULL);
 	ld	hl,0x0000
 	push	hl
 	push	hl
@@ -653,12 +658,11 @@ _ufi_send_diagnostics:
 	ld	h,(ix+5)
 	push	hl
 	call	_usb_execute_cbi
-;source-doc/ufi-drv/./class_ufi.c:162: RETURN_CHECK(result);
-;source-doc/ufi-drv/./class_ufi.c:163: }
+;source-doc/ufi-drv/./class_ufi.c:171: }
 	ld	sp,ix
 	pop	ix
 	ret
-;source-doc/ufi-drv/./class_ufi.c:165: uint32_t convert_from_msb_first(const uint8_t *const buffer) {
+;source-doc/ufi-drv/./class_ufi.c:173: uint32_t convert_from_msb_first(const uint8_t *const buffer) {
 ; ---------------------------------
 ; Function convert_from_msb_first
 ; ---------------------------------
@@ -668,40 +672,40 @@ _convert_from_msb_first:
 	add	ix,sp
 	push	af
 	push	af
-;source-doc/ufi-drv/./class_ufi.c:167: uint8_t       *p_output = ((uint8_t *)&result);
+;source-doc/ufi-drv/./class_ufi.c:175: uint8_t       *p_output = ((uint8_t *)&result);
 	ld	hl,0
 	add	hl, sp
 	ex	de, hl
-;source-doc/ufi-drv/./class_ufi.c:168: const uint8_t *p_input  = buffer + 3;
+;source-doc/ufi-drv/./class_ufi.c:176: const uint8_t *p_input  = buffer + 3;
 	ld	c,(ix+4)
 	ld	b,(ix+5)
 	inc	bc
 	inc	bc
 	inc	bc
-;source-doc/ufi-drv/./class_ufi.c:170: *p_output++ = *p_input--;
+;source-doc/ufi-drv/./class_ufi.c:178: *p_output++ = *p_input--;
 	ld	a, (bc)
 	dec	bc
 	ld	(de), a
 	inc	de
-;source-doc/ufi-drv/./class_ufi.c:171: *p_output++ = *p_input--;
+;source-doc/ufi-drv/./class_ufi.c:179: *p_output++ = *p_input--;
 	ld	a, (bc)
 	dec	bc
 	ld	(de), a
 	inc	de
-;source-doc/ufi-drv/./class_ufi.c:172: *p_output++ = *p_input--;
+;source-doc/ufi-drv/./class_ufi.c:180: *p_output++ = *p_input--;
 	ld	a, (bc)
 	ld	(de), a
 	inc	de
-;source-doc/ufi-drv/./class_ufi.c:173: *p_output   = *p_input--;
+;source-doc/ufi-drv/./class_ufi.c:181: *p_output   = *p_input--;
 	dec	bc
 	ld	a, (bc)
 	ld	(de), a
-;source-doc/ufi-drv/./class_ufi.c:175: return result;
+;source-doc/ufi-drv/./class_ufi.c:183: return result;
 	pop	hl
 	push	hl
 	ld	e,(ix-2)
 	ld	d,(ix-1)
-;source-doc/ufi-drv/./class_ufi.c:176: }
+;source-doc/ufi-drv/./class_ufi.c:184: }
 	ld	sp, ix
 	pop	ix
 	ret

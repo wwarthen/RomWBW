@@ -41,8 +41,9 @@ usb_error ufi_test_unit_ready(device_config *const storage_device, ufi_request_s
 
   result = usb_execute_cbi(storage_device, (uint8_t *)&ufi_cmd_request_sense, false, sizeof(ufi_request_sense_response),
                            (uint8_t *)response, NULL);
-
   RETURN_CHECK(result);
+done:
+  return result;
 }
 
 usb_error ufi_request_sense(device_config *const storage_device, ufi_request_sense_response const *response) {
@@ -53,6 +54,8 @@ usb_error ufi_request_sense(device_config *const storage_device, ufi_request_sen
                                      (uint8_t *)response, NULL);
 
   RETURN_CHECK(result);
+done:
+  return result;
 }
 
 usb_error ufi_read_frmt_caps(device_config *const storage_device, ufi_format_capacities_response const *response) {
@@ -78,6 +81,8 @@ usb_error ufi_read_frmt_caps(device_config *const storage_device, ufi_format_cap
 
   TRACE_USB_ERROR(result);
   RETURN_CHECK(result);
+done:
+  return result;
 }
 
 usb_error ufi_inquiry(device_config *const storage_device, ufi_inquiry_response const *response) {
@@ -88,6 +93,8 @@ usb_error ufi_inquiry(device_config *const storage_device, ufi_inquiry_response 
       usb_execute_cbi(storage_device, (uint8_t *)&ufi_cmd_inquiry, false, sizeof(ufi_inquiry_response), (uint8_t *)response, NULL);
 
   RETURN_CHECK(result);
+done:
+  return result;
 }
 
 usb_error ufi_read_write_sector(device_config *const storage_device,
@@ -106,6 +113,8 @@ usb_error ufi_read_write_sector(device_config *const storage_device,
   usb_error result = usb_execute_cbi(storage_device, (uint8_t *)&cmd, send, 512 * sector_count, (uint8_t *)buffer, sense_codes);
 
   RETURN_CHECK(result);
+done:
+  return result;
 }
 
 /**
@@ -149,17 +158,16 @@ usb_error ufi_format(device_config *const                        storage_device,
   // trace_printf("ufi_format: %d, %02X %02X (len: %d)\r\n", result, sense_codes.bASC, sense_codes.bASCQ, sizeof(parameter_list));
 
   RETURN_CHECK(result);
+done:
+  return result;
 }
 
 usb_error ufi_send_diagnostics(device_config *const storage_device) {
-  usb_error                   result;
   ufi_send_diagnostic_command ufi_cmd_send_diagnostic;
 
   ufi_cmd_send_diagnostic = _ufi_cmd_send_diagnostic;
 
-  result = usb_execute_cbi(storage_device, (uint8_t *)&ufi_cmd_send_diagnostic, true, 0, NULL, NULL);
-
-  RETURN_CHECK(result);
+  return usb_execute_cbi(storage_device, (uint8_t *)&ufi_cmd_send_diagnostic, true, 0, NULL, NULL);
 }
 
 uint32_t convert_from_msb_first(const uint8_t *const buffer) {

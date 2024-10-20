@@ -17,6 +17,7 @@
     "class_scsi.h": "c",
     "z80.h": "c",
     "dev_transfers.h": "c",
-    "usb-base-drv.h": "c"
+    "usb-base-drv.h": "c",
+    "critical-section.h": "c"
   }
 }

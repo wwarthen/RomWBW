@@ -139,14 +139,15 @@ _usb_control_transfer:
 	jr	NZ,l_usb_control_transfer_00102
 ;source-doc/base-drv/./transfers.c:57: return USB_ERR_OTHER;
 	ld	l,0x0f
-	jp	l_usb_control_transfer_00113
+	jp	l_usb_control_transfer_00114
 l_usb_control_transfer_00102:
-;source-doc/base-drv/./transfers.c:59: ch_set_usb_address(device_address);
+;source-doc/base-drv/./transfers.c:59: critical_begin();
 	push	bc
+	call	_critical_begin
 	ld	l,(ix+8)
 	call	_ch_set_usb_address
 	pop	bc
-;source-doc/base-drv/./transfers.c:61: ch_write_data((const uint8_t *)cmd_packet, sizeof(setup_packet));
+;source-doc/base-drv/./transfers.c:63: ch_write_data((const uint8_t *)cmd_packet, sizeof(setup_packet));
 	ld	e,(ix+4)
 	ld	d,(ix+5)
 	push	bc
@@ -160,25 +161,25 @@ l_usb_control_transfer_00102:
 	call	_ch_issue_token_setup
 	call	_ch_short_wait_int_and_get_stat
 	pop	bc
-;source-doc/base-drv/./transfers.c:64: CHECK(result);
+;source-doc/base-drv/./transfers.c:66: CHECK(result);
 	ld	a, l
 	or	a
 	jr	NZ,l_usb_control_transfer_00113
-;source-doc/base-drv/./transfers.c:66: const uint16_t length = cmd_packet->wLength;
+;source-doc/base-drv/./transfers.c:68: const uint16_t length = cmd_packet->wLength;
 	ld	hl,6
 	add	hl, bc
 	ld	c, (hl)
 	inc	hl
 	ld	b, (hl)
-;source-doc/base-drv/./transfers.c:69: ? (transferIn ? ch_data_in_transfer(buffer, length, &endpoint) : ch_data_out_transfer(buffer, length, &endpoint))
+;source-doc/base-drv/./transfers.c:71: ? (transferIn ? ch_data_in_transfer(buffer, length, &endpoint) : ch_data_out_transfer(buffer, length, &endpoint))
 	ld	a, b
 	or	c
-	jr	Z,l_usb_control_transfer_00115
+	jr	Z,l_usb_control_transfer_00116
 	ld	e,(ix+6)
 	ld	d,(ix+7)
 	ld	a,(ix-1)
 	or	a
-	jr	Z,l_usb_control_transfer_00117
+	jr	Z,l_usb_control_transfer_00118
 	ld	hl,0
 	add	hl, sp
 	push	hl
@@ -188,8 +189,8 @@ l_usb_control_transfer_00102:
 	pop	af
 	pop	af
 	pop	af
-	jr	l_usb_control_transfer_00118
-l_usb_control_transfer_00117:
+	jr	l_usb_control_transfer_00119
+l_usb_control_transfer_00118:
 	ld	hl,0
 	add	hl, sp
 	push	hl
@@ -199,59 +200,62 @@ l_usb_control_transfer_00117:
 	pop	af
 	pop	af
 	pop	af
-l_usb_control_transfer_00118:
-	jr	l_usb_control_transfer_00116
-l_usb_control_transfer_00115:
-;source-doc/base-drv/./transfers.c:70: : USB_ERR_OK;
-	ld	l,0x00
+l_usb_control_transfer_00119:
+	jr	l_usb_control_transfer_00117
 l_usb_control_transfer_00116:
-;source-doc/base-drv/./transfers.c:72: CHECK(result)
+;source-doc/base-drv/./transfers.c:72: : USB_ERR_OK;
+	ld	l,0x00
+l_usb_control_transfer_00117:
+;source-doc/base-drv/./transfers.c:74: CHECK(result)
 	ld	a, l
 	or	a
 	jr	NZ,l_usb_control_transfer_00113
-;source-doc/base-drv/./transfers.c:74: if (transferIn) {
+;source-doc/base-drv/./transfers.c:76: if (transferIn) {
 	ld	a,(ix-1)
 	or	a
 	jr	Z,l_usb_control_transfer_00112
-;source-doc/base-drv/./transfers.c:75: ch_command(CH_CMD_WR_HOST_DATA);
+;source-doc/base-drv/./transfers.c:77: ch_command(CH_CMD_WR_HOST_DATA);
 	ld	l,0x2c
 	call	_ch_command
-;source-doc/base-drv/./transfers.c:76: CH376_DATA_PORT = 0;
+;source-doc/base-drv/./transfers.c:78: CH376_DATA_PORT = 0;
 	ld	a,0x00
 	ld	bc,_CH376_DATA_PORT
 	out	(c),a
-;source-doc/base-drv/./transfers.c:77: delay();
-	call	_delay
-;source-doc/base-drv/./transfers.c:78: ch_issue_token_out_ep0();
+;source-doc/base-drv/./transfers.c:79: ch_issue_token_out_ep0();
 	call	_ch_issue_token_out_ep0
-;source-doc/base-drv/./transfers.c:79: result = ch_long_wait_int_and_get_status(); /* sometimes we get STALL here - seems to be ok to ignore */
+;source-doc/base-drv/./transfers.c:80: result = ch_long_wait_int_and_get_status(); /* sometimes we get STALL here - seems to be ok to ignore */
 	call	_ch_long_wait_int_and_get_statu
-;source-doc/base-drv/./transfers.c:81: if (result == USB_ERR_OK || result == USB_ERR_STALL)
+;source-doc/base-drv/./transfers.c:82: if (result == USB_ERR_OK || result == USB_ERR_STALL) {
 	ld	a, l
 	or	a
 	jr	Z,l_usb_control_transfer_00108
 	ld	a, l
 	sub	0x02
-	jr	NZ,l_usb_control_transfer_00109
+	jr	NZ,l_usb_control_transfer_00113
 l_usb_control_transfer_00108:
-;source-doc/base-drv/./transfers.c:82: return USB_ERR_OK;
+;source-doc/base-drv/./transfers.c:83: result = USB_ERR_OK;
 	ld	l,0x00
+;source-doc/base-drv/./transfers.c:84: goto done;
 	jr	l_usb_control_transfer_00113
-l_usb_control_transfer_00109:
-;source-doc/base-drv/./transfers.c:84: RETURN_CHECK(result);
-	jr	l_usb_control_transfer_00113
+;source-doc/base-drv/./transfers.c:87: RETURN_CHECK(result);
 l_usb_control_transfer_00112:
-;source-doc/base-drv/./transfers.c:87: ch_issue_token_in_ep0();
+;source-doc/base-drv/./transfers.c:90: ch_issue_token_in_ep0();
 	call	_ch_issue_token_in_ep0
-;source-doc/base-drv/./transfers.c:88: result = ch_long_wait_int_and_get_status();
+;source-doc/base-drv/./transfers.c:91: result = ch_long_wait_int_and_get_status();
 	call	_ch_long_wait_int_and_get_statu
-;source-doc/base-drv/./transfers.c:90: RETURN_CHECK(result);
+;source-doc/base-drv/./transfers.c:95: done:
 l_usb_control_transfer_00113:
-;source-doc/base-drv/./transfers.c:91: }
+;source-doc/base-drv/./transfers.c:96: critical_end();
+	push	hl
+	call	_critical_end
+	pop	hl
+;source-doc/base-drv/./transfers.c:97: return result;
+l_usb_control_transfer_00114:
+;source-doc/base-drv/./transfers.c:98: }
 	ld	sp, ix
 	pop	ix
 	ret
-;source-doc/base-drv/./transfers.c:94: usb_dat_in_trnsfer_ext(uint8_t *buffer, const uint16_t buffer_size, const uint8_t device_address, endpoint_param *const endpoint) {
+;source-doc/base-drv/./transfers.c:101: usb_dat_in_trnsfer_ext(uint8_t *buffer, const uint16_t buffer_size, const uint8_t device_address, endpoint_param *const endpoint) {
 ; ---------------------------------
 ; Function usb_dat_in_trnsfer_ext
 ; ---------------------------------
@@ -259,26 +263,26 @@ _usb_dat_in_trnsfer_ext:
 	push	ix
 	ld	ix,0
 	add	ix,sp
-;source-doc/base-drv/./transfers.c:95: if (buffer != 0 && (uint16_t)buffer < LOWER_SAFE_RAM_ADDRESS)
+;source-doc/base-drv/./transfers.c:102: if (buffer != 0 && (uint16_t)buffer < LOWER_SAFE_RAM_ADDRESS)
 	ld	a,(ix+5)
 	or	(ix+4)
 	jr	Z,l_usb_dat_in_trnsfer_ext_00102
 	ld	a,(ix+5)
 	sub	0x80
 	jr	NC,l_usb_dat_in_trnsfer_ext_00102
-;source-doc/base-drv/./transfers.c:96: return USB_BAD_ADDRESS;
+;source-doc/base-drv/./transfers.c:103: return USB_BAD_ADDRESS;
 	ld	l,0x82
 	jr	l_usb_dat_in_trnsfer_ext_00106
 l_usb_dat_in_trnsfer_ext_00102:
-;source-doc/base-drv/./transfers.c:98: if ((uint16_t)endpoint < LOWER_SAFE_RAM_ADDRESS)
+;source-doc/base-drv/./transfers.c:105: if ((uint16_t)endpoint < LOWER_SAFE_RAM_ADDRESS)
 	ld	a,(ix+10)
 	sub	0x80
 	jr	NC,l_usb_dat_in_trnsfer_ext_00105
-;source-doc/base-drv/./transfers.c:99: return USB_BAD_ADDRESS;
+;source-doc/base-drv/./transfers.c:106: return USB_BAD_ADDRESS;
 	ld	l,0x82
 	jr	l_usb_dat_in_trnsfer_ext_00106
 l_usb_dat_in_trnsfer_ext_00105:
-;source-doc/base-drv/./transfers.c:101: return usb_data_in_transfer(buffer, buffer_size, device_address, endpoint);
+;source-doc/base-drv/./transfers.c:108: return usb_data_in_transfer(buffer, buffer_size, device_address, endpoint);
 	ld	l,(ix+9)
 	ld	h,(ix+10)
 	push	hl
@@ -297,10 +301,10 @@ l_usb_dat_in_trnsfer_ext_00105:
 	pop	af
 	inc	sp
 l_usb_dat_in_trnsfer_ext_00106:
-;source-doc/base-drv/./transfers.c:102: }
+;source-doc/base-drv/./transfers.c:109: }
 	pop	ix
 	ret
-;source-doc/base-drv/./transfers.c:105: usb_dat_in_trns_n_ext(uint8_t *buffer, uint16_t *buffer_size, const uint8_t device_address, endpoint_param *const endpoint) {
+;source-doc/base-drv/./transfers.c:112: usb_dat_in_trns_n_ext(uint8_t *buffer, uint16_t *buffer_size, const uint8_t device_address, endpoint_param *const endpoint) {
 ; ---------------------------------
 ; Function usb_dat_in_trns_n_ext
 ; ---------------------------------
@@ -308,34 +312,34 @@ _usb_dat_in_trns_n_ext:
 	push	ix
 	ld	ix,0
 	add	ix,sp
-;source-doc/base-drv/./transfers.c:106: if (buffer != 0 && ((uint16_t)buffer & 0xC000) == 0)
+;source-doc/base-drv/./transfers.c:113: if (buffer != 0 && ((uint16_t)buffer & 0xC000) == 0)
 	ld	a,(ix+5)
 	or	(ix+4)
 	jr	Z,l_usb_dat_in_trns_n_ext_00102
 	ld	a,(ix+5)
 	and	0xc0
 	jr	NZ,l_usb_dat_in_trns_n_ext_00102
-;source-doc/base-drv/./transfers.c:107: return USB_BAD_ADDRESS;
+;source-doc/base-drv/./transfers.c:114: return USB_BAD_ADDRESS;
 	ld	l,0x82
 	jr	l_usb_dat_in_trns_n_ext_00108
 l_usb_dat_in_trns_n_ext_00102:
-;source-doc/base-drv/./transfers.c:109: if (((uint16_t)endpoint & 0xC000) == 0)
+;source-doc/base-drv/./transfers.c:116: if (((uint16_t)endpoint & 0xC000) == 0)
 	ld	a,(ix+10)
 	and	0xc0
 	jr	NZ,l_usb_dat_in_trns_n_ext_00105
-;source-doc/base-drv/./transfers.c:110: return USB_BAD_ADDRESS;
+;source-doc/base-drv/./transfers.c:117: return USB_BAD_ADDRESS;
 	ld	l,0x82
 	jr	l_usb_dat_in_trns_n_ext_00108
 l_usb_dat_in_trns_n_ext_00105:
-;source-doc/base-drv/./transfers.c:112: if (((uint16_t)buffer_size & 0xC000) == 0)
+;source-doc/base-drv/./transfers.c:119: if (((uint16_t)buffer_size & 0xC000) == 0)
 	ld	a,(ix+7)
 	and	0xc0
 	jr	NZ,l_usb_dat_in_trns_n_ext_00107
-;source-doc/base-drv/./transfers.c:113: return USB_BAD_ADDRESS;
+;source-doc/base-drv/./transfers.c:120: return USB_BAD_ADDRESS;
 	ld	l,0x82
 	jr	l_usb_dat_in_trns_n_ext_00108
 l_usb_dat_in_trns_n_ext_00107:
-;source-doc/base-drv/./transfers.c:115: return usb_data_in_transfer_n(buffer, buffer_size, device_address, endpoint);
+;source-doc/base-drv/./transfers.c:122: return usb_data_in_transfer_n(buffer, buffer_size, device_address, endpoint);
 	ld	c,(ix+6)
 	ld	b,(ix+7)
 	ld	l,(ix+9)
@@ -354,10 +358,10 @@ l_usb_dat_in_trns_n_ext_00107:
 	pop	af
 	inc	sp
 l_usb_dat_in_trns_n_ext_00108:
-;source-doc/base-drv/./transfers.c:116: }
+;source-doc/base-drv/./transfers.c:123: }
 	pop	ix
 	ret
-;source-doc/base-drv/./transfers.c:128: usb_data_in_transfer(uint8_t *buffer, const uint16_t buffer_size, const uint8_t device_address, endpoint_param *const endpoint) {
+;source-doc/base-drv/./transfers.c:135: usb_data_in_transfer(uint8_t *buffer, const uint16_t buffer_size, const uint8_t device_address, endpoint_param *const endpoint) {
 ; ---------------------------------
 ; Function usb_data_in_transfer
 ; ---------------------------------
@@ -365,10 +369,12 @@ _usb_data_in_transfer:
 	push	ix
 	ld	ix,0
 	add	ix,sp
-;source-doc/base-drv/./transfers.c:129: ch_set_usb_address(device_address);
+;source-doc/base-drv/./transfers.c:136: critical_begin();
+	call	_critical_begin
+;source-doc/base-drv/./transfers.c:138: ch_set_usb_address(device_address);
 	ld	l,(ix+8)
 	call	_ch_set_usb_address
-;source-doc/base-drv/./transfers.c:131: return ch_data_in_transfer(buffer, buffer_size, endpoint);
+;source-doc/base-drv/./transfers.c:140: result = ch_data_in_transfer(buffer, buffer_size, endpoint);
 	ld	l,(ix+9)
 	ld	h,(ix+10)
 	push	hl
@@ -382,10 +388,17 @@ _usb_data_in_transfer:
 	pop	af
 	pop	af
 	pop	af
-;source-doc/base-drv/./transfers.c:132: }
+	ld	a, l
+	ld	(_result), a
+;source-doc/base-drv/./transfers.c:142: critical_end();
+	call	_critical_end
+;source-doc/base-drv/./transfers.c:144: return result;
+	ld	hl,_result
+	ld	l, (hl)
+;source-doc/base-drv/./transfers.c:145: }
 	pop	ix
 	ret
-;source-doc/base-drv/./transfers.c:144: usb_data_in_transfer_n(uint8_t *buffer, uint8_t *const buffer_size, const uint8_t device_address, endpoint_param *const endpoint) {
+;source-doc/base-drv/./transfers.c:157: usb_data_in_transfer_n(uint8_t *buffer, uint8_t *const buffer_size, const uint8_t device_address, endpoint_param *const endpoint) {
 ; ---------------------------------
 ; Function usb_data_in_transfer_n
 ; ---------------------------------
@@ -393,10 +406,12 @@ _usb_data_in_transfer_n:
 	push	ix
 	ld	ix,0
 	add	ix,sp
-;source-doc/base-drv/./transfers.c:145: ch_set_usb_address(device_address);
+;source-doc/base-drv/./transfers.c:158: critical_begin();
+	call	_critical_begin
+;source-doc/base-drv/./transfers.c:160: ch_set_usb_address(device_address);
 	ld	l,(ix+8)
 	call	_ch_set_usb_address
-;source-doc/base-drv/./transfers.c:147: return ch_data_in_transfer_n(buffer, buffer_size, endpoint);
+;source-doc/base-drv/./transfers.c:162: result = ch_data_in_transfer_n(buffer, buffer_size, endpoint);
 	ld	l,(ix+9)
 	ld	h,(ix+10)
 	push	hl
@@ -410,59 +425,17 @@ _usb_data_in_transfer_n:
 	pop	af
 	pop	af
 	pop	af
-;source-doc/base-drv/./transfers.c:148: }
+	ld	a, l
+	ld	(_result), a
+;source-doc/base-drv/./transfers.c:164: critical_end();
+	call	_critical_end
+;source-doc/base-drv/./transfers.c:166: return result;
+	ld	hl,_result
+	ld	l, (hl)
+;source-doc/base-drv/./transfers.c:167: }
 	pop	ix
 	ret
-;source-doc/base-drv/./transfers.c:151: usb_dat_out_trns_ext(const uint8_t *buffer, uint16_t buffer_size, const uint8_t device_address, endpoint_param *const endpoint) {
-; ---------------------------------
-; Function usb_dat_out_trns_ext
-; ---------------------------------
-_usb_dat_out_trns_ext:
-	push	ix
-	ld	ix,0
-	add	ix,sp
-;source-doc/base-drv/./transfers.c:153: if (buffer != 0 && (uint16_t)buffer < LOWER_SAFE_RAM_ADDRESS)
-	ld	a,(ix+5)
-	or	(ix+4)
-	jr	Z,l_usb_dat_out_trns_ext_00102
-	ld	a,(ix+5)
-	sub	0x80
-	jr	NC,l_usb_dat_out_trns_ext_00102
-;source-doc/base-drv/./transfers.c:154: return USB_BAD_ADDRESS;
-	ld	l,0x82
-	jr	l_usb_dat_out_trns_ext_00106
-l_usb_dat_out_trns_ext_00102:
-;source-doc/base-drv/./transfers.c:156: if ((uint16_t)endpoint < LOWER_SAFE_RAM_ADDRESS)
-	ld	a,(ix+10)
-	sub	0x80
-	jr	NC,l_usb_dat_out_trns_ext_00105
-;source-doc/base-drv/./transfers.c:157: return USB_BAD_ADDRESS;
-	ld	l,0x82
-	jr	l_usb_dat_out_trns_ext_00106
-l_usb_dat_out_trns_ext_00105:
-;source-doc/base-drv/./transfers.c:159: return usb_data_out_transfer(buffer, buffer_size, device_address, endpoint);
-	ld	l,(ix+9)
-	ld	h,(ix+10)
-	push	hl
-	ld	a,(ix+8)
-	push	af
-	inc	sp
-	ld	l,(ix+6)
-	ld	h,(ix+7)
-	push	hl
-	ld	l,(ix+4)
-	ld	h,(ix+5)
-	push	hl
-	call	_usb_data_out_transfer
-	pop	af
-	pop	af
-	pop	af
-	inc	sp
-l_usb_dat_out_trns_ext_00106:
-;source-doc/base-drv/./transfers.c:160: }
-	pop	ix
-	ret
-;source-doc/base-drv/./transfers.c:172: usb_data_out_transfer(const uint8_t *buffer, uint16_t buffer_size, const uint8_t device_address, endpoint_param *const endpoint) {
+;source-doc/base-drv/./transfers.c:179: usb_data_out_transfer(const uint8_t *buffer, uint16_t buffer_size, const uint8_t device_address, endpoint_param *const endpoint) {
 ; ---------------------------------
 ; Function usb_data_out_transfer
 ; ---------------------------------
@@ -470,10 +443,12 @@ _usb_data_out_transfer:
 	push	ix
 	ld	ix,0
 	add	ix,sp
-;source-doc/base-drv/./transfers.c:173: ch_set_usb_address(device_address);
+;source-doc/base-drv/./transfers.c:180: critical_begin();
+	call	_critical_begin
+;source-doc/base-drv/./transfers.c:182: ch_set_usb_address(device_address);
 	ld	l,(ix+8)
 	call	_ch_set_usb_address
-;source-doc/base-drv/./transfers.c:175: return ch_data_out_transfer(buffer, buffer_size, endpoint);
+;source-doc/base-drv/./transfers.c:184: result = ch_data_out_transfer(buffer, buffer_size, endpoint);
 	ld	l,(ix+9)
 	ld	h,(ix+10)
 	push	hl
@@ -487,6 +462,13 @@ _usb_data_out_transfer:
 	pop	af
 	pop	af
 	pop	af
-;source-doc/base-drv/./transfers.c:176: }
+	ld	a, l
+	ld	(_result), a
+;source-doc/base-drv/./transfers.c:186: critical_end();
+	call	_critical_end
+;source-doc/base-drv/./transfers.c:188: return result;
+	ld	hl,_result
+	ld	l, (hl)
+;source-doc/base-drv/./transfers.c:189: }
 	pop	ix
 	ret

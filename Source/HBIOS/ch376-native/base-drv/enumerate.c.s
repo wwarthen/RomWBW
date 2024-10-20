@@ -532,12 +532,14 @@ _op_capture_hub_driver_interfac:
 	ex	de, hl
 	call	_configure_usb_hub
 	ld	a, l
+;source-doc/base-drv/./enumerate.c:97: done:
 l_op_capture_hub_driver_interfa:
-;source-doc/base-drv/./enumerate.c:97: }
+;source-doc/base-drv/./enumerate.c:98: return result;
+;source-doc/base-drv/./enumerate.c:99: }
 	ld	sp, ix
 	pop	ix
 	ret
-;source-doc/base-drv/./enumerate.c:99: usb_error op_cap_drv_intf(_working *const working) __z88dk_fastcall {
+;source-doc/base-drv/./enumerate.c:101: usb_error op_cap_drv_intf(_working *const working) __z88dk_fastcall {
 ; ---------------------------------
 ; Function op_cap_drv_intf
 ; ---------------------------------
@@ -552,7 +554,7 @@ _op_cap_drv_intf:
 	ld	sp, hl
 	ld	(ix-2),c
 	ld	(ix-1),b
-;source-doc/base-drv/./enumerate.c:102: const interface_descriptor *const interface = (interface_descriptor *)working->ptr;
+;source-doc/base-drv/./enumerate.c:104: const interface_descriptor *const interface = (interface_descriptor *)working->ptr;
 	ld	l,(ix-2)
 	ld	h,(ix-1)
 	ld	de,0x001b
@@ -563,7 +565,7 @@ _op_cap_drv_intf:
 	dec	hl
 	ld	c, e
 	ld	b, d
-;source-doc/base-drv/./enumerate.c:104: working->ptr += interface->bLength;
+;source-doc/base-drv/./enumerate.c:106: working->ptr += interface->bLength;
 	ld	a, (bc)
 	add	a, e
 	ld	e, a
@@ -572,7 +574,7 @@ _op_cap_drv_intf:
 	ld	(hl), e
 	inc	hl
 	ld	(hl), a
-;source-doc/base-drv/./enumerate.c:105: working->endpoint_count   = interface->bNumEndpoints;
+;source-doc/base-drv/./enumerate.c:107: working->endpoint_count   = interface->bNumEndpoints;
 	ld	a,(ix-2)
 	add	a,0x17
 	ld	e, a
@@ -587,7 +589,7 @@ _op_cap_drv_intf:
 	inc	hl
 	ld	a, (hl)
 	ld	(de), a
-;source-doc/base-drv/./enumerate.c:106: working->p_current_device = NULL;
+;source-doc/base-drv/./enumerate.c:108: working->p_current_device = NULL;
 	ld	a,(ix-2)
 	add	a,0x1d
 	ld	(ix-4),a
@@ -600,7 +602,7 @@ _op_cap_drv_intf:
 	ld	(hl), a
 	inc	hl
 	ld	(hl), a
-;source-doc/base-drv/./enumerate.c:108: switch (working->usb_device) {
+;source-doc/base-drv/./enumerate.c:110: switch (working->usb_device) {
 	ld	l,(ix-2)
 	ld	h,(ix-1)
 	inc	hl
@@ -610,27 +612,26 @@ _op_cap_drv_intf:
 	jr	Z,l_op_cap_drv_intf_00104
 	sub	0x0f
 	jr	NZ,l_op_cap_drv_intf_00107
-;source-doc/base-drv/./enumerate.c:110: CHECK(op_capture_hub_driver_interface(working))
+;source-doc/base-drv/./enumerate.c:112: CHECK(op_capture_hub_driver_interface(working))
 	ld	l,(ix-2)
 	ld	h,(ix-1)
 	call	_op_capture_hub_driver_interfac
 	or	a
 	jr	Z,l_op_cap_drv_intf_00112
-	ld	l, a
-	jr	l_op_cap_drv_intf_00115
-;source-doc/base-drv/./enumerate.c:114: case USB_IS_UNKNOWN: {
+	jr	l_op_cap_drv_intf_00113
+;source-doc/base-drv/./enumerate.c:116: case USB_IS_UNKNOWN: {
 l_op_cap_drv_intf_00104:
-;source-doc/base-drv/./enumerate.c:116: memset(&unkown_dev_cfg, 0, sizeof(device_config));
+;source-doc/base-drv/./enumerate.c:118: memset(&unkown_dev_cfg, 0, sizeof(device_config));
 	push	bc
 	ld	hl,2
 	add	hl, sp
 	ld	b,0x0c
-l_op_cap_drv_intf_00169:
+l_op_cap_drv_intf_00154:
 	ld	(hl),0x00
 	inc	hl
-	djnz	l_op_cap_drv_intf_00169
+	djnz	l_op_cap_drv_intf_00154
 	pop	bc
-;source-doc/base-drv/./enumerate.c:117: working->p_current_device = &unkown_dev_cfg;
+;source-doc/base-drv/./enumerate.c:119: working->p_current_device = &unkown_dev_cfg;
 	ld	hl,0
 	add	hl, sp
 	ex	de, hl
@@ -639,7 +640,7 @@ l_op_cap_drv_intf_00169:
 	ld	(hl), e
 	inc	hl
 	ld	(hl), d
-;source-doc/base-drv/./enumerate.c:118: CHECK(configure_device(working, interface, &unkown_dev_cfg));
+;source-doc/base-drv/./enumerate.c:120: CHECK(configure_device(working, interface, &unkown_dev_cfg));
 	ld	hl,0
 	add	hl, sp
 	push	hl
@@ -654,29 +655,29 @@ l_op_cap_drv_intf_00169:
 	ld	a, l
 	or	a
 	jr	Z,l_op_cap_drv_intf_00112
-	jr	l_op_cap_drv_intf_00115
-;source-doc/base-drv/./enumerate.c:122: default: {
+	jr	l_op_cap_drv_intf_00113
+;source-doc/base-drv/./enumerate.c:124: default: {
 l_op_cap_drv_intf_00107:
-;source-doc/base-drv/./enumerate.c:123: device_config *dev_cfg = find_first_free();
+;source-doc/base-drv/./enumerate.c:125: device_config *dev_cfg = find_first_free();
 	push	bc
 	call	_find_first_free
 	ex	de, hl
 	pop	bc
-;source-doc/base-drv/./enumerate.c:124: if (dev_cfg == NULL)
+;source-doc/base-drv/./enumerate.c:126: if (dev_cfg == NULL)
 	ld	a, d
 	or	e
 	jr	NZ,l_op_cap_drv_intf_00109
-;source-doc/base-drv/./enumerate.c:125: return USB_ERR_OUT_OF_MEMORY;
+;source-doc/base-drv/./enumerate.c:127: return USB_ERR_OUT_OF_MEMORY;
 	ld	l,0x83
-	jr	l_op_cap_drv_intf_00115
+	jr	l_op_cap_drv_intf_00114
 l_op_cap_drv_intf_00109:
-;source-doc/base-drv/./enumerate.c:126: working->p_current_device = dev_cfg;
+;source-doc/base-drv/./enumerate.c:128: working->p_current_device = dev_cfg;
 	ld	l,(ix-4)
 	ld	h,(ix-3)
 	ld	(hl), e
 	inc	hl
 	ld	(hl), d
-;source-doc/base-drv/./enumerate.c:127: CHECK(configure_device(working, interface, dev_cfg));
+;source-doc/base-drv/./enumerate.c:129: CHECK(configure_device(working, interface, dev_cfg));
 	push	de
 	push	bc
 	ld	l,(ix-2)
@@ -688,32 +689,29 @@ l_op_cap_drv_intf_00109:
 	pop	af
 	ld	a, l
 	or	a
-;source-doc/base-drv/./enumerate.c:130: }
-	jr	NZ,l_op_cap_drv_intf_00115
+	jr	NZ,l_op_cap_drv_intf_00113
+;source-doc/base-drv/./enumerate.c:132: }
 l_op_cap_drv_intf_00112:
-;source-doc/base-drv/./enumerate.c:132: CHECK(op_parse_endpoint(working));
+;source-doc/base-drv/./enumerate.c:134: result = op_parse_endpoint(working);
 	ld	l,(ix-2)
 	ld	h,(ix-1)
 	call	_op_parse_endpoint
-	or	a
-	jr	Z,l_op_cap_drv_intf_00114
+;source-doc/base-drv/./enumerate.c:136: done:
+l_op_cap_drv_intf_00113:
+;source-doc/base-drv/./enumerate.c:137: return result;
 	ld	l, a
-	jr	l_op_cap_drv_intf_00115
 l_op_cap_drv_intf_00114:
-;source-doc/base-drv/./enumerate.c:134: return result;
-	ld	l, a
-l_op_cap_drv_intf_00115:
-;source-doc/base-drv/./enumerate.c:135: }
+;source-doc/base-drv/./enumerate.c:138: }
 	ld	sp, ix
 	pop	ix
 	ret
-;source-doc/base-drv/./enumerate.c:137: usb_error op_id_class_drv(_working *const working) __sdcccall(1) {
+;source-doc/base-drv/./enumerate.c:140: usb_error op_id_class_drv(_working *const working) __sdcccall(1) {
 ; ---------------------------------
 ; Function op_id_class_drv
 ; ---------------------------------
 _op_id_class_drv:
 	ex	de, hl
-;source-doc/base-drv/./enumerate.c:139: const interface_descriptor *const ptr = (const interface_descriptor *)working->ptr;
+;source-doc/base-drv/./enumerate.c:141: const interface_descriptor *const ptr = (const interface_descriptor *)working->ptr;
 	ld	l, e
 	ld	h, d
 	ld	bc,0x001c
@@ -721,16 +719,16 @@ _op_id_class_drv:
 	ld	a, (hl)
 	dec	hl
 	ld	l, (hl)
-;source-doc/base-drv/./enumerate.c:141: working->usb_device = ptr->bLength > 5 ? identify_class_driver(working) : 0;
+	ld	h, a
+;source-doc/base-drv/./enumerate.c:143: working->usb_device = ptr->bLength > 5 ? identify_class_driver(working) : 0;
 	ld	c, e
 	ld	b, d
 	inc	bc
 	inc	bc
-	ld	h, a
 	ld	l, (hl)
 	ld	a,0x05
 	sub	l
-	jr	NC,l_op_id_class_drv_00105
+	jr	NC,l_op_id_class_drv_00103
 	push	bc
 	push	de
 	push	de
@@ -739,18 +737,15 @@ _op_id_class_drv:
 	ld	a, l
 	pop	de
 	pop	bc
-	jr	l_op_id_class_drv_00106
-l_op_id_class_drv_00105:
+	jr	l_op_id_class_drv_00104
+l_op_id_class_drv_00103:
 	xor	a
-l_op_id_class_drv_00106:
+l_op_id_class_drv_00104:
 	ld	(bc), a
-;source-doc/base-drv/./enumerate.c:143: CHECK(op_cap_drv_intf(working));
+;source-doc/base-drv/./enumerate.c:145: return op_cap_drv_intf(working);
 	ex	de, hl
 	call	_op_cap_drv_intf
 	ld	a, l
-	or	a
-	ret	NZ
-;source-doc/base-drv/./enumerate.c:145: return result;
 ;source-doc/base-drv/./enumerate.c:146: }
 	ret
 ;source-doc/base-drv/./enumerate.c:148: usb_error op_get_cfg_desc(_working *const working) __sdcccall(1) {
@@ -762,65 +757,81 @@ _op_get_cfg_desc:
 	ld	ix,0
 	add	ix,sp
 	push	af
-	ex	de, hl
-;source-doc/base-drv/./enumerate.c:151: memset(working->config.buffer, 0, MAX_CONFIG_SIZE);
-	ld	hl,0x001f
-	add	hl, de
-	ex	(sp), hl
+	push	af
+	ld	(ix-2),l
+	ld	(ix-1),h
+;source-doc/base-drv/./enumerate.c:149: memset(working->config.buffer, 0, MAX_CONFIG_SIZE);
+	ld	a,(ix-2)
+	add	a,0x1f
+	ld	(ix-4),a
+	ld	a,(ix-1)
+	adc	a,0x00
+	ld	(ix-3),a
 	pop	hl
 	push	hl
 	ld	b,0x8c
-l_op_get_cfg_desc_00121:
+l_op_get_cfg_desc_00113:
 	ld	(hl),0x00
 	inc	hl
-	djnz	l_op_get_cfg_desc_00121
-;source-doc/base-drv/./enumerate.c:153: const uint8_t max_packet_size = working->desc.bMaxPacketSize0;
-	ld	c, e
-	ld	b, d
+	djnz	l_op_get_cfg_desc_00113
+;source-doc/base-drv/./enumerate.c:151: const uint8_t max_packet_size = working->desc.bMaxPacketSize0;
+	pop	hl
+	pop	bc
+	push	bc
+	push	hl
 	inc	bc
 	inc	bc
 	inc	bc
 	ld	hl,7
 	add	hl, bc
-	ld	a, (hl)
-;source-doc/base-drv/./enumerate.c:156: working->config.buffer));
-	ld	c, e
-	ld	b, d
+	ld	d, (hl)
+;source-doc/base-drv/./enumerate.c:154: working->config.buffer));
+	pop	hl
+	pop	bc
+	push	bc
+	push	hl
 	ld	hl,24
 	add	hl, bc
-	ld	b, (hl)
-	ld	l, e
-	ld	h, d
-	push	bc
-	ld	bc,0x0015
-	add	hl, bc
+	ld	a, (hl)
+	pop	hl
 	pop	bc
-	ld	c, (hl)
-	push	de
-	ld	l,(ix-2)
-	ld	h,(ix-1)
+	push	bc
+	push	hl
+	ld	hl,21
+	add	hl, bc
+	ld	b, (hl)
+	pop	hl
+	push	hl
 	push	hl
 	ld	h,0x8c
 	push	hl
 	inc	sp
+	push	de
+	inc	sp
 	push	af
 	inc	sp
 	push	bc
+	inc	sp
 	call	_usbtrn_gfull_cfg_desc
 	pop	af
 	pop	af
 	pop	af
 	ld	a, l
-	pop	de
+	ld	(_result), a
+	ld	a,(_result)
 	or	a
-	jr	NZ,l_op_get_cfg_desc_00105
-;source-doc/base-drv/./enumerate.c:158: working->ptr             = (working->config.buffer + sizeof(config_descriptor));
-	ld	hl,0x001b
+	jr	NZ,l_op_get_cfg_desc_00103
+;source-doc/base-drv/./enumerate.c:156: working->ptr             = (working->config.buffer + sizeof(config_descriptor));
+	pop	de
+	pop	hl
+	push	hl
+	push	de
+	ld	de,0x001b
 	add	hl, de
-	ld	a, e
+	ld	a,(ix-2)
 	add	a,0x1f
 	ld	c, a
-	ld	a, d
+	ld	a,(ix-1)
 	adc	a,0x00
 	ld	b, a
 	ld	a, c
@@ -831,31 +842,37 @@ l_op_get_cfg_desc_00121:
 	ld	(hl), c
 	inc	hl
 	ld	(hl), a
-;source-doc/base-drv/./enumerate.c:159: working->interface_count = working->config.desc.bNumInterfaces;
-	ld	hl,0x0016
+;source-doc/base-drv/./enumerate.c:157: working->interface_count = working->config.desc.bNumInterfaces;
+	ld	a,(ix-2)
+	add	a,0x16
+	ld	c, a
+	ld	a,(ix-1)
+	adc	a,0x00
+	ld	b, a
+	pop	de
+	push	de
+	ld	hl,4
 	add	hl, de
-	ld	c, l
-	ld	b, h
-	pop	hl
-	push	hl
-	inc	hl
-	inc	hl
-	inc	hl
-	inc	hl
 	ld	a, (hl)
 	ld	(bc), a
-;source-doc/base-drv/./enumerate.c:161: CHECK(op_id_class_drv(working));
-	ex	de, hl
+;source-doc/base-drv/./enumerate.c:159: return op_id_class_drv(working);
+	pop	de
+	pop	hl
+	push	hl
+	push	de
 	call	_op_id_class_drv
-	or	a
-	jr	NZ,l_op_get_cfg_desc_00105
-;source-doc/base-drv/./enumerate.c:163: return result;
-l_op_get_cfg_desc_00105:
-;source-doc/base-drv/./enumerate.c:164: }
+	jr	l_op_get_cfg_desc_00104
+;source-doc/base-drv/./enumerate.c:160: done:
+l_op_get_cfg_desc_00103:
+;source-doc/base-drv/./enumerate.c:161: return result;
+	ld	hl,_result
+	ld	a, (hl)
+l_op_get_cfg_desc_00104:
+;source-doc/base-drv/./enumerate.c:162: }
 	ld	sp, ix
 	pop	ix
 	ret
-;source-doc/base-drv/./enumerate.c:166: usb_error read_all_configs(enumeration_state *const state) {
+;source-doc/base-drv/./enumerate.c:164: usb_error read_all_configs(enumeration_state *const state) {
 ; ---------------------------------
 ; Function read_all_configs
 ; ---------------------------------
@@ -866,18 +883,18 @@ _read_all_configs:
 	ld	hl, -171
 	add	hl, sp
 	ld	sp, hl
-;source-doc/base-drv/./enumerate.c:171: memset(&working, 0, sizeof(_working));
+;source-doc/base-drv/./enumerate.c:169: memset(&working, 0, sizeof(_working));
 	ld	hl,0
 	add	hl, sp
 	ex	de, hl
 	ld	l, e
 	ld	h, d
 	ld	b,0xab
-l_read_all_configs_00148:
+l_read_all_configs_00149:
 	ld	(hl),0x00
 	inc	hl
-	djnz	l_read_all_configs_00148
-;source-doc/base-drv/./enumerate.c:172: working.state = state;
+	djnz	l_read_all_configs_00149
+;source-doc/base-drv/./enumerate.c:170: working.state = state;
 	ld	l, e
 	ld	h, d
 	ld	a,(ix+4)
@@ -885,57 +902,53 @@ l_read_all_configs_00148:
 	inc	hl
 	ld	a,(ix+5)
 	ld	(hl), a
-;source-doc/base-drv/./enumerate.c:174: CHECK(usbtrn_get_descriptor(&working.desc));
+;source-doc/base-drv/./enumerate.c:172: CHECK(usbtrn_get_descriptor(&working.desc));
 	push	de
 	ld	hl,5
 	add	hl, sp
 	push	hl
 	call	_usbtrn_get_descriptor
 	pop	af
-	ld	c, l
+	ld	a, l
 	pop	de
-	ld	a, c
 	or	a
-	jr	Z,l_read_all_configs_00102
-	ld	l, c
-	jr	l_read_all_configs_00111
-l_read_all_configs_00102:
-;source-doc/base-drv/./enumerate.c:176: state->next_device_address++;
+	jr	NZ,l_read_all_configs_00108
+;source-doc/base-drv/./enumerate.c:174: state->next_device_address++;
 	ld	a,(ix+4)
-	ld	c,(ix+5)
+	ld	b,(ix+5)
 	ld	l, a
-	ld	h, c
-	ld	b, (hl)
-	inc	b
+	ld	h, b
+	ld	c, (hl)
+	inc	c
 	ld	l, a
-	ld	h, c
-	ld	(hl), b
-;source-doc/base-drv/./enumerate.c:177: working.current_device_address = state->next_device_address;
+	ld	h, b
+	ld	(hl), c
+;source-doc/base-drv/./enumerate.c:175: working.current_device_address = state->next_device_address;
 	ld	hl,0x0018
 	add	hl, de
-	ld	(hl), b
-;source-doc/base-drv/./enumerate.c:178: CHECK(usbtrn_set_address(working.current_device_address));
+	ld	(hl), c
+;source-doc/base-drv/./enumerate.c:176: CHECK(usbtrn_set_address(working.current_device_address));
 	push	de
-	ld	l, b
+	ld	l, c
 	call	_usbtrn_set_address
-	pop	de
 	ld	a, l
-;source-doc/base-drv/./enumerate.c:180: for (uint8_t config_index = 0; config_index < working.desc.bNumConfigurations; config_index++) {
+	pop	de
+;source-doc/base-drv/./enumerate.c:178: for (uint8_t config_index = 0; config_index < working.desc.bNumConfigurations; config_index++) {
 	or	a
-	jr	NZ,l_read_all_configs_00111
+	jr	NZ,l_read_all_configs_00108
 	ld	c,a
-l_read_all_configs_00109:
+l_read_all_configs_00110:
 	ld	hl,20
 	add	hl, sp
 	ld	b, (hl)
 	ld	a, c
 	sub	b
 	jr	NC,l_read_all_configs_00107
-;source-doc/base-drv/./enumerate.c:181: working.config_index = config_index;
+;source-doc/base-drv/./enumerate.c:179: working.config_index = config_index;
 	ld	hl,0x0015
 	add	hl, de
 	ld	(hl), c
-;source-doc/base-drv/./enumerate.c:183: CHECK(op_get_cfg_desc(&working));
+;source-doc/base-drv/./enumerate.c:181: CHECK(op_get_cfg_desc(&working));
 	push	bc
 	push	de
 	ld	hl,4
@@ -944,17 +957,19 @@ l_read_all_configs_00109:
 	pop	de
 	pop	bc
 	or	a
-	jr	Z,l_read_all_configs_00110
-	ld	l, a
-	jr	l_read_all_configs_00111
-l_read_all_configs_00110:
-;source-doc/base-drv/./enumerate.c:180: for (uint8_t config_index = 0; config_index < working.desc.bNumConfigurations; config_index++) {
+	jr	NZ,l_read_all_configs_00108
+;source-doc/base-drv/./enumerate.c:178: for (uint8_t config_index = 0; config_index < working.desc.bNumConfigurations; config_index++) {
 	inc	c
-	jr	l_read_all_configs_00109
+	jr	l_read_all_configs_00110
 l_read_all_configs_00107:
-;source-doc/base-drv/./enumerate.c:186: return USB_ERR_OK;
+;source-doc/base-drv/./enumerate.c:184: return USB_ERR_OK;
 	ld	l,0x00
-l_read_all_configs_00111:
+	jr	l_read_all_configs_00112
+;source-doc/base-drv/./enumerate.c:185: done:
+l_read_all_configs_00108:
+;source-doc/base-drv/./enumerate.c:186: return result;
+	ld	l, a
+l_read_all_configs_00112:
 ;source-doc/base-drv/./enumerate.c:187: }
 	ld	sp, ix
 	pop	ix
@@ -989,17 +1004,9 @@ _enumerate_all_devices:
 ;source-doc/base-drv/./enumerate.c:197: work_area->count_of_detected_usb_devices = state.next_device_address;
 	ld	a, (de)
 	ld	((_x + 1)),a
-;source-doc/base-drv/./enumerate.c:199: CHECK(result);
-	ld	a, c
-	or	a
-	jr	Z,l_enumerate_all_devices_00102
+;source-doc/base-drv/./enumerate.c:200: return result;
 	ld	l, c
-	jr	l_enumerate_all_devices_00103
-l_enumerate_all_devices_00102:
-;source-doc/base-drv/./enumerate.c:201: return result;
-	ld	l, c
-l_enumerate_all_devices_00103:
-;source-doc/base-drv/./enumerate.c:202: }
+;source-doc/base-drv/./enumerate.c:201: }
 	inc	sp
 	pop	ix
 	ret

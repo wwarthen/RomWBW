@@ -22,8 +22,13 @@ all: $(ASSDIR)base-drv.s $(ASSDIR)scsi-drv.s $(ASSDIR)ufi-drv.s $(ASSDIR)keyboar
 
 clean:
 	@rm -rf base-drv
-	@rm -rf scsi-drv
-	@rm -rf ufi-drv
+	rm -rf scsi-drv
+	rm -rf ufi-drv
+	rm -rf keyboard
+	rm ufi-drv.s
+	rm scsi-drv.s
+	rm base-drv.s
+	rm keyboard.s
 
 $(ASSDIR)base-drv.s:
 	@echo "Creating base-drv.s"

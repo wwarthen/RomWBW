@@ -2,6 +2,7 @@
 #include "dev_transfers.h"
 #include "protocol.h"
 #include <ch376.h>
+#include <critical-section.h>
 
 setup_packet cbi2_adsc = {0x21, 0, {0, 0}, {255, 0}, 12}; // ;4th byte is interface number
 
@@ -13,13 +14,13 @@ usb_error usb_execute_cbi(device_config *const storage_device,
                           uint8_t *const       buffer,
                           uint8_t *const       sense_codes) {
 
-  usb_error result;
-
   const uint8_t interface_number = storage_device->interface_number;
 
   setup_packet adsc;
   adsc           = cbi2_adsc;
   adsc.bIndex[0] = interface_number;
+
+  critical_begin();
 
   result = usbdev_control_transfer(storage_device, &adsc, (uint8_t *const)cmd);
 
@@ -27,12 +28,13 @@ usb_error usb_execute_cbi(device_config *const storage_device,
     if (sense_codes != NULL)
       usbdev_dat_in_trnsfer(storage_device, sense_codes, 2, ENDPOINT_INTERRUPT_IN);
 
-    return USB_ERR_STALL;
+    result = USB_ERR_STALL;
+    goto done;
   }
 
   if (result != USB_ERR_OK) {
     TRACE_USB_ERROR(result);
-    return result;
+    goto done;
   }
 
   if (send) {
@@ -40,14 +42,14 @@ usb_error usb_execute_cbi(device_config *const storage_device,
 
     if (result != USB_ERR_OK) {
       TRACE_USB_ERROR(result);
-      return result;
+      goto done;
     }
   } else {
     result = usbdev_dat_in_trnsfer(storage_device, buffer, buffer_size, ENDPOINT_BULK_IN);
 
     if (result != USB_ERR_OK) {
       TRACE_USB_ERROR(result);
-      return result;
+      goto done;
     }
   }
 
@@ -56,9 +58,12 @@ usb_error usb_execute_cbi(device_config *const storage_device,
 
     if (result != USB_ERR_OK) {
       TRACE_USB_ERROR(result);
-      return result;
+      // goto done;
     }
   }
 
-  return USB_ERR_OK;
+done:
+  critical_end();
+
+  return result;
 }

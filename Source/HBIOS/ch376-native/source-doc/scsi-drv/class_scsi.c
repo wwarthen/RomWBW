@@ -1,4 +1,5 @@
 #include "class_scsi.h"
+#include <critical-section.h>
 #include <string.h>
 #include <usb_state.h>
 #include <z80.h>
@@ -18,6 +19,8 @@ usb_error                    do_scsi_cmd(device_config_storage *const       dev,
   if (!send)
     cbw->bmCBWFlags = 0x80;
 
+  critical_begin();
+
   CHECK(usb_data_out_transfer((uint8_t *)cbw, sizeof(_scsi_command_block_wrapper) + 16, dev->address,
                               &dev->endpoints[ENDPOINT_BULK_OUT]));
 
@@ -36,9 +39,13 @@ usb_error                    do_scsi_cmd(device_config_storage *const       dev,
       usb_data_in_transfer((uint8_t *)&csw, sizeof(_scsi_command_status_wrapper), dev->address, &dev->endpoints[ENDPOINT_BULK_IN]));
 
   if (csw.bCSWStatus != 0 && csw.dCSWTag[0] != cbw->dCBWTag[0])
-    return USB_ERR_FAIL;
+    result = USB_ERR_FAIL;
+  else
+    result = USB_ERR_OK;
 
-  return USB_ERR_OK;
+done:
+  critical_end();
+  return result;
 }
 
 _scsi_read_capacity scsi_read_capacity = {0x25, 0, {0, 0, 0, 0, 0, 0, 0, 0}, {0, 0}};
@@ -99,8 +106,10 @@ usb_error scsi_sense_init(device_config_storage *const dev) {
   scsi_sense_result response;
   uint8_t           counter = 3;
 
+  critical_begin();
   while ((result = scsi_test(dev)) && --counter > 0)
     scsi_request_sense(dev, &response);
+  critical_end();
 
   return result;
 }

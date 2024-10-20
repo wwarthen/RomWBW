@@ -25,7 +25,6 @@ void chscsi_init(void) {
       print_uint16(index);
       print_string(" $");
 
-      // storage_device->drive_index = usb_device_count++;
       scsi_sense_init(storage_device);
       dio_add_entry(ch_scsi_fntbl, storage_device);
     }

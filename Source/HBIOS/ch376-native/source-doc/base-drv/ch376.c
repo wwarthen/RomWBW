@@ -8,7 +8,7 @@ usb_error result = 0;
 void ch_command(const uint8_t command) __z88dk_fastcall {
   uint8_t counter = 255;
   while ((CH376_COMMAND_PORT & PARA_STATE_BUSY) && --counter != 0)
-    delay();
+    ;
 
   // if (counter == 0) {
   // It appears that the Ch376 has become blocked
@@ -18,12 +18,7 @@ void ch_command(const uint8_t command) __z88dk_fastcall {
   // return;
   // }
 
-  delay();
   CH376_COMMAND_PORT = command;
-  delay();
-  delay();
-  delay();
-  delay();
 }
 
 extern usb_error ch_wait_int_and_get_status(const int16_t timeout) __z88dk_fastcall;
@@ -36,10 +31,6 @@ usb_error ch_very_short_wait_int_and_get_status(void) { return ch_wait_int_and_g
 
 usb_error ch_get_status(void) {
   ch_command(CH_CMD_GET_STATUS);
-  delay();
-  delay();
-  delay();
-  delay();
   uint8_t ch_status = CH376_DATA_PORT;
 
   if (ch_status >= USB_FILERR_MIN && ch_status <= USB_FILERR_MAX)
@@ -143,14 +134,8 @@ uint8_t ch_cmd_get_ic_version(void) {
 
 void ch_issue_token(const uint8_t toggle_bit, const uint8_t endpoint, const ch376_pid pid) {
   ch_command(CH_CMD_ISSUE_TKN_X);
-  delay();
-  delay();
   CH376_DATA_PORT = toggle_bit;
-  delay();
-  delay();
   CH376_DATA_PORT = endpoint << 4 | pid;
-  delay();
-  delay();
 }
 
 void ch_issue_token_in(const endpoint_param *const endpoint) __z88dk_fastcall {
@@ -168,8 +153,7 @@ void ch_issue_token_in_ep0(void) { ch_issue_token(0x80, 0, CH_PID_IN); }
 void ch_issue_token_setup(void) { ch_issue_token(0, 0, CH_PID_SETUP); }
 
 usb_error ch_data_in_transfer(uint8_t *buffer, int16_t buffer_size, endpoint_param *const endpoint) {
-  uint8_t   count;
-  usb_error result;
+  uint8_t count;
 
   if (buffer_size == 0)
     return USB_ERR_OK;
@@ -197,6 +181,8 @@ usb_error ch_data_in_transfer(uint8_t *buffer, int16_t buffer_size, endpoint_par
   USB_MODULE_LEDS = 0x00;
 
   return USB_ERR_OK;
+done:
+  return result;
 }
 
 usb_error ch_data_in_transfer_n(uint8_t *const buffer, int8_t *const buffer_size, endpoint_param *const endpoint) {
@@ -218,6 +204,8 @@ usb_error ch_data_in_transfer_n(uint8_t *const buffer, int8_t *const buffer_size
   USB_MODULE_LEDS = 0x00;
 
   return USB_ERR_OK;
+done:
+  return result;
 }
 
 usb_error ch_data_out_transfer(const uint8_t *buffer, int16_t buffer_length, endpoint_param *const endpoint) {
@@ -241,10 +229,11 @@ usb_error ch_data_out_transfer(const uint8_t *buffer, int16_t buffer_length, end
   USB_MODULE_LEDS = 0x00;
 
   return USB_ERR_OK;
+done:
+  return result;
 }
 
 void ch_set_usb_address(const uint8_t device_address) __z88dk_fastcall {
   ch_command(CH_CMD_SET_USB_ADDR);
   CH376_DATA_PORT = device_address;
-  delay();
 }

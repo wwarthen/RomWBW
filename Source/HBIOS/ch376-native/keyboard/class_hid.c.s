@@ -61,7 +61,7 @@ _hid_set_protocol:
 	push	af
 	push	af
 	ex	de, hl
-;source-doc/keyboard/./class_hid.c:9: cmd = cmd_hid_set;
+;source-doc/keyboard/./class_hid.c:8: cmd = cmd_hid_set;
 	push	de
 	ex	de, hl
 	ld	hl,2
@@ -71,12 +71,12 @@ _hid_set_protocol:
 	ld	bc,0x0008
 	ldir
 	pop	de
-;source-doc/keyboard/./class_hid.c:11: cmd.bRequest  = HID_SET_PROTOCOL;
+;source-doc/keyboard/./class_hid.c:10: cmd.bRequest  = HID_SET_PROTOCOL;
 	ld	(ix-7),0x0b
-;source-doc/keyboard/./class_hid.c:12: cmd.bValue[0] = protocol;
+;source-doc/keyboard/./class_hid.c:11: cmd.bValue[0] = protocol;
 	ld	a,(ix+4)
 	ld	(ix-6),a
-;source-doc/keyboard/./class_hid.c:14: result = usb_control_transfer(&cmd, NULL, dev->address, dev->max_packet_size);
+;source-doc/keyboard/./class_hid.c:13: return usb_control_transfer(&cmd, NULL, dev->address, dev->max_packet_size);
 	ld	l, e
 	ld	h, d
 	inc	hl
@@ -103,8 +103,7 @@ _hid_set_protocol:
 	pop	af
 	pop	af
 	ld	a, l
-;source-doc/keyboard/./class_hid.c:16: RETURN_CHECK(result);
-;source-doc/keyboard/./class_hid.c:17: }
+;source-doc/keyboard/./class_hid.c:14: }
 	ld	sp, ix
 	pop	ix
 	pop	hl
@@ -118,7 +117,7 @@ _cmd_hid_set:
 	DEFB +0x00
 	DEFB +0x00
 	DEFW +0x0000
-;source-doc/keyboard/./class_hid.c:19: usb_error hid_set_idle(const device_config_keyboard *const dev, const uint8_t duration) __sdcccall(1) {
+;source-doc/keyboard/./class_hid.c:16: usb_error hid_set_idle(const device_config_keyboard *const dev, const uint8_t duration) __sdcccall(1) {
 ; ---------------------------------
 ; Function hid_set_idle
 ; ---------------------------------
@@ -131,7 +130,7 @@ _hid_set_idle:
 	push	af
 	push	af
 	ex	de, hl
-;source-doc/keyboard/./class_hid.c:22: cmd = cmd_hid_set;
+;source-doc/keyboard/./class_hid.c:18: cmd = cmd_hid_set;
 	push	de
 	ex	de, hl
 	ld	hl,2
@@ -141,12 +140,12 @@ _hid_set_idle:
 	ld	bc,0x0008
 	ldir
 	pop	de
-;source-doc/keyboard/./class_hid.c:24: cmd.bRequest  = HID_SET_IDLE;
+;source-doc/keyboard/./class_hid.c:20: cmd.bRequest  = HID_SET_IDLE;
 	ld	(ix-7),0x0a
-;source-doc/keyboard/./class_hid.c:25: cmd.bValue[0] = duration;
+;source-doc/keyboard/./class_hid.c:21: cmd.bValue[0] = duration;
 	ld	a,(ix+4)
 	ld	(ix-6),a
-;source-doc/keyboard/./class_hid.c:27: result = usb_control_transfer(&cmd, NULL, dev->address, dev->max_packet_size);
+;source-doc/keyboard/./class_hid.c:23: return usb_control_transfer(&cmd, NULL, dev->address, dev->max_packet_size);
 	ld	l, e
 	ld	h, d
 	inc	hl
@@ -173,14 +172,13 @@ _hid_set_idle:
 	pop	af
 	pop	af
 	ld	a, l
-;source-doc/keyboard/./class_hid.c:29: RETURN_CHECK(result);
-;source-doc/keyboard/./class_hid.c:30: }
+;source-doc/keyboard/./class_hid.c:24: }
 	ld	sp, ix
 	pop	ix
 	pop	hl
 	inc	sp
 	jp	(hl)
-;source-doc/keyboard/./class_hid.c:32: usb_error hid_get_input_report(const device_config_keyboard *const dev, uint8_t const *report) __sdcccall(1) {
+;source-doc/keyboard/./class_hid.c:26: usb_error hid_get_input_report(const device_config_keyboard *const dev, uint8_t const *report) __sdcccall(1) {
 ; ---------------------------------
 ; Function hid_get_input_report
 ; ---------------------------------
@@ -195,7 +193,7 @@ _hid_get_input_report:
 	ld	sp, hl
 	ld	l, c
 	ld	h, b
-;source-doc/keyboard/./class_hid.c:35: cmd = cmd_hid_set;
+;source-doc/keyboard/./class_hid.c:28: cmd = cmd_hid_set;
 	push	de
 	push	hl
 	ex	de, hl
@@ -207,19 +205,19 @@ _hid_get_input_report:
 	ldir
 	pop	bc
 	pop	de
-;source-doc/keyboard/./class_hid.c:37: cmd.bmRequestType = 0xA1;
+;source-doc/keyboard/./class_hid.c:30: cmd.bmRequestType = 0xA1;
 	ld	(ix-9),0xa1
-;source-doc/keyboard/./class_hid.c:38: cmd.bValue[0]     = 1;
+;source-doc/keyboard/./class_hid.c:31: cmd.bValue[0]     = 1;
 	ld	(ix-7),0x01
-;source-doc/keyboard/./class_hid.c:39: cmd.bValue[1]     = 1;
+;source-doc/keyboard/./class_hid.c:32: cmd.bValue[1]     = 1;
 	ld	(ix-6),0x01
-;source-doc/keyboard/./class_hid.c:40: cmd.bRequest      = HID_GET_REPORT;
+;source-doc/keyboard/./class_hid.c:33: cmd.bRequest      = HID_GET_REPORT;
 	ld	(ix-8),0x01
-;source-doc/keyboard/./class_hid.c:41: cmd.wLength       = 8;
+;source-doc/keyboard/./class_hid.c:34: cmd.wLength       = 8;
 	ld	(ix-3),0x08
 	xor	a
 	ld	(ix-2),a
-;source-doc/keyboard/./class_hid.c:43: result = usb_control_transfer(&cmd, report, dev->address, dev->max_packet_size);
+;source-doc/keyboard/./class_hid.c:36: return usb_control_transfer(&cmd, report, dev->address, dev->max_packet_size);
 	ld	l, c
 	ld	h, b
 	inc	hl
@@ -247,8 +245,7 @@ _hid_get_input_report:
 	pop	af
 	pop	af
 	ld	a, l
-;source-doc/keyboard/./class_hid.c:45: RETURN_CHECK(result);
-;source-doc/keyboard/./class_hid.c:46: }
+;source-doc/keyboard/./class_hid.c:37: }
 	ld	sp, ix
 	pop	ix
 	ret

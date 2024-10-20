@@ -27,12 +27,10 @@ const setup_packet cmd_get_device_descriptor = {0x80, 6, {0, 1}, {0, 0}, 8};
  * @return usb_error USB_ERR_OK if all good, otherwise specific error code
  */
 usb_error usbtrn_get_descriptor(device_descriptor *const buffer) {
-  usb_error    result;
   setup_packet cmd;
   cmd         = cmd_get_device_descriptor;
   cmd.wLength = 8;
 
-  debugger();
   result = usb_control_transfer(&cmd, (uint8_t *)buffer, 0, 8);
 
   CHECK(result);
@@ -42,6 +40,9 @@ usb_error usbtrn_get_descriptor(device_descriptor *const buffer) {
   result      = usb_control_transfer(&cmd, (uint8_t *)buffer, 0, buffer->bMaxPacketSize0);
 
   RETURN_CHECK(result);
+
+done:
+  return result;
 }
 
 /**
@@ -51,7 +52,6 @@ usb_error usbtrn_get_descriptor(device_descriptor *const buffer) {
  * @return usb_error USB_ERR_OK if all good, otherwise specific error code
  */
 usb_error usbtrn_get_descriptor2(device_descriptor *const buffer, const uint8_t device_address) {
-  usb_error    result;
   setup_packet cmd;
   cmd         = cmd_get_device_descriptor;
   cmd.wLength = 8;
@@ -63,6 +63,8 @@ usb_error usbtrn_get_descriptor2(device_descriptor *const buffer, const uint8_t 
   cmd         = cmd_get_device_descriptor;
   cmd.wLength = 18;
   RETURN_CHECK(usb_control_transfer(&cmd, (uint8_t *)buffer, device_address, buffer->bMaxPacketSize0));
+done:
+  return result;
 }
 
 const setup_packet cmd_set_device_address = {0x00, 5, {0, 0}, {0, 0}, 0};
@@ -119,7 +121,7 @@ usb_error usbtrn_get_config_descriptor(config_descriptor *const buffer,
   cmd.bValue[0] = config_index;
   cmd.wLength   = (uint16_t)buffer_size;
 
-  RETURN_CHECK(usb_control_transfer(&cmd, (uint8_t *)buffer, device_address, max_packet_size));
+  return usb_control_transfer(&cmd, (uint8_t *)buffer, device_address, max_packet_size);
 }
 
 usb_error usbtrn_gfull_cfg_desc(const uint8_t  config_index,
@@ -127,7 +129,6 @@ usb_error usbtrn_gfull_cfg_desc(const uint8_t  config_index,
                                 const uint8_t  max_packet_size,
                                 const uint8_t  max_buffer_size,
                                 uint8_t *const buffer) {
-  usb_error result;
 
   CHECK(usbtrn_get_config_descriptor((config_descriptor *)buffer, config_index, sizeof(config_descriptor), device_address,
                                      max_packet_size));
@@ -139,6 +140,8 @@ usb_error usbtrn_gfull_cfg_desc(const uint8_t  config_index,
   CHECK(usbtrn_get_config_descriptor((config_descriptor *)buffer, config_index, max_length, device_address, max_packet_size));
 
   return USB_ERR_OK;
+done:
+  return result;
 }
 
 const setup_packet usb_cmd_clear_endpoint_halt = {2, 1, {0, 0}, {255, 0}, 0}; //    ;byte 4 is the endpoint to be cleared
@@ -148,7 +151,5 @@ usb_error usbtrn_clear_endpoint_halt(const uint8_t endpoint_number, const uint8_
   cmd           = usb_cmd_clear_endpoint_halt;
   cmd.bIndex[0] = endpoint_number;
 
-  usb_error result = usb_control_transfer(&cmd, (uint8_t *)0, device_address, max_packet_size);
-
-  RETURN_CHECK(result);
+  return usb_control_transfer(&cmd, (uint8_t *)0, device_address, max_packet_size);
 }

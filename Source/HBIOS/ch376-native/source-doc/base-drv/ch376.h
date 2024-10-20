@@ -96,11 +96,14 @@ extern usb_error result;
   {                                                                                                                                \
     result = fn;                                                                                                                   \
     if (result != USB_ERR_OK)                                                                                                      \
-      return result;                                                                                                               \
+      goto done;                                                                                                                   \
   }
 
 #define RETURN_CHECK(fn)                                                                                                           \
-  { return fn; }
+  {                                                                                                                                \
+    result = fn;                                                                                                                   \
+    goto done;                                                                                                                     \
+  }
 
 #define TRACE_USB_ERROR(result)
 
@@ -159,9 +162,7 @@ extern usb_error ch_data_out_transfer(const uint8_t *buffer, int16_t buffer_leng
 inline void ch_configure_nak_retry(const ch_nak_retry_type retry, const uint8_t number_of_retries) {
   ch_command(CH_CMD_WRITE_VAR8);
   CH376_DATA_PORT = CH_VAR_RETRY_TIMES;
-  delay();
   CH376_DATA_PORT = retry << 6 | (number_of_retries & 0x1F);
-  delay();
 }
 
 #define ch_configure_nak_retry_indefinite() ch_configure_nak_retry(CH_NAK_RETRY_INDEFINITE, 0x1F)

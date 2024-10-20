@@ -13,11 +13,11 @@
 #include "transfers.h"
 #include "ch376.h"
 #include "delay.h"
-#include "z80.h"
-#include <stdlib.h>
-
 #include "ez80-helpers.h"
 #include "print.h"
+#include "z80.h"
+#include <critical-section.h>
+#include <stdlib.h>
 
 #define LOWER_SAFE_RAM_ADDRESS 0x8000
 
@@ -56,6 +56,8 @@ usb_error usb_control_transfer(const setup_packet *const cmd_packet,
   if (transferIn && buffer == 0)
     return USB_ERR_OTHER;
 
+  critical_begin();
+
   ch_set_usb_address(device_address);
 
   ch_write_data((const uint8_t *)cmd_packet, sizeof(setup_packet));
@@ -74,12 +76,13 @@ usb_error usb_control_transfer(const setup_packet *const cmd_packet,
   if (transferIn) {
     ch_command(CH_CMD_WR_HOST_DATA);
     CH376_DATA_PORT = 0;
-    delay();
     ch_issue_token_out_ep0();
     result = ch_long_wait_int_and_get_status(); /* sometimes we get STALL here - seems to be ok to ignore */
 
-    if (result == USB_ERR_OK || result == USB_ERR_STALL)
-      return USB_ERR_OK;
+    if (result == USB_ERR_OK || result == USB_ERR_STALL) {
+      result = USB_ERR_OK;
+      goto done;
+    }
 
     RETURN_CHECK(result);
   }
@@ -88,6 +91,10 @@ usb_error usb_control_transfer(const setup_packet *const cmd_packet,
   result = ch_long_wait_int_and_get_status();
 
   RETURN_CHECK(result);
+
+done:
+  critical_end();
+  return result;
 }
 
 usb_error
@@ -126,9 +133,15 @@ usb_dat_in_trns_n_ext(uint8_t *buffer, uint16_t *buffer_size, const uint8_t devi
  */
 usb_error
 usb_data_in_transfer(uint8_t *buffer, const uint16_t buffer_size, const uint8_t device_address, endpoint_param *const endpoint) {
+  critical_begin();
+
   ch_set_usb_address(device_address);
 
-  return ch_data_in_transfer(buffer, buffer_size, endpoint);
+  result = ch_data_in_transfer(buffer, buffer_size, endpoint);
+
+  critical_end();
+
+  return result;
 }
 
 /**
@@ -142,21 +155,15 @@ usb_data_in_transfer(uint8_t *buffer, const uint16_t buffer_size, const uint8_t 
  */
 usb_error
 usb_data_in_transfer_n(uint8_t *buffer, uint8_t *const buffer_size, const uint8_t device_address, endpoint_param *const endpoint) {
+  critical_begin();
+
   ch_set_usb_address(device_address);
 
-  return ch_data_in_transfer_n(buffer, buffer_size, endpoint);
-}
+  result = ch_data_in_transfer_n(buffer, buffer_size, endpoint);
 
-usb_error
-usb_dat_out_trns_ext(const uint8_t *buffer, uint16_t buffer_size, const uint8_t device_address, endpoint_param *const endpoint) {
+  critical_end();
 
-  if (buffer != 0 && (uint16_t)buffer < LOWER_SAFE_RAM_ADDRESS)
-    return USB_BAD_ADDRESS;
-
-  if ((uint16_t)endpoint < LOWER_SAFE_RAM_ADDRESS)
-    return USB_BAD_ADDRESS;
-
-  return usb_data_out_transfer(buffer, buffer_size, device_address, endpoint);
+  return result;
 }
 
 /**
@@ -170,7 +177,13 @@ usb_dat_out_trns_ext(const uint8_t *buffer, uint16_t buffer_size, const uint8_t 
  */
 usb_error
 usb_data_out_transfer(const uint8_t *buffer, uint16_t buffer_size, const uint8_t device_address, endpoint_param *const endpoint) {
+  critical_begin();
+
   ch_set_usb_address(device_address);
 
-  return ch_data_out_transfer(buffer, buffer_size, endpoint);
+  result = ch_data_out_transfer(buffer, buffer_size, endpoint);
+
+  critical_end();
+
+  return result;
 }
