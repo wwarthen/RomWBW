@@ -1,42 +1,31 @@
 @echo off
 setlocal
 
-set TOOLS=../../../Tools
-set APPBIN=..\..\Binary\Apps
-
+set TOOLS=..\..\..\Tools
 set PATH=%TOOLS%\tasm32;%TOOLS%\zxcc;%PATH%
-
 set TASMTABS=%TOOLS%\tasm32
-
 set CPMDIR80=%TOOLS%/cpm/
 
-pushd DMAmon && call Build || exit /b & popd
-pushd tstdskng && call Build || exit /b & popd
-pushd inttest && call Build || exit /b & popd
-pushd ppidetst && call Build || exit /b & popd
-pushd ramtest && call Build || exit /b & popd
-pushd I2C && call Build || exit /b & popd
-pushd rzsz && call Build || exit /b & popd
-pushd vdctest && call Build || exit /b & popd
-pushd kbdtest && call Build || exit /b & popd
-pushd ps2info && call Build || exit /b & popd
-pushd 2piotst && call Build || exit /b & popd
-pushd piomon && call Build || exit /b & popd
-pushd banktest && call Build || exit /b & popd
-pushd portscan && call Build || exit /b & popd
-pushd sound && call Build || exit /b & popd
-pushd testh8p && call Build || exit /b & popd
+call :build DMAmon || exit /b
+call :build tstdskng || exit /b
+call :build inttest || exit /b
+call :build ppidetst || exit /b
+call :build ramtest || exit /b
+call :build I2C || exit /b
+call :build rzsz || exit /b
+call :build vdctest || exit /b
+call :build kbdtest || exit /b
+call :build ps2info || exit /b
+call :build 2piotst || exit /b
+call :build piomon || exit /b
+call :build banktest || exit /b
+call :build portscan || exit /b
+call :build sound || exit /b
+call :build testh8p || exit /b
 
 goto :eof
 
-:asm
-echo.
-echo Building %1...
-tasm -t80 -g3 -fFF %1.asm %1.com %1.lst || exit /b
-goto :eof
-
-:asm180
-echo.
-echo Building %1...
-tasm -t180 -g3 -fFF %1.asm %1.com %1.lst || exit /b
+:build
+echo Building %1
+pushd %1 && call Build || exit /b & popd
 goto :eof

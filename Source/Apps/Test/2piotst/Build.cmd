@@ -1,10 +1,8 @@
 @echo off
 setlocal
 
-set TOOLS=..\..\..\..\Tools
-
+set TOOLS=../../../../Tools
 set PATH=%TOOLS%\zxcc;%PATH%
-
 set CPMDIR80=%TOOLS%/cpm/
 
 zxcc M80 -=2piotst/l || exit /b

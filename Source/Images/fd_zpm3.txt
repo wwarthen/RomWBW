@@ -23,6 +23,11 @@ d_zpm3/ReadMe.txt 0:
 ../ZPM3/bnkbdos3.spr 0:
 ../ZPM3/resbdos3.spr 0:
 #
+# Include CP/M 3 files
+#
+d_cpm3/u0/*.COM 15:
+d_cpm3/u0/HELP.HLP 0:
+#
 # Add RomWBW utilities
 #
 #../../Binary/Apps/*.com 15:
@@ -48,7 +53,6 @@ d_zpm3/ReadMe.txt 0:
 #
 Common/All/*.* 15:
 Common/CPM3/*.* 15:
-#Common/Z/u10/*.* 10:
 Common/Z/u14/*.* 14:
 Common/Z/u15/*.* 15:
 Common/Z3/u10/*.* 10:
