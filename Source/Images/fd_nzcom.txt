@@ -33,7 +33,7 @@ d_cpm22/u0/XSUB.COM 15:
 #
 # Add Common Applications
 #
-Common/All/u10/*.* 10:
+# Common/All/u10/*.* 10:
 Common/All/u14/*.* 14:
 Common/All/u15/*.* 15:
 Common/CPM22/*.* 15:

@@ -328,8 +328,6 @@ The following file are in User Area 15, and where noted 14 for config files.
 | `PATH.COM`     | Set/display command search path                          |
 | `PUBLIC.COM`   | Specify ZRDOS public directories/user areas              |
 | `PWD.COM`      | Displays DU and Directory Names with paging              |
-| `SAINST.COM`   | Install/configure SALIAS.                                |
-| `SALIAS.COM`   | Screen oriented alias editor. (v1.5)                     |
 | `SHOW.COM`     | Display Z-System configuration information               |
 | `SUB.COM`      | Enhanced version of SUBMIT                               |
 | `TY3ERA.COM`   | Type-3 program to erase a file                           |
@@ -511,8 +509,6 @@ This is a generic ZPM3 adaptation for RomWBW.
 
 | **File**       | **User Area** | **Description**                                              |
 |----------------|---------------|--------------------------------------------------------------|
-| `ALIAS.COM`    | 15            | Create an Alias (v1.1)                                       |
-| `ALIAS.HLP`    | 10            | Help File for ALIAS.COM                                      |
 | `ARUNZ.COM`    | 15            | Alias-RUN-forZ-System command alias exec (v1.1 Type3)        |
 | `COPY.COM`     | 15            |                                                              |
 | `COPY.CFG`     | 14            |                                                              |
@@ -532,8 +528,6 @@ This is a generic ZPM3 adaptation for RomWBW.
 | `NAMES.NDR`    | 15            | Default Directory Names loaded at boot                       |
 | `REMOVE.COM`   | 15            |                                                              |
 | `RSXDIR.COM`   | 15            | ZCPR Utility which displays RSXes in memory                  |
-| `SAINST.COM`   | 15            | Install/configure SALIAS.                                    |
-| `SALIAS.COM`   | 15            | Screen oriented alias editor. (v1.6)                         |
 | `SETPATH.COM`  | 15            | used to set the command search path.                         |
 | `VERROR.COM`   | 15            | Installs a resident error handler                            |
 | `VLU.COM`      | 15            | Video Library Utility views or extracts files from libraries |
@@ -771,30 +765,34 @@ The following files are found in
 
 | **File**       | **Applicability** | **Description**                                       |
 |----------------|-------------------|-------------------------------------------------------|
+| `ALIAS.COM`    | Z3                | Create an Alias (v1.1)                                |
+| `ALIAS.HLP`    | Z3                | Help File for ALIAS.COM                               |
 | `EDITNDR.COM`  | Z3                | Edit named directory register in memory.              |
 | `KERCPM22.COM` | CPM22             | Kermit communication application                      |
 | `KERCPM3.COM`  | CPM3              | Kermit communication application                      |
 | `LBREXT.COM`   | Z & Z3            | Extract file from .LBR libraries                      |
 | `LBREX36.CFG`  | Z & Z3            | ZCNFG configuration file for LBREXT                   |
-| `RZ.COM`       | CPM3              |                                                       |
-| `RZSC.FOR`     | CPM3              |                                                       |
+| `RZ.COM`       | CPM3              | Receive files with X/Y/ZModem (experimental)          |
+| `RZSC.FOR`     | CPM3              | Description of RZ/SZ programs                         |
+| `SAINST.COM`   | Z3                | Install/configure SALIAS.                             |
+| `SALIAS.COM`   | Z3                | Screen oriented alias editor. (v1.6)                  |
 | `SAVENDR.COM`  | Z3                | Writes the named directory to disk.                   |
 | `SDZ.COM`      | Z3                | Enhanced directory lister.                            |
-| `SCOPY.COM`    | Z3                |                                                       |  
-| `SCOPY10F.CFG` | Z3                |                                                       |  
-| `SCOPY.HLP`    | Z3                |                                                       |  
-| `SCOPY10F.HLP` | Z3                |                                                       |  
-| `SZ.COM`       | CPM3              |                                                       |
-| `TCAP.Z3T`     | Z3                |                                                       |  
+| `SCOPY.COM`    | Z3                | Screen-oriented file copy for ZCPR3                   |  
+| `SCOPY10.CFG`  | Z3                | ZCNFG configuration file for SCOPY                    |  
+| `SCOPY.HLP`    | Z3                | Primary help file for SCOPY                           |  
+| `SCOPY10F.HLP` | Z3                | Secondary help file for SCOPY                         |  
+| `SZ.COM`       | CPM3              | Send files with X/Y/ZModem (experimental)             |
+| `TCAP.Z3T`     | Z3                | Terminal capabilities for ZCPR3 (VT100)               |  
 | `TCSELECT.COM` | Z3                | NZCOM Create terminal capability file (newer version) |
-| `TCVIEW.COM`   | Z3                |                                                       |  
-| `UMAP.COM`     | Z3                |                                                       |  
-| `UMAP18.CFG`   | Z3                |                                                       |  
-| `UNARCU1.CFG`  | Z & Z3            |                                                       |
+| `TCVIEW.COM`   | Z3                | View zcpr3 terminal capabilities                      |  
+| `UMAP.COM`     | Z3                | Shows directory usage                                 |  
+| `UMAP18.CFG`   | Z3                | ZCNFG configuration file for UMAP program             |  
+| `UNARCU1.CFG`  | Z & Z3            | ZCNFG configuration file for UNARC program            |
 | `ZCNFG.COM`    | Z & Z3            | Configuration tool for programs with .CFG files       |
 | `ZCNFG24.CFG`  | Z & Z3            | Configuration file for ZCNFG.COM                      |
 | `ZEX.COM`      | Z3                | A memory-based command file processor, like SUBMIT    |
-| `ZEX.CFG`      | Z3                |                                                       |
+| `ZEX.CFG`      | Z3                | ZCNFG configuration file for ZEX program              |
 | `ZXD.CFG`      | Z & Z3            | Configuration file for ZXD.COM                        |
 | `ZXD.COM`      | Z & Z3            | Extended directory utility w/ date/time stamp support |
 | `Z3LOC.COM`    | Z3                | NZCOM Display info of the ZCPR3 CCP, BDOS, and BIOS   |  
