@@ -51,7 +51,9 @@ d_cpm3/u0/HELP.HLP 0:
 #
 # Add Common Applications
 #
-Common/All/*.* 15:
+# Common/All/u10/*.* 10:
+Common/All/u14/*.* 14:
+Common/All/u15/*.* 15:
 Common/CPM3/*.* 15:
 Common/Z/u14/*.* 14:
 Common/Z/u15/*.* 15:

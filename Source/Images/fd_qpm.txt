@@ -44,5 +44,7 @@ d_cpm22/u0/*.* 0:
 #
 # Add Common Applications
 #
-Common/All/*.* 0:
+Common/All/u10/*.* 0:
+Common/All/u14/*.* 0:
+Common/All/u15/*.* 0:
 Common/CPM22/*.* 0:

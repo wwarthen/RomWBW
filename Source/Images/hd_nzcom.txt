@@ -77,7 +77,9 @@ Common/Test/*.* 2:
 #
 # Add Common Applications
 #
-Common/All/*.* 15:
+Common/All/u10/*.* 10:
+Common/All/u14/*.* 14:
+Common/All/u15/*.* 15:
 Common/CPM22/*.* 15:
 Common/Z/u14/*.* 14:
 Common/Z/u15/*.* 15:
@@ -85,4 +87,3 @@ Common/Z3/u10/*.* 10:
 Common/Z3/u14/*.* 14:
 Common/Z3/u15/*.* 15:
 Common/SIMH/*.* 13:
-Common/UTILS/*.* 15:
