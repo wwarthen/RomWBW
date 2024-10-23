@@ -627,7 +627,7 @@ The following files appear in User Area 0
 | `QSTAMPV.COM`  | Initializes disk for date/time stamping (vertical sort)   |
 | `QSTAMPX.COM`  | Initializes disk for date/time stamping (horizontal sort) |
 | `QSTAT.COM`    | QP/M enhanced version of CP/M 2.2 STAT application        |
-| `QSUB.COM`     | QP/M batch file submission program                        |
+| `QSUB.COM`     | QP/M batch file submission program - Like SUBMIT          |
 | `QSWEEP.COM`   | QP/M directory sweep utility                              |
 | `QTERM.DAT`    | Terminal control codes used by DEBUGZ                     |
 | `QTERMS.LIB`   | Library of available terminal definitions                 |
@@ -683,10 +683,8 @@ The following files are general purpose an provided in (mostly) all OS images
 
 The following files are found in
 
-* /Source/Apps
 * /Source/Apps/*
 * /Source/Images/Common/All
-* /Source/Images/Common/UTILS
 * /Source/TastyBasic
 
 The following files provide specific functionality enabled by
@@ -739,7 +737,7 @@ distribution.  Some provide command line help themselves.  Some are fairly obvio
 | `GENHEX.COM`   |                   | Generates an Intel Hex file from the input file        |  
 | `LS.COM`       |                   | An alternative file listing to DIR                     |  
 | `LSWEEP.COM`   |                   | Extract and view member files of an .LBR archive       |  
-| `MBASIC.COM`   |                   | Microsoft BASIC language interpreter                   |  
+| `MBASIC.COM`   | Microsoft         | Microsoft BASIC language interpreter                   |  
 | `NULU.COM`     |                   | NZCOM new library utility (.LBR) management tool       |  
 | `PMARC.COM`    |                   | Create or add file(s) to LHA .PMA archive              |  
 | `PMEXT.COM`    |                   | Extract file(s) from .PMA/.LZH/.LHA archive            |  
@@ -754,7 +752,7 @@ distribution.  Some provide command line help themselves.  Some are fairly obvio
 | `UNCR.COM`     |                   | Decompress Crunched file(s). See CRUNCH.COM            |  
 | `UNZIP.COM`    | Lars Nelson       | UNZIP extracts from MS-DOS ZIP files                   |  
 | `UNZIP.DOC`    |                   | Documentation for UNZIP                                |  
-| `XSUB1.COM`    | Lars Nelson       | Replacement for DRI SUB                                |  
+| `XSUB1.COM`    | Lars Nelson       | Replacement for DRI XSUB                               |  
 | `ZAP.COM`      |                   | Interactive disk & file utility                        |  
 | `ZDE.COM`      |                   | Compact WordStar-like editor                           |  
 | `ZDE.DOC`      |                   | ZDE Documentation                                      |  
