@@ -227,8 +227,6 @@ The following files appear in User Area 0
 | `TERMBASE.DAT` | Library of terminals used by SETTERM                   |
 | `TESTCLOK.COM` | Test a selected clock driver                           |
 | `ZCAL.COM`     | Display a small one-month calendar to the screen       |
-| `ZCNFG.COM`    | Configuration tool for programs with .CFG files        |
-| `ZCNFG24.CFG`  | Configuration file for ZCNFG.COM                       |
 | `ZPATH.COM`    | Set or display ZSDOS and ZCPR search paths             |
 | `ZSCONFIG.COM` | Configure features of ZSDOS operating systems          |
 | `ZSVSTAMP.COM` | Preserves file date/time stamp across modifications    |
@@ -305,17 +303,16 @@ The following file are in User Area 15, and where noted 14 for config files.
 | **File**       | **Description**                                          |
 |----------------|----------------------------------------------------------|
 | `ALIAS.CMD`    | Sample alias definitions for use with ARUNZ              |
-| `ARUNZ.COM`    | Alias-RUN-forZ-System command alias execution            |
+| `ARUNZ.COM`    | Alias-RUN-forZ-System command alias exec (v0.9u Type4)   |
 | `CLEDINST.COM` | Command line editing and history shell installer         |
 | `CLEDSAVE.COM` | Save RCP-resident command line editor history            |
 | `CMDRUN.COM`   | Extended Command Processor (copied from ARUNZ)           |
 | `CONFIG.LBR`   | Various configuration files for use with ZCNFG. (U14)    |
 | `CPSET.COM`    | Displays/defines CRT/PRT characteristics                 |
-| `EDITNDR.COM`  | Edit named directory register in memory                  |
 | `FCP.LBR`      | Library of alternative FCP modules                       |
 | `FF.COM`       | File finder utility                                      |
 | `HELP.COM`     | (HELPC14) is an improved version of the help utility     |
-| `IF.COM`       | Extended flow control tester for FCP                     |
+| `IF.COM`       | Extended flow control tester for FCP (v1.5 Type4)        |
 | `JETLDR.COM`   | Z-System General-purpose module loader                   |
 | `LBRHELP.COM`  | Help file viewer for use with help file libraries (.LBR) |
 | `LDIR.COM`     | Directory lister for libraries (.LBR)                    |
@@ -331,10 +328,8 @@ The following file are in User Area 15, and where noted 14 for config files.
 | `PATH.COM`     | Set/display command search path                          |
 | `PUBLIC.COM`   | Specify ZRDOS public directories/user areas              |
 | `PWD.COM`      | Displays DU and Directory Names with paging              |
-| `SAINST.COM`   | Install/configure SALIAS                                 |
-| `SALIAS.COM`   | Screen oriented alias editor                             |
-| `SAVENDR.COM`  | Writes the named directory register to disk              |
-| `SDZ.COM`      | Enhanced directory lister                                |
+| `SAINST.COM`   | Install/configure SALIAS.                                |
+| `SALIAS.COM`   | Screen oriented alias editor. (v1.5)                     |
 | `SHOW.COM`     | Display Z-System configuration information               |
 | `SUB.COM`      | Enhanced version of SUBMIT                               |
 | `TY3ERA.COM`   | Type-3 program to erase a file                           |
@@ -346,7 +341,6 @@ The following file are in User Area 15, and where noted 14 for config files.
 | `VIEW.COM`     | Quad directional file viewer                             |
 | `XTCAP.COM`    | Interactive Extended TCAP Installer                      |
 | `ZERR.COM`     | Z34 Error Handler                                        |
-| `ZEX.COM`      | Powerful command line batch processor                    |
 | `ZF-DIM.COM`   | ZFILER shell for dim-video terminals                     |
 | `ZF-REV.COM`   | ZFILER shell for reverse-video terminals                 |
 | `ZFILER.CMD`   | Macro script file for ZFILER                             |
@@ -517,42 +511,35 @@ This is a generic ZPM3 adaptation for RomWBW.
 
 | **File**       | **User Area** | **Description**                                              |
 |----------------|---------------|--------------------------------------------------------------|
-| `ALIAS.COM`    | 15            |                                                              |
-| `ALIAS.HLP`    | 10            |                                                              |
-| `ARUNZ.COM`    | 15            | Alias-RUN-forZ-System command alias execution                |
+| `ALIAS.COM`    | 15            | Create an Alias (v1.1)                                       |
+| `ALIAS.HLP`    | 10            | Help File for ALIAS.COM                                      |
+| `ARUNZ.COM`    | 15            | Alias-RUN-forZ-System command alias exec (v1.1 Type3)        |
 | `COPY.COM`     | 15            |                                                              |
 | `COPY.CFG`     | 14            |                                                              |
 | `DEV.COM`      | 15            |                                                              |
 | `DISKINFO.COM` | 15            | ZCPR utility which gives information about your disks.       |
 | `DU.COM`       | 15            |                                                              |
-| `EDITNDR.COM`  | 15            |                                                              |
 | `ERASE.CFG`    | 14            |                                                              |
 | `GENCPM.COM`   | 15            | DRI CPM3 Utility to Create a memory image of CPM3.SYS        |
 | `GOTO.COM`     | 15            |                                                              |
 | `HELPC15.CFG`  | 14            |                                                              |
 | `HP-RPN.HLP`   | 10            | Help File for HP RPN Calculators ?                           |
 | `HP-ZP.HLP`    | 10            | Help File for HP ZP Calculators ?                            |
-| `IF.COM`       | 15            |                                                              |
+| `IF.COM`       | 15            | Extended flow control tester for FCP (v1.6 Type 3)           |
 | `IF.HLP`       | 10            |                                                              |
 | `LOADSEG.COM`  | 15            | ZCCP Utility to Load RSXes, TCAPs and Named Directory files. |
 | `MENU.HLP`     | 10            |                                                              |
 | `NAMES.NDR`    | 15            | Default Directory Names loaded at boot                       |
 | `REMOVE.COM`   | 15            |                                                              |
 | `RSXDIR.COM`   | 15            | ZCPR Utility which displays RSXes in memory                  |
-| `SAINST.COM`   | 15            |                                                              |
-| `SALIAS.COM`   | 15            | Screen oriented alias editor                                 |
-| `SAVENDR.COM`  | 15            | NZCOM Writes the named directory to disk                     |
-| `SDZ.COM`      | 15            | NZCOM Enhanced directory lister                              |
+| `SAINST.COM`   | 15            | Install/configure SALIAS.                                    |
+| `SALIAS.COM`   | 15            | Screen oriented alias editor. (v1.6)                         |
 | `SETPATH.COM`  | 15            | used to set the command search path.                         |
 | `VERROR.COM`   | 15            | Installs a resident error handler                            |
 | `VLU.COM`      | 15            | Video Library Utility views or extracts files from libraries |
 | `VLU.HLP`      | 10            |                                                              |
 | `XREF.COM`     | 15            |                                                              |
-| `ZCNFG.COM`    | 15            | Configuration tool for programs with .CFG files              |
-| `ZCNFG24.CFG`  | 14            | Configuration file for ZCNFG.COM                             |
 | `ZERASE.COM`   | 15            |                                                              |
-| `ZEX.COM`      | 15            | ZCPR A memory-based command file processor, like SUBMIT      |
-| `ZEX.CFG`      | 14            |                                                              |
 | `ZFHIST.HLP`   | 10            |                                                              |
 | `ZFILER.COM`   | 15            | File management shell, with GUI.                             |
 | `ZFILER.HLP`   | 10            | Help file for ZFILER.COM                                     |
@@ -786,12 +773,15 @@ The following files are found in
 
 | **File**       | **Applicability** | **Description**                                       |
 |----------------|-------------------|-------------------------------------------------------|
+| `EDITNDR.COM`  | Z3                | Edit named directory register in memory.              |
 | `KERCPM22.COM` | CPM22             | Kermit communication application                      |
 | `KERCPM3.COM`  | CPM3              | Kermit communication application                      |
 | `LBREXT.COM`   | Z & Z3            | Extract file from .LBR libraries                      |
 | `LBREX36.CFG`  | Z & Z3            | ZCNFG configuration file for LBREXT                   |
 | `RZ.COM`       | CPM3              |                                                       |
 | `RZSC.FOR`     | CPM3              |                                                       |
+| `SAVENDR.COM`  | Z3                | Writes the named directory to disk.                   |
+| `SDZ.COM`      | Z3                | Enhanced directory lister.                            |
 | `SCOPY.COM`    | Z3                |                                                       |  
 | `SCOPY10F.CFG` | Z3                |                                                       |  
 | `SCOPY.HLP`    | Z3                |                                                       |  
@@ -803,6 +793,10 @@ The following files are found in
 | `UMAP.COM`     | Z3                |                                                       |  
 | `UMAP18.CFG`   | Z3                |                                                       |  
 | `UNARCU1.CFG`  | Z & Z3            |                                                       |
+| `ZCNFG.COM`    | Z & Z3            | Configuration tool for programs with .CFG files       |
+| `ZCNFG24.CFG`  | Z & Z3            | Configuration file for ZCNFG.COM                      |
+| `ZEX.COM`      | Z3                | A memory-based command file processor, like SUBMIT    |
+| `ZEX.CFG`      | Z3                |                                                       |
 | `ZXD.CFG`      | Z & Z3            | Configuration file for ZXD.COM                        |
 | `ZXD.COM`      | Z & Z3            | Extended directory utility w/ date/time stamp support |
 | `Z3LOC.COM`    | Z3                | NZCOM Display info of the ZCPR3 CCP, BDOS, and BIOS   |  
@@ -1252,12 +1246,3 @@ The following files are found in
 | TEST.*     | Sample Program                      |
 | Z80ASM.COM | Relocating macro assembler for CP/M |
 | Z80ASM.DOC | Documentation for Z80.COM           |
-
-# ERATTA
-
-## File Locations in Build
-
-ZCNFG.COM and the associed CFG file that goes with it. There are alot of these in the 
-source repository, it is  good candidate to move to a Common/Z3 folder
-since it appears to be the same version across most distributions
-
