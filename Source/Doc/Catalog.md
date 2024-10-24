@@ -199,8 +199,6 @@ The following files appear in User Area 0
 |----------------|--------------------------------------------------------|
 | `BGPATCH.HEX`  | Patches BackGrounder II for ZSDOS 1.1 compatibility    |
 | `CLOCKS.DAT`   | Library of clock drivers                               |
-| `COPY.COM`     | Enhanced File copier with file dates and archiving     |
-| `COPY.CFG`     | Configuration file (ZCNFG) for COPY.COM                |
 | `COPY.UPD`     | Document describing updates to COPY program            |
 | `DATSWEEP.COM` | Comprehensive file management w/ date stamp awareness  |
 | `DSCONFIG.COM` | Program to configure DATSWEEP                          |
@@ -510,8 +508,6 @@ This is a generic ZPM3 adaptation for RomWBW.
 | **File**       | **User Area** | **Description**                                              |
 |----------------|---------------|--------------------------------------------------------------|
 | `ARUNZ.COM`    | 15            | Alias-RUN-forZ-System command alias exec (v1.1 Type3)        |
-| `COPY.COM`     | 15            |                                                              |
-| `COPY.CFG`     | 14            |                                                              |
 | `DEV.COM`      | 15            |                                                              |
 | `DISKINFO.COM` | 15            | ZCPR utility which gives information about your disks.       |
 | `DU.COM`       | 15            |                                                              |
@@ -767,6 +763,8 @@ The following files are found in
 |----------------|-------------------|-------------------------------------------------------|
 | `ALIAS.COM`    | Z3                | Create an Alias (v1.1)                                |
 | `ALIAS.HLP`    | Z3                | Help File for ALIAS.COM                               |
+| `COPY.COM`     | Z                 | File copier with ZSDOS date stamping awareness        |
+| `COPY.CFG`     | Z                 | ZCNFG configuration file for COPY application         |
 | `EDITNDR.COM`  | Z3                | Edit named directory register in memory.              |
 | `KERCPM22.COM` | CPM22             | Kermit communication application                      |
 | `KERCPM3.COM`  | CPM3              | Kermit communication application                      |
