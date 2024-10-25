@@ -294,7 +294,7 @@ are generally documented in the "NZCOM Users Manual.pdf" document in
 the Doc/CPM directory of the RomWBW distribution.
 
 NOTE: It may appear theat there are not many files, this is because most of the OS
-files are shared with Z3PLUS. See here for a list [NZ3PLUS OS Files]
+files are shared with Z3PLUS. See here for a list [NZ-COM Z3PLUS OS Files]
 
 The following file are in User Area 15, and where noted 
 10 for help files, or 14 for config files.  
@@ -323,7 +323,7 @@ The following file are in User Area 15, and where noted
 |     | [SIMH Simulator]               | 13            |
 |     | [CP/M 2.2 Files]               | 15            |
 |     | [ZSDOS 1.1 Files]              | 15, 14, 10    |
-|     | [NZ3PLUS OS Files]             | 15, 14, 10    |
+|     | [NZ-COM Z3PLUS OS Files]       | 15, 14, 10    |
 |     | [OS General Files]             | 15, 14, 10    |
 |     | [General Purpose Applications] | 15, 10        |
 
@@ -441,7 +441,7 @@ are generally documented in the "Z3PLUS Users Manual.pdf" document in
 the Doc/CPM directory of the RomWBW distribution. Note:  
 
 NOTE: It may appear theat there are not many files, this is because most of the OS
-files are shared with NZCOM. See here for a list [NZ3PLUS OS Files]
+files are shared with NZCOM. See here for a list [NZ-COM Z3PLUS OS Files]
 
 The following file are in User Area 15, and where noted 10 for help files.
 
@@ -461,7 +461,7 @@ The following file are in User Area 15, and where noted 10 for help files.
 |     | [CP/NET 1.2]                   | 4             |
 |     | [SIMH Simulator]               | 13            |
 |     | [CP/M 3 Files]                 | 15            |
-|     | [NZ3PLUS OS Files]             | 15, 14, 10    |
+|     | [NZ-COM Z3PLUS OS Files]       | 15, 14, 10    |
 |     | [OS General Files]             | 15, 14, 10    |
 |     | [General Purpose Applications] | 15, 10        |
 
@@ -815,7 +815,7 @@ Applicability:
 * Z - Included in All Z OS's (ZSDOS, NZ-COM, Z3PLUS, ZPM3)
 * Z3 - Included in ZCPR3 OS's (NZ-COM, Z3PLUS, ZPM3)
 
-## NZ3PLUS OS Files
+## NZ-COM Z3PLUS OS Files
 
 The following files are specific files share across two operating systems.
 
@@ -824,9 +824,6 @@ The following files are specific files share across two operating systems.
 
 These 2 operating systems are identical in all respects, except for the underlying
 operating system that they run on. 
-
-The name **NZ3PLUS** is a simple joining of the 2 names and used to refer to 
-the collective DNA, (and files) that make-up these two products
 
 The following files are found in
 
