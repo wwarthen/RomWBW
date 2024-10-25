@@ -33,14 +33,14 @@ d_cpm3/u0/HELP.HLP 0:
 #../../Binary/Apps/*.com 15:
 ../../Binary/Apps/assign.com 15:
 ../../Binary/Apps/bbcbasic.com 15:
-../../Binary/Apps/bbcbasic.txt 15:
+../../Binary/Apps/bbcbasic.txt 10:
 ../../Binary/Apps/cpuspd.com 15:
 ../../Binary/Apps/reboot.com 15:
 ../../Binary/Apps/copysl.com 15:
-../../Binary/Apps/copysl.doc 15:
+../../Binary/Apps/copysl.doc 10:
 ../../Binary/Apps/fat.com 15:
 ../../Binary/Apps/fdu.com 15:
-../../Binary/Apps/fdu.doc 15:
+../../Binary/Apps/fdu.doc 10:
 ../../Binary/Apps/format.com 15:
 ../../Binary/Apps/mode.com 15:
 ../../Binary/Apps/rtc.com 15:
@@ -55,7 +55,7 @@ d_cpm3/u0/HELP.HLP 0:
 ../../Binary/Apps/xm.com 15:
 ../../Binary/Apps/zmp.com 15:
 ../../Binary/Apps/zmp.hlp 15:
-../../Binary/Apps/zmp.doc 15:
+../../Binary/Apps/zmp.doc 10:
 ../../Binary/Apps/zmxfer.ovr 15:
 ../../Binary/Apps/zmterm.ovr 15:
 ../../Binary/Apps/zminit.ovr 15:
