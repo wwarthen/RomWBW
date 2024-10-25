@@ -75,6 +75,12 @@ Common/Test/*.* 2:
 #
 ../ZSDOS/zsys_wbw.sys 0:zsys.sys
 #
+# Add Shared NZCOM/Z3PLUS
+#
+Common/NZ3PLUS/u10/*.* 10:
+Common/NZ3PLUS/u14/*.* 14:
+Common/NZ3PLUS/u15/*.* 15:
+#
 # Add Common Applications
 #
 Common/All/u10/*.* 10:

@@ -1,0 +1,295 @@
+
+                 RELEASE.NOT - UPDATE INFORMATION ON Z3PLUS
+
+
+Please understand that unlike purely commercial enterprises, Z-System is
+mainly the work of enthusiasts.  As such, Z-System never truly reaches
+completion; each new development is more of a plateau upon which further
+innovation occurs.  Though we have done our best, the printed documentation
+inevitably lags behind the most recent enhancements.  Try to consult as
+much material as possible about a given command before proceeding; if there
+is a help or document file pertaining to the command, it supercedes printed
+instructions, especially with regard to such matters as syntax or technical
+specifications.
+
+
+Notes of September 12, 1991
+===========================
+
+Release 1.02E involves a significant updating of the support utilities
+that we distribute as a courtesy with Z3PLUS.  We suggest that any Z-System
+user who is not in regular contact with a Z-Node consider taking advantage
+of the Z-System Software Update Service (ZSUS).  Here are some of the
+important changes with this release.
+
+ZCNFG.COM, CONFIG.LBR:
+        Al Hawley has introduced a powerful and convenient method for
+        configuring programs.  ZCNFG works either with individual CFG files
+        or with CFG files stored in the CONFIG.LBR library.  For example,
+        try running the command "ZCNFG ZLT".  ZCNFG will automatically
+        extract ZLT15.CFG from CONFIG.LBR.
+
+LBREXT.COM:
+        This replaces LGET for extracting member files from LBR library
+        files.
+
+ZHELP.COM, LBRHELP.COM, HLPFILES.LBR:
+        ZHELP (actually HELPC14) is an improved version of the help utility.
+        It can work with normal help files (HLP) and crunched help files
+        (HZP).  LBRHELP can work with normal or crunched help files that are
+        stored in a library (which is where we have put all the help files
+        distributed with NZCOM and Z3PLUS).
+
+DOCFILES.LBR:
+        Documentation and help files have been collected into an LBR file.
+
+ZLT.COM:
+        This is a full Z-System replacement for LT, and it handles the
+        latest LZH-compressed files.
+
+COPY.COM:
+        This is the version of COPY from the ZSDOS/ZDDOS release.  Enter
+        "COPY //" for syntax information.  It replaces a dangerously
+        defective copy program provided with earlier releases.
+
+LSH.COM, LSH.WZ, LSH-HELP.COM, LSHINST.COM, ZERR.COM:
+        These are the latest LSH command history shell and command-line
+        editor and the associated error handler (fixed-log versions).  These
+        completely replace EASE.
+
+CLEDINST.COM, CLEDSAVE.COM:
+        A transient history shell like LSH can be slow on floppy systems
+        with sluggish disk drives, even if the files have been placed in
+        optimal locations.  Some of the RCP modules supplied no include an
+        RCP-resident command-line editor called CLED.  Its features can be
+        configured using CLEDINST.COM, and the history can be saved to a
+        file using CLEDSAVE.COM.
+
+TCAP.LBR, XTCAP.COM:
+        A number of programs now require a terminal capabilities descriptor
+        (TCAP) with extended functions.  The standard TCAPs loaded with
+        TCSELECT do not have these functions.  TCAP.LBR is a collection of
+        extended TCAPs for some terminals.  XTCAP.COM is a program that can
+        add the most important extensions to a standard TCAP (it is a quick-
+        and-dirty fix until the full set of TCAPs is updated).
+
+VIEW.COM:
+        This is Bridger Mitchell's file viewing utility.  It is very
+        powerful (but it requires an extended TCAP).
+
+NAME.COM:
+        This program can quickly add or remove a name for a single
+        directory.
+
+TCJ.INF:
+        TCJ has a new publisher (one of our own Z-Node sysops), and this
+        file tells how to take out a subscription (which all Z-System users
+        absolutely should do!).
+
+ZFILEB38.LZT:
+        This is the BRIEF listing of all the support programs currently
+        available for use with Z-System.  There is another file which
+        includes descriptions of all the programs, but it would fill up an
+        entire diskette!
+
+
+
+Notes of November 5, 1989
+=========================
+
+
+              1.  TCSELECT PROBLEM.
+              2.  LSH REPLACES EASE.
+              3.  COPY LDIR.COM TO A0:.
+              4.  CHOICE OF MODULE SIZES.
+              5.  YOU NEED REN.COM.
+              6.  ZHELP.COM.
+              7.  OSBORNE EXECUTIVE ROM BUG.
+              8.  SMARTKEY BUGS.
+              9.  COMPATIBILITY WITH BYE.
+              10. MINOR UPDATE NOTES.
+              11. TO NEW Z-SYSTEM USERS.
+              12. NEW DEFAULTS AND NEW FILES: FCP.LBR, RCP.LBR.
+
+
+1.  TCSELECT PROBLEM.
+
+A problem has been discovered with the operation of TCSELECT as described
+in the manual.  TCSELECT is a Z-System program and does not function
+reliably under CP/M (on some systems it causes a crash).  Fortunately, there
+is a simple fix: reverse the order of the instructions in the manual.  Boot
+up Z3PLUS before attempting to create MYTERM.Z3T, and run TCSELECT only
+after Z3PLUS is running.  Remember that you need both TCSELECT.COM and
+Z3TCAP.TCP to generate your .Z3T file.  The entries in the Z3TCAP library
+for the Xerox computers have been patched to correct a long-standing error.
+
+
+2.  LSH REPLACES EASE.
+
+EASE has been replaced by a newer, more versatile, and well-behaved program
+named LSH (Log SHell).  Like EASE, LSH allows you to edit command lines
+using WordStar-like control.  Consult LSH.WZ before use for general
+information and/or run HELPLSH while running LSH for a display of LSH's
+capabilities.  LSHINST installs and customizes LSH to taste.  Error
+handling is now taken care of by ZERR.COM, a separate program.  Our great�
+thanks to Rob Friefeld for writing these superb Z-System tools and for�
+allowing us to include them with NZ-COM.
+
+
+3.  COPY LDIR.COM TO A0:.
+
+We neglected to include LDIR.COM in the list of files to copy to your A0:
+directory.  Some of the examples in the manual will not work correctly if
+LDIR is not available as a command.
+
+
+4.  CHOICE OF MODULE SIZES.
+
+Because of the page alignment of the Z3PLUS system, if the total number of
+records required by the NDR, FCP, and RCP combined is an odd number, you
+can generally increase the size of one of the modules by 1 record without
+losing any additional TPA.  We have, therefore, increased the number of
+names in the NDR from 14, as stated in the manual, to 21.  Until you reach
+a large number of names (more than 60), you can figure one record of memory
+for each 7 names.
+
+
+5.  YOU NEED REN.COM.
+
+Because there is no resident REN command with the standard version of
+Z3PLUS, you should copy the transient version TY4REN.COM to directory A0:
+under the name REN.COM.
+
+
+6.  ZHELP.COM.
+
+The standard form of HELP.COM sets up a file control block with the file
+type H?P in it so that either an HLP or a squeezed HQP file can be opened.
+While this works with a CP/M-2.2 BDOS (which is happy to open the first
+file that matches a wildcard FCB), it is trapped as an error by the
+CP/M-Plus BDOS.  The version of ZHELP distributed with Z3PLUS has been
+patched to look only for HLP files.  If you pick up any later releases of
+this program, it is possible that you will experience this problem.  We
+will try to alert the programming community to this problem so that future
+Z-System programs will be compatible with CP/M-Plus.
+
+
+7.  OSBORNE EXECUTIVE ROM BUG.
+
+Testing on an early version (1.20) of the Executive's boot ROM showed that
+Z3PLUS would not load because the ROM misused the Z80 index registers.
+Version 1.21 of the Osborne Executive ROM works correctly and is available
+from FOG (First Osborne Group).  Alternatively, a utility named TPATCH is
+available on bulletin boards.  TPATCH can be run after cold-booting the
+Executive, and before Z3PLUS is loaded.
+
+
+8.  SMARTKEY BUGS.
+
+Smartkey II version 1.0A will often not run on banked-memory CP/M Plus
+computers; this problem is more likely to occur if Z3PLUS is loaded.  The
+SUBMIT file PATCHSK.SUB, which installs PATCH4SK.HEX into Smartkey, appears
+to correct this bug.
+
+If you use Smartkey, read the submit file carefully, be sure you have
+exactly this version of Smartkey and the other necessary files, and test on
+your system.
+
+We and other users would appreciate hearing from you whether/how-well this
+works.  We cannot support the Smartkey product but will be happy to make
+the source code of the patch available for others to develop further.
+
+
+9.  COMPATIBILITY WITH BYE.
+
+BYE, the remote access program for CP/M, causes some difficulties when run
+with Z3PLUS.  In technical terms, BYE alters the bytes in the CP/M-Plus SCB,
+which Z3PLUS uses to tell when a CP/M-Plus SUBMIT job is running, and BYE
+does not restore these bytes on exit.  Since SUBMIT jobs have a higher
+priority than shells in the Z-System command hierarchy, BYE causes Z3PLUS
+to simply return when the user attempts to run shell programs such as
+ZFILER or LSH under (or after) BYE.
+
+If you MUST use shells with BYE, you can remove SUBMIT job detection by
+installing the patch below.  The only drawback is that SUBMIT and shells
+will no longer run concurrently.  However, the new ZEX 5.0 (included in
+this package) surpasses SUBMIT for all purposes except startup of Z3PLUS
+(not affected by the patch) and extremely TPA-critical situations, so this
+should not be a problem.
+
+The patch is as follows.  Extract your DEFCP3.ZRL file from Z3PLUS.LBR.
+Use a patcher to look at the first page of the file.  You should find the
+string "Z3PLUSCP 6/25/88 v 1.00".  If so, go to offset 985 hex in the file.
+The two bytes at this location should be D6 and C3 hex.  Change them to AF
+AF.  Now use LPUT or NULU to put DEFCP3.ZRL back in Z3PLUS.LBR and restart
+Z3PLUS.
+
+
+10. MINOR UPDATE NOTES.
+
+- The RCP WHLQ command no longer used.  "WHL" alone displays the current
+  wheel status.  As before, "WHL password" turns the wheel byte on.  "WHL
+  xxx" now turns the wheel byte OFF if xxx is something other than the
+  correct password.
+
+- ARUNZ is now a type-4 program which loads at the highest possible
+  memory location so as to save lower memory for immediate re-execution
+  with GO.  See ARUNZ09R.DZC and TCJ31.MZG (as well as your NZ-COM or
+  Z3PLUS manual) for more on the amazing ARUNZ.
+
+- VLU is no longer included, as it was not reliable.  Please use LDIR,
+  LGET, LPUT, and LT instead to manipulate library files.
+
+- At this writing, we are sorry to note that both Z-Node Central and the
+  Lillipute Z-Nodes mentioned in Chapter 7 of your manual are out of
+  service.  Z-Nodes 2 and 3 are still going strong, however, as are the
+  many others listed in ZNODES.LST.  Z-Node 2 is the new Z-Node Central.
+  We cannot recommend highly enough that you get a modem and investigate at
+  least one Z-Node as a source of inspiration and support.
+
+- Version 5.0 of the ZEX batch processor replaces earlier versions.  ZEX
+  now runs under both NZ-COM and Z3PLUS and is a very powerful means of
+  customizing programs and commands.  The ZEX.RSX file mentioned in the
+  manual is no longer required.  See ZEX50.DZC for help.
+
+
+11. TO NEW Z-SYSTEM USERS.
+
+- All files whose middle filetype character is "Z" (e.g., SAMPLE.DZC) are
+  "crunched" files which must be uncompressed with LT.COM or UNCRUNCH.COM
+  before use.
+
+- As outlined in section 4.3.2 of your manual, most Z-System programs
+  have built-in help; type the name of any program followed by "//" for a
+  short description if you are confused.
+
+- Finally, it is not at all necessary to master every nuance of the system
+  before it becomes useful.  Please don't try to devour all of Z-System at
+  once.  Instead, we suggest that you decide what aspects of the system you
+  will find most helpful and try to master one or two of those before
+  exploring further.  We think you will find that if you choose wisely,
+  learning one aspect fully not only makes that aspect of your computing
+  world easier, it also equips you with the skills and confidence with
+  which to surmount other aspects of Z-System more confidently.
+
+
+12. NEW DEFAULTS AND NEW FILES: FCP.LBR, RCP.LBR.
+
+To minimize disk space requirements, Z3PLUS.LBR contains only some standard
+configurations of the FCP and RCP modules.  Alternative versions of these
+modules are now supplied in separate libraries.  Modules can be loaded
+directly from these libraries, or individual files can be extracted and put
+into Z3PLUS.LBR to replace the default files.  Each library has a brief DOC
+file describing the modules (some of which are the default versions included
+in Z3PLUS.LBR).
+
+Carson Wilson and Rob Friefeld have made some major changes in the RCP code
+(see the DOC file in RCP.LBR).  The standard RCP module is now 18 records
+long instead of 16, and the large RCP module is 36 records long.  The system
+configuration files DEFAULT.Z3P and LARGE.Z3P have been edited to reflect
+these changes.  The TPA requirements listed on page 54 of the manual are no
+longer correct.
+
+
+                          - End of RELEASE.NOT -
+                                                                                                              

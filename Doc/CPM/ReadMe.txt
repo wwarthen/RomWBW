@@ -30,10 +30,13 @@ The original DRI CP/M 3.0 Operating System Documentation Set.  This
 should be considered the primary reference for CP/M 3 system operation.
 
 
-NZCOM User's Manual ("NZCOM Users Manual.pdf")
-----------------------------------------------
+NZCOM, Z3PLUS, and replace ZCPR3.3 Documentation
+------------------------------------------------
 
-NZCOM operating system operation manual.
+NZCOM operating system operation manual. ("NZCOM Users Manual.pdf")
+Z3PLUS operating system operation manual.  ("Z3PLUS Users Manual.pdf")
+Z-System User Guide ("Z-System User Guide.pdf")
+ZCPR3.3 Users Guide ("ZCPR3.3 Users Guide.pdf")
 
 
 QP/M 2.7 Installation Guide and Supplements ("qpm27.pdf")
