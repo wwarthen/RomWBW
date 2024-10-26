@@ -122,7 +122,7 @@ blankhd1k:
 	if [ -f $${dtype}_$$d.txt ] ; then \
 		echo " " copying files from $${dtype}_$$d.txt ; \
 		grep -v ^# $${dtype}_$$d.txt | tr -d '\r' | while read file user ; do \
-			rf=$$($(CASEFN) $$file | sort -V) ; \
+			rf=$$($(CASEFN) $$file | sort -f) ; \
 			echo "    " $$rf ; \
 			if [ -z "$$rf" ] ; then \
 				echo " " $$file missing ; \
