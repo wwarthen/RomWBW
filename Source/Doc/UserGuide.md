@@ -2512,6 +2512,11 @@ a host OS. On the RomWBW NZCOM disk images, the boot OS is ZSDOS 1.1.
 A `PROFILE.SUB` file is included which automatically launches NZCOM
 as soon as ZSDOS loads.
 
+NZCOM is a companion product to Z3PLUS, they are almost identical having
+been written by the same team. The only difference is the base operating
+system on which they run, but the architecture, the tools, libraries,
+files, etc are all primarily the same.
+
 NZCOM is highly configurable.  The RomWBW distribution has been
 configured in the most basic way possible.  You should refer to the
 documentation and use `MKZCM` as desired to customize your system.
@@ -2523,6 +2528,8 @@ Manual.pdf" document in order to use this operating system effectively.
 #### Documentation
 
 * [NZCOM Users Manual]($doc_root$/CPM/NZCOM Users Manual.pdf)
+* [Z-System Users Guide]($doc_root$/CPM/Z-System Users Guide.pdf)
+* [ZCPR3.3 User Guide]($doc_root$/CPM/ZCPR3.3 User Guide.pdf)
 
 #### Boot Disk
 
@@ -2536,6 +2543,10 @@ will need to add a `PROFILE.SUB` file to auto-start NZ-COM itself.
 
 * There is no `DIR` command, you must use `SDZ` instead.  If you don't
   like this, look into the `ALIAS` facility.
+
+* For consistency with other ZCPR3 operating systems (ZPM3, Z3PLUS) 
+  the SHOW.COM and HELP.COM command files were renamed to ZSHOW.COM
+  and ZHELP.COM
 
 ## Digital Research CP/M 3
 
@@ -2612,6 +2623,52 @@ in the copy command.
   requires that the disk be properly initialized for it.  This process 
   has not been performed on the CP/M 3 disk image.  Follow the 
   CP/M 3 documentation to complete this process, if desired.
+
+## Z3PLUS Z-System for CP/M-Plus
+
+Z3PLUS is a much further refined version of Z-System (ZCPR 3.4). Z3PLUS
+was sold as an enhancement for existing users of CP/M 3.
+For this reason, (by design) Z3PLUS does not provide a way to boot
+directly from disk. Rather, it is loaded after the system boots into
+CP/M 3. A `PROFILE.SUB` file is included which automatically launches 
+Z3PLUS as soon as CP/M 3 loads.
+
+Z3PLUS is a companion product to NZ-COM, they are almost identical having
+been written by the same team. The only difference is the base operating 
+system on which they run, but the architecture, the tools, libraries,
+files, etc are all primarily the same.
+
+Z3PLUS is highly configurable.  The RomWBW distribution has been
+configured in the most basic way possible.  You should refer to the
+documentation to customize your system.
+
+Z3PLUS has substantially more functionality than CP/M 3 or the basic
+Z-System.  It is important to read the "Z3PLUS Users Manual.pdf" 
+document in order to use this operating system effectively.
+
+#### Documentation
+
+* [Z3PLUS Users Manual]($doc_root$/CPM/Z3PLUS Users Manual.pdf)
+* [Z-System Users Guide]($doc_root$/CPM/Z-System Users Guide.pdf)
+* [ZCPR3.3 User Guide]($doc_root$/CPM/ZCPR3.3 User Guide.pdf)
+
+#### Boot Disk
+
+Since Z3PLUS boots via CP/M 3, you first must make the disk CP/M 3
+bootable. This is not a simple process, as well as placing `CPMLDR.SYS` on
+the system track of the disk there are several files that are required 
+on the disk itself.This is described in [Digital Research CP/M 3]
+section above.
+
+You will need to add a `PROFILE.SUB` file to auto-start Z3PLUS itself.
+
+#### Notes
+
+* All of the notes for [Digital Research CP/M 3] above generally 
+  apply to Z3PLUS.
+
+* Some applications in the Z3PLUS distribution have been upgraded 
+  with newer versions. This is done with in 
 
 ## ZPM3
 

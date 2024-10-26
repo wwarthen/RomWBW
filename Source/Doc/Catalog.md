@@ -149,7 +149,7 @@ RomWBW package (but easily found on the Internet via Google search).
 
 | **File** | **Documentation**                  | **User Area** |
 |----------|------------------------------------|---------------|
-|          | [OS Specific Files]                | 0             |
+|          | [OS General Files]                 | 0             |
 |          | [General Purpose Applications]     | 0             |
 |          | [Testing Applications]             | 2             |
 |          | [Sample Audio Files]               | 3             |
@@ -237,7 +237,7 @@ The following files appear in User Area 0
 |     | **Documentation**                  | **User Area** |
 |-----|------------------------------------|---------------|
 |     | [CP/M 2.2 Files]                   | 0             |
-|     | [OS Specific Files]                | 0             |
+|     | [OS General Files]                 | 0             |
 |     | [General Purpose Applications]     | 0             |
 |     | [Testing Applications]             | 2             |
 |     | [Sample Audio Files]               | 3             |
@@ -275,103 +275,57 @@ The following files appear in User Area 0
 | `!(C)1988`     | NZCOM      | Original copyright (since placed in public domain) |
 | `!NZ-COM`      | NZCOM      | Software marker directory entry (empty file)       |
 | `!VERS--1.2H`  | NZCOM      | Version marker directory entry (empty file)        |
-| `NZCOM.COM`    | NZCOM      | NZCOM Loads and launches NZ-COM system             |
-| `NZCOM.ENV`    | RomWBW     | NZCOM Z-System environment descriptor              |
-| `NZCOM.LBR`    | NZCOM      | NZCOM Library of NZCOM system modules              |
-| `NZCOM.ZCM`    | RomWBW     | NZCOM environment descriptor (alternate format)    |
-| `NZCPR.LBR`    | NZCOM      | NZCOM Library of alternative ZCPR modules          |
+| `NZCOM.COM`    | NZCOM      | Loads and launches NZ-COM system                   |
+| `NZCOM.ENV`    | RomWBW     | Z-System environment descriptor                    |
+| `NZCOM.LBR`    | NZCOM      | Library of NZCOM system modules                    |
+| `NZCOM.ZCM`    | RomWBW     | Environment descriptor (alternate format)          |
+| `NZCPR.LBR`    | NZCOM      | Library of alternative ZCPR modules                |
 | `PROFILE.SUB`  | RomWBW     | Command file to auto-start NZ-COM at system boot   |
-| `RCP.LBR`      | NZCOM      | NZCOM Library of alternative RCP modules           |
-| `STARTZCM.COM` | NZCOM      | Commands to execute after NZ-COM is launched       |
-| `ZRDOS.ZRL`    | NZCOM      | NZCOM Relocatable version of ZRDOS BDOS module     |
-| `ZSDOS.ZRL`    | NZCOM      | NCCOM Relocatable version of ZSDOS 1.1 BDOS module |
+| `RCP.LBR`      | NZCOM      | Library of alternative RCP modules                 |
+| `STARTZCM.COM` | RomWBW     | Commands to execute after NZ-COM is launched       |
+| `ZRDOS.ZRL`    | ZRDOS      | Relocatable version of ZRDOS BDOS module           |
+| `ZSDOS.ZRL`    | ZSDOS      | Relocatable version of ZSDOS 1.1 BDOS module       |
 | `ZSYS.SYS`     | RomWBW     | ZSDOS Boot Image for SYSCOPY                       |
 
 ### NZ-COM Files
 
 The following files came from the official NZ-COM distribution.  These
 are generally documented in the "NZCOM Users Manual.pdf" document in
-the Doc/CPM directory of the RomWBW distribution.  Note that some of the
-files included in the NZ-COM distribution are not listed below because
-they have been superseded by more recent versions listed in other
-sections below. 
+the Doc/CPM directory of the RomWBW distribution.
 
-The following file are in User Area 15, and where noted 14 for config files.  
+NOTE: It may appear theat there are not many files, this is because most of the OS
+files are shared with Z3PLUS. See here for a list [NZ-COM Z3PLUS OS Files]
+
+The following file are in User Area 15, and where noted 
+10 for help files, or 14 for config files.  
 
 | **File**       | **Description**                                          |
 |----------------|----------------------------------------------------------|
 | `ALIAS.CMD`    | Sample alias definitions for use with ARUNZ              |
-| `ARUNZ.COM`    | Alias-RUN-forZ-System command alias exec (v0.9u Type4)   |
-| `CLEDINST.COM` | Command line editing and history shell installer         |
-| `CLEDSAVE.COM` | Save RCP-resident command line editor history            |
+| `BGZRDS19.LBR` | Patch for Backgrounder II (U10)                          |
 | `CMDRUN.COM`   | Extended Command Processor (copied from ARUNZ)           |
-| `CONFIG.LBR`   | Various configuration files for use with ZCNFG. (U14)    |
-| `CPSET.COM`    | Displays/defines CRT/PRT characteristics                 |
-| `FCP.LBR`      | Library of alternative FCP modules                       |
-| `FF.COM`       | File finder utility                                      |
-| `HELP.COM`     | (HELPC14) is an improved version of the help utility     |
-| `IF.COM`       | Extended flow control tester for FCP (v1.5 Type4)        |
-| `JETLDR.COM`   | Z-System General-purpose module loader                   |
-| `LBRHELP.COM`  | Help file viewer for use with help file libraries (.LBR) |
-| `LDIR.COM`     | Directory lister for libraries (.LBR)                    |
-| `LPUT.COM`     | Puts file(s) into a library (.LBR)                       |
-| `LSH.COM`      | Command history shell and command line editor            |
-| `LSH-HELP.COM` | Display LSH help when LSH is running                     |
-| `LSHINST.COM`  | LSH configuration editor                                 |
-| `LX.COM`       | Execute programs directly from a library (.LBR)          |
 | `MKZCM.COM`    | Create/update NZ-COM load environment                    |
-| `NAME.COM`     | Quickly add or remove a name for a single directory      |
 | `NZBLITZ.COM`  | Rapid coldboot of complete NZ-COM system image           |
 | `NZBLTZ14.CFG` | ZCNFG configuration file for NZBLITZ. (U14)              |
-| `PATH.COM`     | Set/display command search path                          |
+| `NZBLTZ14.HZP` | Help file for NZBLITZ (U10)                              |
+| `NZ-DBASE.INF` | dBase II application note regarding SUBMIT files (U10)   |
 | `PUBLIC.COM`   | Specify ZRDOS public directories/user areas              |
-| `PWD.COM`      | Displays DU and Directory Names with paging              |
-| `SHOW.COM`     | Display Z-System configuration information               |
+| `RELEASE.NOT`  | Update information on NZ-COM (U10)                       |
 | `SUB.COM`      | Enhanced version of SUBMIT                               |
-| `TY3ERA.COM`   | Type-3 program to erase a file                           |
-| `TY3REN.COM`   | Type-3 program to rename a file                          |
-| `TY4ERA.COM`   | Type-4 program to erase a file                           |
-| `TY4REN.COM`   | Type-4 program to rename a file                          |
-| `TY4SAVE.COM`  | Type-4 program to save memory to a file                  |
-| `TY4SP.COM`    | Type-4 program to display disk space                     |
-| `VIEW.COM`     | Quad directional file viewer                             |
-| `XTCAP.COM`    | Interactive Extended TCAP Installer                      |
-| `ZERR.COM`     | Z34 Error Handler                                        |
-| `ZF-DIM.COM`   | ZFILER shell for dim-video terminals                     |
-| `ZF-REV.COM`   | ZFILER shell for reverse-video terminals                 |
-| `ZFILER.CMD`   | Macro script file for ZFILER                             |
-| `ZLT.COM`      | File lister with support for compressed files            |
-
-The following documentation files are in User Area 10
-
-| **File**       | **Description**                                          |
-|----------------|----------------------------------------------------------|
-| `BGZRDS19.LBR` | Patch for Backgrounder II                                |
-| `DOCFILES.LBR` | Documentation and help files collected into an LBR file  |
-| `HLPFILES.LBR` | Various app help files for use with LBRHELP              |
-| `LSH.WZ`       | User manual for LSH                                      |
-| `NZ-DBASE.INF` | dBase II application note regarding SUBMIT files         |
-| `NZBLTZ14.HZP` | Help file for NZBLITZ                                    |
-| `RELEASE.NOT`  | NZCOM Update information on NZ-COM                       |
-| `TCJ.INF`      | List of included articles from The Computer Journal      |
-| `TCJ*.WZ`      | Selected articles from The Computer Journal              |
-| `ZFILEB38.LZT` | Brief listing of Z-System support programs               |
-| `ZHELPERS.LZT` | List of volunteers who will help installing Z-System     |
-| `ZNODES66.LZT` | List of Z-Node remote access systems                     |
-| `ZSYSTEM.IZF`  | Information on Z-System and related products             |
 
 ### Additional Files
 
-|     | **Documentation**                  | **User Area** |
-|-----|------------------------------------|---------------|
-|     | [Testing Applications]             | 2             |
-|     | [Sample Audio Files]               | 3             |
-|     | [CP/NET 1.2]                       | 4             |
-|     | [SIMH Simulator]                   | 13            |
-|     | [CP/M 2.2 Files]                   | 15            |
-|     | [ZSDOS 1.1 Files]                  | 15, 14, 10    |
-|     | [OS Specific Files]                | 15, 14, 10    |
-|     | [General Purpose Applications]     | 15, 10        |
+|     | **Documentation**              | **User Area** |
+|-----|--------------------------------|---------------|
+|     | [Testing Applications]         | 2             |
+|     | [Sample Audio Files]           | 3             |
+|     | [CP/NET 1.2]                   | 4             |
+|     | [SIMH Simulator]               | 13            |
+|     | [CP/M 2.2 Files]               | 15            |
+|     | [ZSDOS 1.1 Files]              | 15, 14, 10    |
+|     | [NZ-COM Z3PLUS OS Files]       | 15, 14, 10    |
+|     | [OS General Files]             | 15, 14, 10    |
+|     | [General Purpose Applications] | 15, 10        |
 
 `\clearpage`{=latex}
 
@@ -446,12 +400,70 @@ The following files appear in User Area 0
 
 |     | **Documentation**                  | **User Area** |
 |-----|------------------------------------|---------------|
-|     | [OS Specific Files]                | 0             |
+|     | [OS General Files]                 | 0             |
 |     | [General Purpose Applications]     | 0             |
 |     | [Testing Applications]             | 2             |
 |     | [Sample Audio Files]               | 3             |
 |     | [CP/NET 1.2]                       | 4             |
 |     | [SIMH Simulator]                   | 13            |
+
+`\clearpage`{=latex}
+
+## Z3PLUS
+
+### Z3PLUS OS Files
+
+Z3PLUS is not designed to load directly from the boot tracks of a
+disk.  Instead, it expects to be loaded from an already running OS.
+
+This disk has been configured to boot using CP/M 3 with a PROFILE.SUB
+command file that automatically loads Z3PLUS. So, Z3PLUS will load completely
+without any intervention, but you may notice that CP/M 3 loads first.
+
+The following Z3PLUS files appear in User Area 0
+
+| **File**       | **Source**  | **Description**                                    |
+|----------------|-------------|----------------------------------------------------|
+| `!(C)1988`     | Z3PLUS      | Original copyright (since placed in public domain) |
+| `!VERS--1.02F` | Z3PLUS      | Version marker directory entry (empty file)        |
+| `!Z3PLUS`      | Z3PLUS      | Software marker directory entry (empty file)       |
+| `NAMES.NDR`    | RomWBW      | Default Directory Names loaded at boot             |
+| `RCP.LBR`      | Z3PLUS      | Library of alternative RCP modules                 |
+| `PROFILE.SUB`  | RomWBW      | Command file to auto-start Z3PLUS at system boot   |
+| `STARTZ3P.COM` | RomWBW      | Commands to execute after Z3PLUS is launched       |
+| `Z3PLUS.COM`   | Z3PLUS      | Loads and launches Z3PLUS system                   |
+| `Z3PLUS.LBR`   | Z3PLUS      | Library of Z3PLUS system modules                   |
+
+### Z3PLUS Files
+
+The following files came from the official Z3PLUS distribution.  These
+are generally documented in the "Z3PLUS Users Manual.pdf" document in
+the Doc/CPM directory of the RomWBW distribution. Note:  
+
+NOTE: It may appear theat there are not many files, this is because most of the OS
+files are shared with NZCOM. See here for a list [NZ-COM Z3PLUS OS Files]
+
+The following file are in User Area 15, and where noted 10 for help files.
+
+| **File**       | **Description**                             |
+|----------------|---------------------------------------------|
+| `ALIAS.CMD`    | Sample alias definitions for use with ARUNZ |
+| `PATCHSK.SUB`  | Patch smartkey II v. 1.0A (U10)             |
+| `PATCH4SK.HEX` | Patch smartkey II v. 1.0A - Hex File (U10)  |
+| `RELEASE.NOT`  | Update information on Z3PLUS (U10)          |
+
+### Additional Files
+
+|     | **Documentation**              | **User Area** |
+|-----|--------------------------------|---------------|
+|     | [Testing Applications]         | 2             |
+|     | [Sample Audio Files]           | 3             |
+|     | [CP/NET 1.2]                   | 4             |
+|     | [SIMH Simulator]               | 13            |
+|     | [CP/M 3 Files]                 | 15            |
+|     | [NZ-COM Z3PLUS OS Files]       | 15, 14, 10    |
+|     | [OS General Files]             | 15, 14, 10    |
+|     | [General Purpose Applications] | 15, 10        |
 
 `\clearpage`{=latex}
 
@@ -536,7 +548,7 @@ This is a generic ZPM3 adaptation for RomWBW.
 | `ZF11.CFG`     | 14            |                                                              |
 | `ZFMACRO.HLP`  | 10            |                                                              |
 | `ZHELP.COM`    | 15            |                                                              |
-| `ZP.COM`       | 15            | Z-System Patch utility edits files, disk sectors, or memory  |
+| `ZP.COM`       | 15            | Patch utility edits files, disk sectors, or memory           |
 | `ZP.HLP`       | 10            | Help File for ZP.COM                                         |
 | `ZP17.CFG`     | 14            |                                                              |
 | `ZSHOW.COM`    | 15            | displays amount of information about your Z-System           |
@@ -549,7 +561,7 @@ This is a generic ZPM3 adaptation for RomWBW.
 |     | [Sample Audio Files]               | 3             |
 |     | [SIMH Simulator]                   | 13            |
 |     | [CP/M 3 Files]                     | 15            |
-|     | [OS Specific Files]                | 15, 14, 10    |
+|     | [OS General Files]                 | 15, 14, 10    |
 |     | [General Purpose Applications]     | 15, 10        |
 
 ## QPM 2.7
@@ -620,7 +632,7 @@ look a little strange depending on the terminal emulation you are using.
 |     | **Documentation**                  | **User Area** |
 |-----|------------------------------------|---------------|
 |     | [CP/M 2.2 Files]                   | 0             |
-|     | [OS Specific Files]                | 0             |
+|     | [OS General Files]                | 0             |
 |     | [General Purpose Applications]     | 0             |
 |     | [Testing Applications]             | 2             |
 |     | [Sample Audio Files]               | 3             |
@@ -745,7 +757,7 @@ distribution.  Some provide command line help themselves.  Some are fairly obvio
 | `ZMINIT.OVR`   |                   | Overlay file for ZMP                                   |  
 | `ZMCONFIG.OVR` |                   | Overlay file for ZMP                                   |  
 
-## OS Specific Files
+## OS General Files
 
 The following files are spcific files share across several OS's.  
 In general, there is no documentation for these applications included with 
@@ -768,8 +780,8 @@ The following files are found in
 | `EDITNDR.COM`  | Z3                | Edit named directory register in memory.              |
 | `KERCPM22.COM` | CPM22             | Kermit communication application                      |
 | `KERCPM3.COM`  | CPM3              | Kermit communication application                      |
-| `LBREXT.COM`   | Z & Z3            | Extract file from .LBR libraries                      |
-| `LBREX36.CFG`  | Z & Z3            | ZCNFG configuration file for LBREXT                   |
+| `LBREXT.COM`   | Z                 | Extract file from .LBR libraries                      |
+| `LBREX36.CFG`  | Z                 | ZCNFG configuration file for LBREXT                   |
 | `RZ.COM`       | CPM3              | Receive files with X/Y/ZModem (experimental)          |
 | `RZSC.FOR`     | CPM3              | Description of RZ/SZ programs                         |
 | `SAINST.COM`   | Z3                | Install/configure SALIAS.                             |
@@ -786,22 +798,89 @@ The following files are found in
 | `TCVIEW.COM`   | Z3                | View zcpr3 terminal capabilities                      |  
 | `UMAP.COM`     | Z3                | Shows directory usage                                 |  
 | `UMAP18.CFG`   | Z3                | ZCNFG configuration file for UMAP program             |  
-| `UNARCU1.CFG`  | Z & Z3            | ZCNFG configuration file for UNARC program            |
-| `ZCNFG.COM`    | Z & Z3            | Configuration tool for programs with .CFG files       |
-| `ZCNFG24.CFG`  | Z & Z3            | Configuration file for ZCNFG.COM                      |
+| `UNARCU1.CFG`  | Z                 | ZCNFG configuration file for UNARC program            |
+| `ZCNFG.COM`    | Z                 | Configuration tool for programs with .CFG files       |
+| `ZCNFG24.CFG`  | Z                 | Configuration file for ZCNFG.COM                      |
 | `ZEX.COM`      | Z3                | A memory-based command file processor, like SUBMIT    |
 | `ZEX.CFG`      | Z3                | ZCNFG configuration file for ZEX program              |
-| `ZXD.CFG`      | Z & Z3            | Configuration file for ZXD.COM                        |
-| `ZXD.COM`      | Z & Z3            | Extended directory utility w/ date/time stamp support |
-| `Z3LOC.COM`    | Z3                | NZCOM Display info of the ZCPR3 CCP, BDOS, and BIOS   |  
-| `Z3TCAP.LBR`   | Z3                | NZCOM Database of terminal description                |  
+| `ZXD.CFG`      | Z                 | Configuration file for ZXD.COM                        |
+| `ZXD.COM`      | Z                 | Extended directory utility w/ date/time stamp support |
+| `Z3LOC.COM`    | Z3                | Display info of the ZCPR3 CCP, BDOS, and BIOS         |  
+| `Z3TCAP.LBR`   | Z3                | Database of terminal descriptions                     |  
 
 Applicability:
 
 * CPM22 - Included in all CP/M 2.2 OS's (CPM2.2, ZSDOS, NZ-COM, QPM)
-* CPM3 - Included in all CP/M 3 OS's (CPM3, ZPM3)
-* Z - Included in All Z OS's (ZSDOS, NZ-COM, ZPM3)
-* Z3 - Included in ZCPR3 OS's (NZCOM, ZPM3)
+* CPM3 - Included in all CP/M 3 OS's (CPM3, Z3PLUS, ZPM3)
+* Z - Included in All Z OS's (ZSDOS, NZ-COM, Z3PLUS, ZPM3)
+* Z3 - Included in ZCPR3 OS's (NZ-COM, Z3PLUS, ZPM3)
+
+## NZ-COM Z3PLUS OS Files
+
+The following files are specific files share across two operating systems.
+
+* NZ-COM - The Automatic Z-System - Alpha Systems
+* Z3PLUS - The Z-System for CP/M-Plus - Plu*Perfect Systems
+
+These 2 operating systems are identical in all respects, except for the underlying
+operating system that they run on. 
+
+The following files are found in
+
+* /Source/Images/Common/NZ3PLUS
+
+The following file are in User Area 15, and where noted 14 for config files.
+
+| **File**       | **Description**                                          |
+|----------------|----------------------------------------------------------|
+| `ARUNZ.COM`    | Alias-RUN-forZ-System command alias exec (v0.9u Type4)   |
+| `CLEDINST.COM` | Command line editing and history shell installer         |
+| `CLEDSAVE.COM` | Save RCP-resident command line editor history            |
+| `CONFIG.LBR`   | Various configuration files for use with ZCNFG. (U14)    |
+| `CPSET.COM`    | Displays/defines CRT/PRT characteristics                 |
+| `FCP.LBR`      | Library of alternative FCP modules                       |
+| `FF.COM`       | File finder utility                                      |
+| `IF.COM`       | Extended flow control tester for FCP (v1.5 Type4)        |
+| `JETLDR.COM`   | Z-System General-purpose module loader                   |
+| `LBRHELP.COM`  | Help file viewer for use with help file libraries (.LBR) |
+| `LDIR.COM`     | Directory lister for libraries (.LBR)                    |
+| `LPUT.COM`     | Puts file(s) into a library (.LBR)                       |
+| `LSH.COM`      | Command history shell and command line editor            |
+| `LSH-HELP.COM` | Display LSH help when LSH is running                     |
+| `LSHINST.COM`  | LSH configuration editor                                 |
+| `LX.COM`       | Execute programs directly from a library (.LBR)          |
+| `NAME.COM`     | Quickly add or remove a name for a single directory      |
+| `PATH.COM`     | Set/display command search path                          |
+| `PWD.COM`      | Displays DU and Directory Names with paging              |
+| `TY3ERA.COM`   | Type-3 program to erase a file                           |
+| `TY3REN.COM`   | Type-3 program to rename a file                          |
+| `TY4ERA.COM`   | Type-4 program to erase a file                           |
+| `TY4REN.COM`   | Type-4 program to rename a file                          |
+| `TY4SAVE.COM`  | Type-4 program to save memory to a file                  |
+| `TY4SP.COM`    | Type-4 program to display disk space                     |
+| `VIEW.COM`     | Quad directional file viewer                             |
+| `XTCAP.COM`    | Interactive Extended TCAP Installer                      |
+| `ZERR.COM`     | Z34 Error Handler                                        |
+| `ZF-DIM.COM`   | ZFILER shell for dim-video terminals                     |
+| `ZF-REV.COM`   | ZFILER shell for reverse-video terminals                 |
+| `ZFILER.CMD`   | Macro script file for ZFILER                             |
+| `ZHELP.COM`    | (HELPC14) is an improved version of the help utility     |
+| `ZLT.COM`      | File lister with support for compressed files            |
+| `ZSHOW.COM`    | Display Z-System configuration information               |
+
+The following documentation files are in User Area 10
+
+| **File**       | **Description**                                         |
+|----------------|---------------------------------------------------------|
+| `DOCFILES.LBR` | Documentation and help files collected into an LBR file |
+| `HLPFILES.LBR` | Various app help files for use with LBRHELP             |
+| `LSH.WZ`       | User manual for LSH                                     |
+| `TCJ.INF`      | Subscription information for The Computer Journal       |
+| `TCJ*.WZ`      | Selected articles from The Computer Journal             |
+| `ZFILEB38.LZT` | Brief listing of Z-System support programs              |
+| `ZHELPERS.LZT` | List of volunteers who will help installing Z-System    |
+| `ZNODES66.LZT` | List of Z-Node remote access systems                    |
+| `ZSYSTEM.IZF`  | Information on Z-System and related products            |
 
 ## Sample Audio Files
 
