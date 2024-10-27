@@ -10,7 +10,7 @@ d_cpm22/u0/LIB.COM 15:
 d_cpm22/u0/LINK.COM 15:
 d_cpm22/u0/LOAD.COM 15:
 d_cpm22/u0/MAC.COM 15:
-#d_cpm22/u0/PIP.COM 15: ???
+d_cpm22/u0/PIP.COM 15:
 d_cpm22/u0/RMAC.COM 15:
 d_cpm22/u0/STAT.COM 15:
 d_cpm22/u0/SUBMIT.COM 0:

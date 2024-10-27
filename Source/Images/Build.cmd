@@ -16,14 +16,14 @@ call BuildDisk.cmd zpm3 fd wbw_fd144 ..\zpm3\zpmldr.sys || exit /b
 call BuildDisk.cmd z3plus fd wbw_fd144 ..\cpm3\cpmldr.sys || exit /b
 call BuildDisk.cmd ws4 fd wbw_fd144 || exit /b
 call BuildDisk.cmd qpm fd wbw_fd144 ..\qpm\qpm_wbw.sys || exit /b
-call BuildDisk.cmd z80asm hd wbw_fd144 || exit /b
-call BuildDisk.cmd aztecc hd wbw_fd144 || exit /b
-call BuildDisk.cmd hitechc hd wbw_fd144 || exit /b
-call BuildDisk.cmd tpascal hd wbw_fd144 || exit /b
-call BuildDisk.cmd bascomp hd wbw_fd144 || exit /b
-call BuildDisk.cmd fortran hd wbw_fd144 || exit /b
-call BuildDisk.cmd games hd wbw_fd144 || exit /b
-call BuildDisk.cmd cowgol hd wbw_fd144 || exit /b
+call BuildDisk.cmd z80asm fd wbw_fd144 || exit /b
+call BuildDisk.cmd aztecc fd wbw_fd144 || exit /b
+call BuildDisk.cmd hitechc fd wbw_fd144 || exit /b
+call BuildDisk.cmd tpascal fd wbw_fd144 || exit /b
+call BuildDisk.cmd bascomp fd wbw_fd144 || exit /b
+call BuildDisk.cmd fortran fd wbw_fd144 || exit /b
+call BuildDisk.cmd games fd wbw_fd144 || exit /b
+call BuildDisk.cmd cowgol fd wbw_fd144 || exit /b
 
 echo.
 echo Building Hard Disk Images (512 directory entry format)...
