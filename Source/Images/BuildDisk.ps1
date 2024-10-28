@@ -25,6 +25,7 @@ switch ($Format)
 		# 1.44MB Floppy Disk
 		$Desc = "1.44MB Floppy Disk"
 		$ImgFile = "fd144_${Disk}.img"
+		$CatFile = "fd144_${Disk}.cat"
 		$MediaID = 6
 		$Size = 1440KB
 	}
@@ -34,6 +35,7 @@ switch ($Format)
 		# 512 Directory Entry Hard Disk Format
 		$Desc = "Hard Disk (512 directory entry format)"
 		$ImgFile = "hd512_${Disk}.img"
+		$CatFile = "hd512_${Disk}.cat"
 		$MediaID = 4
 		$Size = 8MB + 128KB
 	}
@@ -43,6 +45,7 @@ switch ($Format)
 		# 1024 Directory Entry Hard Disk Format
 		$Desc = "Hard Disk (1024 directory entry format)"
 		$ImgFile = "hd1k_${Disk}.img"
+		$CatFile = "hd1k_${Disk}.cat"
 		$MediaID = 10
 		$Size = 8MB
 	}
@@ -95,6 +98,10 @@ if (Test-Path("${Type}_${Disk}.txt"))
 		}
 	}
 }
+
+$Cmd = "cpmls -f $Format -D $ImgFile"
+$Cmd
+Invoke-Expression $Cmd > $CatFile
 
 "Moving image $ImgFile into output directory..."
 

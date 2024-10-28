@@ -34,7 +34,7 @@ OBJECTS = $(FDIMGS)
 OBJECTS += $(HD512IMGS) $(HD512XIMGS) hd512_combo.img $(HD512PREFIX)
 OBJECTS += $(HD1KIMGS) $(HD1KXIMGS) hd1k_combo.img $(HD1KPREFIX)
 
-OTHERS = blank144 blankhd512 blankhd1k
+OTHERS = blank144 blankhd512 blankhd1k *.cat
 
 NODELETE = $(HD512PREFIX) $(HD1KPREFIX)
 
@@ -131,7 +131,7 @@ blankhd1k:
 			fi ; \
 		done ; \
 	fi ; \
-
+	$(CPMLS) -f $$fmt -D $@ > $(@:.img=.cat)
 
 clean::
 	@rm -f *.ls

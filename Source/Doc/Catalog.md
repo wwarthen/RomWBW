@@ -122,21 +122,21 @@ The following files appear in User Area 0
 | **File**        | **Description**                  | **Also Found In** |
 |-----------------|----------------------------------|-------------------|
 | `ASM.COM`       | 8080 assembler                   | NZCOM, QPM, ZSDOS |
-| `DDT.COM`       | 8080 dunamic debugger            | QPM               |
-| `DUMP.COM`      | type contents of file in hex     | QPM               |
-| `ED.COM`        | line editor                      | QPM               |
-| `HELP.COM`      | CP/M 3 Derived HELP display      | QPM               |
-| `HELP.HLP`      | CP/M 3 Derived HELP data file    | QPM               |
+| `DDT.COM`       | 8080 dynamic debugger            | NZCOM, QPM, ZSDOS |
+| `DUMP.COM`      | type contents of file in hex     | NZCOM, QPM, ZSDOS |
+| `ED.COM`        | line editor                      | NZCOM, QPM, ZSDOS |
+| `HELP.COM`      | CP/M 3 Derived HELP display      | NZCOM, QPM, ZSDOS |
+| `HELP.HLP`      | CP/M 3 Derived HELP data file    | NZCOM, QPM, ZSDOS |
 | `LIB.COM`       | object file library manager      | NZCOM, QPM, ZSDOS |
 | `LINK.COM`      | object file linker               | NZCOM, QPM, ZSDOS |
 | `LOAD.COM`      | loader for Intel hex files       | NZCOM, QPM, ZSDOS |
 | `MAC.COM`       | 8080 macro assembler             | NZCOM, QPM, ZSDOS |
-| `PIP.COM`       | file transfer program            | QPM               |
-| `RMAC.COM`      | 8080 macro assembler             | NZCOM, QPM, ZSDOS |
+| `PIP.COM`       | file transfer program            | NZCOM, QPM, ZSDOS |
+| `RMAC.COM`      | 8080 relocating macro assembler  | NZCOM, QPM, ZSDOS |
 | `STAT.COM`      | file/disk/device info & config   | NZCOM, QPM, ZSDOS |
 | `SUBMIT.COM`    | batch file submission tool       | NZCOM, QPM, ZSDOS |
 | `XSUB.COM`      | batch file resident extension    | NZCOM, QPM, ZSDOS |
-| `ZSID.COM`      | Z80 symbolic debugger            | QPM               |
+| `ZSID.COM`      | Z80 symbolic debugger            | NZCOM, QPM, ZSDOS |
 
 As noted above several of the above files are also present in other 
 disk images besides CP/M 2.2

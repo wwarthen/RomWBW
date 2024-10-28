@@ -3,18 +3,9 @@
 #
 d_zsdos/ReadMe.txt 0:
 #
-# Include selected CP/M 2.2 files
+# Include CP/M 2.2 files
 #
-d_cpm22/u0/ASM.COM 0:
-d_cpm22/u0/LIB.COM 0:
-d_cpm22/u0/LINK.COM 0:
-d_cpm22/u0/LOAD.COM 0:
-d_cpm22/u0/MAC.COM 0:
-d_cpm22/u0/PIP.COM 0:
-d_cpm22/u0/RMAC.COM 0:
-d_cpm22/u0/STAT.COM 0:
-d_cpm22/u0/SUBMIT.COM 0:
-d_cpm22/u0/XSUB.COM 0:
+d_cpm22/u0/*.* 0:
 #
 # Add RomWBW utilities
 #

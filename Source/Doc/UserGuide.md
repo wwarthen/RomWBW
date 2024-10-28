@@ -2418,6 +2418,88 @@ call "CPM.SYS".  For example:
 
 `SYSCOPY C:=B:CPM.SYS`
 
+#### Character Device Mapping
+
+Character device mapping under CP/M 2.2 has 3 layers:
+
+CP/M Logical Device --> CP/M Physical Device --> RomWBW HBIOS Device
+
+The CP/M Logical Devices are:
+
+| Device | Description                                                              |
+|--------|--------------------------------------------------------------------------|
+| `CON:` | System console device, used by CCP for communication with the operator   |
+| `RDR:` | Paper tape reader device                                                 |
+| `PUN:` | Paper tape punch device                                                  |
+| `LST:` | Output list device                                                       |
+
+The CP/M Physical Devices are:
+
+| Device | Description                                                              |
+|--------|--------------------------------------------------------------------------|
+| `TTY:` | Teletype device (slow speed console)                                     |
+| `CRT:` | Cathode ray tube device (high speed console)                             |
+| `BAT:` | Batch processing (input from `RDR:`, output to `LST:`)                   |
+| `UC1:` | User-defined console                                                     |
+| `PTR:` | Paper tape reader (high speed reader)                                    |
+| `UR1:` | User-defined reader #1                                                   |
+| `UR2:` | User-defined reader #2                                                   |
+| `PTP:` | Paper tape punch (high speed punch)                                      |
+| `UP1:` | User-defined punch #1                                                    |
+| `UP2:` | User-defined punch #2                                                    |
+| `LPT:` | Line printer                                                             |
+| `UL1:` | User-defined list device #1                                              |
+
+CP/M Logical Devices are mapped to CP/M Physical Devices via the
+IOBYTE at 0x0003 as shown below.
+
++----------------+----------+----------+----------+----------+
+| Logical Device | `LST:`   | `PUN:`   | `RDR:`   | `CON:`   |
++----------------+----------+----------+----------+----------+
+| IOBYTE Bits    | 7 6      | 5 4      | 3 2      | 1 0      |
++================+==========+==========+==========+==========+
+| 0 (0b00)       | `TTY:`   | `TTY:`   | `TTY:`   | `TTY:`   |
++----------------+----------+----------+----------+----------+
+| 1 (0b01)       | `CRT:`   | `PTP:`   | `PTR:`   | `CRT:`   |
++----------------+----------+----------+----------+----------+
+| 2 (0b10)       | `LPT:`   | `UP1:`   | `UR1:`   | `BAT:`   |
++----------------+----------+----------+----------+----------+
+| 3 (0b11)       | `UL1:`   | `UP2:`   | `UR2:`   | `UC1:`   |
++----------------+----------+----------+----------+----------+
+
+The mappings above can be managed using the `STAT` command.  This
+command essentially just modifies the IOBYTE value.
+
+CP/M Physical Devices are mapped to RomWBW HBIOS devices during
+the boot process depending on the number of HBIOS Char devices
+in the system.
+
+All CP/M Physical Devices are initially mapped to HBIOS Char 0.
+If additional HBIOS Char devices are available in the system, they will
+be mapped as below:
+
+| CP/M   | RomWBW HBIOS     |
+|--------|------------------|
+| `TTY:` | Char 0           |
+| `CRT:` | CRT              |
+| `BAT:` | CP/M RDR/LST     |
+| `UC1:` | Char 1           |
+| `PTR:` | Char 1           |
+| `UR1:` | Char 2           |
+| `UR2:` | Char 3           |
+| `PTP:` | Char 1           |
+| `UP1:` | Char 2           |
+| `UP2:` | Char 3           |
+| `LPT:` | Char 1           |
+| `UL1:` | Char 2           |
+
+Normally, the HBIOS Console device (Loader prompt) is on HBIOS Device
+Char 0.  If it has been reassigned to a different HBIOS character
+device before launching CP/M, then the above mapping will be modified.
+TTY: will be assigned to the current HBIOS console Char device.  The
+remaining assignments will be filled in with the other Char devices
+as available.
+
 #### Notes
 
 * You can change media, but it must be done while at the OS
@@ -2465,6 +2547,12 @@ the disk.  The RomWBW ROM disk has a copy of the boot track
 call "ZSYS.SYS".  For example:
 
 `SYSCOPY C:=B:ZSYS.SYS`
+
+#### Character Device Mapping
+
+Mapping of character devices to RomWBW HBIOS Character devices
+operates exactly the same as described in [Digital Research CP/M 2.2].
+The CP/M 2.2 `STAT` command is used to manipulate the device mappings.
 
 #### Notes
 
@@ -2537,6 +2625,18 @@ Since NZ-COM boots via Z-System, you can make a bootable
 NZ-COM disk using `ZSYS.SYS` as described in [Z-System] above.  You
 will need to add a `PROFILE.SUB` file to auto-start NZ-COM itself.
 
+#### Character Device Mapping
+
+Mapping of character devices to RomWBW HBIOS Character devices
+operates exactly the same as described in [Digital Research CP/M 2.2].
+However, it is **not** possible to manipulate the CP/M Logical to
+Physical device mapping using the `STAT` command.  The mapping is
+static.
+
+Note: A custom ZCPR IOP module could theoretically be used to manage
+the character device mappings.  RomWBW does not provide this module
+and writing an IOP module is beyond the scope of this document.
+
 #### Notes
 
 * All of the notes for [Z-System] above generally apply to NZCOM.
@@ -2607,6 +2707,36 @@ COPY A:CCP.COM F:
 Note in the example above that `CPM3BNK.SYS` is renamed to `CPM3.SYS`
 in the copy command.
 
+#### Character Device Mapping
+
+Character device mapping under CP/M 3 has 3 layers:
+
+CP/M Logical Device --> CP/M Physical Device --> RomWBW HBIOS Device
+
+The primary CP/M Logical Devices are:
+
+| Device | Description                                                              |
+|--------|--------------------------------------------------------------------------|
+| `CON:` | Console input or output device                                           |
+| `AUX:` | Auxiliary Input or Output Device                                         |
+| `LST:` | List output device, usually the printer                                  |
+
+There are various aliases for these devices.  Please refer to the CP/M 3
+Users Guide for more information.
+
+The mapping of CP/M 3 Logical Devices to Physical Devices is performed
+using the `DEVICE` command.
+
+CP/M 3 refers to Physical Character Devices using the `COM` device 
+label.  These `COM` devices are mapped directly to the RomWBW HBIOS Char
+devices as described below:
+
+|       `COM0:` --> HBIOS Char 0
+|       `COM1:` --> HBIOS Char 1
+|       `COM2:` --> HBIOS Char 2
+|       . . .
+|       `COMn:` --> HBIOS Char n
+
 #### Notes
 
 - The `COPYSYS` command described in the DRI CP/M 3 documentation is
@@ -2661,6 +2791,12 @@ on the disk itself.This is described in [Digital Research CP/M 3]
 section above.
 
 You will need to add a `PROFILE.SUB` file to auto-start Z3PLUS itself.
+
+#### Character Device Mapping
+
+Mapping of character devices to RomWBW HBIOS Character devices
+operates exactly the same as described in [Digital Research CP/M 3].
+The CP/M 3 `DEVICE` command is used to manipulate the device mappings.
 
 #### Notes
 
@@ -2739,6 +2875,12 @@ COPY A:ZINSTAL.ZPM F:
 COPY A:STARTZPM.COM F:
 ```
 
+#### Character Device Mapping
+
+Mapping of character devices to RomWBW HBIOS Character devices
+operates exactly the same as described in [Digital Research CP/M 3].
+The CP/M 3 `DEVICE` command is used to manipulate the device mappings.
+
 #### Notes
 
 - The ZPM3 operating system is contained in the file called CPM3.SYS 
@@ -2761,7 +2903,6 @@ regarding the RomWBW adaptation and customizations.
 * [QP/M 2.7 Features and Facilities]($doc_root$/CPM/qcp27.pdf)
 
 #### Boot Disk
-
 
 To create or update a bootable QP/M Z-System disk, a special process
 is required.  QP/M is not provided in source format.  You are expected
@@ -2792,6 +2933,14 @@ previously made with `QINSTALL` will need to be reapplied.  The
 pre-built RomWBW QP/M disk image includes a couple of specific
 non-default settings to optimize use with RomWBW.  Please review the
 notes in the ReadMe.txt file in Source/Images/d_qpm.
+
+#### Character Device Mapping
+
+Mapping of character devices to RomWBW HBIOS Character devices operates 
+exactly the same as described in [Digital Research CP/M 2.2]. The 
+mappings can be viewed or modified using the QP/M `QSTAT` command which 
+is analogous to the CP/M 2.2 `STAT` command.  Do **not** use the CP/M 
+2.2 `STAT` command under QP/M.
 
 #### Notes
 
@@ -2855,6 +3004,13 @@ There is no mechanism provided to create a p-System boot disk from
 scratch under RomWBW.  This has already been done as part of the
 porting process.  You must use the provided p-System hard disk image
 file which is bootable.
+
+#### Character Device Mapping
+
+RomWBW Character Devices are automatically assigned to p-System devices 
+at startup.  The current HBIOS Console device is assigned to CONSOLE:.  
+The next available HBIOS Char device is assigned to REMIN:/REMOUT:.  The
+next available HBIOS Char devices is assigned to PRINTER:
 
 #### Notes
 

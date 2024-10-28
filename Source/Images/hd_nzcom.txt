@@ -3,18 +3,9 @@
 #
 d_nzcom/ReadMe.txt 0:
 #
-# Include selected CP/M 2.2 files
+# Include CP/M 2.2 files
 #
-d_cpm22/u0/ASM.COM 15:
-d_cpm22/u0/LIB.COM 15:
-d_cpm22/u0/LINK.COM 15:
-d_cpm22/u0/LOAD.COM 15:
-d_cpm22/u0/MAC.COM 15:
-d_cpm22/u0/PIP.COM 15:
-d_cpm22/u0/RMAC.COM 15:
-d_cpm22/u0/STAT.COM 15:
-d_cpm22/u0/SUBMIT.COM 0:
-d_cpm22/u0/XSUB.COM 15:
+d_cpm22/u0/*.* 0:
 #
 # Include ZSDOS files
 #
