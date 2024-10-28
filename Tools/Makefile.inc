@@ -43,6 +43,7 @@ TASM=$(BINDIR)/uz80as -t z80
 TASMFLAGS=
 OPENSPIN=$(BINDIR)/openspin
 CPMCP=$(BINDIR)/cpmcp
+CPMLS=$(BINDIR)/cpmls
 CPMCHATTR=$(BINDIR)/cpmchattr
 
 #
