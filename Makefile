@@ -28,4 +28,4 @@ dist:
 	$(MAKE) --directory Source clean
 
 distlog:
-	$(MAKE) dist 2>&1 | tee make.log
+	time -p $(MAKE) dist 2>&1 | tee make.log
