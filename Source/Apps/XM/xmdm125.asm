@@ -3478,7 +3478,17 @@ RSDMA:	LXI	D,TBUF		; Reset DMA address
 	RET
 ;
 WRERR:	CALL	RSDMA		; Reset DMA to normal
-	MVI	C,CAN		; Cancel
+; [WBW] BEGIN: Fixed to put CAN character in A instead of C because
+; SEND uses the A register.  Also increased number of CAN characters
+; sent to 3.  Credit to HubertH for finding this and providing the fix.
+;	MVI	C,CAN		; Cancel
+; [WBW] -----
+	MVI	A,CAN		; Cancel
+	CALL	SEND		; Sender
+	MVI	A,CAN		; Cancel
+	CALL	SEND		; Sender
+	MVI	A,CAN		; Cancel
+; [WBW] END
 	CALL	SEND		; Sender
 ; [WBW] BEGIN: RCVSABT does not return, so file write error
 ; message was never being displayed.  Swapped things around
