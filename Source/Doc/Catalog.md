@@ -1,5 +1,5 @@
 $define{doc_title}{Disk Catalog}$
-$define{doc_author}{Mykl Orders}$
+$define{doc_author}{Mark Pruden \& Mykl Orders}$
 $define{doc_authmail}{}$
 $include{"Book.h"}$
 
@@ -119,29 +119,29 @@ distribution.
 
 The following files appear in User Area 0
 
-| **File**        | **Description**                  | **Also Found In** |
-|-----------------|----------------------------------|-------------------|
-| `ASM.COM`       | 8080 assembler                   | NZCOM, QPM, ZSDOS |
-| `DDT.COM`       | 8080 dynamic debugger            | NZCOM, QPM, ZSDOS |
-| `DUMP.COM`      | type contents of file in hex     | NZCOM, QPM, ZSDOS |
-| `ED.COM`        | line editor                      | NZCOM, QPM, ZSDOS |
-| `HELP.COM`      | CP/M 3 Derived HELP display      | NZCOM, QPM, ZSDOS |
-| `HELP.HLP`      | CP/M 3 Derived HELP data file    | NZCOM, QPM, ZSDOS |
-| `LIB.COM`       | object file library manager      | NZCOM, QPM, ZSDOS |
-| `LINK.COM`      | object file linker               | NZCOM, QPM, ZSDOS |
-| `LOAD.COM`      | loader for Intel hex files       | NZCOM, QPM, ZSDOS |
-| `MAC.COM`       | 8080 macro assembler             | NZCOM, QPM, ZSDOS |
-| `PIP.COM`       | file transfer program            | NZCOM, QPM, ZSDOS |
-| `RMAC.COM`      | 8080 relocating macro assembler  | NZCOM, QPM, ZSDOS |
-| `STAT.COM`      | file/disk/device info & config   | NZCOM, QPM, ZSDOS |
-| `SUBMIT.COM`    | batch file submission tool       | NZCOM, QPM, ZSDOS |
-| `XSUB.COM`      | batch file resident extension    | NZCOM, QPM, ZSDOS |
-| `ZSID.COM`      | Z80 symbolic debugger            | NZCOM, QPM, ZSDOS |
+| **File**        | **Description**                                      |
+|-----------------|------------------------------------------------------|
+| `ASM.COM`       | DRI 8080 assembler                                   |
+| `DDT.COM`       | 8080 dynamic debugger                                |
+| `DUMP.COM`      | DRI type contents of file in hex                     |
+| `ED.COM`        | DRI line editor                                      |
+| `HELP.COM`      | CP/M 3 derived HELP display                          |
+| `HELP.HLP`      | CP/M 3 derived HELP data file                        |
+| `LIB.COM`       | DRI object file library manager                      |
+| `LINK.COM`      | DRI object file linker                               |
+| `LOAD.COM`      | DRI loader for Intel hex files                       |
+| `MAC.COM`       | DRI 8080 macro assembler                             |
+| `PIP.COM`       | DRI periperal interchange program                    |
+| `RMAC.COM`      | DRI 8080 relocating macro assembler                  |
+| `STAT.COM`      | DRI file/disk/device info & config                   |
+| `SUBMIT.COM`    | DRI batch file submission tool                       |
+| `XREF.COM`      | DRI assembler cross reference listing utility        |
+| `XSUB.COM`      | DRI batch file resident extension                    |
+| `ZSID.COM`      | DRI Z80 symbolic debugger                            |
 
-As noted above several of the above files are also present in other 
-disk images besides CP/M 2.2
+**NOTE:** The above files are also included in the NZCOM disk image.
 
-MAC, RMAC, ZSID are supplemental programs from DRI
+MAC, RMAC, XREF, and ZSID are supplemental programs from DRI
 with separate standalone documentation which is not included in the
 RomWBW package (but easily found on the Internet via Google search).
 
@@ -351,50 +351,61 @@ The following files appear in User Area 0
 | `CPM3.SYS`     | RomWBW     | DRI CPM+ (non-banked) memory image                 |
 | `CPM3RES.SYS`  | RomWBW     | DRI CPM+ (non-banked) memory image                 |
 | `CPM3BNK.SYS`  | RomWBW     | DRI CPM+ (banked) memory image                     |
-| `CPM3FIX.PAT`  | CPM3       |                                                    |
+| `CPM3FIX.PAT`  | CPM3       | DRI CPM+ patch list                                |
 | `CPMLDR.COM`   | RomWBW     | DRI CPM 3.0 Boot Loader Application                |
 | `CPMLDR.SYS`   | RomWBW     | DRI CPM 3.0 Boot Loader for SYSCOPY                |
-| `GENBNK.DAT`   | RomWBW     |                                                    |
-| `GENRES.DAT`   | RomWBW     |                                                    |
-| `GENCPM.DAT`   | RomWBW     | DRI CPM+ System generation tool data file          |
+| `GENBNK.DAT`   | RomWBW     | GENCPM config data file (banked)                   |
+| `GENRES.DAT`   | RomWBW     | GENCPM config data file (non-banked)               |
+| `GENCPM.DAT`   | RomWBW     | Current GENCPM config data file                    |
 | `GENCPM.COM`   | CPM3       | DRI CPM+ Create a memory image of CPM3.SYS         |
 | `RESBDOS3.SPR` | CPM3       | DRI CPM+ GENCPM input file for resident BDOS       |
-| `README.1ST`   | CPM3       |                                                    |
 
 ### CP/M 3 Files
 
 The following CP/M 3 files were distributed by DRI with the operating
-system or as supplemental add-on programs.
+system or as supplemental add-on programs.  They are documented in the
+"CPM3 Command Summary.pdf" document in the Doc/CPM directory of the Rom WBW
+distribution. 
 
 The following files appear in User Area 0
 
-| **File*       | **Description**                                                        |
+| **File**      | **Description**                                                        |
 |---------------|------------------------------------------------------------------------|
 | `DATE.COM`    | DRI CPM+ Set or display the date and time                              |
 | `DEVICE.COM`  | DRI CPM+ Assign logical devices with one or more physical devices      |
 | `DIR.COM`     | DRI CPM+ DIR with options                                              |
 | `DUMP.COM`    | DRI type contents of disk file in hex                                  |
-| `ED.COM`      | DRI context editor                                                     |
-| `ERASE.COM`   | DRI file deletion                                                      |
+| `ED.COM`      | DRI CPM+ line editor                                                   |
+| `ERASE.COM`   | DRI CPM+ file deletion                                                 |
 | `GENCOM.COM`  | DRI CPM+ Generate special COM file with attached RSX files             |
 | `GET.COM`     | DRI CPM+ Temporarily get console input form a disk file                |
 | `HELP.COM`    | DRI CPM+ Display information on how to use commands                    |
 | `HELP.HLP`    | DRI CPM+ Databse of help information for HELP.COM                      |
 | `HEXCOM.COM`  | DRI CPM+ Create a COM file from a hex file output by MAC               |
 | `INITDIR.COM` | DRI CPM+ Initializes a disk to allow time and date stamping            |
+| `LIB.COM`     | DRI object file library manager                                        |
+| `LINK.COM`    | DRI object file linker                                                 |
+| `LOAD.COM`    | DRI loader for Intel hex files                                         |
+| `MAC.COM`     | DRI 8080 macro assembler                                               |
 | `PATCH.COM`   | DRI CPM+ Display or install patch to the CPM+ system or command files  |
-| `PIP.COM`     | DRI Periperal Interchange Program                                      |
+| `PIP.COM`     | DRI CPM+ Periperal Interchange Program                                 |
 | `PUT.COM`     | DIR CPM+ Temporarily redirect printer or console output to a disk file |
 | `RENAME.COM`  | DRI CPM+ Rename a file                                                 |
+| `RMAC.COM`    | DRI 8080 relocating macro assembler                                    |
 | `SAVE.COM`    | DRI CPM+ Copy the contents of memory to a file                         |
 | `SET.COM`     | DIR CPM+ Set file options                                              |
 | `SETDEF.COM`  | DIR CPM+ Set system options including the drive search chain           |
 | `SHOW.COM`    | DIR CPM+ Display disk and drive statistics                             |
-| `SUBMIT.COM`  | DRI batch processor                                                    |
-| `TYPE.COM`    | DIR CPM+ Display the contents of an ASCII character file               |
+| `SUBMIT.COM`  | DRI CPM+ batch processor                                               |
+| `TYPE.COM`    | DRI CPM+ Display the contents of an ASCII character file               |
+| `XREF.COM`    | DRI assembler cross reference listing utility                          |
 | `ZSID.COM`    | DRI Z80 symbolic instruction debugger                                  |                                                                    |
 
-**NOTE:** The above files are also included in the ZPM3 disk image distribution
+**NOTE:** The above files are also included in the ZPM3 and Z3PLUS disk images.
+
+ZSID is a supplemental program from DRI
+with separate standalone documentation which is not included in the
+RomWBW package (but easily found on the Internet via Google search).
 
 ### Additional Files
 

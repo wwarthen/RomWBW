@@ -5,7 +5,8 @@ d_nzcom/ReadMe.txt 0:
 #
 # Include CP/M 2.2 files
 #
-d_cpm22/u0/*.* 0:
+d_cpm22/u0/SUBMIT.COM 0:
+d_cpm22/u0/*.* 15:
 #
 # Add RomWBW utilities
 #
