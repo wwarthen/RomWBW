@@ -1,5 +1,5 @@
 OBJECTS = rom0_wbw.dat rom0_una.dat rom128_wbw.dat rom128_una.dat rom256_wbw.dat rom256_una.dat rom384_wbw.dat rom384_una.dat rom896_wbw.dat rom896_una.dat
-OTHERS=*.dat
+OTHERS=*.dat *.cat
 
 TOOLS = ../../Tools
 include $(TOOLS)/Makefile.inc
@@ -41,3 +41,4 @@ rom0_%.dat:
 	$(CPMCP) -f $(DISKDEF) $@ ../CPM22/cpm_$(BIOS).sys 0:cpm.sys
 	$(CPMCP) -f $(DISKDEF) $@ ../ZSDOS/zsys_$(BIOS).sys 0:zsys.sys
 	$(CPMCHATTR) -f $(DISKDEF) $@ r 0:*.*
+	$(CPMLS) -f $(DISKDEF) -D $@ > $(@:.dat=.cat)

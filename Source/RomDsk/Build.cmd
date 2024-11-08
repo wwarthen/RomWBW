@@ -68,4 +68,7 @@ cpmcp -f %DiskDef% %Output%.dat ..\zsdos\zsys_%Bios%.sys 0:zsys.sys || exit /b
 :: Mark all disk files R/O for safety
 cpmchattr -f %DiskDef% %Output%.dat r 0:*.* || exit /b
 
+:: Dump directory for reference
+cpmls -f %DiskDef% -D %Output%.dat >%Output%.cat
+
 goto :eof
