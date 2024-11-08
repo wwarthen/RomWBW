@@ -1835,10 +1835,10 @@ getnum32a:
 	; X * 10 = (((x * 2 * 2) + x)) * 2
 	push	de
 	push	hl
-;	
+;
 	call	getnum32e	; DE:HL *= 2
 	jr	c,getnum32d	; if overflow, ret w/ CF & stack pop
-;	
+;
 	call	getnum32e	; DE:HL *= 2
 	jr	c,getnum32d	; if overflow, ret w/ CF & stack pop
 ;
@@ -1849,7 +1849,7 @@ getnum32a:
 	adc	hl,bc
 	ex	de,hl
 	ret	c		; if overflow, ret w/ CF
-;	
+;
 	call	getnum32e	; DE:HL *= 2
 	ret	c		; if overflow, ret w/ CF
 ;
@@ -2456,6 +2456,7 @@ ra_ent(str_fth,	  'F',	   KY_EX, BID_IMG1, FTH_IMGLOC,  FTH_LOC, FTH_SIZ, FTH_LO
 ra_ent(str_play,  'P',	   $FF,	  BID_IMG1, GAM_IMGLOC,  GAM_LOC, GAM_SIZ, GAM_LOC)
 ra_ent(str_net,   'N',	   $FF,	  BID_IMG1, NET_IMGLOC,  NET_LOC, NET_SIZ, NET_LOC)
 ra_ent(str_upd,   'X',	   $FF,	  BID_IMG1, UPD_IMGLOC,  UPD_LOC, UPD_SIZ, UPD_LOC)
+ra_ent(str_nvr,   'W',	   $FF,	  BID_IMG1, NVR_IMGLOC,  NVR_LOC, NVR_SIZ, NVR_LOC)
 ra_ent(str_user,  'U',	   $FF,	  BID_IMG1, USR_IMGLOC,  USR_LOC, USR_SIZ, USR_LOC)
 #endif
 #if (DSKYENABLE)
@@ -2484,6 +2485,7 @@ str_bas		.db	"BASIC",0
 str_tbas	.db	"Tasty BASIC",0
 str_play	.db	"Play a Game",0
 str_upd		.db	"XModem Flash Updater",0
+str_nvr		.db	"RomWBW Configure", 0
 str_user	.db	"User App",0
 str_egg		.db	"",0
 str_net		.db	"Network Boot",0

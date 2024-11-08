@@ -3,7 +3,7 @@ MOREDIFF = game.bin hbios_rom.bin nascom.bin usrrom.bin \
 	dbgmon.bin hbios_app.bin imgpad2.bin osimg1.bin osimg2.bin romldr.bin \
 	eastaegg.bin hbios_img.bin osimg.bin game.bin updater.bin usrrom.bin
 
-SUBDIRS =
+SUBDIRS = SysConfig
 DEST = ../../Binary
 TOOLS =../../Tools
 OTHERS =  *.img *.rom *.com *.upd *.bin *.hex cpm.sys zsys.sys Build.inc font*.asm *.dat hbios_env.sh
@@ -62,7 +62,7 @@ $(OBJECTS) : $(ROMDEPS)
 	@cat romldr.bin dbgmon.bin ../ZSDOS/zsys_$(BIOS).bin ../CPM22/cpm_$(BIOS).bin >osimg.bin
 	cat romldr.bin dbgmon.bin ../ZSDOS/zsys_$(BIOS).bin >osimg_small.bin
 	if [ $(ROM_PLATFORM) != UNA ] ; then \
-		cat camel80.bin nascom.bin tastybasic.bin game.bin eastaegg.bin netboot.mod updater.bin usrrom.bin >osimg1.bin ; \
+		cat camel80.bin nascom.bin tastybasic.bin game.bin eastaegg.bin netboot.mod updater.bin SysConfig/sysconfig.bin usrrom.bin >osimg1.bin ; \
 		if [ $(ROM_PLATFORM) = S100 ] ; then \
 			cat s100mon.bin >osimg2.bin ; \
 		else \
@@ -102,7 +102,7 @@ s100mon.bin:
 
 tastybasic.bin:
 	cp ../TastyBasic/src/$@ .
-	
+
 hbios_rom.bin:	hbios.asm build.inc  $(DEPS)
 	@$(TASM) -dROMBOOT hbios.asm hbios_rom.bin hbios_rom.lst
 
@@ -114,7 +114,7 @@ hbios_img.bin:	hbios.asm build.inc  $(DEPS)
 
 hbios_env.com:	hbios_env.asm build.inc
 	@$(TASM) -dBASH hbios_env.asm hbios_env.com hbios_env.lst
-	
+
 hbios_env.sh: hbios_env.com
 	@$(ZXCC) hbios_env.com >hbios_env.sh
 

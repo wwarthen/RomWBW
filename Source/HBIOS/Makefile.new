@@ -6,7 +6,7 @@ DIST_OBJECTS := \
 	DUO_std SCZ180_sc126 SCZ180_sc130 SCZ180_sc131 SCZ180_sc140 \
 	SCZ180_sc503 SCZ180_sc700 S100_std UNA_std Z80RETRO_std \
 	ZETA_std ZETA2_std HEATH_std EPITX_std GMZ180_std
-#	RCZ80_mt RCZ80_duart MON_std 
+#	RCZ80_mt RCZ80_duart MON_std
 
 OBJECTS := $(DIST_OBJECTS)
 # OBJECTS := SBC_std MK4_std UNA_std S100_std
@@ -40,6 +40,9 @@ camel80.bin:
 
 tastybasic.bin:
 	cp ../TastyBasic/src/$@ .
+
+sysconfig.bin:
+	cp SysConfig/$@ .
 
 s100mon.bin:
 	$(ZXCC) $(CPM)/SLR180 -s100mon/FH
@@ -100,8 +103,8 @@ UNA_%.osimg.bin: UNA_%.romldr.bin UNA_%.dbgmon.bin
 %.osimg_small.bin: %.romldr.bin %.dbgmon.bin
 	cat $(*F).romldr.bin $(*F).dbgmon.bin ../ZSDOS/zsys_wbw.bin >$@
 
-%.osimg1.bin: camel80.bin %.nascom.bin tastybasic.bin %.game.bin %.eastaegg.bin netboot.mod %.updater.bin %.usrrom.bin
-	cat camel80.bin $(*F).nascom.bin tastybasic.bin $(*F).game.bin $(*F).eastaegg.bin netboot.mod $(*F).updater.bin $(*F).usrrom.bin >$@
+%.osimg1.bin: camel80.bin %.nascom.bin tastybasic.bin %.game.bin %.eastaegg.bin netboot.mod %.updater.bin sysconfig.bin %.usrrom.bin
+	cat camel80.bin $(*F).nascom.bin tastybasic.bin $(*F).game.bin $(*F).eastaegg.bin netboot.mod $(*F).updater.bin sysconfig.bin $(*F).usrrom.bin >$@
 	srec_cat $@ -Binary -Crop 0 0x7FFF -Checksum_Negative_Big_Endian 0x7FFF 1 1 -o $@ -Binary
 
 S100_%.imgpad2.bin: s100mon.bin
