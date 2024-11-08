@@ -458,6 +458,33 @@ CB_BOOTMODE	.DB	BOOTMODE	; HBIOS BOOTMODE
 CB_HEAP		.DW	0
 CB_HEAPTOP	.DW	0
 ;
+; SWITCHES SHADOW COPY (FROM RTC/NVR) START AT $30
+;
+		.FILL	(HCB + $30 - $),0
+;
+; First byte (header) of NVRAM = "W" if fully initialised, or a ststus byte
+; = 0 if no NVRAM detected, or = 1 If NVR exists, but not configured
+CB_SWITCHES	.DB	0		; this byte is set during init
+;
+;   Byte 0: (L)
+;     Bit 7-0 DISK BOOT SLice Number to Boot -> default = 0
+;     Bit 7-0 ROM BOOT (alpha character) Application to boot -> default = "H"
+;   Byte 1: (H)
+;     Bit 7 - ROM/DISK - Rom or Disk Boot -> Default=ROM=1 (BOOT_DEFAULT is Numeric/Alpha)
+;     Bit 6-0 - DISK BOOT Disk Unit to Boot (0-127) -> default = 0
+CB_SWDEFBOOT	.DB	'H'		; (WORD) DEFAULT BOOT NVR OPTIONS. USED By ROMLDR
+		.DB	DBOOT_ROM	; Default Boot - ROM Application
+;
+;   Byte 0: (L)
+;     Bit 7-6 - Reserved
+;     Bit 5 - AUTO BOOT Auto boot, default=false (BOOT_TIMEOUT != -1)
+;     Bit 4 - Reserved
+;     Bit 3-0 - BOOT_TIMEOUT in seconds (0-15) 0=immediate -> default=3
+CB_SWAUTOB	.DB	0		; AUTO BOOT NVR OPTIONS. USED By ROMLDR
+;
+; CHECKSUM
+CB_SWITCHCK	.DB	0		; CHECKSUM (XOR=0), INCLUDES HEADER and CB_VERSION
+;
 ; STANDARD BANK ID'S START AT $D8. DEFAULT VALUES FOR 512KB SYSTEM WITH NO RESERVED BANKS
 ;
 		.FILL	(HCB + $D8 - $),0
@@ -3349,6 +3376,32 @@ IS_REC_M1:
 	CALL	CALLLIST
 ;
 ;--------------------------------------------------------------------------------------------------
+; NV-SWITCH INITITIALISATION
+; Requires functional RTC NVR
+;--------------------------------------------------------------------------------------------------
+;
+NVR_INIT:
+	; Check for the existence of NV RAM by attempting to read a byte
+	LD	B,BF_RTCGETBYT		; GET RTC BYTE
+	LD	C,0			; FIRST Byte address in RTC
+	CALL	RTC_DISPATCH		; CALL RTC
+	JR	NZ,NVR_INIT_END		; GET BYTE Failed; Noting to do, HCB is correct. Status =0
+	;
+	CALL	NVSW_READ		; read the full data into hcb
+	JR	NZ, NVR_INIT_DEF	; failed to correclty read data
+	;
+	CALL	NVSW_CHECKSUM		; checksum calc into A
+	LD	HL,CB_SWITCHCK		; address of HCB value
+	CP	(HL)			; compare Caculated Check, with hcb Check Value
+	JR	Z,NVR_INIT_END		; The same so success
+NVR_INIT_DEF:
+	; failed Read or Checksum
+	CALL	NVSW_DEFAULTS		; set defaults into HCB, which include the "W" first byte
+	LD 	HL,CB_SWITCHES		; which is incorrect, need the value of 1
+	LD	(HL),1			; to indicate we while not inited, we do have NVRAM
+NVR_INIT_END:
+;
+;--------------------------------------------------------------------------------------------------
 ; WATCHDOG ACTIVATION
 ;--------------------------------------------------------------------------------------------------
 ;
@@ -5474,6 +5527,8 @@ SYS_GET:
 	JP	Z, SYS_GETSNDCNT
 	CP	BF_SYSGET_SNDFN
 	JP	Z,SYS_GETSNDFN
+	CP	BF_SYSGET_SWITCH
+	JP	Z,SYS_GETSWITCH
 	CP	BF_SYSGET_TIMER
 	JP	Z,SYS_GETTIMER
 	CP	BF_SYSGET_SECS
@@ -5626,6 +5681,45 @@ SYS_GETFN:
 	POP	DE			; ... TO DE
 	RET				; AF STILL HAS RESULT OF CALC
 ;
+; GET SWITCH
+;   ON ENTRY:
+;     D: SWITCH KEY
+;	0    -> ILLEGAL / RESERVED
+;	1-FE -> SWITCH
+;	FF   -> DONT GET VALUE CHECK THE STATUS OF NVRAM -> Returning
+;		  A=0   if no NVRAM exists. with NZ flag set
+;		  A=1   if NVRAM is present. with Z flag set
+;		  A='W' if NVRAM is fullly inited. with Z flag set
+;		Note the NZ flag can be used to detect and return an error condition
+;   RETURNS:
+;     HL: SWITCH VALUE 8/16 BIT
+;
+SYS_GETSWITCH:
+;	PUSH	DE
+;	CALL	NVSW_CONFIG		; make sure shadow copy is inited
+;	POP	DE			;
+;	RET	NZ			; Configuration Failed, thus cant continue
+;
+	LD	A,D
+	CP	$FF			; test if want to just get NVRAM status
+	JR	Z,NVSW_STATUS		; Check the Status - Call and Return
+;
+	CALL	SWITCH_RES		; D SWITCH NUMBER -> OUT HL address, E FLAGS
+	RET	NZ			; IF NZ FLAG SET THEN ISSUE
+;
+	LD	B,0			; Clear upper byte
+	LD	C,(HL)			; Get LOW Order Switch Data
+	LD	A,1			; Compare with 1 (byte)
+	CP	E			; Compare The byte count from SWITCH_RES
+	JR	NC,SYS_GETSWITCH2	; 1 byte or less, skip over
+	INC	HL			; next byte pos in a 2 Byte Switch
+	LD	B,(HL)			; Get HIGH Order Switch Data
+;
+SYS_GETSWITCH2:
+	LD	H,B			; retun Result in HL
+	LD	L,C
+	XOR	A			; signal success
+	RET
 #IF ((CPUFAM == CPU_EZ80) & (EZ80TIMER == EZ80TMR_FIRM))
 ; IMPLEMENTED IN EZ80DRV.ASM
 ;
@@ -5854,6 +5948,8 @@ SYS_GETAPPBNKS:
 ;
 SYS_SET:
 	LD	A,C			; GET REQUESTED SUB-FUNCTION
+	CP	BF_SYSSET_SWITCH
+	JP	Z,SYS_SETSWITCH
 	CP	BF_SYSSET_TIMER
 	JP	Z,SYS_SETTIMER
 	CP	BF_SYSSET_SECS
@@ -5866,6 +5962,76 @@ SYS_SET:
 	JP	Z,SYS_SETPANEL
 	SYSCHKERR(ERR_NOFUNC)		; SIGNAL ERROR
 	RET
+;
+; SET SWITCH
+;   ON ENTRY:
+;     D: SWITCH KEY
+;	0 -> ILLEGAL / RESERVED
+;	1-254 -> SWITCH
+;	FF -> REINIT DEFAULT VALUES
+;     HL: SWITCH VALUE 8/16 BIT
+;
+SYS_SETSWITCH:
+	CALL	NVSW_STATUS		; Check the status of NV RAM
+	RET	NZ			; IF NZ then we cant continue, return NZ at this point
+;
+	LD	A,D			; switch # argument
+	CP	$FF			; test if want to reset NVRAM
+	JP	Z,NVSW_RESET		; then perform reset function. CALL AND RETURN
+;
+	LD	B,H			; move value to write into BC
+	LD	C,L
+	CALL	SWITCH_RES		; IN D SWITCH NUMBER -> OUT HL address, E FLAGS
+	RET	NZ			; RETURN IF NZ - swich number illegal
+;
+	LD	(HL),C			; Save LOW Order Switch Data
+	LD	A,1			; Compare with 1 (byte) switch
+	CP	E			; Compare
+	JR	NC,SYS_SETSWITCH1	; 1 byte or less, skip over
+	INC	HL			; next byte pos
+	LD	(HL),B			; Save High Order Switch Data
+;
+SYS_SETSWITCH1:
+	JP	NVSW_UPDATE		; do a write to NVR, CALL AND RETURN
+;
+; Utility function to convert switch number into lookup
+; INPUT
+; 	D SWITCH NUMBER
+; OUTPUT
+; 	E with Byte count (1,2) for switch, or 0 if switch illegal
+; 	HL Memory Address (CB_SWITCHES + offset)
+SWITCH_RES:
+	LD	A,SWITCH_LEN		; lengt of target array (below)
+	CP	D			; check we fit in the loop
+	JR	C,SWITCH_RES1		; overflow table to abort
+;
+	LD	HL,SWITCH_TAB		; Lookup table below
+	LD	A,D			; plus the offset switch number
+	CALL	ADDHLA			; get address of lookup table
+	LD	E,(HL)			; E (OUT) nubmer of bytes in switch
+;
+	LD	HL,CB_SWITCHES		; BASE ADDRESS OF SHADDOW DATA
+	LD	A,D			; Add The offset to the address
+	CALL	ADDHLA			; Final address of Switch Data
+;
+	XOR	A			; signal success
+	RET
+SWITCH_RES1:
+	OR	$FF			; signal failure
+	RET
+;
+; Switch number maps drectly into the HCB data, so to account
+; for double bytes words, we need a table (loopkup)
+; to defines how to map Applicability of Each Swicth Number
+; 0->Cant be Used; 1->Single Byte Value; 2->Double Byte Value
+;
+SWITCH_TAB:
+	.DB	0	; Switch 0 is header, cant be used
+	.DB	2	; Switch 1 - (WORD)
+	.DB	0	; Switch (byte 2) of prior word, not used
+	.DB	1	; Switch 3 - (BYTE)
+	.DB	0	; Last byte is checksum, cant be used
+SWITCH_LEN	.EQU	$ - SWITCH_TAB - 2
 ;
 ; SET BOOT INFORMATION
 ;   ON ENTRY:
@@ -7398,6 +7564,128 @@ Z2DMAADR2:
 	RET
 ;
 #ENDIF
+;
+;--------------------------------------------------------------------------------------------------
+; ROUTINES FOR NON VOLITILE (NVRAM) SWITCHES
+;--------------------------------------------------------------------------------------------------
+;
+; Return Status
+;  A=0   if no NVRAM exists. with NZ flag set
+;  A=1   if NVRAM is present. with Z flag set
+;  A='W' if NVRAM is fullly inited. with Z flag set
+; Note the NZ flag can be used to detect and return an error condition
+;
+NVSW_STATUS:
+	LD	A,(CB_SWITCHES)		; the status byte
+	LD	B,A			; save it
+	AND	1			; applies to 'W' and $01 status, -> 1
+	CP	1			; set NZ based on A = 1
+	LD	A,B			; return the
+	RET
+;
+; RESET CONTENTS OF NVRAM, STORING INTO
+; RETURN NONZERO IF WRITTEN - ZERO IF NOT WRITTEN
+;
+NVSW_RESET:
+	CALL	NVSW_DEFAULTS		; copy defaults into HCB
+	; Fall Through and Update (write) status
+	; JP	NVSW_UPDATE
+;
+; UPDATE HBIOS SHADOW TO NVRAM, AFTER SETTING HBIOS VALUE
+; RETURN NONZERO IF WRITTEN - ZERO IF NOT WRITTEN
+;
+NVSW_UPDATE:
+	CALL	NVSW_CHECKSUM		; CALC checksum into A
+	LD	(CB_SWITCHCK),A		; store checksum in hcb
+	CALL	NVSW_WRITE		; write the bytes to nvr
+	RET	Z			; Successful write, return
+	; write failed for some reason ???
+	LD	A,1
+	LD	(CB_SWITCHES),A		; ensure hcb signature=1
+	OR	$FF			; failure
+	RET				; return NZ flag
+;
+; PERFORM CHECKSUM CALC OF DATA IN HCB
+; RETURN A REGISTER -> CONTAINING THE CHECKSUM
+;
+NVSW_CHECKSUM:
+	XOR	A
+	LD	B,NVSW_SIZE		; NUMBER OF BYTES TO CHECK
+	LD	HL,CB_SWITCHES		; First Byte in HBIOS (HCB)
+NVSW_CHECKSM1:
+	XOR	(HL)			; XOR The Byte
+	INC	HL			; HL address
+	DJNZ	NVSW_CHECKSM1		; LOOP
+	XOR	RMJ << 4 | RMN		; FIRST BYTE OF VERSION INFO
+	XOR	RUP << 4 | RTP		; SECOND BYTE OF VERSION INFO
+	RET
+;
+; COPY DEFAULTS INTO HCB
+;
+NVSW_DEFAULTS:
+	LD	HL,NVSW_DEFAULT		; Copy default bytes from
+	LD	DE,CB_SWITCHES		; to hbios HCB location
+	LD	BC,NVSW_SIZE		; number of bytes top copy
+	LDIR		 		; copy bytes
+	RET
+;
+; LOAD BYTES FROM NVR - INTO HBIOS DCB
+; RETURN ZERO IF READ SUCCESS, NON-ZERO IF CANT READ
+;
+NVSW_READ:
+	LD	B,NVSW_SIZE + 1		; NUMBER OF BYTES, + 1 for CHECKSUM
+	LD	C,0			; FIRST Byte address in RTC
+	LD	HL,CB_SWITCHES		; First Byte in HBIOS (HCB)
+NVSW_READ1:
+	PUSH	HL			; SAVE ADDRESS
+	PUSH 	BC			; Save Loop counter
+	LD	B,BF_RTCGETBYT		; GET RTC BYTE (at a time), requires loop
+	CALL	RTC_DISPATCH		; CALL RTC
+	POP	BC			; Restore Loop
+	POP	HL			; restore Block pointer
+	RET	NZ			; ERROR JUST RETURN
+	LD	(HL),E			; store IT
+	INC	C			; RTC Byte address
+	INC	HL			; HL address
+	DJNZ	NVSW_READ1		; LOOP to the next byte
+NVSW_READ2:
+	LD	A,(CB_SWITCHES)		; FIRST BYTE
+	CP	'W'			; MUST BE 'W'
+	RET				; ZERO IF OK, NON-ZERO IF ISSUE
+;
+; SAVE BYTES FROM HBIOS DCB - INTO NVR
+; RETURN ZERO IF SUCCESS, NON-ZERO IF CANT WRITE
+;
+NVSW_WRITE:
+	LD	B,NVSW_SIZE + 1		; NUMBER OF BYTES, + 1 for CHECKSUM
+	LD	C,0			; FIRST Byte address in RTC
+	LD	HL,CB_SWITCHES		; First Byte in HBIOS (HCB)
+NVSW_WRITE1:
+	PUSH	HL			; SAVE ADDRESS
+	PUSH 	BC			; Save Loop counter
+	LD	E,(HL)			; Value to Write
+	LD	B,BF_RTCSETBYT		; SET RTC BYTE
+	CALL	RTC_DISPATCH		; CALL RTC
+	POP	BC			; Restore Loop
+	POP	HL			; restore Block pointer
+	RET	NZ			; ERROR JUST RETURN
+	INC	C			; RTC Byte address
+	INC	HL			; HL address
+	DJNZ	NVSW_WRITE1		; LOOP, One Byte at a Time
+NVSW_WRITE2:
+	XOR	A			; SUCCESS
+	RET				; ZERO IF OK, NON-ZERO IF ISSUE
+;
+; DEFAULT VALUES FOR NVRAM, USED TO RESET NVR
+;
+NVSW_DEFAULT:
+	.DB	'W'			; Signature Byte
+	.DB	'H'			; Default Boot - Rom Application [H]elp
+	.DB	DBOOT_ROM		; Default Boot - ROM Application
+	.DB	0			; Auto Boot - NO auto boot
+	; Configure above byte from (BOOT_TIMEOUT != -1)
+; SIZE OF NVR BYTES
+NVSW_SIZE	.EQU 	$ - NVSW_DEFAULT
 ;
 HB_INTFUNC_END	.EQU	$
 ;

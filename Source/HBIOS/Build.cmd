@@ -90,6 +90,11 @@ call :asm updater || exit /b
 call :asm imgpad2 || exit /b
 
 ::
+:: Build components in Sub folders
+::
+pushd SysConfig && call Build || exit /b & popd
+
+::
 :: Create additional ROM bank images by assembling components into
 :: 32K chunks which can be concatenated later.  Note that
 :: osimg_small is a special case because it is 20K in size.  This
@@ -97,7 +102,7 @@ call :asm imgpad2 || exit /b
 ::
 
 copy /b romldr.bin + dbgmon.bin + ..\zsdos\zsys_wbw.bin + ..\cpm22\cpm_wbw.bin osimg.bin || exit /b
-copy /b ..\Forth\camel80.bin + nascom.bin + ..\tastybasic\src\tastybasic.bin + game.bin + eastaegg.bin + netboot.mod + updater.bin + usrrom.bin osimg1.bin || exit /b
+copy /b ..\Forth\camel80.bin + nascom.bin + ..\tastybasic\src\tastybasic.bin + game.bin + eastaegg.bin + netboot.mod + updater.bin + SysConfig/sysconfig.bin usrrom.bin osimg1.bin || exit /b
 
 if %Platform%==S100 (
     zxcc slr180 -s100mon/fh
