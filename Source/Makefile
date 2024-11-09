@@ -7,7 +7,7 @@
 .ONESHELL:
 .SHELLFLAGS = -ce
 
-all: prop shared bp images rom zrc z1rcc zzrcc zrc512 fz80
+all: prop shared bp rom images zrc z1rcc zzrcc zrc512 fz80
 
 doc:
 	$(MAKE) --directory Doc $(ACTION)

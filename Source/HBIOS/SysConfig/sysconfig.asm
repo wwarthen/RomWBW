@@ -125,13 +125,13 @@ initz:
 ;
 err_una:
 	ld	de,str_err_una
-	jr	err_ret
+	jp	err_ret
 err_inv:
 	ld	de,str_err_inv
-	jr	err_ret
+	jp	err_ret
 err_ver:
 	ld	de,str_err_ver
-	jr	err_ret
+	jp	err_ret
 ;
 str_err_una		.db	"  ERROR: UNA not supported by application",0
 str_err_inv		.db	"  ERROR: Invalid BIOS (signature missing)",0
@@ -377,8 +377,8 @@ MSG_DEFBOOT	.DB	CR,LF, "  [DB] / Default Boot: ",0
 MSG_DISK	.DB	"Disk (Unit = ",0
 MSG_DISK2	.DB	", Slice = ",0
 MSG_DISK3	.DB	")",0
-MSG_ROM		.DB	"ROM (App = '",0
-MSG_ROM2	.DB	"')",0
+MSG_ROM		.DB	"ROM (App = \"",0
+MSG_ROM2	.DB	"\")",0
 ;
 MSG_DEFB_H	.DB	"\r\nDefault Boot - Disk or Rom App (DB):\r\n"
 		.DB	"  DB [R|D],[{romapp}|{unit},{slice}]\r\n"

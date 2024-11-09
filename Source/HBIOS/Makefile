@@ -3,10 +3,11 @@ MOREDIFF = game.bin hbios_rom.bin nascom.bin usrrom.bin \
 	dbgmon.bin hbios_app.bin imgpad2.bin osimg1.bin osimg2.bin romldr.bin \
 	eastaegg.bin hbios_img.bin osimg.bin game.bin updater.bin usrrom.bin
 
-SUBDIRS = SysConfig
+# SUBDIRS = SysConfig
 DEST = ../../Binary
 TOOLS =../../Tools
-OTHERS =  *.img *.rom *.com *.upd *.bin *.hex cpm.sys zsys.sys Build.inc font*.asm *.dat hbios_env.sh
+OTHERS =  *.img *.rom *.com *.upd *.bin *.hex cpm.sys zsys.sys Build.inc font*.asm *.dat hbios_env.sh \
+	SysConfig/*.com SysConfig/*.bin Sysconfig/*.lst
 
 # DIFFMAKE = 1
 
@@ -88,13 +89,16 @@ $(OBJECTS) : $(ROMDEPS)
 		fi \
 	fi
 
-prereq: $(FONTS) camel80.bin tastybasic.bin
+prereq: $(FONTS) camel80.bin tastybasic.bin syscon
 
 font%.asm:
 	cp ../Fonts/$@ .
 
 camel80.bin:
 	cp ../Forth/$@ .
+
+syscon:
+	$(MAKE) --directory SysConfig
 
 s100mon.bin:
 	$(ZXCC) $(CPM)/SLR180 -s100mon/FH

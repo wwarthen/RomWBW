@@ -5,8 +5,8 @@ setlocal
 call BuildProp || exit /b
 call BuildShared || exit /b
 call BuildBP || exit /b
-call BuildImages || exit /b
 call BuildROM %* || exit /b
+call BuildImages || exit /b
 call BuildZRC || exit /b
 call BuildZ1RCC || exit /b
 call BuildZZRCC || exit /b

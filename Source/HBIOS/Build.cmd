@@ -102,7 +102,7 @@ pushd SysConfig && call Build || exit /b & popd
 ::
 
 copy /b romldr.bin + dbgmon.bin + ..\zsdos\zsys_wbw.bin + ..\cpm22\cpm_wbw.bin osimg.bin || exit /b
-copy /b ..\Forth\camel80.bin + nascom.bin + ..\tastybasic\src\tastybasic.bin + game.bin + eastaegg.bin + netboot.mod + updater.bin + SysConfig/sysconfig.bin usrrom.bin osimg1.bin || exit /b
+copy /b ..\Forth\camel80.bin + nascom.bin + ..\tastybasic\src\tastybasic.bin + game.bin + eastaegg.bin + netboot.mod + updater.bin + SysConfig\sysconfig.bin + usrrom.bin osimg1.bin || exit /b
 
 if %Platform%==S100 (
     zxcc slr180 -s100mon/fh

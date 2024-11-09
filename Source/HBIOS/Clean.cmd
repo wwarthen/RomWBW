@@ -16,3 +16,5 @@ if exist build.inc del build.inc
 if exist font*.asm del font*.asm
 if exist build_env.cmd del build_env.cmd
 if exist hbios_env.cmd del hbios_env.cmd
+
+pushd SysConfig && call Clean & popd
