@@ -3,5 +3,5 @@ rmn	equ	5
 rup	equ	0
 rtp	equ	0
 biosver	macro
-	db	"3.5.0-dev.94"
+	db	"3.5.0-dev.95"
 	endm
