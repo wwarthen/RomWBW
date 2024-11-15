@@ -152,6 +152,7 @@ main:
 	call	prtstr
 ;
 	CALL	PRT_STATUS		; PRINT STATUS
+	RET	NZ			; status failed complely, SO EXIT
 	ld	de,MSG_MENU		; Print the Main Menu
 	CALL	prtstr
 ;
@@ -275,9 +276,20 @@ PRT_STATUS:
 ;
 	CALL	prtcrlf
 	RET
+;
+; Error status handling
+;
 STAT_NOTFOUND:
+	CP	0			; if status is ZERO then this is fatal
+	JR	Z,STAT_NOTFOUND1
 	LD	de,MSG_NOTF
 	CALL	prtstr
+	XOR	A			; success
+	RET
+STAT_NOTFOUND1:
+	LD	de,MSG_NONVR		; print failure status
+	CALL	prtstr
+	OR	$FF			; failure
 	RET
 ;
 ; ======================================================================
@@ -500,6 +512,7 @@ MSG_PROMPT:	.DB	"\r\n"
 		.DB	"$", 0
 MSG_STAT:	.DB	"\r\nCurrent Configuration: ",0
 MSG_NOTF:	.DB	"Config Not Found.\r\n",0
+MSG_NONVR:	.DB	"NVRAM Not Found. Exiting.\r\n",0
 MSG_QUESTION	.DB	"\r\n?\r\n",0
 ;
 ;MSG_PAK:	.DB	"\r\nPress Any Key ...",0

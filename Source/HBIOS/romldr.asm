@@ -249,13 +249,88 @@ nofp:
 ;
 #endif
 ;
+;=======================================================================
+; INITIALISE BOOT PROMPT (acmd_*) FROM CONFIG
+;=======================================================================
+#if (BIOS == BIOS_WBW)
+;
+; NVRAM AUTO BOOT CONFIGURATION
+;
+nvrswitch:
+	ld	bc,BC_SYSGET_SWITCH	; HBIOS SysGet NVRAM Switches
+	ld	D,$FF			; get NVR Status - Is NVRam initialised
+	rst	08
+	CP	'W'			; is NV RAM fully inited.
+	JR	NZ,nonvrswitch		; NOT So - Skip the int from nvram
+nvrsw_def:
+	;
+	call	nl			; display message to indicate switches found
+	ld	hl,str_nvswitches
+	call	pstr
+	;
+	ld	bc,BC_SYSGET_SWITCH	; HBIOS SysGet NVRAM Switches
+	ld	D,NVSW_DEFBOOT		; Read Default Boot (disk/Rom) switch
+	rst	08
+	LD	A,H
+	AND	DBOOT_ROM		; Get the Default Boot from ROM Flag
+	JR	NZ,nvrsw_rom		; IF Set as ROM App BOOT, otherwise Disk
+nvrsw_disk:
+	LD	A,H			; (H contains the Disk Unit 0-127)
+	LD	(bootunit),A		; copy the NVRam Unit and Slice
+	LD	A,L			; (L contains the boot slice 0-255)
+	LD	(bootslice),A		; directly into the selected boot
+	LD	L,'~'			; We use the "~" char to signal, DISK BOOT
+					; setting it a the auto cmd (string/char)
+nvrsw_rom:
+	LD	H,0			; Clear high orer byte, leaving L intact
+	LD	(acmd),HL		; Load the Character into auto command
+					; Thus (acma)   = L   (the boot character)
+					;      (acma+1) = H=0 (string terminator)
+nvrsw_auto:
+	ld	bc,BC_SYSGET_SWITCH	; HBIOS SysGet NVRAM Switches
+	ld	D,NVSW_AUTOBOOT		; GET Autoboot switch
+	rst	08
+	ld	A,L
+	AND	ABOOT_AUTO		; Get the autoboot flag
+	JR	Z,prompt		; not set, so directly prompt
+;
+	or	$FF			; auto cmd active value
+	ld	(acmd_act),a		; set the auto command active flag
+;
+	LD	A,L			; the low order byte from SWITCHES
+	AND	ABOOT_TIMEOUT		; Mask out the Timeout
+	LD	B,A			; timeout to high order B.C byte -> x 256
+	XOR	A
+	LD	C,A			; and clear low order C byte
+	SRL	B			; Shift 2 right by 2 bits -> /4
+	RR	C
+	SRL	B
+	RR	C			; BC should now contain timeout * 64
+	ld	(acmd_to),bc		; save auto cmd timeout 64ths of second
+;
+	JR	initautoboot		; init auto boot from NVRAM, ignore Build Config
+;
+nonvrswitch:
+	; no NVRAM switches found, or disabled, continue process from Buid Config
+#endif
+;
 #if (BOOT_TIMEOUT != -1)
+;
+; BUILD CONFIGURATION
+;
 	; Initialize auto command timeout downcounter
 	or	$FF			; auto cmd active value
 	ld	(acmd_act),a		; set flag
-	ld	bc,BOOT_TIMEOUT * 100	; hundredths of seconds
+	ld	bc,BOOT_TIMEOUT * 64	; 1/64's of a second
 	ld	(acmd_to),bc		; save auto cmd timeout
+	; fall through and initialise Auto boot.
+#endif
 ;
+;=======================================================================
+; INIT AUTO BOOT - If autoboot was detected.
+;=======================================================================
+;
+initautoboot:
 	; If timeout is zero, boot auto command immediately
 	ld	a,b			; check for
 	or	c			; ... zero
@@ -265,7 +340,10 @@ nofp:
 	call	pstr			; show it
 	call	autocmd			; handle w/o prompt
 	jr	reprompt		; restart w/ autocmd disable
-#endif
+;
+;=======================================================================
+; BOOT PROMPT
+;=======================================================================
 ;
 prompt:
 	ld	hl,reprompt		; adr of prompt restart routine
@@ -319,7 +397,6 @@ wtkey:
   #endif
 #endif
 ;
-#if (BOOT_TIMEOUT != -1)
 	; check for timeout and handle auto boot here
 	ld	a,(acmd_act)		; get auto cmd active flag
 	or	a			; set flags
@@ -330,9 +407,8 @@ wtkey:
 	jr	z,autocmd		; if so, handle it
 	dec	bc			; decrement
 	ld	(acmd_to),bc		; resave it
-	ld	de,625			; 16us * 625 = 10ms
-	call	vdelay			; 10ms delay
-#endif
+	ld	de,976			; 16us * 976 -> 1/64th of a second.
+	call	vdelay			; 15.6ms delay, 64 in 1 second
 ;
 	jr	wtkey			; loop
 ;
@@ -451,6 +527,9 @@ runcmd:
 	ld	a,(de)			; get character
 	call	upcase			; make upper case
 ;
+	; Auto Command (probably) from NVR default Disk Boot
+	CP	'~'			; We use the "~" char to signal, DISK
+	JP	Z,diskboot		; noting the - (bootunit) (bootslice) have inited.
 	; Attempt built-in commands
 	cp	'H'			; H = display help
 	jp	z,help			; if so, do it
@@ -2298,8 +2377,13 @@ str_err_api	.db	"Unexpected hardware BIOS API failure",0
 acmd		.db	BOOT_DEFAULT	; auto cmd string
 		.db	0
 acmd_len	.equ	$ - acmd	; len of auto cmd
-acmd_act	.db	$FF		; auto cmd active
-acmd_to		.dw	BOOT_TIMEOUT	; auto cmd timeout
+acmd_act	.dw	$00		; inactive by default
+
+#if (BOOT_TIMEOUT > 0)
+acmd_to		.dw	BOOT_TIMEOUT * 64 ; auto cmd timeout (1/64's of sec)
+#else
+acmd_to		.dw	BOOT_TIMEOUT	; auto cmd timeout -1 DISABLE, 0 IMMEDIATE
+#endif
 ;
 ;=======================================================================
 ; Strings
@@ -2490,6 +2574,7 @@ str_user	.db	"User App",0
 str_egg		.db	"",0
 str_net		.db	"Network Boot",0
 str_switches	.db	"FP Switches = 0x",0
+str_nvswitches	.db	"NV Switches Found",0
 newcon		.db	0
 newspeed	.db	0
 ;
