@@ -20,8 +20,8 @@
 ; Also Based on The Tasty Basic Configuration
 ; Utilitity function were also copied from RomLdr, Assign.
 ;
-#include "../../ver.inc"
-#include "../hbios.inc"
+#include "../ver.inc"
+#include "hbios.inc"
 ;
 ;=======================================================================
 ;
@@ -33,7 +33,7 @@ NVR_LOC		.equ	0100h
 #ifdef ROMWBW
 ;
 #define PLATFORM "ROMWBW"
-#include "../layout.inc"
+#include "layout.inc"
 #endif
 ;
 ;=======================================================================
@@ -275,6 +275,7 @@ PRT_STATUS:
 ; end individual stats
 ;
 	CALL	prtcrlf
+	XOR	A			; success
 	RET
 ;
 ; Error status handling
