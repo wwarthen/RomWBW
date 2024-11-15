@@ -1,10 +1,10 @@
 
 DELAY_FACTOR		.EQU	640
 
-CMD01_RD_USB_DATA0	.EQU	0x27	; Read data block from current USB interrupt endpoint buffer or host endpoint receive buffer
+CMD01_RD_USB_DATA0	.EQU	$27	; Read data block from current USB interrupt endpoint buffer or host endpoint receive buffer
 					; output: length, data stream
 
-CMD10_WR_HOST_DATA	.EQU	0x2C 	; Write a data block to the send buffer of the USB host endpoint
+CMD10_WR_HOST_DATA	.EQU	$2C 	; Write a data block to the send buffer of the USB host endpoint
 					; input: length, data stream
 
 CH_CMD_RD_USB_DATA0	.EQU	CMD01_RD_USB_DATA0
@@ -36,26 +36,25 @@ keep_waiting:
 	or	l
 	jr	nz, _ch_wait_int_and_get_status
 
-	CALL	_delay
+	call	_delay
 	ld	a, $FF
-	in	a, (_CH376_COMMAND_PORT & 0xFF)
-	bit	4, a		; _CH376_COMMAND_PORT & PARA_STATE_BUSY
+	in	a, (_CH376_COMMAND_PORT & $FF)
+	bit	4, a			; _CH376_COMMAND_PORT & PARA_STATE_BUSY
 
-	ld	l, 0x0C 	; USB_ERR_CH376_BLOCKED;
+	ld	l, $0C 			; USB_ERR_CH376_BLOCKED;
 	ret	nz
 
-	ld	l, 0x0D 	; USB_ERR_CH376_TIMEOUT
+	ld	l, $0D 			; USB_ERR_CH376_TIMEOUT
 	ret
 
 ; uint8_t ch_read_data(uint8_t *buffer) __sdcccall(1);
 _ch_read_data:
-	; ch_command(CH_CMD_RD_USB_DATA0);
 	push	hl
 	ld	l, CH_CMD_RD_USB_DATA0
 	call	_ch_command
 	pop	hl
 
-	CALL	_delay
+	call	_delay
 	ld	bc, _CH376_DATA_PORT
 	in	a, (c)
 
@@ -65,7 +64,7 @@ _ch_read_data:
 	ld	e, a
 	push	af
 read_block:
-	CALL	_delay
+	call	_delay
 	in	a, (c)
 	ld	(hl), a
 	inc	hl
@@ -77,7 +76,6 @@ read_block:
 
 ;const uint8_t *ch_write_data(const uint8_t *buffer, uint8_t length)
 _ch_write_data:
-;libraries/usb/ch376.c:125: ch_command(CH_CMD_WR_HOST_DATA);
 	ld	l, CH_CMD_WR_HOST_DATA
 	call	_ch_command
 

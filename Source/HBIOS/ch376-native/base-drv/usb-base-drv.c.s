@@ -1,5 +1,5 @@
 ;
-; Generated from source-doc/base-drv/./usb-base-drv.c.asm -- not to be modify directly
+; Generated from source-doc/base-drv/usb-base-drv.c.asm -- not to be modify directly
 ;
 ; 
 ;--------------------------------------------------------
@@ -48,24 +48,22 @@ _USB_MODULE_LEDS	.EQU	0xff8a
 ;--------------------------------------------------------
 ; code
 ;--------------------------------------------------------
-;source-doc/base-drv/./usb-base-drv.c:6: uint8_t chnative_seek(const uint32_t lba, device_config_storage *const storage_device) __sdcccall(1) {
+;source-doc/base-drv/usb-base-drv.c:6: uint8_t chnative_seek(const uint32_t lba, device_config_storage *const storage_device) __sdcccall(1) {
 ; ---------------------------------
 ; Function chnative_seek
 ; ---------------------------------
 _chnative_seek:
 	push	ix
+;source-doc/base-drv/usb-base-drv.c:7: storage_device->current_lba = lba;
 	ld	ix,0
 	add	ix,sp
-	push	af
-	ld	c, l
-	ld	b, h
-;source-doc/base-drv/./usb-base-drv.c:7: storage_device->current_lba = lba;
-	ld	a,(ix+4)
-	ld	(ix-2),a
-	ld	a,(ix+5)
-	ld	(ix-1),a
+	ld	c,(ix+4)
+	ld	b,(ix+5)
+	push	bc
 	ld	a,(ix-2)
 	add	a,0x0c
+	ld	c,l
+	ld	b,h
 	ld	l, a
 	ld	a,(ix-1)
 	adc	a,0x00
@@ -77,9 +75,9 @@ _chnative_seek:
 	ld	(hl), c
 	inc	hl
 	ld	(hl), b
-;source-doc/base-drv/./usb-base-drv.c:8: return 0;
+;source-doc/base-drv/usb-base-drv.c:8: return 0;
 	xor	a
-;source-doc/base-drv/./usb-base-drv.c:9: }
+;source-doc/base-drv/usb-base-drv.c:9: }
 	ld	sp, ix
 	pop	ix
 	pop	hl

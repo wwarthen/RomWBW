@@ -1,5 +1,5 @@
 ;
-; Generated from source-doc/base-drv/./critical-section.c.asm -- not to be modify directly
+; Generated from source-doc/base-drv/critical-section.c.asm -- not to be modify directly
 ;
 ; 
 ;--------------------------------------------------------
@@ -47,7 +47,7 @@ _in_critical_usb_section:
 ;--------------------------------------------------------
 ; code
 ;--------------------------------------------------------
-;source-doc/base-drv/./critical-section.c:6: void critical_begin() { in_critical_usb_section++; }
+;source-doc/base-drv/critical-section.c:6: void critical_begin() { in_critical_usb_section++; }
 ; ---------------------------------
 ; Function critical_begin
 ; ---------------------------------
@@ -55,7 +55,7 @@ _critical_begin:
 	ld	hl,_in_critical_usb_section
 	inc	(hl)
 	ret
-;source-doc/base-drv/./critical-section.c:8: void critical_end() { in_critical_usb_section--; }
+;source-doc/base-drv/critical-section.c:8: void critical_end() { in_critical_usb_section--; }
 ; ---------------------------------
 ; Function critical_end
 ; ---------------------------------

@@ -1,5 +1,5 @@
 ;
-; Generated from source-doc/keyboard/./class_hid_keyboard.c.asm -- not to be modify directly
+; Generated from source-doc/keyboard/class_hid_keyboard.c.asm -- not to be modify directly
 ;
 ; 
 ;--------------------------------------------------------
@@ -49,39 +49,39 @@ _scancodes_table:
 ;--------------------------------------------------------
 ; code
 ;--------------------------------------------------------
-;source-doc/keyboard/./class_hid_keyboard.c:335: char scancode_to_char(const uint8_t modifier_keys, const uint8_t code) __sdcccall(1) {
+;source-doc/keyboard/class_hid_keyboard.c:335: char scancode_to_char(const uint8_t modifier_keys, const uint8_t code) __sdcccall(1) {
 ; ---------------------------------
 ; Function scancode_to_char
 ; ---------------------------------
 _scancode_to_char:
 	ld	c, a
-	ld	e, l
-;source-doc/keyboard/./class_hid_keyboard.c:336: if (code >= 0x80)
-	ld	a, e
+;source-doc/keyboard/class_hid_keyboard.c:336: if (code >= 0x80)
+	ld	a,l
+	ld	e,l
 	sub	0x80
 	jr	C,l_scancode_to_char_00102
-;source-doc/keyboard/./class_hid_keyboard.c:337: return 0;
+;source-doc/keyboard/class_hid_keyboard.c:337: return 0;
 	xor	a
 	jr	l_scancode_to_char_00105
 l_scancode_to_char_00102:
-;source-doc/keyboard/./class_hid_keyboard.c:339: if (modifier_keys & (KEY_MOD_LSHIFT | KEY_MOD_RSHIFT))
+;source-doc/keyboard/class_hid_keyboard.c:339: if (modifier_keys & (KEY_MOD_LSHIFT | KEY_MOD_RSHIFT))
 	ld	a, c
 	and	0x22
 	jr	Z,l_scancode_to_char_00104
-;source-doc/keyboard/./class_hid_keyboard.c:340: return scancodes_shift_table[code];
-	ld	hl,_scancodes_shift_table
+;source-doc/keyboard/class_hid_keyboard.c:340: return scancodes_shift_table[code];
 	ld	d,0x00
+	ld	hl,_scancodes_shift_table
 	add	hl, de
 	ld	a, (hl)
 	jr	l_scancode_to_char_00105
 l_scancode_to_char_00104:
-;source-doc/keyboard/./class_hid_keyboard.c:342: return scancodes_table[code];
-	ld	hl,_scancodes_table
+;source-doc/keyboard/class_hid_keyboard.c:342: return scancodes_table[code];
 	ld	d,0x00
+	ld	hl,_scancodes_table
 	add	hl, de
 	ld	a, (hl)
 l_scancode_to_char_00105:
-;source-doc/keyboard/./class_hid_keyboard.c:343: }
+;source-doc/keyboard/class_hid_keyboard.c:343: }
 	ret
 _scancodes_shift_table:
 	DEFB +0x00

@@ -1,5 +1,5 @@
 ;
-; Generated from source-doc/base-drv/./work-area.c.asm -- not to be modify directly
+; Generated from source-doc/base-drv/work-area.c.asm -- not to be modify directly
 ;
 ; 
 ;--------------------------------------------------------
