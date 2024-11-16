@@ -8,7 +8,7 @@ ZCCRELFLAGS := -SO3 --max-allocs-per-node600000 --allow-unsafe-read --opt-code-s
 
 SRC := ./source-doc/
 LIBS := -I./$(SRC)base-drv/
-ZCCFLAGS := +z80 -vn -startup=0 -clib=sdcc_iy -crt0 $(SRC)crt.asm -compiler=sdcc -Cs--std=c23 -Cs--Werror  $(ZCCRELFLAGS) $(LIBS)
+ZCCFLAGS := +z80 -vn -startup=0 -clib=sdcc_iy  -compiler=sdcc -Cs--std=c23 -Cs--Werror  $(ZCCRELFLAGS) $(LIBS)
 
 ZCC_PATH := $(shell command -v zcc)
 ZCC := $(shell command -v zcc >/dev/null 2>&1 && echo zcc || echo 'docker run -w /host/${PWD} -v /:/host/ -u $(shell id -u ${USER}):$(shell id -g ${USER}) -t z88dk/z88dk zcc')
@@ -24,10 +24,14 @@ ASSDIR := ./
 all: $(ASSDIR)base-drv.s $(ASSDIR)scsi-drv.s $(ASSDIR)ufi-drv.s $(ASSDIR)keyboard.s
 
 clean:
-	@rm -rf base-drv
-	rm -rf scsi-drv
-	rm -rf ufi-drv
-	rm -rf keyboard
+	@rm -rf base-drv/*.s
+	rm -rf base-drv/*.asm
+	rm -rf scsi-drv/*.s
+	rm -rf scsi-drv/*.asm
+	rm -rf ufi-drv/*.s
+	rm -rf ufi-drv/*.asm
+	rm -rf keyboard/*.s
+	rm -rf keyboard/*.asm
 	rm ufi-drv.s
 	rm scsi-drv.s
 	rm base-drv.s
@@ -38,18 +42,11 @@ $(ASSDIR)%.c.s: $(ASSDIR)%.c.asm
 	echo "Converting $< to $@"
 	${SRC}convert-for-uz80as.sh $< $@
 
-$(ASSDIR)%.s: $(SRC)%.asm
-	@mkdir -p $(dir $@)
-	cp $< $@
-	sed -i "1i\;\r\n; Generated from $< -- not to be modify directly\r\n;\r\n; " $@
-
 define compile
 	@mkdir -p $(dir $@)
 	$(ZCC) $(ZCCFLAGS) --c-code-in-asm --assemble-only $< -o $@
 	echo "Compiled $(notdir $@) from $(notdir $<)"
 endef
-
-ZSDCPP_FLAGS= -I"${ZCCCFG}../../include/_DEVELOPMENT/sdcc" $(LIBS)
 
 define build_subsystem =
 $$(ASSDIR)$(1).s:
