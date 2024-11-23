@@ -201,3 +201,9 @@ Source/Images/hd1k_msxroms1.img
 Source/Images/hd1k_msxroms2.img
 Source/Images/hd512_msxroms1.img
 Source/Images/hd512_msxroms2.img
+Source/Images/fd144_z3plus.img
+Source/Images/hd1k_z3plus.img
+Source/Images/hd512_z3plus.img
+
+Source/Images/*.cat
+Source/RomDsk/*.cat
