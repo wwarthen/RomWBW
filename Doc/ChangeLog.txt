@@ -47,7 +47,7 @@ Version 3.5
 - MAP: Significant improvement in Disk Catalog document
 - MAP: Added Disk Image for the Z3PLUS (Z-System for CP/M-Plus) os.
 - H?H: Fix XModem 12.3 WRERR to put CAN char in proper register to send.
-- MAP: Initial NVRAM configuration infrastructure
+- MAP: Initial NVRAM configuration infrastructure, and boot device selection.
 
 Version 3.4
 -----------

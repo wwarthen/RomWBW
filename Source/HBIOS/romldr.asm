@@ -2504,8 +2504,8 @@ ra_ent		.equ	12
 #defcont	.dw	p8
 ;
 ; Note: The formatting of the following is critical. TASM does not pass
-; macro arguments well. Ensure std.asm holds the definitions for *_LOC,
-; *_SIZ *_END and any code generated which does not include std.asm is
+; macro arguments well. Ensure LAYOUT.INC holds the definitions for *_LOC,
+; *_SIZ *_END and any code generated which does not include LAYOUT.INC is
 ; synced.
 ;
 ; Note: The loadable ROM images are placed in ROM banks BID_IMG0 and
