@@ -1,21 +1,32 @@
 @echo off
 setlocal
 
-if exist *.bin del *.bin
-if exist *.com del *.com
-if exist *.lst del *.lst
-if exist *.hex del *.hex
-if exist *.prn del *.prn
+call :clean syscopy || exit /b
+call :clean assign || exit /b
+call :clean format || exit /b
+call :clean talk || exit /b
+call :clean mode || exit /b
+call :clean rtc || exit /b
+call :clean timer || exit /b
+call :clean sysgen || exit /b
+call :clean XM || exit /b
+call :clean FDU || exit /b
+call :clean Tune || exit /b
+call :clean FAT || exit /b
+call :clean Test || exit /b
+call :clean ZMP || exit /b
+call :clean ZMD || exit /b
+call :clean Dev || exit /b
+call :clean VGM || exit /b
+call :clean cpuspd || exit /b
+call :clean reboot || exit /b
+call :clean Survey || exit /b
+call :clean HTalk || exit /b
+call :clean BBCBASIC || exit /b
+call :clean copysl || exit /b
 
-pushd XM && call Clean || exit /b 1 & popd
-pushd FDU && call Clean || exit /b 1 & popd
-pushd Tune && call Clean || exit /b 1 & popd
-pushd FAT && call Clean || exit /b 1 & popd
-pushd Test && call Clean || exit /b 1 & popd
-pushd ZMP && call Clean || exit /b 1 & popd
-pushd ZMD && call Clean || exit /b 1 & popd
-pushd Dev && call Clean || exit /b 1 & popd
-pushd VGM && call Clean || exit /b 1 & popd
-pushd cpuspd && call Clean || exit /b 1 & popd
-pushd Survey && call Clean || exit /b 1 & popd
-pushd HTalk && call Clean || exit /b 1 & popd
+goto :eof
+
+:clean
+pushd %1 && call Clean || exit /b & popd
+goto :eof

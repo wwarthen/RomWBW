@@ -4,7 +4,7 @@ ZSDOS Adaptation Notes for RomWBW
 Wayne Warthen
 wwarthen@gmail.com
 
-This file is a log of the work done to adapt the ZSDOS distribution to the N8VEM platforms under RomWBW.  I strongly recommend reviewing the zsdos.pdf file in the Doc directory.
+This file is a log of the work done to adapt the ZSDOS distribution to the N8VEM platforms under RomWBW.  I strongly recommend reviewing the zsdos.pdf file in the Doc/CPM directory.
 
 The starting point was the general public release of ZSDOS that is generally available.  The first line of the README file is "ZSDOS-GP.  General Public Release of the ZSDOS 1.x Operating System."
 
@@ -20,7 +20,7 @@ Beyond the construction and integration of the actual DOS itself, the majority o
 
 The remainder of this document details the changes I made as I went along.  In all cases, my goal was to keep the result as close to the original distribution as possible.  I started by copying all of the files from the distribution (contained in zsdos2.zip) into Support\ZSDOS.  From there I tested, modified, updated, and customized as documented below.  Finally, I cherry picked files that made sense to include on the ZSystem ROM disks.
 
-1. CLOCKS.DAT has been updated to include the RomWBW clock driver, HBCLK.  I have also added the SIMHCLOK clock driver.
+1. CLOCKS.DAT has been updated to include the RomWBW clock driver, WBWCLK.  I have also added the SIMHCLOK clock driver.
 
 2. STAMPS.DAT has been replaced with an updated version.  The update was called STAMPS11.DAT and was found on the Walnut Creek CP/M CDROM.  The original version has a bug that prevents RSX (resident system extension) mode to load properly.
 

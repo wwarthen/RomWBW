@@ -72,7 +72,7 @@ copy ..\Fonts\font*.asm . || exit /b
 
 tasm -t%CPUType% -g3 -dROMBOOT hbios.asm hbios_rom.bin hbios_rom.lst || exit /b
 tasm -t%CPUType% -g3 -dAPPBOOT hbios.asm hbios_app.bin hbios_app.lst || exit /b
-tasm -t%CPUType% -g3 -dIMGBOOT hbios.asm hbios_img.bin hbios_img.lst || exit /b
+::tasm -t%CPUType% -g3 -dIMGBOOT hbios.asm hbios_img.bin hbios_img.lst || exit /b
 
 ::
 :: Build ROM Components
@@ -90,6 +90,11 @@ call :asm updater || exit /b
 call :asm imgpad2 || exit /b
 
 ::
+:: Build components in Sub folders
+::
+pushd SysConfig && call Build || exit /b & popd
+
+::
 :: Create additional ROM bank images by assembling components into
 :: 32K chunks which can be concatenated later.  Note that
 :: osimg_small is a special case because it is 20K in size.  This
@@ -97,7 +102,7 @@ call :asm imgpad2 || exit /b
 ::
 
 copy /b romldr.bin + dbgmon.bin + ..\zsdos\zsys_wbw.bin + ..\cpm22\cpm_wbw.bin osimg.bin || exit /b
-copy /b ..\Forth\camel80.bin + nascom.bin + ..\tastybasic\src\tastybasic.bin + game.bin + eastaegg.bin + netboot.mod + updater.bin + usrrom.bin osimg1.bin || exit /b
+copy /b ..\Forth\camel80.bin + nascom.bin + ..\tastybasic\src\tastybasic.bin + game.bin + eastaegg.bin + netboot.mod + updater.bin + SysConfig\sysconfig.bin + usrrom.bin osimg1.bin || exit /b
 
 if %Platform%==S100 (
     zxcc slr180 -s100mon/fh
@@ -204,45 +209,45 @@ goto :eof
 :dist
 
 call Build SBC std || exit /b
-call Build SBC simh || exit /b
+call Build SBC simh_std || exit /b
 call Build MBC std || exit /b
 call Build ZETA std || exit /b
 call Build ZETA2 std || exit /b
 call Build N8 std || exit /b
 call Build MK4 std || exit /b
 call Build RCZ80 std || exit /b
-call Build RCZ80 kio || exit /b
-call Build RCZ80 easy || exit /b
-call Build RCZ80 tiny || exit /b
-call Build RCZ80 skz || exit /b
-:: call Build RCZ80 mt || exit /b
-:: call Build RCZ80 duart || exit /b
-call Build RCZ80 zrc || exit /b
-call Build RCZ80 zrc_ram || exit /b
-call Build RCZ80 zrc512 || exit /b
-call Build RCZ180 ext || exit /b
-call Build RCZ180 nat || exit /b
-call Build RCZ180 z1rcc || exit /b
-call Build RCZ280 ext || exit /b
-call Build RCZ280 nat || exit /b
-call Build RCZ280 zz80mb || exit /b
-call Build RCZ280 zzrcc || exit /b
-call Build RCZ280 zzrcc_ram || exit /b
-call Build SCZ180 sc126 || exit /b
-call Build SCZ180 sc130 || exit /b
-call Build SCZ180 sc131 || exit /b
-call Build SCZ180 sc140 || exit /b
-call Build SCZ180 sc503 || exit /b
-call Build SCZ180 sc700 || exit /b
+call Build RCZ80 kio_std || exit /b
+call Build RCZ80 easy_std || exit /b
+call Build RCZ80 tiny_std || exit /b
+call Build RCZ80 skz_std || exit /b
+call Build RCZ80 zrc_std || exit /b
+call Build RCZ80 zrc_ram_std || exit /b
+call Build RCZ80 zrc512_std || exit /b
+call Build RCZ180 ext_std || exit /b
+call Build RCZ180 nat_std || exit /b
+call Build RCZ180 z1rcc_std || exit /b
+call Build RCZ280 ext_std || exit /b
+call Build RCZ280 nat_std || exit /b
+call Build RCZ280 zz80mb_std || exit /b
+call Build RCZ280 zzrcc_std || exit /b
+call Build RCZ280 zzrcc_ram_std || exit /b
+call Build SCZ180 sc126_std || exit /b
+call Build SCZ180 sc130_std || exit /b
+call Build SCZ180 sc131_std || exit /b
+call Build SCZ180 sc140_std || exit /b
+call Build SCZ180 sc503_std || exit /b
+call Build SCZ180 sc700_std || exit /b
+call Build GMZ180 std || exit /b
 call Build DYNO std || exit /b
-call Build UNA std || exit /b
 call Build RPH std || exit /b
 call Build Z80RETRO std || exit /b
 call Build S100 std || exit /b
 call Build DUO std || exit /b
 call Build HEATH std || exit /b
 call Build EPITX std || exit /b
-call Build NABU std || exit /b
 :: call Build MON std || exit /b
+call Build NABU std || exit /b
+call Build FZ80 std || exit /b
+call Build UNA std || exit /b
 
 goto :eof

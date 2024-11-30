@@ -12,6 +12,7 @@ d_cpm22/u0/*.* 0:
 #../../Binary/Apps/*.com 0:
 ../../Binary/Apps/assign.com 0:
 ../../Binary/Apps/cpuspd.com 0:
+../../Binary/Apps/reboot.com 0:
 ../../Binary/Apps/fat.com 0:
 ../../Binary/Apps/fdu.com 0:
 ../../Binary/Apps/fdu.doc 0:
@@ -37,17 +38,13 @@ d_cpm22/u0/*.* 0:
 ../../Binary/Apps/zmd.com 0:
 ../../Binary/Apps/vgmplay.com 0:
 #
-# Add Tune sample files
-#
-../../Binary/Apps/Tunes/*.pt? 3:
-../../Binary/Apps/Tunes/*.mym 3:
-../../Binary/Apps/Tunes/*.vgm 3:
-#
 # Add OS image
 #
 ../QPM/qpm_wbw.sys 0:qpm.sys
 #
 # Add Common Applications
 #
-Common/All/*.* 0:
+Common/All/u10/*.* 0:
+Common/All/u14/*.* 0:
+Common/All/u15/*.* 0:
 Common/CPM22/*.* 0:

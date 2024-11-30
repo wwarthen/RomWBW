@@ -3,7 +3,7 @@
 **RomWBW ReadMe** \
 Version 3.5 \
 Wayne Warthen  ([wwarthen@gmail.com](mailto:wwarthen@gmail.com)) \
-03 May 2024
+08 Nov 2024
 
 # Overview
 
@@ -112,22 +112,20 @@ functionality.
 
 Complete instructions for installation and operation of RomWBW are found
 in the [RomWBW User
-Guide](https://github.com/wwarthen/RomWBW/raw/dev/Doc/RomWBW%20User%20Guide.pdf).
+Guide](https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20User%20Guide.pdf).
 
 ## Documentation
 
 Documentation for RomWBW includes:
 
 - [RomWBW User
-  Guide](https://github.com/wwarthen/RomWBW/raw/dev/Doc/RomWBW%20User%20Guide.pdf)
+  Guide](https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20User%20Guide.pdf)
 - [RomWBW System
-  Guide](https://github.com/wwarthen/RomWBW/raw/dev/Doc/RomWBW%20System%20Guide.pdf)
+  Guide](https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20System%20Guide.pdf)
 - [RomWBW
-  Applications](https://github.com/wwarthen/RomWBW/raw/dev/Doc/RomWBW%20Applications.pdf)
-- [RomWBW ROM
-  Applications](https://github.com/wwarthen/RomWBW/raw/dev/Doc/RomWBW%20ROM%20Applications.pdf)
+  Applications](https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20Applications.pdf)
 - [RomWBW
-  Errata](https://github.com/wwarthen/RomWBW/raw/dev/Doc/RomWBW%20Errata.pdf)
+  Errata](https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20Errata.pdf)
 
 # Acknowledgments
 
@@ -188,8 +186,8 @@ let me know if I missed you!
 
 - Tasty Basic is a product of Dimitri Theulings.
 
-- Dean Netherton contributed the sound driver interface and the SN76489
-  sound driver.
+- Dean Netherton contributed eZ80 CPU support, the sound driver
+  interface, and the SN76489 sound driver.
 
 - The RomWBW Disk Catalog document was produced by Mykl Orders.
 
@@ -198,7 +196,11 @@ let me know if I missed you!
   Microsoft Fortran Compiler, and a Games compendium.
 
 - Martin R has provided substantial help reviewing and improving the
-  User Guide.
+  User Guide and Applications documents.
+
+- Mark Pruden has also contributed a great deal of content to the Disk
+  Catalog, User Guide as well as contributing the disk image for the
+  Z3PLUS operating system, and the COPYSL utility.
 
 - Jacques Pelletier has contributed the DS1501 RTC driver code.
 

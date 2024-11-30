@@ -42,7 +42,7 @@ RomWBW Distribution.
 
 The following CP/M 2.2 files were distributed by DRI with the operating
 system or as supplemental add-on programs.  They are documented in the
-"CP/M Manual.pdf" document in the Doc directory of the Rom WBW
+"CP/M Manual.pdf" document in the Doc/CPM directory of the Rom WBW
 distribution.  MAC, RMAC, ZSID are supplemental programs from DRI
 with separate standalone documentation which is not included in the
 RomWBW package (but easily found on the Internet via Google search).
@@ -134,7 +134,7 @@ LBREXT.COM - Extract file from .LBR libraries
 LBREXT36.CFG - ZCNFG configuration file for LBREXT
 ZXD.COM - Enhanced directory lister w/ date/time stamp support
 ZXD.CFG - ZCNFG configuration file for ZXD
-BBCBASIC.COM - BBC BASIC CP/M Version 3.00 by R.T.Russell
+BBCBASIC.COM - BBC BASIC CP/M Version by R.T.Russell
 BBCBASIC.TXT - Help file for BBC BASIC
 GENHEX.COM - Generates an Intel Hex file from the input file
 LS.COM - An alternative file listing to DIR

@@ -1,6 +1,7 @@
 $define{doc_ver}{Version 3.5}$
 $define{doc_product}{RomWBW}$
-$define{doc_root}{https://github.com/wwarthen/RomWBW/raw/dev/Doc}$
+$define{file_root}{https://github.com/wwarthen/RomWBW/raw/master}$
+$define{doc_root}{$file_root$/Doc}$
 $ifndef{doc_title}$ $define{doc_title}{Document Title}$ $endif$
 $ifndef{doc_author}$ $define{doc_author}{Wayne Warthen}$ $endif$
 $define{doc_date}{$date{%d %b %Y}$}$
@@ -10,7 +11,6 @@ $define{doc_orgurl}{www.retrobrewcomputers.org}$
 $define{doc_user}{[RomWBW User Guide]($doc_root$/RomWBW User Guide.pdf)}$
 $define{doc_sys}{[RomWBW System Guide]($doc_root$/RomWBW System Guide.pdf)}$
 $define{doc_apps}{[RomWBW Applications]($doc_root$/RomWBW Applications.pdf)}$
-$define{doc_romapps}{[RomWBW ROM Applications]($doc_root$/RomWBW ROM Applications.pdf)}$
 $define{doc_catalog}{[RomWBW Disk Catalog]($doc_root$/RomWBW Disk Catalog.pdf)}$
 $define{doc_errata}{[RomWBW Errata]($doc_root$/RomWBW Errata.pdf)}$
 

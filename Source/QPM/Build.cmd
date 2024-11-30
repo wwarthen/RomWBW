@@ -17,4 +17,8 @@ copy /b qcp27.dat + qdos27.dat + ..\cbios\cbios_una.bin qpm_una.bin || exit /b
 copy /b loader.bin + qpm_wbw.bin qpm_wbw.sys || exit /b
 copy /b loader.bin + qpm_una.bin qpm_una.sys || exit /b
 
+rem Copy OS files to Binary directory
+copy qpm_wbw.sys ..\..\Binary\QPM || exit /b
+copy qpm_una.sys ..\..\Binary\QPM || exit /b
+
 goto :eof

@@ -1,0 +1,284 @@
+;
+=======  S Á Ì É Á S   H E L P  =======
+
+   1‚  Generaì Information
+
+   2‚  Commanä Linå Syntax
+
+   3‚  Filå Mode
+
+   4‚  Ediô Mode
+
+   5‚  Indentation
+
+   6‚  Miscellany
+
+   7‚  Prinô
+
+   8‚  Messages
+
+   9‚  Installation
+:1
+GENERAÌ INFORMATION
+
+        SALIAS¬ Verion 1.6 - SCREEN ORIENTED ALIAS EDITOR
+               Roâ Friefelä    Septembeò 12¬ 1992
+
+
+SALIAÓ ió á fulì screeî editoò foò creatinç anä modifyinç  stanä-
+alonå  aliases®  Thió filå describeó thå uså oæ SALIAS®  Bå  surå 
+tï  reaä  ALIAS.NOÔ  oò ALIAS.HLĞ foò informatioî  oî  usinç  thå 
+executablå aliaó prograí writteî bù SALIAS.
+
+
+System Requirements:
+
+    TCAP support for CLS, EREOL, and addressable cursor.  The CRT 
+    in  use must have at least 79 columns by 6  lines.   Standout 
+    mode must not use  space on the screen.  The help screen will
+    not appear if the screen has less than 24 lines.
+
+Aliaó Module:
+
+    SALIAÓ  useó aî internaì aliaó templatå oæ thå ALIAS1µ  type¬ 
+    recentlù  writteî bù Joå Wright®  Yoõ caî  linë  SALIAS16.REÌ 
+    witè ne÷ aliaó moduleó aó theù arå developed®  Onå  importanô 
+    sidå  effectº   Oî exitinç SALIAS¬ GÏ wilì  no÷  executå  thå 
+    aliaó jusô writteî ratheò thaî rerunninç SALIAÓ aó yoõ  mighô 
+    expect®  
+
+
+SALIAS writes out a stand alone alias with its own internal alias 
+program.   It  does not simply edit the alias script.   In  other 
+words,  all  old aliases are converted to the  newer  program  by 
+SALIAS.
+Š
+     OLÄ ALIAS             SALIAS                 NE× ALIAS
+
+                      *------------------*
+*----------------*    |*----------------*|     *----------------*
+|*--------------*|    ||*--------------*||     |*--------------*|
+|| Alias Scripô ||--->|ü| Alias Scripô |||---->|ü Alias Script ||
+|*--------------*|    ||*--------------*||     |*--------------*|
+| Alias Program  |    || Alias Prograí  ||---->ü Alias Program  |
+*----------------*    |*----------------*|     *----------------*
+                      |  Alias Editor    |
+                      *------------------*
+
+
+USINÇ SALIAS16.REL
+
+SALIAS  1.6 is distributed in M-REL format so that it can  easily 
+be  linked with new or experimental alias modules (and  with  new 
+system  library  versions).  The alias actually written  to  disk 
+makes up the first few records of the program.  In this case,  it 
+is Joe Wright's alias module from ALIAS 1.5.
+
+           SLRNKP SALIAS/N,/A:100/J,ALIAS0,SALIAS16,/E
+                               or
+                   ZML SALIAS=ALIAS0,SALIAS16
+                               or
+                 LINK SALIAS=ALIAS0,SALIAS16[NR]
+
+SALIAS16.REL requests VLIB,Z3LIB, and SYSLIB.
+
+By  tradition,  the alias module is expected to be 8  records  in 
+length or less.  SALIAS and its installation program require only 
+that  the  alias module end on a record boundary and be  no  more 
+than  a few kbytes in size.
+
+SAINST.COM reads the entire SALIAS program, looks for a signature 
+string  at  SALIAS's installation table, then  writes  back  your 
+changes  to  that particular record.  In other words,  the  alias 
+module  can change size and the installation program still  works 
+on the SALIAS you generate.  Unfortunately, M-REL files cannot be 
+installed directly.
+
+Any  alias  experimentation should be based  on  ALIAS0.   SALIAS 
+expects  the general structure and public declarations  you  will 
+find in this module.
+
+Thanks  to Joe Wright for permission to combine  his  interesting 
+new alias program with the SALIAS editor.
+
+
+   ...more
+
+
+
+
+  -------------------------------------------------------------
+
+
+                        COPYRIGHT NOTICE
+
+       SALIAS 1.6 is copyright (C) 1992 by Rob  Friefeld.
+                      All rights reserved.
+
+   Sale or  distribution of this copyrighted  material with a
+   commercial product is prohibited without the prior written
+   consent of the author®   Thió copyrighô doeó noô extenä tï
+   anù aliaó createä witè thå SALIAÓ program.
+
+   Rob Friefeld, 4607 Colorado Street, Long Beach, CA  90814
+
+  ---------------------------------------------------------------
+:2
+COMMANÄ LINÅ SYNTAX
+
+
+
+
+Syntax:    SALIAS [[dir:]aliasname[.COM]] 
+
+    SALIAS  assumes  all files are of type  COM.   The  specified 
+    alias  will be loaded for editing, or created if it does  not 
+    exist.  If no alias name is given on the command line, it may 
+    be supplied on exit.
+:3
+FILÅ MODE
+
+Thå   aliaó scripô  ió displayeä oî screeî witè á  functioî  menõ 
+alonç  thå  bottoí listinç singlå letteò commandó  whicè  controì 
+filå  maintenance®  Thå scripô ió actuallù editeä iî  Ediô  Mode. 
+
+
+
+    A   ADD    - Add the script of another alias.
+    C	CLEAR  - Clear script.  UNDO recovers.
+    E	EDIT   - Enter full screen editor.
+    F	FORMAT - Reformat the script, one command per line.
+    I	INDENT - Format and indent by IF level.
+    L	LOAD   - Clear script and load an alias for editing.
+    M	MODE   - Select Normal or Recursive mode (toggle).
+    N	NAME   - Select a new name (or DIR:) for the script.
+    P	PRINT  - Send the script to printer or to a text file.
+    S	SAVE   - Format and WRITE the alias to disk.
+    U	UNDO   - Cancel unsaved changes to script.
+:4
+EDIÔ MODE
+ŠThå scripô editoò ió WordStar-similaò iî operation.
+
+CURSOR:                           INSERTION:                          
+           ^R - top of screen         ^V - insert/overwrite
+           ^E - line up             <CR> - insert line
+                                      ^N - insert line                 
+^S - char     ^     ^D - char     DELETION:      
+           <  $  >                    ^G - delete char at cursor
+^A - word     v     ^F - word        DEL - delete char left
+                                      ^T - delete word right
+           ^X - line down             ^Y - delete line
+           ^C - first blank line     ^QY - delete to EOLN
+                                  FIND/REPLACE:
+                                     ^QF - find string
+^QS, ^QD - SOLN, EOLN                ^QA - find/replace string
+^QZ - Clear (Zap) script              ^L - repeat find/replace
+^Ê ­ Help                         CONTROL CHAR ENTRY:
+                                    ^P^n - ^n is ctl char
+<TAB> - Indent linå               HELP:
+<ESC> - FILE modå                     ^Ê ­ Sho÷ commanä keys
+
+
+
+
+All File Mode functions are accessible from the editor:
+
+ ^KX - Save & Quit SALIAS
+ ^KD - Save & Clear Editor
+ ^KS - Save & Resume on current script
+ ^KQ - Quit
+ ^KR - Read an alias, or add one to current script
+ ^KN - ReName script
+ ^KI - Indent by IF level
+ ^KU - Undo
+ ^KP - Print to list device or disk
+:5
+INDENTATION
+
+
+
+TAÂ  ió intendeä foò visuaì indentatioî oæ IÆ levels®  TAÂ  lookó 
+likå  ³  blanks¬  buô  ió  noô  actuallù  addeä  tï  thå  script®  
+Automatiã indentatioî witè INDENÔ giveó thå scripô á  Pascaì-likå 
+appearance.
+
+Á  commanä  linå maù starô witè á REAÌ blanë iî ordeò  tï  invokå  
+thå extendeä commanä processor.
+:6
+MISCELLANY
+
+Commanä lineó longeò thaî thå screeî widtè arå indicateä  witè  á 
+">¢  aô  thå  righô margin®  Thå  linå  wilì  scrolì horizontallù 
+wheî thå cursoò reacheó thå screeî boundary®  ^P« aô thå starô oæ 
+á  linå  appendó  iô tï  thå previouó  linå   withouô  á  commanä 
+separatoò (";")®   Thió  optioî keepó thå entirå scripô visible.Š
+
+FIND/REPLACE can be used to replicate a string.
+
+    Exampleº   <^Q^A¾  <cr¾ <IÆ ~NÕ ¾ wilì puô "IÆ  ~NU¢  aô  thå 
+               cursor®  Everù ^Ì wilì producå anotheò copy.
+
+
+Controì characteò entrù useó thå ^Ğ trigger® Controló maù bå useä 
+foò  printeò  oò screeî control®  Notå thaô thå ^Ğ  BDOÓ  printeò 
+togglå  doeó NOÔ worë froí withiî aî aliaó script® ^Ğ onlù  workó 
+wheî thå DOÓ haó directlù takeî á linå oæ input® 
+
+     Example:  To enter ^Z, use ^P^Z (or ^PZ)
+               ^P@ (null) is not accepted.
+:7
+PRINÔ
+
+
+Thå   "PRINT¢   functioî  wilì senä thå  aliaó  scripô   tï   thå 
+printeò   oò  tï  á disë file®  Thå disë  filå   optioî  haó  twï 
+choiceó oæ format:
+
+    1®   TEXTº  Separatå linå foò eacè command¬ likå  thå  screeî 
+         display® Intendeä foò extractinç scripô tï pastå intï  á 
+         texô file.
+
+    2®   LINEº  Singlå multiplå  commanä line®  Foò importinç  thå 
+         scripô tï aî ARUNÚ CMÄ file.
+:8
+MESSAGES
+
+Messageó  whicè  requirå  nï responså gï awaù  wheî  anù  keù  ió 
+pressed®  Messageó whicè dï requirå á responså arå oæ thå form:
+
+     ... xxxx? (Y/n):  or ... xxxx? (y/N):
+
+The letter in caps is the default choice.  A <cr> selects it.
+
+
+CL OVERFLOW n CHARS.  SAVE ANYWAY¿ (y/N):
+    The command line is too long by n characters.  If the SAVE is 
+not  aborted,  the alias probably won't run.  If  you  have  used 
+script parameters such as $U which will require fewer  characters 
+when  "expanded",  you  can  choose  to  over-ride  this  helpful 
+reminder.
+
+
+
+NOT AN ALIAS:
+    The  specified alias is not an alias at all, but  some  other 
+COM file.  The name is ignored and replaced with a blank.
+
+
+ŠDESTINATION DISK FULL/ DIRECTORY FULL:
+    QUIT or RENAME to a new disk.
+
+
+
+ALIAS CHOPPED:
+    The  alias file has too many commands to fit on  the  screen.  
+(Could happen when using a small screen.)
+:9
+INSTALLATION
+
+SAINSÔ installó thå editor'ó commanä keù bindings® Yoõ caî assigî 
+á  singlå  oò doublå controì characteò sequencå tï  mosô  oæ  thå 
+editinç functions®  Yoõ cannoô assigî á non-controì key.
+
+Thå  installatioî prograí ió menõ oriented¬ witè instructionó  oî 
+usage.

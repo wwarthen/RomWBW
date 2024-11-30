@@ -10,6 +10,9 @@ is tailored to RomWBW memory management.
 The primary distribution site for Cowgol 2.0 is at
 https://github.com/davidgiven/cowgol.
 
+The user manual is available in the Doc/Language directory
+Cowgol Language.pdf
+
 The Hi-Tech C compiler components were sourced from the updated
 version by Tony Nicholson at https://github.com/agn453/HI-TECH-Z80-C.
 However, the CPP.COM component was sourced from Ladislau Szilagyi's

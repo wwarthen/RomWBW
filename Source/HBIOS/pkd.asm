@@ -21,12 +21,13 @@
 ;                          |+-------- SHIFT
 ;                          +--------- CONTROL
 ;
-;	00	08	10	18	23
-;	01	09	11	19	22
-;	02	0A	12	1A	21
-;	03	0B	13	1B	20
-;	04	0C	14	1C	SHIFT
-;	05	0D	15	1D	CTRL
+;      _____C0_________C1_________C2_________C3__________C4____
+;  R0 |	 $00 [D]    $08 [E]    $10 [F]    $18 [BO]   $20 [F4]
+;  R1 |	 $01 [A]    $09 [B]    $11 [C]    $19 [GO]   $21 [F3]
+;  R2 |	 $02 [7]    $0A [8]    $12 [9]    $1A [EX]   $22 [F2]
+;  R3 |	 $03 [4]    $0B [5]    $13 [6]    $1B [DE]   $23 [F1]
+;  R5 |	 $04 [1]    $0C [2]    $14 [3]    $1C [EN]  +$40 [SH]
+;  R6 |	 $05 [FW]   $0D [0]    $15 [BK]   $1D [CL]  +$80 [CTL]
 ;
 ; LED BIT MAP (BIT VALUES)
 ;
@@ -34,18 +35,21 @@
 ;	---	---	---	---	---	---	---	---
 ;	01	01	01	01	01
 ;	02	02	02	02	02
-;	04      04      04      04	04
-;	08      08      08      08	08
-;	10      10      10      10	10
-;	20      20      20      20	20	L1	L2 	BUZZ
+;	04	04	04	04	04
+;	08	08	08	08	08
+;	10	10	10	10	10
+;	20	20	20	20	20	L1	L2 	BUZZ
 ;
 PKD_PPIA	.EQU 	PKDPPIBASE + 0	; PORT A
 PKD_PPIB	.EQU 	PKDPPIBASE + 1	; PORT B
 PKD_PPIC	.EQU 	PKDPPIBASE + 2	; PORT C
 PKD_PPIX	.EQU 	PKDPPIBASE + 3	; PPI CONTROL PORT
 ;
-PKD_PPIX_RD:	.EQU	%10010010	; PPIX VALUE FOR READS
-PKD_PPIX_WR:	.EQU	%10000010	; PPIX VALUE FOR WRITES
+PKD_PPIX_RD	.EQU	%10010010	; PPIX VALUE FOR READS
+PKD_PPIX_WR	.EQU	%10000010	; PPIX VALUE FOR WRITES
+;	
+PKD_ROWS	.EQU	1		; DISPLAY ROWS	
+PKD_COLS	.EQU	8		; DISPLAY COLUMNS
 ;
 ; PIO CHANNEL C:
 ;
@@ -68,20 +72,25 @@ PKD_PRESCL	.EQU	PKDOSC/100000		; PRESCALER
 ;
 	DEVECHO	"PKD: IO="
 	DEVECHO	PKDPPIBASE
+	DEVECHO	", SIZE="
+	DEVECHO	PKD_COLS
+	DEVECHO	"X"
+	DEVECHO	PKD_ROWS
 	DEVECHO	"\n"
 ;
-;__PKD_PREINIT_______________________________________________________________________________________
+;__PKD_PREINIT_____________________________________________________________________________________
 ;
 ;  CONFIGURE PARALLEL PORT AND INITIALIZE 8279
-;____________________________________________________________________________________________________
+;__________________________________________________________________________________________________
 ;
 ;
 ; HARDWARE RESET 8279 BY PULSING RESET LINE
 ;
 PKD_PREINIT:
-	LD	A,(DSKY_DISPACT)	; DSKY DISPATCHER ALREADY SET?
-	OR	A			; SET FLAGS
-	RET	NZ			; IF ALREADY ACTIVE, ABORT
+;
+	; RESET PRESENCE FLAG
+	XOR	A			; ASSUME NOT PRESENT
+	LD	(PKD_PRESENT),A		; SAVE IT
 ;
 	; CHECK FOR PPI
 	CALL	PKD_PPIDETECT		; TEST FOR PPI HARDWARE
@@ -118,6 +127,8 @@ PKD_PREINIT:
 	LD	BC,PKD_DISPATCH
 	CALL	DSKY_SETDISP
 ;
+	CALL	PKD_SHOWVER
+;
 	RET
 ;
 PKD_REINIT:
@@ -127,10 +138,35 @@ PKD_REINIT:
 	CALL	PKD_CMD
 	JP	PKD_RESET
 ;
-;__PKD_INIT__________________________________________________________________________________________
+PKD_SHOWVER:
+	LD	HL,PKD_VERSTR
+	LD	DE,PKD_BUF
+	LD	BC,PKD_COLS
+	LDIR
+	LD	HL,PKD_BUF + 5
+	LD	A,RMJ
+	LD	A,(PKD_SEGMAP + RMJ)
+	OR	$80
+	LD	(HL),A
+	INC	HL
+	LD	A,(PKD_SEGMAP + RMN)
+	OR	$80
+	LD	(HL),A
+	INC	HL
+	LD	A,(PKD_SEGMAP + RUP)
+	LD	(HL),A
+;
+	; DISPLAY VERSION ON PKD
+	LD	C,0
+	LD	B,8
+	LD	HL,PKD_BUF
+	CALL	PKD_PUTSTR
+	RET
+;
+;__PKD_INIT________________________________________________________________________________________
 ;
 ;  DISPLAY DSKY INFO
-;____________________________________________________________________________________________________
+;__________________________________________________________________________________________________
 ;
 PKD_INIT:
 	CALL	NEWLINE			; FORMATTING
@@ -142,9 +178,19 @@ PKD_INIT:
 ;
 	LD	A,(PKD_PRESENT)		; PRESENT?
 	OR	A			; SET FLAGS
-	RET	NZ			; YES, ALL DONE
+	JR	NZ,PKD_INIT1		; YES, CONTINUE
 	PRTS(" NOT PRESENT$")		; NOT PRESENT
-	RET				; DONE
+	RET
+;
+PKD_INIT1:
+	CALL	PC_SPACE
+	LD	A,PKD_COLS
+	CALL	PRTDEC8
+	LD	A,'X'
+	CALL	COUT
+	LD	A,PKD_ROWS
+	CALL	PRTDEC8
+	RET
 ;
 ; DSKY DEVICE FUNCTION DISPATCH ENTRY
 ;   A: RESULT (OUT), 0=OK, Z=OK, NZ=ERR
@@ -170,6 +216,10 @@ PKD_DISPATCH:
 	JP	Z,PKD_BEEP		; BEEP DSKY SPEAKER
 	DEC	A
 	JP	Z,PKD_DEVICE		; DEVICE INFO
+	DEC	A
+	JP	Z,PKD_MESSAGE		; HANDLE MESSAGE
+	DEC	A
+	JP	Z,PKD_EVENT		; HANDLE EVENT
 	SYSCHKERR(ERR_NOFUNC)
 	RET
 ;
@@ -198,9 +248,6 @@ PKD_RESET2:
 ;  CHECK FOR KEY PRESS, SAVE RAW VALUE, RETURN STATUS
 ;
 PKD_STAT:
-	LD	A,(PKD_PRESENT)		; DOES IT EXIST?
-	OR	A			; SET FLAGS
-	RET	Z			; ABORT WITH A=0 IF NOT THERE
 	CALL	PKD_ST
 	AND	$0F			; ISOLATE THE CUR FIFO LEN
 	RET
@@ -208,9 +255,6 @@ PKD_STAT:
 ;  WAIT FOR A DSKY KEYPRESS AND RETURN
 ;
 PKD_GETKEY:
-	LD	A,(PKD_PRESENT)		; DOES IT EXIST?
-	OR	A			; SET FLAGS
-	JR	Z,PKD_GETKEY1A		; ABORT IF NOT PRESENT
 	CALL	PKD_STAT
 	JR	Z,PKD_GETKEY		; LOOP IF NOTHING THERE
 	LD	A,PKD_CMD_FIFO
@@ -229,7 +273,6 @@ PKD_GETKEY1:
 	INC	C			; BUMP INDEX
 	DJNZ	PKD_GETKEY1		; LOOP UNTIL EOT
 	POP	AF			; FIX STACK
-PKD_GETKEY1A:
 	LD	A,$FF			; NOT FOUND ERR, RETURN $FF
 	RET
 PKD_GETKEY2:
@@ -245,19 +288,47 @@ PKD_GETKEY2:
 ; DISPLAY HEX VALUE FROM DE:HL
 ;
 PKD_SHOWHEX:
-	LD	BC,DSKY_HEXBUF		; POINT TO HEX BUFFER
+	LD	BC,PKD_TMP32		; POINT TO HEX BUFFER
 	CALL	ST32			; STORE 32-BIT BINARY THERE
-	LD	HL,DSKY_HEXBUF		; FROM: BINARY VALUE (HL)
-	LD	DE,DSKY_BUF		; TO: SEGMENT BUFFER (DE)
-	CALL	DSKY_BIN2SEG		; CONVERT
-	LD	HL,DSKY_BUF		; POINT TO SEGMENT BUFFER
-	; AND FALL THRU TO DISPLAY IT
+	LD	HL,PKD_TMP32		; FROM: BINARY VALUE (HL)
+	LD	DE,PKD_BUF		; TO: SEGMENT BUFFER (DE)
+	CALL	PKD_BIN2SEG		; CONVERT
+	LD	HL,PKD_BUF		; POINT TO SEGMENT BUFFER
+	LD	B,PKD_COLS		; LENGTH TO DISPLAY
+	LD	C,0			; STARTING POSITION
+	CALL	PKD_PUTSTR		; DO IT
+	XOR	A			; SUCCESS
+	RET				; AND RETURN
 ;
-;
+; DRAW DISPLAY USING DEBUG ALPHABET
+; HL = SOURCE BUFFER
 ;
 PKD_SHOWSEG:
+	; CONVERT FROM DBG ALPHABET TO SEG CODES
+	LD	B,PKD_COLS		; DO FOR ALL CHARS
+	LD	DE,PKD_BUF		; DESTINATION BUFFER
+PKD_SHOWSEG1:
+	LD	A,(HL)			; GET SOURCE VALUE
+	INC	HL			; BUMP FOR NEXT TIME
+	PUSH	AF			; SAVE IT
+	AND	$80			; ISOLATE HI BIT (DP)
+	LD	C,A			; SAVE IN C
+	POP	AF			; RECOVER ORIGINAL
+	AND	$7F			; REMOVE HI BIT (DP)
+	PUSH	HL			; SAVE IT
+	LD	HL,PKD_SEGMAP		; POINT TO XLAT MAP
+	CALL	ADDHLA			; OFFSET BY VALUE
+	LD	A,(HL)			; GET NEW VALUE
+	OR	C			; RECOMBINE WITH DP BIT
+	LD	(DE),A			; SAVE IT
+	INC	DE			; BUMP PTR
+	POP	HL			; RESTORE SOURCE PTR
+	DJNZ	PKD_SHOWSEG1		; LOOP TILL DONE
+;	
+	; DISPLAY CONVERTED BUFFER
 	LD	C,0			; STARTING DISPLAY POSITION
-	LD	B,DSKY_BUFLEN		; NUMBER OF CHARS
+	LD	B,PKD_COLS		; NUMBER OF CHARS
+	LD	HL,PKD_BUF		; BUFFER
 	CALL	PKD_PUTSTR		; DO IT
 	XOR	A			; SIGNAL SUCCESS
 	RET
@@ -309,7 +380,7 @@ PKD_BEEP:
 ;
 	; TIMER
 	PUSH	HL
-	LD 	hl,$8FFF
+	LD 	HL,$8FFF
 PKD_BEEP1:
 	DEC 	HL
 	LD 	A,H
@@ -335,10 +406,80 @@ PKD_DEVICE:
 	XOR	A			; SIGNAL SUCCESS
 	RET
 ;
-;__PKD_PPIDETECT_____________________________________________________________________________________
+; MESSAGE HANDLER
+;
+PKD_MESSAGE:
+	LD	A,C			; GET MESSAGE ID
+	ADD	A,A			; WORD OFFSET
+	LD	HL,PKD_MSGTBL		; START OF MESSAGE TABLE
+	CALL	ADDHLA			; ADD OFFSET
+	LD	A,(HL)			; SAVE LSB
+	INC	HL			; BUMP TO MSB
+	LD	H,(HL)			; GET MSB
+	LD	L,A			; GET LSB
+;
+	; HL HAS POINTER TO MESSAGE
+	LD	C,0			; STARTING DISPLAY POSITION
+	LD	B,PKD_COLS		; NUMBER OF CHARS
+	CALL	PKD_PUTSTR		; DISPLAY IT
+	XOR	A			; SIGNAL SUCCESS
+	RET
+;
+; EVENT HANDLER
+;
+PKD_EVENT:
+	LD	A,C			; EVENT ID
+	OR	A			; 0=CPUSPD
+	JR	Z,PKD_EVT_CPUSPD	; HANDLE CPU SPD CHANGE
+	DEC	A			; 1=DSKACT
+	JR	Z,PKD_EVT_DSKACT	; HANDLE DISK ACTIVITY
+	XOR	A
+	RET
+;
+; CPU SPEED CHANGE
+;
+PKD_EVT_CPUSPD:
+	XOR	A
+	RET
+;
+; DISK ACTIVITY
+;
+PKD_EVT_DSKACT:
+;
+	; USE DISK UNIT NUMBER FOR MSB
+	LD	A,(HB_DSKUNIT)		; GET DISK UNIT NUM
+	LD	(HB_DSKADR+3),A		; REPLACE HIGH BYTE W/ DISK #
+;
+	; CONVERT TO SEGMENT DISPLAY
+	LD	HL,HB_DSKADR		; INPUT POINTER
+	LD	DE,PKD_BUF		; BUF FOR OUTPUT
+	CALL	PKD_BIN2SEG		; CONVERT TO SEG DISPLAY
+;
+	; DECIMAL POINT FOR DISK UNIT SEPARATION
+	LD	HL,PKD_BUF+1		; SECOND CHAR OF DISP
+	SET	7,(HL)			; TURN ON DECIMAL PT
+;
+	; DECIMAL POINT TO INDICATE WRITE ACTION
+	LD	A,(HB_DSKFUNC)		; GET CURRENT I/O FUNCTION
+	CP	BF_DIOWRITE		; IS IT A WRITE?
+	JR	NZ,PKD_EVT_DSKACT2	; IF NOT, SKIP
+	LD	HL,PKD_BUF+7		; POINT TO CHAR 7
+	SET	7,(HL)			; SET WRITE DOT
+;
+PKD_EVT_DSKACT2:
+	; UPDATE DISPLAY
+	LD	HL,PKD_BUF		; SEG DISPLAY BUF TO HL
+	LD	B,PKD_COLS
+	LD	C,0
+	CALL	PKD_PUTSTR
+;
+	XOR	A
+	RET
+;
+;__PKD_PPIDETECT___________________________________________________________________________________
 ;
 ;  PROBE FOR PPI HARDWARE
-;____________________________________________________________________________________________________
+;__________________________________________________________________________________________________
 ;
 PKD_PPIDETECT:
 ;
@@ -357,7 +498,7 @@ PKD_PPIDETECT:
 	OR	A			; SET FLAGS
 	RET				; AND RETURN
 ;
-;_KEYMAP_TABLE_____________________________________________________________________________________________________________
+;__KEYMAP_TABLE____________________________________________________________________________________
 ;
 PKD_KEYMAP:
 	; POS	$00  $01  $02  $03  $04  $05  $06  $07
@@ -667,10 +808,74 @@ PKD_PPIIDLE:
 ; UTILTITY FUNCTIONS
 ;==================================================================================================
 ;
+; CONVERT 32 BIT BINARY TO 8 BYTE HEX SEGMENT DISPLAY
+;
+;	HL: ADR OF 32 BIT BINARY
+;	DE: ADR OF DEST LED SEGMENT DISPLAY BUFFER (8 BYTES)
+;
+PKD_BIN2SEG:
+	LD	B,4			; 4 BYTES OF INPUT
+	LD	A,B			; PUT IN ACCUM
+	CALL	ADDHLA			; PROCESS FROM END (LITTLE ENDIAN)
+PKD_BIN2SEG1:
+	DEC	HL			; DEC PTR (LITTLE ENDIAN)
+	LD	A,(HL)			; HIGH NIBBLE
+	RRCA \ RRCA \ RRCA \ RRCA	; ROTATE BITS
+	CALL	PKD_BIN2SEG_NIB	; CONVERT NIBBLE INTO OUTPUT BUF
+	LD	A,(HL)			; LOW NIBBLE
+	CALL	PKD_BIN2SEG_NIB	; CONVERT NIBBLE INTO OUTPUT BUF
+	DJNZ	PKD_BIN2SEG1		; LOOP FOR ALL INPUT BYTES
+	RET				; DONE
+;
+PKD_BIN2SEG_NIB:
+	PUSH	HL			; SAVE HL
+	LD	HL,PKD_SEGMAP		; POINT TO SEG MAP TABLE
+	AND	$0F			; ISOLATE LOW NIBBLE
+	CALL	ADDHLA			; OFFSET INTO TABLE
+	LD	A,(HL)			; LOAD VALUE FROM TABLE
+	POP	HL			; RESTORE HL
+	LD	(DE),A			; SAVE VALUE TO OUTPUT BUF
+	INC	DE			; BUMP TO NEXT OUTPUT BYTE
+	RET				; DONE
 ;
 ;==================================================================================================
 ; STORAGE
 ;==================================================================================================
 ;
-PKD_PPIX_VAL	.DB	0	; PPIX SHADOW REG
-PKD_PRESENT	.DB	0	; HARDWARE PRESENT FLAG
+PKD_PPIX_VAL	.DB	0		; PPIX SHADOW REG
+PKD_PRESENT	.DB	0		; HARDWARE PRESENT FLAG
+PKD_BUF		.FILL	PKD_COLS
+PKD_TMP32	.FILL	4,0		; TEMP DWORD
+;
+PKD_VERSTR	.DB	$76,$7F,$30,$3F,$6D,$00,$00,$00	; "HBIOS   "
+;
+PKD_SEGMAP:
+;
+	; POS	$00  $01  $02  $03  $04  $05  $06  $07
+	; GLYPH '0'  '1'  '2'  '3'  '4'  '5'  '6'  '7'
+
+	.DB	$3F, $06, $5B, $4F, $66, $6D, $7D, $07
+;
+	; POS	$08  $09  $0A  $0B  $0C  $0D  $0E  $0F
+	; GLYPH	'8'  '9'  'A'  'B'  'C'  'D'  'E'  'F'
+	.DB	$7F, $67, $77, $7C, $39, $5E, $79, $71
+;
+	; POS	$10  $11  $12  $13  $14  $15  $16  $17  $18  $19  $1A
+	; GLYPH	' '  '-'  '.'  'P'  'o'  'r'  't'  'A'  'd'  'r'  'G'
+	.DB	$00, $40, $00, $73, $5C, $50, $78, $77, $5E, $50, $3D
+
+;
+PKD_MSGTBL:
+	.DW	PKD_MSG_LDR_SEL
+	.DW	PKD_MSG_LDR_BOOT
+	.DW	PKD_MSG_LDR_LOAD
+	.DW	PKD_MSG_LDR_GO
+	.DW	PKD_MSG_MON_RDY
+	.DW	PKD_MSG_MON_BOOT
+;
+PKD_MSG_LDR_SEL		.DB	$7F,$5C,$5C,$78,$53,$00,$00,$00	; "Boot?   "
+PKD_MSG_LDR_BOOT	.DB	$7F,$5C,$5C,$78,$80,$80,$80,$00	; "Boot... "
+PKD_MSG_LDR_LOAD	.DB	$38,$5C,$5F,$5E,$80,$80,$80,$00	; "Load... "
+PKD_MSG_LDR_GO		.DB	$3D,$5C,$80,$80,$80,$00,$00,$00	; "Go...   "
+PKD_MSG_MON_RDY		.DB	$40,$39,$73,$3E,$00,$3E,$73,$40	; "-CPU UP-"
+PKD_MSG_MON_BOOT	.DB	$7F,$5C,$5C,$78,$82,$00,$00,$00	; "Boot!   "

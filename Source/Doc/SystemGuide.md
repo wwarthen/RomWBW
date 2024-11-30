@@ -126,6 +126,274 @@ execution.
 
 ![Bank Switched Memory Layout](Graphics/BankSwitchedMemory){ width=100% }
 
+
+## Bank Id
+
+RomWBW utilizes a specific assignment of memory banks for dedicated
+purposes.  A numeric Bank Id is used to refer to the memory banks.  The
+Bank Id is a single byte.  In general, the Bank Id simply refers to each
+of the 32K banks in sequential order.  In other words, Bank Id 0 is the
+first physical 32K, Bank Id 1 is the second, etc.  However, the high
+order bit of the Bank Id has a special meaning.  If it is 0, it indicates
+a ROM bank is being referred to.  If it is 1, it indicates a RAM bank
+is being referred to.
+
+For example, let's say we have a typical system with 512KB of ROM and
+512KB of RAM.  The Bank Ids would look like this:
+
+| Physical Memory   | Type | Physical Bank | Bank Id   |
+|-------------------|------|---------------|-----------|
+| 0x000000-0x007FFF | ROM  | 0             | 0x00      |
+| 0x008000-0x00FFFF | ROM  | 1             | 0x01      |
+| 0x010000-0x07FFFF | ROM  | 2-15          | 0x02-0x0F |
+| 0x080000-0x087FFF | RAM  | 16            | 0x80      |
+| 0x088000-0x08FFFF | RAM  | 17            | 0x81      |
+| 0x090000-0x0FFFFF | RAM  | 18-31         | 0x82-0x8F |
+
+Note that Bank Id 0x00 is **always** the first bank of ROM and 0x80 is
+**always** the first bank of RAM.  If there were more banks of physical ROM,
+they would be assigned Bank Ids starting with 0x10.  Likewise, additional
+bank of physical RAM would be assigned Bank Ids starting with 0x90.
+
+The Bank Id is used in all RomWBW API functions when referring to
+the mapping of banks to the lower 32K bank area of the processor.  In
+this way, all RomWBW functions can refer to a generic Bank Id without
+needing to understand how a specific hardware platform accesses the
+physical memory areas.  A single routine within the HBIOS is implemented
+for each memory manager that maps Bank Ids to physical memory.
+
+## Bank Assignments
+
+RomWBW requires dedicated banks of memory for specific purposes.  It
+uses Bank Ids via an algorithm to make these assignments.  The following
+table describes the way the banks are assigned.  The Typical column
+shows the specific values that would be assigned for a common system
+with 512KB of ROM and 512KB of RAM (nROM=16, nRAM=16).
+
+| Bank Id           | Identity  | Typical | Purpose                                  |
+|-------------------|-----------|---------|------------------------------------------|
+| 0x00              |BID_BOOT   | 0x00    | Boot Bank (HBIOS image)                  |
+| 0x01              |BID_IMG0   | 0x01    | Boot Loader, Monitor, ROM OSes, ROM Apps |
+| 0x02              |BID_IMG1   | 0x02    | ROM Apps                                 |
+| 0x03              |BID_IMG2   | 0x03    | \<Reserved\>                             |
+| 0x04              |BID_ROMD0  | 0x04    | First ROM Disk Bank                      |
+| nROM - 1          |           | 0x0F    | Last ROM Disk Bank                       |
+| 0x80              |BID_BIOS   | 0x80    | HBIOS (working copy)                     |
+| 0x81              |BID_RAMD0  | 0x81    | First RAM Disk Bank                      |
+| 0x80 + nRAM - 8   |           | 0x88    | Last RAM Disk Bank                       |
+| 0x80 + nRAM - 7   |BID_APP0   | 0x89    | First Application Bank                   |
+| 0x80 + nRAM - 5   |           | 0x8B    | Last Application Bank                    |
+| 0x80 + nRAM - 4   |BID_BUF    | 0x8C    | OS Disk Buffers                          |
+| 0x80 + nRAM - 3   |BID_AUX    | 0x8D    | OS Code Bank                             |
+| 0x80 + nRAM - 2   |BID_USR    | 0x8E    | User Bank (CP/M TPA)                     |
+| 0x80 + nRAM - 1   |BID_COM    | 0x8F    | Common Bank                              |
+
+In this table, nROM and nRAM refer to the number of corresponding
+ROM and RAM banks in the the system.
+
+The contents of the banks referred to above are described in more detail
+below:
+
+Boot Bank:
+
+: The Boot Bank receives control when a system is first powered
+on.  It contains a ROM (read-only) copy of the HBIOS.  At boot, it does
+minimal hardware initialization, then copies itself to the HBIOS bank
+in RAM, then resumes execution from the RAM bank.
+
+Boot Loader:
+
+: The application that handles loading of ROM or Disk based applications
+including operating systems.  It copies itself to a RAM bank at the
+start of it's execution.
+
+Monitor:
+
+: The application that implements the basic system monitor functions.
+It copies itself to a RAM bank at the start of it's execution.
+
+ROM OSes:
+
+: Code images of CP/M 2.2 and Z-System which are copied to RAM and
+executed when a ROM-based operating system is selected in the Boot
+Loader.
+
+ROM Applications:
+
+: Various ROM-based application images such as BASIC, FORTH, etc.  They
+can be selected in the Boot Loader.  The Boot Loader will copy the
+application image to a RAM bank, then transfer control to it.
+
+ROM Disk:
+
+: A sequential series of banks assigned to provide the system ROM Disk
+contents.
+
+HBIOS:
+
+: This bank hosts the running copy of the RomWBW HBIOS.
+
+RAM Disk:
+
+: A sequential series of banks assigned to provide the system RAM Disk.
+
+Application Bank:
+
+: A sequential series of banks that are available for use by applications
+that wish to utilize banked memory.
+
+OS Disk Buffers:
+
+: This bank is used by CP/M 3 and ZPM3 for disk buffer storage.
+
+OS Code Bank:
+
+: This bank is used by CP/M 3 and ZPM3 as an alternate bank for code.
+This allows these operating systems to make additional TPA space
+available for applications.
+
+User Bank:
+
+: This is the default bank for applications to use.  This includes the
+traditional TPA space for CP/M.
+
+Common Bank:
+
+: This bank is mapped to the upper 32K of the processors memory space.
+It is a fixed mapping that is never changed in normal RomWBW operation
+hence the name "Common".
+
+# Disk Layout
+
+RomWBW supports two hard disk layouts: the Classic layout used by 
+RomWBW with 512 directory entries per slice and a Modern layout with 
+1024 directory entries per slice.  These layouts are referred to as
+hd512 and hd1k respectively.
+
+WARNING: You **can not** mix the two hard disk layouts on one hard 
+disk device.  You can use different layouts on different hard disk 
+devices in a single system though.
+
+RomWBW determines which of the hard disk layouts to use for a given 
+hard disk device based on whether there is a RomWBW hard disk 
+partition on the disk containing the slices.   If there is no RomWBW 
+partition, then RomWBW will assume the 512 directory entry format for 
+all slices and will assume the slices start at the first sector of 
+the hard disk.  If there is a RomWBW partition on the hard disk 
+device, then RomWBW will assume the 1024 directory entry format for 
+all slices and will assume the slices are located in the defined 
+partition.
+
+RomWBW supports up to 256 CP/M slices (0-255).  Under hd512, the slices
+begin at the start of the hard disk.  Under hd1k, the slices reside
+within partition type 0x2E.
+
+RomWBW accesses all hard disks using Logical Block Addressing (pure
+sector offset).  When necessary, RomWBW simulates the following disk
+geometry for operating systems:
+
+- Sector = 512 Bytes
+- Track = 16 Sectors (8KB per Track)
+- Cylinder = 16 Tracks (256 Sectors per Cylinder, 128KB per Cylinder)
+
+If one is used, the FAT Partition must not overlap the CP/M slices.
+The FAT partition does not need to start immediately after the CP/M
+slices nor does it need to extend to the end of the hard disk.  Its
+location and size are entirely determined by its corresponding
+partition table entry.
+
+Drive letters in CP/M are ASSIGNed to the numbered slices as desired.  
+At boot, RomWBW automatically assigns up to  8 slices to drive letters 
+starting with the first available drive letter (typically C:).
+
+Microsoft Windows will assign a single drive letter to the FAT partition
+when the CF/SD Card is inserted.  The drive letter assigned has no 
+relationship to the CP/M drive letters assigned to CP/M slices.
+
+In general, Windows, MacOS, or Linux know nothing about the CP/M slices 
+and CP/M knows nothing about the FAT partition.  However, the FAT 
+application can be run under CP/M to access the FAT partition 
+programmatically.
+
+A CP/M slice is (re)initialized using the CP/M command CLRDIR.  A CP/M 
+slice can be made bootable by copying system image to the System Area 
+using SYSCOPY.
+
+The FAT partition can be created from CP/M using the FDISK80 application.
+
+The FAT partition can be initialized using the FAT application from CP/M
+using the command `FAT FORMAT n:` where n is the RomWBW disk unit 
+number containing the FAT partition to be formatted.
+
+## Modern Disk Layout (hd1k)
+
+![Modern Disk Layout](Graphics/hd1k)
+
+The CP/M filesystem on a Modern disk will accommodate 1,024 directory 
+entries.
+
+The CP/M slices reside entirely within a hard disk partition of type
+0x2E.  The number of slices is determined by the number of slices that
+fit within the partition spaces allocated up to the maximum of 256.
+
+## Classic Disk Layout (hd512)
+
+![Classic Disk Layout](Graphics/hd512)
+
+The CP/M filesystem on a Classic disk will accommodate 512 directory 
+entries.
+
+The CP/M slices reside on the hard disk starting at the first sector
+of the hard disk.  The number of CP/M slices is not explicitly recorded
+anywhere on the hard disk.  It is up to the system user to know how
+many slices are being used based on the size of the hard disk media
+and/or the start of a FAT partition.
+
+A partition table may exist within the first sector of the first
+slice.  For Classic disks, the partition table defines only the
+location and size of the FAT partition.  The Partition Table does
+not control the location or number of CP/M slices in any way.
+
+The Partition Table resides in a sector that is shared with the System 
+Area of CP/M Slice 0.  However, the RomWBW implementation of CP/M takes 
+steps to avoid changing or corrupting the Partition Table area.
+
+The FAT partition can be created from CP/M using the FDISK80 
+application.  The user is responsible for ensuring that the start of the
+FAT partition does not overlap with the area they intend to use for 
+CP/M slices.  FDISK80 has a Reserve option to assist with this.
+
+## Mapping to Media ID
+
+HBIOS has a definition of "Media ID", which defines the type and physical
+properties of disk media provided by an underlying storage device. For a 
+complete list of Media ID's please see the following section
+
+[Disk Input/Output (DIO)]
+
+There are two important Media ID's relating to Hard Disk Layouts:
+
+| **Media**  | **ID** | **Format / Meaning**                                        |
+|------------|-------:|-------------------------------------------------------------|
+| MID_HD     |      4 | Classic Disk Layout (hd512) *--and--* HBIOS Hard Disk Drive |
+| MID_HDNEW  |     10 | Modern Disk Layout (hd1k)                                   |
+
+HBIOS typically does not understand the format of data on a device,
+instead just treating all hard disks as raw sectors. `MID_HD` is the typical
+Media ID used by HBIOS to describe high capaity hard disk media
+
+When the Modern Disk Layout was added, the `MID_HDNEW`, was added to
+differentiate (at the oerating system level) between the Classic and Modern layouts.
+
+However HBIOS itself typically does NOT make this distinction, since the use 
+of these two formats is determined by the operating system based on the 
+partition table on the media. 
+There are two important HBIOS functions that deal with Media ID.
+
+* [Function 0x18 -- Disk Media (DIOMEDIA)]
+
+* [Function 0xE0 -- Calculate Slice (EXTSLICE)]
+
 # System Boot Process
 
 A multi-phase boot strategy is employed. This is necessary because at
@@ -393,23 +661,24 @@ All character units are assigned a Device Type ID which indicates
 the specific hardware device driver that handles the unit.  The table
 below enumerates these values.
 
-| **Device Type** | **ID** | **Description**                          | **Driver** |
-|-----------------|-------:|------------------------------------------|------------|
-| CIODEV_UART     | 0x00   | 16C550 Family Serial Interface           | uart.asm   |
-| CIODEV_ASCI     | 0x01   | Z180 Built-in Serial Ports               | asci.asm   |
-| CIODEV_TERM     | 0x02   | Terminal                                 | ansi.asm   |
-| CIODEV_PRPCON   | 0x03   | PropIO Serial Console Interface          | prp.asm    |
-| CIODEV_PPPCON   | 0x04   | ParPortProp Serial Console Interface     | ppp.asm    |
-| CIODEV_SIO      | 0x05   | Zilog Serial Port Interface              | sio.asm    |
-| CIODEV_ACIA     | 0x06   | MC68B50 Asynchronous Interface           | acia.asm   |
-| CIODEV_PIO      | 0x07   | Zilog Parallel Interface Controller      | pio.asm    |
-| CIODEV_UF       | 0x08   | FT232H-based ECB USB FIFO                | uf.asm     |
-| CIODEV_DUART    | 0x09   | SCC2681 Family Dual UART                 | duart.asm  |
-| CIODEV_Z2U      | 0x0A   | Zilog Z280 Built-in Serial Ports         | z2u.asm    |
-| CIODEV_LPT      | 0x0B   | Parallel I/O Controller                  | lpt.asm    |
-| CIODEV_ESPCON   | 0x0B   | ESP32 VGA Console                        | esp.asm    |
-| CIODEV_ESPSER   | 0x0B   | ESP32 Serial Port                        | esp.asm    |
-| CIODEV_SCON     | 0x0B   | S100 Console                             | scon.asm   |
+| **Device Type** | **ID** | **Description**                          | **Driver**   |
+|-----------------|-------:|------------------------------------------|--------------|
+| CIODEV_UART     | 0x00   | 16C550 Family Serial Interface           | uart.asm     |
+| CIODEV_ASCI     | 0x01   | Z180 Built-in Serial Ports               | asci.asm     |
+| CIODEV_TERM     | 0x02   | Terminal                                 | ansi.asm     |
+| CIODEV_PRPCON   | 0x03   | PropIO Serial Console Interface          | prp.asm      |
+| CIODEV_PPPCON   | 0x04   | ParPortProp Serial Console Interface     | ppp.asm      |
+| CIODEV_SIO      | 0x05   | Zilog Serial Port Interface              | sio.asm      |
+| CIODEV_ACIA     | 0x06   | MC68B50 Asynchronous Interface           | acia.asm     |
+| CIODEV_PIO      | 0x07   | Zilog Parallel Interface Controller      | pio.asm      |
+| CIODEV_UF       | 0x08   | FT232H-based ECB USB FIFO                | uf.asm       |
+| CIODEV_DUART    | 0x09   | SCC2681 Family Dual UART                 | duart.asm    |
+| CIODEV_Z2U      | 0x0A   | Zilog Z280 Built-in Serial Ports         | z2u.asm      |
+| CIODEV_LPT      | 0x0B   | Parallel I/O Controller                  | lpt.asm      |
+| CIODEV_ESPCON   | 0x0B   | ESP32 VGA Console                        | esp.asm      |
+| CIODEV_ESPSER   | 0x0B   | ESP32 Serial Port                        | esp.asm      |
+| CIODEV_SCON     | 0x0B   | S100 Console                             | scon.asm     |
+| CIODEV_EZ80UART | 0x11   | eZ80 Built-in UART0 Interface            | ez80uart.asm | 
 
 Character devices can usually be configured with line characteristics
 such as speed, framing, etc. A word value (16 bit) is used to describe
@@ -602,20 +871,24 @@ more of the defined media types.
 | MID_MDROM     | 1      | ROM Drive                                  |
 | MID_MDRAM     | 2      | RAM Drive                                  |
 | MID_RF        | 3      | RAM Floppy (LBA)                           |
-| MID_HD512     | 4      | Hard Disk (LBA) w/ 512 directory entries   |
+| MID_HD        | 4      | Hard Disk (LBA) w/ 512 directory entries   |
 | MID_FD720     | 5      | 3.5" 720K Floppy                           |
 | MID_FD144     | 6      | 3.5" 1.44M Floppy                          |
 | MID_FD360     | 7      | 5.25" 360K Floppy                          |
 | MID_FD120     | 8      | 5.25" 1.2M Floppy                          |
 | MID_FD111     | 9      | 8" 1.11M Floppy                            |
-| MID_HD1K      | 10     | Hard Disk (LBA) w/ 1024 directory entries  |
+| MID_HDNEW     | 10     | Hard Disk (LBA) w/ 1024 directory entries  |
+
+**NOTE**: HBIOS typically does not actually differentiate between MID_HD and 
+MID_HDNEW, it will generally only use MID_HD. 
+See the section [Mapping to Media ID] for information on this.
 
 HBIOS supports both Cylinder/Head/Sector (CHS) and Logical Block 
 Addresses (CHS) when locating a sector for I/O (see DIOSEEK function). 
 For devices that are natively CHS (e.g., floppy disk), the HBIOS driver 
 can convert LBA values to CHS values according to the geometry of the 
 current media.  For devices that are natively LBA (e.g., hard disk), the
- HBIOS driver simulates CHS using a fictitious geometry provided by the 
+HBIOS driver simulates CHS using a fictitious geometry provided by the 
 driver (typically 16 sectors per track and 16 heads per cylinder).
 
 ### Function 0x10 -- Disk Status (DIOSTATUS)
@@ -828,6 +1101,13 @@ Report the Media ID (E) for the for media in the specified Disk Unit
 will be performed.  The Status (A) is a standard HBIOS result code. If 
 there is no media in device, function will return an error status.
 
+**NOTE**: This function will always return MID_HD for hard disk
+devices. See the section [Mapping to Media ID] for information on this.
+To determine if an HD1K formatted partition exists on the hard disk
+please see the following function.
+
+[Function 0xE0 -- Calculate Slice (EXTSLICE)]
+
 ### Function 0x19 -- Disk Define Media (DIODEFMED)
 
 | **Entry Parameters**                   | **Returned Values**                    |
@@ -861,7 +1141,7 @@ DIOMEDIA function to force this if desired.
 | **Entry Parameters**                   | **Returned Values**                    |
 |----------------------------------------|----------------------------------------|
 | B: 0x1B                                | A: Status                              |
-| C: Disk Unit                           | D: Heads                               |
+| C: Disk Unit                           | D: Heads / LBA                         |
 |                                        | E: Sectors                             |
 |                                        | HL: Cylinder Count                     |
 |                                        | BC: Block Size                         |
@@ -871,7 +1151,11 @@ device uses LBA mode addressing natively, then the drivers simulated
 geometry will be returned. The Status (A) is a standard HBIOS result 
 code.  If the media is unknown, an error will be returned.
 
-Heads (D) refers to the number of heads per cylinder.  Sectors (E)
+LBA capability is indicated by D:7.  When set, the device is capable
+of LBA addressing.  Refer to [Function 0x12 -- Disk Seek (DIOSEEK)]
+for more information on specifying LBA vs. CHS addresses.
+
+Heads (D:6-0) refers to the number of heads per cylinder.  Sectors (E)
 refers to the number of sectors per track.  Cylinder Count (HL) is the
 total number of cylinders addressable for the media.  Block Size (BC)
 is the number of bytes in one sector.
@@ -888,14 +1172,15 @@ more than one at a time.  The RTC unit is assigned a Device Type ID
 which indicates the specific hardware device driver that handles the 
 unit.  The table below enumerates these values.
 
-| **Device Type** | **ID** | **Description**                          | **Driver** |
-|-----------------|-------:|------------------------------------------|------------|
-| RTCDEV_DS       | 0x00   | Maxim DS1302 Real-Time Clock w/ NVRAM    | dsrtc.asm  |
-| RTCDEV_BQ       | 0x01   | BQ4845P Real Time Clock                  | bqrtc.asm  |
-| RTCDEV_SIMH     | 0x02   | SIMH Simulator Real-Time Clock           | simrtc.asm |
-| RTCDEV_INT      | 0x03   | Interrupt-based Real Time Clock          | intrtc.asm |
-| RTCDEV_DS7      | 0x04   | Maxim DS1307 PCF I2C RTC w/ NVRAM        | ds7rtc.asm |
-| RTCDEV_RP5      | 0x05   | Ricoh RPC01A Real-Time Clock w/ NVRAM    | rp5rtc.asm |
+| **Device Type** | **ID** | **Description**                          | **Driver**  |
+|-----------------|-------:|------------------------------------------|-------------|
+| RTCDEV_DS       | 0x00   | Maxim DS1302 Real-Time Clock w/ NVRAM    | dsrtc.asm   |
+| RTCDEV_BQ       | 0x01   | BQ4845P Real Time Clock                  | bqrtc.asm   |
+| RTCDEV_SIMH     | 0x02   | SIMH Simulator Real-Time Clock           | simrtc.asm  |
+| RTCDEV_INT      | 0x03   | Interrupt-based Real Time Clock          | intrtc.asm  |
+| RTCDEV_DS7      | 0x04   | Maxim DS1307 PCF I2C RTC w/ NVRAM        | ds7rtc.asm  |
+| RTCDEV_RP5      | 0x05   | Ricoh RPC01A Real-Time Clock w/ NVRAM    | rp5rtc.asm  |
+| RTCDEV_EZ80     | 0x07   | eZ80 on-chip RTC                         | ez80rtc.asm |
 
 The time functions to get and set the time (RTCGTM and RTCSTM) require a
 6 byte date/time buffer in the following format. Each byte is BCD 
@@ -1024,35 +1309,22 @@ used.
 
 ## Display Keypad (DSKY)
 
-The Display Keypad functions provide read/write access to a segment
-style display and associated hex keypad.
+The Display Keypad functions provide access to a segment or LCD
+style display and associated optional keypad
 
-HBIOS only supports a single DSKY device since there is no reason to have
-more than one at a time.  The DSKY unit is assigned a Device Type ID 
-which indicates the specific hardware device driver that handles the 
-unit.  The table below enumerates these values.
+HBIOS only supports a single DSKY device since there is no reason to 
+have more than one at a time.  If the system contains multiple DSKY 
+devices, only the first device discovered will be used.  The DSKY unit 
+is assigned a Device Type ID which indicates the specific hardware 
+device driver that handles the unit.  The table below enumerates these 
+values.
 
-| **Device Type** | **ID** | **Description**                          | **Driver** |
-|-----------------|-------:|------------------------------------------|------------|
-| DSKYDEV_ICM     | 0x01   | Original ICM7218 based DSKY              | icm.asm    |
-| DSKYDEV_PKD     | 0x02   | Next Gen Intel P8279 based DSKY          | pkd.asm    |
-
-When segment display function encodes the display data in a byte per
-character format.  Currently, all segment displays are exactly
-8 charadcters and this is assumed in API calls.  The encoding of each
-byte is as shown below:
-
-```
-  +---01---+
-  |        |
-  20      02
-  |        |
-  +---40---+
-  |        |
-  10      04
-  |        |
-  +---08---+  80
-```
+| **Device Type**    | **ID** | **Description**                       | **Driver** |
+|--------------------|-------:|---------------------------------------|------------|
+| DSKYDEV_ICM        | 0x01   | Original ICM7218 based DSKY           | icm.asm    |
+| DSKYDEV_PKD        | 0x02   | Next Gen Intel P8279 based DSKY       | pkd.asm    |
+| DSKYDEV_GM7303     | 0x03   | GM7303 LCD Display + Keypad           | gm7303.asm |
+| DSKYDEV_LCD        | 0x04   | HD44780-based LCD Display             | lcd.asm    |
 
 The keypad keys are identified by the following key ids.  Not all
 keypads will contain all keys.
@@ -1138,10 +1410,21 @@ The Status (A) is a standard HBIOS result code.
 | HL: Buffer Address                     |                                        |
 
 Display the segment-encoded values on the segment display.  The encoding
-is defined at the start of this section.  The entire displa is updated
-and it is assumed that an 8 character buffer will be pointed to by HL.
-The buffer must reside in high memory.
-The Status (A) is a standard HBIOS result code.
+uses a small alphabet as defined below.  The actual representation of a
+character is determined by the driver.  The entire display is updated 
+and it is assumed that an 8 character buffer will be pointed to by HL. 
+The buffer must reside in high memory. The Status (A) is a standard 
+HBIOS result code.
+
+|               |               |               |               |
+|---------------|---------------|---------------|---------------|
+| 0x00: '0'     | 0x01: '1'     | 0x02: '2'     | 0x03: '3'     |
+| 0x04: '4'     | 0x05: '5'     | 0x06: '6'     | 0x07: '7'     |
+| 0x08: '8'     | 0x09: '9'     | 0x0A: 'A'     | 0x0B: 'B'     |
+| 0x0C: 'C'     | 0x0D: 'D'     | 0x0E: 'E'     | 0x0F: 'F'     |
+| 0x10: ' '     | 0x11: '-'     | 0x12: '.'     | 0x13: 'p'     |
+| 0x14: 'o'     | 0x15: 'r'     | 0x16: 't'     | 0x17: 'A'     |
+| 0x18: 'd'     | 0x19: 'r'     | 0x1A: 'G'     |               |
 
 ### Function 0x35 -- DSKY Keypad LEDs (DSKYKEYLEDS)
 
@@ -1154,9 +1437,8 @@ Light the LEDs for the keypad keys according to the
 bitmap contained in the buffer pointed to by HL.  The buffer
 must be located in high memory and is assumed to be 8 bytes.
 
-At this time, the bitmap is specific to the PKD hardware.
-This function is ignored by the ICM hardware.
-The Status (A) is a standard HBIOS result code.
+At this time, the bitmap is specific to the PKD hardware and will be
+ignored by all other hardware.
 
 ### Function 0x36 -- DSKY Status LED (DSKYSTATLED)
 
@@ -1170,8 +1452,8 @@ Set or clear the status LED specified in D.  The state of
 the LED is contained in E.  If E=0, the LED will be turned
 off.  If E=1, the LED will be turned on.
 
-This function is specific to the PKD hardware.  It will be ignored
-by the ICM hardware.
+This function is specific to the PKD hardware and will be ignored
+by all other hardware.
 The Status (A) is a standard HBIOS result code.
 
 ### Function 0x37 -- DSKY Beep (DSKYBEEP)
@@ -1211,6 +1493,29 @@ indicates the starting port address of the hardware interface that is
 servicing the specified unit.  Both of these values are considered 
 driver specific.  Refer to the associated hardware driver for the values
 used.
+
+### Function 0x39 -- DSKY Device (DSKYMESSAGE)
+
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x39                                | A: Status                              |
+| C: Message ID                          |                                        |
+
+Instructs the display to show a textual representation of the associated
+message on the display.  The IDs are defined in std.asm.
+
+### Function 0x3A -- DSKY Device (DSKYEVENT)
+
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x3A                                | A: Status                              |
+| C: Event ID                            |                                        |
+
+Instructs the display to update itself in response to an internal
+HBIOS state change.  At this time the the events are:
+
+0: CPU Speed Change \
+1: Disk Activity
 
 `\clearpage`{=latex}
 
@@ -1879,7 +2184,7 @@ sound will play for the duration defined in HL and then return.
 | **Entry Parameters**                   | **Returned Values**                    |
 |----------------------------------------|----------------------------------------|
 | B: 0x57                                | A: Status                              |
-| C: Disk Unit                           | C: Device Attributes                   |
+| C: Sound Unit                          | C: Device Attributes                   |
 |                                        | D: Device Type                         |
 |                                        | E: Device Number                       |
 |                                        | H: Device Unit Mode                    |
@@ -1901,6 +2206,62 @@ that is used by the specified unit.  The Device I/O Base Address
 is servicing the specified unit.  Both of these values are considered 
 driver specific.  Refer to the associated hardware driver for the values
 used.
+
+### Function 0x58 -- Sound Beep (SNDBEEP)
+
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0x58                                | A: Status                              |
+| C: Sound Unit                          |                                        |
+
+Play a beep tone on the specified Sound Unit (C).  The beep will
+normally be about 1/3 second in duration and the tone will be
+approximately B5.
+
+`\clearpage`{=latex}
+
+## Extension (EXT)
+
+Helper (extension) functions that are not a core part of a BIOS.
+
+### Function 0xE0 -- Calculate Slice (EXTSLICE)
+
+| **Entry Parameters**                   | **Returned Values**                    |
+|----------------------------------------|----------------------------------------|
+| B: 0xE0                                | A: Status                              |
+| D: Disk Unit                           | B: Device Attributes                   |             
+| E: Slice                               | C: Media ID                            |
+|                                        | DEHL: Sector Address                   |
+
+Report the Media ID (C), and Device Attributes (B) for the for media in the
+specified Disk Unit (D), and for hard disks the absolute Sector offset to the
+start of the Slice (E). The Status (A) is a standard HBIOS result code.
+
+This function extends upon [Function 0x18 -- Disk Media (DIOMEDIA)] for hard
+disk media by scanning for a partition to determine if the disk uses HD512
+or HD1K, correctly reporting MID_HD or MID_HDNEW respectively.
+See the folowing for some background [Mapping to Media ID]
+
+It will also return the sector number of the first sector in the
+slice if the slice number is valid. If the slice number is invalid
+(it wont fix on the media) an error will be returned.
+
+The slice calculation is performed by considering the partition start
+(if it exists), the size of a slice for the given format type, and ensuring
+that the slice fits within the media or partition size, taking into
+consideration other partitions that may exist.
+
+The Device Attributes (B) are the same as defined in
+[Function 0x17 -- Disk Device (DIODEVICE)]
+
+If the Unit specified is not a hard disk the Media ID will be returned and
+the slice parameter ignored. If there is no media in device, or the slice
+number is invaid (Parameter Out Of Range) the function will return an error status.
+
+**NOTE:
+This function was placed in HBIOS to be shared between the diffeent CP/M
+varients supported by RomWBW. It is not strictly a BIOS function,
+and may be moved in future.
 
 `\clearpage`{=latex}
 
@@ -1948,7 +2309,7 @@ The Version (DE)number is encoded as BCD where the 4 digits are:
 
   [Major Version][Minor Version][Patch Level][Build Number]
 
-So, for example, a Version (L) number of 0x3102 would indicate
+So, for example, a Version (DE) number of 0x3102 would indicate
 version 3.1.0, build 2.
 
 The hardware Platform (L) is identified as follows:
@@ -1972,6 +2333,7 @@ The hardware Platform (L) is identified as follows:
 | PLT_Z80RETRO  |15      | Z80 RETRO COMPUTER                      |
 | PLT_S100      |16      | S100 COMPUTERS Z180                     |
 | PLT_DUO       |17      | DUODYNE Z80 SYSTEM                      |
+| PLT_RCEZ80    |24      | RCBUS W/ eZ80                           |
 
 ### Function 0xF2 -- System Set Bank (SYSSETBNK)
 
@@ -2262,6 +2624,9 @@ a double-word binary value.  The frequency of the system timer in Hertz
 is returned in Frequency (C). The returned Status (A) is a standard HBIOS
 result code.
 
+The tick count is a 32 bit binary value.  It will rollover to zero
+if the maximum value for a 32 bit number is reached.
+
 Note that not all hardware configuration have a system timer.  You
 can determine if a timer exists by calling this function repeatedly
 to see if it is incrementing.
@@ -2272,14 +2637,19 @@ to see if it is incrementing.
 |----------------------------------------|----------------------------------------|
 | B: 0xF8                                | A: Status                              |
 | C: 0xD1                                | DEHL: Seconds Count                    |
-|                                        | C: Ticks per Second                    |
+|                                        | C: Remainder Ticks                     |
 
-Return the a Seconds Count (DEHL) with the number of seconds that have 
+Return the Seconds Count (DEHL) with the number of seconds that have 
 elapsed since the system was started.  This is a double-word binary 
-value.  Additionally, the number of Ticks per Second (C) is returned.  
-The returned Status (A) is a standard HBIOS result code.
+value.  Additionally, Remainder Ticks (C) is returned and contains the number
+of ticks that have elapsed within the current second.
 
-This availability of the Seconds Count (DEHL) is dependent on having a 
+Note that Remainder Ticks (C) will have a value from 0 to 49 since there are
+50 ticks per second.  So, Remainder Ticks does not represent a fraction of the
+current second.  Remainder Ticks (C) can be doubled to derive the hundredths of
+milliseconds elapsed within the current second.
+
+The availability of the Seconds Count (DEHL) is dependent on having a 
 system timer active.  If the hardware configuration has no system timer,
 then Seconds Count (DEHL) will not increment.
 
@@ -2915,7 +3285,7 @@ The following section outlines the read only data referenced by the
 | CMDREG | 5  | 1  | IO PORT ADDRESS FOR MODE 1 |
 |        |    |    | _Below are the register mirror values_ |
 |        |    |    | _that HBIOS used for initialisation_ |
-| REG. 0 | 6  | 1  | $00 - NO EXTERNAL VID
+| REG. 0 | 6  | 1  | $00 - NO EXTERNAL VID |
 | REG. 1 | 7  | 1  | $50 or $70 - SET MODE 1 and interrupt if enabled |
 | REG. 2 | 8  | 1  | $00 - PATTERN NAME TABLE := 0 |
 | REG. 3 | 9  | 1  | $00 - NO COLOR TABLE |

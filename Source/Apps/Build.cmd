@@ -2,47 +2,37 @@
 setlocal
 
 set TOOLS=..\..\Tools
-set APPBIN=..\..\Binary\Apps
 set PATH=%TOOLS%\tasm32;%TOOLS%\zxcc;%PATH%
 set TASMTABS=%TOOLS%\tasm32
 set CPMDIR80=%TOOLS%/cpm/
 
-call :asm syscopy || exit /b
-call :asm assign || exit /b
-call :asm format || exit /b
-call :asm talk || exit /b
-call :asm mode || exit /b
-call :asm rtc || exit /b
-call :asm timer || exit /b
-call :asm rtchb || exit /b
-
-zxcc Z80ASM -SYSGEN/F || exit /b
-
-pushd XM && call Build || exit /b & popd
-pushd FDU && call Build || exit /b & popd
-pushd Tune && call Build || exit /b & popd
-pushd FAT && call Build || exit /b & popd
-pushd Test && call Build || exit /b & popd
-pushd ZMP && call Build || exit /b & popd
-pushd ZMD && call Build || exit /b & popd
-pushd Dev && call Build || exit /b & popd
-pushd VGM && call Build || exit /b & popd
-pushd cpuspd && call Build || exit /b & popd
-pushd Survey && call Build || exit /b & popd
-pushd HTalk && call Build || exit /b & popd
-
-copy *.com %APPBIN%\ || exit /b
+call :build syscopy || exit /b
+call :build assign || exit /b
+call :build format || exit /b
+call :build talk || exit /b
+call :build mode || exit /b
+call :build rtc || exit /b
+call :build timer || exit /b
+call :build sysgen || exit /b
+call :build XM || exit /b
+call :build FDU || exit /b
+call :build Tune || exit /b
+call :build FAT || exit /b
+call :build Test || exit /b
+call :build ZMP || exit /b
+call :build ZMD || exit /b
+call :build Dev || exit /b
+call :build VGM || exit /b
+call :build cpuspd || exit /b
+call :build reboot || exit /b
+call :build Survey || exit /b
+call :build HTalk || exit /b
+call :build BBCBASIC || exit /b
+call :build copysl || exit /b
 
 goto :eof
 
-:asm
-echo.
-echo Building %1...
-tasm -t80 -g3 -fFF %1.asm %1.com %1.lst || exit /b
-goto :eof
-
-:asm180
-echo.
-echo Building %1...
-tasm -t180 -g3 -fFF %1.asm %1.com %1.lst || exit /b
+:build
+echo Building %1
+pushd %1 && call Build || exit /b & popd
 goto :eof

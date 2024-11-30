@@ -10,7 +10,7 @@ set TASMTABS=%TOOLS%\tasm32
 set CPMDIR80=%TOOLS%/cpm/
 
 set RomApps1=assign mode rtc syscopy xm
-set RomApps2=fdu format survey sysgen talk timer cpuspd
+set RomApps2=fdu format survey sysgen talk timer cpuspd reboot
 
 ::
 :: Make all variants of the ROM Disk contents image.  Three sizes are
@@ -67,5 +67,8 @@ cpmcp -f %DiskDef% %Output%.dat ..\zsdos\zsys_%Bios%.sys 0:zsys.sys || exit /b
 
 :: Mark all disk files R/O for safety
 cpmchattr -f %DiskDef% %Output%.dat r 0:*.* || exit /b
+
+:: Dump directory for reference
+cpmls -f %DiskDef% -D %Output%.dat >%Output%.cat
 
 goto :eof
