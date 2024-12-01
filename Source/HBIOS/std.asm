@@ -25,7 +25,7 @@
 ; 21. GMZ180	Doug Jacksons' Genesis Z180 System
 ; 22. NABU	NABU w/ Les Bird's RomWBW Option Board
 ; 23. FZ80	S100 Computers FPGA Z80
-; 24. RCZ80	RCBus eZ80
+; 24. RCEZ80	RCBus eZ80
 ;
 ;
 ; INCLUDE BUILD VERSION
