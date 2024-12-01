@@ -502,8 +502,8 @@ and control is passed to the Boot Loader.
 ## Boot Recovery
 
 To assist users when driver faults or misconfiguration causes a boot 
-failure, RomWBW supports a limited recovery cabability.  This is 
-acheived by allowing the user to reboot their machine, loading
+failure, RomWBW supports a limited recovery capability.  This is 
+achieved by allowing the user to reboot their machine, loading
 a minimal driver set.  Implementation of this feature requires a
 hardware input "BOOT RECOVERY" button to be available and 
 appropriate software configuration to be completed in the HBIOS.
@@ -516,7 +516,7 @@ Typically this would be: Serial communication, RAM disk and parallel
 port IDE interface drivers.
 
 Platforms supporting this option currently are the MBC, Duodyne and
-latter version of the ECB-SBC-V3.
+latter version of the SBC.
  
 # Driver Model
 
