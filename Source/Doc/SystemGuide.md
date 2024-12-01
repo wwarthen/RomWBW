@@ -503,11 +503,11 @@ and control is passed to the Boot Loader.
 
 ## RomWBW NVRAM Configuration
 
-On systems with RTC devices (that have Non-Volitile RAM), RomWBW supports storing
-some limited configuration option options inside this RAM
+On systems with RTC devices (that have Non-Volatile RAM), RomWBW supports storing
+some limited configuration option options inside this RAM.
 
-Several configuration options are currently supported, these are known as Switches
-The following switch ID's are defined, and described in sections below
+Several configuration options are currently supported; these are known as Switches.
+The following switch ID's are defined, and described in sections below.
 
 | Switch Number | Name         | Description                                   |      
 |---------------|--------------|-----------------------------------------------|      
@@ -527,8 +527,8 @@ the bytes in NVRAM to check for authenticity before using the configuration.
 | 0x01 - 0x03 | Switch Data  | Actual Switch Data                |      
 | 0x04        | Parity Check | Parity byte to check authenticity |    
 
-The above data is copied into HBIOS Configuration Block (HCB) at startup at 
-the loacation starting at CB_SWITCHES
+The above data is copied into the HBIOS Configuration Block (HCB) at startup at 
+the location starting at CB_SWITCHES.
 
 ### Default Boot (NVSW_DEFBOOT) 
 
@@ -541,7 +541,7 @@ the loacation starting at CB_SWITCHES
 
 ### Auto Boot (NVSW_AUTOBOOT)
 
-8 bit Switch defining if the system should auto boot at startup
+8 bit Switch defining if the system should auto boot at startup.
 
 | Bits 7-6 | Bit 5                  | Bit 4    | Bits 3-0                             |     
 |----------|------------------------|----------|--------------------------------------|     

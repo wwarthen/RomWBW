@@ -391,12 +391,15 @@ be set, dynamically and stored in NVRAM provided by an RTC chip.
 
 (`SYSCONF`) is both a ROM application ('W' Menu option), and a CP/M utility.
 Noting however the CP/M utility is not included on an disk image, it is found in
-the `Binary/Applications` folder of the RomWBW distribution
+the `Binary/Applications` folder of the RomWBW distribution.
+
+The $doc_user$ has additional information on the use of NVRAM to set your
+system configuration.
 
 ### Basic Operation
 
 The application is an interactive application it does not have command line syntax.
-Instead commands are executed from within the application in a command line structure
+Instead commands are executed from within the application in a command line structure.
 
 When you first start the (`SYSCONF`) utility it will display the current switches
 followed by a command listing.
@@ -406,20 +409,20 @@ be initialised using the (R)eset command, which write default values to NVRAM.
 
 Updates are done immediately to NVRAM as you enter them, i.e. there is no confirm
 changes step. If you make an incorrect changes you simply need to enter a new
-command to set the Switch value correctly
+command to set the Switch value correctly.
 
 Once a change has been made it is available, however may not take effect until
-the next system reboot. This is dependant on the Switch itself
+the next system reboot. This is dependent on the Switch itself.
 
 If no NVRAM is provided by your hardware then running this application will just
 report the missing hardware and exit immediately.
 
-To exit from the application use the (Q)uit command
+To exit from the application use the (Q)uit command.
 
 ### Commands and Syntax
 
 The following are the accepted commands, unless otherwise specified a "Space" 
-character is used to delimit parameters in the command 
+character is used to delimit parameters in the command.
 
 | Command    | Argument(s)      | Description                                   | 
 |------------|------------------|-----------------------------------------------| 

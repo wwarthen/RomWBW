@@ -258,60 +258,61 @@ nofp:
 ;
 nvrswitch:
 	ld	bc,BC_SYSGET_SWITCH	; HBIOS SysGet NVRAM Switches
-	ld	D,$FF			; get NVR Status - Is NVRam initialised
+	ld	d,$FF			; get NVR Status - Is NVRam initialised
 	rst	08
-	CP	'W'			; is NV RAM fully inited.
-	JR	NZ,nonvrswitch		; NOT So - Skip the int from nvram
+	cp	'W'			; is NV RAM fully inited.
+	jr	NZ,nonvrswitch		; NOT So - Skip the int from nvram
 nvrsw_def:
-	;
+;
 	call	nl			; display message to indicate switches found
 	ld	hl,str_nvswitches
 	call	pstr
 	;
 	ld	bc,BC_SYSGET_SWITCH	; HBIOS SysGet NVRAM Switches
-	ld	D,NVSW_DEFBOOT		; Read Default Boot (disk/Rom) switch
+	ld	d,NVSW_DEFBOOT		; Read Default Boot (disk/Rom) switch
 	rst	08
-	LD	A,H
-	AND	DBOOT_ROM		; Get the Default Boot from ROM Flag
-	JR	NZ,nvrsw_rom		; IF Set as ROM App BOOT, otherwise Disk
+	ld	a,h
+	and	DBOOT_ROM		; Get the Default Boot from ROM Flag
+	jr	nz,nvrsw_rom		; IF Set as ROM App BOOT, otherwise Disk
+;
 nvrsw_disk:
-	LD	A,H			; (H contains the Disk Unit 0-127)
-	LD	(bootunit),A		; copy the NVRam Unit and Slice
-	LD	A,L			; (L contains the boot slice 0-255)
-	LD	(bootslice),A		; directly into the selected boot
-	LD	L,'~'			; We use the "~" char to signal, DISK BOOT
+	ld	a,h			; (H contains the Disk Unit 0-127)
+	ld	(bootunit),a		; copy the NVRam Unit and Slice
+	ld	a,l			; (L contains the boot slice 0-255)
+	ld	(bootslice),a		; directly into the selected boot
+	ld	l,'~'			; We use the "~" char to signal, DISK BOOT
 					; setting it a the auto cmd (string/char)
 nvrsw_rom:
-	LD	H,0			; Clear high orer byte, leaving L intact
-	LD	(acmd),HL		; Load the Character into auto command
+	ld	h,0			; Clear high orer byte, leaving L intact
+	ld	(acmd),hl		; Load the Character into auto command
 					; Thus (acma)   = L   (the boot character)
 					;      (acma+1) = H=0 (string terminator)
 nvrsw_auto:
 	ld	bc,BC_SYSGET_SWITCH	; HBIOS SysGet NVRAM Switches
-	ld	D,NVSW_AUTOBOOT		; GET Autoboot switch
+	ld	d,NVSW_AUTOBOOT		; GET Autoboot switch
 	rst	08
-	ld	A,L
-	AND	ABOOT_AUTO		; Get the autoboot flag
-	JR	Z,prompt		; not set, so directly prompt
+	ld	a,l
+	and	ABOOT_AUTO		; Get the autoboot flag
+	jr	z,prompt		; not set, so directly prompt
 ;
 	or	$FF			; auto cmd active value
 	ld	(acmd_act),a		; set the auto command active flag
 ;
-	LD	A,L			; the low order byte from SWITCHES
-	AND	ABOOT_TIMEOUT		; Mask out the Timeout
-	LD	B,A			; timeout to high order B.C byte -> x 256
-	XOR	A
-	LD	C,A			; and clear low order C byte
-	SRL	B			; Shift 2 right by 2 bits -> /4
-	RR	C
-	SRL	B
-	RR	C			; BC should now contain timeout * 64
+	ld	a,l			; the low order byte from SWITCHES
+	and	ABOOT_TIMEOUT		; Mask out the Timeout
+	ld	b,a			; timeout to high order B.C byte -> x 256
+	xor	a
+	ld	c,a			; and clear low order C byte
+	srl	b			; Shift 2 right by 2 bits -> /4
+	rr	c
+	srl	b
+	rr	c			; BC should now contain timeout * 64
 	ld	(acmd_to),bc		; save auto cmd timeout 64ths of second
 ;
-	JR	initautoboot		; init auto boot from NVRAM, ignore Build Config
+	jr	initautoboot		; init auto boot from NVRAM, ignore Build Config
 ;
 nonvrswitch:
-	; no NVRAM switches found, or disabled, continue process from Buid Config
+	; no NVRAM switches found, or disabled, continue process from Build Config
 #endif
 ;
 #if (BOOT_TIMEOUT != -1)
@@ -339,13 +340,30 @@ initautoboot:
 	ld	hl,str_autoboot		; auto command prefix
 	call	pstr			; show it
 	call	autocmd			; handle w/o prompt
-	jr	reprompt		; restart w/ autocmd disable
+	jp	reprompt		; restart w/ autocmd disable
 ;
 ;=======================================================================
 ; BOOT PROMPT
 ;=======================================================================
 ;
 prompt:
+	; if autboot is active, notify user as a reminder
+	ld	a,(acmd_act)		; get auto cmd active flag
+	or	a			; active?
+	jr	z,prompt2		; bypass message if not active
+	ld	hl,str_autoact1		; message part 1
+	call	pstr			; display it
+	ld	bc,(acmd_to)		; get timeout
+	rl	c			; seconds value to B
+	rl	b
+	rl	c
+	rl	b
+	ld	a,b			; move it to A
+	call	prtdecb			; display it
+	ld	hl,str_autoact2		; message part 2
+	call	pstr			; display it
+;
+prompt2:
 	ld	hl,reprompt		; adr of prompt restart routine
 	push	hl			; put it on stack
 	call	nl2			; formatting
@@ -415,7 +433,7 @@ wtkey:
 reprompt:
 	xor	a			; zero accum
 	ld	(acmd_act),a		; set auto cmd inactive
-	jr	prompt			; back to loader prompt
+	jp	prompt			; back to loader prompt
 ;
 clrbuf:
 	ld	hl,cmdbuf
@@ -2392,6 +2410,8 @@ acmd_to		.dw	BOOT_TIMEOUT	; auto cmd timeout -1 DISABLE, 0 IMMEDIATE
 str_banner	.db	PLATFORM_NAME," Boot Loader",0
 str_appboot	.db	" (App Boot)",0
 str_autoboot	.db	"AutoBoot: ",0
+str_autoact1	.db	"\r\n\r\nAutoBoot in ",0
+str_autoact2	.db	" Seconds...",0
 str_prompt	.db	"Boot [H=Help]: ",0
 str_bs		.db	bs,' ',bs,0
 str_reboot	.db	"\r\n\r\nRestarting System...",0

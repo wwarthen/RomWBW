@@ -32,7 +32,7 @@ else ifeq ($(CPUFAM),3)
 	TASM=$(BINDIR)/uz80as -t z280
 endif
 
-DEPS=prereq dbgmon.bin romldr.bin nascom.bin tastybasic.bin game.bin eastaegg.bin updater.bin sysconf.bin usrrom.bin imgpad2.bin
+DEPS=prereq dbgmon.bin romldr.bin nascom.bin tastybasic.bin game.bin eastaegg.bin updater.bin sysconf.bin sysconf.com usrrom.bin imgpad2.bin
 
 ifeq ($(ROM_PLATFORM),UNA)
 	ROMDEPS=romldr.bin dbgmon.bin
@@ -100,6 +100,7 @@ sysconf.bin:
 
 sysconf.com:
 	@$(TASM) -dCPM sysconf.asm sysconf.com sysconf_com.lst
+	cp $@ $(DEST)/Apps
 
 s100mon.bin:
 	$(ZXCC) $(CPM)/SLR180 -s100mon/FH

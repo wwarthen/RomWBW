@@ -900,7 +900,7 @@ Restarting System...
 ### Setting NVRAM Options
 
 On systems with RTC devices (that have Non-Volatile RAM), RomWBW supports storing
-some limited configuration option options inside this NVRAM
+some limited configuration option options inside this NVRAM.
 
 Several configuration options are currently supported, these are known as Switches
 
@@ -920,28 +920,33 @@ so long as you do NOT perform this Reset step.
 
 NVRAM may also need to be reset in these circumstances
 
-* When there has been a loss of power to the NVRAM
-* When upgrading to a new RomWBW version, or a RomWBW version that has new switches
+* When there has been a loss of power to the NVRAM.
+* When upgrading to a new RomWBW version, or a RomWBW version that has new switches.
 * If the NVRAM has been overitten by another application.
 
 If you want to continue to use NVRAM in your applications you may want to consider storing
 your data above the RomWBW Switch data.
 
-The WIZNET class of Network devices also contain NVRAM, currently RomWBW does not support
-writing configuration to these devices.
-
 To configure these options an inbuilt ROM application is provided which can be accessed
 by the command "`W`" from the RomWBW boot menu.
 
 This application is also built as a CP/M utility, but is not included on an disk image, 
-it is found in the `Binary/Applications` folder of the RomWBW distribution
+it is found in the `Binary/Applications` folder of the RomWBW distribution.
 
 For further guidance on using this application please see the section 
-"RomWBW System Configuration" in the RomWBW Applications document
+"RomWBW System Configuration" in the $doc_apps$ document.
+
+If your system has both a [Front Panel] as well as NVRAM, be aware that
+the Front Panel switches take precedence over the NVRAM configuration
+settings.
+
+Note that the WizNet class of Network devices also contain NVRAM which is
+entirely separate from the RomWBW configuration NVRAM described here.  A
+separate utility is used to set the WizNet NVRAM (see [CP/NET Client Setup]).
 
 [RomWBW Applications]($doc_root$/RomWBW Applications.pdf)
 
-### Changing Console and Console speed
+### Changing Console and Console Speed
 
 Your system can support a number of devices for the console. They may
 be VDU type devices or serial devices. If you want to change which
