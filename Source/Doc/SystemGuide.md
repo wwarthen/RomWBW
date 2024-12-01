@@ -499,6 +499,25 @@ The startup then proceeds very much like the Application Boot
 process described above.  HBIOS is installed in its operating bank
 and control is passed to the Boot Loader.
 
+## Boot Recovery
+
+To assist users when driver faults or misconfiguration causes a boot 
+failure, RomWBW supports a limited recovery capability.  This is 
+achieved by allowing the user to reboot their machine, loading
+a minimal driver set.  Implementation of this feature requires a
+hardware input "BOOT RECOVERY" button to be available and 
+appropriate software configuration to be completed in the HBIOS.
+
+When implemented, holding the "BOOT RECOVERY" button in after a 
+reset or power cycle will cause the normal driver load process to
+be skipped in preference to a minimal set of drivers being loaded.
+
+Typically this would be: Serial communication, RAM disk and parallel
+port IDE interface drivers.
+
+Platforms supporting this option currently are the MBC, Duodyne and
+latter version of the SBC.
+ 
 # Configuration
 
 ## RomWBW NVRAM Configuration

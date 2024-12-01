@@ -362,7 +362,7 @@ SPDDISP:LD	DE,DMA_SPD_STR
 	CALL	PRTIDXDEA
 ;
 	call	PRTSTRD
-	.db	"\n\rTransfer Mode: $"	; DIPLAY TRANSFER
+	.db	"\n\rTransfer Mode: $"	; DISPLAY TRANSFER
 	LD	a,(dmaxfer)		; MODE
 	LD	DE,DMA_XFRMODE
 	CALL	PRTIDXDEA
