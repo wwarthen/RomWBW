@@ -2337,12 +2337,21 @@ survive re-imaging, you **must** follow these rules:
 
 This section covers techniques to copy partial images onto pre-existing media,
 in effect performing a selective slice copy. These techniques currently **only** apply to 
-hd1k formatted media, which has a convienient 1MB size metric. 
-However adapting to hd512 is possible.
+hd1k formatted media, which has a convenient 1MB size metric. 
+However adapting to hd512 is possible, but left to the user.
 
 On Linux/MacOS the `dd` command can be used to write data in a controlled manner.
-The `dd` command supports options to define precisly souce 
-and destination offsets and sizes to copy. 
+Although Windows does not have a native `dd` command, there are multiple
+options for installing it including [MSYS2](https://www.msys2.org/),
+[CygWin](https://www.cygwin.com/),
+and [dd for Windows](http://www.chrysocome.net/dd).
+
+**WARNING**: The `dd` command is a low-level utility that writes
+directly to raw disk sectors with almost no safety checks.  It is very
+easy to corrupt a disk if this tool is used incorrectly.
+
+The `dd` command supports options to define precisely source 
+and destination offsets and sizes to copy.
 From the documentation of `dd` the following options are important.
 
 ```
@@ -2413,6 +2422,27 @@ where 8 is the size of a slice
 and 1 is the size of the partition table im megabytes.
 Thus we are skipping 6 slices (in the combo image) 
 and writing to the 7th slice.
+
+#### Example 3 : Copy image using partition
+
+In the previous examples, the hard disk is addressed as a raw disk
+device and we took steps to calculate the assumed start of the RomWBW
+partition.  However, as long as the hd1k format is in use, it is
+also possible to just point `dd` directly to the partition itself.
+
+To do this, you must first determine the name that your operating
+system is using for the desired partition.  Frequently, partitions
+are named by simply adding a number after the name of the hard disk
+device.  For example, if the hard disk is /dev/sdg, the first
+partition is frequently /dev/sdg1 or /dev/sdgp1.
+
+Taking advantage of this, it is safer and easier to calculate the
+offset of a slice within the partition.  It is simply the slice
+number \* 8MB.  Example 2 above, could now be performed as:
+
+```
+Binary % sudo dd if=hd1k_games.img of=/dev/sdg1 seek=48 bs=1M
+```
 
 # Operating Systems
 
