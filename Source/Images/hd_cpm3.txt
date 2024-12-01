@@ -39,7 +39,6 @@ d_cpm3/ReadMe.txt 0:
 ../../Binary/Apps/mode.com 0:
 ../../Binary/Apps/rtc.com 0:
 ../../Binary/Apps/survey.com 0:
-../../Binary/Apps/sysconfig.com 0:
 ../../Binary/Apps/syscopy.com 0:
 #../../Binary/Apps/sysgen.com 0:
 #../../Binary/Apps/talk.com 0:

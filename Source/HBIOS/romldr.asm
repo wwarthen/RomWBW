@@ -249,13 +249,89 @@ nofp:
 ;
 #endif
 ;
+;=======================================================================
+; INITIALISE BOOT PROMPT (acmd_*) FROM CONFIG
+;=======================================================================
+#if (BIOS == BIOS_WBW)
+;
+; NVRAM AUTO BOOT CONFIGURATION
+;
+nvrswitch:
+	ld	bc,BC_SYSGET_SWITCH	; HBIOS SysGet NVRAM Switches
+	ld	d,$FF			; get NVR Status - Is NVRam initialised
+	rst	08
+	cp	'W'			; is NV RAM fully inited.
+	jr	NZ,nonvrswitch		; NOT So - Skip the int from nvram
+nvrsw_def:
+;
+	call	nl			; display message to indicate switches found
+	ld	hl,str_nvswitches
+	call	pstr
+	;
+	ld	bc,BC_SYSGET_SWITCH	; HBIOS SysGet NVRAM Switches
+	ld	d,NVSW_DEFBOOT		; Read Default Boot (disk/Rom) switch
+	rst	08
+	ld	a,h
+	and	DBOOT_ROM		; Get the Default Boot from ROM Flag
+	jr	nz,nvrsw_rom		; IF Set as ROM App BOOT, otherwise Disk
+;
+nvrsw_disk:
+	ld	a,h			; (H contains the Disk Unit 0-127)
+	ld	(bootunit),a		; copy the NVRam Unit and Slice
+	ld	a,l			; (L contains the boot slice 0-255)
+	ld	(bootslice),a		; directly into the selected boot
+	ld	l,'~'			; We use the "~" char to signal, DISK BOOT
+					; setting it a the auto cmd (string/char)
+nvrsw_rom:
+	ld	h,0			; Clear high orer byte, leaving L intact
+	ld	(acmd),hl		; Load the Character into auto command
+					; Thus (acma)   = L   (the boot character)
+					;      (acma+1) = H=0 (string terminator)
+nvrsw_auto:
+	ld	bc,BC_SYSGET_SWITCH	; HBIOS SysGet NVRAM Switches
+	ld	d,NVSW_AUTOBOOT		; GET Autoboot switch
+	rst	08
+	ld	a,l
+	and	ABOOT_AUTO		; Get the autoboot flag
+	jr	z,prompt		; not set, so directly prompt
+;
+	or	$FF			; auto cmd active value
+	ld	(acmd_act),a		; set the auto command active flag
+;
+	ld	a,l			; the low order byte from SWITCHES
+	and	ABOOT_TIMEOUT		; Mask out the Timeout
+	ld	b,a			; timeout to high order B.C byte -> x 256
+	xor	a
+	ld	c,a			; and clear low order C byte
+	srl	b			; Shift 2 right by 2 bits -> /4
+	rr	c
+	srl	b
+	rr	c			; BC should now contain timeout * 64
+	ld	(acmd_to),bc		; save auto cmd timeout 64ths of second
+;
+	jr	initautoboot		; init auto boot from NVRAM, ignore Build Config
+;
+nonvrswitch:
+	; no NVRAM switches found, or disabled, continue process from Build Config
+#endif
+;
 #if (BOOT_TIMEOUT != -1)
+;
+; BUILD CONFIGURATION
+;
 	; Initialize auto command timeout downcounter
 	or	$FF			; auto cmd active value
 	ld	(acmd_act),a		; set flag
-	ld	bc,BOOT_TIMEOUT * 100	; hundredths of seconds
+	ld	bc,BOOT_TIMEOUT * 64	; 1/64's of a second
 	ld	(acmd_to),bc		; save auto cmd timeout
+	; fall through and initialise Auto boot.
+#endif
 ;
+;=======================================================================
+; INIT AUTO BOOT - If autoboot was detected.
+;=======================================================================
+;
+initautoboot:
 	; If timeout is zero, boot auto command immediately
 	ld	a,b			; check for
 	or	c			; ... zero
@@ -264,10 +340,30 @@ nofp:
 	ld	hl,str_autoboot		; auto command prefix
 	call	pstr			; show it
 	call	autocmd			; handle w/o prompt
-	jr	reprompt		; restart w/ autocmd disable
-#endif
+	jp	reprompt		; restart w/ autocmd disable
+;
+;=======================================================================
+; BOOT PROMPT
+;=======================================================================
 ;
 prompt:
+	; if autboot is active, notify user as a reminder
+	ld	a,(acmd_act)		; get auto cmd active flag
+	or	a			; active?
+	jr	z,prompt2		; bypass message if not active
+	ld	hl,str_autoact1		; message part 1
+	call	pstr			; display it
+	ld	bc,(acmd_to)		; get timeout
+	rl	c			; seconds value to B
+	rl	b
+	rl	c
+	rl	b
+	ld	a,b			; move it to A
+	call	prtdecb			; display it
+	ld	hl,str_autoact2		; message part 2
+	call	pstr			; display it
+;
+prompt2:
 	ld	hl,reprompt		; adr of prompt restart routine
 	push	hl			; put it on stack
 	call	nl2			; formatting
@@ -319,7 +415,6 @@ wtkey:
   #endif
 #endif
 ;
-#if (BOOT_TIMEOUT != -1)
 	; check for timeout and handle auto boot here
 	ld	a,(acmd_act)		; get auto cmd active flag
 	or	a			; set flags
@@ -330,16 +425,15 @@ wtkey:
 	jr	z,autocmd		; if so, handle it
 	dec	bc			; decrement
 	ld	(acmd_to),bc		; resave it
-	ld	de,625			; 16us * 625 = 10ms
-	call	vdelay			; 10ms delay
-#endif
+	ld	de,976			; 16us * 976 -> 1/64th of a second.
+	call	vdelay			; 15.6ms delay, 64 in 1 second
 ;
 	jr	wtkey			; loop
 ;
 reprompt:
 	xor	a			; zero accum
 	ld	(acmd_act),a		; set auto cmd inactive
-	jr	prompt			; back to loader prompt
+	jp	prompt			; back to loader prompt
 ;
 clrbuf:
 	ld	hl,cmdbuf
@@ -451,6 +545,9 @@ runcmd:
 	ld	a,(de)			; get character
 	call	upcase			; make upper case
 ;
+	; Auto Command (probably) from NVR default Disk Boot
+	CP	'~'			; We use the "~" char to signal, DISK
+	JP	Z,diskboot		; noting the - (bootunit) (bootslice) have inited.
 	; Attempt built-in commands
 	cp	'H'			; H = display help
 	jp	z,help			; if so, do it
@@ -2298,8 +2395,13 @@ str_err_api	.db	"Unexpected hardware BIOS API failure",0
 acmd		.db	BOOT_DEFAULT	; auto cmd string
 		.db	0
 acmd_len	.equ	$ - acmd	; len of auto cmd
-acmd_act	.db	$FF		; auto cmd active
-acmd_to		.dw	BOOT_TIMEOUT	; auto cmd timeout
+acmd_act	.dw	$00		; inactive by default
+
+#if (BOOT_TIMEOUT > 0)
+acmd_to		.dw	BOOT_TIMEOUT * 64 ; auto cmd timeout (1/64's of sec)
+#else
+acmd_to		.dw	BOOT_TIMEOUT	; auto cmd timeout -1 DISABLE, 0 IMMEDIATE
+#endif
 ;
 ;=======================================================================
 ; Strings
@@ -2308,6 +2410,8 @@ acmd_to		.dw	BOOT_TIMEOUT	; auto cmd timeout
 str_banner	.db	PLATFORM_NAME," Boot Loader",0
 str_appboot	.db	" (App Boot)",0
 str_autoboot	.db	"AutoBoot: ",0
+str_autoact1	.db	"\r\n\r\nAutoBoot in ",0
+str_autoact2	.db	" Seconds...",0
 str_prompt	.db	"Boot [H=Help]: ",0
 str_bs		.db	bs,' ',bs,0
 str_reboot	.db	"\r\n\r\nRestarting System...",0
@@ -2420,8 +2524,8 @@ ra_ent		.equ	12
 #defcont	.dw	p8
 ;
 ; Note: The formatting of the following is critical. TASM does not pass
-; macro arguments well. Ensure std.asm holds the definitions for *_LOC,
-; *_SIZ *_END and any code generated which does not include std.asm is
+; macro arguments well. Ensure LAYOUT.INC holds the definitions for *_LOC,
+; *_SIZ *_END and any code generated which does not include LAYOUT.INC is
 ; synced.
 ;
 ; Note: The loadable ROM images are placed in ROM banks BID_IMG0 and
@@ -2490,6 +2594,7 @@ str_user	.db	"User App",0
 str_egg		.db	"",0
 str_net		.db	"Network Boot",0
 str_switches	.db	"FP Switches = 0x",0
+str_nvswitches	.db	"NV Switches Found",0
 newcon		.db	0
 newspeed	.db	0
 ;

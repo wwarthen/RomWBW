@@ -897,7 +897,56 @@ Boot [H=Help]: r
 Restarting System...
 ```
 
-### Changing Console and Console speed
+### Setting NVRAM Options
+
+On systems with RTC devices (that have Non-Volatile RAM), RomWBW supports storing
+some limited configuration option options inside this NVRAM.
+
+Several configuration options are currently supported, these are known as Switches
+
+* Specify Automatic boot at startup, after an optional delay (AB)
+* Define the Default Disk or ROM App to be booted at startup (DB)
+
+RomWBW uses bytes located at the start of RTC NVRAM, and includes a Parity check of 
+the bytes in NVRAM to check for authenticity before using the configuration.
+
+Initially NVRAM has to be reset (with default values), before it can be used.
+As well as setting defaults, it also writes the correct parity, and allows the
+NVRAM to be accessed and to store RomWBW config.
+
+This is an explicit step that must be done, as any existing data stored is overitten.
+If you are using NVRAM for other purposes then you can continue to do so
+so long as you do NOT perform this Reset step.
+
+NVRAM may also need to be reset in these circumstances
+
+* When there has been a loss of power to the NVRAM.
+* When upgrading to a new RomWBW version, or a RomWBW version that has new switches.
+* If the NVRAM has been overitten by another application.
+
+If you want to continue to use NVRAM in your applications you may want to consider storing
+your data above the RomWBW Switch data.
+
+To configure these options an inbuilt ROM application is provided which can be accessed
+by the command "`W`" from the RomWBW boot menu.
+
+This application is also built as a CP/M utility, but is not included on an disk image, 
+it is found in the `Binary/Applications` folder of the RomWBW distribution.
+
+For further guidance on using this application please see the section 
+"RomWBW System Configuration" in the $doc_apps$ document.
+
+If your system has both a [Front Panel] as well as NVRAM, be aware that
+the Front Panel switches take precedence over the NVRAM configuration
+settings.
+
+Note that the WizNet class of Network devices also contain NVRAM which is
+entirely separate from the RomWBW configuration NVRAM described here.  A
+separate utility is used to set the WizNet NVRAM (see [CP/NET Client Setup]).
+
+[RomWBW Applications]($doc_root$/RomWBW Applications.pdf)
+
+### Changing Console and Console Speed
 
 Your system can support a number of devices for the console. They may
 be VDU type devices or serial devices. If you want to change which
@@ -2288,12 +2337,21 @@ survive re-imaging, you **must** follow these rules:
 
 This section covers techniques to copy partial images onto pre-existing media,
 in effect performing a selective slice copy. These techniques currently **only** apply to 
-hd1k formatted media, which has a convienient 1MB size metric. 
-However adapting to hd512 is possible.
+hd1k formatted media, which has a convenient 1MB size metric. 
+However adapting to hd512 is possible, but left to the user.
 
 On Linux/MacOS the `dd` command can be used to write data in a controlled manner.
-The `dd` command supports options to define precisly souce 
-and destination offsets and sizes to copy. 
+Although Windows does not have a native `dd` command, there are multiple
+options for installing it including [MSYS2](https://www.msys2.org/),
+[CygWin](https://www.cygwin.com/),
+and [dd for Windows](http://www.chrysocome.net/dd).
+
+**WARNING**: The `dd` command is a low-level utility that writes
+directly to raw disk sectors with almost no safety checks.  It is very
+easy to corrupt a disk if this tool is used incorrectly.
+
+The `dd` command supports options to define precisely source 
+and destination offsets and sizes to copy.
 From the documentation of `dd` the following options are important.
 
 ```
@@ -2364,6 +2422,27 @@ where 8 is the size of a slice
 and 1 is the size of the partition table im megabytes.
 Thus we are skipping 6 slices (in the combo image) 
 and writing to the 7th slice.
+
+#### Example 3 : Copy image using partition
+
+In the previous examples, the hard disk is addressed as a raw disk
+device and we took steps to calculate the assumed start of the RomWBW
+partition.  However, as long as the hd1k format is in use, it is
+also possible to just point `dd` directly to the partition itself.
+
+To do this, you must first determine the name that your operating
+system is using for the desired partition.  Frequently, partitions
+are named by simply adding a number after the name of the hard disk
+device.  For example, if the hard disk is /dev/sdg, the first
+partition is frequently /dev/sdg1 or /dev/sdgp1.
+
+Taking advantage of this, it is safer and easier to calculate the
+offset of a slice within the partition.  It is simply the slice
+number \* 8MB.  Example 2 above, could now be performed as:
+
+```
+Binary % sudo dd if=hd1k_games.img of=/dev/sdg1 seek=48 bs=1M
+```
 
 # Operating Systems
 
@@ -4237,6 +4316,11 @@ ALIAS facility.
 p-System has its own startup command processing mechanism that is
 covered in the p-System documentation.
 
+## NVRAM Configuration
+
+See section [Setting NVRAM Options] for information about how to
+apply NVRAM configuration.
+
 ## ROM Customization
 
 The pre-built ROM images are configured for the basic capabilities of
@@ -4268,6 +4352,14 @@ level task and is left to the reader to pursue.
 Note that the ROM customization process does not apply to UNA. All
 UNA customization is performed within the ROM setup script that is
 built into the ROM.
+
+## ROM User Application
+
+The User App is provided as a way to access a custom written
+ROM application.  In the pre-built ROMs, selecting User App will just
+return to the Boot Loader menu.  If you are interested in creating a
+custom application to run instead, review the "usrrom.asm" file in the
+Source/HBIOS folder of the distribution.
 
 # UNA Hardware BIOS
 
@@ -4678,7 +4770,8 @@ please let me know if I missed you!
   
 * Mark Pruden has also contributed a great deal of content to the
   Disk Catalog, User Guide as well as contributing the disk image
-  for the Z3PLUS operating system, and the COPYSL utility.
+  for the Z3PLUS operating system, the COPYSL utility, and also
+  implemented feature for RomWBW configuration by NVRAM.  
 
 * Jacques Pelletier has contributed the DS1501 RTC driver code.
 

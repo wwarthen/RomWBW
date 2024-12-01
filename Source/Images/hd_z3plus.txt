@@ -46,7 +46,6 @@ d_cpm3/u0/HELP.HLP 0:
 ../../Binary/Apps/mode.com 15:
 ../../Binary/Apps/rtc.com 15:
 ../../Binary/Apps/survey.com 15:
-../../Binary/Apps/sysconfig.com 15:
 ../../Binary/Apps/syscopy.com 15:
 ../../Binary/Apps/sysgen.com 15:
 ../../Binary/Apps/talk.com 15:
