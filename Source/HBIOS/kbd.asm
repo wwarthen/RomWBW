@@ -59,10 +59,18 @@ KBD_IDLE	.DB	0	; IDLE COUNT
 	DEVECHO	"KBD: ENABLED\n"
 ;
 ;__________________________________________________________________________________________________
+; HARDWARE LEVEL INTERFACE
+;__________________________________________________________________________________________________
+;
+#INCLUDE "ps2iface.inc"
+;__________________________________________________________________________________________________
 ; KEYBOARD INITIALIZATION
 ;__________________________________________________________________________________________________
 ;
 KBD_INIT:
+#IF (INTPS2KBD)
+	CALL	KBDQINIT		; INITIALIZE QUEUE
+#ENDIF
 	CALL	NEWLINE			; FORMATTING
 	PRTS("KBD: IO=0x$")
 	LD	A,(IY+KBD_DAT)
@@ -159,35 +167,6 @@ KBD_FLUSH:
 	RET
 ;
 ;__________________________________________________________________________________________________
-; HARDWARE INTERFACE
-;__________________________________________________________________________________________________
-;
-;__________________________________________________________________________________________________
-KBD_IST:
-;
-; KEYBOARD INPUT STATUS
-;   A=0, Z SET FOR NOTHING PENDING, OTHERWISE DATA PENDING
-;
-	LD	C,(IY+KBD_ST)		; STATUS PORT
-	EZ80_IO
-	IN	A,(C)			; GET STATUS
-	AND	$01			; ISOLATE INPUT PENDING BIT
-	RET
-;
-;__________________________________________________________________________________________________
-KBD_OST:
-;
-; KEYBOARD OUTPUT STATUS
-;   A=0, Z SET FOR NOT READY, OTHERWISE READY TO WRITE
-;
-	LD	C,(IY+KBD_ST)		; STATUS PORT
-	EZ80_IO
-	IN	A,(C)			; GET STATUS
-	AND	$02			; ISOLATE OUTPUT EMPTY BIT
-	XOR	$02			; FLIP IT FOR APPROPRIATE RETURN VALUES
-	RET
-;
-;__________________________________________________________________________________________________
 KBD_PUTCMD:
 ;
 ; PUT A CMD BYTE FROM A TO THE KEYBOARD INTERFACE WITH TIMEOUT
@@ -211,9 +190,7 @@ KBD_PUTCMD1:
 	CALL	PC_GT
 	CALL	PRTHEXBYTE
 #ENDIF
-	LD	C,(IY+KBD_CMD)		; COMMAND PORT
-	EZ80_IO
-	OUT	(C),A			; WRITE IT
+	CALL	KBD_CMDOUT		; OUTPUT CMD TO PORT
 KBD_PUTCMD2:
 	XOR	A			; SIGNAL SUCCESS
 	RET
@@ -241,9 +218,7 @@ KBD_PUTDATA1:
 	CALL	PC_GT
 	CALL	PRTHEXBYTE
 #ENDIF
-	LD	C,(IY+KBD_DAT)		; DATA PORT
-	EZ80_IO
-	OUT	(C),A			; WRITE IT
+	CALL	KBD_DTAOUT		; WRITE IT
 KBD_PUTDATA2:
 	XOR	A			; SIGNAL SUCCESS
 	RET
@@ -262,9 +237,7 @@ KBD_GETDATA0:
 	XOR	A			; NO DATA, RETURN ZERO
 	RET
 KBD_GETDATA1:
-	LD	C,(IY+KBD_DAT)		; DATA PORT
-	EZ80_IO
-	IN	A,(C)			; GET THE DATA VALUE
+	CALL	KBD_IN			; GET A KEY
 #IF (KBDTRACE >= 2)
 	PUSH	AF
 	CALL	PC_SPACE

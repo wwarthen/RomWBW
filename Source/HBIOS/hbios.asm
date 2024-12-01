@@ -3392,7 +3392,7 @@ IS_REC_M1:
 	CALL	CALLLIST
 ;
 ;--------------------------------------------------------------------------------------------------
-; NV-SWITCH INITITIALISATION
+; NV-SWITCH INITIALISATION
 ; Requires functional RTC NVR
 ;--------------------------------------------------------------------------------------------------
 ;
@@ -3818,7 +3818,7 @@ INITSYS4:
 ;
 HB_PCINIT_REC:
 ;
-  #IF ((PLATFORM == PLT_SBC) | (PLATFORM == PLT_MBC))
+  #IF ((PLATFORM == PLT_SBC) | (PLATFORM == PLT_MBC) | (PLATFORM == PLT_DUO))
 	.DW	UART_PREINIT
 ;	.DW	CALLDUMMY
   #ENDIF
@@ -3827,7 +3827,7 @@ HB_PCINITRLEN	.EQU	(($ - HB_PCINIT_REC) / 2)
 ;
 HB_INIT_REC:
 ;
-  #IF ((PLATFORM == PLT_SBC) | (PLATFORM == PLT_MBC))
+  #IF ((PLATFORM == PLT_SBC) | (PLATFORM == PLT_MBC) | (PLATFORM == PLT_DUO))
 	.DW	UART_INIT
 	.DW	MD_INIT
 	.DW	PPIDE_INIT
