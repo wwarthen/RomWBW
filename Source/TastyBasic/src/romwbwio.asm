@@ -31,7 +31,7 @@ BF_SYSRES_WARM			.equ 01h			; warm start
 
 ;*************************************************************
 ;
-; THE FOLLOWING NEED MUST BE SYNCED WITH STD.ASM SO ROMLDR
+; THE FOLLOWING NEED MUST BE SYNCED WITH LAYOUT.INC SO ROMLDR
 ; KNOWS WHERE THIS EXECUTES AT
 ;
 ;*************************************************************

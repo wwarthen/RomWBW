@@ -499,6 +499,77 @@ The startup then proceeds very much like the Application Boot
 process described above.  HBIOS is installed in its operating bank
 and control is passed to the Boot Loader.
 
+# Configuration
+
+## RomWBW NVRAM Configuration
+
+On systems with RTC devices (that have Non-Volitile RAM), RomWBW supports storing
+some limited configuration option options inside this RAM
+
+Several configuration options are currently supported, these are known as Switches
+The following switch ID's are defined, and described in sections below
+
+| Switch Number | Name         | Description                                   |      
+|---------------|--------------|-----------------------------------------------|      
+| 0x00          | -reserved-   | Reserved                                      |      
+| 0x01          | Default Boot | Default boot, either a Rom App or Disk Boot   |      
+| 0x02          | -n/a-        | -n/a- high order byte of previous switch      |      
+| 0x03          | Auto Boot    | Automatically boot enabled without user input |
+| 0x04 - 0xFE   | -future-     | Future general usage                          |
+| 0xFF          | Status Reset | Get Status or Reset Switches to Default       |     
+
+RomWBW uses bytes located at the start of RTC NVRAM, and includes a Parity check of
+the bytes in NVRAM to check for authenticity before using the configuration.
+
+| NVRAM Byte  | Name         | Description                       |      
+|-------------|--------------|-----------------------------------|      
+| 0x00        | Header Byte  | Header Signature Byte 'W'         |      
+| 0x01 - 0x03 | Switch Data  | Actual Switch Data                |      
+| 0x04        | Parity Check | Parity byte to check authenticity |    
+
+The above data is copied into HBIOS Configuration Block (HCB) at startup at 
+the loacation starting at CB_SWITCHES
+
+### Default Boot (NVSW_DEFBOOT) 
+
+16 bit Switch defining the default Rom application or Disk device to boot. 
+
+| Bit 15      | Bits 14-8         | Bits 7-0           |      
+|-------------|-------------------|--------------------|      
+| 1 = Rom App | -undefined-       | App to Boot (Char) |      
+| 0 = Disk    | Disk Unit (0-127) | Disk Slice (0-255) |      
+
+### Auto Boot (NVSW_AUTOBOOT)
+
+8 bit Switch defining if the system should auto boot at startup
+
+| Bits 7-6 | Bit 5                  | Bit 4    | Bits 3-0                             |     
+|----------|------------------------|----------|--------------------------------------|     
+| -unused- | 1 = Auto Boot Enabled  | -unused- | 0 = Immediate Boot with no delay     |     
+| -unused- | 1 = Auto Boot Enabled  | -unused- | (1-15) Timeout (seconds) before boot |     
+| -unused- | 0 = Auto Boot Disabled | -unused- | -undefined-                          |     
+
+### Status Reset (0xFF)
+
+The Status Reset switch is not a general purpose switch, it is a control mechanism
+to allow the global status of all switches to be determined. The meaning of the switch
+is different for Read (Get Status) and Write (Reset NVRAM)
+
+#### GET (Get Status)
+
+The read Get Status of switches. This returns very specific values from the function call.
+
+| Status                                       | A Register | Z / NZ Flag  |
+|----------------------------------------------|------------|--------------|
+| NVRAM does not exist                         | A=0        | NZ flag set  |
+| NVRAM exists, but has not been initialised   | A=1        | NZ flag set  |
+| NVRAM exists, and has been fully initialised | A='W'      | Z flag set   |
+
+#### SET (Reset NVRAM)
+
+Reset NVRAM to default values. This will wipe any existing data and set default
+values into NVRAM.
+
 # Driver Model
 
 The framework code for bank switching also allows hardware drivers to be
@@ -2611,6 +2682,27 @@ the caller can use interbank calls directly to the function in the
 driver which bypasses the overhead of the normal function invocation
 lookup.
 
+#### SYSGET Subfunction 0xC0 -- Get Switches (SWITCH)
+
+| **Entry Parameters** | **Returned Values** |
+|----------------------|---------------------|
+| B: 0xF8              | A: Status           |
+| C: 0xC0              | HL: Switch Value    |
+| D: Switch Key        |                     |
+
+This function will return the current value (HL) of the switch (D) from NVRAM. 
+
+Switches may be returned as a 16 bit (HL) or 8 bit (L) value. It is up to the caller 
+to process the returned value correctly. Note for Switch 0xFF (status) the returned value
+is primarily in the Status (A) register.
+
+Errors are signalled in the return by setting the NZ flag. When set the
+(A) register may contain an error code, but this code does not conform to RomWBW standard
+
+Success is indicated by setting the Z flag
+
+For a description of switches please see [RomWBW NVRAM Configuration]
+
 #### SYSGET Subfunction 0xD0 -- Get Timer Tick Count (TIMER)
 
 | **Entry Parameters**                   | **Returned Values**                    |
@@ -2782,6 +2874,27 @@ This function will set various system parameters based on the
 sub-function value. The following lists the subfunctions available along
 with the registers/information utilized.  The Status (A) is a standard 
 HBIOS result code.
+
+#### SYSSET Subfunction 0xC0 -- Set Switches (SWITCH)
+
+| **Entry Parameters** | **Returned Values** |
+|----------------------|---------------------|
+| B: 0xF9              | A: Status           |
+| C: 0xC0              |                     |
+| D: Switch Key        |                     |
+| HL: Switch Value     |                     |
+
+This function will set the value (HL) into the switch (D) and store it into NVRAM.
+
+Switches may be passed as a 16 bit (HL) or 8 bit (L) value. It is up to the caller
+to send the value correctly. Note for Switch 0xFF (reset) the value (HL) is ignored
+
+Errors are signalled in the return by setting the NZ flag. When set the
+(A) register may contain an error code, but this code does not conform to RomWBW standard
+
+Success is indicated by setting the Z flag
+
+For a description of switches please see [RomWBW NVRAM Configuration]
 
 #### SYSSET Subfunction 0xD0 -- Set Timer Tick Count (TIMER)
 

@@ -897,6 +897,50 @@ Boot [H=Help]: r
 Restarting System...
 ```
 
+### Setting NVRAM Options
+
+On systems with RTC devices (that have Non-Volatile RAM), RomWBW supports storing
+some limited configuration option options inside this NVRAM
+
+Several configuration options are currently supported, these are known as Switches
+
+* Specify Automatic boot at startup, after an optional delay (AB)
+* Define the Default Disk or ROM App to be booted at startup (DB)
+
+RomWBW uses bytes located at the start of RTC NVRAM, and includes a Parity check of 
+the bytes in NVRAM to check for authenticity before using the configuration.
+
+Initially NVRAM has to be reset (with default values), before it can be used.
+As well as setting defaults, it also writes the correct parity, and allows the
+NVRAM to be accessed and to store RomWBW config.
+
+This is an explicit step that must be done, as any existing data stored is overitten.
+If you are using NVRAM for other purposes then you can continue to do so
+so long as you do NOT perform this Reset step.
+
+NVRAM may also need to be reset in these circumstances
+
+* When there has been a loss of power to the NVRAM
+* When upgrading to a new RomWBW version, or a RomWBW version that has new switches
+* If the NVRAM has been overitten by another application.
+
+If you want to continue to use NVRAM in your applications you may want to consider storing
+your data above the RomWBW Switch data.
+
+The WIZNET class of Network devices also contain NVRAM, currently RomWBW does not support
+writing configuration to these devices.
+
+To configure these options an inbuilt ROM application is provided which can be accessed
+by the command "`W`" from the RomWBW boot menu.
+
+This application is also built as a CP/M utility, but is not included on an disk image, 
+it is found in the `Binary/Applications` folder of the RomWBW distribution
+
+For further guidance on using this application please see the section 
+"RomWBW System Configuration" in the RomWBW Applications document
+
+[RomWBW Applications]($doc_root$/RomWBW Applications.pdf)
+
 ### Changing Console and Console speed
 
 Your system can support a number of devices for the console. They may
@@ -4237,6 +4281,11 @@ ALIAS facility.
 p-System has its own startup command processing mechanism that is
 covered in the p-System documentation.
 
+## NVRAM Configuration
+
+See section [Setting NVRAM Options] for information about how to
+apply NVRAM configuration.
+
 ## ROM Customization
 
 The pre-built ROM images are configured for the basic capabilities of
@@ -4268,6 +4317,14 @@ level task and is left to the reader to pursue.
 Note that the ROM customization process does not apply to UNA. All
 UNA customization is performed within the ROM setup script that is
 built into the ROM.
+
+## ROM User Application
+
+The User App is provided as a way to access a custom written
+ROM application.  In the pre-built ROMs, selecting User App will just
+return to the Boot Loader menu.  If you are interested in creating a
+custom application to run instead, review the "usrrom.asm" file in the
+Source/HBIOS folder of the distribution.
 
 # UNA Hardware BIOS
 
@@ -4678,7 +4735,8 @@ please let me know if I missed you!
   
 * Mark Pruden has also contributed a great deal of content to the
   Disk Catalog, User Guide as well as contributing the disk image
-  for the Z3PLUS operating system, and the COPYSL utility.
+  for the Z3PLUS operating system, the COPYSL utility, and also
+  implemented feature for RomWBW configuration by NVRAM.  
 
 * Jacques Pelletier has contributed the DS1501 RTC driver code.
 

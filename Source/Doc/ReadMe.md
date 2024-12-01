@@ -191,7 +191,8 @@ please let me know if I missed you!
   
 * Mark Pruden has also contributed a great deal of content to the
   Disk Catalog, User Guide as well as contributing the disk image
-  for the Z3PLUS operating system, and the COPYSL utility.
+  for the Z3PLUS operating system, the COPYSL utility, and also
+  implemented feature for RomWBW configuration by NVRAM.
 
 * Jacques Pelletier has contributed the DS1501 RTC driver code.
 
