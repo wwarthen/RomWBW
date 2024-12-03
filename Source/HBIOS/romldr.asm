@@ -267,33 +267,23 @@ nvrsw_def:
 	call	nl			; display message to indicate switches found
 	ld	hl,str_nvswitches
 	call	pstr
-	;
-	ld	bc,BC_SYSGET_SWITCH	; HBIOS SysGet NVRAM Switches
-	ld	d,NVSW_DEFBOOT		; Read Default Boot (disk/Rom) switch
-	rst	08
-	ld	a,h
-	and	DBOOT_ROM		; Get the Default Boot from ROM Flag
-	jr	nz,nvrsw_rom		; IF Set as ROM App BOOT, otherwise Disk
 ;
-nvrsw_disk:
-	ld	a,h			; (H contains the Disk Unit 0-127)
-	ld	(bootunit),a		; copy the NVRam Unit and Slice
-	ld	a,l			; (L contains the boot slice 0-255)
-	ld	(bootslice),a		; directly into the selected boot
-	ld	l,'~'			; We use the "~" char to signal, DISK BOOT
-					; setting it a the auto cmd (string/char)
-nvrsw_rom:
-	ld	h,0			; Clear high orer byte, leaving L intact
-	ld	(acmd),hl		; Load the Character into auto command
-					; Thus (acma)   = L   (the boot character)
-					;      (acma+1) = H=0 (string terminator)
 nvrsw_auto:
 	ld	bc,BC_SYSGET_SWITCH	; HBIOS SysGet NVRAM Switches
 	ld	d,NVSW_AUTOBOOT		; GET Autoboot switch
 	rst	08
 	ld	a,l
 	and	ABOOT_AUTO		; Get the autoboot flag
-	jr	z,prompt		; not set, so directly prompt
+;
+; At this point, we know that NVR is valid and we have tested the
+; ABOOT_AUTO bit.  Branching to "prompt" will bypass ROM config
+; autoboot settings.  Branching to "nonvrswitch" will proceed with
+; ROM config autoboot settings.  I have not decided which makes more
+; sense.  For now, we branch to nonvrswitch because it makes
+; my testing easier.  :-)
+;
+	;;;jr	z,prompt		; not set, so directly prompt
+	jr	z,nonvrswitch		; not set, proceed to ROM config
 ;
 	or	$FF			; auto cmd active value
 	ld	(acmd_act),a		; set the auto command active flag
@@ -308,6 +298,26 @@ nvrsw_auto:
 	srl	b
 	rr	c			; BC should now contain timeout * 64
 	ld	(acmd_to),bc		; save auto cmd timeout 64ths of second
+;
+	ld	bc,BC_SYSGET_SWITCH	; HBIOS SysGet NVRAM Switches
+	ld	d,NVSW_DEFBOOT		; Read Default Boot (disk/Rom) switch
+	rst	08
+	ld	a,h
+	and	DBOOT_ROM		; Get the Default Boot from ROM Flag
+	jr	nz,nvrsw_rom		; IF Set as ROM App BOOT, otherwise Disk
+;
+nvrsw_disk:
+	ld	a,h			; (H contains the Disk Unit 0-127)
+	ld	(bootunit),a		; copy the NVRam Unit and Slice
+	ld	a,l			; (L contains the boot slice 0-255)
+	ld	(bootslice),a		; directly into the selected boot
+	ld	l,'~'			; We use the "~" char to signal, DISK BOOT
+;					; setting it a the auto cmd (string/char)
+nvrsw_rom:
+	ld	h,0			; Clear high order byte, leaving L intact
+	ld	(acmd),hl		; Load the Character into auto command
+;					; Thus (acma)   = L   (the boot character)
+;					;      (acma+1) = H=0 (string terminator)
 ;
 	jr	initautoboot		; init auto boot from NVRAM, ignore Build Config
 ;
@@ -347,7 +357,7 @@ initautoboot:
 ;=======================================================================
 ;
 prompt:
-	; if autboot is active, notify user as a reminder
+	; if autoboot is active, notify user as a reminder
 	ld	a,(acmd_act)		; get auto cmd active flag
 	or	a			; active?
 	jr	z,prompt2		; bypass message if not active
@@ -371,8 +381,6 @@ prompt2:
 	call	pstr			; do it
 	call	clrbuf			; zero fill the cmd buffer
 ;
-	;ld	hl,msg_sel		; boot select msg
-	;call	dsky_show		; show on DSKY
 	ld	c,DSKY_MSG_LDR_SEL	; boot select msg
 	call	dsky_msg                ; show on DSKY
 #if (DSKYENABLE)
@@ -521,10 +529,11 @@ concmd:
 	; Get a command line from console and handle it
 	call	rdln			; get a line from the user
 	ld	de,cmdbuf		; point to buffer
-	call	skipws			; skip whitespace
-	or	a			; set flags to check for null
-	jr	nz,runcmd		; got a cmd, process it
-	; if no cmd entered, fall thru to process default cmd
+	jr	runcmd			; process command
+	;;;call	skipws			; skip whitespace
+	;;;or	a			; set flags to check for null
+	;;;jr	nz,runcmd		; got a cmd, process it
+	;;;; if no cmd entered, fall thru to process default cmd
 ;
 autocmd:
 	; Copy autocmd string to buffer and process it
@@ -546,8 +555,8 @@ runcmd:
 	call	upcase			; make upper case
 ;
 	; Auto Command (probably) from NVR default Disk Boot
-	CP	'~'			; We use the "~" char to signal, DISK
-	JP	Z,diskboot		; noting the - (bootunit) (bootslice) have inited.
+	cp	'~'			; We use the "~" char to signal, DISK
+	jp	z,diskboot		; noting the - (bootunit) (bootslice) have inited.
 	; Attempt built-in commands
 	cp	'H'			; H = display help
 	jp	z,help			; if so, do it
