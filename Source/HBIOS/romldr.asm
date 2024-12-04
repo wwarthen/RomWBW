@@ -33,8 +33,20 @@
 ;
 #include "std.asm"	; standard RomWBW constants
 ;
-#ifndef BOOT_DEFAULT
-#define BOOT_DEFAULT "H"
+; BOOT_DEFAULT is deprecated and has been replaced by AUTO_CMD.  In
+; case someone has not yet made the switch, we define AUTO_CMD from
+; BOOT_DEFAULT.
+;
+#ifdef BOOT_DEFAULT
+  #ifndef AUTO_CMD
+    #define AUTO_CMD BOOT_DEFAULT
+  #endif
+#endif
+;
+; If AUTO_CMD is not defined, just define it as an empty string.
+;
+#ifndef AUTO_CMD
+  #define AUTO_CMD ""
 #endif
 ;
 bel	.equ	7	; ASCII bell
@@ -213,7 +225,7 @@ start2:
 
 ;
 ;=======================================================================
-; Loader prompt
+; Boot Loader Banner
 ;=======================================================================
 ;
 	call	nl2			; formatting
@@ -224,6 +236,10 @@ start2:
 	ld	hl,str_appboot		; signal application boot mode
 	call	z,pstr			; print if APP boot
 	call	clrbuf			; zero fill the cmd buffer
+;
+;=======================================================================
+; Front Panel Boot
+;=======================================================================
 ;
 #if ((BIOS == BIOS_WBW) & FPSW_ENABLE)
 ;
@@ -243,6 +259,7 @@ start2:
 	ld	a,(switches)		; get switches value
 	and	SW_AUTO			; auto boot?
 	call	nz,runfp		; process front panel
+	jp	nz,prompt		; on failure, restart at prompt
 ;
 nofp:
 	; fall thru
@@ -250,20 +267,19 @@ nofp:
 #endif
 ;
 ;=======================================================================
-; INITIALISE BOOT PROMPT (acmd_*) FROM CONFIG
+; NVRAM Boot
 ;=======================================================================
-#if (BIOS == BIOS_WBW)
 ;
-; NVRAM AUTO BOOT CONFIGURATION
+#if (BIOS == BIOS_WBW)
 ;
 nvrswitch:
 	ld	bc,BC_SYSGET_SWITCH	; HBIOS SysGet NVRAM Switches
 	ld	d,$FF			; get NVR Status - Is NVRam initialised
 	rst	08
 	cp	'W'			; is NV RAM fully inited.
-	jr	NZ,nonvrswitch		; NOT So - Skip the int from nvram
-nvrsw_def:
+	jr	nz,nonvrswitch		; NOT So - Skip the int from nvram
 ;
+nvrsw_def:
 	call	nl			; display message to indicate switches found
 	ld	hl,str_nvswitches
 	call	pstr
@@ -275,18 +291,16 @@ nvrsw_auto:
 	ld	a,l
 	and	ABOOT_AUTO		; Get the autoboot flag
 ;
-; At this point, we know that NVR is valid and we have tested the
-; ABOOT_AUTO bit.  Branching to "prompt" will bypass ROM config
-; autoboot settings.  Branching to "nonvrswitch" will proceed with
-; ROM config autoboot settings.  I have not decided which makes more
-; sense.  For now, we branch to nonvrswitch because it makes
-; my testing easier.  :-)
+; At this point, we know that NVR is valid and the ABOOT_AUTO bit has
+; been tested.  If ABOOT_AUTO is not set, we can either go directly to
+; Boot Loader command prompt (prompt) or try to process ROM config
+; auto command line (nonvrswitch).  I have not decided what is
+; best yet.  For now, we process ROM autoboot because it
+; makes my testing easier.  :-)
 ;
-	;;;jr	z,prompt		; not set, so directly prompt
-	jr	z,nonvrswitch		; not set, proceed to ROM config
+	;;;jp	z,prompt		; Bypass ROM config auto cmd
+	jr	z,nonvrswitch		; Proceed to ROM config autoboot
 ;
-	or	$FF			; auto cmd active value
-	ld	(acmd_act),a		; set the auto command active flag
 ;
 	ld	a,l			; the low order byte from SWITCHES
 	and	ABOOT_TIMEOUT		; Mask out the Timeout
@@ -299,27 +313,9 @@ nvrsw_auto:
 	rr	c			; BC should now contain timeout * 64
 	ld	(acmd_to),bc		; save auto cmd timeout 64ths of second
 ;
-	ld	bc,BC_SYSGET_SWITCH	; HBIOS SysGet NVRAM Switches
-	ld	d,NVSW_DEFBOOT		; Read Default Boot (disk/Rom) switch
-	rst	08
-	ld	a,h
-	and	DBOOT_ROM		; Get the Default Boot from ROM Flag
-	jr	nz,nvrsw_rom		; IF Set as ROM App BOOT, otherwise Disk
-;
-nvrsw_disk:
-	ld	a,h			; (H contains the Disk Unit 0-127)
-	ld	(bootunit),a		; copy the NVRam Unit and Slice
-	ld	a,l			; (L contains the boot slice 0-255)
-	ld	(bootslice),a		; directly into the selected boot
-	ld	l,'~'			; We use the "~" char to signal, DISK BOOT
-;					; setting it a the auto cmd (string/char)
-nvrsw_rom:
-	ld	h,0			; Clear high order byte, leaving L intact
-	ld	(acmd),hl		; Load the Character into auto command
-;					; Thus (acma)   = L   (the boot character)
-;					;      (acma+1) = H=0 (string terminator)
-;
-	jr	initautoboot		; init auto boot from NVRAM, ignore Build Config
+	call	acmd_wait		; do autocmd wait processing
+	call	z,runnvr		; if Z set, process NVR switches
+	jp	prompt			; if we return, do normal loader prompt
 ;
 nonvrswitch:
 	; no NVRAM switches found, or disabled, continue process from Build Config
@@ -334,33 +330,17 @@ nonvrswitch:
 	ld	(acmd_act),a		; set flag
 	ld	bc,BOOT_TIMEOUT * 64	; 1/64's of a second
 	ld	(acmd_to),bc		; save auto cmd timeout
-	; fall through and initialise Auto boot.
+;
+	call	acmd_wait		; do autocmd wait processing
+	call	z,autocmd		; if Z set, to autocmd processing
+	jp	prompt			; if we return, do normal loader prompt
 #endif
 ;
 ;=======================================================================
-; INIT AUTO BOOT - If autoboot was detected.
+; Auto Command Wait Processing
 ;=======================================================================
 ;
-initautoboot:
-	; If timeout is zero, boot auto command immediately
-	ld	a,b			; check for
-	or	c			; ... zero
-	jr	nz,prompt		; not zero, prompt w/ timeout
-	call	nl2			; formatting
-	ld	hl,str_autoboot		; auto command prefix
-	call	pstr			; show it
-	call	autocmd			; handle w/o prompt
-	jp	reprompt		; restart w/ autocmd disable
-;
-;=======================================================================
-; BOOT PROMPT
-;=======================================================================
-;
-prompt:
-	; if autoboot is active, notify user as a reminder
-	ld	a,(acmd_act)		; get auto cmd active flag
-	or	a			; active?
-	jr	z,prompt2		; bypass message if not active
+acmd_wait:
 	ld	hl,str_autoact1		; message part 1
 	call	pstr			; display it
 	ld	bc,(acmd_to)		; get timeout
@@ -373,9 +353,36 @@ prompt:
 	ld	hl,str_autoact2		; message part 2
 	call	pstr			; display it
 ;
-prompt2:
-	ld	hl,reprompt		; adr of prompt restart routine
-	push	hl			; put it on stack
+acmd_wait1:
+	; wait for auto cmd timeout or user escape
+	call	cst			; check for keyboard key
+	jr	z,acmd_wait2		; no key, continue
+	call	cin			; get key
+	cp	27			; escape key?
+	jr	nz,acmd_wait1		; loop if not
+	or	$FF			; signal abort
+	ret				; and return
+;
+acmd_wait2:
+	; check for auto cmd timeout and handle if so
+	ld	bc,(acmd_to)		; load timeout value
+	ld	a,b			; test for
+	or	c			; ... zero
+	ret	z			; if so, ret with Z set
+	dec	bc			; decrement
+	ld	(acmd_to),bc		; resave it
+	ld	de,976			; 16us * 976 -> 1/64th of a second.
+	call	vdelay			; 15.6ms delay, 64 in 1 second
+	jr	acmd_wait1		; loop
+;
+;=======================================================================
+; Boot Loader Prompt Processing
+;=======================================================================
+;
+prompt:
+	ld	hl,prompt		; restart address is here
+	push	hl			; preset stack
+;
 	call	nl2			; formatting
 	ld	hl,str_prompt		; display boot prompt "Boot [H=Help]:"
 	call	pstr			; do it
@@ -423,25 +430,7 @@ wtkey:
   #endif
 #endif
 ;
-	; check for timeout and handle auto boot here
-	ld	a,(acmd_act)		; get auto cmd active flag
-	or	a			; set flags
-	jr	z,wtkey			; if not active, just loop
-	ld	bc,(acmd_to)		; load timeout value
-	ld	a,b			; test for
-	or	c			; ... zero
-	jr	z,autocmd		; if so, handle it
-	dec	bc			; decrement
-	ld	(acmd_to),bc		; resave it
-	ld	de,976			; 16us * 976 -> 1/64th of a second.
-	call	vdelay			; 15.6ms delay, 64 in 1 second
-;
 	jr	wtkey			; loop
-;
-reprompt:
-	xor	a			; zero accum
-	ld	(acmd_act),a		; set auto cmd inactive
-	jp	prompt			; back to loader prompt
 ;
 clrbuf:
 	ld	hl,cmdbuf
@@ -530,23 +519,21 @@ concmd:
 	call	rdln			; get a line from the user
 	ld	de,cmdbuf		; point to buffer
 	jr	runcmd			; process command
-	;;;call	skipws			; skip whitespace
-	;;;or	a			; set flags to check for null
-	;;;jr	nz,runcmd		; got a cmd, process it
-	;;;; if no cmd entered, fall thru to process default cmd
 ;
 autocmd:
 	; Copy autocmd string to buffer and process it
-	ld	hl,acmd			; auto cmd string
+	call	nl2			; formatting
+	ld	hl,str_autoboot		; auto command prefix
+	call	pstr			; show it
+	ld	hl,acmd_buf			; auto cmd string
 	call	pstr			; display it
-	ld	hl,acmd			; auto cmd string
+	ld	hl,acmd_buf		; auto cmd string
 	ld	de,cmdbuf		; cmd buffer adr
 	ld	bc,acmd_len		; auto cmd length
 	ldir				; copy to command line buffer
 ;
 runcmd:
 	; Process command line
-;
 	ld	de,cmdbuf		; point to start of buf
 	call	skipws			; skip whitespace
 	or	a			; check for null terminator
@@ -732,6 +719,48 @@ fp_flopboot2:
 	xor	a		;	; zero accum
 	ld	(bootslice),a		; floppy boot slice is always 0
 	jp	diskboot		; do it
+;
+#endif
+;
+#if (BIOS == BIOS_WBW)
+;
+;=======================================================================
+; Process NVR Switches
+;=======================================================================
+;
+runnvr:
+	ld	bc,BC_SYSGET_SWITCH	; HBIOS SysGet NVRAM Switches
+	ld	d,NVSW_DEFBOOT		; Read Default Boot (disk/Rom) switch
+	rst	08
+	ld	a,h
+	and	DBOOT_ROM		; Get the Default Boot from ROM Flag
+	jr	nz,nvrsw_rom		; IF Set as ROM App BOOT, otherwise Disk
+;
+nvrsw_disk:
+	ld	a,h			; (H contains the Disk Unit 0-127)
+	ld	(bootunit),a		; copy the NVRam Unit and Slice
+	ld	a,l			; (L contains the boot slice 0-255)
+	ld	(bootslice),a		; directly into the selected boot
+	jp	diskboot		; do it
+;
+nvrsw_rom:
+	; Attempt ROM application launch
+	ld	a,l			; Load the ROM app selection to A
+	; *** Below is duplicated from fp_romboot, but fp_romboot
+	; is not always included.  Need to clean this up someday.
+	ld	ix,(ra_tbl_loc)		; point to start of ROM app tbl
+	ld	c,a			; save command in C
+nvrsw_rom1:
+	ld	a,(ix+ra_conkey)	; get match char
+	and	~$80			; clear "hidden entry" bit
+	cp	c			; compare
+	jp	z,romload		; if match, load it
+	ld	de,ra_entsiz		; table entry size
+	add	ix,de			; bump IX to next entry
+	ld	a,(ix)			; check for end
+	or	(ix+1)			; ... of table
+	jr	nz,nvrsw_rom1		; loop till done
+	ret				; no match, return
 ;
 #endif
 ;
@@ -2401,9 +2430,9 @@ str_err_api	.db	"Unexpected hardware BIOS API failure",0
 ; Working data storage (initialized)
 ;=======================================================================
 ;
-acmd		.db	BOOT_DEFAULT	; auto cmd string
+acmd_buf	.text	AUTO_CMD	; auto cmd string
 		.db	0
-acmd_len	.equ	$ - acmd	; len of auto cmd
+acmd_len	.equ	$ - acmd_buf	; len of auto cmd
 acmd_act	.dw	$00		; inactive by default
 
 #if (BOOT_TIMEOUT > 0)
@@ -2420,7 +2449,7 @@ str_banner	.db	PLATFORM_NAME," Boot Loader",0
 str_appboot	.db	" (App Boot)",0
 str_autoboot	.db	"AutoBoot: ",0
 str_autoact1	.db	"\r\n\r\nAutoBoot in ",0
-str_autoact2	.db	" Seconds...",0
+str_autoact2	.db	" Seconds (<esc> aborts)...",0
 str_prompt	.db	"Boot [H=Help]: ",0
 str_bs		.db	bs,' ',bs,0
 str_reboot	.db	"\r\n\r\nRestarting System...",0
@@ -2451,22 +2480,6 @@ str_help	.db	"\r\n"
 #endif
 		.db	"\r\n  <u>[.<s>]   - Boot Disk Unit/Slice"
 		.db	0
-;;;;
-;;;#if (DSKYENABLE)
-;;;  #if (GM7303ENABLE)
-;;;		; The GM7303 has an ASCII LCD display
-;;;msg_sel		.db	"Boot?", $00
-;;;msg_boot	.db	"Boot...", $00
-;;;msg_load	.db	"Load...", $00
-;;;msg_go		.db	"Go...", $00
-;;;  #else
-;;;		; Other DSKY devices use 7 segment LEDs
-;;;msg_sel		.db	$7f,$5c,$5c,$78,$53,$00,$00,$00	; "boot?   "
-;;;msg_boot	.db	$7f,$5c,$5c,$78,$80,$80,$80,$00	; "boot... "
-;;;msg_load	.db	$38,$5c,$5f,$5e,$80,$80,$80,$00	; "load... "
-;;;msg_go		.db	$3d,$5c,$80,$80,$80,$00,$00,$00	; "go...   "
-;;;  #endif
-;;;#endif
 ;
 ;=======================================================================
 ; DSKY keypad led matrix masks
