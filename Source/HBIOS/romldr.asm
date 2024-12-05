@@ -33,14 +33,10 @@
 ;
 #include "std.asm"	; standard RomWBW constants
 ;
-; BOOT_DEFAULT is deprecated and has been replaced by AUTO_CMD.  In
-; case someone has not yet made the switch, we define AUTO_CMD from
-; BOOT_DEFAULT.
+; If BOOT_DEFAULT is not defined, just define it to "H" for help.
 ;
-#ifdef BOOT_DEFAULT
-  #ifndef AUTO_CMD
-    #define AUTO_CMD BOOT_DEFAULT
-  #endif
+#ifndef BOOT_DEFAULT
+  #define BOOT_DEFAULT "H"
 #endif
 ;
 ; If AUTO_CMD is not defined, just define it as an empty string.
@@ -53,6 +49,7 @@ bel	.equ	7	; ASCII bell
 bs	.equ	8	; ASCII backspace
 lf	.equ	10	; ASCII linefeed
 cr	.equ	13	; ASCII carriage return
+esc	.equ	27	; ASCII escape
 del	.equ	127	; ASCII del/rubout
 ;
 cmdbuf	.equ	$80	; cmd buf is in second half of page zero
@@ -238,7 +235,7 @@ start2:
 	call	clrbuf			; zero fill the cmd buffer
 ;
 ;=======================================================================
-; Front Panel Boot
+; Front Panel Boot Setup
 ;=======================================================================
 ;
 #if ((BIOS == BIOS_WBW) & FPSW_ENABLE)
@@ -267,7 +264,7 @@ nofp:
 #endif
 ;
 ;=======================================================================
-; NVRAM Boot
+; NVRAM Auto Boot Setup
 ;=======================================================================
 ;
 #if (BIOS == BIOS_WBW)
@@ -301,17 +298,9 @@ nvrsw_auto:
 	;;;jp	z,prompt		; Bypass ROM config auto cmd
 	jr	z,nonvrswitch		; Proceed to ROM config autoboot
 ;
-;
 	ld	a,l			; the low order byte from SWITCHES
 	and	ABOOT_TIMEOUT		; Mask out the Timeout
-	ld	b,a			; timeout to high order B.C byte -> x 256
-	xor	a
-	ld	c,a			; and clear low order C byte
-	srl	b			; Shift 2 right by 2 bits -> /4
-	rr	c
-	srl	b
-	rr	c			; BC should now contain timeout * 64
-	ld	(acmd_to),bc		; save auto cmd timeout 64ths of second
+	ld	(acmd_to),a		; save auto cmd timeout in seconds
 ;
 	call	acmd_wait		; do autocmd wait processing
 	call	z,runnvr		; if Z set, process NVR switches
@@ -321,59 +310,87 @@ nonvrswitch:
 	; no NVRAM switches found, or disabled, continue process from Build Config
 #endif
 ;
+;
+;=======================================================================
+; ROM Configuration Auto Boot Setup
+;=======================================================================
+;
 #if (BOOT_TIMEOUT != -1)
-;
-; BUILD CONFIGURATION
-;
-	; Initialize auto command timeout downcounter
+	; Initialize auto command flag and timeout downcounter
 	or	$FF			; auto cmd active value
 	ld	(acmd_act),a		; set flag
-	ld	bc,BOOT_TIMEOUT * 64	; 1/64's of a second
-	ld	(acmd_to),bc		; save auto cmd timeout
+	ld	a,BOOT_TIMEOUT		; boot timeout in secs
+	ld	(acmd_to),a		; save auto cmd timeout in seconds
 ;
 	call	acmd_wait		; do autocmd wait processing
-	call	z,autocmd		; if Z set, to autocmd processing
-	jp	prompt			; if we return, do normal loader prompt
+	call	z,autocmd		; if Z set, do autocmd processing
 #endif
+;
+	jp	prompt			; interactive loader prompt
 ;
 ;=======================================================================
 ; Auto Command Wait Processing
 ;=======================================================================
 ;
 acmd_wait:
+	call	nl2			; formatting
+;
+acmd_wait0:
 	ld	hl,str_autoact1		; message part 1
 	call	pstr			; display it
-	ld	bc,(acmd_to)		; get timeout
-	rl	c			; seconds value to B
-	rl	b
-	rl	c
-	rl	b
-	ld	a,b			; move it to A
+	ld	a,(acmd_to)		; remaining timeout in seconds
 	call	prtdecb			; display it
 	ld	hl,str_autoact2		; message part 2
 	call	pstr			; display it
 ;
+	ld	a,64			; 1/64 sub-seconds counter reload value
+	ld	(acmd_to_64),a		; reload sub-seconds counter
+;
 acmd_wait1:
-	; wait for auto cmd timeout or user escape
+	; check for user escape/enter
 	call	cst			; check for keyboard key
 	jr	z,acmd_wait2		; no key, continue
 	call	cin			; get key
-	cp	27			; escape key?
+	cp	cr			; enter key?
+	jr	z,acmd_wait_z		; if so, ret immed with Z set
+	cp	esc			; escape key?
 	jr	nz,acmd_wait1		; loop if not
 	or	$FF			; signal abort
-	ret				; and return
+	jr	acmd_wait_z		; and return
 ;
 acmd_wait2:
 	; check for auto cmd timeout and handle if so
-	ld	bc,(acmd_to)		; load timeout value
-	ld	a,b			; test for
-	or	c			; ... zero
-	ret	z			; if so, ret with Z set
-	dec	bc			; decrement
-	ld	(acmd_to),bc		; resave it
+	ld	a,(acmd_to)		; get seconds counter
+	or	a			; test for zero
+	jr	z,acmd_wait_z		; if done, ret with Z set
+;
+	ld	a,(acmd_to_64)		; get sub-seconds counter
+	dec	a			; decrement counter
+	ld	(acmd_to_64),a		; resave it
+	jr	nz,acmd_wait3		; skip over seconds down count
+;
+	ld	a,(acmd_to)		; get seconds counter
+	dec	a			; decrement counter
+	ld	(acmd_to),a		; resave it
+	jr	acmd_wait0		; and restart loop
+;
+acmd_wait3:
 	ld	de,976			; 16us * 976 -> 1/64th of a second.
 	call	vdelay			; 15.6ms delay, 64 in 1 second
 	jr	acmd_wait1		; loop
+;
+acmd_wait_z:
+	; clear the downcounter message from screen, then return
+	push	af			; save flags
+	ld	a,13			; start of line
+	call	cout			; do it
+	ld	a,' '			; space char
+	ld	b,60			; send 60 of them
+acmd_wait_z2:
+	call	cout			; print space char
+	djnz	acmd_wait_z2		; loop till done
+	pop	af			; restore flags
+	ret				; and return
 ;
 ;=======================================================================
 ; Boot Loader Prompt Processing
@@ -522,10 +539,9 @@ concmd:
 ;
 autocmd:
 	; Copy autocmd string to buffer and process it
-	call	nl2			; formatting
 	ld	hl,str_autoboot		; auto command prefix
 	call	pstr			; show it
-	ld	hl,acmd_buf			; auto cmd string
+	ld	hl,acmd_buf		; auto cmd string
 	call	pstr			; display it
 	ld	hl,acmd_buf		; auto cmd string
 	ld	de,cmdbuf		; cmd buffer adr
@@ -537,13 +553,23 @@ runcmd:
 	ld	de,cmdbuf		; point to start of buf
 	call	skipws			; skip whitespace
 	or	a			; check for null terminator
-	ret	z			; if empty line, just bail out
+	;;;ret	z			; if empty line, just bail out
+	jr	nz,runcmd0		; if char, process cmd line
+;
+	; if empty cmd line, use default
+	ld	hl,defcmd_buf		; def cmd string
+	ld	de,cmdbuf		; cmd buffer adr
+	ld	bc,defcmd_len		; auto cmd length
+	ldir				; copy to command line buffer
+	ld	de,cmdbuf		; point to start of buf
+	call	skipws			; skip whitespace
+	or	a			; check for null terminator
+	ret	z			; if empty line, bail out
+;
+runcmd0:
 	ld	a,(de)			; get character
 	call	upcase			; make upper case
 ;
-	; Auto Command (probably) from NVR default Disk Boot
-	cp	'~'			; We use the "~" char to signal, DISK
-	jp	z,diskboot		; noting the - (bootunit) (bootslice) have inited.
 	; Attempt built-in commands
 	cp	'H'			; H = display help
 	jp	z,help			; if so, do it
@@ -623,21 +649,7 @@ fp_romboot:
 	ld	hl,fpapps		; rom apps cmd char list
 	call	addhla			; point to the right one
 	ld	a,(hl)			; get it
-;
-	; Attempt ROM application launch
-	ld	ix,(ra_tbl_loc)		; point to start of ROM app tbl
-	ld	c,a			; save command in C
-fp_romboot1:
-	ld	a,(ix+ra_conkey)	; get match char
-	and	~$80			; clear "hidden entry" bit
-	cp	c			; compare
-	jp	z,romload		; if match, load it
-	ld	de,ra_entsiz		; table entry size
-	add	ix,de			; bump IX to next entry
-	ld	a,(ix)			; check for end
-	or	(ix+1)			; ... of table
-	jr	nz,fp_romboot1		; loop till done
-	ret				; no match, return
+	jp	romboot			; do it
 ;
 fpapps	.db	"MBFPCZNU"
 ;
@@ -746,21 +758,7 @@ nvrsw_disk:
 nvrsw_rom:
 	; Attempt ROM application launch
 	ld	a,l			; Load the ROM app selection to A
-	; *** Below is duplicated from fp_romboot, but fp_romboot
-	; is not always included.  Need to clean this up someday.
-	ld	ix,(ra_tbl_loc)		; point to start of ROM app tbl
-	ld	c,a			; save command in C
-nvrsw_rom1:
-	ld	a,(ix+ra_conkey)	; get match char
-	and	~$80			; clear "hidden entry" bit
-	cp	c			; compare
-	jp	z,romload		; if match, load it
-	ld	de,ra_entsiz		; table entry size
-	add	ix,de			; bump IX to next entry
-	ld	a,(ix)			; check for end
-	or	(ix+1)			; ... of table
-	jr	nz,nvrsw_rom1		; loop till done
-	ret				; no match, return
+	jp	romboot			; do it
 ;
 #endif
 ;
@@ -1117,6 +1115,28 @@ romload1:
 	ld	l,(ix+ra_ent)		; HL := app entry address
 	ld	h,(ix+ra_ent+1)		; ...
 	jp	(hl)			; go
+;
+;=======================================================================
+; Boot ROM Application
+;=======================================================================
+;
+; Enter with ROM application menu selection (command) character in A
+;
+romboot:
+	call	upcase			; force uppercase for matching
+	ld	ix,(ra_tbl_loc)		; point to start of ROM app tbl
+	ld	c,a			; save command char in C
+romboot1:
+	ld	a,(ix+ra_conkey)	; get match char
+	and	~$80			; clear "hidden entry" bit
+	cp	c			; compare
+	jp	z,romload		; if match, load it
+	ld	de,ra_entsiz		; table entry size
+	add	ix,de			; bump IX to next entry
+	ld	a,(ix)			; check for end
+	or	(ix+1)			; ... of table
+	jr	nz,romboot1		; loop till done
+	ret				; no match, just return
 ;
 ;=======================================================================
 ; Boot disk unit/slice
@@ -2434,12 +2454,12 @@ acmd_buf	.text	AUTO_CMD	; auto cmd string
 		.db	0
 acmd_len	.equ	$ - acmd_buf	; len of auto cmd
 acmd_act	.dw	$00		; inactive by default
-
-#if (BOOT_TIMEOUT > 0)
-acmd_to		.dw	BOOT_TIMEOUT * 64 ; auto cmd timeout (1/64's of sec)
-#else
-acmd_to		.dw	BOOT_TIMEOUT	; auto cmd timeout -1 DISABLE, 0 IMMEDIATE
-#endif
+acmd_to		.db	BOOT_TIMEOUT	; auto cmd timeout -1 DISABLE, 0 IMMEDIATE
+acmd_to_64	.db	64		; sub-second counter for acmd_to in 1/64s
+;
+defcmd_buf	.text	BOOT_DEFAULT	; default boot cmd
+		.db	0
+defcmd_len	.equ	$ - defcmd_buf	; len of def boot cmd
 ;
 ;=======================================================================
 ; Strings
@@ -2447,9 +2467,9 @@ acmd_to		.dw	BOOT_TIMEOUT	; auto cmd timeout -1 DISABLE, 0 IMMEDIATE
 ;
 str_banner	.db	PLATFORM_NAME," Boot Loader",0
 str_appboot	.db	" (App Boot)",0
-str_autoboot	.db	"AutoBoot: ",0
-str_autoact1	.db	"\r\n\r\nAutoBoot in ",0
-str_autoact2	.db	" Seconds (<esc> aborts)...",0
+str_autoboot	.db	"\rAutoBoot: ",0
+str_autoact1	.db	"\rAutoBoot in ",0
+str_autoact2	.db	" Seconds (<esc> aborts, <enter> now)... ",0
 str_prompt	.db	"Boot [H=Help]: ",0
 str_bs		.db	bs,' ',bs,0
 str_reboot	.db	"\r\n\r\nRestarting System...",0
