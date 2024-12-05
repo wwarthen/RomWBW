@@ -4,6 +4,13 @@
 ;
 ;	ORIGINAL CODE BY DR JAMES MOXHAM
 ;	ROMWBW ADAPTATION BY WAYNE WARTHEN
+;	INTERUPT DRIVER ADDITION BY PHIL SUMMERS
+;
+;
+; IN DEBUG MODE:
+: >>nn SHOWS HEX COMMAND nn BEING WRITTEN TO THE COMMAND PORT
+; >nn  SHOWS HEX VALUE nn BEING WRITTEN TO THE DATA PORT
+; <nn  SHOWS HEX VALUE READ FROM DATA PORT
 ;__________________________________________________________________________________________________
 ;
 ; TODO:
@@ -42,7 +49,7 @@ KBD_NUMPAD	.EQU	80H	; BIT 7, NUM PAD KEY (KEY PRESSED IS ON NUM PAD)
 ;
 KBD_DEFRPT	.EQU	$40		; DEFAULT REPEAT RATE (.5 SEC DELAY, 30CPS)
 KBD_DEFSTATE	.EQU	KBD_NUMLCK	; DEFAULT STATE (NUM LOCK ON)
-;
+KBD_ACK		.EQU	$FA		; CMD ACKNOWLEDGE
 ;__________________________________________________________________________________________________
 ; DATA
 ;__________________________________________________________________________________________________
@@ -59,14 +66,29 @@ KBD_IDLE	.DB	0	; IDLE COUNT
 	DEVECHO	"KBD: ENABLED\n"
 ;
 ;__________________________________________________________________________________________________
+; HARDWARE LEVEL INTERFACE
+;__________________________________________________________________________________________________
+;
+#INCLUDE "ps2iface.inc"
+;__________________________________________________________________________________________________
 ; KEYBOARD INITIALIZATION
 ;__________________________________________________________________________________________________
 ;
 KBD_INIT:
+#IF ((INTMODE == 2) & INTPS2KBD)
+	CALL	KBDQINIT		; INITIALIZE QUEUE
+	LD	HL,KBD_INT		; INSTALL VECTOR
+	LD	(IVT(INT_PS2KB)),HL	; IVT INDEX
+#ENDIF
 	CALL	NEWLINE			; FORMATTING
-	PRTS("KBD: IO=0x$")
-	LD	A,(IY+KBD_DAT)
+	PRTS("KBD: IO=0x$")		; DISPLAY
+	LD	A,(IY+KBD_DAT)		; PORT SETTING
 	CALL	PRTHEXBYTE
+#IF ((INTMODE == 2) & INTPS2KBD)
+	PRTS(" INT #$")			; DISPLAY 	
+	LD	A,INT_PS2KB		; INTERRUPT SETTING
+	CALL	PRTDECB
+#ENDIF
 ;
 	LD	A,KBD_DEFRPT		; GET DEFAULT REPEAT RATE
 	LD	(KBD_REPEAT),A		; SAVE IT
@@ -84,7 +106,7 @@ KBD_INIT:
 	CP	$55			; IS IT THERE?
 	JR	Z,KBD_INIT1		; IF SO, CONTINUE
 	PRTS(" NOT PRESENT$")		; DIAGNOSE PROBLEM
-	RET				; BAIL OUT
+INT_RET:RET				; BAIL OUT
 ;
 KBD_INIT1:
 	PRTS(" MODE=$")			; TAG
@@ -101,8 +123,12 @@ KBD_INIT2:
 ;
 	LD	A,$60			; SET COMMAND REGISTER
 	CALL	KBD_PUTCMD		; SEND IT
-;	LD	A,$60			; XLAT ENABLED, MOUSE DISABLED, NO INTS
+
+#IF ((INTMODE == 2) & INTPS2KBD)
+	LD	A,$21			; XLAT DISABLED, MOUSE DISABLED, WITH INTS		
+#ELSE
 	LD	A,$20			; XLAT DISABLED, MOUSE DISABLED, NO INTS
+#ENDIF
 	CALL	KBD_PUTDATA		; SEND IT
 	
 	CALL	KBD_GETDATA		; GOBBLE UP $AA FROM POWER UP, AS NEEDED
@@ -159,35 +185,6 @@ KBD_FLUSH:
 	RET
 ;
 ;__________________________________________________________________________________________________
-; HARDWARE INTERFACE
-;__________________________________________________________________________________________________
-;
-;__________________________________________________________________________________________________
-KBD_IST:
-;
-; KEYBOARD INPUT STATUS
-;   A=0, Z SET FOR NOTHING PENDING, OTHERWISE DATA PENDING
-;
-	LD	C,(IY+KBD_ST)		; STATUS PORT
-	EZ80_IO
-	IN	A,(C)			; GET STATUS
-	AND	$01			; ISOLATE INPUT PENDING BIT
-	RET
-;
-;__________________________________________________________________________________________________
-KBD_OST:
-;
-; KEYBOARD OUTPUT STATUS
-;   A=0, Z SET FOR NOT READY, OTHERWISE READY TO WRITE
-;
-	LD	C,(IY+KBD_ST)		; STATUS PORT
-	EZ80_IO
-	IN	A,(C)			; GET STATUS
-	AND	$02			; ISOLATE OUTPUT EMPTY BIT
-	XOR	$02			; FLIP IT FOR APPROPRIATE RETURN VALUES
-	RET
-;
-;__________________________________________________________________________________________________
 KBD_PUTCMD:
 ;
 ; PUT A CMD BYTE FROM A TO THE KEYBOARD INTERFACE WITH TIMEOUT
@@ -211,9 +208,7 @@ KBD_PUTCMD1:
 	CALL	PC_GT
 	CALL	PRTHEXBYTE
 #ENDIF
-	LD	C,(IY+KBD_CMD)		; COMMAND PORT
-	EZ80_IO
-	OUT	(C),A			; WRITE IT
+	CALL	KBD_CMDOUT		; OUTPUT CMD TO PORT
 KBD_PUTCMD2:
 	XOR	A			; SIGNAL SUCCESS
 	RET
@@ -241,9 +236,7 @@ KBD_PUTDATA1:
 	CALL	PC_GT
 	CALL	PRTHEXBYTE
 #ENDIF
-	LD	C,(IY+KBD_DAT)		; DATA PORT
-	EZ80_IO
-	OUT	(C),A			; WRITE IT
+	CALL	KBD_DTAOUT		; WRITE IT
 KBD_PUTDATA2:
 	XOR	A			; SIGNAL SUCCESS
 	RET
@@ -262,9 +255,7 @@ KBD_GETDATA0:
 	XOR	A			; NO DATA, RETURN ZERO
 	RET
 KBD_GETDATA1:
-	LD	C,(IY+KBD_DAT)		; DATA PORT
-	EZ80_IO
-	IN	A,(C)			; GET THE DATA VALUE
+	CALL	KBD_IN			; GET A KEY
 #IF (KBDTRACE >= 2)
 	PUSH	AF
 	CALL	PC_SPACE
@@ -300,7 +291,7 @@ KBD_RESET0:
 	JR	NZ,KBD_RESET1	; GOT A BYTE?  IF SO, GET OUT OF LOOP
 	DJNZ	KBD_RESET0	; LOOP TILL COUNTER EXHAUSTED
 KBD_RESET1:
-	LD	A,B
+;	LD	A,B
 	XOR	A		; SIGNAL SUCCESS (RESPONSE IS IGNORED...)
 	RET			; DONE
 ;
@@ -312,7 +303,7 @@ KBD_SETLEDS:
 	LD	A,$ED		; SET/RESET LED'S COMMAND
 	CALL	KBD_PUTDATA	; SEND THE COMMAND
 	CALL	KBD_GETDATA	; READ THE RESPONSE
-	CP	$FA		; MAKE SURE WE GET ACK
+	CP	KBD_ACK		; MAKE SURE WE GET ACK
 	RET	NZ		; ABORT IF NO ACK
 	LD	A,(KBD_STATE)	; LOAD THE STATE BYTE
 	RRCA			; ROTATE TOGGLE KEY BITS AS NEEDED
@@ -333,7 +324,7 @@ KBD_SETRPT:
 	LD	A,$F3		; COMMAND = SET TYPEMATIC RATE/DELAY
 	CALL	KBD_PUTDATA	; SEND IT
 	CALL	KBD_GETDATA	; GET THE ACK
-	CP	$FA		; MAKE SURE WE GET ACK
+	CP	KBD_ACK		; MAKE SURE WE GET ACK
 	RET	NZ		; ABORT IF NO ACK
 	LD	A,(KBD_REPEAT)	; LOAD THE CURRENT RATE/DELAY BYTE
 	CALL	KBD_PUTDATA	; SEND IT

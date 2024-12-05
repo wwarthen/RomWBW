@@ -1137,7 +1137,7 @@ HBX_INTSTK	.EQU	$
 ; ---	--------------	--------------  --------------	--------------	--------------
 ; 0	CTC0A		INT1 -+               -+	      -+	HCCARCV -+
 ; 1	CTC0B		INT2  |                |	       |	HCCASND  |
-; 2	CTC0C		TIM0  |                | IM2	       | IM2	NABUKB	 | IM2
+; 2	CTC0C		TIM0  |                | IM2	PS2KBD | IM2	NABUKB	 | IM2
 ; 3	CTC0D		TIM1  |                | INT	       | INT	VDP	 | INT
 ; 4	UART0		DMA0  | Z180	UART0  | VEC	UART0  | VEC	OPTCRD0  | VEC
 ; 5	UART1		DMA1  | CPU	UART1  | GEN	UART1  | GEN	OPTCRD1  | GEN
@@ -2361,7 +2361,7 @@ HB_CPU1:
 	CALL	SN76489_PREINIT
 #ENDIF
 #IF (DSRTCENABLE)
-	; THE DSRTC NEEDS TO BE INITIALIZED IN ORDER TO PERFROM THE
+	; THE DSRTC NEEDS TO BE INITIALIZED IN ORDER TO PERFORM THE
 	; CPU SPEED DETECTION BELOW.
 	CALL	DSRTC_PREINIT
 #ENDIF
