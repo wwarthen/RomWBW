@@ -358,6 +358,8 @@ acmd_wait1:
 	call	cst			; check for keyboard key
 	jr	z,acmd_wait2		; no key, continue
 	call	cin			; get key
+	cp	13			; return key?
+	ret	z			; if so, ret with Z set
 	cp	27			; escape key?
 	jr	nz,acmd_wait1		; loop if not
 	or	$FF			; signal abort
