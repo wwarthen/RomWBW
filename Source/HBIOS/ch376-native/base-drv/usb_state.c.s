@@ -92,8 +92,8 @@ l_find_device_config_00106:
 	ret
 _device_config_sizes:
 	DEFB +0x00
-	DEFB +0x10
-	DEFB +0x10
+	DEFB +0x11
+	DEFB +0x11
 	DEFB +0x0c
 	DEFB +0x06
 	DEFB 0x00
@@ -175,7 +175,7 @@ l_next_device_config_00102:
 	add	hl, de
 	ex	de, hl
 ;source-doc/base-drv/usb_state.c:61: if (result >= (device_config *)&usb_state->device_configs_end)
-	ld	hl,0x0062
+	ld	hl,0x0068
 	add	hl, bc
 	ld	a, e
 	sub	l

@@ -20,6 +20,10 @@ _delay:
 	call	DELAY
 	call	DELAY
 	call	DELAY
+	call	DELAY
+	call	DELAY
+	call	DELAY
+	call	DELAY
 	pop	af
 	ret
 

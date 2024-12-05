@@ -37,9 +37,9 @@ typedef struct {
 
 typedef struct {
   COMMON_DEVICE_CONFIG             // bytes: 0-2
-      endpoint_param endpoints[3]; // bytes: 3-5, 6-8, 9-11  bulk in/out and interrupt
+  endpoint_param     endpoints[3]; // bytes: 3-5, 6-8, 9-11  bulk in/out and interrupt
   uint32_t           current_lba;  // bytes 12-15
-  // uint8_t            drive_index;  // byte 16
+  uint8_t            drive_index;  // byte 16
 } device_config_storage;
 
 typedef struct {

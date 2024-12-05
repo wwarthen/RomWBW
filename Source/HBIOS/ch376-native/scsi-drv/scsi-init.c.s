@@ -56,7 +56,7 @@ _chscsi_init:
 	push	ix
 	ld	ix,0
 	add	ix,sp
-	dec	sp
+	push	af
 ;source-doc/scsi-drv/scsi-init.c:15: do {
 	ld	(ix-1),0x01
 l_chscsi_init_00105:
@@ -88,24 +88,43 @@ l_chscsi_init_00105:
 	ld	hl,scsi_init_str_1
 	call	_print_string
 	pop	de
-;source-doc/scsi-drv/scsi-init.c:28: scsi_sense_init(storage_device);
+;source-doc/scsi-drv/scsi-init.c:27: print_uint16(storage_count);
+	ld	hl,(_storage_count)
+	ld	h,0x00
+	push	de
+	call	_print_uint16
+	ld	hl,scsi_init_str_2
+	call	_print_string
+	pop	de
+;source-doc/scsi-drv/scsi-init.c:29: storage_device->drive_index = storage_count++;
+	ld	hl,0x0010
+	add	hl, de
+	ld	c, l
+	ld	b, h
+	ld	hl,_storage_count
+	ld	a, (hl)
+	ld	(ix-2),a
+	inc	(hl)
+	ld	a,(ix-2)
+	ld	(bc), a
+;source-doc/scsi-drv/scsi-init.c:30: scsi_sense_init(storage_device);
 	push	de
 	push	de
 	call	_scsi_sense_init
 	pop	af
 	pop	de
-;source-doc/scsi-drv/scsi-init.c:29: dio_add_entry(ch_scsi_fntbl, storage_device);
+;source-doc/scsi-drv/scsi-init.c:31: dio_add_entry(ch_scsi_fntbl, storage_device);
 	ld	hl,_ch_scsi_fntbl
 	call	_dio_add_entry
 l_chscsi_init_00106:
-;source-doc/scsi-drv/scsi-init.c:32: } while (++index != MAX_NUMBER_OF_DEVICES + 1);
+;source-doc/scsi-drv/scsi-init.c:34: } while (++index != MAX_NUMBER_OF_DEVICES + 1);
 	inc	(ix-1)
 	ld	a,(ix-1)
 	sub	0x07
 	jr	NZ,l_chscsi_init_00105
 l_chscsi_init_00108:
-;source-doc/scsi-drv/scsi-init.c:33: }
-	inc	sp
+;source-doc/scsi-drv/scsi-init.c:35: }
+	ld	sp, ix
 	pop	ix
 	ret
 scsi_init_str_0:
@@ -114,5 +133,8 @@ scsi_init_str_0:
 	DEFM "USB: MASS STORAGE @ $"
 	DEFB 0x00
 scsi_init_str_1:
+	DEFM ":$"
+	DEFB 0x00
+scsi_init_str_2:
 	DEFM " $"
 	DEFB 0x00

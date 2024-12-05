@@ -22,7 +22,10 @@ void chufi_init(void) {
     if (t == USB_IS_FLOPPY) {
       print_string("\r\nUSB: FLOPPY @ $");
       print_uint16(index);
+      print_string(":$");
+      print_uint16(storage_count);
       print_string(" $");
+      storage_device->drive_index = storage_count++;
       dio_add_entry(ch_ufi_fntbl, storage_device);
     }
 

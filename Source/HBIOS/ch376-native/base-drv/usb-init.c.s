@@ -94,7 +94,7 @@ _chnative_init:
 	ld	e, l
 	ld	d, h
 	inc	de
-	ld	bc,0x0062
+	ld	bc,0x0068
 	ldir
 ;source-doc/base-drv/usb-init.c:28: ch_cmd_reset_all();
 	call	_ch_cmd_reset_all

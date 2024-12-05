@@ -30,12 +30,12 @@ CH_SCSI_FNTBL:
 #ENDIF
 
 CH_SCSI_STATUS:
-	LD	A, (IY)
+	; LD	A, (IY)
 	XOR	A
 	RET
 
 CH_SCSI_RESET:
-	LD	A, (IY)
+	; LD	A, (IY)
 	XOR	A
 	RET
 
@@ -182,9 +182,9 @@ CH_SCSI_FORMAT:
 ; |          |   9=Cartridge, 10=usb-scsi, 11=usb-ufi           |
 ;
 CH_SCSI_DEVICE:
-	LD	C, %01111010		; TODO?
+	LD	C, %00111010		; TODO?
 	LD	D, DIODEV_USB
-	LD	E, (iy+16)
+	LD	E, (iy+16) ;???? device_config_storage.drive_index
 	LD	H, 0
 	LD	L, 0
 	XOR	A
