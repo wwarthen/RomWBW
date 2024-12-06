@@ -56,11 +56,11 @@ KBDQ		.FILL	KBDQSIZ,0	; CIRCULAR KEYBOARD BUFFER
 ; RESET THE QUEUE TO EMPTY
 ;__________________________________________________________________________________________________
 ;
-KBDQINIT: 
-	XOR	A
-	LD	(KBDQGETX),A
-	LD	(KBDQPUTX),A
-	RET
+;KBDQINIT: 
+;	XOR	A
+;	LD	(KBDQGETX),A
+;	LD	(KBDQPUTX),A
+;	RET
 ;
 ;__________________________________________________________________________________________________
 ; KEYBOARD INTERRUPT VECTOR
@@ -146,13 +146,14 @@ KBDQPOP:
 ;	RETURN A BYTE FROM THE KEYBOARD PORT
 ;
 KBD_IN:
+#ENDIF
+KBD_IN_P:
 	EZ80_IO
 	IN	A,(C)			; GET THE DATA VALUE
 	LD	C,(IY+KBD_DAT)		; DATA PORT
 	EZ80_IO
 	IN	A,(C)			; GET THE DATA VALUE
 	RET
-#ENDIF
 ;
 ;__________________________________________________________________________________________________
 ; KEYBOARD INPUT STATUS
@@ -166,13 +167,14 @@ KBDQLEN:				; EXIT WITH NUMBER OF CHARACTERS IN QUEUE
 	SUB	(HL)
 	RET
 #ELSE
-KBD_IST:				; A=0, Z SET FOR NOTHING PENDING, OTHERWISE DATA PENDING
+KBD_IST:
+#ENDIF
+KBD_IST_P:				; A=0, Z SET FOR NOTHING PENDING, OTHERWISE DATA PENDING
 	LD	C,(IY+KBD_ST)		; STATUS PORT
 	EZ80_IO
 	IN	A,(C)			; GET STATUS
 	AND	$01			; ISOLATE INPUT PENDING BIT
 	RET
-#ENDIF
 ;
 ;__________________________________________________________________________________________________
 ; OUTPUT TO KEYBOARD COMMAND PORT
