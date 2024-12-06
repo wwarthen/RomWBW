@@ -742,10 +742,10 @@ fp_flopboot2:
 ;
 runnvr:
 	ld	bc,BC_SYSGET_SWITCH	; HBIOS SysGet NVRAM Switches
-	ld	d,NVSW_DEFBOOT		; Read Default Boot (disk/Rom) switch
+	ld	d,NVSW_BOOTOPTS		; Read Boot options (disk/Rom) switch
 	rst	08
 	ld	a,h
-	and	DBOOT_ROM		; Get the Default Boot from ROM Flag
+	and	BOPTS_ROM		; Get the Boot Opts ROM Flag
 	jr	nz,nvrsw_rom		; IF Set as ROM App BOOT, otherwise Disk
 ;
 nvrsw_disk:

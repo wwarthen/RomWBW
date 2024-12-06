@@ -531,7 +531,7 @@ The following switch ID's are defined, and described in sections below.
 | Switch Number | Name         | Description                                   |      
 |---------------|--------------|-----------------------------------------------|      
 | 0x00          | -reserved-   | Reserved                                      |      
-| 0x01          | Default Boot | Default boot, either a Rom App or Disk Boot   |      
+| 0x01          | Boot Options | ROM or Disk Boot Settings                     |      
 | 0x02          | -n/a-        | -n/a- high order byte of previous switch      |      
 | 0x03          | Auto Boot    | Automatically boot enabled without user input |
 | 0x04 - 0xFE   | -future-     | Future general usage                          |
@@ -544,18 +544,19 @@ the bytes in NVRAM to check for authenticity before using the configuration.
 |-------------|--------------|-----------------------------------|      
 | 0x00        | Header Byte  | Header Signature Byte 'W'         |      
 | 0x01 - 0x03 | Switch Data  | Actual Switch Data                |      
-| 0x04        | Parity Check | Parity byte to check authenticity |    
+| 0x04        | Parity Check | Checksum byte to check integrity  |    
 
 The above data is copied into the HBIOS Configuration Block (HCB) at startup at 
 the location starting at CB_SWITCHES.
 
-### Default Boot (NVSW_DEFBOOT) 
+### Boot Options (NVSW_BOOTOPTS) 
 
-16 bit Switch defining the default Rom application or Disk device to boot. 
+16 bit Switch defining the ROM application or Disk device to boot if
+automatic booting is enabled.
 
 | Bit 15      | Bits 14-8         | Bits 7-0           |      
 |-------------|-------------------|--------------------|      
-| 1 = Rom App | -undefined-       | App to Boot (Char) |      
+| 1 = ROM App | -undefined-       | App to Boot (Char) |      
 | 0 = Disk    | Disk Unit (0-127) | Disk Slice (0-255) |      
 
 ### Auto Boot (NVSW_AUTOBOOT)

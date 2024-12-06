@@ -905,24 +905,24 @@ some limited configuration option options inside this NVRAM.
 Several configuration options are currently supported, these are known as Switches
 
 * Specify Automatic boot at startup, after an optional delay (AB)
-* Define the Default Disk or ROM App to be booted at startup (DB)
+* Define the Disk or ROM App to be booted at for automatic boot (BO)
 
-RomWBW uses bytes located at the start of RTC NVRAM, and includes a Parity check of 
-the bytes in NVRAM to check for authenticity before using the configuration.
+RomWBW uses bytes located at the start of RTC NVRAM, and includes a checksum of 
+the bytes in NVRAM to check for integrity before using the configuration.
 
 Initially NVRAM has to be reset (with default values), before it can be used.
-As well as setting defaults, it also writes the correct parity, and allows the
-NVRAM to be accessed and to store RomWBW config.
+As well as setting defaults, it also writes the correct checksum, and allows the
+NVRAM to be accessed and to store the RomWBW config.
 
-This is an explicit step that must be done, as any existing data stored is overitten.
-If you are using NVRAM for other purposes then you can continue to do so
+This is an explicit step that must be done, as any existing data stored is overwritten.
+If you are using NVRAM for other purposes, then you can continue to do so
 so long as you do NOT perform this Reset step.
 
-NVRAM may also need to be reset in these circumstances
+NVRAM may also need to be reset in these circumstances:
 
 * When there has been a loss of power to the NVRAM.
 * When upgrading to a new RomWBW version, or a RomWBW version that has new switches.
-* If the NVRAM has been overitten by another application.
+* If the NVRAM has been overwritten by another application.
 
 If you want to continue to use NVRAM in your applications you may want to consider storing
 your data above the RomWBW Switch data.

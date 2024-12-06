@@ -398,23 +398,23 @@ system configuration.
 
 ### Basic Operation
 
-The application is an interactive application it does not have command line syntax.
+The application is an interactive application; it does not have a command line syntax.
 Instead commands are executed from within the application in a command line structure.
 
 When you first start the (`SYSCONF`) utility it will display the current switches
 followed by a command listing.
 
 When you first run the (`SYSCONF`) utility the NVRAM will be uninitialised, and can 
-be initialised using the (R)eset command, which write default values to NVRAM.
+be initialised using the (R)eset command, which writes default values to NVRAM.
 
 Updates are done immediately to NVRAM as you enter them, i.e. there is no confirm
-changes step. If you make an incorrect changes you simply need to enter a new
+changes step. If you make any incorrect changes, you simply need to enter a new
 command to set the Switch value correctly.
 
-Once a change has been made it is available, however may not take effect until
+Once a change has been made it is available, however it may not take effect until
 the next system reboot. This is dependent on the Switch itself.
 
-If no NVRAM is provided by your hardware then running this application will just
+If no NVRAM is provided by your hardware, then running this application will just
 report the missing hardware and exit immediately.
 
 To exit from the application use the (Q)uit command.
@@ -445,7 +445,7 @@ character is used to delimit parameters in the command.
 
 This switch will define if the system will perform auto boot at the RomWBW boot prompt. 
 Enabling this will not prevent a user from typing a boot command, so long as the timeout is not
-exceeded. When configured this replaces the (`BOOT_DEFAULT`) variable
+exceeded. When configured this replaces the (`AUTO_CMD`) variable
 defined in build configuration.
 
 Making changes to auto boot has no affect until the next reboot.
@@ -465,13 +465,13 @@ Making changes to auto boot has no affect until the next reboot.
 | S AB E,10             | Enable Auto Boot with 10 second delay             | 
 | S AB D                | Disable Auto Boot                                 | 
 
-#### Default Boot (DB)
+#### Boot Options (BO)
 
-This switch will define the default boot command to be executed when pressing enter
-at the RomWBW boot prompt. When configured this replaces the (`BOOT_TIMEOUT`) variable
-defined in build configuration.
+This switch will define the boot command to be executed when auto boot is
+enabled.  When configured this replaces the (`AUTO_CMD`) variable
+defined in the ROM build configuration.
 
-Making changes to auto boot has no affect until the next reboot.
+Making changes to boot options has no affect until the next reboot.
 
 **Arguments**
 
@@ -487,8 +487,8 @@ Making changes to auto boot has no affect until the next reboot.
 
 | Command     | Description                                              | 
 |-------------|----------------------------------------------------------| 
-| S DB D,2,14 | Set the default boot from Disk; Unit 2, Slice 14         | 
-| S DB R,M    | Set the default boot to be the (M)onitor Rom Application | 
+| S BO D,2,14 | Set the default boot from Disk; Unit 2, Slice 14         | 
+| S BO R,M    | Set the default boot to be the (M)onitor Rom Application | 
 
 ## CP/M 2.2
 
