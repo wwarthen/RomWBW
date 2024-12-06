@@ -208,8 +208,8 @@ helpandloop:				; HELP MENU
 	; the folloiwng is just testing a single charater
 	cp	'A'			; Auto Boot help menu
 	JP	Z,HELP_AB
-	cp	'D'			; Default Boot help menu
-	JP	Z,HELP_DB
+	cp	'B'			; Boot Options help menu
+	JP	Z,HELP_BO
 ;
 printmainhelp:
 	ld	de,MSG_MENU		; nothing found Print the Main Menu
@@ -237,8 +237,8 @@ setvalueandloop:
 	; the folloiwng is just testing a single charater
 	cp	'A'			; Auto Boot help menu
 	JP	Z,SET_AB
-	cp	'D'			; Default Boot help menu
-	JP	Z,SET_DB
+	cp	'B'			; Boot Options help menu
+	JP	Z,SET_BO
 ;
 setvalueerror:
 	ld	de,MSG_QUESTION		; nothing found Print the Main Menu
@@ -269,8 +269,8 @@ PRT_STATUS:
 ;
 ; print invdividual stats, on all per switch
 ;
-	CALL	STAT_DEFBOOT
-	CALL	STAT_AUTOB
+	CALL	STAT_BO
+	CALL	STAT_AB
 ;
 ; end individual stats
 ;
@@ -297,31 +297,31 @@ STAT_NOTFOUND1:
 ; Specific Switches Below
 ; ======================================================================
 ;
-; DEFAULT BOOT
+; BOOT OPTIONS
 ;   Byte 1: (L)
 ;     Bit 7-0 DISK BOOT SLice Number to Boot -> default = 0
 ;     Bit 7-0 ROM BOOT (alpha character) Application to boot -> default = 0 translates to "H"
 ;   Byte 2: (H)
-;     Bit 7 - DISK/ROM - Disk or Rom Boot -> Default=ROM (BOOT_DEFAULT is Numeric/Alpha)
+;     Bit 7 - DISK/ROM - Disk or Rom Boot -> Default=ROM (AUTO_CMD is Numeric/Alpha)
 ;     Bit 6-0 - DISK BOOT Disk Unit to Boot (0-127) -> default = 0
 ;
 ; PRINT CURRENT SWITCH VALUE
 ;
-STAT_DEFBOOT:
+STAT_BO:
 	LD	BC,BC_SYSGET_SWITCH
-	LD	D,NVSW_DEFBOOT
+	LD	D,NVSW_BOOTOPTS
 	RST	08			; Should return auto Boot in HL
 	RET	NZ			; return if error
-	LD	de,MSG_DEFBOOT
+	LD	de,MSG_BO
 	CALL	prtstr
 	LD	A,H			; Byte 2
-	AND	DBOOT_ROM		; DISK/ROM
-	JR	NZ,STAT_AUTOROM		; is it ROM
-STAT_AUTODISK:
+	AND	BOPTS_ROM		; DISK/ROM
+	JR	NZ,STAT_BO_ROM		; is it ROM
+STAT_BO_DISK:
 	LD	de,MSG_DISK		; disk
 	CALL	prtstr
 	LD	A,H			; Byte 2
-	AND	DBOOT_UNIT		; Unit
+	AND	BOPTS_UNIT		; Unit
 	CALL	prtdecb
 	LD	de,MSG_DISK2		; Slice
 	CALL	prtstr
@@ -330,7 +330,7 @@ STAT_AUTODISK:
 	LD	de,MSG_DISK3		; close bracket
 	CALL	prtstr
 	RET
-STAT_AUTOROM:
+STAT_BO_ROM:
 	LD	de,MSG_ROM		; ROM
 	CALL	prtstr
 	LD	A,L			; ROM APP
@@ -341,67 +341,67 @@ STAT_AUTOROM:
 ;
 ; SET SWITCH VALUE
 ;
-SET_DB:
+SET_BO:
 	CALL	findskipws		; skip over WS to first char
-	JR	z,SET_DB_ERR		; if empty line, print main help
+	JR	z,SET_BO_ERR		; if empty line, print main help
 	call	upcase
 	cp	'R'			; ROM
-	JR	Z,SET_DB_ROM
+	JR	Z,SET_BO_ROM
 	cp	'D'			; DISK
-	JR	Z,SET_DB_DISK
-	JR	SET_DB_ERR
-SET_DB_ROM:
+	JR	Z,SET_BO_DISK
+	JR	SET_BO_ERR
+SET_BO_ROM:
 	CALL	findskipcomma
 	CALL	skipws
-	JR	z,SET_DB_ERR		; if empty line, print main help
+	JR	z,SET_BO_ERR		; if empty line, print main help
 	LD	L,A			; LOW BYTE ; next CHAR is the ROM App Name
-	LD	A,DBOOT_ROM
-	LD	H,A			; HIGH BYTE, has constant. DBOOT_ROM = $80
-	JR	SET_DB_SAVE		; SAVE
-SET_DB_DISK:
+	LD	A,BOPTS_ROM
+	LD	H,A			; HIGH BYTE, has constant. ABOOT_ROM = $80
+	JR	SET_BO_SAVE		; SAVE
+SET_BO_DISK:
 	CALL	findskipcomma
 	CALL	skipws
-	JR	z,SET_DB_ERR		; if empty line, print main help
+	JR	z,SET_BO_ERR		; if empty line, print main help
 	CALL	getnum			; next CHAR is the DISK UNIT
-	JR	C,SET_DB_ERR		; overflow
+	JR	C,SET_BO_ERR		; overflow
 	BIT	7,A			; is > 127
-	JR	NZ, SET_DB_ERR
+	JR	NZ, SET_BO_ERR
 	LD	H,A			; HIGH BYTE, has disk unit < $80
 	CALL	findskipcomma
 	CALL	skipws
-	JR	z,SET_DB_ERR		; if empty line, print main help
+	JR	z,SET_BO_ERR		; if empty line, print main help
 	CALL	getnum			; next CHAR is the SLICE
-	JR	C,SET_DB_ERR		; overflow
+	JR	C,SET_BO_ERR		; overflow
 	LD	L,A			; LOW BYTE, has the slice number
-	;JR	SET_DB_SAVE		; SAVE - Fall Through
-SET_DB_SAVE:
-	LD	D,NVSW_DEFBOOT		; DEFAULT BOOT
+	;JR	SET_BO_SAVE		; SAVE - Fall Through
+SET_BO_SAVE:
+	LD	D,NVSW_BOOTOPTS		; BOOT OPTIONS
 	JP	setvaluesave		; SAVE THE VALUE
-SET_DB_ERR:
+SET_BO_ERR:
 	JP	setvalueerror		; ERROR. Added this so can use JR above
 ;
 ; PRINT HELP TEST FOR SWITCH
 ;
-HELP_DB:
-	ld	de,MSG_DEFB_H
+HELP_BO:
+	ld	de,MSG_BO_H
 	JP	printhelp
 ;
-MSG_DEFBOOT	.DB	CR,LF, "  [DB] / Default Boot: ",0
+MSG_BO		.DB	CR,LF, "  [BO] / Boot Options: ",0
 MSG_DISK	.DB	"Disk (Unit = ",0
 MSG_DISK2	.DB	", Slice = ",0
 MSG_DISK3	.DB	")",0
 MSG_ROM		.DB	"ROM (App = \"",0
 MSG_ROM2	.DB	"\")",0
 ;
-MSG_DEFB_H	.DB	"\r\nDefault Boot - Disk or Rom App (DB):\r\n"
-		.DB	"  DB [R|D],[{romapp}|{unit},{slice}]\r\n"
-		.DB	"    e.g. S DB D,2,14 ; Disk Boot, unit 2, slice 14\r\n"
-		.DB	"         S DB R,M    ; Rom Application 'M'onitor\r\n"
+MSG_BO_H	.DB	"\r\nBoot Options - Disk or Rom App (BO):\r\n"
+		.DB	"  BO [R|D],[{romapp}|{unit},{slice}]\r\n"
+		.DB	"    e.g. S BO D,2,14 ; Disk Boot, unit 2, slice 14\r\n"
+		.DB	"         S BO R,M    ; Rom Application 'M'onitor\r\n"
 		.DB	"  Note: Disk: Unit (0-127); Slice (0-255)\r\n",0
 ;
 ;=======================================================================
 ;
-; AUTO BOOT
+; AUTO BOOT CONFIG
 ;   Byte 0: (L)
 ;     Bit 7-6 - Reserved
 ;     Bit 5 - AUTO BOOT Auto boot, default=false (i.e. BOOT_TIMEOUT != -1)
@@ -410,7 +410,7 @@ MSG_DEFB_H	.DB	"\r\nDefault Boot - Disk or Rom App (DB):\r\n"
 ;
 ; PRINT CURRENT SWITCH VALUE
 ;
-STAT_AUTOB:
+STAT_AB:
 	LD	BC,BC_SYSGET_SWITCH
 	LD	D,NVSW_AUTOBOOT
 	RST	08			; Should return auto Boot in HL
@@ -420,14 +420,14 @@ STAT_AUTOB:
 	LD	A,L			; Byte 1
 	LD	de,MSG_DISABLED
 	AND	ABOOT_AUTO		; enabled
-	JR	Z, STAT_AUTOB1		; disabled
+	JR	Z, STAT_AB1		; disabled
 	LD	de,MSG_ENABLED		; enabled
 	CALL	prtstr
 	LD	A,L			; Byte 1
 	AND	ABOOT_TIMEOUT		; timeout
 	CALL	prtdecb			; print timeout
 	LD	de,MSG_ENABLED2		; and closing bracket
-STAT_AUTOB1:
+STAT_AB1:
 	CALL	prtstr
 	RET
 ;
@@ -458,7 +458,7 @@ SET_AB_DISAB:
 	LD	L,0
 	;JR	SET_AB_SAVE		; SAVE - Fall Through
 SET_AB_SAVE:
-	LD	D,NVSW_AUTOBOOT		; AUTO BOOT
+	LD	D,NVSW_AUTOBOOT		; AUTO BOOT CONFIG
 	JP	setvaluesave		; SAVE THE VALUE
 SET_AB_ERR:
 	JP	setvalueerror		; ERROR. Added this so can use JR above
@@ -466,7 +466,7 @@ SET_AB_ERR:
 ; PRINT HELP TEST FOR SWITCH
 ;
 HELP_AB:
-	ld	de,MSG_AUTOB_H
+	ld	de,MSG_AB_H
 	JP	printhelp
 ;
 MSG_AUTOB:	.DB	CR,LF,"  [AB] / Auto Boot: ",0
@@ -474,7 +474,7 @@ MSG_ENABLED:	.DB	"Enabled (Timeout = ",0
 MSG_ENABLED2:	.DB	")",0
 MSG_DISABLED:	.DB	"Disabled",0
 ;
-MSG_AUTOB_H	.DB	"\r\nAutomatic Boot (AB):\r\n"
+MSG_AB_H	.DB	"\r\nAutomatic Boot (AB):\r\n"
 		.DB	"  AB <D|E>[,{timeout}]\r\n"
 		.DB	"    e.g. S AB E,3 ; enabled (show menu) with 3 second timout before boot\r\n"
 		.DB	"         S AB E,0 ; enabled with immediate effect, bypass menu\r\n"
@@ -504,7 +504,7 @@ str_banner	.db	"\r\n"
 MSG_MENU	.DB	"\r\n"
 		.DB	"Commands:\r\n"
 		.DB	"  (P)rint - Display Current settings\r\n"
-		.DB	"  (S)et {SW},{val}[,{val}[,{val}]]- Set a switch value(s)\r\n"
+		.DB	"  (S)et {SW} {val}[,{val}[,{val}]]- Set a switch value(s)\r\n"
 		.DB	"  (R)eset - Init NVRAM to Defaults\r\n"
 		.DB	"  (H)elp [{SW}] - This help menu, or help on a switch\r\n"
 		.DB	"  (Q)uit - Quit\r\n"
@@ -1031,12 +1031,12 @@ stack		.equ	$		; stack top
 SLACK	.EQU	(NVR_END - $)
 ;
 #IF (SLACK < 0)
-	.ECHO	"*** NVRCONFIG APP IS TOO BIG!!!\n"
+	.ECHO	"*** SYSCONF APP IS TOO BIG!!!\n"
 	!!!	; FORCE AN ASSEMBLY ERROR
 #endif
 ;
 	.FILL	SLACK,$00
-	.ECHO	"NVRCONFIG space remaining: "
+	.ECHO	"SYSCONF space remaining: "
 	.ECHO	SLACK
 	.ECHO	" bytes.\n"
 ;
