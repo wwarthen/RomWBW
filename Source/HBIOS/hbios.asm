@@ -3031,6 +3031,23 @@ HB_SPDTST:
 ; ENABLE INTERRUPTS
 ;--------------------------------------------------------------------------------------------------
 ;
+	;;;CALL	HB_PREINT_HOOKS		; HACK TO ALLOW SOME DRIVERS TO DO PRE INTERRUPT STUFF
+;
+#IFDEF TESTING
+;
+INTTEST:
+	; TEST TO SEE IF SOMEBODY ENABLED INTS EARLY!
+	LD	A,I
+	JP	PO,INTTEST_Z		; IF PO, INTS DISABLED AS EXPECTED
+	PRTX(STR_INTWARN)		; WARNING
+	JR	INTTEST_Z		; CONTINUE
+;
+STR_INTWARN	.TEXT	"\r\n\r\nWARNING: INTERRUPTS ENABLED TOO EARLY!!!$"
+;
+INTTEST_Z:
+;
+#ENDIF
+;
 	HB_EI				; INTERRUPTS SHOULD BE OK NOW
 ;
 ;--------------------------------------------------------------------------------------------------
@@ -7595,7 +7612,7 @@ Z2DMAADR2:
 #ENDIF
 ;
 ;--------------------------------------------------------------------------------------------------
-; ROUTINES FOR NON VOLATILE (NVRAM) SWITCHES
+; ROUTINES FOR NON VOLITILE (NVRAM) SWITCHES
 ;--------------------------------------------------------------------------------------------------
 ;
 ; RESET CONTENTS OF NVRAM, STORING INTO
@@ -9357,6 +9374,15 @@ SIZ_EZ80DRVS	.EQU	$ - ORG_EZ80DRVS
 		MEMECHO	"RTCDEF="
 		MEMECHO	RTCDEF
 		MEMECHO	"\n"
+;;;;
+;;;; PRE-INTERRUPT HOOKS
+;;;;
+;;;HB_PREINT_HOOKS:
+;;;;
+;;;#IF (KBDENABLE)
+;;;	CALL	KBD_PREINT_HOOK
+;;;#ENDIF
+;;;	RET
 ;
 HB_DRIVERS_END	.EQU	$
 ;

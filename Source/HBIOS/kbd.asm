@@ -8,7 +8,7 @@
 ;
 ;
 ; IN DEBUG MODE:
-: >>nn SHOWS HEX COMMAND nn BEING WRITTEN TO THE COMMAND PORT
+; >>nn SHOWS HEX COMMAND nn BEING WRITTEN TO THE COMMAND PORT
 ; >nn  SHOWS HEX VALUE nn BEING WRITTEN TO THE DATA PORT
 ; <nn  SHOWS HEX VALUE READ FROM DATA PORT
 ;__________________________________________________________________________________________________
@@ -70,6 +70,25 @@ KBD_IDLE	.DB	0	; IDLE COUNT
 ;__________________________________________________________________________________________________
 ;
 #INCLUDE "ps2iface.inc"
+;;;;
+;;;; HACK TO ENSURE PS/2 CONTROLLER INTERRUPTS ARE TURNED OFF!!!
+;;;;
+;;;KBD_PREINT_HOOK:
+;;;#IF (KBDINTS)
+;;;	LD	IY,KBDIDAT
+;;;	LD	A,$60			; SET COMMAND REGISTER
+;;;	CALL	KBD_PUTCMD		; SEND IT
+;;;	LD	A,$20			; XLAT DISABLED, MOUSE DISABLED, NO INTS
+;;;	CALL	KBD_PUTDATA		; SEND IT
+;;;;
+;;;	; FLUSH ANY PENDING OUTPUT
+;;;	LD	B,16
+;;;KBD_PREINT_HOOK1:
+;;;	CALL	KBD_IN_P
+;;;	DJNZ	KBD_PREINT_HOOK1
+;;;#ENDIF
+	RET
+;
 ;__________________________________________________________________________________________________
 ; KEYBOARD INITIALIZATION
 ;__________________________________________________________________________________________________
@@ -79,7 +98,7 @@ KBD_INIT:
 	PRTS("KBD: IO=0x$")		; DISPLAY
 	LD	A,(IY+KBD_DAT)		; PORT SETTING
 	CALL	PRTHEXBYTE
-#IF ((INTMODE == 2) & INTPS2KBD)
+#IF ((INTMODE == 2) & KBDINTS)
 	PRTS(" INT #$")			; DISPLAY 	
 	LD	A,INT_PS2KB		; INTERRUPT SETTING
 	CALL	PRTDECB
@@ -94,7 +113,7 @@ KBD_INIT:
 	CP	KBDMODE_VRC		; VRC?
 	JR	Z,KBD_INIT1		; IF SO, MUST ASSUME PRESENT
 ;
-#IF ((INTMODE == 2) & INTPS2KBD)
+#IF ((INTMODE == 2) & KBDINTS)
 	HB_DI				; DISABLE INTERRUPTS WHILE WE PROBE
 #ENDIF
 	LD	A,$AA			; CONTROLLER SELF TEST
@@ -103,14 +122,14 @@ KBD_INIT:
 ;
 	CP	$55			; IS IT THERE?
 	JR	Z,KBD_INIT1		; IF SO, CONTINUE
-#IF ((INTMODE == 2) & INTPS2KBD)
+#IF ((INTMODE == 2) & KBDINTS)
 	HB_EI				; RESTORE INTERRUPTS
 #ENDIF
 	PRTS(" NOT PRESENT$")		; DIAGNOSE PROBLEM
 	RET				; BAIL OUT
 ;
 KBD_INIT1:
-#IF ((INTMODE == 2) & INTPS2KBD)
+#IF ((INTMODE == 2) & KBDINTS)
 ;	CALL	KBDQINIT		; INITIALIZE QUEUE
 	LD	HL,KBD_INT		; INSTALL VECTOR
 	LD	(IVT(INT_PS2KB)),HL	; IVT INDEX
@@ -131,7 +150,7 @@ KBD_INIT2:
 	LD	A,$60			; SET COMMAND REGISTER
 	CALL	KBD_PUTCMD		; SEND IT
 
-#IF ((INTMODE == 2) & INTPS2KBD)
+#IF ((INTMODE == 2) & KBDINTS)
 	LD	A,$21			; XLAT DISABLED, MOUSE DISABLED, WITH INTS		
 #ELSE
 	LD	A,$20			; XLAT DISABLED, MOUSE DISABLED, NO INTS

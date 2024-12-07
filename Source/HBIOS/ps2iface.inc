@@ -8,34 +8,7 @@
 ; CURRENTLY CONFIGURED FOR INT #2 ON DUODYNE WITH I/O MULTI BOARD.
 ;__________________________________________________________________________________________________
 ;
-#IF ((INTMODE == 2) & INTPS2KBD))
-;
-; SETUP POINTER TO KEYBOARD PORT
-;
-#IF (TMSENABLE)
-KBDIDAT		.EQU	TMS_IDAT	; KBD INSTANCE DATA TABLE
-#ELSE
-
-#IF (GDCENABLE)
-KBDIDAT		.EQU	GDC_IDAT	; KBD INSTANCE DATA TABLE
-#ELSE
-
-#IF (CVDUENABLE)
-KBDIDAT		.EQU	CVDU_IDAT	; KBD INSTANCE DATA TABLE
-#ELSE
-
-#IF (VRCENABLE)
-KBDIDAT		.EQU	VRC_IDAT	; KBD INSTANCE DATA TABLE
-#ELSE
-
-#IF (VGAENABLE)
-KBDIDAT		.EQU	VGA_IDAT	; KBD INSTANCE DATA TABLE
-#ENDIF
-
-#ENDIF
-#ENDIF
-#ENDIF
-#ENDIF
+#IF ((INTMODE == 2) & KBDINTS))
 ;
 ;__________________________________________________________________________________________________
 ; KEYBOARD QUEUE FOR INTERRUPTS
@@ -113,7 +86,7 @@ KBDQFULL:				; RETURN Z IF QUEUE IS FULL
 ; KEYBOARD READ
 ;__________________________________________________________________________________________________
 ;
-#IF ((INTMODE == 2) & INTPS2KBD))
+#IF ((INTMODE == 2) & KBDINTS))
 ;
 ; 	RETURN A BYTE TO FROM KEYBOARD QUEUE
 ;	NOTE THE QUEUE INDEX'S NEVER DECREASE IN SIZE.
@@ -153,7 +126,7 @@ KBD_IN_P:
 ; KEYBOARD INPUT STATUS
 ;__________________________________________________________________________________________________
 ;
-#IF ((INTMODE == 2) & INTPS2KBD))
+#IF ((INTMODE == 2) & KBDINTS))
 KBD_IST:
 KBDQLEN:				; EXIT WITH NUMBER OF CHARACTERS IN QUEUE
 	LD	A,(KBDQPUTX)		; Z STATUS AND ZERO IF NONE 
@@ -204,7 +177,7 @@ KBD_OST:
 ; DEBUG QUEUE
 ;__________________________________________________________________________________________________
 ;
-#IF ((INTMODE == 2) & INTPS2KBD & 0)
+#IF ((INTMODE == 2) & KBDINTS & 0)
 KBDQDBG:
 	PUSH	HL
 	PUSH	DE
