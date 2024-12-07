@@ -82,16 +82,24 @@ KBDQFULL:				; RETURN Z IF QUEUE IS FULL
 	SUB	KBDQSIZ
 	RET
 #ENDIF
+;
 ;__________________________________________________________________________________________________
 ; KEYBOARD READ
 ;__________________________________________________________________________________________________
 ;
+; READ DIRECT FROM PORT
+;
+KBD_IN_P:
+	LD	C,(IY+KBD_DAT)		; DATA PORT
+	EZ80_IO
+	IN	A,(C)			; GET THE DATA VALUE
+	RET
+;
+; READ FROM INTERRUPT QUEUE
+;
 #IF ((INTMODE == 2) & KBDINTS))
 ;
-; 	RETURN A BYTE TO FROM KEYBOARD QUEUE
-;	NOTE THE QUEUE INDEX'S NEVER DECREASE IN SIZE.
-;
-KBD_IN:
+KBD_IN_Q:
 KBDQPOP:
 	CALL	KBDQLEN
 	RET	Z			; EXIT IF THE QUEUE IS EMPTY
@@ -110,38 +118,50 @@ KBDQPOP:
 ;
 	RET
 ;
-#ELSE
-;
-;	RETURN A BYTE FROM THE KEYBOARD PORT
-;
-KBD_IN:
 #ENDIF
-KBD_IN_P:
-	LD	C,(IY+KBD_DAT)		; DATA PORT
-	EZ80_IO
-	IN	A,(C)			; GET THE DATA VALUE
-	RET
+;
+; 	RETURN A BYTE TO FROM KEYBOARD QUEUE
+;	NOTE THE QUEUE INDEX'S NEVER DECREASE IN SIZE.
+;
+#IF ((INTMODE == 2) & KBDINTS))
+KBD_IN	.EQU	KBD_IN_Q
+#ELSE
+KBD_IN	.EQU	KBD_IN_P
+#ENDIF
 ;
 ;__________________________________________________________________________________________________
 ; KEYBOARD INPUT STATUS
 ;__________________________________________________________________________________________________
 ;
-#IF ((INTMODE == 2) & KBDINTS))
-KBD_IST:
-KBDQLEN:				; EXIT WITH NUMBER OF CHARACTERS IN QUEUE
-	LD	A,(KBDQPUTX)		; Z STATUS AND ZERO IF NONE 
-	LD	HL,KBDQGETX
-	SUB	(HL)
-	RET
-#ELSE
-KBD_IST:
-#ENDIF
-KBD_IST_P:				; A=0, Z SET FOR NOTHING PENDING, OTHERWISE DATA PENDING
+; DIRECT PORT STATUS READ
+;
+KBD_IST_P:
 	LD	C,(IY+KBD_ST)		; STATUS PORT
 	EZ80_IO
 	IN	A,(C)			; GET STATUS
 	AND	$01			; ISOLATE INPUT PENDING BIT
 	RET
+;
+; STATUS FROM INTERRUPT QUEUE
+;
+#IF ((INTMODE == 2) & KBDINTS))
+;
+KBD_IST_Q:
+KBDQLEN:				; EXIT WITH NUMBER OF CHARACTERS IN QUEUE
+	LD	A,(KBDQPUTX)		; Z STATUS AND ZERO IF NONE 
+	LD	HL,KBDQGETX
+	SUB	(HL)
+	RET
+;
+#ENDIF
+;
+; 	RETURN INDICATION OF KEYBOARD DATA READY
+;
+#IF ((INTMODE == 2) & KBDINTS))
+KBD_IST	.EQU	KBD_IST_Q
+#ELSE
+KBD_IST	.EQU	KBD_IST_P
+#ENDIF
 ;
 ;__________________________________________________________________________________________________
 ; OUTPUT TO KEYBOARD COMMAND PORT
