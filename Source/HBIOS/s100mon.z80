@@ -550,7 +550,7 @@ TBL:	DW  FLUSH			;"@"  SEND FF to LaserJet printer
 
 
 BEGIN:	DI				;No interrupts
-	XOR	A			;SET INTERUPT TO PAGE 0H
+	XOR	A			;SET INTERRUPT TO PAGE 0H
 	LD	I,A			;Z80 Interrupt page 0
 
 SETUP_STACK:

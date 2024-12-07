@@ -1,6 +1,6 @@
 ;======================================================================
 ;	VIDEO DRIVER FOR FPGA VGA
-;	http://s100computers.com/My%20System%20Pages/FPGA%20Z80%20SBC/FPGA%20Z80%20SBC.htm
+;	http://s100computers.com/My%20System%20Pages/FPGA%20Z80%20SBC/FPGA%20Z80%20SBC.htm
 ;
 ;	WRITTEN BY: WAYNE WARTHEN -- 9/2/2024
 ;======================================================================
@@ -36,8 +36,8 @@ FV_CTL		.EQU	FV_BASE+2	; VGA CONTROL PORT
 ;
 FV_BUFCTL	.EQU	$08
 ;
-FV_KBDDATA	.EQU	$03
-FV_KBDST	.EQU	$02
+FV_KBDDATA	.EQU	$03		; KBD CTLR DATA PORT
+FV_KBDST	.EQU	$02		; KBD CTLR STATUS/CMD PORT
 ;
 FV_ROWS	.EQU	40
 FV_COLS	.EQU	80
