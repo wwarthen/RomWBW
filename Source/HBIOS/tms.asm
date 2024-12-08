@@ -1189,14 +1189,6 @@ TMS_IDAT:
 	.DB	TMS_DATREG
 	.DB	TMS_CMDREG
 ;
-; IF WE ARE USING PS2 INTERRUPTS, WE NEED TO PASS THE INSTANCE
-; DATA POINTER TO PS2IFACE.INC VIA KBDIDAT FOR USE BY THE INTERRUPT
-; HANDLER IN PS2IFACE.INC.
-;
-#IF ((TMSKBD == TMSKBD_KBD) & KBDINTS)
-KBDIDAT		.EQU	TMS_IDAT
-#ENDIF
-;
 ;==================================================================================================
 ;   TMS DRIVER - TMS9918 REGISTER INITIALIZATION
 ;==================================================================================================

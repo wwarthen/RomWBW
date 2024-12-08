@@ -905,7 +905,7 @@ setcon:
 	jp	nz,err_invcmd		; abort on error
 ;
 	ld	a,d			; mask off current
-	and	$11100000		; baud rate
+	and	%11100000		; baud rate
 	ld	hl,newspeed		; and load in new
 	or	(hl)			; baud rate
 	ld	d,a
@@ -2496,7 +2496,7 @@ str_help	.db	"\r\n"
 		.db	"\r\n  R           - Reboot System"
 #if (BIOS == BIOS_WBW)
 		.db	"\r\n  W           - RomWBW Configure"
-		.db	"\r\n  I <u> [<c>] - Set Console Interface/Baud code"
+		.db	"\r\n  I <u> [<c>] - Set Console Interface/Baud Rate"
 		.db	"\r\n  V [<n>]     - View/Set HBIOS Diagnostic Verbosity"
 #endif
 		.db	"\r\n  <u>[.<s>]   - Boot Disk Unit/Slice"

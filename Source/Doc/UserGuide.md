@@ -573,14 +573,15 @@ For example, typing `H<enter>` will display a short command summary:
 Boot [H=Help]: h
 
   L           - List ROM Applications
-  D           - Disk Device Inventory
+  D           - Device Inventory
   R           - Reboot System
-  I <u> [<c>] - Set Console Interface/Baud code
+  W           - RomWBW Configure
+  I <u> [<c>] - Set Console Interface/Baud Rate
   V [<n>]     - View/Set HBIOS Diagnostic Verbosity
   <u>[.<s>]   - Boot Disk Unit/Slice
 ```
 
-Likewise the `L` command will display the list of ROM Applications that
+Likewise the `L` command (List ROM Applications) will display the list of ROM Applications that
 you can launch right from the Boot Loader:
 
 ```
@@ -599,6 +600,9 @@ ROM Applications:
   X: XModem Flash Updater
   U: User App
 ```
+
+A more complete description of these options is found below in
+[System Management].
 
 ## Starting Applications from ROM
 
