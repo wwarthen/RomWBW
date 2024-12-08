@@ -917,7 +917,7 @@ TMS_XY2IDX:
 	RET				; RETURN
 ;
 ;----------------------------------------------------------------------
-; WRITE VALUE IN A TO CURRENT VDU BUFFER POSTION, ADVANCE CURSOR
+; WRITE VALUE IN A TO CURRENT VDU BUFFER POSITION, ADVANCE CURSOR
 ;----------------------------------------------------------------------
 ;
 TMS_PUTCHAR:
