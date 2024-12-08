@@ -3340,28 +3340,62 @@ placeholder
 
 ### Diagnostic LEDs
 
-Progress through the boot and initialization process can be difficult to monitor 
-due to the lack of console or video output. Access to these output devices does
-not become available until late the in the boot process. If these output devices 
-are also involved with the issue trying to be resolved then trouble shooting is 
-even more difficult.
+Progress through the boot and initialization process can be difficult to 
+monitor due to the lack of console or video output.  Access to these output 
+devices does not become available until late the in the boot process.  If 
+these output devices are also involved with the issue trying to be resolved 
+then trouble shooting is even more difficult.
 
-ROMWBW can be configured to display boot progress with the assistance of additional 
-hardware. This take the form of an LED breakout debugging board connected to an
-8-bit output port. As the boot code executes, the LED output display is updated.
+ROMWBW can be configured to display boot progress with the assistance of 
+additional hardware.  This can take the form of a front panel LED display or 
+LED breakout debugging board connected to an 8-bit output port.  Or it can 
+utilize existing platform status LEDS. 
 
-To use a LED breakout board, it must be connected the computers data, reset and port
-select lines.
+As the boot code executes, the LED output display is updated to indicate the execution progress.
 
-To enable the DIAG option the following settings must be made in the systems .ini
-configuration file, where 0xnn is the port address.
+Platforms that have these capabilities built in have them enabled by default.
 
-DIAGENABLE .SET TRUE
-DIAGPORT   .SET 0xnn
+#### Front Panel display
 
-The following table shows the ROMWBW process steps in relation to the LED display.
+A LED front panel or breakout board needs to be connected the computers data, 
+reset and port select lines.
 
-| **LED**    | **RomWBW Processes**                           |
+To enable this option the following settings can be made in the platforms custom
+configuration file.
+
+```
+FPLED_ENABLE	.SET	TRUE           ; ENABLE FRONT PANEL
+```
+
+Custom hardware can be configured with :
+
+```
+FPLED_IO	.SET	$nn	    	; USE PORT ADDRESS nn
+FPLED_INV	.SET	FALSE		; INVERTED LED BITS
+```
+
+#### Platform Status LEDS
+
+These status LEDs use preexisting status LEDs on each platform.
+
+Enable using:
+
+```
+LEDENABLE	.SET	TRUE            ; ENABLES STATUS LED
+```
+
+Customize using:
+
+```
+LEDMODE		.SET	LEDMODE_STD     ; LEDMODE_[STD|SC|RTC|NABU]
+LEDPORT		.SET	$nn             ; STATUS LED PORT ADDRESS
+```
+
+The following table shows the ROMWBW process steps in relation to the panel
+display.
+
+
+| **PANEL**  | **RomWBW Processes**                           |
 |------------|------------------------------------------------|
 | `........` | Initial boot                                   |
 |            | Jump to start address                          |
