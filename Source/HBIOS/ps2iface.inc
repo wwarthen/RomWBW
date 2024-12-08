@@ -8,34 +8,7 @@
 ; CURRENTLY CONFIGURED FOR INT #2 ON DUODYNE WITH I/O MULTI BOARD.
 ;__________________________________________________________________________________________________
 ;
-#IF ((INTMODE == 2) & INTPS2KBD))
-;
-; SETUP POINTER TO KEYBOARD PORT
-;
-#IF (TMSENABLE)
-KBDIDAT		.EQU	TMS_IDAT	; KBD INSTANCE DATA TABLE
-#ELSE
-
-#IF (GDCENABLE)
-KBDIDAT		.EQU	GDC_IDAT	; KBD INSTANCE DATA TABLE
-#ELSE
-
-#IF (CVDUENABLE)
-KBDIDAT		.EQU	CVDU_IDAT	; KBD INSTANCE DATA TABLE
-#ELSE
-
-#IF (VRCENABLE)
-KBDIDAT		.EQU	VRC_IDAT	; KBD INSTANCE DATA TABLE
-#ELSE
-
-#IF (VGAENABLE)
-KBDIDAT		.EQU	VGA_IDAT	; KBD INSTANCE DATA TABLE
-#ENDIF
-
-#ENDIF
-#ENDIF
-#ENDIF
-#ENDIF
+#IF ((INTMODE == 2) & KBDINTS))
 ;
 ;__________________________________________________________________________________________________
 ; KEYBOARD QUEUE FOR INTERRUPTS
@@ -109,16 +82,24 @@ KBDQFULL:				; RETURN Z IF QUEUE IS FULL
 	SUB	KBDQSIZ
 	RET
 #ENDIF
+;
 ;__________________________________________________________________________________________________
 ; KEYBOARD READ
 ;__________________________________________________________________________________________________
 ;
-#IF ((INTMODE == 2) & INTPS2KBD))
+; READ DIRECT FROM PORT
 ;
-; 	RETURN A BYTE TO FROM KEYBOARD QUEUE
-;	NOTE THE QUEUE INDEX'S NEVER DECREASE IN SIZE.
+KBD_IN_P:
+	LD	C,(IY+KBD_DAT)		; DATA PORT
+	EZ80_IO
+	IN	A,(C)			; GET THE DATA VALUE
+	RET
 ;
-KBD_IN:
+; READ FROM INTERRUPT QUEUE
+;
+#IF ((INTMODE == 2) & KBDINTS))
+;
+KBD_IN_Q:
 KBDQPOP:
 	CALL	KBDQLEN
 	RET	Z			; EXIT IF THE QUEUE IS EMPTY
@@ -137,38 +118,50 @@ KBDQPOP:
 ;
 	RET
 ;
-#ELSE
-;
-;	RETURN A BYTE FROM THE KEYBOARD PORT
-;
-KBD_IN:
 #ENDIF
-KBD_IN_P:
-	LD	C,(IY+KBD_DAT)		; DATA PORT
-	EZ80_IO
-	IN	A,(C)			; GET THE DATA VALUE
-	RET
+;
+; 	RETURN A BYTE TO FROM KEYBOARD QUEUE
+;	NOTE THE QUEUE INDEX'S NEVER DECREASE IN SIZE.
+;
+#IF ((INTMODE == 2) & KBDINTS))
+KBD_IN	.EQU	KBD_IN_Q
+#ELSE
+KBD_IN	.EQU	KBD_IN_P
+#ENDIF
 ;
 ;__________________________________________________________________________________________________
 ; KEYBOARD INPUT STATUS
 ;__________________________________________________________________________________________________
 ;
-#IF ((INTMODE == 2) & INTPS2KBD))
-KBD_IST:
-KBDQLEN:				; EXIT WITH NUMBER OF CHARACTERS IN QUEUE
-	LD	A,(KBDQPUTX)		; Z STATUS AND ZERO IF NONE 
-	LD	HL,KBDQGETX
-	SUB	(HL)
-	RET
-#ELSE
-KBD_IST:
-#ENDIF
-KBD_IST_P:				; A=0, Z SET FOR NOTHING PENDING, OTHERWISE DATA PENDING
+; DIRECT PORT STATUS READ
+;
+KBD_IST_P:
 	LD	C,(IY+KBD_ST)		; STATUS PORT
 	EZ80_IO
 	IN	A,(C)			; GET STATUS
 	AND	$01			; ISOLATE INPUT PENDING BIT
 	RET
+;
+; STATUS FROM INTERRUPT QUEUE
+;
+#IF ((INTMODE == 2) & KBDINTS))
+;
+KBD_IST_Q:
+KBDQLEN:				; EXIT WITH NUMBER OF CHARACTERS IN QUEUE
+	LD	A,(KBDQPUTX)		; Z STATUS AND ZERO IF NONE 
+	LD	HL,KBDQGETX
+	SUB	(HL)
+	RET
+;
+#ENDIF
+;
+; 	RETURN INDICATION OF KEYBOARD DATA READY
+;
+#IF ((INTMODE == 2) & KBDINTS))
+KBD_IST	.EQU	KBD_IST_Q
+#ELSE
+KBD_IST	.EQU	KBD_IST_P
+#ENDIF
 ;
 ;__________________________________________________________________________________________________
 ; OUTPUT TO KEYBOARD COMMAND PORT
@@ -204,7 +197,7 @@ KBD_OST:
 ; DEBUG QUEUE
 ;__________________________________________________________________________________________________
 ;
-#IF ((INTMODE == 2) & INTPS2KBD & 0)
+#IF ((INTMODE == 2) & KBDINTS & 0)
 KBDQDBG:
 	PUSH	HL
 	PUSH	DE
