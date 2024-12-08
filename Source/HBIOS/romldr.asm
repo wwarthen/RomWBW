@@ -905,7 +905,7 @@ setcon:
 	jp	nz,err_invcmd		; abort on error
 ;
 	ld	a,d			; mask off current
-	and	$11100000		; baud rate
+	and	%11100000		; baud rate
 	ld	hl,newspeed		; and load in new
 	or	(hl)			; baud rate
 	ld	d,a
