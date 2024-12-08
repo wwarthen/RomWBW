@@ -2383,6 +2383,11 @@ Cold Start (0x02):
   : Perform a system cold start (like a power on).  All devices are
     reinitialized.
 
+User Restart (0x03):
+
+  : Perform a video terminal reset.  Terminal emulation and visual display
+    systems are reset.
+
 The Status (A) is a standard HBIOS result code.
 
 ### Function 0xF1 -- System Version (SYSVER)
