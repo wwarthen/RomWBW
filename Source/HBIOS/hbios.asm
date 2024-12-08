@@ -3031,8 +3031,6 @@ HB_SPDTST:
 ; ENABLE INTERRUPTS
 ;--------------------------------------------------------------------------------------------------
 ;
-	;;;CALL	HB_PREINT_HOOKS		; HACK TO ALLOW SOME DRIVERS TO DO PRE INTERRUPT STUFF
-;
 #IFDEF TESTING
 ;
 INTTEST:
@@ -9374,15 +9372,6 @@ SIZ_EZ80DRVS	.EQU	$ - ORG_EZ80DRVS
 		MEMECHO	"RTCDEF="
 		MEMECHO	RTCDEF
 		MEMECHO	"\n"
-;;;;
-;;;; PRE-INTERRUPT HOOKS
-;;;;
-;;;HB_PREINT_HOOKS:
-;;;;
-;;;#IF (KBDENABLE)
-;;;	CALL	KBD_PREINT_HOOK
-;;;#ENDIF
-;;;	RET
 ;
 HB_DRIVERS_END	.EQU	$
 ;

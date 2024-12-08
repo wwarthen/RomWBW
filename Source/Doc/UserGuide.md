@@ -576,7 +576,7 @@ Boot [H=Help]: h
   D           - Device Inventory
   R           - Reboot System
   W           - RomWBW Configure
-  I <u> [<c>] - Set Console Interface/Baud code
+  I <u> [<c>] - Set Console Interface/Baud Rate
   V [<n>]     - View/Set HBIOS Diagnostic Verbosity
   <u>[.<s>]   - Boot Disk Unit/Slice
 ```
