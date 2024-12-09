@@ -1,6 +1,6 @@
 ;__________________________________________________________________________________________________
 ;
-;	8242 BASED PS/2 KEYBOARD DRIVER FOR SBC
+;	8242 BASED PS/2 KEYBOARD DRIVER
 ;
 ;	ORIGINAL CODE BY DR JAMES MOXHAM
 ;	ROMWBW ADAPTATION BY WAYNE WARTHEN
@@ -72,6 +72,18 @@ KBD_RSTATE	.DB	0	; STATE BITS FOR "RIGHT" KEYS
 KBD_STATUS	.DB	0	; CURRENT STATUS BITS (SEE ABOVE)
 KBD_REPEAT	.DB	0	; CURRENT REPEAT RATE
 KBD_IDLE	.DB	0	; IDLE COUNT
+;__________________________________________________________________________________________________
+; 8242 CONTROLLER COMMANDS AND RESPONSES 
+;__________________________________________________________________________________________________
+;
+KBD_CON_WCR	.EQU	$60	; WRITE TO COMMAND REGISTER. VALUE TO FOLLOW.
+KBD_CON_CST	.EQU	$AA	; CONTROLLER SELF TEST. RETURN FF IF CONTROLLER OK
+;__________________________________________________________________________________________________
+; 8242 CONTROLLER COMMAND REGISTER VALUES
+;__________________________________________________________________________________________________
+;
+KBD_CON_ION	.EQU	$21	; XLAT DISABLED, MOUSE DISABLED, WITH INTS		
+KBD_CON_IOF	.EQU	$20	; XLAT DISABLED, MOUSE DISABLED, NO INTS
 ;
 	DEVECHO	"KBD: ENABLED\n"
 ;
@@ -80,34 +92,6 @@ KBD_IDLE	.DB	0	; IDLE COUNT
 ;__________________________________________________________________________________________________
 ;
 #INCLUDE "ps2iface.inc"
-;
-;__________________________________________________________________________________________________
-; KEYBOARD PRE-INITIALIZATION
-;__________________________________________________________________________________________________
-;
-; TO BE CALLED PRIOR TO INITERRUPTS BEING ENABLED
-; MUST BE CALLED FROM VIDEO DRIVER PREINIT WITH IY SET
-; THIS PREVENTS INTRERRUPT ISSUES IF 8242 HAS INTERRUPTS ENABLED
-;
-; AT STARTUP.  NOT USING IT FOR NOW BECAUSE IT IS NOT A PROBLEM IF
-; YOU DON'T USE THE KEYBOARD DURING BOOT.
-;
-;;;KBD_PREINT:
-;;;;
-;;;;
-;;;#IF (KBDINTS)
-;;;	LD	A,$60			; SET COMMAND REGISTER
-;;;	CALL	KBD_PUTCMD		; SEND IT
-;;;	LD	A,$20			; XLAT DISABLED, MOUSE DISABLED, NO INTS
-;;;	CALL	KBD_PUTDATA		; SEND IT
-;;;;
-;;;	; FLUSH ANY PENDING OUTPUT
-;;;	LD	B,16
-;;;KBD_PREINT_HOOK1:
-;;;	CALL	KBD_IN_P
-;;;	DJNZ	KBD_PREINT_HOOK1
-;;;#ENDIF
-;;;	RET
 ;
 ;__________________________________________________________________________________________________
 ; KEYBOARD INITIALIZATION
@@ -134,7 +118,7 @@ KBD_INIT:
 	JR	Z,KBD_INIT1		; IF SO, MUST ASSUME PRESENT
 ;
 	HB_DI				; DISABLE INTERRUPTS WHILE WE PROBE
-	LD	A,$AA			; CONTROLLER SELF TEST
+	LD	A,KBD_CON_CST		; CONTROLLER SELF TEST
 	CALL	KBD_PUTCMD		; SEND IT
 	CALL	KBD_GETDATA_P		; CONTROLLER SHOULD RESPOND WITH $55 (ACK)
 	HB_EI				; RESTORE INTERRUPTS
@@ -163,16 +147,15 @@ KBD_INIT1:
 KBD_INIT2:
 	CALL	WRITESTR
 ;
-	LD	A,$60			; SET COMMAND REGISTER
+	LD	A,KBD_CON_WCR		; SET COMMAND REGISTER
 	CALL	KBD_PUTCMD		; SEND IT
 
 #IF ((INTMODE == 2) & KBDINTS)
-	LD	A,$21			; XLAT DISABLED, MOUSE DISABLED, WITH INTS		
+	LD	A,KBD_CON_ION		; XLAT DISABLED, MOUSE DISABLED, WITH INTS		
 #ELSE
-	LD	A,$20			; XLAT DISABLED, MOUSE DISABLED, NO INTS
+	LD	A,KBD_CON_IOF		; XLAT DISABLED, MOUSE DISABLED, NO INTS
 #ENDIF
 	CALL	KBD_PUTDATA		; SEND IT
-	
 	CALL	KBD_GETDATA		; GOBBLE UP $AA FROM POWER UP, AS NEEDED
 	
 	CALL 	KBD_RESET		; RESET THE KEYBOARD
