@@ -64,19 +64,10 @@ KBD_INT:
 ;
 KBD_DEINIT: 
 	LD	IY,(KBD_IDAT)		; SETUP PORT POINTER
-;
-	LD	C,(IY+KBD_CMD)		; LOAD COMMAND PORT
 	LD	A,KBD_CON_WCR		; LOAD WRITE COMMAND
-	EZ80_IO
-	OUT	(C),A			; SEND COMMAND
-;
-	LD	C,(IY+KBD_DAT)		; LOAD DATA PORT
+	CALL	KBD_CMDOUT		; WRITE IT
 	LD	A,KBD_CON_IOF		; LOAD DISABLE INTERRUPTS CFG
-	EZ80_IO
-	OUT	(C),A			; SEND DATA
-;
-	XOR	A			; SIGNAL SUCCESS
-	RET
+	JP	KBD_DTAOUT		; WRITE IT
 #ENDIF
 ;__________________________________________________________________________________________________
 ; KEYBOARD READ
