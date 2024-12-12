@@ -52,6 +52,7 @@
 ;   2024-07-08 [WBW] Add support for Les Bird's Graphics, Sound, Joystick
 ;   2024-07-11 [WBW] Updated, Les Bird's module now uses same settings as EB6
 ;   2024-09-17 [WBW] Add support for HEATH H8 with Les Bird's MSX Card
+;   2024-12-12 [WBW] Add options to force standard MSX or RC ports
 ;_______________________________________________________________________________
 ;
 ; ToDo:
@@ -72,6 +73,10 @@ HEAPEND		.EQU	$C000		; End of heap storage
 TYPPT2		.EQU	1		; FILTYP value for PT2 sound file
 TYPPT3		.EQU	2		; FILTYP value for PT3 sound file
 TYPMYM		.EQU	3		; FILTYP value for MYM sound file
+;
+PORTS_AUTO	.EQU	0		; AUTO select audio chip ports
+PORTS_MSX	.EQU	1		; force MSX audio chip ports
+PORTS_RC	.EQU	2		; force RCBUS audio chip ports
 ;
 ; HIGH SPEED CPU CONTROL
 ;
@@ -106,6 +111,7 @@ Id		.EQU	1	; 5) Insert official identificator
 	PRTSTRDE(MSGBAN)		; Print to banner message
 
 	CALL	CLI_ABRT_IF_OPT_FIRST
+	CALL	CLI_PORTS
 	CALL	CLI_HAVE_HBIOS_SWITCH
 	CALL	CLI_OCTAVE_ADJST
 	JP	CONTINUE
@@ -125,6 +131,22 @@ CONTINUE:
 	OR	A
 	JR	NZ, TSTTIMER		; skip hardware check if using hbios
 
+	LD	A, (USEPORTS)		; get ports option
+	LD	HL,MSXPORTS		; assume MSX
+	CP	PORTS_MSX		; use MSX?
+	JR	Z,FORCE
+	LD	HL,RCPORTS		; asssume RC
+	CP	PORTS_RC		; use RC?
+	JR	Z,FORCE
+	JR	AUTOSEL			; otherwise do auto select
+
+FORCE:
+	LD	BC,CFGSIZ		; Size of one entry
+	LD	DE,CFG			; Active config structure
+	LDIR				; Update active config structure
+	JR	MAT			; Continue
+
+AUTOSEL:
 	LD	HL,CFGTBL		; Point to start of config table
 CFGSEL:
 	LD	A,$FF			; End of table marker
@@ -646,6 +668,17 @@ CFGSIZ	.EQU	$ - CFGTBL
 ;
 	.DB	$FF					; END OF TABLE MARKER
 ;
+; The following are table entries (like above), but not part of auto
+; detection searching.  They are selected byh command line options.
+;
+MSXPORTS:
+	.DB	$FF,	$A0,	$A1,	$FF,	$FF,	$FF,	$FF	; GENERIC MSX
+	.DW	HWSTR_MSX
+;
+RCPORTS:
+	.DB	$FF,	$D8,	$D0,	$FF,	$FF,	$FF,	$FF	; GENERIC RC
+	.DW	HWSTR_RC
+;
 CFG:		; ACTIVE CONFIG VALUES (FROM SELECTED CFGTBL ENTRY)
 PLT		.DB	0	; RomWBW HBIOS platform id
 PORTS:
@@ -672,11 +705,13 @@ TMP		.DB	0	; work around use of undocumented Z80
 HBIOSMD		.DB	0	; NON-ZERO IF USING HBIOS SOUND DRIVER, ZERO OTHERWISE
 OCTAVEADJ	.DB	0	; AMOUNT TO ADJUST OCTAVE UP OR DOWN
 
-MSGBAN		.DB	"Tune Player for RomWBW v3.11, 17-Sep-2024",0
+USEPORTS	.DB	0	; AUDIO CHIP PORT SELECTION MODE
+
+MSGBAN		.DB	"Tune Player for RomWBW v3.12, 12-Dec-2024",0
 MSGUSE		.DB	"Copyright (C) 2024, Wayne Warthen, GNU GPL v3",13,10
 		.DB	"PTxPlayer Copyright (C) 2004-2007 S.V.Bulba",13,10
 		.DB	"MYMPlay by Marq/Lieves!Tuore",13,10,13,10
-		.DB	"Usage: TUNE <filename>.[PT2|PT3|MYM] [--hbios] [+tn|-tn]",0
+		.DB	"Usage: TUNE <filename>.[PT2|PT3|MYM] [-msx|-rc] [--hbios] [+tn|-tn]",0
 MSGBIO		.DB	"Incompatible BIOS or version, "
 		.DB	"HBIOS v", '0' + RMJ, ".", '0' + RMN, " required",0
 MSGPLT		.DB	"Hardware error, system not supported!",0
@@ -700,6 +735,8 @@ HWSTR_MBC	.DB	"NHYODYNE Sound Module",0
 HWSTR_DUO	.DB	"DUODYNE Sound Module",0
 HWSTR_NABU	.DB	"NABU Onboard Sound",0
 HWSTR_HEATH	.DB	"HEATH H8 MSX Module",0
+HWSTR_MSX	.DB	"MSX Standard Ports (A0H/A1H)",0
+HWSTR_RC	.DB	"RCBus Standard Ports (D8H/D0H)",0
 
 MSGUNSUP	.db	"MYM files not supported with HBIOS yet!\r\n", 0
 
