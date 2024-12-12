@@ -76,6 +76,10 @@ KBD_IDLE	.DB	0	; IDLE COUNT
 ; 8242 CONTROLLER COMMANDS AND RESPONSES 
 ;__________________________________________________________________________________________________
 ;
+KBD_CON_DP1	.EQU	$AD	; DISABLE PS2 PORT 1 (KEYBOARD)
+KBD_CON_DP2	.EQU	$A7	; DISABLE PS2 PORT 2 (MOUSE)
+KBD_CON_EP1	.EQU	$AE	; ENABLE PS2 PORT 1 (KEYBOARD)
+KBD_CON_EP2	.EQU	$A8	; ENABLE PS2 PORT 2 (MOUSE)
 KBD_CON_WCR	.EQU	$60	; WRITE TO COMMAND REGISTER. VALUE TO FOLLOW.
 KBD_CON_CST	.EQU	$AA	; CONTROLLER SELF TEST. RETURN FF IF CONTROLLER OK
 ;__________________________________________________________________________________________________
@@ -92,6 +96,41 @@ KBD_CON_IOF	.EQU	$20	; XLAT DISABLED, MOUSE DISABLED, NO INTS
 ;__________________________________________________________________________________________________
 ;
 #INCLUDE "ps2iface.inc"
+;
+;__________________________________________________________________________________________________
+; KEYBOARD PRE-INITIALIZATION
+;__________________________________________________________________________________________________
+;
+; TO BE CALLED PRIOR TO INITERRUPTS BEING ENABLED
+; MUST BE CALLED FROM VIDEO DRIVER PREINIT WITH IY SET
+; THIS PREVENTS INTRERRUPT ISSUES IF 8242 HAS INTERRUPTS ENABLED
+;
+; AT STARTUP.  NOT USING IT FOR NOW BECAUSE IT IS NOT A PROBLEM IF
+; YOU DON'T USE THE KEYBOARD DURING BOOT.
+;
+KBD_PREINIT:
+;
+#IF (KBDINTS)
+	; DISABLE DEVICES (KEYBOARD/MOUSE)
+	LD	A,KBD_CON_DP1		; DISABLE PORT 1 (KEYBOARD)
+	CALL	KBD_PUTCMD		; SEND IT
+	LD	A,KBD_CON_DP2		; DISABLE PORT 2 (MOUSE)
+	CALL	KBD_PUTCMD		; SEND IT
+;
+	; FLUSH ANY PENDING OUTPUT
+	LD	B,16			; UP TO 16 BYTES MAY BE WAITING
+KBD_PREINIT1:
+	CALL	KBD_IN_P		; BLIND READ
+	DJNZ	KBD_PREINIT1		; AND LOOP
+;
+	; DISABLE INTERRUPTS
+	LD	A,KBD_CON_WCR		; SET COMMAND REGISTER
+	CALL	KBD_PUTCMD		; SEND IT
+	LD	A,KBD_CON_IOF		; XLAT DISABLED, MOUSE DISABLED, NO INTS
+	CALL	KBD_PUTDATA		; SEND IT
+;
+#ENDIF
+	RET
 ;
 ;__________________________________________________________________________________________________
 ; KEYBOARD INITIALIZATION

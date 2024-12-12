@@ -2224,6 +2224,10 @@ well known port addresses at startup. It will auto-configure itself
 for the hardware found. If no hardware is detected, it will abort with
 an error message.
 
+Some sound board hardware does not support automatic detection
+(notably the Why-Em-Ulator).  You may force the use of standard
+MSX or RC Bus standard ports using the `-MSX` or `-RC` options.
+
 On Z180 systems, I/O wait states are added when writing to the sound
 chip to avoid exceeding its speed limitations. On Z80 systems, you
 will need to ensure that the CPU clock speed of your system does not
@@ -2239,18 +2243,20 @@ AY-3-8910 or YM2149 chips, or a compatibility layer thru HBIOS supporting
 the SN76489 chip.
 
 By default the application will attempt to interface directly to the sound
-chip.  The optional argument `--hbios` supplied after the filename, will
+chip.  The optional argument `--HBIOS` supplied after the filename, will
 enable the application to use the HBIOS sound driver.
 
 The HBIOS mode also support other switch as described below.
 
 | Switch      | Description                                            |
 | ----------- | ------------------------------------------------------ |
-|  `--hbios`  | Utilise HBIOS' sound driver                            |
-| `+t1`       | Play tune an octave higher                             |
-| `+t2`       | Play tune two octaves higher                           |
-| `-t1`       | Play tune an octave lower                              |
-| `-t2`       | Play tune two octaves lower                            |
+|  `-MSX`     | Force use of MSX standard ports (A0H/A1H)              |
+|  `-RC`      | Force use of RCBus standard ports (D8H/D0H)            |
+|  `--HBIOS`  | Utilise HBIOS' sound driver                            |
+| `+T1`       | Play tune an octave higher                             |
+| `+T2`       | Play tune two octaves higher                           |
+| `-T1`       | Play tune an octave lower                              |
+| `-T2`       | Play tune two octaves lower                            |
 
 All RomWBW operating system boot disks include a selection of sound
 files in user area 3.

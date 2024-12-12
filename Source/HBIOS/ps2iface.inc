@@ -58,16 +58,16 @@ KBD_INT:
 ;	CALL	KBDQDBG
 ;
 	RET
-;__________________________________________________________________________________________________
-; KEYBOARD DEINITIALIZATION
-;__________________________________________________________________________________________________
-;
-KBD_DEINIT: 
-	LD	IY,(KBD_IDAT)		; SETUP PORT POINTER
-	LD	A,KBD_CON_WCR		; LOAD WRITE COMMAND
-	CALL	KBD_CMDOUT		; WRITE IT
-	LD	A,KBD_CON_IOF		; LOAD DISABLE INTERRUPTS CFG
-	JP	KBD_DTAOUT		; WRITE IT
+;;;;__________________________________________________________________________________________________
+;;;; KEYBOARD DEINITIALIZATION
+;;;;__________________________________________________________________________________________________
+;;;;
+;;;KBD_DEINIT: 
+;;;	LD	IY,(KBD_IDAT)		; SETUP PORT POINTER
+;;;	LD	A,KBD_CON_WCR		; LOAD WRITE COMMAND
+;;;	CALL	KBD_CMDOUT		; WRITE IT
+;;;	LD	A,KBD_CON_IOF		; LOAD DISABLE INTERRUPTS CFG
+;;;	JP	KBD_DTAOUT		; WRITE IT
 #ENDIF
 ;__________________________________________________________________________________________________
 ; KEYBOARD READ
