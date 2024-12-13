@@ -538,8 +538,6 @@ This is a generic ZPM3 adaptation for RomWBW.
 | `GENCPM.COM`   | 15            | DRI CPM3 Utility to Create a memory image of CPM3.SYS        |
 | `GOTO.COM`     | 15            |                                                              |
 | `HELPC15.CFG`  | 14            |                                                              |
-| `HP-RPN.HLP`   | 10            | Help File for HP RPN Calculators ?                           |
-| `HP-ZP.HLP`    | 10            | Help File for HP ZP Calculators ?                            |
 | `IF.COM`       | 15            | Extended flow control tester for FCP (v1.6 Type 3)           |
 | `IF.HLP`       | 10            |                                                              |
 | `LOADSEG.COM`  | 15            | ZCCP Utility to Load RSXes, TCAPs and Named Directory files. |
@@ -559,9 +557,6 @@ This is a generic ZPM3 adaptation for RomWBW.
 | `ZF11.CFG`     | 14            |                                                              |
 | `ZFMACRO.HLP`  | 10            |                                                              |
 | `ZHELP.COM`    | 15            |                                                              |
-| `ZP.COM`       | 15            | Patch utility edits files, disk sectors, or memory           |
-| `ZP.HLP`       | 10            | Help File for ZP.COM                                         |
-| `ZP17.CFG`     | 14            |                                                              |
 | `ZSHOW.COM`    | 15            | displays amount of information about your Z-System           |
 
 ### Additional Files
@@ -789,6 +784,8 @@ The following files are found in
 | `COPY.COM`     | Z                 | File copier with ZSDOS date stamping awareness        |
 | `COPY.CFG`     | Z                 | ZCNFG configuration file for COPY application         |
 | `EDITNDR.COM`  | Z3                | Edit named directory register in memory.              |
+| `HP-RPN.HLP`   | Z3                | Help File for ZP.COM - HP RPN Calculators             |
+| `HP-ZP.HLP`    | Z3                | Help File for ZP.COM - HP ZP Calculators              |
 | `KERCPM22.COM` | CPM22             | Kermit communication application                      |
 | `KERCPM3.COM`  | CPM3              | Kermit communication application                      |
 | `LBREXT.COM`   | Z                 | Extract file from .LBR libraries                      |
@@ -814,6 +811,9 @@ The following files are found in
 | `ZCNFG24.CFG`  | Z                 | Configuration file for ZCNFG.COM                      |
 | `ZEX.COM`      | Z3                | A memory-based command file processor, like SUBMIT    |
 | `ZEX.CFG`      | Z3                | ZCNFG configuration file for ZEX program              |
+| `ZP.COM`       | Z3                | Screen-oriented file/disk/memory record patcher (ZAP) |
+| `ZP.HLP`       | Z3                | Help File for ZP.COM                                  |
+| `ZP17.CFG`     | Z3                | Configuration file for ZP.COM                         |
 | `ZXD.CFG`      | Z                 | Configuration file for ZXD.COM                        |
 | `ZXD.COM`      | Z                 | Extended directory utility w/ date/time stamp support |
 | `Z3LOC.COM`    | Z3                | Display info of the ZCPR3 CCP, BDOS, and BIOS         |  
