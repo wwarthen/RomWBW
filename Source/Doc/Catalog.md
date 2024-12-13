@@ -538,8 +538,6 @@ This is a generic ZPM3 adaptation for RomWBW.
 | `GENCPM.COM`   | 15            | DRI CPM3 Utility to Create a memory image of CPM3.SYS        |
 | `GOTO.COM`     | 15            |                                                              |
 | `HELPC15.CFG`  | 14            |                                                              |
-| `HP-RPN.HLP`   | 10            | Help File for HP RPN Calculators ?                           |
-| `HP-ZP.HLP`    | 10            | Help File for HP ZP Calculators ?                            |
 | `IF.COM`       | 15            | Extended flow control tester for FCP (v1.6 Type 3)           |
 | `IF.HLP`       | 10            |                                                              |
 | `LOADSEG.COM`  | 15            | ZCCP Utility to Load RSXes, TCAPs and Named Directory files. |
@@ -559,9 +557,6 @@ This is a generic ZPM3 adaptation for RomWBW.
 | `ZF11.CFG`     | 14            |                                                              |
 | `ZFMACRO.HLP`  | 10            |                                                              |
 | `ZHELP.COM`    | 15            |                                                              |
-| `ZP.COM`       | 15            | Patch utility edits files, disk sectors, or memory           |
-| `ZP.HLP`       | 10            | Help File for ZP.COM                                         |
-| `ZP17.CFG`     | 14            |                                                              |
 | `ZSHOW.COM`    | 15            | displays amount of information about your Z-System           |
 
 ### Additional Files
@@ -789,6 +784,8 @@ The following files are found in
 | `COPY.COM`     | Z                 | File copier with ZSDOS date stamping awareness        |
 | `COPY.CFG`     | Z                 | ZCNFG configuration file for COPY application         |
 | `EDITNDR.COM`  | Z3                | Edit named directory register in memory.              |
+| `HP-RPN.HLP`   | Z3                | Help File for ZP.COM - HP RPN Calculators             |
+| `HP-ZP.HLP`    | Z3                | Help File for ZP.COM - HP ZP Calculators              |
 | `KERCPM22.COM` | CPM22             | Kermit communication application                      |
 | `KERCPM3.COM`  | CPM3              | Kermit communication application                      |
 | `LBREXT.COM`   | Z                 | Extract file from .LBR libraries                      |
@@ -814,6 +811,9 @@ The following files are found in
 | `ZCNFG24.CFG`  | Z                 | Configuration file for ZCNFG.COM                      |
 | `ZEX.COM`      | Z3                | A memory-based command file processor, like SUBMIT    |
 | `ZEX.CFG`      | Z3                | ZCNFG configuration file for ZEX program              |
+| `ZP.COM`       | Z3                | Screen-oriented file/disk/memory record patcher (ZAP) |
+| `ZP.HLP`       | Z3                | Help File for ZP.COM                                  |
+| `ZP17.CFG`     | Z3                | Configuration file for ZP.COM                         |
 | `ZXD.CFG`      | Z                 | Configuration file for ZXD.COM                        |
 | `ZXD.COM`      | Z                 | Extended directory utility w/ date/time stamp support |
 | `Z3LOC.COM`    | Z3                | Display info of the ZCPR3 CCP, BDOS, and BIOS         |  
@@ -1306,7 +1306,9 @@ Also contained on this image in User Area 1 are.
 | Floppy Disk Image: **fd_z80asm.img**
 | Hard Disk Image: **hd_z80asm.img**
 
-Z80ASM is a relocating macro assembler for CP/M. It takes assembly language
+This disk contains 4 major components
+
+* Z80ASM is a relocating macro assembler for CP/M. It takes assembly language
 source statements from a disk file, converts them into their binary equivalent,
 and stores the output in either a core-image, Intel hex format, or relocatable
 object file. The mnemonics recognized are those of Zilog/Mostek. The optional
@@ -1314,19 +1316,91 @@ listing output may be sent to a disk file, the console and/or the printer, in
 any combination. Output files may also be generated containing cross-reference
 information on each symbol used.
 
-The manual is available in the Doc/Language directory,
-z80asm (SLR Systems).pdf
+* SLR180 is a powerful relocating macro assembler for Z80
+compatible CP/M systems. It takes assembly language source
+statements from a disk file, converts them into their binary
+equivalent, and stores the output in either a core-image, Intel
+hex format, or relocatable object file. The mnemonics recognized
+are those of Zilog/Hitachi. The optional listing output may be
+sent to a disk file, the console and/or the printer, in any
+combination. Output files may also be generated containing
+cross-reference information on each symbol used.
+
+* SLRNK is a powerful linking loader for Z80-based CP/M systems.
+It takes relocatable binary information in either Microsoft or
+SLR Systems format from a disk file, resolves external and entry
+point references, and stores the output in memory for execution
+or outputs it to a disk file.
+
+* Z80DIS is an entirely new disassembler for Z80 based CP/M sys-
+tems. Z80DIS is written in TURBO PASCAL. Z80DIS generates Z80
+mnemonics and prepares an assembly language file with many
+special features for ease of understanding the intent of the
+code. The program and documantation are Copyright 1985, by
+Kenneth Gielow, Palo Alto, CA. All rights are reserved.
+
+The manual(s) are available in the Doc/Language directory,
+
+* z80asm (SLR Systems).pdf
+* SL180 (SLR Systems 1985).pdf
+* SLRNK (SLR Systems 1984).pdf
+* Z80DIS User Manual (1985).pdf
 
 A run through of using the assembler is available at
 [https://8bitlabs.ca/Posts/2023/05/20/learning-z80-asm]
+
+And another shorter, but shows linker usage guide
+[https://pollmyfinger.wordpress.com/2022/01/10/modular-retro-z80-assembly-language-programming-using-slr-systems-z80asm-and-srlnk/]
 
 The following files are found in
 
 *  /Source/Images/d_z80asm
 
-| **File**   | **Description**                     |
-|------------|-------------------------------------|
-| DUMP.*     | Sample Program                      |
-| TEST.*     | Sample Program                      |
-| Z80ASM.COM | Relocating macro assembler for CP/M |
-| Z80ASM.DOC | Documentation for Z80.COM           |
+User Area 0 - Assembler
+
+| **File**    | **Description**                             |
+|-------------|---------------------------------------------|
+| 180FIG.COM  | Configuration utility for SLR180.COM        |
+| 8080.MAC    | ?                                           |
+| CONFIG.COM  | Configuration utility for Z80ASM.COM        |
+| DUMP.*      | Sample Program                              |
+| MAKESYM.COM | Symbol File .SYM file generation            |
+| MAKESYM.DOC | Documentation for MAKESYM.COM               |
+| SLR180.COM  | HD64180 Relocating Macro Assembler          |
+| SLR180.DOC  | Release Notes for SLR180.COM                |
+| SYNTAX.HLP  | Documentation basic usage for all SLR Tools |
+| SYNTAX.TXT  | Documentation basic usage for all SLR Tools |
+| TEST.*      | Sample Program                              |
+| Z80ASM.COM  | Z80 Relocating Macro Assembler              |
+| Z80ASM.DOC  | Release Notes for Z80ASM.COM                |
+
+User Area 1 - Linker
+
+| **File**     | **Description**                               |
+|--------------|-----------------------------------------------|
+| LNKFIG.COM   | Configuration utility for SLRNK.COM           |
+| NZLNKFIX.ZEX | ?                                             |
+| SLRIB.COM    | SuperLibrarian, library manager               |
+| SLRNK.COM    | SuperLinker, the main linker tool             |
+| SLRNK.DOC    | Release Notes for SLRNK.COM                   |
+| SLRNKFIX.ZEX | ?                                             |
+| SYNTAX.HLP   | Documentation basic usage for all SLR Tools   |
+| SYNTAX.TXT   | Documentation basic usage for all SLR Tools   |
+| SYSSLR.REL   | SYSLIB (older) Library compatible with SLR    |
+| VSLR.REL     | VLIB (older) Library compatible with SLR      |
+| Z3SLR.REL    | Z3LIB (older) Library compatible with SLR     |
+
+User Area 2 - Disassembler
+
+| **File**     | **Description**                  |
+|--------------|----------------------------------|
+| README.22    | Documentation for Z80DIS         |
+| Z80DIS.000   | Overlay File for Z80DIS.COM      |
+| Z80DIS.001   | Overlay File for Z80DIS.COM      |
+| Z80DIS.002   | Overlay File for Z80DIS.COM      |
+| Z80DIS.COM   | Z80DIS Disassembler main program |
+| Z80DIS22.DOC | Main Documentation for Z80DIS    |
+| ZDINSTAL.COM | Instal and Config for Z80DIS.COM |
+| ZDINSTAL.DTA | Overlay file for ZDINSTAL.COM    |
+| ZDINSTAL.MSG | Overlay file for ZDINSTAL.COM    |
+
