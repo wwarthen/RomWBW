@@ -1,0 +1,166 @@
+'DUMP - Recreated by Z80DIS'    			    Z80ASM 1.30 Page   1
+DUMP    Z80
+
+    2                   
+    3         0100      	ORG	0100H
+    4                   
+    5         0005      CPM	EQU	0005H
+    6         005C      DFCB	EQU	005CH
+    7         0065      FCBEXT	EQU	0065H
+    8                   
+    9 0100              DUMP
+   10 0100  11 005C     	LD	DE,DFCB
+   11 0103  0E 0F       	LD	C,0FH		;SI
+   12 0105  CD 0005     	CALL	CPM		;OPENFIL
+   13 0108  3C          	INC	A
+   14 0109  20 09       	JR	NZ,FILEOK
+   15 010B  11 01E6     	LD	DE,CANTOPE
+   16 010E  0E 09       	LD	C,09H		;HT
+   17 0110  CD 0005     	CALL	CPM		;PRNTSTG
+   18 0113  C9          	RET	
+   19 0114              FILEOK
+   20 0114  21 0065     	LD	HL,FCBEXT
+   21 0117  7E          	LD	A,(HL)
+   22 0118  FE 43       	CP	43H		;'C'
+   23 011A  20 12       	JR	NZ,NEXTPAGE
+   24 011C  23          	INC	HL
+   25 011D  7E          	LD	A,(HL)
+   26 011E  FE 4F       	CP	4FH		;'O'
+   27 0120  20 0C       	JR	NZ,NEXTPAGE
+   28 0122  23          	INC	HL
+   29 0123  7E          	LD	A,(HL)
+   30 0124  FE 4D       	CP	4DH		;'M'
+   31 0126  20 06       	JR	NZ,NEXTPAGE
+   32 0128  21 0100     	LD	HL,DUMP
+   33 012B  22 01F7     	LD	(ADDR),HL
+   34 012E              NEXTPAGE
+   35 012E  1E 0C       	LD	E,0CH		;FF
+   36 0130  0E 02       	LD	C,02H		;STX
+   37 0132  CD 0005     	CALL	CPM		;CONOUT
+   38 0135  3E 08       	LD	A,08H		;BS
+   39 0137  32 01FB     	LD	(PAGECNT),A
+   40 013A              NEXTSECT
+   41 013A  11 005C     	LD	DE,DFCB
+   42 013D  0E 14       	LD	C,14H		;DC4
+   43 013F  CD 0005     	CALL	CPM		;READSEQ
+   44 0142  B7          	OR	A
+   45 0143  C0          	RET	NZ
+   46 0144  3E 08       	LD	A,08H		;BS
+   47 0146  32 01F6     	LD	(LINECNT),A
+   48 0149  21 0080     	LD	HL,0080H
+   49 014C  22 01F9     	LD	(ADDR1),HL
+   50 014F              NXTLINE
+   51 014F  0E 0B       	LD	C,0BH		;VT
+   52 0151  CD 0005     	CALL	CPM		;CONSTAT
+   53 0154  B7          	OR	A
+   54 0155  C0          	RET	NZ
+   55 0156  21 01FC     	LD	HL,OUTBUF
+   56 0159  36 0D       	LD	(HL),0DH	;CR
+   57 015B  23          	INC	HL
+   58 015C  36 0A       	LD	(HL),0AH	;LF
+   59 015E  23          	INC	HL
+'DUMP - Recreated by Z80DIS'    			    Z80ASM 1.30 Page   2
+DUMP    Z80
+
+   60 015F  ED 5B 01F7  	LD	DE,(ADDR)
+   61 0163  7A          	LD	A,D
+   62 0164  CD 01C7     	CALL	HEXOUT
+   63 0167  7B          	LD	A,E
+   64 0168  CD 01C7     	CALL	HEXOUT
+   65 016B  36 20       	LD	(HL),20H	;' '
+   66 016D  23          	INC	HL
+   67 016E  EB          	EX	DE,HL
+   68 016F  01 0010     	LD	BC,0010H
+   69 0172  09          	ADD	HL,BC
+   70 0173  22 01F7     	LD	(ADDR),HL
+   71 0176  EB          	EX	DE,HL
+   72 0177  ED 5B 01F9  	LD	DE,(ADDR1)
+   73 017B  06 10       	LD	B,10H		;DLE
+   74 017D              NXTBYTE
+   75 017D  1A          	LD	A,(DE)
+   76 017E  13          	INC	DE
+   77 017F  CD 01C7     	CALL	HEXOUT
+   78 0182  36 20       	LD	(HL),20H	;' '
+   79 0184  23          	INC	HL
+   80 0185  10 F6       	DJNZ	NXTBYTE
+   81 0187  36 20       	LD	(HL),20H	;' '
+   82 0189  23          	INC	HL
+   83 018A  36 24       	LD	(HL),24H	;'$'
+   84 018C  11 01FC     	LD	DE,OUTBUF
+   85 018F  0E 09       	LD	C,09H		;HT
+   86 0191  CD 0005     	CALL	CPM		;PRNTSTG
+   87 0194  2A 01F9     	LD	HL,(ADDR1)
+   88 0197  06 10       	LD	B,10H		;DLE
+   89 0199              NXTASCI
+   90 0199  7E          	LD	A,(HL)
+   91 019A  23          	INC	HL
+   92 019B  E6 7F       	AND	7FH		;DEL
+   93 019D  FE 20       	CP	20H		;' '
+   94 019F  38 04       	JR	C,CTRL
+   95 01A1  FE 7F       	CP	7FH		;DEL
+   96 01A3  20 02       	JR	NZ,NOTCTRL
+   97 01A5              CTRL
+   98 01A5  3E 2E       	LD	A,2EH		;'.'
+   99 01A7              NOTCTRL
+  100 01A7  5F          	LD	E,A
+  101 01A8  0E 02       	LD	C,02H		;STX
+  102 01AA  C5          	PUSH	BC
+  103 01AB  E5          	PUSH	HL
+  104 01AC  CD 0005     	CALL	CPM		;CONOUT
+  105 01AF  E1          	POP	HL
+  106 01B0  C1          	POP	BC
+  107 01B1  10 E6       	DJNZ	NXTASCI
+  108 01B3  22 01F9     	LD	(ADDR1),HL
+  109 01B6  21 01F6     	LD	HL,LINECNT
+  110 01B9  35          	DEC	(HL)
+  111 01BA  C2 014F     	JP	NZ,NXTLINE
+  112 01BD  21 01FB     	LD	HL,PAGECNT
+  113 01C0  35          	DEC	(HL)
+  114 01C1  C2 013A     	JP	NZ,NEXTSECT
+  115 01C4  C3 012E     	JP	NEXTPAGE
+  116 01C7              HEXOUT
+  117 01C7  F5          	PUSH	AF
+'DUMP - Recreated by Z80DIS'    			    Z80ASM 1.30 Page   3
+DUMP    Z80
+
+  118 01C8  1F          	RRA
+  119 01C9  1F          	RRA
+  120 01CA  1F          	RRA
+  121 01CB  1F          	RRA
+  122 01CC  E6 0F       	AND	0FH		;SI
+  123 01CE  C6 30       	ADD	A,30H		;'0'
+  124 01D0  FE 3A       	CP	3AH		;':'
+  125 01D2  38 02       	JR	C,HEX1
+  126 01D4  C6 07       	ADD	A,07H		;BEL
+  127 01D6              HEX1
+  128 01D6  77          	LD	(HL),A
+  129 01D7  23          	INC	HL
+  130 01D8  F1          	POP	AF
+  131 01D9  E6 0F       	AND	0FH		;SI
+  132 01DB  C6 30       	ADD	A,30H		;'0'
+  133 01DD  FE 3A       	CP	3AH		;':'
+  134 01DF  38 02       	JR	C,HEX2
+  135 01E1  C6 07       	ADD	A,07H		;BEL
+  136 01E3              HEX2
+  137 01E3  77          	LD	(HL),A
+  138 01E4  23          	INC	HL
+  139 01E5  C9          	RET	
+  140 01E6              CANTOPE
+  141 01E6  43 61 6E 27 	DEFB	43H,61H,6EH,27H,74H,20H		; Can't 
+  142 01EC  4F 70 65 6E 	DEFB	4FH,70H,65H,6EH,20H,46H		; Open F
+  143 01F2  69 6C 65 24 	DEFB	69H,6CH,65H,24H			; ile$
+  144 01F6              LINECNT
+  145 01F6    0001      	DEFS	0001H
+  146 01F7              ADDR
+  147 01F7    0002      	DEFS	0002H
+  148 01F9              ADDR1
+  149 01F9    0002      	DEFS	0002H
+  150 01FB              PAGECNT
+  151 01FB    0001      	DEFS	0001H
+  152 01FC              OUTBUF
+  153 01FC    0004      	DEFS	0004H
+  154                   	END
+ 0 Error(s) Detected.
+ 256 Absolute Bytes. 21 Symbols Detected.
+
+  130 01D8 
