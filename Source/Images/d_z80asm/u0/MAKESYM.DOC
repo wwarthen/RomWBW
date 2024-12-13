@@ -1,0 +1,45 @@
+The MAKESYM program included on this diskette is used to produce a .SYM
+file from the Symbol Table listing provided by Z80ASM or SLRMAC.  MAKESYM
+reads a .LST file, converts the symbol table to a format readable by
+ZSID, DSD80, etc, and writes it to a .SYM file on the same drive.
+
+Since extra information is included in the .LST file, such as CSEG relative
+designations, or COMMON relative, external, etc, MAKESYM allows you to
+specify offsets for any or all of the relative types, while stripping out
+any external symbols (Only one COMMON is supported since there is no dis-
+tinction between different COMMONs in the .LST table).
+
+This is useful for intense debugging of a particular module where you would
+like to have all the internal symbols available at debug time, but don't
+want to go in and declare them all global.  You just tell MAKESYM where the
+PROG and DATA sections were placed at link time, and there you have it.
+
+This is also useful for generating a useable symbol table when you directly
+generate the .COM or .HEX without linking.  In that case you just run MAKESYM
+and don't need to specify any offsets.
+
+To use:
+
+A>MAKESYM FILENAME[.EXT] [/PXXXX] [/DXXXX] [/CXXXX] [/U]
+
+where the brackets surround optional items and are not actually typed.
+
+	/PXXXX		Here XXXX is the HEX offset for PROG relative items.
+
+	/DXXXX		Here XXXX is the HEX offset for DATA relative items.
+
+	/CXXXX		Here XXXX is the HEX offset for COMMON relative items.
+
+	/U		This tells MAKESYM to perform upper-case conversion
+			(Some debuggers allow lower case symbols but don't let
+			you access them).
+
+	.EXT		This is used to overide the default extension of .LST.
+			Don't use .SYM (to convert .SYM to .SYM) because
+			MAKESYM creates a .SYM file immediately, erasing the
+			file it is trying to convert.
+
+
+Have a productive day!
+
+Steve

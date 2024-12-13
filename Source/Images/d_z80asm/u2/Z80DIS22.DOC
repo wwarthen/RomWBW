@@ -1,0 +1,1057 @@
+Z80DIS22.DOC____________________________________________01_May_87
+
+
+
+Table of Contents of the full Z80DIS manual..
+---------------------------------------------
+
+
+    Table of Contents - - -				   Page
+
+SECTION  1:  Introduction: Remarks, Copyright, License ..... 3
+	 2:  Features of Z80DIS ............................ 7
+	 3:  How to use the program: Execution dialog ..... 11
+	   3.1	Basic parameter definition ................ 11
+	   3.2	Definition of the Break Table ............. 16
+	   3.3	Execution pass one ........................ 23
+	   3.4	Execution pass two ........................ 24
+	 4:  Tips, tricks, problems, and limitations ...... 25
+	 5:  Your first disassembly, a walk-through ....... 35
+
+APPENDIX A:  Installation of Z80DIS for your computer ..... 43
+	 B:  Error messages produced by Z80DIS ............ 49
+	 C:  Anomaly messages from Auto Assignment ........ 55
+	 D:  PRN output file format with sample ........... 61
+	 E:  MAC output file format with sample ........... 79
+	 F:  Break file format with sample ................ 83
+	 G:  Revision history of Z80DIS ................... 85
+
+
+
+
+How to get the Z80DIS manual
+----------------------------
+
+Copies	of  the Z80DIS USER MANUAL are available by  mail.  I  am
+asking	a  nominal charge of $ 20.00 which includes  the  manual,
+postage,  handling,  and  an  update  notification  service.  The
+program  itself  is  not  available  by mail as  I  do	not  have
+extensive,  multi-format disk copy capability.	The  notification
+service  will consist of a letter to you anytime a new version is
+released so that you may be on the lookout for it.
+
+To order copies of the Z80DIS USER MANUAL by mail, send a request
+with your name, address, and a check for $ 20.00 to --
+
+	  Kenneth Gielow
+	  79 Tulip Lane
+	  Palo Alto, CA  94303
+
+
+
+
+
+
+
+
+
+
+
+
+				1
+
+
+
+
+
+Z80DIS22.DOC____________________________________________01_May_87
+
+
+This  walk  through  the use of Z80DIS is taken  from  chapter	5
+(page 35) of the larger Z80DIS manual.
+
+			      - O -
+
+Your first disassembly, a walk-through
+--------------------------------------
+
+The  purpose of this section is to walk you through a disassembly
+using what I would consider the "best" first guess values for all
+interactive program inputs.  I suggest using the widely available
+public	domain	program D.COM for your first disassembly so  that
+you may follow along with the example.
+
+Z80DIS	is  a batch program with user interactive set-up  of  the
+control  parameters.  Disk  scratch  files are	used  during  the
+disassembly.  I suggest the following file disposition for a  two
+disk  drive system:  (If you are not using D.COM then  substitute
+your file name as required.)
+
+     On drive A - Z80DIS.COM, Z80DIS.000, Z80DIS.001, Z80DIS.002
+     On drive B - D.COM
+
+During the Z80DIS set up phase direct files as follows -
+
+     PRN to your list device (LST:) or to drive B
+     Scratch file Z80DIS.$$$ to drive A.
+     Initially suppress the MAC file by directing to NONE:
+
+If  you have a third disk drive,  direct the scratch file to that
+drive.
+
+This optimizes data flow by minimizing disk head action.
+
+The  following	assumes that you start with the A drive  as  your
+selected default drive. Your CP/M input prompt should read:
+
+			 A>
+
+You  start  Z80DIS by typing "Z80DIS"  with  no  parameters.  The
+program  will  prompt  you for inputs.	In  most  cases,  default
+entries are shown in reduced intensity already occupying the data
+field. If you type only the RETURN key, the default will be used.
+
+			       --
+
+
+
+
+
+
+
+
+
+
+
+
+				2
+
+
+
+
+
+Z80DIS22.DOC____________________________________________01_May_87
+
+
+INITIAL PARAMETER SETTING
+
+After  a brief sign-on message,  you will be asked to supply  the
+following information.
+
+|================================================================
+| Please enter	INPUT	file name: ______________
+|		OUTPUT	file name: ______________
+|		LISTING file name: ______________
+|   Descriptive TITLE: __________________________________________
+|
+|	       file LOAD  address: ____ HEX
+|	disassembly START address: ____ HEX
+|	disassembly STOP  address: ____ HEX
+|
+| Do you wish to run a FULL output (as opposed to XREF only)?
+| On which disk do you wish the scratch file to reside? (A-G)
+|
+| Do You wish to process all Z80 codes (as opposed 8080 subset)?
+|
+| Are all inputs OK so far?
+|================================================================
+
+
+Each  question is presented one-at-a-time from the  top.  Only	a
+single suggested answer will be given for each. You actually have
+lots of choices possible.  For details of the purpose,	defaults,
+editing  capability   and error checking for each  answer  please
+refer to the larger manual.
+
+The following comments apply to all user inputs to Z80DIS:
+
+File Names  - The  program  wants a CP/M style file name  in  the
+     standard form D:FILENAME.EXT.  Each file name,  but the very
+     first, has default values selected to simplify your job.
+
+Letter	Case  - Upper and lower case letters are  equivalent  and
+     will echo as upper case.
+
+Editing Your Input - All inputs,  except single character Y or	N
+     answers,  must  be terminated by a carriage return (shown as
+     <CR>).   Until the <CR> terminator is typed, you may correct
+     the  entry  as required by backspacing.
+
+Terminating  Z80DIS  - You  may terminate  Z80DIS  by  the  usual
+     control-C	(shown	as ^C) at any time.  At later  stages  of
+     execution,  only  the then current phase will be aborted  to
+     provide  a graceful recovery of the processing done to  that
+     point.
+
+Notation  - In	the  examples  to  follow,   carriage  return  is
+     sometimes indicated by the notation <cr>.
+
+
+
+
+
+				3
+
+
+
+
+
+Z80DIS22.DOC____________________________________________01_May_87
+
+
+-----------------------------------------------------------------
+INPUT file name: ______________
+
+     Type  the name of your binary file to be disassembled.  As I
+have suggested placing this file on the B drive,  you will need a
+B: drive prefix.  The program will default the file extension  to
+
+	       b:d<cr>
+
+The program will echo:
+
+	       B:D.COM
+
+-----------------------------------------------------------------
+OUTPUT file name: ______________
+
+     Z80DIS  will  show  the  default  in  reduced  intensity  as
+NONE:.MAC.   Simply type carriage return (<cr>). The program will
+echo:
+	       NONE:
+
+This will suppress generation of the D.MAC assembly code file.
+
+-----------------------------------------------------------------
+LISTING file name: ______________
+
+     Z80DIS  will  show  the  default  in  reduced  intensity  as
+B:D.PRN.  I suggest that you change this to direct printer output
+by typing:
+	       lst:<cr>
+
+The program will echo:
+
+	       LST:
+
+-----------------------------------------------------------------
+Descriptive TITLE: __________________________________________
+
+     Type  the	date and time of your disassembly followed  by	a
+carriage return.  The program will not interpret your input.  For
+the example, I typed:
+
+	       Demonstration<cr>
+
+-----------------------------------------------------------------
+file LOAD  address: ____ HEX
+
+     Accept  the  default value ( 0100 hex) by typing a  carriage
+return.
+
+-----------------------------------------------------------------
+
+
+
+
+
+
+				4
+
+
+
+
+
+Z80DIS22.DOC____________________________________________01_May_87
+
+
+disassembly START address: ____ HEX
+
+     Accept the default value ( 0100 hex) by carriage return.
+
+-----------------------------------------------------------------
+disassembly STOP  address: ____ HEX
+
+     Accept the default value by carriage return.
+
+-----------------------------------------------------------------
+Do you wish to run a FULL output
+      (as opposed to XREF only) ? (Y/N) _
+
+     Type  Y  to select the full output.  No carriage  return  is
+needed. Only four characters are accepted for input: y Y n N. All
+others are ignored and the program will beep your terminal "bell"
+to indicate bad input.
+
+-----------------------------------------------------------------
+On which disk do you wish the scratch file to reside? (A-G) _
+
+     Type <cr> to accept the default (A:) drive.
+
+-----------------------------------------------------------------
+Do you wish to process all Z80 codes
+      (as opposed 8080 subset only) ? (Y/N) _
+
+     As D.COM is an older 8080 CP/M program you should type N. If
+your program is known to contain Z80 instructions, type Y.
+
+-----------------------------------------------------------------
+Are all inputs OK so far? (Y/N) _
+
+     If all looks OK,  type Y.	A no (N) response will return you
+to the first question again.
+
+-----------------------------------------------------------------
+
+			       __
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+				5
+
+
+
+
+
+Z80DIS22.DOC____________________________________________01_May_87
+
+
+BREAK TABLE BUILDING
+
+After  you  have answered Y (yes) to the "Inputs  OK?"	question,
+the  screen  will  clear and your terminal will now  display  the
+following:
+
+|================================================================
+| >>>  Z80DIS version 2.2
+| You may now enter CONTROL BREAK addresses to define the type
+|  of disassembly for each section of the code; each control
+|  break defines the first address of a section which ends at the
+|  beginning of the next section-1 byte.
+|
+| NOTE: You may select AUTOMATIC CONTROL BREAK assignment by the
+|	artificial intelligence expertise of Z80DIS by typing *
+|
+| TO SEE DETAILS OF YOUR COMMAND CHOICES, type H
+|
+| ?: _
+|================================================================
+
+A  break  table tells a disassembler how to interpret the  binary
+bytes that it is examining.  A disassembler must know whether the
+bytes are instructions or data in order to proceed.
+
+First type the letter H just to see your choices.  Then type  the
+character  *  to select automatic break table  operation.  Z80DIS
+will ask for confirmation:  Type Y to confirm.
+
+The  *	command  will generate the break  table  for  you.  After
+automatic assignment returns,  you will be shown the break table.
+You may list the table to your printer if you wish by typing P.
+
+If Z80DIS had trouble reaching a decision about some of the code,
+anomaly  reports  will	be displayed and you  will  be	given  an
+opportunity  to print these reports.  I got one message with  the
+version  of  D.COM that I was running.	Note that D.COM  replaces
+itself nearly every time you run it,  and your copy will  contain
+different file names in the directory part.
+
+Just  for now,	print any anomalies if you wish then  proceed  to
+exit the break defining process.
+
+To  exit  the break table building process enter  the  Q  command
+(Quit).  As you have not saved a copy of the changed break  table
+to  a file,  Z80DIS will ask you to either save the file or  type
+the  quit  command  again.   Type  Q  a  second  time  to   start
+disassembly.
+
+			       __
+
+
+
+
+
+
+
+				6
+
+
+
+
+
+Z80DIS22.DOC____________________________________________01_May_87
+
+
+DISASSEMBLY PASS ONE
+
+As  the  disassembly begins the code is cracked according to  the
+break  table,  the cross reference list structure is linked  into
+the PASCAL heap space in upper memory, the cracked code is copied
+with  context information onto a scratch file called  Z80DIS.$$$.
+During pass one, your console screen will display the following:
+
+|================================================================
+| Beginning disassembly...
+| THIS IS Pass 1
+| working at 05F0 Asc
+|================================================================
+
+The  "working  at"  line is animated and will  show  the  current
+address and disassembly mode. In the illustrated case the program
+has  just  finished processing the file D.COM and the last  break
+type was ascii.
+
+			       --
+
+
+DISASSEMBLY PASS TWO
+
+During	the  second pass all user output files and  listings  are
+produced  and the scratch file is erased.  During pass two,  your
+console screen will display the following:
+
+|================================================================
+| THIS IS Pass 2
+| scratch file contains 396 records of 30 bytes each
+| Free memory space remaining after XREF table storage
+|   assignments is 29144 bytes out of the original 31300
+|   bytes (or	6.9 percent used.)
+|
+| LISTING cross references
+|
+| LISTING Subroutines
+|
+| PRODUCING disassembled output files
+|   Processing external label equates
+|   Working at 05F0 Asc
+|================================================================
+
+The informative messages about file and memory space will let you
+see just how close to capacity the program is running.
+
+During this pass your printer will start to print the output.
+
+The  "working  at"  line is animated and will  show  the  current
+address and disassembly mode. In the illustrated case the program
+has  just  finished pass two processing of the file D.COM.
+
+When  the  program is complete,  Z80DIS will ring  your  terminal
+"bell" twice and display the following sign-off message:
+
+
+				7
+
+
+
+
+
+Z80DIS22.DOC____________________________________________01_May_87
+
+
+
+|================================================================
+| END of Pass 2
+|================================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+				8
+
+
+
+
+
+Z80DIS22.DOC____________________________________________01_May_87
+
+
+This  section is taken from Appendix A of the Z80DIS user  manual
+(page 43).
+
+			      - O -
+
+Installation of Z80DIS for your computer
+----------------------------------------
+
+CP/M  is  a generic operating system,  but most of the	terminals
+used  with  CP/M have features not  anticipated  by  CP/M.  These
+features  include  CURSOR  ADDRESSing and BRIGHT/DIM  display  of
+characters.  This program utilizes such features, when available,
+to  improve the operator interaction.	As the program itself  is
+written  in TURBO PASCAL,  the TURBO installation support feature
+has been used to make this adaptation easy.
+
+Therefore,  before you use this program,  it must be installed to
+your  particular  terminal,  by  providing  it	with  information
+regarding control characters required for certain functions. This
+installation is easily performed using the program ZDINSTAL which
+is described in this section.
+
+The following files are part of this program installation package
+and  must  be  present during terminal	installation  (the  three
+ZDINSTAL.*  files  may then be deleted after installation  if  no
+other terminals are to be supported)..
+
+     Z80DIS.COM    - Z80DIS main program file
+     Z80DIS.000    - overlay file
+     Z80DIS.001    - overlay file
+     Z80DIS.002    - overlay file
+
+     ZDINSTAL.COM  - the installation program
+     ZDINSTAL.MSG  - text of ZDINSTAL messages
+     ZDINSTAL.DTA  - terminal characteristics data
+
+
+
+- THE INSTALLATION PROCEDURE -
+
+
+Start  the  installation of Z80DIS by typing "ZDINSTAL"  at  your
+terminal. Select Screen installation from the main menu.
+
+A  numbered  menu listing a collection of popular terminals  will
+appear, inviting you to choose one by entering its number.
+
+If your terminal is mentioned,	just enter the corresponding num-
+ber,  and  the installation is complete.  Before installation  is
+actually performed, you are asked the question..
+
+
+     Do you want to modify the definition before installation? _
+
+
+
+
+				9
+
+
+
+
+
+Z80DIS22.DOC____________________________________________01_May_87
+
+
+This allows you to modify one or more of the values being instal-
+led  as described in the following.  If you do not want to modify
+the terminal definition,  just type N,	and the installation will
+complete  by  asking you the operating frequency of your  CPU  to
+establish parameters for timing loops.
+
+If your terminal is not on the menu, however, you must define the
+required values yourself.  The values can most probably be  found
+in the manual supplied with your terminal.
+
+Enter  the  number corresponding to None of the above and  answer
+the questions one by one as they appear on the screen.
+
+In  the following,  each command you may install is described  in
+detail.  Your terminal may not support all the commands that  can
+be installed. If so, just bypass the command not needed by typing
+<CR> in response to the prompt.  If Delete line,  Insert line, or
+Erase  to  end	of line is not installed,  the function  will  be
+emulated in software, slowing screen performance somewhat.
+
+Commands may be entered either simply by pressing the appropriate
+keys or by entering the decimal or hexadecimal ASCII value of the
+command.  If a command requires the two characters <ESC> (escape)
+and = (equal), you may
+			     either
+
+     Press  first  the Esc key,  then the =.  The entry  will  be
+echoed with appropriate labels, i.e. <ESC> =.
+
+			       or
+
+     Enter the decimal or hexadecimal values separated by spaces.
+Hexadecimal values must be preceded by a dollar-sign.  Enter e.g.
+27 61  or  $1B 61  or  $1B $3D	which are all equivalent.
+
+The two methods cannot be mixed in the same definition, i.e. once
+you  have  entered  a non-numeric character,  the  rest  of  that
+command must be defined in that mode, and vise versa.
+
+A  -  (hyphen)	entered as the very first character  is  used  to
+delete a command, and the text Nothing to be echoed.
+
+-----------------------------------------------------------------
+Terminal type: _
+
+     Enter  the  name of the terminal you are about  to  install.
+When  you complete ZDINSTAL,  the values will be stored,  and the
+terminal  name will appear on the initial list of  terminals.  If
+you later need to re-install Z80DIS to this terminal,  you can do
+that by choosing it from the list.
+
+-----------------------------------------------------------------
+
+
+
+
+
+			       10
+
+
+
+
+
+Z80DIS22.DOC____________________________________________01_May_87
+
+
+Send an initialization string to the terminal? _
+
+     If  you want to initialize your terminal when Z80DIS  starts
+(e.g.  to download commands to programmable function  keys),  you
+answer Y for yes to this question. If not, just hit <CR>.
+
+     If you answer Y, you may choose between entering the command
+directly  or defining a file name containing the command  string.
+The  latter is a good idea if the initialization string is  long,
+as a string to program a number of function keys would be.
+
+-----------------------------------------------------------------
+Send a reset string to the terminal? _
+
+     Here,  you  may  define a string to be sent to the  terminal
+when Z80DIS terminates.  The above description of the initializa-
+tion command applies here.
+
+-----------------------------------------------------------------
+CURSOR LEAD-IN command: _
+
+     Cursor  Lead-in  is a special sequence of	characters  which
+tells  your terminal that the following characters are an address
+on the screen on which the cursor should be placed.
+
+     When  you define this command,  you are asked the	following
+supplementary questions:
+
+CURSOR POSITIONING command to send between line and column: _
+
+     Some terminals need a command between the two numbers  defi-
+ning the row and column cursor address.
+
+CURSOR POSITIONING command to send after line and column: _
+
+     Some terminals need a command after the two numbers defining
+the row and column cursor address.
+
+-----------------------------------------------------------------
+Column first? _
+
+     Most terminals require the address in the format: first ROW,
+then COLUMN.  If this is the case on your terminal,  answer N. If
+your terminal wants COLUMN first, then ROW, then answer Y.
+
+-----------------------------------------------------------------
+OFFSET to add to LINE _
+
+     Enter the number to add to the LINE (ROW) address.
+
+-----------------------------------------------------------------
+
+
+
+
+
+
+			       11
+
+
+
+
+
+Z80DIS22.DOC____________________________________________01_May_87
+
+
+OFFSET to add to COLUMN _
+
+     Enter the number to add to the COLUMN address.
+
+-----------------------------------------------------------------
+Binary address? _
+
+     Most  terminals need the cursor address sent in binary form.
+If  that is true for your terminal,  enter Y.  If  your  terminal
+expects the cursor address as ASCII digits,  enter N.  If so, you
+are asked the supplementary question..
+
+2 or 3 ASCII digits? _
+
+     Enter the number of digits in the cursor address for    your
+terminal.
+
+-----------------------------------------------------------------
+CLEAR SCREEN command: _
+
+     Enter  the  command that will clear the entire  contents  of
+your screen,  both foreground and background,  if applicable.  If
+you have no command to clear the screen, enter - (hyphen).
+
+-----------------------------------------------------------------
+Does CLEAR SCREEN also HOME cursor? _
+
+     This is normally the case; if it is not so on your terminal,
+enter N, and define the cursor HOME command.
+
+-----------------------------------------------------------------
+DELETE LINE command: _
+
+     Enter the command that deletes the entire line at the cursor
+position.
+
+-----------------------------------------------------------------
+INSERT LINE command: _
+
+     Enter  the  command that inserts a line at the cursor  posi-
+tion.
+
+-----------------------------------------------------------------
+ERASE TO END OF LINE command: _
+
+     Enter  the command that erases the line at the cursor  posi-
+tion from the cursor position through the right end of the line.
+
+-----------------------------------------------------------------
+START OF 'LOW VIDEO' command: _
+
+     If your terminal supports different video intensities,  then
+define	the command that initiates the DIM video  here.  If  this
+command is defined, the following question is asked:
+
+
+
+			       12
+
+
+
+
+
+Z80DIS22.DOC____________________________________________01_May_87
+
+
+START OF 'NORMAL VIDEO' command: _
+
+     Define  the command that sets the screen to show  characters
+in 'normal' video.
+
+-----------------------------------------------------------------
+Number of rows (lines) on your screen: _
+
+     Enter the number of horizontal lines on your screen.
+
+-----------------------------------------------------------------
+Number of columns on your screen: _
+
+     Enter the number of column positions on your screen.
+
+-----------------------------------------------------------------
+Delay after CURSOR ADDRESS (0-255 ms): _
+Delay after CLEAR, DELETE, and INSERT (0-255 ms): _
+Delay after ERASE TO END OF LINE and HIGHLIGHT On/Off (0-255 ms):
+
+
+     Enter the delay in milliseconds required after the functions
+specified. <CR> means 0 (no delay).
+
+-----------------------------------------------------------------
+Is this definition correct? _
+
+     If you have made any errors in the definitions, enter N. You
+will then return to the terminal selection menu. The installation
+data  you have just entered will be included in the  installation
+data file and appear on the terminal selection menu,  but instal-
+lation will not be performed.
+
+     When  you	enter  Y in response to this  question,  you  are
+asked..
+
+-----------------------------------------------------------------
+Operating frequency of your microprocessor in MHz (for delays): _
+
+     As  the  delays  specified  earlier  are  depending  on  the
+operating frequency of your CPU,  you must define this value.  If
+your  processor  operates at a fractional speed (i.e.  2.5  Mhz),
+enter the next larger integer value (3 Mhz for this example.)
+
+-----------------------------------------------------------------
+
+
+The  installation is finished,	installation data is  written  to
+Z80DIS,  and you return to the outer menu.  New installation data
+is also saved in the installation data file, and the new terminal
+will  appear on the terminal selection list when you run ZDINSTAL
+in the future.
+
+
+
+
+
+			       13
+
+
+
+
+
+Z80DIS22.DOC____________________________________________01_May_87
+
+
+Significant Changes in Version 2.2		Released 05/01/87
+----------------------------------
+
+A. Format Improvements
+
+     1) Output format changes for M80 compatibility:
+	  Singular references now flagged with $ not #
+	  Inferred references flagged with ?
+	  No : (colon) on labels on EQU statements
+	  No address on END card
+	  Shortened some comments to fit on M80 list page
+	  Output M80 pseudo-op '.Z80' just before 'ORG' line
+
+     2) Comments showing Reference-type on EQU external lines are
+     now preceded by a semi-colon (;).
+
+     3) Lower-case 'end' operation changed to upper-case 'END'.
+
+     4)  Z80DIS now remembers the numeric value on any	immediate
+     load of the C register:
+	       LD      C,nn
+     When 'nn' is in the range 0..40 hex, the value is translated
+     and shown on the following BDOS call as a CP/M function.
+	       CALL    BDOS	 ; fcnNN= XXXXXXXXXXXXXXX
+
+     5)  DEFS  pseudo op now modified to  specify  filling  value
+     found in the region. i.e.
+	       DEFS 1234H,00H
+     When  automatic assignment has set the break table,  this is
+     the right thing to do because the space area is known to  be
+     filled with only a single value throughout. That is not true
+     for  a user supplied SPC break but the DEFS is still  output
+     as if it was true.
+
+     6)  Changed format of DEFB print out to try to eliminate the
+     alternation of long and short lines.  Also changed automatic
+     break  table handling of ASCII data to better  resynchronize
+     text  lines  with	the labeled  bytes.  These  are  esthetic
+     improvements.
+
+B. Bug Fixes
+
+     1)  Fixed bug causing occasional truncation of default  file
+     name generated for break table save or load.
+
+     2) Changed two remaining cases of incorrect address compares
+     to use the correct 16-bit unsigned compare function.
+
+     3) Fixed bug when size of SPC blocks get larger than biggest
+     positive integer.
+
+     4) Fixed bug causing early termination under certain obscure
+     circumstances  involving  interactions with zero filled  SPC
+     regions.
+
+
+
+			       14
+
+
+
+
+
+Z80DIS22.DOC____________________________________________01_May_87
+
+
+     5) Address table conversion (break type ADT) was modified to
+     change format of output from
+	       DEFW (xxxx)   to
+	       DEFW xxxx
+
+C. Algorithm & Heuristic Improvements
+
+     1)  Added	new controls on recognition of	ASCII  text.  Now
+     check  further into string composition for number of  common
+     punctuation  characters and for number of	rare  punctuation
+     characters in the string. If excessive, then not ASCII.
+
+     2)  Improved  distinction	between strong and  weak  address
+     references  to converge the automatic break assignment  with
+     fewer passes over the code.
+
+D. Speed-ups and memory savings
+
+     1)  Cross Reference Information moved out of real memory  to
+     virtual memory on a disk file.
+
+     2)  Label table records reduced in size by eliminating  XREF
+     linkage pointers.
+
+
+
+Significant Changes in Version 2.1		Released 01/12/86
+----------------------------------
+
+     1) BUG CORRECTION:  During automatic break table creation in
+version 2.0,  the codes DD34,  DD35,  DD36, FD34, FD35, FD36 were
+not  correctly	recognized.  This resulted in  false  assumptions
+about  the  legality  of some Z80 code regions	which  were  then
+thought to be data regions rather than instruction regions.  This
+has been corrected in version 2.1.
+
+     2) IMPROVEMENT IN HANDLING JR REFERENCES:	In  disassembling
+8080  coding,  instruction jumps and calls use 3-byte addressing;
+that is unambiguous and not easily misinterpreted. With Z80 code,
+ASCII text blocks contain codes that are easily mistaken for  Z80
+relative  jumps;  that	creates apparent jump references to  code
+within	128 bytes before or after the  misinterpreted  byte.  The
+ASCII blank (20 hex) is especially bad as it looks exactly like a
+"JR NZ,xxxx" code. Version 2.1 has been much improved to distrust
+relative  jump references as a basis for declaring a region to be
+instructions.  Version	2.1  examines corroborative  evidence  to
+distinguish ASCII data from instruction codes.
+
+     3) OTHER IMPROVEMENTS:  The entire Expert system  comprising
+the Automatic Break Determination feature was enhanced to yield a
+more complete analysis of the code structure.
+
+
+
+
+
+
+			       15
+
+
+
+
+
+Z80DIS22.DOC____________________________________________01_May_87
+
+
+Highlights of Changes in Version 2.0		Released 12/01/85
+------------------------------------
+
+     1) AUTOMATIC BREAK TABLE CREATION: When the program asks for
+break  table inputs,  you may now enter '*' which will trigger	a
+detailed analysis of the structure and relationships of the input
+code.
+
+     2)  The COM file and overlay files for Z80DIS no longer need
+to be on your default disk drive.
+
+     3)  The  cross-reference listing now shows the  break  table
+region of residency for each label.
+
+     4)  Overflow of memory or disk space during pass 1 will  not
+abort execution.
+
+     5)  You  may  now	disassemble direct  to	your  printer  by
+specifying LST: as the list file name.
+
+     6)  You  may  now suppress creation of either .PRN  or  .MAC
+output files.
+
+     7) The default name for the break table save file is now the
+same name as that of your input file.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+_________________________________________________________________
+
+CP/M  is a registered trademark of Digital Research  Inc.,  TURBO
+PASCAL	is  a  trademark of  Borland  International,  Z-80  is	a
+trademark of Zilog Corp.
+
+
+
+			       16
+
+
+
+
+
+

@@ -1,0 +1,61 @@
+		SLR180 1.30 Release Notes
+
+Bugs Fixed From 1.00:
+
+Nested macro calls using % operator fixed
+IFIDN	<>,<>	now returns true
+JR	NUMBER+$	generates correct code
+INCLUDE and MACLIB filenames can now contain +, -, etc
+Fixed number conversion in non-power-of-two radix
+.$$1 files are cleaned up on abort
+	LD	A,TYPE 0	works
+ex	af,af'		works in U/L mode
+
+
+Additions:
+
+All input and output files are always closed upon termination (unless
+terminated by ^C from BUFIN call).
+
+CONFIG option added to allow TABs in strings.  Normally SLR180 complains
+about any control characters in quoted strings but generates the correct
+code.  This option suppress the error if the control character is a TAB.
+
+CONFIG option added to disable stripping the high bit of each byte read
+from the input source.  THIS IS DANGEROUS!  Should ONLY be used for using
+non-ASCII characters in comments.  DO NOT USE in macros, since the high
+bit is used as a parameter replacement flag.  Other indexed tables also
+assume the high bit is clear.
+
+
+
+                    SLR180 1.31 Release Notes
+
+SLR180 will now delete A:$$$.SUB if an error was detected during any assembly
+(Configurable with 180FIG).  This complements the setting of the ZCPR3 error
+flag, and the setting of the CP/M 3.0 Error return code (******* CP/M Plus
+users:  SUBMIT files may test the error return code with a leading 'colon',
+documented obscurely in CP/M 3 Programmers Guide 1.6.3 *******).
+
+180fig will now set an alternate user # to be used if a given source file
+cannot be found under the default user #.  Useful for keeping just one copy 
+of system equates and macro libraries under a single user #.
+
+180fig will let you define a drive to be used for storing intermediate files.
+This should be set to your fastest device.
+
+180fig will let you select Common selection to start back at address relative
+0 (M80 compat), or continue at the last used address (like any other address
+space).
+
+180fig will select whether or not to print the 'nesting level' character in
+the listing.
+
+^C will now abort the assembler, not just the current assembly.
+
+Colon not required on equated labels not in column one, even when that
+requirement is selected.
+
+Labeled IRP and IRPC's work.
+
+Forward referenced EQU's work in one-pass mode.

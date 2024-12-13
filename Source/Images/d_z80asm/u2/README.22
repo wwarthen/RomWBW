@@ -1,0 +1,265 @@
+
+
+
+						   April 18, 1987
+This is the READ-ME file from the Z80DIS.LBR package, version 2.2
+------------------------------------------------------===========
+
+
+
+
+A personal note from the programmer:
+- -------- ---- ---- --- ----------
+
+     I	wrote this disassembler because I could not find  another
+that would really open up a large foreign program for inspection.
+RESOURCE  and all of its spin-offs give you only a pin-hole  look
+at  a program without indicating the important interactions  with
+other  parts  of the code.  Without the interactions and a  wider
+view,  figuring out the code purpose or data type of a code block
+is very hard.
+
+     Z80DIS  eliminates  the narrow pin-hole view  of  a  program
+provided  by  an  interactive  display.   Z80DIS  provides  fully
+automated  analysis of the code structure,  well formatted output
+in both assembler and printer formats, a complete cross-reference
+coded  by  reference type,  and commenting of  DOS  interactions.
+Recent	improvements in this latest version add  further  utility
+and increase the ability to handle even larger code segments.
+
+     For those who prefer an interactive approach to disassembly,
+I  recommend  the  combination	of Z80DIS  with  the  interactive
+disassembler DAZZLESTAR (DZ) by John Washington in  England.  Use
+Z80DIS for the automated analysis of the underlying structure and
+use  DZ  for  the interactive refinement of the  code.	John  has
+provided  a  DZ  command  (namely KG) to  read	the  break  table
+produced by Z80DIS.
+
+     As CP/M users are getting less and less support for problems
+with existing 8080 or Z80 software products,  maintenance of that
+software has fallen to the CP/M users themselves. Z80DIS lets you
+examine the software and repair the problem yourself. I hope that
+you will find Z80DIS as useful as I have.
+
+				  Kenneth Gielow
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+				1
+
+
+
+Z80DIS 2.2						 04/18/87
+
+
+Version 2.2 change note:
+
+     Version 2.0 added artificial intelligence to Z80DIS.
+
+     Version 2.1 corrected a small bug in the processing of  INC,
+     DEC, and LD using index registers IX and IY and enhanced the
+     distinction between ASCII blank (20 hex) and the instruction
+     "JR NZ,xxxx" (also 20 hex).
+
+     Version  2.2  modifies the output format for M-80	assembler
+     compatibility.  Increases	the size of program that  can  be
+     disassembled  by  moving cross-reference tables  to  virtual
+     memory  on disk.  Fixed several minor bugs.  Interprets CP/M
+     DOS calls and comments such calls by the function performed.
+
+Caveat:  If you are running a system with single sided disks, you
+     probably do not want to upgrade from version 2.1 to  version
+     2.2 because of the increased off-loading of memory functions
+     onto disk files
+
+Z80DIS	is a disassembler for Z80 based CP/M systems.  Z80DIS  is
+designed  to  generate	Z80 mnemonics  and  prepare  an  assembly
+language   file   with	 many  special	features  for	ease   of
+understanding the intent of the disassembled code. The source for
+Z80DIS has grown to 8400 lines of pascal code.
+
+With  Z80DIS versions 2.0 and higher,  you need know very  little
+about  the format of the *.COM file to produce a nearly  finished
+source	file  in  most	cases.	In addition  a	large  number  of
+convenience  features and defaults have been added that were  not
+present  in version 1.	The Z80DIS change history for version 2.x
+follows at the end of this paper.
+
+Both  the  Z80DIS  program and the Z80DIS documentation  are  (C)
+Copyright  1985,  1986	and 1987 by Kenneth  Gielow;  All  Rights
+Reserved. While I am freely distributing the binary code for non-
+profit use, I am reserving the source code as a trade secret.
+
+This  program requires a Z80 based computer running CP/M  version
+2.2  or  higher.  The code was compiled for a 50K  TPA;  the  top
+address   is  C7FF.   This  slightly  small  size  was	done  for
+compatibility with CP/M 3.0 and ZCPR3.
+
+The  following	files  will be found  on  Z80DIS21.LBR	for  this
+program distribution library package:
+
+     Z80DIS.COM    - the disassembler program
+     Z80DIS.000    - overlay file for Z80DIS
+     Z80DIS.001    - overlay file for Z80DIS
+     Z80DIS.002    - overlay file for Z80DIS
+
+     ZDINSTAL.COM  - a terminal command installation program
+     ZDINSTAL.MSG  - contains text of ZDINSTAL messages
+     ZDINSTAL.DTA  - contains terminal characteristics data
+
+     Z80DIS22.DQC  - an installation manual. (Squeezed format)
+
+
+
+				2
+
+
+
+Z80DIS 2.2						 04/18/87
+
+
+The  three  ZDINSTAL files are based on the TURBO  Toolbox  GINST
+program  and  will tailor the display command sequences for  your
+terminal.  The DOC file is the text of a short user manual  which
+explains use and installation of the program.
+
+The  interactive  displays for parameter specification	make  the
+program easy to use.  All control parameters have defaults preset
+to the most likely values.
+
+		       FEATURES OF Z80DIS
+		       ------------------
+
+The  major  feature  of Z80DIS is an extensive	analysis  of  the
+memory	usage by the program under investigation.  This  analysis
+capability  forms the basis for an automatic partitioning of  the
+code to generate the break table.  This analysis also produces	a
+fully-annotated cross reference of all addresses.
+
+A  disassembler  must know whether the bytes are instructions  or
+data  in order to proceed.  Z80DIS is the first  disassembler  to
+produce  its  own  break table for this  purpose.  Some  previous
+programs, such as RESOURCE, have included a search for ASCII text
+regions,  but have left the verification and interpretation up to
+the  user.  Most other disassemblers are fooled by the	trick  of
+adding	nonsense bytes after jumps to cause the analysis to  fall
+out of synchronization with instruction code interpretation.
+
+Z80DIS	produces  an output listing which itemizes all	addresses
+referenced by the code,  distinguishes types of label references,
+marks  subroutines  and jumps and produces  an	annotated  cross-
+reference.  This  listing shows the exact mode of usage for every
+reference:  Jump absolute, Jump relative, Call, Restart, Load 16-
+bit,  Store 16-bit, Immediate 16-bit, Load 8-bit, Store 8-bit. In
+version  2.1,  this listing also shows the break table region  of
+residency  for	each label so that you may inspect the	list  for
+inconsistencies.
+
+An  address  labeling  convention assists  in  understanding  the
+assembly  code generated.  Each label generated on  the  assembly
+listing  indicates,  by format,  not only the generic type (Jump,
+Call, Data, Other) of any references, but also the singularity of
+the reference. For example, J$02E3 used at address 02E3 indicates
+that  only  one reference was made to address 02E3 and that  that
+reference was a JUMP.
+
+In  addition to helping you by automatic analysis of memory  use,
+Z80DIS also assists you by styling the presentation of the disas-
+sembled code.  The disassembled code is output in two forms: Both
+the usual *.MAC file and a printer formatted *.PRN file.
+
+The  *.PRN file is styled to look like the output of an assembler
+with both the instructions and assembled bytes shown.  The juxta-
+position  of  the hexadecimal bytes and  the  assembly	mnemonics
+allows	the  user  to recognize errors caused by  an  incorrectly
+defined break table.
+
+
+
+
+				3
+
+
+
+Z80DIS 2.2						 04/18/87
+
+
+		      DOCUMENTATION NOTICE
+		      --------------------
+
+The  original,	version 1,  user manual ran forty-plus pages  and
+gave extensive examples and used disassembly of the public domain
+program  D.COM as an example.
+
+The version 2 manual is now eighty eight pages of detailed, what-
+if instructions and a dissertation on understanding and  handling
+large  or complex code modules.
+
+As  the binary code for Z80DIS is now running 108K bytes and  the
+ascii  text for the manual is over 200K bytes,	there is  no  way
+that  I can get system operators to carry both.  I feel that  the
+program  is largely self explanatory so that you can get  started
+very  well  with only the minimal help of the included DOC  file.
+The  short user manual included here deals only  with  installing
+the  Z80DIS  program  and doing a simple  disassembly.	For  more
+serious work you will want the full manual.
+
+The  longer manual expands on the discussion of the features  and
+explains  the  step-wise  approach to dealing  with  much  larger
+source codes. The manual also deals with disassembling code which
+relocates  itself.  Extensive  examples are included.  All  error
+messages and secondary options are discussed in detail.
+
+The full Z80DIS USER MANUAL is available by mail.  I am asking	a
+nominal  charge  of $20.00 which includes the printed  and  bound
+manual,  postage,  handling,  and an update notification service.
+You  are  granted the right to make not-for-profit copies of  the
+manual.  The program itself is not available by mail as I do  not
+have   extensive,   multi-format   disk  copy	capability.   The
+notification  service will consist of a letter to you  anytime	a
+new version is released so that you may be on the lookout for it.
+
+To  order a copy of the Z80DIS USER MANUAL,  send a request  with
+your name, address, and a check for $ 20.00 to --
+
+		  Kenneth Gielow
+		  79 Tulip Lane
+		  Palo Alto, CA 94303
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+				4
+
+
+
+
