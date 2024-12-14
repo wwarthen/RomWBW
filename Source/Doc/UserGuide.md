@@ -822,19 +822,25 @@ Here is an overview for each operating system:
   not cover the use of SUBMIT files -- please refer to the CP/M 2.2
   documentation.
 
-- **NZCOM** - Will run the command STARTZCM at startup.  This is 
-  normally an alias file.  You use SALIAS to edit such files.  Please see 
+- **NZCOM** - Will run the command STARTZCM at startup.  This is
+  normally an alias file, which you can edit using SALIAS.  Please see 
   Section 3.1 Creating an Alias of the NZCOM Users Manual included in the 
-  Doc/CPM folder of the RomWBW distribution.  Note that the NZCOM 
-  distribution includes a PROFILE.SUB file.  NZCOM itself is launched from 
-  ZSDOS.  The included PROFILE.SUB accomplishes this.  Do not modify this 
-  file unless you fully understand the NZCOM boot process.
+  Doc/CPM folder of the RomWBW distribution.  Do not modify this 
+  file unless you fully understand the NZCOM boot process. Note that 
+  NZCOM itself is launched from ZSDOS via the included PROFILE.SUB file.
 
 - **CP/M 3** - Will run PROFILE.SUB as a SUBMIT file if it exists in A: 
   at startup.  This mechanism is built into the CP/M 3 operating system.  
   Please see Section 4.5 Executing Multiple Commands and Section 5.2.74 
   Executing the SUBMIT Command of the CPM3 Users Guide included in the 
   Doc/CPM folder of the RomWBW distribution.
+
+- **Z3PLUS** - Will run the command STARTZ3P at startup.  This is
+  normally an alias file, which you can edit using SALIAS.  Please see
+  Section 3.1 Creating an Alias of the Z3PLUS Users Manual included in the
+  Doc/CPM folder of the RomWBW distribution.  Do not modify this
+  file unless you fully understand the Z3PLUS boot process. Note that 
+  Z3PLUS itself is launched from CP/M 3 via the included PROFILE.SUB file.
 
 - **ZPM3** - Will run the command STARTZPM at startup.  This is normally
   an alias file.  You use SALIAS to edit such files.  ZPM3 has no real 
