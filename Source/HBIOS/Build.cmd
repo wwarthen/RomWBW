@@ -61,7 +61,17 @@ call hbios_env.cmd
 if %Platform%==UNA goto :UNA
 
 ::
-:: Bring the previously build font files into this directory
+:: Determine proper variant of the NetBoot module to embed
+::
+
+if %Platform%==DUO (
+    set NetBoot=netboot-duo.mod
+) else (
+    set NetBoot=netboot-mt.mod
+)
+
+::
+:: Bring the previously build font files into this directory 
 ::
 
 copy ..\Fonts\font*.asm . || exit /b
@@ -101,7 +111,7 @@ tasm -t%CPUType% -g3 -fFF -dCPM sysconf.asm sysconf.com sysconf_com.lst || exit 
 ::
 
 copy /b romldr.bin + dbgmon.bin + ..\zsdos\zsys_wbw.bin + ..\cpm22\cpm_wbw.bin osimg.bin || exit /b
-copy /b ..\Forth\camel80.bin + nascom.bin + ..\tastybasic\src\tastybasic.bin + game.bin + eastaegg.bin + netboot.mod + updater.bin + sysconf.bin + usrrom.bin osimg1.bin || exit /b
+copy /b ..\Forth\camel80.bin + nascom.bin + ..\tastybasic\src\tastybasic.bin + game.bin + eastaegg.bin + %NETBOOT% + updater.bin + sysconf.bin + usrrom.bin osimg1.bin || exit /b
 
 if %Platform%==S100 (
     zxcc slr180 -s100mon/fh

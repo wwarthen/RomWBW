@@ -5,7 +5,7 @@ MOREDIFF = game.bin hbios_rom.bin nascom.bin usrrom.bin \
 
 DEST = ../../Binary
 TOOLS =../../Tools
-OTHERS =  *.img *.rom *.com *.upd *.bin *.hex cpm.sys zsys.sys Build.inc font*.asm *.dat hbios_env.sh
+OTHERS =  *.img *.rom *.com *.upd *.bin *.hex cpm.sys zsys.sys Build.inc font*.asm *.dat hbios_env.sh netboot.mod
 
 # DIFFMAKE = 1
 
@@ -60,6 +60,11 @@ ROMNAME=${ROM_PLATFORM}_${ROM_CONFIG}
 $(OBJECTS) : $(ROMDEPS)
 	@cat romldr.bin dbgmon.bin ../ZSDOS/zsys_$(BIOS).bin ../CPM22/cpm_$(BIOS).bin >osimg.bin
 	cat romldr.bin dbgmon.bin ../ZSDOS/zsys_$(BIOS).bin >osimg_small.bin
+	if [ $(ROM_PLATFORM) = DUO ] ; then \
+		cat netboot-duo.mod >netboot.mod ; \
+	else \
+		cat netboot-mt.mod >netboot.mod  ; \
+	fi
 	if [ $(ROM_PLATFORM) != UNA ] ; then \
 		cat camel80.bin nascom.bin tastybasic.bin game.bin eastaegg.bin netboot.mod updater.bin sysconf.bin usrrom.bin >osimg1.bin ; \
 		if [ $(ROM_PLATFORM) = S100 ] ; then \
