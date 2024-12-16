@@ -3887,22 +3887,29 @@ local drives.
 
 ## Network Boot
 
-It is possible to boot your MT011 equipped RomWBW system directly from a
-network server.  This means that the operating system will be loaded 
+It is possible to boot your RomWBW system directly from a
+network server if it has the required hardware.  This means that the operating system will be loaded 
 directly from the network server and all of your drive letters will be 
-provided by the network server.  Duodyne is not yet supported in this 
-mode of operation.
+provided by the network server.  The supported hardware is:
+
+- RCBus System w/ MT011 including:
+  - Featherwing WizNet W5500
+  - SPI FRAM on secondary SPI interface (CS2)
+- Doudyne Disk I/O Board including:
+  - WIZ850io Module
+  - 25LCxxx Serial SPI EEPROM
+  
+Unlike the CP/NET Client, the presence of dedicated non-volatile
+storage is required to hold the network configuration.  This will be
+FRAM (for MT011) or Serial SPI EEPROM (Duodyne).    The NVRAM is used to store your WizNet 
+configuration values so they do not need to be re-entered every time you
+power-cycle your system.
 
 It is important to understand that the operating system that is loaded
 in this case is **not** a RomWBW enhanced operating system.  Some
 commands (such as the `ASSIGN` command) will not be possible.  Also,
 you will only have access to drives provided by the network server --
 no local disk drives will be available.
-
-In order to do this, your MT011 Module **must** be enhanced with an 
-NVRAM SPI FRAM mini-board.  The NVRAM is used to store your WizNet 
-configuration values so they do not need to be re-entered every time you
-power-cycle your system.
 
 Using the same values from the previous example, you would
 issue the `WIZCFG` commands:
@@ -3924,12 +3931,9 @@ contains some files that will be sent to your RomWBW system when the
 Network boot is performed.  By default the directory will be
 `~/NetBoot`.  In this directory you need to place the following files:
 
-* `cpnos-wbw.sys`
+* `cpnos.sys`
 * `ndos.spr`
 * `snios.spr`
-
-All of these files are found in the Binary/CPNET/NetBoot directory of 
-the RomWBW distribution.
 
 You also need to make sure CpnetSocketServer is configured with an 'A' 
 drive and that drive must contain (at an absolute minimum) the following
@@ -3937,12 +3941,15 @@ file:
 
 * `ccp.spr`
 
-which is also found in the Binary/CPNET/NetBoot directory of RomWBW
+All of these files are found in the Binary/CPNET/NetBoot directory of 
+the RomWBW distribution.  You will find 2 sub-directories named MT and
+DUO.  Get the files from the sub-directory corresponding to your
+specific hardware.
 
 Finally, you need to add the following line to your CpnetSocketServer 
 configuration file:
 
-`netboot_default = cpnos-wbw.sys`
+`netboot_default = cpnos.sys`
 
 To perform the network boot, you start your RomWBW system normally which
 should leave you at the Boot Loader prompt.  The 'N' command will

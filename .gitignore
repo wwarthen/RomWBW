@@ -20,7 +20,7 @@
 
 Binary/**/*.mym
 Binary/**/*.pt3
-!Binary/CPNET/NetBoot/cpnos-wbw.sys
+!Binary/CPNET/NetBoot/*/cpnos.sys
 
 Source/**/eeprom
 Source/Apps/Assign.com
