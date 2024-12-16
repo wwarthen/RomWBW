@@ -21,7 +21,7 @@ KBDQPUTX	.DB	0		; QUEUE INDEX
 ;		.DB	$55		; GUARD BYTE FOR DEBUGGING ; NOTE THAT SCAN CODES ARE BEING
 KBDQ		.FILL	KBDQSIZ,0	; CIRCULAR KEYBOARD BUFFER ; BUFFERED. ONE KEY PRESS CAN
 ;		.DB	$AA		; GUARD BYTE FOR DEBUGGING ; GENERATE SEVERAL SCAN CODES
-
+;
 ;__________________________________________________________________________________________________
 ; RESET THE QUEUE TO EMPTY
 ;__________________________________________________________________________________________________
@@ -58,17 +58,8 @@ KBD_INT:
 ;	CALL	KBDQDBG
 ;
 	RET
-;;;;__________________________________________________________________________________________________
-;;;; KEYBOARD DEINITIALIZATION
-;;;;__________________________________________________________________________________________________
-;;;;
-;;;KBD_DEINIT: 
-;;;	LD	IY,(KBD_IDAT)		; SETUP PORT POINTER
-;;;	LD	A,KBD_CON_WCR		; LOAD WRITE COMMAND
-;;;	CALL	KBD_CMDOUT		; WRITE IT
-;;;	LD	A,KBD_CON_IOF		; LOAD DISABLE INTERRUPTS CFG
-;;;	JP	KBD_DTAOUT		; WRITE IT
 #ENDIF
+;
 ;__________________________________________________________________________________________________
 ; KEYBOARD READ
 ;__________________________________________________________________________________________________
