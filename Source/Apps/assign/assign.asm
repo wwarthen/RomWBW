@@ -614,17 +614,11 @@ bootdra:
 ; Note: if MDFFENABLE is enabled, this wont select the ROM since the
 ; driver returns MD_AFSH (%00010111), and we cannot generalise this mask
 bootdro:
-	ld	a,$FF		; specific mask to include all BITS
+	ld	a,%11111101	; ROM mask, excluding Bit 1, which varies
 	ld	(atrmask),a	; mask for device attributes
-	ld	a,%00010100	; specific mask for ROM drive. "MD_AROM"
+	ld	a,%00010100	; for values "MD_AROM", "MD_AFSH"; Att="000101x0"
 	ld	(atrcomp),a	; compare to after mask
 	call	bootadds	; do single slice assignment
-; possible workaround below, not elegant. other woraround is to have a specific option for this code
-; Better option is change the definitions for device attribute media types to
-; 4=ROM, 5=RAM, 6=FLASH, 7=RAMF, (6,7 swapped) so much easir to mask RAM/ROM as only 1 bit difference
-;	ld	a,%00010111	; specific mask for ROM drive. "MD_AFSH"
-;	ld	(atrcomp),a	; compare to after mask
-;	call	bootadds	; do single slice assignment
 	ret			; Finished, returning error
 ;
 ; FLOPPY DRIVE(S)
