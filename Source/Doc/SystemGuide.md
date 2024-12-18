@@ -1162,7 +1162,7 @@ The non-Floppy specific bits are:
 |---------:|--------------------------------------------------|
 | 4        | LBA Capable                                      |
 | 3-0      | Media Type: 0=Hard Disk, 1=CF, 2=SD, 3=USB,      |
-|          |   4=ROM, 5=RAM, 6=RAMF, 7=FLASH, 8=CD-ROM,       |
+|          |   4=ROM, 5=RAM, 6=FLASH, 7=RAMF, 8=CD-ROM,       |
 |          |   9=Cartridge                                    |
 
 Device Type (D) indicates the specific hardware driver that handles the 
