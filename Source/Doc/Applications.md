@@ -2202,10 +2202,23 @@ MYM sound files.
 
 #### Syntax
 
-`TUNE `*`<filename>`*
+`TUNE `*`<filename>`* `*`<options>`*`
 
 *`<filename>`* is the name of a sound file ending in .PT2, .PT3, or
 .MYM
+
+| Option      | Description                                            |
+| ----------- | ------------------------------------------------------ |
+|  `-MSX`     | Force MSX port addresses A0H/A1H (no PSG detection)    |
+|  `-RC`      | Force RCBus port addresses D8H/D0H (no PSG detection)  |
+|  `--HBIOS`  | Utilise HBIOS' sound driver                            |
+| `+T1`       | Play tune an octave higher                             |
+| `+T2`       | Play tune two octaves higher                           |
+| `-T1`       | Play tune an octave lower                              |
+| `-T2`       | Play tune two octaves lower                            |
+
+The +t and -t options apply only to HBIOS mode operation.  The `-MSX`,
+`-RC`, and `--HBIOS` options are mutually exclusive.  See Notes below.
 
 #### Usage
 
@@ -2224,9 +2237,9 @@ well known port addresses at startup. It will auto-configure itself
 for the hardware found. If no hardware is detected, it will abort with
 an error message.
 
-Some sound board hardware does not support automatic detection
-(notably the Why-Em-Ulator).  You may force the use of standard
-MSX or RC Bus standard ports using the `-MSX` or `-RC` options.
+Some hardware (notably Why-Em-Ulator) cannot be detected due limitations
+of the emulation.  In such cases, you can force the use of the two
+most common port addresses using the `-msx` or `-rc` options.
 
 On Z180 systems, I/O wait states are added when writing to the sound
 chip to avoid exceeding its speed limitations. On Z80 systems, you
@@ -2238,25 +2251,33 @@ accurately pace the sound file output. If no system timer is
 available, a delay loop is calculated instead. The delay loop will not
 be as accurate as the system timer.
 
-There are two modes of operations.  A direct hardware interface for the
+There are two modes of operation.  A direct hardware interface for the
 AY-3-8910 or YM2149 chips, or a compatibility layer thru HBIOS supporting
-the SN76489 chip.
+both the AY-3-8910 and the SN76489 chip.
 
 By default the application will attempt to interface directly to the sound
 chip.  The optional argument `--HBIOS` supplied after the filename, will
 enable the application to use the HBIOS sound driver.
 
-The HBIOS mode also support other switch as described below.
+The following summarizes the different modes of operation for the
+application:
 
-| Switch      | Description                                            |
-| ----------- | ------------------------------------------------------ |
-|  `-MSX`     | Force use of MSX standard ports (A0H/A1H)              |
-|  `-RC`      | Force use of RCBus standard ports (D8H/D0H)            |
-|  `--HBIOS`  | Utilise HBIOS' sound driver                            |
-| `+T1`       | Play tune an octave higher                             |
-| `+T2`       | Play tune two octaves higher                           |
-| `-T1`       | Play tune an octave lower                              |
-| `-T2`       | Play tune two octaves lower                            |
+- If you use `TUNE` with no options, it will use it's original behavior
+  of searching for and detecting a sound chip.  `TUNE` will play sound
+  files directly to the PSG hardware.  In this mode it does not
+  matter if HBIOS does or does not know about the sound chip.
+
+- If you use `TUNE` with the `--HBIOS` option, it will not detect a sound chip
+  and will use the RomWBW HBIOS interface.  This will only work if HBIOS
+  was configured for the installed sound card and HBIOS detects the sound chip.
+
+- If you use `TUNE` with `-RC` or `-MSX`, it will play tunes directly to the PSG
+  hardware (not via HBIOS) and will bypass detection.  In this mode it does
+  not matter if HBIOS does or does not know about the sound chip.
+
+Note that the HBIOS API for sound cards is pretty good, but does not implement
+everything that the sound card can do.  For best fidelity, use `TUNE` without the
+`--HBIOS` option.
 
 All RomWBW operating system boot disks include a selection of sound
 files in user area 3.
