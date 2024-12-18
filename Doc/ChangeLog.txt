@@ -52,6 +52,7 @@ Version 3.5
 - PMS: Support interrupt-driven PS2 Keyboard Interface
 - D?M: Added NetBoot support for Duodyne
 - WBW: Add options to TUNE/HBIOS to force detection of MSX and RC AY/YM standard PSG ports
+- MAP: Added /B=OPTIONS for automated drive assignment to ASSIGN.COM
 
 Version 3.4
 -----------
