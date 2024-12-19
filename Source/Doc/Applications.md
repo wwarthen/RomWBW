@@ -1251,11 +1251,6 @@ cold reboot of the system.
 
 The functionality is highly dependent on the capabilities of your system.
 
-At present, all Z180 systems can change their CPU speed and their
-wait states.  SBC and MBC systems may be able to change their CPU
-speed if the hardware supports it and it is enabled in the HBIOS
-configuration.
-
 #### Syntax
 
 | `CPUSPD [`*`<speed>`*`[,[`*`<memws>`*`][,[`*`<iows>`*`]]]`
@@ -1290,10 +1285,26 @@ If an attempt is made to change the speed of a system
 that is definitely incapable of doing so, then an error result is
 returned.
 
+Z180-based systems will be able to adjust their CPU speed depending
+on the specific variant of the Z180 chip being used:
+
+| Z180 Variant        | Capability         |
+| --------------------|--------------------|
+| Z80180 (original)   | Half               |
+| Z8S180 Rev. K       | Half, Full         |
+| Z8S180 Rev. N       | Half, Full, Double |
+
+SBC and MBC systems may be able to change their CPU
+speed if the hardware supports it and it is enabled in the HBIOS
+configuration.
+
 The `CPUSPD` command makes no attempt to ensure that the new CPU
 speed will actually work on the current hardware.  Setting a CPU
 speed that exceeds the capabilities of the system will result in
 unstable operation or a system stall.
+
+In the case of Z180 CPUs, it is frequently necessary to add
+memory wait states when increasing the CPU speed.
 
 Some peripherals are dependent on the CPU speed.  For example, the Z180
 ASCI baud rate and system timer are derived from the CPU speed.  The
