@@ -1,0 +1,16 @@
+
+Eazy80_512 has a 64K ROM contains a monitor.  The monitor command "b 4" loads RomWBW program
+starting from SD sector 288 into first 4 banks of memory.  RAM disk is not loaded, so drive A is
+blank.
+
+Bank		Contents	Description
+--------	--------	-----------
+0x0		BIOS		HBIOS Bank (operating)
+0x1		IMG0		ROM Loader, Monitor, ROM OSes
+0x2		IMG1		ROM Applications
+0x3		IMG2		Reserved
+0x4-0xB		RAMD		RAM Disk Banks <- not loaded, blank
+0xC		BUF		OS Buffers (CP/M3)
+0xD		AUX		Aux Bank (CP/M 3, BPBIOS, etc.)
+0xE		USR		User Bank (CP/M TPA, etc.)
+0xF		COM		Common Bank, Upper 32KB

@@ -1,0 +1,22 @@
+Eazy80_512 Disk Prefix Layout
+=============================
+
+---- Bytes ----   --- Sectors ---
+Start   Length    Start   Length    Description
+------- -------   ------- -------   ---------------------------
+0x00000 0x001BE   0       1         CF Boot Loader
+0x001B8 0x00048                     RomWBW Partition Table
+0x00200 0x1EE00   1       247       Unused
+0x1F000 0x01000   248     8         EZ512 Monitor v0.3
+0x20000 0x04000   256     32        Unused
+0x24000 0x80000   288     1024      RomWBW
+0xA4000 0x5C000   1312    736       Unused  
+0x100000          2048              Start of slices (partition 0x1E)
+
+Notes
+-----
+- Eazy80_512 monitor reads the first 128KB of RomWBW stored started from sector 288 into banks 0-3
+- Afterward Z80 jumps to location 0x0 to execute RomWBW
+
+
+
