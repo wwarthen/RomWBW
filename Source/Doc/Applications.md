@@ -1077,9 +1077,12 @@ to display, assign, reassign, or remove the drive letter assignments.
 
 | `ASSIGN /?`
 | `ASSIGN /L`
+| `ASSIGN ` *`<drv>`*`=`
+| `ASSIGN `
 | `ASSIGN [`*`<drv>`*`],...`
-| `ASSIGN `*`<drv>`*`=[`*`<device>`*`:[`*`<slice>`*`]],...`
-| `ASSIGN `*`<tgtdrv>`*`=`*`<srcdrv>`*`,...`
+| `ASSIGN ` *`<drv>`*`=[`*`<device>`*`:[`*`<slice>`*`]],...`
+| `ASSIGN ` *`<tgtdrv>`*`=`*`<srcdrv>`*`,...`
+| `ASSIGN /B='*'<option>'*'['*'<option>'*'['*'<option>'*'...]]`
 
 #### Usage
 
@@ -1090,23 +1093,36 @@ used in drive assignments in the running system. The devices listed
 may or may not contain media. Although some device types support the
 use of slices, the list does not indicate this.
 
+`ASSIGN A:` just specifying the drive letter will display the
+assignment for the drive letter
+
 `ASSIGN` with no parameters will list all of the current drive
 assignments.
 
-`ASSIGN `*`<drv>`* will display the assignment for the specific drive
+#### Usage (Specific)
+
+The following describes how to assign drive specifically by identifing each
+drive by its unique device and slice id's
+
+`ASSIGN ` *`<drv>`* will display the assignment for the specific drive
 For example, `ASSIGN C:` will display the assignment for drive C:.
 
-`ASSIGN `*`<drv>`*`=`*`<device>`*`[:`*`<slice>`*`]` will assign (or
+`ASSIGN ` *`<drv>`*`=`*`<device>`*`[:`*`<slice>`*`]` will assign (or
 reassign) a drive letter to a new device and (optionally) slice. If no
 slice is specified, then slice 0 is assumed. For example, `ASSIGN
 C:=IDE0` will assign drive letter C: to device IDE0, slice 0. `ASSIGN
 D:=IDE0:3` will assign drive letter D: to device IDE0 slice 3.
 
-`ASSIGN `*`<drv>`*`=` can be used to remove the assignment from a
+The `ASSIGN` command will not allow you to specify a slice (other than
+zero) for devices that do not support slices.
+A slice should only be specified for hard disk devices (SD, IDE, PPIDE).
+Floppy disk drives and RAM/ROM drives do not have slices.
+
+`ASSIGN ` *`<drv>`*`=` can be used to remove the assignment from a
 drive letter. So, `ASSIGN E:=` will remove the association of drive
 letter E: from any previous device.
 
-`ASSIGN `*`<tgtdrv>`*`=`*`<srcdrv>`* is used to swap the assignments
+`ASSIGN ` *`<tgtdrv>`*`=`*`<srcdrv>`* is used to swap the assignments
 of two drive letters. For example, `ASSIGN C:=D:` will swap the device
 assignments of C: and D:.
 
@@ -1117,6 +1133,78 @@ two slices of IDE 0 and will unassign E:.
 When the command runs it will echo the resultant assignments to the
 console to confirm its actions. It will also display the remaining
 space available in disk buffers.
+
+#### Usage (Bulk)
+
+The following describes how to assign drives in bulk without having to specify
+the identifiers of each drive being mapped. Instead bulk mode has a
+predefined set options (identified by single letter) which will map drives.
+Bulk mode works by assigning drives sequentially starting at A: until all
+drives are used, or there are no more options to process. Each option
+will typically map between 0 and N drives depending on the option
+and the available hardware in your system.
+
+`ASSIGN /B=`*`<option><option>`*... will perform bulk assignment .
+
+The following options will assign a small number of devices, typically you would
+place at beginning of an option list.
+
+| Option | Name     | Description                                 | Assigned |
+|--------|----------|---------------------------------------------|----------|
+| B      | Boot     | The boot device                             | 1        | 
+| A      | RAM      | Ram drive                                   | 0,1      |
+| O      | ROM      | Rom drive                                   | 0,1      |
+| F      | Floppy   | All floppy devices, with/without media      | 0,1,2,.. |
+| P      | Preserve | Skip and preserve the next drive assignment | 1        |
+| X      | Exclude  | Un-assign / Exclude the next drive          | 1        |
+
+A drive e.g. RAM, ROM, FLOPPY can only be assigned if it exists. if you system
+doesn't have the hardware that supports the device, then no devices will be
+assigned, and the next option will be processed.
+
+`B` assigns the boot device. If used the `B`oot drive should typically be
+assigned first.
+
+`P` will not make any changes to the next drive, it will skip over it. While the
+`X` option will un-assign the next drive, leaving a gap.
+
+The remaining options will fill drives mostly to end, from hard drive slices,
+generally choose 1 of the following:
+
+| Option | Name        | Description                                 | Assigned |
+|--------|-------------|---------------------------------------------|----------|
+| S      | Slices      | Assign slices from boot hard drive          | ...max   |
+| H      | Hard Drive  | Assign slices evenly from all hard drives   | ...max   |
+| L      | Legacy HD   | Assign slices from all hard drives (legacy) | 6,...max |
+| Z      | Exclude All | Un-assign all remaining drives               | ...max   |
+
+`S`lices assignment will map all remaining drives to slices from the boot device.
+If I have other hard drives present these will not be mapped by this option.
+
+e.g. `ASSIGN /B=BAOS`
+
+Will first assign drives `A:(Boot), B:(RAM), C:(ROM)` this leaves 13 drives
+which will be assigned to slices from the boot hard drive (D: thru P:),
+leaving no unused drives.
+
+'H'ard drive assignment will attempt to fill all remaining drive letters
+by splitting the number of drives remaining evenly across all.
+
+e.g. `ASSIGN /B=BAOH`
+
+Will first assign drives `A:(Boot), B:(RAM), C:(ROM)` this leaves 13 drives
+available. If I have 3 hard disks then (13/3) = 4 slices from each hard drive will
+be assigned to drives (D: thru O:), leaving a single unused drive (P:).
+
+`L`egacy hard drive assignment is identical to how the startup hard disk assignment
+works. ie. Attempt to assign up to 8 hard drives split across hard drives
+detected at boot.
+
+e.g. `ASSIGN /B=BAOL`
+
+Will first assign drives `A:(Boot), B:(RAM), C:(ROM)`. If I have 3 hard disks
+then (8/3) = 2 slices from each hard drive will be assigned to drives (D: thru I:),
+leaving 7 unused drives (J: thru P:).
 
 #### Notes
 
@@ -1136,10 +1224,6 @@ being assigned actually contains readable media. If the assigned
 device has no media, you will receive an I/O error when you attempt to
 use the drive letter.
 
-The `ASSIGN` command will not allow you to specify a slice (other than
-zero) for devices that do not support slices (such as floppy drives
-or RAM/ROM disks).
-
 The `ASSIGN` command does not check that the media is large enough to
 support the slice you specify. In other words, you could potentially
 assign a drive letter to a slice that is beyond the end of the media
@@ -1152,7 +1236,11 @@ data (such as a FAT filesystem).
 
 You will not be allowed to assign multiple drive letters to a single
 device and slice. In other words, only one drive letter may refer to a
-single filesystem at a time.
+single filesystem at a time. 
+
+Attempts to assign a duplicate drive letter will fail and display an 
+error. If you wish to assign a different drive letter to a 
+device/unit/slice, unassign the existing drive letter first.
 
 Drive letter A: must always be assigned to a device and slice. The
 `ASSIGN` command will enforce this.
@@ -1162,14 +1250,6 @@ will persist through a warm start, but when you reboot your system,
 all drive letters will return to their default assignments. A SUBMIT
 batch file can be used to setup desired drive assignments
 automatically at boot.
-
-Floppy disk drives and RAM/ROM drives do not have slices. A slice
-should only be specified for hard disk devices (SD, IDE, PPIDE).
-
-Only one drive letter may be assigned to a specific device/unit/slice
-at a time. Attempts to assign a duplicate drive letter will fail and
-display an error. If you wish to assign a different drive letter to a
-device/unit/slice, unassign the existing drive letter first.
 
 Be aware that this command will allow you to reassign or remove the
 assignment of your system drive letter. This can cause your operating
