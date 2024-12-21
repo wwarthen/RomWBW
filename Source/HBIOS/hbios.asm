@@ -745,6 +745,18 @@ HBX_ROM:
 	RET				; DONE
 #ENDIF
 ;
+#IF (MEMMGR == MM_EZ512)
+	AND	$F			; HCS mask off high nibble
+	BIT	3,A			; HCS if banks $8-$F, set bit 6
+	JR	Z,MM_EZ512_BANK0TO7
+	AND	7			; HCS clear bit 3
+	OR	$40			; HCS set bit 6 for banks $8-$F
+MM_EZ512_BANK0TO7:
+	OR	$80			; HCS set bit 7 to keep RAM enabled
+	OUT	($0C),A			; HCS write to the bank control register
+	RET				; DONE
+#ENDIF
+;
 #IF (MEMMGR == MM_MBC)
 ;
   #IF (INTMODE == 1)
@@ -8701,8 +8713,8 @@ PS_DTSD		.TEXT	"SD Card$"
 PS_DTUSB	.TEXT	"USB Drive$"
 PS_DTROM	.TEXT	"ROM Disk$"
 PS_DTRAM	.TEXT	"RAM Disk$"
+PS_DTFSH	.TEXT	"Flash ROM"
 PS_DTRF		.TEXT	"RAM Floppy$"
-PS_DTFSH	.TEXT	"Flash Drive$"
 PS_DTCD		.TEXT	"CD-ROM$"
 PS_DTCRT	.TEXT	"Cartridge$"
 PS_DTOTHER	.TEXT	"???$"

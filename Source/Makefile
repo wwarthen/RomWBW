@@ -2,12 +2,12 @@
 # order is actually important, because of build dependencies
 #
 
-.PHONY: doc prop shared bp images rom zrc z1rcc zzrcc zrc512 fz80
+.PHONY: doc prop shared bp images rom zrc z1rcc zzrcc zrc512 fz80 ez512
 
 .ONESHELL:
 .SHELLFLAGS = -ce
 
-all: prop shared bp images rom zrc z1rcc zzrcc zrc512 fz80
+all: prop shared bp images rom zrc z1rcc zzrcc zrc512 fz80 ez512
 
 doc:
 	$(MAKE) --directory Doc $(ACTION)
@@ -56,6 +56,9 @@ zrc512:
 
 fz80:
 	$(MAKE) --directory FZ80 $(ACTION)
+
+ez512:
+	$(MAKE) --directory EZ512 $(ACTION)
 
 clean: ACTION=clean
 clean: all

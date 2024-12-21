@@ -1077,9 +1077,12 @@ to display, assign, reassign, or remove the drive letter assignments.
 
 | `ASSIGN /?`
 | `ASSIGN /L`
+| `ASSIGN ` *`<drv>`*`=`
+| `ASSIGN `
 | `ASSIGN [`*`<drv>`*`],...`
-| `ASSIGN `*`<drv>`*`=[`*`<device>`*`:[`*`<slice>`*`]],...`
-| `ASSIGN `*`<tgtdrv>`*`=`*`<srcdrv>`*`,...`
+| `ASSIGN ` *`<drv>`*`=[`*`<device>`*`:[`*`<slice>`*`]],...`
+| `ASSIGN ` *`<tgtdrv>`*`=`*`<srcdrv>`*`,...`
+| `ASSIGN /B='*'<option>'*'['*'<option>'*'['*'<option>'*'...]]`
 
 #### Usage
 
@@ -1090,23 +1093,36 @@ used in drive assignments in the running system. The devices listed
 may or may not contain media. Although some device types support the
 use of slices, the list does not indicate this.
 
+`ASSIGN A:` just specifying the drive letter will display the
+assignment for the drive letter
+
 `ASSIGN` with no parameters will list all of the current drive
 assignments.
 
-`ASSIGN `*`<drv>`* will display the assignment for the specific drive
+#### Usage (Specific)
+
+The following describes how to assign drive specifically by identifing each
+drive by its unique device and slice id's
+
+`ASSIGN ` *`<drv>`* will display the assignment for the specific drive
 For example, `ASSIGN C:` will display the assignment for drive C:.
 
-`ASSIGN `*`<drv>`*`=`*`<device>`*`[:`*`<slice>`*`]` will assign (or
+`ASSIGN ` *`<drv>`*`=`*`<device>`*`[:`*`<slice>`*`]` will assign (or
 reassign) a drive letter to a new device and (optionally) slice. If no
 slice is specified, then slice 0 is assumed. For example, `ASSIGN
 C:=IDE0` will assign drive letter C: to device IDE0, slice 0. `ASSIGN
 D:=IDE0:3` will assign drive letter D: to device IDE0 slice 3.
 
-`ASSIGN `*`<drv>`*`=` can be used to remove the assignment from a
+The `ASSIGN` command will not allow you to specify a slice (other than
+zero) for devices that do not support slices.
+A slice should only be specified for hard disk devices (SD, IDE, PPIDE).
+Floppy disk drives and RAM/ROM drives do not have slices.
+
+`ASSIGN ` *`<drv>`*`=` can be used to remove the assignment from a
 drive letter. So, `ASSIGN E:=` will remove the association of drive
 letter E: from any previous device.
 
-`ASSIGN `*`<tgtdrv>`*`=`*`<srcdrv>`* is used to swap the assignments
+`ASSIGN ` *`<tgtdrv>`*`=`*`<srcdrv>`* is used to swap the assignments
 of two drive letters. For example, `ASSIGN C:=D:` will swap the device
 assignments of C: and D:.
 
@@ -1117,6 +1133,78 @@ two slices of IDE 0 and will unassign E:.
 When the command runs it will echo the resultant assignments to the
 console to confirm its actions. It will also display the remaining
 space available in disk buffers.
+
+#### Usage (Bulk)
+
+The following describes how to assign drives in bulk without having to specify
+the identifiers of each drive being mapped. Instead bulk mode has a
+predefined set options (identified by single letter) which will map drives.
+Bulk mode works by assigning drives sequentially starting at A: until all
+drives are used, or there are no more options to process. Each option
+will typically map between 0 and N drives depending on the option
+and the available hardware in your system.
+
+`ASSIGN /B=`*`<option><option>`*... will perform bulk assignment .
+
+The following options will assign a small number of devices, typically you would
+place at beginning of an option list.
+
+| Option | Name     | Description                                 | Assigned |
+|--------|----------|---------------------------------------------|----------|
+| B      | Boot     | The boot device                             | 1        | 
+| A      | RAM      | Ram drive                                   | 0,1      |
+| O      | ROM      | Rom drive                                   | 0,1      |
+| F      | Floppy   | All floppy devices, with/without media      | 0,1,2,.. |
+| P      | Preserve | Skip and preserve the next drive assignment | 1        |
+| X      | Exclude  | Un-assign / Exclude the next drive          | 1        |
+
+A drive e.g. RAM, ROM, FLOPPY can only be assigned if it exists. if you system
+doesn't have the hardware that supports the device, then no devices will be
+assigned, and the next option will be processed.
+
+`B` assigns the boot device. If used the `B`oot drive should typically be
+assigned first.
+
+`P` will not make any changes to the next drive, it will skip over it. While the
+`X` option will un-assign the next drive, leaving a gap.
+
+The remaining options will fill drives mostly to end, from hard drive slices,
+generally choose 1 of the following:
+
+| Option | Name        | Description                                 | Assigned |
+|--------|-------------|---------------------------------------------|----------|
+| S      | Slices      | Assign slices from boot hard drive          | ...max   |
+| H      | Hard Drive  | Assign slices evenly from all hard drives   | ...max   |
+| L      | Legacy HD   | Assign slices from all hard drives (legacy) | 6,...max |
+| Z      | Exclude All | Un-assign all remaining drives               | ...max   |
+
+`S`lices assignment will map all remaining drives to slices from the boot device.
+If I have other hard drives present these will not be mapped by this option.
+
+e.g. `ASSIGN /B=BAOS`
+
+Will first assign drives `A:(Boot), B:(RAM), C:(ROM)` this leaves 13 drives
+which will be assigned to slices from the boot hard drive (D: thru P:),
+leaving no unused drives.
+
+'H'ard drive assignment will attempt to fill all remaining drive letters
+by splitting the number of drives remaining evenly across all.
+
+e.g. `ASSIGN /B=BAOH`
+
+Will first assign drives `A:(Boot), B:(RAM), C:(ROM)` this leaves 13 drives
+available. If I have 3 hard disks then (13/3) = 4 slices from each hard drive will
+be assigned to drives (D: thru O:), leaving a single unused drive (P:).
+
+`L`egacy hard drive assignment is identical to how the startup hard disk assignment
+works. ie. Attempt to assign up to 8 hard drives split across hard drives
+detected at boot.
+
+e.g. `ASSIGN /B=BAOL`
+
+Will first assign drives `A:(Boot), B:(RAM), C:(ROM)`. If I have 3 hard disks
+then (8/3) = 2 slices from each hard drive will be assigned to drives (D: thru I:),
+leaving 7 unused drives (J: thru P:).
 
 #### Notes
 
@@ -1136,10 +1224,6 @@ being assigned actually contains readable media. If the assigned
 device has no media, you will receive an I/O error when you attempt to
 use the drive letter.
 
-The `ASSIGN` command will not allow you to specify a slice (other than
-zero) for devices that do not support slices (such as floppy drives
-or RAM/ROM disks).
-
 The `ASSIGN` command does not check that the media is large enough to
 support the slice you specify. In other words, you could potentially
 assign a drive letter to a slice that is beyond the end of the media
@@ -1152,7 +1236,11 @@ data (such as a FAT filesystem).
 
 You will not be allowed to assign multiple drive letters to a single
 device and slice. In other words, only one drive letter may refer to a
-single filesystem at a time.
+single filesystem at a time. 
+
+Attempts to assign a duplicate drive letter will fail and display an 
+error. If you wish to assign a different drive letter to a 
+device/unit/slice, unassign the existing drive letter first.
 
 Drive letter A: must always be assigned to a device and slice. The
 `ASSIGN` command will enforce this.
@@ -1162,14 +1250,6 @@ will persist through a warm start, but when you reboot your system,
 all drive letters will return to their default assignments. A SUBMIT
 batch file can be used to setup desired drive assignments
 automatically at boot.
-
-Floppy disk drives and RAM/ROM drives do not have slices. A slice
-should only be specified for hard disk devices (SD, IDE, PPIDE).
-
-Only one drive letter may be assigned to a specific device/unit/slice
-at a time. Attempts to assign a duplicate drive letter will fail and
-display an error. If you wish to assign a different drive letter to a
-device/unit/slice, unassign the existing drive letter first.
 
 Be aware that this command will allow you to reassign or remove the
 assignment of your system drive letter. This can cause your operating
@@ -1251,11 +1331,6 @@ cold reboot of the system.
 
 The functionality is highly dependent on the capabilities of your system.
 
-At present, all Z180 systems can change their CPU speed and their
-wait states.  SBC and MBC systems may be able to change their CPU
-speed if the hardware supports it and it is enabled in the HBIOS
-configuration.
-
 #### Syntax
 
 | `CPUSPD [`*`<speed>`*`[,[`*`<memws>`*`][,[`*`<iows>`*`]]]`
@@ -1290,10 +1365,26 @@ If an attempt is made to change the speed of a system
 that is definitely incapable of doing so, then an error result is
 returned.
 
+Z180-based systems will be able to adjust their CPU speed depending
+on the specific variant of the Z180 chip being used:
+
+| Z180 Variant        | Capability         |
+| --------------------|--------------------|
+| Z80180 (original)   | Half               |
+| Z8S180 Rev. K       | Half, Full         |
+| Z8S180 Rev. N       | Half, Full, Double |
+
+SBC and MBC systems may be able to change their CPU
+speed if the hardware supports it and it is enabled in the HBIOS
+configuration.
+
 The `CPUSPD` command makes no attempt to ensure that the new CPU
 speed will actually work on the current hardware.  Setting a CPU
 speed that exceeds the capabilities of the system will result in
 unstable operation or a system stall.
+
+In the case of Z180 CPUs, it is frequently necessary to add
+memory wait states when increasing the CPU speed.
 
 Some peripherals are dependent on the CPU speed.  For example, the Z180
 ASCI baud rate and system timer are derived from the CPU speed.  The
@@ -2202,10 +2293,23 @@ MYM sound files.
 
 #### Syntax
 
-`TUNE `*`<filename>`*
+`TUNE `*`<filename>`* `*`<options>`*`
 
 *`<filename>`* is the name of a sound file ending in .PT2, .PT3, or
 .MYM
+
+| Option      | Description                                            |
+| ----------- | ------------------------------------------------------ |
+|  `-MSX`     | Force MSX port addresses A0H/A1H (no PSG detection)    |
+|  `-RC`      | Force RCBus port addresses D8H/D0H (no PSG detection)  |
+|  `--HBIOS`  | Utilise HBIOS' sound driver                            |
+| `+T1`       | Play tune an octave higher                             |
+| `+T2`       | Play tune two octaves higher                           |
+| `-T1`       | Play tune an octave lower                              |
+| `-T2`       | Play tune two octaves lower                            |
+
+The +t and -t options apply only to HBIOS mode operation.  The `-MSX`,
+`-RC`, and `--HBIOS` options are mutually exclusive.  See Notes below.
 
 #### Usage
 
@@ -2224,9 +2328,9 @@ well known port addresses at startup. It will auto-configure itself
 for the hardware found. If no hardware is detected, it will abort with
 an error message.
 
-Some sound board hardware does not support automatic detection
-(notably the Why-Em-Ulator).  You may force the use of standard
-MSX or RC Bus standard ports using the `-MSX` or `-RC` options.
+Some hardware (notably Why-Em-Ulator) cannot be detected due limitations
+of the emulation.  In such cases, you can force the use of the two
+most common port addresses using the `-msx` or `-rc` options.
 
 On Z180 systems, I/O wait states are added when writing to the sound
 chip to avoid exceeding its speed limitations. On Z80 systems, you
@@ -2238,25 +2342,33 @@ accurately pace the sound file output. If no system timer is
 available, a delay loop is calculated instead. The delay loop will not
 be as accurate as the system timer.
 
-There are two modes of operations.  A direct hardware interface for the
+There are two modes of operation.  A direct hardware interface for the
 AY-3-8910 or YM2149 chips, or a compatibility layer thru HBIOS supporting
-the SN76489 chip.
+both the AY-3-8910 and the SN76489 chip.
 
 By default the application will attempt to interface directly to the sound
 chip.  The optional argument `--HBIOS` supplied after the filename, will
 enable the application to use the HBIOS sound driver.
 
-The HBIOS mode also support other switch as described below.
+The following summarizes the different modes of operation for the
+application:
 
-| Switch      | Description                                            |
-| ----------- | ------------------------------------------------------ |
-|  `-MSX`     | Force use of MSX standard ports (A0H/A1H)              |
-|  `-RC`      | Force use of RCBus standard ports (D8H/D0H)            |
-|  `--HBIOS`  | Utilise HBIOS' sound driver                            |
-| `+T1`       | Play tune an octave higher                             |
-| `+T2`       | Play tune two octaves higher                           |
-| `-T1`       | Play tune an octave lower                              |
-| `-T2`       | Play tune two octaves lower                            |
+- If you use `TUNE` with no options, it will use it's original behavior
+  of searching for and detecting a sound chip.  `TUNE` will play sound
+  files directly to the PSG hardware.  In this mode it does not
+  matter if HBIOS does or does not know about the sound chip.
+
+- If you use `TUNE` with the `--HBIOS` option, it will not detect a sound chip
+  and will use the RomWBW HBIOS interface.  This will only work if HBIOS
+  was configured for the installed sound card and HBIOS detects the sound chip.
+
+- If you use `TUNE` with `-RC` or `-MSX`, it will play tunes directly to the PSG
+  hardware (not via HBIOS) and will bypass detection.  In this mode it does
+  not matter if HBIOS does or does not know about the sound chip.
+
+Note that the HBIOS API for sound cards is pretty good, but does not implement
+everything that the sound card can do.  For best fidelity, use `TUNE` without the
+`--HBIOS` option.
 
 All RomWBW operating system boot disks include a selection of sound
 files in user area 3.
