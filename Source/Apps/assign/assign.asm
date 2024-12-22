@@ -801,7 +801,7 @@ bootdest1:
 	ld	de,EST_HD	; otherwise assume HD
 bootdest2:
 	ld	(slicmem),de
-	ret;
+	ret
 ;
 ; Count Number of Devices
 ; (atrmask) mask the device attribtes
