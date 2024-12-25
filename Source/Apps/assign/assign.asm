@@ -36,6 +36,8 @@
 ;   2023-09-19 [WBW] Added CHUSB & CHSD device support
 ;   2023-10-13 [WBW] Fixed DPH creation to select correct DPB
 ;   2024-12-17 [MAP] Added new /B=opt feaure to assign drives
+;   2024-12-21 [MAP] Added CBIOS heap estimation to /B to prevent
+;                    overflow when the drives are finally added
 ;_______________________________________________________________________________
 ;
 ; ToDo:
@@ -171,6 +173,8 @@ init:
 	cp	$30		; CP/M 3.0?
 	jp	nc,initcpm3	; handle CP/M 3.0 or greater
 ;
+; CP/M 2.2 (CBIOS) initialization
+;
 	; make a local working copy of the drive map
 	ld	hl,(maploc)	; copy from CBIOS drive map
 	ld	de,mapwrk	; copy to working drive map
@@ -219,6 +223,13 @@ initx:
 	add	hl,de		; adjust
 	ld	(heaplim),hl	; save it
 ;
+	; establish remaining heap, used for estimation during /b
+	ld	de,(maploc)	; start of free heap space
+	or	a		; clear carry
+	sbc	hl,de		; upper heap - start of heap = size
+	ld	de,SIZ_DBUF	; 128 bytes for directory buffer
+	sbc	hl,de		; less directory buffer overhead
+	ld	(heaprem),hl	; save heap size that can be allocated
 #if 0
 	ld	a,' '
 	call	crlf
@@ -233,7 +244,9 @@ initx:
 	call	prtchr
 	ld	bc,(heaplim)
 	call	prthexword
-
+	call	prtchr
+	ld	bc,(heaprem)
+	call	prthexword
 #endif
 ;
  	; return success
@@ -566,6 +579,16 @@ bootdr4:
 ;
 ; PRESERVE, SKIP 1, JUST LOOP
 bootdrp:
+	; determine the drive being preserved, calc estimate
+	ld	hl,(mapadr)	; address of next map entry in table. Indirect
+	ld	a,(hl)		; the unit number of drive being skipped
+	call	bootdest	; for unit in A, calc the heap estimate -> DE
+	; subtract bytes from estimate, not not checking for overflow
+	ld	hl,(heaprem)	; remaing heap estimate
+	or	a		; clear carry
+	sbc	hl,de		; subtract slice from heap estimate
+	ld	(heaprem),hl	; update estimate based on adding slice
+	; and skip to next drive
 	call	bootinc		; Skip to next drive letter
 	ret			; Finished
 ;
@@ -575,6 +598,8 @@ bootdrx:
 	ld	(unit),a	; set unit
 	xor	a		; slice 0
 	ld	(slice),a	; save as slice to assign.
+	ld	hl,SIZ_DMAP	; heap used is 4 bytes for drvmap entry only
+	ld	(slicmem),hl	; save estmate so heap space can be counted
 	call	bootadd 	; assign the slice
 	ret			; Finished, returning error
 ;
@@ -584,6 +609,8 @@ bootdrz:
 	ld	(unit),a	; set unit
 	xor	a		; slice 0
 	ld	(slice),a	; save as slice to assign.
+	ld	hl,0		; all remainging drives consume 0 bytes
+	ld	(slicmem),hl	; save estmate so heap space can be counted
 bootdrz1:
 	call	bootadd 	; assign the slice
 	jr	nc,bootdrz1	; NC still can continue to allocate
@@ -594,10 +621,11 @@ bootdrz1:
 bootdrb:
 	ld	bc,BC_SYSGET_BOOTINFO	; HBIOS SysGet; BootInfo
 	rst	08		; Get boot disk unit/slice in DE
-	ld	a,d		; boot unit id returned in D
-	ld	(unit),a	; save as unit number
 	ld	a,e		; boot slice returned in E
 	ld	(slice),a	; save as slice to assign.
+	ld	a,d		; boot unit id returned in D
+	ld	(unit),a	; save as unit number
+	call	bootdest	; calc estimat of unit A store in (sliceem)
 	call	bootadd 	; add the boot drive slice
 	ret			; Finished, returning error
 ;
@@ -607,6 +635,8 @@ bootdra:
 	ld	(atrmask),a	; mask for device attributes
 	ld	a,%00010101	; specific mask for RAM DRIVE.
 	ld	(atrcomp),a	; compare to after mask
+	ld	hl,EST_MD	; estimate of heap used. for RAM ROM
+	ld	(slicmem),hl	; save estmate so heap space can be counted
 	call	bootadds	; do single slice assignment
 	ret			; Finished, returning error
 ;
@@ -618,6 +648,8 @@ bootdro:
 	ld	(atrmask),a	; mask for device attributes
 	ld	a,%00010100	; for values "MD_AROM", "MD_AFSH"; Att="000101x0"
 	ld	(atrcomp),a	; compare to after mask
+	ld	hl,EST_MD	; estimate of heap used. for RAM ROM
+	ld	(slicmem),hl	; save estmate so heap space can be counted
 	call	bootadds	; do single slice assignment
 	ret			; Finished, returning error
 ;
@@ -626,6 +658,8 @@ bootdrf:
 	ld	a,%11000000	; device parameters (Removable Floppy)
 	ld	(atrmask),a	; mask for device attributes
 	ld	(atrcomp),a	; compare to after mask
+	ld	hl,EST_FD	; estimate of heap used. for Floppy
+	ld	(slicmem),hl	; save estmate so heap space can be counted
 	call	bootadds	; do single slice assignment
 	ret			; Finished, returning error
 ;
@@ -634,6 +668,8 @@ bootdrs:
 	; find the boot drive, save unit /slice number
 	ld	a,(mapwrk)	; boot drive unit number
 	ld	(unit),a	; save as unit number to assign
+	ld	hl,EST_HD	; estimate of heap used, for HDD
+	ld	(slicmem),hl	; save estmate so heap space can be counted
 	ld	a,0		; starting slice number
 bootdrs1:
 	; A is next slice to assign when entering here
@@ -652,6 +688,8 @@ bootdrh:
 	ld	a,%00100000	; device parameters (High Capacity)
 	ld	(atrmask),a	; mask for device attributes
 	ld	(atrcomp),a	; compare to after mask
+	ld	hl,EST_HD	; estimate of heap used, for HDD
+	ld	(slicmem),hl	; save estmate so heap space can be counted
 	; count the number of drives matching criteria
 	call	bootcnt		; return Drive count in A
 	; compute Slices per volume from drv count in A
@@ -668,6 +706,8 @@ bootdrh1:
 	ld	d,a		; put it in d
 	ld	a,16 		; total number of drives
 	sub	d		; less assigned = remaining
+	; above assumes we have space remaining on heap for all drives
+	; ideally should take A=Min( A, (heaprem)/EST_HD ) before division
 	ld	d,a		; divides d - remaing drives
 ; The following routine divides d by e and places the quotient in d and the remainder in a
 ; https://wikiti.brandonw.net/index.php?title=Z80_Routines:Math:Division
@@ -689,6 +729,8 @@ bootdrl:
 	ld	a,%00100000	; device parameters (High Capacity)
 	ld	(atrmask),a	; mask for device attributes
 	ld	(atrcomp),a	; compare to after mask
+	ld	hl,EST_HD	; estimate of heap used, for HDD
+	ld	(slicmem),hl	; save estmate so heap space can be counted
 	;
 	; count the number of drives matching criteria
 	call	bootcnt		; return Drive count in A
@@ -716,13 +758,56 @@ bootdrl2:
 	ret
 ;
 ; -------------------------------------------------
+; Memory allocation estimates for each device type
+;
+SIZ_DBUF	.EQU 	128		; actual size of directory buffer
+SIZ_DPH		.EQU	20		; actual size of a DPH structure
+SIZ_DMAP	.EQU	4		; actual bytes per drvmap entry
+;
+EST_FIXED	.EQU	SIZ_DPH+SIZ_DMAP ; overhead for all assignments
+;
+EST_MD		.EQU	EST_FIXED + 24	; estimated size for ram/rom
+EST_FD		.EQU	EST_FIXED + 192 ; estimated size for floppy
+EST_HD		.EQU	EST_FIXED + 256 ; estimated size hdd (CKS/ALS)
+;
+; -------------------------------------------------
 ; /B=XXX - General Purpose Functions
+;
+; Determine Slice Estimate for Unit in A reg
+; storing estimate in (slicmem), and DE
+;
+bootdest:
+	; is it assigned
+	ld	c,a		; store unit (passed in A) for hbios call
+	ld	de,SIZ_DMAP	; assume unassigned, 4 bytes for drvmap
+	cp	$FF		; unassigned?
+	jr	z,bootdest2	; finished at this point.
+	; check for UNA mode, before calling HBIOS
+	ld	a,(unamod)	; get UNA mode flag, and set Flags
+	or	a		; if UNA Mode then dont do hbios lookup
+	jr	nz,bootdest1	; use worst case scenario (future una call)
+	; determine device type by hbios lookup
+	ld	b,BF_DIODEVICE  ; get device info
+	rst	08		; Note C was set above
+	; now work out the bytes to allocate
+	ld	a,d		; device type to A
+	ld	de,EST_MD	; assume md size
+	cp	DIODEV_MD	; ram/rom MD device
+	jr	z,bootdest2	; finished at this point
+	ld	de,EST_FD	; assume floppy
+	cp	DIODEV_FD	; floppy device
+	jr	z,bootdest2	; finished at this point
+bootdest1:
+	ld	de,EST_HD	; otherwise assume HD
+bootdest2:
+	ld	(slicmem),de
+	ret
 ;
 ; Count Number of Devices
 ; (atrmask) mask the device attribtes
 ; (atrcomp) compare to set zero flag
 ; return A number of drives mathing the attributes
-bootcnt
+bootcnt:
 	; loop thru hbios units looking for device type/unit match
 	ld	bc,BC_SYSGET_DIOCNT ; hbios func: sysget subfunc: diocnt
 	rst	08		; call hbios, E := device count
@@ -818,6 +903,13 @@ bootadd:
 	jr	z,bootinc1	; Z - found a duplicate, exit out
 ;
 bootadd1:
+	; check we have enough heap to allocate
+	ld	hl,(heaprem)	; remaing heap estimate
+	ld	de,(slicmem)	; memory alloc per drive
+	or	a		; clear carry
+	sbc	hl,de		; subtract slice from heap estimate
+	ret	c		; overflow (not enough heap) so abort
+	ld	(heaprem),hl	; update estimate based on sub of mem
 	; actually assign it.
 	ld	hl,(mapadr)	; address of next map entry in table
 	ld	a,(unit)	; the unit number
@@ -962,7 +1054,7 @@ install3:
 	ld	(heaptop),de	; DE has next byte available
 ;
 	; allocate directory buffer
-	ld	hl,128		; size of directory buffer
+	ld	hl,SIZ_DBUF	; size of directory buffer
 	call	alloc		; allocate the space
 	jp	c,instovf	; handle overflow error
 	ld	(dirbuf),hl	; ... and save in dirbuf
@@ -990,8 +1082,7 @@ dph_init2:
 	ld	a,(hl)		; unit to A
 	push	bc		; save loop control
 	push	hl		; save drive map pointer
-	;ld	hl,16		; size of a DPH structure
-	ld	hl,20		; size of a DPH structure
+	ld	hl,SIZ_DPH	; size of a DPH structure
 	call	alloc		; allocate space for dph
 	jp	c,instovf	; handle overflow error
 	push	hl		; save DPH location
@@ -1023,6 +1114,12 @@ dph_init3:
 	call	prtdecw		; print it
 	ld	de,msgmem	; add description
 	call	prtstr		; and print it
+;
+#if 0
+	call	crlf
+	ld	bc,(heaprem)
+	call	prthexword
+#endif
 ;
 	call	drvrst		; perform BDOS drive reset
 ;
@@ -1072,22 +1169,22 @@ makdphwbw:	; determine appropriate dpb (WBW mode, unit number in A)
 	ld	b,BF_DIODEVICE	; HBIOS: Report Device Info
 	rst	08		; call HBIOS, return w/ device type in D, physical unit in E
 	ld	a,d		; device type to A
-	cp	$00		; ram/rom?
+	cp	DIODEV_MD	; ram/rom?
 	jr	nz,makdph00	; if not, skip ahead to other types
 	ld	a,e		; physical unit number to A
-	ld	e,1		; assume rom
+	ld	e,MID_MDROM	; assume rom
 	cp	$01		; rom?
 	jr	z,makdph0	; yes, jump ahead
-	ld	e,2		; otherwise ram
+	ld	e,MID_MDRAM	; otherwise ram
 	jr	makdph0		; jump ahead
 makdph00:
-	ld	e,6		; assume floppy
-	cp	$01		; floppy?
+	ld	e,MID_FD144	; assume floppy
+	cp	DIODEV_FD	; floppy?
 	jr	z,makdph0	; yes, jump ahead
-	ld	e,3		; assume ram floppy
-	cp	$02		; ram floppy?
+	ld	e,MID_RF	; assume ram floppy
+	cp	DIODEV_RF	; ram floppy?
 	jr	z,makdph0	; yes, jump ahead
-	ld	e,4		; everything else is assumed to be hard disk
+	ld	e,MID_HD	; everything else is assumed to be hard disk
 	jr	makdph0		; yes, jump ahead
 ;
 makdph0:
@@ -2301,6 +2398,7 @@ slice	.db	0		; source slice
 atrmask	.db	0		; device attributes mask before compare
 atrcomp	.db	0		; device attributes compare to
 slicec	.db	1		; number of slices to assign for each volume
+slicmem	.dw	280		; memory to allocate to next slice assigment
 ;
 unamod	.db	0		; $FF indicates UNA UBIOS active
 modcnt	.db	0		; count of drive map modifications
@@ -2312,6 +2410,7 @@ tmpstr	.fill	17,0		; temporary string of up to 16 chars, zero term
 ;
 heaptop	.dw	0		; current address of top of heap memory
 heaplim	.dw	0		; heap limit address
+heaprem	.dw	$7FFF		; estimate of heap remaining, (before allocate)
 ;
 dirbuf	.dw	0		; directory buffer location
 ;
@@ -2365,10 +2464,10 @@ stack	.equ	$		; stack top
 ; Messages
 ;
 indent	.db	"   ",0
-msgban1	.db	"ASSIGN v1.9 for RomWBW CP/M ",0
+msgban1	.db	"ASSIGN v2.0 for RomWBW CP/M ",0
 msg22	.db	"2.2",0
 msg3	.db	"3",0
-msbban2	.db	", 9-Dec-2024",0
+msbban2	.db	", 21-Dec-2024",0
 msghb	.db	" (HBIOS Mode)",0
 msgub	.db	" (UBIOS Mode)",0
 msgban3	.db	"Copyright 2024, Wayne Warthen, GNU GPL v3",0

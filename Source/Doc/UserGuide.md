@@ -252,6 +252,7 @@ is discussed in [Customizing RomWBW].
 | [Z80 ZRC CPU Module]^7^                                     | RCBus   | RCZ80_zrc_std.rom            | 115200        |
 | [Z80 ZRC CPU Module]^7^ ROMless                             | RCBus   | RCZ80_zrc_ram_std.rom        | 115200        |
 | [Z80 ZRC512 CPU Module]^7^                                  | RCBus   | RCZ80_zrc512_std.rom         | 115200        |
+| [Z80 EaZy80-512 CPU Module]^7^                              | RCBus   | RCZ80_ez512_std.rom          | 115200        |
 | [Z180 Z1RCC CPU Module]^7^                                  | RCBus   | RCZ180_z1rcc_std.rom         | 115200        |
 | [Z280 ZZRCC CPU Module]^7^                                  | RCBus   | RCZ280_zzrcc_std.rom         | 115200        |
 | [Z280 ZZRCC CPU Module]^7^ ROMless                          | RCBus   | RCZ280_zzrcc_ram_std.rom     | 115200        |
@@ -6115,6 +6116,54 @@ the RomWBW HBIOS configuration.
 ##### Notes:
 
 - ROMless boot -- HBIOS is loaded from disk at boot
+- CPU speed will be dynamically measured at startup if DSRTC is present
+
+`\clearpage`{=latex}
+
+### Z80 EaZy80-512 CPU Module
+
+#### ROM Image File:  RCZ80_ez512_std.rom
+
+|                   |               |
+|-------------------|---------------|
+| Default CPU Speed | 22.000 MHz    |
+| Interrupts        | Mode 2        |
+| System Timer      | CTC           |
+| Serial Default    | 115200 Baud   |
+| Memory Manager    | EZ512         |
+| ROM Size          | 0 KB          |
+| RAM Size          | 512 KB        |
+
+##### Supported Hardware (see [Appendix B - Device Summary]):
+
+- FP: LEDIO=0, SWIO=0
+- LCD: IO=218, SIZE=20X4
+- DSRTC: MODE=STD, IO=192
+- UART: MODE=RC, IO=160
+- UART: MODE=RC, IO=168
+- SIO MODE=STD, IO=8, CHANNEL A, INTERRUPTS ENABLED
+- SIO MODE=STD, IO=8, CHANNEL B, INTERRUPTS ENABLED
+- ACIA: IO=128
+- VRC: IO=0, KBD MODE=VRC, KBD IO=244
+- KBD: ENABLED
+- CH: IO=62
+- CH: IO=60
+- CHUSB: IO=62
+- CHUSB: IO=60
+- MD: TYPE=RAM
+- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
+- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
+- IDE: MODE=RC, IO=16, MASTER
+- IDE: MODE=RC, IO=16, SLAVE
+- PPIDE: IO=32, MASTER
+- PPIDE: IO=32, SLAVE
+- SD: MODE=EZ512, IO=2, UNITS=1
+- KIO: IO=0
+- CTC: IO=4, TIMER MODE=TIMER/16, DIVISOR=4608, HI=256, LO=18, INTERRUPTS ENABLED
+
+##### Notes:
+
+- HBIOS is loaded from disk at boot by ROM monitor
 - CPU speed will be dynamically measured at startup if DSRTC is present
 
 `\clearpage`{=latex}
