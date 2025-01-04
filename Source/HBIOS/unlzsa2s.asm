@@ -198,7 +198,7 @@ READSRCHLA:
 	push	de
 	push	af
 	ld	d,BID_IMG2
-	call	HBX_PEEK
+	call	SYS_PEEK
 	pop	af
 	ld	a,e
 	pop	de
@@ -208,7 +208,7 @@ READSRCHLB:
 	push	de
 	push	af
 	ld	d,BID_IMG2
-	call	HBX_PEEK
+	call	SYS_PEEK
 	pop	af
 	ld	b,e
 	pop	de
@@ -218,7 +218,7 @@ READSRCHLC:
 	push	de
 	push	af
 	ld	d,BID_IMG2
-	call	HBX_PEEK
+	call	SYS_PEEK
 	pop	af
 	ld	c,e
 	pop	de
