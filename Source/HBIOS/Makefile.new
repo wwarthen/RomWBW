@@ -25,9 +25,9 @@ FONTS += font8x8c.asm font8x8u.asm fontcgac.asm fontcgau.asm
 FONTS += fontvgarcc.asm fontvgarcu.asm
 
 define BUILD_COMPONENT
- 	cp $(*F).build.inc build.inc
- 	$(TASM) $(TASMFLAGS) $1 $< $@ $(@:.bin=.lst)
- 	rm build.inc
+	cp $(*F).build.inc build.inc
+	$(TASM) $(TASMFLAGS) $1 $< $@ $(@:.bin=.lst)
+	rm build.inc
 endef
 
 SHELL=/bin/bash

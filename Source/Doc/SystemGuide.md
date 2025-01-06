@@ -775,18 +775,18 @@ Character devices can usually be configured with line characteristics
 such as speed, framing, etc. A word value (16 bit) is used to describe
 the line characteristics as indicated below:
 
-| **Bits** | **Characteristic**                     |
-|---------:|----------------------------------------|
-| 15-14    | Reserved (set to 0)                    |
-| 13       | RTS                                    |
-| 12-8     | Baud Rate (see below)                  |
-| 7        | DTR                                    |
-| 6        | XON/XOFF Flow Control                  |
-| 5        | Stick Parity (set for true)            |
-| 4        | Even Parity (set for true)             |
-| 3        | Parity Enable (set for true)           |
-| 2        | Stop Bits (set for true)               |
-| 1-0      | Data Bits (5-8 encoded as 0-3)         |
+| **Bits** | **Characteristic**                                         |
+|---------:|------------------------------------------------------------|
+| 15-14    | Reserved (set to 0)                                        |
+| 13       | RTS                                                        |
+| 12-8     | Baud Rate (see below)                                      |
+| 7        | DTR                                                        |
+| 6        | XON/XOFF Flow Control                                      |
+| 5        | 1 = Stick Parity(Mark/Space), 0 = Normal Parity (odd/even) |
+| 4        | 1 = Even/Space, 0 = Odd/Mark                               |
+| 3        | Parity Enable (set for true)                               |
+| 2        | Stop Bits (set for true)                                   |
+| 1-0      | Data Bits (5-8 encoded as 0-3)                             |
 
 The 5-bit Baud Rate value (V) is encoded as V = 75 * 2^X * 3^Y. The
 bits are defined as YXXXX.
