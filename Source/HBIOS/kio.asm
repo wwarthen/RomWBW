@@ -37,9 +37,14 @@ KIO_PREINIT:
 	; RECORD PRESENCE
 	LD	A,$FF
 	LD	(KIO_EXISTS),A
-	; INITIALIZE KIO
+;HCS initialize KIO if NOT EZ512	
+;HCS	do not write to KIO command register, if EZ512
+;HCS		because it is already done in monitor and will upset the bank register	
+#IF (SDMODE != SDMODE_EZ512)		; Z80 PIO ON EAZY80-512
+	; INITIALIZE KIO	
 	LD	A,%11111001	; RESET ALL DEVICES, SET DAISYCHAIN
 	OUT	(KIO_KIOCMD),A	; DO IT
+#ENDIF	
 ;
 	XOR	A
 	RET
