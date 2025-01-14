@@ -48,7 +48,7 @@ _USB_MODULE_LEDS	.EQU	0xff8a
 ;--------------------------------------------------------
 ; code
 ;--------------------------------------------------------
-;source-doc/base-drv/dev_transfers.c:31: usb_error usbdev_control_transfer(device_config *const device, const setup_packet *const cmd_packet, uint8_t *const buffer) {
+;source-doc/base-drv/dev_transfers.c:24: * See https://www.beyondlogic.org/usbnutshell/usb4.shtml for a description of the USB control transfer
 ; ---------------------------------
 ; Function usbdev_control_transfer
 ; ---------------------------------
@@ -56,7 +56,7 @@ _usbdev_control_transfer:
 	push	ix
 	ld	ix,0
 	add	ix,sp
-;source-doc/base-drv/dev_transfers.c:32: return usb_control_transfer(cmd_packet, buffer, device->address, device->max_packet_size);
+;source-doc/base-drv/dev_transfers.c:25: *
 	ld	l,(ix+4)
 	ld	h,(ix+5)
 	ld	e,l
@@ -82,10 +82,10 @@ _usbdev_control_transfer:
 	pop	af
 	pop	af
 	pop	af
-;source-doc/base-drv/dev_transfers.c:33: }
+;source-doc/base-drv/dev_transfers.c:26: * @param device the usb device
 	pop	ix
 	ret
-;source-doc/base-drv/dev_transfers.c:35: usb_error usbdev_blk_out_trnsfer(device_config *const dev, const uint8_t *const buffer, const uint16_t buffer_size) {
+;source-doc/base-drv/dev_transfers.c:28: * @param buffer Pointer of data to send or receive into
 ; ---------------------------------
 ; Function usbdev_blk_out_trnsfer
 ; ---------------------------------
@@ -94,7 +94,7 @@ _usbdev_blk_out_trnsfer:
 	ld	ix,0
 	add	ix,sp
 	dec	sp
-;source-doc/base-drv/dev_transfers.c:37: endpoint_param *const endpoint = &dev->endpoints[ENDPOINT_BULK_OUT];
+;source-doc/base-drv/dev_transfers.c:30: */
 	ld	e,(ix+4)
 	ld	d,(ix+5)
 	ld	c, e
@@ -102,7 +102,7 @@ _usbdev_blk_out_trnsfer:
 	inc	bc
 	inc	bc
 	inc	bc
-;source-doc/base-drv/dev_transfers.c:39: result = usb_data_out_transfer(buffer, buffer_size, dev->address, endpoint);
+;source-doc/base-drv/dev_transfers.c:32: return usb_control_transfer(cmd_packet, buffer, device->address, device->max_packet_size);
 	ld	l, e
 	ld	h, d
 	ld	a, (hl)
@@ -131,11 +131,11 @@ _usbdev_blk_out_trnsfer:
 	pop	bc
 	ld	a, l
 	ld	(_result), a
-;source-doc/base-drv/dev_transfers.c:41: if (result == USB_ERR_STALL) {
+;source-doc/base-drv/dev_transfers.c:34:
 	ld	a,(_result)
 	sub	0x02
 	jr	NZ,l_usbdev_blk_out_trnsfer_00102
-;source-doc/base-drv/dev_transfers.c:42: usbtrn_clear_endpoint_halt(endpoint->number, dev->address, dev->max_packet_size);
+;source-doc/base-drv/dev_transfers.c:35: usb_error usbdev_blk_out_trnsfer(device_config *const dev, const uint8_t *const buffer, const uint16_t buffer_size) {
 	ld	l, e
 	ld	h, d
 	inc	hl
@@ -164,23 +164,23 @@ _usbdev_blk_out_trnsfer:
 	pop	af
 	inc	sp
 	pop	bc
-;source-doc/base-drv/dev_transfers.c:43: endpoint->toggle = 0;
+;source-doc/base-drv/dev_transfers.c:36:
 	ld	a, (bc)
 	and	0xfe
 	ld	(bc), a
-;source-doc/base-drv/dev_transfers.c:44: return USB_ERR_STALL;
+;source-doc/base-drv/dev_transfers.c:37: endpoint_param *const endpoint = &dev->endpoints[ENDPOINT_BULK_OUT];
 	ld	l,0x02
 	jr	l_usbdev_blk_out_trnsfer_00104
 l_usbdev_blk_out_trnsfer_00102:
-;source-doc/base-drv/dev_transfers.c:47: RETURN_CHECK(result);
-;source-doc/base-drv/dev_transfers.c:50: return result;
+;source-doc/base-drv/dev_transfers.c:40:
+;source-doc/base-drv/dev_transfers.c:43: endpoint->toggle = 0;
 	ld	hl,(_result)
 l_usbdev_blk_out_trnsfer_00104:
-;source-doc/base-drv/dev_transfers.c:51: }
+;source-doc/base-drv/dev_transfers.c:44: return USB_ERR_STALL;
 	inc	sp
 	pop	ix
 	ret
-;source-doc/base-drv/dev_transfers.c:53: usb_error usbdev_bulk_in_transfer(device_config *const dev, uint8_t *const buffer, uint8_t *const buffer_size) {
+;source-doc/base-drv/dev_transfers.c:46:
 ; ---------------------------------
 ; Function usbdev_bulk_in_transfer
 ; ---------------------------------
@@ -189,12 +189,12 @@ _usbdev_bulk_in_transfer:
 	ld	ix,0
 	add	ix,sp
 	dec	sp
-;source-doc/base-drv/dev_transfers.c:54: endpoint_param *const endpoint = &dev->endpoints[ENDPOINT_BULK_IN];
+;source-doc/base-drv/dev_transfers.c:47: RETURN_CHECK(result);
 	ld	c,(ix+4)
 	ld	b,(ix+5)
 	ld	hl,0x0006
 	add	hl, bc
-;source-doc/base-drv/dev_transfers.c:56: result = usb_data_in_transfer_n(buffer, buffer_size, dev->address, endpoint);
+;source-doc/base-drv/dev_transfers.c:49: done:
 	ld	e,c
 	ld	d,b
 	ex	de,hl
@@ -224,11 +224,11 @@ _usbdev_bulk_in_transfer:
 	pop	bc
 	ld	a, l
 	ld	(_result), a
-;source-doc/base-drv/dev_transfers.c:58: if (result == USB_ERR_STALL) {
+;source-doc/base-drv/dev_transfers.c:51: }
 	ld	a,(_result)
 	sub	0x02
 	jr	NZ,l_usbdev_bulk_in_transfer_00102
-;source-doc/base-drv/dev_transfers.c:59: usbtrn_clear_endpoint_halt(endpoint->number, dev->address, dev->max_packet_size);
+;source-doc/base-drv/dev_transfers.c:52:
 	ld	l, c
 	ld	h, b
 	inc	hl
@@ -258,22 +258,22 @@ _usbdev_bulk_in_transfer:
 	pop	af
 	inc	sp
 	pop	de
-;source-doc/base-drv/dev_transfers.c:60: endpoint->toggle = 0;
+;source-doc/base-drv/dev_transfers.c:53: usb_error usbdev_bulk_in_transfer(device_config *const dev, uint8_t *const buffer, uint8_t *const buffer_size) {
 	ex	de, hl
 	res	0, (hl)
-;source-doc/base-drv/dev_transfers.c:61: return USB_ERR_STALL;
+;source-doc/base-drv/dev_transfers.c:54: endpoint_param *const endpoint = &dev->endpoints[ENDPOINT_BULK_IN];
 	ld	l,0x02
 	jr	l_usbdev_bulk_in_transfer_00104
 l_usbdev_bulk_in_transfer_00102:
-;source-doc/base-drv/dev_transfers.c:64: RETURN_CHECK(result);
-;source-doc/base-drv/dev_transfers.c:66: return result;
+;source-doc/base-drv/dev_transfers.c:57:
+;source-doc/base-drv/dev_transfers.c:59: usbtrn_clear_endpoint_halt(endpoint->number, dev->address, dev->max_packet_size);
 	ld	hl,(_result)
 l_usbdev_bulk_in_transfer_00104:
-;source-doc/base-drv/dev_transfers.c:67: }
+;source-doc/base-drv/dev_transfers.c:60: endpoint->toggle = 0;
 	inc	sp
 	pop	ix
 	ret
-;source-doc/base-drv/dev_transfers.c:69: usb_error usbdev_dat_in_trnsfer(device_config *const    device,
+;source-doc/base-drv/dev_transfers.c:62: }
 ; ---------------------------------
 ; Function usbdev_dat_in_trnsfer
 ; ---------------------------------
@@ -282,7 +282,7 @@ _usbdev_dat_in_trnsfer:
 	ld	ix,0
 	add	ix,sp
 	dec	sp
-;source-doc/base-drv/dev_transfers.c:74: endpoint_param *const endpoint = &device->endpoints[endpoint_type];
+;source-doc/base-drv/dev_transfers.c:67: }
 	ld	e,(ix+4)
 	ld	d,(ix+5)
 	ld	c, e
@@ -301,7 +301,7 @@ _usbdev_dat_in_trnsfer:
 	ld	a,0x00
 	adc	a, b
 	ld	b, a
-;source-doc/base-drv/dev_transfers.c:76: result = usb_data_in_transfer(buffer, buffer_size, device->address, endpoint);
+;source-doc/base-drv/dev_transfers.c:69: usb_error usbdev_dat_in_trnsfer(device_config *const    device,
 	ld	l, e
 	ld	h, d
 	ld	a, (hl)
@@ -330,11 +330,11 @@ _usbdev_dat_in_trnsfer:
 	pop	bc
 	ld	a, l
 	ld	(_result), a
-;source-doc/base-drv/dev_transfers.c:78: if (result == USB_ERR_STALL) {
+;source-doc/base-drv/dev_transfers.c:71: const uint16_t          buffer_size,
 	ld	a,(_result)
 	sub	0x02
 	jr	NZ,l_usbdev_dat_in_trnsfer_00102
-;source-doc/base-drv/dev_transfers.c:79: usbtrn_clear_endpoint_halt(endpoint->number, device->address, device->max_packet_size);
+;source-doc/base-drv/dev_transfers.c:72: const usb_endpoint_type endpoint_type) {
 	ld	l, e
 	ld	h, d
 	inc	hl
@@ -363,23 +363,23 @@ _usbdev_dat_in_trnsfer:
 	pop	af
 	inc	sp
 	pop	bc
-;source-doc/base-drv/dev_transfers.c:80: endpoint->toggle = 0;
+;source-doc/base-drv/dev_transfers.c:73:
 	ld	a, (bc)
 	and	0xfe
 	ld	(bc), a
-;source-doc/base-drv/dev_transfers.c:81: return USB_ERR_STALL;
+;source-doc/base-drv/dev_transfers.c:74: endpoint_param *const endpoint = &device->endpoints[endpoint_type];
 	ld	l,0x02
 	jr	l_usbdev_dat_in_trnsfer_00104
 l_usbdev_dat_in_trnsfer_00102:
-;source-doc/base-drv/dev_transfers.c:84: RETURN_CHECK(result);
-;source-doc/base-drv/dev_transfers.c:86: return result;
+;source-doc/base-drv/dev_transfers.c:77:
+;source-doc/base-drv/dev_transfers.c:79: usbtrn_clear_endpoint_halt(endpoint->number, device->address, device->max_packet_size);
 	ld	hl,(_result)
 l_usbdev_dat_in_trnsfer_00104:
-;source-doc/base-drv/dev_transfers.c:87: }
+;source-doc/base-drv/dev_transfers.c:80: endpoint->toggle = 0;
 	inc	sp
 	pop	ix
 	ret
-;source-doc/base-drv/dev_transfers.c:89: usb_error usbdev_dat_in_trnsfer_0(device_config *const device, uint8_t *const buffer, const uint8_t buffer_size) {
+;source-doc/base-drv/dev_transfers.c:82: }
 ; ---------------------------------
 ; Function usbdev_dat_in_trnsfer_0
 ; ---------------------------------
@@ -388,13 +388,13 @@ _usbdev_dat_in_trnsfer_0:
 	ld	ix,0
 	add	ix,sp
 	push	af
-;source-doc/base-drv/dev_transfers.c:90: endpoint_param *const endpoint = &device->endpoints[0];
+;source-doc/base-drv/dev_transfers.c:83:
 	ld	e,(ix+4)
 	ld	d,(ix+5)
 	ld	hl,0x0003
 	add	hl, de
 	ex	(sp), hl
-;source-doc/base-drv/dev_transfers.c:92: result = usb_data_in_transfer(buffer, buffer_size, device->address, endpoint);
+;source-doc/base-drv/dev_transfers.c:85: done:
 	ld	l, e
 	ld	h, d
 	ld	a, (hl)
@@ -423,11 +423,11 @@ _usbdev_dat_in_trnsfer_0:
 	pop	de
 	ld	a, l
 	ld	(_result), a
-;source-doc/base-drv/dev_transfers.c:94: if (result == USB_ERR_STALL) {
+;source-doc/base-drv/dev_transfers.c:87: }
 	ld	a,(_result)
 	sub	0x02
 	jr	NZ,l_usbdev_dat_in_trnsfer_0_00102
-;source-doc/base-drv/dev_transfers.c:95: usbtrn_clear_endpoint_halt(endpoint->number, device->address, device->max_packet_size);
+;source-doc/base-drv/dev_transfers.c:88:
 	ld	l, e
 	ld	h, d
 	inc	hl
@@ -452,18 +452,18 @@ _usbdev_dat_in_trnsfer_0:
 	call	_usbtrn_clear_endpoint_halt
 	pop	af
 	inc	sp
-;source-doc/base-drv/dev_transfers.c:96: endpoint->toggle = 0;
+;source-doc/base-drv/dev_transfers.c:89: usb_error usbdev_dat_in_trnsfer_0(device_config *const device, uint8_t *const buffer, const uint8_t buffer_size) {
 	pop	hl
 	push	hl
 	res	0, (hl)
-;source-doc/base-drv/dev_transfers.c:97: return USB_ERR_STALL;
+;source-doc/base-drv/dev_transfers.c:90: endpoint_param *const endpoint = &device->endpoints[0];
 	ld	l,0x02
 	jr	l_usbdev_dat_in_trnsfer_0_00103
 l_usbdev_dat_in_trnsfer_0_00102:
-;source-doc/base-drv/dev_transfers.c:100: return result;
+;source-doc/base-drv/dev_transfers.c:93:
 	ld	hl,(_result)
 l_usbdev_dat_in_trnsfer_0_00103:
-;source-doc/base-drv/dev_transfers.c:101: }
+;source-doc/base-drv/dev_transfers.c:94: if (result == USB_ERR_STALL) {
 	ld	sp, ix
 	pop	ix
 	ret

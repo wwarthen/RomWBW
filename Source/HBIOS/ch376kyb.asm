@@ -3,6 +3,7 @@
 ; CH376 NATIVE USB KEYBOARD DRIVER
 ;==================================================================================================
 ;
+; This driver is designed to work within the TMS video driver for a CRT solution.
 
 #DEFINE DEFM	.DB
 #DEFINE DEFB	.DB
@@ -60,8 +61,6 @@ CHUKB_TICK:
 	LD      (UKY_SCNCNT), A
 
 	; we gonna need a bigger stack
-
-	EZ80_UTIL_DEBUG
 
 	LD	(UKY_INT_SP),SP		; SAVE ORIGINAL STACK FRAME
 	LD	SP,UKY_INTSTK		; USE DEDICATED INT STACK FRAME IN HI MEM
@@ -155,6 +154,5 @@ UKY_READ:
 	JR	NZ, UKY_READ
 	LD	C, 0
 	LD	D, 0
-	; LD	E, 'A'
 	XOR	A
 	RET

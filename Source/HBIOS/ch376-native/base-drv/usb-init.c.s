@@ -68,14 +68,14 @@ _usb_host_bus_reset:
 	call	_ch_cmd_set_usb_mode
 ;source-doc/base-drv/usb-init.c:16: delay_20ms();
 	call	_delay_20ms
-;source-doc/base-drv/ch376.h:163: ch_command(CH_CMD_WRITE_VAR8);
+;source-doc/base-drv/ch376.h:110: #endif
 	ld	l,0x0b
 	call	_ch_command
-;source-doc/base-drv/ch376.h:164: CH376_DATA_PORT = CH_VAR_RETRY_TIMES;
+;source-doc/base-drv/ch376.h:111:
 	ld	a,0x25
 	ld	bc,_CH376_DATA_PORT
 	out	(c),a
-;source-doc/base-drv/ch376.h:165: CH376_DATA_PORT = retry << 6 | (number_of_retries & 0x1F);
+;source-doc/base-drv/ch376.h:112: #define calc_max_packet_sizex(packet_size) (packet_size & 0x3FF)
 	ld	a,0xdf
 	ld	bc,_CH376_DATA_PORT
 	out	(c),a
