@@ -31,6 +31,8 @@ jobs:
           echo "Tag: ${{github.ref_name}}"
           if grep -q "dev" <<< "${{github.ref_name}}"; then
             TITLE="RomWBW Development Snapshot"
+          elif grep -q "beta" <<< "${{github.ref_name}}"; then
+            TITLE="RomWBW Beta Release"
           elif grep -q "pre" <<< "${{github.ref_name}}"; then
             TITLE="RomWBW Prerelease"
           elif grep -q "rc" <<< "${{github.ref_name}}"; then
