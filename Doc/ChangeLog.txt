@@ -38,8 +38,8 @@ Version 3.5
 - WBW: Add CPU speed selection for HEATH platform to HBIOS
 - WBW: Add Warm/Cold reboot options to CPUSPD utility
 - D?N: Added support for eZ80 CPU
-- MAP: Contributed COPYSL utility
-- MAP: Added new HBIOS function EXT_SLICE (orginally SYSGET_DIOMED)
+- MAP: Contributed COPYSL utility that allows disk slices to be copied
+- MAP: Added new HBIOS function EXT_SLICE, extended disk slice info
 - MAP: ROMLDR now uses EXT_SLICE to get Slice Sector for boot
 - MAP: CBIOS now uses EXT_SLICE during drive selection
 - MAP: CPM3 Boot Loader, and BIOS (drive select) now use EXT_SLICE
@@ -47,7 +47,10 @@ Version 3.5
 - MAP: Significant improvement in Disk Catalog document
 - MAP: Added Disk Image for the Z3PLUS (Z-System for CP/M-Plus) os.
 - H?H: Fix XModem 12.3 WRERR to put CAN char in proper register to send.
-- MAP: Initial NVRAM configuration infrastructure, and boot device selection.
+- MAP: Added support for dynamic HBIOS config via (RTC) NVRAM
+- MAP: Added boot application to allow config of NVRAM options
+- MAP: Configuration of autoboot disk/app added to NVRAM config
+- WBW: Autoboot is now handled in seperate prompt during RomWBW startup
 - MAP: Added additional tools (Linker/Disasembler) to the Z80ASM Disk Image
 - PMS: Support interrupt-driven PS2 Keyboard Interface
 - D?M: Added NetBoot support for Duodyne
