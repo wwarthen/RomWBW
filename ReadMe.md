@@ -3,7 +3,7 @@
 **RomWBW ReadMe** \
 Version 3.5 \
 Wayne Warthen  ([wwarthen@gmail.com](mailto:wwarthen@gmail.com)) \
-05 Jan 2025
+18 Jan 2025
 
 # Overview
 
@@ -113,6 +113,9 @@ functionality.
 Complete instructions for installation and operation of RomWBW are found
 in the [RomWBW User
 Guide](https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20User%20Guide.pdf).
+It is also a good idea to review the [Release
+Notes](https://github.com/wwarthen/RomWBW/blob/master/RELEASE_NOTES.md)
+for helpful release-specific information.
 
 ## Documentation
 

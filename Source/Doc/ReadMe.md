@@ -105,7 +105,9 @@ drives (IDE disk, CF Card, SD Card, etc.) which then provides even more
 functionality.
 
 Complete instructions for installation and operation of RomWBW are
-found in the $doc_user$.
+found in the $doc_user$.  It is also a good idea to review the
+[Release Notes](https://github.com/wwarthen/RomWBW/blob/master/RELEASE_NOTES.md)
+for helpful release-specific information.
 
 ## Documentation
 
@@ -192,7 +194,7 @@ please let me know if I missed you!
 * Mark Pruden has also contributed a great deal of content to the
   Disk Catalog, User Guide as well as contributing the disk image
   for the Z3PLUS operating system, the COPYSL utility, and also
-  implemented a feature for RomWBW configuration by NVRAM, 
+  implemented a feature for RomWBW configuration by NVRAM,
   and added the /B bulk mode of disk assignment to the ASSIGN utility.
 
 * Jacques Pelletier has contributed the DS1501 RTC driver code.

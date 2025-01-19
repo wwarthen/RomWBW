@@ -1,6 +1,6 @@
 RomWBW ReadMe
 Wayne Warthen (wwarthen@gmail.com)
-05 Jan 2025
+18 Jan 2025
 
 
 
@@ -112,7 +112,8 @@ drives (IDE disk, CF Card, SD Card, etc.) which then provides even more
 functionality.
 
 Complete instructions for installation and operation of RomWBW are found
-in the RomWBW User Guide.
+in the RomWBW User Guide. It is also a good idea to review the Release
+Notes for helpful release-specific information.
 
 
 Documentation
