@@ -83,11 +83,15 @@ _usb_host_bus_reset:
 	ld	l,0x00
 ;source-doc/base-drv/usb-init.c:21: }
 	ret
-;source-doc/base-drv/usb-init.c:25: void chnative_init(void) {
+;source-doc/base-drv/usb-init.c:25: void _chnative_init(bool forced) {
 ; ---------------------------------
-; Function chnative_init
+; Function _chnative_init
 ; ---------------------------------
-_chnative_init:
+__chnative_init:
+	push	ix
+	ld	ix,0
+	add	ix,sp
+	dec	sp
 ;source-doc/base-drv/usb-init.c:26: memset(get_usb_work_area(), 0, sizeof(_usb_state));
 	ld	hl,_x
 	ld	(hl),0x00
@@ -100,75 +104,175 @@ _chnative_init:
 	call	_ch_cmd_reset_all
 ;source-doc/base-drv/usb-init.c:30: delay_medium();
 	call	_delay_medium
-;source-doc/base-drv/usb-init.c:32: if (!ch_probe()) {
+;source-doc/base-drv/usb-init.c:32: if(forced) {
+	bit	0,(ix+4)
+	jr	Z,l__chnative_init_00110
+;source-doc/base-drv/usb-init.c:33: bool indicator = true;
+	ld	(ix-1),0x01
+;source-doc/base-drv/usb-init.c:34: print_string("\r\nCH376: *$");
+	ld	hl,usb_init_str_0
+	call	_print_string
+;source-doc/base-drv/usb-init.c:35: while(!ch_probe()) {
+l__chnative_init_00104:
 	call	_ch_probe
 	ld	a, l
 	or	a
-	jr	NZ,l_chnative_init_00102
-;source-doc/base-drv/usb-init.c:33: print_string("\r\nCH376: NOT PRESENT$");
-;source-doc/base-drv/usb-init.c:34: return;
-	ld	hl,usb_init_str_0
-	jp	_print_string
-l_chnative_init_00102:
-;source-doc/base-drv/usb-init.c:37: print_string("\r\nCH376: PRESENT (VER $");
+	jr	NZ,l__chnative_init_00106
+;source-doc/base-drv/usb-init.c:36: if (indicator)
+	bit	0,(ix-1)
+	jr	Z,l__chnative_init_00102
+;source-doc/base-drv/usb-init.c:37: print_string("\b $");
 	ld	hl,usb_init_str_1
 	call	_print_string
-;source-doc/base-drv/usb-init.c:38: print_hex(ch_cmd_get_ic_version());
-	call	_ch_cmd_get_ic_version
-	call	_print_hex
-;source-doc/base-drv/usb-init.c:39: print_string("); $");
+	jr	l__chnative_init_00103
+l__chnative_init_00102:
+;source-doc/base-drv/usb-init.c:39: print_string("\b*$");
 	ld	hl,usb_init_str_2
 	call	_print_string
-;source-doc/base-drv/usb-init.c:41: usb_host_bus_reset();
+l__chnative_init_00103:
+;source-doc/base-drv/usb-init.c:41: delay_medium();
+	call	_delay_medium
+;source-doc/base-drv/usb-init.c:42: indicator = !indicator;
+	ld	a,(ix-1)
+	xor	0x01
+	ld	(ix-1),a
+	jr	l__chnative_init_00104
+l__chnative_init_00106:
+;source-doc/base-drv/usb-init.c:45: print_string("\bPRESENT (VER $");
+	ld	hl,usb_init_str_3
+	call	_print_string
+	jr	l__chnative_init_00111
+l__chnative_init_00110:
+;source-doc/base-drv/usb-init.c:48: if (!ch_probe()) {
+	call	_ch_probe
+	ld	a, l
+	or	a
+	jr	NZ,l__chnative_init_00108
+;source-doc/base-drv/usb-init.c:49: print_string("\r\nCH376: NOT PRESENT$");
+	ld	hl,usb_init_str_4
+	call	_print_string
+;source-doc/base-drv/usb-init.c:50: return;
+	jr	l__chnative_init_00118
+l__chnative_init_00108:
+;source-doc/base-drv/usb-init.c:53: print_string("\r\nCH376: PRESENT (VER $");
+	ld	hl,usb_init_str_5
+	call	_print_string
+l__chnative_init_00111:
+;source-doc/base-drv/usb-init.c:56: print_hex(ch_cmd_get_ic_version());
+	call	_ch_cmd_get_ic_version
+	call	_print_hex
+;source-doc/base-drv/usb-init.c:57: print_string("); $");
+	ld	hl,usb_init_str_6
+	call	_print_string
+;source-doc/base-drv/usb-init.c:59: usb_host_bus_reset();
 	call	_usb_host_bus_reset
-;source-doc/base-drv/usb-init.c:43: for (uint8_t i = 0; i < 4; i++) {
+;source-doc/base-drv/usb-init.c:61: for (uint8_t i = 0; i < (forced ? 10 : 5); i++) {
 	ld	c,0x00
-l_chnative_init_00107:
-	ld	a, c
-	sub	0x04
-	jr	NC,l_chnative_init_00105
-;source-doc/base-drv/usb-init.c:44: const uint8_t r = ch_very_short_wait_int_and_get_();
+l__chnative_init_00116:
+	bit	0,(ix+4)
+	jr	Z,l__chnative_init_00120
+	ld	de,0x000a
+	jr	l__chnative_init_00121
+l__chnative_init_00120:
+	ld	de,0x0005
+l__chnative_init_00121:
+	ld	b, c
+	ld	l,0x00
+	ld	a, b
+	sub	e
+	ld	a, l
+	sbc	a, d
+	jp	PO, l__chnative_init_00185
+	xor	0x80
+l__chnative_init_00185:
+	jp	P, l__chnative_init_00114
+;source-doc/base-drv/usb-init.c:62: const uint8_t r = ch_very_short_wait_int_and_get_();
 	push	bc
 	call	_ch_very_short_wait_int_and_get
 	ld	a, l
 	pop	bc
-;source-doc/base-drv/usb-init.c:46: if (r == USB_INT_CONNECT) {
+;source-doc/base-drv/usb-init.c:64: if (r == USB_INT_CONNECT) {
 	sub	0x81
-	jr	NZ,l_chnative_init_00108
-;source-doc/base-drv/usb-init.c:47: print_string("USB: CONNECTED$");
-	ld	hl,usb_init_str_3
+	jr	NZ,l__chnative_init_00117
+;source-doc/base-drv/usb-init.c:65: print_string("USB: CONNECTED$");
+	ld	hl,usb_init_str_7
 	call	_print_string
-;source-doc/base-drv/usb-init.c:49: enumerate_all_devices();
-	jp	_enumerate_all_devices
-;source-doc/base-drv/usb-init.c:51: return;
-	jr	l_chnative_init_00109
-l_chnative_init_00108:
-;source-doc/base-drv/usb-init.c:43: for (uint8_t i = 0; i < 4; i++) {
+;source-doc/base-drv/usb-init.c:67: enumerate_all_devices();
+	call	_enumerate_all_devices
+;source-doc/base-drv/usb-init.c:69: return;
+	jr	l__chnative_init_00118
+l__chnative_init_00117:
+;source-doc/base-drv/usb-init.c:61: for (uint8_t i = 0; i < (forced ? 10 : 5); i++) {
 	inc	c
-	jr	l_chnative_init_00107
-l_chnative_init_00105:
-;source-doc/base-drv/usb-init.c:55: print_string("USB: DISCONNECTED$");
-	ld	hl,usb_init_str_4
-	jp	_print_string
-l_chnative_init_00109:
-;source-doc/base-drv/usb-init.c:56: }
+	jr	l__chnative_init_00116
+l__chnative_init_00114:
+;source-doc/base-drv/usb-init.c:73: print_string("USB: DISCONNECTED$");
+	ld	hl,usb_init_str_8
+	call	_print_string
+l__chnative_init_00118:
+;source-doc/base-drv/usb-init.c:74: }
+	inc	sp
+	pop	ix
 	ret
 usb_init_str_0:
 	DEFB 0x0d
 	DEFB 0x0a
-	DEFM "CH376: NOT PRESENT$"
+	DEFM "CH376: *$"
 	DEFB 0x00
 usb_init_str_1:
+	DEFB 0x08
+	DEFM " $"
+	DEFB 0x00
+usb_init_str_2:
+	DEFB 0x08
+	DEFM "*$"
+	DEFB 0x00
+usb_init_str_3:
+	DEFB 0x08
+	DEFM "PRESENT (VER $"
+	DEFB 0x00
+usb_init_str_4:
+	DEFB 0x0d
+	DEFB 0x0a
+	DEFM "CH376: NOT PRESENT$"
+	DEFB 0x00
+usb_init_str_5:
 	DEFB 0x0d
 	DEFB 0x0a
 	DEFM "CH376: PRESENT (VER $"
 	DEFB 0x00
-usb_init_str_2:
+usb_init_str_6:
 	DEFM "); $"
 	DEFB 0x00
-usb_init_str_3:
+usb_init_str_7:
 	DEFM "USB: CONNECTED$"
 	DEFB 0x00
-usb_init_str_4:
+usb_init_str_8:
 	DEFM "USB: DISCONNECTED$"
 	DEFB 0x00
+;source-doc/base-drv/usb-init.c:77: void chnative_init_force(void) {
+; ---------------------------------
+; Function chnative_init_force
+; ---------------------------------
+_chnative_init_force:
+;source-doc/base-drv/usb-init.c:78: _chnative_init(true);
+	ld	a,0x01
+	push	af
+	inc	sp
+	call	__chnative_init
+	inc	sp
+;source-doc/base-drv/usb-init.c:79: }
+	ret
+;source-doc/base-drv/usb-init.c:81: void chnative_init(void) {
+; ---------------------------------
+; Function chnative_init
+; ---------------------------------
+_chnative_init:
+;source-doc/base-drv/usb-init.c:82: _chnative_init(false);
+	xor	a
+	push	af
+	inc	sp
+	call	__chnative_init
+	inc	sp
+;source-doc/base-drv/usb-init.c:83: }
+	ret

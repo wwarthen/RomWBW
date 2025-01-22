@@ -50,3 +50,4 @@ _dio_add_entry:
 #include "./ch376-native/base-drv.s"
 
 CHNATIVE_INIT	.EQU	_chnative_init
+CHNATIVE_INITF	.EQU	_chnative_init_force

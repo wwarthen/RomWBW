@@ -22,25 +22,42 @@ static usb_error usb_host_bus_reset(void) {
 
 #define ERASE_LINE "\x1B\x6C\r$"
 
-void chnative_init(void) {
+void _chnative_init(bool forced) {
   memset(get_usb_work_area(), 0, sizeof(_usb_state));
 
   ch_cmd_reset_all();
 
   delay_medium();
 
-  if (!ch_probe()) {
-    print_string("\r\nCH376: NOT PRESENT$");
-    return;
+  if (forced) {
+    bool indicator = true;
+    print_string("\r\nCH376: *$");
+    while (!ch_probe()) {
+      if (indicator)
+        print_string("\b $");
+      else
+        print_string("\b*$");
+
+      delay_medium();
+      indicator = !indicator;
+    }
+
+    print_string("\bPRESENT (VER $");
+  } else {
+    if (!ch_probe()) {
+      print_string("\r\nCH376: NOT PRESENT$");
+      return;
+    }
+
+    print_string("\r\nCH376: PRESENT (VER $");
   }
 
-  print_string("\r\nCH376: PRESENT (VER $");
   print_hex(ch_cmd_get_ic_version());
   print_string("); $");
 
   usb_host_bus_reset();
 
-  for (uint8_t i = 0; i < 4; i++) {
+  for (uint8_t i = 0; i < (forced ? 10 : 5); i++) {
     const uint8_t r = ch_very_short_wait_int_and_get_status();
 
     if (r == USB_INT_CONNECT) {
@@ -54,3 +71,7 @@ void chnative_init(void) {
 
   print_string("USB: DISCONNECTED$");
 }
+
+void chnative_init_force(void) { _chnative_init(true); }
+
+void chnative_init(void) { _chnative_init(false); }

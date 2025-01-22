@@ -79,3 +79,8 @@ $(eval $(call build_subsystem,base-drv))
 $(eval $(call build_subsystem,scsi-drv))
 $(eval $(call build_subsystem,keyboard))
 $(eval $(call build_subsystem,ufi-drv))
+
+.PHONY: format
+format: SHELL:=/bin/bash
+format:
+	@find \( -name "*.c" -o -name "*.h" \) -exec echo "formating {}" \; -exec clang-format -i {} \;
