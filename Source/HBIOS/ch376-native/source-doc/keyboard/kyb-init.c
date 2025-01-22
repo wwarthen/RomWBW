@@ -45,9 +45,16 @@ keyboard_event buffer[KEYBOARD_BUFFER_SIZE] = {{0}};
 uint8_t        write_index                  = 0;
 uint8_t        read_index                   = 0;
 
+uint8_t previous_keyCodes[6] = {0};
+
 void keyboard_buf_put(const uint8_t modifier_keys, const uint8_t key_code) {
   if (key_code >= 0x80 || key_code == 0)
     return; // ignore ???
+
+  // if already reported, just skip it
+  for (uint8_t i = 0; i < 6; i++)
+    if (previous_keyCodes[i] == key_code)
+      return;
 
   uint8_t next_write_index = (write_index + 1) & KEYBOARD_BUFFER_SIZE_MASK;
   if (next_write_index != read_index) { // Check if buffer is not full
@@ -93,5 +100,8 @@ void keyboard_tick(void) {
   result = usbdev_dat_in_trnsfer_0((device_config *)keyboard_config, (uint8_t *)report, 8);
   ch_configure_nak_retry_3s();
   if (result == 0)
-    keyboard_buf_put(report.bModifierKeys, report.keyCode[0]);
+    for (uint8_t i = 0; i < 6; i++) {
+      keyboard_buf_put(report.bModifierKeys, report.keyCode[i]);
+      previous_keyCodes[i] = report.keyCode[i];
+    }
 }
