@@ -353,6 +353,29 @@ char scancode_to_char(const uint8_t modifier_keys, const uint8_t code) __sdcccal
   if (code >= 0x80)
     return 0;
 
+  if ((modifier_keys & (KEY_MOD_LCTRL | KEY_MOD_RCTRL))) {
+    if (code >= 4 && code <= 0x1d)
+      return code - 3;
+
+    if (code == 0x1F || code == 0x2C) //@ or SPACE
+      return 0;
+
+    if (code == 0x2F) // [
+      return 27;
+
+    if (code == 0x31) // back slash
+      return 28;
+
+    if (code == 0x30) // ]
+      return 29;
+
+    if (code == 0x23) //^
+      return 30;
+
+    if (code == 0x2D) //_
+      return 31;
+  }
+
   if (modifier_keys & (KEY_MOD_LSHIFT | KEY_MOD_RSHIFT))
     return char_with_caps_lock(scancodes_shift_table[code]);
 

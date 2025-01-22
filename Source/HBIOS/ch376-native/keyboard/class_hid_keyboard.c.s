@@ -107,29 +107,96 @@ _scancode_to_char:
 	jr	C,l_scancode_to_char_00102
 ;source-doc/keyboard/class_hid_keyboard.c:352: char scancode_to_char(const uint8_t modifier_keys, const uint8_t code) __sdcccall(1) {
 	xor	a
-	jr	l_scancode_to_char_00105
+	jr	l_scancode_to_char_00123
 l_scancode_to_char_00102:
 ;source-doc/keyboard/class_hid_keyboard.c:354: return 0;
 	ld	a, c
-	and	0x22
-	jr	Z,l_scancode_to_char_00104
+	and	0x11
+	jr	Z,l_scancode_to_char_00120
 ;source-doc/keyboard/class_hid_keyboard.c:355:
+	ld	a, e
+	sub	0x04
+	jr	C,l_scancode_to_char_00104
+	ld	a,0x1d
+	sub	e
+	jr	C,l_scancode_to_char_00104
+;source-doc/keyboard/class_hid_keyboard.c:356: if ((modifier_keys & (KEY_MOD_LCTRL | KEY_MOD_RCTRL))) {
+	ld	a, e
+	add	a,0xfd
+	jr	l_scancode_to_char_00123
+l_scancode_to_char_00104:
+;source-doc/keyboard/class_hid_keyboard.c:358: return code - 3;
+	ld	a,e
+	cp	0x1f
+	jr	Z,l_scancode_to_char_00106
+	sub	0x2c
+	jr	NZ,l_scancode_to_char_00107
+l_scancode_to_char_00106:
+;source-doc/keyboard/class_hid_keyboard.c:359:
+	xor	a
+	jr	l_scancode_to_char_00123
+l_scancode_to_char_00107:
+;source-doc/keyboard/class_hid_keyboard.c:361: return 0;
+	ld	a, e
+	sub	0x2f
+	jr	NZ,l_scancode_to_char_00110
+;source-doc/keyboard/class_hid_keyboard.c:362:
+	ld	a,0x1b
+	jr	l_scancode_to_char_00123
+l_scancode_to_char_00110:
+;source-doc/keyboard/class_hid_keyboard.c:364: return 27;
+	ld	a, e
+	sub	0x31
+	jr	NZ,l_scancode_to_char_00112
+;source-doc/keyboard/class_hid_keyboard.c:365:
+	ld	a,0x1c
+	jr	l_scancode_to_char_00123
+l_scancode_to_char_00112:
+;source-doc/keyboard/class_hid_keyboard.c:367: return 28;
+	ld	a, e
+	sub	0x30
+	jr	NZ,l_scancode_to_char_00114
+;source-doc/keyboard/class_hid_keyboard.c:368:
+	ld	a,0x1d
+	jr	l_scancode_to_char_00123
+l_scancode_to_char_00114:
+;source-doc/keyboard/class_hid_keyboard.c:370: return 29;
+	ld	a, e
+	sub	0x23
+	jr	NZ,l_scancode_to_char_00116
+;source-doc/keyboard/class_hid_keyboard.c:371:
+	ld	a,0x1e
+	jr	l_scancode_to_char_00123
+l_scancode_to_char_00116:
+;source-doc/keyboard/class_hid_keyboard.c:373: return 30;
+	ld	a, e
+	sub	0x2d
+	jr	NZ,l_scancode_to_char_00120
+;source-doc/keyboard/class_hid_keyboard.c:374:
+	ld	a,0x1f
+	jr	l_scancode_to_char_00123
+l_scancode_to_char_00120:
+;source-doc/keyboard/class_hid_keyboard.c:377: }
+	ld	a, c
+	and	0x22
+	jr	Z,l_scancode_to_char_00122
+;source-doc/keyboard/class_hid_keyboard.c:378:
 	ld	d,0x00
 	ld	hl,_scancodes_shift_table
 	add	hl, de
 	ld	a,(hl)
 	ld	c,a
 	jp	_char_with_caps_lock
-l_scancode_to_char_00104:
-;source-doc/keyboard/class_hid_keyboard.c:357: return char_with_caps_lock(scancodes_shift_table[code]);
+l_scancode_to_char_00122:
+;source-doc/keyboard/class_hid_keyboard.c:380: return char_with_caps_lock(scancodes_shift_table[code]);
 	ld	d,0x00
 	ld	hl,_scancodes_table
 	add	hl, de
 	ld	a,(hl)
 	ld	c,a
 	jp	_char_with_caps_lock
-l_scancode_to_char_00105:
-;source-doc/keyboard/class_hid_keyboard.c:358:
+l_scancode_to_char_00123:
+;source-doc/keyboard/class_hid_keyboard.c:381:
 	ret
 _caps_lock_engaged:
 	DEFB +0x01
