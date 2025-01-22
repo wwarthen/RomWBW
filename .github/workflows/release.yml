@@ -19,7 +19,8 @@ jobs:
           export TZ='America/Los_Angeles'
           sudo apt-get install libncurses-dev
           sudo apt-get install srecord
-          make distlog
+          make transpile-c-code
+          make distlog --trace
           rm -rf .git*
       
       - name: Create Package Archive

@@ -26,7 +26,8 @@ jobs:
         run: |
           export TZ='America/Los_Angeles'
           sudo apt-get install srecord
-          make distlog
+          make transpile-c-code
+          make distlog --trace
           rm -rf .git*
 
       - name: List Output
@@ -58,7 +59,8 @@ jobs:
         run: |
           export TZ='America/Los_Angeles'
           brew install srecord
-          make distlog
+          make transpile-c-code
+          make distlog --trace
           rm -rf .git*
 
       - name: List Output

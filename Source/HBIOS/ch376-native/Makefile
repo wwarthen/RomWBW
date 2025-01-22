@@ -11,10 +11,15 @@ LIBS := -I./$(SRC)base-drv/
 ZCCFLAGS := +z80 -vn -startup=0 -clib=sdcc_iy  -compiler=sdcc -Cs--std=c23 -Cs--Werror  $(ZCCRELFLAGS) $(LIBS)
 
 ZCC_PATH := $(shell command -v zcc)
+DOCKER_PATH := $(shell command -v docker)
 ZCC := $(shell command -v zcc >/dev/null 2>&1 && echo zcc || echo 'docker run -w /host/${PWD} -v /:/host/ -u $(shell id -u ${USER}):$(shell id -g ${USER}) -t z88dk/z88dk zcc')
 
 ifeq ($(ZCC_PATH),)
-    $(info ZCC is set to use Docker to run zcc)
+    ifeq ($(DOCKER_PATH),)
+			.DEFAULT_GOAL := skip
+    else
+        $(info ZCC is set to use Docker to run zcc)
+    endif
 else
     $(info ZCC is set to $(ZCC_PATH))
 endif
@@ -22,6 +27,10 @@ endif
 ASSDIR := ./
 
 all: $(ASSDIR)base-drv.s $(ASSDIR)scsi-drv.s $(ASSDIR)ufi-drv.s $(ASSDIR)keyboard.s
+
+skip:
+	@echo "Unable to compile ch376 native to assembly.  Install docker or z88dk."
+	exit 0
 
 clean:
 	@rm -rf base-drv/*.s
@@ -43,7 +52,8 @@ $(ASSDIR)%.c.s: $(ASSDIR)%.c.asm
 	${SRC}convert-for-uz80as.sh $< $@
 
 define compile
-	@mkdir -p $(dir $@)
+	@set -e
+	mkdir -p $(dir $@)
 	$(ZCC) $(ZCCFLAGS) --c-code-in-asm --assemble-only $< -o $@
 	echo "Compiled $(notdir $@) from $(notdir $<)"
 endef
