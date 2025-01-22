@@ -7,6 +7,7 @@
 #include <usb_state.h>
 
 static device_config_keyboard *keyboard_config = 0;
+extern bool                    caps_lock_engaged;
 
 void keyboard_init(void) {
 
@@ -78,7 +79,13 @@ uint32_t keyboard_buf_get_next() {
   const uint8_t modifier_key = buffer[read_index].modifier_keys;
   const uint8_t key_code     = buffer[read_index].key_code;
   read_index                 = (read_index + 1) & KEYBOARD_BUFFER_SIZE_MASK;
-  const unsigned char c      = scancode_to_char(modifier_key, key_code);
+
+  if (key_code == KEY_CODE_CAPS_LOCK) {
+    caps_lock_engaged = !caps_lock_engaged;
+    return keyboard_buf_get_next();
+  }
+
+  const unsigned char c = scancode_to_char(modifier_key, key_code);
   /* D = modifier, e-> char, H = 0, L=>code */
   return (uint32_t)modifier_key << 24 | (uint32_t)c << 16 | key_code;
 }

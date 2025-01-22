@@ -2,6 +2,8 @@
 
 #define ESC 0x1B
 
+bool caps_lock_engaged = true;
+
 /**
  * scan codes sourced from https://deskthority.net/wiki/Scancode
  *
@@ -241,6 +243,8 @@ char scancodes_table[128] = {
     ',',
     '.',
     '/',
+
+    /* 0x39 */
     0x00 /*CAPSLOCK*/,
     0x00 /* F1 */,
     0x00 /* F2 */,
@@ -332,12 +336,25 @@ char scancodes_table[128] = {
     0x00 /* MUTE */,
 };
 
+char char_with_caps_lock(const char c) __sdcccall(1) {
+  if (!caps_lock_engaged)
+    return c;
+
+  if (c >= 'A' && c <= 'Z')
+    return c - 'A' + 'a';
+
+  if (c >= 'a' && c <= 'z')
+    return c - 'a' + 'A';
+
+  return c;
+}
+
 char scancode_to_char(const uint8_t modifier_keys, const uint8_t code) __sdcccall(1) {
   if (code >= 0x80)
     return 0;
 
   if (modifier_keys & (KEY_MOD_LSHIFT | KEY_MOD_RSHIFT))
-    return scancodes_shift_table[code];
+    return char_with_caps_lock(scancodes_shift_table[code]);
 
-  return scancodes_table[code];
+  return char_with_caps_lock(scancodes_table[code]);
 }

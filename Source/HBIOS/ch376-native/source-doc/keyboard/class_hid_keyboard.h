@@ -18,6 +18,8 @@ typedef struct {
 #define KEY_MOD_RALT   0x40
 #define KEY_MOD_RMETA  0x80
 
+#define KEY_CODE_CAPS_LOCK 0x39
+
 extern char scancodes_table[128];
 extern char scancode_to_char(const uint8_t modifier_keys, const uint8_t code) __sdcccall(1);
 
