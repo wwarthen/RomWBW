@@ -294,12 +294,13 @@ please let me know if I missed you!
 * Martin R has provided substantial help reviewing and improving the
   User Guide and Applications documents.
 
-* Mark Pruden has contributed a great deal of content to the
-  Disk Catalog, User Guide, as well as creating the Introduction
-  and Hardware documents, and contributed the disk image
-  for the Z3PLUS operating system, the COPYSL utility, and also
-  implemented a feature for RomWBW configuration by NVRAM,
-  and added the /B bulk mode of disk assignment to the ASSIGN utility.
+* Mark Pruden has made a wide variety of contributions including:
+  - significant content in the Disk Catalog and User Guide
+  - creation of the Introduction and Hardware documents
+  - Z3PLUS operating system disk image
+  - COPYSL utility
+  - a feature for RomWBW configuration by NVRAM
+  - the /B bulk mode of disk assignment to the ASSIGN utility
 
 * Jacques Pelletier has contributed the DS1501 RTC driver code.
 

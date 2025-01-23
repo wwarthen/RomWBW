@@ -3,9 +3,10 @@ $include{"Basic.h"}$
 
 # Overview
 
-RomWBW software provides a complete, commercial quality 
-implementation of CP/M (and workalike) operating systems and 
+RomWBW software provides a complete, commercial quality
+implementation of CP/M (and workalike) operating systems and
 applications for modern Z80/180/280 retro-computing hardware systems.
+
 A wide variety of platforms are supported including those
 produced by these developer communities:
 
@@ -22,7 +23,7 @@ produced by these developer communities:
 A complete list of the currently supported platforms is found in the
 [Installation] section.
 
-General features include:
+Supported hardware features of RomWBW include:
 
 * Z80 Family CPUs including Z80, Z180, and Z280
 * Banked memory services for several banking designs
@@ -31,7 +32,6 @@ General features include:
 * Video drivers including TMS9918, SY6545, MOS8563, HD6445
 * Keyboard (PS/2) drivers via VT8242 or PPI interfaces
 * Real time clock drivers including DS1302, BQ4845
-* OSes: CP/M 2.2, ZSDOS, CP/M 3, NZ-COM, ZPM3, QPM, p-System, and FreeRTOS
 * Built-in VT-100 terminal emulation support
 
 RomWBW is distributed as both source code and pre-built ROM and disk
@@ -43,13 +43,14 @@ ROM firmware itself:
 * ROM BASIC (Nascom BASIC and Tasty BASIC)
 * ROM Forth
 
-A dynamic disk drive letter assignment mechanism allows mapping 
-operating system drive letters to any available disk media. 
-Additionally, mass storage devices (IDE Disk, CF Card, SD Card, etc.) 
-support the use of multiple slices (up to 256 per device). Each slice 
-contains a complete CP/M filesystem and can be mapped independently to 
+A dynamic disk drive letter assignment mechanism allows mapping
+operating system drive letters to any available disk media.
+Additionally, mass storage devices (IDE Disk, CF Card, SD Card, etc.)
+support the use of multiple slices (up to 256 per device). Each slice
+contains a complete CP/M filesystem and can be mapped independently to
 any drive letter. This overcomes the inherent size limitations in legacy
-OSes and allows up to 2GB of accessible storage on a single device.
+OSes and allows up to 2GB of accessible storage on a single device, 
+with up to 128MB accessible at any one time.
 
 The pre-built ROM firmware images are generally suitable for most
 users. However, it is also very easy to modify and build custom ROM
@@ -72,25 +73,25 @@ such that all of the operating systems and applications on a disk
 will run on any RomWBW-based system.  To put it simply, you can take
 a disk (or CF/SD/USB Card) and move it between systems transparently.
 
-A tool is provided that allows you to access a FAT-12/16/32 filesystem. 
-The FAT filesystem may be coresident on the same disk media as RomWBW 
+A tool is provided that allows you to access a FAT-12/16/32 filesystem.
+The FAT filesystem may be coresident on the same disk media as RomWBW
 slices or on stand-alone media.  This makes exchanging files with modern
 OSes such as Windows, MacOS, and Linux very easy.
 
 # Acquiring RomWBW
 
 The [RomWBW Repository](https://github.com/wwarthen/RomWBW)
-(<https://github.com/wwarthen/RomWBW>) on GitHub is the official 
-distribution location for all project source and documentation.  The 
-fully-built distribution releases are available on the
+(<https://github.com/wwarthen/RomWBW>) on GitHub is the official
+distribution location for all project source and documentation.
+The fully-built distribution releases are available on the
 [RomWBW Releases Page](https://github.com/wwarthen/RomWBW/releases)
-(<https://github.com/wwarthen/RomWBW/releases>) of the repository.  On 
-this page, you will normally see a Development Snapshot as well as 
+(<https://github.com/wwarthen/RomWBW/releases>) of the repository.
+On this page, you will normally see a Development Snapshot as well as
 recent stable releases. Unless you have a specific reason, I suggest you
- stick to the most recent stable release. Expand the "Assets" drop-down 
-for the release you want to download, then select the asset named 
-RomWBW-vX.X.X-Package.zip. The Package asset includes all pre-built ROM 
-and Disk images as well as full source code. The other assets contain 
+stick to the most recent stable release.
+
+The asset named RomWBW-vX.X.X-Package.zip includes all pre-built ROM
+and Disk images as well as full source code. The other assets contain
 only source code and do not have the pre-built ROM or disk images.
 
 All source code and distributions are maintained on GitHub. Code
@@ -192,13 +193,14 @@ please let me know if I missed you!
 
 * Martin R has provided substantial help reviewing and improving the
   User Guide and Applications documents.
-  
-* Mark Pruden has contributed a great deal of content to the
-  Disk Catalog, User Guide, as well as creating the Introduction
-  and Hardware documents, and contributed the disk image
-  for the Z3PLUS operating system, the COPYSL utility, and also
-  implemented a feature for RomWBW configuration by NVRAM,
-  and added the /B bulk mode of disk assignment to the ASSIGN utility.
+
+* Mark Pruden has made a wide variety of contributions including:
+  - significant content in the Disk Catalog and User Guide
+  - creation of the Introduction and Hardware documents
+  - Z3PLUS operating system disk image
+  - COPYSL utility
+  - a feature for RomWBW configuration by NVRAM
+  - the /B bulk mode of disk assignment to the ASSIGN utility
 
 * Jacques Pelletier has contributed the DS1501 RTC driver code.
 

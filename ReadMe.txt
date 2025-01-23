@@ -9,9 +9,10 @@ OVERVIEW
 
 RomWBW software provides a complete, commercial quality implementation
 of CP/M (and workalike) operating systems and applications for modern
-Z80/180/280 retro-computing hardware systems. A wide variety of
-platforms are supported including those produced by these developer
-communities:
+Z80/180/280 retro-computing hardware systems.
+
+A wide variety of platforms are supported including those produced by
+these developer communities:
 
 -   RetroBrew Computers (https://www.retrobrewcomputers.org)
 -   RC2014 (https://rc2014.co.uk),
@@ -22,7 +23,7 @@ communities:
 A complete list of the currently supported platforms is found in the
 [Installation] section.
 
-General features include:
+Supported hardware features of RomWBW include:
 
 -   Z80 Family CPUs including Z80, Z180, and Z280
 -   Banked memory services for several banking designs
@@ -32,8 +33,6 @@ General features include:
 -   Video drivers including TMS9918, SY6545, MOS8563, HD6445
 -   Keyboard (PS/2) drivers via VT8242 or PPI interfaces
 -   Real time clock drivers including DS1302, BQ4845
--   OSes: CP/M 2.2, ZSDOS, CP/M 3, NZ-COM, ZPM3, QPM, p-System, and
-    FreeRTOS
 -   Built-in VT-100 terminal emulation support
 
 RomWBW is distributed as both source code and pre-built ROM and disk
@@ -51,7 +50,8 @@ Additionally, mass storage devices (IDE Disk, CF Card, SD Card, etc.)
 support the use of multiple slices (up to 256 per device). Each slice
 contains a complete CP/M filesystem and can be mapped independently to
 any drive letter. This overcomes the inherent size limitations in legacy
-OSes and allows up to 2GB of accessible storage on a single device.
+OSes and allows up to 2GB of accessible storage on a single device, with
+up to 128MB accessible at any one time.
 
 The pre-built ROM firmware images are generally suitable for most users.
 However, it is also very easy to modify and build custom ROM images that
@@ -90,12 +90,11 @@ documentation. The fully-built distribution releases are available on
 the RomWBW Releases Page (https://github.com/wwarthen/RomWBW/releases)
 of the repository. On this page, you will normally see a Development
 Snapshot as well as recent stable releases. Unless you have a specific
-reason, I suggest you stick to the most recent stable release. Expand
-the “Assets” drop-down for the release you want to download, then select
-the asset named RomWBW-vX.X.X-Package.zip. The Package asset includes
-all pre-built ROM and Disk images as well as full source code. The other
-assets contain only source code and do not have the pre-built ROM or
-disk images.
+reason, I suggest you stick to the most recent stable release.
+
+The asset named RomWBW-vX.X.X-Package.zip includes all pre-built ROM and
+Disk images as well as full source code. The other assets contain only
+source code and do not have the pre-built ROM or disk images.
 
 All source code and distributions are maintained on GitHub. Code
 contributions are very welcome.
@@ -126,6 +125,7 @@ Documentation for RomWBW includes:
 -   RomWBW Applications
 -   RomWBW Disk Catalog
 -   RomWBW Hardware
+
 
 
 ACKNOWLEDGMENTS
@@ -201,12 +201,14 @@ let me know if I missed you!
 -   Martin R has provided substantial help reviewing and improving the
     User Guide and Applications documents.
 
--   Mark Pruden has contributed a great deal of content to the Disk
-    Catalog, User Guide, as well as creating the Introduction and
-    Hardware documents, and contributed the disk image for the Z3PLUS
-    operating system, the COPYSL utility, and also implemented a feature
-    for RomWBW configuration by NVRAM, and added the /B bulk mode of
-    disk assignment to the ASSIGN utility.
+-   Mark Pruden has made a wide variety of contributions including:
+
+    -   significant content in the Disk Catalog and User Guide
+    -   creation of the Introduction and Hardware documents
+    -   Z3PLUS operating system disk image
+    -   COPYSL utility
+    -   a feature for RomWBW configuration by NVRAM
+    -   the /B bulk mode of disk assignment to the ASSIGN utility
 
 -   Jacques Pelletier has contributed the DS1501 RTC driver code.
 

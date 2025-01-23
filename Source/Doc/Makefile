@@ -31,7 +31,7 @@ all :: deploy
 	pandoc $< -f markdown -t dokuwiki -s -o $@ --default-image-extension=pdf
 
 %.gfm : %.tmp
-	pandoc $< -f markdown -t gfm -s -o $@ --default-image-extension=pdf
+	pandoc $< -f markdown -t gfm-yaml_metadata_block -s -o $@ --default-image-extension=pdf
 
 %.txt : %.tmp
 	pandoc $< -f markdown -t plain -s -o $@ --default-image-extension=pdf
