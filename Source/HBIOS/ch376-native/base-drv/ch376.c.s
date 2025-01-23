@@ -539,9 +539,10 @@ l_ch_data_in_transfer_00107:
 	pop	bc
 ;source-doc/base-drv/ch376.c:172: if (count == 0) {
 	ld	a, e
-;source-doc/base-drv/ch376.c:173: USB_MODULE_LEDS = 0x00;
 	or	a
 	jr	NZ,l_ch_data_in_transfer_00106
+;source-doc/base-drv/ch376.c:173: USB_MODULE_LEDS = 0x03;
+	ld	a,0x03
 	ld	bc,_USB_MODULE_LEDS
 	out	(c),a
 ;source-doc/base-drv/ch376.c:174: return USB_ERR_DATA_ERROR;
@@ -571,24 +572,28 @@ l_ch_data_in_transfer_00148:
 	xor	0x80
 l_ch_data_in_transfer_00149:
 	jp	M, l_ch_data_in_transfer_00107
-;source-doc/base-drv/ch376.c:181: USB_MODULE_LEDS = 0x00;
-	ld	a,0x00
+;source-doc/base-drv/ch376.c:181: USB_MODULE_LEDS = 0x03;
+	ld	a,0x03
 	ld	bc,_USB_MODULE_LEDS
 	out	(c),a
-;source-doc/base-drv/ch376.c:183: return USB_ERR_OK;
+;source-doc/base-drv/ch376.c:182: return USB_ERR_OK;
 	ld	l,0x00
 	jr	l_ch_data_in_transfer_00111
 ;source-doc/base-drv/ch376.c:184: done:
 l_ch_data_in_transfer_00110:
-;source-doc/base-drv/ch376.c:185: return result;
+;source-doc/base-drv/ch376.c:185: USB_MODULE_LEDS = 0x03;
+	ld	a,0x03
+	ld	bc,_USB_MODULE_LEDS
+	out	(c),a
+;source-doc/base-drv/ch376.c:186: return result;
 	ld	hl,(_result)
 	ld	h,+((_result) / 256)
 l_ch_data_in_transfer_00111:
-;source-doc/base-drv/ch376.c:186: }
+;source-doc/base-drv/ch376.c:187: }
 	ld	sp, ix
 	pop	ix
 	ret
-;source-doc/base-drv/ch376.c:188: usb_error ch_data_in_transfer_n(uint8_t *const buffer, int8_t *const buffer_size, endpoint_param *const endpoint) {
+;source-doc/base-drv/ch376.c:189: usb_error ch_data_in_transfer_n(uint8_t *const buffer, int8_t *const buffer_size, endpoint_param *const endpoint) {
 ; ---------------------------------
 ; Function ch_data_in_transfer_n
 ; ---------------------------------
@@ -596,21 +601,21 @@ _ch_data_in_transfer_n:
 	push	ix
 	ld	ix,0
 	add	ix,sp
-;source-doc/base-drv/ch376.c:192: USB_MODULE_LEDS = 0x01;
+;source-doc/base-drv/ch376.c:193: USB_MODULE_LEDS = 0x01;
 	ld	a,0x01
 	ld	bc,_USB_MODULE_LEDS
 	out	(c),a
-;source-doc/base-drv/ch376.c:194: ch_issue_token_in(endpoint);
+;source-doc/base-drv/ch376.c:195: ch_issue_token_in(endpoint);
 	ld	l,(ix+8)
 	ld	h,(ix+9)
 	call	_ch_issue_token_in
-;source-doc/base-drv/ch376.c:196: CHECK(ch_long_wait_int_and_get_status());
+;source-doc/base-drv/ch376.c:197: CHECK(ch_long_wait_int_and_get_status());
 	call	_ch_long_wait_int_and_get_statu
 	ld	a, l
 	ld	b, a
 	or	a
 	jr	NZ,l_ch_data_in_transfer_n_00103
-;source-doc/base-drv/ch376.c:198: endpoint->toggle = !endpoint->toggle;
+;source-doc/base-drv/ch376.c:199: endpoint->toggle = !endpoint->toggle;
 	ld	e,(ix+8)
 	ld	d,(ix+9)
 	ld	c, e
@@ -625,30 +630,36 @@ _ch_data_in_transfer_n:
 	and	0xfe
 	or	e
 	ld	(bc), a
-;source-doc/base-drv/ch376.c:200: count = ch_read_data(buffer);
+;source-doc/base-drv/ch376.c:201: count = ch_read_data(buffer);
 	ld	l,(ix+4)
 	ld	h,(ix+5)
 	call	_ch_read_data
-;source-doc/base-drv/ch376.c:202: *buffer_size = count;
+;source-doc/base-drv/ch376.c:203: *buffer_size = count;
 	ld	c,(ix+6)
 	ld	b,(ix+7)
 	ld	(bc), a
-;source-doc/base-drv/ch376.c:204: USB_MODULE_LEDS = 0x00;
-	ld	a,0x00
+;source-doc/base-drv/ch376.c:205: USB_MODULE_LEDS = 0x03;
+	ld	a,0x03
 	ld	bc,_USB_MODULE_LEDS
 	out	(c),a
-;source-doc/base-drv/ch376.c:206: return USB_ERR_OK;
+;source-doc/base-drv/ch376.c:207: return USB_ERR_OK;
 	ld	l,0x00
 	jr	l_ch_data_in_transfer_n_00104
-;source-doc/base-drv/ch376.c:207: done:
+;source-doc/base-drv/ch376.c:208: done:
 l_ch_data_in_transfer_n_00103:
-;source-doc/base-drv/ch376.c:208: return result;
+;source-doc/base-drv/ch376.c:209: USB_MODULE_LEDS = 0x03;
+	ld	a,0x03
+	push	bc
+	ld	bc,_USB_MODULE_LEDS
+	out	(c),a
+	pop	bc
+;source-doc/base-drv/ch376.c:210: return result;
 	ld	l, b
 l_ch_data_in_transfer_n_00104:
-;source-doc/base-drv/ch376.c:209: }
+;source-doc/base-drv/ch376.c:211: }
 	pop	ix
 	ret
-;source-doc/base-drv/ch376.c:211: usb_error ch_data_out_transfer(const uint8_t *buffer, int16_t buffer_length, endpoint_param *const endpoint) {
+;source-doc/base-drv/ch376.c:213: usb_error ch_data_out_transfer(const uint8_t *buffer, int16_t buffer_length, endpoint_param *const endpoint) {
 ; ---------------------------------
 ; Function ch_data_out_transfer
 ; ---------------------------------
@@ -658,7 +669,7 @@ _ch_data_out_transfer:
 	add	ix,sp
 	push	af
 	dec	sp
-;source-doc/base-drv/ch376.c:214: const uint8_t max_packet_size = calc_max_packet_size(endpoint->max_packet_sizex);
+;source-doc/base-drv/ch376.c:216: const uint8_t max_packet_size = calc_max_packet_size(endpoint->max_packet_sizex);
 	ld	c,(ix+8)
 	ld	b,(ix+9)
 	ld	e, c
@@ -666,13 +677,13 @@ _ch_data_out_transfer:
 	inc	de
 	ld	a, (de)
 	ld	(ix-3),a
-;source-doc/base-drv/ch376.c:216: USB_MODULE_LEDS = 0x02;
+;source-doc/base-drv/ch376.c:218: USB_MODULE_LEDS = 0x02;
 	ld	a,0x02
 	push	bc
 	ld	bc,_USB_MODULE_LEDS
 	out	(c),a
 	pop	bc
-;source-doc/base-drv/ch376.c:218: while (buffer_length > 0) {
+;source-doc/base-drv/ch376.c:220: while (buffer_length > 0) {
 	ld	(ix-2),c
 	ld	(ix-1),b
 l_ch_data_out_transfer_00103:
@@ -683,7 +694,7 @@ l_ch_data_out_transfer_00103:
 	xor	0x80
 l_ch_data_out_transfer_00139:
 	jp	P, l_ch_data_out_transfer_00105
-;source-doc/base-drv/ch376.c:219: const uint8_t size = max_packet_size < buffer_length ? max_packet_size : buffer_length;
+;source-doc/base-drv/ch376.c:221: const uint8_t size = max_packet_size < buffer_length ? max_packet_size : buffer_length;
 	ld	d,(ix-3)
 	ld	e,0x00
 	ld	a, d
@@ -699,7 +710,7 @@ l_ch_data_out_transfer_00109:
 	ld	d,(ix+6)
 	ld	e,(ix+7)
 l_ch_data_out_transfer_00110:
-;source-doc/base-drv/ch376.c:220: buffer             = ch_write_data(buffer, size);
+;source-doc/base-drv/ch376.c:222: buffer             = ch_write_data(buffer, size);
 	push	bc
 	push	de
 	push	de
@@ -714,7 +725,7 @@ l_ch_data_out_transfer_00110:
 	pop	bc
 	ld	(ix+4),l
 	ld	(ix+5),h
-;source-doc/base-drv/ch376.c:221: buffer_length -= size;
+;source-doc/base-drv/ch376.c:223: buffer_length -= size;
 	ld	e,0x00
 	ld	a,(ix+6)
 	sub	d
@@ -722,7 +733,7 @@ l_ch_data_out_transfer_00110:
 	ld	a,(ix+7)
 	sbc	a, e
 	ld	(ix+7),a
-;source-doc/base-drv/ch376.c:222: ch_issue_token_out(endpoint);
+;source-doc/base-drv/ch376.c:224: ch_issue_token_out(endpoint);
 	ld	l,c
 	ld	h,b
 	push	hl
@@ -733,7 +744,7 @@ l_ch_data_out_transfer_00110:
 	ld	l, a
 	or	a
 	jr	NZ,l_ch_data_out_transfer_00106
-;source-doc/base-drv/ch376.c:226: endpoint->toggle = !endpoint->toggle;
+;source-doc/base-drv/ch376.c:228: endpoint->toggle = !endpoint->toggle;
 	ld	e, c
 	ld	d, b
 	ld	l,(ix-2)
@@ -749,34 +760,40 @@ l_ch_data_out_transfer_00110:
 	ld	(de), a
 	jr	l_ch_data_out_transfer_00103
 l_ch_data_out_transfer_00105:
-;source-doc/base-drv/ch376.c:229: USB_MODULE_LEDS = 0x00;
-	ld	a,0x00
+;source-doc/base-drv/ch376.c:231: USB_MODULE_LEDS = 0x03;
+	ld	a,0x03
 	ld	bc,_USB_MODULE_LEDS
 	out	(c),a
-;source-doc/base-drv/ch376.c:231: return USB_ERR_OK;
+;source-doc/base-drv/ch376.c:232: return USB_ERR_OK;
 	ld	l,0x00
-;source-doc/base-drv/ch376.c:232: done:
-;source-doc/base-drv/ch376.c:233: return result;
+	jr	l_ch_data_out_transfer_00107
+;source-doc/base-drv/ch376.c:234: done:
 l_ch_data_out_transfer_00106:
-;source-doc/base-drv/ch376.c:234: }
+;source-doc/base-drv/ch376.c:235: USB_MODULE_LEDS = 0x03;
+	ld	a,0x03
+	ld	bc,_USB_MODULE_LEDS
+	out	(c),a
+;source-doc/base-drv/ch376.c:236: return result;
+l_ch_data_out_transfer_00107:
+;source-doc/base-drv/ch376.c:237: }
 	ld	sp, ix
 	pop	ix
 	ret
-;source-doc/base-drv/ch376.c:236: void ch_set_usb_address(const uint8_t device_address) __z88dk_fastcall {
+;source-doc/base-drv/ch376.c:239: void ch_set_usb_address(const uint8_t device_address) __z88dk_fastcall {
 ; ---------------------------------
 ; Function ch_set_usb_address
 ; ---------------------------------
 _ch_set_usb_address:
-;source-doc/base-drv/ch376.c:237: ch_command(CH_CMD_SET_USB_ADDR);
+;source-doc/base-drv/ch376.c:240: ch_command(CH_CMD_SET_USB_ADDR);
 	push	hl
 	ld	l,0x13
 	call	_ch_command
 	pop	hl
-;source-doc/base-drv/ch376.c:238: CH376_DATA_PORT = device_address;
+;source-doc/base-drv/ch376.c:241: CH376_DATA_PORT = device_address;
 	ld	a, l
 	ld	bc,_CH376_DATA_PORT
 	out	(c),a
-;source-doc/base-drv/ch376.c:239: }
+;source-doc/base-drv/ch376.c:242: }
 	ret
 _result:
 	DEFB +0x00
