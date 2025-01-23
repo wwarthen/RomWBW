@@ -1,9 +1,30 @@
+---
+author: Wayne Warthen (<wwarthen@gmail.com>)
+colorlinks: true
+date: 23 Jan 2025
+fontsize: 12pt
+geometry:
+- top=1.5in
+- bottom=1.5in
+- left=1.5in
+- right=1.5in
+header-includes:
+- 
+institution: RetroBrew Computers Group
+monofont: roboto-mono
+monofontoptions: Scale=0.75
+papersize: letter
+sansfont: roboto
+subtitle: Version 3.5
+title: RomWBW ReadMe
+---
+
 
 
 **RomWBW ReadMe** \
 Version 3.5 \
 Wayne Warthen  ([wwarthen@gmail.com](mailto:wwarthen@gmail.com)) \
-18 Jan 2025
+23 Jan 2025
 
 # Overview
 
@@ -121,14 +142,18 @@ for helpful release-specific information.
 
 Documentation for RomWBW includes:
 
+- [RomWBW
+  Introduction](https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20Introduction.pdf)
 - [RomWBW User
   Guide](https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20User%20Guide.pdf)
 - [RomWBW System
   Guide](https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20System%20Guide.pdf)
 - [RomWBW
   Applications](https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20Applications.pdf)
+- [RomWBW Disk
+  Catalog](https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20Disk%20Catalog.pdf)
 - [RomWBW
-  Errata](https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20Errata.pdf)
+  Hardware](https://github.com/wwarthen/RomWBW/raw/master/Doc/RomWBW%20Hardware.pdf)
 
 # Acknowledgments
 
@@ -201,11 +226,12 @@ let me know if I missed you!
 - Martin R has provided substantial help reviewing and improving the
   User Guide and Applications documents.
 
-- Mark Pruden has also contributed a great deal of content to the Disk
-  Catalog, User Guide as well as contributing the disk image for the
-  Z3PLUS operating system, the COPYSL utility, and also implemented a
-  feature for RomWBW configuration by NVRAM, and added the /B bulk mode
-  of disk assignment to the ASSIGN utility.
+- Mark Pruden has contributed a great deal of content to the Disk
+  Catalog, User Guide, as well as creating the Introduction and Hardware
+  documents, and contributed the disk image for the Z3PLUS operating
+  system, the COPYSL utility, and also implemented a feature for RomWBW
+  configuration by NVRAM, and added the /B bulk mode of disk assignment
+  to the ASSIGN utility.
 
 - Jacques Pelletier has contributed the DS1501 RTC driver code.
 
