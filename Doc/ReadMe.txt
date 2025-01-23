@@ -31,9 +31,9 @@ Log of changes in RomWBW by version.
 RomWBW User Guide ("RomWBW User Guide.pdf")
 RomWBW System Guide ("RomWBW System Guide.pdf")
 RomWBW Applications ("RomWBW Applications.pdf")
-RomWBW ROM Applications ("RomWBW ROM Applications.pdf")
 RomWBW Disk Catalog ("RomWBW Disk Catalog.pdf")
-RomWBW Errata ("RomWBW Errata.pdf")
+RomWBW Hardware ("RomWBW Hardware.pdf")
+
 -------------------------------------------------------
 
 Documentation set for RomWBW.  The primary document is the

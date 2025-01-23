@@ -1,6 +1,6 @@
 RomWBW ReadMe
 Wayne Warthen (wwarthen@gmail.com)
-18 Jan 2025
+23 Jan 2025
 
 
 
@@ -120,11 +120,12 @@ Documentation
 
 Documentation for RomWBW includes:
 
+-   RomWBW Introduction
 -   RomWBW User Guide
 -   RomWBW System Guide
 -   RomWBW Applications
--   RomWBW Errata
-
+-   RomWBW Disk Catalog
+-   RomWBW Hardware
 
 
 ACKNOWLEDGMENTS
@@ -200,11 +201,12 @@ let me know if I missed you!
 -   Martin R has provided substantial help reviewing and improving the
     User Guide and Applications documents.
 
--   Mark Pruden has also contributed a great deal of content to the Disk
-    Catalog, User Guide as well as contributing the disk image for the
-    Z3PLUS operating system, the COPYSL utility, and also implemented a
-    feature for RomWBW configuration by NVRAM, and added the /B bulk
-    mode of disk assignment to the ASSIGN utility.
+-   Mark Pruden has contributed a great deal of content to the Disk
+    Catalog, User Guide, as well as creating the Introduction and
+    Hardware documents, and contributed the disk image for the Z3PLUS
+    operating system, the COPYSL utility, and also implemented a feature
+    for RomWBW configuration by NVRAM, and added the /B bulk mode of
+    disk assignment to the ASSIGN utility.
 
 -   Jacques Pelletier has contributed the DS1501 RTC driver code.
 

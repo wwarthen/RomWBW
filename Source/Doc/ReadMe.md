@@ -113,10 +113,12 @@ for helpful release-specific information.
 
 Documentation for $doc_product$ includes:
 
+* $doc_intro$
 * $doc_user$
 * $doc_sys$
 * $doc_apps$
-* $doc_errata$
+* $doc_catalog$
+* $doc_hardware$
 
 # Acknowledgments
 
@@ -191,8 +193,9 @@ please let me know if I missed you!
 * Martin R has provided substantial help reviewing and improving the
   User Guide and Applications documents.
   
-* Mark Pruden has also contributed a great deal of content to the
-  Disk Catalog, User Guide as well as contributing the disk image
+* Mark Pruden has contributed a great deal of content to the
+  Disk Catalog, User Guide, as well as creating the Introduction
+  and Hardware documents, and contributed the disk image
   for the Z3PLUS operating system, the COPYSL utility, and also
   implemented a feature for RomWBW configuration by NVRAM,
   and added the /B bulk mode of disk assignment to the ASSIGN utility.

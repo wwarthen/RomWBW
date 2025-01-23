@@ -2551,7 +2551,7 @@ checking.
 
 The `WDATE` application was written and contributed by Kevin Boone.
 The source code is available on GitHub at
-<https://github.com/kevinboone/wdate-cpm/blob/main/README.md>.
+<https://github.com/kevinboone/wdate-cpm>.
 
 `\clearpage`{=latex}
 
