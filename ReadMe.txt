@@ -1,11 +1,10 @@
 RomWBW ReadMe
 Wayne Warthen (wwarthen@gmail.com)
-23 Jan 2025
+24 Jan 2025
 
 
 
-OVERVIEW
-
+Overview
 
 RomWBW software provides a complete, commercial quality implementation
 of CP/M (and workalike) operating systems and applications for modern
@@ -32,6 +31,7 @@ General features include:
 -   Video drivers including TMS9918, SY6545, MOS8563, HD6445
 -   Keyboard (PS/2) drivers via VT8242 or PPI interfaces
 -   Real time clock drivers including DS1302, BQ4845
+-   Support for CP/NET networking using Wiznet, MT011 or Serial
 -   OSes: CP/M 2.2, ZSDOS, CP/M 3, NZ-COM, ZPM3, QPM, p-System, and
     FreeRTOS
 -   Built-in VT-100 terminal emulation support
@@ -79,10 +79,7 @@ The FAT filesystem may be coresident on the same disk media as RomWBW
 slices or on stand-alone media. This makes exchanging files with modern
 OSes such as Windows, MacOS, and Linux very easy.
 
-
-
-ACQUIRING ROMWBW
-
+Acquiring RomWBW
 
 The RomWBW Repository (https://github.com/wwarthen/RomWBW) on GitHub is
 the official distribution location for all project source and
@@ -100,10 +97,7 @@ disk images.
 All source code and distributions are maintained on GitHub. Code
 contributions are very welcome.
 
-
-
-INSTALLATION & OPERATION
-
+Installation & Operation
 
 In general, installation of RomWBW on your platform is very simple. You
 just need to program your ROM with the correct ROM image from the RomWBW
@@ -114,7 +108,6 @@ functionality.
 Complete instructions for installation and operation of RomWBW are found
 in the RomWBW User Guide. It is also a good idea to review the Release
 Notes for helpful release-specific information.
-
 
 Documentation
 
@@ -127,9 +120,7 @@ Documentation for RomWBW includes:
 -   RomWBW Disk Catalog
 -   RomWBW Hardware
 
-
-ACKNOWLEDGMENTS
-
+Acknowledgments
 
 I want to acknowledge that a great deal of the code and inspiration for
 RomWBW has been provided by or derived from the work of others in the
@@ -242,10 +233,7 @@ let me know if I missed you!
 
 Contributions of all kinds to RomWBW are very welcome.
 
-
-
-LICENSING
-
+Licensing
 
 RomWBW is free software: you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free
@@ -287,10 +275,7 @@ control system to ensure their contributions are clearly documented.
 
 All contributions to RomWBW are subject to this license.
 
-
-
-GETTING ASSISTANCE
-
+Getting Assistance
 
 The best way to get assistance with RomWBW or any aspect of the
 RetroBrew Computers projects is via one of the community forums:

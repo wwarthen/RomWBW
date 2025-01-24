@@ -1,7 +1,7 @@
 ---
 author: Wayne Warthen (<wwarthen@gmail.com>)
 colorlinks: true
-date: 23 Jan 2025
+date: 24 Jan 2025
 fontsize: 12pt
 geometry:
 - top=1.5in
@@ -24,7 +24,7 @@ title: RomWBW ReadMe
 **RomWBW ReadMe** \
 Version 3.5 \
 Wayne Warthen  ([wwarthen@gmail.com](mailto:wwarthen@gmail.com)) \
-23 Jan 2025
+24 Jan 2025
 
 # Overview
 
@@ -57,6 +57,7 @@ General features include:
 - Video drivers including TMS9918, SY6545, MOS8563, HD6445
 - Keyboard (PS/2) drivers via VT8242 or PPI interfaces
 - Real time clock drivers including DS1302, BQ4845
+- Support for CP/NET networking using Wiznet, MT011 or Serial
 - OSes: CP/M 2.2, ZSDOS, CP/M 3, NZ-COM, ZPM3, QPM, p-System, and
   FreeRTOS
 - Built-in VT-100 terminal emulation support
