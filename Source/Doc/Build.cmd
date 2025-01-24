@@ -15,7 +15,7 @@ set PATH=%TOOLS%\gpp;%PATH%
 
 if not "%1"=="" (call :GenDoc %1 & goto :eof)
 
-call :GenDoc ReadMe || exit /b
+:: call :GenDoc ReadMe || exit /b
 call :GenDoc Introduction || exit /b
 call :GenDoc UserGuide || exit /b
 call :GenDoc SystemGuide || exit /b
@@ -23,8 +23,10 @@ call :GenDoc Applications || exit /b
 call :GenDoc Catalog || exit /b
 call :GenDoc Hardware || exit /b
 
-if exist ReadMe.gfm copy Readme.gfm ..\..\ReadMe.md || exit /b
-if exist ReadMe.txt copy ReadMe.txt ..\..\ReadMe.txt || exit /b
+:: if exist ReadMe.gfm copy Readme.gfm ..\..\ReadMe.md || exit /b
+:: if exist ReadMe.txt copy ReadMe.txt ..\..\ReadMe.txt || exit /b
+if exist Introduction.gfm copy Introduction.gfm ..\..\ReadMe.md || exit /b
+if exist Introduction.txt copy Introduction.txt ..\..\ReadMe.txt || exit /b
 if exist Introduction.pdf copy Introduction.pdf "..\..\Doc\RomWBW Introduction.pdf" || exit /b
 if exist UserGuide.pdf copy UserGuide.pdf "..\..\Doc\RomWBW User Guide.pdf" || exit /b
 if exist SystemGuide.pdf copy SystemGuide.pdf "..\..\Doc\RomWBW System Guide.pdf" || exit /b
