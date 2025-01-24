@@ -671,6 +671,8 @@ The following are found in
 | CPN3MT.LBR      | CP/NET 3            | CP/M 3          | RCBus w/ MT011          |
 | CPN12DUO.LBR    | CP/NET 1.2          | CP/M 2.2        | Duodyne w/ Disk I/O     |
 | CPN3DUO.LBR     | CP/NET 3            | CP/M 3          | Duodyne w/ Disk I/O     |
+| CPN12SER.LBR    | CP/NET 1.2          | CP/M 2.2        | RomWBW Serial Port      |
+| CPN3SER.LBR     | CP/NET 3            | CP/M 3          | RomWBW Serial Port      |
 
 ## General Purpose Applications
 

@@ -25,31 +25,6 @@ $doc_hardware$ .
 
 `\clearpage`{=latex}
 
-## Conventions Used
-
-#### Size Suffixes
-
-Within the documentation and in RomWBW in general, the use of size
-suffixes KB, MB, GB, and TB refer to the binary variant as shown
-below.  The modern suffixes (KiB, MiB, etc.) are not used here because
-they were not prevalent during the time that the RomWBW OSes were
-used.  This keeps all of RomWBW and associated applications consistent.
-
-| Suffix     | Value     | Meaning                                |
-|------------|-----------|----------------------------------------|
-| KB         | 1024      | 1,024 bytes                            |
-| MB         | 1024^2^   | 1,048,576 bytes                        |
-| GB         | 1024^3^   | 1,073,741,824 bytes                    |
-| TB         | 1024^4^   | 1,099,511,627,776 bytes                |
-
-#### Links and URLs
-
-Many of the references in the documentation to Internet addresses (URLs)
-do not provide the address in the text.  However, these links are
-embedded and "clickable" within the documents.  Your PDF viewer should
-highlight these links in some manner (typically an alternate color
-or an underline).
-
 # Description
 
 ## Primary Features
@@ -69,6 +44,7 @@ Supported hardware features of RomWBW include:
 * Video drivers including TMS9918, SY6545, MOS8563, HD6445
 * Keyboard (PS/2) drivers via VT8242 or PPI interfaces
 * Real time clock drivers including DS1302, BQ4845
+* Support for CP/NET networking using Wiznet, MT011 or Serial
 * Built-in VT-100 terminal emulation support
 
 A dynamic disk drive letter assignment mechanism allows mapping
@@ -77,7 +53,7 @@ Additionally, mass storage devices (IDE Disk, CF Card, SD Card, etc.)
 support the use of multiple slices (up to 256 per device). Each slice
 contains a complete CP/M filesystem and can be mapped independently to
 any drive letter. This overcomes the inherent size limitations in legacy
-OSes and allows up to 2GB of accessible storage on a single device, 
+OSes and allows up to 2GB of addressable storage on a single device, 
 with up to 128MB accessible at any one time.
 
 ## Included Software
@@ -89,15 +65,15 @@ slices, each with a full operating system implementation. If you use
 this disk image, you can easily pick whichever operating system you
 want to boot without changing media.
 
-Some of the included software
+Some of the included software:
 
 * Operating Systems (CP/M 2.2, ZSDOS, NZ-COM, CP/M 3, ZPM3, Z3PLUS, QPM )
-* Additional operating systems, p-System, FreeRTOS, and FUZIX.
+* Support for other operating systems, p-System, FreeRTOS, and FUZIX.
 * Programming Tools (Z80ASM, Turbo Pascal, Forth, Cowgol)
-* C Compilers including Aztec, and HI-TECK
+* C Compiler's including Aztec-C, and HI-TECH C
 * Microsoft Basic Compiler, and Microsoft Fortran
 * Some games such as Colossal Cave, Zork, etc
-* Wordstar
+* Wordstar Word processing software
 
 Some of the provided software can be launched directly from the
 ROM firmware itself:

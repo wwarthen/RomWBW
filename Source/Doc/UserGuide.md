@@ -13,6 +13,31 @@ find this document far too basic.  Others will find it lacking in many
 areas.  I am doing my best and encourage you to provide constructive
 feedback.
 
+#### Conventions Used
+
+##### Size Suffixes
+
+Within the documentation and in RomWBW in general, the use of size
+suffixes KB, MB, GB, and TB refer to the binary variant as shown
+below.  The modern suffixes (KiB, MiB, etc.) are not used here because
+they were not prevalent during the time that the RomWBW OSes were
+used.  This keeps all of RomWBW and associated applications consistent.
+
+| Suffix     | Value     | Meaning                                |
+|------------|-----------|----------------------------------------|
+| KB         | 1024      | 1,024 bytes                            |
+| MB         | 1024^2^   | 1,048,576 bytes                        |
+| GB         | 1024^3^   | 1,073,741,824 bytes                    |
+| TB         | 1024^4^   | 1,099,511,627,776 bytes                |
+
+##### Links and URLs
+
+Many of the references in the documentation to Internet addresses (URLs)
+do not provide the address in the text.  However, these links are
+embedded and "clickable" within the documents.  Your PDF viewer should
+highlight these links in some manner (typically an alternate color
+or an underline).
+
 # Getting Started
 
 ## Installation

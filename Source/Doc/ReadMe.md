@@ -32,6 +32,7 @@ Supported hardware features of RomWBW include:
 * Video drivers including TMS9918, SY6545, MOS8563, HD6445
 * Keyboard (PS/2) drivers via VT8242 or PPI interfaces
 * Real time clock drivers including DS1302, BQ4845
+* Support for CP/NET networking using Wiznet, MT011 or Serial
 * Built-in VT-100 terminal emulation support
 
 RomWBW is distributed as both source code and pre-built ROM and disk
