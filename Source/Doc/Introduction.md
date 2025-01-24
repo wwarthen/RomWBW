@@ -141,6 +141,19 @@ included -- no need to install assemblers, etc.  The firmware can also
 be built using Linux or MacOS after confirming a few standard tools
 have been installed.
 
+## Installation & Operation
+
+In general, installation of RomWBW on your platform is very simple. You
+just need to program your ROM with the correct ROM image from the RomWBW
+distribution. Subsequently, you can write disk images on your disk
+drives (IDE disk, CF Card, SD Card, etc.) which then provides even more
+functionality.
+
+Complete instructions for installation and operation of RomWBW are found
+in the $doc_user$. It is also a good idea to review the [Release
+Notes](https://github.com/wwarthen/RomWBW/blob/master/RELEASE_NOTES.md)
+for helpful release-specific information.
+
 ## Documentation
 
 There are several documents that form the core of the RomWBW documentation:
