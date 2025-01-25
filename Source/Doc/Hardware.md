@@ -1352,6 +1352,8 @@ program the image into the first 512KB of the ROM for now.
 
 `\clearpage`{=latex}
 
+## Z80 K80W CPU Module
+
 #### ROM Image File:  RCZ80_k8w_std.rom
 
 |                   |               |
@@ -1876,113 +1878,126 @@ program the image into the first 512KB of the ROM for now.
 This section briefly describes each of the possible devices that
 may be discovered by RomWBW in your system.
 
-## Serial
+## Character
 
-| **ID**    | **Type** | **Description**                                        |
-|-----------|----------|--------------------------------------------------------|
-| ACIA      | Char     | MC68B50 Asynchronous Communications Interface Adapter  |
-| ASCI      | Char     | Zilog Z180 CPU Built-in Serial Ports                   |
-| DUART     | Char     | SCC2681 or compatible Dual UART                        |
-| EF        | Char     | EF9345 Video Display Controller                        |
-| KBD       | Keyboard | 8242 PS/2 Keyboard Controller                          |
-| LPT       | Char     | Parallel I/O Controller                                |
-| MSXKYB    | Keyboard | MSX Compliant Matrix Keyboard                          |
-| PIO       | Char     | Zilog Parallel Interface Controller                    |
-| PPK       | Keyboard | Matrix Keyboard                                        |
-| PPPCON    | Serial   | ParPortProp Serial Console Interface                   |
-| PRPCON    | Serial   | PropIO Serial Console Interface                        |
-| SCON      | Char     | S100 Console                                           |
-| SIO       | Char     | Zilog Serial Port Interface                            |
-| SSER      | Char     | Simple Serial Interface                                |
-| UART      | Char     | 16C550 Family Serial Interface                         |
-| USB-FIFO  | Char     | FT232H-based ECB USB FIFO                              |
-| Z2U       | Char     | Zilog Z280 CPU Built-in Serial Ports                   |
+| **ID**    | **Description**                                        |
+|-----------|--------------------------------------------------------|
+| ACIA      | MC68B50 Asynchronous Communications Interface Adapter  |
+| ASCI      | Zilog Z180 CPU Built-in Serial Ports                   |
+| DUART     | SCC2681 or compatible Dual UART                        |
+| EF        | EF9345 Video Display Controller                        |
+| ESPCON    | ESP32 Firmware-based Video Console                     |
+| ESPSER    | ESP32 Firmware-based Serial Interface                  |
+| LPT       | Parallel I/O Controller                                |
+| PIO       | Zilog Parallel Interface Controller                    |
+| PPPCON    | ParPortProp Serial Console Interface                   |
+| PRPCON    | PropIO Serial Console Interface                        |
+| SCON      | S100 Console                                           |
+| SIO       | Zilog Serial Port Interface                            |
+| SSER      | Simple Serial Interface                                |
+| UART      | 16C550 Family Serial Interface                         |
+| USB-FIFO  | FT232H-based ECB USB FIFO                              |
+| Z2U       | Zilog Z280 CPU Built-in Serial Ports                   |
 
 By default, RomWBW will use the first available character device it
-discovers for the initial console.  Serial devices are scanned in
-the following order:
+discovers for the initial console.  The following character devices are
+scanned in the order shown.  The available character devices depend on
+the active platform and configuration.
 
+#. SSET: Simple Serial Interface
 #. ASCI: Zilog Z180 CPU Built-in Serial Ports
 #. Z2U: Zilog Z280 CPU Built-in Serial Ports
 #. UART: 16C550 Family Serial Interface
 #. DUART: SCC2681 or compatible Dual UART
 #. SIO: Zilog Serial Port Interface
 #. ACIA: MC68B50 Asynchronous Communications Interface Adapter
+#. USB-FIFO: FT232H-based ECB USB FIFO
 
 ## Disk
 
-| **ID**    | **Type** | **Description**                                        |
-|-----------|----------|--------------------------------------------------------|
-| CHSD      | Disk     | CH37x SD Card Interface                                |
-| CHUSB     | Disk     | CH37x USB Drive Interface                              |
-| EMM       | Disk     | Disk drive on Parallel Port emm interface (Zip Drive)  |
-| FD        | Disk     | 8272 or compatible Floppy Disk Controller              |
-| HDSK      | Disk     | SIMH Simulator Hard Disk                               |
-| IDE       | Disk     | IDE/ATA/ATAPI Hard Disk Interface                      |
-| IMM       | Disk     | IMM Zip Drive on PPI                                   |
-| MD        | Disk     | ROM/RAM Disk                                           |
-| PPA       | Disk     | PPA Zip Drive on PPI                                   |
-| PPIDE     | Disk     | 8255 IDE/ATA/ATAPI Hard Disk Interface                 |
-| PPPSD     | Disk     | ParPortProp SD Card Interface                          |
-| PRPSD     | Disk     | PropIO SD Card Interface                               |
-| RF        | Disk     | RAM Floppy Disk Interface                              |
-| SD        | Disk     | SD Card Interface                                      |
-| SYQ       | Disk     | Iomega SparQ Drive on PPI                              |
+| **ID**    | **Description**                                        |
+|-----------|--------------------------------------------------------|
+| CHSD      | CH37x SD Card Interface                                |
+| CHUSB     | CH37x USB Drive Interface                              |
+| FD        | 8272 or compatible Floppy Disk Controller              |
+| HDSK      | SIMH Simulator Hard Disk                               |
+| IDE       | IDE/ATA/ATAPI Hard Disk Interface                      |
+| IMM       | Zip Drive on PPI (IMM variant)                         |
+| MD        | ROM/RAM Disk                                           |
+| PPA       | Zip Drive on PPI (PPA variant)                         |
+| PPIDE     | 8255 IDE/ATA/ATAPI Hard Disk Interface                 |
+| PPPSD     | ParPortProp SD Card Interface                          |
+| PRPSD     | PropIO SD Card Interface                               |
+| RF        | RAM Floppy Disk Interface                              |
+| SD        | SD Card Interface                                      |
+| SYQ       | Iomega SparQ Drive on PPI                              |
 
 ## Video
 
-| **ID**    | **Type** | **Description**                                        |
-|-----------|----------|--------------------------------------------------------|
-| CVDU      | Video    | MC8563-based Video Display Controller                  |
-| FV        | Video    | S100 FPGA Z80 Onboard VGA/Keyboard                     |
-| GDC       | Video    | uPD7220 Video Display Controller                       |
-| TMS       | Video    | TMS9918/38/58 Video Display Controller                 |
-| VDU       | Video    | MC6845 Family Video Display Controller                 |
-| VGA       | Video    | HD6445CP4-based Video Display Controller               |
-| VRC       | Video    | VGARC Video Display Controller                         |
+| **ID**    | **Description**                                        |
+|-----------|--------------------------------------------------------|
+| CVDU      | MC8563-based Video Display Controller                  |
+| FV        | S100 FPGA Z80 Onboard VGA/Keyboard                     |
+| GDC       | uPD7220 Video Display Controller                       |
+| TMS       | TMS9918/38/58 Video Display Controller                 |
+| VDU       | MC6845 Family Video Display Controller                 |
+| VGA       | HD6445CP4-based Video Display Controller               |
+| VRC       | VGARC Video Display Controller                         |
+
+## Keyboard
+
+| **ID**    | **Description**                                        |
+|-----------|--------------------------------------------------------|
+| KBD       | 8242 PS/2 Keyboard Controller                          |
+| MSXKYB    | MSX Compliant Matrix Keyboard                          |
+| NABUKB    | NABU Keyboard                                          |
+| PPK       | Matrix Keyboard                                        |
 
 ## Audio
 
-| **ID**    | **Type** | **Description**                                        |
-|-----------|----------|--------------------------------------------------------|
-| AY        | Audio    | AY-3-8910/YM2149 Programmable Sound Generator          |
-| SN76489   | Sound    | SN76489 Programmable Sound Generator                   |
-| SPK       | Sound    | Bit-bang Speaker                                       |
-| YM        | Audio    | YM2612 Programmable Sound Generator                    |
+| **ID**    | **Description**                                        |
+|-----------|--------------------------------------------------------|
+| AY        | AY-3-8910/YM2149 Programmable Sound Generator          |
+| SN76489   | SN76489 Programmable Sound Generator                   |
+| SPK       | Bit-bang Speaker                                       |
+| YM        | YM2612 Programmable Sound Generator                    |
 
 ## RTC (RealTime Clock)
 
-| **ID**    | **Type** | **Description**                                        |
-|-----------|----------|--------------------------------------------------------|
-| BQRTC     | RTC      | BQ4845P Real Time Clock                                |
-| DS5RTC    | RTC      | Maxim DS1305 SPI Real-Time Clock w/ NVRAM              |
-| DS7RTC    | RTC      | Maxim DS1307 PCF I2C Real-Time Clock w/ NVRAM          |
-| DS1501RTC | RTC      | Maxim DS1501/DS1511 Watchdog Real-Time Clock           |
-| DSRTC     | RTC      | Maxim DS1302 Real-Time Clock w/ NVRAM                  |
-| INTRTC    | RTC      | Interrupt-based Real Time Clock                        |
-| PCF       | RTC      | PCF8584-based I2C Real-Time Clock                      |
-| RP5C01    | RTC      | Ricoh RPC01A Real-Time Clock w/ NVRAM                  |
-| SIMRTC    | RTC      | SIMH Simulator Real-Time Clock                         |
+| **ID**    | **Description**                                        |
+|-----------|--------------------------------------------------------|
+| BQRTC     | BQ4845P Real Time Clock                                |
+| DS5RTC    | Maxim DS1305 SPI Real-Time Clock w/ NVRAM              |
+| DS7RTC    | Maxim DS1307 PCF I2C Real-Time Clock w/ NVRAM          |
+| DS1501RTC | Maxim DS1501/DS1511 Watchdog Real-Time Clock           |
+| DSRTC     | Maxim DS1302 Real-Time Clock w/ NVRAM                  |
+| INTRTC    | Interrupt-based Real Time Clock                        |
+| PCF       | PCF8584-based I2C Real-Time Clock                      |
+| RP5C01    | Ricoh RPC01A Real-Time Clock w/ NVRAM                  |
+| SIMRTC    | SIMH Simulator Real-Time Clock                         |
 
-## DSKY (DiSplay KeYboard)
+## DsKy (DiSplay KeYpad)
 
-| **ID**    | **Type** | **Description**                                        |
-|-----------|----------|--------------------------------------------------------|
-| ICM       | DsKy     | ICM7218-based Display/Keypad on PPI                    |
-| PKD       | DsKy     | P8279-based Display/Keypad on PPI                      |
+| **ID**    | **Description**                                        |
+|-----------|--------------------------------------------------------|
+| FP        | Simple LED & Switch Front Panel                        |
+| GM7303    | Prolog 7303 derived Display/Keypad                     |
+| H8P       | Heath H8 Display/Keypad                                |
+| ICM       | ICM7218-based Display/Keypad on PPI                    |
+| LCD       | Hitachi HD44780-based LCD Display                      |
+| PKD       | P8279-based Display/Keypad on PPI                      |
 
 ## System
 
-| **ID**    | **Type** | **Description**                                        |
-|-----------|----------|--------------------------------------------------------|
-| CH        | System   | CH375/376 USB Controller                               |
-| CTC       | System   | Zilog Clock/Timer                                      |
-| DMA       | System   | Zilog DMA Controller                                   |
-| FP        | System   | Simple LED & Switch Front Panel                        |
-| KIO       | System   | Zilog Serial/ Parallel Counter/Timer                   |
-| LCD       | System   | Hitachi HD44780-based LCD Display                      |
-| PPP       | System   | ParPortProp Host Interface Controller                  |
-| PRP       | System   | PropIO Host Interface Controller                       |
+| **ID**    | **Description**                                        |
+|-----------|--------------------------------------------------------|
+| CH        | CH375/376 USB Interface Controller                     |
+| CTC       | Zilog Clock/Timer                                      |
+| DMA       | Zilog DMA Controller                                   |
+| ESP       | ESP32 Firmware-based interface                         |
+| KIO       | Zilog Serial/ Parallel Counter/Timer                   |
+| PPP       | ParPortProp Host Interface Controller                  |
+| PRP       | PropIO Host Interface Controller                       |
 
 # UNA Hardware BIOS
 
