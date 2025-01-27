@@ -381,11 +381,10 @@ The following files appear in User Area 0
 | `GET.COM`     | DRI CPM+ Temporarily get console input form a disk file                |
 | `HELP.COM`    | DRI CPM+ Display information on how to use commands                    |
 | `HELP.HLP`    | DRI CPM+ Databse of help information for HELP.COM                      |
-| `HEXCOM.COM`  | DRI CPM+ Create a COM file from a hex file output by MAC               |
+| `HEXCOM.COM`  | DRI CPM+ Create a COM file from a hex file (replaces LOAD.COM)         |
 | `INITDIR.COM` | DRI CPM+ Initializes a disk to allow time and date stamping            |
 | `LIB.COM`     | DRI object file library manager                                        |
 | `LINK.COM`    | DRI object file linker                                                 |
-| `LOAD.COM`    | DRI loader for Intel hex files                                         |
 | `MAC.COM`     | DRI 8080 macro assembler                                               |
 | `PATCH.COM`   | DRI CPM+ Display or install patch to the CPM+ system or command files  |
 | `PIP.COM`     | DRI CPM+ Periperal Interchange Program                                 |

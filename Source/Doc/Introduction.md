@@ -349,8 +349,7 @@ development of RomWBW.  The project can be found at
 #### Z80 fig-FORTH
 
 Dimitri Theulings' implementation of fig-FORTH for the Z80 has a
-RomWBW-specific variant.  This fig-FORTH is built into the RomWBW
-ROM.  However, the project itself is hosted at
+RomWBW-specific variant. The project is hosted at
 <https://github.com/dimitrit/figforth>.
 
 #### Assembly Language Programming for the RC2014 Zed
