@@ -6,7 +6,7 @@ BF_SYSRESET		EQU	0F0h		; RESTART SYSTEM
 BF_SYSRES_WARM		EQU	01h		; WARM START (RESTART BOOT LOADER)
 
 
-; THE FOLLOWING NEED TO BE SYNCED WITH STD.ASM SO ROMLDR
+; THE FOLLOWING NEED TO BE SYNCED WITH INCLUDE.ASM SO ROMLDR
 ; KNOWS WHERE THIS EXECUTES AT
 
 FTH_SIZ			EQU	1700h
@@ -31,7 +31,7 @@ HB_LOC			EQU	0FD80h
 ; You should have received a copy of the GNU General Public License
 ; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-; Commercial inquiries should be directed to the author at 
+; Commercial inquiries should be directed to the author at
 ; 115 First St., #105, Collingwood, Ontario L9Y 4W3 Canada
 ; or via email to bj@camelforth.com
 ;
@@ -68,18 +68,18 @@ HB_LOC			EQU	0FD80h
 ;                   keywords are being passed in a
 ;                   macro.
 ;       b1ackmai1er difficultylevelhigh@gmail.com
-;   03-Dec 20 v1.02 Add James Bowmans double 
+;   03-Dec 20 v1.02 Add James Bowmans double
 ;                   precision words as per RC2014
-;                   version. Increase terminal 
+;                   version. Increase terminal
 ;                   input buffer (TIB) size.
-;       b1ackmai1er difficultylevelhigh@gmail.com  
+;       b1ackmai1er difficultylevelhigh@gmail.com
 ;   22-Jan 21 v1.02 Adjust for revised HBIOS
 ;                   proxy size.
 ;       b1ackmai1er difficultylevelhigh@gmail.com
-;   07-Sep 21 v1.02 Separate additions.  
+;   07-Sep 21 v1.02 Separate additions.
 ;   05-Oct 21 v1.02 Add Douglas Beattie Jr.'s
 ;                   API call and port read and
-;                   write words.                
+;                   write words.
 ; ===============================================
 ; Macros to define Forth headers
 ; HEAD  label,length,name,action
@@ -296,7 +296,7 @@ dodoes: ; -- a-addr
         next
 
 ; CP/M TERMINAL I/O =============================
- 
+
 ;C EMIT     c --    output character to console
     head EMIT,4,EMIT,docode
 		PUSH	DE
@@ -309,7 +309,7 @@ dodoes: ; -- a-addr
 		POP		DE
 		pop		BC					; PUT TOP OF STACK IN BC
 		next
-;		
+;
 ;Z SAVEKEY  -- addr  temporary storage for KEY?
     head savekey,7,SAVEKEY,dovar
 SVKY:	DW 0
@@ -318,7 +318,7 @@ SVKY:	DW 0
     head querykey,4,KEY?,docode
 		PUSH	BC					; SAVE TOP OF STACK
 		PUSH	DE
-		PUSH	HL					; GET CONSOLE INPUT STATUS VIA HBIOS					
+		PUSH	HL					; GET CONSOLE INPUT STATUS VIA HBIOS
 		LD		C,CIODEV_CONSOLE	; CONSOLE UNIT TO C
 		LD		B,CIOIST			; HBIOS FUNC: INPUT STATUS
 		RST		08					; HBIOS RETURNS STATUS IN A
@@ -334,7 +334,7 @@ key3:	LD		C,0
 		LD		(HL),B
 		INC		HL
 		LD		(HL),C
-		POP		HL					 
+		POP		HL
 		POP		DE
 		next
 
@@ -1090,6 +1090,6 @@ ELSE
 	nop
 ENDIF
 	.DEPHASE
-		
+
         END
 

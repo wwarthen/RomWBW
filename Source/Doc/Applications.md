@@ -596,7 +596,7 @@ CamelForth is the version of Forth included as part of the boot ROM in
 RomWBW. It has been converted from the Z80 CP/M version published at 
 <https://www.camelforth.com/page.php?5>. The 
 author is Brad Rodriguez who is a prolific Forth enthusiast, whose work 
-can be found here: <https://www.bradrodriguez/papers/index.html>.
+can be found here: <https://www.bradrodriguez.com/papers>.
 
 For those are who are not familiar with Forth, I recommend the
 wikipedia article <https://en.wikipedia.org/wiki/Forth_(programming_language)>
@@ -617,6 +617,10 @@ words are added to the dictionary.
 
 This implementation does not support loading or saving of programs. All programs
 need to be typed in. Additionally, screen editing and code blocks are not supported.
+
+A CP/M version is not provided with RomWBW, this is only a ROM application. If you need to 
+run it under CP/M you would need to download it from the camelforth web site, the link is 
+above.
 
 ### Structure of Forth source files
 
