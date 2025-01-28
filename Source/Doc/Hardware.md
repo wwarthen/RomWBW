@@ -1885,7 +1885,6 @@ may be discovered by RomWBW in your system.
 | ACIA      | MC68B50 Asynchronous Communications Interface Adapter  |
 | ASCI      | Zilog Z180 CPU Built-in Serial Ports                   |
 | DUART     | SCC2681 or compatible Dual UART                        |
-| EF        | EF9345 Video Display Controller                        |
 | ESPCON    | ESP32 Firmware-based Video Console                     |
 | ESPSER    | ESP32 Firmware-based Serial Interface                  |
 | LPT       | Parallel I/O Controller                                |
@@ -1937,6 +1936,7 @@ the active platform and configuration.
 | **ID**    | **Description**                                        |
 |-----------|--------------------------------------------------------|
 | CVDU      | MC8563-based Video Display Controller                  |
+| EF        | EF9345 Video Display Controller                        |
 | FV        | S100 FPGA Z80 Onboard VGA/Keyboard                     |
 | GDC       | uPD7220 Video Display Controller                       |
 | TMS       | TMS9918/38/58 Video Display Controller                 |
