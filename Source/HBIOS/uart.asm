@@ -32,6 +32,7 @@
 ;    - RCBUS DUAL RS232	$80,$88
 ;    - EPITX		$A0,$A8
 ;    - NABU		$48
+;    - HEATH		$C0,$C8,$D0
 ;
 UART_DEBUG		.EQU	FALSE
 ;
