@@ -9513,7 +9513,8 @@ STR_BANNER	.DB	"\r\n\r\nRomWBW HBIOS v", BIOSVER, ", ", TIMESTAMP
 		.DB	" (App Boot)"
 #ENDIF
 		.DB	"$"
-STR_PLATFORM	.DB	PLATFORM_NAME, "$"
+STR_PLATFORM	.DB	PLATFORM_NAME
+		.DB	"$"
 STR_CONSOLE	.DB	"\r\n\r\n  Console on Unit #$"
 STR_BADINT	.DB	"\r\n*** BAD INT ***\r\n$"
 STR_LOWBAT	.DB	"\r\n\r\n+++ LOW BATTERY +++$"
@@ -9604,7 +9605,9 @@ HB_APPBOOT2:
 	JR	HB_APPBOOT3		; AND CONTINUE
 ;
 STR_APPBOOT	.DB	"\r\n\r\n*** Launching RomWBW HBIOS v", BIOSVER, ", ", TIMESTAMP, " for"
-		.DB	"\r\n\r\n    ", PLATFORM_NAME, "$"
+		.DB	"\r\n\r\n    "
+		.DB	PLATFORM_NAME
+		.DB	"$"
 ;
 HB_APPBOOT3:
 ;

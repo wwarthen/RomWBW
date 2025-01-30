@@ -2508,7 +2508,8 @@ defcmd_len	.equ	$ - defcmd_buf	; len of def boot cmd
 ; Strings
 ;=======================================================================
 ;
-str_banner	.db	PLATFORM_NAME," Boot Loader",0
+str_banner	.db	PLATFORM_NAME
+		.db	" Boot Loader",0
 str_appboot	.db	" (App Boot)",0
 str_autoboot	.db	"\rAutoBoot: ",0
 str_autoact1	.db	"\rAutoBoot in ",0
