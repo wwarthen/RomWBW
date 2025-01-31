@@ -2609,7 +2609,7 @@ HB_CPU3:
 ; SK Z80-512K CLOCK INITIALIZATION
 ;--------------------------------------------------------------------------------------------------
 ;
-#IF (SKZENABLE)
+#IF ((SKZENABLE) | (WDOGMODE != WDOG_NONE))
 ;
 ;;; LOCATION OF THIS CODE???
 ;

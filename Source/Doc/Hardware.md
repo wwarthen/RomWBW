@@ -831,6 +831,9 @@ program the image into the first 512KB of the ROM for now.
 #### Notes:
 
 - CPU speed will be dynamically measured at startup if DSRTC is present
+- When disabled, watchdog requires /IM to be pulsed.  If an RCBus module
+  holds the CPU in WAIT for more than this, the watchdog will fire when
+  disabled with random consequences.  The Pico SD does this at power-on.
 
 `\clearpage`{=latex}
 
