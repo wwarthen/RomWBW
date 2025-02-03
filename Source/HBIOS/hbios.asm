@@ -180,8 +180,8 @@ SUPCTS	.EQU	FALSE		; SUPPRESS CTS DURING HBIOS BOOT
 ;
 ; SET DIAGNOSTIC LEDS
 ;
-; SCxxx: LED Port=0x0E, bit 2, inverted, dedicated port (LEDMODE_SC)
-; SC7xx/SC5xx: LED Port=0x0E, bit 0, inverted, dedicated port (LEDMODE_STD)
+; SC130/SC140/SC5xx/SC7xx: LED Port=0x0E, bit 0, inverted, dedicated port (LEDMODE_STD)
+; SC131: LED Port=0x0E, bit 2, inverted, dedicated port (LEDMODE_SC)
 ; TinyZ80: LED Port=0x6E, bit 0, inverted, dedicated port (LEDMODE_STD)
 ; Z80-512K: LED Port=0x6E, bit 0, inverted, dedicated port (LEDMODE_STD)
 ; MBC: LED Port=0x70, bits 1-0, normal, shared w/ RTC port (LEDMODE_RTC)
