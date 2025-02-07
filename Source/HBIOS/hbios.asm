@@ -185,6 +185,7 @@ SUPCTS	.EQU	FALSE		; SUPPRESS CTS DURING HBIOS BOOT
 ; TinyZ80: LED Port=0x6E, bit 0, inverted, dedicated port (LEDMODE_STD)
 ; Z80-512K: LED Port=0x6E, bit 0, inverted, dedicated port (LEDMODE_STD)
 ; MBC: LED Port=0x70, bits 1-0, normal, shared w/ RTC port (LEDMODE_RTC)
+; RPH?
 ; DUO: LED Port=0x94, bits 1-0, normal, shared w/ RTC port (LEDMODE_RTC)
 ; S100: LED Port = $0E, bit 2, inverted, dedicated port (LEDMODE_SC)
 ; NABU: LED Port = $00, bits 5-3, normal, shared w/ control port (LEDMODE_NABU)

@@ -1,8 +1,10 @@
 
                              UNARCU
               Universal Archive File Extraction Utility
-                           Version 1.0
+                           Version 1.1
 
+               CP/M 2.2 Bug fix by Lars Nelson
+                        February 4, 2025
                Modified for Universal use by Lars Nelson
                         September 17, 2023
                Modified for ZCPR3 by Gene Pizzetta
@@ -434,4 +436,4 @@ For additional information about the LZW algorithm (and data compression
 methods in general), refer to the article "A Technique for High-Performance 
 Data Compression", by Terry A.  Welch, in IEEE Computer magazine, Vol. 17, 
 No. 6, June 1984.
-
+
