@@ -645,8 +645,10 @@ program the image into the first 512KB of the ROM for now.
 - IDE: MODE=RC, IO=16, SLAVE
 - PPIDE: IO=32, MASTER
 - PPIDE: IO=32, SLAVE
-- CTC: IO=136
-- EZ80 DRIVERS
+- EZ80: CPU DRIVER
+- EZ80: SYS TIMER DRIVER
+- EZ80: RTC DRIVER
+- EZ80: UART DRIVER
 
 #### Notes:
 
@@ -1890,6 +1892,7 @@ may be discovered by RomWBW in your system.
 | DUART     | SCC2681 or compatible Dual UART                        |
 | ESPCON    | ESP32 Firmware-based Video Console                     |
 | ESPSER    | ESP32 Firmware-based Serial Interface                  |
+| EZ80UART  | eZ80 Serial Interface                                  |
 | LPT       | Parallel I/O Controller                                |
 | PIO       | Zilog Parallel Interface Controller                    |
 | PPPCON    | ParPortProp Serial Console Interface                   |
@@ -1906,12 +1909,13 @@ discovers for the initial console.  The following character devices are
 scanned in the order shown.  The available character devices depend on
 the active platform and configuration.
 
-#. SSET: Simple Serial Interface
+#. SSER: Simple Serial Interface
 #. ASCI: Zilog Z180 CPU Built-in Serial Ports
 #. Z2U: Zilog Z280 CPU Built-in Serial Ports
 #. UART: 16C550 Family Serial Interface
 #. DUART: SCC2681 or compatible Dual UART
 #. SIO: Zilog Serial Port Interface
+#. EZ80UART: eZ80 Serial Port Interface
 #. ACIA: MC68B50 Asynchronous Communications Interface Adapter
 #. USB-FIFO: FT232H-based ECB USB FIFO
 
@@ -1974,6 +1978,7 @@ the active platform and configuration.
 | DS7RTC    | Maxim DS1307 PCF I2C Real-Time Clock w/ NVRAM          |
 | DS1501RTC | Maxim DS1501/DS1511 Watchdog Real-Time Clock           |
 | DSRTC     | Maxim DS1302 Real-Time Clock w/ NVRAM                  |
+| EZ80RTC   | eZ80 Real-Time Clock                                   |
 | INTRTC    | Interrupt-based Real Time Clock                        |
 | PCF       | PCF8584-based I2C Real-Time Clock                      |
 | RP5C01    | Ricoh RPC01A Real-Time Clock w/ NVRAM                  |
@@ -1998,6 +2003,7 @@ the active platform and configuration.
 | CTC       | Zilog Clock/Timer                                      |
 | DMA       | Zilog DMA Controller                                   |
 | ESP       | ESP32 Firmware-based interface                         |
+| EZ80TIMER | eZ80 System Timer                                      |
 | KIO       | Zilog Serial/ Parallel Counter/Timer                   |
 | PPP       | ParPortProp Host Interface Controller                  |
 | PRP       | PropIO Host Interface Controller                       |
@@ -2054,13 +2060,12 @@ for more information on UNA.
   for UNA: `CPM.SYS` and `ZSYS.SYS`.  So, you can boot a ROM OS and
   then use one of these files to update the system track.
 
-- Only Z-System and CP/M 2 are available OSes under UNA at this time.
-  Since NZ-COM launches from CP/M 2, it is usable.  p-System is not
-  usable under UNA.
-
+- The only operating systems supported at this time are CP/M 2 and
+  ZSDOS.  NZ-COM is also supported because it uses the ZSDOS CBIOS.
+  None of the other RomWBW operating systems are supported such as
+  CP/M 3, ZPM3, and p-System.
+  
 - Some of the RomWBW-specific applications are not UNA compatible.
-
-
 
 # Errata
 
