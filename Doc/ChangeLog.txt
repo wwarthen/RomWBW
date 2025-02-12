@@ -50,7 +50,7 @@ Version 3.5
 - MAP: Added support for dynamic HBIOS config via (RTC) NVRAM
 - MAP: Added boot application to allow config of NVRAM options
 - MAP: Configuration of autoboot disk/app added to NVRAM config
-- WBW: Autoboot is now handled in seperate prompt during RomWBW startup
+- WBW: Autoboot is now handled in separate prompt during RomWBW startup
 - MAP: Added additional tools (Linker/Disasembler) to the Z80ASM Disk Image
 - PMS: Support interrupt-driven PS2 Keyboard Interface
 - D?M: Added NetBoot support for Duodyne
