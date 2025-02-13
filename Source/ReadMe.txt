@@ -8,12 +8,12 @@
 
 This directory is the root directory of the source tree for RomWBW.
 
-This document describes the process to build a customized version 
-of the RomWBW firmware.  RomWBW was explicitly organized in a way 
+This document describes the process to build a customized version
+of the RomWBW firmware.  RomWBW was explicitly organized in a way
 that makes it very easy to rebuild the firmware.
 
-Significant customization can be achieved with a custom built 
-firmware using simple option configuration files.  You can 
+Significant customization can be achieved with a custom built
+firmware using simple option configuration files.  You can
 customize your firmware to:
 
     - Include support for add-on support boards such as
@@ -21,12 +21,12 @@ customize your firmware to:
     - Modify operational parameters such as serial port
       speed or wait state insertion.
     - Add or remove programs or files contained on the disk images.
-    
+
 Virtually all source code is provided including the operating
 systems themselves, so advanced users can easily modify any of
 the software.
 
-A cross-platform approach is used to build the RomWBW firmware. 
+A cross-platform approach is used to build the RomWBW firmware.
 The software is built using a modern Windows, Linux, or Mac
 computer, then the resulting firmware image is programmed into
 the ROM of your RetroBrew Computer CPU board.
@@ -36,26 +36,26 @@ Windows Build System Requirements
 
 For Microsoft Windows computers, all that is required to build the
 firmware is the RomWBW distribution zip archive file.  The zip
-archive package includes all of the required source code 
-(including the operating systems) and the programs required to run 
+archive package includes all of the required source code
+(including the operating systems) and the programs required to run
 the build.
 
-The build process is run via some simple scripts that automate the 
-process.  These scripts utilize both batch command files as well as 
-Windows PowerShell.  Windows 7 or greater is recommended.  If you want 
-to use Windows Vista or XP, you will need to first install PowerShell 
-which available for free from Microsoft.  Either 32 or 64 bit versions 
-of Microsoft Windows are fine.  No additional programs need to be 
+The build process is run via some simple scripts that automate the
+process.  These scripts utilize both batch command files as well as
+Windows PowerShell.  Windows 7 or greater is recommended.  If you want
+to use Windows Vista or XP, you will need to first install PowerShell
+which available for free from Microsoft.  Either 32 or 64 bit versions
+of Microsoft Windows are fine.  No additional programs need to be
 installed to run the build.
 
 You may find that you get messages such as this during the Windows
 build process:
 
 Security warning
-Run only scripts that you trust. While scripts from the internet can be 
-useful, this script can potentially harm your computer. If you trust 
-this script, use the Unblock-File cmdlet to allow the script to run 
-without this warning message. Do you want to run 
+Run only scripts that you trust. While scripts from the internet can be
+useful, this script can potentially harm your computer. If you trust
+this script, use the Unblock-File cmdlet to allow the script to run
+without this warning message. Do you want to run
 C:\Temp\RomWBW-v3.5.0-dev.67-Package\Source\Images\BuildDisk.ps1?
 [D] Do not run  [R] Run once  [S] Suspend  [?] Help (default is "D"):
 
@@ -75,7 +75,7 @@ before removing the file block protection.
 Linux Build System Requirements
 -------------------------------
 
-You must have some standard system tools and libraries 
+You must have some standard system tools and libraries
 installed, specifically: gcc, gnu make, libncurses, and srecord.
 Typically, something like this will take care of adding all
 required packages in Linux:
@@ -94,9 +94,9 @@ build process:
 
 	brew install srecord
 
-You may encounter a failure reading or writing files. This is caused by 
-protection features in MacOS (at least, in Catalina) that prevent 
-programs built on your local system (unsigned) from running.  To 
+You may encounter a failure reading or writing files. This is caused by
+protection features in MacOS (at least, in Catalina) that prevent
+programs built on your local system (unsigned) from running.  To
 disable this feature:
 
 1) Make sure you exit System Preferences.
@@ -126,12 +126,12 @@ The basic steps to create a custom ROM are:
 
   4) Program the resultant ROM image and/or write thedisk images.
 
-Note that steps 1 and 2 are performed to customize your ROM as 
-desired.  If you want to simply build a standard configuration, it is 
-*not* necessary to perform steps 1 or 2 before running a build.  In 
-fact, I strongly recommend that you skip steps 1 and 2 initially and 
-just perform perform steps 3 and 4 using the standard configuration to 
-make sure that you have no issues building and programming a ROM that 
+Note that steps 1 and 2 are performed to customize your ROM as
+desired.  If you want to simply build a standard configuration, it is
+*not* necessary to perform steps 1 or 2 before running a build.  In
+fact, I strongly recommend that you skip steps 1 and 2 initially and
+just perform perform steps 3 and 4 using the standard configuration to
+make sure that you have no issues building and programming a ROM that
 works the same as a pre-built ROM.
 
 Each of the 4 steps above is described in more detail below.
@@ -139,7 +139,7 @@ Each of the 4 steps above is described in more detail below.
 1. Create/Update Configuration File
 -----------------------------------
 
-The options for a build are primarily controlled by a configuration 
+The options for a build are primarily controlled by a configuration
 file that is included in the build process.
 
 RomWBW uses cascading configuration files as indicated below:
@@ -157,11 +157,11 @@ configuration settings. Each file below the master configuration file
 inherits the cumulative settings of the files above it and may
 override these settings as desired.
 
-Other than the top master file, each file must "#INCLUDE" its parent 
-file.  The top two files should not be modified.  To customize your 
-build settings you should modify the default build settings 
-(config/<platform>_std.asm) or preferably create an optional custom 
-user settings file that includes the default build settings file (see 
+Other than the top master file, each file must "#INCLUDE" its parent
+file.  The top two files should not be modified.  To customize your
+build settings you should modify the default build settings
+(config/<platform>_std.asm) or preferably create an optional custom
+user settings file that includes the default build settings file (see
 example Config/SBC_user.asm).
 
 By creating a custom user settings file, you are less likely to be
@@ -174,7 +174,7 @@ systems supported.  Configuration refers to the settings that
 customize the build.  The configuration is modifies the platform
 defaults as desired.
 
-The platform names are predefined.  Refer to the following table 
+The platform names are predefined.  Refer to the following table
 to determine the <plt> component of the configuration filename:
 
 	SBC		Z80 SBC (v1 or v2) w/ ECB interface
@@ -201,17 +201,17 @@ to determine the <plt> component of the configuration filename:
 	NABU		NABU w/ Les Bird's RomWBW Option Board
 	FZ80		S100 Computers FPGA Z80
 
-Configuration files are found in the Source\HBIOS\Config 
-directory.  If you look in the this directory, you will see a 
+Configuration files are found in the Source\HBIOS\Config
+directory.  If you look in the this directory, you will see a
 series of files named <plt>_<cfg>.asm.  By convention, all
 configuration files start with the platform identifier followed
 by an underscore.  You will see later that the build process does
 require this naming convention and it allows you to easily see which
 configuration files apply to each of the platforms supported.
 
-Each of the possible platforms has at least one configuration file.  In 
-many cases, there will be a standard ("std") configuration for the 
-platform.  For example, there is a file called MK4_std.asm.  This is 
+Each of the possible platforms has at least one configuration file.  In
+many cases, there will be a standard ("std") configuration for the
+platform.  For example, there is a file called MK4_std.asm.  This is
 the standard ("std") configuration for a Mark IV CPU board.
 
 The <cfg> portion of the filename can be anything desired.  To create
@@ -248,8 +248,8 @@ This is because ".EQU" defines the initial value for a variable and
 ".SET" modifies a pre-existing value.  You *must* use ".EQU" and ".SET"
 correctly or the assembler will complain very loudly.
 
-In our example, let's say you have added a DiskIO V3 board to your 
-Mark IV system and want to include floppy support. You will see a 
+In our example, let's say you have added a DiskIO V3 board to your
+Mark IV system and want to include floppy support. You will see a
 couple lines similar to these in the config file:
 
 FDENABLE	.SET	TRUE		; FD: ENABLE FLOPPY DISK DRIVER (FD.ASM)
@@ -261,18 +261,18 @@ just modify the line to read:
 
 FDMODE		.SET	FDMODE_DIO3	; FD: DRIVER MODE: FDMODE_[DIO|ZETA|ZETA2|DIDE|N8|DIO3|RCSMC|RCWDC|DYNO|EPWDC]
 
-You are now probably wondering where to find detailed instructions for 
-each of the configuration settings.  Sadly, this is an area where 
-RomWBW is very deficient.  The changes to hardware support happen so 
-fast that is have been virtually impossible to create such a document. 
-If it is not obvious what you need to do when looking at the build 
-configuration file, I recommend that you look at the platform 
-configuration file in the parent directory.  It will contain all of the 
-possible settings and their default values as well as a brief comment.  
-In many cases this is enough information to figure out what to do.  If 
-not, you will need to either look at the HBIOS source code or request 
-help in any of the RomWBW support communities (people are typically 
-very helpful).  You can also post questions or issues on the GitHub 
+You are now probably wondering where to find detailed instructions for
+each of the configuration settings.  Sadly, this is an area where
+RomWBW is very deficient.  The changes to hardware support happen so
+fast that is have been virtually impossible to create such a document.
+If it is not obvious what you need to do when looking at the build
+configuration file, I recommend that you look at the platform
+configuration file in the parent directory.  It will contain all of the
+possible settings and their default values as well as a brief comment.
+In many cases this is enough information to figure out what to do.  If
+not, you will need to either look at the HBIOS source code or request
+help in any of the RomWBW support communities (people are typically
+very helpful).  You can also post questions or issues on the GitHub
 repository.
 
 2. Update/Add/Delete Disk Files
@@ -281,29 +281,32 @@ repository.
 A major part of the RomWBW build process is the creation of the
 ROM disk contents and the floppy/hard disk image files.
 
-The files that are included on the ROM Disk of your ROM are copied 
-from a set of directories during the build process.  This allows 
-you to have complete flexibility over the files you want included 
+The files that are included on the ROM Disk of your ROM are copied
+from a set of directories during the build process.  This allows
+you to have complete flexibility over the files you want included
 in your ROM.
 
 The ROM disk process starts in the Source/RomDsk directory.  Within
 that directory, there are subdirectories for each of the different
-possible ROM sizes that can be created.  The vast majority of all
-ROMs are 512KB, so you will probably be interested primarily in the
-ROM_512KB subdirectory.
+possible ROM disk sizes that can be created.
 
-These subdirectories are already populated in the distribution.  You do 
-not need to do anything unless you want to change the files that are 
+A ROM disk will occupy 128KB less than the physical size of ROM chip
+itself, as 128KB is used for the ROMWBW firmware, software,
+and boot images. Since the vast majority of all ROMs are 512KB, you will
+probably be interested primarily in the ROM_384KB subdirectory.
+
+These subdirectories are already populated in the distribution.  You do
+not need to do anything unless you want to change the files that are
 included on your ROM Disk.
 
-In summary, the ROM Disk embedded in the ROM firmware you build, 
-will include the files from the ROM_512KB directory (or the 
-ROM_1024KB directory if building a 1024KB firmware, etc.).  
+In summary, the ROM Disk embedded in the ROM firmware you build,
+will include the files from the ROM_384KB directory for a 512KB ROM,
+or a different sub directory depending on the size of the actual ROM.
 
-There is a ReadMe.txt document in the \Source\RomDsk directory 
+There is a ReadMe.txt document in the \Source\RomDsk directory
 with a more detailed description of this process.
 
-Note that the standard 512K ROM disk is almost full.  So, if
+Note that the standard 384KB ROM disk is almost full.  So, if
 you want to add files to it, you will need to delete other files
 to free up some space.
 
@@ -353,20 +356,20 @@ id:
      > cust
     Configuration:
 
-Enter one of the configuration options to build a ROM with the 
+Enter one of the configuration options to build a ROM with the
 associated config file.
 
-At this point, the build should continue and you will see output 
-related to the assembler runs and some utility invocations.  Just 
-review the output for any obvious errors.  Normally, all errors 
-will cause the build to stop immediately and display an error 
+At this point, the build should continue and you will see output
+related to the assembler runs and some utility invocations.  Just
+review the output for any obvious errors.  Normally, all errors
+will cause the build to stop immediately and display an error
 message in red.
 
-You will see some lines in the output indicating the amount of 
-space various components have taken.  You should check these to 
-make sure you do not see any negative numbers which would indicate 
-that you have included too many features/drivers for the available 
-memory space.  Here are examples of the lines showing the space 
+You will see some lines in the output indicating the amount of
+space various components have taken.  You should check these to
+make sure you do not see any negative numbers which would indicate
+that you have included too many features/drivers for the available
+memory space.  Here are examples of the lines showing the space
 used:
 
     HBIOS PROXY STACK space: 38 bytes.
@@ -380,9 +383,9 @@ used:
     HBIOS space remaining: 21434 bytes.
 
 At the completion of the build process, you will find the resultant
-ROM and disk image files in the Binary directory.  
+ROM and disk image files in the Binary directory.
 
-There will be many disk image (".img") files created.  These are 
+There will be many disk image (".img") files created.  These are
 described in the RomWBW User Guide document.  Since RomWBW
 encapsulates all hardware interface code in the ROM itself, the
 disk image files are generic for all ROMs.  The only reason they
@@ -392,7 +395,7 @@ made.
 4. Deploy the ROM
 -----------------
 
-Upon completion of a successful build, you should find the 
+Upon completion of a successful build, you should find the
 resulting firmware in the Binary directory.  The ROM file
 will be called <plt>_<cfg>.rom matching the platform identifier
 and configuration you chose.
@@ -408,17 +411,17 @@ Three output files will be created for a single build:
 			only the "code" portion of your ROM
 			and not modify the ROM disk
 
-The actual ROM image is the file ending in .rom.  It will normally be 
-512KB.  Simply burn the .rom image to your ROM and install 
-it in your hardware.  The process for programming your ROM depends 
-on your hardware, but the .rom file is in a pure binary format (it 
+The actual ROM image is the file ending in .rom.  It will normally be
+512KB.  Simply burn the .rom image to your ROM and install
+it in your hardware.  The process for programming your ROM depends
+on your hardware, but the .rom file is in a pure binary format (it
 is not hex encoded).
 
 You can alternatively reprogram your ROM in-situ (most hardware
 supports this) using the FLASH application included with RomWBW.  This
 is described in the "Upgrading" section of the RomWBW User Guide.
 
-Refer to the document ReadMe.txt in the Binary directory for more 
+Refer to the document ReadMe.txt in the Binary directory for more
 information on the other two file extensions created.
 
 Specifying Build Options on Command Line
@@ -437,7 +440,7 @@ Under Linux or MacOS, you can do the same thing like this:
 
     make ROM_PLATFORM=MK4 ROM_CONFIG=cust
 
-In this case, you will not be prompted.  This is useful if you wish 
+In this case, you will not be prompted.  This is useful if you wish
 to automate your build process.
 
 In the past, the size of the ROM could be specified as the third
