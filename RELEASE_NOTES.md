@@ -56,25 +56,23 @@ release of RomWBW.
 
 - Documentation improvements (Mark Pruden), including:
 
+  - Reorganization into multiple directories.
   - Improved Disk Management section in User Guide.
-  - Complete overhaul of Disk Catalog.
+  - Overhaul of Disk Catalog.
   
-- Z3PLUS disk image, a CP/M 3 (ZCPR 3.4) based OS (Mark Pruden).
+- Disk image for Z3PLUS (Mark Pruden).
 
 - `REBOOT` application added (Martin R).  Also, reboot capability
   added to `CPUSPD` utility.
 
-- `COPYSL` application to allow the fast copy, move, and backup 
-  of whole disk slices. (Mark Pruden).
+- `COPYSL` slice copy application (Mark Pruden).
 
-- Improved disk slice management and protection of other data 
-  that may be present. (Mark Pruden).
+- Improved disk slice management and protection (Mark Pruden).
 
-- Use of NVRAM (RTC based) to support dynamic configuration,
-  initially supporting automatic boot options (Mark Pruden).
+- Initial NVRAM configuration support (Mark Pruden).
 
-- Enhancements to ASSIGN command to automatically assign
-  multiple drives based on simple policy options (Mark Pruden).
+- Enhancements to ASSIGN command to automatically assign drives
+  (Mark Pruden).
 
 
 ### New Hardware Support

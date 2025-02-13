@@ -1772,7 +1772,6 @@ The following table shows the disk images available.
 | xxx_qpm.img       | QPM Operating System                 | Yes      |
 | xxx_tpascal.img   | Borland Turbo Pascal Compiler        | No       |
 | xxx_ws4.img       | WordStar v4 & ZDE Applications       | No       |
-| xxx_z3plus.img    | Z3 PLUS ZCPR 3.4 Operating System    | Yes      |
 | xxx_z80asm.img    | Relocating macro assembler for CP/M  | No       |
 | xxx_zpm3.img      | ZPM3 Operating System                | Yes      |
 | xxx_zsdos.img     | ZCPR-DJ & ZSDOS 1.1 Operating System | Yes      |
@@ -2278,10 +2277,6 @@ call "CPM.SYS".  For example:
 
 `SYSCOPY C:=B:CPM.SYS`
 
-Note: While the CP/M manual refers to the use of SYSGEN under RomWBW, it
-is recommended that you use SYSCOPY as it is more flexible. SYSGEN is
-included for completeness.
-
 #### Character Device Mapping
 
 Character device mapping under CP/M 2.2 has 3 layers:
@@ -2383,11 +2378,6 @@ as available.
 * Z-System applications will not run under CP/M 2.2.  For example,
   the `LDDS` date stamper will not work.
 
-* CP/M 2.2 was not distributed with a help system.  Douglas Miller
-  has adapted the CP/M 3 help system for CP/M 2.2 and is included.
-  The HELP.HLP data file must be found on the current default drive
-  and user area when HELP.COM is run.
-
 ## Z-System
 
 Z-System is the most popular non-DRI CP/M workalike "clone" which is generally
@@ -2487,9 +2477,6 @@ Manual.pdf" document in order to use this operating system effectively.
 * [NZCOM Users Manual]($doc_root$/CPM/NZCOM Users Manual.pdf)
 * [Z-System Users Guide]($doc_root$/CPM/Z-System Users Guide.pdf)
 * [ZCPR3.3 User Guide]($doc_root$/CPM/ZCPR3.3 User Guide.pdf)
-
-* Additionally, please review the file called RELEASE.NOT (U14) on the 
-  disk which contains a variety of updates regarding the NZ-COM distribution.
 
 #### Boot Disk
 
@@ -2654,9 +2641,6 @@ document in order to use this operating system effectively.
 * [Z-System Users Guide]($doc_root$/CPM/Z-System Users Guide.pdf)
 * [ZCPR3.3 User Guide]($doc_root$/CPM/ZCPR3.3 User Guide.pdf)
 
-* Additionally, please review the file called RELEASE.NOT (U14) on the
-  disk which contains a variety of updates regarding the Z3PLUS distribution.
-
 #### Boot Disk
 
 Since Z3PLUS boots via CP/M 3, you first must make the disk CP/M 3
@@ -2679,7 +2663,7 @@ The CP/M 3 `DEVICE` command is used to manipulate the device mappings.
   apply to Z3PLUS.
 
 * Some applications in the Z3PLUS distribution have been upgraded 
-  with newer versions. 
+  with newer versions. This is done with in 
 
 ## ZPM3
 
@@ -3036,32 +3020,6 @@ To boot into Fuzix:
 
 You may now use Fuzix as desired.  The general operation and use of
 Fuzix is outside of the scope of this document.
-
-## DOS 65
-
-This disk is one of several ready-to-run disks provided with RomWBW.  
-It contains the files to start and run DOS/65 on an MBC system that
-contains Dan Werner's 6502 processor. The contents of this disk are 
-purely a redistribution of the work of Dan Werner
-
-WARNING: This is a work in progress.  Use of this disk image requires
-specific hardware and configuration.  You should contact Dan Werner
-before attempting to use this disk image.
-
-### Usage ###
-
-- The disk is configured to boot under ZSDOS 1.1 (via primary Z80
-  CPU).  Once booted, you can launch DOS/65 on a secondary 6502
-  CPU using the "DOS65" command.
-
-### Notes ###
-
-- DOS/65 is generally compatible with the CP/M 2.2 filesystem.  Once
-  launched, you will have access to the fielsystem of the boot disk.
-
-- DOS/65 does not utilize any of the RomWBW framework or drivers, so
-  it will only support devices built into DOS/65 itself.  Once
-  launched DOS/65 takes over the hardware completely.
 
 # Custom Applications
 
