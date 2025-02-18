@@ -50,13 +50,13 @@ to be CP/M applications, **not** ROM applications.
 
 # Boot Menu
 
-The system start-up process is described in some detail in the RomWBW 
+The system start-up process is described in some detail in the RomWBW
 User Guide, and for the sake of completeness there is some overlap here.
 
-When a RomWBW system is started the user is presented with a sign-on 
-message at the default console detailing the RomWBW version and build 
-date. The system follows this with the list of hardware that it has 
-discovered, a list of devices and the system units assigned to them, 
+When a RomWBW system is started the user is presented with a sign-on
+message at the default console detailing the RomWBW version and build
+date. The system follows this with the list of hardware that it has
+discovered, a list of devices and the system units assigned to them,
 before finally inviting the to select a boot device with the prompt:
 
 ```
@@ -67,8 +67,8 @@ At this point, the user may specify a unit, optionally with a slice,
 to boot from. Note that it is not possible to boot from from the serial (ASCI)
 or memory disk (MD) devices.
 
-Alternatively the user may select one of the built-in Boot Loader commands. 
-A menu of  which may be displayed by pressing the H or ? keys (for Help). 
+Alternatively the user may select one of the built-in Boot Loader commands.
+A menu of  which may be displayed by pressing the H or ? keys (for Help).
 Furthermore, a ROM application may also be started from this prompt.
 
 This start-up process is described in some detailed in the RomWBW User Guide,
@@ -76,7 +76,7 @@ and there is some overlap here.
 
 ## Help
 
-After pressing H or ? at the boot prompt the user will be presented with 
+After pressing H or ? at the boot prompt the user will be presented with
 the following list of available commands:
 
 ```
@@ -92,7 +92,7 @@ The function performed by each command is described below:
 
 L:
 
-:  Lists the applications and operating systems that are built into the 
+:  Lists the applications and operating systems that are built into the
    RomWBW ROM - e.g., low-level monitor utility, CP/M, or BASIC.
 
 
@@ -110,8 +110,8 @@ R:
 
 I:
 
-:  Allows the user to select the interface connected to the console, and 
-   optionally the Baud rate. This could be used to allow the system to be 
+:  Allows the user to select the interface connected to the console, and
+   optionally the Baud rate. This could be used to allow the system to be
    operated from a second console.
 
 V:
@@ -120,7 +120,7 @@ V:
    is very unlikely to be used by a user and is used for development
    purposes.
 
-And, finally, the system may be booted by specifying the unit number, 
+And, finally, the system may be booted by specifying the unit number,
 and optional slice, separated by a period('.'), of where the disk operating
 system software is located - eg 2, 4.1, 5.3
 
@@ -130,7 +130,7 @@ key from the applications menu, shown in the following section.
 ## List ROM Applications
 
 If the user presses the L key at the Boot Loader prompt then the system will
-display the list of ROM applications that are built into RomWBW. If a command 
+display the list of ROM applications that are built into RomWBW. If a command
 letter is known, then it may be entered directly at the prompt rather than
 first displaying the menu.
 
@@ -155,14 +155,14 @@ Each of these will now be described in greater detail.
 
 ## Monitor
 
-The Monitor program is a low-level utility that can be used 
+The Monitor program is a low-level utility that can be used
 for testing and programming. It allows programs to be entered,
 memory to be examined and modified, and input/output devices to
 be read or written to.
 
-It's key advantage is that is available at boot up. 
+It's key advantage is that is available at boot up.
 
-Its key disadvantages are that code cannot be entered in assembly 
+Its key disadvantages are that code cannot be entered in assembly
 language and there is no ability to save to persistent storage (disks).
 
 The available memory area for programming is `0100h-EDFFh`.
@@ -187,7 +187,7 @@ mapped to the lower 32K of the processor.  The method of assigning
 banks for specific RomWBW functions is also described.
 
 Commands can be entered at the command prompt.
-Automatic case conversion takes place on command entry and all 
+Automatic case conversion takes place on command entry and all
 numeric arguments are expected to be in hex format.
 
 The Monitor allows access to all memory locations but ROM and
@@ -234,7 +234,7 @@ returns to the Boot Loader prompt.
 on the screen as lines of 16 hexadecimal bytes with their
 ASCII equivalents (if within a set range, else a '.' is
 printed). If the end address is omitted then 256 bytes are
-displayed. 
+displayed.
 
 A good tool to see where code is located, check
 for version id, obtain details for chip configurations and
@@ -281,7 +281,7 @@ LED will be illuminated.
 
 **`I xxxx`** - Input data from port xxxx and display to the screen.
 This command is used to read values from hardware I/O ports
-and display the contents in hexadecimal. 
+and display the contents in hexadecimal.
 
 ### Keyboard Echo
 
@@ -301,7 +301,7 @@ give a delay at the end of each line to allow the monitor
 enough time to parse the line and move the data to memory.
 
 Keep in mind that this will be transient unless the
-system supports battery backed memory. Saving to memory drive 
+system supports battery backed memory. Saving to memory drive
 is not supported.
 
 ### Move Memory
@@ -325,7 +325,7 @@ allow you to program a hexadecimal value 'into memory starting
 at location xxxx. Press 'Enter' on a blank line to
 return to the Monitor prompt.
 
-The limitation around programming memory is that it must be 
+The limitation around programming memory is that it must be
 entered in hexadecimal. An alternative is to use the L command
 to load a program that has been assembled to a hex file on the
 remote computer.
@@ -342,7 +342,7 @@ Monitor is saved on the stack so the program can return
 to the monitor. On return to the monitor, the contents of
 the A, HL, DE and BC registers are displayed.
 
-### Set Bank 
+### Set Bank
 
 **`S xx`** - Set the physical memory bank to the RomWBW Bank Id
 indicated by xx.  Memory addresses
@@ -375,9 +375,9 @@ This command should be used in conjunction with the S command.
 ### X-Modem Transfer
 
 **`T xxxx`** - Receive an X-modem file transfer and load it into
-memory starting at location xxxx. 
+memory starting at location xxxx.
 
-128 byte blocks and checksum mode is the only supported 
+128 byte blocks and checksum mode is the only supported
 protocol.
 
 ### Exit Monitor
@@ -386,7 +386,7 @@ protocol.
 
 ## RomWBW System Configuration
 
-System Configuration (`SYSCONF`) is a utility that allows system configuration to 
+System Configuration (`SYSCONF`) is a utility that allows system configuration to
 be set, dynamically and stored in NVRAM provided by an RTC chip.
 
 (`SYSCONF`) is both a ROM application ('W' Menu option), and a CP/M utility.
@@ -404,7 +404,7 @@ Instead commands are executed from within the application in a command line stru
 When you first start the (`SYSCONF`) utility it will display the current switches
 followed by a command listing.
 
-When you first run the (`SYSCONF`) utility the NVRAM will be uninitialised, and can 
+When you first run the (`SYSCONF`) utility the NVRAM will be uninitialised, and can
 be initialised using the (R)eset command, which writes default values to NVRAM.
 
 Updates are done immediately to NVRAM as you enter them, i.e. there is no confirm
@@ -421,16 +421,16 @@ To exit from the application use the (Q)uit command.
 
 ### Commands and Syntax
 
-The following are the accepted commands, unless otherwise specified a "Space" 
+The following are the accepted commands, unless otherwise specified a "Space"
 character is used to delimit parameters in the command.
 
-| Command    | Argument(s)      | Description                                   | 
-|------------|------------------|-----------------------------------------------| 
-| (P)rint    | -none-           | Display a list of the current switch value(s) | 
-| (S)et      | {SW} {val},...   | Sets an Switch {SW} with specific values(s)   | 
-| (R)eset    | -none-           | Reset all setting to default                  | 
-| (H)elp     | {SW}             | Provides help on the syntax (values)          | 
-| (Q)uit     | -none-           | Exit the application                          | 
+| Command    | Argument(s)      | Description                                   |
+|------------|------------------|-----------------------------------------------|
+| (P)rint    | -none-           | Display a list of the current switch value(s) |
+| (S)et      | {SW} {val},...   | Sets an Switch {SW} with specific values(s)   |
+| (R)eset    | -none-           | Reset all setting to default                  |
+| (H)elp     | {SW}             | Provides help on the syntax (values)          |
+| (Q)uit     | -none-           | Exit the application                          |
 
 **Where**
 
@@ -443,7 +443,7 @@ character is used to delimit parameters in the command.
 
 #### Auto Boot (AB)
 
-This switch will define if the system will perform auto boot at the RomWBW boot prompt. 
+This switch will define if the system will perform auto boot at the RomWBW boot prompt.
 Enabling this will not prevent a user from typing a boot command, so long as the timeout is not
 exceeded. When configured this replaces the (`AUTO_CMD`) variable
 defined in build configuration.
@@ -452,18 +452,18 @@ Making changes to auto boot has no affect until the next reboot.
 
 **Arguments**
 
-| Type     | Arguments  | Description                                            | 
-|----------|------------|--------------------------------------------------------| 
-| Enable   | 'E'        | Auto Boot. eg. "E,10" will auto boot, after 10 seconds | 
-|          | Timout     | Timeout in seconds in the range 0-15, 0 = immediate    | 
-| Disabled | 'D'        | No Auto Boot. e.g. "D" will disable autoboot           | 
+| Type     | Arguments  | Description                                            |
+|----------|------------|--------------------------------------------------------|
+| Enable   | 'E'        | Auto Boot. eg. "E,10" will auto boot, after 10 seconds |
+|          | Timout     | Timeout in seconds in the range 0-15, 0 = immediate    |
+| Disabled | 'D'        | No Auto Boot. e.g. "D" will disable autoboot           |
 
 **Examples**
 
-| Command               | Description                                       | 
-|-----------------------|---------------------------------------------------| 
-| S AB E,10             | Enable Auto Boot with 10 second delay             | 
-| S AB D                | Disable Auto Boot                                 | 
+| Command               | Description                                       |
+|-----------------------|---------------------------------------------------|
+| S AB E,10             | Enable Auto Boot with 10 second delay             |
+| S AB D                | Disable Auto Boot                                 |
 
 #### Boot Options (BO)
 
@@ -475,59 +475,59 @@ Making changes to boot options has no affect until the next reboot.
 
 **Arguments**
 
-| Type | Arguments        | Description                                              | 
-|------|------------------|----------------------------------------------------------| 
-| Disk | 'D'              | Disk Boot. eg. "D,2,14" will boot, disk unit 2, slice 14 | 
-|      | Disk Unit Number | Unit number in the range 0-127                           | 
-|      | Disk Slice       | Slice in the range 0-255, use 0 for floppy boot          | 
-| ROM  | 'R'              | ROM App. e.g. "R,M" will boot the Monitor App            | 
-|      | Rom App Name     | single character used on the Menu to identify the app    | 
+| Type | Arguments        | Description                                              |
+|------|------------------|----------------------------------------------------------|
+| Disk | 'D'              | Disk Boot. eg. "D,2,14" will boot, disk unit 2, slice 14 |
+|      | Disk Unit Number | Unit number in the range 0-127                           |
+|      | Disk Slice       | Slice in the range 0-255, use 0 for floppy boot          |
+| ROM  | 'R'              | ROM App. e.g. "R,M" will boot the Monitor App            |
+|      | Rom App Name     | single character used on the Menu to identify the app    |
 
 **Examples**
 
-| Command     | Description                                              | 
-|-------------|----------------------------------------------------------| 
-| S BO D,2,14 | Set the default boot from Disk; Unit 2, Slice 14         | 
-| S BO R,M    | Set the default boot to be the (M)onitor Rom Application | 
+| Command     | Description                                              |
+|-------------|----------------------------------------------------------|
+| S BO D,2,14 | Set the default boot from Disk; Unit 2, Slice 14         |
+| S BO R,M    | Set the default boot to be the (M)onitor Rom Application |
 
 ## CP/M 2.2
 
-This option will boot the CP/M 2.2 disk operating system 
+This option will boot the CP/M 2.2 disk operating system
 from an image contained within the ROM.  Please refer to the
 CPM User Manual in the Doc/CPM folder of the distribution for
-CP/M usage.  There are also many online resources. 
+CP/M usage.  There are also many online resources.
 
-During the build process the system will create a ROM disk 
-containing a number of curated CP/M applications, and also a 
-RAM drive. The capacity of each will depend upon the size 
+During the build process the system will create a ROM disk
+containing a number of curated CP/M applications, and also a
+RAM drive. The capacity of each will depend upon the size
 of the ROM and RAM available to the system. A more complete
-set of utilities are provided within the disk image files 
+set of utilities are provided within the disk image files
 provided as part of RomWBW.
 
-A number of the applications provided are generic to 
-CP/M, while others rely on particular hardware or 
+A number of the applications provided are generic to
+CP/M, while others rely on particular hardware or
 aspects of RomWBW itself.
 
 Those that are written specific to RomWBW include: ASSIGN,
-CPUSPD, FDU, FORMAT, FLASH, FDISK80, MODE, REBOOT, RTC, SYSCOPY, 
+CPUSPD, FDU, FORMAT, FLASH, FDISK80, MODE, REBOOT, RTC, SYSCOPY,
 TALK, TIMER, XM, and COPYSL.
 
-The CP/M utilities supplied with RomWBW warrant more detailed descriptions, 
+The CP/M utilities supplied with RomWBW warrant more detailed descriptions,
 and so are described in some detail in their own section
-of this user guide. In summary they provide the initial capability 
+of this user guide. In summary they provide the initial capability
 to manage and update your RomWBW system, to create other
-bootable media (hardware dependent) and to write/debug 
+bootable media (hardware dependent) and to write/debug
 code using assembler and BASIC.
 
 ## Z-System
 
-Z-System is a complete alternative, but entirely compatible, disk 
-operating system to CP/M. 
+Z-System is a complete alternative, but entirely compatible, disk
+operating system to CP/M.
 
 Z-System is comprised of ZSDOS 1.1 which is a
-replacement for CP/M's Basic Disk Operating System (BDOS), and ZCPR which 
-is a replacement for the Console Command Processor (CCP). Either or both 
-may be used, although using both together will allow ZCPR to make use of 
+replacement for CP/M's Basic Disk Operating System (BDOS), and ZCPR which
+is a replacement for the Console Command Processor (CCP). Either or both
+may be used, although using both together will allow ZCPR to make use of
 specific ZSDOS features.
 
 Documentation for Z-System may be found in the Doc/CPM folder of the
@@ -536,7 +536,7 @@ RomWBW distribution and the reader is referred to those.
 ## BASIC
 
 For those who are not familiar with BASIC, it stands for Beginners All Purpose Symbolic
-Instruction Code. 
+Instruction Code.
 
 RomWBW contains two versions of ROM BASIC, a full implementation and a "tiny" BASIC.
 
@@ -557,10 +557,10 @@ A comprehensive instruction manual is available in the Doc/Contrib directory.
 
 ## TastyBASIC
 
-TastyBASIC offers a minimal implementation of BASIC that is only 2304 
-bytes in size. It originates from Li-Chen Wang's Palo Alto Tiny BASIC 
-from around 1976. It's small size is suited the tiny memory capacities of 
-the time. This implementation is by Dimitri Theulings and his original 
+TastyBASIC offers a minimal implementation of BASIC that is only 2304
+bytes in size. It originates from Li-Chen Wang's Palo Alto Tiny BASIC
+from around 1976. It's small size is suited the tiny memory capacities of
+the time. This implementation is by Dimitri Theulings and his original
 source can be found at <https://github.com/dimitrit/tastybasic>.
 
 ### Features / Limitations
@@ -568,7 +568,7 @@ source can be found at <https://github.com/dimitrit/tastybasic>.
 - Integer arithmetic, numbers -32767 to 32767
 - Singles letter variables A-Z
 - 1-dimensional array support
-- Strings are not supported  
+- Strings are not supported
 
 ### Direct Commands
 
@@ -592,10 +592,10 @@ Type ***BYE*** to return to the boot menu.
 
 ## FORTH
 
-CamelForth is the version of Forth included as part of the boot ROM in 
-RomWBW. It has been converted from the Z80 CP/M version published at 
-<https://www.camelforth.com/page.php?5>. The 
-author is Brad Rodriguez who is a prolific Forth enthusiast, whose work 
+CamelForth is the version of Forth included as part of the boot ROM in
+RomWBW. It has been converted from the Z80 CP/M version published at
+<https://www.camelforth.com/page.php?5>. The
+author is Brad Rodriguez who is a prolific Forth enthusiast, whose work
 can be found here: <https://www.bradrodriguez.com/papers>.
 
 For those are who are not familiar with Forth, I recommend the
@@ -618,8 +618,8 @@ words are added to the dictionary.
 This implementation does not support loading or saving of programs. All programs
 need to be typed in. Additionally, screen editing and code blocks are not supported.
 
-A CP/M version is not provided with RomWBW, this is only a ROM application. If you need to 
-run it under CP/M you would need to download it from the camelforth web site, the link is 
+A CP/M version is not provided with RomWBW, this is only a ROM application. If you need to
+run it under CP/M you would need to download it from the camelforth web site, the link is
 above.
 
 ### Structure of Forth source files
@@ -640,7 +640,7 @@ Extensions and changes to this implementation compared to the original distribut
 
 - The source code has been converted from Z80mr assembler to Hector Peraza's zsm.
 
-- An additional file camel80r.azm has been added for including additional words to 
+- An additional file camel80r.azm has been added for including additional words to
   the dictionary at build time. However, as currently configured there is very little space
   allocated for addition words. Exceeding the allocated ROM space will generate an error
   message when building.
@@ -667,16 +667,16 @@ appears deceptively simple but failure can creep up on you suddenly.
 
 It requires an ANSI/VT-100 compatible colour terminal to play.
 
-2048 is like a sliding puzzle game except the puzzle tiles are 
-numbers instead of pictures. Instead of moving a single tile all 
-tiles are moved simultaneously in the same direction. Where two 
+2048 is like a sliding puzzle game except the puzzle tiles are
+numbers instead of pictures. Instead of moving a single tile all
+tiles are moved simultaneously in the same direction. Where two
 tiles of the same number collide, they are reduced to one tile with
 the combined value. After every move a new tile is added with
-a starting value of 2. 
+a starting value of 2.
 
 The goal is to create a tile of 2048 before all tile locations are
 occupied. Reaching the highest points score, which is the sum of all
-the tiles is a secondary goal. The game will automatically end when 
+the tiles is a secondary goal. The game will automatically end when
 there are no more possible moves.
 
 Play consists of entering a direction to move. Directions can be entered
@@ -737,20 +737,20 @@ Press Q at any time to bring up the option to Quit or Restart the game.
 
 ## Network Boot
 
-If your RomWBW system is equipped with an RCBus MT011 module, it is 
-possible to boot into CP/M 2.2 directly from a CP/NET network server. 
-This means that the operating system will be loaded directly from the 
-network server and all of your drive letters will be provided by the 
+If your RomWBW system is equipped with an RCBus MT011 module, it is
+possible to boot into CP/M 2.2 directly from a CP/NET network server.
+This means that the operating system will be loaded directly from the
+network server and all of your drive letters will be provided by the
 network server.
 
-This function requires substantial knowledge of CP/NET and it's 
-implementation within RomWBW.  Section 10 of the $doc_user$ provides 
+This function requires substantial knowledge of CP/NET and it's
+implementation within RomWBW.  Section 10 of the $doc_user$ provides
 complete instructions for setting up a CP/NET based network under RomWBW
 including a section on network booting.
 
 ## Xmodem Flash Updater
 
-The RomWBW Xmodem flash updater provides the capability to update RomWBW from the boot loader using  an x-modem file transfer. It offers similar capabilities to Will Sowerbutts FLASH4 utility except that the flashing process occurs during the file transfer. 
+The RomWBW Xmodem flash updater provides the capability to update RomWBW from the boot loader using  an x-modem file transfer. It offers similar capabilities to Will Sowerbutts FLASH4 utility except that the flashing process occurs during the file transfer.
 
 These are the key differences between the two methods are:
 
@@ -764,12 +764,12 @@ More convenient one step process | Ability save and verify ROM images
 No intermediate storage required | Progress display while flashing
 .                                | Displays chip identification information
 .                                | Faster file transfer
-                                 
+
 The major disadvantages of the Updater is that it is new and relatively untested. There is the risk that a failed transfer will result in a partially flashed and unbootable ROM. There are some limitations on serial transfer speeds.
- 
+
 The updater utility was initially intended to support the Retrobrew SBC-V2-005 platform using Atmel 39SF040 flash chips but has now been extended to be more generic in operation.
 
-Supported flash chips are 
+Supported flash chips are
 39SF040, 29F040,  AT49F040, AT29C040, M29F040 , MX29F040,  A29010B, A29040B
 
 The Atmel 39SF040 chip is recommended as it can erase and write 4Kb sectors. Other chips require the whole chip to be erased.
@@ -788,7 +788,7 @@ If your console device is not able to transfer a ROM image i.e. your console is 
 
 When your console is the serial device used for the transfer, no progress information is displayed as this would disrupt the x-modem file transfer. If you use an alternate character-input/output devices as the serial device for the transfer then progress information will be displayed on the console device.
 
-Due to different platform processor speeds,  serials speeds and flow control capabilities the default console or serial device speed may need to be reduced for a successful transfer and flash to occur. The **Set Console Interface/Baud code** option at the Boot Loader can be used to change the speed if required. Additionally, the Updater has options to set to and revert from a recommended speed. 
+Due to different platform processor speeds,  serials speeds and flow control capabilities the default console or serial device speed may need to be reduced for a successful transfer and flash to occur. The **Set Console Interface/Baud code** option at the Boot Loader can be used to change the speed if required. Additionally, the Updater has options to set to and revert from a recommended speed.
 
 See the RomWBW Applications guide for additional information on performing upgrades.
 
@@ -839,7 +839,7 @@ If the update fails it is recommended that you retry before rebooting or
 exiting to the Boot loader as your machine may not be bootable.
 
 Option ( D ) - Duplicate flash #1 to flash #2
- 
+
 This option will make a copy of flash #1 onto flash #2. The purpose of this is to enable
  making a backup copy of the current flash. Intended for systems using 2x512Kb Flash devices.
 
@@ -858,7 +858,7 @@ you perform a cold reboot after a failed update then it is likely that
 your system will be unusable and removing and reprogramming the flash
 will be required.
 
-Option ( Q ) - Quit to boot loader. 
+Option ( Q ) - Quit to boot loader.
 
 The SBC Boot Loader is reloaded from ROM and
 executed. After a successful update a Reboot should be performed. However,
@@ -874,7 +874,7 @@ Can be used to verify if a ROM image has been transferred and flashed correctly.
 
 In Windows, right clicking on a file should also give you a context menu option CRC SHA which will allow you to select a CRC32 calculation to be done on the selected file.
 
-### Tera Term macro configuration 
+### Tera Term macro configuration
 
 Macros are a useful tool for automatic common tasks. There are a number of instances where using macros to facilitate the update process could be worthwhile if you are:
 
@@ -932,37 +932,37 @@ Unabios not supported
 
 ## User Application
 
-RomWBW provides the facility for a user to build, include and execute their 
-own custom application directly from the applications menu at boot-up. All that's 
-needed is for the user to create their custom code ready for inclusion, 
+RomWBW provides the facility for a user to build, include and execute their
+own custom application directly from the applications menu at boot-up. All that's
+needed is for the user to create their custom code ready for inclusion,
 recognising that there are certain constraints in doing this.
 
-In order to build properly, the build process requires that the file 
+In order to build properly, the build process requires that the file
 `usrrom.asm` be found in the /Source/HBIOS folder of the RomWBW tree.
 
 This source file needs to assemble using TASM and it must start at
-(ORG) address 00100H as the RomWBW HBIOS reserves locations 00000H 
-to 000FFH for internal use. Further, the user application must assemble to 
-a maximum of `USR-SIZ` bytes. 
+(ORG) address 00100H as the RomWBW HBIOS reserves locations 00000H
+to 000FFH for internal use. Further, the user application must assemble to
+a maximum of `USR-SIZ` bytes.
 
-During execution, the user application may make use of HBIOS calls as necessary, 
-and at exit it should return to the RomWBW boot loader 
-using the HBIOS warm reset. Note that no disk operating system (eg CP/M) 
+During execution, the user application may make use of HBIOS calls as necessary,
+and at exit it should return to the RomWBW boot loader
+using the HBIOS warm reset. Note that no disk operating system (eg CP/M)
 functions will be available as no disk operating system will have been loaded.
 
-There is a sample `usrrom.asm` supplied in Source/HBIOS and it is recommended 
-that, at least initially, users create their own application based on this as 
-a template because it already creates the necessary variables, starts at 
-(ORG) 00100H, and ensures that the assembled file is padded to create a 
-file `USR-SIZ` in length. Equally, should the the user's application prove 
+There is a sample `usrrom.asm` supplied in Source/HBIOS and it is recommended
+that, at least initially, users create their own application based on this as
+a template because it already creates the necessary variables, starts at
+(ORG) 00100H, and ensures that the assembled file is padded to create a
+file `USR-SIZ` in length. Equally, should the the user's application prove
 too large for the space available then assembly will be terminated with an error.
 Users should not remove this check from the templated code.
 
-If required, the user application may make use of the Z80 interrupt system 
-but if the user application wishes to rely on HBIOS functionality then it 
-must adhere to the HBIOS framework for managing interupts. Alternatively, 
-if the user appliction has no need for the HBIOS then it may use its own 
-custom code for handling interrupts. In that case, a hard reset, rather 
+If required, the user application may make use of the Z80 interrupt system
+but if the user application wishes to rely on HBIOS functionality then it
+must adhere to the HBIOS framework for managing interupts. Alternatively,
+if the user appliction has no need for the HBIOS then it may use its own
+custom code for handling interrupts. In that case, a hard reset, rather
 than an HBIOS warm start, would be necessary to return control to RomWBW.
 
 `\clearpage`{=latex}
@@ -1000,7 +1000,7 @@ binary executable applications are found in the Binary/Apps directory.
 The table below clarifies where each of the applications may be
 found. It is not an exhaustive list, with further applications existing
 on both the ROM-based and disk-based versions of CP/M. All of the Applications
-included within RomWBW may be found within the Binary/Apps directory. 
+included within RomWBW may be found within the Binary/Apps directory.
 
 | Application | ROM Disk | Boot Disks |
 | ----------- | :------: | :--------: |
@@ -1030,13 +1030,13 @@ included within RomWBW may be found within the Binary/Apps directory.
 | ZMD         | No       | Yes        |
 | ZMP         | No       | Yes        |
 
-All of the CP/M applications may be found in the RomWBW Binary/Apps directory 
+All of the CP/M applications may be found in the RomWBW Binary/Apps directory
 and a user may copy those they need to their own customized disk/slice.
 
 Independently of whether the CP/M system was started from ROM or a boot disk,
-such as a floppy disk or a slice on a CF or uSD memory card, applications 
-may be located on and executed from either the ROM-disk itself or from other media. 
-There are multiple disk images available for CP/M (eg floppy, legacy hard-disk and new 
+such as a floppy disk or a slice on a CF or uSD memory card, applications
+may be located on and executed from either the ROM-disk itself or from other media.
+There are multiple disk images available for CP/M (eg floppy, legacy hard-disk and new
 hard-disk formats) and they all contain essentially the same set of applications.
 
 There are particular advantages for each method of booting into CP/M.
@@ -1058,12 +1058,12 @@ For systems starting CP/M from a disk created from an image file, there are a sm
 of additional applications stored in the ```USER 2``` area of the disk. These applications
 do not form part of CP/M, but rather are small utilities used for test purposes during develpment work.
 They may, or may not, fuction correctly with any given hardware or software configuration.
-Documentation for these untilities is very limited, though the source files maybe found 
+Documentation for these untilities is very limited, though the source files maybe found
 in the /Source folder. Note that these utiltites are not available when starting CP/M
 from the ROM image or from a floppy disk.
 
-A number of the CP/M applications available are described in more detail in 
-the following sections, each with an indication as to whether that application 
+A number of the CP/M applications available are described in more detail in
+the following sections, each with an indication as to whether that application
 may be found on the ROM-disk, a boot-disk, or both.
 
 `\clearpage`{=latex}
@@ -1159,7 +1159,7 @@ place at beginning of an option list.
 
 | Option | Name     | Description                                 | Assigned |
 |--------|----------|---------------------------------------------|----------|
-| B      | Boot     | The boot device                             | 1        | 
+| B      | Boot     | The boot device                             | 1        |
 | A      | RAM      | Ram drive                                   | 0,1      |
 | O      | ROM      | Rom drive                                   | 0,1      |
 | F      | Floppy   | All floppy devices, with/without media      | 0,1,2,.. |
@@ -1244,10 +1244,10 @@ data (such as a FAT filesystem).
 
 You will not be allowed to assign multiple drive letters to a single
 device and slice. In other words, only one drive letter may refer to a
-single filesystem at a time. 
+single filesystem at a time.
 
-Attempts to assign a duplicate drive letter will fail and display an 
-error. If you wish to assign a different drive letter to a 
+Attempts to assign a duplicate drive letter will fail and display an
+error. If you wish to assign a different drive letter to a
 device/unit/slice, unassign the existing drive letter first.
 
 Drive letter A: must always be assigned to a device and slice. The
@@ -1293,20 +1293,40 @@ provided in the RomWBW distribution.
 | ROM-based           |No |
 | Disk-based          |Yes|
 
+BBC BASIC is an interpreted version of the BASIC programming language
+originally developed by Acorn Computers for the 6502 CPU.  Compared to
+other BASIC implementations, BBC BASIC adds structured programming as
+well as a built-in Z80 assembler.
+
 #### Syntax
+
+| `BBCBASIC` [*\<filename\>*]
 
 #### Usage
 
+The full documentation for BBC BASIC (Z80) is found online at
+<https://www.bbcbasic.co.uk/bbcbasic/mancpm/index.html>.
+
 #### Notes
+
+The cursor and screen management assumes the use of an ANSI/VT-100
+terminal which is generally correct for RomWBW.  Support for a hardware
+system timer is also implemented.  If your system does not have a
+hardware timer, the TIME function will always return 0 and the timeout
+parameter of the INKEY(n) function will not be observed (will never
+timeout).
 
 #### Etymology
 
+This is a RomWBW HBIOS adaptation of BBCBASIC v5.00 by R.T.Russell.
+This implementation was adapted from the source code found at
+<https://github.com/rtrussell/BBCZ80>.
 
+The adaptation to RomWBW was minimal and includes:
 
+- VT100 terminal control
 
-
-
-
+- TIME function
 
 `\clearpage`{=latex}
 
@@ -1328,14 +1348,14 @@ The `CLRDIR` command is used to initialise the directory area of a drive.
 `CLRDIR `*`<drv>`* will initialise the directory area of the specified drive. The
 drive may take any form - eg floppy disk, hard-disk, CF, uSD etc.
 
-The use of FDISK80 to reserve space, or slices, for CP/M use as drives will not 
-initialise the directory areas of those slices. The resultant directory areas will 
+The use of FDISK80 to reserve space, or slices, for CP/M use as drives will not
+initialise the directory areas of those slices. The resultant directory areas will
 contain garbage left over from a previous use of the disk (or media) and using
-them in this state with CP/M will very likely lead to failed or corrupted data 
+them in this state with CP/M will very likely lead to failed or corrupted data
 storage. Use `CLRDIR` to initialise the directory properly.
 
 FDU will initialise the directory of a floppy disk as part of the formatting process
-and so `CLRDIR` is unnecessary for a floppy disk. `CLRDIR` is, therefore, primarily used 
+and so `CLRDIR` is unnecessary for a floppy disk. `CLRDIR` is, therefore, primarily used
 with other types such as hard-disk, CF and uSD.
 
 The `CLRDIR` command may also be used to effectively 'reformat' a used disk
@@ -1345,7 +1365,7 @@ Use `CLRDIR` with caution as changes made to disks by `CLRDIR` cannot be undone.
 
 #### Notes
 
-If `CLRDIR` is used on disk containing data then the directory area will be 
+If `CLRDIR` is used on disk containing data then the directory area will be
 reinitialised and the data previously stored will be lost.
 
 `\clearpage`{=latex}
@@ -1369,8 +1389,8 @@ The functionality is highly dependent on the capabilities of your system.
 | `CPUSPD (W)armBoot`
 | `CPUSPD (C)oldBoot`
 
-*`<speed>`* is one of (H)alf, (F)ull, (D)ouble, or (Q)uad.  
-*`<memws>`* is a number specifying the desired memory wait states.  
+*`<speed>`* is one of (H)alf, (F)ull, (D)ouble, or (Q)uad.
+*`<memws>`* is a number specifying the desired memory wait states.
 *`<iows>`* is a number specifying the desired I/O wait states.
 
 #### Usage
@@ -1447,34 +1467,34 @@ The source code is provided in the RomWBW distribution.
 The purpose of this utility is to allow the copying of whole disk slices
 from one disk slice to another slice
 
-This tool is only supported by RomWBW HBIOS, it uses HDIOS for all its 
-disk IO. UNA UBIOS is not supported by this tool. 
+This tool is only supported by RomWBW HBIOS, it uses HDIOS for all its
+disk IO. UNA UBIOS is not supported by this tool.
 
 This tool is running on CP/M 2.2 or 3.0 and has access to full 64kb of
 RAM, with a minimum of 48kb TPA
 
-This tool only works with hard disk devices, other media types like 
-floppy, are not supported at this time. This tool works across different 
+This tool only works with hard disk devices, other media types like
+floppy, are not supported at this time. This tool works across different
 hard disk device types, even of different physical type
 
-Both hd1k and hd512 are fully supported, however copying from one layout 
+Both hd1k and hd512 are fully supported, however copying from one layout
 type to the other is not supported.
 
-During operation data is copied in a single read/write pass, data is not 
+During operation data is copied in a single read/write pass, data is not
 verified by default. If there is a write error, it will be reported, and
 operation will stop.
 
 #### Syntax
 
-This tool operates at the disk level via RomWBW, thus all disk identifiers 
+This tool operates at the disk level via RomWBW, thus all disk identifiers
 are in the RomWBW \<disk\>.\<unit\> format.
 
 The syntax (similar to copy) for the command is:
 
 | `COPYSL `*\<destunit\>*[`.`*\<slice\>*]`=`*\<srcunit\>*[`.`*\<slice\>*] [`/`*\<options\>*]
-  
+
 E.g.
-  
+
 | COPYSL 3.3=2.10 /U
 
 Means copy from slice 10 on disk 2, onto disk 3 slice 3. This is in unattended
@@ -1488,26 +1508,26 @@ V - Verify. Does an additional read and verify after write.
 
 #### Usage
 
-When run COPYSL will perform command line argument validation and display 
+When run COPYSL will perform command line argument validation and display
 an error if they are illegal. Also any disk IO errors will cause COPYSL
 to exit.
 
-When specifying slice number(s) a check is made that the slice number is 
-valid, i.e. not too large that it would extend past the end of the 
+When specifying slice number(s) a check is made that the slice number is
+valid, i.e. not too large that it would extend past the end of the
 partition (hd1k), or the end of the media (hd512). For hd512 a check is
-also performed to ensure that the slice would not extend into the first 
+also performed to ensure that the slice would not extend into the first
 defined partition.
 
 The copy operation will be faster if the source disk has been formatted
-with the CP/M file system, since during copy the CP/M directory is scanned, 
-and unused blocks are not copied. 
+with the CP/M file system, since during copy the CP/M directory is scanned,
+and unused blocks are not copied.
 
-If a filesystem is not found, (or the /F option is chosen) all data is 
+If a filesystem is not found, (or the /F option is chosen) all data is
 copied.
 
 Verification (if option chosen) will do an aditional read (after write)
 and compare the data read matches what was written. This compare is only
-on every 32'nd byte. This is done for efficiency. 
+on every 32'nd byte. This is done for efficiency.
 
 During copy dots "." will be displayed to indicate progress of the copy.
 Each "." represents 16 kBytes of data. Each line of "." 's is 1 mBytes.
@@ -1703,7 +1723,7 @@ applications. Please refer to the file called "FDisk Manual.pdf" in
 the Doc directory of the RomWBW distribution for further instructions.
 
 If 'slices' for CP/M have been created using `FDISK80`, then these will
-need to have their directory areas initialised properly using `CLRDIR`. 
+need to have their directory areas initialised properly using `CLRDIR`.
 Failure to do this will likely result in corrupted data.
 
 There is also more information on using FAT partitions with RomWBW in
@@ -2007,7 +2027,7 @@ via command line switches.
 #### Usage
 
 Entering `REBOOT` with no parameters will display the usage and
-version information.  Use /C or /W to immediately initiate a 
+version information.  Use /C or /W to immediately initiate a
 cold or warm restart.
 
 #### Notes
@@ -2019,7 +2039,7 @@ been recycled.
 
 #### Etymology
 
-The `REBOOT` application was custom written for RomWBW by MartinR. All 
+The `REBOOT` application was custom written for RomWBW by MartinR. All
 of the hardware interface code is specific to RomWBW and the application
 will not operate correctly on non-RomWBW systems.
 
@@ -2103,21 +2123,21 @@ The `SURVEY` command takes no arguments.
 
 The results presented by `SURVEY` include:
 
-1. Information about any drives, within the first eight (ie A: to H:), 
-which have been logged by the system. This includes: the total number 
-of files; the storage capacity occupied by those files; and the capacity 
+1. Information about any drives, within the first eight (ie A: to H:),
+which have been logged by the system. This includes: the total number
+of files; the storage capacity occupied by those files; and the capacity
 remaining on that drive.
 
-1. Information about the the 64KByte CP/M memory map, which is shown 
-diagramatically, and includes: locations and sizes of the TPA (Transient Program Area), 
+1. Information about the the 64KByte CP/M memory map, which is shown
+diagramatically, and includes: locations and sizes of the TPA (Transient Program Area),
 CP/M's CCP (Console Command Processor),and BDOS (Basic Disk Operating System).
 
 1. The addresses of active CPU I/O ports.
 
 #### Notes
 
-The mechanism by which `SURVEY` discovers I/O ports is very conservative and 
-therefore the list returned may not be exhaustive. In particular, it may fail to 
+The mechanism by which `SURVEY` discovers I/O ports is very conservative and
+therefore the list returned may not be exhaustive. In particular, it may fail to
 discover ports that are 'write-only'.
 
 `\clearpage`{=latex}
@@ -2269,20 +2289,26 @@ provided in the RomWBW distribution.
 | ROM-based           |No |
 | Disk-based          |Yes|
 
+Tasty Basic is a basic interpreter for CP/M and RomWBW based on the
+Z80 port of Palo Alto Tiny Basic.
+
 #### Syntax
+
+`TBASIC` [*\<filename\>*]
 
 #### Usage
 
 #### Notes
 
+Tasty Basic is provided on RomWBW as both a ROM implementation and as
+a CP/M application.  The CP/M version should be used if you wish to
+save Tasty Basic files.
+
 #### Etymology
 
-
-
-
-
-
-
+The implementation of Tasty Basic included in RomWBW is the work of
+Dimitri Theulings.  The primary distribution site for this work is
+<https://github.com/dimitrit/tastybasic>.
 
 `\clearpage`{=latex}
 
@@ -2313,8 +2339,8 @@ The display of the counter will be something like this:
 
 `13426 Ticks     268.52 Seconds`
 
-The first number is the total number of ticks since system startup, where 
-there are 50 ticks per second. The second number is the total number of 
+The first number is the total number of ticks since system startup, where
+there are 50 ticks per second. The second number is the total number of
 seconds since system startup. Numbers are displayed in decimal format.
 
 #### Notes
@@ -2448,13 +2474,13 @@ The source code is provided in the RomWBW distribution.
 | ROM-based           |No |
 | Disk-based          |Yes|
 
-This application will allow you to play Video Game Music files. VGM 
-files contain music samples from a range of different sound chips 
-that were used in arcade games, game consoles and personal computer 
+This application will allow you to play Video Game Music files. VGM
+files contain music samples from a range of different sound chips
+that were used in arcade games, game consoles and personal computer
 systems.
 
-Video Game Music files have a .VGM file extension and each file 
-contains an embedded header that identifies the hardware it is 
+Video Game Music files have a .VGM file extension and each file
+contains an embedded header that identifies the hardware it is
 intended for and also the title of the music.
 
 All RomWBW operating system boot disks include a selection of sound
@@ -2472,7 +2498,7 @@ Sound chips currently supported are:
 * AY-3-8190 (and equivalent YM2149)
 * YM2612 (and equivalent YM3848)
 * SN76489 (single chip mono and dual chip stereo)
-* YM2151 
+* YM2151
 
 VGMPLAY supports playback of files with multiple combinations of these
 chips.
@@ -2515,11 +2541,11 @@ CPU speed: Autodetected
 | YM2151    |  2nd    | 0cbh     | stereo
 
 Inconsistant, garbled or distorted playback can be an indication that
-your CPU clock speed is too high for your sound chip. In this case, if 
-your platform supports speed switching, then the CPUSPD application 
+your CPU clock speed is too high for your sound chip. In this case, if
+your platform supports speed switching, then the CPUSPD application
 can be used to reduce your processor speed.
 
-VGMPLAY is still under development. The source code is provided in the 
+VGMPLAY is still under development. The source code is provided in the
 RomWBW distribution.
 
 `\clearpage`{=latex}
@@ -2535,10 +2561,10 @@ RomWBW distribution.
 RomWBW firmware. It reads or sets the real-time clock, using function
 calls in the BIOS. It should work on any RTC device that is supported by
 RomWBW, including the internal interrupt-driven timer that is is available
-on some systems. 
+on some systems.
 
 `wdate` differs from the `rtc.com` utility that is provided with the
-RomWBW version of CP/M in that it only gets and sets the date/time. 
+RomWBW version of CP/M in that it only gets and sets the date/time.
 `rtc.com` can also manipulate the nonvolatile RAM in certain clock
 devices, and modify the charge controller. However, `wdate` is (I would
 argue) easier to use, as it takes its input from the command line, which
@@ -2546,7 +2572,7 @@ can be edited, and it's less fussy about the format. It doesn't require
 the date to be set if you only want to change the time, for example.
  In addition, `wdate` has at least some error checking.
 
-`wdate` displays the day-of-week and month as English text, not 
+`wdate` displays the day-of-week and month as English text, not
 numbers. It calculates the day-of-week from the year, month, and day.
 RTC chips usually store a day-of-week value, but it's useless in this
 application for two reasons: first, the BIOS does not expose it. Second,
@@ -2565,7 +2591,7 @@ the week start on? Is '0' a valid day of the week?)
     A> wdate
     Saturday 27 May 13:14:39 2023
 
-With no arguments, displays the current date and time. 
+With no arguments, displays the current date and time.
 
     A> wdate hr min
 
@@ -2580,7 +2606,7 @@ changing date
     A> wdate year month day hr min sec
 
 With six arguments, sets date and time. All numbers are one or two digits.  The
-two-digit year starts at 2000. 
+two-digit year starts at 2000.
 
     A> wdate /?
 
@@ -2588,19 +2614,19 @@ Show a summary of the command-line usage.
 
 #### Notes
 
-I've tested this utility with the DS1302 clock board designed by Ed 
-Brindly, and on the interrupt-driven timer built into my Z180 board. 
-However, it does not interact with hardware, only BIOS; I would expect 
+I've tested this utility with the DS1302 clock board designed by Ed
+Brindly, and on the interrupt-driven timer built into my Z180 board.
+However, it does not interact with hardware, only BIOS; I would expect
 it to work with other hardware.
 
-wdate checks for the non-existence of RomWBW, and also for failing 
-operations on the RTC. It will display the terse "No RTC" message in 
+wdate checks for the non-existence of RomWBW, and also for failing
+operations on the RTC. It will display the terse "No RTC" message in
 both cases.
 
-The RomWBW functions that manipulate the date and time operate on BCD 
-numbers, as RTC chips themselves usually do. wdate works in decimal, so 
+The RomWBW functions that manipulate the date and time operate on BCD
+numbers, as RTC chips themselves usually do. wdate works in decimal, so
 that it can check that the user input makes sense. A substantial part of
-the program's code is taken up by number format conversion and range 
+the program's code is taken up by number format conversion and range
 checking.
 
 #### Etymology
@@ -2684,7 +2710,7 @@ pre-existing XModem application. Based on the source code comments, it
 was originally adapted from Ward Christensen's MODEM2 by Keith
 Petersen and is labeled version 12.5.
 
-The original source of the application was found in the Walnut Creek
+The original source of the application was found on the Walnut Creek
 CD-ROM and is called XMDM125.ARK dated 7/15/86.
 
 The actual application is virtually untouched in the RomWBW
@@ -2703,20 +2729,41 @@ The source code is provided in the RomWBW distribution.
 | ROM-based           |No |
 | Disk-based          |Yes|
 
+An adaptation of Robert Kramer's Remote CP/M File Transfer Program
+with support for XModem and YModem transfers.
+
 #### Syntax
+
+`ZMD` *\<mode\>\<protocol\>\<unit\>* [*\<filename\>*]
+
+where *\<mode\>* can be:\
+**`   S  -`** Send file from BBS \
+**`   SP -`** Send from private area \
+**`   A  -`** Send ARK/ARC/LBR member \
+**`   R  -`** Receive file from YOU \
+**`   RP -`** Receive in private area \
+**`   RW -`** Receive without description(s) \
+**`   F  -`** Displays available upload space
+
+*\<protocol\>* can be: \
+**`   X  -`** Xmodem 128 byte blocks  (CRC) \
+**`   C  -`** Xmodem 128 byte blocks  (Checksum) \
+**`   K  -`** Ymodem 1024 byte blocks (CRC only)
+
+and *\<unit\>* can specify a single digit (0-9) that specifies
+the RomWBW Character Unit to use for the file transfer.
 
 #### Usage
 
 #### Notes
 
+If no *\<unit\>* is specified, ZMD will use the current HBIOS
+console for the file transfer.
+
 #### Etymology
 
-
-
-
-
-
-
+ZMD v1.50 was produced by Robert Kramer.  The RomWBW adaptation just
+uses the RomWBW HBIOS serial API.
 
 `\clearpage`{=latex}
 
