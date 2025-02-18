@@ -1,9 +1,9 @@
-	TITLE	BBC BASIC (C) R.T.RUSSELL 1981-2024
+	TITLE	BBC BASIC (C) R.T.RUSSELL 1981-2025
 	NAME	('EVAL')
 ;
 ;BBC BASIC INTERPRETER - Z80 VERSION
 ;EVALUATE EXPRESSION MODULE - "EVAL"
-;(C) COPYRIGHT R.T.RUSSELL 1981-2024
+;(C) COPYRIGHT R.T.RUSSELL 1981-2025
 ;
 ;THE NAME BBC BASIC IS USED WITH THE PERMISSION
 ;OF THE BRITISH BROADCASTING CORPORATION AND IS
@@ -11,7 +11,9 @@
 ;
 ;VERSION 2.3, 07-05-1984
 ;VERSION 3.0, 08-03-1987
-;VERSION 5.0, 14-05-2024
+;VERSION 5.0, 31-05-2024
+;VERSION 5.1, 28-12-2024
+;VERSION 5.2, 11-01-2025
 ;
 ;BINARY FLOATING POINT REPRESENTATION:
 ; 32 BIT SIGN-MAGNITUDE NORMALIZED MANTISSA
@@ -368,6 +370,11 @@ EXPR4B:	CALL	SAVE
 	CALL	DOIT
 	JR	EXPR4A
 ;
+EXPR45:	LD	A,E
+	CP	'+'
+	JR	Z,EXPR4
+	CP	'-'
+	JR	Z,EXPR4
 EXPR5:	CALL	ITEM
 	OR	A		;TEST TYPE
 	EX	AF,AF'		;SAVE TYPE
@@ -396,6 +403,9 @@ EXPRS:	CALL	EXPR
 	RET	M
 	JR	MISMAT
 ;
+BADHEX:	LD	A,28
+ERROR2:	JP	ERROR		;"Bad HEX or binary"
+;
 NEGATE:	EXX
 	LD	A,H
 	CPL
@@ -419,9 +429,6 @@ ADD1:	EXX
 	RET	NZ
 	INC	HL
 	RET
-;
-BADHEX:	LD	A,28
-ERROR2:	JP	ERROR		;"Bad HEX or binary"
 ;
 ITEMI:	CALL	ITEM
 	OR	A
@@ -635,7 +642,7 @@ CONS2:	LD	A,(IY)
 	RET
 ;
 ARRAY:	LD	A,14		;'Bad use of array'
-	JP	ERROR
+	JR	ERROR0
 ;
 ; ARRLEN - Get start address and number of elements of an array
 ;   Inputs: HL addresses array descriptor
@@ -719,20 +726,21 @@ LOADS:	LD	DE,ACCS
 	EXX
 	OR	A
 	LD	C,A
-	LD	A,80H		;STRING MARKER
+REPDUN:	LD	A,80H		;STRING MARKER
 	RET	Z
 	LD	B,0
 	LDIR
 	RET
 ;
-LOADS2:	LD	A,(HL)
+LOADS2:	PUSH	IX
+	POP	HL
+LOADS3:	LD	A,(HL)
 	LD	(DE),A
 	INC	HL
 	CP	CR
-REPDUN:	LD	A,80H		;STRING MARKER
-	RET	Z
+	JR	Z,REPDUN
 	INC	E
-	JR	NZ,LOADS2
+	JR	NZ,LOADS3
 	RET			;RETURN NULL STRING
 ;
 ; Version 5 extensions:
@@ -1522,9 +1530,8 @@ GET5:	LD	D,0
 GET6:	PUSH	BC
 	CALL	OSBGET
 	POP	BC
-	JR	C,GET9		;EOF
 	BIT	1,B
-	JR	Z,GET8
+	JR	Z,GET10
 	CP	C
 	JR	Z,GET9		;NUL (or supplied term)
 	BIT	7,B
@@ -1535,9 +1542,11 @@ GET6:	PUSH	BC
 	JR	Z,GET9		;LF
 GET7:	CP	CR
 	JR	Z,GET9		;CR
-GET8:	LD	(HL),A
+GET8:	OR	A
+GET10:	LD	(HL),A
 	INC	L
 	DEC	D
+	JR	C,GET9		;EOF
 	JR	NZ,GET6
 GET9:	EX	DE,HL
 	LD	A,80H
@@ -1915,20 +1924,6 @@ RELOPQ:	CP	'>'
 	CP	'<'
 	RET
 ;
-COMMA:	CALL	NXT
-	INC	IY
-	CP	','
-	RET	Z
-	LD	A,5
-	JR	ERROR1		;"Missing ,"
-;
-BRAKET:	CALL	NXT
-	INC	IY
-	CP	')'
-	RET	Z
-	LD	A,27
-ERROR1:	JP	ERROR		;"Missing )"
-;
 SAVE:	INC	IY
 	AND	0FH
 SAVE1:	EX	AF,AF'
@@ -1966,6 +1961,20 @@ DOIT:	EX	AF,AF'
 	EX	AF,AF'		;TYPE
 	LD	A,(IY)
 	RET
+;
+COMMA:	CALL	NXT
+	INC	IY
+	CP	','
+	RET	Z
+	LD	A,5
+	JR	ERROR1		;"Missing ,"
+;
+BRAKET:	CALL	NXT
+	INC	IY
+	CP	')'
+	RET	Z
+	LD	A,27
+ERROR1:	JP	ERROR		;"Missing )"
 ;
 DISPT2:	PUSH	HL
 	LD	HL,SOPTBL
@@ -2045,17 +2054,17 @@ LETARR:	RES	6,D		;Lose array marker
 ; allocate space on stack and zero it:
 ;
 	XOR	A		;Clear carry and zero error code
-	LD	HL,0
+	SBC	HL,HL
 	ADD	HL,SP		;HL = SP
 	SBC	HL,BC
-	JP	C,ERROR		;'No room'
+	JR	C,ERROR1	;'No room'
 	PUSH	BC
 	LD	BC,(FREE)
 	INC	B		;Safety margin
 	SBC	HL,BC
 	ADD	HL,BC
 	POP	BC
-	JP	C,ERROR		;'No room'
+	JR	C,ERROR1	;'No room'
 	LD	SP,HL	
 LETA0:	LD	(HL),0
 	INC	HL
@@ -2095,8 +2104,7 @@ EXPRA1:	INC	IY
 	PUSH	BC
 	PUSH	HL
 	PUSH	IX
-	LD	E,A		;For unary minus
-	CALL	NXT
+	LD	E,A		;Operator
 	CALL	ITEMA
 	POP	IX
 	POP	HL
@@ -2172,16 +2180,20 @@ EXPRA8:	ADD	HL,BC		;Skip remaining elements
 	RET
 ;
 ; ITEMA: evaluate and operate on array item
-;   Inputs: A = operator
-;           D = type
-;           E = operator
+;   Inputs: D = type
+;           E = operator ('=' for first item)
 ;           BC = number of elements
 ;           HL = pointer to destination on stack
 ;           IY = text pointer
 ;  Outputs: IY updated
 ; Destroys: Everything except SP
 ;
-ITEMA:	CP	'-'
+ITEMA:	CALL	NXT
+	PUSH	HL		;Pointer to destination
+	PUSH	BC		;Number of elements
+	PUSH	IY		;In case normal expression
+	PUSH	DE		;Ditto
+	CP	'-'
 	JR	NZ,ITEMA1	;Not unary minus
 	LD	A,E
 	CP	'='
@@ -2189,16 +2201,14 @@ ITEMA:	CP	'-'
 	INC	IY		;Bump past '-'
 	CALL	NXT
 	LD	E,'-'		;Unary minus
-ITEMA1:	PUSH	HL		;Pointer to destination
-	PUSH	BC		;Number of elements
-	PUSH	DE		;Type and previous operator
-	PUSH	IY		;In case normal expression
+ITEMA1:	PUSH	DE		;Type and operator
 	CALL	GETVAR
+	POP	DE		;Type & operator
 	JR	NZ,ITEMA4	;Non-array expression
 	BIT	6,A
 	JR	Z,ITEMA4	;Not a whole array
+	POP	BC		;Junk saved original op
 	POP	BC		;Junk saved text pointer
-	POP	DE		;Type & operator
 	RES	6,A
 	CP	D
 	JP	NZ,MISMAT	;'Type mismatch'
@@ -2259,10 +2269,12 @@ ITEMA3:	EX	DE,HL		;DE = destination
 ;
 ; Process numeric non-array item:
 ;
-ITEMA4:	POP	IY		;Restore text pointer
+ITEMA4:	POP	DE		;Restore original operator
+	POP	IY		;Restore original text pointer
 	BIT	7,D
 	JR	NZ,ITEMA5
-	CALL	EXPR4		;; should be EXP345
+	PUSH	DE
+	CALL	EXPR45		;; should be EXP345
 	LD	A,C		;Exponent
 	POP	DE		;Type / operator
 	POP	BC		;Count
@@ -2303,8 +2315,7 @@ ITEMA5:	CALL	EXPRS
 	LD	C,A
 	LD	B,0
 	LDIR
-ITEMA0:	POP	DE
-	POP	BC
+ITEMA0:	POP	BC
 	POP	IX
 	EXX
 	LD	L,A
@@ -2362,13 +2373,11 @@ ARRDOT:	INC	IY		;Bump past dot
 	JR	Z,ARR1D
 	LD	H,(IY-1)
 	LD	L,(IY-2)
-ARR1D:	PUSH	AF
-	PUSH	DE
-	LD	C,A
-	LD	B,0
-	CALL	MUL16
+ARR1D:	PUSH	DE
+	EX	DE,HL
+	CALL	X14OR5
+	EX	DE,HL
 	POP	DE
-	POP	AF
 	LD	B,(IX-1)
 	LD	C,(IX-2)
 ;
@@ -2519,9 +2528,7 @@ INNER:	PUSH	DE		;6
 	ADD	IY,BC
 	PUSH	AF
 	PUSH	HL
-	EX	DE,HL
-	CALL	MUL16
-	EX	DE,HL
+	CALL	X14OR5
 	POP	BC
 	CALL	MOD16
 	POP	AF
@@ -2541,12 +2548,9 @@ INNER:	PUSH	DE		;6
 	SBC	HL,DE
 	PUSH	HL
 	POP	IY
-	LD	L,A
-	LD	H,0
-	PUSH	AF
-	CALL	MUL16
-	POP	AF
-	EX	DE,HL
+	LD	D,B
+	LD	E,C
+	CALL	X14OR5
 	ADD	IX,DE
 	POP	HL
 	POP	DE

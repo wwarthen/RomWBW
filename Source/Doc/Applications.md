@@ -1000,11 +1000,12 @@ binary executable applications are found in the Binary/Apps directory.
 The table below clarifies where each of the applications may be
 found. It is not an exhaustive list, with further applications existing
 on both the ROM-based and disk-based versions of CP/M. All of the Applications
-incuded within RomWBW may be found with in the Binary/Apps directory. 
+included within RomWBW may be found within the Binary/Apps directory. 
 
 | Application | ROM Disk | Boot Disks |
 | ----------- | :------: | :--------: |
 | ASSIGN      | Yes      | Yes        |
+| BBCBASIC    | No       | Yes        |
 | CLRDIR      | Yes      | Yes        |
 | COPYSL      | No       | Yes        |
 | CPUSPD      | Yes      | Yes        |
@@ -1020,14 +1021,17 @@ incuded within RomWBW may be found with in the Binary/Apps directory.
 | SURVEY      | Yes      | Yes        |
 | SYSCOPY     | Yes      | Yes        |
 | TALK        | Yes      | Yes        |
+| TBASIC      | No       | Yes        |
 | TIMER       | Yes      | Yes        |
 | TUNE        | No       | Yes        |
 | VGMPLAY     | No       | Yes        |
 | WDATE       | No       | Yes        |
 | XM          | Yes      | Yes        |
+| ZMD         | No       | Yes        |
+| ZMP         | No       | Yes        |
 
 All of the CP/M applications may be found in the RomWBW Binary/Apps directory 
-and a user may copy those they need to their own customised disk/slice.
+and a user may copy those they need to their own customized disk/slice.
 
 Independently of whether the CP/M system was started from ROM or a boot disk,
 such as a floppy disk or a slice on a CF or uSD memory card, applications 
@@ -1279,6 +1283,30 @@ sure to use `ASSIGN` prior to loading the RSX or after it is unloaded.
 
 The `ASSIGN` command is an original product and the source code is
 provided in the RomWBW distribution.
+
+`\clearpage`{=latex}
+
+## BBCBASIC
+
+| BBCBASIC            |   |
+| --------------------|---|
+| ROM-based           |No |
+| Disk-based          |Yes|
+
+#### Syntax
+
+#### Usage
+
+#### Notes
+
+#### Etymology
+
+
+
+
+
+
+
 
 `\clearpage`{=latex}
 
@@ -2234,6 +2262,30 @@ provided in the RomWBW distribution.
 
 `\clearpage`{=latex}
 
+## TBASIC
+
+| TBASIC              |   |
+| --------------------|---|
+| ROM-based           |No |
+| Disk-based          |Yes|
+
+#### Syntax
+
+#### Usage
+
+#### Notes
+
+#### Etymology
+
+
+
+
+
+
+
+
+`\clearpage`{=latex}
+
 ## TIMER
 
 | TIMER               |   |
@@ -2630,7 +2682,7 @@ control is fully functional (end to end).
 The `XM` application provided in RomWBW is an adaptation of a
 pre-existing XModem application. Based on the source code comments, it
 was originally adapted from Ward Christensen's MODEM2 by Keith
-Petersen and is labelled version 12.5.
+Petersen and is labeled version 12.5.
 
 The original source of the application was found in the Walnut Creek
 CD-ROM and is called XMDM125.ARK dated 7/15/86.
@@ -2643,3 +2695,57 @@ appropriate driver.
 The source code is provided in the RomWBW distribution.
 
 `\clearpage`{=latex}
+
+## ZMD
+
+| ZMD                 |   |
+| --------------------|---|
+| ROM-based           |No |
+| Disk-based          |Yes|
+
+#### Syntax
+
+#### Usage
+
+#### Notes
+
+#### Etymology
+
+
+
+
+
+
+
+
+`\clearpage`{=latex}
+
+## ZMP
+
+| ZMP                 |   |
+| --------------------|---|
+| ROM-based           |No |
+| Disk-based          |Yes|
+
+#### Syntax
+
+#### Usage
+
+#### Notes
+
+#### Etymology
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
