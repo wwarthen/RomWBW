@@ -181,6 +181,14 @@ MINIT_UB1:
 	LD	A,E		; Put in A
 	LD	(CPUSPD),A	; Save it
 ;
+	LD	A,(UNIT)	; get current unit specified
+	CP	0FFH		; check for undefined
+	JR	NZ,MINIT_UB2	; if already specified, go ahead
+	XOR	A		; default is unit 0
+	LD	(UNIT),A	; and save it
+;
+MINIT_UB2:
+;
 	JP	UB_INIT		; UNA BIOS init
 ;
 MINIT_RET:
@@ -578,8 +586,10 @@ UB_SENDR:
 	PUSH	BC
 	PUSH	DE
 	PUSH	HL
-	LD	BC,0012H	; unit 0, func 12h (write char)
 	LD	E,A		; character to E
+	LD	A,(UNIT)	; unit
+	LD	B,A		; to B
+	LD	C,12H		; func 12h (write char)
 	RST	08
 	POP	HL
 	POP	DE
@@ -611,7 +621,9 @@ UB_MDIN:
 	PUSH	BC
 	PUSH	DE
 	PUSH	HL
-	LD	BC,0011H	; unit 0, func 12h (write char)
+	LD	A,(UNIT)	; unit
+	LD	B,A		; to B
+	LD	C,11H		; func 11h (read char)
 	RST	08
 	LD	A,E		; byte received to A
 	POP	HL
@@ -629,12 +641,14 @@ UB_RCVRDY:
 	PUSH	BC
 	PUSH	DE
 	PUSH	HL
-	LD	BC,0013H	; unit 0, func 13h (input stat)
+	LD	A,(UNIT)	; unit
+	LD	B,A		; to B
+	LD	C,13H		; func 13h (input stat)
 	RST	08
-	XOR	A		; zero accum		; 4
-	CP	E		; CF means not zero	; 4
-	CCF			; CF means zero		; 4
-	RLA			; ZF means not zero	; 4
+	LD	A,E		; move char count to accum
+	SUB	1		; CF set IFF zero
+	RL	A		; CF to bit 0 of A
+	AND	01H		; set Z flag as needed
 	LD	A,0		; report no line errors
 	POP	HL
 	POP	DE
@@ -649,12 +663,14 @@ UB_SNDRDY:
 	PUSH	BC
 	PUSH	DE
 	PUSH	HL
-	LD	BC,0014H	; unit 0, func 14h (output stat)
+	LD	A,(UNIT)	; unit
+	LD	B,A		; to B
+	LD	C,14H		; func 14h (output stat)
 	RST	08
-	XOR	A		; zero accum		; 4
-	CP	E		; CF means not zero	; 4
-	CCF			; CF means zero		; 4
-	RLA			; ZF means not zero	; 4
+	LD	A,E		; char avail to send to accum
+	SUB	1		; CF set IFF zero
+	RL	A		; CF to bit 0 of A
+	AND	01H		; set Z flag as needed
 	POP	HL
 	POP	DE
 	POP	BC
