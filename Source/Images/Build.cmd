@@ -1,7 +1,7 @@
 @echo off
 setlocal
 
-:: call BuildDisk.cmd bp hd wbw_hd1k
+:: call BuildDisk.cmd bp hd wbw_hd1k ..\zsdos\zsys_wbw.sys
 :: copy /b hd1k_prefix.dat + ..\..\Binary\hd1k_bp.img + ..\..\Binary\hd1k_cpm22.img + ..\..\Binary\hd1k_zsdos.img + ..\..\Binary\hd1k_nzcom.img + ..\..\Binary\hd1k_cpm3.img + ..\..\Binary\hd1k_zpm3.img + ..\..\Binary\hd1k_ws4.img ..\..\Binary\hd1k_combo_bp.img || exit /b
 :: goto :eof
 

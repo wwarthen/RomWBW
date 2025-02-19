@@ -6,6 +6,7 @@
 ../BPBIOS/*.zrl 0:
 ../BPBIOS/*.zex 0:
 ../BPBIOS/bpbuild.com 0:
+Common/Z3/u15/ZEX.COM 0:
 #
 # Add RomWBW utilities
 #
