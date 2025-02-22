@@ -36,11 +36,6 @@ goto :eof
 
 :makebp
 
-::
-:: Below statement added temporarily for build debugging for Mark Cohen.
-::
-@echo on 
-
 set VER=%1
 echo.
 echo Building BPBIOS Variant "%VER%"...
