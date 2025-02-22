@@ -29,7 +29,7 @@
 ;    - NHYODYNE Z80	$68
 ;    - NHYODYNE DUART	$80,$88
 ;    - RCBUS EPSER	$A0,$A8
-;    - RCBUS DUAL RS232	$80,$88
+;    - RCBUS SERIAL	$80,$88,$A0,$A8,$C0,$C8,$E0,$E8
 ;    - EPITX		$A0,$A8
 ;    - NABU		$48
 ;    - HEATH		$C0,$C8,$D0
