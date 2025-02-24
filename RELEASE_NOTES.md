@@ -51,7 +51,7 @@ release of RomWBW.
   allows OS to recover from applications that reprogram the TMS
   video display controller.
 
-- Implemented "application" RAM banks that can be discovered bia
+- Implemented "application" RAM banks that can be discovered via
   the HBIOS API.
 
 - Documentation improvements (Mark Pruden), including:
