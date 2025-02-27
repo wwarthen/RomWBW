@@ -65,7 +65,7 @@ void _chnative_init(bool forced) {
 
   usb_host_bus_reset();
 
-  for (uint8_t i = 0; i < (forced ? 10 : 5); i++) {
+  for (uint8_t i = 0; i < (forced ? 80 : 5); i++) {
     const uint8_t r = ch_very_short_wait_int_and_get_status();
 
     if (r == USB_INT_CONNECT) {
@@ -73,6 +73,23 @@ void _chnative_init(bool forced) {
 
       enumerate_all_devices();
 
+      if (forced && count_of_devices() == 0) {
+        print_string("\r\nUSB: SCANNING $");
+
+        for (i = 0; i < 10; i++) {
+          print_string(".$");
+          memset(get_usb_work_area(), 0, sizeof(_usb_state));
+          usb_host_bus_reset();
+
+          delay_medium();
+          enumerate_all_devices();
+
+          if (count_of_devices() > 0)
+            goto connected;
+        }
+      }
+
+    connected:
       USB_MODULE_LEDS = 0x03;
       return;
     }

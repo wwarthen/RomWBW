@@ -10,20 +10,23 @@ const uint8_t device_config_sizes[_USB_LAST_DEVICE_TYPE] = {
 };
 
 // always usb work area
-device_config *find_device_config(const usb_device_type requested_type) {
+uint8_t count_of_devices(void) __sdcccall(1) {
   _usb_state *const p = get_usb_work_area();
+
+  uint8_t count = 0;
 
   const device_config *p_config = first_device_config(p);
   while (p_config) {
     const uint8_t type = p_config->type;
 
-    if (type == requested_type)
-      return (device_config *)p_config;
+    if (type != USB_IS_HUB && type)
+      count++;
+    ;
 
     p_config = next_device_config(p, p_config);
   };
 
-  return NULL;
+  return count;
 }
 
 // always search in boot

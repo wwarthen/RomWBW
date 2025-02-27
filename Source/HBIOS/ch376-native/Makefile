@@ -46,6 +46,7 @@ clean:
 	rm base-drv.s
 	rm keyboard.s
 
+.PRECIOUS: $(ASSDIR)%.c.asm
 $(ASSDIR)%.c.s: $(ASSDIR)%.c.asm
 	@mkdir -p $(dir $@)
 	echo "Converting $< to $@"
