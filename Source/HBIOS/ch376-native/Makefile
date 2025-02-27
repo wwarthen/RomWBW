@@ -12,7 +12,7 @@ ZCCFLAGS := +z80 -vn -startup=0 -clib=sdcc_iy  -compiler=sdcc -Cs--std=c23 -Cs--
 
 ZCC_PATH := $(shell command -v zcc)
 DOCKER_PATH := $(shell command -v docker)
-ZCC := $(shell command -v zcc >/dev/null 2>&1 && echo zcc || echo 'docker run -w /host/${PWD} -v /:/host/ -u $(shell id -u ${USER}):$(shell id -g ${USER}) -t z88dk/z88dk zcc')
+ZCC := $(shell command -v zcc >/dev/null 2>&1 && echo zcc || echo 'docker run -w /host/${PWD} -v /:/host/ -u $(shell id -u ${USER}):$(shell id -g ${USER}) -t z88dk/z88dk:20250224 zcc')
 
 ifeq ($(ZCC_PATH),)
     ifeq ($(DOCKER_PATH),)

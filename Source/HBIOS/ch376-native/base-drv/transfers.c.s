@@ -4,7 +4,7 @@
 ; 
 ;--------------------------------------------------------
 ; File Created by SDCC : free open source ISO C Compiler
-; Version 4.4.0 #14648 (Linux)
+; Version 4.5.0 #15248 (Linux)
 ;--------------------------------------------------------
 ; Processed by Z88DK
 ;--------------------------------------------------------
@@ -120,7 +120,7 @@ _usb_control_transfer:
 	inc	hl
 	ld	a, b
 	and	0x03
-	ld	e,a
+	ld	e, a
 	ld	a, (hl)
 	and	0xfc
 	or	e
@@ -144,6 +144,7 @@ l_usb_control_transfer_00102:
 ;source-doc/base-drv/transfers.c:50: const uint8_t             max_packet_size) {
 	push	bc
 	call	_critical_begin
+;source-doc/base-drv/transfers.c:52: endpoint_param endpoint = {1, 0, max_packet_size};
 	ld	l,(ix+8)
 	call	_ch_set_usb_address
 	pop	bc
@@ -158,7 +159,9 @@ l_usb_control_transfer_00102:
 	call	_ch_write_data
 	pop	af
 	inc	sp
+;source-doc/base-drv/transfers.c:55:
 	call	_ch_issue_token_setup
+;source-doc/base-drv/transfers.c:56: if (transferIn && buffer == 0)
 	call	_ch_short_wait_int_and_get_stat
 	pop	bc
 ;source-doc/base-drv/transfers.c:57: return USB_ERR_OTHER;
@@ -175,13 +178,13 @@ l_usb_control_transfer_00102:
 	ld	b,a
 	or	c
 	jr	Z,l_usb_control_transfer_00116
+	ld	hl,0
+	add	hl, sp
 	ld	e,(ix+6)
 	ld	d,(ix+7)
 	ld	a,(ix-1)
 	or	a
 	jr	Z,l_usb_control_transfer_00118
-	ld	hl,0
-	add	hl, sp
 	push	hl
 	push	bc
 	push	de
@@ -191,8 +194,6 @@ l_usb_control_transfer_00102:
 	pop	af
 	jr	l_usb_control_transfer_00119
 l_usb_control_transfer_00118:
-	ld	hl,0
-	add	hl, sp
 	push	hl
 	push	bc
 	push	de
@@ -220,7 +221,7 @@ l_usb_control_transfer_00117:
 ;source-doc/base-drv/transfers.c:69:
 	ld	a,0x00
 	ld	bc,_CH376_DATA_PORT
-	out	(c),a
+	out	(c), a
 ;source-doc/base-drv/transfers.c:70: result = length != 0
 	call	_ch_issue_token_out_ep0
 ;source-doc/base-drv/transfers.c:71: ? (transferIn ? ch_data_in_transfer(buffer, length, &endpoint) : ch_data_out_transfer(buffer, length, &endpoint))
@@ -392,7 +393,7 @@ _usb_data_in_transfer:
 ;source-doc/base-drv/transfers.c:126: * @brief Perform a USB data in on the specififed endpoint
 	call	_critical_end
 ;source-doc/base-drv/transfers.c:128: * @param buffer the buffer to receive the data
-	ld	hl,(_result)
+	ld	hl, (_result)
 ;source-doc/base-drv/transfers.c:129: * @param buffer_size the maximum size of data to be received
 	pop	ix
 	ret
@@ -428,7 +429,7 @@ _usb_data_in_transfer_n:
 ;source-doc/base-drv/transfers.c:141:
 	call	_critical_end
 ;source-doc/base-drv/transfers.c:143:
-	ld	hl,(_result)
+	ld	hl, (_result)
 ;source-doc/base-drv/transfers.c:144: return result;
 	pop	ix
 	ret
@@ -464,7 +465,7 @@ _usb_data_out_transfer:
 ;source-doc/base-drv/transfers.c:156: usb_error
 	call	_critical_end
 ;source-doc/base-drv/transfers.c:158: critical_begin();
-	ld	hl,(_result)
+	ld	hl, (_result)
 ;source-doc/base-drv/transfers.c:159:
 	pop	ix
 	ret

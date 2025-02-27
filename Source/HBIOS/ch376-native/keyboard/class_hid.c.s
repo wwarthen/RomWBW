@@ -4,7 +4,7 @@
 ; 
 ;--------------------------------------------------------
 ; File Created by SDCC : free open source ISO C Compiler
-; Version 4.4.0 #14648 (Linux)
+; Version 4.5.0 #15248 (Linux)
 ;--------------------------------------------------------
 ; Processed by Z88DK
 ;--------------------------------------------------------
@@ -62,6 +62,7 @@ _hid_set_protocol:
 	push	af
 ;source-doc/keyboard/class_hid.c:8: cmd = cmd_hid_set;
 	push	hl
+	ex	de,hl
 	ld	hl,2
 	add	hl, sp
 	ex	de, hl
@@ -126,6 +127,7 @@ _hid_set_idle:
 	push	af
 ;source-doc/keyboard/class_hid.c:18: cmd = cmd_hid_set;
 	push	hl
+	ex	de,hl
 	ld	hl,2
 	add	hl, sp
 	ex	de, hl

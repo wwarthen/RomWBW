@@ -4,7 +4,7 @@
 ; 
 ;--------------------------------------------------------
 ; File Created by SDCC : free open source ISO C Compiler
-; Version 4.4.0 #14648 (Linux)
+; Version 4.5.0 #15248 (Linux)
 ;--------------------------------------------------------
 ; Processed by Z88DK
 ;--------------------------------------------------------
@@ -173,8 +173,8 @@ l_keyboard_buf_put_00110:
 	ld	b,0x00
 	ld	hl,_previous_keyCodes
 	add	hl, bc
-	ld	a,(ix+5)
-	sub	(hl)
+	ld	a, (hl)
+	sub	(ix+5)
 ;source-doc/keyboard/kyb-init.c:57: if (previous_keyCodes[i] == key_code)
 	jr	Z,l_keyboard_buf_put_00112
 ;source-doc/keyboard/kyb-init.c:55: // if already reported, just skip it
@@ -182,7 +182,7 @@ l_keyboard_buf_put_00110:
 	jr	l_keyboard_buf_put_00110
 l_keyboard_buf_put_00106:
 ;source-doc/keyboard/kyb-init.c:59:
-	ld	a,(_write_index)
+	ld	a, (_write_index)
 	inc	a
 	and	0x07
 	ld	c, a
@@ -192,21 +192,20 @@ l_keyboard_buf_put_00106:
 	jr	Z,l_keyboard_buf_put_00112
 ;source-doc/keyboard/kyb-init.c:61: if (next_write_index != read_index) { // Check if buffer is not full
 	ld	de,_buffer+0
-	ld	hl,(_write_index)
+	ld	hl, (_write_index)
 	ld	h,0x00
 	add	hl, hl
 	add	hl, de
 	ld	a,(ix+4)
 	ld	(hl), a
 ;source-doc/keyboard/kyb-init.c:62: buffer[write_index].modifier_keys = modifier_keys;
-	ld	hl,(_write_index)
+	ld	hl, (_write_index)
 	ld	h,0x00
 	add	hl, hl
 	add	hl, de
-	ex	de, hl
-	inc	de
+	inc	hl
 	ld	a,(ix+5)
-	ld	(de), a
+	ld	(hl), a
 ;source-doc/keyboard/kyb-init.c:63: buffer[write_index].key_code      = key_code;
 	ld	hl,_write_index
 	ld	(hl), c
@@ -231,13 +230,11 @@ _keyboard_buf_size:
 	jr	l_keyboard_buf_size_00103
 l_keyboard_buf_size_00102:
 ;source-doc/keyboard/kyb-init.c:71:
-	ld	hl,_read_index
-	ld	c, (hl)
+	ld	hl, (_read_index)
 	ld	a,0x08
-	sub	c
-	ld	hl,_write_index
-	ld	c, (hl)
-	add	a, c
+	sub	l
+	ld	hl, (_write_index)
+	add	a, l
 l_keyboard_buf_size_00103:
 ;source-doc/keyboard/kyb-init.c:72: return KEYBOARD_BUFFER_SIZE - read_index + write_index;
 	ret
@@ -264,7 +261,7 @@ _keyboard_buf_get_next:
 l_keyboard_buf_get_next_00102:
 ;source-doc/keyboard/kyb-init.c:78:
 	ld	bc,_buffer+0
-	ld	hl,(_read_index)
+	ld	hl, (_read_index)
 	ld	h,0x00
 	add	hl, hl
 	add	hl, bc
@@ -273,11 +270,10 @@ l_keyboard_buf_get_next_00102:
 	inc	hl
 	ld	c, (hl)
 ;source-doc/keyboard/kyb-init.c:80: const uint8_t key_code     = buffer[read_index].key_code;
-	ld	hl,_read_index
-	ld	a, (hl)
+	ld	a, (_read_index)
 	inc	a
 	and	0x07
-	ld	(hl), a
+	ld	(_read_index),a
 ;source-doc/keyboard/kyb-init.c:82:
 	ld	a, c
 	sub	0x39
@@ -325,11 +321,10 @@ l_keyboard_buf_get_next_00105:
 ; ---------------------------------
 _keyboard_buf_flush:
 ;source-doc/keyboard/kyb-init.c:93: void keyboard_buf_flush() {
-	ld	hl,_write_index
-	ld	(hl),0x00
 ;source-doc/keyboard/kyb-init.c:94: write_index = 0;
-	ld	hl,_read_index
-	ld	(hl),0x00
+	xor	a
+	ld	(_write_index),a
+	ld	(_read_index),a
 ;source-doc/keyboard/kyb-init.c:95: read_index  = 0;
 	ret
 ;source-doc/keyboard/kyb-init.c:101:
@@ -349,13 +344,13 @@ _keyboard_tick:
 ;././source-doc/base-drv//ch376.h:111:
 	ld	a,0x25
 	ld	bc,_CH376_DATA_PORT
-	out	(c),a
+	out	(c), a
 ;././source-doc/base-drv//ch376.h:112: #define calc_max_packet_sizex(packet_size) (packet_size & 0x3FF)
 	ld	a,0x1f
 	ld	bc,_CH376_DATA_PORT
-	out	(c),a
+	out	(c), a
 ;source-doc/keyboard/kyb-init.c:106: ch_configure_nak_retry_disable();
-	ld	bc,_report+0
+	ld	bc,_report
 	ld	hl, (_keyboard_config)
 	ld	a,0x08
 	push	af
@@ -374,11 +369,11 @@ _keyboard_tick:
 ;././source-doc/base-drv//ch376.h:111:
 	ld	a,0x25
 	ld	bc,_CH376_DATA_PORT
-	out	(c),a
+	out	(c), a
 ;././source-doc/base-drv//ch376.h:112: #define calc_max_packet_sizex(packet_size) (packet_size & 0x3FF)
 	ld	a,0xdf
 	ld	bc,_CH376_DATA_PORT
-	out	(c),a
+	out	(c), a
 ;source-doc/keyboard/kyb-init.c:108: ch_configure_nak_retry_3s();
 	ld	hl,_result
 	ld	a, (hl)

@@ -4,7 +4,7 @@
 ; 
 ;--------------------------------------------------------
 ; File Created by SDCC : free open source ISO C Compiler
-; Version 4.4.0 #14648 (Linux)
+; Version 4.5.0 #15248 (Linux)
 ;--------------------------------------------------------
 ; Processed by Z88DK
 ;--------------------------------------------------------
@@ -70,10 +70,8 @@ l_find_device_config_00103:
 	ld	h, d
 	ld	a, (hl)
 	and	0x0f
-	ld	c, a
 ;source-doc/base-drv/usb_state.c:20: if (type == requested_type)
-	ld	a,(ix+4)
-	sub	c
+	sub	(ix+4)
 	jr	NZ,l_find_device_config_00102
 ;source-doc/base-drv/usb_state.c:21: return (device_config *)p_config;
 	ex	de, hl
@@ -168,12 +166,14 @@ l_next_device_config_00102:
 	ld	a,0x00
 	adc	a, +((_device_config_sizes) / 256)
 	ld	h, a
-	ld	l, (hl)
+	ld	a, (hl)
 ;source-doc/base-drv/usb_state.c:58: const uint8_t       *_p     = (uint8_t *)p;
 ;source-doc/base-drv/usb_state.c:59: device_config *const result = (device_config *)(_p + size);
-	ld	h,0x00
-	add	hl, de
-	ex	de, hl
+	add	a, e
+	ld	e, a
+	ld	a,0x00
+	adc	a, d
+	ld	d, a
 ;source-doc/base-drv/usb_state.c:61: if (result >= (device_config *)&usb_state->device_configs_end)
 	ld	hl,0x0068
 	add	hl, bc

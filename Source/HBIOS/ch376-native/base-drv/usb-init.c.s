@@ -4,7 +4,7 @@
 ; 
 ;--------------------------------------------------------
 ; File Created by SDCC : free open source ISO C Compiler
-; Version 4.4.0 #14648 (Linux)
+; Version 4.5.0 #15248 (Linux)
 ;--------------------------------------------------------
 ; Processed by Z88DK
 ;--------------------------------------------------------
@@ -74,11 +74,11 @@ _usb_host_bus_reset:
 ;source-doc/base-drv/ch376.h:111:
 	ld	a,0x25
 	ld	bc,_CH376_DATA_PORT
-	out	(c),a
+	out	(c), a
 ;source-doc/base-drv/ch376.h:112: #define calc_max_packet_sizex(packet_size) (packet_size & 0x3FF)
 	ld	a,0xdf
 	ld	bc,_CH376_DATA_PORT
-	out	(c),a
+	out	(c), a
 ;source-doc/base-drv/usb-init.c:20: return USB_ERR_OK;
 	ld	l,0x00
 ;source-doc/base-drv/usb-init.c:21: }
@@ -103,7 +103,7 @@ __chnative_init:
 ;source-doc/base-drv/usb-init.c:28: USB_MODULE_LEDS = 0x00;
 	ld	a,0x00
 	ld	bc,_USB_MODULE_LEDS
-	out	(c),a
+	out	(c), a
 ;source-doc/base-drv/usb-init.c:30: ch_cmd_reset_all();
 	call	_ch_cmd_reset_all
 ;source-doc/base-drv/usb-init.c:32: delay_medium();
@@ -128,7 +128,7 @@ l__chnative_init_00104:
 ;source-doc/base-drv/usb-init.c:39: USB_MODULE_LEDS = 0x00;
 	ld	a,0x00
 	ld	bc,_USB_MODULE_LEDS
-	out	(c),a
+	out	(c), a
 ;source-doc/base-drv/usb-init.c:40: print_string("\b $");
 	ld	hl,usb_init_str_1
 	call	_print_string
@@ -137,7 +137,7 @@ l__chnative_init_00102:
 ;source-doc/base-drv/usb-init.c:42: USB_MODULE_LEDS = 0x03;
 	ld	a,0x03
 	ld	bc,_USB_MODULE_LEDS
-	out	(c),a
+	out	(c), a
 ;source-doc/base-drv/usb-init.c:43: print_string("\b*$");
 	ld	hl,usb_init_str_2
 	call	_print_string
@@ -162,7 +162,7 @@ l__chnative_init_00110:
 	or	a
 	jr	NZ,l__chnative_init_00108
 	ld	bc,_USB_MODULE_LEDS
-	out	(c),a
+	out	(c), a
 ;source-doc/base-drv/usb-init.c:54: print_string("\r\nCH376: NOT PRESENT$");
 	ld	hl,usb_init_str_4
 	call	_print_string
@@ -176,7 +176,7 @@ l__chnative_init_00111:
 ;source-doc/base-drv/usb-init.c:61: USB_MODULE_LEDS = 0x01;
 	ld	a,0x01
 	ld	bc,_USB_MODULE_LEDS
-	out	(c),a
+	out	(c), a
 ;source-doc/base-drv/usb-init.c:63: print_hex(ch_cmd_get_ic_version());
 	call	_ch_cmd_get_ic_version
 	call	_print_hex
@@ -190,21 +190,14 @@ l__chnative_init_00111:
 l__chnative_init_00116:
 	bit	0,(ix+4)
 	jr	Z,l__chnative_init_00120
-	ld	de,0x000a
+	ld	b,0x0a
 	jr	l__chnative_init_00121
 l__chnative_init_00120:
-	ld	de,0x0005
+	ld	b,0x05
 l__chnative_init_00121:
-	ld	b, c
-	ld	l,0x00
-	ld	a, b
-	sub	e
-	ld	a, l
-	sbc	a, d
-	jp	PO, l__chnative_init_00185
-	xor	0x80
-l__chnative_init_00185:
-	jp	P, l__chnative_init_00114
+	ld	a, c
+	sub	b
+	jr	NC,l__chnative_init_00114
 ;source-doc/base-drv/usb-init.c:69: const uint8_t r = ch_very_short_wait_int_and_get_();
 	push	bc
 	call	_ch_very_short_wait_int_and_get
@@ -221,7 +214,7 @@ l__chnative_init_00185:
 ;source-doc/base-drv/usb-init.c:76: USB_MODULE_LEDS = 0x03;
 	ld	a,0x03
 	ld	bc,_USB_MODULE_LEDS
-	out	(c),a
+	out	(c), a
 ;source-doc/base-drv/usb-init.c:77: return;
 	jr	l__chnative_init_00118
 l__chnative_init_00117:
@@ -232,7 +225,7 @@ l__chnative_init_00114:
 ;source-doc/base-drv/usb-init.c:81: USB_MODULE_LEDS = 0x00;
 	ld	a,0x00
 	ld	bc,_USB_MODULE_LEDS
-	out	(c),a
+	out	(c), a
 ;source-doc/base-drv/usb-init.c:82: print_string("USB: DISCONNECTED$");
 	ld	hl,usb_init_str_8
 	call	_print_string

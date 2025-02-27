@@ -4,7 +4,7 @@
 ; 
 ;--------------------------------------------------------
 ; File Created by SDCC : free open source ISO C Compiler
-; Version 4.4.0 #14648 (Linux)
+; Version 4.5.0 #15248 (Linux)
 ;--------------------------------------------------------
 ; Processed by Z88DK
 ;--------------------------------------------------------
@@ -56,19 +56,18 @@ _result:
 ; ---------------------------------
 _ch_command:
 ;source-doc/base-drv/ch376.c:10: while ((CH376_COMMAND_PORT & PARA_STATE_BUSY) && --counter != 0)
-	ld	c,0xff
+	ld	b,0xff
 l_ch_command_00102:
 	ld	a, +((_CH376_COMMAND_PORT) / 256)
 	in	a, (((_CH376_COMMAND_PORT) & 0xFF))
 	bit	4, a
 	jr	Z,l_ch_command_00104
-	dec	c
-	jr	NZ,l_ch_command_00102
+	djnz	l_ch_command_00102
 l_ch_command_00104:
 ;source-doc/base-drv/ch376.c:21: CH376_COMMAND_PORT = command;
 	ld	a, l
 	ld	bc,_CH376_COMMAND_PORT
-	out	(c),a
+	out	(c), a
 ;source-doc/base-drv/ch376.c:22: }
 	ret
 ;source-doc/base-drv/ch376.c:26: usb_error ch_long_wait_int_and_get_status(void) { return ch_wait_int_and_get_status(5000); }
@@ -104,57 +103,51 @@ _ch_get_status:
 	ld	a, +((_CH376_DATA_PORT) / 256)
 	in	a, (((_CH376_DATA_PORT) & 0xFF))
 ;source-doc/base-drv/ch376.c:36: if (ch_status >= USB_FILERR_MIN && ch_status <= USB_FILERR_MAX)
-	ld	l,a
-	sub	0x41
+	cp	0x41
 	jr	C,l_ch_get_status_00102
-	ld	a,0xb4
-	sub	l
+	cp	0xb5
+	jr	NC,l_ch_get_status_00102
 ;source-doc/base-drv/ch376.c:37: return ch_status;
-	jr	NC,l_ch_get_status_00126
+	ld	l, a
+	jr	l_ch_get_status_00126
 l_ch_get_status_00102:
 ;source-doc/base-drv/ch376.c:39: if (ch_status == CH_CMD_RET_SUCCESS)
-	ld	a, l
-;source-doc/base-drv/ch376.c:40: return USB_ERR_OK;
-	sub	0x51
+	cp	0x51
 	jr	NZ,l_ch_get_status_00105
-	ld	l,a
+;source-doc/base-drv/ch376.c:40: return USB_ERR_OK;
+	ld	l,0x00
 	jr	l_ch_get_status_00126
 l_ch_get_status_00105:
 ;source-doc/base-drv/ch376.c:42: if (ch_status == CH_USB_INT_SUCCESS)
-	ld	a, l
-;source-doc/base-drv/ch376.c:43: return USB_ERR_OK;
-	sub	0x14
+	cp	0x14
 	jr	NZ,l_ch_get_status_00107
-	ld	l,a
+;source-doc/base-drv/ch376.c:43: return USB_ERR_OK;
+	ld	l,0x00
 	jr	l_ch_get_status_00126
 l_ch_get_status_00107:
 ;source-doc/base-drv/ch376.c:45: if (ch_status == CH_USB_INT_CONNECT)
-	ld	a, l
-	sub	0x15
+	cp	0x15
 	jr	NZ,l_ch_get_status_00109
 ;source-doc/base-drv/ch376.c:46: return USB_INT_CONNECT;
 	ld	l,0x81
 	jr	l_ch_get_status_00126
 l_ch_get_status_00109:
 ;source-doc/base-drv/ch376.c:48: if (ch_status == CH_USB_INT_DISK_READ)
-	ld	a, l
-	sub	0x1d
+	cp	0x1d
 	jr	NZ,l_ch_get_status_00111
 ;source-doc/base-drv/ch376.c:49: return USB_ERR_DISK_READ;
 	ld	l,0x1d
 	jr	l_ch_get_status_00126
 l_ch_get_status_00111:
 ;source-doc/base-drv/ch376.c:51: if (ch_status == CH_USB_INT_DISK_WRITE)
-	ld	a, l
-	sub	0x1e
+	cp	0x1e
 	jr	NZ,l_ch_get_status_00113
 ;source-doc/base-drv/ch376.c:52: return USB_ERR_DISK_WRITE;
 	ld	l,0x1e
 	jr	l_ch_get_status_00126
 l_ch_get_status_00113:
 ;source-doc/base-drv/ch376.c:54: if (ch_status == CH_USB_INT_DISCONNECT) {
-	ld	a, l
-	sub	0x16
+	cp	0x16
 	jr	NZ,l_ch_get_status_00115
 ;source-doc/base-drv/ch376.c:55: ch_cmd_set_usb_mode(5);
 	ld	l,0x05
@@ -164,15 +157,13 @@ l_ch_get_status_00113:
 	jr	l_ch_get_status_00126
 l_ch_get_status_00115:
 ;source-doc/base-drv/ch376.c:59: if (ch_status == CH_USB_INT_BUF_OVER)
-	ld	a, l
-	sub	0x17
+	cp	0x17
 	jr	NZ,l_ch_get_status_00117
 ;source-doc/base-drv/ch376.c:60: return USB_ERR_DATA_ERROR;
 	ld	l,0x04
 	jr	l_ch_get_status_00126
 l_ch_get_status_00117:
 ;source-doc/base-drv/ch376.c:62: ch_status &= 0x2F;
-	ld	a, l
 	and	0x2f
 ;source-doc/base-drv/ch376.c:64: if (ch_status == 0x2A)
 	cp	0x2a
@@ -234,7 +225,7 @@ l_ch_probe_00103:
 ;source-doc/base-drv/ch376.c:86: CH376_DATA_PORT = (uint8_t)~0x55;
 	ld	a,0xaa
 	ld	bc,_CH376_DATA_PORT
-	out	(c),a
+	out	(c), a
 ;source-doc/base-drv/ch376.c:87: delay();
 	call	_delay
 ;source-doc/base-drv/ch376.c:88: complement = CH376_DATA_PORT;
@@ -272,14 +263,16 @@ _ch_cmd_set_usb_mode:
 	ld	a,0x15
 	push	bc
 	ld	bc,_CH376_COMMAND_PORT
-	out	(c),a
+	out	(c), a
+;source-doc/base-drv/ch376.c:116: delay();
 	call	_delay
 	pop	bc
 ;source-doc/base-drv/ch376.c:117: CH376_DATA_PORT = mode;
 	ld	a, c
 	push	bc
 	ld	bc,_CH376_DATA_PORT
-	out	(c),a
+	out	(c), a
+;source-doc/base-drv/ch376.c:118: delay();
 	call	_delay
 	pop	bc
 ;source-doc/base-drv/ch376.c:122: while (result != CH_CMD_RET_SUCCESS && result != CH_CMD_RET_ABORT && --count != 0) {
@@ -351,7 +344,7 @@ _ch_issue_token:
 ;source-doc/base-drv/ch376.c:137: CH376_DATA_PORT = toggle_bit;
 	ld	a,(ix+4)
 	ld	bc,_CH376_DATA_PORT
-	out	(c),a
+	out	(c), a
 ;source-doc/base-drv/ch376.c:138: CH376_DATA_PORT = endpoint << 4 | pid;
 	ld	a,(ix+5)
 	add	a, a
@@ -360,7 +353,7 @@ _ch_issue_token:
 	add	a, a
 	or	(ix+6)
 	ld	bc,_CH376_DATA_PORT
-	out	(c),a
+	out	(c), a
 ;source-doc/base-drv/ch376.c:139: }
 	pop	ix
 	ret
@@ -484,7 +477,6 @@ _ch_data_in_transfer:
 	push	ix
 	ld	ix,0
 	add	ix,sp
-	push	af
 ;source-doc/base-drv/ch376.c:158: if (buffer_size == 0)
 	ld	a,(ix+7)
 	or	(ix+6)
@@ -496,18 +488,17 @@ l_ch_data_in_transfer_00102:
 ;source-doc/base-drv/ch376.c:161: USB_MODULE_LEDS = 0x01;
 	ld	a,0x01
 	ld	bc,_USB_MODULE_LEDS
-	out	(c),a
+	out	(c), a
 ;source-doc/base-drv/ch376.c:162: do {
 	ld	c,(ix+8)
 	ld	b,(ix+9)
-	pop	de
-	push	bc
 l_ch_data_in_transfer_00107:
 ;source-doc/base-drv/ch376.c:163: ch_issue_token_in(endpoint);
 	ld	l,c
 	ld	h,b
 	push	hl
 	call	_ch_issue_token_in
+;source-doc/base-drv/ch376.c:165: result = ch_long_wait_int_and_get_status();
 	call	_ch_long_wait_int_and_get_statu
 	pop	bc
 	ld	a, l
@@ -519,9 +510,9 @@ l_ch_data_in_transfer_00107:
 ;source-doc/base-drv/ch376.c:168: endpoint->toggle = !endpoint->toggle;
 	ld	e, c
 	ld	d, b
-	pop	hl
-	ld	a,(hl)
-	push	hl
+	ld	l, e
+	ld	h, d
+	ld	a, (hl)
 	and	0x01
 	xor	0x01
 	and	0x01
@@ -544,7 +535,7 @@ l_ch_data_in_transfer_00107:
 ;source-doc/base-drv/ch376.c:173: USB_MODULE_LEDS = 0x03;
 	ld	a,0x03
 	ld	bc,_USB_MODULE_LEDS
-	out	(c),a
+	out	(c), a
 ;source-doc/base-drv/ch376.c:174: return USB_ERR_DATA_ERROR;
 	ld	l,0x04
 	jr	l_ch_data_in_transfer_00111
@@ -575,7 +566,7 @@ l_ch_data_in_transfer_00149:
 ;source-doc/base-drv/ch376.c:181: USB_MODULE_LEDS = 0x03;
 	ld	a,0x03
 	ld	bc,_USB_MODULE_LEDS
-	out	(c),a
+	out	(c), a
 ;source-doc/base-drv/ch376.c:182: return USB_ERR_OK;
 	ld	l,0x00
 	jr	l_ch_data_in_transfer_00111
@@ -584,13 +575,11 @@ l_ch_data_in_transfer_00110:
 ;source-doc/base-drv/ch376.c:185: USB_MODULE_LEDS = 0x03;
 	ld	a,0x03
 	ld	bc,_USB_MODULE_LEDS
-	out	(c),a
+	out	(c), a
 ;source-doc/base-drv/ch376.c:186: return result;
-	ld	hl,(_result)
-	ld	h,+((_result) / 256)
+	ld	hl, (_result)
 l_ch_data_in_transfer_00111:
 ;source-doc/base-drv/ch376.c:187: }
-	ld	sp, ix
 	pop	ix
 	ret
 ;source-doc/base-drv/ch376.c:189: usb_error ch_data_in_transfer_n(uint8_t *const buffer, int8_t *const buffer_size, endpoint_param *const endpoint) {
@@ -604,32 +593,28 @@ _ch_data_in_transfer_n:
 ;source-doc/base-drv/ch376.c:193: USB_MODULE_LEDS = 0x01;
 	ld	a,0x01
 	ld	bc,_USB_MODULE_LEDS
-	out	(c),a
+	out	(c), a
 ;source-doc/base-drv/ch376.c:195: ch_issue_token_in(endpoint);
 	ld	l,(ix+8)
 	ld	h,(ix+9)
 	call	_ch_issue_token_in
 ;source-doc/base-drv/ch376.c:197: CHECK(ch_long_wait_int_and_get_status());
 	call	_ch_long_wait_int_and_get_statu
-	ld	a, l
-	ld	b, a
+	ld	a,l
 	or	a
 	jr	NZ,l_ch_data_in_transfer_n_00103
 ;source-doc/base-drv/ch376.c:199: endpoint->toggle = !endpoint->toggle;
-	ld	e,(ix+8)
-	ld	d,(ix+9)
-	ld	c, e
-	ld	b, d
-	ex	de, hl
+	ld	l,(ix+8)
+	ld	h,(ix+9)
 	ld	a, (hl)
 	and	0x01
 	xor	0x01
 	and	0x01
-	ld	e, a
-	ld	a, (bc)
+	ld	c, a
+	ld	a, (hl)
 	and	0xfe
-	or	e
-	ld	(bc), a
+	or	c
+	ld	(hl), a
 ;source-doc/base-drv/ch376.c:201: count = ch_read_data(buffer);
 	ld	l,(ix+4)
 	ld	h,(ix+5)
@@ -641,7 +626,7 @@ _ch_data_in_transfer_n:
 ;source-doc/base-drv/ch376.c:205: USB_MODULE_LEDS = 0x03;
 	ld	a,0x03
 	ld	bc,_USB_MODULE_LEDS
-	out	(c),a
+	out	(c), a
 ;source-doc/base-drv/ch376.c:207: return USB_ERR_OK;
 	ld	l,0x00
 	jr	l_ch_data_in_transfer_n_00104
@@ -649,12 +634,9 @@ _ch_data_in_transfer_n:
 l_ch_data_in_transfer_n_00103:
 ;source-doc/base-drv/ch376.c:209: USB_MODULE_LEDS = 0x03;
 	ld	a,0x03
-	push	bc
 	ld	bc,_USB_MODULE_LEDS
-	out	(c),a
-	pop	bc
+	out	(c), a
 ;source-doc/base-drv/ch376.c:210: return result;
-	ld	l, b
 l_ch_data_in_transfer_n_00104:
 ;source-doc/base-drv/ch376.c:211: }
 	pop	ix
@@ -667,7 +649,6 @@ _ch_data_out_transfer:
 	push	ix
 	ld	ix,0
 	add	ix,sp
-	push	af
 	dec	sp
 ;source-doc/base-drv/ch376.c:216: const uint8_t max_packet_size = calc_max_packet_size(endpoint->max_packet_sizex);
 	ld	c,(ix+8)
@@ -676,16 +657,14 @@ _ch_data_out_transfer:
 	ld	d, b
 	inc	de
 	ld	a, (de)
-	ld	(ix-3),a
+	ld	(ix-1),a
 ;source-doc/base-drv/ch376.c:218: USB_MODULE_LEDS = 0x02;
 	ld	a,0x02
 	push	bc
 	ld	bc,_USB_MODULE_LEDS
-	out	(c),a
+	out	(c), a
 	pop	bc
 ;source-doc/base-drv/ch376.c:220: while (buffer_length > 0) {
-	ld	(ix-2),c
-	ld	(ix-1),b
 l_ch_data_out_transfer_00103:
 	xor	a
 	cp	(ix+6)
@@ -695,7 +674,7 @@ l_ch_data_out_transfer_00103:
 l_ch_data_out_transfer_00139:
 	jp	P, l_ch_data_out_transfer_00105
 ;source-doc/base-drv/ch376.c:221: const uint8_t size = max_packet_size < buffer_length ? max_packet_size : buffer_length;
-	ld	d,(ix-3)
+	ld	d,(ix-1)
 	ld	e,0x00
 	ld	a, d
 	sub	(ix+6)
@@ -738,6 +717,7 @@ l_ch_data_out_transfer_00110:
 	ld	h,b
 	push	hl
 	call	_ch_issue_token_out
+;source-doc/base-drv/ch376.c:226: CHECK(ch_long_wait_int_and_get_status());
 	call	_ch_long_wait_int_and_get_statu
 	ld	a, l
 	pop	bc
@@ -747,8 +727,8 @@ l_ch_data_out_transfer_00110:
 ;source-doc/base-drv/ch376.c:228: endpoint->toggle = !endpoint->toggle;
 	ld	e, c
 	ld	d, b
-	ld	l,(ix-2)
-	ld	h,(ix-1)
+	ld	l, e
+	ld	h, d
 	ld	a, (hl)
 	and	0x01
 	xor	0x01
@@ -763,7 +743,7 @@ l_ch_data_out_transfer_00105:
 ;source-doc/base-drv/ch376.c:231: USB_MODULE_LEDS = 0x03;
 	ld	a,0x03
 	ld	bc,_USB_MODULE_LEDS
-	out	(c),a
+	out	(c), a
 ;source-doc/base-drv/ch376.c:232: return USB_ERR_OK;
 	ld	l,0x00
 	jr	l_ch_data_out_transfer_00107
@@ -772,11 +752,11 @@ l_ch_data_out_transfer_00106:
 ;source-doc/base-drv/ch376.c:235: USB_MODULE_LEDS = 0x03;
 	ld	a,0x03
 	ld	bc,_USB_MODULE_LEDS
-	out	(c),a
+	out	(c), a
 ;source-doc/base-drv/ch376.c:236: return result;
 l_ch_data_out_transfer_00107:
 ;source-doc/base-drv/ch376.c:237: }
-	ld	sp, ix
+	inc	sp
 	pop	ix
 	ret
 ;source-doc/base-drv/ch376.c:239: void ch_set_usb_address(const uint8_t device_address) __z88dk_fastcall {
@@ -792,7 +772,7 @@ _ch_set_usb_address:
 ;source-doc/base-drv/ch376.c:241: CH376_DATA_PORT = device_address;
 	ld	a, l
 	ld	bc,_CH376_DATA_PORT
-	out	(c),a
+	out	(c), a
 ;source-doc/base-drv/ch376.c:242: }
 	ret
 _result:

@@ -4,7 +4,7 @@
 ; 
 ;--------------------------------------------------------
 ; File Created by SDCC : free open source ISO C Compiler
-; Version 4.4.0 #14648 (Linux)
+; Version 4.5.0 #15248 (Linux)
 ;--------------------------------------------------------
 ; Processed by Z88DK
 ;--------------------------------------------------------
@@ -190,35 +190,37 @@ _hub_get_status_port:
 ;source-doc/base-drv/enumerate_hub.c:33: get_status_port = cmd_get_status_port;
 	ld	hl,0
 	add	hl, sp
-	ex	de, hl
+	ld	e,l
+	ld	d,h
+	push	hl
 	ld	bc,0x0008
 	ld	hl,_cmd_get_status_port
 	ldir
+	pop	bc
 ;source-doc/base-drv/enumerate_hub.c:35: get_status_port.bIndex[0] = index;
 	ld	a,(ix+6)
 	ld	(ix-4),a
 ;source-doc/base-drv/enumerate_hub.c:36: return usb_control_transfer(&get_status_port, port_status, hub_config->address, hub_config->max_packet_size);
-	ld	l,(ix+4)
-	ld	h,(ix+5)
-	ld	e,l
-	ld	d,h
+	ld	e,(ix+5)
+	ld	a,(ix+4)
+	ld	l, a
+	ld	h, e
 	inc	hl
-	ld	b, (hl)
-	ex	de, hl
+	ld	d, (hl)
+	ld	l, a
+	ld	h, e
 	ld	a, (hl)
 	rlca
 	rlca
 	rlca
 	rlca
 	and	0x0f
-	ld	e,(ix+7)
-	ld	d,(ix+8)
-	ld	c,a
-	push	bc
+	ld	l,(ix+7)
+	ld	h,(ix+8)
+	ld	e,a
 	push	de
-	ld	hl,4
-	add	hl, sp
 	push	hl
+	push	bc
 	call	_usb_control_transfer
 ;source-doc/base-drv/enumerate_hub.c:37: }
 	ld	sp,ix

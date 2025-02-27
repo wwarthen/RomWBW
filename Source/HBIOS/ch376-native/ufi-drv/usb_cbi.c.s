@@ -4,7 +4,7 @@
 ; 
 ;--------------------------------------------------------
 ; File Created by SDCC : free open source ISO C Compiler
-; Version 4.4.0 #14648 (Linux)
+; Version 4.5.0 #15248 (Linux)
 ;--------------------------------------------------------
 ; Processed by Z88DK
 ;--------------------------------------------------------
@@ -72,7 +72,6 @@ _usb_execute_cbi:
 ;source-doc/ufi-drv/usb_cbi.c:20: adsc           = cbi2_adsc;
 	push	de
 	push	bc
-	ex	de, hl
 	ld	hl,4
 	add	hl, sp
 	ex	de, hl
@@ -216,7 +215,7 @@ l_usb_execute_cbi_00116:
 ;source-doc/ufi-drv/usb_cbi.c:66: critical_end();
 	call	_critical_end
 ;source-doc/ufi-drv/usb_cbi.c:68: return result;
-	ld	hl,(_result)
+	ld	hl, (_result)
 ;source-doc/ufi-drv/usb_cbi.c:69: }
 	ld	sp, ix
 	pop	ix

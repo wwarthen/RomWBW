@@ -4,7 +4,7 @@
 ; 
 ;--------------------------------------------------------
 ; File Created by SDCC : free open source ISO C Compiler
-; Version 4.4.0 #14648 (Linux)
+; Version 4.5.0 #15248 (Linux)
 ;--------------------------------------------------------
 ; Processed by Z88DK
 ;--------------------------------------------------------
@@ -184,16 +184,14 @@ l_scancode_to_char_00120:
 	ld	d,0x00
 	ld	hl,_scancodes_shift_table
 	add	hl, de
-	ld	a,(hl)
-	ld	c,a
+	ld	a, (hl)
 	jp	_char_with_caps_lock
 l_scancode_to_char_00122:
 ;source-doc/keyboard/class_hid_keyboard.c:380: return char_with_caps_lock(scancodes_shift_table[code]);
 	ld	d,0x00
 	ld	hl,_scancodes_table
 	add	hl, de
-	ld	a,(hl)
-	ld	c,a
+	ld	a, (hl)
 	jp	_char_with_caps_lock
 l_scancode_to_char_00123:
 ;source-doc/keyboard/class_hid_keyboard.c:381:

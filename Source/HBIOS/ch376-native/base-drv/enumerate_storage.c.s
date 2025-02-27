@@ -4,7 +4,7 @@
 ; 
 ;--------------------------------------------------------
 ; File Created by SDCC : free open source ISO C Compiler
-; Version 4.4.0 #14648 (Linux)
+; Version 4.5.0 #15248 (Linux)
 ;--------------------------------------------------------
 ; Processed by Z88DK
 ;--------------------------------------------------------
@@ -133,7 +133,7 @@ l_parse_endpoints_00107:
 	inc	de
 	ld	a, b
 	and	0x03
-	ld	l,a
+	ld	l, a
 	ld	a, (de)
 	and	0xfc
 	or	l

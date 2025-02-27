@@ -4,7 +4,7 @@
 ; 
 ;--------------------------------------------------------
 ; File Created by SDCC : free open source ISO C Compiler
-; Version 4.4.0 #14648 (Linux)
+; Version 4.5.0 #15248 (Linux)
 ;--------------------------------------------------------
 ; Processed by Z88DK
 ;--------------------------------------------------------
@@ -73,9 +73,10 @@ _usbtrn_get_descriptor:
 ;source-doc/base-drv/protocol.c:30: setup_packet cmd;
 	ld	c,(ix+4)
 	ld	b,(ix+5)
-	ld	e, c
-	ld	d, b
 	push	bc
+	push	bc
+	ld	e,c
+	ld	d,b
 	ld	a,0x08
 	push	af
 	inc	sp
@@ -83,13 +84,14 @@ _usbtrn_get_descriptor:
 	push	af
 	inc	sp
 	push	de
-	ld	hl,6
+	ld	hl,8
 	add	hl, sp
 	push	hl
 	call	_usb_control_transfer
 	pop	af
 	pop	af
 	pop	af
+	pop	de
 	pop	bc
 	ld	a, l
 	ld	(_result), a
@@ -98,30 +100,30 @@ _usbtrn_get_descriptor:
 	or	a
 	jr	NZ,l_usbtrn_get_descriptor_00103
 ;source-doc/base-drv/protocol.c:34: result = usb_control_transfer(&cmd, (uint8_t *)buffer, 0, 8);
-	ld	hl,0
+	push	de
+	push	bc
+	ld	hl,4
 	add	hl, sp
 	ex	de, hl
-	push	bc
 	ld	bc,0x0008
 	ld	hl,_cmd_get_device_descriptor
 	ldir
 	pop	bc
+	pop	de
 ;source-doc/base-drv/protocol.c:35:
 	ld	(ix-2),0x12
 	xor	a
 	ld	(ix-1),a
 ;source-doc/base-drv/protocol.c:36: CHECK(result);
-	ld	e,(ix+4)
-	ld	d,(ix+5)
 	ld	hl,7
-	add	hl, de
+	add	hl, bc
 	ld	a, (hl)
 	push	af
 	inc	sp
 	xor	a
 	push	af
 	inc	sp
-	push	bc
+	push	de
 	ld	hl,4
 	add	hl, sp
 	push	hl
@@ -135,7 +137,7 @@ _usbtrn_get_descriptor:
 ;source-doc/base-drv/protocol.c:40: result      = usb_control_transfer(&cmd, (uint8_t *)buffer, 0, buffer->bMaxPacketSize0);
 l_usbtrn_get_descriptor_00103:
 ;source-doc/base-drv/protocol.c:41:
-	ld	hl,(_result)
+	ld	hl, (_result)
 ;source-doc/base-drv/protocol.c:42: RETURN_CHECK(result);
 	ld	sp, ix
 	pop	ix
@@ -173,20 +175,22 @@ _usbtrn_get_descriptor2:
 ;source-doc/base-drv/protocol.c:51: * @param buffer the buffer to store the device descriptor in
 	ld	c,(ix+4)
 	ld	b,(ix+5)
-	ld	e, c
-	ld	d, b
 	push	bc
+	push	bc
+	ld	e,c
+	ld	d,b
 	ld	h,0x08
 	ld	l,(ix+6)
 	push	hl
 	push	de
-	ld	hl,6
+	ld	hl,8
 	add	hl, sp
 	push	hl
 	call	_usb_control_transfer
 	pop	af
 	pop	af
 	pop	af
+	pop	de
 	pop	bc
 	ld	a, l
 	ld	(_result), a
@@ -195,27 +199,27 @@ _usbtrn_get_descriptor2:
 	or	a
 	jr	NZ,l_usbtrn_get_descriptor2_00103
 ;source-doc/base-drv/protocol.c:55: setup_packet cmd;
-	ld	hl,0
+	push	de
+	push	bc
+	ld	hl,4
 	add	hl, sp
 	ex	de, hl
-	push	bc
 	ld	bc,0x0008
 	ld	hl,_cmd_get_device_descriptor
 	ldir
 	pop	bc
+	pop	de
 ;source-doc/base-drv/protocol.c:56: cmd         = cmd_get_device_descriptor;
 	ld	(ix-2),0x12
 	xor	a
 	ld	(ix-1),a
 ;source-doc/base-drv/protocol.c:57: cmd.wLength = 8;
-	ld	e,(ix+4)
-	ld	d,(ix+5)
 	ld	hl,7
-	add	hl, de
+	add	hl, bc
 	ld	h,(hl)
 	ld	l,(ix+6)
 	push	hl
-	push	bc
+	push	de
 	ld	hl,4
 	add	hl, sp
 	push	hl
@@ -228,7 +232,7 @@ _usbtrn_get_descriptor2:
 ;source-doc/base-drv/protocol.c:58:
 l_usbtrn_get_descriptor2_00103:
 ;source-doc/base-drv/protocol.c:59: result = usb_control_transfer(&cmd, (uint8_t *)buffer, device_address, 8);
-	ld	hl,(_result)
+	ld	hl, (_result)
 ;source-doc/base-drv/protocol.c:60:
 	ld	sp, ix
 	pop	ix
@@ -247,10 +251,10 @@ _usbtrn_set_address:
 	push	af
 	ld	c, l
 ;source-doc/base-drv/protocol.c:68: }
-	ld	hl,0
+	push	bc
+	ld	hl,2
 	add	hl, sp
 	ex	de, hl
-	push	bc
 	ld	bc,0x0008
 	ld	hl,_cmd_set_device_address
 	ldir
@@ -351,9 +355,13 @@ _usbtrn_get_config_descriptor:
 	ld	a,(ix+6)
 	ld	(ix-6),a
 ;source-doc/base-drv/protocol.c:98:
+	ld	hl,0x0006
+	add	hl, bc
 	ld	e,(ix+7)
-	ld	(ix-2),e
-	ld	(ix-1),0x00
+	xor	a
+	ld	(hl), e
+	inc	hl
+	ld	(hl), a
 ;source-doc/base-drv/protocol.c:100: }
 	ld	e,(ix+4)
 	ld	d,(ix+5)
@@ -408,8 +416,8 @@ _usbtrn_gfull_cfg_desc:
 	or	a
 	jr	NZ,l_usbtrn_gfull_cfg_desc_00107
 ;source-doc/base-drv/protocol.c:112: * @return usb_error USB_ERR_OK if all good, otherwise specific error code
-	ld	l, c
-	ld	h, b
+	ld	l,(ix+8)
+	ld	h,(ix+9)
 	inc	hl
 	inc	hl
 	ld	d, (hl)
@@ -442,7 +450,7 @@ l_usbtrn_gfull_cfg_desc_00104:
 ;source-doc/base-drv/protocol.c:119: setup_packet cmd;
 l_usbtrn_gfull_cfg_desc_00107:
 ;source-doc/base-drv/protocol.c:120: cmd           = cmd_get_config_descriptor;
-	ld	hl,(_result)
+	ld	hl, (_result)
 l_usbtrn_gfull_cfg_desc_00108:
 ;source-doc/base-drv/protocol.c:121: cmd.bValue[0] = config_index;
 	pop	ix

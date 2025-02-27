@@ -4,7 +4,7 @@
 ; 
 ;--------------------------------------------------------
 ; File Created by SDCC : free open source ISO C Compiler
-; Version 4.4.0 #14648 (Linux)
+; Version 4.5.0 #15248 (Linux)
 ;--------------------------------------------------------
 ; Processed by Z88DK
 ;--------------------------------------------------------
@@ -85,14 +85,16 @@ l_chscsi_init_00105:
 	ld	h,0x00
 	push	de
 	call	_print_uint16
+;source-doc/scsi-drv/scsi-init.c:26: print_string(":$");
 	ld	hl,scsi_init_str_1
 	call	_print_string
 	pop	de
 ;source-doc/scsi-drv/scsi-init.c:27: print_uint16(storage_count);
-	ld	hl,(_storage_count)
+	ld	hl, (_storage_count)
 	ld	h,0x00
 	push	de
 	call	_print_uint16
+;source-doc/scsi-drv/scsi-init.c:28: print_string(" $");
 	ld	hl,scsi_init_str_2
 	call	_print_string
 	pop	de
