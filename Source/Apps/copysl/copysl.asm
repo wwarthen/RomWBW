@@ -11,13 +11,15 @@
 ; ----------------
 ; 0.1 - Initial Version written by Mark Pruden
 ; 0.2 - Added support for /v (verify) option.
+; 0.3 - refresh CP/M disk buffers after completion
 ; ----------------
 ;
     .ORG 100H
     jp start
 ;
-    .INCLUDE "crc.asm"	; comparison of data blocks, used for verify
-    .include "cio.asm"	; bdos IO routines
+    .include "crc.asm"		; comparison of data blocks, used for verify
+    .include "cio.asm"		; bdos IO routines
+    .include "bdos.asm"		; bdos general routines
     .include "hbios.asm"	; hbios routines
 ;
 ; -------------------------
@@ -250,6 +252,9 @@ finishcopy1:
     CALL    iprtstr
     .DB      " seconds.", 13, 10, 0
 
+    ; Force BDOS to reset (logout) all drives
+    CALL    drvrst
+
 end:
     ld      hl,msg_complete
     CALL    prtstr
@@ -268,7 +273,7 @@ exit:
 ; =========================================
 ;
 msg_welcome:
-    .DB  "CopySlice v0.2 (RomWBW) Sept 2024 - M.Pruden", 13, 10, 0
+    .DB  "CopySlice v0.3 (RomWBW) March 2025 - M.Pruden", 13, 10, 0
 msg_overite_partition:
     .DB  13,10
     .DB  "Warning: Copying to Slice 0 of hd512 media, "
