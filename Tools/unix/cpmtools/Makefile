@@ -15,8 +15,9 @@ DEFFORMAT=wbw_fd144
 
 # Locate the ncurses libs or try a guess if pkg-config does not exist
 NCURSESLIBS=$(shell if env pkg-config --libs ncurses ; then : ; else echo -lncurses ; fi)
+NCURSESCFLAGS=$(shell if env pkg-config --cflags ncurses ; then : ; fi)
 
-CPPFLAGS = -DDISKDEFS=\"$(DISKDEFS)\" -DFORMAT=\"$(DEFFORMAT)\"
+CPPFLAGS = -DDISKDEFS=\"$(DISKDEFS)\" -DFORMAT=\"$(DEFFORMAT)\" $(NCURSESCFLAGS)
 
 DEVICEOBJ = device_posix.o 
 
