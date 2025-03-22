@@ -1,6 +1,6 @@
 ==========================================================================
-              CopySlice Utility v0.2 for RomWbW computers
-                   written by Mark Pruden (Sept 2024)
+              CopySlice Utility v0.3 for RomWbW computers
+                   written by Mark Pruden (March 2025)
 ==========================================================================
 
 Purpose:
@@ -87,6 +87,7 @@ History
 -------
 * v 0.1 Initial Release
 * v 0.2 Added the /v command option to read and verify after write
+* v 0.3 Refresh CP/M disk buffers after completion
 
 Future
 ------
