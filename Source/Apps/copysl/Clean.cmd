@@ -1,5 +1,6 @@
 @echo off
 setlocal
 
-:: copysl.com is currently distributed as a binary application, so
-:: we do not delete the .COM file.
+if exist *.com del *.com
+if exist *.lst del *.lst
+if exist *.bin del *.bin

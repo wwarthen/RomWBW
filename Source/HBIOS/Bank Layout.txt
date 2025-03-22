@@ -71,7 +71,7 @@ Bank ID         Usage
 0x82            User TPA
 0x83            Common
 
-ROMless Standard Bank Layout (512K)
+ROMless Standard Bank Layout (512K): ZRC, ZRC512, EZ512, Z1RCC, ZZRCC, FZ80
 
 Bank ID         Usage
 -------         ------
