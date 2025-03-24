@@ -3101,13 +3101,11 @@ with the handler prior to uninstalling it.
 | C: 0x00                                | D: Interrupt Mode                      |
 |                                        | E: IVT Size                            |
 
-Return current Interrupt Mode (D) of the system.  Also return the
-number of Interrupt Vector Table (IVT) entries in IVT Size (E).
-interrupt mode in D and size of interrupt vector table in E. For
-IM1, the size of the table is the number of vectors chained together.
-For IM2, the size of the table is the number of slots in the vector
-table.  The Status (A) is a standard 
-HBIOS result code.
+Return current Interrupt Mode (D) of the system.  Also return the number
+of Interrupt Vector Table (IVT) entries in IVT (E). For IM1, the size
+of the table is the number of vectors chained together. For IM2, the
+size of the table is the number of slots in the vector table.  The
+Status (A) is a standard HBIOS result code.
 
 #### SYSINT Subfunction 0x10 -- Get Interrupt (INTGET)
 
