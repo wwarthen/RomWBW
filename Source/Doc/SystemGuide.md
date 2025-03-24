@@ -464,8 +464,10 @@ of a system image before programming it to the ROM; or 2) easily switch
 between system images on the fly.
 
 During the RomWBW build process, one of the output files produced is an
-actual CP/M application (an executable .COM program file). Once you have
-a running CP/M (or compatible) system, you can upload/copy this
+actual CP/M application (an executable .COM program file).  Like the
+normal .ROM files, this file is placed in the Binary directory with the
+same names as the ROM file, but with the file extension of .ROM. Once
+you have a running CP/M (or compatible) system, you can upload/copy this
 application file to the filesystem. By executing this file, you will
 initiate an Application Boot using the system image contained in the
 application file itself.
