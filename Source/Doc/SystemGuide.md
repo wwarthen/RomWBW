@@ -638,7 +638,7 @@ CRT character device, the data is actually passed to a built-in terminal
 emulator which, in turn, utilizes a set of VDA (Video Display Adapter)
 functions (such as cursor positioning, scrolling, etc.).
 
-Figure 7.1 depicts the relationship between these components
+Figure 9.1 depicts the relationship between these components
 of HBIOS video processing:
 
 ![Character / Emulation / Video Services](Graphics/CharacterEmulationVideoServices){ width=100% }
