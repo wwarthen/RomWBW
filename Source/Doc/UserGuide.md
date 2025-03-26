@@ -2117,13 +2117,13 @@ survive re-imaging, you **must** follow these rules:
 
 This section covers techniques to copy partial images onto pre-existing media,
 in effect performing a selective slice copy. These techniques currently **only** apply to 
-hd1k formatted media, which has a convenient 1MB size metric. 
+hd1k formatted media, which has a partition table entry, and a convenient 1MB size metric. 
 However adapting to hd512 is possible, but left to the user.
 
-On Linux/MacOS the `dd` command can be used to write data in a controlled manner.
-Although Windows does not have a native `dd` command, there are multiple
-options for installing it including [MSYS2](https://www.msys2.org/),
-[CygWin](https://www.cygwin.com/),
+You will need to have access to a Linux/MacOS machine, or have the
+Linux tools for Windows installed, including the `dd` command line tool.
+For Windows there are multiple options for installing `dd` including
+[MSYS2](https://www.msys2.org/), [CygWin](https://www.cygwin.com/),
 and [dd for Windows](http://www.chrysocome.net/dd).
 
 **WARNING**: The `dd` command is a low-level utility that writes
@@ -2146,21 +2146,79 @@ From the documentation of `dd` the following options are important.
               of the default 512
  ```
 
-In the following examples we use the above options, noting the `of=` option
-is specific to your computer but defines the block device that the target
-media is mounted to in the operating system, 
-and `bs=1MB` defines the block size used in other parameters which is convienient 
-since it aligns perfectly with slices which are exactly 8MB 
-and the initial partition table is exactly 1MB. 
+The best approach is to copy data to the RomWBW partition. To do this, you
+must first determine the name that your operating system is using for the
+RomWBW disk and partition. An easy way to determine this may be the linux `mount`
+command, which lists the currently mounted partitions. From here you can more easily 
+determine the naming scheme used by your operating system.
+
+Typically disk devices are named something like `/dev/disk9` or `/dev/sdg`, noting above
+the `g` is a alphabetic and it could be any letter. This naming is arbitrary
+and depend on the operating system, and the specific hardware connecting the device
+
+Partitions are typically named by simply adding a number after the name of the hard disk
+device.  For example, the first partition could be `/dev/disk9s1`, `/dev/sdg1`, or `/dev/sdgp1`.
+
+In the following examples we use the above `dd` options, noting the `of=` option
+is the RomWBW target partition.
+
+** NOTE ** A second approach (Examples 3 and 4) the hard disk is addressed as a raw disk
+device and we take explicit steps to calculate the start of the RomWBW
+partition. While this work's, it is better to use the partition relative approach
 
 The commands in the examples below are run from the `Binary` folder of RomWBW distribution.
 
-#### Example 1 : Copy the Combo Image without replacing partition table
+#### Example 1 : Copy the Games image to an empty slice of our media
 
-In this example we will copy the (hd1k) combo image over our media 
-without replacing the partition table. In this example we assume the media
-has already been formated with the combo image, and we have modified
-the partition table, which we do not want to overrite.
+In this example we will copy the (hd1k) games image to Slice 6 (free)
+of our existing media. In this example we assume the media
+has already been formatted with the combo image, which already
+contains 6 slices (numbered from 0 to 5)
+We are just coping the needed slice to the existing media
+as a new slice (number 6) after the existing slices making it the 7th slice.
+
+```
+Binary % sudo dd if=hd1k_games.img of=/dev/sdg1 seek=6 bs=8M
+
+Password:
+
+1+0 records in
+1+0 records out
+8388608 bytes transferred in 1.917296 secs (4375228 bytes/sec)
+```
+
+Since bs=8MB the `seek=6` skips the first 6 (8MB slices) slices (in the target image)
+and writes the games image to the 7th slice.
+
+#### Example 2 : Copy the entire Combo Image without replacing partition table
+
+In all the following examples we use `bs=1MB` to defines the block size used
+in other parameters. This is convenient since the combo image reserves 1MB for
+the partition table at the start of the disk.
+
+In this example we will copy the (hd1k) combo image (which includes a partition table) 
+over our media without replacing the partition table. In this example we assume the media
+has already been formatted with the combo image, and we have modified the partition table, 
+which we do not want to overwrite.
+
+```
+Binary % sudo dd if=hd1k_combo.img of=/dev/sdg1 skip=1 bs=1M
+
+Password:
+
+48+0 records in
+48+0 records out
+50331648 bytes transferred in 11.503776 secs (4745528 bytes/sec)
+```
+
+The `skip=1` skips the first 1MB (partition table) in the input file, 
+effectively stripping out the combo images partition table, before overwriting 
+the slices in the target partition.
+
+#### Example 3 : Copy the Combo Image without replacing partition table
+
+This example is identical to Example 2 except it writes to the target 
+disk device itself (`of=/dev/disk9`), not the target partition.
 
 ```
 Binary % sudo dd if=hd1k_combo.img of=/dev/disk9 skip=1 seek=1 bs=1M
@@ -2174,14 +2232,14 @@ Password:
 
 The `skip=1` skips the first 1MB in the input file, and likewise 
 `seek=1` skips the first 1MB of the target media file we are writing to,
-tus in effect we are skipping the first 1MB,  which contains the 
+thus in effect we are skipping the first 1MB,  which contains the 
 partition table itself.
 
-#### Example 2 : Copy the Games image to an empty slice of our media
+#### Example 4 : Copy the Games image to an empty slice of our media
 
 In this example we will copy the (hd1k) games image to Slice 6 (free)
 of our existing media. In this example we assume the media 
-has already been formated with the combo image, which already 
+has already been formatted with the combo image, which already 
 contains 6 slices (numbered from 0 to 5)
 We are just coping the needed slice to this existing media
 as a new slice (number 6) after the existing slices making it the 7th slice.
@@ -2202,27 +2260,6 @@ where 8 is the size of a slice
 and 1 is the size of the partition table im megabytes.
 Thus we are skipping 6 slices (in the combo image) 
 and writing to the 7th slice.
-
-#### Example 3 : Copy image using partition
-
-In the previous examples, the hard disk is addressed as a raw disk
-device and we took steps to calculate the assumed start of the RomWBW
-partition.  However, as long as the hd1k format is in use, it is
-also possible to just point `dd` directly to the partition itself.
-
-To do this, you must first determine the name that your operating
-system is using for the desired partition.  Frequently, partitions
-are named by simply adding a number after the name of the hard disk
-device.  For example, if the hard disk is /dev/sdg, the first
-partition is frequently /dev/sdg1 or /dev/sdgp1.
-
-Taking advantage of this, it is safer and easier to calculate the
-offset of a slice within the partition.  It is simply the slice
-number \* 8MB.  Example 2 above, could now be performed as:
-
-```
-Binary % sudo dd if=hd1k_games.img of=/dev/sdg1 seek=48 bs=1M
-```
 
 # Operating Systems
 
