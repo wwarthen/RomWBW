@@ -2162,9 +2162,10 @@ device.  For example, the first partition could be `/dev/disk9s1`, `/dev/sdg1`, 
 In the following examples we use the above `dd` options, noting the `of=` option
 is the RomWBW target partition.
 
-** NOTE ** A second approach (Examples 3 and 4) the hard disk is addressed as a raw disk
-device and we take explicit steps to calculate the start of the RomWBW
-partition. While this work's, it is better to use the partition relative approach
+** NOTE ** A second approach (Examples 3 and 4) is to address the hard
+disk as a raw disk device and we take explicit steps to calculate the
+start of the RomWBW partition. While this works, it is better to use the
+partition relative approach.
 
 The commands in the examples below are run from the `Binary` folder of RomWBW distribution.
 
@@ -2173,8 +2174,8 @@ The commands in the examples below are run from the `Binary` folder of RomWBW di
 In this example we will copy the (hd1k) games image to Slice 6 (free)
 of our existing media. In this example we assume the media
 has already been formatted with the combo image, which already
-contains 6 slices (numbered from 0 to 5)
-We are just coping the needed slice to the existing media
+contains 6 slices (numbered from 0 to 5).
+We are just copying the needed slice to the existing media
 as a new slice (number 6) after the existing slices making it the 7th slice.
 
 ```
@@ -2192,7 +2193,7 @@ and writes the games image to the 7th slice.
 
 #### Example 2 : Copy the entire Combo Image without replacing partition table
 
-In all the following examples we use `bs=1MB` to defines the block size used
+In all of the following examples we use `bs=1MB` to defines the block size used
 in other parameters. This is convenient since the combo image reserves 1MB for
 the partition table at the start of the disk.
 
