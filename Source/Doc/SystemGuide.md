@@ -768,10 +768,11 @@ below enumerates these values.
 | CIODEV_DUART    | 0x09   | SCC2681 Family Dual UART                 | duart.asm    |
 | CIODEV_Z2U      | 0x0A   | Zilog Z280 Built-in Serial Ports         | z2u.asm      |
 | CIODEV_LPT      | 0x0B   | Parallel I/O Controller                  | lpt.asm      |
-| CIODEV_ESPCON   | 0x0B   | ESP32 VGA Console                        | esp.asm      |
-| CIODEV_ESPSER   | 0x0B   | ESP32 Serial Port                        | esp.asm      |
-| CIODEV_SCON     | 0x0B   | S100 Console                             | scon.asm     |
-| CIODEV_EZ80UART | 0x11   | eZ80 Built-in UART0 Interface            | ez80uart.asm | 
+| CIODEV_ESPCON   | 0x0C   | ESP32 VGA Console                        | esp.asm      |
+| CIODEV_ESPSER   | 0x0D   | ESP32 Serial Port                        | esp.asm      |
+| CIODEV_SCON     | 0x0E   | S100 Console                             | scon.asm     |
+| CIODEV_SSER     | 0x0F   | Simple Serial Console                    | sser.asm     |
+| CIODEV_EZ80UART | 0x10   | eZ80 Built-in UART0 Interface            | ez80uart.asm | 
 
 Character devices can usually be configured with line characteristics
 such as speed, framing, etc. A word value (16 bit) is used to describe
