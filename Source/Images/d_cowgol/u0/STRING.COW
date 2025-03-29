@@ -1,0 +1,192 @@
+sub strlen(str: [uint8]): (len: uint16) @extern("strlen") is
+@asm "ld de,(", str, ")";
+@asm "ld hl,0";
+@asm "1:";
+@asm "ld a,(de)";
+@asm "or a";
+@asm "ret z";
+@asm "inc de";
+@asm "inc hl";
+@asm "jr 1b";
+end sub;
+
+# returns dest
+sub strcpy(dest: [uint8], src: [uint8]): (ret: [uint8]) @extern("strcpy") is
+@asm "ld hl,(", src, ")";
+@asm "ld de,(", dest, ")";
+@asm "push de";
+@asm "1:";
+@asm "ld a,(hl)";
+@asm "ld (de),a";
+@asm "or a";
+@asm "jr z,2f";
+@asm "inc hl";
+@asm "inc de";
+@asm "jr 1b";
+@asm "2:";
+@asm "pop hl";
+@asm "ret";
+end sub;
+
+# returns dest
+sub strcat(dest: [uint8], src: [uint8]): (ret: [uint8]) @extern("strcat") is
+@asm "ld hl,(", src, ")";
+@asm "ld de,(", dest, ")";
+@asm "push de";
+@asm "1:";
+@asm "ld a,(de)";
+@asm "inc de";
+@asm "or a";
+@asm "jr nz,1b";
+@asm "dec de";
+@asm "2:";
+@asm "ld a,(hl)";
+@asm "ld (de),a";
+@asm "or a";
+@asm "jr z,3f";
+@asm "inc hl";
+@asm "inc de";
+@asm "jr 2b";
+@asm "3:";
+@asm "pop hl";
+@asm "ret";
+end sub;
+
+# returns 0 if equal, 1 if greather, else -1
+sub strcmp(str1: [uint8], str2: [uint8]): (ret: int8) @extern("strcmp") is
+@asm "ld de,(", str1, ")";
+@asm "ld hl,(", str2, ")";
+@asm "1:";
+@asm "ld a,(de)";
+@asm "cp (hl)";
+@asm "jr nz,2f";
+@asm "or a";
+@asm "ret z";
+@asm "jr 3f";
+@asm "2:";
+@asm "jr nc,4f";
+@asm "ld a,-1";
+@asm "ret";
+@asm "3:";
+@asm "inc hl";
+@asm "inc de";
+@asm "jr 1b";
+@asm "4:";
+@asm "ld a,1";
+@asm "ret";
+end sub;
+
+sub tolower(char: uint8): (ret: uint8) @extern("tolower") is
+@asm "ld a,(", char, ")";
+@asm "cp 41H";
+@asm "ret c";
+@asm "cp 5AH+1";
+@asm "ret nc";
+@asm "or 20H";
+@asm "ret";
+end sub;
+
+# case insensitive, returns 0 if equal, 1 if greather, else -1
+sub strcasecmp(str1: [uint8], str2: [uint8]): (ret: uint8) @extern("strcasecmp") is
+var c1: uint8;
+var c2: uint8;
+@asm "ld de,(", str1, ")";
+@asm "ld hl,(", str2, ")";
+@asm "1:";
+@asm "ld a,(hl)";
+@asm "call tolower";
+@asm "ld c,a";
+@asm "ld a,(de)";
+@asm "call tolower";
+@asm "cp c";
+@asm "jr nz,2f";
+@asm "or a";
+@asm "ret z";
+@asm "jr 3f";
+@asm "2:";
+@asm "jr nc,4f";
+@asm "ld a,-1";
+@asm "ret";
+@asm "3:";
+@asm "inc hl";
+@asm "inc de";
+@asm "jr 1b";
+@asm "4:";
+@asm "ld a,1";
+@asm "ret";
+@asm "tolower:";
+@asm "cp 41H";
+@asm "ret c";
+@asm "cp 5AH+1";
+@asm "ret nc";
+@asm "or 20H";
+@asm "ret";
+end sub;
+
+sub strstr(str: [uint8], tosearch: [uint8]): (ret: [uint8]) @extern("strstr") is
+@asm "ld de,(", tosearch, ")";
+@asm "ld hl,(", str, ")";
+@asm "1:";
+@asm "ld a,(de)";
+@asm "cp (hl)";
+@asm "jr z,2f";
+@asm "inc hl";
+@asm "ld a,(hl)";
+@asm "or a";
+@asm "jr nz,1b";
+@asm "3:";
+@asm "ld hl,0";
+@asm "ret";
+@asm "2:";
+@asm "ld b,d";
+@asm "ld c,e";
+@asm "inc de";
+@asm "ld a,(de)";
+@asm "or a";
+@asm "ret z";
+@asm "push hl";
+@asm "inc hl";
+@asm "6:";
+@asm "ld a,(de)";
+@asm "cp (hl)";
+@asm "jr nz,4f";
+@asm "inc hl";
+@asm "inc de";
+@asm "ld a,(de)";
+@asm "or a";
+@asm "jr z,5f";
+@asm "ld a,(hl)";
+@asm "or a";
+@asm "jr nz,6b";
+@asm "pop hl";
+@asm "jr 3b";
+@asm "5:";
+@asm "pop hl";
+@asm "ret";
+@asm "4:";
+@asm "pop hl";
+@asm "inc hl";
+@asm "ld a,(hl)";
+@asm "or a";
+@asm "jr z,3b";
+@asm "ld d,b";
+@asm "ld e,c";
+@asm "jr 1b";
+end sub;
+
+sub strchr(str: [uint8], tosearch: uint8): (ret: [uint8]) @extern("strchr") is
+@asm "ld a,(", tosearch, ")";
+@asm "ld c,a";
+@asm "ld hl,(", str, ")";
+@asm "1:";
+@asm "ld a,c";
+@asm "cp (hl)";
+@asm "ret z";
+@asm "inc hl";
+@asm "ld a,(hl)";
+@asm "or a";
+@asm "jr nz,1b";
+@asm "ld hl,0";
+@asm "ret";
+end sub;
+

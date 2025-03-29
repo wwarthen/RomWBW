@@ -1,0 +1,63 @@
+# CP/M Z80 sequential files 
+#
+# supports two kind of files: text files (0x1A is EOF) & binary files (0 is EOF)
+#
+# FCBOpenIn 		: opens specified existing file for read (type: IO_TEXT or IO_BIN)
+# FCBOpenOut		: opens new, empty specified file for write (creates file) (type: IO_TEXT or IO_BIN)
+# FCBOpenInOut		: opens existing specified file for read/write (just opens, NOT creates file) (type: IO_TEXT or IO_BIN)
+# FCBOpenForAppend	: opens existing specified binary file for write & positions the write cursor after the last actual 128-bytes record,
+#			:  or creates a new, empty binary file, if the specified file was not found
+# FCBClose		: closes the specified file (writing all the file data to disk if the file was opened for write)
+# FCBRewind		: equivalent to FCBClose + FCBOpenIn, works only for files already opened for read
+# FCBGetChar		: reads a byte from a file already opened for read or read/write
+# FCBPutChar		: writes a byte to a file already opened for write or read/write
+#
+
+record CpmFCB is
+	dr: uint8;
+	f: uint8[11];
+	ex: uint8;
+	s1: uint8;
+	s2: uint8;
+	rc: uint8;
+	d: uint8[16];
+	cr: uint8;
+	r0: uint8;
+	r1: uint8;
+	r2: uint8;
+end record;
+
+record FCB is
+	bufferptr: uint8; # offset in buffer
+	iotype: uint8;
+	datatype: uint8;
+	cpm: CpmFCB;
+	buffer: uint8[128];
+end record;
+
+# file types
+const IO_TEXT := 0;
+const IO_BIN := 1;
+
+# I/O return codes (error numbers)
+const SUCCESS := 0;
+const ERR_NO_FILE := 1;
+const ERR_BAD_IO := 2;
+const ERR_DIR_FULL := 3;
+const ERR_DISK_FULL := 4;
+const ERR_EOF := 5;
+
+@decl sub FCBOpenIn(fcb: [FCB], filename: [uint8], filetype: uint8): (errno: uint8) @extern("FCBOpenIn");
+@decl sub FCBOpenOut(fcb: [FCB], filename: [uint8], filetype: uint8): (errno: uint8) @extern("FCBOpenOut");
+@decl sub FCBOpenInOut(fcb: [FCB], filename: [uint8], filetype: uint8): (errno: uint8) @extern("FCBOpenInOut");
+
+#only for binary files
+@decl sub FCBOpenForAppend(fcb: [FCB], filename: [uint8]): (errno: uint8) @extern("FCBOpenForAppend");
+
+@decl sub FCBGetChar(fcb: [FCB]): (c: uint8, errno: uint8) @extern("FCBGetChar");
+@decl sub FCBPutChar(fcb: [FCB], c: uint8): (errno: uint8) @extern("FCBPutChar");
+
+@decl sub FCBClose(fcb: [FCB]): (errno: uint8) @extern("FCBClose");
+
+# only for files open for READ
+@decl sub FCBRewind(fcb: [FCB]): (errno: uint8) @extern("FCBRewind");

@@ -1,0 +1,36 @@
+@decl sub exit() @extern("exit");
+
+@decl sub get_char(): (c: uint8) @extern("get_char");
+@decl sub get_line(p: [uint8]) @extern("get_line");
+@decl sub print_char(c: uint8) @extern("print_char");
+@decl sub print(ptr: [uint8]) @extern("print");
+@decl sub print_nl() @extern("print_nl");
+
+@decl sub print_hex_i8(char: uint8) @extern("print_hex_i8");
+@decl sub print_hex_i16(word: uint16) @extern("print_hex_i16");
+@decl sub print_hex_i32(dword: uint32) @extern("print_hex_i32");
+
+@decl sub print_i8(v: int8) @extern("print_i8");
+@decl sub print_i16(v: int16) @extern("print_i16");
+
+@decl sub isdigit(ch: uint8): (ret: uint8) @extern("isdigit");
+
+@decl sub itoa(i: int16): (pbuf: [uint8]) @extern("itoa");
+@decl sub uitoa(i: uint16): (pbuf: [uint8]) @extern("uitoa");
+@decl sub ltoa(i: int32): (pbuf: [uint8]) @extern("ltoa");
+@decl sub atoi(p: [uint8]): (ret: int16) @extern("atoi");
+@decl sub atol(p: [uint8]): (ret: int32) @extern("atol");
+
+@decl sub atofixed(p: [uint8]): (ret: uint16) @extern("atofixed");
+
+# fdigits: number of digits in fractional part
+@decl sub fixedtoa(f: uint16, fdigits: uint8): (ret: [uint8]) @extern("fixedtoa");
+
+@decl sub memcpy(dest: [uint8], src: [uint8], size: uint16): (ret: [uint8]) @extern("memcpy");
+@decl sub memset(dest: [uint8], char: uint8, size: uint16): (ret: [uint8]) @extern("memset");
+
+@decl sub xrnd() :(ret: uint16) @extern("xrnd");
+@decl sub xrndseed() @extern("xrndseed");
+
+@decl sub ArgvInit() @extern("ArgvInit");
+@decl sub ArgvNext(): (arg: [uint8]) extern("ArgvNext");

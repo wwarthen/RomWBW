@@ -1,0 +1,41 @@
+sub positive(fp: int16): (ret: int16) is
+@asm "jp __positive";
+end sub;
+
+sub neg(fp: int16): (ret: int16) is
+@asm "jp __neg";
+end sub;
+
+sub fpmul(fp1: int16, fp2: int16): (ret: int16) is
+# HL=fp1
+@asm "ld de,(", fp2, ")"; # DE=fp2
+@asm "jp __fpmul";
+end sub;
+
+sub fpdiv(fp1: int16, fp2: int16): (ret: int16) is
+# HL=fp1
+@asm "ld de,(", fp2, ")"; # DE=fp2
+@asm "jp __fpdiv";
+end sub;
+
+sub fpsqrt(fp: int16): (ret: int16) is
+@asm "jp __fpsqrt";
+end sub;
+
+sub fpsin(fp: int16): (ret: int16) is
+@asm "jp __fpsin";
+end sub;
+
+sub fpcos(fp: int16): (ret: int16) is
+@asm "jp __fpcos";
+end sub;
+
+sub fparctan(fp: int16): (ret: int16) is
+@asm "jp __fparctan";
+end sub;
+
+sub xdivytofp(x: int16, y: int16): (ret: int16) is
+# HL=x
+@asm "ld bc,(", y, ")"; # BC=y
+@asm "jp __xdivytofp";
+end sub;

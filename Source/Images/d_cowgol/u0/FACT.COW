@@ -1,0 +1,32 @@
+include "misc.coh";
+
+var fp: int16;
+
+sub factorial(n: int16): (ret: int16) is
+	var tmp: int16;
+
+	if n == 1 then
+		ret := 1;
+	else
+		# ret := n * factorial(n - 1);
+		@asm "ld hl,(", n, ")";
+		@asm "push hl";
+		n := n - 1;
+		@asm "ld hl,(", n, ")";
+		@asm "ld ix,(", fp, ")";
+		@asm "ld de, 1f";
+		@asm "push de";
+		@asm "jp (ix)";
+		@asm "1:";
+		@asm "ld (", tmp, "),hl"; #tmp = factorial(n-1)
+		@asm "pop hl";
+		@asm "ld (", n, "),hl";
+		ret := n * tmp;
+	end if;
+end sub;
+
+#setup pointer to factorial
+@asm "ld hl,", factorial;
+@asm "ld (", fp, "),hl";
+
+print_i16(factorial(5));

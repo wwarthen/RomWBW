@@ -1,0 +1,214 @@
+sub memset(dest: [uint8], char: uint8, size: uint16) is
+@asm "ld hl,(", dest, ")";
+@asm "ld bc,(", size, ")";
+@asm "ld a,(", char, ")";
+@asm "ld e,a";
+@asm "2:";
+@asm "ld a,b";
+@asm "or c";
+@asm "ret z";
+@asm "ld (hl),e";
+@asm "inc hl";
+@asm "dec bc";
+@asm "jr 2b";
+end sub;
+
+# file I/O support ---------------------------------------------------------
+
+record CpmFCB is
+	dr: uint8;
+	f: uint8[11];
+	ex: uint8;
+	s1: uint8;
+	s2: uint8;
+	rc: uint8;
+	d: uint8[16];
+	cr: uint8;
+	r: uint16;
+	r2: uint8;
+end record;
+
+record FCB is
+	bufferptr: uint8; # byte just read
+	dirty: uint8;
+	cpm: CpmFCB;
+	buffer: uint8[128];
+end record;
+
+sub file_i_init(fcb: [FCB], filename: [uint8]) is 
+	sub fill(dest: [uint8], src: [uint8], len: uint8): (srcout: [uint8]) is
+		loop
+			var c := [src];
+			if (c < 32) or (c == '.') then
+				c := ' ';
+			elseif (c == '*') then
+				c := '?';
+			else
+				src := src + 1;
+			end if;
+			if (c >= 'a') and (c <= 'z') then
+				c := c - ('a' - 'A');
+			end if;
+			[dest] := c;
+			dest := dest + 1;
+
+			len := len - 1;
+			if len == 0 then
+				break;
+			end if;
+		end loop;
+		srcout := src;
+	end sub;
+
+	memset(fcb as [uint8], 0, @bytesof FCB);
+	memset(&fcb.cpm.f[0] as [uint8], ' ', 11);
+	filename := fill(&fcb.cpm.f[0], filename, 8);
+
+	var c: uint8;
+	loop
+		c := [filename];
+		if (c < 32) or (c == '.') then
+			break;
+		end if;
+		filename := filename + 1;
+	end loop;
+
+	if c == '.' then
+		filename := fill(&fcb.cpm.f[8], filename+1, 3);
+	end if;
+
+	fcb.cpm.r := 0xffff;
+	fcb.bufferptr := 127;
+end sub;
+
+sub fcb_i_gbpb(fcb: [FCB], c: uint8) is 
+	var cpmfcb := &fcb.cpm;
+	var dma := &fcb.buffer[0];
+
+	@asm "ld c, 26"; # SET DMA
+	@asm "ld de, (", dma, ")";
+	@asm "call 5";
+
+	@asm "ld a, (", c, ")";
+	@asm "ld c, a";
+	@asm "ld de, (", cpmfcb, ")";
+	@asm "call 5";
+end sub;
+
+sub fcb_i_blockin(fcb: [FCB]) is 
+	memset(&fcb.buffer[0], 0, 128);
+	fcb_i_gbpb(fcb, 33); # READ RANDOM
+	fcb.dirty := 0;
+end sub;
+
+sub fcb_i_blockout(fcb: [FCB]) is 
+	if fcb.dirty != 0 then
+		fcb_i_gbpb(fcb, 34); # WRITE RANDOM
+		fcb.dirty := 0;
+	end if;
+end sub;
+
+sub fcb_i_changeblock(fcb: [FCB], newblock: uint16) is 
+	if newblock != fcb.cpm.r then
+		fcb_i_blockout(fcb);
+		fcb.cpm.r := newblock;
+		fcb_i_blockin(fcb);
+	end if;
+end sub;
+
+sub fcb_a_to_error() is 
+	@asm "cp 0xff";
+	@asm "ld a, 0";
+	@asm "ret nz";
+	@asm "inc a";
+end sub;
+
+sub FCBOpenIn(fcb: [FCB], filename: [uint8]): (errno: uint8) @extern("FCBOpenIn") is 
+	file_i_init(fcb, filename);
+
+	var cpmfcb := &fcb.cpm;
+	@asm "ld c, 15"; # OPEN_FILE
+	@asm "ld de, (", cpmfcb, ")";
+	@asm "call 5";
+	@asm "call", fcb_a_to_error;
+	@asm "ld (", errno, "), a";
+end sub;
+
+sub FCBOpenUp(fcb: [FCB], filename: [uint8]): (errno: uint8) @extern("FCBOpenUp") is 
+	(errno) := FCBOpenIn(fcb, filename);
+end sub;
+
+sub FCBOpenOut(fcb: [FCB], filename: [uint8]): (errno: uint8) @extern("FCBOpenOut") is 
+	file_i_init(fcb, filename);
+
+	var cpmfcb := &fcb.cpm;
+	@asm "ld c, 19"; # DELETE_FILE
+	@asm "ld de, (", cpmfcb, ")";
+	@asm "call 5";
+
+	@asm "ld c, 22"; # CREATE_FILE
+	@asm "ld de, (", cpmfcb, ")";
+	@asm "call 5";
+	@asm "call", fcb_a_to_error;
+	@asm "ld (", errno, "), a";
+end sub;
+	
+sub FCBClose(fcb: [FCB]): (errno: uint8) @extern("FCBClose") is 
+	fcb_i_blockout(fcb);
+
+	var cpmfcb := &fcb.cpm;
+	@asm "ld c, 16"; # CLOSE_FILE
+	@asm "ld de, (", cpmfcb, ")";
+	@asm "call 5";
+	@asm "call", fcb_a_to_error;
+	@asm "ld (", errno, "), a";
+end sub;
+
+sub FCBSeek(fcb: [FCB], pos: uint32) @extern("FCBSeek") is
+	pos := pos - 1; # seek to *previous* character
+	var newblock := (pos >> 7) as uint16;
+	var newptr := (pos as uint8) & 127;
+	fcb_i_changeblock(fcb, newblock);
+	fcb.bufferptr := newptr;
+end sub;
+
+sub FCBPos(fcb: [FCB]): (pos: uint32) @extern("FCBPos") is 
+	pos := (((fcb.cpm.r as uint32) << 7) | (fcb.bufferptr as uint32)) + 1;
+end sub;
+
+sub FCBExt(fcb: [FCB]): (len: uint32) @extern("FCBExt") is 
+	var oldblock := fcb.cpm.r;
+	var cpmfcb := &fcb.cpm;
+
+	@asm "ld c, 16"; # CLOSE_FILE (actually flushing it to disk)
+	@asm "ld de, (", cpmfcb, ")";
+	@asm "call 5";
+
+	@asm "ld c, 35"; # COMPUTE FILE SIZE
+	@asm "ld de, (", cpmfcb, ")";
+	@asm "call 5";
+
+	len := ([&fcb.cpm.r as [uint32]] & 0x00ffffff) << 7;
+	fcb.cpm.r := oldblock;
+end sub;
+
+sub fcb_i_nextchar(fcb: [FCB]) is 
+	fcb.bufferptr := fcb.bufferptr + 1;
+	if fcb.bufferptr == 128 then
+		fcb_i_changeblock(fcb, fcb.cpm.r + 1);
+		fcb.bufferptr := 0;
+	end if;
+end sub;
+
+sub FCBGetChar(fcb: [FCB]): (c: uint8) @extern("FCBGetChar") is 
+	fcb_i_nextchar(fcb);
+	c := fcb.buffer[fcb.bufferptr];
+end sub;
+
+sub FCBPutChar(fcb: [FCB], c: uint8) @extern("FCBPutChar") is 
+	fcb_i_nextchar(fcb);
+	fcb.buffer[fcb.bufferptr] := c;
+	fcb.dirty := 1;
+end sub;
+
+# ---------------------------------------------------------

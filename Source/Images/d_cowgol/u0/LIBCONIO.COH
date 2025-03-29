@@ -1,0 +1,35 @@
+sub get_char(): (ch: uint8) is
+@asm "jp __get_char";
+end sub;
+
+sub get_str(buf: [uint8]) is
+@asm "jp __get_str";
+end sub;
+
+sub print_char(ch: uint8) is
+@asm "jp __print_char";
+end sub;
+
+sub print(buf: [uint8]) is
+@asm "jp __print";
+end sub;
+
+sub print_nl() is
+@asm "jp __print_nl";
+end sub;
+
+sub print_i8(n: int8) is
+@asm "jp __print_i8";
+end sub;
+
+sub print_i16(n: int16) is
+@asm "jp __print_i16";
+end sub;
+
+sub print_hex_i8(n: int8) is
+@asm "jp __print_hex_i8";
+end sub;
+
+sub print_hex_i16(n: int16) is
+@asm "jp __print_hex_i16";
+end sub;

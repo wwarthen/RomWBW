@@ -1,0 +1,17 @@
+sub Exit() is
+@asm "rst 0";
+end sub;
+
+sub MemSet(buf: [uint8], ch: uint8, len: uint16) is
+# A=ch, HL=buf
+@asm "ld de,(", len, ")"; # DE=len
+@asm "jp __MemSet";
+end sub;
+
+sub MemCopy(src: [uint8], len: uint16, dest: [uint8]) is
+# HL=src
+@asm "ld de,(", dest, ")"; # DE=dest
+@asm "ld bc,(", len, ")"; # BC=len
+@asm "jp __MemCopy";
+end sub;
+

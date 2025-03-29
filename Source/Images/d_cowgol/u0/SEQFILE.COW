@@ -1,0 +1,390 @@
+
+const IO_READ := 0;
+const IO_WRITE := 1;
+const IO_READ_WRITE := 2;
+
+const IO_TEXT := 0;
+const IO_BIN := 1;
+
+const SUCCESS := 0;
+const ERR_NO_FILE := 1;
+const ERR_BAD_IO := 2;
+const ERR_DIR_FULL := 3;
+const ERR_DISK_FULL := 4;
+const ERR_EOF := 5;
+
+const CHAR_EOF := 0x1A;
+
+record CpmFCB is
+	dr: uint8;
+	f: uint8[11];
+	ex: uint8;
+	s1: uint8;
+	s2: uint8;
+	rc: uint8;
+	d: uint8[16];
+	cr: uint8;
+	r0: uint8;
+	r1: uint8;
+	r2: uint8;
+end record;
+
+record FCB is
+	bufferptr: uint8; # offset in buffer
+	iotype: uint8;
+	datatype: uint8;
+	cpm: CpmFCB;
+	buffer: uint8[128];
+end record;
+
+sub MemSet(p:[uint8], char:uint8, size:uint16) is
+@asm "ld a,(", char, ")";
+@asm "ld de,(", size, ")";
+@asm "ld hl,(", p, ")";
+@asm "ld c,a";
+@asm "loopm:";
+@asm "ld a,e";
+@asm "or d";
+@asm "ret z";
+@asm "ld (hl),c";
+@asm "inc hl";
+@asm "dec de";
+@asm "jr loopm";
+end sub;
+
+sub MemCopy(src: [uint8], size: intptr, dest: [uint8]) is
+@asm "ld de,(", dest, ")";
+@asm "ld hl,(", src, ")";
+@asm "ld bc,(", size, ")";
+@asm "ld a,b";
+@asm "or c";
+@asm "ret z";
+@asm "ldir";
+@asm "ret";
+end sub;
+
+sub fcb_init(fcb: [FCB], filename: [uint8]) is
+	sub fill(dest: [uint8], src: [uint8], len: uint8): (srcout: [uint8]) is
+		loop
+			var c := [src];
+			if (c < 32) or (c == '.') then
+				c := ' ';
+			elseif (c == '*') then
+				c := '?';
+			else
+				src := src + 1;
+			end if;
+			if (c >= 'a') and (c <= 'z') then
+				c := c - ('a' - 'A');
+			end if;
+			[dest] := c;
+			dest := dest + 1;
+
+			len := len - 1;
+			if len == 0 then
+				break;
+			end if;
+		end loop;
+		srcout := src;
+	end sub;
+
+	MemSet(fcb as [uint8], 0, @bytesof FCB);
+	MemSet(&fcb.cpm.f[0] as [uint8], ' ', 11);
+	filename := fill(&fcb.cpm.f[0], filename, 8);
+
+	var c: uint8;
+	loop
+		c := [filename];
+		if (c < 32) or (c == '.') then
+			break;
+		end if;
+		filename := filename + 1;
+	end loop;
+
+	if c == '.' then
+		filename := fill(&fcb.cpm.f[8], filename+1, 3);
+	end if;
+end sub;
+
+sub FCBOpenIn(fcb: [FCB], filename: [uint8], type: uint8): (errno: uint8) @extern("FCBOpenIn") is
+	var cpmfcb := &fcb.cpm;
+	var cpmerr: uint8;
+
+	fcb_init(fcb, filename);
+	fcb.iotype := IO_READ;
+	fcb.datatype := type;
+
+	@asm "ld c, 15"; # OPEN_FILE
+	@asm "ld de, (", cpmfcb, ")";
+	@asm "call 5";
+	@asm "ld (", cpmerr, "), a";
+
+	if cpmerr == 0xFF then
+		errno := ERR_NO_FILE;
+	else
+		errno := SUCCESS;
+	end if;
+end sub;
+
+sub FCBOpenRW(fcb: [FCB], type: uint8, iotype: uint8): (errno: uint8) is
+	var cpmfcb := &fcb.cpm;
+	var cpmerr: uint8;
+	var c: uint8;
+
+	fcb.iotype := iotype;
+	fcb.datatype := type;
+
+	if iotype == IO_WRITE then
+		@asm "ld c, 19"; # DELETE_FILE
+		@asm "ld de, (", cpmfcb, ")";
+		@asm "call 5";
+
+		@asm "ld c, 22"; # CREATE_FILE
+		@asm "ld de, (", cpmfcb, ")";
+		@asm "call 5";
+		@asm "ld (", cpmerr, "), a";
+
+		if cpmerr == 0xFF then
+			errno := ERR_DIR_FULL;
+		else
+			errno := SUCCESS;
+		end if;
+	else #IO_READ_WRITE
+		@asm "ld c, 15"; # OPEN_FILE
+		@asm "ld de, (", cpmfcb, ")";
+		@asm "call 5";
+		@asm "ld (", cpmerr, "), a";
+
+		if cpmerr == 0xFF then
+			errno := ERR_NO_FILE;
+		else
+			errno := SUCCESS;
+		end if;
+	end if;
+
+	if fcb.datatype == IO_TEXT then
+		c := CHAR_EOF;
+	else
+		c := 0;
+	end if;
+		
+	MemSet(&fcb.buffer[0], c, 128);
+end sub;
+
+sub FCBOpenOut(fcb: [FCB], filename: [uint8], type: uint8): (errno: uint8) @extern("FCBOpenOut") is
+	fcb_init(fcb, filename);
+	errno := FCBOpenRW(fcb, type, IO_WRITE);
+end sub;
+
+sub FCBOpenInOut(fcb: [FCB], filename: [uint8], type: uint8): (errno: uint8) @extern("FCBOpenInOut") is
+	fcb_init(fcb, filename);
+	errno := FCBOpenRW(fcb, type, IO_READ_WRITE);
+end sub;
+
+sub FCBOpenForAppend(fcb: [FCB], filename: [uint8]): (errno: uint8) @extern("FCBOpenForAppend") is
+	var cpmfcb := &fcb.cpm;
+	var cpmerr: uint8;
+
+	fcb_init(fcb, filename);
+
+	@asm "ld c, 17"; # SEARCH_FILE
+	@asm "ld de, (", cpmfcb, ")";
+	@asm "call 5";
+	@asm "ld (", cpmerr, "), a";
+
+	if cpmerr == 0xFF then
+		# not found, open it for write
+		errno := FCBOpenRW(fcb, IO_BIN, IO_WRITE);
+	else
+		# found, open it for read/write
+		errno := FCBOpenRW(fcb, IO_BIN, IO_READ_WRITE);  
+
+		# errno should be SUCCESS
+		if errno != SUCCESS then
+			return;
+		end if;
+
+		var dma := &fcb.buffer[0];
+		@asm "ld c, 26"; # SET DMA
+		@asm "ld de, (", dma, ")";
+		@asm "call 5";
+
+		@asm "ld c, 35"; # COMPUTE FILE SIZE
+		@asm "ld de, (", cpmfcb, ")";
+		@asm "call 5";
+
+		MemSet(&fcb.buffer[0] as [uint8], 0, 128);
+
+		@asm "ld c, 34"; # WRITE RANDOM
+		@asm "ld de, (", cpmfcb, ")";
+		@asm "call 5";
+
+		errno := SUCCESS;
+	end if;
+end sub;
+
+sub FCBGetChar(fcb: [FCB]): (c: uint8, errno: uint8) @extern("FCBGetChar") is
+
+	if fcb.iotype == IO_WRITE then
+		errno := ERR_BAD_IO;
+		c := 0;
+		return;
+	end if;
+
+	var index: uint8 := fcb.bufferptr;
+
+	if index == 0 then
+		var cpmfcb := &fcb.cpm;
+		var cpmerr: uint8;
+
+		var dma := &fcb.buffer[0];
+		@asm "ld c, 26"; # SET DMA
+		@asm "ld de, (", dma, ")";
+		@asm "call 5";
+
+		@asm "ld c, 20"; # READ SEQ
+		@asm "ld de, (", cpmfcb, ")";
+		@asm "call 5";
+		@asm "ld (", cpmerr, "),a";
+
+		if cpmerr != 0 then
+			c := 0;
+			errno := ERR_EOF;
+			return;
+		end if;
+
+		c := fcb.buffer[0];
+		fcb.bufferptr := 1;
+	else
+		c := fcb.buffer[index];
+
+		if index == 127 then
+			fcb.bufferptr := 0;
+		else
+			fcb.bufferptr := index + 1;
+		end if;
+	end if;
+
+	if fcb.datatype == IO_TEXT and c == CHAR_EOF then
+		errno := ERR_EOF;
+	else
+		errno := SUCCESS;
+	end if;
+end sub;
+
+sub FCBPutChar(fcb: [FCB], c: uint8): (errno: uint8) @extern("FCBPutChar") is
+
+	if fcb.iotype == IO_READ then
+		errno := ERR_BAD_IO;
+		return;
+	end if;
+
+	var index: uint8 := fcb.bufferptr;
+	fcb.buffer[index] := c;
+
+	if index == 127 then
+		var cpmfcb := &fcb.cpm;
+		var cpmerr: uint8;
+
+		var dma := &fcb.buffer[0];
+		@asm "ld c, 26"; # SET DMA
+		@asm "ld de, (", dma, ")";
+		@asm "call 5";
+
+		@asm "ld c, 21"; # WRITE SEQ
+		@asm "ld de, (", cpmfcb, ")";
+		@asm "call 5";
+		@asm "ld (", cpmerr, "),a";
+
+		if cpmerr != 0 then
+			errno := ERR_DISK_FULL;
+			return;
+		end if;
+
+		fcb.bufferptr := 0;
+
+		if fcb.datatype == IO_TEXT then
+			c := CHAR_EOF;
+		else
+			c := 0;
+		end if;
+		
+		MemSet(&fcb.buffer[0], c, 128);
+	else
+		fcb.bufferptr := index + 1;
+	end if;
+
+	errno := SUCCESS;
+end sub;
+
+sub FCBClose(fcb: [FCB]): (errno: uint8) @extern("FCBClose") is
+	var cpmfcb := &fcb.cpm;
+	var closeerr: uint8;
+	var writeerr: uint8 := 0;
+
+	errno := SUCCESS;
+
+	if fcb.iotype == IO_READ then
+		return;
+	end if;
+
+	if fcb.bufferptr != 0 then
+		var dma := &fcb.buffer[0];
+		@asm "ld c, 26"; # SET DMA
+		@asm "ld de, (", dma, ")";
+		@asm "call 5";
+
+		@asm "ld c, 21"; # WRITE SEQ
+		@asm "ld de, (", cpmfcb, ")";
+		@asm "call 5";
+		@asm "ld (", writeerr, "),a";
+	end if;
+
+	@asm "ld c, 16"; # CLOSE_FILE
+	@asm "ld de, (", cpmfcb, ")";
+	@asm "call 5";
+	@asm "ld (", closeerr, "),a";
+
+	if writeerr != 0 then
+		errno := ERR_DISK_FULL;
+		return;
+	end if;
+
+	if closeerr == 0xFF then
+		errno := ERR_NO_FILE;
+	end if;
+end sub;
+
+# only for files open for READ
+sub FCBRewind(fcb: [FCB]): (errno: uint8) @extern("FCBRewind") is
+	var cpmfcb := &fcb.cpm;
+	var cpmerr: uint8;
+
+	if fcb.iotype != IO_READ then
+		errno := ERR_BAD_IO;
+		return;
+	end if;
+
+	errno := FCBClose(fcb);
+
+	if errno != SUCCESS then
+		return;
+	end if;
+
+	var file: uint8[11];
+	MemCopy(&cpmfcb.f[0], 11, &file[0]);
+	MemSet(cpmfcb as [uint8], 0, @bytesof CpmFCB);
+	MemCopy(&file[0], 11, &cpmfcb.f[0]);
+	fcb.bufferptr := 0;
+
+	@asm "ld c, 15"; # OPEN_FILE
+	@asm "ld de, (", cpmfcb, ")";
+	@asm "call 5";
+	@asm "ld (", cpmerr, "), a";
+
+	if cpmerr == 0xFF then
+		errno := ERR_NO_FILE;
+	else
+		errno := SUCCESS;
+	end if;
+end sub;

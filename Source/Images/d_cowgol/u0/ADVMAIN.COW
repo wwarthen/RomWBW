@@ -17,60 +17,95 @@
 ##  Adapted for HiTech C Z80 under CP/M by Ladislau Szilagyi, Oct. 2023
 ##  Uncommented Daimler's disabled verbs - game is complete again !
 ##  Added a new pseudo-random number generator (Xorshift)
-##  Adapted to Cowgol language by Ladislau Szilagyi, Feb. 2024
+##  Adapted to Cowgol language by Ladislau Szilagyi, Feb. 2025
 
-@decl sub exit() @extern("exit");
-@decl sub get_char(): (c: uint8) @extern("get_char");
-@decl sub get_line(p: [uint8]) @extern("get_line");
-@decl sub print_char(c: uint8) @extern("print_char");
-@decl sub print(ptr: [uint8]) @extern("print");
-@decl sub print_nl() @extern("print_nl");
-@decl sub itoa(i: int16): (pbuf: [uint8]) @extern("itoa");
-@decl sub ltoa(i: int32): (pbuf: [uint8]) @extern("ltoa");
-@decl sub isdigit(ch: uint8): (ret: uint8) @extern("isdigit");
-@decl sub atoi(p: [uint8]): (ret: int16) @extern("atoi");
-@decl sub atol(p: [uint8]): (ret: int32) @extern("atol");
-@decl sub strcpy(dest: [uint8], src: [uint8]) @extern("strcpy");
-@decl sub strcmp(s1: [uint8], s2: [uint8]): (ret: int8) @extern("strcmp");
-@decl sub strlen(s: [uint8]): (ret: uint16) @extern("strlen");
-@decl sub strcat(dest: [uint8], src: [uint8]) @extern("strcat");
-@decl sub rindex(str: [uint8], ch: uint8): (ret: [uint8]) @extern("rindex");
-@decl sub MemSet(buf: [uint8], byte: uint8, len: uint16) @extern("MemSet");
-@decl sub ArgvInit() @extern("ArgvInit");
-@decl sub ArgvNext(): (arg: [uint8]) @extern("ArgvNext");
-@decl sub bug(n: uint8) @extern("bug");
-@decl sub closefiles() @extern("closefiles");
-@decl sub opentxt() @extern("opentxt");
-@decl sub rspeak(msg: uint8) @extern("rspeak");
-@decl sub pspeak(item: uint8, state: int8) @extern("pspeak");
-@decl sub desclg(loc: uint8) @extern("desclg");
-@decl sub descsh(loc: uint8) @extern("descsh");
-@decl sub vocab(word: [uint8], val: uint16): (ret: int16) @extern("vocab");
-@decl sub outwords() @extern("outwords");
-@decl sub tolower(ch: uint8): (ret: uint8) @extern("tolower");
-@decl sub pct(x: uint16): (ret: uint8) @extern("pct");
-@decl sub dstroy(obj: uint16) @extern("dstroy");
-@decl sub juggle(loc: uint16) @extern("juggle");
-@decl sub put(obj: uint16, where: int16, pval: int16): (ret: int16) @extern("put");
-@decl sub liq2(pbottle: uint16): (ret: uint16) @extern("liq2");
-@decl sub copytrv(trav1: [trav], trav2: [trav]) @extern("copytrv");
-@decl sub analyze(word: [uint8]): (valid: uint8, type: int16, value: int16) @extern("analyze");
-@decl sub yes(msg1: uint8, msg2: uint8, msg3: uint8): (ret: uint8) @extern("yes");
+include "misc.coh";
+include "string.coh";
+include "ranfile.coh";
+
+@decl sub move(obj: uint16, where: int16) @extern("move");
+@decl sub score() @extern("score");
+@decl sub death() @extern("death");
+@decl sub initplay() @extern("initplay");
+@decl sub turn() @extern("turn");
+@decl sub ivtake() @extern("ivtake");
+@decl sub ivopen() @extern("ivopen");
+@decl sub trverb(verb: int16, object: int16, closed: int16) @extern("trverb");
+@decl sub actspk(verb: uint16) @extern("actspk");
 @decl sub ivkill() @extern("ivkill");
+@decl sub iveat() @extern("iveat");
+@decl sub ivdrink() @extern("ivdrink");
+@decl sub ivquit() @extern("ivquit");
+@decl sub ivfill() @extern("ivfill");
+@decl sub ivfoo() @extern("ivfoo");
+@decl sub ivread() @extern("ivread");
+@decl sub vdrop() @extern("vdrop");
+@decl sub vtake() @extern("vtake");
+@decl sub vopen() @extern("vopen");
+@decl sub von() @extern("von");
+@decl sub voff() @extern("voff");
+@decl sub vwave() @extern("vwave");
+@decl sub vkill() @extern("vkill");
+@decl sub vpour() @extern("vpour");
+@decl sub veat() @extern("veat");
+@decl sub vdrink() @extern("vdrink");
+@decl sub vthrow() @extern("vthrow");
+@decl sub vfeed() @extern("vfeed");
+@decl sub vfind() @extern("vfind");
+@decl sub vfill() @extern("vfill");
+@decl sub vblast() @extern("vblast");
+@decl sub vbreak() @extern("vbreak");
+@decl sub vwake() @extern("vwake");
+@decl sub set_limit(v: int16) @extern("set_limit");
+@decl sub set_verb(v: int16) @extern("set_verb");
+@decl sub set_object(v: int16) @extern("set_object");
+@decl sub set_motion(v: int16) @extern("set_motion");
+@decl sub rspeak(msg: uint8) @extern("rspeak");
+@decl sub dark(): (ret: uint8) @extern("dark");
+@decl sub toting(item: uint16): (ret: uint8) @extern("toting");
+@decl sub yes(msg1: uint8, msg2: uint8, msg3: uint8): (ret: uint8) @extern("yes");
+@decl sub pspeak(item: uint8, state: int8) @extern("pspeak");
+@decl sub save() @extern("save");
+@decl sub restore() @extern("restore");
+@decl sub get_dbugflg(): (ret: int16) @extern("get_dbugflg");
+@decl sub set_saveflg(v: int16) @extern("set_saveflg");
+@decl sub get_saveflg(): (ret: int16) @extern("get_saveflg");
+@decl sub set_dbugflg(v: int16) @extern("set_dbugflg");
 
-# ---------------------------------------------------------------------------
+#	Action verb definitions
 
-const	MAXOBJ :=	100;		# max # of objects in cave	
-const	MAXWC :=	301;		# max # of adventure words	
-const	MAXLOC :=	140;		# max # of cave locations	
-const	WORDSIZE :=	20;		# max # of chars in commands	
-const	MAXMSG :=	201;		# max # of long location descr	
-
-const	MAXTRAV	:= 	(16+1);		# max # of travel directions from loc	
-					# +1 for terminator travel[x].tdest=-1	
-const	DWARFMAX :=	7;		# max # of nasty dwarves	
-const	MAXDIE :=	3;		# max # of deaths before close	
-const	MAXTRS :=	79;		# max # of			
+const	TAKE :=	1;
+const	DROP :=	2;
+const	SAY :=	3;
+const	OPEN :=	4;
+const	NOTHING := 5;
+const	LOCK :=	6;
+const	ON :=	7;
+const	OFF :=	8;
+const	WAVE :=	9;
+const	CALM :=	10;
+const	WALK :=	11;
+const	KILL :=	12;
+const	POUR :=	13;
+const	EAT :=	14;
+const	DRINK := 15;
+const	RUB :=	16;
+const	THROW := 17;
+const	QUIT :=	18;
+const	FIND :=	19;
+const	INVENTORY := 20;
+const	FEED :=	21;
+const	FILL :=	22;
+const	BLAST := 23;
+const	SCORE := 24;
+const	FOO :=	25;
+const	BRIEF := 26;
+const	READ :=	27;
+const	BREAK := 28;
+const	WAKE :=	29;
+const	SUSPEND := 30;
+const	HOURS := 31;
+const	LOG := 32;
 
 #	Object definitions
 
@@ -121,434 +156,1093 @@ const	RUG := 62;
 const	SPICES := 63;
 const	CHAIN := 64;
 
-#	Verb definitions
-
-const	NULLX := 21;
-const	BACK :=	8;
-const	LOOK :=	57;
-const	CAVE :=	67;
-const	ENTRANCE := 64;
-const	DEPRESSION := 63;
-
-#	Action verb definitions
-
-const	TAKE :=	1;
-const	DROP :=	2;
-const	SAY :=	3;
-const	OPEN :=	4;
-const	NOTHING := 5;
-const	LOCK :=	6;
-const	ON :=	7;
-const	OFF :=	8;
-const	WAVE :=	9;
-const	CALM :=	10;
-const	WALK :=	11;
-const	KILL :=	12;
-const	POUR :=	13;
-const	EAT :=	14;
-const	DRINK := 15;
-const	RUB :=	16;
-const	THROW := 17;
-const	QUIT :=	18;
-const	FIND :=	19;
-const	INVENTORY := 20;
-const	FEED :=	21;
-const	FILL :=	22;
-const	BLAST := 23;
-const	SCORE := 24;
-const	FOO :=	25;
-const	BRIEF := 26;
-const	READ :=	27;
-const	BREAK := 28;
-const	WAKE :=	29;
-const	SUSPEND := 30;
-const	HOURS := 31;
-const	LOG := 32;
-
-#	BIT mapping of "cond" array which indicates location status
-
-const	LIGHT :=	1;
-const	WATOIL :=	2;
-const	LIQUID :=	4;
-const	NOPIRAT :=	8;
-const	HINTC :=	16;
-const	HINTB :=	32;
-const	HINTS :=	64;
-const	HINTM :=	128;
-const	HINT :=		240;
-
-#	Structure definitions
-
-record	trav is
-	tdest: int16;
-	tverb: int16;
-	tcond: int16;
-end record;
-
-# ---------------------------------------------------------------
-
-#	WARNING: GLOBAL variable allocations for adventure	
-
-#	Database variables
-
-var	travel: trav[MAXTRAV];
-var	actmsg: int16[32];		# action messages	
+const	MAXOBJ :=	100;
 
 #	English variables
 
-var	verb: int16;
-var	object: int16;
-var	motion: int16;
+const	WORDSIZE :=	20;		# max # of chars in commands	
+
 var	word1: uint8[WORDSIZE];
 var	word2: uint8[WORDSIZE];
 
-#	Play variables
+# some utilities --------------------------------------------------------------
 
-var	turns: int16;
-var	loc: int16;
-var	oldloc: int16;
-var	oldloc2: int16;
-var	newloc: int16;			# location variables 
-var	cond: int16[MAXLOC];		# location status	
-var	place: int16[MAXOBJ];		# object location	
-var	fixed: int16[MAXOBJ];		# second object loc	
-var	visited: int16[MAXLOC];		# >0 if has been here	
-var	prop: int16[MAXOBJ];		# status of object	
-var	tally: int16;
-var	tally2: int16;			# item counts		
-var	limit: int16;			# time limit		
-var	lmwarn: int16;			# lamp warning flag	
-var	wzdark: int16;
-var	closing: int16;
-var	closed: int16;			# game state flags	
-var	holding: int16;			# count of held items	
-var	detail: int16;			# LOOK count		
-var	knfloc: int16;			# knife location	
-var	clock1: int16;
-var	clock2: int16;
-var	panic: int16;	 		# timing variables	 
-var	dloc: int16[DWARFMAX];		# dwarf locations	
-var	dflag: int16;			# dwarf flag		
-var	dseen: int16[DWARFMAX];		# dwarf seen flag	
-var	odloc: int16[DWARFMAX];		# dwarf old locations	
-var	daltloc: int16;			# alternate appearance	
-var	dkill: int16;			# dwarves killed	
-var	chloc: int16;
-var	chloc2: int16;			# chest locations	
-var	bonus: int16;			# to pass to end	
-var	numdie: int16;			# number of deaths	
-var	object1: int16;			# to help intrans.	
-var	gaveup: int16;			# 1 if he quit early	
-var	foobar: int16;			# fie fie foe foo...	
-var	saveflg: int16;			# if game being saved	
-var	dbugflg: uint8;			# if game is in debug	
-var	lastglob: int16;		# to get space req.	
-
-sub get_dbugflg(): (ret: uint8) @extern("get_dbugflg") is
-	ret := dbugflg;
+#	Fatal error routine
+sub bug(n: uint8) @extern("bug") is
+	print("Fatal error number ");
+	print(itoa(n as int16));
+	print_nl();
+	exit();
 end sub;
 
-sub set_saveflg() @extern("set_saveflg") is
-	saveflg := 1;
+#	normal end of game
+sub normend() @extern("normend") is
+	score();
+	exit();
 end sub;
 
-# --------------------------------------------------------------
+#	Routine to handle player's demise via
+#	waking up the dwarves...
+sub dwarfend() @extern("dwarfend") is
+	death();
+	normend();
+end sub;
 
-#	WARNING: the travel array for the cave is stored as MAXLOC
-#	         strings.  the strings are an array of 1..MAXTRAV
-#	         LONG INTEGERS.  this requires 32 bit LONG INTEGERS.
-#	         these values are used in database.c "gettrav".
-#	         tdset*1000000 + tverb*1000 + tcond = value stored
+record	wac is
+	aword: [uint8];
+	acode: uint16;
+end record;
 
-var cave: [uint8][] :=
-	{
-	"2002,2044,2029,3003,3012,3019,3043,4005,4013,4014,4046,4030,5006,5045,5043,8063,",
-	"1002000,1012000,1007000,1043000,1045000,1030000,5006000,5045000,5046000,",
-	"1003000,1011000,1032000,1044000,11062000,33065000,79005000,79014000,",
-	"1004000,1012000,1045000,5006000,5043000,5044000,5029000,7005000,7046000,7030000,8063000,",
-	"4009000,4043000,4030000,5006050,5007050,5045050,6006000,5044000,5046000,",
-	"1002000,1045000,4009000,4043000,4044000,4030000,5006000,5046000,",
-	"1012000,4004000,4045000,5006000,5043000,5044000,8005000,8015000,8016000,8046000,595060000,595014000,595030000,",
-	"5006000,5043000,5046000,5044000,1012000,7004000,7013000,7045000,9003303,9019303,9030303,593003000,",
-	"8011303,8029303,593011000,10017000,10018000,10019000,10044000,14031000,11051000,",
-	"9011000,9020000,9021000,9043000,11019000,11022000,11044000,11051000,14031000,",
-	"8063303,9064000,10017000,10018000,10023000,10024000,10043000,12025000,12019000,12029000,12044000,3062000,14031000,",
-	"8063303,9064000,11030000,11043000,11051000,13019000,13029000,13044000,14031000,",
-	"8063303,9064000,11051000,12025000,12043000,14023000,14031000,14044000,",
-	"8063303,9064000,11051000,13023000,13043000,20030150,20031150,20034150,15030000,16033000,16044000,",
-	"1803,1804,1700,1703,1704,1901,1903,1904,2202,2203,2203,2203,2202,2204,1402,3405,",
-	"14001000,",
-	"15038000,15043000,596039312,21007412,597041412,597042412,597044412,597069412,27041000,",
-	"15038000,15011000,15045000,",
-	"15010000,15029000,15043000,28045311,28036311,29046311,29037311,30044311,30007311,32045000,74049035,32049211,74066000,",
-	"001000,",
-	"001000,",
-	"15001000,",
-	"67043000,67042000,68044000,68061000,25030000,25031000,648052000,",
-	"67029000,67011000,",
-	"23029000,23011000,31056724,26056000,",
-	"88001000,",
-	"596039312,21007412,597041412,597042412,597043412,597069412,17041000,40045000,41044000,",
-	"19038000,19011000,19046000,33045000,33055000,36030000,36052000,",
-	"19038000,19011000,19045000,",
-	"19038000,19011000,19043000,62044000,62029000,",
-	"89001524,90001000,",
-	"19001000,",
-	"3065000,28046000,34043000,34053000,34054000,35044000,302071159,100071000,",
-	"33030000,33055000,15029000,",
-	"33043000,33055000,20039000,",
-	"37043000,37017000,28029000,28052000,39044000,65070000,",
-	"36044000,36017000,38030000,38031000,38056000,",
-	"37056000,37029000,37011000,595060000,595014000,595030000,595004000,595005000,",
-	"36043000,36023000,64030000,64052000,64058000,65070000,",
-	"41001000,",
-	"42046000,42029000,42023000,42056000,27043000,59045000,60044000,60017000,",
-	"41029000,42045000,43043000,45046000,80044000,",
-	"42044000,44046000,45043000,",
-	"43043000,48030000,50046000,82045000,",
-	"42044000,43045000,46043000,47046000,87029000,87030000,",
-	"45044000,45011000,",
-	"45043000,45011000,",
-	"44029000,44011000,",
-	"50043000,51044000,",
-	"44043000,49044000,51030000,52046000,",
-	"49044000,50029000,52043000,53046000,",
-	"50044000,51043000,52046000,53029000,55045000,86030000,",
-	"51044000,52045000,54046000,",
-	"53044000,53011000,",
-	"52044000,55045000,56030000,57043000,",
-	"55029000,55011000,",
-	"13030000,13056000,55044000,58046000,83045000,84043000,",
-	"57043000,57011000,",
-	"27001000,",
-	"41043000,41029000,41017000,61044000,62045000,62030000,62052000,",
-	"60043000,62045000,107046100,",
-	"60044000,63045000,30043000,61046000,",
-	"62046000,62011000,",
-	"39029000,39056000,39059000,65044000,65070000,103045000,103074000,106043000,",
-	"64043000,66044000,556046080,68061000,556029080,70029050,39029000,556045060,72045075,71045000,556030080,106030000,",
-	"65047000,67044000,556046080,77025000,96043000,556050050,97072000,",
-	"66043000,23044000,23042000,24030000,24031000,",
-	"23046000,69029000,69056000,65045000,",
-	"68030000,68061000,120046331,119046000,109045000,113075000,",
-	"71045000,65030000,65023000,111046000,",
-	"65048000,70046000,110045000,",
-	"65070000,118049000,73045000,97048000,97072000,",
-	"72046000,72017000,72011000,",
-	"19043000,120044331,121044000,75030000,",
-	"76046000,77045000,",
-	"75045000,",
-	"75043000,78044000,66045000,66017000,",
-	"77046000,",
-	"3001000,",
-	"42045000,80044000,80046000,81043000,",
-	"80044000,80011000,",
-	"44046000,44011000,",
-	"57046000,84043000,85044000,",
-	"57045000,83044000,114050000,",
-	"83043000,83011000,",
-	"52029000,52011000,",
-	"45029000,45030000,",
-	"25030000,25056000,25043000,20039000,92044000,92027000,",
-	"25001000,",
-	"23001000,",
-	"95045000,95073000,95023000,72030000,72056000,",
-	"88046000,93043000,94045000,",
-	"92046000,92027000,92011000,",
-	"92046000,92027000,92023000,95045309,95003309,95073309,611045000,",
-	"94046000,94011000,92027000,91044000,",
-	"66044000,66011000,",
-	"66048000,72044000,72017000,98029000,98045000,98073000,",
-	"97046000,97072000,99044000,",
-	"98050000,98073000,301043000,301023000,100043000,",
-	"301044000,301023000,301011000,99044000,302071159,33071000,101047000,101022000,",
-	"100046000,100071000,100011000,",
-	"103030000,103074000,103011000,",
-	"102029000,102038000,104030000,618046114,619046115,64046000,",
-	"103029000,103074000,105030000,",
-	"104029000,104011000,103074000,",
-	"64029000,65044000,108043000,",
-	"131046000,132049000,133047000,134048000,135029000,136050000,137043000,138044000,139045000,61030000,",
-	"556043095,556045095,556046095,556047095,556048095,556049095,556050095,556029095,556030095,106043000,626044000,",
-	"69046000,113045000,113075000,",
-	"71044000,20039000,",
-	"70045000,50030040,50039040,50056040,53030050,45030000,",
-	"131049000,132045000,133043000,134050000,135048000,136047000,137044000,138030000,139029000,140046000,",
-	"109046000,109011000,109109000,",
-	"84048000,",
-	"116049000,",
-	"115047000,593030000,",
-	"118049000,660041233,660042233,660069233,660047233,661041332,303041000,21039332,596039000,",
-	"72030000,117029000,",
-	"69045000,69011000,653043000,65307000,",
-	"69045000,74043000,",
-	"74043000,74011000,653045000,653007000,",
-	"123047000,660041233,660042233,660069233,660049233,303041000,596039000,124077000,126028000,129040000,",
-	"122044000,124043000,124077000,126028000,129040000,",
-	"123044000,125047000,125036000,128048000,128037000,128030000,126028000,129040000,",
-	"124046000,124077000,126045000,126028000,127043000,127017000,",
-	"125046000,125023000,125011000,124077000,610030000,610039000,",
-	"125044000,125011000,125017000,124077000,126028000,",
-	"124045000,124029000,124077000,129046000,129030000,129040000,126028000,",
-	"128044000,128029000,124077000,130043000,130019000,130040000,130003000,126028000,",
-	"129044000,124077000,126028000,",
-	"107044000,132048000,133050000,134049000,135047000,136029000,137030000,138045000,139046000,112043000,",
-	"107050000,131029000,133045000,134046000,135044000,136049000,137047000,138043000,139030000,112048000,",
-	"107029000,131030000,132044000,134047000,135049000,136043000,137045000,138050000,139048000,112046000,",
-	"107047000,131045000,132050000,133048000,135043000,136030000,137046000,138029000,139044000,112049000,",
-	"107045000,131048000,132030000,133046000,134043000,136044000,137049000,138047000,139050000,112029000,",
-	"107043000,131044000,132029000,133049000,134030000,135046000,137050000,138048000,139047000,112045000,",
-	"107048000,131047000,132046000,133030000,134029000,135050000,136045000,138049000,139043000,112044000,",
-	"107030000,131043000,132047000,133029000,134044000,135045000,136046000,137048000,139049000,112050000,",
-	"107049000,131050000,132043000,133044000,134045000,135030000,136048000,137029000,138046000,112047000,",
-	"112045000,112011000,"
-	};
+#	Adventure vocabulary & encryption
+const	MAXWC :=	301;
+var	wc: wac[] :=
+{
+	{"spelunker today",1016},
+	{"?",		3051},
+	{"above",	29},
+	{"abra",	3050},
+	{"abracadabra",	3050},
+	{"across",	42},
+	{"ascend",	29},
+	{"attack",	2012},
+	{"awkward",	26},
+	{"axe",		1028},
+	{"back",	8},
+	{"barren",	40},
+	{"bars",	1052},
+	{"batteries",	1039},
+	{"battery",	1039},
+	{"beans",	1024},
+	{"bear",	1035},
+	{"bed",		16},
+	{"bedquilt",	70},
+	{"bird",	1008},
+	{"blast",	2023},
+	{"blowup",	2023},
+	{"bottle",	1020},
+	{"box",		1055},
+	{"break",	2028},
+	{"brief",	2026},
+	{"broken",	54},
+	{"building",	12},
+	{"cage",	1004},
+	{"calm",	2010},
+	{"canyon",	25},
+	{"capture",	2001},
+	{"carpet",	1040},
+	{"carry",	2001},
+	{"catch",	2001},
+	{"cave",	67},
+	{"cavern",	73},
+	{"chain",	1064},
+	{"chant",	2003},
+	{"chasm",	1032},
+	{"chest",	1055},
+	{"clam",	1014},
+	{"climb",	56},
+	{"close",	2006},
+	{"cobblestone",	18},
+	{"coins",	1054},
+	{"continue",	2011},
+	{"crack",	33},
+	{"crap",	3079},
+	{"crawl",	17},
+	{"cross",	69},
+	{"d",		30},
+	{"damn",	3079},
+	{"damnit",	3079},
+	{"dark",	22},
+	{"debris",	51},
+	{"depression",	63},
+	{"descend",	30},
+	{"describe",	57},
+	{"detonate",	2023},
+	{"devour",	2014},
+	{"diamonds",	1051},
+	{"dig",		3066},
+	{"discard",	2002},
+	{"disturb",	2029},
+	{"dome",	35},
+	{"door",	1009},
+	{"down",	30},
+	{"downstream",	4},
+	{"downward",	30},
+	{"dragon",	1031},
+	{"drawing",	1029},
+	{"drink",	2015},
+	{"drop",	2002},
+	{"dump",	2002},
+	{"dwarf",	1017},
+	{"dwarves",	1017},
+	{"e",		43},
+	{"east",	43},
+	{"eat",		2014},
+	{"egg",		1056},
+	{"eggs",	1056},
+	{"emerald",	1059},
+	{"enter",	3},
+	{"entrance",	64},
+	{"examine",	57},
+	{"excavate",	3066},
+	{"exit",	11},
+	{"explore",	2011},
+	{"extinguish",	2008},
+	{"fee",		2025},
+	{"fee",		3001},
+	{"feed",	2021},
+	{"fie",		2025},
+	{"fie",		3002},
+	{"fight",	2012},
+	{"figure",	1027},
+	{"fill",	2022},
+	{"find",	2019},
+	{"fissure",	1012},
+	{"floor",	58},
+	{"foe",		2025},
+	{"foe",		3003},
+	{"follow",	2011},
+	{"foo",		2025},
+	{"foo",		3004},
+	{"food",	1019},
+	{"forest",	6},
+	{"fork",	77},
+	{"forward",	7},
+	{"free",	2002},
+	{"fuck",	3079},
+	{"fum",		2025},
+	{"fum",		3005},
+	{"get",		2001},
+	{"geyser",	1037},
+	{"giant",	27},
+	{"go",		2011},
+	{"gold",	1050},
+	{"goto",	2011},
+	{"grate",	1003},
+	{"gully",	13},
+	{"h2o",		1021},
+	{"hall",	38},
+	{"headlamp",	1002},
+	{"help",	3051},
+	{"hill",	2},
+	{"hit",		2012},
+	{"hocus",	3050},
+	{"hole",	52},
+	{"hours",	2031},
+	{"house",	12},
+	{"ignite",	2023},
+	{"in",		19},
+	{"info",	3142},
+	{"information",	3142},
+	{"inside",	19},
+	{"inventory",	2020},
+	{"inward",	19},
+	{"issue",	1016},
+	{"jar",		1020},
+	{"jewel",	1053},
+	{"jewelry",	1053},
+	{"jewels",	1053},
+	{"jump",	39},
+	{"keep",	2001},
+	{"key",		1001},
+	{"keys",	1001},
+	{"kill",	2012},
+	{"knife",	1018},
+	{"knives",	1018},
+	{"lamp",	1002},
+	{"lantern",	1002},
+	{"leave",	11},
+	{"left",	36},
+	{"light",	2007},
+	{"lock",	2006},
+	{"log",		2032},
+	{"look",	57},
+	{"lost",	3068},
+	{"low",		24},
+	{"machine",	1038},
+	{"magazine",	1016},
+	{"main",	76},
+	{"message",	1036},
+	{"ming",	1058},
+	{"mirror",	1023},
+	{"mist",	3069},
+	{"moss",	1040},
+	{"mumble",	2003},
+	{"n",		45},
+	{"ne",		47},
+	{"nest",	1056},
+	{"north",	45},
+	{"nothing",	2005},
+	{"nowhere",	21},
+	{"nugget",	1050},
+	{"null",	21},
+	{"nw",		50},
+	{"off",		2008},
+	{"office",	76},
+	{"oil",		1022},
+	{"on",		2007},
+	{"onward",	7},
+	{"open",	2004},
+	{"opensesame",	3050},
+	{"oriental",	72},
+	{"out",		11},
+	{"outdoors",	32},
+	{"outside",	11},
+	{"over",	41},
+	{"oyster",	1015},
+	{"passage",	23},
+	{"pause",	2030},
+	{"pearl",	1061},
+	{"persian",	1062},
+	{"peruse",	2027},
+	{"pillow",	1010},
+	{"pirate",	1030},
+	{"pit",		31},
+	{"placate",	2010},
+	{"plant",	1024},
+	{"plant",	1025},
+	{"platinum",	1060},
+	{"plover",	71},
+	{"plugh",	65},
+	{"pocus",	3050},
+	{"pottery",	1058},
+	{"pour",	2013},
+	{"proceed",	2011},
+	{"pyramid",	1060},
+	{"quit",	2018},
+	{"rations",	1019},
+	{"read",	2027},
+	{"release",	2002},
+	{"reservoir",	75},
+	{"retreat",	8},
+	{"return",	8},
+	{"right",	37},
+	{"road",	2},
+	{"rock",	15},
+	{"rod",		1005},
+	{"rod",		1006},
+	{"room",	59},
+	{"rub",		2016},
+	{"rug",		1062},
+	{"run",		2011},
+	{"s",		46},
+	{"save",	2030},
+	{"say",		2003},
+	{"score",	2024},
+	{"se",		48},
+	{"secret",	66},
+	{"sesame",	3050},
+	{"shadow",	1027},
+	{"shake",	2009},
+	{"shard",	1058},
+	{"shatter",	2028},
+	{"shazam",	3050},
+	{"shell",	74},
+	{"shit",	3079},
+	{"silver",	1052},
+	{"sing",	2003},
+	{"slab",	61},
+	{"slit",	60},
+	{"smash",	2028},
+	{"snake",	1011},
+	{"south",	46},
+	{"spelunker",	1016},
+	{"spice",	1063},
+	{"spices",	1063},
+	{"stairs",	10},
+	{"stalactite",	1026},
+	{"steal",	2001},
+	{"steps",	1007},
+	{"steps",	34},
+	{"stop",	3139},
+	{"stream",	14},
+	{"strike",	2012},
+	{"surface",	20},
+	{"suspend",	2030},
+	{"sw",		49},
+	{"swim",	3147},
+	{"swing",	2009},
+	{"tablet",	1013},
+	{"take",	2001},
+	{"tame",	2010},
+	{"throw",	2017},
+	{"toss",	2017},
+	{"tote",	2001},
+	{"touch",	57},
+	{"travel",	2011},
+	{"treasure",	1055},
+	{"tree",	3064},
+	{"trees",	3064},
+	{"trident",	1057},
+	{"troll",	1033},
+	{"troll",	1034},
+	{"tunnel",	23},
+	{"turn",	2011},
+	{"u",		29},
+	{"unlock",	2004},
+	{"up",		29},
+	{"upstream",	4},
+	{"upward",	29},
+	{"utter",	2003},
+	{"valley",	9},
+	{"vase",	1058},
+	{"velvet",	1010},
+	{"vending",	1038},
+	{"view",	28},
+	{"volcano",	1037},
+	{"w",		44},
+	{"wake",	2029},
+	{"walk",	2011},
+	{"wall",	53},
+	{"water",	1021},
+	{"wave",	2009},
+	{"west",	44},
+	{"xyzzy",	62},
+	{"y2",		55}
+};
 
-var caveend: [uint8][] :=
-	{
-	"000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	"6000,6000,7000,8000,4000,0000,0000,5000,9150,1150,4150,5150,3150,3150,9000,5000,",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	",",
-	","
-	};
+#	binary search
+sub binary(w: [uint8], wctable: [wac], maxwc: uint16): (ret: int16) is
+	var lo: uint16;
+	var mid: uint16;
+	var hi: uint16;
+	var check: int8;
+	var pwc: [wac];
 
-#	Utility Routines --------------------------------------
+	lo := 0;
+	hi := maxwc - 1;
+	while lo <= hi loop
+		mid := (lo + hi) / 2;
+		pwc := wctable + 4 * mid;
+		check := strcmp(w, [pwc].aword);
+
+		if check == -1 then
+			hi := mid - 1;
+		elseif check == 1 then
+			lo := mid + 1;
+		else
+			ret := mid as int16;
+			return;
+		end if;
+	end loop;
+	ret := -1;
+end sub;
+
+#	look-up vocabulary word in lex-ordered table.  words may have
+#	two entries with different codes. if minimum acceptable value
+#	= 0, then return minimum of different codes.  last word CANNOT
+#	have two entries(due to binary sort).
+#	word is the word to look up.
+#	val  is the minimum acceptable value,
+#		if != 0 return %1000
+sub vocab(word: [uint8], val: uint16): (ret: int16) @extern("vocab") is
+	var v1: int16;
+	var v2: int16;
+
+	v1 := binary(word, &wc[0], MAXWC);
+	
+	if v1 >= 0 then
+		v2 := binary(word, &wc[0], MAXWC-1);
+		if v2 < 0 then
+			v2 := v1;
+		end if;
+		if val == 0 then
+			if wc[v1 as uint16].acode < wc[v2 as uint16].acode then
+				ret := wc[v1 as uint16].acode as int16;
+			else
+				ret := wc[v2 as uint16].acode as int16;
+			end if;
+		else
+			if val <= wc[v1 as uint16].acode then
+				ret := (wc[v1 as uint16].acode % 1000) as int16;
+			elseif val <= wc[v2 as uint16].acode then
+				ret := (wc[v2 as uint16].acode % 1000) as int16;
+			else
+				ret := -1;
+			end if;
+		end if;
+	else
+		ret := -1;
+	end if;
+end sub;
+
+sub vocab_ivfoo(): (ret: uint8) @extern("vocab_ivfoo") is
+	ret := vocab(&word1[0], 3000) as uint8;
+end sub;
+
+#	Routine to analyze a word.
+sub analyze(word: [uint8]): (valid: uint8, type: int16, value: int16) @extern("analyze") is
+	var	wordval: int16;
+	var	msg: uint8;
+
+	# make sure I understand
+	wordval := vocab(word, 0);
+
+	if wordval == -1 then
+		case (xrnd() % 3) is
+		when 0:
+			msg := 60;
+		when 1:
+			msg := 61;
+		when else:
+			msg := 13;
+		end case;
+		rspeak(msg);
+		valid := 0;
+		type := -1;
+		value := -1;
+	else
+		valid := 1;
+		type := wordval/1000;
+		value := wordval%1000;
+	end if;
+end sub;
+
+# called by doobj & vread
+sub I_see_no() extern("I_see_no") is
+	var	wtype: int16;
+	var	wval: int16;
+	var	valid: uint8;
+
+      	(valid, wtype, wval) := analyze(&word1[0]);
+	if valid == 1 then
+		print("I see no ");
+		if wtype == 1 then
+			print(&word1[0]);
+		else
+			print(&word2[0]);
+		end if;
+       		print(" here.\n");
+	end if;
+end sub;
+
+#	Routine to indicate no reasonable
+#	object for verb found.  Used mostly by
+#	intransitive verbs.
+sub needobj() @extern("needobj") is
+	var	wtype: int16;
+	var	wval: int16;
+	var	valid: uint8;
+
+	(valid, wtype, wval) := analyze(&word1[0]);
+
+	if valid == 1 then
+		if wtype == 2 then
+			print(&word1[0]);
+		else
+			print(&word2[0]);
+		end if;
+		print(" what?\n");
+	end if;
+end sub;
+
+#	SAY etc.
+sub vsay() is
+	var	wtype: int16;
+	var	wval: int16;
+	var	valid: uint8;
+
+	(valid, wtype, wval) := analyze(&word1[0]);
+	if valid == 1 then
+		print("Okay.\n");
+		if wval == SAY then		
+			print(&word2[0]);
+		else
+			print(&word1[0]);
+		end if;
+	end if;
+end sub;
+
+#	READ etc.
+sub vread(object: int16, closed: int16, verb: int16) @extern("vread") is
+	var	msg: uint8;
+	var	valid: uint8;
+
+	msg := 0;
+	if dark() == 1 then
+		I_see_no();
+		return;
+	end if;
+	case object is
+	when MAGAZINE:
+		msg := 190;
+	when TABLET:
+		msg := 196;
+	when MESSAGE:
+		msg := 191;
+	when OYSTER:
+		if toting(OYSTER) != 0 and closed != 0 then
+			valid := yes(192,193,54);
+			return;
+		end if;
+	when else:
+	end case;
+	if msg > 0 then
+		rspeak(msg);
+	else
+		actspk(verb as uint16);
+	end if;
+end sub;
+
+#	INVENTORY 
+sub inventory() is
+	var	msg: uint8;
+	var	i: uint16;
+
+	msg := 98;
+	i := 1;
+	while i <= MAXOBJ loop
+		if i == BEAR or toting(i) == 0 then
+			i := i + 1;
+			continue;
+		end if;
+		if msg > 0 then
+			rspeak(99);
+		end if;
+		msg := 0;
+		pspeak(i as uint8 ,-1);
+		i := i + 1;
+	end loop;
+	if toting(BEAR) == 1 then
+		msg := 141;
+	end if;
+	if msg > 0 then
+		rspeak(msg);
+	end if;
+end sub;
+
+#	Routines to process intransitive verbs
+sub itverb(verb: int16, object: int16, closed: int16) @extern("itverb") is
+	var v := verb;
+
+	if v == DROP or v == SAY or v == WAVE or v == CALM or v == RUB or v == THROW or v == FIND or v == FEED or v == BREAK then v := WAKE; 
+	elseif v == OPEN then v := LOCK;
+	elseif v == ON or v == OFF then v := POUR;
+	end if;
+	case v is
+	#when DROP:
+	#when SAY:
+	#when WAVE:
+	#when CALM:
+	#when RUB:
+	#when THROW:
+	#when FIND:
+	#when FEED:
+	#when BREAK:
+	when WAKE:
+		needobj();
+	when TAKE:
+		ivtake();
+	#when OPEN:
+	when LOCK:
+		ivopen();
+	when NOTHING:
+		rspeak(54);
+	#when ON:
+	#when OFF:
+	when POUR:
+		trverb(verb, object, closed);
+	when WALK:
+		actspk(verb as uint16);
+	when KILL:
+		ivkill();
+	when EAT:
+		iveat();
+	when DRINK:
+		ivdrink();
+	when QUIT:
+		ivquit();
+	when FILL:
+		ivfill();
+	when BLAST:
+		vblast();
+	when SCORE:
+		score();
+	when FOO:
+		ivfoo();
+	when SUSPEND:
+		set_saveflg(1);
+	when INVENTORY:
+		inventory();
+	when READ:
+		ivread();
+	when else:
+		print("This intransitive not implemented yet\n");
+	end case;
+end sub;
+
+#	Routine to process a transitive verb
+@impl sub trverb is
+	var v := verb;
+
+	if v == CALM or v == WALK or v == QUIT or v == SCORE or v == FOO or v == BRIEF or v == SUSPEND or v == HOURS then v := LOG;
+	elseif v == OPEN then v := LOCK;
+	elseif v == FIND then v := INVENTORY;
+	end if;
+	case v is
+	#when CALM:
+	#when WALK:
+	#when QUIT:
+	#when SCORE:
+	#when FOO:
+	#when BRIEF:
+	#when SUSPEND:
+	#when HOURS:
+	when LOG:
+		actspk(verb as uint16);
+	when TAKE:
+		vtake();
+	when DROP:
+		vdrop();
+	#when OPEN:
+	when LOCK:
+		vopen();
+	when SAY:
+		vsay();
+	when NOTHING:
+		rspeak(54);
+	when ON:
+		von();
+	when OFF:
+		voff();
+	when WAVE:
+		vwave();
+	when KILL:
+		vkill();
+	when POUR:
+		vpour();
+	when EAT:
+		veat();
+	when DRINK:
+		vdrink();
+	when RUB:
+		if object != LAMP then
+			rspeak(76);
+		else
+			actspk(RUB);
+		end if;
+	when THROW:
+		vthrow();
+	when FEED:
+		vfeed();
+	#when FIND:
+	when INVENTORY:
+		vfind();
+	when FILL:
+		vfill();
+	when READ:
+		vread(object, closed, verb);
+	when BLAST:
+		vblast();
+	when BREAK:
+		vbreak();
+	when WAKE:
+		vwake();
+	when else:
+		print("This verb is not implemented yet.\n");
+	end case;
+end sub;
+
+# file I/O support ---------------------------------------------------------
+
+record CpmFCB is
+	dr: uint8;
+	f: uint8[11];
+	ex: uint8;
+	s1: uint8;
+	s2: uint8;
+	rc: uint8;
+	d: uint8[16];
+	cr: uint8;
+	r: uint16;
+	r2: uint8;
+end record;
+
+record FCB is
+	bufferptr: uint8; # byte just read
+	dirty: uint8;
+	cpm: CpmFCB;
+	buffer: uint8[128];
+end record;
+
+var	fd1: FCB;
+var	fd2: FCB;
+var	fd3: FCB;
+var	fd4: FCB;
+
+sub closefiles() is
+	var sts: uint8;
+	sts := FCBClose(&fd1);
+	sts := FCBClose(&fd2);
+	sts := FCBClose(&fd3);
+	sts := FCBClose(&fd4);
+end sub;
+
+#	Open advent?.txt files
+sub opentxt() is
+	var sts: uint8;
+
+	sts := FCBOpenIn(&fd1, "advent1.txt");
+	if sts != 0 then
+		print("Sorry, I can't open advent1.txt...\n");
+		exit();
+	end if;
+	sts := FCBOpenIn(&fd2, "advent2.txt");
+	if sts != 0 then
+		print("Sorry, I can't open advent2.txt...\n");
+		exit();
+	end if;
+	sts := FCBOpenIn(&fd3, "advent3.txt");
+	if sts != 0 then
+		print("Sorry, I can't open advent3.txt...\n");
+		exit();
+	end if;
+	sts := FCBOpenIn(&fd4, "advent4.txt");
+	if sts != 0 then
+		print("Sorry, I can't open advent4.txt...\n");
+		exit();
+	end if;
+end sub;
+
+# ---------------------------------------------------------
+
+const	MAXLOC :=	140;
+
+var    idx1: uint32[MAXLOC] := {
+        3,160,304,367,448,
+        507,564,689,855,980,
+        1086,1333,1385,1567,1694,
+        2033,2083,2224,2332,2415,
+        2472,2496,2525,2647,2770,
+        2894,2963,3029,3125,3164,
+        3274,3282,3314,3490,3547,
+        4023,4151,4229,4335,4477,
+        4574,4733,4793,4853,4913,
+        4973,4986,4999,5012,5072,
+        5132,5192,5252,5312,5325,
+        5385,5398,5581,5594,5691,
+        5863,5977,6045,6058,6270,
+        6398,6557,6892,7187,7242,
+        7302,7447,7512,7532,7688,
+        7744,7803,7896,7953,8065,
+        8125,8139,8153,8213,8273,
+        8287,8301,8361,8516,8589,
+        8643,8818,9043,9096,9154,
+        9364,9499,9698,9944,10149,
+        10283,10357,10504,10769,10834,
+        10888,11197,11262,11328,11802,
+        12278,12486,12553,12884,12899,
+        13652,14160,14346,14427,14494,
+        14561,14628,14722,14818,15026,
+        15215,16503,16733,16843,16980,
+        17180,17247,17312,17379,17446,
+        17511,17576,17641,17708,17773
+        };
+
+var    idx2: uint32[MAXLOC] := {
+        3,35,62,89,110,
+        131,152,184,209,237,
+        265,292,344,372,404,
+        433,483,519,554,586,
+        644,668,697,736,760,
+        784,853,919,1015,1054,
+        1164,1172,1204,1224,1281,
+        1310,1339,1417,1523,1554,
+        1651,1692,1752,1812,1872,
+        1932,1946,1960,1974,2034,
+        2094,2154,2214,2274,2288,
+        2348,2362,2390,2404,2501,
+        2538,2575,2643,2657,2689,
+        2817,2850,2889,2914,2969,
+        3029,3077,3142,3162,3214,
+        3270,3329,3422,3479,3591,
+        3651,3665,3679,3739,3799,
+        3813,3827,3887,3918,3991,
+        4045,4091,4117,4170,4228,
+        4265,4290,4319,4347,4370,
+        4398,4424,4452,4479,4544,
+        4598,4623,4688,4715,4745,
+        4775,4809,4876,4902,4917,
+        4954,4991,5024,5057,5124,
+        5191,5258,5291,5316,5345,
+        5386,5421,5457,5491,5528,
+        5556,5623,5688,5755,5822,
+        5887,5952,6017,6084,6149
+        };
+
+var    idx3: uint32[MAXOBJ] := {
+        3,63,153,208,274,
+        355,436,524,636,770,
+        833,889,981,1110,1200,
+        1377,1469,1473,1477,1522,
+        1640,1668,1693,1709,2151,
+        2315,2335,2424,2518,2541,
+        2557,2780,3020,3196,3250,
+        3451,3643,3674,3821,3924,
+        3952,3956,3960,3964,3968,
+        3972,3976,3980,3984,3988,
+        4062,4112,4166,4223,4269,
+        4329,4444,4509,4733,4812,
+        4891,4957,5072,5120,0,
+	0,0,0,0,0,
+	0,0,0,0,0,
+	0,0,0,0,0,
+	0,0,0,0,0,
+	0,0,0,0,0,
+	0,0,0,0,0,
+	0,0,0,0,0
+        };
+
+const	MAXMSG :=	201;
+
+var    idx4: uint32[MAXMSG] := {
+        3,485,537,655,716,
+        760,785,810,842,884,
+        959,1073,1119,1148,1194,
+        1301,1376,1427,1465,1580,
+        1631,1796,1832,1891,1924,
+        1950,2060,2113,2152,2180,
+        2276,2298,2318,2371,2398,
+        2427,2458,2487,2520,2545,
+        2571,2666,2687,2698,2735,
+        2790,2855,2886,2947,2979,
+        3033,4327,4342,4359,4366,
+        4397,4485,4609,4659,4781,
+        4809,4819,4860,5032,5394,
+        5717,5810,5842,5874,6040,
+        6067,6104,6138,6268,6306,
+        6401,6444,6492,6517,6531,
+        6546,6717,6921,7054,7171,
+        7312,7372,7385,7398,7411,
+        7424,7493,7566,7613,7665,
+        7708,7780,7820,7854,7900,
+        7990,8033,8097,8170,8214,
+        8248,8306,8345,8382,8408,
+        8434,8488,8565,8630,8733,
+        8804,8874,8991,9059,9129,
+        9197,9267,9328,9391,9592,
+        9688,9825,9892,10117,10254,
+        10373,10503,10712,10986,11202,
+        11294,11474,11518,11577,11649,
+        11685,11741,13063,13100,13156,
+        13229,13270,13293,13333,13418,
+        13474,13542,13605,13672,13793,
+        13807,13937,14078,14222,14291,
+        14332,14382,14619,14759,14830,
+        14889,14950,15008,15134,15178,
+        15210,15242,15272,15333,15368,
+        15395,15442,15509,15564,15737,
+        15780,15800,15870,16064,16101,
+        16236,16564,16636,16719,16820,
+        16873,16945,17067,17195,17238,
+        17274,17335,17433,17502,17612,
+        17637
+        };
+
+const EOF := 0x1A;
+
+#	Function to scan a file up to a specified
+#	point and either print or return a string.
+sub rdupto(fdi: [FCB], uptoc: uint8, print: uint8, str: [uint8]) is
+	var ch: uint8;
+	ch := FCBGetChar(fdi);
+	while ch != uptoc loop
+		if ch == EOF or ch == 0 then
+			return;
+#		elseif ch == '\n' then
+#			ch := FCBGetChar(fdi);
+#			continue;
+		elseif print == 1 then
+			print_char(ch);
+		else
+			[str] := ch; str := str + 1;
+		end if;
+		ch := FCBGetChar(fdi);
+	end loop;
+	if print == 0 then
+		[str] := 0;
+	end if;
+end sub;
+
+#	Function to read a file skipping
+#	a given character a specified number
+#	of times, with or without repositioning
+#	the file.
+sub rdskip(fdi: [FCB], skipc: uint8, n: uint16, rewind: uint8) is
+	var ch: uint8;
+	if rewind == 1 then
+		FCBSeek(fdi, 0);
+	end if;
+	while n > 0 loop
+ 		ch := FCBGetChar(fdi);
+		while ch != skipc loop
+			if ch == EOF or ch == 0 then
+				bug(32);
+			end if;
+			ch := FCBGetChar(fdi);
+		end loop;
+		n := n - 1;
+	end loop;
+end sub;
+
+#	Print a location description from "advent4.txt"
+@impl sub rspeak is
+	if msg == 54 then
+		print("ok.\n");
+	else 
+		if get_dbugflg() == 1 then
+			print("Seek loc msg #");
+			print(itoa(msg as int16));
+			print(" @ ");
+			print(ltoa(idx4[msg - 1] as int32));
+		end if;
+		FCBSeek(&fd4, idx4[msg - 1]);
+		rdupto(&fd4, '#', 1, 0);
+	end if;
+end sub;
+
+#	Print an item message for a given state from "advent3.txt"
+@impl sub pspeak is
+	FCBSeek(&fd3, idx3[item - 1]);
+	rdskip(&fd3, '/', (state+2) as uint16, 0);
+	rdupto(&fd3, '/', 1, 0);
+end sub;
+
+#	Print a long location description from "advent1.txt"
+sub desclg(loc: uint8) @extern("desclg") is
+	FCBSeek(&fd1, idx1[loc - 1]);
+	rdupto(&fd1, '#', 1, 0);
+end sub;
+
+#	Print a short location description from "advent2.txt"
+sub descsh(loc: uint8) @extern("descsh") is
+	FCBSeek(&fd2, idx2[loc - 1]);
+	rdupto(&fd2, '#', 1, 0);
+end sub;
+
+#	output adventure word list (motion/0xxx & verb/2xxx) only
+#	6 words/line pausing at 20th line until keyboard active
+sub outwords() @extern("outwords") is
+	var	i: uint16;
+	var	j: uint16;
+	var	line: uint16;
+	var	ch: uint8;
+
+	j := 0;
+	line := 0;
+
+	i := 0;
+	while i < 301 loop
+		if (wc[i].acode < 1000) or ((wc[i].acode < 3000) and (wc[i].acode > 1999)) then
+			print(wc[i].aword);
+			print_char(' ');
+			j := j + 1;
+			if (j == 6) or (i == 300) then
+				j := 0;
+				print_nl();
+				line := line + 1;
+				if line == 20 then
+					line := 0;
+					print("\nHit any key to continue...");
+					ch := get_char();
+				end if;
+			end if;
+		end if;
+		i := i + 1;
+	end loop;
+end sub;
+
+#	Routine true x% of the time.
+sub pct(x: uint16): (ret: uint8) @extern("pct") is
+	if xrnd() % 100 < x then
+		ret := 1;
+	else
+		ret := 0;
+	end if;
+end sub;
+
+#	Routine to request a yes or no answer to a question.
+@impl sub yes is
+	var answer: uint8[80];
+	var n: uint8;
+	var ch: uint8;
+
+	if msg1 > 0 then
+		rspeak(msg1);
+	end if;
+	print_char('>');
+	get_line(&answer[0]);
+	if answer[0] == 'n' or answer[0] == 'N' then
+		if msg3 == 1 then
+			rspeak(msg3);
+		end if;
+		ret := 0;
+	end if;
+	if msg2 == 1 then
+		rspeak(msg2);
+	end if;
+	ret := 1;
+end sub;
+
+#	Routine to destroy an object
+sub dstroy(obj: uint16) @extern("dstroy") is
+	move(obj, 0);
+end sub;
+
+#	Juggle an object, currently a no-op
+sub juggle(loc: uint16) @extern("juggle") is
+end sub;
+
+#	routine to move an object and return a
+#	value used to set the negated prop values
+#	for the repository.
+sub put(obj: uint16, where: int16, pval: int16): (ret: int16) @extern("put") is
+	move(obj, where);
+	ret := -pval-1;
+end sub;
+
+#	Convert  0 to WATER
+#		 1 to nothing
+#		 2 to OIL
+sub liq2(pbottle: uint16): (ret: uint16) @extern("liq2") is
+	ret := (1 - pbottle) * WATER + (pbottle >> 1) * (WATER + OIL);
+end sub;
+
+#	The player tried a poor move option.
+sub badmove(motion: int16, verb: int16) @extern("badmove") is
+	var	msg: uint8;
+
+	msg := 12;
+	if motion >= 43 and motion <= 50 then msg := 9; end if;
+	if motion == 29 or motion == 30 then msg := 9; end if;
+	if motion == 7 or motion == 36 or motion == 37 then msg := 10;  end if;
+	if motion == 11 or motion == 19 then msg := 11;  end if;
+	if verb == FIND or verb == INVENTORY then msg := 59; end if;
+	if motion == 62 or motion == 65 then msg := 42; end if;
+	if motion == 17 then msg := 80; end if;
+	rspeak(msg);
+end sub;
+
+#	Routine to process an object being referred to.
+sub trobj(verb: int16, object: int16, closed: int16) @extern("trobj") is
+	var	wtype: int16;
+	var	wval: int16;
+	var	valid: uint8;
+
+	if verb != 0 then
+		trverb(verb, object, closed);
+	else  
+                (valid, wtype, wval) := analyze(&word1[0]);
+		if valid == 1 then
+                	print("What do you want to do with the");
+			if wtype == 1 then
+				print(&word1[0]);
+			else
+				print(&word2[0]);
+			end if;
+			print_nl();
+		end if;
+	end if;
+end sub;
 
 #	retrieve input line (max 80 chars), convert to lower case
 #	 & rescan for first two words (max. WORDSIZE-1 chars).
@@ -595,7 +1289,7 @@ sub getwords() @extern("getwords") is
 	end loop;
 	word2[n] := 0;
 
-	if dbugflg == 1 then
+	if get_dbugflg() == 1 then
 		print("WORD1 = ");
 		print(&word1[0]);
 		print(" WORD2 = ");
@@ -604,91 +1298,8 @@ sub getwords() @extern("getwords") is
 	end if;
 end sub;
 
-#	Routine to fill travel array for a given location
-sub gettrav(loc: uint8) is
-	var	i: uint8;
-	var	t: int32;
-	var	p1: [uint8];
-	var	q1: [uint8];
-	var	p2: [uint8];
-	var	q2: [uint8];
-	var	buf1: uint8[256];
-	var	buf2: uint8[256];
-	var	aptr: [uint8];
-	var	atrav: uint8[256];
-	var	hasend: uint8 := 1;
-
-	strcpy(&buf1[0], cave[loc - 1]);
-	p1 := &buf1[0];
-
-	strcpy(&buf2[0], caveend[loc - 1]);
-	p2 := &buf2[0];
-
-	if [p2] == ',' then
-		hasend := 0;
-	end if;
-
-	aptr := &atrav[0];
-
-	q1 := rindex(p1, ',');
-	while q1 != 0 loop
-		[q1] := 0;
-		strcpy(aptr, p1);
-		p1 := q1 + 1;
-
-		if hasend == 1 then
-			q2 := rindex(p2, ',');
-			[q2] := 0;
-			strcat(aptr, p2);
-			p2 := q2 + 1;
-		end if;
-
-		q1 := rindex(p1, ',');
-		#print(aptr); print_nl();
-		aptr := aptr + strlen(aptr) + 1;
-	end loop;
-	[aptr] := 0;		
-
-	aptr := &atrav[0];
-
-	i := 0;
-	while i < MAXTRAV loop
-		t := atol(aptr); 	# convert to long int
-		travel[i].tcond := (t % 1000) as int16;
-		t := t / 1000;
-		travel[i].tverb := (t % 1000) as int16;
-		t := t / 1000;
-		travel[i].tdest := (t % 1000) as int16;
-
-		aptr := aptr + strlen(aptr) + 1;
-
-		if [aptr] == 0 then
-			i := i + 1;
-		    	travel[i].tdest := -1;	# end of array
-		    	if dbugflg != 0 then
-				i := 0;
-				while travel[i].tdest != -1 loop
-					print("cave[");
-					print(itoa(loc as int16));
-					print("] = ");
-					print(itoa(travel[i].tdest));
-					print_char(' ');
-					print(itoa(travel[i].tverb));
-					print_char(' ');
-					print(itoa(travel[i].tcond));
-					print_nl();
-					i := i + 1;
-				end loop;
-			end if;
-		    	return;
-		end if;
-		i := i + 1;
-	end loop;
-	bug(33);
-end sub;
-
 #	Analyze a two word sentence
-sub english(): (ret: uint8) is
+sub english(): (ret: uint8) @extern("english") is
 	var	msg: [uint8];
 	var	type1: int16;
 	var	type2: int16;
@@ -696,9 +1307,9 @@ sub english(): (ret: uint8) is
 	var	val2: int16;
 	var	valid: uint8;
 
-	verb := 0;
-	object := 0;
-	motion := 0;
+	set_verb(0);
+	set_object(0);
+	set_motion(0);
 	type2 := -1;
 	val2 := -1;
 	type1 := -1;
@@ -719,8 +1330,8 @@ sub english(): (ret: uint8) is
 	end if;
 
 	if type1 == 2 and val1 == SAY then
-		verb := SAY;	# repeat word & act upon if..	
-		object := 1;
+		set_verb(SAY);	# repeat word & act upon if..	
+		set_object(1);
 		ret := 1;
 		return;
 	end if;
@@ -753,14 +1364,14 @@ sub english(): (ret: uint8) is
 			ret := 0;
 			return;
 		else
-			motion := val1;
+			set_motion(val1);
 		end if;
 	elseif type2 == 0 then
-		motion := val2;
+		set_motion(val2);
 	elseif type1 == 1 then
-		object := val1;
+		set_object(val1);
 		if type2 == 2 then
-			verb := val2;
+			set_verb(val2);
 		end if;
 		if type2 == 1 then
 			print(msg);
@@ -769,9 +1380,9 @@ sub english(): (ret: uint8) is
 			return;
 		end if;
 	elseif type1 == 2 then
-		verb := val1;
+		set_verb(val1);
 		if type2 == 1 then
-			object := val2;
+			set_object(val2);
 		end if;
 		if type2 == 2 then
 			print(msg);
@@ -785,1292 +1396,12 @@ sub english(): (ret: uint8) is
 	ret := 1;
 end sub;
 
-#	ensure uniqueness as objects are searched
-#	out for an intransitive verb
-sub addobj(obj: uint16) is
-	if object1 != 0 then
-		return;
-	end if;
-	if object != 0 then
-		object1 := -1;
-		return;
-	end if;
-	object := obj as int16;
-end sub;
-
-#	Routine to tell if an item is being carried.
-sub toting(item: uint16): (ret: uint8) is
-	if place[item as uint8] == -1 then
-		ret := 1;
-	else
-		ret := 0;
-	end if;
-end sub;
-
-#	Routine to tell if an item is present.
-sub here(item: uint16): (ret: uint8) is
-	if place[item as uint8] == loc or toting(item) == 1 then
-		ret := 1;
-	else
-		ret := 0;
-	end if;
-end sub;
-
-#	Routine to test for darkness
-sub dark(): (ret: uint8) is
-	if ((cond[loc as uint8] & LIGHT) == 0) and (prop[LAMP] == 0 or here(LAMP) == 0) then
-		ret := 1;
-	else
-		ret := 0;
-	end if;
-end sub;
-
-#	Routine to tell if a location causes a forced move.
-sub forced(atloc: uint16): (ret: uint8) is
-	if cond[atloc as uint8] == 2 then
-		ret := 1;
-	else
-		ret := 0;
-	end if;
-end sub;
-
-#	Routine to tell if player is on either side of a two sided object.
-sub at(item: uint16): (ret: uint8) is
-	if place[item as uint8] == loc or fixed[item as uint8] == loc then
-		ret := 1;
-	else
-		ret := 0;
-	end if;
-end sub;
-
-#	Routine to carry an object
-sub carry(obj: uint16, where: int16) is
-	if obj < MAXOBJ then
-		if place[obj as uint8] == -1 then
-			return;
-		end if;
-		place[obj as uint8] := -1;
-		holding := holding + 1;
-	end if;
-end sub;
-
-#	Routine to drop an object
-sub drop(obj: uint16, where: int16) is
-	if obj < MAXOBJ then
-		if place[obj as uint8] == -1 then
-			holding := holding - 1;
-		end if;
-		place[obj as uint8] := where;
-	else
-		fixed[obj as uint8 - MAXOBJ] := where;
-	end if;
-end sub;
-
-#	Routine to move an object
-sub move(obj: uint16, where: int16) @extern("move") is
-	var from: int16;
-	
-	if obj < MAXOBJ then
-		from := place[obj as uint8];
-	else
-		from := fixed[obj as uint8];
-	end if;
-
-	if from > 0 and from <= 300 then
-		carry(obj, from);
-	end if;
-
-	drop(obj, where);
-end sub;
-
-#	Routine to check for presence of dwarves..
-sub dcheck(): (ret: uint8) is
-	var i: uint8;
-
-	i := 1;
-	while i < (DWARFMAX-1) loop
-		if dloc[i] == loc then
-			ret := i; return;
-		end if;
-		i := i + 1;
-	end loop;
-	ret := 0;
-end sub;
-
-#	Determine liquid in the bottle
-sub liq(): (ret: uint16) is
-	var i: int16;
-	var j: int16;
-
-	i := prop[BOTTLE];
-	j := -i - 1;
-	
-	if i > j then
-		ret := liq2(i as uint16);
-	else
-		ret := liq2(j as uint16);
-	end if;
-end sub;
-
-#	Determine liquid at a location
-sub liqloc(loc: uint16): (ret: uint16) is
-	if cond[loc as uint8] & LIQUID != 0 then
-		ret := liq2((cond[loc as uint8] & WATOIL) as uint16);
-	else
-		ret := liq2(1);
-	end if;
-end sub;
-
-#	Routine to indicate no reasonable
-#	object for verb found.  Used mostly by
-#	intransitive verbs.
-sub needobj() @extern("needobj") is
-	var	wtype: int16;
-	var	wval: int16;
-	var	valid: uint8;
-
-	(valid, wtype, wval) := analyze(&word1[0]);
-
-	if valid == 1 then
-		if wtype == 2 then
-			print(&word1[0]);
-		else
-			print(&word2[0]);
-		end if;
-		print(" what?\n");
-	end if;
-end sub;
-
-#	Routine to speak default verb message
-sub actspk(verb: uint16) @extern("actspk") is
-	var	i: int16;
-
-	if verb < 1 or verb > 31 then
-		bug(39);
-	end if;
-	i := actmsg[verb as uint8];
-	if i > 0 then
-		rspeak(i as uint8);
-	end if;
-end sub;
-
-#	scoring
-sub score() @extern("score") is
-	var t: uint8;
-	var i: uint8;
-	var k: uint8;
-	var s: uint8;
-
-	s := 0;
-	t := 0;
-	i := 50;
-	while i <= MAXTRS loop
-		if i == CHEST then
-			k := 14;
-		elseif i > CHEST then
-			k := 16;
-		else 
-			k := 12;
-		end if;
-		if prop[i] >= 0 then
-			t := t + 2;
-		end if;
-		if place[i] == 3 and prop[i] == 0 then
-			t := t + k-2;
-		end if;
-		i := i + 1;
-	end loop;
-	s := t;
-	print("Treasures: ");
-	print(itoa(s as int16));
-	print_nl();
-	t := (MAXDIE - numdie as uint8)*10;
-	if t != 0 then
-		print("Survival: ");
-		print(itoa(t as int16));
-		print_nl();
-	end if;
-	s := s + t;
-	if gaveup == 0 then
-		s := s + 4;
-	end if;
-	if dflag != 0 then
-		t := 25;
-	else
-		t := 0;
-	end if;
-	if t != 0 then
-		print("Getting well in: ");
-		print(itoa(t as int16));
-		print_nl();
-	end if;
-	s := s + t;
-	if closing == 1 then
-		t := 25;
-	else
-		t := 0;
-	end if;
-	if t != 0 then
-		print("Masters section: ");
-		print(itoa(t as int16));
-		print_nl();
-	end if;
-	s := s + t;
-	if closed != 0 then
-		if (bonus == 0) then
-			t := 10;
-		elseif bonus == 135 then
-			t := 25;
-		elseif bonus == 134 then
-			t := 30;
-		elseif bonus == 133 then
-			t := 45;
-		end if;
-		print("Bonus: ");
-		print(itoa(t as int16));
-		print_nl();
-		s := s + t;
-	end if;
-	if place[MAGAZINE] == 108 then
-		s := s + 1;
-	end if;
-	s := s + 2;
-	print("Score: ");
-	print(itoa(s as int16));
-	print_nl();
-end sub;
-
-#	normal end of game
-sub normend() is
-	score();
-	exit();
-end sub;
-
-#	Routine to handle the passing on of one
-#	of the player's incarnations...
-sub death() is
-	var yea: uint8;
-	var i: uint8;
-	var j: uint8;
-	var k: uint8;
-
-	if closing == 0 then
-		yea := yes(81+(numdie as uint8)*2, 82+(numdie as uint8)*2, 54);
-		numdie := numdie + 1;
-		if numdie >= MAXDIE or yea == 0 then
-			normend();
-		end if;
-		place[WATER] := 0;
-		place[OIL] := 0;
-		if toting(LAMP) == 1 then
-			prop[LAMP] := 0;
-		end if;
-		j := 1;
-		while j < 101 loop
-			i := 101 - j;
-			if toting(i as uint16) == 1 then
-				if i == LAMP then
-					drop(i as uint16, 1);
-				else
-					drop(i as uint16, oldloc2);
-				end if;
-			end if;
-			j := j + 1;
-		end loop;
-		newloc := 3;
-		oldloc := loc;
-		return;
-	end if;
-	
-	#   closing -- no resurrection...
-	rspeak(131);
-	numdie := numdie + 1;
-	normend();
-end sub;
-
-#	Routine to handle player's demise via
-#	waking up the dwarves...
-sub dwarfend() is
-	death();
-	normend();
-end sub;
-
-#	DROP etc.
-sub vdrop() @extern("vdrop") is
-	var 	i: int16;
-
-	#   check for dynamite
-	
-	if toting(ROD2) == 1 and object == ROD and toting(ROD) == 0 then
-		object := ROD2;
-	end if;
-	if toting(object as uint16) == 0 then
-		actspk(verb as uint16);
-		return;
-	end if;
-	
-	#   snake and bird
-	
-	if object == BIRD and here(SNAKE) == 1 then
-		rspeak(30);
-		if closed == 1 then
-			dwarfend();
-		end if;
-		dstroy(SNAKE);
-		prop[SNAKE] := -1;
-	#   coins and vending machine
-	elseif object == COINS and here(VEND) == 1 then
-		dstroy(COINS);
-		drop(BATTERIES,loc);
-		pspeak(BATTERIES,0);
-		return;
-	#   bird and dragon (ouch!!)
-	elseif object == BIRD and at(DRAGON) == 1 and prop[DRAGON] == 0 then
-		rspeak(154);
-		dstroy(BIRD);
-		prop[BIRD] := 0;
-		if (place[SNAKE] != 0) then
-			tally2 := tally2 + 1;
-		end if;
-		return;
-	end if;
-	
-	#   Bear and troll
-	
-	if object == BEAR and at(TROLL) == 1 then
-		rspeak(163);
-		move(TROLL,0);
-		move((TROLL+MAXOBJ),0);
-		move(TROLL2,117);
-		move((TROLL2+MAXOBJ),122);
-		juggle(CHASM);
-		prop[TROLL] := 2;
-	#   vase
-	elseif object == VASE then
-		if loc == 96 then
-			rspeak(54);
-		else
-			if at(PILLOW) == 1 then
-				prop[VASE] := 0;
-			else
-				prop[VASE] := 2;
-			end if;
-			pspeak(VASE,prop[VASE] as int8 + 1);
-			if prop[VASE] != 0 then
-				fixed[VASE] := -1;
-			end if;
-		end if;
-	end if;
-	
-	#   handle liquid and bottle
-	
-	i := liq() as int16;
-	if i == object then
-		object := BOTTLE;
-	end if;
-	if object == BOTTLE and i != 0 then
-		place[i as uint8] := 0;
-	end if;
-	
-	#   handle bird and cage
-
-	if object == CAGE and prop[BIRD] != 0 then
-		drop(BIRD,loc);
-	end if;
-	if object == BIRD then
-		prop[BIRD] := 0;
-	end if;
-	drop(object as uint16,loc);
-end sub;
-
-#	FILL
-sub vfill() @extern("vfill") is
-	var	msg: uint8;
-	var	i: uint16;
-
-	case object is
-	when BOTTLE:
-		if liq() != 0 then
-			msg := 105;
-		elseif liqloc(loc as uint16) == 0 then
-			msg := 106;
-		else 
-			prop[BOTTLE] := cond[loc as uint8] & WATOIL;
-			i := liq();
-			if (toting(BOTTLE) == 1) then
-				place[i as uint8] := -1;
-			end if;
-			if i == OIL then
-				msg := 108;
-			else
-				msg := 107;
-			end if;
-		end if;
-	when VASE:
-		if liqloc(loc as uint16) == 0 then
-			msg := 144;
-		else
-			if toting(VASE) == 0 then
-				msg := 29;
-			else
-				rspeak(145);
-				vdrop();
-				return;
-			end if;
-		end if;
-	when else:
-		msg := 29;
-	end case;
-	rspeak(msg);
-end sub;
-
-#	CARRY TAKE etc.
-sub vtake() @extern("vtake") is
-	var	msg: uint8;
-	var	i: uint16;
-
-	if toting(object as uint16) == 1 then
-		actspk(verb as uint16);
-		return;
-	end if;
-	
-	#   special case objects and fixed objects
-
-	msg := 25;
-	if object == PLANT and prop[PLANT] <= 0 then
-		msg := 115;
-	end if;
-	if object == BEAR and prop[BEAR] == 1 then
-		msg := 169;
-	end if;
-	if object == CHAIN and prop[BEAR] != 0 then
-		msg := 170;
-	end if;
-	if fixed[object as uint8] != 0 then
-		rspeak(msg);
-		return;
-	end if;
-
-	#   special case for liquids
-
-	if object == WATER or object == OIL then
-		if here(BOTTLE) == 0 or liq() != object as uint16 then
-			object := BOTTLE;
-			if toting(BOTTLE) == 1 and prop[BOTTLE] == 1 then
-				vfill();
-				return;
-			end if;
-			if prop[BOTTLE] != 1 then
-				msg := 105;
-			end if;
-			if toting(BOTTLE) == 0 then
-				msg := 104;
-			end if;
-			rspeak(msg);
-			return;
-		end if;
-		object := BOTTLE;
-	end if;
-	if holding >= 7 then
-		rspeak(92);
-		return;
-	end if;
-
-	#   special case for bird.
-	
-	if object == BIRD and prop[BIRD] == 0 then
-		if toting(ROD) == 1 then
-			rspeak(26);
-			return;
-		end if;
-		if toting(CAGE) == 0 then
-			rspeak(27);
-			return;
-		end if;
-		prop[BIRD] := 1;
-	end if;
-	if (object == BIRD or object == CAGE) and prop[BIRD] != 0 then
-		carry((BIRD+CAGE)-object as uint16, loc);
-	end if;
-	carry(object as uint16,loc);
-	
-	#   handle liquid in bottle
-	
-	i := liq();
-	if object == BOTTLE and i != 0 then
-		place[i as uint8] := -1;
-	end if;
-	rspeak(54);
-end sub;
-
-#	LOCK, UNLOCK, OPEN, CLOSE etc.
-sub vopen() @extern("vopen") is
-	var	msg: uint8;
-	var	oyclam: uint8;
-
-	case object is
-	when CLAM:
-	when OYSTER:
-		if object == OYSTER then
-			oyclam := 1;
-		else
-			oyclam := 0;
-		end if;
-		if verb == LOCK then
-			msg := 61;
-		elseif toting(TRIDENT) == 0 then
-			msg := 122+oyclam;
-		elseif toting(object as uint16) == 1 then
-			msg := 120+oyclam;
-		else 
-			msg := 124+oyclam;
-			dstroy(CLAM);
-			drop(OYSTER,loc);
-			drop(PEARL,105);
-		end if;
-	when DOOR:
-		if prop[DOOR] == 1 then
-			msg := 54;
-		else
-			msg := 111;
-		end if;
-	when CAGE:
-		msg := 32;
-	when KEYS:
-		msg := 55;
-	when CHAIN:
-		if here(KEYS) == 0 then
-			msg := 31;
-		elseif verb == LOCK then
-			if prop[CHAIN] != 0 then
-				msg := 34;
-			elseif loc != 130 then
-				msg := 173;
-			else 
-				prop[CHAIN] := 2;
-				if toting(CHAIN) == 1 then
-					drop(CHAIN,loc);
-				end if;
-				fixed[CHAIN] :=  -1;
-				msg := 172;
-			end if;
-		else 
-			if prop[BEAR] == 0 then
-				msg := 41;
-			elseif prop[CHAIN] == 0 then
-				msg := 37;
-			else
-				prop[CHAIN] := 0;
-				fixed[CHAIN] := 0;
-				if prop[BEAR] != 3 then
-					prop[BEAR] := 2;
-				end if;
-				fixed[BEAR] := 2-prop[BEAR];
-				msg := 171;
-			end if;
-		end if;
-	when GRATE:
-		if here(KEYS) == 0 then
-			msg := 31;
-		elseif closing == 1 then
-			if panic == 0 then
-				clock2 := 15;
-				panic := panic + 1;
-			end if;
-			msg := 130;
-		else 
-			msg := 34+prop[GRATE] as uint8;
-			if verb == LOCK then
-				prop[GRATE] := 0;
-			else
-				prop[GRATE] := 1;
-			end if;
-			msg := msg + 2*prop[GRATE] as uint8;
-		end if;
-	when else:
-		msg := 33;
-	end case;
-	rspeak(msg);
-end sub;
-
-#	SAY etc.
-sub vsay() @extern("vsay") is
-	var	wtype: int16;
-	var	wval: int16;
-	var	valid: uint8;
-
-	(valid, wtype, wval) := analyze(&word1[0]);
-	if valid == 1 then
-		print("Okay.\n");
-		if wval == SAY then		
-			print(&word2[0]);
-		else
-			print(&word1[0]);
-		end if;
-	end if;
-end sub;
-
-#	Routine to describe current location
-sub describe() is
-	if toting(BEAR) == 1 then
-		rspeak(141);
-	end if;
-	if dark() == 1 then
-		rspeak(16);
-	elseif visited[loc as uint8] == 1 then
-		descsh(loc as uint8);
-	else
-		desclg(loc as uint8);
-	end if;
-	if loc == 33 and pct(25) == 1 and closing == 0 then
-		rspeak(8);
-	end if;
-end sub;
-
-#	ON etc.
-sub von() @extern("von") is
-	if here(LAMP) == 0 then
-		actspk(verb as uint16);
-	elseif limit < 0 then
-		rspeak(184);
-	else 
-		prop[LAMP] := 1;
-		rspeak(39);
-		if wzdark == 1 then
-			wzdark := 0;
-			describe();
-		end if;
-	end if;
-end sub;
-
-#	OFF etc.
-sub voff() @extern("voff") is
-	if here(LAMP) == 0 then
-		actspk(verb as uint16);
-	else
-		prop[LAMP] := 0;
-		rspeak(40);
-	end if;
-end sub;
-
-#	WAVE etc.
-sub vwave() @extern("vwave") is
-	if toting(object as uint16) == 0 and (object != ROD or toting(ROD2) == 0) then
-		rspeak(29);
-	elseif object != ROD or at(FISSURE) == 0 or toting(object as uint16) == 0 or closing == 1 then
-		actspk(verb as uint16);
-	else
-		prop[FISSURE] := 1-prop[FISSURE];
-		pspeak(FISSURE,2-prop[FISSURE] as int8);
-	end if;
-end sub;
-
-#	ATTACK, KILL etc.
-sub vkill() @extern("vkill") is
-	var	msg: uint8;
-	var	i: uint16;
-
-	case object is
-	when BIRD:
-		if closed == 1 then
-			msg := 137;
-		else 
-			dstroy(BIRD);
-			prop[BIRD] := 0;
-			if place[SNAKE] == 19 then
-				tally2 := tally2 + 1;
-			end if;
-			msg := 45;
-		end if;
-	when 0:
-		msg := 44;
-	when CLAM:
-	when OYSTER:
-		msg := 150;
-	when SNAKE:
-		msg := 46;
-	when DWARF:
-		if closed == 1 then
-			dwarfend();
-		end if;
-		msg := 49;
-	when TROLL:
-		msg := 157;
-	when BEAR:
-		msg := 165+(prop[BEAR] as uint8+1)/2;
-	when DRAGON:
-		if prop[DRAGON] != 0 then
-			msg := 167;
-		elseif yes(49,0,0) != 0 then
-			pspeak(DRAGON,1);
-			prop[DRAGON] := 2;
-			prop[RUG] := 0;
-			move((DRAGON+MAXOBJ),-1);
-			move((RUG+MAXOBJ),0);
-			move(DRAGON,120);
-			move(RUG,120);
-			i := 1;
-			while i < MAXOBJ loop
-				if place[i as uint8] == 119 or place[i as uint8] == 121 then
-					move(i,120);
-				end if;
-				i := 1 + 1;
-			end loop;
-			newloc := 120;
-			return;
-		end if;
-	when else:
-		actspk(verb as uint16);
-		return;
-	end case;
-	rspeak(msg);
-end sub;
-
-#	POUR
-sub vpour() @extern("vpour") is
-	if object == BOTTLE or object == 0 then
-		object := liq() as int16;
-	end if;
-	if object == 0 then
-		needobj();
-		return;
-	end if;
-	if toting(object as uint16) == 0 then
-		actspk(verb as uint16);
-		return;
-	end if;
-	if object != OIL and object != WATER then
-		rspeak(78);
-		return;
-	end if;
-	prop[BOTTLE] := 1;
-	place[object as uint8] := 0;
-	if at(PLANT) == 1 then
-		if object != WATER then
-			rspeak(112);
-		else
-			pspeak(PLANT,prop[PLANT] as int8 +1);
-			prop[PLANT] := (prop[PLANT]+2)%6;
-			prop[PLANT2] := prop[PLANT]/2;
-			describe();
-		end if;
-	elseif at(DOOR) == 1 then
-		if object == OIL then
-			prop[DOOR] := 1;
-		else
-			prop[DOOR] := 0;
-		end if;
-		rspeak(113+prop[DOOR] as uint8);
-	else
-		rspeak(77);
-	end if;
-end sub;
-
-#	EAT
-sub veat() @extern("veat") is
-	var	msg: uint8;
-
-	case object is
-	when FOOD:
-		dstroy(FOOD);
-		msg := 72;
-	when BIRD:
-	when SNAKE: 
-	when CLAM: 
-	when OYSTER:
-	when DWARF: 
-	when DRAGON: 
-	when TROLL: 
-	when BEAR:
-		msg := 71;
-	when else:
-		actspk(verb as uint16);
-		return;
-	end case;
-	rspeak(msg);
-end sub;
-
-#	DRINK
-sub vdrink() @extern("vdrink") is
-	if object != WATER then
-		rspeak(110);
-	elseif liq() != WATER or here(BOTTLE) == 0 then
-		actspk(verb as uint16);
-	else 
-		prop[BOTTLE] := 1;
-		place[WATER] := 0;
-		rspeak(74);
-	end if;
-end sub;
-
-#	FEED
-sub vfeed() @extern("vfeed") is
-	var	msg: uint8;
-
-	case object is
-	when BIRD:
-		msg := 100;
-	when DWARF:
-		if here(FOOD) == 0 then
-			actspk(verb as uint16);
-			return;
-		end if;
-		dflag := dflag + 1;
-		msg := 103;
-	when BEAR:
-		if here(FOOD) == 0 then
-			if prop[BEAR] == 0 then
-				msg := 102;
-			elseif prop[BEAR] == 3 then
-				msg := 110;
-			else
-				actspk(verb as uint16);
-				return;
-			end if;
-		else
-			dstroy(FOOD);
-			prop[BEAR] := 1;
-			fixed[AXE] := 0;
-			prop[AXE] := 0;
-			msg := 168;
-		end if;
-	when DRAGON:
-		if prop[DRAGON] != 0 then
-			msg := 110;
-		else
-			msg := 102;
-		end if;
-	when TROLL:
-		msg := 182;
-	when SNAKE:
-		if closed == 1 or here(BIRD) == 0 then
-			msg := 102;
-		else
-			msg := 101;
-			dstroy(BIRD);
-			prop[BIRD] := 0;
-			tally2 := tally2 + 1;
-		end if;
-	when else:
-		msg := 14;
-	end case;
-	rspeak(msg);
-end sub;
-
-#	THROW etc.
-sub vthrow() @extern("vthrow") is
-	var	msg: uint8;
-	var	i: uint8;
-
-	if toting(ROD2) == 1 and object == ROD and toting(ROD) == 0 then
-		object := ROD2;
-	end if;
-	if toting(object as uint16) == 0 then
-		actspk(verb as uint16);
-		return;
-	end if;
-	
-	#   treasure to troll
-	if at(TROLL) == 1 and object >= 50 and object < MAXOBJ then
-		rspeak(159);
-		drop(object as uint16,0);
-		move(TROLL,0);
-		move((TROLL+MAXOBJ),0);
-		drop(TROLL2,117);
-		drop((TROLL2+MAXOBJ),122);
-		juggle(CHASM);
-		return;
-	end if;
-	
-	#   feed the bears...
-	if object == FOOD and here(BEAR) == 1 then
-		object := BEAR;
-		vfeed();
-		return;
-	end if;
-	
-	#   if not axe, same as drop...
-	if object != AXE then
-		vdrop();
-		return;
-	end if;
-	
-	#   AXE is THROWN
-
-	#   at a dwarf...
-	i := dcheck();
-	if i > 0 then
-		msg := 48;
-		if pct(33) == 1 then
-			dseen[i] := 0;
-			dloc[i] := 0;
-			msg := 47;
-			dkill := dkill + 1;
-			if dkill == 1 then
-				msg := 149;
-			end if;
-		end if;
-	#   at a dragon...
-	elseif at(DRAGON) == 1 and prop[DRAGON] == 0 then 
-		msg := 152;
-	#   at the troll...
-	elseif at(TROLL) == 1 then
-		msg := 158;
-	#   at the bear...
-	elseif here(BEAR) == 1 and prop[BEAR] == 0 then
-		rspeak(164);
-		drop(AXE,loc);
-		fixed[AXE] := -1;
-		prop[AXE] := 1;
-		juggle(BEAR);
-		return;
-	#   otherwise it is an attack
-	else 
-		#verb := KILL;
-		object := 0;
-		#itverb();
-		ivkill();	#instead of itverb --> ivkill
-		return;
-	end if;
-	
-	#   handle the left over axe...
-	rspeak(msg);
-	drop(AXE,loc);
-	describe();
-end sub;
-
-#	INVENTORY, FIND etc.
-sub vfind() @extern("vfind") is
-	var	msg: uint8;
-	if toting(object as uint16) == 1 then
-		msg := 24;
-	elseif closed == 1 then
-		msg := 138;
-	elseif dcheck() > 1 and dflag >= 2 and object == DWARF then
-		msg := 94;
-	elseif at(object as uint16) == 1 or (liq() as int16 == object and here(BOTTLE) == 1) or object == liqloc(loc as uint16) as int16 then
-		msg := 94;
-	else 
-		actspk(verb as uint16);
-		return;
-	end if;
-	rspeak(msg);
-end sub;
-
-#	READ etc.
-sub vread() @extern("vread") is
-	var	msg: uint8;
-	var	wtype: int16;
-	var	wval: int16;
-	var	valid: uint8;
-
-	msg := 0;
-	if dark() == 1 then
-		(valid, wtype, wval) := analyze(&word1[0]);
-		if valid == 1 then
-			print("I see no ");
-			if (wtype == 1) then
-				print(&word1[0]);
-			else
-				print(&word2[0]);
-			end if;
-			print(" here.\n");
-		end if;
-		return;
-	end if;
-	case object is
-	when MAGAZINE:
-		msg := 190;
-	when TABLET:
-		msg := 196;
-	when MESSAGE:
-		msg := 191;
-	when OYSTER:
-		if toting(OYSTER) != 0 and closed != 0 then
-			valid := yes(192,193,54);
-			return;
-		end if;
-	when else:
-	end case;
-	if msg > 0 then
-		rspeak(msg);
-	else
-		actspk(verb as uint16);
-	end if;
-end sub;
-
-#	BLAST etc.
-sub vblast() @extern("vblast") is
-	if prop[ROD2] < 0 or closed == 0 then
-		actspk(verb as uint16);
-	else 
-		bonus := 133;
-		if loc == 115 then
-			bonus := 134;
-		end if;
-		if here(ROD2) == 1 then
-			bonus := 135;
-		end if;
-		rspeak(bonus as uint8);
-		normend();
-	end if;
-end sub;
-
-#	BREAK etc.
-sub vbreak() @extern("vbreak") is
-	var	msg: uint8;
-
-	if object == MIRROR then
-		msg := 148;
-		if closed == 1 then
-			rspeak(197);
-			dwarfend();
-		end if;
-	elseif object == VASE and prop[VASE] == 0 then
-		msg := 198;
-		if toting(VASE) == 1 then
-			drop(VASE,loc);
-		end if;
-		prop[VASE] := 2;
-		fixed[VASE] := -1;
-	else 
-		actspk(verb as uint16);
-		return;
-	end if;
-	rspeak(msg);
-end sub;
-
-#	WAKE etc.
-sub vwake() @extern("vwake") is
-	if object != DWARF or closed == 0 then
-		actspk(verb as uint16);
-	else
-		rspeak(199);
-		dwarfend();
-	end if;
-end sub;
-
-#	CARRY, TAKE etc.
-sub ivtake() @extern("ivtake") is
-	var	anobj: uint16;
-	var	item: uint16;
-
-	anobj := 0;
-	item := 1;
-	while item < MAXOBJ loop
-		if place[item as uint8] == loc then
-			if anobj != 0 then
-				needobj();
-				return;
-			end if;
-			anobj := item;
-		end if;
-		item := item + 1;
-	end loop;
-	if anobj==0 or (dcheck() > 0 and dflag >= 2) then
-		needobj();
-		return;
-	end if;
-	object := anobj as int16;
-	vtake();
-end sub;
-
-#	OPEN, LOCK, UNLOCK
-sub ivopen() @extern("ivopen") is
-	if here(CLAM) == 1 then
-		object := CLAM;
-	end if;
-	if here(OYSTER) == 1 then
-		object := OYSTER;
-	end if;
-	if at(DOOR) == 1 then
-		object := DOOR;
-	end if;
-	if at(GRATE) == 1 then
-		object := GRATE;
-	end if;
-	if here(CHAIN) == 1 then
-		if object != 0 then
-			needobj();
-			return;
-		end if;
-		object:=CHAIN;
-	end if;
-	if object==0 then
-		rspeak(28);
-		return;
-	end if;
-	vopen();
-end sub;
-
-#	ATTACK, KILL etc
-@impl sub ivkill is
-	object1 := 0;
-	if dcheck() > 1 and dflag >=2 then
-		object:=DWARF;
-	end if;
-	if here(SNAKE) == 1 then
-		addobj(SNAKE);
-	end if;
-	if at(DRAGON) == 1 and prop[DRAGON]==0 then
-		addobj(DRAGON);
-	end if;
-	if at(TROLL) == 1 then
-		addobj(TROLL);
-	end if;
-	if here(BEAR) == 1 and prop[BEAR]==0 then
-		addobj(BEAR);
-	end if;
-	if object1 != 0 then
-		needobj();
-		return;
-	end if;
-	if object != 0 then
-		vkill();
-		return;
-	end if;
-	if here(BIRD) == 1 and verb!= THROW then
-		object:=BIRD;
-	end if;
-	if here(CLAM) == 1 or here(OYSTER) == 1 then
-		addobj(CLAM);
-	end if;
-	if object1 != 0 then
-		needobj();
-		return;
-	end if;
-	vkill();
-end sub;
-
-#	EAT
-sub iveat() @extern("iveat") is
-	if here(FOOD) == 0 then
-		needobj();
-	else
-		object:=FOOD;
-		veat();
-	end if;
-end sub;
-
-#	DRINK
-sub ivdrink() @extern("ivdrink") is
-	if liqloc(loc as uint16) != WATER and (liq() != WATER or here(BOTTLE) == 0) then
-		needobj();
-	else 
-		object:=WATER;
-		vdrink();
-	end if;
-end sub;
-
-#	QUIT
-sub ivquit() @extern("ivquit") is
-	gaveup := yes(22,54,54) as int16;
-	if gaveup == 1 then
-		normend();
-	end if;
-end sub;
-
-#	FILL
-sub ivfill() @extern("ivfill") is
-	if here(BOTTLE) == 0 then
-		needobj();
-	else 
-		object:=BOTTLE;
-		vfill();
-	end if;
-end sub;
-
-#	Handle fee fie foe foo...
-sub ivfoo() @extern("ivfoo") is
-	var	k: uint8;
-	var	msg: uint8;
-
-	k := vocab(&word1[0],3000) as uint8;
-	msg := 42;
-	if foobar != 1-k as int16 then
-		if foobar != 0 then
-			msg := 151;
-		end if;
-		rspeak(msg);
-		return;
-	end if;
-	foobar := k as int16;
-	if k != 4 then
-		return;
-	end if;
-	foobar := 0;
-	if place[EGGS] == 92 or (toting(EGGS) == 1 and loc == 92) then
-		rspeak(msg);
-		return;
-	end if;
-	if place[EGGS] == 0 and place[TROLL] == 0 and prop[TROLL] == 0 then
-		prop[TROLL] := 1;
-	end if;
-	if here(EGGS) == 1 then
-		k := 1;
-	elseif loc == 92 then
-		k := 0;
-	else
-		k := 2;
-	end if;
-	move(EGGS,92);
-	pspeak(EGGS,k as int8);
-	return;
-end sub;
-
-#	read etc...
-sub ivread() @extern("ivread") is
-	if here(MAGAZINE) == 1 then
-		object := MAGAZINE;
-	end if;
-	if here(TABLET) == 1 then
-		object := object*100 + TABLET;
-	end if;
-	if here(MESSAGE) == 1 then
-		object := object*100 + MESSAGE;
-	end if;
-	if object > 100 or object == 0 or dark() == 1 then
-		needobj();
-		return;
-	end if;
-	vread();
-end sub;
-
-#	INVENTORY 
-sub inventory() @extern("inventory") is
-	var	msg: uint8;
-	var	i: uint16;
-
-	msg := 98;
-	i := 1;
-	while i <= MAXOBJ loop
-		if i == BEAR or toting(i) == 0 then
-			i := i + 1;
-			continue;
-		end if;
-		if msg > 0 then
-			rspeak(99);
-		end if;
-		msg := 0;
-		pspeak(i as uint8 ,-1);
-		i := i + 1;
-	end loop;
-	if toting(BEAR) == 1 then
-		msg := 141;
-	end if;
-	if msg > 0 then
-		rspeak(msg);
-	end if;
-end sub;
-
-# ----------------------------------------------------------
-
 #	Initialize integer arrays
-sub scanint(pi: [int16], str: [uint8]) is
+sub scanint(pi: [int16], str: [uint8]) @extern("scanint") is
 	var p: [uint8];
 
 	p := str;
-	while [p] != 0 loop
+	while [p] != nil loop
 		if [p] == ',' then
 			[p] := 0;
 		end if;
@@ -2078,1028 +1409,65 @@ sub scanint(pi: [int16], str: [uint8]) is
 	end loop;
 
 	p := str;
-	while [p] != 0 loop
+	while [p] != nil loop
 		[pi] := atoi(p);
 		pi := @next pi;
 		p := p + strlen(p) + 1;
 	end loop;
 end sub;
 
-#	Initialization of adventure play variables
-sub initplay() is
-	turns := 0;
-
-	# initialize location status array
-	MemSet(&cond[0] as [uint8], 0, 2 * MAXLOC);
-	scanint(&cond[1], "5,1,5,5,1,1,5,17,1,1,");
-	scanint(&cond[13], "32,0,0,2,0,0,64,2,");
-	scanint(&cond[21], "2,2,0,6,0,2,");
-	scanint(&cond[31], "2,2,0,0,0,0,0,4,0,2,");
-	scanint(&cond[42], "128,128,128,128,136,136,136,128,128,");
-	scanint(&cond[51], "128,128,136,128,136,0,8,0,2,");
-	scanint(&cond[79], "2,128,128,136,0,0,8,136,128,0,2,2,");
-	scanint(&cond[95], "4,0,0,0,0,1,");
-	scanint(&cond[113], "4,0,1,1,");
-	scanint(&cond[122], "8,8,8,8,8,8,8,8,8,");
-
-	# initialize object locations 
-	MemSet(&place[0] as [uint8], 0, 2 * MAXOBJ);
-	scanint(&place[1], "3,3,8,10,11,0,14,13,94,96,");
-	scanint(&place[11], "19,17,101,103,0,106,0,0,3,3,");
-	scanint(&place[23], "109,25,23,111,35,0,97,");
-	scanint(&place[31], "119,117,117,0,130,0,126,140,0,96,");
-	scanint(&place[50], "18,27,28,29,30,");
-	scanint(&place[56], "92,95,97,100,101,0,119,127,130,");
-
-	# initialize second (fixed) locations 
-	MemSet(&fixed[0] as [uint8], 0, 2 * MAXOBJ);
-	scanint(&fixed[3], "9,0,0,0,15,0,-1,");
-	scanint(&fixed[11], "-1,27,-1,0,0,0,-1,");
-	scanint(&fixed[23], "-1,-1,67,-1,110,0,-1,-1,");
-	scanint(&fixed[31], "121,122,122,0,-1,-1,-1,-1,0,-1,");
-	scanint(&fixed[62], "121,-1,");
-
-	# initialize default verb messages 
-	scanint(&actmsg[0], "0,24,29,0,33,0,33,38,38,42,14,");
-	scanint(&actmsg[11], "43,110,29,110,73,75,29,13,59,59,");
-	scanint(&actmsg[21], "174,109,67,13,147,155,195,146,110,13,13,");
-
-	# initialize various flags and other variables
-	MemSet(&visited[0] as [uint8], 0, 2 * MAXLOC);
-	MemSet(&prop[0] as [uint8], 0, 2 * MAXOBJ);
-	MemSet(&prop[50] as [uint8], 0xFF, 2 * (MAXOBJ-50));
-	wzdark := 0;
-	closed := 0;
-	closing := 0; 
-	holding := 0;
-	detail := 0;
-	limit := 100;
-	tally := 15;
-	tally2 := 0;
-	newloc := 3;
-	loc := 1;
-	oldloc := 1;
-	oldloc2 := 1;
-	knfloc := 0;
-	chloc := 114;
-	chloc2 := 140;
-#	dloc[DWARFMAX-1] := chloc;
-	scanint(&dloc[0], "0,19,27,33,44,64,114,");
-	scanint(&odloc[0], "0,0,0,0,0,0,0,");
-	dkill := 0;
-	scanint(&dseen[0], "0,0,0,0,0,0,0,");
-	clock1 := 30;
-	clock2 := 50;
-	panic := 0;
-	bonus := 0;
-	numdie := 0;
-	daltloc := 18;
-	lmwarn := 0;
-	foobar := 0;
-	dflag := 0;
-	gaveup := 0;
-	saveflg := 0;
-end sub;
-
-#	Routine to describe visible items
-sub descitem() is
-	var i: uint8;
-	var state: uint8;
-
-	i := 1;
-	while i < MAXOBJ loop
-		if at(i as uint16) == 1 then
-			if i == STEPS and toting(NUGGET) == 1 then
-				i := i + 1;
-				continue;
-			end if;
-			if prop[i] < 0 then
-				if closed == 1 then
-					i := i + 1;
-					continue;
-				else
-					prop[i] := 0;
-					if i == RUG or i == CHAIN then
-						prop[i] := prop[i] + 1;
-					end if;
-					tally := tally - 1;
-				end if;
-			end if;
-			if i == STEPS and loc == fixed[STEPS] then
-				state := 1;
-			else
-				state := prop[i] as uint8;
-			end if;
-			pspeak(i, state as int8);
-		end if;
-		i := i + 1;
-	end loop;
-	if tally == tally2 and tally != 0 and limit > 35 then
-		limit := 35;
-	end if;
-end sub;
-
-#	Routine to process a transitive verb
-sub trverb() @extern("trverb") is
-	case verb is
-	when CALM:
-	when WALK:
-	when QUIT:
-	when SCORE:
-	when FOO:
-	when BRIEF:
-	when SUSPEND:
-	when HOURS:
-	when LOG:
-		actspk(verb as uint16);
-	when TAKE:
-		vtake();
-	when DROP:
-		vdrop();
-	when OPEN:
-	when LOCK:
-		vopen();
-	when SAY:
-		vsay();
-	when NOTHING:
-		rspeak(54);
-	when ON:
-		von();
-	when OFF:
-		voff();
-	when WAVE:
-		vwave();
-	when KILL:
-		vkill();
-	when POUR:
-		vpour();
-	when EAT:
-		veat();
-	when DRINK:
-		vdrink();
-	when RUB:
-		if object != LAMP then
-			rspeak(76);
-		else
-			actspk(RUB);
-		end if;
-	when THROW:
-		vthrow();
-	when FEED:
-		vfeed();
-	when FIND:
-	when INVENTORY:
-		vfind();
-	when FILL:
-		vfill();
-	when READ:
-		vread();
-	when BLAST:
-		vblast();
-	when BREAK:
-		vbreak();
-	when WAKE:
-		vwake();
-	when else:
-		print("This verb is not implemented yet.\n");
-	end case;
-end sub;
-
-#	Routine to process an object being referred to.
-sub trobj() is
-	var	wtype: int16;
-	var	wval: int16;
-	var	valid: uint8;
-
-	if verb != 0 then
-		trverb();
-	else  
-                (valid, wtype, wval) := analyze(&word1[0]);
-		if valid == 1 then
-                	print("What do you want to do with the");
-			if wtype == 1 then
-				print(&word1[0]);
-			else
-				print(&word2[0]);
-			end if;
-			print_nl();
-		end if;
-	end if;
-end sub;
-
-#	The player tried a poor move option.
-sub badmove() is
-	var	msg: uint8;
-
-	msg := 12;
-	if motion >= 43 and motion <= 50 then msg := 9; end if;
-	if motion == 29 or motion == 30 then msg := 9; end if;
-	if motion == 7 or motion == 36 or motion == 37 then msg := 10;  end if;
-	if motion == 11 or motion == 19 then msg := 11;  end if;
-	if verb == FIND or verb == INVENTORY then msg := 59; end if;
-	if motion == 62 or motion == 65 then msg := 42; end if;
-	if motion == 17 then msg := 80; end if;
-	rspeak(msg);
-end sub;
-
-#	Routine to handle very special movement.
-sub spcmove(rdest: uint16) is
-	case rdest-300 is
-	when 1:  # plover movement via alcove
-		if holding == 0 or (holding == 1 and toting(EMERALD) == 1) then
-			newloc := (99+100)-loc;
-		else
-			rspeak(117);
-		end if;
-	when 2:  # trying to remove plover, bad route
-		drop(EMERALD, loc);
-	when 3:  # troll bridge
-		if prop[TROLL] == 1 then
-			pspeak(TROLL, 1);
-			prop[TROLL] := 0;
-			move(TROLL2, 0);
-			move((TROLL2+MAXOBJ), 0);
-			move(TROLL, 117);
-			move((TROLL+MAXOBJ), 122);
-			juggle(CHASM);
-			newloc := loc;
-		else 
-			if loc == 117 then
-				newloc := 122;
-			else
-				newloc := 117;
-			end if;
-			if prop[TROLL] == 0 then
-				prop[TROLL] := prop[TROLL] + 1;
-			end if;
-			if toting(BEAR) == 0 then
-				return;
-			end if;
-			rspeak(162);
-			prop[CHASM] := 1;
-			prop[TROLL] := 2;
-			drop(BEAR, newloc);
-			fixed[BEAR] := -1;
-			prop[BEAR] := 3;
-			if prop[SPICES] < 0 then
-				tally2 := tally2 + 1;
-			end if;
-			oldloc2 := newloc;
-			death();
-		end if;
-	when else:
-		bug(38);
-	end case;
-end sub;
-
-#	Routine to figure out a new location
-#	given current location and a motion.
-sub dotrav() is
-	var	mvflag: uint8;
-	var	hitflag: uint8;
-	var	kk: uint8;
-	var	rdest: int16;
-	var	rverb: int16;
-	var	rcond: int16;
-	var	robject: int16;
-	var	pctt: uint16;
-	var v: uint16;
-
-	@asm "call _xrnd";
-	@asm "ld (", v, "),hl";
-
-	newloc := loc;
-	mvflag := 0;
-	hitflag := 0;
-	pctt := v % 100;
-
-	kk := 0;
-	while travel[kk].tdest >= 0 and mvflag == 0 loop
-		rdest := travel[kk].tdest;
-		rverb := travel[kk].tverb;
-		rcond := travel[kk].tcond;
-		robject := rcond % 100;
-
-		if dbugflg == 1 then
-			print("rdest = ");
-			print(itoa(rdest));
-			print(", rverb = ");
-			print(itoa(rverb));
-			print(", rcond = ");
-			print(itoa(rcond));
-			print(", robject = ");
-			print(itoa(robject));
-			print(" in dotrav\n");
-		end if;
-
-		if rverb != 1 and rverb != motion and hitflag == 0 then
-			kk := kk + 1;
-			continue;
-		end if;
-
-		hitflag := hitflag + 1;
-
-		case rcond / 100 is
-		when 0:
-			if rcond == 0 or pctt < rcond as uint16 then
-				mvflag := mvflag + 1;
-			end if;
-			if rcond == 1 and dbugflg == 1 then
-				print("%% move ");
-				print(itoa(pctt as int16));
-				print_char(' ');
-				print(itoa(mvflag as int16));
-				print_nl();
-			end if;
-		when 1:
-			if robject == 0 or toting(robject as uint16) == 1 then
-				mvflag := mvflag + 1;
-			end if;
-		when 2:
-			if toting(robject as uint16) == 1 or at(robject as uint16) == 1 then
-				mvflag := mvflag + 1;
-			end if;
-		when 3:
-		when 4:
-		when 5:
-		when 7:
-			if prop[robject as uint8] != (rcond/100)-3 then
-				mvflag := mvflag + 1;
-			end if;
-		when else:
-			bug(37);
-		end case;
-		kk := kk + 1;
-	end loop;
-
-	if mvflag == 0 then
-		badmove();
-	elseif rdest > 500 then
-		rspeak((rdest-500) as uint8);
-	elseif rdest>300 then
-		spcmove(rdest as uint16);
-	else 
-		newloc := rdest;
-		if dbugflg == 1 then
-			print("newloc in dotrav = ");
-			print(itoa(newloc));
-			print_nl();
-		end if;
-	end if;
-end sub;
-
-#	Routine to handle request to return
-#	from whence we came!
-sub goback() is
-	var	kk: uint8;
-	var	k2: uint8;
-	var	want: int16;
-	var	temp: int16;
-	var 	strav: trav[MAXTRAV];
-
-	if forced(oldloc as uint16) == 1 then
-		want := oldloc2;
-	else
-		want := oldloc;
-	end if;
-	oldloc2 := oldloc;
-	oldloc := loc;
-	k2 := 0;
-	if want == loc then
-		rspeak(91);
-		return;
-	end if;
-	copytrv(&travel[0], &strav[0]);
-	kk := 0;
-	while travel[kk].tdest != 0xFFFF loop
-		if travel[kk].tcond == 0 and travel[kk].tdest == want then
-			motion := travel[kk].tverb;
-			dotrav();
-			return;
-		end if;
-		if travel[kk].tcond == 0 then
-			k2 := kk;
-			temp := travel[kk].tdest;
-			gettrav(temp as uint8);
-			if forced(temp as uint16) == 1 and travel[0].tdest == want then
-				k2 := temp as uint8;
-			end if;
-			copytrv(&strav[0], &travel[0]);
-		end if;
-		kk := kk + 1;
-	end loop;
-	if k2 > 0 then
-		motion := travel[k2].tverb;
-		dotrav();
-	else
-		rspeak(140);
-	end if;
-end sub;
-
-#	Routine to handle motion requests
-sub domove() is
-	gettrav(loc as uint8);
-	case motion is
-	when NULLX:
-	when BACK:
-		goback();
-	when LOOK:
-		detail := detail + 1;
-		if detail < 3 then
-			rspeak(15);
-		end if;
-		wzdark := 0;
-		visited[loc as uint8] := 0;
-		newloc := loc;
-		loc := 0;
-	when CAVE:
-		if loc < 8 then
-			rspeak(57);
-		else
-			rspeak(58);
-		end if;
-	when else:
-		oldloc2 := oldloc;
-		oldloc := loc;
-		dotrav();
-	end case;
-end sub;
-
-#	pirate stuff
-sub dopirate() is
-	var	j: uint8;
-	var	k: uint8;
-
-	if newloc == chloc or prop[CHEST] >= 0 then
-		return;
-	end if;
-	k := 0;
-	j := 50;
-	while j <= MAXTRS loop
-		if j != PYRAMID or (newloc != place[PYRAMID] and newloc != place[EMERALD]) then
-			if toting(j as uint16) == 1 then
-				rspeak(128);
-				if place[MESSAGE] == 0 then
-					move(CHEST, chloc);
-				end if;
-				move(MESSAGE, chloc2);
-				j := 50;
-				while j <= MAXTRS loop
-					if j == PYRAMID and (newloc == place[PYRAMID] or newloc == place[EMERALD]) then
-						j := j + 1;
-						continue;
-					end if;
-					if at(j as uint16) == 1 and fixed[j] == 0 then
-						carry(j as uint16, newloc);
-					end if;
-					if toting(j as uint16) == 1 then
-						drop(j as uint16, chloc);
-					end if;
-					j := j + 1;
-				end loop;
-				dloc[6] := chloc;
-				odloc[6] := chloc;
-				dseen[6] := 0;
-			end if;
-			if here(j as uint16) == 1 then
-				k := k + 1;
-			end if;
-		end if;
-		j := j + 1;
-	end loop;
-	if tally == tally2+1 and k == 0 and place[CHEST] == 0 and here(LAMP) == 1 and prop[LAMP] == 1 then
-		rspeak(186);
-		move(CHEST, chloc);
-		move(MESSAGE, chloc2);
-		dloc[6] := chloc;
-		odloc[6] := chloc;
-		dseen[6] := 0;
-		return;
-	end if;
-	if odloc[6] != dloc[6] and pct(20) == 1 then
-		rspeak(127);
-		return;
-	end if;
-end sub;
-
-#	dwarf stuff.
-sub dwarves() is
-	var	i: uint8;
-	var	j: uint8;
-	var	k: uint8;
-	var	try: uint8;
-	var	attack: uint8;
-	var	stick: uint8;
-	var	dtotal: uint8;
-	var v: uint16;
-	
-	#	see if dwarves allowed here
-
-	if newloc == 0 or forced(newloc as uint16) == 1 or (cond[newloc as uint8] & NOPIRAT) != 0 then
-		return;
-	end if;
-	
-	#	see if dwarves are active.
-
-	if dflag == 0 then
-		if newloc > 15 then
-			dflag := dflag + 1;
-		end if;
-		return;
-	end if;
-	
-	#	if first close encounter (of 3rd kind) kill 0, 1 or 2
-
-	if dflag == 1 then
-		if newloc < 15 or pct(95) != 0 then
-			return;
-		end if;
-		dflag := dflag + 1;
-		i := 1;
-		while i < 3 loop
-			if pct(50) == 1 then
-				@asm "call _xrnd";
-				@asm "ld (", v, "),hl";
-				dloc[(v % 5 + 1) as uint8] := 0;
-			end if;
-			i := 1 + 1;
-		end loop;
-		i := 1;
-		while i < (DWARFMAX-1) loop
-			if dloc[i] == newloc then
-				dloc[i] := daltloc;
-			end if;
-			odloc[i] := dloc[i];
-			i := i + 1;
-		end loop;
-		rspeak(3);
-		drop(AXE, newloc);
-		return;
-	end if;
-	dtotal := 0;
-	attack := 0;
-	stick := 0;
-	i := 1;
-	while i < DWARFMAX loop
-		if dloc[i] == 0 then
-			i := i + 1;
-			continue;
-		end if;
-		
-		#	move a dwarf at random.
-		try := 1;
-		while try < 20 loop
-			@asm "call _xrnd";
-			@asm "ld (", v, "),hl";
-			j := (v % 106 + 15) as uint8; # allowed area
-			if j != odloc[i] as uint8 and j != dloc[i] as uint8 and not(i == (DWARFMAX-1) and (cond[j] & NOPIRAT) == 1) then
-				break;
-			end if;
-			try := try + 1;
-		end loop;
-		if j == 0 then
-			j := odloc[i] as uint8;
-		end if;
-		odloc[i] := dloc[i];
-		dloc[i] := j as int16;
-		if dseen[i] > 0 and newloc >= 15 or
-		    dloc[i] == newloc or odloc[i] == newloc then
-			dseen[i] := 1;
-		else
-			dseen[i] := 0;
-		end if;
-		if dseen[i] == 0 then
-			i := i + 1;
-			continue;
-		end if;
-		dloc[i] := newloc;
-		if i == 6 then
-			dopirate();
-		else 
-			dtotal := dtotal + 1;
-			if odloc[i] == dloc[i] then
-				attack := attack + 1;
-				if knfloc >= 0 then
-					knfloc := newloc;
-				end if;
-				@asm "call _xrnd";
-				@asm "ld (", v, "),hl";
-				if v % 1000 < 95*(dflag as uint16 - 2) then
-					stick := stick + 1;
-				end if;
-			end if;
-		end if;
-		i := i + 1;
-	end loop;
-	if dtotal == 0 then
-		return;
-	end if;
-	if dtotal > 1 then
-		print("There are ");
-		print(itoa(dtotal as int16));
-		print(" threatening little dwarves in the room with you!\n");
-	else
-		rspeak(4);
-	end if;
-	if attack == 0 then
-		return;
-	end if;
-	if dflag == 2 then
-		dflag := dflag + 1;
-	end if;
-	if attack > 1 then
-		print(itoa(attack as int16));
-		print(" of them throw knives at you!!\n");
-		k := 6;
-	else
-		rspeak(5);
-		k := 52;
-	end if;
-	if stick <= 1 then
-		rspeak(stick+k);
-		if stick == 0 then
-			return;
-		end if;
-	else
-		print(itoa(stick as int16));
-		print(" of them get you !!!\n");
-	end if;
-	oldloc2 := newloc;
-	death();
-end sub;
-
-#	special time limit stuff...
-sub stimer(): (ret: uint8) is
-	var 	i: uint8;
-
-	if foobar > 0 then
-		foobar := -foobar;
-	else
-		foobar := 0;
-	end if;
-
-	if tally == 0 and loc >= 15 and loc != 33 then
-		clock1 := clock1 - 1;
-	end if;
-	if clock1 == 0 then
-		#	start closing the cave
-		prop[GRATE] := 0;
-		prop[FISSURE] := 0;
-		i := 1;
-		while i < DWARFMAX loop
-			dseen[i] := 0;
-			i := i + 1;
-		end loop;
-		move(TROLL, 0);
-		move((TROLL+MAXOBJ), 0);
-		move(TROLL2, 117);
-		move((TROLL2+MAXOBJ), 122);
-		juggle(CHASM);
-		if prop[BEAR] != 3 then
-			dstroy(BEAR);
-		end if;
-		prop[CHAIN] := 0;
-		fixed[CHAIN] := 0;
-		prop[AXE] := 0;
-		fixed[AXE] := 0;
-		rspeak(129);
-		clock1 := -1;
-		closing := 1;
-		ret := 0;
-		return;
-	end if;
-	if clock1 < 0 then
-		clock2 := clock2 - 1;
-	end if;
-	if clock2 == 0 then
-		#	set up storage room... and close the cave...
-		prop[BOTTLE] := put(BOTTLE, 115, 1);
-		prop[PLANT] := put(PLANT, 115, 0);
-		prop[OYSTER] := put(OYSTER, 115, 0);
-		prop[LAMP] := put(LAMP, 115, 0);
-		prop[ROD] := put(ROD, 115, 0);
-		prop[DWARF] := put(DWARF, 115, 0);
-		loc := 115;
-		oldloc := 115;
-		newloc := 115;
-		var tmp: int16 := put(GRATE, 116, 0);
-		prop[SNAKE] := put(SNAKE, 116, 1);
-		prop[BIRD] := put(BIRD, 116, 1);
-		prop[CAGE] := put(CAGE, 116, 0);
-		prop[ROD2] := put(ROD2, 116, 0);
-		prop[PILLOW] := put(PILLOW, 116, 0);
-		prop[MIRROR] := put(MIRROR, 115, 0);
-		fixed[MIRROR] := 116;
-		i := 1;
-		while i <= MAXOBJ loop
-			if toting(i as uint16) == 1 then
-				dstroy(i as uint16);
-			end if;
-			i := i + 1;
-		end loop;
-		rspeak(132);
-		closed := 1;
-		ret := 1;
-		return;
-	end if;
-	if prop[LAMP] == 1 then
-		limit := limit - 1;
-	end if;
-	if limit <= 30 and here(BATTERIES) == 1 and prop[BATTERIES] == 0 and here(LAMP) == 1 then
-		rspeak(188);
-		prop[BATTERIES] := 1;
-		if (toting(BATTERIES) == 1) then
-			drop(BATTERIES, loc);
-		end if;
-		limit := limit + 2500;
-		lmwarn := 0;
-		ret := 0;
-		return;
-	end if;
-	if limit == 0 then
-		limit := limit - 1;
-		prop[LAMP] := 0;
-		if here(LAMP) == 1 then
-			rspeak(184);
-		end if;
-		ret := 0;
-		return;
-	end if;
-	if limit < 0 and loc <= 8 then
-		rspeak(185);
-		gaveup := 1;
-		normend();
-	end if;
-	if limit <= 30 then
-		if lmwarn > 0 or here(LAMP) == 0 then
-			ret := 0;
-			return;
-		end if;
-		lmwarn := 1;
-		i := 187;
-		if place[BATTERIES] == 0 then
-			i := 183;
-		end if;
-		if prop[BATTERIES] == 1 then
-			i := 189;
-		end if;
-		rspeak(i);
-		ret := 0;
-		return;
-	end if;
-	ret := 0;
-end sub;
-
-#	Routine to process an object.
-sub doobj() is
-	var	wtype: int16;
-	var	wval: int16;
-	var	i: uint8;
-	var	valid: uint8;
-
-	#   	is object here?  if so, transitive
-
-	if fixed[object as uint8] == loc or here(object as uint16) == 1 then
-		trobj();
-	#	did he give grate as destination?
-	elseif object == GRATE then
-		if loc == 1 or loc == 4 or loc == 7 then
-			motion := DEPRESSION;
-			domove();
-		elseif loc > 9 and loc < 15 then
-			motion := ENTRANCE;
-			domove();
-		end if;
-	#	is it a dwarf he is after?
-	elseif dcheck() > 0 and dflag >= 2 then
-		object := DWARF;
-		trobj();
-	#   	is he trying to get/use a liquid?
-	elseif liq() == object as uint16 and here(BOTTLE) == 1 or liqloc(loc as uint16) == object as uint16 then
-		trobj();
-	elseif object == PLANT and at(PLANT2) == 1 and prop[PLANT2] == 0 then
-		object := PLANT2;
-		trobj();
-	#   	is he trying to grab a knife?
-	elseif object == KNIFE and knfloc == loc then
-		rspeak(116);
-		knfloc := -1;
-	#	is he trying to get at dynamite?
-	elseif object == ROD and here(ROD2) == 1 then
-		object := ROD2;
-		trobj();
-	else 
-          	(valid, wtype, wval) := analyze(&word1[0]);
-		if valid == 1 then
-			print("I see no ");
-			if wtype == 1 then
-				print(&word1[0]);
-			else
-				print(&word2[0]);
-			end if;
-          		print(" here.\n");
-		end if;
-	end if;
-end sub;
-
-#	Routines to process intransitive verbs
-sub itverb() @extern("itverb") is
-	case verb is
-	when DROP:
-	when SAY:
-	when WAVE:
-	when CALM:
-	when RUB:
-	when THROW:
-	when FIND:
-	when FEED:
-	when BREAK:
-	when WAKE:
-		needobj();
-	when TAKE:
-		ivtake();
-	when OPEN:
-	when LOCK:
-		ivopen();
-	when NOTHING:
-		rspeak(54);
-	when ON:
-	when OFF:
-	when POUR:
-		trverb();
-	when WALK:
-		actspk(verb as uint16);
-	when KILL:
-		ivkill();
-	when EAT:
-		iveat();
-	when DRINK:
-		ivdrink();
-	when QUIT:
-		ivquit();
-	when FILL:
-		ivfill();
-	when BLAST:
-		vblast();
-	when SCORE:
-		score();
-	when FOO:
-		ivfoo();
-	when SUSPEND:
-		saveflg := 1;
-	when INVENTORY:
-		inventory();
-	when READ:
-		ivread();
-	when else:
-		print("This intransitive not implemented yet\n");
-	end case;
-end sub;
-
-#	Routine to take 1 turn
-sub turn() is
-	var	i: uint8;
-	
-	#	if closing, then he can't leave except via
-	#	the main office.
-
-	if newloc < 9 and newloc != 0 and closing == 1 then
-		rspeak(130);
-		newloc := loc;
-		if panic == 0 then
-			clock2 := 15;
-		end if;
-		panic := 1;
-	end if;
-	
-	#	see if a dwarf has seen him and has come
-	#	from where he wants to go.
-
-	if newloc != loc and forced(loc as uint16) == 0 and cond[loc as uint8] & NOPIRAT == 0 then
-		i := 1;
-		while i < (DWARFMAX-1) loop
-			if odloc[i] == newloc and dseen[i] == 1 then
-				newloc := loc;
-				rspeak(2);
-				break;
-			end if;
-			i := i + 1;
-		end loop;
-	end if;
-
-	dwarves();	# & special dwarf(pirate who steals)
-
-	if loc != newloc then
-		turns := turns + 1;
-		loc := newloc;
-	
-		# check for death
-		if loc == 0 then
-			death();
-			return;
-		end if;
-
-		# check for forced move
-		if forced(loc as uint16) == 1 then
-			describe();
-			domove();
-			return;
-		end if;
-
-		# check for wandering in dark
-		if wzdark == 1 and dark() == 1 and pct(35) == 1 then
-			rspeak(23);
-			oldloc2 := loc;
-			death();
-			return;
-		end if;
-
-		# describe his situation
-		describe();
-
-		if dark() == 0 then
-			visited[loc as uint8] := visited[loc as uint8] + 1;
-			descitem();
-		end if;
-	end if;
-
-	if closed == 1 then
-		if prop[OYSTER] < 0 and toting(OYSTER) == 1 then
-			pspeak(OYSTER, 1);
-		end if;
-		i := 1;
-		while i <= MAXOBJ loop
-			if toting(i as uint16) == 1 and prop[i] < 0 then
-				prop[i] := -1 - prop[i];
-			end if;
-			i := i + 1;
-		end loop;
-	end if;
-
-	wzdark := dark() as int16;
-
-	if knfloc > 0 and knfloc != loc then
-		knfloc := 0;
-	end if;
-
-	if stimer() == 1 then	# as the grains of sand slip by
-		return;
-	end if;
-
-	while english() == 0 loop	# retrieve player instructions
-	end loop;
-
-	if dbugflg == 1 then
-		print("loc = ");
-		print(itoa(loc));
-		print(", verb = ");
-		print(itoa(verb));
-		print(", object = ");
-		print(itoa(object));
-		print(", motion = ");
-		print(itoa(motion));
-		print_nl();
-	end if;
-
-	if motion == 1 then		# execute player instructions
-		domove();
-	elseif object == 1 then
-		doobj();
-	else
-		itverb();
-	end if;
-end sub;
-
 # main
 	var arg: [uint8];
+	var rest: uint8 := 0;
 
-	@asm "call _xrndseed";
+	xrndseed();
 
-	dbugflg := 0;
+	set_dbugflg(0);
 
 	ArgvInit();
 
-	arg := ArgvNext();
+	loop
+		var ch: uint8;
+		arg := ArgvNext();
 
-	if [arg] == 'd' or [arg] == 'D' then
-		dbugflg := 1;
-	end if;
+		if arg == nil then
+			break;
+		end if;
+
+		ch := tolower([arg]);
+
+		if ch == 'd' then
+			set_dbugflg(1);
+		elseif ch == 'r' then
+			rest := 1;
+		end if;
+	end loop;
 
 	opentxt();
+
 	initplay();
 
-	if yes(65, 1, 0) == 1 then
-		limit := 1000;
-	else
-		limit := 330;
+	if rest == 1 then
+		restore();
 	end if;
 
-	saveflg := 0;
+	if yes(65, 1, 0) == 1 then
+		set_limit(1000);
+	else
+		set_limit(330);
+	end if;
 
-	while saveflg == 0 loop
+	set_saveflg(0);
+
+	while get_saveflg() == 0 loop
 		turn();
 	end loop;
 
+	# ...suspend
+
 	closefiles();
-	exit();				
-
+	save();
+
+	exit();		
+
+

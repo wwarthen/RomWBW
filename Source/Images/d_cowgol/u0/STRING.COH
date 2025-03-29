@@ -1,0 +1,8 @@
+@decl sub strlen(str: [uint8]): (len: uint16) @extern("strlen");
+@decl sub strcpy(dest: [uint8], src: [uint8]): (ret: [uint8]) @extern("strcpy");
+@decl sub strcat(dest: [uint8], src: [uint8]): (ret: [uint8]) @extern("strcat");
+@decl sub strcmp(str1: [uint8], str2: [uint8]): (ret: int8) @extern("strcmp");
+@decl sub strcasecmp(str1: [uint8], str2: [uint8]): (ret: int8) @extern("strcasecmp");
+@decl sub strstr(str: [uint8], tosearch: [uint8]): (ret: [uint8]) @extern("strstr");
+@decl sub strchr(str: [uint8], tosearch: uint8): (ret: [uint8]) @extern("strchr");
+@decl sub tolower(char: uint8): (ret: uint8) @extern("tolower");

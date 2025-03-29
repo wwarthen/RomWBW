@@ -1,0 +1,35 @@
+sub IsDigit(ch: uint8): (ret: uint8) is
+# A=ch
+@asm "jp __IsDigit";
+end sub;
+
+sub ToLower(c: uint8): (cc: uint8) is
+# A=ch
+@asm "jp __ToLower";
+end sub;
+
+sub CopyString(src: [uint8], dest: [uint8]) is
+# HL=src
+@asm "ld de,(", dest, ")"; # DE=dest
+@asm "jp __CopyString";
+end sub;
+
+sub StrCmp(s1: [uint8], s2: [uint8]): (res: int8) is
+# HL=s1
+@asm "ld de,(", s2, ")"; # DE=s2
+@asm "jp __StrCmp";
+end sub;
+
+sub StrICmp(s1: [uint8], s2: [uint8]): (res: int8) is
+# HL=s1
+@asm "ld de,(", s2, ")"; # DE=s2
+@asm "jp __StrICmp";
+end sub;
+
+sub StrLen(s: [uint8]): (size: uint16) is
+# HL = s
+@asm "jp __StrLen";
+end sub;
+
+
+

@@ -1,0 +1,3 @@
+sub Test() is
+@asm "call _xrndseed";
+end sub;

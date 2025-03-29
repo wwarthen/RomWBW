@@ -1,0 +1,646 @@
+sub exit() @extern("exit") is
+@asm "rst 0";
+end sub;
+
+sub get_char(): (c: uint8) @extern("get_char") is
+@asm "ld c, 1";
+@asm "call 5";
+@asm "ld (", c, "), a";
+end sub;
+
+sub print_char(c: uint8) @extern("print_char") is
+if c == 10 then
+	@asm "ld e, 13";
+	@asm "ld c, 2";
+	@asm "call 5";
+end if;
+@asm "ld a, (", c, ")";
+@asm "ld e, a";
+@asm "ld c, 2";
+@asm "call 5";
+end sub;
+
+sub print(ptr: [uint8]) @extern("print") is
+var ch: uint8;
+@asm "ld hl,(", ptr, ")";
+@asm "1:";
+@asm "ld a,(hl)";
+@asm "or a";
+@asm "ret z";
+@asm "ld (", ch, "), a";
+@asm "push hl";
+print_char(ch);
+@asm "pop hl";
+@asm "inc hl";
+@asm "jr 1b";
+end sub;
+
+sub print_nl() @extern("print_nl") is
+print_char('\n');
+end sub;
+
+sub print_hex_i8(char: uint8) @extern("print_hex_i8") is
+var ra: uint8;
+@asm "call Bin2Hex";
+@asm "push bc";
+@asm "ld (", ra, "),a";
+print_char(ra);
+@asm "pop bc";
+@asm "ld a,c";
+@asm "ld (", ra, "),a";
+print_char(ra);
+@asm "ret";
+@asm "Bin2Hex:";
+@asm "ld c,a";
+@asm "and 0FH";
+@asm "call nibble2hex";
+@asm "ld a,c";
+@asm "ld c,b";
+@asm "and 0F0H";
+@asm "rrca";
+@asm "rrca";
+@asm "rrca";
+@asm "rrca";
+@asm "nibble2hex:";
+@asm "add a,090h";
+@asm "daa";
+@asm "adc a,040h";
+@asm "daa";
+@asm "ld b,a";
+@asm "ret";
+end sub;
+
+sub print_hex_i16(word: uint16) @extern("print_hex_i16") is
+var ra: uint8;
+@asm "ld a,(", word, "+1)";
+@asm "ld (", ra, "),a";
+print_hex_i8(ra);
+@asm "ld a,(", word, ")";
+@asm "ld (", ra, "),a";
+print_hex_i8(ra);
+end sub;
+
+sub print_hex_i32(dword: uint32) @extern("print_hex_i32") is
+var v16: uint16;
+@asm "ld hl,(", dword, "+2)";
+@asm "ld (", v16, "),hl";
+print_hex_i16(v16);
+@asm "ld hl,(", dword, ")";
+@asm "ld (", v16, "),hl";
+print_hex_i16(v16);
+end sub;
+
+sub Bn2Dec() is
+@asm "ld (bufptr),hl";
+@asm "ld (buffer),hl";
+@asm "ex de,hl";
+@asm "xor a";
+@asm "ld (curlen),a";
+@asm "cnvert:";
+@asm "ld e,0";
+@asm "ld b,16";
+@asm "or a";
+@asm "dvloop:";
+@asm "rl l";
+@asm "rl h";
+@asm "rl e";
+@asm "ld a,e";
+@asm "sub 10";
+@asm "ccf";
+@asm "jr nc,deccnt";
+@asm "ld e,a";
+@asm "deccnt:";
+@asm "djnz dvloop";
+@asm "rl l";
+@asm "rl h";
+@asm "chins:";
+@asm "ld a,e";
+@asm "add a,30h";
+@asm "call insert";
+@asm "ld a,h";
+@asm "or l";
+@asm "jr nz,cnvert";
+@asm "ld hl,(buffer)";
+@asm "ld c,(hl)";
+@asm "ld b,0";
+@asm "ld d,h";
+@asm "ld e,l";
+@asm "inc hl";
+@asm "ldir";
+@asm "xor a";
+@asm "ld (de),a";
+@asm "ret";
+@asm "insert:";
+@asm "push hl";
+@asm "push af";
+@asm "ld hl,(bufptr)";
+@asm "ld d,h";
+@asm "ld e,l";
+@asm "inc de";
+@asm "ld (bufptr),de";
+@asm "ld a,(curlen)";
+@asm "or a";
+@asm "jr z,exitmr";
+@asm "ld c,a";
+@asm "ld b,0";
+@asm "lddr";
+@asm "exitmr:";
+@asm "ld a,(curlen)";
+@asm "inc a";
+@asm "ld (curlen),a";
+@asm "ld (hl),a";
+@asm "ex de,hl";
+@asm "pop af";
+@asm "ld (hl),a";
+@asm "pop hl";
+@asm "ret";
+@asm "buffer: defs 2";
+@asm "bufptr: defs 2";
+@asm "curlen: defs 1";
+end sub;
+
+var buf12:uint8[12];
+
+sub print_i8(v: int8) @extern("print_i8") is
+@asm "ld hl,", buf12 ;
+@asm "ld a,(", v, ")";
+@asm "or a";
+@asm "jp p,1f";
+@asm "ld (hl),'-'";
+@asm "inc hl";
+@asm "neg";
+@asm "1:";
+@asm "ld e,a";
+@asm "ld d,0";
+Bn2Dec();
+print(&buf12[0]);
+@asm "ret";
+end sub;
+
+sub print_i16(v: int16) @extern("print_i16") is
+@asm "ld hl,", buf12 ;
+@asm "ld de,(", v, ")";
+@asm "bit 7,d";
+@asm "jr z,1f";
+@asm "xor a";
+@asm "ld hl,0";
+@asm "sbc hl,de";
+@asm "ex de,hl";
+@asm "ld hl,", buf12 ;
+@asm "ld (hl),'-'";
+@asm "inc hl";
+@asm "1:";
+Bn2Dec();
+print(&buf12[0]);
+@asm "ret";
+end sub;
+
+sub get_line(p: [uint8]) @extern("get_line") is
+	var ch: uint8;
+
+	loop
+		ch := get_char();
+		if ch == '\r' then
+			print_nl();
+			[p] := 0;
+			return;
+		end if;
+		[p] := ch;
+		p := p + 1; 
+	end loop;
+end sub;
+
+sub itoa(i: int16): (pbuf: [uint8]) @extern("itoa") is
+        var sign: uint8;
+
+        pbuf := &buf12[8];  # points to terminating zero
+        [pbuf] := 0;
+
+        if (i >= 0) then
+                sign := 0;
+        else
+                i := -i; sign := 1;
+        end if;
+
+        loop
+                pbuf := pbuf - 1;
+                [pbuf] := '0' + ((i % 10) as uint8);
+                i := i / 10;
+                if i == 0 then break; end if;
+        end loop;
+
+        if (sign == 1) then
+                pbuf := pbuf - 1; [pbuf] := '-';
+        end if;
+end sub;
+
+sub uitoa(i: uint16): (pbuf: [uint8]) @extern("uitoa") is
+        pbuf := &buf12[8];  # points to terminating zero
+        [pbuf] := 0;
+
+        loop
+                pbuf := pbuf - 1;
+                [pbuf] := '0' + ((i % 10) as uint8);
+                i := i / 10;
+                if i == 0 then break; end if;
+        end loop;
+end sub;
+
+sub ltoa(i: int32): (pbuf: [uint8]) @extern("ltoa") is
+	var sign: uint8 := 0;
+
+	if i < 0 then 
+		sign := 1;
+	end if;
+
+        pbuf := &buf12[11];  # points to terminating zero
+        [pbuf] := 0;
+
+        loop
+                pbuf := pbuf - 1;
+                [pbuf] := '0' + ((i % 10) as uint8);
+                i := i / 10;
+                if i == 0 then break; end if;
+        end loop;
+
+	if sign == 1 then
+		pbuf := pbuf - 1;
+		[pbuf] := '-';
+	end if;
+end sub;
+
+sub isdigit(ch: uint8): (ret: uint8) @extern("isdigit") is
+@asm "ld a,(", ch, ")";
+@asm "cp 30h";
+@asm "jr c,1f";
+@asm "cp 3Ah";
+@asm "jr nc,1f";
+@asm "ld a,1";
+@asm "ret";
+@asm "1:";
+@asm "xor a";
+@asm "ret";
+end sub;
+
+sub atoi(p: [uint8]): (ret: int16) @extern("atoi") is
+	var sign: uint8 := 0;
+	ret := 0;
+
+	if [p] == '-' then
+		sign := 1;
+		p := p + 1;
+	elseif [p] == '+' then
+		p := p + 1;
+	end if;
+
+	while [p] != 0 loop
+		if isdigit([p]) == 1 then
+			ret := ret * 10 + (([p] - '0') as int16); 
+			p := p + 1;
+		else
+			break;
+		end if;
+	end loop;
+
+	if sign == 1 then
+		ret := -ret;
+	end if;
+end sub;
+
+sub atol(p: [uint8]): (ret: int32) @extern("atol") is
+	var sign: uint8 := 0;
+
+	ret := 0;
+	if [p] == '-' then
+		sign := 1;
+		p := p + 1;
+	end if;
+	while [p] != 0 loop
+		if isdigit([p]) == 1 then
+			ret := ret * 10 + (([p] - '0') as int32); p := p + 1;
+		else
+			ret := -1; return;
+		end if;
+	end loop;
+	if sign == 1 then
+		ret := -ret;
+	end if;
+end sub;
+
+# accepts [+|-]iii[.ddd] min -127.999 max 127.999
+sub atofixed(p: [uint8]): (ret: uint16) @extern("atofixed") is
+	var intp: int16 := 0;
+	var dec: uint16 := 0;
+	var sign: uint8 := 0;
+	var i: uint8;
+
+	sub check_int(): (isok: uint8) is
+		isok := 1;
+		if intp > 127 then
+			ret := 0;
+			isok := 0;
+		end if;
+	end sub;
+
+	sub set_sign() is
+		if sign == 1 then
+			intp := -intp;
+		end if;
+	end sub;
+
+	sub get_dec(): (isok: uint8) is
+		var s16: uint16 := 0;
+		var f: uint16 := 1000;
+
+		i := 0;
+		while i<3 loop
+			if isdigit([p]) == 1 then
+				s16 := s16 + ([p] - '0') as uint16 * f;
+				f := f / 10;
+  				p := p + 1;
+			elseif [p] == 0 then
+				if s16 == 0 then isok := 1; return; end if;
+				break;
+			else
+				isok := 0;
+				return;
+ 			end if;
+			i := i + 1;
+		end loop;
+
+		if s16 >= 5000 then 
+			dec := dec | 0b10000000;
+			s16 := s16 - 5000;
+		end if;
+
+		if s16 >= 2500 then
+			dec := dec | 0b01000000;
+			s16 := s16 - 2500;
+		end if;
+
+		if s16 >= 1250 then
+			dec := dec | 0b00100000;
+			s16 := s16 - 1250;
+		end if;
+
+		if s16 >= 0625 then
+			dec := dec | 0b00010000;
+			s16 := s16 - 0625;
+		end if;
+
+		if s16 >= 0312 then
+			dec := dec | 0b00001000;
+			s16 := s16 - 0312;
+		end if;
+
+		if s16 >= 0156 then
+			dec := dec | 0b00000100;
+			s16 := s16 - 0156;
+		end if;
+
+		if s16 >= 0078 then
+			dec := dec | 0b00000010;
+			s16 := s16 - 0078;
+		end if;
+
+		if s16 >= 0039 then
+			dec := dec | 0b00000001;
+		end if;
+
+		isok := 1;
+	end sub;
+
+	if [p] == '+' then
+		p := p + 1;
+	elseif [p] == '-' then
+		sign := 1;
+		p := p + 1;
+	end if;
+
+	i := 0;
+	while i < 3 loop
+		if isdigit([p]) == 1 then
+			intp := intp * 10;
+			intp := intp + ([p] - '0') as int16;
+			p := p + 1;
+		elseif [p] == '.' then
+			p := p + 1;
+			if check_int() == 0 then return; end if;
+			set_sign();
+			if get_dec() == 0 then return; end if;
+			ret := (intp << 8) as uint16 | dec;
+			return;
+		elseif [p] == 0 then
+			if check_int() == 0 then return; end if;
+			set_sign();
+			ret := (intp << 8) as uint16;
+			return;
+		else
+			ret := 0;
+			return;
+		end if;
+		i := i + 1;
+	end loop;
+
+	if check_int() == 0 then return; end if;
+
+	if [p] == '.' then
+		p := p + 1;
+		set_sign();
+		if get_dec() == 0 then return; end if;
+		ret := (intp << 8) as uint16 | dec;
+	elseif [p] == 0 then 
+		set_sign();
+		ret := (intp << 8) as uint16;
+	else
+		ret := 0;
+	end if;
+end sub;
+
+sub fixedtoa(f: uint16, fdigits: uint8): (ret: [uint8]) @extern("fixedtoa") is
+	var intp: int8;
+	var sign: uint8 := 0;
+	var dec: uint8;
+	var vdec: uint32 := 0;
+	var pbuf: [uint8] := &buf12[4]; # position of .
+	var i: uint8;
+
+	if fdigits > 3 then fdigits := 3; end if;
+
+	intp := (f >> 8) as int8;
+	dec := f as uint8;
+
+	if intp < 0 then
+		intp := - intp;
+		sign := 1;
+	end if;
+
+	#first the integer part, without leading zeros
+        loop
+                pbuf := pbuf - 1;
+                [pbuf] := '0' + ((intp % 10) as uint8);
+                intp := intp / 10;
+                if intp == 0 then break; end if;
+        end loop;
+
+        if (sign == 1) then
+                pbuf := pbuf - 1; [pbuf] := '-';
+        end if;
+
+	ret := pbuf;	#to be returned...
+
+	#fractional part requested...?
+
+	if fdigits == 0 then
+		buf12[4] := 0;	#...no, keep only the integer part
+		return;
+	end if;
+
+	#...yes, build fractional part
+
+	pbuf := &buf12[4];
+	[pbuf] := '.';
+
+	if dec & 0b00000001 != 0 then vdec := vdec + 00390625; end if;
+	if dec & 0b00000010 != 0 then vdec := vdec + 00781250; end if;
+	if dec & 0b00000100 != 0 then vdec := vdec + 01562500; end if;
+	if dec & 0b00001000 != 0 then vdec := vdec + 03125000; end if;
+	if dec & 0b00010000 != 0 then vdec := vdec + 06250000; end if;
+	if dec & 0b00100000 != 0 then vdec := vdec + 12500000; end if;
+	if dec & 0b01000000 != 0 then vdec := vdec + 25000000; end if;
+	if dec & 0b10000000 != 0 then vdec := vdec + 50000000; end if;
+
+	vdec := vdec / 100000;	#keep only the 3 top digits
+
+	pbuf := &buf12[8];
+	i := 0;
+	while i < 3 loop
+                pbuf := pbuf - 1;
+                [pbuf] := '0' + ((vdec % 10) as uint8);
+                vdec := vdec / 10;
+		i := i + 1;
+        end loop;
+
+	# keep only 'fdigits' digits
+
+	buf12[4+fdigits+1] := 0;
+end sub;
+
+sub memcpy(dest: [uint8], src: [uint8], size: uint16): (ret: [uint8]) @extern("memcpy") is
+@asm "ld hl,(", src, ")";
+@asm "ld de,(", dest, ")";
+@asm "ld bc,(", size, ")";
+@asm "push de";
+@asm "ld a,b";
+@asm "or c";
+@asm "jr z,1f";
+@asm "ldir";
+@asm "1:";
+@asm "pop hl";
+@asm "ret";
+end sub;
+
+sub memset(dest: [uint8], char: uint8, size: uint16): (ret: [uint8]) @extern("memset") is
+@asm "ld hl,(", dest, ")";
+@asm "ld bc,(", size, ")";
+@asm "ld a,(", char, ")";
+@asm "ld e,a";
+@asm "push hl";
+@asm "2:";
+@asm "ld a,b";
+@asm "or c";
+@asm "jr z,1f";
+@asm "ld (hl),e";
+@asm "inc hl";
+@asm "dec bc";
+@asm "jr 2b";
+@asm "1:";
+@asm "pop hl";
+@asm "ret";
+end sub;
+
+var random: uint16;
+
+sub xrnd(): (ret: uint16) @extern("xrnd") is
+@asm "  ld hl,(", random, ")";
+@asm "  ld a,h ";
+@asm "  rra ";
+@asm "  ld a,l ";
+@asm "  rra ";
+@asm "  xor h ";
+@asm "  ld h,a ";
+@asm "  ld a,l ";
+@asm "  rra ";
+@asm "  ld a,h ";
+@asm "  rra ";
+@asm "  xor l ";
+@asm "  ld l,a ";
+@asm "  xor h ";
+@asm "  ld h,a ";
+@asm "  ld (", random, "),hl ";
+@asm "  res 7,h ";
+@asm "  ld (", ret, "),hl";
+@asm "  ret ";
+end sub;
+
+sub xrndseed() @extern("xrndseed") is
+@asm "  ld a,r ";
+@asm "  ld l,a ";
+@asm "  ld a,r ";
+@asm "  ld h,a ";
+@asm "  or l ";
+@asm "  jr nz,1f ";
+@asm "  inc hl ";
+@asm " 1: ";
+@asm "  ld (", random, "),hl ";
+@asm "  ret ";
+end sub;
+
+var argv_pointer: [uint8];
+
+sub ArgvInit() @extern("ArgvInit") is
+	argv_pointer := 0x81 as [uint8];
+	[argv_pointer + [0x80 as [uint8]] as intptr] := 0;
+end sub;
+
+# Returns null is there's no next argument.
+sub ArgvNext(): (arg: [uint8]) extern("ArgvNext") is
+	# No more arguments?
+
+	if argv_pointer == (0 as [uint8]) then
+		arg := argv_pointer;
+		return;
+	end if;
+
+	# Skip leading whitespace.
+
+	var c: uint8;
+	loop
+		c := [argv_pointer];
+		if c != ' ' then
+			break;
+		end if;
+		argv_pointer := argv_pointer + 1;
+	end loop;
+
+	arg := argv_pointer;
+
+	# Skip to end of word and terminate.
+
+	loop
+		c := [argv_pointer];
+		if (c == ' ') or (c == '\n') or (c == 0) then
+			break;
+		end if;
+		argv_pointer := argv_pointer + 1;
+	end loop;
+	[argv_pointer] := 0;
+
+	if c == ' ' then
+		argv_pointer := argv_pointer + 1;
+	else
+		argv_pointer := 0 as [uint8];
+	end if;
+end sub;
+
+
