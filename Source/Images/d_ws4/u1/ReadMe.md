@@ -28,4 +28,9 @@ your terminal and printer.
 ## ZDE 1.8 - Lars Nelson 12/3/2022
 
 Added routine to save create time stamp under CP/M Plus since 
-CP/M Plus, unlike ZSDOS, has no native ability to set time stamps.
+CP/M Plus, unlike ZSDOS, has no native ability to set time stamps.
+
+## ZDE 1.9 - Peter Onion 03/27/2025
+
+- Added support for ANSI PgUp, PgDn, Home, & End.
+- Support ANSI F1 key for menu/error escape.

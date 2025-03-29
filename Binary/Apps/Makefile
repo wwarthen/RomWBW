@@ -1,6 +1,6 @@
 TOOLS = ../../Tools
 MOREDIFF := $(shell $(TOOLS)/unix/casefn.sh *.com)
-SUBDIRS = Test
+SUBDIRS = Test ZDE
 
 include $(TOOLS)/Makefile.inc
 

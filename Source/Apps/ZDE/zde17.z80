@@ -1,0 +1,8111 @@
+			;Assembles with Al Hawley's ZMAC as is
+			;Rename to ZDE17.Z80 for ZASM (Cromemco ASMB)
+;	.Z80		;Uncomment these two lines and rename
+;	ASEG		;to ZDE17.MAC for M80
+			;(use RELHEX to convert ZDE17.REL to ZDE17.HEX)
+;
+;*** ZDE assembly sequence
+;
+CR	EQU	0DH	;ASCII stuff
+LF	EQU	0AH
+FF	EQU	0CH
+BS	EQU	08H
+TAB	EQU	09H
+ESC	EQU	1BH
+DEL	EQU	7FH
+BEL	EQU	07H
+EOF	EQU	1AH
+X	EQU	80H	;hibit
+;
+BDOSep	EQU	0005h	;BDOS stuff
+FCB	EQU	005Ch
+FCBt1	EQU	FCB+9
+FCBex	EQU	FCB+12
+FCBs1	EQU	FCB+13
+FCBd0	EQU	FCB+16
+FCBcr	EQU	FCB+32
+FCBr0	EQU	FCB+33
+FCBr1	EQU	FCB+34
+FCBr2	EQU	FCB+35
+DMA	EQU	0080h
+;
+LSTO	EQU	5
+UCON	EQU	6
+CPMV	EQU	12
+RSTD	EQU	13
+SELD	EQU	14
+FOPN	EQU	15
+FCLO	EQU	16
+SRCH	EQU	17
+SRCN	EQU	18
+FDEL	EQU	19
+RSEQ	EQU	20
+WSEQ	EQU	21
+FMAK	EQU	22
+FREN	EQU	23
+GDRV	EQU	25
+SDMA	EQU	26
+USRN	EQU	32
+RSTV	EQU	37
+ERRM	EQU	45
+DOSV	EQU	48
+FTRU	EQU	99
+GETF	EQU	100
+SETF	EQU	101
+GETS	EQU	102
+SETS	EQU	103
+;
+Z3NdrL	EQU	16		; length of NDR dir/pwdstring
+Z3NdrM	EQU	8		; length of NDR name to match
+Z3NDR	EQU	0015H		; offset to NDR address in Z3ENV
+Z3MSG	EQU	0022H
+MsgUsr	EQU	64		; User area offset in message buffer
+MsgNmU	EQU	16		; # of user registers
+TPAful	EQU	12		; Z33 TPA full error code
+ErrBit	EQU	00000010B
+EcpBit	EQU	00000100B
+ExtBit	EQU	00001000B
+;
+;ErrSta is the value to be returned in the Z33 Message Buffer command
+;status to inform the command processor that an error has occurred in
+;an external program and that the error handler should be invoked.
+;
+ErrSta	EQU	ErrBit+EcpBit+ExtBit
+;
+;*** ZDE.ASM -  Z-System Display Editor
+;*** Universal Version - (c)1988 Eric Meyer
+;*** Z-System Version - (c)1989 Carson Wilson
+;    -------------------
+; VDE,VDE-2 - 9-12/84 - Enhanced VDO, added functions 
+; VDE-OS,OX - 7/85-1/86 - Small additions and fixes
+; VDE-PX    - 7-9/85 - Epson Geneva terminal version
+; VDE 1.2-3 - 9/85-1/86 - Generic terminal version
+; VDE/M 2.0 - 4/86 - Generic memory map version; CP/M+ support; additions
+;       2.1 - 6/86 - New Keys 0-9; window; undo; directory; new pagination,
+;                   compression, block marker, scroll; etc.
+;       2.2 - 8/86 - WS-like commands; left mrgn, hyphenation; macros
+;       2.3 - 9/86 - VINSTALL; Print options; word fns; real ^QA; RstDrv
+;       2.4 - 1/87 - vidRAM/window redone; "W" mode; ^OZ,^QP; block print
+;       2.5 - 3/87 - User#s; "N" mode; ^OS, ^OV/+/-; new block fns; hard-CRs
+;       2.6 - 7/87 - Allow blank filename; ^U abort; new toggles; ruler;
+;                   ^O<u>; AltBit fixes; works w/o curpos; key buffer; faster
+;                   scrolling; case insensitive searches; no fake "VIDRAM"
+;      2.61 - 8/87 - Bug fixes (incl FastFi), improved hyphenation
+;      2.62 - 11/87 - ^JKL synonyms; ^W prefix; ^OH; several small fixes
+;      2.63 - 1/88 - ^KV; WS style ^W/^Z; chgs to ^OP, ^OI/N, word fns
+;      2.64 - 3/88 - ^OQ,^QT,^QI; ^KD; ^QA fixes; dbl spc; top margin;
+;                         backward find; ShoRCu
+;      2.65 - 4/88 - ^OI/N args; Esc-TAB; ^OA; menu removal; minor fixes
+;      2.66 - 6/24/88 - Printer margins; Minor fixes.  LAST RELEASE!
+;      2.67b - 10/14/88 - Minor fixes
+; ZDE  1.0 - 3/10/89 - Z-System Display Editor
+;      1.3 - 8/26/89
+;      1.6 - 6/2/90
+;      1.6 - 11/19/20 - ZDE 1.6 source reconstituted using VDE 2.67
+;			source as a guide
+;      1.7 - 11/21/20 - Incorporated Al Hawley's timestamp fixes
+;    -------------------
+;
+	ORG	0100H
+;
+	JP	Start		;Entry and exit vectors
+	DB	'Z3ENV'
+	DB	1
+Z3Env:	DW	0
+Boot:	JP	0
+	DW	0
+;
+;Following VINSTALL data MUST be at 0110-0121
+;
+	DW	1006H		;Version compatibility
+	DW	UsrPat
+	DB	UPatL
+	DW	PSTbl
+	DB	PsL
+	DW	MnuSt
+	DW	KMnuSt
+	DW	EMnuSt
+	DW	OMnuSt
+	DW	QMnuSt
+		;version message (28 chars, used in menu)
+;		[----5----10---15---20---25--]
+VersID:	DB	'ZDE 1.7, Copr. 1990 C.Wilson',0
+;
+;
+;USER PATCHABLE VALUES
+;
+	ORG	0140H
+BAKFlg:	DB	0FFH	;0140H - create BAK files (y/n)
+DFMode:	DB	'A'	;default file modem W/A/N
+FDflt1:	DB	'Z80N'	;1st default override
+FDflt2:	DB	'WS W'	;2nd
+FDflt3:	DB	'CMDN'	;3rd
+FDflt4:	DB	'LIBN'	;4th
+InsFlg:	DB	0FFH	;defulat insert on (y/n)
+RulFlg:	DB	0FFH	;default rules on (y/n)
+HCDflt:	DB	0FFH	;default HCR disp on (y/n)
+HypFlg:	DB	0FFH	;enable hyphenation (y/n)
+PSFlg:	DB	0	;default proportional flag (y/n)
+PSokFl:	DB	0FFH	;default allow proportional flag (y/n)
+DfltLM:	DB	1	;left margin column (1=OFF)
+DfltRM:	DB	65	;right margin column (1=OFF)
+Ovlap:	DB	2	;scroll overlap (0=none)
+DirSys:	DB	0	;include SYS files (y/n)
+FixDsk:	DB	'@@'	;fixed drives
+Ring:	DB	0FFH	;error ring bell (y/n)
+Help:	DB	0FFH	;use help menus (y/n)
+AltHdr:	DB	0FFH	;use alt video in header (y/n)
+NoHdrF:	DB	0	;suppress header
+MHz:	DB	40H	;clock speed (40h=4MHz)
+Timer:	DB	38H	;horiz scroll delay (01..FF)
+TabCnt:	DB	7	;hard tab cols -1 (1/3/7/15)
+VTList:	DB	6,11,16,21	;variable tab columns (8)
+	DB	0,0,0,0
+VTNum	EQU	$-VTList
+WildCd:	DB	EOF	;wildcard character
+BlkChr:	DB	0	;block characters (^@)
+TogTbl:	DB	02H,04H,13H,19H	;toggles ^B,^D[^T],^S,^Y
+NTgTbl:	DB	11H,17H,5,12H	;switches ^Q,^W,^E,^R (last 015C)
+;
+;INSTALLATION
+;
+	ORG	180H
+Z3tcap:	DB	'Generic CRT     '	;ID
+	ORG	190H
+View:	DB	80			;viewable columns (max 128)
+AuWrap:	DB	0FFH			;does autowrap cursor
+Lines:	DB	24			;lines
+UsrKys:	DB	0FFH			;DEL key
+	DB	0FFH			;arrow up
+	DB	0FFH			;arrow down
+	DB	0FFH			;arrow right
+	DB	0FFH			;arrow left
+	DB	0
+CIL:	DB	0,0,0,0,0,0,0		;clear to end of line, 6 bytes
+TInit:	DB	1,'Z'-40H,0,0,0,0,0,0	;terminal init, 7 bytes
+TUInit:	DB	1,'Z'-40H,0,0,0,0,0,0	;terminal uninit
+AltOn:	DB	0,0,0,0,0,0,0		;alt video on, 6 bytes
+AltOff:	DB	0,0,0,0,0,0,0		;alt video off
+AltBit:	DB	0			;high bit gives alt video?
+Filter:	DB	7FH			;highest ASCII to send to screen
+PosMod:	DB	'N'			;curpos mode (Std/Rev/ANSI/None)
+PCu:	DB	1EH,0,0CH,0		;position cursor to (0,0)
+PosDly:	DB	0			;delay after curpos (00-FF)
+InsL:	DB	0,0,0,0,0,0,0		;insert line [1], 6 bytes
+DelL:	DB	0,0,0,0,0,0,0		;delete line [1], 6 byts
+OddDel:	DB	0			;ins/del line specific?
+CsrOff:	DB	0,0,0,0,0,0,0		;cursor off
+CurOn:	DB	0,0,0,0,0,0,0		;cursor on
+;
+	ORG	01F0H			;Printer codes
+	DB	'Teletype        '	;ID
+	ORG	0200H
+UseLF:	DB	0FFH			;use LF after CR in print?
+FormL:	DB	54			;form length (0=no pag)
+PTMarg:	DB	0			;top margin skip
+DotPO:	DB	0			;left margin skip
+PInit:					;printer init, 19 bytes
+	ORG	0218H
+PUInit:					;printer uninit, 7 bytes
+	ORG	0220H
+PCodes:	DB	0,0,0,0,0,0,0,0		;^B toggle on
+	DB	0,0,0,0,0,0,0,0		;...and off
+	DB	0,0,0,0,0,0,0,0		;^T [^D] toggle on
+	DB	0,0,0,0,0,0,0,0		;...and off
+	DB	0,0,0,0,0,0,0,0		;^S toggle on
+	DB	0,0,0,0,0,0,0,0		;...and off
+	DB	0,0,0,0,0,0,0,0		;^Y toggle on
+	DB	0,0,0,0,0,0,0,0		;...and off
+UCodes:	DB	0,0,0,0,0,0,0,0		;sw 1 (^Q)
+	DB	0,0,0,0,0,0,0,0		;sw 2 (^W)
+	DB	0,0,0,0,0,0,0,0		;sw 3 (^E)
+	DB	0,0,0,0,0,0,0,0		;sw 4 (^R)
+;
+	ORG	0280H
+UsrPat: 			;0280-02AFH - User Patch Area
+;(Can extend back into UCodes section if fewer switches used)
+;
+	ORG	02B0H		;02B0-030EH - Proportinal table
+UPatL	EQU	$-UsrPat
+PSTbl:	DB	  0,-12,  0,  0,  0,  6,  6,-12	;" "-";"
+	DB	 -6, -6,  0,  0,-12,  0,-12,  0	;"("-"/"
+	DB	  0,  0,  0,  0,  0,  0,  0,  0	;"0"-"7"
+	DB	  0,  0,-12,-12,  0,  0,  0,  0	;"8"-"?"
+	DB	  6,  6,  6,  6,  6,  6,  6,  6	;"@"-"G"
+	DB	  6, -6,  0,  6,  6, 12,  6,  6	;"H"-"O"
+	DB	  6,  6,  6,  6,  6, 12,  6, 12	;"P"-"W"
+	DB	  6,  6,  0, -6,  0, -6,  0,  0	;"X"-"_"
+	DB	-12,  0,  6,  0,  6,  0, -6,  6	;"'"-"g"
+	DB	  6,-12, -6,  6,-12, 12,  6,  0	;"h"-"o"
+	DB	  6,  6,  0,  0, -6,  6,  6, 12	;"p"-"w"
+	DB	  0,  6,  0, -6,-12, -6,  0	;"x"-"~"
+PsL	EQU	$-PSTbl
+;
+	ORG	0310H		;0310-04AFH - Macro keys
+Keys:	DS	2		;free count (VDE does this)
+	DS	510
+KT:
+;
+;
+;----- EXECUTION BEGINS HERE -------
+;
+	ORG	0510H
+;
+Start:	SUB	A		;check for Z80
+	RET	PE
+	LD	SP,Stack
+	LD	HL,Data		;zero out data area
+	LD	DE,Data+1
+	LD	BC,DataLn-1
+	LD	(HL),0
+	LDIR
+	LD	C,CPMV
+	CALL	BDOSep
+	LD	(DOSVer+1),A	;CP/M version
+	CP	30H
+	JR	NC,ItsCP3
+	LD	C,DOSV
+	CALL	BDOSep		; what kind of enhanced BDOS
+	LD	A,H
+	CP	'S'
+	JR	Z,ZxDOS
+	CP	'D'
+	JR	NZ,ItsCP3
+ZxDOS:	LD	(DOSVer+1),A	; store ZS/ZDDOS version
+	LD	C,GETF		; get ZSDOS flags
+	CALL	BDOSep
+	LD	(ZDflgs+1),HL
+	EX	DE,HL
+	RES	1,E		; public files are R/O
+	LD	C,SETF
+	CALL	BDOSep		; set ZSDOS flags
+ItsCP3:	CALL	DOSVer
+	LD	C,ERRM		; set action on hardware error
+	LD	E,0FEH		; return error code to program
+	CALL	NC,BDOSep	; for anything other than CP/M 2.2
+	LD	C,GDRV
+	CALL	BDOSep		;save logged drive
+	LD	(CurDsk),A
+	INC	A
+	LD	(FCB),A		; store A=1..P=16 in FCB->drive
+	LD	C,USRN		;and user
+	LD	E,0FFH
+	CALL	BDOSep
+	LD	(CurUsr),A
+	LD	(FCBU),A
+	LD	A,(Lines)
+	LD	(PhysLn),A
+	CALL	AdjLns
+	LD	A,(FormL)
+	LD	(PgLen),A
+	LD	HL,(DfltLM)
+	LD	(LfMarg),HL
+	LD	A,(BlkChr)
+	LD	(BadTbl),A
+	LD	A,(UseLF)
+	CPL
+	OR	LF
+	LD	(LFChr),A
+	LD	HL,MacStr
+	DEC	(HL)		;make a FF terminator
+	XOR	A		;a bad load will exit and invoke Z33's
+	LD	(BadLdX+1),A	;error handler
+;
+	LD	HL,DMA
+	LD	A,(HL)
+	INC	HL
+	CALL	Parse		;parse command line
+;
+	CALL	VerKey		;verify keys
+	LD	HL,TInit
+	CALL	CtlStr		;Clear and home cursor
+	JR	Edit		;start editing.
+;
+;Clear it all out and start over.
+;
+Restrt:	LD	A,1		;a bad load will not exit and invoke
+	LD	(BadLdX+1),A	;Z33's error handler
+	LD	HL,LoadQ
+	CALL	NewNam
+	LD	A,(EdErr)	;bad name?
+	OR	A
+	JR	NZ,BadLdX
+;
+;Start editing a File
+;
+Edit:	CALL	IniRAM		;initialize memory
+	CALL	DfltM		;adjust defaults
+	CALL	DoHdr		;show header
+	CALL	Top		;Start at TOF
+	CALL	Error0		;No errors
+	LD	A,(FCB+1)
+	CP	' '		;Filename blank?
+	JR	Z,Edit1
+	CALL	SavNam		;save it for LoadIt kludge
+	CALL	LoadIt		;Get input file
+	LD	A,(EdErr)
+	CP	1		;is it too big?
+	JR	NZ,Edit1
+BadLdX:	LD	A,0		;a non-zero value will set up Z33's message
+	OR	A		;buffer to have the Z33 error handler handle
+	JR	NZ,BadLd	;the 'TPA full' condition when we exit
+	LD	BC,Z3MSG
+	CALL	Z3EAdr
+	JR	Z,BadLd
+	LD	H,B
+	LD	L,C
+	LD	(HL),TPAful	; Z3MSG error byte: file too big
+	INC	HL
+	INC	HL
+	INC	HL		; point HL at Z3MSG command status byte
+	LD	(HL),ErrSta	; error, ECP running, external invocation
+	JP	QuitY
+BadLd:	CALL	DoErr		;Too big, or bad name
+	CALL	BlkFCB		;(Other error means new file)
+	JR	Edit
+Edit1:	LD	A,(MSIFlg)	;set up BAKflag
+	LD	HL,BAKFlg
+	AND	(HL)
+	LD	(FilFlg),A
+	XOR	A
+	LD	(Modify),A
+;
+Reset:	LD	SP,Stack	;recover from ^U prompt abort
+	CALL	ShoLn1
+;
+;
+;MAIN LOOP: SHOW TEXT, GET KEY
+;
+Ready:	CALL	Orient		;Get bearings
+	LD	HL,(OldLin)	; ###
+	LD	(SavLin),HL	; ###
+	LD	A,(OldCol)	; ###
+	LD	(SavCol),A	; ###
+	LD	A,(MacFlg)	; ###
+	OR	A		; ###
+	JR	NZ,RdyMac	; ###
+	LD	HL,(CurLin)	; ###
+	LD	(OldLin),HL	; ###
+	LD	A,(CurCol)	; ###
+	LD	(OldCol),A	; ###
+RdyMac:	CALL	ShoTx		;  then show text as needed
+	CALL	Cursr		;position cursor
+	CALL	TRptKy		;Get input
+	PUSH	AF
+	CALL	Error0		;Clear error indicator
+	CALL	SetNo		;default NO redisp
+	POP	AF
+	CALL	AdjKey		;translate arrows/DEL
+;
+DoKey:	CALL	Case		;try to match control code?
+	DB	MnuLn/3
+	DW	IChar		;Default : Insert character
+MnuSt	EQU	$
+	DB	0		;(internal use: null key)
+	DW	CKCan
+	DB	80H		;DEL
+	DW	Delete
+	DB	81H		;Up arrow
+	DW	Up
+	DB	82H		;Down
+	DW	Down
+	DB	83H		;Right
+	DW	Right
+	DB	84H		;Left
+	DW	Left
+	DB	ESC
+	DW	Escape
+	DB	'^'-40H
+	DW	UpLow
+	DB	'\'-40H
+	DW	Repeat		;Synonym for ^L
+	DB	'A'-40H
+	DW	WordLf
+	DB	'B'-40H
+	DW	Reform
+	DB	'C'-40H
+	DW	PageF
+	DB	'F'-40H
+	DW	WordRt
+	DB	'G'-40H
+	DW	EChar
+	DB	'I'-40H
+	DW	TabKey
+	DB	'J'-40H
+	DW	DoMnu
+	DB	'K'-40H
+	DW	CKKey
+	DB	'L'-40H
+	DW	Repeat
+	DB	'M'-40H
+	DW	ICR
+	DB	'N'-40H
+	DW	ICRA
+	DB	'O'-40H
+	DW	Onscrn
+	DB	'P'-40H
+	DW	CtlP
+	DB	'Q'-40H
+	DW	Quick
+	DB	'R'-40H
+	DW	PageB
+	DB	'T'-40H
+	DW	WordDl
+	DB	'U'-40H
+	DW	Undel
+	DB	'V'-40H
+	DW	IToggl
+	DB	'W'-40H
+	DW	Scr1LU
+	DB	'Y'-40H
+	DW	Eline
+	DB	'Z'-40H
+	DW	Scr1LD
+MnuLn	EQU	$-MnuSt
+;
+Sk1Ed:	LD	A,(EdErr)	;Check for error, repeat main loop
+	OR	A
+	CALL	NZ,DoErr
+	JP	Ready
+;
+;Block commands: ^K toggle is on
+;
+CKKey:	LD	HL,CKTog
+	CALL	Prefix
+CKSyn:	CALL	XCase		;Entry for ESC synonyms
+	CALL	Case
+	DB	KMnuLn/3
+	DW	Error2		;complain if unknown
+KMnuSt	EQU	$
+	DB	'B'-40h
+	DW	Block
+	DB	'C'-40h
+	DW	Copy
+	DB	'D'-40h
+	DW	Done
+	DB	'E'-40h
+	DW	Era
+	DB	'F'-40h
+	DW	Dir
+	DB	'H'-40h
+	DW	DoMnu
+	DB	'I'-40h
+	DW	Info
+	DB	'K'-40h
+	DW	Termin
+	DB	'L'-40h
+	DW	Load
+	DB	'N'-40h
+	DW	ChgNam
+	DB	'P'-40h
+	DW	Print
+	DB	'Q'-40h
+	DW	Quit
+	DB	'R'-40h
+	DW	Read
+	DB	'S'-40h
+	DW	Save
+	DB	'U'-40h
+	DW	Unmark
+	DB	'V'-40h
+	DW	MovBlk
+	DB	'W'-40h
+	DW	Write
+	DB	'X'-40h
+	DW	Exit
+	DB	'Y'-40h
+	DW	EBlock
+	DB	ESC
+	DW	CKCan
+	DB	' '
+	DW	CKCan
+KMnuLn	EQU	$-KMnuSt
+CKCan:	RET
+;
+;ESC commands: ESC toggle is on.
+;
+Escape:	LD	HL,ESCTog
+	CALL	Prefix
+	CALL	AdjKey
+	CALL	UCase
+	CP	'0'
+	JR	C,Esc01		;macro Keys: special case
+	CP	'9'+1
+	JP	C,UseKey
+Esc01:	CALL	Case
+	DB	EMnuLn/3
+	DW	CKSyn		;default: ^K synonym
+EMnuSt	EQU	$
+	DB	81H		;Up arrow
+	DW	ShftU
+	DB	82H		;Down
+	DW	ShftD
+	DB	83H		;Right
+	DW	ShftR
+	DB	84H		;Left
+	DW	ShftL
+	DB	'['		;ANSI cursor sequences
+	DW	ANSIcu
+	DB	TAB
+	DW	TaBack
+	DB	'M'
+	DW	DoMac
+	DB	'#'
+	DW	MacKey
+	DB	'!'		;macro prog stmts
+	DW	MacJmp
+	DB	'='
+	DW	MacTst
+	DB	'~'
+	DW	MacTsX
+	DB	'+'
+	DW	ChainK
+	DB	';'
+	DW	Wait
+EMnuLn	EQU	$-EMnuSt
+	RET
+;
+;Onscreen commands.  ^O toggle is on.
+;
+Onscrn:	LD	HL,COTog
+	CALL	Prefix
+	CALL	XCase		;force to ctl
+	CALL	AdjKUp		;adjust UP ARROW ONLY
+	CALL	Case		;What function?
+	DB	OMnuLn/3
+	DW	Error2		;complain if unknown
+OMnuSt	EQU	$
+	DB	81H		;up
+	DW	MakTop
+	DB	'A'-40h
+	DW	AITog
+	DB	'C'-40h
+	DW	Center
+	DB	'D'-40h
+	DW	HCRTog
+	DB	'F'-40h
+	DW	Center		;same fn as 'C'
+	DB	'H'-40h
+	DW	HypTog
+	DB	'I'-40h
+	DW	VTSet
+	DB	'J'-40h
+	DW	PSTog
+	DB	'L'-40h
+	DW	SetLM
+	DB	'N'-40h
+	DW	VTClr
+	DB	'P'-40h
+	DW	PgSet
+	DB	'Q'-40h
+	DW	NoHdr
+	DB	'R'-40h
+	DW	SetRM
+	DB	'S'-40h
+	DW	DblTog
+	DB	'T'-40h
+	DW	Ruler
+	DB	'V'-40h
+	DW	VTTog
+	DB	'W'-40h
+	DW	Window
+	DB	'X'-40h
+	DW	RelM
+	DB	'Z'-40h
+	DW	Blank
+	DB	ESC
+	DW	COCan
+	DB	' '
+	DW	COCan
+OMnuLn	EQU	$-OMnuSt
+COCan:	RET
+;
+;Quick commands.  ^Q toggle is on.
+;
+Quick:	LD	HL,CQTog
+	CALL	Prefix
+	CALL	XCase
+	CALL	AdjKey		;translate arrow/DEL
+	CALL	Case		;What function?
+	DB	QMnuLn/3
+	DW	Error2		;complain if unknown
+QMnuSt	EQU	$
+	DB	80H		;DEL
+	DW	EBLine
+	DB	81H		;Up arrow
+	DW	QuikUp
+	DB	82H		;Down
+	DW	QuikDn
+	DB	83H		;Right
+	DW	QuikRt
+	DB	84H		;Left
+	DW	QuikLf
+	DB	'A'-40h
+	DW	Rplace
+	DB	'B'-40h
+	DW	QikBlk
+	DB	'C'-40h
+	DW	Bottom
+	DB	'F'-40h
+	DW	Find
+	DB	'Q'-40h
+	DW	Queue
+	DB	'I'-40h
+	DW	ZipTo
+	DB	'P'-40h
+	DW	QuikLc
+	DB	'R'-40h
+	DW	Top
+	DB	'T'-40h
+	DW	E2Char
+	DB	'U'-40h
+	DW	UndlLn
+	DB	'Y'-40h
+	DW	EOLine
+	DB	'Z'-40h
+	DW	QuikMk
+	DB	ESC
+	DW	CQCan
+	DB	' '
+	DW	CQCan
+QMnuLn	EQU	$-QMnuSt
+CQCan:	RET
+;
+;
+;
+Prefix:	PUSH	HL		;show prefix, get suffix
+	LD	DE,DspEsc
+	CALL	GoTo
+	CALL	MakAlt
+	POP	HL
+	LD	B,3
+	CALL	BHLMsg
+	LD	B,1
+	CALL	BBlank
+	LD	DE,DspEsQ	;position cursor
+	CALL	GoTo
+	CALL	RptKey		;get suffix
+	PUSH	AF
+	LD	A,(NoHdrF)
+	OR	A
+	JR	NZ,PrefNH
+	LD	DE,DspEsc
+	CALL	GoTo
+	LD	B,4		;clean up
+	CALL	BBlank
+	CALL	UnAlt
+	POP	AF
+	RET
+PrefNH:	CALL	UnAlt		;(if no header)
+	CALL	ShoLn1
+	CALL	RulFix
+	POP	AF
+	RET
+;
+;
+;Return to CP/M ... With or without saving
+;
+Exit:	CALL	Save		;Save the file
+	LD	A,(EdErr)	;Was it ok?
+	OR	A
+	RET	NZ		;No, do not quit
+	JR	QuitY1
+;
+Done:	CALL	Save		;Save, and load new
+	LD	A,(EdErr)
+	OR	A
+	RET	NZ
+	JP	Restrt
+;
+Quit:	LD	A,(Modify)	;Quit to CP/M
+	OR	A
+	JR	Z,QuitY1
+	LD	HL,QuitQ
+	CALL	Prompt
+	CALL	Confrm		;warn if file changed...
+	JP	NZ,ShoLn1
+QuitY1:	XOR	A		;###
+	LD	(WinFlg),A	;###
+	CALL	AdjLns		;###
+	LD	BC,Z3MSG	;###
+	CALL	Z3EAdr		;###
+	JR	Z,QuitY		;###
+	LD	HL,MsgUsr	;### offset to user area in message buffers
+	ADD	HL,BC		;###
+	LD	DE,CurLin	;### store the current line# in the Z3
+	EX	DE,HL		;###
+	LD	BC,2		;###
+	LDIR			;###
+QuitY:	LD	HL,TUInit	;Clear screen
+	CALL	CtlStr
+	LD	A,(CurDsk)	;restore logged disk
+	LD	E,A
+	LD	C,SELD
+	CALL	BDOS
+	LD	A,(CurUsr)	;and user
+	LD	E,A
+	LD	C,USRN
+	CALL	BDOSep
+	CALL	DOSVer
+	JP	C,Boot		;### restart if CP/M 2.2
+	CP	'S'		;###
+	JR	Z,ZSErrR	;###
+	CP	'D'		;###
+	JR	NZ,CPM3xt	;###
+ZSErrR: LD	C,SETF		;### restore ZxDOS flags
+ZDflgs: LD	DE,0		;###
+	CALL	BDOSep		;###
+CPM3xt:	LD	C,ERRM		;### reset ZxDOS, CP/M 3 error mode
+	LD	E,0		;###
+	CALL	BDOSep		;###
+	JP	Boot		;### and restart
+;
+;Error handler
+;
+DoErr:	CALL	Loud		;Show error message, wait for ESC
+	CALL	SetNo
+	LD	A,(MacFlg)
+	OR	A		;###
+	CALL	NZ,RstI1x	;###
+	XOR	A		;###
+	LD	(MacFlg),A	;### kill any running macro
+	LD	A,(EdErr)
+	CP	10
+	JP	NC,SetAl	;error 10 does NOT show
+	LD	A,(Ring)
+	OR	A
+	LD	E,BEL
+	CALL	NZ,ShutUp	; ring bell
+	CALL	MakAlt
+	CALL	UpLft
+	CALL	Dspl
+	DB	X,31,'[[','['+X,0
+	LD	A,(EdErr)
+	ADD	A,A		;Double the code
+	LD	L,A
+	LD	H,0
+	LD	DE,ErrTab
+	ADD	HL,DE
+	LD	E,(HL)		;Get msg addr from table
+	INC	HL
+	LD	D,(HL)
+	EX	DE,HL
+	CALL	DspLp		;show it
+	CALL	DsplC
+	DB	' ]]]',CR,0
+	CALL	UnAlt
+	CALL	ESCLp
+	LD	A,(EdErr)
+	CP	1
+	JR	Z,DoErr2
+	CP	5
+	JR	Z,DoErr2
+	CP	9
+	JP	C,ShoLn1	;(errors 2-8 need no redisp)
+DoErr2:	JP	SetAl
+ESCLp:	CALL	RptKey		;await ESC from console
+	CP	ESC
+	RET	Z
+	CP	' '
+	JR	NZ,ESCLp
+	RET
+;
+Error0:	LD	A,0		;clear error (don't change flags)
+	JR	ErrSet
+Error1:	LD	A,1		;error set fns
+	JR	ErrSet
+Error2:	LD	A,2
+	JR	ErrSet
+Error3:	LD	A,3
+	JR	ErrSet
+Error4:	LD	A,4
+	JR	ErrSet
+Error5:	LD	A,5		;6 currently not used
+	JR	ErrSet
+Error7:	LD	A,7
+	JR	ErrSet
+Error8:	LD	A,8
+	JR	ErrSet
+Error9:	LD	A,9
+	JR	ErrSet
+Eror10:	LD	A,10
+ErrSet:	LD	(EdErr),A
+	RET
+;
+;
+;INPUT ROUTINES
+;
+KeyIn:	LD	HL,(Timer)	;Get key, regardless
+	LD	H,0
+	ADD	HL,HL
+	ADD	HL,HL
+	ADD	HL,HL
+	ADD	HL,HL
+	INC	HL
+KyIn1:	PUSH	HL
+	CALL	KyStat
+	POP	HL
+	DEC	HL
+	JR	NZ,Keybd	;read key if got one
+	LD	A,(HorFlg)
+	LD	E,A
+	LD	A,(KeyFlg)
+	OR	E
+	OR	H
+	OR	L		;allow redisp for horizontal scroll?
+	JR	NZ,KyIn1
+	CPL
+	LD	(HorFlg),A	;yep (just once)
+	CALL	ShoAll
+	CALL	Cursr
+	JR	KyIn1
+;
+Keybd:	CALL	KyStat		;Get key, or 0 if none
+	RET	Z
+	LD	HL,ConBuf
+	DEC	(HL)		;uncount it
+	INC	HL
+	LD	A,(HL)		;here it is
+	LD	D,H
+	LD	E,L
+	INC	HL
+	LD	BC,ConBufL-1
+	LDIR			;remove it
+	AND	7FH		;strip parity
+	RET
+;
+KyStat:	CALL	CONSt		;Console status with buffering
+	JR	Z,ConChk	;all quiet
+	LD	HL,ConBuf	;got key
+	INC	(HL)		;ok, count it
+	LD	E,(HL)
+	LD	D,0
+	ADD	HL,DE		;point there
+	LD	(HL),A		;put it in
+	LD	A,E
+	CP	ConBufL		;buffer full?
+	JR	C,ConChk
+ConBsy:	LD	A,0C9H		;(RET)
+	LD	(Plug),A	;plug up the console until buffer empty
+ConChk:	LD	A,(ConBuf)	;check buffer (FAST)
+	OR	A
+	RET	NZ
+	LD	(Plug),A	;buffer empty, unplug console
+	RET
+;
+CONSt:	XOR	A
+Plug:	NOP			;<--- RET plugs up console
+	LD	E,0FFH		;console status/input
+	LD	C,UCON
+	CALL	BDOSep
+	OR	A		;test for null
+	RET
+;
+KyPeek:	CALL	KyStat		;key available?
+	RET	Z		;no
+	LD	A,(ConBuf+1)	;return 1st char in buffer
+	AND	7FH		;strip parity
+	RET
+;
+;
+Confrm:	CALL	RptKey		;get a Y/N answer
+	CALL	UCase
+	CP	'Y'		;return Z if confirmed
+	RET	Z
+	CP	'U'-40h
+	JR	Z,IsCtlU
+	CP	ESC		;allow this too
+IsCtlU:	JP	Z,Reset		
+	CP	'N'
+	JR	NZ,Confrm
+CnfNo:	OR	A
+	RET
+;
+;Translate four arrow keys and BS,DEL
+;
+AdjKey:	CP	BS		;First handle ^H (special case)
+	JR	NZ,AdjK0
+	LD	C,80h		;make it DEL
+	LD	HL,UsrKys
+	CP	(HL)		;Is it installed as DEL?
+	JR	Z,AKret
+	LD	C,84h		;no, then it's Left arrow
+	CP	A
+	JR	AKret
+AdjK0:	LD	B,5		;Not ^H, try the rest
+	JR	AdjK1
+AdjKUp:	LD	B,2		;only do (DEL and) UP arrow
+AdjK1:	LD	HL,UsrKys
+	LD	DE,WSKys
+	LD	C,7FH		;encode 80h=DEL, 81h=up, etc.
+AKlp:	INC	C
+	CP	(HL)
+	JR	Z,AKret
+	EX	DE,HL
+	INC	DE
+	CP	(HL)
+	JR	Z,AKret
+	INC	HL
+	DJNZ	AKlp
+	CP	C
+	LD	C,A		;NO match: return NZ, char in A and C
+AKret:	LD	B,A		;MATCH: return Z, code in A, char in C
+	LD	A,C
+	LD	C,B
+	RET
+WSKys:	DB	DEL,'E'-40H,'X'-40H,'D'-40H,'S'-40H
+;
+;
+ANSIcu:	CALL	RptKey		;Handle ANSI cursor keys ESC-[...
+	SUB	'A'
+	JP	Z,Up
+	DEC	A
+	JP	Z,Down
+	DEC	A
+	JP	Z,Right
+	DEC	A
+	JP	Z,Left
+	JP	Error2
+;
+;Get string input
+;
+GetStr: LD	A,LinLen+1	;string length +1
+GSEnt:	LD	(GSlen+1),A	;(entry for GetNum and NewNam)
+	LD	HL,DMA		;*** MUST be 0080h ***
+Lp1GSx:	EXX
+	POP	HL		;word after call
+	PUSH	HL
+	LD	E,(HL)		;storage/recall buffer address
+	INC	HL
+	LD	D,(HL)
+	LD	(GSbufA),DE
+	EXX
+Lp1GSy:	XOR	A
+	LD	(RclFlg),A
+Lp1GS:	LD	A,L
+	SUB	DMA		;length
+GSlen:	CP	0		;<---- max length pastes in here
+	JR	NC,GSBS		;full?
+	LD	A,(RclFlg)
+	OR	A
+	JR	NZ,GSrcl
+	PUSH	HL
+	CALL	RptKey		;Get next input
+	CALL	AdjKey		;translate key
+	POP	HL
+	CP	80H		;corrections? DEL,
+	JR	Z,GSBS
+	CP	84H		;left
+	JR	Z,GSBS
+	CP	83H		;right
+	JR	Z,GSrcl		;recall a char
+	CP	CR		;CR ends
+	JR	Z,GSCR
+	CP	'U'-40H		;^U aborts operation
+	JP	Z,Reset
+	CP	'P'-40H		;^P for ctlcode
+	JR	Z,GSctl
+	LD	A,C		;restore orig char
+	CP	'X'-40H		;wipeout
+	JR	Z,GSwipe
+	CP	'R'-40H
+	JR	Z,GSrcl		;recall the last string
+;
+Sk1GS:	LD	(HL),A		;Store byte
+	INC	HL		;Move along
+	CP	20H		; ctl char?
+	PUSH	HL
+	JR	NC,Sk2GS	;no, just a normal char
+	ADD	A,40H		;ctls are hili letters
+	PUSH	AF
+	CALL	AltY
+	POP	AF
+	CALL	PutChA
+	CALL	UnAltY
+	JR	Sk3GS
+Sk2GS:	CALL	PutChA		;show byte
+Sk3GS:	POP	HL
+	JR	Lp1GS
+;
+GSBS:	CALL	GSBSsb
+	JR	Lp1GSy
+GSwipe: CALL	GSBSsb
+	JR	NZ,GSwipe
+	JR	Lp1GSx
+GSBSsb:	LD	A,DMA		;Are we at start
+	CP	L
+	RET	Z		;return Z if so
+	DEC	HL		;back up pointer
+	LD	E,BS		;wipe out char
+	CALL	PutCh
+	LD	E,' '
+	CALL	PutCh
+	LD	E,BS
+	CALL	PutCh
+	OR	1		;clear flags
+	RET
+;
+GSrcl:	EX	AF,AF'		;save original char
+	EXX			;save HL
+	LD	HL,(GSbufA)	;recall buffer ptr
+	LD	A,H
+	OR	L
+	EXX			;restore HL
+	JP	Z,Lp1GS		;no recall buffer
+	EXX			;recall buffer ptr in HL
+	LD	A,(HL)		;fetch char from recall buffer
+	EXX			;restore HL
+	OR	A		;any char?
+	JP	Z,Lp1GSx	;no, we're done, reset the ptr addr
+	CP	0FFH
+	JP	Z,Lp1GSx	;no, we're done, reset the ptr addr
+	EXX			;recall buffer pre in HL
+	INC	HL		;point to next char
+	LD	(GSbufA),HL	;update recall buffer ptr
+	EXX			;restore HL
+	EX	AF,AF'		;restore original char
+	CP	'R'-40h		;^R? (whole string)
+	JR	NZ,GSrclX	;no, just a single char
+	LD	(RclFlg),A
+GSrclX:	EX	AF,AF'		;restore char from recall buffer
+	JR	Sk1GS		;store char
+;
+GSCR:	LD	(HL),0		;terminator
+	LD	A,L
+	SUB	DMA		;Compute input length (Z=zero)
+	POP	DE		;skip over buffer address
+	INC	DE
+	INC	DE
+	PUSH	DE
+	RET			;HL points past end of string
+;
+GSctl:	PUSH	HL
+	CALL	RptKey
+	CALL	XCase
+	POP	HL
+	JP	Sk1GS
+;
+;Get numeric input (0-65535 decimal), return C if bad
+;
+GetNbr:	PUSH	BC		;BC = default if no input
+	LD	A,5+1
+	CALL	GSEnt		;get up to 3 digits
+	DW	0
+	POP	DE
+	JR	NZ,GNyes
+	LD	B,D
+	LD	C,E
+	LD	A,B		;no entry, use default
+	OR	C
+	RET
+GNyes:	LD	DE,DMA		;fall thru to GetNNN
+;
+GetNNN:	PUSH	HL		;gets decimal # pointed by DE
+	LD	H,D
+	LD	L,E
+	LD	B,0
+GNL:	LD	A,(HL)
+	CP	'0'
+	JR	C,GotN		;terminated by any nondigit.
+	CP	'9'+1
+	JR	NC,GotN
+	INC	HL
+	INC	B
+	LD	A,B
+	CP	5+1
+	JR	NC,GNErr	;5 digits max.
+	JR	GNL
+GotN:	LD	A,B		;okay, do them
+	LD	BC,0
+	OR	A		;digits?
+	JR	Z,GNErr
+	CP	2
+	JR	Z,Got2
+	JR	C,Got1
+	CP	4
+	JR	Z,Got4
+	JR	C,Got3
+	CP	5
+	JR	NZ,GNErr
+Got5:	LD	HL,10000
+	CALL	GNNdig
+	JR	C,GNErr
+Got4:	LD	HL,1000
+	CALL	GNNdig
+	JR	C,GNErr
+Got3:	LD	HL,100
+	CALL	GNNdig
+	JR	C,GNErr
+Got2:	LD	HL,10
+	CALL	GNNdig
+	JR	C,GNErr
+Got1:	LD	HL,1
+	CALL	GNNdig
+	JR	C,GNErr
+	POP	HL
+	LD	A,B
+	OR	C
+	RET
+GNErr:	POP	HL
+	SCF			;error
+	RET
+;
+GNNdig:	LD	A,(DE)		;do a digit: HL=power of 10
+	INC	DE
+GNNLp:	CP	'0'
+	RET	Z
+	DEC	A
+	PUSH	HL
+	ADD	HL,BC
+	LD	B,H
+	LD	C,L
+	POP	HL
+	RET	C		;overflow
+	JR	GNNLp
+;
+;Versions of above for 0...255 only: GetNum, GetNN take # in A
+;
+GetNum:	LD	C,A
+	LD	B,0
+	CALL	GetNbr
+	JR	GetNN1
+GetNN:	CALL	GetNNN
+GetNN1:	RET	C
+	XOR	A
+	OR	B
+	JR	NZ,GetNNX
+	OR	C		;result in A, OK
+	RET
+GetNNX:	SCF			;oops, too big
+	RET
+;
+;
+;Convert 16-bit number in HL to a one to five
+;digit decimal number in the area pointed to by DE
+;
+BCDCon:	LD	IX,P10Tab	;Point at table
+	PUSH	DE		;Save output pointer
+BCDlp1:	LD	B,(IX+1)
+	LD	C,(IX)
+	LD	A,C		;low byte
+	CP	1		;Clear carry flag
+	JR	Z,BCDend
+	SBC	HL,BC		;Subtract from input
+	JR	NC,BCDok	;Got one in range
+	ADD	HL,BC		;Restore it
+	INC	IX
+	INC	IX
+	JR	BCDlp1		;Try next one
+;
+BCDok:	LD	A,'1'
+	LD	(DE),A		;Set initial digit
+BCDlp2:	SBC	HL,BC		;Subtract again
+	JR	C,BCDsk1	;Went negative
+	EX	DE,HL
+	INC	(HL)		;Increment digit
+	EX	DE,HL
+	JR	BCDlp2
+;
+BCDsk1:	ADD	HL,BC		;Restore it
+	INC	DE		;Bump output
+	INC	IX
+	INC	IX
+	LD	C,(IX)
+	LD	B,(IX+1)
+	LD	A,C
+	CP	1		;Is this last entry
+	JR	Z,BCDend
+	LD	A,'0'
+	LD	(DE),A
+	JR	BCDlp2
+;
+BCDend:	LD	A,L
+	OR	'0'
+	LD	(DE),A
+	INC	DE
+	EX	DE,HL
+	POP	BC
+	SBC	HL,BC		;Number filled
+	LD	A,5		; needed
+	SUB	L		; to do
+	RET	Z
+	ADD	HL,BC		;Restore pointer
+BCDlp3:	LD	(HL),' '	;Clear field
+	INC	HL
+	DEC	A
+	JR	NZ,BCDlp3
+	RET
+;
+P10Tab:	DW	10000,1000,100,10,1
+;
+;
+;
+;PRINT text from memory
+;
+Print:	LD	HL,PgLen	;set defaults
+	XOR	A
+	CP	(HL)
+	JR	NZ,Pr00
+	INC	A		;bit 0 set if no pagn
+Pr00:	LD	(POByt),A
+	XOR	A
+	LD	(HdrLen),A
+	LD	(POff),A
+	CPL
+	LD	(PNum),A
+	LD	(PrFlg),A
+	LD	A,1
+	LD	(Copies),A
+	LD	(PBeg),A
+	LD	A,(DotPO)
+	LD	(PrLMrg),A
+	LD	A,(PTMarg)
+	LD	(PrTMrg),A
+	LD	HL,PrtQ		;options?
+	CALL	Prompt
+	CALL	GetStr		;get string into 80
+	DW	0
+PO1st:	LD	DE,DMA		;point to option string
+PrOlp:	LD	A,(DE)
+	INC	DE
+	LD	HL,POByt	;set up bit flags
+	LD	BC,PrOlp
+	PUSH	BC		;(return)
+	CALL	UCase
+	CP	' '		;eat spaces
+	RET	Z
+	CP	'B'
+	JR	Z,POBlk
+	CP	'D'
+	JR	Z,PODblS
+	CP	'P'
+	JR	Z,POPau
+	CP	'L'
+	JR	Z,POLMrg
+	CP	'T'
+	JR	Z,POTMrg
+	CP	'*'
+	JR	Z,POCpy
+	CP	'^'
+	JR	Z,POCtl
+	CP	'@'
+	JR	Z,POBeg
+	CP	'#'
+	JR	Z,PONum
+	CP	'='
+	JP	Z,POPgS
+	CP	'"'
+	JP	Z,POHdrT
+	POP	BC		;kill return
+	OR	A
+	JP	NZ,Error7	;unexpected char
+	LD	A,(PrFlg)
+	LD	B,A
+	XOR	A		;zero PrFlg
+	LD	(PrFlg),A
+	OR	B
+	JR	NZ,PO1st
+	JP	PORdy
+;
+PrFlg:	DB	0
+;
+POCpy:	CALL	GetNN		;"*" sets copy count
+	JP	C,POBad
+	LD	(Copies),A
+	RET
+POLMrg:	CALL	GetNN		;"Lnn" sets left margin
+	JP	C,POBad
+	LD	(PrLMrg),A
+	RET
+POTMrg:	CALL	GetNN		;"Tnn" sets top margin
+	JR	C,POBad
+	LD	(PrTMrg),A
+	RET
+POPau:	SET	4,(HL)		;bit 4 is for "P"
+	RET
+PODblS:	SET	3,(HL)		;bit 3 is for "D"
+	RET
+POCtl:	SET	2,(HL)		;bit 2 is for "^"
+	RET
+POBlk:	LD	A,(HL)
+	AND	11000010B	;bits 1,6,7 must be clear
+	JR	NZ,POBad
+	SET	5,(HL)		;set bit 5 (BLOCK)
+	RET
+POBeg:	BIT	0,(HL)		;must be paginating
+	JR	NZ,POBad
+	CALL	GetNN		;"@" page beginning
+	JR	C,POBad
+	OR	A
+	JR	Z,POBad
+	LD	(PBeg),A
+	SET	6,(HL)		;bit 6 is for "@" (suppresses output)
+	SET	7,(HL)		;so is bit 7 (multicopy)
+	INC	A
+	NEG			;255-@ is most # can be
+	LD	B,A
+	LD	A,(PNum)
+	CP	B
+	RET	C		;okay, less
+	LD	A,B
+	LD	(PNum),A
+	RET
+PONum:	BIT	0,(HL)		;must be paginating
+	JR	NZ,POBad
+	CALL	GetNN		;"#" page count
+	JR	C,POBad
+	OR	A
+	JR	Z,POBad
+	LD	B,A
+	LD	A,(PBeg)
+	ADD	A,B		;@ + # cannot exceed 255
+	JR	C,POBad
+	LD	A,B
+	LD	(PNum),A
+	RET
+POPgS:	BIT	0,(HL)		;must be paginating
+	JR	NZ,POBad
+	CALL	GetNN		;"=" starting pagination
+	JR	C,POBad
+	OR	A
+	JR	Z,POBad
+	LD	(POff),A	;offset beginning page
+	RET
+POHdrT:	BIT	0,(HL)		;must be paginating
+	JR	NZ,POBad
+	SET	1,(HL)		;bit 1 requests header
+	LD	(HdrPtr),DE	;point to header text
+	LD	B,50		;and figure its length
+POHlp:	LD	A,(DE)
+	INC	DE
+	CP	'"'
+	JR	Z,POHlpF
+	DJNZ	POHlp
+	JR	POBad		;too long
+POHlpF:	LD	A,50
+	SUB	B		;length
+	LD	(HdrLen),A
+	RET
+POBad:	POP	HL		;eat return
+	JP	Error7
+;
+PORdy:	CALL	IOon		;say Wait
+	LD	HL,PInit	;init string?
+	LD	B,(HL)
+	INC	HL
+	CALL	LSTStr
+	LD	HL,(AftCu)
+	LD	(LastCu),HL	;save position
+	LD	HL,(BegTx)
+	CALL	MoveL		;move to top of file
+	LD	A,(POff)
+	OR	A
+	JR	NZ,PORdy0
+	LD	A,(PBeg)
+PORdy0:	LD	HL,PBeg
+	SUB	(HL)		;adjust starting page offset
+	LD	(POff),A
+	LD	HL,POByt
+	BIT	5,(HL)
+	JR	Z,PORdy1
+	CALL	IsBlk		;block print requested
+	BIT	1,A		; must be marked
+	JP	Z,PrOops
+	INC	DE
+	PUSH	HL
+	SBC	HL,DE
+	POP	HL
+	RET	Z		;block empty
+	DEC	HL
+	EX	DE,HL
+	JR	PORdy2
+PORdy1:	CALL	NdCnt		;print whole file
+	JP	C,PrDone	;file empty
+	LD	HL,(AftCu)
+	LD	DE,(EndTx)
+PORdy2:	LD	(StPrt),HL
+	LD	(EndPr),DE
+	CALL	PCR		;###
+;
+RePrt:	LD	HL,POByt	;[reprint reentry]
+	BIT	7,(HL)
+	JR	Z,PRP0
+	SET	6,(HL)		;remember if "@" was used
+PRP0:	XOR	A
+	LD	(PageN),A
+	INC	A
+	LD	(IgnFlg),A	;TOF is start of line (DotChk)
+	LD	A,(PgLen)	;start first page
+	LD	B,A
+	OR	A
+	PUSH	AF		;###
+	CALL	Z,DoPOf		;###
+	POP	AF		;###
+	CALL	NZ,PgBrk
+	JR	C,Sk4Pr
+	LD	HL,(StPrt)	;Point at first one
+	LD	C,0		;Initialize GetNx
+Lp1Pr:	CALL	GetNx		;Get a character
+	CALL	DotChk		;(maybe ignore dot command lines)
+	CP	CR
+	JR	NZ,Sk2Pr
+	CALL	PrOut		;It's a CR
+	PUSH	BC
+	PUSH	HL
+	CALL	Keybd
+	CP	ESC		;Abort request?
+	POP	HL
+	POP	BC
+	JR	Z,Sk1Pr
+	LD	A,(POByt)
+	BIT	3,A		;doublespacing? do extra CR(LFCR)LF
+	JR	Z,Sk0Pr
+	CALL	PLF
+	CALL	PCR
+	LD	A,B		;count it (if paginating)
+	OR	A
+	JR	Z,Sk0Pr
+	DEC	B
+	JR	Z,Sk01Pr
+Sk0Pr:	LD	A,B
+	OR	A		;Not paginating? B is and stays 0
+	LD	A,(LFChr)	;Add usual line feed
+	JR	Z,Sk2Pr
+	DJNZ	Sk2Pr
+Sk01Pr:	CALL	PgBrk		;time for NEW PAGE
+	JR	C,Sk4Pr		;done?
+	JR	Sk2aPr
+Sk1Pr:	LD	A,1		;abort
+	LD	(Copies),A
+	JR	Sk3Pr
+Sk2Pr:	CALL	ChekC		;Check for masking
+	CALL	PrOut		;Output char
+	XOR	A
+	CP	C		;Hidden space waiting?
+	JR	NZ,Lp1Pr
+Sk2aPr:	LD	DE,(EndPr)	;At end?
+	LD	A,E
+	SUB	L
+	LD	A,D
+	SBC	A,H
+	JR	NC,Lp1Pr	;Loop if more to go
+Sk3Pr:	CALL	PCR		;last CRLF for some matrix printers
+	LD	A,(LFChr)
+	LD	C,A
+	LD	A,(PgLen)
+	OR	A		;Finish page?
+	JR	Z,Sk3aPr
+	LD	C,FF
+Sk3aPr:	LD	A,C
+	CALL	PrOut
+Sk4Pr:	LD	HL,PCodes	;undo toggles if on
+	LD	DE,16
+	LD	B,4
+Lp2Pr:	BIT	7,(HL)
+	JR	Z,Lp2PrF
+	RES	7,(HL)
+	PUSH	BC
+	PUSH	DE
+	PUSH	HL
+	LD	DE,8
+	ADD	HL,DE
+	LD	B,(HL)
+	INC	HL
+	CALL	LSTStr
+	POP	HL
+	POP	DE
+	POP	BC
+Lp2PrF:	ADD	HL,DE
+	DJNZ	Lp2Pr
+	LD	HL,Copies	;more copies?
+	DEC	(HL)
+	JP	NZ,RePrt
+	LD	HL,PUInit	;uninit string?
+	LD	B,(HL)
+	INC	HL
+	CALL	LSTStr
+	JR	PrDone
+PrOops:	CALL	Error7
+PrDone:	LD	HL,(LastCu)	;all finished
+	DEC	HL
+	CALL	MoveR		;go back to position
+	CALL	IOoff
+	JP	ShoLn1
+;
+PgBrk:	PUSH	BC		;call this for new page (returns C for EOP)
+	PUSH	HL
+	LD	A,(PageN)
+	OR	A
+	LD	A,FF		;start new sheet IF not 1
+	CALL	NZ,PrOut
+	LD	A,(POByt)
+	BIT	4,A		;pause requested?
+	JR	Z,NP00
+	CALL	IOoff		;do it
+	LD	HL,RdyQ
+	CALL	Prefix
+	CP	ESC
+	JP	Z,NPquit
+	CALL	IOon
+NP00:	LD	HL,PageN
+	INC	(HL)
+	JP	Z,NPquit	;255 page limit.
+	LD	C,(HL)		;check "#" limit?
+	LD	A,(PBeg)
+	LD	E,A
+	LD	A,(PNum)	;Pnum+Pbeg-1 = Lastpage#
+	DEC	A
+	ADD	A,E
+	JP	C,NPquit	;255 page limit
+	CP	C
+	JP	C,NPquit	;"#" pages printed... quit.
+	LD	A,(PBeg)
+	LD	C,A
+	LD	A,(PageN)
+	CP	C
+	LD	HL,POByt
+	JR	C,NP10		;are we "@" yet?
+	RES	6,(HL)		;yes (start) printing
+	LD	A,0C9H		;begin with margin offset
+	LD	(DoPOf),A
+NP10:	LD	A,(PrTMrg)
+	OR	A
+	JR	Z,NP20
+	LD	B,A
+NP11Lp:	CALL	PCRLF		;top margin?
+	DJNZ	NP11Lp
+NP20:	LD	HL,POByt
+	BIT	1,(HL)
+	JR	Z,NPnoh		;want header?
+	LD	A,(HdrLen)
+	ADD	A,6
+	LD	B,A
+	LD	A,(RtMarg)	;column for page no.
+	SUB	B
+	JR	NC,NPlp
+	LD	A,70		;default if margin unusable
+	SUB	B
+NPlp:	PUSH	AF		;space over to right justify header
+	CALL	PrSpc
+	POP	AF
+	DEC	A
+	JR	NZ,NPlp
+	LD	HL,(HdrPtr)	;put out header
+	LD	A,(HdrLen)
+	LD	B,A
+	CALL	POStr
+	CALL	PrSpc
+	LD	A,(PageN)	;put out page
+	LD	HL,POff
+	ADD	A,(HL)		;adjust for "=" option
+	LD	L,A
+	LD	H,0
+	LD	DE,PNBuf
+	CALL	BCDCon
+	LD	HL,PNBuf
+	LD	B,5
+	CALL	POStr
+	CALL	PCRLF
+	CALL	PCRLF		;two blank lines
+	CALL	PCRLF
+NPnoh:	XOR	A
+	LD	(DoPOf),A
+	CALL	DoPOf
+	POP	HL
+	POP	BC
+	LD	A,(PgLen)	;reset TOP
+	LD	B,A
+	OR	A
+	RET
+NPquit:	POP	HL
+	POP	BC
+	SCF
+	RET
+PNBuf:	DB	'nnnnn',0	;(also used elsewhere)
+;
+DotChk:	CP	CR		;may ignore dot commands
+	JR	Z,DotCCR
+	CP	'.'
+	JR	Z,DotCDt
+DtC01:	EX	AF,AF'		;ordinary char
+	LD	A,(IgnFlg)
+	CP	0FFh		;ignoring chars?
+	RET	Z		;(returns 0FFh, nonprinting)
+	XOR	A
+	LD	(IgnFlg),A	;nope, clear dot search
+DtCRet:	EX	AF,AF'		;no action, accept char
+	RET			;leave it 0FFh (ignore)
+DotCCR:	CALL	DtC01
+	EX	AF,AF'
+	LD	A,1		;1 = ready to ignore if next char dot
+	LD	(IgnFlg),A
+	EX	AF,AF'
+	RET
+DotCDt:	EX	AF,AF'
+	LD	A,(FMode)	;Only ignore dotcmds in "W" mode
+	CP	'W'
+	JR	NZ,DtCRet
+	LD	A,(IgnFlg)
+	OR	A
+	JR	Z,DtCRet
+	LD	A,0FFh		;FF = dot seen, ignore
+	LD	(IgnFlg),A
+	RET
+;
+ChekC:	CP	' '		;may mask ctl chars
+	RET	NC
+	CP	CR		;exceptions: CR,LF,BadTbl
+	RET	Z
+	CP	LF
+	RET	Z
+	PUSH	HL
+	PUSH	BC
+	LD	HL,BadTbl
+	LD	BC,BadLen
+	CPIR
+	POP	BC
+	POP	HL
+	RET	Z
+	PUSH	AF
+	LD	A,(POByt)
+	BIT	2,A
+	JR	NZ,CMask
+	POP	AF
+	RET
+CMask:	LD	A,'^'		;mask: print "^",
+	CALL	PrOut
+	POP	AF
+	OR	40H		;turn ^A into A, etc.
+	RET
+;
+PCR:	LD	A,CR
+	JR	PrOut
+PrSpc:	LD	A,' '
+PrOut:	CP	0FFH		;(FF=dummy code, ignore)
+	RET	Z
+	PUSH	BC		;Print byte
+	PUSH	DE
+	PUSH	HL
+	LD	HL,POByt	;printing yet?
+	BIT	6,(HL)
+	JR	NZ,Sk2PO
+	CP	' '
+	JR	NC,Sk1PO	;non-ctl
+	LD	HL,BadTbl
+	LD	BC,BadLen
+	CPIR
+	JR	Z,Sk2PO		;ILLEGAL
+	LD	HL,TogTbl
+	LD	BC,4
+	CPIR			;toggle?
+	JR	Z,Sk3PO
+	LD	BC,4
+	CPIR			;switch?
+	JR	NZ,Sk1PO	;arbitrary ctl-code
+	LD	A,4-1
+	SUB	C		;nontog# (0..n)
+	ADD	A,A
+	ADD	A,A
+	ADD	A,A		;*8
+	LD	E,A
+	LD	D,0
+	LD	HL,UCodes
+	ADD	HL,DE
+Sk00PO:	LD	B,(HL)
+	INC	HL		;string to send
+Sk0PO:	CALL	LSTStr
+	JR	Sk2PO
+Sk3PO:	LD	A,4-1
+	SUB	C		;tog# (0..n)
+	ADD	A,A
+	ADD	A,A
+	ADD	A,A
+	ADD	A,A		;*16
+	LD	E,A
+	LD	D,0
+	LD	HL,PCodes
+	ADD	HL,DE
+	BIT	7,(HL)		;toggle status?
+	JR	NZ,Sk3aPO
+	LD	B,(HL)		;off, turn on
+	SET	7,(HL)
+	INC	HL
+	JR	Sk0PO
+Sk3aPO:	RES	7,(HL)		;on, turn off
+	LD	DE,8
+	ADD	HL,DE
+	JR	Sk00PO
+Sk1PO:	LD	E,A		;byte to send
+	PUSH	AF
+	CALL	LSTOut
+	POP	AF
+	LD	HL,LFChr
+	CP	(HL)
+	CALL	Z,DoPOf		;LF? need margin skip
+Sk2PO:	POP	HL
+	POP	DE
+	POP	BC
+	RET
+;
+DoPOf:	NOP
+	LD	A,(PrLMrg)	;do printer margin offset
+	OR	A
+	RET	Z
+	LD	B,A
+DoPOfL:	CALL	PrSpc
+	DJNZ	DoPOfL
+	RET
+;
+PCRLF:	CALL	PCR		;do CR(LF?)
+PLF:	LD	A,(LFChr)
+	JP	PrOut
+;
+POStr:	LD	A,B		;send B chars at (HL) to PrOut
+	OR	A
+	RET	Z
+	LD	A,(HL)
+	CALL	PrOut
+	INC	HL
+	DJNZ	POStr
+	RET
+;
+LSTStr:	LD	A,B		;send B chars at (HL) to LST directly
+	OR	A
+	RET	Z
+	LD	E,(HL)
+	PUSH	BC
+	PUSH	HL
+	CALL	LSTOut
+	POP	HL
+	POP	BC
+	INC	HL
+	DJNZ	LSTStr
+	RET
+;
+LSTOut:	LD	C,LSTO		;print char in E
+	JP	BDOSep
+;
+;
+;
+; ASSORTED SUPPORT ROUTINES
+;
+;RAM initialization functions
+;
+IniRAM:	LD	HL,MnuEnd	;Figure what used to be TxtOrg
+	LD	A,(Help)	;help menus disabled?
+	OR	A
+	JR	NZ,IniR02
+	LD	HL,HelpY	;yes, use that memory for editing
+IniR02:	LD	(BegTx),HL
+	LD	HL,(BDOSep+1)	;BDOS origin (xx06)
+	LD	L,-4		;a few bytes room
+	DEC	H		;back a page
+	LD	(EndTx),HL
+	XOR	A		;initialize screen
+	LD	(NSkip),A
+	INC	A
+	LD	(Horiz),A
+	LD	(Vert),A
+	LD	(CurCol),A
+	LD	(OldCol),A	;###
+	LD	HL,1
+	LD	(CurPg),HL
+	LD	(CurPgL),HL
+	LD	(CurLin),HL
+	LD	(OldLin),HL	;###
+	LD	HL,(BegTx)	;set up cursor gap, mark CRs at ends
+	DEC	HL
+	LD	(BefCu),HL
+	LD	(HL),CR
+	LD	HL,(EndTx)
+	INC	HL
+	LD	(AftCu),HL
+	LD	(HL),CR
+	RET
+;
+;Case selection subroutine
+;    CALL Case
+;    DB   # of entries in list
+;    DW   Default subroutine if no match
+;    DB   value1
+;    DW   subroutine1....
+;    <return point>
+;
+Case:	POP	HL
+	LD	B,(HL)		;entries
+	INC	HL
+	LD	E,(HL)		;DE=default sbr
+	INC	HL
+	LD	D,(HL)
+	INC	HL
+Lp1Ca:	CP	(HL)		;Value matches?
+	INC	HL
+	JR	NZ,Sk2Ca
+	LD	E,(HL)		;yes, get address
+	INC	HL
+	LD	D,(HL)
+	JR	Sk3Ca		;finish up
+;
+Sk2Ca:	INC	HL		;No match, skip ahead
+Sk3Ca:	INC	HL
+	DJNZ	Lp1Ca		;Try again
+	EX	DE,HL		;Swap sbr and return
+	PUSH	DE		;Store return (end of list)
+	JP	(HL)		;Go do sbr (LAST match)
+;
+;
+XCase:	CALL	UCase		;force A to ctl-codes
+	CP	'@' 
+	RET	C
+	CP	'_'+1
+	RET	NC
+	AND	1FH
+	RET
+UXCase:	CP	ESC		;uppercase A if letter OR ctl-code
+	JR	NC,UCase
+	ADD	A,40H
+	RET
+UCase:	CP	'a'
+	RET	C		;uppercase A if letter
+	CP	'z'+1
+	RET	NC
+	AND	5FH
+	RET
+;
+;
+Wait:	LD	A,(MacFlg)	;Macro Pause function
+	OR	A
+	JP	Z,Error2
+	LD	A,3		;Wait about 3/2 sec
+	JR	Dly0
+;
+Delay:	LD	B,A		;Delay about A/2 sec
+	LD	A,(MacFlg)	;but NOT if Macro going
+	OR	A
+	RET	NZ
+	LD	A,B
+Dly0:	ADD	A,A
+	ADD	A,A
+Dly1:	PUSH	AF
+	CALL	BDly
+	POP	AF
+	DEC	A
+	JR	NZ,Dly1
+	RET
+BDly:	LD	A,(MHz)
+	LD	B,A
+	LD	C,0
+BDlyLp:	DEC	BC
+	LD	A,B
+	OR	C
+	JR	NZ,BDlyLp
+	RET
+;
+;
+; UR-ROUTINES
+;
+Fill:	LD	(DE),A		;fill B bytes at DE with A
+	INC	DE
+	DJNZ	Fill
+	RET
+;
+GpCnt:	LD	BC,(BefCu)	;Count cursor gap size
+	LD	HL,(AftCu)
+	DEC	HL
+	DEC	HL
+SubDP:	PUSH	HL		;Double precision subtract
+	OR	A		;BC = HL - BC + 1
+	SBC	HL,BC
+	LD	B,H
+	LD	C,L
+	INC	BC
+	POP	HL
+	RET
+;
+BgCnt:	LD	HL,(BegTx)	;Count bytes before cursor
+LCnt:	LD	B,H
+	LD	C,L
+	PUSH	HL
+	LD	HL,(BefCu)
+	CALL	SubDP
+	POP	HL
+	RET
+NdCnt:	LD	HL,(EndTx)	;Count bytes after cursor
+RCnt:	LD	BC,(AftCu)
+	JR	SubDP
+;
+;Move bytes across cursor gap so the gap moves left.
+;HL points to what will become BefCu.
+;
+MoveL:	CALL	LCnt		;bytes to move
+	RET	C
+	LD	DE,(AftCu)
+	DEC	DE
+	LD	HL,(BefCu)
+	LDDR
+	LD	(BefCu),HL
+	INC	DE
+	LD	(AftCu),DE
+	RET
+;
+;MoveR  - Moves gap right.  HL will become BefCu.
+;
+MoveR:	CALL	RCnt
+	RET	C
+	LD	DE,(BefCu)
+	INC	DE
+	LD	HL,(AftCu)
+	LDIR
+	LD	(AftCu),HL
+	DEC	DE
+	LD	(BefCu),DE
+	RET
+;
+;CrLft - Find CRs to left of cursor (up to E)
+;
+CrLft:	CALL	BgCnt
+	JR	NC,Sk1Lf
+	XOR	A		;no bytes, return with C and no Z
+	SUB	1
+	RET
+Sk1Lf:	CALL	FetchB
+	CP	CR		;Is cursor on a CR
+	JR	NZ,Sk2Lf
+	LD	A,1
+	CP	E
+	JR	NZ,Sk2Lf
+	SCF			;Asked for 1, and already there: ret C and Z
+	RET
+Sk2Lf:	LD	A,CR
+Lp3Lf:	CPDR			;find a CR
+	JP	PO,Sk4Lf	;count exhausted?
+	DEC	E
+	JR	NZ,Lp3Lf	;Do more?
+	INC	HL		;Back up to before CR
+	INC	HL
+	XOR	A		;Found AOK, ret Z and no C
+	RET
+Sk4Lf:	INC	HL		;Back to first byte
+	SCF
+	CCF			;Clear C
+	JR	Z,Sk5Lf		;Was first byte CR
+	DEC	E		;No, reduce count
+	RET
+Sk5Lf:	INC	HL		;Back after CR
+	DEC	E		;the one we wanted?
+	RET	Z
+	DEC	HL		;No, back in front of it
+	DEC	E
+	RET
+;
+;CrRit - same, to right.
+;
+CrRit:	CALL	NdCnt
+	JR	NC,Sk1Ri
+	XOR	A
+	SUB	1		;no bytes, return C and no Z
+	RET
+Sk1Ri:	LD	D,E
+	LD	A,CR
+	LD	HL,(AftCu)
+Lp2Ri:	CPIR
+	JP	PO,Sk3Ri
+	DEC	E
+	JR	NZ,Lp2Ri
+	SCF
+	CCF			;found AOK, ret Z and no C
+	RET
+Sk3Ri:	LD	A,D
+	CP	E
+	JR	NZ,Sk4Ri
+	SCF			;none found, return C and Z
+	RET
+Sk4Ri:	LD	HL,(EndTx)
+	DEC	HL
+	LD	A,CR
+	LD	BC,0FFFFh
+	CPDR
+	INC	HL
+	INC	HL
+	OR	1		;some but not enough, ret no C and no Z
+	RET
+;
+;cursor positioning subroutines
+;
+TopV:	LD	A,1
+	JR	LoadV
+MidV:	LD	A,(TxtLns)
+	SRL	A
+	JR	LoadV
+DecV:	EXX
+	LD	HL,(CurLin)
+	DEC	HL
+	LD	(CurLin),HL
+	EXX
+DecVO:	LD	A,(Vert)	;returns Z if cannot Dec
+	CP	1
+	JR	Z,LoadV
+	DEC	A
+	JR	LoadV
+IncV:	EXX
+	LD	HL,(CurLin)
+	INC	HL
+	LD	(CurLin),HL
+	EXX
+IncVO:	LD	A,(Vert)	;returns Z if cannot Inc
+	EXX
+	LD	HL,TxtLns
+	CP	(HL)
+	EXX
+	JR	Z,LoadV
+	INC	A
+	JR	LoadV
+BotV:	LD	A,(TxtLns)
+LoadV:	LD	(Vert),A
+	RET
+LftH:	LD	A,1
+	JR	LoadH
+LTabH:	LD	A,(Horiz)
+	DEC	A
+	JR	Z,RitH
+	CALL	WhatC		;ouch, got to calculate
+	LD	HL,NSkip	;Horiz = CurCol-NSkip
+	SUB	(HL)
+	JR	C,RitH
+	JR	LoadH
+DecH:	LD	A,(Horiz)
+	DEC	A
+	RET	Z
+	JR	LoadH
+TabH:	LD	A,(Horiz)
+	DEC	A
+	EXX
+	LD	HL,TabCnt
+	OR	(HL)
+	EXX
+	INC	A
+	JR	IncT
+IncH:	LD	A,(Horiz)
+IncT:	EXX
+	LD	HL,View
+	CP	(HL)
+	EXX
+	RET	NC
+	INC	A
+	JR	LoadH
+RitH:	LD	A,(View)
+LoadH:	EX	AF,AF'		;###
+	LD	A,(CurCol)	;###
+	INC	A		;###
+	JR	NZ,LoadH2	;###
+	EX	AF,AF'		;###
+	RET			;###
+LoadH2:	EX	AF,AF'		;###
+	LD	(Horiz),A
+	RET
+;
+;
+;Get next text character from memory
+;(HL and C keep track across repeated calls)
+;
+GetNx:	XOR	A
+	CP	C		;Have we a hidden space?
+	JR	NZ,Sk1Gt
+	LD	A,(HL)		;No, get next byte
+	INC	HL
+	CP	80H		;Does it have hidden space?
+	JR	NC,Sk2Gt	;Yes, note and remove
+	CP	CR
+	RET
+Sk1Gt:	DEC	C		;Fetch hidden space
+	LD	A,' '
+	CP	CR		;Set Z flag if CR
+	RET
+Sk2Gt:	AND	7FH
+	INC	C
+	CP	CR		;Set Z flag if CR
+	RET
+;
+;Hide any hideable spaces. (NEW ALGORITHM)
+;
+Cmprs:	CALL	BgCnt		;bytes to left
+	JR	C,Sk2Cm		;none?
+	LD	D,H
+	LD	E,L
+	DEC	DE
+Lp1Cm:	LD	A,(HL)		;Get a byte
+	CP	' '		;Nonspace? fine
+	JR	NZ,Sk1Cm
+	LD	A,(DE)		;Last byte CTL? fine
+	CP	20H	
+	LD	A,' '
+	JR	C,Sk1Cm
+	LD	A,(DE)		;Hidden space already? fine
+	BIT	7,A
+	LD	A,' '
+	JR	NZ,Sk1Cm
+	LD	A,(DE)
+	OR	80h		;Got to hide the space.
+	DEC	DE
+Sk1Cm:	INC	DE		;Store byte
+	LD	(DE),A
+	INC	HL		;Bump input
+	DEC	BC
+	LD	A,B
+	OR	C		;more to do?
+	JR	NZ,Lp1Cm
+	LD	(BefCu),DE	;This is now BefCu
+;
+Sk2Cm:	CALL	NdCnt		;How many after cursor?
+	RET	C
+	LD	HL,(EndTx)	;work back from end
+	LD	D,H
+	LD	E,L
+	INC	DE
+Lp3Cm:	LD	A,(DE)
+	CP	' '		;Last byte space?
+	JR	NZ,Sk3Cm
+	LD	A,1FH		;This byte CTL?
+	CP	(HL)
+	JR	NC,Sk3Cm
+	BIT	7,(HL)		;This byte already hiding?
+	JR	NZ,Sk3Cm
+	SET	7,(HL)		;Got to hide that space
+	INC	DE
+Sk3Cm:	DEC	DE
+	LDD			;Store byte, Bump input
+	INC	DE
+	JP	PE,Lp3Cm	;more to do?
+	LD	(AftCu),DE	;This is now AftCu
+	RET
+;
+;Set BC to gap size (make room if needed, or set EdErr)
+;
+Space:	LD	L,A		;Save A
+	PUSH	HL
+	CALL	GpCnt		;Count gap size
+	CALL	C,Cmprs		;No room? Hide spaces
+	CALL	GpCnt		;Room now?
+	CALL	C,Error1	;out of memory
+	POP	HL
+	LD	A,L
+	RET
+;
+InsSpc:	LD	A,' '
+;
+;Put ordinary byte in A into text at cursor.
+;
+Insrt:	CALL	Space		;Insert Before cursor
+	RET	C
+	CP	EOF
+	JR	Z,Insrt1
+	LD	HL,BlkChr
+	CP	(HL)
+	JR	Z,Insrt1
+	LD	HL,Modify
+	LD	(HL),0FFh
+Insrt1:	LD	HL,(BefCu)	;Bump pointer
+	INC	HL
+	LD	(HL),A		;Store byte
+	LD	(BefCu),HL
+	OR	A		;Clear flags
+	RET
+InsrtA:	CALL	Space		;same, but After cursor
+	RET	C
+	LD	HL,Modify
+	LD	(HL),0FFh
+InsrA1:	LD	HL,(AftCu)
+	DEC	HL
+	LD	(HL),A
+	LD	(AftCu),HL
+	OR	A
+	RET
+;
+;Compute absolute line number
+;
+CountS:	LD	HL,1		;Hard way: from start
+	LD	(CurLin),HL
+	CALL	BgCnt
+	JR	Sk0CL
+CountL:	LD	HL,(LastCu)	;same but faster, using LastCu
+	INC	HL
+	CALL	LCnt
+Sk0CL:	RET	C		;(At start, or have not moved)
+	LD	DE,0
+	LD	A,CR
+	LD	HL,(BefCu)
+Lp1CL:	CPDR
+	JR	NZ,Sk1CL
+	INC	DE
+	JP	PE,Lp1CL
+Sk1CL:	LD	HL,(CurLin)
+	ADD	HL,DE
+	LD	(CurLin),HL
+	RET
+CountR:	LD	HL,(LastCu)	;same, but for backward move
+	DEC	HL
+	CALL	RCnt
+	RET	C		;(have not moved)
+	LD	DE,0
+	LD	A,CR
+	LD	HL,(AftCu)
+Lp1CR:	CPIR
+	JR	NZ,Sk1CR	;(have not moved)
+	INC	DE
+	JP	PE,Lp1CR
+Sk1CR:	LD	HL,(CurLin)
+	OR	A
+	SBC	HL,DE
+	LD	(CurLin),HL
+	RET
+;
+;
+;MACRO functions
+;
+MacKey:	LD	HL,KeyQ
+	CALL	Prompt
+	CALL	RptKey		;which key?
+	CALL	UCase
+	LD	(MKsav),A
+	CP	'N'		;no-rpt request?
+	JR	Z,MK0
+	CP	'Q'		;no-rpt & macro request?
+	JR	NZ,MK00
+MK0:	CALL	Echo		;show N or Q, get next
+	CALL	RptKey
+MK00:	SUB	'0'
+	JP	C,Error7
+	CP	10
+	JP	NC,Error7
+	LD	D,A		;save key
+	LD	A,0FFH
+	LD	HL,MacStr
+	LD	BC,StrSiz+1	;find end
+	CPIR
+	LD	A,StrSiz
+	SUB	C		;figure length
+	LD	E,A		;save it
+	LD	HL,Keys+2
+	LD	A,D
+	OR	A
+	JR	Z,MKlp1F
+MKlp1:	LD	C,(HL)
+	LD	B,0		;find key in list
+	ADD	HL,BC
+	INC	HL
+	DEC	A
+	JR	NZ,MKlp1
+MKlp1F:	LD	A,(HL)		;old length
+	OR	A
+	JR	Z,MK1
+	PUSH	DE
+	PUSH	HL		;delete old one
+	LD	E,(HL)
+	LD	D,0
+	LD	(HL),0
+	INC	HL
+	EX	DE,HL
+	ADD	HL,DE
+	LD	B,H
+	LD	C,L
+	PUSH	HL
+	LD	HL,Keys+200H
+	OR	A
+	SBC	HL,BC		;bytes to move
+	LD	B,H
+	LD	C,L
+	POP	HL
+	LDIR
+	CALL	VerKey
+	POP	HL
+	POP	DE
+MK1:	LD	A,E		;anything to add?
+	OR	A
+	JR	Z,MKDone
+	LD	A,(Keys+1)	;will it fit
+	OR	A
+	JR	NZ,MK1a
+	LD	A,(Keys)
+	SUB	E
+	JP	C,Error1	;out of memory
+MK1a:	LD	(HL),E		;yes
+	INC	HL
+	LD	C,E
+	LD	B,0
+	PUSH	HL
+	LD	HL,Keys+200H-1
+	LD	D,H
+	LD	E,L
+	OR	A
+	SBC	HL,BC		;from here
+	POP	BC
+	PUSH	HL
+	SBC	HL,BC		;bytes to move
+	LD	B,H
+	LD	C,L
+	INC	BC		;inclusive
+	POP	HL
+	LDDR			;make room
+	LD	C,(HL)
+	LD	B,0
+	INC	HL
+	EX	DE,HL
+	LD	HL,MacStr
+	PUSH	DE
+	LDIR			;insert new one
+	POP	HL
+	LD	A,(MKsav)
+	CP	'N'		;take care of N/Q request
+	JR	Z,MK2
+	CP	'Q'
+	JR	NZ,MKDone
+	DEC	HL
+	LD	A,(HL)		;Q only works if length >1
+	CP	2
+	INC	HL
+	JR	C,MK2
+	INC	HL
+	SET	7,(HL)		;indicate quiet
+	DEC	HL
+MK2:	SET	7,(HL)		;indicate no-rpt
+MKDone:	CALL	VerKey
+	JP	ShoLn1
+;
+;
+VerKey:	LD	B,10		;verify key area
+	LD	HL,200H-12
+	LD	D,0
+	LD	IX,Keys+2
+VKlp:	LD	A,StrSiz	;check size
+	CP	(IX)
+	JR	C,VKwipe
+	LD	E,(IX)
+	SBC	HL,DE		;decrement
+	JR	C,VKwipe
+	ADD	IX,DE		;move to next
+	INC	IX
+	DJNZ	VKlp
+	LD	(Keys),HL	;free bytes
+	LD	A,H
+	OR	L
+	RET	Z		;full?
+VKlp2:	LD	(IX),0
+	INC	IX		;zero fill
+	DEC	HL
+	LD	A,H
+	OR	L
+	JR	NZ,VKlp2
+	RET
+VKwipe:	LD	HL,200H-12	;oops, bad
+	LD	(Keys),HL
+	LD	IX,Keys+2
+	LD	HL,200H-2
+	JR	VKlp2
+;
+ChainK:	LD	HL,MacFlg	;chain to new macro
+	BIT	0,(HL)		;(used only if macro going)
+	RET	Z
+	CALL	RstI1x		;reset INS to saved state
+	CALL	RptKey		;get key #
+	CP	'0'
+	JP	C,Error8
+	CP	'9'+1
+	JP	NC,Error8
+	PUSH	AF
+	CALL	Loud
+	XOR	A
+	LD	(MacFlg),A
+	POP	AF
+	JR	UK0
+;
+UseKey:	LD	HL,MacFlg	;macro going already?
+	BIT	0,(HL)
+	RET	NZ		;YES, this is just a label
+UK0:	SUB	'0'		;NO, retrieve key 0-9
+	LD	B,A
+	LD	HL,Keys+2
+	JR	Z,UKlp1F
+UKlp1:	LD	E,(HL)
+	LD	D,0		;find it
+	ADD	HL,DE
+	INC	HL
+	DJNZ	UKlp1
+UKlp1F:	LD	A,(HL)		;length
+	INC	HL
+	OR	A
+	JP	Z,Error7	;none?
+	LD	C,A
+	LD	B,0
+	PUSH	BC		;on stack for Mac00 entry
+	LD	DE,DMA
+	PUSH	DE
+	LDIR			;fetch it in
+	POP	HL		;point to it
+	BIT	7,(HL)
+	RES	7,(HL)
+	JR	Z,Mac00		;not no-rpt? go ask, etc.
+	INC	HL
+	BIT	7,(HL)
+	RES	7,(HL)
+	CALL	NZ,Quiet	;quiet?
+	LD	A,'1'
+	JR	Mac0		;go do just once
+;
+DoMac:	LD	HL,MacroQ	;get Macro defn
+	CALL	Prompt
+	CALL	GetStr
+	DW	MacStr		;###
+	OR	A
+	JR	Z,MacDel	;none? delete
+	LD	C,A		;save count
+	LD	B,0
+	PUSH	BC
+Mac00:	LD	HL,RptcQ	;(entry for normal Key)
+	CALL	Prompt
+	CALL	RptKey
+	CALL	UCase
+	CP	'Q'
+	JR	NZ,Mac0
+	CALL	Echo
+	CALL	Quiet		;Q? do quiet, get rpt cnt
+	CALL	RptKey
+Mac0:	POP	BC		;string cnt  (entry for no-rpt Key)
+	PUSH	AF		;save rpt cnt
+	LD	A,C
+	OR	A		;null string?
+	JR	Z,Mac1
+	LD	HL,DMA		;move in string
+	LD	DE,MacStr
+	LDIR
+	EX	DE,HL
+	LD	(HL),0FFh	;terminator
+Mac1:	CALL	ShoLn1
+	POP	AF
+	LD	B,255
+	CP	'*'		;figure rpt cnt
+	JR	Z,Mac2		;(* is maximal)
+	LD	B,0		;(0 is default)
+	SUB	'0'
+	JR	C,Mac2
+	CP	9+1
+	JR	NC,Mac2
+	LD	B,A
+Mac2:	LD	A,B		;set rpt cnt
+	LD	(RptCnt),A
+	OR	A
+	JP	Z,Loud		;oops, rpt=0
+Mac3:	LD	HL,MacStr	;Point to it
+	LD	(CmdPtr),HL
+	LD	A,0FFH		;Okay, here goes
+	LD	(MacFlg),A
+	LD	HL,InsFlg	;save INSERT toggle
+	LD	A,(HL)
+	LD	(SavIns),A	;turn INSERT off if on
+	BIT	7,(HL)
+	CALL	NZ,ToggHL
+	RET
+MacDel:	LD	A,0FFH
+	LD	(MacStr),A
+	JP	ShoLn1
+;
+;"Macro Programming Language"
+;
+MacJmp:	LD	A,(MacFlg)	;jump to a label
+	OR	A
+	JP	Z,Error8	;macro must be going
+	LD	(JmpFlg),A	;say Jump in progress
+	CALL	RptKey
+	LD	HL,JmpFlg
+	LD	(HL),0
+	CP	'['		;TOF/EOF?
+	JR	Z,MJtop
+	CP	']'
+	JR	Z,MJend
+	CP	'>'		;move/loops?
+	JR	Z,MJRt
+	CP	'<'
+	JR	Z,MJLf
+	LD	E,A		;key to find
+	LD	HL,MacStr
+	LD	B,StrSiz
+MJlp:	LD	A,(HL)		;search along
+	INC	HL
+	CP	0FFH
+	JP	Z,Error8
+	CP	ESC
+	JR	Z,MJlp01
+	DJNZ	MJlp
+	JP	Error8
+MJlp01:	LD	A,E		;found ESC... right one?
+	CP	(HL)
+	JR	NZ,MJlp
+	INC	HL		;yep
+	LD	(CmdPtr),HL
+	RET
+;
+MJtop:	LD	HL,MacStr	;redo it from the top
+	LD	(CmdPtr),HL
+	RET
+MJend:	XOR	A		;quit
+	LD	(MacFlg),A
+	LD	E,A
+	CALL	RstI1x
+	JP	Loud
+MJRt:	CALL	NdCnt		;right/left jump loops
+	JP	C,Error7	;stop at EOF
+	CALL	Right
+	JR	MJredo
+MJLf:	CALL	BgCnt
+	JP	C,Error7
+	CALL	Left
+MJredo:	LD	HL,(CmdPtr)
+	DEC	HL		;back up to the ESC to repeat
+	DEC	HL
+	DEC	HL
+	DEC	HL
+	LD	(CmdPtr),HL
+	RET
+;
+MacTst:	LD	A,0CAH		;(JP Z)
+	JR	MacT1
+MacTsX:	LD	A,0C2H		;(JP NZ)
+MacT1:	LD	(MacT),A
+	LD	A,(MacFlg)
+	OR	A		;macro must be going
+	JP	Z,Error8
+	CALL	RptKey		;get char to match
+	LD	E,A
+	CALL	Fetch		;char at cursor
+	CP	E
+MacT:	JP	Z,MacJmp	;yes? jump      <--- can be JP NZ too
+	JP	RptKey		;no, just eat label
+;
+;Get the next key stroke (check Macro first.)
+;
+TRptKy:	XOR	A		;enable redisp Timer
+	JR	RK0
+RptKey:	LD	A,0FFH
+RK0:	LD	(KeyFlg),A
+	LD	A,(MacFlg)
+	OR	A		;macro waiting?
+	JP	Z,KeyIn		;no.
+MacIn:	CALL	Keybd		;YES, check keyboard for abort
+	CP	ESC
+	JR	NZ,MacIn1
+	LD	HL,(CmdPtr)	;abort, make this last char
+	LD	E,(HL)
+	LD	HL,MacFF+1	;###
+	LD	(CmdPtr),HL	;###
+	JR	MacIn3
+MacIn1:	LD	HL,(CmdPtr)	;OK, take waiting char
+	LD	A,(HL)
+	INC	HL		;bump pointer
+	LD	(CmdPtr),HL
+MacFF:	CP	0FFH		;###
+	JR	Z,MacFFx		;###
+	LD	E,A		;###
+	LD	A,(HL)		;end of macro now? (FF)
+	INC	A
+	JR	NZ,MacIn2	;NO, return char
+	LD	A,(JmpFlg)	;jump in progress?
+	OR	A
+	JR	NZ,MacIn2
+	LD	HL,RptCnt	;need to repeat?
+	LD	A,(HL)
+	INC	A
+	JR	Z,McIn1a
+	DEC	(HL)
+	JR	Z,MacIn3
+McIn1a:	LD	HL,MacStr	;repeat: reset pointer
+	LD	(CmdPtr),HL
+	JR	MacIn2
+MacIn3:	CALL	Loud
+MacIn2:	LD	A,E
+	AND	7FH		;strip parity, return char
+	RET
+MacFFx:	XOR	A		;NO, stop macro execution
+	LD	(MacFlg),A
+	CALL	RstI1x		;restore saved INS state
+	JP	KeyIn
+;
+;
+;Unconditional Q/L for Macros
+;
+Quiet:	LD	HL,ShutUp
+	LD	(HL),0C9H	;(RET)
+	RET
+Loud:	LD	HL,ShutUp
+	XOR	A		;(NOP)
+	CP	(HL)
+	RET	Z
+	LD	(HL),A
+	JP	HoldSc		;gotta see...
+;
+RstI1x:	LD	A,(SavIns)
+	LD	HL,InsFlg
+	CP	(HL)
+	CALL	NZ,ToggHL	;switch INS to match the saved state
+	RET
+;
+;Conditional Q/L for formatting etc.
+;
+;
+XQuiet:	LD	HL,ShutUp
+	LD	A,(HL)
+	LD	(HL),0C9H	;(RET)
+	LD	(SavQ),A
+	RET
+XLoud:	LD	A,(SavQ)
+	OR	A		;(NOP)
+	RET	NZ
+	LD	(ShutUp),A
+	RET			;do NOT need redisp here
+;
+;Force loud for header display
+;
+Force:	LD	HL,ShutUp
+	LD	A,(HL)
+	LD	(HL),00H	;(NOP)
+	LD	(SavQ2),A
+	RET
+UForce:	LD	A,(SavQ2)
+	CP	0C9H		;(RET)
+	RET	NZ
+	LD	(ShutUp),A
+	RET
+;
+;
+; VDE EDITING FUNCTIONS
+;
+;
+;Show information
+;
+Info:	CALL	MakAlt		;show this first for entertainment
+	CALL	UndrHd
+	CALL	Dspl
+	DB	X,26,0
+	LD	HL,VersID
+	CALL	DspLp
+	CALL	Cmprs		;pack spaces
+	CALL	GpCnt		;count gap size
+	PUSH	BC
+	LD	H,B
+	LD	L,C
+	LD	DE,FreNNN	;show it as "free space"
+	CALL	BCDCon
+	LD	HL,(EndTx)
+	INC	HL
+	LD	DE,(BegTx)
+	OR	A
+	SBC	HL,DE
+	POP	BC
+	SBC	HL,BC		;memory used
+	LD	DE,UsdNNN
+	CALL	BCDCon		;show it as "used"
+	LD	HL,(BegTx)
+	LD	DE,(BefCu)
+	CALL	FSzSbr		;figure actual disk file size
+	PUSH	BC
+	LD	HL,(AftCu)
+	LD	DE,(EndTx)
+	CALL	FSzSbr
+	POP	HL
+	ADD	HL,BC
+	LD	DE,SizNNN	;show it as "file size"
+	CALL	BCDCon
+	LD	A,(Modify)
+	OR	A		;file changed?
+	LD	A,'Y'
+	JR	NZ,Info2
+	LD	A,'N'
+Info2:	LD	(ModQQQ),A
+	LD	HL,InfMsg	;now display the data
+	CALL	DspLp
+	CALL	UnAlt
+	CALL	ESCLp
+	JP	SetAl
+;
+FSzSbr:	LD	BC,0		;count a block
+FSzLp:	LD	A,E		;done?
+	SUB	L
+	LD	A,D
+	SBC	A,H
+	RET	C
+	LD	A,(HL)
+	INC	HL
+	INC	BC		;count character
+	CP	CR
+	JR	Z,FSz1		;and (missing) LF?
+	CP	X
+	JR	C,FSzLp		;and (hidden) space?
+FSz1:	INC	BC
+	JR	FSzLp
+;
+;
+; Blank the screen
+;
+Blank:	LD	A,(WinFlg)	;window off first (will lose text)
+	OR	A
+	CALL	NZ,Window
+	LD	HL,CsrOff	;###
+	CALL	CtlStr		;###
+	LD	HL,TInit
+	CALL	CtlStr
+	CALL	ESCLp
+	CALL	DoHdr
+	JP	SetAl
+;
+;
+;Move cursor to the beginning of text
+;
+Top:	LD	HL,(BegTx)
+	CALL	MoveL		;Move
+	CALL	TopV		;Adjust cursor
+	CALL	LftH
+	LD	HL,1
+	LD	(CurLin),HL
+	JP	SetAl
+;
+;
+;Move cursor to the last character of text
+;
+Bottom:	LD	HL,(BefCu)	;for CountL
+	LD	(LastCu),HL
+	LD	HL,(EndTx)
+	CALL	MoveR		;Move
+	CALL	BotV		;Adjust cursor
+	CALL	RitH
+	CALL	CountL
+	JP	SetAl
+;
+;
+; Queue: move to next line in ZCPR queue
+;
+Queue:	LD	BC,Z3MSG
+	CALL	Z3EAdr
+	JP	Z,Error7	; no Z3 message buffers
+	LD	D,B		; addr of Z3MSG to DE
+	LD	E,C
+	LD	HL,RegNum+1	; current register addr
+	LD	A,(HL)
+	CP	MsgUsr-2+MsgNmU	; time to wrap around?
+	JR	NZ,QueNxt
+QueWrp:	LD	A,MsgUsr-2	; yes
+	LD	(HL),A		; update it
+QueNxt:	INC	(HL)		; next register
+	INC	(HL)
+RegNum:	LD	HL,MsgUsr-2
+	ADD	HL,DE		; point to next line #
+	LD	C,(HL)
+	INC	HL
+	LD	B,(HL)		; line # to BC
+	LD	A,B
+	OR	C
+	JP	NZ,ZipTo2	; go to it
+	LD	HL,RegNum+1	; is first register empty?
+	LD	A,(HL)
+	CP	MsgUsr
+	JP	Z,Error7	; yes, error
+	JR	QueWrp		; no, wrap around
+;
+;
+;QUICK cursor movements
+;
+QuikMk:	CALL	NdCnt		;look for next place marker
+	JR	C,QkMk1
+	LD	HL,(AftCu)
+	LD	A,EOF		;marker
+	CPIR
+	JP	Z,QikB1		;found? rest same as ^QB
+QkMk1:	CALL	BgCnt		;not? try from top
+	JR	C,QkMk2
+	LD	HL,(BegTx)
+	LD	A,EOF
+	CPIR
+	JP	Z,QikB0		;found? rest same as ^QB
+QkMk2:	JP	Error7		;not? error.
+;
+QuikLf:	LD	E,1		;move left to start of line
+	CALL	CrLft
+	RET	C
+	LD	A,1
+	LD	(CurCol),A	;(useful for format subroutines)
+	CALL	MoveL
+	CALL	LftH
+	JP	IfScl
+;
+QuikRt:	CALL	NdCnt		;move right to end of line
+	JP	C,ColCnt
+	CALL	Fetch
+	JP	Z,ColCnt
+	CALL	Right
+	RET	C
+	JR	QuikRt
+;
+QuikUp:	LD	A,(Vert)	;move up to top of screen
+	DEC	A
+	RET	Z
+	LD	B,A
+	LD	A,(CurCol)
+	PUSH	AF
+QUlp:	PUSH	BC
+	CALL	Up
+	POP	BC
+	DJNZ	QUlp
+	CALL	SetNo
+	POP	AF		;restore col
+	JP	SkQUD
+;
+QuikDn:	LD	A,(TxtLns)	;move down to end of screen
+	LD	HL,Vert
+	SUB	(HL)
+	RET	Z
+	LD	B,A
+	LD	A,(CurCol)
+	PUSH	AF
+QDlp:	PUSH	BC
+	CALL	Down
+	POP	BC
+	DJNZ	QDlp
+	CALL	SetNo
+	POP	AF
+	JP	SkQUD
+;
+ZipTo:	LD	HL,PageQ	;zip to given page
+	LD	A,(PgLen)
+	OR	A
+	JR	Z,ZipTo0
+	LD	A,(FMode)
+	CP	'N'
+	JR	NZ,ZipTo1
+ZipTo0:	LD	HL,LineQ	;or line, in N mode
+ZipTo1:	CALL	Prompt
+	LD	BC,1
+	CALL	GetNbr
+	JP	C,Error7
+	JP	Z,Error7
+	LD	A,(FMode)
+	CP	'N'
+	JR	Z,ZipTo2
+	LD	A,(PgLen)	;(calculate line)
+	OR	A
+	JR	Z,ZipTo2
+	LD	D,0
+	LD	E,A
+	LD	L,D
+	LD	H,D
+	DEC	BC
+ZipMul:	LD	A,B
+	OR	C
+	JR	Z,ZipMF
+	ADD	HL,DE
+	DEC	BC
+	JR	ZipMul
+ZipMF:	INC	HL
+ZipMF2:	LD	B,H
+	LD	C,L
+ZipTo2:	PUSH	BC
+	CALL	Top
+	POP	DE		;desired line
+	LD	A,D
+	OR	E
+	JR	Z,ZipXit
+	DEC	DE		;lines to move down
+	XOR	A
+	OR	D
+	JR	Z,ZipLpF
+ZipLp:	PUSH	DE		;do multiples of 256
+	LD	E,0		;(256)
+	CALL	CrRit
+	DEC	HL
+	CALL	MoveR
+	POP	DE
+	DEC	D
+	JR	NZ,ZipLp
+ZipLpF:	XOR	A
+	OR	E
+	JR	Z,ZipTo3
+	CALL	CrRit		;do remainder
+	DEC	HL
+	CALL	MoveR
+ZipTo3:	CALL	MidV
+	CALL	RitH
+	CALL	CountS
+ZipXit:	JP	SetAl
+;
+;
+;Move cursor up.
+;
+Up:	CALL	TestCu		;no delays here
+	CALL	NZ,ShoCu1
+	LD	E,2		;start of last line
+	CALL	CrLft
+	RET	NZ		;TOF? quit
+	PUSH	HL
+	CALL	EdgeU
+	CALL	DecV
+	POP	HL
+	CALL	MoveL
+SkUpDn:	LD	A,(CurCol)	;where we were
+SkQUD:	CALL	GoCol
+	RET	Z		;exact?
+	JP	IfScl	;may need to scroll
+;
+;
+;Move cursor down.
+;
+Down:	CALL	TestCu		;no delays here
+	CALL	NZ,ShoCu1
+	LD	E,1		;start of next line
+	CALL	CrRit
+	DEC	HL
+	JR	NC,Sk1Dn	;was there one?
+	RET	NZ		;EOF? quit
+	LD	HL,(EndTx)
+	LD	A,(HL)		;Get that last byte
+	CP	CR
+	RET	NZ		;no next line
+Sk1Dn:	PUSH	HL
+	CALL	EdgeD
+	CALL	IncV
+	POP	HL
+	CALL	MoveR
+	JR	SkUpDn
+;
+QuikLc:	LD	HL,(SavLin)
+	CALL	ZipMF2
+	LD	A,(SavCol)
+;
+;
+GoCol:	DEC	A		;restore cursor to column A
+	RET	Z
+	LD	HL,(HorFlg)	;don't change show status
+	PUSH	HL
+	PUSH	AF
+	CALL	ColCnt		;where are we?
+	LD	IY,CurCol
+	JR	GRCent
+GRCLp:	CALL	NdCnt
+	JR	C,GRCF		;stop at EOF
+	CALL	Fetch
+	JR	Z,GRCF		;stop at CR
+	CP	TAB		;tabs are special
+	JR	NZ,GRC1
+	LD	A,(IY)
+	DEC	A
+	LD	HL,TabCnt
+	OR	(HL)		;round up
+	INC	A
+	LD	(IY),A
+GRC1:	INC	(IY)		;Keep CurCol updated
+	CALL	Right
+GRCent:	POP	AF
+	PUSH	AF
+	CP	(IY)		;there yet?
+	JR	NC,GRCLp
+GRCF:	POP	AF
+	POP	HL
+	LD	(HorFlg),HL
+	INC	A
+	SUB	(IY)		;set Z if exact
+	RET
+;
+;
+;Move cursor one to the left (C=cannot)
+;
+Left:	CALL	Space		;Any space left?
+	RET	C
+	CALL	BgCnt		;Are we at front?
+	RET	C
+	CALL	EdgeL
+	LD	HL,(BefCu)	;Look back
+	LD	A,(HL)
+	BIT	7,(HL)		;Hidden space?
+	JR	Z,Sk1Lt		;No, just move
+	RES	7,(HL)		;Yes, unhide it
+	LD	A,' '
+	INC	HL
+Sk1Lt:	DEC	HL		;Back up
+	LD	(BefCu),HL
+	CALL	InsrA1		;store byte ahead
+	CP	TAB		;Was a TAB moved
+	JR	Z,LftTab
+	CP	CR		;Was a CR moved?
+	JR	Z,LftCR
+	CALL	DecH		;no
+	OR	A
+	RET	NZ
+	JP	IfScl		;at left mgn...scroll?
+;
+LftCR:	CALL	RitH		;special cases - scrolling
+	CALL	DecV
+	CALL	ColCnt
+	DEC	A
+	LD	HL,View
+	CP	(HL)
+	CALL	NC,HorScl
+	OR	A
+	RET
+LftTab:	LD	A,(Horiz)
+	DEC	A
+	CALL	Z,HorScl	;need to scroll if at left
+	CALL	LTabH
+	OR	A
+	RET
+;
+;
+;Move cursor one to the right
+;(return C if can't, char passed in A)
+;
+Right:	CALL	Space		;Any room left?
+	RET	C
+	CALL	NdCnt		;Already at end?
+	RET	C
+	CALL	EdgeR
+	CALL	Fetch
+	JR	NZ,Sk0Rt
+	PUSH	HL
+	CALL	TestCu		;change of line: no delays
+	CALL	NZ,ShoCu1
+	POP	HL
+Sk0Rt:	LD	A,(HL)
+	BIT	7,A		;Hidden space?
+	JR	Z,Sk1Rt		;No, just move
+	LD	(HL),' '	;Yes, unhide it
+	AND	7FH
+	DEC	HL
+Sk1Rt:	INC	HL		;Bump pointer
+	LD	(AftCu),HL
+	CALL	Insrt1		;put byte in behind
+	OR	A		;and return it
+	PUSH	AF
+	CP	TAB		;TAB and CR are special
+	JR	Z,RtTab
+	CP	CR
+	JR	Z,RtCR
+	CALL	IncH		;no, just move
+	POP	AF
+	RET
+;
+RtCR:	CALL	IfScl		;may have to scroll
+	CALL	IncV		;adjust
+	CALL	LftH
+	LD	A,1
+	LD	(CurCol),A
+	POP	AF
+	RET
+;
+RtTab:	LD	A,(View)
+	DEC	A
+	LD	HL,TabCnt
+	SUB	(HL)
+	LD	HL,Horiz
+	SUB	(HL)
+	CALL	C,HorScl	;at right, need to scroll
+	CALL	TabH
+	POP	AF
+	RET
+;
+;
+;Word tab, delete
+;
+WdMxCh	EQU	255		;max chars to loop
+;
+WordRt:	CALL	Fetch		;Word tab right
+	JP	Z,Right		;at EOL? special case
+	CALL	IsBlnk		;on break? just find nonbreak
+	JR	Z,WRlpF
+	LD	B,WdMxCh
+WRlp:	CALL	WRfBrk
+	JR	Z,WRlpF
+	CP	CR		;quit at CR
+	RET	Z
+	DJNZ	WRlp
+WRlpF:	LD	B,WdMxCh
+WRlp2:	CALL	WRfBrk
+	RET	NZ
+	DJNZ	WRlp2
+	RET
+WRfBrk:	PUSH	BC
+	CALL	Right
+	JR	C,WRfBrX
+	CALL	IsBlnk		;then nonbreak
+	CALL	NZ,IsPunc
+	PUSH	BC
+WRfBrX:	POP	BC
+	POP	BC
+	RET
+;
+WordLf:	CALL	FetchB		;Word tab left
+	CP	CR		;at BOL? Special case
+	JP	Z,Left
+	LD	B,WdMxCh
+WLlp:	CALL	IsParB		;find a nonbreak
+	CALL	NZ,IsPunB
+	JR	NZ,WLlpF
+	CP	CR		;quit at CR
+	RET	Z
+	PUSH	BC
+	CALL	Left
+	POP	BC
+	RET	C
+	DJNZ	WLlp
+WLlpF:	CALL	Left
+	LD	B,WdMxCh
+WLlp2:	CALL	IsParB		;then a break
+	CALL	NZ,IsPunB
+	RET	Z
+	PUSH	BC
+	CALL	Left
+	POP	BC
+	RET	C
+	DJNZ	WLlp2
+	RET
+;
+WordDl:	CALL	Fetch		;Word Delete
+	JP	Z,EChar		;at BOL? special case
+	CALL	IsPaPu		;combined CALL IsPara/CALL NZ,IsPunc
+	JR	Z,WDlNB		;on break? delete till nonbreak
+	CALL	IsParB
+	CALL	NZ,IsPunB
+	PUSH	AF
+	CALL	WDlB		;nonbreak? delete till break
+	POP	AF
+	RET	NZ		;BOW? delete till nonbreak too
+WDlNB:	LD	B,WdMxCh
+WDlp2:	CALL	IsPaPu		;combined CALL IsPara/CALL NZ,IsPunc
+	RET	NZ		;delete till nonbreak
+	CP	CR		;but quit at CR
+	RET	Z
+	PUSH	BC
+	CALL	EChar
+	POP	BC
+	DJNZ	WDlp2
+	RET
+WDlB:	LD	B,WdMxCh
+WDlp:	CALL	IsPaPu		;combined CALL IsPara/CALL NZ,IsPunc
+	RET	Z		;delete till  reak
+	PUSH	BC
+	CALL	EChar
+	POP	BC
+	DJNZ	WDlp
+	RET
+;
+Join:	CALL	IsPaPu		;combined CALL IsPara/CALL NZ,IsPunc
+	JR	Z,WDlNBx	;on break? delete till nonbreak
+	CALL	IsParB
+	CALL	NZ,IsPunB
+	PUSH	AF
+	CALL	WDlB		;nonbreak? delete till break
+	POP	AF
+	RET	NZ		;BOW? delete till nonbreak too
+WDlNBx:	LD	B,WdMxCh
+WDlp2x:	CALL	IsPaPu		;combined CALL IsPara/CALL NZ,IsPunc
+	RET	NZ		;delete till nonbreak (including CRs)
+	PUSH	BC
+	CALL	EChar
+	POP	BC
+	DJNZ	WDlp2x
+	RET
+;
+IsPaPu:	CALL	IsPara
+	CALL	NZ,IsPunc
+	RET
+;
+;
+;Move cursor ahead one page
+;
+PageF:	CALL	SetAl
+	LD	A,(TxtLns)
+	DEC	A
+	LD	E,A		;default scroll
+	LD	HL,Ovlap
+	SUB	(HL)
+	JR	C,PgF1
+	INC	A
+	LD	E,A
+PgF1:	CALL	CrRit		;Point that many CRs down
+	DEC	HL		;Back off one byte
+	JP	C,Bottom
+	JP	NZ,Bottom
+	LD	DE,(BefCu)	;Prepare Count
+	LD	(LastCu),DE
+	CALL	MoveR		;Move cursor gap
+	CALL	CountL
+	JR	LDaGoC		;relocate cursor
+;
+;
+;Move cursor back one page
+;
+PageB:	CALL	SetAl
+	LD	A,(TxtLns)
+	LD	E,A
+	DEC	A		;default scroll
+	LD	HL,Ovlap
+	SUB	(HL)
+	JR	C,PgB1
+	ADD	A,2
+	LD	E,A
+PgB1:	CALL	CrLft		;Point that many CRs back
+	JP	C,Top
+	JP	NZ,Top
+	LD	DE,(AftCu)	;Prepare Count
+	LD	(LastCu),DE
+	CALL	MoveL		;Move cursor gap
+	CALL	CountR
+LDaGoC:	LD	A,(CurCol)
+	JP	GoCol		;relocate cursor
+;
+;
+;Scroll screen 1/4 vertically
+;
+ShftD:	LD	A,(TxtLns)	;Down
+	SRL	A
+	SRL	A
+	INC	A
+	LD	B,A
+LDLp:	PUSH	BC
+	CALL	DecVO
+	JR	NZ,LDLpF
+	CALL	Down		;oops, cursor already on top
+	CALL	DecVO
+LDLpF:	POP	BC
+	DJNZ	LDLp
+	JP	SetAl
+;
+ShftU:	LD	A,(TxtLns)	;same, up
+	SRL	A
+	SRL	A
+	INC	A
+	LD	B,A
+LULp:	PUSH	BC
+	CALL	IncVO
+	JR	NZ,LULpF
+	CALL	Up		;oops, cursr already on bottom
+	CALL	IncVO
+LULpF:	POP	BC
+	DJNZ	LULp
+	JP	SetAl
+;
+Scr1LD:	CALL	DecVO		;FAST one-line scrolls
+	JR	NZ,ScLD1
+	CALL	Down		;oops, already on top
+	CALL	DecVO
+ScLD1:	LD	HL,DelL
+	CALL	ScrlUD
+	JP	C,SetAl		; no scroll
+	CALL	SmlDly
+	LD	A,(TxtLns)
+	LD	B,A
+	JP	ShoLn		;re-show last line
+;
+Scr1LU:	LD	HL,(CurLin)
+	LD	DE,(Vert)
+	LD	D,0
+	OR	A
+	SBC	HL,DE
+	RET	Z		;oops, nowhere to go
+	CALL	IncVO
+	JR	NZ,ScLU1
+	CALL	Up		;oops, already on bottom
+	CALL	IncVO
+ScLU1:	LD	HL,InsL
+	CALL	ScrlUD
+	JP	C,SetAl		; no scroll
+	CALL	SmlDly
+	JP	ShoLn1
+;
+;Scroll screen 32 cols horizontally
+;
+ShftR:	LD	HL,Horiz	;INcrease screen scroll (right)
+	LD	A,(HL)
+	SUB	32+1
+	RET	C
+	INC	A
+	LD	(HL),A
+	LD	HL,NSkip
+	LD	A,(HL)
+	ADD	A,32
+	JR	ShftX
+;
+ShftL:	LD	A,(Horiz)	;DEcrease scroll (left)
+	ADD	A,32
+	LD	HL,View
+	CP	(HL)
+	RET	NC
+	LD	(Horiz),A
+	LD	HL,NSkip
+	LD	A,(HL)
+	SUB	32
+	RET	C
+;
+;Make current line top
+;
+ShftX:	LD	(HL),A
+	JP	SetAl
+;
+MakTop:	CALL	TopV		;gee boss, that was easy, huh?
+	JP	SetAl
+;
+;
+;FIND/REPLACE
+;
+;Find next occurance of a given string.
+;
+Find:	CALL	FndSub
+	JP	C,Error7
+	CALL	ShoLn1
+;
+	LD	A,(FGlobl)
+	OR	A
+	JR	Z,RpFind
+	LD	A,(FBackw)	;global search: backwards?
+	OR	A
+	JR	Z,FndBck
+	CALL	Bottom		;...yes, goto bottom of file
+	JR	RpFind
+FndBck:	CALL	Top		;...no, goto top of file
+RpFind:	LD	A,(FndStr)	;length
+	OR	A
+	RET	Z		;no string, quit
+	LD	A,(FBackw)
+	OR	A		;backward?
+	JR	NZ,RpF5
+	CALL	NdCnt		;number to scan
+	JP	C,Err4x
+	LD	HL,(EndTx)
+	LD	DE,(FndStr)	;string length
+	XOR	A
+	LD	D,A		;extend to 16 bits
+	SBC	HL,DE
+RpSsLp:	INC	HL
+	BIT	7,(HL)		;soft space?
+	JR	Z,RpSsNo	;nope
+	INC	A		;count soft spaces?
+RpSsNo:	DEC	E		;decrement string length
+	JR	NZ,RpSsLp
+	ADC	A,C
+	LD	C,A
+	LD	A,B
+	ADC	A,0
+	LD	B,A
+	LD	HL,FndStr
+	LD	A,C
+	SUB	(HL)
+	LD	C,A		;less string length
+	LD	A,B
+	SBC	A,0
+	LD	B,A
+	JR	C,Err4x
+	INC	BC		;in case last
+	LD	HL,(BefCu)
+	LD	(LastCu),HL	;Mark position
+	LD	HL,(AftCu)
+	LD	A,(ChgFlg)	;was last operation change?
+	OR	A
+	JR	NZ,RpF1
+	INC	HL		;NO, start at next byte
+	DEC	BC		;YES, start at this byte
+RpF1:	LD	A,B
+	OR	C
+	JR	Z,Err4x		;gotta have bytes
+	LD	A,(FUCase)
+	CP	0C3H		;ucase? (groan)
+	JR	Z,SlowFi
+	LD	A,(FndStr)	;only one char? (groan)
+	DEC	A
+	JR	Z,SlowFi
+	LD	DE,(FndStr+1)	;space in char 1 or 2? (groan)
+	LD	A,' '
+	CP	D
+	JR	Z,SlowFi
+	CP	E
+	JR	Z,SlowFi
+	JR	FastFi
+;
+Err4x:	LD	A,(FGlobl)
+	OR	A
+	JP	Z,Error4	;not found
+	LD	HL,(OldLin)
+	CALL	ZipMF2
+	LD	A,(OldCol)
+	CALL	GoCol
+	JP	Error5
+;
+RpF5:	CALL	BgCnt		;backward: number to scan
+	JR	C,Err4x		;EOF?
+	LD	HL,(AftCu)
+	LD	(LastCu),HL	;Mark position
+	LD	HL,(BefCu)
+	JR	BackFi
+;
+FastFi:	LD	A,B		;find lead char FAST with CPIR
+	OR	C
+	JR	Z,Err4x
+	LD	A,(FndStr+1)
+	CPIR
+	JP	PE,FstFi1	;jump if P/V=1 (BC-1 is not 0)
+	JR	NZ,Err4x	;NOT found
+FstFi1:	PUSH	BC
+	PUSH	HL
+	LD	C,0		;no hidden spaces involved
+	CALL	FndChk		;rest of string?
+	POP	HL
+	POP	BC
+	JR	NZ,FastFi	;no match, keep going
+	LD	C,0
+	JP	Found
+;
+SlowFi:	LD	A,(FndStr+1)	;find lead char the slow way
+	LD	(LdChar+1),A	;(spaces or upcase involved)
+	LD	D,H
+	LD	E,L
+	ADD	HL,BC
+	EX	DE,HL
+	LD	C,0
+Lp1Fi:	LD	(FindSv),BC	;save hidden space status
+	CALL	GetNx
+	CALL	FUCase
+LdChar:	CP	0		;<----
+	JR	Z,Lp1Fi1	;got one
+Lp1Fi0:	LD	A,H
+	XOR	D
+	JR	NZ,Lp1Fi
+	LD	A,L
+	XOR	E
+	JR	NZ,Lp1Fi
+	JR	Err4x
+Lp1Fi1:	PUSH	BC
+	PUSH	DE
+	PUSH	HL
+	CALL	FndChk		;rest of string?
+	POP	HL
+	POP	DE
+	POP	BC
+	JR	NZ,Lp1Fi0	;no, keep trying
+	LD	BC,(FindSv)	;YES, indicate whether lead is hidden
+	JR	Found
+;
+BackFi:	LD	A,(FndStr+1)	;find lead char backwards
+	LD	(LdChr2+1),A
+	PUSH	HL
+	OR	A
+	SBC	HL,BC
+	PUSH	HL
+	POP	DE
+	POP	HL
+	INC	HL
+	INC	HL		;adjust for kludge below
+	LD	C,0
+Lp1BF:	LD	A,C
+	LD	(FindSv),A	;clear hidden space status
+	OR	A
+	JR	Z,Lp1BFa
+	DEC	C
+	LD	A,' '
+	JR	Lp1BFb
+Lp1BFa:	DEC	HL		;back up
+	DEC	HL
+	LD	A,(HL)
+	INC	HL		;simulate GetNx in reverse
+	BIT	7,A
+	JR	Z,Lp1BFb
+	INC	C
+Lp1BFb:	AND	7Fh
+	CALL	FUCase
+LdChr2:	CP	0		;<-----
+	JR	Z,Lp1BF1	;got one
+Lp1BF0:	LD	A,H
+	XOR	D
+	JR	NZ,Lp1BF
+	LD	A,L
+	XOR	E
+	JR	NZ,Lp1BF
+	JP	Err4x
+Lp1BF1:	PUSH	HL
+	PUSH	DE
+	PUSH	BC
+	CALL	FndChk		;rest of string?
+	POP	BC
+	POP	DE
+	POP	HL
+	JR	NZ,Lp1BF0	;no, keep trying
+	LD	BC,(FindSv)	;YES, indicate whether lead is hidden
+	JR	FoundB
+;
+FndChk:	LD	A,(FndStr)	;is (HL) a hit?
+	DEC	A
+	RET	Z		;just one char: already matched
+	LD	B,A
+	LD	DE,FndStr+2	;start at char2
+Lp1FC:	CALL	GetNx
+	CALL	FUCase
+	EX	DE,HL
+	CP	(HL)
+	EX	DE,HL
+	JR	Z,Sk1FC
+	LD	A,(DE)		;hmm, no match
+	PUSH	HL
+	LD	HL,WildCd	;consider wildcard
+	CP	(HL)
+	POP	HL
+	RET	NZ		;NOPE.
+Sk1FC:	INC	DE		;match, keep on
+	DJNZ	Lp1FC
+	RET			;YES.
+;
+;
+Found:	LD	A,C		;(note C=1 if began with hidden space)
+	DEC	HL		;point back to char1
+	DEC	HL		;put cursor BEFORE char1
+	CALL	MoveR
+	LD	HL,(AftCu)	;Hidden space there?
+	BIT	7,(HL)
+	JR	Z,Found1
+	OR	A		;need to be on it?
+	JR	Z,Found1
+	LD	A,(HL)
+	AND	7FH		;Yep, unhide it
+	LD	(HL),' '
+	CALL	Insrt1
+Found1:	CALL	MidV		;Center on screen
+Chged0:	CALL	CountL		;Adjust line number
+Chged:	CALL	RitH		;Adjust cursor
+	LD	HL,ChgFlg
+	BIT	0,(HL)
+	JP	Z,SetAl		;find? redisplay
+	LD	HL,FndStr
+	XOR	A
+	ADD	A,(HL)
+	JR	Z,Chgd1
+	LD	C,A		;change: CR involved?
+	LD	B,0
+	INC	HL
+	LD	A,CR
+	CPIR
+	JP	Z,SetAl		;yes
+Chgd1:	LD	HL,ChgStr
+	XOR	A
+	ADD	A,(HL)
+	JP	Z,SetCu		;no
+	LD	C,A
+	LD	B,0
+	INC	HL
+	LD	A,CR
+	CPIR
+	JP	Z,SetAl
+	JP	SetCu
+;
+FoundB:	LD	A,C		;(note C=1 if began with hidden space)
+	DEC	HL		;point back before char1
+	CALL	MoveL		;Move to found string
+	LD	HL,(AftCu)	;hidden space there?
+	BIT	7,(HL)
+	JR	Z,FounB1
+	OR	A		;yes, need to be on it?
+	JR	Z,FounB1
+	LD	A,(HL)		;Yes, unhide it
+	AND	7Fh
+	LD	(HL),' '
+	CALL	Insrt1
+FounB1:	CALL	MidV		;Center on screen
+	CALL	RitH		;Adjust cursor
+	CALL	CountR		;Adjust line number
+	JP	SetAl
+;
+FndSub:	LD	HL,FindQ	;Get Find string
+	CALL	Prompt
+	CALL	GetStr		;Put string in 80
+	DW	FndStr+1
+	LD	DE,FndStr
+	LD	(DE),A
+	RET	Z		;no string
+	INC	DE
+	XOR	A
+	LD	(ChgFlg),A	;find, not change
+	LD	(FBackw),A	;not (yet) backwards
+	LD	(FGlobl),A	;not (yet) global
+	LD	A,0C3H		;(JP)
+	LD	(FUCase),A	;ignore case
+	LD	HL,DMA
+	LD	A,(HL)
+	CP	'/'
+	JR	NZ,FndSb2
+	INC	HL
+FndSL1:	LD	A,(HL)
+	INC	HL
+	OR	A
+	RET	Z
+	CP	'/'		;do /options/
+	JR	Z,FndSb2
+	CALL	UCase
+	CP	'C'
+	JR	Z,FOptC
+	CP	'B'
+	JR	Z,FOptB
+	CP	'G'
+	JR	Z,FOptG
+	SCF
+	RET
+FOptC:	LD	A,0C9H		;(RET) respect case
+	LD	(FUCase),A
+	JR	FndSL1
+FOptB:	LD	(FBackw),A	;backward
+	JR	FndSL1
+FOptG:	LD	A,0FFH
+	LD	(FGlobl),A
+	JR	FndSL1
+FndSb2:	LD	B,0
+FndSL2:	LD	A,(HL)		;move string in
+	INC	HL
+	CALL	FUCase
+	OR	A
+	LD	(DE),A
+	JR	Z,FndSLF
+	INC	DE
+	INC	B
+	JR	FndSL2
+FndSLF:	LD	A,B		;count
+	LD	(FndStr),A
+	RET
+;
+FUCase:	JP	UCase		;<--- becomes RET
+;
+;Change found string [this entry NOT currently in use]
+;
+;Change:	CALL	ChgSub		;get string
+;
+RepChg:	LD	HL,(BefCu)	;mark position
+	LD	(LastCu),HL
+	LD	A,(FndStr)
+	OR	A
+	JR	Z,RpCh1F	;no string
+	LD	B,A		;count to erase
+RpCh1:	PUSH	BC
+	CALL	EChar
+	POP	BC
+	JP	C,Error7
+	DJNZ	RpCh1
+RpCh1F:	LD	HL,ChgStr	;point to string
+	LD	A,(HL)		;count to replace
+	OR	A
+	JR	Z,RpCh3		;quit if no new string
+	LD	B,A
+	PUSH	BC
+RpCh2:	INC	HL
+	PUSH	BC
+	PUSH	HL
+	LD	A,(HL)
+	CALL	Insrt
+	POP	HL
+	POP	BC
+	CALL	C,Error1	;out of memory
+	DJNZ	RpCh2
+	POP	BC
+	LD	A,(FBackw)
+	OR	A
+RpCh3:	JP	Z,Chged0
+RpCh4l:	PUSH	BC
+	CALL	Left
+	POP	BC
+	RET	C
+	DJNZ	RpCh4l
+	CALL	CountR
+	JP	Chged
+;
+ChgSub:	LD	A,0FFH		;say we've done a change
+	LD	(ChgFlg),A
+	LD	HL,ChgQ
+	CALL	Prompt
+	CALL	GetStr		;Put string in 80
+	DW	ChgStr+1
+	PUSH	AF
+	CALL	ShoLn1		;may need this later
+	POP	AF
+	LD	DE,ChgStr
+	LD	(DE),A
+	RET	Z		;do not LDIR with B=0
+	INC	DE
+	LD	C,A
+	LD	B,0
+	LD	HL,DMA
+	LDIR			;Move string in
+	XOR	A
+	LD	(DE),A		;zero terminate it
+	RET
+;
+;Global replace
+;
+Rplace:	LD	A,0FFH
+	LD	(YNFlg),A
+	CALL	FndSub
+	JP	C,Error7
+	LD	A,(FndStr)
+	OR	A
+	JP	Z,ShoLn1	;no string?
+	LD	A,(FGlobl)	;global replace?
+	OR	A
+	JR	Z,RplcGo
+	LD	A,(FBackw)	;backward?
+	OR	A
+	JR	Z,RplTop
+	CALL	Bottom		;goto end
+	JR	RplcGo
+RplTop:	CALL	Top		;goto start
+RplcGo:	LD	A,(MacFlg)
+	PUSH	AF		;(got to do this before Chg Input)
+	CALL	ChgSub
+	POP	AF
+	OR	A
+	CALL	NZ,Global	;within Macro: force Global
+	CALL	RepFCh		;do first one
+	JR	C,RplLpQ	;none found?
+RplLp:	CALL	Keybd
+	CP	ESC		;abort?
+	JR	Z,RplLpX
+	XOR	A
+	LD	(FGlobl),A	;turn off global
+	CALL	RepFCh
+	JR	NC,RplLp
+RplLpX:	LD	A,(EdErr)
+	CP	4		;suppress "not found" error
+	CALL	Z,Error0
+RplLpQ:	CALL	XLoud		;turn CONOut back on
+	JP	SetAl
+;
+;Repeat last find/replace
+;
+Repeat:	LD	A,0FFH
+	LD	(YNFlg),A
+	CALL	RepFCh
+	LD	A,(YNFlg)
+	OR	A
+	JR	Z,RplLp
+	RET
+;
+RepFCh:	CALL	RpFind		;[entry from Replace]
+	LD	A,(EdErr)	;return Carry if not found or error
+	OR	A
+	SCF
+	RET	NZ		;not found
+	LD	A,(ChgFlg)
+	OR	A
+	RET	Z		;find only, all done
+	CALL	ShoAll		;replace, gotta show it
+	CALL	YesNo		;..and ask
+	JR	C,RepFC0
+	JR	Z,RepFC1
+	LD	A,(FBackw)	;NC,NZ = No
+	OR	A
+	LD	A,(FndStr)
+	CALL	Z,GoRtA		;skip ahead
+	OR	A
+	RET
+RepFC0:	RET	NZ		;C,NZ means Esc: abort
+RepFC1:	CALL	RepChg		;Z (C or NC) means Yes
+	LD	A,(EdErr)
+	CP	1		;error? set carry
+	CCF
+	RET
+;
+YesNo:	LD	A,(YNFlg)	;return C=abort, Z=yes
+	OR	A
+	SCF
+	RET	Z		;"*" mode? Z,C = yes,global
+	CALL	Loud		;MUST see this
+YesNo1:	LD	DE,DspEsc	;entry for hyphenation Y/N
+	CALL	GoTo
+	CALL	MakAlt
+	LD	HL,YNMsg	;say "Y/N/*"
+	LD	B,4
+	CALL	BHLMsg
+	CALL	UnAlt
+	CALL	Cursr
+	CALL	KeyIn		;MUST come from keyboard
+	PUSH	AF
+	LD	DE,DspEsc	;clean up
+	CALL	GoTo
+	LD	A,(NoHdrF)
+	OR	A
+	CALL	Z,MakAlt
+	LD	B,4
+	CALL	BBlank
+	CALL	UnAlt
+	POP	AF
+	CP	ESC		;abort?
+	JR	NZ,YN1
+	OR	A
+	SCF			;C, NZ = yes
+	RET
+YN1:	CP	'*'
+	JR	NZ,YN2
+Global:	CALL	XQuiet
+	XOR	A
+	LD	(YNFlg),A	;set global flag
+	SCF
+	RET			;Z,C = yes,globally
+YN2:	AND	5FH		; upper case
+	CP	'Y'
+	RET	Z		;Z,NC = yes,once
+	CP	'N'
+	JR	NZ,YesNo1
+	OR	A
+	RET			;NZ,NC = no
+;
+;
+;Variable Tabs.
+;"VTList" is a list of settings, increasing order, zero fill
+;
+VTTog:	LD	HL,VTFlg	;toggle variable on/off
+	CALL	ToggHL
+	CALL	RulFix
+VTshow:	LD	A,(VTFlg)	;requires header display
+	OR	A
+	LD	HL,VTon
+	JR	NZ,VTsho1
+	LD	HL,TogOff
+VTsho1:	LD	DE,DspTab
+	JP	TogSho
+;
+;
+VarTab:	CALL	ColCnt		;advance to next VT setting
+	LD	B,VTNum
+	LD	HL,VTList
+VTlp1:	CP	(HL)		;find it
+	JR	C,VTb2
+	INC	HL
+	DJNZ	VTlp1
+	RET			;none, no action.
+VTb2:	LD	A,(HL)
+	PUSH	HL
+	DEC	A
+	LD	HL,View
+	CP	(HL)
+	CALL	NC,HorScl	;may need to scroll
+	POP	HL
+	LD	A,(InsFlg)
+	OR	A		;is insert on?
+	LD	A,(HL)		;column to move to
+	JP	Z,MvCol
+	JP	MvColI		;move by inserting spaces
+;
+TaBack:	CALL	ColCnt		;retreat to last tab setting
+	DEC	B
+	RET	Z
+	LD	A,(VTFlg)
+	OR	A
+	JR	Z,BThard
+	LD	C,B
+	XOR	A
+	LD	B,VTNum
+	LD	HL,VTList+VTNum-1
+BTlp1:	CP	(HL)		;skip 0s
+	JR	NZ,BTb1
+	DEC	HL
+	DJNZ	BTlp1
+	RET			;no tabs at all, no action
+BTb1:	LD	A,C
+BTlp2:	CP	(HL)		;find it
+	JR	NC,BTb2
+	DEC	HL
+	DJNZ	BTlp2
+	JP	QuikLf		;no more left, go to col 1
+BTb2:	LD	A,(HL)		;that's it
+	JR	BTabX
+BThard:	LD	A,(TabCnt)	;back to last multiple
+	CPL
+	DEC	B
+	AND	B
+	INC	A
+BTabX:	PUSH	AF
+	CALL	QuikLf		;go all the way back
+	POP	AF
+	JP	MvCol		;then go there
+;
+;
+VTSet:	LD	HL,ColQ		;Set tab(s)
+	CALL	Prompt
+	CALL	GetStr
+	DW	0
+	LD	A,(CurCol)	;default is Here
+	JR	Z,VTSt01	;nothing entered?
+	LD	HL,DMA
+	LD	A,(HL)
+	CP	'@'
+	JR	Z,VTSInt	;interval specified?
+	CP	'#'
+	JR	Z,VTSGrp	;group?
+	EX	DE,HL
+	CALL	GetNN		;nope, single tab set
+	JR	Z,VTErr
+VTSt01:	CALL	VTStCl
+	JR	C,VTErr
+	JR	VTStX
+VTStCl:	LD	E,A		;[sbr: set VT here]
+	LD	A,(VTList+VTNum-1)
+	OR	A
+	SCF
+	RET	NZ		;must be room in list
+	LD	BC,VTNum
+	LD	HL,VTList
+VTSlp1:	LD	A,(HL)		;find it
+	OR	A
+	JR	Z,VTSt1
+	CP	E
+	RET	Z		;(quit if already set)
+	JR	NC,VTSt2
+	INC	HL
+	DEC	C
+	JR	NZ,VTSlp1
+	DEC	HL		;last place
+VTSt1:	LD	(HL),E		;add at end
+	OR	A
+	RET
+VTSt2:	LD	A,E
+	LD	HL,VTList+VTNum-2	;make room here
+	LD	DE,VTList+VTNum-1
+	DEC	BC
+	LDDR
+	LD	(DE),A		;put it in
+	OR	A
+	RET
+VTErr:	JP	Error7
+;
+VTSInt:	LD	DE,VTList	;"@" interval specified
+	LD	B,VTNum
+	XOR	A
+	CALL	Fill		;clear all existing tabs
+	EX	DE,HL
+	INC	DE
+	CALL	GetNN
+	OR	A
+	JR	Z,VTStX
+	LD	C,A
+	INC	A		;"@n" means n+1, 2n+1 etc
+	LD	DE,VTList
+	LD	B,VTNum
+VTSlp2:	LD	(DE),A
+	INC	DE
+	ADD	A,C
+	JR	C,VTStX
+	DJNZ	VTSlp2
+	JR	VTStX
+VTSGrp:	LD	DE,VTList	;'#' group specivied
+	LD	B,VTNum
+	XOR	A
+	CALL	Fill		;clear all existing tabs
+	EX	DE,HL
+VTGlp:	INC	DE
+	CALL	GetNN		;get one from list
+	OR	A
+	PUSH	DE
+	CALL	NZ,VTStCl	;set it?
+	POP	DE
+	JR	C,VTErr
+	LD	A,(DE)
+	OR	A
+	JR	NZ,VTGlp
+VTClX:
+VTStX:	CALL	ShoLn1		;all done
+	JP	RulFix
+;
+;
+VTClr:	LD	HL,ColQ		;clear a tab
+	CALL	Prompt
+	LD	A,(CurCol)	;default is Here
+	CALL	GetNum
+	JR	C,VTErr
+	JR	Z,VTErr
+	LD	B,VTNum
+	LD	HL,VTList
+VTClp1:	CP	(HL)		;find it
+	JR	Z,VTCl2
+	INC	HL
+	DJNZ	VTClp1
+	JR	VTErr		;wasn't set
+VTCl2:	LD	(HL),0
+	DEC	B
+	JR	Z,VTClX		;was last, all done
+	LD	D,H
+	LD	E,L
+	INC	HL
+	LD	C,B
+	LD	B,0
+	LDIR			;delete it
+	XOR	A
+	LD	(DE),A		;zero fill
+	JR	VTClX
+;
+;
+; INSERTION FUNCTIONS
+;
+;Store a ctl-code in text
+;
+CtlP:	LD	HL,CPTog	;say "^P-_", get key
+	CALL	Prefix
+	CALL	XCase
+	CP	DEL
+	JR	Z,CtlP1
+	CP	' '		;error if not now ctl-char
+	RET	Z		;(space cancels)
+	JP	NC,Error2	;invalid key
+CtlP1:	LD	HL,BlkChr
+	CP	(HL)		;don't allow block char
+	JP	Z,Error2	;invalid key
+	CP	TAB		;tabs are special
+	JR	Z,ITab
+	CP	CR		;so are CRs
+	JP	Z,ICRB1
+	JR	Sk2IC
+;
+IChar:	CP	' '		;Main menu entry: no control codes allowed
+	RET	C
+Sk2IC:	PUSH	AF
+	CALL	ChkLM		;Check for left margin
+	JR	NC,Sk2aIC
+	CALL	UpToLM
+	CALL	SetCu
+Sk2aIC:	POP	AF
+	LD	E,A
+	CP	7FH		;redo line if DEL/ctl
+	CCF
+	JR	C,Sk3IC
+	CP	' '
+Sk3IC:	CALL	C,SetRCu
+	PUSH	DE
+	CALL	NC,XPutCh	;just show nice chars
+	POP	DE
+	PUSH	DE
+	LD	A,E
+	CALL	Insrt		;Put byte in
+	POP	DE
+	RET	C		;Full?
+	PUSH	DE
+	LD	A,(Horiz)
+	LD	HL,View
+	CP	(HL)
+	CALL	NC,HorScl	;scroll if at edge
+	CALL	IncH		;Move cursor
+	CALL	ChkIns		;adjust for insert mode
+	POP	DE
+	LD	A,E
+	CP	' '
+	RET	Z		;if not space
+	CP	EOF
+	RET	Z
+	LD	HL,BlkChr
+	CP	(HL)
+	RET	Z
+	JP	WdWrap		;check wordwrap
+;
+TabKey:	LD	A,(VTFlg)
+	OR	A
+	JP	NZ,VarTab	;maybe variable tabbing
+ITab:	LD	A,TAB
+	CALL	Insrt
+	RET	C
+	CALL	SetCu
+	CALL	ChkIns
+	LD	A,(Horiz)
+	LD	HL,TabCnt
+	ADD	A,(HL)
+	LD	HL,View
+	CP	(HL)
+	CALL	NC,HorScl	;scroll if needed
+	JP	TabH
+;
+;Do a carriage return
+;
+ICR:	LD	A,(DSFlg)
+	OR	A
+	CALL	NZ,ICR1
+ICR1:	LD	A,(InsFlg)
+	BIT	7,A		;Is insert flag on?
+	JR	NZ,ICRB1
+	CALL	QuikRt		;noo...
+	LD	A,(FMode)
+	CP	'N'
+	JR	Z,ICR01
+ICR00:	CALL	FetchB		;<CR> in Document: make HCR
+	CP	' '
+	JR	NZ,ICR01
+	CALL	Delete
+	JR	ICR00
+ICR01:	CALL	Cursr		;may need to show new HCR
+	CALL	NdCnt		;Are we at end?
+	JR	C,ICRB1		;Yes, add a new line
+	CALL	IfScl		;no, just move cursor
+	CALL	Right
+	JP	ChkAI
+ICRB:	CALL	ICRB1
+ICRB0:	LD	A,(DSFlg)
+	OR	A
+	RET	Z
+	CALL	InsSpc		;doublespace? add soft CRLF
+ICRB1:	XOR	A
+	LD	(NumTab),A
+	CALL	IfScl
+	LD	A,CR
+	CALL	Insrt		;Put it in
+	RET	C
+	LD	A,(Vert)
+	LD	HL,TxtLns
+	CP	(HL)
+	CALL	Z,ScrlU2		;end of screen? scroll
+	CALL	SetDn
+	CALL	IncV		;Move cursor down
+	CALL	LftH		;Move to start of line
+	JR	ChkAI
+ICRA:	CALL	ICRA1
+	LD	A,(DSFlg)
+	OR	A
+	RET	Z
+	LD	A,' '		;doublespace? add soft CRLF
+	CALL	InsrtA
+ICRA1:	LD	A,CR		;Used as ^N routine only
+	CALL	InsrtA
+	RET	C
+	CALL	FetchB
+	CP	CR
+	JR	NZ,ICRAx
+	LD	HL,InsL
+	CALL	ScrUDx
+	RET	NC
+ICRAx:	JP	SetDn
+;
+;
+;Check for insert mode
+;
+ChkIns:	LD	A,(InsFlg)
+	OR	A		;INSERT on?
+	JP	NZ,SetRCu	;Yes, all done
+	LD	HL,(BefCu)
+	LD	A,(HL)
+	CP	EOF
+	JP	Z,SetRCu
+	LD	HL,BlkChr
+	CP	(HL)
+	JP	Z,SetRCu
+	LD	HL,(AftCu)	;No, Look at the character
+	LD	A,CR
+	CP	(HL)		;Is it a CR?
+	RET	Z		;Yes, leave it
+	LD	A,TAB
+	CP	(HL)		;TAB? redo line
+	CALL	Z,SetCu
+	LD	A,(ShoFlg)
+	PUSH	AF
+	CALL	EChar		;overwrite character
+	POP	AF
+	LD	(ShoFlg),A
+	RET
+;
+;Check for auto indent mode
+;
+ChkAI:	LD	A,(AIFlg)	;AI on?
+	OR	A
+	RET	Z
+	LD	A,(DSFlg)
+	OR	A
+	RET	NZ		;done if doublespacing
+	CALL	NdCnt		;add text at cmd?
+	JR	C,ChkAll
+	LD	A,(InsFlg)	;insert on?
+	OR	A
+	JR	Z,ChkALp
+ChkAll:	CALL	QuikLf		;#inline version of IndPL
+	CALL	BgCnt		;#  /
+	RET	C		;# /
+	CALL	Up		;#/
+	CALL	CntSpc		;get indentation
+	PUSH	BC		;back to this line
+	CALL	QuikRt		;#inline version of IndNL
+	CALL	Right		;#these are just like RfmNL/PL,
+	POP	BC		;#except they DON'T skip over blank lines
+	LD	A,B
+	CP	TAB
+	LD	A,(NumTab)
+	JR	Z,ChkAtb
+	INC	A
+	JP	MvColI		;do it
+ChkALp:	CALL	Fetch		;NO, just move to first nonspace
+	CP	' '
+	JR	Z,ChkAI1
+	CP	TAB
+	RET	NZ
+ChkAI1:	CALL	Right
+	JR	ChkALp
+ChkAtb:	OR	A
+	RET	Z
+	DEC	A
+	PUSH	AF
+	CALL	ITab
+	POP	AF
+	JR	ChkAtb
+;
+;
+; DELETION FUNCTIONS
+;
+;UNdelete a character
+;
+Undel:	CALL	GpCnt		;Anything to undelete?
+	RET	C
+	CALL	ELret2
+	LD	HL,(AftCu)
+	DEC	HL		;here goes
+	LD	(AftCu),HL
+	LD	A,(HL)
+	CP	CR		;was it a CR?
+	JP	Z,SetDn
+	JP	SetRCu
+;
+UndlLn:	CALL	GpCnt		;Do a whole line
+	RET	C
+	CALL	ELret2
+	LD	A,B
+	OR	A		;max 256 chars
+	JR	Z,UdLn1
+	LD	BC,256
+UdLn1:	LD	HL,(AftCu)
+	DEC	HL
+	DEC	HL
+	LD	A,CR
+	CPDR			;look for CR
+	RET	NZ
+	INC	HL
+	INC	HL		;start of line
+	LD	(AftCu),HL
+	JP	SetDn
+;
+;
+;Erase character to left of cursor (C=error)
+;
+Delete:	CALL	Left
+	RET	C		;Fall through to EChar
+;
+;
+;Erase character to right of cursor (C=error)
+;
+EChar:	CALL	NdCnt		;Anything to erase?
+	RET	C
+	CALL	ELret2
+	CALL	SetRCu
+	LD	HL,(AftCu)
+	BIT	7,(HL)		;Hidden space?
+	JR	Z,Sk1EC
+	CALL	GpShft		;unhide it
+	LD	HL,(AftCu)
+	LD	A,(HL)
+	LD	(HL),' '
+	AND	7FH
+	DEC	HL
+	LD	(HL),A
+	RET
+Sk1EC:	LD	A,(HL)
+	INC	HL		;Move up, past character
+	LD	(AftCu),HL	;Store updated value
+	CP	CR
+	CALL	Z,SetDn		;ate a CR?
+	OR	A
+	RET
+;
+GpShft:	CALL	GpCnt		;Shift gap contents left (for Undel sake)
+	RET	C
+	DEC	BC
+	LD	A,B
+	OR	C
+	SCF
+	RET	Z
+	LD	HL,(BefCu)
+	INC	HL
+	LD	A,B
+	SUB	08H		;Maximum 2k worth
+	JR	C,GpS1
+	LD	B,08H
+	ADD	A,H
+	LD	H,A
+GpS1:	LD	D,H
+	LD	E,L
+	INC	HL
+	LDIR
+	OR	A
+	RET
+GpCR:	CALL	GpShft		;mark BOL for ^QU
+	RET	C
+	LD	A,CR
+	LD	(DE),A
+	RET
+;
+;
+;Line erase functions
+;
+Eline:	LD	HL,(AftCu)	;first left end
+	PUSH	HL
+	CALL	QuikLf
+	POP	HL
+	LD	(AftCu),HL
+	LD	E,1		;now right end
+	CALL	CrRit
+	JR	NC,Eline1	;found CR? good
+	JR	NZ,Eline2	;EOF? return
+	LD	HL,(EndTx)	;Cursor is in last line
+	INC	HL
+Eline1:	LD	(AftCu),HL
+Eline2:	CALL	ELret2
+	LD	HL,DelL
+	CALL	ScrUDx
+	JP	C,SetDn
+	LD	A,(TxtLns)
+	LD	B,A
+	JP	ShoLn
+;
+EOLine:	LD	E,1		;Erase to EOL
+	CALL	CrRit
+	JR	NC,Sk1EO	;Found CR? good
+	RET	NZ		;EOF? return
+	LD	HL,(EndTx)	;cursor is in last line
+	LD	A,(HL)
+	CP	CR		;Is last byte a CR?
+	INC	HL
+	JR	NZ,Sk2EO	;No
+Sk1EO:	DEC	HL		;Point at trailing CR
+Sk2EO:	PUSH	HL
+	JR	EBLret		;delete to there
+;
+EBLine:	LD	HL,(AftCu)	;Erase to BOL
+	PUSH	HL
+	CALL	QuikLf
+EBLret:	CALL	GpCR		;delete to there
+	POP	HL
+	CALL	SetRCu
+ELret:	LD	(AftCu),HL
+ELret2:	LD	A,0FFh
+	LD	(Modify),A
+	RET
+;
+E2Char:	LD	HL,CQTTog	;Erase to character
+	CALL	Prefix
+	CP	ESC
+	RET	Z
+	CP	'U'-40h		;^U?
+	RET	Z
+	LD	(PrevCh),A
+E2CLp:	CALL	EChar		;always eat first char
+	CALL	NdCnt
+	RET	C
+	CALL	Keybd
+	CP	ESC
+	RET	Z
+	CALL	Fetch
+	LD	HL,PrevCh
+	CP	(HL)
+	JR	Z,E2CLpF
+	LD	(PrvCh2),A
+	JR	E2CLp
+E2CLpF:	CP	CR
+	RET	NZ
+	LD	A,(FMode)
+	CP	'N'
+	RET	Z
+	LD	HL,PrvCh2	;CR means HARD CR in Doc modes
+	LD	A,(HL)
+	CP	' '
+	RET	NZ
+	LD	(HL),CR
+	JR	E2CLp
+;
+;
+; BLOCK FUNCTIONS
+;
+;MARK Block start and termination
+;
+Block:	CALL	UnBlAb		;Remove any markers above
+	CALL	UnBlB1		;Remove all but last marker below
+Blk01:	LD	A,(BlkChr)	;mark it now
+	JP	Sk2IC
+;
+Termin:	CALL	UnBlA1		;Remove all but first marker above
+	CALL	UnBlBl		;Remove any markers below
+	JR	Blk01
+;
+Unmark:	CALL	UnBlAb		;Remove all block markers
+	CALL	UnBlBl
+	RET
+;
+;Move cursor to block start
+;
+QikBlk:	CALL	IsBlk
+	EX	DE,HL
+	INC	HL
+	BIT	0,A
+	JP	Z,Error7	;must be marked
+	BIT	6,A
+	JR	NZ,QikB1
+QikB0:	CALL	MoveL		;before cursor (entries from QuikMk)
+	JR	QikB2
+QikB1:	DEC	HL		;after cursor
+	CALL	MoveR
+QikB2:	CALL	CountS		;Adjust count
+	CALL	RitH		;Adjust cursor
+	CALL	MidV
+	JP	SetAl
+;
+;Basic query returns:
+; A= {bit 7=gap in block; 6=start after gap; 1=block marked; 0=start marked}
+; DE,HL= start, end (if marked)
+;
+IsBlk:	LD	IX,IsBVal
+	LD	(IX),0		;result byte
+	CALL	BgCnt
+	JR	C,IsB1
+	LD	A,(BlkChr)	;look before cursor
+	CPIR
+	JR	NZ,IsB1
+	SET	0,(IX)		;found start
+	LD	D,H
+	LD	E,L
+	DEC	DE
+	JP	PO,IsB0
+	CPIR
+	JR	NZ,IsB0
+	SET	1,(IX)		;found end
+	DEC	HL
+IsB5:	LD	A,(IX)		;exit
+	RET
+IsB0:	SET	7,(IX)		;straddle
+	JR	IsB1a
+IsB1:	SET	6,(IX)		;block after cursor
+IsB1a:	CALL	NdCnt		;now look after cursor
+	JR	C,IsB5
+	LD	HL,(AftCu)
+IsB3:	LD	A,(BlkChr)	;search loop
+	CPIR
+	JR	NZ,IsB5
+	BIT	0,(IX)
+	JR	NZ,IsB2
+	SET	0,(IX)		;found start
+	LD	D,H
+	LD	E,L
+	DEC	DE
+	LD	A,B
+	OR	C
+	JR	Z,IsB5
+	JR	IsB3
+IsB2:	SET	1,(IX)		;found end
+	DEC	HL
+	JR	IsB5
+;
+;
+UnBlA1:	CALL	BgCnt		;undo all but 1st marker above
+	RET	C
+	LD	A,(BlkChr)
+	CPIR
+	JP	PE,UnBA01	;one? leave and look for more
+	RET			;no more, finished
+UnBlAb:	CALL	BgCnt		;undo all markers above
+	RET	C
+UnBA01:	LD	A,(BlkChr)
+	CPIR
+	RET	NZ		;none, finished
+	CALL	SetAl
+	PUSH	BC
+	PUSH	HL
+	LD	D,H
+	LD	E,L
+	DEC	DE
+	CALL	LCnt
+	JR	C,UnBA02
+	LDIR			;remove it
+UnBA02:	DEC	DE
+	LD	(BefCu),DE
+	POP	HL
+	DEC	HL
+	POP	BC
+	LD	A,B
+	OR	C
+	JR	NZ,UnBA01
+	RET
+;
+UnBlB1:	CALL	NdCnt		;undo all but 1st marker below
+	RET	C
+	LD	HL,(EndTx)
+	LD	A,(BlkChr)
+	CPDR
+	JP	PE,UnBB01	;one, leave and continue
+	RET			;none, finished
+UnBlBl:	CALL	NdCnt		;undo all markers below
+	RET	C
+	LD	HL,(EndTx)
+UnBB01:	LD	A,(BlkChr)
+	CPDR
+	RET	NZ		;none, finished
+	CALL	SetDn
+	PUSH	BC
+	PUSH	HL
+	LD	D,H
+	LD	E,L
+	INC	DE
+	CALL	RCnt
+	JR	C,UnBB02
+	LDDR			;remove it
+UnBB02:	INC	DE
+	LD	(AftCu),DE
+	POP	HL
+	INC	HL
+	POP	BC
+	LD	A,B
+	OR	C
+	JR	NZ,UnBB01
+	RET
+;
+;Erase Block
+;
+EBlock:	CALL	IsBlk
+	BIT	1,A		;must be marked
+	JP	Z,Error7
+	BIT	7,A
+	JR	NZ,EPrt3	;straddles cursor?
+	BIT	6,A		;is it after cursor?
+	JR	NZ,EPrt2
+	LD	B,H		;no, before cursor
+	LD	C,L
+	LD	HL,(BefCu)
+	SBC	HL,BC		;bytes to move
+	PUSH	HL
+	LD	H,B
+	LD	L,C
+	POP	BC
+	JR	Z,EPrt1a
+	INC	HL
+	LDIR
+EPrt1a:	DEC	DE
+	LD	(BefCu),DE
+	JR	EPrtRt
+EPrt2:	EX	DE,HL		;it's after cursor
+	LD	BC,(AftCu)
+	PUSH	HL
+	SBC	HL,BC
+	LD	B,H
+	LD	C,L
+	POP	HL
+	JR	Z,EPrt2a
+	DEC	HL
+	LDDR
+EPrt2a:	INC	DE
+	LD	(AftCu),DE
+	JR	EPrtRt
+EPrt3:	DEC	DE		;cursor straddles it
+	LD	(BefCu),DE
+	INC	HL
+	LD	(AftCu),HL
+EPrtRt:	CALL	RitH		;Adjust cursor
+	CALL	CountS
+	CALL	ELret2
+	JP	SetAl
+;
+;Block Copy
+;
+Copy:	CALL	IsBlk
+	AND	82H		;must be marked, not straddled
+	CP	2		;(bit 1 set, 7 clear)
+	JP	NZ,Error7
+	CALL	CmpLng		;compute length
+	RET	Z		;was empty
+	CALL	CpSafe
+	JR	NC,Copy02	;okay, go do it
+	CALL	Cmprs		;try to get more room
+	CALL	IsBlk
+	CALL	CmpLng		;compute length now
+	CALL	CpSafe		;well?
+	JP	C,Error1	;REALLY won't fit
+Copy02:	LDDR
+	INC	DE
+	LD	(AftCu),DE
+	CALL	RitH		;adjust cursor
+	CALL	CountS
+	CALL	ELret2
+	JP	SetDn
+;
+CmpLng:	DEC	HL
+	INC	DE
+	PUSH	HL
+	INC	HL
+	SBC	HL,DE		;compute length now
+	LD	B,H
+	LD	C,L
+	POP	HL
+	LD	DE,(AftCu)
+	DEC	DE
+	RET
+;
+CpSafe:	PUSH	HL		;Set C if BC bigger than gap
+	PUSH	BC
+	CALL	GpCnt
+	LD	H,B
+	LD	L,C
+	POP	BC
+	SCF			;(just to be safe)
+	SBC	HL,BC
+	POP	HL
+	RET
+;
+;Block Move
+;
+MovBlk:	CALL	Copy		;first copy
+	LD	A,(EdErr)
+	OR	A
+	RET	NZ
+	JP	EBlock		;then delete
+;
+;
+; DISK FUNCTIONS
+;
+;View Directory
+;
+Dir:	LD	HL,DirQ
+	CALL	Prompt
+	LD	A,8+1		;ask for Duu: or NDR name (8 chars max)
+	CALL	GSEnt
+	DW	0
+	PUSH	AF
+	LD	A,(FCB)		;defaults
+	LD	B,A
+	LD	A,(FCBU)
+	LD	C,A
+	POP	AF
+	JR	Z,Dir00
+	LD	B,A
+	LD	HL,DMA
+DirULp:	LD	A,(HL)
+	CALL	UCase		;new D (?)
+	LD	(HL),A
+	INC	HL
+	DJNZ	DirULp
+	CP	':'
+	JR	NZ,Dir0x	;jump if not a ":"
+	DEC	HL
+	LD	(HL),0
+Dir0x:	LD	DE,DMA
+	CALL	NdrChk
+	JR	NZ,Dir00	;is an NDR name
+	LD	A,(DE)		;new D (?)
+	CP	'0'
+	JP	C,Error7	;<'0', not even a user #
+	CP	'9'+1
+	JR	C,Dir0		;jump is just a user #
+	SUB	'A'-1
+	CP	17		;drive letter > 'P'?
+	JP	NC,Error7	;yep.. a no no
+	LD	B,A
+	INC	DE
+Dir0:	PUSH	BC
+	CALL	GetNN		;new uu
+	POP	BC
+	JR	NC,Dir0a
+	LD	A,(FCBU)	; fetch user #
+	JR	Dir0y
+Dir0a:	CP	32		;0-31 ok
+	JP	NC,Error7
+Dir0y:	LD	C,A
+Dir00:	PUSH	BC
+	LD	E,C
+	LD	C,USRN
+	CALL	BDOSep		;set user
+	POP	BC
+	LD	HL,FCBBuf
+	LD	(HL),B		;and drive
+	INC	HL
+	LD	(HL),'?'	;set up *.* FCB
+	LD	DE,FCBBuf+2
+	LD	BC,10+1
+	LDIR			; wildcard filename, type and extent
+	LD	(HL),0
+	LD	BC,19
+	LDIR			; zero out S1, S2, RC and alloc. map
+	CALL	MakAlt
+	LD	DE,010Fh	;position to col 2
+	LD	A,(RulFlg)
+	OR	A
+	JR	Z,Dir1
+	INC	D		;move down a line to preserve the ruler
+Dir1:	CALL	GoTo
+	LD	A,(View)	;initialize
+	SUB	14
+	LD	(HPos),A
+	LD	A,(TxtLns)	;lines free on screen
+	DEC	A
+	LD	(DirLns),A
+	LD	A,(View)	;columns free
+	LD	HL,DirCls
+	LD	(HL),A
+	XOR	A
+	RRD			;cols=view/16
+	LD	C,(HL)
+	DEC	C
+	PUSH	BC
+	LD	DE,FCBBuf	;first file?
+	LD	C,SRCH
+	CALL	BDOS		; search for first matching file
+	POP	BC
+	CP	0FFH
+	JR	NZ,Sk1Dir
+	CALL	DsplC
+	DB	'N','o'+X,'File',CR,0
+	JP	Sk3Dir
+;
+Lp3Dir:	PUSH	BC
+	LD	DE,FCBBuf	;next one...
+	LD	C,SRCN
+	CALL	BDOS		; search for next matching file
+	POP	BC
+	CP	0FFH
+	JP	Z,DirEnd	;all done?
+Sk1Dir:	ADD	A,A
+	ADD	A,A
+	ADD	A,A
+	ADD	A,A
+	ADD	A,A		;desired FCB is at 32*A + DMA
+	LD	E,A
+	LD	D,0
+	LD	HL,DMA
+	ADD	HL,DE
+	INC	HL		;point to filename
+	EX	DE,HL
+	LD	HL,9
+	ADD	HL,DE		;test SYS attribute
+	BIT	7,(HL)
+	JR	Z,Sk2Dir
+	LD	A,(DirSys)	;yes, include?
+	OR	A
+	JR	Z,Lp3Dir	;no
+Sk2Dir:	EX	DE,HL
+	PUSH	HL
+	LD	B,11
+Lp4Dir:	RES	7,(HL)		;strip flags
+	INC	HL
+	DJNZ	Lp4Dir
+	LD	DE,4
+	ADD	HL,DE
+	LD	(HL),0		;terminator
+	DEC	HL
+	LD	A,' '		;separator
+	LD	(HL),A
+	DEC	HL
+	LD	(HL),A
+	DEC	HL
+	LD	(HL),A
+	DEC	HL
+	LD	D,H
+	LD	E,L
+	DEC	HL
+	LD	A,C		;save DirCls
+	LD	BC,3		;move TYP
+	LDDR
+	EX	DE,HL
+	LD	(HL),'.'	;punctuate
+	POP	HL
+	LD	C,A		;save DirCls
+	PUSH	BC
+	CALL	DspLp		;SHOW IT
+	POP	BC
+	DEC	C
+	JR	NZ,Lp3Dir	;finish line?
+	LD	HL,DirLns
+	DEC	(HL)
+	JR	Z,DirFul	;out of room?
+	LD	A,CR
+	CALL	DsByt		;okay, new line
+	LD	A,(DirCls)
+	LD	C,A
+	JR	Lp3Dir
+;
+DirFul:	CALL	DsplC		;ran out of lines
+	DB	'...',CR,0
+	JR	Sk3Dir
+DirEnd:	LD	A,C		;done, need CR?
+	LD	HL,DirCls
+	CP	(HL)
+	JR	Z,Sk3Dir
+	LD	A,CR
+	CALL	DsByt
+Sk3Dir:	CALL	UnAlt
+	CALL	IfSpLn
+	LD	A,(FCBU)
+	LD	E,A
+	LD	C,USRN		;reset user
+	CALL	BDOSep
+	CALL	SetAl
+	JP	ESCLp		;wait for ESC to clear
+;
+;Load a new file.
+;
+Load:	LD	A,(Modify)
+	OR	A
+	JR	Z,LoadY
+	LD	HL,QuitQ	;warn if old file was changed
+	CALL	Prompt
+	CALL	Confrm
+	JP	NZ,ShoLn1
+LoadY:	JP	Restrt		;go do it
+;
+;Erase a disk file.
+;
+Era:	CALL	SavNam		;save old FCB
+	LD	HL,EraQ
+	CALL	NewNam
+	LD	A,(EdErr)
+	OR	A
+	JR	NZ,EraDon
+	LD	(FCBs1),A	;zero S1
+	CALL	DOSVer
+	LD	A,(FCB)
+	CALL	C,RstDrv	;reset drive
+	LD	C,FDEL
+	CALL	BDOSfc
+	INC	A
+	CALL	Z,Error7
+EraDon:	CALL	GetNam		;restore FCB
+	JP	ShoLn1
+;
+;
+;Read text from disk file to cursor location.
+;
+Read:	CALL	SavNam		;save old FCB
+	LD	HL,ReadQ
+	CALL	NewNam
+	LD	A,(EdErr)	;check entry error
+	OR	A
+	JR	NZ,RdDone
+;
+LoadIt:	CALL	IOon		;say wait
+	CALL	Cmprs		;need all our room
+	CALL	GpCnt
+	JR	C,Sk1Rd		;No room?
+	LD	HL,(BefCu)	;Start here
+	CALL	MSIn		;Read it in
+	JR	NZ,Sk2Rd	;Worked?
+Sk1Rd:	CALL	Error1		;no, out of room
+	JR	RdDone
+Sk2Rd:	JR	NC,Sk3Rd	;Okay?
+	CALL	Error3		;no, I/O error
+	JR	RdDone
+Sk3Rd:	LD	DE,(BefCu)	;Get old BefCu
+	LD	(BefCu),HL	;Set new one
+	EX	DE,HL
+	INC	HL		;Point at first byte loaded
+	CALL	MoveL		;Move the cursor
+RdDone:	CALL	GetNam		;restore FCB
+	CALL	IOoff
+	CALL	ELret2
+	JP	SetAl
+;
+;
+;Write the whole file out to disk.
+;
+Save:	LD	A,(FCB+1)	;must have filename
+	CP	' '
+	JR	NZ,Save00
+	CALL	ChgNam
+	LD	A,(EdErr)
+	OR	A
+	RET	NZ
+Save00:	LD	A,(Modify)
+	OR	A
+	JR	NZ,Save01
+	LD	HL,UnchgQ	;hey, no changes!
+	CALL	Prompt
+	CALL	Confrm
+	PUSH	AF
+	CALL	ShoLn1
+	POP	AF
+	RET	NZ
+Save01:	CALL	IOon		;say wait
+	LD	HL,(AftCu)
+	LD	(LastCu),HL	;save position
+	LD	HL,(BegTx)
+	CALL	MoveL		;go to top of file
+	CALL	NdCnt		;count number of bytes
+	JR	NC,Save02
+	LD	BC,0
+Save02:	LD	HL,(AftCu)	;point at first byte
+	CALL	MSOut		;write it out
+	JR	NC,Save03
+	CALL	Error3		;I/O error
+	JR	Save04
+Save03:	XOR	A
+	LD	(Modify),A	;clean slate
+Save04:	LD	HL,(LastCu)
+	DEC	HL
+	CALL	MoveR		;go back
+	JP	IOoff
+;
+;
+;Write block text to a disk file.
+;
+Write:	CALL	SavNam		;save orig FCB
+	LD	HL,WritQ
+	CALL	NewNam
+	LD	A,(EdErr)	;check entry error
+	OR	A
+	JR	NZ,WrXit
+	CALL	IOon		;say wait
+	LD	HL,(AftCu)	;save position
+	LD	(LastCu),HL
+	LD	HL,(BegTx)
+	CALL	MoveL		;go to top of file
+	CALL	IsBlk
+	BIT	1,A		;must be marked
+	JR	Z,WrOops
+	INC	DE		;point to it
+	SBC	HL,DE		;size of block
+	EX	DE,HL
+	LD	B,D
+	LD	C,E
+	CALL	MSOut
+	JR	NC,WrDone
+WrOops:	CALL	Error7
+WrDone:	LD	HL,(LastCu)
+	DEC	HL
+	CALL	MoveR		;go back
+	CALL	IOoff
+WrXit:	CALL	GetNam		;restore orig FCB
+	JP	ShoLn1
+;
+;
+SavNam:	LD	HL,FCB		;Preserve main filename
+	LD	DE,FCBBuf
+	LD	BC,12
+	LDIR			; copy drive, file name and type
+	XOR	A
+	LD	(FCBd0),A
+	LD	A,(FCBU)	;and user, W/A, FilFlg
+	LD	(DE),A		; set user number in FCBBuf+13
+	INC	DE
+	LD	A,(FMode)
+	LD	(DE),A		; set S1
+	INC	DE
+	LD	A,(FilFlg)
+	LD	(DE),A		; set S2
+	RET
+GetNam:	LD	HL,FCBBuf	;And restore them
+	LD	DE,FCB
+	LD	BC,12
+	LDIR
+	XOR	A
+	LD	(FCBd0),A
+	LD	A,(HL)
+	LD	(FCBU),A
+	LD	E,A
+	INC	HL
+	LD	A,(HL)
+	LD	(FMode),A
+	INC	HL
+	LD	A,(HL)
+	LD	(FilFlg),A
+	LD	C,USRN
+	JP	BDOSep
+;
+;
+;Accept a new file name to be used for disk i/o.
+;
+ChgNam:	CALL	SavNam
+	LD	HL,NameQ
+	CALL	NewNam
+	LD	A,(EdErr)
+	OR	A
+	CALL	NZ,GetNam	;bad? restore
+	CALL	DfltM		;may have changed modes
+	CALL	DoHdr
+	CALL	ELret2
+	JP	ShoLn1
+;
+NewNam:	CALL	Prompt		;subroutine entry
+	LD	A,24+1
+	CALL	GSEnt		;Ask for input
+	DW	FNamBf
+	JP	Z,Error7	;Error if no input
+	LD	B,A
+	PUSH	BC
+	LD	HL,DMA		;uppercase it
+NNUlp:	LD	A,(HL)
+	CALL	UCase
+	LD	(HL),A
+	INC	HL
+	DJNZ	NNUlp
+	POP	BC		;restore length
+	LD	HL,DMA
+	LD	A,(HL)
+	CP	'/'		;watch for mode only
+	JR	NZ,NNMod
+	INC	HL
+	CP	(HL)		;second '/'
+	DEC	HL
+	JR	NZ,NNMod2
+NNMod:	LD	A,B
+	CALL	Parse		;parse DU:FN.T /O
+	JP	C,Error7	;check bad entry
+	XOR	A
+	LD	(FilFlg),A	;kill fileflg
+	RET
+NNMod2:	INC	HL
+	LD	A,(HL)		;do mode only
+	CP	'W'		;WordStar
+	JR	Z,NNMdOK
+	CP	'A'		;ASCII
+	JR	Z,NNMdOK
+	CP	'N'		;non document
+	JP	NZ,Error7
+NNMdOK:	LD	(FMode),A
+	RET
+;
+DfltM:	LD	HL,0101H
+	LD	(LMSav),HL	;margins set
+	LD	A,(FMode)	;doc or nondoc mode?
+	SUB	'N'
+	JR	Z,Dflt2
+	XOR	A
+	LD	(AIFlg),A
+	DEC	A
+	LD	(VTFlg),A
+	LD	A,(HCDflt)
+	LD	(HCRFlg),A	;HCR display?
+	LD	A,(RtMarg)	;If RM set, avoid wierd WW/AI conflict
+	DEC	A
+	JR	NZ,DfltX
+	LD	HL,(DfltLM)	;from NONdoc: reset margins
+	LD	(LfMarg),HL
+DfltX:	LD	A,';'		;punctation chars: , ; : - . ? !
+	JR	DfltX2
+Dflt2:	LD	(LfMarg),HL	;NONdocument mode
+	LD	(VTFlg),A	;varitabs off
+	LD	(HCRFlg),A	;HCR display off
+	DEC	A
+	LD	(AIFlg),A	;auto indent ON
+	LD	A,':'		;punctation chars: , : - . ? ! (NOT ;)
+DfltX2:	LD	(PunTbl+1),A
+	JP	RulFix
+;
+;
+;Toggle case of character at cursor
+;
+UpLow:	CALL	Fetch		;also points to byte with (HL)
+	AND	5FH		;strip off both hidden space and case
+	CP	'A'
+	JR	C,UpLo1		;leave alone if not letter
+	CP	'Z'+1
+	JR	NC,UpLo1
+	BIT	5,(HL)		;toggle case
+	RES	5,(HL)
+	JR	NZ,UpLo0	;was lower, now up
+	SET	5,(HL)		;was upper, now low
+UpLo0:	CALL	ELret2
+UpLo1:	CALL	Right		;move right for next(?)
+	JP	SetRCu
+;
+;
+;Set page length
+;
+PgSet:	LD	HL,PgLnQ
+	CALL	Prompt
+	LD	A,(FormL)	;default value
+	CALL	GetNum
+	JP	C,Error7
+	LD	(PgLen),A
+	CALL	DoHdr
+	JP	ShoLn1
+;
+;
+;VARIOUS TOGGLES
+;
+;Simple on/off toggles
+;
+HCRTog:	CALL	SetAl		;HCR display
+	LD	HL,HCRFlg
+ToggHL:	LD	A,(HL)
+	CPL
+	LD	(HL),A
+	RET
+;
+;These require header display
+;
+HypTog:	LD	HL,HypFlg	;hyphenation
+	CALL	ToggHL
+HYshow:	LD	HL,HYon
+	LD	A,(FMode)
+	CP	'N'		;irrelevant in N mode
+	JR	Z,HYsho0
+	LD	A,(HypFlg)
+	OR	A
+	JR	NZ,HYsho1
+HYsho0:	LD	HL,TogOff
+HYsho1:	LD	DE,DspHyp
+	JP	TogSho
+;
+IToggl:	LD	HL,InsFlg	;INSERT
+	CALL	ToggHL
+ITshow:	LD	A,(InsFlg)
+	LD	HL,MacFlg
+	BIT	7,(HL)
+	JR	Z,ITsho0
+	LD	A,(SavIns)
+ITsho0:	OR	A
+	LD	HL,INSon
+	JR	NZ,ITsho1
+	LD	HL,TogOff
+ITsho1:	LD	DE,DspIns
+	JP	TogSho
+;
+DblTog:	LD	HL,DSFlg	;double spacing
+	CALL	ToggHL
+	OR	A
+	CALL	NZ,AIoff	;turn off auto ident if double spacing
+DblSho:	LD	A,(DSFlg)
+	OR	A
+	LD	HL,DSon
+	JR	NZ,DSsho1
+	LD	HL,TogOff
+DSsho1:	LD	DE,DspSpc
+	JP	TogSho
+;
+AIoff:	LD	HL,AIFlg
+	INC	(HL)
+	DEC	(HL)
+	RET	Z		;fall thru to turn off auto indent if it's on
+;
+AITog:	LD	HL,AIFlg	;auto indentation
+	CALL	ToggHL
+	OR	A
+	JR	Z,AIshow
+	LD	HL,DSFlg	;is double spacing on?
+	INC	(HL)
+	DEC	(HL)
+	CALL	NZ,ToggHL	;turn it off if so
+	CALL	NZ,DblSho	;turn off the old DS display
+	LD	A,1
+	CALL	SLM1		;reset left margin to 1
+AIshow:	LD	A,(AIFlg)
+	OR	A
+	LD	HL,AIon
+	JR	NZ,AIsho1
+	LD	HL,TogOff
+AIsho1:	LD	DE,DspInd
+	JP	TogSho
+;
+PSTog:	LD	A,(PSokFl)
+	OR	A
+	JP	Z,Error2	;invalid key
+	LD	HL,PSFlg
+	CALL	ToggHL
+	LD	A,(RMSav)
+	DEC	A
+	RET	NZ		;margins released? then we're done
+PSDisp:	LD	A,(FMode)
+	CP	'N'
+	JR	Z,PSTogU	;no PS in nondocument mode
+	LD	A,(PSFlg)
+	OR	A
+	LD	HL,PSon		;proportional spacing on
+	JR	NZ,PSTogX
+PSTogU:	LD	HL,TogOff	;turn off margin release
+PSTogX:	LD	DE,DspMrg
+	JP	TogSho
+;
+;
+;TEXT FORMAT functions
+;
+SetRM:	CALL	StMrCm		;Same for left and right
+	LD	C,A
+	LD	A,(LfMarg)
+	CP	C
+	JR	C,SRM1		;inside LM?
+	LD	A,1
+	LD	(LfMarg),A	;if so, reset LM
+SRM1:	LD	A,C
+	LD	(RtMarg),A
+	JR	StMgEn
+;
+SetLM:	CALL	StMrCm		;Same for left and right
+	LD	HL,RtMarg
+	CP	(HL)
+	JR	NC,MrgErr
+SLM1:	LD	(LfMarg),A
+	DEC	A
+	CALL	NZ,AIoff
+StMgEn:	CALL	RulFix
+	JP	ShoLn1
+;
+StMrCm:	LD	A,(FMode)	;Set right margin
+	CP	'N' 		;(must be Document mode)
+	JR	Z,MrgErr
+	LD	A,(RMSav)	;okay, do it
+	DEC	A
+	CALL	NZ,RelM		;(undo Margin Release)
+	LD	HL,ColQ
+	CALL	Prompt
+	LD	A,(CurCol)	;default: cursor column
+	CALL	GetNum
+	JR	Z,MrgErr
+	RET	NC
+MrgErr:	POP	HL
+	JP	Error7
+;
+RelM:	CALL	RelLM		;release both margins (Toggle)
+	LD	HL,RtMarg
+	LD	DE,RMSav
+	CALL	RelSb
+	CALL	MRshow
+	JP	RulFix
+;
+RelLM:	LD	HL,LfMarg	;SBR: release left only
+	LD	DE,LMSav
+RelSb:	LD	A,(HL)		;common subroutine
+	CP	1
+	JR	Z,Rel1
+	LD	(DE),A		;note: if RMSav>1, margins released
+	LD	(HL),1
+	RET
+Rel1:	LD	A,(DE)
+	LD	(HL),A
+	LD	A,1
+	LD	(DE),A
+	RET
+;
+;Check the right margin
+;
+ChkRM:	LD	A,(CurCol)	;be sure this is up to date
+	LD	B,A
+	LD	A,(RtMarg)
+	INC	A
+	LD	C,A
+	SUB	B		;set C if over
+	RET	NC
+	CALL	IgnCtl		;yes, ignore ctlchars
+	LD	A,C		;try arithmetic once again
+	ADD	A,E
+	SUB	B
+	RET			;now C set if really over
+;
+IgnCtl:	CALL	Fetch		;count ctlchars to be ignored
+	LD	E,0		;(up to present cursor)
+	LD	HL,(BefCu)
+	JR	NZ,IgnC1
+IgnCLp:	LD	A,(HL)		;count em
+	DEC	HL
+	CP	CR		;quit at BOL
+	RET	Z
+IgnC1:	CP	TAB		;tabs don't count
+	JR	Z,IgnCLp
+	CP	20H
+	JR	NC,IgnCLp
+	INC	E		;others do
+	JR	IgnCLp
+;
+;Check left margin, space over if needed
+;
+ChkLM:	LD	A,(LfMarg)
+	LD	B,A
+	LD	A,(CurCol)
+	SUB	B		;be sure this is uptodate
+	RET			;ret Z if at, C if over
+;
+UpToLM:	LD	A,(LfMarg)	;git on over to the LM column
+;
+MvCol:	PUSH	AF		;move to col A saving any existing text
+	CALL	GoCol
+	POP	AF
+MvColI:	LD	HL,CurCol	;move to col A inserting spaces
+	SUB	(HL)
+	RET	C		;we're past already
+	RET	Z		;we're there
+	LD	B,A
+	CALL	SetCu		;this is going to hurt
+MvClp:	PUSH	BC		;insert B spaces
+	CALL	InsSpc
+	POP	BC
+	RET	C		;quit if out of space
+	CALL	IncH
+	DJNZ	MvClp
+	RET
+;
+DoLM:	LD	A,(LfMarg)	;create whole left margin
+	DEC	A
+	RET	Z
+	LD	B,A
+	JR	MvClp
+;
+;Handle former margin for reformat
+;
+CntSpc:	CALL	QuikLf		;count lead spaces/tabs on line
+	CALL	Fetch
+	LD	B,A
+	EXX
+	XOR	A
+CSpLp:	LD	(NumTab),A
+	PUSH	AF
+	CALL	Fetch
+	CP	' '
+	JR	Z,CSpL1
+	CP	TAB
+	JR	NZ,CSpLpF
+CSpL1:	EXX
+	CP	B
+	EXX
+	JR	NZ,CSpLpF
+	CALL	Right		;move 1 char right
+	POP	AF
+	INC	A		;incr # tabs
+	JR	CSpLp
+CSpLpF:	CALL	QuikLf		;back to start
+	EXX
+CntSpX:	POP	AF
+	RET
+;
+EatSpc:	OR	A		;eat up to A lead spaces on line
+	RET	Z
+ESpLp:	PUSH	AF
+	CALL	Fetch
+	CP	TAB
+	JR	Z,ESpLpF
+	CP	' '
+	JR	NZ,CntSpX
+ESpLpF:	CALL	EChar
+	POP	AF
+	DEC	A
+	JR	NZ,ESpLp
+	RET
+;
+;
+;Update CurCol and return it in A and B
+;(NOTE: slow. When possible, LDA CurCol.)
+;
+ColCnt:	CALL	WhatC
+	LD	(CurCol),A
+	RET
+;
+WhatC:	CALL	FetchB		;col 1 is spcl case
+	CP	CR
+	LD	A,1
+	LD	B,A
+	RET	Z
+	LD	E,1
+	CALL	CrLft		;start of line
+	LD	BC,0
+;
+CCLp:	CALL	GetNx		;get a char
+	CP	TAB
+	JR	NZ,CC1
+	LD	A,B		;tabs are special
+	PUSH	HL
+	LD	HL,TabCnt
+	OR	(HL)		;round up
+	POP	HL
+	LD	B,A
+CC1:	INC	B		;count char
+	LD	A,B
+	CP	254
+	JR	Z,CC2		;too long? return column 255 forever
+	XOR	A
+	CP	C
+	JR	NZ,CCLp		;get hidden space?
+	PUSH	BC
+	CALL	LCnt		;compare HL to BefCu
+	POP	BC
+	JR	NC,CCLp		;get another, if more exist
+CC2:	INC	B
+	LD	A,B		;that is curcol.
+	RET
+;
+;
+;Do wordwrap if needed
+;
+WdWrap:	LD	A,(RtMarg)	;WW off if RM=1
+	DEC	A
+	RET	Z
+	LD	IY,CurCol
+	INC	(IY)		;count the char you just put in
+	CALL	ChkRM
+	RET	NC
+	LD	B,0		;past margin...
+WWLp:	INC	B		;count moves
+	PUSH	BC
+	CALL	Left
+	DEC	(IY)
+	POP	BC
+	CALL	FetchB
+	CP	CR		;oh no Uncle Bill
+	JP	Z,Error9
+	CP	'-'		;hyphenation
+	JR	NZ,WW1
+	LD	A,(HypFlg)
+	OR	A
+	JR	Z,WW1
+	CALL	Fetch
+	CP	' '
+	JR	Z,WW1a
+	INC	B
+	PUSH	BC
+	CALL	InsSpc		;tuck in a space if there isn't one
+	JR	WW2
+WW1:	CALL	Fetch
+	CP	' '
+	JR	NZ,WWLp
+WW1a:	PUSH	BC
+	CALL	Right		;leave it if there is
+	INC	(IY)
+WW2:	CALL	ChkLM
+	JR	Z,WWerr
+	JR	C,WWerr
+	CALL	ICRB		;break line
+	CALL	QuikLf
+	CALL	DoLM
+	POP	BC
+	LD	A,(NumTab)
+	ADD	A,B
+	JP	C,WWerr
+	DEC	A		;one spc gone
+GoRtA:	OR	A		;Go right A chars - used by wordwrap etc
+	RET	Z
+	PUSH	AF
+	CALL	Right
+	POP	AF
+	DEC	A
+	JR	GoRtA
+;
+WWerr:	POP	BC
+	JP	Error9
+;
+;Reform a paragraph
+;
+Reform:	LD	A,(RtMarg)	;is RM set?
+	DEC	A
+	RET	Z
+	CALL	QuikLf
+	CALL	NdCnt
+	JP	C,RfmE10
+	CALL	Fetch		;empty line?
+	JP	Z,Down
+	CALL	XQuiet
+	LD	A,(AIFlg)
+	OR	A
+	JR	NZ,RfmBg
+	CALL	RfmNL		;figure out indentation
+	JR	C,RfmBg
+	CALL	CntSpc
+	PUSH	AF
+	CALL	RfmPL
+	POP	AF
+	CALL	EatSpc		;remove spaces acc. to NEXT line indent
+	CALL	DoLM		;and add current margin
+RfmBg:	CALL	QuikLf
+	CALL	KyPeek		;peek for a keypress
+	CP	ESC		;check for abort
+	JR	NZ,RfmBg1	;no... keep going
+	CALL	Keybd		;eat the ESC
+	JP	RfmEnd		;and quit
+RfmBg1:	CALL	ColCnt		;only once per line (slow)
+	LD	IY,CurCol
+	LD	A,63
+	LD	(PScnt),A
+;
+RfmLp:	CALL	NdCnt
+	JP	C,RfmE10	;check for EOF
+	CALL	Fetch
+	JP	Z,Rfm7		;and EOL
+	CP	TAB		;tabs are special
+	JR	NZ,RfmTab
+	LD	A,(IY)
+	DEC	A
+	LD	HL,TabCnt
+	OR	(HL)		;round up
+	INC	A
+	LD	(IY),A
+	JR	Rfm3
+RfmTab:	LD	HL,PSFlg
+	DEC	(HL)
+	INC	(HL)
+	JR	Z,Rfm3
+	LD	HL,PSTbl-32
+	ADD	A,L
+	LD	L,A
+	LD	A,0
+	ADC	A,H
+	LD	H,A
+	LD	A,(PScnt)
+	ADD	A,(HL)
+	CP	63+30
+	JR	NC,RfmTb1
+	CP	63-30+1
+	JR	NC,Rfm3
+	ADD	A,30
+	JR	Rfm3a
+RfmTb1:	ADD	A,-30
+	INC	(IY)
+Rfm3:	INC	(IY)		;Keep CurCol updated
+Rfm3a:	LD	(PScnt),A
+	CALL	Right
+	CALL	ChkRM
+	JR	NC,RfmLp
+;
+Rfm4:	CALL	FetchB		;just the right length?
+	CP	' '
+	JR	NZ,Rfm4a
+	CALL	Fetch
+	JR	Z,Rfm7
+Rfm4a:	CALL	Left		;oops, too long.
+	CALL	FetchB
+	CP	CR
+	JP	Z,RfmErr
+	CALL	Fetch
+	CP	'-'
+	JR	NZ,Rfm4b
+	LD	A,(HypFlg)
+	OR	A
+	JR	Z,Rfm4b
+	CALL	Right
+	CALL	ColCnt		;##
+	CALL	ChkRM		;##
+	JR	NC,Rfm4a2	;##
+	CALL	Left		;##
+	JR	Rfm4		;##
+;
+Rfm4a2:	CALL	InsSpc
+	JR	Rfm4c
+Rfm4b:	CALL	IsBlnk		;break after blank
+	JR	NZ,Rfm4
+	CALL	Right
+Rfm4c:	CALL	ColCnt
+	CALL	ChkLM		;watch out for left mgn
+	JP	Z,RfmErr
+	JP	C,RfmErr
+	CALL	ICRB
+Rfm5:	CALL	Fetch		;avoid spurious para
+	JR	Z,Rfm6a		;(stop after CR)
+	CP	' '
+	JR	NZ,Rfm6b
+	CALL	EChar
+	JR	Rfm5
+Rfm6a:	CALL	EChar
+	JR	RfmBg2
+Rfm6b:	CALL	DoLM
+	JR	RfmBg2
+;
+Rfm7:	CALL	FetchB		;is the CR soft or hard?
+	CP	' '
+	JR	NZ,Rfm9		;hard, quit
+	CALL	Left		;soft, delete any other spaces
+Rfm7a:	CALL	FetchB
+	CP	' '
+	JR	NZ,Rfm7b
+	CALL	Delete
+	JR	Rfm7a
+Rfm7b:	CP	'-'		;unhyphenate?
+	JR	Z,Rfm20
+Rfm8:	CALL	Right		;and now the CR itself
+	CALL	EChar
+	CALL	RfmSD		;and any soft CR following
+	LD	A,255
+	CALL	EatSpc		;and any leading spaces
+	CALL	Fetch
+	JR	NZ,Rfm8a	;hit bald CR?
+	CALL	Delete		;yep, kill space and quit
+	JR	Rfm9
+Rfm8a:	CALL	Left
+	CALL	Left
+	CALL	IsEndS		;(extra spc for punc)
+	JR	NZ,RfmBg2
+	CALL	Right
+	CALL	InsSpc
+RfmBg2:	JP	RfmBg
+Rfm9:	CALL	Right		;hard CR (check following soft?)
+	CALL	RfmSD		;delete, if there
+	CALL	ICRB0		;may need to separate paras
+RfmEnd:	CALL	XLoud
+	JP	SetAl
+RfmErr:	CALL	XLoud
+	JP	Error9
+RfmE10:	CALL	XLoud
+	JP	Eror10
+;
+Rfm20:	LD	A,(HypFlg)	;unhyphenation
+	OR	A
+	JR	Z,Rfm8		;not allowed, continue
+Rfm21:	CALL	Loud
+	CALL	ShoAll
+	CALL	YesNo1
+	PUSH	AF
+	CALL	XQuiet
+	POP	AF
+	JR	NC,Rfm22
+	JR	Z,Rfm21		;C,Z means "*": unacceptable
+	JR	Rfm8		;C,NZ means ESC: don't join at all
+Rfm22:	CALL	Z,Delete	;kill hyphen if it was "Yes"
+	CALL	Join		;join lines (whether "Yes or No")
+	JR	RfmBg2
+;
+RfmNL:	CALL	QuikRt		;go to next line of text
+	CALL	NdCnt
+	JR	NC,RfmNL0
+	CALL	QuikLf		;oops, none
+	SCF
+	RET
+RfmNL0:	CALL	Right
+	CALL	Fetch		;(may be blank)
+	JR	NZ,RfmNL1	;bald CR next? also give up
+	CALL	Up
+	SCF
+	RET
+RfmNL1:	CP	' '
+	JR	Z,RfmNL2
+	CALL	QuikLf		;no, fine, we're here
+	OR	A
+	RET
+RfmNL2:	CALL	Right
+	CALL	Fetch
+	JR	NZ,RfmNL1	;just spaces and CR? doublespacing,
+	CALL	Right		;  go on to next line
+	JR	RfmNL1
+RfmPL:	CALL	QuikLf		;return to previous line of text
+RfmPL0:	CALL	Left
+	CALL	FetchB		;(may be blank)
+	CP	CR
+	JP	Z,RfmPLx	;yes, take next
+	CP	' '
+	JR	Z,RfmPL0
+	JP	QuikLf		;no, fine
+RfmPLx:	CALL	Left
+	JP	QuikLf
+;
+RfmSD:	CALL	Fetch		;delete a soft CR if present
+	CP	' '
+	RET	NZ
+	CALL	Right
+	CALL	Fetch
+	PUSH	AF
+	CALL	Left
+	POP	AF
+	RET	NZ
+	CALL	EChar
+	JP	EChar
+;
+;
+;Center or flush a line
+;
+Center:	LD	E,1FH		;(RRA) if Center
+	CP	'F'-40H
+	JR	NZ,Ctr0
+	LD	E,0C9H		;(RET) if Flush
+Ctr0:	LD	A,E
+	LD	(Flush),A
+	LD	A,(RtMarg)
+	CP	1
+	RET	Z		;not if no margin
+	CALL	QuikLf		;start of line
+CtrL1:	CALL	Fetch
+	JR	Z,CtrXit	;end? done
+	CALL	IsBlnk
+	JR	NZ,CtrL1F
+	CALL	EChar		;delete spaces
+	JP	C,Error9
+	JR	CtrL1
+CtrL1F:	CALL	QuikRt		;end of line
+CtrL2:	CALL	Left
+	CALL	IsBlnk
+	JR	NZ,CtrL2F
+	CALL	EChar		;delete spaces
+	JR	CtrL2
+CtrL2F:	CALL	ColCnt		;where are we?
+	CALL	IgnCtl		;ignore ctlchars
+	LD	HL,CurCol
+	LD	A,(LfMarg)
+	DEC	A
+	LD	B,A
+	LD	A,(RtMarg)
+	ADD	A,E		;(ctlchars)
+	SUB	B
+	SUB	(HL)
+	JP	C,Error9	;error
+	CALL	Flush
+	JR	Z,CtrXit
+	PUSH	AF
+	CALL	QuikLf		;start again
+	CALL	DoLM
+	POP	BC
+CtrL3:	PUSH	BC		;insert spaces to center
+	CALL	InsSpc
+	POP	BC
+	DJNZ	CtrL3
+CtrXit:	CALL	QuikLf
+	CALL	ShoCu
+	CALL	QuikRt		;to next line(?)
+	JP	Right
+;
+Flush:	RRA			;<--- goes to RET if Flush
+	AND	7FH		;take half the difference for Center
+	RET
+;
+;
+;Fetch character at (or before) cursor
+;
+Fetch:	LD	HL,(AftCu)
+	LD	A,(HL)
+	AND	7FH		;ignore any hidden space
+	CP	CR
+	RET
+FetchB:	LD	HL,(BefCu)
+	LD	A,(HL)
+	BIT	7,A
+	RET	Z		;ordinary byte
+	LD	A,' '
+	RET			;hidden space
+;
+;Tests on char at cursor (use only A,HL)
+;
+IsBlnk:	LD	HL,BlkTbl	;point to tbl
+	JR	IsTest
+IsPara:	LD	HL,ParTbl
+	JR	IsTest
+IsParB:	LD	HL,ParTbl
+	JR	IsTstB
+IsPunc:	LD	HL,PunTbl
+	JR	IsTest
+IsPunB:	LD	HL,PunTbl
+	JR	IsTstB
+IsEndS:	LD	HL,EndTbl
+;
+IsTest:	PUSH	HL
+	CALL	Fetch
+	POP	HL
+	JR	IsTLp
+IsTstB:	PUSH	HL
+	CALL	FetchB
+	POP	HL
+IsTLp:	BIT	7,(HL)
+	JR	NZ,IsTst1	;at end of tbl?
+	CP	(HL)
+	RET	Z		;Z set if match
+	INC	HL
+	JR	IsTLp
+IsTst1:	OR	A		;clear Z if none
+	RET			;ret char in A
+;
+PunTbl:	DB	',;:-'		;fall thru...
+EndTbl:	DB	'.?!',0FFh	;end with 0FFh
+ParTbl:	DB	CR		;fall thru...
+BadTbl:	DB	0,EOF		;characters not "part" of file text
+BadLen	EQU	$-BadTbl	;(<--BlkChr patches in here)
+BlkTbl:	DB	' ',TAB,0FFh	;end with 0FFh
+;
+;DISK I/O
+;
+IOon:	LD	DE,DspEsc	;show Wait....
+	CALL	GoTo
+	CALL	MakAlt
+	LD	HL,IOmsg
+	LD	B,4
+	CALL	BHLMsg
+	CALL	UnAlt
+	RET
+;
+BDOSfc:	LD	DE,FCB
+;
+;Enter BDOS, but latch onto warm start for
+;recovery purposes. (CP/M 2 ONLY)
+;
+BDOS:	CALL	DOSVer
+	JP	NC,BDOSep	; just do the BDOS call for CP/M 3.0
+	LD	A,(DE)		; grab drive #
+	LD	(FcbDrv+1),A	; and stuff it into code
+	PUSH	DE
+	LD	HL,(0001H)
+	INC	HL		;trap warm boot vector in BIOS JP table
+	LD	E,(HL)
+	INC	HL
+	LD	D,(HL)
+	LD	(BIOSws+1),DE
+	LD	DE,BIOSws
+	LD	(HL),D
+	DEC	HL
+	LD	(HL),E
+	POP	DE
+	CALL	BDOSep		;DO IT
+	PUSH	HL
+	LD	DE,(BIOSws+1)	;Restore real warm boot
+	LD	HL,(0001H)
+	INC	HL
+	LD	(HL),E
+	INC	HL
+	LD	(HL),D
+	POP	HL
+	RET
+BIOSws:	LD	DE,0		;<--- Warm boot vector
+	LD	HL,(0001H)
+	INC	HL
+	LD	(HL),E		;restore it
+	INC	HL
+	LD	(HL),D
+FcbDrv:	LD	A,0		;<-----
+	LD	(FCB),A		;restore drive
+	LD	SP,Stack	;restore stack
+	CALL	RDlog		;and disks
+	CALL	Error3		;Give I/O message
+	JP	Sk1Ed		;Continue editing
+;
+DOSVer:	LD	A,0		;<---- Version
+	CP	30H		;(Carry set if 2.2, reset if CP/M3, ZxDOS)
+	RET
+;
+RstDrv:	OR	A		;CP/M 2 drive reset (A=1 etc)
+	JR	Z,RDlog
+	LD	HL,FixDsk
+	RES	6,(HL)		;(have to adjust from ASCII)
+	CP	(HL)		;one of 2 fixed drives? ignore
+	RET	Z
+	INC	HL
+	RES	6,(HL)
+	CP	(HL)
+	RET	Z
+	PUSH	AF
+	LD	C,GDRV
+	CALL	BDOSep
+	POP	BC
+	INC	A
+	CP	B		;is it logged drive?
+	JR	Z,RDlog
+	LD	HL,1		;if NOT, can be selective
+RDlp:	DEC	B
+	JR	Z,RDok
+	ADD	HL,HL
+	JR	RDlp
+RDok:	EX	DE,HL
+	LD	C,RSTV		;reset single drive
+	JR	RDxit
+RDlog:	LD	C,RSTD		;sigh, whole system
+RDxit:	JP	BDOSep
+;
+;
+Parse:	PUSH	AF		;parse FCB w/Duu: and [A/W (NO WILDCARDS)
+	LD	A,(DFMode)
+	LD	(FMode),A
+	PUSH	HL		;Entry: HL=string, A=length
+	CALL	BlkFCB		;Exit: set FCB, FCBU, FMode
+	POP	HL		;...now checks filetypes too
+	LD	D,H
+	LD	E,L
+	POP	AF
+	OR	A
+	JP	Z,PNODRV
+	LD	C,A
+	LD	B,0		;chars there
+	LD	A,':'
+	CPIR			;find drivespec?
+	JR	NZ,PNODRV
+	DEC	HL		;yep...NDR?
+	LD	(HL),0
+	CALL	NdrChk
+	LD	(HL),':'
+	JR	Z,Parse1	;not an NDR name
+	INC	HL
+	LD	A,B
+	LD	(FCB),A		;store drive
+	LD	A,C
+	LD	(FCBU),A	;store user number
+	LD	E,A
+	LD	C,USRN
+	PUSH	HL
+	CALL	BDOSep		;set user number
+	POP	HL
+	JR	PNAME
+Parse1:	DEC	HL		;yep...User number?
+	LD	A,(HL)
+	CP	'0'
+	JR	C,PDRV
+	CP	'9'+1
+	JR	NC,PDRV
+;
+PUSR:	SUB	'0'
+	LD	E,A		;Got user... figure units
+	DEC	HL
+	LD	A,(HL)
+	CP	'0'
+	JR	C,ZPAR1		;thats all?
+	CP	'9'+1
+	JR	NC,ZPAR1
+	SUB	'0'
+	LD	D,A		;nope, tens too
+	ADD	A,A
+	ADD	A,A
+	ADD	A,A		;*8
+	ADD	A,D
+	ADD	A,D
+	ADD	A,E		;*(8+2)+units = user
+	LD	E,A
+	DEC	HL
+	CP	32
+	JR	NC,ZPBAD	;illegal?
+ZPAR1:	LD	A,E
+	LD	(FCBU),A	;set user
+	LD	C,USRN
+	PUSH	HL
+	CALL	BDOSep
+	POP	HL
+;
+PDRV:	BIT	7,L		;now, parse FCB (start with drive)
+	JR	Z,ZPAR2B	;(Kludge: stay above 0080h)
+	LD	A,(HL)
+	CP	' '		;oops, was it there?
+	JR	Z,ZPAR2B
+ZPAR2:	SUB	'A'
+	JR	C,ZPBAD		;make sure it's legal
+	LD	E,A
+	LD	A,15
+	CP	E
+	JR	C,ZPBAD
+	DEC	HL
+	BIT	7,L
+	JR	Z,ZPAR2A		;kludge again (stay about 0080H)
+	LD	A,(HL)
+	CP	' '
+	JR	NZ,ZPBAD
+ZPAR2A:	INC	HL
+	LD	A,E
+	INC	A
+	LD	(FCB),A
+ZPAR2B:	LD	BC,4
+	LD	A,':'
+	CPIR			;skip over user, to filename
+	JR	PNAME
+PNODRV:	LD	A,' '		;no du: at all
+	EX	DE,HL
+	DEC	HL		;find filename
+PNDL:	INC	HL
+	CP	(HL)
+	JR	Z,PNDL		;(first nonblank)
+;
+PNAME:	LD	B,8
+	LD	DE,FCB+1	;do filename at (HL)
+	EXX
+	LD	DE,FNamBf
+	LD	H,D
+	LD	L,E
+	LD	B,13
+	XOR	A
+	CALL	Fill
+	EXX
+ZPRL1:	XOR	A
+	ADD	A,(HL)
+	INC	HL
+	JR	Z,ZPARX
+	CP	'.'
+	JR	Z,ZPRL1X
+	CP	' '
+	JR	Z,ZPRL2F
+	RET	C
+	CP	'/'
+	JR	NZ,ZRLP1A
+	CP	(HL)
+	JR	NZ,POPT
+	INC	HL
+ZRLP1A:	CALL	ZPBADC
+	JR	Z,ZPBAD
+	LD	(DE),A
+	INC	DE
+	EXX
+	LD	(HL),A
+	INC	HL
+	EXX
+	DJNZ	ZPRL1
+	JR	ZPRL1F
+ZPRL1X:	LD	A,' '		;fill with " "
+	CALL	Fill
+	JR	PTYP
+ZPBAD:	CALL	BlkFCB		;bad entry
+	SCF
+	RET
+ZPRL1F:	XOR	A
+	ADD	A,(HL)
+	JR	Z,ZPARX
+	CP	'.'
+	JR	NZ,ZPRL2F	;no "."? leave type blank
+	INC	HL
+;
+PTYP:	LD	B,3		;fill type at (HL)
+	EXX
+	LD	A,'.'
+	LD	(HL),A
+	INC	HL
+	EXX
+ZPRL2:	XOR	A
+	ADD	A,(HL)
+	INC	HL
+	JR	Z,ZPARX
+	CP	' '
+	JR	Z,ZPRL2F
+	RET	C
+	CP	'/'
+	JR	NZ,ZPRL2A
+	CP	(HL)
+	JR	NZ,POPT
+	INC	HL
+ZPRL2A:	CALL	ZPBADC
+	JR	Z,ZPBAD
+	LD	(DE),A
+	INC	DE
+	EXX
+	LD	(HL),A
+	INC	HL
+	EXX
+	DJNZ	ZPRL2
+ZPRL2F:	LD	A,(HL)		;(eat spaces)
+	CP	' '
+	JR	NZ,POPT
+	INC	HL
+	JR	ZPRL2F
+;
+POPT:	LD	A,(HL)		;process W/A/N option
+	CP	'/'
+	JR	NZ,POPT1
+	INC	HL
+	LD	A,(HL)		;process W/A/N option
+POPT1:	OR	A
+	JR	Z,ZPARX
+	CALL	VerOpt		;verify legality
+	JR	NZ,ZPBAD
+	LD	(FMode),A
+	JR	ZPARX2		;any specification overrides defaults
+;
+ZPARX:	LD	HL,FCBt1	;check filetype mode defaults
+	LD	DE,FDflt1
+	CALL	TypDfl
+	LD	DE,FDflt2
+	CALL	TypDfl
+	LD	DE,FDflt3
+	CALL	TypDfl
+	LD	DE,FDflt4
+	CALL	TypDfl
+ZPARX2:	LD	A,(FCB+1)
+	CP	' '
+	JR	Z,ZPBAD
+	OR	A		;DONE.
+	RET
+;
+ZPBADC:	PUSH	HL		;check bad chars
+	PUSH	BC
+	LD	HL,ZPBLST
+	LD	BC,ZPBLEN
+	CPIR			;Z set if bad
+	POP	BC
+	POP	HL
+	RET
+ZPBLST:	DB	' .,;:?*='	;illegal chars
+ZPBLEN	EQU	$-ZPBLST
+;
+TypDfl:	PUSH	HL
+	LD	B,3		;Set mode from filetype if (HL),(DE) MATCH
+TypDLp:	LD	A,(DE)
+	CP	'?'
+	JR	Z,TypD2
+	CP	(HL)
+	JR	NZ,TypDex	;no match, quit
+TypD2:	INC	DE
+	INC	HL
+	DJNZ	TypDLp
+	LD	A,(DE)		;match, here's your mode
+	CALL	VerOpt
+TypDex:	POP	HL
+	RET	NZ
+	LD	(FMode),A
+	RET
+;
+;
+VerOpt:	CP	'A'		;verify mode option legal
+	RET	Z
+	CP	'N'
+	RET	Z
+	CP	'W'
+	RET
+;
+;
+;IN:  DE=string to match
+;OUT: Z=0,B=drive,C=user# (if NDR match found)
+;     Z=1 if no NDR match
+;
+NdrChk:	PUSH	HL
+	PUSH	DE
+	EX	DE,HL		;string addr to HL
+	LD	A,' '
+	DEC	HL
+NdrSpc:	INC	HL		;skip over spaces
+	CP	(HL)
+	JR	Z,NdrSpc
+	LD	D,H		;addr of 1st non blank to DE
+	LD	E,L
+	LD	B,Z3NdrM+1	;# chars to allow before 
+	XOR	A		;we MUST see a NUL
+NdrEos:	CP	(HL)		;find terminating NUL
+	JR	Z,NdrNul
+	INC	HL
+	DJNZ	NdrEos
+	JR	NoNdr		;more than 8 chars, not an NDR
+NdrNul:	LD	BC,Z3NDR
+	CALL	Z3EAdr
+	JR	Z,NoNdr		;no NDR block
+	EX	DE,HL		;start of string to HL
+	LD	D,B		;NDR addr to DE
+	LD	E,C
+NxtNdr:	LD	A,(DE)		;end of NDRs?
+	OR	A
+	JR	Z,NoNdr		;yep, no match
+	INC	DE
+	INC	DE		;DE points to NDR string
+	PUSH	HL		;save start of string
+	PUSH	DE		;save NDR string addr
+	LD	B,Z3NdrM
+NdrNxC:	LD	A,(DE)
+	CP	' '		;end of NDR name string?
+	JR	NZ,NdrChC	;not yet
+	INC	(HL)		;did we hit the NUL
+	DEC	(HL)		;at the end of string
+	JR	NdrMis		;(i.e. was it a full match?)
+NdrChC:	CP	(HL)
+	JR	NZ,NdrMis
+	INC	HL		;next char in string
+	INC	DE		;next char in NDR entry
+	DJNZ	NdrNxC
+NdrMis:	POP	DE		;restore start of NDR string
+	POP	HL		;restore start of string
+	JR	Z,NdrMtc	;all chars match, got an NDR
+	EX	DE,HL		;start of NDR string to HL
+	LD	BC,Z3NdrL
+	ADD	HL,BC		;next NDR entry to HL
+	EX	DE,HL		;and now to DE
+	JR	NxtNdr
+NdrMtc:	EX	DE,HL		;NDR matched
+	DEC	HL
+	LD	C,(HL)		;fetch user number
+	DEC	HL
+	LD	B,(HL)		;fetch drive
+	OR	0FFh		;Z=0H
+NoNdr:	POP	DE
+	POP	HL
+	RET
+;
+;Read in a word from the Z3ENV block.
+;IN:  offset in BC
+;OUT: addr in BC
+;     Z=1 if addr is invalid
+;
+Z3EAdr:	PUSH	HL
+	LD	HL,(Z3Env)
+	LD	A,H
+	OR	L
+	JR	Z,NoZEnv	;no Z3ENV: Z=1
+	ADD	HL,BC
+	LD	C,(HL)
+	INC	HL
+	LD	B,(HL)
+	LD	A,B
+	OR	C		;Z=1 if no address at offset
+NoZEnv:	POP	HL
+	RET
+;
+;
+;Read in the file. (HL=prev byte, BC=max size)
+;Return with HL=last byte, Z=out of room, C=input error.
+;
+MSIn:	PUSH	HL		;Initialize FCBex thru FCBrc and FCBcr
+	PUSH	BC
+	XOR	A
+	LD	DE,FCBex
+	LD	B,4+16+1
+	CALL	Fill
+	LD	(MSIFlg),A
+	CPL
+	LD	(SftFlg),A
+	LD	C,FOPN
+	CALL	BDOSfc
+	INC	A		;Not found?
+	JR	NZ,MSIfnd
+MSIerr:	POP	BC		;Error...
+	POP	BC
+	OR	1		;Clear Z
+	SCF			;Set C
+	RET
+MSIfnd:	LD	DE,DMA
+	LD	C,SDMA
+	CALL	BDOS
+;
+MSIlp1:	LD	C,RSEQ
+	CALL	BDOSfc
+	CP	1		;No more reocrds?
+	JP	Z,MSIefX
+	JR	NC,MSIerr	;Other error?
+	LD	IX,DMA
+	POP	DE		;target count
+	LD	B,128		;1 record
+	POP	HL		;target address
+MSIlp2:	LD	A,(FMode)
+	CP	'W'
+	JR	NZ,MSIlp3
+	LD	A,(IX)		;Wordstar: handle soft hyphens
+	CP	1Fh
+	JR	NZ,MSIl2x
+	LD	A,'-'
+	LD	(IX),A
+MSIl2x:	CP	1Eh		;remove dead soft hyphens
+	JR	Z,MSIlf
+	CP	' '+080H	;remove soft spaces
+	JR	NZ,MSIl2a
+	LD	A,(SftFlg)
+	OR	A		;(unless at beginning of line)
+	JR	Z,MSIlf
+	JR	MSIlp3
+MSIl2a:	XOR	A
+	LD	(SftFlg),A
+	LD	A,(IX)		;and keep hard/soft CRs straight
+	CP	CR+80H
+	JR	NZ,MSIl2b
+	LD	A,(HL)		;SCR must have space before...
+	CP	' '
+	JR	Z,MSIlp3
+	SET	7,(HL)
+	JR	NC,MSIlp3
+	RES	7,(HL)		;can't set hi bit on ctlcodes
+	LD	A,' '
+	INC	HL		;Bump output
+	LD	(HL),A		;Insert byte
+	DEC	DE		;Room left?
+	LD	A,D
+	OR	E
+	RET	Z
+	JR	MSIlp3
+MSIl2b:	CP	CR
+	JR	NZ,MSIlp3
+MSIl2c:	RES	7,(HL)		;...and HCR must not have space
+	LD	A,(HL)
+	CP	' '
+	JR	NZ,MSIlp3
+	DEC	HL
+	INC	DE
+	JR	MSIl2c
+MSIlp3:	LD	A,(IX)		;take the byte
+	AND	7Fh		;Mask parity
+	CP	EOF		;EOF?
+	JR	Z,MSIeof
+	CP	LF		;toss line feeds
+	JR	NZ,MSIl3a
+	LD	(SftFlg),A	;but record them
+	JR	MSIlf
+MSIl3a:	LD	IY,BlkChr
+	CP	(IY)		;toss block chars
+	JR	Z,MSIlf
+	CP	' '		;take non-spaces
+	JR	NZ,MSIok
+	LD	A,(HL)
+	CP	20H		;Last one CTL? take space
+	JR	C,MSIsp
+	BIT	7,(HL)		;Already hidden space? take space
+	JR	NZ,MSIsp
+	SET	7,(HL)		;Hide space
+	JR	MSIlf
+;
+MSIsp:	LD	A,' '
+MSIok:	INC	HL		;Bump output
+	LD	(HL),A		;Insert byte
+	DEC	DE		;Room left?
+	LD	A,D
+	OR	E
+	RET	Z
+MSIlf:	INC	IX		;Bump input
+	DEC	B		;Go through record
+	JP	NZ,MSIlp2
+	PUSH	HL
+	PUSH	DE
+	JP	MSIlp1		;Get next block
+;
+MSIefX:	POP	DE		;(for last rec bug fix)
+	POP	HL
+MSIeof:	OR	1		;clear Z/C
+	LD	(MSIFlg),A	;Show load OK
+	RET
+;
+;
+;Write out BC characters at HL to file FCB  (C=error)
+;
+MSOut:	PUSH	BC
+	PUSH	HL
+	ADD	HL,BC		;ending address
+	PUSH	HL
+	CALL	DOSVer
+	LD	A,(FCB)
+	CALL	C,RstDrv	;reset drive
+	LD	HL,FCB+1	;strip attributes
+	LD	B,11
+MSOlp0:	RES	7,(HL)
+	INC	HL
+	DJNZ	MSOlp0
+	LD	B,4
+	XOR	A
+MSOlp1:	LD	(HL),A		; zero out FCBex, FCBs1, FCBs2, FCBrc
+	INC	HL
+	DJNZ	MSOlp1
+	LD	DE,tStamp	; set the buffer for the
+	LD	C,SDMA		; file timestamp
+	CALL	BDOSep
+	LD	C,GETS		; get the file timestamp
+	CALL	BDOSfc
+	LD	(tsFlg),A	; A=1 if we got a stamp
+	LD	A,(FilFlg)	; make a backup file?
+	OR	A
+	JR	Z,MSOdel	; no backup needed
+	LD	HL,FCB		; copy original filename and extension
+	LD	DE,DMA
+	LD	BC,16		;FCB length
+	LDIR			;copy it
+	LD	BC,8+1		;copy original filename only
+	LD	HL,FCB
+	LDIR			;again
+	LD	BC,3		;extension of BAK
+	LD	HL,Bak
+	LDIR
+	LD	DE,DMA+16	;delete BAKfil
+	LD	C,FDEL
+	CALL	BDOS
+	INC	A
+	JR	NZ,MSOren
+	OR	H		;no BAK deleted, h/w error?
+	JP	NZ,MSOer2	;yep...
+MSOren:	LD	DE,DMA		;rename old file to BAK
+	LD	C,FREN
+	CALL	BDOS
+	JR	MSOmak
+;
+MSOdel:	CALL	DOSVer
+	JR	C,MSOdl2	; skip if plain CP/M
+	CP	'S'
+	JR	Z,MSOdl2	; skip if ZSDOS
+	CP	'D'
+	JR	Z,MSOdl2	; skip if ZDDOS
+	LD	C,ERRM		; ... we get here, we're CP/M 3.0
+	LD	E,0FFH		; return error, no print
+	CALL	BDOS
+	XOR	A
+	LD	(SftFlg),A
+	LD	(FCBex),A
+	LD	(FCBcr),A
+	LD	C,FMAK		;make a new file
+	CALL	BDOSfc
+	PUSH	AF
+	PUSH	HL
+	LD	C,ERRM		; return error, print
+	LD	E,0FEH
+	CALL	BDOS
+	POP	HL
+	POP	AF
+	PUSH	AF
+	OR	A
+	JR	Z,MSOnSt
+	POP	AF
+	LD	A,H
+	CP	8
+	JR	NZ,MSOmak
+	LD	C,FTRU		; truncate file to 0 bytes
+	XOR	A
+	LD	(FCBr0),A
+	LD	(FCBr1),A
+	LD	(FCBr2),A
+	CALL	BDOSfc
+	OR	A
+	JP	NZ,MSOer2
+	LD	C,FOPN
+	CALL	BDOSfc		; open the file
+	PUSH	AF
+	JR	MSOnSt		; --- end of CP/M3 specific open code
+;
+MSOdl2:	LD	C,FDEL		; +++ CP/M2.2, ZxDOS specific
+	CALL	BDOSfc		; delete any old BAK file
+	INC	A
+	JR	NZ,MSOmak	; jump if all good
+	OR	H		; hardware error code?
+	JP	NZ,MSOer2	; ...yep
+;
+MSOmak:	XOR	A		;Initialize FCB
+	LD	(SftFlg),A
+	LD	(FCBex),A
+	LD	(FCBcr),A
+	LD	C,FMAK
+	CALL	BDOSfc
+	PUSH	AF
+	LD	A,(tsFlg)	;+++ timestamp code start
+	DEC	A		;do we have a timestamp?
+	JR	NZ,MSOnSt	;no, don't update the timestamp
+	LD	C,SETS		;set create timestamp of new file
+	CALL	BDOSfc		;to the same as existing file
+MSOnSt:	LD	C,SDMA
+	LD	DE,DMA
+	CALL	BDOSep
+	POP	AF		;restore result of FMAK
+	POP	DE		;end
+	POP	HL		;start
+	POP	BC		;(bytes)
+	INC	A
+	JP	Z,MSOerr	;make file failed
+	LD	A,B
+	OR	C		;any bytes?
+	JP	Z,MSOcls
+	LD	C,0		;Initialize GetNx
+	LD	B,128		;1 record
+	LD	IX,DMA
+MSOlp2:	CALL	GetNx
+	EXX
+	LD	HL,BadTbl	;skip illegal chars
+	LD	BC,BadLen
+	CPIR
+	EXX
+	JR	Z,MSOsk1	;0 or EOF
+MSOlp3:	LD	(IX),A		;put it out
+	LD	A,(FMode)
+	CP	'W'		;Wordstar mode?
+	JR	NZ,MSOWSx
+	LD	A,(IX)
+	CP	' '
+	JR	NZ,MSOWSa
+	LD	A,(IX-1)	;add microjustification bits
+	CP	21h
+	JR	C,MSOWS2
+	SET	7,(IX-1)
+	JR	MSOWS2
+MSOWSa:	CP	CR
+	JR	Z,MSOWS1
+	CP	LF
+	JR	Z,MSOWSx
+MSOWS0:	XOR	A
+	LD	(SftFlg),A
+	JR	MSOWSx
+MSOWS1:	LD	A,(IX-1)	;soften CRs after spaces
+	AND	7FH
+	CP	' '
+	JR	NZ,MSOWS0
+MSOW1a:	SET	7,(IX)
+	LD	A,0FFH
+	LD	(SftFlg),A
+	JR	MSOWSx
+MSOWS2:	LD	A,(SftFlg)	;and spaces after soft CRs
+	OR	A
+	JR	NZ,MSOW1a
+MSOWSx:	LD	A,(IX)
+	INC	IX		;bump pointer
+	DJNZ	MSOsk1		;Skip if buffer not full
+	PUSH	BC
+	PUSH	DE
+	PUSH	HL
+	LD	C,WSEQ
+	CALL	BDOSfc
+	POP	HL
+	POP	DE
+	POP	BC
+	OR	A
+	JR	Z,MSOook
+	CALL	MSOcls		;output error
+	JR	MSOerr
+MSOook:	LD	B,128
+	LD	IX,DMA
+	LD	A,(DMA+127)
+	LD	(IX-1),A
+MSOsk1:	AND	7FH
+	CP	CR		;Add LF after CR
+	LD	A,LF
+	JR	Z,MSOlp3
+	LD	A,H
+	XOR	D		;At end yet?
+	JP	NZ,MSOlp2
+	LD	A,L
+	XOR	E
+	JP	NZ,MSOlp2
+	OR	C		;Still got hidden space?
+	JP	NZ,MSOlp2
+	OR	B		;need EOF?
+	JR	Z,MSOsk2
+MSOefL:	LD	(IX),EOF	;yes
+	INC	IX
+	DJNZ	MSOefL
+MSOsk2:	LD	C,WSEQ
+	CALL	BDOSfc
+	OR	A
+	JR	Z,MSOcls
+	CALL	MSOcls
+	JR	MSOerr
+MSOcls:	LD	C,FCLO		;all done, close up
+	CALL	BDOSfc
+	INC	A
+	OR	A		;bug fix 2.67
+	RET	NZ
+MSOerr:	SCF
+	RET
+MSOer2:	POP	HL		;discard start,
+	POP	HL		;end,
+	POP	HL		;(bytes)
+	LD	C,SDMA
+	LD	DE,DMA
+	CALL	BDOSep		;reset DMA buffer
+	JR	MSOerr
+;
+;
+;
+;
+; DISPLAY FUNCTIONS
+;
+;(Re)initialize screen to begin editing
+;
+DoHdr:	LD	A,(NoHdrF)
+	OR	A
+	RET	NZ
+	LD	DE,0
+	CALL	GoTo
+	LD	HL,Header
+	CALL	AltDsp
+	CALL	ShoFnm		;Show file name
+	LD	HL,OPoff
+	LD	A,(FMode)
+	CP	'N'
+	JR	NZ,DoHdr1	;show "Pg " if document
+	LD	A,(PgLen)
+	OR	A
+	JR	NZ,DoHdrT
+	LD	HL,OPon		;show "OP" if ^OP in nondoc
+DoHdr1:	LD	DE,DspOP
+	CALL	TogSho
+DoHdrT:	CALL	ITshow		;show toggles
+	CALL	VTshow
+	CALL	HYshow
+	CALL	AIshow
+	CALL	DblSho
+MRshow:	LD	A,(RMSav)	;requires header display
+	DEC	A
+	LD	HL,MRon
+	JP	Z,PSDisp
+	LD	DE,DspMrg
+	JP	TogSho
+;
+TogSho:	LD	A,(NoHdrF)
+	OR	A
+	RET	NZ
+	PUSH	HL		;toggle show subroutine
+	CALL	GoTo
+	CALL	MakAlt
+	POP	HL
+	LD	B,3
+	CALL	BHLMsg
+	JP	UnAlt
+;
+;
+UpLft:	LD	DE,0100H	;go to "top of text"
+	LD	A,(RulFlg)
+	OR	A
+	JR	Z,UndrX
+	INC	D
+	JR	UndrX
+UndrHd:	LD	DE,0100H	;go below header regardless
+UndrX:	JP	GoTo
+;
+;
+NoHdr:	LD	HL,NoHdrF	;toggles on/off
+	CALL	ToggHL
+	OR	A
+	JR	Z,HdrOn
+HdrOff:	CALL	AdjLns		;that's one more line
+	CALL	IncVO
+	JP	SetAl
+HdrOn:	CALL	AdjLns
+	CALL	DecVO
+	CALL	DoHdr		;let's see it again
+	JP	SetAl
+;
+;
+;Show current file data in the heading
+;
+ShoFnm:	CALL	MakAlt
+	LD	DE,DspFnm+8	;blank out old stuff
+	CALL	GoTo
+	LD	B,19
+	CALL	BBlank
+	LD	DE,DspFnm
+	CALL	GoTo
+	LD	A,(FCB)
+	ADD	A,'A'-1		;drive letter
+	CALL	PutChA
+	LD	A,(FCBU)	;user number 0-15
+	LD	C,A
+	LD	B,'3'		;user 30+?
+	SUB	30
+	JR	NC,ShoFn1
+	LD	B,'2'		;user 20+?
+	LD	A,C
+	SUB	20
+	JR	NC,ShoFn1
+	LD	B,'1'		;user 10+?
+	LD	A,C
+	SUB	10
+ShoFn1:	PUSH	AF
+	LD	A,B
+	CALL	NC,PutChA
+	POP	AF
+	JR	NC,ShoFn2
+	LD	A,C
+ShoFn2:	ADD	A,'0'		;show LSD of user number
+	CALL	PutChA
+	LD	BC,Z3NDR
+	CALL	Z3EAdr
+	JR	Z,ShoFnN	;skip if no NDR
+	LD	H,B
+	LD	L,C
+ShFnNl:	LD	B,(HL)		;drive of this NDR entry
+	INC	B
+	DEC	B
+	JR	Z,ShoFnN	;0 means no more entries
+	LD	A,(FCB)
+	CP	B		;drive match?
+	INC	HL
+	JR	NZ,ShFnNx	
+	LD	C,(HL)
+	LD	A,(FCBU)
+	CP	C		;user # match?
+	JR	Z,ShFnNn	;yes, display NDR name
+ShFnNx:	LD	DE,Z3NdrL+1	;skip over NDR
+	ADD	HL,DE
+	JR	ShFnNl		;try next NDR
+ShFnNn:	LD	A,'/'
+	CALL	PutChA
+	LD	B,8		;show up to first 8 chars of NDR
+ShFdLp:	INC	HL
+	LD	A,(HL)
+	CP	' '
+	CALL	NZ,PutChA
+	DJNZ	ShFdLp
+ShoFnN:	LD	A,':'
+	CALL	PutChA		;punctuate
+	LD	HL,FCB+1
+	LD	B,8		;Name
+ShFnLp:	LD	A,(HL)
+	RES	7,A
+	CP	' '		;Quit on blank
+	JR	Z,ShFnLF
+	CALL	PutChA
+	INC	HL
+	DJNZ	ShFnLp		;Loop for 8
+ShFnLF:	LD	A,'.'		;punctuate
+	CALL	PutChA
+	LD	HL,FCBt1
+	LD	B,3		;Type
+ShFnL2:	LD	A,(HL)
+	CALL	PutChA
+	INC	HL
+	DJNZ	ShFnL2
+	CALL	PutSpc
+	LD	A,'/'		;option
+	CALL	PutChA
+	LD	A,(FMode)
+	CALL	PutChA
+	JP	UnAlt
+;
+;
+Ruler:	LD	HL,RulFlg	;toggle ruler on/off
+	CALL	ToggHL
+	OR	A
+	JP	Z,RulOff
+;
+RulOn:	CALL	AdjLns		;readjust screen length
+	CALL	DecVO
+	CALL	Z,SetAl		;maybe on line 1?
+	JR	RuShow
+;
+RulFix:	LD	A,(RulFlg)	;update ruler if on
+	OR	A
+	RET	Z
+RuShow:	LD	IY,RulBuf	;build ruler here
+	LD	A,(NSkip)	;starting column
+	INC	A
+	LD	C,A
+	LD	A,(View)	;length
+	LD	B,A
+RuLp:	LD	E,'-'		;default char is "-"
+	LD	A,(VTFlg)	;which tab mode?
+	OR	A
+	JR	Z,RuLpH
+	PUSH	BC		;"T" if varitab stop
+	LD	A,C
+	LD	HL,VTList
+	LD	BC,VTNum
+	CPIR
+	POP	BC
+	JR	Z,RuVtab
+	JR	RuNtab
+RuLpH:	LD	HL,TabCnt	;"I" if hardtab stop
+	LD	A,C
+	DEC	A
+	AND	(HL)
+	JR	Z,RuHtab
+RuNtab:	LD	A,(RtMarg)	;"R" if right margin
+	CP	C
+	JR	Z,RuRM
+	JR	C,RuDot		;or dot if outside
+	LD	A,(LfMarg)
+	CP	C
+	JR	Z,RuLM		;or "L" if left margin
+	DEC	A
+	CP	C
+	JR	NC,RuDot
+RuLpF:	LD	(IY),E		;okay, show it
+	INC	IY
+	INC	C
+	DJNZ	RuLp
+	LD	(IY),0
+	CALL	UndrHd
+	LD	HL,RulBuf
+	JP	AltDsp
+RuLM:	LD	E,'L'
+	JR	RuLpF
+RuRM:	LD	E,'R'
+	JR	RuLpF
+RuDot:	LD	E,'.'
+	JR	RuLpF
+RuVtab:	LD	E,'!'
+	JR	RuLpF
+RuHtab:	LD	E,'I'
+	JR	RuLpF
+;
+RulOff:	CALL	AdjLns		;adjust screen size
+	CALL	IncVO
+	LD	E,A
+	CALL	CrLft		;oops, may be near top
+	XOR	A
+	ADD	A,E
+	JP	Z,ShoLn1
+	JP	SetAl
+;
+;
+;Display one byte on the screen for messages rather than text.
+;Hi bit set = following space.
+;
+DsByt:	CP	CR		;Is it a CR
+	JR	Z,Sk1DB		;Yes, skip
+	CP	X		;compressed space?
+	JR	NC,Sk3DB
+DsBy1:	LD	E,A		;normal character
+	LD	HL,HPos		;room?
+	DEC	(HL)
+	JP	NZ,PutCh	;put it out
+	INC	(HL)		;EOL
+	RET
+Sk1DB:	LD	A,(HPos)	;Fill out spaces for CR
+	LD	E,A		;(needed for attributes, etc)
+	CALL	SpEOL
+	LD	A,(AuWrap)	;does autowrap occur?
+	OR	A
+	JR	NZ,Sk1aDB
+	LD	E,CR		;NO, put out a CRLF
+	CALL	PutCh
+	LD	E,LF
+	CALL	PutCh
+Sk1aDB:	LD	A,(View)
+	INC	A
+	LD	(HPos),A	;new line
+	RET
+Sk3DB:	AND	7FH		;compressed space
+	CALL	DsByt
+DsSpc:	LD	A,' '
+	JR	DsBy1
+;
+;
+;Display message pointed to by HL. 00h is end.
+;80H,nn = skip count.
+;
+Dspla:	LD	A,(View)	;initialize
+	INC	A
+	LD	(HPos),A
+DspLp:	LD	A,(HPos)	;or continue, here
+	LD	E,A
+	LD	A,(HL)		;get byte
+	INC	HL
+	OR	A		;All done?
+	RET	Z
+	CP	X		;hidden spaces?
+	JR	NZ,Dsp10
+	LD	A,(HL)		;get space count
+	INC	HL
+	LD	B,A
+Dsp01:	PUSH	BC
+	PUSH	HL
+	CALL	DsSpc
+	POP	HL
+	POP	BC
+	DJNZ	Dsp01
+	JR	DspLp
+Dsp10:	PUSH	HL
+	CALL	DsByt		;Put it out
+	POP	HL
+	JR	DspLp		;Do next one
+;
+;Display message which immediatly follows the CALL
+;
+Dspl:	POP	HL
+	CALL	Dspla
+	JP	(HL)
+DsplC:	POP	HL		;same, but continued
+	CALL	DspLp
+	JP	(HL)
+;
+;
+;Make a text "window" at screen bottom
+;
+Window:	LD	A,(PhysLn)	;requires 16 lines or more
+	CP	16
+	JP	C,Error7
+	LD	HL,WinFlg	;toggles on/off
+	CALL	ToggHL
+	OR	A
+	JR	Z,WinOff
+;
+WinOn:	CALL	AdjLns		;adjust counts
+	LD	A,(PhysLn)
+	AND	1
+	CALL	NZ,ClLast	;clear odd line?
+	CALL	TopV		;put chosen text on top
+	LD	A,0FFh
+	LD	(BelowF),A	;go below
+	CALL	ShoSc		;show text
+	LD	A,(NoHdrF)
+	OR	A
+	JR	NZ,WinOn2
+	LD	DE,0000h	;separator needed?
+	CALL	GoTo
+	CALL	SepLin
+	CALL	ShoFnm		;with name
+WinOn2:	XOR	A
+	LD	(BelowF),A
+	JP	SetAl
+;
+WinOff:	CALL	AdjLns
+	JP	SetAl
+;
+;
+AdjLns:	LD	A,(PhysLn)	;KEEP screen counts consistent
+	LD	HL,WinFlg
+	BIT	0,(HL)
+	JR	Z,AdjL1
+	SRL	A
+AdjL1:	LD	(Lines),A	;physical window size
+	LD	HL,NoHdrF
+	BIT	0,(HL)
+	JR	NZ,AdjL2
+	DEC	A		;adjust for header if present
+AdjL2:	LD	HL,RulFlg
+	ADD	A,(HL)		;adjust for ruler if present
+	LD	(TxtLns),A
+	RET
+;
+;
+; SCREEN I/O ROUTINES
+;
+;Do screen control code strings (return Carry if none)
+;
+CtlStr:	XOR	A
+	ADD	A,(HL)		;HL points to #,bytes (# may be 0)
+	SCF
+	RET	Z
+	LD	B,A
+	INC	HL		;set up count
+BHLMsg:
+CtlSLp:	LD	E,(HL)
+	INC	HL
+	PUSH	BC
+	PUSH	HL
+	CALL	ShutUp		;do NOT filter
+	POP	HL
+	POP	BC
+	DJNZ	CtlSLp
+	OR	A
+	RET
+;
+BlkFCB:	LD	B,11		;blank out FCB name,typ
+	LD	DE,FCB+1
+BlkFil:	LD	A,' '		;blank out B bytes at DE
+	LD	(DE),A
+	INC	DE
+	DJNZ	BlkFil
+	RET
+BBlank:	PUSH	BC		;blank out B spaces
+	LD	E,' '
+	CALL	ShutUp
+	POP	BC
+	DJNZ	BBlank
+	RET
+;
+;Show messages and prompts
+;
+MsgDsp:	PUSH	HL		;must start at "top"
+	CALL	UpLft
+	POP	HL
+AltDsp:	PUSH	HL		;display message in alt video
+	CALL	MakAlt
+	POP	HL
+	CALL	Dspla
+	JR	UnAlt
+;
+Prompt:	PUSH	HL		;Prompt: blank first line
+	CALL	UpLft		;(with attribute)
+	CALL	MakAlt
+	LD	A,(View)
+	INC	A
+	LD	E,A
+	CALL	SpEOL
+	CALL	UnAlt
+	POP	HL
+	JR	MsgDsp		;then show prompt message
+;
+;Handle alternate video
+;
+MakAlt:	LD	A,(AltHdr)	;optional for messages and prompts
+	OR	A
+	RET	Z
+AltY:	LD	HL,AltOn	;mandatory for ctl-chars
+	LD	A,(AltBit)	;ram always uses hi bit
+	OR	A
+	JP	Z,CtlStr
+	LD	A,X
+	LD	(AltMsk),A
+	RET
+UnAlt:	LD	A,(AltHdr)
+	OR	A
+	RET	Z
+UnAltY:	LD	HL,AltOff
+	LD	A,(AltBit)
+	OR	A
+	JP	Z,CtlStr
+	XOR	A
+	LD	(AltMsk),A
+	RET
+;
+;Character output
+;
+XPutCh:	LD	A,(Horiz)	;show character in E
+	LD	HL,View		;UNLESS in lower rt corner
+	CP	(HL)
+	JR	NZ,PutCh
+	LD	A,(Vert)
+	LD	HL,TxtLns
+	CP	(HL)
+	RET	Z
+PutCh:	PUSH	HL		;show char in E
+	PUSH	DE
+	PUSH	BC
+	LD	A,(Filter)	;filtered
+	CP	E
+	JR	C,PutChQ	;'?' if char >= Filter (07FH)
+PutCh1:	LD	A,(AltMsk)
+	OR	E
+	CALL	CONOut
+	POP	BC
+	POP	DE
+	POP	HL
+	RET
+PutChQ:	LD	E,'?'
+	JR	PutCh1
+;
+PutSpc:	LD	A,' '
+Echo:	CP	20H		;echo typed char, IF nice
+	RET	C		; (used for one-char input)
+PutChA:	PUSH	DE		;show char in A
+	PUSH	AF		; save it too (for Echo)
+	LD	E,A
+	CALL	PutCh
+	POP	AF
+	POP	DE
+	RET
+;
+CONOut:	LD	E,A
+ShutUp:	NOP			;<--- goes to RET for Quiet
+	LD	C,UCON		;put byte to console (mostly ctls)
+	JP	BDOSep
+;
+PosCur:	LD	A,(Horiz)
+	LD	E,A
+	DEC	E
+	LD	A,(RulFlg)
+	AND	1
+	LD	HL,Vert
+	ADD	A,(HL)
+	LD	D,A
+;
+;Position cursor to row D column E
+;
+GoTo:	LD	A,(NoHdrF)	;lie for lack of header
+	AND	D		;(decrement row if >0)
+	JR	Z,GoTo01
+	DEC	D
+GoTo01:	LD	A,(BelowF)	;implement window below
+	OR	A
+	JR	Z,GoToIt
+	LD	A,(Lines)
+	ADD	A,D
+	LD	D,A
+GoToIt:	LD	A,D
+	LD	(CurRow),A
+	LD	A,(PosMod)
+	CP	'N'
+	JR	NZ,GoYPos
+	LD	HL,PCu		;use Down,Right method (gaak)
+	CALL	Go2Byt		;home first
+	LD	A,D
+	OR	A
+	JR	Z,Go2RwF
+Go2Row:	PUSH	DE		;move down to desired row
+	LD	E,LF
+	CALL	ShutUp
+	POP	DE
+	DEC	D
+	JR	NZ,Go2Row
+Go2RwF:	LD	A,E
+	OR	A
+	RET	Z
+Go2Col:	LD	HL,PCu+2
+	CALL	Go2Byt		;now across to desired col
+	DEC	E
+	JR	NZ,Go2Col
+	RET
+GoYPos:	CP	'A'		;Okay, can be more sophisticated...
+	JR	Z,GoANSI
+	LD	HL,PCu		;use ESC = sequence
+	CALL	Go2Byt		;leadin byte(s)
+	LD	HL,PCu+2
+	PUSH	DE		;now coordinates
+	PUSH	HL
+	LD	A,(PosMod)	;which order?
+	CP	'R'
+	JR	Z,GoToX		;(backwards)
+	LD	A,D
+	ADD	A,(HL)
+	CALL	CONOut
+	POP	HL
+	POP	DE
+	INC	HL
+	LD	A,E
+	ADD	A,(HL)
+	CALL	CONOut
+	JR	GoToDl
+GoToX:	LD	A,E
+	ADD	A,(HL)
+	CALL	CONOut
+	POP	HL
+	POP	DE
+	INC	HL
+	LD	A,D
+	ADD	A,(HL)
+	CALL	CONOut
+GoToDl:	LD	A,(PosDly)	;optional delay for some terminals
+	OR	A
+	RET	Z
+	LD	B,A
+	LD	C,0
+	JP	BDlyLp
+GoANSI:	LD	HL,ANSIms+3	;use ANSI sequence
+	LD	A,D
+	INC	A		;origin 1,1
+	CALL	GoASub
+	LD	HL,ANSIms+6
+	LD	A,E
+	INC	A
+	CALL	GoASub
+	LD	HL,ANSIms
+	CALL	CtlStr
+	JR	GoToDl
+GoASub:	LD	(HL),'0'	;tens digit
+GASl1:	CP	10
+	JR	C,GAS2
+	INC	(HL)
+	SUB	10
+	JR	GASl1
+GAS2:	INC	HL
+	ADD	A,'0'		;units
+	LD	(HL),A
+	RET
+Go2Byt:	CALL	Go1Byt		;show one or two bytes at HL
+	LD	A,(HL)
+	OR	A
+	RET	Z
+Go1Byt:	PUSH	DE
+	LD	B,1		;just do one byte
+	CALL	CtlSLp
+	POP	DE
+	RET
+ANSIms:	DB	8,ESC,'[00;00H'	;for use with CtlStr
+;
+;
+IfSpLn:	LD	A,(AltHdr)	;draw sep line IF headers not alt
+	OR	A
+	RET	NZ
+SepLin:	CALL	MakAlt		;draw separator line
+	LD	A,(View)
+	LD	D,A
+	LD	E,'-'
+SLDlp:	PUSH	DE
+	CALL	PutCh
+	POP	DE
+	DEC	D
+	JR	NZ,SLDlp
+	JP	UnAlt
+;
+;
+;SHOW SCREEN ROUTINES
+;
+;	|             +------------------------
+;	|HELLO!       |                             ^
+;	|This is your |text file, which is seen    Vert
+;	|on the screen| just like this._            v
+;	|             |                 \
+;	|<---NSkip---> <-----Horiz-----> \
+;	|<-----------CurCol------------>  \Cursor at (H,V)
+;
+;Recheck current position on screen
+;
+Orient:	LD	A,(Vert)	;Adjust Horiz and Vert
+	LD	E,A
+	CALL	CrLft		;Start of first screen line
+	JR	NC,Ornt1
+	CALL	TopV		;At top, set Vert to 1
+	JR	Ornt2
+Ornt1:	LD	A,(Vert)	;Decrement Vert if needed
+	SUB	E		; to avoid whitespace at top
+	LD	(Vert),A
+Ornt2:	CALL	ColCnt		;Update columen (in A,B,CurCol)
+	INC	A
+	JR	NZ,Ornt3
+	LD	B,0FEH
+Ornt3:	LD	A,(Horiz)	;Compute cursor offset in line
+	LD	C,A
+	LD	A,B
+	SUB	C		;CurCol-Horiz is minimum offset
+	JR	NC,Ornt4a
+	XOR	A		;set 0 if negative
+Ornt4a:	LD	E,A
+	LD	A,(NSkip)	;present offset < min?
+	CP	E
+	JR	C,Ornt4b	;if so, change
+	CP	B		;bigger than CurCol-1?
+	JR	C,Ornt4c	;if not, OK
+	LD	A,B		;round down to small enough
+	DEC	A
+	AND	0C0H		;multiple of 32
+	JR	Ornt4c
+Ornt4b:	LD	A,E		;round up to big enough
+	OR	1FH
+	JR	Z,Ornt4c
+	INC	A
+Ornt4c:	LD	(NSkip),A	;set (new?) offset
+	SUB	B
+	NEG
+	LD	(Horiz),A
+	LD	HL,(CurLin)	;Figure line, page
+	LD	(CurPgL),HL
+	LD	A,(FMode)
+	CP	'N'
+	LD	A,(PgLen)
+	JR	NZ,Ornt5
+	XOR	A		;don't SHOW pagination for nondocs
+Ornt5:	LD	E,A
+	LD	D,0
+	DEC	HL
+	LD	B,D
+	LD	C,D
+	OR	A		;not paginating?
+	JR	Z,OrnLpF
+	INC	BC
+OrntLp:	SBC	HL,DE
+	JR	C,OrnLpF
+	INC	BC
+	JR	OrntLp
+OrnLpF:	ADD	HL,DE
+	INC	HL
+	LD	(CurPgL),HL
+	LD	(CurPg),BC
+	RET
+;
+;Show (just) as much of the text as necessary
+;
+ShoTx:	CALL	KyStat		;check keybd
+	JR	NZ,ShoTx1
+	CALL	TestSc		;check postponed screen disp
+	JP	NZ,ShoAll	;do it!
+	CALL	ShoPos		;quiet? update header
+	CALL	TestCu		;check postponed line disp
+	JR	NZ,DoPost	;do it (or more, if requested)
+ShoTx1:	LD	A,(ShoFlg)	;busy...
+	OR	A		;nothing (0)
+	RET	Z
+	DEC	A
+	JP	Z,ShoRCu	;just one line (1,2) - can be postponed
+	DEC	A
+	JP	Z,ShoCu
+	DEC	A
+	JP	Z,ShoDn		;bottom part (3)
+	JP	ShoSc		;or whole screen
+DoPost:	LD	A,(ShoFlg)
+	CP	3
+	JP	C,ShoCu		;at LEAST this
+	JP	Z,ShoDn
+	JP	ShoSc
+;
+;Show position in file, no matter what
+;
+ShoPos:	LD	A,(NoHdrF)
+	OR	A
+	RET	NZ
+	CALL	Force		;must see this
+	LD	DE,DspPg	;Update header
+	CALL	GoTo
+	CALL	MakAlt		;C128 bug fix requires GoTo first
+	LD	HL,(CurPg)
+	LD	A,(FMode)
+	CP	'N'
+	CALL	NZ,ShPSb1
+	LD	DE,DspLin
+	LD	HL,(CurPgL)
+	CALL	ShPoSb
+	LD	DE,DspCol
+	LD	A,(CurCol)
+	LD	L,A
+	LD	H,0
+	CALL	ShPoSb
+	CALL	UnAlt
+	JP	UForce
+ShPoSb:	PUSH	HL		;show a number
+	CALL	GoTo
+	POP	HL
+ShPSb1:	LD	DE,PNBuf
+	CALL	BCDCon
+	LD	HL,PNBuf
+	LD	B,5
+	JP	BHLMsg
+;
+;Show current line only (fast)
+;
+ShoCu:	CALL	ConChk		;(postpone if busy!)
+	JP	NZ,HoldCu
+ShoCu1:	LD	A,(Vert)
+	LD	B,A
+	JP	ShoLn
+;
+ShoRCu:	CALL	ConChk		;(postpone if busy!)
+	JP	NZ,HoldCu
+	CALL	FetchB
+	CP	TAB		;can't do this with tab at left
+	JP	Z,ShoCu
+	LD	A,(Vert)	;special routine: only RIGHT of cursor
+	LD	D,A		;...modeled on ShoLCu
+	LD	A,(RulFlg)
+	AND	1
+	ADD	A,D
+	LD	D,A		;current row
+	LD	A,(Horiz)
+	DEC	A
+	LD	E,A
+	JP	Z,ShoCu		;can't do this at left of screen
+	DEC	E
+	CALL	GoTo		;position to start
+	LD	E,1		;find start of line
+	CALL	CrLft
+	PUSH	HL
+	LD	HL,Horiz
+	LD	A,(NSkip)
+	ADD	A,(HL)
+	DEC	A
+	LD	D,A
+	DEC	A
+	LD	B,A		;skip till just before cursor
+	LD	A,(View)
+	INC	A
+	SUB	(HL)
+	LD	E,A
+	INC	E
+	POP	HL
+	CALL	ShoLSb		;do part (char!) left of cursor
+	INC	E		;(DON'T ask me why this INC is needed)
+	LD	D,E
+	DEC	D
+	LD	A,(Vert)
+	LD	HL,TxtLns
+	CP	(HL)		;avoid last line, col
+	JR	NZ,ShRCu3
+	DEC	D
+ShRCu3:	LD	HL,(AftCu)
+	JP	ShoLSb
+;
+;Display from Cursor line-1 down
+;
+ShoDn:	CALL	ConChk		;(postpone if busy!)
+	JP	NZ,HoldSc
+	LD	HL,CsrOff
+	CALL	CtlStr
+	LD	A,(DSFlg)	;(or line-2 if DS)
+	LD	HL,Vert
+	ADD	A,(HL)
+	JR	Z,ShoSc0
+	LD	B,A
+	DJNZ	ShScLp
+	JR	ShoSc0
+;
+;Show everything on emerging from macros etc
+;
+ShoAll:	CALL	Orient
+	CALL	DoHdr
+	CALL	ShoPos
+	JR	ShoScX
+;
+;Display whole text screen (sigh)
+;
+ShoSc:	CALL	ConChk		;(Postpone if busy!)
+	JP	NZ,HoldSc
+ShoScX:	LD	HL,CsrOff
+	CALL	CtlStr
+ShoSc0:	CALL	RulFix
+	CALL	SetNo		;kill any pending redisps
+	XOR	A
+	LD	(CuFlg),A
+	CPL
+	LD	(HorFlg),A
+	LD	B,1		;Simple method if not memory mapped
+ShScLp:	PUSH	BC
+	CALL	ShoLn
+	POP	BC
+	INC	B
+	LD	A,(TxtLns)
+	INC	A
+	SUB	B
+	JR	NZ,ShScLp
+	LD	HL,CurOn
+	CALL	CtlStr
+	RET
+;
+IOoff1:	LD	DE,DspEsc	;header: blank prompt
+	CALL	GoTo
+	CALL	MakAlt
+	LD	B,4+1		;(cursor)
+	CALL	BBlank
+	JP	UnAlt
+;
+IOoff:	LD	A,(NoHdrF)	;headerless? redo top line
+	OR	A
+	JR	Z,IOoff1
+	LD	A,(RulFlg)
+	OR	A
+	JP	NZ,RuShow
+;
+;Show line 1 (to wipe out msgs)
+;
+ShoLn1:	LD	B,1		;fall thru...
+;
+;Show line number B (=1...TxtLns)
+;
+ShoLn:	LD	A,(ShutUp)
+	OR	A
+	RET	NZ
+	PUSH	BC
+	CALL	KyStat		;(helps buffering for slow keyboards)
+	POP	BC
+	LD	A,(RulFlg)
+	AND	1
+	ADD	A,B
+	LD	D,A		;position cursor on screen
+	LD	E,0
+	PUSH	BC
+	CALL	GoTo
+	POP	BC
+	LD	A,(Vert)	;is line before or after cursor?
+	SUB	B
+	JR	Z,ShoLCu	;ouch, it's cursor line
+	JR	C,ShoLAf
+ShoLBf:	LD	E,A		;okay, before
+	INC	E
+	CALL	CrLft
+	LD	A,(View)
+	INC	A
+	LD	E,A
+	LD	A,(NSkip)
+	LD	B,A
+	LD	D,255
+	JR	ShoLSb
+ShoLAf:	NEG			;okay, after
+	PUSH	BC		;save line#
+	LD	E,A
+	CALL	CrRit
+	POP	BC
+	PUSH	AF
+	LD	A,(View)
+	LD	D,A
+	INC	A
+	LD	E,A
+	LD	A,(TxtLns)
+	CP	B		;last line? avoid last column
+	JR	NZ,ShLAf0
+	DEC	D
+ShLAf0:	POP	AF
+	JR	C,ShLAf1
+	JR	Z,ShLAf2
+ShLAf1:	JP	ClEOL		;no line!
+ShLAf2:	LD	A,(NSkip)
+	LD	B,A
+	ADD	A,D
+	LD	D,A
+	JR	ShoLSb
+ShoLCu:	LD	E,1		;hmm, right on cursor
+	PUSH	BC		;save line#
+	CALL	CrLft
+	LD	A,(NSkip)
+	LD	B,A
+	LD	A,(CurCol)	;do part to left
+	DEC	A
+	LD	D,A
+	LD	A,(View)
+	INC	A
+	LD	E,A
+	CALL	ShoLSb
+	LD	D,E
+	DEC	D
+	POP	AF		;line#
+	LD	HL,TxtLns
+	CP	(HL)		;avoid last line, col
+	JR	NZ,ShLCu1
+	DEC	D
+ShLCu1:	LD	HL,(AftCu)
+;
+ShoLSb:	LD	A,D		;Show up to column D of text starting at HL
+	OR	A		;E=room+1, B=Cols to skip (if any)
+	RET	Z
+	XOR	A
+	EXX
+	LD	B,A		;B',C' keep track of previous chars
+	LD	C,A
+	LD	E,A		;E' is count skipped
+	EXX
+	LD	C,A		;initialize GetNx
+	ADD	A,B
+	JR	Z,ShLSL2
+ShLSL1:	CALL	GetNx		;eat skipped columns
+	JP	Z,ClEOL		;end of line?
+	CP	TAB
+	JR	Z,ShLS1T
+	EXX
+	INC	E		;E'
+	EXX
+	DEC	D
+	DJNZ	ShLSL1
+	CALL	ShSvCh
+	INC	D
+	DEC	D
+	RET	Z
+	JR	ShLSL2
+ShLS1T:	EXX			;count for tabs
+	LD	A,E
+	LD	HL,TabCnt
+	AND	(HL)
+	XOR	(HL)		;extra spaces
+	INC	A		;plus usual one
+	PUSH	AF
+	ADD	A,E
+	LD	E,A
+	POP	AF
+	EXX
+	PUSH	AF
+	SUB	D
+	NEG
+	LD	D,A
+	POP	AF
+	SUB	B
+	NEG
+	LD	B,A
+	JR	NZ,ShLSL1
+	LD	A,TAB
+	CALL	ShSvCh
+	INC	D
+	DEC	D
+	RET	Z
+ShLSL2:	CALL	GetNx		;show the rest
+	EXX
+	LD	C,B
+	LD	B,A
+	EXX
+	JR	Z,ShLSCr	;take care of CR,TAB
+	CP	' '
+	JR	C,ShCtl
+	PUSH	DE
+	LD	E,A
+	CALL	PutCh
+	POP	DE
+ShLSL3:	DEC	E
+	DEC	D
+	RET	Z
+	LD	A,E
+	DEC	A
+	RET	Z
+	JR	ShLSL2
+ShCtl:	PUSH	HL
+	PUSH	BC
+	PUSH	DE
+	CP	TAB
+	JR	Z,ShLSTb
+	ADD	A,40H		;other ctls are hili letters
+	EX	AF,AF'
+	CALL	AltY		;(mandatory)
+	EX	AF,AF'
+	CALL	PutChA
+	CALL	UnAltY
+	JR	ShLRet
+ShLSCr:	PUSH	HL
+	PUSH	BC
+	PUSH	DE
+	EXX
+	LD	A,C		;last char
+	EXX
+	CP	' '
+	JR	Z,ShLCrF	;SCR doesn't show
+	LD	A,(HCRFlg)
+	OR	A
+	JR	Z,ShLCrF	;HCRs also MAY not...
+	LD	E,'<'
+	CALL	PutCh
+	POP	DE
+	DEC	D
+	DEC	E
+	PUSH	DE
+	LD	A,E		;don't ClEOL if now in last col
+	CP	2
+ShLCrF:	CALL	NC,ClEOL
+	POP	DE		;end of line
+	POP	BC
+	POP	HL
+	RET
+ShLSTb:	LD	A,(View)	;hit a tab...
+	INC	A
+	SUB	E		;column
+	LD	HL,TabCnt
+	AND	(HL)
+	XOR	(HL)		;figure extra spaces
+	LD	B,A
+	JR	Z,ShLTLF
+ShLTbL:	CALL	PutSpc		;do them
+	POP	DE
+	DEC	E
+	DEC	D
+	PUSH	DE
+	JR	Z,ShLRet
+	DJNZ	ShLTbL		;then one last
+ShLTLF:	CALL	PutSpc
+ShLRet:	POP	DE
+	POP	BC
+	POP	HL
+	JR	ShLSL3
+ShSvCh:	EXX			;keep track of prev chars
+	LD	C,B
+	LD	B,A
+	EXX
+	RET
+;
+;
+ClEOL:	LD	HL,CIL		;clear to EOL (quickly if possible)
+	CALL	CtlStr
+	RET	NC
+SpEOL:	DEC	E		;this always SPACES (for attributes)
+	RET	Z
+ClELp:	LD	A,(CurRow)
+	INC	A
+	LD	HL,PhysLn
+	CP	(HL)
+	JR	NZ,ClEL3
+	DEC	E		;avoid last char on last line
+	RET	Z
+ClEL3:	CALL	PutSpc
+	DEC	E
+	JR	NZ,ClEL3
+	RET
+;
+ClLast:	LD	A,(PhysLn)	;clear last line on screen
+	DEC	A
+	LD	D,A
+	LD	E,0
+	CALL	GoToIt
+	LD	A,(View)
+	LD	E,A		;do NOT INC this, it's last line
+	JR	ClEOL
+;
+;
+;Set level of display required
+;
+SetAl:	LD	A,0FFH		;routines to set it
+	JR	Set1		;(must preserve ALL REGS and FLAGS)
+SetDn:	LD	A,3
+	JR	Set1
+SetCu:	LD	A,2
+	JR	Set1
+SetRCu:	LD	A,1
+	JR	Set1
+SetNo:	XOR	A		;this one WILL shut it up...
+	JR	Set2
+Set1:	PUSH	AF	;...otherwise, do not DEcrease previous requests
+	EX	(SP),HL
+	LD	A,(ShoFlg)
+	CP	H
+	EX	(SP),HL
+	JR	NC,Set3
+	POP	AF
+Set2:	LD	(ShoFlg),A
+	RET
+Set3:	POP	AF
+	RET
+;
+SmlDly:	LD	A,(Timer)
+	LD	B,A
+	LD	C,1
+	JP	BDlyLp
+;
+ScrUDx:	LD	A,0C9H		;(RET)
+	LD	(UpLft),A
+	CALL	ScrlUD
+	CALL	NC,SmlDly	; delay if scrolled
+	LD	A,11H		;(LD DE,nnnn)
+	LD	(UpLft),A
+	RET
+;
+ScrlU2:	LD	HL,DelL
+	CALL	ScrlUD
+	JR	C,SetAl		; no scroll
+	JR	SetCu
+;
+ScrlU:	LD	HL,DelL
+	JR	ScrlX
+;
+EdgeU:	LD	A,(Vert)
+	DEC	A		;first line: scroll
+	RET	NZ
+ScrlD:	LD	HL,InsL
+ScrlX:	CALL	ScrlUD
+	JR	C,SetAl		; no scroll
+	CALL	SmlDly
+	JR	SetCu
+ScrlUD:	PUSH	HL		;[common sbr, used in one-liners too]
+	CALL	TestCu
+	CALL	NZ,ShoCu1
+	LD	A,(NoHdrF)	;canNOT do this if header is suppressed
+	LD	HL,OddDel	; and ins/del specific to ln 1.
+	AND	(HL)
+	LD	HL,WinFlg	; or if Windowing (in any event)
+	OR	(HL)
+	POP	HL
+	JR	NZ,NoScrl
+	PUSH	HL
+	CALL	UpLft
+	POP	HL
+	CALL	CtlStr		;do it
+	RET	C		;(maybe couldn't)
+	LD	A,(OddDel)
+	OR	A
+	CALL	NZ,RulFix
+	RET
+NoScrl:	SCF			; didn't scroll
+	RET
+;
+; Set flag for redisplay due to arrow keys
+;
+EdgeL:	LD	A,(Vert)
+	DEC	A
+	RET	NZ
+	LD	A,(CurCol)
+	DEC	A
+	RET	NZ
+	JR	ScrlD		;scroll if at top left
+EdgeR:	CALL	Fetch
+	JR	Z,ER01
+	LD	A,(Horiz)	;not CR: if off right edge, scroll
+	LD	HL,View
+	CP	(HL)
+	JR	Z,HorScl
+	RET
+ER01:	LD	A,(Vert)	;CR: if at bot right, scroll
+	LD	HL,TxtLns
+	CP	(HL)
+	JP	Z,ScrlU
+EdgeD:	LD	A,(Vert)
+	LD	HL,TxtLns
+	CP	(HL)
+	JP	Z,ScrlU		;last line: scroll
+	RET
+;
+;Watch for horizontal scroll
+;
+IfScl:	LD	A,(NSkip)	;request scroll if already scrolled
+	OR	A
+	RET	Z
+HorScl:	CALL	SetCu		;request scroll
+	XOR	A
+	LD	(HorFlg),A
+	RET
+;
+;Postpone display for speed
+;
+HoldCu:	LD	A,0FFH		;save if busy
+	LD	(CuFlg),A
+	RET
+HoldSc:	LD	A,0FFH
+	LD	(ScFlg),A
+	RET
+TestSc:	LD	HL,ScFlg	;test & reset postponement
+	JR	TestX
+TestCu:	LD	HL,CuFlg
+TestX:	XOR	A		;(ret with Z if none)
+	ADD	A,(HL)
+	LD	(HL),0
+	RET
+;
+; Position cursor for input
+;
+Cursr:	CALL	PosCur		;turn on cursor
+	CALL	Fetch
+	RET	NZ
+	LD	A,(HCRFlg)	;oops, on a CR
+	OR	A		;HCRs showing?
+	RET	Z
+	CALL	FetchB		;got to fix HCR flag
+	LD	E,' '		;kludge to " " or "<"
+	CP	E
+	JR	Z,Csr01
+	CALL	NdCnt
+	JR	C,Csr01
+	LD	E,'<'
+Csr01:	CALL	XPutCh
+	LD	E,BS
+	JP	PutCh
+;
+;
+; MESSAGES
+;
+ErrTab:	DW	0,MSG1,MSG2,MSG3,MSG4,MSG4,MSG7,MSG7,MSG8,MSG9
+;
+MSG1:	DB	'Ou','t'+X,'o','f'+X,'Memory',0
+MSG2:	DB	'Invali','d'+X,'Key',0
+MSG3:	DB	'I/','O'+X		;(fall through to 7)
+MSG7:	DB	'Error',0
+MSG4:	DB	'No','t'+X,'Found',0
+MSG8:	DB	'Synta','x'+X,'Error',0		;(note 5,6 not used)
+MSG9:	DB	'Canno','t'+X,'Reformat',0	;(note error 10 has no MSG)
+;
+NameQ:	DB	'Name',':'+X,0
+ReadQ:	DB	'Read',':'+X,0
+WritQ:	DB	'Write',':'+X,0
+EraQ:	DB	'Erase',':'+X,0
+LoadQ:	DB	'Load',':'+X,0
+FindQ:	DB	'Find',':'+X,0
+ChgQ:	DB	'Chang','e'+X,'to',':'+X,0
+DirQ:	DB	'Dir',':'+X,0
+PrtQ:	DB	'Options',':'+X,0
+PgLnQ:	DB	'Length',':'+X,0
+ColQ:	DB	'Column',':'+X,0
+PageQ:	DB	'Page',':'+X,0
+LineQ:	DB	'Line',':'+X,0
+MacroQ:	DB	'Macro',':'+X,0
+RptcQ:	DB	'Repea','t'+X,'coun','t'+X,'([Q],0-9/*)',':'+X,0
+KeyQ:	DB	'Ke','y'+X,'numbe','r'+X,'([N/Q],0-9)',':'+X,0
+QuitQ:	DB	'Abando','n'+X,'changes','?'+X,'(Y/N)',':'+X,0
+UnchgQ:	DB	'Unchanged',';'+X,'save','?'+X,'(Y/N)',':'+X,0
+;
+; Changed: Q       File size: NNNNN     Memory used: NNNNN     Free: NNNNN
+InfMsg:	DB	CR
+	DB	' '+X,'Changed',':'+X
+ModQQQ:	DB	'Q',X,7,'Fil','e'+X,'size',':'+X
+SizNNN:	DB	'NNNNN',X,5,'Memor','y'+X,'used',':'+X
+UsdNNN:	DB	'NNNNN',X,5,'Free',':'+X
+FreNNN:	DB	'NNNNN',CR,0
+;
+;                    [Menus disabled; see VDE.DOC or .QRF]
+;                       [See VDE.DOC and .QRF for help]
+;
+HlpMsg:		DB	X,26,'[Menu','s'+X,'disabled',';'+X,'se','e'+X
+		DB	'Manual]',CR,0
+;
+;A4/DOC:FILENAME.TYP /A        Pg 1    Ln 1    Cl 51   INS vt by AO DS <R  ^Q_
+;
+Header:	DB	X,39,'L','n'+X,X,5,'Cl',CR,0
+DspFnm	EQU	1		;offsets for display
+DspOP	EQU	DspFnm+30	;31
+DspPg	EQU	DspOP+3		;34
+DspLin	EQU	DspPg+8		;42
+DspCol	EQU	DspLin+8	;50
+DspIns	EQU	DspCol+5	;55
+DspTab	EQU	DspIns+4	;59
+DspHyp	EQU	DspTab+3	;62
+DspInd	EQU	DspHyp+3	;65
+DspSpc	EQU	DspInd+3	;68
+DspMrg	EQU	DspSpc+3	;71
+DspEsc	EQU	DspMrg+3	;74
+DspEsQ	EQU	DspEsc+3	;74
+;
+TogOff:	DB	'   '
+CQTog:	DB	' ^Q'
+COTog:	DB	' ^O'
+CPTog:	DB	' ^P'
+CKTog:	DB	' ^K'
+ESCTog:	DB	'ESC'
+YNMsg:	DB	'Chg?'
+IOmsg:	DB	'Wait'
+RdyQ:	DB	'Rdy'
+CQTTog:	DB	'^QT'
+OPon:	DB	'OP '
+OPoff:	DB	'Pg '
+INSon:	DB	'INS'
+VTon:	DB	'vt '
+HYon:	DB	'hy '
+AIon:	DB	'AI '
+DSon:	DB	'DS '
+MRon:	DB	'MR '
+PSon:	DB	'PS '
+;
+Bak:	DB	'BAK'
+Data:		;zeroed out at initialization...
+		;any other values that matter must be set by Start:.
+;
+;FLAGS
+;
+FilFlg:	DS	1	;make BAK file?
+MSIFlg:	DS	1	;file loaded?
+Modify:	DS	1	;file modified?
+WinFlg:	DS	1	;windowing?
+BelowF:	DS	1	;in window?
+MacFlg:	DS	1	;macro going?
+ChgFlg:	DS	1	;change followed last find?
+FBackw:	DS	1	;find backward?
+FGlobl:	DS	1	;find global?
+AIFlg:	DS	1	;auto indent?
+DSFlg:	DS	1	;doublespace?
+VTFlg:	DS	1	;varitab?
+KeyFlg:	DS	1	;allow redisp?
+HorFlg:	DS	1	;horiz scroll? (must be next to ShoFlg)
+ShoFlg:	DS	1	;redisp code
+CuFlg:	DS	1	;postponed line redisp?
+ScFlg:	DS	1	;postponed screen redisp?
+JmpFlg:	DS	1	;jump in progress?
+YNFlg:	DS	1	;"*" specified?
+SftFlg:	DS	1	;handle space softening
+HCRFlg:	DS	1	;showing hard CRs?
+IgnFlg:	DS	1	;ignoring dot commands?
+;
+;STORAGE
+;
+FMode:	DS	1
+EdErr:	DS	1
+CurDsk:	DS	1
+CurUsr:	DS	1
+FCBU:	DS	1
+FindSv:	DS	2
+MKsav:	DS	1
+Copies:	DS	1
+POByt:	DS	1
+StPrt:	DS	2
+EndPr:	DS	2
+PageN:	DS	1
+PBeg:	DS	1
+PNum:	DS	1
+POff:	DS	1
+PrTMrg:	DS	1
+PrLMrg:	DS	1
+HdrPtr:	DS	2
+HdrLen:	DS	1
+PgLen:	DS	1
+LfMarg:	DS	1	;L,R order
+RtMarg:	DS	1
+LMSav:	DS	1	;ditto
+RMSav:	DS	1
+PhysLn:	DS	1
+DirLns:	DS	1
+DirCls:	DS	1
+CmdPtr:	DS	2
+RptCnt:	DS	1
+LFChr:	DS	1
+SavQ:	DS	1
+SavQ2:	DS	1
+SavIns:	DS	1
+AltMsk:	DS	1
+CurRow:	DS	1
+DspFlg:	DS	1
+IsBVal:	DS	1
+PrevCh:	DS	1
+PrvCh2:	DS	1
+PScnt:	DS	1
+NumTab:	DS	1
+GSbufA:	DS	2	;GetStr buffer address
+RclFlg:	DS	1	;recall previous string flag
+;
+;SCREEN DATA AREA
+;
+TxtLns:	DS	1	;text screen size
+Horiz:	DS	1	;virtual screen position
+Vert:	DS	1
+NSkip:	DS	1	;virtual screen offset
+HPos:	DS	1	;room left on line
+CurCol:	DS	1	;column
+CurLin:	DS	2	;line
+CurPg:	DS	2	;page
+CurPgL:	DS	2	;line on page
+;
+SavLin:	DS	2
+OldLin:	DS	2
+SavCol:	DS	1
+OldCol:	DS	1
+;
+BegTx:	DS	2	;text boundaries
+BefCu:	DS	2
+AftCu:	DS	2
+EndTx:	DS	2
+LastCu:	DS	2
+;
+;BUFFERS
+;
+FNamBf:	DS	8+1+3+1		;filename store/recall buffer
+tStamp:	DS	15		;file timestamp
+tsFlg:	DS	1		;have timestamp
+;
+;BUFFERS
+;
+ConBufL	EQU	30
+ConBuf:	DS	ConBufL+1	;console buffer
+;
+FCBBuf:	DS	32		;for SavNam, Dir
+RulBuf:	DS	128		;for RulFix
+;
+StrSiz	EQU	128		;size of Macro strings
+LinLen	EQU	65		;max length of ZDE input line
+FndStr:	DS	LinLen+1	;string buffers
+ChgStr:	DS	LinLen+1
+MacStr:	DS	StrSiz+1
+;
+DataLn	EQU	$-Data		;end of DATA segment
+;
+	DS	48
+Stack:	DS	4
+;
+;Show the menu
+;
+DoMnu:	LD	A,(Help)	;menus enabled?
+	OR	A
+	JR	NZ,HelpY
+	LD	HL,HlpMsg	;no, it's just a one-line msg now
+	CALL	MsgDsp
+	CALL	ESCLp
+	JP	ShoLn1
+;
+	DB	0
+	DB	0,0,0
+;
+HelpY:	LD	A,(TxtLns)
+	CP	7
+	JP	C,Error7	;menu takes 7 lines
+	LD	HL,Menu
+	CALL	MsgDsp
+	CALL	IfSpLn
+DoMnuI:	CALL	RptKey		;request submenu?
+	CALL	XCase
+	CP	' '
+	JR	Z,DoMnuX
+	LD	HL,KMenu
+	CP	'K'-40h
+	JR	Z,DoMnu2
+	CP	ESC
+	JR	Z,DoMnu2
+	LD	HL,OMenu
+	CP	'O'-40h
+	JR	Z,DoMnu2
+	LD	HL,QMenu
+	CP	'Q'-40h
+	JR	NZ,DoMnuI
+DoMnu2:	CALL	MsgDsp
+	CALL	ESCLp		;wait for ESC
+DoMnuX:	JP	SetAl
+;
+;^E csr up  ^F word rt   ^W line up   ^G delete    ^U UNdelete   ^P prt code
+;^X down    ^A word lf   ^Z line dn  DEL del left  ^B reform     ^PZ place mark
+;^S left    ^R page up   ^V insert    ^T del word  ^^ case toggle
+;^D right   ^C page dn   ^N insrt CR  ^Y del line  ^L(^\) rpt find
+;                      (PRESS ^K/ESC, ^O, ^Q FOR SUBMENUS)
+;
+Menu:	DB '^','E'+X,'cs','r'+X,'up',' '+X,'^','F'+X,'wor','d'+X,'rt',X,3
+	DB '^','W'+X,'lin','e'+X,'up',X,3,'^','G'+X,'delete',X,4
+	DB '^','U'+X,'UNdelete',X,3,'^P',' '+X,'Pt','r'+X,'code',CR
+	DB '^','X'+X,'down',X,4,'^','A'+X,'wor','d'+X,'lf',X,3
+	DB '^','Z'+X,'lin','e'+X,'dn',' '+X,'DE','L'+X,'de','l'+X,'left',' '+X
+	DB '^','B'+X,'reform',X,5,'^P','Z'+X,'plac','e'+X,'mark',CR
+	DB '^','S'+X,'left',X,4,'^','R'+X,'pag','e'+X,'up',X,3
+	DB '^','V'+X,'insert',X,4,'^','T'+X,'de','l'+X,'word',' '+X
+	DB '^','^'+X,'cas','e'+X,'toggle',CR
+	DB '^','D'+X,'right',X,3,'^','C'+X,'pag','e'+X,'dn',X,3
+	DB '^','N'+X,'insr','t'+X,'CR',' '+X,'^','Y'+X,'de','l'+X,'line',' '+X
+	DB '^L(^\',')'+X,'rp','t'+X,'find',CR
+	DB X,24,'(PRES','S'+X,'^K/ESC',','+X,'^O',','+X,'^','Q'+X
+	DB 'FO','R'+X,'SUBMENUS)',CR,0
+;
+;^KB Begin block  ^KW block Write   ^KL Load new     ^KN Name    EscM Macro def
+;^KK end block    ^KY delete block  ^KS Save         ^KI Info    Esc# store key
+;^KU Unmark blk   ^KR Read file     ^KD save+load    ^KP Print   Esc0..9 use ky
+;^KC Copy block   ^KF File list     ^KX save+eXit    Esc-TAB tab back
+;^KV moVe block   ^KE Erase file    ^KQ Quit         Esc-Arrows shift screen
+;
+KMenu:	DB '^K','B'+X,'Begi','n'+X,'block',' '+X,'^K','W'+X,'bloc','k'+X,'Write'
+	DB X,3,'^K','L'+X,'Loa','d'+X,'new',X,5,'^K','N'+X,'Name',X,4
+	DB 'Esc','M'+X,'Macr','o'+X,'def',CR
+	DB '^K','K'+X,'en','d'+X,'block',X,4,'^K','Y'+X,'delet','e'+X,'block'
+	DB ' '+X,'^K','S'+X,'Save',X,9,'^K','I'+X,'Info',X,4
+	DB 'Esc','#'+X,'stor','e'+X,'key',CR
+	DB '^K','U'+X,'Unmar','k'+X,'blk',X,3,'^K','R'+X,'Rea','d'+X,'file'
+	DB X,5,'^K','D'+X,'save+load',X,4,'^K','P'+X,'Print',X,3
+	DB 'Esc0..','9'+X,'us','e'+X,'ky',CR
+	DB '^K','C'+X,'Cop','y'+X,'block',X,3,'^K','F'+X,'Fil','e'+X,'list'
+	DB X,5,'^K','X'+X,'save+eXit',X,4,'Esc-TA','B'+X,'ta','b'+X,'back',CR
+	DB '^K','V'+X,'moV','e'+X,'block',X,3,'^K','E'+X,'Eras','e'+X,'file'
+	DB X,4,'^K','Q'+X,'Quit',X,9,'Esc-Arrow','s'+X,'shif','t'+X,'screen',CR
+	DB 0
+;
+;   ^QB goto Block    ^Q<u> scr top     ^QY del to EOL    ^QF Find
+;   ^QP to Place mk   ^Q<d> scr bot     ^QDel " to BOL    ^QA replAce
+;   ^QR goto TOF      ^Q<l> ln start    ^QT del to char   ^QP to last cursor
+;   ^QC goto EOF      ^Q<r> ln end      ^QU UNdel line    ^QI goto pg/ln
+;                                       ^QQ goto ZCPR queue line
+;
+QMenu:	DB X,4,'^Q','B'+X,'got','o'+X,'Block',X,4,'^Q<u','>'+X,'sc','r'+X,'top'
+	DB X,5,'^Q','Y'+X,'de','l'+X,'t','o'+X,'EOL',X,4,'^Q','F'+X,'Find',CR
+	DB X,4,'^Q','Z'+X,'t','o'+X,'plac','e'+X,'mk',X,3,'^Q<d','>'+X,'sc'
+	DB 'r'+X,'bot',X,5,'^QDe','l'+X,'"'+X,'t','o'+X,'BOL',X,4,'^Q','A'+X
+	DB 'replAce',CR
+	DB X,4,'^Q','R'+X,'got','o'+X,'TOF',X,6,'^Q<l','>'+X,'l','n'+X,'start'
+	DB X,4,'^Q','T'+X,'de','l'+X,'t','o'+X,'char',X,3,'^Q','P'+X,'t','o'+X
+	DB 'las','t'+X,'cursor',CR
+	DB X,4,'^Q','C'+X,'got','o'+X,'EOF',X,6,'^Q<r','>'+X,'l','n'+X,'end'
+	DB X,6,'^Q','U'+X,'UNde','l'+X,'line',X,4,'^Q','I'+X,'got','o'+X
+	DB 'Pg/Ln',CR
+	DB X,'(^Q','Q'+X,'got','o'+X,'ZCP','R'+X,'queu','e'+X,'line',CR,0
+;
+;^OL,R marg set  ^OI tab set   ^OP Page length   ^O<u> make top ln  ^OA Auto-in
+;  ^OX marg rel  ^ON tab clr   ^OS dbl Spacing     ^OW Window       ^OQ Quiet
+;  ^OC Center    ^OV Vari tabs ^OH Hyphenation     ^OJ proportional
+;  ^OF Flush rt  ^OT ruler     ^OD Display CRs     ^OZ Zap screen
+;
+OMenu:	DB '^OL,','R'+X,'mar','g'+X,'set',X,2,'^O','I'+X,'ta','b'+X,'set'
+	DB X,4,'^O','P'+X,'Pag','e'+X,'length',X,2
+	DB '^O<u','>'+X,'mak','e'+X,'to','p'+X,'ln',X,2,'^O','A'+X,'Auto-in',CR
+	DB X,2,'^O','X'+X,'mar','g'+X,'rel',X,2,'^O','N'+X,'ta','b'+X,'clr'
+	DB X,4,'^O','S'+X,'db','l'+X,'Spacing',X,4,'^O','W'+X,'Window',X,7
+	DB '^O','Q'+X,'Quiet',CR
+	DB X,2,'^O','C'+X,'Center',X,4,'^O','V'+X,'Var','i'+X,'tabs'
+	DB X,2,'^O','H'+X,'Hyphenation',X,4,'^O','J'+X,'proportional',CR
+	DB X,2,'^O','F'+X,'Flus','h'+X,'rt',X,2,'^O','T'+X,'ruler'
+	DB X,6,'^O','D'+X,'Displa','y'+X,'CRs'
+	DB X,4,'^O','Z'+X,'Za','p'+X,'screen',CR,' ',CR,0
+;
+	DS	4
+MnuEnd:		;menus end here, text can begin
+	END
+

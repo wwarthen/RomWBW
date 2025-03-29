@@ -24,6 +24,7 @@ call :clean Survey || exit /b
 call :clean HTalk || exit /b
 call :clean BBCBASIC || exit /b
 call :clean copysl || exit /b
+call :clean ZDE || exit /b
 
 goto :eof
 

@@ -1,0 +1,4 @@
+#
+# Add the ZDE binaries
+#
+../../Binary/Apps/ZDE/*.com 1:

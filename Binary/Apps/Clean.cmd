@@ -11,3 +11,4 @@ if exist Tunes\*.vgm del Tunes\*.vgm
 if exist bbcbasic.txt del bbcbasic.txt
 
 pushd Test && call Clean || exit /b 1 & popd
+pushd ZDE && call Clean || exit /b 1 & popd
