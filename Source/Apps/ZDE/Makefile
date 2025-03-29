@@ -11,5 +11,5 @@ OTHERS = *.hex
 include $(TOOLS)/Makefile.inc
 
 zde16a.com: zde16.com zde16a.pat
-	$(ZXCC) zmac zde16a.pat -/H
-	$(ZXCC) mload25 zde16a=zde16.com,zde16a.hex || exit /b
+	$(ZXCC) ZMAC zde16a.pat -/H
+	$(ZXCC) MLOAD25 zde16a=zde16.com,zde16a.hex || exit /b
