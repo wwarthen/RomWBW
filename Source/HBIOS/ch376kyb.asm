@@ -38,6 +38,10 @@ SCAN_INT_PERIOD:	.EQU	2
 UKY_INTSTK:	; 128 bytes for keyboard interrupt stack - need ~52 bytes???
 
 CHUKB_INIT:
+	CALL	_keyboard_init
+	OR	A
+	RET	Z
+
 	; INSTALL INTERRUPT HANDLER
 	LD	HL, (VEC_TICK+1)
 	LD	(VEC_CHUKB_TICK+1), HL
@@ -45,7 +49,7 @@ CHUKB_INIT:
 	LD	HL, CHUKB_TICK
 	LD	(VEC_TICK+1), HL
 
-	JP	_keyboard_init
+	RET
 
 CHUKB_TICK:
 	LD      A, SCAN_INT_PERIOD			; SCAN THE KEYBOARD EVERY 'SCAN_INT_PERIOD' INTERRUPTS.

@@ -9,7 +9,7 @@
 static device_config_keyboard *keyboard_config = 0;
 extern bool                    caps_lock_engaged;
 
-void keyboard_init(void) {
+uint8_t keyboard_init(void) __sdcccall(1) {
 
   uint8_t index   = 1;
   keyboard_config = NULL;
@@ -29,11 +29,12 @@ void keyboard_init(void) {
 
       hid_set_protocol(keyboard_config, 1);
       hid_set_idle(keyboard_config, 0x80);
-      return;
+      return 1;
     }
   } while (++index != MAX_NUMBER_OF_DEVICES + 1);
 
   print_string("\r\nUSB: KEYBOARD: NOT FOUND$");
+  return 0;
 }
 
 #define KEYBOARD_BUFFER_SIZE      8
