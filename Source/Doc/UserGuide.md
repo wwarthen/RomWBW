@@ -1830,20 +1830,21 @@ command prompt.
 Keeping in mind that a RomWBW hard disk (including CF/SD/USB devices)
 allows you to have multiple slices (CP/M filesystems), there are a
 couple ways to image hard disk media. The easiest approach is to 
-use the "combo" disk image.  This image is already prepared
+use the Combo Disk Image.  This hard disk image is already prepared
 with 6 slices containing 5 ready-to-run OSes and a slice with
 the WordStar application files.  
 
-Alternatively, you can create your own
-hard disk image with the specific slice contents you choose.
+Alternatively, you can create your own hard disk image with the specific
+slice contents you choose.
 
-### Standard Hard Disk Physical Layout
+### Combo Hard Disk Physical Layout
 
 As previously described in [Hard Disk Layouts], the exact placement of
 slices and optional FAT partition will vary depending on which disk
 layout (hd512 or hd1k) you are using and your partition table entries.
 To simplify the use of hard disk images, RomWBW has adopted standard
-partition table entries for disk image files provided.
+partition table entries for disk image files provided.  This standard
+layout is used to produce the Combo Disk Images described below.
 
 These partition sizes and locations were chosen to:
 
@@ -1853,7 +1854,9 @@ These partition sizes and locations were chosen to:
 
 **NOTE:** RomWBW is not limited to these partition table entries.  You 
 can change the size and location of the RomWBW and/or FAT partitions to 
-increase/decrease the number of slices or FAT filesystem size.
+increase/decrease the number of slices or FAT filesystem size.  Doing
+so would require using `FDISK80` to define your own custom disk layout
+and initializing your filesystems manually.
 
 +---------------------------------+-------------------------------+-------------------------------+
 |                                 | **--- Legacy (hd512) ---**    | **--- Modern (hd1k) ---**     |
@@ -1913,10 +1916,11 @@ filesystems on the RomWBW disk images.
 
 #### Combo Hard Disk Image
 
-The combo disk image is essentially just a single image that has several
-of the individual filesystem images (slices) already concatenated 
-together. The combo disk image contains the following 6 slices in the 
-positions indicated:
+The Combo Disk Image is essentially just a single disk image that has
+several of the individual filesystem images (slices) already
+concatenated together using the stardard disk layout described above.
+The Combo Disk Image includes the partition table of the standard disk
+layout and the following 6 slices in the positions indicated:
 
 | **Slice**  | **Description**                         |
 |------------|-----------------------------------------|
@@ -1928,28 +1932,29 @@ positions indicated:
 | Slice 5    | WordStar v4 & ZDE Applications          |
 | Slice 6-63 | _blank unformatted_                     |
 
-There are actually 2 primary combo disk images in the 
+There are actually 2 Combo Disk Images in the 
 distribution.  One for an hd512 disk layout (hd512_combo.img) and one 
 for an hd1k disk layout (hd1k_combo.img). Simply use the image file that
 corresponds to your desired hard disk layout.  Review the information
 in [Hard Disk Layouts] if you need more information of the disk layout
 options.
 
-> **Note**: Apart from the hd512 and hd1k combo disk images (mentioned above)
-> there are actaully a number of other `hd1k_*_combo.img` files. These 
+> **Note**: Apart from the hd512 and hd1k Combo Disk Images (mentioned above)
+> there are actually a number of other `hd1k_*_combo.img` files. These 
 > additional combo files are platform (generally romless) specific, 
 > and should be ignored unless you are on one of these platforms.
 > If you are on one of these platforms you must use the correct combo file
 
-The combo disk image actaully only contains the initial partition table, 
-and the first 6 slices (Slice 0 to 5), this is approximately 49MB in size. 
-While the partition table reserves space to store 64 CP/M filesystem 
-slices as well as a single 384MB FAT filesystem, these area remain
-empty, and must be manuall initialized manually.
+The Combo Disk Image actually only contains the initial partition table,
+and the first 6 slices (Slice 0 to 5), this is approximately 49MB in 
+size. While the partition table reserves space to store 64 CP/M 
+filesystem slices as well as a single 384MB FAT filesystem, these areas 
+remain empty, and must be initialized manually using `CLRDIR` for CP/M 
+filesystems and `FAT FORMAT` for the FAT filesystem.
 
 #### Combo Image Capacity
 
-The combo disk image layout was designed to fit well on a 1GB hard disk.
+The Combo Disk Image layout was designed to fit well on a 1GB hard disk.
 The 64 CP/M slices (approximately 512MB) and 384MB FAT filesystem all 
 fit well within a 1GB hard disk.  This size choice was a bit arbitrary, 
 but based on the idea that 1GB CF/SD/USB Media is easy and cheap to 
@@ -1984,12 +1989,12 @@ disk image.
 
 If you look in the Binary directory of the distribution, you will see
 that there are more disk (slice) images than the 6 that are included
-in the "combo" disk images.  These images are identified by looking
+in the Combo Disk Images.  These images are identified by looking
 for the files that start with hd1k_ or hd512_.
 
 #### Adding Slices to Combo Image
 
-You can add slices to the combo disk images simply by tacking
+You can add slices to the Combo Disk Images simply by tacking
 slices onto the end.  For example, if you want to add a slice
 containing the MSX ROMs to the end of the combo image, you could
 use one of the following command lines depending on your operating
@@ -2052,7 +2057,7 @@ please refer to the ReadMe.txt file in the Source/Images directory.
 
 ### Writing Hard Disk Images
 
-Once you have chosen a combo hard disk image file or prepared your own 
+Once you have chosen a Combo Hard Disk Image file or prepared your own 
 custom hard disk image file, it will need to be written to the media 
 using your modern computer.  When using this method, 
 the disk will be partitioned and setup with 1 or more slices containing 
@@ -2857,7 +2862,7 @@ is analogous to the CP/M 2.2 `STAT` command.  Do **not** use the CP/M
   Source/Images/d_qpm/u0 directory.
 
 - The QPM disk image is not included as one of the slices on the
-  RomWBW combo disk image.  If you want to include QPM, you can do
+  RomWBW Combo Disk Image.  If you want to include QPM, you can do
   so by following the directions in Source/Images/Readme.txt.
 
 ## UCSD p-System
