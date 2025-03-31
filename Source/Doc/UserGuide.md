@@ -1293,7 +1293,7 @@ disk drive space to store a sequential series of slices that contain the
 actual CP/M filesystems referred to by drive letters by the operating 
 system.
 
-Two physical layout schemes exist:
+Two hard disk layout schemes exist:
 
 * Modern (hd1k)
 * Legacy (hd512)
@@ -1837,13 +1837,13 @@ the WordStar application files.
 Alternatively, you can create your own hard disk image with the specific
 slice contents you choose.
 
-### Combo Hard Disk Physical Layout
+### Standard Hard Disk Layout
 
 As previously described in [Hard Disk Layouts], the exact placement of
 slices and optional FAT partition will vary depending on which disk
 layout (hd512 or hd1k) you are using and your partition table entries.
-To simplify the use of hard disk images, RomWBW has adopted standard
-partition table entries for disk image files provided.  This standard
+To simplify the use of hard disk images, RomWBW has adopted a standard
+partition layout for disk image files provided.  This standard
 layout is used to produce the Combo Disk Images described below.
 
 These partition sizes and locations were chosen to:
@@ -1914,11 +1914,17 @@ filesystems on the RomWBW disk images.
 | \<end\>                         | 947,912,704   | 1,851,392     | 940,572,672   | 1,837,056     |
 +---------------------------------+---------------+---------------+---------------+---------------+
 
-#### Combo Hard Disk Image
+The $doc_sys$ has more information on the standard disk layouts as
+implemented in the Combo Disk Images.  Additionally, there is a document
+called "Hard Disk Anatomy.pdf" in the Doc directory of the RomWBW
+distribution with detailed information on the standard disk
+layouts.
+
+### Combo Hard Disk Image
 
 The Combo Disk Image is essentially just a single disk image that has
 several of the individual filesystem images (slices) already
-concatenated together using the stardard disk layout described above.
+concatenated together using the standard disk layout described above.
 The Combo Disk Image includes the partition table of the standard disk
 layout and the following 6 slices in the positions indicated:
 
@@ -1932,65 +1938,63 @@ layout and the following 6 slices in the positions indicated:
 | Slice 5    | WordStar v4 & ZDE Applications          |
 | Slice 6-63 | _blank unformatted_                     |
 
-There are actually 2 Combo Disk Images in the 
-distribution.  One for an hd512 disk layout (hd512_combo.img) and one 
+There are actually 2 Combo Disk Images in the
+distribution.  One for an hd512 disk layout (hd512_combo.img) and one
 for an hd1k disk layout (hd1k_combo.img). Simply use the image file that
 corresponds to your desired hard disk layout.  Review the information
 in [Hard Disk Layouts] if you need more information of the disk layout
 options.
 
 > **Note**: Apart from the hd512 and hd1k Combo Disk Images (mentioned above)
-> there are actually a number of other `hd1k_*_combo.img` files. These 
-> additional combo files are platform (generally romless) specific, 
+> there are actually a number of other `hd1k_*_combo.img` files. These
+> additional combo files are platform (generally romless) specific,
 > and should be ignored unless you are on one of these platforms.
 > If you are on one of these platforms you must use the correct combo file
 
 The Combo Disk Image actually only contains the initial partition table,
-and the first 6 slices (Slice 0 to 5), this is approximately 49MB in 
-size. While the partition table reserves space to store 64 CP/M 
-filesystem slices as well as a single 384MB FAT filesystem, these areas 
-remain empty, and must be initialized manually using `CLRDIR` for CP/M 
+and the first 6 slices (Slice 0 to 5), this is approximately 49MB in
+size. While the partition table reserves space to store 64 CP/M
+filesystem slices as well as a single 384MB FAT filesystem, these areas
+remain empty, and must be initialized manually using `CLRDIR` for CP/M
 filesystems and `FAT FORMAT` for the FAT filesystem.
 
-#### Combo Image Capacity
+#### Combo Disk Image Capacity
 
-The Combo Disk Image layout was designed to fit well on a 1GB hard disk.
-The 64 CP/M slices (approximately 512MB) and 384MB FAT filesystem all 
-fit well within a 1GB hard disk.  This size choice was a bit arbitrary, 
-but based on the idea that 1GB CF/SD/USB Media is easy and cheap to 
-acquire.  
+The standard hard disk layout used by the Combo Disk Image was designed
+to fit well on a 1GB hard disk. The 64 CP/M slices (approximately 512MB)
+and 384MB FAT filesystem all fit well within a 1GB hard disk.  This
+size choice was a bit arbitrary, but based on the idea that 1GB
+CF/SD/USB Media is easy and cheap to acquire.
 
-It is fine if your hard disk is smaller than 1GB.  It just 
-means that it will not be possible to use the pre-allocated FAT 
-filesystem partition and any CP/M filesystem slices that don't fit. 
-The true number of CP/M filesystem slices that
-will fit on your specific physical hard disk can be calculated as
-described in [Hard Disk Capacity].
+It is fine if your hard disk is smaller than 1GB.  It just means that it
+will not be possible to use the pre-allocated FAT filesystem partition
+and any CP/M filesystem slices that don't fit. The true number of CP/M
+filesystem slices that will fit on your specific physical hard disk can
+be calculated as described in [Hard Disk Capacity].
 
-If you attempt to access a slice past the end of the 
-physical hard disk you will get "no disk" errors.
-You should calculate the maximum number of slices your hard disk
-will support and do not exceed this number.
+If you attempt to access a slice past the end of the physical hard disk
+you will get "no disk" errors. You should calculate the maximum number
+of slices your hard disk will support and do not exceed this number.
 
-#### Combo Image Advice
+#### Combo Disk Image Advice
 
-A great way to maintain your own data on a hard disk is to put this
-data in slices beyond the first 6.  By doing so, you can always
-"re-image" your drive media with the combo image without overlaying the data
+A great way to maintain your own data on a hard disk is to put your data
+in slices beyond the first 6.  By doing so, you can always "re-image"
+your drive media with the Combo Disk Image without overlaying the data
 stored in the slices beyond the first 6.  Just be very careful to use
 the same combo image layout (hd512 or hd1k) as you used originally.
 
 ### Custom Hard Disk Image
 
-For hard disks, each .img file represents a single slice (CP/M 
-filesystem).  Since a hard disk can contain many slices, you can just 
+For hard disks, each .img file represents a single slice (CP/M
+filesystem).  Since a hard disk can contain many slices, you can just
 concatenate the slices (.img files) together to create your desired hard
-disk image.  
+disk image.
 
 If you look in the Binary directory of the distribution, you will see
-that there are more disk (slice) images than the 6 that are included
-in the Combo Disk Images.  These images are identified by looking
-for the files that start with hd1k_ or hd512_.
+that there are more disk (slice) images than the 6 that are included in
+the Combo Disk Images.  These supplemental disk images are identified by
+looking for the files that start with hd1k_ or hd512_.
 
 #### Adding Slices to Combo Image
 
