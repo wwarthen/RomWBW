@@ -688,34 +688,34 @@ RomWBW enhancements.  These applications are typically documented in the
 "RomWBW Applications.pdf" document in the Doc directory of the
 RomWBW Distribution.
 
-| **File**       | **Source**      | **Description**                                               |
-|----------------|-----------------|---------------------------------------------------------------|
-| `ASSIGN.COM`   | RomWBW          | Assign,remove,swap drive letters of RomWBW disk slices        |
-| `CLRDIR.COM`   | Max Scane       | Initializes the directory area of a disk                      |  
-| `COPYSL.COM`   | M.Pruden        | Copy CPM Hard Disk Slices                                     |  
-| `COPYSL.DOC`   | M.Pruden        | Documentation for COPYSL.COM                                  |  
-| `CPUSPD.COM`   | RomWBW          | CPU Speed                                                     |  
-| `FAT.COM`      | RomWBW          | MS-DOS FAT filesystem tool (list, copy, delete, format, etc.) |  
-| `FDISK80.COM`  | John Coffman    | Hard disk partitioning tool                                   |  
-| `FDU.COM`      | RomWBW          | Floppy Disk Utility, Test and format floppy disks             |  
-| `FDU.DOC`      | RomWBW          | Documentation for FDU                                         |  
-| `FLASH.COM`    | Will Sowerbutts | Program FLASH chips in-situ                                   |  
-| `FLASH.DOC`    | Will Sowerbutts | Documentation for FLASH                                       |  
-| `FORMAT.COM`   | RomWBW          | Placeholder application with formatting instructions          |  
-| `HTALK.COM`    | Tom Plano       | Terminal utility talking directly to HBIOS Character Units    |  
-| `MODE.COM`     | RomWBW          | Change serial line characteristics (baud rate, etc.)          |  
-| `REBOOT.COM`   | MartinR         | Cold or Warm Boot the RomWBW System                           |  
-| `RTC.COM`      | Andrew Lynch    | Test real time clock hardware on your system                  |  
-| `SURVEY.COM`   | RomWBW          | Display system resources summary                              |  
-| `SYSCOPY.COM`  | RomWBW          | Copy system tracks to disks (make bootable)                   |  
-| `TALK.COM`     | RomWBW          | Route console I/O to & from specified serial port             |  
-| `TIMER.COM`    | RomWBW          | Test and display system timer ticks                           |  
-| `TUNE.COM`     | RomWBW          | Play .PT2, .PT3, and .MYM audio files on supported hardware   |  
-| `VGMPLAY.COM`  |                 | Simple player for VGM (Video Game Music) files.               |
-| `WDATE.COM`    | Kevin Boone     | Utility to configure RTC Date.                                |  
-| `XM.COM`       | RomWBW          | XModem file transfer application                              |  
+| **File**       | **Source**        | **Description**                                               |
+|----------------|-------------------|---------------------------------------------------------------|
+| `ASSIGN.COM`   | RomWBW            | Assign,remove,swap drive letters of RomWBW disk slices        |
+| `CLRDIR.COM`   | Max Scane         | Initializes the directory area of a disk                      |  
+| `COPYSL.COM`   | M.Pruden          | Copy CPM Hard Disk Slices                                     |  
+| `COPYSL.DOC`   | M.Pruden          | Documentation for COPYSL.COM                                  |  
+| `CPUSPD.COM`   | RomWBW            | CPU Speed                                                     |  
+| `FAT.COM`      | RomWBW            | MS-DOS FAT filesystem tool (list, copy, delete, format, etc.) |  
+| `FDISK80.COM`  | John Coffman      | Hard disk partitioning tool                                   |  
+| `FDU.COM`      | RomWBW            | Floppy Disk Utility, Test and format floppy disks             |  
+| `FDU.DOC`      | RomWBW            | Documentation for FDU                                         |  
+| `FLASH.COM`    | Will Sowerbutts   | Program FLASH chips in-situ                                   |  
+| `FLASH.DOC`    | Will Sowerbutts   | Documentation for FLASH                                       |  
+| `FORMAT.COM`   | RomWBW            | Placeholder application with formatting instructions          |  
+| `HTALK.COM`    | Tom Plano         | Terminal utility talking directly to HBIOS Character Units    |  
+| `MODE.COM`     | RomWBW            | Change serial line characteristics (baud rate, etc.)          |  
+| `REBOOT.COM`   | MartinR           | Cold or Warm Boot the RomWBW System                           |  
+| `RTC.COM`      | Andrew Lynch      | Test real time clock hardware on your system                  |  
+| `SURVEY.COM`   | RomWBW            | Display system resources summary                              |  
+| `SYSCOPY.COM`  | RomWBW            | Copy system tracks to disks (make bootable)                   |  
+| `TALK.COM`     | RomWBW            | Route console I/O to & from specified serial port             |  
+| `TIMER.COM`    | RomWBW            | Test and display system timer ticks                           |  
+| `TUNE.COM`     | RomWBW            | Play .PT2, .PT3, and .MYM audio files on supported hardware   |  
+| `VGMPLAY.COM`  |                   | Simple player for VGM (Video Game Music) files.               |
+| `WDATE.COM`    | Kevin Boone       | Utility to configure RTC Date.                                |  
+| `XM.COM`       | RomWBW            | XModem file transfer application                              |  
 
-Then we have some more general purpose applcations.
+Then we have some more general purpose applications.
 In general, there is no documentation for these applications included with the RomWBW
 distribution.  Some provide command line help themselves.  Some are fairly obvious.
 
@@ -742,7 +742,9 @@ distribution.  Some provide command line help themselves.  Some are fairly obvio
 | `SUPERSUB.DOC` |                   | Documentation for SUPERSUB                             |  
 | `SYSGEN.COM`   | DRI               | Copy system tracks to disks                            |  
 | `TBASIC.COM`   | Dimitri Theulings | Tasty Basic. This also exists as a Rom appication      |
-| `TDLBASIC.COM` |                   | TDL Zapple 12K BASIC language interpreter              |  
+| `TDLBASIC.COM` |                   | TDL Zapple 12K BASIC language interpreter              |
+| `TE.COM`       | Ladislau Szilagyi | RomWBW enhanced version of TE editor                   |  
+| `TE.DOC`       | Ladislau Szilagyi | TE Editor Documentation                                |  
 | `UNARC.COM`    |                   | Extract file(s) from .ARC or .ARK archive              |  
 | `UNARC.DOC`    |                   | Documentation for UNARC                                |  
 | `UNCR.COM`     |                   | Decompress Crunched file(s). See CRUNCH.COM            |  
