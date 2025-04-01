@@ -1871,6 +1871,12 @@ The standard partition table table entries are:
 | \<end\>                         | 897 MB        | 1,851,392     | 904 MB        | 1,837,056     |
 +---------------------------------+---------------+---------------+---------------+---------------+
 
+**NOTE:** RomWBW is not limited to these partition table entries.  You
+can change the size and location of the RomWBW and/or FAT partitions to
+increase/decrease the number of slices or FAT filesystem size.  Doing
+so would require using `FDISK80` to define your own custom disk layout
+and initializing your filesystems manually.
+
 The $doc_sys$ has more information on the standard disk layouts as
 implemented in the Combo Disk Images.  Additionally, there is a document
 called "Hard Disk Anatomy.pdf" in the Doc directory of the RomWBW
