@@ -62,7 +62,7 @@ Of course, to "free" the allocated buffer, this "page index" must be provided to
 
 Text files up to 400KB can be edited.
 
-The 521KB version can be run on any CP/M version, regardless of its TPA area size.
+The 512KB version can be run on any CP/M version, regardless of its TPA area size.
 
 2. For the 128KB version: 
 -------------------------
