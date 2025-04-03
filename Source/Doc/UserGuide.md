@@ -845,33 +845,51 @@ The first two switches affect the device used as the initial console.
 | CRT        | Sec     | Secondary Cathode Ray Tube device (high speed console)      |
 | Serial     | Pri     | Boot Console is Primary Serial Port                         |
 | Serial     | Sec     | Boot Console is Secondary Serial Port                       |
+
 If not available (default): "Char Unit 0" is used
 
 The final six switches allow you to select the desired boot device.
 
-|           |          |             | ROM/App/Boot Slice |
-| Auto/Menu | Disk/ROM | Floppy/Hard |   4      2      1  | Explanation                     |
-|-----------|----------|-------------|--------------------|---------------------------------|
-| Menu      |    -     |      -      |   -      -      -  | Boot to RomWBW Menu             |
-| Auto      | Disk     | Floppy      |   #  |   #  |   #  | Boot Selected Floppy Disk Index |
-| Auto      | Disk     | Hard        |   #  |   #  |   #  | Boot Selected Hard Disk Index   |
-| Auto      | ROM      |      -      |   #  |   #  |   #  | Boot selected ROM Index         |
-If not available: Boot Loader Command Prompt
-'-' Ignored
-'#' bit flag to select an  three bits 4,2,1
++-----------+----------+-------------+--------------------------+-------------------------------------------------+
+|           |          |             | ROM/App/Boot Slice       |                                                 |
+| Auto /    | Disk /   | Floppy /    +--------+--------+--------+-------------------------------------------------+
+| Menu      | ROM      | Hard        |   4    |   2    |   1    | Explanation                                     |
++===========+==========+=============+========+========+========+=================================================+
+| Menu      | --       | --          |   --   |   --   |   --   | Boot to RomWBW Menu                             |
++-----------+----------+-------------+--------+--------+--------+-------------------------------------------------+
+| Auto      | Disk     | Floppy      |   #    |   #    |   #    | Boot Selected Floppy Disk Index                 |
++-----------+----------+-------------+--------+--------+--------+-------------------------------------------------+
+| Auto      | Disk     | Hard        |   #    |   #    |   #    | Boot Selected Hard Disk Index                   |
++-----------+----------+-------------+--------+--------+--------+-------------------------------------------------+
+| Auto      | ROM      | --          |   #    |   #    |   #    | Boot selected ROM Index                         |
++-----------+----------+-------------+--------+--------+--------+-------------------------------------------------+
 
-ROM or Harddisk - First 8 Drive Images
-|       | Floppy/Hard |         
-| 4 2 1 | Drive Index | ROM Index |
-|-------|-------------|-----------|
-| 0 0 0 |  Zero       | Monitor   |
-| 0 0 1 |  One        | BASIC     |
-| 0 2 0 |  Two        | Forth     |
-| 0 2 1 |  Three      | Game      |
-| 4 0 0 |  Four       | CP/M      |
-| 4 0 1 |  Five       | Z-System  |
-| 4 2 0 |  Six        | Net Boot  |
-| 4 2 1 |  Seven      | User      |
+If not available: Boot Loader Command Prompt \
+'--' Ignored \
+'#' bit flag to select any three bits 4,2,1
+
+ROM or Hard Disk - First 8 Drive Images
+
++-------+-----------------+-----------+
+|       | Floppy / Hard \ |           |
+| 4 2 1 | Drive Index     | ROM Index |
++=======+=================+===========+
+| 0 0 0 |  Zero           | Monitor   |
++-------+-----------------+-----------+
+| 0 0 1 |  One            | BASIC     |
++-------+-----------------+-----------+
+| 0 2 0 |  Two            | Forth     |
++-------+-----------------+-----------+
+| 0 2 1 |  Three          | Game      |
++-------+-----------------+-----------+
+| 4 0 0 |  Four           | CP/M      |
++-------+-----------------+-----------+
+| 4 0 1 |  Five           | Z-System  |
++-------+-----------------+-----------+
+| 4 2 0 |  Six            | Net Boot  |
++-------+-----------------+-----------+
+| 4 2 1 |  Seven          | User      |
++-------+-----------------+-----------+
 
 # Disk Management
 

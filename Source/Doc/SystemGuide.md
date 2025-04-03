@@ -16,7 +16,7 @@ constraints, new hardware platforms can be supported by simply
 adjusting values in a build configuration file.
 
 RomWBW is geared toward hardware being developed in modern
-retro-computing hobbyist communities, not as a replacement for
+retro-computing hobbyist communities, not as replacement software for
 legacy hardware.  As a result, RomWBW requires at least 128KB
 of bank switched RAM.
 
@@ -42,11 +42,11 @@ RomWBW firmware (ROM) includes:
 
 It is appropriate to note that much of the code and components that make
 up a complete RomWBW package are derived from pre-existing work. Most
-notably, the embedded operating system is simply a ROM-based copy of
+notably, the embedded operating systems are simply ROM-based copies of
 generic CP/M or ZSDOS. Much of the hardware support code was originally
 produced by other members of the RetroBrew Computers Community.
 
-The remainder of this document focuses on HBIOS which is the
+The remainder of this document focuses on RomWBW HBIOS which is the
 fundamental basis of RomWBW.
 
 # Background
@@ -61,13 +61,13 @@ space that is much larger than the CPU address space (typically 512K or
 the CPU using a technique called bank switching. To achieve this, the 
 physical memory is divided up into chunks (banks) of 32K each. A 
 designated area of the CPU's 64K address space is then reserved to "map"
- any of the physical memory chunks. You can think of this as a window 
+any of the physical memory chunks. You can think of this as a window 
 that can be adjusted to view portions of the physical memory in 32K 
 blocks. In the case of RomWBW, the lower 32K of the CPU address space is
- used for this purpose (the window). The upper 32K of CPU address space 
+used for this purpose (the window). The upper 32K of CPU address space 
 is assigned a fixed 32K area of physical memory that never changes. The 
 lower 32K can be "mapped" on the fly to any of the 32K banks of physical
- memory at a time. The only constraint is that the CPU cannot be 
+memory at a time. The primary constraint is that the CPU cannot be 
 executing code in the lower 32K of CPU address space at the time that a 
 bank switch is performed.
 
@@ -90,6 +90,17 @@ physical RAM into the lower 32K and completing the request. The
 operating system is unaware this has occurred. As control is returned to
 the operating system, the lower 32KB of memory is switched back to the
 original memory bank.
+
+The HBIOS functions are invoked simply by placing function parameters
+in Z80 registers and calling an address within the HBIOS proxy.
+Additionally, HBIOS implements a complete hardware interrupt management
+framework.  When a hardware interrupt occurs, control vectors through
+the HBIOS proxy which saves the machine state, selects the HBIOS
+driver bank into memory, and transfers control to the registered
+driver's interrupt handler.  Upon completion of interrupt processing,
+control returns via the HBIOS proxy, machine state is restored, and
+normal processing resumes.  The interrupt management framework supports
+Z80 interrupt modes 1, 2, and 3 (Z280).
 
 HBIOS is completely agnostic with respect to the operating system (it
 does not know or care what operating system is using it). The operating
@@ -124,8 +135,23 @@ execution.
 
 # Runtime Memory Layout
 
-![Bank Switched Memory Layout](Graphics/BankSwitchedMemory){ width=100% }
+RomWBW divides the standard 64KB Z80 address space into 2 sections.
+The lower 32KB is the "banked" area.  This is the area that will
+contain any of the 32KB chunks of physical RAM based on which bank is
+currently selected.  The upper 32KB is "fixed".  This area of memory
+is never swapped out and is used to contain software and operating
+systems that must remain in the Z80 address space.
 
+Figure 4.1 depicts the memory layout for a system running the CP/M
+operating system.  Applications residing in TPA invoke BDOS services
+of CP/M, BDOS invokes the custom CBIOS APIs, and finally CBIOS
+invokes HBIOS functions as needed by calling into the HBIOS proxy.
+The HBIOS proxy swaps in the HBIOS bank as needed to perform the
+requested function.
+
+Additional banks of RAM are used to create a virtual disk drive.
+
+![Bank Switched Memory Layout](Graphics/BankSwitchedMemory){ width=100% }
 
 ## Bank Id
 
@@ -139,7 +165,8 @@ a ROM bank is being referred to.  If it is 1, it indicates a RAM bank
 is being referred to.
 
 For example, let's say we have a typical system with 512KB of ROM and
-512KB of RAM.  The Bank Ids would look like this:
+512KB of RAM.  The following table demonstrates how Bank Ids represent
+areas of physical memory.
 
 | Physical Memory   | Type | Physical Bank | Bank Id   |
 |-------------------|------|---------------|-----------|
@@ -265,28 +292,55 @@ hence the name "Common".
 
 # Disk Layout
 
-RomWBW supports two hard disk layouts: the Classic layout used by 
-RomWBW with 512 directory entries per slice and a Modern layout with 
-1024 directory entries per slice.  These layouts are referred to as
-hd512 and hd1k respectively.
+RomWBW supports the use of PC MBR hard disk partitioning (see
+<https://en.wikipedia.org/wiki/Disk_partitioning>).  When accessing
+a hard disk device, HBIOS will look for a partition with type id 0x2E
+and will use that partition exclusively for all storage.  If a hard
+disk does not have a valid partition table with a partition of type
+0x2E, the HBIOS will treat the hard disk as dedicated storage and
+will store data starting at the first sector of the disk.
+
+The use of a partition of type 0x2E is preferred for RomWBW and is
+referred to as a "Modern" disk layout.  If there is no RomWBW
+partition on the disk, then the disk is designated as having a
+"Classic" disk layout.
+
+When a disk uses a RomWBW partition (type 0x2E) for storage (Modern 
+layout), the CP/M filesystems on that disk will utilize a format with 
+1,024 directory entries per filesystem.  If there is no RomWBW 
+partition, the CP/M filesystems will have 512 directory entries per 
+filesystem. As a result, the Modern disk layout with a RomWBW partition 
+is also referred to as the "hd1k" layout indicating 1024 directory 
+entries. Similarly, the Classic disk layout (no partition of type 0x2E) 
+is also referred to as the "hd512" layout indicating 512 directory 
+entries.
+
+The layout type of any hard disk is simply dictated by the existence of 
+a RomWBW partition.  This also means that if you add or remove a 
+partition table entry of type 0x2E on existing hard disk media, you will
+lose access to any pre-existing CP/M data on the disk.  If used, 
+partitioning should be done before putting any data on the disk.
 
 WARNING: You **can not** mix the two hard disk layouts on one hard 
 disk device.  You can use different layouts on different hard disk 
 devices in a single system though.
 
-RomWBW determines which of the hard disk layouts to use for a given 
-hard disk device based on whether there is a RomWBW hard disk 
-partition on the disk containing the slices.   If there is no RomWBW 
-partition, then RomWBW will assume the 512 directory entry format for 
-all slices and will assume the slices start at the first sector of 
-the hard disk.  If there is a RomWBW partition on the hard disk 
-device, then RomWBW will assume the 1024 directory entry format for 
-all slices and will assume the slices are located in the defined 
-partition.
+Regardless of whether a disk is Modern or Classic, RomWBW supports
+the concept of CP/M filesystem slices.  In general, CP/M filesystems are
+limited to 8MB.  Since current disk media is dramatically larger than
+this, RomWBW implements a mechanism to put many (up to 256) CP/M
+filesystems on a single disk.  Each such filesystem is called a slice
+referring to the idea that the disk has been sliced into many
+independent CP/M filesystems.  RomWBW allows the disk slices to be
+mapped to the limited (16) drive letters of CP/M.  The mapping can be
+modified on-the-fly on a running system as desired.
 
-RomWBW supports up to 256 CP/M slices (0-255).  Under hd512, the slices
-begin at the start of the hard disk.  Under hd1k, the slices reside
-within partition type 0x2E.
+If the case of a Modern disk layout (with a RomWBW partition), the
+slices are contained within the defined partition area and the number
+of slices is dictated by the size of the partition.  In the case of a
+Classic disk layout (no RomWBW partition), the slices are located at the
+start of the disk (first sector).  In either case, the slices are just
+sequential areas of space on the hard disk.
 
 RomWBW accesses all hard disks using Logical Block Addressing (pure
 sector offset).  When necessary, RomWBW simulates the following disk
@@ -315,12 +369,11 @@ and CP/M knows nothing about the FAT partition.  However, the FAT
 application can be run under CP/M to access the FAT partition 
 programmatically.
 
-A CP/M slice is (re)initialized using the CP/M command CLRDIR.  A CP/M 
-slice can be made bootable by copying system image to the System Area 
-using SYSCOPY.
+Before being used, A CP/M slice must be (re)initialized using the CP/M 
+command CLRDIR.  A CP/M slice can be made bootable by copying a system 
+image to the System Area using SYSCOPY.
 
 The FAT partition can be created from CP/M using the FDISK80 application.
-
 The FAT partition can be initialized using the FAT application from CP/M
 using the command `FAT FORMAT n:` where n is the RomWBW disk unit 
 number containing the FAT partition to be formatted.
@@ -380,10 +433,10 @@ There are two important Media ID's relating to Hard Disk Layouts:
 
 HBIOS typically does not understand the format of data on a device,
 instead just treating all hard disks as raw sectors. `MID_HD` is the typical
-Media ID used by HBIOS to describe high capaity hard disk media
+Media ID used by HBIOS to describe high capacity hard disk media
 
 When the Modern Disk Layout was added, the `MID_HDNEW`, was added to
-differentiate (at the oerating system level) between the Classic and Modern layouts.
+differentiate (at the operating system level) between the Classic and Modern layouts.
 
 However HBIOS itself typically does NOT make this distinction, since the use 
 of these two formats is determined by the operating system based on the 
@@ -503,7 +556,7 @@ and control is passed to the Boot Loader.
 
 ## Boot Recovery
 
-To assist users when driver faults or misconfiguration causes a boot 
+To assist users when driver faults or mis-configuration causes a boot 
 failure, RomWBW supports a limited recovery capability.  This is 
 achieved by allowing the user to reboot their machine, loading
 a minimal driver set.  Implementation of this feature requires a
@@ -691,7 +744,7 @@ must be careful not to modify the operating environment in any way that
 the operating system does not expect.
 
 In general, the desired function is placed in the B register. Register C
-is frequently used to specify a subfunction or a target device unit 
+is frequently used to specify a sub-function or a target device unit 
 number. Additional registers are used as defined by the specific 
 function. Register A should be used to return function result 
 information.  See below for result code definitions.
@@ -714,7 +767,7 @@ lower 32K of CPU address space. For optimal performance, such buffers
 should be placed in the upper 32K of CPU address space.
 
 HBIOS also implements a small number of core functions in the HBIOS 
-proxy area at the top of RAM.  These exist primarily to faciliate the 
+proxy area at the top of RAM.  These exist primarily to facilitate the 
 operation of normal HBIOS function calls.  However, they are available 
 to be used by OSes and applications.  These functions can only be 
 invoked by calling into a jump table in upper RAM.
@@ -1986,7 +2039,7 @@ standard HBIOS result code.
 |                                        | E: Keycode                             |
 
 Read the next key data from keyboard of the specified Video Unit (C). If
- a keyboard buffer is used, return the next key code in the buffer. If 
+a keyboard buffer is used, return the next key code in the buffer. If 
 no key data is available, this function will wait indefinitely for a 
 keypress.  The Status (A) is a standard HBIOS result code.
 
@@ -1994,7 +2047,7 @@ The Scancode (C) value is the raw scancode from the keyboard for the
 keypress. Scancodes are from the PS/2 scancode set 2 standard.
 
 The Keystate (D) is a bitmap representing the value of all modifier keys
- and shift states as they existed at the time of the keystroke. The 
+and shift states as they existed at the time of the keystroke. The 
 bitmap is defined as:
 
 | **Bit** | **Keystate Indication**          |
@@ -2336,7 +2389,7 @@ start of the Slice (E). The Status (A) is a standard HBIOS result code.
 This function extends upon [Function 0x18 -- Disk Media (DIOMEDIA)] for hard
 disk media by scanning for a partition to determine if the disk uses HD512
 or HD1K, correctly reporting MID_HD or MID_HDNEW respectively.
-See the folowing for some background [Mapping to Media ID]
+See the following for some background [Mapping to Media ID]
 
 It will also return the sector number of the first sector in the
 slice if the slice number is valid. If the slice number is invalid
@@ -2726,7 +2779,7 @@ Switches may be returned as a 16 bit (HL) or 8 bit (L) value. It is up to the ca
 to process the returned value correctly. Note for Switch 0xFF (status) the returned value
 is primarily in the Status (A) register.
 
-Errors are signalled in the return by setting the NZ flag. When set the
+Errors are signaled in the return by setting the NZ flag. When set the
 (A) register may contain an error code, but this code does not conform to RomWBW standard
 
 Success is indicated by setting the Z flag
@@ -3044,7 +3097,7 @@ Status (A) is a standard HBIOS result code.
 This function allows the caller to query information about the interrupt
  configuration of the running system and allows adding or hooking 
 interrupt handlers dynamically. Register C is used to specify a 
-subfunction. Additional input and output registers may be used as 
+sub-function. Additional input and output registers may be used as 
 defined by the sub-function.  The Status (A) is a standard 
 HBIOS result code.
 
@@ -3471,5 +3524,3 @@ The following section outlines the read only data referenced by the
 | DCNTL* | 14 | 1  | Z180 DMA/WAIT CONTROL |
 
 * ONLY PRESENT FOR Z180 BUILDS
-
-
