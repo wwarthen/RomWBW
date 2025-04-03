@@ -833,24 +833,45 @@ disk device performs I/O, the LED will light while the disk is active.
 This is only possible for the first 8 disk units.
 
 The second row of the front panel is composed of switches that allow
-you to control a few aspects of the system startup.
+you to control a few aspects of the system startup. The switches are 
+also re-read during warm boot, so confirm the switch settings are your
+desired boot configuration before executing 'REBOOT /W'.
+ 
+The first two switches affect the device used as the initial console.
+ 
+| CRT/Serial | Sec/Pri | Explanation                                                 |
+|------------|---------|-------------------------------------------------------------|
+| CRT        | Pri     | Primary Cathode Ray Tube device (high speed console)        |
+| CRT        | Sec     | Secondary Cathode Ray Tube device (high speed console)      |
+| Serial     | Pri     | Boot Console is Primary Serial Port                         |
+| Serial     | Sec     | Boot Console is Secondary Serial Port                       |
+If not available (default): "Char Unit 0" is used
 
-The first two switches affect the device used as the console initially.
-Setting the CRT/Serial switch will cause the system to boot directly 
-to an attached CRT device (if available).  Setting the Pri/Sec switch 
-will cause the system to boot to the secondary Serial or CRT device 
-(depending on the setting of the first switch).
+The final six switches allow you to select the desired boot device.
 
-The final six switches allow you to cause the system to automatically
-boot into a desired function.  The Auto/Menu switch must be set to
-enable this, otherwise the normal ROM Loader prompt will be used.
-If the Disk/ROM switch is not set, then you can use the last 3
-switches to select a ROM app to auto-start.  If the Disk/ROM switch is
-set, then the system will attempt a disk boot based on the following
-switches.  The Floppy/Hard switch can be used to boot to a Floppy or
-Hard Disk.  In either case, the first Floppy or Hard Disk will be used
-for the boot.  If a Hard Disk boot is selected, then the last three
-switches can be used to select any of the first 8 slices.
+|           |          |             | ROM/App/Boot Slice |
+| Auto/Menu | Disk/ROM | Floppy/Hard |   4      2      1  | Explanation                     |
+|-----------|----------|-------------|--------------------|---------------------------------|
+| Menu      |    -     |      -      |   -      -      -  | Boot to RomWBW Menu             |
+| Auto      | Disk     | Floppy      |   #  |   #  |   #  | Boot Selected Floppy Disk Index |
+| Auto      | Disk     | Hard        |   #  |   #  |   #  | Boot Selected Hard Disk Index   |
+| Auto      | ROM      |      -      |   #  |   #  |   #  | Boot selected ROM Index         |
+If not available: Boot Loader Command Prompt
+'-' Ignored
+'#' bit flag to select an  three bits 4,2,1
+
+ROM or Harddisk - First 8 Drive Images
+|       | Floppy/Hard |         
+| 4 2 1 | Drive Index | ROM Index |
+|-------|-------------|-----------|
+| 0 0 0 |  Zero       | Monitor   |
+| 0 0 1 |  One        | BASIC     |
+| 0 2 0 |  Two        | Forth     |
+| 0 2 1 |  Three      | Game      |
+| 4 0 0 |  Four       | CP/M      |
+| 4 0 1 |  Five       | Z-System  |
+| 4 2 0 |  Six        | Net Boot  |
+| 4 2 1 |  Seven      | User      |
 
 # Disk Management
 
