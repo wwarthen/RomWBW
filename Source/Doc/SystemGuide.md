@@ -168,14 +168,14 @@ For example, let's say we have a typical system with 512KB of ROM and
 512KB of RAM.  The following table demonstrates how Bank Ids represent
 areas of physical memory.
 
-| Physical Memory   | Type | Physical Bank | Bank Id   |
-|-------------------|------|---------------|-----------|
-| 0x000000-0x007FFF | ROM  | 0             | 0x00      |
-| 0x008000-0x00FFFF | ROM  | 1             | 0x01      |
-| 0x010000-0x07FFFF | ROM  | 2-15          | 0x02-0x0F |
-| 0x080000-0x087FFF | RAM  | 16            | 0x80      |
-| 0x088000-0x08FFFF | RAM  | 17            | 0x81      |
-| 0x090000-0x0FFFFF | RAM  | 18-31         | 0x82-0x8F |
+| **Physical Memory**   | **Type** | **Physical Bank** | **Bank Id**   |
+|-----------------------|----------|-------------------|---------------|
+|   0x000000-0x007FFF   |   ROM    |   0               |   0x00        |
+|   0x008000-0x00FFFF   |   ROM    |   1               |   0x01        |
+|   0x010000-0x07FFFF   |   ROM    |   2-15            |   0x02-0x0F   |
+|   0x080000-0x087FFF   |   RAM    |   16              |   0x80        |
+|   0x088000-0x08FFFF   |   RAM    |   17              |   0x81        |
+|   0x090000-0x0FFFFF   |   RAM    |   18-31           |   0x82-0x8F   |
 
 Note that Bank Id 0x00 is **always** the first bank of ROM and 0x80 is
 **always** the first bank of RAM.  If there were more banks of physical ROM,
@@ -197,23 +197,23 @@ table describes the way the banks are assigned.  The Typical column
 shows the specific values that would be assigned for a common system
 with 512KB of ROM and 512KB of RAM (nROM=16, nRAM=16).
 
-| Bank Id           | Identity  | Typical | Purpose                                  |
-|-------------------|-----------|---------|------------------------------------------|
-| 0x00              |BID_BOOT   | 0x00    | Boot Bank (HBIOS image)                  |
-| 0x01              |BID_IMG0   | 0x01    | Boot Loader, Monitor, ROM OSes, ROM Apps |
-| 0x02              |BID_IMG1   | 0x02    | ROM Apps                                 |
-| 0x03              |BID_IMG2   | 0x03    | \<Reserved\>                             |
-| 0x04              |BID_ROMD0  | 0x04    | First ROM Disk Bank                      |
-| nROM - 1          |           | 0x0F    | Last ROM Disk Bank                       |
-| 0x80              |BID_BIOS   | 0x80    | HBIOS (working copy)                     |
-| 0x81              |BID_RAMD0  | 0x81    | First RAM Disk Bank                      |
-| 0x80 + nRAM - 8   |           | 0x88    | Last RAM Disk Bank                       |
-| 0x80 + nRAM - 7   |BID_APP0   | 0x89    | First Application Bank                   |
-| 0x80 + nRAM - 5   |           | 0x8B    | Last Application Bank                    |
-| 0x80 + nRAM - 4   |BID_BUF    | 0x8C    | OS Disk Buffers                          |
-| 0x80 + nRAM - 3   |BID_AUX    | 0x8D    | OS Code Bank                             |
-| 0x80 + nRAM - 2   |BID_USR    | 0x8E    | User Bank (CP/M TPA)                     |
-| 0x80 + nRAM - 1   |BID_COM    | 0x8F    | Common Bank                              |
+| **Bank Id**         | **Identity** | **Typical** | **Purpose**                                |
+|---------------------|--------------|-------------|--------------------------------------------|
+| 0x00                | BID_BOOT     | 0x00        | Boot Bank (HBIOS image)                    |
+| 0x01                | BID_IMG0     | 0x01        | Boot Loader, Monitor, ROM OSes, ROM Apps   |
+| 0x02                | BID_IMG1     | 0x02        | ROM Apps                                   |
+| 0x03                | BID_IMG2     | 0x03        | \<Reserved\>                               |
+| 0x04                | BID_ROMD0    | 0x04        | First ROM Disk Bank                        |
+| nROM - 1            |              | 0x0F        | Last ROM Disk Bank                         |
+| 0x80                | BID_BIOS     | 0x80        | HBIOS (working copy)                       |
+| 0x81                | BID_RAMD0    | 0x81        | First RAM Disk Bank                        |
+| 0x80 + nRAM - 8     |              | 0x88        | Last RAM Disk Bank                         |
+| 0x80 + nRAM - 7     | BID_APP0     | 0x89        | First Application Bank                     |
+| 0x80 + nRAM - 5     |              | 0x8B        | Last Application Bank                      |
+| 0x80 + nRAM - 4     | BID_BUF      | 0x8C        | OS Disk Buffers                            |
+| 0x80 + nRAM - 3     | BID_AUX      | 0x8D        | OS Code Bank                               |
+| 0x80 + nRAM - 2     | BID_USR      | 0x8E        | User Bank (CP/M TPA)                       |
+| 0x80 + nRAM - 1     | BID_COM      | 0x8F        | Common Bank                                |
 
 In this table, nROM and nRAM refer to the number of corresponding
 ROM and RAM banks in the the system.
@@ -291,6 +291,23 @@ It is a fixed mapping that is never changed in normal RomWBW operation
 hence the name "Common".
 
 # Disk Layout
+
+## Floppy Disk Layout
+
+RomWBVW generally handles floppy disks in the same physical formats
+as MS-DOS.  However, the filesystem will normally be CP/M.  The following
+table lists the floppy disk formats used by RomWBW.  In all cases,
+the sector size is 512 bytes.
+
+| **HBIOS Media ID** | **Capacity** | **Tracks** | **Heads** | **Sectors** |
+|--------------------|-------------:|-----------:|----------:|------------:|
+|   MID_FD720        |   720KB      |   80       |   2       |   9         |
+|   MID_FD144        |   1440KB     |   80       |   2       |   18        |
+|   MID_FD360        |   360KB      |   40       |   2       |   9         |
+|   MID_FD120        |   1200KB     |   80       |   2       |   15        |
+|   MID_FD111        |   1155KB     |   77       |   2       |   15        |
+
+## Hard Disk Layout
 
 RomWBW supports the use of PC MBR hard disk partitioning (see
 <https://en.wikipedia.org/wiki/Disk_partitioning>).  When accessing
@@ -378,7 +395,7 @@ The FAT partition can be initialized using the FAT application from CP/M
 using the command `FAT FORMAT n:` where n is the RomWBW disk unit 
 number containing the FAT partition to be formatted.
 
-## Modern Disk Layout (hd1k)
+### Modern Hard Disk Layout (hd1k)
 
 ![Modern Disk Layout](Graphics/hd1k)
 
@@ -389,7 +406,7 @@ The CP/M slices reside entirely within a hard disk partition of type
 0x2E.  The number of slices is determined by the number of slices that
 fit within the partition spaces allocated up to the maximum of 256.
 
-## Classic Disk Layout (hd512)
+### Classic Hard Disk Layout (hd512)
 
 ![Classic Disk Layout](Graphics/hd512)
 
@@ -416,20 +433,18 @@ application.  The user is responsible for ensuring that the start of the
 FAT partition does not overlap with the area they intend to use for 
 CP/M slices.  FDISK80 has a Reserve option to assist with this.
 
-## Mapping to Media ID
+### Mapping to Media ID
 
 HBIOS has a definition of "Media ID", which defines the type and physical
 properties of disk media provided by an underlying storage device. For a 
-complete list of Media ID's please see the following section
-
-[Disk Input/Output (DIO)]
+complete list of Media ID's please see [Disk Input/Output (DIO)].
 
 There are two important Media ID's relating to Hard Disk Layouts:
 
-| **Media**  | **ID** | **Format / Meaning**                                        |
-|------------|-------:|-------------------------------------------------------------|
-| MID_HD     |      4 | Classic Disk Layout (hd512) *--and--* HBIOS Hard Disk Drive |
-| MID_HDNEW  |     10 | Modern Disk Layout (hd1k)                                   |
+| **Media**      | **ID** | **Format / Meaning**                                        |
+|----------------|-------:|-------------------------------------------------------------|
+| MID_HD         |      4 | Classic Disk Layout (hd512) *--and--* HBIOS Hard Disk Drive |
+| MID_HDNEW      |     10 | Modern Disk Layout (hd1k)                                   |
 
 HBIOS typically does not understand the format of data on a device,
 instead just treating all hard disks as raw sectors. `MID_HD` is the typical
