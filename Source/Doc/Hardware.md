@@ -48,7 +48,7 @@ by RomWBW along with the standard pre-built ROM image(s).
 | [Z80 ZRC CPU Module]^7^ ROMless                             | RCBus   | RCZ80_zrc_ram_std.rom        | 115200        |
 | [Z80 ZRC512 CPU Module]^7^                                  | RCBus   | RCZ80_zrc512_std.rom         | 115200        |
 | [Z80 EaZy80-512 CPU Module]^7^                              | RCBus   | RCZ80_ez512_std.rom          | 115200        |
-| [Z80 K80W CPU Module]^7^                                    | RCBus   | RCZ80_k8w_std.rom            | 115200        |
+| [Z80 K80W CPU Module]^7^                                    | RCBus   | RCZ80_k80w_std.rom           | 115200        |
 | [Z180 Z1RCC CPU Module]^7^                                  | RCBus   | RCZ180_z1rcc_std.rom         | 115200        |
 | [Z280 ZZRCC CPU Module]^7^                                  | RCBus   | RCZ280_zzrcc_std.rom         | 115200        |
 | [Z280 ZZRCC CPU Module]^7^ ROMless                          | RCBus   | RCZ280_zzrcc_ram_std.rom     | 115200        |
@@ -134,8 +134,6 @@ program the image into the first 512KB of the ROM for now.
 - UART: MODE=4UART, IO=200
 - UART: MODE=4UART, IO=208
 - UART: MODE=4UART, IO=216
-- SIO MODE=ZP, IO=176, CHANNEL A
-- SIO MODE=ZP, IO=176, CHANNEL B
 - VGA: IO=224, KBD MODE=PS/2, KBD IO=224
 - CVDU: MODE=ECB, IO=224, KBD MODE=PS/2, KBD IO=226
 - CVDU occupies 905 bytes.
@@ -173,19 +171,11 @@ program the image into the first 512KB of the ROM for now.
 #### Supported Hardware
 
 - SIMRTC: IO=254
-- UART: MODE=SBC, IO=104
-- UART: MODE=CAS, IO=128
-- UART: MODE=MFP, IO=104
-- UART: MODE=4UART, IO=192
-- UART: MODE=4UART, IO=200
-- UART: MODE=4UART, IO=208
-- UART: MODE=4UART, IO=216
-- SIO MODE=ZP, IO=176, CHANNEL A, INTERRUPTS ENABLED
-- SIO MODE=ZP, IO=176, CHANNEL B, INTERRUPTS ENABLED
-- FONTS occupy 0 bytes.
+- SSER: IO=109
 - MD: TYPE=RAM
 - MD: TYPE=ROM
 - HDSK: IO=253, DEVICE COUNT=2
+
 
 #### Notes:
 
@@ -213,12 +203,7 @@ program the image into the first 512KB of the ROM for now.
 - DSRTC: MODE=STD, IO=136
 - ASCI: IO=64, INTERRUPTS ENABLED
 - ASCI: IO=65, INTERRUPTS ENABLED
-- UART: MODE=CAS, IO=128
-- UART: MODE=4UART, IO=192
-- UART: MODE=4UART, IO=200
-- UART: MODE=4UART, IO=208
-- UART: MODE=4UART, IO=216
-- TMS: MODE=N8, IO=152
+- TMS: MODE=N8, IO=152, SCREEN=40X24, KEYBOARD=PPK
 - PPK: ENABLED
 - MD: TYPE=RAM
 - MD: TYPE=ROM
@@ -251,7 +236,7 @@ program the image into the first 512KB of the ROM for now.
 #### Supported Hardware
 
 - DSRTC: MODE=STD, IO=112
-- UART: MODE=SBC, IO=104
+- UART: IO=104
 - PPP: IO=96
 - PPPCON: ENABLED
 - PPPSD: ENABLED
@@ -286,7 +271,7 @@ program the image into the first 512KB of the ROM for now.
 #### Supported Hardware
 
 - DSRTC: MODE=STD, IO=112
-- UART: MODE=SBC, IO=104
+- UART: IO=104
 - PPP: IO=96
 - PPPCON: ENABLED
 - PPPSD: ENABLED
@@ -324,12 +309,12 @@ program the image into the first 512KB of the ROM for now.
 - DSRTC: MODE=STD, IO=138
 - ASCI: IO=64, INTERRUPTS ENABLED
 - ASCI: IO=65, INTERRUPTS ENABLED
-- UART: MODE=CAS, IO=128
-- UART: MODE=MFP, IO=104
-- UART: MODE=4UART, IO=192
-- UART: MODE=4UART, IO=200
-- UART: MODE=4UART, IO=208
-- UART: MODE=4UART, IO=216
+- UART: IO=24
+- UART: IO=128
+- UART: IO=192
+- UART: IO=200
+- UART: IO=208
+- UART: IO=216
 - VGA: IO=224, KBD MODE=PS/2, KBD IO=224
 - CVDU: MODE=ECB, IO=224, KBD MODE=PS/2, KBD IO=226
 - KBD: ENABLED
@@ -367,9 +352,12 @@ program the image into the first 512KB of the ROM for now.
 #### Supported Hardware
 
 - FP: LEDIO=0, SWIO=0
+- LCD: IO=218, SIZE=20X4
 - DSRTC: MODE=STD, IO=192
-- UART: MODE=RC, IO=160
-- UART: MODE=RC, IO=168
+- UART: IO=128
+- UART: IO=136
+- UART: IO=160
+- UART: IO=168
 - SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
@@ -387,7 +375,7 @@ program the image into the first 512KB of the ROM for now.
 - IDE: MODE=RC, IO=16, SLAVE
 - PPIDE: IO=32, MASTER
 - PPIDE: IO=32, SLAVE
-- CTC: IO=136
+- SD: MODE=PIO, IO=105, UNITS=1
 
 #### Notes:
 
@@ -410,9 +398,13 @@ program the image into the first 512KB of the ROM for now.
 #### Supported Hardware
 
 - FP: LEDIO=0, SWIO=0
+- LCD: IO=218, SIZE=20X4
 - DSRTC: MODE=STD, IO=192
-- UART: MODE=RC, IO=160
-- UART: MODE=RC, IO=168
+- INTRTC: ENABLED
+- UART: IO=128
+- UART: IO=136
+- UART: IO=160
+- UART: IO=168
 - SIO MODE=STD, IO=136, CHANNEL A, INTERRUPTS ENABLED
 - SIO MODE=STD, IO=136, CHANNEL B, INTERRUPTS ENABLED
 - CH: IO=62
@@ -427,6 +419,8 @@ program the image into the first 512KB of the ROM for now.
 - IDE: MODE=RC, IO=16, SLAVE
 - PPIDE: IO=32, MASTER
 - PPIDE: IO=32, SLAVE
+- SD: MODE=PIO, IO=105, UNITS=1
+- KIO: IO=128
 - CTC: IO=132, TIMER MODE=TIMER/16, DIVISOR=9216, HI=256, LO=36, INTERRUPTS ENABLED
 
 #### Notes:
@@ -457,8 +451,10 @@ program the image into the first 512KB of the ROM for now.
 - INTRTC: ENABLED
 - ASCI: IO=192, INTERRUPTS ENABLED
 - ASCI: IO=193, INTERRUPTS ENABLED
-- UART: MODE=RC, IO=160
-- UART: MODE=RC, IO=168
+- UART: IO=128
+- UART: IO=136
+- UART: IO=160
+- UART: IO=168
 - SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
@@ -475,6 +471,7 @@ program the image into the first 512KB of the ROM for now.
 - IDE: MODE=RC, IO=16, SLAVE
 - PPIDE: IO=32, MASTER
 - PPIDE: IO=32, SLAVE
+- SD: MODE=PIO, IO=105, UNITS=1
 
 #### Notes:
 
@@ -502,8 +499,10 @@ program the image into the first 512KB of the ROM for now.
 - INTRTC: ENABLED
 - ASCI: IO=192, INTERRUPTS ENABLED
 - ASCI: IO=193, INTERRUPTS ENABLED
-- UART: MODE=RC, IO=160
-- UART: MODE=RC, IO=168
+- UART: IO=128
+- UART: IO=136
+- UART: IO=160
+- UART: IO=168
 - SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
@@ -520,6 +519,7 @@ program the image into the first 512KB of the ROM for now.
 - IDE: MODE=RC, IO=16, SLAVE
 - PPIDE: IO=32, MASTER
 - PPIDE: IO=32, SLAVE
+- SD: MODE=PIO, IO=105, UNITS=1
 
 #### Notes:
 
@@ -534,7 +534,7 @@ program the image into the first 512KB of the ROM for now.
 
 |                   |               |
 |-------------------|---------------|
-| Default CPU Speed | 6.000 MHz     |
+| Default CPU Speed | 12.000 MHz    |
 | Interrupts        | Mode 1        |
 | System Timer      | None          |
 | Serial Default    | 115200 Baud   |
@@ -545,19 +545,23 @@ program the image into the first 512KB of the ROM for now.
 #### Supported Hardware
 
 - FP: LEDIO=0, SWIO=0
+- LCD: IO=218, SIZE=20X4
 - DSRTC: MODE=STD, IO=192
+- INTRTC: ENABLED
 - Z2U: IO=16
-- UART: MODE=RC, IO=160
-- UART: MODE=RC, IO=168
+- UART: IO=128
+- UART: IO=136
+- UART: IO=160
+- UART: IO=168
 - SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- ACIA: IO=128, INTERRUPTS ENABLED
 - CH: IO=62
 - CH: IO=60
 - CHUSB: IO=62
 - CHUSB: IO=60
-- ACIA: IO=128, INTERRUPTS ENABLED
 - MD: TYPE=RAM
 - MD: TYPE=ROM
 - FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
@@ -566,6 +570,7 @@ program the image into the first 512KB of the ROM for now.
 - IDE: MODE=RC, IO=16, SLAVE
 - PPIDE: IO=32, MASTER
 - PPIDE: IO=32, SLAVE
+- SD: MODE=PIO, IO=105, UNITS=1
 
 #### Notes:
 
@@ -577,7 +582,7 @@ program the image into the first 512KB of the ROM for now.
 
 |                   |               |
 |-------------------|---------------|
-| Default CPU Speed | 6.000 MHz     |
+| Default CPU Speed | 12.000 MHz    |
 | Interrupts        | Mode 3        |
 | System Timer      | Z280          |
 | Serial Default    | 115200 Baud   |
@@ -588,10 +593,14 @@ program the image into the first 512KB of the ROM for now.
 #### Supported Hardware
 
 - FP: LEDIO=0, SWIO=0
+- LCD: IO=218, SIZE=20X4
 - DSRTC: MODE=STD, IO=192
+- INTRTC: ENABLED
 - Z2U: IO=16, INTERRUPTS ENABLED
-- UART: MODE=RC, IO=160
-- UART: MODE=RC, IO=168
+- UART: IO=128
+- UART: IO=136
+- UART: IO=160
+- UART: IO=168
 - SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
@@ -608,6 +617,7 @@ program the image into the first 512KB of the ROM for now.
 - IDE: MODE=RC, IO=16, SLAVE
 - PPIDE: IO=32, MASTER
 - PPIDE: IO=32, SLAVE
+- SD: MODE=PIO, IO=105, UNITS=1
 
 #### Notes:
 
@@ -632,7 +642,7 @@ program the image into the first 512KB of the ROM for now.
 #### Supported Hardware
 
 - FP: LEDIO=0, SWIO=0
-- LCD: IO=218
+- LCD: IO=218, SIZE=20X4
 - CH: IO=62
 - CH: IO=60
 - CHUSB: IO=62
@@ -671,10 +681,13 @@ program the image into the first 512KB of the ROM for now.
 #### Supported Hardware
 
 - FP: LEDIO=0, SWIO=0
+- LCD: IO=218, SIZE=20X4
 - DSRTC: MODE=STD, IO=192
 - INTRTC: ENABLED
-- UART: MODE=RC, IO=160
-- UART: MODE=RC, IO=168
+- UART: IO=128
+- UART: IO=136
+- UART: IO=160
+- UART: IO=168
 - SIO MODE=STD, IO=128, CHANNEL A, INTERRUPTS ENABLED
 - SIO MODE=STD, IO=128, CHANNEL B, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
@@ -691,6 +704,7 @@ program the image into the first 512KB of the ROM for now.
 - IDE: MODE=RC, IO=16, SLAVE
 - PPIDE: IO=32, MASTER
 - PPIDE: IO=32, SLAVE
+- SD: MODE=PIO, IO=105, UNITS=1
 - CTC: IO=136, TIMER MODE=COUNTER, DIVISOR=18432, HI=256, LO=72, INTERRUPTS ENABLED
 
 #### Notes:
@@ -716,9 +730,13 @@ program the image into the first 512KB of the ROM for now.
 #### Supported Hardware
 
 - FP: LEDIO=0, SWIO=0
+- LCD: IO=218, SIZE=20X4
 - DSRTC: MODE=STD, IO=192
-- UART: MODE=RC, IO=160
-- UART: MODE=RC, IO=168
+- INTRTC: ENABLED
+- UART: IO=128
+- UART: IO=136
+- UART: IO=160
+- UART: IO=168
 - SIO MODE=STD, IO=24, CHANNEL A, INTERRUPTS ENABLED
 - SIO MODE=STD, IO=24, CHANNEL B, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
@@ -735,6 +753,7 @@ program the image into the first 512KB of the ROM for now.
 - IDE: MODE=RC, IO=144, SLAVE
 - PPIDE: IO=32, MASTER
 - PPIDE: IO=32, SLAVE
+- SD: MODE=PIO, IO=105, UNITS=1
 - CTC: IO=16, TIMER MODE=COUNTER, DIVISOR=18432, HI=256, LO=72, INTERRUPTS ENABLED
 
 #### Notes:
@@ -760,9 +779,12 @@ program the image into the first 512KB of the ROM for now.
 #### Supported Hardware
 
 - FP: LEDIO=0, SWIO=0
+- LCD: IO=218, SIZE=20X4
 - DSRTC: MODE=STD, IO=192
-- UART: MODE=RC, IO=160
-- UART: MODE=RC, IO=168
+- UART: IO=128
+- UART: IO=136
+- UART: IO=160
+- UART: IO=168
 - SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
@@ -780,7 +802,7 @@ program the image into the first 512KB of the ROM for now.
 - IDE: MODE=RC, IO=16, SLAVE
 - PPIDE: IO=32, MASTER
 - PPIDE: IO=32, SLAVE
-- CTC: IO=136
+- SD: MODE=PIO, IO=105, UNITS=1
 
 #### Notes:
 
@@ -806,11 +828,12 @@ program the image into the first 512KB of the ROM for now.
 
 - FP: LEDIO=13, SWIO=0
 - DSRTC: MODE=STD, IO=12
-- INTRTC: ENABLED
 - ASCI: IO=192, INTERRUPTS ENABLED
 - ASCI: IO=193, INTERRUPTS ENABLED
-- UART: MODE=RC, IO=160
-- UART: MODE=RC, IO=168
+- UART: IO=128
+- UART: IO=136
+- UART: IO=160
+- UART: IO=168
 - SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
@@ -828,7 +851,6 @@ program the image into the first 512KB of the ROM for now.
 - PPIDE: IO=32, MASTER
 - PPIDE: IO=32, SLAVE
 - SD: MODE=SC, IO=12, UNITS=1
-- AY38910: MODE=RCZ180, IO=104, CLOCK=1789772 HZ
 
 #### Notes:
 
@@ -860,8 +882,10 @@ program the image into the first 512KB of the ROM for now.
 - INTRTC: ENABLED
 - ASCI: IO=192, INTERRUPTS ENABLED
 - ASCI: IO=193, INTERRUPTS ENABLED
-- UART: MODE=RC, IO=160
-- UART: MODE=RC, IO=168
+- UART: IO=128
+- UART: IO=136
+- UART: IO=160
+- UART: IO=168
 - SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
@@ -879,7 +903,6 @@ program the image into the first 512KB of the ROM for now.
 - PPIDE: IO=32, MASTER
 - PPIDE: IO=32, SLAVE
 - SD: MODE=SC, IO=12, UNITS=1
-- AY38910: MODE=RCZ180, IO=104, CLOCK=1789772 HZ
 
 #### Notes:
 
@@ -935,8 +958,10 @@ program the image into the first 512KB of the ROM for now.
 - INTRTC: ENABLED
 - ASCI: IO=192, INTERRUPTS ENABLED
 - ASCI: IO=193, INTERRUPTS ENABLED
-- UART: MODE=RC, IO=160
-- UART: MODE=RC, IO=168
+- UART: IO=128
+- UART: IO=136
+- UART: IO=160
+- UART: IO=168
 - SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
@@ -982,8 +1007,10 @@ program the image into the first 512KB of the ROM for now.
 - INTRTC: ENABLED
 - ASCI: IO=192, INTERRUPTS ENABLED
 - ASCI: IO=193, INTERRUPTS ENABLED
-- UART: MODE=RC, IO=160
-- UART: MODE=RC, IO=168
+- UART: IO=128
+- UART: IO=136
+- UART: IO=160
+- UART: IO=168
 - SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
@@ -1025,12 +1052,15 @@ program the image into the first 512KB of the ROM for now.
 #### Supported Hardware
 
 - FP: LEDIO=0
+- LCD: IO=170, SIZE=20X4
 - DSRTC: MODE=STD, IO=12
 - INTRTC: ENABLED
 - ASCI: IO=192, INTERRUPTS ENABLED
 - ASCI: IO=193, INTERRUPTS ENABLED
-- UART: MODE=RC, IO=160
-- UART: MODE=RC, IO=168
+- UART: IO=128
+- UART: IO=136
+- UART: IO=160
+- UART: IO=168
 - SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
@@ -1048,7 +1078,6 @@ program the image into the first 512KB of the ROM for now.
 - PPIDE: IO=32, MASTER
 - PPIDE: IO=32, SLAVE
 - SD: MODE=SC, IO=12, UNITS=1
-- AY38910: MODE=RCZ180, IO=104, CLOCK=1789772 HZ
 
 #### Notes:
 
@@ -1102,11 +1131,11 @@ program the image into the first 512KB of the ROM for now.
 
 #### Supported Hardware
 
-- PKD: IO=96
+- PKD: IO=96, SIZE=8X1
 - DSRTC: MODE=STD, IO=112
-- UART: MODE=SBC, IO=104
-- UART: MODE=DUAL, IO=128
-- UART: MODE=DUAL, IO=136
+- UART: IO=104
+- UART: IO=128
+- UART: IO=136
 - SIO MODE=ZP, IO=176, CHANNEL A
 - SIO MODE=ZP, IO=176, CHANNEL B
 - PIO: IO=184, CHANNEL A
@@ -1115,7 +1144,7 @@ program the image into the first 512KB of the ROM for now.
 - PIO: IO=188, CHANNEL B
 - LPT: MODE=SPP, IO=232
 - CVDU: MODE=MBC, IO=224, KBD MODE=PS/2, KBD IO=226
-- TMS: MODE=MBC, IO=152
+- TMS: MODE=MBC, IO=152, SCREEN=80X24, KEYBOARD=KBD
 - KBD: ENABLED
 - ESP: IO=156
 - ESPCON: ENABLED
@@ -1128,7 +1157,6 @@ program the image into the first 512KB of the ROM for now.
 - PPIDE: IO=96, MASTER
 - PPIDE: IO=96, SLAVE
 - SPK: IO=112
-- CTC: IO=176
 
 #### Notes:
 
@@ -1185,9 +1213,12 @@ program the image into the first 512KB of the ROM for now.
 #### Supported Hardware
 
 - FP: LEDIO=0, SWIO=0
+- LCD: IO=218, SIZE=20X4
 - DSRTC: MODE=STD, IO=192
-- UART: MODE=RC, IO=160
-- UART: MODE=RC, IO=168
+- UART: IO=128
+- UART: IO=136
+- UART: IO=160
+- UART: IO=168
 - SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
@@ -1207,7 +1238,7 @@ program the image into the first 512KB of the ROM for now.
 - IDE: MODE=RC, IO=16, SLAVE
 - PPIDE: IO=32, MASTER
 - PPIDE: IO=32, SLAVE
-- CTC: IO=136
+- SD: MODE=PIO, IO=105, UNITS=1
 
 #### Notes:
 
@@ -1232,9 +1263,12 @@ program the image into the first 512KB of the ROM for now.
 #### Supported Hardware
 
 - FP: LEDIO=0, SWIO=0
+- LCD: IO=218, SIZE=20X4
 - DSRTC: MODE=STD, IO=192
-- UART: MODE=RC, IO=160
-- UART: MODE=RC, IO=168
+- UART: IO=128
+- UART: IO=136
+- UART: IO=160
+- UART: IO=168
 - SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
@@ -1253,7 +1287,7 @@ program the image into the first 512KB of the ROM for now.
 - IDE: MODE=RC, IO=16, SLAVE
 - PPIDE: IO=32, MASTER
 - PPIDE: IO=32, SLAVE
-- CTC: IO=136
+- SD: MODE=PIO, IO=105, UNITS=1
 
 #### Notes:
 
@@ -1279,9 +1313,12 @@ program the image into the first 512KB of the ROM for now.
 #### Supported Hardware
 
 - FP: LEDIO=0, SWIO=0
+- LCD: IO=218, SIZE=20X4
 - DSRTC: MODE=STD, IO=192
-- UART: MODE=RC, IO=160
-- UART: MODE=RC, IO=168
+- UART: IO=128
+- UART: IO=136
+- UART: IO=160
+- UART: IO=168
 - SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
@@ -1300,7 +1337,7 @@ program the image into the first 512KB of the ROM for now.
 - IDE: MODE=RC, IO=16, SLAVE
 - PPIDE: IO=32, MASTER
 - PPIDE: IO=32, SLAVE
-- CTC: IO=136
+- SD: MODE=PIO, IO=105, UNITS=1
 
 #### Notes:
 
@@ -1317,7 +1354,7 @@ program the image into the first 512KB of the ROM for now.
 |-------------------|---------------|
 | Default CPU Speed | 22.000 MHz    |
 | Interrupts        | Mode 2        |
-| System Timer      | CTC           |
+| System Timer      | None          |
 | Serial Default    | 115200 Baud   |
 | Memory Manager    | EZ512         |
 | ROM Size          | 0 KB          |
@@ -1325,30 +1362,14 @@ program the image into the first 512KB of the ROM for now.
 
 #### Supported Hardware
 
-- FP: LEDIO=0, SWIO=0
-- LCD: IO=218, SIZE=20X4
 - DSRTC: MODE=STD, IO=192
-- UART: MODE=RC, IO=160
-- UART: MODE=RC, IO=168
 - SIO MODE=STD, IO=8, CHANNEL A, INTERRUPTS ENABLED
 - SIO MODE=STD, IO=8, CHANNEL B, INTERRUPTS ENABLED
-- ACIA: IO=128
-- VRC: IO=0, KBD MODE=VRC, KBD IO=244
-- KBD: ENABLED
-- CH: IO=62
-- CH: IO=60
-- CHUSB: IO=62
-- CHUSB: IO=60
 - MD: TYPE=RAM
-- FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
-- FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
-- IDE: MODE=RC, IO=16, MASTER
-- IDE: MODE=RC, IO=16, SLAVE
-- PPIDE: IO=32, MASTER
-- PPIDE: IO=32, SLAVE
+- MD occupies 409 bytes.
 - SD: MODE=EZ512, IO=2, UNITS=1
 - KIO: IO=0
-- CTC: IO=4, TIMER MODE=TIMER/16, DIVISOR=4608, HI=256, LO=18, INTERRUPTS ENABLED
+- CTC: IO=4
 
 #### Notes:
 
@@ -1359,13 +1380,13 @@ program the image into the first 512KB of the ROM for now.
 
 ## Z80 K80W CPU Module
 
-#### ROM Image File:  RCZ80_k8w_std.rom
+#### ROM Image File:  RCZ80_k80w_std.rom
 
 |                   |               |
 |-------------------|---------------|
 | Default CPU Speed | 22.000 MHz    |
 | Interrupts        | Mode 2        |
-| System Timer      | CTC           |
+| System Timer      | None          |
 | Serial Default    | 115200 Baud   |
 | Memory Manager    | Z2            |
 | ROM Size          | 512 KB        |
@@ -1382,6 +1403,8 @@ program the image into the first 512KB of the ROM for now.
 - UART: IO=168
 - SIO MODE=STD, IO=136, CHANNEL A, INTERRUPTS ENABLED
 - SIO MODE=STD, IO=136, CHANNEL B, INTERRUPTS ENABLED
+- VRC: IO=0, KBD MODE=VRC, KBD IO=244
+- KBD: ENABLED
 - CH: IO=62
 - CH: IO=60
 - CHUSB: IO=62
@@ -1396,7 +1419,7 @@ program the image into the first 512KB of the ROM for now.
 - PPIDE: IO=32, SLAVE
 - SD: MODE=EZ512, IO=130, UNITS=1
 - KIO: IO=128
-- CTC: IO=132, TIMER MODE=TIMER/16, DIVISOR=9216, HI=256, LO=36, INTERRUPTS ENABLED
+- CTC: IO=132
 
 #### Notes:
 
@@ -1425,8 +1448,10 @@ program the image into the first 512KB of the ROM for now.
 - INTRTC: ENABLED
 - ASCI: IO=192, INTERRUPTS ENABLED
 - ASCI: IO=193, INTERRUPTS ENABLED
-- UART: MODE=RC, IO=160
-- UART: MODE=RC, IO=168
+- UART: IO=128
+- UART: IO=136
+- UART: IO=160
+- UART: IO=168
 - SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
@@ -1442,6 +1467,7 @@ program the image into the first 512KB of the ROM for now.
 - IDE: MODE=RC, IO=16, SLAVE
 - PPIDE: IO=32, MASTER
 - PPIDE: IO=32, SLAVE
+- SD: MODE=PIO, IO=105, UNITS=1
 
 #### Notes:
 
@@ -1467,20 +1493,24 @@ program the image into the first 512KB of the ROM for now.
 #### Supported Hardware
 
 - FP: LEDIO=0, SWIO=0
+- LCD: IO=218, SIZE=20X4
 - DSRTC: MODE=STD, IO=192
+- INTRTC: ENABLED
 - Z2U: IO=16, INTERRUPTS ENABLED
-- UART: MODE=RC, IO=160
-- UART: MODE=RC, IO=168
+- UART: IO=128
+- UART: IO=136
+- UART: IO=160
+- UART: IO=168
 - SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
+- VRC: IO=0, KBD MODE=VRC, KBD IO=244
+- KBD: ENABLED
 - CH: IO=62
 - CH: IO=60
 - CHUSB: IO=62
 - CHUSB: IO=60
-- VRC: IO=0, KBD MODE=VRC, KBD IO=244
-- KBD: ENABLED
 - MD: TYPE=RAM
 - MD: TYPE=ROM
 - FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
@@ -1513,10 +1543,14 @@ program the image into the first 512KB of the ROM for now.
 #### Supported Hardware
 
 - FP: LEDIO=0, SWIO=0
+- LCD: IO=218, SIZE=20X4
 - DSRTC: MODE=STD, IO=192
+- INTRTC: ENABLED
 - Z2U: IO=16, INTERRUPTS ENABLED
-- UART: MODE=RC, IO=160
-- UART: MODE=RC, IO=168
+- UART: IO=128
+- UART: IO=136
+- UART: IO=160
+- UART: IO=168
 - SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
@@ -1559,10 +1593,14 @@ program the image into the first 512KB of the ROM for now.
 #### Supported Hardware
 
 - FP: LEDIO=0, SWIO=0
+- LCD: IO=218, SIZE=20X4
 - DSRTC: MODE=STD, IO=192
+- INTRTC: ENABLED
 - Z2U: IO=16, INTERRUPTS ENABLED
-- UART: MODE=RC, IO=160
-- UART: MODE=RC, IO=168
+- UART: IO=128
+- UART: IO=136
+- UART: IO=160
+- UART: IO=168
 - SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
 - SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
@@ -1608,8 +1646,7 @@ program the image into the first 512KB of the ROM for now.
 - SIO MODE=Z80R, IO=128, CHANNEL B, INTERRUPTS ENABLED
 - MD: TYPE=RAM
 - MD: TYPE=ROM
-- SD: MODE=, IO=104, UNITS=1
-- CTC: IO=64
+- SD: MODE=Z80R, IO=104, UNITS=1
 
 #### Notes:
 
@@ -1631,7 +1668,6 @@ program the image into the first 512KB of the ROM for now.
 
 #### Supported Hardware
 
-- FP: LEDIO=0
 - INTRTC: ENABLED
 - ASCI: IO=192, INTERRUPTS ENABLED
 - ASCI: IO=193, INTERRUPTS ENABLED
@@ -1670,38 +1706,29 @@ program the image into the first 512KB of the ROM for now.
 
 #### Supported Hardware
 
+- FP: LEDIO=66, SWIO=66
 - DSRTC: MODE=STD, IO=148
 - PCF: IO=86
-- UART: MODE=SBC, IO=88
-- UART: MODE=AUX, IO=168
-- UART: MODE=DUAL, IO=112
-- UART: MODE=DUAL, IO=120
+- UART: IO=88
+- UART: IO=168
+- UART: IO=112
+- UART: IO=120
 - SIO MODE=ZP, IO=96, CHANNEL A, INTERRUPTS ENABLED
 - SIO MODE=ZP, IO=96, CHANNEL B, INTERRUPTS ENABLED
-- PIO: IO=104, CHANNEL A
-- PIO: IO=104, CHANNEL B
-- PIO: IO=108, CHANNEL A
-- PIO: IO=108, CHANNEL B
 - LPT: MODE=SPP, IO=72
-- TMS: MODE=MBC, IO=160
 - DMA: MODE=DUO, IO=64
 - CH: IO=78
 - CHUSB: IO=78
 - CHSD: IO=78
-- ESP: IO=156
-- ESPCON: ENABLED
-- ESPSER: DEVICE=0
-- ESPSER: DEVICE=1
 - MD: TYPE=RAM
 - MD: TYPE=ROM
 - FD: MODE=DUO, IO=128, DRIVE 0, TYPE=3.5" HD
 - FD: MODE=DUO, IO=128, DRIVE 1, TYPE=3.5" HD
 - PPIDE: IO=136, MASTER
 - PPIDE: IO=136, SLAVE
-- SD: MODE=, IO=140, UNITS=1
+- SD: MODE=MT, IO=140, UNITS=1
 - SPK: IO=148
 - CTC: IO=96, TIMER MODE=COUNTER, DIVISOR=18432, HI=256, LO=72, INTERRUPTS ENABLED
-- AY38910: MODE=DUO, IO=164, CLOCK=1789772 HZ
 
 #### Notes:
 
@@ -1715,7 +1742,7 @@ program the image into the first 512KB of the ROM for now.
 
 |                   |               |
 |-------------------|---------------|
-| Default CPU Speed | 7.372 MHz     |
+| Default CPU Speed | 16.384 MHz    |
 | Interrupts        | Mode 1        |
 | System Timer      | None          |
 | Serial Default    | 115200 Baud   |
@@ -1725,28 +1752,22 @@ program the image into the first 512KB of the ROM for now.
 
 #### Supported Hardware
 
-- FP: LEDIO=0, SWIO=0
-- DSRTC: MODE=STD, IO=192
-- UART: MODE=RC, IO=160
-- UART: MODE=RC, IO=168
-- SIO MODE=RC, IO=128, CHANNEL A, INTERRUPTS ENABLED
-- SIO MODE=RC, IO=128, CHANNEL B, INTERRUPTS ENABLED
-- SIO MODE=RC, IO=132, CHANNEL A, INTERRUPTS ENABLED
-- SIO MODE=RC, IO=132, CHANNEL B, INTERRUPTS ENABLED
-- ACIA: IO=128, INTERRUPTS ENABLED
+- H8P: IO=240
+- INTRTC: ENABLED
+- UART: IO=232
+- UART: IO=224
+- UART: IO=216
+- UART: IO=208
+- TMS: MODE=MSX, IO=152, SCREEN=80X24, KEYBOARD=NONE
 - MD: TYPE=RAM
 - MD: TYPE=ROM
 - FD: MODE=RCWDC, IO=80, DRIVE 0, TYPE=3.5" HD
 - FD: MODE=RCWDC, IO=80, DRIVE 1, TYPE=3.5" HD
-- IDE: MODE=RC, IO=16, MASTER
-- IDE: MODE=RC, IO=16, SLAVE
 - PPIDE: IO=32, MASTER
 - PPIDE: IO=32, SLAVE
-- CTC: IO=136
+- AY38910: MODE=MSX, IO=160, CLOCK=1789772 HZ
 
 #### Notes:
-
-- CPU speed will be dynamically measured at startup if DSRTC is present
 
 `\clearpage`{=latex}
 
@@ -1769,14 +1790,14 @@ program the image into the first 512KB of the ROM for now.
 - INTRTC: ENABLED
 - ASCI: IO=192, INTERRUPTS ENABLED
 - ASCI: IO=193, INTERRUPTS ENABLED
-- UART: MODE=RC, IO=160
-- UART: MODE=RC, IO=168
-- TMS: MODE=MSX, IO=152
+- UART: IO=160
+- UART: IO=168
+- TMS: MODE=MSX, IO=152, SCREEN=40X24, KEYBOARD=NONE
 - MD: TYPE=RAM
 - MD: TYPE=ROM
 - FD: MODE=EPFDC, IO=72, DRIVE 0, TYPE=3.5" HD
 - FD: MODE=EPFDC, IO=72, DRIVE 1, TYPE=3.5" HD
-- SD: MODE=, IO=66, UNITS=1
+- SD: MODE=EPITX, IO=66, UNITS=1
 
 #### Notes:
 
@@ -1789,8 +1810,8 @@ program the image into the first 512KB of the ROM for now.
 |                   |               |
 |-------------------|---------------|
 | Default CPU Speed | 3.580 MHz     |
-| Interrupts        | Mode 1        |
-| System Timer      | None          |
+| Interrupts        | Mode 2        |
+| System Timer      | TMS           |
 | Serial Default    | 115200 Baud   |
 | Memory Manager    | Z2            |
 | ROM Size          | 512 KB        |
@@ -1798,8 +1819,11 @@ program the image into the first 512KB of the ROM for now.
 
 #### Supported Hardware
 
-- UART: MODE=NABU, IO=72
-- TMS: MODE=NABU, IO=160
+- NABU: IO=64
+- INTRTC: ENABLED
+- UART: IO=72
+- TMS: MODE=NABU, IO=160, SCREEN=80X24, KEYBOARD=NABU, INTERRUPTS ENABLED
+- NABUKB: IO=144
 - MD: TYPE=RAM
 - MD: TYPE=ROM
 - PPIDE: IO=96, MASTER
@@ -1829,14 +1853,11 @@ program the image into the first 512KB of the ROM for now.
 #### Supported Hardware
 
 - FP: LEDIO=255
-- SSER: IO=52
-- SCON: IO=0
-- MD: TYPE=RAM
-- PPIDE: IO=48, MASTER
-- PPIDE: IO=48, SLAVE
-- FP: LEDIO=255
 - DS5RTC: RTCIO=104, IO=104
 - SSER: IO=52
+- LPT: MODE=S100, IO=199
+- FV: IO=192, KBD MODE=FV, KBD IO=3
+- KBD: ENABLED
 - SCON: IO=0
 - MD: TYPE=RAM
 - PPIDE: IO=48, MASTER
@@ -1863,6 +1884,7 @@ program the image into the first 512KB of the ROM for now.
 
 #### Supported Hardware
 
+- GM7303: IO=48
 - DSRTC: MODE=STD, IO=132
 - INTRTC: ENABLED
 - ASCI: IO=192, INTERRUPTS ENABLED
