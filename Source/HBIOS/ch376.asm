@@ -18,12 +18,6 @@ _delay:
 	push	af
 	call	DELAY
 	call	DELAY
-	call	DELAY
-	call	DELAY
-	call	DELAY
-	call	DELAY
-	call	DELAY
-	call	DELAY
 	pop	af
 	ret
 
