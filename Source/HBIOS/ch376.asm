@@ -17,7 +17,6 @@ _print_hex:
 _delay:
 	push	af
 	call	DELAY
-	call	DELAY
 	pop	af
 	ret
 
