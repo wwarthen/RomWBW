@@ -1005,7 +1005,7 @@ during the boot process that identifies all disk devices uniquely.
 
 All character units are assigned a Device Type ID which indicates
 the specific hardware device driver that handles the unit.  The table
-below enumerates there values.
+below enumerates their values.
 
 | **Device Type** | **ID** | **Description**                          | **Driver** |
 |-----------------|-------:|------------------------------------------|------------|
@@ -1691,7 +1691,7 @@ keyboard functions should return a failure status.
 
 All video units are assigned a Device Type ID which indicates
 the specific hardware device driver that handles the unit.  The table
-below enumerates there values.
+below enumerates their values.
 
 | **Device Type** | **ID** | **Description**                          | **Driver** |
 |-----------------|-------:|------------------------------------------|------------|
