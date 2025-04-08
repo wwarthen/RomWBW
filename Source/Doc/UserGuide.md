@@ -67,7 +67,7 @@ The Binary directory of the distribution contains the pre-built ROM images.
 Refer to $doc_hardware$ to identify the correct ROM image for your system.
 
 A complete list of the currently supported platforms is found in
-$doc_hardware$ . You must burn the correct ROM image that matches your hardware
+$doc_hardware$. You must burn the correct ROM image that matches your hardware
 
 Once you have a running RomWBW system, you can generally update your ROM
 to a newer version in-situ with the included ROM Flashing tool (Will 
@@ -83,8 +83,8 @@ be able to boot and check out your system with just the ROM.
 Connect a serial terminal or computer with terminal emulation software 
 to the primary serial port of your CPU board. You may need to refer to 
 your hardware provider's documentation for details. A null-modem 
-connection may be required. Set the baud rate as indicated in the table 
-above. Set the line characteristics to 8 data bits, 1 stop bit, no 
+connection may be required. Set the baud rate as indicated in $doc_hardware$.
+Set the line characteristics to 8 data bits, 1 stop bit, no 
 parity, and no flow control. If possible, select ANSI or VT-100 terminal
 emulation.  Hardware flow control is not required for terminal
 operation, but may be necessary for [Serial Port Transfers].
