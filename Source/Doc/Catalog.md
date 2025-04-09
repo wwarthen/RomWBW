@@ -1319,6 +1319,8 @@ listing output may be sent to a disk file, the console and/or the printer, in
 any combination. Output files may also be generated containing cross-reference
 information on each symbol used.
 
+* Z80ASMP (Z80ASM Plus)
+
 * SLR180 is a powerful relocating macro assembler for Z80
 compatible CP/M systems. It takes assembly language source
 statements from a disk file, converts them into their binary
@@ -1329,11 +1331,15 @@ sent to a disk file, the console and/or the printer, in any
 combination. Output files may also be generated containing
 cross-reference information on each symbol used.
 
+* SLRMAC Intel 8080 mnemonics
+
 * SLRNK is a powerful linking loader for Z80-based CP/M systems.
 It takes relocatable binary information in either Microsoft or
 SLR Systems format from a disk file, resolves external and entry
 point references, and stores the output in memory for execution
 or outputs it to a disk file.
+
+* SLRNKP (SLRNK Plus)
 
 * Z80DIS is an entirely new disassembler for Z80 based CP/M sys-
 tems. Z80DIS is written in TURBO PASCAL. Z80DIS generates Z80
@@ -1366,18 +1372,21 @@ User Area 0 - Assembler
 | 180FIG.COM  | Configuration utility for SLR180.COM        |
 | 8080.MAC    | ?                                           |
 | CONFIG.COM  | Configuration utility for Z80ASM.COM        |
+| CONFIGP.COM | Configuration utility for Z80ASMP.COM       |
 | DUMP.*      | Sample Program                              |
 | MAKESYM.COM | Symbol File .SYM file generation            |
 | MAKESYM.DOC | Documentation for MAKESYM.COM               |
 | SLR180.COM  | HD64180 Relocating Macro Assembler          |
 | SLR180.DOC  | Release Notes for SLR180.COM                |
+| SLRMAC.COM  | 8080 Relocating Macro Assembler             |
 | SYNTAX.HLP  | Documentation basic usage for all SLR Tools |
 | SYNTAX.TXT  | Documentation basic usage for all SLR Tools |
 | TEST.*      | Sample Program                              |
 | Z80ASM.COM  | Z80 Relocating Macro Assembler              |
+| Z80ASMP.COM | Z80 Relocating Macro Assembler (PLUS)       |
 | Z80ASM.DOC  | Release Notes for Z80ASM.COM                |
 
-User Area 1 - Linker
+User Area 1 - Linker and Library Management
 
 | **File**     | **Description**                               |
 |--------------|-----------------------------------------------|
@@ -1385,6 +1394,7 @@ User Area 1 - Linker
 | NZLNKFIX.ZEX | ?                                             |
 | SLRIB.COM    | SuperLibrarian, library manager               |
 | SLRNK.COM    | SuperLinker, the main linker tool             |
+| SLRNKP.COM   | SuperLinker (PLUS)                            |
 | SLRNK.DOC    | Release Notes for SLRNK.COM                   |
 | SLRNKFIX.ZEX | ?                                             |
 | SYNTAX.HLP   | Documentation basic usage for all SLR Tools   |
