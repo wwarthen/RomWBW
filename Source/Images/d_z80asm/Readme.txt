@@ -2,7 +2,7 @@
 Assembly Language Tools by SLR Systems
 ======================================
 
-===== Z80ASM v1.30 by SLR Systems =====
+===== Z80ASM by SLR Systems 1983-86 Rel. 1.32 #AB1234 =====
 
 Z80ASM is a relocating macro assembler for CP/M. It takes assembly language
 source statements from a disk file, converts them into their binary equivalent,
@@ -12,7 +12,12 @@ listing output may be sent to a disk file, the console and/or the printer, in
 any combination. Output files may also be generated containing cross-reference
 information on each symbol used.
 
-===== SLR180 v1.31 by SLR Systems =====
+===== Z80ASM PLUS by SLR Systems 1985-86 Rel. v1.12 #L10068 =====
+
+Z80ASMP.COM
+CONFIGP.COM
+
+===== SLR180 by SLR Systems v1.31 Rel. 1.31 #AB1234 =====
 
 SLR180 is a powerful relocating macro assembler for Z80
 compatible CP/M systems. It takes assembly language source
@@ -23,6 +28,10 @@ are those of Zilog/Hitachi. The optional listing output may be
 sent to a disk file, the console and/or the printer, in any
 combination. Output files may also be generated containing
 cross-reference information on each symbol used.
+
+===== SLRMAC by SLR Systems 1985-86 Rel. 1.32 #K10096 =====
+
+SLRMAC.COM
 
 ===== MAKESYM SuperLinker v1.31 =====
 
@@ -35,6 +44,10 @@ It takes relocatable binary information in either Microsoft or
 SLR Systems format from a disk file, resolves external and entry
 point references, and stores the output in memory for execution
 or outputs it to a disk file.
+
+===== SLRNK+ SuperLinker+ by SLR Systems 1985-86 Rel. 2.02 #J10154 =====
+
+SLRNKP.COM
 
 ===== SLRIB SuperLibrarian v1.30 =====
 
