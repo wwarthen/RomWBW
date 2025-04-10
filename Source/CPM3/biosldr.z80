@@ -668,15 +668,15 @@ lba	ds	4	; current lba
 stack	equ	$
 stksav	ds	2
 
-csvbufs	equ	256
-alvbufs	equ	512
-dirbufs	equ	512
-dtabufs	equ	512
+	; CPMLDR.SYS must be a multiple of 512 bytes (one sector)
+	; for the RomWBW loader.  Below padding as needed to force
+	; this.
+	ds	80h
 
-;csvbuf	ds	256	; length (CSV) = ((DRM+1)/4)
-;alvbuf	ds	512	; length (ALV) = ((DSM+1)/4)
-;dirbuf	ds	512	; sector buffer
-;dtabuf	ds	512	; sector buffer
+csvbufs	equ	256	; length (CSV) = ((DRM+1)/4)
+alvbufs	equ	512     ; length (ALV) = ((DSM+1)/4)
+dirbufs	equ	512     ; sector buffer
+dtabufs	equ	512     ; sector buffer
 
 ; Trying to save space.  The loader must fit underneath
 ; the start of BNKBDOS3 and we have a big BNKBDOS because

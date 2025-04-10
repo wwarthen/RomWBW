@@ -1,3 +1,10 @@
+Version 3.5.1
+-------------
+- WBW: Fix CPMLDR.SYS & ZPMLDR.SYS for SYSCOPY (reported by Guido Santer)
+- MAP: Enhanced SLR Tools Disk Image with Plus versions
+- WBW: Add missing BCLOAD file to MS BASIC Compiler Disk Image (reported by Marshall Gates)
+- WBW: Doc improvements (per Fraser and Rob Gowin)
+
 Version 3.5
 -----------
 - M?F: Fix for hours display in HBRTC application
@@ -56,6 +63,8 @@ Version 3.5
 - D?M: Added NetBoot support for Duodyne
 - WBW: Add options to TUNE/HBIOS to force detection of MSX and RC AY/YM standard PSG ports
 - MAP: Added /B=OPTIONS for automated drive assignment to ASSIGN.COM
+- WBW: Added TE Editor (Ladislau Szilagyi)
+- WBW: Refrech Cowgol disk image (Ladislau Szilagyi)
 
 Version 3.4
 -----------
