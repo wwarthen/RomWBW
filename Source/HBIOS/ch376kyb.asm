@@ -153,7 +153,6 @@ UKY_READ:
 	LD	A, H
 	OR	A
 	JR	NZ, UKY_READ
-	LD	C, 0
-	LD	D, 0
+	LD	C, L
 	XOR	A
 	RET

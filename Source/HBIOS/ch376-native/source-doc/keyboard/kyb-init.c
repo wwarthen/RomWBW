@@ -75,16 +75,21 @@ uint8_t keyboard_buf_size() __sdcccall(1) {
 
 uint32_t keyboard_buf_get_next() {
   if (write_index == read_index) // Check if buffer is empty
-    return 255 << 8;
+    return 0x0000FF00; // H = -1, D, E, L = 0
 
   const uint8_t modifier_key = buffer[read_index].modifier_keys;
   const uint8_t key_code     = buffer[read_index].key_code;
   read_index                 = (read_index + 1) & KEYBOARD_BUFFER_SIZE_MASK;
 
-  if (key_code == KEY_CODE_CAPS_LOCK) {
-    caps_lock_engaged = !caps_lock_engaged;
-    return keyboard_buf_get_next();
-  }
+  //D: Modifier keys - aka Keystate
+  //E: ASCII Code
+  //H: 0
+  //L: KeyCode aka scan code
+
+  // if (key_code == KEY_CODE_CAPS_LOCK) {
+  //   caps_lock_engaged = !caps_lock_engaged;
+  //   return keyboard_buf_get_next();
+  // }
 
   const unsigned char c = scancode_to_char(modifier_key, key_code);
   /* D = modifier, e-> char, H = 0, L=>code */

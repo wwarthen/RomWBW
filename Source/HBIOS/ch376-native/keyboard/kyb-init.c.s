@@ -258,9 +258,9 @@ _keyboard_buf_get_next:
 	jr	NZ,l_keyboard_buf_get_next_00102
 ;source-doc/keyboard/kyb-init.c:77: if (write_index == read_index) // Check if buffer is empty
 	ld	hl,0xff00
-	ld	e, h
-	ld	d, h
-	jr	l_keyboard_buf_get_next_00105
+	ld	e, l
+	ld	d, l
+	jr	l_keyboard_buf_get_next_00103
 l_keyboard_buf_get_next_00102:
 ;source-doc/keyboard/kyb-init.c:79:
 	ld	bc,_buffer+0
@@ -277,27 +277,14 @@ l_keyboard_buf_get_next_00102:
 	inc	a
 	and	0x07
 	ld	(_read_index),a
-;source-doc/keyboard/kyb-init.c:83:
-	ld	a, c
-	sub	0x39
-	jr	NZ,l_keyboard_buf_get_next_00104
-;source-doc/keyboard/kyb-init.c:84: if (key_code == KEY_CODE_CAPS_LOCK) {
-	ld	hl,_caps_lock_engaged
-	ld	a, (hl)
-	xor	0x01
-	ld	(hl), a
-;source-doc/keyboard/kyb-init.c:85: caps_lock_engaged = !caps_lock_engaged;
-	call	_keyboard_buf_get_next
-	jr	l_keyboard_buf_get_next_00105
-l_keyboard_buf_get_next_00104:
-;source-doc/keyboard/kyb-init.c:88:
+;source-doc/keyboard/kyb-init.c:93:
 	push	bc
 	ld	l, c
 	ld	a, b
 	call	_scancode_to_char
 	ld	e, a
 	pop	bc
-;source-doc/keyboard/kyb-init.c:90: /* D = modifier, e-> char, H = 0, L=>code */
+;source-doc/keyboard/kyb-init.c:95: /* D = modifier, e-> char, H = 0, L=>code */
 	xor	a
 	ld	(ix-1),b
 	xor	a
@@ -313,33 +300,33 @@ l_keyboard_buf_get_next_00104:
 	ld	(ix-1),a
 	pop	hl
 	push	hl
-l_keyboard_buf_get_next_00105:
-;source-doc/keyboard/kyb-init.c:91: return (uint32_t)modifier_key << 24 | (uint32_t)c << 16 | key_code;
+l_keyboard_buf_get_next_00103:
+;source-doc/keyboard/kyb-init.c:96: return (uint32_t)modifier_key << 24 | (uint32_t)c << 16 | key_code;
 	ld	sp, ix
 	pop	ix
 	ret
-;source-doc/keyboard/kyb-init.c:93:
+;source-doc/keyboard/kyb-init.c:98:
 ; ---------------------------------
 ; Function keyboard_buf_flush
 ; ---------------------------------
 _keyboard_buf_flush:
-;source-doc/keyboard/kyb-init.c:94: void keyboard_buf_flush() {
-;source-doc/keyboard/kyb-init.c:95: write_index = 0;
+;source-doc/keyboard/kyb-init.c:99: void keyboard_buf_flush() {
+;source-doc/keyboard/kyb-init.c:100: write_index = 0;
 	xor	a
 	ld	(_write_index),a
 	ld	(_read_index),a
-;source-doc/keyboard/kyb-init.c:96: read_index  = 0;
+;source-doc/keyboard/kyb-init.c:101: read_index  = 0;
 	ret
-;source-doc/keyboard/kyb-init.c:102:
+;source-doc/keyboard/kyb-init.c:107:
 ; ---------------------------------
 ; Function keyboard_tick
 ; ---------------------------------
 _keyboard_tick:
-;source-doc/keyboard/kyb-init.c:103: void keyboard_tick(void) {
+;source-doc/keyboard/kyb-init.c:108: void keyboard_tick(void) {
 	ld	hl,_in_critical_usb_section
 	ld	a, (hl)
 	or	a
-;source-doc/keyboard/kyb-init.c:104: if (is_in_critical_section())
+;source-doc/keyboard/kyb-init.c:109: if (is_in_critical_section())
 	jr	NZ,l_keyboard_tick_00111
 ;././source-doc/base-drv//ch376.h:110: #endif
 	ld	l,0x0b
@@ -352,7 +339,6 @@ _keyboard_tick:
 	ld	a,0x1f
 	ld	bc,_CH376_DATA_PORT
 	out	(c), a
-;source-doc/keyboard/kyb-init.c:107: ch_configure_nak_retry_disable();
 	ld	bc,_report
 	ld	hl, (_keyboard_config)
 	ld	a,0x08
@@ -377,10 +363,10 @@ _keyboard_tick:
 	ld	a,0xdf
 	ld	bc,_CH376_DATA_PORT
 	out	(c), a
-;source-doc/keyboard/kyb-init.c:109: ch_configure_nak_retry_3s();
+;source-doc/keyboard/kyb-init.c:114: ch_configure_nak_retry_3s();
 	ld	hl,_result
 	ld	a, (hl)
-;source-doc/keyboard/kyb-init.c:110: if (result == 0)
+;source-doc/keyboard/kyb-init.c:115: if (result == 0)
 	or	a
 	jr	NZ,l_keyboard_tick_00111
 	ld	c,a
@@ -388,7 +374,7 @@ l_keyboard_tick_00109:
 	ld	a, c
 	sub	0x06
 	ret	NC
-;source-doc/keyboard/kyb-init.c:111: for (uint8_t i = 0; i < 6; i++) {
+;source-doc/keyboard/kyb-init.c:116: for (uint8_t i = 0; i < 6; i++) {
 	ld	a,+((_report+2) & 0xFF)
 	add	a, c
 	ld	e, a
@@ -407,17 +393,17 @@ l_keyboard_tick_00109:
 	pop	af
 	pop	de
 	pop	bc
-;source-doc/keyboard/kyb-init.c:112: keyboard_buf_put(report.bModifierKeys, report.keyCode[i]);
+;source-doc/keyboard/kyb-init.c:117: keyboard_buf_put(report.bModifierKeys, report.keyCode[i]);
 	ld	b,0x00
 	ld	hl,_previous_keyCodes
 	add	hl, bc
 	ld	a, (de)
 	ld	(hl), a
-;source-doc/keyboard/kyb-init.c:110: if (result == 0)
+;source-doc/keyboard/kyb-init.c:115: if (result == 0)
 	inc	c
 	jr	l_keyboard_tick_00109
 l_keyboard_tick_00111:
-;source-doc/keyboard/kyb-init.c:114: }
+;source-doc/keyboard/kyb-init.c:119: }
 	ret
 _keyboard_config:
 	DEFW +0x0000
