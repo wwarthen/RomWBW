@@ -170,7 +170,7 @@ usb_error ch_data_in_transfer(uint8_t *buffer, int16_t buffer_size, endpoint_par
     count = ch_read_data(buffer);
 
     if (count == 0) {
-      USB_MODULE_LEDS = 0x03;
+      USB_MODULE_LEDS = 0x00;
       return USB_ERR_DATA_ERROR;
     }
 
@@ -178,11 +178,11 @@ usb_error ch_data_in_transfer(uint8_t *buffer, int16_t buffer_size, endpoint_par
     buffer_size -= count;
   } while (buffer_size > 0);
 
-  USB_MODULE_LEDS = 0x03;
+  USB_MODULE_LEDS = 0x00;
   return USB_ERR_OK;
 
 done:
-  USB_MODULE_LEDS = 0x03;
+  USB_MODULE_LEDS = 0x00;
   return result;
 }
 
@@ -202,11 +202,11 @@ usb_error ch_data_in_transfer_n(uint8_t *const buffer, int8_t *const buffer_size
 
   *buffer_size = count;
 
-  USB_MODULE_LEDS = 0x03;
+  USB_MODULE_LEDS = 0x00;
 
   return USB_ERR_OK;
 done:
-  USB_MODULE_LEDS = 0x03;
+  USB_MODULE_LEDS = 0x00;
   return result;
 }
 
@@ -228,11 +228,11 @@ usb_error ch_data_out_transfer(const uint8_t *buffer, int16_t buffer_length, end
     endpoint->toggle = !endpoint->toggle;
   }
 
-  USB_MODULE_LEDS = 0x03;
+  USB_MODULE_LEDS = 0x00;
   return USB_ERR_OK;
 
 done:
-  USB_MODULE_LEDS = 0x03;
+  USB_MODULE_LEDS = 0x00;
   return result;
 }
 

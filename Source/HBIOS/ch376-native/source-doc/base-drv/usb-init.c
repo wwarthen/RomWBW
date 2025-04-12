@@ -25,7 +25,7 @@ static usb_error usb_host_bus_reset(void) {
 void _chnative_init(bool forced) {
   memset(get_usb_work_area(), 0, sizeof(_usb_state));
 
-  USB_MODULE_LEDS = 0x00;
+  USB_MODULE_LEDS = 0x03;
 
   ch_cmd_reset_all();
 
@@ -50,7 +50,7 @@ void _chnative_init(bool forced) {
     print_string("\bPRESENT (VER $");
   } else {
     if (!ch_probe()) {
-      USB_MODULE_LEDS = 0x00;
+      USB_MODULE_LEDS = 0x03;
       print_string("\r\nCH376: NOT PRESENT$");
       return;
     }
@@ -58,7 +58,7 @@ void _chnative_init(bool forced) {
     print_string("\r\nCH376: PRESENT (VER $");
   }
 
-  USB_MODULE_LEDS = 0x01;
+  USB_MODULE_LEDS = 0x00;
 
   print_hex(ch_cmd_get_ic_version());
   print_string("); $");
@@ -90,12 +90,12 @@ void _chnative_init(bool forced) {
       }
 
     connected:
-      USB_MODULE_LEDS = 0x03;
+      USB_MODULE_LEDS = 0x00;
       return;
     }
   }
 
-  USB_MODULE_LEDS = 0x00;
+  USB_MODULE_LEDS = 0x03;
   print_string("USB: DISCONNECTED$");
 }
 

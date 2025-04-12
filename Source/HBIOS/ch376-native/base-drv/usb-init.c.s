@@ -100,8 +100,8 @@ __chnative_init:
 	inc	de
 	ld	bc,0x0068
 	ldir
-;source-doc/base-drv/usb-init.c:28: USB_MODULE_LEDS = 0x00;
-	ld	a,0x00
+;source-doc/base-drv/usb-init.c:28: USB_MODULE_LEDS = 0x03;
+	ld	a,0x03
 	ld	bc,_USB_MODULE_LEDS
 	out	(c), a
 ;source-doc/base-drv/usb-init.c:30: ch_cmd_reset_all();
@@ -158,9 +158,10 @@ l__chnative_init_00110:
 ;source-doc/base-drv/usb-init.c:52: if (!ch_probe()) {
 	call	_ch_probe
 	ld	a, l
-;source-doc/base-drv/usb-init.c:53: USB_MODULE_LEDS = 0x00;
 	or	a
 	jr	NZ,l__chnative_init_00108
+;source-doc/base-drv/usb-init.c:53: USB_MODULE_LEDS = 0x03;
+	ld	a,0x03
 	ld	bc,_USB_MODULE_LEDS
 	out	(c), a
 ;source-doc/base-drv/usb-init.c:54: print_string("\r\nCH376: NOT PRESENT$");
@@ -173,8 +174,8 @@ l__chnative_init_00108:
 	ld	hl,usb_init_str_5
 	call	_print_string
 l__chnative_init_00111:
-;source-doc/base-drv/usb-init.c:61: USB_MODULE_LEDS = 0x01;
-	ld	a,0x01
+;source-doc/base-drv/usb-init.c:61: USB_MODULE_LEDS = 0x00;
+	ld	a,0x00
 	ld	bc,_USB_MODULE_LEDS
 	out	(c), a
 ;source-doc/base-drv/usb-init.c:63: print_hex(ch_cmd_get_ic_version());
@@ -251,8 +252,8 @@ l__chnative_init_00122:
 	jr	C,l__chnative_init_00122
 ;source-doc/base-drv/usb-init.c:92: connected:
 l__chnative_init_00118:
-;source-doc/base-drv/usb-init.c:93: USB_MODULE_LEDS = 0x03;
-	ld	a,0x03
+;source-doc/base-drv/usb-init.c:93: USB_MODULE_LEDS = 0x00;
+	ld	a,0x00
 	ld	bc,_USB_MODULE_LEDS
 	out	(c), a
 ;source-doc/base-drv/usb-init.c:94: return;
@@ -262,8 +263,8 @@ l__chnative_init_00126:
 	inc	c
 	jr	l__chnative_init_00125
 l__chnative_init_00121:
-;source-doc/base-drv/usb-init.c:98: USB_MODULE_LEDS = 0x00;
-	ld	a,0x00
+;source-doc/base-drv/usb-init.c:98: USB_MODULE_LEDS = 0x03;
+	ld	a,0x03
 	ld	bc,_USB_MODULE_LEDS
 	out	(c), a
 ;source-doc/base-drv/usb-init.c:99: print_string("USB: DISCONNECTED$");

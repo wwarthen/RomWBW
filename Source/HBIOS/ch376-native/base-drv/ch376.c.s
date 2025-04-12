@@ -530,10 +530,9 @@ l_ch_data_in_transfer_00107:
 	pop	bc
 ;source-doc/base-drv/ch376.c:172: if (count == 0) {
 	ld	a, e
+;source-doc/base-drv/ch376.c:173: USB_MODULE_LEDS = 0x00;
 	or	a
 	jr	NZ,l_ch_data_in_transfer_00106
-;source-doc/base-drv/ch376.c:173: USB_MODULE_LEDS = 0x03;
-	ld	a,0x03
 	ld	bc,_USB_MODULE_LEDS
 	out	(c), a
 ;source-doc/base-drv/ch376.c:174: return USB_ERR_DATA_ERROR;
@@ -563,8 +562,8 @@ l_ch_data_in_transfer_00148:
 	xor	0x80
 l_ch_data_in_transfer_00149:
 	jp	M, l_ch_data_in_transfer_00107
-;source-doc/base-drv/ch376.c:181: USB_MODULE_LEDS = 0x03;
-	ld	a,0x03
+;source-doc/base-drv/ch376.c:181: USB_MODULE_LEDS = 0x00;
+	ld	a,0x00
 	ld	bc,_USB_MODULE_LEDS
 	out	(c), a
 ;source-doc/base-drv/ch376.c:182: return USB_ERR_OK;
@@ -572,8 +571,8 @@ l_ch_data_in_transfer_00149:
 	jr	l_ch_data_in_transfer_00111
 ;source-doc/base-drv/ch376.c:184: done:
 l_ch_data_in_transfer_00110:
-;source-doc/base-drv/ch376.c:185: USB_MODULE_LEDS = 0x03;
-	ld	a,0x03
+;source-doc/base-drv/ch376.c:185: USB_MODULE_LEDS = 0x00;
+	ld	a,0x00
 	ld	bc,_USB_MODULE_LEDS
 	out	(c), a
 ;source-doc/base-drv/ch376.c:186: return result;
@@ -623,8 +622,8 @@ _ch_data_in_transfer_n:
 	ld	c,(ix+6)
 	ld	b,(ix+7)
 	ld	(bc), a
-;source-doc/base-drv/ch376.c:205: USB_MODULE_LEDS = 0x03;
-	ld	a,0x03
+;source-doc/base-drv/ch376.c:205: USB_MODULE_LEDS = 0x00;
+	ld	a,0x00
 	ld	bc,_USB_MODULE_LEDS
 	out	(c), a
 ;source-doc/base-drv/ch376.c:207: return USB_ERR_OK;
@@ -632,8 +631,8 @@ _ch_data_in_transfer_n:
 	jr	l_ch_data_in_transfer_n_00104
 ;source-doc/base-drv/ch376.c:208: done:
 l_ch_data_in_transfer_n_00103:
-;source-doc/base-drv/ch376.c:209: USB_MODULE_LEDS = 0x03;
-	ld	a,0x03
+;source-doc/base-drv/ch376.c:209: USB_MODULE_LEDS = 0x00;
+	ld	a,0x00
 	ld	bc,_USB_MODULE_LEDS
 	out	(c), a
 ;source-doc/base-drv/ch376.c:210: return result;
@@ -740,8 +739,8 @@ l_ch_data_out_transfer_00110:
 	ld	(de), a
 	jr	l_ch_data_out_transfer_00103
 l_ch_data_out_transfer_00105:
-;source-doc/base-drv/ch376.c:231: USB_MODULE_LEDS = 0x03;
-	ld	a,0x03
+;source-doc/base-drv/ch376.c:231: USB_MODULE_LEDS = 0x00;
+	ld	a,0x00
 	ld	bc,_USB_MODULE_LEDS
 	out	(c), a
 ;source-doc/base-drv/ch376.c:232: return USB_ERR_OK;
@@ -749,8 +748,8 @@ l_ch_data_out_transfer_00105:
 	jr	l_ch_data_out_transfer_00107
 ;source-doc/base-drv/ch376.c:234: done:
 l_ch_data_out_transfer_00106:
-;source-doc/base-drv/ch376.c:235: USB_MODULE_LEDS = 0x03;
-	ld	a,0x03
+;source-doc/base-drv/ch376.c:235: USB_MODULE_LEDS = 0x00;
+	ld	a,0x00
 	ld	bc,_USB_MODULE_LEDS
 	out	(c), a
 ;source-doc/base-drv/ch376.c:236: return result;
