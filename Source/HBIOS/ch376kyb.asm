@@ -52,7 +52,7 @@ CHUKB_INIT:
 	RET
 
 CHUKB_TICK:
-	LD      A, SCAN_INT_PERIOD			; SCAN THE KEYBOARD EVERY 'SCAN_INT_PERIOD' INTERRUPTS.
+	LD      A, SCAN_INT_PERIOD	; SCAN THE KEYBOARD EVERY 'SCAN_INT_PERIOD' INTERRUPTS.
 UKY_SCNCNT	.EQU	$ - 1
 	DEC     A
 	LD      (UKY_SCNCNT), A
@@ -84,23 +84,46 @@ VEC_CHUKB_TICK:
 ;
 ; Outputs:
 ;   A: Status / Codes Pending
+;   A': Current Modifier Key State
+;   B, C, D, E, H, L: Up to 6 active key codes
 ;
-; Return a count of the number of key Codes Pending (A) in the keyboard buffer. 
-; If it is not possible to determine the actual number in the buffer, it is 
-; acceptable to return 1 to indicate there are key codes available to read and 
+; Return a count of the number of key Codes Pending (A) in the keyboard buffer.
+; If it is not possible to determine the actual number in the buffer, it is
+; acceptable to return 1 to indicate there are key codes available to read and
 ; 0 if there are none available.
-; The value returned in register A is used as both a Status (A) code and the 
-; return value. Negative values (bit 7 set) indicate a standard HBIOS result 
-; (error) code. Otherwise, the return value represents the number of key codes 
+; The value returned in register A is used as both a Status (A) code and the
+; return value. Negative values (bit 7 set) indicate a standard HBIOS result
+; (error) code. Otherwise, the return value represents the number of key codes
 ; pending.
 ;
+; USB Extension
+; Returns the most current USB Key Report
+; (See https://wiki.osdev.org/USB_Human_Interface_Devices).
+; The report indicates the current keyboard state, irrespective of the
+; character queue.
+; The A' register contains the current modifier key state
+; The B, C, D, E, H, L contain the 0 to 6 USB scancodes.
+;
 UKY_STAT:
-	JP	_keyboard_buf_size
+	HB_DI
+	call	_keyboard_buf_size
+	HB_EI
+	ld	iy, _report
+	ex	af, af'
+	ld	a, (iy)
+	ex	af, af'
+	ld	b, (iy+2)
+	ld	c, (iy+3)
+	ld	d, (iy+4)
+	ld	e, (iy+5)
+	ld	h, (iy+6)
+	ld	l, (iy+7)
+	ret
 
 ; ### Function 0x4D -- Video Keyboard Flush (VDAKFL)
 ;
 ; Inputs:
-;   C: Video Unit
+;   None
 ;
 ; Outputs:
 ;   A: standard HBIOS result code
@@ -108,7 +131,9 @@ UKY_STAT:
 ; Purged and all contents discarded. The Status (A) is a standard HBIOS result code.
 ;
 UKY_FLUSH:
+	HB_DI
 	CALL	_keyboard_buf_flush
+	HB_EI
 	XOR	A
 	RET
 ;
@@ -124,16 +149,16 @@ UKY_FLUSH:
 ;   E: Keycode
 ;
 ; Read the next key data from the keyboard. If a buffer is used, return the next key code in the buffer.
-; If no key data is available, this function will wait indefinitely for a keypress. The Status (A) is a 
+; If no key data is available, this function will wait indefinitely for a key press. The Status (A) is a
 ; standard HBIOS result code.
 ;
-; The Scancode (C) value is the raw scancode from the keyboard for the keypress. Scancodes are from 
-; the PS/2 scancode set 2 standard.
+; The Scancode (C) value is the raw scan code from the keyboard for the key press. Scan codes are standard
+; usb scan codes
 ;
-; The Keystate (D) is a bitmap representing the value of all modifier keys and shift states as they 
+; The Keystate (D) is a bitmap representing the value of all modifier keys and shift states as they
 ; existed at the time of the keystroke. The bitmap is defined as:
 ;
-; Bit Keystate Indication
+; Bit Key state Indication
 ; 7   Key pressed was from the num pad
 ; 6   Caps Lock was active
 ; 5   Num Lock was active
@@ -143,7 +168,7 @@ UKY_FLUSH:
 ; 1   Control key was held down
 ; 0   Shift key was held down
 ;
-; The Keycode (E) is generally returned as appropriate ASCII values, if possible. Special keys, like 
+; The Keycode (E) is generally returned as appropriate ASCII values, if possible. Special keys, like
 ; function keys and arrows, are returned as reserved codes as described at the start of this section.
 ;
 UKY_READ:
