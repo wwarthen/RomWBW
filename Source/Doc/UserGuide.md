@@ -2796,6 +2796,39 @@ The CP/M 3 `DEVICE` command is used to manipulate the device mappings.
   I believe it was done this way to make it easier for users to
   transition from CP/M 3 to ZPM3.
 
+- The command line editing key bindings were slightly modified by
+  Jon Saxton when he applied a few ZPM3 fixes.  This is explained
+  in the file zpm3fix.txt in the distribution folder Source/ZPM3.
+  The current key bindings are from the "New" column below.
+
+| **Old** | **New** | **Function**                              |
+|---------|---------|-------------------------------------------|
+| ^A	  | ^A	    | one word left                             |
+| ^B	  | ^B	    | to beginning/end of line                  |
+| ^C	  | ^C	    | reboot if at start of line                |
+| ^D	  | ^D	    | right one char                            |
+| ^E	  | ^E	    | get previous line                         |
+| ^F	  | ^F	    | right one word                            |
+| ^G	  | ^G	    | delete char at cursor                     |
+| ^H	  | ^H	    | destructive backspace                     |
+| ^I	  | ^I	    | (TAB) ignored here                        |
+| ^J	  | ^J	    | (LF) exit editor                          |
+| ^K	  | ^K	    | delete all to the right                   |
+| ^L	  | ^L	    | ignored                                   |
+| ^M	  | ^M	    | (CR) exit editor                          |
+| ^N	  | ^N	    | ignored                                   |
+| ^O	  | ^O	    | ignored                                   |
+| ^P	  | ^P	    | toggle printer echoing                    |
+| ^Q	  | ^Q	    | toggle autoprompt (if enabled)            |
+| ^R	  | ^R	    | ignored                                   |
+| ^S	  | ^S	    | left one char                             |
+| ^T	  | ^T	    | delete word at cursor                     |
+| ^U	  | ^U	    | add line to history                       |
+| ^V	  | ^V	    | clear line, delete from history           |
+| ^W	  | ^X	    | get next line from history                |
+| ^X	  | ^W	    | delete all to the left                    |
+| ^Y	  | ^Y	    | clear line                                |
+
 ## QP/M
 
 QP/M is another OS providing compatibility with and enhancements

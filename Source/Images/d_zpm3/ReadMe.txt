@@ -55,9 +55,45 @@ are documented in ZPM3FIX.TXT in the RomWBW distribution in the
 Source/ZPM3 directory.  RomWBW uses the patched version of
 ZPM3.  However, Jose Luis discovered that named directories do not
 work properly with these patches (see RomWBW GitHub Issue #324). I have
-subsequenty added a small patch to correct this.  The original
+subsequently added a small patch to correct this.  The original
 unpatched copies of RESBDOS.SPR and BNKBDOS.SPR are included in the 
 RomWBW build directory for ZPM3 as RESBDOS.SPR.bak and 
 BNKBDOS.SPR.bak.  If you want to revert to the unpatched release of 
 ZPM3, just overlay RESBDOS.SPR and BNKBDOS.SPR with the .bak variants 
 and regenerate RomWBW.
+
+jduraes reported an inconsistency between the key bindings for the
+built-in ZPM3 command line editing vs the key functions documented
+in ZPM3.TXT.  Refer to RomWBW Issue https://github.com/wwarthen/RomWBW/issues/533.
+
+When Jon Saxton implemented a his patches to ZPM3, he also updated
+the command line history to function a bit more like one would typically
+expect (see ZPM3FIX.TXT).  Part of this change included swapping the
+functions of ^W and ^X for WordStar compatibility:
+
+Old	New	Function
+^A	^A	one word left
+^B	^B	to beginning/end of line
+^C	^C	reboot if at start of line
+^D	^D	right one char
+^E	^E	get previous line
+^F	^F	right one word
+^G	^G	delete char at cursor
+^H	^H	destructive backspace
+^I	^I	(TAB) ignored here
+^J	^J	(LF) exit editor
+^K	^K	delete all to the right
+^L	^L	ignored
+^M	^M	(CR) exit editor
+^N	^N	ignored
+^O	^O	ignored
+^P	^P	toggle printer echoing
+^Q	^Q	toggle autoprompt (if enabled)
+^R	^R	ignored
+^S	^S	left one char
+^T	^T	delete word at cursor
+^U	^U	add line to history
+^V	^V	clear line, delete from history
+^W	^X	get next line from history
+^X	^W	delete all to the left
+^Y	^Y	clear line
