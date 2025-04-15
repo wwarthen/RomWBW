@@ -7,7 +7,7 @@ typedef struct {
   uint8_t bModifierKeys;
   uint8_t bReserved;
   uint8_t keyCode[6];
-} keyboard_report;
+} keyboard_report_t;
 
 #define KEY_MOD_LCTRL  0x01
 #define KEY_MOD_LSHIFT 0x02

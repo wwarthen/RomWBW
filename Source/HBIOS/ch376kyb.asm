@@ -84,8 +84,9 @@ VEC_CHUKB_TICK:
 ;
 ; Outputs:
 ;   A: Status / Codes Pending
-;   A': Current Modifier Key State
-;   B, C, D, E, H, L: Up to 6 active key codes
+;   B: Number of buffered usb reports
+;   A': USB Report Modifier Key State (valid if B > 0)
+;   B', C', D', E', H', L': USB Report's 6 key codes (valid only if B > 0)
 ;
 ; Return a count of the number of key Codes Pending (A) in the keyboard buffer.
 ; If it is not possible to determine the actual number in the buffer, it is
@@ -96,28 +97,48 @@ VEC_CHUKB_TICK:
 ; (error) code. Otherwise, the return value represents the number of key codes
 ; pending.
 ;
-; USB Extension
-; Returns the most current USB Key Report
-; (See https://wiki.osdev.org/USB_Human_Interface_Devices).
-; The report indicates the current keyboard state, irrespective of the
-; character queue.
-; The A' register contains the current modifier key state
-; The B, C, D, E, H, L contain the 0 to 6 USB scancodes.
-;
+; USB Keyboard Extension:
+; Returns the current USB HID keyboard report data.
+; Register B contains the number of buffered reports available:
+;   B = 0: No reports available
+;   B > 0: At least one report available (will be consumed after reading)
+; When a report is available (B > 0):
+;   A': Contains modifier key states
+;   B',C',D',E',H',L': Contains up to 6 concurrent key codes
+; See USB HID Usage Tables specification for key codes
+
 UKY_STAT:
 	HB_DI
 	call	_keyboard_buf_size
 	HB_EI
-	ld	iy, _report
+	ld	a, l
+	ld	b, h
 	ex	af, af'
+	ld	a, b
+	or	a
+	jr	z, no_queued_reports
+	ld	iy, (_queued_report)
 	ld	a, (iy)
 	ex	af, af'
+	exx
 	ld	b, (iy+2)
 	ld	c, (iy+3)
 	ld	d, (iy+4)
 	ld	e, (iy+5)
 	ld	h, (iy+6)
 	ld	l, (iy+7)
+	exx
+	ret
+
+no_queued_reports:
+	ex	af, af'
+	exx
+	ld	bc, 0
+	ld	d, b
+	ld	e, b
+	ld	l, b
+	ld	h, b
+	exx
 	ret
 
 ; ### Function 0x4D -- Video Keyboard Flush (VDAKFL)
@@ -169,7 +190,7 @@ UKY_FLUSH:
 ; 0   Shift key was held down
 ;
 ; The Keycode (E) is generally returned as appropriate ASCII values, if possible. Special keys, like
-; function keys and arrows, are returned as reserved codes as described at the start of this section.
+; function keys and arrows, are returned as reserved codes.
 ;
 UKY_READ:
 	HB_DI

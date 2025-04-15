@@ -4,13 +4,31 @@
 #include <dev_transfers.h>
 #include <print.h>
 #include <stdint.h>
+#include <string.h>
 #include <usb_state.h>
 
+#define KEYBOARD_BUFFER_SIZE      8
+#define KEYBOARD_BUFFER_SIZE_MASK 7
+typedef struct {
+  uint8_t modifier_keys;
+  uint8_t key_code;
+} keyboard_event;
+
 static device_config_keyboard *keyboard_config = 0;
-extern bool                    caps_lock_engaged;
+
+static keyboard_event buffer[KEYBOARD_BUFFER_SIZE] = {{0}};
+static uint8_t        write_index                  = 0;
+static uint8_t        read_index                   = 0;
+
+static uint8_t           alt_write_index               = 0;
+static uint8_t           alt_read_index                = 0;
+static keyboard_report_t reports[KEYBOARD_BUFFER_SIZE] = {{0}};
+
+static keyboard_report_t *queued_report = NULL;
+static keyboard_report_t  report        = {0};
+static keyboard_report_t  previous      = {0};
 
 uint8_t keyboard_init(void) __sdcccall(1) {
-
   uint8_t index   = 1;
   keyboard_config = NULL;
 
@@ -37,26 +55,39 @@ uint8_t keyboard_init(void) __sdcccall(1) {
   return 0;
 }
 
-#define KEYBOARD_BUFFER_SIZE      8
-#define KEYBOARD_BUFFER_SIZE_MASK 7
-typedef struct {
-  uint8_t modifier_keys;
-  uint8_t key_code;
-} keyboard_event;
-keyboard_event buffer[KEYBOARD_BUFFER_SIZE] = {{0}};
-uint8_t        write_index                  = 0;
-uint8_t        read_index                   = 0;
+static uint8_t report_diff() __sdcccall(1) {
+  uint8_t *a = (uint8_t *)&report;
+  uint8_t *b = (uint8_t *)&previous;
 
-uint8_t previous_keyCodes[6] = {0};
+  uint8_t i = sizeof(report);
+  do {
+    if (*a++ != *b++)
+      return true;
+  } while (--i != 0);
 
-void keyboard_buf_put(const uint8_t modifier_keys, const uint8_t key_code) {
+  return false;
+}
+
+static void report_put() {
+  uint8_t next_write_index = (alt_write_index + 1) & KEYBOARD_BUFFER_SIZE_MASK;
+
+  if (next_write_index != alt_read_index) { // Check if buffer is not full
+    reports[alt_write_index] = report;
+    alt_write_index          = next_write_index;
+  }
+}
+
+static void keyboard_buf_put(const uint8_t modifier_keys, const uint8_t key_code) __sdcccall(1) {
   if (key_code >= 0x80 || key_code == 0)
     return; // ignore ???
 
   // if already reported, just skip it
-  for (uint8_t i = 0; i < 6; i++)
-    if (previous_keyCodes[i] == key_code)
+  uint8_t  i = 6;
+  uint8_t *a = previous.keyCode;
+  do {
+    if (*a++ == key_code)
       return;
+  } while (--i != 0);
 
   uint8_t next_write_index = (write_index + 1) & KEYBOARD_BUFFER_SIZE_MASK;
   if (next_write_index != read_index) { // Check if buffer is not full
@@ -66,30 +97,42 @@ void keyboard_buf_put(const uint8_t modifier_keys, const uint8_t key_code) {
   }
 }
 
-uint8_t keyboard_buf_size() __sdcccall(1) {
-  if (write_index >= read_index)
-    return write_index - read_index;
+uint16_t keyboard_buf_size() {
+  uint8_t size;
+  uint8_t alt_size;
 
-  return KEYBOARD_BUFFER_SIZE - read_index + write_index;
+  if (alt_write_index >= alt_read_index)
+    alt_size = alt_write_index - alt_read_index;
+  else
+    alt_size = KEYBOARD_BUFFER_SIZE - alt_read_index + alt_write_index;
+
+  if (alt_size == 0)
+    queued_report = NULL;
+  else {
+    queued_report  = &reports[alt_read_index];
+    alt_read_index = (alt_read_index + 1) & KEYBOARD_BUFFER_SIZE_MASK;
+  }
+
+  if (write_index >= read_index)
+    size = write_index - read_index;
+  else
+    size = KEYBOARD_BUFFER_SIZE - read_index + write_index;
+
+  return (uint16_t)alt_size << 8 | (uint16_t)size;
 }
 
 uint32_t keyboard_buf_get_next() {
   if (write_index == read_index) // Check if buffer is empty
-    return 0x0000FF00; // H = -1, D, E, L = 0
+    return 0x0000FF00;           // H = -1, D, E, L = 0
 
   const uint8_t modifier_key = buffer[read_index].modifier_keys;
   const uint8_t key_code     = buffer[read_index].key_code;
   read_index                 = (read_index + 1) & KEYBOARD_BUFFER_SIZE_MASK;
 
-  //D: Modifier keys - aka Keystate
-  //E: ASCII Code
-  //H: 0
-  //L: KeyCode aka scan code
-
-  // if (key_code == KEY_CODE_CAPS_LOCK) {
-  //   caps_lock_engaged = !caps_lock_engaged;
-  //   return keyboard_buf_get_next();
-  // }
+  // D: Modifier keys - aka Keystate
+  // E: ASCII Code
+  // H: 0
+  // L: KeyCode aka scan code
 
   const unsigned char c = scancode_to_char(modifier_key, key_code);
   /* D = modifier, e-> char, H = 0, L=>code */
@@ -97,24 +140,32 @@ uint32_t keyboard_buf_get_next() {
 }
 
 void keyboard_buf_flush() {
-  write_index = 0;
-  read_index  = 0;
+  write_index = read_index = alt_write_index = alt_read_index = 0;
+
+  uint8_t  i = sizeof(previous);
+  uint8_t *a = (uint8_t *)previous;
+  uint8_t *b = (uint8_t *)report;
+  do {
+    *a++ = 0;
+    *b++ = 0;
+  } while (--i != 0);
 }
-
-uint8_t active = 0;
-
-keyboard_report report = {0};
 
 void keyboard_tick(void) {
   if (is_in_critical_section())
     return;
 
   ch_configure_nak_retry_disable();
-  result = usbdev_dat_in_trnsfer_0((device_config *)keyboard_config, (uint8_t *)report, 8);
+  result = usbdev_dat_in_trnsfer_0((device_config *)keyboard_config, (uint8_t *)&report, 8);
   ch_configure_nak_retry_3s();
-  if (result == 0)
-    for (uint8_t i = 0; i < 6; i++) {
-      keyboard_buf_put(report.bModifierKeys, report.keyCode[i]);
-      previous_keyCodes[i] = report.keyCode[i];
+  if (result == 0) {
+    if (report_diff()) {
+      report_put();
+      uint8_t i = 6;
+      do {
+        keyboard_buf_put(report.bModifierKeys, report.keyCode[i - 1]);
+      } while (--i != 0);
+      previous = report;
     }
+  }
 }

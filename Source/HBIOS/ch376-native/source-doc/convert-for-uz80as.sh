@@ -35,6 +35,8 @@ sed -E \
   -e 's/\s+or\s+a,(0x[0-9A-Fa-f]{2})/\tor\t\1/g' \
   -e 's/\s+xor\s+a,(0x[0-9A-Fa-f]{2})/\txor\t\1/g' \
   -e 's/\s+and\s+a,(0x[0-9A-Fa-f]{2})/\tand\t\1/g' \
+  -e 's/\s+and\s+a,\s*a/\tand\ta/g' \
+  -e 's/\s+and\s+a,\s*(b|c|d|e|h|l|iyl|iyh|ixl|ixh)/\tand\t\1/g' \
   -e 's/\s+sub\s+a,(0x[0-9A-Fa-f]{2})/\tsub\t\1/g' \
   -e 's/\s+cp\s+a,\s*a/\tcp\ta/g' \
   -e 's/\s+or\s+a,\s*a/\tor\ta/g' \
