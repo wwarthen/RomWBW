@@ -16,7 +16,7 @@ FROM ubuntu:jammy-20240111 AS basebuilder
 
 # cd Tools && make
 # cd Source && make # at least once to build many common units
-# cd Source && make rom ROM_PLATFORM=RCZ80 ROM_CONFIG=std
+# cd Source && make rom ROM_PLATFORM=RCEZ80 ROM_CONFIG=std
 
 # when finish, type 'exit' to return to back to your standard terminal session
 

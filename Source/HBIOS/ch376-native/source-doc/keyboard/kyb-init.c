@@ -9,16 +9,13 @@
 
 #define KEYBOARD_BUFFER_SIZE      8
 #define KEYBOARD_BUFFER_SIZE_MASK 7
-typedef struct {
-  uint8_t modifier_keys;
-  uint8_t key_code;
-} keyboard_event;
+typedef uint16_t modifier_and_code_t;
 
 static device_config_keyboard *keyboard_config = 0;
 
-static keyboard_event buffer[KEYBOARD_BUFFER_SIZE] = {{0}};
-static uint8_t        write_index                  = 0;
-static uint8_t        read_index                   = 0;
+static modifier_and_code_t buffer[KEYBOARD_BUFFER_SIZE] = {0};
+static uint8_t             write_index                  = 0;
+static uint8_t             read_index                   = 0;
 
 static uint8_t           alt_write_index               = 0;
 static uint8_t           alt_read_index                = 0;
@@ -77,7 +74,8 @@ static void report_put() {
   }
 }
 
-static void keyboard_buf_put(const uint8_t modifier_keys, const uint8_t key_code) __sdcccall(1) {
+static void keyboard_buf_put(const uint8_t indx) __sdcccall(1) {
+  const uint8_t key_code = report.keyCode[indx];
   if (key_code >= 0x80 || key_code == 0)
     return; // ignore ???
 
@@ -91,9 +89,8 @@ static void keyboard_buf_put(const uint8_t modifier_keys, const uint8_t key_code
 
   uint8_t next_write_index = (write_index + 1) & KEYBOARD_BUFFER_SIZE_MASK;
   if (next_write_index != read_index) { // Check if buffer is not full
-    buffer[write_index].modifier_keys = modifier_keys;
-    buffer[write_index].key_code      = key_code;
-    write_index                       = next_write_index;
+    buffer[write_index] = (uint16_t)report.bModifierKeys << 8 | (uint16_t)key_code;
+    write_index         = next_write_index;
   }
 }
 
@@ -106,12 +103,8 @@ uint16_t keyboard_buf_size() {
   else
     alt_size = KEYBOARD_BUFFER_SIZE - alt_read_index + alt_write_index;
 
-  if (alt_size == 0)
-    queued_report = NULL;
-  else {
-    queued_report  = &reports[alt_read_index];
+  if (alt_size != 0)
     alt_read_index = (alt_read_index + 1) & KEYBOARD_BUFFER_SIZE_MASK;
-  }
 
   if (write_index >= read_index)
     size = write_index - read_index;
@@ -125,8 +118,8 @@ uint32_t keyboard_buf_get_next() {
   if (write_index == read_index) // Check if buffer is empty
     return 0x0000FF00;           // H = -1, D, E, L = 0
 
-  const uint8_t modifier_key = buffer[read_index].modifier_keys;
-  const uint8_t key_code     = buffer[read_index].key_code;
+  const uint8_t modifier_key = buffer[read_index] >> 8;
+  const uint8_t key_code     = buffer[read_index] & 255;
   read_index                 = (read_index + 1) & KEYBOARD_BUFFER_SIZE_MASK;
 
   // D: Modifier keys - aka Keystate
@@ -163,7 +156,7 @@ void keyboard_tick(void) {
       report_put();
       uint8_t i = 6;
       do {
-        keyboard_buf_put(report.bModifierKeys, report.keyCode[i - 1]);
+        keyboard_buf_put(i - 1);
       } while (--i != 0);
       previous = report;
     }

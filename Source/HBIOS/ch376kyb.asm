@@ -108,6 +108,16 @@ VEC_CHUKB_TICK:
 ; See USB HID Usage Tables specification for key codes
 
 UKY_STAT:
+	exx
+	ld	hl, (_alt_read_index)
+	ld	h,0x00
+	add	hl, hl
+	add	hl, hl
+	add	hl, hl
+	ld	bc,_reports
+	add	hl, bc
+	push	hl			; address of potential que'd next usb report
+
 	HB_DI
 	call	_keyboard_buf_size
 	HB_EI
@@ -116,10 +126,11 @@ UKY_STAT:
 	ex	af, af'
 	ld	a, b
 	or	a
+	pop	iy			; retrieve the next que'd usb_report address
 	jr	z, no_queued_reports
-	ld	iy, (_queued_report)
+
 	ld	a, (iy)
-	ex	af, af'
+	ex	af, af'		
 	exx
 	ld	b, (iy+2)
 	ld	c, (iy+3)
@@ -202,3 +213,4 @@ UKY_READ:
 	LD	C, L
 	XOR	A
 	RET
+

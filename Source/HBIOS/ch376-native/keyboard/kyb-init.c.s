@@ -68,80 +68,80 @@ _previous:
 ;--------------------------------------------------------
 ; code
 ;--------------------------------------------------------
-;source-doc/keyboard/kyb-init.c:30:
+;source-doc/keyboard/kyb-init.c:27:
 ; ---------------------------------
 ; Function keyboard_init
 ; ---------------------------------
 _keyboard_init:
-;source-doc/keyboard/kyb-init.c:31: uint8_t keyboard_init(void) __sdcccall(1) {
+;source-doc/keyboard/kyb-init.c:28: uint8_t keyboard_init(void) __sdcccall(1) {
 	ld	c,0x01
-;source-doc/keyboard/kyb-init.c:32: uint8_t index   = 1;
+;source-doc/keyboard/kyb-init.c:29: uint8_t index   = 1;
 	ld	hl,0x0000
 	ld	(_keyboard_config),hl
-;source-doc/keyboard/kyb-init.c:34:
+;source-doc/keyboard/kyb-init.c:31:
 	ld	b,0x01
 l_keyboard_init_00105:
-;source-doc/keyboard/kyb-init.c:35: do {
+;source-doc/keyboard/kyb-init.c:32: do {
 	push	bc
 	ld	a, b
 	call	_get_usb_device_config
 	ex	de, hl
 	pop	bc
 	ld	(_keyboard_config), hl
-;source-doc/keyboard/kyb-init.c:37:
+;source-doc/keyboard/kyb-init.c:34:
 	ld	hl,(_keyboard_config)
 	ld	a,h
 	or	l
 	jr	Z,l_keyboard_init_00107
-;source-doc/keyboard/kyb-init.c:40:
+;source-doc/keyboard/kyb-init.c:37:
 	ld	hl, (_keyboard_config)
 	ld	a, (hl)
 	and	0x0f
-;source-doc/keyboard/kyb-init.c:42:
+;source-doc/keyboard/kyb-init.c:39:
 	sub	0x04
 	jr	NZ,l_keyboard_init_00106
-;source-doc/keyboard/kyb-init.c:43: if (t == USB_IS_KEYBOARD) {
+;source-doc/keyboard/kyb-init.c:40: if (t == USB_IS_KEYBOARD) {
 	push	bc
 	ld	hl,kyb_init_str_0
 	call	_print_string
 	pop	bc
-;source-doc/keyboard/kyb-init.c:44: print_string("\r\nUSB: KEYBOARD @ $");
+;source-doc/keyboard/kyb-init.c:41: print_string("\r\nUSB: KEYBOARD @ $");
 	ld	h,0x00
 	ld	l, c
 	call	_print_uint16
-;source-doc/keyboard/kyb-init.c:45: print_uint16(index);
+;source-doc/keyboard/kyb-init.c:42: print_uint16(index);
 	ld	hl,kyb_init_str_1
 	call	_print_string
-;source-doc/keyboard/kyb-init.c:47:
+;source-doc/keyboard/kyb-init.c:44:
 	ld	a,0x01
 	push	af
 	inc	sp
 	ld	hl, (_keyboard_config)
 	call	_hid_set_protocol
-;source-doc/keyboard/kyb-init.c:48: hid_set_protocol(keyboard_config, 1);
+;source-doc/keyboard/kyb-init.c:45: hid_set_protocol(keyboard_config, 1);
 	ld	a,0x80
 	push	af
 	inc	sp
 	ld	hl, (_keyboard_config)
 	call	_hid_set_idle
-;source-doc/keyboard/kyb-init.c:49: hid_set_idle(keyboard_config, 0x80);
+;source-doc/keyboard/kyb-init.c:46: hid_set_idle(keyboard_config, 0x80);
 	ld	a,0x01
 	jr	l_keyboard_init_00108
 l_keyboard_init_00106:
-;source-doc/keyboard/kyb-init.c:51: }
+;source-doc/keyboard/kyb-init.c:48: }
 	inc	b
 	ld	a,b
 	ld	c,b
 	sub	0x07
 	jr	NZ,l_keyboard_init_00105
 l_keyboard_init_00107:
-;source-doc/keyboard/kyb-init.c:53:
+;source-doc/keyboard/kyb-init.c:50:
 	ld	hl,kyb_init_str_2
 	call	_print_string
-;source-doc/keyboard/kyb-init.c:54: print_string("\r\nUSB: KEYBOARD: NOT FOUND$");
+;source-doc/keyboard/kyb-init.c:51: print_string("\r\nUSB: KEYBOARD: NOT FOUND$");
 	xor	a
 l_keyboard_init_00108:
-;source-doc/keyboard/kyb-init.c:55: return 0;
+;source-doc/keyboard/kyb-init.c:52: return 0;
 	ret
 kyb_init_str_0:
 	DEFB 0x0d
@@ -156,51 +156,51 @@ kyb_init_str_2:
 	DEFB 0x0a
 	DEFM "USB: KEYBOARD: NOT FOUND$"
 	DEFB 0x00
-;source-doc/keyboard/kyb-init.c:57:
+;source-doc/keyboard/kyb-init.c:54:
 ; ---------------------------------
 ; Function report_diff
 ; ---------------------------------
 _report_diff:
-;source-doc/keyboard/kyb-init.c:58: static uint8_t report_diff() __sdcccall(1) {
+;source-doc/keyboard/kyb-init.c:55: static uint8_t report_diff() __sdcccall(1) {
 	ld	de,_report+0
-;source-doc/keyboard/kyb-init.c:59: uint8_t *a = (uint8_t *)&report;
-;source-doc/keyboard/kyb-init.c:62: uint8_t i = sizeof(report);
+;source-doc/keyboard/kyb-init.c:56: uint8_t *a = (uint8_t *)&report;
+;source-doc/keyboard/kyb-init.c:59: uint8_t i = sizeof(report);
 	ld	b,0x08
 	ld	hl,_previous
 l_report_diff_00103:
-;source-doc/keyboard/kyb-init.c:63: do {
+;source-doc/keyboard/kyb-init.c:60: do {
 	ld	a, (de)
 	inc	de
 	ld	c, (hl)
 	inc	hl
 	sub	c
 	jr	Z,l_report_diff_00104
-;source-doc/keyboard/kyb-init.c:64: if (*a++ != *b++)
+;source-doc/keyboard/kyb-init.c:61: if (*a++ != *b++)
 	ld	a,0x01
 	jr	l_report_diff_00106
 l_report_diff_00104:
-;source-doc/keyboard/kyb-init.c:65: return true;
+;source-doc/keyboard/kyb-init.c:62: return true;
 	djnz	l_report_diff_00103
-;source-doc/keyboard/kyb-init.c:67:
+;source-doc/keyboard/kyb-init.c:64:
 	xor	a
 l_report_diff_00106:
-;source-doc/keyboard/kyb-init.c:68: return false;
+;source-doc/keyboard/kyb-init.c:65: return false;
 	ret
-;source-doc/keyboard/kyb-init.c:70:
+;source-doc/keyboard/kyb-init.c:67:
 ; ---------------------------------
 ; Function report_put
 ; ---------------------------------
 _report_put:
-;source-doc/keyboard/kyb-init.c:71: static void report_put() {
+;source-doc/keyboard/kyb-init.c:68: static void report_put() {
 	ld	a, (_alt_write_index)
 	inc	a
 	and	0x07
 	ld	c, a
-;source-doc/keyboard/kyb-init.c:73:
+;source-doc/keyboard/kyb-init.c:70:
 	ld	a,(_alt_read_index)
 	sub	c
 	ret	Z
-;source-doc/keyboard/kyb-init.c:74: if (next_write_index != alt_read_index) { // Check if buffer is not full
+;source-doc/keyboard/kyb-init.c:71: if (next_write_index != alt_read_index) { // Check if buffer is not full
 	ld	de,_reports+0
 	ld	hl, (_alt_write_index)
 	ld	h,0x00
@@ -214,90 +214,90 @@ _report_put:
 	ld	hl,_report
 	ldir
 	pop	bc
-;source-doc/keyboard/kyb-init.c:75: reports[alt_write_index] = report;
+;source-doc/keyboard/kyb-init.c:72: reports[alt_write_index] = report;
 	ld	hl,_alt_write_index
 	ld	(hl), c
-;source-doc/keyboard/kyb-init.c:77: }
+;source-doc/keyboard/kyb-init.c:74: }
 	ret
-;source-doc/keyboard/kyb-init.c:79:
+;source-doc/keyboard/kyb-init.c:76:
 ; ---------------------------------
 ; Function keyboard_buf_put
 ; ---------------------------------
 _keyboard_buf_put:
 	ld	c, a
-;source-doc/keyboard/kyb-init.c:80: static void keyboard_buf_put(const uint8_t modifier_keys, const uint8_t key_code) __sdcccall(1) {
-	ld	a,l
-	ld	e,l
+;source-doc/keyboard/kyb-init.c:77: static void keyboard_buf_put(const uint8_t indx) __sdcccall(1) {
+	ld	b,0x00
+	ld	hl,+(_report + 2)
+	add	hl, bc
+;source-doc/keyboard/kyb-init.c:78: const uint8_t key_code = report.keyCode[indx];
+	ld	a,(hl)
+	ld	c,a
 	cp	0x80
 	jr	NC,l_keyboard_buf_put_00111
 	or	a
-;source-doc/keyboard/kyb-init.c:81: if (key_code >= 0x80 || key_code == 0)
+;source-doc/keyboard/kyb-init.c:79: if (key_code >= 0x80 || key_code == 0)
 	jr	Z,l_keyboard_buf_put_00111
-;source-doc/keyboard/kyb-init.c:85: uint8_t  i = 6;
-;source-doc/keyboard/kyb-init.c:86: uint8_t *a = previous.keyCode;
+;source-doc/keyboard/kyb-init.c:83: uint8_t  i = 6;
+;source-doc/keyboard/kyb-init.c:84: uint8_t *a = previous.keyCode;
 	ld	b,0x06
 	ld	hl,+(_previous + 2)
 l_keyboard_buf_put_00106:
-;source-doc/keyboard/kyb-init.c:87: do {
+;source-doc/keyboard/kyb-init.c:85: do {
 	ld	a, (hl)
 	inc	hl
-	sub	e
-;source-doc/keyboard/kyb-init.c:88: if (*a++ == key_code)
+	sub	c
+;source-doc/keyboard/kyb-init.c:86: if (*a++ == key_code)
 	ret	Z
-;source-doc/keyboard/kyb-init.c:89: return;
+;source-doc/keyboard/kyb-init.c:87: return;
 	djnz	l_keyboard_buf_put_00106
-;source-doc/keyboard/kyb-init.c:91:
+;source-doc/keyboard/kyb-init.c:89:
 	ld	a, (_write_index)
 	inc	a
 	and	0x07
-	ld	d, a
-;source-doc/keyboard/kyb-init.c:92: uint8_t next_write_index = (write_index + 1) & KEYBOARD_BUFFER_SIZE_MASK;
+	ld	b, a
+;source-doc/keyboard/kyb-init.c:90: uint8_t next_write_index = (write_index + 1) & KEYBOARD_BUFFER_SIZE_MASK;
 	ld	a,(_read_index)
-	sub	d
+	sub	b
 	ret	Z
-;source-doc/keyboard/kyb-init.c:93: if (next_write_index != read_index) { // Check if buffer is not full
+;source-doc/keyboard/kyb-init.c:91: if (next_write_index != read_index) { // Check if buffer is not full
+	ld	de,_buffer+0
 	ld	hl, (_write_index)
 	ld	h,0x00
 	add	hl, hl
-	ld	a,+((_buffer) & 0xFF)
-	add	a,l
-	ld	l,a
-	ld	a,+((_buffer) / 256)
-	adc	a,h
-	ld	h,a
-	ld	(hl), c
-;source-doc/keyboard/kyb-init.c:94: buffer[write_index].modifier_keys = modifier_keys;
-	ld	hl, (_write_index)
-	ld	h,0x00
-	add	hl, hl
-	ld	bc,_buffer
-	add	hl, bc
-	inc	hl
-	ld	(hl), e
-;source-doc/keyboard/kyb-init.c:95: buffer[write_index].key_code      = key_code;
+	add	hl, de
+	ex	de, hl
+	ld	hl,(_report)
+	xor	a
+	xor	a
+	ld	a, c
+	ld	(de), a
+	inc	de
+	ld	a, l
+	ld	(de), a
+;source-doc/keyboard/kyb-init.c:92: buffer[write_index] = (uint16_t)report.bModifierKeys << 8 | (uint16_t)key_code;
 	ld	hl,_write_index
-	ld	(hl), d
+	ld	(hl), b
 l_keyboard_buf_put_00111:
-;source-doc/keyboard/kyb-init.c:97: }
+;source-doc/keyboard/kyb-init.c:94: }
 	ret
-;source-doc/keyboard/kyb-init.c:99:
+;source-doc/keyboard/kyb-init.c:96:
 ; ---------------------------------
 ; Function keyboard_buf_size
 ; ---------------------------------
 _keyboard_buf_size:
-;source-doc/keyboard/kyb-init.c:103:
+;source-doc/keyboard/kyb-init.c:100:
 	ld	a,(_alt_write_index)
 	ld	hl,_alt_read_index
 	sub	(hl)
 	jr	C,l_keyboard_buf_size_00102
-;source-doc/keyboard/kyb-init.c:104: if (alt_write_index >= alt_read_index)
+;source-doc/keyboard/kyb-init.c:101: if (alt_write_index >= alt_read_index)
 	ld	a,(_alt_write_index)
 	ld	hl,_alt_read_index
 	sub	(hl)
 	ld	d, a
 	jr	l_keyboard_buf_size_00103
 l_keyboard_buf_size_00102:
-;source-doc/keyboard/kyb-init.c:106: else
+;source-doc/keyboard/kyb-init.c:103: else
 	ld	hl, (_alt_read_index)
 	ld	a,0x08
 	sub	l
@@ -305,57 +305,43 @@ l_keyboard_buf_size_00102:
 	add	a, l
 	ld	d, a
 l_keyboard_buf_size_00103:
-;source-doc/keyboard/kyb-init.c:108:
+;source-doc/keyboard/kyb-init.c:105:
 	ld	a, d
 	or	a
-	jr	NZ,l_keyboard_buf_size_00105
-;source-doc/keyboard/kyb-init.c:109: if (alt_size == 0)
-	ld	hl,0x0000
-	ld	(_queued_report),hl
-	jr	l_keyboard_buf_size_00106
-l_keyboard_buf_size_00105:
-;source-doc/keyboard/kyb-init.c:111: else {
-	ld	hl, (_alt_read_index)
-	ld	h,0x00
-	add	hl, hl
-	add	hl, hl
-	add	hl, hl
-	ld	bc,_reports
-	add	hl, bc
-	ld	(_queued_report), hl
-;source-doc/keyboard/kyb-init.c:112: queued_report  = &reports[alt_read_index];
+	jr	Z,l_keyboard_buf_size_00105
+;source-doc/keyboard/kyb-init.c:106: if (alt_size != 0)
 	ld	a, (_alt_read_index)
 	inc	a
 	and	0x07
 	ld	(_alt_read_index),a
-l_keyboard_buf_size_00106:
-;source-doc/keyboard/kyb-init.c:115:
+l_keyboard_buf_size_00105:
+;source-doc/keyboard/kyb-init.c:108:
 	ld	a,(_write_index)
 	ld	hl,_read_index
 	sub	(hl)
-	jr	C,l_keyboard_buf_size_00108
-;source-doc/keyboard/kyb-init.c:116: if (write_index >= read_index)
+	jr	C,l_keyboard_buf_size_00107
+;source-doc/keyboard/kyb-init.c:109: if (write_index >= read_index)
 	ld	a,(_write_index)
 	ld	hl,_read_index
 	sub	(hl)
 	ld	e, a
-	jr	l_keyboard_buf_size_00109
-l_keyboard_buf_size_00108:
-;source-doc/keyboard/kyb-init.c:118: else
+	jr	l_keyboard_buf_size_00108
+l_keyboard_buf_size_00107:
+;source-doc/keyboard/kyb-init.c:111: else
 	ld	hl, (_read_index)
 	ld	a,0x08
 	sub	l
 	ld	hl, (_write_index)
 	add	a, l
 	ld	e, a
-l_keyboard_buf_size_00109:
-;source-doc/keyboard/kyb-init.c:120:
+l_keyboard_buf_size_00108:
+;source-doc/keyboard/kyb-init.c:113:
 	xor	a
 	xor	a
 	ex	de, hl
-;source-doc/keyboard/kyb-init.c:121: return (uint16_t)alt_size << 8 | (uint16_t)size;
+;source-doc/keyboard/kyb-init.c:114: return (uint16_t)alt_size << 8 | (uint16_t)size;
 	ret
-;source-doc/keyboard/kyb-init.c:123:
+;source-doc/keyboard/kyb-init.c:116:
 ; ---------------------------------
 ; Function keyboard_buf_get_next
 ; ---------------------------------
@@ -365,40 +351,40 @@ _keyboard_buf_get_next:
 	add	ix,sp
 	push	af
 	push	af
-;source-doc/keyboard/kyb-init.c:124: uint32_t keyboard_buf_get_next() {
+;source-doc/keyboard/kyb-init.c:117: uint32_t keyboard_buf_get_next() {
 	ld	a,(_write_index)
 	ld	hl,_read_index
 	sub	(hl)
 	jr	NZ,l_keyboard_buf_get_next_00102
-;source-doc/keyboard/kyb-init.c:125: if (write_index == read_index) // Check if buffer is empty
+;source-doc/keyboard/kyb-init.c:118: if (write_index == read_index) // Check if buffer is empty
 	ld	hl,0xff00
 	ld	e, l
 	ld	d, l
 	jr	l_keyboard_buf_get_next_00103
 l_keyboard_buf_get_next_00102:
-;source-doc/keyboard/kyb-init.c:127:
+;source-doc/keyboard/kyb-init.c:120:
 	ld	bc,_buffer+0
 	ld	hl, (_read_index)
 	ld	h,0x00
 	add	hl, hl
 	add	hl, bc
-	ld	b, (hl)
-;source-doc/keyboard/kyb-init.c:128: const uint8_t modifier_key = buffer[read_index].modifier_keys;
-	inc	hl
 	ld	c, (hl)
-;source-doc/keyboard/kyb-init.c:129: const uint8_t key_code     = buffer[read_index].key_code;
+	inc	hl
+	ld	b, (hl)
+;source-doc/keyboard/kyb-init.c:121: const uint8_t modifier_key = buffer[read_index] >> 8;
+;source-doc/keyboard/kyb-init.c:122: const uint8_t key_code     = buffer[read_index] & 255;
 	ld	a, (_read_index)
 	inc	a
 	and	0x07
 	ld	(_read_index),a
-;source-doc/keyboard/kyb-init.c:136:
+;source-doc/keyboard/kyb-init.c:129:
 	push	bc
 	ld	l, c
 	ld	a, b
 	call	_scancode_to_char
 	ld	e, a
 	pop	bc
-;source-doc/keyboard/kyb-init.c:138: /* D = modifier, e-> char, H = 0, L=>code */
+;source-doc/keyboard/kyb-init.c:131: /* D = modifier, e-> char, H = 0, L=>code */
 	xor	a
 	ld	(ix-1),b
 	xor	a
@@ -415,50 +401,50 @@ l_keyboard_buf_get_next_00102:
 	pop	hl
 	push	hl
 l_keyboard_buf_get_next_00103:
-;source-doc/keyboard/kyb-init.c:139: return (uint32_t)modifier_key << 24 | (uint32_t)c << 16 | key_code;
+;source-doc/keyboard/kyb-init.c:132: return (uint32_t)modifier_key << 24 | (uint32_t)c << 16 | key_code;
 	ld	sp, ix
 	pop	ix
 	ret
-;source-doc/keyboard/kyb-init.c:141:
+;source-doc/keyboard/kyb-init.c:134:
 ; ---------------------------------
 ; Function keyboard_buf_flush
 ; ---------------------------------
 _keyboard_buf_flush:
-;source-doc/keyboard/kyb-init.c:142: void keyboard_buf_flush() {
+;source-doc/keyboard/kyb-init.c:135: void keyboard_buf_flush() {
 	xor	a
 	ld	(_alt_read_index),a
 	ld	(_alt_write_index),a
 	xor	a
 	ld	(_read_index),a
 	ld	(_write_index),a
-;source-doc/keyboard/kyb-init.c:145: uint8_t  i = sizeof(previous);
+;source-doc/keyboard/kyb-init.c:138: uint8_t  i = sizeof(previous);
 	ld	de,_previous+0
-;source-doc/keyboard/kyb-init.c:146: uint8_t *a = (uint8_t *)previous;
-;source-doc/keyboard/kyb-init.c:147: uint8_t *b = (uint8_t *)report;
+;source-doc/keyboard/kyb-init.c:139: uint8_t *a = (uint8_t *)previous;
+;source-doc/keyboard/kyb-init.c:140: uint8_t *b = (uint8_t *)report;
 	ld	b,0x08
 	ld	hl,_report
 l_keyboard_buf_flush_00101:
-;source-doc/keyboard/kyb-init.c:148: do {
+;source-doc/keyboard/kyb-init.c:141: do {
 	xor	a
 	ld	(de), a
 	inc	de
-;source-doc/keyboard/kyb-init.c:149: *a++ = 0;
+;source-doc/keyboard/kyb-init.c:142: *a++ = 0;
 	ld	(hl),0x00
 	inc	hl
-;source-doc/keyboard/kyb-init.c:150: *b++ = 0;
+;source-doc/keyboard/kyb-init.c:143: *b++ = 0;
 	djnz	l_keyboard_buf_flush_00101
-;source-doc/keyboard/kyb-init.c:151: } while (--i != 0);
+;source-doc/keyboard/kyb-init.c:144: } while (--i != 0);
 	ret
-;source-doc/keyboard/kyb-init.c:153:
+;source-doc/keyboard/kyb-init.c:146:
 ; ---------------------------------
 ; Function keyboard_tick
 ; ---------------------------------
 _keyboard_tick:
-;source-doc/keyboard/kyb-init.c:154: void keyboard_tick(void) {
+;source-doc/keyboard/kyb-init.c:147: void keyboard_tick(void) {
 	ld	hl,_in_critical_usb_section
 	ld	a, (hl)
 	or	a
-;source-doc/keyboard/kyb-init.c:155: if (is_in_critical_section())
+;source-doc/keyboard/kyb-init.c:148: if (is_in_critical_section())
 	jr	NZ,l_keyboard_tick_00112
 ;././source-doc/base-drv//ch376.h:110: #endif
 	ld	l,0x0b
@@ -471,7 +457,7 @@ _keyboard_tick:
 	ld	a,0x1f
 	ld	bc,_CH376_DATA_PORT
 	out	(c), a
-;source-doc/keyboard/kyb-init.c:158: ch_configure_nak_retry_disable();
+;source-doc/keyboard/kyb-init.c:151: ch_configure_nak_retry_disable();
 	ld	bc,_report+0
 	ld	hl, (_keyboard_config)
 	ld	a,0x08
@@ -496,47 +482,40 @@ _keyboard_tick:
 	ld	a,0xdf
 	ld	bc,_CH376_DATA_PORT
 	out	(c), a
-;source-doc/keyboard/kyb-init.c:160: ch_configure_nak_retry_3s();
+;source-doc/keyboard/kyb-init.c:153: ch_configure_nak_retry_3s();
 	ld	hl,_result
 	ld	a, (hl)
 	or	a
 	jr	NZ,l_keyboard_tick_00112
-;source-doc/keyboard/kyb-init.c:161: if (result == 0) {
+;source-doc/keyboard/kyb-init.c:154: if (result == 0) {
 	call	_report_diff
 	or	a
 	jr	Z,l_keyboard_tick_00112
-;source-doc/keyboard/kyb-init.c:162: if (report_diff()) {
+;source-doc/keyboard/kyb-init.c:155: if (report_diff()) {
 	call	_report_put
-;source-doc/keyboard/kyb-init.c:164: uint8_t i = 6;
+;source-doc/keyboard/kyb-init.c:157: uint8_t i = 6;
 	ld	b,0x06
 l_keyboard_tick_00103:
-;source-doc/keyboard/kyb-init.c:165: do {
-	ld	l, b
-	dec	l
-	ld	h,0x00
-	ld	de, +(_report + 2)
-	add	hl, de
-	ld	c, (hl)
-	ld	a,(_report)
+;source-doc/keyboard/kyb-init.c:158: do {
+	ld	a, b
+	dec	a
 	push	bc
-	ld	l, c
 	call	_keyboard_buf_put
 	pop	bc
-;source-doc/keyboard/kyb-init.c:166: keyboard_buf_put(report.bModifierKeys, report.keyCode[i-1]);
+;source-doc/keyboard/kyb-init.c:159: keyboard_buf_put(i-1);
 	djnz	l_keyboard_tick_00103
-;source-doc/keyboard/kyb-init.c:167: } while (--i != 0);
+;source-doc/keyboard/kyb-init.c:160: } while (--i != 0);
 	ld	de,_previous
 	ld	bc,0x0008
 	ld	hl,_report
 	ldir
 l_keyboard_tick_00112:
-;source-doc/keyboard/kyb-init.c:170: }
+;source-doc/keyboard/kyb-init.c:163: }
 	ret
 _keyboard_config:
 	DEFW +0x0000
 _buffer:
-	DEFB +0x00
-	DEFB +0x00
+	DEFW +0x0000
 	DEFB 0x00
 	DEFB 0x00
 	DEFB 0x00
