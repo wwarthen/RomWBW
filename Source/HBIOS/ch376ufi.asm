@@ -126,8 +126,8 @@ CH_UFI_WRITE:
 	push	iy
 	call	_chufi_write
 	ld	a, l
-	pop	hl
 	pop	iy
+	pop	hl
 	ld	bc, 512
 	add	hl, bc
 	ret
