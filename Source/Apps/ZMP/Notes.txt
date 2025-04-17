@@ -28,3 +28,14 @@ as at Aug 23rd, 2021.
 - Space getting short so messages shortened. 
 
 --PMS 8/24/2021
+
+- Refactored overlay to resolve some stack issues.
+- Removed support for setport because it didn't make much sense
+  with ability to specify port on command line.
+- Added an equate (pcfg) which controls whether port configuration
+  is implemented.  It is set to false (no port configuration).
+  because ZMP it is unable to handle   many RomWBW serial port settings 
+  (notably the hard-wired 115200 baud of many RCBus systems).  You 
+  must now used MODE to configure port before starting ZMP.
+
+--WBW 1:55 PM 4/16/2025

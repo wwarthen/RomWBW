@@ -81,7 +81,7 @@ MINIT1:
 	SUB	'0'		; Got it, convert to binary
 	LD	(UNIT),A	; Save it
 	LD	A,' '		; Space character to accum
-	LD	(HL),A		; Remove numberic from FCB
+	LD	(HL),A		; Remove numeric from FCB
 	JR	MINIT3		; Proceed with initialization
 
 MINIT2:
@@ -188,7 +188,6 @@ MINIT_UB1:
 	LD	(UNIT),A	; and save it
 ;
 MINIT_UB2:
-;
 	JP	UB_INIT		; UNA BIOS init
 ;
 MINIT_RET:
@@ -221,7 +220,6 @@ MINIT_RET:
 ;
 	; Return with CPU speed in A
 	LD	A,(CPUSPD)	; A := CPU speed in MHz
-	LD	HL,(RCVSCL)	; HL := receive scalar
 	RET			; and return
 ;
 ;-----------------------------------------------------------------------
@@ -307,6 +305,22 @@ FAIL:
 	CALL	BDOS		; Do it
 	JP	0		; Bail out!
 ;
+; Adjust CPUSPD to account for overhead of HBIOS or UBIOS.  It appears
+; that dividing CPU speed in MHz by 8 results in timeouts that are
+; roughly correct.
+;
+SLOW:
+	LD	A,(CPUSPD)	; Get true CPU speed
+	ADD	A,4		; Add for rounding
+	SRL	A		; Divide by 8
+	SRL	A
+	SRL	A
+	JR	NZ,SLOW1	; If not zero, we are good
+	LD	A,1		; else, make it 1
+SLOW1:
+	LD	(CPUSPD),A	; Save it
+	RET
+;
 ;-----------------------------------------------------------------------
 ;
 ; The following are all dummy routines that are unused because MINIT
@@ -326,7 +340,6 @@ EXTRA3:
 ;
 BIOID	DB	0		; BIOS ID, 1=HBIOS, 2=UBIOS
 CPUSPD	DB	10		; CPU speed in MHz
-RCVSCL	DW	6600		; RECV loop timeout scalar
 UNIT	DB	0FFH		; BIOS serial device unit number
 BIOSBID	DB	00H		; BIOS bank id
 ;
@@ -373,8 +386,7 @@ HB_JPTBL:
 ; HBIOS initialization
 ;
 HB_INIT:
-	LD	HL,2150		; Smaller receive loop timeout scalar
-	LD	(RCVSCL),HL	; ... to compensate for BIOS overhead
+	CALL	SLOW		; Adjust CPUSPD for HBIOS overhead
 ;
 	; Patch SENDR w/ FastPath addresses
 	LD	BC,0F801H	; Get CIO func/data adr
@@ -412,10 +424,6 @@ HB_INIT:
 	RST	08
 	JP	NZ,APIERR	; handle API error
 	LD	(HB_SRFN),HL	; Plug in func adr
-;
-	; Claim 1 MHz CPU to offset overhead of HBIOS
-	LD	A,1
-	LD	(CPUSPD),A	; Save it
 ;
 	LD	HL,HB_JPTBL
 	LD	DE,HB_LBL
@@ -564,14 +572,8 @@ UB_INIT:
 ;
 ; TODO:
 ;   - TEST!!!
-;   - ADJUST RCVSCL?
 ;
-	LD	HL,3000		; Smaller receive loop timeout scalar
-	LD	(RCVSCL),HL	; ... to compensate for BIOS overhead
-;
-	; Claim 1 MHz CPU to offset overhead of HBIOS
-	LD	A,1
-	LD	(CPUSPD),A	; Save it
+	CALL	SLOW		; Adjust CPUSPD for UBIOS overhead
 ;
 	LD	HL,UB_JPTBL
 	LD	DE,UB_LBL
@@ -721,9 +723,6 @@ UA_JPTBL:
 ; UART initialization
 ;
 UA_INIT:
-	LD	DE,13000	; receive loop timeout scalar
-	LD	(RCVSCL),DE	; ... for UART RCVRDY timing
-;
 	LD	A,L		; get base I/O port address
 	LD	(UA_SCP),A	; set port value in SENDR
 	LD	(UA_GCP),A	; set port value in GETCHR
@@ -842,9 +841,6 @@ UF_JPTBL:
 ; USB-FIFO initialization
 ;
 UF_INIT:
-	LD	DE,12000	; receive loop timeout scalar
-	LD	(RCVSCL),DE	; ... for UART RCVRDY timing
-;
 	LD	A,L		; get base I/O port address (data port)
 	LD	(UF_SCDP),A	; set data port in SENDR
 	LD	(UF_GCDP),A	; set data port in GETCHR/MDIN
@@ -863,7 +859,6 @@ UF_INIT:
 ; Send character on top of stack
 ;
 UF_SENDR:
-
 	POP	AF		; get character to send from stack
 	OUT	(0FFH),A	; write to fifo
 UF_SCDP	EQU	$-1		; data port

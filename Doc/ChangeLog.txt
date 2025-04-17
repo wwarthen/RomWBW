@@ -4,6 +4,7 @@ Version 3.5.1
 - MAP: Enhanced SLR Tools Disk Image with Plus versions
 - WBW: Add missing BCLOAD file to MS BASIC Compiler Disk Image (reported by Marshall Gates)
 - WBW: Doc improvements (per Fraser and Rob Gowin)
+- WBW: Correct ZMP application crash
 
 Version 3.5
 -----------

@@ -88,6 +88,8 @@ XM.COM - XModem file transfer application
 ZMP.COM - ZModem communications program (requires dedicated comm port)
 ZMP.DOC - Documentation for ZMP
 ZMP.HLP - Help file for ZMP
+ZMP.CFG - Configuration file for ZMP
+ZMP.FON - Phone book for ZMP
 ZMXFER.OVR - Overlay file for ZMP
 ZMTERM.OVR - Overlay file for ZMP
 ZMINIT.OVR - Overlay file for ZMP

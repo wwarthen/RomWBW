@@ -291,7 +291,7 @@ EXTRA3:
 BIOID	DB	0		; BIOS ID, 1=HBIOS, 2=UBIOS
 CPUSPD	DB	10		; CPU speed in MHz
 RCVSCL	DW	6600		; RECV loop timeout scalar
-UNIT	DB	0		; BIOS serial device unit number
+UNIT	DB	0FFH		; BIOS serial device unit number
 BIOSBID	DB	00H		; BIOS bank id
 ;
 TAG	DB	"RomWBW, 30-May-2020$"
@@ -330,7 +330,7 @@ HB_JPTBL:
 	JP	HB_GETCHR	; get character from modem
 	JP	HB_RCVRDY	; check receive ready
 	JP	HB_SNDRDY	; check send ready
-	JP	HB_SPEED		; get speed value for file transfer time
+	JP	HB_SPEED	; get speed value for file transfer time
 ;
 ;-----------------------------------------------------------------------
 ;
@@ -819,7 +819,6 @@ UF_INIT:
 ; Send character on top of stack
 ;
 UF_SENDR:
-
 	POP	AF		; get character to send from stack
 	OUT	(0FFH),A	; write to fifo
 UF_SCDP	EQU	$-1		; data port

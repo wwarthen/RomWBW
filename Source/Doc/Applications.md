@@ -2655,14 +2655,24 @@ files between systems using a serial port.
 | `XM LK `*`<library> <filename>`*
 | `XM R `*`<filename>`*
 
-`S`: Send a file
-`L`: Send a file from a library
-`R`: Receive a file
-`K`: Use 1K blocksize for transfer
+The following may be added to the action codes:
+| `S`: Send a file
+| `L`: Send a file from a library
+| `R`: Receive a file
+| `K`: Use 1K blocksize (send operations)
+| `C`: Force use of checksum (receive operations)
+| `X`: Force 128-byte protocol (receive operations)
+| `0`-`9`: Specifies HBIOS character unit for transfers
 
 *`<filename>`* is the name of a file to send or receive
 
 *`<library>`* is the name of a library (.lbr) to extract a file to send
+
+For example, the following command will receive a file
+using checksums on HBIOS character unit 3 and will name the
+received file `MYFILE.TXT`.
+
+`XM RC3 MYFILE.TXT`
 
 #### Usage
 
@@ -2689,9 +2699,10 @@ emulation software for specific instructions on how to use XModem.
 
 #### Notes
 
-The XModem adaptation that comes with RomWBW will automatically use
-the primary character device unit (character device unit 0) for the
-file transfer.
+The XModem adaptation that comes with RomWBW will default to using
+the current HBIOS console port for transfers.  Note that if you
+change your console port at the OS level (e.g., STAT CON:=UC1:),
+this does not change the HBIOS console.
 
 `XM` attempts to determine the best way to drive the serial port based
 on your hardware configuration. When possible, it will bypass the
@@ -2732,6 +2743,9 @@ The source code is provided in the RomWBW distribution.
 An adaptation of Robert Kramer's Remote CP/M File Transfer Program
 with support for XModem and YModem transfers.
 
+**NOTE**: ZMD does not do ZModem transfers.  The Z in ZMD refers
+to Z-System compatibility.
+
 #### Syntax
 
 `ZMD` *\<mode\>\<protocol\>\<unit\>* [*\<filename\>*]
@@ -2755,10 +2769,43 @@ the RomWBW Character Unit to use for the file transfer.
 
 #### Usage
 
+To transfer a file from your host computer to your RomWBW computer, do
+the following:
+
+1. Enter one of the `ZMD` receive commands specifying the name you want
+to give to the received file (no filename required for ZModem transfers).
+
+2. On your host computer select a file to send and initiate an XModem or
+YModem send operation.
+
+To transfer a file from your RomWBW computer to your host computer, do
+the following:
+
+1. Enter one of the `ZMD` send commands specifying the name of the file
+to be sent.
+
+2. On your host computer, specify the name to assign to the received
+file and initiate an XModem or YModem receive operation.
+
+Please refer to the documentation of your host computer's terminal
+emulation software for specific instructions on how to use XModem.
+
 #### Notes
 
-If no *\<unit\>* is specified, ZMD will use the current HBIOS
-console for the file transfer.
+The ZMP adaptation that comes with RomWBW will default to using
+the current HBIOS console port for transfers.  Note that if you
+change your console port at the OS level (e.g., STAT CON:=UC1:),
+this does not change the HBIOS console.
+
+`ZMP` attempts to determine the best way to drive the serial port based
+on your hardware configuration. When possible, it will bypass the
+HBIOS for faster operation. However, in many cases, it will use HBIOS
+so that flow control can be used.
+
+`ZMP` is dependent on a reliable communications channel. You must
+ensure that the serial port can be serviced fast enough by either
+using a baud rate that is low enough or ensuring that hardware flow
+control is fully functional (end to end).
 
 #### Etymology
 
@@ -2774,25 +2821,61 @@ uses the RomWBW HBIOS serial API.
 | ROM-based           |No |
 | Disk-based          |Yes|
 
+`ZMP` is a terminal program for interacting with a modem attached to
+your system.  It includes X/Y/ZModem file transfer protocols.  An
+actual modem is not required, but you must have a port for ZMP to use
+that is independent of the console running `ZMP`.
+
 #### Syntax
+
+`ZMD` *[\<unit\>]*
+
+*\<unit\>* can specify a single digit (0-9) indicating
+the RomWBW Character Unit to use for the modem port.
 
 #### Usage
 
+Refer to the file `ZMP.DOC` found on all disk images that include
+the `ZMP` application.
+
 #### Notes
+
+`ZMP` requires access to multiple overlay and configuration files
+to run.  It will look for these on the default driver and user area.
+Depending the operating system used, you may be able to set up a
+search path and locate these files in other locations.  The files
+used by `ZMP` are:
+
+- `ZMP.HLP`
+- `ZMP.DOC`
+- `ZMP.CFG`
+- `ZMP.FON`
+- `ZMXFER.OVR`
+- `ZMTERM.OVR`
+- `ZMINIT.OVR`
+- `ZMCONFIG.OVR`
+
+The `ZMP` console is always the active OS console.
+If no *\<unit\>* is specified on the command line, `ZMP` will
+default to using HBIOS Character Unit 1 as the modem port.  Take care
+to avoid using the same HBIOS Character Unit as both the console and
+the modem or various strangeness will occur.
+
+`ZMP` is a full screen application and is configured to use
+ANSI/VT-100 screen control.
+
+`ZMP` does not support the range of port configurations provided by 
+RomWBW.  The RomWBW adaptation of `ZMP` ignores the port configuration 
+options within `ZMP`.  Instead, you should configure the HBIOS Character
+Unit using the RomWBW MODE command before launching `ZMP`.
+
+`ZMP` is written in C.  As a result, file transfers will be noticeably
+slower than other assembly language file transfer tools.
 
 #### Etymology
 
+ZMP was produced by Ron Murray and was based on HMODEM II.  Wayne
+Hortensius updated the source to compile with the latest version 
+of Hi-Tech C and implemented a few enhancements.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+The RomWBW overlay was developed by Phil Summers.

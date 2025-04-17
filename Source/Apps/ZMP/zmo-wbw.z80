@@ -1,19 +1,50 @@
 ;-----------------------------------------------------------------------------
 ;
-;	Sample Overlay for ZMP (Z-Modem Program)
+;	Overlay for ZMP (Z-Modem Program)
 ;
-;	Name	ZMO-BLNK.Z80
+;	Name	ZMO-WBW.Z80
 ;
-;	Dated Sep 14, 1988
+;	Dated April 14, 2025
 ;
 ;	Written by -
-;	  Ron Murray, c/o Z-Node 62, 061-9-450-0200, Perth, Western Australia.
+;	  Phil Summers, Wayne Warthen
 ;
-;	Modified to ZMP v1.2 standard rjm 15/9/88
-;	Modified to ZMP v1.3 standard rjm 11/10/88
-;	Modified to ZMP v1.4 standard rjm 20/11/88
-;	Modified to ZMP v1.5 standard rjm 25/3/89
+;	ROMWBW version using HBIOS and https://github.com/mecparts/zmp
+;       version of zmodem
 ;
+;	  - All modem/serial i/o is through RomWBW HBIOS.
+;
+;	  - Data bits, stop bits, and parity are determined by HBIOS.
+;           The ZMP settings will have no effect.  Use RomWBW MODE
+;	    command to set serial port config before starting ZMP.
+;
+;	  - Timing delay calculations based on HBIOS reported CPU speed.
+;
+;	  - The pcfg equate determines whether the overlay will
+;           implement port initialization.  Normally, pcfg will be
+;           set to false because ZMP does not allow configuring
+;           many HBIOS speeds (notably the 115200 baud hardwired
+;           into many RCBus systems).  In this case, you must
+;	    configure the modem port using the RomWBW
+;	    MODE command as desired before starting ZMP.
+;
+;	  - The modem port is assigned to an HBIOS character unit.  By
+;	    default, the modem is assigned to HBIOS character unit 1.
+;           An alternate HBIOS character unit may be specified as a
+;	    parameter on the command line as a single number.  For
+;	    example, the following will assign HBIOS port 3 as the
+;	    ZMP modem port:
+;
+;	    ZMP 3
+;
+;         - The original version of ZMP from Ron Murray allows you to
+;           select from 2 logical modem ports.  This overlay ignores
+;	    any attempt to select ports from within ZMP.  The desired
+;	    modem port should be assigned using the command line
+;	    parameter as described above.
+;
+;         - Teraterm users may need to change the ZmodemWinSize value
+;           to 1024 in the teraterm.ini configuration file.
 ;
 ;-----------------------------------------------------------------------------
 ;
@@ -26,11 +57,11 @@
 ; has been written in Z80 code for use with M80 or SLR. Assemble as follows:
 ;
 ;	SLR ZMO-xx01/h
-;	MLOAD ZMP.COM=ZMPX.COM,ZMO-xx01.HEX
+;	MLOAD ZMP.COM=ZMODEM.COM,ZMO-xx01.HEX
 ; or
 ;	M80 =ZMO-xx01.Z80
 ;	RELHEX ZMO-xx01
-;	MLOAD ZMP.COM=ZMPX.COM,ZMO-xx01.HEX
+;	MLOAD ZMP.COM=ZMODEM.COM,ZMO-xx01.HEX
 ;
 ;
 ;       (Don't use L80 without changing the source for assembly as a
@@ -79,14 +110,16 @@ true	equ	not false
 
 ; User-set variables: 
 
-clkspd	equ	4		; Processor clock speed in MHz
 debug	equ	false		; to allow debugging of overlay with Z8E etc.
+clkspd	equ	8		; Processor clock speed in MHz
+pcfg	equ	false		; Allow ZMP to configure port
 
+;
 ;Set the following two equates to the drive and user area which will contain
 ;   ZMP's .OVR files, .CFG file, .FON file and .HLP file. Set both to zero
 ;   (null) to locate them on the drive from which ZMP was invoked.
 
-overdrive	equ	'A'	; Drive to find overlay files on ('A'-'P')
+overdrive	equ	0	; Drive to find overlay files on ('A'-'P')
 overuser	equ	0	; User area to find files
 
 ;------------------------------------------------------------------------------
@@ -99,6 +132,8 @@ userdef	equ	0145h		; origin of this overlay
 				; subsequent revisions.
 mspeed	equ	03ch		; location of current baud rate. 
 ovsize	equ	0400h		; max size of this overlay
+
+fcb	equ	05ch		; primary command line CP/M fcb
 
 	.z80			; use z80 code
 	aseg			; absolute
@@ -158,6 +193,11 @@ jump_tab:
 	jp	spare		; spare for later use
 	jp	spare		; spare for later use
 
+; Local storage
+
+hbunit	db	1		; Active HBIOS unit for modem I/O
+cpumhz	db	clkspd		; CPU clock speed in MHz
+
 ;
 ; Main code starts here
 ;
@@ -165,27 +205,110 @@ jump_tab:
 scrnpr:
 				; <== Insert your own code here
 	call	print
-	db	'This function not supported.',cr,lf,0
+	db	'Screen print not supported.',cr,lf,0
 				; <== End of your own code
 spare:
 	ret
 
+
 ; User-defined entry routine: leave empty if not needed
 userin:
+	push	bc
+	push	de
+	push	hl
+	
+	call	print
+	db	cr,lf,'ZMP Overlay for RomWBW HBIOS v1.0',cr,lf,0
+	
+	; Scan and parse default FCB to initialize HBIOS unit if
+	; specified.
+	ld	a,(fcb + 1)	; get parm from fcb
+	cp	' '		; anything there?
+	jr	z,userin1	; if empty, done
+	sub	'0'		; ASCII to binary
+	jr	c,parmerr	; less than 0, parm error
+	cp	10		; >= 10?
+	jr	nc,parmerr	; greater than 9, parm error
+	ld	(hbunit),a	; save it
+
+userin1:
+	call	showcom		; show com port info
+
+	; check that unit is actually available in HBIOS
+	ld	bc,0f800h	; get HBIOS char unit count
+	rst	8		; do it
+	ld	a,(hbunit)	; get active modem unit
+	cp	e		; compare to units available
+	jr	nc,porterr	; unit too high, port error
+
+	if pcfg
+
+	; Force port initialization by setting an invalid
+	; baud rate (mspeed).
+	; speed to an arbitrary value of 8 (9600 baud).
+	ld	a,-1
+	ld	(mspeed),a
+
+	else
+
+	; We don't support port configuration.  Here we set the modem
+	; speed to an arbitrary value of 8 (9600 baud).
+	ld	a,8
+	ld	(mspeed),a
+
+	endif
+
+	
+	ld	bc,0f8f0h	; HBIOS func get CPU info
+	rst	08		; do it, l = CPU speed in MHz
+	ld	a,l		; to accum
+	ld	(cpumhz),a	; and save it for wait loop
+	
+	ld	hl,2
+	call	waithls
+
+	pop	hl
+	pop	de
+	pop	bc
 	ret
+
+parmerr:
+	; Handle a bad parameter
+	call	print		; print error message
+	db	cr,lf,'ZMP parameter error!',cr,lf,0
+	rst	0		; bail out to OS
+
+porterr:
+	; Handle a bad port
+	call	print		; print error message
+	db	cr,lf,'Invalid HBIOS unit for ZMP Modem port!',cr,lf,0
+	rst	0		; bail out to OS
+
+showcom:
+	; Display the HBIOS unit to be used for the ZMP Modem
+	call	print
+	db	cr,lf,'ZMP Modem on HBIOS Unit #',0
+	ld	a,(hbunit)
+	add	a,'0'
+	call	cout
+	call	print
+	db	cr,lf,0
 
 ; User-defined exit routine: leave empty if not needed
 userout:
 	ret
 
-
 ;Get a character from the modem: return in HL
 mchin:
 	push	bc
-				; <== Insert your own code here
 
-
-				; <== End of your own code
+	; <== Insert your own code here
+	ld	a,(hbunit)
+	ld	c,a
+	ld	b,00h
+	rst	08
+	ld	a,e
+	; <== End of your own code
 
 	ld	l,a		; put in HL
 	ld	h,0
@@ -198,17 +321,31 @@ mchout:
 	ld	hl,2		; get the character
 	add	hl,sp
 	ld	a,(hl)
-				; <== Insert your own code here
+	
+	; <== Insert your own code here
+	push	bc
+	ld	e,a
+	ld	a,(hbunit)
+	ld	c,a
+	ld	b,01h
+	rst	08
+	pop	bc
+	; <== End of your own code
 
-
-				; <== End of your own code
 	ret			; done
 
 ;Test for output ready: return TRUE (1) in HL if ok
 mordy:
-				; <== Insert your own code here
-
-				; <== End of your own code
+	; <== Insert your own code here
+	push	bc
+	ld	a,(hbunit)
+	ld	c,a
+	ld	b,03h
+	rst	08
+	ld	h,0
+	ld	l,a
+	pop	bc
+	; <== End of your own code
 
 	ld	a,l		; set/clear Z
 	or	a
@@ -216,29 +353,36 @@ mordy:
 
 ;Test for character at modem: return TRUE (1) in HL if so
 mirdy:
-				; <== Insert your own code here
+	; <== Insert your own code here
+	push	bc
+	ld	a,(hbunit)
+	ld	c,a
+	ld	b,02h
+	rst	08
+	ld	h,0
+	ld	l,a
+	pop	bc
+	; <== End of your own code
 
-
-				; <== End of your own code
 	ld	a,l		; set/clear Z
 	or	a
 	ret
 
 ;Send a break to the modem: leave empty if your system can't do it
 sndbrk:
-				; <== Insert your own code here
-
+	; <== Insert your own code here
 	ld	hl,300		; wait 300 mS
 	call	waithlms
+	; <== End of your own code
 
-				; <== End of your own code
 	ret
 ;
 ;Test UART flags for error: return TRUE (1) in HL if error.
 mdmerr:
-				; <== Insert your own code here
+	; <== Insert your own code here
+	xor	a		; not implemented
+	; <== End of your own code
 
-				; <== End of your own code
 	ld	a,l		; set/clear Z
 	or	a
 	ret
@@ -265,9 +409,7 @@ dtroff:
 
 
 ;Initialise the uart
-
 init:
-
 	ld	hl,2		; get parameters
 	add	hl,sp
 	ex	de,hl
@@ -280,13 +422,117 @@ init:
 	call	getparm
 	ld	(stop),hl	; stop bits (BINARY 1 or 2)
 
+	; <== Insert your own code here
+	; using values below
+	; don't forget to load mspeed with the
+	; current brate value if the new rate is
+	; valid. See table of values below.
 
-				; <== Insert your own code here
-				; using values below
-	ld	(mspeed),a	; don't forget to load mspeed with the
-				; current brate value if the new rate is
-				; valid. See table of values below.
-				; <== End of your own code
+	push	bc
+
+	; If pcfg is true, attempt to initialize the active
+	; HBIOS unit.  If false, initialization if bypassed with
+	; the assumption that the RomWBW MODE command was used
+	; to initialize the port priot to running ZMP.
+	
+	if pcfg
+
+	call	print
+	db	'Initializing device: ',0
+	call	diport
+
+	ld	a,(hbunit)	; get device type
+	ld	c,a
+	ld	b,06h
+	rst	08
+	or	a		; check if valid
+	jr	nz,initerr
+
+	ld	a,(brate)	; get baud rate to set
+	ld	c,a
+	ld	b,0
+	ld	hl,baudtbl
+	add	hl,bc
+	ld	a,(hl)		; convert to encoded hbios
+	cp	a,-1
+	jr	z,initerr
+
+	push	af
+	ld	a,(hbunit)	; get line characteristics
+	ld	c,a
+	ld	b,05h
+	rst	08
+	ld	a,d		; mask out exisitng
+	and	11100000b	; replace with rate
+	ld	d,a
+	pop	af
+	or	d
+	ld	d,a
+
+	ld	b,04h		; set new
+	ld	a,(hbunit)	; speed
+	ld	c,a
+	rst	08
+	or	a
+	jr	nz,initerr
+
+	ld	a,(brate)	; load mspeed with the current brate value if
+	ld	(mspeed),a	; the new rate is valid. See table of values below.
+
+	call	print
+	db	lf,lf,'Initization completed, device: ',0
+	call	diport
+
+	jr	init_z
+
+initerr:call	print
+	db	lf,lf,'Initization failed, device: ',0
+	call	diport
+
+	jr	init_z
+
+diport:	ld	a,(hbunit)	; Display port
+diport1:add	a,'0'
+	call	cout
+	call	print
+	db	cr,lf,0
+	ld	hl,2
+	call	waithls
+	ret
+	
+	else
+	
+	;call	print
+	;db	cr,lf,'Modem port initialization...',0
+	;ld	hl,2
+	;call	waithls
+
+	ld	b,05h		; HBIOS port reset function
+	ld	a,(hbunit)	; get active modem port
+	ld	c,a		; and put in accum
+	rst	8		; reset port
+	or	a		; check result
+	jr	nz,init1	; if error, handle it
+	ld	a,8		; dummy value for speed
+	ld	(mspeed),a	; save it
+	jr	init_z		; done
+
+init1:
+	; Handle error return from initialization
+	call	print
+	db	cr,lf,'Modem port initialization failed!',cr,lf,0
+	ld	hl,2
+	call	waithls
+
+	jr	init_z
+
+	endif
+
+init_z:
+	pop	bc
+
+	; <== End of your own code
+
 	ret
 ;--------------------------------------------------------------------------
 
@@ -296,24 +542,25 @@ data:	dw	8		; data bits
 brate:	dw	7		; baud rate:
 
 ;--------------------------------------------------------------------------
+;
 ;Values of brate for each baud rate
 ;
-; baud rate    brate
+; 		hb encode	baud rate    brate
 ;
-;   110		 0
-;   300		 1
-;   450		 2
-;   600		 3
-;   710		 4
-;  1200		 5
-;  2400		 6
-;  4800		 7
-;  9600		 8
-; 19200		 9
-; 38400		10
-; 57600         11
-; 76800         12
-
+baudtbl:
+	db	-1		; 110		 0	not supported
+	db	2		; 300		 1
+	db	17		; 450		 2
+	db	3		; 600		 3
+	db	-1		; 710		 4	not supported
+	db	4		; 1200		 5
+	db	5		; 2400		 6
+	db	6		; 4800		 7
+	db	7		; 9600		 8
+	db	8		; 19200		 9
+	db	9		; 38400		10
+	db	24		; 57600         11
+	db	10		; 76800         12
 ;
 ; Set the port. ZMP supplies either 0 or 1 as a parameter. You're on your
 ; own here -- your system is bound to be different from any other! You may
@@ -325,91 +572,128 @@ brate:	dw	7		; baud rate:
 ; this routine returning with no changes made. Note that ZMP calls this
 ; routine with both values for the port on initialisation.
 ;
+; Only originl ZMP calls setport. MECPARTS variant does not.
+;
+; We ignore this call.  Since we are using a command line parameter
+; to specify the desired modem port, it makes no sense.
+;
 setport:
 	ld	hl,2		; get port number
 	add	hl,sp
 	ex	de,hl
 	call	getparm		; in HL (values are 0 and 1)
 
-				; <== Insert your own code here
+	; <== Insert your own code here
 
-				; <== End of your own code
+	; <== End of your own code
+
 	ret
 
-port:	ds	1
 
-
+;
 ;****************************************************************************
-;Video terminal sequences: these are for ADM-3A: Modify as you wish
+;Video terminal sequences: these are for VT-100: Modify as you wish
 ;Cursor addressing: 
 cursadd:
 	ld	hl,2		; get parameters
 	add	hl,sp
 	ex	de,hl
 	call	getparm		; in HL
+	inc	hl
 	ld	(row),hl	; row
 	call	getparm
+	inc	hl
 	ld	(col),hl	; column
-				; <== Insert your own code here
-				; using values in row and col
-	call	print
-	db	esc,'=',0	; ADM-3A leadin
-	ld	a,(row)		; row first
-	add	a,' '		; add offset
-	call	cout
-	ld	a,(col)		; sane for column
-	add	a,' '
-	call	cout
-				; <== end of your own code
-	ret
+;
+	push	bc
 
+	call	print
+	db	esc,'[',0
+	ld	a,(row)		; row first
+	call	cursconv
+	ld	a,';'
+	call	cout
+	ld	a,(col)		; same for column
+	call	cursconv
+	ld	a,'H'
+	call	cout
+
+	pop	bc
+
+	ret
+;
+cursconv:
+	ld	b,a
+	xor	a
+ca1:	add	a,1
+	daa
+	djnz	ca1
+	ld	(num),a
+	and	0f0h
+	jr	z,ca2
+	srl	a
+	srl	a
+	srl	a
+	srl	a
+	or	'0'
+	call	cout
+ca2:	ld	a,(num)
+	and	0fh
+	or	'0'
+	call	cout
+	ret
+;
 row:	ds	2		; row
 col:	ds	2		; column
-
-
+num:	ds	1
+;
 ;Clear screen:
 cls:
 	call	print
-	db	1ah,0
+	db	esc,"[H",esc,"[2J",0
 	ret
-
+;
 ;Inverse video on:
 invon:
 	call	print
-	db	esc,'G4',0
+	db	esc,"[7m",0
 	ret
-
+;
 ;Inverse video off:
 invoff:
 	call	print
-	db	esc,'G0',0
+	db	esc,"[m",0
 	ret
-
+;
 ;Turn off cursor:
 hide:
 	call	print
-	db	esc,'.1',0
+	db	esc,'[?25l',0
 	ret
-
+;
 ;Turn on cursor:
 show:
 	call	print
-	db	esc,'.3',0
+	db	esc,'[?25h',0
 	ret
-
+;
 ;Save cursor position:
 savecu:
+	call	print
+	db	esc,'[7',0
 	ret
-
+;
 ;Restore cursor position:
 rescu:
+	call	print
+	db	esc,'[8',0
 	ret
 
 ;****************************************************************************
 
 ;Service modem interrupt:
 mint:
-	ret			; my system doesn't need this
+	ret			; handled in HBIOS
 
 ;Initialise interrupt vectors:
 invec:
@@ -471,7 +755,8 @@ cout:
 	pop	bc
 	ret
 
-;Wait(seconds)
+
+;Wait seconds
 wait:
 	ld	hl,2
 	add	hl,sp
@@ -480,45 +765,17 @@ wait:
 				; fall thru to..
 ;Wait seconds in HL
 waithls:
-	push	bc		; save bc
-	push	de		; de
-	push	ix		; and ix
-	ld	ix,0		; then point ix to 0
-				; so we don't upset memory-mapped i/o
-
-;Calculate values for loop constants. Need to have two loops to avoid
-;   16-bit overflow with clock speeds above 9 MHz.
-
-outerval	equ	(clkspd / 10) + 1
-innerval	equ	(6667 / outerval) * clkspd
-
-wait10:
-	ld	b,outerval
-
-wait11:
-	ld	de,innerval
-
-wait12:
-	bit	0,(ix)		; time-wasters
-	bit	0,(ix)
-	bit	0,(ix)		; 20 T-states each
-	bit	0,(ix)
-	bit	0,(ix)
-	bit	0,(ix)
-	dec	de
-	ld	a,e
-	ld	a,d
-	or	e
-	jr	nz,wait12	; 150 T-states per inner loop
-	djnz	wait11		; decrement outer loop
-	dec	hl		; ok, decrement count in hl
+	push	hl		; save loop control
+	ld	hl,1000		; 1000ms = 1 second
+	call	waithlms
+	pop	hl		; restore loop control
+	dec	hl
 	ld	a,h
 	or	l
-	jr	nz,wait10
-	pop	ix		; done -- restore ix
-	pop	de		; de
-	pop	bc		; and bc
+	jr	nz,waithls
 	ret
+
+
 
 ;Wait milliseconds
 mswait:
@@ -529,20 +786,34 @@ mswait:
 				; fall thru to..
 ;Wait milliseconds in HL
 waithlms:
-	push	de
-w1ms0:
-	ld	de,39 * clkspd
-w1ms1:
-	dec	de
-	ld	a,d
-	or	e
-	jr	nz,w1ms1
+	; burn 1000us (1ms)
+	ld	a,(cpumhz)	
+	ld	e,a
+hlms1:
+	; burn 1000 t-states
+	; 50 * 20 = 1000 t-states
+	ld	d,50
+hlms2:
+	nop			; 4
+	dec	d		; 4
+	jr	nz,hlms2	; 12	20
+
+	dec	e
+	jr	nz,hlms1
+
 	dec	hl
 	ld	a,h
 	or	l
-	jr	nz,w1ms0
-	pop	de
+	jr	nz,waithlms
+
 	ret
+
+
+
+
+
+
+
 
 ;Get next parameter from (de) into hl
 getparm:
@@ -570,3 +841,4 @@ toobig:	jp	errval		; Overlay too large!
 	 endif
 
 	end
+

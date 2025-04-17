@@ -12,6 +12,10 @@ awhile (some, a few decades):
 * In keyboard macros, ! translates to a CR now, not CR/LF.
 * \ escapes ! and ~ so those literal characters can be used in
   keyboard macros.
+* Waits in keyboard macros now allow characters from the modem to
+  be handled.
+* Keys in keyboard macros now have 25ms waits between them as to
+  not overrun the remove system.
 * Long distance access code has been removed.
 * Quick dialing letters limited to A-T.
 
@@ -23,5 +27,5 @@ version in ZMP15.LBR. So, to quote the original author,
 new one with the config option.  There have again been changes to 
 the format of this file."
 
-June 7, 2021
-
+August 15, 2023
+

@@ -50,6 +50,8 @@ d_cpm3/ReadMe.txt 0:
 ../../Binary/Apps/zmp.com 0:
 ../../Binary/Apps/zmp.hlp 0:
 ../../Binary/Apps/zmp.doc 0:
+../../Binary/Apps/zmp.cfg 0:
+../../Binary/Apps/zmp.fon 0:
 ../../Binary/Apps/zmxfer.ovr 0:
 ../../Binary/Apps/zmterm.ovr 0:
 ../../Binary/Apps/zminit.ovr 0:

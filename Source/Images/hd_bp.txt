@@ -36,6 +36,8 @@ Common/Z3/u15/ZEX.COM 0:
 ../../Binary/Apps/zmp.com 15:
 ../../Binary/Apps/zmp.hlp 15:
 ../../Binary/Apps/zmp.doc 10:
+../../Binary/Apps/zmp.cfg 15:
+../../Binary/Apps/zmp.fon 15:
 ../../Binary/Apps/zmxfer.ovr 15:
 ../../Binary/Apps/zmterm.ovr 15:
 ../../Binary/Apps/zminit.ovr 15:
