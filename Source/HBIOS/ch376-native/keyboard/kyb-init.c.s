@@ -502,7 +502,7 @@ l_keyboard_tick_00103:
 	push	bc
 	call	_keyboard_buf_put
 	pop	bc
-;source-doc/keyboard/kyb-init.c:159: keyboard_buf_put(i-1);
+;source-doc/keyboard/kyb-init.c:159: keyboard_buf_put(i - 1);
 	djnz	l_keyboard_tick_00103
 ;source-doc/keyboard/kyb-init.c:160: } while (--i != 0);
 	ld	de,_previous
