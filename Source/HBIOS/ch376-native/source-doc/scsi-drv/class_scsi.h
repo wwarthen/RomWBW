@@ -182,15 +182,12 @@ typedef struct {
   _scsi_packet_read_write     scsi_cmd;
 } cbw_scsi_read_write;
 
-extern usb_error get_scsi_read_capacity(device_config_storage *const dev, scsi_read_capacity_result *result);
+extern usb_error scsi_read_capacity(device_config_storage *const dev, scsi_read_capacity_result *result);
 extern usb_error scsi_inquiry(device_config_storage *const dev, scsi_inquiry_result *inq_result);
 extern usb_error scsi_sense_init(device_config_storage *const dev);
 extern usb_error scsi_test(device_config_storage *const dev);
 extern usb_error scsi_request_sense(device_config_storage *const dev, scsi_sense_result *const sens_result);
 extern usb_error scsi_eject(device_config_storage *const dev);
-extern usb_error scsi_read_write(
-    device_config_storage *const dev, const bool send, uint32_t sector_number, const uint8_t sector_count, uint8_t *const buffer);
-
 extern usb_error scsi_read(device_config_storage *const dev, uint8_t *const buffer);
 extern usb_error scsi_write(device_config_storage *const dev, uint8_t *const buffer);
 #endif

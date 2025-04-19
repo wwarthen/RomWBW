@@ -186,7 +186,7 @@ done:
   return result;
 }
 
-//TODO: review: does buffer_size need to be signed?
+// TODO: review: does buffer_size need to be signed?
 usb_error ch_data_in_transfer_n(uint8_t *const buffer, int8_t *const buffer_size, endpoint_param *const endpoint) {
   uint8_t   count;
   usb_error result;

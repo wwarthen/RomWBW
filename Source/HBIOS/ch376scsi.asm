@@ -237,7 +237,7 @@ CH_SCSI_CAP:
 
 	push	ix
 	push	iy
-	call	_get_scsi_read_capacity
+	call	_scsi_read_capacity
 	pop	iy
 	pop	ix
 

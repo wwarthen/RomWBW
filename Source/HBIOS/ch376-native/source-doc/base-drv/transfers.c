@@ -159,7 +159,7 @@ usb_data_in_transfer_n(uint8_t *buffer, uint8_t *const buffer_size, const uint8_
 
   ch_set_usb_address(device_address);
 
-  result = ch_data_in_transfer_n(buffer, buffer_size, endpoint); //does ch_data_in_transfer_n size need to be signed?
+  result = ch_data_in_transfer_n(buffer, buffer_size, endpoint); // does ch_data_in_transfer_n size need to be signed?
 
   critical_end();
 

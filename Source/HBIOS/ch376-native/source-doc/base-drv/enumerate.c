@@ -46,7 +46,7 @@ usb_error op_interface_next(_working *const working) __z88dk_fastcall {
 }
 
 usb_error op_endpoint_next(_working *const working) __sdcccall(1) {
-  if (--working->endpoint_count > 0) {
+  if (working->endpoint_count != 0 && --working->endpoint_count > 0) {
     working->ptr += ((endpoint_descriptor *)working->ptr)->bLength;
     return op_parse_endpoint(working);
   }

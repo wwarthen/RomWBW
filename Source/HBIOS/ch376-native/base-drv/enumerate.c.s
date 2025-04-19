@@ -245,10 +245,12 @@ l_op_interface_next_00103:
 ; ---------------------------------
 _op_endpoint_next:
 	ex	de, hl
-;source-doc/base-drv/enumerate.c:49: if (--working->endpoint_count > 0) {
+;source-doc/base-drv/enumerate.c:49: if (working->endpoint_count != 0 && --working->endpoint_count > 0) {
 	ld	hl,0x0017
 	add	hl, de
 	ld	a, (hl)
+	or	a
+	jr	Z,l_op_endpoint_next_00102
 	dec	a
 	ld	(hl), a
 	or	a
@@ -271,13 +273,13 @@ _op_endpoint_next:
 ;source-doc/base-drv/enumerate.c:51: return op_parse_endpoint(working);
 	ex	de, hl
 	jp	_op_parse_endpoint
-	jr	l_op_endpoint_next_00103
+	jr	l_op_endpoint_next_00104
 l_op_endpoint_next_00102:
 ;source-doc/base-drv/enumerate.c:54: return op_interface_next(working);
 	ex	de, hl
 	call	_op_interface_next
 	ld	a, l
-l_op_endpoint_next_00103:
+l_op_endpoint_next_00104:
 ;source-doc/base-drv/enumerate.c:55: }
 	ret
 ;source-doc/base-drv/enumerate.c:57: usb_error op_parse_endpoint(_working *const working) __sdcccall(1) {

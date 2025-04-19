@@ -9,10 +9,11 @@ _scsi_command_block_wrapper scsi_command_block_wrapper = {{0x55, 0x53, 0x42, 0x4
 uint16_t next_tag = 0;
 
 _scsi_command_status_wrapper csw = {{{0}}};
-usb_error                    do_scsi_cmd(device_config_storage *const       dev,
-                                         _scsi_command_block_wrapper *const cbw,
-                                         void *const                        send_receive_buffer,
-                                         const bool                         send) {
+
+usb_error do_scsi_cmd(device_config_storage *const       dev,
+                      _scsi_command_block_wrapper *const cbw,
+                      void *const                        send_receive_buffer,
+                      const bool                         send) {
 
   cbw->dCBWTag[0] = next_tag++;
 
@@ -48,12 +49,12 @@ done:
   return result;
 }
 
-_scsi_read_capacity scsi_read_capacity = {0x25, 0, {0, 0, 0, 0, 0, 0, 0, 0}, {0, 0}};
+_scsi_read_capacity scsi_packet_read_capacity = {0x25, 0, {0, 0, 0, 0, 0, 0, 0, 0}, {0, 0}};
 
-usb_error get_scsi_read_capacity(device_config_storage *const dev, scsi_read_capacity_result *cap_result) {
+usb_error scsi_read_capacity(device_config_storage *const dev, scsi_read_capacity_result *cap_result) {
   cbw_scsi_read_capacity cbw_scsi;
   cbw_scsi.cbw           = scsi_command_block_wrapper;
-  cbw_scsi.read_capacity = scsi_read_capacity;
+  cbw_scsi.read_capacity = scsi_packet_read_capacity;
 
   cbw_scsi.cbw.bCBWLUN                = 0;
   cbw_scsi.cbw.bCBWCBLength           = sizeof(_scsi_read_capacity);
