@@ -10,6 +10,7 @@
     "*.mac": "z80-macroasm",
     "*.asmpp": "z80-macroasm",
     "*.zdsproj": "xml",
+    "*.Z80": "z80-macroasm",
     "ch376.h": "c",
     "protocol.h": "c",
     "usb_state.h": "c",
@@ -18,6 +19,8 @@
     "z80.h": "c",
     "dev_transfers.h": "c",
     "usb-base-drv.h": "c",
-    "critical-section.h": "c"
+    "critical-section.h": "c",
+    "enumerate.h": "c",
+    "ch376inc.h": "c"
   }
 }

@@ -759,49 +759,53 @@ typedef unsigned char volatile *PUINT8V;
 /* The following status codes are used for file system error codes in host file
  * mode */
 #ifndef ERR_DISK_DISCON
-#define ERR_DISK_DISCON                                                                                                            \
-  0x82 /* The  disk has not been connected, maybe the disk has been                                                                \
-          disconnected */
-#define ERR_LARGE_SECTOR                                                                                                           \
-  0x84                            /*The sector of the disk is too large, only 512 bytes per sector are                             \
-                                     supported */                                                                                  \
-      #define ERR_TYPE_ERROR 0x92 /* The  disk partition type is not                                                               \
-                             supported, only FAT12/FAT16/BigDOS/FAT32 is                                                           \
-                             supported, it needs to be re-partitioned by the                                                       \
-                             disk management tool */
-#define ERR_BPB_ERROR                                                                                                              \
-  0xA1                            /*The disk has not been formatted,                                                               \
-                                 or the parameters are wrong and need to be reformatted by WINDOWS with                            \
-                                 default parameters */                                                                             \
-      #define ERR_DISK_FULL 0xB1  /*The disk file is too full, the remaining                                                       \
-                                 space is too little or there is no more,  and                                                     \
-                                 disk defragmentation is required */                                                               \
-      #define ERR_FDT_OVER 0xB2   /*There are too many files in the                                                                \
-                                 directory(folder), there is no free directory                                                     \
-                                 entry,   the number of files in the FAT12 /                                                       \
-                                 FAT16   root directory should be less than 512,                                                   \
-                                 and   disk defragmentation is required */                                                         \
-      #define ERR_FILE_CLOSE 0xB4 /*The file has been closed, it should be                                                         \
-                                     reopened if needed */                                                                         \
-      #define ERR_OPEN_DIR 0x41   /* The directory (folder) of the specified                                                       \
-                                     path is opened */
-#define ERR_MISS_FILE                                                                                                              \
-  0x42                            /*The file in the specified path is not found, maybe the file name is                            \
-                                     wrong */                                                                                      \
-      #define ERR_FOUND_NAME 0x43 /* Search for a matching file name, or ask                                                       \
-      to open a directory (folder) but the actual result opens the file */
+
+/* The disk has not been connected, maybe the disk has been disconnected */
+#define ERR_DISK_DISCON 0x82
+
+/*The sector of the disk is too large, only 512 bytes per sector are supported */
+#define ERR_LARGE_SECTOR 0x84
+
+/* The disk partition type is not supported, only FAT12/FAT16/BigDOS/FAT32 is supported, it needs to be re-partitioned by the disk
+ * management tool */
+#define ERR_TYPE_ERROR 0x92
+
+/* The disk has not been formatted, or the parameters are wrong and need to be reformatted by WINDOWS with  default parameters */
+#define ERR_BPB_ERROR 0xA1
+
+/* The disk file is too full, the remaining space is too little or there is no more, and disk defragmentation is required */
+#define ERR_DISK_FULL 0xB1
+
+/* There are too many files in the directory(folder), there is no free directory entry, the number of files in the FAT12 / FAT16
+ * root directory should be less than 512, and disk defragmentation is required */
+#define ERR_FDT_OVER 0xB2
+
+/*The file has been closed, it should be reopened if needed */
+#define ERR_FILE_CLOSE 0xB4
+
+/* The directory (folder) of the specified path is opened */
+#define ERR_OPEN_DIR 0x41
+
+/* The file in the specified path is not found, maybe the file name is wrong */
+#define ERR_MISS_FILE 0x42
+
+/* Search for a matching file name, or ask to open a directory (folder) but the actual result opens the file */
+
 /* The following file system error codes are used for file system subroutines */
-#define ERR_MISS_DIR                                                                                                               \
-  0xB3                               /*A subdirectory(folder) of the specified path is not found, maybe the                        \
-                                        directory name is wrong */                                                                 \
-      #define ERR_LONG_BUF_OVER 0x48 /* long file buffer overflow */
-#define ERR_LONG_NAME_ERR                                                                                                          \
-  0x49 /* The short file name does not have a corresponding long file name or                                                      \
-        * the long file name is wrong                                                                                              \
-        */
-#define ERR_NAME_EXIST                                                                                                             \
-  0x4A /* A short file with the same name already exists, it is recommended to                                                     \
-          regenerate another short file name */
+#define ERR_FOUND_NAME 0x43
+
+/* A subdirectory(folder) of the specified path is not found, maybe the directory name is wrong */
+#define ERR_MISS_DIR 0xB3
+
+/* long file buffer overflow */
+#define ERR_LONG_BUF_OVER 0x48
+
+/* The short file name does not have a corresponding long file name or the long file name is wrong */
+#define ERR_LONG_NAME_ERR 0x49
+
+/* A short file with the same name already exists, it is recommended to regenerate another short file name */
+#define ERR_NAME_EXIST 0x4A
+
 #endif
 
 /* ************************************************
@@ -809,23 +813,30 @@ typedef unsigned char volatile *PUINT8V;
 /* The following status codes are used for disk and file status in host file
  * mode, VAR_DISK_STATUS */
 #ifndef DEF_DISK_UNKNOWN
-#define DEF_DISK_UNKNOWN                                                                                                           \
-  0x00                              /*Not initialized, unknown state */                                                            \
-      #define DEF_DISK_DISCONN 0x01 /* The disk is not connected or has been                                                       \
-                                       disconnected */
-#define DEF_DISK_CONNECT                                                                                                           \
-  0x02 /* The  disk is connected, but it has not been initialized or the disk                                                      \
-        * cannot be recognized                                                                                                     \
-        */
-#define DEF_DISK_MOUNTED                                                                                                           \
-  0x03                      /* The disk has been initialized successfully, but the file system has                                 \
-                               not been analyzed or the file system does not support */
-#define DEF_DISK_READY 0x10 /* The file system of the disk has been analyzed and can support */
-#define DEF_DISK_OPEN_ROOT                                                                                                         \
-  0x12                          /* The  root directory has been opened and must be closed after use.                               \
-                                   Note that the FAT12/FAT16 root directory is a fixed length */
-#define DEF_DISK_OPEN_DIR  0x13 /* A subdirectory (folder) has been opened */
-#define DEF_DISK_OPEN_FILE 0x14 /* The file has been opened */
+
+/*Not initialized, unknown state */
+#define DEF_DISK_UNKNOWN 0x00
+
+/* The disk is not connected or has been disconnected */
+#define DEF_DISK_DISCONN 0x01
+
+/* The  disk is connected, but it has not been initialized or the disk cannot be recognized */
+#define DEF_DISK_CONNECT 0x02
+
+/* The disk has been initialized successfully, but the file system has not been analyzed or the file system does not support */
+#define DEF_DISK_MOUNTED 0x03
+
+/* The file system of the disk has been analyzed and can support */
+#define DEF_DISK_READY 0x10
+
+/* The  root directory has been opened and must be closed after use. Note that the FAT12/FAT16 root directory is a fixed length */
+#define DEF_DISK_OPEN_ROOT 0x12
+
+/* A subdirectory (folder) has been opened */
+#define DEF_DISK_OPEN_DIR 0x13
+
+/* The file has been opened */
+#define DEF_DISK_OPEN_FILE 0x14
 #endif
 
 /* ************************************************
@@ -833,7 +844,8 @@ typedef unsigned char volatile *PUINT8V;
 /* Common definitions of file system */
 
 #ifndef DEF_SECTOR_SIZE
-#define DEF_SECTOR_SIZE 512 /* The default physical sector size of U disk or SD card */
+/* The default physical sector size of U disk or SD card */
+#define DEF_SECTOR_SIZE 512
 #endif
 
 #ifndef DEF_WILDCARD_CHAR
