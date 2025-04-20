@@ -1,5 +1,6 @@
 ; Generated File -- not to be modify directly
 #include "ch376-native/base-drv/ch376.c.s"
+#include "ch376-native/base-drv/ch376_init.c.s"
 #include "ch376-native/base-drv/class_hub.c.s"
 #include "ch376-native/base-drv/critical-section.c.s"
 #include "ch376-native/base-drv/dev_transfers.c.s"
@@ -9,6 +10,6 @@
 #include "ch376-native/base-drv/protocol.c.s"
 #include "ch376-native/base-drv/transfers.c.s"
 #include "ch376-native/base-drv/usb-base-drv.c.s"
-#include "ch376-native/base-drv/usb-init.c.s"
+#include "ch376-native/base-drv/usb_init.c.s"
 #include "ch376-native/base-drv/usb_state.c.s"
 #include "ch376-native/base-drv/work-area.c.s"
