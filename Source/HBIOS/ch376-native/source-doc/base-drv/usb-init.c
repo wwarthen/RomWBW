@@ -22,81 +22,119 @@ static usb_error usb_host_bus_reset(void) {
 
 #define ERASE_LINE "\x1B\x6C\r$"
 
-void _chnative_init(bool forced) {
-  memset(get_usb_work_area(), 0, sizeof(_usb_state));
+uint16_t ch376_init(uint8_t state) {
+  uint8_t r;
 
   USB_MODULE_LEDS = 0x03;
 
-  ch_cmd_reset_all();
+  if (state == 0) {
+    ch_cmd_reset_all();
+    delay_medium();
 
-  delay_medium();
-
-  if (forced) {
-    bool indicator = true;
-    print_string("\r\nCH376: *$");
-    while (!ch_probe()) {
-      if (indicator) {
-        USB_MODULE_LEDS = 0x00;
-        print_string("\b $");
-      } else {
-        USB_MODULE_LEDS = 0x03;
-        print_string("\b*$");
-      }
-
-      delay_medium();
-      indicator = !indicator;
-    }
-
-    print_string("\bPRESENT (VER $");
-  } else {
     if (!ch_probe()) {
-      USB_MODULE_LEDS = 0x03;
-      print_string("\r\nCH376: NOT PRESENT$");
-      return;
+      USB_MODULE_LEDS = 0x00;
+      return 0xFF00;
     }
-
-    print_string("\r\nCH376: PRESENT (VER $");
+    USB_MODULE_LEDS = 0x00;
+    return 1;
   }
 
-  USB_MODULE_LEDS = 0x00;
+  if (state == 1) {
+    r = ch_cmd_get_ic_version();
 
-  print_hex(ch_cmd_get_ic_version());
+    USB_MODULE_LEDS = 0x00;
+    return (uint16_t)r << 8 | 2;
+  }
+
+  if (state == 2) {
+    usb_host_bus_reset();
+
+    r = ch_very_short_wait_int_and_get_status();
+
+    if (r != USB_INT_CONNECT) {
+      USB_MODULE_LEDS = 0x00;
+      return 2;
+    }
+
+    return 3;
+  }
+
+  memset(get_usb_work_area(), 0, sizeof(_usb_state));
+  if (state != 2) {
+    usb_host_bus_reset();
+    delay_medium();
+  }
+  enumerate_all_devices();
+  USB_MODULE_LEDS = 0x00;
+  return (uint16_t)count_of_devices() << 8 | state + 1;
+}
+
+static uint16_t wait_for_state(const uint8_t loop_counter, uint8_t state, const uint8_t desired_state) __sdcccall(1) {
+  uint16_t r = state;
+
+  for (uint8_t i = 0; i < loop_counter; i++) {
+    if (state == desired_state)
+      break;
+
+    if (i & 1)
+      print_string("\b $");
+    else
+      print_string("\b*$");
+
+    r     = ch376_init(state);
+    state = r & 255;
+  }
+
+  return r;
+}
+
+void _chnative_init(bool forced) {
+  uint8_t       state = 0;
+  uint16_t      r;
+  const uint8_t loop_counter = forced ? 40 : 5;
+
+  print_string("\r\nCH376: *$");
+
+  r     = wait_for_state(loop_counter, state, 1);
+  state = r & 255;
+
+  print_string("\bPRESENT (VER $");
+
+  r     = ch376_init(state);
+  state = r & 255;
+  if (state != 2) {
+    print_string("\rCH376: $");
+    print_string("VERSION FAILURE\r\n$");
+    return;
+  }
+
+  print_hex(r >> 8);
   print_string("); $");
 
-  usb_host_bus_reset();
+  print_string("USB: *$");
 
-  for (uint8_t i = 0; i < (forced ? 80 : 5); i++) {
-    const uint8_t r = ch_very_short_wait_int_and_get_status();
+  r     = wait_for_state(loop_counter, state, 3);
+  state = r & 255;
 
-    if (r == USB_INT_CONNECT) {
-      print_string("USB: CONNECTED$");
-
-      enumerate_all_devices();
-
-      if (forced && count_of_devices() == 0) {
-        print_string("\r\nUSB: SCANNING $");
-
-        for (i = 0; i < 10; i++) {
-          print_string(".$");
-          memset(get_usb_work_area(), 0, sizeof(_usb_state));
-          usb_host_bus_reset();
-
-          delay_medium();
-          enumerate_all_devices();
-
-          if (count_of_devices() > 0)
-            goto connected;
-        }
-      }
-
-    connected:
-      USB_MODULE_LEDS = 0x00;
-      return;
-    }
+  if (state == 2) {
+    print_string("\bDISCONNECTED$");
+    return;
   }
 
-  USB_MODULE_LEDS = 0x03;
-  print_string("USB: DISCONNECTED$");
+  print_string("\bCONNECTED$");
+
+  // enumerate....
+  r     = ch376_init(state);
+  state = r & 255;
+
+  for (uint8_t i = 0; i < loop_counter; i++) {
+    if (r >> 8 != 0)
+      break;
+
+    print_string(".$");
+    r     = ch376_init(state);
+    state = r & 255;
+  }
 }
 
 void chnative_init_force(void) { _chnative_init(true); }
