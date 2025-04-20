@@ -55,22 +55,22 @@ _wait_for_state:
 	add	ix,sp
 	dec	sp
 	ld	(ix-1),a
-	ld	b, l
 ;source-doc/base-drv/ch376_init.c:5: uint16_t r = state;
-	ld	e, b
+	ld	c,l
+	ld	e,l
 ;source-doc/base-drv/ch376_init.c:7: for (uint8_t i = 0; i < loop_counter; i++) {
 	ld	d,0x00
-	ld	c,d
+	ld	b,d
 l_wait_for_state_00108:
-	ld	a, c
+	ld	a, b
 	sub	(ix-1)
 	jr	NC,l_wait_for_state_00106
 ;source-doc/base-drv/ch376_init.c:8: if (state == desired_state)
 	ld	a,(ix+4)
-	sub	b
+	sub	c
 	jr	Z,l_wait_for_state_00106
 ;source-doc/base-drv/ch376_init.c:11: if (i & 1)
-	bit	0, c
+	bit	0, b
 	jr	Z,l_wait_for_state_00104
 ;source-doc/base-drv/ch376_init.c:12: print_string("\b $");
 	push	bc
@@ -87,16 +87,14 @@ l_wait_for_state_00104:
 l_wait_for_state_00105:
 ;source-doc/base-drv/ch376_init.c:16: r     = usb_init(state);
 	push	bc
-	push	bc
-	inc	sp
+	ld	l, c
 	call	_usb_init
-	inc	sp
 	ex	de, hl
 	pop	bc
 ;source-doc/base-drv/ch376_init.c:17: state = r & 255;
-	ld	b, e
+	ld	c, e
 ;source-doc/base-drv/ch376_init.c:7: for (uint8_t i = 0; i < loop_counter; i++) {
-	inc	c
+	inc	b
 	jr	l_wait_for_state_00108
 l_wait_for_state_00106:
 ;source-doc/base-drv/ch376_init.c:20: return r;
@@ -142,16 +140,15 @@ l__chnative_init_00114:
 	ld	l,0x00
 	ld	a,(ix-1)
 	call	_wait_for_state
-	ld	b, e
 ;source-doc/base-drv/ch376_init.c:31: state = r & 255;
 ;source-doc/base-drv/ch376_init.c:33: print_string("\bPRESENT (VER $");
-	push	bc
+	push	de
 	ld	hl,ch376_init_str_3
 	call	_print_string
+	pop	de
 ;source-doc/base-drv/ch376_init.c:35: r     = usb_init(state);
-	inc	sp
+	ld	l, e
 	call	_usb_init
-	inc	sp
 	ex	de, hl
 ;source-doc/base-drv/ch376_init.c:36: state = r & 255;
 	ld	c, e
@@ -186,10 +183,9 @@ l__chnative_init_00102:
 	ld	l, c
 	ld	a,(ix-1)
 	call	_wait_for_state
-	ld	b, e
 ;source-doc/base-drv/ch376_init.c:49: state = r & 255;
 ;source-doc/base-drv/ch376_init.c:51: if (state == 2) {
-	ld	a, b
+	ld	a, e
 	sub	0x02
 	jr	NZ,l__chnative_init_00104
 ;source-doc/base-drv/ch376_init.c:52: print_string("\bDISCONNECTED$");
@@ -199,20 +195,20 @@ l__chnative_init_00102:
 	jr	l__chnative_init_00111
 l__chnative_init_00104:
 ;source-doc/base-drv/ch376_init.c:56: print_string("\bCONNECTED$");
-	push	bc
+	push	de
 	ld	hl,ch376_init_str_9
 	call	_print_string
+	pop	de
 ;source-doc/base-drv/ch376_init.c:59: r     = usb_init(state);
-	inc	sp
+	ld	l, e
 	call	_usb_init
-	inc	sp
 	ex	de, hl
 ;source-doc/base-drv/ch376_init.c:60: state = r & 255;
-	ld	b, e
+	ld	c, e
 ;source-doc/base-drv/ch376_init.c:62: for (uint8_t i = 0; i < loop_counter; i++) {
-	ld	c,0x00
+	ld	b,0x00
 l__chnative_init_00109:
-	ld	a, c
+	ld	a, b
 	sub	(ix-1)
 	jr	NC,l__chnative_init_00111
 ;source-doc/base-drv/ch376_init.c:63: if (r >> 8 != 0)
@@ -226,16 +222,14 @@ l__chnative_init_00109:
 	pop	bc
 ;source-doc/base-drv/ch376_init.c:67: r     = usb_init(state);
 	push	bc
-	push	bc
-	inc	sp
+	ld	l, c
 	call	_usb_init
-	inc	sp
 	ex	de, hl
 	pop	bc
 ;source-doc/base-drv/ch376_init.c:68: state = r & 255;
-	ld	b, e
+	ld	c, e
 ;source-doc/base-drv/ch376_init.c:62: for (uint8_t i = 0; i < loop_counter; i++) {
-	inc	c
+	inc	b
 	jr	l__chnative_init_00109
 l__chnative_init_00111:
 ;source-doc/base-drv/ch376_init.c:70: }

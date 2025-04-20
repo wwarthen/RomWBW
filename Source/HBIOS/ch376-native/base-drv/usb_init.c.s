@@ -83,20 +83,17 @@ _usb_host_bus_reset:
 	ld	l,0x00
 ;source-doc/base-drv/usb_init.c:20: }
 	ret
-;source-doc/base-drv/usb_init.c:24: uint16_t usb_init(uint8_t state) {
+;source-doc/base-drv/usb_init.c:24: uint16_t usb_init(uint8_t state) __z88dk_fastcall {
 ; ---------------------------------
 ; Function usb_init
 ; ---------------------------------
 _usb_init:
-	push	ix
-	ld	ix,0
-	add	ix,sp
 ;source-doc/base-drv/usb_init.c:27: USB_MODULE_LEDS = 0x03;
 	ld	a,0x03
 	ld	bc,_USB_MODULE_LEDS
 	out	(c), a
 ;source-doc/base-drv/usb_init.c:29: if (state == 0) {
-	ld	a,(ix+4)
+	ld	a, l
 	or	a
 	jr	NZ,l_usb_init_00104
 ;source-doc/base-drv/usb_init.c:30: ch_cmd_reset_all();
@@ -124,7 +121,7 @@ l_usb_init_00102:
 	jr	l_usb_init_00113
 l_usb_init_00104:
 ;source-doc/base-drv/usb_init.c:41: if (state == 1) {
-	ld	a,(ix+4)
+	ld	a, l
 	dec	a
 	jr	NZ,l_usb_init_00106
 ;source-doc/base-drv/usb_init.c:42: r = ch_cmd_get_ic_version();
@@ -140,7 +137,7 @@ l_usb_init_00104:
 	jr	l_usb_init_00113
 l_usb_init_00106:
 ;source-doc/base-drv/usb_init.c:48: if (state == 2) {
-	ld	a,(ix+4)
+	ld	a, l
 	sub	0x02
 	jr	NZ,l_usb_init_00159
 	ld	a,0x01
@@ -196,15 +193,11 @@ l_usb_init_00112:
 	ld	a,0x00
 	ld	bc,_USB_MODULE_LEDS
 	out	(c), a
-;source-doc/base-drv/usb_init.c:68: return (uint16_t)count_of_devices() << 8 | state + 1;
+;source-doc/base-drv/usb_init.c:68: return (uint16_t)count_of_devices() << 8 | 4;
 	call	_count_of_devices
-	ld	c,(ix+4)
-	ld	b,0x00
-	inc	bc
-	or	b
 	ld	h, a
-	ld	l, c
+	xor	a
+	ld	l,0x04
 l_usb_init_00113:
 ;source-doc/base-drv/usb_init.c:69: }
-	pop	ix
 	ret

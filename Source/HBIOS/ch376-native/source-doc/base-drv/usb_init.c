@@ -21,7 +21,7 @@ static usb_error usb_host_bus_reset(void) {
 
 #define ERASE_LINE "\x1B\x6C\r$"
 
-uint16_t usb_init(uint8_t state) {
+uint16_t usb_init(uint8_t state) __z88dk_fastcall {
   uint8_t r;
 
   USB_MODULE_LEDS = 0x03;
@@ -65,5 +65,5 @@ uint16_t usb_init(uint8_t state) {
   }
   enumerate_all_devices();
   USB_MODULE_LEDS = 0x00;
-  return (uint16_t)count_of_devices() << 8 | state + 1;
+  return (uint16_t)count_of_devices() << 8 | 4;
 }
