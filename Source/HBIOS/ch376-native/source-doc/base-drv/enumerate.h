@@ -8,7 +8,8 @@
 #define MAX_CONFIG_SIZE 140
 
 typedef struct {
-  uint8_t next_device_address;
+  uint8_t next_device_address; /* Track the count of installed usb devices*/
+  uint8_t storage_count;       /* Track the count of storage devices (scsi, ufi) */
 } enumeration_state;
 
 typedef struct __working {

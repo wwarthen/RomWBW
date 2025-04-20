@@ -24,9 +24,8 @@ void chscsi_init(void) {
       print_string("\r\nUSB: MASS STORAGE @ $");
       print_uint16(index);
       print_string(":$");
-      print_uint16(storage_count);
+      print_uint16(storage_device->drive_index);
       print_string(" $");
-      storage_device->drive_index = storage_count++;
       scsi_sense_init(storage_device);
       dio_add_entry(ch_scsi_fntbl, storage_device);
     }

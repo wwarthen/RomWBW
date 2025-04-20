@@ -61,7 +61,7 @@ usb_error op_parse_endpoint(_working *const working) __sdcccall(1) {
   switch (working->usb_device) {
   case USB_IS_FLOPPY:
   case USB_IS_MASS_STORAGE: {
-    parse_endpoints(device, endpoint);
+    parse_endpoints((device_config_storage *)device, endpoint);
     break;
   }
 
@@ -186,13 +186,33 @@ done:
   return result;
 }
 
+static uint8_t count_storage_devs(enumeration_state *state) {
+
+  uint8_t index = 1;
+  do {
+    device_config_storage *const storage_device = (device_config_storage *)get_usb_device_config(index);
+
+    if (storage_device == NULL)
+      break;
+
+    const usb_device_type t = storage_device->type;
+
+    if (t == USB_IS_FLOPPY || t == USB_IS_MASS_STORAGE)
+      storage_device->drive_index = state->storage_count++;
+
+  } while (++index != MAX_NUMBER_OF_DEVICES + 1);
+
+  return state->storage_count;
+}
+
 usb_error enumerate_all_devices(void) {
   _usb_state *const work_area = get_usb_work_area();
   enumeration_state state;
   memset(&state, 0, sizeof(enumeration_state));
-  state.next_device_address = 0;
 
   usb_error result = read_all_configs(&state);
+
+  count_storage_devs(&state);
 
   work_area->count_of_detected_usb_devices = state.next_device_address;
 

@@ -322,7 +322,7 @@ _op_parse_endpoint:
 	jr	l_op_parse_endpoint_00104
 ;source-doc/base-drv/enumerate.c:63: case USB_IS_MASS_STORAGE: {
 l_op_parse_endpoint_00102:
-;source-doc/base-drv/enumerate.c:64: parse_endpoints(device, endpoint);
+;source-doc/base-drv/enumerate.c:64: parse_endpoints((device_config_storage *)device, endpoint);
 	push	bc
 	ld	l,(ix-2)
 	ld	h,(ix-1)
@@ -923,37 +923,102 @@ l_read_all_configs_00112:
 	ld	sp, ix
 	pop	ix
 	ret
-;source-doc/base-drv/enumerate.c:189: usb_error enumerate_all_devices(void) {
+;source-doc/base-drv/enumerate.c:189: static uint8_t count_storage_devs(enumeration_state *state) {
+; ---------------------------------
+; Function count_storage_devs
+; ---------------------------------
+_count_storage_devs:
+	push	ix
+	ld	ix,0
+	add	ix,sp
+;source-doc/base-drv/enumerate.c:192: do {
+	ld	c,0x01
+l_count_storage_devs_00106:
+;source-doc/base-drv/enumerate.c:193: device_config_storage *const storage_device = (device_config_storage *)get_usb_device_config(index);
+	push	bc
+	ld	a, c
+	call	_get_usb_device_config
+	pop	bc
+;source-doc/base-drv/enumerate.c:195: if (storage_device == NULL)
+	ld	a, d
+	or	e
+	jr	Z,l_count_storage_devs_00108
+;source-doc/base-drv/enumerate.c:198: const usb_device_type t = storage_device->type;
+	ld	l, e
+	ld	h, d
+	ld	a, (hl)
+	and	0x0f
+;source-doc/base-drv/enumerate.c:200: if (t == USB_IS_FLOPPY || t == USB_IS_MASS_STORAGE)
+	cp	0x01
+	jr	Z,l_count_storage_devs_00103
+	sub	0x02
+	jr	NZ,l_count_storage_devs_00107
+l_count_storage_devs_00103:
+;source-doc/base-drv/enumerate.c:201: storage_device->drive_index = state->storage_count++;
+	ld	hl,0x0010
+	add	hl, de
+	ex	de, hl
+	ld	l,(ix+4)
+	ld	h,(ix+5)
+	inc	hl
+	ld	a, (hl)
+	ld	b, a
+	inc	b
+	ld	(hl), b
+	ld	(de), a
+l_count_storage_devs_00107:
+;source-doc/base-drv/enumerate.c:203: } while (++index != MAX_NUMBER_OF_DEVICES + 1);
+	inc	c
+	ld	a, c
+	sub	0x07
+	jr	NZ,l_count_storage_devs_00106
+l_count_storage_devs_00108:
+;source-doc/base-drv/enumerate.c:205: return state->storage_count;
+	ld	l,(ix+4)
+	ld	h,(ix+5)
+	inc	hl
+	ld	l, (hl)
+;source-doc/base-drv/enumerate.c:206: }
+	pop	ix
+	ret
+;source-doc/base-drv/enumerate.c:208: usb_error enumerate_all_devices(void) {
 ; ---------------------------------
 ; Function enumerate_all_devices
 ; ---------------------------------
 _enumerate_all_devices:
 	push	ix
-	dec	sp
-;source-doc/base-drv/enumerate.c:190: _usb_state *const work_area = get_usb_work_area();
-;source-doc/base-drv/enumerate.c:192: memset(&state, 0, sizeof(enumeration_state));
+	ld	ix,0
+	add	ix,sp
+	push	af
+;source-doc/base-drv/enumerate.c:209: _usb_state *const work_area = get_usb_work_area();
+;source-doc/base-drv/enumerate.c:211: memset(&state, 0, sizeof(enumeration_state));
 	ld	hl,0
 	add	hl, sp
-	ld	e,l
-	ld	d,h
-	ld	(hl),0x00
-;source-doc/base-drv/enumerate.c:193: state.next_device_address = 0;
-	ld	c, e
-	ld	b, d
 	xor	a
-	ld	(bc), a
-;source-doc/base-drv/enumerate.c:195: usb_error result = read_all_configs(&state);
-	push	bc
-	push	de
+	ld	(hl), a
+	inc	hl
+	ld	(hl), a
+;source-doc/base-drv/enumerate.c:213: usb_error result = read_all_configs(&state);
+	ld	hl,0
+	add	hl, sp
+	push	hl
+	push	hl
 	call	_read_all_configs
 	pop	af
+	ld	c, l
+	pop	hl
+;source-doc/base-drv/enumerate.c:215: count_storage_devs(&state);
+	push	bc
+	push	hl
+	call	_count_storage_devs
+	pop	af
 	pop	bc
-;source-doc/base-drv/enumerate.c:197: work_area->count_of_detected_usb_devices = state.next_device_address;
-	ld	de,_x + 1
-	ld	a, (bc)
-	ld	(de), a
-;source-doc/base-drv/enumerate.c:200: return result;
-;source-doc/base-drv/enumerate.c:201: }
-	inc	sp
+;source-doc/base-drv/enumerate.c:217: work_area->count_of_detected_usb_devices = state.next_device_address;
+	ld	a,(ix-2)
+	ld	((_x + 1)),a
+;source-doc/base-drv/enumerate.c:220: return result;
+	ld	l, c
+;source-doc/base-drv/enumerate.c:221: }
+	ld	sp, ix
 	pop	ix
 	ret

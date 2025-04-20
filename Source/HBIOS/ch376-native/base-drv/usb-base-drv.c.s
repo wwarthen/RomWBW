@@ -33,8 +33,6 @@ _USB_MODULE_LEDS	.EQU	0xff8a
 	
 ; .area _INITIALIZED removed by z88dk
 	
-_storage_count:
-	DEFS 1
 	
 #ENDIF
 	
@@ -50,7 +48,7 @@ _storage_count:
 ;--------------------------------------------------------
 ; code
 ;--------------------------------------------------------
-;source-doc/base-drv/usb-base-drv.c:6: uint8_t chnative_seek(const uint32_t lba, device_config_storage *const storage_device) __sdcccall(1) {
+;source-doc/base-drv/usb-base-drv.c:3: uint8_t chnative_seek(const uint32_t lba, device_config_storage *const storage_device) __sdcccall(1) {
 ; ---------------------------------
 ; Function chnative_seek
 ; ---------------------------------
@@ -60,7 +58,7 @@ _chnative_seek:
 	add	ix,sp
 	ld	c, l
 	ld	b, h
-;source-doc/base-drv/usb-base-drv.c:7: storage_device->current_lba = lba;
+;source-doc/base-drv/usb-base-drv.c:4: storage_device->current_lba = lba;
 	ld	h,(ix+5)
 	ld	a,(ix+4)
 	add	a,0x0c
@@ -75,12 +73,10 @@ l_chnative_seek_00103:
 	ld	(hl), c
 	inc	hl
 	ld	(hl), b
-;source-doc/base-drv/usb-base-drv.c:8: return 0;
+;source-doc/base-drv/usb-base-drv.c:5: return 0;
 	xor	a
-;source-doc/base-drv/usb-base-drv.c:9: }
+;source-doc/base-drv/usb-base-drv.c:6: }
 	pop	ix
 	pop	hl
 	pop	bc
 	jp	(hl)
-_storage_count:
-	DEFB +0x00

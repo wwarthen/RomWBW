@@ -2,7 +2,7 @@
 #include "protocol.h"
 #include <string.h>
 
-void parse_endpoints(device_config *const storage_dev, const endpoint_descriptor const *pEndpoint) {
+void parse_endpoints(device_config_storage *const storage_dev, const endpoint_descriptor const *pEndpoint) {
 
   if (!(pEndpoint->bmAttributes & 0x02))
     return;

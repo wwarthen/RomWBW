@@ -48,7 +48,7 @@ _USB_MODULE_LEDS	.EQU	0xff8a
 ;--------------------------------------------------------
 ; code
 ;--------------------------------------------------------
-;source-doc/base-drv/enumerate_storage.c:5: void parse_endpoints(device_config *const storage_dev, const endpoint_descriptor const *pEndpoint) {
+;source-doc/base-drv/enumerate_storage.c:5: void parse_endpoints(device_config_storage *const storage_dev, const endpoint_descriptor const *pEndpoint) {
 ; ---------------------------------
 ; Function parse_endpoints
 ; ---------------------------------

@@ -21,6 +21,8 @@
     "usb-base-drv.h": "c",
     "critical-section.h": "c",
     "enumerate.h": "c",
-    "ch376inc.h": "c"
+    "ch376inc.h": "c",
+    "enumerate_storage.h": "c",
+    "work-area.h": "c"
   }
 }
