@@ -5,6 +5,7 @@
 ;
 
 #include "./ch376-native/ufi-drv.s"
+_ufi_seek	.EQU	_scsi_seek
 
 	; find and mount all floppy USB drives
 CHUFI_INIT	.EQU	_chufi_init
@@ -61,22 +62,25 @@ CH_UFI_RESET:
 ;
 CH_UFI_SEEK:
 	EXX
-	push	IY
-	POP	HL
-	LD	E, (HL)
-	INC	HL
-	LD	D, (HL)
+	LD	D, 0
+	LD	E, (IY+1)		; usb_device
 	PUSH	DE
 	POP	IY
 	EXX
 
-	BIT	7, D			; CHECK FOR LBA FLAG
-	CALL	Z, HB_CHS2LBA		; CLEAR MEANS CHS, CONVERT TO LBA - never seems to happen?
-	RES	7, D
-	EX	DE, HL
+	BIT	7,D			; CHECK FOR LBA FLAG
+	CALL	Z,HB_CHS2LBA		; CLEAR MEANS CHS, CONVERT TO LBA
+	RES	7,D			; CLEAR FLAG REGARDLESS (DOES NO HARM IF ALREADY LBA)
 
-	push	IY
-	CALL	_chnative_seek
+	PUSH	DE
+	PUSH	HL
+	PUSH	IY
+	CALL	_ufi_seek
+	POP	IY
+	POP	HL
+	POP	DE
+
+	XOR	A
 	RET
 ;
 ; ### Function 0x13 -- Disk Read (DIOREAD)
@@ -97,27 +101,24 @@ CH_UFI_SEEK:
 ;
 CH_UFI_READ:
 	EXX
-	push	IY
-	POP	HL
-	LD	E, (HL)
-	INC	HL
-	LD	D, (HL)
+	LD	D, 0
+	LD	E, (IY+1)		; usb_device
 	PUSH	DE
 	POP	IY
 	EXX
 
 	CALL	HB_DSKREAD		; HOOK HBIOS DISK READ SUPERVISOR
 
-	push	hl
-	push	iy
+	PUSH	HL
+	PUSH	IY
 	call	_chufi_read
-	ld	l, 0
-	ld	a, l
-	pop	iy
-	pop	hl
-	ld	bc, 512
-	add	hl, bc
-	ret
+	LD	L, 0
+	LD	A, L
+	POP	IY
+	POP	HL
+	LD	BC, 512
+	ADD	HL, BC
+	RET
 ;
 ; ### Function 0x14 -- Disk Write (DIOWRITE)
 ;
@@ -137,11 +138,8 @@ CH_UFI_READ:
 ;
 CH_UFI_WRITE:
 	EXX
-	push	IY
-	POP	HL
-	LD	E, (HL)
-	INC	HL
-	LD	D, (HL)
+	LD	D, 0
+	LD	E, (IY+1)		; usb_device
 	PUSH	DE
 	POP	IY
 	EXX
@@ -150,15 +148,15 @@ CH_UFI_WRITE:
 
 	; call scsi_write(IY, HL);
 	; HL = HL + 512
-	push	hl
-	push	iy
+	PUSH	HL
+	PUSH	IY
 	call	_chufi_write
-	ld	a, l
-	pop	iy
-	pop	hl
-	ld	bc, 512
-	add	hl, bc
-	ret
+	LD	A, L
+	POP	IY
+	POP	HL
+	LD	BC, 512
+	ADD	HL, BC
+	RET
 
 CH_UFI_VERIFY:
 CH_UFI_FORMAT:
@@ -213,7 +211,7 @@ CH_UFI_FORMAT:
 CH_UFI_DEVICE:
 	LD	C, %11010110
 	LD	D, DIODEV_USB
-	LD	E, (iy+2)		; drive_index
+	LD	E, (IY+0)			; drive_index
 	LD	HL, 0
 	XOR	A
 	RET
@@ -262,21 +260,18 @@ CH_UFI_DEFMED:
 ;
 CH_UFI_CAP:
 	EXX
-	push	IY
-	POP	HL
-	LD	E, (HL)
-	INC	HL
-	LD	D, (HL)
+	LD	D, 0
+	LD	E, (IY+1)		; usb_device
 	PUSH	DE
 	POP	IY
 	EXX
 
-	push	iy
+	PUSH	IY
 	call	_chufi_get_cap
-	pop	iy
-	ld	bc, 512
-	xor	a
-	ret
+	POP	IY
+	LD	BC, 512
+	XOR	A
+	RET
 
 CH_UFI_GEOM:
 	LD	HL, 0

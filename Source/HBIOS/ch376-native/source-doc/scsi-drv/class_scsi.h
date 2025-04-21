@@ -182,12 +182,14 @@ typedef struct {
   _scsi_packet_read_write     scsi_cmd;
 } cbw_scsi_read_write;
 
-extern usb_error scsi_read_capacity(device_config_storage *const dev, scsi_read_capacity_result *result);
-extern usb_error scsi_inquiry(device_config_storage *const dev, scsi_inquiry_result *inq_result);
-extern usb_error scsi_sense_init(device_config_storage *const dev);
-extern usb_error scsi_test(device_config_storage *const dev);
-extern usb_error scsi_request_sense(device_config_storage *const dev, scsi_sense_result *const sens_result);
-extern usb_error scsi_eject(device_config_storage *const dev);
-extern usb_error scsi_read(const uint16_t dev, uint8_t *const buffer);
-extern usb_error scsi_write(device_config_storage *const dev, uint8_t *const buffer);
+extern usb_error scsi_read_capacity(const uint16_t dev_index, scsi_read_capacity_result *result);
+extern usb_error scsi_inquiry(const uint16_t dev_index, scsi_inquiry_result *inq_result);
+extern usb_error scsi_sense_init(const uint16_t dev_index);
+// extern usb_error scsi_request_sense(const uint16_t dev_index, scsi_sense_result *const sens_result);
+// extern usb_error scsi_eject(device_config_storage *const dev);
+extern usb_error scsi_read(const uint16_t dev_index, uint8_t *const buffer);
+extern usb_error scsi_write(const uint16_t dev_index, uint8_t *const buffer);
+
+extern usb_error scsi_seek(const uint16_t dev_index, const uint32_t lba);
+
 #endif

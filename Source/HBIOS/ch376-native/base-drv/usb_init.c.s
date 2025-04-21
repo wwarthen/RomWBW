@@ -169,7 +169,7 @@ l_usb_init_00108:
 	jr	l_usb_init_00113
 l_usb_init_00110:
 ;source-doc/base-drv/usb_init.c:61: memset(get_usb_work_area(), 0, sizeof(_usb_state));
-	ld	b,0x35
+	ld	b,0x32
 	ld	hl,_x
 	jr	l_usb_init_00163
 l_usb_init_00162:

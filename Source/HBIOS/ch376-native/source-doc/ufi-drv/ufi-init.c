@@ -1,11 +1,11 @@
 #include "class_ufi.h"
+#include "hbios-driver-storage.h"
 #include <dev_transfers.h>
 #include <hbios.h>
 #include <print.h>
 #include <string.h>
 #include <usb-base-drv.h>
 #include <work-area.h>
-#include "hbios-driver-storage.h"
 
 extern const uint16_t const ch_ufi_fntbl[];
 
@@ -21,11 +21,10 @@ void chufi_init(void) {
     const usb_device_type t = storage_device->type;
 
     if (t == USB_IS_FLOPPY) {
-      const uint8_t dev_index = find_storage_dev();  //dev_index == -1 (no more left) should never happen
-      hbios_usb_storage_devices[dev_index].storage_device = storage_device;
+      const uint8_t dev_index                          = find_storage_dev(); // dev_index == -1 (no more left) should never happen
       hbios_usb_storage_devices[dev_index].drive_index = dev_index + 1;
-      hbios_usb_storage_devices[dev_index].usb_device = index;
-      
+      hbios_usb_storage_devices[dev_index].usb_device  = index;
+
       print_string("\r\nUSB: FLOPPY @ $");
       print_uint16(index);
       print_string(":$");
@@ -37,7 +36,9 @@ void chufi_init(void) {
   } while (++index != MAX_NUMBER_OF_DEVICES + 1);
 }
 
-uint32_t chufi_get_cap(device_config *const dev) {
+uint32_t chufi_get_cap(const uint16_t dev_index) {
+  device_config_storage *const dev = (device_config_storage *)get_usb_device_config(dev_index);
+
   ufi_format_capacities_response response;
   memset(&response, 0, sizeof(ufi_format_capacities_response));
 
@@ -56,7 +57,8 @@ uint32_t chufi_get_cap(device_config *const dev) {
   return convert_from_msb_first(response.descriptors[0].number_of_blocks);
 }
 
-uint8_t chufi_read(device_config_storage *const dev, uint8_t *const buffer) {
+uint8_t chufi_read(const uint16_t dev_index, uint8_t *const buffer) {
+  device_config_storage *const dev = (device_config_storage *)get_usb_device_config(dev_index);
 
   if (wait_for_device_ready((device_config *)dev, 20) != 0)
     return -1; // Not READY!
@@ -85,7 +87,8 @@ uint8_t chufi_read(device_config_storage *const dev, uint8_t *const buffer) {
   return USB_ERR_OK;
 }
 
-usb_error chufi_write(device_config_storage *const dev, uint8_t *const buffer) {
+usb_error chufi_write(const uint16_t dev_index, uint8_t *const buffer) {
+  device_config_storage *const dev = (device_config_storage *)get_usb_device_config(dev_index);
 
   if (wait_for_device_ready((device_config *)dev, 20) != 0)
     return -1; // Not READY!

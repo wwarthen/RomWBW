@@ -4,7 +4,6 @@
 #include "usb_state.h"
 
 typedef struct _hbios_storage_device {
-  device_config_storage * storage_device;
   uint8_t drive_index;
   uint8_t usb_device;
 } hbios_storage_device_t;

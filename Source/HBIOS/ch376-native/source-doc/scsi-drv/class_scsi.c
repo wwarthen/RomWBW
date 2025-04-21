@@ -51,7 +51,9 @@ done:
 
 _scsi_read_capacity scsi_packet_read_capacity = {0x25, 0, {0, 0, 0, 0, 0, 0, 0, 0}, {0, 0}};
 
-usb_error scsi_read_capacity(device_config_storage *const dev, scsi_read_capacity_result *cap_result) {
+usb_error scsi_read_capacity(const uint16_t dev_index, scsi_read_capacity_result *cap_result) {
+  device_config_storage *const dev = (device_config_storage *)get_usb_device_config(dev_index);
+
   cbw_scsi_read_capacity cbw_scsi;
   cbw_scsi.cbw           = scsi_command_block_wrapper;
   cbw_scsi.read_capacity = scsi_packet_read_capacity;
@@ -63,21 +65,23 @@ usb_error scsi_read_capacity(device_config_storage *const dev, scsi_read_capacit
   return do_scsi_cmd(dev, &cbw_scsi.cbw, cap_result, false);
 }
 
-_scsi_packet_inquiry scsi_packet_inquiry = {0x12, 0, 0, 0, 0x24, 0, {0, 0, 0, 0, 0, 0}};
+// _scsi_packet_inquiry scsi_packet_inquiry = {0x12, 0, 0, 0, 0x24, 0, {0, 0, 0, 0, 0, 0}};
 
-usb_error scsi_inquiry(device_config_storage *const dev, scsi_inquiry_result *inq_result) {
-  cbw_scsi_inquiry cbw_scsi;
-  cbw_scsi.cbw     = scsi_command_block_wrapper;
-  cbw_scsi.inquiry = scsi_packet_inquiry;
+// usb_error scsi_inquiry(const uint16_t dev_index, scsi_inquiry_result *inq_result) {
+//   device_config_storage *const dev = (device_config_storage *)get_usb_device_config(dev_index);
 
-  cbw_scsi.cbw.bCBWLUN                = 0;
-  cbw_scsi.cbw.bCBWCBLength           = sizeof(_scsi_packet_inquiry);
-  cbw_scsi.cbw.dCBWDataTransferLength = 0x24;
+//   cbw_scsi_inquiry cbw_scsi;
+//   cbw_scsi.cbw     = scsi_command_block_wrapper;
+//   cbw_scsi.inquiry = scsi_packet_inquiry;
 
-  return do_scsi_cmd(dev, &cbw_scsi.cbw, inq_result, false);
-}
+//   cbw_scsi.cbw.bCBWLUN                = 0;
+//   cbw_scsi.cbw.bCBWCBLength           = sizeof(_scsi_packet_inquiry);
+//   cbw_scsi.cbw.dCBWDataTransferLength = 0x24;
 
-usb_error scsi_test(device_config_storage *const dev) {
+//   return do_scsi_cmd(dev, &cbw_scsi.cbw, inq_result, false);
+// }
+
+static usb_error scsi_test(device_config_storage *const dev) {
   cbw_scsi_test cbw_scsi;
   cbw_scsi.cbw = scsi_command_block_wrapper;
   memset(&cbw_scsi.test, 0, sizeof(_scsi_packet_test));
@@ -91,7 +95,7 @@ usb_error scsi_test(device_config_storage *const dev) {
 
 _scsi_packet_request_sense scsi_packet_request_sense = {0x03, 0, 0, 0, 18, 0, {0, 0, 0, 0, 0, 0}};
 
-usb_error scsi_request_sense(device_config_storage *const dev, scsi_sense_result *const sens_result) {
+static usb_error scsi_request_sense(device_config_storage *const dev, scsi_sense_result *const sens_result) {
   cbw_scsi_request_sense cbw_scsi;
   cbw_scsi.cbw           = scsi_command_block_wrapper;
   cbw_scsi.request_sense = scsi_packet_request_sense;
@@ -103,7 +107,9 @@ usb_error scsi_request_sense(device_config_storage *const dev, scsi_sense_result
   return do_scsi_cmd(dev, &cbw_scsi.cbw, sens_result, false);
 }
 
-usb_error scsi_sense_init(device_config_storage *const dev) {
+usb_error scsi_sense_init(const uint16_t dev_index) {
+  device_config_storage *const dev = (device_config_storage *)get_usb_device_config(dev_index);
+
   scsi_sense_result response;
   uint8_t           counter = 3;
 
@@ -117,11 +123,7 @@ usb_error scsi_sense_init(device_config_storage *const dev) {
 
 static cbw_scsi_read_write cbw = {{{0}}};
 
-void spike_x(void) {
-  scsi_read(5, NULL);
-}
-
-usb_error scsi_read(const uint16_t dev_index, uint8_t *const buffer)  {
+usb_error scsi_read(const uint16_t dev_index, uint8_t *const buffer) {
   device_config_storage *const dev = (device_config_storage *)get_usb_device_config(dev_index);
 
   memset(&cbw, 0, sizeof(cbw_scsi_read_write));
@@ -145,7 +147,9 @@ usb_error scsi_read(const uint16_t dev_index, uint8_t *const buffer)  {
   return result;
 }
 
-usb_error scsi_write(device_config_storage *const dev, uint8_t *const buffer) {
+usb_error scsi_write(const uint16_t dev_index, uint8_t *const buffer) {
+  device_config_storage *const dev = (device_config_storage *)get_usb_device_config(dev_index);
+
   memset(&cbw, 0, sizeof(cbw_scsi_read_write));
   cbw.cbw = scsi_command_block_wrapper;
 
@@ -167,18 +171,18 @@ usb_error scsi_write(device_config_storage *const dev, uint8_t *const buffer) {
   return result;
 }
 
-usb_error scsi_eject(device_config_storage *const dev) {
-  cbw_scsi_eject cbw_scsi;
-  cbw_scsi.cbw = scsi_command_block_wrapper;
+// usb_error scsi_eject(device_config_storage *const dev) {
+//   cbw_scsi_eject cbw_scsi;
+//   cbw_scsi.cbw = scsi_command_block_wrapper;
 
-  memset(&cbw_scsi.eject, 0, sizeof(_scsi_packet_eject));
+//   memset(&cbw_scsi.eject, 0, sizeof(_scsi_packet_eject));
 
-  cbw_scsi.eject.operation_code = 0x1B;
-  cbw_scsi.eject.loej           = 1;
+//   cbw_scsi.eject.operation_code = 0x1B;
+//   cbw_scsi.eject.loej           = 1;
 
-  cbw_scsi.cbw.bCBWLUN                = 0;
-  cbw_scsi.cbw.bCBWCBLength           = sizeof(_scsi_packet_eject);
-  cbw_scsi.cbw.dCBWDataTransferLength = 0;
+//   cbw_scsi.cbw.bCBWLUN                = 0;
+//   cbw_scsi.cbw.bCBWCBLength           = sizeof(_scsi_packet_eject);
+//   cbw_scsi.cbw.dCBWDataTransferLength = 0;
 
-  return do_scsi_cmd(dev, &cbw_scsi.cbw, 0, false);
-}
+//   return do_scsi_cmd(dev, &cbw_scsi.cbw, 0, false);
+// }

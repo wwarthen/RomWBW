@@ -61,20 +61,26 @@ CH_SCSI_RESET:
 ; sector) are 0 relative.
 ;
 CH_SCSI_SEEK:
+	EXX
+	LD	D, 0
+	LD	E, (IY+1)		; usb_device
+	PUSH	DE
+	POP	IY
+	EXX
+
 	BIT	7,D			; CHECK FOR LBA FLAG
 	CALL	Z,HB_CHS2LBA		; CLEAR MEANS CHS, CONVERT TO LBA
 	RES	7,D			; CLEAR FLAG REGARDLESS (DOES NO HARM IF ALREADY LBA)
-	EX	DE, HL
 
-	EXX
-	push	IY
-	POP	HL
-	LD	E, (HL)
-	INC	HL
-	LD	D, (HL)
 	PUSH	DE
-	EXX
-	CALL	_chnative_seek
+	PUSH	HL
+	PUSH	IY
+	CALL	_scsi_seek
+	POP	IY
+	POP	HL
+	POP	DE
+
+	XOR	A
 	RET
 ;
 ; ### Function 0x13 -- Disk Read (DIOREAD)
@@ -95,25 +101,25 @@ CH_SCSI_SEEK:
 ;
 CH_SCSI_READ:
 	EXX
-	ld	d, 0
-	ld	e, (iy+3)
-	push	de
-	pop	iy
+	LD	D, 0
+	LD	E, (IY+1)		; usb_device
+	PUSH	DE
+	POP	IY
 	EXX
 
 	CALL	HB_DSKREAD		; HOOK HBIOS DISK READ SUPERVISOR
 
 	; call scsi_read(IY, HL);
 	; HL = HL + 512
-	push	hl
-	push	iy
+	PUSH	HL
+	PUSH	IY
 	call	_scsi_read
-	ld	a, l
-	pop	iy
-	pop	hl
-	ld	bc, 512
-	add	hl, bc
-	ret
+	LD	A, L
+	POP	IY
+	POP	HL
+	LD	BC, 512
+	ADD	HL, BC
+	RET
 ;
 ; ### Function 0x14 -- Disk Write (DIOWRITE)
 ;
@@ -133,11 +139,8 @@ CH_SCSI_READ:
 ;
 CH_SCSI_WRITE:
 	EXX
-	push	IY
-	POP	HL
-	LD	E, (HL)
-	INC	HL
-	LD	D, (HL)
+	LD	D, 0
+	LD	E, (IY+1)		; usb_device
 	PUSH	DE
 	POP	IY
 	EXX
@@ -146,14 +149,14 @@ CH_SCSI_WRITE:
 
 	; call scsi_write(IY, HL);
 	; HL = HL + 512
-	push	hl
-	push	iy
+	PUSH	HL
+	PUSH	IY
 	call	_scsi_write
-	ld	a, l
-	pop	iy
-	pop	hl
-	ld	bc, 512
-	add	hl, bc
+	LD	A, L
+	POP	IY
+	POP	HL
+	LD	BC, 512
+	ADD	HL, BC
 	ret
 
 CH_SCSI_VERIFY:
@@ -206,7 +209,7 @@ CH_SCSI_FORMAT:
 CH_SCSI_DEVICE:
 	LD	C, %00111010
 	LD	D, DIODEV_USB
-	LD	E, (iy+2) 		; drive_index
+	LD	E, (IY+0) 			; drive_index
 	LD	HL, 0
 	XOR	A
 	RET
@@ -252,40 +255,37 @@ CH_SCSI_DEFMED:
 ;
 CH_SCSI_CAP:
 	EXX
-	push	IY
-	POP	HL
-	LD	E, (HL)
-	INC	HL
-	LD	D, (HL)
+	LD	D, 0
+	LD	E, (IY+1)	; usb_device
 	PUSH	DE
 	POP	IY
 	EXX
 
-	push	ix
-	ld	ix, -8		; reserve 8 bytes for 
-	add	ix, sp		; scsi_read_capacity_result
-	ld	sp, ix
+	PUSH	IX
+	LD	IX, -8		; reserve 8 bytes for 
+	ADD	IX, SP		; scsi_read_capacity_result
+	LD	SP, IX
 
-	push	ix
-	push	iy
+	PUSH	IX
+	PUSH	IY
 	call	_scsi_read_capacity
-	pop	iy
-	pop	ix
+	POP	IY
+	POP	IX
 
-	ld	d, (ix)		; response.number_of_blocks[0]
-	ld	e, (ix+1)	; response.number_of_blocks[1]
-	ld	h, (ix+2)	; response.number_of_blocks[2]
-	ld	l, (ix+3)	; response.number_of_blocks[3]
-	ld	b, (ix+6)	; response.block_size[2]
-	ld	c, (ix+7)	; response.block_size[3]
+	LD	D, (IX)		; response.number_of_blocks[0]
+	LD	E, (IX+1)	; response.number_of_blocks[1]
+	LD	H, (IX+2)	; response.number_of_blocks[2]
+	LD	L, (IX+3)	; response.number_of_blocks[3]
+	LD	B, (IX+6)	; response.block_size[2]
+	LD	C, (IX+7)	; response.block_size[3]
 
-	ld	ix, 8
-	add	ix, sp
-	ld	sp, ix
-	pop	ix
+	LD	IX, 8
+	ADD	IX, SP
+	LD	SP, IX
+	POP	IX
 
-	xor	a		; todo determine a drive status
-	ret
+	XOR	A		; todo determine a drive status
+	RET
 ;
 ; ### Function 0x1B -- Disk Geometry (DIOGEOMETRY)
 ;
@@ -305,16 +305,6 @@ CH_SCSI_CAP:
 ; ** Does not appear to be used??
 ;
 CH_SCSI_GEOM:
-	EXX
-	push	IY
-	POP	HL
-	LD	E, (HL)
-	INC	HL
-	LD	D, (HL)
-	PUSH	DE
-	POP	IY
-	EXX
-
 	; FOR LBA, WE SIMULATE CHS ACCESS USING 16 HEADS AND 16 SECTORS
 	; RETURN HS:CC -> DE:HL, SET HIGH BIT OF D TO INDICATE LBA CAPABLE
 	CALL	CH_SCSI_CAP		; GET TOTAL BLOCKS IN DE:HL, BLOCK SIZE TO BC

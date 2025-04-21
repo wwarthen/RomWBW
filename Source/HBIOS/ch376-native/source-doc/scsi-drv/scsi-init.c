@@ -1,4 +1,5 @@
 #include "class_scsi.h"
+#include "hbios-driver-storage.h"
 #include <ch376.h>
 #include <enumerate.h>
 #include <hbios.h>
@@ -7,7 +8,6 @@
 #include <usb-base-drv.h>
 #include <work-area.h>
 #include <z80.h>
-#include "hbios-driver-storage.h"
 
 extern const uint16_t const ch_scsi_fntbl[];
 
@@ -22,17 +22,16 @@ void chscsi_init(void) {
     const usb_device_type t = storage_device->type;
 
     if (t == USB_IS_MASS_STORAGE) {
-      const uint8_t dev_index = find_storage_dev();  //index == -1 (no more left) should never happen
-      hbios_usb_storage_devices[dev_index].storage_device = storage_device;
+      const uint8_t dev_index                          = find_storage_dev(); // index == -1 (no more left) should never happen
       hbios_usb_storage_devices[dev_index].drive_index = dev_index + 1;
-      hbios_usb_storage_devices[dev_index].usb_device = index;
+      hbios_usb_storage_devices[dev_index].usb_device  = index;
 
       print_string("\r\nUSB: MASS STORAGE @ $");
       print_uint16(index);
       print_string(":$");
       print_uint16(dev_index + 1);
       print_string(" $");
-      scsi_sense_init(storage_device);
+      scsi_sense_init(index);
       dio_add_entry(ch_scsi_fntbl, &hbios_usb_storage_devices[dev_index]);
     }
 
