@@ -7,6 +7,7 @@
 #include "ch376-native/base-drv/enumerate.c.s"
 #include "ch376-native/base-drv/enumerate_hub.c.s"
 #include "ch376-native/base-drv/enumerate_storage.c.s"
+#include "ch376-native/base-drv/hbios-driver-storage.c.s"
 #include "ch376-native/base-drv/protocol.c.s"
 #include "ch376-native/base-drv/transfers.c.s"
 #include "ch376-native/base-drv/usb-base-drv.c.s"

@@ -188,6 +188,6 @@ extern usb_error scsi_sense_init(device_config_storage *const dev);
 extern usb_error scsi_test(device_config_storage *const dev);
 extern usb_error scsi_request_sense(device_config_storage *const dev, scsi_sense_result *const sens_result);
 extern usb_error scsi_eject(device_config_storage *const dev);
-extern usb_error scsi_read(device_config_storage *const dev, uint8_t *const buffer);
+extern usb_error scsi_read(const uint16_t dev, uint8_t *const buffer);
 extern usb_error scsi_write(device_config_storage *const dev, uint8_t *const buffer);
 #endif

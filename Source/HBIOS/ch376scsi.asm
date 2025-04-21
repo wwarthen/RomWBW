@@ -30,12 +30,10 @@ CH_SCSI_FNTBL:
 #ENDIF
 
 CH_SCSI_STATUS:
-	; LD	A, (IY)
 	XOR	A
 	RET
 
 CH_SCSI_RESET:
-	; LD	A, (IY)
 	XOR	A
 	RET
 
@@ -68,7 +66,14 @@ CH_SCSI_SEEK:
 	RES	7,D			; CLEAR FLAG REGARDLESS (DOES NO HARM IF ALREADY LBA)
 	EX	DE, HL
 
+	EXX
 	push	IY
+	POP	HL
+	LD	E, (HL)
+	INC	HL
+	LD	D, (HL)
+	PUSH	DE
+	EXX
 	CALL	_chnative_seek
 	RET
 ;
@@ -89,6 +94,13 @@ CH_SCSI_SEEK:
 ; Status (A) is a standard HBIOS result code.
 ;
 CH_SCSI_READ:
+	EXX
+	ld	d, 0
+	ld	e, (iy+3)
+	push	de
+	pop	iy
+	EXX
+
 	CALL	HB_DSKREAD		; HOOK HBIOS DISK READ SUPERVISOR
 
 	; call scsi_read(IY, HL);
@@ -120,6 +132,16 @@ CH_SCSI_READ:
 ; Status (A) is a standard HBIOS result code.
 ;
 CH_SCSI_WRITE:
+	EXX
+	push	IY
+	POP	HL
+	LD	E, (HL)
+	INC	HL
+	LD	D, (HL)
+	PUSH	DE
+	POP	IY
+	EXX
+	
 	CALL	HB_DSKWRITE		; HOOK HBIOS DISK WRITE SUPERVISOR
 
 	; call scsi_write(IY, HL);
@@ -182,11 +204,10 @@ CH_SCSI_FORMAT:
 ; |          |   9=Cartridge, 10=usb-scsi, 11=usb-ufi           |
 ;
 CH_SCSI_DEVICE:
-	LD	C, %00111010		; TODO?
+	LD	C, %00111010
 	LD	D, DIODEV_USB
-	LD	E, (iy+16) ;???? device_config_storage.drive_index
-	LD	H, 0
-	LD	L, 0
+	LD	E, (iy+2) 		; drive_index
+	LD	HL, 0
 	XOR	A
 	RET
 ;
@@ -230,6 +251,16 @@ CH_SCSI_DEFMED:
 ;
 ;
 CH_SCSI_CAP:
+	EXX
+	push	IY
+	POP	HL
+	LD	E, (HL)
+	INC	HL
+	LD	D, (HL)
+	PUSH	DE
+	POP	IY
+	EXX
+
 	push	ix
 	ld	ix, -8		; reserve 8 bytes for 
 	add	ix, sp		; scsi_read_capacity_result
@@ -274,6 +305,16 @@ CH_SCSI_CAP:
 ; ** Does not appear to be used??
 ;
 CH_SCSI_GEOM:
+	EXX
+	push	IY
+	POP	HL
+	LD	E, (HL)
+	INC	HL
+	LD	D, (HL)
+	PUSH	DE
+	POP	IY
+	EXX
+
 	; FOR LBA, WE SIMULATE CHS ACCESS USING 16 HEADS AND 16 SECTORS
 	; RETURN HS:CC -> DE:HL, SET HIGH BIT OF D TO INDICATE LBA CAPABLE
 	CALL	CH_SCSI_CAP		; GET TOTAL BLOCKS IN DE:HL, BLOCK SIZE TO BC

@@ -117,7 +117,13 @@ usb_error scsi_sense_init(device_config_storage *const dev) {
 
 static cbw_scsi_read_write cbw = {{{0}}};
 
-usb_error scsi_read(device_config_storage *const dev, uint8_t *const buffer) {
+void spike_x(void) {
+  scsi_read(5, NULL);
+}
+
+usb_error scsi_read(const uint16_t dev_index, uint8_t *const buffer)  {
+  device_config_storage *const dev = (device_config_storage *)get_usb_device_config(dev_index);
+
   memset(&cbw, 0, sizeof(cbw_scsi_read_write));
   cbw.cbw = scsi_command_block_wrapper;
 

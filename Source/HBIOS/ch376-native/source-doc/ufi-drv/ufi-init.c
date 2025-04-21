@@ -5,6 +5,7 @@
 #include <string.h>
 #include <usb-base-drv.h>
 #include <work-area.h>
+#include "hbios-driver-storage.h"
 
 extern const uint16_t const ch_ufi_fntbl[];
 
@@ -20,12 +21,17 @@ void chufi_init(void) {
     const usb_device_type t = storage_device->type;
 
     if (t == USB_IS_FLOPPY) {
+      const uint8_t dev_index = find_storage_dev();  //dev_index == -1 (no more left) should never happen
+      hbios_usb_storage_devices[dev_index].storage_device = storage_device;
+      hbios_usb_storage_devices[dev_index].drive_index = dev_index + 1;
+      hbios_usb_storage_devices[dev_index].usb_device = index;
+      
       print_string("\r\nUSB: FLOPPY @ $");
       print_uint16(index);
       print_string(":$");
-      print_uint16(storage_device->drive_index);
+      print_uint16(dev_index + 1);
       print_string(" $");
-      dio_add_entry(ch_ufi_fntbl, storage_device);
+      dio_add_entry(ch_ufi_fntbl, &hbios_usb_storage_devices[dev_index]);
     }
 
   } while (++index != MAX_NUMBER_OF_DEVICES + 1);

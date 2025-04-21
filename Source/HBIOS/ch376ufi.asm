@@ -30,12 +30,10 @@ CH_UFI_FNTBL:
 #ENDIF
 
 CH_UFI_STATUS:
-	LD	A, (IY)
 	XOR	A
 	RET
 
 CH_UFI_RESET:
-	LD	A, (IY)
 	XOR	A
 	RET
 ; ### Function 0x12 -- Disk Seek (DIOSEEK)
@@ -62,6 +60,16 @@ CH_UFI_RESET:
 ; sector) are 0 relative.
 ;
 CH_UFI_SEEK:
+	EXX
+	push	IY
+	POP	HL
+	LD	E, (HL)
+	INC	HL
+	LD	D, (HL)
+	PUSH	DE
+	POP	IY
+	EXX
+
 	BIT	7, D			; CHECK FOR LBA FLAG
 	CALL	Z, HB_CHS2LBA		; CLEAR MEANS CHS, CONVERT TO LBA - never seems to happen?
 	RES	7, D
@@ -88,6 +96,16 @@ CH_UFI_SEEK:
 ; Status (A) is a standard HBIOS result code.
 ;
 CH_UFI_READ:
+	EXX
+	push	IY
+	POP	HL
+	LD	E, (HL)
+	INC	HL
+	LD	D, (HL)
+	PUSH	DE
+	POP	IY
+	EXX
+
 	CALL	HB_DSKREAD		; HOOK HBIOS DISK READ SUPERVISOR
 
 	push	hl
@@ -118,6 +136,16 @@ CH_UFI_READ:
 ; Status (A) is a standard HBIOS result code.
 ;
 CH_UFI_WRITE:
+	EXX
+	push	IY
+	POP	HL
+	LD	E, (HL)
+	INC	HL
+	LD	D, (HL)
+	PUSH	DE
+	POP	IY
+	EXX
+
 	CALL	HB_DSKWRITE		; HOOK HBIOS DISK WRITE SUPERVISOR
 
 	; call scsi_write(IY, HL);
@@ -185,9 +213,8 @@ CH_UFI_FORMAT:
 CH_UFI_DEVICE:
 	LD	C, %11010110
 	LD	D, DIODEV_USB
-	LD	E, (iy+16)
-	LD	H, 0
-	LD	L, 0
+	LD	E, (iy+2)		; drive_index
+	LD	HL, 0
 	XOR	A
 	RET
 ;
@@ -234,6 +261,16 @@ CH_UFI_DEFMED:
 ; Report the current media capacity information.
 ;
 CH_UFI_CAP:
+	EXX
+	push	IY
+	POP	HL
+	LD	E, (HL)
+	INC	HL
+	LD	D, (HL)
+	PUSH	DE
+	POP	IY
+	EXX
+
 	push	iy
 	call	_chufi_get_cap
 	pop	iy

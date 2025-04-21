@@ -587,7 +587,22 @@ l_scsi_sense_init_00104:
 	ld	sp, ix
 	pop	ix
 	ret
-;source-doc/scsi-drv/class_scsi.c:120: usb_error scsi_read(device_config_storage *const dev, uint8_t *const buffer) {
+;source-doc/scsi-drv/class_scsi.c:120: void spike_x(void) {
+; ---------------------------------
+; Function spike_x
+; ---------------------------------
+_spike_x:
+;source-doc/scsi-drv/class_scsi.c:121: scsi_read(5, NULL);
+	ld	hl,0x0000
+	push	hl
+	ld	l,0x05
+	push	hl
+	call	_scsi_read
+	pop	af
+	pop	af
+;source-doc/scsi-drv/class_scsi.c:122: }
+	ret
+;source-doc/scsi-drv/class_scsi.c:124: usb_error scsi_read(const uint16_t dev_index, uint8_t *const buffer)  {
 ; ---------------------------------
 ; Function scsi_read
 ; ---------------------------------
@@ -595,7 +610,13 @@ _scsi_read:
 	push	ix
 	ld	ix,0
 	add	ix,sp
-;source-doc/scsi-drv/class_scsi.c:121: memset(&cbw, 0, sizeof(cbw_scsi_read_write));
+	push	af
+;source-doc/scsi-drv/class_scsi.c:125: device_config_storage *const dev = (device_config_storage *)get_usb_device_config(dev_index);
+	ld	a,(ix+4)
+	call	_get_usb_device_config
+	pop	bc
+	push	de
+;source-doc/scsi-drv/class_scsi.c:127: memset(&cbw, 0, sizeof(cbw_scsi_read_write));
 	ld	de,_cbw
 	ld	l, e
 	ld	h, d
@@ -608,30 +629,30 @@ l_scsi_read_00113:
 	ld	(hl),0x00
 	inc	hl
 	djnz	l_scsi_read_00112
-;source-doc/scsi-drv/class_scsi.c:122: cbw.cbw = scsi_command_block_wrapper;
+;source-doc/scsi-drv/class_scsi.c:128: cbw.cbw = scsi_command_block_wrapper;
 	ld	bc,0x000f
 	ld	hl,_scsi_command_block_wrapper
 	ldir
-;source-doc/scsi-drv/class_scsi.c:124: cbw.cbw.bCBWLUN                = 0;
+;source-doc/scsi-drv/class_scsi.c:130: cbw.cbw.bCBWLUN                = 0;
 	ld	hl,_cbw + 13
 	ld	(hl),0x00
-;source-doc/scsi-drv/class_scsi.c:125: cbw.cbw.bCBWCBLength           = sizeof(_scsi_packet_read_write);
+;source-doc/scsi-drv/class_scsi.c:131: cbw.cbw.bCBWCBLength           = sizeof(_scsi_packet_read_write);
 	ld	hl,_cbw + 14
 	ld	(hl),0x0c
-;source-doc/scsi-drv/class_scsi.c:126: cbw.cbw.dCBWDataTransferLength = 512;
+;source-doc/scsi-drv/class_scsi.c:132: cbw.cbw.dCBWDataTransferLength = 512;
 	ld	hl,0x0200
 	ld	(_cbw + 8),hl
 	ld	h, l
 	ld	(_cbw + 8 + 2),hl
-;source-doc/scsi-drv/class_scsi.c:128: cbw.scsi_cmd.operation_code  = 0x28; // read operation
+;source-doc/scsi-drv/class_scsi.c:134: cbw.scsi_cmd.operation_code  = 0x28; // read operation
 	ld	hl,_cbw + 15
 	ld	(hl),0x28
-;source-doc/scsi-drv/class_scsi.c:129: cbw.scsi_cmd.transfer_len[1] = 1;
+;source-doc/scsi-drv/class_scsi.c:135: cbw.scsi_cmd.transfer_len[1] = 1;
 	ld	hl,_cbw + 23
 	ld	(hl),0x01
-;source-doc/scsi-drv/class_scsi.c:130: cbw.scsi_cmd.lba[0]          = dev->current_lba >> 24;
-	ld	l,(ix+4)
-	ld	h,(ix+5)
+;source-doc/scsi-drv/class_scsi.c:136: cbw.scsi_cmd.lba[0]          = dev->current_lba >> 24;
+	ld	l,(ix-2)
+	ld	h,(ix-1)
 	ld	bc,0x000c
 	add	hl,bc
 	ld	c,l
@@ -641,8 +662,8 @@ l_scsi_read_00113:
 	inc	hl
 	ld	a, (hl)
 	ld	((_cbw + 17)),a
-;source-doc/scsi-drv/class_scsi.c:131: cbw.scsi_cmd.lba[1]          = dev->current_lba >> 16;
-;source-doc/scsi-drv/class_scsi.c:132: cbw.scsi_cmd.lba[2]          = dev->current_lba >> 8;
+;source-doc/scsi-drv/class_scsi.c:137: cbw.scsi_cmd.lba[1]          = dev->current_lba >> 16;
+;source-doc/scsi-drv/class_scsi.c:138: cbw.scsi_cmd.lba[2]          = dev->current_lba >> 8;
 	ld	l,c
 	ld	h,b
 	inc	hl
@@ -653,11 +674,11 @@ l_scsi_read_00113:
 	ld	e, (hl)
 	ld	hl, +(_cbw + 19)
 	ld	(hl), e
-;source-doc/scsi-drv/class_scsi.c:133: cbw.scsi_cmd.lba[3]          = dev->current_lba;
+;source-doc/scsi-drv/class_scsi.c:139: cbw.scsi_cmd.lba[3]          = dev->current_lba;
 	ld	a, (bc)
 	inc	hl
 	ld	(hl), a
-;source-doc/scsi-drv/class_scsi.c:135: result = do_scsi_cmd(dev, &cbw.cbw, buffer, false);
+;source-doc/scsi-drv/class_scsi.c:141: result = do_scsi_cmd(dev, &cbw.cbw, buffer, false);
 	ld	e,(ix+6)
 	ld	d,(ix+7)
 	push	bc
@@ -667,8 +688,8 @@ l_scsi_read_00113:
 	push	de
 	ld	hl,_cbw
 	push	hl
-	ld	l,(ix+4)
-	ld	h,(ix+5)
+	ld	l,(ix-2)
+	ld	h,(ix-1)
 	push	hl
 	call	_do_scsi_cmd
 	pop	af
@@ -678,11 +699,11 @@ l_scsi_read_00113:
 	pop	bc
 	ld	a, l
 	ld	(_result), a
-;source-doc/scsi-drv/class_scsi.c:137: if (result == USB_ERR_OK)
+;source-doc/scsi-drv/class_scsi.c:143: if (result == USB_ERR_OK)
 	ld	a,(_result)
 	or	a
 	jr	NZ,l_scsi_read_00102
-;source-doc/scsi-drv/class_scsi.c:138: dev->current_lba++;
+;source-doc/scsi-drv/class_scsi.c:144: dev->current_lba++;
 	ld	l, c
 	ld	h, b
 	ld	e, (hl)
@@ -711,12 +732,13 @@ l_scsi_read_00114:
 	ld	a, h
 	ld	(bc), a
 l_scsi_read_00102:
-;source-doc/scsi-drv/class_scsi.c:139: return result;
+;source-doc/scsi-drv/class_scsi.c:145: return result;
 	ld	hl, (_result)
-;source-doc/scsi-drv/class_scsi.c:140: }
+;source-doc/scsi-drv/class_scsi.c:146: }
+	ld	sp, ix
 	pop	ix
 	ret
-;source-doc/scsi-drv/class_scsi.c:142: usb_error scsi_write(device_config_storage *const dev, uint8_t *const buffer) {
+;source-doc/scsi-drv/class_scsi.c:148: usb_error scsi_write(device_config_storage *const dev, uint8_t *const buffer) {
 ; ---------------------------------
 ; Function scsi_write
 ; ---------------------------------
@@ -724,7 +746,7 @@ _scsi_write:
 	push	ix
 	ld	ix,0
 	add	ix,sp
-;source-doc/scsi-drv/class_scsi.c:143: memset(&cbw, 0, sizeof(cbw_scsi_read_write));
+;source-doc/scsi-drv/class_scsi.c:149: memset(&cbw, 0, sizeof(cbw_scsi_read_write));
 	ld	de,_cbw
 	ld	l, e
 	ld	h, d
@@ -737,28 +759,28 @@ l_scsi_write_00113:
 	ld	(hl),0x00
 	inc	hl
 	djnz	l_scsi_write_00112
-;source-doc/scsi-drv/class_scsi.c:144: cbw.cbw = scsi_command_block_wrapper;
+;source-doc/scsi-drv/class_scsi.c:150: cbw.cbw = scsi_command_block_wrapper;
 	ld	bc,0x000f
 	ld	hl,_scsi_command_block_wrapper
 	ldir
-;source-doc/scsi-drv/class_scsi.c:146: cbw.cbw.bCBWLUN                = 0;
+;source-doc/scsi-drv/class_scsi.c:152: cbw.cbw.bCBWLUN                = 0;
 	ld	hl,_cbw + 13
 	ld	(hl),0x00
-;source-doc/scsi-drv/class_scsi.c:147: cbw.cbw.bCBWCBLength           = sizeof(_scsi_packet_read_write);
+;source-doc/scsi-drv/class_scsi.c:153: cbw.cbw.bCBWCBLength           = sizeof(_scsi_packet_read_write);
 	ld	hl,_cbw + 14
 	ld	(hl),0x0c
-;source-doc/scsi-drv/class_scsi.c:148: cbw.cbw.dCBWDataTransferLength = 512;
+;source-doc/scsi-drv/class_scsi.c:154: cbw.cbw.dCBWDataTransferLength = 512;
 	ld	hl,0x0200
 	ld	(_cbw + 8),hl
 	ld	h, l
 	ld	(_cbw + 8 + 2),hl
-;source-doc/scsi-drv/class_scsi.c:150: cbw.scsi_cmd.operation_code  = 0x2A; // write operation
+;source-doc/scsi-drv/class_scsi.c:156: cbw.scsi_cmd.operation_code  = 0x2A; // write operation
 	ld	hl,_cbw + 15
 	ld	(hl),0x2a
-;source-doc/scsi-drv/class_scsi.c:151: cbw.scsi_cmd.transfer_len[1] = 1;
+;source-doc/scsi-drv/class_scsi.c:157: cbw.scsi_cmd.transfer_len[1] = 1;
 	ld	hl,_cbw + 23
 	ld	(hl),0x01
-;source-doc/scsi-drv/class_scsi.c:152: cbw.scsi_cmd.lba[0]          = dev->current_lba >> 24;
+;source-doc/scsi-drv/class_scsi.c:158: cbw.scsi_cmd.lba[0]          = dev->current_lba >> 24;
 	ld	l,(ix+4)
 	ld	h,(ix+5)
 	ld	bc,0x000c
@@ -770,8 +792,8 @@ l_scsi_write_00113:
 	inc	hl
 	ld	a, (hl)
 	ld	((_cbw + 17)),a
-;source-doc/scsi-drv/class_scsi.c:153: cbw.scsi_cmd.lba[1]          = dev->current_lba >> 16;
-;source-doc/scsi-drv/class_scsi.c:154: cbw.scsi_cmd.lba[2]          = dev->current_lba >> 8;
+;source-doc/scsi-drv/class_scsi.c:159: cbw.scsi_cmd.lba[1]          = dev->current_lba >> 16;
+;source-doc/scsi-drv/class_scsi.c:160: cbw.scsi_cmd.lba[2]          = dev->current_lba >> 8;
 	ld	l,c
 	ld	h,b
 	inc	hl
@@ -782,11 +804,11 @@ l_scsi_write_00113:
 	ld	e, (hl)
 	ld	hl, +(_cbw + 19)
 	ld	(hl), e
-;source-doc/scsi-drv/class_scsi.c:155: cbw.scsi_cmd.lba[3]          = dev->current_lba;
+;source-doc/scsi-drv/class_scsi.c:161: cbw.scsi_cmd.lba[3]          = dev->current_lba;
 	ld	a, (bc)
 	inc	hl
 	ld	(hl), a
-;source-doc/scsi-drv/class_scsi.c:157: result = do_scsi_cmd(dev, &cbw.cbw, buffer, true);
+;source-doc/scsi-drv/class_scsi.c:163: result = do_scsi_cmd(dev, &cbw.cbw, buffer, true);
 	ld	e,(ix+6)
 	ld	d,(ix+7)
 	push	bc
@@ -807,11 +829,11 @@ l_scsi_write_00113:
 	pop	bc
 	ld	a, l
 	ld	(_result), a
-;source-doc/scsi-drv/class_scsi.c:159: if (result == USB_ERR_OK)
+;source-doc/scsi-drv/class_scsi.c:165: if (result == USB_ERR_OK)
 	ld	a,(_result)
 	or	a
 	jr	NZ,l_scsi_write_00102
-;source-doc/scsi-drv/class_scsi.c:160: dev->current_lba++;
+;source-doc/scsi-drv/class_scsi.c:166: dev->current_lba++;
 	ld	l, c
 	ld	h, b
 	ld	e, (hl)
@@ -840,12 +862,12 @@ l_scsi_write_00114:
 	ld	a, h
 	ld	(bc), a
 l_scsi_write_00102:
-;source-doc/scsi-drv/class_scsi.c:161: return result;
+;source-doc/scsi-drv/class_scsi.c:167: return result;
 	ld	hl, (_result)
-;source-doc/scsi-drv/class_scsi.c:162: }
+;source-doc/scsi-drv/class_scsi.c:168: }
 	pop	ix
 	ret
-;source-doc/scsi-drv/class_scsi.c:164: usb_error scsi_eject(device_config_storage *const dev) {
+;source-doc/scsi-drv/class_scsi.c:170: usb_error scsi_eject(device_config_storage *const dev) {
 ; ---------------------------------
 ; Function scsi_eject
 ; ---------------------------------
@@ -856,7 +878,7 @@ _scsi_eject:
 	ld	hl, -21
 	add	hl, sp
 	ld	sp, hl
-;source-doc/scsi-drv/class_scsi.c:166: cbw_scsi.cbw = scsi_command_block_wrapper;
+;source-doc/scsi-drv/class_scsi.c:172: cbw_scsi.cbw = scsi_command_block_wrapper;
 	ld	hl,0
 	add	hl, sp
 	ld	e,l
@@ -865,7 +887,7 @@ _scsi_eject:
 	ld	bc,0x000f
 	ld	hl,_scsi_command_block_wrapper
 	ldir
-;source-doc/scsi-drv/class_scsi.c:168: memset(&cbw_scsi.eject, 0, sizeof(_scsi_packet_eject));
+;source-doc/scsi-drv/class_scsi.c:174: memset(&cbw_scsi.eject, 0, sizeof(_scsi_packet_eject));
 	ld	hl,17
 	add	hl, sp
 	ld	b,0x03
@@ -877,17 +899,17 @@ l_scsi_eject_00103:
 	inc	hl
 	djnz	l_scsi_eject_00103
 	pop	bc
-;source-doc/scsi-drv/class_scsi.c:170: cbw_scsi.eject.operation_code = 0x1B;
+;source-doc/scsi-drv/class_scsi.c:176: cbw_scsi.eject.operation_code = 0x1B;
 	ld	(ix-6),0x1b
-;source-doc/scsi-drv/class_scsi.c:171: cbw_scsi.eject.loej           = 1;
+;source-doc/scsi-drv/class_scsi.c:177: cbw_scsi.eject.loej           = 1;
 	ld	hl,19
 	add	hl, sp
 	set	1, (hl)
-;source-doc/scsi-drv/class_scsi.c:173: cbw_scsi.cbw.bCBWLUN                = 0;
+;source-doc/scsi-drv/class_scsi.c:179: cbw_scsi.cbw.bCBWLUN                = 0;
 	ld	(ix-8),0x00
-;source-doc/scsi-drv/class_scsi.c:174: cbw_scsi.cbw.bCBWCBLength           = sizeof(_scsi_packet_eject);
+;source-doc/scsi-drv/class_scsi.c:180: cbw_scsi.cbw.bCBWCBLength           = sizeof(_scsi_packet_eject);
 	ld	(ix-7),0x06
-;source-doc/scsi-drv/class_scsi.c:175: cbw_scsi.cbw.dCBWDataTransferLength = 0;
+;source-doc/scsi-drv/class_scsi.c:181: cbw_scsi.cbw.dCBWDataTransferLength = 0;
 	ld	hl,0x0008
 	add	hl, bc
 	xor	a
@@ -898,7 +920,7 @@ l_scsi_eject_00103:
 	ld	(hl), a
 	inc	hl
 	ld	(hl), a
-;source-doc/scsi-drv/class_scsi.c:177: return do_scsi_cmd(dev, &cbw_scsi.cbw, 0, false);
+;source-doc/scsi-drv/class_scsi.c:183: return do_scsi_cmd(dev, &cbw_scsi.cbw, 0, false);
 	xor	a
 	push	af
 	inc	sp
@@ -909,7 +931,7 @@ l_scsi_eject_00103:
 	ld	h,(ix+5)
 	push	hl
 	call	_do_scsi_cmd
-;source-doc/scsi-drv/class_scsi.c:178: }
+;source-doc/scsi-drv/class_scsi.c:184: }
 	ld	sp,ix
 	pop	ix
 	ret
