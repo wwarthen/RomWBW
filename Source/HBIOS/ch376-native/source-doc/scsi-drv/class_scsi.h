@@ -182,14 +182,15 @@ typedef struct {
   _scsi_packet_read_write     scsi_cmd;
 } cbw_scsi_read_write;
 
-extern usb_error scsi_read_capacity(const uint16_t dev_index, scsi_read_capacity_result *result);
-extern usb_error scsi_inquiry(const uint16_t dev_index, scsi_inquiry_result *inq_result);
-extern usb_error scsi_sense_init(const uint16_t dev_index);
-// extern usb_error scsi_request_sense(const uint16_t dev_index, scsi_sense_result *const sens_result);
-// extern usb_error scsi_eject(device_config_storage *const dev);
-extern usb_error scsi_read(const uint16_t dev_index, uint8_t *const buffer);
-extern usb_error scsi_write(const uint16_t dev_index, uint8_t *const buffer);
+extern _scsi_command_block_wrapper scsi_command_block_wrapper;
 
-extern usb_error scsi_seek(const uint16_t dev_index, const uint32_t lba);
+extern usb_error do_scsi_cmd(device_config_storage *const       dev,
+                             _scsi_command_block_wrapper *const cbw,
+                             void *const                        send_receive_buffer,
+                             const bool                         send);
+
+extern usb_error scsi_test(device_config_storage *const dev);
+
+extern usb_error scsi_request_sense(device_config_storage *const dev, scsi_sense_result *const sens_result);
 
 #endif

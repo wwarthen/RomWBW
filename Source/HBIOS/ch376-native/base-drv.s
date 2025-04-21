@@ -11,6 +11,5 @@
 #include "ch376-native/base-drv/protocol.c.s"
 #include "ch376-native/base-drv/transfers.c.s"
 #include "ch376-native/base-drv/usb-base-drv.c.s"
-#include "ch376-native/base-drv/usb_init.c.s"
 #include "ch376-native/base-drv/usb_state.c.s"
 #include "ch376-native/base-drv/work-area.c.s"

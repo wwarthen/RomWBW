@@ -1,5 +1,5 @@
 #include "print.h"
-#include "usb_init.h"
+#include "usb-base-drv.h"
 
 static uint16_t wait_for_state(const uint8_t loop_counter, uint8_t state, const uint8_t desired_state) __sdcccall(1) {
   uint16_t r = state;

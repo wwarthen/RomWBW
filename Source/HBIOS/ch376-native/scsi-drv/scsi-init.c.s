@@ -48,7 +48,7 @@ _USB_MODULE_LEDS	.EQU	0xff8a
 ;--------------------------------------------------------
 ; code
 ;--------------------------------------------------------
-;source-doc/scsi-drv/scsi-init.c:14: void chscsi_init(void) {
+;source-doc/scsi-drv/scsi-init.c:9: void chscsi_init(void) {
 ; ---------------------------------
 ; Function chscsi_init
 ; ---------------------------------
@@ -58,88 +58,83 @@ _chscsi_init:
 	add	ix,sp
 	push	af
 	dec	sp
-;source-doc/scsi-drv/scsi-init.c:16: do {
+;source-doc/scsi-drv/scsi-init.c:11: do {
 	ld	(ix-1),0x01
-l_chscsi_init_00105:
-;source-doc/scsi-drv/scsi-init.c:17: device_config_storage *const storage_device = (device_config_storage *)get_usb_device_config(index);
+l_chscsi_init_00103:
+;source-doc/scsi-drv/scsi-init.c:12: usb_device_type t = get_usb_device_type(index);
 	ld	a,(ix-1)
-	call	_get_usb_device_config
-	ld	l, e
-;source-doc/scsi-drv/scsi-init.c:19: if (storage_device == NULL)
-	ld	a,d
-	ld	h,a
-	or	e
-	jr	Z,l_chscsi_init_00108
-;source-doc/scsi-drv/scsi-init.c:22: const usb_device_type t = storage_device->type;
-	ld	a, (hl)
-	and	0x0f
-;source-doc/scsi-drv/scsi-init.c:24: if (t == USB_IS_MASS_STORAGE) {
+	push	af
+	inc	sp
+	call	_get_usb_device_type
+	inc	sp
+	ld	a, l
+;source-doc/scsi-drv/scsi-init.c:14: if (t == USB_IS_MASS_STORAGE) {
 	sub	0x02
-	jr	NZ,l_chscsi_init_00106
-;source-doc/scsi-drv/scsi-init.c:25: const uint8_t dev_index                          = find_storage_dev(); // index == -1 (no more left) should never happen
+	jr	NZ,l_chscsi_init_00104
+;source-doc/scsi-drv/scsi-init.c:15: const uint8_t dev_index = find_storage_dev(); // index == -1 (no more left) should never happen
 	call	_find_storage_dev
-;source-doc/scsi-drv/scsi-init.c:26: hbios_usb_storage_devices[dev_index].drive_index = dev_index + 1;
+;source-doc/scsi-drv/scsi-init.c:17: hbios_usb_storage_devices[dev_index].drive_index = dev_index + 1;
 	ld	c,l
 	ld	e,l
 	ld	d,0x00
-	ld	h, d
-	add	hl, hl
-	ld	a, l
+	ld	a, e
+	ld	b, d
+	add	a, a
+	rl	b
 	add	a, +((_hbios_usb_storage_devices) & 0xFF)
 	ld	(ix-3),a
-	ld	a, h
+	ld	a, b
 	adc	a, +((_hbios_usb_storage_devices) / 256)
 	ld	(ix-2),a
 	pop	hl
 	push	hl
 	inc	c
 	ld	(hl), c
-;source-doc/scsi-drv/scsi-init.c:27: hbios_usb_storage_devices[dev_index].usb_device  = index;
+;source-doc/scsi-drv/scsi-init.c:18: hbios_usb_storage_devices[dev_index].usb_device  = index;
 	pop	bc
 	push	bc
 	inc	bc
 	ld	a,(ix-1)
 	ld	(bc), a
-;source-doc/scsi-drv/scsi-init.c:29: print_string("\r\nUSB: MASS STORAGE @ $");
+;source-doc/scsi-drv/scsi-init.c:20: print_string("\r\nUSB: MASS STORAGE @ $");
 	push	de
 	ld	hl,scsi_init_str_0
 	call	_print_string
 	pop	de
-;source-doc/scsi-drv/scsi-init.c:30: print_uint16(index);
+;source-doc/scsi-drv/scsi-init.c:21: print_uint16(index);
 	ld	l,(ix-1)
 	ld	h,0x00
 	push	hl
 	push	de
 	call	_print_uint16
-;source-doc/scsi-drv/scsi-init.c:31: print_string(":$");
+;source-doc/scsi-drv/scsi-init.c:22: print_string(":$");
 	ld	hl,scsi_init_str_1
 	call	_print_string
 	pop	de
 	pop	hl
-;source-doc/scsi-drv/scsi-init.c:32: print_uint16(dev_index + 1);
+;source-doc/scsi-drv/scsi-init.c:23: print_uint16(dev_index + 1);
 	inc	de
 	push	hl
 	ex	de, hl
 	call	_print_uint16
-;source-doc/scsi-drv/scsi-init.c:33: print_string(" $");
+;source-doc/scsi-drv/scsi-init.c:24: print_string(" $");
 	ld	hl,scsi_init_str_2
 	call	_print_string
-;source-doc/scsi-drv/scsi-init.c:34: scsi_sense_init(index);
-	call	_scsi_sense_init
+;source-doc/scsi-drv/scsi-init.c:25: usb_scsi_init(index);
+	call	_usb_scsi_init
 	pop	af
-;source-doc/scsi-drv/scsi-init.c:35: dio_add_entry(ch_scsi_fntbl, &hbios_usb_storage_devices[dev_index]);
+;source-doc/scsi-drv/scsi-init.c:26: dio_add_entry(ch_scsi_fntbl, &hbios_usb_storage_devices[dev_index]);
 	pop	de
 	push	de
 	ld	hl,_ch_scsi_fntbl
 	call	_dio_add_entry
-l_chscsi_init_00106:
-;source-doc/scsi-drv/scsi-init.c:38: } while (++index != MAX_NUMBER_OF_DEVICES + 1);
+l_chscsi_init_00104:
+;source-doc/scsi-drv/scsi-init.c:29: } while (++index != MAX_NUMBER_OF_DEVICES + 1);
 	inc	(ix-1)
 	ld	a,(ix-1)
 	sub	0x07
-	jr	NZ,l_chscsi_init_00105
-l_chscsi_init_00108:
-;source-doc/scsi-drv/scsi-init.c:39: }
+	jr	NZ,l_chscsi_init_00103
+;source-doc/scsi-drv/scsi-init.c:30: }
 	ld	sp, ix
 	pop	ix
 	ret

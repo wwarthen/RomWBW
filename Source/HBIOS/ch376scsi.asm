@@ -75,7 +75,7 @@ CH_SCSI_SEEK:
 	PUSH	DE
 	PUSH	HL
 	PUSH	IY
-	CALL	_scsi_seek
+	CALL	_usb_scsi_seek
 	POP	IY
 	POP	HL
 	POP	DE
@@ -113,7 +113,7 @@ CH_SCSI_READ:
 	; HL = HL + 512
 	PUSH	HL
 	PUSH	IY
-	call	_scsi_read
+	CALL	_usb_scsi_read
 	LD	A, L
 	POP	IY
 	POP	HL
@@ -151,7 +151,7 @@ CH_SCSI_WRITE:
 	; HL = HL + 512
 	PUSH	HL
 	PUSH	IY
-	call	_scsi_write
+	CALL	_usb_scsi_write
 	LD	A, L
 	POP	IY
 	POP	HL
@@ -268,7 +268,7 @@ CH_SCSI_CAP:
 
 	PUSH	IX
 	PUSH	IY
-	call	_scsi_read_capacity
+	CALL	_usb_scsi_read_capacity
 	POP	IY
 	POP	IX
 

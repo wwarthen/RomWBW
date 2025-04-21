@@ -24,6 +24,8 @@
     "ch376inc.h": "c",
     "enumerate_storage.h": "c",
     "work-area.h": "c",
-    "hbios-driver-storage.h": "c"
+    "hbios-driver-storage.h": "c",
+    "class_hid_keyboard.h": "c",
+    "print.h": "c"
   }
 }

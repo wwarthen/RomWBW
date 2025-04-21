@@ -18,10 +18,9 @@ typedef struct __usb_state {
 } _usb_state;
 
 extern device_config *find_first_free(void);
-extern device_config *first_device_config(const _usb_state *const p) __sdcccall(1);
-extern device_config *next_device_config(const _usb_state *const usb_state, const device_config *const p) __sdcccall(1);
 extern uint8_t        count_of_devices(void) __sdcccall(1);
-
 extern device_config *get_usb_device_config(const uint8_t device_index) __sdcccall(1);
+
+extern usb_device_type get_usb_device_type(const uint8_t dev_index);
 
 #endif

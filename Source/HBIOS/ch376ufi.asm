@@ -5,7 +5,7 @@
 ;
 
 #include "./ch376-native/ufi-drv.s"
-_ufi_seek	.EQU	_scsi_seek
+_ufi_seek	.EQU	_usb_scsi_seek
 
 	; find and mount all floppy USB drives
 CHUFI_INIT	.EQU	_chufi_init
@@ -111,7 +111,7 @@ CH_UFI_READ:
 
 	PUSH	HL
 	PUSH	IY
-	call	_chufi_read
+	CALL	_usb_ufi_read
 	LD	L, 0
 	LD	A, L
 	POP	IY
@@ -150,7 +150,7 @@ CH_UFI_WRITE:
 	; HL = HL + 512
 	PUSH	HL
 	PUSH	IY
-	call	_chufi_write
+	CALL	_usb_ufi_write
 	LD	A, L
 	POP	IY
 	POP	HL
@@ -267,7 +267,7 @@ CH_UFI_CAP:
 	EXX
 
 	PUSH	IY
-	call	_chufi_get_cap
+	CALL	_usb_ufi_get_cap
 	POP	IY
 	LD	BC, 512
 	XOR	A

@@ -48,6 +48,7 @@ typedef enum {
   USB_IS_UNKNOWN      = 6,
   _USB_LAST_DEVICE_TYPE,
   USB_IS_HUB = 15
+
 } usb_device_type; // 4 bits only
 
 typedef enum { ENDPOINT_BULK_OUT = 0, ENDPOINT_BULK_IN = 1, ENDPOINT_INTERRUPT_IN = 2 } usb_endpoint_type;

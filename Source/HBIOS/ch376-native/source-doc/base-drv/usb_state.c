@@ -1,5 +1,9 @@
 #include "usb_state.h"
+#include "ch376.h"
 #include "work-area.h"
+
+extern device_config *first_device_config(const _usb_state *const p) __sdcccall(1);
+extern device_config *next_device_config(const _usb_state *const usb_state, const device_config *const p) __sdcccall(1);
 
 const uint8_t device_config_sizes[_USB_LAST_DEVICE_TYPE] = {
     0,                              /* USB_NOT_SUPPORTED   = 0 */
@@ -82,4 +86,13 @@ device_config *get_usb_device_config(const uint8_t device_index) __sdcccall(1) {
   }
 
   return NULL; // is not a usb device
+}
+
+usb_device_type get_usb_device_type(const uint8_t dev_index) {
+  const device_config *dev = get_usb_device_config(dev_index);
+
+  if (dev == NULL)
+    return -1;
+
+  return dev->type;
 }

@@ -66,7 +66,7 @@ UKY_SCNCNT	.EQU	$ - 1
 	LD	(UKY_INT_SP),SP		; SAVE ORIGINAL STACK FRAME
 	LD	SP,UKY_INTSTK		; USE DEDICATED INT STACK FRAME IN HI MEM
 
-	CALL	_keyboard_tick
+	CALL	_usb_kyb_tick
 
 	LD	SP, $FFFF		; RESTORE ORIGINAL STACK FRAME
 UKY_INT_SP	.EQU	$ - 2
@@ -119,7 +119,7 @@ UKY_STAT:
 	push	hl			; address of potential que'd next usb report
 
 	HB_DI
-	call	_keyboard_buf_size
+	call	_usb_kyb_buf_size
 	HB_EI
 	ld	a, l
 	ld	b, h
@@ -164,7 +164,7 @@ no_queued_reports:
 ;
 UKY_FLUSH:
 	HB_DI
-	CALL	_keyboard_buf_flush
+	CALL	_usb_kyb_flush
 	HB_EI
 	XOR	A
 	RET
@@ -205,7 +205,7 @@ UKY_FLUSH:
 ;
 UKY_READ:
 	HB_DI
-	CALL	_keyboard_buf_get_next
+	CALL	_usb_kyb_buf_get_next
 	HB_EI
 	LD	A, H
 	OR	A
