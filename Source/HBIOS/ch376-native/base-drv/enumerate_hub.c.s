@@ -333,11 +333,9 @@ l_configure_usb_hub_00126:
 	pop	bc
 	or	a
 	jp	NZ, l_configure_usb_hub_00129
-;source-doc/base-drv/enumerate_hub.c:61: if (port_status.wPortStatus.port_connection) {
-	ld	hl,8
-	add	hl, sp
-	ld	a, (hl)
-	and	0x01
+;source-doc/base-drv/enumerate_hub.c:61: if (port_status.wPortStatus & PORT_STAT_CONNECTION) {
+	ld	e,(ix-6)
+	bit	0, e
 	jr	Z,l_configure_usb_hub_00124
 ;source-doc/base-drv/enumerate_hub.c:62: CHECK(hub_clear_feature(hub_config, HUB_FEATURE_PORT_CONNECTION_CHA, i));
 	push	bc

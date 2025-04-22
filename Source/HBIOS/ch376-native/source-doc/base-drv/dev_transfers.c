@@ -12,13 +12,12 @@
 
 #include "dev_transfers.h"
 #include "ch376.h"
+#include "critical-section.h"
 #include "delay.h"
+#include "ez80-helpers.h"
 #include "protocol.h"
 #include <stdlib.h>
 
-#include <critical-section.h>
-
-#include "ez80-helpers.h"
 /**
  * @brief Perform a USB control transfer (in or out)
  * See https://www.beyondlogic.org/usbnutshell/usb4.shtml for a description of the USB control transfer

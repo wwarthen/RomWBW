@@ -4,6 +4,7 @@
 
 #include "ch376inc.h"
 #include "delay.h"
+#include <stdint.h>
 #include <stdlib.h>
 
 typedef enum {
@@ -157,7 +158,7 @@ extern usb_error ch_control_transfer_request_descriptor(const uint8_t descriptor
 extern usb_error ch_control_transfer_set_address(const uint8_t device_address) __z88dk_fastcall;
 extern usb_error ch_control_transfer_set_config(const uint8_t config_value) __z88dk_fastcall;
 extern usb_error ch_data_in_transfer(uint8_t *buffer, int16_t data_length, endpoint_param *const endpoint);
-extern usb_error ch_data_in_transfer_n(uint8_t *buffer, int8_t *const buffer_size, endpoint_param *const endpoint);
+extern usb_error ch_data_in_transfer_n(uint8_t *buffer, uint8_t *const buffer_size, endpoint_param *const endpoint);
 extern usb_error ch_data_out_transfer(const uint8_t *buffer, int16_t buffer_length, endpoint_param *const endpoint);
 
 inline void ch_configure_nak_retry(const ch_nak_retry_type retry, const uint8_t number_of_retries) {

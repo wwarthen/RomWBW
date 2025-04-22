@@ -68,14 +68,14 @@ _usb_host_bus_reset:
 	call	_ch_cmd_set_usb_mode
 ;source-doc/base-drv/usb-base-drv.c:15: delay_20ms();
 	call	_delay_20ms
-;source-doc/base-drv/ch376.h:111: #endif
+;source-doc/base-drv/ch376.h:111:
 	ld	l,0x0b
 	call	_ch_command
-;source-doc/base-drv/ch376.h:112:
+;source-doc/base-drv/ch376.h:112: #endif
 	ld	a,0x25
 	ld	bc,_CH376_DATA_PORT
 	out	(c), a
-;source-doc/base-drv/ch376.h:113: #define calc_max_packet_sizex(packet_size) (packet_size & 0x3FF)
+;source-doc/base-drv/ch376.h:113:
 	ld	a,0xdf
 	ld	bc,_CH376_DATA_PORT
 	out	(c), a
@@ -201,7 +201,7 @@ l_usb_init_00112:
 l_usb_init_00113:
 ;source-doc/base-drv/usb-base-drv.c:69: }
 	ret
-;source-doc/base-drv/usb-base-drv.c:71: uint8_t usb_scsi_seek(const uint16_t dev_index, const uint32_t lba) {
+;source-doc/base-drv/usb-base-drv.c:71: usb_error usb_scsi_seek(const uint16_t dev_index, const uint32_t lba) {
 ; ---------------------------------
 ; Function usb_scsi_seek
 ; ---------------------------------
@@ -220,7 +220,7 @@ _usb_scsi_seek:
 	add	hl, sp
 	ld	bc,0x0004
 	ldir
-;source-doc/base-drv/usb-base-drv.c:75: return 0;
+;source-doc/base-drv/usb-base-drv.c:75: return USB_ERR_OK;
 	ld	l,0x00
 ;source-doc/base-drv/usb-base-drv.c:76: }
 	pop	ix

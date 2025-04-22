@@ -71,7 +71,6 @@ device_config *next_device_config(const _usb_state *const usb_state, const devic
   return result;
 }
 
-// always usb work area
 device_config *get_usb_device_config(const uint8_t device_index) __sdcccall(1) {
   const _usb_state *const usb_state = get_usb_work_area();
 

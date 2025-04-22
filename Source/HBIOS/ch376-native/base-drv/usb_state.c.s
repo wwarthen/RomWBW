@@ -187,14 +187,14 @@ l_next_device_config_00102:
 l_next_device_config_00105:
 ;source-doc/base-drv/usb_state.c:72: }
 	ret
-;source-doc/base-drv/usb_state.c:75: device_config *get_usb_device_config(const uint8_t device_index) __sdcccall(1) {
+;source-doc/base-drv/usb_state.c:74: device_config *get_usb_device_config(const uint8_t device_index) __sdcccall(1) {
 ; ---------------------------------
 ; Function get_usb_device_config
 ; ---------------------------------
 _get_usb_device_config:
 	ld	c, a
-;source-doc/base-drv/usb_state.c:76: const _usb_state *const usb_state = get_usb_work_area();
-;source-doc/base-drv/usb_state.c:80: for (device_config *p = first_device_config(usb_state); p; p = next_device_config(usb_state, p)) {
+;source-doc/base-drv/usb_state.c:75: const _usb_state *const usb_state = get_usb_work_area();
+;source-doc/base-drv/usb_state.c:79: for (device_config *p = first_device_config(usb_state); p; p = next_device_config(usb_state, p)) {
 	push	bc
 	ld	hl,_x
 	call	_first_device_config
@@ -204,33 +204,33 @@ l_get_usb_device_config_00107:
 	ld	a, d
 	or	e
 	jr	Z,l_get_usb_device_config_00105
-;source-doc/base-drv/usb_state.c:81: if (p->type != USB_NOT_SUPPORTED) {
+;source-doc/base-drv/usb_state.c:80: if (p->type != USB_NOT_SUPPORTED) {
 	ld	l, e
 	ld	h, d
 	ld	a, (hl)
 	and	0x0f
 	jr	Z,l_get_usb_device_config_00108
-;source-doc/base-drv/usb_state.c:82: if (counter == device_index)
+;source-doc/base-drv/usb_state.c:81: if (counter == device_index)
 	ld	a, c
 	sub	b
-;source-doc/base-drv/usb_state.c:83: return p;
+;source-doc/base-drv/usb_state.c:82: return p;
 	jr	Z,l_get_usb_device_config_00109
-;source-doc/base-drv/usb_state.c:84: counter++;
+;source-doc/base-drv/usb_state.c:83: counter++;
 	inc	b
 l_get_usb_device_config_00108:
-;source-doc/base-drv/usb_state.c:80: for (device_config *p = first_device_config(usb_state); p; p = next_device_config(usb_state, p)) {
+;source-doc/base-drv/usb_state.c:79: for (device_config *p = first_device_config(usb_state); p; p = next_device_config(usb_state, p)) {
 	push	bc
 	ld	hl,_x
 	call	_next_device_config
 	pop	bc
 	jr	l_get_usb_device_config_00107
 l_get_usb_device_config_00105:
-;source-doc/base-drv/usb_state.c:88: return NULL; // is not a usb device
+;source-doc/base-drv/usb_state.c:87: return NULL; // is not a usb device
 	ld	de,0x0000
 l_get_usb_device_config_00109:
-;source-doc/base-drv/usb_state.c:89: }
+;source-doc/base-drv/usb_state.c:88: }
 	ret
-;source-doc/base-drv/usb_state.c:91: usb_device_type get_usb_device_type(const uint8_t dev_index) {
+;source-doc/base-drv/usb_state.c:90: usb_device_type get_usb_device_type(const uint8_t dev_index) {
 ; ---------------------------------
 ; Function get_usb_device_type
 ; ---------------------------------
@@ -238,24 +238,24 @@ _get_usb_device_type:
 	push	ix
 	ld	ix,0
 	add	ix,sp
-;source-doc/base-drv/usb_state.c:92: const device_config *dev = get_usb_device_config(dev_index);
+;source-doc/base-drv/usb_state.c:91: const device_config *dev = get_usb_device_config(dev_index);
 	ld	a,(ix+4)
 	call	_get_usb_device_config
 	ld	l, e
-;source-doc/base-drv/usb_state.c:94: if (dev == NULL)
+;source-doc/base-drv/usb_state.c:93: if (dev == NULL)
 	ld	a,d
 	ld	h,a
 	or	e
 	jr	NZ,l_get_usb_device_type_00102
-;source-doc/base-drv/usb_state.c:95: return -1;
+;source-doc/base-drv/usb_state.c:94: return -1;
 	ld	l,0xff
 	jr	l_get_usb_device_type_00103
 l_get_usb_device_type_00102:
-;source-doc/base-drv/usb_state.c:97: return dev->type;
+;source-doc/base-drv/usb_state.c:96: return dev->type;
 	ld	a, (hl)
 	and	0x0f
 	ld	l, a
 l_get_usb_device_type_00103:
-;source-doc/base-drv/usb_state.c:98: }
+;source-doc/base-drv/usb_state.c:97: }
 	pop	ix
 	ret

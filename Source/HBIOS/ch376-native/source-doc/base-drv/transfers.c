@@ -12,11 +12,10 @@
 
 #include "transfers.h"
 #include "ch376.h"
+#include "critical-section.h"
 #include "delay.h"
 #include "ez80-helpers.h"
 #include "print.h"
-#include "z80.h"
-#include <critical-section.h>
 #include <stdlib.h>
 
 #define LOWER_SAFE_RAM_ADDRESS 0x8000
@@ -108,20 +107,6 @@ usb_dat_in_trnsfer_ext(uint8_t *buffer, const uint16_t buffer_size, const uint8_
   return usb_data_in_transfer(buffer, buffer_size, device_address, endpoint);
 }
 
-usb_error
-usb_dat_in_trns_n_ext(uint8_t *buffer, uint16_t *buffer_size, const uint8_t device_address, endpoint_param *const endpoint) {
-  if (buffer != 0 && ((uint16_t)buffer & 0xC000) == 0)
-    return USB_BAD_ADDRESS;
-
-  if (((uint16_t)endpoint & 0xC000) == 0)
-    return USB_BAD_ADDRESS;
-
-  if (((uint16_t)buffer_size & 0xC000) == 0)
-    return USB_BAD_ADDRESS;
-
-  return usb_data_in_transfer_n(buffer, buffer_size, device_address, endpoint);
-}
-
 /**
  * @brief Perform a USB data in on the specififed endpoint
  *
@@ -145,7 +130,7 @@ usb_data_in_transfer(uint8_t *buffer, const uint16_t buffer_size, const uint8_t 
 }
 
 /**
- * @brief Perform a USB data in on the specififed endpoint
+ * @brief Perform a USB data in on the specified endpoint
  *
  * @param buffer the buffer to receive the data - must be 62 bytes
  * @param buffer_size  on exit the actual size of data received

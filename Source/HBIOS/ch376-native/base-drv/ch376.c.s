@@ -251,7 +251,7 @@ l_ch_probe_00107:
 	inc	sp
 	pop	ix
 	ret
-;source-doc/base-drv/ch376.c:112: uint8_t ch_cmd_set_usb_mode(const uint8_t mode) __z88dk_fastcall {
+;source-doc/base-drv/ch376.c:112: usb_error ch_cmd_set_usb_mode(const uint8_t mode) __z88dk_fastcall {
 ; ---------------------------------
 ; Function ch_cmd_set_usb_mode
 ; ---------------------------------
@@ -581,7 +581,7 @@ l_ch_data_in_transfer_00111:
 ;source-doc/base-drv/ch376.c:187: }
 	pop	ix
 	ret
-;source-doc/base-drv/ch376.c:190: usb_error ch_data_in_transfer_n(uint8_t *const buffer, int8_t *const buffer_size, endpoint_param *const endpoint) {
+;source-doc/base-drv/ch376.c:190: usb_error ch_data_in_transfer_n(uint8_t *const buffer, uint8_t *const buffer_size, endpoint_param *const endpoint) {
 ; ---------------------------------
 ; Function ch_data_in_transfer_n
 ; ---------------------------------

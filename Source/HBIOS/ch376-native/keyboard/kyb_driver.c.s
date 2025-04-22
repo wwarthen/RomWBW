@@ -358,14 +358,14 @@ _usb_kyb_tick:
 	or	a
 ;source-doc/keyboard/kyb_driver.c:120: if (is_in_critical_section())
 	jr	NZ,l_usb_kyb_tick_00112
-;././source-doc/base-drv//ch376.h:111: #endif
+;././source-doc/base-drv//ch376.h:111:
 	ld	l,0x0b
 	call	_ch_command
-;././source-doc/base-drv//ch376.h:112:
+;././source-doc/base-drv//ch376.h:112: #endif
 	ld	a,0x25
 	ld	bc,_CH376_DATA_PORT
 	out	(c), a
-;././source-doc/base-drv//ch376.h:113: #define calc_max_packet_sizex(packet_size) (packet_size & 0x3FF)
+;././source-doc/base-drv//ch376.h:113:
 	ld	a,0x1f
 	ld	bc,_CH376_DATA_PORT
 	out	(c), a
@@ -383,14 +383,14 @@ _usb_kyb_tick:
 	inc	sp
 	ld	a, l
 	ld	(_result), a
-;././source-doc/base-drv//ch376.h:111: #endif
+;././source-doc/base-drv//ch376.h:111:
 	ld	l,0x0b
 	call	_ch_command
-;././source-doc/base-drv//ch376.h:112:
+;././source-doc/base-drv//ch376.h:112: #endif
 	ld	a,0x25
 	ld	bc,_CH376_DATA_PORT
 	out	(c), a
-;././source-doc/base-drv//ch376.h:113: #define calc_max_packet_sizex(packet_size) (packet_size & 0x3FF)
+;././source-doc/base-drv//ch376.h:113:
 	ld	a,0xdf
 	ld	bc,_CH376_DATA_PORT
 	out	(c), a

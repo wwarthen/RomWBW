@@ -68,9 +68,9 @@ uint16_t usb_init(uint8_t state) __z88dk_fastcall {
   return (uint16_t)count_of_devices() << 8 | 4;
 }
 
-uint8_t usb_scsi_seek(const uint16_t dev_index, const uint32_t lba) {
+usb_error usb_scsi_seek(const uint16_t dev_index, const uint32_t lba) {
   device_config_storage *const dev = (device_config_storage *)get_usb_device_config(dev_index);
 
   dev->current_lba = lba;
-  return 0;
+  return USB_ERR_OK;
 }

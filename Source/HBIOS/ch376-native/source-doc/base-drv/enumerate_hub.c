@@ -58,7 +58,7 @@ usb_error configure_usb_hub(_working *const working) __z88dk_fastcall {
 
     CHECK(hub_get_status_port(hub_config, i, &port_status));
 
-    if (port_status.wPortStatus.port_connection) {
+    if (port_status.wPortStatus & PORT_STAT_CONNECTION) {
       CHECK(hub_clear_feature(hub_config, HUB_FEATURE_PORT_CONNECTION_CHANGE, i));
 
       CHECK(hub_clear_feature(hub_config, FEAT_PORT_ENABLE_CHANGE, i));

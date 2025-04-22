@@ -1,6 +1,7 @@
 #ifndef __XPRINT
 #define __XPRINT
 
+#include <stdint.h>
 #include <stdlib.h>
 
 extern void print_hex(const char c) __z88dk_fastcall;

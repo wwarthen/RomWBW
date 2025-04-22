@@ -109,7 +109,7 @@ uint8_t ch_probe(void) {
   return false;
 }
 
-uint8_t ch_cmd_set_usb_mode(const uint8_t mode) __z88dk_fastcall {
+usb_error ch_cmd_set_usb_mode(const uint8_t mode) __z88dk_fastcall {
   uint8_t result = 0;
 
   CH376_COMMAND_PORT = CH_CMD_SET_USB_MODE;
@@ -187,7 +187,7 @@ done:
 }
 
 // TODO: review: does buffer_size need to be signed?
-usb_error ch_data_in_transfer_n(uint8_t *const buffer, int8_t *const buffer_size, endpoint_param *const endpoint) {
+usb_error ch_data_in_transfer_n(uint8_t *const buffer, uint8_t *const buffer_size, endpoint_param *const endpoint) {
   uint8_t   count;
   usb_error result;
 

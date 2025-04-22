@@ -36,39 +36,26 @@ typedef struct {
 } hub_descriptor;
 
 typedef struct {
-  union {
-    struct {
-      uint8_t port_connection : 1;
-      uint8_t port_enable : 1;
-      uint8_t port_suspend : 1;
-      uint8_t port_over_current : 1;
-      uint8_t port_reset : 1;
-      uint8_t reserved : 3;
-      uint8_t port_power : 1;
-      uint8_t port_low_speed : 1;
-      uint8_t port_high_speed : 1;
-      uint8_t port_test : 1;
-      uint8_t port_indicator : 1;
-    };
-
-    uint16_t val;
-
-  } wPortStatus;
-
-  union {
-    struct {
-      uint8_t c_port_connection : 1;
-      uint8_t c_port_enable : 1;
-      uint8_t c_port_suspend : 1;
-      uint8_t c_port_over_current : 1;
-      uint8_t c_port_reset : 1;
-    };
-
-    uint16_t val;
-
-  } wPortChange;
-
+  uint16_t wPortStatus;
+  uint16_t wPortChange;
 } hub_port_status;
+
+#define PORT_STAT_CONNECTION  0x0001
+#define PORT_STAT_ENABLE      0x0002
+#define PORT_STAT_SUSPEND     0x0004
+#define PORT_STAT_OVERCURRENT 0x0008
+#define PORT_STAT_RESET       0x0010
+#define PORT_STAT_POWER       0x0100
+#define PORT_STAT_LOW_SPEED   0x0200
+#define PORT_STAT_HIGH_SPEED  0x0400
+#define PORT_STAT_TEST        0x0800
+#define PORT_STAT_INDICATOR   0x1000
+
+#define PORT_STAT_C_CONNECTION  0x0001
+#define PORT_STAT_C_ENABLE      0x0002
+#define PORT_STAT_C_SUSPEND     0x0004
+#define PORT_STAT_C_OVERCURRENT 0x0008
+#define PORT_STAT_C_RESET       0x0010
 
 usb_error hub_get_descriptor(const device_config_hub *const hub_config, hub_descriptor *const hub_description) __sdcccall(1);
 
