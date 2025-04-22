@@ -29,6 +29,7 @@ call :build Survey || exit /b
 call :build HTalk || exit /b
 call :build BBCBASIC || exit /b
 call :build copysl || exit /b
+call :build slabel || exit /b
 call :build ZDE || exit /b
 
 goto :eof
