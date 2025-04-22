@@ -230,11 +230,11 @@ l_get_usb_device_config_00105:
 l_get_usb_device_config_00109:
 ;source-doc/base-drv/usb_state.c:88: }
 	ret
-;source-doc/base-drv/usb_state.c:90: usb_device_type get_usb_device_type(const uint8_t dev_index) {
+;source-doc/base-drv/usb_state.c:90: usb_device_type usb_get_device_type(const uint16_t dev_index) {
 ; ---------------------------------
-; Function get_usb_device_type
+; Function usb_get_device_type
 ; ---------------------------------
-_get_usb_device_type:
+_usb_get_device_type:
 	push	ix
 	ld	ix,0
 	add	ix,sp
@@ -246,16 +246,16 @@ _get_usb_device_type:
 	ld	a,d
 	ld	h,a
 	or	e
-	jr	NZ,l_get_usb_device_type_00102
+	jr	NZ,l_usb_get_device_type_00102
 ;source-doc/base-drv/usb_state.c:94: return -1;
 	ld	l,0xff
-	jr	l_get_usb_device_type_00103
-l_get_usb_device_type_00102:
+	jr	l_usb_get_device_type_00103
+l_usb_get_device_type_00102:
 ;source-doc/base-drv/usb_state.c:96: return dev->type;
 	ld	a, (hl)
 	and	0x0f
 	ld	l, a
-l_get_usb_device_type_00103:
+l_usb_get_device_type_00103:
 ;source-doc/base-drv/usb_state.c:97: }
 	pop	ix
 	ret

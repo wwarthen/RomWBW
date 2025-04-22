@@ -59,6 +59,8 @@ define compile
 	echo "Compiled $(notdir $@) from $(notdir $<)"
 endef
 
+FIRMWARE_ALT = kyb-init ch376_init scsi-init ufi-init hbios-driver-storage
+
 define build_subsystem =
 $$(ASSDIR)$(1).s:
 	@echo "Creating $(1).s"
@@ -66,10 +68,22 @@ $$(ASSDIR)$(1).s:
 	for dep in $$^; do
 		dep=$$$${dep#*/}
 		dep=$$$${dep#*/}
-		if [ -n "$$$${dep%%*.asm}" ]; then
-			echo '#include "'ch376-native/$(1)/$$$${dep}'"' >> $$(ASSDIR)$(1).s
+		filename=$$$${dep##*/}
+		basename=$$$${filename%.*.*}
+		if echo "$(FIRMWARE_ALT)" | grep -w -q "$$$${basename}"; then
+			if [ -n "$$$${dep%%*.asm}" ]; then
+				echo '#include "'ch376-native/$(1)/$$$${dep}'"' >> $$(ASSDIR)$(1).s
+			else
+				echo '#include "'ch376-native/source-doc/$(1)/$$$${dep}'"' >> $$(ASSDIR)$(1).s
+			fi
 		else
-			echo '#include "'ch376-native/source-doc/$(1)/$$$${dep}'"' >> $$(ASSDIR)$(1).s
+			echo '#IF (!CHNATIVEEZ80)' >> $$(ASSDIR)$(1).s
+			if [ -n "$$$${dep%%*.asm}" ]; then
+				echo '#include "'ch376-native/$(1)/$$$${dep}'"' >> $$(ASSDIR)$(1).s
+			else
+				echo '#include "'ch376-native/source-doc/$(1)/$$$${dep}'"' >> $$(ASSDIR)$(1).s
+			fi
+			echo '#ENDIF' >> $$(ASSDIR)$(1).s
 		fi
 	done
 

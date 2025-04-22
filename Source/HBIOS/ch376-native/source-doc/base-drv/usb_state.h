@@ -21,6 +21,6 @@ extern device_config *find_first_free(void);
 extern uint8_t        count_of_devices(void) __sdcccall(1);
 extern device_config *get_usb_device_config(const uint8_t device_index) __sdcccall(1);
 
-extern usb_device_type get_usb_device_type(const uint8_t dev_index);
+extern usb_device_type usb_get_device_type(const uint16_t dev_index);
 
 #endif

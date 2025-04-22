@@ -9263,15 +9263,6 @@ SIZ_MKY		.EQU	$ - ORG_MKY
 		MEMECHO	" bytes.\n"
 #ENDIF
 ;
-#IF (USBKYBENABLE)
-ORG_UKY		.EQU	$
-  #INCLUDE "ch376kyb.asm"
-SIZ_UKY		.EQU	$ - ORG_UKY
-		MEMECHO	"CH376 USB Keyboard occupies "
-		MEMECHO	SIZ_UKY
-		MEMECHO	" bytes.\n"
-#ENDIF
-;
 #IF (NABUKBENABLE)
 ORG_NABUKB .EQU	$
   #INCLUDE "nabukb.asm"
@@ -9487,7 +9478,7 @@ SIZ_CHNATIVE	.EQU	$ - ORG_CHNATIVE
 ORG_CHSCSI	.EQU	$
   #INCLUDE "ch376scsi.asm"
 SIZ_CHSCSI	.EQU	$ - ORG_CHSCSI
-		MEMECHO	"CH376 SCSI Mass Storage occupies "
+		MEMECHO	"  CH376 SCSI Mass Storage occupies "
 		MEMECHO	SIZ_CHSCSI
 		MEMECHO	" bytes.\n"
 #ENDIF
@@ -9496,8 +9487,17 @@ SIZ_CHSCSI	.EQU	$ - ORG_CHSCSI
 ORG_CHUFI	.EQU	$
   #INCLUDE "ch376ufi.asm"
 SIZ_CHUFI	.EQU	$ - ORG_CHUFI
-		MEMECHO	"CH376 UFI Floppy Storage occupies "
+		MEMECHO	"  CH376 UFI Floppy Storage occupies "
 		MEMECHO	SIZ_CHUFI
+		MEMECHO	" bytes.\n"
+#ENDIF
+;
+#IF (USBKYBENABLE)
+ORG_UKY		.EQU	$
+  #INCLUDE "ch376kyb.asm"
+SIZ_UKY		.EQU	$ - ORG_UKY
+		MEMECHO	"  CH376 USB Keyboard occupies "
+		MEMECHO	SIZ_UKY
 		MEMECHO	" bytes.\n"
 #ENDIF
 ;

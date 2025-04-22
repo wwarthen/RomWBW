@@ -14,6 +14,17 @@ _print_hex:
 	ld	a, l
 	JP	PRTHEXBYTE
 
+_dio_add_entry:
+	LD	B, H
+	LD	C, L
+	JP	DIO_ADDENT		; ADD ENTRY TO GLOBAL DISK DEV TABLE
+
+#IF (CHNATIVEEZ80)
+
+#include "./ch376-native/ez80-firmware.asm"
+
+#ELSE
+
 _delay:
 	push	af
 	call	DELAY
@@ -32,15 +43,13 @@ _delay_short:
 ; DELAY approx 1/2 second
 _delay_medium	.EQU	LDELAY
 
-_dio_add_entry:
-	LD	B, H
-	LD	C, L
-	JP	DIO_ADDENT		; ADD ENTRY TO GLOBAL DISK DEV TABLE
-
-#include "./ch376-native/base-drv.asm"
-#include "./ch376-native/print.asm"
 #include "./ch376-native/cruntime.asm"
+#include "./ch376-native/base-drv.asm"
+#ENDIF
+
+#include "./ch376-native/print.asm"
 #include "./ch376-native/base-drv.s"
 
 CHNATIVE_INIT	.EQU	_chnative_init
 CHNATIVE_INITF	.EQU	_chnative_init_force
+

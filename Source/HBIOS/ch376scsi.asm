@@ -210,6 +210,7 @@ CH_SCSI_DEVICE:
 	LD	C, %00111010
 	LD	D, DIODEV_USB
 	LD	E, (IY+0) 			; drive_index
+	DEC	E
 	LD	HL, 0
 	XOR	A
 	RET

@@ -57,69 +57,66 @@ _chufi_init:
 	ld	ix,0
 	add	ix,sp
 	push	af
-	dec	sp
 ;source-doc/ufi-drv/ufi-init.c:11: do {
 	ld	(ix-1),0x01
 l_chufi_init_00103:
-;source-doc/ufi-drv/ufi-init.c:12: usb_device_type t = get_usb_device_type(index);
-	ld	a,(ix-1)
-	push	af
-	inc	sp
-	call	_get_usb_device_type
-	inc	sp
+;source-doc/ufi-drv/ufi-init.c:12: usb_device_type t = usb_get_device_type(index);
+	ld	e,(ix-1)
+	ld	d,0x00
+	push	de
+	push	de
+	call	_usb_get_device_type
+	pop	af
+	pop	de
 ;source-doc/ufi-drv/ufi-init.c:14: if (t == USB_IS_FLOPPY) {
 	dec	l
 	jr	NZ,l_chufi_init_00104
 ;source-doc/ufi-drv/ufi-init.c:15: const uint8_t dev_index = find_storage_dev(); // dev_index == -1 (no more left) should never happen
+	push	de
 	call	_find_storage_dev
-;source-doc/ufi-drv/ufi-init.c:17: hbios_usb_storage_devices[dev_index].drive_index = dev_index + 1;
-	ld	(ix-3),l
-	ld	(ix-2),0x00
-	ld	a,l
-	ld	c,l
-	ld	b,0x00
-	add	a, a
-	rl	b
-	add	a, +((_hbios_usb_storage_devices) & 0xFF)
-	ld	e, a
-	ld	a, b
-	adc	a, +((_hbios_usb_storage_devices) / 256)
-	ld	d, a
-	ld	l, e
-	ld	h, d
-	inc	c
-	ld	(hl), c
+	ld	(ix-2),l
+	pop	de
+;source-doc/ufi-drv/ufi-init.c:17: hbios_usb_storage_devices[dev_index].drive_index = dev_index+1;
+	ld	l,(ix-2)
+	ld	h,0x00
+	add	hl, hl
+	ld	bc,_hbios_usb_storage_devices
+	add	hl, bc
+	ld	a,(ix-2)
+	inc	a
+	ld	(hl),a
 ;source-doc/ufi-drv/ufi-init.c:18: hbios_usb_storage_devices[dev_index].usb_device  = index;
-	ld	c, e
-	ld	b, d
-	inc	bc
+	inc	hl
 	ld	a,(ix-1)
-	ld	(bc), a
+	ld	(hl),a
+	dec	hl
 ;source-doc/ufi-drv/ufi-init.c:20: print_string("\r\nUSB: FLOPPY @ $");
+	push	hl
 	push	de
 	ld	hl,ufi_init_str_0
 	call	_print_string
 	pop	de
+	pop	hl
 ;source-doc/ufi-drv/ufi-init.c:21: print_uint16(index);
-	ld	l,(ix-1)
-	ld	h,0x00
-	push	de
+	push	hl
+	ex	de, hl
 	call	_print_uint16
 ;source-doc/ufi-drv/ufi-init.c:22: print_string(":$");
 	ld	hl,ufi_init_str_1
 	call	_print_string
-	pop	de
-;source-doc/ufi-drv/ufi-init.c:23: print_uint16(dev_index + 1);
 	pop	hl
+;source-doc/ufi-drv/ufi-init.c:23: print_uint16(dev_index);
+	ld	e,(ix-2)
+	ld	d,0x00
 	push	hl
-	inc	hl
-	push	de
+	ex	de, hl
 	call	_print_uint16
 ;source-doc/ufi-drv/ufi-init.c:24: print_string(" $");
 	ld	hl,ufi_init_str_2
 	call	_print_string
-	pop	de
+	pop	hl
 ;source-doc/ufi-drv/ufi-init.c:25: dio_add_entry(ch_ufi_fntbl, &hbios_usb_storage_devices[dev_index]);
+	ex	de, hl
 	ld	hl,_ch_ufi_fntbl
 	call	_dio_add_entry
 l_chufi_init_00104:

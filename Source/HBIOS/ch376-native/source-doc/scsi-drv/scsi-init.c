@@ -9,7 +9,7 @@ extern const uint16_t const ch_scsi_fntbl[];
 void chscsi_init(void) {
   uint8_t index = 1;
   do {
-    usb_device_type t = get_usb_device_type(index);
+    usb_device_type t = usb_get_device_type(index);
 
     if (t == USB_IS_MASS_STORAGE) {
       const uint8_t dev_index = find_storage_dev(); // index == -1 (no more left) should never happen
@@ -20,7 +20,7 @@ void chscsi_init(void) {
       print_string("\r\nUSB: MASS STORAGE @ $");
       print_uint16(index);
       print_string(":$");
-      print_uint16(dev_index + 1);
+      print_uint16(dev_index);
       print_string(" $");
       usb_scsi_init(index);
       dio_add_entry(ch_scsi_fntbl, &hbios_usb_storage_devices[dev_index]);

@@ -59,26 +59,30 @@ _keyboard_init:
 	dec	sp
 ;source-doc/keyboard/kyb-init.c:7: uint8_t index = 1;
 ;source-doc/keyboard/kyb-init.c:9: do {
-	ld	b,0x01
-	ld	(ix-1),b
+	ld	c,0x01
+	ld	(ix-1),c
 l_keyboard_init_00103:
-;source-doc/keyboard/kyb-init.c:10: usb_device_type t = get_usb_device_type(index);
+;source-doc/keyboard/kyb-init.c:10: usb_device_type t = usb_get_device_type(index);
+	ld	e, c
+	ld	d,0x00
 	push	bc
-	push	bc
-	inc	sp
-	call	_get_usb_device_type
-	inc	sp
+	push	de
+	push	de
+	call	_usb_get_device_type
+	pop	af
 	ld	a, l
+	pop	de
 	pop	bc
 ;source-doc/keyboard/kyb-init.c:12: if (t == USB_IS_KEYBOARD) {
 	sub	0x04
 	jr	NZ,l_keyboard_init_00104
 ;source-doc/keyboard/kyb-init.c:13: print_string("\r\nUSB: KEYBOARD @ $");
+	push	de
 	ld	hl,kyb_init_str_0
 	call	_print_string
+	pop	de
 ;source-doc/keyboard/kyb-init.c:14: print_uint16(index);
-	ld	l,(ix-1)
-	ld	h,0x00
+	ex	de, hl
 	call	_print_uint16
 ;source-doc/keyboard/kyb-init.c:15: print_string(" $");
 	ld	hl,kyb_init_str_1
@@ -94,9 +98,9 @@ l_keyboard_init_00103:
 	jr	l_keyboard_init_00106
 l_keyboard_init_00104:
 ;source-doc/keyboard/kyb-init.c:20: } while (++index != MAX_NUMBER_OF_DEVICES + 1);
-	inc	b
-	ld	(ix-1),b
-	ld	a, b
+	inc	c
+	ld	(ix-1),c
+	ld	a, c
 	sub	0x07
 	jr	NZ,l_keyboard_init_00103
 ;source-doc/keyboard/kyb-init.c:22: print_string("\r\nUSB: KEYBOARD: NOT FOUND$");

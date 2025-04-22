@@ -212,6 +212,7 @@ CH_UFI_DEVICE:
 	LD	C, %11010110
 	LD	D, DIODEV_USB
 	LD	E, (IY+0)			; drive_index
+	DEC	E
 	LD	HL, 0
 	XOR	A
 	RET

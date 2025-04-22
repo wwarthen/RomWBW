@@ -7,7 +7,7 @@ uint8_t keyboard_init(void) __sdcccall(1) {
   uint8_t index = 1;
 
   do {
-    usb_device_type t = get_usb_device_type(index);
+    usb_device_type t = usb_get_device_type(index);
 
     if (t == USB_IS_KEYBOARD) {
       print_string("\r\nUSB: KEYBOARD @ $");

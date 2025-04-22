@@ -87,7 +87,7 @@ device_config *get_usb_device_config(const uint8_t device_index) __sdcccall(1) {
   return NULL; // is not a usb device
 }
 
-usb_device_type get_usb_device_type(const uint8_t dev_index) {
+usb_device_type usb_get_device_type(const uint16_t dev_index) {
   const device_config *dev = get_usb_device_config(dev_index);
 
   if (dev == NULL)

@@ -9,7 +9,7 @@ void chufi_init(void) {
   uint8_t index = 1;
 
   do {
-    usb_device_type t = get_usb_device_type(index);
+    usb_device_type t = usb_get_device_type(index);
 
     if (t == USB_IS_FLOPPY) {
       const uint8_t dev_index = find_storage_dev(); // dev_index == -1 (no more left) should never happen
@@ -20,7 +20,7 @@ void chufi_init(void) {
       print_string("\r\nUSB: FLOPPY @ $");
       print_uint16(index);
       print_string(":$");
-      print_uint16(dev_index + 1);
+      print_uint16(dev_index);
       print_string(" $");
       dio_add_entry(ch_ufi_fntbl, &hbios_usb_storage_devices[dev_index]);
     }
