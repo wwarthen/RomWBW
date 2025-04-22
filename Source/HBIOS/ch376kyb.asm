@@ -76,7 +76,6 @@ UKY_INT_SP	.EQU	$ - 2
 VEC_CHUKB_TICK:
 	JP	HB_TICK
 
-
 ; ### Function 0x4C -- Keyboard Status (VDAKST)
 ;
 ; Inputs:
@@ -107,50 +106,7 @@ VEC_CHUKB_TICK:
 ;   B',C',D',E',H',L': Contains up to 6 concurrent key codes
 ; See USB HID Usage Tables specification for key codes
 
-UKY_STAT:
-	exx
-	ld	hl, (_alt_read_index)
-	ld	h,0x00
-	add	hl, hl
-	add	hl, hl
-	add	hl, hl
-	ld	bc,_reports
-	add	hl, bc
-	push	hl			; address of potential que'd next usb report
-
-	HB_DI
-	call	_usb_kyb_buf_size
-	HB_EI
-	ld	a, l
-	ld	b, h
-	ex	af, af'
-	ld	a, b
-	or	a
-	pop	iy			; retrieve the next que'd usb_report address
-	jr	z, no_queued_reports
-
-	ld	a, (iy)
-	ex	af, af'		
-	exx
-	ld	b, (iy+2)
-	ld	c, (iy+3)
-	ld	d, (iy+4)
-	ld	e, (iy+5)
-	ld	h, (iy+6)
-	ld	l, (iy+7)
-	exx
-	ret
-
-no_queued_reports:
-	ex	af, af'
-	exx
-	ld	bc, 0
-	ld	d, b
-	ld	e, b
-	ld	l, b
-	ld	h, b
-	exx
-	ret
+UKY_STAT	.EQU	_usb_kyb_report
 
 ; ### Function 0x4D -- Video Keyboard Flush (VDAKFL)
 ;
@@ -162,12 +118,8 @@ no_queued_reports:
 ;
 ; Purged and all contents discarded. The Status (A) is a standard HBIOS result code.
 ;
-UKY_FLUSH:
-	HB_DI
-	CALL	_usb_kyb_flush
-	HB_EI
-	XOR	A
-	RET
+UKY_FLUSH	.EQU	_usb_kyb_flush
+
 ;
 ; ### Function 0x4E -- Video Keyboard Read (VDAKRD)
 ;
@@ -204,9 +156,7 @@ UKY_FLUSH:
 ; function keys and arrows, are returned as reserved codes.
 ;
 UKY_READ:
-	HB_DI
 	CALL	_usb_kyb_buf_get_next
-	HB_EI
 	LD	A, H
 	OR	A
 	JR	NZ, UKY_READ

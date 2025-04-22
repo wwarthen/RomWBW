@@ -24,6 +24,9 @@ static keyboard_report_t *queued_report = NULL;
 static keyboard_report_t  report        = {0};
 static keyboard_report_t  previous      = {0};
 
+#define DI __asm__("DI")
+#define EI __asm__("EI")
+
 static uint8_t report_diff() __sdcccall(1) {
   uint8_t *a = (uint8_t *)&report;
   uint8_t *b = (uint8_t *)&previous;
@@ -67,6 +70,8 @@ static void keyboard_buf_put(const uint8_t indx) __sdcccall(1) {
 }
 
 uint16_t usb_kyb_buf_size() {
+  DI;
+
   uint8_t size;
   uint8_t alt_size;
 
@@ -83,6 +88,7 @@ uint16_t usb_kyb_buf_size() {
   else
     size = KEYBOARD_BUFFER_SIZE - read_index + write_index;
 
+  EI;
   return (uint16_t)alt_size << 8 | (uint16_t)size;
 }
 
@@ -90,10 +96,11 @@ uint32_t usb_kyb_buf_get_next() {
   if (write_index == read_index) // Check if buffer is empty
     return 0x0000FF00;           // H = -1, D, E, L = 0
 
+  DI;
   const uint8_t modifier_key = buffer[read_index] >> 8;
   const uint8_t key_code     = buffer[read_index] & 255;
   read_index                 = (read_index + 1) & KEYBOARD_BUFFER_SIZE_MASK;
-
+  EI;
   // D: Modifier keys - aka Keystate
   // E: ASCII Code
   // H: 0
@@ -101,10 +108,12 @@ uint32_t usb_kyb_buf_get_next() {
 
   const unsigned char c = scancode_to_char(modifier_key, key_code);
   /* D = modifier, e-> char, H = 0, L=>code */
+
   return (uint32_t)modifier_key << 24 | (uint32_t)c << 16 | key_code;
 }
 
-void usb_kyb_flush() {
+uint8_t usb_kyb_flush() __sdcccall(1) {
+  DI;
   write_index = read_index = alt_write_index = alt_read_index = 0;
 
   uint8_t  i = sizeof(previous);
@@ -114,6 +123,10 @@ void usb_kyb_flush() {
     *a++ = 0;
     *b++ = 0;
   } while (--i != 0);
+
+  EI;
+
+  return 0;
 }
 
 void usb_kyb_tick(void) {

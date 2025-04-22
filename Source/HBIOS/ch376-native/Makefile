@@ -66,14 +66,20 @@ $$(ASSDIR)$(1).s:
 	for dep in $$^; do
 		dep=$$$${dep#*/}
 		dep=$$$${dep#*/}
-		echo '#include "'ch376-native/$(1)/$$$${dep}'"' >> $$(ASSDIR)$(1).s
+		if [ -n "$$$${dep%%*.asm}" ]; then
+			echo '#include "'ch376-native/$(1)/$$$${dep}'"' >> $$(ASSDIR)$(1).s
+		else
+			echo '#include "'ch376-native/source-doc/$(1)/$$$${dep}'"' >> $$(ASSDIR)$(1).s
+		fi
 	done
 
 $$(ASSDIR)$(1)/%.c.asm: $$(SRC)$(1)/%.c; $$(compile)
+# $$(ASSDIR)$(1)/%.asm: $$(SRC)$(1)/%.asm; echo $$@ $$<
 
 $(1)_C_FILES := $$(wildcard $$(SRC)$(1)/*.c)
-$(1)_S_FILES := $$(patsubst ./source-doc/%, ./%, $$($(1)_C_FILES:.c=.c.s))
-./$(1).s: $$($(1)_S_FILES)
+$(1)_ASM_FILES := $$(wildcard $$(SRC)$(1)/*.asm)
+$(1)_C_S_FILES := $$(patsubst ./source-doc/%, ./%, $$($(1)_C_FILES:.c=.c.s))
+./$(1).s: $$($(1)_C_S_FILES) $$($(1)_ASM_FILES)
 endef
 
 $(eval $(call build_subsystem,base-drv))
