@@ -78,17 +78,17 @@ typedef struct {
   // device_type: identifies the device currently connected to the requested logical unit.
   // 00h Direct-access device (floppy)
   // 1Fh none (no FDD connected to the requested logical unit)
-  uint8_t device_typex; // lower 5 bits
+  uint8_t device_type; // lower 5 bits
 
   // Removable Media Bit: this shall be set to one to indicate removable media.
-  uint8_t removable_mediax; // top bit
+  uint8_t removable_media; // top bit
 
   // ANSI Version: must contain a zero to comply with this version of the Specification.
   // ISO/ECMA: These fields shall be zero for the UFI device.
   uint8_t version;
 
   // Response Data Format: a value of 01h shall be used for UFI device
-  uint8_t response_data_formatx; // lower 4 bits
+  uint8_t response_data_format; // lower 4 bits
 
   // The Additional Length field shall specify the length in bytes of the parameters. If the Allocation Length of the
   // Command Packet is too small to transfer all of the parameters, the Additional Length shall not be adjusted to

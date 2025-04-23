@@ -69,9 +69,44 @@ _usb_scsi_read_capacity:
 	LD	L, A
 	RET
 
+; extern uint8_t usb_ufi_read(const uint16_t dev_index, uint8_t *const buffer)
 _usb_ufi_read:
+	LD	IY, 0
+	ADD	IY, SP
+
+	LD	C, (IY+2)
+	LD	E, (IY+4)
+	LD	D, (IY+5)
+	EZ80_EXTN_DE_TO_MB_DE
+	EZ80_EX_USB_UFI_READ
+	LD	L, A
+	RET
+
+;extern usb_error usb_ufi_write(const uint16_t dev_index, uint8_t *const buffer);
 _usb_ufi_write:
+	LD	IY, 0
+	ADD	IY, SP
+
+	LD	C, (IY+2)
+	LD	E, (IY+4)
+	LD	D, (IY+5)
+	EZ80_EXTN_DE_TO_MB_DE
+	EZ80_EX_USB_UFI_WRITE
+	LD	L, A
+	RET
+
+; extern uint32_t  usb_ufi_get_cap(const uint16_t dev_index)
 _usb_ufi_get_cap:
+	LD	IY, 0
+	ADD	IY, SP
+
+	LD	C, (IY+2)
+	EZ80_EXTN_DE_TO_MB_DE
+	EZ80_EX_USB_UFI_GET_CAP		; 
+
+	LD	D, E			; convert E:uHL to DE:HL
+	EZ80_CPY_UHL_TO_EHL
+	RET
 
 _usb_kyb_flush:
 _usb_kyb_report:
@@ -88,4 +123,3 @@ _usb_get_device_type:
 	EZ80_EX_USB_GET_DEV_TYPE
 	LD	L, A
 	RET
-
