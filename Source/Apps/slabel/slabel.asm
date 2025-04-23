@@ -401,19 +401,19 @@ err_parm:
 	ld	de,str_err_parm
 	jr	err_ret
 err_nodisk:
-	ld	hl,str_err_nodisk
+	ld	de,str_err_nodisk
 	jr	err_ret
 err_nomedia:
-	ld	hl,str_err_nomedia
+	ld	de,str_err_nomedia
 	jr	err_ret
 err_badslice:
-	ld	hl,str_err_badslc
+	ld	de,str_err_badslc
 	jr	err_ret
 err_sig:
-	ld	hl,str_err_sig
+	ld	de,str_err_sig
 	jr	err_ret
 err_diskio:
-	ld	hl,str_err_diskio
+	ld	de,str_err_diskio
 	jr	err_ret
 err_ret:
 	call	crlf2
