@@ -2143,10 +2143,10 @@ bootable media.
 This will only display labels for the first 64 slices of any device. Slices 
 higher than this are currently ignored.
 
-Only bootable RomWBW disk images have a label which is defined by the OS
-which is booted. i.e. NZ-COM has a label of "CP/M 2.2" since that is the 
+Only bootable RomWBW disk images have a label, which is defined by the OS
+which is booted. i.e. NZ-COM has a label of "ZSDOS 1.1" since that is the 
 booted OS. Prior to RomWBW 3.5 all disk images were defined with the label 
-"Unknown".
+"Unlabeled".
 
 #### Etymology
 
