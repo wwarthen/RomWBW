@@ -91,9 +91,6 @@ VEC_CHUKB_TICK:
 ;
 ; Outputs:
 ;   A: Status / Codes Pending
-;   B: Number of buffered usb reports
-;   A': USB Report Modifier Key State (valid if B > 0)
-;   B', C', D', E', H', L': USB Report's 6 key codes (valid only if B > 0)
 ;
 ; Return a count of the number of key Codes Pending (A) in the keyboard buffer.
 ; If it is not possible to determine the actual number in the buffer, it is
@@ -104,17 +101,7 @@ VEC_CHUKB_TICK:
 ; (error) code. Otherwise, the return value represents the number of key codes
 ; pending.
 ;
-; USB Keyboard Extension:
-; Returns the current USB HID keyboard report data.
-; Register B contains the number of buffered reports available:
-;   B = 0: No reports available
-;   B > 0: At least one report available (will be consumed after reading)
-; When a report is available (B > 0):
-;   A': Contains modifier key states
-;   B',C',D',E',H',L': Contains up to 6 concurrent key codes
-; See USB HID Usage Tables specification for key codes
-
-UKY_STAT	.EQU	_usb_kyb_report
+UKY_STAT:	.EQU	_usb_kyb_status
 
 ; ### Function 0x4D -- Video Keyboard Flush (VDAKFL)
 ;
@@ -164,7 +151,7 @@ UKY_FLUSH	.EQU	_usb_kyb_flush
 ; function keys and arrows, are returned as reserved codes.
 ;
 UKY_READ:
-	CALL	_usb_kyb_buf_get_next
+	CALL	_usb_kyb_read
 	LD	A, H
 	OR	A
 	JR	NZ, UKY_READ

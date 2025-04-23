@@ -20,5 +20,6 @@ uint8_t keyboard_init(void) __sdcccall(1) {
   } while (++index != MAX_NUMBER_OF_DEVICES + 1);
 
   print_string("\r\nUSB: KEYBOARD: NOT FOUND$");
+
   return 0;
 }

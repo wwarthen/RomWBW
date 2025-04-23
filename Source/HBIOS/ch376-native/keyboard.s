@@ -9,6 +9,3 @@
 #IF (!CHNATIVEEZ80)
 #include "ch376-native/keyboard/kyb_driver.c.s"
 #ENDIF
-#IF (!CHNATIVEEZ80)
-#include "ch376-native/source-doc/keyboard/kyb_driver.asm"
-#ENDIF

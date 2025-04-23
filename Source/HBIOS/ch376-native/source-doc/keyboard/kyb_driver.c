@@ -16,13 +16,8 @@ static modifier_and_code_t buffer[KEYBOARD_BUFFER_SIZE] = {0};
 static uint8_t             write_index                  = 0;
 static uint8_t             read_index                   = 0;
 
-static uint8_t           alt_write_index               = 0;
-static uint8_t           alt_read_index                = 0;
-static keyboard_report_t reports[KEYBOARD_BUFFER_SIZE] = {{0}};
-
-static keyboard_report_t *queued_report = NULL;
-static keyboard_report_t  report        = {0};
-static keyboard_report_t  previous      = {0};
+static keyboard_report_t report   = {0};
+static keyboard_report_t previous = {0};
 
 #define DI __asm__("DI")
 #define EI __asm__("EI")
@@ -38,15 +33,6 @@ static uint8_t report_diff() __sdcccall(1) {
   } while (--i != 0);
 
   return false;
-}
-
-static void report_put() {
-  uint8_t next_write_index = (alt_write_index + 1) & KEYBOARD_BUFFER_SIZE_MASK;
-
-  if (next_write_index != alt_read_index) { // Check if buffer is not full
-    reports[alt_write_index] = report;
-    alt_write_index          = next_write_index;
-  }
 }
 
 static void keyboard_buf_put(const uint8_t indx) __sdcccall(1) {
@@ -69,19 +55,10 @@ static void keyboard_buf_put(const uint8_t indx) __sdcccall(1) {
   }
 }
 
-uint16_t usb_kyb_buf_size() {
+uint8_t usb_kyb_status() __sdcccall(1) {
   DI;
 
   uint8_t size;
-  uint8_t alt_size;
-
-  if (alt_write_index >= alt_read_index)
-    alt_size = alt_write_index - alt_read_index;
-  else
-    alt_size = KEYBOARD_BUFFER_SIZE - alt_read_index + alt_write_index;
-
-  if (alt_size != 0)
-    alt_read_index = (alt_read_index + 1) & KEYBOARD_BUFFER_SIZE_MASK;
 
   if (write_index >= read_index)
     size = write_index - read_index;
@@ -89,10 +66,10 @@ uint16_t usb_kyb_buf_size() {
     size = KEYBOARD_BUFFER_SIZE - read_index + write_index;
 
   EI;
-  return (uint16_t)alt_size << 8 | (uint16_t)size;
+  return size;
 }
 
-uint32_t usb_kyb_buf_get_next() {
+uint32_t usb_kyb_read() {
   if (write_index == read_index) // Check if buffer is empty
     return 0x0000FF00;           // H = -1, D, E, L = 0
 
@@ -114,7 +91,7 @@ uint32_t usb_kyb_buf_get_next() {
 
 uint8_t usb_kyb_flush() __sdcccall(1) {
   DI;
-  write_index = read_index = alt_write_index = alt_read_index = 0;
+  write_index = read_index = 0;
 
   uint8_t  i = sizeof(previous);
   uint8_t *a = (uint8_t *)previous;
@@ -138,7 +115,6 @@ void usb_kyb_tick(void) {
   ch_configure_nak_retry_3s();
   if (result == 0) {
     if (report_diff()) {
-      report_put();
       uint8_t i = 6;
       do {
         keyboard_buf_put(i - 1);
@@ -148,16 +124,12 @@ void usb_kyb_tick(void) {
   }
 }
 
-usb_error usb_kyb_init(const uint8_t dev_index) {
-  uint8_t result;
+void usb_kyb_init(const uint8_t dev_index) __sdcccall(1) {
   keyboard_config = (device_config_keyboard *)get_usb_device_config(dev_index);
 
   if (keyboard_config == NULL)
-    return USB_ERR_OTHER;
+    return;
 
-  CHECK(hid_set_protocol(keyboard_config, 1));
-  return hid_set_idle(keyboard_config, 0x80);
-
-done:
-  return result;
+  hid_set_protocol(keyboard_config, 1);
+  hid_set_idle(keyboard_config, 0x80);
 }
