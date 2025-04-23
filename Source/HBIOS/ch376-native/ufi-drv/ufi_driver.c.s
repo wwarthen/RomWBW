@@ -132,7 +132,7 @@ l_usb_ufi_get_cap_00103:
 	ld	sp, ix
 	pop	ix
 	ret
-;source-doc/ufi-drv/ufi_driver.c:27: uint8_t usb_ufi_read(const uint16_t dev_index, uint8_t *const buffer) {
+;source-doc/ufi-drv/ufi_driver.c:27: usb_error usb_ufi_read(const uint16_t dev_index, uint8_t *const buffer) {
 ; ---------------------------------
 ; Function usb_ufi_read
 ; ---------------------------------
@@ -237,13 +237,11 @@ l_usb_ufi_read_00139:
 	ld	l,0xff
 	jr	l_usb_ufi_read_00109
 l_usb_ufi_read_00106:
-;source-doc/ufi-drv/ufi_driver.c:49: const uint8_t sense_key = response.sense_key;
-	ld	hl,4
-	add	hl, sp
-	ld	a, (hl)
-;source-doc/ufi-drv/ufi_driver.c:51: if (sense_key != 0)
+;source-doc/ufi-drv/ufi_driver.c:49: const uint8_t sense_key = response.sense_key & 15;
+	ld	a,(ix-16)
 	and	0x0f
 	jr	Z,l_usb_ufi_read_00108
+;source-doc/ufi-drv/ufi_driver.c:51: if (sense_key != 0)
 ;source-doc/ufi-drv/ufi_driver.c:52: return -1;
 	ld	l,0xff
 	jr	l_usb_ufi_read_00109
@@ -360,13 +358,11 @@ l_usb_ufi_write_00139:
 	ld	l,0xff
 	jr	l_usb_ufi_write_00109
 l_usb_ufi_write_00106:
-;source-doc/ufi-drv/ufi_driver.c:79: const uint8_t sense_key = response.sense_key;
-	ld	hl,4
-	add	hl, sp
-	ld	a, (hl)
-;source-doc/ufi-drv/ufi_driver.c:81: if (sense_key != 0)
+;source-doc/ufi-drv/ufi_driver.c:79: const uint8_t sense_key = response.sense_key & 15;
+	ld	a,(ix-16)
 	and	0x0f
 	jr	Z,l_usb_ufi_write_00108
+;source-doc/ufi-drv/ufi_driver.c:81: if (sense_key != 0)
 ;source-doc/ufi-drv/ufi_driver.c:82: return -1;
 	ld	l,0xff
 	jr	l_usb_ufi_write_00109

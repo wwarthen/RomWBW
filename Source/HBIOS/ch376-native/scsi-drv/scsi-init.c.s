@@ -76,7 +76,7 @@ l_chscsi_init_00103:
 	jr	NZ,l_chscsi_init_00104
 ;source-doc/scsi-drv/scsi-init.c:15: const uint8_t dev_index = find_storage_dev(); // index == -1 (no more left) should never happen
 	call	_find_storage_dev
-;source-doc/scsi-drv/scsi-init.c:17: hbios_usb_storage_devices[dev_index].drive_index = dev_index+1;
+;source-doc/scsi-drv/scsi-init.c:17: hbios_usb_storage_devices[dev_index].drive_index = dev_index + 1;
 	ld	a, l
 	ld	c,0x00
 	add	a, a

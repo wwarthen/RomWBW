@@ -76,7 +76,7 @@ l_chufi_init_00103:
 	call	_find_storage_dev
 	ld	(ix-2),l
 	pop	de
-;source-doc/ufi-drv/ufi-init.c:17: hbios_usb_storage_devices[dev_index].drive_index = dev_index+1;
+;source-doc/ufi-drv/ufi-init.c:17: hbios_usb_storage_devices[dev_index].drive_index = dev_index + 1;
 	ld	l,(ix-2)
 	ld	h,0x00
 	add	hl, hl

@@ -5,11 +5,11 @@
 #include <string.h>
 #include <z80.h>
 
-const ufi_request_sense_command          _ufi_cmd_request_sense          = {0x03, 0, 0, 0, 0, 18, {0, 0, 0, 0, 0, 0, 0}};
-const ufi_read_format_capacities_command _ufi_cmd_read_format_capacities = {0x23, 0, 0, {0, 0, 0, 0, 0}, {0, 12}, {0, 0, 0}};
-const ufi_inquiry_command                _ufi_cmd_inquiry                = {0x12, 0, 0, 0, 0, 0, 0x24, {0, 0, 0, 0, 0, 0, 0}};
-const ufi_format_command                 _ufi_cmd_format                 = {0x04, 7, 0, 1, 0, 0, {0, 0}, {0, 0}, {0, 0}, {0, 0, 0}};
-const ufi_send_diagnostic_command        _ufi_cmd_send_diagnostic        = {0x1D, 0, 0, 1, 0, 0, 0, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
+const ufi_request_sense_command          _ufi_cmd_request_sense          = {0x03, 0, 0, 0, 18, {0, 0, 0, 0, 0, 0, 0}};
+const ufi_read_format_capacities_command _ufi_cmd_read_format_capacities = {0x23, 0, {0, 0, 0, 0, 0}, {0, 12}, {0, 0, 0}};
+const ufi_inquiry_command                _ufi_cmd_inquiry                = {0x12, 0, 0, 0, 0x24, {0, 0, 0, 0, 0, 0, 0}};
+const ufi_format_command                 _ufi_cmd_format                 = {0x04, 7 | 1 << 4, 0, {0, 0}, {0, 0}, {0, 0}, {0, 0, 0}};
+const ufi_send_diagnostic_command        _ufi_cmd_send_diagnostic        = {0x1D, 1 << 2, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
 
 uint8_t wait_for_device_ready(device_config *const storage_device, uint8_t timeout_counter) {
   usb_error                  result;
@@ -19,14 +19,14 @@ uint8_t wait_for_device_ready(device_config *const storage_device, uint8_t timeo
     memset(&sense, 0, sizeof(sense));
     result = ufi_test_unit_ready(storage_device, &sense);
 
-    if ((result == USB_ERR_OK && sense.sense_key == 0) || timeout_counter-- == 0)
+    if ((result == USB_ERR_OK && (sense.sense_key & 15) == 0) || timeout_counter-- == 0)
       break;
 
     delay_medium();
 
   } while (true);
 
-  return result | sense.sense_key;
+  return result | (sense.sense_key & 15);
 }
 
 usb_error ufi_test_unit_ready(device_config *const storage_device, ufi_request_sense_response const *response) {
@@ -141,13 +141,8 @@ usb_error ufi_format(device_config *const                        storage_device,
   cmd.interleave[1]            = 0;
   cmd.parameter_list_length[1] = sizeof(parameter_list);
 
-  parameter_list.defect_list_header.side                   = side;
-  parameter_list.defect_list_header.immediate              = 0;
-  parameter_list.defect_list_header.reserved2              = 0;
-  parameter_list.defect_list_header.single_track           = 1;
-  parameter_list.defect_list_header.dcrt                   = 1;
-  parameter_list.defect_list_header.extend                 = 0;
-  parameter_list.defect_list_header.fov                    = 1;
+  parameter_list.defect_list_header.status =
+      FMT_DEFECT_STATUS_FOV | FMT_DEFECT_STATUS_DCRT | FMT_DEFECT_STATUS_SINGLE_TRACK | (side & 1);
   parameter_list.defect_list_header.defect_list_length_msb = 0;
   parameter_list.defect_list_header.defect_list_length_lsb = 8;
   memcpy(&parameter_list.format_descriptor, (void *)format, sizeof(ufi_format_capacity_descriptor));

@@ -14,8 +14,7 @@ typedef struct {
 
 typedef struct {
   uint8_t operation_code;
-  uint8_t reserverd1 : 5;
-  uint8_t lun : 3;
+  uint8_t lun; // in top 3 bits
   uint8_t reserved1[5];
   uint8_t allocation_length[2];
   uint8_t reserved[3];
@@ -29,8 +28,7 @@ typedef enum { UNFORMATTED_MEDIA = 1, FORMATTED_MEDIA = 2, NO_MEDIA = 3 } UFI_DE
 
 typedef struct {
   uint8_t number_of_blocks[4];
-  uint8_t descriptor_code : 2; // UFI_DESCRIPTOR_CODE
-  uint8_t reserved2 : 6;
+  uint8_t descriptor_codex; // UFI_DESCRIPTOR_CODE
   uint8_t block_size[3];
 } ufi_format_capacity_descriptor;
 
@@ -48,9 +46,7 @@ typedef struct {
 
 typedef struct {
   uint8_t operation_code;
-  uint8_t evpd : 1;
-  uint8_t reserved1 : 4;
-  uint8_t lun : 3;
+  uint8_t lun_and_evpd;
   uint8_t page_code;
   uint8_t reserved3;
   uint8_t allocation_length;
@@ -59,8 +55,7 @@ typedef struct {
 
 typedef struct {
   uint8_t operation_code;
-  uint8_t reserverd1 : 5;
-  uint8_t lun : 3;
+  uint8_t lun; // top 3 bits
   uint8_t reserved2;
   uint8_t reserved3;
   uint8_t allocation_length;
@@ -70,8 +65,7 @@ typedef struct {
 typedef struct {
   uint8_t error_code;
   uint8_t reserved1;
-  uint8_t sense_key : 4;
-  uint8_t reserved2 : 4;
+  uint8_t sense_key; // lower 4 bits
   uint8_t information[4];
   uint8_t additional_length;
   uint8_t reserved3[4];
@@ -84,22 +78,17 @@ typedef struct {
   // device_type: identifies the device currently connected to the requested logical unit.
   // 00h Direct-access device (floppy)
   // 1Fh none (no FDD connected to the requested logical unit)
-  uint8_t device_type : 5;
-  uint8_t reserved1 : 3;
+  uint8_t device_typex; // lower 5 bits
 
-  uint8_t reserved2 : 7;
   // Removable Media Bit: this shall be set to one to indicate removable media.
-  uint8_t removable_media : 1;
+  uint8_t removable_mediax; // top bit
 
   // ANSI Version: must contain a zero to comply with this version of the Specification.
-  uint8_t ansi_version : 3;
   // ISO/ECMA: These fields shall be zero for the UFI device.
-  uint8_t ecma : 3;
-  uint8_t iso_version : 2;
+  uint8_t version;
 
   // Response Data Format: a value of 01h shall be used for UFI device
-  uint8_t response_data_format : 4;
-  uint8_t reserved3 : 4;
+  uint8_t response_data_formatx; // lower 4 bits
 
   // The Additional Length field shall specify the length in bytes of the parameters. If the Allocation Length of the
   // Command Packet is too small to transfer all of the parameters, the Additional Length shall not be adjusted to
@@ -121,16 +110,8 @@ typedef struct {
 
 typedef struct {
   uint8_t operation_code; /*0*/
-  union {                 /*1*/
-    uint8_t byte_1;
-    struct {
-      uint8_t rel_adr : 1;
-      uint8_t reserved1 : 2;
-      uint8_t fua : 1;
-      uint8_t dpo : 1;
-      uint8_t lun : 3;
-    };
-  };
+  uint8_t byte_1;         /*1*/
+  /* [7:5] lun, [4] dpo, [3] fua, [0]rel_adr*/
   uint8_t lba[4];             /*2, 3, 4, 5*/
   uint8_t reserved2;          /*6*/
   uint8_t transfer_length[2]; /*7, 8*/
@@ -140,13 +121,8 @@ typedef struct {
 typedef struct {
   struct {
     uint8_t reserved1;
-    uint8_t side : 1;
-    uint8_t immediate : 1;
-    uint8_t reserved2 : 2;
-    uint8_t single_track : 1;
-    uint8_t dcrt : 1;
-    uint8_t extend : 1;
-    uint8_t fov : 1;
+    /* [7] FOV, [6] Extend, [5] DCRT, [4] SingleTrack, [1] Immediate, [0] Side*/
+    uint8_t status;
     uint8_t defect_list_length_msb;
     uint8_t defect_list_length_lsb;
   } defect_list_header;
@@ -154,12 +130,17 @@ typedef struct {
   ufi_format_capacity_descriptor format_descriptor;
 } ufi_format_parameter_list;
 
+#define FMT_DEFECT_STATUS_FOV          0x80
+#define FMT_DEFECT_STATUS_EXTEND       0x40
+#define FMT_DEFECT_STATUS_DCRT         0x20
+#define FMT_DEFECT_STATUS_SINGLE_TRACK 0x10
+#define FMT_DEFECT_STATUS_IMMEDIATE    0x02
+#define FMT_DEFECT_STATUS_SIDE         0x01
+
 typedef struct {
   uint8_t operation_code; /* 0x04 */
-  uint8_t defect_list_format : 3;
-  uint8_t cmp_list : 1;
-  uint8_t format_data : 1;
-  uint8_t lun : 3;
+  /* [7:5] lun, [4]format_data, [3]cmp_list, [2:0] defect_list_format*/
+  uint8_t status;
   uint8_t track_number;
   uint8_t interleave[2];
   uint8_t reserved1[2];
@@ -169,12 +150,8 @@ typedef struct {
 
 typedef struct {
   uint8_t operation_code; /*0x1D*/
-  uint8_t unit_of_l : 1;
-  uint8_t def_of_l : 1;
-  uint8_t self_test : 1;
-  uint8_t reserved1 : 1;
-  uint8_t pf : 1;
-  uint8_t lun : 3;
+  /* [7:5] lun, [4] pf, [2] self test, [1] def of l [0] unit of l*/
+  uint8_t status;
   uint8_t reserved[10];
 } ufi_send_diagnostic_command;
 
