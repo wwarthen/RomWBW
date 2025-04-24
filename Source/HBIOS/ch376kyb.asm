@@ -5,6 +5,15 @@
 ;
 ; This driver is designed to work within the TMS video driver for a CRT solution.
 
+
+#IF (!CHNATIVEENABLE)
+	.ECHO	"*** TMSMODE: TMSMODE_MSXUKY REQUIRES CHNATIVEENABLE***\n"
+	!!!!! *** TMSMODE: TMSMODE_MSXUKY REQUIRES CHNATIVEENABLE***
+_usb_kyb_status:
+_usb_kyb_flush:
+#ENDIF
+
+
 #DEFINE DEFM	.DB
 #DEFINE DEFB	.DB
 #DEFINE DEFW	.DW
