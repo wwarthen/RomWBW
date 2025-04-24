@@ -8,13 +8,13 @@
 
 #define KEYBOARD_BUFFER_SIZE      8
 #define KEYBOARD_BUFFER_SIZE_MASK 7
-typedef uint16_t modifier_and_code_t;
 
-static device_config_keyboard *keyboard_config = 0;
+static bool                    caps_lock_engaged = true;
+static device_config_keyboard *keyboard_config   = 0;
 
-static modifier_and_code_t buffer[KEYBOARD_BUFFER_SIZE] = {0};
-static uint8_t             write_index                  = 0;
-static uint8_t             read_index                   = 0;
+static uint8_t buffer[KEYBOARD_BUFFER_SIZE] = {0};
+static uint8_t write_index                  = 0;
+static uint8_t read_index                   = 0;
 
 static keyboard_report_t report   = {0};
 static keyboard_report_t previous = {0};
@@ -41,16 +41,22 @@ static void keyboard_buf_put(const uint8_t indx) __sdcccall(1) {
     return; // ignore ???
 
   // if already reported, just skip it
-  uint8_t  i = 6;
-  uint8_t *a = previous.keyCode;
-  do {
-    if (*a++ == key_code)
-      return;
-  } while (--i != 0);
+  if (previous.keyCode[indx] == key_code)
+    return;
+
+  if (key_code == KEY_CODE_CAPS_LOCK) {
+    caps_lock_engaged = !caps_lock_engaged;
+    return;
+  }
+
+  const unsigned char c = scancode_to_char(report.bModifierKeys, key_code, caps_lock_engaged);
+
+  if (c == 0)
+    return;
 
   uint8_t next_write_index = (write_index + 1) & KEYBOARD_BUFFER_SIZE_MASK;
   if (next_write_index != read_index) { // Check if buffer is not full
-    buffer[write_index] = (uint16_t)report.bModifierKeys << 8 | (uint16_t)key_code;
+    buffer[write_index] = c;
     write_index         = next_write_index;
   }
 }
@@ -69,24 +75,17 @@ uint8_t usb_kyb_status() __sdcccall(1) {
   return size;
 }
 
-uint32_t usb_kyb_read() {
+uint16_t usb_kyb_read() {
   if (write_index == read_index) // Check if buffer is empty
-    return 0x0000FF00;           // H = -1, D, E, L = 0
+    return 0xFF00;               // H = -1, L = 0
 
   DI;
-  const uint8_t modifier_key = buffer[read_index] >> 8;
-  const uint8_t key_code     = buffer[read_index] & 255;
-  read_index                 = (read_index + 1) & KEYBOARD_BUFFER_SIZE_MASK;
+  const uint8_t c = buffer[read_index];
+  read_index      = (read_index + 1) & KEYBOARD_BUFFER_SIZE_MASK;
   EI;
-  // D: Modifier keys - aka Keystate
-  // E: ASCII Code
-  // H: 0
-  // L: KeyCode aka scan code
 
-  const unsigned char c = scancode_to_char(modifier_key, key_code);
-  /* D = modifier, e-> char, H = 0, L=>code */
-
-  return (uint32_t)modifier_key << 24 | (uint32_t)c << 16 | key_code;
+  /* H = 0, L = ascii char */
+  return c;
 }
 
 uint8_t usb_kyb_flush() __sdcccall(1) {

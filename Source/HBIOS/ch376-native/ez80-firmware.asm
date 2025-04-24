@@ -108,11 +108,29 @@ _usb_ufi_get_cap:
 	EZ80_CPY_UHL_TO_EHL
 	RET
 
-_usb_kyb_flush:
-_usb_kyb_report:
-_usb_kyb_buf_get_next:
+; extern void usb_kyb_init(const uint8_t dev_index) __sdcccall(1);
 _usb_kyb_init:
+	LD	C, A
+	EZ80_EX_USB_KYB_INIT
 	RET
+
+; extern uint8_t  usb_kyb_flush() __sdcccall(1);
+_usb_kyb_flush:
+	EZ80_EX_USB_KYB_FLUSH
+	RET
+
+; extern uint8_t  usb_kyb_status() __sdcccall(1);
+_usb_kyb_status:
+	EZ80_EX_USB_KYB_STATUS
+	RET
+
+; extern uint16_t usb_kyb_read();
+;  H = 0/1 set if char, L=>code 
+_usb_kyb_read:
+	EZ80_EX_USB_KYB_READ
+	LD	H, A
+	RET
+
 
 ;usb_device_type usb_get_device_type(const uint16_t dev_index)
 _usb_get_device_type:

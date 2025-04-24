@@ -1,6 +1,7 @@
 #ifndef __CLASS_HID_KEYBOARD_H__
 #define __CLASS_HID_KEYBOARD_H__
 
+#include <stdbool.h>
 #include <stdint.h>
 
 typedef struct {
@@ -21,6 +22,6 @@ typedef struct {
 #define KEY_CODE_CAPS_LOCK 0x39
 
 extern char scancodes_table[128];
-extern char scancode_to_char(const uint8_t modifier_keys, const uint8_t code) __sdcccall(1);
+extern char scancode_to_char(const uint8_t modifier_keys, const uint8_t code, const bool caps_lock_engaged) __sdcccall(1);
 
 #endif

@@ -1,9 +1,6 @@
 #include "class_hid_keyboard.h"
 
 #define ESC 0x1B
-
-bool caps_lock_engaged = true;
-
 /**
  * scan codes sourced from https://deskthority.net/wiki/Scancode
  *
@@ -336,7 +333,7 @@ char scancodes_table[128] = {
     0x00 /* MUTE */,
 };
 
-char char_with_caps_lock(const char c) __sdcccall(1) {
+static char char_with_caps_lock(const char c, const bool caps_lock_engaged) __sdcccall(1) {
   if (!caps_lock_engaged)
     return c;
 
@@ -349,10 +346,7 @@ char char_with_caps_lock(const char c) __sdcccall(1) {
   return c;
 }
 
-char scancode_to_char(const uint8_t modifier_keys, const uint8_t code) __sdcccall(1) {
-  if (code >= 0x80)
-    return 0;
-
+char scancode_to_char(const uint8_t modifier_keys, const uint8_t code, const bool caps_lock_engaged) __sdcccall(1) {
   if ((modifier_keys & (KEY_MOD_LCTRL | KEY_MOD_RCTRL))) {
     if (code >= 4 && code <= 0x1d)
       return code - 3;
@@ -377,7 +371,7 @@ char scancode_to_char(const uint8_t modifier_keys, const uint8_t code) __sdcccal
   }
 
   if (modifier_keys & (KEY_MOD_LSHIFT | KEY_MOD_RSHIFT))
-    return char_with_caps_lock(scancodes_shift_table[code]);
+    return char_with_caps_lock(scancodes_shift_table[code], caps_lock_engaged);
 
-  return char_with_caps_lock(scancodes_table[code]);
+  return char_with_caps_lock(scancodes_table[code], caps_lock_engaged);
 }

@@ -123,29 +123,11 @@ UKY_FLUSH	.EQU	_usb_kyb_flush
 ;
 ; Outputs:
 ;   A: Status
-;   C: Scancode
-;   D: Keystate
 ;   E: Keycode
 ;
 ; Read the next key data from the keyboard. If a buffer is used, return the next key code in the buffer.
 ; If no key data is available, this function will wait indefinitely for a key press. The Status (A) is a
 ; standard HBIOS result code.
-;
-; The Scancode (C) value is the raw scan code from the keyboard for the key press. Scan codes are standard
-; usb scan codes
-;
-; The Keystate (D) is a bitmap representing the value of all modifier keys and shift states as they
-; existed at the time of the keystroke. The bitmap is defined as:
-;
-; Bit Key state Indication
-; 7   Key pressed was from the num pad
-; 6   Caps Lock was active
-; 5   Num Lock was active
-; 4   Scroll Lock was active
-; 3   Windows key was held down
-; 2   Alt key was held down
-; 1   Control key was held down
-; 0   Shift key was held down
 ;
 ; The Keycode (E) is generally returned as appropriate ASCII values, if possible. Special keys, like
 ; function keys and arrows, are returned as reserved codes.
@@ -155,6 +137,6 @@ UKY_READ:
 	LD	A, H
 	OR	A
 	JR	NZ, UKY_READ
-	LD	C, L
+	LD	E, L
 	XOR	A
 	RET
