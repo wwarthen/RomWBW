@@ -67,6 +67,8 @@ release of RomWBW.
 
 - `COPYSL` slice copy application (Mark Pruden).
 
+- `SLABEL` slice label display/edit tool (Mark Pruden).
+
 - Improved disk slice management and protection (Mark Pruden).
 
 - Initial NVRAM configuration support (Mark Pruden).

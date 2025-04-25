@@ -288,7 +288,7 @@ setlabel:
 	call	skipws			; skip possible whitespace
 	ld	a,(de)			; get separator char
 	or	a			; test for terminator
-	jr	z,err_parm		; if so, incomplete
+	jp	z,err_parm		; if so, incomplete
 	cp	'='			; otherwise, is ','?
 	jr	z,setlabel4		; if so, skip the Slice parm
 	cp	'.'			; otherwise, is '.'?
@@ -305,7 +305,7 @@ setlabel3:
 	call	skipws			; skip possible whitespace
 	ld	a,(de)			; get separator char
 	or	a			; test for terminator
-	jr	z,err_parm		; if so, then an error
+	jp	z,err_parm		; if so, then an error
 	cp	'='			; otherwise, is ','?
 	jp	nz,err_parm		; if not, format error
 setlabel4:
@@ -646,7 +646,8 @@ diskread:
 	ld	c,a			; from the specified unit
 	ld	e,1			; read 1 sector
 	ld	hl,(dma)		; read into info sec buffer
-	ld	d,BID_USR		; user bank
+	ld	a,(BID_USR)		; get user bank to accum
+	ld	d,a			; and move to D
 	ld	b,BF_DIOREAD		; HBIOS func: disk read
 	rst	08			; do it
 	ret				; and done
@@ -673,7 +674,8 @@ diskwrite:
 	ld	e,b			; transfer count
 	ld	b,BF_DIOWRITE		; HBIOS func: disk read
 	ld	hl,(dma)		; read into info sec buffer
-	ld	d,BID_USR		; user bank
+	ld	a,(BID_USR)		; get user bank to accum
+	ld	d,a			; and move to D
 	rst	08			; do it
 	ret				; and done
 ;
