@@ -2054,12 +2054,16 @@ standard HBIOS result code.
 |                                        | E: Keycode                             |
 
 Read the next key data from keyboard of the specified Video Unit (C). If
-a keyboard buffer is used, return the next key code in the buffer. If 
+a keyboard buffer is used, return the next Keycode in the buffer. If 
 no key data is available, this function will wait indefinitely for a 
 keypress.  The Status (A) is a standard HBIOS result code.
 
 The Scancode (C) value is the raw scancode from the keyboard for the 
-keypress. Scancodes are from the PS/2 scancode set 2 standard.
+keypress. Scancodes are optional and may not be implemented by the
+driver.  The Scancode values are driver dependent.  In the case of a
+PS/2 keyboard driver, they should be the PS/2 scancode.  Other keyboard
+drivers may return values appropriate for their specific keyboard.  If
+the driver does not implement this, it should return 0 in C.
 
 The Keystate (D) is a bitmap representing the value of all modifier keys
 and shift states as they existed at the time of the keystroke. The 
@@ -2075,6 +2079,9 @@ bitmap is defined as:
 | 2       | Alt key was held down            |
 | 1       | Control key was held down        |
 | 0       | Shift key was held down          |
+
+Not all of these bits may be relevant for all keyboards.  Any bit that
+is not relevant should be returned as 0.
 
 The Keycode (E) is generally returned as appropriate ASCII values, if 
 possible. Special keys, like function keys and arrows, are returned as 
