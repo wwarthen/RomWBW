@@ -115,7 +115,7 @@ ch376_init_str_1:
 	DEFB 0x08
 	DEFM "*$"
 	DEFB 0x00
-;source-doc/base-drv/ch376_init.c:23: static void _chnative_init(bool forced) {
+;source-doc/base-drv/ch376_init.c:25: static void _chnative_init(bool forced) {
 ; ---------------------------------
 ; Function _chnative_init
 ; ---------------------------------
@@ -124,7 +124,7 @@ __chnative_init:
 	ld	ix,0
 	add	ix,sp
 	dec	sp
-;source-doc/base-drv/ch376_init.c:26: const uint8_t loop_counter = forced ? 40 : 5;
+;source-doc/base-drv/ch376_init.c:28: const uint8_t loop_counter = forced ? 40 : 5;
 	bit	0,(ix+4)
 	jr	Z,l__chnative_init_00113
 	ld	a,0x28
@@ -133,109 +133,109 @@ l__chnative_init_00113:
 	ld	a,0x05
 l__chnative_init_00114:
 	ld	(ix-1),a
-;source-doc/base-drv/ch376_init.c:28: print_string("\r\nCH376: *$");
+;source-doc/base-drv/ch376_init.c:30: print_string("\r\nCH376: *$");
 	ld	hl,ch376_init_str_2
 	call	_print_string
-;source-doc/base-drv/ch376_init.c:30: r     = wait_for_state(loop_counter, state, 1);
+;source-doc/base-drv/ch376_init.c:32: r     = wait_for_state(loop_counter, state, 1);
 	ld	a,0x01
 	push	af
 	inc	sp
 	ld	l,0x00
 	ld	a,(ix-1)
 	call	_wait_for_state
-;source-doc/base-drv/ch376_init.c:31: state = r & 255;
-;source-doc/base-drv/ch376_init.c:33: print_string("\bPRESENT (VER $");
+;source-doc/base-drv/ch376_init.c:33: state = r & 255;
+;source-doc/base-drv/ch376_init.c:35: print_string("\bPRESENT (VER $");
 	push	de
 	ld	hl,ch376_init_str_3
 	call	_print_string
 	pop	de
-;source-doc/base-drv/ch376_init.c:35: r     = usb_init(state);
+;source-doc/base-drv/ch376_init.c:37: r     = usb_init(state);
 	ld	l, e
 	call	_usb_init
 	ex	de, hl
-;source-doc/base-drv/ch376_init.c:36: state = r & 255;
+;source-doc/base-drv/ch376_init.c:38: state = r & 255;
 	ld	c, e
-;source-doc/base-drv/ch376_init.c:37: if (state != 2) {
+;source-doc/base-drv/ch376_init.c:39: if (state != 2) {
 	ld	a, c
 	sub	0x02
 	jr	Z,l__chnative_init_00102
-;source-doc/base-drv/ch376_init.c:38: print_string("\rCH376: $");
+;source-doc/base-drv/ch376_init.c:40: print_string("\rCH376: $");
 	ld	hl,ch376_init_str_4
 	call	_print_string
-;source-doc/base-drv/ch376_init.c:39: print_string("VERSION FAILURE\r\n$");
+;source-doc/base-drv/ch376_init.c:41: print_string("VERSION FAILURE\r\n$");
 	ld	hl,ch376_init_str_5
 	call	_print_string
-;source-doc/base-drv/ch376_init.c:40: return;
+;source-doc/base-drv/ch376_init.c:42: return;
 	jr	l__chnative_init_00111
 l__chnative_init_00102:
-;source-doc/base-drv/ch376_init.c:43: print_hex(r >> 8);
+;source-doc/base-drv/ch376_init.c:45: print_hex(r >> 8);
 	push	bc
 	ld	l, d
 	call	_print_hex
-;source-doc/base-drv/ch376_init.c:44: print_string("); $");
+;source-doc/base-drv/ch376_init.c:46: print_string(ch376_driver_version);
+	ld	hl,_ch376_driver_version
+	call	_print_string
+;source-doc/base-drv/ch376_init.c:48: print_string("USB: *$");
 	ld	hl,ch376_init_str_6
 	call	_print_string
-;source-doc/base-drv/ch376_init.c:46: print_string("USB: *$");
-	ld	hl,ch376_init_str_7
-	call	_print_string
 	pop	bc
-;source-doc/base-drv/ch376_init.c:48: r     = wait_for_state(loop_counter, state, 3);
+;source-doc/base-drv/ch376_init.c:50: r     = wait_for_state(loop_counter, state, 3);
 	ld	a,0x03
 	push	af
 	inc	sp
 	ld	l, c
 	ld	a,(ix-1)
 	call	_wait_for_state
-;source-doc/base-drv/ch376_init.c:49: state = r & 255;
-;source-doc/base-drv/ch376_init.c:51: if (state == 2) {
+;source-doc/base-drv/ch376_init.c:51: state = r & 255;
+;source-doc/base-drv/ch376_init.c:53: if (state == 2) {
 	ld	a, e
 	sub	0x02
 	jr	NZ,l__chnative_init_00104
-;source-doc/base-drv/ch376_init.c:52: print_string("\bDISCONNECTED$");
-	ld	hl,ch376_init_str_8
+;source-doc/base-drv/ch376_init.c:54: print_string("\bDISCONNECTED$");
+	ld	hl,ch376_init_str_7
 	call	_print_string
-;source-doc/base-drv/ch376_init.c:53: return;
+;source-doc/base-drv/ch376_init.c:55: return;
 	jr	l__chnative_init_00111
 l__chnative_init_00104:
-;source-doc/base-drv/ch376_init.c:56: print_string("\bCONNECTED$");
+;source-doc/base-drv/ch376_init.c:58: print_string("\bCONNECTED$");
 	push	de
-	ld	hl,ch376_init_str_9
+	ld	hl,ch376_init_str_8
 	call	_print_string
 	pop	de
-;source-doc/base-drv/ch376_init.c:59: r     = usb_init(state);
+;source-doc/base-drv/ch376_init.c:61: r     = usb_init(state);
 	ld	l, e
 	call	_usb_init
 	ex	de, hl
-;source-doc/base-drv/ch376_init.c:60: state = r & 255;
+;source-doc/base-drv/ch376_init.c:62: state = r & 255;
 	ld	c, e
-;source-doc/base-drv/ch376_init.c:62: for (uint8_t i = 0; i < loop_counter; i++) {
+;source-doc/base-drv/ch376_init.c:64: for (uint8_t i = 0; i < loop_counter; i++) {
 	ld	b,0x00
 l__chnative_init_00109:
 	ld	a, b
 	sub	(ix-1)
 	jr	NC,l__chnative_init_00111
-;source-doc/base-drv/ch376_init.c:63: if (r >> 8 != 0)
+;source-doc/base-drv/ch376_init.c:65: if (r >> 8 != 0)
 	ld	a,0x00
 	or	d
 	jr	NZ,l__chnative_init_00111
-;source-doc/base-drv/ch376_init.c:66: print_string(".$");
+;source-doc/base-drv/ch376_init.c:68: print_string(".$");
 	push	bc
-	ld	hl,ch376_init_str_10
+	ld	hl,ch376_init_str_9
 	call	_print_string
 	pop	bc
-;source-doc/base-drv/ch376_init.c:67: r     = usb_init(state);
+;source-doc/base-drv/ch376_init.c:69: r     = usb_init(state);
 	push	bc
 	ld	l, c
 	call	_usb_init
 	ex	de, hl
 	pop	bc
-;source-doc/base-drv/ch376_init.c:68: state = r & 255;
+;source-doc/base-drv/ch376_init.c:70: state = r & 255;
 	ld	c, e
-;source-doc/base-drv/ch376_init.c:62: for (uint8_t i = 0; i < loop_counter; i++) {
+;source-doc/base-drv/ch376_init.c:64: for (uint8_t i = 0; i < loop_counter; i++) {
 	inc	b
 	jr	l__chnative_init_00109
 l__chnative_init_00111:
-;source-doc/base-drv/ch376_init.c:70: }
+;source-doc/base-drv/ch376_init.c:72: }
 	inc	sp
 	pop	ix
 	ret
@@ -259,23 +259,20 @@ ch376_init_str_5:
 	DEFM "$"
 	DEFB 0x00
 ch376_init_str_6:
-	DEFM "); $"
-	DEFB 0x00
-ch376_init_str_7:
 	DEFM "USB: *$"
 	DEFB 0x00
-ch376_init_str_8:
+ch376_init_str_7:
 	DEFB 0x08
 	DEFM "DISCONNECTED$"
 	DEFB 0x00
-ch376_init_str_9:
+ch376_init_str_8:
 	DEFB 0x08
 	DEFM "CONNECTED$"
 	DEFB 0x00
-ch376_init_str_10:
+ch376_init_str_9:
 	DEFM ".$"
 	DEFB 0x00
-;source-doc/base-drv/ch376_init.c:72: void chnative_init_force(void) { _chnative_init(true); }
+;source-doc/base-drv/ch376_init.c:74: void chnative_init_force(void) { _chnative_init(true); }
 ; ---------------------------------
 ; Function chnative_init_force
 ; ---------------------------------
@@ -286,7 +283,7 @@ _chnative_init_force:
 	call	__chnative_init
 	inc	sp
 	ret
-;source-doc/base-drv/ch376_init.c:74: void chnative_init(void) { _chnative_init(false); }
+;source-doc/base-drv/ch376_init.c:76: void chnative_init(void) { _chnative_init(false); }
 ; ---------------------------------
 ; Function chnative_init
 ; ---------------------------------

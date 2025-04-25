@@ -20,6 +20,8 @@ static uint16_t wait_for_state(const uint8_t loop_counter, uint8_t state, const 
   return r;
 }
 
+extern const char ch376_driver_version[];
+
 static void _chnative_init(bool forced) {
   uint8_t       state = 0;
   uint16_t      r;
@@ -41,7 +43,7 @@ static void _chnative_init(bool forced) {
   }
 
   print_hex(r >> 8);
-  print_string("); $");
+  print_string(ch376_driver_version);
 
   print_string("USB: *$");
 

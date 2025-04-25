@@ -23,7 +23,13 @@ _dio_add_entry:
 
 #include "./ch376-native/ez80-firmware.asm"
 
+_ch376_driver_version:
+	.DB	",F); $", 0
+
 #ELSE
+
+_ch376_driver_version:
+	.DB	",W); $", 0
 
 _delay:
 	push	af
