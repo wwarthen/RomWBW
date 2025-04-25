@@ -5,6 +5,7 @@ Version 3.5.1
 - WBW: Add missing BCLOAD file to MS BASIC Compiler Disk Image (reported by Marshall Gates)
 - WBW: Doc improvements (per Fraser and Rob Gowin)
 - WBW: Correct ZMP application crash
+- MAP: Contribution of the SLABEL.COM tool for displaying and changing slice labels.
 
 Version 3.5
 -----------

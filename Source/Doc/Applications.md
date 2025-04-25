@@ -1286,7 +1286,7 @@ provided in the RomWBW distribution.
 
 `\clearpage`{=latex}
 
-## BBCBASIC
+## BBCBASIC (BBC BASIC)
 
 | BBCBASIC            |   |
 | --------------------|---|
@@ -1330,7 +1330,7 @@ The adaptation to RomWBW was minimal and includes:
 
 `\clearpage`{=latex}
 
-## CLRDIR
+## CLRDIR (Clear Directory)
 
 | CLRDIR              |   |
 | --------------------|---|
@@ -1370,7 +1370,7 @@ reinitialised and the data previously stored will be lost.
 
 `\clearpage`{=latex}
 
-## CPUSPD
+## CPUSPD (CPU Speed)
 
 | CPUSPD              |   |
 | --------------------|---|
@@ -1457,7 +1457,7 @@ The source code is provided in the RomWBW distribution.
 
 `\clearpage`{=latex}
 
-## COPYSL
+## COPYSL (Copy Slice)
 
 | COPYSL              |   |
 | --------------------|---|
@@ -1547,7 +1547,7 @@ by Mark Pruden.
 
 `\clearpage`{=latex}
 
-## FAT
+## FAT (FAT Utility)
 
 | FAT                 |   |
 | --------------------|---|
@@ -1748,7 +1748,7 @@ Please contact John Coffman if you would like a copy of the source.
 
 `\clearpage`{=latex}
 
-## FDU
+## FDU (Floppy Disk Utility)
 
 | FDU                 |   |
 | --------------------|---|
@@ -1789,7 +1789,7 @@ provided in the RomWBW distribution.
 
 `\clearpage`{=latex}
 
-## FLASH
+## FLASH (Flash EEPROM)
 
 | FLASH               |   |
 | --------------------|---|
@@ -1896,7 +1896,7 @@ provided in the RomWBW distribution.
 
 `\clearpage`{=latex}
 
-## HTALK
+## HTALK (HBIOS Talk)
 
 | HTALK               |   |
 | --------------------|---|
@@ -2047,7 +2047,7 @@ The source code is provided in the RomWBW distribution.
 
 `\clearpage`{=latex}
 
-## RTC
+## RTC (Real Time Clock)
 
 | RTC                 |   |
 | --------------------|---|
@@ -2103,6 +2103,56 @@ support most of the hardware variations included with RomWBW.
 
 `\clearpage`{=latex}
 
+## SLABEL (Slice Label)
+
+| SLABEL              |     |
+| --------------------|-----|
+| ROM-based           | No  |
+| Disk-based          | Yes |
+
+Display or change the label of a disk slice.
+
+The label applied is only used as informational purposes, displayed by RomWBW 
+when an OS is booted. It has no correlation with any OS volume label scheme 
+that may exist. i.e. It does not affect the CP/M 3 disk label as applied by 
+the `SET` command
+
+#### Syntax
+
+`SLABEL [unit.slice=label] [/?]`
+
+`unit.slice` the disk unit and slice number to apply the new label to. This 
+is in the same format as when booting the system to a disk
+
+`label` is the new disk label to apply to the disk
+
+#### Usage
+
+`SLABEL` with no arguments will list All existing labels across All disks
+
+`SLABEL 2.5=MYDRIVE` will set the disk label of the 6th slice of disk unit 2 
+
+`SLABEL /?` (or other unrecognised parameters) will display a usage message.
+
+#### Notes
+
+There is no capability to update a label onto media that currently does not have 
+existing media information in the third sector, typically this means only 
+bootable media.
+
+This will only display labels for the first 64 slices of any device. Slices 
+higher than this are currently ignored.
+
+Only bootable RomWBW disk images have a label, which is defined by the OS
+which is booted. i.e. NZ-COM has a label of "ZSDOS 1.1" since that is the 
+booted OS. Prior to RomWBW 3.5 all disk images were defined with the label 
+"Unlabeled".
+
+#### Etymology
+
+The `SLABEL` application was custom written for RomWBW and contributed
+by Mark Pruden.
+
 ## SURVEY
 
 | SURVEY              |   |
@@ -2142,7 +2192,7 @@ discover ports that are 'write-only'.
 
 `\clearpage`{=latex}
 
-## SYSCOPY
+## SYSCOPY (System Copy)
 
 | SYSCOPY             |   |
 | --------------------|---|
@@ -2282,7 +2332,7 @@ provided in the RomWBW distribution.
 
 `\clearpage`{=latex}
 
-## TBASIC
+## TBASIC (Tasty BASIC)
 
 | TBASIC              |   |
 | --------------------|---|
@@ -2467,7 +2517,7 @@ The source code is provided in the RomWBW distribution.
 
 `\clearpage`{=latex}
 
-## VGMPLAY
+## VGMPLAY (Video Game Music Play)
 
 | VGMPLAY             |   |
 | --------------------|---|
@@ -2550,7 +2600,7 @@ RomWBW distribution.
 
 `\clearpage`{=latex}
 
-## WDATE
+## WDATE (WBW DATE)
 
 | WDATE               |   |
 | --------------------|---|
@@ -2637,7 +2687,7 @@ The source code is available on GitHub at
 
 `\clearpage`{=latex}
 
-## XM
+## XM (X-Modem)
 
 | XM                  |   |
 | --------------------|---|
@@ -2733,7 +2783,7 @@ The source code is provided in the RomWBW distribution.
 
 `\clearpage`{=latex}
 
-## ZMD
+## ZMD (Z-Modem)
 
 | ZMD                 |   |
 | --------------------|---|
@@ -2814,7 +2864,7 @@ uses the RomWBW HBIOS serial API.
 
 `\clearpage`{=latex}
 
-## ZMP
+## ZMP (Z-Modem Program)
 
 | ZMP                 |   |
 | --------------------|---|
