@@ -18,21 +18,6 @@
 #include "print.h"
 #include <stdlib.h>
 
-#define LOWER_SAFE_RAM_ADDRESS 0x8000
-
-usb_error usb_ctrl_trnsfer_ext(const setup_packet *const cmd_packet,
-                               void *const               buffer,
-                               const uint8_t             device_address,
-                               const uint8_t             max_packet_size) {
-  if ((uint16_t)cmd_packet < LOWER_SAFE_RAM_ADDRESS)
-    return USB_BAD_ADDRESS;
-
-  if (buffer != 0 && (uint16_t)buffer < LOWER_SAFE_RAM_ADDRESS)
-    return USB_BAD_ADDRESS;
-
-  return usb_control_transfer(cmd_packet, buffer, device_address, max_packet_size);
-}
-
 /**
  * @brief Perform a USB control transfer (in or out)
  * See https://www.beyondlogic.org/usbnutshell/usb4.shtml for a description of the USB control transfer
@@ -94,17 +79,6 @@ usb_error usb_control_transfer(const setup_packet *const cmd_packet,
 done:
   critical_end();
   return result;
-}
-
-usb_error
-usb_dat_in_trnsfer_ext(uint8_t *buffer, const uint16_t buffer_size, const uint8_t device_address, endpoint_param *const endpoint) {
-  if (buffer != 0 && (uint16_t)buffer < LOWER_SAFE_RAM_ADDRESS)
-    return USB_BAD_ADDRESS;
-
-  if ((uint16_t)endpoint < LOWER_SAFE_RAM_ADDRESS)
-    return USB_BAD_ADDRESS;
-
-  return usb_data_in_transfer(buffer, buffer_size, device_address, endpoint);
 }
 
 /**
