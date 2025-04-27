@@ -6,6 +6,22 @@
 #include "transfers.h"
 #include <stdlib.h>
 
+typedef struct {
+  uint8_t bLength;
+  uint8_t bDescriptorType;
+} usb_descriptor_t;
+
+#define USB_DESCR_DEVICE            1
+#define USB_DESCR_CONFIGURATION     2
+#define USB_DESCR_STRING            3
+#define USB_DESCR_INTERFACE         4
+#define USB_DESCR_ENDPOINT          5
+#define USB_DESCR_DEV_QUALIFIER     6
+#define USB_DESCR_OTHER_SPEED       7
+#define USB_DESCR_HID               33
+#define USB_DESCR_HID_REPORT        34
+#define USB_DESCR_HID_PHYSICAL_DESC 35
+
 typedef struct _device_descriptor {
   uint8_t  bLength;
   uint8_t  bDescriptorType;

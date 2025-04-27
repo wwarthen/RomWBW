@@ -10,6 +10,30 @@
 usb_error op_id_class_drv(_working *const working) __sdcccall(1);
 usb_error op_parse_endpoint(_working *const working) __sdcccall(1);
 
+static usb_error adv_to_next_desc(_working *const working, const uint8_t descriptor_type) __sdcccall(1) {
+  usb_descriptor_t *d;
+  const uint8_t    *buffer_end = working->config.buffer + MAX_CONFIG_SIZE;
+
+  if (working->ptr >= buffer_end)
+    return USB_ERR_BUFF_TO_LARGE;
+
+  d = (usb_descriptor_t *)working->ptr;
+
+  do {
+    working->ptr += d->bLength;
+
+    if (working->ptr >= buffer_end)
+      return USB_ERR_BUFF_TO_LARGE;
+
+    d = (usb_descriptor_t *)working->ptr;
+  } while (d->bDescriptorType != descriptor_type);
+
+  if (working->ptr + d->bLength >= buffer_end)
+    return USB_ERR_BUFF_TO_LARGE;
+
+  return USB_ERR_OK;
+}
+
 void parse_endpoint_keyboard(device_config_keyboard *const keyboard_config, const endpoint_descriptor const *pEndpoint)
     __sdcccall(1) {
   endpoint_param *const ep = &keyboard_config->endpoints[0];
@@ -39,19 +63,30 @@ usb_device_type identify_class_driver(_working *const working) {
 }
 
 usb_error op_interface_next(_working *const working) __z88dk_fastcall {
+  uint8_t result;
+
   if (--working->interface_count == 0)
     return USB_ERR_OK;
 
+  CHECK(adv_to_next_desc(working, USB_DESCR_INTERFACE));
   return op_id_class_drv(working);
+
+done:
+  return result;
 }
 
 usb_error op_endpoint_next(_working *const working) __sdcccall(1) {
+  usb_error result;
+
   if (working->endpoint_count != 0 && --working->endpoint_count > 0) {
-    working->ptr += ((endpoint_descriptor *)working->ptr)->bLength;
+    CHECK(adv_to_next_desc(working, USB_DESCR_ENDPOINT));
     return op_parse_endpoint(working);
   }
 
   return op_interface_next(working);
+
+done:
+  return result;
 }
 
 usb_error op_parse_endpoint(_working *const working) __sdcccall(1) {
@@ -103,8 +138,9 @@ usb_error op_cap_drv_intf(_working *const working) __z88dk_fastcall {
   _usb_state *const                 work_area = get_usb_work_area();
   const interface_descriptor *const interface = (interface_descriptor *)working->ptr;
 
-  working->ptr += interface->bLength;
-  working->endpoint_count   = interface->bNumEndpoints;
+  working->endpoint_count = interface->bNumEndpoints;
+  if (working->endpoint_count > 0)
+    CHECK(adv_to_next_desc(working, USB_DESCR_ENDPOINT));
   working->p_current_device = NULL;
 
   switch (working->usb_device) {
@@ -131,7 +167,7 @@ usb_error op_cap_drv_intf(_working *const working) __z88dk_fastcall {
   }
   }
 
-  result = op_parse_endpoint(working);
+  return op_parse_endpoint(working);
 
 done:
   return result;
@@ -140,23 +176,30 @@ done:
 usb_error op_id_class_drv(_working *const working) __sdcccall(1) {
   const interface_descriptor *const ptr = (const interface_descriptor *)working->ptr;
 
-  working->usb_device = ptr->bLength > 5 ? identify_class_driver(working) : 0;
+  if (ptr->bDescriptorType != USB_DESCR_INTERFACE)
+    return USB_ERR_FAIL;
+
+  working->usb_device = identify_class_driver(working);
 
   return op_cap_drv_intf(working);
 }
 
 usb_error op_get_cfg_desc(_working *const working) __sdcccall(1) {
-  memset(working->config.buffer, 0, MAX_CONFIG_SIZE);
+  usb_error result;
 
   const uint8_t max_packet_size = working->desc.bMaxPacketSize0;
+
+  memset(working->config.buffer, 0, MAX_CONFIG_SIZE);
+  working->ptr = working->config.buffer;
 
   CHECK(usbtrn_gfull_cfg_desc(working->config_index, working->current_device_address, max_packet_size, MAX_CONFIG_SIZE,
                               working->config.buffer));
 
-  working->ptr             = (working->config.buffer + sizeof(config_descriptor));
+  CHECK(adv_to_next_desc(working, USB_DESCR_INTERFACE));
   working->interface_count = working->config.desc.bNumInterfaces;
 
   return op_id_class_drv(working);
+
 done:
   return result;
 }

@@ -82,7 +82,7 @@ done:
 }
 
 /**
- * @brief Perform a USB data in on the specififed endpoint
+ * @brief Perform a USB data in on the specified endpoint
  *
  * @param buffer the buffer to receive the data
  * @param buffer_size the maximum size of data to be received
