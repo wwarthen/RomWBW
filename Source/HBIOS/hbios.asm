@@ -2950,6 +2950,46 @@ NXTMIO:	LD	A,(HL)
 #ENDIF
 ;
 ;--------------------------------------------------------------------------------------------------
+; ENABLE INTERRUPTS
+;--------------------------------------------------------------------------------------------------
+;
+#IFDEF TESTING
+;
+INTTEST:
+	; TEST TO SEE IF SOMEBODY ENABLED INTS EARLY!
+	LD	A,I
+	JP	PO,INTTEST_Z		; IF PO, INTS DISABLED AS EXPECTED
+	PRTX(STR_INTWARN)		; WARNING
+	JR	INTTEST_Z		; CONTINUE
+;
+STR_INTWARN	.TEXT	"\r\n\r\nWARNING: INTERRUPTS ENABLED TOO EARLY!!!$"
+;
+INTTEST_Z:
+;
+#ENDIF
+;
+	HB_EI				; INTERRUPTS SHOULD BE OK NOW
+;
+; PERFORM A RESET OPERATION ON ALL CHARACTER DEVICES THAT HAVE BEEN
+; INSTALLED.  THIS SHOULD CORRECT ANY PROBLEMS IF A PROBE DESTROYED
+; THE PROGRAMMING OF ANOTHER DEVICE.
+;
+	LD	A,(CIO_CNT)		; NUMBER OF CHARACTER DEVICES
+	OR	A			; CHECK FOR ZERO TO AVOID CRASHING
+	JR	Z,HB_CHRES_Z		; BYPASS IF NONE
+	LD	B,A			; SETUP LOOP COUNTER
+	LD	C,0			; DEVICE INDEX
+HB_CHRES:
+	PUSH	BC			; SAVE LOOP CONTROL
+	LD	B,BF_CIOINIT		; HBIOS RESET FUNCTION
+	LD	DE,$FFFF		; NO CONFIG CHANGES
+	CALL	CIO_DISPATCH		; CALL CIO DISPATCHER DIRECTLY
+	POP	BC			; RECOVER LOOP CONTROL
+	INC	C			; NEXT DEVICE
+	DJNZ	HB_CHRES		; LOOP AS NEEDED
+HB_CHRES_Z:
+;
+;--------------------------------------------------------------------------------------------------
 ; ANNOUNCE HBIOS
 ;--------------------------------------------------------------------------------------------------
 ;
@@ -3051,27 +3091,6 @@ HB_SPDTST:
 	JR	HB_SPDTST
 ;
 #ENDIF
-;
-;--------------------------------------------------------------------------------------------------
-; ENABLE INTERRUPTS
-;--------------------------------------------------------------------------------------------------
-;
-#IFDEF TESTING
-;
-INTTEST:
-	; TEST TO SEE IF SOMEBODY ENABLED INTS EARLY!
-	LD	A,I
-	JP	PO,INTTEST_Z		; IF PO, INTS DISABLED AS EXPECTED
-	PRTX(STR_INTWARN)		; WARNING
-	JR	INTTEST_Z		; CONTINUE
-;
-STR_INTWARN	.TEXT	"\r\n\r\nWARNING: INTERRUPTS ENABLED TOO EARLY!!!$"
-;
-INTTEST_Z:
-;
-#ENDIF
-;
-	HB_EI				; INTERRUPTS SHOULD BE OK NOW
 ;
 ;--------------------------------------------------------------------------------------------------
 ; DISPLAY PLATFORM INFORMATION
