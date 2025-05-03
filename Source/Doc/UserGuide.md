@@ -2736,7 +2736,14 @@ a variety of common ZCPR3 utilities.
 #### Documentation
 
 ZPM3 has no real documentation.  You are expected to understand both
-CP/M 3 and ZCPR 3.
+CP/M 3 and ZCPR 3. The best source of information is:
+
+* [CPM3 Users Guide]($doc_root$/CPM/CPM3 Users Guide.pdf)
+* [CPM3 Command Summary]($doc_root$/CPM/CPM3 Command Summary.pdf)
+* [CPM3 Programmers Guide]($doc_root$/CPM/CPM3 Programmers Guide.pdf)
+* [CPM3 System Guide]($doc_root$/CPM/CPM3 System Guide.pdf)
+* [Z-System Users Guide]($doc_root$/CPM/Z-System Users Guide.pdf)
+* [ZCPR3.3 User Guide]($doc_root$/CPM/ZCPR3.3 User Guide.pdf)
 
 #### Boot Disk
 

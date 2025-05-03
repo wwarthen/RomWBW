@@ -1147,6 +1147,13 @@ contain all sectors requested.  Disk data transfers will be faster if
 the buffer resides in the top 32K of memory because it avoids a
 double buffer copy.
 
+Also for buffers in the top 32K of memory the Bank ID is not
+strictly required as this memory is alway mapped to the common bank.
+For buffers in the bottom 32KB ram, the Bank ID is used to identify
+the bank to use for the buffer. If you do not wih to use banked memory
+you will need to provide the current Bank ID, which can be obtained
+using [Function 0xF3 -- System Get Bank (SYSGETBNK)] 
+
 ### Function 0x14 -- Disk Write (DIOWRITE)
 
 | **Entry Parameters**                   | **Returned Values**                    |
