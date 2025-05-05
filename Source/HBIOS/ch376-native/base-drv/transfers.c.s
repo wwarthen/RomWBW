@@ -218,12 +218,12 @@ _usb_data_in_transfer:
 	push	ix
 	ld	ix,0
 	add	ix,sp
-;source-doc/base-drv/transfers.c:80: critical_end();
+;source-doc/base-drv/transfers.c:81: return result;
 	call	_critical_begin
-;source-doc/base-drv/transfers.c:82: }
+;source-doc/base-drv/transfers.c:83:
 	ld	l,(ix+8)
 	call	_ch_set_usb_address
-;source-doc/base-drv/transfers.c:84: /**
+;source-doc/base-drv/transfers.c:85: * @brief Perform a USB data in on the specified endpoint
 	ld	l,(ix+9)
 	ld	h,(ix+10)
 	push	hl
@@ -236,17 +236,15 @@ _usb_data_in_transfer:
 	call	_ch_data_in_transfer
 	pop	af
 	pop	af
-	pop	af
-	ld	a, l
-	ld	(_result), a
-;source-doc/base-drv/transfers.c:86: *
+;source-doc/base-drv/transfers.c:87: * @param buffer the buffer to receive the data
+	ex	(sp),hl
 	call	_critical_end
-;source-doc/base-drv/transfers.c:88: * @param buffer_size the maximum size of data to be received
-	ld	hl, (_result)
+	pop	hl
 ;source-doc/base-drv/transfers.c:89: * @param device_address the usb address of the device
+;source-doc/base-drv/transfers.c:90: * @param endpoint the usb endpoint to receive from (toggle of endpoint is updated)
 	pop	ix
 	ret
-;source-doc/base-drv/transfers.c:94: usb_data_in_transfer(uint8_t *buffer, const uint16_t buffer_size, const uint8_t device_address, endpoint_param *const endpoint) {
+;source-doc/base-drv/transfers.c:95: usb_error result;
 ; ---------------------------------
 ; Function usb_data_in_transfer_n
 ; ---------------------------------
@@ -254,12 +252,12 @@ _usb_data_in_transfer_n:
 	push	ix
 	ld	ix,0
 	add	ix,sp
-;source-doc/base-drv/transfers.c:95: critical_begin();
+;source-doc/base-drv/transfers.c:98: ch_set_usb_address(device_address);
 	call	_critical_begin
-;source-doc/base-drv/transfers.c:97: ch_set_usb_address(device_address);
+;source-doc/base-drv/transfers.c:100: result = ch_data_in_transfer(buffer, buffer_size, endpoint);
 	ld	l,(ix+8)
 	call	_ch_set_usb_address
-;source-doc/base-drv/transfers.c:99: result = ch_data_in_transfer(buffer, buffer_size, endpoint);
+;source-doc/base-drv/transfers.c:102: critical_end();
 	ld	l,(ix+9)
 	ld	h,(ix+10)
 	push	hl
@@ -272,17 +270,15 @@ _usb_data_in_transfer_n:
 	call	_ch_data_in_transfer_n
 	pop	af
 	pop	af
-	pop	af
-	ld	a, l
-	ld	(_result), a
-;source-doc/base-drv/transfers.c:101: critical_end();
+;source-doc/base-drv/transfers.c:104: return result;
+	ex	(sp),hl
 	call	_critical_end
-;source-doc/base-drv/transfers.c:103: return result;
-	ld	hl, (_result)
-;source-doc/base-drv/transfers.c:104: }
+	pop	hl
+;source-doc/base-drv/transfers.c:106:
+;source-doc/base-drv/transfers.c:107: /**
 	pop	ix
 	ret
-;source-doc/base-drv/transfers.c:109: * @param buffer the buffer to receive the data - must be 62 bytes
+;source-doc/base-drv/transfers.c:112: * @param device_address the usb address of the device
 ; ---------------------------------
 ; Function usb_data_out_transfer
 ; ---------------------------------
@@ -290,12 +286,12 @@ _usb_data_out_transfer:
 	push	ix
 	ld	ix,0
 	add	ix,sp
-;source-doc/base-drv/transfers.c:110: * @param buffer_size  on exit the actual size of data received
+;source-doc/base-drv/transfers.c:114: * @return usb_error USB_ERR_OK if all good, otherwise specific error code
 	call	_critical_begin
-;source-doc/base-drv/transfers.c:112: * @param endpoint the usb endpoint to receive from (toggle of endpoint is updated)
+;source-doc/base-drv/transfers.c:116: usb_error
 	ld	l,(ix+8)
 	call	_ch_set_usb_address
-;source-doc/base-drv/transfers.c:114: */
+;source-doc/base-drv/transfers.c:118: usb_error result;
 	ld	l,(ix+9)
 	ld	h,(ix+10)
 	push	hl
@@ -308,13 +304,11 @@ _usb_data_out_transfer:
 	call	_ch_data_out_transfer
 	pop	af
 	pop	af
-	pop	af
-	ld	a, l
-	ld	(_result), a
-;source-doc/base-drv/transfers.c:116: usb_data_in_transfer_n(uint8_t *buffer, uint8_t *const buffer_size, const uint8_t device_address, endpoint_param *const endpoint) {
+;source-doc/base-drv/transfers.c:120: critical_begin();
+	ex	(sp),hl
 	call	_critical_end
-;source-doc/base-drv/transfers.c:118:
-	ld	hl, (_result)
-;source-doc/base-drv/transfers.c:119: ch_set_usb_address(device_address);
+	pop	hl
+;source-doc/base-drv/transfers.c:122: ch_set_usb_address(device_address);
+;source-doc/base-drv/transfers.c:123:
 	pop	ix
 	ret

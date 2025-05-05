@@ -106,6 +106,8 @@ uint8_t usb_kyb_flush() __sdcccall(1) {
 }
 
 void usb_kyb_tick(void) {
+  usb_error result;
+
   if (is_in_critical_section())
     return;
 

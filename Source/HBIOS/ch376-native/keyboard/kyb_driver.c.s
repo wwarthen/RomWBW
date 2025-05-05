@@ -273,24 +273,24 @@ l_usb_kyb_flush_00101:
 ; Function usb_kyb_tick
 ; ---------------------------------
 _usb_kyb_tick:
-;source-doc/keyboard/kyb_driver.c:107:
+;source-doc/keyboard/kyb_driver.c:109: usb_error result;
 	ld	hl,_in_critical_usb_section
 	ld	a, (hl)
 	or	a
-;source-doc/keyboard/kyb_driver.c:108: void usb_kyb_tick(void) {
+;source-doc/keyboard/kyb_driver.c:110:
 	jr	NZ,l_usb_kyb_tick_00112
-;././source-doc/base-drv//ch376.h:111:
+;././source-doc/base-drv//ch376.h:108: #define TRACE_USB_ERROR(result)
 	ld	l,0x0b
 	call	_ch_command
-;././source-doc/base-drv//ch376.h:112: #endif
+;././source-doc/base-drv//ch376.h:109:
 	ld	a,0x25
 	ld	bc,_CH376_DATA_PORT
 	out	(c), a
-;././source-doc/base-drv//ch376.h:113:
+;././source-doc/base-drv//ch376.h:110: #endif
 	ld	a,0x1f
 	ld	bc,_CH376_DATA_PORT
 	out	(c), a
-;source-doc/keyboard/kyb_driver.c:111:
+;source-doc/keyboard/kyb_driver.c:113:
 	ld	bc,_report+0
 	ld	hl, (_keyboard_config)
 	ld	a,0x08
@@ -302,74 +302,75 @@ _usb_kyb_tick:
 	pop	af
 	pop	af
 	inc	sp
-	ld	a, l
-	ld	(_result), a
+;././source-doc/base-drv//ch376.h:108: #define TRACE_USB_ERROR(result)
+	push	hl
 	ld	l,0x0b
 	call	_ch_command
-;././source-doc/base-drv//ch376.h:112: #endif
+	pop	hl
+;././source-doc/base-drv//ch376.h:109:
 	ld	a,0x25
 	ld	bc,_CH376_DATA_PORT
 	out	(c), a
-;././source-doc/base-drv//ch376.h:113:
+;././source-doc/base-drv//ch376.h:110: #endif
 	ld	a,0xdf
 	ld	bc,_CH376_DATA_PORT
 	out	(c), a
-	ld	hl,_result
-	ld	a, (hl)
+;source-doc/keyboard/kyb_driver.c:115: result = usbdev_dat_in_trnsfer_0((device_config *)keyboard_config, (uint8_t *)&report, 8);
+	ld	a, l
 	or	a
 	jr	NZ,l_usb_kyb_tick_00112
-;source-doc/keyboard/kyb_driver.c:114: ch_configure_nak_retry_3s();
+;source-doc/keyboard/kyb_driver.c:116: ch_configure_nak_retry_3s();
 	call	_report_diff
 	or	a
 	jr	Z,l_usb_kyb_tick_00112
-;source-doc/keyboard/kyb_driver.c:116: if (report_diff()) {
+;source-doc/keyboard/kyb_driver.c:118: if (report_diff()) {
 	ld	b,0x06
 l_usb_kyb_tick_00103:
-;source-doc/keyboard/kyb_driver.c:117: uint8_t i = 6;
+;source-doc/keyboard/kyb_driver.c:119: uint8_t i = 6;
 	ld	a, b
 	dec	a
 	push	bc
 	call	_keyboard_buf_put
 	pop	bc
-;source-doc/keyboard/kyb_driver.c:118: do {
+;source-doc/keyboard/kyb_driver.c:120: do {
 	djnz	l_usb_kyb_tick_00103
-;source-doc/keyboard/kyb_driver.c:119: keyboard_buf_put(i - 1);
+;source-doc/keyboard/kyb_driver.c:121: keyboard_buf_put(i - 1);
 	ld	de,_previous
 	ld	bc,0x0008
 	ld	hl,_report
 	ldir
 l_usb_kyb_tick_00112:
-;source-doc/keyboard/kyb_driver.c:122: }
-	ret
 ;source-doc/keyboard/kyb_driver.c:124: }
+	ret
+;source-doc/keyboard/kyb_driver.c:126: }
 ; ---------------------------------
 ; Function usb_kyb_init
 ; ---------------------------------
 _usb_kyb_init:
-;source-doc/keyboard/kyb_driver.c:125:
+;source-doc/keyboard/kyb_driver.c:127:
 	call	_get_usb_device_config
 	ex	de, hl
 	ld	(_keyboard_config), hl
-;source-doc/keyboard/kyb_driver.c:127: keyboard_config = (device_config_keyboard *)get_usb_device_config(dev_index);
+;source-doc/keyboard/kyb_driver.c:129: keyboard_config = (device_config_keyboard *)get_usb_device_config(dev_index);
 	ld	hl,_keyboard_config + 1
 	ld	a, (hl)
 	dec	hl
 	or	(hl)
-;source-doc/keyboard/kyb_driver.c:128:
+;source-doc/keyboard/kyb_driver.c:130:
 	ret	Z
-;source-doc/keyboard/kyb_driver.c:130: return;
+;source-doc/keyboard/kyb_driver.c:132: return;
 	ld	a,0x01
 	push	af
 	inc	sp
 	ld	hl, (_keyboard_config)
 	call	_hid_set_protocol
-;source-doc/keyboard/kyb_driver.c:131:
+;source-doc/keyboard/kyb_driver.c:133:
 	ld	a,0x80
 	push	af
 	inc	sp
 	ld	hl, (_keyboard_config)
 	call	_hid_set_idle
-;source-doc/keyboard/kyb_driver.c:132: hid_set_protocol(keyboard_config, 1);
+;source-doc/keyboard/kyb_driver.c:134: hid_set_protocol(keyboard_config, 1);
 	ret
 _caps_lock_engaged:
 	DEFB +0x01

@@ -13,7 +13,7 @@ usb_error usb_execute_cbi(device_config *const storage_device,
                           const uint16_t       buffer_size,
                           uint8_t *const       buffer,
                           uint8_t *const       sense_codes) {
-
+  usb_error     result;
   const uint8_t interface_number = storage_device->interface_number;
 
   setup_packet adsc;

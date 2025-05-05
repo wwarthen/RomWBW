@@ -6,6 +6,8 @@
 #include <usb_state.h>
 
 usb_error usb_scsi_init(const uint16_t dev_index) {
+  usb_error result;
+
   device_config_storage *const dev = (device_config_storage *)get_usb_device_config(dev_index);
 
   scsi_sense_result response;
@@ -54,6 +56,8 @@ usb_error usb_scsi_read_capacity(const uint16_t dev_index, scsi_read_capacity_re
 static cbw_scsi_read_write cbw = {{{0}}};
 
 usb_error usb_scsi_read(const uint16_t dev_index, uint8_t *const buffer) {
+  usb_error result;
+
   device_config_storage *const dev = (device_config_storage *)get_usb_device_config(dev_index);
 
   memset(&cbw, 0, sizeof(cbw_scsi_read_write));
@@ -78,6 +82,7 @@ usb_error usb_scsi_read(const uint16_t dev_index, uint8_t *const buffer) {
 }
 
 usb_error usb_scsi_write(const uint16_t dev_index, uint8_t *const buffer) {
+  usb_error                    result;
   device_config_storage *const dev = (device_config_storage *)get_usb_device_config(dev_index);
 
   memset(&cbw, 0, sizeof(cbw_scsi_read_write));

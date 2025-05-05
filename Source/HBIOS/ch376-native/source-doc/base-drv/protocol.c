@@ -27,6 +27,7 @@ const setup_packet cmd_get_device_descriptor = {0x80, 6, {0, 1}, {0, 0}, 8};
  * @return usb_error USB_ERR_OK if all good, otherwise specific error code
  */
 usb_error usbtrn_get_descriptor(device_descriptor *const buffer) {
+  usb_error    result;
   setup_packet cmd;
   cmd         = cmd_get_device_descriptor;
   cmd.wLength = 8;
@@ -52,6 +53,8 @@ done:
  * @return usb_error USB_ERR_OK if all good, otherwise specific error code
  */
 usb_error usbtrn_get_descriptor2(device_descriptor *const buffer, const uint8_t device_address) {
+  usb_error result;
+
   setup_packet cmd;
   cmd         = cmd_get_device_descriptor;
   cmd.wLength = 8;
@@ -129,6 +132,7 @@ usb_error usbtrn_gfull_cfg_desc(const uint8_t  config_index,
                                 const uint8_t  max_packet_size,
                                 const uint8_t  max_buffer_size,
                                 uint8_t *const buffer) {
+  usb_error result;
 
   CHECK(usbtrn_get_config_descriptor((config_descriptor *)buffer, config_index, sizeof(config_descriptor), device_address,
                                      max_packet_size));

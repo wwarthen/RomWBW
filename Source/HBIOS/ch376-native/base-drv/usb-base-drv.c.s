@@ -68,14 +68,14 @@ _usb_host_bus_reset:
 	call	_ch_cmd_set_usb_mode
 ;source-doc/base-drv/usb-base-drv.c:15: delay_20ms();
 	call	_delay_20ms
-;source-doc/base-drv/ch376.h:111:
+;source-doc/base-drv/ch376.h:108: #define TRACE_USB_ERROR(result)
 	ld	l,0x0b
 	call	_ch_command
-;source-doc/base-drv/ch376.h:112: #endif
+;source-doc/base-drv/ch376.h:109:
 	ld	a,0x25
 	ld	bc,_CH376_DATA_PORT
 	out	(c), a
-;source-doc/base-drv/ch376.h:113:
+;source-doc/base-drv/ch376.h:110: #endif
 	ld	a,0xdf
 	ld	bc,_CH376_DATA_PORT
 	out	(c), a

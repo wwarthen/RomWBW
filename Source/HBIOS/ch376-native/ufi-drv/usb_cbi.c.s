@@ -98,10 +98,8 @@ _usb_execute_cbi:
 	pop	af
 	pop	af
 	pop	af
-	ld	a, l
-	ld	(_result), a
 ;source-doc/ufi-drv/usb_cbi.c:27: if (result == USB_ERR_STALL) {
-	ld	a,(_result)
+	ld	a, l
 	sub	0x02
 	jr	NZ,l_usb_execute_cbi_00104
 ;source-doc/ufi-drv/usb_cbi.c:28: if (sense_codes != NULL)
@@ -126,15 +124,14 @@ _usb_execute_cbi:
 	ld	sp, hl
 l_usb_execute_cbi_00102:
 ;source-doc/ufi-drv/usb_cbi.c:31: result = USB_ERR_STALL;
-	ld	hl,_result
-	ld	(hl),0x02
+	ld	l,0x02
 ;source-doc/ufi-drv/usb_cbi.c:32: goto done;
-	jp	l_usb_execute_cbi_00116
+	jr	l_usb_execute_cbi_00116
 l_usb_execute_cbi_00104:
 ;source-doc/ufi-drv/usb_cbi.c:35: if (result != USB_ERR_OK) {
-	ld	a,(_result)
+	ld	a, l
 	or	a
-	jp	NZ, l_usb_execute_cbi_00116
+	jr	NZ,l_usb_execute_cbi_00116
 ;source-doc/ufi-drv/usb_cbi.c:40: if (send) {
 	bit	0,(ix+8)
 	jr	Z,l_usb_execute_cbi_00112
@@ -152,10 +149,8 @@ l_usb_execute_cbi_00104:
 	pop	af
 	pop	af
 	pop	af
-	ld	a, l
-	ld	(_result), a
 ;source-doc/ufi-drv/usb_cbi.c:43: if (result != USB_ERR_OK) {
-	ld	a,(_result)
+	ld	a, l
 	or	a
 	jr	Z,l_usb_execute_cbi_00113
 ;source-doc/ufi-drv/usb_cbi.c:45: goto done;
@@ -179,10 +174,8 @@ l_usb_execute_cbi_00112:
 	pop	af
 	pop	af
 	inc	sp
-	ld	a, l
-	ld	(_result), a
 ;source-doc/ufi-drv/usb_cbi.c:50: if (result != USB_ERR_OK) {
-	ld	a,(_result)
+	ld	a, l
 	or	a
 	jr	NZ,l_usb_execute_cbi_00116
 ;source-doc/ufi-drv/usb_cbi.c:52: goto done;
@@ -208,14 +201,13 @@ l_usb_execute_cbi_00113:
 	pop	af
 	pop	af
 	inc	sp
-	ld	a, l
-	ld	(_result), a
 ;source-doc/ufi-drv/usb_cbi.c:65: done:
 l_usb_execute_cbi_00116:
 ;source-doc/ufi-drv/usb_cbi.c:66: critical_end();
+	push	hl
 	call	_critical_end
+	pop	hl
 ;source-doc/ufi-drv/usb_cbi.c:68: return result;
-	ld	hl, (_result)
 ;source-doc/ufi-drv/usb_cbi.c:69: }
 	ld	sp, ix
 	pop	ix

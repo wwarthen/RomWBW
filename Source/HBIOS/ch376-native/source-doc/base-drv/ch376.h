@@ -90,8 +90,6 @@ extern int printf(const char *msg, ...);
 
 #else
 
-extern usb_error result;
-
 #define trace_printf(...)
 
 #define CHECK(fn)                                                                                                                  \

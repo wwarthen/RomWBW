@@ -15,6 +15,8 @@ usb_error do_scsi_cmd(device_config_storage *const       dev,
                       void *const                        send_receive_buffer,
                       const bool                         send) {
 
+  usb_error result;
+
   cbw->dCBWTag[0] = next_tag++;
 
   if (!send)
