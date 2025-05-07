@@ -2497,7 +2497,7 @@ version 3.1.0, build 2.
 
 The hardware Platform (L) is identified as follows:
 
-| **Name**      | **Id** | **Platform **                           |
+| **Name**      | **Id** | **Platform **                                          |
 |---------------|-------:|-----------------------------------------|
 | PLT_SBC       |      1 | ECB Z80 SBC                             |
 | PLT_ZETA      |      2 | ZETA Z80 SBC                            |
