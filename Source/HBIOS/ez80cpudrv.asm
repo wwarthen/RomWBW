@@ -342,24 +342,20 @@ _EZ80_CPY_UHL_TO_EHL:
 
 ; set the upper byte (u of DE) to MB.
 _EZ80_EXTN_DE_TO_MB_DE:
-	PUSH	IY
-	.DB	$5B, $FD, $21, $00, $00, $00		; LD.LIL	IY, 0
+	.DB	$49, $D5				; PUSH.L 	DE
+	.DB	$5B, $FD, $21, $00, $00, $00		; LD.LIL 	IY, 0
 	.DB	$49, $FD, $39				; ADD.L		IY, SP
-	.DB	$49, $FD, $1F, $FD                	; LD.L		(IY-3), DE
-	.DB	$ED, $6E                    		; LD		A, MB
-	.DB	$49, $FD, $77, $FF			; LD.L		(IY-1), A
-	.DB	$49, $FD, $17, $FD			; LD.L		DE, (IY-3)
-	POP	IY
+	.DB	$ED, $6E              			; LD 		A, MB
+	.DB	$5B, $FD, $77, $02			; LD.LIL 	(IY+2), A
+	.DB	$49, $D1				; POP.L		DE
 	RET
 
 ; set the upper byte (u of IY) to MB.
 _EZ80_EXTN_IY_TO_MB_IY:
-	PUSH	IX
-	.DB	$5B, $DD, $21, $00, $00, $00		; LD.LIL	IX, 0
-	.DB	$49, $DD, $39				; ADD.L		IX, SP
-	.DB	$49, $DD, $3E, $FD			; LD.L		(IX-3), IY
+	.DB	$49, $FD, $E5				; PUSH.L	IY
+	.DB	$5B, $FD, $21, $00, $00, $00		; LD.LIL	IY, 0
+	.DB	$49, $FD, $39				; ADD.L		IY, SP
 	.DB	$ED, $6E				; LD		A, MB
-	.DB	$49, $DD, $77, $FF			; LD.L		(IX-1), A
-	.DB	$49, $DD, $31, $FD			; LD.L		IY, (IX-3)
-	POP	IX
+	.DB	$5B, $FD, $77, $02			; LD.LIL	(IY+2), A
+	.DB	$49, $FD, $E1				; POP.L		IY
 	RET

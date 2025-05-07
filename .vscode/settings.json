@@ -1,4 +1,11 @@
 {
+  "z80-macroasm.format.enabled": true,
+  "z80-macroasm.format.baseIndent": 1,
+  "z80-macroasm.format.whitespaceAfterInstruction": "tab",
+  "z80-macroasm.format.uppercaseKeywords": true,
+  "z80-macroasm.format.spaceAfterArgument": true,
+  "z80-macroasm.format.hexaNumberStyle": "motorola",
+  "z80-macroasm.format.hexaNumberCase": true,
   "files.trimTrailingWhitespace": false,
   "files.eol": "\r\n",
   "files.associations": {

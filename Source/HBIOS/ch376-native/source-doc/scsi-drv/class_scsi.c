@@ -8,14 +8,13 @@ _scsi_command_block_wrapper scsi_command_block_wrapper = {{0x55, 0x53, 0x42, 0x4
 
 uint16_t next_tag = 0;
 
-_scsi_command_status_wrapper csw = {{{0}}};
-
 usb_error do_scsi_cmd(device_config_storage *const       dev,
                       _scsi_command_block_wrapper *const cbw,
                       void *const                        send_receive_buffer,
                       const bool                         send) {
 
   usb_error result;
+  _scsi_command_status_wrapper csw = {{{0}}};
 
   cbw->dCBWTag[0] = next_tag++;
 
@@ -41,7 +40,7 @@ usb_error do_scsi_cmd(device_config_storage *const       dev,
   CHECK(
       usb_data_in_transfer((uint8_t *)&csw, sizeof(_scsi_command_status_wrapper), dev->address, &dev->endpoints[ENDPOINT_BULK_IN]));
 
-  if (csw.bCSWStatus != 0 && csw.dCSWTag[0] != cbw->dCBWTag[0])
+  if (csw.bCSWStatus != 0 || csw.dCSWTag[0] != cbw->dCBWTag[0])
     result = USB_ERR_FAIL;
   else
     result = USB_ERR_OK;
@@ -63,7 +62,7 @@ usb_error scsi_test(device_config_storage *const dev) {
   return do_scsi_cmd(dev, &cbw_scsi.cbw, 0, false);
 }
 
-_scsi_packet_request_sense scsi_packet_request_sense = {0x03, 0, 0, 0, 18, 0, {0, 0, 0, 0, 0, 0}};
+const _scsi_packet_request_sense scsi_packet_request_sense = {0x03, 0, 0, 0, 18, 0, {0, 0, 0, 0, 0, 0}};
 
 usb_error scsi_request_sense(device_config_storage *const dev, scsi_sense_result *const sens_result) {
   cbw_scsi_request_sense cbw_scsi;
