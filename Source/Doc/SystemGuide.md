@@ -2508,7 +2508,7 @@ The hardware Platform (L) is identified as follows:
 | PLT_RCZ80     |      7 | RCBUS W/ Z80                            |
 | PLT_RCZ180    |      8 | RCBUS W/ Z180                           |
 | PLT_EZZ80     |      9 | EASY/TINY Z80                           |
-| PLT_SCZ180    |     10 | RCBUS SC126, SC130, SC131, SC140        |
+| PLT_SCZ180    |     10 | SMALL COMPUTER CENTRAL Z180             |
 | PLT_DYNO      |     11 | DYNO MICRO-ATX MOTHERBOARD              |
 | PLT_RCZ280    |     12 | RCBUS W/ Z280                           |
 | PLT_MBC       |     13 | NHYODYNE MULTI-BOARD COMPUTER           |
@@ -2523,6 +2523,8 @@ The hardware Platform (L) is identified as follows:
 | PLT_NABU      |     22 | NABU PC W/ ROMWBW OPTION BOARD          |
 | PLT_FZ80      |     23 | S100 FPGA Z80                           |
 | PLT_RCEZ80    |     24 | RCBUS W/ eZ80                           |
+
+For more information on these platforms see $doc_hardware$
 
 ### Function 0xF2 -- System Set Bank (SYSSETBNK)
 
