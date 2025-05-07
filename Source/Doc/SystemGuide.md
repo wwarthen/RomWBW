@@ -2497,26 +2497,32 @@ version 3.1.0, build 2.
 
 The hardware Platform (L) is identified as follows:
 
-| **Name**      | **Id** | **Platform **                           |
+| **Name**      | **Id** | **Platform **                                          |
 |---------------|-------:|-----------------------------------------|
-| PLT_SBC       |1       | ECB Z80 SBC                             |
-| PLT_ZETA      |2       | ZETA Z80 SBC                            |
-| PLT_ZETA2     |3       | ZETA Z80 V2 SBC                         |
-| PLT_N8        |4       | N8 (HOME COMPUTER) Z180 SBC             |
-| PLT_MK4       |5       | MARK IV                                 |
-| PLT_UNA       |6       | UNA BIOS                                |
-| PLT_RCZ80     |7       | RCBUS W/ Z80                            |
-| PLT_RCZ180    |8       | RCBUS W/ Z180                           |
-| PLT_EZZ80     |9       | EASY/TINY Z80                           |
-| PLT_SCZ180    |10      | RCBUS SC126, SC130, SC131, SC140        |
-| PLT_DYNO      |11      | DYNO MICRO-ATX MOTHERBOARD              |
-| PLT_RCZ280    |12      | RCBUS W/ Z280                           |
-| PLT_MBC       |13      | NHYODYNE MULTI-BOARD COMPUTER           |
-| PLT_RPH       |14      | RHYOPHYRE GRAPHICS SBC                  |
-| PLT_Z80RETRO  |15      | Z80 RETRO COMPUTER                      |
-| PLT_S100      |16      | S100 COMPUTERS Z180                     |
-| PLT_DUO       |17      | DUODYNE Z80 SYSTEM                      |
-| PLT_RCEZ80    |24      | RCBUS W/ eZ80                           |
+| PLT_SBC       | 1      | ECB Z80 SBC                             |
+| PLT_ZETA      | 2      | ZETA Z80 SBC                            |
+| PLT_ZETA2     | 3      | ZETA Z80 V2 SBC                         |
+| PLT_N8        | 4      | N8 (HOME COMPUTER) Z180 SBC             |
+| PLT_MK4       | 5      | MARK IV                                 |
+| PLT_UNA       | 6      | UNA BIOS                                |
+| PLT_RCZ80     | 7      | RCBUS W/ Z80                            |
+| PLT_RCZ180    | 8      | RCBUS W/ Z180                           |
+| PLT_EZZ80     | 9      | EASY/TINY Z80                           |
+| PLT_SCZ180    | 10     | RCBUS SC126, SC130, SC131, SC140        |
+| PLT_DYNO      | 11     | DYNO MICRO-ATX MOTHERBOARD              |
+| PLT_RCZ280    | 12     | RCBUS W/ Z280                           |
+| PLT_MBC       | 13     | NHYODYNE MULTI-BOARD COMPUTER           |
+| PLT_RPH       | 14     | RHYOPHYRE GRAPHICS SBC                  |
+| PLT_Z80RETRO  | 15     | Z80 RETRO COMPUTER                      |
+| PLT_S100      | 16     | S100 COMPUTERS Z180                     |
+| PLT_DUO       | 17     | DUODYNE Z80 SYSTEM                      |
+| PLT_HEATH     | 18     | HEATHKIT H8 Z80 SYSTEM                  |
+| PLT_EPITX     | 19     | Z180 MINI-ITX                           |
+| PLT_MON       | 20     | MONSPUTER (DEPRECATED)                  |
+| PLT_GMZ180    | 21     | GENESIS Z180 SYSTEM                     |
+| PLT_NABU      | 22     | NABU PC W/ ROMWBW OPTION BOARD          |
+| PLT_FZ80      | 23     | S100 FPGA Z80                           |
+| PLT_RCEZ80    | 24     | RCBUS W/ eZ80                           |
 
 ### Function 0xF2 -- System Set Bank (SYSSETBNK)
 
